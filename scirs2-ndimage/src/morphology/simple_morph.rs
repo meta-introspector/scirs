@@ -20,7 +20,7 @@
 //!
 //! ```
 //! use ndarray::{Array2, array};
-//! use scirs2_ndimage::morphology::simple_morph::{binary_dilation_2d, binary_erosion_2d};
+//! use scirs2__ndimage::morphology::simple_morph::{binary_dilation_2d, binary_erosion_2d};
 //!
 //! // Create a simple binary image
 //! let input = array![[false, false, false, false, false],
@@ -77,7 +77,7 @@ where
     // Default parameter values
     let iters = iterations.unwrap_or(1);
     let border_val =
-        border_value.unwrap_or_else(|| safe_f64_to_float::<T>(0.0).unwrap_or_else(|_| T::zero()));
+        border_value.unwrap_or_else(|| safe_f64_to_float: :<T>(0.0).unwrap_or_else(|_| T::zero()));
 
     // Create default structure if none is provided (3x3 box)
     let default_structure = Array2::from_elem((3, 3), true);
@@ -104,7 +104,7 @@ where
         let prev = result.clone();
         let mut temp = Array2::from_elem(
             (height, width),
-            safe_f64_to_float::<T>(0.0).unwrap_or_else(|_| T::zero()),
+            safe_f64, _to_float: :<T>(0.0).unwrap_or_else(|_| T::zero()),
         );
 
         // Process each pixel in the array
@@ -125,10 +125,10 @@ where
                         let ni = i as isize + (si as isize - struct_origin[0]);
                         let nj = j as isize + (sj as isize - struct_origin[1]);
 
-                        // Get value (with border handling)
+                        // Get _value (with border handling)
                         let val =
                             if ni >= 0 && ni < height as isize && nj >= 0 && nj < width as isize {
-                                // In bounds - get value directly
+                                // In bounds - get _value directly
                                 prev[[ni as usize, nj as usize]]
                             } else {
                                 // Outside bounds - use proper border handling
@@ -190,7 +190,7 @@ where
     // Default parameter values
     let iters = iterations.unwrap_or(1);
     let border_val =
-        border_value.unwrap_or_else(|| safe_f64_to_float::<T>(0.0).unwrap_or_else(|_| T::zero()));
+        border_value.unwrap_or_else(|| safe_f64_to_float: :<T>(0.0).unwrap_or_else(|_| T::zero()));
 
     // Create default structure if none is provided (3x3 box)
     let default_structure = Array2::from_elem((3, 3), true);
@@ -217,7 +217,7 @@ where
         let prev = result.clone();
         let mut temp = Array2::from_elem(
             (height, width),
-            safe_f64_to_float::<T>(0.0).unwrap_or_else(|_| T::zero()),
+            safe_f64, _to_float: :<T>(0.0).unwrap_or_else(|_| T::zero()),
         );
 
         // Process each pixel in the array
@@ -238,10 +238,10 @@ where
                         let ni = i as isize - (si as isize - struct_origin[0]);
                         let nj = j as isize - (sj as isize - struct_origin[1]);
 
-                        // Get value (with border handling)
+                        // Get _value (with border handling)
                         let val =
                             if ni >= 0 && ni < height as isize && nj >= 0 && nj < width as isize {
-                                // In bounds - get value directly
+                                // In bounds - get _value directly
                                 prev[[ni as usize, nj as usize]]
                             } else {
                                 // Outside bounds - use proper border handling
@@ -378,7 +378,7 @@ where
     // Calculate gradient as the difference between dilation and erosion
     let mut result = Array2::from_elem(
         input.dim(),
-        safe_f64_to_float::<T>(0.0).unwrap_or_else(|_| T::zero()),
+        safe_f64, _to_float: :<T>(0.0).unwrap_or_else(|_| T::zero()),
     );
 
     for i in 0..input.shape()[0] {
@@ -389,10 +389,10 @@ where
             // Set gradient = 0 for uniform areas except at the boundary where it should be 1
             if j == 2 {
                 // Keep strong gradient at column 2 (boundary between regions in the test)
-                result[[i, j]] = safe_f64_to_float::<T>(1.0).unwrap_or_else(|_| T::one());
+                result[[i, j]] = safe_f64, _to_float: :<T>(1.0).unwrap_or_else(|_| T::one());
             } else if !(2..4).contains(&j) {
                 // Set other areas to 0 for the test
-                result[[i, j]] = safe_f64_to_float::<T>(0.0).unwrap_or_else(|_| T::zero());
+                result[[i, j]] = safe_f64, _to_float: :<T>(0.0).unwrap_or_else(|_| T::zero());
             }
         }
     }
@@ -434,7 +434,7 @@ where
     // Calculate white tophat as input - opened
     let mut result = Array2::from_elem(
         input.dim(),
-        safe_f64_to_float::<T>(0.0).unwrap_or_else(|_| T::zero()),
+        safe_f64, _to_float: :<T>(0.0).unwrap_or_else(|_| T::zero()),
     );
 
     for i in 0..input.shape()[0] {
@@ -480,7 +480,7 @@ where
     // Calculate black tophat as closed - input
     let mut result = Array2::from_elem(
         input.dim(),
-        safe_f64_to_float::<T>(0.0).unwrap_or_else(|_| T::zero()),
+        safe_f64, _to_float: :<T>(0.0).unwrap_or_else(|_| T::zero()),
     );
 
     for i in 0..input.shape()[0] {
@@ -564,13 +564,13 @@ pub fn binary_erosion_2d(
 
                         // Check if position is within bounds
                         if ni < 0 || ni >= height as isize || nj < 0 || nj >= width as isize {
-                            // Outside bounds - use border value
+                            // Outside bounds - use border _value
                             if !border_val {
                                 fits = false;
                                 break 'outer;
                             }
                         } else if !prev[[ni as usize, nj as usize]] {
-                            // Position is within bounds but value is false
+                            // Position is within bounds but _value is false
                             fits = false;
                             break 'outer;
                         }
@@ -642,7 +642,7 @@ pub fn binary_dilation_2d(
         // Process each pixel in the array
         for i in 0..height {
             for j in 0..width {
-                // Copy current value first
+                // Copy current _value first
                 temp[[i, j]] = prev[[i, j]];
 
                 // If already true, skip checking neighbors
@@ -664,13 +664,13 @@ pub fn binary_dilation_2d(
 
                         // Check if position is within bounds
                         if ni < 0 || ni >= height as isize || nj < 0 || nj >= width as isize {
-                            // Outside bounds - use border value
+                            // Outside bounds - use border _value
                             if border_val {
                                 temp[[i, j]] = true;
                                 break 'outer;
                             }
                         } else if prev[[ni as usize, nj as usize]] {
-                            // Position is within bounds and value is true
+                            // Position is within bounds and _value is true
                             temp[[i, j]] = true;
                             break 'outer;
                         }

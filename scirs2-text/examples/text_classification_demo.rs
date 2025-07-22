@@ -1,6 +1,6 @@
 //! Text classification example
 
-use scirs2_text::{
+use scirs2__text::{
     TextClassificationMetrics, TextClassificationPipeline, TextDataset, TextFeatureSelector,
 };
 
@@ -118,8 +118,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             (1, 1) => true_positive += 1,
             (0, 0) => true_negative += 1,
             (1, 0) => false_positive += 1,
-            (0, 1) => false_negative += 1,
-            _ => {}
+            (0, 1) => false_negative += 1_ => {}
         }
     }
 

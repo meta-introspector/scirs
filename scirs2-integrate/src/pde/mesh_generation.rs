@@ -4,7 +4,7 @@
 //! It includes algorithms for generating structured and unstructured meshes for various
 //! shapes and domains, with quality control and refinement options.
 
-use crate::pde::finite_element::{ElementType, Point, Triangle, TriangularMesh};
+use crate::pde::finite__element::{ElementType, Point, Triangle, TriangularMesh};
 use crate::pde::{PDEError, PDEResult};
 use std::collections::{HashMap, HashSet};
 use std::f64::consts::PI;
@@ -27,7 +27,7 @@ pub struct MeshGenerationParams {
 }
 
 impl Default for MeshGenerationParams {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             element_size: 0.1,
             min_angle: 20.0,
@@ -113,19 +113,19 @@ pub struct AutoMeshGenerator {
 }
 
 impl Default for AutoMeshGenerator {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new(MeshGenerationParams::default())
     }
 }
 
 impl AutoMeshGenerator {
     /// Create a new mesh generator with specified parameters
-    pub fn new(params: MeshGenerationParams) -> Self {
-        Self { params }
+    pub fn new(_params: MeshGenerationParams) -> Self {
+        Self { _params }
     }
 
     /// Create a mesh generator with default parameters
-    pub fn with_default_params() -> Self {
+    pub fn with_default_params(&self) -> Self {
         Self::default()
     }
 
@@ -195,8 +195,8 @@ impl AutoMeshGenerator {
         let height = y_max - y_min;
 
         // Calculate number of divisions
-        let nx = ((width / self.params.element_size).ceil() as usize).max(2);
-        let ny = ((height / self.params.element_size).ceil() as usize).max(2);
+        let nx = ((width / self.params.element_size).ceil() as usize)._max(2);
+        let ny = ((height / self.params.element_size).ceil() as usize)._max(2);
 
         let dx = width / (nx - 1) as f64;
         let dy = height / (ny - 1) as f64;
@@ -271,9 +271,9 @@ impl AutoMeshGenerator {
             let r = radius * i as f64 / n_r as f64;
             for j in 0..n_theta {
                 let theta = 2.0 * PI * j as f64 / n_theta as f64;
-                let x = center_x + r * theta.cos();
-                let y = center_y + r * theta.sin();
-                points.push(Point::new(x, y));
+                let _x = center_x + r * theta.cos();
+                let _y = center_y + r * theta.sin();
+                points.push(Point::new(_x_y));
             }
         }
 
@@ -339,16 +339,16 @@ impl AutoMeshGenerator {
 
         for point in &mut mesh.points {
             // Scale to ellipse
-            point.x *= a / max_radius;
-            point.y *= b / max_radius;
+            point._x *= a / max_radius;
+            point._y *= b / max_radius;
 
             // Rotate
-            let x_rot = point.x * cos_rot - point.y * sin_rot;
-            let y_rot = point.x * sin_rot + point.y * cos_rot;
+            let x_rot = point._x * cos_rot - point._y * sin_rot;
+            let y_rot = point._x * sin_rot + point._y * cos_rot;
 
             // Translate
-            point.x = center_x + x_rot;
-            point.y = center_y + y_rot;
+            point._x = center_x + x_rot;
+            point._y = center_y + y_rot;
         }
 
         self.apply_boundary_markers(
@@ -380,15 +380,15 @@ impl AutoMeshGenerator {
         let mesh1 = self.generate_rectangle_mesh(
             0.0,
             0.0,
-            width,
-            height - notch_height,
+            _width,
+            _height - notch_height,
             &BoundarySpecification::default(),
         )?;
         let mesh2 = self.generate_rectangle_mesh(
             0.0,
-            height - notch_height,
-            width - notch_width,
-            height,
+            _height - notch_height,
+            _width - notch_width,
+            _height,
             &BoundarySpecification::default(),
         )?;
 
@@ -400,8 +400,8 @@ impl AutoMeshGenerator {
             &mut mesh,
             boundary_spec,
             &Domain::LShape {
-                width,
-                height,
+                _width,
+                _height,
                 notch_width,
                 notch_height,
             },
@@ -489,7 +489,7 @@ impl AutoMeshGenerator {
     ) -> PDEResult<TriangularMesh> {
         if inner_radius >= outer_radius {
             return Err(PDEError::FiniteElementError(
-                "Inner radius must be less than outer radius".to_string(),
+                "Inner _radius must be less than outer _radius".to_string(),
             ));
         }
 
@@ -506,9 +506,9 @@ impl AutoMeshGenerator {
             let r = inner_radius + (outer_radius - inner_radius) * i as f64 / n_r as f64;
             for j in 0..n_theta {
                 let theta = 2.0 * PI * j as f64 / n_theta as f64;
-                let x = center_x + r * theta.cos();
-                let y = center_y + r * theta.sin();
-                points.push(Point::new(x, y));
+                let _x = center_x + r * theta.cos();
+                let _y = center_y + r * theta.sin();
+                points.push(Point::new(_x_y));
             }
         }
 
@@ -550,8 +550,7 @@ impl AutoMeshGenerator {
     fn apply_boundary_markers(
         &self,
         mesh: &mut TriangularMesh,
-        boundary_spec: &BoundarySpecification,
-        _domain: &Domain,
+        boundary_spec: &BoundarySpecification, _domain: &Domain,
     ) -> PDEResult<()> {
         // This is a simplified implementation
         // In practice, would need sophisticated boundary detection
@@ -560,7 +559,7 @@ impl AutoMeshGenerator {
         if boundary_spec.boundary_markers.is_empty() {
             // Mark all boundary edges with marker 1
             let boundary_edges = self.find_boundary_edges(mesh);
-            for (_p1, _p2) in boundary_edges {
+            for (_p1_p2) in boundary_edges {
                 // Mark boundary points
                 // In a complete implementation, would track edge markers
             }
@@ -570,11 +569,11 @@ impl AutoMeshGenerator {
     }
 
     /// Find boundary edges in the mesh
-    fn find_boundary_edges(&self, mesh: &TriangularMesh) -> Vec<(usize, usize)> {
+    fn find_boundary_edges(_mesh: &TriangularMesh) -> Vec<(usize, usize)> {
         let mut edge_count = HashMap::new();
 
         // Count how many times each edge appears
-        for element in &mesh.elements {
+        for element in &_mesh.elements {
             let [p1, p2, p3] = element.nodes;
             let edges = [
                 (p1.min(p2), p1.max(p2)),
@@ -591,48 +590,48 @@ impl AutoMeshGenerator {
         edge_count
             .into_iter()
             .filter(|(_, count)| *count == 1)
-            .map(|(edge, _)| edge)
+            .map(|(edge_)| edge)
             .collect()
     }
 
     /// Improve mesh quality through smoothing and refinement
-    fn improve_mesh_quality(&self, mesh: &mut TriangularMesh) -> PDEResult<()> {
+    fn improve_mesh_quality(_mesh: &mut TriangularMesh) -> PDEResult<()> {
         for _ in 0..self.params.quality_iterations {
             // Laplacian smoothing
-            self.laplacian_smoothing(mesh)?;
+            self.laplacian_smoothing(_mesh)?;
 
             // Quality-based refinement
-            self.quality_refinement(mesh)?;
+            self.quality_refinement(_mesh)?;
         }
 
         Ok(())
     }
 
     /// Apply Laplacian smoothing to improve mesh quality
-    fn laplacian_smoothing(&self, mesh: &mut TriangularMesh) -> PDEResult<()> {
-        let n_points = mesh.points.len();
+    fn laplacian_smoothing(_mesh: &mut TriangularMesh) -> PDEResult<()> {
+        let n_points = _mesh.points.len();
         let mut new_positions = vec![Point::new(0.0, 0.0); n_points];
         let mut neighbor_counts = vec![0; n_points];
 
         // Find neighbors for each point
-        for element in &mesh.elements {
+        for element in &_mesh.elements {
             let [p1, p2, p3] = element.nodes;
 
-            new_positions[p1].x += mesh.points[p2].x + mesh.points[p3].x;
-            new_positions[p1].y += mesh.points[p2].y + mesh.points[p3].y;
+            new_positions[p1].x += _mesh.points[p2].x + _mesh.points[p3].x;
+            new_positions[p1].y += _mesh.points[p2].y + _mesh.points[p3].y;
             neighbor_counts[p1] += 2;
 
-            new_positions[p2].x += mesh.points[p1].x + mesh.points[p3].x;
-            new_positions[p2].y += mesh.points[p1].y + mesh.points[p3].y;
+            new_positions[p2].x += _mesh.points[p1].x + _mesh.points[p3].x;
+            new_positions[p2].y += _mesh.points[p1].y + _mesh.points[p3].y;
             neighbor_counts[p2] += 2;
 
-            new_positions[p3].x += mesh.points[p1].x + mesh.points[p2].x;
-            new_positions[p3].y += mesh.points[p1].y + mesh.points[p2].y;
+            new_positions[p3].x += _mesh.points[p1].x + _mesh.points[p2].x;
+            new_positions[p3].y += _mesh.points[p1].y + _mesh.points[p2].y;
             neighbor_counts[p3] += 2;
         }
 
         // Update positions (keep boundary points fixed)
-        let boundary_edges = self.find_boundary_edges(mesh);
+        let boundary_edges = self.find_boundary_edges(_mesh);
         let boundary_points: HashSet<usize> = boundary_edges
             .iter()
             .flat_map(|(p1, p2)| vec![*p1, *p2])
@@ -640,8 +639,8 @@ impl AutoMeshGenerator {
 
         for i in 0..n_points {
             if !boundary_points.contains(&i) && neighbor_counts[i] > 0 {
-                mesh.points[i].x = new_positions[i].x / neighbor_counts[i] as f64;
-                mesh.points[i].y = new_positions[i].y / neighbor_counts[i] as f64;
+                _mesh.points[i].x = new_positions[i].x / neighbor_counts[i] as f64;
+                _mesh.points[i].y = new_positions[i].y / neighbor_counts[i] as f64;
             }
         }
 
@@ -649,12 +648,12 @@ impl AutoMeshGenerator {
     }
 
     /// Refine elements with poor quality
-    fn quality_refinement(&self, mesh: &mut TriangularMesh) -> PDEResult<()> {
+    fn quality_refinement(_mesh: &mut TriangularMesh) -> PDEResult<()> {
         let mut elements_to_refine = Vec::new();
 
         // Identify poor quality elements
-        for (i, element) in mesh.elements.iter().enumerate() {
-            let quality = self.element_quality(mesh, element);
+        for (i, element) in _mesh.elements.iter().enumerate() {
+            let quality = self.element_quality(_mesh, element);
             if quality.min_angle < self.params.min_angle
                 || quality.max_angle > self.params.max_angle
             {
@@ -669,11 +668,11 @@ impl AutoMeshGenerator {
     }
 
     /// Calculate quality metrics for a single element
-    fn element_quality(&self, mesh: &TriangularMesh, element: &Triangle) -> ElementQuality {
+    fn element_quality(_mesh: &TriangularMesh, element: &Triangle) -> ElementQuality {
         let [p1, p2, p3] = element.nodes;
-        let a = &mesh.points[p1];
-        let b = &mesh.points[p2];
-        let c = &mesh.points[p3];
+        let a = &_mesh.points[p1];
+        let b = &_mesh.points[p2];
+        let c = &_mesh.points[p3];
 
         // Calculate edge lengths
         let ab = ((b.x - a.x).powi(2) + (b.y - a.y).powi(2)).sqrt();
@@ -708,14 +707,14 @@ impl AutoMeshGenerator {
     }
 
     /// Check if a point is inside a polygon using ray casting
-    fn point_in_polygon(&self, point: &Point, polygon: &[Point]) -> bool {
+    fn point_in_polygon(_point: &Point, polygon: &[Point]) -> bool {
         let mut inside = false;
         let mut j = polygon.len() - 1;
 
         for i in 0..polygon.len() {
-            if ((polygon[i].y > point.y) != (polygon[j].y > point.y))
-                && (point.x
-                    < (polygon[j].x - polygon[i].x) * (point.y - polygon[i].y)
+            if ((polygon[i].y > _point.y) != (polygon[j].y > _point.y))
+                && (_point.x
+                    < (polygon[j].x - polygon[i].x) * (_point.y - polygon[i].y)
                         / (polygon[j].y - polygon[i].y)
                         + polygon[i].x)
             {
@@ -728,8 +727,8 @@ impl AutoMeshGenerator {
     }
 
     /// Combine multiple meshes into one
-    fn combine_meshes(&self, meshes: &[TriangularMesh]) -> PDEResult<TriangularMesh> {
-        if meshes.is_empty() {
+    fn combine_meshes(_meshes: &[TriangularMesh]) -> PDEResult<TriangularMesh> {
+        if _meshes.is_empty() {
             return Err(PDEError::FiniteElementError(
                 "Cannot combine empty mesh list".to_string(),
             ));
@@ -739,7 +738,7 @@ impl AutoMeshGenerator {
         let mut combined_elements = Vec::new();
         let mut point_offset = 0;
 
-        for mesh in meshes {
+        for mesh in _meshes {
             // Add points
             combined_points.extend(mesh.points.iter().cloned());
 
@@ -762,15 +761,15 @@ impl AutoMeshGenerator {
     }
 
     /// Calculate overall mesh quality metrics
-    pub fn assess_mesh_quality(&self, mesh: &TriangularMesh) -> MeshQuality {
+    pub fn assess_mesh_quality(_mesh: &TriangularMesh) -> MeshQuality {
         let mut min_angle = f64::INFINITY;
         let mut max_angle: f64 = 0.0;
         let mut total_area = 0.0;
         let mut min_aspect_ratio = f64::INFINITY;
         let mut poor_quality_count = 0;
 
-        for element in &mesh.elements {
-            let quality = self.element_quality(mesh, element);
+        for element in &_mesh.elements {
+            let quality = self.element_quality(_mesh, element);
 
             min_angle = min_angle.min(quality.min_angle);
             max_angle = max_angle.max(quality.max_angle);
@@ -784,8 +783,8 @@ impl AutoMeshGenerator {
             }
         }
 
-        let avg_element_size = (total_area / mesh.elements.len() as f64).sqrt();
-        let quality_score = 1.0 - (poor_quality_count as f64 / mesh.elements.len() as f64);
+        let avg_element_size = (total_area / _mesh.elements.len() as f64).sqrt();
+        let quality_score = 1.0 - (poor_quality_count as f64 / _mesh.elements.len() as f64);
 
         MeshQuality {
             min_angle,

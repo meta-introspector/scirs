@@ -33,7 +33,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::sph_harm;
+/// use scirs2__special::sph_harm;
 /// use std::f64::consts::PI;
 ///
 /// // Y₀⁰(θ, φ) = 1/(2√π)
@@ -123,7 +123,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::sph_harm_complex;
+/// use scirs2__special::sph_harm_complex;
 /// use std::f64::consts::PI;
 ///
 /// // Y₀⁰(θ, φ) = 1/(2√π)

@@ -2,8 +2,9 @@ use ndarray::{Array, Array1, Array2};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2_signal::sswt::{self, SynchroCwtConfig, SynchroCwtResult};
-use scirs2_signal::wavelets;
+use scirs2__signal::sswt::{self, SynchroCwtConfig, SynchroCwtResult};
+use scirs2__signal::wavelets;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -69,8 +70,7 @@ fn generate_test_signal() -> Array1<f64> {
     let noise_level = 0.1;
     let mut rng = rand::rng();
     let noise = Array::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.random_range(0.0..1.0) - 1.0)),
-    );
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
 
     // Combine components
     &chirp_1 + &constant + &chirp_3 + &noise
@@ -78,12 +78,12 @@ fn generate_test_signal() -> Array1<f64> {
 
 /// Analyze the signal using both CWT and Synchrosqueezed Transform
 #[allow(dead_code)]
-fn analyze_signal(signal: &Array1<f64>) -> (Array2<f64>, SynchroCwtResult) {
+fn analyze_signal(_signal: &Array1<f64>) -> (Array2<f64>, SynchroCwtResult) {
     // Create logarithmically spaced scales for CWT
     let scales = sswt::log_scales(1.0, 24.0, 48);
 
-    // Convert signal to Vec for wavelets::cwt
-    let signal_vec: Vec<f64> = signal.iter().copied().collect();
+    // Convert _signal to Vec for wavelets::cwt
+    let _signal_vec: Vec<f64> = _signal.iter().copied().collect();
 
     // Convert scales to Vec for wavelets::cwt
     let scales_vec: Vec<f64> = scales.iter().copied().collect();
@@ -99,7 +99,7 @@ fn analyze_signal(signal: &Array1<f64>) -> (Array2<f64>, SynchroCwtResult) {
 
     // Convert the CWT result to Array2 for easier processing
     let n_scales = scales.len();
-    let n_samples = signal.len();
+    let n_samples = _signal.len();
     let mut cwt_coeffs = Array2::zeros((n_scales, n_samples));
 
     for (i, row) in cwt_vec.iter().enumerate() {
@@ -118,7 +118,7 @@ fn analyze_signal(signal: &Array1<f64>) -> (Array2<f64>, SynchroCwtResult) {
     // Compute the synchrosqueezed transform
     let w0 = 5.0; // Center frequency of the Morlet wavelet
     let sst_result = sswt::synchrosqueezed_cwt(
-        signal,
+        _signal,
         &scales,
         |points, scale| wavelets::morlet(points, w0, scale), // Using Morlet wavelet
         w0, // Center frequency of the Morlet wavelet
@@ -131,9 +131,9 @@ fn analyze_signal(signal: &Array1<f64>) -> (Array2<f64>, SynchroCwtResult) {
 
 /// Extract and analyze time-frequency ridges from the synchrosqueezed transform
 #[allow(dead_code)]
-fn extract_and_analyze_ridges(sst_result: &SynchroCwtResult) -> Vec<Vec<(usize, f64)>> {
+fn extract_and_analyze_ridges(_sst_result: &SynchroCwtResult) -> Vec<Vec<(usize, f64)>> {
     // Extract the top 3 ridges (we have 3 components in our signal)
-    let ridges = sswt::extract_ridges(&sst_result.sst, &sst_result.frequencies, 3);
+    let ridges = sswt::extract_ridges(&_sst_result.sst, &_sst_result.frequencies, 3);
 
     println!("Found {} significant ridges", ridges.len());
 
@@ -196,7 +196,7 @@ fn save_results_to_csv(
         writeln!(file, "{},{}", i, val).expect("Failed to write to signal.csv");
     }
 
-    // Save the CWT power spectrogram
+    // Save the CWT _power spectrogram
     let mut file = File::create("cwt_power.csv").expect("Failed to create cwt_power.csv");
 
     // Write header with scale values

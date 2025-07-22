@@ -1,10 +1,12 @@
 //! Moment-based feature extraction for images
 
-use super::utils::calculate_raw_moment;
+use crate::error::SignalResult;
 use crate::error::SignalResult;
 use ndarray::Array2;
 use std::collections::HashMap;
+use super::utils::calculate_raw_moment;
 
+#[allow(unused_imports)]
 /// Extract moment-based features from an image
 #[allow(dead_code)]
 pub fn extract_moment_features(

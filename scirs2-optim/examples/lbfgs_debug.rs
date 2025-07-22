@@ -1,7 +1,7 @@
 //! Debug LBFGS optimizer behavior
 
 use ndarray::Array1;
-use scirs2_optim::optimizers::{Optimizer, LBFGS};
+use scirs2__optim::optimizers::{Optimizer, LBFGS};
 
 #[allow(dead_code)]
 fn main() {

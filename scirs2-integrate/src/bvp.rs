@@ -75,7 +75,7 @@ pub struct BVPResult<F: IntegrateFloat> {
 ///
 /// ```
 /// use ndarray::{array, Array1, ArrayView1};
-/// use scirs2_integrate::bvp::{solve_bvp, BVPOptions};
+/// use scirs2__integrate::bvp::{solve_bvp, BVPOptions};
 ///
 /// // Solve a simple linear ODE: y' = -y with boundary conditions
 /// // y(0) = 1, y(1) = exp(-1)
@@ -485,7 +485,7 @@ where
     let n_dim = bc_values[0].len();
     if bc_values[1].len() != n_dim {
         return Err(IntegrateError::ValueError(
-            "Boundary values must have the same dimension at both endpoints".to_string(),
+            "Boundary _values must have the same dimension at both endpoints".to_string(),
         ));
     }
 
@@ -497,7 +497,7 @@ where
         y_init.push(y_i);
     }
 
-    // Create a boundary condition function based on the type
+    // Create a boundary condition function based on the _type
     let bc = match bc_type.to_lowercase().as_str() {
         "dirichlet" => {
             // For Dirichlet boundary conditions
@@ -562,7 +562,7 @@ where
         }
         _ => {
             return Err(IntegrateError::ValueError(format!(
-                "Unsupported boundary condition type: {bc_type}. Use 'dirichlet', 'neumann', or 'mixed'."
+                "Unsupported boundary condition _type: {bc_type}. Use 'dirichlet', 'neumann', or 'mixed'."
             )));
         }
     };

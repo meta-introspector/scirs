@@ -144,7 +144,7 @@
 //! ### Statistical Distributions
 //!
 //! ```
-//! use scirs2_stats::distributions;
+//! use scirs2__stats::distributions;
 //!
 //! // Normal distribution
 //! let normal = distributions::norm(0.0f64, 1.0).unwrap();
@@ -275,7 +275,7 @@
 //! ### Random Number Generation
 //!
 //! ```
-//! use scirs2_stats::random::{uniform, randn, randint, choice};
+//! use scirs2__stats::random::{uniform, randn, randint, choice};
 //! use ndarray::array;
 //!
 //! // Generate uniform random numbers between 0 and 1
@@ -295,7 +295,7 @@
 //! ### Statistical Sampling
 //!
 //! ```
-//! use scirs2_stats::sampling;
+//! use scirs2__stats::sampling;
 //! use ndarray::array;
 //!
 //! // Create an array
@@ -323,29 +323,29 @@ pub mod intelligent_error_recovery;
 pub mod performance_optimization;
 // pub mod advanced_error_enhancements_v2; // Temporarily commented out
 pub mod unified_error_handling;
-pub use adaptive_simd_optimization::{
+pub use adaptive_simd__optimization::{
     create_adaptive_simd_optimizer, optimize_simd_operation, AdaptiveSimdConfig,
     AdaptiveSimdOptimizer, DataCharacteristics as SimdDataCharacteristics, HardwareCapabilities,
     OptimizationLevel, PerformanceStatistics, SimdOptimizationResult, SimdStrategy,
 };
-pub use api_standardization::{
+pub use api__standardization::{
     Alternative, CorrelationBuilder, CorrelationMethod, CorrelationResult, DescriptiveStats,
     DescriptiveStatsBuilder, F32DescriptiveBuilder, F32StatsAnalyzer, F64DescriptiveBuilder,
     F64StatsAnalyzer, NullHandling, StandardizedConfig, StandardizedResult, StatsAnalyzer,
     TestResult,
 };
-pub use api_standardization_enhanced::{
+pub use api_standardization__enhanced::{
     quick_correlation, quick_descriptive, stats, stats_with, AutoOptimizationLevel, ChainedResults,
     CorrelationMethod as EnhancedCorrelationMethod, CorrelationType, FluentCorrelation,
     FluentDescriptive, FluentRegression, FluentStats, FluentStatsConfig, FluentTesting,
     MemoryStrategy, OperationResult, OperationType, RegressionType, ResultFormat,
     StatisticalOperation, TestType,
 };
-pub use benchmark_suite::{
+pub use benchmark__suite::{
     AlgorithmConfig, BenchmarkConfig, BenchmarkMetrics, BenchmarkReport, BenchmarkSuite,
     ComplexityClass, MemoryStats, OptimizationRecommendation, PerformanceAnalysis, TimingStats,
 };
-pub use benchmark_suite_enhanced::{
+pub use benchmark_suite__enhanced::{
     create_configured_enhanced_benchmark_suite, create_enhanced_benchmark_suite,
     run_quick_ai_analysis, AIPerformanceAnalysis, AnomalyType, BottleneckType,
     CrossPlatformAnalysis, EnhancedBenchmarkConfig, EnhancedBenchmarkReport,
@@ -355,20 +355,20 @@ pub use benchmark_suite_enhanced::{
     SimdCapabilities, TrendDirection,
 };
 pub use error::{StatsError, StatsResult};
-pub use error_diagnostics::{
+pub use error__diagnostics::{
     generate_global_health_report, get_global_statistics, global_monitor, record_global_error,
     CriticalIssue, ErrorMonitor, ErrorOccurrence, ErrorPattern, ErrorStatistics, ErrorTrend,
     HealthReport, Recommendation,
 };
-pub use error_handling_enhancements::{
+pub use error_handling__enhancements::{
     AdvancedContextBuilder, AdvancedErrorContext, AdvancedErrorMessages, AdvancedErrorRecovery,
     OptimizationSuggestion, RecoveryStrategy,
 };
-pub use error_handling_v2::{
+pub use error_handling__v2::{
     EnhancedError, ErrorBuilder, ErrorCode, ErrorContext as ErrorContextV2, PerformanceImpact,
     RecoverySuggestion,
 };
-pub use error_recovery_system::{
+pub use error_recovery__system::{
     enhance_error_with_recovery, initialize_error_recovery, CodeSnippet, ComputationState,
     ConvergenceStatus, DataCharacteristics, DistributionInfo, EnhancedStatsError, ErrorContext,
     ErrorRecoveryConfig, ErrorRecoverySystem, ErrorSeverity, ImpactLevel, MissingDataInfo,
@@ -376,31 +376,31 @@ pub use error_recovery_system::{
     RecoveryAction, RecoverySuggestion as RecoveryRecoverySuggestion, SizeInfo, SuggestionType,
     SystemInfo, ValidationCheck,
 };
-pub use error_standardization::{
+pub use error__standardization::{
     AutoRecoverySystem, BatchErrorHandler, DataDiagnostics, DataQualityIssue, EnhancedErrorContext,
     ErrorDiagnostics, ErrorMessages, ErrorValidator, InterModuleErrorChecker,
     PerformanceImpact as StandardizedPerformanceImpact, RecoverySuggestions,
     StandardizedErrorReporter, StatsSummary, SystemDiagnostics,
 };
-pub use error_suggestions::{
+pub use error__suggestions::{
     diagnose_error, DiagnosisReport, ErrorFormatter, ErrorType, Severity, Suggestion,
     SuggestionEngine,
 };
-pub use intelligent_error_recovery::{
+pub use intelligent_error__recovery::{
     create_intelligent_recovery, get_intelligent_suggestions, IntelligentErrorRecovery,
     IntelligentRecoveryStrategy, RecoveryConfig, ResourceRequirements, RiskLevel,
 };
-pub use memory_optimization_advanced::{
+pub use memory_optimization__advanced::{
     AdaptiveStatsAllocator, CacheOptimizedMatrix, MatrixLayout, MemoryOptimizationConfig,
     MemoryOptimizationReport, MemoryOptimizationSuite, MemoryProfile, StreamingStatsCalculator,
 };
-pub use memory_optimization_enhanced::{
+pub use memory_optimization__enhanced::{
     create_configured_memory_optimizer, create_enhanced_memory_optimizer, EnhancedMemoryOptimizer,
     GarbageCollectionResult, MemoryOptimizationConfig as EnhancedMemoryConfig,
     MemoryStatistics as EnhancedMemoryStatistics,
     OptimizationRecommendation as EnhancedOptimizationRecommendation,
 };
-pub use performance_benchmark_suite::{
+pub use performance_benchmark__suite::{
     AdvancedBenchmarkConfig,
     AdvancedBenchmarkMetrics,
     AdvancedBenchmarkReport,
@@ -411,16 +411,16 @@ pub use performance_benchmark_suite::{
     ScalabilityAssessment,
     StabilityAssessment,
 };
-pub use performance_optimization::{
+pub use performance__optimization::{
     OptimizedCanonicalCorrelationAnalysis, OptimizedLinearDiscriminantAnalysis,
     PerformanceBenchmark, PerformanceConfig, PerformanceMetrics,
 };
-pub use scipy_benchmark_comparison::{
+pub use scipy_benchmark__comparison::{
     run_function_comparison, run_scipy_comparison, AccuracyComparison, AccuracyRating,
     ComparisonRecommendation, ComparisonStatus, FunctionComparison, PerformanceComparison,
     PerformanceRating, ScipyBenchmarkComparison, ScipyComparisonConfig, ScipyComparisonReport,
 };
-// pub use advanced_parallel_stats::{
+// pub use advanced_parallel__stats::{
 //     create_advanced_parallel_processor as create_advanced_parallel_stats_processor, mean_advanced_parallel,
 //     variance_advanced_parallel, LoadBalancingAlgorithm,
 //     ParallelExecutionMetrics as AdvancedParallelExecutionMetrics, ParallelPerformanceAnalysis,
@@ -431,47 +431,47 @@ pub use scipy_benchmark_comparison::{
 // };
 // Temporarily commented out
 /*
-pub use advanced_error_enhancements_v2::{
+pub use advanced_error_enhancements__v2::{
     create_enhanced_error_context, CompatibilityImpact, EffortLevel, ErrorEngineConfig,
     IntelligentDiagnostics, OperationContext, PerformanceAssessment,
     RecoveryStrategy as RecoveryStrategyV2, UXRecommendations,
     AdvancedErrorContext as AdvancedErrorContextV2, AdvancedErrorEngine,
 };
 */
-pub use unified_error_handling::{
+pub use unified_error__handling::{
     create_standardized_error, global_error_handler, UnifiedErrorHandler,
 };
 
 // API improvements for v1.0.0
 pub mod api_improvements;
-pub use api_improvements::{CorrelationExt, OptimizationHint, StatsBuilder, StatsConfig};
+pub use api__improvements::{CorrelationExt, OptimizationHint, StatsBuilder, StatsConfig};
 
 // Advanced integration workflows
-pub use advanced_bootstrap::{
+pub use advanced__bootstrap::{
     block_bootstrap, circular_block_bootstrap, moving_block_bootstrap, stationary_bootstrap,
     stratified_bootstrap, AdvancedBootstrapConfig, AdvancedBootstrapProcessor,
     AdvancedBootstrapResult, BlockType, BootstrapConfidenceIntervals, BootstrapDiagnostics,
     BootstrapDistributionStats, BootstrapType, ConvergenceInfo, ParametricBootstrapParams,
     QualityMetrics, TaperFunction, WildDistribution,
 };
-pub use advanced_integration::{
+pub use advanced__integration::{
     BayesianAnalysisResult, BayesianAnalysisWorkflow, BayesianModelMetrics,
     DimensionalityAnalysisResult, DimensionalityAnalysisWorkflow, DimensionalityMetrics,
     DimensionalityRecommendations, QMCQualityMetrics, QMCResult, QMCSequenceType, QMCWorkflow,
     SurvivalAnalysisResult, SurvivalAnalysisWorkflow, SurvivalSummaryStats,
 };
-pub use advanced_parallel_monte_carlo::{
+pub use advanced_parallel_monte__carlo::{
     integrate_parallel, AdvancedParallelMonteCarlo, GaussianFunction, IntegrableFunction,
     IntegrationMetrics, MonteCarloConfig, MonteCarloResult, TestFunction, VarianceReductionConfig,
 };
-pub use api_consistency_validation::{
+pub use api_consistency__validation::{
     validate_api_consistency, APIConsistencyValidator, APIInconsistency, CheckCategory,
     DocumentationStatus, FunctionCategory, FunctionPattern, FunctionRegistry, FunctionSignature,
     InconsistencyType, NamingConventions, ParameterInfo, ParameterUsage, ReturnTypeInfo,
     Severity as APISeverity, ValidationCheck as APIValidationCheck, ValidationConfig,
     ValidationReport, ValidationResults, ValidationStatus, ValidationSummary, ValidationWarning,
 };
-pub use production_deployment::{
+pub use production__deployment::{
     create_cloud_production_config, create_container_production_config, CheckResult, CheckSeverity,
     CheckStatus, CloudProvider, ContainerRuntime, CpuFeatures, EnvironmentSpec, EnvironmentType,
     HealthCheck, HealthCheckResult, HealthChecker, HealthStatus, MemoryLimits, PerformanceMonitor,
@@ -575,38 +575,38 @@ mod topological_advanced;
 // pub mod unified_processor; // Commented out for now
 // pub mod advanced_stubs; // Temporary stubs for compilation
 pub use descriptive::*;
-pub use descriptive_simd::{descriptive_stats_simd, mean_simd, std_simd, variance_simd};
-pub use dispersion_simd::{
+pub use descriptive__simd::{descriptive_stats_simd, mean_simd, std_simd, variance_simd};
+pub use dispersion__simd::{
     coefficient_of_variation_simd, gini_simd, iqr_simd, mad_simd, median_abs_deviation_simd,
     percentile_range_simd, range_simd, sem_simd,
 };
-pub use moments_simd::{kurtosis_simd, moment_simd, moments_batch_simd, skewness_simd};
-pub use simd_enhanced_core::{
+pub use moments__simd::{kurtosis_simd, moment_simd, moments_batch_simd, skewness_simd};
+pub use simd_enhanced__core::{
     comprehensive_stats_simd as comprehensive_stats_enhanced, correlation_simd_enhanced,
     mean_enhanced, variance_enhanced, ComprehensiveStats,
 };
 
 // Property-based testing framework
-pub use adaptive_memory_advanced::{
+pub use adaptive_memory__advanced::{
     create_adaptive_memory_manager, create_optimized_memory_manager, AdaptiveMemoryConfig,
     AdaptiveMemoryManager as AdvancedAdaptiveMemoryManager, AllocationStrategy,
     CacheOptimizationConfig, F32AdaptiveMemoryManager, F64AdaptiveMemoryManager, GCResult,
     GarbageCollectionConfig, MemoryPressureConfig, MemoryUsageStatistics, NumaConfig,
     OutOfCoreConfig, PredictiveConfig,
 };
-pub use advanced_simd_stats::{
+pub use advanced_simd__stats::{
     AccuracyLevel, AdvancedSimdConfig as AdvancedSimdConfigV2, AdvancedSimdOptimizer,
     AlgorithmChoice as AdvancedAlgorithmChoice, BatchOperation, BatchResults,
     MemoryConstraints as AdvancedMemoryConstraints, PerformancePreference,
     PerformanceProfile as AdvancedPerformanceProfile, ScalarAlgorithm, SimdAlgorithm,
     ThreadingPreferences,
 };
-pub use bayesian_advanced::{
+pub use bayesian__advanced::{
     ActivationType, AdvancedBayesianResult, AdvancedPrior, BayesianGaussianProcess, BayesianModel,
     BayesianModelComparison, BayesianNeuralNetwork, ModelComparisonResult, ModelSelectionCriterion,
     ModelType,
 };
-pub use cross_platform_regression_detection::{
+pub use cross_platform_regression__detection::{
     create_regression_detector, create_regression_detector_with_config, BaselineStatistics,
     CompilerContext, CrossPlatformRegressionConfig, CrossPlatformRegressionDetector,
     HardwareContext, PerformanceBaseline, PerformanceMeasurement, PerformanceRecommendation,
@@ -614,47 +614,47 @@ pub use cross_platform_regression_detection::{
     RegressionSummaryStatistics, TrendAnalysis, TrendDirection as RegressionTrendDirection,
 };
 pub use either::Either;
-pub use mcmc_advanced::{
+pub use mcmc__advanced::{
     AdaptationConfig, AdvancedAdvancedConfig, AdvancedAdvancedMCMC, AdvancedAdvancedResults,
     AdvancedTarget, ConvergenceDiagnostics, PerformanceMetrics as MCMCPerformanceMetrics,
     SamplingMethod, TemperingConfig,
 };
-pub use memory_efficient::{
+pub use memory__efficient::{
     covariance_chunked, normalize_inplace, quantile_quickselect, streaming_mean, welford_variance,
     StreamingHistogram,
 };
-pub use memory_optimized_advanced::{
+pub use memory_optimized__advanced::{
     cache_oblivious_matrix_mult, corrcoef_memory_aware, pca_memory_efficient,
     streaming_covariance_matrix, streaming_histogram_adaptive, streaming_pca_enhanced,
     streaming_quantiles_p2, streaming_regression_enhanced,
     AdaptiveMemoryManager as AdvancedMemoryManager, MemoryConstraints,
     MemoryStatistics as AdvancedMemoryStatistics, PCAResult,
 };
-pub use memory_optimized_v2::{
+pub use memory_optimized__v2::{
     mean_zero_copy, variance_cache_aware, LazyStats, MemoryConfig, MemoryPool, StreamingCovariance,
 };
-pub use memory_profiler_v3::{
+pub use memory_profiler__v3::{
     AdaptiveMemoryManager, AlgorithmChoice as MemoryAlgorithmChoice, AllocationStats, CacheStats,
     MemoryProfiler, MemoryReport, ProfiledStatistics, StatisticsCache,
 };
-pub use memory_profiling::{
+pub use memory__profiling::{
     cache_friendly, memory_mapped, zero_copy, AlgorithmChoice, LazyStatComputation,
     MemoryAdaptiveAlgorithm, MemoryTracker, RingBufferStats,
 };
-pub use mixture_models::{
+pub use mixture__models::{
     benchmark_mixture_models, gaussian_mixture_model, gmm_cross_validation, gmm_model_selection,
     hierarchical_gmm_init, kernel_density_estimation, BandwidthMethod, ComponentDiagnostics,
     ConvergenceReason, CovarianceConstraint, CovarianceType, GMMConfig, GMMParameters,
     GaussianMixtureModel, InitializationMethod, KDEConfig, KernelDensityEstimator, KernelType,
     ModelSelectionCriteria, ParameterSnapshot, RobustGMM, StreamingGMM,
 };
-pub use multivariate_advanced::{
+pub use multivariate__advanced::{
     ActivationFunction, AdvancedMultivariateAnalysis, AdvancedMultivariateConfig,
     AdvancedMultivariateResults, ClusteringAlgorithm, ClusteringConfig,
     DimensionalityReductionMethod, ICAAlgorithm, ManifoldConfig, MultiViewConfig, PCAVariant,
     TensorConfig, TensorDecomposition,
 };
-pub use numerical_stability_enhancements::{
+pub use numerical_stability__enhancements::{
     create_advanced_think_numerical_stability_tester, create_exhaustive_numerical_stability_tester,
     create_fast_numerical_stability_tester, AdvancedNumericalStabilityConfig,
     AdvancedNumericalStabilityTester, CancellationDetectionResult, ComprehensiveStabilityResult,
@@ -665,48 +665,48 @@ pub use numerical_stability_enhancements::{
     StabilityAssessment as NumericalStabilityAssessment, StabilityRecommendation,
     StabilityTolerance, StabilityTrend, StabilityTrendAnalysis, WarningType,
 };
-pub use parallel_advanced::{
+pub use parallel__advanced::{
     AdvancedParallelConfig as AdvancedAdvancedParallelConfig,
     AdvancedParallelProcessor as AdvancedAdvancedParallelProcessor, HardwareConfig,
     MemoryConfig as AdvancedMemoryConfig, MemoryUsageStats, OptimizationConfig, ParallelStrategy,
     PerformanceMetrics as AdvancedPerformanceMetrics,
 };
-pub use parallel_advanced_v3::{
+pub use parallel_advanced__v3::{
     AdvancedParallelConfig, ParallelBatchProcessor, ParallelCrossValidator, ParallelMatrixOps,
     ParallelMonteCarlo,
 };
-pub use parallel_enhanced_advanced::{
+pub use parallel_enhanced__advanced::{
     create_advanced_parallel_processor, create_configured_parallel_processor,
     AdvancedParallelConfig as EnhancedAdvancedParallelConfig, AdvancedParallelProcessor,
     ChunkStrategy,
 };
-pub use parallel_enhanced_v2::{
+pub use parallel_enhanced__v2::{
     bootstrap_parallel_enhanced, mean_parallel_enhanced, variance_parallel_enhanced, ParallelConfig,
 };
-pub use parallel_enhanced_v4::{
+pub use parallel_enhanced__v4::{
     bootstrap_parallel_advanced, correlation_matrix_parallel_advanced, mean_parallel_advanced,
     variance_parallel_advanced, EnhancedParallelConfig, EnhancedParallelProcessor,
     MatrixParallelResult,
 };
-pub use parallel_stats::{
+pub use parallel__stats::{
     bootstrap_parallel, corrcoef_parallel, mean_parallel, quantiles_parallel,
     row_statistics_parallel, variance_parallel,
 };
-pub use parallel_stats_enhanced::{
+pub use parallel_stats__enhanced::{
     kde_parallel, pairwise_distances_parallel, AdaptiveThreshold, ParallelCrossValidation,
     ParallelHistogram, ParallelMovingStats,
 };
 #[cfg(test)]
-pub use property_based_tests_extended::{
+pub use property_based_tests__extended::{
     BatchProcessingTester, CrossPlatformTester, ExtendedMathematicalTester, FuzzingTester,
     MathematicalInvariantTester, MatrixTestData, MemoryOptimizationTester,
     NumericalStabilityTester, ParallelConsistencyTester, PerformanceRegressionTester,
     RobustnessTester, SimdConsistencyTester, StatisticalTestData,
 };
-pub use quantile_simd::{
+pub use quantile__simd::{
     median_simd, percentile_simd, quantile_simd, quantiles_simd, quickselect_simd,
 };
-pub use quantum_advanced::{
+pub use quantum__advanced::{
     AdvancedQuantumAnalyzer, DataEncodingMethod, QAEResults, QClusteringResults, QNNResults,
     QPCAResults, QSVMResults, QuantumAdvantageMetrics, QuantumClusteringAlgorithm, QuantumConfig,
     QuantumEnsembleResult, QuantumFeatureEncoding, QuantumFeatureMap, QuantumKernelType,
@@ -714,15 +714,15 @@ pub use quantum_advanced::{
     QuantumResults, QuantumVariationalResult, TensorNetworkResults, TensorNetworkType, VQEAnsatz,
     VQEResults,
 };
-pub use simd_advanced::{
+pub use simd__advanced::{
     advanced_mean_f32, advanced_mean_f64, AdvancedSimdProcessor, AdvancedStatsResult,
     CacheAwareVectorProcessor, MemoryPattern, VectorStrategy,
 };
-pub use simd_comprehensive::{
+pub use simd__comprehensive::{
     AdvancedComprehensiveSimdConfig, AdvancedComprehensiveSimdProcessor, ComprehensiveStatsResult,
     MatrixStatsResult as AdvancedMatrixStatsResult,
 };
-pub use simd_enhanced::{
+pub use simd__enhanced::{
     create_advanced_simd_processor, create_performance_optimized_simd_processor,
     create_stability_optimized_simd_processor, AccuracyMetrics, AdvancedEnhancedSimdProcessor,
     AdvancedSimdConfig as AdvancedEnhancedSimdConfig, AdvancedSimdResults,
@@ -731,40 +731,40 @@ pub use simd_enhanced::{
     OptimalAlgorithm, PerformanceStatistics as AdvancedSimdPerformanceStats, PrefetchStrategy,
     ProfilingLevel, VectorizationLevel,
 };
-pub use simd_enhanced_advanced::{
+pub use simd_enhanced__advanced::{
     bootstrap_mean_simd, corrcoef_matrix_simd, linear_regression_simd, robust_statistics_simd,
     ttest_ind_simd,
 };
-pub use simd_enhanced_v3::{
+pub use simd_enhanced__v3::{
     cosine_distance_simd, detect_outliers_zscore_simd, distance_matrix_simd,
     euclidean_distance_simd, histogram_simd, manhattan_distance_simd, MovingWindowSIMD,
 };
-pub use simd_enhanced_v4::{
+pub use simd_enhanced__v4::{
     batch_normalize_simd, comprehensive_stats_simd, covariance_matrix_simd,
     exponential_moving_average_simd, outlier_detection_zscore_simd, quantiles_batch_simd,
     robust_statistics_simd as robust_stats_v4_simd, sliding_window_stats_simd,
     ComprehensiveStats as V4ComprehensiveStats, RobustStats, SlidingWindowStats,
 };
-pub use simd_enhanced_v5::{
+pub use simd_enhanced__v5::{
     rolling_statistics_simd, BootstrapResult, BootstrapStatistic, KernelType as V5KernelType,
     MatrixOperation, MatrixStatsResult, RollingStatistic, RollingStatsResult,
 };
-pub use simd_enhanced_v6::{
+pub use simd_enhanced__v6::{
     advanced_comprehensive_simd, advanced_mean_simd, advanced_std_simd, AdvancedSimdConfig,
     AdvancedSimdOps, BootstrapResult as V6BootstrapResult,
     ComprehensiveStats as V6ComprehensiveStats, MatrixStatsResult as V6MatrixStatsResult,
 };
-pub use simd_optimized_v2::{
+pub use simd_optimized__v2::{
     mean_simd_optimized, stats_simd_single_pass, variance_simd_optimized, SimdConfig,
 };
-pub use spectral_advanced::{
+pub use spectral__advanced::{
     ActivationFunction as SpectralActivationFunction, AdvancedSpectralAnalyzer,
     AdvancedSpectralConfig, AdvancedSpectralResults, CoherenceConfig, CoherenceResults,
     HigherOrderResults, HigherOrderSpectralConfig, MLSpectralConfig, MLSpectralResults,
     MultiTaperConfig, NonStationaryConfig, SpectralPeak, SpectralPerformanceMetrics,
     SpectrogramType, WaveletConfig, WaveletResults, WaveletType, WindowFunction,
 };
-pub use streaming_advanced::{
+pub use streaming__advanced::{
     create_advanced_streaming_processor, create_streaming_processor_with_config,
     AdvancedAdvancedStreamingProcessor, AdvancedStreamingConfig, AnomalyDetectionAlgorithm,
     AnomalyDetector, AnomalyEvent, AnomalySeverity, ChangePointAlgorithm, ChangePointDetector,
@@ -772,16 +772,16 @@ pub use streaming_advanced::{
     IncrementalMLModel, MLModelType, StreamProcessingMode, StreamingAnalyticsResult,
     StreamingPerformanceMetrics, StreamingRecommendation, StreamingStatistics, WindowingStrategy,
 };
-pub use survival_advanced::{
+pub use survival__advanced::{
     AFTDistribution, ActivationFunction as SurvivalActivationFunction, AdvancedSurvivalAnalysis,
     AdvancedSurvivalConfig, AdvancedSurvivalResults, CausalSurvivalConfig, CompetingRisksConfig,
     EnsembleConfig as SurvivalEnsembleConfig, SurvivalModel, SurvivalModelType, SurvivalPrediction,
 };
-pub use survival_enhanced::{
+pub use survival__enhanced::{
     cox_regression, kaplan_meier, log_rank_test, CoxConfig, CoxConvergenceInfo,
     CoxProportionalHazards, EnhancedKaplanMeier,
 };
-pub use topological_advanced::{
+pub use topological__advanced::{
     AdvancedTopologicalAnalyzer, CoeffientField, DistanceMetric, FilterFunction, Filtration,
     FiltrationType, MapperEdge, MapperGraph, MapperNode, MultiscaleResults, PersistenceAlgorithm,
     PersistenceDiagram, Simplex, SimplicialChain, SimplicialComplex, TopologicalConfig,
@@ -789,24 +789,24 @@ pub use topological_advanced::{
 };
 // Temporarily commented out for compilation fixes
 /*
-pub use advanced_cross_platform_validation::{
+pub use advanced_cross_platform__validation::{
     create_cross_platform_validator, CompatibilityRating, CrossPlatformTestResult,
     CrossPlatformValidationReport, CrossPlatformValidator, PerformancePlatformProfile,
 };
-pub use advanced_memory_advanced_enhanced::{
+pub use advanced_memory_advanced__enhanced::{
     create_large_dataset_memory_manager, create_streaming_memory_manager,
     create_advanced_think_memory_manager, AccessPattern, BatchMemoryResult, CacheImportance,
     LifetimeHint, MemoryOptimizationLevel, MemoryPoolStrategy, MemoryStatistics, MemoryUsageHint,
     NumaMemoryPolicy, AdvancedMemoryConfig as AdvancedMemoryConfigV2, AdvancedMemoryManager,
 };
-pub use parallel_enhancements::{
+pub use parallel__enhancements::{
     create_configured_advanced_parallel_processor as create_configured_advanced_parallel_processor,
     create_advanced_parallel_processor as create_advanced_parallel_processor,
     LoadBalancingStrategy as AdvancedLoadBalancingStrategy, MatrixOperationType,
     ParallelExecutionMetrics as AdvancedParallelExecutionMetrics, ParallelPerformanceAnalytics,
     TimeSeriesOperation, AdvancedParallelBatchResult, AdvancedParallelMatrixResult,
 };
-pub use advanced_parallel_advanced_enhanced::{
+pub use advanced_parallel_advanced__enhanced::{
     create_large_dataset_parallel_processor, create_streaming_parallel_processor,
     create_advanced_think_parallel_processor, BatchOperation as AdvancedBatchOperation,
     LoadBalancingIntelligence, MemoryAwarenessLevel, NumaTopologyAwareness, PredictionModelType,
@@ -816,7 +816,7 @@ pub use advanced_parallel_advanced_enhanced::{
     AdvancedParallelStreamingResult, AdvancedParallelConfig as AdvancedParallelConfigV2,
     AdvancedParallelConfig, AdvancedParallelProcessor,
 };
-pub use advanced_property_testing_advanced_enhanced::{
+pub use advanced_property_testing_advanced__enhanced::{
     create_comprehensive_property_tester, create_fast_property_tester,
     create_advanced_think_property_tester, ComprehensivePropertyTestResult,
     EdgeCaseGenerationStrategy, EdgeCaseTestResult, FuzzingTestResult,
@@ -825,11 +825,11 @@ pub use advanced_property_testing_advanced_enhanced::{
     TestingThoroughnessLevel, AdvancedPropertyConfig as AdvancedPropertyConfigV2,
     AdvancedPropertyTester,
 };
-pub use advanced_property_tests::{
+pub use advanced_property__tests::{
     create_advanced_property_tester, ComprehensiveTestReport, PropertyTestResult,
     AdvancedPropertyTester,
 };
-pub use unified_processor::{
+pub use unified__processor::{
     create_configured_advanced_processor, create_advanced_processor, OptimizationMode,
     ProcessingStrategy, AdvancedComprehensiveResult, AdvancedMatrixResult,
     AdvancedPerformanceAnalytics, AdvancedProcessorConfig, AdvancedTimeSeriesResult,
@@ -839,7 +839,7 @@ pub use unified_processor::{
 
 // Advanced benchmark validation - temporarily commented out
 /*
-pub use advanced_benchmark_validation::{
+pub use advanced_benchmark__validation::{
     create_custom_advanced_validator, create_advanced_validator, AdvancedBenchmarkValidator,
     ValidationConfig as ComprehensiveValidationConfig, ValidationReport as AdvancedValidationReport,
     ValidationResult as ComprehensiveValidationResult,
@@ -852,7 +852,7 @@ pub use mcmc::ChainStatistics;
 // Statistical tests module
 pub mod tests;
 pub use tests::anova::{one_way_anova, tukey_hsd};
-pub use tests::chi2_test::{chi2_gof, chi2_independence, chi2_yates};
+pub use tests::chi2__test::{chi2_gof, chi2_independence, chi2_yates};
 pub use tests::nonparametric::{friedman, kruskal_wallis, mann_whitney, wilcoxon};
 pub use tests::normality::{anderson_darling, dagostino_k2, ks_2samp, shapiro_wilk};
 pub use tests::ttest::{ttest_1samp, ttest_ind, ttest_ind_from_stats, ttest_rel, TTestResult};
@@ -867,11 +867,11 @@ pub use correlation::{
     corrcoef, kendall_tau, kendalltau, partial_corr, partial_corrr, pearson_r, pearsonr,
     point_biserial, point_biserialr, spearman_r, spearmanr,
 };
-pub use correlation_parallel_enhanced::{
+pub use correlation_parallel__enhanced::{
     batch_correlations_parallel, corrcoef_parallel_enhanced, pearson_r_simd_enhanced,
     rolling_correlation_parallel, ParallelCorrelationConfig,
 };
-pub use correlation_simd::{corrcoef_simd, covariance_simd, pearson_r_simd};
+pub use correlation__simd::{corrcoef_simd, covariance_simd, pearson_r_simd};
 
 // Dispersion and variability measures
 mod dispersion;
@@ -888,7 +888,7 @@ pub use quantile::{
 
 // Distribution characteristics statistics
 pub mod distribution_characteristics;
-pub use distribution_characteristics::{
+pub use distribution__characteristics::{
     cross_entropy, entropy, kl_divergence, kurtosis_ci, mode, skewness_ci, ConfidenceInterval,
     Mode, ModeMethod,
 };

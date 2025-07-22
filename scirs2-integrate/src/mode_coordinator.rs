@@ -7,13 +7,13 @@
 #![allow(dead_code)]
 #![allow(clippy::too_many_arguments)]
 
-use crate::advanced_memory_optimization::AdvancedMemoryOptimizer;
-use crate::advanced_simd_acceleration::AdvancedSimdAccelerator;
+use crate::advanced_memory__optimization::AdvancedMemoryOptimizer;
+use crate::advanced_simd__acceleration::AdvancedSimdAccelerator;
 use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
-use crate::gpu_advanced_acceleration::AdvancedGPUAccelerator;
-use crate::neural_rl_step_control::{NeuralRLStepController, ProblemState};
-use crate::realtime_performance_adaptation::{
+use crate::gpu_advanced__acceleration::AdvancedGPUAccelerator;
+use crate::neural_rl_step__control::{NeuralRLStepController, ProblemState};
+use crate::realtime_performance__adaptation::{
     AdaptationStrategy, AdaptationTriggers, OptimizationObjectives, PerformanceConstraints,
     RealTimeAdaptiveOptimizer, TargetMetrics,
 };
@@ -22,6 +22,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use std::time::Instant;
+// use statrs::statistics::Statistics;
 
 /// Unified Advanced mode coordinator integrating all optimization components
 pub struct AdvancedModeCoordinator<
@@ -110,8 +111,8 @@ impl<
     > AdvancedModeCoordinator<F>
 {
     /// Create a new Advanced mode coordinator
-    pub fn new(config: AdvancedModeConfig) -> IntegrateResult<Self> {
-        let gpu_accelerator = if config.enable_gpu {
+    pub fn new(_config: AdvancedModeConfig) -> IntegrateResult<Self> {
+        let gpu_accelerator = if _config.enable_gpu {
             // Try to create GPU accelerator, fallback to CPU mode if GPU not available
             match AdvancedGPUAccelerator::new() {
                 Ok(accelerator) => Arc::new(Mutex::new(accelerator)),
@@ -129,7 +130,7 @@ impl<
         let simd_accelerator = Arc::new(Mutex::new(AdvancedSimdAccelerator::new()?));
         let adaptive_optimizer = Arc::new(Mutex::new(RealTimeAdaptiveOptimizer::new()?));
 
-        let neural_rl_controller = if config.enable_neural_rl {
+        let neural_rl_controller = if _config.enable_neural_rl {
             Arc::new(Mutex::new(NeuralRLStepController::new()?))
         } else {
             // Create a dummy controller for interface consistency
@@ -142,7 +143,7 @@ impl<
             simd_accelerator,
             adaptive_optimizer,
             neural_rl_controller,
-            config,
+            _config,
         })
     }
 
@@ -227,7 +228,7 @@ impl<
         }
 
         // Use neural RL for step size prediction if enabled
-        let (solution, _final_step_size) = if self.config.enable_neural_rl {
+        let (solution_final_step_size) = if self.config.enable_neural_rl {
             let neural_rl_controller = self.neural_rl_controller.lock().unwrap();
 
             // Initialize neural RL if not already done
@@ -244,8 +245,7 @@ impl<
             let performance_metrics = crate::neural_rl_step_control::PerformanceMetrics {
                 throughput: 1000.0,        // Would be measured
                 memory_usage: y.len() * 8, // Approximate
-                accuracy: rtol.to_f64().unwrap_or(1e-8),
-                _phantom: std::marker::PhantomData,
+                accuracy: rtol.to_f64().unwrap_or(1e-8), _phantom: std::marker::PhantomData,
             };
 
             // Get neural RL step size prediction
@@ -261,7 +261,7 @@ impl<
             // Use the predicted step size for integration
             let solution = if self.config.enable_gpu && y.len() > 500 {
                 let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
-                let (result, _new_h, _accepted) =
+                let (result_new_h_accepted) =
                     gpu_accelerator.advanced_adaptive_step(t, y, predicted_step, rtol, atol, f)?;
                 result
             } else if self.config.enable_simd {
@@ -297,7 +297,7 @@ impl<
                     self.calculate_optimal_batch_size(y.len(), problem_complexity);
 
                 // Use GPU advanced-acceleration for large systems
-                let (result, _new_h, _accepted) =
+                let (result_new_h_accepted) =
                     gpu_accelerator.advanced_adaptive_step(t, y, h, rtol, atol, f)?;
                 if y.len() > 2000 {
                     optimizations_applied
@@ -356,7 +356,7 @@ impl<
         }
 
         // Use GPU acceleration for adaptive stepping if available
-        let (solution, _new_h, _accepted) = if self.config.enable_gpu && y.len() > 500 {
+        let (solution_new_h_accepted) = if self.config.enable_gpu && y.len() > 500 {
             let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
             let result = gpu_accelerator.advanced_adaptive_step(t, y, h, rtol, atol, f)?;
             optimizations_applied.push("GPU adaptive stepping".to_string());
@@ -452,11 +452,11 @@ impl<
         problem_characteristics: &ProblemCharacteristics,
         current_performance: &PerformanceMetrics,
     ) -> IntegrateResult<AlgorithmSwitchRecommendation> {
-        // Analyze current problem characteristics
+        // Analyze current problem _characteristics
         let complexity_score = self.calculate_problem_complexity(problem_characteristics)?;
         let stiffness_indicator = self.detect_stiffness_pattern(problem_characteristics)?;
 
-        // Predict performance for different algorithm combinations
+        // Predict _performance for different algorithm combinations
         let gpu_prediction = if self.config.enable_gpu {
             self.predict_gpu_performance(problem_characteristics)?
         } else {
@@ -563,7 +563,7 @@ impl<
     // Private helper methods
 
     /// Collect historical performance data
-    fn collect_performance_history(&self) -> IntegrateResult<PerformanceHistory> {
+    fn collect_performance_history() -> IntegrateResult<PerformanceHistory> {
         // In a real implementation, this would read from a performance database
         Ok(PerformanceHistory {
             samples: Vec::new(), // Would contain historical samples
@@ -590,7 +590,7 @@ impl<
     }
 
     /// Identify performance bottlenecks
-    fn identify_performance_bottlenecks(&self) -> IntegrateResult<BottleneckAnalysis> {
+    fn identify_performance_bottlenecks() -> IntegrateResult<BottleneckAnalysis> {
         let mut impact_scores = HashMap::new();
         impact_scores.insert(BottleneckType::Memory, 0.3);
         impact_scores.insert(BottleneckType::Compute, 0.5);
@@ -604,7 +604,7 @@ impl<
     }
 
     /// Collect real-time performance metrics
-    fn collect_real_time_metrics(&self) -> IntegrateResult<RealTimeMetrics> {
+    fn collect_real_time_metrics() -> IntegrateResult<RealTimeMetrics> {
         Ok(RealTimeMetrics {
             current_throughput: 100_000.0,
             current_latency: Duration::from_millis(5),
@@ -790,8 +790,7 @@ impl<
 
     /// Estimate performance improvement from recommended configuration
     fn estimate_performance_improvement(
-        &self,
-        _current_performance: &PerformanceMetrics,
+        &self, _current_performance: &PerformanceMetrics,
         recommended_config: &OptimalConfiguration,
     ) -> f64 {
         let mut improvement = 1.0;
@@ -813,15 +812,14 @@ impl<
     }
 
     /// Estimate overhead cost of switching algorithms
-    fn estimate_switching_overhead(&self, _recommended_config: &OptimalConfiguration) -> Duration {
+    fn estimate_switching_overhead(_recommended_config: &OptimalConfiguration) -> Duration {
         // Switching overhead includes initialization time, memory transfers, etc.
         Duration::from_millis(50)
     }
 
     /// Get GPU-specific performance metrics
     fn get_gpu_metrics(
-        &self,
-        _gpu_accelerator: &AdvancedGPUAccelerator<F>,
+        &self, _gpu_accelerator: &AdvancedGPUAccelerator<F>,
     ) -> IntegrateResult<GpuMetrics> {
         Ok(GpuMetrics {
             utilization: 0.75,
@@ -833,8 +831,7 @@ impl<
 
     /// Get memory-specific performance metrics
     fn get_memory_metrics(
-        &self,
-        _memory_optimizer: &AdvancedMemoryOptimizer<F>,
+        &self, _memory_optimizer: &AdvancedMemoryOptimizer<F>,
     ) -> IntegrateResult<MemoryMetrics> {
         Ok(MemoryMetrics {
             pressure_ratio: 0.65,
@@ -846,8 +843,7 @@ impl<
 
     /// Get SIMD-specific performance metrics
     fn get_simd_metrics(
-        &self,
-        _simd_accelerator: &AdvancedSimdAccelerator<F>,
+        &self, _simd_accelerator: &AdvancedSimdAccelerator<F>,
     ) -> IntegrateResult<SimdMetrics> {
         Ok(SimdMetrics {
             vectorization_ratio: 0.75,
@@ -888,9 +884,7 @@ impl<
 
     /// Apply adaptive optimization based on performance feedback
     fn apply_adaptive_optimization(
-        &self,
-        _adaptive_optimizer: &RealTimeAdaptiveOptimizer<F>,
-        _execution_time: &Duration,
+        &self, _adaptive_optimizer: &RealTimeAdaptiveOptimizer<F>, _execution_time: &Duration,
     ) -> IntegrateResult<()> {
         // In a real implementation, this would analyze performance metrics
         // and suggest optimizations like algorithm switching, parameter tuning, etc.
@@ -898,8 +892,8 @@ impl<
     }
 
     /// Estimate memory usage for a given problem size
-    fn estimate_memory_usage(&self, problem_size: usize) -> usize {
-        let base_memory = problem_size * std::mem::size_of::<F>() * 5; // 5 arrays typical for RK4
+    fn estimate_memory_usage(_problem_size: usize) -> usize {
+        let base_memory = _problem_size * std::mem::_size_of::<F>() * 5; // 5 arrays typical for RK4
         if self.config.enable_gpu {
             base_memory * 2 // GPU memory overhead
         } else {
@@ -1014,7 +1008,7 @@ impl<
     ) -> IntegrateResult<F> {
         // Multi-objective reward calculation
 
-        // Accuracy reward: higher for lower error
+        // Accuracy reward: higher for lower _error
         let accuracy_reward = if solution.iter().any(|&x| x.is_nan() || x.is_infinite()) {
             F::from(-10.0).unwrap() // Heavy penalty for invalid solutions
         } else {
@@ -1061,7 +1055,7 @@ impl<
 
         // Solution statistics (first 16 features)
         if !solution.is_empty() {
-            let mean = solution.mean().unwrap_or(F::zero());
+            let mean = solution.iter().copied().sum::<F>() / F::from(solution.len()).unwrap_or(F::one());
             let max_val = solution
                 .iter()
                 .fold(F::neg_infinity(), |acc, &x| acc.max(x));
@@ -1102,7 +1096,7 @@ impl<
     }
 
     /// Estimate problem complexity for optimization decisions
-    fn estimate_problem_complexity(&self, y: &ArrayView1<F>, h: F) -> IntegrateResult<f64> {
+    fn estimate_problem_complexity(y: &ArrayView1<F>, h: F) -> IntegrateResult<f64> {
         let system_size = y.len() as f64;
         let step_size = h.to_f64().unwrap_or(0.01);
 
@@ -1121,9 +1115,9 @@ impl<
     }
 
     /// Calculate optimal batch size based on problem characteristics  
-    fn calculate_optimal_batch_size(&self, system_size: usize, complexity: f64) -> usize {
-        // Base batch size on system size and complexity
-        let base_batch = if system_size > 5000 {
+    fn calculate_optimal_batch_size(_system_size: usize, complexity: f64) -> usize {
+        // Base batch _size on system _size and complexity
+        let base_batch = if _system_size > 5000 {
             128
         } else if system_size > 1000 {
             64
@@ -1139,7 +1133,7 @@ impl<
     }
 
     /// Estimate stiffness ratio for problem characterization
-    fn estimate_stiffness_ratio(&self, y: &ArrayView1<F>) -> IntegrateResult<f64> {
+    fn estimate_stiffness_ratio(y: &ArrayView1<F>) -> IntegrateResult<f64> {
         // Simplified stiffness estimation based on solution characteristics
         let variance = y
             .iter()
@@ -1233,7 +1227,7 @@ pub struct PerformancePrediction {
 }
 
 impl Default for PerformancePrediction {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             throughput_improvement: 1.0,
             memory_efficiency: 0.5,
@@ -1460,7 +1454,7 @@ pub struct SimdMetrics {
 }
 
 impl Default for AdvancedModeConfig {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         AdvancedModeConfig {
             enable_gpu: true,
             enable_memory_optimization: true,
@@ -1478,7 +1472,7 @@ impl Default for AdvancedModeConfig {
 }
 
 impl Default for PerformanceTargets {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         PerformanceTargets {
             target_throughput: 100.0,
             max_memory_usage: 1024 * 1024 * 1024, // 1GB

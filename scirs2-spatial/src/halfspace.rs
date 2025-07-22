@@ -19,7 +19,7 @@
 //! # Examples
 //!
 //! ```
-//! # use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
+//! # use scirs2__spatial::halfspace::{HalfspaceIntersection, Halfspace};
 //! # use ndarray::array;
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Define halfspaces for a unit square: x ≥ 0, y ≥ 0, x ≤ 1, y ≤ 1
@@ -42,9 +42,10 @@
 //! # }
 //! ```
 
-use crate::convex_hull::ConvexHull;
+use crate::convex__hull::ConvexHull;
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{arr1, Array1, Array2, ArrayView1};
+use statrs::statistics::Statistics;
 
 /// Representation of a halfspace: a·x ≤ b
 #[derive(Debug, Clone, PartialEq)]
@@ -70,14 +71,14 @@ impl Halfspace {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::halfspace::Halfspace;
+    /// use scirs2__spatial::halfspace::Halfspace;
     /// use ndarray::array;
     ///
     /// // Halfspace x + y ≤ 1
     /// let hs = Halfspace::new(array![1.0, 1.0], 1.0);
     /// ```
-    pub fn new(normal: Array1<f64>, offset: f64) -> Self {
-        Self { normal, offset }
+    pub fn new(_normal: Array1<f64>, offset: f64) -> Self {
+        Self { _normal, offset }
     }
 
     /// Get the normal vector
@@ -104,15 +105,15 @@ impl Halfspace {
     /// # Returns
     ///
     /// * true if point satisfies a·x ≤ b, false otherwise
-    pub fn contains(&self, point: &ArrayView1<f64>) -> bool {
-        if point.len() != self.normal.len() {
+    pub fn contains(_point: &ArrayView1<f64>) -> bool {
+        if _point.len() != self.normal.len() {
             return false;
         }
 
         let dot_product: f64 = self
             .normal
             .iter()
-            .zip(point.iter())
+            .zip(_point.iter())
             .map(|(a, x)| a * x)
             .sum();
         dot_product <= self.offset + 1e-10 // Small tolerance for numerical errors
@@ -127,8 +128,8 @@ impl Halfspace {
     /// # Returns
     ///
     /// * Signed distance (negative if inside halfspace, positive if outside)
-    pub fn distance(&self, point: &ArrayView1<f64>) -> SpatialResult<f64> {
-        if point.len() != self.normal.len() {
+    pub fn distance(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
+        if _point.len() != self.normal.len() {
             return Err(SpatialError::ValueError(
                 "Point dimension must match halfspace dimension".to_string(),
             ));
@@ -137,7 +138,7 @@ impl Halfspace {
         let dot_product: f64 = self
             .normal
             .iter()
-            .zip(point.iter())
+            .zip(_point.iter())
             .map(|(a, x)| a * x)
             .sum();
         let normal_norm = (self.normal.iter().map(|x| x * x).sum::<f64>()).sqrt();
@@ -205,7 +206,7 @@ impl HalfspaceIntersection {
     /// # Examples
     ///
     /// ```
-    /// # use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
+    /// # use scirs2__spatial::halfspace::{HalfspaceIntersection, Halfspace};
     /// # use ndarray::array;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let halfspaces = vec![
@@ -241,19 +242,19 @@ impl HalfspaceIntersection {
             ));
         }
 
-        // Validate interior point if provided
-        if let Some(ref point) = interior_point {
-            if point.len() != dim {
+        // Validate interior _point if provided
+        if let Some(ref _point) = interior_point {
+            if _point.len() != dim {
                 return Err(SpatialError::ValueError(
-                    "Interior point dimension must match halfspace dimension".to_string(),
+                    "Interior _point dimension must match halfspace dimension".to_string(),
                 ));
             }
 
-            // Check that the point is actually interior to all halfspaces
+            // Check that the _point is actually interior to all halfspaces
             for hs in halfspaces {
-                if !hs.contains(&point.view()) {
+                if !hs.contains(&_point.view()) {
                     return Err(SpatialError::ValueError(
-                        "Provided point is not in the interior of all halfspaces".to_string(),
+                        "Provided _point is not in the interior of all halfspaces".to_string(),
                     ));
                 }
             }
@@ -278,14 +279,14 @@ impl HalfspaceIntersection {
     }
 
     /// Check if the intersection is likely to be bounded by examining halfspaces
-    fn is_likely_bounded(halfspaces: &[Halfspace]) -> bool {
-        let dim = halfspaces[0].dim();
+    fn is_likely_bounded(_halfspaces: &[Halfspace]) -> bool {
+        let dim = _halfspaces[0].dim();
 
-        // Check if we have enough "bounding" halfspaces in different directions
+        // Check if we have enough "bounding" _halfspaces in different directions
         let mut positive_count = vec![0; dim];
         let mut negative_count = vec![0; dim];
 
-        for hs in halfspaces {
+        for hs in _halfspaces {
             for (i, &val) in hs.normal.iter().enumerate() {
                 if val > 1e-10 {
                     positive_count[i] += 1;
@@ -401,29 +402,29 @@ impl HalfspaceIntersection {
             return Self::compute_2d_intersection(halfspaces);
         }
 
-        // Find or use provided interior point
-        let interior = if let Some(point) = interior_point {
-            point.clone()
+        // Find or use provided interior _point
+        let interior = if let Some(_point) = interior_point {
+            _point.clone()
         } else {
             Self::find_interior_point(halfspaces)?
         };
 
-        // Transform halfspaces to dual points using interior point as origin
+        // Transform halfspaces to dual points using interior _point as origin
         let mut dual_points = Vec::new();
 
         for hs in halfspaces {
-            // Transform: each halfspace a·x ≤ b becomes point
+            // Transform: each halfspace a·x ≤ b becomes _point
             // p = (a₁, a₂, ..., aₐ) / (b - a·interior)
             let denominator = hs.offset - hs.normal.dot(&interior);
 
             if denominator.abs() < 1e-15 {
-                // Halfspace passes through or very close to interior point
+                // Halfspace passes through or very close to interior _point
                 continue;
             }
 
             if denominator < 0.0 {
                 return Err(SpatialError::ComputationError(
-                    "Interior point violates halfspace constraint".to_string(),
+                    "Interior _point violates halfspace constraint".to_string(),
                 ));
             }
 
@@ -456,7 +457,7 @@ impl HalfspaceIntersection {
         for &vertex_idx in hull_vertices {
             let dual_vertex = dual_array.row(vertex_idx);
 
-            // Transform back: dual point (p₁, p₂, ..., pₐ) becomes primal vertex
+            // Transform back: dual _point (p₁, p₂, ..., pₐ) becomes primal vertex
             // v = interior + p / ||p||²
             let p_norm_sq: f64 = dual_vertex.iter().map(|x| x * x).sum();
 
@@ -527,8 +528,8 @@ impl HalfspaceIntersection {
     }
 
     /// Find an interior point for the given halfspaces using linear programming
-    fn find_interior_point(halfspaces: &[Halfspace]) -> SpatialResult<Array1<f64>> {
-        let dim = halfspaces[0].dim();
+    fn find_interior_point(_halfspaces: &[Halfspace]) -> SpatialResult<Array1<f64>> {
+        let dim = _halfspaces[0].dim();
 
         // Try simple candidate points first, ensuring they are truly interior
         let candidates = vec![
@@ -543,7 +544,7 @@ impl HalfspaceIntersection {
         for candidate in candidates {
             // Check that point is strictly interior (not on boundary)
             let mut is_strictly_interior = true;
-            for hs in halfspaces {
+            for hs in _halfspaces {
                 let dot_product = hs.normal.dot(&candidate);
                 if dot_product >= hs.offset - 1e-10 {
                     // Point is on or outside this halfspace
@@ -561,10 +562,10 @@ impl HalfspaceIntersection {
         // Use Chebyshev center approach: find point that maximizes distance to closest constraint
 
         // For simple cases, try analytical solutions
-        if dim == 2 && halfspaces.len() >= 3 {
+        if dim == 2 && _halfspaces.len() >= 3 {
             // Try intersection of first two constraints, shifted inward
-            let hs1 = &halfspaces[0];
-            let hs2 = &halfspaces[1];
+            let hs1 = &_halfspaces[0];
+            let hs2 = &_halfspaces[1];
 
             // Solve n1·x = b1 and n2·x = b2 system
             let det = hs1.normal[0] * hs2.normal[1] - hs1.normal[1] * hs2.normal[0];
@@ -576,7 +577,7 @@ impl HalfspaceIntersection {
                 let candidate = arr1(&[x, y]);
 
                 // Check if this intersection point is feasible for all constraints
-                if halfspaces.iter().all(|hs| hs.contains(&candidate.view())) {
+                if _halfspaces.iter().all(|hs| hs.contains(&candidate.view())) {
                     return Ok(candidate);
                 }
 
@@ -585,7 +586,7 @@ impl HalfspaceIntersection {
                 let mut min_slack = f64::INFINITY;
                 let mut worst_constraint_idx = 0;
 
-                for (i, hs) in halfspaces.iter().enumerate() {
+                for (i, hs) in _halfspaces.iter().enumerate() {
                     let slack = hs.offset - hs.normal.dot(&candidate);
                     if slack < min_slack {
                         min_slack = slack;
@@ -595,10 +596,10 @@ impl HalfspaceIntersection {
 
                 if min_slack >= -1e-10 {
                     // Point is feasible or very close, shift inward slightly
-                    let shift_direction = &halfspaces[worst_constraint_idx].normal * (-0.1);
+                    let shift_direction = &_halfspaces[worst_constraint_idx].normal * (-0.1);
                     let shifted_candidate = &candidate + &shift_direction;
 
-                    if halfspaces
+                    if _halfspaces
                         .iter()
                         .all(|hs| hs.contains(&shifted_candidate.view()))
                     {
@@ -614,26 +615,26 @@ impl HalfspaceIntersection {
     }
 
     /// Find intersection vertices by solving systems of linear equations
-    fn find_intersection_vertices(halfspaces: &[Halfspace]) -> SpatialResult<Array2<f64>> {
-        let dim = halfspaces[0].dim();
-        let n = halfspaces.len();
+    fn find_intersection_vertices(_halfspaces: &[Halfspace]) -> SpatialResult<Array2<f64>> {
+        let dim = _halfspaces[0].dim();
+        let n = _halfspaces.len();
 
         if n < dim {
             return Err(SpatialError::ComputationError(
-                "Need at least d halfspaces to find intersection vertices in d dimensions"
+                "Need at least d _halfspaces to find intersection vertices in d dimensions"
                     .to_string(),
             ));
         }
 
         let mut vertices = Vec::new();
 
-        // Generate all combinations of d halfspaces
+        // Generate all combinations of d _halfspaces
         let combinations = Self::generate_combinations(n, dim);
 
         for combo in combinations {
-            if let Ok(vertex) = Self::solve_intersection_system(halfspaces, &combo) {
-                // Check if vertex satisfies all other halfspaces
-                if halfspaces.iter().all(|hs| hs.contains(&vertex.view())) {
+            if let Ok(vertex) = Self::solve_intersection_system(_halfspaces, &combo) {
+                // Check if vertex satisfies all other _halfspaces
+                if _halfspaces.iter().all(|hs| hs.contains(&vertex.view())) {
                     vertices.push(vertex.to_vec());
                 }
             }
@@ -789,13 +790,13 @@ impl HalfspaceIntersection {
     }
 
     /// Check if a polytope is bounded by examining vertices
-    fn check_boundedness(vertices: &Array2<f64>, _halfspaces: &[Halfspace]) -> SpatialResult<bool> {
-        if vertices.nrows() == 0 {
+    fn check_boundedness(_vertices: &Array2<f64>, _halfspaces: &[Halfspace]) -> SpatialResult<bool> {
+        if _vertices.nrows() == 0 {
             return Ok(false);
         }
 
         // Simple check: if all coordinates are finite and within reasonable bounds
-        let max_coord = vertices
+        let max_coord = _vertices
             .iter()
             .map(|&x| x.abs())
             .fold(0.0f64, |acc, x| acc.max(x));
@@ -804,10 +805,10 @@ impl HalfspaceIntersection {
     }
 
     /// Extract face structure from convex hull
-    fn extract_faces_from_hull(hull: &ConvexHull) -> SpatialResult<Vec<Vec<usize>>> {
+    fn extract_faces_from_hull(_hull: &ConvexHull) -> SpatialResult<Vec<Vec<usize>>> {
         // For now, create a simple face structure
-        // A complete implementation would extract actual facets from the hull
-        let vertices = hull.vertex_indices();
+        // A complete implementation would extract actual facets from the _hull
+        let vertices = _hull.vertex_indices();
         if vertices.len() < 3 {
             Ok(vec![vertices.to_vec()])
         } else {
@@ -874,8 +875,7 @@ impl HalfspaceIntersection {
 
         match self.dim {
             2 => self.compute_polygon_area(),
-            3 => self.compute_polyhedron_volume(),
-            _ => self.compute_high_dim_volume(),
+            3 => self.compute_polyhedron_volume(, _ => self.compute_high_dim_volume(),
         }
     }
 
@@ -971,7 +971,6 @@ impl HalfspaceIntersection {
 
     /// Compute volume for high-dimensional halfspace intersection
     fn compute_high_dim_volume(&self) -> SpatialResult<f64> {
-        use crate::convex_hull::ConvexHull;
 
         // For high-dimensional halfspace intersections, we can compute the volume
         // by treating the vertices as a convex polytope and using convex hull algorithms
@@ -994,7 +993,6 @@ impl HalfspaceIntersection {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::arr1;
 
     #[test]
     fn test_halfspace_creation() {

@@ -753,7 +753,7 @@ pub mod precision {
             &self,
             other: &TrackedValue<U>,
             op: F,
-            _op_name: &str,
+            op_name: &str,
         ) -> TrackedValue<V>
         where
             F: FnOnce(T, U) -> V,
@@ -1284,7 +1284,7 @@ pub mod scientific {
         }
 
         /// Create approximation from float
-        pub fn from_float_approx(value: f64, max_denominator: i64) -> Self {
+        pub fn from_float(value: f64, max_denominator: i64) -> Self {
             // Simple continued fraction approximation
             let mut a = value.floor() as i64;
             let mut remainder = value - a as f64;
@@ -1419,7 +1419,7 @@ pub mod scientific {
         }
 
         /// Create symmetric interval around center
-        pub fn symmetric(center: f64, radius: f64) -> Self {
+        pub fn center(center: f64, radius: f64) -> Self {
             Self::new(center - radius, center + radius)
         }
 

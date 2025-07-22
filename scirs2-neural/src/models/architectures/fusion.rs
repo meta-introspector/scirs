@@ -54,12 +54,12 @@ pub struct FeatureAlignment<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub norm: LayerNorm<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> FeatureAlignment<F> {
     /// Create a new FeatureAlignment module
-    pub fn new(input_dim: usize, output_dim: usize, _name: Option<&str>) -> Result<Self> {
+    pub fn new(_input_dim: usize, output_dim: usize, _name: Option<&str>) -> Result<Self> {
         let mut rng = rng();
-        let projection = Dense::<F>::new(input_dim, output_dim, None, &mut rng)?;
+        let projection = Dense::<F>::new(_input_dim, output_dim, None, &mut rng)?;
         let norm = LayerNorm::<F>::new(output_dim, 1e-6, &mut rng)?;
         Ok(Self {
-            input_dim,
+            _input_dim,
             output_dim,
             projection,
             norm,
@@ -117,11 +117,11 @@ pub struct CrossModalAttention<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub scale: F,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> CrossModalAttention<F> {
     /// Create a new CrossModalAttention module
-    pub fn new(query_dim: usize, key_dim: usize, hidden_dim: usize) -> Result<Self> {
-        let query_proj = Dense::<F>::new(query_dim, hidden_dim, None, &mut rng)?;
+    pub fn new(_query_dim: usize, key_dim: usize, hidden_dim: usize) -> Result<Self> {
+        let query_proj = Dense::<F>::new(_query_dim, hidden_dim, None, &mut rng)?;
         let key_proj = Dense::<F>::new(key_dim, hidden_dim, None, &mut rng)?;
         let value_proj = Dense::<F>::new(key_dim, hidden_dim, None, &mut rng)?;
-        let output_proj = Dense::<F>::new(hidden_dim, query_dim, None, &mut rng)?;
+        let output_proj = Dense::<F>::new(hidden_dim, _query_dim, None, &mut rng)?;
         // Scale factor for dot product attention
         let scale = F::from(1.0 / (hidden_dim as f64).sqrt()).unwrap();
             query_proj,
@@ -153,7 +153,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> CrossModalAttention<F> {
         // Reshape scores to (batch_size, query_len, context_len)
         let scores_3d = scores.into_shape_with_order((batch_size, query_len, context_len))?;
         // Apply softmax along the context dimension
-        let mut attention_weights = Array::<F, _>::zeros(scores_3d.raw_dim());
+        let mut attention_weights = Array::<F>::zeros(scores_3d.raw_dim());
         for b in 0..batch_size {
             for q in 0..query_len {
                 let mut row = scores_3d.slice(ndarray::s![b, q, ..]).to_owned();
@@ -187,11 +187,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> CrossModalAttention<F> {
         let output = self.output_proj.forward(&context_vec_reshaped.into_dyn())?;
         Ok(output)
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for CrossModalAttention<F> {
-    fn forward(&self, _input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+    fn forward(&mut self,
+        _input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // This assumes the input contains both query and context packed together
         // In practical use, use the dedicated forward method with separate inputs
-        Err(NeuralError::ValidationError("CrossModalAttention requires separate query and context inputs. Use the dedicated forward method.".to_string()))
-        _input: &Array<F, IxDyn>,
+        Err(NeuralError::ValidationError("CrossModalAttention requires separate query and context inputs. Use the dedicated forward method.".to_string())), _input: &Array<F, IxDyn>,
         // For CrossModalAttention, the backward pass is complex because it involves
         // two separate inputs (query and context). Since the Layer trait only provides
         // one input, we cannot properly implement backward for the general case.
@@ -227,10 +227,10 @@ pub struct FiLMModule<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub beta_proj: Dense<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> FiLMModule<F> {
     /// Create a new FiLMModule
-    pub fn new(feature_dim: usize, cond_dim: usize) -> Result<Self> {
-        let gamma_proj = Dense::<F>::new(cond_dim, feature_dim, None, &mut rng)?;
-        let beta_proj = Dense::<F>::new(cond_dim, feature_dim, None, &mut rng)?;
-            feature_dim,
+    pub fn new(_feature_dim: usize, cond_dim: usize) -> Result<Self> {
+        let gamma_proj = Dense::<F>::new(cond_dim, _feature_dim, None, &mut rng)?;
+        let beta_proj = Dense::<F>::new(cond_dim, _feature_dim, None, &mut rng)?;
+            _feature_dim,
             cond_dim,
             gamma_proj,
             beta_proj,
@@ -274,7 +274,7 @@ pub struct BilinearFusion<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub low_rank_proj: Dense<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> BilinearFusion<F> {
     /// Create a new BilinearFusion module
-    pub fn new(dim_a: usize, dim_b: usize, output_dim: usize, rank: usize) -> Result<Self> {
+    pub fn new(_dim_a: usize, dim_b: usize, output_dim: usize, rank: usize) -> Result<Self> {
         let proj_a = Dense::<F>::new(dim_a, rank, None, &mut rng)?;
         let proj_b = Dense::<F>::new(dim_b, rank, None, &mut rng)?;
         let low_rank_proj = Dense::<F>::new(rank, output_dim, None, &mut rng)?;
@@ -353,13 +353,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Clone for FeatureFusion<F> 
             config: self.config.clone(),
 impl<F: Float + Debug + ScalarOperand + Send + Sync> FeatureFusion<F> {
     /// Create a new FeatureFusion model
-    pub fn new(config: FeatureFusionConfig) -> Result<Self> {
+    pub fn new(_config: FeatureFusionConfig) -> Result<Self> {
         // Create feature aligners
         let mut aligners = Vec::with_capacity(config.input_dims.len());
         for (i, &dim) in config.input_dims.iter().enumerate() {
             aligners.push(FeatureAlignment::<F>::new(
                 dim,
-                config.hidden_dim,
+                _config.hidden_dim,
                 Some(&format!("aligner_{}", i)),
             )?);
         // Create fusion-specific module based on method
@@ -372,14 +372,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> FeatureFusion<F> {
                 let attn = CrossModalAttention::<F>::new(
                     config.hidden_dim,
                 )?;
-                Some(Box::new(attn))
-            FusionMethod::Bilinear => {
+                Some(Box::new(attn)), FusionMethod::Bilinear => {
                 if config.input_dims.len() != 2 {
                         "Bilinear fusion requires exactly two modalities".to_string(),
                 let bilinear = BilinearFusion::<F>::new(
                     config.hidden_dim / 4, // Low-rank approximation
-                Some(Box::new(bilinear))
-            FusionMethod::FiLM => {
+                Some(Box::new(bilinear)), FusionMethod::FiLM => {
                         "FiLM fusion requires exactly two modalities".to_string(),
                 let film = FiLMModule::<F>::new(config.hidden_dim, config.hidden_dim)?;
                 Some(Box::new(film))
@@ -390,8 +388,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> FeatureFusion<F> {
         let mut post_fusion = Sequential::new();
         // Determine input dimension for the post-fusion network
         let post_fusion_input_dim = match config.fusion_method {
-            FusionMethod::Concatenation => config.hidden_dim * config.input_dims.len(),
-            _ => config.hidden_dim,
+            FusionMethod::Concatenation => config.hidden_dim * config.input_dims.len(, _ => config.hidden_dim,
         post_fusion.add(Dense::<F>::new(
             post_fusion_input_dim,
             config.hidden_dim * 2,

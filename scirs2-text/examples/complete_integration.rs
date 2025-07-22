@@ -12,13 +12,13 @@
 //! - Comprehensive analytics and reporting
 //! - Real-time adaptation and learning
 
-use scirs2_text::error::Result;
-use scirs2_text::performance::{AdvancedPerformanceMonitor, PerformanceThresholds};
-use scirs2_text::simd_ops::{AdvancedSIMDTextProcessor, SimdStringOps};
-use scirs2_text::streaming::AdvancedStreamingProcessor;
-use scirs2_text::text_coordinator::{AdvancedTextConfig, AdvancedTextCoordinator};
-use scirs2_text::tokenize::WordTokenizer;
-use scirs2_text::Tokenizer;
+use scirs2__text::error::Result;
+use scirs2__text::performance::{AdvancedPerformanceMonitor, PerformanceThresholds};
+use scirs2__text::simd_ops::{AdvancedSIMDTextProcessor, SimdStringOps};
+use scirs2__text::streaming::AdvancedStreamingProcessor;
+use scirs2__text::text_coordinator::{AdvancedTextConfig, AdvancedTextCoordinator};
+use scirs2__text::tokenize::WordTokenizer;
+use scirs2__text::Tokenizer;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -494,8 +494,7 @@ impl AdvancedSystem {
             score if score >= 90.0 => "Excellent",
             score if score >= 80.0 => "Good",
             score if score >= 70.0 => "Fair",
-            score if score >= 60.0 => "Poor",
-            _ => "Critical",
+            score if score >= 60.0 => "Poor"_ => "Critical",
         };
         println!(
             "   Status: {} - System is performing {}",
@@ -514,31 +513,30 @@ impl AdvancedSystem {
 
 // Helper functions for generating test data
 #[allow(dead_code)]
-fn generate_short_documents(count: usize) -> Vec<String> {
-    (0..count).map(|i| format!("Short doc {i}.")).collect()
+fn generate_short_documents(_count: usize) -> Vec<String> {
+    (0.._count).map(|i| format!("Short doc {i}.")).collect()
 }
 
 #[allow(dead_code)]
-fn generate_medium_documents(count: usize) -> Vec<String> {
-    (0..count)
+fn generate_medium_documents(_count: usize) -> Vec<String> {
+    (0.._count)
         .map(|i| format!("Medium length document {i} with additional content for processing analysis and performance testing."))
         .collect()
 }
 
 #[allow(dead_code)]
-fn generate_long_documents(count: usize) -> Vec<String> {
-    (0..count)
+fn generate_long_documents(_count: usize) -> Vec<String> {
+    (0.._count)
         .map(|i| format!("This is a long document number {i} that contains significant amounts of text content designed to test the performance characteristics of the Advanced text processing system under heavy load conditions with complex linguistic patterns and varied vocabulary usage."))
         .collect()
 }
 
 #[allow(dead_code)]
-fn generate_mixed_workload(count: usize) -> Vec<String> {
-    (0..count)
+fn generate_mixed_workload(_count: usize) -> Vec<String> {
+    (0.._count)
         .map(|i| match i % 3 {
             0 => format!("Short {i}"),
-            1 => format!("Medium document {i} with some content."),
-            _ => format!("Long detailed document {i} with extensive content for comprehensive testing and analysis."),
+            1 => format!("Medium document {i} with some content.", _ => format!("Long detailed document {i} with extensive content for comprehensive testing and analysis."),
         })
         .collect()
 }

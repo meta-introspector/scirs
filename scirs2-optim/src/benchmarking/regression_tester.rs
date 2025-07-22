@@ -14,6 +14,7 @@ use std::fmt::Debug;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+// use std::path::PathBuf; // Duplicate import
 
 /// Comprehensive performance regression testing framework
 #[derive(Debug)]
@@ -553,15 +554,15 @@ pub enum AlertStatus {
 
 impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<A> {
     /// Create a new regression tester
-    pub fn new(config: RegressionConfig) -> Result<Self> {
+    pub fn new(_config: RegressionConfig) -> Result<Self> {
         // Ensure baseline directory exists
-        fs::create_dir_all(&config.baseline_dir)?;
+        fs::create_dir_all(&_config.baseline_dir)?;
 
-        let performance_db = PerformanceDatabase::load(&config.baseline_dir)
+        let performance_db = PerformanceDatabase::load(&_config.baseline_dir)
             .unwrap_or_else(|_| PerformanceDatabase::new());
 
         let mut tester = Self {
-            config: config.clone(),
+            _config: _config.clone(),
             performance_db,
             baselines: HashMap::new(),
             detectors: Vec::new(),
@@ -1504,7 +1505,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Extract memory usage information from benchmark result
-    fn extract_memory_usage(&self, _result: &BenchmarkResult<A>) -> Option<usize> {
+    fn extract_memory_usage(&self_result: &BenchmarkResult<A>) -> Option<usize> {
         // Use system memory profiling if available
         #[cfg(target_os = "linux")]
         {
@@ -1518,21 +1519,21 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Extract average memory usage
-    fn extract_avg_memory_usage(&self, _result: &BenchmarkResult<A>) -> Option<usize> {
+    fn extract_avg_memory_usage(&self_result: &BenchmarkResult<A>) -> Option<usize> {
         // For now, assume 80% of peak memory as average
         self.extract_memory_usage(_result)
             .map(|peak| (peak as f64 * 0.8) as usize)
     }
 
     /// Extract allocation count (simplified)
-    fn extract_allocation_count(&self, _result: &BenchmarkResult<A>) -> Option<usize> {
+    fn extract_allocation_count(&self_result: &BenchmarkResult<A>) -> Option<usize> {
         // This would require memory profiling integration
         // For now, provide a reasonable estimate
         Some(1000) // Default estimate
     }
 
     /// Calculate memory efficiency score
-    fn calculate_memory_efficiency(&self, _result: &BenchmarkResult<A>) -> f64 {
+    fn calculate_memory_efficiency(&self_result: &BenchmarkResult<A>) -> f64 {
         // Simple efficiency calculation based on memory usage patterns
         0.85 // Default efficiency score
     }
@@ -1621,7 +1622,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Extract CPU utilization
-    fn extract_cpu_utilization(&self, _result: &BenchmarkResult<A>) -> Option<f64> {
+    fn extract_cpu_utilization(&self_result: &BenchmarkResult<A>) -> Option<f64> {
         // This would require system monitoring integration
         // For now, provide a reasonable estimate for single-threaded optimization
         Some(0.75) // 75% utilization estimate
@@ -1742,8 +1743,7 @@ impl<A: Float + Debug> RegressionDetector<A> for StatisticalTestDetector {
     fn detect_regression(
         &self,
         baseline: &PerformanceBaseline<A>,
-        current_metrics: &PerformanceMetrics<A>,
-        _history: &VecDeque<PerformanceRecord<A>>,
+        current_metrics: &PerformanceMetrics<A>, _history: &VecDeque<PerformanceRecord<A>>,
     ) -> Result<RegressionResult<A>> {
         // Simple t-test approximation for timing regression
         let current_time = current_metrics.timing.mean_time_ns as f64;
@@ -1860,8 +1860,7 @@ impl SlidingWindowDetector {
 
 impl<A: Float + Debug> RegressionDetector<A> for SlidingWindowDetector {
     fn detect_regression(
-        &self,
-        _baseline: &PerformanceBaseline<A>,
+        &self_baseline: &PerformanceBaseline<A>,
         current_metrics: &PerformanceMetrics<A>,
         history: &VecDeque<PerformanceRecord<A>>,
     ) -> Result<RegressionResult<A>> {
@@ -1907,7 +1906,7 @@ impl<A: Float + Debug> RegressionDetector<A> for SlidingWindowDetector {
             .iter()
             .rev()
             .take(self.window_size)
-            .map(|r| r.metrics.timing.mean_time_ns as f64)
+            .map(|r| r._metrics.timing.mean_time_ns as f64)
             .collect();
 
         let recent_avg = recent_times.iter().sum::<f64>() / recent_times.len() as f64;
@@ -1959,7 +1958,7 @@ impl<A: Float + Debug> RegressionDetector<A> for SlidingWindowDetector {
             recommendations: if regression_detected {
                 vec![
                     "Performance degradation detected in recent window".to_string(),
-                    "Compare current run with recent baseline".to_string(),
+                    "Compare current run with recent _baseline".to_string(),
                 ]
             } else {
                 vec![]
@@ -1997,9 +1996,7 @@ impl ChangePointDetector {
 
 impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
     fn detect_regression(
-        &self,
-        _baseline: &PerformanceBaseline<A>,
-        _current_metrics: &PerformanceMetrics<A>,
+        &self_baseline: &PerformanceBaseline<A>, _current_metrics: &PerformanceMetrics<A>,
         history: &VecDeque<PerformanceRecord<A>>,
     ) -> Result<RegressionResult<A>> {
         // Simplified change point detection using variance change
@@ -2046,13 +2043,13 @@ impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
         let first_half: Vec<f64> = history
             .iter()
             .take(mid_point)
-            .map(|r| r.metrics.timing.mean_time_ns as f64)
+            .map(|r| r._metrics.timing.mean_time_ns as f64)
             .collect();
 
         let second_half: Vec<f64> = history
             .iter()
             .skip(mid_point)
-            .map(|r| r.metrics.timing.mean_time_ns as f64)
+            .map(|r| r._metrics.timing.mean_time_ns as f64)
             .collect();
 
         let first_mean = first_half.iter().sum::<f64>() / first_half.len() as f64;
@@ -2291,8 +2288,8 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> PerformanceDataba
     }
 
     /// Load database from disk
-    pub fn load(base_dir: &Path) -> Result<Self> {
-        let db_path = base_dir.join("performance_db.json");
+    pub fn load(_base_dir: &Path) -> Result<Self> {
+        let db_path = _base_dir.join("performance_db.json");
         if db_path.exists() {
             let data = fs::read_to_string(&db_path)?;
             let db = serde_json::from_str(&data)?;
@@ -2360,8 +2357,7 @@ impl AlertSystem {
             severity: match regression.severity {
                 s if s >= 0.8 => AlertSeverity::Critical,
                 s if s >= 0.6 => AlertSeverity::High,
-                s if s >= 0.3 => AlertSeverity::Medium,
-                _ => AlertSeverity::Low,
+                s if s >= 0.3 => AlertSeverity::Medium_ =>, AlertSeverity::Low,
             },
             message: format!(
                 "Performance regression detected in {}: {:.2}% degradation",

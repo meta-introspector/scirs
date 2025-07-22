@@ -12,6 +12,7 @@ use scirs2_neural::performance::PerformanceOptimizer;
 #[cfg(feature = "simd")]
 use scirs2_neural::performance::{PerformanceOptimizer, SIMDOperations, SIMDStats};
 use std::time::Instant;
+use statrs::statistics::Statistics;
 #[allow(dead_code)]
 fn main() -> Result<()> {
     println!("SIMD Acceleration Demo for Neural Networks");
@@ -210,7 +211,7 @@ fn demo_simd_loss_functions() -> Result<()> {
     let predictions = Array2::from_shape_fn((64, 10), |(i, j)| {
         let logit = (i + j) as f32 * 0.1;
         logit.exp() / (0..10).map(|k| ((i + k) as f32 * 0.1).exp()).sum::<f32>()
-    let targets = Array2::from_shape_fn((64, 10), |(i, _)| {
+    let targets = Array2::from_shape_fn((64, 10), |(i_)| {
         let class = i % 10;
         if i % 10 == class {
             1.0

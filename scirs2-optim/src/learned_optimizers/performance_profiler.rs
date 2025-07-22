@@ -9,7 +9,7 @@ use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant, SystemTime};
 
-use super::optimization_coordinator::{AdvancedCoordinator, AdvancedConfig};
+use super::optimization__coordinator::{AdvancedCoordinator, AdvancedConfig};
 use super::{LearnedOptimizerMetrics, NeuralOptimizerMetrics, PerformanceMetrics};
 #[allow(unused_imports)]
 use crate::error::Result;
@@ -410,8 +410,8 @@ pub trait TrendAnalyzer<T: Float> {
 /// Trend analysis result
 #[derive(Debug, Clone)]
 pub struct TrendAnalysis<T: Float> {
-    pub trend_direction: TrendDirection,
-    pub trend_strength: T,
+    pub _trend_direction: TrendDirection,
+    pub _trend_strength: T,
     pub volatility: T,
     pub seasonal_patterns: Vec<SeasonalPattern<T>>,
     pub change_points: Vec<ChangePoint<T>>}
@@ -487,14 +487,14 @@ pub trait AlertChannel {
 
 impl<T: Float + Default + Clone + std::fmt::Debug + 'static> AdvancedPerformanceMonitor<T> {
     /// Create new performance monitor
-    pub fn new(config: PerformanceMonitorConfig<T>) -> Result<Self> {
-        let metrics_collector = RealTimeMetricsCollector::new(&config)?;
-        let performance_predictor = MLPerformancePredictor::new(&config)?;
-        let anomaly_detector = AnomalyDetectionEngine::new(&config)?;
-        let resource_tracker = ResourceUsageTracker::new(&config)?;
-        let trend_analyzer = PerformanceTrendAnalyzer::new(&config)?;
-        let alert_manager = AlertManager::new(&config)?;
-        let historical_data = PerformanceDataStorage::new(&config)?;
+    pub fn new(_config: PerformanceMonitorConfig<T>) -> Result<Self> {
+        let metrics_collector = RealTimeMetricsCollector::new(&_config)?;
+        let performance_predictor = MLPerformancePredictor::new(&_config)?;
+        let anomaly_detector = AnomalyDetectionEngine::new(&_config)?;
+        let resource_tracker = ResourceUsageTracker::new(&_config)?;
+        let trend_analyzer = PerformanceTrendAnalyzer::new(&_config)?;
+        let alert_manager = AlertManager::new(&_config)?;
+        let historical_data = PerformanceDataStorage::new(&_config)?;
 
         Ok(Self {
             metrics_collector,
@@ -503,7 +503,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> AdvancedPerformance
             resource_tracker,
             trend_analyzer,
             alert_manager,
-            config,
+            _config,
             historical_data})
     }
 
@@ -937,7 +937,7 @@ impl<T: Float + Send + Sync> MLPerformancePredictor<T> {
         Ok(Self::default())
     }
 
-    fn predict_performance(&mut self, _metrics: &[AdvancedMetrics<T>]) -> Result<Vec<PredictionResult<T>>> {
+    fn predict_performance(&mut self_metrics: &[AdvancedMetrics<T>]) -> Result<Vec<PredictionResult<T>>> {
         Ok(Vec::new())
     }
 }
@@ -955,11 +955,11 @@ impl<T: Float + Send + Sync> AnomalyDetectionEngine<T> {
         Ok(Self::default())
     }
 
-    fn detect_anomaly(&mut self, _metrics: &AdvancedMetrics<T>) -> Result<Option<AnomalyEvent<T>>> {
+    fn detect_anomaly(&mut self_metrics: &AdvancedMetrics<T>) -> Result<Option<AnomalyEvent<T>>> {
         Ok(None)
     }
 
-    fn update_baseline(&mut self, _metrics: &AdvancedMetrics<T>) -> Result<()> {
+    fn update_baseline(&mut self_metrics: &AdvancedMetrics<T>) -> Result<()> {
         Ok(())
     }
 
@@ -981,7 +981,7 @@ impl<T: Float + Send + Sync> ResourceUsageTracker<T> {
         Ok(Self::default())
     }
 
-    fn update(&mut self, _metrics: &AdvancedMetrics<T>) -> Result<()> {
+    fn update(&mut self_metrics: &AdvancedMetrics<T>) -> Result<()> {
         Ok(())
     }
 
@@ -1002,7 +1002,7 @@ impl<T: Float + Send + Sync> PerformanceTrendAnalyzer<T> {
         Ok(Self::default())
     }
 
-    fn analyze_trends(&mut self, _metrics: &[AdvancedMetrics<T>]) -> Result<Vec<TrendAnalysis<T>>> {
+    fn analyze_trends(&mut self_metrics: &[AdvancedMetrics<T>]) -> Result<Vec<TrendAnalysis<T>>> {
         Ok(Vec::new())
     }
 
@@ -1023,7 +1023,7 @@ impl<T: Float + Send + Sync> AlertManager<T> {
         Ok(Self::default())
     }
 
-    fn check_alerts(&mut self, _metrics: &[AdvancedMetrics<T>]) -> Result<Vec<Alert<T>>> {
+    fn check_alerts(&mut self_metrics: &[AdvancedMetrics<T>]) -> Result<Vec<Alert<T>>> {
         Ok(Vec::new())
     }
 }

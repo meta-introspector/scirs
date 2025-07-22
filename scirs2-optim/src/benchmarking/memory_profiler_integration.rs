@@ -4,7 +4,7 @@
 //! that integrates with external profiling tools and provides actionable insights
 //! for optimization algorithms and their memory usage patterns.
 
-use crate::benchmarking::memory_leak_detector::{
+use crate::benchmarking::memory_leak__detector::{
     MemoryLeakDetector, MemoryDetectionConfig, MemoryOptimizationReport, 
     AllocationEvent, AllocationType
 };
@@ -18,6 +18,7 @@ use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::path::PathBuf;
 
 /// Production memory profiler that integrates with system tools
 #[derive(Debug)]
@@ -411,18 +412,18 @@ impl Default for PerfConfig {
 
 impl ProductionMemoryProfiler {
     /// Create a new production memory profiler
-    pub fn new(config: MemoryProfilerConfig) -> Result<Self> {
+    pub fn new(_config: MemoryProfilerConfig) -> Result<Self> {
         // Create output directory
-        std::fs::create_dir_all(&config.output_directory)?;
+        std::fs::create_dir_all(&_config.output_directory)?;
         
         let leak_detector_config = MemoryDetectionConfig {
             enable_allocation_tracking: true,
-            memory_growth_threshold: (config.memory_pressure_threshold * 1024.0 * 1024.0 * 1024.0) as usize,
+            memory_growth_threshold: (_config.memory_pressure_threshold * 1024.0 * 1024.0 * 1024.0) as usize,
             leak_sensitivity: 0.8,
             sampling_rate: 1000,
-            max_history_entries: config.max_history_size,
-            enable_real_time_monitoring: config.enable_real_time_alerts,
-            memory_pressure_threshold: config.memory_pressure_threshold,
+            max_history_entries: _config.max_history_size,
+            enable_real_time_monitoring: _config.enable_real_time_alerts,
+            memory_pressure_threshold: _config.memory_pressure_threshold,
             enable_gc_hints: true,
         };
 
@@ -440,7 +441,7 @@ impl ProductionMemoryProfiler {
         let profile_history = Arc::new(Mutex::new(VecDeque::new()));
         
         let alert_system = AlertSystem::new(AlertConfig {
-            enabled: config.enable_real_time_alerts,
+            enabled: _config.enable_real_time_alerts,
             memory_threshold_mb: 1024.0, // 1GB default
             growth_rate_threshold: 10.0, // 10MB/sec
             cooldown_period: Duration::from_secs(60),
@@ -448,7 +449,7 @@ impl ProductionMemoryProfiler {
         });
 
         let mut profiler = Self {
-            config: config.clone(),
+            _config: _config.clone(),
             leak_detector,
             external_tools: Vec::new(),
             monitoring_state,
@@ -543,7 +544,7 @@ impl ProductionMemoryProfiler {
 
         // Create optimizer context
         let mut optimizer_context = OptimizerMemoryContext {
-            name: optimizer_name.to_string(),
+            _name: optimizer_name.to_string(),
             parameter_memory_mb: 0.0,
             gradient_memory_mb: 0.0,
             state_memory_mb: 0.0,
@@ -819,9 +820,9 @@ pub struct ValgrindProfiler {
 }
 
 impl ValgrindProfiler {
-    pub fn new(config: ValgrindConfig) -> Self {
+    pub fn new(_config: ValgrindConfig) -> Self {
         Self {
-            config,
+            _config,
             output_file: None,
             process: None,
         }
@@ -935,9 +936,9 @@ pub struct PerfProfiler {
 }
 
 impl PerfProfiler {
-    pub fn new(config: PerfConfig) -> Self {
+    pub fn new(_config: PerfConfig) -> Self {
         Self {
-            config,
+            _config,
             output_file: None,
             process: None,
         }
@@ -1058,9 +1059,9 @@ pub struct CustomProfiler {
 }
 
 impl CustomProfiler {
-    pub fn new(config: CustomProfilerConfig) -> Self {
+    pub fn new(_config: CustomProfilerConfig) -> Self {
         Self {
-            config,
+            _config,
             process: None,
         }
     }
@@ -1068,7 +1069,7 @@ impl CustomProfiler {
 
 impl ExternalProfiler for CustomProfiler {
     fn start_profiling(&mut self, target_command: &str, args: &[String]) -> Result<()> {
-        let mut cmd = Command::new(&self.config.command);
+        let mut cmd = Command::new(&self.config._command);
         cmd.args(&self.config.args);
         cmd.arg(target_command);
         cmd.args(args);
@@ -1129,9 +1130,9 @@ impl ExternalProfiler for CustomProfiler {
 }
 
 impl AlertSystem {
-    pub fn new(config: AlertConfig) -> Self {
+    pub fn new(_config: AlertConfig) -> Self {
         Self {
-            config,
+            _config,
             active_alerts: Arc::new(Mutex::new(HashMap::new())),
             alert_history: Arc::new(Mutex::new(VecDeque::new())),
         }

@@ -63,7 +63,7 @@ impl<F: Float + FromPrimitive> Default for ParallelKMeansOptions<F> {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::vq::parallel_kmeans;
+/// use scirs2__cluster::vq::parallel_kmeans;
 ///
 /// let data = Array2::from_shape_vec((1000, 2),
 ///     (0..2000).map(|i| i as f64 / 100.0).collect()
@@ -144,13 +144,13 @@ where
     let _n_features = data.shape()[1];
     let k = init_centroids.shape()[0];
 
-    let mut centroids = init_centroids.to_owned();
+    let mut _centroids = init_centroids.to_owned();
     let mut labels = Array1::zeros(n_samples);
     let mut prev_inertia = F::infinity();
 
     for _iter in 0..opts.max_iter {
         // Parallel assignment step
-        let (new_labels, distances) = parallel_assign_labels(data, centroids.view())?;
+        let (new_labels, distances) = parallel_assign_labels(data, _centroids.view())?;
         labels = new_labels;
 
         // Parallel centroid update
@@ -164,7 +164,7 @@ where
         for (i, &count) in cluster_counts.iter().enumerate() {
             if count == 0 {
                 // Find the point furthest from its centroid
-                let (far_idx, _) = distances
+                let (far_idx_) = distances
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -185,14 +185,14 @@ where
             return Ok((final_centroids, labels, inertia));
         }
 
-        centroids = final_centroids;
+        _centroids = final_centroids;
         prev_inertia = inertia;
     }
 
     // Final inertia calculation
-    let final_inertia = parallel_compute_inertia(data, &labels, centroids.view())?;
+    let final_inertia = parallel_compute_inertia(data, &labels, _centroids.view())?;
 
-    Ok((centroids, labels, final_inertia))
+    Ok((_centroids, labels, final_inertia))
 }
 
 /// Parallel assignment of samples to nearest centroids
@@ -293,9 +293,9 @@ where
 
 /// Count number of points in each cluster
 #[allow(dead_code)]
-fn count_clusters(labels: &Array1<usize>, k: usize) -> Vec<usize> {
+fn count_clusters(_labels: &Array1<usize>, k: usize) -> Vec<usize> {
     let mut counts = vec![0; k];
-    for &label in labels.iter() {
+    for &label in _labels.iter() {
         counts[label] += 1;
     }
     counts

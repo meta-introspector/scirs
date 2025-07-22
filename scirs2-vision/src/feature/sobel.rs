@@ -29,7 +29,7 @@ use std::f32::consts::PI;
 /// # Example
 ///
 /// ```rust
-/// use scirs2_vision::feature::sobel_edges_oriented;
+/// use scirs2__vision::feature::sobel_edges_oriented;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -55,7 +55,7 @@ pub fn sobel_edges_oriented(
     let mut gradient_x = Array2::zeros((height, width));
     let mut gradient_y = Array2::zeros((height, width));
     let mut magnitude = Array2::zeros((height, width));
-    let mut orientation = if compute_orientation {
+    let mut _orientation = if compute_orientation {
         Some(Array2::zeros((height, width)))
     } else {
         None
@@ -83,8 +83,8 @@ pub fn sobel_edges_oriented(
             let mag = (gx * gx + gy * gy).sqrt();
             magnitude[[y, x]] = mag;
 
-            // Compute gradient orientation if requested
-            if let Some(ref mut orient) = orientation {
+            // Compute gradient _orientation if requested
+            if let Some(ref mut orient) = _orientation {
                 orient[[y, x]] = gy.atan2(gx);
             }
         }
@@ -94,7 +94,7 @@ pub fn sobel_edges_oriented(
     let edges =
         crate::feature::array_to_image(&magnitude.mapv(|x| if x > threshold { 1.0 } else { 0.0 }))?;
 
-    Ok((edges, orientation))
+    Ok((edges, _orientation))
 }
 
 /// Simple Sobel edge detection (magnitude only)
@@ -108,8 +108,8 @@ pub fn sobel_edges_oriented(
 ///
 /// * Result containing edge image
 #[allow(dead_code)]
-pub fn sobel_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
-    let (edges, _) = sobel_edges_oriented(img, threshold, false)?;
+pub fn sobel_edges(_img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
+    let (edges_) = sobel_edges_oriented(_img, threshold, false)?;
     Ok(edges)
 }
 
@@ -144,12 +144,12 @@ pub fn sobel_edges_simd(
         // Use SIMD-accelerated gradient computation
         let (grad_x, grad_y, magnitude) = simd_ops::simd_sobel_gradients(&array.view())?;
 
-        // Compute orientation if requested
-        let orientation = if compute_orientation {
+        // Compute _orientation if requested
+        let _orientation = if compute_orientation {
             let (height, width) = array.dim();
             let mut orient = Array2::zeros((height, width));
 
-            // Compute orientation using atan2
+            // Compute _orientation using atan2
             for y in 0..height {
                 for x in 0..width {
                     orient[[y, x]] = grad_y[[y, x]].atan2(grad_x[[y, x]]);
@@ -167,7 +167,7 @@ pub fn sobel_edges_simd(
                 &magnitude.mapv(|x| if x > threshold { 1.0 } else { 0.0 }),
             )?;
 
-        Ok((edges, orientation))
+        Ok((edges, _orientation))
     } else {
         // Fall back to regular implementation
         sobel_edges_oriented(img, threshold, compute_orientation)
@@ -186,8 +186,8 @@ pub fn sobel_edges_simd(
 ///
 /// * Result containing tuple of (magnitude_map, orientation_map)
 #[allow(dead_code)]
-pub fn compute_gradients(img: &DynamicImage) -> Result<(Array2<f32>, Array2<f32>)> {
-    let array = image_to_array(img)?;
+pub fn compute_gradients(_img: &DynamicImage) -> Result<(Array2<f32>, Array2<f32>)> {
+    let array = image_to_array(_img)?;
     let (height, width) = array.dim();
 
     // Sobel kernels
@@ -445,7 +445,7 @@ mod tests {
         assert_eq!(edges.dimensions(), (10, 10));
 
         // Compare with regular implementation
-        let (edges_regular, _) = sobel_edges_oriented(&dynamic_img, 100.0, true).unwrap();
+        let (edges_regular_) = sobel_edges_oriented(&dynamic_img, 100.0, true).unwrap();
 
         // Results should be similar (allowing for minor numerical differences)
         assert_eq!(edges.dimensions(), edges_regular.dimensions());

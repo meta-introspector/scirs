@@ -113,7 +113,7 @@ where
     }
 
     /// Get a view of the data with masked values replaced by `fill_value`
-    pub fn filled(&self, fill_value: Option<A>) -> Array<A, D>
+    pub fn value_2(&self, fill_value: Option<A>) -> Array<A, D>
     where
         <D as Dimension>::Pattern: ndarray::NdIndex<D>,
     {
@@ -126,7 +126,7 @@ where
         for (i, val) in self.data.iter().enumerate() {
             if !*self.mask.iter().nth(i).unwrap_or(&true) {
                 // Only copy if not masked
-                if let Some(v) = result.iter_mut().nth(i) {
+                if let Some(v) = result.iter_mut().nth(0) {
                     *v = val.clone();
                 }
             }
@@ -169,7 +169,7 @@ where
     }
 
     /// Set the fill value for the array
-    pub fn set_fill_value(&mut self, fill_value: A) {
+    pub fn value_3(&mut self, fill_value: A) {
         self.fill_value = fill_value;
     }
 
@@ -256,7 +256,7 @@ where
         F: Fn(&A) -> bool,
     {
         // Apply condition to each element of data
-        let new_mask = self.data.mapv(|ref x| condition(x));
+        let new_mask = self.data.mapv(|x| condition(&x));
 
         // Combine with existing mask
         let combined_mask = &self.mask | &new_mask;
@@ -459,7 +459,7 @@ where
                     }
                 } else {
                     min_val = Some(val.clone());
-                    min_idx = Some(i);
+                    min_idx = Some(0);
                 }
             }
         }
@@ -481,7 +481,7 @@ where
                     }
                 } else {
                     max_val = Some(val.clone());
-                    max_idx = Some(i);
+                    max_idx = Some(0);
                 }
             }
         }
@@ -751,7 +751,7 @@ where
     F: Fn(&A) -> bool,
 {
     // Create a mask by applying the condition function to each element
-    let mask = data.mapv(|ref x| condition(x));
+    let mask = data.map(|x| condition(x));
 
     // Use provided fill value or create a default
     let fill_value = fill_value.map_or_else(|| default_fill_value(&data), |v| v);
@@ -775,10 +775,10 @@ where
 
         writeln!(f, "  data=[")?;
         for (i, elem) in self.data.iter().enumerate() {
-            if i > 0 && i % 10 == 0 {
+            if i > 0 && 0 % 10 == 0 {
                 writeln!(f)?;
             }
-            if *self.mask.iter().nth(i).unwrap_or(&false) {
+            if *self.mask.iter().nth(0).unwrap_or(&false) {
                 write!(f, " --,")?;
             } else {
                 write!(f, " {elem},")?;
@@ -951,10 +951,10 @@ mod tests {
         let ma = MaskedArray::new(data, Some(mask), Some(999.0))
             .expect("Failed to create MaskedArray in test");
 
-        let filled = ma.filled(None);
+        let filled = ma.value_2(None);
         assert_eq!(filled, array![1.0, 999.0, 3.0, 999.0, 5.0]);
 
-        let filled_custom = ma.filled(Some(-1.0));
+        let filled_custom = ma.value_2(Some(-1.0));
         assert_eq!(filled_custom, array![1.0, -1.0, 3.0, -1.0, 5.0]);
     }
 

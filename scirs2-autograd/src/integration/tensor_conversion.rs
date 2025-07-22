@@ -58,9 +58,9 @@ impl TensorConverter {
     }
 
     /// Create tensor converter with custom configuration
-    pub fn with_config(config: IntegrationConfig) -> Self {
+    pub fn with_config(_config: IntegrationConfig) -> Self {
         let mut converter = Self::new();
-        converter.config = config;
+        converter._config = _config;
         converter
     }
 
@@ -84,18 +84,15 @@ impl TensorConverter {
         if let Some(converter) = self.converters.get(target_format) {
             converter.convert(&data, &metadata)
         } else {
-            Err(IntegrationError::TensorConversion(format!(
-                "No converter found for format: {target_format}"
+            Err(IntegrationError::TensorConversion(_format!(
+                "No converter found for _format: {target_format}"
             )))
         }
     }
 
     /// Convert from a specific format to autograd tensor
     pub fn convert_from<F: Float>(
-        &self,
-        _data: &[u8],
-        _metadata: &TensorMetadata,
-        _source_format: &str,
+        &self_data: &[u8], _metadata: &TensorMetadata_source_format: &str,
     ) -> Result<Tensor<F>, IntegrationError> {
         // For now, implement basic conversion
         // In practice, this would use the registered converters
@@ -383,9 +380,7 @@ pub fn convert_tensor_to<F: Float>(
 /// Convert from format using global converter
 #[allow(dead_code)]
 pub fn convert_tensor_from<F: Float>(
-    _data: &[u8],
-    _metadata: &TensorMetadata,
-    _source_format: &str,
+    _data: &[u8], _metadata: &TensorMetadata_source_format: &str,
 ) -> Result<(), IntegrationError> {
     let _converter = init_tensor_converter();
     let _converter_guard = _converter.lock().map_err(|_| {
@@ -423,19 +418,19 @@ pub fn from_ndarray<F: Float>(_array: ArrayD<F>) -> Result<(), IntegrationError>
 
 /// Quick conversion to ndarray
 #[allow(dead_code)]
-pub fn to_ndarray<F: Float>(tensor: &Tensor<F>) -> Result<ArrayD<F>, IntegrationError> {
+pub fn to_ndarray<F: Float>(_tensor: &Tensor<F>) -> Result<ArrayD<F>, IntegrationError> {
     let converter = init_tensor_converter();
     let converter_guard = converter.lock().map_err(|_| {
         IntegrationError::TensorConversion("Failed to acquire converter lock".to_string())
     })?;
-    converter_guard.to_ndarray(tensor)
+    converter_guard.to_ndarray(_tensor)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::tensor::Tensor;
-    use crate::tensor_ops::convert_to_tensor;
+    use crate::tensor__ops::convert_to_tensor;
 
     #[test]
     fn test_tensor_converter_creation() {

@@ -9,7 +9,7 @@ use crate::ode::methods::{
     lsoda_method, radau_method, radau_method_with_mass, rk23_method, rk45_method, rk4_method,
 };
 use crate::ode::types::{MassMatrix, MassMatrixType, ODEMethod, ODEOptions, ODEResult};
-use crate::ode::utils::dense_output::DenseSolution;
+use crate::ode::utils::dense__output::DenseSolution;
 use crate::ode::utils::events::{
     EventAction, EventHandler, ODEOptionsWithEvents, ODEResultWithEvents,
 };
@@ -37,7 +37,7 @@ use ndarray::{Array1, ArrayView1};
 ///
 /// ```
 /// use ndarray::{array, ArrayView1};
-/// use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+/// use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 ///
 /// // Define ODE system: dy/dt = -y
 /// let f = |_t: f64, y: ArrayView1<f64>| array![-y[0]];
@@ -68,7 +68,7 @@ use ndarray::{Array1, ArrayView1};
 ///
 /// ```
 /// use ndarray::{array, Array2, ArrayView1};
-/// use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions, MassMatrix};
+/// use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions, MassMatrix};
 ///
 /// // Define a constant mass matrix for the ODE system
 /// let mut mass_matrix = Array2::<f64>::eye(2);
@@ -113,8 +113,8 @@ where
     // Calculate default initial step size if not provided
     let [t_start, t_end] = t_span;
     let h0 = opts.h0.unwrap_or_else(|| {
-        let span = t_end - t_start;
-        span * F::from_f64(0.01).unwrap() // 1% of interval
+        let _span = t_end - t_start;
+        _span * F::from_f64(0.01).unwrap() // 1% of interval
     });
 
     // Dispatch to the appropriate solver based on the method
@@ -132,14 +132,14 @@ where
             let lsoda_opts = ODEOptions {
                 // If h0 not set, use a slightly larger default than other methods
                 h0: opts.h0.or_else(|| {
-                    let span = t_span[1] - t_span[0];
-                    Some(span * F::from_f64(0.05).unwrap()) // 5% of interval instead of default 1%
+                    let _span = t_span[1] - t_span[0];
+                    Some(_span * F::from_f64(0.05).unwrap()) // 5% of interval instead of default 1%
                 }),
                 // If min_step not set, use reasonable minimum (keeping consistency)
                 min_step: opts.min_step.or_else(|| {
-                    let span = t_span[1] - t_span[0];
-                    // 0.01% of span as default - match the implementation in lsoda_method
-                    Some(span * F::from_f64(0.0001).unwrap())
+                    let _span = t_span[1] - t_span[0];
+                    // 0.01% of _span as default - match the implementation in lsoda_method
+                    Some(_span * F::from_f64(0.0001).unwrap())
                 }),
                 // Otherwise use the original options
                 ..opts
@@ -153,13 +153,13 @@ where
             let enhanced_opts = ODEOptions {
                 // If h0 not set, use a slightly larger default than other methods
                 h0: opts.h0.or_else(|| {
-                    let span = t_span[1] - t_span[0];
-                    Some(span * F::from_f64(0.05).unwrap()) // 5% of interval
+                    let _span = t_span[1] - t_span[0];
+                    Some(_span * F::from_f64(0.05).unwrap()) // 5% of interval
                 }),
                 // If min_step not set, use reasonable minimum
                 min_step: opts.min_step.or_else(|| {
-                    let span = t_span[1] - t_span[0];
-                    Some(span * F::from_f64(0.0001).unwrap()) // 0.01% of span
+                    let _span = t_span[1] - t_span[0];
+                    Some(_span * F::from_f64(0.0001).unwrap()) // 0.01% of _span
                 }),
                 // Set more generous max_steps by default for the enhanced version
                 max_steps: if opts.max_steps == 500 {
@@ -178,9 +178,9 @@ where
             let enhanced_bdf_opts = ODEOptions {
                 // If h0 not set, use an adaptive initial step size (more conservative than default)
                 h0: opts.h0.or_else(|| {
-                    let span = t_span[1] - t_span[0];
+                    let _span = t_span[1] - t_span[0];
                     // Start with 1% of the interval which is more conservative for stiff problems
-                    Some(span * F::from_f64(0.01).unwrap())
+                    Some(_span * F::from_f64(0.01).unwrap())
                 }),
                 // More generous max_steps allowance for better convergence
                 max_steps: if opts.max_steps == 500 {
@@ -216,14 +216,14 @@ where
     F: IntegrateFloat + std::iter::Sum + std::default::Default,
     Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone,
 {
-    // Check if mass matrix is compatible with the initial state
+    // Check if mass _matrix is compatible with the initial state
     mass_matrix::check_mass_compatibility(&mass_matrix, t_span[0], y0.view())?;
 
     // Handle different types of mass matrices
     match mass_matrix.matrix_type {
-        // Identity mass matrix is just the standard case
+        // Identity mass _matrix is just the standard case
         MassMatrixType::Identity => {
-            // Recursive call without the mass matrix
+            // Recursive call without the mass _matrix
             let mut new_opts = opts.clone();
             new_opts.mass_matrix = None;
             solve_ivp(f, t_span, y0, Some(new_opts))
@@ -234,12 +234,12 @@ where
         MassMatrixType::Constant | MassMatrixType::TimeDependent => {
             // Check if we're using an implicit method that directly supports mass matrices
             match opts.method {
-                // Use specialized Radau solver with mass matrix support
+                // Use specialized Radau solver with mass _matrix support
                 ODEMethod::Radau => {
                     crate::ode::methods::radau_method_with_mass(f, t_span, y0, mass_matrix, opts)
                 }
 
-                // For BDF methods, implement direct mass matrix support
+                // For BDF methods, implement direct mass _matrix support
                 ODEMethod::Bdf | ODEMethod::EnhancedBDF => {
                     solve_bdf_with_mass_matrix(f, t_span, y0, mass_matrix, opts)
                 }
@@ -260,15 +260,15 @@ where
                         })
                     };
 
-                    // Create new options without the mass matrix
+                    // Create new options without the mass _matrix
                     let mut new_opts = opts.clone();
                     new_opts.mass_matrix = None;
 
                     // Solve the transformed system by dispatching to the appropriate method
                     let [t_start, t_end] = t_span;
                     let h0 = new_opts.h0.unwrap_or_else(|| {
-                        let span = t_end - t_start;
-                        span * F::from_f64(0.01).unwrap() // 1% of interval
+                        let _span = t_end - t_start;
+                        _span * F::from_f64(0.01).unwrap() // 1% of interval
                     });
 
                     match new_opts.method {
@@ -307,14 +307,14 @@ where
                     crate::ode::methods::radau_method_with_mass(f, t_span, y0, mass_matrix, opts)
                 }
 
-                // For BDF methods, implement direct state-dependent mass matrix support
+                // For BDF methods, implement direct state-dependent mass _matrix support
                 ODEMethod::Bdf | ODEMethod::EnhancedBDF => {
                     solve_bdf_with_state_dependent_mass_matrix(f, t_span, y0, mass_matrix, opts)
                 }
 
                 // For explicit methods, we need to transform at each step
                 // This is similar to the time-dependent case but requires evaluating
-                // the mass matrix at each state point during integration
+                // the mass _matrix at each state point during integration
                 _ => {
                     // Create a wrapped function that solves M(t,y)·y' = f(t,y) at each step
                     let wrapper_f = move |t: F, y: ArrayView1<F>| -> Array1<F> {
@@ -332,14 +332,14 @@ where
                         }
                     };
 
-                    // Create new options without the mass matrix
+                    // Create new options without the mass _matrix
                     let mut new_opts = opts.clone();
                     new_opts.mass_matrix = None;
 
                     // Calculate default initial step size if not provided
                     let h0 = new_opts.h0.unwrap_or_else(|| {
-                        let span = t_span[1] - t_span[0];
-                        span * F::from_f64(0.01).unwrap() // 1% of interval
+                        let _span = t_span[1] - t_span[0];
+                        _span * F::from_f64(0.01).unwrap() // 1% of interval
                     });
 
                     // Dispatch directly to the appropriate method
@@ -394,10 +394,10 @@ where
 ///
 /// ```
 /// use ndarray::{array, ArrayView1};
-/// use scirs2_integrate::ode::{
+/// use scirs2__integrate::ode::{
 ///     solve_ivp_with_events, ODEMethod, ODEOptions
 /// };
-/// use scirs2_integrate::ode::utils::events::{
+/// use scirs2__integrate::ode::utils::events::{
 ///     EventSpec, EventDirection, EventAction, ODEOptionsWithEvents
 /// };
 ///
@@ -601,11 +601,11 @@ where
     Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone + 'static,
     EventFunc: Fn(F, ArrayView1<F>) -> F,
 {
-    // Check if mass matrix is compatible with the initial state
+    // Check if mass _matrix is compatible with the initial state
     mass_matrix::check_mass_compatibility(&mass_matrix, t_span[0], y0.view())?;
 
     match mass_matrix.matrix_type {
-        // Identity mass matrix - use standard event detection
+        // Identity mass _matrix - use standard event detection
         MassMatrixType::Identity => {
             let mut modified_options = options;
             modified_options.base_options.mass_matrix = None;
@@ -616,7 +616,7 @@ where
         MassMatrixType::Constant
         | MassMatrixType::TimeDependent
         | MassMatrixType::StateDependent => {
-            // For mass matrix systems, we must use an implicit method that supports mass matrices
+            // For mass _matrix systems, we must use an implicit method that supports mass matrices
             match options.base_options.method {
                 // Radau method can handle mass matrices directly
                 ODEMethod::Radau => solve_ivp_with_events_radau_mass(
@@ -645,7 +645,7 @@ where
                                 }
                             };
 
-                            // Remove mass matrix from options since we've transformed the system
+                            // Remove mass _matrix from options since we've transformed the system
                             let mut modified_options = options;
                             modified_options.base_options.mass_matrix = None;
 
@@ -697,8 +697,8 @@ where
     Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone + 'static,
     EventFunc: Fn(F, ArrayView1<F>) -> F,
 {
-    use crate::ode::methods::radau_mass::radau_method_with_mass;
-    use crate::ode::utils::events::{EventAction, EventHandler};
+    use crate::ode::methods::radau__mass::radau_method_with_mass;
+use crate::ode::utils::events::{EventAction, EventHandler};
 
     // Create event handler
     let mut event_handler = EventHandler::new(options.event_specs.clone());
@@ -730,7 +730,7 @@ where
         // Calculate next integration target
         let next_t = (current_t + max_step_size).min(t_end);
 
-        // Integrate one step using Radau with mass matrix
+        // Integrate one step using Radau with mass _matrix
         let step_result = radau_method_with_mass(
             f.clone(),
             [current_t, next_t],
@@ -827,9 +827,8 @@ where
     FFunc: Fn(F, ArrayView1<F>) -> Array1<F> + Clone,
 {
     use crate::ode::methods::enhanced_bdf_method;
-    use crate::ode::types::MassMatrixType;
 
-    // Create a combined function that handles mass matrix equation: M(t)·y' = f(t,y)
+    // Create a combined function that handles mass _matrix equation: M(t)·y' = f(t,y)
     let mass_f = move |t: F, y: ArrayView1<F>| -> Array1<F> {
         let rhs = f(t, y);
 
@@ -843,13 +842,13 @@ where
                 rhs
             }
             MassMatrixType::Constant => {
-                // For constant mass matrix, we can precompute M⁻¹ if it's not singular
+                // For constant mass _matrix, we can precompute M⁻¹ if it's not singular
                 // However, for BDF, it's better to keep M in the Newton system
-                rhs // Return original RHS, mass matrix will be handled in Newton solve
+                rhs // Return original RHS, mass _matrix will be handled in Newton solve
             }
             MassMatrixType::TimeDependent => {
-                // For time-dependent mass matrix, return original RHS
-                // Mass matrix handling will be incorporated into the Newton system
+                // For time-dependent mass _matrix, return original RHS
+                // Mass _matrix handling will be incorporated into the Newton system
                 rhs
             }
             MassMatrixType::StateDependent => {
@@ -859,7 +858,7 @@ where
         }
     };
 
-    // Solve using enhanced BDF with mass matrix information stored in options
+    // Solve using enhanced BDF with mass _matrix information stored in options
     opts.mass_matrix = Some(mass_matrix);
     enhanced_bdf_method(mass_f, t_span, y0, opts)
 }
@@ -877,7 +876,6 @@ where
     F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>) -> Array1<F> + Clone,
 {
-    use crate::ode::methods::enhanced_bdf_method;
 
     // For state-dependent mass matrices M(t,y), we need to solve M(t,y)·y' = f(t,y)
     // at each time step within the BDF Newton iteration
@@ -888,11 +886,11 @@ where
         // This is more complex and requires careful handling of M(t,y) derivatives
 
         // For now, return the original RHS and let the BDF solver handle
-        // the mass matrix in its Newton iteration
+        // the mass _matrix in its Newton iteration
         f(t, y)
     };
 
-    // Configure BDF solver for state-dependent mass matrix
+    // Configure BDF solver for state-dependent mass _matrix
     opts.mass_matrix = Some(mass_matrix);
     opts.rtol = opts.rtol.min(F::from_f64(1e-8).unwrap_or(opts.rtol)); // Tighter tolerance
 

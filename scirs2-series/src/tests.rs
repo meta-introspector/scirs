@@ -8,6 +8,7 @@ use std::fmt::{Debug, Display};
 
 use crate::error::{Result, TimeSeriesError};
 use crate::utils::autocovariance;
+use statrs::statistics::Statistics;
 
 /// Augmented Dickey-Fuller test for unit root
 #[derive(Debug, Clone)]
@@ -68,10 +69,10 @@ where
 
     // Determine number of lags
     let n = data.len();
-    let lags = if let Some(lag) = max_lag {
-        lag
+    let lags = if let Some(_lag) = max_lag {
+        _lag
     } else {
-        // Use Schwert criterion for automatic lag selection
+        // Use Schwert criterion for automatic _lag selection
         let power = F::from(0.25).unwrap();
         let max_lag = ((F::from(12).unwrap()
             * (F::from(n).unwrap() / F::from(100).unwrap()).powf(power))
@@ -83,7 +84,7 @@ where
 
     // Create regression variables
     let y_diff = difference(data);
-    let y_lag1 = lag(data, 1)?;
+    let y_lag1 = _lag(data, 1)?;
 
     // Build regression matrix
     let (x_mat, y_vec) =
@@ -177,7 +178,7 @@ where
     });
 
     // Detrend the series
-    let (residuals, _) = match test_type {
+    let (residuals_) = match test_type {
         KPSSType::Constant => {
             let (res, mean) = detrend_constant(data)?;
             (res, Array1::from_elem(1, mean))
@@ -305,36 +306,36 @@ where
 
 /// Calculate first difference
 #[allow(dead_code)]
-fn difference<S, F>(data: &ArrayBase<S, Ix1>) -> Array1<F>
+fn difference<S, F>(_data: &ArrayBase<S, Ix1>) -> Array1<F>
 where
     S: Data<Elem = F>,
     F: Float,
 {
-    let n = data.len();
+    let n = _data.len();
     let mut diff = Array1::zeros(n - 1);
     for i in 1..n {
-        diff[i - 1] = data[i] - data[i - 1];
+        diff[i - 1] = _data[i] - _data[i - 1];
     }
     diff
 }
 
 /// Lag a series
 #[allow(dead_code)]
-fn lag<S, F>(data: &ArrayBase<S, Ix1>, k: usize) -> Result<Array1<F>>
+fn lag<S, F>(_data: &ArrayBase<S, Ix1>, k: usize) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
     F: Float,
 {
-    if k >= data.len() {
+    if k >= _data.len() {
         return Err(TimeSeriesError::InvalidInput(
             "Lag exceeds series length".to_string(),
         ));
     }
 
-    let n = data.len() - k;
+    let n = _data.len() - k;
     let mut lagged = Array1::zeros(n);
     for i in 0..n {
-        lagged[i] = data[i];
+        lagged[i] = _data[i];
     }
     Ok(lagged)
 }
@@ -355,7 +356,7 @@ where
     use ndarray::Array2;
 
     let n = y_diff.len() - lags;
-    let mut n_cols = 1 + lags; // lag1 + diff lags
+    let mut n_cols = 1 + lags; // _lag1 + _diff lags
 
     match regression {
         ADFRegression::NoConstantNoTrend => {}
@@ -451,7 +452,7 @@ where
 
     for lag_idx in 0..=max_lag.min(data.len() / 4) {
         let y_diff = difference(data);
-        let y_lag1 = lag(data, 1)?;
+        let y_lag1 = _lag(data, 1)?;
 
         if let Ok((x_mat, y_vec)) =
             build_regression_matrix(&y_diff, &y_lag1, lag_idx, &data.to_owned(), regression)
@@ -479,26 +480,26 @@ where
 
 /// Detrend with constant only
 #[allow(dead_code)]
-fn detrend_constant<S, F>(data: &ArrayBase<S, Ix1>) -> Result<(Array1<F>, F)>
+fn detrend_constant<S, F>(_data: &ArrayBase<S, Ix1>) -> Result<(Array1<F>, F)>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive,
 {
-    let mean = data.mean().unwrap();
-    let residuals = data.mapv(|x| x - mean);
+    let mean = _data.mean().unwrap();
+    let residuals = _data.mapv(|x| x - mean);
     Ok((residuals, mean))
 }
 
 /// Detrend with linear trend
 #[allow(dead_code)]
-fn detrend_linear<S, F>(data: &ArrayBase<S, Ix1>) -> Result<(Array1<F>, Array1<F>)>
+fn detrend_linear<S, F>(_data: &ArrayBase<S, Ix1>) -> Result<(Array1<F>, Array1<F>)>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + ScalarOperand,
 {
     use ndarray::Array2;
 
-    let n = data.len();
+    let n = _data.len();
     let mut x_mat = Array2::zeros((n, 2));
 
     // Design matrix: [1 t]
@@ -507,28 +508,28 @@ where
         x_mat[[i, 1]] = F::from(i).unwrap();
     }
 
-    let coeffs = ols_regression(&x_mat, &data.to_owned())?;
+    let coeffs = ols_regression(&x_mat, &_data.to_owned())?;
     let fitted = x_mat.dot(&coeffs);
-    let residuals = data - &fitted;
+    let residuals = _data - &fitted;
 
     Ok((residuals, coeffs))
 }
 
 /// Newey-West variance estimator
 #[allow(dead_code)]
-fn newey_west_variance<S, F>(residuals: &ArrayBase<S, Ix1>, lags: usize) -> Result<F>
+fn newey_west_variance<S, F>(_residuals: &ArrayBase<S, Ix1>, lags: usize) -> Result<F>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + ndarray::ScalarOperand,
 {
-    let n = residuals.len();
-    let residuals_owned = residuals.to_owned();
+    let n = _residuals.len();
+    let residuals_owned = _residuals.to_owned();
     let mut variance = residuals_owned.dot(&residuals_owned) / F::from(n).unwrap();
 
     // Add autocovariance terms with Bartlett weights
     for lag in 1..=lags {
         let weight = F::one() - F::from(lag).unwrap() / F::from(lags + 1).unwrap();
-        if let Ok(acov) = autocovariance(&residuals.to_owned(), lag) {
+        if let Ok(acov) = autocovariance(&_residuals.to_owned(), lag) {
             variance = variance + F::from(2.0).unwrap() * weight * acov;
         }
     }
@@ -566,7 +567,7 @@ where
 
 /// Calculate ADF p-value (simplified)
 #[allow(dead_code)]
-fn calculate_adf_pvalue<F>(test_stat: F, n: usize, regression: ADFRegression) -> Result<F>
+fn calculate_adf_pvalue<F>(_test_stat: F, n: usize, regression: ADFRegression) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
@@ -574,7 +575,7 @@ where
     // In practice would use MacKinnon (1994) approximation
     let critical_values = get_adf_critical_values(n, regression)?;
 
-    if test_stat < critical_values.cv_1_percent {
+    if _test_stat < critical_values.cv_1_percent {
         Ok(F::from(0.001).unwrap())
     } else if test_stat < critical_values.cv_5_percent {
         Ok(F::from(0.025).unwrap())
@@ -587,11 +588,11 @@ where
 
 /// Get KPSS critical values
 #[allow(dead_code)]
-fn get_kpss_critical_values<F>(test_type: KPSSType) -> Result<CriticalValues<F>>
+fn get_kpss_critical_values<F>(_test_type: KPSSType) -> Result<CriticalValues<F>>
 where
     F: Float + FromPrimitive,
 {
-    let cv = match test_type {
+    let cv = match _test_type {
         KPSSType::Constant => CriticalValues {
             cv_1_percent: F::from(0.739).unwrap(),
             cv_5_percent: F::from(0.463).unwrap(),
@@ -609,13 +610,13 @@ where
 
 /// Calculate KPSS p-value (simplified)
 #[allow(dead_code)]
-fn calculate_kpss_pvalue<F>(test_stat: F, test_type: KPSSType) -> Result<F>
+fn calculate_kpss_pvalue<F>(_test_stat: F, test_type: KPSSType) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     let critical_values = get_kpss_critical_values(test_type)?;
 
-    if test_stat > critical_values.cv_1_percent {
+    if _test_stat > critical_values.cv_1_percent {
         Ok(F::from(0.001).unwrap())
     } else if test_stat > critical_values.cv_5_percent {
         Ok(F::from(0.025).unwrap())

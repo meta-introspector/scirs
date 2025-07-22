@@ -269,11 +269,11 @@ where
 
 /// Apply attention mask to scores
 #[allow(dead_code)]
-fn apply_mask<F>(scores: &mut Array2<F>, mask: &AttentionMask, batch_idx: usize) -> LinalgResult<()>
+fn apply_mask<F>(_scores: &mut Array2<F>, mask: &AttentionMask, batch_idx: usize) -> LinalgResult<()>
 where
     F: Float + Add + Mul + Div + Sub + NumAssignOps + Zero + std::fmt::Debug,
 {
-    let (seq_len_q, seq_len_k) = (scores.shape()[0], scores.shape()[1]);
+    let (seq_len_q, seq_len_k) = (_scores.shape()[0], _scores.shape()[1]);
 
     match mask {
         AttentionMask::Additive(mask_tensor) => {
@@ -282,7 +282,7 @@ where
 
             if mask_tensor.shape()[1] != seq_len_q || mask_tensor.shape()[2] != seq_len_k {
                 return Err(LinalgError::DimensionError(format!(
-                    "Mask shape {:?} doesn't match scores shape [{}, {}]",
+                    "Mask shape {:?} doesn't match _scores shape [{}, {}]",
                     mask_tensor.shape(),
                     seq_len_q,
                     seq_len_k
@@ -295,7 +295,7 @@ where
                 for j in 0..seq_len_k {
                     // Convert f32 to F (handling float type conversion)
                     let mask_val = F::from(mask_slice[[i, j]]).unwrap_or(F::zero());
-                    scores[[i, j]] += mask_val;
+                    _scores[[i, j]] += mask_val;
                 }
             }
         }
@@ -306,7 +306,7 @@ where
 
             if mask_tensor.shape()[1] != seq_len_q || mask_tensor.shape()[2] != seq_len_k {
                 return Err(LinalgError::DimensionError(format!(
-                    "Mask shape {:?} doesn't match scores shape [{}, {}]",
+                    "Mask shape {:?} doesn't match _scores shape [{}, {}]",
                     mask_tensor.shape(),
                     seq_len_q,
                     seq_len_k
@@ -319,7 +319,7 @@ where
                 for j in 0..seq_len_k {
                     // Convert f32 to F
                     let mask_val = F::from(mask_slice[[i, j]]).unwrap_or(F::zero());
-                    scores[[i, j]] *= mask_val;
+                    _scores[[i, j]] *= mask_val;
                 }
             }
         }
@@ -330,7 +330,7 @@ where
 
             if mask_tensor.shape()[1] != seq_len_q || mask_tensor.shape()[2] != seq_len_k {
                 return Err(LinalgError::DimensionError(format!(
-                    "Mask shape {:?} doesn't match scores shape [{}, {}]",
+                    "Mask shape {:?} doesn't match _scores shape [{}, {}]",
                     mask_tensor.shape(),
                     seq_len_q,
                     seq_len_k
@@ -342,7 +342,7 @@ where
             for i in 0..seq_len_q {
                 for j in 0..seq_len_k {
                     if !mask_slice[[i, j]] {
-                        scores[[i, j]] = F::neg_infinity();
+                        _scores[[i, j]] = F::neg_infinity();
                     }
                 }
             }
@@ -352,7 +352,7 @@ where
             for i in 0..seq_len_q {
                 for j in 0..seq_len_k {
                     if j > i {
-                        scores[[i, j]] = F::neg_infinity();
+                        _scores[[i, j]] = F::neg_infinity();
                     }
                 }
             }
@@ -923,7 +923,7 @@ where
 
     if pattern_mask.shape() != [seq_len_q, seq_len_k] {
         return Err(LinalgError::DimensionError(format!(
-            "Pattern mask shape {:?} doesn't match query and key sequence lengths [{}, {}]",
+            "Pattern _mask shape {:?} doesn't match query and key sequence lengths [{}, {}]",
             pattern_mask.shape(),
             seq_len_q,
             seq_len_k
@@ -947,7 +947,7 @@ where
             let mut scores = Vec::new();
             let mut indices = Vec::new();
 
-            // Only compute scores for positions allowed by the pattern mask
+            // Only compute scores for positions allowed by the pattern _mask
             for j in 0..seq_len_k {
                 if pattern_mask[[i, j]] {
                     let k_j = k_b.slice(ndarray::s![j, ..]);
@@ -1547,13 +1547,13 @@ where
     // Validate kv head configuration
     if num_heads % num_kv_heads != 0 {
         return Err(LinalgError::ValueError(format!(
-            "Number of query heads ({num_heads}) must be divisible by number of KV heads ({num_kv_heads})"
+            "Number of query _heads ({num_heads}) must be divisible by number of KV _heads ({num_kv_heads})"
         )));
     }
 
     if num_heads % num_kv_heads != 0 {
         return Err(LinalgError::ValueError(format!(
-            "Number of heads ({num_heads}) must be divisible by number of key-value heads ({num_kv_heads})"
+            "Number of _heads ({num_heads}) must be divisible by number of key-value _heads ({num_kv_heads})"
         )));
     }
     let heads_per_kv = num_heads / num_kv_heads;
@@ -1629,7 +1629,7 @@ where
         // Extract query head
         let q_head = q_proj.slice(ndarray::s![.., .., q_start..q_end]);
 
-        // Extract key and value heads (shared across multiple query heads)
+        // Extract key and value _heads (shared across multiple query _heads)
         let k_head = k_proj.slice(ndarray::s![.., .., kv_start..kv_end]);
         let v_head = v_proj.slice(ndarray::s![.., .., kv_start..kv_end]);
 
@@ -1701,7 +1701,7 @@ where
         let (batch_size, seq_len_q, d_model) =
             (query.shape()[0], query.shape()[1], query.shape()[2]);
         let (_, seq_len_k, _) = (key.shape()[0], key.shape()[1], key.shape()[2]);
-        let (_, _, _d_model_v) = (value.shape()[0], value.shape()[1], value.shape()[2]); // For future use
+        let (_,_,_d_model_v) = (value.shape()[0], value.shape()[1], value.shape()[2]); // For future use
 
         // Create scaled arrays for computation
 

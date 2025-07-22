@@ -34,35 +34,35 @@ pub(crate) fn expand_dims<T: Float>(x: NdArray<T>, axis: usize) -> NdArray<T> {
 }
 
 #[inline]
-pub(crate) fn roll_axis<T: Float>(arg: &mut NdArray<T>, to: ndarray::Axis, from: ndarray::Axis) {
+pub(crate) fn roll_axis<T: Float>(_arg: &mut NdArray<T>, to: ndarray::Axis, from: ndarray::Axis) {
     let i = to.index();
     let mut j = from.index();
     if j > i {
         while i != j {
-            arg.swap_axes(i, j);
+            _arg.swap_axes(i, j);
             j -= 1;
         }
     } else {
         while i != j {
-            arg.swap_axes(i, j);
+            _arg.swap_axes(i, j);
             j += 1;
         }
     }
 }
 
 #[inline]
-pub(crate) fn normalize_negative_axis(axis: isize, ndim: usize) -> usize {
-    if axis < 0 {
-        (ndim as isize + axis) as usize
+pub(crate) fn normalize_negative_axis(_axis: isize, ndim: usize) -> usize {
+    if _axis < 0 {
+        (ndim as isize + _axis) as usize
     } else {
-        axis as usize
+        _axis as usize
     }
 }
 
 #[inline]
-pub(crate) fn normalize_negative_axes<T: Float>(axes: &NdArrayView<T>, ndim: usize) -> Vec<usize> {
-    let mut axes_ret: Vec<usize> = Vec::with_capacity(axes.len());
-    for &axis in axes.iter() {
+pub(crate) fn normalize_negative_axes<T: Float>(_axes: &NdArrayView<T>, ndim: usize) -> Vec<usize> {
+    let mut _axes_ret: Vec<usize> = Vec::with_capacity(_axes.len());
+    for &axis in _axes.iter() {
         let axis = if axis < T::zero() {
             (T::from(ndim).unwrap() + axis)
                 .to_usize()
@@ -76,9 +76,9 @@ pub(crate) fn normalize_negative_axes<T: Float>(axes: &NdArrayView<T>, ndim: usi
 }
 
 #[inline]
-pub(crate) fn sparse_to_dense<T: Float>(arr: &NdArrayView<T>) -> Vec<usize> {
+pub(crate) fn sparse_to_dense<T: Float>(_arr: &NdArrayView<T>) -> Vec<usize> {
     let mut axes: Vec<usize> = vec![];
-    for (i, &a) in arr.iter().enumerate() {
+    for (i, &a) in _arr.iter().enumerate() {
         if a == T::one() {
             axes.push(i);
         }
@@ -88,9 +88,9 @@ pub(crate) fn sparse_to_dense<T: Float>(arr: &NdArrayView<T>) -> Vec<usize> {
 
 #[allow(unused)]
 #[inline]
-pub(crate) fn is_fully_transposed(strides: &[ndarray::Ixs]) -> bool {
+pub(crate) fn is_fully_transposed(_strides: &[ndarray::Ixs]) -> bool {
     let mut ret = true;
-    for w in strides.windows(2) {
+    for w in _strides.windows(2) {
         if w[0] > w[1] {
             ret = false;
             break;
@@ -102,22 +102,22 @@ pub(crate) fn is_fully_transposed(strides: &[ndarray::Ixs]) -> bool {
 /// Creates a zero array in the specified shape.
 #[inline]
 #[allow(dead_code)]
-pub fn zeros<T: Float>(shape: &[usize]) -> NdArray<T> {
-    NdArray::<T>::zeros(shape)
+pub fn zeros<T: Float>(_shape: &[usize]) -> NdArray<T> {
+    NdArray::<T>::zeros(_shape)
 }
 
 /// Creates a one array in the specified shape.
 #[inline]
 #[allow(dead_code)]
-pub fn ones<T: Float>(shape: &[usize]) -> NdArray<T> {
-    NdArray::<T>::ones(shape)
+pub fn ones<T: Float>(_shape: &[usize]) -> NdArray<T> {
+    NdArray::<T>::ones(_shape)
 }
 
 /// Creates a constant array in the specified shape.
 #[inline]
 #[allow(dead_code)]
-pub fn constant<T: Float>(value: T, shape: &[usize]) -> NdArray<T> {
-    NdArray::<T>::from_elem(shape, value)
+pub fn constant<T: Float>(_value: T, shape: &[usize]) -> NdArray<T> {
+    NdArray::<T>::from_elem(shape_value)
 }
 
 use rand::{Rng, RngCore, SeedableRng};
@@ -126,8 +126,7 @@ use rand::{Rng, RngCore, SeedableRng};
 /// Random number generator for ndarray
 #[derive(Clone)]
 pub struct ArrayRng<A> {
-    rng: rand::rngs::StdRng,
-    _phantom: std::marker::PhantomData<A>,
+    rng: rand::rngs::StdRng_phantom: std::marker::PhantomData<A>,
 }
 
 // Implement RngCore for ArrayRng by delegating to the internal StdRng
@@ -156,11 +155,10 @@ impl<A: Float> ArrayRng<A> {
     }
 
     /// Creates a new random number generator with the specified seed.
-    pub fn from_seed(seed: u64) -> Self {
-        let rng = rand::rngs::StdRng::seed_from_u64(seed);
+    pub fn from_seed(_seed: u64) -> Self {
+        let rng = rand::rngs::StdRng::seed_from_u64(_seed);
         Self {
-            rng,
-            _phantom: std::marker::PhantomData,
+            rng_phantom: std::marker::PhantomData,
         }
     }
 
@@ -188,7 +186,7 @@ impl<A: Float> ArrayRng<A> {
     /// Creates a normal random array in the specified shape.
     /// Values are drawn from a normal distribution with the specified mean and standard deviation.
     pub fn normal(&mut self, shape: &[usize], mean: f64, std: f64) -> NdArray<A> {
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
         let normal = Normal::new(mean, std).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -201,7 +199,7 @@ impl<A: Float> ArrayRng<A> {
     /// Creates a uniform random array in the specified shape.
     /// Values are in the range [low, high).
     pub fn uniform(&mut self, shape: &[usize], low: f64, high: f64) -> NdArray<A> {
-        use rand_distr::{Distribution, Uniform};
+        use rand__distr::{Distribution, Uniform};
         let uniform = Uniform::new(low, high).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -265,7 +263,7 @@ impl<A: Float> ArrayRng<A> {
 
     /// Creates a random array from the bernoulli distribution.
     pub fn bernoulli(&mut self, shape: &[usize], p: f64) -> NdArray<A> {
-        use rand_distr::{Bernoulli, Distribution};
+        use rand__distr::{Bernoulli, Distribution};
         let bernoulli = Bernoulli::new(p).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -282,7 +280,7 @@ impl<A: Float> ArrayRng<A> {
 
     /// Creates a random array from the exponential distribution.
     pub fn exponential(&mut self, shape: &[usize], lambda: f64) -> NdArray<A> {
-        use rand_distr::{Distribution, Exp};
+        use rand__distr::{Distribution, Exp};
         let exp = Exp::new(lambda).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -294,7 +292,7 @@ impl<A: Float> ArrayRng<A> {
 
     /// Creates a random array from the log-normal distribution.
     pub fn log_normal(&mut self, shape: &[usize], mean: f64, stddev: f64) -> NdArray<A> {
-        use rand_distr::{Distribution, LogNormal};
+        use rand__distr::{Distribution, LogNormal};
         let log_normal = LogNormal::new(mean, stddev).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -306,7 +304,7 @@ impl<A: Float> ArrayRng<A> {
 
     /// Creates a random array from the gamma distribution.
     pub fn gamma(&mut self, shape: &[usize], shape_param: f64, scale: f64) -> NdArray<A> {
-        use rand_distr::{Distribution, Gamma};
+        use rand__distr::{Distribution, Gamma};
         let gamma = Gamma::new(shape_param, scale).unwrap();
         let len = shape.iter().product();
         let mut data = Vec::with_capacity(len);
@@ -326,8 +324,8 @@ impl<A: Float> Default for ArrayRng<A> {
 /// Check if a shape represents a scalar value (empty or [1] shape)
 #[inline]
 #[allow(dead_code)]
-pub fn is_scalar_shape(shape: &[usize]) -> bool {
-    shape.is_empty() || (shape.len() == 1 && shape[0] == 1)
+pub fn is_scalar_shape(_shape: &[usize]) -> bool {
+    _shape.is_empty() || (_shape.len() == 1 && _shape[0] == 1)
 }
 
 /// Create a scalar shape (empty shape)
@@ -340,22 +338,22 @@ pub fn scalar_shape() -> Vec<usize> {
 /// Create an array from a scalar value
 #[inline]
 #[allow(dead_code)]
-pub fn from_scalar<T: Float>(value: T) -> NdArray<T> {
-    NdArray::<T>::from_elem(ndarray::IxDyn(&[1]), value)
+pub fn from_scalar<T: Float>(_value: T) -> NdArray<T> {
+    NdArray::<T>::from_elem(ndarray::IxDyn(&[1]), _value)
 }
 
 /// Get shape of an ndarray view
 #[inline]
 #[allow(dead_code)]
-pub fn shape_of_view<T>(view: &NdArrayView<'_, T>) -> Vec<usize> {
-    view.shape().to_vec()
+pub fn shape_of_view<T>(_view: &NdArrayView<'_, T>) -> Vec<usize> {
+    _view.shape().to_vec()
 }
 
 /// Get shape of an ndarray
 #[inline]
 #[allow(dead_code)]
-pub fn shape_of<T>(array: &NdArray<T>) -> Vec<usize> {
-    array.shape().to_vec()
+pub fn shape_of<T>(_array: &NdArray<T>) -> Vec<usize> {
+    _array.shape().to_vec()
 }
 
 /// Get default random number generator
@@ -368,8 +366,8 @@ pub fn get_default_rng<A: Float>() -> ArrayRng<A> {
 /// Create a deep copy of an ndarray
 #[inline]
 #[allow(dead_code)]
-pub fn deep_copy<T: Float + Clone>(array: &NdArrayView<'_, T>) -> NdArray<T> {
-    array.to_owned()
+pub fn deep_copy<T: Float + Clone>(_array: &NdArrayView<'_, T>) -> NdArray<T> {
+    _array.to_owned()
 }
 
 /// Select elements from an array along an axis
@@ -396,13 +394,13 @@ pub fn select<T: Float + Clone>(
 /// Check if two shapes are compatible for broadcasting
 #[inline]
 #[allow(dead_code)]
-pub fn are_broadcast_compatible(shape1: &[usize], shape2: &[usize]) -> bool {
-    let len1 = shape1.len();
+pub fn are_broadcast_compatible(_shape1: &[usize], shape2: &[usize]) -> bool {
+    let len1 = _shape1.len();
     let len2 = shape2.len();
     let min_len = std::cmp::min(len1, len2);
 
     for i in 0..min_len {
-        let dim1 = shape1[len1 - 1 - i];
+        let dim1 = _shape1[len1 - 1 - i];
         let dim2 = shape2[len2 - 1 - i];
         if dim1 != dim2 && dim1 != 1 && dim2 != 1 {
             return false;
@@ -414,18 +412,18 @@ pub fn are_broadcast_compatible(shape1: &[usize], shape2: &[usize]) -> bool {
 /// Compute the shape resulting from broadcasting two shapes together
 #[inline]
 #[allow(dead_code)]
-pub fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Option<Vec<usize>> {
-    if !are_broadcast_compatible(shape1, shape2) {
+pub fn broadcast_shape(_shape1: &[usize], shape2: &[usize]) -> Option<Vec<usize>> {
+    if !are_broadcast_compatible(_shape1, shape2) {
         return None;
     }
 
-    let len1 = shape1.len();
+    let len1 = _shape1.len();
     let len2 = shape2.len();
     let result_len = std::cmp::max(len1, len2);
     let mut result = Vec::with_capacity(result_len);
 
     for i in 0..result_len {
-        let dim1 = if i < len1 { shape1[len1 - 1 - i] } else { 1 };
+        let dim1 = if i < len1 { _shape1[len1 - 1 - i] } else { 1 };
         let dim2 = if i < len2 { shape2[len2 - 1 - i] } else { 1 };
         result.push(std::cmp::max(dim1, dim2));
     }
@@ -440,14 +438,14 @@ pub mod array_gen {
 
     /// Creates a zero array in the specified shape.
     #[inline]
-    pub fn zeros<T: Float>(shape: &[usize]) -> NdArray<T> {
-        NdArray::<T>::zeros(shape)
+    pub fn zeros<T: Float>(_shape: &[usize]) -> NdArray<T> {
+        NdArray::<T>::zeros(_shape)
     }
 
     /// Creates a one array in the specified shape.
     #[inline]
-    pub fn ones<T: Float>(shape: &[usize]) -> NdArray<T> {
-        NdArray::<T>::ones(shape)
+    pub fn ones<T: Float>(_shape: &[usize]) -> NdArray<T> {
+        NdArray::<T>::ones(_shape)
     }
 
     /// Creates a 2D identity matrix of the specified size.
@@ -462,72 +460,72 @@ pub mod array_gen {
 
     /// Creates a constant array in the specified shape.
     #[inline]
-    pub fn constant<T: Float>(value: T, shape: &[usize]) -> NdArray<T> {
-        NdArray::<T>::from_elem(shape, value)
+    pub fn constant<T: Float>(_value: T, shape: &[usize]) -> NdArray<T> {
+        NdArray::<T>::from_elem(shape_value)
     }
 
     /// Generates a random array in the specified shape with values between 0 and 1.
-    pub fn random<T: Float>(shape: &[usize]) -> NdArray<T> {
+    pub fn random<T: Float>(_shape: &[usize]) -> NdArray<T> {
         let mut rng = ArrayRng::<T>::default();
-        rng.random(shape)
+        rng.random(_shape)
     }
 
     /// Generates a random normal array in the specified shape.
-    pub fn randn<T: Float>(shape: &[usize]) -> NdArray<T> {
+    pub fn randn<T: Float>(_shape: &[usize]) -> NdArray<T> {
         let mut rng = ArrayRng::<T>::default();
-        rng.normal(shape, 0.0, 1.0)
+        rng.normal(_shape, 0.0, 1.0)
     }
 
     /// Creates a Glorot/Xavier uniform initialized array in the specified shape.
-    pub fn glorot_uniform<T: Float>(shape: &[usize]) -> NdArray<T> {
+    pub fn glorot_uniform<T: Float>(_shape: &[usize]) -> NdArray<T> {
         let mut rng = ArrayRng::<T>::default();
-        rng.glorot_uniform(shape)
+        rng.glorot_uniform(_shape)
     }
 
     /// Creates a Glorot/Xavier normal initialized array in the specified shape.
-    pub fn glorot_normal<T: Float>(shape: &[usize]) -> NdArray<T> {
+    pub fn glorot_normal<T: Float>(_shape: &[usize]) -> NdArray<T> {
         let mut rng = ArrayRng::<T>::default();
-        rng.glorot_normal(shape)
+        rng.glorot_normal(_shape)
     }
 
     /// Creates a He/Kaiming uniform initialized array in the specified shape.
-    pub fn he_uniform<T: Float>(shape: &[usize]) -> NdArray<T> {
+    pub fn he_uniform<T: Float>(_shape: &[usize]) -> NdArray<T> {
         let mut rng = ArrayRng::<T>::default();
-        rng.he_uniform(shape)
+        rng.he_uniform(_shape)
     }
 
     /// Creates a He/Kaiming normal initialized array in the specified shape.
-    pub fn he_normal<T: Float>(shape: &[usize]) -> NdArray<T> {
+    pub fn he_normal<T: Float>(_shape: &[usize]) -> NdArray<T> {
         let mut rng = ArrayRng::<T>::default();
-        rng.he_normal(shape)
+        rng.he_normal(_shape)
     }
 
     /// Creates an array with a linearly spaced sequence from start to end.
-    pub fn linspace<T: Float>(start: T, end: T, num: usize) -> NdArray<T> {
+    pub fn linspace<T: Float>(_start: T, end: T, num: usize) -> NdArray<T> {
         if num <= 1 {
             return if num == 0 {
                 NdArray::<T>::zeros(ndarray::IxDyn(&[0]))
             } else {
-                NdArray::<T>::from_elem(ndarray::IxDyn(&[1]), start)
+                NdArray::<T>::from_elem(ndarray::IxDyn(&[1]), _start)
             };
         }
 
-        let step = (end - start) / T::from(num - 1).unwrap();
+        let step = (end - _start) / T::from(num - 1).unwrap();
         let mut data = Vec::with_capacity(num);
 
         for i in 0..num {
-            data.push(start + step * T::from(i).unwrap());
+            data.push(_start + step * T::from(i).unwrap());
         }
 
         NdArray::<T>::from_shape_vec(ndarray::IxDyn(&[num]), data).unwrap()
     }
 
     /// Creates an array of evenly spaced values within a given interval.
-    pub fn arange<T: Float>(start: T, end: T, step: T) -> NdArray<T> {
-        let size = ((end - start) / step).to_f64().unwrap().ceil() as usize;
+    pub fn arange<T: Float>(_start: T, end: T, step: T) -> NdArray<T> {
+        let size = ((end - _start) / step).to_f64().unwrap().ceil() as usize;
         let mut data = Vec::with_capacity(size);
 
-        let mut current = start;
+        let mut current = _start;
         while current < end {
             data.push(current);
             current += step;

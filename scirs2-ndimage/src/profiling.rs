@@ -154,14 +154,14 @@ pub struct MemoryStats {
 }
 
 impl PerformanceReport {
-    fn from_metrics(metrics: &[OperationMetrics]) -> Self {
-        let total_time = metrics.iter().map(|m| m.duration).sum();
+    fn from_metrics(_metrics: &[OperationMetrics]) -> Self {
+        let total_time = _metrics.iter().map(|m| m.duration).sum();
 
-        // Group metrics by operation name
+        // Group _metrics by operation name
         let mut op_groups: HashMap<String, Vec<&OperationMetrics>> = HashMap::new();
         let mut backend_usage: HashMap<String, usize> = HashMap::new();
 
-        for metric in metrics {
+        for metric in _metrics {
             op_groups
                 .entry(metric.name.clone())
                 .or_default()
@@ -211,9 +211,9 @@ impl PerformanceReport {
             .collect();
 
         // Compute memory statistics
-        let total_allocated: usize = metrics.iter().map(|m| m.memory_allocated).sum();
-        let total_deallocated: usize = metrics.iter().map(|m| m.memory_deallocated).sum();
-        let peak_usage = metrics
+        let total_allocated: usize = _metrics.iter().map(|m| m.memory_allocated).sum();
+        let total_deallocated: usize = _metrics.iter().map(|m| m.memory_deallocated).sum();
+        let peak_usage = _metrics
             .iter()
             .scan(0isize, |acc, m| {
                 *acc += m.memory_allocated as isize - m.memory_deallocated as isize;
@@ -230,7 +230,7 @@ impl PerformanceReport {
 
         // Generate recommendations
         let recommendations =
-            generate_recommendations(&operation_breakdown, &backend_usage, metrics);
+            generate_recommendations(&operation_breakdown, &backend_usage, _metrics);
 
         Self {
             total_time,
@@ -364,7 +364,7 @@ pub struct ProfilingScope {
 }
 
 impl ProfilingScope {
-    pub fn new(name: impl Into<String>, shape: &[usize], backend: Backend) -> Self {
+    pub fn new(_name: impl Into<String>, shape: &[usize], backend: Backend) -> Self {
         let profiler = PROFILER
             .lock()
             .expect("PROFILER mutex should not be poisoned");
@@ -372,7 +372,7 @@ impl ProfilingScope {
         drop(profiler);
 
         Self {
-            name: name.into(),
+            _name: _name.into(),
             start: Instant::now(),
             shape: shape.to_vec(),
             backend,
@@ -483,9 +483,9 @@ pub struct BenchmarkResult<T> {
 }
 
 impl<T> Benchmark<T> {
-    pub fn new(name: impl Into<String>) -> Self {
+    pub fn new(_name: impl Into<String>) -> Self {
         Self {
-            name: name.into(),
+            _name: _name.into(),
             iterations: 100,
             warmup_iterations: 10,
             results: Vec::new(),
@@ -558,7 +558,7 @@ pub struct VariantStats {
 }
 
 impl BenchmarkComparison {
-    fn from_results<T>(name: &str, results: &[BenchmarkResult<T>]) -> Self {
+    fn from_results<T>(_name: &str, results: &[BenchmarkResult<T>]) -> Self {
         let mut variants = Vec::new();
 
         for result in results {
@@ -582,7 +582,7 @@ impl BenchmarkComparison {
             let std_dev = Duration::from_nanos(variance.sqrt() as u64);
 
             variants.push(VariantStats {
-                name: result.variant.clone(),
+                _name: result.variant.clone(),
                 mean,
                 median,
                 std_dev,
@@ -597,11 +597,11 @@ impl BenchmarkComparison {
             .iter()
             .enumerate()
             .min_by_key(|(_, v)| v.median)
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .unwrap_or(0);
 
-        let fastest = variants[fastest_idx].name.clone();
-        let baseline = variants.first().map(|v| v.name.clone()).unwrap_or_default();
+        let fastest = variants[fastest_idx]._name.clone();
+        let baseline = variants.first().map(|v| v._name.clone()).unwrap_or_default();
 
         // Calculate speedups relative to baseline
         let baseline_time = variants[0].median.as_nanos() as f64;
@@ -610,7 +610,7 @@ impl BenchmarkComparison {
         }
 
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             variants,
             fastest,
             baseline,
@@ -661,9 +661,9 @@ pub struct AutoTuner {
 }
 
 impl AutoTuner {
-    pub fn new(name: impl Into<String>) -> Self {
+    pub fn new(_name: impl Into<String>) -> Self {
         Self {
-            name: name.into(),
+            _name: _name.into(),
             test_data: Vec::new(),
         }
     }
@@ -910,8 +910,7 @@ impl OptimizationAdvisor {
         match max_difficulty {
             1 => ImplementationDifficulty::Easy,
             2 => ImplementationDifficulty::Moderate,
-            3 => ImplementationDifficulty::Hard,
-            _ => ImplementationDifficulty::Expert,
+            3 => ImplementationDifficulty::Hard_ =>, ImplementationDifficulty::Expert,
         }
     }
 }
@@ -952,7 +951,7 @@ pub enum ImplementationDifficulty {
 impl HardwareInfo {
     fn detect() -> Self {
         Self {
-            cpu_cores: num_cpus::get(),
+            cpu_cores: num, _cpus: get(),
             simd_support: SimdSupport::detect(),
             gpu_available: cfg!(feature = "cuda") || cfg!(feature = "opencl"),
             total_memory: 16_000_000_000, // 16GB default

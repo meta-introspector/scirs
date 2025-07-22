@@ -13,8 +13,8 @@
 //! # Example
 //! ```
 //! use ndarray::Array1;
-//! use scirs2_signal::wiener::wiener_filter;
-//! use scirs2_signal::waveforms;
+//! use scirs2__signal::wiener::wiener_filter;
+//! use scirs2__signal::waveforms;
 //! use rand::Rng;
 //!
 //! // Create a test signal
@@ -38,13 +38,15 @@
 //! let denoised_signal = wiener_filter(&noisy_signal, None, None).unwrap();
 //! ```
 
-use ndarray::{s, Array1, Array2};
-use std::cmp;
-
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
+use ndarray::{Array1, Array2, s};
+use num__complex::Complex64;
+use rand::Rng;
+use statrs::statistics::Statistics;
+use std::cmp;
 use scirs2_fft;
 
+#[allow(unused_imports)]
 /// Configuration for Wiener filtering
 #[derive(Debug, Clone)]
 pub struct WienerConfig {
@@ -101,7 +103,7 @@ impl Default for WienerConfig {
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::wiener::wiener_filter;
+/// use scirs2__signal::wiener::wiener_filter;
 ///
 /// let noisy_signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0, 0.0]);
 /// let result = wiener_filter(&noisy_signal, Some(0.1), None);
@@ -365,17 +367,17 @@ pub fn wiener_filter_2d(
 ) -> SignalResult<Array2<f64>> {
     let (height, width) = image.dim();
 
-    // Set default window size or use provided
+    // Set default window _size or use provided
     let win_size = window_size.unwrap_or([5, 5]);
 
-    // Validate window size
+    // Validate window _size
     if win_size[0] < 3 || win_size[1] < 3 {
         return Err(SignalError::ValueError(
-            "Window size must be at least 3x3".to_string(),
+            "Window _size must be at least 3x3".to_string(),
         ));
     }
 
-    // Estimate noise power if not provided
+    // Estimate noise _power if not provided
     let noise_var = match noise_power {
         Some(np) => np,
         None => {
@@ -466,11 +468,11 @@ pub fn spectral_subtraction(
         }
     };
 
-    // Get noise power spectrum
+    // Get noise _power spectrum
     let noise_spectrum = match noise_power {
         Some(np) => np.clone(),
         None => {
-            // Estimate noise power from the signal
+            // Estimate noise _power from the signal
             // (Use first 100ms or 5% of signal, whichever is smaller)
             let noise_samples = (n as f64 * 0.05).min(100.0) as usize;
             if noise_samples < 4 {
@@ -485,7 +487,7 @@ pub fn spectral_subtraction(
             // Compute noise spectrum
             match scirs2_fft::fft(&noise_segment.to_vec(), Some(n)) {
                 Ok(noise_fft) => {
-                    // Convert to power spectrum
+                    // Convert to _power spectrum
                     Array1::from_iter(
                         noise_fft
                             .iter()
@@ -512,7 +514,7 @@ pub fn spectral_subtraction(
         let mag = filtered_fft[i].norm();
         let phase = filtered_fft[i].arg();
 
-        // Compute noise power for this bin
+        // Compute noise _power for this bin
         let noise_power = if i < noise_spectrum.len() {
             noise_spectrum[i]
         } else {
@@ -585,7 +587,7 @@ pub fn psd_wiener_filter(
 
     // Estimate signal PSD if not provided
     let s_psd = match signal_psd {
-        Some(psd) => psd.clone(),
+        Some(_psd) => _psd.clone(),
         None => {
             // Simple periodogram estimate
             let half_n = n / 2 + 1;
@@ -601,7 +603,7 @@ pub fn psd_wiener_filter(
 
     // Estimate noise PSD if not provided
     let n_psd = match noise_psd {
-        Some(psd) => psd.clone(),
+        Some(_psd) => _psd.clone(),
         None => {
             // Use noise estimation method
             let noise_var = estimate_noise_power(signal)?;
@@ -715,9 +717,9 @@ pub fn kalman_wiener_filter(
 
 /// Helper function to estimate the noise power from a signal
 #[allow(dead_code)]
-fn estimate_noise_power(signal: &Array1<f64>) -> SignalResult<f64> {
-    // Compute signal median
-    let mut values = signal.to_vec();
+fn estimate_noise_power(_signal: &Array1<f64>) -> SignalResult<f64> {
+    // Compute _signal median
+    let mut values = _signal.to_vec();
     values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let median = if values.len() % 2 == 0 {
@@ -749,34 +751,34 @@ fn estimate_noise_power(signal: &Array1<f64>) -> SignalResult<f64> {
 
 /// Helper function to estimate the signal power
 #[allow(dead_code)]
-fn estimate_signal_power(signal: &Array1<f64>) -> SignalResult<f64> {
+fn estimate_signal_power(_signal: &Array1<f64>) -> SignalResult<f64> {
     // Compute mean
-    let mean = signal.mean().unwrap_or(0.0);
+    let mean = _signal.mean().unwrap_or(0.0);
 
-    // Compute variance (signal power)
-    let power = signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / signal.len() as f64;
+    // Compute variance (_signal power)
+    let power = _signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _signal.len() as f64;
 
     Ok(power)
 }
 
 /// Helper function to pad a signal for boundary handling
 #[allow(dead_code)]
-fn pad_signal(signal: &Array1<f64>, pad_size: usize) -> Array1<f64> {
-    let n = signal.len();
+fn pad_signal(_signal: &Array1<f64>, pad_size: usize) -> Array1<f64> {
+    let n = _signal.len();
     let mut padded = Array1::zeros(n + 2 * pad_size);
 
-    // Copy original signal
+    // Copy original _signal
     for i in 0..n {
-        padded[i + pad_size] = signal[i];
+        padded[i + pad_size] = _signal[i];
     }
 
     // Reflect boundaries
     for i in 0..pad_size {
         // Left boundary
-        padded[pad_size - 1 - i] = signal[i.min(n - 1)];
+        padded[pad_size - 1 - i] = _signal[i.min(n - 1)];
 
         // Right boundary
-        padded[n + pad_size + i] = signal[n - 1 - i.min(n - 1)];
+        padded[n + pad_size + i] = _signal[n - 1 - i.min(n - 1)];
     }
 
     padded
@@ -784,8 +786,8 @@ fn pad_signal(signal: &Array1<f64>, pad_size: usize) -> Array1<f64> {
 
 /// Helper function to smooth a power spectral density estimate
 #[allow(dead_code)]
-fn smooth_psd(psd: &Array1<f64>) -> Array1<f64> {
-    let n = psd.len();
+fn smooth_psd(_psd: &Array1<f64>) -> Array1<f64> {
+    let n = _psd.len();
     let mut smoothed = Array1::zeros(n);
 
     // Apply simple moving average smoothing
@@ -796,7 +798,7 @@ fn smooth_psd(psd: &Array1<f64>) -> Array1<f64> {
         let start = i.saturating_sub(half_window);
         let end = (i + half_window + 1).min(n);
 
-        let sum = psd.slice(s![start..end]).sum();
+        let sum = _psd.slice(s![start..end]).sum();
         let count = end - start;
 
         smoothed[i] = sum / count as f64;

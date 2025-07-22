@@ -39,8 +39,8 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 /// Uses SIMD operations for the inner convolution loop, providing
 /// significant speedup for large images. Memory pool reduces allocations by 90%.
 #[allow(dead_code)]
-pub fn simd_convolve_2d(image: &ArrayView2<f32>, kernel: &ArrayView2<f32>) -> Result<Array2<f32>> {
-    let (height, width) = image.dim();
+pub fn simd_convolve_2d(_image: &ArrayView2<f32>, kernel: &ArrayView2<f32>) -> Result<Array2<f32>> {
+    let (height, width) = _image.dim();
     let (k_height, k_width) = kernel.dim();
 
     // Ensure kernel is odd-sized
@@ -65,11 +65,11 @@ pub fn simd_convolve_2d(image: &ArrayView2<f32>, kernel: &ArrayView2<f32>) -> Re
     // Process each output pixel
     for y in k_half_h..(height - k_half_h) {
         for x in k_half_w..(width - k_half_w) {
-            // Extract image patch into pre-allocated buffer (cache-friendly)
+            // Extract _image patch into pre-allocated buffer (cache-friendly)
             let mut patch_idx = 0;
             for ky in 0..k_height {
                 for kx in 0..k_width {
-                    patch[patch_idx] = image[[y + ky - k_half_h, x + kx - k_half_w]];
+                    patch[patch_idx] = _image[[y + ky - k_half_h, x + kx - k_half_w]];
                     patch_idx += 1;
                 }
             }
@@ -161,12 +161,12 @@ pub fn simd_sobel_gradients(
 /// Uses separable convolution (horizontal then vertical) with SIMD
 /// for 3-5x speedup over naive implementation.
 #[allow(dead_code)]
-pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<f32>> {
-    let (height, width) = image.dim();
+pub fn simd_gaussian_blur(_image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<f32>> {
+    let (height, width) = _image.dim();
 
-    // Handle edge case: very small sigma or image
+    // Handle edge case: very small sigma or _image
     if sigma < 0.1 || height < 3 || width < 3 {
-        return Ok(image.to_owned());
+        return Ok(_image.to_owned());
     }
 
     // Generate 1D Gaussian kernel with proper odd size calculation
@@ -190,7 +190,7 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
     }
     let kernel_arr = ndarray::arr1(&kernel_1d);
 
-    // Ensure kernel doesn't exceed image dimensions
+    // Ensure kernel doesn't exceed _image dimensions
     if kernel_size >= width || kernel_size >= height {
         // Fall back to simple averaging for very small images
         let mut output = Array2::zeros((height, width));
@@ -203,7 +203,7 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
                     for dx in -(kernel_half as i32)..=(kernel_half as i32) {
                         let ny = (y as i32 + dy).clamp(0, height as i32 - 1) as usize;
                         let nx = (x as i32 + dx).clamp(0, width as i32 - 1) as usize;
-                        sum_val += image[[ny, nx]];
+                        sum_val += _image[[ny, nx]];
                         count += 1;
                     }
                 }
@@ -217,7 +217,7 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
 
     // Horizontal pass with SIMD
     for y in 0..height {
-        let row = image.row(y);
+        let row = _image.row(y);
 
         // Process interior pixels
         for x in kernel_half..(width - kernel_half) {
@@ -235,7 +235,7 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
             if kernel_half < width {
                 temp[[y, x]] = temp[[y, kernel_half]];
             } else {
-                temp[[y, x]] = image[[y, x]];
+                temp[[y, x]] = _image[[y, x]];
             }
         }
 
@@ -244,7 +244,7 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
             if kernel_half < width {
                 temp[[y, x]] = temp[[y, width - kernel_half - 1]];
             } else {
-                temp[[y, x]] = image[[y, x]];
+                temp[[y, x]] = _image[[y, x]];
             }
         }
     }
@@ -304,15 +304,15 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
 ///
 /// 2-3x faster than scalar implementation.
 #[allow(dead_code)]
-pub fn simd_normalize_image(image: &ArrayView2<f32>) -> Result<Array2<f32>> {
-    let (height, width) = image.dim();
+pub fn simd_normalize_image(_image: &ArrayView2<f32>) -> Result<Array2<f32>> {
+    let (height, width) = _image.dim();
     let mut output = Array2::zeros((height, width));
 
     // Find min/max using SIMD
     let mut min_val = f32::INFINITY;
     let mut max_val = f32::NEG_INFINITY;
 
-    for row in image.rows() {
+    for row in _image.rows() {
         let row_min = f32::simd_min_element(&row);
         let row_max = f32::simd_max_element(&row);
         min_val = min_val.min(row_min);
@@ -329,7 +329,7 @@ pub fn simd_normalize_image(image: &ArrayView2<f32>) -> Result<Array2<f32>> {
     let min_arr = ndarray::Array1::from_elem(width, min_val);
     let scale = 1.0 / range;
 
-    for (y, row) in image.rows().into_iter().enumerate() {
+    for (y, row) in _image.rows().into_iter().enumerate() {
         // Subtract minimum
         let shifted = f32::simd_sub(&row, &min_arr.view());
         // Scale to [0, 1]
@@ -611,8 +611,8 @@ pub fn simd_convolve_2d_parallel(
 ///
 /// 3-5x faster than computing each statistic separately.
 #[allow(dead_code)]
-pub fn simd_image_statistics(image: &ArrayView2<f32>) -> (f32, f32, f32, f32) {
-    let (height, width) = image.dim();
+pub fn simd_image_statistics(_image: &ArrayView2<f32>) -> (f32, f32, f32, f32) {
+    let (height, width) = _image.dim();
     let total_pixels = (height * width) as f32;
 
     // Single-pass computation using SIMD
@@ -622,7 +622,7 @@ pub fn simd_image_statistics(image: &ArrayView2<f32>) -> (f32, f32, f32, f32) {
     let mut sum_squares = 0.0f32;
 
     // Process each row with SIMD
-    for row in image.rows() {
+    for row in _image.rows() {
         let row_min = f32::simd_min_element(&row);
         let row_max = f32::simd_max_element(&row);
         let row_sum = f32::simd_sum(&row);
@@ -691,14 +691,14 @@ impl SimdMemoryPool {
 
 /// Get a temporary buffer from the memory pool
 #[allow(dead_code)]
-pub fn get_temp_buffer(size: usize) -> Vec<f32> {
-    SIMD_MEMORY_POOL.with(|pool| pool.borrow_mut().get_buffer(size))
+pub fn get_temp_buffer(_size: usize) -> Vec<f32> {
+    SIMD_MEMORY_POOL.with(|pool| pool.borrow_mut().get_buffer(_size))
 }
 
 /// Return a buffer to the memory pool
 #[allow(dead_code)]
-pub fn return_temp_buffer(buffer: Vec<f32>) {
-    SIMD_MEMORY_POOL.with(|pool| pool.borrow_mut().return_buffer(buffer));
+pub fn return_temp_buffer(_buffer: Vec<f32>) {
+    SIMD_MEMORY_POOL.with(|pool| pool.borrow_mut().return_buffer(_buffer));
 }
 
 // ============================================================================
@@ -1122,7 +1122,7 @@ pub fn simd_convolve_adaptive_advanced(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
 ) -> Result<Array2<f32>> {
-    let (_height, _width) = image.dim();
+    let (_height_width) = image.dim();
     let (k_height, k_width) = kernel.dim();
 
     // Ensure kernel is odd-sized
@@ -1136,9 +1136,7 @@ pub fn simd_convolve_adaptive_advanced(
     match (k_height, k_width) {
         (3, 3) => simd_convolve_3x3_specialized(image, kernel),
         (5, 5) => simd_convolve_5x5_specialized(image, kernel),
-        (7, 7) => simd_convolve_7x7_specialized(image, kernel),
-        _ if k_height * k_width <= 49 => simd_convolve_small_kernel(image, kernel),
-        _ => simd_convolve_large_kernel_fft(image, kernel),
+        (7, 7) => simd_convolve_7x7_specialized(image, kernel)_ if k_height * k_width <= 49 => simd_convolve_small_kernel(image, kernel, _ => simd_convolve_large_kernel_fft(image, kernel),
     }
 }
 

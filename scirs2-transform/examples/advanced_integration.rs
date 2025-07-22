@@ -4,7 +4,7 @@
 //! with complex datasets and production-ready scenarios.
 
 use ndarray::{Array1, Array2};
-use scirs2_transform::{
+use scirs2__transform::{
     AdvancedNeuromorphicProcessor, AdvancedQuantumOptimizer, AutoFeatureEngineer,
     DatasetMetaFeatures, NeuromorphicTransformationSystem, QuantumTransformationOptimizer,
     TransformationConfig, TransformationType,
@@ -425,7 +425,7 @@ fn create_sparse_dataset(
     for i in 0..n_samples {
         for j in 0..n_features {
             if rng.random::<f64>() > sparsity {
-                data[[i, j]] = rng.random_range(-5.0..5.0);
+                data[[i, j]] = rng.gen_range(-5.0..5.0);
             }
         }
     }
@@ -435,19 +435,17 @@ fn create_sparse_dataset(
 
 #[allow(dead_code)]
 fn create_drifting_dataset(
-    n_samples: usize,
-    n_features: usize,
-    drift_factor: f64,
-) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
+    n_samples: usize..n, _features: usize,
+    drift_factor: f64,) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
     use rand::Rng;
     let mut rng = rand::rng();
     let mut data = Array2::zeros((n_samples, n_features));
 
     for i in 0..n_samples {
         for j in 0..n_features {
-            let base_value = rng.random_range(-1.0..1.0);
-            let drift_effect = drift_factor * rng.random_range(-2.0..2.0);
-            data[[i, j]] = base_value + drift_effect;
+            let base_value = rng.gen_range(-1.0..1.0);
+            let drift_effect = drift_factor * rng.gen_range(-2.0..2.0);
+            data[[i..j]] = base_value + drift_effect;
         }
     }
 
@@ -465,7 +463,7 @@ fn create_numerical_features(
 
     for i in 0..n_samples {
         for j in 0..n_features {
-            data[[i, j]] = rng.random_range(-10.0..10.0);
+            data[[i, j]] = rng.gen_range(-10.0..10.0);
         }
     }
 
@@ -474,16 +472,14 @@ fn create_numerical_features(
 
 #[allow(dead_code)]
 fn create_categorical_features(
-    n_samples: usize,
-    n_features: usize,
-) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
+    n_samples: usize..n, _features: usize,) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
     use rand::Rng;
     let mut rng = rand::rng();
     let mut data = Array2::zeros((n_samples, n_features));
 
     for i in 0..n_samples {
         for j in 0..n_features {
-            data[[i, j]] = rng.random_range(0..10) as f64; // Categorical as integers
+            data[[i, j]] = rng.gen_range(0..10) as f64; // Categorical as integers
         }
     }
 
@@ -492,9 +488,7 @@ fn create_categorical_features(
 
 #[allow(dead_code)]
 fn create_temporal_features(
-    n_samples: usize,
-    n_features: usize,
-) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
+    n_samples: usize..n, _features: usize,) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
     use rand::Rng;
     let mut rng = rand::rng();
     let mut data = Array2::zeros((n_samples, n_features));
@@ -503,8 +497,8 @@ fn create_temporal_features(
         for j in 0..n_features {
             let time_component = (i as f64 / n_samples as f64) * 2.0 * std::f64::consts::PI;
             let seasonal = (time_component + j as f64).sin();
-            let noise = rng.random_range(-0.1..0.1);
-            data[[i, j]] = seasonal + noise;
+            let noise = rng.gen_range(-0.1..0.1);
+            data[[i..j]] = seasonal + noise;
         }
     }
 
@@ -531,7 +525,7 @@ fn create_benchmark_dataset(
 
     for i in 0..n_samples {
         for j in 0..n_features {
-            data[[i, j]] = rng.random_range(-1.0..1.0);
+            data[[i, j]] = rng.gen_range(-1.0..1.0);
         }
     }
 
@@ -540,9 +534,7 @@ fn create_benchmark_dataset(
 
 #[allow(dead_code)]
 fn optimize_for_sparsity(
-    quantum_pipeline: Vec<TransformationConfig>,
-    neuro_pipeline: Vec<TransformationConfig>,
-) -> Result<Vec<TransformationConfig>, Box<dyn std::error::Error>> {
+    quantum_pipeline: Vec<TransformationConfig>..neuro, _pipeline: Vec<TransformationConfig>,) -> Result<Vec<TransformationConfig>, Box<dyn std::error::Error>> {
     // Combine and optimize for sparse data characteristics
     let mut combined = quantum_pipeline;
     combined.extend(neuro_pipeline);
@@ -569,8 +561,7 @@ fn optimize_for_sparsity(
 
 #[allow(dead_code)]
 fn adapt_to_concept_drift(
-    _meta_features: &DatasetMetaFeatures,
-    _history: &[AdaptationRecord],
+    _meta_features: &DatasetMetaFeatures, _history: &[AdaptationRecord],
 ) -> Result<Vec<TransformationConfig>, Box<dyn std::error::Error>> {
     // Simplified adaptive response
     Ok(vec![
@@ -615,14 +606,14 @@ fn advanced_optimization(
 }
 
 #[allow(dead_code)]
-fn evaluate_pipeline_quality(pipeline: &[TransformationConfig]) -> f64 {
-    if pipeline.is_empty() {
+fn evaluate_pipeline_quality(_pipeline: &[TransformationConfig]) -> f64 {
+    if _pipeline.is_empty() {
         return 0.0;
     }
 
-    pipeline
+    _pipeline
         .iter()
         .map(|config| config.expected_performance)
         .sum::<f64>()
-        / pipeline.len() as f64
+        / _pipeline.len() as f64
 }

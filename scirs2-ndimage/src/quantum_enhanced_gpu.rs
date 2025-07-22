@@ -16,14 +16,14 @@
 //! - **Adaptive Quantum Computing**: Dynamic quantum-classical resource allocation
 
 use ndarray::{Array1, Array2, ArrayView2};
-use num_complex::Complex;
+use num__complex::Complex;
 use num_traits::{Float, FromPrimitive, Zero};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::quantum_inspired::QuantumConfig;
+use crate::quantum__inspired::QuantumConfig;
 use scirs2_core::parallel_ops::*;
 
 /// Configuration for quantum-enhanced GPU acceleration
@@ -571,7 +571,7 @@ pub fn quantum_enhanced_image_processing<T>(
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
-    let (_height, _width) = image.dim();
+    let (_height_width) = image.dim();
 
     // Create quantum-GPU task
     let task = create_quantum_image_processing_task(&image, &processing_type, config)?;
@@ -642,7 +642,7 @@ pub fn quantum_circuit_simulation_gpu(
         ));
     }
 
-    // Allocate quantum state on GPU
+    // Allocate quantum _state on GPU
     let mut current_state = initial_state.clone();
 
     // Execute quantum gates on GPU
@@ -655,7 +655,7 @@ pub fn quantum_circuit_simulation_gpu(
         }
     }
 
-    // Validate final state
+    // Validate final _state
     validate_quantum_state(&current_state)?;
 
     Ok(current_state)
@@ -683,7 +683,7 @@ where
     let quantum_classifier =
         train_quantum_classifier_gpu(&quantum_feature_maps, labels, context, config)?;
 
-    // Classify test data
+    // Classify test _data
     let mut results = Vec::new();
     for test_sample in test_data {
         let test_features = create_quantum_feature_map(test_sample, context, config)?;
@@ -768,9 +768,7 @@ pub struct ResourcePrediction {
 
 #[allow(dead_code)]
 fn create_quantum_image_processing_task<T>(
-    _image: &ArrayView2<T>,
-    _processing_type: &QuantumImageProcessingType,
-    _config: &QuantumGPUConfig,
+    _image: &ArrayView2<T>, _processing_type: &QuantumImageProcessingType, _config: &QuantumGPUConfig,
 ) -> NdimageResult<QuantumGPUTask>
 where
     T: Float + FromPrimitive + Copy,
@@ -789,18 +787,15 @@ where
 
 #[allow(dead_code)]
 fn schedule_quantum_gpu_task(
-    _context: &QuantumGPUContext,
-    _task: QuantumGPUTask,
+    _context: &QuantumGPUContext_task: QuantumGPUTask,
 ) -> NdimageResult<()> {
-    // Implementation would schedule task for execution
+    // Implementation would schedule _task for execution
     Ok(())
 }
 
 #[allow(dead_code)]
 fn quantum_fourier_image_processing<T>(
-    _image: &ArrayView2<T>,
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    _image: &ArrayView2<T>, _context: &QuantumGPUContext_config: &QuantumGPUConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy + Zero,
@@ -812,9 +807,7 @@ where
 
 #[allow(dead_code)]
 fn quantum_superposition_image_processing<T>(
-    _image: &ArrayView2<T>,
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    _image: &ArrayView2<T>, _context: &QuantumGPUContext_config: &QuantumGPUConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy + Zero,
@@ -826,9 +819,7 @@ where
 
 #[allow(dead_code)]
 fn quantum_entanglement_image_processing<T>(
-    _image: &ArrayView2<T>,
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    _image: &ArrayView2<T>, _context: &QuantumGPUContext_config: &QuantumGPUConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy + Zero,
@@ -840,9 +831,7 @@ where
 
 #[allow(dead_code)]
 fn quantum_ml_image_processing<T>(
-    _image: &ArrayView2<T>,
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    _image: &ArrayView2<T>, _context: &QuantumGPUContext_config: &QuantumGPUConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy + Zero,
@@ -854,9 +843,7 @@ where
 
 #[allow(dead_code)]
 fn quantum_sensing_image_processing<T>(
-    _image: &ArrayView2<T>,
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    _image: &ArrayView2<T>, _context: &QuantumGPUContext_config: &QuantumGPUConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy + Zero,
@@ -868,9 +855,7 @@ where
 
 #[allow(dead_code)]
 fn apply_quantum_error_correction<T>(
-    _result: &Array2<T>,
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    _result: &Array2<T>, _context: &QuantumGPUContext_config: &QuantumGPUConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy + Clone,
@@ -881,9 +866,7 @@ where
 
 #[allow(dead_code)]
 fn update_performance_metrics(
-    _context: &QuantumGPUContext,
-    _task: &QuantumGPUTask,
-    _result: &Array2<impl Float>,
+    _context: &QuantumGPUContext_task: &QuantumGPUTask, _result: &Array2<impl Float>,
 ) -> NdimageResult<()> {
     // Implementation would update performance metrics
     Ok(())
@@ -892,35 +875,29 @@ fn update_performance_metrics(
 #[allow(dead_code)]
 fn execute_quantum_gate_gpu(
     _gate: &QuantumGate,
-    current_state: Array1<Complex<f64>>,
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    current_state: Array1<Complex<f64>>, _context: &QuantumGPUContext_config: &QuantumGPUConfig,
 ) -> NdimageResult<Array1<Complex<f64>>> {
-    // Implementation would execute quantum gate on GPU
+    // Implementation would execute quantum _gate on GPU
     Ok(current_state)
 }
 
 #[allow(dead_code)]
 fn apply_gate_level_error_correction(
-    current_state: &Array1<Complex<f64>>,
-    _gate: &QuantumGate,
-    _context: &QuantumGPUContext,
+    current_state: &Array1<Complex<f64>>, _gate: &QuantumGate_context: &QuantumGPUContext,
 ) -> NdimageResult<Array1<Complex<f64>>> {
-    // Implementation would apply gate-level error correction
+    // Implementation would apply _gate-level error correction
     Ok(current_state.clone())
 }
 
 #[allow(dead_code)]
 fn validate_quantum_state(_state: &Array1<Complex<f64>>) -> NdimageResult<()> {
-    // Implementation would validate quantum state normalization
+    // Implementation would validate quantum _state normalization
     Ok(())
 }
 
 #[allow(dead_code)]
 fn create_quantum_feature_maps<T>(
-    _training_data: &[ArrayView2<T>],
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    _training_data: &[ArrayView2<T>], _context: &QuantumGPUContext_config: &QuantumGPUConfig,
 ) -> NdimageResult<Vec<Array1<Complex<f64>>>>
 where
     T: Float + FromPrimitive + Copy,
@@ -931,9 +908,7 @@ where
 
 #[allow(dead_code)]
 fn create_quantum_feature_map<T>(
-    _data: &ArrayView2<T>,
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    _data: &ArrayView2<T>, _context: &QuantumGPUContext_config: &QuantumGPUConfig,
 ) -> NdimageResult<Array1<Complex<f64>>>
 where
     T: Float + FromPrimitive + Copy,
@@ -944,10 +919,7 @@ where
 
 #[allow(dead_code)]
 fn train_quantum_classifier_gpu(
-    _feature_maps: &[Array1<Complex<f64>>],
-    _labels: &[usize],
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    _feature_maps: &[Array1<Complex<f64>>], _labels: &[usize], _context: &QuantumGPUContext_config: &QuantumGPUConfig,
 ) -> NdimageResult<QuantumClassifier> {
     // Implementation would train quantum classifier
     Ok(QuantumClassifier {
@@ -966,10 +938,7 @@ pub struct QuantumClassifier {
 
 #[allow(dead_code)]
 fn classify_quantum_sample_gpu(
-    _features: &Array1<Complex<f64>>,
-    _classifier: &QuantumClassifier,
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    _features: &Array1<Complex<f64>>, _classifier: &QuantumClassifier_context: &QuantumGPUContext, _config: &QuantumGPUConfig,
 ) -> NdimageResult<(usize, f64)> {
     // Implementation would classify quantum sample
     Ok((0, 0.8))
@@ -990,8 +959,7 @@ fn analyze_current_workload(_context: &QuantumGPUContext) -> NdimageResult<Workl
 
 #[allow(dead_code)]
 fn predict_resource_requirements(
-    _workload: &WorkloadAnalysis,
-    _context: &QuantumGPUContext,
+    _workload: &WorkloadAnalysis_context: &QuantumGPUContext,
 ) -> NdimageResult<ResourcePrediction> {
     Ok(ResourcePrediction {
         predicted_quantum_load: 0.4,
@@ -1004,10 +972,7 @@ fn predict_resource_requirements(
 
 #[allow(dead_code)]
 fn optimize_resource_allocation(
-    _workload: &WorkloadAnalysis,
-    _prediction: &ResourcePrediction,
-    _context: &QuantumGPUContext,
-    _config: &QuantumGPUConfig,
+    _workload: &WorkloadAnalysis_prediction: &ResourcePrediction, _context: &QuantumGPUContext_config: &QuantumGPUConfig,
 ) -> NdimageResult<ResourceAllocationDecision> {
     Ok(ResourceAllocationDecision {
         quantum_resource_allocation: 0.4,
@@ -1020,16 +985,14 @@ fn optimize_resource_allocation(
 
 #[allow(dead_code)]
 fn apply_resource_allocation(
-    _decision: &ResourceAllocationDecision,
-    _context: &QuantumGPUContext,
+    _decision: &ResourceAllocationDecision_context: &QuantumGPUContext,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_performance_predictions(
-    _context: &QuantumGPUContext,
-    _decision: &ResourceAllocationDecision,
+    _context: &QuantumGPUContext_decision: &ResourceAllocationDecision,
 ) -> NdimageResult<()> {
     Ok(())
 }

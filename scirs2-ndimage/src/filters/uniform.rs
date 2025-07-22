@@ -41,7 +41,7 @@ use scirs2_core::parallel_ops;
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::filters::{uniform_filter, BorderMode};
+/// use scirs2__ndimage::filters::{uniform_filter, BorderMode};
 ///
 /// let input = array![[1.0, 2.0, 3.0],
 ///                     [4.0, 5.0, 6.0],
@@ -622,8 +622,7 @@ where
 fn uniform_filter_nd_general<T, D>(
     input: &Array<T, D>,
     size: &[usize],
-    mode: &BorderMode,
-    _origin: &[isize],
+    mode: &BorderMode_origin: &[isize],
     pad_width: &[(usize, usize)],
     norm_factor: T,
 ) -> NdimageResult<Array<T, D>>
@@ -689,20 +688,20 @@ where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign,
     D: Dimension,
 {
-    let ndim = input.ndim();
+    let ndim = _input.ndim();
 
     // Helper function to convert linear index to n-dimensional coordinates
-    fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
-        let mut coords = vec![0; shape.len()];
-        for i in (0..shape.len()).rev() {
-            coords[i] = index % shape[i];
-            index /= shape[i];
+    fn index_to_coords(mut index: usize_shape: &[usize]) -> Vec<usize> {
+        let mut coords = vec![0; _shape.len()];
+        for i in (0.._shape.len()).rev() {
+            coords[i] = index % _shape[i];
+            index /= _shape[i];
         }
         coords
     }
 
-    // Iterate through each position in the input array
-    for linear_idx in 0..input.len() {
+    // Iterate through each position in the _input array
+    for linear_idx in 0.._input.len() {
         let coords = index_to_coords(linear_idx, input_shape);
 
         // Initialize sum
@@ -761,15 +760,15 @@ where
 {
     use scirs2_core::parallel_ops::*;
 
-    let ndim = input.ndim();
-    let total_elements = input.len();
+    let ndim = _input.ndim();
+    let total_elements = _input.len();
 
     // Helper function to convert linear index to n-dimensional coordinates
-    fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
-        let mut coords = vec![0; shape.len()];
-        for i in (0..shape.len()).rev() {
-            coords[i] = index % shape[i];
-            index /= shape[i];
+    fn index_to_coords(mut index: usize_shape: &[usize]) -> Vec<usize> {
+        let mut coords = vec![0; _shape.len()];
+        for i in (0.._shape.len()).rev() {
+            coords[i] = index % _shape[i];
+            index /= _shape[i];
         }
         coords
     }
@@ -819,7 +818,7 @@ where
         .collect();
 
     // Convert results back to n-dimensional array
-    let output = Array::from_shape_vec(input.raw_dim(), results)
+    let output = Array::from_shape_vec(_input.raw_dim(), results)
         .map_err(|_| NdimageError::DimensionError("Failed to create output array".into()))?;
 
     Ok(output)
@@ -1118,8 +1117,7 @@ where
 #[allow(dead_code)]
 pub fn uniform_filter_chunked<T>(
     input: &Array2<T>,
-    size: &[usize],
-    _chunk_size: usize,
+    size: &[usize], _chunk_size: usize,
     mode: Option<BorderMode>,
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array2<T>>
@@ -1148,12 +1146,12 @@ where
         orig.to_vec()
     } else {
         // Default to centered filter
-        vec![(size[0] / 2) as isize, (size[1] / 2) as isize]
+        vec![(_size[0] / 2) as isize, (_size[1] / 2) as isize]
     };
 
     // Calculate padding for overlap between chunks
-    let pad_rows = size[0];
-    let pad_cols = size[1];
+    let pad_rows = _size[0];
+    let pad_cols = _size[1];
 
     // Create output array
     let mut output = Array2::zeros((rows, cols));
@@ -1188,7 +1186,7 @@ where
         let chunk = chunk_slice.to_owned();
 
         // Apply uniform filter to the chunk
-        let filtered_chunk = uniform_filter_2d(&chunk, size, &border_mode, &origin)?;
+        let filtered_chunk = uniform_filter_2d(&chunk, _size, &border_mode, &origin)?;
 
         // Extract the non-padded portion
         let output_row_offset = row_start.saturating_sub(padded_row_start);
@@ -1226,8 +1224,7 @@ where
 #[allow(dead_code)]
 pub fn uniform_filter_chunked<T>(
     input: &Array2<T>,
-    size: &[usize],
-    _chunk_size: usize,
+    size: &[usize], _chunk_size: usize,
     mode: Option<BorderMode>,
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array2<T>>
@@ -1244,11 +1241,11 @@ where
 {
     // For non-parallel version, just call the regular uniform filter
     // This ensures the API is consistent even when parallel feature is disabled
-    uniform_filter_2d(input, size, &mode.unwrap_or(BorderMode::Reflect), &{
+    uniform_filter_2d(input, _size, &mode.unwrap_or(BorderMode::Reflect), &{
         if let Some(orig) = origin {
             orig.to_vec()
         } else {
-            vec![(size[0] / 2) as isize, (size[1] / 2) as isize]
+            vec![(_size[0] / 2) as isize, (_size[1] / 2) as isize]
         }
     })
 }

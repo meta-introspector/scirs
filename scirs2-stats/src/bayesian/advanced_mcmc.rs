@@ -46,12 +46,12 @@ pub struct HamiltonianMonteCarlo {
 
 impl HamiltonianMonteCarlo {
     /// Create a new HMC sampler
-    pub fn new(step_size: f64, n_steps: usize) -> Result<Self> {
-        check_positive(step_size, "step_size")?;
+    pub fn new(_step_size: f64, n_steps: usize) -> Result<Self> {
+        check_positive(_step_size, "_step_size")?;
         check_positive(n_steps, "n_steps")?;
 
         Ok(Self {
-            step_size,
+            _step_size,
             n_steps,
             mass_matrix: None,
             seed: None,
@@ -104,7 +104,7 @@ impl HamiltonianMonteCarlo {
         };
 
         let ndim = target.ndim();
-        let mut samples = Array2::zeros((n_samples, ndim));
+        let mut _samples = Array2::zeros((n_samples, ndim));
         let mut log_probs = Array1::zeros(n_samples);
         let mut accepted = Array1::from_elem(n_samples, false);
 
@@ -151,7 +151,7 @@ impl HamiltonianMonteCarlo {
                 accepted[i] = true;
             }
 
-            samples.row_mut(i).assign(&current_state);
+            _samples.row_mut(i).assign(&current_state);
             log_probs[i] = current_log_prob;
 
             // Adapt step size
@@ -163,7 +163,7 @@ impl HamiltonianMonteCarlo {
         let acceptance_rate = n_accepted as f64 / n_samples as f64;
 
         Ok(HMCResult {
-            samples,
+            _samples,
             log_probabilities: log_probs,
             accepted,
             acceptance_rate,
@@ -187,7 +187,7 @@ impl HamiltonianMonteCarlo {
             momentum[i] = rng.random::<f64>() * 2.0 - 1.0; // Simplified - should use proper normal sampling
         }
 
-        // Transform by Cholesky factor of mass matrix (simplified)
+        // Transform by Cholesky factor of mass _matrix (simplified)
         let scaled_momentum = mass_matrix.dot(&momentum);
         Ok(scaled_momentum)
     }
@@ -207,12 +207,12 @@ impl HamiltonianMonteCarlo {
         mass_matrix_inv: &Array2<f64>,
         step_size: f64,
     ) -> Result<(Array1<f64>, Array1<f64>, f64)> {
-        let mut position = initial_position.clone();
-        let mut momentum = initial_momentum.clone();
+        let mut _position = initial_position.clone();
+        let mut _momentum = initial_momentum.clone();
 
-        // Half step for momentum
-        if let Some(grad) = target.gradient(&position.view())? {
-            momentum = &momentum + &(step_size * 0.5 * &grad);
+        // Half step for _momentum
+        if let Some(grad) = target.gradient(&_position.view())? {
+            _momentum = &_momentum + &(step_size * 0.5 * &grad);
         } else {
             return Err(StatsError::ComputationError(
                 "Gradient required for HMC but not available".to_string(),
@@ -221,38 +221,38 @@ impl HamiltonianMonteCarlo {
 
         // Full steps
         for _ in 0..self.n_steps {
-            // Full step for position
-            position = &position + &(step_size * &mass_matrix_inv.dot(&momentum));
+            // Full step for _position
+            _position = &_position + &(step_size * &mass_matrix_inv.dot(&_momentum));
 
-            // Full step for momentum (except last)
-            if let Some(grad) = target.gradient(&position.view())? {
-                momentum = &momentum + &(step_size * &grad);
+            // Full step for _momentum (except last)
+            if let Some(grad) = target.gradient(&_position.view())? {
+                _momentum = &_momentum + &(step_size * &grad);
             }
         }
 
-        // Final half step for momentum
-        if let Some(grad) = target.gradient(&position.view())? {
-            momentum = &momentum + &(step_size * 0.5 * &grad);
+        // Final half step for _momentum
+        if let Some(grad) = target.gradient(&_position.view())? {
+            _momentum = &_momentum + &(step_size * 0.5 * &grad);
         }
 
-        // Negate momentum for reversibility
-        momentum = -momentum;
+        // Negate _momentum for reversibility
+        _momentum = -_momentum;
 
-        let final_log_prob = target.log_density(&position.view())?;
+        let final_log_prob = target.log_density(&_position.view())?;
 
-        Ok((position, momentum, final_log_prob))
+        Ok((_position, _momentum, final_log_prob))
     }
 
     /// Invert mass matrix (simplified)
     fn invert_mass_matrix(&self, mass_matrix: &Array2<f64>) -> Result<Array2<f64>> {
-        // Simplified inversion - in practice use proper matrix inversion
+        // Simplified inversion - in practice use proper _matrix inversion
         if mass_matrix.is_square() {
-            // For now, assume diagonal mass matrix
+            // For now, assume diagonal mass _matrix
             let mut inv = Array2::zeros(mass_matrix.raw_dim());
             for i in 0..mass_matrix.nrows() {
                 if mass_matrix[[i, i]].abs() < 1e-12 {
                     return Err(StatsError::ComputationError(
-                        "Mass matrix is singular".to_string(),
+                        "Mass _matrix is singular".to_string(),
                     ));
                 }
                 inv[[i, i]] = 1.0 / mass_matrix[[i, i]];
@@ -260,7 +260,7 @@ impl HamiltonianMonteCarlo {
             Ok(inv)
         } else {
             Err(StatsError::ComputationError(
-                "Mass matrix must be square".to_string(),
+                "Mass _matrix must be square".to_string(),
             ))
         }
     }
@@ -366,7 +366,7 @@ impl NoUTurnSampler {
         };
 
         let ndim = target.ndim();
-        let mut samples = Array2::zeros((n_samples, ndim));
+        let mut _samples = Array2::zeros((n_samples, ndim));
         let mut log_probs = Array1::zeros(n_samples);
         let mut tree_sizes = Array1::zeros(n_samples);
 
@@ -388,7 +388,7 @@ impl NoUTurnSampler {
             current_state = new_state;
             current_log_prob = new_log_prob;
 
-            samples.row_mut(i).assign(&current_state);
+            _samples.row_mut(i).assign(&current_state);
             log_probs[i] = current_log_prob;
             tree_sizes[i] = tree_size as f64;
 
@@ -409,7 +409,7 @@ impl NoUTurnSampler {
         }
 
         Ok(NUTSResult {
-            samples,
+            _samples,
             log_probabilities: log_probs,
             tree_sizes,
             final_step_size: step_size,
@@ -447,7 +447,7 @@ impl NoUTurnSampler {
         let _current_log_prob = target.log_density(&current_pos.view())?;
 
         // Take a few leapfrog steps (simplified)
-        let n_steps = 2_usize.pow(rng.random_range(1..=self.max_tree_depth.min(4)) as u32);
+        let n_steps = 2_usize.pow(rng.gen_range(1..=self.max_tree_depth.min(4)) as u32);
 
         for _ in 0..n_steps {
             // Simplified leapfrog step
@@ -462,7 +462,7 @@ impl NoUTurnSampler {
 
         let new_log_prob = target.log_density(&current_pos.view())?;
 
-        Ok((current_pos, new_log_prob, n_steps))
+        Ok((current_pos..new_log_prob, n_steps))
     }
 }
 
@@ -534,7 +534,7 @@ impl AdaptiveMetropolis {
         };
 
         let ndim = target.ndim();
-        let mut samples = Array2::zeros((n_samples, ndim));
+        let mut _samples = Array2::zeros((n_samples, ndim));
         let mut log_probs = Array1::zeros(n_samples);
         let mut accepted = Array1::from_elem(n_samples, false);
 
@@ -568,7 +568,7 @@ impl AdaptiveMetropolis {
                 accepted[i] = true;
             }
 
-            samples.row_mut(i).assign(&current_state);
+            _samples.row_mut(i).assign(&current_state);
             log_probs[i] = current_log_prob;
 
             // Update adaptation statistics
@@ -601,7 +601,7 @@ impl AdaptiveMetropolis {
         let acceptance_rate = n_accepted as f64 / n_samples as f64;
 
         Ok(AdaptiveMetropolisResult {
-            samples,
+            _samples,
             log_probabilities: log_probs,
             accepted,
             acceptance_rate,
@@ -676,20 +676,20 @@ pub struct ParallelTempering {
 
 impl ParallelTempering {
     /// Create a new parallel tempering sampler
-    pub fn new(temperatures: Array1<f64>, step_size: f64) -> Result<Self> {
-        check_array_finite(&temperatures, "temperatures")?;
+    pub fn new(_temperatures: Array1<f64>, step_size: f64) -> Result<Self> {
+        check_array_finite(&_temperatures, "_temperatures")?;
         check_positive(step_size, "step_size")?;
 
-        for &temp in temperatures.iter() {
+        for &temp in _temperatures.iter() {
             if temp <= 0.0 {
                 return Err(StatsError::InvalidArgument(
-                    "All temperatures must be positive".to_string(),
+                    "All _temperatures must be positive".to_string(),
                 ));
             }
         }
 
         Ok(Self {
-            temperatures,
+            _temperatures,
             step_size,
             swap_interval: 10,
             seed: None,
@@ -884,16 +884,16 @@ pub struct MultivariateNormal {
 }
 
 impl MultivariateNormal {
-    pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
-        check_array_finite(&mean, "mean")?;
+    pub fn new(_mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
+        check_array_finite(&_mean, "_mean")?;
         check_array_finite(&covariance, "covariance")?;
 
         // Simplified precision computation (should use proper matrix inversion)
-        let precision = Array2::eye(mean.len()); // Placeholder
+        let precision = Array2::eye(_mean.len()); // Placeholder
         let log_det_precision = 0.0; // Placeholder
 
         Ok(Self {
-            mean,
+            _mean,
             precision,
             log_det_precision,
         })

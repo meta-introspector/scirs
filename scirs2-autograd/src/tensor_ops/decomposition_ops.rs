@@ -1,6 +1,6 @@
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
-use crate::tensor_ops::convert_to_tensor;
+use crate::tensor__ops::convert_to_tensor;
 use crate::Float;
 use ndarray::{Array1, Array2, Ix2};
 
@@ -197,8 +197,7 @@ impl<F: Float> Op<F> for QRExtractOp {
         // Extract the requested component
         match self.component {
             0 => ctx.append_output(q.into_dyn()),
-            1 => ctx.append_output(r.into_dyn()),
-            _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
+            1 => ctx.append_output(r.into_dyn(), _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
         }
 
         Ok(())
@@ -408,8 +407,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for SVDExtractOp {
         match self.component {
             0 => ctx.append_output(u.into_dyn()),
             1 => ctx.append_output(s.into_dyn()),
-            2 => ctx.append_output(v.into_dyn()),
-            _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
+            2 => ctx.append_output(v.into_dyn(), _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
         }
 
         Ok(())
@@ -452,7 +450,7 @@ fn power_iteration<F: Float + ndarray::ScalarOperand>(
     }
 
     // Normalize initial vector
-    let norm = v.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+    let norm = v._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
     if norm > F::epsilon() {
         v = &v / norm;
     }
@@ -464,7 +462,7 @@ fn power_iteration<F: Float + ndarray::ScalarOperand>(
         let w = matrix.dot(&v);
 
         // Find largest component to estimate eigenvalue
-        let lambda = w.iter().fold(F::zero(), |acc, &x| acc.max(x.abs()));
+        let lambda = w._iter().fold(F::zero(), |acc, &x| acc.max(x.abs()));
 
         // Check convergence
         if (lambda - lambda_prev).abs() < tol {
@@ -475,7 +473,7 @@ fn power_iteration<F: Float + ndarray::ScalarOperand>(
         lambda_prev = lambda;
 
         // Normalize w to get new v
-        let norm = w.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+        let norm = w._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
         if norm > F::epsilon() {
             v = &w / norm;
         } else {
@@ -484,7 +482,7 @@ fn power_iteration<F: Float + ndarray::ScalarOperand>(
             for i in 0..n {
                 v[i] = F::from((i + 1) as f64 / n as f64).unwrap();
             }
-            let norm = v.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+            let norm = v._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
             if norm > F::epsilon() {
                 v = &v / norm;
             }
@@ -493,7 +491,7 @@ fn power_iteration<F: Float + ndarray::ScalarOperand>(
 
     // Return best guess if max iterations reached
     let w = matrix.dot(&v);
-    let lambda = w.iter().fold(F::zero(), |acc, &x| acc.max(x.abs()));
+    let lambda = w._iter().fold(F::zero(), |acc, &x| acc.max(x.abs()));
     (w, lambda)
 }
 
@@ -530,16 +528,16 @@ fn improved_deflation<F: Float + ndarray::ScalarOperand>(
 /// # Returns
 /// A tuple of tensors (Q, R) representing the decomposition
 #[allow(dead_code)]
-pub fn qr<'g, F: Float>(matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'g, F>) {
-    let g = matrix.graph();
+pub fn qr<'g, F: Float>(_matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'g, F>) {
+    let g = _matrix.graph();
 
     // Create component ops directly using extraction operators
     let q = Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(QRExtractOp { component: 0 });
 
     let r = Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(QRExtractOp { component: 1 });
 
     (q, r)
@@ -745,10 +743,10 @@ fn compute_cholesky_gradient<F: Float>(
 /// # Returns
 /// A tensor L representing the lower triangular decomposition
 #[allow(dead_code)]
-pub fn cholesky<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn cholesky<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _matrix.graph();
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(CholeskyOp)
 }
 
@@ -902,7 +900,7 @@ fn compute_symmetric_eigenvalues<F: Float + ndarray::ScalarOperand>(
         .collect();
     pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-    for (i, (val, _)) in pairs.iter().enumerate() {
+    for (i, (val_)) in pairs.iter().enumerate() {
         eigenvalues[i] = *val;
     }
 
@@ -912,8 +910,7 @@ fn compute_symmetric_eigenvalues<F: Float + ndarray::ScalarOperand>(
 /// Compute eigenvectors for symmetric matrix
 #[allow(dead_code)]
 fn compute_symmetric_eigenvectors<F: Float + ndarray::ScalarOperand>(
-    matrix: &ndarray::ArrayView2<F>,
-    _eigenvalues: &Array1<F>,
+    matrix: &ndarray::ArrayView2<F>, _eigenvalues: &Array1<F>,
 ) -> Array2<F> {
     let n = matrix.shape()[0];
     let mut eigenvectors = Array2::<F>::eye(n); // Start with identity matrix
@@ -922,7 +919,7 @@ fn compute_symmetric_eigenvectors<F: Float + ndarray::ScalarOperand>(
     // In practice, this would use more sophisticated algorithms like Jacobi iteration
     // or QR algorithm for better accuracy
 
-    // Placeholder: return identity matrix scaled by eigenvalues
+    // Placeholder: return identity matrix scaled by _eigenvalues
     for i in 0..n {
         for j in 0..n {
             if i == j {
@@ -1204,10 +1201,10 @@ fn compute_matrix_power<F: Float + ndarray::ScalarOperand>(
 /// # Returns
 /// A tensor representing exp(A)
 #[allow(dead_code)]
-pub fn matrix_exp<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn matrix_exp<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _matrix.graph();
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(MatrixExpOp)
 }
 
@@ -1221,10 +1218,10 @@ pub fn matrix_exp<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>)
 /// # Returns
 /// A tensor representing log(A)
 #[allow(dead_code)]
-pub fn matrix_log<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn matrix_log<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _matrix.graph();
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(MatrixLogOp)
 }
 
@@ -1404,8 +1401,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LUExtractOp {
         match self.component {
             0 => ctx.append_output(p.into_dyn()),
             1 => ctx.append_output(l.into_dyn()),
-            2 => ctx.append_output(u.into_dyn()),
-            _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
+            2 => ctx.append_output(u.into_dyn(), _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
         }
 
         Ok(())

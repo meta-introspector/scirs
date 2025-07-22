@@ -6,7 +6,7 @@ use ndarray::Array;
 use num_traits::Float;
 use std::fmt::Debug;
 // Import from scirs2-optim
-use scirs2_optim::optimizers as optim_optimizers;
+use scirs2__optim::optimizers as optim_optimizers;
 /// Adam optimizer (Adaptive Moment Estimation).
 ///
 /// Adam is an optimization algorithm that adapts the learning rate for each parameter
@@ -29,7 +29,7 @@ use scirs2_optim::optimizers as optim_optimizers;
 /// adam.update(&mut params, &grads).unwrap();
 pub struct Adam<F: Float + Debug> {
     /// Inner Adam optimizer from scirs2-optim
-    inner: optim_optimizers::Adam<F>,
+    inner: optim_optimizers: Adam<F>,
     /// Weight decay (L2 regularization)
     weight_decay: F,
 }
@@ -41,10 +41,10 @@ impl<F: Float + Debug> Adam<F> {
     /// * `beta1` - Exponential decay rate for first moment estimates (default: 0.9)
     /// * `beta2` - Exponential decay rate for second moment estimates (default: 0.999)
     /// * `epsilon` - Small constant for numerical stability (default: 1e-8)
-    pub fn new(learning_rate: F, beta1: F, beta2: F, epsilon: F) -> Self {
+    pub fn new(_learning_rate: F, beta1: F, beta2: F, epsilon: F) -> Self {
         Self {
-            inner: optim_optimizers::Adam::new_with_config(
-                learning_rate,
+            inner: optim_optimizers: Adam::new_with_config(
+                _learning_rate,
                 beta1,
                 beta2,
                 epsilon,
@@ -54,7 +54,7 @@ impl<F: Float + Debug> Adam<F> {
         }
     }
     /// Create a new Adam optimizer with default hyperparameters
-    pub fn default_with_lr(learning_rate: F) -> Result<Self> {
+    pub fn default_with_lr(_learning_rate: F) -> Result<Self> {
         let beta1 = F::from(0.9).ok_or_else(|| 
             NeuralError::InvalidArchitecture("Failed to convert beta1".to_string()))?;
         let beta2 = F::from(0.999).ok_or_else(|| 
@@ -62,7 +62,7 @@ impl<F: Float + Debug> Adam<F> {
         let epsilon = F::from(1e-8).ok_or_else(|| 
             NeuralError::InvalidArchitecture("Failed to convert epsilon".to_string()))?;
         
-        Ok(Self::new(learning_rate, beta1, beta2, epsilon))
+        Ok(Self::new(_learning_rate, beta1, beta2, epsilon))
     
     /// Create a new Adam optimizer with weight decay
     /// * `beta1` - Exponential decay rate for first moment estimates
@@ -110,11 +110,11 @@ impl<F: Float + Debug> Adam<F> {
 impl<F: Float + Debug> Default for Adam<F> {
     fn default() -> Self {
         // Safe default with learning rate 0.001
-        let learning_rate = F::from(0.001).unwrap_or(F::one() / F::from(1000.0).unwrap_or(F::one()));
+        let _learning_rate = F::from(0.001).unwrap_or(F::one() / F::from(1000.0).unwrap_or(F::one()));
         let beta1 = F::from(0.9).unwrap_or(F::one());
         let beta2 = F::from(0.999).unwrap_or(F::one());
         let epsilon = F::from(1e-8).unwrap_or(F::zero());
-        Self::new(learning_rate, beta1, beta2, epsilon)
+        Self::new(_learning_rate, beta1, beta2, epsilon)
 impl<F: Float + Debug> Optimizer<F> for Adam<F> {
     fn update(&mut self, params: &mut [Array<F, ndarray::IxDyn>], 
               grads: &[Array<F, ndarray::IxDyn>]) -> Result<()> {

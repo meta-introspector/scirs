@@ -42,8 +42,8 @@ pub struct DataSlice {
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::fairness::bias_detection::slice_analysis;
-/// use scirs2_metrics::classification::accuracy_score;
+/// use scirs2__metrics::fairness::bias_detection::slice_analysis;
+/// use scirs2__metrics::classification::accuracy_score;
 ///
 /// // Create sample dataset
 /// let features = Array2::from_shape_vec((8, 3), vec![
@@ -96,10 +96,10 @@ where
     F: Fn(&[T], &[T]) -> f64,
 {
     // Check that dimensions match
-    let n_samples = features.nrows();
+    let n_samples = _features.nrows();
     if n_samples != y_true.len() || n_samples != y_pred.len() {
         return Err(MetricsError::InvalidInput(format!(
-            "Dimensions mismatch: features ({} rows), y_true ({}), y_pred ({})",
+            "Dimensions mismatch: _features ({} rows), y_true ({}), y_pred ({})",
             n_samples,
             y_true.len(),
             y_pred.len()
@@ -112,7 +112,7 @@ where
         ));
     }
 
-    let n_features = features.ncols();
+    let n_features = _features.ncols();
     for &feature_idx in categorical_features {
         if feature_idx >= n_features {
             return Err(MetricsError::InvalidInput(format!(
@@ -135,7 +135,7 @@ where
         // Find unique values for this feature
         let mut unique_values = BTreeSet::new();
         for i in 0..n_samples {
-            let value = features[[i, feature_idx]].to_f64().unwrap();
+            let value = _features[[i, feature_idx]].to_f64().unwrap();
             // Convert to integer by rounding to handle precision issues
             let rounded_value = (value * 1000.0).round() as i64;
             unique_values.insert(rounded_value);
@@ -153,11 +153,11 @@ where
             let mut slice_y_pred = Vec::new();
 
             for i in 0..n_samples {
-                let feature_value = features[[i, feature_idx]].to_f64().unwrap();
+                let feature_value = _features[[i, feature_idx]].to_f64().unwrap();
                 let rounded_value = (feature_value * 1000.0).round() as i64;
 
                 if rounded_value == int_value {
-                    mask[i] = true;
+                    mask[i] = _true;
                     slice_y_true.push(y_true[i].clone());
                     slice_y_pred.push(y_pred[i].clone());
                 }
@@ -195,8 +195,8 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::fairness::bias_detection::subgroup_performance;
-/// use scirs2_metrics::classification::accuracy_score;
+/// use scirs2__metrics::fairness::bias_detection::subgroup_performance;
+/// use scirs2__metrics::classification::accuracy_score;
 ///
 /// // Create sample dataset
 /// let y_true = array![0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0];
@@ -270,7 +270,7 @@ where
     let n_groups = groups.ncols();
     if n_groups != group_names.len() {
         return Err(MetricsError::InvalidInput(format!(
-            "Number of group columns ({}) doesn't match number of group names ({})",
+            "Number of group columns ({}) doesn't match number of group _names ({})",
             n_groups,
             group_names.len()
         )));
@@ -429,7 +429,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::fairness::bias_detection::intersectional_fairness;
+/// use scirs2__metrics::fairness::bias_detection::intersectional_fairness;
 ///
 /// // Create sample dataset
 /// let y_true = array![0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0];
@@ -525,7 +525,7 @@ where
     let n_protected = protected_features.ncols();
     if n_protected != feature_names.len() {
         return Err(MetricsError::InvalidInput(format!(
-            "Number of protected feature columns ({}) doesn't match number of feature names ({})",
+            "Number of protected feature columns ({}) doesn't match number of feature _names ({})",
             n_protected,
             feature_names.len()
         )));
@@ -566,7 +566,7 @@ where
             }
 
             // Skip if all or none of the samples are in this group
-            let num_in_group: usize = protected_group.iter().filter(|&&x| x > T::zero()).count();
+            let num_in_group: usize = protected_group.iter().filter(|&&x| x >, T::zero()).count();
             if num_in_group == 0 || num_in_group == n_samples {
                 continue;
             }

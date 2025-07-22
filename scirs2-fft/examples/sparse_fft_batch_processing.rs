@@ -1,10 +1,10 @@
 use rand::Rng;
-use scirs2_fft::sparse_fft::SparseFFTAlgorithm;
+use scirs2__fft::sparse_fft::SparseFFTAlgorithm;
 /// Batch Processing Example for Sparse FFT
 ///
 /// This example demonstrates the batch processing capabilities for sparse FFT,
 /// which can significantly improve performance when processing multiple signals.
-use scirs2_fft::{
+use scirs2__fft::{
     batch_sparse_fft, gpu_batch_sparse_fft, spectral_flatness_batch_sparse_fft, BatchConfig,
     GPUBackend, WindowFunction,
 };
@@ -26,21 +26,21 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 
 // Helper to add noise to signals
 #[allow(dead_code)]
-fn add_noise(signal: &[f64], noise_level: f64) -> Vec<f64> {
+fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
     let mut rng = rand::rng();
-    signal
+    _signal
         .iter()
-        .map(|&x| x + rng.random_range(-noise_level..noise_level))
+        .map(|&x| x + rng.gen_range(-noise_level..noise_level))
         .collect()
 }
 
 // Helper to create a batch of signals with varying parameters
 #[allow(dead_code)]
-fn create_test_batch(count: usize) -> Vec<Vec<f64>> {
-    let mut signals = Vec::with_capacity(count);
+fn create_test_batch(_count: usize) -> Vec<Vec<f64>> {
+    let mut signals = Vec::with_capacity(_count);
     let _rng = rand::rng();
 
-    for i in 0..count {
+    for i in 0.._count {
         // Vary signal parameters slightly for each signal
         let n = 1024 + (i % 5) * 256; // Different sizes
         let noise_level = 0.05 + (i as f64 * 0.01); // Gradually increasing noise
@@ -50,7 +50,7 @@ fn create_test_batch(count: usize) -> Vec<Vec<f64>> {
         let freq2 = 50 + i % 30;
         let freq3 = 100 + i % 50;
 
-        let frequencies = vec![(freq1, 1.0), (freq2, 0.7), (freq3, 0.4)];
+        let frequencies = vec![(freq1..1.0), (freq2, 0.7), (freq3, 0.4)];
 
         // Create signal and add noise
         let base_signal = create_sparse_signal(n, &frequencies);
@@ -121,7 +121,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Time: {:.3} ms", spectral_time.as_millis());
 
     // 4. GPU batch processing (if available)
-    if scirs2_fft::sparse_fft_gpu_memory::is_cuda_available() {
+    if scirs2_fft::sparse_fft_gpu, _memory::is_cuda_available() {
         println!("\n4. GPU Batch Processing (CUDA):");
         let start = Instant::now();
         let _config = BatchConfig {
@@ -171,7 +171,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn process_signals_sequentially(
     signals: &[Vec<f64>],
-) -> Result<Vec<scirs2_fft::sparse_fft::SparseFFTResult>, Box<dyn std::error::Error>> {
+) -> Result<Vec<scirs2_fft::sparse, _fft::SparseFFTResult>, Box<dyn std::error::Error>> {
     let mut results = Vec::with_capacity(signals.len());
 
     for (i, signal) in signals.iter().enumerate() {
@@ -197,8 +197,8 @@ fn process_signals_sequentially(
 // Verify that different processing methods give similar results
 #[allow(dead_code)]
 fn verify_results(
-    baseline_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
-    test_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
+    baseline_results: &[scirs2, _fft::sparse_fft::SparseFFTResult],
+    test_results: &[scirs2, _fft::sparse_fft::SparseFFTResult],
 ) {
     assert_eq!(
         baseline_results.len(),
@@ -251,9 +251,9 @@ fn verify_results(
 // Analyze results from different processing methods
 #[allow(dead_code)]
 fn analyze_results(
-    sequential_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
-    parallel_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
-    spectral_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
+    sequential_results: &[scirs2, _fft::sparse_fft::SparseFFTResult],
+    parallel_results: &[scirs2, _fft::sparse_fft::SparseFFTResult],
+    spectral_results: &[scirs2, _fft::sparse_fft::SparseFFTResult],
 ) {
     // Calculate average number of components found
     let seq_avg = sequential_results

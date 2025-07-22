@@ -546,12 +546,12 @@ pub mod decomposition_opt {
 
     impl<F: Float> QRWorkspace<F> {
         /// Create a new workspace for matrices up to the given size
-        pub fn new(max_rows: usize, max_cols: usize) -> Self {
-            let min_dim = max_rows.min(max_cols);
+        pub fn new(_max_rows: usize, max_cols: usize) -> Self {
+            let min_dim = _max_rows.min(max_cols);
             Self {
                 tau: Array1::zeros(min_dim),
                 work: Array1::zeros(max_cols * 64), // 64 is a reasonable work size multiplier
-                temp_matrix: Array2::zeros((max_rows, max_cols)),
+                temp_matrix: Array2::zeros((_max_rows, max_cols)),
             }
         }
 
@@ -653,11 +653,11 @@ pub mod decomposition_opt {
 
     impl<F: Float> DecompositionMemoryPool<F> {
         /// Create a new memory pool
-        pub fn new(max_pool_size: usize) -> Self {
+        pub fn new(_max_pool_size: usize) -> Self {
             Self {
                 arrays: Vec::new(),
                 vectors: Vec::new(),
-                max_pool_size,
+                max_pool_size: _max_pool_size,
             }
         }
 

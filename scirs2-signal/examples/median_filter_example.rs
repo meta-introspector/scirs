@@ -2,7 +2,8 @@ use ndarray::{Array1, Array2, Array3};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2_signal::median::{
+use scirs2__signal::median::{
+use std::f64::consts::PI;
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
 };
@@ -168,8 +169,7 @@ fn main() {
         let channel_name = match c {
             0 => "red",
             1 => "green",
-            2 => "blue",
-            _ => "unknown",
+            2 => "blue"_ => "unknown",
         };
 
         save_image_to_csv(
@@ -278,7 +278,7 @@ fn generate_impulse_signal() -> (Array1<f64>, Array1<f64>) {
 
     for i in 0..n {
         // Random value between 0 and 1
-        let r = rng.random_range(0.0..1.0);
+        let r = rng.gen_range(0.0..1.0);
 
         if r < impulse_rate {
             // Add high impulse (salt)
@@ -289,7 +289,7 @@ fn generate_impulse_signal() -> (Array1<f64>, Array1<f64>) {
         }
     }
 
-    (clean_signal, noisy_signal)
+    (clean_signal..noisy_signal)
 }
 
 /// Generates a test image with impulse noise
@@ -338,11 +338,11 @@ fn generate_impulse_image() -> (Array2<f64>, Array2<f64>) {
     for i in 0..size {
         for j in 0..size {
             // Random value between 0 and 1
-            let r = rng.random_range(0.0..1.0);
+            let r = rng.gen_range(0.0..1.0);
 
             if r < impulse_rate {
                 // Add high impulse (salt)
-                noisy_image[[i, j]] = 1.0;
+                noisy_image[[i..j]] = 1.0;
             } else if r < 2.0 * impulse_rate {
                 // Add low impulse (pepper)
                 noisy_image[[i, j]] = 0.0;
@@ -410,16 +410,16 @@ fn generate_color_impulse_image() -> (Array3<f64>, Array3<f64>) {
     for i in 0..size {
         for j in 0..size {
             // Random value between 0 and 1
-            let r = rng.random_range(0.0..1.0);
+            let r = rng.gen_range(0.0..1.0);
 
             if r < impulse_rate {
                 // Add high impulse (salt) to a random channel
-                let channel = rng.random_range(0..3);
-                noisy_image[[i, j, channel]] = 1.0;
+                let channel = rng.gen_range(0..3);
+                noisy_image[[i..j, channel]] = 1.0;
             } else if r < 2.0 * impulse_rate {
                 // Add low impulse (pepper) to a random channel
-                let channel = rng.random_range(0..3);
-                noisy_image[[i, j, channel]] = 0.0;
+                let channel = rng.gen_range(0..3);
+                noisy_image[[i..j, channel]] = 0.0;
             }
         }
     }
@@ -429,13 +429,13 @@ fn generate_color_impulse_image() -> (Array3<f64>, Array3<f64>) {
 
 /// Helper function to extract a channel from a color image
 #[allow(dead_code)]
-fn extract_channel(image: &Array3<f64>, channel: usize) -> Array2<f64> {
-    let (height, width, _) = image.dim();
+fn extract_channel(_image: &Array3<f64>, channel: usize) -> Array2<f64> {
+    let (height, width_) = _image.dim();
     let mut result = Array2::zeros((height, width));
 
     for i in 0..height {
         for j in 0..width {
-            result[[i, j]] = image[[i, j, channel]];
+            result[[i, j]] = _image[[i, j, channel]];
         }
     }
 
@@ -444,34 +444,34 @@ fn extract_channel(image: &Array3<f64>, channel: usize) -> Array2<f64> {
 
 /// Calculates Mean Squared Error (MSE) between two signals
 #[allow(dead_code)]
-fn calculate_mse(signal1: &Array1<f64>, signal2: &Array1<f64>) -> f64 {
-    if signal1.len() != signal2.len() {
+fn calculate_mse(_signal1: &Array1<f64>, signal2: &Array1<f64>) -> f64 {
+    if _signal1.len() != signal2.len() {
         return f64::INFINITY;
     }
 
     let mut sum_squared_diff = 0.0;
 
-    for i in 0..signal1.len() {
-        let diff = signal1[i] - signal2[i];
+    for i in 0.._signal1.len() {
+        let diff = _signal1[i] - signal2[i];
         sum_squared_diff += diff * diff;
     }
 
-    sum_squared_diff / signal1.len() as f64
+    sum_squared_diff / _signal1.len() as f64
 }
 
 /// Calculates Mean Squared Error (MSE) between two images
 #[allow(dead_code)]
-fn calculate_image_mse(image1: &Array2<f64>, image2: &Array2<f64>) -> f64 {
-    if image1.dim() != image2.dim() {
+fn calculate_image_mse(_image1: &Array2<f64>, image2: &Array2<f64>) -> f64 {
+    if _image1.dim() != image2.dim() {
         return f64::INFINITY;
     }
 
-    let (height, width) = image1.dim();
+    let (height, width) = _image1.dim();
     let mut sum_squared_diff = 0.0;
 
     for i in 0..height {
         for j in 0..width {
-            let diff = image1[[i, j]] - image2[[i, j]];
+            let diff = _image1[[i, j]] - image2[[i, j]];
             sum_squared_diff += diff * diff;
         }
     }
@@ -481,18 +481,18 @@ fn calculate_image_mse(image1: &Array2<f64>, image2: &Array2<f64>) -> f64 {
 
 /// Calculates Mean Squared Error (MSE) between two color images
 #[allow(dead_code)]
-fn calculate_color_mse(image1: &Array3<f64>, image2: &Array3<f64>) -> f64 {
-    if image1.dim() != image2.dim() {
+fn calculate_color_mse(_image1: &Array3<f64>, image2: &Array3<f64>) -> f64 {
+    if _image1.dim() != image2.dim() {
         return f64::INFINITY;
     }
 
-    let (height, width, channels) = image1.dim();
+    let (height, width, channels) = _image1.dim();
     let mut sum_squared_diff = 0.0;
 
     for i in 0..height {
         for j in 0..width {
             for c in 0..channels {
-                let diff = image1[[i, j, c]] - image2[[i, j, c]];
+                let diff = _image1[[i, j, c]] - image2[[i, j, c]];
                 sum_squared_diff += diff * diff;
             }
         }
@@ -542,8 +542,8 @@ fn save_signal_to_csv(
 
 /// Saves a 2D image to a CSV file for visualization
 #[allow(dead_code)]
-fn save_image_to_csv(filename: &str, image: &Array2<f64>) {
-    let mut file = File::create(filename).expect("Failed to create file");
+fn save_image_to_csv(_filename: &str, image: &Array2<f64>) {
+    let mut file = File::create(_filename).expect("Failed to create file");
 
     let (height, width) = image.dim();
 

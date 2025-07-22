@@ -46,27 +46,27 @@ pub struct EdgeCaseResult {
 
 /// Edge case test suite for gamma function
 #[allow(dead_code)]
-pub fn test_gamma_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+pub fn test_gamma_edge_cases(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
-    if config.special_values {
+    if _config.special_values {
         // Test special values
-        results.extend(test_gamma_special_values(config));
+        results.extend(test_gamma_special_values(_config));
     }
 
-    if config.extreme_values {
+    if _config.extreme_values {
         // Test extreme values
-        results.extend(test_gamma_extreme_values(config));
+        results.extend(test_gamma_extreme_values(_config));
     }
 
-    if config.boundary_conditions {
+    if _config.boundary_conditions {
         // Test boundary conditions
-        results.extend(test_gamma_boundary_conditions(config));
+        results.extend(test_gamma_boundary_conditions(_config));
     }
 
-    if config.subnormal_values {
+    if _config.subnormal_values {
         // Test subnormal values
-        results.extend(test_gamma_subnormal_values(config));
+        results.extend(test_gamma_subnormal_values(_config));
     }
 
     results
@@ -74,7 +74,7 @@ pub fn test_gamma_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 
 /// Test gamma function with special values
 #[allow(dead_code)]
-fn test_gamma_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+fn test_gamma_special_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test cases: (input, expected, description)
@@ -91,7 +91,7 @@ fn test_gamma_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     for (input, expected, description) in test_cases {
         let output = gamma::gamma(input);
         let error = (output - expected).abs();
-        let passed = error < config.tolerance;
+        let passed = error < _config.tolerance;
 
         results.push(EdgeCaseResult {
             test_name: format!("gamma_special_{input}"),
@@ -103,7 +103,7 @@ fn test_gamma_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
             error_message: if !passed {
                 Some(format!(
                     "Error: {error:.2e}, tolerance: {tolerance:.2e}",
-                    tolerance = config.tolerance
+                    tolerance = _config.tolerance
                 ))
             } else {
                 None
@@ -226,19 +226,19 @@ fn test_gamma_subnormal_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> 
 
 /// Edge case test suite for Bessel functions
 #[allow(dead_code)]
-pub fn test_bessel_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+pub fn test_bessel_edge_cases(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
-    if config.special_values {
-        results.extend(test_bessel_special_values(config));
+    if _config.special_values {
+        results.extend(test_bessel_special_values(_config));
     }
 
-    if config.extreme_values {
-        results.extend(test_bessel_extreme_values(config));
+    if _config.extreme_values {
+        results.extend(test_bessel_extreme_values(_config));
     }
 
-    if config.boundary_conditions {
-        results.extend(test_bessel_boundary_conditions(config));
+    if _config.boundary_conditions {
+        results.extend(test_bessel_boundary_conditions(_config));
     }
 
     results
@@ -246,7 +246,7 @@ pub fn test_bessel_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 
 /// Test Bessel functions with special values
 #[allow(dead_code)]
-fn test_bessel_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+fn test_bessel_special_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // J0(0) = 1
@@ -260,8 +260,8 @@ fn test_bessel_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
         input: 0.0,
         output,
         expected_behavior: "J0(0) = 1".to_string(),
-        passed: error < config.tolerance,
-        error_message: if error >= config.tolerance {
+        passed: error < _config.tolerance,
+        error_message: if error >= _config.tolerance {
             Some(format!("Error: {error:.2e}"))
         } else {
             None
@@ -279,8 +279,8 @@ fn test_bessel_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
         input: 0.0,
         output,
         expected_behavior: "J1(0) = 0".to_string(),
-        passed: error < config.tolerance,
-        error_message: if error >= config.tolerance {
+        passed: error < _config.tolerance,
+        error_message: if error >= _config.tolerance {
             Some(format!("Error: {error:.2e}"))
         } else {
             None
@@ -320,7 +320,7 @@ fn test_bessel_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 
 /// Test Bessel functions boundary conditions
 #[allow(dead_code)]
-fn test_bessel_boundary_conditions(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+fn test_bessel_boundary_conditions(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test very small positive values
@@ -335,8 +335,8 @@ fn test_bessel_boundary_conditions(config: &EdgeCaseConfig) -> Vec<EdgeCaseResul
         input: small_input,
         output,
         expected_behavior: "J0(x) ≈ 1 for small x".to_string(),
-        passed: error < config.tolerance,
-        error_message: if error >= config.tolerance {
+        passed: error < _config.tolerance,
+        error_message: if error >= _config.tolerance {
             Some(format!("Error: {error:.2e}"))
         } else {
             None
@@ -348,15 +348,15 @@ fn test_bessel_boundary_conditions(config: &EdgeCaseConfig) -> Vec<EdgeCaseResul
 
 /// Edge case test suite for error functions
 #[allow(dead_code)]
-pub fn test_erf_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+pub fn test_erf_edge_cases(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
-    if config.special_values {
-        results.extend(test_erf_special_values(config));
+    if _config.special_values {
+        results.extend(test_erf_special_values(_config));
     }
 
-    if config.extreme_values {
-        results.extend(test_erf_extreme_values(config));
+    if _config.extreme_values {
+        results.extend(test_erf_extreme_values(_config));
     }
 
     results
@@ -364,7 +364,7 @@ pub fn test_erf_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 
 /// Test error functions with special values
 #[allow(dead_code)]
-fn test_erf_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
+fn test_erf_special_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
     // Test cases: (input, expected, description)
@@ -382,7 +382,7 @@ fn test_erf_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
             0.0 // For infinite cases, just check if they're in the right direction
         };
         let passed = if expected.is_finite() {
-            error < config.tolerance
+            error < _config.tolerance
         } else {
             (output > 0.0) == (expected > 0.0) && output.abs() >= 0.99
         };
@@ -451,7 +451,7 @@ fn test_erf_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 
 /// Comprehensive edge case test runner
 #[allow(dead_code)]
-pub fn run_comprehensive_edge_case_tests(config: &EdgeCaseConfig) -> SpecialResult<()> {
+pub fn run_comprehensive_edge_case_tests(_config: &EdgeCaseConfig) -> SpecialResult<()> {
     println!("🧪 Running Comprehensive Edge Case Tests");
     println!("========================================");
 
@@ -459,7 +459,7 @@ pub fn run_comprehensive_edge_case_tests(config: &EdgeCaseConfig) -> SpecialResu
 
     // Test gamma function
     println!("\n📊 Testing Gamma Function Edge Cases");
-    let gamma_results = test_gamma_edge_cases(config);
+    let gamma_results = test_gamma_edge_cases(_config);
     let gamma_passed = gamma_results.iter().filter(|r| r.passed).count();
     println!(
         "Gamma tests: {}/{} passed",
@@ -470,7 +470,7 @@ pub fn run_comprehensive_edge_case_tests(config: &EdgeCaseConfig) -> SpecialResu
 
     // Test Bessel functions
     println!("\n📊 Testing Bessel Function Edge Cases");
-    let bessel_results = test_bessel_edge_cases(config);
+    let bessel_results = test_bessel_edge_cases(_config);
     let bessel_passed = bessel_results.iter().filter(|r| r.passed).count();
     println!(
         "Bessel tests: {}/{} passed",
@@ -481,7 +481,7 @@ pub fn run_comprehensive_edge_case_tests(config: &EdgeCaseConfig) -> SpecialResu
 
     // Test error functions
     println!("\n📊 Testing Error Function Edge Cases");
-    let erf_results = test_erf_edge_cases(config);
+    let erf_results = test_erf_edge_cases(_config);
     let erf_passed = erf_results.iter().filter(|r| r.passed).count();
     println!(
         "Error function tests: {}/{} passed",

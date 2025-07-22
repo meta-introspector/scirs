@@ -52,13 +52,13 @@ pub struct GradientFlowAnalyzer<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientFlowAnalyzer<A, D> {
     /// Create a new gradient flow analyzer
-    pub fn new(max_history: usize) -> Self {
+    pub fn new(_max_history: usize) -> Self {
         Self {
-            gradient_magnitudes: VecDeque::with_capacity(max_history),
-            gradient_directions: VecDeque::with_capacity(max_history),
-            parameter_updates: VecDeque::with_capacity(max_history),
+            gradient_magnitudes: VecDeque::with_capacity(_max_history),
+            gradient_directions: VecDeque::with_capacity(_max_history),
+            parameter_updates: VecDeque::with_capacity(_max_history),
             step_count: 0,
-            max_history,
+            _max_history,
             stats_cache: None,
             cache_valid: false,
         }
@@ -72,7 +72,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientFlowAnalyzer<A, D> 
     ) -> Result<()> {
         if gradients.len() != parameter_updates.len() {
             return Err(OptimError::DimensionMismatch(
-                "Number of gradients must match number of parameter updates".to_string(),
+                "Number of gradients must match number of parameter _updates".to_string(),
             ));
         }
 
@@ -95,7 +95,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientFlowAnalyzer<A, D> 
             self.gradient_directions.push_back(A::one());
         }
 
-        // Store parameter updates
+        // Store parameter _updates
         self.parameter_updates.push_back(parameter_updates.to_vec());
 
         // Maintain maximum history size
@@ -142,7 +142,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientFlowAnalyzer<A, D> 
         let norm1 = norm1_sq.sqrt();
         let norm2 = norm2_sq.sqrt();
 
-        if norm1 > A::zero() && norm2 > A::zero() {
+        if norm1 > A::zero() && norm2 >, A::zero() {
             Ok(dot_product / (norm1 * norm2))
         } else {
             Ok(A::zero())
@@ -560,7 +560,7 @@ impl<A: Float + ScalarOperand + Debug> OptimizerBenchmark<A> {
                     break;
                 }
 
-                // Perform optimization step
+                // Perform optimization _step
                 x = optimization_step(&x, &grad);
             }
 
@@ -574,13 +574,13 @@ impl<A: Float + ScalarOperand + Debug> OptimizerBenchmark<A> {
 
             let result = BenchmarkResult {
                 optimizer_name: optimizer_name.clone(),
-                function_name: test_function.name.clone(),
+                function_name: test_function._name.clone(),
                 converged: convergence_step.is_some(),
                 convergence_step,
                 final_function_value: *function_values.last().unwrap(),
                 final_gradient_norm: *gradient_norms.last().unwrap(),
                 final_error,
-                iterations_taken: function_values.len(),
+                _iterations_taken: function_values.len(),
                 elapsed_time: elapsed,
                 function_evaluations: function_values.len(),
                 function_value_history: function_values,
@@ -787,13 +787,13 @@ pub mod visualization {
 
     impl<A: Float + ScalarOperand + Debug, D: Dimension> OptimizerStateVisualizer<A, D> {
         /// Create a new optimizer state visualizer
-        pub fn new(max_history: usize) -> Self {
+        pub fn new(_max_history: usize) -> Self {
             Self {
-                parameter_history: VecDeque::with_capacity(max_history),
-                state_history: VecDeque::with_capacity(max_history),
-                learning_rate_history: VecDeque::with_capacity(max_history),
-                loss_history: VecDeque::with_capacity(max_history),
-                max_history,
+                parameter_history: VecDeque::with_capacity(_max_history),
+                state_history: VecDeque::with_capacity(_max_history),
+                learning_rate_history: VecDeque::with_capacity(_max_history),
+                loss_history: VecDeque::with_capacity(_max_history),
+                _max_history,
                 step_count: 0,
             }
         }
@@ -820,7 +820,7 @@ pub mod visualization {
                 self.state_history.pop_front();
             }
 
-            // Record learning rate
+            // Record learning _rate
             self.learning_rate_history.push_back(learning_rate);
             if self.learning_rate_history.len() > self.max_history {
                 self.learning_rate_history.pop_front();
@@ -1043,8 +1043,7 @@ pub mod visualization {
                             0 => ' ',
                             1 => '.',
                             2 => ':',
-                            3 => '*',
-                            _ => '#',
+                            3 => '*'_ => '#',
                         };
                         write!(plot, "{}", char).unwrap();
                     } else {

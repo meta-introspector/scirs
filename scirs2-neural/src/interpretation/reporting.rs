@@ -12,6 +12,7 @@ use std::fmt::Debug;
 use std::iter::Sum;
 use super::analysis::{AttributionStatistics, InterpretationSummary, LayerAnalysisStats};
 use super::core::ModelInterpreter;
+use statrs::statistics::Statistics;
 /// Comprehensive interpretation report for a single input
 #[derive(Debug, Clone)]
 pub struct InterpretationReport<F: Float + Debug> {
@@ -167,8 +168,7 @@ fn generate_feature_visualizations<F>(
     Ok(visualizations)
 /// Compute confidence estimates for interpretation results
 #[allow(dead_code)]
-fn compute_confidence_estimates<F>(report: &InterpretationReport<F>) -> Result<ConfidenceEstimates>
-    F: Float + Debug,
+fn compute_confidence_estimates<F>(_report: &InterpretationReport<F>) -> Result<ConfidenceEstimates>, F: Float + Debug,
     let overall_confidence = report.interpretation_summary.interpretation_confidence;
     let mut method_confidence = HashMap::new();
     let mut attribution_uncertainty = HashMap::new();
@@ -263,14 +263,13 @@ pub fn export_report_data<F>(
         "csv" => export_to_csv(report),
         "yaml" => export_to_yaml(report),
         "xml" => export_to_xml(report),
-        "toml" => export_to_toml(report),
-        _ => Err(NeuralError::NotImplementedError(format!(
+        "toml" => export_to_toml(report, _ => Err(NeuralError::NotImplementedError(format!(
             "Export format '{}' not supported. Supported formats: json, summary, csv, yaml, xml, toml",
             format
         ))),
 #[allow(dead_code)]
-fn export_to_json<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
-    use serde_json::{json, Map};
+fn export_to_json<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<String>
+    use serde__json::{_json, Map};
     // Build JSON object with report data
     let mut json_obj = Map::new();
     // Basic report information
@@ -300,12 +299,12 @@ fn export_to_json<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<St
     json_obj.insert("confidence_estimates".to_string(), json!(confidence_obj));
     // Feature visualizations (metadata only, as arrays are too large for JSON)
     let mut viz_metadata = Map::new();
-    for (name, _) in &report.feature_visualizations {
+    for (name_) in &report.feature_visualizations {
         viz_metadata.insert(name.clone(), json!("available"));
     json_obj.insert("feature_visualizations".to_string(), json!(viz_metadata));
     // Attention visualizations metadata
     let mut attention_metadata = Map::new();
-    for (name, _) in &report.attention_visualizations {
+    for (name_) in &report.attention_visualizations {
         attention_metadata.insert(name.clone(), json!("available"));
     json_obj.insert("attention_visualizations".to_string(), json!(attention_metadata));
     // Robustness analysis
@@ -324,7 +323,7 @@ fn export_to_json<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<St
     serde_json::to_string_pretty(&json_obj)
         .map_err(|e| NeuralError::ConfigError(format!("JSON serialization error: {e}")))
 #[allow(dead_code)]
-fn format_summary_report<F>(report: &ComprehensiveInterpretationReport<F>) -> String
+fn format_summary_report<F>(_report: &ComprehensiveInterpretationReport<F>) -> String
     let summary = generate_report_summary(report);
     let mut output = String::new();
     output.push_str("=== Interpretation Report Summary ===\n\n");
@@ -334,7 +333,7 @@ fn format_summary_report<F>(report: &ComprehensiveInterpretationReport<F>) -> St
         output.push_str(&format!("{method}: {confidence:.3}\n"));
     output
 #[allow(dead_code)]
-fn export_to_csv<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
+fn export_to_csv<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<String>
     let mut csv_content = String::new();
     // Header for method confidence data
     csv_content.push_str("section,key,value\n");
@@ -362,7 +361,7 @@ fn export_to_csv<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<Str
     Ok(csv_content)
 /// Helper function to compute attribution statistics
 #[allow(dead_code)]
-fn compute_attribution_statistics<F>(attribution: &ArrayD<F>) -> AttributionStats
+fn compute_attribution_statistics<F>(_attribution: &ArrayD<F>) -> AttributionStats
     F: Float + Debug + Copy,
     let data: Vec<f64> = attribution.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
     let min = data.iter().cloned().fold(f64::INFINITY, f64::min);
@@ -379,7 +378,7 @@ struct AttributionStats {
     std: f64,
 /// Export report to YAML format
 #[allow(dead_code)]
-fn export_to_yaml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
+fn export_to_yaml<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<String>
     use serde_yaml;
     // Reuse the JSON structure but serialize to YAML
     let mut yaml_obj = Map::new();
@@ -401,7 +400,7 @@ fn export_to_yaml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<St
         .map_err(|e| NeuralError::ConfigError(format!("YAML serialization error: {}", e)))
 /// Export report to XML format
 #[allow(dead_code)]
-fn export_to_xml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
+fn export_to_xml<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<String>
     let mut xml_content = String::new();
     xml_content.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     xml_content.push_str("<interpretation_report>\n");
@@ -431,7 +430,7 @@ fn export_to_xml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<Str
     Ok(xml_content)
 /// Export report to TOML format
 #[allow(dead_code)]
-fn export_to_toml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
+fn export_to_toml<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<String>
     let mut toml_content = String::new();
     toml_content.push_str("[basic_info]\n");
     toml_content.push_str(&format!("input_shape = \"{:?}\"\n", report.basic_report.input_shape));
@@ -453,7 +452,7 @@ fn export_to_toml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<St
     toml_content.push_str(&format!("std = {}\n", attribution_stats.std));
     Ok(toml_content)
 // Display implementation for reports
-impl<F: Float + Debug> std::fmt::Display for InterpretationReport<F> {
+impl<F: Float + Debug> + std::fmt::Display for InterpretationReport<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Interpretation Report")?;
         writeln!(f, "===================")?;
@@ -468,7 +467,7 @@ impl<F: Float + Debug> std::fmt::Display for InterpretationReport<F> {
             self.interpretation_summary.interpretation_confidence
         )?;
         Ok(())
-impl<F: Float + Debug> std::fmt::Display for ComprehensiveInterpretationReport<F> {
+impl<F: Float + Debug> + std::fmt::Display for ComprehensiveInterpretationReport<F> {
         writeln!(f, "Comprehensive Interpretation Report")?;
         writeln!(f, "==================================")?;
         write!(f, "{}", self.basic_report)?;
@@ -494,7 +493,7 @@ impl<F: Float + Debug> std::fmt::Display for ComprehensiveInterpretationReport<F
                 robustness.attribution_stability
 /// Compute concept activation for a given input and concept vector
 #[allow(dead_code)]
-fn compute_concept_activation<F>(input: &ArrayD<F>, concept_vector: &ConceptActivationVector<F>) -> f64
+fn compute_concept_activation<F>(_input: &ArrayD<F>, concept_vector: &ConceptActivationVector<F>) -> f64
     F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
     // Simplified concept activation computation
     // In practice, this would be based on the specific concept vector implementation
@@ -508,7 +507,7 @@ fn compute_concept_activation<F>(input: &ArrayD<F>, concept_vector: &ConceptActi
         0.0
 /// Compute high activation score based on input statistics
 #[allow(dead_code)]
-fn compute_high_activation_score<F>(input: &ArrayD<F>) -> f64
+fn compute_high_activation_score<F>(_input: &ArrayD<F>) -> f64
     let mean_val = input.mean().unwrap_or(F::zero()).to_f64().unwrap_or(0.0);
     let max_val = input.iter().fold(F::zero(), |acc, &x| acc.max(x)).to_f64().unwrap_or(0.0);
     // Score based on how much of the input has high activation values
@@ -517,19 +516,19 @@ fn compute_high_activation_score<F>(input: &ArrayD<F>) -> f64
     let total_count = input.len();
     if total_count > 0 {
         high_count as f64 / total_count as f64
-/// Compute low activation score based on input statistics
+/// Compute low activation score based on _input statistics
 #[allow(dead_code)]
-fn compute_low_activation_score<F>(input: &ArrayD<F>) -> f64
-    let min_val = input.iter().fold(F::zero(), |acc, &x| acc.min(x)).to_f64().unwrap_or(0.0);
-    // Score based on how much of the input has low activation values
+fn compute_low_activation_score<F>(_input: &ArrayD<F>) -> f64
+    let min_val = _input.iter().fold(F::zero(), |acc, &x| acc.min(x)).to_f64().unwrap_or(0.0);
+    // Score based on how much of the _input has low activation values
     let threshold = F::from(mean_val - 0.5 * (mean_val - min_val)).unwrap();
-    let low_count = input.iter().filter(|&&x| x < threshold).count();
+    let low_count = _input.iter().filter(|&&x| x < threshold).count();
         low_count as f64 / total_count as f64
 /// Compute activation variance as a concept score
 #[allow(dead_code)]
-fn compute_activation_variance<F>(input: &ArrayD<F>) -> f64
-    let mean_val = input.mean().unwrap_or(F::zero());
-    let variance = input.iter()
+fn compute_activation_variance<F>(_input: &ArrayD<F>) -> f64
+    let mean_val = _input.mean().unwrap_or(F::zero());
+    let variance = _input.iter()
         .map(|&x| {
             let diff = x - mean_val;
             diff * diff
@@ -557,7 +556,7 @@ mod tests {
                 total_negative_attribution: -5.0,
             },
         let report = InterpretationReport {
-            input_shape: Array::<f64, _>::ones((3, 32, 32)).into_dyn().raw_dim(),
+            input_shape: Array::<f64>::ones((3, 32, 32)).into_dyn().raw_dim(),
             target_class: Some(1),
             attributions: HashMap::new(),
             attribution_statistics: attribution_stats,

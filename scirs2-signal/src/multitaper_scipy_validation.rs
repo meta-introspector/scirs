@@ -5,14 +5,17 @@
 //! numerical stability tests in Advanced mode.
 
 use crate::error::{SignalError, SignalResult};
-use crate::multitaper::{enhanced_pmtm, MultitaperConfig};
+use crate::multitaper::{MultitaperConfig, enhanced_pmtm};
+use crate::multitaper::windows::dpss;
 use crate::waveforms::{brown_noise, chirp};
 use ndarray::Array1;
+use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(unused_imports)]
 /// SciPy validation result for multitaper methods
 #[derive(Debug, Clone)]
 pub struct MultitaperScipyValidationResult {
@@ -29,7 +32,7 @@ pub struct MultitaperScipyValidationResult {
     /// Overall validation score (0-100)
     pub overall_score: f64,
     /// Critical issues found
-    pub critical_issues: Vec<String>,
+    pub issues: Vec<String>,
     /// Recommendations for improvements
     pub recommendations: Vec<String>,
 }
@@ -169,8 +172,9 @@ impl Default for EnhancedTestSignalConfig {
 #[allow(dead_code)]
 pub fn run_scipy_multitaper_validation() -> SignalResult<MultitaperScipyValidationResult> {
     let mut test_results = HashMap::new();
-    let mut critical_issues = Vec::new();
+    let mut critical_issues: Vec<String> = Vec::new();
     let mut recommendations = Vec::new();
+    let mut issues: Vec<String> = Vec::new();
 
     // Test 1: Enhanced sinusoid validation with multiple frequencies
     let sinusoid_result = validate_enhanced_sinusoid_estimation()?;
@@ -246,7 +250,7 @@ pub fn run_scipy_multitaper_validation() -> SignalResult<MultitaperScipyValidati
         simd_validation,
         precision_analysis,
         overall_score,
-        critical_issues,
+        issues,
         recommendations,
     })
 }
@@ -280,7 +284,7 @@ fn validate_sinusoid_estimation() -> SignalResult<TestResult> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .unwrap();
 
     let estimated_freq = result.frequencies[peak_idx];
@@ -288,7 +292,7 @@ fn validate_sinusoid_estimation() -> SignalResult<TestResult> {
     let frequency_error = (estimated_freq - true_freq).abs() / true_freq;
 
     // Frequency resolution
-    let freq_resolution = config.fs / config.n_samples as f64;
+    let freq_resolution = config.fs / config.n_samples  as f64;
     let acceptable_error = freq_resolution / true_freq;
 
     let mut additional_metrics = HashMap::new();
@@ -350,7 +354,7 @@ fn validate_multitone_estimation() -> SignalResult<TestResult> {
         total_error += freq_error;
     }
 
-    let mean_error = total_error / frequencies.len() as f64;
+    let mean_error = total_error / frequencies.len()  as f64;
     let threshold = 0.05; // 5% error threshold
 
     let mut additional_metrics = HashMap::new();
@@ -397,7 +401,7 @@ fn validate_chirp_estimation() -> SignalResult<TestResult> {
         .frequencies
         .iter()
         .zip(result.psd.iter())
-        .filter(|(&f, _)| f >= 10.0 && f <= 100.0)
+        .filter(|(&f_)| f >= 10.0 && f <= 100.0)
         .map(|(_, &p)| p)
         .sum::<f64>();
 
@@ -485,8 +489,6 @@ fn validate_colored_noise_estimation() -> SignalResult<TestResult> {
 /// Enhanced DPSS validation
 #[allow(dead_code)]
 fn validate_dpss_implementation_enhanced() -> SignalResult<TestResult> {
-    use crate::multitaper::windows::dpss;
-
     let n = 512;
     let nw = 4.0;
     let k = 7;
@@ -578,7 +580,7 @@ fn validate_numerical_stability_enhanced() -> SignalResult<TestResult> {
         stability_tests_passed += 1;
     }
 
-    let stability_ratio = stability_tests_passed as f64 / total_tests as f64;
+    let stability_ratio = stability_tests_passed as f64 / total_tests  as f64;
     let threshold = 0.8; // 80% of stability tests should pass
 
     let mut additional_metrics = HashMap::new();
@@ -596,7 +598,7 @@ fn validate_numerical_stability_enhanced() -> SignalResult<TestResult> {
 
 /// Test signal processing with a given signal
 #[allow(dead_code)]
-fn test_signal_processing(signal: &Array1<f64>) -> SignalResult<()> {
+fn test_signal_processing(_signal: &Array1<f64>) -> SignalResult<()> {
     let config = MultitaperConfig {
         fs: 1000.0,
         nw: 4.0,
@@ -605,18 +607,18 @@ fn test_signal_processing(signal: &Array1<f64>) -> SignalResult<()> {
         ..Default::default()
     };
 
-    let _result = enhanced_pmtm(signal, &config)?;
+    let _result = enhanced_pmtm(_signal, &config)?;
     Ok(())
 }
 
 /// Generate test signal based on configuration
 #[allow(dead_code)]
-fn generate_test_signal(config: &EnhancedTestSignalConfig) -> SignalResult<Array1<f64>> {
+fn generate_test_signal(_config: &EnhancedTestSignalConfig) -> SignalResult<Array1<f64>> {
     let mut rng = rand::rng();
-    let dt = 1.0 / config.fs;
-    let t: Array1<f64> = Array1::from_shape_fn(config.n_samples, |i| i as f64 * dt);
+    let dt = 1.0 / _config.fs;
+    let t: Array1<f64> = Array1::from_shape_fn(_config.n_samples, |i| i as f64 * dt);
 
-    let signal = match &config.signal_type {
+    let signal = match &_config.signal_type {
         TestSignalType::Sinusoid {
             frequency,
             amplitude,
@@ -626,7 +628,7 @@ fn generate_test_signal(config: &EnhancedTestSignalConfig) -> SignalResult<Array
             frequencies,
             amplitudes,
         } => {
-            let mut signal = Array1::zeros(config.n_samples);
+            let mut signal = Array1::zeros(_config.n_samples);
             for (&freq, &amp) in frequencies.iter().zip(amplitudes.iter()) {
                 for (i, &time) in t.iter().enumerate() {
                     signal[i] += amp * (2.0 * PI * freq * time).sin();
@@ -635,21 +637,21 @@ fn generate_test_signal(config: &EnhancedTestSignalConfig) -> SignalResult<Array
             signal
         }
         TestSignalType::Chirp { f0, f1, method: _ } => {
-            let duration = config.n_samples as f64 / config.fs;
+            let duration = _config.n_samples as f64 / _config.fs;
             chirp(&t, *f0, duration, *f1, "linear", None, None)
                 .map_err(|_| SignalError::InvalidInput("Failed to generate chirp".to_string()))?
         }
         TestSignalType::ColoredNoise { color, amplitude } => {
             match color.as_str() {
                 "brown" => {
-                    let noise = brown_noise(config.n_samples, 1.0).map_err(|_| {
+                    let noise = brown_noise(_config.n_samples, 1.0).map_err(|_| {
                         SignalError::InvalidInput("Failed to generate brown noise".to_string())
                     })?;
                     noise * *amplitude
                 }
                 _ => {
                     // White noise fallback
-                    Array1::from_shape_fn(config.n_samples, |_| {
+                    Array1::from_shape_fn(_config.n_samples, |_| {
                         amplitude * rng.random_range(-1.0..1.0)
                     })
                 }
@@ -728,9 +730,9 @@ fn analyze_numerical_precision() -> SignalResult<PrecisionAnalysisResult> {
 
 /// Calculate overall validation score
 #[allow(dead_code)]
-fn calculate_overall_score(test_results: &HashMap<String, TestResult>) -> f64 {
-    let total_tests = test_results.len() as f64;
-    let passed_tests = test_results.values().filter(|result| result.passed).count() as f64;
+fn calculate_overall_score(_test_results: &HashMap<String, TestResult>) -> f64 {
+    let total_tests = _test_results.len()  as f64;
+    let passed_tests = _test_results.values().filter(|result| result.passed).count()  as f64;
 
     (passed_tests / total_tests) * 100.0
 }
@@ -765,11 +767,11 @@ fn generate_recommendations(
 #[allow(dead_code)]
 fn identify_critical_issues(
     test_results: &HashMap<String, TestResult>,
-    critical_issues: &mut Vec<String>,
+    issues: &mut Vec<String>,
 ) {
     for (test_name, result) in test_results {
         if !result.passed && result.error_metric > 2.0 * result.threshold {
-            critical_issues.push(format!(
+            issues.push(format!(
                 "Critical failure in {}: error {:.3} exceeds threshold {:.3} by >2x",
                 test_name, result.error_metric, result.threshold
             ));
@@ -779,18 +781,18 @@ fn identify_critical_issues(
 
 /// Generate comprehensive validation report
 #[allow(dead_code)]
-pub fn generate_multitaper_validation_report(result: &MultitaperScipyValidationResult) -> String {
+pub fn generate_multitaper_validation_report(_result: &MultitaperScipyValidationResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Multitaper Spectral Estimation - SciPy Validation Report\n\n");
     report.push_str(&format!(
         "Overall Score: {:.1}/100\n\n",
-        result.overall_score
+        _result.overall_score
     ));
 
     // Test results summary
     report.push_str("## Test Results Summary\n\n");
-    for (test_name, test_result) in &result.test_results {
+    for (test_name, test_result) in &_result.test_results {
         let status = if test_result.passed {
             "✅ PASS"
         } else {
@@ -806,24 +808,24 @@ pub fn generate_multitaper_validation_report(result: &MultitaperScipyValidationR
     report.push_str("\n## Performance Comparison\n\n");
     report.push_str(&format!(
         "- Speed Ratio: {:.2}x\n- Memory Ratio: {:.2}x\n- SIMD Speedup: {:.2}x\n- Parallel Efficiency: {:.1}%\n",
-        result.performance_comparison.speed_ratio,
-        result.performance_comparison.memory_ratio,
-        result.performance_comparison.simd_speedup,
-        result.performance_comparison.parallel_efficiency * 100.0
+        _result.performance_comparison.speed_ratio,
+        _result.performance_comparison.memory_ratio,
+        _result.performance_comparison.simd_speedup,
+        _result.performance_comparison.parallel_efficiency * 100.0
     ));
 
     // Critical issues
-    if !result.critical_issues.is_empty() {
+    if !_result.issues.is_empty() {
         report.push_str("\n## ⚠️ Critical Issues\n\n");
-        for issue in &result.critical_issues {
+        for issue in &_result.issues {
             report.push_str(&format!("- {}\n", issue));
         }
     }
 
     // Recommendations
-    if !result.recommendations.is_empty() {
+    if !_result.recommendations.is_empty() {
         report.push_str("\n## 💡 Recommendations\n\n");
-        for recommendation in &result.recommendations {
+        for recommendation in &_result.recommendations {
             report.push_str(&format!("- {}\n", recommendation));
         }
     }
@@ -873,7 +875,7 @@ fn validate_enhanced_sinusoid_estimation() -> SignalResult<TestResult> {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .unwrap();
 
         let estimated_freq = result.frequencies[peak_idx];
@@ -1024,7 +1026,7 @@ fn validate_memory_efficiency() -> SignalResult<TestResult> {
         efficiency_scores.push(efficiency);
     }
 
-    let avg_efficiency = efficiency_scores.iter().sum::<f64>() / efficiency_scores.len() as f64;
+    let avg_efficiency = efficiency_scores.iter().sum::<f64>() / efficiency_scores.len()  as f64;
 
     let mut additional_metrics = HashMap::new();
     additional_metrics.insert("avg_memory_efficiency".to_string(), avg_efficiency);

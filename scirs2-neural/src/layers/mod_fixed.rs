@@ -50,17 +50,17 @@ pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     }
 
     /// Set the gradients of the layer parameters
-    fn set_gradients(&mut self, _gradients: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
+    fn set_gradients(&mut self_gradients: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
         Ok(())
     }
 
     /// Set the parameters of the layer
-    fn set_params(&mut self, _params: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
+    fn set_params(&mut self_params: &[Array<F, ndarray::IxDyn>]) -> Result<()> {
         Ok(())
     }
 
     /// Set the layer to training mode (true) or evaluation mode (false)
-    fn set_training(&mut self, _training: bool) {
+    fn set_training(&mut self, training: bool) {
         // Default implementation: do nothing
     }
 
@@ -106,7 +106,7 @@ pub struct Sequential<F: Float + Debug + ScalarOperand> {
     training: bool,
 }
 
-impl<F: Float + Debug + ScalarOperand> std::fmt::Debug for Sequential<F> {
+impl<F: Float + Debug + ScalarOperand> + std::fmt::Debug for Sequential<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Sequential")
             .field("num_layers", &self.layers.len())
@@ -172,7 +172,7 @@ impl<F: Float + Debug + ScalarOperand> Layer<F> for Sequential<F> {
     }
 
     fn backward(
-        &self,
+        &mut self,
         _input: &Array<F, ndarray::IxDyn>,
         grad_output: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>> {

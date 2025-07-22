@@ -1,10 +1,10 @@
 use approx::assert_abs_diff_eq;
 use ndarray::{array, Array2};
-use scirs2_metrics::classification::accuracy_score;
-use scirs2_metrics::fairness::robustness::{
+use scirs2__metrics::classification::accuracy_score;
+use scirs2__metrics::fairness::robustness::{
     influence_function, performance_invariance, perturbation_sensitivity, PerturbationType,
 };
-use scirs2_metrics::fairness::{demographic_parity_difference, equalized_odds_difference};
+use scirs2__metrics::fairness::{demographic_parity_difference, equalized_odds_difference};
 
 #[test]
 #[allow(dead_code)]

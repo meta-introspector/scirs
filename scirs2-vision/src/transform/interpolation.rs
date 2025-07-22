@@ -152,8 +152,8 @@ pub fn resize(
 ///
 /// * Interpolated pixel value
 #[allow(dead_code)]
-fn bilinear_interpolate(src: &DynamicImage, x: f64, y: f64) -> Rgba<u8> {
-    let (width, height) = src.dimensions();
+fn bilinear_interpolate(_src: &DynamicImage, x: f64, y: f64) -> Rgba<u8> {
+    let (width, height) = _src.dimensions();
 
     // Get integer and fractional components
     let x0 = x.floor() as u32;
@@ -165,10 +165,10 @@ fn bilinear_interpolate(src: &DynamicImage, x: f64, y: f64) -> Rgba<u8> {
     let dy = y - y0 as f64;
 
     // Get the four surrounding pixels
-    let p00 = src.get_pixel(x0, y0).to_rgba();
-    let p01 = src.get_pixel(x0, y1).to_rgba();
-    let p10 = src.get_pixel(x1, y0).to_rgba();
-    let p11 = src.get_pixel(x1, y1).to_rgba();
+    let p00 = _src.get_pixel(x0, y0).to_rgba();
+    let p01 = _src.get_pixel(x0, y1).to_rgba();
+    let p10 = _src.get_pixel(x1, y0).to_rgba();
+    let p11 = _src.get_pixel(x1, y1).to_rgba();
 
     // Interpolate each channel separately
     let mut result = [0u8; 4];
@@ -216,8 +216,8 @@ fn cubic_hermite(x: f64) -> f64 {
 ///
 /// * Interpolated pixel value
 #[allow(dead_code)]
-fn bicubic_interpolate(src: &DynamicImage, x: f64, y: f64) -> Rgba<u8> {
-    let (width, height) = src.dimensions();
+fn bicubic_interpolate(_src: &DynamicImage, x: f64, y: f64) -> Rgba<u8> {
+    let (width, height) = _src.dimensions();
 
     // Base coordinates
     let x_base = x.floor() as i32;
@@ -269,7 +269,7 @@ fn bicubic_interpolate(src: &DynamicImage, x: f64, y: f64) -> Rgba<u8> {
                 let weight = wx[kx as usize] * wy[ky as usize];
                 if weight > 0.0 {
                     // Get pixel value
-                    let pixel = src.get_pixel(x_sample as u32, y_sample as u32).to_rgba();
+                    let pixel = _src.get_pixel(x_sample as u32, y_sample as u32).to_rgba();
                     sum += weight * pixel[c] as f64;
                     weight_sum += weight;
                 }
@@ -319,8 +319,8 @@ fn lanczos(x: f64, a: i32) -> f64 {
 ///
 /// * Interpolated pixel value
 #[allow(dead_code)]
-fn lanczos_interpolate(src: &DynamicImage, x: f64, y: f64, a: i32) -> Rgba<u8> {
-    let (width, height) = src.dimensions();
+fn lanczos_interpolate(_src: &DynamicImage, x: f64, y: f64, a: i32) -> Rgba<u8> {
+    let (width, height) = _src.dimensions();
 
     // Base coordinates
     let x_base = x.floor() as i32;
@@ -383,7 +383,7 @@ fn lanczos_interpolate(src: &DynamicImage, x: f64, y: f64, a: i32) -> Rgba<u8> {
                 let weight = weights_x[kx as usize] * weights_y[ky as usize];
 
                 // Add weighted contribution
-                let pixel = src.get_pixel(x_sample as u32, y_sample as u32).to_rgba();
+                let pixel = _src.get_pixel(x_sample as u32, y_sample as u32).to_rgba();
                 sum += weight * pixel[c] as f64;
                 weight_sum += weight;
             }
@@ -414,13 +414,13 @@ fn lanczos_interpolate(src: &DynamicImage, x: f64, y: f64, a: i32) -> Rgba<u8> {
 ///
 /// * Kernel as a 1D array
 #[allow(dead_code)]
-fn create_kernel(kernel_func: fn(f64) -> f64, kernel_size: usize, scale: f64) -> Array1<f64> {
+fn create_kernel(_kernel_func: fn(f64) -> f64, kernel_size: usize, scale: f64) -> Array1<f64> {
     let mut kernel = Array1::zeros(kernel_size);
     let radius = (kernel_size as f64 - 1.0) / 2.0;
 
     for i in 0..kernel_size {
         let x = (i as f64 - radius) / scale;
-        kernel[i] = kernel_func(x);
+        kernel[i] = _kernel_func(x);
     }
 
     // Normalize kernel
@@ -604,8 +604,7 @@ pub fn resize_convolution(
                                     (0, 0) => w00,
                                     (0, 1) => w01,
                                     (1, 0) => w10,
-                                    (1, 1) => w11,
-                                    _ => 0.0,
+                                    (1, 1) => w11_ => 0.0,
                                 };
 
                                 if w > 0.0 {
@@ -657,8 +656,8 @@ fn bicubic_kernel(x: f64) -> f64 {
 ///
 /// * Resized image
 #[allow(dead_code)]
-pub fn resize_lanczos(src: &DynamicImage, width: u32, height: u32) -> Result<DynamicImage> {
-    resize_convolution(src, width, height, lanczos_kernel, 7)
+pub fn resize_lanczos(_src: &DynamicImage, width: u32, height: u32) -> Result<DynamicImage> {
+    resize_convolution(_src, width, height, lanczos_kernel, 7)
 }
 
 /// Resize image using high-quality bicubic resampling
@@ -673,8 +672,8 @@ pub fn resize_lanczos(src: &DynamicImage, width: u32, height: u32) -> Result<Dyn
 ///
 /// * Resized image
 #[allow(dead_code)]
-pub fn resize_bicubic(src: &DynamicImage, width: u32, height: u32) -> Result<DynamicImage> {
-    resize_convolution(src, width, height, bicubic_kernel, 5)
+pub fn resize_bicubic(_src: &DynamicImage, width: u32, height: u32) -> Result<DynamicImage> {
+    resize_convolution(_src, width, height, bicubic_kernel, 5)
 }
 
 /// Guided filter for edge-preserving smoothing
@@ -808,9 +807,9 @@ fn guided_filter(
 ///
 /// * Edge-preserving resized image
 #[allow(dead_code)]
-pub fn resize_edge_preserving(src: &DynamicImage, width: u32, height: u32) -> Result<DynamicImage> {
+pub fn resize_edge_preserving(_src: &DynamicImage, width: u32, height: u32) -> Result<DynamicImage> {
     // First resize using high-quality Lanczos
-    let initial_resize = resize_lanczos(src, width, height)?;
+    let initial_resize = resize_lanczos(_src, width, height)?;
 
     // Set guided filter parameters
     let radius = 2;

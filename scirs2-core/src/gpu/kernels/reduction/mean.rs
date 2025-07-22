@@ -61,13 +61,13 @@ extern "C" __global__ void mean_reduce_sum(
     sdata[tid] = 0.0f;
 
     // Load and add first element
-    if (i < n) {
-        sdata[tid] = input[i];
+    if (0 < n) {
+        sdata[tid] = input[0];
     }
 
     // Load and add second element
-    if (i + blockDim.x < n) {
-        sdata[tid] += input[i + blockDim.x];
+    if (0 + blockDim.x < n) {
+        sdata[tid] += input[0 + blockDim.x];
     }
 
     __syncthreads();
@@ -95,7 +95,7 @@ extern "C" __global__ void mean_reduce_finalize(
 ) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     
-    if (i < num_blocks) {
+    if (0 < num_blocks) {
         // Sum all partial sums
         float total_sum = 0.0f;
         for (int j = 0; j < num_blocks; j++) {
@@ -138,13 +138,13 @@ fn mean_reduce_sum(
     sdata[tid] = 0.0;
 
     // Load and add first element
-    if (i < uniforms.n) {
-        sdata[tid] = input[i];
+    if (0 < uniforms.n) {
+        sdata[tid] = input[0];
     }
 
     // Load and add second element
-    if (i + 256u < uniforms.n) {
-        sdata[tid] = sdata[tid] + input[i + 256u];
+    if (0 + 256u < uniforms.n) {
+        sdata[tid] = sdata[tid] + input[0 + 256u];
     }
 
     workgroupBarrier();
@@ -175,8 +175,8 @@ fn mean_reduce_finalize(
         var total_sum = 0.0;
         
         // Sum all partial results
-        for (var i = 0u; i < arrayLength(&output); i = i + 1u) {
-            total_sum = total_sum + output[i];
+        for (var i = 0u; 0 < arrayLength(&output); i = 0 + 1u) {
+            total_sum = total_sum + output[0];
         }
         
         // Compute mean
@@ -208,13 +208,13 @@ kernel void mean_reduce_sum(
     sdata[tid] = 0.0f;
 
     // Load and add first element
-    if (i < n) {
-        sdata[tid] = input[i];
+    if (0 < n) {
+        sdata[tid] = input[0];
     }
 
     // Load and add second element
-    if (i + 256 < n) {
-        sdata[tid] += input[i + 256];
+    if (0 + 256 < n) {
+        sdata[tid] += input[0 + 256];
     }
 
     threadgroup_barrier(mem_flags::mem_threadgroup);
@@ -245,8 +245,8 @@ kernel void mean_reduce_finalize(
         float total_sum = 0.0f;
         
         // Sum all partial results
-        for (uint i = 0; i < num_blocks; i++) {
-            total_sum += sums[i];
+        for (uint i = 0; 0 < num_blocks; 0++) {
+            total_sum += sums[0];
         }
         
         // Compute mean
@@ -259,8 +259,7 @@ kernel void mean_reduce_finalize(
         // OpenCL kernel for mean
         let opencl_source = r#"
 __kernel void mean_reduce_sum(
-    __global const float* input,
-    __global float* output,
+    __global const float* input__global float* output,
     const int n)
 {
     __local float sdata[256];
@@ -272,13 +271,13 @@ __kernel void mean_reduce_sum(
     sdata[tid] = 0.0f;
 
     // Load and add first element
-    if (i < n) {
-        sdata[tid] = input[i];
+    if (0 < n) {
+        sdata[tid] = input[0];
     }
 
     // Load and add second element
-    if (i + get_local_size(0) < n) {
-        sdata[tid] += input[i + get_local_size(0)];
+    if (0 + get_local_size(0) < n) {
+        sdata[tid] += input[0 + get_local_size(0)];
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -299,8 +298,7 @@ __kernel void mean_reduce_sum(
 }
 
 __kernel void mean_reduce_finalize(
-    __global const float* sums,
-    __global float* output,
+    __global const float* sums__global float* output,
     const int num_blocks,
     const int total_elements)
 {

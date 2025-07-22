@@ -12,13 +12,13 @@
 //! - Support for both runtime and ahead-of-time planning
 //! - Plan pruning and management to optimize memory usage
 
-use crate::auto_tuning::{AutoTuneConfig, AutoTuner, FftVariant};
+use crate::auto__tuning::{AutoTuneConfig, AutoTuner, FftVariant};
 use crate::backend::BackendContext;
 use crate::error::{FFTError, FFTResult};
-use crate::plan_serialization::{PlanMetrics, PlanSerializationManager};
+use crate::plan__serialization::{PlanMetrics, PlanSerializationManager};
 
 use ndarray::{ArrayBase, Data, Dimension};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -207,15 +207,15 @@ impl AdvancedFftPlanner {
     }
 
     /// Create a new FftPlanner with custom configuration
-    pub fn with_config(config: PlanningConfig) -> Self {
-        let serialization_manager = config
+    pub fn with_config(_config: PlanningConfig) -> Self {
+        let serialization_manager = _config
             .serialized_db_path
             .as_ref()
             .map(PlanSerializationManager::new);
 
-        let auto_tuner = if config.strategy == PlanningStrategy::AutoTuned {
+        let auto_tuner = if _config.strategy == PlanningStrategy::AutoTuned {
             let tuner = AutoTuner::new();
-            if let Some(_auto_config) = &config.auto_tune_config {
+            if let Some(_auto_config) = &_config.auto_tune_config {
                 // Configure the auto-tuner here if needed
                 // This is a simplified implementation
             }
@@ -225,7 +225,7 @@ impl AdvancedFftPlanner {
         };
 
         Self {
-            config,
+            _config,
             cache: Arc::new(Mutex::new(HashMap::new())),
             serialization_manager,
             auto_tuner,
@@ -367,10 +367,10 @@ impl AdvancedFftPlanner {
         // If still over capacity, remove least recently used
         let max_entries = self.config.max_cached_plans;
         while cache.len() >= max_entries {
-            if let Some((key_to_remove, _)) = cache
+            if let Some((key_to_remove_)) = cache
                 .iter()
                 .min_by_key(|(_, v)| (v.last_used, v.usage_count))
-                .map(|(k, _)| (k.clone(), ()))
+                .map(|(k_)| (k.clone(), ()))
             {
                 cache.remove(&key_to_remove);
             } else {
@@ -466,9 +466,9 @@ pub fn get_global_planner() -> &'static Mutex<AdvancedFftPlanner> {
 
 /// Initialize the global FFT planner with custom configuration
 #[allow(dead_code)]
-pub fn init_global_planner(config: PlanningConfig) -> Result<(), &'static str> {
+pub fn init_global_planner(_config: PlanningConfig) -> Result<(), &'static str> {
     GLOBAL_FFT_PLANNER
-        .set(Mutex::new(AdvancedFftPlanner::with_config(config)))
+        .set(Mutex::new(AdvancedFftPlanner::with_config(_config)))
         .map_err(|_| "Global FFT planner already initialized")
 }
 
@@ -484,17 +484,17 @@ pub struct FftPlanExecutor {
 
 impl FftPlanExecutor {
     /// Create a new executor for the given plan
-    pub fn new(plan: Arc<FftPlan>) -> Self {
+    pub fn new(_plan: Arc<FftPlan>) -> Self {
         Self {
-            plan,
+            _plan,
             context: None,
         }
     }
 
     /// Create a new executor with a specific context
-    pub fn with_context(plan: Arc<FftPlan>, context: BackendContext) -> Self {
+    pub fn with_context(_plan: Arc<FftPlan>, context: BackendContext) -> Self {
         Self {
-            plan,
+            _plan,
             context: Some(context),
         }
     }
@@ -671,17 +671,17 @@ impl Default for PlanBuilder {
 ///
 /// Result indicating success or failure
 #[allow(dead_code)]
-pub fn plan_ahead_of_time(sizes: &[usize], db_path: Option<&str>) -> FFTResult<()> {
+pub fn plan_ahead_of_time(_sizes: &[usize], db_path: Option<&str>) -> FFTResult<()> {
     let mut config = PlanningConfig::default();
-    if let Some(path) = db_path {
-        config.serialized_db_path = Some(path.to_string());
+    if let Some(_path) = db_path {
+        config.serialized_db_path = Some(_path.to_string());
         config.strategy = PlanningStrategy::SerializedFirst;
     }
 
     let mut planner = AdvancedFftPlanner::with_config(config);
 
     // Convert to shapes (assuming 1D transforms for simplicity)
-    let shapes: Vec<Vec<usize>> = sizes.iter().map(|&s| vec![s]).collect();
+    let shapes: Vec<Vec<usize>> = _sizes.iter().map(|&s| vec![s]).collect();
 
     for shape in shapes {
         // Create both forward and inverse plans
@@ -698,7 +698,7 @@ pub fn plan_ahead_of_time(sizes: &[usize], db_path: Option<&str>) -> FFTResult<(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use num_complex::Complex64;
+    use num__complex::Complex64;
     use tempfile::tempdir;
 
     #[test]

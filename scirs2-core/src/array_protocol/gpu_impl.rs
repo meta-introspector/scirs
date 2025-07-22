@@ -203,9 +203,7 @@ where
     T: std::ops::Div<f64, Output = T> + std::ops::Mul<Output = T> + std::ops::Add<Output = T>,
     D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
 {
-    fn array_function(
-        &self,
-        func: &ArrayFunction,
+    fn array_function(&self, func: &ArrayFunction,
         _types: &[TypeId],
         args: &[Box<dyn Any>],
         kwargs: &HashMap<String, Box<dyn Any>>,
@@ -259,7 +257,7 @@ where
                 }
 
                 // If the other array is not a GPU array, we could potentially handle
-                // other array types, but for simplicity, we'll just return NotImplemented
+                // other array _types, but for simplicity, we'll just return NotImplemented
                 Err(NotImplemented)
             }
             "scirs2::array_protocol::operations::multiply" => {
@@ -284,7 +282,7 @@ where
                 }
 
                 // If the other array is not a GPU array, we could potentially handle
-                // other array types, but for simplicity, we'll just return NotImplemented
+                // other array _types, but for simplicity, we'll just return NotImplemented
                 Err(NotImplemented)
             }
             "scirs2::array_protocol::operations::matmul" => {
@@ -316,7 +314,7 @@ where
 
                         match kernels::matmul(self_f64, other_f64) {
                             Ok(result) => {
-                                // We can't safely transmute between types with different sizes
+                                // We can't safely transmute between _types with different sizes
                                 // Since we're in a specific case where we know T is f64 and D is Ix2,
                                 // we can just return the f64 result directly
                                 return Ok(Box::new(result));
@@ -324,8 +322,8 @@ where
                             Err(_) => return Err(NotImplemented),
                         }
                     }
-                    // For other types, create a placeholder result for demonstration
-                    // In a real implementation, we would support more types and dimensions
+                    // For other _types, create a placeholder result for demonstration
+                    // In a real implementation, we would support more _types and dimensions
                     let result = Self::new(self.host_data.clone(), self.config.clone());
                     return Ok(Box::new(result));
                 }
@@ -524,9 +522,8 @@ pub mod kernels {
         // Check that the shapes match
         if a.shape() != b.shape() {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
-                "Shape mismatch: {a_shape:?} vs {b_shape:?}",
-                a_shape = a.shape(),
-                b_shape = b.shape()
+                "Shape mismatch: {:?} vs {:?}",
+                a.shape(), b.shape()
             ))));
         }
 
@@ -561,9 +558,8 @@ pub mod kernels {
         // Check that the shapes match
         if a.shape() != b.shape() {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
-                "Shape mismatch: {a_shape:?} vs {b_shape:?}",
-                a_shape = a.shape(),
-                b_shape = b.shape()
+                "Shape mismatch: {:?} vs {:?}",
+                a.shape(), b.shape()
             ))));
         }
 

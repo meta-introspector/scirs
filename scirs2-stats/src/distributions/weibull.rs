@@ -6,7 +6,8 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Distribution, Uniform as RandUniform};
+use rand__distr::{Distribution, Uniform as RandUniform};
+use statrs::statistics::Statistics;
 
 /// Weibull distribution structure
 ///
@@ -40,13 +41,13 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::weibull::Weibull;
+    /// use scirs2__stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// ```
-    pub fn new(shape: F, scale: F, loc: F) -> StatsResult<Self> {
+    pub fn new(_shape: F, scale: F, loc: F) -> StatsResult<Self> {
         // Validate parameters
-        if shape <= F::zero() {
+        if _shape <= F::zero() {
             return Err(StatsError::DomainError(
                 "Shape parameter must be positive".to_string(),
             ));
@@ -69,7 +70,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
         };
 
         Ok(Weibull {
-            shape,
+            _shape,
             scale,
             loc,
             rand_distr,
@@ -89,7 +90,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::weibull::Weibull;
+    /// use scirs2__stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let pdf_at_one = weibull.pdf(1.0);
@@ -130,7 +131,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::weibull::Weibull;
+    /// use scirs2__stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let cdf_at_one = weibull.cdf(1.0);
@@ -164,14 +165,14 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::weibull::Weibull;
+    /// use scirs2__stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let x = weibull.ppf(0.5).unwrap();
     /// assert!((x - 0.8325546).abs() < 1e-7);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p > F::one() {
+        if p < F::zero() || p >, F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));
@@ -207,7 +208,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::weibull::Weibull;
+    /// use scirs2__stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let samples = weibull.rvs(10).unwrap();
@@ -240,7 +241,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::weibull::Weibull;
+    /// use scirs2__stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let mean = weibull.mean();
@@ -262,7 +263,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::weibull::Weibull;
+    /// use scirs2__stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let var = weibull.var();
@@ -293,7 +294,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::weibull::Weibull;
+    /// use scirs2__stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let median = weibull.median();
@@ -315,7 +316,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::weibull::Weibull;
+    /// use scirs2__stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let mode = weibull.mode();
@@ -403,18 +404,18 @@ fn gamma_function<F: Float + NumCast>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::distributions::weibull;
+/// use scirs2__stats::distributions::weibull;
 ///
 /// let w = weibull::weibull(2.0f64, 1.0, 0.0).unwrap();
 /// let pdf_at_one = w.pdf(1.0);
 /// assert!((pdf_at_one - 0.73575888).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn weibull<F>(shape: F, scale: F, loc: F) -> StatsResult<Weibull<F>>
+pub fn weibull<F>(_shape: F, scale: F, loc: F) -> StatsResult<Weibull<F>>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    Weibull::new(shape, scale, loc)
+    Weibull::new(_shape, scale, loc)
 }
 
 /// Implementation of SampleableDistribution for Weibull

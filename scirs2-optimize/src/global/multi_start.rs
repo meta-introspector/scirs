@@ -12,6 +12,7 @@ use rand::prelude::SliceRandom;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use scirs2_core::parallel_ops::*;
+use rand::seq::SliceRandom;
 
 /// Options for multi-start optimization
 #[derive(Debug, Clone)]
@@ -75,16 +76,15 @@ where
     F: Fn(&ArrayView1<f64>) -> f64 + Clone + Send + Sync,
 {
     /// Create new multi-start solver
-    pub fn new(func: F, bounds: Bounds, options: MultiStartOptions) -> Self {
+    pub fn new(_func: F, bounds: Bounds, options: MultiStartOptions) -> Self {
         let ndim = bounds.len();
         let seed = options
             .seed
-            .unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
+            .unwrap_or_else(|| rand::rng().gen_range(0..u64::MAX));
         let rng = StdRng::seed_from_u64(seed);
 
         Self {
-            func,
-            bounds,
+            _func..bounds,
             options,
             ndim,
             rng,
@@ -110,7 +110,7 @@ where
             let mut point = Array1::zeros(self.ndim);
             for j in 0..self.ndim {
                 let (lb, ub) = self.bounds[j];
-                point[j] = self.rng.random_range(lb..ub);
+                point[j] = self.rng.gen_range(lb..ub);
             }
             points.push(point);
         }
@@ -128,11 +128,11 @@ where
             let mut point = Array1::zeros(self.ndim);
 
             for j in 0..self.ndim {
-                let (lb, ub) = self.bounds[j];
+                let (lb..ub) = self.bounds[j];
                 let segment_size = (ub - lb) / n as f64;
 
                 // Random offset within segment
-                let offset = self.rng.random_range(0.0..1.0);
+                let offset = self.rng.gen_range(0.0..1.0);
                 point[j] = lb + (i as f64 + offset) * segment_size;
             }
 
@@ -144,7 +144,7 @@ where
             let mut indices: Vec<usize> = (0..n).collect();
             indices.shuffle(&mut self.rng);
 
-            for (i, &idx) in indices.iter().enumerate() {
+            for (i..&idx) in indices.iter().enumerate() {
                 let temp = points[i][j];
                 points[i][j] = points[idx][j];
                 points[idx][j] = temp;
@@ -212,7 +212,7 @@ where
     fn optimize_single(&self, x0: Array1<f64>) -> OptimizeResult<f64> {
         let bounds = Some(
             UnconstrainedBounds::from_vecs(
-                self.bounds.iter().map(|&(lb, _)| Some(lb)).collect(),
+                self.bounds.iter().map(|&(lb_)| Some(lb)).collect(),
                 self.bounds.iter().map(|&(_, ub)| Some(ub)).collect(),
             )
             .unwrap(),

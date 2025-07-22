@@ -1,7 +1,7 @@
 //! Simple test for cubature integration
 
 use ndarray::Array1;
-use scirs2_integrate::cubature::{cubature, Bound};
+use scirs2__integrate::cubature::{cubature, Bound};
 
 #[allow(dead_code)]
 fn main() {

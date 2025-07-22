@@ -21,7 +21,7 @@
 //!
 //! ```rust
 //! use ndarray::{Array1, Array2};
-//! use scirs2_interpolate::high_dimensional::{
+//! use scirs2__interpolate::high_dimensional::{
 //!     HighDimensionalInterpolator, DimensionReductionMethod
 //! };
 //!
@@ -186,8 +186,7 @@ where
     dimension_reduction: DimensionReductionMethod,
     local_method: LocalMethod,
     sparse_strategy: Option<SparseStrategy>,
-    spatial_index_type: SpatialIndexType,
-    _phantom: PhantomData<F>,
+    spatial_index_type: SpatialIndexType, _phantom: PhantomData<F>,
 }
 
 /// Types of spatial indices available
@@ -225,8 +224,7 @@ where
                 weight_power: 2.0,
             },
             sparse_strategy: None,
-            spatial_index_type: SpatialIndexType::Auto,
-            _phantom: PhantomData,
+            spatial_index_type: SpatialIndexType::Auto, _phantom: PhantomData,
         }
     }
 }
@@ -250,7 +248,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2_interpolate::high_dimensional::HighDimensionalInterpolatorBuilder;
+    /// use scirs2__interpolate::high_dimensional::HighDimensionalInterpolatorBuilder;
     /// use ndarray::Array2;
     ///
     /// let builder = HighDimensionalInterpolatorBuilder::<f64>::new();
@@ -264,7 +262,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2_interpolate::high_dimensional::{HighDimensionalInterpolatorBuilder, DimensionReductionMethod};
+    /// use scirs2__interpolate::high_dimensional::{HighDimensionalInterpolatorBuilder, DimensionReductionMethod};
     ///
     /// let builder = HighDimensionalInterpolatorBuilder::<f64>::new()
     ///     .with_dimension_reduction(DimensionReductionMethod::PCA { target_dims: 5 });
@@ -279,7 +277,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2_interpolate::high_dimensional::{HighDimensionalInterpolatorBuilder, LocalMethod};
+    /// use scirs2__interpolate::high_dimensional::{HighDimensionalInterpolatorBuilder, LocalMethod};
     ///
     /// let builder = HighDimensionalInterpolatorBuilder::<f64>::new()
     ///     .with_local_method(LocalMethod::KNearestNeighbors { k: 8, weight_power: 1.5 });
@@ -463,8 +461,7 @@ where
     /// Apply Local Linear Embedding (simplified)
     fn apply_lle(
         points: &ArrayView2<F>,
-        target_dims: usize,
-        _n_neighbors: usize,
+        target_dims: usize, _n_neighbors: usize,
     ) -> InterpolateResult<DimensionReduction<F>> {
         // For simplicity, fall back to random projection
         // A full LLE implementation would require eigenvalue decomposition
@@ -566,7 +563,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2_interpolate::high_dimensional::HighDimensionalInterpolator;
+    /// use scirs2__interpolate::high_dimensional::HighDimensionalInterpolator;
     ///
     /// // Create a builder for high-dimensional interpolation
     /// let builder = HighDimensionalInterpolator::<f64>::builder();
@@ -591,7 +588,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2_interpolate::high_dimensional::{HighDimensionalInterpolator, DimensionReductionMethod};
+    /// use scirs2__interpolate::high_dimensional::{HighDimensionalInterpolator, DimensionReductionMethod};
     /// use ndarray::{Array1, Array2};
     ///
     /// // Create sample 5D data
@@ -724,8 +721,7 @@ where
 
     /// Perform local interpolation using neighbors
     fn interpolate_local(
-        &self,
-        _query: &Array1<F>,
+        &self_query: &Array1<F>,
         neighbors: &[(usize, F)],
     ) -> InterpolateResult<F> {
         if neighbors.is_empty() {
@@ -765,7 +761,7 @@ where
                 let mut sum = F::zero();
                 let count = F::from_usize(neighbors.len()).unwrap();
 
-                for &(idx, _) in neighbors {
+                for &(idx_) in neighbors {
                     sum += self.values[idx];
                 }
 
@@ -781,8 +777,7 @@ where
     /// Perform local RBF interpolation
     fn interpolate_local_rbf(
         &self,
-        neighbors: &[(usize, F)],
-        _rbf_type: &LocalRBFType,
+        neighbors: &[(usize, F)]_rbf_type: &LocalRBFType,
     ) -> InterpolateResult<F> {
         // Simplified RBF interpolation
         let mut sum = F::zero();
@@ -817,7 +812,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2_interpolate::high_dimensional::HighDimensionalInterpolator;
+    /// use scirs2__interpolate::high_dimensional::HighDimensionalInterpolator;
     /// use ndarray::{Array1, Array2};
     ///
     /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
@@ -865,7 +860,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2_interpolate::high_dimensional::HighDimensionalInterpolator;
+    /// use scirs2__interpolate::high_dimensional::HighDimensionalInterpolator;
     /// use ndarray::{Array1, Array2};
     ///
     /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
@@ -962,7 +957,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_interpolate::high_dimensional::make_knn_interpolator;
+/// use scirs2__interpolate::high_dimensional::make_knn_interpolator;
 /// use ndarray::{Array1, Array2};
 ///
 /// // Create 3D scattered data
@@ -1027,7 +1022,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_interpolate::high_dimensional::make_pca_interpolator;
+/// use scirs2__interpolate::high_dimensional::make_pca_interpolator;
 /// use ndarray::{Array1, Array2};
 ///
 /// // Create high-dimensional data that lies on a lower-dimensional manifold
@@ -1093,7 +1088,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_interpolate::high_dimensional::make_local_rbf_interpolator;
+/// use scirs2__interpolate::high_dimensional::make_local_rbf_interpolator;
 /// use ndarray::{Array1, Array2};
 ///
 /// // Create scattered 2D data

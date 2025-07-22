@@ -4,10 +4,10 @@
 //! using CUDA, HIP (ROCm), or SYCL backends for high-performance computing.
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse_fft::{
+use crate::sparse__fft::{
     SparseFFTAlgorithm, SparseFFTConfig, SparseFFTResult, SparsityEstimationMethod, WindowFunction,
 };
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 use std::time::Instant;
@@ -64,7 +64,7 @@ impl Default for GPUSparseFFTConfig {
 /// GPU-accelerated sparse FFT processor
 pub struct GPUSparseFFT {
     /// Configuration
-    config: GPUSparseFFTConfig,
+    _config: GPUSparseFFTConfig,
     /// GPU resources initialized
     gpu_initialized: bool,
     /// GPU device information
@@ -73,9 +73,9 @@ pub struct GPUSparseFFT {
 
 impl GPUSparseFFT {
     /// Create a new GPU-accelerated sparse FFT processor with the given configuration
-    pub fn new(config: GPUSparseFFTConfig) -> Self {
+    pub fn new(_config: GPUSparseFFTConfig) -> Self {
         Self {
-            config,
+            _config,
             gpu_initialized: false,
             device_info: None,
         }

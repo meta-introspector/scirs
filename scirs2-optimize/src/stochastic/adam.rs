@@ -12,6 +12,7 @@ use crate::stochastic::{
 };
 use crate::unconstrained::result::OptimizeResult;
 use ndarray::Array1;
+use statrs::statistics::Statistics;
 
 /// Options for ADAM optimization
 #[derive(Debug, Clone)]

@@ -6,9 +6,9 @@
 
 use ndarray::{array, Array2};
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_spatial::kdtree::KDTree;
-use scirs2_spatial::kdtree_optimized::KDTreeOptimized;
-use scirs2_spatial::set_distance::hausdorff_distance;
+use scirs2__spatial::kdtree::KDTree;
+use scirs2__spatial::kdtree_optimized::KDTreeOptimized;
+use scirs2__spatial::set_distance::hausdorff_distance;
 use std::time::Instant;
 
 /// Generate random points in the unit square
@@ -27,13 +27,13 @@ fn generate_random_points(n: usize, seed: u64) -> Array2<f64> {
 
 /// Benchmark Hausdorff distance computation: direct vs. KD-tree optimized
 #[allow(dead_code)]
-fn benchmark_hausdorff(n1: usize, n2: usize) {
+fn benchmark_hausdorff(_n1: usize, n2: usize) {
     println!("Benchmarking Hausdorff distance computation");
     println!("------------------------------------------");
-    println!("Set 1: {n1} points, Set 2: {n2} points");
+    println!("Set 1: {_n1} points, Set 2: {n2} points");
 
     // Generate random point sets
-    let points1 = generate_random_points(n1, 42);
+    let points1 = generate_random_points(_n1, 42);
     let points2 = generate_random_points(n2, 43);
 
     // Build KD-tree for set 1

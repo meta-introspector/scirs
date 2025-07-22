@@ -68,16 +68,16 @@ pub mod prelude {
     // Configuration and serialization
     pub use crate::config::{ConfigBuilder, ConfigSerializer};
     // Transfer learning
-    pub use crate::transfer_learning::{
+    pub use crate::transfer__learning::{
         LayerState, PretrainedWeightLoader, TransferLearningManager, TransferLearningOrchestrator,
         TransferStrategy,
     };
     // Model interpretation
-    pub use crate::interpretation_legacy::{
+    pub use crate::interpretation__legacy::{
         AttributionMethod, BaselineMethod, InterpretationReport, ModelInterpreter,
     };
     // Training utilities
-    pub use crate::training::mixed_precision::MixedPrecisionManager;
+    pub use crate::training::mixed__precision::MixedPrecisionManager;
     // Data utilities
     pub use crate::data::{DataLoader, Dataset};
     // Evaluation
@@ -91,11 +91,11 @@ pub mod prelude {
     // Visualization
     pub use crate::visualization::NetworkVisualizer;
     // Unified performance optimization
-    pub use crate::performance_integration::{
+    pub use crate::performance__integration::{
         AutoOptimizationStrategy, OptimizationChoice, UnifiedPerformanceManager,
     };
     // Advanced Mode Coordinator
-    pub use crate::advanced_coordinator::{
+    pub use crate::advanced__coordinator::{
         AdaptiveConfig, DeviceType, MemoryStrategy, OptimizationConfig, PerformanceReport,
         AdvancedCoordinator,
     };

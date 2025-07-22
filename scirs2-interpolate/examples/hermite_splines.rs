@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     make_hermite_spline, make_hermite_spline_with_derivatives, make_natural_hermite_spline,
     make_periodic_hermite_spline, make_quintic_hermite_spline, DerivativeSpec, ExtrapolateMode,
     HermiteSpline,

@@ -5,7 +5,7 @@
 //! and adaptive strategies for all supported clustering algorithms.
 
 use ndarray::Array2;
-use scirs2_cluster::{
+use scirs2__cluster::{
     preprocess::standardize,
     tuning::{
         AcquisitionFunction, AutoTuner, CVStrategy, CrossValidationConfig, DependencyRelationship,
@@ -444,9 +444,9 @@ fn generate_test_datasets() -> HashMap<String, Array2<f64>> {
 
 /// Generate blob clusters
 #[allow(dead_code)]
-fn generate_blob_clusters(n_samples: usize, n_clusters: usize, std_dev: f64) -> Array2<f64> {
+fn generate_blob_clusters(_n_samples: usize, n_clusters: usize, std_dev: f64) -> Array2<f64> {
     let mut data = Vec::new();
-    let samples_per_cluster = n_samples / n_clusters;
+    let samples_per_cluster = _n_samples / n_clusters;
 
     for cluster in 0..n_clusters {
         let center_x = (cluster as f64) * 5.0;
@@ -464,9 +464,9 @@ fn generate_blob_clusters(n_samples: usize, n_clusters: usize, std_dev: f64) -> 
 
 /// Generate moon-shaped clusters
 #[allow(dead_code)]
-fn generate_moon_clusters(n_samples: usize) -> Array2<f64> {
+fn generate_moon_clusters(_n_samples: usize) -> Array2<f64> {
     let mut data = Vec::new();
-    let samples_per_moon = n_samples / 2;
+    let samples_per_moon = _n_samples / 2;
 
     for i in 0..samples_per_moon {
         let t = i as f64 / samples_per_moon as f64 * std::f64::consts::PI;
@@ -488,9 +488,9 @@ fn generate_moon_clusters(n_samples: usize) -> Array2<f64> {
 
 /// Generate circle clusters
 #[allow(dead_code)]
-fn generate_circle_clusters(n_samples: usize) -> Array2<f64> {
+fn generate_circle_clusters(_n_samples: usize) -> Array2<f64> {
     let mut data = Vec::new();
-    let samples_per_circle = n_samples / 2;
+    let samples_per_circle = _n_samples / 2;
 
     for i in 0..samples_per_circle {
         let t = i as f64 / samples_per_circle as f64 * 2.0 * std::f64::consts::PI;
@@ -514,9 +514,9 @@ fn generate_circle_clusters(n_samples: usize) -> Array2<f64> {
 
 /// Generate anisotropic clusters
 #[allow(dead_code)]
-fn generate_anisotropic_clusters(n_samples: usize, n_clusters: usize) -> Array2<f64> {
+fn generate_anisotropic_clusters(_n_samples: usize, n_clusters: usize) -> Array2<f64> {
     let mut data = Vec::new();
-    let samples_per_cluster = n_samples / n_clusters;
+    let samples_per_cluster = _n_samples / n_clusters;
 
     for cluster in 0..n_clusters {
         let angle = cluster as f64 * std::f64::consts::PI / 2.0;
@@ -540,9 +540,9 @@ fn generate_anisotropic_clusters(n_samples: usize, n_clusters: usize) -> Array2<
 
 /// Generate varied size clusters
 #[allow(dead_code)]
-fn generate_varied_size_clusters(n_samples: usize) -> Array2<f64> {
+fn generate_varied_size_clusters(_n_samples: usize) -> Array2<f64> {
     let mut data = Vec::new();
-    let cluster_sizes = vec![n_samples / 2, n_samples / 3, n_samples / 6];
+    let cluster_sizes = vec![_n_samples / 2, _n_samples / 3, _n_samples / 6];
 
     for (cluster, &size) in cluster_sizes.iter().enumerate() {
         let center_x = cluster as f64 * 6.0;
@@ -561,18 +561,18 @@ fn generate_varied_size_clusters(n_samples: usize) -> Array2<f64> {
 
 /// Other utility functions (placeholders for actual implementations)
 #[allow(dead_code)]
-fn generate_density_clusters(n_samples: usize, n_clusters: usize) -> Array2<f64> {
-    generate_blob_clusters(n_samples, n_clusters, 0.8)
+fn generate_density_clusters(_n_samples: usize, n_clusters: usize) -> Array2<f64> {
+    generate_blob_clusters(_n_samples, n_clusters, 0.8)
 }
 
 #[allow(dead_code)]
-fn generate_hierarchical_clusters(n_samples: usize, n_clusters: usize) -> Array2<f64> {
-    generate_blob_clusters(n_samples, n_clusters, 1.2)
+fn generate_hierarchical_clusters(_n_samples: usize, n_clusters: usize) -> Array2<f64> {
+    generate_blob_clusters(_n_samples, n_clusters, 1.2)
 }
 
 #[allow(dead_code)]
-fn generate_mixed_clusters(n_samples: usize) -> Array2<f64> {
-    generate_blob_clusters(n_samples, 4, 1.0)
+fn generate_mixed_clusters(_n_samples: usize) -> Array2<f64> {
+    generate_blob_clusters(_n_samples, 4, 1.0)
 }
 
 #[allow(dead_code)]

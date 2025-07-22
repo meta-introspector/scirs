@@ -6,9 +6,9 @@
 
 #![allow(dead_code)]
 
-use crate::benchmark_suite::{BenchmarkConfig, BenchmarkMetrics};
+use crate::benchmark__suite::{BenchmarkConfig, BenchmarkMetrics};
 use crate::error::StatsResult;
-// use crate::advanced_error_enhancements_v2::CompatibilityImpact; // Commented out temporarily
+// use crate::advanced_error_enhancements__v2::CompatibilityImpact; // Commented out temporarily
 use ndarray::Array1;
 use scirs2_core::rng;
 use serde::{Deserialize, Serialize};
@@ -386,9 +386,9 @@ pub enum PlatformSpecificity {
 
 impl AdvancedBenchmarkSuite {
     /// Create new advanced benchmark suite
-    pub fn new(config: AdvancedBenchmarkConfig) -> Self {
+    pub fn new(_config: AdvancedBenchmarkConfig) -> Self {
         Self {
-            config,
+            _config,
             performance_models: HashMap::new(),
             baseline_results: HashMap::new(),
             platform_profiles: HashMap::new(),
@@ -633,9 +633,9 @@ impl AdvancedBenchmarkSuite {
         distribution: &DataDistribution,
     ) -> StatsResult<Array1<f64>> {
         use rand::prelude::*;
-        use rand_distr::{Exp, LogNormal, Normal, Pareto, Uniform};
+        use rand__distr::{Exp, LogNormal, Normal, Pareto, Uniform};
 
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let mut data = Array1::zeros(size);
 
         match distribution {
@@ -985,7 +985,7 @@ impl AdvancedBenchmarkSuite {
         name: &str,
         size: usize,
         timings: &[f64],
-    ) -> crate::benchmark_suite::BenchmarkMetrics {
+    ) -> crate::benchmark__suite::BenchmarkMetrics {
         let mut sorted_timings = timings.to_vec();
         sorted_timings.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -1170,8 +1170,7 @@ impl AdvancedBenchmarkSuite {
 
     /// Analyze SIMD optimization opportunities
     fn analyze_simd_opportunities(
-        &self,
-        _metrics: &[AdvancedBenchmarkMetrics],
+        &self_metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Performance,
@@ -1197,8 +1196,7 @@ let result = f64::simd_mean(&data.view());
 
     /// Analyze parallel processing opportunities
     fn analyze_parallel_opportunities(
-        &self,
-        _metrics: &[AdvancedBenchmarkMetrics],
+        &self_metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Performance,
@@ -1225,8 +1223,7 @@ if data.len() > 10_000 {
 
     /// Analyze memory optimization opportunities
     fn analyze_memory_opportunities(
-        &self,
-        _metrics: &[AdvancedBenchmarkMetrics],
+        &self_metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Memory,
@@ -1244,8 +1241,7 @@ if data.len() > 10_000 {
 
     /// Analyze numerical stability improvements
     fn analyze_stability_improvements(
-        &self,
-        _metrics: &[AdvancedBenchmarkMetrics],
+        &self_metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Stability,
@@ -1260,10 +1256,10 @@ if data.len() > 10_000 {
                 r#"
 // Kahan summation for improved accuracy
 #[allow(dead_code)]
-fn kahan_sum(data: &[f64]) -> f64 {
+fn kahan_sum(_data: &[f64]) -> f64 {
     let mut sum = 0.0;
     let mut c = 0.0;
-    for &value in data {
+    for &value in _data {
         let y = value - c;
         let t = sum + y;
         c = (t - sum) - y;
@@ -1311,7 +1307,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
     }
 
     /// Assess scalability characteristics
-    fn assess_scalability(&self, _metrics: &[AdvancedBenchmarkMetrics]) -> ScalabilityAssessment {
+    fn assess_scalability(&self_metrics: &[AdvancedBenchmarkMetrics]) -> ScalabilityAssessment {
         ScalabilityAssessment {
             scaling_efficiency: 0.85, // Average efficiency across data sizes
             memory_efficiency: 0.90,
@@ -1341,8 +1337,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
 
     /// Assess cross-platform performance
     fn assess_cross_platform(
-        &self,
-        _metrics: &[AdvancedBenchmarkMetrics],
+        &self_metrics: &[AdvancedBenchmarkMetrics],
     ) -> CrossPlatformAssessment {
         CrossPlatformAssessment {
             portability_score: 0.9,
@@ -1357,8 +1352,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
 
     /// Analyze performance bottlenecks
     fn analyze_bottlenecks(
-        &self,
-        _metrics: &[AdvancedBenchmarkMetrics],
+        &self_metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<BottleneckAnalysis> {
         vec![
             BottleneckAnalysis {
@@ -1382,8 +1376,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
 
     /// Identify optimization opportunities
     fn identify_optimization_opportunities(
-        &self,
-        _metrics: &[AdvancedBenchmarkMetrics],
+        &self_metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<OptimizationOpportunity> {
         vec![
             OptimizationOpportunity {

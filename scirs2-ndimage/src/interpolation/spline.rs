@@ -9,8 +9,8 @@ use crate::error::{NdimageError, NdimageResult};
 /// B-spline poles for different orders
 /// Based on the theory of B-spline interpolation
 #[allow(dead_code)]
-fn get_spline_poles<T: Float + FromPrimitive>(order: usize) -> Vec<T> {
-    match order {
+fn get_spline_poles<T: Float + FromPrimitive>(_order: usize) -> Vec<T> {
+    match _order {
         0 | 1 => vec![], // No poles for constant or linear
         2 => {
             // Quadratic B-spline has one pole at sqrt(8) - 3
@@ -64,42 +64,42 @@ fn get_initial_causal_coefficient<T: Float + FromPrimitive>(
 
 /// Compute initial anti-causal coefficient for B-spline filtering
 #[allow(dead_code)]
-fn get_initial_anti_causal_coefficient<T: Float + FromPrimitive>(coeffs: &[T], pole: T) -> T {
-    let n = coeffs.len();
+fn get_initial_anti_causal_coefficient<T: Float + FromPrimitive>(_coeffs: &[T], pole: T) -> T {
+    let n = _coeffs.len();
     if n < 2 {
         return T::zero();
     }
 
     let last_idx = n - 1;
-    (pole / (pole * pole - T::one())) * (pole * coeffs[last_idx] + coeffs[last_idx - 1])
+    (pole / (pole * pole - T::one())) * (pole * _coeffs[last_idx] + _coeffs[last_idx - 1])
 }
 
 /// Apply causal filtering (forward pass)
 #[allow(dead_code)]
-fn apply_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T, initial_coeff: T) {
-    if coeffs.is_empty() {
+fn apply_causal_filter<T: Float + FromPrimitive>(_coeffs: &mut [T], pole: T, initial_coeff: T) {
+    if _coeffs.is_empty() {
         return;
     }
 
-    coeffs[0] = initial_coeff;
+    _coeffs[0] = initial_coeff;
 
-    for i in 1..coeffs.len() {
-        coeffs[i] = coeffs[i] + pole * coeffs[i - 1];
+    for i in 1.._coeffs.len() {
+        _coeffs[i] = _coeffs[i] + pole * _coeffs[i - 1];
     }
 }
 
 /// Apply anti-causal filtering (backward pass)
 #[allow(dead_code)]
-fn apply_anti_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T, initial_coeff: T) {
-    if coeffs.is_empty() {
+fn apply_anti_causal_filter<T: Float + FromPrimitive>(_coeffs: &mut [T], pole: T, initial_coeff: T) {
+    if _coeffs.is_empty() {
         return;
     }
 
-    let last_idx = coeffs.len() - 1;
-    coeffs[last_idx] = initial_coeff;
+    let last_idx = _coeffs.len() - 1;
+    _coeffs[last_idx] = initial_coeff;
 
     for i in (0..last_idx).rev() {
-        coeffs[i] = pole * (coeffs[i + 1] - coeffs[i]);
+        _coeffs[i] = pole * (_coeffs[i + 1] - _coeffs[i]);
     }
 }
 
@@ -114,13 +114,13 @@ fn apply_anti_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T,
 ///
 /// * `Result<Array<T, D>>` - Filtered array
 #[allow(dead_code)]
-pub fn spline_filter<T, D>(input: &Array<T, D>, order: Option<usize>) -> NdimageResult<Array<T, D>>
+pub fn spline_filter<T, D>(_input: &Array<T, D>, order: Option<usize>) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Validate inputs
-    if input.ndim() == 0 {
+    if _input.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Input array cannot be 0-dimensional".into(),
         ));
@@ -137,14 +137,14 @@ where
 
     // For orders 0 and 1, no filtering is needed
     if spline_order <= 1 {
-        return Ok(input.to_owned());
+        return Ok(_input.to_owned());
     }
 
     // Create output array
-    let mut output = input.to_owned();
+    let mut output = _input.to_owned();
 
     // Apply spline filtering along each axis
-    for axis in 0..input.ndim() {
+    for axis in 0.._input.ndim() {
         spline_filter_axis(&mut output, spline_order, axis)?;
     }
 
@@ -250,7 +250,7 @@ where
     }
 
     // Evaluate B-spline basis function at given positions
-    let mut result = Array::<T, _>::zeros(positions.len());
+    let mut result = Array::<T>::zeros(positions.len());
 
     for (i, &pos) in positions.iter().enumerate() {
         result[i] = evaluate_bspline_basis(pos, spline_order, deriv);
@@ -261,7 +261,7 @@ where
 
 /// Apply B-spline filtering along a specific axis
 #[allow(dead_code)]
-fn spline_filter_axis<T, D>(data: &mut Array<T, D>, order: usize, axis: usize) -> NdimageResult<()>
+fn spline_filter_axis<T, D>(_data: &mut Array<T, D>, order: usize, axis: usize) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Clone,
     D: Dimension,
@@ -272,10 +272,10 @@ where
     }
 
     let tolerance = T::from_f64(1e-10).unwrap();
-    let axis_len = data.shape()[axis];
+    let axis_len = _data.shape()[axis];
 
     // Process each 1D line along the specified axis
-    for mut lane in data.axis_iter_mut(Axis(axis)) {
+    for mut lane in _data.axis_iter_mut(Axis(axis)) {
         let mut coeffs: Vec<T> = lane.iter().cloned().collect();
 
         // Apply filtering for each pole

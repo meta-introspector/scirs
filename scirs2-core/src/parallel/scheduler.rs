@@ -111,7 +111,7 @@ impl SchedulerConfigBuilder {
     }
 
     /// Set the number of worker threads
-    pub const fn num_workers(mut self, num_workers: usize) -> Self {
+    pub const fn workers(mut self, num_workers: usize) -> Self {
         self.config.num_workers = num_workers;
         self
     }
@@ -273,7 +273,7 @@ impl TaskHandle {
 
         // Wait if the task is not complete
         if !*completed {
-            let _unused = cvar.wait(completed).unwrap();
+            let _completed = cvar.wait(completed).unwrap();
         }
 
         self.status()
@@ -579,7 +579,7 @@ impl WorkerState {
         }
 
         // Get the current statistics
-        let _tasks_processed = self.tasks_processed.load(Ordering::Relaxed);
+        let tasks_processed = self.tasks_processed.load(Ordering::Relaxed);
         let tasks_stolen = self.tasks_stolen.load(Ordering::Relaxed);
         let failed_steals = self.failed_steals.load(Ordering::Relaxed);
 
@@ -960,7 +960,7 @@ impl WorkStealingScheduler {
         // Create a simple task from the function
         struct FnTask<F, R> {
             f: Option<F>,
-            _phantom: std::marker::PhantomData<R>,
+            phantom: std::marker::PhantomData<R>,
         }
 
         impl<F, R> Task for FnTask<F, R>
@@ -987,7 +987,7 @@ impl WorkStealingScheduler {
 
         self.submit_boxed(Box::new(FnTask {
             f: Some(f),
-            _phantom: std::marker::PhantomData,
+            phantom: std::marker::PhantomData,
         }))
     }
 
@@ -1018,7 +1018,7 @@ impl WorkStealingScheduler {
                 let completed = lock.lock().unwrap();
 
                 if !*completed {
-                    let _unused = cvar.wait(completed);
+                    let _completed = cvar.wait(completed).unwrap();
                 }
             }
         }
@@ -1286,8 +1286,8 @@ pub fn create_work_stealing_scheduler() -> WorkStealingScheduler {
 
 /// Create a new work-stealing scheduler with the specified number of workers
 #[allow(dead_code)]
-pub fn create_work_stealing_scheduler_with_workers(workers: usize) -> WorkStealingScheduler {
-    let config = SchedulerConfigBuilder::new().num_workers(workers).build();
+pub fn create_work_stealing_scheduler_with_workers(num_workers: usize) -> WorkStealingScheduler {
+    let config = SchedulerConfigBuilder::new().workers(num_workers).build();
 
     WorkStealingScheduler::new(config)
 }
@@ -1341,7 +1341,7 @@ where
     }
 
     /// Set whether to continue on errors
-    pub const fn continue_on_error(mut self, continue_on_error: bool) -> Self {
+    pub fn continue_on_error(mut self, continue_on_error: bool) -> Self {
         self.continue_on_error = continue_on_error;
         self
     }

@@ -5,15 +5,15 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_spatial::distance::{euclidean, manhattan, pdist};
+use scirs2__spatial::distance::{euclidean, manhattan, pdist};
 use std::hint::black_box;
 use std::time::Duration;
 
 // Simple data generator
 #[allow(dead_code)]
-fn generate_test_data(n_points: usize, dimensions: usize) -> Array2<f64> {
+fn generate_test_data(_n_points: usize, dimensions: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(42);
-    Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
+    Array2::from_shape_fn((_n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
 }
 
 // Quick performance validation
@@ -24,7 +24,7 @@ fn bench_performance_validation(c: &mut Criterion) {
     group.warm_up_time(Duration::from_secs(1));
 
     // Single point distance calculations
-    let p1 = &[0.0, 1.0, 2.0, 3.0, 4.0];
+    let p1 = &[0.0..1.0, 2.0, 3.0, 4.0];
     let p2 = &[1.0, 2.0, 3.0, 4.0, 5.0];
 
     group.bench_function("single_euclidean_distance", |b| {
@@ -69,7 +69,7 @@ fn bench_performance_validation(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("scaling_euclidean", size),
             &size,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     let distances = pdist(&points, euclidean);
                     black_box(distances.sum())
@@ -102,7 +102,7 @@ fn bench_system_characterization(c: &mut Criterion) {
                     format!("{size}x{dim}_({data_size_kb:.1}KB)"),
                 ),
                 &(size, dim),
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         // Simulate a typical workload
                         let mut total = 0.0;

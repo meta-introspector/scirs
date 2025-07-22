@@ -39,13 +39,13 @@ pub struct NASController {
     search_space: SearchSpaceConfig,
 impl NASController {
     /// Create a new NAS controller
-    pub fn new(search_space: SearchSpaceConfig) -> Result<Self> {
+    pub fn new(_search_space: SearchSpaceConfig) -> Result<Self> {
         Ok(Self {
             config: ControllerConfig::default(),
-            search_space,
+            _search_space,
         })
     /// Create with custom configuration
-    pub fn with_config(search_space: SearchSpaceConfig, config: ControllerConfig) -> Result<Self> {
+    pub fn with_config(_search_space: SearchSpaceConfig, config: ControllerConfig) -> Result<Self> {
             config,
     /// Build a model from an architecture encoding
     pub fn build_model(&self, encoding: &Arc<dyn ArchitectureEncoding>) -> Result<Sequential<f32>> {
@@ -194,15 +194,14 @@ impl NASController {
                         _input: &ndarray::ArrayD<f32>,
                         grad_output: &ndarray::ArrayD<f32>,
                         Ok(grad_output.clone())
-                    fn update(&mut self, _learning_rate: f32) -> Result<()> {
+                    fn update(&mut self, learning_rate: f32) -> Result<()> {
                         Ok(())
                     fn as_any(&self) -> &dyn std::any::Any {
                         self
                     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
                     fn layer_type(&self) -> &str {
                         "Flatten"
-                Ok(Box::new(FlattenLayer))
-            LayerType::Conv2D {
+                Ok(Box::new(FlattenLayer)), LayerType::Conv2D {
                 filters,
                 kernel_size,
                 stride,
@@ -261,7 +260,7 @@ impl NASController {
                 struct ReshapeLayer {
                     target_shape: Vec<i32>,
                 impl<
-                        F: num_traits::Float + std::fmt::Debug + ndarray::ScalarOperand + Send + Sync,
+                        F: num_traits: Float + std::fmt::Debug + ndarray::ScalarOperand + Send + Sync,
                     > crate::layers::Layer<F> for ReshapeLayer
                 {
                     fn forward(&self, input: &ndarray::ArrayD<F>) -> Result<ndarray::ArrayD<F>> {
@@ -287,7 +286,7 @@ impl NASController {
                         _input: &ndarray::ArrayD<F>,
                         grad_output: &ndarray::ArrayD<F>,
                     ) -> Result<ndarray::ArrayD<F>> {
-                    fn update(&mut self, _learning_rate: F) -> Result<()> {
+                    fn update(&mut self, learning_rate: F) -> Result<()> {
                         "Reshape"
                 Ok(Box::new(ReshapeLayer {
                     target_shape: new_shape.clone(),
@@ -537,7 +536,7 @@ impl NASController {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::nas::search_space::Architecture;
+    use crate::nas::search__space::Architecture;
     #[test]
     fn test_controller_creation() {
         let search_space = SearchSpaceConfig::default();
@@ -577,7 +576,6 @@ mod tests {
         let modified = controller.apply_multipliers(&layers, 2.0, 1.5).unwrap();
         // Width multiplier should double the units/filters
         match &modified[0] {
-            LayerType::Dense(units) => assert_eq!(*units, 200),
-            _ => unreachable!("Expected Dense layer"),
+            LayerType::Dense(units) => assert_eq!(*units, 200, _ => unreachable!("Expected Dense layer"),
         // Depth multiplier should create repetitions
         assert!(modified.len() > layers.len());

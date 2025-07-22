@@ -11,16 +11,17 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::parametric::ARMethod;
-use crate::parametric_enhanced::{
-    enhanced_parametric_estimation, EstimationMethod, ParametricConfig,
-};
-use ndarray::{s, Array1};
+use ndarray::{Array1, s};
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(unused_imports)]
+use crate::parametric__enhanced::{
+    enhanced_parametric_estimation, EstimationMethod, ParametricConfig,
+};
 /// Comprehensive optimization result for parametric methods
 #[derive(Debug, Clone)]
 pub struct ComprehensiveParametricResult {
@@ -324,9 +325,8 @@ fn evaluate_model_order(
         max_ar_order: order,
         max_ma_order: 0, // Only AR model for order selection
         method: match config.optimization_method {
-            OptimizationMethod::Burg => EstimationMethod::AR(ARMethod::Burg),
-            OptimizationMethod::YuleWalker => EstimationMethod::AR(ARMethod::YuleWalker),
-            _ => EstimationMethod::AR(ARMethod::Burg), // Default to Burg for order selection
+            OptimizationMethod::Burg =>, EstimationMethod::AR(ARMethod::Burg),
+            OptimizationMethod::YuleWalker => EstimationMethod::AR(ARMethod::YuleWalker, _ =>, EstimationMethod::AR(ARMethod::Burg), // Default to Burg for order selection
         },
         ..Default::default()
     };
@@ -335,7 +335,7 @@ fn evaluate_model_order(
 
     // Calculate information criteria
     let log_likelihood = -0.5 * n as f64 * (result.variance.ln() + 1.0 + 2.0 * PI);
-    let aic = -2.0 * log_likelihood + 2.0 * order as f64;
+    let aic = -2.0 * log_likelihood + 2.0 * order  as f64;
     let bic = -2.0 * log_likelihood + order as f64 * (n as f64).ln();
 
     // Quick cross-validation estimate
@@ -403,10 +403,10 @@ fn quick_cross_validation(
 }
 
 #[allow(dead_code)]
-fn evaluate_prediction_error(ar_coeffs: &Array1<f64>, test_data: &[f64]) -> f64 {
-    let order = ar_coeffs.len() - 1;
+fn evaluate_prediction_error(_ar_coeffs: &Array1<f64>, test_data: &[f64]) -> f64 {
+    let order = _ar_coeffs.len() - 1;
     if test_data.len() <= order {
-        return 1e6; // High error for insufficient data
+        return 1e6; // High error for insufficient _data
     }
 
     let mut total_error = 0.0;
@@ -445,16 +445,16 @@ fn select_optimal_order(
         ));
     }
 
-    // Normalize scores to [0, 1] range
-    let normalize = |scores: &[f64]| -> Vec<f64> {
-        let min_score = scores.iter().cloned().fold(f64::INFINITY, f64::min);
-        let max_score = scores.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    // Normalize _scores to [0, 1] range
+    let normalize = |_scores: &[f64]| -> Vec<f64> {
+        let min_score = _scores.iter().cloned().fold(f64::INFINITY, f64::min);
+        let max_score = _scores.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
         let range = max_score - min_score;
 
         if range < 1e-10 {
-            vec![0.5; scores.len()]
+            vec![0.5; _scores.len()]
         } else {
-            scores.iter().map(|&s| (s - min_score) / range).collect()
+            _scores.iter().map(|&s| (s - min_score) / range).collect()
         }
     };
 
@@ -526,12 +526,12 @@ fn evaluate_model_type(
     // For now, just return the cross-validation score for AR models
     // This is a simplified implementation - a full version would handle MA and ARMA
     match model_order {
-        ModelOrder::AR(order) => quick_cross_validation(signal, *order, config),
-        ModelOrder::MA(order) => {
+        ModelOrder::AR(_order) => quick_cross_validation(signal, *_order, config),
+        ModelOrder::MA(_order) => {
             // Placeholder - MA model evaluation would be more complex
-            quick_cross_validation(signal, *order, config).map(|score| score * 1.1)
+            quick_cross_validation(signal, *_order, config).map(|score| score * 1.1)
         }
-        ModelOrder::ARMA(ar_order, _ma_order) => {
+        ModelOrder::ARMA(ar_order_ma_order) => {
             // Placeholder - ARMA model evaluation would be more complex
             quick_cross_validation(signal, *ar_order, config).map(|score| score * 0.9)
         }
@@ -546,14 +546,13 @@ fn advanced_parameter_estimation(
     config: &ComprehensiveOptimizationConfig,
 ) -> SignalResult<AdvancedEstimationResult> {
     match model_order {
-        ModelOrder::AR(order) => {
+        ModelOrder::AR(_order) => {
             let parametric_config = ParametricConfig {
-                max_ar_order: *order,
+                max_ar_order: *_order,
                 max_ma_order: 0, // Only AR model
                 method: match config.optimization_method {
-                    OptimizationMethod::Burg => EstimationMethod::AR(ARMethod::Burg),
-                    OptimizationMethod::YuleWalker => EstimationMethod::AR(ARMethod::YuleWalker),
-                    _ => EstimationMethod::AR(ARMethod::Burg),
+                    OptimizationMethod::Burg =>, EstimationMethod::AR(ARMethod::Burg),
+                    OptimizationMethod::YuleWalker => EstimationMethod::AR(ARMethod::YuleWalker, _ =>, EstimationMethod::AR(ARMethod::Burg),
                 },
                 ..Default::default()
             };
@@ -578,7 +577,7 @@ fn advanced_parameter_estimation(
                 "MA estimation not yet implemented".to_string(),
             ))
         }
-        ModelOrder::ARMA(_ar_order, _ma_order) => {
+        ModelOrder::ARMA(_ar_order_ma_order) => {
             // Placeholder for ARMA estimation
             Err(SignalError::NotImplemented(
                 "ARMA estimation not yet implemented".to_string(),
@@ -599,8 +598,7 @@ struct AdvancedEstimationResult {
 #[allow(dead_code)]
 fn calculate_optimization_metrics(
     signal: &[f64],
-    ar_coeffs: &Array1<f64>,
-    _ma_coeffs: Option<&Array1<f64>>,
+    ar_coeffs: &Array1<f64>, _ma_coeffs: Option<&Array1<f64>>,
     noise_variance: f64,
 ) -> SignalResult<OptimizationMetrics> {
     let n = signal.len();
@@ -610,17 +608,17 @@ fn calculate_optimization_metrics(
     let log_likelihood = -0.5 * n as f64 * (noise_variance.ln() + 1.0 + 2.0 * PI);
 
     // Information criteria
-    let aic = -2.0 * log_likelihood + 2.0 * p as f64;
+    let aic = -2.0 * log_likelihood + 2.0 * p  as f64;
     let bic = -2.0 * log_likelihood + p as f64 * (n as f64).ln();
     let fpe = noise_variance * (n as f64 + p as f64) / (n as f64 - p as f64);
 
     // Calculate R-squared
-    let signal_mean = signal.iter().sum::<f64>() / n as f64;
+    let signal_mean = signal.iter().sum::<f64>() / n  as f64;
     let total_ss = signal
         .iter()
         .map(|&x| (x - signal_mean).powi(2))
         .sum::<f64>();
-    let residual_ss = noise_variance * n as f64;
+    let residual_ss = noise_variance * n  as f64;
     let r_squared = 1.0 - residual_ss / total_ss;
 
     Ok(OptimizationMetrics {
@@ -638,8 +636,7 @@ fn calculate_optimization_metrics(
 #[allow(dead_code)]
 fn compute_residuals(
     signal: &[f64],
-    ar_coeffs: &Array1<f64>,
-    _ma_coeffs: Option<&Array1<f64>>,
+    ar_coeffs: &Array1<f64>, _ma_coeffs: Option<&Array1<f64>>,
 ) -> SignalResult<Array1<f64>> {
     let n = signal.len();
     let p = ar_coeffs.len() - 1;
@@ -700,18 +697,18 @@ fn enhanced_cross_validation(
         }
     }
 
-    let mean_cv_score = cv_scores.iter().sum::<f64>() / cv_scores.len() as f64;
+    let mean_cv_score = cv_scores.iter().sum::<f64>() / cv_scores.len()  as f64;
     let cv_std = {
         let variance = cv_scores
             .iter()
             .map(|&x| (x - mean_cv_score).powi(2))
             .sum::<f64>()
-            / cv_scores.len() as f64;
+            / cv_scores.len()  as f64;
         variance.sqrt()
     };
 
     let prediction_accuracy =
-        prediction_accuracies.iter().sum::<f64>() / prediction_accuracies.len() as f64;
+        prediction_accuracies.iter().sum::<f64>() / prediction_accuracies.len()  as f64;
     let generalization_error = mean_cv_score * (1.0 + cv_std / mean_cv_score);
 
     Ok(CrossValidationResults {
@@ -726,8 +723,7 @@ fn enhanced_cross_validation(
 /// Comprehensive stability analysis
 #[allow(dead_code)]
 fn comprehensive_stability_analysis(
-    result: &AdvancedEstimationResult,
-    _config: &ComprehensiveOptimizationConfig,
+    result: &AdvancedEstimationResult_config: &ComprehensiveOptimizationConfig,
 ) -> SignalResult<StabilityAnalysis> {
     let ar_coeffs = &result.ar_coeffs;
 
@@ -770,24 +766,24 @@ fn comprehensive_stability_analysis(
 }
 
 #[allow(dead_code)]
-fn check_ar_stability(ar_coeffs: &Array1<f64>) -> bool {
-    // For AR model stability, all roots of characteristic polynomial must be inside unit circle
+fn check_ar_stability(_ar_coeffs: &Array1<f64>) -> bool {
+    // All roots of characteristic polynomial must be inside unit circle
     // This is a simplified check - could be improved with actual root finding
-    let sum_abs_coeffs: f64 = ar_coeffs.slice(s![1..]).iter().map(|&x| x.abs()).sum();
+    let sum_abs_coeffs: f64 = _ar_coeffs.slice(s![1..]).iter().map(|&x: &f64| x.abs()).sum();
     sum_abs_coeffs < 1.0 // Sufficient but not necessary condition
 }
 
 #[allow(dead_code)]
-fn calculate_condition_number(ar_coeffs: &Array1<f64>) -> f64 {
+fn calculate_condition_number(_ar_coeffs: &Array1<f64>) -> f64 {
     // Simplified condition number calculation
-    let max_coeff = ar_coeffs
+    let max_coeff = _ar_coeffs
         .iter()
         .cloned()
         .fold(0.0f64, |a, b| a.max(b.abs()));
-    let min_coeff = ar_coeffs
+    let min_coeff = _ar_coeffs
         .iter()
         .cloned()
-        .filter(|&x| x.abs() > 1e-15)
+        .filter(|&x: &f64| x.abs() > 1e-15)
         .fold(f64::INFINITY, |a, b| a.min(b.abs()));
 
     if min_coeff > 0.0 && min_coeff.is_finite() {
@@ -817,7 +813,7 @@ fn analyze_performance_statistics(
 
     // Complexity metrics
     let time_complexity_factor = (n as f64 * p as f64).log2();
-    let memory_complexity_factor = (n + p) as f64;
+    let memory_complexity_factor = (n + p)  as f64;
     let condition_number = calculate_condition_number(&result.ar_coeffs);
     let stability_margin = if check_ar_stability(&result.ar_coeffs) {
         1.0

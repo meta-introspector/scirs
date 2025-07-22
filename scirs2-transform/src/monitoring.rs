@@ -236,13 +236,13 @@ impl TransformationMonitor {
     ) -> Result<()> {
         self.reference_data = Some(data.clone());
 
-        if let Some(names) = feature_names {
-            if names.len() != data.ncols() {
+        if let Some(_names) = feature_names {
+            if _names.len() != data.ncols() {
                 return Err(TransformError::InvalidInput(
-                    "Number of feature names must match number of columns".to_string(),
+                    "Number of feature _names must match number of columns".to_string(),
                 ));
             }
-            self.feature_names = names;
+            self.feature_names = _names;
         } else {
             self.feature_names = (0..data.ncols())
                 .map(|i| format!("feature_{}", i))
@@ -262,7 +262,7 @@ impl TransformationMonitor {
     pub fn set_drift_method(&mut self, feature_name: &str, method: DriftMethod) -> Result<()> {
         if !self.feature_names.contains(&feature_name.to_string()) {
             return Err(TransformError::InvalidInput(format!(
-                "Unknown feature name: {}",
+                "Unknown feature _name: {}",
                 feature_name
             )));
         }
@@ -289,11 +289,11 @@ impl TransformationMonitor {
         let reference_data = self
             .reference_data
             .as_ref()
-            .ok_or_else(|| TransformError::InvalidInput("Reference data not set".to_string()))?;
+            .ok_or_else(|| TransformError::InvalidInput("Reference _data not set".to_string()))?;
 
         if new_data.ncols() != reference_data.ncols() {
             return Err(TransformError::InvalidInput(
-                "New data must have same number of features as reference data".to_string(),
+                "New _data must have same number of features as reference _data".to_string(),
             ));
         }
 
@@ -451,7 +451,7 @@ impl TransformationMonitor {
         for &val in reference.iter() {
             if !val.is_finite() {
                 return Err(crate::error::TransformError::DataValidationError(
-                    "Reference data contains non-finite values".to_string(),
+                    "Reference _data contains non-finite values".to_string(),
                 ));
             }
         }
@@ -460,7 +460,7 @@ impl TransformationMonitor {
         for &val in new_data.iter() {
             if !val.is_finite() {
                 return Err(crate::error::TransformError::DataValidationError(
-                    "New data contains non-finite values".to_string(),
+                    "New _data contains non-finite values".to_string(),
                 ));
             }
         }
@@ -570,7 +570,7 @@ impl TransformationMonitor {
         reference: &ArrayView1<f64>,
         new_data: &ArrayView1<f64>,
     ) -> Result<f64> {
-        // Create bins based on reference data
+        // Create bins based on reference _data
         let mut ref_sorted = reference.to_vec();
         ref_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -688,10 +688,10 @@ impl TransformationMonitor {
         reference: &ArrayView1<f64>,
         new_data: &ArrayView1<f64>,
     ) -> Result<(f64, f64)> {
-        // For continuous data, we'll bin it first and then apply chi-square test
+        // For continuous _data, we'll bin it first and then apply chi-square test
         let n_bins = 10;
 
-        // Combine data to determine common bins
+        // Combine _data to determine common bins
         let mut combined_data: Vec<f64> = reference
             .iter()
             .chain(new_data.iter())
@@ -700,7 +700,7 @@ impl TransformationMonitor {
             .collect();
 
         if combined_data.len() < n_bins {
-            return Ok((0.0, 1.0)); // Not enough data for meaningful test
+            return Ok((0.0, 1.0)); // Not enough _data for meaningful test
         }
 
         combined_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
@@ -917,8 +917,7 @@ impl TransformationMonitor {
     /// Gamma function using Lanczos approximation
     fn gamma(&self, z: f64) -> f64 {
         if z < 0.5 {
-            // Use reflection formula: Γ(z)Γ(1-z) = π/sin(πz)
-            std::f64::consts::PI / (std::f64::consts::PI * z).sin() / self.gamma(1.0 - z)
+            // Use reflection formula: Γ(z)Γ(1-z) = π/sin(πz), std::f64::consts::PI / (std::f64::consts::PI * z).sin() / self.gamma(1.0 - z)
         } else {
             // Lanczos approximation coefficients
             let g = 7.0;
@@ -1108,9 +1107,7 @@ impl EnsembleAnomalyDetector {
 
     /// Detect ensemble anomalies by combining multiple detector results
     pub fn detect_ensemble_anomalies(
-        &self,
-        _metrics: &HashMap<String, f64>,
-        _timestamp: u64,
+        &self_metrics: &HashMap<String, f64>, _timestamp: u64,
     ) -> Result<Vec<AnomalyRecord>> {
         // Placeholder ensemble detection logic
         // In a full implementation, this would combine results from multiple detectors
@@ -1363,7 +1360,7 @@ impl AdvancedAnomalyDetector {
         let most_anomalous_metric = metric_frequencies
             .iter()
             .max_by_key(|(_, &count)| count)
-            .map(|(metric, _)| metric.clone());
+            .map(|(metric_)| metric.clone());
 
         AnomalyInsights {
             total_anomalies,
@@ -1394,7 +1391,7 @@ impl AdvancedAnomalyDetector {
         recent_counts
             .into_iter()
             .filter(|(_, count)| *count >= 3) // At least 3 anomalies in recent period
-            .map(|(metric, _)| metric)
+            .map(|(metric_)| metric)
             .collect()
     }
 
@@ -1449,11 +1446,11 @@ impl AdvancedAnomalyDetector {
 #[cfg(feature = "monitoring")]
 impl StatisticalDetector {
     /// Create a new statistical detector
-    pub fn new(z_score_threshold: f64, iqr_multiplier: f64, max_window_size: usize) -> Self {
+    pub fn new(_z_score_threshold: f64, iqr_multiplier: f64, max_window_size: usize) -> Self {
         StatisticalDetector {
-            z_score_threshold,
+            _z_score_threshold,
             iqr_multiplier,
-            modified_z_threshold: z_score_threshold * 0.6745, // Median-based
+            modified_z_threshold: _z_score_threshold * 0.6745, // Median-based
             data_window: VecDeque::with_capacity(max_window_size),
             max_window_size,
         }
@@ -1758,7 +1755,7 @@ impl TimeSeriesAnomalyDetector {
     }
 
     /// Simple change point detection
-    fn detect_change_point(&self, _current_value: f64) -> Result<f64> {
+    fn detect_change_point(&self_current_value: f64) -> Result<f64> {
         let window_size = self
             .change_point_config
             .window_size
@@ -1772,7 +1769,7 @@ impl TimeSeriesAnomalyDetector {
             .iter()
             .rev()
             .take(window_size)
-            .map(|p| p.value)
+            .map(|p| p._value)
             .collect();
 
         let half_window = window_size / 2;

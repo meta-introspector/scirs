@@ -50,9 +50,9 @@ impl<A: Float + FromPrimitive + Debug> ActivityRegularization<A> {
     /// # Returns
     ///
     /// A new activity regularizer with L1 norm
-    pub fn l1(lambda: A) -> Self {
+    pub fn l1(_lambda: A) -> Self {
         Self {
-            lambda,
+            _lambda,
             norm: ActivityNorm::L1,
         }
     }
@@ -66,9 +66,9 @@ impl<A: Float + FromPrimitive + Debug> ActivityRegularization<A> {
     /// # Returns
     ///
     /// A new activity regularizer with L2 norm
-    pub fn l2(lambda: A) -> Self {
+    pub fn l2(_lambda: A) -> Self {
         Self {
-            lambda,
+            _lambda,
             norm: ActivityNorm::L2,
         }
     }
@@ -82,9 +82,9 @@ impl<A: Float + FromPrimitive + Debug> ActivityRegularization<A> {
     /// # Returns
     ///
     /// A new activity regularizer with squared L2 norm
-    pub fn l2_squared(lambda: A) -> Self {
+    pub fn l2_squared(_lambda: A) -> Self {
         Self {
-            lambda,
+            _lambda,
             norm: ActivityNorm::L2Squared,
         }
     }
@@ -99,8 +99,8 @@ impl<A: Float + FromPrimitive + Debug> ActivityRegularization<A> {
     /// # Returns
     ///
     /// A new activity regularizer with specified norm
-    pub fn new(lambda: A, norm: ActivityNorm) -> Self {
-        Self { lambda, norm }
+    pub fn new(_lambda: A, norm: ActivityNorm) -> Self {
+        Self { _lambda, norm }
     }
 
     /// Calculate the activity penalty

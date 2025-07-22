@@ -1,17 +1,18 @@
 use ndarray::array;
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::time::Instant;
+use ndarray::ArrayView1;
 
 /// A helper function to time and report the result of an integration method
 #[allow(dead_code)]
-fn time_integration<F, R>(name: &str, f: F) -> R
+fn time_integration<F, R>(_name: &str, f: F) -> R
 where
     F: FnOnce() -> R,
 {
     let start = Instant::now();
     let result = f();
     let elapsed = start.elapsed();
-    println!("{name}: {elapsed:?}");
+    println!("{_name}: {elapsed:?}");
     result
 }
 

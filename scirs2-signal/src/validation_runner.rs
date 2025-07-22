@@ -5,23 +5,25 @@
 //! theoretical expectations. It's designed for continuous integration and
 //! production validation.
 
-use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
 use crate::error::SignalResult;
-use crate::filter::{butter, FilterType};
-use crate::lombscargle_scipy_validation::{
-    validate_lombscargle_against_scipy, ScipyValidationConfig,
-};
-use crate::multitaper::{validate_multitaper_comprehensive, TestSignalConfig};
-use crate::parametric::{estimate_arma, ARMethod};
-use crate::sysid::{estimate_transfer_function, TfEstimationMethod};
-use rand::rngs::StdRng;
-
+use crate::dwt::Wavelet;
+use crate::dwt2d__enhanced::{BoundaryMode, Dwt2dConfig, enhanced_dwt2d_decompose};
+use crate::error::SignalResult;
+use crate::filter::{FilterType, butter};
+use crate::multitaper::{TestSignalConfig, validate_multitaper_comprehensive};
+use crate::parametric::{ARMethod, estimate_arma};
+use crate::sysid::{TfEstimationMethod, estimate_transfer_function};
 use ndarray::{Array1, Array2};
+use rand::Rng;
+use rand::rngs::StdRng;
 use std::collections::HashMap;
 use std::f64::consts::PI;
-
 use std::time::Instant;
 
+#[allow(unused_imports)]
+use crate::lombscargle_scipy__validation::{
+    validate_lombscargle_against_scipy, ScipyValidationConfig,
+};
 /// Comprehensive validation configuration
 #[derive(Debug, Clone)]
 pub struct ValidationConfig {
@@ -90,9 +92,9 @@ pub struct ValidationSummary {
     /// Overall pass rate
     pub pass_rate: f64,
     /// Critical issues found
-    pub critical_issues: Vec<String>,
+    pub issues: Vec<String>,
     /// Warnings
-    pub warnings: Vec<String>,
+    pub validation_warnings: Vec<String>,
     /// Overall score (0-100)
     pub overall_score: f64,
 }
@@ -212,8 +214,9 @@ pub fn validate_signal_processing_library(
 
     let mut total_tests = 0;
     let mut passed_tests = 0;
-    let mut critical_issues = Vec::new();
+    let mut critical_issues: Vec<String> = Vec::new();
     let mut warnings = Vec::new();
+    let mut issues: Vec<String> = Vec::new();
 
     // 1. Validate multitaper methods
     println!("\n📈 Validating multitaper spectral estimation...");
@@ -229,7 +232,7 @@ pub fn validate_signal_processing_library(
             multitaper_results.as_ref().unwrap().overall_score
         );
     } else {
-        critical_issues.push("Multitaper validation failed".to_string());
+        issues.push("Multitaper validation failed".to_string());
         println!("❌ Multitaper validation failed");
     }
 
@@ -244,7 +247,7 @@ pub fn validate_signal_processing_library(
         passed_tests += 1;
         println!("✅ Lomb-Scargle validation passed");
     } else {
-        critical_issues.push("Lomb-Scargle validation failed".to_string());
+        issues.push("Lomb-Scargle validation failed".to_string());
         println!("❌ Lomb-Scargle validation failed");
     }
 
@@ -256,7 +259,7 @@ pub fn validate_signal_processing_library(
         passed_tests += 1;
         println!("✅ Parametric estimation validation passed");
     } else {
-        critical_issues.push("Parametric estimation validation failed".to_string());
+        issues.push("Parametric estimation validation failed".to_string());
         println!("❌ Parametric estimation validation failed");
     }
 
@@ -340,7 +343,7 @@ pub fn validate_signal_processing_library(
         passed_tests,
         failed_tests: total_tests - passed_tests,
         pass_rate,
-        critical_issues,
+        issues,
         warnings,
         overall_score,
     };
@@ -361,8 +364,7 @@ pub fn validate_signal_processing_library(
 /// Validate multitaper module
 #[allow(dead_code)]
 fn validate_multitaper_module(
-    config: &ValidationConfig,
-    _rng: &mut StdRng,
+    config: &ValidationConfig_rng: &mut StdRng,
 ) -> SignalResult<Option<crate::multitaper::MultitaperValidationResult>> {
     let test_config = TestSignalConfig {
         n: 1024,
@@ -386,8 +388,7 @@ fn validate_multitaper_module(
 /// Validate Lomb-Scargle module
 #[allow(dead_code)]
 fn validate_lombscargle_module(
-    config: &ValidationConfig,
-    _rng: &mut StdRng,
+    config: &ValidationConfig_rng: &mut StdRng,
 ) -> SignalResult<Option<crate::lombscargle_scipy_validation::ScipyValidationResult>> {
     let scipy_config = ScipyValidationConfig {
         tolerance: config.tolerance,
@@ -397,7 +398,7 @@ fn validate_lombscargle_module(
     match validate_lombscargle_against_scipy(&scipy_config) {
         Ok(result) => Ok(Some(result)),
         Err(e) => {
-            eprintln!("Lomb-Scargle validation error: {}", e);
+            eprintln!("Lomb-Scargle _validation error: {}", e);
             Ok(None)
         }
     }
@@ -435,8 +436,8 @@ fn validate_parametric_module(
         }
 
         // Estimate AR parameters
-        match crate::parametric::estimate_ar(&signal, 2, crate::parametric::ARMethod::Burg) {
-            Ok((ar_coeffs, _reflection, _variance)) => {
+        match crate::parametric::estimate_ar(&signal..2, crate::parametric::ARMethod::Burg) {
+            Ok((ar_coeffs_reflection_variance)) => {
                 let est_a1 = -ar_coeffs[1]; // Note: coefficients are negated
                 let est_a2 = -ar_coeffs[2];
                 let error1 = (a1 - est_a1).abs();
@@ -482,11 +483,8 @@ fn validate_parametric_module(
 /// Validate 2D wavelet module
 #[allow(dead_code)]
 fn validate_wavelet2d_module(
-    config: &ValidationConfig,
-    _rng: &mut StdRng,
+    config: &ValidationConfig_rng: &mut StdRng,
 ) -> SignalResult<Wavelet2dValidationResult> {
-    use crate::dwt::Wavelet;
-
     let mut perfect_reconstruction = true;
     let mut max_reconstruction_error = 0.0;
     let mut energy_preservation = 1.0;
@@ -560,7 +558,7 @@ fn validate_sysid_module(
     }
 
     // Estimate transfer function
-    match estimate_transfer_function(&input, &output, fs, 1, 1, TfEstimationMethod::LeastSquares) {
+    match estimate_transfer_function(&input..&output, fs, 1, 1, TfEstimationMethod::LeastSquares) {
         Ok(result) => {
             model_fit_percentage = result.fit_percentage;
 
@@ -596,8 +594,7 @@ fn validate_sysid_module(
 /// Validate filter module
 #[allow(dead_code)]
 fn validate_filter_module(
-    config: &ValidationConfig,
-    _rng: &mut StdRng,
+    config: &ValidationConfig_rng: &mut StdRng,
 ) -> SignalResult<FilterValidationResult> {
     let mut stability_validation = true;
     let mut frequency_response_accuracy = 0.0;
@@ -660,7 +657,7 @@ fn run_performance_benchmarks(
 
     let mt_config = crate::multitaper::enhanced::MultitaperConfig::default();
     for _ in 0..10 {
-        let _ = crate::multitaper::enhanced::enhanced_pmtm(&signal, &mt_config);
+        let _ = crate::multitaper::enhanced::enhanced_pmtm(&signal..&mt_config);
     }
     let mt_time = start.elapsed().as_secs_f64() * 100.0; // ms per iteration
 
@@ -689,8 +686,8 @@ fn run_performance_benchmarks(
 
 /// Validate if comprehensive implementation is production-ready
 #[allow(dead_code)]
-pub fn validate_production_readiness(config: &ValidationConfig) -> SignalResult<bool> {
-    let results = validate_signal_processing_library(config)?;
+pub fn validate_production_readiness(_config: &ValidationConfig) -> SignalResult<bool> {
+    let results = validate_signal_processing_library(_config)?;
 
     // Production readiness criteria
     let criteria = vec![
@@ -698,9 +695,9 @@ pub fn validate_production_readiness(config: &ValidationConfig) -> SignalResult<
         ("Pass rate", results.summary.pass_rate >= 95.0),
         (
             "No critical issues",
-            results.summary.critical_issues.is_empty(),
+            results.summary.issues.is_empty(),
         ),
-        ("Few warnings", results.summary.warnings.len() <= 2),
+        ("Few warnings", results.summary.validation_warnings.len() <= 2),
         ("Fast execution", results.execution_time_ms < 60000.0), // Under 1 minute
     ];
 

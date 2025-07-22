@@ -40,26 +40,26 @@ fn main() -> LinalgResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_general_matrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
+fn demo_general_matrix<R: rand::Rng>(_rng: &mut R) -> LinalgResult<()> {
     println!("1. General Random Matrix");
     println!("----------------------");
 
     // Uniform distribution
-    let uniform_matrix = random_matrix::<f64, _>(
+    let uniform_matrix = random_matrix::<f64>(
         3,
         4,
         MatrixType::General(Distribution1D::Uniform { a: -1.0, b: 1.0 }),
-        rng,
+        _rng,
     )?;
     println!("Uniform[-1, 1] (3x4):");
     print_matrix(&uniform_matrix);
 
     // Standard normal distribution
-    let normal_matrix = random_matrix::<f64, _>(
+    let normal_matrix = random_matrix::<f64>(
         4,
         3,
         MatrixType::General(Distribution1D::StandardNormal),
-        rng,
+        _rng,
     )?;
     println!("\nStandard Normal (4x3):");
     print_matrix(&normal_matrix);
@@ -69,18 +69,18 @@ fn demo_general_matrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_symmetric_matrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
+fn demo_symmetric_matrix<R: rand::Rng>(_rng: &mut R) -> LinalgResult<()> {
     println!("2. Symmetric Random Matrix");
     println!("------------------------");
 
-    let sym_matrix = random_matrix::<f64, _>(
+    let sym_matrix = random_matrix::<f64>(
         4,
         4,
         MatrixType::Symmetric(Distribution1D::Normal {
             mean: 0.0,
             std_dev: 2.0,
         }),
-        rng,
+        _rng,
     )?;
 
     println!("Symmetric matrix (4x4):");
@@ -101,18 +101,18 @@ fn demo_symmetric_matrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_positive_definite<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
+fn demo_positive_definite<R: rand::Rng>(_rng: &mut R) -> LinalgResult<()> {
     println!("3. Positive Definite Matrix");
     println!("--------------------------");
 
-    let pd_matrix = random_matrix::<f64, _>(
+    let pd_matrix = random_matrix::<f64>(
         3,
         3,
         MatrixType::PositiveDefinite {
             eigenvalue_min: 0.5,
             eigenvalue_max: 5.0,
         },
-        rng,
+        _rng,
     )?;
 
     println!("Positive definite matrix (3x3):");
@@ -130,11 +130,11 @@ fn demo_positive_definite<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_orthogonal_matrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
+fn demo_orthogonal_matrix<R: rand::Rng>(_rng: &mut R) -> LinalgResult<()> {
     println!("4. Orthogonal Matrix");
     println!("-------------------");
 
-    let ortho_matrix = random_matrix::<f64, _>(3, 3, MatrixType::Orthogonal, rng)?;
+    let ortho_matrix = random_matrix::<f64>(3, 3, MatrixType::Orthogonal, _rng)?;
 
     println!("Orthogonal matrix Q (3x3):");
     print_matrix(&ortho_matrix);
@@ -162,11 +162,11 @@ fn demo_orthogonal_matrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_correlation_matrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
+fn demo_correlation_matrix<R: rand::Rng>(_rng: &mut R) -> LinalgResult<()> {
     println!("5. Correlation Matrix");
     println!("--------------------");
 
-    let corr_matrix = random_matrix::<f64, _>(5, 5, MatrixType::Correlation, rng)?;
+    let corr_matrix = random_matrix::<f64>(5, 5, MatrixType::Correlation, _rng)?;
 
     println!("Correlation matrix (5x5):");
     print_matrix(&corr_matrix);
@@ -211,11 +211,11 @@ fn demo_correlation_matrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_sparse_matrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
+fn demo_sparse_matrix<R: rand::Rng>(_rng: &mut R) -> LinalgResult<()> {
     println!("6. Sparse Matrix");
     println!("---------------");
 
-    let sparse_matrix = random_matrix::<f64, _>(
+    let sparse_matrix = random_matrix::<f64>(
         6,
         8,
         MatrixType::Sparse {
@@ -225,7 +225,7 @@ fn demo_sparse_matrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
                 std_dev: 1.0,
             },
         },
-        rng,
+        _rng,
     )?;
 
     println!("Sparse matrix (6x8, density=0.2):");
@@ -246,28 +246,28 @@ fn demo_sparse_matrix<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_complex_matrices<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
+fn demo_complex_matrices<R: rand::Rng>(_rng: &mut R) -> LinalgResult<()> {
     println!("7. Complex Matrices");
     println!("------------------");
 
     // General complex matrix
-    let complex_matrix = random_complex_matrix::<f64, _>(
+    let complex_matrix = random_complex_matrix::<f64>(
         3,
         3,
         Distribution1D::StandardNormal,
         Distribution1D::StandardNormal,
-        rng,
+        _rng,
     )?;
 
     println!("Complex matrix (3x3):");
     print_complex_matrix(&complex_matrix);
 
     // Hermitian matrix
-    let hermitian = random_hermitian::<f64, _>(
+    let hermitian = random_hermitian::<f64>(
         4,
         Distribution1D::StandardNormal,
         Distribution1D::Uniform { a: -0.5, b: 0.5 },
-        rng,
+        _rng,
     )?;
 
     println!("\nHermitian matrix (4x4):");
@@ -290,8 +290,8 @@ fn demo_complex_matrices<R: rand::Rng>(rng: &mut R) -> LinalgResult<()> {
 // Helper functions for pretty printing
 
 #[allow(dead_code)]
-fn print_matrix(matrix: &ndarray::Array2<f64>) {
-    for row in matrix.rows() {
+fn print_matrix(_matrix: &ndarray::Array2<f64>) {
+    for row in _matrix.rows() {
         print!("[");
         for (i, &val) in row.iter().enumerate() {
             if i > 0 {
@@ -304,8 +304,8 @@ fn print_matrix(matrix: &ndarray::Array2<f64>) {
 }
 
 #[allow(dead_code)]
-fn print_sparse_matrix(matrix: &ndarray::Array2<f64>) {
-    for row in matrix.rows() {
+fn print_sparse_matrix(_matrix: &ndarray::Array2<f64>) {
+    for row in _matrix.rows() {
         print!("[");
         for (i, &val) in row.iter().enumerate() {
             if i > 0 {
@@ -322,8 +322,8 @@ fn print_sparse_matrix(matrix: &ndarray::Array2<f64>) {
 }
 
 #[allow(dead_code)]
-fn print_complex_matrix(matrix: &ndarray::Array2<num_complex::Complex<f64>>) {
-    for row in matrix.rows() {
+fn print_complex_matrix(_matrix: &ndarray::Array2<num_complex::Complex<f64>>) {
+    for row in _matrix.rows() {
         print!("[");
         for (i, &val) in row.iter().enumerate() {
             if i > 0 {

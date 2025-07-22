@@ -18,7 +18,7 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_interpolate::geospatial::{
+//! use scirs2__interpolate::geospatial::{
 //!     GeospatialInterpolator, CoordinateSystem, InterpolationModel
 //! };
 //!
@@ -404,7 +404,7 @@ where
         }
 
         // Project query coordinates
-        let (_x_coords, _y_coords) = self.project_coordinates(latitudes, longitudes)?;
+        let (_x_coords_y_coords) = self.project_coordinates(latitudes, longitudes)?;
 
         // Use the fitted interpolator
         if let Some(ref interpolator) = self.interpolator {
@@ -491,10 +491,7 @@ where
 
     /// Compute spatial statistics from the data
     fn compute_spatial_statistics(
-        &mut self,
-        _x_coords: &Array1<T>,
-        _y_coords: &Array1<T>,
-        _values: &ArrayView1<T>,
+        &mut self, _x_coords: &Array1<T>, _y_coords: &Array1<T>, _values: &ArrayView1<T>,
     ) -> InterpolateResult<()> {
         // For now, compute basic statistics
         // In a full implementation, this would include:

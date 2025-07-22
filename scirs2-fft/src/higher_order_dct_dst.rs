@@ -5,7 +5,7 @@
 //! normalization conventions.
 
 use ndarray::{Array1, ArrayBase, Data, Dimension};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use std::f64::consts::PI;
 
 use crate::error::{FFTError, FFTResult};

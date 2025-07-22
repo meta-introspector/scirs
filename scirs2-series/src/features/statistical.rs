@@ -340,18 +340,18 @@ where
     // Trend strength
     let trend_strength = F::one() - (diff_var / ts_var);
 
-    // Seasonality strength (if seasonal period is provided)
-    let seasonality_strength = if let Some(period) = seasonal_period {
-        if n <= period {
+    // Seasonality strength (if seasonal _period is provided)
+    let seasonality_strength = if let Some(_period) = seasonal_period {
+        if n <= _period {
             return Err(TimeSeriesError::FeatureExtractionError(
-                "Time series length must be greater than seasonal period".to_string(),
+                "Time series length must be greater than seasonal _period".to_string(),
             ));
         }
 
         // Calculate seasonal differences
-        let mut seasonal_diff = Vec::with_capacity(n - period);
-        for i in period..n {
-            seasonal_diff.push(ts[i] - ts[i - period]);
+        let mut seasonal_diff = Vec::with_capacity(n - _period);
+        for i in _period..n {
+            seasonal_diff.push(ts[i] - ts[i - _period]);
         }
 
         // Variance of seasonal differences
@@ -667,17 +667,17 @@ where
 
 /// Calculate higher-order moments (5th and 6th)
 #[allow(dead_code)]
-fn calculate_higher_order_moments<F>(ts: &Array1<F>, mean: F) -> Result<(F, F)>
+fn calculate_higher_order_moments<F>(_ts: &Array1<F>, mean: F) -> Result<(F, F)>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = ts.len();
+    let n = _ts.len();
     let n_f = F::from(n).unwrap();
 
     let mut fifth_sum = F::zero();
     let mut sixth_sum = F::zero();
 
-    for &value in ts.iter() {
+    for &value in _ts.iter() {
         let diff = value - mean;
         let diff_2 = diff * diff;
         let diff_3 = diff_2 * diff;
@@ -693,11 +693,11 @@ where
 
 /// Calculate excess kurtosis
 #[allow(dead_code)]
-fn calculate_excess_kurtosis<F>(ts: &Array1<F>, mean: F, std: F) -> Result<F>
+fn calculate_excess_kurtosis<F>(_ts: &Array1<F>, mean: F, std: F) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = ts.len();
+    let n = _ts.len();
     let n_f = F::from(n).unwrap();
 
     if std == F::zero() {
@@ -705,7 +705,7 @@ where
     }
 
     let mut fourth_moment_sum = F::zero();
-    for &value in ts.iter() {
+    for &value in _ts.iter() {
         let standardized = (value - mean) / std;
         fourth_moment_sum = fourth_moment_sum + standardized.powi(4);
     }
@@ -716,11 +716,11 @@ where
 
 /// Calculate interquartile mean
 #[allow(dead_code)]
-fn calculate_interquartile_mean<F>(ts: &Array1<F>, q1: F, q3: F) -> Result<F>
+fn calculate_interquartile_mean<F>(_ts: &Array1<F>, q1: F, q3: F) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    let values_in_iqr: Vec<F> = ts
+    let values_in_iqr: Vec<F> = _ts
         .iter()
         .filter(|&&x| x >= q1 && x <= q3)
         .cloned()
@@ -737,14 +737,14 @@ where
 
 /// Calculate mean absolute deviation
 #[allow(dead_code)]
-fn calculate_mean_absolute_deviation<F>(ts: &Array1<F>, center: F) -> Result<F>
+fn calculate_mean_absolute_deviation<F>(_ts: &Array1<F>, center: F) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    let n = ts.len();
+    let n = _ts.len();
     let n_f = F::from(n).unwrap();
 
-    let sum = ts
+    let sum = _ts
         .iter()
         .fold(F::zero(), |acc, &x| acc + (x - center).abs());
     Ok(sum / n_f)
@@ -752,11 +752,11 @@ where
 
 /// Calculate Gini coefficient
 #[allow(dead_code)]
-fn calculate_gini_coefficient<F>(ts: &Array1<F>) -> Result<F>
+fn calculate_gini_coefficient<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let mut sorted = ts.to_vec();
+    let mut sorted = _ts.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let n = sorted.len();
     let n_f = F::from(n).unwrap();
@@ -778,7 +778,7 @@ where
 
 /// Calculate outlier counts using IQR method
 #[allow(dead_code)]
-fn calculate_outlier_counts<F>(ts: &Array1<F>, q1: F, q3: F) -> Result<(usize, usize)>
+fn calculate_outlier_counts<F>(_ts: &Array1<F>, q1: F, q3: F) -> Result<(usize, usize)>
 where
     F: Float + FromPrimitive,
 {
@@ -786,8 +786,8 @@ where
     let lower_bound = q1 - F::from(1.5).unwrap() * iqr;
     let upper_bound = q3 + F::from(1.5).unwrap() * iqr;
 
-    let lower_outliers = ts.iter().filter(|&&x| x < lower_bound).count();
-    let upper_outliers = ts.iter().filter(|&&x| x > upper_bound).count();
+    let lower_outliers = _ts.iter().filter(|&&x| x < lower_bound).count();
+    let upper_outliers = _ts.iter().filter(|&&x| x > upper_bound).count();
 
     Ok((lower_outliers, upper_outliers))
 }
@@ -852,7 +852,7 @@ where
     F::zero()
 }
 #[allow(dead_code)]
-fn calculate_jarque_bera_statistic<F>(_ts: &Array1<F>, _mean: F, _std: F) -> Result<F>
+fn calculate_jarque_bera_statistic<F>(_ts: &Array1<F>, _mean: F_std: F) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
@@ -880,14 +880,14 @@ where
     Ok(F::zero())
 }
 #[allow(dead_code)]
-fn calculate_dagostino_statistic<F>(_ts: &Array1<F>, _mean: F, _std: F) -> Result<F>
+fn calculate_dagostino_statistic<F>(_ts: &Array1<F>, _mean: F_std: F) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
 #[allow(dead_code)]
-fn calculate_normality_composite_score<F>(_jb: F, _ad: F, _ks: F) -> F
+fn calculate_normality_composite_score<F>(_jb: F_ad: F, _ks: F) -> F
 where
     F: Float,
 {

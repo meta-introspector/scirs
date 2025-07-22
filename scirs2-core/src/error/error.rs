@@ -34,7 +34,7 @@ impl ErrorLocation {
     /// Create a new error location with function information
     #[must_use]
     #[inline]
-    pub const fn with_function(file: &'static str, line: u32, function: &'static str) -> Self {
+    pub const fn new_with_function(file: &'static str, line: u32, function: &'static str) -> Self {
         Self {
             file,
             line,
@@ -46,7 +46,7 @@ impl ErrorLocation {
     /// Create a new error location with column information
     #[must_use]
     #[inline]
-    pub const fn with_column(file: &'static str, line: u32, column: u32) -> Self {
+    pub const fn new_with_column(file: &'static str, line: u32, column: u32) -> Self {
         Self {
             file,
             line,
@@ -58,7 +58,7 @@ impl ErrorLocation {
     /// Create a new error location with function and column information
     #[must_use]
     #[inline]
-    pub const fn full(file: &'static str, line: u32, column: u32, function: &'static str) -> Self {
+    pub const fn new_full(file: &'static str, line: u32, column: u32, function: &'static str) -> Self {
         Self {
             file,
             line,
@@ -102,9 +102,9 @@ pub struct ErrorContext {
 impl ErrorContext {
     /// Create a new error context
     #[must_use]
-    pub fn new<S: Into<String>>(message: S) -> Self {
+    pub fn new<S: Into<String>>(_message: S) -> Self {
         Self {
-            message: message.into(),
+            message: _message.into(),
             location: None,
             cause: None,
         }
@@ -409,8 +409,8 @@ macro_rules! computation_error {
 ///
 /// Returns `CoreError::DomainError` if the condition is false.
 #[allow(dead_code)]
-pub fn check_domain<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
-    if condition {
+pub fn check_domain<S: Into<String>>(_condition: bool, message: S) -> CoreResult<()> {
+    if _condition {
         Ok(())
     } else {
         Err(CoreError::DomainError(
@@ -435,8 +435,8 @@ pub fn check_domain<S: Into<String>>(condition: bool, message: S) -> CoreResult<
 ///
 /// Returns `CoreError::DimensionError` if the condition is false.
 #[allow(dead_code)]
-pub fn check_dimensions<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
-    if condition {
+pub fn check_dimensions<S: Into<String>>(_condition: bool, message: S) -> CoreResult<()> {
+    if _condition {
         Ok(())
     } else {
         Err(CoreError::DimensionError(
@@ -461,8 +461,8 @@ pub fn check_dimensions<S: Into<String>>(condition: bool, message: S) -> CoreRes
 ///
 /// Returns `CoreError::ValueError` if the condition is false.
 #[allow(dead_code)]
-pub fn check_value<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
-    if condition {
+pub fn check_value<S: Into<String>>(_condition: bool, message: S) -> CoreResult<()> {
+    if _condition {
         Ok(())
     } else {
         Err(CoreError::ValueError(
@@ -514,20 +514,20 @@ where
 /// * A CoreError with the original error as its cause
 #[must_use]
 #[allow(dead_code)]
-pub fn convert_error<E, S>(error: E, message: S) -> CoreError
+pub fn convert_error<E, S>(_error: E, message: S) -> CoreError
 where
     E: std::error::Error + 'static,
     S: Into<String>,
 {
-    // Create a computation error that contains the original error
-    // We combine the provided message with the error's own message for extra context
+    // Create a computation _error that contains the original _error
+    // We combine the provided message with the _error's own message for extra context
     let message_str = message.into();
-    let error_message = format!("{message_str} | Original error: {error}");
+    let error_message = format!("{message_str} | Original error: {_error}");
 
     // For I/O errors we have direct conversion via From trait implementation
     // but we can't use it directly due to the generic bounds.
     // In a real implementation, you would use a match or if statement with
-    // type_id or another approach to distinguish error types.
+    // type_id or another approach to distinguish _error types.
 
     // For simplicity, we'll just use ComputationError as a general case
     CoreError::ComputationError(
@@ -547,13 +547,13 @@ where
 /// * A CoreError with the original error as its cause
 #[must_use]
 #[allow(dead_code)]
-pub fn chain_error<S>(error: CoreError, message: S) -> CoreError
+pub fn chain_error<S>(_error: CoreError, message: S) -> CoreError
 where
     S: Into<String>,
 {
     CoreError::ComputationError(
         ErrorContext::new(message)
             .with_location(ErrorLocation::new(file!(), line!()))
-            .with_cause(error),
+            .with_cause(_error),
     )
 }

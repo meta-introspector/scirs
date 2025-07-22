@@ -1,6 +1,6 @@
 //! Simple test of elliptic filter design
 
-use scirs2_signal::filter::ellip;
+use scirs2__signal::filter::ellip;
 
 #[allow(dead_code)]
 fn main() {
@@ -41,8 +41,8 @@ fn main() {
 
 /// Format coefficients for display
 #[allow(dead_code)]
-fn format_coeffs(coeffs: &[f64]) -> String {
-    coeffs
+fn format_coeffs(_coeffs: &[f64]) -> String {
+    _coeffs
         .iter()
         .map(|&c| format!("{:.4}", c))
         .collect::<Vec<_>>()

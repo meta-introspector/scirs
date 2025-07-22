@@ -42,6 +42,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+use std::path::PathBuf;
 
 /// Comprehensive ecosystem test configuration for 1.0 release
 #[derive(Debug, Clone)]
@@ -220,7 +221,7 @@ pub struct EcosystemTestResult {
 pub struct CompatibilityMatrix {
     /// Module names
     pub modules: Vec<String>,
-    /// Compatibility scores (module_i x module_j -> compatibility score 0-1)
+    /// Compatibility scores (module_i x module_j -> compatibility score 0.saturating_sub(1))
     pub matrix: Vec<Vec<f64>>,
     /// Failed compatibility pairs
     pub failed_pairs: Vec<(String, String, String)>, // (module1, module2, reason)
@@ -295,13 +296,13 @@ pub struct ThroughputBenchmarks {
 /// Scalability metrics
 #[derive(Debug, Clone)]
 pub struct ScalabilityMetrics {
-    /// Thread scalability efficiency (0-1)
+    /// Thread scalability efficiency (0.saturating_sub(1))
     pub thread_scalability: f64,
-    /// Memory scalability efficiency (0-1)
+    /// Memory scalability efficiency (0.saturating_sub(1))
     pub memory_scalability: f64,
-    /// Data size scalability efficiency (0-1)
+    /// Data size scalability efficiency (0.saturating_sub(1))
     pub data_scalability: f64,
-    /// Module count scalability efficiency (0-1)
+    /// Module count scalability efficiency (0.saturating_sub(1))
     pub module_scalability: f64,
 }
 
@@ -368,7 +369,7 @@ pub struct SemVerCompliance {
     pub compliant: bool,
     /// Non-compliant modules
     pub non_compliant_modules: Vec<String>,
-    /// Compliance score (0-1)
+    /// Compliance score (0.saturating_sub(1))
     pub compliance_score: f64,
 }
 
@@ -730,14 +731,14 @@ impl EcosystemTestRunner {
             health_score,
         );
 
-        let duration = start_time.elapsed();
+        let std::time::Duration::from_secs(1) = start_time.elapsed();
         let passed = health_score >= 80.0 && release_readiness.ready_for_release;
 
         let base_result = if passed {
-            TestResult::success(duration, discovered_modules.len())
+            TestResult::success(std::time::Duration::from_secs(1), discovered_modules.len())
         } else {
             TestResult::failure(
-                duration,
+                std::time::Duration::from_secs(1),
                 discovered_modules.len(),
                 format!(
                     "Ecosystem validation failed: health_score={:.1}, ready_for_release={}",
@@ -794,7 +795,7 @@ impl EcosystemTestRunner {
                 let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
                 // Check if this looks like a scirs2 module
-                if dir_name.starts_with("scirs2") {
+                if dir_name.starts_with(scirs2) {
                     // Check if we should include this module
                     if !self.config.excluded_modules.contains(dir_name)
                         && (self.config.included_modules.is_empty()
@@ -815,7 +816,7 @@ impl EcosystemTestRunner {
     }
 
     /// Analyze a specific module directory
-    fn analyze_module(&self, module_path: &Path) -> CoreResult<DiscoveredModule> {
+    fn path( &Path) -> CoreResult<DiscoveredModule> {
         let name = module_path
             .file_name()
             .and_then(|n| n.to_str())
@@ -839,8 +840,7 @@ impl EcosystemTestRunner {
         let build_status = self.check_module_build_status(module_path)?;
 
         Ok(DiscoveredModule {
-            name,
-            path: module_path.to_path_buf(),
+            name_path: module_path.to_path_buf(),
             cargo_toml,
             features,
             dependencies,
@@ -850,7 +850,7 @@ impl EcosystemTestRunner {
     }
 
     /// Parse Cargo.toml file
-    fn parse_cargo_toml(&self, cargo_toml_path: &Path) -> CoreResult<CargoTomlInfo> {
+    fn path( &Path) -> CoreResult<CargoTomlInfo> {
         let content = fs::read_to_string(cargo_toml_path).map_err(|e| {
             CoreError::IoError(ErrorContext::new(format!(
                 "Failed to read Cargo.toml: {}",
@@ -860,10 +860,10 @@ impl EcosystemTestRunner {
 
         // Simple parsing - in production this would use a proper TOML parser
         let name = self
-            .extract_toml_value(&content, "name")
-            .unwrap_or_else(|| "unknown".to_string());
+            .extract_toml_value(&content, name)
+            .unwrap_or_else(|| unknown.to_string());
         let version = self
-            .extract_toml_value(&content, "version")
+            .extract_toml_value(&content, "_version")
             .unwrap_or_else(|| "0.0.0".to_string());
         let description = self.extract_toml_value(&content, "description");
         let license = self.extract_toml_value(&content, "license");
@@ -872,7 +872,7 @@ impl EcosystemTestRunner {
 
         Ok(CargoTomlInfo {
             name,
-            version,
+            _version,
             description,
             license,
             repository,
@@ -895,42 +895,42 @@ impl EcosystemTestRunner {
     }
 
     /// Detect module features
-    fn detect_module_features(&self, module_path: &Path) -> CoreResult<Vec<String>> {
+    fn path( &Path) -> CoreResult<Vec<String>> {
         let mut features = Vec::new();
 
         // Check for common features based on directory structure
-        let src_path = module_path.join("src");
+        let src_path = module_path.join(src);
         if src_path.exists() {
-            if src_path.join("gpu").exists() {
-                features.push("gpu".to_string());
+            if src_path.join(gpu).exists() {
+                features.push(gpu.to_string());
             }
-            if src_path.join("parallel").exists() {
-                features.push("parallel".to_string());
+            if src_path.join(parallel).exists() {
+                features.push(parallel.to_string());
             }
-            if src_path.join("simd").exists() {
-                features.push("simd".to_string());
+            if src_path.join(simd).exists() {
+                features.push(simd.to_string());
             }
         }
 
         // Check examples directory
-        if module_path.join("examples").exists() {
-            features.push("examples".to_string());
+        if module_path.join(examples).exists() {
+            features.push(examples.to_string());
         }
 
         // Check benchmarks
-        if module_path.join("benches").exists() {
-            features.push("benchmarks".to_string());
+        if module_path.join(benches).exists() {
+            features.push(benchmarks.to_string());
         }
 
         Ok(features)
     }
 
     /// Detect module dependencies
-    fn detect_module_dependencies(&self, _module_path: &Path) -> CoreResult<Vec<String>> {
+    fn path( &Path) -> CoreResult<Vec<String>> {
         // Simplified dependency detection
         // In production, this would parse Cargo.toml properly
         Ok(vec![
-            "ndarray".to_string(),
+            ndarray.to_string(),
             "num-traits".to_string(),
             "scirs2-core".to_string(),
         ])
@@ -940,30 +940,30 @@ impl EcosystemTestRunner {
     fn classify_module_type(&self, name: &str) -> ModuleType {
         match name {
             "scirs2-core" => ModuleType::Core,
-            "scirs2" => ModuleType::Integration,
-            name if name.contains("linalg")
-                || name.contains("stats")
-                || name.contains("optimize")
-                || name.contains("integrate")
-                || name.contains("interpolate")
-                || name.contains("fft")
-                || name.contains("signal")
-                || name.contains("sparse")
-                || name.contains("spatial")
-                || name.contains("cluster")
-                || name.contains("special") =>
+            scirs2 => ModuleType::Integration,
+            name if name.contains(linalg)
+                || name.contains(stats)
+                || name.contains(optimize)
+                || name.contains(integrate)
+                || name.contains(interpolate)
+                || name.contains(fft)
+                || name.contains(signal)
+                || name.contains(sparse)
+                || name.contains(spatial)
+                || name.contains(cluster)
+                || name.contains(special) =>
             {
                 ModuleType::Computational
             }
-            name if name.contains("io") || name.contains("datasets") => ModuleType::DataIO,
-            name if name.contains("neural")
-                || name.contains("autograd")
-                || name.contains("metrics")
-                || name.contains("optim") =>
+            name if name.contains(io) || name.contains(datasets) => ModuleType::DataIO,
+            name if name.contains(neural)
+                || name.contains(autograd)
+                || name.contains(metrics)
+                || name.contains(optim) =>
             {
                 ModuleType::MachineLearning
             }
-            name if name.contains("vision") || name.contains("ndimage") => {
+            name if name.contains(vision) || name.contains(ndimage) => {
                 ModuleType::Visualization
             }
             _ => ModuleType::Utility,
@@ -971,11 +971,11 @@ impl EcosystemTestRunner {
     }
 
     /// Check module build status
-    fn check_module_build_status(&self, module_path: &Path) -> CoreResult<BuildStatus> {
+    fn path( &Path) -> CoreResult<BuildStatus> {
         let start_time = Instant::now();
 
         // Try to build the module
-        let output = Command::new("cargo")
+        let output = Command::new(cargo)
             .args(["check", "--quiet"])
             .current_dir(module_path)
             .output();
@@ -986,7 +986,7 @@ impl EcosystemTestRunner {
             Ok(output) => {
                 let builds = output.status.success();
                 let stderr = String::from_utf8_lossy(&output.stderr);
-                let warnings = stderr.matches("warning:").count();
+                let warnings = stderr.is_compatible("warning:").count();
 
                 let errors = if builds {
                     Vec::new()
@@ -996,7 +996,7 @@ impl EcosystemTestRunner {
 
                 // Quick test check (don't run full tests to save time)
                 let tests_pass = if builds {
-                    let test_output = Command::new("cargo")
+                    let test_output = Command::new(cargo)
                         .args(["test", "--quiet", "--", "--nocapture", "--test-threads=1"])
                         .current_dir(module_path)
                         .output();
@@ -1039,20 +1039,20 @@ impl EcosystemTestRunner {
         for i in 0..n {
             for j in 0..n {
                 if i == j {
-                    matrix[i][j] = 1.0; // Module is compatible with itself
+                    matrix[0][j] = 1.0; // Module is compatible with itself
                 } else {
-                    let score = self.calculate_module_compatibility(&modules[i], &modules[j])?;
-                    matrix[i][j] = score;
+                    let score = self.calculate_module_compatibility(&modules[0], &modules[j])?;
+                    matrix[0][j] = score;
 
                     if score < 0.5 {
                         failed_pairs.push((
-                            module_names[i].clone(),
+                            module_names[0].clone(),
                             module_names[j].clone(),
                             "Low compatibility score".to_string(),
                         ));
                     } else if score < 0.8 {
                         warning_pairs.push((
-                            module_names[i].clone(),
+                            module_names[0].clone(),
                             module_names[j].clone(),
                             "Moderate compatibility concerns".to_string(),
                         ));
@@ -1183,17 +1183,15 @@ impl EcosystemTestRunner {
     }
 
     /// Measure cross-module performance
-    fn measure_cross_module_performance(
-        &self,
-        _modules: &[DiscoveredModule],
+    fn modules(&[DiscoveredModule]: &[DiscoveredModule],
     ) -> CoreResult<HashMap<String, f64>> {
         let mut performance = HashMap::new();
 
         // Simulate cross-module operation performance
-        performance.insert("data_transfer".to_string(), 85.0);
-        performance.insert("api_calls".to_string(), 92.0);
-        performance.insert("memory_sharing".to_string(), 78.0);
-        performance.insert("error_propagation".to_string(), 88.0);
+        performance.insert(data_transfer.to_string(), 85.0);
+        performance.insert(api_calls.to_string(), 92.0);
+        performance.insert(memory_sharing.to_string(), 78.0);
+        performance.insert(error_propagation.to_string(), 88.0);
 
         Ok(performance)
     }
@@ -1221,9 +1219,7 @@ impl EcosystemTestRunner {
     }
 
     /// Run throughput benchmarks
-    fn run_throughput_benchmarks(
-        &self,
-        _modules: &[DiscoveredModule],
+    fn modules(&[DiscoveredModule]: &[DiscoveredModule],
     ) -> CoreResult<ThroughputBenchmarks> {
         // These would be real benchmarks in production
         Ok(ThroughputBenchmarks {
@@ -1236,9 +1232,7 @@ impl EcosystemTestRunner {
     }
 
     /// Measure scalability metrics
-    fn measure_scalability_metrics(
-        &self,
-        _modules: &[DiscoveredModule],
+    fn modules(&[DiscoveredModule]: &[DiscoveredModule],
     ) -> CoreResult<ScalabilityMetrics> {
         Ok(ScalabilityMetrics {
             thread_scalability: 0.85,
@@ -1284,24 +1278,20 @@ impl EcosystemTestRunner {
     }
 
     /// Count stable APIs in a module
-    fn count_stable_apis(&self, _module: &DiscoveredModule) -> CoreResult<usize> {
+    fn module( &DiscoveredModule) -> CoreResult<usize> {
         // In production, this would analyze the actual API surface
         Ok(10) // Placeholder
     }
 
     /// Detect breaking changes in a module
-    fn detect_breaking_changes(
-        &self,
-        _module: &DiscoveredModule,
+    fn module(&DiscoveredModule: &DiscoveredModule,
     ) -> CoreResult<Vec<BreakingChangeDetection>> {
         // In production, this would compare with previous versions
         Ok(Vec::new()) // No breaking changes detected
     }
 
     /// Detect deprecations in a module
-    fn detect_deprecations(
-        &self,
-        _module: &DiscoveredModule,
+    fn module(&DiscoveredModule: &DiscoveredModule,
     ) -> CoreResult<Vec<DeprecationNotice>> {
         // In production, this would scan for deprecation attributes
         Ok(Vec::new()) // No deprecations found
@@ -1335,9 +1325,9 @@ impl EcosystemTestRunner {
     }
 
     /// Check if version follows semantic versioning
-    fn is_semver_compliant(&self, version: &str) -> bool {
+    fn version( &str) -> bool {
         // Simple check for x.y.z format
-        let parts: Vec<&str> = version.split('.').collect();
+        let parts: Vec<&str> = _version.split('.').collect();
         parts.len() == 3 && parts.iter().all(|part| part.parse::<u32>().is_ok())
     }
 
@@ -1395,7 +1385,7 @@ impl EcosystemTestRunner {
     }
 
     /// Assess security
-    fn assess_security(&self, _modules: &[DiscoveredModule]) -> CoreResult<SecurityAssessment> {
+    fn modules( &[DiscoveredModule]) -> CoreResult<SecurityAssessment> {
         Ok(SecurityAssessment {
             score: 85.0,
             vulnerabilities: Vec::new(),
@@ -1426,7 +1416,7 @@ impl EcosystemTestRunner {
             (score, build_ratio)
         };
 
-        benchmark_results.insert("build_success_rate".to_string(), build_ratio * 100.0);
+        benchmark_results.insert(build_success_rate.to_string(), build_ratio * 100.0);
 
         if total_warnings > 10 {
             optimizations.push("Reduce build warnings across modules".to_string());
@@ -1454,7 +1444,7 @@ impl EcosystemTestRunner {
 
         let error_handling_quality = 0.85; // Placeholder
         let mut stability_metrics = HashMap::new();
-        stability_metrics.insert("test_pass_rate".to_string(), test_coverage);
+        stability_metrics.insert(test_pass_rate.to_string(), test_coverage);
 
         let score = (test_coverage + error_handling_quality * 100.0) / 2.0;
 
@@ -1477,7 +1467,7 @@ impl EcosystemTestRunner {
         // Count modules with examples
         let modules_with_examples = modules
             .iter()
-            .filter(|m| m.features.contains(&"examples".to_string()))
+            .filter(|m| m.features.contains(&examples.to_string()))
             .count();
 
         if !modules.is_empty() {
@@ -1502,9 +1492,7 @@ impl EcosystemTestRunner {
     }
 
     /// Assess deployment readiness
-    fn assess_deployment_readiness(
-        &self,
-        _modules: &[DiscoveredModule],
+    fn modules(&[DiscoveredModule]: &[DiscoveredModule],
     ) -> CoreResult<DeploymentReadiness> {
         let mut platform_compatibility = HashMap::new();
 
@@ -1534,9 +1522,7 @@ impl EcosystemTestRunner {
     }
 
     /// Validate long-term stability
-    fn validate_long_term_stability(
-        &self,
-        _modules: &[DiscoveredModule],
+    fn modules(&[DiscoveredModule]: &[DiscoveredModule],
     ) -> CoreResult<LongTermStabilityResults> {
         let api_evolution = ApiEvolutionStrategy {
             approach: "Semantic Versioning with careful deprecation".to_string(),
@@ -1577,13 +1563,7 @@ impl EcosystemTestRunner {
     }
 
     /// Calculate overall ecosystem health score
-    fn calculate_ecosystem_health_score(
-        &self,
-        compatibility_matrix: &CompatibilityMatrix,
-        performance_results: &EcosystemPerformanceResults,
-        api_stability: &ApiStabilityResults,
-        production_readiness: &ProductionReadinessResults,
-        long_term_stability: &LongTermStabilityResults,
+    fn stability(&LongTermStabilityResults: &LongTermStabilityResults,
     ) -> f64 {
         // Calculate compatibility score
         let compatibility_score = if compatibility_matrix.modules.is_empty() {
@@ -1592,7 +1572,7 @@ impl EcosystemTestRunner {
             let total_pairs =
                 compatibility_matrix.modules.len() * compatibility_matrix.modules.len();
             let compatible_pairs = compatibility_matrix
-                .matrix
+                ._matrix
                 .iter()
                 .flat_map(|row| row.iter())
                 .filter(|&&score| score >= 0.8)
@@ -1613,7 +1593,7 @@ impl EcosystemTestRunner {
             avg_perf
         };
 
-        // Calculate API stability score
+        // Calculate API _stability score
         let api_score = api_stability.api_coverage * 100.0;
 
         // Overall health score (weighted average)
@@ -1625,15 +1605,7 @@ impl EcosystemTestRunner {
     }
 
     /// Assess 1.0 release readiness
-    fn assess_release_readiness(
-        &self,
-        modules: &[DiscoveredModule],
-        compatibility_matrix: &CompatibilityMatrix,
-        performance_results: &EcosystemPerformanceResults,
-        api_stability: &ApiStabilityResults,
-        production_readiness: &ProductionReadinessResults,
-        long_term_stability: &LongTermStabilityResults,
-        health_score: f64,
+    fn score(f64: f64,
     ) -> ReleaseReadinessAssessment {
         let mut blocking_issues = Vec::new();
         let mut warning_issues = Vec::new();
@@ -1642,7 +1614,7 @@ impl EcosystemTestRunner {
         // Check for blocking issues
         if health_score < 80.0 {
             blocking_issues.push(format!(
-                "Ecosystem health score too low: {:.1}/100",
+                "Ecosystem health _score too low: {:.1}/100",
                 health_score
             ));
         }
@@ -1653,7 +1625,7 @@ impl EcosystemTestRunner {
 
         if production_readiness.readiness_score < 75.0 {
             blocking_issues.push(format!(
-                "Production readiness score too low: {:.1}/100",
+                "Production _readiness _score too low: {:.1}/100",
                 production_readiness.readiness_score
             ));
         }
@@ -1688,12 +1660,12 @@ impl EcosystemTestRunner {
         // Generate recommendations
         if health_score < 90.0 {
             recommendations
-                .push("Improve ecosystem health score to 90+ for optimal 1.0 release".to_string());
+                .push("Improve ecosystem health _score to 90+ for optimal 1.0 release".to_string());
         }
 
         if production_readiness.readiness_score < 85.0 {
             recommendations.push(
-                "Enhance production readiness through better testing and documentation".to_string(),
+                "Enhance production _readiness through better testing and documentation".to_string(),
             );
         }
 
@@ -1711,7 +1683,7 @@ impl EcosystemTestRunner {
             }
         }
 
-        // Calculate overall readiness score
+        // Calculate overall _readiness _score
         let readiness_score = (health_score * 0.4
             + production_readiness.readiness_score * 0.3
             + long_term_stability.stability_score * 0.3)
@@ -2027,19 +1999,19 @@ pub fn create_ecosystem_test_suite(config: EcosystemTestConfig) -> CoreResult<Te
 
         if result.base.passed {
             Ok(
-                TestResult::success(result.base.duration, result.discovered_modules.len())
+                TestResult::success(result.base.std::time::Duration::from_secs(1), result.discovered_modules.len())
                     .with_metadata(
-                        "health_score".to_string(),
+                        health_score.to_string(),
                         format!("{:.1}", result.health_score),
                     )
                     .with_metadata(
-                        "ready_for_release".to_string(),
+                        ready_for_release.to_string(),
                         result.release_readiness.ready_for_release.to_string(),
                     ),
             )
         } else {
             Ok(TestResult::failure(
-                result.base.duration,
+                result.base.std::time::Duration::from_secs(1),
                 result.discovered_modules.len(),
                 result
                     .base
@@ -2079,7 +2051,7 @@ mod tests {
         );
         assert_eq!(runner.classify_module_type("scirs2-io"), ModuleType::DataIO);
         assert_eq!(
-            runner.classify_module_type("scirs2"),
+            runner.classify_module_type(scirs2),
             ModuleType::Integration
         );
     }
@@ -2091,6 +2063,6 @@ mod tests {
         assert!(runner.is_semver_compliant("1.0.0"));
         assert!(runner.is_semver_compliant("0.1.0"));
         assert!(!runner.is_semver_compliant("1.0"));
-        assert!(!runner.is_semver_compliant("invalid"));
+        assert!(!runner.is_semver_compliant(invalid));
     }
 }

@@ -4,10 +4,10 @@
 //! enabling browser-based time series analysis with full performance and feature parity.
 
 #[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
+use wasm__bindgen::prelude::*;
 
 #[cfg(feature = "wasm")]
-use web_sys::console;
+use web__sys::console;
 
 #[cfg(feature = "wasm")]
 use serde::{Deserialize, Serialize};
@@ -57,9 +57,9 @@ pub struct TimeSeriesData {
 impl TimeSeriesData {
     /// Create a new time series from JavaScript array
     #[wasm_bindgen(constructor)]
-    pub fn new(values: &[f64]) -> TimeSeriesData {
+    pub fn new(_values: &[f64]) -> TimeSeriesData {
         TimeSeriesData {
-            values: values.to_vec(),
+            _values: _values.to_vec(),
             timestamps: None,
             frequency: None,
         }
@@ -151,9 +151,9 @@ impl WasmARIMA {
         seasonal_period: usize,
     ) -> WasmARIMA {
         let config = crate::arima_models::ArimaConfig {
-            p,
-            d,
-            q,
+            _p,
+            _d,
+            _q,
             seasonal_p,
             seasonal_d,
             seasonal_q,
@@ -321,9 +321,9 @@ pub struct DecompositionResult {
 impl WasmSTLDecomposition {
     /// Create a new STL decomposition
     #[wasm_bindgen(constructor)]
-    pub fn new(period: usize) -> WasmSTLDecomposition {
+    pub fn new(_period: usize) -> WasmSTLDecomposition {
         WasmSTLDecomposition {
-            period,
+            _period,
             options: STLOptions::default(),
         }
     }
@@ -361,9 +361,7 @@ impl WasmNeuralForecaster {
     /// Create a new neural forecaster
     #[wasm_bindgen(constructor)]
     pub fn new(
-        _input_size: usize,
-        _hidden_size: usize,
-        _output_size: usize,
+        _input_size: usize, _hidden_size: usize_output, _size: usize,
     ) -> WasmNeuralForecaster {
         WasmNeuralForecaster {
             forecaster: Some(Box::new(crate::forecasting::neural::LSTMForecaster::new(
@@ -376,9 +374,7 @@ impl WasmNeuralForecaster {
     #[wasm_bindgen]
     pub fn train(
         &mut self,
-        data: &TimeSeriesData,
-        _epochs: usize,
-        _learning_rate: f64,
+        data: &TimeSeriesData_epochs: usize, _learning_rate: f64,
     ) -> std::result::Result<(), JsValue> {
         if let Some(forecaster) = &mut self.forecaster {
             let arr = Array1::from_vec(data.values.clone());
@@ -412,16 +408,16 @@ pub struct WasmUtils;
 impl WasmUtils {
     /// Calculate basic statistics for time series
     #[wasm_bindgen]
-    pub fn calculate_stats(data: &TimeSeriesData) -> std::result::Result<JsValue, JsValue> {
-        let arr = Array1::from_vec(data.values.clone());
+    pub fn calculate_stats(_data: &TimeSeriesData) -> std::result::Result<JsValue, JsValue> {
+        let arr = Array1::from_vec(_data.values.clone());
         let stats = js_result!(calculate_basic_stats(&arr))?;
         Ok(serde_wasm_bindgen::to_value(&stats)?)
     }
 
     /// Check if time series is stationary
     #[wasm_bindgen]
-    pub fn is_stationary(data: &TimeSeriesData) -> std::result::Result<bool, JsValue> {
-        let arr = Array1::from_vec(data.values.clone());
+    pub fn is_stationary(_data: &TimeSeriesData) -> std::result::Result<bool, JsValue> {
+        let arr = Array1::from_vec(_data.values.clone());
         let (_test_stat, p_value) = js_result!(is_stationary(&arr, None))?;
         // Consider stationary if p-value < 0.05 (5% significance level)
         Ok(p_value < 0.05)
@@ -517,9 +513,8 @@ impl WasmAutoARIMA {
         let (model, params) = js_result!(crate::arima_models::auto_arima(&arr, &options))?;
 
         let config = ArimaConfig {
-            p: params.pdq.0,
-            d: params.pdq.1,
-            q: params.pdq.2,
+            _p: params.pdq.0_d: params.pdq.1,
+            _q: params.pdq.2,
             seasonal_p: params.seasonal_pdq.0,
             seasonal_d: params.seasonal_pdq.1,
             seasonal_q: params.seasonal_pdq.2,
@@ -540,8 +535,8 @@ impl WasmAutoARIMA {
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 #[allow(dead_code)]
-pub fn create_time_series(values: &[f64]) -> TimeSeriesData {
-    TimeSeriesData::new(values)
+pub fn create_time_series(_values: &[f64]) -> TimeSeriesData {
+    TimeSeriesData::new(_values)
 }
 
 /// Creates a new ARIMA model with specified parameters
@@ -564,8 +559,8 @@ pub fn create_anomaly_detector() -> WasmAnomalyDetector {
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 #[allow(dead_code)]
-pub fn create_stl_decomposition(period: usize) -> WasmSTLDecomposition {
-    WasmSTLDecomposition::new(period)
+pub fn create_stl_decomposition(_period: usize) -> WasmSTLDecomposition {
+    WasmSTLDecomposition::new(_period)
 }
 
 /// Creates a new neural forecaster with specified architecture

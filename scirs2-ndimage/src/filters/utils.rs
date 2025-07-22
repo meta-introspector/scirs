@@ -13,9 +13,9 @@ use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult<T> {
+    T::from_usize(_value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
     })
 }
 
@@ -26,11 +26,11 @@ pub fn calculate_kernel_size<T: Float + FromPrimitive>(
     truncate: Option<T>,
 ) -> NdimageResult<usize> {
     let truncate_val = truncate.unwrap_or_else(|| {
-        safe_f64_to_float::<T>(4.0)
+        safe_f64, _to_float: :<T>(4.0)
             .unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::zero()))
     });
-    let size = safe_usize_to_float::<T>(1)?
-        + (sigma * truncate_val * safe_f64_to_float::<T>(2.0)?)
+    let size = safe_usize, _to_float: :<T>(1)?
+        + (sigma * truncate_val * safe_f64, _to_float: :<T>(2.0)?)
             .ceil()
             .to_usize()
             .ok_or_else(|| {
@@ -63,9 +63,9 @@ pub fn generate_gaussian_kernel<T: Float + FromPrimitive>(
     let half = kernel_size / 2;
     let mut kernel = Array::zeros(kernel_size);
     let sigma_sq = sigma * sigma;
-    let norm_factor = safe_f64_to_float::<T>(1.0)?
-        / (sigma * safe_f64_to_float::<T>(std::f64::consts::TAU.sqrt())?);
-    let exp_factor = safe_f64_to_float::<T>(-0.5)? / sigma_sq;
+    let norm_factor = safe_f64, _to_float: :<T>(1.0)?
+        / (sigma * safe_f64, _to_float: :<T>(std::f64::consts::TAU.sqrt())?);
+    let exp_factor = safe_f64, _to_float: :<T>(-0.5)? / sigma_sq;
 
     let mut sum = T::zero();
     for (i, k) in kernel.iter_mut().enumerate() {
@@ -106,35 +106,35 @@ where
         temp.axis_iter_mut(ndarray::Axis(0))
             .into_par_iter()
             .enumerate()
-            .for_each(|(y, mut row)| {
-                for x in 0..width {
+            .for_each(|(_y, mut row)| {
+                for _x in 0..width {
                     let mut sum = T::zero();
                     let kernel_half = kernel_x.len() / 2;
 
                     for (k_idx, &k_val) in kernel_x.iter().enumerate() {
-                        let src_x = (x as isize + k_idx as isize - kernel_half as isize)
+                        let src_x = (_x as isize + k_idx as isize - kernel_half as isize)
                             .clamp(0, width as isize - 1)
                             as usize;
-                        sum = sum + input[(y, src_x)] * k_val;
+                        sum = sum + input[(_y, src_x)] * k_val;
                     }
-                    row[x] = sum;
+                    row[_x] = sum;
                 }
             });
     }
 
     #[cfg(not(feature = "parallel"))]
     {
-        for y in 0..height {
-            for x in 0..width {
+        for _y in 0..height {
+            for _x in 0..width {
                 let mut sum = T::zero();
                 let kernel_half = kernel_x.len() / 2;
 
                 for (k_idx, &k_val) in kernel_x.iter().enumerate() {
-                    let src_x = (x as isize + k_idx as isize - kernel_half as isize)
+                    let src_x = (_x as isize + k_idx as isize - kernel_half as isize)
                         .clamp(0, width as isize - 1) as usize;
-                    sum = sum + input[(y, src_x)] * k_val;
+                    sum = sum + input[(_y, src_x)] * k_val;
                 }
-                temp[(y, x)] = sum;
+                temp[(_y, _x)] = sum;
             }
         }
     }
@@ -148,35 +148,35 @@ where
             .axis_chunks_iter_mut(ndarray::Axis(1), 1)
             .into_par_iter()
             .enumerate()
-            .for_each(|(x, mut col)| {
-                for y in 0..height {
+            .for_each(|(_x, mut col)| {
+                for _y in 0..height {
                     let mut sum = T::zero();
                     let kernel_half = kernel_y.len() / 2;
 
                     for (k_idx, &k_val) in kernel_y.iter().enumerate() {
-                        let src_y = (y as isize + k_idx as isize - kernel_half as isize)
+                        let src_y = (_y as isize + k_idx as isize - kernel_half as isize)
                             .clamp(0, height as isize - 1)
                             as usize;
-                        sum = sum + temp[(src_y, x)] * k_val;
+                        sum = sum + temp[(src_y, _x)] * k_val;
                     }
-                    col[[y, 0]] = sum;
+                    col[[_y, 0]] = sum;
                 }
             });
     }
 
     #[cfg(not(feature = "parallel"))]
     {
-        for x in 0..width {
-            for y in 0..height {
+        for _x in 0..width {
+            for _y in 0..height {
                 let mut sum = T::zero();
                 let kernel_half = kernel_y.len() / 2;
 
                 for (k_idx, &k_val) in kernel_y.iter().enumerate() {
-                    let src_y = (y as isize + k_idx as isize - kernel_half as isize)
+                    let src_y = (_y as isize + k_idx as isize - kernel_half as isize)
                         .clamp(0, height as isize - 1) as usize;
-                    sum = sum + temp[(src_y, x)] * k_val;
+                    sum = sum + temp[(src_y, _x)] * k_val;
                 }
-                output[(y, x)] = sum;
+                output[(_y, _x)] = sum;
             }
         }
     }
@@ -330,7 +330,7 @@ where
 
     if pad_width.len() != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
-            "Pad width must have same length as input dimensions (got {} expected {})",
+            "Pad _width must have same length as input dimensions (got {} expected {})",
             pad_width.len(),
             input.ndim()
         )));
@@ -347,7 +347,7 @@ where
         new_shape.push(input.shape()[dim] + pad_before + pad_after);
     }
 
-    // Create output array with default constant value
+    // Create output array with default constant _value
     let const_val = constant_value.unwrap_or_else(|| T::zero());
     let dimension = D::from_dimension(&ndarray::IxDyn(&new_shape)).map_err(|_| {
         NdimageError::DimensionError("Could not create dimension from shape".into())
@@ -379,7 +379,7 @@ where
         // Then pad the borders based on the mode
         match mode {
             BorderMode::Constant => {
-                // Already filled with constant value
+                // Already filled with constant _value
             }
             BorderMode::Reflect => {
                 // Pad left side
@@ -475,7 +475,7 @@ where
         // Handle border padding based on mode
         match mode {
             BorderMode::Constant => {
-                // Already filled with constant value
+                // Already filled with constant _value
             }
             BorderMode::Reflect => {
                 // Pad top and bottom (rows)
@@ -691,7 +691,7 @@ where
     // Convert to dynamic dimensionality for flexible indexing
     let input_dyn = input
         .clone()
-        .into_dimensionality::<ndarray::IxDyn>()
+        .into__dimensionality::<ndarray::IxDyn>()
         .map_err(|_| {
             NdimageError::DimensionError("Failed to convert input to dynamic dimensionality".into())
         })?;
@@ -705,14 +705,14 @@ where
         })?;
 
     // Calculate starts for center region
-    let center_starts: Vec<usize> = pad_width.iter().map(|(before, _)| *before).collect();
+    let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
 
     // Copy the input to the center of the output
     copy_nd_array(&mut output_dyn, &input_dyn, &center_starts)?;
 
     match mode {
         BorderMode::Constant => {
-            // Already filled with constant value
+            // Already filled with constant _value
         }
         BorderMode::Reflect => {
             pad_nd_array_reflect(&mut output_dyn, &input_dyn, pad_width)?;
@@ -743,11 +743,7 @@ where
 // We're not going to use this function as we've implemented a more specialized approach above
 #[allow(dead_code)]
 fn pad_along_axis<T, D>(
-    _output: &mut Array<T, D>,
-    _input: &Array<T, D>,
-    _axis: usize,
-    _dest_idx: usize,
-    _src_idx: usize,
+    _output: &mut Array<T, D>, _input: &Array<T, D>, _axis: usize, _dest_idx: usize_src, _idx: usize,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -775,9 +771,7 @@ where
 pub fn get_window<T, D>(
     input: &Array<T, D>,
     center: &[usize],
-    window_size: &[usize],
-    _mode: &BorderMode,
-    _constant_value: Option<T>,
+    window_size: &[usize], _mode: &BorderMode_constant_value: Option<T>,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -800,7 +794,7 @@ where
 
     if window_size.len() != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
-            "Window size must have same length as input dimensions (got {} expected {})",
+            "Window _size must have same length as input dimensions (got {} expected {})",
             window_size.len(),
             input.ndim()
         )));
@@ -870,7 +864,7 @@ where
     // Validate inputs
     if start_indices.len() != input.ndim() || start_indices.len() != output.ndim() {
         return Err(NdimageError::DimensionError(format!(
-            "Start indices must have same length as input dimensions (got {} expected {})",
+            "Start _indices must have same length as input dimensions (got {} expected {})",
             start_indices.len(),
             input.ndim()
         )));
@@ -900,7 +894,7 @@ where
         start_indices: &[usize],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
-            // We have full indices, copy the value
+            // We have full _indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
             let in_idx = ndarray::IxDyn(in_indices);
             output[&out_idx] = input[&in_idx].clone();
@@ -924,7 +918,7 @@ where
         Ok(())
     }
 
-    // Initialize temporary vectors for indices
+    // Initialize temporary vectors for _indices
     let mut out_indices = vec![0; input.ndim()];
     let mut in_indices = vec![0; input.ndim()];
 
@@ -964,19 +958,19 @@ where
     // Initialize temporary vectors for indices
     let mut out_indices = vec![0; input.ndim()];
     let mut in_indices = vec![0; input.ndim()];
-    let center_starts: Vec<usize> = pad_width.iter().map(|(before, _)| *before).collect();
+    let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
 
     // Helper function to get reflected index
-    fn get_reflect_idx(idx: isize, len: usize) -> usize {
-        if idx < 0 {
+    fn get_reflect_idx(_idx: isize, len: usize) -> usize {
+        if _idx < 0 {
             // Reflect from the start
-            (-idx - 1) as usize % len
-        } else if idx >= len as isize {
+            (-_idx - 1) as usize % len
+        } else if _idx >= len as isize {
             // Reflect from the end
-            (2 * len as isize - idx - 1) as usize % len
+            (2 * len as isize - _idx - 1) as usize % len
         } else {
             // Within bounds
-            idx as usize
+            _idx as usize
         }
     }
 
@@ -992,11 +986,10 @@ where
         out_indices: &mut Vec<usize>,
         in_indices: &mut Vec<usize>,
         dim: usize,
-        center_starts: &[usize],
-        _pad_width: &[(usize, usize)],
+        center_starts: &[usize], _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
-            // We have full indices, copy the value
+            // We have full _indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
             let in_idx = ndarray::IxDyn(in_indices);
             output[&out_idx] = input[&in_idx].clone();
@@ -1017,8 +1010,7 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts,
-                _pad_width,
+                center_starts_pad_width,
             )?;
         } else {
             // Calculate reflected index
@@ -1033,8 +1025,7 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts,
-                _pad_width,
+                center_starts_pad_width,
             )?;
         }
 
@@ -1057,7 +1048,7 @@ where
         pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == output.ndim() {
-            // Check if current indices are in the center region
+            // Check if current _indices are in the center region
             let mut is_center = true;
             for d in 0..output.ndim() {
                 is_center &= (out_indices[d] >= center_starts[d])
@@ -1152,19 +1143,19 @@ where
     // Initialize temporary vectors for indices
     let mut out_indices = vec![0; input.ndim()];
     let mut in_indices = vec![0; input.ndim()];
-    let center_starts: Vec<usize> = pad_width.iter().map(|(before, _)| *before).collect();
+    let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
 
     // Helper function to get mirrored index
-    fn get_mirror_idx(idx: isize, len: usize) -> usize {
-        if idx < 0 {
+    fn get_mirror_idx(_idx: isize, len: usize) -> usize {
+        if _idx < 0 {
             // Mirror from the start
-            idx.unsigned_abs() % len
-        } else if idx >= len as isize {
+            _idx.unsigned_abs() % len
+        } else if _idx >= len as isize {
             // Mirror from the end
-            (len as isize - 1 - (idx - len as isize) % (len as isize)) as usize
+            (len as isize - 1 - (_idx - len as isize) % (len as isize)) as usize
         } else {
             // Within bounds
-            idx as usize
+            _idx as usize
         }
     }
 
@@ -1180,11 +1171,10 @@ where
         out_indices: &mut Vec<usize>,
         in_indices: &mut Vec<usize>,
         dim: usize,
-        center_starts: &[usize],
-        _pad_width: &[(usize, usize)],
+        center_starts: &[usize], _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
-            // We have full indices, copy the value
+            // We have full _indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
             let in_idx = ndarray::IxDyn(in_indices);
             output[&out_idx] = input[&in_idx].clone();
@@ -1205,8 +1195,7 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts,
-                _pad_width,
+                center_starts_pad_width,
             )?;
         } else {
             // Calculate mirrored index
@@ -1221,8 +1210,7 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts,
-                _pad_width,
+                center_starts_pad_width,
             )?;
         }
 
@@ -1245,7 +1233,7 @@ where
         pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == output.ndim() {
-            // Check if current indices are in the center region
+            // Check if current _indices are in the center region
             let mut is_center = true;
             for d in 0..output.ndim() {
                 is_center &= (out_indices[d] >= center_starts[d])
@@ -1321,12 +1309,12 @@ where
     // Initialize temporary vectors for indices
     let mut out_indices = vec![0; input.ndim()];
     let mut in_indices = vec![0; input.ndim()];
-    let center_starts: Vec<usize> = pad_width.iter().map(|(before, _)| *before).collect();
+    let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
 
     // Helper function to get wrapped index
-    fn get_wrap_idx(idx: isize, len: usize) -> usize {
+    fn get_wrap_idx(_idx: isize, len: usize) -> usize {
         let len_i = len as isize;
-        (((idx % len_i) + len_i) % len_i) as usize
+        (((_idx % len_i) + len_i) % len_i) as usize
     }
 
     // Recursive function to pad each region
@@ -1341,11 +1329,10 @@ where
         out_indices: &mut Vec<usize>,
         in_indices: &mut Vec<usize>,
         dim: usize,
-        center_starts: &[usize],
-        _pad_width: &[(usize, usize)],
+        center_starts: &[usize], _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
-            // We have full indices, copy the value
+            // We have full _indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
             let in_idx = ndarray::IxDyn(in_indices);
             output[&out_idx] = input[&in_idx].clone();
@@ -1366,8 +1353,7 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts,
-                _pad_width,
+                center_starts_pad_width,
             )?;
         } else {
             // Calculate wrapped index
@@ -1382,8 +1368,7 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts,
-                _pad_width,
+                center_starts_pad_width,
             )?;
         }
 
@@ -1406,7 +1391,7 @@ where
         pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == output.ndim() {
-            // Check if current indices are in the center region
+            // Check if current _indices are in the center region
             let mut is_center = true;
             for d in 0..output.ndim() {
                 is_center &= (out_indices[d] >= center_starts[d])
@@ -1501,19 +1486,19 @@ where
     // Initialize temporary vectors for indices
     let mut out_indices = vec![0; input.ndim()];
     let mut in_indices = vec![0; input.ndim()];
-    let center_starts: Vec<usize> = pad_width.iter().map(|(before, _)| *before).collect();
+    let center_starts: Vec<usize> = pad_width.iter().map(|(before_)| *before).collect();
 
     // Helper function to get nearest index
-    fn get_nearest_idx(idx: isize, len: usize) -> usize {
-        if idx < 0 {
+    fn get_nearest_idx(_idx: isize, len: usize) -> usize {
+        if _idx < 0 {
             // Use first element
             0
-        } else if idx >= len as isize {
+        } else if _idx >= len as isize {
             // Use last element
             len - 1
         } else {
             // Within bounds
-            idx as usize
+            _idx as usize
         }
     }
 
@@ -1529,11 +1514,10 @@ where
         out_indices: &mut Vec<usize>,
         in_indices: &mut Vec<usize>,
         dim: usize,
-        center_starts: &[usize],
-        _pad_width: &[(usize, usize)],
+        center_starts: &[usize], _pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == input.ndim() {
-            // We have full indices, copy the value
+            // We have full _indices, copy the value
             let out_idx = ndarray::IxDyn(out_indices);
             let in_idx = ndarray::IxDyn(in_indices);
             output[&out_idx] = input[&in_idx].clone();
@@ -1554,8 +1538,7 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts,
-                _pad_width,
+                center_starts_pad_width,
             )?;
         } else {
             // Calculate nearest index
@@ -1570,8 +1553,7 @@ where
                 out_indices,
                 in_indices,
                 dim + 1,
-                center_starts,
-                _pad_width,
+                center_starts_pad_width,
             )?;
         }
 
@@ -1594,7 +1576,7 @@ where
         pad_width: &[(usize, usize)],
     ) -> NdimageResult<()> {
         if dim == output.ndim() {
-            // Check if current indices are in the center region
+            // Check if current _indices are in the center region
             let mut is_center = true;
             for d in 0..output.ndim() {
                 is_center &= (out_indices[d] >= center_starts[d])
@@ -1680,10 +1662,7 @@ where
 #[allow(dead_code)]
 pub fn apply_window_function<T, D, F>(
     input: &Array<T, D>,
-    window_size: &[usize],
-    _mode: &BorderMode,
-    _constant_value: Option<T>,
-    _func: F,
+    window_size: &[usize], _mode: &BorderMode_constant_value: Option<T>, _func: F,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -1699,7 +1678,7 @@ where
 
     if window_size.len() != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
-            "Window size must have same length as input dimensions (got {} expected {})",
+            "Window _size must have same length as input dimensions (got {} expected {})",
             window_size.len(),
             input.ndim()
         )));

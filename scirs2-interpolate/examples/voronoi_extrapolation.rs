@@ -5,11 +5,11 @@
 
 use ndarray::{Array1, Array2};
 use rand::Rng;
-use scirs2_interpolate::voronoi::{
+use scirs2__interpolate::voronoi::{
     constant_value_extrapolation, inverse_distance_extrapolation, linear_gradient_extrapolation,
     make_sibson_interpolator, nearest_neighbor_extrapolation,
 };
-use scirs2_interpolate::Extrapolation;
+use scirs2__interpolate::Extrapolation;
 use std::error::Error;
 
 #[allow(dead_code)]
@@ -21,13 +21,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Create points in a specific region (unit square)
     let mut points_vec = Vec::with_capacity(n_points * 2);
     for _ in 0..n_points {
-        let x = rng.random_range(0.0..=1.0);
-        let y = rng.random_range(0.0..=1.0);
+        let x = rng.gen_range(0.0..=1.0);
+        let y = rng.gen_range(0.0..=1.0);
         points_vec.push(x);
         points_vec.push(y);
     }
 
-    let points = Array2::from_shape_vec((n_points, 2), points_vec)?;
+    let points = Array2::from_shape_vec((n_points..2), points_vec)?;
 
     // Create values with a test function
     let mut values_vec = Vec::with_capacity(n_points);

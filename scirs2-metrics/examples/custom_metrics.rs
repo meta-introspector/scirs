@@ -4,7 +4,7 @@
 //! with the scirs2-metrics framework.
 
 use ndarray::array;
-use scirs2_metrics::custom::{
+use scirs2__metrics::custom::{
     ClassificationMetric, CustomMetricSuite, MetricResult, RegressionMetric,
 };
 
@@ -125,8 +125,8 @@ struct Mase {
 }
 
 impl Mase {
-    fn new(baseline_mae: f64) -> Self {
-        Self { baseline_mae }
+    fn new(_baseline_mae: f64) -> Self {
+        Self { _baseline_mae }
     }
 }
 

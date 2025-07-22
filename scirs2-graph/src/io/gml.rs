@@ -59,8 +59,8 @@
 //! use std::fs::File;
 //! use std::io::Write;
 //! use tempfile::NamedTempFile;
-//! use scirs2_graph::base::Graph;
-//! use scirs2_graph::io::gml::{read_gml_format, write_gml_format};
+//! use scirs2__graph::base::Graph;
+//! use scirs2__graph::io::gml::{read_gml_format, write_gml_format};
 //!
 //! // Create a temporary file with GML data
 //! let mut temp_file = NamedTempFile::new().unwrap();
@@ -125,8 +125,8 @@ struct GmlLexer {
 }
 
 impl GmlLexer {
-    fn new(input: String) -> Self {
-        Self { input, position: 0 }
+    fn new(_input: String) -> Self {
+        Self { _input, position: 0 }
     }
 
     fn next_token(&mut self) -> Option<GmlToken> {
@@ -242,13 +242,13 @@ impl GmlLexer {
 /// - Comments starting with #
 /// - String, integer, and float values
 #[allow(dead_code)]
-pub fn read_gml_format<N, E, P>(path: P, weighted: bool) -> Result<Graph<N, E>>
+pub fn read_gml_format<N, E, P>(_path: P, weighted: bool) -> Result<Graph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(path)?;
+    let file = File::open(_path)?;
     let reader = BufReader::new(file);
     let content = reader
         .lines()
@@ -308,8 +308,7 @@ where
                             _current_node_id = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val),
-                                _ => None,
+                                GmlToken::Identifier(val) => Some(val, _ => None,
                             };
                         }
                     }
@@ -326,8 +325,7 @@ where
                             current_edge_source = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val),
-                                _ => None,
+                                GmlToken::Identifier(val) => Some(val, _ => None,
                             };
                         }
                     }
@@ -336,8 +334,7 @@ where
                             current_edge_target = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val),
-                                _ => None,
+                                GmlToken::Identifier(val) => Some(val, _ => None,
                             };
                         }
                     }
@@ -347,8 +344,7 @@ where
                                 current_edge_weight = match token {
                                     GmlToken::Float(val) => Some(val.to_string()),
                                     GmlToken::Integer(val) => Some(val.to_string()),
-                                    GmlToken::String(val) => Some(val),
-                                    _ => None,
+                                    GmlToken::String(val) => Some(val, _ => None,
                                 };
                             }
                         } else {
@@ -428,13 +424,13 @@ where
 /// * `Ok(DiGraph)` - The directed graph read from the file
 /// * `Err(GraphError)` - If there was an error reading or parsing the file
 #[allow(dead_code)]
-pub fn read_gml_format_digraph<N, E, P>(path: P, weighted: bool) -> Result<DiGraph<N, E>>
+pub fn read_gml_format_digraph<N, E, P>(_path: P, weighted: bool) -> Result<DiGraph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(path)?;
+    let file = File::open(_path)?;
     let reader = BufReader::new(file);
     let content = reader
         .lines()
@@ -492,8 +488,7 @@ where
                             _current_node_id = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val),
-                                _ => None,
+                                GmlToken::Identifier(val) => Some(val, _ => None,
                             };
                         }
                     }
@@ -510,8 +505,7 @@ where
                             current_edge_source = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val),
-                                _ => None,
+                                GmlToken::Identifier(val) => Some(val, _ => None,
                             };
                         }
                     }
@@ -520,8 +514,7 @@ where
                             current_edge_target = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val),
-                                _ => None,
+                                GmlToken::Identifier(val) => Some(val, _ => None,
                             };
                         }
                     }
@@ -531,8 +524,7 @@ where
                                 current_edge_weight = match token {
                                     GmlToken::Float(val) => Some(val.to_string()),
                                     GmlToken::Integer(val) => Some(val.to_string()),
-                                    GmlToken::String(val) => Some(val),
-                                    _ => None,
+                                    GmlToken::String(val) => Some(val, _ => None,
                                 };
                             }
                         } else {
@@ -606,7 +598,7 @@ where
 /// * `Ok(())` - If the graph was written successfully
 /// * `Err(GraphError)` - If there was an error writing the file
 #[allow(dead_code)]
-pub fn write_gml_format<N, E, Ix, P>(graph: &Graph<N, E, Ix>, path: P, weighted: bool) -> Result<()>
+pub fn write_gml_format<N, E, Ix, P>(_graph: &Graph<N, E, Ix>, path: P, weighted: bool) -> Result<()>
 where
     N: Node + std::fmt::Debug + std::fmt::Display + Clone,
     E: EdgeWeight
@@ -621,19 +613,19 @@ where
     let mut file = File::create(path)?;
 
     // Write GML header
-    writeln!(file, "# Generated by scirs2-graph")?;
-    writeln!(file, "graph [")?;
+    writeln!(file, "# Generated by scirs2-_graph")?;
+    writeln!(file, "_graph [")?;
     writeln!(file, "  directed 0")?;
 
     // Write nodes
-    for node in graph.nodes() {
+    for node in _graph.nodes() {
         writeln!(file, "  node [")?;
         writeln!(file, "    id {node}")?;
         writeln!(file, "  ]")?;
     }
 
     // Write edges
-    let edges = graph.edges();
+    let edges = _graph.edges();
     for edge in edges {
         writeln!(file, "  edge [")?;
         writeln!(file, "    source {}", edge.source)?;
@@ -644,7 +636,7 @@ where
         writeln!(file, "  ]")?;
     }
 
-    // Close graph
+    // Close _graph
     writeln!(file, "]")?;
 
     Ok(())

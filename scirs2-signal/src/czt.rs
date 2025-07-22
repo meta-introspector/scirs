@@ -8,10 +8,13 @@
 //! non-uniform spacing or for "zooming in" on specific frequency ranges.
 
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
+use rustfft::{FftPlanner, num_complex::Complex as RustComplex};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Calculate the points at which the chirp z-transform is computed
 ///
 /// # Arguments
@@ -27,7 +30,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::czt::czt_points;
+/// use scirs2__signal::czt::czt_points;
 ///
 /// // Generate 10 points on the unit circle
 /// let points = czt_points(10, None, None).unwrap();
@@ -76,7 +79,7 @@ pub fn czt_points(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::czt::czt;
+/// use scirs2__signal::czt::czt;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -89,7 +92,7 @@ pub fn czt_points(
 /// Zoom in on a specific frequency range:
 ///
 /// ```
-/// use scirs2_signal::czt::czt;
+/// use scirs2__signal::czt::czt;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -238,8 +241,6 @@ fn next_power_of_two(n: usize) -> usize {
 /// This is an implementation for complex inputs using rustfft directly
 #[allow(dead_code)]
 fn fft(x: &[Complex64]) -> SignalResult<Vec<Complex64>> {
-    use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
-
     if x.is_empty() {
         return Err(SignalError::ValueError("Input array is empty".to_string()));
     }
@@ -271,7 +272,6 @@ fn fft(x: &[Complex64]) -> SignalResult<Vec<Complex64>> {
 /// This is an implementation for complex inputs using rustfft directly
 #[allow(dead_code)]
 fn ifft(x: &[Complex64]) -> SignalResult<Vec<Complex64>> {
-    use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 
     if x.is_empty() {
         return Err(SignalError::ValueError("Input array is empty".to_string()));
@@ -302,8 +302,7 @@ fn ifft(x: &[Complex64]) -> SignalResult<Vec<Complex64>> {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_czt_points() {
         // Generate 4 points on the unit circle

@@ -18,7 +18,7 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_interpolate::timeseries::{
+//! use scirs2__interpolate::timeseries::{
 //!     TimeSeriesInterpolator, TemporalPattern, SeasonalityType
 //! };
 //!
@@ -298,8 +298,7 @@ where
             "forward_fill" => MissingDataStrategy::ForwardFill,
             "backward_fill" => MissingDataStrategy::BackwardFill,
             "mean" => MissingDataStrategy::Mean,
-            "seasonal" => MissingDataStrategy::Seasonal,
-            _ => MissingDataStrategy::Spline,
+            "seasonal" => MissingDataStrategy::Seasonal_ =>, MissingDataStrategy::Spline,
         };
         self
     }
@@ -561,7 +560,7 @@ where
     }
 
     /// Estimate uncertainty for interpolated values
-    fn estimate_uncertainty(&self, _timestamps: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    fn estimate_uncertainty(&self_timestamps: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         // Simple uncertainty estimation based on local variance
         let n = _timestamps.len();
         let base_uncertainty = self.temporal_stats.noise_level;
@@ -653,9 +652,9 @@ pub fn forward_fill<T>(
 where
     T: Float + PartialOrd + Copy,
 {
-    if timestamps.len() != values.len() {
+    if _timestamps.len() != values.len() {
         return Err(InterpolateError::DimensionMismatch(
-            "timestamps and values must have same length".to_string(),
+            "_timestamps and values must have same length".to_string(),
         ));
     }
 
@@ -665,7 +664,7 @@ where
         // Find the last timestamp <= query_time
         let mut last_value = values[0]; // Default to first value
 
-        for (j, &timestamp) in timestamps.iter().enumerate() {
+        for (j, &timestamp) in _timestamps.iter().enumerate() {
             if timestamp <= query_time {
                 last_value = values[j];
             } else {
@@ -689,9 +688,9 @@ pub fn backward_fill<T>(
 where
     T: Float + PartialOrd + Copy,
 {
-    if timestamps.len() != values.len() {
+    if _timestamps.len() != values.len() {
         return Err(InterpolateError::DimensionMismatch(
-            "timestamps and values must have same length".to_string(),
+            "_timestamps and values must have same length".to_string(),
         ));
     }
 
@@ -701,7 +700,7 @@ where
         // Find the first timestamp >= query_time
         let mut next_value = values[values.len() - 1]; // Default to last value
 
-        for (j, &timestamp) in timestamps.iter().enumerate().rev() {
+        for (j, &timestamp) in _timestamps.iter().enumerate().rev() {
             if timestamp >= query_time {
                 next_value = values[j];
             } else {

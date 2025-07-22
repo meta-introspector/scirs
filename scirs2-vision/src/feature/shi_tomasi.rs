@@ -33,7 +33,7 @@ use ndarray::Array2;
 /// # Example
 ///
 /// ```rust
-/// use scirs2_vision::feature::shi_tomasi_corners;
+/// use scirs2__vision::feature::shi_tomasi_corners;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -141,27 +141,27 @@ pub fn shi_tomasi_corners(
         }
     }
 
-    // Step 4: Threshold and extract corners
-    let mut corners = Vec::new();
+    // Step 4: Threshold and extract _corners
+    let mut _corners = Vec::new();
 
     for y in radius..(height - radius) {
         for x in radius..(width - radius) {
             if response[[y, x]] > threshold {
-                corners.push((x, y, response[[y, x]]));
+                _corners.push((x, y, response[[y, x]]));
             }
         }
     }
 
     // Sort by response strength
-    corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
+    _corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
 
-    // Filter by minimum distance
+    // Filter by minimum _distance
     let mut selected_corners = Vec::new();
 
-    for (x, y, score) in corners {
+    for (x, y, score) in _corners {
         let mut too_close = false;
 
-        for &(sx, sy, _) in &selected_corners {
+        for &(sx, sy_) in &selected_corners {
             let dist_sq = ((x as i32 - sx as i32).pow(2) + (y as i32 - sy as i32).pow(2)) as usize;
             if dist_sq < min_distance * min_distance {
                 too_close = true;
@@ -180,7 +180,7 @@ pub fn shi_tomasi_corners(
 
     // Create output image
     let mut output = Array2::zeros((height, width));
-    for (x, y, _) in selected_corners {
+    for (x, y_) in selected_corners {
         output[[y, x]] = 1.0;
     }
 
@@ -200,8 +200,8 @@ pub fn shi_tomasi_corners(
 ///
 /// * Result containing corner points
 #[allow(dead_code)]
-pub fn shi_tomasi_corners_simple(img: &DynamicImage, max_corners: usize) -> Result<GrayImage> {
-    shi_tomasi_corners(img, 3, 0.01, max_corners, 10)
+pub fn shi_tomasi_corners_simple(_img: &DynamicImage, max_corners: usize) -> Result<GrayImage> {
+    shi_tomasi_corners(_img, 3, 0.01, max_corners, 10)
 }
 
 /// Extract good features to track with sub-pixel accuracy
@@ -296,8 +296,8 @@ pub fn good_features_to_track(
         }
     }
 
-    // Extract corners with sub-pixel refinement
-    let mut corners = Vec::new();
+    // Extract _corners with sub-pixel refinement
+    let mut _corners = Vec::new();
 
     for y in (radius + 1)..(height - radius - 1) {
         for x in (radius + 1)..(width - radius - 1) {
@@ -338,22 +338,22 @@ pub fn good_features_to_track(
                         sub_y -= dy / dyy;
                     }
 
-                    corners.push((sub_x, sub_y, r));
+                    _corners.push((sub_x, sub_y, r));
                 }
             }
         }
     }
 
     // Sort by response strength
-    corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
+    _corners.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
 
-    // Filter by minimum distance
+    // Filter by minimum _distance
     let mut selected_corners = Vec::new();
 
-    for (x, y, score) in corners {
+    for (x, y, score) in _corners {
         let mut too_close = false;
 
-        for &(sx, sy, _) in &selected_corners {
+        for &(sx, sy_) in &selected_corners {
             let x_diff: f32 = x - sx;
             let y_diff: f32 = y - sy;
             let dist_sq: f32 = x_diff.powi(2) + y_diff.powi(2);

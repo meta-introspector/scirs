@@ -6,7 +6,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::NormMode;
 use ndarray::{Array, Array1, Array2, ArrayD, Dimension, IxDyn, ShapeBuilder};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 use std::fmt::Debug;
@@ -19,69 +19,69 @@ thread_local! {
 
 /// Get a buffer from the thread-local cache or create a new one
 #[allow(dead_code)]
-fn get_or_create_buffer(size: usize) -> Vec<RustComplex<f64>> {
+fn get_or_create_buffer(_size: usize) -> Vec<RustComplex<f64>> {
     BUFFER_CACHE.with(|cache| {
         let mut cache_ref = cache.borrow_mut();
         if let Some(buffer) = cache_ref.take() {
-            if buffer.capacity() >= size {
+            if buffer.capacity() >= _size {
                 // Reuse existing buffer
                 let mut buffer = buffer;
-                buffer.resize(size, RustComplex::new(0.0, 0.0));
+                buffer.resize(_size, RustComplex::new(0.0, 0.0));
                 return buffer;
             }
         }
         // Create new buffer
-        Vec::with_capacity(size)
+        Vec::with_capacity(_size)
     })
 }
 
 /// Return a buffer to the thread-local cache for future reuse
 #[allow(dead_code)]
-fn return_buffer_to_cache(buffer: Vec<RustComplex<f64>>) {
+fn return_buffer_to_cache(_buffer: Vec<RustComplex<f64>>) {
     BUFFER_CACHE.with(|cache| {
-        *cache.borrow_mut() = Some(buffer);
+        *cache.borrow_mut() = Some(_buffer);
     });
 }
 
 /// Convert a value to Complex64 with minimal allocations
 #[allow(dead_code)]
-fn to_complex_value<T>(val: T) -> FFTResult<Complex64>
+fn to_complex_value<T>(_val: T) -> FFTResult<Complex64>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // Handle Complex64 type directly
-    if let Some(complex) = try_as_complex(&val) {
+    if let Some(complex) = try_as_complex(&_val) {
         return Ok(complex);
     }
     
     // Handle real value
-    let real = num_traits::cast::<T, f64>(val)
-        .ok_or_else(|| FFTError::ValueError(format!("Could not convert {:?} to f64", val)))?;
+    let real = num_traits::cast::<T, f64>(_val)
+        .ok_or_else(|| FFTError::ValueError(format!("Could not convert {:?} to f64", _val)))?;
     
     Ok(Complex64::new(real, 0.0))
 }
 
 /// Try to convert a value to Complex64
 #[allow(dead_code)]
-fn try_as_complex<T: 'static>(val: &T) -> Option<Complex64> {
+fn try_as_complex<T: 'static>(_val: &T) -> Option<Complex64> {
     use std::any::Any;
     
     // Try direct cast
-    if let Some(complex) = (val as &dyn Any).downcast_ref::<Complex64>() {
+    if let Some(complex) = (_val as &dyn Any).downcast_ref::<Complex64>() {
         return Some(*complex);
     }
     
     // Try f32 complex
-    if let Some(complex) = (val as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
+    if let Some(complex) = (_val as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
         return Some(Complex64::new(complex.re as f64, complex.im as f64));
     }
     
     // Try rustfft complex types
-    if let Some(complex) = (val as &dyn Any).downcast_ref::<RustComplex<f64>>() {
+    if let Some(complex) = (_val as &dyn Any).downcast_ref::<RustComplex<f64>>() {
         return Some(Complex64::new(complex.re, complex.im));
     }
     
-    if let Some(complex) = (val as &dyn Any).downcast_ref::<RustComplex<f32>>() {
+    if let Some(complex) = (_val as &dyn Any).downcast_ref::<RustComplex<f32>>() {
         return Some(Complex64::new(complex.re as f64, complex.im as f64));
     }
     
@@ -339,8 +339,7 @@ where
     let norm_mode = match norm {
         Some("forward") => NormMode::Forward,
         Some("backward") => NormMode::Backward,
-        Some("ortho") => NormMode::Ortho,
-        _ => NormMode::Backward, // Default
+        Some("ortho") => NormMode::Ortho_ =>, NormMode::Backward, // Default
     };
     
     // Create output array
@@ -454,8 +453,7 @@ where
     let norm_mode = match norm {
         Some("forward") => NormMode::Forward,
         Some("backward") => NormMode::Backward,
-        Some("ortho") => NormMode::Ortho,
-        _ => NormMode::Backward, // Default
+        Some("ortho") => NormMode::Ortho_ =>, NormMode::Backward, // Default
     };
     
     // Create output array

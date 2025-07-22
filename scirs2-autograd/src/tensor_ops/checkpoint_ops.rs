@@ -116,7 +116,7 @@ impl<F: Float> Op<F> for CheckpointOp {
                     // If shapes don't match, we need to reshape or broadcast
                     // For now with our temporary gradient fix, we'll use a simple ones tensor
                     // with the same shape as the input
-                    let shape_tensor = crate::tensor_ops::convert_to_tensor(
+                    let shape_tensor = crate::tensor__ops::convert_to_tensor(
                         ndarray::Array::from_shape_vec(
                             ndarray::IxDyn(&[input_shape.len()]),
                             input_shape
@@ -171,7 +171,7 @@ impl<F: Float> Op<F> for CheckpointOp {
 /// ```
 /// # use scirs2_autograd as ag;
 /// # use ag::tensor_ops as T;
-/// # ag::run::<f32, _, _>(|ctx| {
+/// # ag::run::<f32_>(|ctx| {
 /// let input = T::ones(&[2, 2], ctx);
 /// let w1 = T::ones(&[2, 2], ctx);
 /// let layer1 = T::matmul(&input, &w1);
@@ -190,11 +190,11 @@ impl<F: Float> Op<F> for CheckpointOp {
 /// # Returns
 /// A new tensor with the same value but with gradient checkpointing enabled
 #[allow(dead_code)]
-pub fn checkpoint<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = tensor.graph();
+pub fn checkpoint<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _tensor.graph();
 
     Tensor::builder(g)
-        .append_input(tensor, false)
+        .append_input(_tensor, false)
         .build(CheckpointOp)
 }
 
@@ -210,12 +210,12 @@ pub fn checkpoint<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 /// # Returns
 /// A new tensor with the same value but detached from the gradient computation
 #[allow(dead_code)]
-pub fn detach<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = tensor.graph();
+pub fn detach<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _tensor.graph();
 
     // Use the same checkpoint op but mark it as not differentiable
     Tensor::builder(g)
-        .append_input(tensor, false)
+        .append_input(_tensor, false)
         .set_differentiable(false)
         .build(CheckpointOp)
 }
@@ -243,7 +243,7 @@ pub fn checkpoint_segment<'g, F: Float, Func, const N: usize>(
 where
     Func: FnOnce([&Tensor<'g, F>; N]) -> Tensor<'g, F>,
 {
-    // First, detach all input tensors to prevent gradient computation
+    // First, detach all input _tensors to prevent gradient computation
     // through the input paths during the segment recomputation
     let detached_inputs: Vec<Tensor<'g, F>> = input_tensors.iter().map(|t| detach(t)).collect();
 
@@ -283,7 +283,7 @@ pub fn checkpoint_segment_flex<'g, F: Float, Func>(
 where
     Func: FnOnce(&[&Tensor<'g, F>]) -> Tensor<'g, F>,
 {
-    // First, detach all input tensors to prevent gradient computation
+    // First, detach all input _tensors to prevent gradient computation
     // through the input paths during the segment recomputation
     let detached_inputs: Vec<Tensor<'g, F>> = input_tensors.iter().map(|t| detach(t)).collect();
 
@@ -302,8 +302,7 @@ where
 /// This struct allows for checkpointing multiple operations as a group,
 /// which can lead to more optimal recomputation during backpropagation.
 pub struct CheckpointGroup<'g, F: Float> {
-    _ctx: &'g crate::graph::Context<'g, F>,
-    _phantom: PhantomData<F>,
+    _ctx: &'g crate::graph::Context<'g, F>, _phantom: PhantomData<F>,
 }
 
 impl<'g, F: Float> CheckpointGroup<'g, F> {
@@ -314,10 +313,9 @@ impl<'g, F: Float> CheckpointGroup<'g, F> {
     ///
     /// # Returns
     /// A new CheckpointGroup instance
-    pub fn new(ctx: &'g crate::graph::Context<'g, F>) -> Self {
+    pub fn new(_ctx: &'g crate::graph::Context<'g, F>) -> Self {
         Self {
-            _ctx: ctx,
-            _phantom: PhantomData,
+            _ctx: _ctx_phantom: PhantomData,
         }
     }
 
@@ -493,7 +491,7 @@ impl<'g, F: Float> CheckpointOutput<'g, F> for Vec<Tensor<'g, F>> {
 /// ```
 /// # use scirs2_autograd as ag;
 /// # use ag::tensor_ops as T;
-/// # ag::run::<f32, _, _>(|ctx| {
+/// # ag::run::<f32_>(|ctx| {
 /// let input = T::ones(&[1024, 1024], ctx); // A large tensor
 /// let w = T::ones(&[1024, 1024], ctx);
 ///
@@ -579,7 +577,7 @@ pub fn adaptive_checkpoint<'g, F: Float>(
 /// ```
 /// # use scirs2_autograd as ag;
 /// # use ag::tensor_ops as T;
-/// # ag::run::<f32, _, _>(|ctx| {
+/// # ag::run::<f32_>(|ctx| {
 /// // Start tracking memory usage
 /// T::CheckpointProfiler::start_tracking();
 ///

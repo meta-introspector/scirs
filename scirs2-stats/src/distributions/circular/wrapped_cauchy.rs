@@ -7,7 +7,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::traits::{CircularDistribution, Distribution};
 use ndarray::Array1;
 use rand::{rng, Rng};
-use rand_distr::uniform::SampleUniform;
+use rand__distr::uniform::SampleUniform;
 use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -29,8 +29,8 @@ use std::marker::PhantomData;
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::distributions::circular::WrappedCauchy;
-/// use scirs2_stats::traits::CircularDistribution;
+/// use scirs2__stats::distributions::circular::WrappedCauchy;
+/// use scirs2__stats::traits::CircularDistribution;
 ///
 /// // Create a wrapped Cauchy distribution with mean direction 0.0 and concentration 0.5
 /// let wc = WrappedCauchy::new(0.0f64, 0.5).unwrap();
@@ -69,7 +69,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> WrappedCauc
     /// # Errors
     ///
     /// Returns an error if gamma is not in the range (0, 1)
-    pub fn new(mu: F, gamma: F) -> StatsResult<Self> {
+    pub fn new(_mu: F, gamma: F) -> StatsResult<Self> {
         if gamma <= F::zero() || gamma >= F::one() {
             return Err(StatsError::InvalidArgument(format!(
                 "Concentration parameter gamma must be in range (0, 1), got {:?}",
@@ -77,14 +77,13 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> WrappedCauc
             )));
         }
 
-        // Normalize mu to [0, 2π]
+        // Normalize _mu to [0, 2π]
         let two_pi = F::from(2.0 * PI).unwrap();
-        let normalized_mu = ((mu % two_pi) + two_pi) % two_pi;
+        let normalized_mu = ((_mu % two_pi) + two_pi) % two_pi;
 
         Ok(Self {
-            mu: normalized_mu,
-            gamma,
-            _phantom: PhantomData,
+            _mu: normalized_mu,
+            gamma_phantom: PhantomData,
         })
     }
 }
@@ -163,7 +162,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
         
         // Method 1: Inverse transform sampling
         // Generate uniform random number in [0, 1)
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let u: f64 = rng.random();
         
         // Convert to angle using inverse CDF

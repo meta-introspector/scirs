@@ -8,9 +8,10 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_positive};
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 
+#[allow(unused_imports)]
 /// Memory optimization configuration
 #[derive(Debug, Clone)]
 pub struct MemoryConfig {
@@ -66,11 +67,11 @@ pub struct StreamingProcessor {
 
 impl StreamingProcessor {
     /// Create a new streaming processor
-    pub fn new(config: MemoryConfig) -> Self {
+    pub fn new(_config: MemoryConfig) -> Self {
         Self {
-            buffer: VecDeque::with_capacity(config.chunk_size),
-            output_buffer: Vec::with_capacity(config.chunk_size),
-            config,
+            buffer: VecDeque::with_capacity(_config.chunk_size),
+            output_buffer: Vec::with_capacity(_config.chunk_size),
+            _config,
             stats: MemoryStats {
                 current_usage: 0,
                 peak_usage: 0,
@@ -163,7 +164,7 @@ where
 
     if overlap >= chunk_size {
         return Err(SignalError::ValueError(
-            "Overlap must be less than chunk size".to_string(),
+            "Overlap must be less than chunk _size".to_string(),
         ));
     }
 
@@ -215,9 +216,9 @@ pub struct StreamingFFTResult {
 
 /// Compute FFT for a single chunk
 #[allow(dead_code)]
-fn compute_fft_chunk(data: &[f64], _chunk_size: usize) -> SignalResult<Vec<f64>> {
+fn compute_fft_chunk(_data: &[f64], _chunk_size: usize) -> SignalResult<Vec<f64>> {
     // Convert to ndarray and compute FFT
-    let signal = Array1::from(data.to_vec());
+    let signal = Array1::from(_data.to_vec());
 
     // Use a simple DFT implementation for this example
     let n = signal.len();
@@ -228,7 +229,7 @@ fn compute_fft_chunk(data: &[f64], _chunk_size: usize) -> SignalResult<Vec<f64>>
         let mut imag = 0.0;
 
         for j in 0..n {
-            let angle = -2.0 * PI * (k * j) as f64 / n as f64;
+            let angle = -2.0 * PI * (k * j) as f64 / n  as f64;
             real += signal[j] * angle.cos();
             imag += signal[j] * angle.sin();
         }
@@ -299,7 +300,7 @@ where
         } else {
             chunk_size
         };
-        let chunk_data: Vec<f64> = buffer.iter().take(process_size).copied().collect();
+        let chunk_data: Vec<f64> = buffer._iter().take(process_size).copied().collect();
 
         // Apply filter to chunk
         let filtered_chunk = apply_filter_with_state(&chunk_data, b, a, &mut filter_state)?;
@@ -345,9 +346,9 @@ fn apply_filter_with_state(
     a: &[f64],
     state: &mut [f64],
 ) -> SignalResult<Vec<f64>> {
-    check_finite(input, "input")?;
-    check_finite(b, "b")?;
-    check_finite(a, "a")?;
+    check_finite(input, "input value")?;
+    check_finite(b, "b value")?;
+    check_finite(a, "a value")?;
 
     let n = input.len();
     let mut output = vec![0.0; n];
@@ -431,12 +432,12 @@ where
         // Check if we have enough data for a frame
         while buffer.len() >= window_size {
             // Extract frame
-            let frame_data: Vec<f64> = buffer.iter().take(window_size).copied().collect();
+            let frame_data: Vec<f64> = buffer._iter().take(window_size).copied().collect();
 
             // Apply window and compute spectrum
             let windowed: Vec<f64> = frame_data
-                .iter()
-                .zip(window.iter())
+                ._iter()
+                .zip(window._iter())
                 .map(|(x, w)| x * w)
                 .collect();
 
@@ -444,7 +445,7 @@ where
             let spectrum = compute_fft_chunk(&windowed, window_size)?;
             spectrogram_frames.push(spectrum);
 
-            // Advance by hop size
+            // Advance by hop _size
             for _ in 0..hop_size.min(buffer.len()) {
                 buffer.pop_front();
             }
@@ -529,26 +530,26 @@ where
         let chunk2 = &signal2_vec[chunk_start..chunk_end];
 
         // Compute correlation for this chunk
-        for lag in 0..=max_lag {
+        for _lag in 0..=max_lag {
             let mut correlation = 0.0;
-            let valid_length = chunk1.len().saturating_sub(lag);
+            let valid_length = chunk1.len().saturating_sub(_lag);
 
             for i in 0..valid_length {
-                correlation += chunk1[i] * chunk2[i + lag];
+                correlation += chunk1[i] * chunk2[i + _lag];
             }
 
-            correlation_values[max_lag + lag] += correlation;
+            correlation_values[max_lag + _lag] += correlation;
 
             // Negative lags
-            if lag > 0 && lag < chunk2.len() {
+            if _lag > 0 && _lag < chunk2.len() {
                 let mut neg_correlation = 0.0;
-                let valid_length = chunk2.len().saturating_sub(lag);
+                let valid_length = chunk2.len().saturating_sub(_lag);
 
                 for i in 0..valid_length {
-                    neg_correlation += chunk2[i] * chunk1[i + lag];
+                    neg_correlation += chunk2[i] * chunk1[i + _lag];
                 }
 
-                correlation_values[max_lag - lag] += neg_correlation;
+                correlation_values[max_lag - _lag] += neg_correlation;
             }
         }
 
@@ -557,7 +558,7 @@ where
 
     // Normalize correlation values
     for val in &mut correlation_values {
-        *val /= sample_count as f64;
+        *val /= sample_count  as f64;
     }
 
     let lags: Vec<i32> = (-(max_lag as i32)..=(max_lag as i32)).collect();
@@ -568,7 +569,7 @@ where
         max_lag,
         memory_stats: MemoryStats {
             current_usage: 0,
-            peak_usage: sample_count * std::mem::size_of::<f64>() * 2,
+            peak_usage: sample_count * std::mem::size, _of::<f64>() * 2,
             allocations: 1,
             cache_hits: 0,
             cache_misses: 0,
@@ -603,10 +604,10 @@ where
     V: Clone,
 {
     /// Create a new cache with specified maximum size
-    pub fn new(max_size: usize) -> Self {
+    pub fn new(_max_size: usize) -> Self {
         Self {
             cache: std::collections::HashMap::new(),
-            max_size,
+            _max_size,
             hits: 0,
             misses: 0,
         }

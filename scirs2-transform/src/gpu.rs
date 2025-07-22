@@ -44,14 +44,14 @@ impl GpuPCA {
     /// # Examples
     ///
     /// ```
-    /// # use scirs2_transform::gpu::GpuPCA;
+    /// # use scirs2__transform::gpu::GpuPCA;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let pca = GpuPCA::new(5)?;
     /// # Ok(())
     /// # }
     /// ```
-    pub fn new(n_components: usize) -> Result<Self> {
-        check_positive(n_components, "n_components")?;
+    pub fn new(_n_components: usize) -> Result<Self> {
+        check_positive(_n_components, "_n_components")?;
 
         let gpu_context = GpuContext::new(GpuBackend::preferred()).map_err(|e| {
             TransformError::ComputationError(format!("Failed to initialize GPU: {}", e))
@@ -59,8 +59,7 @@ impl GpuPCA {
 
         Ok(GpuPCA {
             n_components,
-            center: true,
-            components: None,
+            center: true_components: None,
             explained_variance: None,
             mean: None,
             gpu_context: Some(gpu_context),
@@ -83,7 +82,7 @@ impl GpuPCA {
     /// # Examples
     ///
     /// ```should_panic
-    /// # use scirs2_transform::gpu::GpuPCA;
+    /// # use scirs2__transform::gpu::GpuPCA;
     /// # use ndarray::Array2;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let mut pca = GpuPCA::new(2)?;
@@ -197,7 +196,7 @@ impl GpuMatrixOps {
     }
 
     /// GPU-accelerated matrix multiplication (placeholder)
-    pub fn matmul(&self, _a: &ArrayView2<f64>, _b: &ArrayView2<f64>) -> Result<Array2<f64>> {
+    pub fn matmul(&self_a: &ArrayView2<f64>, _b: &ArrayView2<f64>) -> Result<Array2<f64>> {
         Err(TransformError::NotImplemented(
             "GPU matrix multiplication is not yet implemented. Use CPU operations instead."
                 .to_string(),
@@ -205,14 +204,14 @@ impl GpuMatrixOps {
     }
 
     /// GPU-accelerated SVD decomposition (placeholder)
-    pub fn svd(&self, _a: &ArrayView2<f64>) -> Result<(Array2<f64>, Array1<f64>, Array2<f64>)> {
+    pub fn svd(&self_a: &ArrayView2<f64>) -> Result<(Array2<f64>, Array1<f64>, Array2<f64>)> {
         Err(TransformError::NotImplemented(
             "GPU SVD is not yet implemented. Use CPU operations instead.".to_string(),
         ))
     }
 
     /// GPU-accelerated eigendecomposition (placeholder)
-    pub fn eigh(&self, _a: &ArrayView2<f64>) -> Result<(Array1<f64>, Array2<f64>)> {
+    pub fn eigh(&self_a: &ArrayView2<f64>) -> Result<(Array1<f64>, Array2<f64>)> {
         Err(TransformError::NotImplemented(
             "GPU eigendecomposition is not yet implemented. Use CPU operations instead."
                 .to_string(),
@@ -239,8 +238,8 @@ pub struct GpuTSNE {
 #[cfg(feature = "gpu")]
 impl GpuTSNE {
     /// Create new GPU t-SNE instance
-    pub fn new(n_components: usize) -> Result<Self> {
-        check_positive(n_components, "n_components")?;
+    pub fn new(_n_components: usize) -> Result<Self> {
+        check_positive(_n_components, "_n_components")?;
 
         let gpu_context = GpuContext::new(GpuBackend::preferred()).map_err(|e| {
             TransformError::ComputationError(format!("Failed to initialize GPU: {}", e))
@@ -274,7 +273,7 @@ impl GpuTSNE {
     }
 
     /// Fit and transform data using GPU-accelerated t-SNE (placeholder)
-    pub fn fit_transform(&self, _x: &ArrayView2<f64>) -> Result<Array2<f64>> {
+    pub fn fit_transform(&self_x: &ArrayView2<f64>) -> Result<Array2<f64>> {
         Err(TransformError::NotImplemented(
             "GPU t-SNE is not yet implemented. Use CPU t-SNE instead.".to_string(),
         ))

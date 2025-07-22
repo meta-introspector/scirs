@@ -2,25 +2,26 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use num_traits::Float;
+use ndarray::ArrayView1;
 
 /// Safely convert a numeric literal to type T
 ///
 /// This function replaces the pattern `T::from(value).unwrap()` with proper error handling
 #[allow(dead_code)]
-pub fn safe_from<T: Float>(value: f64, context: &str) -> SpatialResult<T> {
-    T::from(value).ok_or_else(|| {
+pub fn safe_from<T: Float>(_value: f64, context: &str) -> SpatialResult<T> {
+    T::from(_value).ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Failed to convert {value} to numeric type in {context}"
+            "Failed to convert {_value} to numeric type in {context}"
         ))
     })
 }
 
 /// Safely convert usize to type T
 #[allow(dead_code)]
-pub fn safe_from_usize<T: Float>(value: usize, context: &str) -> SpatialResult<T> {
-    T::from(value).ok_or_else(|| {
+pub fn safe_from_usize<T: Float>(_value: usize, context: &str) -> SpatialResult<T> {
+    T::from(_value).ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Failed to convert usize {value} to numeric type in {context}"
+            "Failed to convert usize {_value} to numeric type in {context}"
         ))
     })
 }
@@ -41,12 +42,12 @@ pub fn safe_partial_cmp<T: PartialOrd>(
 
 /// Safely get the minimum of an iterator
 #[allow(dead_code)]
-pub fn safe_min<I, T>(iter: I, context: &str) -> SpatialResult<T>
+pub fn safe_min<I, T>(_iter: I, context: &str) -> SpatialResult<T>
 where
     I: Iterator<Item = T>,
     T: PartialOrd,
 {
-    iter.min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+    _iter.min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         .ok_or_else(|| {
             SpatialError::ComputationError(format!(
                 "Failed to find minimum value in {context} (empty iterator or all NaN)"
@@ -56,12 +57,12 @@ where
 
 /// Safely get the maximum of an iterator
 #[allow(dead_code)]
-pub fn safe_max<I, T>(iter: I, context: &str) -> SpatialResult<T>
+pub fn safe_max<I, T>(_iter: I, context: &str) -> SpatialResult<T>
 where
     I: Iterator<Item = T>,
     T: PartialOrd,
 {
-    iter.max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+    _iter.max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         .ok_or_else(|| {
             SpatialError::ComputationError(format!(
                 "Failed to find maximum value in {context} (empty iterator or all NaN)"
@@ -84,31 +85,31 @@ pub fn safe_as_slice<'a, T>(
 
 /// Safely get first element of a slice
 #[allow(dead_code)]
-pub fn safe_first<'a, T>(slice: &'a [T], context: &str) -> SpatialResult<&'a T> {
-    slice.first().ok_or_else(|| {
+pub fn safe_first<'a, T>(_slice: &'a [T], context: &str) -> SpatialResult<&'a T> {
+    _slice.first().ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Failed to get first element in {context} (empty slice)"
+            "Failed to get first element in {context} (empty _slice)"
         ))
     })
 }
 
 /// Safely get last element of a slice
 #[allow(dead_code)]
-pub fn safe_last<'a, T>(slice: &'a [T], context: &str) -> SpatialResult<&'a T> {
-    slice.last().ok_or_else(|| {
+pub fn safe_last<'a, T>(_slice: &'a [T], context: &str) -> SpatialResult<&'a T> {
+    _slice.last().ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Failed to get last element in {context} (empty slice)"
+            "Failed to get last element in {context} (empty _slice)"
         ))
     })
 }
 
 /// Safely index into an array with bounds checking
 #[allow(dead_code)]
-pub fn safe_index<T: Clone>(array: &[T], index: usize, context: &str) -> SpatialResult<T> {
-    array.get(index).cloned().ok_or_else(|| {
+pub fn safe_index<T: Clone>(_array: &[T], index: usize, context: &str) -> SpatialResult<T> {
+    _array.get(index).cloned().ok_or_else(|| {
         SpatialError::ComputationError(format!(
-            "Index {index} out of bounds for array of length {} in {context}",
-            array.len()
+            "Index {index} out of bounds for _array of length {} in {context}",
+            _array.len()
         ))
     })
 }

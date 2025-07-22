@@ -88,7 +88,7 @@ impl ActivationFunction {
                 let sigmoid = F::one() / (F::one() + (-x).exp());
                 sigmoid * (F::one() + x * (F::one() - sigmoid))
             }
-            ActivationFunction::Linear => F::one(),
+            ActivationFunction::Linear =>, F::one(),
         }
     }
 }
@@ -130,15 +130,15 @@ pub struct LSTMCell<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
     /// Create new LSTM cell with random initialization
-    pub fn new(input_size: usize, hidden_size: usize) -> Self {
-        let total_input_size = input_size + hidden_size;
+    pub fn new(_input_size: usize, hidden_size: usize) -> Self {
+        let total_input_size = _input_size + hidden_size;
 
         // Initialize weights with Xavier/Glorot initialization
         let scale = F::from(2.0).unwrap() / F::from(total_input_size).unwrap();
         let std_dev = scale.sqrt();
 
         Self {
-            input_size,
+            _input_size,
             hidden_size,
             w_forget: Self::random_matrix(hidden_size, total_input_size, std_dev),
             w_input: Self::random_matrix(hidden_size, total_input_size, std_dev),
@@ -149,12 +149,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
     }
 
     /// Initialize random matrix with given standard deviation
-    fn random_matrix(rows: usize, cols: usize, std_dev: F) -> Array2<F> {
-        let mut matrix = Array2::zeros((rows, cols));
+    fn random_matrix(_rows: usize, cols: usize, std_dev: F) -> Array2<F> {
+        let mut matrix = Array2::zeros((_rows, cols));
 
         // Simple pseudo-random initialization (for production, use proper RNG)
         let mut seed: u32 = 12345;
-        for i in 0..rows {
+        for i in 0.._rows {
             for j in 0..cols {
                 // Linear congruential generator
                 seed = (seed.wrapping_mul(1103515245).wrapping_add(12345)) & 0x7fffffff;
@@ -184,7 +184,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
             });
         }
 
-        // Concatenate input and previous hidden state
+        // Concatenate input and previous hidden _state
         let mut combined_input = Array1::zeros(self.input_size + self.hidden_size);
         for (i, &val) in input.iter().enumerate() {
             combined_input[i] = val;
@@ -206,14 +206,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
         let candidate_activated = candidate_gate.mapv(|x| ActivationFunction::Tanh.apply(x));
         let output_activated = output_gate.mapv(|x| ActivationFunction::Sigmoid.apply(x));
 
-        // Update cell state
+        // Update cell _state
         let mut new_cell = Array1::zeros(self.hidden_size);
         for i in 0..self.hidden_size {
             new_cell[i] = forget_activated[i] * prev_state.cell[i]
                 + input_activated[i] * candidate_activated[i];
         }
 
-        // Update hidden state
+        // Update hidden _state
         let cell_tanh = new_cell.mapv(|x| x.tanh());
         let mut new_hidden = Array1::zeros(self.hidden_size);
         for i in 0..self.hidden_size {
@@ -309,7 +309,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMNetwork<F> {
 
     /// Forward pass through the network
     pub fn forward(&self, input_sequence: &Array2<F>) -> Result<Array2<F>> {
-        let (seq_len, _input_size) = input_sequence.dim();
+        let (seq_len_input_size) = input_sequence.dim();
 
         if self.layers.is_empty() {
             return Err(TimeSeriesError::InvalidModel(
@@ -366,9 +366,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMNetwork<F> {
 
     /// Generate forecast for multiple steps
     pub fn forecast(&self, input_sequence: &Array2<F>, forecast_steps: usize) -> Result<Array1<F>> {
-        let (seq_len, _) = input_sequence.dim();
+        let (seq_len_) = input_sequence.dim();
 
-        // Get the last hidden states from input sequence
+        // Get the last hidden states from input _sequence
         let _ = self.forward(input_sequence)?;
 
         // Initialize states for forecasting
@@ -443,10 +443,10 @@ pub struct MultiHeadAttention<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> MultiHeadAttention<F> {
     /// Create new multi-head attention layer
-    pub fn new(model_dim: usize, num_heads: usize) -> Result<Self> {
-        if model_dim % num_heads != 0 {
+    pub fn new(_model_dim: usize, num_heads: usize) -> Result<Self> {
+        if _model_dim % num_heads != 0 {
             return Err(TimeSeriesError::InvalidInput(
-                "Model dimension must be divisible by number of heads".to_string(),
+                "Model dimension must be divisible by number of _heads".to_string(),
             ));
         }
 
@@ -665,17 +665,17 @@ pub struct FeedForwardNetwork<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> FeedForwardNetwork<F> {
     /// Create new feed-forward network
-    pub fn new(model_dim: usize, hidden_dim: usize, activation: ActivationFunction) -> Self {
-        let scale1 = F::from(2.0).unwrap() / F::from(model_dim).unwrap();
+    pub fn new(_model_dim: usize, hidden_dim: usize, activation: ActivationFunction) -> Self {
+        let scale1 = F::from(2.0).unwrap() / F::from(_model_dim).unwrap();
         let std1 = scale1.sqrt();
         let scale2 = F::from(2.0).unwrap() / F::from(hidden_dim).unwrap();
         let std2 = scale2.sqrt();
 
         Self {
-            w1: LSTMCell::random_matrix(hidden_dim, model_dim, std1),
-            w2: LSTMCell::random_matrix(model_dim, hidden_dim, std2),
+            w1: LSTMCell::random_matrix(hidden_dim, _model_dim, std1),
+            w2: LSTMCell::random_matrix(_model_dim, hidden_dim, std2),
             bias1: Array1::zeros(hidden_dim),
-            bias2: Array1::zeros(model_dim),
+            bias2: Array1::zeros(_model_dim),
             activation,
         }
     }
@@ -732,18 +732,18 @@ pub struct TransformerBlock<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> TransformerBlock<F> {
     /// Create new transformer block
-    pub fn new(model_dim: usize, num_heads: usize, ffn_hidden_dim: usize) -> Result<Self> {
-        let attention = MultiHeadAttention::new(model_dim, num_heads)?;
-        let ffn = FeedForwardNetwork::new(model_dim, ffn_hidden_dim, ActivationFunction::ReLU);
+    pub fn new(_model_dim: usize, num_heads: usize, ffn_hidden_dim: usize) -> Result<Self> {
+        let attention = MultiHeadAttention::new(_model_dim, num_heads)?;
+        let ffn = FeedForwardNetwork::new(_model_dim, ffn_hidden_dim, ActivationFunction::ReLU);
 
         Ok(Self {
             attention,
             ffn,
-            ln1_gamma: Array1::ones(model_dim),
-            ln1_beta: Array1::zeros(model_dim),
-            ln2_gamma: Array1::ones(model_dim),
-            ln2_beta: Array1::zeros(model_dim),
-            model_dim,
+            ln1_gamma: Array1::ones(_model_dim),
+            ln1_beta: Array1::zeros(_model_dim),
+            ln2_gamma: Array1::ones(_model_dim),
+            ln2_beta: Array1::zeros(_model_dim),
+            _model_dim,
         })
     }
 
@@ -858,10 +858,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerForecaster<F> {
     }
 
     /// Create sinusoidal positional encoding
-    fn create_positional_encoding(max_seq_len: usize, model_dim: usize) -> Array2<F> {
-        let mut pe = Array2::zeros((max_seq_len, model_dim));
+    fn create_positional_encoding(_max_seq_len: usize, model_dim: usize) -> Array2<F> {
+        let mut pe = Array2::zeros((_max_seq_len, model_dim));
 
-        for pos in 0..max_seq_len {
+        for pos in 0.._max_seq_len {
             for i in 0..model_dim / 2 {
                 let angle = F::from(pos as f64).unwrap()
                     / F::from(10000.0_f64.powf(2.0 * i as f64 / model_dim as f64)).unwrap();
@@ -934,19 +934,19 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerForecaster<F> {
         let mut forecasts = Array1::zeros(forecast_steps);
 
         for step in 0..forecast_steps {
-            // Forward pass with current sequence
+            // Forward pass with current _sequence
             let output = self.forward(&extended_sequence)?;
 
             // Get the last prediction
             let last_prediction = output[[seq_len + step - 1, 0]];
             forecasts[step] = last_prediction;
 
-            // Extend sequence with the prediction
+            // Extend _sequence with the prediction
             if step < forecast_steps - 1 {
                 let mut new_row = Array1::zeros(input_dim);
                 new_row[0] = last_prediction; // Assuming univariate for simplicity
 
-                // Create new extended sequence
+                // Create new extended _sequence
                 let new_len = extended_sequence.nrows() + 1;
                 let mut new_sequence = Array2::zeros((new_len, input_dim));
 
@@ -1013,23 +1013,23 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         theta_size: usize,
         block_type: NBeatsBlockType,
     ) -> Self {
-        let mut layers = Vec::new();
+        let mut _layers = Vec::new();
         let mut biases = Vec::new();
 
         // Input layer
         let input_size = backcast_size;
         let scale = F::from(2.0).unwrap() / F::from(input_size).unwrap();
-        layers.push(LSTMCell::random_matrix(
+        _layers.push(LSTMCell::random_matrix(
             hidden_size,
             input_size,
             scale.sqrt(),
         ));
         biases.push(Array1::zeros(hidden_size));
 
-        // Hidden layers
+        // Hidden _layers
         for _ in 1..num_layers {
             let scale = F::from(2.0).unwrap() / F::from(hidden_size).unwrap();
-            layers.push(LSTMCell::random_matrix(
+            _layers.push(LSTMCell::random_matrix(
                 hidden_size,
                 hidden_size,
                 scale.sqrt(),
@@ -1037,9 +1037,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
             biases.push(Array1::zeros(hidden_size));
         }
 
-        // Output layers (theta generation)
+        // Output _layers (theta generation)
         let scale = F::from(2.0).unwrap() / F::from(hidden_size).unwrap();
-        layers.push(LSTMCell::random_matrix(
+        _layers.push(LSTMCell::random_matrix(
             theta_size,
             hidden_size,
             scale.sqrt(),
@@ -1047,7 +1047,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         biases.push(Array1::zeros(theta_size));
 
         Self {
-            layers,
+            _layers,
             biases,
             backcast_size,
             forecast_size,
@@ -1277,13 +1277,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
         num_blocks: usize,
         stack_type: NBeatsStackType,
     ) -> Self {
-        let mut blocks = Vec::new();
+        let mut _blocks = Vec::new();
 
         match stack_type {
             NBeatsStackType::Generic => {
                 let theta_size = backcast_size + forecast_size;
                 for _ in 0..num_blocks {
-                    blocks.push(NBeatsBlock::new(
+                    _blocks.push(NBeatsBlock::new(
                         backcast_size,
                         forecast_size,
                         hidden_size,
@@ -1294,13 +1294,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
                 }
             }
             NBeatsStackType::Interpretable => {
-                // Half trend blocks, half seasonal blocks
+                // Half trend _blocks, half seasonal _blocks
                 let trend_blocks = num_blocks / 2;
                 let seasonal_blocks = num_blocks - trend_blocks;
 
-                // Trend blocks
+                // Trend _blocks
                 for _ in 0..trend_blocks {
-                    blocks.push(NBeatsBlock::new(
+                    _blocks.push(NBeatsBlock::new(
                         backcast_size,
                         forecast_size,
                         hidden_size,
@@ -1310,10 +1310,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
                     ));
                 }
 
-                // Seasonal blocks
+                // Seasonal _blocks
                 for _ in 0..seasonal_blocks {
                     let theta_size = 2 * (backcast_size / 4).max(1); // Number of harmonics * 2
-                    blocks.push(NBeatsBlock::new(
+                    _blocks.push(NBeatsBlock::new(
                         backcast_size,
                         forecast_size,
                         hidden_size,
@@ -1325,7 +1325,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
             }
         }
 
-        Self { blocks, stack_type }
+        Self { _blocks, stack_type }
     }
 
     /// Forward pass through the stack
@@ -1377,7 +1377,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
         let mut generic_stacks = Vec::new();
         let mut interpretable_stacks = Vec::new();
 
-        // Create generic stacks
+        // Create generic _stacks
         for _ in 0..num_generic_stacks {
             generic_stacks.push(NBeatsStack::new(
                 backcast_size,
@@ -1389,7 +1389,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
             ));
         }
 
-        // Create interpretable stacks
+        // Create interpretable _stacks
         for _ in 0..num_interpretable_stacks {
             interpretable_stacks.push(NBeatsStack::new(
                 backcast_size,
@@ -1448,7 +1448,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
     pub fn forecast(&self, input_sequence: &Array1<F>) -> Result<Array1<F>> {
         if input_sequence.len() < self.backcast_size {
             return Err(TimeSeriesError::InvalidInput(
-                "Input sequence too short for backcast window".to_string(),
+                "Input _sequence too short for backcast window".to_string(),
             ));
         }
 
@@ -1485,12 +1485,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
                 all_forecasts[current_step + i] = forecast[i];
             }
 
-            // Extend sequence with forecast for next iteration
+            // Extend _sequence with forecast for next iteration
             if current_step + step_size < steps {
                 let new_len = extended_sequence.len() + copy_steps;
                 let mut new_sequence = Array1::zeros(new_len);
 
-                // Copy existing sequence
+                // Copy existing _sequence
                 for i in 0..extended_sequence.len() {
                     new_sequence[i] = extended_sequence[i];
                 }
@@ -1537,19 +1537,19 @@ pub struct MambaBlock<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
     /// Create new Mamba block
-    pub fn new(input_dim: usize, state_dim: usize, conv_size: usize, expand: usize) -> Self {
-        let inner_dim = expand * input_dim;
-        let dt_rank = (input_dim / 16).max(1);
+    pub fn new(_input_dim: usize, state_dim: usize, conv_size: usize, expand: usize) -> Self {
+        let inner_dim = expand * _input_dim;
+        let dt_rank = (_input_dim / 16).max(1);
 
         // Initialize parameters with proper scaling
-        let scale = F::from(1.0 / (input_dim as f64).sqrt()).unwrap();
+        let scale = F::from(1.0 / (_input_dim as f64).sqrt()).unwrap();
 
         Self {
-            input_dim,
+            _input_dim,
             state_dim,
             conv_size,
             expand,
-            in_proj: Self::init_weight(inner_dim * 2, input_dim, scale),
+            in_proj: Self::init_weight(inner_dim * 2, _input_dim, scale),
             conv1d: Self::init_weight(inner_dim, conv_size, scale),
             x_proj: Self::init_weight(dt_rank + state_dim * 2, inner_dim, scale),
             dt_proj: Self::init_weight(inner_dim, dt_rank, scale),
@@ -1559,14 +1559,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
                     .collect(),
             ),
             d: Array1::ones(inner_dim),
-            out_proj: Self::init_weight(input_dim, inner_dim, scale),
+            out_proj: Self::init_weight(_input_dim, inner_dim, scale),
         }
     }
 
     /// Initialize weight matrix
-    fn init_weight(out_dim: usize, in_dim: usize, scale: F) -> Array2<F> {
-        let mut weight = Array2::zeros((out_dim, in_dim));
-        for i in 0..out_dim {
+    fn init_weight(_out_dim: usize, in_dim: usize, scale: F) -> Array2<F> {
+        let mut weight = Array2::zeros((_out_dim, in_dim));
+        for i in 0.._out_dim {
             for j in 0..in_dim {
                 // Xavier initialization
                 let rand_val = (i + j * 17) % 1000; // Simple deterministic "random"
@@ -1579,7 +1579,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
 
     /// Forward pass through Mamba block
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
-        let (_seq_len, _) = input.dim();
+        let (_seq_len_) = input.dim();
         let inner_dim = self.expand * self.input_dim;
 
         // Input projection
@@ -1770,7 +1770,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
     ) -> crate::error::Result<Self> {
         if model_dim % num_heads != 0 {
             return Err(crate::error::TimeSeriesError::InvalidInput(
-                "Model dimension must be divisible by number of heads".to_string(),
+                "Model dimension must be divisible by number of _heads".to_string(),
             ));
         }
 
@@ -2067,12 +2067,12 @@ pub struct LayerNorm<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> LayerNorm<F> {
     /// Create new layer normalization
-    pub fn new(dim: usize) -> Self {
+    pub fn new(_dim: usize) -> Self {
         Self {
-            weight: Array1::ones(dim),
-            bias: Array1::zeros(dim),
+            weight: Array1::ones(_dim),
+            bias: Array1::zeros(_dim),
             eps: F::from(1e-5).unwrap(),
-            dim,
+            _dim,
         }
     }
 
@@ -2137,9 +2137,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
         let scale = F::from(2.0).unwrap() / F::from(input_dim).unwrap();
         let std_dev = scale.sqrt();
 
-        let mut experts = Vec::new();
+        let mut _experts = Vec::new();
         for _ in 0..num_experts {
-            experts.push(LSTMCell::random_matrix(output_dim, input_dim, std_dev));
+            _experts.push(LSTMCell::random_matrix(output_dim, input_dim, std_dev));
         }
 
         let gate = LSTMCell::random_matrix(num_experts, input_dim, std_dev);
@@ -2147,7 +2147,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
         Self {
             num_experts,
             top_k,
-            experts,
+            _experts,
             gate,
             input_dim,
             hidden_dim,
@@ -2157,7 +2157,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
 
     /// Forward pass with expert routing
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
-        let (seq_len, _) = input.dim();
+        let (seq_len_) = input.dim();
         let mut output = Array2::zeros((seq_len, self.output_dim));
 
         for i in 0..seq_len {
@@ -2239,7 +2239,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
         indexed_probs
             .into_iter()
             .take(k.min(self.num_experts))
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .collect()
     }
 }
@@ -2272,10 +2272,10 @@ pub struct MultiQueryAttention<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
     /// Create new Multi-Query Attention layer
-    pub fn new(model_dim: usize, num_heads: usize) -> crate::error::Result<Self> {
-        if model_dim % num_heads != 0 {
+    pub fn new(_model_dim: usize, num_heads: usize) -> crate::error::Result<Self> {
+        if _model_dim % num_heads != 0 {
             return Err(crate::error::TimeSeriesError::InvalidInput(
-                "Model dimension must be divisible by number of heads".to_string(),
+                "Model dimension must be divisible by number of _heads".to_string(),
             ));
         }
 
@@ -2296,7 +2296,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
 
     /// Forward pass through Multi-Query Attention
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
-        let (seq_len, _) = input.dim();
+        let (seq_len_) = input.dim();
 
         // Project to queries (multiple heads), key and value (single head each)
         let queries = self.linear_transform(input, &self.w_query);
@@ -2329,7 +2329,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
         keys: &Array2<F>,
         values: &Array2<F>,
     ) -> crate::error::Result<Array2<F>> {
-        let (seq_len, _) = queries.dim();
+        let (seq_len_) = queries.dim();
         let scale = F::one() / F::from(self.head_dim as f64).unwrap().sqrt();
 
         // Compute attention scores
@@ -2484,22 +2484,22 @@ pub struct RotaryPositionalEmbedding<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> RotaryPositionalEmbedding<F> {
     /// Create new Rotary Position Embedding
-    pub fn new(dim: usize, max_seq_len: usize) -> Self {
+    pub fn new(_dim: usize, max_seq_len: usize) -> Self {
         let base = F::from(10000.0).unwrap();
 
         // Precompute sin and cos values
-        let mut sin_cache = Array2::zeros((max_seq_len, dim));
-        let mut cos_cache = Array2::zeros((max_seq_len, dim));
+        let mut sin_cache = Array2::zeros((max_seq_len, _dim));
+        let mut cos_cache = Array2::zeros((max_seq_len, _dim));
 
         for pos in 0..max_seq_len {
-            for i in 0..dim / 2 {
+            for i in 0.._dim / 2 {
                 let angle = F::from(pos as f64).unwrap()
-                    / base.powf(F::from(2.0 * i as f64 / dim as f64).unwrap());
+                    / base.powf(F::from(2.0 * i as f64 / _dim as f64).unwrap());
 
                 sin_cache[[pos, 2 * i]] = angle.sin();
                 cos_cache[[pos, 2 * i]] = angle.cos();
 
-                if 2 * i + 1 < dim {
+                if 2 * i + 1 < _dim {
                     sin_cache[[pos, 2 * i + 1]] = angle.sin();
                     cos_cache[[pos, 2 * i + 1]] = angle.cos();
                 }
@@ -2507,7 +2507,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RotaryPositionalEmbedding<F> {
         }
 
         Self {
-            dim,
+            _dim,
             max_seq_len,
             base,
             sin_cache,
@@ -2566,8 +2566,8 @@ pub struct ALiBiAttention<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> ALiBiAttention<F> {
     /// Create new ALiBi attention layer
-    pub fn new(model_dim: usize, num_heads: usize) -> crate::error::Result<Self> {
-        let attention = MultiHeadAttention::new(model_dim, num_heads)?;
+    pub fn new(_model_dim: usize, num_heads: usize) -> crate::error::Result<Self> {
+        let attention = MultiHeadAttention::new(_model_dim, num_heads)?;
 
         // Compute ALiBi slopes
         let mut slopes = Array1::zeros(num_heads);
@@ -2588,7 +2588,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ALiBiAttention<F> {
 
     /// Forward pass with ALiBi position bias
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
-        let (seq_len, _model_dim) = input.dim();
+        let (seq_len_model_dim) = input.dim();
 
         // Get base attention computation (we'll modify the scores)
         let _qkv = self
@@ -2767,11 +2767,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
                 AttentionType::MultiQuery(MultiQueryAttention::new(model_dim, num_heads)?)
             }
             "flash" => AttentionType::Flash(FlashAttention::new(model_dim, num_heads, 64)?),
-            "alibi" => AttentionType::ALiBi(ALiBiAttention::new(model_dim, num_heads)?),
-            _ => AttentionType::MultiHead(MultiHeadAttention::new(model_dim, num_heads)?),
+            "alibi" => AttentionType::ALiBi(ALiBiAttention::new(model_dim, num_heads)?, _ => AttentionType::MultiHead(MultiHeadAttention::new(model_dim, num_heads)?),
         };
 
-        let rope = if use_rope {
+        let _rope = if use_rope {
             Some(RotaryPositionalEmbedding::new(model_dim, 512))
         } else {
             None
@@ -2779,7 +2778,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
 
         Ok(Self {
             attention_type,
-            rope,
+            _rope,
             ffn: FeedForwardNetwork::new(model_dim, ffn_hidden_dim, ActivationFunction::ReLU),
             norm1: LayerNorm::new(model_dim),
             norm2: LayerNorm::new(model_dim),
@@ -2866,7 +2865,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RingAttention<F> {
     ) -> crate::error::Result<Self> {
         if model_dim % num_heads != 0 {
             return Err(crate::error::TimeSeriesError::InvalidInput(
-                "Model dimension must be divisible by number of heads".to_string(),
+                "Model dimension must be divisible by number of _heads".to_string(),
             ));
         }
 
@@ -2896,7 +2895,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RingAttention<F> {
 
     /// Forward pass with distributed ring attention
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
-        let (seq_len, _) = input.dim();
+        let (seq_len_) = input.dim();
 
         // Project to QKV
         let qkv = self.linear_transform(input, &self.w_qkv);
@@ -2950,8 +2949,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> RingAttention<F> {
         key_offset: usize,
         query_offset: usize,
     ) -> crate::error::Result<Array2<F>> {
-        let (q_seq_len, _) = queries.dim();
-        let (k_seq_len, _) = keys.dim();
+        let (q_seq_len_) = queries.dim();
+        let (k_seq_len_) = keys.dim();
 
         // Reshape for multi-head attention
         let q_heads = self.reshape_for_heads(queries, q_seq_len);
@@ -2989,8 +2988,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> RingAttention<F> {
         key_offset: usize,
         query_offset: usize,
     ) -> crate::error::Result<Array2<F>> {
-        let (q_len, _) = queries.dim();
-        let (k_len, _) = keys.dim();
+        let (q_len_) = queries.dim();
+        let (k_len_) = keys.dim();
         let scale = F::one() / F::from(self.head_dim as f64).unwrap().sqrt();
 
         // Compute attention scores
@@ -3207,17 +3206,17 @@ pub struct HyenaAttention<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> HyenaAttention<F> {
     /// Create new Hyena Attention layer
-    pub fn new(model_dim: usize, order: usize, max_seq_len: usize) -> Self {
-        let scale = F::from(2.0).unwrap() / F::from(model_dim).unwrap();
+    pub fn new(_model_dim: usize, order: usize, max_seq_len: usize) -> Self {
+        let scale = F::from(2.0).unwrap() / F::from(_model_dim).unwrap();
         let std_dev = scale.sqrt();
 
         // Input projection to order + 1 dimensions
-        let input_proj = LSTMCell::random_matrix((order + 1) * model_dim, model_dim, std_dev);
+        let input_proj = LSTMCell::random_matrix((order + 1) * _model_dim, _model_dim, std_dev);
 
         // Filter projections for each order
         let mut filter_projs = Vec::new();
         for _ in 0..order {
-            filter_projs.push(LSTMCell::random_matrix(model_dim, model_dim, std_dev));
+            filter_projs.push(LSTMCell::random_matrix(_model_dim, _model_dim, std_dev));
         }
 
         // Convolution kernels (learnable filters)
@@ -3264,7 +3263,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> HyenaAttention<F> {
 
     /// Forward pass through Hyena attention
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
-        let (seq_len, _) = input.dim();
+        let (seq_len_) = input.dim();
 
         // Add positional encoding
         let input_with_pos = self.add_positional_encoding(input);
@@ -3473,7 +3472,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RetrievalAugmentedTimeSeries<F> {
 
     /// Forward pass with retrieval-augmented forecasting
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
-        let (_seq_len, _) = input.dim();
+        let (_seq_len_) = input.dim();
 
         // Encode input time series
         let encoded = self.encoder.forward(input)?;
@@ -3529,7 +3528,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RetrievalAugmentedTimeSeries<F> {
             let query_norm = self.compute_norm(&query.row(0).to_owned());
             let key_norm = self.compute_norm(&self.memory_keys.row(i).to_owned());
 
-            similarity_scores[i] = if query_norm > F::zero() && key_norm > F::zero() {
+            similarity_scores[i] = if query_norm > F::zero() && key_norm >, F::zero() {
                 dot_product / (query_norm * key_norm)
             } else {
                 F::zero()
@@ -3714,7 +3713,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumSuperpositionAttention<F> 
 
     /// Quantum attention computation
     fn quantum_attention_branch(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
-        let (_seq_len, _) = input.dim();
+        let (_seq_len_) = input.dim();
 
         // Project to quantum state space
         let quantum_states = self.project_to_quantum_space(input);
@@ -3733,7 +3732,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumSuperpositionAttention<F> 
 
     /// Project input to quantum state space
     fn project_to_quantum_space(&self, input: &Array2<F>) -> Array2<F> {
-        let (seq_len, _) = input.dim();
+        let (seq_len_) = input.dim();
         let quantum_dim = 1 << self.num_qubits;
         let mut quantum_states = Array2::zeros((seq_len, quantum_dim));
 
@@ -3814,7 +3813,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumSuperpositionAttention<F> 
 
     /// Project quantum states back to classical space
     fn project_to_classical_space(&self, quantum_states: &Array2<F>) -> Array2<F> {
-        let (seq_len, _) = quantum_states.dim();
+        let (seq_len_) = quantum_states.dim();
         let mut classical_output = Array2::zeros((seq_len, self.model_dim));
 
         // Project each quantum state back to classical model dimension
@@ -3890,7 +3889,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumSuperpositionAttention<F> 
 
     /// Adaptive fusion weight adjustment based on quantum coherence
     pub fn adjust_fusion_weights(&mut self, quantum_coherence: F) {
-        // Adjust weights based on quantum coherence measure
+        // Adjust weights based on quantum _coherence measure
         let coherence_factor = quantum_coherence.min(F::one()).max(F::zero());
 
         self.fusion_weights[0] = F::one() - coherence_factor * F::from(0.5).unwrap();
@@ -3940,7 +3939,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> SpeculativeDecoder<F> {
 
         let draft_model = EnhancedTransformerBlock::new(
             draft_model_dim,
-            num_heads / 2, // Fewer heads for draft model
+            num_heads / 2, // Fewer _heads for draft model
             draft_model_dim * 2,
             "multiquery", // Use more efficient MQA for draft model
             false,        // No RoPE for speed
@@ -3981,7 +3980,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> SpeculativeDecoder<F> {
             }
         }
 
-        // Trim to target length
+        // Trim to target _length
         let final_seq_len = (initial_seq_len + target_length).min(current_sequence.nrows());
         let mut result = Array2::zeros((final_seq_len, model_dim));
         for i in 0..final_seq_len {
@@ -4096,7 +4095,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> SpeculativeDecoder<F> {
         let main_norm = main_norm_sq.sqrt();
         let candidate_norm = candidate_norm_sq.sqrt();
 
-        if main_norm > F::zero() && candidate_norm > F::zero() {
+        if main_norm > F::zero() && candidate_norm >, F::zero() {
             dot_product / (main_norm * candidate_norm)
         } else {
             F::zero()
@@ -4136,10 +4135,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> SpeculativeDecoder<F> {
 
     /// Update acceptance threshold based on performance
     pub fn update_acceptance_threshold(&mut self, acceptance_rate: F) {
-        let target_rate = F::from(0.7).unwrap(); // Target 70% acceptance rate
+        let target_rate = F::from(0.7).unwrap(); // Target 70% acceptance _rate
         let learning_rate = F::from(0.01).unwrap();
 
-        // Adjust threshold to maintain target acceptance rate
+        // Adjust threshold to maintain target acceptance _rate
         if acceptance_rate < target_rate {
             // Lower threshold to accept more tokens
             self.acceptance_threshold = self.acceptance_threshold - learning_rate;

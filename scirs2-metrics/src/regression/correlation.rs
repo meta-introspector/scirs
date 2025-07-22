@@ -86,7 +86,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::regression::r2_score;
+/// use scirs2__metrics::regression::r2_score;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -129,7 +129,7 @@ where
 
     if ss_total < F::epsilon() {
         return Err(MetricsError::InvalidInput(
-            "Total sum of squares is zero. R^2 score is not defined when all true values are identical.".to_string(),
+            "Total sum of squares is zero. R^2 score is not defined when all _true values are identical.".to_string(),
         ));
     }
 
@@ -154,7 +154,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::regression::adjusted_r2_score;
+/// use scirs2__metrics::regression::adjusted_r2_score;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -180,7 +180,7 @@ where
 
     if n_samples <= n_features + 1 {
         return Err(MetricsError::InvalidInput(
-            "Number of samples must be greater than number of features + 1".to_string(),
+            "Number of samples must be greater than number of _features + 1".to_string(),
         ));
     }
 
@@ -215,7 +215,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::regression::explained_variance_score;
+/// use scirs2__metrics::regression::explained_variance_score;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -263,7 +263,7 @@ where
 
     if y_true_var < F::epsilon() {
         return Err(MetricsError::InvalidInput(
-            "Variance of y_true is zero. Explained variance score is not defined when all true values are identical.".to_string(),
+            "Variance of y_true is zero. Explained variance score is not defined when all _true values are identical.".to_string(),
         ));
     }
 
@@ -289,7 +289,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::regression::pearson_correlation;
+/// use scirs2__metrics::regression::pearson_correlation;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -358,7 +358,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::regression::spearman_correlation;
+/// use scirs2__metrics::regression::spearman_correlation;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -447,7 +447,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::regression::concordance_correlation;
+/// use scirs2__metrics::regression::concordance_correlation;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];

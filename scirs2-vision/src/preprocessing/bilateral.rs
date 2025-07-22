@@ -44,7 +44,7 @@ impl Default for BilateralParams {
 /// # Example
 ///
 /// ```rust
-/// use scirs2_vision::preprocessing::{bilateral_filter_advanced, BilateralParams};
+/// use scirs2__vision::preprocessing::{bilateral_filter_advanced, BilateralParams};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -74,8 +74,8 @@ pub fn bilateral_filter_advanced(
 
 /// Apply bilateral filter to grayscale image
 #[allow(dead_code)]
-fn bilateral_filter_gray(img: &GrayImage, params: &BilateralParams) -> Result<GrayImage> {
-    let (width, height) = img.dimensions();
+fn bilateral_filter_gray(_img: &GrayImage, params: &BilateralParams) -> Result<GrayImage> {
+    let (width, height) = _img.dimensions();
     let radius = params.radius;
 
     // Precompute spatial weights
@@ -91,7 +91,7 @@ fn bilateral_filter_gray(img: &GrayImage, params: &BilateralParams) -> Result<Gr
                 .into_par_iter()
                 .map(move |x| {
                     let filtered_value = apply_bilateral_pixel_gray(
-                        img,
+                        _img,
                         x,
                         y,
                         radius,
@@ -115,8 +115,8 @@ fn bilateral_filter_gray(img: &GrayImage, params: &BilateralParams) -> Result<Gr
 
 /// Apply bilateral filter to RGB image
 #[allow(dead_code)]
-fn bilateral_filter_rgb(img: &RgbImage, params: &BilateralParams) -> Result<RgbImage> {
-    let (width, height) = img.dimensions();
+fn bilateral_filter_rgb(_img: &RgbImage, params: &BilateralParams) -> Result<RgbImage> {
+    let (width, height) = _img.dimensions();
     let radius = params.radius;
 
     // Precompute spatial weights
@@ -132,7 +132,7 @@ fn bilateral_filter_rgb(img: &RgbImage, params: &BilateralParams) -> Result<RgbI
                 .into_par_iter()
                 .map(move |x| {
                     let filtered_rgb =
-                        apply_bilateral_pixel_rgb(img, x, y, radius, &spatial_weights, sigma_range);
+                        apply_bilateral_pixel_rgb(_img, x, y, radius, &spatial_weights, sigma_range);
                     (x, y, filtered_rgb)
                 })
                 .collect::<Vec<_>>()
@@ -150,15 +150,15 @@ fn bilateral_filter_rgb(img: &RgbImage, params: &BilateralParams) -> Result<RgbI
 
 /// Compute spatial weights for the filter kernel
 #[allow(dead_code)]
-fn compute_spatial_weights(radius: usize, sigma: f32) -> Vec<Vec<f32>> {
-    let size = 2 * radius + 1;
+fn compute_spatial_weights(_radius: usize, sigma: f32) -> Vec<Vec<f32>> {
+    let size = 2 * _radius + 1;
     let mut weights = vec![vec![0.0; size]; size];
     let sigma2 = sigma * sigma;
 
     for (dy, row) in weights.iter_mut().enumerate() {
         for (dx, weight) in row.iter_mut().enumerate() {
-            let y = dy as f32 - radius as f32;
-            let x = dx as f32 - radius as f32;
+            let y = dy as f32 - _radius as f32;
+            let x = dx as f32 - _radius as f32;
             let dist2 = x * x + y * y;
             *weight = (-dist2 / (2.0 * sigma2)).exp();
         }
@@ -193,7 +193,7 @@ fn apply_bilateral_pixel_gray(
             if x >= 0 && x < width as i32 && y >= 0 && y < height as i32 {
                 let pixel_value = img.get_pixel(x as u32, y as u32)[0] as f32;
 
-                // Compute range weight
+                // Compute _range weight
                 let range_diff = pixel_value - center_value;
                 let range_weight = (-(range_diff * range_diff) / (2.0 * sigma_range2)).exp();
 
@@ -239,7 +239,7 @@ fn apply_bilateral_pixel_rgb(
             if x >= 0 && x < width as i32 && y >= 0 && y < height as i32 {
                 let pixel = img.get_pixel(x as u32, y as u32);
 
-                // Compute range weight using Euclidean distance in RGB space
+                // Compute _range weight using Euclidean distance in RGB space
                 let dr = pixel[0] as f32 - center_pixel[0] as f32;
                 let dg = pixel[1] as f32 - center_pixel[1] as f32;
                 let db = pixel[2] as f32 - center_pixel[2] as f32;
@@ -270,10 +270,10 @@ fn apply_bilateral_pixel_rgb(
 
 /// Fast bilateral filter using integral histograms (simplified version)
 #[allow(dead_code)]
-pub fn fast_bilateral_filter(img: &DynamicImage, params: &BilateralParams) -> Result<DynamicImage> {
+pub fn fast_bilateral_filter(_img: &DynamicImage, params: &BilateralParams) -> Result<DynamicImage> {
     // For simplicity, fall back to regular bilateral filter
     // A full implementation would use integral histograms for acceleration
-    bilateral_filter_advanced(img, params)
+    bilateral_filter_advanced(_img, params)
 }
 
 /// Joint bilateral filter using a guidance image

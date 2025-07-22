@@ -51,8 +51,7 @@ impl Default for AdvancedSimdConfig {
 
 /// Advanced-optimized SIMD statistics computer
 pub struct AdvancedSimdStatistics<F> {
-    config: AdvancedSimdConfig,
-    _phantom: PhantomData<F>,
+    config: AdvancedSimdConfig_phantom: PhantomData<F>,
 }
 
 impl<F> AdvancedSimdStatistics<F>
@@ -72,16 +71,14 @@ where
     /// Create new advanced-optimized SIMD statistics computer
     pub fn new() -> Self {
         Self {
-            config: AdvancedSimdConfig::default(),
-            _phantom: PhantomData,
+            config: AdvancedSimdConfig::default(), _phantom: PhantomData,
         }
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: AdvancedSimdConfig) -> Self {
+    pub fn with_config(_config: AdvancedSimdConfig) -> Self {
         Self {
-            config,
-            _phantom: PhantomData,
+            _config_phantom: PhantomData,
         }
     }
 
@@ -388,9 +385,9 @@ where
         let mut bootstrap_vars = Array1::zeros(n_bootstrap);
         let mut bootstrap_stds = Array1::zeros(n_bootstrap);
 
-        // Perform bootstrap sampling with SIMD statistics
+        // Perform _bootstrap sampling with SIMD statistics
         for i in 0..n_bootstrap {
-            // Generate bootstrap sample
+            // Generate _bootstrap sample
             let mut bootstrap_sample = Array1::zeros(n);
             for j in 0..n {
                 let idx = rng.random_range(0..n);
@@ -409,7 +406,7 @@ where
         sorted_means
             .as_slice_mut()
             .unwrap()
-            .sort_by(|a, b| a.partial_cmp(b).unwrap());
+            .sort_by(|a..b| a.partial_cmp(b).unwrap());
 
         let alpha = F::from(0.05).unwrap(); // 95% confidence
         let lower_idx = ((alpha / F::from(2).unwrap()) * F::from(n_bootstrap).unwrap())
@@ -484,19 +481,19 @@ where
         + std::iter::Sum<F>,
 {
     /// SIMD-optimized sum of cubes
-    fn simd_sum_cubes(data: &ArrayView1<F>) -> F {
-        data.iter().map(|&x| x * x * x).sum()
+    fn simd_sum_cubes(_data: &ArrayView1<F>) -> F {
+        _data.iter().map(|&x| x * x * x).sum()
     }
 
     /// SIMD-optimized sum of fourth powers
-    fn simd_sum_quads(data: &ArrayView1<F>) -> F {
-        data.iter().map(|&x| x * x * x * x).sum()
+    fn simd_sum_quads(_data: &ArrayView1<F>) -> F {
+        _data.iter().map(|&x| x * x * x * x).sum()
     }
 
     /// SIMD-optimized correlation coefficient
     fn simd_correlation(x: &ArrayView1<F>, y: &ArrayView1<F>, mean_x: F, mean_y: F) -> F {
-        let n = x.len();
-        if n != y.len() {
+        let n = _x.len();
+        if n != _y.len() {
             return F::zero();
         }
 
@@ -506,8 +503,8 @@ where
         let mut sum_y2 = F::zero();
 
         for i in 0..n {
-            let dx = x[i] - mean_x;
-            let dy = y[i] - mean_y;
+            let dx = _x[i] - mean_x;
+            let dy = _y[i] - mean_y;
             sum_xy = sum_xy + dx * dy;
             sum_x2 = sum_x2 + dx * dx;
             sum_y2 = sum_y2 + dy * dy;
@@ -528,7 +525,7 @@ impl AdvancedSimdOps<f64> for f64 {}
 
 /// High-level convenience functions
 #[allow(dead_code)]
-pub fn advanced_mean_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
+pub fn advanced_mean_simd<F>(_data: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float
         + NumCast
@@ -543,12 +540,12 @@ where
         + std::iter::Sum<F>,
 {
     let computer = AdvancedSimdStatistics::<F>::new();
-    let stats = computer.comprehensive_stats_advanced(data)?;
+    let stats = computer.comprehensive_stats_advanced(_data)?;
     Ok(stats.mean)
 }
 
 #[allow(dead_code)]
-pub fn advanced_std_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
+pub fn advanced_std_simd<F>(_data: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float
         + NumCast
@@ -563,12 +560,12 @@ where
         + std::iter::Sum<F>,
 {
     let computer = AdvancedSimdStatistics::<F>::new();
-    let stats = computer.comprehensive_stats_advanced(data)?;
+    let stats = computer.comprehensive_stats_advanced(_data)?;
     Ok(stats.std_dev)
 }
 
 #[allow(dead_code)]
-pub fn advanced_comprehensive_simd<F>(data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
+pub fn advanced_comprehensive_simd<F>(_data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
 where
     F: Float
         + NumCast
@@ -583,14 +580,14 @@ where
         + std::iter::Sum<F>,
 {
     let computer = AdvancedSimdStatistics::<F>::new();
-    computer.comprehensive_stats_advanced(data)
+    computer.comprehensive_stats_advanced(_data)
 }
 
 /// Create RNG with optional seed
 #[allow(dead_code)]
-fn create_rng(seed: Option<u64>) -> impl Rng {
+fn create_rng(_seed: Option<u64>) -> impl Rng {
     use rand::{rngs::StdRng, SeedableRng};
-    match seed {
+    match _seed {
         Some(s) => StdRng::seed_from_u64(s),
         None => {
             use std::time::{SystemTime, UNIX_EPOCH};

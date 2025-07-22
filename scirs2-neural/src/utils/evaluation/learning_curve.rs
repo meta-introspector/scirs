@@ -72,12 +72,12 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
         let n_sizes = train_sizes.len();
         if train_scores.shape()[0] != n_sizes || val_scores.shape()[0] != n_sizes {
             return Err(NeuralError::ValidationError(
-                "Number of scores must match number of training sizes".to_string(),
+                "Number of _scores must match number of training _sizes".to_string(),
             ));
         }
         if train_scores.shape()[1] != val_scores.shape()[1] {
             return Err(NeuralError::ValidationError(
-                "Training and validation scores must have the same number of CV folds".to_string(),
+                "Training and validation _scores must have the same number of CV folds".to_string(),
             ));
         }
         // Compute means and standard deviations

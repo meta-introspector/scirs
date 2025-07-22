@@ -161,8 +161,7 @@ impl DatasetRegistry {
                 feature_names: None,
                 url: None,
                 checksum: None,
-            }),
-            _ => Err(DatasetsError::Other(format!("Unknown dataset: {name}"))),
+            }, _ => Err(DatasetsError::Other(format!("Unknown dataset: {name}"))),
         }
     }
 
@@ -239,15 +238,14 @@ impl DatasetRegistry {
     }
 
     /// Register a toy dataset (built-in datasets don't need URLs or hashes)
-    fn register_toy_dataset(&mut self, name: &str, _description: &str) {
+    fn register_toy_dataset(&mut self, name: &str_description: &str) {
         let url = match name {
             "iris" => "builtin://iris",
             "boston" => "builtin://boston",
             "digits" => "builtin://digits",
             "wine" => "builtin://wine",
             "breast_cancer" => "builtin://breast_cancer",
-            "diabetes" => "builtin://diabetes",
-            _ => "builtin://unknown",
+            "diabetes" => "builtin://diabetes"_ => "builtin://unknown",
         };
 
         self.register(
@@ -269,50 +267,48 @@ pub fn get_registry() -> DatasetRegistry {
 /// Load a dataset by name from the registry
 #[cfg(feature = "download")]
 #[allow(dead_code)]
-pub fn load_dataset_by_name(name: &str, force_download: bool) -> Result<crate::utils::Dataset> {
+pub fn load_dataset_by_name(_name: &str, force_download: bool) -> Result<crate::utils::Dataset> {
     let registry = get_registry();
 
-    if let Some(entry) = registry.get(name) {
+    if let Some(entry) = registry.get(_name) {
         // Handle different URL schemes
         if entry.url.starts_with("builtin://") {
             // Built-in toy datasets
-            match name {
+            match _name {
                 "iris" => crate::toy::load_iris(),
                 "boston" => crate::toy::load_boston(),
                 "digits" => crate::toy::load_digits(),
                 "wine" => crate::sample::load_wine(false),
                 "breast_cancer" => crate::toy::load_breast_cancer(),
-                "diabetes" => crate::toy::load_diabetes(),
-                _ => Err(DatasetsError::Other(format!(
+                "diabetes" => crate::toy::load_diabetes(, _ => Err(DatasetsError::Other(format!(
                     "Built-in dataset '{}' not implemented",
-                    name
+                    _name
                 ))),
             }
         } else if entry.url.starts_with("file://") {
             // Local file datasets
-            load_local_dataset(name, &entry.url[7..], entry.sha256) // Remove "file://" prefix
+            load_local_dataset(_name, &entry.url[7..], entry.sha256) // Remove "file://" prefix
         } else if entry.url.starts_with("http") {
             // Remote datasets (when available)
-            match name {
+            match _name {
                 "california_housing" => crate::sample::load_california_housing(force_download),
                 "electrocardiogram" => crate::time_series::electrocardiogram(),
                 "stock_market" => crate::time_series::stock_market(false),
-                "weather" => crate::time_series::weather(None),
-                _ => Err(DatasetsError::Other(format!(
+                "weather" => crate::time_series::weather(None, _ => Err(DatasetsError::Other(format!(
                     "Remote dataset '{}' not yet implemented for loading",
-                    name
+                    _name
                 ))),
             }
         } else {
             Err(DatasetsError::Other(format!(
                 "Unsupported URL scheme for dataset '{}': {}",
-                name, entry.url
+                _name, entry.url
             )))
         }
     } else {
         Err(DatasetsError::Other(format!(
             "Unknown dataset: '{}'. Available datasets: {:?}",
-            name,
+            _name,
             registry.list_datasets()
         )))
     }
@@ -327,9 +323,9 @@ fn load_local_dataset(
     expected_sha256: &str,
 ) -> Result<crate::utils::Dataset> {
     use crate::loaders::{load_csv, CsvConfig};
-    use std::path::Path;
+    use std::_path::Path;
 
-    // Build absolute path from workspace root
+    // Build absolute _path from workspace root
     let workspace_root = env!("CARGO_MANIFEST_DIR");
     let file_path = Path::new(workspace_root).join(relative_path);
 
@@ -367,7 +363,7 @@ fn load_local_dataset(
 #[allow(dead_code)]
 pub fn load_dataset_by_name(_name: &str, _force_download: bool) -> Result<crate::utils::Dataset> {
     Err(DatasetsError::Other(
-        "Download feature is not enabled. Recompile with --features download".to_string(),
+        "Download feature is not enabled. Recompile with --features _download".to_string(),
     ))
 }
 

@@ -48,16 +48,16 @@ fn create_test_data() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn verify_data_structure(data: &Array2<f64>) {
-    assert!(data.nrows() > 0, "Data should have rows");
-    assert!(data.ncols() > 0, "Data should have columns");
+fn verify_data_structure(_data: &Array2<f64>) {
+    assert!(_data.nrows() > 0, "Data should have rows");
+    assert!(_data.ncols() > 0, "Data should have columns");
     
     // Check for finite values
-    for &value in data.iter() {
+    for &value in _data.iter() {
         assert!(value.is_finite(), "All values should be finite");
     }
     
-    println!("   📊 Data validation: {} points in {}D space", data.nrows(), data.ncols());
+    println!("   📊 Data validation: {} points in {}D space", _data.nrows(), _data.ncols());
 }
 
 #[allow(dead_code)]

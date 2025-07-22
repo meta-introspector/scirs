@@ -40,8 +40,7 @@ where
             let distance = match metric {
                 "euclidean" => euclidean_distance_simd(&row_i, &row_j)?,
                 "manhattan" => manhattan_distance_simd(&row_i, &row_j)?,
-                "cosine" => cosine_distance_simd(&row_i, &row_j)?,
-                _ => {
+                "cosine" => cosine_distance_simd(&row_i, &row_j)?_ => {
                     return Err(StatsError::InvalidArgument(format!(
                         "Unknown metric: {}",
                         metric
@@ -179,18 +178,16 @@ where
 ///
 /// Computes rolling statistics over a sliding window using SIMD acceleration.
 pub struct MovingWindowSIMD<F> {
-    window_size: usize,
-    _phantom: std::marker::PhantomData<F>,
+    window_size: usize, _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F> MovingWindowSIMD<F>
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
 {
-    pub fn new(window_size: usize) -> Self {
+    pub fn new(_window_size: usize) -> Self {
         Self {
-            window_size,
-            _phantom: std::marker::PhantomData,
+            window_size_phantom: std::marker::PhantomData,
         }
     }
 

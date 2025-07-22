@@ -1,12 +1,12 @@
-use num_complex::Complex64;
+use num__complex::Complex64;
 use plotly::{
     common::{Mode, Title},
     Layout, Plot, Scatter,
 };
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use rand_distr::{Distribution, Normal};
-use scirs2_fft::{
+use rand__distr::{Distribution, Normal};
+use scirs2__fft::{
     sparse_fft::{reconstruct_time_domain, SparseFFTAlgorithm, SparseFFTResult},
     sparse_fft_cuda_kernels::execute_cuda_sublinear_sparse_fft,
     sparse_fft_cuda_kernels_iterative::execute_cuda_iterative_sparse_fft,
@@ -52,7 +52,7 @@ fn evaluate_accuracy(
     true_frequencies: &[(usize, f64)],
     n: usize,
 ) -> (f64, f64, usize) {
-    // Calculate true positive rate (how many true frequencies were found)
+    // Calculate true positive rate (how many true _frequencies were found)
     let mut true_positives = 0;
     let mut _false_positives = 0;
     let mut found_indices = vec![false; true_frequencies.len()];
@@ -60,8 +60,8 @@ fn evaluate_accuracy(
     // For each found frequency, check if it corresponds to a true frequency
     for &idx in &result.indices {
         let mut found = false;
-        for (i, &(freq, _)) in true_frequencies.iter().enumerate() {
-            // Consider frequencies within a small tolerance window as matches
+        for (i, &(freq_)) in true_frequencies.iter().enumerate() {
+            // Consider _frequencies within a small tolerance window as matches
             let tolerance = std::cmp::max(1, n / 1000);
             if (idx as i64 - freq as i64).abs() <= tolerance as i64 {
                 found = true;
@@ -89,7 +89,7 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
     println!("\nRunning algorithm comparison:");
     println!("  Signal size: {n}");
     println!("  Expected sparsity: {sparsity}");
-    println!("  Noise level: {noise_level:.3}");
+    println!("  Noise _level: {noise_level:.3}");
 
     // Create a sparse signal with known frequencies
     let frequencies = vec![
@@ -141,7 +141,7 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
         // CPU implementation
         let cpu_start = Instant::now();
         let cpu_result =
-            scirs2_fft::sparse_fft::sparse_fft(&signal, sparsity, Some(algorithm), None).unwrap();
+            scirs2_fft::sparse, _fft::sparse_fft(&signal, sparsity, Some(algorithm), None).unwrap();
         let cpu_time = cpu_start.elapsed().as_millis();
 
         // Evaluate CPU accuracy
@@ -383,7 +383,7 @@ fn run_noise_benchmark() {
             )
             .unwrap();
 
-            let (_, recall, _) = evaluate_accuracy(&result, &frequencies, n);
+            let (_, recall_) = evaluate_accuracy(&result, &frequencies, n);
             accuracies.push(recall);
         }
 
@@ -492,7 +492,7 @@ fn run_iteration_comparison() {
             for (i, (idx, val)) in components.iter().take(10).enumerate() {
                 // Check if this is a true component
                 let mut is_true = false;
-                for &(freq, _) in &frequencies {
+                for &(freq_) in &frequencies {
                     let tolerance = std::cmp::max(1, n / 1000);
                     if (*idx as i64 - freq as i64).abs() <= tolerance as i64 {
                         is_true = true;
@@ -576,7 +576,7 @@ fn run_iteration_comparison() {
     for (i, (idx, val)) in components.iter().take(10).enumerate() {
         // Check if this is a true component
         let mut is_true = false;
-        for &(freq, _) in &frequencies {
+        for &(freq_) in &frequencies {
             let tolerance = std::cmp::max(1, n / 1000);
             if (*idx as i64 - freq as i64).abs() <= tolerance as i64 {
                 is_true = true;

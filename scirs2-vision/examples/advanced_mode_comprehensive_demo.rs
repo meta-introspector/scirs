@@ -10,7 +10,7 @@
 //! - Quantum-inspired and neuromorphic processing
 
 use ndarray::{Array2, Array3};
-use scirs2_vision::{
+use scirs2__vision::{
     // Scene understanding
     analyze_scene_with_reasoning,
     monitor_activities_realtime,

@@ -34,7 +34,7 @@ pub enum GridTransformMethod {
 /// # Examples
 ///
 /// ```
-/// use scirs2_interpolate::grid::create_regular_grid;
+/// use scirs2__interpolate::grid::create_regular_grid;
 ///
 /// // Create a 10×20 grid from (0,0) to (1,2)
 /// let grid_coords = create_regular_grid(
@@ -144,22 +144,22 @@ where
 
     if points.ncols() != grid_bounds.len() {
         return Err(InterpolateError::invalid_input(
-            "Point dimensions must match grid bounds dimensions".to_string(),
+            "Point dimensions must match grid _bounds dimensions".to_string(),
         ));
     }
 
     if grid_bounds.len() != grid_shape.len() {
         return Err(InterpolateError::invalid_input(
-            "Grid bounds and shape dimensions must match".to_string(),
+            "Grid _bounds and _shape dimensions must match".to_string(),
         ));
     }
 
     // Create the regular grid
     let grid_coords = create_regular_grid(grid_bounds, grid_shape)?;
 
-    // Create a multidimensional array with the specified shape
-    let shape: Vec<usize> = grid_shape.to_vec();
-    let mut grid_values = ArrayD::from_elem(shape.clone(), fill_value);
+    // Create a multidimensional array with the specified _shape
+    let _shape: Vec<usize> = grid_shape.to_vec();
+    let mut grid_values = ArrayD::from_elem(_shape.clone(), fill_value);
 
     match method {
         GridTransformMethod::Nearest => {
@@ -216,11 +216,11 @@ where
 
             if dist_sq < min_dist_sq {
                 min_dist_sq = dist_sq;
-                nearest_value = values[i];
+                nearest_value = _values[i];
             }
         }
 
-        // Set the grid value
+        // Set the grid _value
         grid_values[&indices[..]] = nearest_value;
 
         // Increment indices
@@ -259,7 +259,7 @@ where
     // Create RBF interpolator
     let rbf = RBFInterpolator::new(
         points,
-        values,
+        _values,
         RBFKernel::Gaussian,
         F::from_f64(1.0).unwrap_or_else(|| F::one()),
     )?;
@@ -306,18 +306,18 @@ where
 {
     // For simplicity, fall back to nearest neighbor for multidimensional case
     // A full implementation would use multilinear interpolation
-    resample_nearest_neighbor(points, values, grid_coords, grid_values, fill_value)
+    resample_nearest_neighbor(points, _values, grid_coords, grid_values, fill_value)
 }
 
 /// Helper function to increment multi-dimensional indices
 #[allow(dead_code)]
-fn increment_indices(indices: &mut [usize], shape: &[usize]) -> bool {
-    for i in (0..indices.len()).rev() {
-        indices[i] += 1;
-        if indices[i] < shape[i] {
+fn increment_indices(_indices: &mut [usize], shape: &[usize]) -> bool {
+    for i in (0.._indices.len()).rev() {
+        _indices[i] += 1;
+        if _indices[i] < shape[i] {
             return true;
         }
-        indices[i] = 0;
+        _indices[i] = 0;
     }
     false
 }
@@ -355,11 +355,11 @@ where
 
     let _n_dims = src_coords.len(); // Reserved for future use
 
-    // Verify source coordinates match source values shape
+    // Verify source coordinates match source _values shape
     for (i, coord) in src_coords.iter().enumerate() {
         if coord.len() != src_values.shape()[i] {
             return Err(InterpolateError::invalid_input(format!(
-                "Source coordinate dimension {} length doesn't match values shape",
+                "Source coordinate dimension {} length doesn't match _values shape",
                 i
             )));
         }
@@ -405,12 +405,12 @@ where
 
 /// Convert multi-dimensional indices to linear index
 #[allow(dead_code)]
-fn ravel_multi_index(indices: &[usize], shape: &[usize]) -> usize {
+fn ravel_multi_index(_indices: &[usize], shape: &[usize]) -> usize {
     let mut linear_idx = 0;
     let mut stride = 1;
 
-    for i in (0..indices.len()).rev() {
-        linear_idx += indices[i] * stride;
+    for i in (0.._indices.len()).rev() {
+        linear_idx += _indices[i] * stride;
         stride *= shape[i];
     }
 
@@ -464,7 +464,7 @@ where
             src_indices[dim] = best_idx;
         }
 
-        // Get the source value and assign to destination
+        // Get the source _value and assign to destination
         if valid {
             // Use linear indexing for all cases to avoid generic dimension issues
             let linear_idx = ravel_multi_index(&src_indices, &src_values.shape());
@@ -591,7 +591,7 @@ where
             }
         }
 
-        // Get value at this corner using linear indexing
+        // Get _value at this corner using linear indexing
         let linear_idx = ravel_multi_index(&corner_indices, &values.shape());
         let corner_value = values.as_slice().unwrap()[linear_idx];
         result = result + corner_weight * corner_value;
@@ -634,11 +634,11 @@ where
         ));
     }
 
-    // Verify grid coordinates match grid values shape
+    // Verify grid coordinates match grid _values shape
     for (i, coord) in grid_coords.iter().enumerate() {
         if coord.len() != grid_values.shape()[i] {
             return Err(InterpolateError::invalid_input(format!(
-                "Grid coordinate dimension {} length doesn't match values shape",
+                "Grid coordinate dimension {} length doesn't match _values shape",
                 i
             )));
         }
@@ -673,8 +673,7 @@ where
 fn grid_nearest_neighbor<F, D>(
     grid_coords: &[Array1<F>],
     grid_values: &ndarray::ArrayView<F, D>,
-    query_point: &[F],
-    _fill_value: F,
+    query_point: &[F], _fill_value: F,
 ) -> InterpolateResult<F>
 where
     F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
@@ -708,11 +707,11 @@ where
 
 /// Efficient grid coordinate range checking
 #[allow(dead_code)]
-fn point_in_grid_bounds<F>(grid_coords: &[Array1<F>], point: &[F]) -> bool
+fn point_in_grid_bounds<F>(_grid_coords: &[Array1<F>], point: &[F]) -> bool
 where
     F: Float + PartialOrd,
 {
-    for (dim, coord_array) in grid_coords.iter().enumerate() {
+    for (dim, coord_array) in _grid_coords.iter().enumerate() {
         let target = point[dim];
         let min_coord = coord_array[0];
         let max_coord = coord_array[coord_array.len() - 1];
@@ -729,11 +728,11 @@ where
 /// This function creates all combinations of coordinates from the input arrays,
 /// useful for creating meshgrids for evaluation.
 #[allow(dead_code)]
-pub fn create_meshgrid<F>(coords: &[Array1<F>]) -> InterpolateResult<Array2<F>>
+pub fn create_meshgrid<F>(_coords: &[Array1<F>]) -> InterpolateResult<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + Zero,
 {
-    let n_dims = coords.len();
+    let n_dims = _coords.len();
     if n_dims == 0 {
         return Err(InterpolateError::invalid_input(
             "At least one coordinate array required".to_string(),
@@ -742,18 +741,18 @@ where
 
     // Calculate total number of grid points
     let mut total_points = 1;
-    for coord in coords {
+    for coord in _coords {
         total_points *= coord.len();
     }
 
     let mut result = Array2::zeros((total_points, n_dims));
-    let shapes: Vec<usize> = coords.iter().map(|c| c.len()).collect();
+    let shapes: Vec<usize> = _coords.iter().map(|c| c.len()).collect();
     let mut indices = vec![0; n_dims];
 
     for row in 0..total_points {
         // Set coordinates for this grid point
         for (dim, &idx) in indices.iter().enumerate() {
-            result[[row, dim]] = coords[dim][idx];
+            result[[row, dim]] = _coords[dim][idx];
         }
 
         // Increment multi-dimensional indices
@@ -765,13 +764,13 @@ where
 
 /// Calculate grid spacing for each dimension
 #[allow(dead_code)]
-pub fn calculate_grid_spacing<F>(coords: &[Array1<F>]) -> InterpolateResult<Vec<F>>
+pub fn calculate_grid_spacing<F>(_coords: &[Array1<F>]) -> InterpolateResult<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let mut spacings = Vec::with_capacity(coords.len());
+    let mut spacings = Vec::with_capacity(_coords.len());
 
-    for coord in coords {
+    for coord in _coords {
         if coord.len() < 2 {
             return Err(InterpolateError::invalid_input(
                 "Grid coordinates must have at least 2 points".to_string(),

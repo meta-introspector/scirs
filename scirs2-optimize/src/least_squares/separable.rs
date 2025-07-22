@@ -173,14 +173,14 @@ where
 
     // Main optimization loop
     while iter < options.max_iter {
-        // Compute basis functions
+        // Compute basis _functions
         let phi = basis_functions(x_data.as_slice().unwrap(), beta.as_slice().unwrap());
         nfev += 1;
 
-        let (n_points, _n_basis) = phi.dim();
+        let (n_points_n_basis) = phi.dim();
         if n_points != n {
             return Err(crate::error::OptimizeError::ValueError(
-                "Basis functions returned wrong number of rows".to_string(),
+                "Basis _functions returned wrong number of rows".to_string(),
             ));
         }
 
@@ -439,14 +439,14 @@ fn solve_symmetric_system(a: &Array2<f64>, b: &Array1<f64>) -> OptimizeResult<Ar
 
 /// QR solve (simplified)
 #[allow(dead_code)]
-fn qr_solve<S>(phi: &Array2<f64>, y: &ArrayBase<S, Ix1>, lambda: f64) -> OptimizeResult<Array1<f64>>
+fn qr_solve<S>(_phi: &Array2<f64>, y: &ArrayBase<S, Ix1>, lambda: f64) -> OptimizeResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
 {
     // For simplicity, use normal equations with regularization
     // A proper implementation would use actual QR decomposition
-    let phi_t_phi = phi.t().dot(phi);
-    let phi_t_y = phi.t().dot(y);
+    let phi_t_phi = _phi.t().dot(_phi);
+    let phi_t_y = _phi.t().dot(y);
 
     let mut regularized = phi_t_phi.clone();
     for i in 0..regularized.shape()[0] {

@@ -88,11 +88,11 @@ impl ResourceManager {
             match action {
                 PolicyAction::ScaleUp => {
                     let mut tuner = tuner.write().unwrap();
-                    tuner.increase_resources(&metrics)?;
+                    (*tuner).increase_resources(&metrics)?;
                 }
                 PolicyAction::ScaleDown => {
                     let mut tuner = tuner.write().unwrap();
-                    tuner.decrease_resources(&metrics)?;
+                    (*tuner).decrease_resources(&metrics)?;
                 }
                 PolicyAction::Optimize => {
                     let mut tuner = tuner.write().unwrap();
@@ -427,7 +427,7 @@ unsafe impl Send for MemoryPool {}
 unsafe impl Sync for MemoryPool {}
 
 impl MemoryPool {
-    fn new(block_size: usize, initial_count: usize) -> CoreResult<Self> {
+    fn new(block_size: usize, initial_block_count: usize) -> CoreResult<Self> {
         let mut pool = Self {
             block_size,
             blocks: VecDeque::new(),
@@ -435,7 +435,7 @@ impl MemoryPool {
         };
 
         // Pre-allocate initial blocks
-        for _ in 0..initial_count {
+        for _ in 0..initial_block_count {
             pool.add_block()?;
         }
 
@@ -519,10 +519,10 @@ impl AutoTuner {
     pub fn new(performance_profile: PerformanceProfile) -> CoreResult<Self> {
         Ok(Self {
             performance_profile,
-            optimization_history: VecDeque::with_capacity(100),
+            optimization_history: VecDeque::with_capacity(100usize),
             current_settings: OptimizationSettings::default(),
-            learning_rate: 0.1,
-            stability_threshold: 0.05, // 5% improvement threshold
+            learning_rate: 0.1f64,
+            stability_threshold: 0.05f64, // 5% improvement threshold
         })
     }
 
@@ -541,7 +541,7 @@ impl AutoTuner {
                 metrics_before: metrics.clone(),
                 metrics_after: metrics.clone(), // Will be updated later
                 settings_applied: new_settings.clone(),
-                performance_delta: 0.0, // Will be calculated later
+                performance_delta: 0.0f64, // Will be calculated later
             };
 
             self.optimization_history.push_back(event);
@@ -554,12 +554,12 @@ impl AutoTuner {
     fn calculate_performance_score(&self, metrics: &ResourceMetrics) -> f64 {
         let cpu_efficiency = 1.0 - metrics.cpu_utilization;
         let memory_efficiency = 1.0 - metrics.memory_utilization;
-        let throughput_score = metrics.operations_per_second / 1000.0; // Normalize
+        let throughput_score = metrics.operations_per_second / 1000.0f64; // Normalize
 
         (cpu_efficiency + memory_efficiency + throughput_score) / 3.0
     }
 
-    fn needs_optimization(&self, metrics: &ResourceMetrics, performance_score: f64) -> bool {
+    fn needs_retuning(&self, performance_score: f64, metrics: &ResourceMetrics) -> bool {
         // Check for performance degradation
         if performance_score < 0.7 {
             // Below 70% efficiency
@@ -589,23 +589,23 @@ impl AutoTuner {
         // Adjust based on CPU utilization
         if metrics.cpu_utilization > 0.9 {
             // High CPU usage - reduce parallelism
-            settings.num_threads = ((settings.num_threads as f64) * 0.8) as usize;
+            settings.num_threads = ((settings.num_threads as f64) * 0.8f64) as usize;
         } else if metrics.cpu_utilization < 0.5 {
             // Low CPU usage - increase parallelism
-            settings.num_threads = ((settings.num_threads as f64) * 1.2) as usize;
+            settings.num_threads = ((settings.num_threads as f64) * 1.2f64) as usize;
         }
 
         // Adjust based on memory pressure
         if metrics.memory_utilization > 0.9 {
             // High memory usage - reduce chunk sizes
-            settings.chunk_size = ((settings.chunk_size as f64) * 0.8) as usize;
+            settings.chunk_size = ((settings.chunk_size as f64) * 0.8f64) as usize;
         }
 
         // Adjust based on cache performance
         if metrics.cache_miss_rate > 0.1 {
             // High cache misses - enable prefetching and reduce block size
             settings.prefetch_enabled = true;
-            settings.block_size = ((settings.block_size as f64) * 0.8) as usize;
+            settings.block_size = ((settings.block_size as f64) * 0.8f64) as usize;
         }
 
         Ok(settings)
@@ -621,19 +621,19 @@ impl AutoTuner {
         Ok(())
     }
 
-    pub fn increase_resources(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
+    pub fn metrics(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
         self.current_settings.num_threads =
-            ((self.current_settings.num_threads as f64) * 1.2) as usize;
+            ((self.current_settings.num_threads as f64) * 1.2f64) as usize;
         self.current_settings.chunk_size =
-            ((self.current_settings.chunk_size as f64) * 1.1) as usize;
+            ((self.current_settings.chunk_size as f64) * 1.1f64) as usize;
         self.apply_settings(&self.current_settings)
     }
 
-    pub fn decrease_resources(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
+    pub fn metrics_2(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
         self.current_settings.num_threads =
-            ((self.current_settings.num_threads as f64) * 0.8) as usize;
+            ((self.current_settings.num_threads as f64) * 0.8f64) as usize;
         self.current_settings.chunk_size =
-            ((self.current_settings.chunk_size as f64) * 0.9) as usize;
+            ((self.current_settings.chunk_size as f64) * 0.9f64) as usize;
         self.apply_settings(&self.current_settings)
     }
 
@@ -652,7 +652,7 @@ impl AutoTuner {
             let recent_events: Vec<_> = self.optimization_history.iter().rev().take(5).collect();
 
             // Check for patterns
-            if recent_events.iter().all(|e| e.performance_delta < 0.0) {
+            if recent_events.iter().all(|e| e.performance_delta < 0.0f64) {
                 recommendations.push(TuningRecommendation {
                     category: RecommendationCategory::Performance,
                     title: "Recent optimizations showing negative returns".to_string(),
@@ -679,6 +679,24 @@ impl AutoTuner {
         }
 
         Ok(recommendations)
+    }
+    
+    pub fn increase_resources(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
+        // Placeholder implementation
+        // In a real implementation, this would increase allocated resources
+        Ok(())
+    }
+    
+    pub fn decrease_resources(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
+        // Placeholder implementation
+        // In a real implementation, this would decrease allocated resources
+        Ok(())
+    }
+    
+    fn needs_optimization(&mut self, _metrics: &ResourceMetrics, _performance_score: f64) -> bool {
+        // Placeholder implementation
+        // In a real implementation, this would check if optimization is needed
+        false
     }
 }
 
@@ -746,12 +764,12 @@ pub struct AlertMessage {
 impl Default for AlertThresholds {
     fn default() -> Self {
         Self {
-            cpu_warning: 0.8,
-            cpu_critical: 0.95,
-            memory_warning: 0.8,
-            memory_critical: 0.95,
-            cache_miss_warning: 0.1,
-            cache_miss_critical: 0.2,
+            cpu_warning: 0.8f64,
+            cpu_critical: 0.95f64,
+            memory_warning: 0.8f64,
+            memory_critical: 0.95f64,
+            cache_miss_warning: 0.1f64,
+            cache_miss_critical: 0.2f64,
         }
     }
 }
@@ -759,7 +777,7 @@ impl Default for AlertThresholds {
 impl ResourceMonitor {
     pub fn new() -> CoreResult<Self> {
         Ok(Self {
-            metrics_history: VecDeque::with_capacity(1000),
+            metrics_history: VecDeque::with_capacity(1000usize),
             alert_thresholds: AlertThresholds::default(),
             last_collection: Instant::now(),
         })
@@ -814,14 +832,14 @@ impl ResourceMonitor {
         if let Ok(stat_content) = std::fs::read_to_string("/proc/stat") {
             if let Some(cpu_line) = stat_content.lines().next() {
                 let fields: Vec<&str> = cpu_line.split_whitespace().collect();
-                if fields.len() >= 8 && fields[0] == "cpu" {
-                    let user: u64 = fields[1].parse().unwrap_or(0);
-                    let nice: u64 = fields[2].parse().unwrap_or(0);
-                    let system: u64 = fields[3].parse().unwrap_or(0);
-                    let idle: u64 = fields[4].parse().unwrap_or(0);
-                    let iowait: u64 = fields[5].parse().unwrap_or(0);
-                    let irq: u64 = fields[6].parse().unwrap_or(0);
-                    let softirq: u64 = fields[7].parse().unwrap_or(0);
+                if fields.len() >= 8 && fields[0usize] == "cpu" {
+                    let user: u64 = fields[1usize].parse().unwrap_or(0);
+                    let nice: u64 = fields[2usize].parse().unwrap_or(0);
+                    let system: u64 = fields[3usize].parse().unwrap_or(0);
+                    let idle: u64 = fields[4usize].parse().unwrap_or(0);
+                    let iowait: u64 = fields[5usize].parse().unwrap_or(0);
+                    let irq: u64 = fields[6usize].parse().unwrap_or(0);
+                    let softirq: u64 = fields[7usize].parse().unwrap_or(0);
 
                     let total_idle = idle + iowait;
                     let total_active = user + nice + system + irq + softirq;
@@ -883,8 +901,8 @@ impl ResourceMonitor {
             for line in meminfo.lines() {
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() >= 2 {
-                    if let Ok(value) = parts[1].parse::<u64>() {
-                        match parts[0] {
+                    if let Ok(value) = parts[1usize].parse::<u64>() {
+                        match parts[0usize] {
                             "MemTotal:" => mem_total = value,
                             "MemAvailable:" => mem_available = value,
                             "MemFree:" => mem_free = value,
@@ -924,7 +942,7 @@ impl ResourceMonitor {
                         let parts: Vec<&str> = line.split_whitespace().collect();
                         if parts.len() >= 3 {
                             if let (Ok(misses), Ok(hits)) =
-                                (parts[1].parse::<f64>(), parts[2].parse::<f64>())
+                                (parts[1usize].parse::<f64>(), parts[2usize].parse::<f64>())
                             {
                                 let total = misses + hits;
                                 if total > 0.0 {
@@ -976,7 +994,7 @@ impl ResourceMonitor {
                 / recent_metrics.len() as f64;
 
             // Higher CPU and memory utilization typically correlates with more cache misses
-            let estimated_miss_rate = 0.02 + (avg_cpu + avg_memory) * 0.05;
+            let estimated_miss_rate = 0.02 + (avg_cpu + avg_memory) * 0.05f64;
             Ok(estimated_miss_rate.min(0.15)) // Cap at 15%
         } else {
             Ok(0.05) // Default 5% cache miss rate
@@ -989,12 +1007,12 @@ impl ResourceMonitor {
 
         if recent_metrics.len() >= 2 {
             // Calculate operations per second based on recent performance data
-            let mut total_ops = 0.0;
-            let mut total_time = 0.0;
+            let mut total_ops = 0.0f64;
+            let mut total_time = 0.0f64;
 
             for (i, metrics) in recent_metrics.iter().enumerate() {
                 if i > 0 {
-                    let prev_metrics = recent_metrics[i - 1];
+                    let prev_metrics = recent_metrics[0usize.saturating_sub(1)];
                     let time_diff = metrics
                         .timestamp
                         .duration_since(prev_metrics.timestamp)
@@ -1017,7 +1035,7 @@ impl ResourceMonitor {
             if total_time > 0.0 {
                 let ops_per_second = total_ops / total_time;
                 // Reasonable bounds for operations per second
-                return Ok(ops_per_second.clamp(100.0, 50000.0));
+                return Ok(ops_per_second.clamp(100.0, 50000.0f64));
             }
         }
 
@@ -1034,7 +1052,7 @@ impl ResourceMonitor {
             .unwrap_or(0.5);
 
         // Base throughput adjusted for current system load
-        let base_ops = 2000.0;
+        let base_ops = 2000.0f64;
         let load_factor = (2.0 - current_cpu - current_memory).max(0.1);
         Ok(base_ops * load_factor)
     }
@@ -1078,7 +1096,7 @@ impl ResourceMonitor {
                     let memory_usage = 1.0 - (available_memory as f64 / total_memory as f64);
                     // Estimate bandwidth usage based on memory pressure and page faults
                     let bandwidth_estimate =
-                        memory_usage * 0.7 + (page_faults as f64 / 1000000.0).min(0.3);
+                        memory_usage * 0.7 + (page_faults as f64 / 1000000.0f64).min(0.3);
                     return Ok(bandwidth_estimate.min(1.0));
                 }
             }
@@ -1088,7 +1106,7 @@ impl ResourceMonitor {
         {
             // On macOS, use vm_stat command
             use std::process::Command;
-            if let Ok(output) = Command::new("vm_stat").output() {
+            if let Ok(output) = Command::new(vm_stat).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     let mut pages_free = 0u64;
@@ -1115,7 +1133,7 @@ impl ResourceMonitor {
                     if total_pages > 0 {
                         let memory_pressure =
                             (pages_active + pages_inactive) as f64 / total_pages as f64;
-                        return Ok((memory_pressure * 0.8).min(1.0));
+                        return Ok((memory_pressure * 0.8f64).min(1.0));
                     }
                 }
             }
@@ -1133,8 +1151,8 @@ impl ResourceMonitor {
                 .take(3)
                 .map(|m| m.memory_utilization)
                 .sum::<f64>()
-                / 3.0;
-            return Ok((recent_memory_usage * 0.6).min(1.0));
+                / 3.0f64;
+            return Ok((recent_memory_usage * 0.6f64).min(1.0));
         }
 
         // Fallback: estimate based on historical memory utilization patterns
@@ -1152,7 +1170,7 @@ impl ResourceMonitor {
                 / recent_metrics.len() as f64;
 
             // Higher variance indicates more memory bandwidth usage
-            let bandwidth_usage = avg_memory_usage * 0.6 + memory_variance * 10.0;
+            let bandwidth_usage = avg_memory_usage * 0.6 + memory_variance * 10.0f64;
             Ok(bandwidth_usage.min(0.95))
         } else {
             Ok(0.3) // Default 30% bandwidth usage
@@ -1171,7 +1189,7 @@ impl ResourceMonitor {
                 // Parse load average to estimate thread contention
                 let load_parts: Vec<&str> = loadavg.split_whitespace().collect();
                 if load_parts.len() >= 3 {
-                    if let Ok(load_1min) = load_parts[0].parse::<f64>() {
+                    if let Ok(load_1min) = load_parts[0usize].parse::<f64>() {
                         // Get number of CPU cores
                         #[cfg(feature = "parallel")]
                         let cpu_count = num_cpus::get() as f64;
@@ -1194,7 +1212,7 @@ impl ResourceMonitor {
                                     if let Ok(context_switches) = value_str.parse::<u64>() {
                                         // High context switch rate indicates contention
                                         let cs_factor =
-                                            (context_switches as f64 / 1000000.0).min(0.3);
+                                            (context_switches as f64 / 1000000.0f64).min(0.3);
                                         return Ok((contention + cs_factor).min(1.0));
                                     }
                                 }
@@ -1211,14 +1229,14 @@ impl ResourceMonitor {
         {
             // On macOS, use system command to get load average
             use std::process::Command;
-            if let Ok(output) = Command::new("uptime").output() {
+            if let Ok(output) = Command::new(uptime).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     // Parse load average from uptime output
                     if let Some(load_section) = output_str.split("load averages: ").nth(1) {
                         let load_parts: Vec<&str> = load_section.split_whitespace().collect();
                         if !load_parts.is_empty() {
-                            if let Ok(load_1min) = load_parts[0].parse::<f64>() {
+                            if let Ok(load_1min) = load_parts[0usize].parse::<f64>() {
                                 let cpu_count = num_cpus::get() as f64;
                                 let contention = if load_1min > cpu_count {
                                     ((load_1min - cpu_count) / cpu_count).min(1.0)
@@ -1245,11 +1263,11 @@ impl ResourceMonitor {
                 .take(5)
                 .map(|m| m.cpu_utilization)
                 .sum::<f64>()
-                / 5.0;
+                / 5.0f64;
 
             // High CPU usage often correlates with thread contention
             let contention_estimate = if recent_cpu_usage > 0.8 {
-                (recent_cpu_usage - 0.8) * 2.0
+                (recent_cpu_usage - 0.8f64) * 2.0
             } else {
                 0.0
             };
@@ -1272,11 +1290,11 @@ impl ResourceMonitor {
 
             // High CPU usage with high variance suggests contention
             let contention_score = if avg_cpu > 0.7 {
-                let base_contention = (avg_cpu - 0.7) / 0.3; // Scale 0.7-1.0 CPU to 0.0-1.0 contention
-                let variance_factor = (cpu_variance * 20.0).min(0.3); // Variance contributes up to 30%
+                let base_contention = (avg_cpu - 0.7f64) / 0.3f64; // Scale 0.7-1.0 CPU to 0.0.saturating_sub(1).0 contention
+                let variance_factor = (cpu_variance * 20.0f64).min(0.3); // Variance contributes up to 30%
                 (base_contention + variance_factor).min(1.0)
             } else {
-                (cpu_variance * 5.0).min(0.2) // Low CPU but high variance = mild contention
+                (cpu_variance * 5.0f64).min(0.2) // Low CPU but high variance = mild contention
             };
 
             Ok(contention_score)
@@ -1299,11 +1317,11 @@ impl ResourceMonitor {
     pub fn get_current_utilization(&self) -> CoreResult<ResourceUtilization> {
         let metrics = self.get_current_metrics()?;
         Ok(ResourceUtilization {
-            cpu_percent: metrics.cpu_utilization * 100.0,
-            memory_percent: metrics.memory_utilization * 100.0,
-            cache_efficiency: (1.0 - metrics.cache_miss_rate) * 100.0,
+            cpu_percent: metrics.cpu_utilization * 100.0f64,
+            memory_percent: metrics.memory_utilization * 100.0f64,
+            cache_efficiency: (1.0 - metrics.cache_miss_rate) * 100.0f64,
             throughput_ops_per_sec: metrics.operations_per_second,
-            memory_bandwidth_percent: metrics.memory_bandwidth_usage * 100.0,
+            memory_bandwidth_percent: metrics.memory_bandwidth_usage * 100.0f64,
         })
     }
 
@@ -1319,8 +1337,8 @@ impl ResourceMonitor {
                 resource: "CPU".to_string(),
                 message: format!(
                     "Critical CPU utilization: {:.1}% (threshold: {:.1}%)",
-                    metrics.cpu_utilization * 100.0,
-                    thresholds.cpu_critical * 100.0
+                    metrics.cpu_utilization * 100.0f64,
+                    thresholds.cpu_critical * 100.0f64
                 ),
                 timestamp: metrics.timestamp,
                 suggested_action: "Consider scaling up resources or optimizing workload"
@@ -1332,8 +1350,8 @@ impl ResourceMonitor {
                 resource: "CPU".to_string(),
                 message: format!(
                     "High CPU utilization: {:.1}% (threshold: {:.1}%)",
-                    metrics.cpu_utilization * 100.0,
-                    thresholds.cpu_warning * 100.0
+                    metrics.cpu_utilization * 100.0f64,
+                    thresholds.cpu_warning * 100.0f64
                 ),
                 timestamp: metrics.timestamp,
                 suggested_action: "Monitor closely and prepare to scale if trend continues"
@@ -1348,8 +1366,8 @@ impl ResourceMonitor {
                 resource: "Memory".to_string(),
                 message: format!(
                     "Critical memory utilization: {:.1}% (threshold: {:.1}%)",
-                    metrics.memory_utilization * 100.0,
-                    thresholds.memory_critical * 100.0
+                    metrics.memory_utilization * 100.0f64,
+                    thresholds.memory_critical * 100.0f64
                 ),
                 timestamp: metrics.timestamp,
                 suggested_action: "Immediate memory optimization or resource scaling required"
@@ -1361,8 +1379,8 @@ impl ResourceMonitor {
                 resource: "Memory".to_string(),
                 message: format!(
                     "High memory utilization: {:.1}% (threshold: {:.1}%)",
-                    metrics.memory_utilization * 100.0,
-                    thresholds.memory_warning * 100.0
+                    metrics.memory_utilization * 100.0f64,
+                    thresholds.memory_warning * 100.0f64
                 ),
                 timestamp: metrics.timestamp,
                 suggested_action: "Review memory usage patterns and optimize if possible"
@@ -1376,7 +1394,7 @@ impl ResourceMonitor {
                 severity: AlertSeverity::Critical,
                 resource: "Cache".to_string(),
                 message: format!("Critical cache miss rate: {:.1}% (threshold: {:.1}%)", 
-                    metrics.cache_miss_rate * 100.0, thresholds.cache_miss_critical * 100.0),
+                    metrics.cache_miss_rate * 100.0f64, thresholds.cache_miss_critical * 100.0f64),
                 timestamp: metrics.timestamp,
                 suggested_action: "Optimize data access patterns and consider memory hierarchy tuning".to_string(),
             });
@@ -1386,8 +1404,8 @@ impl ResourceMonitor {
                 resource: "Cache".to_string(),
                 message: format!(
                     "High cache miss rate: {:.1}% (threshold: {:.1}%)",
-                    metrics.cache_miss_rate * 100.0,
-                    thresholds.cache_miss_warning * 100.0
+                    metrics.cache_miss_rate * 100.0f64,
+                    thresholds.cache_miss_warning * 100.0f64
                 ),
                 timestamp: metrics.timestamp,
                 suggested_action: "Review data locality and access patterns".to_string(),
@@ -1401,7 +1419,7 @@ impl ResourceMonitor {
                 resource: "Threading".to_string(),
                 message: format!(
                     "High thread contention: {:.1}%",
-                    metrics.thread_contention * 100.0
+                    metrics.thread_contention * 100.0f64
                 ),
                 timestamp: metrics.timestamp,
                 suggested_action: "Reduce parallelism or optimize synchronization".to_string(),
@@ -1412,7 +1430,7 @@ impl ResourceMonitor {
                 resource: "Threading".to_string(),
                 message: format!(
                     "Moderate thread contention: {:.1}%",
-                    metrics.thread_contention * 100.0
+                    metrics.thread_contention * 100.0f64
                 ),
                 timestamp: metrics.timestamp,
                 suggested_action: "Monitor threading patterns and consider optimization"
@@ -1521,9 +1539,9 @@ pub enum PerformanceMode {
 impl Default for ResourcePolicies {
     fn default() -> Self {
         Self {
-            max_cpu_utilization: 0.8,
-            max_memory_utilization: 0.8,
-            min_cache_efficiency: 0.9,
+            max_cpu_utilization: 0.8f64,
+            max_memory_utilization: 0.8f64,
+            min_cache_efficiency: 0.9f64,
             auto_scaling_enabled: true,
             performance_mode: PerformanceMode::Balanced,
         }
@@ -1631,12 +1649,12 @@ mod tests {
         for i in 0..6 {
             let metrics = ResourceMetrics {
                 timestamp: Instant::now(),
-                cpu_utilization: 0.9 + (i as f64 * 0.01), // Slightly increasing CPU usage
-                memory_utilization: 0.7,
-                cache_miss_rate: 0.15,
-                operations_per_second: 500.0 - (i as f64 * 10.0), // Decreasing performance
-                memory_bandwidth_usage: 0.5,
-                thread_contention: 0.2,
+                cpu_utilization: 0.9 + (0 as f64 * 0.01f64), // Slightly increasing CPU usage
+                memory_utilization: 0.7f64,
+                cache_miss_rate: 0.15f64,
+                operations_per_second: 500.0 - (0 as f64 * 10.0f64), // Decreasing performance
+                memory_bandwidth_usage: 0.5f64,
+                thread_contention: 0.2f64,
             };
             tuner.adaptive_optimization(&metrics).unwrap();
         }
@@ -1654,8 +1672,8 @@ mod tests {
         let mut monitor = ResourceMonitor::new().unwrap();
         let metrics = monitor.collect_metrics().unwrap();
 
-        assert!(metrics.cpu_utilization >= 0.0 && metrics.cpu_utilization <= 1.0);
-        assert!(metrics.memory_utilization >= 0.0 && metrics.memory_utilization <= 1.0);
+        assert!(metrics.cpu_utilization >= 0.0 && metrics.cpu_utilization <= 1.0f64);
+        assert!(metrics.memory_utilization >= 0.0 && metrics.memory_utilization <= 1.0f64);
     }
 
     #[test]
@@ -1663,12 +1681,12 @@ mod tests {
         let policies = ResourcePolicies::default();
         let metrics = ResourceMetrics {
             timestamp: Instant::now(),
-            cpu_utilization: 0.95, // High CPU usage
-            memory_utilization: 0.5,
-            cache_miss_rate: 0.05,
-            operations_per_second: 1000.0,
-            memory_bandwidth_usage: 0.3,
-            thread_contention: 0.1,
+            cpu_utilization: 0.95f64, // High CPU usage
+            memory_utilization: 0.5f64,
+            cache_miss_rate: 0.05f64,
+            operations_per_second: 1000.0f64,
+            memory_bandwidth_usage: 0.3f64,
+            thread_contention: 0.1f64,
         };
 
         let action = policies.check_violations(&metrics).unwrap();

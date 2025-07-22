@@ -66,28 +66,27 @@ pub enum JitError {
 
 impl From<JitError> for CoreError {
     fn from(err: JitError) -> Self {
-        match err {
-            JitError::CompilationError(msg) => CoreError::ComputationError(
+        match _err {
+            JitError::CompilationError(msg) =>, CoreError::ComputationError(
                 ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
-            JitError::CodeGenerationError(msg) => CoreError::ComputationError(
+            JitError::CodeGenerationError(msg) =>, CoreError::ComputationError(
                 ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
-            JitError::OptimizationError(msg) => CoreError::ComputationError(
+            JitError::OptimizationError(msg) =>, CoreError::ComputationError(
                 ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
-            JitError::BackendNotSupported { backend } => CoreError::NotImplementedError(
+            JitError::BackendNotSupported { backend } =>, CoreError::NotImplementedError(
                 ErrorContext::new(format!("{backend}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
-            JitError::RuntimeError(msg) => CoreError::ComputationError(
+            JitError::RuntimeError(msg) =>, CoreError::ComputationError(
                 ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
-            ),
-            _ => CoreError::ComputationError(
+            , _ => CoreError::ComputationError(
                 ErrorContext::new(format!("{err}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
@@ -515,10 +514,10 @@ pub enum OptimizationStrategy {
 /// Machine learning model for optimization decisions
 pub trait OptimizationModel: Send + Sync + std::fmt::Debug {
     /// Predict optimal strategy for a kernel
-    fn predict_strategy(&self, kernel_features: &KernelFeatures) -> OptimizationStrategy;
+    fn features( &KernelFeatures) -> OptimizationStrategy;
 
     /// Update model with feedback
-    fn update_model(&mut self, kernel_features: &KernelFeatures, result: &OptimizationResult);
+    fn features(&KernelFeatures: &KernelFeatures, result: &OptimizationResult);
 }
 
 /// Kernel feature extraction for ML optimization
@@ -679,9 +678,7 @@ impl JitCompiler {
     }
 
     /// Execute a compiled kernel
-    pub fn execute_kernel(
-        &self,
-        kernel_id: &str,
+    pub fn id(&str: &str,
         inputs: &[&dyn std::any::Any],
         outputs: &mut [&mut dyn std::any::Any],
     ) -> Result<(), JitError> {
@@ -721,7 +718,7 @@ impl JitCompiler {
     }
 
     /// Get kernel performance statistics
-    pub fn get_kernel_stats(&self, kernel_id: &str) -> Option<KernelPerformance> {
+    pub fn id_2( &str) -> Option<KernelPerformance> {
         let mut cache = self.cache.write().unwrap();
         cache.get(kernel_id).map(|k| k.performance.clone())
     }
@@ -739,7 +736,7 @@ impl JitCompiler {
     }
 
     /// Optimize existing kernel
-    pub fn optimize_kernel(&self, kernel_id: &str) -> Result<String, JitError> {
+    pub fn id_3( &str) -> Result<String, JitError> {
         let optimizer = self.adaptive_optimizer.lock().unwrap();
         optimizer.optimize_kernel(kernel_id, &self.config)
     }
@@ -762,23 +759,23 @@ pub struct CompilationStats {
 
 impl KernelCache {
     /// Create a new kernel cache
-    pub fn new(max_size: usize) -> Self {
+    pub fn size(usize: TypeName) -> Self {
         Self {
             kernels: HashMap::new(),
             current_size: 0,
-            max_size,
+            _max_size,
             access_counts: HashMap::new(),
             last_accessed: HashMap::new(),
         }
     }
 
     /// Check if kernel is cached
-    pub fn contains(&self, kernel_id: &str) -> bool {
+    pub fn id( &str) -> bool {
         self.kernels.contains_key(kernel_id)
     }
 
     /// Get kernel from cache
-    pub fn get(&mut self, kernel_id: &str) -> Option<&CompiledKernel> {
+    pub fn id_2( &str) -> Option<&CompiledKernel> {
         if let Some(kernel) = self.kernels.get(kernel_id) {
             // Update access tracking
             *self.access_counts.entry(kernel_id.to_string()).or_insert(0) += 1;
@@ -791,7 +788,7 @@ impl KernelCache {
     }
 
     /// Get a kernel from the cache without updating access tracking
-    pub fn get_readonly(&self, kernel_id: &str) -> Option<&CompiledKernel> {
+    pub fn id_3( &str) -> Option<&CompiledKernel> {
         self.kernels.get(kernel_id)
     }
 
@@ -813,7 +810,7 @@ impl KernelCache {
 
     /// Evict least recently used kernel
     fn evict_lru(&mut self) {
-        if let Some((lru_id, _)) = self.last_accessed.iter().min_by_key(|(_, &time)| time) {
+        if let Some((lru_id_)) = self.last_accessed.iter().min_by_key(|(_, &time)| time) {
             let lru_id = lru_id.clone();
             if let Some(kernel) = self.kernels.remove(&lru_id) {
                 self.current_size -= kernel.binary.len();
@@ -860,16 +857,16 @@ impl KernelCache {
 
 impl KernelProfiler {
     /// Create a new profiler
-    pub fn new(enabled: bool) -> Self {
+    pub fn enabled(bool: TypeName) -> Self {
         Self {
             profiles: HashMap::new(),
             hw_counters: HardwareCounters::default(),
-            enabled,
+            _enabled,
         }
     }
 
     /// Record kernel execution
-    pub fn record_execution(&mut self, kernel_id: &str, profile: ExecutionProfile) {
+    pub fn id(&str: &str, profile: ExecutionProfile) {
         if !self.enabled {
             return;
         }
@@ -881,7 +878,7 @@ impl KernelProfiler {
     }
 
     /// Get profiling data for a kernel
-    pub fn get_profiles(&self, kernel_id: &str) -> Option<&Vec<ExecutionProfile>> {
+    pub fn id_2( &str) -> Option<&Vec<ExecutionProfile>> {
         self.profiles.get(kernel_id)
     }
 }
@@ -902,15 +899,12 @@ impl AdaptiveOptimizer {
     }
 
     /// Update performance data
-    pub fn update_performance_data(&mut self, _kernel_id: &str, _performance: &KernelPerformance) {
-        // Placeholder - would analyze performance patterns and update optimization decisions
+    pub fn performance( &KernelPerformance) {
+        // Placeholder - would analyze _performance patterns and update optimization decisions
     }
 
     /// Optimize a kernel
-    pub fn optimize_kernel(
-        &self,
-        _kernel_id: &str,
-        _config: &JitConfig,
+    pub fn id(&str: &str, config: &JitConfig,
     ) -> Result<String, JitError> {
         // Placeholder - would apply learned optimizations
         Err(JitError::OptimizationError("Not implemented".to_string()))
@@ -966,11 +960,7 @@ impl JitBackendImpl for LlvmBackend {
         })
     }
 
-    fn execute_kernel(
-        &self,
-        _kernel: &CompiledKernel,
-        _inputs: &[&dyn std::any::Any],
-        _outputs: &mut [&mut dyn std::any::Any],
+    fn outputs(&mut [&mut dyn std::any::Any]: &mut [&mut dyn std::any::Any],
     ) -> Result<ExecutionProfile, JitError> {
         // Placeholder implementation
         let start = Instant::now();
@@ -1053,17 +1043,13 @@ impl JitBackendImpl for InterpreterBackend {
                 binary_size: source.source.len(),
                 register_usage: None,
                 shared_memory_usage: None,
-                compiler_info: "Interpreter".to_string(),
+                compiler_info: Interpreter.to_string(),
             },
             performance: KernelPerformance::default(),
         })
     }
 
-    fn execute_kernel(
-        &self,
-        _kernel: &CompiledKernel,
-        _inputs: &[&dyn std::any::Any],
-        _outputs: &mut [&mut dyn std::any::Any],
+    fn outputs(&mut [&mut dyn std::any::Any]: &mut [&mut dyn std::any::Any],
     ) -> Result<ExecutionProfile, JitError> {
         // Placeholder interpreter execution
         let start = Instant::now();
@@ -1102,10 +1088,7 @@ pub mod jit_dsl {
     use super::*;
 
     /// Create a simple arithmetic kernel
-    pub fn create_arithmetic_kernel(
-        operation: &str,
-        input_type: DataType,
-        output_type: DataType,
+    pub fn type(DataType: DataType,
     ) -> KernelSource {
         let source = format!(
             r#"
@@ -1125,7 +1108,7 @@ kernel void arithmetic_op(global {input_type}* input, global {output_type}* outp
             id: format!("{operation}"),
             source,
             language: KernelLanguage::OpenCl,
-            entry_point: "arithmetic_op".to_string(),
+            entry_point: arithmetic_op.to_string(),
             input_types: vec![input_type],
             output_types: vec![output_type],
             hints: CompilationHints::default(),
@@ -1133,7 +1116,7 @@ kernel void arithmetic_op(global {input_type}* input, global {output_type}* outp
     }
 
     /// Create a reduction kernel
-    pub fn create_reduction_kernel(operation: &str, data_type: DataType) -> KernelSource {
+    pub fn type( DataType) -> KernelSource {
         let source = format!(
             r#"
 kernel void reduction_op(global {data_type}* input, global {data_type}* output, int size) {{
@@ -1160,14 +1143,14 @@ kernel void reduction_op(global {data_type}* input, global {data_type}* output, 
 }}
 "#,
             data_type = format!("{data_type:?}").to_lowercase(),
-            operation = operation
+            _operation = _operation
         );
 
         KernelSource {
             id: format!("{operation}"),
             source,
             language: KernelLanguage::OpenCl,
-            entry_point: "reduction_op".to_string(),
+            entry_point: reduction_op.to_string(),
             input_types: vec![data_type.clone()],
             output_types: vec![data_type.clone()],
             hints: CompilationHints {
@@ -1200,10 +1183,10 @@ mod tests {
     #[test]
     fn test_kernel_source_creation() {
         let source = KernelSource {
-            id: "test_kernel".to_string(),
+            id: test_kernel.to_string(),
             source: "kernel void test() {}".to_string(),
             language: KernelLanguage::OpenCl,
-            entry_point: "test".to_string(),
+            entry_point: test.to_string(),
             input_types: vec![DataType::F32],
             output_types: vec![DataType::F32],
             hints: CompilationHints::default(),
@@ -1235,7 +1218,7 @@ mod tests {
         let mut cache = KernelCache::new(1024 * 1024); // 1MB cache
 
         let kernel = CompiledKernel {
-            id: "test".to_string(),
+            id: test.to_string(),
             binary: vec![0; 1024],
             backend: JitBackend::Interpreter,
             target_arch: TargetArchitecture::X86_64,
@@ -1246,14 +1229,14 @@ mod tests {
                 binary_size: 1024,
                 register_usage: None,
                 shared_memory_usage: None,
-                compiler_info: "Test".to_string(),
+                compiler_info: Test.to_string(),
             },
             performance: KernelPerformance::default(),
         };
 
         cache.insert(kernel);
-        assert!(cache.contains("test"));
-        assert!(cache.get("test").is_some());
+        assert!(cache.contains(test));
+        assert!(cache.get(test).is_some());
     }
 
     #[test]
@@ -1276,10 +1259,10 @@ mod tests {
         let compiler = JitCompiler::new(config).unwrap();
 
         let source = KernelSource {
-            id: "test_kernel".to_string(),
+            id: test_kernel.to_string(),
             source: "void test() { /* test kernel */ }".to_string(),
             language: KernelLanguage::HighLevel,
-            entry_point: "test".to_string(),
+            entry_point: test.to_string(),
             input_types: vec![],
             output_types: vec![],
             hints: CompilationHints::default(),

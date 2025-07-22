@@ -28,21 +28,21 @@ pub enum EulerianType {
 /// # Returns
 /// * The type of Eulerian structure in the graph
 #[allow(dead_code)]
-pub fn eulerian_type<N, E, Ix>(graph: &Graph<N, E, Ix>) -> EulerianType
+pub fn eulerian_type<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> EulerianType
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    // First check if the graph is connected (ignoring isolated vertices)
-    let non_isolated: Vec<_> = graph
+    // First check if the _graph is connected (ignoring isolated vertices)
+    let non_isolated: Vec<_> = _graph
         .inner()
         .node_indices()
-        .filter(|&idx| graph.inner().edges(idx).count() > 0)
+        .filter(|&idx| _graph.inner().edges(idx).count() > 0)
         .collect();
 
     if non_isolated.is_empty() {
-        return EulerianType::Circuit; // Empty graph technically has a circuit
+        return EulerianType::Circuit; // Empty _graph technically has a circuit
     }
 
     // Check connectivity among non-isolated vertices
@@ -52,7 +52,7 @@ where
     visited.insert(non_isolated[0]);
 
     while let Some(node) = queue.pop_front() {
-        for neighbor in graph.inner().neighbors(node) {
+        for neighbor in _graph.inner().neighbors(node) {
             if !visited.contains(&neighbor) && non_isolated.contains(&neighbor) {
                 visited.insert(neighbor);
                 queue.push_back(neighbor);
@@ -66,8 +66,8 @@ where
 
     // Count vertices with odd degree
     let mut odd_degree_count = 0;
-    for node in graph.inner().node_indices() {
-        let degree = graph.inner().edges(node).count();
+    for node in _graph.inner().node_indices() {
+        let degree = _graph.inner().edges(node).count();
         if degree % 2 == 1 {
             odd_degree_count += 1;
         }
@@ -75,8 +75,7 @@ where
 
     match odd_degree_count {
         0 => EulerianType::Circuit,
-        2 => EulerianType::Path,
-        _ => EulerianType::None,
+        2 => EulerianType::Path_ =>, EulerianType::None,
     }
 }
 
@@ -88,25 +87,25 @@ where
 /// # Returns
 /// * `bool` - True if a Hamiltonian path exists
 #[allow(dead_code)]
-pub fn has_hamiltonian_path<N, E, Ix>(graph: &Graph<N, E, Ix>) -> bool
+pub fn has_hamiltonian_path<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> bool
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    let n = graph.node_count();
+    let n = _graph.node_count();
     if n == 0 {
         return true;
     }
 
-    let nodes: Vec<_> = graph.inner().node_indices().collect();
+    let nodes: Vec<_> = _graph.inner().node_indices().collect();
 
     // Try starting from each node
     for &start in &nodes {
         let mut visited = vec![false; n];
         visited[start.index()] = true;
 
-        if hamiltonian_path_dfs(graph, start, &mut visited, 1, n) {
+        if hamiltonian_path_dfs(_graph, start, &mut visited, 1, n) {
             return true;
         }
     }
@@ -155,13 +154,13 @@ where
 /// # Returns
 /// * `bool` - True if a Hamiltonian circuit exists
 #[allow(dead_code)]
-pub fn has_hamiltonian_circuit<N, E, Ix>(graph: &Graph<N, E, Ix>) -> bool
+pub fn has_hamiltonian_circuit<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> bool
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    let n = graph.node_count();
+    let n = _graph.node_count();
     if n == 0 {
         return true;
     }
@@ -169,13 +168,13 @@ where
         return false;
     }
 
-    let nodes: Vec<_> = graph.inner().node_indices().collect();
+    let nodes: Vec<_> = _graph.inner().node_indices().collect();
     let start = nodes[0];
 
     let mut visited = vec![false; n];
     visited[start.index()] = true;
 
-    hamiltonian_circuit_dfs(graph, start, start, &mut visited, 1, n)
+    hamiltonian_circuit_dfs(_graph, start, start, &mut visited, 1, n)
 }
 
 /// DFS helper for Hamiltonian circuit

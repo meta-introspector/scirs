@@ -164,7 +164,7 @@ impl NetCDFFile {
     /// # Examples
     ///
     /// ```no_run
-    /// use scirs2_io::netcdf::NetCDFFile;
+    /// use scirs2__io::netcdf::NetCDFFile;
     ///
     /// // Open a NetCDF file for reading
     /// let nc = NetCDFFile::open("data.nc", None).unwrap();
@@ -175,9 +175,9 @@ impl NetCDFFile {
     /// // List the variables
     /// println!("Variables: {:?}", nc.variables());
     /// ```
-    pub fn open<P: AsRef<Path>>(path: P, options: Option<NetCDFOptions>) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(_path: P, options: Option<NetCDFOptions>) -> Result<Self> {
         let opts = options.unwrap_or_default();
-        let path_str = path.as_ref().to_string_lossy().to_string();
+        let path_str = _path.as_ref().to_string_lossy().to_string();
 
         if opts.mode == "r" && !Path::new(&path_str).exists() {
             return Err(IoError::FileError(format!("File not found: {}", path_str)));
@@ -199,7 +199,7 @@ impl NetCDFFile {
         // Create an empty NetCDF file structure
         // In a real implementation, this would parse an actual NetCDF file
         Ok(Self {
-            path: path_str,
+            _path: path_str,
             mode: opts.mode,
             format: opts.format,
             dimensions: HashMap::new(),
@@ -218,8 +218,8 @@ impl NetCDFFile {
     /// # Returns
     ///
     /// * `Result<NetCDFFile>` - The created NetCDF file or an error
-    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Self::create_with_format(path, NetCDFFormat::Classic)
+    pub fn create<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        Self::create_with_format(_path, NetCDFFormat::Classic)
     }
 
     /// Create a new NetCDF file with specified format
@@ -232,14 +232,14 @@ impl NetCDFFile {
     /// # Returns
     ///
     /// * `Result<NetCDFFile>` - The created NetCDF file or an error
-    pub fn create_with_format<P: AsRef<Path>>(path: P, format: NetCDFFormat) -> Result<Self> {
+    pub fn create_with_format<P: AsRef<Path>>(_path: P, format: NetCDFFormat) -> Result<Self> {
         let opts = NetCDFOptions {
             mode: "w".to_string(),
             format,
             ..Default::default()
         };
 
-        let path_str = path.as_ref().to_string_lossy().to_string();
+        let path_str = _path.as_ref().to_string_lossy().to_string();
 
         // Create parent directories if they don't exist
         if let Some(parent) = Path::new(&path_str).parent() {
@@ -259,7 +259,7 @@ impl NetCDFFile {
             };
 
         Ok(Self {
-            path: path_str,
+            _path: path_str,
             mode: opts.mode,
             format: opts.format,
             dimensions: HashMap::new(),
@@ -561,11 +561,10 @@ impl NetCDFFile {
     /// Process chunked data for optimal reading
     fn process_chunked_data(
         &self,
-        array_data: &ArrayD<f64>,
-        _chunk_attr: &crate::hdf5::AttributeValue,
+        array_data: &ArrayD<f64>, _chunk_attr: &crate::hdf5::AttributeValue,
     ) -> Result<()> {
         // In a full implementation, this would optimize chunk reading
-        // For now, we return the data as-is since HDF5 handles chunk decompression
+        // For now, we return the _data as-is since HDF5 handles chunk decompression
         // This is where chunk-specific optimizations would go:
         // - Cache frequently accessed chunks
         // - Pre-decompress chunks in background
@@ -588,7 +587,7 @@ impl NetCDFFile {
             .map(|&x| {
                 // Use any::Any for safe downcasting
                 let value: Box<dyn std::any::Any> =
-                    if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
+                    if std::any::TypeId::of::<T>() == std::any::TypeId::of::<_f64>() {
                         Box::new(x)
                     } else if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() {
                         Box::new(x as f32)
@@ -912,7 +911,7 @@ impl NetCDFFile {
 /// ```no_run
 /// use ndarray::array;
 /// use std::collections::HashMap;
-/// use scirs2_io::netcdf::{create_netcdf4_with_data};
+/// use scirs2__io::netcdf::{create_netcdf4_with_data};
 ///
 /// let mut datasets = HashMap::new();
 /// datasets.insert(
@@ -939,7 +938,7 @@ pub fn create_netcdf4_with_data<P: AsRef<Path>>(
 ) -> Result<()> {
     let mut file = NetCDFFile::create_with_format(path, NetCDFFormat::NetCDF4)?;
 
-    // Add global attributes
+    // Add global _attributes
     for (name, value) in global_attributes {
         file.add_global_attribute(&name, &value)?;
     }
@@ -966,7 +965,7 @@ pub fn create_netcdf4_with_data<P: AsRef<Path>>(
 /// # Example
 ///
 /// ```no_run
-/// use scirs2_io::netcdf::read_netcdf;
+/// use scirs2__io::netcdf::read_netcdf;
 ///
 /// let file = read_netcdf("data.nc")?;
 /// println!("Dimensions: {:?}", file.dimensions());
@@ -974,8 +973,8 @@ pub fn create_netcdf4_with_data<P: AsRef<Path>>(
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn read_netcdf<P: AsRef<Path>>(path: P) -> Result<NetCDFFile> {
-    let path_ref = path.as_ref();
+pub fn read_netcdf<P: AsRef<Path>>(_path: P) -> Result<NetCDFFile> {
+    let path_ref = _path.as_ref();
 
     // Try to open as NetCDF4/HDF5 first, then fall back to Classic
     match NetCDFFile::open(
@@ -1095,7 +1094,7 @@ mod tests {
             .unwrap();
 
         // Test writing data (placeholder implementation just validates)
-        let data = Array::<f32, _>::zeros((3, 2));
+        let data = Array::<f32>::zeros((3, 2));
         file.write_variable("data", &data).unwrap();
 
         // Since this is a placeholder implementation that doesn't persist,

@@ -13,6 +13,7 @@ use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Window function types for Lomb-Scargle analysis
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WindowType {
@@ -26,6 +27,18 @@ pub enum WindowType {
     Blackman,
     /// Custom window function
     Custom,
+}
+
+impl std::fmt::Display for WindowType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            WindowType::None => write!(f, "None"),
+            WindowType::Hann => write!(f, "Hann"),
+            WindowType::Hamming => write!(f, "Hamming"),
+            WindowType::Blackman => write!(f, "Blackman"),
+            WindowType::Custom => write!(f, "Custom"),
+        }
+    }
 }
 
 /// Enhanced Lomb-Scargle configuration
@@ -87,7 +100,7 @@ pub fn lombscargle_enhanced<T, U>(
     config: &LombScargleConfig,
 ) -> SignalResult<(Vec<f64>, Vec<f64>, Option<(Vec<f64>, Vec<f64>)>)>
 where
-    T: Float + NumCast + Debug,
+    T: Float + NumCast + Debug + std::fmt::Display,
     U: Float + NumCast + Debug,
 {
     // Validate inputs
@@ -107,11 +120,14 @@ where
     let times_f64: Vec<f64> = times
         .iter()
         .map(|&t| {
-            let val = NumCast::from(t).ok_or_else(|| {
+            let val: T = NumCast::from(t).ok_or_else(|| {
                 SignalError::ValueError(format!("Could not convert time {:?} to f64", t))
             })?;
-            check_finite(val, "time")?;
-            Ok(val)
+            check_finite(val, "time value")?;
+            let f64_val: f64 = NumCast::from(val).ok_or_else(|| {
+                SignalError::ValueError(format!("Could not convert {:?} to f64", val))
+            })?;
+            Ok(f64_val)
         })
         .collect::<SignalResult<Vec<f64>>>()?;
 
@@ -121,7 +137,7 @@ where
             let val = NumCast::from(v).ok_or_else(|| {
                 SignalError::ValueError(format!("Could not convert value {:?} to f64", v))
             })?;
-            check_finite(val, "value")?;
+            check_finite(val, "value value")?;
             Ok(val)
         })
         .collect::<SignalResult<Vec<f64>>>()?;
@@ -145,7 +161,7 @@ where
     let power = if config.use_fast {
         compute_fast_lombscargle(&times_f64, &windowed_values, &frequencies, config.tolerance)?
     } else {
-        compute_standard_lombscargle(&times_f64, &windowed_values, &frequencies)?
+        compute_standard_lombscargle(&times_f64, &windowed_values, &frequencies, None, None, Some(false))?
     };
 
     // Compute bootstrap confidence intervals if requested
@@ -167,8 +183,8 @@ where
 
 /// Apply window function to values
 #[allow(dead_code)]
-fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
-    let n = values.len();
+fn apply_window(_values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
+    let n = _values.len();
 
     let window = match config.window {
         WindowType::None => vec![1.0; n],
@@ -189,7 +205,7 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
         WindowType::Blackman => {
             let mut w = vec![0.0; n];
             for i in 0..n {
-                let x = 2.0 * PI * i as f64 / (n - 1) as f64;
+                let x = 2.0 * PI * i as f64 / (n - 1)  as f64;
                 w[i] = 0.42 - 0.5 * x.cos() + 0.08 * (2.0 * x).cos();
             }
             w
@@ -204,7 +220,7 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
                 custom.clone()
             } else {
                 return Err(SignalError::ValueError(
-                    "Custom window specified but no window values provided".to_string(),
+                    "Custom window specified but no window _values provided".to_string(),
                 ));
             }
         }
@@ -215,7 +231,7 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
     let window_sum: f64 = window.iter().sum();
 
     for i in 0..n {
-        windowed[i] = values[i] * window[i] / window_sum.sqrt();
+        windowed[i] = _values[i] * window[i] / window_sum.sqrt();
     }
 
     Ok(windowed)
@@ -223,12 +239,12 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
 
 /// Compute frequency grid with oversampling
 #[allow(dead_code)]
-fn compute_frequency_grid(times: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
-    let n = times.len();
-    let t_span = times[n - 1] - times[0];
+fn compute_frequency_grid(_times: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
+    let n = _times.len();
+    let t_span = _times[n - 1] - _times[0];
 
     // Estimate average sampling rate
-    let avg_dt = t_span / (n - 1) as f64;
+    let avg_dt = t_span / (n - 1)  as f64;
     let nyquist = 0.5 / avg_dt;
 
     // Determine frequency range
@@ -265,11 +281,11 @@ fn compute_fast_lombscargle(
     let mut power = vec![0.0; frequencies.len()];
 
     // Center the data
-    let mean_val: f64 = values.iter().sum::<f64>() / n as f64;
+    let mean_val: f64 = values.iter().sum::<f64>() / n  as f64;
     let values_centered: Vec<f64> = values.iter().map(|&v| v - mean_val).collect();
 
     // Precompute time shifts for numerical stability
-    let t_mean = times.iter().sum::<f64>() / n as f64;
+    let t_mean = times.iter().sum::<f64>() / n  as f64;
     let times_shifted: Vec<f64> = times.iter().map(|&t| t - t_mean).collect();
 
     for (i, &freq) in frequencies.iter().enumerate() {
@@ -312,7 +328,7 @@ fn compute_fast_lombscargle(
         s_tau2 = s_tau2.max(tolerance);
 
         // Compute variance
-        let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n as f64;
+        let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n  as f64;
 
         if variance > tolerance {
             // Standard normalization
@@ -336,9 +352,9 @@ fn compute_standard_lombscargle(
     let mut power = vec![0.0; frequencies.len()];
 
     // Center the data
-    let mean_val: f64 = values.iter().sum::<f64>() / n as f64;
+    let mean_val: f64 = values.iter().sum::<f64>() / n  as f64;
     let values_centered: Vec<f64> = values.iter().map(|&v| v - mean_val).collect();
-    let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n as f64;
+    let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n  as f64;
 
     if variance == 0.0 {
         return Ok(power); // All zeros
@@ -457,7 +473,7 @@ pub fn false_alarm_probability(
         "standard" => {
             // Baluev (2008) approximation
             let z = peak_power;
-            let n_eff = n_frequencies as f64;
+            let n_eff = n_frequencies  as f64;
 
             if z <= 0.0 {
                 1.0
@@ -470,7 +486,7 @@ pub fn false_alarm_probability(
         "model" => {
             // For model normalization, use chi-squared distribution
             let dof = 2.0; // Degrees of freedom for sinusoidal model
-            let chi2 = peak_power * (n_samples - 3) as f64;
+            let chi2 = peak_power * (n_samples - 3)  as f64;
 
             // Approximate using incomplete gamma function
             let prob_single = (-chi2 / 2.0).exp();

@@ -11,6 +11,7 @@ use std::collections::VecDeque;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::path::PathBuf;
 
 /// Configuration for streaming operations
 #[derive(Debug, Clone)]
@@ -36,7 +37,7 @@ impl Default for StreamConfig {
         Self {
             chunk_size: 10_000,
             buffer_size: 3,
-            num_workers: num_cpus::get(),
+            num_workers: num, _cpus: get(),
             memory_limit_mb: None,
             enable_compression: false,
             enable_prefetch: true,
@@ -97,15 +98,15 @@ pub struct StreamingIterator {
 
 impl StreamingIterator {
     /// Create a new streaming iterator from a CSV file
-    pub fn from_csv<P: AsRef<Path>>(path: P, config: StreamConfig) -> Result<Self> {
-        let path = path.as_ref().to_path_buf();
+    pub fn from_csv<P: AsRef<Path>>(_path: P, config: StreamConfig) -> Result<Self> {
+        let _path = _path.as_ref().to_path_buf();
         let chunk_buffer = Arc::new(Mutex::new(VecDeque::new()));
         let buffer_clone = Arc::clone(&chunk_buffer);
         let config_clone = config.clone();
 
         // Start producer thread
         let producer_handle =
-            thread::spawn(move || Self::csv_producer(path, config_clone, buffer_clone));
+            thread::spawn(move || Self::csv_producer(_path, config_clone, buffer_clone));
 
         Ok(Self {
             config,
@@ -465,7 +466,7 @@ impl StreamingIterator {
         }
 
         let n_samples = data.len();
-        let n_features = data[0].0.len() - 1; // Assume last column is target
+        let n_features = data[0].0.len() - 1; // Assume _last column is target
 
         let mut chunk_data = Array2::zeros((n_samples, n_features));
         let mut chunk_target = Array1::zeros(n_samples);
@@ -519,8 +520,7 @@ impl StreamStats {
 
 /// Parallel streaming processor for applying operations to chunks
 pub struct StreamProcessor<T> {
-    config: StreamConfig,
-    _phantom: std::marker::PhantomData<T>,
+    config: StreamConfig_phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> StreamProcessor<T>
@@ -528,10 +528,9 @@ where
     T: Send + Sync + 'static,
 {
     /// Create a new stream processor
-    pub fn new(config: StreamConfig) -> Self {
+    pub fn new(_config: StreamConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 
@@ -742,8 +741,8 @@ impl Default for StreamTransformer {
 ///
 /// Stream a large CSV file
 #[allow(dead_code)]
-pub fn stream_csv<P: AsRef<Path>>(path: P, config: StreamConfig) -> Result<StreamingIterator> {
-    StreamingIterator::from_csv(path, config)
+pub fn stream_csv<P: AsRef<Path>>(_path: P, config: StreamConfig) -> Result<StreamingIterator> {
+    StreamingIterator::from_csv(_path, config)
 }
 
 /// Stream synthetic classification data
@@ -756,13 +755,13 @@ pub fn stream_classification(
 ) -> Result<StreamingIterator> {
     use crate::generators::make_classification;
 
-    let generator = move |chunk_size: usize, features: usize, start_idx: usize| {
+    let generator = move |chunk_size: usize, _features: usize, start_idx: usize| {
         let dataset = make_classification(
             chunk_size,
-            features,
+            _features,
             n_classes,
             2,
-            features / 2,
+            _features / 2,
             Some(42 + start_idx as u64),
         )?;
         Ok((dataset.data, dataset.target))
@@ -780,11 +779,11 @@ pub fn stream_regression(
 ) -> Result<StreamingIterator> {
     use crate::generators::make_regression;
 
-    let generator = move |chunk_size: usize, features: usize, start_idx: usize| {
+    let generator = move |chunk_size: usize, _features: usize, start_idx: usize| {
         let dataset = make_regression(
             chunk_size,
-            features,
-            features / 2,
+            _features,
+            _features / 2,
             0.1,
             Some(42 + start_idx as u64),
         )?;

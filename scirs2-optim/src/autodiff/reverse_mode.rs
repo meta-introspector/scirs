@@ -219,8 +219,7 @@ impl<T: Float + Default + Clone> Default for GradientContext<T> {
             requires_grad: HashMap::new(),
             accumulate: true,
             retain_graph: false,
-            create_graph: false,
-            _phantom: std::marker::PhantomData,
+            create_graph: false, _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -582,7 +581,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
     /// Reshape operation
     pub fn reshape(&mut self, input: usize, new_shape: &[usize]) -> Result<usize> {
         let input_val = self.get_value(input)?;
-        let original_shape = input_val.shape().to_vec();
+        let original_shape = input_val._shape().to_vec();
 
         let output_id = self.tape.len();
 
@@ -725,8 +724,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
         }
 
         match &self.tape[var_id].saved_values {
-            SavedValues::Tensor(tensor) => Ok(tensor.clone()),
-            _ => {
+            SavedValues::Tensor(tensor) => Ok(tensor.clone(), _ => {
                 // For operations, we'd need to compute the forward value
                 // This is simplified - in practice would need full forward evaluation
                 Ok(Array1::zeros(1))
@@ -782,8 +780,8 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
                 if let SavedValues::Tensor(ref base_val) = op.saved_values {
                     // Power: (u^n)' = n * u^(n-1) * u'
                     let derivative = base_val.mapv(|x| *exponent * x.powf(*exponent - T::one()));
-                    let grad = output_grad * &derivative;
-                    Ok(vec![grad])
+                    let _grad = output_grad * &derivative;
+                    Ok(vec![_grad])
                 } else {
                     Err(OptimError::InvalidConfig(
                         "Missing saved values for power".to_string(),
@@ -795,8 +793,8 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
                 if let SavedValues::Tensor(ref input_val) = op.saved_values {
                     // Exponential: (e^u)' = e^u * u'
                     let exp_val = input_val.mapv(|x| x.exp());
-                    let grad = output_grad * &exp_val;
-                    Ok(vec![grad])
+                    let _grad = output_grad * &exp_val;
+                    Ok(vec![_grad])
                 } else {
                     Err(OptimError::InvalidConfig(
                         "Missing saved values for exp".to_string(),
@@ -807,8 +805,8 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
             BackwardFunction::LogBackward => {
                 if let SavedValues::Tensor(ref input_val) = op.saved_values {
                     // Logarithm: (ln(u))' = u' / u
-                    let grad = output_grad / input_val;
-                    Ok(vec![grad])
+                    let _grad = output_grad / input_val;
+                    Ok(vec![_grad])
                 } else {
                     Err(OptimError::InvalidConfig(
                         "Missing saved values for log".to_string(),
@@ -823,8 +821,8 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
                         TrigFunction::Cos => input_val.mapv(|x| -x.sin()), // -sin(u)
                         TrigFunction::Tan => input_val.mapv(|x| T::one() + x.tan().powi(2)), // sec^2(u)
                     };
-                    let grad = output_grad * &derivative;
-                    Ok(vec![grad])
+                    let _grad = output_grad * &derivative;
+                    Ok(vec![_grad])
                 } else {
                     Err(OptimError::InvalidConfig(
                         "Missing saved values for trig function".to_string(),
@@ -852,8 +850,8 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
                             input_val.mapv(|x| if x > T::zero() { T::one() } else { alpha_t })
                         }
                     };
-                    let grad = output_grad * &derivative;
-                    Ok(vec![grad])
+                    let _grad = output_grad * &derivative;
+                    Ok(vec![_grad])
                 } else {
                     Err(OptimError::InvalidConfig(
                         "Missing saved values for activation".to_string(),
@@ -869,25 +867,25 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
                 match reduction_type {
                     ReductionType::Sum => {
                         // Sum: gradient broadcasts to input shape
-                        let grad = Array1::from_elem(input_shape[0], output_grad[0]);
-                        Ok(vec![grad])
+                        let _grad = Array1::from_elem(input_shape[0], output_grad[0]);
+                        Ok(vec![_grad])
                     }
                     ReductionType::Mean => {
                         // Mean: gradient divided by input size then broadcast
                         let n = T::from(input_shape[0]).unwrap();
-                        let grad = Array1::from_elem(input_shape[0], output_grad[0] / n);
-                        Ok(vec![grad])
+                        let _grad = Array1::from_elem(input_shape[0], output_grad[0] / n);
+                        Ok(vec![_grad])
                     }
                     ReductionType::Norm => {
                         if let SavedValues::Tensor(ref input_val) = op.saved_values {
                             // Norm: gradient is input / norm
                             let norm = input_val.iter().map(|&x| x * x).sum::<T>().sqrt();
-                            let grad = if norm > T::zero() {
+                            let _grad = if norm > T::zero() {
                                 input_val * (output_grad[0] / norm)
                             } else {
                                 Array1::zeros(input_val.len())
                             };
-                            Ok(vec![grad])
+                            Ok(vec![_grad])
                         } else {
                             Err(OptimError::InvalidConfig(
                                 "Missing saved values for norm".to_string(),
@@ -905,8 +903,8 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
                     Ok(vec![output_grad.clone()])
                 } else {
                     // Create appropriately sized gradient
-                    let grad = Array1::zeros(original_shape[0]);
-                    Ok(vec![grad])
+                    let _grad = Array1::zeros(original_shape[0]);
+                    Ok(vec![_grad])
                 }
             }
 

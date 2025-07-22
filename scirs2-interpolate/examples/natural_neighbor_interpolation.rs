@@ -7,7 +7,7 @@ use ndarray::{Array1, Array2};
 use plotters::prelude::*;
 use plotters::style::colors::{BLACK, BLUE, RED};
 use rand::Rng;
-use scirs2_interpolate::voronoi::{make_laplace_interpolator, make_sibson_interpolator};
+use scirs2__interpolate::voronoi::{make_laplace_interpolator, make_sibson_interpolator};
 use std::error::Error;
 
 #[allow(dead_code)]
@@ -19,13 +19,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Create points in a 2D domain
     let mut points_vec = Vec::with_capacity(n_points * 2);
     for _ in 0..n_points {
-        let x = rng.random_range(0.0..=10.0);
-        let y = rng.random_range(0.0..=10.0);
+        let x = rng.gen_range(0.0..=10.0);
+        let y = rng.gen_range(0.0..=10.0);
         points_vec.push(x);
         points_vec.push(y);
     }
 
-    let points = Array2::from_shape_vec((n_points, 2), points_vec)?;
+    let points = Array2::from_shape_vec((n_points..2), points_vec)?;
 
     // Create values with a test function
     let mut values_vec = Vec::with_capacity(n_points);

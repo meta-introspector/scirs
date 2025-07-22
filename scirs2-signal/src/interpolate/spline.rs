@@ -3,12 +3,14 @@
 //! This module provides cubic spline and cubic Hermite spline (PCHIP) interpolation
 //! algorithms for filling missing values in signals with smooth curves.
 
-use super::basic::linear_interpolate;
-use super::core::{enforce_monotonicity, smooth_signal, InterpolationConfig};
 use crate::error::{SignalError, SignalResult};
+use crate::interpolate::core::InterpolationConfig;
 use ndarray::{Array1, Array2};
-use scirs2_linalg::solve;
+use scirs2__linalg::solve;
+use super::basic::linear_interpolate;
+use super::core::{enforce_monotonicity, smooth_signal};
 
+#[allow(unused_imports)]
 /// Applies cubic spline interpolation to fill missing values in a signal
 ///
 /// Cubic spline interpolation creates smooth curves using piecewise cubic polynomials
@@ -28,7 +30,7 @@ use scirs2_linalg::solve;
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_signal::interpolate::{spline::cubic_spline_interpolate, core::InterpolationConfig};
+/// use scirs2__signal::interpolate::{spline::cubic_spline_interpolate, core::InterpolationConfig};
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, 4.0, f64::NAN, 6.0]);
 /// let config = InterpolationConfig::default();
@@ -205,7 +207,7 @@ pub fn cubic_spline_interpolate(
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_signal::interpolate::{spline::cubic_hermite_interpolate, core::InterpolationConfig};
+/// use scirs2__signal::interpolate::{spline::cubic_hermite_interpolate, core::InterpolationConfig};
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 2.0]);
 /// let config = InterpolationConfig::default();
@@ -361,9 +363,6 @@ pub fn cubic_hermite_interpolate(
 /// Unit tests for spline interpolation methods
 #[cfg(test)]
 mod tests {
-    use crate::interpolate::core::InterpolationConfig;
-    use ndarray::Array1;
-
     #[test]
     fn test_cubic_spline_interpolate_no_missing() {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);

@@ -1,5 +1,5 @@
 use ndarray::{array, Array1, ArrayView1};
-use scirs2_interpolate::spline::make_interp_spline;
+use scirs2__interpolate::spline::make_interp_spline;
 
 #[allow(dead_code)]
 fn main() {

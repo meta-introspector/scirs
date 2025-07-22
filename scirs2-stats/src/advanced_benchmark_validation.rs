@@ -8,7 +8,7 @@
 #![allow(dead_code)]
 
 use crate::error::{StatsError, StatsResult};
-use crate::unified_processor::{
+use crate::unified__processor::{
     OptimizationMode, AdvancedProcessorConfig, AdvancedUnifiedProcessor,
 };
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
@@ -93,7 +93,7 @@ impl ReferenceImplementation for ReferenceMean {
         Ok(data.iter().sum::<f64>() / data.len() as f64)
     }
 
-    fn compute_matrix_f64(&self, _data: ArrayView2<f64>) -> StatsResult<Array2<f64>> {
+    fn compute_matrix_f64(&self_data: ArrayView2<f64>) -> StatsResult<Array2<f64>> {
         Err(StatsError::NotImplemented(
             "Matrix mean not implemented for reference".to_string(),
         ))
@@ -118,7 +118,7 @@ impl ReferenceImplementation for ReferenceVariance {
         Ok(variance)
     }
 
-    fn compute_matrix_f64(&self, _data: ArrayView2<f64>) -> StatsResult<Array2<f64>> {
+    fn compute_matrix_f64(&self_data: ArrayView2<f64>) -> StatsResult<Array2<f64>> {
         Err(StatsError::NotImplemented(
             "Matrix variance not implemented for reference".to_string(),
         ))
@@ -129,7 +129,7 @@ impl ReferenceImplementation for ReferenceVariance {
 struct ReferenceCorrelation;
 
 impl ReferenceImplementation for ReferenceCorrelation {
-    fn compute_f64(&self, _data: ArrayView1<f64>) -> StatsResult<f64> {
+    fn compute_f64(&self_data: ArrayView1<f64>) -> StatsResult<f64> {
         Err(StatsError::NotImplemented(
             "Vector correlation not applicable".to_string(),
         ))
@@ -184,7 +184,7 @@ impl ReferenceImplementation for ReferenceCorrelation {
 
 impl AdvancedBenchmarkValidator {
     /// Create a new benchmark validator
-    pub fn new(config: ValidationConfig) -> Self {
+    pub fn new(_config: ValidationConfig) -> Self {
         let processor_config = AdvancedProcessorConfig::default();
         let processor = AdvancedUnifiedProcessor::new(processor_config);
 
@@ -195,7 +195,7 @@ impl AdvancedBenchmarkValidator {
         reference_implementations.insert("correlation".to_string(), Box::new(ReferenceCorrelation));
 
         Self {
-            config,
+            _config,
             processor,
             reference_implementations,
         }
@@ -415,7 +415,7 @@ impl AdvancedBenchmarkValidator {
     /// Generate test data for validation
     fn generate_test_data(&self, size: usize) -> Array1<f64> {
         use rand::SeedableRng;
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
 
         let mut rng = rand::rngs::StdRng::seed_from_u64(42); // Fixed seed for reproducibility
         let normal = Normal::new(0.0, 1.0).unwrap();
@@ -426,7 +426,7 @@ impl AdvancedBenchmarkValidator {
     /// Generate test matrix data for validation
     fn generate_test_matrix(&self, rows: usize, cols: usize) -> Array2<f64> {
         use rand::SeedableRng;
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
 
         let mut rng = rand::rngs::StdRng::seed_from_u64(42); // Fixed seed for reproducibility
         let normal = Normal::new(0.0, 1.0).unwrap();

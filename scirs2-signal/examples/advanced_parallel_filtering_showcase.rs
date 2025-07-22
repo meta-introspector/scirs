@@ -4,12 +4,13 @@
 //! including real-time streaming, multi-rate systems, sparse filtering, and
 //! high-performance spectral processing.
 
-use num_complex::Complex64;
-use scirs2_signal::filter::{
+use num__complex::Complex64;
+use scirs2__signal::filter::{
     benchmark_parallel_filtering_operations, AdvancedParallelConfig, LockFreeStreamingFilter,
     ParallelMultiRateFilterBank, ParallelSpectralFilter, SparseParallelFilter,
 };
 use std::time::Instant;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

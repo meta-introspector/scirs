@@ -12,13 +12,15 @@
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
+use crate::wpt__validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
 use std::collections::HashMap;
 use std::time::Instant;
+use std::f64::consts::PI;
 
+#[allow(unused_imports)]
 /// Enhanced modern validation result for WPT
 #[derive(Debug, Clone)]
 pub struct EnhancedModernValidationResult {
@@ -588,10 +590,7 @@ pub fn run_enhanced_modern_validation(
 /// Run core WPT validation
 #[allow(dead_code)]
 fn run_core_validation(
-    signal: &[f64],
-    _wavelet: &Wavelet,
-    _max_depth: usize,
-    _config: &EnhancedModernValidationConfig,
+    signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<WptValidationResult> {
     // This would use the existing WPT validation functions
     // For now, create a placeholder with realistic values
@@ -623,10 +622,7 @@ fn run_core_validation(
 /// Run GPU acceleration validation
 #[allow(dead_code)]
 fn run_gpu_validation(
-    _signal: &[f64],
-    _wavelet: &Wavelet,
-    _max_depth: usize,
-    _config: &EnhancedModernValidationConfig,
+    _signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<GpuValidationResult> {
     // GPU validation implementation would go here
     Ok(create_placeholder_gpu_validation())
@@ -635,10 +631,7 @@ fn run_gpu_validation(
 /// Run streaming performance validation
 #[allow(dead_code)]
 fn run_streaming_validation(
-    signal: &[f64],
-    _wavelet: &Wavelet,
-    _max_depth: usize,
-    _config: &EnhancedModernValidationConfig,
+    signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<StreamingValidationResult> {
     let _start_time = Instant::now();
 
@@ -675,7 +668,7 @@ fn run_streaming_validation(
             .iter()
             .map(|&x| (x - mean_latency).powi(2))
             .sum::<f64>()
-            / (latencies.len() - 1) as f64;
+            / (latencies.len() - 1)  as f64;
         variance.sqrt()
     } else {
         0.0
@@ -728,14 +721,11 @@ fn run_streaming_validation(
 /// Run anomaly detection
 #[allow(dead_code)]
 fn run_anomaly_detection(
-    signal: &[f64],
-    _wavelet: &Wavelet,
-    _max_depth: usize,
-    _config: &EnhancedModernValidationConfig,
+    signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<AnomalyDetectionResult> {
     // Simple anomaly detection based on statistical analysis
-    let mean = signal.iter().sum::<f64>() / signal.len() as f64;
-    let variance = signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / signal.len() as f64;
+    let mean = signal.iter().sum::<f64>() / signal.len()  as f64;
+    let variance = signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / signal.len()  as f64;
     let std_dev = variance.sqrt();
 
     // Count outliers (more than 3 standard deviations from mean)
@@ -744,7 +734,7 @@ fn run_anomaly_detection(
         .filter(|&&x| (x - mean).abs() > 3.0 * std_dev)
         .count();
 
-    let outlier_ratio = outlier_count as f64 / signal.len() as f64;
+    let outlier_ratio = outlier_count as f64 / signal.len()  as f64;
 
     let mut anomalies = Vec::new();
     if outlier_ratio > 0.05 {
@@ -774,10 +764,7 @@ fn run_anomaly_detection(
 /// Run cross-framework compatibility validation
 #[allow(dead_code)]
 fn run_cross_framework_validation(
-    _signal: &[f64],
-    _wavelet: &Wavelet,
-    _max_depth: usize,
-    _config: &EnhancedModernValidationConfig,
+    _signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<CrossFrameworkValidationResult> {
     Ok(create_placeholder_cross_framework_validation())
 }
@@ -785,17 +772,15 @@ fn run_cross_framework_validation(
 /// Run precision validation
 #[allow(dead_code)]
 fn run_precision_validation(
-    _signal: &[f64],
-    _wavelet: &Wavelet,
-    max_depth: usize,
-    _config: &EnhancedModernValidationConfig,
+    _signal: &[f64], _wavelet: &Wavelet,
+    max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<PrecisionValidationResult> {
-    // Test error progression with decomposition depth
+    // Test error progression with decomposition _depth
     let mut error_progression = Vec::new();
 
-    for depth in 1..=max_depth {
+    for _depth in 1..=max_depth {
         // Simulate error accumulation (this would be more sophisticated in practice)
-        let theoretical_error = (depth as f64).powi(2) * 1e-15;
+        let theoretical_error = (_depth as f64).powi(2) * 1e-15;
         error_progression.push(theoretical_error);
     }
 
@@ -821,10 +806,7 @@ fn run_precision_validation(
 /// Run edge case validation
 #[allow(dead_code)]
 fn run_edge_case_validation(
-    _signal: &[f64],
-    _wavelet: &Wavelet,
-    _max_depth: usize,
-    _config: &EnhancedModernValidationConfig,
+    _signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<EdgeCaseValidationResult> {
     Ok(create_placeholder_edge_case_validation())
 }
@@ -832,10 +814,7 @@ fn run_edge_case_validation(
 /// Run resource validation
 #[allow(dead_code)]
 fn run_resource_validation(
-    signal: &[f64],
-    _wavelet: &Wavelet,
-    _max_depth: usize,
-    _config: &EnhancedModernValidationConfig,
+    signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<ResourceValidationResult> {
     // Simple memory tracking simulation
     let estimated_memory = signal.len() * 8 * 4; // Rough estimate
@@ -862,36 +841,33 @@ fn run_resource_validation(
 /// Run optimization validation
 #[allow(dead_code)]
 fn run_optimization_validation(
-    _signal: &[f64],
-    _wavelet: &Wavelet,
-    _max_depth: usize,
-    _config: &EnhancedModernValidationConfig,
+    _signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<OptimizationValidationResult> {
     Ok(create_placeholder_optimization_validation())
 }
 
 /// Calculate overall validation score
 #[allow(dead_code)]
-fn calculate_overall_score(results: &EnhancedModernValidationResult) -> f64 {
+fn calculate_overall_score(_results: &EnhancedModernValidationResult) -> f64 {
     let mut total_score = 0.0;
     let mut weight_sum = 0.0;
 
     // Core validation (weight: 30%)
-    total_score += results.core_validation.stability_score * 100.0 * 0.3;
+    total_score += _results.core_validation.stability_score * 100.0 * 0.3;
     weight_sum += 0.3;
 
     // Streaming validation (weight: 20%)
-    let streaming_score = 100.0 - results.streaming_validation.realtime_metrics.jitter * 10.0;
+    let streaming_score = 100.0 - _results.streaming_validation.realtime_metrics.jitter * 10.0;
     total_score += streaming_score.max(0.0) * 0.2;
     weight_sum += 0.2;
 
     // Anomaly detection (weight: 15%)
-    let anomaly_score = (1.0 - results.anomaly_detection.anomaly_score) * 100.0;
+    let anomaly_score = (1.0 - _results.anomaly_detection.anomaly_score) * 100.0;
     total_score += anomaly_score * 0.15;
     weight_sum += 0.15;
 
     // Precision validation (weight: 15%)
-    let precision_score = if results
+    let precision_score = if _results
         .precision_validation
         .accumulation_errors
         .bounds_validation
@@ -904,11 +880,11 @@ fn calculate_overall_score(results: &EnhancedModernValidationResult) -> f64 {
     weight_sum += 0.15;
 
     // Resource validation (weight: 20%)
-    let resource_score = (results
+    let resource_score = (_results
         .resource_validation
         .resource_utilization
         .cpu_efficiency
-        + results
+        + _results
             .resource_validation
             .resource_utilization
             .memory_efficiency)
@@ -925,21 +901,21 @@ fn calculate_overall_score(results: &EnhancedModernValidationResult) -> f64 {
 
 /// Identify critical findings that need attention
 #[allow(dead_code)]
-fn identify_critical_findings(results: &EnhancedModernValidationResult) -> Vec<String> {
+fn identify_critical_findings(_results: &EnhancedModernValidationResult) -> Vec<String> {
     let mut findings = Vec::new();
 
     // Check core validation issues
-    if results.core_validation.stability_score < 0.95 {
+    if _results.core_validation.stability_score < 0.95 {
         findings.push("Low numerical stability detected".to_string());
     }
 
-    if results.core_validation.energy_ratio < 0.999 || results.core_validation.energy_ratio > 1.001
+    if _results.core_validation.energy_ratio < 0.999 || _results.core_validation.energy_ratio > 1.001
     {
         findings.push("Energy conservation violation detected".to_string());
     }
 
     // Check streaming performance issues
-    if results
+    if _results
         .streaming_validation
         .realtime_metrics
         .processing_latency
@@ -948,17 +924,17 @@ fn identify_critical_findings(results: &EnhancedModernValidationResult) -> Vec<S
         findings.push("High processing latency detected".to_string());
     }
 
-    if results.streaming_validation.realtime_metrics.dropout_rate > 0.01 {
+    if _results.streaming_validation.realtime_metrics.dropout_rate > 0.01 {
         findings.push("Significant dropout rate in streaming processing".to_string());
     }
 
-    // Check anomaly detection results
-    if results.anomaly_detection.anomaly_score > 0.2 {
+    // Check anomaly detection _results
+    if _results.anomaly_detection.anomaly_score > 0.2 {
         findings.push("High anomaly score - unusual patterns detected".to_string());
     }
 
     // Check precision issues
-    if !results
+    if !_results
         .precision_validation
         .accumulation_errors
         .bounds_validation
@@ -967,7 +943,7 @@ fn identify_critical_findings(results: &EnhancedModernValidationResult) -> Vec<S
     }
 
     // Check resource issues
-    if results.resource_validation.memory_leaks.leak_score > 0.1 {
+    if _results.resource_validation.memory_leaks.leak_score > 0.1 {
         findings.push("Potential memory leaks detected".to_string());
     }
 

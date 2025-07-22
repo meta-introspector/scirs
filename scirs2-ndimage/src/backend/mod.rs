@@ -13,20 +13,20 @@ pub mod kernels;
 #[cfg(feature = "cuda")]
 pub mod cuda;
 
-pub use device_detection::{DeviceCapability, DeviceManager, MemoryManager};
-pub use gpu_acceleration_framework::{
+pub use device__detection::{DeviceCapability, DeviceManager, MemoryManager};
+pub use gpu_acceleration__framework::{
     CompiledKernel, GpuAccelerationManager, GpuKernelCache, GpuMemoryPool, GpuPerformanceReport,
     KernelPerformanceStats, MemoryPoolConfig, MemoryPoolStatistics,
 };
 pub use kernels::{GpuBuffer, GpuKernelExecutor, KernelInfo};
 
 #[cfg(feature = "cuda")]
-pub use concrete_gpu_backends::CudaContext;
+pub use concrete_gpu__backends::CudaContext;
 #[cfg(feature = "opencl")]
-pub use concrete_gpu_backends::OpenCLContext;
+pub use concrete_gpu__backends::OpenCLContext;
 // TODO: Implement MetalContext in concrete_gpu_backends.rs
 // #[cfg(all(target_os = "macos", feature = "metal"))]
-// pub use concrete_gpu_backends::MetalContext;
+// pub use concrete_gpu__backends::MetalContext;
 
 use crate::error::{NdimageError, NdimageResult};
 use ndarray::{Array, ArrayView, Dimension};
@@ -115,21 +115,20 @@ pub struct BackendExecutor {
 }
 
 impl BackendExecutor {
-    pub fn new(config: BackendConfig) -> NdimageResult<Self> {
+    pub fn new(_config: BackendConfig) -> NdimageResult<Self> {
         #[cfg(feature = "gpu")]
-        let gpu_context = match config.backend {
+        let gpu_context = match _config.backend {
             #[cfg(feature = "cuda")]
-            Backend::Cuda => Some(Arc::new(CudaContext::new(config.device_id)?)),
+            Backend::Cuda => Some(Arc::new(CudaContext::new(_config.device_id)?)),
             #[cfg(feature = "opencl")]
-            Backend::OpenCL => Some(Arc::new(OpenCLContext::new(config.device_id)?)),
+            Backend::OpenCL => Some(Arc::new(OpenCLContext::new(_config.device_id)?)),
             // TODO: Implement Metal backend
             // #[cfg(all(target_os = "macos", feature = "metal"))]
-            // Backend::Metal => Some(Arc::new(MetalContext::new(config.device_id)?)),
-            _ => None,
+            // Backend::Metal => Some(Arc::new(MetalContext::new(_config.device_id)?), _ => None,
         };
 
         Ok(Self {
-            config,
+            _config,
             #[cfg(feature = "gpu")]
             gpu_context,
         })
@@ -239,8 +238,8 @@ pub struct GaussianFilterOp<T> {
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone> GaussianFilterOp<T> {
-    pub fn new(sigma: Vec<T>, truncate: Option<T>) -> Self {
-        Self { sigma, truncate }
+    pub fn new(_sigma: Vec<T>, truncate: Option<T>) -> Self {
+        Self { _sigma, truncate }
     }
 }
 
@@ -288,8 +287,7 @@ where
 #[allow(dead_code)]
 fn cuda_gaussian_filter<T, D>(
     input: &ArrayView<T, D>,
-    sigma: &[T],
-    _truncate: Option<T>,
+    sigma: &[T], _truncate: Option<T>,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,

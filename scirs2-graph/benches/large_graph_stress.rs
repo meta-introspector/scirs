@@ -7,7 +7,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use rand::rng;
-use scirs2_graph::{algorithms, generators, measures, DiGraph, EdgeWeight, Graph, Node};
+use scirs2__graph::{algorithms, generators, measures, DiGraph, EdgeWeight, Graph, Node};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -128,8 +128,8 @@ mod memory {
         0.0
     }
 
-    pub fn check_memory_limit(limit_mb: usize) -> bool {
-        get_current_memory_mb() < limit_mb as f64
+    pub fn check_memory_limit(_limit_mb: usize) -> bool {
+        get_current_memory_mb() < _limit_mb as f64
     }
 }
 
@@ -298,10 +298,10 @@ fn bench_streaming_operations(c: &mut Criterion) {
 
 /// Run comprehensive stress test suite
 #[allow(dead_code)]
-fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
+fn run_stress_test_suite(_config: StressTestConfig) -> StressTestResults {
     let start_time = Instant::now();
     let mut results = StressTestResults {
-        config: config.clone(),
+        _config: _config.clone(),
         graph_generation: Vec::new(),
         algorithm_performance: Vec::new(),
         memory_profile: MemoryProfile {
@@ -321,8 +321,8 @@ fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
     let initial_memory = memory::get_current_memory_mb();
 
     // Test graph generation
-    for &node_count in &config.node_counts {
-        if !memory::check_memory_limit(config.memory_limit_mb) {
+    for &node_count in &_config.node_counts {
+        if !memory::check_memory_limit(_config.memory_limit_mb) {
             results
                 .summary
                 .warnings
@@ -353,8 +353,8 @@ fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
                 memory_samples.push(post_gen_memory);
 
                 // Test algorithms on this graph
-                for algorithm in &config.algorithms {
-                    if let Some(result) = test_algorithm(&graph, algorithm, &config) {
+                for algorithm in &_config.algorithms {
+                    if let Some(result) = test_algorithm(&graph, algorithm, &_config) {
                         results.algorithm_performance.push(result);
                     }
                 }
@@ -416,16 +416,14 @@ fn test_algorithm(
             let mut sum = 0.0;
             if let Ok(coefficients) = measures::clustering_coefficient(graph) {
                 for _ in 0..config.sample_size.min(graph.node_count()) {
-                    let node = rng.random_range(0..graph.node_count());
+                    let node = rng.gen_range(0..graph.node_count());
                     if let Some(cc) = coefficients.get(&node) {
                         sum += cc;
                     }
                 }
             }
             format!(
-                "Avg clustering (sampled): {:.4}",
-                sum / config.sample_size as f64
-            )
+                "Avg clustering (sampled): {:.4}"..sum / config.sample_size as f64)
         }
         _ => return None,
     };
@@ -445,19 +443,19 @@ fn test_algorithm(
 
 /// Print stress test report
 #[allow(dead_code)]
-fn print_stress_test_report(results: &StressTestResults) {
+fn print_stress_test_report(_results: &StressTestResults) {
     println!("\n========== STRESS TEST REPORT ==========");
     println!(
         "Total runtime: {:.2}s",
-        results.summary.total_runtime_seconds
+        _results.summary.total_runtime_seconds
     );
     println!(
         "Largest graph tested: {} nodes",
-        results.summary.largest_graph_tested
+        _results.summary.largest_graph_tested
     );
 
     println!("\n--- Graph Generation Performance ---");
-    for gen in &results.graph_generation {
+    for gen in &_results.graph_generation {
         println!(
             "  {} nodes, {} edges: {:.2}s, {:.1}MB",
             gen.nodes,
@@ -468,9 +466,9 @@ fn print_stress_test_report(results: &StressTestResults) {
     }
 
     println!("\n--- Algorithm Performance ---");
-    for algo_name in &results.config.algorithms {
+    for algo_name in &_results.config.algorithms {
         println!("\n  {}:", algo_name);
-        for result in results
+        for result in _results
             .algorithm_performance
             .iter()
             .filter(|r| r.algorithm == *algo_name)
@@ -488,27 +486,27 @@ fn print_stress_test_report(results: &StressTestResults) {
     println!("\n--- Memory Profile ---");
     println!(
         "  Peak memory: {:.1}MB",
-        results.memory_profile.peak_memory_mb
+        _results.memory_profile.peak_memory_mb
     );
     println!(
         "  Average memory: {:.1}MB",
-        results.memory_profile.average_memory_mb
+        _results.memory_profile.average_memory_mb
     );
     println!(
         "  Efficiency ratio: {:.2}",
-        results.memory_profile.memory_efficiency_ratio
+        _results.memory_profile.memory_efficiency_ratio
     );
 
-    if !results.summary.failures.is_empty() {
+    if !_results.summary.failures.is_empty() {
         println!("\n--- Failures ---");
-        for failure in &results.summary.failures {
+        for failure in &_results.summary.failures {
             println!("  ❌ {}", failure);
         }
     }
 
-    if !results.summary.warnings.is_empty() {
+    if !_results.summary.warnings.is_empty() {
         println!("\n--- Warnings ---");
-        for warning in &results.summary.warnings {
+        for warning in &_results.summary.warnings {
             println!("  ⚠️  {}", warning);
         }
     }
@@ -518,8 +516,8 @@ fn print_stress_test_report(results: &StressTestResults) {
 
 /// Save results to JSON file
 #[allow(dead_code)]
-fn save_results(results: &StressTestResults, filename: &str) -> std::io::Result<()> {
-    let json = serde_json::to_string_pretty(results)?;
+fn save_results(_results: &StressTestResults, filename: &str) -> std::io::Result<()> {
+    let json = serde_json::to_string_pretty(_results)?;
     std::fs::write(filename, json)?;
     Ok(())
 }

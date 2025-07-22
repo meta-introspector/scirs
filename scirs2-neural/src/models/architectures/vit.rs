@@ -86,7 +86,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for TransformerMlp
         x = self.dense2.forward(&x)?;
         Ok(x)
     fn backward(
-        &self,
+        &mut self,
         _input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
@@ -230,43 +230,43 @@ pub struct VisionTransformer<
             config: self.config.clone(),
     > VisionTransformer<F>
     /// Create a new Vision Transformer model
-    pub fn new(config: ViTConfig) -> Result<Self> {
+    pub fn new(_config: ViTConfig) -> Result<Self> {
         // Calculate number of patches
-        let h_patches = config.image_size.0 / config.patch_size.0;
-        let w_patches = config.image_size.1 / config.patch_size.1;
+        let h_patches = _config.image_size.0 / _config.patch_size.0;
+        let w_patches = _config.image_size.1 / _config.patch_size.1;
         let num_patches = h_patches * w_patches;
         // Create patch embedding layer
         let patch_embed = PatchEmbedding::new(
-            config.image_size,
-            config.patch_size,
-            config.in_channels,
-            config.embed_dim,
+            _config.image_size,
+            _config.patch_size,
+            _config.in_channels,
+            _config.embed_dim,
             true,
         )?;
         // Create class token
-        let cls_token = Array::zeros(IxDyn(&[1, 1, config.embed_dim]));
+        let cls_token = Array::zeros(IxDyn(&[1, 1, _config.embed_dim]));
         // Create position embedding (include class token)
-        let pos_embed = Array::zeros(IxDyn(&[1, num_patches + 1, config.embed_dim]));
+        let pos_embed = Array::zeros(IxDyn(&[1, num_patches + 1, _config.embed_dim]));
         // Create dropout
-        let dropout_rate = config.dropout_rate; // Use directly as f64
+        let dropout_rate = _config.dropout_rate; // Use directly as f64
         let dropout = Dropout::new(dropout_rate, &mut dropout_rng)?;
         // Create transformer encoder blocks
-        let mut encoder_blocks = Vec::with_capacity(config.num_layers);
-        for _ in 0..config.num_layers {
+        let mut encoder_blocks = Vec::with_capacity(_config.num_layers);
+        for _ in 0.._config.num_layers {
             let block = TransformerEncoderBlock::new(
-                config.embed_dim,
-                config.num_heads,
-                config.mlp_dim,
-                F::from(config.dropout_rate).unwrap(),
-                F::from(config.attention_dropout_rate).unwrap(),
+                _config.embed_dim,
+                _config.num_heads,
+                _config.mlp_dim,
+                F::from(_config.dropout_rate).unwrap(),
+                F::from(_config.attention_dropout_rate).unwrap(),
             )?;
             encoder_blocks.push(block);
         // Layer normalization
         let mut rng = rand::rngs::SmallRng::seed_from_u64(42);
-        let norm = LayerNorm::new(config.embed_dim, 1e-6, &mut rng)?;
+        let norm = LayerNorm::new(_config.embed_dim, 1e-6, &mut rng)?;
         // Classification head
         let classifier = Dense::new(
-            config.num_classes,
+            _config.num_classes,
             None, // No activation for final layer
             &mut rng,
             patch_embed,
@@ -276,21 +276,21 @@ pub struct VisionTransformer<
             encoder_blocks,
             norm,
             classifier,
-            config,
+            _config,
     /// Create a ViT-Base model
-        let config = ViTConfig::vit_base(image_size, patch_size, in_channels, num_classes);
-        Self::new(config)
+        let _config = ViTConfig::vit_base(image_size, patch_size, in_channels, num_classes);
+        Self::new(_config)
     /// Create a ViT-Large model
-        let config = ViTConfig::vit_large(image_size, patch_size, in_channels, num_classes);
+        let _config = ViTConfig::vit_large(image_size, patch_size, in_channels, num_classes);
     /// Create a ViT-Huge model
-        let config = ViTConfig::vit_huge(image_size, patch_size, in_channels, num_classes);
+        let _config = ViTConfig::vit_huge(image_size, patch_size, in_channels, num_classes);
     > Layer<F> for VisionTransformer<F>
         // Check input shape
         let shape = input.shape();
         if shape.len() != 4
-            || shape[1] != self.config.in_channels
-            || shape[2] != self.config.image_size.0
-            || shape[3] != self.config.image_size.1
+            || shape[1] != self._config.in_channels
+            || shape[2] != self._config.image_size.0
+            || shape[3] != self._config.image_size.1
         {
             return Err(NeuralError::InferenceError(format!(
                 "Expected input shape [batch_size, {}, {}, {}], got {:?}",

@@ -211,10 +211,10 @@ struct CachedResult<F> {
 }
 
 impl<F: Float + Clone + std::fmt::Display> StatisticsCache<F> {
-    pub fn new(max_entries: usize, max_memory: usize) -> Self {
+    pub fn new(_max_entries: usize, max_memory: usize) -> Self {
         Self {
             cache: HashMap::new(),
-            max_entries,
+            _max_entries,
             max_memory,
             current_memory: 0,
             profiler: None,
@@ -337,11 +337,11 @@ pub struct AdaptiveMemoryManager {
 }
 
 impl AdaptiveMemoryManager {
-    pub fn new(profiler: Arc<MemoryProfiler>) -> Self {
+    pub fn new(_profiler: Arc<MemoryProfiler>) -> Self {
         Self {
             memory_threshold_low: 100 * 1024 * 1024,   // 100MB
             memory_threshold_high: 1024 * 1024 * 1024, // 1GB
-            profiler,
+            _profiler,
         }
     }
 
@@ -407,13 +407,13 @@ impl<F> ProfiledStatistics<F>
 where
     F: Float + NumCast + Clone + Send + Sync + std::fmt::Display,
 {
-    pub fn new(profiler: Arc<MemoryProfiler>) -> Self {
+    pub fn new(_profiler: Arc<MemoryProfiler>) -> Self {
         let cache = StatisticsCache::new(1000, 50 * 1024 * 1024) // 50MB cache
-            .with_profiler(profiler.clone());
-        let adaptive_manager = AdaptiveMemoryManager::new(profiler.clone());
+            .with_profiler(_profiler.clone());
+        let adaptive_manager = AdaptiveMemoryManager::new(_profiler.clone());
 
         Self {
-            profiler: profiler.clone(),
+            _profiler: _profiler.clone(),
             cache,
             adaptive_manager,
         }
@@ -439,8 +439,7 @@ where
 
         let result = match algorithm {
             AlgorithmChoice::Streaming => self.compute_mean_streaming(data),
-            AlgorithmChoice::Chunked => self.compute_mean_chunked(data),
-            _ => self.compute_mean_standard(data),
+            AlgorithmChoice::Chunked => self.compute_mean_chunked(data, _ => self.compute_mean_standard(data),
         }?;
 
         // Record allocation timing

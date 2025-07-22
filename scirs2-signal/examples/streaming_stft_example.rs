@@ -4,7 +4,8 @@
 //! processing for continuous data streams, showing various configurations
 //! and use cases for low-latency spectral analysis.
 
-use scirs2_signal::streaming_stft::{RealTimeStft, StreamingStft, StreamingStftConfig};
+use scirs2__signal::streaming_stft::{RealTimeStft, StreamingStft, StreamingStftConfig};
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -17,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = StreamingStftConfig {
         frame_length: 512,
         hop_length: 256,
-        window: "hann".to_string(),
+        window: WindowType::Hann.to_string(),
         center: true,
         ..Default::default()
     };
@@ -118,7 +119,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rt_config = StreamingStftConfig {
         frame_length: 256,
         hop_length: 128,
-        window: "hamming".to_string(),
+        window: WindowType::Hamming.to_string(),
         center: false,
         magnitude_only: true,
         log_magnitude: true,
@@ -211,7 +212,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let low_latency_config = StreamingStftConfig {
         frame_length: 128,
         hop_length: 64,
-        window: "blackman".to_string(),
+        window: WindowType::Blackman.to_string(),
         center: false, // No centering to reduce latency
         magnitude_only: true,
         ..Default::default()
@@ -276,7 +277,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let batch_config = StreamingStftConfig {
         frame_length: 256,
         hop_length: 128,
-        window: "hann".to_string(),
+        window: WindowType::Hann.to_string(),
         center: true,
         ..Default::default()
     };

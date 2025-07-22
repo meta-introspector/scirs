@@ -46,8 +46,8 @@ pub struct WeightAverager<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> WeightAverager<A, D> {
     /// Create a new weight averager
-    pub fn new(method: AveragingMethod, max_history: usize) -> Self {
-        let ema_decay = match method {
+    pub fn new(_method: AveragingMethod, max_history: usize) -> Self {
+        let ema_decay = match _method {
             AveragingMethod::ExponentialMovingAverage { decay } => {
                 A::from(decay).unwrap_or_else(|| A::from(0.999).unwrap())
             }
@@ -58,7 +58,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> WeightAverager<A, D> {
             averaged_weights: Vec::new(),
             weight_history: VecDeque::new(),
             step_count: 0,
-            method,
+            _method,
             max_history,
             initialized: false,
             ema_decay,
@@ -255,9 +255,9 @@ pub struct PolyakAverager<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> PolyakAverager<A, D> {
     /// Create a new Polyak averager
-    pub fn new(initial_decay: A, final_decay: A, decay_steps: usize) -> Self {
+    pub fn new(_initial_decay: A, final_decay: A, decay_steps: usize) -> Self {
         let method = AveragingMethod::ExponentialMovingAverage {
-            decay: initial_decay.to_f64().unwrap_or(0.9),
+            _decay: _initial_decay.to_f64().unwrap_or(0.9),
         };
 
         Self {
@@ -297,32 +297,32 @@ pub mod gradient_centralization {
     use super::*;
 
     /// Apply gradient centralization to gradients
-    pub fn centralize_gradients<A, D>(gradients: &mut [Array<A, D>]) -> Result<()>
+    pub fn centralize_gradients<A, D>(_gradients: &mut [Array<A, D>]) -> Result<()>
     where
         A: Float + ScalarOperand + Debug,
         D: Dimension,
     {
-        for grad in gradients {
+        for grad in _gradients {
             centralize_single_gradient(grad)?;
         }
         Ok(())
     }
 
     /// Apply gradient centralization to a single gradient array
-    pub fn centralize_single_gradient<A, D>(gradient: &mut Array<A, D>) -> Result<()>
+    pub fn centralize_single_gradient<A, D>(_gradient: &mut Array<A, D>) -> Result<()>
     where
         A: Float + ScalarOperand + Debug,
         D: Dimension,
     {
-        if gradient.is_empty() {
+        if _gradient.is_empty() {
             return Ok(());
         }
 
         // Compute mean
-        let mean = gradient.sum() / A::from(gradient.len()).unwrap();
+        let mean = _gradient.sum() / A::from(_gradient.len()).unwrap();
 
         // Subtract mean from all elements
-        gradient.mapv_inplace(|x| x - mean);
+        _gradient.mapv_inplace(|x| x - mean);
 
         Ok(())
     }

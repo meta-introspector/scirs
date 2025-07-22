@@ -64,11 +64,11 @@ struct WardCluster<F: Float> {
 
 impl<F: Float + FromPrimitive + ScalarOperand + 'static> WardCluster<F> {
     /// Create a new cluster from a single point
-    fn new(point: &Array1<F>, timestamp: usize) -> Self {
-        let sum_squared = point.dot(point);
+    fn new(_point: &Array1<F>, timestamp: usize) -> Self {
+        let sum_squared = _point.dot(_point);
         Self {
             size: 1,
-            sum_coords: point.clone(),
+            sum_coords: _point.clone(),
             sum_squared,
             active: true,
             timestamp,
@@ -133,7 +133,7 @@ impl<F: Float + FromPrimitive + ScalarOperand + 'static> WardCluster<F> {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::hierarchy::{optimized_ward_linkage, Metric};
+/// use scirs2__cluster::hierarchy::{optimized_ward_linkage, Metric};
 ///
 /// let data = Array2::from_shape_vec((4, 2), vec![
 ///     0.0, 0.0,
@@ -146,8 +146,7 @@ impl<F: Float + FromPrimitive + ScalarOperand + 'static> WardCluster<F> {
 /// ```
 #[allow(dead_code)]
 pub fn optimized_ward_linkage<F>(
-    data: ArrayView2<F>,
-    _metric: Metric, // Ward's method always uses Euclidean distance
+    data: ArrayView2<F>, _metric: Metric, // Ward's method always uses Euclidean distance
 ) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd + Send + Sync + ScalarOperand + 'static,

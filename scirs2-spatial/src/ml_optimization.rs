@@ -27,7 +27,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::ml_optimization::{NeuralSpatialOptimizer, ReinforcementLearningSelector};
+//! use scirs2__spatial::ml_optimization::{NeuralSpatialOptimizer, ReinforcementLearningSelector};
 //! use ndarray::array;
 //!
 //! // Neural network-based spatial optimizer
@@ -52,9 +52,10 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView2, Axis};
-use rand::{rng, Rng};
+use rand::{Rng};
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
+use statrs::statistics::Statistics;
 
 /// Neural network layer for spatial optimization
 #[derive(Debug, Clone)]
@@ -106,7 +107,7 @@ impl ActivationFunction {
     }
 
     /// Compute derivative of activation function
-    pub fn derivative(&self, x: f64) -> f64 {
+    pub fn derivative(x: f64) -> f64 {
         match self {
             ActivationFunction::ReLU => {
                 if x > 0.0 {
@@ -164,7 +165,7 @@ pub struct NeuralSpatialOptimizer {
 }
 
 impl Default for NeuralSpatialOptimizer {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -184,12 +185,12 @@ impl NeuralSpatialOptimizer {
 
     /// Configure network architecture
     pub fn with_network_architecture(mut self, layer_sizes: impl AsRef<[usize]>) -> Self {
-        let sizes = layer_sizes.as_ref();
+        let _sizes = layer_sizes.as_ref();
         self.layers.clear();
 
-        for i in 0..sizes.len() - 1 {
-            let input_size = sizes[i];
-            let output_size = sizes[i + 1];
+        for i in 0.._sizes.len() - 1 {
+            let input_size = _sizes[i];
+            let output_size = _sizes[i + 1];
 
             // Xavier/Glorot initialization
             let scale = (2.0 / (input_size + output_size) as f64).sqrt();
@@ -198,7 +199,7 @@ impl NeuralSpatialOptimizer {
             });
             let biases = Array1::zeros(output_size);
 
-            let activation = if i == sizes.len() - 2 {
+            let activation = if i == _sizes.len() - 2 {
                 ActivationFunction::Sigmoid // Output layer
             } else {
                 ActivationFunction::ReLU // Hidden layers
@@ -216,12 +217,12 @@ impl NeuralSpatialOptimizer {
 
     /// Set network architecture in place (for use when already borrowed mutably)
     pub fn set_network_architecture(&mut self, layer_sizes: impl AsRef<[usize]>) {
-        let sizes = layer_sizes.as_ref();
+        let _sizes = layer_sizes.as_ref();
         self.layers.clear();
 
-        for i in 0..sizes.len() - 1 {
-            let input_size = sizes[i];
-            let output_size = sizes[i + 1];
+        for i in 0.._sizes.len() - 1 {
+            let input_size = _sizes[i];
+            let output_size = _sizes[i + 1];
 
             // Xavier/Glorot initialization
             let scale = (2.0 / (input_size + output_size) as f64).sqrt();
@@ -230,7 +231,7 @@ impl NeuralSpatialOptimizer {
             });
             let biases = Array1::zeros(output_size);
 
-            let activation = if i == sizes.len() - 2 {
+            let activation = if i == _sizes.len() - 2 {
                 ActivationFunction::Sigmoid // Output layer
             } else {
                 ActivationFunction::ReLU // Hidden layers
@@ -245,13 +246,13 @@ impl NeuralSpatialOptimizer {
     }
 
     /// Configure learning rate
-    pub fn with_learning_rate(mut self, lr: f64) -> Self {
+    pub fn with_learning_rate(mut lr: f64) -> Self {
         self.learning_rate = lr;
         self
     }
 
     /// Enable adaptive learning
-    pub fn with_adaptive_learning(mut self, enabled: bool) -> Self {
+    pub fn with_adaptive_learning(mut enabled: bool) -> Self {
         self.adaptive_learning = enabled;
         self
     }
@@ -285,8 +286,8 @@ impl NeuralSpatialOptimizer {
     }
 
     /// Extract spatial features from data
-    fn extract_spatial_features(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
-        let (n_points, n_dims) = points.dim();
+    fn extract_spatial_features(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
+        let (n_points, n_dims) = _points.dim();
         let mut features = Vec::new();
 
         // Basic statistics
@@ -295,7 +296,7 @@ impl NeuralSpatialOptimizer {
 
         // Data distribution features
         for dim in 0..n_dims {
-            let column = points.column(dim);
+            let column = _points.column(dim);
             let mean = column.mean().unwrap_or(0.0);
             let std = (column.mapv(|x| (x - mean).powi(2)).mean().unwrap_or(0.0)).sqrt();
             let min_val = column.fold(f64::INFINITY, |a, &b| a.min(b));
@@ -316,10 +317,10 @@ impl NeuralSpatialOptimizer {
         for i in 0..n_points.min(100) {
             // Sample for efficiency
             for j in (i + 1)..n_points.min(100) {
-                let dist: f64 = points
+                let dist: f64 = _points
                     .row(i)
                     .iter()
-                    .zip(points.row(j).iter())
+                    .zip(_points.row(j).iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();
@@ -347,25 +348,25 @@ impl NeuralSpatialOptimizer {
         }
 
         // Density estimation
-        let density = self.estimate_local_density(points)?;
+        let density = self.estimate_local_density(_points)?;
         features.push(density);
 
         // Clustering tendency (Hopkins statistic approximation)
-        let hopkins = self.estimate_clustering_tendency(points)?;
+        let hopkins = self.estimate_clustering_tendency(_points)?;
         features.push(hopkins);
 
         Ok(Array1::from(features))
     }
 
     /// Estimate local density of the data
-    fn estimate_local_density(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-        let (n_points, _n_dims) = points.dim();
+    fn estimate_local_density(_points: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+        let (n_points_n_dims) = _points.dim();
 
         if n_points < 2 {
             return Ok(0.0);
         }
 
-        // Sample points for efficiency
+        // Sample _points for efficiency
         let sample_size = n_points.min(50);
         let mut total_inverse_distance = 0.0;
         let mut count = 0;
@@ -375,10 +376,10 @@ impl NeuralSpatialOptimizer {
 
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = points
+                    let dist: f64 = _points
                         .row(i)
                         .iter()
-                        .zip(points.row(j).iter())
+                        .zip(_points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -403,27 +404,27 @@ impl NeuralSpatialOptimizer {
     }
 
     /// Estimate clustering tendency (Hopkins-like statistic)
-    fn estimate_clustering_tendency(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-        let (n_points, n_dims) = points.dim();
+    fn estimate_clustering_tendency(_points: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+        let (n_points, n_dims) = _points.dim();
 
         if n_points < 10 {
             return Ok(0.5); // Neutral value
         }
 
-        // Sample a subset of points
+        // Sample a subset of _points
         let sample_size = n_points.min(20);
         let mut real_distances = Vec::new();
         let mut random_distances = Vec::new();
 
-        // Calculate distances to nearest neighbors for real points
+        // Calculate distances to nearest neighbors for real _points
         for i in 0..sample_size {
             let mut min_dist = f64::INFINITY;
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = points
+                    let dist: f64 = _points
                         .row(i)
                         .iter()
-                        .zip(points.row(j).iter())
+                        .zip(_points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -433,8 +434,8 @@ impl NeuralSpatialOptimizer {
             real_distances.push(min_dist);
         }
 
-        // Generate random points and calculate distances
-        let bounds = self.get_data_bounds(points);
+        // Generate random _points and calculate distances
+        let bounds = self.get_data_bounds(_points);
         for _ in 0..sample_size {
             let random_point: Array1<f64> = Array1::from_shape_fn(n_dims, |i| {
                 rand::random::<f64>() * (bounds[i].1 - bounds[i].0) + bounds[i].0
@@ -444,7 +445,7 @@ impl NeuralSpatialOptimizer {
             for j in 0..n_points {
                 let dist: f64 = random_point
                     .iter()
-                    .zip(points.row(j).iter())
+                    .zip(_points.row(j).iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();
@@ -462,12 +463,12 @@ impl NeuralSpatialOptimizer {
     }
 
     /// Get data bounds for each dimension
-    fn get_data_bounds(&self, points: &ArrayView2<'_, f64>) -> Vec<(f64, f64)> {
-        let (_, n_dims) = points.dim();
+    fn get_data_bounds(_points: &ArrayView2<'_, f64>) -> Vec<(f64, f64)> {
+        let (_, n_dims) = _points.dim();
         let mut bounds = Vec::new();
 
         for dim in 0..n_dims {
-            let column = points.column(dim);
+            let column = _points.column(dim);
             let min_val = column.fold(f64::INFINITY, |a, &b| a.min(b));
             let max_val = column.fold(f64::NEG_INFINITY, |a, &b| a.max(b));
             bounds.push((min_val, max_val));
@@ -477,8 +478,8 @@ impl NeuralSpatialOptimizer {
     }
 
     /// Forward pass through neural network
-    fn forward_pass(&self, input: &Array1<f64>) -> SpatialResult<Array1<f64>> {
-        let mut current = input.clone();
+    fn forward_pass(_input: &Array1<f64>) -> SpatialResult<Array1<f64>> {
+        let mut current = _input.clone();
 
         for layer in &self.layers {
             // Linear transformation: y = Wx + b
@@ -519,13 +520,12 @@ impl NeuralSpatialOptimizer {
     }
 
     /// Decode distance metric from neural output
-    fn decode_distance_metric(&self, value: f64) -> DistanceMetric {
-        match (value * 4.0) as usize {
+    fn decode_distance_metric(_value: f64) -> DistanceMetric {
+        match (_value * 4.0) as usize {
             0 => DistanceMetric::Euclidean,
             1 => DistanceMetric::Manhattan,
             2 => DistanceMetric::Cosine,
-            3 => DistanceMetric::Minkowski(2.0),
-            _ => DistanceMetric::Euclidean,
+            3 => DistanceMetric::Minkowski(2.0, _ =>, DistanceMetric::Euclidean,
         }
     }
 
@@ -573,10 +573,10 @@ impl NeuralSpatialOptimizer {
             }
             InitMethod::KMeansPlusPlus => {
                 // Simplified k-means++ initialization
-                let mut rng = rng();
+                let mut rng = rand::rng();
                 let mut selected = Vec::new();
                 for _ in 0..params.num_clusters {
-                    let idx = rng.random_range(0..n_points);
+                    let idx = rng.gen_range(0..n_points);
                     selected.push(idx);
                 }
 
@@ -651,7 +651,7 @@ impl NeuralSpatialOptimizer {
     }
 
     /// Calculate distance between two points
-    fn calculate_distance(&self, a: &Array1<f64>, b: &Array1<f64>, metric: &DistanceMetric) -> f64 {
+    fn calculate_distance(a: &Array1<f64>, b: &Array1<f64>, metric: &DistanceMetric) -> f64 {
         match metric {
             DistanceMetric::Euclidean => a
                 .iter()
@@ -681,7 +681,7 @@ impl NeuralSpatialOptimizer {
         points: &ArrayView2<'_, f64>,
         result: &ClusteringResult,
     ) -> SpatialResult<f64> {
-        let (n_points, _) = points.dim();
+        let (n_points_) = points.dim();
         let mut silhouette_scores = Vec::new();
 
         for i in 0..n_points {
@@ -748,8 +748,7 @@ impl NeuralSpatialOptimizer {
 
     /// Calculate inertia (WCSS)
     fn calculate_inertia(
-        &self,
-        _points: &ArrayView2<'_, f64>,
+        &self_points: &ArrayView2<'_, f64>,
         result: &ClusteringResult,
     ) -> SpatialResult<f64> {
         Ok(result.inertia)
@@ -762,7 +761,7 @@ impl NeuralSpatialOptimizer {
         centroids: &Array2<f64>,
         assignments: &Array1<usize>,
     ) -> SpatialResult<f64> {
-        let (n_points, _) = points.dim();
+        let (n_points_) = points.dim();
         let mut inertia = 0.0;
 
         for i in 0..n_points {
@@ -784,7 +783,7 @@ impl NeuralSpatialOptimizer {
         points: &ArrayView2<'_, f64>,
         result: &ClusteringResult,
     ) -> SpatialResult<f64> {
-        let (n_points, _n_dims) = points.dim();
+        let (n_points_n_dims) = points.dim();
         let k = result.centroids.nrows();
 
         if k <= 1 || n_points <= k {
@@ -817,10 +816,10 @@ impl NeuralSpatialOptimizer {
     }
 
     /// Update neural network based on performance feedback
-    fn update_network(&mut self, input: &Array1<f64>, quality_score: f64) -> SpatialResult<()> {
+    fn update_network(_input: &Array1<f64>, quality_score: f64) -> SpatialResult<()> {
         // Store experience for training
         let target = Array1::from(vec![quality_score; 8]); // Simplified target
-        self.experience_buffer.push_back((input.clone(), target));
+        self.experience_buffer.push_back((_input.clone(), target));
 
         // Limit buffer size
         if self.experience_buffer.len() > 1000 {
@@ -1044,7 +1043,7 @@ pub struct Experience {
 }
 
 impl Default for ReinforcementLearningSelector {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -1064,13 +1063,13 @@ impl ReinforcementLearningSelector {
     }
 
     /// Configure epsilon for exploration
-    pub fn with_epsilon_greedy(mut self, epsilon: f64) -> Self {
+    pub fn with_epsilon_greedy(mut epsilon: f64) -> Self {
         self.epsilon = epsilon;
         self
     }
 
     /// Enable experience replay
-    pub fn with_experience_replay(mut self, enabled: bool) -> Self {
+    pub fn with_experience_replay(mut enabled: bool) -> Self {
         if enabled {
             self.experience_buffer = VecDeque::new();
         }
@@ -1078,7 +1077,7 @@ impl ReinforcementLearningSelector {
     }
 
     /// Enable target network
-    pub fn with_target_network(mut self, enabled: bool) -> Self {
+    pub fn with_target_network(mut enabled: bool) -> Self {
         if enabled {
             self.target_q_table = Some(HashMap::new());
         }
@@ -1103,23 +1102,21 @@ impl ReinforcementLearningSelector {
     }
 
     /// Analyze data to determine state
-    fn analyze_data_state(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<DataState> {
-        let (n_points, n_dims) = points.dim();
+    fn analyze_data_state(_points: &ArrayView2<'_, f64>) -> SpatialResult<DataState> {
+        let (n_points, n_dims) = _points.dim();
 
         let size_category = match n_points {
             0..=999 => SizeCategory::Small,
-            1000..=9999 => SizeCategory::Medium,
-            _ => SizeCategory::Large,
+            1000..=9999 => SizeCategory::Medium_ =>, SizeCategory::Large,
         };
 
         let dimensionality_category = match n_dims {
             0..=4 => DimensionalityCategory::Low,
-            5..=20 => DimensionalityCategory::Medium,
-            _ => DimensionalityCategory::High,
+            5..=20 => DimensionalityCategory::Medium_ =>, DimensionalityCategory::High,
         };
 
         // Estimate density
-        let density = self.estimate_density(points)?;
+        let density = self.estimate_density(_points)?;
         let density_category = if density < 0.3 {
             DensityCategory::Low
         } else if density < 0.7 {
@@ -1129,7 +1126,7 @@ impl ReinforcementLearningSelector {
         };
 
         // Estimate clustering tendency
-        let hopkins = self.estimate_hopkins_statistic(points)?;
+        let hopkins = self.estimate_hopkins_statistic(_points)?;
         let clustering_tendency_category = if hopkins < 0.3 {
             ClusteringTendencyCategory::HighlyStructured
         } else if hopkins < 0.7 {
@@ -1147,8 +1144,8 @@ impl ReinforcementLearningSelector {
     }
 
     /// Estimate data density
-    fn estimate_density(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-        let (n_points, _) = points.dim();
+    fn estimate_density(_points: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+        let (n_points_) = _points.dim();
 
         if n_points < 2 {
             return Ok(0.0);
@@ -1163,10 +1160,10 @@ impl ReinforcementLearningSelector {
 
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = points
+                    let dist: f64 = _points
                         .row(i)
                         .iter()
-                        .zip(points.row(j).iter())
+                        .zip(_points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -1191,8 +1188,8 @@ impl ReinforcementLearningSelector {
     }
 
     /// Estimate Hopkins statistic
-    fn estimate_hopkins_statistic(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-        let (n_points, n_dims) = points.dim();
+    fn estimate_hopkins_statistic(_points: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+        let (n_points, n_dims) = _points.dim();
 
         if n_points < 10 {
             return Ok(0.5);
@@ -1207,10 +1204,10 @@ impl ReinforcementLearningSelector {
             let mut min_dist = f64::INFINITY;
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = points
+                    let dist: f64 = _points
                         .row(i)
                         .iter()
-                        .zip(points.row(j).iter())
+                        .zip(_points.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -1221,7 +1218,7 @@ impl ReinforcementLearningSelector {
         }
 
         // Random point distances
-        let bounds = self.get_data_bounds(points);
+        let bounds = self.get_data_bounds(_points);
         for _ in 0..sample_size {
             let random_point: Array1<f64> = Array1::from_shape_fn(n_dims, |i| {
                 rand::random::<f64>() * (bounds[i].1 - bounds[i].0) + bounds[i].0
@@ -1231,7 +1228,7 @@ impl ReinforcementLearningSelector {
             for j in 0..n_points {
                 let dist: f64 = random_point
                     .iter()
-                    .zip(points.row(j).iter())
+                    .zip(_points.row(j).iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();
@@ -1248,12 +1245,12 @@ impl ReinforcementLearningSelector {
     }
 
     /// Get data bounds
-    fn get_data_bounds(&self, points: &ArrayView2<'_, f64>) -> Vec<(f64, f64)> {
-        let (_, n_dims) = points.dim();
+    fn get_data_bounds(_points: &ArrayView2<'_, f64>) -> Vec<(f64, f64)> {
+        let (_, n_dims) = _points.dim();
         let mut bounds = Vec::new();
 
         for dim in 0..n_dims {
-            let column = points.column(dim);
+            let column = _points.column(dim);
             let min_val = column.fold(f64::INFINITY, |a, &b| a.min(b));
             let max_val = column.fold(f64::NEG_INFINITY, |a, &b| a.max(b));
             bounds.push((min_val, max_val));
@@ -1279,7 +1276,7 @@ impl ReinforcementLearningSelector {
     }
 
     /// Find best algorithm for given state
-    fn best_algorithm_for_state(&self, state: &DataState) -> SpatialAlgorithm {
+    fn best_algorithm_for_state(_state: &DataState) -> SpatialAlgorithm {
         let algorithms = [
             SpatialAlgorithm::KMeans,
             SpatialAlgorithm::DBScan,
@@ -1295,7 +1292,7 @@ impl ReinforcementLearningSelector {
 
         for algorithm in &algorithms {
             let state_action = StateAction {
-                state: state.clone(),
+                _state: _state.clone(),
                 action: algorithm.clone(),
             };
 
@@ -1310,34 +1307,34 @@ impl ReinforcementLearningSelector {
     }
 
     /// Update Q-values based on experience
-    pub fn update_q_values(&mut self, experience: Experience) -> SpatialResult<()> {
+    pub fn update_q_values(_experience: Experience) -> SpatialResult<()> {
         let state_action = StateAction {
-            state: experience.state.clone(),
-            action: experience.action.clone(),
+            state: _experience.state.clone(),
+            action: _experience.action.clone(),
         };
 
         let current_q = *self.q_table.get(&state_action).unwrap_or(&0.0);
 
         // Find maximum Q-value for next state
-        let max_next_q = if experience.done {
+        let max_next_q = if _experience.done {
             0.0
         } else {
-            self.max_q_value_for_state(&experience.next_state)
+            self.max_q_value_for_state(&_experience.next_state)
         };
 
         // Q-learning update rule
         let new_q = current_q
-            + self.learning_rate * (experience.reward + self.gamma * max_next_q - current_q);
+            + self.learning_rate * (_experience.reward + self.gamma * max_next_q - current_q);
 
         self.q_table.insert(state_action, new_q);
 
-        // Store experience for replay
-        self.experience_buffer.push_back(experience);
+        // Store _experience for replay
+        self.experience_buffer.push_back(_experience);
         if self.experience_buffer.len() > 10000 {
             self.experience_buffer.pop_front();
         }
 
-        // Perform experience replay
+        // Perform _experience replay
         if self.experience_buffer.len() >= 32 {
             self.replay_experience()?;
         }
@@ -1346,7 +1343,7 @@ impl ReinforcementLearningSelector {
     }
 
     /// Find maximum Q-value for given state
-    fn max_q_value_for_state(&self, state: &DataState) -> f64 {
+    fn max_q_value_for_state(_state: &DataState) -> f64 {
         let algorithms = [
             SpatialAlgorithm::KMeans,
             SpatialAlgorithm::DBScan,
@@ -1361,7 +1358,7 @@ impl ReinforcementLearningSelector {
             .iter()
             .map(|algorithm| {
                 let state_action = StateAction {
-                    state: state.clone(),
+                    _state: _state.clone(),
                     action: algorithm.clone(),
                 };
                 *self.q_table.get(&state_action).unwrap_or(&0.0)
@@ -1370,7 +1367,7 @@ impl ReinforcementLearningSelector {
     }
 
     /// Perform experience replay training
-    fn replay_experience(&mut self) -> SpatialResult<()> {
+    fn replay_experience(&self) -> SpatialResult<()> {
         let batch_size = 32.min(self.experience_buffer.len());
 
         for _ in 0..batch_size {

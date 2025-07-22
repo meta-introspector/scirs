@@ -186,8 +186,7 @@ impl<T: Float + Default + Clone> CandleTensor<T> {
         let shape = vec![data.len()];
         
         Self {
-            data,
-            grad: None,
+            data_grad: None,
             requires_grad,
             shape,
             dtype,
@@ -211,18 +210,18 @@ impl<T: Float + Default + Clone> CandleTensor<T> {
     }
     
     /// Create tensor with zeros
-    pub fn zeros(shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
-        Self::full(shape, T::zero(), dtype, device)
+    pub fn zeros(_shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
+        Self::full(_shape, T::zero(), dtype, device)
     }
     
     /// Create tensor with ones
-    pub fn ones(shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
-        Self::full(shape, T::one(), dtype, device)
+    pub fn ones(_shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
+        Self::full(_shape, T::one(), dtype, device)
     }
     
     /// Create tensor with random values
-    pub fn randn(shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
-        let size = shape.iter().product();
+    pub fn randn(_shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
+        let size = _shape.iter().product();
         let data = Array1::from_vec(
             (0..size).map(|_| T::from(fastrand::f32()).unwrap()).collect()
         );
@@ -254,7 +253,7 @@ impl<T: Float + Default + Clone> CandleTensor<T> {
     pub fn set_requires_grad(&mut self, requires_grad: bool) {
         self.requires_grad = requires_grad;
         if !requires_grad {
-            self.grad = None;
+            self._grad = None;
         }
     }
     
@@ -353,7 +352,7 @@ impl<T: Float + Default + Clone> CandleTensor<T> {
             });
         }
         
-        self.shape = new_shape.to_vec();
+        self._shape = new_shape.to_vec();
         Ok(())
     }
     
@@ -374,12 +373,12 @@ impl<T: Float + Default + Clone> CandleTensor<T> {
 
 impl<T: Float + Default + Clone> CandleOptimizer<T> {
     /// Create new Candle optimizer
-    pub fn new(config: CandleOptimizerConfig, device: CandleDevice) -> Result<Self> {
+    pub fn new(_config: CandleOptimizerConfig, device: CandleDevice) -> Result<Self> {
         let autodiff_config = AutodiffConfig {
             enable_forward_mode: true,
             enable_reverse_mode: true,
             enable_hessian: true,
-            gradient_checkpointing: config.gradient_checkpointing,
+            gradient_checkpointing: _config.gradient_checkpointing,
             checkpoint_chunk_size: 1000,
             ..Default::default()
         };
@@ -392,27 +391,27 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
         }
         
         let mixed_precision = MixedPrecisionConfig {
-            enabled: config.auto_mixed_precision,
-            forward_precision: if config.auto_mixed_precision { CandleDataType::F16 } else { CandleDataType::F32 },
+            enabled: _config.auto_mixed_precision,
+            forward_precision: if _config.auto_mixed_precision { CandleDataType::F16 } else { CandleDataType::F32 },
             backward_precision: CandleDataType::F32,
             param_precision: CandleDataType::F32,
             optimizer_precision: CandleDataType::F32,
-            loss_scaling: if config.dynamic_loss_scaling {
+            loss_scaling: if _config.dynamic_loss_scaling {
                 LossScalingStrategy::Dynamic {
-                    init_scale: config.loss_scale,
+                    init_scale: _config.loss_scale,
                     growth_factor: 2.0,
                     backoff_factor: 0.5,
                     growth_interval: 2000,
                 }
             } else {
-                LossScalingStrategy::Fixed(config.loss_scale)
+                LossScalingStrategy::Fixed(_config.loss_scale)
             },
         };
         
         Ok(Self {
             engine,
             tensors: HashMap::new(),
-            config,
+            _config,
             device,
             grad_buffer: HashMap::new(),
             mixed_precision,
@@ -438,7 +437,7 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
     /// Compute gradients for all registered tensors
     pub fn backward(&mut self, loss_tensor: &str) -> Result<()> {
         let loss_tensor = self.tensors.get(loss_tensor)
-            .ok_or_else(|| OptimError::InvalidInput(format!("Loss tensor '{}' not found", loss_tensor)))?;
+            .ok_or_else(|| OptimError::InvalidInput(format!("Loss _tensor '{}' not found", loss_tensor)))?;
         
         if let Some(node_id) = loss_tensor.node_id {
             if let Ok(mut engine) = self.engine.lock() {
@@ -448,9 +447,9 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
                 let scale_factor = self.get_loss_scale();
                 
                 // Distribute gradients to tensors
-                for (name, tensor) in &mut self.tensors {
-                    if tensor.requires_grad && tensor.node_id.is_some() {
-                        let node_id = tensor.node_id.unwrap();
+                for (name_tensor) in &mut self.tensors {
+                    if _tensor.requires_grad && _tensor.node_id.is_some() {
+                        let node_id = _tensor.node_id.unwrap();
                         if node_id < gradients.len() {
                             let scaled_grad = gradients[node_id] / scale_factor;
                             
@@ -459,10 +458,10 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
                                 if let Some(existing_grad) = self.grad_buffer.get_mut(name) {
                                     *existing_grad = &*existing_grad + &Array1::from_elem(1, scaled_grad);
                                 } else {
-                                    self.grad_buffer.insert(name.clone(), Array1::from_elem(tensor.data.len(), scaled_grad));
+                                    self.grad_buffer.insert(name.clone(), Array1::from_elem(_tensor.data.len(), scaled_grad));
                                 }
                             } else {
-                                tensor.grad = Some(Array1::from_elem(tensor.data.len(), scaled_grad));
+                                _tensor.grad = Some(Array1::from_elem(_tensor.data.len(), scaled_grad));
                             }
                         }
                     }
@@ -535,9 +534,9 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
     /// Get current loss scale factor
     fn get_loss_scale(&self) -> T {
         match &self.mixed_precision.loss_scaling {
-            LossScalingStrategy::Fixed(scale) => T::from(*scale).unwrap(),
+            LossScalingStrategy::Fixed(scale) =>, T::from(*scale).unwrap(),
             LossScalingStrategy::Dynamic { init_scale, .. } => T::from(*init_scale).unwrap(),
-            LossScalingStrategy::Adaptive { .. } => T::from(1024.0).unwrap(), // Default adaptive scale
+            LossScalingStrategy::Adaptive { .. } =>, T::from(1024.0).unwrap(), // Default adaptive scale
         }
     }
     
@@ -668,7 +667,7 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
         MemoryStats {
             total_tensor_memory: total_memory,
             gradient_memory,
-            buffer_memory: self.grad_buffer.len() * std::mem::size_of::<Array1<T>>(),
+            buffer_memory: self.grad_buffer.len() * std::mem::size, _of::<Array1<T>>(),
             peak_memory: total_memory + gradient_memory, // Simplified
         }
     }
@@ -799,8 +798,8 @@ pub mod utils {
     }
     
     /// Convert Candle tensor to ndarray
-    pub fn to_ndarray<T: Float + Clone>(tensor: &CandleTensor<T>) -> Array1<T> {
-        tensor.data.clone()
+    pub fn to_ndarray<T: Float + Clone>(_tensor: &CandleTensor<T>) -> Array1<T> {
+        _tensor.data.clone()
     }
     
     /// Create tensor from scalar
@@ -822,13 +821,13 @@ pub mod utils {
     }
     
     /// Check if two tensors are on the same device
-    pub fn same_device<T: Float>(tensor1: &CandleTensor<T>, tensor2: &CandleTensor<T>) -> bool {
-        tensor1.device == tensor2.device
+    pub fn same_device<T: Float>(_tensor1: &CandleTensor<T>, tensor2: &CandleTensor<T>) -> bool {
+        _tensor1.device == tensor2.device
     }
     
     /// Get device name as string
-    pub fn device_name(device: &CandleDevice) -> String {
-        match device {
+    pub fn device_name(_device: &CandleDevice) -> String {
+        match _device {
             CandleDevice::Cpu => "cpu".to_string(),
             CandleDevice::Cuda(id) => format!("cuda:{}", id),
             CandleDevice::Metal(id) => format!("metal:{}", id),
@@ -836,8 +835,8 @@ pub mod utils {
     }
     
     /// Get data type size in bytes
-    pub fn dtype_size(dtype: CandleDataType) -> usize {
-        match dtype {
+    pub fn dtype_size(_dtype: CandleDataType) -> usize {
+        match _dtype {
             CandleDataType::F16 | CandleDataType::BF16 => 2,
             CandleDataType::F32 | CandleDataType::U32 => 4,
             CandleDataType::F64 | CandleDataType::I64 => 8,

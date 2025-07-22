@@ -1,7 +1,7 @@
 //! Example demonstrating various interpolation methods
 
 use image::{GenericImageView, Pixel};
-use scirs2_vision::transform::{
+use scirs2__vision::transform::{
     resize, resize_bicubic, resize_edge_preserving, resize_lanczos, InterpolationMethod,
 };
 use std::env;
@@ -383,7 +383,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Draw simple text on an image
 #[allow(dead_code)]
-fn draw_text(img: &mut image::RgbaImage, text: &str, x: u32, y: u32) {
+fn draw_text(_img: &mut image::RgbaImage, text: &str, x: u32, y: u32) {
     let color = image::Rgba([255, 255, 255, 255]);
     let shadow_color = image::Rgba([0, 0, 0, 192]);
 
@@ -391,21 +391,21 @@ fn draw_text(img: &mut image::RgbaImage, text: &str, x: u32, y: u32) {
     for (i, c) in text.chars().enumerate() {
         let cx = x + i as u32 * 8 + 1;
         let cy = y + 1;
-        draw_char(img, c, cx, cy, shadow_color);
+        draw_char(_img, c, cx, cy, shadow_color);
     }
 
     // Draw text
     for (i, c) in text.chars().enumerate() {
         let cx = x + i as u32 * 8;
         let cy = y;
-        draw_char(img, c, cx, cy, color);
+        draw_char(_img, c, cx, cy, color);
     }
 }
 
 /// Draw a single character (simple bitmap font)
 #[allow(dead_code)]
-fn draw_char(img: &mut image::RgbaImage, c: char, x: u32, y: u32, color: image::Rgba<u8>) {
-    let (width, height) = img.dimensions();
+fn draw_char(_img: &mut image::RgbaImage, c: char, x: u32, y: u32, color: image::Rgba<u8>) {
+    let (width, height) = _img.dimensions();
 
     // Simple bitmap patterns for letters and numbers
     let pattern = match c {
@@ -528,8 +528,7 @@ fn draw_char(img: &mut image::RgbaImage, c: char, x: u32, y: u32, color: image::
         ],
         '3' => &[
             0b01100000, 0b10010000, 0b00010000, 0b00100000, 0b00010000, 0b10010000, 0b01100000,
-        ],
-        _ => &[
+        ]_ => &[
             0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000,
         ],
     };
@@ -542,7 +541,7 @@ fn draw_char(img: &mut image::RgbaImage, c: char, x: u32, y: u32, color: image::
                 let px = x + dx;
                 let py = y + dy as u32;
                 if px < width && py < height {
-                    img.put_pixel(px, py, color);
+                    _img.put_pixel(px, py, color);
                 }
             }
         }

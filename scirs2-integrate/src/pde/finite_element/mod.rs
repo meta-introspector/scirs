@@ -46,8 +46,8 @@ impl Point {
     }
 
     /// Calculate the distance to another point
-    pub fn distance(&self, other: &Point) -> f64 {
-        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
+    pub fn distance(_other: &Point) -> f64 {
+        ((self.x - _other.x).powi(2) + (self.y - _other.y).powi(2)).sqrt()
     }
 }
 
@@ -63,8 +63,8 @@ pub struct Triangle {
 
 impl Triangle {
     /// Create a new triangle
-    pub fn new(nodes: [usize; 3], marker: Option<i32>) -> Self {
-        Triangle { nodes, marker }
+    pub fn new(_nodes: [usize; 3], marker: Option<i32>) -> Self {
+        Triangle { _nodes, marker }
     }
 }
 
@@ -101,7 +101,7 @@ pub struct BoundaryNodeInfo {
 }
 
 impl Default for TriangularMesh {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -231,8 +231,8 @@ impl TriangularMesh {
     }
 
     /// Compute area of a triangle
-    pub fn triangle_area(&self, element: &Triangle) -> f64 {
-        let [i, j, k] = element.nodes;
+    pub fn triangle_area(_element: &Triangle) -> f64 {
+        let [i, j, k] = _element.nodes;
         let pi = &self.points[i];
         let pj = &self.points[j];
         let pk = &self.points[k];
@@ -242,13 +242,13 @@ impl TriangularMesh {
     }
 
     /// Compute shape function gradients for a linear triangular element
-    pub fn shape_function_gradients(&self, element: &Triangle) -> PDEResult<[Point; 3]> {
-        let [i, j, k] = element.nodes;
+    pub fn shape_function_gradients(_element: &Triangle) -> PDEResult<[Point; 3]> {
+        let [i, j, k] = _element.nodes;
         let pi = &self.points[i];
         let pj = &self.points[j];
         let pk = &self.points[k];
 
-        let area = self.triangle_area(element);
+        let area = self.triangle_area(_element);
         if area < 1e-10 {
             return Err(PDEError::FiniteElementError(format!(
                 "Element has nearly zero area: {area}"
@@ -302,7 +302,7 @@ pub struct FEMOptions {
 }
 
 impl Default for FEMOptions {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         FEMOptions {
             element_type: ElementType::Linear,
             quadrature_order: 3, // 3-point rule suitable for quadratic functions
@@ -365,7 +365,7 @@ impl FEMPoissonSolver {
         boundary_conditions: Vec<BoundaryCondition<f64>>,
         options: Option<FEMOptions>,
     ) -> PDEResult<Self> {
-        // Validate boundary conditions
+        // Validate boundary _conditions
         if boundary_conditions.is_empty() {
             return Err(PDEError::BoundaryConditions(
                 "At least one boundary condition is required".to_string(),
@@ -398,7 +398,7 @@ impl FEMPoissonSolver {
     }
 
     /// Solve Poisson's equation using the Finite Element Method
-    pub fn solve(&mut self) -> PDEResult<FEMResult> {
+    pub fn solve(&self) -> PDEResult<FEMResult> {
         let start_time = Instant::now();
 
         // Apply boundary conditions to the mesh
@@ -498,20 +498,20 @@ impl FEMPoissonSolver {
     }
 
     /// Compute element stiffness matrix and load vector for linear elements
-    fn element_matrices_linear(&self, element: &Triangle) -> PDEResult<([[f64; 3]; 3], [f64; 3])> {
+    fn element_matrices_linear(_element: &Triangle) -> PDEResult<([[f64; 3]; 3], [f64; 3])> {
         // Get nodes
-        let [i, j, k] = element.nodes;
+        let [i, j, k] = _element.nodes;
         let pi = &self.mesh.points[i];
         let pj = &self.mesh.points[j];
         let pk = &self.mesh.points[k];
 
         // Element area
-        let area = self.mesh.triangle_area(element);
+        let area = self.mesh.triangle_area(_element);
 
         // Shape function gradients
-        let gradients = self.mesh.shape_function_gradients(element)?;
+        let gradients = self.mesh.shape_function_gradients(_element)?;
 
-        // Stiffness matrix - For Poisson's equation: Integral of (∇φᵢ · ∇φⱼ) over element
+        // Stiffness matrix - For Poisson's equation: Integral of (∇φᵢ · ∇φⱼ) over _element
         let mut a_e = [[0.0; 3]; 3];
 
         for m in 0..3 {
@@ -522,7 +522,7 @@ impl FEMPoissonSolver {
             }
         }
 
-        // Load vector - For Poisson's equation: Integral of (f · φᵢ) over element
+        // Load vector - For Poisson's equation: Integral of (f · φᵢ) over _element
         let mut b_e = [0.0; 3];
 
         // Approximate the source term at the centroid of the triangle
@@ -530,7 +530,7 @@ impl FEMPoissonSolver {
         let centroid_y = (pi.y + pj.y + pk.y) / 3.0;
         let f_centroid = (self.source_term)(centroid_x, centroid_y);
 
-        // For linear elements, the integral of each shape function over the element is area/3
+        // For linear elements, the integral of each shape function over the _element is area/3
         b_e.iter_mut().for_each(|value| {
             *value = f_centroid * (area / 3.0);
         });
@@ -668,11 +668,11 @@ impl FEMPoissonSolver {
                     .mesh
                     .boundary_edges
                     .iter()
-                    .filter(|&&(n1, n2, _)| n1 == node_idx || n2 == node_idx)
+                    .filter(|&&(n1, n2_)| n1 == node_idx || n2 == node_idx)
                     .collect();
 
                 // For each boundary edge, apply the Neumann condition
-                for &(n1, n2, _) in &boundary_edges {
+                for &(n1, n2_) in &boundary_edges {
                     let other_node = if *n1 == node_idx { *n2 } else { *n1 };
 
                     // Get the coordinates of the nodes
@@ -688,16 +688,16 @@ impl FEMPoissonSolver {
                 }
             } else if bc_info.bc_type == BoundaryConditionType::Robin {
                 // Robin boundary conditions (a*u + b*∂u/∂n = c)
-                if let Some([a_coef, _b_coef, c_coef]) = bc_info.coefficients {
+                if let Some([a_coef_b_coef, c_coef]) = bc_info.coefficients {
                     // Similar to Neumann, we need to find boundary edges
                     let boundary_edges: Vec<_> = self
                         .mesh
                         .boundary_edges
                         .iter()
-                        .filter(|&&(n1, n2, _)| n1 == node_idx || n2 == node_idx)
+                        .filter(|&&(n1, n2_)| n1 == node_idx || n2 == node_idx)
                         .collect();
 
-                    for &(n1, n2, _) in &boundary_edges {
+                    for &(n1, n2_) in &boundary_edges {
                         let other_node = if *n1 == node_idx { *n2 } else { *n1 };
 
                         // Get the coordinates of the nodes
@@ -723,7 +723,7 @@ impl FEMPoissonSolver {
     }
 
     /// Solve the linear system Ax = b
-    fn solve_linear_system(&self, a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f64>> {
+    fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f64>> {
         let n = b.len();
 
         // Simple Gaussian elimination for demonstration purposes
@@ -793,7 +793,7 @@ impl FEMPoissonSolver {
     }
 
     /// Compute residual norm ||Ax - b||₂
-    fn compute_residual(&self, a: &Array2<f64>, b: &Array1<f64>, x: &Array1<f64>) -> f64 {
+    fn compute_residual(a: &Array2<f64>, b: &Array1<f64>, x: &Array1<f64>) -> f64 {
         let n = b.len();
         let mut residual = 0.0;
 
@@ -813,15 +813,15 @@ impl FEMPoissonSolver {
 
 /// Convert FEMResult to PDESolution
 impl From<FEMResult> for PDESolution<f64> {
-    fn from(result: FEMResult) -> Self {
+    fn from(_result: FEMResult) -> Self {
         let mut grids = Vec::new();
-        let n = result.mesh.points.len();
+        let n = _result.mesh.points.len();
 
         // Extract x and y coordinates as separate grids
         let mut x_coords = Array1::zeros(n);
         let mut y_coords = Array1::zeros(n);
 
-        for (i, point) in result.mesh.points.iter().enumerate() {
+        for (i, point) in _result.mesh.points.iter().enumerate() {
             x_coords[i] = point.x;
             y_coords[i] = point.y;
         }
@@ -831,15 +831,15 @@ impl From<FEMResult> for PDESolution<f64> {
 
         // Create solution values as a 2D array with one column
         let mut values = Vec::new();
-        let u_reshaped = result.u.into_shape_with_order((n, 1)).unwrap();
+        let u_reshaped = _result.u.into_shape_with_order((n, 1)).unwrap();
         values.push(u_reshaped);
 
         // Create solver info
         let info = PDESolverInfo {
-            num_iterations: result.num_iterations,
-            computation_time: result.computation_time,
-            residual_norm: Some(result.residual_norm),
-            convergence_history: result.convergence_history,
+            num_iterations: _result.num_iterations,
+            computation_time: _result.computation_time,
+            residual_norm: Some(_result.residual_norm),
+            convergence_history: _result.convergence_history,
             method: "Finite Element Method".to_string(),
         };
 
@@ -855,7 +855,7 @@ impl From<FEMResult> for PDESolution<f64> {
 // Add PDE error types
 impl PDEError {
     /// Create a finite element error
-    pub fn finite_element_error(msg: String) -> Self {
-        PDEError::Other(format!("Finite element error: {msg}"))
+    pub fn finite_element_error(_msg: String) -> Self {
+        PDEError::Other(format!("Finite element error: {_msg}"))
     }
 }

@@ -20,7 +20,7 @@ use crate::regularizers::Regularizer;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_optim::regularizers::StochasticDepth;
+/// use scirs2__optim::regularizers::StochasticDepth;
 ///
 /// let stochastic_depth = StochasticDepth::new(0.2, 10, 50);
 /// let features = array![[1.0, 2.0], [3.0, 4.0]];
@@ -48,9 +48,9 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> StochasticDepth<A> {
     /// * `drop_prob` - The base probability of dropping a layer
     /// * `layer_idx` - The index of the current layer
     /// * `num_layers` - The total number of layers in the network
-    pub fn new(drop_prob: A, layer_idx: usize, num_layers: usize) -> Self {
+    pub fn new(_drop_prob: A, layer_idx: usize, num_layers: usize) -> Self {
         Self {
-            drop_prob,
+            _drop_prob,
             layer_idx,
             num_layers,
             rng_state: 0,
@@ -142,13 +142,13 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> StochasticDepth<A> {
 impl<A: Float + Debug + ScalarOperand + FromPrimitive, D: Dimension> Regularizer<A, D>
     for StochasticDepth<A>
 {
-    fn apply(&self, _params: &Array<A, D>, _gradients: &mut Array<A, D>) -> Result<A> {
+    fn apply(&self_params: &Array<A, D>, _gradients: &mut Array<A, D>) -> Result<A> {
         // This method is not the primary way to use stochastic depth,
         // prefer apply_layer for layer-wise applications
         Ok(A::zero())
     }
 
-    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self_params: &Array<A, D>) -> Result<A> {
         // Stochastic depth doesn't add a direct penalty term
         Ok(A::zero())
     }

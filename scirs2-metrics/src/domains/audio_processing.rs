@@ -750,14 +750,14 @@ impl AudioProcessingMetrics {
         let (precision, recall, f1_score) = self.calculate_precision_recall_f1(y_true, y_pred)?;
 
         // Calculate audio-specific metrics
-        let (eer, auc) = if let Some(scores) = y_scores {
+        let (eer, auc) = if let Some(_scores) = y_scores {
             let eer_val = self
                 .audio_classification
-                .calculate_eer(y_true, &scores.column(1))?;
+                .calculate_eer(y_true, &_scores.column(1))?;
             // Convert to appropriate types for roc_auc_score
             let y_true_u32: Vec<u32> = y_true.iter().map(|&x| x as u32).collect();
             let y_true_u32_array = Array1::from(y_true_u32);
-            let scores_f64: Vec<f64> = scores
+            let _scores_f64: Vec<f64> = _scores
                 .column(1)
                 .iter()
                 .map(|&x| x.to_f64().unwrap_or(0.0))
@@ -843,8 +843,7 @@ impl AudioProcessingMetrics {
     pub fn evaluate_audio_quality<F>(
         &mut self,
         reference_audio: &ArrayView1<F>,
-        degraded_audio: &ArrayView1<F>,
-        _sample_rate: f64,
+        degraded_audio: &ArrayView1<F>, _sample_rate: f64,
     ) -> Result<AudioQualityResults>
     where
         F: Float + std::iter::Sum,
@@ -1398,7 +1397,7 @@ impl BleuCalculator {
         }
     }
 
-    fn calculate(&mut self, _reference: &[String], _hypothesis: &[String]) -> Result<f64> {
+    fn calculate(&mut self_reference: &[String], _hypothesis: &[String]) -> Result<f64> {
         // Simplified BLEU calculation
         Ok(0.8) // Placeholder
     }
@@ -1435,7 +1434,7 @@ impl AudioClassificationMetrics {
             ));
         }
 
-        // Sort by scores in descending order
+        // Sort by _scores in descending order
         let mut data: Vec<(F, i32)> = y_scores
             .iter()
             .zip(y_true.iter())
@@ -1477,9 +1476,7 @@ impl AudioClassificationMetrics {
     }
 
     fn calculate_frame_accuracy(
-        &self,
-        _frame_true: &ArrayView2<i32>,
-        _frame_pred: &ArrayView2<i32>,
+        &self, _frame_true: &ArrayView2<i32>, _frame_pred: &ArrayView2<i32>,
     ) -> Result<f64> {
         // Simplified frame accuracy calculation
         Ok(0.85) // Placeholder
@@ -1525,7 +1522,7 @@ impl MusicInformationMetrics {
         }
     }
 
-    fn calculate_beat_f_measure(&self, _reference: &[f64], _estimated: &[f64]) -> Result<f64> {
+    fn calculate_beat_f_measure(&self_reference: &[f64], _estimated: &[f64]) -> Result<f64> {
         Ok(0.7) // Placeholder
     }
 
@@ -1631,37 +1628,25 @@ impl SoundEventDetectionMetrics {
     }
 
     fn calculate_event_based_f1(
-        &self,
-        _reference: &[(f64, f64, String)],
-        _predicted: &[(f64, f64, String, f64)],
-        _tolerance: f64,
+        &self_reference: &[(f64, f64, String)], _predicted: &[(f64, f64, String, f64)], _tolerance: f64,
     ) -> Result<f64> {
         Ok(0.6) // Placeholder
     }
 
     fn calculate_segment_based_f1(
-        &self,
-        _reference: &[(f64, f64, String)],
-        _predicted: &[(f64, f64, String, f64)],
-        _segment_length: f64,
+        &self_reference: &[(f64, f64, String)], _predicted: &[(f64, f64, String, f64)]_segment_length: f64,
     ) -> Result<f64> {
         Ok(0.65) // Placeholder
     }
 
     fn calculate_error_rate(
-        &self,
-        _reference: &[(f64, f64, String)],
-        _predicted: &[(f64, f64, String, f64)],
-        _tolerance: f64,
+        &self_reference: &[(f64, f64, String)], _predicted: &[(f64, f64, String, f64)], _tolerance: f64,
     ) -> Result<f64> {
         Ok(0.3) // Placeholder
     }
 
     fn calculate_class_wise_f1(
-        &self,
-        _reference: &[(f64, f64, String)],
-        _predicted: &[(f64, f64, String, f64)],
-        _tolerance: f64,
+        &self_reference: &[(f64, f64, String)], _predicted: &[(f64, f64, String, f64)], _tolerance: f64,
     ) -> Result<f64> {
         Ok(0.58) // Placeholder
     }
@@ -1689,7 +1674,7 @@ impl AudioSimilarityMetrics {
 
 // Placeholder implementations for remaining structs...
 impl AudioEvaluationReport {
-    fn new(results: &AudioEvaluationResults) -> Self {
+    fn new(_results: &AudioEvaluationResults) -> Self {
         Self {
             summary: AudioSummary {
                 overall_score: 0.75,
@@ -1701,7 +1686,7 @@ impl AudioEvaluationReport {
                 ],
                 improvements: vec!["Better chord recognition".to_string()],
             },
-            detailed_results: results.clone(),
+            detailed_results: _results.clone(),
             insights: Vec::new(),
             recommendations: Vec::new(),
         }

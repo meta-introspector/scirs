@@ -66,7 +66,7 @@ where
     // Start with random initial vector
     let mut rng = rand::rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rng.random_range(-0.5, 0.5)).unwrap();
+        v[[i, 0]] = T::from(rng.random_range(-0.5..0.5)).unwrap();
     }
     
     // Normalize initial vector
@@ -210,7 +210,7 @@ where
     // Start with random initial vector
     let mut rng = rand::rng();
     for i in 0..n {
-        v[[i, 0]] = T::from(rng.random_range(-0.5, 0.5)).unwrap();
+        v[[i, 0]] = T::from(rng.random_range(-0.5..0.5)).unwrap();
     }
     
     // Normalize initial vector
@@ -316,7 +316,6 @@ where
             // Take largest
             selected.extend(pairs.iter().rev().take(remaining).map(|(_, i)| *i));
             selected
-        },
         _ => return Err(LinalgError::ValueError(format!(
             "Invalid which parameter: {}. Must be 'largest', 'smallest', or 'both'",
             which
@@ -363,7 +362,7 @@ where
 
 /// Check convergence of Lanczos iteration
 #[allow(dead_code)]
-fn check_lanczos_convergence<T>(alpha: &Array1<T>, beta: &Array1<T>, j: usize, tolerance: T) -> bool
+fn check_lanczos_convergence<T>(_alpha: &Array1<T>, beta: &Array1<T>, j: usize, tolerance: T) -> bool
 where
     T: Float + Copy,
 {
@@ -373,7 +372,7 @@ where
     
     // Check if the off-diagonal elements are becoming small
     let off_diag_norm = beta[j].abs();
-    off_diag_norm < tolerance * alpha[j - 1].abs()
+    off_diag_norm < tolerance * _alpha[j - 1].abs()
 }
 
 /// Compute eigenvalues of a small Hessenberg matrix
@@ -509,7 +508,7 @@ mod tests {
         let result = sparse_lanczos_eigen(&sparse, 1, "largest", 50, 1e-8);
         assert!(result.is_ok());
         
-        let (eigenvals, _eigenvecs) = result.unwrap();
+        let (eigenvals_eigenvecs) = result.unwrap();
         assert_eq!(eigenvals.len(), 1);
         
         // The largest eigenvalue should be approximately 5.14

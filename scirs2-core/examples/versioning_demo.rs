@@ -21,8 +21,8 @@ fn main() -> CoreResult<()> {
     // Create and register API versions
     let v1_0_0 = ApiVersionBuilder::new(Version::parse("1.0.0")?)
         .stability(StabilityLevel::Stable)
-        .feature("basic_operations")
-        .feature("linear_algebra")
+        .feature(basic_operations)
+        .feature(linear_algebra)
         .new_feature("Initial stable release")
         .new_feature("Basic mathematical operations")
         .new_feature("Linear algebra support")
@@ -30,9 +30,9 @@ fn main() -> CoreResult<()> {
 
     let v1_1_0 = ApiVersionBuilder::new(Version::parse("1.1.0")?)
         .stability(StabilityLevel::Stable)
-        .feature("basic_operations")
-        .feature("linear_algebra")
-        .feature("statistics")
+        .feature(basic_operations)
+        .feature(linear_algebra)
+        .feature(statistics)
         .new_feature("Statistical functions")
         .new_feature("Regression analysis")
         .bug_fix("Fixed numerical stability issues")
@@ -41,15 +41,15 @@ fn main() -> CoreResult<()> {
     let v2_0_0 = ApiVersionBuilder::new(Version::parse("2.0.0")?)
         .stability(StabilityLevel::Beta)
         .support_status(SupportStatus::Active)
-        .feature("basic_operations")
-        .feature("linear_algebra_v2")
-        .feature("statistics")
-        .feature("machine_learning")
+        .feature(basic_operations)
+        .feature(linear_algebra_v2)
+        .feature(statistics)
+        .feature(machine_learning)
         .breaking_change("Linear algebra API redesigned for better performance")
         .breaking_change("Removed deprecated basic_math module")
         .new_feature("Machine learning algorithms")
         .new_feature("Neural network primitives")
-        .deprecated_feature("legacy_array_ops")
+        .deprecated_feature(legacy_array_ops)
         .min_client_version(Version::parse("1.5.0")?)
         .build()?;
 
@@ -174,11 +174,11 @@ fn main() -> CoreResult<()> {
                 Version::parse("1.1.0")?,
                 Version::parse("2.0.0")?,
             ])
-            .require_feature("linear_algebra")
-            .prefer_feature("statistics")
+            .require_feature(linear_algebra)
+            .prefer_feature(statistics)
             .build();
 
-    let _supported_versions: Vec<&Version> = version_manager
+    let supported_versions: Vec<&Version> = version_manager
         .get_supported_versions()
         .into_iter()
         .map(|v| &v.version)

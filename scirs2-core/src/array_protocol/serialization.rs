@@ -133,11 +133,7 @@ impl ModelSerializer {
     }
 
     /// Save a model to disk.
-    pub fn save_model(
-        &self,
-        model: &Sequential,
-        name: &str,
-        version: &str,
+    pub fn save_model(&self, model: &Sequential, name: &str, version: &str,
         optimizer: Option<&dyn Optimizer>,
     ) -> CoreResult<PathBuf> {
         // Create model directory
@@ -194,10 +190,7 @@ impl ModelSerializer {
     }
 
     /// Load a model from disk.
-    pub fn load_model(
-        &self,
-        name: &str,
-        version: &str,
+    pub fn load_model(&self, name: &str, version: &str
     ) -> CoreResult<(Sequential, Option<Box<dyn Optimizer>>)> {
         // Get model directory
         let model_dir = self.base_dir.join(name).join(version);
@@ -244,17 +237,8 @@ impl ModelSerializer {
 
     /// Create layer configuration from a layer.
     fn create_layer_config(&self, layer: &dyn Layer) -> CoreResult<LayerConfig> {
-        let layer_type = if layer.as_any().is::<Linear>() {
-            "Linear"
-        } else if layer.as_any().is::<Conv2D>() {
-            "Conv2D"
-        } else if layer.as_any().is::<MaxPool2D>() {
-            "MaxPool2D"
-        } else if layer.as_any().is::<BatchNorm>() {
-            "BatchNorm"
-        } else if layer.as_any().is::<Dropout>() {
-            "Dropout"
-        } else {
+        let layer_type = layer.layer_type();
+        if !["Linear", "Conv2D", "MaxPool2D", "BatchNorm", "Dropout"].contains(&layer_type) {
             return Err(CoreError::NotImplementedError(ErrorContext::new(format!(
                 "Serialization not implemented for layer type: {}",
                 layer.name()
@@ -264,69 +248,47 @@ impl ModelSerializer {
         // Create configuration based on layer type
         let config = match layer_type {
             "Linear" => {
-                let linear = layer.as_any().downcast_ref::<Linear>().unwrap();
-                // Extract actual configuration from linear layer
-                let params = linear.parameters();
-                let (in_features, out_features) = if !params.is_empty() {
-                    if let Some(weight) = params[0]
-                        .as_any()
-                        .downcast_ref::<NdarrayWrapper<f64, IxDyn>>()
-                    {
-                        let shape = weight.shape();
-                        if shape.len() >= 2 {
-                            (shape[1], shape[0])
-                        } else {
-                            (0, 0)
-                        }
-                    } else {
-                        (0, 0)
-                    }
-                } else {
-                    (0, 0)
-                };
-
+                // Without downcasting, we can't extract the actual configuration
+                // This would need to be stored in the layer itself
                 serde_json::json!({
-                    "in_features": in_features,
-                    "out_features": out_features,
-                    "bias": params.len() > 1,
-                    "activation": "relu", // Default, would need to store this in the layer
-                })
-            }
-            "Conv2D" => {
-                let conv = layer.as_any().downcast_ref::<Conv2D>().unwrap();
-                // Extract actual configuration from conv layer
-                let params = conv.parameters();
-                let (filter_height, filter_width, in_channels, out_channels) = if !params.is_empty()
-                {
-                    if let Some(weight) = params[0]
-                        .as_any()
-                        .downcast_ref::<NdarrayWrapper<f64, IxDyn>>()
-                    {
-                        let shape = weight.shape();
-                        if shape.len() >= 4 {
-                            (shape[2], shape[3], shape[1], shape[0])
-                        } else {
-                            (3, 3, 0, 0)
-                        }
-                    } else {
-                        (3, 3, 0, 0)
-                    }
-                } else {
-                    (3, 3, 0, 0)
-                };
-
-                serde_json::json!({
-                    "filter_height": filter_height,
-                    "filter_width": filter_width,
-                    "in_channels": in_channels,
-                    "out_channels": out_channels,
-                    "stride": [1, 1],
-                    "padding": [0, 0],
-                    "bias": params.len() > 1,
+                    "in_features": 0,
+                    "out_features": 0,
+                    "bias": true,
                     "activation": "relu",
                 })
             }
-            // Other layer types would be handled similarly
+            "Conv2D" => {
+                serde_json::json!({
+                    "filter_height": 3,
+                    "filter_width": 3,
+                    "in_channels": 0,
+                    "out_channels": 0,
+                    "stride": [1, 1],
+                    "padding": [0, 0],
+                    "bias": true,
+                    "activation": "relu",
+                })
+            }
+            "MaxPool2D" => {
+                serde_json::json!({
+                    "kernel_size": [2, 2],
+                    "stride": [2, 2],
+                    "padding": [0, 0],
+                })
+            }
+            "BatchNorm" => {
+                serde_json::json!({
+                    "num_features": 0,
+                    "epsilon": 1e-5,
+                    "momentum": 0.1,
+                })
+            }
+            "Dropout" => {
+                serde_json::json!({
+                    "rate": 0.5,
+                    "seed": null,
+                })
+            }
             _ => serde_json::json!({}),
         };
 
@@ -450,7 +412,7 @@ impl ModelSerializer {
                 };
 
                 // Create layer
-                Ok(Box::new(Linear::with_shape(
+                Ok(Box::new(Linear::new_random(
                     &config.name,
                     in_features,
                     out_features,
@@ -572,9 +534,9 @@ impl ModelSerializer {
                         file.read_to_string(&mut json_str)?;
 
                         let load_data: serde_json::Value = serde_json::from_str(&json_str)?;
-                        let _shape: Vec<usize> =
+                        let shape: Vec<usize> =
                             serde_json::from_value(load_data["shape"].clone())?;
-                        let _data: Vec<f64> = serde_json::from_value(load_data["data"].clone())?;
+                        let data: Vec<f64> = serde_json::from_value(load_data["data"].clone())?;
 
                         // Load data into the parameter
                         // Since we can't mutate the existing array, we'll need to skip actual loading
@@ -638,10 +600,11 @@ pub struct OnnxExporter;
 
 impl OnnxExporter {
     /// Export a model to ONNX format.
-    pub fn export_model(
-        _model: &Sequential,
+    pub fn export(
+        &self,
+        model: &Sequential,
         path: impl AsRef<Path>,
-        _input_shape: &[usize],
+        input_shape: &[usize],
     ) -> CoreResult<()> {
         // This is a simplified implementation for demonstration purposes.
         // In a real implementation, this would convert the model to ONNX format.
@@ -749,7 +712,7 @@ mod tests {
         let mut model = Sequential::new("test_model", Vec::new());
 
         // Add layers
-        model.add_layer(Box::new(Linear::with_shape(
+        model.add_layer(Box::new(Linear::new_random(
             "fc1",
             10,
             5,
@@ -757,7 +720,7 @@ mod tests {
             Some(ActivationFunc::ReLU),
         )));
 
-        model.add_layer(Box::new(Linear::with_shape("fc2", 5, 2, true, None)));
+        model.add_layer(Box::new(Linear::new_random("fc2", 5, 2, true, None)));
 
         // Create optimizer
         let optimizer = SGD::new(0.01, Some(0.9));
@@ -798,7 +761,7 @@ mod tests {
         let mut model = Sequential::new("test_model", Vec::new());
 
         // Add layers
-        model.add_layer(Box::new(Linear::with_shape(
+        model.add_layer(Box::new(Linear::new_random(
             "fc1",
             10,
             5,
@@ -829,7 +792,7 @@ mod tests {
             return;
         }
 
-        let (loaded_model, _loaded_optimizer, loaded_epoch, loaded_metrics) = result.unwrap();
+        let (loaded_model, loaded_optimizer, loaded_epoch, loaded_metrics) = result.unwrap();
 
         // Check loaded data
         assert_eq!(loaded_model.layers().len(), 1);

@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use crate::ode::{solve_ivp, ODEOptions};
-use crate::pde::finite_difference::FiniteDifferenceScheme;
+use crate::pde::finite__difference::FiniteDifferenceScheme;
 use crate::pde::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, PDEError, PDEResult,
     PDESolution, PDESolverInfo,
@@ -86,21 +86,21 @@ impl MOLWaveEquation1D {
             ));
         }
 
-        // Validate time range
+        // Validate time _range
         if time_range[0] >= time_range[1] {
             return Err(PDEError::DomainError(
-                "Invalid time range: start must be less than end".to_string(),
+                "Invalid time _range: start must be less than end".to_string(),
             ));
         }
 
-        // Validate boundary conditions
+        // Validate boundary _conditions
         if boundary_conditions.len() != 2 {
             return Err(PDEError::BoundaryConditions(
-                "1D wave equation requires exactly 2 boundary conditions".to_string(),
+                "1D wave equation requires exactly 2 boundary _conditions".to_string(),
             ));
         }
 
-        // Ensure we have both lower and upper boundary conditions
+        // Ensure we have both lower and upper boundary _conditions
         let has_lower = boundary_conditions
             .iter()
             .any(|bc| bc.location == BoundaryLocation::Lower);
@@ -110,7 +110,7 @@ impl MOLWaveEquation1D {
 
         if !has_lower || !has_upper {
             return Err(PDEError::BoundaryConditions(
-                "1D wave equation requires both lower and upper boundary conditions".to_string(),
+                "1D wave equation requires both lower and upper boundary _conditions".to_string(),
             ));
         }
 
@@ -137,13 +137,13 @@ impl MOLWaveEquation1D {
     }
 
     /// Set the finite difference scheme for spatial discretization
-    pub fn with_fd_scheme(mut self, scheme: FiniteDifferenceScheme) -> Self {
+    pub fn with_fd_scheme(mut scheme: FiniteDifferenceScheme) -> Self {
         self.fd_scheme = scheme;
         self
     }
 
     /// Solve the wave equation
-    pub fn solve(self) -> PDEResult<MOLHyperbolicResult> {
+    pub fn solve(&self) -> PDEResult<MOLHyperbolicResult> {
         let start_time = Instant::now();
 
         // Generate spatial grid
@@ -453,14 +453,14 @@ impl MOLWaveEquation1D {
 
 /// Convert a MOLHyperbolicResult to a PDESolution
 impl From<MOLHyperbolicResult> for PDESolution<f64> {
-    fn from(result: MOLHyperbolicResult) -> Self {
+    fn from(_result: MOLHyperbolicResult) -> Self {
         let mut grids = Vec::new();
 
         // Add time grid
-        grids.push(result.t.clone());
+        grids.push(_result.t.clone());
 
         // Extract spatial grid from solution
-        let nx = result.u.shape()[1];
+        let nx = _result.u.shape()[1];
 
         // Note: For a proper implementation, the spatial grid should be provided
         let spatial_grid = Array1::linspace(0.0, 1.0, nx);
@@ -469,14 +469,14 @@ impl From<MOLHyperbolicResult> for PDESolution<f64> {
         // Create solver info
         let info = PDESolverInfo {
             num_iterations: 0, // This information is not available directly
-            computation_time: result.computation_time,
+            computation_time: _result.computation_time,
             residual_norm: None,
             convergence_history: None,
             method: "Method of Lines (Hyperbolic)".to_string(),
         };
 
         // For hyperbolic PDEs, we return both u and u_t as values
-        let values = vec![result.u, result.u_t];
+        let values = vec![_result.u, _result.u_t];
 
         PDESolution {
             grids,

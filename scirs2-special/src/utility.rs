@@ -136,7 +136,7 @@ use std::fmt::{Debug, Display};
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::utility::cbrt;
+/// use scirs2__special::utility::cbrt;
 ///
 /// assert_eq!(cbrt(8.0), 2.0);
 /// assert_eq!(cbrt(-8.0), -2.0);
@@ -195,12 +195,12 @@ where
 /// # Returns
 /// Angle in radians
 #[allow(dead_code)]
-pub fn radian<T>(degrees: T) -> T
+pub fn radian<T>(_degrees: T) -> T
 where
     T: Float + FromPrimitive,
 {
     let pi = T::from_f64(std::f64::consts::PI).unwrap();
-    degrees * pi / T::from_f64(180.0).unwrap()
+    _degrees * pi / T::from_f64(180.0).unwrap()
 }
 
 /// Cosine of angle in degrees
@@ -313,8 +313,8 @@ pub fn powm1<T>(x: T, y: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display,
 {
-    check_finite(x, "x")?;
-    check_finite(y, "y")?;
+    check_finite(x, "x value")?;
+    check_finite(y, "y value")?;
 
     if x.abs() < T::from_f64(0.1).unwrap() && y.abs() < T::from_f64(10.0).unwrap() {
         // Use exp(y * log1p(x)) - 1 = expm1(y * log1p(x))
@@ -468,8 +468,8 @@ pub fn agm<T>(a: T, b: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display,
 {
-    check_finite(a, "a")?;
-    check_finite(b, "b")?;
+    check_finite(a, "a value")?;
+    check_finite(b, "b value")?;
 
     if a <= T::zero() || b <= T::zero() {
         return Err(SpecialError::DomainError(
@@ -556,8 +556,8 @@ pub fn owens_t<T>(h: T, a: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug,
 {
-    check_finite(h, "h")?;
-    check_finite(a, "a")?;
+    check_finite(h, "h value")?;
+    check_finite(a, "a value")?;
 
     let zero = T::zero();
     let one = T::one();
@@ -750,7 +750,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::expit;
+/// use scirs2__special::expit;
 /// assert_eq!(expit(0.0), 0.5);
 /// assert!(expit(10.0) > 0.99);
 /// assert!(expit(-10.0) < 0.01);
@@ -778,7 +778,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::logit;
+/// use scirs2__special::logit;
 /// assert!((logit(0.5).unwrap() - 0.0).abs() < 1e-10);
 /// assert!(logit(0.0).is_err());
 /// assert!(logit(1.0).is_err());
@@ -810,7 +810,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2_special::expit_array;
+/// use scirs2__special::expit_array;
 /// let input = array![0.0, 1.0, -1.0];
 /// let result = expit_array(&input.view());
 /// assert!((result[0] - 0.5).abs() < 1e-10);
@@ -834,7 +834,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2_special::logit_array;
+/// use scirs2__special::logit_array;
 /// let input = array![0.1, 0.5, 0.9];
 /// let result = logit_array(&input.view());
 /// assert!((result[1] - 0.0).abs() < 1e-10);
@@ -877,7 +877,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2_special::log1p_array_utility;
+/// use scirs2__special::log1p_array_utility;
 /// let input = array![0.0, 1e-10, 0.1];
 /// let result = log1p_array_utility(&input.view());
 /// assert!((result[0] - 0.0).abs() < 1e-15);
@@ -901,7 +901,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2_special::expm1_array_utility;
+/// use scirs2__special::expm1_array_utility;
 /// let input = array![0.0, 1e-10, 0.1];
 /// let result = expm1_array_utility(&input.view());
 /// assert!((result[0] - 0.0).abs() < 1e-15);
@@ -928,20 +928,20 @@ where
 /// # Returns
 /// Angular distance in radians
 #[allow(dead_code)]
-pub fn spherical_distance<T>(lat1: T, lon1: T, lat2: T, lon2: T) -> SpecialResult<T>
+pub fn spherical_distance<T>(_lat1: T, lon1: T, lat2: T, lon2: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy,
 {
-    check_finite(lat1, "lat1")?;
-    check_finite(lon1, "lon1")?;
-    check_finite(lat2, "lat2")?;
-    check_finite(lon2, "lon2")?;
+    check_finite(_lat1, "_lat1 value")?;
+    check_finite(lon1, "lon1 value")?;
+    check_finite(lat2, "lat2 value")?;
+    check_finite(lon2, "lon2 value")?;
 
     let two = T::from_f64(2.0).unwrap();
-    let dlat = (lat2 - lat1) / two;
+    let dlat = (lat2 - _lat1) / two;
     let dlon = (lon2 - lon1) / two;
 
-    let a = dlat.sin().powi(2) + lat1.cos() * lat2.cos() * dlon.sin().powi(2);
+    let a = dlat.sin().powi(2) + _lat1.cos() * lat2.cos() * dlon.sin().powi(2);
     Ok(two * a.sqrt().asin())
 }
 

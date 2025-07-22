@@ -114,7 +114,7 @@ impl SobolGenerator {
     pub const MAX_DIMENSION: usize = 21201;
 
     /// Create a new Sobol generator for the given dimension
-    pub fn new(dimension: usize) -> Result<Self, QmcError> {
+    pub fn dimension(dimension: usize) -> Result<Self, QmcError> {
         if dimension == 0 || dimension > Self::MAX_DIMENSION {
             return Err(QmcError::InvalidDimension(dimension, Self::MAX_DIMENSION));
         }
@@ -177,7 +177,7 @@ impl SobolGenerator {
         // Generate remaining values using recurrence relation
         for i in 2..self.max_bits {
             let prev2 = direction_nums[i - 2];
-            let prev1 = direction_nums[i - 1];
+            let prev1 = direction_nums[i.saturating_sub(1)];
 
             // Simplified recurrence (real Sobol uses proper polynomial recurrence)
             let next_val = prev1 ^ (prev2 >> poly_coeff) ^ (prev1 >> 1);
@@ -254,7 +254,7 @@ impl HaltonGenerator {
     }
 
     /// Create a Halton generator using the first n prime numbers as bases
-    pub fn with_prime_bases(dimension: usize) -> Result<Self, QmcError> {
+    pub fn dimension(dimension: usize) -> Result<Self, QmcError> {
         if dimension == 0 {
             return Err(QmcError::InvalidDimension(dimension, 1000));
         }
@@ -314,7 +314,7 @@ impl HaltonGenerator {
     }
 
     /// Get the bases used by this generator
-    pub fn bases(&self) -> &[u32] {
+    pub fn bases_2(&self) -> &[u32] {
         &self.bases
     }
 }
@@ -363,7 +363,7 @@ impl<R: rand::Rng> LatinHypercubeSampler<R> {
     pub fn with_seed(dimension: usize, seed: u64) -> LatinHypercubeSampler<rand::prelude::StdRng> {
         LatinHypercubeSampler {
             dimension,
-            rng: crate::random::Random::with_seed(seed),
+            rng: crate::random::Random::seed(seed),
         }
     }
 
@@ -386,10 +386,10 @@ impl<R: rand::Rng> LatinHypercubeSampler<R> {
             }
 
             // Convert to Latin hypercube coordinates
-            for (i, &perm_val) in permutation.iter().enumerate() {
+            for (idx, &perm_val) in permutation.iter().enumerate() {
                 let uniform_sample = self.rng.random_range(0.0, 1.0);
                 let lh_value = (perm_val as f64 + uniform_sample) / n as f64;
-                points[[i, dim]] = lh_value;
+                points[[idx, dim]] = lh_value;
             }
         }
 
@@ -458,7 +458,7 @@ pub struct FaureGenerator {
 
 impl FaureGenerator {
     /// Create a new Faure generator
-    pub fn new(dimension: usize) -> Result<Self, QmcError> {
+    pub fn dimension(dimension: usize) -> Result<Self, QmcError> {
         if dimension == 0 {
             return Err(QmcError::InvalidDimension(dimension, 1000));
         }
@@ -496,12 +496,12 @@ impl FaureGenerator {
             self.pascal_matrix[i][0] = 1;
             for j in 1..=i {
                 let prev_row = if i > 0 {
-                    self.pascal_matrix[i - 1][j - 1]
+                    self.pascal_matrix[i.saturating_sub(1)][j.saturating_sub(1)]
                 } else {
                     0
                 };
                 let prev_diag = if i > 0 && j < size {
-                    self.pascal_matrix[i - 1][j]
+                    self.pascal_matrix[i.saturating_sub(1)][j]
                 } else {
                     0
                 };
@@ -590,13 +590,13 @@ pub mod integration {
         F: Fn(&[f64]) -> f64 + Send + Sync,
     {
         let dimension = bounds.len();
-        let mut generator = create_generator(sequence_type, dimension)?;
+        let mut generator = create_qmc_generator(sequence_type, dimension)?;
 
         let points = generator.generate(n_points);
         let mut sum = 0.0;
         let mut sum_sq = 0.0;
 
-        // Transform points to integration bounds and evaluate function
+        // Transform _points to integration bounds and evaluate function
         for i in 0..n_points {
             let mut transformed_point = Vec::with_capacity(dimension);
             for dim in 0..dimension {
@@ -655,7 +655,7 @@ pub mod integration {
             let results_clone = Arc::clone(&results);
 
             let handle = thread::spawn(move || {
-                let mut generator = create_generator(sequence_type, dimension).unwrap();
+                let mut generator = create_qmc_generator(sequence_type, dimension).unwrap();
                 generator.skip(thread_id * points_per_thread);
 
                 let points = generator.generate(points_per_thread);
@@ -721,14 +721,14 @@ pub enum QmcSequenceType {
 
 /// Create a QMC generator of the specified type
 #[allow(dead_code)]
-pub fn create_generator(
+pub fn create_qmc_generator(
     sequence_type: QmcSequenceType,
     dimension: usize,
 ) -> Result<Box<dyn LowDiscrepancySequence>, QmcError> {
     match sequence_type {
-        QmcSequenceType::Sobol => Ok(Box::new(SobolGenerator::new(dimension)?)),
-        QmcSequenceType::Halton => Ok(Box::new(HaltonGenerator::with_prime_bases(dimension)?)),
-        QmcSequenceType::Faure => Ok(Box::new(FaureGenerator::new(dimension)?)),
+        QmcSequenceType::Sobol => Ok(Box::new(SobolGenerator::dimension(dimension)?)),
+        QmcSequenceType::Halton => Ok(Box::new(HaltonGenerator::dimension(dimension)?)),
+        QmcSequenceType::Faure => Ok(Box::new(FaureGenerator::dimension(dimension)?)),
         QmcSequenceType::LatinHypercube => {
             // Note: LHS doesn't implement LowDiscrepancySequence directly
             // This is a simplified adapter

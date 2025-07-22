@@ -31,8 +31,8 @@ fn generate_conditioned_matrix(size: usize, condition_number: f64) -> Array2<f64
     let u_raw = Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng);
     let v_raw = Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng);
 
-    let (u, _) = qr(&u_raw.view(), None).unwrap();
-    let (v, _) = qr(&v_raw.view(), None).unwrap();
+    let (u_) = qr(&u_raw.view(), None).unwrap();
+    let (v_) = qr(&v_raw.view(), None).unwrap();
 
     // Create singular values with specified condition number
     let mut singular_values = Array1::linspace(1.0, 1.0 / condition_number, size);
@@ -198,7 +198,7 @@ fn bench_well_conditioned_stability(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(format!("solve_cond_{:.0e}", cond_num), size),
                 &size,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         let start = std::time::Instant::now();
                         let (success, error) = test_solve_accuracy(&matrix.view(), &known_solution);
@@ -229,7 +229,7 @@ fn bench_well_conditioned_stability(c: &mut Criterion) {
                 group.bench_with_input(
                     BenchmarkId::new(format!("inverse_cond_{:.0e}", cond_num), size),
                     &size,
-                    |b, _| {
+                    |b_| {
                         b.iter(|| {
                             let start = std::time::Instant::now();
                             let (success, error) = test_inverse_accuracy(&matrix.view());
@@ -279,7 +279,7 @@ fn bench_pathological_matrices(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(format!("solve_{}", matrix_type), size),
                 &size,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         let start = std::time::Instant::now();
                         let (success, error) = test_solve_accuracy(&matrix.view(), &known_solution);
@@ -327,7 +327,7 @@ fn bench_decomposition_stability(c: &mut Criterion) {
                 group.bench_with_input(
                     BenchmarkId::new(format!("{}_{:.0e}", decomp_type, cond_num), size),
                     &size,
-                    |b, _| {
+                    |b_| {
                         b.iter(|| {
                             let start = std::time::Instant::now();
                             let (success, error) =
@@ -392,7 +392,7 @@ fn bench_edge_cases(c: &mut Criterion) {
     group.bench_function("large_matrix_det", |b| {
         b.iter(|| {
             let start = std::time::Instant::now();
-            let result: Result<f64, _> = det(&large_matrix.view(), None);
+            let result: Result<f64_> = det(&large_matrix.view(), None);
             let elapsed = start.elapsed().as_nanos() as u64;
 
             let success = result.is_ok() && result.as_ref().unwrap().is_finite();
@@ -418,7 +418,7 @@ fn bench_edge_cases(c: &mut Criterion) {
 #[allow(dead_code)]
 fn estimate_condition_number(matrix: &ArrayView2<f64>) -> f64 {
     match svd(matrix, false, None) {
-        Ok((_, s, _)) => {
+        Ok((_, s_)) => {
             let max_sv = s.iter().cloned().fold(0.0, f64::max);
             let min_sv = s.iter().cloned().fold(f64::INFINITY, f64::min);
             if min_sv > 0.0 {

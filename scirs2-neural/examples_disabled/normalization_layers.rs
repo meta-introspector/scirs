@@ -17,6 +17,7 @@ use ndarray::{s, Array, Array1, Array2, Array4, Axis};
 use scirs2_neural::error::Result;
 use std::f32;
 use std::fmt::Debug;
+use rand::seq::SliceRandom;
 /// Activation function type
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
@@ -52,7 +53,7 @@ impl ActivationFunction {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
             ActivationFunction::LeakyReLU(alpha) => x.mapv(|v| if v > 0.0 { 1.0 } else { *alpha }),
-            ActivationFunction::Linear => Array::ones(x.dim()),
+            ActivationFunction::Linear =>, Array::ones(x.dim()),
     /// Get a string representation of the activation function
     fn to_string(&self) -> String {
             ActivationFunction::ReLU => "ReLU".to_string(),
@@ -97,20 +98,20 @@ struct BatchNorm2D {
     std_dev: Option<Array1<f32>>,
 impl BatchNorm2D {
     /// Create a new BatchNorm2D layer
-    fn new(num_features: usize, epsilon: f32, momentum: f32) -> Self {
+    fn new(_num_features: usize, epsilon: f32, momentum: f32) -> Self {
         Self {
-            num_features,
+            _num_features,
             epsilon,
             momentum,
             // Initialize gamma to ones and beta to zeros
-            gamma: Array1::ones(num_features),
-            beta: Array1::zeros(num_features),
+            gamma: Array1::ones(_num_features),
+            beta: Array1::zeros(_num_features),
             // Gradients
             dgamma: None,
             dbeta: None,
             // Running statistics
-            running_mean: Array1::zeros(num_features),
-            running_var: Array1::ones(num_features),
+            running_mean: Array1::zeros(_num_features),
+            running_var: Array1::ones(_num_features),
             // Cache
             input: None,
             batch_mean: None,
@@ -124,7 +125,7 @@ impl Layer<Array4<f32>> for BatchNorm2D {
         let height = x.shape()[2];
         let width = x.shape()[3];
         assert_eq!(
-            channels, self.num_features,
+            channels, self._num_features,
             "Input channel dimension mismatch"
         );
         // Store input for backward pass
@@ -259,10 +260,10 @@ struct LayerNorm {
     mean: Option<Array1<f32>>,
 impl LayerNorm {
     /// Create a new LayerNorm layer
-    fn new(normalized_shape: Vec<usize>, epsilon: f32) -> Self {
+    fn new(_normalized_shape: Vec<usize>, epsilon: f32) -> Self {
         // Calculate number of features
-        let num_features: usize = normalized_shape.iter().product();
-            normalized_shape,
+        let num_features: usize = _normalized_shape.iter().product();
+            _normalized_shape,
             mean: None,
 impl Layer<Array2<f32>> for LayerNorm {
     fn forward(&mut self, x: &Array2<f32>, _is_training: bool) -> Array2<f32> {
@@ -316,7 +317,7 @@ impl Layer<Array2<f32>> for LayerNorm {
                 let dvar_term = 2.0 * (input[[b, f]] - mean[b]) / n_features;
                 dinput[[b, f]] =
                     dxhat[[b, f]] / std_dev[b] + dvar[b] * dvar_term + dmean[b] / n_features;
-            "LayerNorm: normalized_shape={:?}, epsilon={}",
+            "LayerNorm: _normalized_shape={:?}, epsilon={}",
             self.normalized_shape, self.epsilon
         2 * self.gamma.len()
 /// Group Normalization layer
@@ -327,11 +328,11 @@ struct GroupNorm {
     group_mean: Option<Array2<f32>>,
 impl GroupNorm {
     /// Create a new GroupNorm layer
-    fn new(num_groups: usize, num_channels: usize, epsilon: f32) -> Self {
+    fn new(_num_groups: usize, num_channels: usize, epsilon: f32) -> Self {
         assert!(
-            num_channels % num_groups == 0,
+            num_channels % _num_groups == 0,
             "Number of channels must be divisible by number of groups"
-            num_groups,
+            _num_groups,
             num_channels,
             gamma: Array1::ones(num_channels),
             beta: Array1::zeros(num_channels),
@@ -340,13 +341,13 @@ impl GroupNorm {
 impl Layer<Array4<f32>> for GroupNorm {
     fn forward(&mut self, x: &Array4<f32>, _is_training: bool) -> Array4<f32> {
         assert_eq!(channels, self.num_channels, "Channel dimension mismatch");
-        let channels_per_group = channels / self.num_groups;
+        let channels_per_group = channels / self._num_groups;
         let pixels_per_group = height * width * channels_per_group;
         let mut normalized = Array4::zeros(x.dim());
-        let mut group_mean = Array2::zeros((batch_size, self.num_groups));
-        let mut group_std = Array2::zeros((batch_size, self.num_groups));
+        let mut group_mean = Array2::zeros((batch_size, self._num_groups));
+        let mut group_std = Array2::zeros((batch_size, self._num_groups));
         // Compute mean and std for each group
-            for g in 0..self.num_groups {
+            for g in 0..self._num_groups {
                 let start_c = g * channels_per_group;
                 let end_c = (g + 1) * channels_per_group;
                 // Compute mean
@@ -369,8 +370,8 @@ impl Layer<Array4<f32>> for GroupNorm {
             .group_mean
         let n_pixels_per_group = pixels_per_group as f32;
         // Compute gradients with respect to mean and variance for each group
-        let mut dgroup_mean = Array2::zeros((batch_size, self.num_groups));
-        let mut dgroup_var = Array2::zeros((batch_size, self.num_groups));
+        let mut dgroup_mean = Array2::zeros((batch_size, self._num_groups));
+        let mut dgroup_var = Array2::zeros((batch_size, self._num_groups));
                 let mut sum_dmean = 0.0;
                 let mut sum_dvar = 0.0;
                             sum_dmean += dxhat[[b, c, h, w]] * (-1.0 / group_std[[b, g]]);
@@ -592,7 +593,7 @@ fn compare_normalization_methods() -> Result<()> {
         ("With Both", true, true, false),
     ];
     // Compare different configurations
-    for (name, use_batchnorm, use_layernorm, _use_residual) in configurations {
+    for (name, use_batchnorm, use_layernorm_use_residual) in configurations {
         println!("\n--- {} ---", name);
         // Create a network
         let mut network = create_network(

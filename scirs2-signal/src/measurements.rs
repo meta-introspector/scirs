@@ -6,8 +6,11 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
+use rand::Rng;
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Calculate the root mean square (RMS) level of a signal.
 ///
 /// # Arguments
@@ -21,14 +24,14 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::measurements::rms;
+/// use scirs2__signal::measurements::rms;
 ///
 /// // Calculate RMS of a sine wave
 /// let signal = (0..1000).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
 /// let rms_value = rms(&signal).unwrap();
 ///
 /// // RMS of a sine wave with amplitude 1 is 1/√2 ≈ 0.707
-/// assert!((rms_value - 0.707).abs() < 0.01);
+/// assert!(((rms_value - 0.707) as f64).abs() < 0.01);
 /// ```
 #[allow(dead_code)]
 pub fn rms<T>(x: &[T]) -> SignalResult<f64>
@@ -70,7 +73,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::measurements::peak_to_peak;
+/// use scirs2__signal::measurements::peak_to_peak;
 ///
 /// // Calculate peak-to-peak amplitude of a signal
 /// let signal = vec![-1.5, -0.5, 0.0, 0.5, 1.0, 0.5, 0.0, -0.5];
@@ -120,14 +123,14 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::measurements::peak_to_rms;
+/// use scirs2__signal::measurements::peak_to_rms;
 ///
 /// // Calculate crest factor of a sine wave
 /// let signal = (0..1000).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
 /// let crest_factor = peak_to_rms(&signal).unwrap();
 ///
 /// // Crest factor of a sine wave is √2 ≈ 1.414
-/// assert!((crest_factor - 1.414).abs() < 0.01);
+/// assert!(((crest_factor - 1.414) as f64).abs() < 0.01);
 /// ```
 #[allow(dead_code)]
 pub fn peak_to_rms<T>(x: &[T]) -> SignalResult<f64>
@@ -174,7 +177,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::measurements::snr;
+/// use scirs2__signal::measurements::snr;
 /// use rand::Rng;  // Import the Rng trait to access gen_range
 ///
 /// // Create a clean signal
@@ -190,27 +193,27 @@ where
 /// let snr_db = snr(&clean, &noisy).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn snr<T, U>(signal: &[T], signal_plus_noise: &[U]) -> SignalResult<f64>
+pub fn snr<T, U>(_signal: &[T], signal_plus_noise: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if signal.is_empty() || signal_plus_noise.is_empty() {
+    if _signal.is_empty() || signal_plus_noise.is_empty() {
         return Err(SignalError::ValueError(
             "Input signals are empty".to_string(),
         ));
     }
 
-    if signal.len() != signal_plus_noise.len() {
+    if _signal.len() != signal_plus_noise.len() {
         return Err(SignalError::DimensionMismatch(format!(
             "Signal lengths do not match: {} vs {}",
-            signal.len(),
+            _signal.len(),
             signal_plus_noise.len()
         )));
     }
 
     // Convert to f64 for internal processing
-    let signal_f64: Vec<f64> = signal
+    let _signal_f64: Vec<f64> = _signal
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -228,17 +231,17 @@ where
         })
         .collect::<SignalResult<Vec<_>>>()?;
 
-    // Calculate noise by subtracting signal from signal_plus_noise
-    let noise: Vec<f64> = signal_f64
+    // Calculate _noise by subtracting _signal from signal_plus_noise
+    let _noise: Vec<f64> = signal_f64
         .iter()
         .zip(signal_plus_noise_f64.iter())
         .map(|(&s, &spn)| spn - s)
         .collect();
 
-    // Calculate power of signal and noise
-    let signal_power: f64 =
+    // Calculate power of _signal and _noise
+    let _signal_power: f64 =
         signal_f64.iter().map(|&x| x * x).sum::<f64>() / signal_f64.len() as f64;
-    let noise_power: f64 = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len() as f64;
+    let _noise_power: f64 = _noise.iter().map(|&x| x * x).sum::<f64>() / _noise.len() as f64;
 
     // Avoid division by zero
     if noise_power.abs() < f64::EPSILON {
@@ -270,7 +273,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::measurements::thd;
+/// use scirs2__signal::measurements::thd;
 ///
 /// // Create a signal with some harmonic distortion
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -288,15 +291,15 @@ where
 /// let thd_val = thd(&signal, fs, f0, Some(5)).unwrap();
 ///
 /// // THD should be approximately sqrt(0.1² + 0.05²)/1.0 ≈ 0.112
-/// assert!((thd_val - 0.112).abs() < 0.01);
+/// assert!(((thd_val - 0.112) as f64).abs() < 0.01);
 /// ```
 #[allow(dead_code)]
-pub fn thd<T>(signal: &[T], fs: f64, f0: f64, n_harmonics: Option<usize>) -> SignalResult<f64>
+pub fn thd<T>(_signal: &[T], fs: f64, f0: f64, n_harmonics: Option<usize>) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
 {
-    if signal.is_empty() {
-        return Err(SignalError::ValueError("Input signal is empty".to_string()));
+    if _signal.is_empty() {
+        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
     }
 
     if fs <= 0.0 {
@@ -313,11 +316,11 @@ where
         )));
     }
 
-    // Get number of harmonics or use default
+    // Get number of _harmonics or use default
     let n_harmonics = n_harmonics.unwrap_or(5);
 
     // Convert to f64 for internal processing
-    let signal_f64: Vec<f64> = signal
+    let _signal_f64: Vec<f64> = _signal
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -359,7 +362,7 @@ where
     for h in 2..(n_harmonics + 2) {
         let h_bin = (h as f64 * f0 / fft_bin_size).round() as usize;
         if h_bin >= n / 2 {
-            // Skip harmonics above Nyquist frequency
+            // Skip _harmonics above Nyquist frequency
             break;
         }
 
@@ -400,10 +403,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
-    use std::f64::consts::PI;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_rms() {
         // DC signal
@@ -451,6 +451,8 @@ mod tests {
 
     #[test]
     fn test_snr() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a clean signal
         let clean: Vec<f64> = (0..1000)
             .map(|i| (2.0 * PI * i as f64 / 100.0).sin())
@@ -459,7 +461,6 @@ mod tests {
         // Add noise with known power
         let noise_amplitude = 0.1; // -20 dB relative to signal
                                    // Using rand API that's compatible with 0.9.0
-        use rand::Rng; // Import the Rng trait to access its methods
         let mut rng = rand::rng();
         let noisy: Vec<f64> = clean
             .iter()
@@ -471,6 +472,6 @@ mod tests {
 
         // Expected SNR ≈ 20 dB (signal amplitude = 1, noise amplitude = 0.1)
         // In power: (1^2)/(0.1^2) = 100 => 10*log10(100) = 20 dB
-        assert!((snr_db - 20.0).abs() < 1.0);
+        assert!(((snr_db - 20.0) as f64).abs() < 1.0);
     }
 }

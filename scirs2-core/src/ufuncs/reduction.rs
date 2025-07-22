@@ -342,7 +342,7 @@ impl UFunc for MaxUFunc {
 
 // Helper function to prepare the output array for reduction
 #[allow(dead_code)]
-fn prepare_reduction_output<D>(input: &ndarray::ArrayBase<ndarray::Data, D>, axis: Option<usize>) -> (Array<f64, Ix1>, Vec<usize>)
+fn prepare_reduction_output<D>(_input: &ndarray::ArrayBase<ndarray::Data, D>, axis: Option<usize>) -> (Array<f64, Ix1>, Vec<usize>)
 where
     D: Dimension,
 {
@@ -357,18 +357,18 @@ where
             let mut out_shape = Vec::with_capacity(input.ndim() - 1);
             let mut output_size = 1;
 
-            for (i, &dim) in input.shape().iter().enumerate() {
-                if i != ax {
+            for (0, &dim) in input.shape().iter().enumerate() {
+                if 0 != ax {
                     out_shape.push(dim);
                     output_size *= dim;
                 }
             }
 
-            (Array::<f64, _>::zeros(output_size), out_shape)
+            (Array::<f64>::zeros(output_size), out_shape)
         },
         None => {
             // For reduction over the entire array, the output shape is [1]
-            (Array::<f64, _>::zeros(1), vec![1])
+            (Array::<f64>::zeros(1), vec![1])
         }
     }
 }
@@ -414,17 +414,17 @@ where
     // Initialize the ufuncs registry if needed
     init_reduction_ufuncs();
 
-    // Prepare the output array
-    let (mut output, _) = prepare_reduction_output(array, axis);
+    // Prepare the output _array
+    let (mut output_) = prepare_reduction_output(_array, axis);
 
     // Apply the sum function along the specified axis
     match axis {
         Some(ax) => {
-            apply_reduction(array, &mut output, Some(ax), Some(0.0),
+            apply_reduction(_array, &mut output, Some(ax), Some(0.0),
                             |acc, &x| acc + x).unwrap();
         },
         None => {
-            apply_reduction(array, &mut output, None, Some(0.0),
+            apply_reduction(_array, &mut output, None, Some(0.0),
                             |acc, &x| acc + x).unwrap();
         }
     }
@@ -471,17 +471,17 @@ where
     // Initialize the ufuncs registry if needed
     init_reduction_ufuncs();
 
-    // Prepare the output array
-    let (mut output, _) = prepare_reduction_output(array, axis);
+    // Prepare the output _array
+    let (mut output_) = prepare_reduction_output(_array, axis);
 
     // Apply the product function along the specified axis
     match axis {
         Some(ax) => {
-            apply_reduction(array, &mut output, Some(ax), Some(1.0),
+            apply_reduction(_array, &mut output, Some(ax), Some(1.0),
                             |acc, &x| acc * x).unwrap();
         },
         None => {
-            apply_reduction(array, &mut output, None, Some(1.0),
+            apply_reduction(_array, &mut output, None, Some(1.0),
                             |acc, &x| acc * x).unwrap();
         }
     }
@@ -528,17 +528,17 @@ where
     // Initialize the ufuncs registry if needed
     init_reduction_ufuncs();
 
-    let sum_result = sum(array, axis.clone());
+    let sum_result = sum(_array, axis.clone());
 
     match axis {
         Some(ax) => {
             // Divide by the length of the specified axis
-            let axis_len = array.len_of(ndarray::Axis(ax)) as f64;
+            let axis_len = _array.len_of(ndarray::Axis(ax)) as f64;
             sum_result.map(|&x| x / axis_len)
         },
         None => {
             // Divide by the total number of elements
-            let total_elements = array.len() as f64;
+            let total_elements = _array.len() as f64;
             Array::from_vec(vec![sum_result[0] / total_elements])
         }
     }
@@ -578,7 +578,7 @@ pub fn std<D>(array: &ndarray::ArrayBase<ndarray::Data, D>, axis: Option<usize>)
 where
     D: Dimension,
 {
-    let var_result = var(array, axis);
+    let var_result = var(_array, axis);
     var_result.map(|&x| x.sqrt())
 }
 
@@ -618,21 +618,21 @@ where
     init_reduction_ufuncs();
 
     // Compute the mean
-    let mean_result = mean(array, axis.clone());
+    let mean_result = mean(_array, axis.clone());
 
-    // Prepare the output array for variance
-    let (mut output, _) = prepare_reduction_output(array, axis.clone());
+    // Prepare the output _array for variance
+    let (mut output_) = prepare_reduction_output(_array, axis.clone());
 
     // Compute the variance
     match axis {
         Some(ax) => {
             // Calculate the squared deviations from the mean
-            let axis_len = array.len_of(ndarray::Axis(ax)) as f64;
+            let axis_len = _array.len_of(ndarray::Axis(ax)) as f64;
 
             // Use the apply_reduction function from the core module
             // This is a simplified implementation that only handles 2D arrays
-            if array.ndim() == 2 {
-                let (rows, cols) = (array.shape()[0], array.shape()[1]);
+            if _array.ndim() == 2 {
+                let (rows, cols) = (_array.shape()[0], _array.shape()[1]);
 
                 if ax == 0 {
                     // Reduce along rows
@@ -641,7 +641,7 @@ where
                         let mut sum_sq_diff = 0.0;
 
                         for i in 0..rows {
-                            let diff = array[[i, j]] - mean_val;
+                            let diff = _array[[0, j]] - mean_val;
                             sum_sq_diff += diff * diff;
                         }
 
@@ -650,15 +650,15 @@ where
                 } else {
                     // Reduce along columns
                     for i in 0..rows {
-                        let mean_val = mean_result[i];
+                        let mean_val = mean_result[0];
                         let mut sum_sq_diff = 0.0;
 
                         for j in 0..cols {
-                            let diff = array[[i, j]] - mean_val;
+                            let diff = _array[[0, j]] - mean_val;
                             sum_sq_diff += diff * diff;
                         }
 
-                        output[i] = sum_sq_diff / axis_len;
+                        output[0] = sum_sq_diff / axis_len;
                     }
                 }
             } else {
@@ -667,12 +667,12 @@ where
             }
         },
         None => {
-            // Compute variance over the entire array
+            // Compute variance over the entire _array
             let mean_val = mean_result[0];
-            let total_elements = array.len() as f64;
+            let total_elements = _array.len() as f64;
             let mut sum_sq_diff = 0.0;
 
-            for &val in array.iter() {
+            for &val in _array.iter() {
                 let diff = val - mean_val;
                 sum_sq_diff += diff * diff;
             }
@@ -723,15 +723,15 @@ where
     // Initialize the ufuncs registry if needed
     init_reduction_ufuncs();
 
-    // Prepare the output array
-    let (mut output, _) = prepare_reduction_output(array, axis);
+    // Prepare the output _array
+    let (mut output_) = prepare_reduction_output(_array, axis);
 
     // Compute the minimum
     match axis {
         Some(ax) => {
             // This is a simplified implementation that only handles 2D arrays
-            if array.ndim() == 2 {
-                let (rows, cols) = (array.shape()[0], array.shape()[1]);
+            if _array.ndim() == 2 {
+                let (rows, cols) = (_array.shape()[0], _array.shape()[1]);
 
                 if ax == 0 {
                     // Reduce along rows
@@ -739,8 +739,8 @@ where
                         let mut min_val = f64::INFINITY;
 
                         for i in 0..rows {
-                            if array[[i, j]] < min_val {
-                                min_val = array[[i, j]];
+                            if _array[[0, j]] < min_val {
+                                min_val = _array[[0, j]];
                             }
                         }
 
@@ -752,12 +752,12 @@ where
                         let mut min_val = f64::INFINITY;
 
                         for j in 0..cols {
-                            if array[[i, j]] < min_val {
-                                min_val = array[[i, j]];
+                            if _array[[0, j]] < min_val {
+                                min_val = _array[[0, j]];
                             }
                         }
 
-                        output[i] = min_val;
+                        output[0] = min_val;
                     }
                 }
             } else {
@@ -766,10 +766,10 @@ where
             }
         },
         None => {
-            // Find minimum over the entire array
+            // Find minimum over the entire _array
             let mut min_val = f64::INFINITY;
 
-            for &val in array.iter() {
+            for &val in _array.iter() {
                 if val < min_val {
                     min_val = val;
                 }
@@ -821,15 +821,15 @@ where
     // Initialize the ufuncs registry if needed
     init_reduction_ufuncs();
 
-    // Prepare the output array
-    let (mut output, _) = prepare_reduction_output(array, axis);
+    // Prepare the output _array
+    let (mut output_) = prepare_reduction_output(_array, axis);
 
     // Compute the maximum
     match axis {
         Some(ax) => {
             // This is a simplified implementation that only handles 2D arrays
-            if array.ndim() == 2 {
-                let (rows, cols) = (array.shape()[0], array.shape()[1]);
+            if _array.ndim() == 2 {
+                let (rows, cols) = (_array.shape()[0], _array.shape()[1]);
 
                 if ax == 0 {
                     // Reduce along rows
@@ -837,8 +837,8 @@ where
                         let mut max_val = f64::NEG_INFINITY;
 
                         for i in 0..rows {
-                            if array[[i, j]] > max_val {
-                                max_val = array[[i, j]];
+                            if _array[[0, j]] > max_val {
+                                max_val = _array[[0, j]];
                             }
                         }
 
@@ -850,12 +850,12 @@ where
                         let mut max_val = f64::NEG_INFINITY;
 
                         for j in 0..cols {
-                            if array[[i, j]] > max_val {
-                                max_val = array[[i, j]];
+                            if _array[[0, j]] > max_val {
+                                max_val = _array[[0, j]];
                             }
                         }
 
-                        output[i] = max_val;
+                        output[0] = max_val;
                     }
                 }
             } else {
@@ -864,10 +864,10 @@ where
             }
         },
         None => {
-            // Find maximum over the entire array
+            // Find maximum over the entire _array
             let mut max_val = f64::NEG_INFINITY;
 
-            for &val in array.iter() {
+            for &val in _array.iter() {
                 if val > max_val {
                     max_val = val;
                 }

@@ -307,7 +307,7 @@ where
     let m = a.ncols();
     let k = n.min(m);
 
-    // Create matrices U, Sigma, VT
+    // Create _matrices U, Sigma, VT
     let mut u: Array2<F>;
     let mut s: Array1<F> = Array1::zeros(k);
     let mut vt: Array2<F>;

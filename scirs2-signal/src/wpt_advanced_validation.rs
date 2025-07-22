@@ -5,9 +5,12 @@
 //! reconstruction fidelity, best basis selection, and compression performance.
 
 use crate::error::SignalResult;
+use crate::dwt::Wavelet;
+use crate::error::SignalResult;
 use std::collections::HashMap;
 use std::time::Instant;
 
+#[allow(unused_imports)]
 /// Advanced-comprehensive wavelet packet validation configuration
 #[derive(Debug, Clone)]
 pub struct WptadvancedConfig {
@@ -379,9 +382,9 @@ pub struct ScalabilityAnalysisResult {
 ///
 /// * Comprehensive validation results with detailed analysis
 #[allow(dead_code)]
-pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<WptadvancedResult> {
+pub fn run_wpt_advanced_validation(_config: &WptadvancedConfig) -> SignalResult<WptadvancedResult> {
     let start_time = Instant::now();
-    let mut issues = Vec::new();
+    let mut issues: Vec<String> = Vec::new();
     let mut recommendations = Vec::new();
     let mut total_score = 0.0;
     let mut score_count = 0;
@@ -389,11 +392,11 @@ pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<W
     println!("📦 Starting advanced-comprehensive wavelet packet validation...");
 
     // Set random seed for reproducibility
-    let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(config.random_seed);
+    let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(_config.random_seed);
 
     // 1. Tree Structure Validation
     println!("  🌳 Validating tree structure construction...");
-    let tree_validation = validate_tree_structure(config, &mut rng)?;
+    let tree_validation = validate_tree_structure(_config, &mut rng)?;
     let tree_score = calculate_tree_score(&tree_validation);
     total_score += tree_score;
     score_count += 1;
@@ -405,7 +408,7 @@ pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<W
 
     // 2. Coefficient Organization Validation
     println!("  📊 Validating coefficient organization...");
-    let coefficient_validation = validate_coefficient_organization(config, &mut rng)?;
+    let coefficient_validation = validate_coefficient_organization(_config, &mut rng)?;
     let coefficient_score = calculate_coefficient_score(&coefficient_validation);
     total_score += coefficient_score;
     score_count += 1;
@@ -417,7 +420,7 @@ pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<W
 
     // 3. Reconstruction Fidelity Validation
     println!("  🔄 Validating reconstruction fidelity...");
-    let reconstruction_validation = validate_reconstruction_fidelity(config, &mut rng)?;
+    let reconstruction_validation = validate_reconstruction_fidelity(_config, &mut rng)?;
     let reconstruction_score = calculate_reconstruction_score(&reconstruction_validation);
     total_score += reconstruction_score;
     score_count += 1;
@@ -429,9 +432,9 @@ pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<W
     }
 
     // 4. Best Basis Selection Validation
-    if config.test_best_basis {
+    if _config.test_best_basis {
         println!("  🎯 Validating best basis selection...");
-        let best_basis_validation = validate_best_basis_selection(config, &mut rng)?;
+        let best_basis_validation = validate_best_basis_selection(_config, &mut rng)?;
         let best_basis_score = calculate_best_basis_score(&best_basis_validation);
         total_score += best_basis_score;
         score_count += 1;
@@ -454,9 +457,9 @@ pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<W
     }
 
     // 5. Compression Performance Validation
-    if config.test_compression {
+    if _config.test_compression {
         println!("  📦 Validating compression performance...");
-        let compression_validation = validate_compression_performance(config, &mut rng)?;
+        let compression_validation = validate_compression_performance(_config, &mut rng)?;
         let compression_score = calculate_compression_score(&compression_validation);
         total_score += compression_score;
         score_count += 1;
@@ -482,9 +485,9 @@ pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<W
     }
 
     // 6. Denoising Performance Validation
-    if config.test_denoising {
+    if _config.test_denoising {
         println!("  🧹 Validating denoising performance...");
-        let denoising_validation = validate_denoising_performance(config, &mut rng)?;
+        let denoising_validation = validate_denoising_performance(_config, &mut rng)?;
         let denoising_score = calculate_denoising_score(&denoising_validation);
         total_score += denoising_score;
         score_count += 1;
@@ -500,9 +503,9 @@ pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<W
     }
 
     // 7. 2D Wavelet Packet Validation (if enabled)
-    let twod_validation = if config.test_2d {
+    let twod_validation = if _config.test_2d {
         println!("  🌐 Validating 2D wavelet packets...");
-        let validation = validate_2d_wavelet_packets(config, &mut rng)?;
+        let validation = validate_2d_wavelet_packets(_config, &mut rng)?;
         let twod_score = calculate_2d_score(&validation);
         total_score += twod_score;
         score_count += 1;
@@ -513,28 +516,28 @@ pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<W
 
     // 8. Numerical Stability Validation
     println!("  🔢 Validating numerical stability...");
-    let stability_validation = validate_numerical_stability(config, &mut rng)?;
+    let stability_validation = validate_numerical_stability(_config, &mut rng)?;
     let stability_score = calculate_stability_score(&stability_validation);
     total_score += stability_score;
     score_count += 1;
 
     // 9. Performance Analysis
     println!("  ⚡ Analyzing performance characteristics...");
-    let performance_analysis = analyze_performance(config, &mut rng)?;
+    let performance_analysis = analyze_performance(_config, &mut rng)?;
     let performance_score = calculate_performance_score(&performance_analysis);
     total_score += performance_score;
     score_count += 1;
 
     // 10. Memory Analysis
     println!("  💾 Analyzing memory usage...");
-    let memory_analysis = analyze_memory_usage(config, &mut rng)?;
+    let memory_analysis = analyze_memory_usage(_config, &mut rng)?;
     let memory_score = calculate_memory_score(&memory_analysis);
     total_score += memory_score;
     score_count += 1;
 
     // 11. Consistency Analysis
     println!("  🔍 Validating cross-method consistency...");
-    let consistency_analysis = validate_consistency(config, &mut rng)?;
+    let consistency_analysis = validate_consistency(_config, &mut rng)?;
     let consistency_score = calculate_consistency_score(&consistency_analysis);
     total_score += consistency_score;
     score_count += 1;
@@ -620,8 +623,7 @@ pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<W
 
 #[allow(dead_code)]
 fn validate_tree_structure(
-    _config: &WptadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<TreeValidationResult> {
     // Placeholder implementation for tree structure validation
     Ok(TreeValidationResult {
@@ -641,8 +643,7 @@ fn validate_tree_structure(
 
 #[allow(dead_code)]
 fn validate_coefficient_organization(
-    _config: &WptadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<CoefficientValidationResult> {
     // Placeholder implementation
     Ok(CoefficientValidationResult {
@@ -668,8 +669,7 @@ fn validate_coefficient_organization(
 
 #[allow(dead_code)]
 fn validate_reconstruction_fidelity(
-    _config: &WptadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<ReconstructionValidationResult> {
     // Placeholder implementation
     Ok(ReconstructionValidationResult {
@@ -683,8 +683,7 @@ fn validate_reconstruction_fidelity(
 
 #[allow(dead_code)]
 fn validate_best_basis_selection(
-    _config: &WptadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<BestBasisValidationResult> {
     // Placeholder implementation
     Ok(BestBasisValidationResult {
@@ -699,8 +698,7 @@ fn validate_best_basis_selection(
 
 #[allow(dead_code)]
 fn validate_compression_performance(
-    _config: &WptadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<CompressionValidationResult> {
     // Placeholder implementation
     Ok(CompressionValidationResult {
@@ -719,8 +717,7 @@ fn validate_compression_performance(
 
 #[allow(dead_code)]
 fn validate_denoising_performance(
-    _config: &WptadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<DenoisingValidationResult> {
     // Placeholder implementation
     Ok(DenoisingValidationResult {
@@ -735,8 +732,7 @@ fn validate_denoising_performance(
 
 #[allow(dead_code)]
 fn validate_2d_wavelet_packets(
-    _config: &WptadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<TwoDValidationResult> {
     // Placeholder implementation
     Ok(TwoDValidationResult {
@@ -750,8 +746,7 @@ fn validate_2d_wavelet_packets(
 
 #[allow(dead_code)]
 fn validate_numerical_stability(
-    _config: &WptadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<StabilityValidationResult> {
     // Placeholder implementation
     Ok(StabilityValidationResult {
@@ -770,8 +765,7 @@ fn validate_numerical_stability(
 
 #[allow(dead_code)]
 fn analyze_performance(
-    _config: &WptadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<PerformanceAnalysisResult> {
     // Placeholder implementation
     Ok(PerformanceAnalysisResult {
@@ -791,8 +785,7 @@ fn analyze_performance(
 
 #[allow(dead_code)]
 fn analyze_memory_usage(
-    _config: &WptadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<MemoryAnalysisResult> {
     // Placeholder implementation
     Ok(MemoryAnalysisResult {
@@ -806,8 +799,7 @@ fn analyze_memory_usage(
 
 #[allow(dead_code)]
 fn validate_consistency(
-    _config: &WptadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<ConsistencyAnalysisResult> {
     // Placeholder implementation
     Ok(ConsistencyAnalysisResult {
@@ -822,108 +814,108 @@ fn validate_consistency(
 // Scoring functions
 
 #[allow(dead_code)]
-fn calculate_tree_score(result: &TreeValidationResult) -> f64 {
-    (result.construction_accuracy
-        + result.indexing_consistency
-        + result.relationship_validation
-        + result.traversal_efficiency
-        + result.memory_organization)
+fn calculate_tree_score(_result: &TreeValidationResult) -> f64 {
+    (_result.construction_accuracy
+        + _result.indexing_consistency
+        + _result.relationship_validation
+        + _result.traversal_efficiency
+        + _result.memory_organization)
         / 5.0
 }
 
 #[allow(dead_code)]
-fn calculate_coefficient_score(result: &CoefficientValidationResult) -> f64 {
-    (result.ordering_accuracy
-        + result.frequency_localization
-        + result.spatial_localization
-        + result.sparsity_measures.sparsity_ratio * 100.0)
+fn calculate_coefficient_score(_result: &CoefficientValidationResult) -> f64 {
+    (_result.ordering_accuracy
+        + _result.frequency_localization
+        + _result.spatial_localization
+        + _result.sparsity_measures.sparsity_ratio * 100.0)
         / 4.0
 }
 
 #[allow(dead_code)]
-fn calculate_reconstruction_score(result: &ReconstructionValidationResult) -> f64 {
-    let error_score = (-20.0 * (result.reconstruction_error + 1e-15).log10())
+fn calculate_reconstruction_score(_result: &ReconstructionValidationResult) -> f64 {
+    let error_score = (-20.0 * (_result.reconstruction_error + 1e-15).log10())
         .min(100.0)
         .max(0.0);
-    (error_score + result.partial_reconstruction_accuracy + result.energy_conservation) / 3.0
+    (error_score + _result.partial_reconstruction_accuracy + _result.energy_conservation) / 3.0
 }
 
 #[allow(dead_code)]
-fn calculate_best_basis_score(result: &BestBasisValidationResult) -> f64 {
-    (result.selection_accuracy
-        + result.selection_consistency
-        + result.selection_efficiency
-        + result.optimal_basis_detection_rate)
+fn calculate_best_basis_score(_result: &BestBasisValidationResult) -> f64 {
+    (_result.selection_accuracy
+        + _result.selection_consistency
+        + _result.selection_efficiency
+        + _result.optimal_basis_detection_rate)
         / 4.0
 }
 
 #[allow(dead_code)]
-fn calculate_compression_score(result: &CompressionValidationResult) -> f64 {
-    result.threshold_selection_accuracy
+fn calculate_compression_score(_result: &CompressionValidationResult) -> f64 {
+    _result.threshold_selection_accuracy
 }
 
 #[allow(dead_code)]
-fn calculate_denoising_score(result: &DenoisingValidationResult) -> f64 {
-    (result.edge_preservation + result.artifact_suppression + result.optimal_denoising_basis) / 3.0
+fn calculate_denoising_score(_result: &DenoisingValidationResult) -> f64 {
+    (_result.edge_preservation + _result.artifact_suppression + _result.optimal_denoising_basis) / 3.0
 }
 
 #[allow(dead_code)]
-fn calculate_2d_score(result: &TwoDValidationResult) -> f64 {
-    (result.construction_accuracy_2d
-        + result.reconstruction_fidelity_2d
-        + result.frequency_localization_2d
-        + result.best_basis_selection_2d
-        + result.compression_performance_2d)
+fn calculate_2d_score(_result: &TwoDValidationResult) -> f64 {
+    (_result.construction_accuracy_2d
+        + _result.reconstruction_fidelity_2d
+        + _result.frequency_localization_2d
+        + _result.best_basis_selection_2d
+        + _result.compression_performance_2d)
         / 5.0
 }
 
 #[allow(dead_code)]
-fn calculate_stability_score(result: &StabilityValidationResult) -> f64 {
-    (result.precision_maintenance
-        + result.condition_number_analysis.stability_score
-        + result.error_propagation
-        + result.extreme_input_robustness
-        + result.overflow_handling)
+fn calculate_stability_score(_result: &StabilityValidationResult) -> f64 {
+    (_result.precision_maintenance
+        + _result.condition_number_analysis.stability_score
+        + _result.error_propagation
+        + _result.extreme_input_robustness
+        + _result.overflow_handling)
         / 5.0
 }
 
 #[allow(dead_code)]
-fn calculate_performance_score(result: &PerformanceAnalysisResult) -> f64 {
-    (result.decomposition_efficiency
-        + result.reconstruction_efficiency
-        + result.best_basis_efficiency)
+fn calculate_performance_score(_result: &PerformanceAnalysisResult) -> f64 {
+    (_result.decomposition_efficiency
+        + _result.reconstruction_efficiency
+        + _result.best_basis_efficiency)
         / 3.0
 }
 
 #[allow(dead_code)]
-fn calculate_memory_score(result: &MemoryAnalysisResult) -> f64 {
-    (result.efficiency_score
-        + result.access_pattern_efficiency
-        + result.cache_utilization
-        + result.fragmentation_analysis)
+fn calculate_memory_score(_result: &MemoryAnalysisResult) -> f64 {
+    (_result.efficiency_score
+        + _result.access_pattern_efficiency
+        + _result.cache_utilization
+        + _result.fragmentation_analysis)
         / 4.0
 }
 
 #[allow(dead_code)]
-fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
-    (result.wavelet_consistency
-        + result.tree_structure_consistency
-        + result.entropy_measure_consistency
-        + result.platform_consistency
-        + result.implementation_consistency)
+fn calculate_consistency_score(_result: &ConsistencyAnalysisResult) -> f64 {
+    (_result.wavelet_consistency
+        + _result.tree_structure_consistency
+        + _result.entropy_measure_consistency
+        + _result.platform_consistency
+        + _result.implementation_consistency)
         / 5.0
 }
 
 /// Generate a comprehensive report of wavelet packet validation results
 #[allow(dead_code)]
-pub fn generate_wpt_advanced_report(result: &WptadvancedResult) -> String {
+pub fn generate_wpt_advanced_report(_result: &WptadvancedResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Advanced-comprehensive Wavelet Packet Transform Validation Report\n\n");
 
     report.push_str(&format!(
         "## Overall Score: {:.1}%\n\n",
-        result.overall_score
+        _result.overall_score
     ));
 
     report.push_str("## Validation Results Summary\n\n");
@@ -931,37 +923,37 @@ pub fn generate_wpt_advanced_report(result: &WptadvancedResult) -> String {
     report.push_str(&format!("### Tree Structure Validation\n"));
     report.push_str(&format!(
         "- Construction Accuracy: {:.1}%\n",
-        result.tree_validation.construction_accuracy
+        _result.tree_validation.construction_accuracy
     ));
     report.push_str(&format!(
         "- Indexing Consistency: {:.1}%\n",
-        result.tree_validation.indexing_consistency
+        _result.tree_validation.indexing_consistency
     ));
     report.push_str(&format!(
         "- Relationship Validation: {:.1}%\n",
-        result.tree_validation.relationship_validation
+        _result.tree_validation.relationship_validation
     ));
     report.push_str(&format!(
         "- Memory Organization: {:.1}%\n\n",
-        result.tree_validation.memory_organization
+        _result.tree_validation.memory_organization
     ));
 
     report.push_str(&format!("### Coefficient Organization\n"));
     report.push_str(&format!(
         "- Ordering Accuracy: {:.1}%\n",
-        result.coefficient_validation.ordering_accuracy
+        _result.coefficient_validation.ordering_accuracy
     ));
     report.push_str(&format!(
         "- Frequency Localization: {:.1}%\n",
-        result.coefficient_validation.frequency_localization
+        _result.coefficient_validation.frequency_localization
     ));
     report.push_str(&format!(
         "- Spatial Localization: {:.1}%\n",
-        result.coefficient_validation.spatial_localization
+        _result.coefficient_validation.spatial_localization
     ));
     report.push_str(&format!(
         "- Sparsity Ratio: {:.1}%\n\n",
-        result
+        _result
             .coefficient_validation
             .sparsity_measures
             .sparsity_ratio
@@ -971,15 +963,15 @@ pub fn generate_wpt_advanced_report(result: &WptadvancedResult) -> String {
     report.push_str(&format!("### Reconstruction Fidelity\n"));
     report.push_str(&format!(
         "- Reconstruction Error: {:.2e}\n",
-        result.reconstruction_validation.reconstruction_error
+        _result.reconstruction_validation.reconstruction_error
     ));
     report.push_str(&format!(
         "- Energy Conservation: {:.2}%\n",
-        result.reconstruction_validation.energy_conservation
+        _result.reconstruction_validation.energy_conservation
     ));
     report.push_str(&format!(
         "- Partial Reconstruction: {:.1}%\n\n",
-        result
+        _result
             .reconstruction_validation
             .partial_reconstruction_accuracy
     ));
@@ -987,22 +979,22 @@ pub fn generate_wpt_advanced_report(result: &WptadvancedResult) -> String {
     report.push_str(&format!("### Best Basis Selection\n"));
     report.push_str(&format!(
         "- Selection Accuracy: {:.1}%\n",
-        result.best_basis_validation.selection_accuracy
+        _result.best_basis_validation.selection_accuracy
     ));
     report.push_str(&format!(
         "- Entropy Reduction: {:.1}%\n",
-        result.best_basis_validation.entropy_reduction
+        _result.best_basis_validation.entropy_reduction
     ));
     report.push_str(&format!(
         "- Selection Consistency: {:.1}%\n",
-        result.best_basis_validation.selection_consistency
+        _result.best_basis_validation.selection_consistency
     ));
     report.push_str(&format!(
         "- Optimal Basis Detection: {:.1}%\n\n",
-        result.best_basis_validation.optimal_basis_detection_rate
+        _result.best_basis_validation.optimal_basis_detection_rate
     ));
 
-    if let Some(ref twod) = result.twod_validation {
+    if let Some(ref twod) = _result.twod_validation {
         report.push_str(&format!("### 2D Wavelet Packets\n"));
         report.push_str(&format!(
             "- 2D Construction Accuracy: {:.1}%\n",
@@ -1021,32 +1013,32 @@ pub fn generate_wpt_advanced_report(result: &WptadvancedResult) -> String {
     report.push_str(&format!("### Performance Analysis\n"));
     report.push_str(&format!(
         "- Time Complexity: O(N^{:.1})\n",
-        result.performance_analysis.time_complexity
+        _result.performance_analysis.time_complexity
     ));
     report.push_str(&format!(
         "- Memory Complexity: O(N^{:.1})\n",
-        result.performance_analysis.memory_complexity
+        _result.performance_analysis.memory_complexity
     ));
     report.push_str(&format!(
         "- Decomposition Efficiency: {:.1}%\n",
-        result.performance_analysis.decomposition_efficiency
+        _result.performance_analysis.decomposition_efficiency
     ));
     report.push_str(&format!(
         "- Reconstruction Efficiency: {:.1}%\n\n",
-        result.performance_analysis.reconstruction_efficiency
+        _result.performance_analysis.reconstruction_efficiency
     ));
 
-    if !result.issues.is_empty() {
+    if !_result.issues.is_empty() {
         report.push_str("## Issues Found\n\n");
-        for issue in &result.issues {
+        for issue in &_result.issues {
             report.push_str(&format!("- ⚠️ {}\n", issue));
         }
         report.push_str("\n");
     }
 
-    if !result.recommendations.is_empty() {
+    if !_result.recommendations.is_empty() {
         report.push_str("## Recommendations\n\n");
-        for rec in &result.recommendations {
+        for rec in &_result.recommendations {
             report.push_str(&format!("- 💡 {}\n", rec));
         }
     }

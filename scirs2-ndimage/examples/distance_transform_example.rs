@@ -5,7 +5,7 @@
 //! each foreground pixel to the nearest background pixel in a binary image.
 
 use ndarray::{Array2, IxDyn};
-use scirs2_ndimage::morphology::{
+use scirs2__ndimage::morphology::{
     distance_transform_bf, distance_transform_cdt, distance_transform_edt,
 };
 
@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Calculate the Euclidean distance transform
     let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
-    let (edt, _) =
+    let (edt_) =
         distance_transform_edt(&input_dyn, None, true, false).expect("Distance transform failed");
     let edt = edt.unwrap().into_dimensionality::<ndarray::Ix2>().unwrap();
 
@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_distance_2d(&edt);
 
     // Calculate the city block distance transform
-    let (cdt, _) = distance_transform_cdt(&input_dyn, "cityblock", true, false)
+    let (cdt_) = distance_transform_cdt(&input_dyn, "cityblock", true, false)
         .expect("City block distance transform failed");
     let cdt = cdt.unwrap().into_dimensionality::<ndarray::Ix2>().unwrap();
 
@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_integer_distance_2d(&cdt);
 
     // Calculate the chessboard distance transform
-    let (chess, _) = distance_transform_cdt(&input_dyn, "chessboard", true, false)
+    let (chess_) = distance_transform_cdt(&input_dyn, "chessboard", true, false)
         .expect("Chessboard distance transform failed");
     let chess = chess
         .unwrap()
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_integer_distance_2d(&chess);
 
     // Calculate the distance transform with brute force
-    let (bf_edt, _) = distance_transform_bf(&input_dyn, "euclidean", None, true, false)
+    let (bf_edt_) = distance_transform_bf(&input_dyn, "euclidean", None, true, false)
         .expect("Brute force distance transform failed");
     let bf_edt = bf_edt
         .unwrap()
@@ -82,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Demonstrate custom sampling
     let sampling = [1.0, 0.5]; // Non-uniform pixel spacing
-    let (custom_edt, _) = distance_transform_edt(&input_dyn, Some(&sampling), true, false)
+    let (custom_edt_) = distance_transform_edt(&input_dyn, Some(&sampling), true, false)
         .expect("Custom sampling distance transform failed");
     let custom_edt = custom_edt
         .unwrap()
@@ -98,10 +98,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to print a 2D binary array
 #[allow(dead_code)]
-fn print_binary_2d(arr: &Array2<bool>) {
-    for i in 0..arr.shape()[0] {
-        for j in 0..arr.shape()[1] {
-            if arr[[i, j]] {
+fn print_binary_2d(_arr: &Array2<bool>) {
+    for i in 0.._arr.shape()[0] {
+        for j in 0.._arr.shape()[1] {
+            if _arr[[i, j]] {
                 print!("█ ");
             } else {
                 print!("· ");
@@ -113,10 +113,10 @@ fn print_binary_2d(arr: &Array2<bool>) {
 
 // Helper function to print a 2D floating-point distance array
 #[allow(dead_code)]
-fn print_distance_2d(arr: &Array2<f64>) {
-    for i in 0..arr.shape()[0] {
-        for j in 0..arr.shape()[1] {
-            let val = arr[[i, j]];
+fn print_distance_2d(_arr: &Array2<f64>) {
+    for i in 0.._arr.shape()[0] {
+        for j in 0.._arr.shape()[1] {
+            let val = _arr[[i, j]];
             if val < 0.01 {
                 print!("0.0 ");
             } else {
@@ -129,10 +129,10 @@ fn print_distance_2d(arr: &Array2<f64>) {
 
 // Helper function to print a 2D integer distance array
 #[allow(dead_code)]
-fn print_integer_distance_2d(arr: &Array2<i32>) {
-    for i in 0..arr.shape()[0] {
-        for j in 0..arr.shape()[1] {
-            let val = arr[[i, j]];
+fn print_integer_distance_2d(_arr: &Array2<i32>) {
+    for i in 0.._arr.shape()[0] {
+        for j in 0.._arr.shape()[1] {
+            let val = _arr[[i, j]];
             print!("{:2} ", val);
         }
         println!();
@@ -141,11 +141,11 @@ fn print_integer_distance_2d(arr: &Array2<i32>) {
 
 // Helper function to print indices from a distance transform
 #[allow(dead_code)]
-fn print_indices_2d(indices: &ndarray::ArrayBase<ndarray::OwnedRepr<i32>, IxDyn>, dim: usize) {
-    // The indices array has an extra dimension: [dimension, rows, columns]
-    for i in 0..indices.shape()[1] {
-        for j in 0..indices.shape()[2] {
-            print!("{:2} ", indices[[dim, i, j]]);
+fn print_indices_2d(_indices: &ndarray::ArrayBase<ndarray::OwnedRepr<i32>, IxDyn>, dim: usize) {
+    // The _indices array has an extra dimension: [dimension, rows, columns]
+    for i in 0.._indices.shape()[1] {
+        for j in 0.._indices.shape()[2] {
+            print!("{:2} ", _indices[[dim, i, j]]);
         }
         println!();
     }

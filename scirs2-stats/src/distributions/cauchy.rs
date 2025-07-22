@@ -8,7 +8,7 @@ use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Distribution, Uniform as RandUniform};
+use rand__distr::{Distribution, Uniform as RandUniform};
 
 /// Cauchy distribution structure
 ///
@@ -39,11 +39,11 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::cauchy::Cauchy;
+    /// use scirs2__stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// ```
-    pub fn new(loc: F, scale: F) -> StatsResult<Self> {
+    pub fn new(_loc: F, scale: F) -> StatsResult<Self> {
         // Validate parameters
         if scale <= F::zero() {
             return Err(StatsError::DomainError(
@@ -62,7 +62,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
         };
 
         Ok(Cauchy {
-            loc,
+            _loc,
             scale,
             rand_distr,
         })
@@ -81,7 +81,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::cauchy::Cauchy;
+    /// use scirs2__stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let pdf_at_zero = cauchy.pdf(0.0);
@@ -109,7 +109,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::cauchy::Cauchy;
+    /// use scirs2__stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let cdf_at_zero = cauchy.cdf(0.0);
@@ -137,14 +137,14 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::cauchy::Cauchy;
+    /// use scirs2__stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let x = cauchy.ppf(0.75).unwrap();
     /// assert!((x - 1.0).abs() < 1e-7);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p > F::one() {
+        if p < F::zero() || p >, F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));
@@ -173,7 +173,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::cauchy::Cauchy;
+    /// use scirs2__stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let samples = cauchy.rvs_vec(10).unwrap();
@@ -241,7 +241,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::cauchy::Cauchy;
+    /// use scirs2__stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let samples = cauchy.rvs(10).unwrap();
@@ -261,7 +261,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::cauchy::Cauchy;
+    /// use scirs2__stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(2.0f64, 1.0).unwrap();
     /// let median = cauchy.median();
@@ -281,7 +281,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::cauchy::Cauchy;
+    /// use scirs2__stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(2.0f64, 1.0).unwrap();
     /// let mode = cauchy.mode();
@@ -301,7 +301,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::cauchy::Cauchy;
+    /// use scirs2__stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let iqr = cauchy.iqr();
@@ -321,7 +321,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::cauchy::Cauchy;
+    /// use scirs2__stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let entropy = cauchy.entropy();
@@ -353,18 +353,18 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::distributions::cauchy;
+/// use scirs2__stats::distributions::cauchy;
 ///
 /// let c = cauchy::cauchy(0.0f64, 1.0).unwrap();
 /// let pdf_at_zero = c.pdf(0.0);
 /// assert!((pdf_at_zero - 0.3183099).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn cauchy<F>(loc: F, scale: F) -> StatsResult<Cauchy<F>>
+pub fn cauchy<F>(_loc: F, scale: F) -> StatsResult<Cauchy<F>>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    Cauchy::new(loc, scale)
+    Cauchy::new(_loc, scale)
 }
 
 /// Implementation of SampleableDistribution for Cauchy

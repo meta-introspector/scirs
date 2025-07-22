@@ -15,7 +15,7 @@ use ndarray::{Array, Array2, Dimension};
 use num_traits::Float;
 use std::sync::Arc;
 
-use crate::gpu::memory_pool::{CudaKernel, CudaStream};
+use crate::gpu::memory__pool::{CudaKernel, CudaStream};
 use crate::gpu::{GpuOptimError, GpuOptimizerConfig};
 use scirs2_core::gpu::{GpuContext, GpuKernel};
 
@@ -147,7 +147,7 @@ pub enum MatrixLayout {
 
 impl TensorCoreOptimizer {
     /// Create new tensor core optimizer
-    pub fn new(config: TensorCoreConfig) -> Result<Self, GpuOptimError> {
+    pub fn new(_config: TensorCoreConfig) -> Result<Self, GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
             let context = Arc::new(GpuContext::new(crate::gpu::utils::get_optimal_backend())?);
@@ -158,11 +158,11 @@ impl TensorCoreOptimizer {
             let compute_capability = (major as u32, minor as u32);
 
             // Compile tensor core kernels
-            let kernels = Self::compile_kernels(&context, &config, compute_capability)?;
+            let kernels = Self::compile_kernels(&context, &_config, compute_capability)?;
 
             Ok(Self {
                 context,
-                config,
+                _config,
                 kernels,
                 stream,
                 compute_capability,
@@ -173,7 +173,7 @@ impl TensorCoreOptimizer {
         #[cfg(not(feature = "gpu"))]
         {
             Ok(Self {
-                config,
+                _config,
                 compute_capability: (0, 0),
                 layout_cache: std::collections::HashMap::new(),
             })
@@ -196,7 +196,7 @@ impl TensorCoreOptimizer {
         let fused_lamb_tc =
             CudaKernel::from_ptx(context, FUSED_LAMB_TC_PTX, "fused_lamb_tensor_core")?;
 
-        // FP8 kernels only available on Hopper+ (compute capability 9.0+)
+        // FP8 kernels only available on Hopper+ (compute _capability 9.0+)
         let fp8_gemm = if compute_capability >= (9, 0) && config.use_hopper_cores {
             Some(CudaKernel::from_ptx(
                 context,
@@ -248,10 +248,10 @@ impl TensorCoreOptimizer {
             2.0
         };
         let tensor_core_factor = match self.compute_capability {
-            (major, _minor) if major >= 9 => 8.0,              // Hopper
-            (major, _minor) if major >= 8 => 6.0,              // Ampere
+            (major_minor) if major >= 9 => 8.0,              // Hopper
+            (major_minor) if major >= 8 => 6.0,              // Ampere
             (major, minor) if major >= 7 && minor >= 5 => 4.0, // Turing
-            (major, _minor) if major >= 7 => 3.0,              // Volta
+            (major_minor) if major >= 7 => 3.0,              // Volta
             _ => 1.5, // Pre-tensor core with some optimization
         };
 
@@ -421,8 +421,8 @@ impl TensorCoreOptimizer {
         padding_m: usize,
         padding_n: usize,
     ) -> (u32, u32, u32) {
-        let padded_m = m + padding_m;
-        let padded_n = n + padding_n;
+        let padded_m = _m + padding_m;
+        let padded_n = _n + padding_n;
 
         let tile_m = self.config.wmma_tile_m;
         let tile_n = self.config.wmma_tile_n;
@@ -663,7 +663,7 @@ impl TensorCoreOptimizer {
     ) -> Result<(), GpuOptimError> {
         #[cfg(feature = "gpu")]
         {
-            // Prefetch memory for next operation (simplified implementation)
+            // Prefetch memory for next _operation (simplified implementation)
             // In real GPU code, this would trigger async memory transfers
             match &next_operation.op_type {
                 TensorCoreOpType::GEMM { a, b, .. } => {
@@ -725,8 +725,7 @@ impl TensorCoreOptimizer {
         // Estimate cache hit ratio
         let cache_hit_ratio = match pattern_type {
             AccessPatternType::Sequential => 0.95,
-            AccessPatternType::Strided => 0.7,
-            _ => 0.3,
+            AccessPatternType::Strided => 0.7_ => 0.3,
         };
 
         // Detect bank conflicts (simplified)
@@ -749,9 +748,9 @@ impl TensorCoreOptimizer {
     ) -> Result<OptimizedMatrix<T>, GpuOptimError> {
         let (rows, cols) = matrix.dim();
 
-        // Determine optimal layout based on access pattern
+        // Determine optimal layout based on access _pattern
         let layout = match access_pattern.pattern_type {
-            AccessPatternType::Sequential => MatrixLayout::RowMajor,
+            AccessPatternType::Sequential =>, MatrixLayout::RowMajor,
             AccessPatternType::Strided => {
                 if access_pattern.stride_y > access_pattern.stride_x {
                     MatrixLayout::ColumnMajor
@@ -887,7 +886,7 @@ impl TensorCoreOptimizer {
             stream_assignments.push(current_stream);
             current_stream = (current_stream + 1) % num_streams;
 
-            // Determine optimal precision based on operation and hardware state
+            // Determine optimal precision based on operation and hardware _state
             let operation = &operations[op_idx];
             let optimal_precision = self.select_optimal_precision_for_op(operation, hardware_state);
             precision_assignments.push(optimal_precision);
@@ -1109,8 +1108,7 @@ impl TensorCoreOptimizer {
         &self,
         m: usize,
         n: usize,
-        k: usize,
-        _precision: TensorCorePrecision,
+        k: usize_precision: TensorCorePrecision,
     ) -> f64 {
         let tile_m = self.config.wmma_tile_m;
         let tile_n = self.config.wmma_tile_n;
@@ -1128,20 +1126,20 @@ impl TensorCoreOptimizer {
 
     fn estimate_max_tensor_cores(&self) -> usize {
         match self.compute_capability {
-            (major, _minor) if major >= 9 => 528, // Hopper H100
-            (major, _minor) if major >= 8 => 432, // Ampere A100
+            (major_minor) if major >= 9 => 528, // Hopper H100
+            (major_minor) if major >= 8 => 432, // Ampere A100
             (major, minor) if major >= 7 && minor >= 5 => 272, // Turing RTX 2080
-            (major, _minor) if major >= 7 => 640, // Volta V100
+            (major_minor) if major >= 7 => 640, // Volta V100
             _ => 1,
         }
     }
 
     fn estimate_tensor_ops_throughput(&self) -> f64 {
         match self.compute_capability {
-            (major, _minor) if major >= 9 => 1000e12, // Hopper: ~1000 TOPS
-            (major, _minor) if major >= 8 => 312e12,  // Ampere: ~312 TOPS
+            (major_minor) if major >= 9 => 1000e12, // Hopper: ~1000 TOPS
+            (major_minor) if major >= 8 => 312e12,  // Ampere: ~312 TOPS
             (major, minor) if major >= 7 && minor >= 5 => 130e12, // Turing: ~130 TOPS
-            (major, _minor) if major >= 7 => 125e12,  // Volta: ~125 TOPS
+            (major_minor) if major >= 7 => 125e12,  // Volta: ~125 TOPS
             _ => 0.0,
         }
     }
@@ -1233,7 +1231,7 @@ impl MixedPrecisionTrainer {
         }
 
         if has_overflow {
-            // Reduce loss scale on overflow
+            // Reduce loss scale on _overflow
             self.loss_scale *= self.backoff_factor;
             self.successful_steps = 0;
         } else {
@@ -1324,14 +1322,13 @@ pub struct SparseTensorCoreMatrix<T: Float> {
     dense_m: usize,
     dense_n: usize,
 
-    /// Sparsity ratio (should be ~0.5 for 2:4)
-    sparsity_ratio: f32,
+    /// Sparsity ratio (should be ~0.5 for 2:4), sparsity_ratio: f32,
 }
 
 impl<T: Float + Send + Sync> SparseTensorCoreMatrix<T> {
     /// Create sparse matrix from dense matrix using 2:4 structured sparsity
-    pub fn from_dense(dense: &Array2<T>) -> Self {
-        let (m, n) = dense.dim();
+    pub fn from_dense(_dense: &Array2<T>) -> Self {
+        let (m, n) = _dense.dim();
         let mut values = Vec::new();
         let mut metadata = Vec::new();
 
@@ -1345,7 +1342,7 @@ impl<T: Float + Send + Sync> SparseTensorCoreMatrix<T> {
                 // Collect 4 elements
                 for offset in 0..4 {
                     if col_group + offset < n {
-                        group_values.push(dense[[row, col_group + offset]]);
+                        group_values.push(_dense[[row, col_group + offset]]);
                         group_indices.push(offset);
                     }
                 }
@@ -1368,8 +1365,8 @@ impl<T: Float + Send + Sync> SparseTensorCoreMatrix<T> {
         Self {
             values,
             metadata,
-            dense_m: m,
-            dense_n: n,
+            _dense_m: m,
+            _dense_n: n,
             sparsity_ratio,
         }
     }
@@ -1617,14 +1614,14 @@ pub struct StreamPool {
 
 impl StreamPool {
     #[cfg(feature = "gpu")]
-    pub fn new(context: &GpuContext, num_streams: usize) -> Result<Self, GpuOptimError> {
-        let mut streams = Vec::with_capacity(num_streams);
+    pub fn new(_context: &GpuContext, num_streams: usize) -> Result<Self, GpuOptimError> {
+        let mut _streams = Vec::with_capacity(num_streams);
         for _ in 0..num_streams {
-            streams.push(CudaStream::new(context)?);
+            _streams.push(CudaStream::new(_context)?);
         }
 
         Ok(Self {
-            streams,
+            _streams,
             current_stream: 0,
             num_streams,
         })
@@ -1645,7 +1642,7 @@ impl StreamPool {
     }
 
     #[cfg(not(feature = "gpu"))]
-    pub fn get_stream(&mut self, _index: usize) -> &() {
+    pub fn get_stream(&mut self_index: usize) -> &() {
         &()
     }
 

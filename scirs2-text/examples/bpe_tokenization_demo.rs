@@ -1,4 +1,4 @@
-use scirs2_text::{BpeConfig, BpeTokenizer, Result, Tokenizer};
+use scirs2__text::{BpeConfig, BpeTokenizer, Result, Tokenizer};
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
@@ -26,7 +26,7 @@ fn main() -> Result<()> {
             "<EOS>".to_string(),
         ],
         character_level: true, // Start with characters (not words)
-        lowercase: true,       // Convert all text to lowercase
+        lowercase: true,       // Convert all _text to lowercase
     });
 
     println!("Training BPE tokenizer on a small corpus...");

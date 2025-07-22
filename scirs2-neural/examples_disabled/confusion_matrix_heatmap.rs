@@ -14,12 +14,12 @@ fn main() {
     // Generate true labels (0 to num_classes-1)
     let mut y_true = Vec::with_capacity(n_samples);
     for _ in 0..n_samples {
-        y_true.push(rng.random_range(0..num_classes));
+        y_true.push(rng.gen_range(0..num_classes));
     }
     // Generate predicted labels with controlled accuracy
     let mut y_pred = Vec::with_capacity(n_samples);
     for &true_label in &y_true {
-        // 80% chance to predict correctly, 20% chance of error
+        // 80% chance to predict correctly..20% chance of error
         if rng.random::<f64>() < 0.8 {
             y_pred.push(true_label);
         } else {

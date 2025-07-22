@@ -7,12 +7,13 @@
 //! - Adaptive thresholding based on local statistics
 //! - Multiscale denoising with cross-scale dependencies
 
-use crate::denoise::{threshold_coefficients, ThresholdMethod};
-use crate::dwt::{wavedec, waverec, DecompositionResult, Wavelet};
+use crate::denoise::{ThresholdMethod, threshold_coefficients};
+use crate::dwt::{DecompositionResult, Wavelet, wavedec, waverec};
 use crate::error::{SignalError, SignalResult};
+use crate::wpt::wp_decompose;
 use ndarray::Array1;
 use scirs2_core::parallel_ops::*;
-
+use std::f64::consts::PI;
 use std::sync::Arc;
 
 /// Advanced denoising configuration
@@ -101,7 +102,7 @@ pub fn advanced_denoise(
     signal: &[f64],
     config: &AdvancedDenoiseConfig,
 ) -> SignalResult<AdvancedDenoiseResult> {
-    if !signal.iter().all(|&x| x.is_finite()) {
+    if !signal.iter().all(|&x: &f64| x.is_finite()) {
         return Err(SignalError::ValueError(
             "Signal contains non-finite values".to_string(),
         ));
@@ -164,7 +165,7 @@ fn translation_invariant_denoise(
                 }
 
                 // Denoise shifted signal
-                let (denoised_shifted, _) =
+                let (denoised_shifted_) =
                     standard_denoise(&shifted, config, noise_level).unwrap();
 
                 // Inverse shift
@@ -181,7 +182,7 @@ fn translation_invariant_denoise(
         let mut averaged = vec![0.0; n];
         for result in &results {
             for i in 0..n {
-                averaged[i] += result[i] / n_shifts as f64;
+                averaged[i] += result[i] / n_shifts  as f64;
             }
         }
 
@@ -210,7 +211,7 @@ fn translation_invariant_denoise(
 
             // Inverse shift and accumulate
             for i in 0..n {
-                accumulated[(i + shift) % n] += denoised_shifted[i] / n_shifts as f64;
+                accumulated[(i + shift) % n] += denoised_shifted[i] / n_shifts  as f64;
             }
         }
 
@@ -226,7 +227,7 @@ fn bayesian_denoise(
     noise_level: f64,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     // Decompose signal
-    let coeffs_raw = wavedec(signal, config.wavelet, Some(config.level), None)?;
+    let coeffs_raw = wavedec(signal, config.wavelet, Some(config._level), None)?;
     let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
     let mut thresholds = Vec::new();
 
@@ -239,7 +240,7 @@ fn bayesian_denoise(
 
         // Bayesian shrinkage
         let shrinkage_factor = signal_var / (signal_var + noise_level * noise_level);
-        let threshold = noise_level * (1.0 - shrinkage_factor).sqrt();
+        let threshold = noise_level * ((1.0 - shrinkage_factor) as f64).sqrt();
         thresholds.push(threshold);
 
         // Apply Bayesian shrinkage to coefficients
@@ -265,7 +266,7 @@ fn block_threshold_denoise(
     noise_level: f64,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     // Decompose signal
-    let coeffs_raw = wavedec(signal, config.wavelet, Some(config.level), None)?;
+    let coeffs_raw = wavedec(signal, config.wavelet, Some(config._level), None)?;
     let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
     let mut thresholds = Vec::new();
     let mut denoised_coeffs = coeffs.clone();
@@ -278,7 +279,7 @@ fn block_threshold_denoise(
 
         // Scale-dependent threshold
         let base_threshold = noise_level * (2.0 * (signal.len() as f64).ln()).sqrt();
-        let scale_factor = (level_idx + 1) as f64 / config.level as f64;
+        let scale_factor = (level_idx + 1) as f64 / config._level  as f64;
         let threshold = base_threshold * (1.0 + 0.5 * scale_factor);
         thresholds.push(threshold);
 
@@ -323,7 +324,7 @@ fn standard_denoise(
     noise_level: f64,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     // Decompose signal
-    let coeffs_raw = wavedec(signal, config.wavelet, Some(config.level), None)?;
+    let coeffs_raw = wavedec(signal, config.wavelet, Some(config._level), None)?;
     let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
     let mut thresholds = Vec::new();
     let mut denoised_coeffs = coeffs.clone();
@@ -336,7 +337,7 @@ fn standard_denoise(
         // Adaptive threshold based on scale
         let threshold = if config.adaptive {
             // Scale-dependent threshold
-            let scale_factor = (level_idx + 1) as f64 / config.level as f64;
+            let scale_factor = (level_idx + 1) as f64 / config._level  as f64;
             base_threshold * (1.0 - 0.3 * scale_factor)
         } else {
             base_threshold
@@ -365,11 +366,11 @@ fn standard_denoise(
 
 /// Estimate noise level from signal
 #[allow(dead_code)]
-fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> SignalResult<f64> {
+fn estimate_noise_level(_signal: &[f64], config: &AdvancedDenoiseConfig) -> SignalResult<f64> {
     match config.noise_estimation {
         NoiseEstimation::MAD => {
             // Use MAD of finest scale wavelet coefficients
-            let coeffs = wavedec(signal, config.wavelet, Some(1), None)?;
+            let coeffs = wavedec(_signal, config.wavelet, Some(1), None)?;
             let detail = &coeffs[1]; // First detail coefficients
 
             // Compute median
@@ -387,19 +388,19 @@ fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> Signa
         }
         NoiseEstimation::FinestScale => {
             // Standard deviation of finest scale coefficients
-            let coeffs_raw = wavedec(signal, config.wavelet, Some(1), None)?;
+            let coeffs_raw = wavedec(_signal, config.wavelet, Some(1), None)?;
             let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
             let detail = &coeffs.details[0];
 
-            let mean = detail.iter().sum::<f64>() / detail.len() as f64;
+            let mean = detail.iter().sum::<f64>() / detail.len()  as f64;
             let variance =
-                detail.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / detail.len() as f64;
+                detail.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / detail.len()  as f64;
 
             Ok(variance.sqrt())
         }
         NoiseEstimation::IQR => {
             // Interquartile range based estimation
-            let coeffs_raw = wavedec(signal, config.wavelet, Some(1), None)?;
+            let coeffs_raw = wavedec(_signal, config.wavelet, Some(1), None)?;
             let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
             let mut detail = coeffs.details[0].to_vec();
             detail.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -412,14 +413,14 @@ fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> Signa
             Ok(iqr / 1.349)
         }
         NoiseEstimation::LocalVariance => {
-            // Estimate using local variance in signal domain
+            // Estimate using local variance in _signal domain
             let window = 16;
             let mut variances = Vec::new();
 
-            for i in 0..signal.len() - window {
-                let chunk = &signal[i..i + window];
-                let mean = chunk.iter().sum::<f64>() / window as f64;
-                let var = chunk.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / window as f64;
+            for i in 0.._signal.len() - window {
+                let chunk = &_signal[i..i + window];
+                let mean = chunk.iter().sum::<f64>() / window  as f64;
+                let var = chunk.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / window  as f64;
                 variances.push(var);
             }
 
@@ -432,9 +433,9 @@ fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> Signa
 
 /// Estimate signal variance for Bayesian denoising
 #[allow(dead_code)]
-fn estimate_signal_variance(coeffs: &[f64], noise_level: f64) -> f64 {
-    let n = coeffs.len() as f64;
-    let empirical_var = coeffs.iter().map(|&x| x * x).sum::<f64>() / n;
+fn estimate_signal_variance(_coeffs: &[f64], noise_level: f64) -> f64 {
+    let n = _coeffs.len()  as f64;
+    let empirical_var = _coeffs.iter().map(|&x| x * x).sum::<f64>() / n;
 
     // Estimate signal variance by removing noise contribution
     let noise_var = noise_level * noise_level;
@@ -445,21 +446,21 @@ fn estimate_signal_variance(coeffs: &[f64], noise_level: f64) -> f64 {
 
 /// Estimate SNR improvement
 #[allow(dead_code)]
-fn estimate_snr_improvement(original: &[f64], denoised: &[f64]) -> Option<f64> {
-    if original.len() != denoised.len() {
+fn estimate_snr_improvement(_original: &[f64], denoised: &[f64]) -> Option<f64> {
+    if _original.len() != denoised.len() {
         return None;
     }
 
-    // Estimate noise as difference between original and denoised
-    let noise: Vec<f64> = original
+    // Estimate noise as difference between _original and denoised
+    let noise: Vec<f64> = _original
         .iter()
         .zip(denoised.iter())
         .map(|(&o, &d)| o - d)
         .collect();
 
     // Compute power
-    let signal_power = denoised.iter().map(|&x| x * x).sum::<f64>() / denoised.len() as f64;
-    let noise_power = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len() as f64;
+    let signal_power = denoised.iter().map(|&x| x * x).sum::<f64>() / denoised.len()  as f64;
+    let noise_power = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len()  as f64;
 
     if noise_power > 0.0 {
         Some(10.0 * (signal_power / noise_power).log10())
@@ -474,8 +475,6 @@ pub fn wavelet_packet_denoise(
     signal: &[f64],
     config: &AdvancedDenoiseConfig,
 ) -> SignalResult<Vec<f64>> {
-    use crate::wpt::wp_decompose;
-
     // Decompose using wavelet packets
     let tree = wp_decompose(signal, config.wavelet, config.level, None)?;
 
@@ -491,8 +490,6 @@ pub fn wavelet_packet_denoise(
 #[cfg(test)]
 mod tests {
     #[allow(unused_imports)]
-    use std::f64::consts::PI;
-
     #[test]
     fn test_advanced_denoise_basic() {
         // Create noisy signal

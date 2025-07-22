@@ -5,7 +5,7 @@
 //! graph representations where nodes represent data points and edges represent
 //! similarities or connections between them.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Debug;
@@ -29,20 +29,20 @@ pub struct Graph<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> Graph<F> {
     /// Create a new empty graph with specified number of nodes
-    pub fn new(n_nodes: usize) -> Self {
+    pub fn new(_n_nodes: usize) -> Self {
         Self {
-            n_nodes,
-            adjacency: vec![Vec::new(); n_nodes],
+            _n_nodes,
+            adjacency: vec![Vec::new(); _n_nodes],
             node_features: None,
         }
     }
 
     /// Create a graph from an adjacency matrix
-    pub fn from_adjacency_matrix(adjacency_matrix: ArrayView2<F>) -> Result<Self> {
-        let n_nodes = adjacency_matrix.shape()[0];
-        if adjacency_matrix.shape()[1] != n_nodes {
+    pub fn from_adjacency_matrix(_adjacency_matrix: ArrayView2<F>) -> Result<Self> {
+        let n_nodes = _adjacency_matrix.shape()[0];
+        if _adjacency_matrix.shape()[1] != n_nodes {
             return Err(ClusteringError::InvalidInput(
-                "Adjacency matrix must be square".to_string(),
+                "Adjacency _matrix must be square".to_string(),
             ));
         }
 
@@ -61,10 +61,10 @@ impl<F: Float + FromPrimitive + Debug> Graph<F> {
     }
 
     /// Create a k-nearest neighbor graph from data points
-    pub fn from_knn_graph(data: ArrayView2<F>, k: usize) -> Result<Self> {
-        let n_samples = data.shape()[0];
+    pub fn from_knn_graph(_data: ArrayView2<F>, k: usize) -> Result<Self> {
+        let n_samples = _data.shape()[0];
         let mut graph = Self::new(n_samples);
-        graph.node_features = Some(data.to_owned());
+        graph.node_features = Some(_data.to_owned());
 
         // For each point, find k nearest neighbors
         for i in 0..n_samples {
@@ -72,7 +72,7 @@ impl<F: Float + FromPrimitive + Debug> Graph<F> {
 
             for j in 0..n_samples {
                 if i != j {
-                    let dist = euclidean_distance(data.row(i), data.row(j));
+                    let dist = euclidean_distance(_data.row(i), _data.row(j));
                     distances.push((j, dist));
                 }
             }
@@ -202,7 +202,7 @@ impl<F: Float + FromPrimitive + Debug> Graph<F> {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::graph::{Graph, louvain};
+/// use scirs2__cluster::graph::{Graph, louvain};
 ///
 /// // Create a simple graph
 /// let adjacency = Array2::from_shape_vec((4, 4), vec![
@@ -216,12 +216,12 @@ impl<F: Float + FromPrimitive + Debug> Graph<F> {
 /// let communities = louvain(&graph, 1.0, 100).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn louvain<F>(graph: &Graph<F>, resolution: f64, max_iterations: usize) -> Result<Array1<usize>>
+pub fn louvain<F>(_graph: &Graph<F>, resolution: f64, max_iterations: usize) -> Result<Array1<usize>>
 where
     F: Float + FromPrimitive + Debug + 'static,
     f64: From<F>,
 {
-    let n_nodes = graph.n_nodes;
+    let n_nodes = _graph.n_nodes;
     let mut communities: Array1<usize> = Array1::from_iter(0..n_nodes);
     let mut improved = true;
     let mut iteration = 0;
@@ -240,7 +240,7 @@ where
             let mut candidate_communities = HashSet::new();
             candidate_communities.insert(current_community);
 
-            for &(neighbor, _) in graph.neighbors(node) {
+            for &(neighbor_) in _graph.neighbors(node) {
                 candidate_communities.insert(communities[neighbor]);
             }
 
@@ -248,7 +248,7 @@ where
                 if candidate_community != current_community {
                     // Calculate modularity gain from moving to this community
                     let gain = modularity_gain(
-                        graph,
+                        _graph,
                         &communities,
                         node,
                         current_community,
@@ -296,7 +296,7 @@ where
     let node_degree = graph.weighted_degree(node);
     let resolution_f = F::from(resolution).unwrap();
 
-    // Calculate connections within target community
+    // Calculate connections within target _community
     let mut edges_to_target = F::zero();
     let mut edges_from_source = F::zero();
 
@@ -309,7 +309,7 @@ where
         }
     }
 
-    // Calculate community weights
+    // Calculate _community weights
     let target_community_weight = calculate_community_weight(graph, communities, to_community);
     let source_community_weight = calculate_community_weight(graph, communities, from_community);
 
@@ -391,7 +391,7 @@ where
             }
 
             // Choose label with highest weight
-            if let Some((&best_label, _)) = label_weights
+            if let Some((&best_label_)) = label_weights
                 .iter()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
             {
@@ -441,25 +441,25 @@ where
 ///
 /// Community assignments for each node
 #[allow(dead_code)]
-pub fn girvan_newman<F>(graph: &Graph<F>, n_communities: usize) -> Result<Array1<usize>>
+pub fn girvan_newman<F>(_graph: &Graph<F>, n_communities: usize) -> Result<Array1<usize>>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
-    if n_communities > graph.n_nodes {
+    if n_communities > _graph.n_nodes {
         return Err(ClusteringError::InvalidInput(
-            "Number of communities cannot exceed number of nodes".to_string(),
+            "Number of _communities cannot exceed number of nodes".to_string(),
         ));
     }
 
-    let mut working_graph = graph.clone();
-    let mut communities = find_connected_components(&working_graph);
+    let mut working_graph = _graph.clone();
+    let mut _communities = find_connected_components(&working_graph);
 
-    while count_communities(&communities) < n_communities && has_edges(&working_graph) {
+    while count_communities(&_communities) < n_communities && has_edges(&working_graph) {
         // Calculate edge betweenness centrality
         let edge_betweenness = calculate_edge_betweenness(&working_graph)?;
 
         // Find edge with highest betweenness
-        if let Some((max_edge, _)) = edge_betweenness
+        if let Some((max_edge_)) = edge_betweenness
             .iter()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
         {
@@ -467,26 +467,26 @@ where
             remove_edge(&mut working_graph, max_edge.0, max_edge.1);
 
             // Recalculate connected components
-            communities = find_connected_components(&working_graph);
+            _communities = find_connected_components(&working_graph);
         } else {
             break; // No more edges to remove
         }
     }
 
-    Ok(Array1::from_vec(communities))
+    Ok(Array1::from_vec(_communities))
 }
 
 /// Calculate edge betweenness centrality for all edges
 #[allow(dead_code)]
-fn calculate_edge_betweenness<F>(graph: &Graph<F>) -> Result<HashMap<(usize, usize), f64>>
+fn calculate_edge_betweenness<F>(_graph: &Graph<F>) -> Result<HashMap<(usize, usize), f64>>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
     let mut edge_betweenness = HashMap::new();
 
     // Initialize all edges with zero betweenness
-    for node in 0..graph.n_nodes {
-        for &(neighbor, _) in graph.neighbors(node) {
+    for node in 0.._graph.n_nodes {
+        for &(neighbor_) in _graph.neighbors(node) {
             if node < neighbor {
                 // Count each edge only once
                 edge_betweenness.insert((node, neighbor), 0.0);
@@ -495,9 +495,9 @@ where
     }
 
     // For each pair of nodes, calculate shortest paths and update edge betweenness
-    for source in 0..graph.n_nodes {
-        for target in (source + 1)..graph.n_nodes {
-            let paths = find_all_shortest_paths(graph, source, target);
+    for source in 0.._graph.n_nodes {
+        for target in (source + 1).._graph.n_nodes {
+            let paths = find_all_shortest_paths(_graph, source, target);
 
             if !paths.is_empty() {
                 let contribution = 1.0 / paths.len() as f64;
@@ -522,12 +522,12 @@ where
 
 /// Find all shortest paths between two nodes using BFS
 #[allow(dead_code)]
-fn find_all_shortest_paths<F>(graph: &Graph<F>, source: usize, target: usize) -> Vec<Vec<usize>>
+fn find_all_shortest_paths<F>(_graph: &Graph<F>, source: usize, target: usize) -> Vec<Vec<usize>>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
-    let mut distances = vec![None; graph.n_nodes];
-    let mut predecessors: Vec<Vec<usize>> = vec![Vec::new(); graph.n_nodes];
+    let mut distances = vec![None; _graph.n_nodes];
+    let mut predecessors: Vec<Vec<usize>> = vec![Vec::new(); _graph.n_nodes];
     let mut queue = VecDeque::new();
 
     distances[source] = Some(0);
@@ -536,7 +536,7 @@ where
     while let Some(current) = queue.pop_front() {
         let current_dist = distances[current].unwrap();
 
-        for &(neighbor, _) in graph.neighbors(current) {
+        for &(neighbor_) in _graph.neighbors(current) {
             if distances[neighbor].is_none() {
                 // First time visiting this node
                 distances[neighbor] = Some(current_dist + 1);
@@ -584,21 +584,21 @@ where
 
 /// Remove an edge from the graph
 #[allow(dead_code)]
-fn remove_edge<F>(graph: &mut Graph<F>, node1: usize, node2: usize)
+fn remove_edge<F>(_graph: &mut Graph<F>, node1: usize, node2: usize)
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
-    graph.adjacency[node1].retain(|(neighbor, _)| *neighbor != node2);
-    graph.adjacency[node2].retain(|(neighbor, _)| *neighbor != node1);
+    _graph.adjacency[node1].retain(|(neighbor_)| *neighbor != node2);
+    _graph.adjacency[node2].retain(|(neighbor_)| *neighbor != node1);
 }
 
 /// Check if the graph has any edges
 #[allow(dead_code)]
-fn has_edges<F>(graph: &Graph<F>) -> bool
+fn has_edges<F>(_graph: &Graph<F>) -> bool
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
-    graph
+    _graph
         .adjacency
         .iter()
         .any(|neighbors| !neighbors.is_empty())
@@ -606,17 +606,17 @@ where
 
 /// Find connected components in the graph
 #[allow(dead_code)]
-fn find_connected_components<F>(graph: &Graph<F>) -> Vec<usize>
+fn find_connected_components<F>(_graph: &Graph<F>) -> Vec<usize>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
-    let mut visited = vec![false; graph.n_nodes];
-    let mut components = vec![0; graph.n_nodes];
+    let mut visited = vec![false; _graph.n_nodes];
+    let mut components = vec![0; _graph.n_nodes];
     let mut component_id = 0;
 
-    for node in 0..graph.n_nodes {
+    for node in 0.._graph.n_nodes {
         if !visited[node] {
-            dfs_component(graph, node, component_id, &mut visited, &mut components);
+            dfs_component(_graph, node, component_id, &mut visited, &mut components);
             component_id += 1;
         }
     }
@@ -638,7 +638,7 @@ fn dfs_component<F>(
     visited[node] = true;
     components[node] = component_id;
 
-    for &(neighbor, _) in graph.neighbors(node) {
+    for &(neighbor_) in graph.neighbors(node) {
         if !visited[neighbor] {
             dfs_component(graph, neighbor, component_id, visited, components);
         }
@@ -647,9 +647,9 @@ fn dfs_component<F>(
 
 /// Count the number of unique communities
 #[allow(dead_code)]
-fn count_communities(communities: &[usize]) -> usize {
+fn count_communities(_communities: &[usize]) -> usize {
     let mut unique: HashSet<usize> = HashSet::new();
-    for &community in communities {
+    for &community in _communities {
         unique.insert(community);
     }
     unique.len()

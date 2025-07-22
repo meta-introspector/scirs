@@ -191,11 +191,11 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for NuclearNormOp {
 
 /// Check if matrix is diagonal
 #[allow(dead_code)]
-fn is_diagonal_matrix<F: Float>(matrix: &ArrayView2<F>) -> bool {
-    let (m, n) = matrix.dim();
+fn is_diagonal_matrix<F: Float>(_matrix: &ArrayView2<F>) -> bool {
+    let (m, n) = _matrix.dim();
     for i in 0..m {
         for j in 0..n {
-            if i != j && matrix[[i, j]].abs() > F::epsilon() {
+            if i != j && _matrix[[i, j]].abs() > F::epsilon() {
                 return false;
             }
         }
@@ -205,13 +205,13 @@ fn is_diagonal_matrix<F: Float>(matrix: &ArrayView2<F>) -> bool {
 
 /// Compute nuclear norm for diagonal matrix
 #[allow(dead_code)]
-fn compute_diagonal_nuclear_norm<F: Float>(matrix: &ArrayView2<F>) -> F {
-    let (m, n) = matrix.dim();
+fn compute_diagonal_nuclear_norm<F: Float>(_matrix: &ArrayView2<F>) -> F {
+    let (m, n) = _matrix.dim();
     let mut sum = F::zero();
     let min_dim = m.min(n);
 
     for i in 0..min_dim {
-        sum += matrix[[i, i]].abs();
+        sum += _matrix[[i, i]].abs();
     }
 
     sum
@@ -219,13 +219,13 @@ fn compute_diagonal_nuclear_norm<F: Float>(matrix: &ArrayView2<F>) -> F {
 
 /// Compute sign gradient for diagonal matrix
 #[allow(dead_code)]
-fn compute_diagonal_sign_gradient<F: Float>(matrix: &ArrayView2<F>) -> Array2<F> {
-    let (m, n) = matrix.dim();
+fn compute_diagonal_sign_gradient<F: Float>(_matrix: &ArrayView2<F>) -> Array2<F> {
+    let (m, n) = _matrix.dim();
     let mut grad_matrix = Array2::zeros((m, n));
     let min_dim = m.min(n);
 
     for i in 0..min_dim {
-        let diag_val = matrix[[i, i]];
+        let diag_val = _matrix[[i, i]];
         grad_matrix[[i, i]] = if diag_val > F::zero() {
             F::one()
         } else if diag_val < F::zero() {
@@ -245,7 +245,7 @@ fn power_iteration_spectral<F: Float + ndarray::ScalarOperand>(
     max_iter: usize,
     tol: F,
 ) -> (Array1<F>, F) {
-    let (m, _n) = matrix.dim();
+    let (m_n) = matrix.dim();
 
     // Initialize with normalized vector
     let mut u = Array1::<F>::zeros(m);
@@ -257,7 +257,7 @@ fn power_iteration_spectral<F: Float + ndarray::ScalarOperand>(
     }
 
     // Normalize
-    let norm = u.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+    let norm = u._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
     if norm > F::epsilon() {
         u.mapv_inplace(|x| x / norm);
     }
@@ -272,14 +272,14 @@ fn power_iteration_spectral<F: Float + ndarray::ScalarOperand>(
         let atau = matrix.t().dot(&au);
 
         // Compute norm (approximate eigenvalue of A^T * A)
-        let sigma = atau.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+        let sigma = atau._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
 
         // Check convergence
         if (sigma - prev_sigma).abs() < tol {
             // Final computation of actual singular value
             let au_final = matrix.dot(&u);
             let sigma_final = au_final
-                .iter()
+                ._iter()
                 .fold(F::zero(), |acc, &x| acc + x * x)
                 .sqrt();
             return (u, sigma_final);
@@ -288,7 +288,7 @@ fn power_iteration_spectral<F: Float + ndarray::ScalarOperand>(
         prev_sigma = sigma;
 
         // Normalize for next iteration
-        let norm = atau.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+        let norm = atau._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
         if norm > F::epsilon() {
             u = atau.mapv(|x| x / norm);
         }
@@ -296,7 +296,7 @@ fn power_iteration_spectral<F: Float + ndarray::ScalarOperand>(
 
     // Final estimate
     let au = matrix.dot(&u);
-    let sigma = au.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+    let sigma = au._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
     (u, sigma)
 }
 
@@ -468,10 +468,10 @@ fn compute_nuclear_norm_gradient_improved<F: Float + ndarray::ScalarOperand>(
 // Public API functions
 
 #[allow(dead_code)]
-pub fn frobenius_norm<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn frobenius_norm<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _matrix.graph();
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(FrobeniusNormOp)
 }
 

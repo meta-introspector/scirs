@@ -4,7 +4,7 @@
 //! dispersion measures using scirs2-core's unified SIMD operations.
 
 use crate::error::{StatsError, StatsResult};
-use crate::quantile_simd::{median_simd, quantile_simd};
+use crate::quantile__simd::{median_simd, quantile_simd};
 use ndarray::{ArrayBase, Data, DataMut, Ix1};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
@@ -36,7 +36,7 @@ where
         ));
     }
 
-    // Handle NaN values according to policy
+    // Handle NaN values according to _policy
     match nan_policy {
         "propagate" => {
             if x.iter().any(|&v| v.is_nan()) {
@@ -108,10 +108,8 @@ where
 /// The interquartile range
 #[allow(dead_code)]
 pub fn iqr_simd<F, D>(
-    x: &mut ArrayBase<D, Ix1>,
-    _rng: F,
-    interpolation: &str,
-    _keep_dims: bool,
+    x: &mut ArrayBase<D, Ix1>, _rng: F,
+    interpolation: &str, _keep_dims: bool,
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
@@ -152,7 +150,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
     D: Data<Elem = F>,
 {
-    use crate::descriptive_simd::{mean_simd, std_simd};
+    use crate::descriptive__simd::{mean_simd, std_simd};
 
     // Handle NaN values
     let valid_data = match nan_policy {
@@ -312,7 +310,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
     D: Data<Elem = F>,
 {
-    use crate::descriptive_simd::std_simd;
+    use crate::descriptive__simd::std_simd;
 
     let n = x.len();
     if n <= ddof {

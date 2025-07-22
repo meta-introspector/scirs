@@ -228,8 +228,7 @@ impl AdvancedGpuOptimizer {
         // Determine optimal block size based on GPU architecture
         let optimal_block_size = match backend {
             GpuBackend::Cuda { .. } => self.tune_cuda_block_size(data_shape),
-            GpuBackend::OpenCl { .. } => self.tune_opencl_work_group_size(data_shape),
-            _ => 256, // Default for other backends
+            GpuBackend::OpenCl { .. } => self.tune_opencl_work_group_size(data_shape, _ => 256, // Default for other backends
         };
 
         // Estimate memory bandwidth requirements
@@ -266,8 +265,7 @@ impl AdvancedGpuOptimizer {
             0..=1_000 => 32,
             1_001..=10_000 => 64,
             10_001..=100_000 => 128,
-            100_001..=1_000_000 => 256,
-            _ => 512,
+            100_001..=1_000_000 => 256_ => 512,
         }
     }
 
@@ -280,8 +278,7 @@ impl AdvancedGpuOptimizer {
             0..=1_000 => 16,
             1_001..=10_000 => 32,
             10_001..=100_000 => 64,
-            100_001..=1_000_000 => 128,
-            _ => 256,
+            100_001..=1_000_000 => 128_ => 256,
         }
     }
 
@@ -332,8 +329,7 @@ impl AdvancedGpuOptimizer {
                 }
             }
             "transpose" => DataLayout::ColumnMajor,
-            "element_wise" => DataLayout::RowMajor,
-            _ => DataLayout::Adaptive,
+            "element_wise" => DataLayout::RowMajor_ =>, DataLayout::Adaptive,
         }
     }
 
@@ -347,8 +343,7 @@ impl AdvancedGpuOptimizer {
         // Heuristic scoring based on multiple factors
         let block_efficiency = match block_size {
             32..=256 => 1.0,
-            257..=512 => 0.9,
-            _ => 0.7,
+            257..=512 => 0.9_ => 0.7,
         };
 
         let bandwidth_efficiency = (memory_bandwidth / (memory_bandwidth + 1e9)).min(1.0);
@@ -368,12 +363,12 @@ impl AdvancedGpuOptimizer {
         };
 
         let memory_pattern = match profile.optimal_layout {
-            DataLayout::RowMajor => MemoryAccessPattern::Sequential,
-            DataLayout::ColumnMajor => MemoryAccessPattern::Strided { stride: 1 },
-            DataLayout::Tiled { tile_size } => MemoryAccessPattern::Blocked {
+            DataLayout::RowMajor =>, MemoryAccessPattern::Sequential,
+            DataLayout::ColumnMajor =>, MemoryAccessPattern::Strided { stride: 1 },
+            DataLayout::Tiled { tile_size } =>, MemoryAccessPattern::Blocked {
                 block_size: tile_size,
             },
-            DataLayout::Adaptive => MemoryAccessPattern::Sequential,
+            DataLayout::Adaptive =>, MemoryAccessPattern::Sequential,
         };
 
         let vectorization = if profile.compute_utilization > 0.7 {
@@ -415,8 +410,7 @@ impl AdvancedGpuOptimizer {
                 vectorization: VectorizationStrategy::Vector2,
                 load_balancing: LoadBalancingMethod::Static,
                 block_size: 256,
-            },
-            _ => AdvancedKernelConfig {
+            }_ => AdvancedKernelConfig {
                 specialization_level: SpecializationLevel::Basic,
                 memory_pattern: MemoryAccessPattern::Sequential,
                 vectorization: VectorizationStrategy::Scalar,
@@ -516,8 +510,7 @@ impl AdvancedGpuOptimizer {
         let kernel_name = match distribution {
             "normal" => "curand_normal_kernel",
             "uniform" => "curand_uniform_kernel",
-            "exponential" => "curand_exponential_kernel",
-            _ => "curand_uniform_kernel", // Default
+            "exponential" => "curand_exponential_kernel"_ => "curand_uniform_kernel", // Default
         };
 
         // Simulate kernel execution with realistic timing
@@ -538,7 +531,7 @@ impl AdvancedGpuOptimizer {
     /// Simulate GPU memory coalescing optimization
     fn apply_gpu_memory_coalescing_optimization(&self, data: &mut Array2<f64>) {
         // Simulate memory access pattern optimization that would occur on GPU
-        let (_rows, _cols) = data.dim();
+        let (_rows_cols) = data.dim();
 
         // For GPU efficiency, ensure data access patterns are optimized
         // This is a simulation of what actual GPU kernels would achieve
@@ -560,8 +553,7 @@ impl AdvancedGpuOptimizer {
         let base_time_per_element = match kernel_name {
             "curand_normal_kernel" => 0.001, // microseconds per element
             "curand_uniform_kernel" => 0.0008,
-            "curand_exponential_kernel" => 0.0012,
-            _ => 0.001,
+            "curand_exponential_kernel" => 0.0012_ => 0.001,
         };
 
         // GPU parallel efficiency factor
@@ -600,8 +592,7 @@ impl AdvancedGpuOptimizer {
             0..=1024 => 32,
             1025..=16384 => 64,
             16385..=262144 => 128,
-            262145..=1048576 => 256,
-            _ => 512,
+            262145..=1048576 => 256_ => 512,
         }
     }
 
@@ -766,8 +757,7 @@ impl AdvancedGpuOptimizer {
         let base_time_per_element = match distribution {
             "normal" => 0.0015, // microseconds per element (more complex than CUDA)
             "uniform" => 0.0012,
-            "exponential" => 0.0018,
-            _ => 0.0012,
+            "exponential" => 0.0018_ => 0.0012,
         };
 
         // OpenCL typically has more overhead than CUDA
@@ -787,9 +777,9 @@ impl AdvancedGpuOptimizer {
         let (rows, cols) = data.dim();
 
         // Simulate OpenCL local memory optimization
-        let optimal_tile_size = work_group_size.min(16); // Typical tile size for OpenCL
+        let optimal_tile_size = work_group_size.min(16); // Typical tile _size for OpenCL
 
-        // Process in tiles that fit OpenCL work group size
+        // Process in tiles that fit OpenCL work group _size
         for row_chunk in (0..rows).step_by(optimal_tile_size) {
             let end_row = (row_chunk + optimal_tile_size).min(rows);
             for col_chunk in (0..cols).step_by(optimal_tile_size) {
@@ -825,7 +815,7 @@ impl AdvancedGpuOptimizer {
         distribution: &str,
     ) -> Result<Array2<f64>> {
         use rand::Rng;
-        use rand_distr::{Distribution, Normal, Uniform};
+        use rand__distr::{Distribution, Normal, Uniform};
 
         let _rng = rand::rng();
         let total_elements = rows * cols;
@@ -930,8 +920,7 @@ impl AdvancedGpuOptimizer {
             "matrix_multiply" => 0.001,
             "element_wise" => 0.0001,
             "reduction" => 0.0005,
-            "trigonometric" => 0.01,
-            _ => 0.001,
+            "trigonometric" => 0.01_ => 0.001,
         };
 
         total_elements as f64 * base_time_per_element
@@ -1372,16 +1361,16 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: MonitoringConfig) -> Self {
+    pub fn with_config(_config: MonitoringConfig) -> Self {
         Self {
-            performance_history: std::collections::VecDeque::with_capacity(config.max_history_size),
+            performance_history: std::collections::VecDeque::with_capacity(_config.max_history_size),
             current_optimization: AdaptiveOptimizationState {
                 trend: PerformanceTrend::Unknown,
                 adjustments: Vec::new(),
                 learning_rate: 0.1,
                 stability_threshold: 0.02,
             },
-            config,
+            _config,
             ai_predictor: AIPerformancePredictor::new(),
         }
     }
@@ -1590,7 +1579,7 @@ impl AdvancedGpuOptimizer {
     ) -> Result<AdvancedKernelConfig> {
         let mut ai_predictor = AIPerformancePredictor::new();
 
-        // Train on historical data
+        // Train on historical _data
         for data_point in historical_data {
             ai_predictor.add_training_data(data_point.clone());
         }

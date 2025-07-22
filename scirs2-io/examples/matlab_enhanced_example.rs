@@ -8,11 +8,11 @@
 //! - Error handling and performance monitoring
 
 use ndarray::{Array1, Array2};
-use scirs2_io::matlab::enhanced::{
+use scirs2__io::matlab::enhanced::{
     create_cell_array, create_struct, read_mat_enhanced, write_mat_enhanced, EnhancedMatFile,
     MatFileConfig,
 };
-use scirs2_io::matlab::{read_mat, write_mat, MatType};
+use scirs2__io::matlab::{read_mat, write_mat, MatType};
 use std::collections::HashMap;
 use std::time::Instant;
 use tempfile::tempdir;
@@ -108,8 +108,7 @@ fn demonstrate_basic_mat_v5() -> Result<(), Box<dyn std::error::Error>> {
                 (MatType::Single(orig), MatType::Single(load)) => orig.shape() == load.shape(),
                 (MatType::Int32(orig), MatType::Int32(load)) => orig.shape() == load.shape(),
                 (MatType::Logical(orig), MatType::Logical(load)) => orig.shape() == load.shape(),
-                (MatType::Char(orig), MatType::Char(load)) => orig == load,
-                _ => false,
+                (MatType::Char(orig), MatType::Char(load)) => orig == load_ => false,
             };
             println!(
                 "    {}: {}",
@@ -220,8 +219,7 @@ fn demonstrate_cell_arrays() -> Result<(), Box<dyn std::error::Error>> {
                     MatType::Double(_) => "Double array",
                     MatType::Char(_) => "Character string",
                     MatType::Int32(_) => "Int32 array",
-                    MatType::Logical(_) => "Logical array",
-                    _ => "Other type",
+                    MatType::Logical(_) => "Logical array"_ => "Other type",
                 };
                 println!("      Cell {}: {}", i + 1, type_name);
             }
@@ -288,8 +286,7 @@ fn demonstrate_structures() -> Result<(), Box<dyn std::error::Error>> {
                 let type_name = match field_value {
                     MatType::Double(_) => "Double array",
                     MatType::Char(_) => "Character string",
-                    MatType::Logical(_) => "Logical array",
-                    _ => "Other type",
+                    MatType::Logical(_) => "Logical array"_ => "Other type",
                 };
                 println!("      {}: {}", field_name, type_name);
             }

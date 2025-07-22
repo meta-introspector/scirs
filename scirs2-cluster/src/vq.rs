@@ -6,8 +6,8 @@
 //! ## Examples
 //!
 //! ```
-//! use ndarray::{Array2, ArrayView2};
-//! use scirs2_cluster::vq::kmeans;
+//! use ndarray::{ArrayView1, Array2, ArrayView2};
+//! use scirs2__cluster::vq::kmeans;
 //!
 //! // Example data
 //! let data = Array2::from_shape_vec((6, 2), vec![
@@ -27,7 +27,7 @@
 //! println!("Labels: {:?}", labels);
 //! ```
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -42,12 +42,12 @@ mod parallel_kmeans;
 mod simd_kmeans;
 mod simd_optimizations;
 mod weighted_kmeans;
-pub use self::distance_metrics::{
+pub use self::distance__metrics::{
     create_metric, ChebyshevDistance, CorrelationDistance, CosineDistance,
     DistanceMetric as VQDistanceMetric, EuclideanDistance, MahalanobisDistance, ManhattanDistance,
     MetricType, MinkowskiDistance,
 };
-pub use distance_simd::{
+pub use distance__simd::{
     distance_to_centroids_simd, pairwise_euclidean_parallel, pairwise_euclidean_simd,
 };
 pub use kmeans::{
@@ -55,14 +55,14 @@ pub use kmeans::{
     KMeansOptions,
 };
 pub use kmeans2::{kmeans2, kmeans2_str, MinitMethod, MissingMethod};
-pub use minibatch_kmeans::*;
-pub use parallel_kmeans::{parallel_kmeans, ParallelKMeansOptions};
-pub use simd_kmeans::{kmeans_plus_plus_simd, kmeans_simd, mini_batch_kmeans_simd};
-pub use simd_optimizations::{
+pub use minibatch__kmeans::*;
+pub use parallel__kmeans::{parallel_kmeans, ParallelKMeansOptions};
+pub use simd__kmeans::{kmeans_plus_plus_simd, kmeans_simd, mini_batch_kmeans_simd};
+pub use simd__optimizations::{
     calculate_distortion_simd, compute_centroids_simd, euclidean_distance_simd, vq_simd,
     whiten_simd, SimdOptimizationConfig,
 };
-pub use weighted_kmeans::{weighted_kmeans, weighted_kmeans_plus_plus, WeightedKMeansOptions};
+pub use weighted__kmeans::{weighted_kmeans, weighted_kmeans_plus_plus, WeightedKMeansOptions};
 
 /// Computes the Euclidean distance between two vectors
 #[allow(dead_code)]
@@ -99,7 +99,7 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::vq::whiten;
+/// use scirs2__cluster::vq::whiten;
 ///
 /// let data = Array2::<f64>::from_shape_vec((4, 2), vec![
 ///     1.0, 2.0,
@@ -111,19 +111,19 @@ where
 /// let whitened = whiten(&data).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn whiten<F>(obs: &Array2<F>) -> Result<Array2<F>>
+pub fn whiten<F>(_obs: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + std::fmt::Debug,
 {
-    let n_samples = obs.shape()[0];
-    let n_features = obs.shape()[1];
+    let n_samples = _obs.shape()[0];
+    let n_features = _obs.shape()[1];
 
     // Calculate mean for each feature
     let mut means = Array1::<F>::zeros(n_features);
     for j in 0..n_features {
         let mut sum = F::zero();
         for i in 0..n_samples {
-            sum = sum + obs[[i, j]];
+            sum = sum + _obs[[i, j]];
         }
         means[j] = sum / F::from(n_samples).unwrap();
     }
@@ -133,7 +133,7 @@ where
     for j in 0..n_features {
         let mut sum = F::zero();
         for i in 0..n_samples {
-            let diff = obs[[i, j]] - means[j];
+            let diff = _obs[[i, j]] - means[j];
             sum = sum + diff * diff;
         }
         stds[j] = (sum / F::from(n_samples - 1).unwrap()).sqrt();
@@ -148,7 +148,7 @@ where
     let mut whitened = Array2::<F>::zeros((n_samples, n_features));
     for i in 0..n_samples {
         for j in 0..n_features {
-            whitened[[i, j]] = (obs[[i, j]] - means[j]) / stds[j];
+            whitened[[i, j]] = (_obs[[i, j]] - means[j]) / stds[j];
         }
     }
 
@@ -177,25 +177,25 @@ where
 ///
 /// * Returns an error if the dimensions of data and centroids don't match
 #[allow(dead_code)]
-pub fn vq<F>(data: ArrayView2<F>, centroids: ArrayView2<F>) -> Result<(Array1<usize>, Array1<F>)>
+pub fn vq<F>(_data: ArrayView2<F>, centroids: ArrayView2<F>) -> Result<(Array1<usize>, Array1<F>)>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if data.shape()[1] != centroids.shape()[1] {
+    if _data.shape()[1] != centroids.shape()[1] {
         return Err(ClusteringError::InvalidInput(format!(
             "Observation array and centroid array must have the same number of dimensions. Got {} and {}",
-            data.shape()[1], centroids.shape()[1]
+            _data.shape()[1], centroids.shape()[1]
         )));
     }
 
-    let n_samples = data.shape()[0];
+    let n_samples = _data.shape()[0];
     let n_centroids = centroids.shape()[0];
 
     let mut labels = Array1::zeros(n_samples);
     let mut distances = Array1::zeros(n_samples);
 
     for i in 0..n_samples {
-        let point = data.slice(s![i, ..]);
+        let point = _data.slice(s![i, ..]);
         let mut min_dist = F::infinity();
         let mut closest_centroid = 0;
 

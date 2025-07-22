@@ -4,7 +4,7 @@
 //! particularly effective for systems arising from discretizations of
 //! elliptic PDEs and other problems with nice geometric structure.
 
-use crate::csr_array::CsrArray;
+use crate::csr__array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, ArrayView1};
@@ -117,8 +117,8 @@ where
     /// # Example
     ///
     /// ```rust
-    /// use scirs2_sparse::csr_array::CsrArray;
-    /// use scirs2_sparse::linalg::amg::{AMGPreconditioner, AMGOptions};
+    /// use scirs2__sparse::csr_array::CsrArray;
+    /// use scirs2__sparse::linalg::amg::{AMGPreconditioner, AMGOptions};
     ///
     /// // Create a simple matrix
     /// let rows = vec![0, 0, 1, 1, 2, 2];
@@ -129,9 +129,9 @@ where
     /// // Create AMG preconditioner
     /// let amg = AMGPreconditioner::new(&matrix, AMGOptions::default()).unwrap();
     /// ```
-    pub fn new(matrix: &CsrArray<T>, options: AMGOptions) -> SparseResult<Self> {
+    pub fn new(_matrix: &CsrArray<T>, options: AMGOptions) -> SparseResult<Self> {
         let mut amg = AMGPreconditioner {
-            operators: vec![matrix.clone()],
+            operators: vec![_matrix.clone()],
             prolongations: Vec::new(),
             restrictions: Vec::new(),
             options,
@@ -150,7 +150,7 @@ where
 
         while level < self.options.max_levels - 1 {
             let current_matrix = &self.operators[level];
-            let (rows, _) = current_matrix.shape();
+            let (rows_) = current_matrix.shape();
 
             // Stop if matrix is small enough
             if rows <= self.options.max_coarse_size {
@@ -161,7 +161,7 @@ where
             let (coarse_matrix, prolongation, restriction) = self.coarsen_level(current_matrix)?;
 
             // Check if coarsening was successful
-            let (coarse_rows, _) = coarse_matrix.shape();
+            let (coarse_rows_) = coarse_matrix.shape();
             if coarse_rows >= rows {
                 // Coarsening didn't reduce the problem size significantly
                 break;
@@ -182,13 +182,13 @@ where
         &self,
         matrix: &CsrArray<T>,
     ) -> SparseResult<(CsrArray<T>, CsrArray<T>, CsrArray<T>)> {
-        let (_n, _) = matrix.shape();
+        let (_n_) = matrix.shape();
 
         // Step 1: Detect strong connections
         let strong_connections = self.detect_strong_connections(matrix)?;
 
         // Step 2: Perform C/F splitting using classical Ruge-Stuben algorithm
-        let (c_points, _f_points) = self.classical_cf_splitting(matrix, &strong_connections)?;
+        let (c_points_f_points) = self.classical_cf_splitting(matrix, &strong_connections)?;
 
         // Step 3: Build coarse point mapping
         let mut fine_to_coarse = HashMap::new();
@@ -234,7 +234,7 @@ where
     /// Detect strong connections in the matrix
     /// A connection i -> j is strong if |a_ij| >= theta * max_k(|a_ik|) for k != i
     fn detect_strong_connections(&self, matrix: &CsrArray<T>) -> SparseResult<Vec<Vec<usize>>> {
-        let (n, _) = matrix.shape();
+        let (n_) = matrix.shape();
         let mut strong_connections = vec![Vec::new(); n];
 
         #[allow(clippy::needless_range_loop)]
@@ -276,9 +276,9 @@ where
         matrix: &CsrArray<T>,
         strong_connections: &[Vec<usize>],
     ) -> SparseResult<(Vec<usize>, Vec<usize>)> {
-        let (n, _) = matrix.shape();
+        let (n_) = matrix.shape();
 
-        // Count strong connections for each point (influence measure)
+        // Count strong _connections for each point (influence measure)
         let mut influence = vec![0; n];
         for i in 0..n {
             influence[i] = strong_connections[i].len();
@@ -355,7 +355,7 @@ where
         fine_to_coarse: &HashMap<usize, usize>,
         coarse_size: usize,
     ) -> SparseResult<CsrArray<T>> {
-        let (n, _) = matrix.shape();
+        let (n_) = matrix.shape();
         let mut prolongation_data = Vec::new();
         let mut prolongation_indices = Vec::new();
         let mut prolongation_indptr = vec![0];
@@ -366,7 +366,7 @@ where
         #[allow(clippy::needless_range_loop)]
         for i in 0..n {
             if let Some(&coarse_idx) = fine_to_coarse.get(&i) {
-                // Direct injection for coarse points
+                // Direct injection for _coarse points
                 prolongation_data.push(T::one());
                 prolongation_indices.push(coarse_idx);
             } else {
@@ -379,7 +379,7 @@ where
                 )?;
 
                 if interp_weights.is_empty() {
-                    // Fallback: direct injection to first coarse point
+                    // Fallback: direct injection to first _coarse point
                     prolongation_data.push(T::one());
                     prolongation_indices.push(0);
                 } else {
@@ -411,7 +411,7 @@ where
     ) -> SparseResult<Vec<(usize, T)>> {
         let mut weights = Vec::new();
 
-        // Find coarse neighbors that are strongly connected
+        // Find _coarse _neighbors that are strongly connected
         let mut coarse_neighbors = Vec::new();
         let mut coarse_weights = Vec::new();
 
@@ -426,7 +426,7 @@ where
             return Ok(weights);
         }
 
-        // Get the diagonal entry for fine point
+        // Get the diagonal entry for fine _point
         let mut a_ii = T::zero();
         let row_start = matrix.get_indptr()[fine_point];
         let row_end = matrix.get_indptr()[fine_point + 1];
@@ -444,7 +444,7 @@ where
         }
 
         // Compute interpolation weights using classical formula
-        // w_j = -a_ij / a_ii for coarse neighbors j
+        // w_j = -a_ij / a_ii for _coarse _neighbors j
         let mut total_weight = T::zero();
         let mut temp_weights = Vec::new();
 
@@ -492,7 +492,7 @@ where
     ///
     /// Approximate solution x
     pub fn apply(&self, b: &ArrayView1<T>) -> SparseResult<Array1<T>> {
-        let (n, _) = self.operators[0].shape();
+        let (n_) = self.operators[0].shape();
         if b.len() != n {
             return Err(SparseError::DimensionMismatch {
                 expected: n,
@@ -716,11 +716,11 @@ where
 
 /// Helper function for matrix-vector multiplication
 #[allow(dead_code)]
-fn matrix_vector_multiply<T>(matrix: &CsrArray<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+fn matrix_vector_multiply<T>(_matrix: &CsrArray<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
 {
-    let (rows, cols) = matrix.shape();
+    let (rows, cols) = _matrix.shape();
     if x.len() != cols {
         return Err(SparseError::DimensionMismatch {
             expected: cols,
@@ -731,9 +731,9 @@ where
     let mut result = Array1::zeros(rows);
 
     for i in 0..rows {
-        for j in matrix.get_indptr()[i]..matrix.get_indptr()[i + 1] {
-            let col = matrix.get_indices()[j];
-            let val = matrix.get_data()[j];
+        for j in _matrix.get_indptr()[i].._matrix.get_indptr()[i + 1] {
+            let col = _matrix.get_indices()[j];
+            let val = _matrix.get_data()[j];
             result[i] = result[i] + val * x[col];
         }
     }
@@ -744,7 +744,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
 
     #[test]
     fn test_amg_preconditioner_creation() {

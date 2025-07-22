@@ -9,7 +9,7 @@
 //! - GPU backend device detection
 
 use ndarray::{Array1, Array2};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     // Analysis functions
     analysis::{
         image_entropy, image_quality_assessment, image_sharpness, multi_scale_analysis,
@@ -85,7 +85,7 @@ fn demonstrate_device_detection() -> NdimageResult<()> {
     println!("-------------------------------");
 
     // Try to create device manager
-    match scirs2_ndimage::backend::device_detection::get_device_manager() {
+    match scirs2_ndimage::backend::device, _detection::get_device_manager() {
         Ok(manager_arc) => {
             let manager = manager_arc.lock().unwrap();
 
@@ -190,15 +190,15 @@ fn create_test_image() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_quality_assessment(image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_quality_assessment(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("2. Advanced Image Quality Assessment");
     println!("------------------------------------");
 
     // Create a slightly modified version for comparison
-    let noisy_image = image.mapv(|x| (x + 0.02 * rand::random::<f64>()).clamp(0.0, 1.0));
+    let noisy_image = _image.mapv(|x| (x + 0.02 * rand::random::<f64>()).clamp(0.0, 1.0));
 
     // Compute comprehensive quality metrics
-    let metrics = image_quality_assessment(&image.view(), &noisy_image.view())?;
+    let metrics = image_quality_assessment(&_image.view(), &noisy_image.view())?;
 
     println!("  Quality Metrics (comparing original vs. noisy):");
     println!("    PSNR:           {:.2} dB", metrics.psnr);
@@ -213,10 +213,10 @@ fn demonstrate_quality_assessment(image: &Array2<f64>) -> NdimageResult<()> {
     println!("    Local Variance: {:.6}", metrics.local_variance);
 
     // Individual metric demonstrations
-    let entropy = image_entropy(&image.view())?;
-    let sharpness = image_sharpness(&image.view())?;
-    let psnr = peak_signal_to_noise_ratio(&image.view(), &noisy_image.view())?;
-    let ssim = structural_similarity_index(&image.view(), &noisy_image.view())?;
+    let entropy = image_entropy(&_image.view())?;
+    let sharpness = image_sharpness(&_image.view())?;
+    let psnr = peak_signal_to_noise_ratio(&_image.view(), &noisy_image.view())?;
+    let ssim = structural_similarity_index(&_image.view(), &noisy_image.view())?;
 
     println!("\n  Individual Metric Validation:");
     println!("    Image entropy:  {:.2} bits", entropy);
@@ -229,11 +229,11 @@ fn demonstrate_quality_assessment(image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_texture_analysis(image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_texture_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("3. Comprehensive Texture Analysis");
     println!("----------------------------------");
 
-    let texture_metrics = texture_analysis(&image.view(), Some(5))?;
+    let texture_metrics = texture_analysis(&_image.view(), Some(5))?;
 
     println!("  Texture Metrics:");
     println!(
@@ -269,7 +269,7 @@ fn demonstrate_texture_analysis(image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_advanced_filtering(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("4. Advanced Filtering Techniques");
     println!("--------------------------------");
 
@@ -284,7 +284,7 @@ fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
     };
 
     let gabor_result = gabor_filter(
-        &image.view(),
+        &_image.view(),
         &gabor_params,
         Some(15),
         Some(BorderMode::Reflect),
@@ -300,7 +300,7 @@ fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
     );
 
     // Log-Gabor filtering (frequency domain)
-    match log_gabor_filter(&image.view(), 0.1, 1.0, 0.0, std::f64::consts::PI / 6.0) {
+    match log_gabor_filter(&_image.view(), 0.1, 1.0, 0.0, std::f64::consts::PI / 6.0) {
         Ok(log_gabor_result) => {
             println!("  Log-Gabor filter: Applied (center freq: 0.1, bandwidth: 1.0 octave)");
             println!(
@@ -320,7 +320,7 @@ fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
 
     // Steerable filtering
     let steerable_result = steerable_filter(
-        &image.view(),
+        &_image.view(),
         2,
         std::f64::consts::PI / 6.0,
         2.0,
@@ -340,7 +340,7 @@ fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
     );
 
     // Standard filters for comparison
-    let gaussian_result = gaussian_filter(image.clone(), &vec![2.0, 2.0], None, None, None)?;
+    let gaussian_result = gaussian_filter(_image.clone(), &vec![2.0, 2.0], None, None, None)?;
     println!("  Gaussian filter: Applied (sigma: 2.0)");
     println!(
         "    Output range: [{:.3}, {:.3}]",
@@ -354,7 +354,7 @@ fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
             .fold(f64::NEG_INFINITY, f64::max)
     );
 
-    let sobel_result = sobel(&image.clone(), None)?;
+    let sobel_result = sobel(&_image.clone(), None)?;
     println!("  Sobel edge detection: Applied");
     println!(
         "    Output range: [{:.3}, {:.3}]",
@@ -370,12 +370,12 @@ fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_wavelet_analysis(image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_wavelet_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("5. Wavelet Analysis and Denoising");
     println!("----------------------------------");
 
     // Add noise for denoising demonstration
-    let noisy_image = image.mapv(|x| (x + 0.05 * rand::random::<f64>()).clamp(0.0, 1.0));
+    let noisy_image = _image.mapv(|x| (x + 0.05 * rand::random::<f64>()).clamp(0.0, 1.0));
 
     // Test different wavelet families
     let wavelets = [
@@ -389,17 +389,17 @@ fn demonstrate_wavelet_analysis(image: &Array2<f64>) -> NdimageResult<()> {
             Ok(denoised) => {
                 let original_mse = noisy_image
                     .iter()
-                    .zip(image.iter())
+                    .zip(_image.iter())
                     .map(|(&noisy, &orig)| (noisy - orig).powi(2))
                     .sum::<f64>()
-                    / (image.len() as f64);
+                    / (_image.len() as f64);
 
                 let denoised_mse = denoised
                     .iter()
-                    .zip(image.iter())
+                    .zip(_image.iter())
                     .map(|(&denoised_val, &orig)| (denoised_val - orig).powi(2))
                     .sum::<f64>()
-                    / (image.len() as f64);
+                    / (_image.len() as f64);
 
                 println!("  {} wavelet denoising:", name);
                 println!("    Noisy MSE:    {:.6}", original_mse);
@@ -418,7 +418,7 @@ fn demonstrate_wavelet_analysis(image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_multiscale_analysis(image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_multiscale_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("6. Multi-scale Analysis");
     println!("-----------------------");
 
@@ -428,14 +428,14 @@ fn demonstrate_multiscale_analysis(image: &Array2<f64>) -> NdimageResult<()> {
         min_size: 16,
     };
 
-    let multiscale_results = multi_scale_analysis(&image.view(), &config)?;
+    let multiscale_results = multi_scale_analysis(&_image.view(), &config)?;
 
     println!(
         "  Multi-scale quality analysis ({} scales):",
         multiscale_results.len()
     );
     for (i, metrics) in multiscale_results.iter().enumerate() {
-        let scale_size = image.nrows() / (2_usize.pow(i as u32));
+        let scale_size = _image.nrows() / (2_usize.pow(i as u32));
         println!(
             "    Scale {}: {}×{} - Entropy: {:.2}, Sharpness: {:.4}",
             i + 1,
@@ -451,12 +451,12 @@ fn demonstrate_multiscale_analysis(image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_visualization(image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_visualization(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("7. Visualization and Reporting");
     println!("------------------------------");
 
     // Create histogram data
-    let flat_data: Array1<f64> = image.iter().cloned().collect();
+    let flat_data: Array1<f64> = _image.iter().cloned().collect();
 
     // Generate histogram plot
     let plot_config = PlotConfig {
@@ -488,7 +488,7 @@ fn demonstrate_visualization(image: &Array2<f64>) -> NdimageResult<()> {
         ..ReportConfig::default()
     };
 
-    match generate_report(&image.view(), None, None, &report_config) {
+    match generate_report(&_image.view(), None, None, &report_config) {
         Ok(report) => {
             println!("\n  Analysis report generated:");
             // Show first few lines of the report
@@ -519,7 +519,7 @@ fn demonstrate_visualization(image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_performance_comparison(image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstrate_performance_comparison(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("8. Performance Characteristics");
     println!("------------------------------");
 
@@ -527,33 +527,33 @@ fn demonstrate_performance_comparison(image: &Array2<f64>) -> NdimageResult<()> 
 
     // Gaussian filter timing
     let start = Instant::now();
-    let _gaussian = gaussian_filter(image.clone(), &vec![2.0, 2.0], None, None, None)?;
+    let _gaussian = gaussian_filter(_image.clone(), &vec![2.0, 2.0], None, None, None)?;
     let gaussian_time = start.elapsed();
 
     // Sobel filter timing
     let start = Instant::now();
-    let _sobel = sobel(&image.clone(), None)?;
+    let _sobel = sobel(&_image.clone(), None)?;
     let sobel_time = start.elapsed();
 
     // Gabor filter timing
     let gabor_params = GaborParams::default();
     let start = Instant::now();
-    let _gabor = gabor_filter(&image.view(), &gabor_params, Some(15), None)?;
+    let _gabor = gabor_filter(&_image.view(), &gabor_params, Some(15), None)?;
     let gabor_time = start.elapsed();
 
     println!(
-        "  Processing times for {}×{} image:",
-        image.nrows(),
-        image.ncols()
+        "  Processing times for {}×{} _image:",
+        _image.nrows(),
+        _image.ncols()
     );
     println!("    Gaussian filter: {:?}", gaussian_time);
     println!("    Sobel filter:    {:?}", sobel_time);
     println!("    Gabor filter:    {:?}", gabor_time);
 
     // Memory usage estimation
-    let image_size_mb = (image.len() * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0);
+    let image_size_mb = (_image.len() * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0);
     println!("\n  Memory characteristics:");
-    println!("    Input image:     {:.2} MB", image_size_mb);
+    println!("    Input _image:     {:.2} MB", image_size_mb);
     println!(
         "    Typical overhead:{:.2} MB (for intermediate arrays)",
         image_size_mb * 2.0

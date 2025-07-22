@@ -85,7 +85,7 @@ fn main() -> CoreResult<()> {
 
     let memory_result = memory_tester.test_memory_leaks(|| {
         // Test function that should not leak memory
-        let _test_data = vec![0u8; 1000];
+        let test_data = vec![0u8; 1000];
         std::thread::sleep(Duration::from_millis(1)); // Simulate some work
         Ok(())
     })?;

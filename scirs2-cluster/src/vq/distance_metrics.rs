@@ -4,7 +4,7 @@
 //! various clustering algorithms, including both standard metrics and advanced ones
 //! like Mahalanobis distance. SIMD acceleration is provided where possible.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, ScalarOperand};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -260,15 +260,15 @@ where
     /// # Returns
     ///
     /// * Result containing the Mahalanobis distance metric or an error
-    pub fn from_data(data: ArrayView2<F>) -> Result<Self> {
-        let cov_matrix = compute_covariance_matrix(data)?;
+    pub fn from_data(_data: ArrayView2<F>) -> Result<Self> {
+        let cov_matrix = compute_covariance_matrix(_data)?;
         let inv_cov = invert_matrix(cov_matrix)?;
         Ok(Self { inv_cov })
     }
 
     /// Create a Mahalanobis distance metric from a precomputed inverse covariance matrix
-    pub fn from_inv_cov(inv_cov: Array2<F>) -> Self {
-        Self { inv_cov }
+    pub fn from_inv_cov(_inv_cov: Array2<F>) -> Self {
+        Self { _inv_cov }
     }
 }
 
@@ -290,12 +290,12 @@ where
 
 /// Compute the covariance matrix of the given data
 #[allow(dead_code)]
-fn compute_covariance_matrix<F>(data: ArrayView2<F>) -> Result<Array2<F>>
+fn compute_covariance_matrix<F>(_data: ArrayView2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand,
 {
-    let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
+    let n_samples = _data.shape()[0];
+    let n_features = _data.shape()[1];
 
     if n_samples <= 1 {
         return Err(crate::error::ClusteringError::InvalidInput(
@@ -304,13 +304,13 @@ where
     }
 
     // Compute means
-    let means = data.mean_axis(Axis(0)).unwrap();
+    let means = _data.mean_axis(Axis(0)).unwrap();
 
-    // Center the data
+    // Center the _data
     let mut centered_data = Array2::zeros((n_samples, n_features));
     for i in 0..n_samples {
         for j in 0..n_features {
-            centered_data[[i, j]] = data[[i, j]] - means[j];
+            centered_data[[i, j]] = _data[[i, j]] - means[j];
         }
     }
 
@@ -321,12 +321,12 @@ where
 
 /// Simple matrix inversion using LU decomposition
 #[allow(dead_code)]
-fn invert_matrix<F>(matrix: Array2<F>) -> Result<Array2<F>>
+fn invert_matrix<F>(_matrix: Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand,
 {
-    let n = matrix.shape()[0];
-    if n != matrix.shape()[1] {
+    let n = _matrix.shape()[0];
+    if n != _matrix.shape()[1] {
         return Err(crate::error::ClusteringError::InvalidInput(
             "Matrix must be square for inversion".into(),
         ));
@@ -336,10 +336,10 @@ where
     // For production use, consider using ndarray-linalg for better numerical stability
     let mut aug = Array2::zeros((n, 2 * n));
 
-    // Set up augmented matrix [A | I]
+    // Set up augmented _matrix [A | I]
     for i in 0..n {
         for j in 0..n {
-            aug[[i, j]] = matrix[[i, j]];
+            aug[[i, j]] = _matrix[[i, j]];
         }
         aug[[i, n + i]] = F::one();
     }
@@ -387,7 +387,7 @@ where
         }
     }
 
-    // Extract the inverse matrix
+    // Extract the inverse _matrix
     let mut inv = Array2::zeros((n, n));
     for i in 0..n {
         for j in 0..n {

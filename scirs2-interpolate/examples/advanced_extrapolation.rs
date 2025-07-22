@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     make_antisymmetric_boundary, make_cubic_extrapolator, make_exponential_extrapolator,
     make_linear_extrapolator, make_linear_gradient_boundary, make_periodic_boundary,
     make_periodic_extrapolator, make_reflection_extrapolator, make_symmetric_boundary,
@@ -9,11 +9,11 @@ use scirs2_interpolate::{
 
 // Helper to run extrapolation for example points and display results
 #[allow(dead_code)]
-fn demonstrate_extrapolation<F>(name: &str, extrap_values: &[(f64, f64)], f: F)
+fn demonstrate_extrapolation<F>(_name: &str, extrap_values: &[(f64, f64)], f: F)
 where
     F: Fn(f64) -> Result<f64, String>,
 {
-    println!("--- {} Extrapolation ---", name);
+    println!("--- {} Extrapolation ---", _name);
     for &(x, expected) in extrap_values {
         match f(x) {
             Ok(value) => println!(
@@ -291,7 +291,7 @@ fn main() {
                         let diff_b = f64::abs(mapped_x - *b);
                         diff_a.partial_cmp(&diff_b).unwrap()
                     })
-                    .map(|(idx, _)| idx)
+                    .map(|(idx_)| idx)
                     .unwrap();
                 println!(
                     "  f({:.2}) → mapped to: f({:.2}) ≈ {:.6}",
@@ -316,7 +316,7 @@ fn main() {
                         let diff_b = f64::abs(mapped_x - *b);
                         diff_a.partial_cmp(&diff_b).unwrap()
                     })
-                    .map(|(idx, _)| idx)
+                    .map(|(idx_)| idx)
                     .unwrap();
                 println!(
                     "  f({:.2}) → mapped to: f({:.2}) ≈ {:.6}",

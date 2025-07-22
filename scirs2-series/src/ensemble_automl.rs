@@ -405,15 +405,15 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
     }
 
     /// Create meta-model from specification
-    fn create_meta_model(meta_learner: MetaLearner) -> Result<Box<dyn MetaModel<F>>> {
-        match meta_learner {
+    fn create_meta_model(_meta_learner: MetaLearner) -> Result<Box<dyn MetaModel<F>>> {
+        match _meta_learner {
             MetaLearner::LinearRegression => Ok(Box::new(LinearRegressionMeta::new())),
             MetaLearner::RidgeRegression { alpha: _alpha } => {
                 // For simplicity, use linear regression with regularization
                 Ok(Box::new(LinearRegressionMeta::new()))
             }
             _ => Err(TimeSeriesError::NotImplemented(
-                "Meta-learner not yet implemented".to_string(),
+                "Meta-_learner not yet implemented".to_string(),
             )),
         }
     }
@@ -691,19 +691,19 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
         let n = data.len();
         let mut autocorrs = vec![F::zero(); max_lag + 1];
 
-        for lag in 0..=max_lag {
-            if lag >= n {
+        for _lag in 0..=max_lag {
+            if _lag >= n {
                 break;
             }
 
             let mut sum = F::zero();
-            let count = n - lag;
+            let count = n - _lag;
 
-            for i in lag..n {
-                sum = sum + data[i] * data[i - lag];
+            for i in _lag..n {
+                sum = sum + data[i] * data[i - _lag];
             }
 
-            autocorrs[lag] = sum / F::from(count).unwrap();
+            autocorrs[_lag] = sum / F::from(count).unwrap();
         }
 
         Ok(autocorrs)
@@ -1036,13 +1036,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
 
         if let (Some(&level), trend_opt) = (
             model_wrapper.model_state.parameters.get("level"),
-            model_wrapper.model_state.parameters.get("trend"),
+            model_wrapper.model_state.parameters.get("_trend"),
         ) {
-            let trend = trend_opt.cloned().unwrap_or(F::zero());
+            let _trend = trend_opt.cloned().unwrap_or(F::zero());
 
             for step in 0..steps {
                 let h = F::from(step + 1).unwrap();
-                forecasts[step] = if has_trend { level + trend * h } else { level };
+                forecasts[step] = if has_trend { level + _trend * h } else { level };
             }
         }
 
@@ -1258,7 +1258,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> Ensemb
                 }
             }
             EnsembleStrategy::BestModel => {
-                // Use predictions from the best performing model
+                // Use _predictions from the best performing model
                 let best_model_idx = self.find_best_model_index();
                 for step in 0..steps {
                     ensemble_forecast[step] = model_predictions[[step, best_model_idx]];
@@ -1802,7 +1802,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> AutoML
         let max_models = 5; // Maximum models in ensemble
 
         // Select top performing models
-        for (model, _score) in model_scores.iter().take(max_models) {
+        for (model_score) in model_scores.iter().take(max_models) {
             selected_models.push(model.clone());
         }
 

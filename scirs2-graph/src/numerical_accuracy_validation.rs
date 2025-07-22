@@ -297,9 +297,9 @@ impl Default for ValidationConfig {
 
 impl AdvancedNumericalValidator {
     /// Create a new numerical validator
-    pub fn new(config: ValidationConfig) -> Self {
+    pub fn new(_config: ValidationConfig) -> Self {
         Self {
-            config,
+            _config,
             test_cases: Vec::new(),
             tolerances: ValidationTolerances::default(),
             results: Vec::new(),
@@ -360,7 +360,7 @@ impl AdvancedNumericalValidator {
             graph.edge_count()
         );
 
-        // Run validation for each algorithm in the test case
+        // Run validation for each algorithm in the test _case
         for algorithm in &test_case.algorithms {
             println!("    🧮 Validating algorithm: {algorithm:?}");
 
@@ -487,7 +487,7 @@ impl AdvancedNumericalValidator {
             ValidationAlgorithm::ClosenessCentrality => {
                 AlgorithmOutput::ScoreMap(closeness_centrality(graph, false))
             }
-            ValidationAlgorithm::DegreeCentrality => AlgorithmOutput::ScoreMap({
+            ValidationAlgorithm::DegreeCentrality =>, AlgorithmOutput::ScoreMap({
                 let mut degree_map = HashMap::new();
                 for node in graph.nodes() {
                     degree_map.insert(*node, graph.degree(node) as f64);
@@ -743,8 +743,7 @@ impl AdvancedNumericalValidator {
     fn compare_results(
         &self,
         standard: &AlgorithmOutput,
-        advanced: &AlgorithmOutput,
-        _algorithm: &ValidationAlgorithm,
+        advanced: &AlgorithmOutput_algorithm: &ValidationAlgorithm,
     ) -> Result<ValidationMetrics> {
         match (standard, advanced) {
             (AlgorithmOutput::ScoreMap(std_scores), AlgorithmOutput::ScoreMap(ut_scores)) => {
@@ -759,12 +758,11 @@ impl AdvancedNumericalValidator {
             (
                 AlgorithmOutput::AllPairsDistances(std_all),
                 AlgorithmOutput::AllPairsDistances(ut_all),
-            ) => self.compare_all_pairs_distances(std_all, ut_all),
-            _ => Err(crate::error::GraphError::InvalidParameter {
+            ) => self.compare_all_pairs_distances(std_all, ut_all, _ => Err(crate::error::GraphError::InvalidParameter {
                 param: "algorithm_outputs".to_string(),
                 value: "mismatched types".to_string(),
                 expected: "matching output types".to_string(),
-                context: "Mismatched algorithm output types".to_string(),
+                context: "Mismatched _algorithm output types".to_string(),
             }),
         }
     }
@@ -989,7 +987,7 @@ impl AdvancedNumericalValidator {
         indexed_values.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
         let mut ranks = vec![0.0; values.len()];
-        for (rank, (original_index, _)) in indexed_values.iter().enumerate() {
+        for (rank, (original_index_)) in indexed_values.iter().enumerate() {
             ranks[*original_index] = (rank + 1) as f64;
         }
 

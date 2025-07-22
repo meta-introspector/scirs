@@ -120,7 +120,7 @@ impl Default for PartitionerConfig {
 /// Partitioner for dividing data based on distribution characteristics
 pub struct DataPartitioner<T> {
     config: PartitionerConfig,
-    _phantom: PhantomData<T>,
+    phantom: PhantomData<T>,
 }
 
 impl<T> DataPartitioner<T>
@@ -131,7 +131,7 @@ where
     pub fn new(config: PartitionerConfig) -> Self {
         Self {
             config,
-            _phantom: PhantomData,
+            phantom: PhantomData,
         }
     }
 
@@ -476,7 +476,7 @@ where
         for i in 0..num_partitions {
             let weight = if skewness > 0.0 {
                 // Right skew - more weight on early partitions
-                base.powf((num_partitions - i - 1) as f64)
+                base.powf((num_partitions - i.saturating_sub(1)) as f64)
             } else {
                 // Left skew - more weight on later partitions
                 base.powf(i as f64)
@@ -641,14 +641,14 @@ impl LoadBalancer {
     /// Get current load imbalance factor
     pub fn get_imbalance_factor(&self) -> f64 {
         let mut min_time = f64::MAX;
-        let mut max_time = 0.0;
+        let mut max_time = 0.0f64;
 
         for times in &self.execution_times {
             if !times.is_empty() {
                 let avg: f64 =
                     times.iter().map(|d| d.as_secs_f64()).sum::<f64>() / times.len() as f64;
                 min_time = min_time.min(avg);
-                max_time = f64::max(max_time, avg);
+                max_time = max_time.max(avg);
             }
         }
 

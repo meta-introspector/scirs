@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a custom ResNet configuration
     println!("\nCreating a custom ResNet model...");
     let custom_config = ResNetConfig {
-        block: scirs2_neural::models::ResNetBlock::Basic,
+        block: scirs2_neural: models::ResNetBlock::Basic,
         layers: vec![
             scirs2_neural::models::ResNetLayer {
                 blocks: 2,

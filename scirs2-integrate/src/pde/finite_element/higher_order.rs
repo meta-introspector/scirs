@@ -76,10 +76,10 @@ pub struct ShapeFunctions;
 impl ShapeFunctions {
     /// Evaluate shape functions at a point (xi, eta) in reference coordinates
     /// Reference triangle: (0,0), (1,0), (0,1)
-    pub fn evaluate(element_type: ElementType, xi: f64, eta: f64) -> PDEResult<Array1<f64>> {
+    pub fn evaluate(_element_type: ElementType, xi: f64, eta: f64) -> PDEResult<Array1<f64>> {
         let zeta = 1.0 - xi - eta; // Third barycentric coordinate
 
-        match element_type {
+        match _element_type {
             ElementType::Linear => Ok(Self::linear_shape_functions(xi, eta, zeta)),
             ElementType::Quadratic => Ok(Self::quadratic_shape_functions(xi, eta, zeta)),
             ElementType::Cubic => Ok(Self::cubic_shape_functions(xi, eta, zeta)),
@@ -103,16 +103,16 @@ impl ShapeFunctions {
     }
 
     /// Linear shape functions (P1)
-    fn linear_shape_functions(xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
+    fn linear_shape_functions(_xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
         Array1::from_vec(vec![
-            zeta, // N1 = 1 - xi - eta
-            xi,   // N2 = xi
+            zeta, // N1 = 1 - _xi - eta
+            _xi,   // N2 = _xi
             eta,  // N3 = eta
         ])
     }
 
     /// Linear shape function derivatives
-    fn linear_shape_derivatives(_xi: f64, _eta: f64, _zeta: f64) -> (Array1<f64>, Array1<f64>) {
+    fn linear_shape_derivatives(_xi: f64_eta: f64, _zeta: f64) -> (Array1<f64>, Array1<f64>) {
         let dxi = Array1::from_vec(vec![-1.0, 1.0, 0.0]);
         let deta = Array1::from_vec(vec![-1.0, 0.0, 1.0]);
         (dxi, deta)
@@ -120,24 +120,24 @@ impl ShapeFunctions {
 
     /// Quadratic shape functions (P2)
     /// Node ordering: 3 corners + 3 mid-edge nodes
-    fn quadratic_shape_functions(xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
+    fn quadratic_shape_functions(_xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
         Array1::from_vec(vec![
             zeta * (2.0 * zeta - 1.0), // N1: corner node 1
-            xi * (2.0 * xi - 1.0),     // N2: corner node 2
+            _xi * (2.0 * _xi - 1.0),     // N2: corner node 2
             eta * (2.0 * eta - 1.0),   // N3: corner node 3
-            4.0 * xi * zeta,           // N4: mid-edge node 1-2
-            4.0 * xi * eta,            // N5: mid-edge node 2-3
+            4.0 * _xi * zeta,           // N4: mid-edge node 1-2
+            4.0 * _xi * eta,            // N5: mid-edge node 2-3
             4.0 * eta * zeta,          // N6: mid-edge node 3-1
         ])
     }
 
     /// Quadratic shape function derivatives
-    fn quadratic_shape_derivatives(xi: f64, eta: f64, zeta: f64) -> (Array1<f64>, Array1<f64>) {
+    fn quadratic_shape_derivatives(_xi: f64, eta: f64, zeta: f64) -> (Array1<f64>, Array1<f64>) {
         let dxi = Array1::from_vec(vec![
             1.0 - 4.0 * zeta,  // dN1/dxi
-            4.0 * xi - 1.0,    // dN2/dxi
+            4.0 * _xi - 1.0,    // dN2/dxi
             0.0,               // dN3/dxi
-            4.0 * (zeta - xi), // dN4/dxi
+            4.0 * (zeta - _xi), // dN4/dxi
             4.0 * eta,         // dN5/dxi
             -4.0 * eta,        // dN6/dxi
         ]);
@@ -146,8 +146,8 @@ impl ShapeFunctions {
             1.0 - 4.0 * zeta,   // dN1/deta
             0.0,                // dN2/deta
             4.0 * eta - 1.0,    // dN3/deta
-            -4.0 * xi,          // dN4/deta
-            4.0 * xi,           // dN5/deta
+            -4.0 * _xi,          // dN4/deta
+            4.0 * _xi,           // dN5/deta
             4.0 * (zeta - eta), // dN6/deta
         ]);
 
@@ -156,43 +156,43 @@ impl ShapeFunctions {
 
     /// Cubic shape functions (P3)
     /// Node ordering: 3 corners + 6 edge nodes (2 per edge) + 1 internal node
-    fn cubic_shape_functions(xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
+    fn cubic_shape_functions(_xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
         Array1::from_vec(vec![
             // Corner nodes
             zeta * (3.0 * zeta - 1.0) * (3.0 * zeta - 2.0) / 2.0, // N1
-            xi * (3.0 * xi - 1.0) * (3.0 * xi - 2.0) / 2.0,       // N2
+            _xi * (3.0 * _xi - 1.0) * (3.0 * _xi - 2.0) / 2.0,       // N2
             eta * (3.0 * eta - 1.0) * (3.0 * eta - 2.0) / 2.0,    // N3
             // Edge nodes (2 nodes per edge)
-            9.0 * xi * zeta * (3.0 * zeta - 1.0) / 2.0, // N4: edge 1-2, node 1
-            9.0 * xi * zeta * (3.0 * xi - 1.0) / 2.0,   // N5: edge 1-2, node 2
-            9.0 * xi * eta * (3.0 * xi - 1.0) / 2.0,    // N6: edge 2-3, node 1
-            9.0 * xi * eta * (3.0 * eta - 1.0) / 2.0,   // N7: edge 2-3, node 2
+            9.0 * _xi * zeta * (3.0 * zeta - 1.0) / 2.0, // N4: edge 1-2, node 1
+            9.0 * _xi * zeta * (3.0 * _xi - 1.0) / 2.0,   // N5: edge 1-2, node 2
+            9.0 * _xi * eta * (3.0 * _xi - 1.0) / 2.0,    // N6: edge 2-3, node 1
+            9.0 * _xi * eta * (3.0 * eta - 1.0) / 2.0,   // N7: edge 2-3, node 2
             9.0 * eta * zeta * (3.0 * eta - 1.0) / 2.0, // N8: edge 3-1, node 1
             9.0 * eta * zeta * (3.0 * zeta - 1.0) / 2.0, // N9: edge 3-1, node 2
             // Internal node
-            27.0 * xi * eta * zeta, // N10: internal node
+            27.0 * _xi * eta * zeta, // N10: internal node
         ])
     }
 
     /// Cubic shape function derivatives
-    fn cubic_shape_derivatives(xi: f64, eta: f64, zeta: f64) -> (Array1<f64>, Array1<f64>) {
+    fn cubic_shape_derivatives(_xi: f64, eta: f64, zeta: f64) -> (Array1<f64>, Array1<f64>) {
         let dxi = Array1::from_vec(vec![
-            // Corner nodes derivatives w.r.t xi
+            // Corner nodes derivatives w.r.t _xi
             -(3.0 * zeta - 1.0) * (3.0 * zeta - 2.0) / 2.0
                 - zeta * 3.0 * (3.0 * zeta - 2.0) / 2.0
                 - zeta * (3.0 * zeta - 1.0) * 3.0 / 2.0,
-            (3.0 * xi - 1.0) * (3.0 * xi - 2.0) / 2.0
-                + xi * 3.0 * (3.0 * xi - 2.0) / 2.0
-                + xi * (3.0 * xi - 1.0) * 3.0 / 2.0,
+            (3.0 * _xi - 1.0) * (3.0 * _xi - 2.0) / 2.0
+                + _xi * 3.0 * (3.0 * _xi - 2.0) / 2.0
+                + _xi * (3.0 * _xi - 1.0) * 3.0 / 2.0,
             0.0,
-            // Edge nodes derivatives w.r.t xi
-            9.0 * zeta * (3.0 * zeta - 1.0) / 2.0 - 9.0 * xi * zeta * 3.0 / 2.0,
-            9.0 * zeta * (3.0 * xi - 1.0) / 2.0 + 9.0 * xi * zeta * 3.0 / 2.0,
-            9.0 * eta * (3.0 * xi - 1.0) / 2.0 + 9.0 * xi * eta * 3.0 / 2.0,
+            // Edge nodes derivatives w.r.t _xi
+            9.0 * zeta * (3.0 * zeta - 1.0) / 2.0 - 9.0 * _xi * zeta * 3.0 / 2.0,
+            9.0 * zeta * (3.0 * _xi - 1.0) / 2.0 + 9.0 * _xi * zeta * 3.0 / 2.0,
+            9.0 * eta * (3.0 * _xi - 1.0) / 2.0 + 9.0 * _xi * eta * 3.0 / 2.0,
             9.0 * eta * (3.0 * eta - 1.0) / 2.0,
             -9.0 * eta * zeta * 3.0 / 2.0,
             -9.0 * eta * zeta * 3.0 / 2.0,
-            // Internal node derivative w.r.t xi
+            // Internal node derivative w.r.t _xi
             27.0 * eta * zeta,
         ]);
 
@@ -206,14 +206,14 @@ impl ShapeFunctions {
                 + eta * 3.0 * (3.0 * eta - 2.0) / 2.0
                 + eta * (3.0 * eta - 1.0) * 3.0 / 2.0,
             // Edge nodes derivatives w.r.t eta
-            -9.0 * xi * zeta * 3.0 / 2.0,
-            -9.0 * xi * zeta * 3.0 / 2.0,
-            9.0 * xi * (3.0 * xi - 1.0) / 2.0,
-            9.0 * xi * (3.0 * eta - 1.0) / 2.0 + 9.0 * xi * eta * 3.0 / 2.0,
+            -9.0 * _xi * zeta * 3.0 / 2.0,
+            -9.0 * _xi * zeta * 3.0 / 2.0,
+            9.0 * _xi * (3.0 * _xi - 1.0) / 2.0,
+            9.0 * _xi * (3.0 * eta - 1.0) / 2.0 + 9.0 * _xi * eta * 3.0 / 2.0,
             9.0 * zeta * (3.0 * eta - 1.0) / 2.0 + 9.0 * eta * zeta * 3.0 / 2.0,
             9.0 * zeta * (3.0 * zeta - 1.0) / 2.0 - 9.0 * eta * zeta * 3.0 / 2.0,
             // Internal node derivative w.r.t eta
-            27.0 * xi * zeta,
+            27.0 * _xi * zeta,
         ]);
 
         (dxi, deta)
@@ -226,14 +226,13 @@ pub struct TriangularQuadrature;
 impl TriangularQuadrature {
     /// Get quadrature points and weights for a given order
     /// Returns (xi_coords, eta_coords, weights)
-    pub fn get_rule(order: usize) -> PDEResult<(Array1<f64>, Array1<f64>, Array1<f64>)> {
-        match order {
+    pub fn get_rule(_order: usize) -> PDEResult<(Array1<f64>, Array1<f64>, Array1<f64>)> {
+        match _order {
             1 => Ok(Self::order_1()),
             3 => Ok(Self::order_3()),
             6 => Ok(Self::order_6()),
-            12 => Ok(Self::order_12()),
-            _ => Err(PDEError::FiniteElementError(format!(
-                "Quadrature rule of order {order} is not implemented"
+            12 => Ok(Self::order_12(), _ => Err(PDEError::FiniteElementError(format!(
+                "Quadrature rule of _order {_order} is not implemented"
             ))),
         }
     }
@@ -434,7 +433,7 @@ impl HigherOrderMeshGenerator {
             let p1 = &points[n1];
             let p2 = &points[n2];
 
-            // Create two nodes at 1/3 and 2/3 along the edge
+            // Create two _nodes at 1/3 and 2/3 along the edge
             let node1_pos = Point::new(p1.x + (p2.x - p1.x) / 3.0, p1.y + (p2.y - p1.y) / 3.0);
             let node2_pos = Point::new(
                 p1.x + 2.0 * (p2.x - p1.x) / 3.0,
@@ -519,15 +518,15 @@ mod tests {
     #[test]
     fn test_quadrature_rules() {
         // Test that weights sum to area of reference triangle (0.5)
-        let (_, _, weights) = TriangularQuadrature::get_rule(1).unwrap();
+        let (__, weights) = TriangularQuadrature::get_rule(1).unwrap();
         let sum: f64 = weights.iter().sum();
         assert_relative_eq!(sum, 0.5, epsilon = 1e-12);
 
-        let (_, _, weights) = TriangularQuadrature::get_rule(3).unwrap();
+        let (__, weights) = TriangularQuadrature::get_rule(3).unwrap();
         let sum: f64 = weights.iter().sum();
         assert_relative_eq!(sum, 0.5, epsilon = 1e-12);
 
-        let (_, _, weights) = TriangularQuadrature::get_rule(6).unwrap();
+        let (__, weights) = TriangularQuadrature::get_rule(6).unwrap();
         let sum: f64 = weights.iter().sum();
         assert_relative_eq!(sum, 0.5, epsilon = 1e-12);
     }

@@ -4,13 +4,13 @@
 //! arbitrary memory layouts and striding patterns.
 
 use ndarray::{ArrayBase, Data, Dimension};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use rustfft::FftPlanner;
 use std::sync::Arc;
 
 use crate::error::{FFTError, FFTResult};
-use crate::plan_cache::get_global_cache;
+use crate::plan__cache::get_global_cache;
 
 /// Execute FFT on strided data with optimal memory access
 #[allow(dead_code)]

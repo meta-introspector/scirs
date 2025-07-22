@@ -4,6 +4,7 @@ use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView2, Axis};
 use num_traits::Float;
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 
 /// Global explainer for model-level insights
 pub struct GlobalExplainer<F: Float> {
@@ -29,8 +30,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Self {
             n_samples: 1000,
             n_bootstrap: 100,
-            random_seed: None,
-            _phantom: std::marker::PhantomData,
+            random_seed: None, _phantom: std::marker::PhantomData,
         }
     }
 
@@ -220,12 +220,12 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
             }
         }
 
-        // Compute higher-order interactions if requested
+        // Compute higher-_order interactions if requested
         if max_interaction_order > 2 {
-            for order in 3..=max_interaction_order.min(n_features) {
+            for _order in 3..=max_interaction_order.min(n_features) {
                 let interactions =
-                    self.compute_higher_order_interactions(model, x_data, feature_names, order)?;
-                higher_order_interactions.insert(order, interactions);
+                    self.compute_higher_order_interactions(model, x_data, feature_names, _order)?;
+                higher_order_interactions.insert(_order, interactions);
             }
         }
 
@@ -456,11 +456,11 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
 
             let mut modified = instance.to_owned();
 
-            // Perturb feature i
+            // Perturb feature _i
             modified[feature_i] = val_i + self.get_feature_std(x_data, feature_i)?;
             let pred_i = model(&modified.clone().insert_axis(Axis(0)).view())[0];
 
-            // Perturb feature j
+            // Perturb feature _j
             modified[feature_i] = val_i;
             modified[feature_j] = val_j + self.get_feature_std(x_data, feature_j)?;
             let pred_j = model(&modified.clone().insert_axis(Axis(0)).view())[0];
@@ -483,16 +483,12 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     }
 
     fn compute_higher_order_interactions<M>(
-        &self,
-        _model: &M,
-        _x_data: &Array2<F>,
-        _feature_names: &[String],
-        _order: usize,
+        &self_model: &M_x, _data: &Array2<F>, _feature_names: &[String], _order: usize,
     ) -> Result<HashMap<String, F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        // Simplified higher-order interaction computation
+        // Simplified higher-_order interaction computation
         // In practice, this would use ANOVA decomposition or other methods
         Ok(HashMap::new())
     }
@@ -598,7 +594,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
     }
 
     fn compute_sample_coverage(&self, x_data: &Array2<F>) -> Result<F> {
-        // Simplified coverage metric based on data distribution
+        // Simplified coverage metric based on _data distribution
         let n_features = x_data.ncols();
         let mut coverage_score = F::zero();
 
@@ -692,7 +688,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> GlobalExplainer<F> {
         Ok(original_variance - baseline_variance)
     }
 
-    fn estimate_effective_dof<M>(&self, _model: &M, x_data: &Array2<F>) -> Result<F>
+    fn estimate_effective_dof<M>(&self_model: &M, x_data: &Array2<F>) -> Result<F>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {

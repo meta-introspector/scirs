@@ -41,12 +41,12 @@ impl<F: Float + Debug + Send + Sync + 'static> GradientTape<F> {
     /// # Returns
     ///
     /// A new GradientTape instance
-    pub fn new(persistent: bool) -> Self {
+    pub fn new(_persistent: bool) -> Self {
         Self {
             graph: Mutex::new(Graph::new()),
             watched_tensors: Mutex::new(HashSet::new()),
             is_recording: Mutex::new(true),
-            persistent,
+            _persistent,
         }
     }
 
@@ -206,9 +206,9 @@ impl<F: Float + Debug + Send + Sync + 'static> GradientContext<F> {
     /// # Returns
     ///
     /// A new GradientContext instance
-    pub fn new(persistent: bool) -> Self {
+    pub fn new(_persistent: bool) -> Self {
         Self {
-            tape: Arc::new(GradientTape::new(persistent)),
+            tape: Arc::new(GradientTape::new(_persistent)),
         }
     }
 

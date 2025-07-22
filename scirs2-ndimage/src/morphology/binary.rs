@@ -53,7 +53,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Basic 2D erosion
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_ndimage::morphology::binary_erosion;
+/// use scirs2__ndimage::morphology::binary_erosion;
 ///
 /// // Create a simple 3x3 array filled with true values
 /// let input = Array2::from_elem((3, 3), true);
@@ -68,7 +68,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Custom structuring element
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::morphology::binary_erosion;
+/// use scirs2__ndimage::morphology::binary_erosion;
 ///
 /// let input = array![
 ///     [true,  true,  true,  true,  true],
@@ -92,7 +92,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Multiple iterations for heavy erosion
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_ndimage::morphology::binary_erosion;
+/// use scirs2__ndimage::morphology::binary_erosion;
 ///
 /// // Create a larger filled region
 /// let input = Array2::from_elem((10, 10), true);
@@ -107,7 +107,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Using a mask to limit erosion area
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::morphology::binary_erosion;
+/// use scirs2__ndimage::morphology::binary_erosion;
 ///
 /// let input = Array2::from_elem((5, 5), true);
 ///
@@ -127,7 +127,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## 1D signal processing
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_ndimage::morphology::binary_erosion;
+/// use scirs2__ndimage::morphology::binary_erosion;
 ///
 /// let signal = Array1::from_vec(vec![false, true, true, true, false]);
 /// let eroded = binary_erosion(&signal, None, None, None, None, None, None).unwrap();
@@ -386,13 +386,13 @@ fn binary_erosion1d(
 
                 // Check if position is within bounds
                 if pos < 0 || pos >= prev.len() as isize {
-                    // Outside bounds - use border value
+                    // Outside bounds - use border _value
                     if !border_val {
                         fits = false;
                         break;
                     }
                 } else if !prev[pos as usize] {
-                    // Position is within bounds but value is false
+                    // Position is within bounds but _value is false
                     fits = false;
                     break;
                 }
@@ -501,13 +501,13 @@ fn binary_erosion2d(
 
                         // Check if position is within bounds
                         if ni < 0 || ni >= shape[0] as isize || nj < 0 || nj >= shape[1] as isize {
-                            // Outside bounds - use border value
+                            // Outside bounds - use border _value
                             if !border_val {
                                 fits = false;
                                 break 'outer;
                             }
                         } else if !prev[[ni as usize, nj as usize]] {
-                            // Position is within bounds but value is false
+                            // Position is within bounds but _value is false
                             fits = false;
                             break 'outer;
                         }
@@ -537,8 +537,7 @@ fn binary_erosion_dyn(
     iterations: Option<usize>,
     mask: Option<&Array<bool, IxDyn>>,
     border_value: Option<bool>,
-    origin: Option<&[isize]>,
-    _brute_force: Option<bool>,
+    origin: Option<&[isize]>, _brute_force: Option<bool>,
 ) -> NdimageResult<Array<bool, IxDyn>> {
     let iterations = iterations.unwrap_or(1);
     let border = border_value.unwrap_or(false);
@@ -614,7 +613,7 @@ fn binary_erosion_dyn(
                     }
                 }
 
-                // Get the value, using border value if out of bounds
+                // Get the _value, using border _value if out of bounds
                 let val = if within_bounds {
                     let input_idx: Vec<_> = input_pos.iter().map(|&x| x as usize).collect();
                     temp[input_idx.as_slice()]
@@ -892,7 +891,7 @@ fn binary_dilation1d(
                 }
             }
 
-            // Initialize current position value
+            // Initialize current position _value
             *val = prev[i];
 
             // If position is already true, no need to check neighbors
@@ -912,13 +911,13 @@ fn binary_dilation1d(
 
                 // Check if position is within bounds
                 if pos < 0 || pos >= prev.len() as isize {
-                    // Outside bounds - use border value
+                    // Outside bounds - use border _value
                     if border_val {
                         *val = true;
                         break;
                     }
                 } else if prev[pos as usize] {
-                    // Position has a true value in input
+                    // Position has a true _value in input
                     *val = true;
                     break;
                 }
@@ -1009,7 +1008,7 @@ fn binary_dilation2d(
                     }
                 }
 
-                // Copy current value first
+                // Copy current _value first
                 temp[[i, j]] = prev[[i, j]];
 
                 // If already true, skip checking neighbors
@@ -1033,13 +1032,13 @@ fn binary_dilation2d(
 
                         // Check if neighbor position is within bounds
                         if ni < 0 || ni >= shape[0] as isize || nj < 0 || nj >= shape[1] as isize {
-                            // Outside bounds - use border value
+                            // Outside bounds - use border _value
                             if border_val {
                                 found_true = true;
                                 break 'outer;
                             }
                         } else if prev[[ni as usize, nj as usize]] {
-                            // Position is within bounds and value is true
+                            // Position is within bounds and _value is true
                             found_true = true;
                             break 'outer;
                         }
@@ -1071,8 +1070,7 @@ fn binary_dilation_dyn(
     iterations: Option<usize>,
     mask: Option<&Array<bool, IxDyn>>,
     border_value: Option<bool>,
-    origin: Option<&[isize]>,
-    _brute_force: Option<bool>,
+    origin: Option<&[isize]>, _brute_force: Option<bool>,
 ) -> NdimageResult<Array<bool, IxDyn>> {
     let iterations = iterations.unwrap_or(1);
     let border = border_value.unwrap_or(false);
@@ -1121,7 +1119,7 @@ fn binary_dilation_dyn(
                 }
             }
 
-            // Check if any structure element touches a true value
+            // Check if any structure element touches a true _value
             let mut any_fit = false;
 
             // Check each structure element
@@ -1148,7 +1146,7 @@ fn binary_dilation_dyn(
                     }
                 }
 
-                // Get the value, using border value if out of bounds
+                // Get the _value, using border _value if out of bounds
                 let val = if within_bounds {
                     let input_idx: Vec<_> = input_pos.iter().map(|&x| x as usize).collect();
                     temp[input_idx.as_slice()]
@@ -1156,7 +1154,7 @@ fn binary_dilation_dyn(
                     border
                 };
 
-                // Dilation requires at least one value to be true
+                // Dilation requires at least one _value to be true
                 if val {
                     any_fit = true;
                     break;
@@ -1292,9 +1290,7 @@ where
 /// * `Result<Array<bool, D>>` - Array with filled holes
 #[allow(dead_code)]
 pub fn binary_fill_holes<D>(
-    input: &Array<bool, D>,
-    _structure: Option<&Array<bool, D>>,
-    _origin: Option<&[isize]>,
+    input: &Array<bool, D>, _structure: Option<&Array<bool, D>>, _origin: Option<&[isize]>,
 ) -> NdimageResult<Array<bool, D>>
 where
     D: Dimension + 'static,
@@ -1328,7 +1324,7 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_ndimage::morphology::binary_hit_or_miss;
+/// use scirs2__ndimage::morphology::binary_hit_or_miss;
 ///
 /// // Create a binary image with a specific pattern
 /// let mut input = Array2::from_elem((5, 5), false);
@@ -1405,13 +1401,7 @@ where
 /// Apply binary hit-or-miss transform to a 1D array
 #[allow(dead_code)]
 fn binary_hit_or_miss_1d<D>(
-    input: &Array<bool, ndarray::Ix1>,
-    _structure1: Option<&Array<bool, D>>,
-    _structure2: Option<&Array<bool, D>>,
-    _mask: Option<&Array<bool, D>>,
-    _border_value: Option<bool>,
-    _origin1: Option<&[isize]>,
-    _origin2: Option<&[isize]>,
+    input: &Array<bool, ndarray::Ix1>, _structure1: Option<&Array<bool, D>>, _structure2: Option<&Array<bool, D>>, _mask: Option<&Array<bool, D>>, _border_value: Option<bool>, _origin1: Option<&[isize]>, _origin2: Option<&[isize]>,
 ) -> NdimageResult<Array<bool, ndarray::Ix1>>
 where
     D: Dimension + 'static,

@@ -5,6 +5,7 @@
 //! (z-score), min-max scaling, and robust scaling that is resistant to outliers.
 
 use ndarray::Array2;
+use statrs::statistics::Statistics;
 
 /// Helper function to normalize data (zero mean, unit variance)
 ///
@@ -20,18 +21,18 @@ use ndarray::Array2;
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_datasets::utils::normalize;
+/// use scirs2__datasets::utils::normalize;
 ///
 /// let mut data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 /// normalize(&mut data);
 /// // data is now normalized with zero mean and unit variance for each feature
 /// ```
 #[allow(dead_code)]
-pub fn normalize(data: &mut Array2<f64>) {
-    let n_features = data.ncols();
+pub fn normalize(_data: &mut Array2<f64>) {
+    let n_features = _data.ncols();
 
     for j in 0..n_features {
-        let mut column = data.column_mut(j);
+        let mut column = _data.column_mut(j);
 
         // Calculate mean and std
         let mean = column.mean().unwrap_or(0.0);
@@ -58,19 +59,19 @@ pub fn normalize(data: &mut Array2<f64>) {
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_datasets::utils::min_max_scale;
+/// use scirs2__datasets::utils::min_max_scale;
 ///
 /// let mut data = Array2::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap();
 /// min_max_scale(&mut data, (0.0, 1.0));
 /// // Features are now scaled to [0, 1] range
 /// ```
 #[allow(dead_code)]
-pub fn min_max_scale(data: &mut Array2<f64>, feature_range: (f64, f64)) {
+pub fn min_max_scale(_data: &mut Array2<f64>, feature_range: (f64, f64)) {
     let (range_min, range_max) = feature_range;
     let range_size = range_max - range_min;
 
-    for j in 0..data.ncols() {
-        let mut column = data.column_mut(j);
+    for j in 0.._data.ncols() {
+        let mut column = _data.column_mut(j);
 
         // Find min and max values in the column
         let col_min = column.iter().fold(f64::INFINITY, |a, &b| a.min(b));
@@ -80,7 +81,7 @@ pub fn min_max_scale(data: &mut Array2<f64>, feature_range: (f64, f64)) {
         if (col_max - col_min).abs() > 1e-10 {
             column.mapv_inplace(|x| (x - col_min) / (col_max - col_min) * range_size + range_min);
         } else {
-            // If all values are the same, set to the middle of the range
+            // If all values are the same, set to the middle of the _range
             column.fill(range_min + range_size / 2.0);
         }
     }
@@ -100,16 +101,16 @@ pub fn min_max_scale(data: &mut Array2<f64>, feature_range: (f64, f64)) {
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_datasets::utils::robust_scale;
+/// use scirs2__datasets::utils::robust_scale;
 ///
 /// let mut data = Array2::from_shape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 100.0, 500.0]).unwrap();
 /// robust_scale(&mut data);
 /// // Features are now robustly scaled using median and IQR
 /// ```
 #[allow(dead_code)]
-pub fn robust_scale(data: &mut Array2<f64>) {
-    for j in 0..data.ncols() {
-        let mut column_values: Vec<f64> = data.column(j).to_vec();
+pub fn robust_scale(_data: &mut Array2<f64>) {
+    for j in 0.._data.ncols() {
+        let mut column_values: Vec<f64> = _data.column(j).to_vec();
         column_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let n = column_values.len();
@@ -132,7 +133,7 @@ pub fn robust_scale(data: &mut Array2<f64>) {
         let iqr = q3 - q1;
 
         // Scale the column
-        let mut column = data.column_mut(j);
+        let mut column = _data.column_mut(j);
         if iqr > 1e-10 {
             column.mapv_inplace(|x| (x - median) / iqr);
         } else {

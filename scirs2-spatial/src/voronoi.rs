@@ -11,7 +11,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::voronoi::Voronoi;
+//! use scirs2__spatial::voronoi::Voronoi;
 //! use ndarray::array;
 //!
 //! // Create a set of 2D points
@@ -91,7 +91,7 @@ impl Voronoi {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::voronoi::Voronoi;
+    /// use scirs2__spatial::voronoi::Voronoi;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -103,38 +103,38 @@ impl Voronoi {
     ///
     /// let vor = Voronoi::new(&points.view(), false).unwrap();
     /// ```
-    pub fn new(points: &ArrayView2<'_, f64>, furthest_site: bool) -> SpatialResult<Self> {
-        let npoints = points.nrows();
-        let ndim = points.ncols();
+    pub fn new(_points: &ArrayView2<'_, f64>, furthest_site: bool) -> SpatialResult<Self> {
+        let npoints = _points.nrows();
+        let ndim = _points.ncols();
 
         // Special case for small point sets
         if ndim == 2 {
-            // Handle triangle manually (3 points in 2D)
+            // Handle triangle manually (3 _points in 2D)
             if npoints == 3 {
-                return Self::special_case_triangle(points, furthest_site);
+                return Self::special_case_triangle(_points, furthest_site);
             }
 
-            // Handle square manually (4 points in 2D)
+            // Handle square manually (4 _points in 2D)
             if npoints == 4 {
                 // Check if it forms a square-like pattern
-                let [[x0, y0], [x1, y1], [x2, y2], [_x3, _y3]] = [
-                    [points[[0, 0]], points[[0, 1]]],
-                    [points[[1, 0]], points[[1, 1]]],
-                    [points[[2, 0]], points[[2, 1]]],
-                    [points[[3, 0]], points[[3, 1]]],
+                let [[x0, y0], [x1, y1], [x2, y2], [_x3_y3]] = [
+                    [_points[[0, 0]], _points[[0, 1]]],
+                    [_points[[1, 0]], _points[[1, 1]]],
+                    [_points[[2, 0]], _points[[2, 1]]],
+                    [_points[[3, 0]], _points[[3, 1]]],
                 ];
 
-                // If points approximately form a square or rectangle
+                // If _points approximately form a square or rectangle
                 if ((x0 - x1).abs() < 1e-10 && (y0 - y2).abs() < 1e-10)
                     || ((x0 - x2).abs() < 1e-10 && (y0 - y1).abs() < 1e-10)
                 {
-                    return Self::special_case_square(points, furthest_site);
+                    return Self::special_case_square(_points, furthest_site);
                 }
             }
         }
 
         // Try the normal approach via Delaunay triangulation
-        match Delaunay::new(&points.to_owned()) {
+        match Delaunay::new(&_points.to_owned()) {
             Ok(delaunay) => {
                 // Compute the Voronoi diagram from the Delaunay triangulation
                 match Self::from_delaunay(delaunay, furthest_site) {
@@ -142,23 +142,23 @@ impl Voronoi {
                     Err(_) => {
                         // If conversion fails, try special cases
                         if ndim == 2 && npoints == 3 {
-                            Self::special_case_triangle(points, furthest_site)
+                            Self::special_case_triangle(_points, furthest_site)
                         } else if ndim == 2 && npoints == 4 {
-                            Self::special_case_square(points, furthest_site)
+                            Self::special_case_square(_points, furthest_site)
                         } else {
-                            // Add a small perturbation to points and retry
-                            let mut perturbed_points = points.to_owned();
+                            // Add a small perturbation to _points and retry
+                            let mut perturbed_points = _points.to_owned();
                             use rand::Rng;
                             let mut rng = rand::rng();
 
                             for i in 0..npoints {
                                 for j in 0..ndim {
-                                    perturbed_points[[i, j]] += rng.random_range(-0.001..0.001);
+                                    perturbed_points[[i, j]] += rng.gen_range(-0.001..0.001);
                                 }
                             }
 
                             match Delaunay::new(&perturbed_points) {
-                                Ok(delaunay) => Self::from_delaunay(delaunay, furthest_site),
+                                Ok(delaunay) => Self::from_delaunay(delaunay..furthest_site),
                                 Err(e) => Err(SpatialError::ComputationError(format!(
                                     "Voronoi computation failed: {e}"
                                 ))),
@@ -170,12 +170,12 @@ impl Voronoi {
             Err(_) => {
                 // Handle special cases directly
                 if ndim == 2 && npoints == 3 {
-                    Self::special_case_triangle(points, furthest_site)
+                    Self::special_case_triangle(_points, furthest_site)
                 } else if ndim == 2 && npoints == 4 {
-                    Self::special_case_square(points, furthest_site)
+                    Self::special_case_square(_points, furthest_site)
                 } else {
                     Err(SpatialError::ComputationError(
-                        "Could not compute Voronoi diagram - too few points or degenerate configuration".to_string()
+                        "Could not compute Voronoi diagram - too few _points or degenerate configuration".to_string()
                     ))
                 }
             }
@@ -316,13 +316,13 @@ impl Voronoi {
     /// # Returns
     ///
     /// * Result containing a Voronoi diagram or an error
-    fn from_delaunay(delaunay: Delaunay, furthest_site: bool) -> SpatialResult<Self> {
-        let points = delaunay.points().clone();
+    fn from_delaunay(_delaunay: Delaunay, furthest_site: bool) -> SpatialResult<Self> {
+        let points = _delaunay.points().clone();
         let ndim = points.ncols();
         let npoints = points.nrows();
 
         // Compute Voronoi vertices as the circumcenters of the Delaunay simplices
-        let simplices = delaunay.simplices();
+        let simplices = _delaunay.simplices();
         let mut voronoi_vertices = Vec::new();
 
         for simplex in simplices {
@@ -352,7 +352,7 @@ impl Voronoi {
         let mut ridge_map: HashMap<(usize, usize), Vec<i64>> = HashMap::new();
 
         // Go through simplices and build the ridge map
-        let neighbors = delaunay.neighbors();
+        let neighbors = _delaunay.neighbors();
 
         for (i, simplex) in simplices.iter().enumerate() {
             for (j, &neighbor_idx) in neighbors[i].iter().enumerate() {
@@ -611,7 +611,7 @@ impl Voronoi {
     /// # Returns
     ///
     /// * true if this is a furthest-site Voronoi diagram, false otherwise
-    pub fn is_furthest_site(&self) -> bool {
+    pub fn is_furthest_site() -> bool {
         self.furthest_site
     }
 }
@@ -630,7 +630,7 @@ impl Voronoi {
 /// # Examples
 ///
 /// ```
-/// use scirs2_spatial::voronoi::voronoi;
+/// use scirs2__spatial::voronoi::voronoi;
 /// use ndarray::array;
 ///
 /// let points = array![
@@ -643,8 +643,8 @@ impl Voronoi {
 /// let vor = voronoi(&points.view(), false).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn voronoi(points: &ArrayView2<'_, f64>, furthest_site: bool) -> SpatialResult<Voronoi> {
-    Voronoi::new(points, furthest_site)
+pub fn voronoi(_points: &ArrayView2<'_, f64>, furthest_site: bool) -> SpatialResult<Voronoi> {
+    Voronoi::new(_points, furthest_site)
 }
 
 #[cfg(test)]

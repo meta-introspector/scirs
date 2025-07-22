@@ -52,7 +52,7 @@ pub fn detect_and_compute(
 ) -> Result<Vec<Descriptor>> {
     // Convert to grayscale
     let gray = img.to_luma8();
-    let (_width, _height) = gray.dimensions();
+    let (_width_height) = gray.dimensions();
 
     // Convert to array for easier processing
     let array = image_to_array(img)?;
@@ -317,11 +317,11 @@ pub fn match_descriptors(
 ///
 /// * Euclidean distance
 #[allow(dead_code)]
-fn euclidean_distance(vec1: &[f32], vec2: &[f32]) -> f32 {
+fn euclidean_distance(_vec1: &[f32], vec2: &[f32]) -> f32 {
     let mut sum_sq = 0.0;
 
-    for i in 0..vec1.len().min(vec2.len()) {
-        let diff = vec1[i] - vec2[i];
+    for i in 0.._vec1.len().min(vec2.len()) {
+        let diff = _vec1[i] - vec2[i];
         sum_sq += diff * diff;
     }
 

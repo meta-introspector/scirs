@@ -85,7 +85,7 @@ impl Default for PeriodDetectionOptions {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_series::detection::{detect_periods, PeriodDetectionOptions};
+/// use scirs2__series::detection::{detect_periods, PeriodDetectionOptions};
 ///
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0,
 ///                 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0];
@@ -358,7 +358,7 @@ where
     // Add periods from FFT
     for &(period, strength) in &fft_result.periods {
         // Check if period already exists in the combined list
-        let exists = all_periods.iter().any(|&(p, _)| p == period);
+        let exists = all_periods.iter().any(|&(p_)| p == period);
         if !exists {
             all_periods.push((period, strength));
         }
@@ -380,19 +380,19 @@ where
 
 /// Filters out harmonic periods from a list of candidate periods
 #[allow(dead_code)]
-fn filter_harmonics<F>(periods: Vec<(usize, F)>, _threshold_factor: f64) -> Vec<(usize, F)>
+fn filter_harmonics<F>(_periods: Vec<(usize, F)>, _threshold_factor: f64) -> Vec<(usize, F)>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if periods.is_empty() {
-        return periods;
+    if _periods.is_empty() {
+        return _periods;
     }
 
     let mut filtered = Vec::new();
-    let mut used = vec![false; periods.len()];
+    let mut used = vec![false; _periods.len()];
 
     // Sort by strength (descending)
-    let mut sorted_periods = periods.clone();
+    let mut sorted_periods = _periods.clone();
     sorted_periods.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
     for i in 0..sorted_periods.len() {
@@ -407,9 +407,9 @@ where
         // Mark harmonics as used
         for j in 0..sorted_periods.len() {
             if i != j && !used[j] {
-                let (other_period, _) = sorted_periods[j];
+                let (other_period_) = sorted_periods[j];
 
-                // Check if other_period is a harmonic (multiple or factor) of period
+                // Check if other_period is a harmonic (multiple or _factor) of period
                 if other_period % period == 0 || period % other_period == 0 {
                     used[j] = true;
                 }
@@ -439,7 +439,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_series::detection::{detect_and_decompose, PeriodDetectionOptions, DecompositionType, AutoDecomposition};
+/// use scirs2__series::detection::{detect_and_decompose, PeriodDetectionOptions, DecompositionType, AutoDecomposition};
 ///
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0,
 ///                 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0];
@@ -541,12 +541,12 @@ where
     // Perform decomposition based on the specified method
     match method {
         DecompositionType::MSTL => {
-            let options = crate::decomposition::MSTLOptions {
-                seasonal_periods: periods.iter().map(|&(p, _)| p).collect(),
+            let _options = crate::decomposition::MSTLOptions {
+                seasonal_periods: periods.iter().map(|&(p_)| p).collect(),
                 ..Default::default()
             };
 
-            let mstl_result = crate::decomposition::mstl_decomposition(ts, &options)?;
+            let mstl_result = crate::decomposition::mstl_decomposition(ts, &_options)?;
 
             Ok(AutoDecompositionResult {
                 periods,
@@ -554,12 +554,12 @@ where
             })
         }
         DecompositionType::TBATS => {
-            let options = crate::decomposition::TBATSOptions {
-                seasonal_periods: periods.iter().map(|&(p, _)| p as f64).collect(),
+            let _options = crate::decomposition::TBATSOptions {
+                seasonal_periods: periods.iter().map(|&(p_)| p as f64).collect(),
                 ..Default::default()
             };
 
-            let tbats_result = crate::decomposition::tbats_decomposition(ts, &options)?;
+            let tbats_result = crate::decomposition::tbats_decomposition(ts, &_options)?;
 
             Ok(AutoDecompositionResult {
                 periods,
@@ -567,12 +567,12 @@ where
             })
         }
         DecompositionType::STR => {
-            let options = crate::decomposition::STROptions {
-                seasonal_periods: periods.iter().map(|&(p, _)| p as f64).collect(),
+            let _options = crate::decomposition::STROptions {
+                seasonal_periods: periods.iter().map(|&(p_)| p as f64).collect(),
                 ..Default::default()
             };
 
-            let str_result = crate::decomposition::str_decomposition(ts, &options)?;
+            let str_result = crate::decomposition:: str, _decomposition(ts, &_options)?;
 
             Ok(AutoDecompositionResult {
                 periods,
@@ -716,7 +716,7 @@ mod tests {
             seasonal_periods: vec![forced_period as f64],
             ..Default::default()
         };
-        let str_result = crate::decomposition::str_decomposition(&ts, &str_options).unwrap();
+        let str_result = crate::decomposition:: str, _decomposition(&ts, &str_options).unwrap();
         assert_eq!(str_result.trend.len(), ts.len());
         assert_eq!(str_result.seasonal_components.len(), 1);
 

@@ -1,11 +1,11 @@
 use crate::op::*;
 use crate::tensor::Tensor;
-use crate::tensor_ops::convert_to_tensor;
+use crate::tensor__ops::convert_to_tensor;
 use crate::Float;
 use ndarray::Array2;
 use ndarray::ScalarOperand;
 // BLAS dependencies removed - using core abstractions
-// use ndarray_linalg::{Lapack, UPLO};
+// use ndarray__linalg::{Lapack, UPLO};
 
 /// Cholesky decomposition operation with gradient support
 #[derive(Clone)]
@@ -533,60 +533,60 @@ impl<F: Float> Op<F> for BandMatrixOp {
 
 /// Compute Cholesky decomposition with gradient support
 #[allow(dead_code)]
-pub fn cholesky<'g, F: Float + ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn cholesky<'g, F: Float + ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _matrix.graph();
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(CholeskyOp)
 }
 
 /// Make a matrix symmetric by averaging with its transpose
 #[allow(dead_code)]
-pub fn symmetrize<'g, F: Float + ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn symmetrize<'g, F: Float + ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _matrix.graph();
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(SymmetrizeOp)
 }
 
 /// Extract lower triangular part of a matrix
 #[allow(dead_code)]
-pub fn tril<'g, F: Float>(matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn tril<'g, F: Float>(_matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, F> {
+    let g = _matrix.graph();
 
     // Get the shape of the input tensor for setting the output shape
-    let matrix_shape = crate::tensor_ops::shape(matrix);
+    let matrix_shape = crate::tensor_ops::shape(_matrix);
 
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .set_shape(&matrix_shape)  // Preserve shape information
         .build(LowerTriangularOp { diagonal })
 }
 
 /// Extract upper triangular part of a matrix
 #[allow(dead_code)]
-pub fn triu<'g, F: Float>(matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn triu<'g, F: Float>(_matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, F> {
+    let g = _matrix.graph();
 
     // Get the shape of the input tensor for setting the output shape
-    let matrix_shape = crate::tensor_ops::shape(matrix);
+    let matrix_shape = crate::tensor_ops::shape(_matrix);
 
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .set_shape(&matrix_shape)  // Preserve shape information
         .build(UpperTriangularOp { diagonal })
 }
 
 /// Extract band from a matrix
 #[allow(dead_code)]
-pub fn band_matrix<'g, F: Float>(matrix: &Tensor<'g, F>, lower: i32, upper: i32) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn band_matrix<'g, F: Float>(_matrix: &Tensor<'g, F>, lower: i32, upper: i32) -> Tensor<'g, F> {
+    let g = _matrix.graph();
 
     // Get the shape of the input tensor for setting the output shape
-    let matrix_shape = crate::tensor_ops::shape(matrix);
+    let matrix_shape = crate::tensor_ops::shape(_matrix);
 
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .set_shape(&matrix_shape)  // Preserve shape information
         .build(BandMatrixOp { lower, upper })
 }

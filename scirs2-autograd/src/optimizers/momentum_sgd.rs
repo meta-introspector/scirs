@@ -2,7 +2,7 @@
 
 use crate::optimizers::Optimizer;
 use crate::tensor::Tensor;
-use crate::tensor_ops::gradient_descent_ops::sgd;
+use crate::tensor__ops::gradient_descent_ops::sgd;
 use crate::variable::VariableID;
 use crate::{Context, Float, VariableEnvironment};
 

@@ -31,7 +31,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::distance::inter_cluster_distances;
+/// use scirs2__metrics::clustering::distance::inter_cluster_distances;
 ///
 /// // Create a small dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![
@@ -122,8 +122,7 @@ where
             let distance = match metric {
                 "euclidean" => euclidean_distance(centroid_i, centroid_j),
                 "manhattan" => manhattan_distance(centroid_i, centroid_j),
-                "cosine" => cosine_distance(centroid_i, centroid_j),
-                _ => {
+                "cosine" => cosine_distance(centroid_i, centroid_j, _ => {
                     return Err(MetricsError::InvalidInput(format!(
                         "Unsupported metric: {metric}"
                     )))
@@ -157,7 +156,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::distance::intra_cluster_distances;
+/// use scirs2__metrics::clustering::distance::intra_cluster_distances;
 ///
 /// // Create a small dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![
@@ -252,8 +251,7 @@ where
                 let distance = match metric {
                     "euclidean" => euclidean_distance(&sample, centroid),
                     "manhattan" => manhattan_distance(&sample, centroid),
-                    "cosine" => cosine_distance(&sample, centroid),
-                    _ => {
+                    "cosine" => cosine_distance(&sample, centroid, _ => {
                         return Err(MetricsError::InvalidInput(format!(
                             "Unsupported metric: {metric}"
                         )))
@@ -294,7 +292,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::distance::distance_ratio_index;
+/// use scirs2__metrics::clustering::distance::distance_ratio_index;
 ///
 /// // Create a small dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![
@@ -400,7 +398,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::distance::isolation_index;
+/// use scirs2__metrics::clustering::distance::isolation_index;
 ///
 /// // Create a small dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![
@@ -569,7 +567,7 @@ where
         (dot_product, norm_x.sqrt(), norm_y.sqrt())
     };
 
-    if norm_x > F::zero() && norm_y > F::zero() {
+    if norm_x > F::zero() && norm_y >, F::zero() {
         F::one() - (dot_product / (norm_x * norm_y))
     } else {
         F::one() // If either vector is zero, use maximum distance

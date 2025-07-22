@@ -11,6 +11,7 @@ use rand::rng;
 use ndarray::{ArrayD, ArrayView, Zip};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 /// Quantization configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuantizationConfig {
@@ -71,9 +72,9 @@ pub struct QuantizationParams {
     pub qmax: i32,
 impl QuantizationParams {
     /// Create new quantization parameters
-    pub fn new(bits: u8, signed: bool) -> Self {
+    pub fn new(_bits: u8, signed: bool) -> Self {
         let (qmin, qmax) = if signed {
-            (-(1 << (bits - 1)), (1 << (bits - 1)) - 1)
+            (-(1 << (_bits - 1)), (1 << (_bits - 1)) - 1)
         } else {
             (0, (1 << bits) - 1)
         };
@@ -121,17 +122,17 @@ pub struct QuantizedTensor {
     pub shape: Vec<usize>,
 impl QuantizedTensor {
     /// Create new quantized tensor from float tensor
-    pub fn from_float(tensor: &ArrayD<f32>, config: &QuantizationConfig) -> Result<Self> {
-        let params = QuantizationParams::from_tensor(&tensor.view(), config)?;
-        let quantized_data = Self::quantize_tensor(tensor, &params)?;
+    pub fn from_float(_tensor: &ArrayD<f32>, config: &QuantizationConfig) -> Result<Self> {
+        let params = QuantizationParams::from_tensor(&_tensor.view(), config)?;
+        let quantized_data = Self::quantize_tensor(_tensor, &params)?;
         Ok(Self {
             data: quantized_data,
             params,
-            shape: tensor.shape().to_vec(),
+            shape: _tensor.shape().to_vec(),
         })
     /// Quantize a float tensor to integers
-    fn quantize_tensor(tensor: &ArrayD<f32>, params: &QuantizationParams) -> Result<ArrayD<i8>> {
-        let quantized = tensor.mapv(|x| {
+    fn quantize_tensor(_tensor: &ArrayD<f32>, params: &QuantizationParams) -> Result<ArrayD<i8>> {
+        let quantized = _tensor.mapv(|x| {
             let q_val = (x / params.scale).round() + params.zero_point as f32;
             let clamped = q_val.max(params.qmin as f32).min(params.qmax as f32);
             clamped as i8
@@ -191,8 +192,8 @@ impl TensorStats {
             self.histogram[bin] += 1;
 impl PostTrainingQuantizer {
     /// Create new post-training quantizer
-    pub fn new(config: QuantizationConfig) -> Self {
-            config,
+    pub fn new(_config: QuantizationConfig) -> Self {
+            _config,
             calibration_stats: HashMap::new(),
     /// Add calibration data for a named tensor
     pub fn add_calibration_data(&mut self, name: &str, tensor: &ArrayD<f32>) {
@@ -212,14 +213,14 @@ impl PostTrainingQuantizer {
         Ok(params_map)
     /// Compute optimal quantization parameters using KL divergence
     fn compute_optimal_params(&self, stats: &TensorStats) -> Result<QuantizationParams> {
-        let mut best_params = QuantizationParams::new(self.config.bits, self.config.signed);
+        let mut best_params = QuantizationParams::new(self._config.bits, self._config.signed);
         let mut best_kl_div = f32::INFINITY;
         // Try different threshold values
         for threshold_idx in 128..=255 {
             let threshold = stats.min + (threshold_idx as f32 / 255.0) * (stats.max - stats.min);
             // Compute quantization parameters for this threshold
-            let mut params = QuantizationParams::new(self.config.bits, self.config.signed);
-            match self.config.scheme {
+            let mut params = QuantizationParams::new(self._config.bits, self._config.signed);
+            match self._config.scheme {
                 QuantizationScheme::Symmetric => {
                     params.scale = (2.0 * threshold) / (params.qmax - params.qmin) as f32;
                     params.zero_point = 0;
@@ -392,7 +393,7 @@ impl MixedBitWidthQuantizer {
         // Sort by sensitivity (higher sensitivity gets more bits)
         scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         // Assign bit-widths: high sensitivity layers get 8 bits, others get 4-6 bits
-        for (i, (layer_name, _)) in scores.iter().enumerate() {
+        for (i, (layer_name_)) in scores.iter().enumerate() {
             let bits = if i < scores.len() / 3 {
                 8 // High sensitivity
             } else if i < 2 * scores.len() / 3 {
@@ -452,17 +453,17 @@ impl DynamicQuantizer {
 pub mod utils {
     use super::*;
     /// Compare quantized vs original tensor accuracy
-    pub fn compute_quantization_error(original: &ArrayD<f32>, quantized: &QuantizedTensor) -> f32 {
+    pub fn compute_quantization_error(_original: &ArrayD<f32>, quantized: &QuantizedTensor) -> f32 {
         let dequantized = quantized.dequantize();
-        let mse = Zip::from(original)
+        let mse = Zip::from(_original)
             .and(&dequantized)
             .fold(0.0, |acc, &orig, &deq| acc + (orig - deq).powi(2));
-        mse / original.len() as f32
+        mse / _original.len() as f32
     /// Estimate model size reduction from quantization
-    pub fn estimate_size_reduction(bit_width: u8) -> f32 {
+    pub fn estimate_size_reduction(_bit_width: u8) -> f32 {
         32.0 / bit_width as f32
     /// Simulate quantization performance gains
-    pub fn estimate_performance_gain(bit_width: u8) -> f32 {
+    pub fn estimate_performance_gain(_bit_width: u8) -> f32 {
         // Empirical approximation based on common hardware
         match bit_width {
             8 => 2.0,  // ~2x speedup with INT8
@@ -486,7 +487,7 @@ pub mod utils {
 #[cfg(test)]
 mod tests {
     use ndarray::{array, Array2};
-    use rand_distr::Standard;
+    use rand__distr::Standard;
     use ndarray_rand::RandomExt;
     #[test]
     fn test_quantization_config_default() {
@@ -539,7 +540,7 @@ mod tests {
         let tensor = Array2::random((20, 20), Standard).into_dyn();
         let quantized = dq.quantize(&tensor, Some("test_key")).unwrap();
         assert_eq!(quantized.shape, tensor.shape().to_vec());
-        let (cache_size, _) = dq.cache_stats();
+        let (cache_size_) = dq.cache_stats();
         assert_eq!(cache_size, 1);
     fn test_quantization_utilities() {
         let original = Array2::random((10, 10), Standard).into_dyn();

@@ -11,15 +11,18 @@
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
-use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
+use crate::wpt::{WaveletPacketTree, reconstruct_from_nodes, wp_decompose};
+use crate::wpt__validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
+use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(unused_imports)]
 /// Advanced-comprehensive WPT validation result
 #[derive(Debug, Clone)]
 pub struct AdvancedWptValidationResult {
@@ -855,7 +858,7 @@ impl Default for AdvancedWptValidationConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::wpt_advanced_validation::{run_advanced_wpt_validation, AdvancedWptValidationConfig};
+/// use scirs2__signal::wpt_advanced_validation::{run_advanced_wpt_validation, AdvancedWptValidationConfig};
 ///
 /// let config = AdvancedWptValidationConfig::default();
 /// let results = run_advanced_wpt_validation(&config).unwrap();
@@ -1846,7 +1849,7 @@ fn analyze_coefficient_distributions(
 }
 
 #[allow(dead_code)]
-fn validate_simd_vs_scalar_accuracy(config: &AdvancedWptValidationConfig) -> SignalResult<f64> {
+fn validate_simd_vs_scalar_accuracy(_config: &AdvancedWptValidationConfig) -> SignalResult<f64> {
     let mut max_deviation = 0.0;
     let caps = PlatformCapabilities::detect();
 
@@ -1854,9 +1857,9 @@ fn validate_simd_vs_scalar_accuracy(config: &AdvancedWptValidationConfig) -> Sig
         return Ok(0.0); // No SIMD to compare
     }
 
-    for signal_config in &config.test_signals {
-        for wavelet in &config.wavelets_to_test {
-            for &max_level in &config.max_levels_to_test {
+    for signal_config in &_config.test_signals {
+        for wavelet in &_config.wavelets_to_test {
+            for &max_level in &_config.max_levels_to_test {
                 if max_level > 6 {
                     continue;
                 } // Limit for computation efficiency
@@ -1918,8 +1921,7 @@ fn validate_individual_simd_operations(
                 "simd_downsampling" => test_simd_downsampling(&test_signal)?,
                 "simd_upsampling" => test_simd_upsampling(&test_signal)?,
                 "simd_coefficient_thresholding" => test_simd_thresholding(&test_signal)?,
-                "simd_energy_calculation" => test_simd_energy_calculation(&test_signal)?,
-                _ => (0.0, 0.0),
+                "simd_energy_calculation" => test_simd_energy_calculation(&test_signal)?_ => (0.0, 0.0),
             };
 
             let error = (simd_result - scalar_result).abs();
@@ -2030,7 +2032,7 @@ fn determine_overall_validation_status(
 /// Calculate coefficient energy from WPT tree
 #[allow(dead_code)]
 fn calculate_coefficient_energy(_tree: &WaveletPacketTree) -> SignalResult<f64> {
-    // Placeholder - would sum energy from all coefficients in tree
+    // Placeholder - would sum energy from all coefficients in _tree
     Ok(1.0)
 }
 
@@ -2039,7 +2041,7 @@ fn calculate_coefficient_energy(_tree: &WaveletPacketTree) -> SignalResult<f64> 
 fn calculate_subband_energy_distribution(_tree: &WaveletPacketTree) -> SignalResult<Array1<f64>> {
     // Placeholder - would calculate energy in each subband
     let num_subbands = 10;
-    let distribution = Array1::ones(num_subbands) / num_subbands as f64;
+    let distribution = Array1::ones(num_subbands) / num_subbands  as f64;
     Ok(distribution)
 }
 
@@ -2088,12 +2090,12 @@ fn analyze_basis_selection_consistency(
     }
 
     let multi_run_consistency =
-        consistency_scores.iter().sum::<f64>() / consistency_scores.len() as f64;
+        consistency_scores.iter().sum::<f64>() / consistency_scores.len()  as f64;
     let noise_stability =
-        noise_stability_scores.iter().sum::<f64>() / noise_stability_scores.len() as f64;
+        noise_stability_scores.iter().sum::<f64>() / noise_stability_scores.len()  as f64;
     let initial_condition_sensitivity =
-        sensitivity_scores.iter().sum::<f64>() / sensitivity_scores.len() as f64;
-    let selection_entropy = entropy_values.iter().sum::<f64>() / entropy_values.len() as f64;
+        sensitivity_scores.iter().sum::<f64>() / sensitivity_scores.len()  as f64;
+    let selection_entropy = entropy_values.iter().sum::<f64>() / entropy_values.len()  as f64;
 
     Ok(BasisSelectionConsistency {
         multi_run_consistency,
@@ -2241,9 +2243,9 @@ fn analyze_breakdown_points(
 
 /// Assess numerical stability by comparing results
 #[allow(dead_code)]
-fn assess_numerical_stability(simd_result: f64, scalar_result: f64) -> f64 {
+fn assess_numerical_stability(_simd_result: f64, scalar_result: f64) -> f64 {
     let max_relative_error = if scalar_result.abs() > 1e-15 {
-        (simd_result - scalar_result).abs() / scalar_result.abs()
+        (_simd_result - scalar_result).abs() / scalar_result.abs()
     } else if simd_result.abs() > 1e-15 {
         simd_result.abs()
     } else {
@@ -2256,39 +2258,37 @@ fn assess_numerical_stability(simd_result: f64, scalar_result: f64) -> f64 {
 
 /// Generate test signal based on configuration
 #[allow(dead_code)]
-fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> {
-    use std::f64::consts::PI;
-
-    let length = config.length;
+fn generate_test_signal(_config: &TestSignalConfig) -> SignalResult<Array1<f64>> {
+    let length = _config.length;
     let mut signal = Array1::zeros(length);
     let t: Vec<f64> = (0..length).map(|i| i as f64).collect();
 
-    match config.signal_type {
+    match _config.signal_type {
         TestSignalType::Sinusoid => {
-            let freq = config.parameters.get("frequency").unwrap_or(&0.1);
-            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let freq = _config.parameters.get("frequency").unwrap_or(&0.1);
+            let amplitude = _config.parameters.get("amplitude").unwrap_or(&1.0);
             for (i, &ti) in t.iter().enumerate() {
                 signal[i] = amplitude * (2.0 * PI * freq * ti / length as f64).sin();
             }
         }
         TestSignalType::Chirp => {
-            let f0 = config.parameters.get("f0").unwrap_or(&0.05);
-            let f1 = config.parameters.get("f1").unwrap_or(&0.4);
-            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let f0 = _config.parameters.get("f0").unwrap_or(&0.05);
+            let f1 = _config.parameters.get("f1").unwrap_or(&0.4);
+            let amplitude = _config.parameters.get("amplitude").unwrap_or(&1.0);
             for (i, &ti) in t.iter().enumerate() {
-                let freq = f0 + (f1 - f0) * ti / length as f64;
+                let freq = f0 + (f1 - f0) * ti / length  as f64;
                 signal[i] = amplitude * (2.0 * PI * freq * ti).sin();
             }
         }
         TestSignalType::WhiteNoise => {
-            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let amplitude = _config.parameters.get("amplitude").unwrap_or(&1.0);
             let mut rng = rand::rng();
             for i in 0..length {
                 signal[i] = amplitude * rng.random_range(-1.0..1.0);
             }
         }
         TestSignalType::PinkNoise => {
-            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let amplitude = _config.parameters.get("amplitude").unwrap_or(&1.0);
             let mut rng = rand::rng();
             // Simplified pink noise generation
             for i in 0..length {
@@ -2296,29 +2296,29 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
             }
         }
         TestSignalType::Impulse => {
-            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
-            let position = config.parameters.get("position").unwrap_or(&0.5);
+            let amplitude = _config.parameters.get("amplitude").unwrap_or(&1.0);
+            let position = _config.parameters.get("position").unwrap_or(&0.5);
             let pos_idx = ((position * length as f64) as usize).min(length - 1);
             signal[pos_idx] = *amplitude;
         }
         TestSignalType::Step => {
-            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
-            let position = config.parameters.get("position").unwrap_or(&0.5);
+            let amplitude = _config.parameters.get("amplitude").unwrap_or(&1.0);
+            let position = _config.parameters.get("position").unwrap_or(&0.5);
             let pos_idx = ((position * length as f64) as usize).min(length - 1);
             for i in pos_idx..length {
                 signal[i] = *amplitude;
             }
         }
         TestSignalType::Polynomial => {
-            let degree = *config.parameters.get("degree").unwrap_or(&2.0) as usize;
-            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let degree = *_config.parameters.get("degree").unwrap_or(&2.0) as usize;
+            let amplitude = _config.parameters.get("amplitude").unwrap_or(&1.0);
             for (i, &ti) in t.iter().enumerate() {
                 let x = 2.0 * ti / length as f64 - 1.0; // Normalize to [-1, 1]
                 signal[i] = amplitude * x.powi(*degree as i32);
             }
         }
         TestSignalType::Piecewise => {
-            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let amplitude = _config.parameters.get("amplitude").unwrap_or(&1.0);
             let segments = 4;
             let segment_length = length / segments;
             for i in 0..length {
@@ -2327,8 +2327,8 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
             }
         }
         TestSignalType::Fractal => {
-            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
-            let hurst = config.parameters.get("hurst").unwrap_or(&0.5);
+            let amplitude = _config.parameters.get("amplitude").unwrap_or(&1.0);
+            let hurst = _config.parameters.get("hurst").unwrap_or(&0.5);
             // Simplified fractal noise
             let mut rng = rand::rng();
             for i in 0..length {
@@ -2336,7 +2336,7 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
             }
         }
         TestSignalType::Composite => {
-            let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
+            let amplitude = _config.parameters.get("amplitude").unwrap_or(&1.0);
             // Composite of sinusoid and noise
             let mut rng = rand::rng();
             for (i, &ti) in t.iter().enumerate() {
@@ -2357,7 +2357,7 @@ mod tests {
         let config = AdvancedWptValidationConfig::default();
         assert!(config.validate_mathematical_properties);
         assert!(config.validate_simd);
-        assert_eq!(config.tolerance, 1e-12);
+        assert_eq!(config.tolerance..1e-12);
         assert!(config.test_signals.len() > 0);
     }
 
@@ -2394,22 +2394,22 @@ mod tests {
 
 /// Test SIMD vs scalar convolution and return energy comparison
 #[allow(dead_code)]
-fn test_simd_convolution(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
+fn test_simd_convolution(_signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
     let kernel = Array1::from_vec(vec![0.25, 0.5, 0.25]);
 
     // SIMD convolution using performance_optimized module
-    let simd_result = crate::performance_optimized::simd_convolve_1d(signal, &kernel, "same")?;
+    let simd_result = crate::performance_optimized::simd_convolve_1d(_signal, &kernel, "same")?;
     let simd_energy = simd_result.mapv(|x| x * x).sum();
 
     // Scalar convolution (simple implementation)
-    let mut scalar_result = Array1::zeros(signal.len());
+    let mut scalar_result = Array1::zeros(_signal.len());
     let half_kernel = kernel.len() / 2;
-    for i in 0..signal.len() {
+    for i in 0.._signal.len() {
         let mut sum = 0.0;
         for j in 0..kernel.len() {
             let signal_idx = (i + j).saturating_sub(half_kernel);
-            if signal_idx < signal.len() {
-                sum += signal[signal_idx] * kernel[j];
+            if signal_idx < _signal.len() {
+                sum += _signal[signal_idx] * kernel[j];
             }
         }
         scalar_result[i] = sum;
@@ -2421,15 +2421,15 @@ fn test_simd_convolution(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
 
 /// Test SIMD vs scalar downsampling and return energy comparison
 #[allow(dead_code)]
-fn test_simd_downsampling(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
+fn test_simd_downsampling(_signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
     let factor = 2;
 
     // SIMD downsampling
-    let simd_result: Array1<f64> = signal.iter().step_by(factor).cloned().collect();
+    let simd_result: Array1<f64> = _signal.iter().step_by(factor).cloned().collect();
     let simd_energy = simd_result.mapv(|x| x * x).sum();
 
     // Scalar downsampling
-    let scalar_result: Array1<f64> = signal.iter().step_by(factor).cloned().collect();
+    let scalar_result: Array1<f64> = _signal.iter().step_by(factor).cloned().collect();
     let scalar_energy = scalar_result.mapv(|x| x * x).sum();
 
     Ok((simd_energy, scalar_energy))
@@ -2437,13 +2437,13 @@ fn test_simd_downsampling(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
 
 /// Test SIMD vs scalar upsampling and return energy comparison
 #[allow(dead_code)]
-fn test_simd_upsampling(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
+fn test_simd_upsampling(_signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
     let factor = 2;
-    let new_len = signal.len() * factor;
+    let new_len = _signal.len() * factor;
 
     // SIMD upsampling (zero-order hold)
     let mut simd_result = Array1::zeros(new_len);
-    for (i, &val) in signal.iter().enumerate() {
+    for (i, &val) in _signal.iter().enumerate() {
         for j in 0..factor {
             if i * factor + j < new_len {
                 simd_result[i * factor + j] = val;
@@ -2454,7 +2454,7 @@ fn test_simd_upsampling(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
 
     // Scalar upsampling (same implementation)
     let mut scalar_result = Array1::zeros(new_len);
-    for (i, &val) in signal.iter().enumerate() {
+    for (i, &val) in _signal.iter().enumerate() {
         for j in 0..factor {
             if i * factor + j < new_len {
                 scalar_result[i * factor + j] = val;
@@ -2468,15 +2468,15 @@ fn test_simd_upsampling(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
 
 /// Test SIMD vs scalar coefficient thresholding and return energy comparison
 #[allow(dead_code)]
-fn test_simd_thresholding(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
+fn test_simd_thresholding(_signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
     let threshold = 0.1;
 
     // SIMD thresholding
-    let simd_result = signal.mapv(|x| if x.abs() > threshold { x } else { 0.0 });
+    let simd_result = _signal.mapv(|x| if x.abs() > threshold { x } else { 0.0 });
     let simd_energy = simd_result.mapv(|x| x * x).sum();
 
     // Scalar thresholding
-    let scalar_result = signal.mapv(|x| if x.abs() > threshold { x } else { 0.0 });
+    let scalar_result = _signal.mapv(|x| if x.abs() > threshold { x } else { 0.0 });
     let scalar_energy = scalar_result.mapv(|x| x * x).sum();
 
     Ok((simd_energy, scalar_energy))
@@ -2484,13 +2484,13 @@ fn test_simd_thresholding(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
 
 /// Test SIMD vs scalar energy calculation and return energy comparison
 #[allow(dead_code)]
-fn test_simd_energy_calculation(signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
+fn test_simd_energy_calculation(_signal: &Array1<f64>) -> SignalResult<(f64, f64)> {
     // SIMD energy calculation
-    let simd_energy = signal.mapv(|x| x * x).sum();
+    let simd_energy = _signal.mapv(|x| x * x).sum();
 
     // Scalar energy calculation
     let mut scalar_energy = 0.0;
-    for &val in signal.iter() {
+    for &val in _signal.iter() {
         scalar_energy += val * val;
     }
 
@@ -2529,8 +2529,7 @@ fn calculate_reconstruction_error(
 
 #[allow(dead_code)]
 fn analyze_frequency_domain_reconstruction(
-    _original: &Array1<f64>,
-    _reconstructed: &Array1<f64>,
+    _original: &Array1<f64>, _reconstructed: &Array1<f64>,
 ) -> SignalResult<f64> {
     // TODO: Implement frequency domain reconstruction analysis using FFT
     Ok(0.0)
@@ -2538,9 +2537,7 @@ fn analyze_frequency_domain_reconstruction(
 
 #[allow(dead_code)]
 fn analyze_frequency_band_errors(
-    _original: &Array1<f64>,
-    _reconstructed: &Array1<f64>,
-    _num_bands: usize,
+    _original: &Array1<f64>, _reconstructed: &Array1<f64>, _num_bands: usize,
 ) -> SignalResult<Array1<f64>> {
     // TODO: Implement frequency band error analysis
     Ok(Array1::zeros(10))
@@ -2548,8 +2545,7 @@ fn analyze_frequency_band_errors(
 
 #[allow(dead_code)]
 fn calculate_frame_bounds(
-    _tree: &crate::wpt::WaveletPacketTree,
-    _signal: &Array1<f64>,
+    _tree: &crate::wpt::WaveletPacketTree_signal: &Array1<f64>,
 ) -> SignalResult<(f64, f64)> {
     // TODO: Implement frame bounds calculation for tight frame validation
     Ok((0.99, 1.01))
@@ -2557,8 +2553,7 @@ fn calculate_frame_bounds(
 
 #[allow(dead_code)]
 fn verify_parseval_relation(
-    _tree: &crate::wpt::WaveletPacketTree,
-    _signal: &Array1<f64>,
+    _tree: &crate::wpt::WaveletPacketTree_signal: &Array1<f64>,
 ) -> SignalResult<f64> {
     // TODO: Implement Parseval's relation verification (energy conservation)
     Ok(0.0)
@@ -2568,7 +2563,7 @@ fn verify_parseval_relation(
 fn extract_coefficient_vectors(
     _tree: &crate::wpt::WaveletPacketTree,
 ) -> SignalResult<Vec<Array1<f64>>> {
-    // TODO: Implement coefficient vector extraction from WPT tree
+    // TODO: Implement coefficient vector extraction from WPT _tree
     Ok(vec![Array1::zeros(1)])
 }
 
@@ -2579,8 +2574,8 @@ fn calculate_cross_correlation(_vec1: &Array1<f64>, _vec2: &Array1<f64>) -> Sign
 }
 
 #[allow(dead_code)]
-fn calculate_l2_norm(vec: &Array1<f64>) -> SignalResult<f64> {
-    Ok((vec.mapv(|x| x * x).sum()).sqrt())
+fn calculate_l2_norm(_vec: &Array1<f64>) -> SignalResult<f64> {
+    Ok((_vec.mapv(|x| x * x).sum()).sqrt())
 }
 
 #[allow(dead_code)]
@@ -2591,8 +2586,7 @@ fn is_orthogonal_wavelet(_wavelet: crate::dwt::Wavelet) -> bool {
 
 #[allow(dead_code)]
 fn verify_biorthogonality(
-    _tree: &crate::wpt::WaveletPacketTree,
-    _wavelet: crate::dwt::Wavelet,
+    _tree: &crate::wpt::WaveletPacketTree_wavelet: crate::dwt::Wavelet,
 ) -> SignalResult<bool> {
     // TODO: Implement biorthogonality verification for non-orthogonal wavelets
     Ok(true)
@@ -2623,8 +2617,7 @@ fn wp_decompose_scalar(
 
 #[allow(dead_code)]
 fn compare_wpt_coefficients(
-    _simd_tree: &crate::wpt::WaveletPacketTree,
-    _scalar_tree: &crate::wpt::WaveletPacketTree,
+    _simd_tree: &crate::wpt::WaveletPacketTree_scalar, _tree: &crate::wpt::WaveletPacketTree,
 ) -> SignalResult<f64> {
     // TODO: Implement coefficient comparison between different WPT trees
     Ok(0.0)

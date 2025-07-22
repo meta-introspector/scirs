@@ -504,8 +504,7 @@ where
 #[allow(dead_code)]
 fn analyze_directional_changes<F>(
     ts: &Array1<F>,
-    turning_points: &[usize],
-    _config: &TurningPointsConfig,
+    turning_points: &[usize], _config: &TurningPointsConfig,
 ) -> Result<(usize, usize, DirectionalChangeStats<F>)>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -515,7 +514,7 @@ where
     let mut upward_magnitudes = Vec::new();
     let mut downward_magnitudes = Vec::new();
 
-    // Analyze changes between consecutive turning points
+    // Analyze changes between consecutive turning _points
     for window in turning_points.windows(2) {
         let start_idx = window[0];
         let end_idx = window[1];
@@ -798,7 +797,7 @@ where
     let range = max_val - min_val;
     let major_abs_threshold = major_threshold * range;
 
-    // Analyze changes between turning points
+    // Analyze changes between turning _points
     for window in turning_points.windows(2) {
         let start_idx = window[0];
         let end_idx = window[1];
@@ -860,7 +859,7 @@ where
         return Ok(TurningPointTemporalFeatures::default());
     }
 
-    // Calculate intervals between turning points
+    // Calculate intervals between turning _points
     let intervals: Vec<F> = turning_points
         .windows(2)
         .map(|w| F::from(w[1] - w[0]).unwrap())
@@ -917,9 +916,9 @@ where
 {
     let n = ts.len();
 
-    // Turning point volatility (average local variance around turning points)
+    // Turning point volatility (average local variance around turning _points)
     let mut local_variances = Vec::new();
-    let window_size = 5; // Local window around turning points
+    let window_size = 5; // Local window around turning _points
 
     for &tp_idx in turning_points {
         let start = tp_idx.saturating_sub(window_size / 2);
@@ -967,7 +966,7 @@ where
         if i >= 2 {
             let prev_change = ts[i - 1] - ts[i - 2];
             let curr_change = ts[i] - ts[i - 1];
-            if (prev_change > F::zero()) != (curr_change > F::zero()) {
+            if (prev_change > F::zero()) != (curr_change >, F::zero()) {
                 directional_changes += 1;
             }
         }
@@ -989,8 +988,7 @@ where
 fn detect_advanced_patterns<F>(
     ts: &Array1<F>,
     local_maxima: &[usize],
-    local_minima: &[usize],
-    _config: &TurningPointsConfig,
+    local_minima: &[usize], _config: &TurningPointsConfig,
 ) -> Result<AdvancedPatternFeatures>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
@@ -1121,7 +1119,7 @@ where
         };
 
         // Detect turning points at this scale
-        let (tp, _, _) = detect_turning_points(&smoothed, &smoothed_config)?;
+        let (tp__) = detect_turning_points(&smoothed, &smoothed_config)?;
         multiscale_turning_points.push(tp.len());
 
         // Calculate scale consistency (similarity with original scale)
@@ -1186,13 +1184,13 @@ where
 
 /// Apply simple moving average smoothing
 #[allow(dead_code)]
-fn apply_moving_average<F>(ts: &Array1<F>, window_size: usize) -> Result<Array1<F>>
+fn apply_moving_average<F>(_ts: &Array1<F>, window_size: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Clone,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if window_size >= n {
-        return Ok(ts.clone());
+        return Ok(_ts.clone());
     }
 
     let mut smoothed = Array1::zeros(n);
@@ -1202,7 +1200,7 @@ where
         let start = i.saturating_sub(half_window);
         let end = (i + half_window + 1).min(n);
 
-        let window_sum = ts.slice(s![start..end]).sum();
+        let window_sum = _ts.slice(s![start..end]).sum();
         let window_len = F::from(end - start).unwrap();
         smoothed[i] = window_sum / window_len;
     }
@@ -1212,19 +1210,19 @@ where
 
 /// Calculate clustering coefficient for intervals
 #[allow(dead_code)]
-fn calculate_clustering_coefficient<F>(intervals: &[F]) -> Result<F>
+fn calculate_clustering_coefficient<F>(_intervals: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    if intervals.len() < 3 {
+    if _intervals.len() < 3 {
         return Ok(F::zero());
     }
 
     // Simple clustering measure: variance of interval ratios
     let mut ratios = Vec::new();
-    for i in 1..intervals.len() {
-        if intervals[i] > F::zero() && intervals[i - 1] > F::zero() {
-            ratios.push(intervals[i] / intervals[i - 1]);
+    for i in 1.._intervals.len() {
+        if _intervals[i] > F::zero() && _intervals[i - 1] >, F::zero() {
+            ratios.push(_intervals[i] / _intervals[i - 1]);
         }
     }
 
@@ -1244,41 +1242,41 @@ where
 
 /// Calculate periodicity strength
 #[allow(dead_code)]
-fn calculate_periodicity_strength<F>(intervals: &[F]) -> Result<F>
+fn calculate_periodicity_strength<F>(_intervals: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    if intervals.len() < 4 {
+    if _intervals.len() < 4 {
         return Ok(F::zero());
     }
 
     // Simple periodicity measure: autocorrelation at lag 1
-    calculate_autocorrelation_at_lag(intervals, 1)
+    calculate_autocorrelation_at_lag(_intervals, 1)
 }
 
 /// Calculate autocorrelation at specific lag
 #[allow(dead_code)]
-fn calculate_autocorrelation_at_lag<F>(data: &[F], lag: usize) -> Result<F>
+fn calculate_autocorrelation_at_lag<F>(_data: &[F], lag: usize) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
-    if data.len() <= lag {
+    if _data.len() <= lag {
         return Ok(F::zero());
     }
 
-    let n = data.len() - lag;
+    let n = _data.len() - lag;
     if n < 2 {
         return Ok(F::zero());
     }
 
-    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
+    let mean = _data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(_data.len()).unwrap();
 
     let mut numerator = F::zero();
     let mut denominator = F::zero();
 
     for i in 0..n {
-        let x_centered = data[i] - mean;
-        let y_centered = data[i + lag] - mean;
+        let x_centered = _data[i] - mean;
+        let y_centered = _data[i + lag] - mean;
         numerator = numerator + x_centered * y_centered;
         denominator = denominator + x_centered * x_centered;
     }
@@ -1338,8 +1336,7 @@ where
 #[allow(dead_code)]
 fn detect_head_and_shoulders<F>(
     _ts: &Array1<F>,
-    local_maxima: &[usize],
-    _local_minima: &[usize],
+    local_maxima: &[usize], _local_minima: &[usize],
 ) -> Result<usize>
 where
     F: Float + FromPrimitive + PartialOrd,

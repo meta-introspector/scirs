@@ -13,6 +13,7 @@ use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
+use statrs::statistics::Statistics;
 
 /// Adaptive Transformer-Enhanced Optimizer
 #[derive(Debug, Clone)]
@@ -258,12 +259,12 @@ pub struct TransformerMetrics {
 
 impl AdaptiveTransformerOptimizer {
     /// Create new adaptive transformer optimizer
-    pub fn new(config: LearnedOptimizationConfig) -> Self {
-        let model_dim = config.hidden_size;
+    pub fn new(_config: LearnedOptimizationConfig) -> Self {
+        let model_dim = _config.hidden_size;
         let transformer = OptimizationTransformer::new(
-            config.num_heads,
+            _config.num_heads,
             model_dim,
-            config.max_parameters,
+            _config.max_parameters,
             6, // num_layers
         );
 
@@ -271,7 +272,7 @@ impl AdaptiveTransformerOptimizer {
         let history_buffer = OptimizationHistory::new(100);
 
         Self {
-            config,
+            _config,
             transformer,
             problem_encoder,
             history_buffer,
@@ -400,11 +401,11 @@ impl AdaptiveTransformerOptimizer {
     ) -> OptimizeResult<OptimizationStep> {
         if transformer_output.is_empty() {
             return Err(OptimizeError::InvalidInput(
-                "Empty transformer output".to_string(),
+                "Empty transformer _output".to_string(),
             ));
         }
 
-        // Extract last timestep output
+        // Extract last timestep _output
         let last_output = transformer_output.row(transformer_output.nrows() - 1);
 
         // Decode step size
@@ -629,11 +630,11 @@ pub struct TrajectoryStep {
 
 impl OptimizationTransformer {
     /// Create new optimization transformer
-    pub fn new(num_heads: usize, model_dim: usize, max_seq_len: usize, num_layers: usize) -> Self {
+    pub fn new(_num_heads: usize, model_dim: usize, max_seq_len: usize, num_layers: usize) -> Self {
         let mut transformer_blocks = Vec::new();
 
         for _ in 0..num_layers {
-            transformer_blocks.push(TransformerBlock::new(num_heads, model_dim));
+            transformer_blocks.push(TransformerBlock::new(_num_heads, model_dim));
         }
 
         // Position encoding
@@ -701,10 +702,10 @@ impl OptimizationTransformer {
     }
 
     /// Create sinusoidal position encoding
-    fn create_position_encoding(max_len: usize, model_dim: usize) -> Array2<f64> {
-        let mut pos_encoding = Array2::zeros((max_len, model_dim));
+    fn create_position_encoding(_max_len: usize, model_dim: usize) -> Array2<f64> {
+        let mut pos_encoding = Array2::zeros((_max_len, model_dim));
 
-        for pos in 0..max_len {
+        for pos in 0.._max_len {
             for i in 0..model_dim {
                 let angle = pos as f64 / 10000_f64.powf(2.0 * i as f64 / model_dim as f64);
                 if i % 2 == 0 {
@@ -721,8 +722,8 @@ impl OptimizationTransformer {
 
 impl TransformerBlock {
     /// Create new transformer block
-    pub fn new(num_heads: usize, model_dim: usize) -> Self {
-        let attention = MultiHeadAttention::new(num_heads, model_dim);
+    pub fn new(_num_heads: usize, model_dim: usize) -> Self {
+        let attention = MultiHeadAttention::new(_num_heads, model_dim);
         let feed_forward = FeedForwardNetwork::new(model_dim, model_dim * 4);
         let layer_norm1 = LayerNormalization::new(model_dim);
         let layer_norm2 = LayerNormalization::new(model_dim);
@@ -756,9 +757,9 @@ impl TransformerBlock {
 
 impl MultiHeadAttention {
     /// Create new multi-head attention
-    pub fn new(num_heads: usize, model_dim: usize) -> Self {
-        assert_eq!(model_dim % num_heads, 0);
-        let head_dim = model_dim / num_heads;
+    pub fn new(_num_heads: usize, model_dim: usize) -> Self {
+        assert_eq!(model_dim % _num_heads, 0);
+        let head_dim = model_dim / _num_heads;
 
         let w_query = Array2::from_shape_fn((model_dim, model_dim), |_| {
             (rand::rng().random_f64() - 0.5) * (2.0 / model_dim as f64).sqrt()
@@ -924,9 +925,9 @@ impl MultiHeadAttention {
 
 impl FeedForwardNetwork {
     /// Create new feed-forward network
-    pub fn new(input_dim: usize, hidden_dim: usize) -> Self {
-        let linear1 = Array2::from_shape_fn((hidden_dim, input_dim), |_| {
-            (rand::rng().random_f64() - 0.5) * (2.0 / input_dim as f64).sqrt()
+    pub fn new(_input_dim: usize, hidden_dim: usize) -> Self {
+        let linear1 = Array2::from_shape_fn((hidden_dim, _input_dim), |_| {
+            (rand::rng().random_f64() - 0.5) * (2.0 / _input_dim as f64).sqrt()
         });
         let linear2 = Array2::from_shape_fn((input_dim, hidden_dim), |_| {
             (rand::rng().random_f64() - 0.5) * (2.0 / hidden_dim as f64).sqrt()
@@ -976,10 +977,10 @@ impl FeedForwardNetwork {
 
 impl LayerNormalization {
     /// Create new layer normalization
-    pub fn new(dim: usize) -> Self {
+    pub fn new(_dim: usize) -> Self {
         Self {
-            gamma: Array1::ones(dim),
-            beta: Array1::zeros(dim),
+            gamma: Array1::ones(_dim),
+            beta: Array1::zeros(_dim),
             epsilon: 1e-6,
         }
     }
@@ -994,7 +995,7 @@ impl LayerNormalization {
             // Compute mean and variance for this sequence position
             let row = input.row(i);
             let mean = row.mean().unwrap_or(0.0);
-            let var = row.var(0.0);
+            let var = row.variance();
             let std = (var + self.epsilon).sqrt();
 
             // Normalize
@@ -1009,11 +1010,11 @@ impl LayerNormalization {
 
 impl TransformerProblemEncoder {
     /// Create new transformer problem encoder
-    pub fn new(embedding_dim: usize) -> Self {
+    pub fn new(_embedding_dim: usize) -> Self {
         let feature_dim = 20; // Fixed feature dimension
 
         Self {
-            gradient_encoder: Array2::from_shape_fn((embedding_dim, feature_dim), |_| {
+            gradient_encoder: Array2::from_shape_fn((_embedding_dim, feature_dim), |_| {
                 (rand::rng().random_f64() - 0.5) * 0.1
             }),
             hessian_encoder: Array2::from_shape_fn((embedding_dim, feature_dim), |_| {
@@ -1062,7 +1063,7 @@ impl TransformerProblemEncoder {
 
         if !params.is_empty() {
             features[0] = params.mean().unwrap_or(0.0).tanh();
-            features[1] = params.var(0.0).sqrt().tanh();
+            features[1] = params.variance().sqrt().tanh();
             features[2] = params.fold(-f64::INFINITY, |a, &b| a.max(b)).tanh();
             features[3] = params.fold(f64::INFINITY, |a, &b| a.min(b)).tanh();
             features[4] = (params.len() as f64).ln().tanh();
@@ -1115,7 +1116,7 @@ impl TransformerProblemEncoder {
                 .tanh(); // Gradient norm
             features[1] = f0.abs().ln().tanh(); // Objective magnitude
             features[2] = gradient.mean().unwrap_or(0.0).tanh(); // Gradient mean
-            features[3] = gradient.var(0.0).sqrt().tanh(); // Gradient std
+            features[3] = gradient.variance().sqrt().tanh(); // Gradient std
 
             // Gradient direction consistency
             let grad_consistency = gradient
@@ -1141,8 +1142,7 @@ impl TransformerProblemEncoder {
         match problem.problem_class.as_str() {
             "quadratic" => features[3] = 1.0,
             "neural_network" => features[4] = 1.0,
-            "sparse" => features[5] = 1.0,
-            _ => features[6] = 1.0,
+            "sparse" => features[5] = 1.0_ => features[6] = 1.0,
         }
 
         features
@@ -1164,14 +1164,14 @@ impl TransformerProblemEncoder {
 
 impl OptimizationHistory {
     /// Create new optimization history
-    pub fn new(max_length: usize) -> Self {
+    pub fn new(_max_length: usize) -> Self {
         Self {
-            parameter_history: VecDeque::with_capacity(max_length),
-            objective_history: VecDeque::with_capacity(max_length),
-            gradient_history: VecDeque::with_capacity(max_length),
-            step_size_history: VecDeque::with_capacity(max_length),
-            success_history: VecDeque::with_capacity(max_length),
-            max_length,
+            parameter_history: VecDeque::with_capacity(_max_length),
+            objective_history: VecDeque::with_capacity(_max_length),
+            gradient_history: VecDeque::with_capacity(_max_length),
+            step_size_history: VecDeque::with_capacity(_max_length),
+            success_history: VecDeque::with_capacity(_max_length),
+            _max_length,
             current_step: 0,
         }
     }
@@ -1199,12 +1199,12 @@ impl OptimizationHistory {
 
 impl AdaptiveComponents {
     /// Create new adaptive components
-    pub fn new(model_dim: usize) -> Self {
+    pub fn new(_model_dim: usize) -> Self {
         Self {
-            attention_adaptation: AttentionAdaptation::new(model_dim),
+            attention_adaptation: AttentionAdaptation::new(_model_dim),
             learning_rate_adapter: LearningRateAdapter::new(),
-            gradient_scaler: GradientScaler::new(model_dim),
-            step_size_predictor: StepSizePredictor::new(model_dim),
+            gradient_scaler: GradientScaler::new(_model_dim),
+            step_size_predictor: StepSizePredictor::new(_model_dim),
             convergence_detector: ConvergenceDetector::new(),
         }
     }
@@ -1212,10 +1212,10 @@ impl AdaptiveComponents {
 
 impl AttentionAdaptation {
     /// Create new attention adaptation
-    pub fn new(model_dim: usize) -> Self {
+    pub fn new(_model_dim: usize) -> Self {
         Self {
             adaptation_rate: 0.01,
-            attention_focus: Array1::from_elem(model_dim, 1.0 / model_dim as f64),
+            attention_focus: Array1::from_elem(_model_dim, 1.0 / _model_dim as f64),
             focus_history: VecDeque::with_capacity(100),
             problem_patterns: HashMap::new(),
         }
@@ -1227,7 +1227,7 @@ impl AttentionAdaptation {
             return Ok(());
         }
 
-        // Compute attention focus from weights
+        // Compute attention focus from _weights
         let mut new_focus = Array1::zeros(self.attention_focus.len());
         for i in 0..attention_weights.nrows().min(new_focus.len()) {
             new_focus[i] = attention_weights.row(i).mean().unwrap_or(0.0);
@@ -1298,12 +1298,12 @@ impl LearningRateAdapter {
 
 impl GradientScaler {
     /// Create new gradient scaler
-    pub fn new(model_dim: usize) -> Self {
+    pub fn new(_model_dim: usize) -> Self {
         Self {
-            scale_factors: Array1::ones(model_dim),
+            scale_factors: Array1::ones(_model_dim),
             gradient_stats: GradientStatistics {
-                mean: Array1::zeros(model_dim),
-                variance: Array1::ones(model_dim),
+                mean: Array1::zeros(_model_dim),
+                variance: Array1::ones(_model_dim),
                 count: 0,
                 momentum: 0.9,
             },
@@ -1314,9 +1314,9 @@ impl GradientScaler {
 
 impl StepSizePredictor {
     /// Create new step size predictor
-    pub fn new(feature_dim: usize) -> Self {
+    pub fn new(_feature_dim: usize) -> Self {
         Self {
-            predictor_network: Array2::from_shape_fn((1, feature_dim), |_| {
+            predictor_network: Array2::from_shape_fn((1, _feature_dim), |_| {
                 (rand::rng().random_f64() - 0.5) * 0.1
             }),
             feature_dim,
@@ -1380,7 +1380,7 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
                 }
                 super::ParameterDistribution::Custom { samples } => {
                     if !samples.is_empty() {
-                        samples[rand::rng().random_range(0..samples.len())].clone()
+                        samples[rand::rng().gen_range(0..samples.len())].clone()
                     } else {
                         Array1::zeros(task.problem.dimension)
                     }
@@ -1393,8 +1393,7 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
             // Process a few optimization steps
             for _ in 0..10 {
                 let step = self.process_optimization_step(
-                    &training_objective,
-                    &initial_params.view(),
+                    &training_objective..&initial_params.view(),
                     &task.problem,
                 )?;
                 self.update_performance_metrics();
@@ -1406,8 +1405,7 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
 
     fn adapt_to_problem(
         &mut self,
-        problem: &OptimizationProblem,
-        _initial_params: &ArrayView1<f64>,
+        problem: &OptimizationProblem_initial_params: &ArrayView1<f64>,
     ) -> OptimizeResult<()> {
         self.adapt_to_problem_class(&problem.problem_class)
     }
@@ -1484,12 +1482,12 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
 
 /// Compute attention entropy for analysis
 #[allow(dead_code)]
-fn compute_attention_entropy(attention_scores: &Array2<f64>) -> f64 {
+fn compute_attention_entropy(_attention_scores: &Array2<f64>) -> f64 {
     let mut total_entropy = 0.0;
-    let num_heads = attention_scores.nrows();
+    let num_heads = _attention_scores.nrows();
 
     for i in 0..num_heads {
-        let row = attention_scores.row(i);
+        let row = _attention_scores.row(i);
         let entropy = -row
             .iter()
             .filter(|&&p| p > 1e-8)

@@ -12,22 +12,22 @@ use std::hash::Hash;
 /// Jaccard similarity is the size of the intersection divided by the size of the union
 /// of the neighbor sets.
 #[allow(dead_code)]
-pub fn jaccard_similarity<N, E, Ix>(graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
+pub fn jaccard_similarity<N, E, Ix>(_graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
-    if !graph.contains_node(node1) || !graph.contains_node(node2) {
+    if !_graph.contains_node(node1) || !_graph.contains_node(node2) {
         return Err(GraphError::node_not_found("node"));
     }
 
-    let neighbors1: HashSet<N> = graph
+    let neighbors1: HashSet<N> = _graph
         .neighbors(node1)
         .unwrap_or_default()
         .into_iter()
         .collect();
-    let neighbors2: HashSet<N> = graph
+    let neighbors2: HashSet<N> = _graph
         .neighbors(node2)
         .unwrap_or_default()
         .into_iter()
@@ -45,17 +45,17 @@ where
 
 /// Compute the cosine similarity between two nodes based on their adjacency vectors
 #[allow(dead_code)]
-pub fn cosine_similarity<N, E, Ix>(graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
+pub fn cosine_similarity<N, E, Ix>(_graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64>,
     Ix: IndexType,
 {
-    if !graph.contains_node(node1) || !graph.contains_node(node2) {
+    if !_graph.contains_node(node1) || !_graph.contains_node(node2) {
         return Err(GraphError::node_not_found("node"));
     }
 
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     // Build adjacency vectors
@@ -63,10 +63,10 @@ where
     let mut vec2 = vec![0.0; n];
 
     for (i, node) in nodes.iter().enumerate() {
-        if let Ok(weight) = graph.edge_weight(node1, node) {
+        if let Ok(weight) = _graph.edge_weight(node1, node) {
             vec1[i] = weight.into();
         }
-        if let Ok(weight) = graph.edge_weight(node2, node) {
+        if let Ok(weight) = _graph.edge_weight(node2, node) {
             vec2[i] = weight.into();
         }
     }
@@ -88,14 +88,14 @@ where
 /// This is a simplified version that counts the number of edge additions/deletions
 /// needed to transform one graph into another.
 #[allow(dead_code)]
-pub fn graph_edit_distance<N, E, Ix>(graph1: &Graph<N, E, Ix>, graph2: &Graph<N, E, Ix>) -> usize
+pub fn graph_edit_distance<N, E, Ix>(_graph1: &Graph<N, E, Ix>, graph2: &Graph<N, E, Ix>) -> usize
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
     // Get all edges from both graphs
-    let edges1: HashSet<(N, N)> = graph1
+    let edges1: HashSet<(N, N)> = _graph1
         .edges()
         .into_iter()
         .map(|edge| (edge.source, edge.target))
@@ -107,7 +107,7 @@ where
         .map(|edge| (edge.source, edge.target))
         .collect();
 
-    // Count edges only in graph1 (need to be deleted)
+    // Count edges only in _graph1 (need to be deleted)
     let edges_to_delete = edges1.difference(&edges2).count();
 
     // Count edges only in graph2 (need to be added)

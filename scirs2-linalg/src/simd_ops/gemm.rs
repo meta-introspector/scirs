@@ -63,8 +63,7 @@ pub fn simd_gemm_f32(
     a: &ArrayView2<f32>,
     b: &ArrayView2<f32>,
     beta: f32,
-    c: &mut Array2<f32>,
-    _block_sizes: Option<GemmBlockSizes>,
+    c: &mut Array2<f32>, _block_sizes: Option<GemmBlockSizes>,
 ) -> LinalgResult<()> {
     let (m, k1) = a.dim();
     let (k2, n) = b.dim();
@@ -111,8 +110,7 @@ pub fn simd_gemm_f64(
     a: &ArrayView2<f64>,
     b: &ArrayView2<f64>,
     beta: f64,
-    c: &mut Array2<f64>,
-    _block_sizes: Option<GemmBlockSizes>,
+    c: &mut Array2<f64>, _block_sizes: Option<GemmBlockSizes>,
 ) -> LinalgResult<()> {
     let (m, k1) = a.dim();
     let (k2, n) = b.dim();

@@ -18,7 +18,7 @@ use crate::regularizers::Regularizer;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::regularizers::{L1, Regularizer};
+/// use scirs2__optim::regularizers::{L1, Regularizer};
 ///
 /// // Create an L1 regularizer with strength 0.01
 /// let regularizer = L1::new(0.01);
@@ -45,8 +45,8 @@ impl<A: Float + Debug> L1<A> {
     /// # Arguments
     ///
     /// * `alpha` - Regularization strength
-    pub fn new(alpha: A) -> Self {
-        Self { alpha }
+    pub fn new(_alpha: A) -> Self {
+        Self { _alpha }
     }
 
     /// Get the regularization strength
@@ -67,8 +67,7 @@ where
     D: Dimension,
 {
     fn apply(&self, params: &Array<A, D>, gradients: &mut Array<A, D>) -> Result<A> {
-        // L1 gradient: alpha * sign(params)
-        Zip::from(params).and(gradients).for_each(|&param, grad| {
+        // L1 gradient: alpha * sign(params), Zip::from(params).and(gradients).for_each(|&param, grad| {
             // Sign function: 1 for positive, -1 for negative, 0 for zero
             let sign = if param > A::zero() {
                 A::one()

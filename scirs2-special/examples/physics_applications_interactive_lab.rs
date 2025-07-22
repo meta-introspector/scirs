@@ -16,7 +16,7 @@
 //! Run with: cargo run --example physics_applications_interactive_lab
 
 use ndarray::{Array1, Array2};
-use scirs2_special::*;
+use scirs2__special::*;
 use std::collections::HashMap;
 use std::f64::consts::{PI, TAU};
 use std::io::{self, Write};
@@ -957,11 +957,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn display_main_menu(experiments: &[PhysicsExperiment]) {
+fn display_main_menu(_experiments: &[PhysicsExperiment]) {
     println!("🔬 Available Physics Experiments:");
     println!();
 
-    for (i, exp) in experiments.iter().enumerate() {
+    for (i, exp) in _experiments.iter().enumerate() {
         println!("{}. {} 📊", i + 1, exp.title);
         println!("   {}", exp.description);
         println!(
@@ -1064,9 +1064,9 @@ fn run_experiment(
 }
 
 #[allow(dead_code)]
-fn display_current_parameters(parameters: &HashMap<String, ExperimentParameter>) {
+fn display_current_parameters(_parameters: &HashMap<String, ExperimentParameter>) {
     println!("🎛️  **Current Parameters:**");
-    for (_, param) in parameters {
+    for (_, param) in _parameters {
         println!(
             "  {} ({}) = {} {} - {}",
             param.name, param.symbol, param.current_value, param.units, param.physical_meaning
@@ -1075,13 +1075,13 @@ fn display_current_parameters(parameters: &HashMap<String, ExperimentParameter>)
 }
 
 #[allow(dead_code)]
-fn display_detailed_theory(experiment: &PhysicsExperiment) {
+fn display_detailed_theory(_experiment: &PhysicsExperiment) {
     println!("\n📚 **Detailed Mathematical Theory**");
     println!("{}", "=".repeat(35));
     println!();
 
     println!("🎯 **Special Functions Used:**");
-    for func in &experiment.special_functions_used {
+    for func in &_experiment.special_functions_used {
         println!("  • {}", func);
     }
     println!();
@@ -1089,38 +1089,38 @@ fn display_detailed_theory(experiment: &PhysicsExperiment) {
     println!("🔧 **Simulation Details:**");
     println!(
         "  • Time evolution: {}",
-        experiment.simulation_engine.time_evolution
+        _experiment.simulation_engine.time_evolution
     );
     println!(
         "  • Spatial dimensions: {}",
-        experiment.simulation_engine.spatial_dimensions
+        _experiment.simulation_engine.spatial_dimensions
     );
     println!(
         "  • Boundary conditions: {}",
-        experiment.simulation_engine.boundary_conditions
+        _experiment.simulation_engine.boundary_conditions
     );
     println!(
         "  • Numerical method: {}",
-        experiment.simulation_engine.numerical_method
+        _experiment.simulation_engine.numerical_method
     );
     println!();
 
     println!("📊 **Visualization:**");
     println!(
         "  • Plot type: {:?}",
-        experiment.visualization_config.plot_type
+        _experiment.visualization_config.plot_type
     );
     println!(
         "  • X-axis: {}",
-        experiment.visualization_config.x_axis.label
+        _experiment.visualization_config.x_axis.label
     );
     println!(
         "  • Y-axis: {}",
-        experiment.visualization_config.y_axis.label
+        _experiment.visualization_config.y_axis.label
     );
     println!(
         "  • Animation: {}",
-        experiment.visualization_config.animation_enabled
+        _experiment.visualization_config.animation_enabled
     );
     println!();
 
@@ -1129,8 +1129,8 @@ fn display_detailed_theory(experiment: &PhysicsExperiment) {
 }
 
 #[allow(dead_code)]
-fn run_simulation(experiment: &PhysicsExperiment) -> Result<(), Box<dyn std::error::Error>> {
-    match experiment.id.as_str() {
+fn run_simulation(_experiment: &PhysicsExperiment) -> Result<(), Box<dyn std::error::Error>> {
+    match _experiment.id.as_str() {
         "quantum_harmonic_oscillator" => run_quantum_oscillator_simulation(),
         "cylindrical_wave_propagation" => run_wave_propagation_simulation(),
         "heat_diffusion" => run_heat_diffusion_simulation(),
@@ -1138,9 +1138,8 @@ fn run_simulation(experiment: &PhysicsExperiment) -> Result<(), Box<dyn std::err
         "statistical_mechanics" => run_statistical_simulation(),
         "signal_processing" => run_signal_processing_simulation(),
         "mie_scattering" => run_scattering_simulation(),
-        "quantum_tunneling" => run_tunneling_simulation(),
-        _ => {
-            println!("Simulation not yet implemented for this experiment.");
+        "quantum_tunneling" => run_tunneling_simulation(, _ => {
+            println!("Simulation not yet implemented for this _experiment.");
             Ok(())
         }
     }
@@ -1384,7 +1383,7 @@ fn run_signal_processing_simulation() -> Result<(), Box<dyn std::error::Error>> 
 
     // Fresnel diffraction intensity at a straight edge
     let mut intensity = Array1::zeros(t_range.len());
-    for (i, _t) in t_range.iter().enumerate() {
+    for (i_t) in t_range.iter().enumerate() {
         let c_val = fresnel_c[i] + 0.5;
         let s_val = fresnel_s[i] + 0.5;
         intensity[i] = 0.25 * (c_val * c_val + s_val * s_val);
@@ -1400,7 +1399,7 @@ fn run_signal_processing_simulation() -> Result<(), Box<dyn std::error::Error>> 
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .unwrap();
 
     println!("\n🎯 First diffraction maximum:");
@@ -1546,7 +1545,7 @@ fn run_tunneling_simulation() -> Result<(), Box<dyn std::error::Error>> {
 // Helper functions for special function evaluations
 #[allow(dead_code)]
 fn fresnel_c_integral(x: f64) -> f64 {
-    // Simplified implementation - in practice, use scirs2_special::fresnel
+    // Simplified implementation - in practice, use scirs2__special::fresnel
     let t_max = x.abs();
     if t_max > 5.0 {
         return 0.5 * x.signum();
@@ -1572,7 +1571,7 @@ fn fresnel_c_integral(x: f64) -> f64 {
 
 #[allow(dead_code)]
 fn fresnel_s_integral(x: f64) -> f64 {
-    // Simplified implementation - in practice, use scirs2_special::fresnel
+    // Simplified implementation - in practice, use scirs2__special::fresnel
     let t_max = x.abs();
     if t_max > 5.0 {
         return 0.5 * x.signum();
@@ -1627,8 +1626,7 @@ fn hermite_physicist(n: usize, x: f64) -> f64 {
         2 => 4.0 * x * x - 2.0,
         3 => 8.0 * x * x * x - 12.0 * x,
         4 => 16.0 * x.powi(4) - 48.0 * x * x + 12.0,
-        5 => 32.0 * x.powi(5) - 160.0 * x.powi(3) + 120.0 * x,
-        _ => {
+        5 => 32.0 * x.powi(5) - 160.0 * x.powi(3) + 120.0 * x_ => {
             // Recurrence relation: H_{n+1} = 2x H_n - 2n H_{n-1}
             let mut h_prev2 = 1.0; // H_0
             let mut h_prev1 = 2.0 * x; // H_1
@@ -1648,8 +1646,7 @@ fn j_n(n: i32, x: f64) -> f64 {
     // Placeholder for Bessel function of first kind - use scirs2_special in practice
     match n {
         0 => j0(x),
-        1 => j1(x),
-        _ => 0.0, // Simplified - implement full Bessel functions
+        1 => j1(x, _ => 0.0, // Simplified - implement full Bessel functions
     }
 }
 
@@ -1658,14 +1655,13 @@ fn y_n(n: i32, x: f64) -> f64 {
     // Placeholder for Bessel function of second kind - use scirs2_special in practice
     match n {
         0 => y0(x),
-        1 => y1(x),
-        _ => 0.0, // Simplified - implement full Neumann functions
+        1 => y1(x, _ => 0.0, // Simplified - implement full Neumann functions
     }
 }
 
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> io::Result<String> {
-    print!("{}", prompt);
+fn get_user_input(_prompt: &str) -> io::Result<String> {
+    print!("{}", _prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

@@ -11,8 +11,8 @@
 //! # Examples
 //!
 //! ```rust
-//! use scirs2_graph::io::edge_list::{read_edge_list_format, write_edge_list_format};
-//! use scirs2_graph::base::Graph;
+//! use scirs2__graph::io::edge_list::{read_edge_list_format, write_edge_list_format};
+//! use scirs2__graph::base::Graph;
 //! use std::io::Write;
 //! use tempfile::NamedTempFile;
 //!
@@ -63,13 +63,13 @@ use crate::error::{GraphError, Result};
 /// - Empty lines are ignored
 /// - Malformed lines are skipped
 #[allow(dead_code)]
-pub fn read_edge_list_format<N, E, P>(path: P, weighted: bool) -> Result<Graph<N, E>>
+pub fn read_edge_list_format<N, E, P>(_path: P, weighted: bool) -> Result<Graph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
+    let file = File::open(_path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
     let reader = BufReader::new(file);
     let mut graph = Graph::new();
 
@@ -192,13 +192,13 @@ where
 /// - Empty lines are ignored
 /// - Malformed lines are skipped
 #[allow(dead_code)]
-pub fn read_edge_list_format_digraph<N, E, P>(path: P, weighted: bool) -> Result<DiGraph<N, E>>
+pub fn read_edge_list_format_digraph<N, E, P>(_path: P, weighted: bool) -> Result<DiGraph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
+    let file = File::open(_path).map_err(|e| GraphError::Other(format!("Cannot open file: {e}")))?;
     let reader = BufReader::new(file);
     let mut graph = DiGraph::new();
 

@@ -1,8 +1,8 @@
 use ndarray::{array, Array1, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::utils::dense_output::{create_dense_solution, DenseSolution};
-use scirs2_integrate::ode::utils::interpolation::ContinuousOutputMethod;
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::utils::dense_output::{create_dense_solution, DenseSolution};
+use scirs2__integrate::ode::utils::interpolation::ContinuousOutputMethod;
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::f64::consts::PI;
 use std::io::Write;
 

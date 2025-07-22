@@ -3,7 +3,7 @@
 //! This example demonstrates the comprehensive SIMD performance validation system
 //! across different architectures and instruction sets.
 
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     run_simd_validation, run_simd_validation_with_config, SimdValidationConfig,
 };
 

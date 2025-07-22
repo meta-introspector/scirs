@@ -6,8 +6,8 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
-use rand_distr::{Normal, StandardNormal};
-use scirs2_stats::{
+use rand__distr::{Normal, StandardNormal};
+use scirs2__stats::{
     anderson_darling,
     dagostino_k2,
     friedman,
@@ -31,7 +31,7 @@ use scirs2_stats::{
 /// Generate random normal data
 #[allow(dead_code)]
 fn generate_normal_data(n: usize, mean: f64, std: f64) -> Array1<f64> {
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let normal = Normal::new(mean, std).unwrap();
     Array1::from_shape_fn(n, |_| normal.sample(&mut rng))
 }
@@ -223,7 +223,7 @@ fn bench_correlations(c: &mut Criterion) {
 
     for &n in &sample_sizes {
         // Generate correlated data
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let x: Array1<f64> = Array1::from_shape_fn(n, |_| StandardNormal.sample(&mut rng));
         let noise: Array1<f64> = Array1::from_shape_fn(n, |_| StandardNormal.sample(&mut rng));
         let y = &x * 0.8 + &noise * 0.2; // Correlation ~ 0.8
@@ -281,7 +281,7 @@ fn bench_anova(c: &mut Criterion) {
         (10, 20), // 10 groups, 20 samples each
     ];
 
-    use scirs2_stats::one_way_anova;
+    use scirs2__stats::one_way_anova;
 
     for (num_groups, samples_per_group) in configurations {
         let groups: Vec<Array1<f64>> = (0..num_groups)

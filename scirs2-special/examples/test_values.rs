@@ -1,4 +1,4 @@
-use scirs2_special::*;
+use scirs2__special::*;
 
 #[allow(dead_code)]
 fn main() {

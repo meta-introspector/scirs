@@ -35,11 +35,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> Clone for C
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> CSVDataset<F> {
     /// Create a new dataset from CSV file
     pub fn from_csv<P: AsRef<Path>>(
-        _path: P,
-        _has_header: bool,
-        _feature_cols: &[usize],
-        _label_cols: &[usize],
-        _delimiter: char,
+        _path: P_has_header: bool, _feature_cols: &[usize], _label_cols: &[usize], _delimiter: char,
     ) -> Result<Self> {
         // In a real implementation, we'd use a CSV reader here
         // For now, just return an error
@@ -97,18 +93,18 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync, D: Dataset<
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync, D: Dataset<F> + Clone>
     TransformedDataset<F, D>
     /// Create a new transformed dataset
-    pub fn new(dataset: D) -> Self {
-            dataset,
+    pub fn new(_dataset: D) -> Self {
+            _dataset,
             feature_transform: None,
             label_transform: None,
 impl<
         F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync,
         D: Dataset<F> + Clone + 'static,
     > Dataset<F> for TransformedDataset<F, D>
-        self.dataset.len()
-        // Get the data from the underlying dataset
-        let (mut x, mut y) = self.dataset.get(index)?;
-/// Subset dataset wrapper
+        self._dataset.len()
+        // Get the data from the underlying _dataset
+        let (mut x, mut y) = self._dataset.get(index)?;
+/// Subset _dataset wrapper
 #[derive(Debug, Clone)]
 pub struct SubsetDataset<
     /// Indices to include in the subset
@@ -116,11 +112,11 @@ pub struct SubsetDataset<
     /// Phantom data for float type
     _phantom: PhantomData<F>,
     SubsetDataset<F, D>
-    /// Create a new subset dataset
-    pub fn new(dataset: D, indices: Vec<usize>) -> Result<Self> {
+    /// Create a new subset _dataset
+    pub fn new(_dataset: D, indices: Vec<usize>) -> Result<Self> {
         // Validate indices
         for &idx in &indices {
-            if idx >= dataset.len() {
+            if idx >= _dataset.len() {
                 return Err(NeuralError::InferenceError(format!(
                     "Index {} out of bounds for dataset with length {}",
                     idx,
@@ -128,8 +124,7 @@ pub struct SubsetDataset<
                 )));
             }
         Ok(Self {
-            indices,
-            _phantom: PhantomData,
+            indices_phantom: PhantomData,
         })
     > Dataset<F> for SubsetDataset<F, D>
         self.indices.len()

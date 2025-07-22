@@ -55,14 +55,14 @@ impl std::fmt::Debug for BoundaryCondition {
 impl Clone for BoundaryCondition {
     fn clone(&self) -> Self {
         match self {
-            BoundaryCondition::Dirichlet(value) => BoundaryCondition::Dirichlet(*value),
-            BoundaryCondition::Neumann(value) => BoundaryCondition::Neumann(*value),
+            BoundaryCondition::Dirichlet(value) =>, BoundaryCondition::Dirichlet(*value),
+            BoundaryCondition::Neumann(value) =>, BoundaryCondition::Neumann(*value),
             BoundaryCondition::Robin { alpha, beta, value } => BoundaryCondition::Robin {
                 alpha: *alpha,
                 beta: *beta,
                 value: *value,
             },
-            BoundaryCondition::Custom(func) => BoundaryCondition::Custom(Arc::clone(func)),
+            BoundaryCondition::Custom(func) =>, BoundaryCondition::Custom(Arc::clone(func)),
         }
     }
 }
@@ -222,7 +222,7 @@ impl IrregularGrid {
     }
 
     /// Generate ghost point values based on boundary conditions
-    pub fn update_ghost_points(&mut self, solution: &Array1<f64>) -> PDEResult<()> {
+    pub fn update_ghost_points(_solution: &Array1<f64>) -> PDEResult<()> {
         for ((i, j), bc) in &self.boundary_conditions {
             let boundary_point = &self.points[[*j, *i]];
 
@@ -240,7 +240,7 @@ impl IrregularGrid {
                             boundary_point,
                             ghost_point,
                             bc,
-                            solution,
+                            _solution,
                             (di, dj),
                         )?;
 
@@ -256,12 +256,12 @@ impl IrregularGrid {
     }
 
     /// Get ghost point value by grid indices
-    pub fn get_ghost_value(&self, i: usize, j: usize) -> Option<f64> {
+    pub fn get_ghost_value(i: usize, j: usize) -> Option<f64> {
         self.ghost_values.get(&(i, j)).copied()
     }
 
     /// Clear all stored ghost values
-    pub fn clear_ghost_values(&mut self) {
+    pub fn clear_ghost_values() {
         self.ghost_values.clear();
     }
 
@@ -271,7 +271,7 @@ impl IrregularGrid {
     }
 
     /// Set a specific ghost point value manually
-    pub fn set_ghost_value(&mut self, i: usize, j: usize, value: f64) -> PDEResult<()> {
+    pub fn set_ghost_value(i: usize, j: usize, value: f64) -> PDEResult<()> {
         if i >= self.nx || j >= self.ny {
             return Err(PDEError::FiniteDifferenceError(
                 "Grid indices out of bounds".to_string(),
@@ -306,13 +306,13 @@ impl IrregularGrid {
         match bc {
             BoundaryCondition::Dirichlet(value) => {
                 // For Dirichlet BC: u_boundary = value
-                // Ghost point: u_ghost = 2*value - u_interior
+                // Ghost _point: u_ghost = 2*value - u_interior
                 // This ensures the boundary condition is satisfied
                 Ok(2.0 * value - boundary_value)
             }
             BoundaryCondition::Neumann(derivative) => {
                 // For Neumann BC: du/dn = derivative
-                // Ghost point: u_ghost = u_interior + 2*h*derivative
+                // Ghost _point: u_ghost = u_interior + 2*h*derivative
                 let h = if direction.0 != 0 { self.dx } else { self.dy };
                 Ok(boundary_value + 2.0 * h * derivative)
             }
@@ -416,7 +416,7 @@ impl IrregularGrid {
                                     rhs[row_idx] = *value;
                                 }
                                 _ => {
-                                    // For non-Dirichlet boundary conditions, use the source function
+                                    // For non-Dirichlet boundary conditions, use the source _function
                                     if let Some(source_fn) = source_function {
                                         rhs[row_idx] += source_fn(x, y);
                                     }
@@ -477,14 +477,14 @@ impl IrregularGrid {
     }
 
     /// Extract solution values for interior and boundary points
-    pub fn extract_domain_solution(&self, full_solution: &Array1<f64>) -> Array2<f64> {
+    pub fn extract_domain_solution(_full_solution: &Array1<f64>) -> Array2<f64> {
         let mut domain_solution = Array2::from_elem((self.ny, self.nx), f64::NAN);
 
         for j in 0..self.ny {
             for i in 0..self.nx {
                 let point = &self.points[[j, i]];
                 if point.solution_index >= 0 {
-                    domain_solution[[j, i]] = full_solution[point.solution_index as usize];
+                    domain_solution[[j, i]] = _full_solution[point.solution_index as usize];
                 }
             }
         }
@@ -501,14 +501,14 @@ impl IrregularGrid {
     ) -> PDEResult<Array1<f64>> {
         let n_interior = self.count_interior_points();
 
-        // Use initial guess or zero vector
-        let mut solution = if let Some(guess) = initial_guess {
-            if guess.len() != n_interior {
+        // Use initial _guess or zero vector
+        let mut solution = if let Some(_guess) = initial_guess {
+            if _guess.len() != n_interior {
                 return Err(PDEError::ComputationError(
-                    "Initial guess size doesn't match number of domain points".to_string(),
+                    "Initial _guess size doesn't match number of domain points".to_string(),
                 ));
             }
-            guess.clone()
+            _guess.clone()
         } else {
             Array1::zeros(n_interior)
         };
@@ -539,14 +539,14 @@ impl IrregularGrid {
     ) -> PDEResult<Array1<f64>> {
         let n_interior = self.count_interior_points();
 
-        // Use initial guess or zero vector
-        let mut solution = if let Some(guess) = initial_guess {
-            if guess.len() != n_interior {
+        // Use initial _guess or zero vector
+        let mut solution = if let Some(_guess) = initial_guess {
+            if _guess.len() != n_interior {
                 return Err(PDEError::ComputationError(
-                    "Initial guess size doesn't match number of domain points".to_string(),
+                    "Initial _guess size doesn't match number of domain points".to_string(),
                 ));
             }
-            guess.clone()
+            _guess.clone()
         } else {
             Array1::zeros(n_interior)
         };
@@ -586,7 +586,7 @@ impl IrregularGrid {
 
         if !converged {
             return Err(PDEError::ComputationError(format!(
-                "Failed to converge after {max_iterations} iterations"
+                "Failed to converge after {max_iterations} _iterations"
             )));
         }
 
@@ -609,7 +609,7 @@ impl IrregularStencils {
     ) -> PDEResult<Vec<(usize, usize, f64)>> {
         if neighbor_points.is_empty() {
             return Err(PDEError::InvalidGrid(
-                "No neighbor points provided".to_string(),
+                "No neighbor _points provided".to_string(),
             ));
         }
 
@@ -619,12 +619,12 @@ impl IrregularStencils {
         match derivative_order {
             1 => {
                 // First derivative: use forward/backward differences based on available neighbors
-                for (neighbor, _distance) in neighbor_points.iter() {
+                for (neighbor_distance) in neighbor_points.iter() {
                     let (nx, ny) = neighbor.coords;
                     let dx = nx - cx;
                     let dy = ny - cy;
 
-                    // Simple first-order finite difference coefficients
+                    // Simple first-_order finite difference coefficients
                     if dx.abs() > dy.abs() {
                         // Primarily x-direction derivative
                         let coeff = if dx > 0.0 { 1.0 / dx } else { -1.0 / dx.abs() };
@@ -644,8 +644,8 @@ impl IrregularStencils {
                     }
                 }
 
-                // Add center point coefficient
-                let center_coeff = -stencil_coefficients.iter().map(|(_, _, c)| c).sum::<f64>();
+                // Add center _point coefficient
+                let center_coeff = -stencil_coefficients.iter().map(|(__, c)| c).sum::<f64>();
                 stencil_coefficients.push((
                     center_point.grid_indices.0,
                     center_point.grid_indices.1,
@@ -654,7 +654,7 @@ impl IrregularStencils {
             }
 
             2 => {
-                // Second derivative: use three-point stencils when possible
+                // Second derivative: use three-_point stencils when possible
                 if neighbor_points.len() >= 2 {
                     // Find the two closest neighbors in the primary direction
                     let mut sorted_neighbors: Vec<_> = neighbor_points.iter().collect();
@@ -664,7 +664,7 @@ impl IrregularStencils {
                         let h1 = sorted_neighbors[0].1;
                         let h2 = sorted_neighbors[1].1;
 
-                        // Three-point finite difference for second derivative
+                        // Three-_point finite difference for second derivative
                         let c0 = 2.0 / (h1 * h2 * (h1 + h2));
                         let c1 = -2.0 / (h1 * h2);
                         let c2 = 2.0 / (h2 * h1 * (h1 + h2));
@@ -690,7 +690,7 @@ impl IrregularStencils {
 
             _ => {
                 return Err(PDEError::InvalidParameter(format!(
-                    "Unsupported derivative order: {derivative_order}"
+                    "Unsupported derivative _order: {derivative_order}"
                 )));
             }
         }
@@ -718,7 +718,7 @@ impl IrregularStencils {
         let mut constraint_matrix = Array2::<f64>::zeros((n, n));
         let mut rhs = Array1::<f64>::zeros(n);
 
-        for (i, &((x, y), _)) in neighbors.iter().enumerate() {
+        for (i, &((x, y)_)) in neighbors.iter().enumerate() {
             let dx = x - cx;
             let dy = y - cy;
 
@@ -911,12 +911,12 @@ impl ImmersedBoundary {
         let (px, py) = immersed_point.coords;
         let (gi, gj) = immersed_point.grid_indices;
 
-        // Find the closest point on the boundary curve
+        // Find the closest _point on the boundary curve
         let closest_boundary_point = self.find_closest_boundary_point(px, py)?;
         let (bx, by) = closest_boundary_point;
 
-        // Get the normal vector at the boundary point
-        let (_nx, _ny) = (self.normal_function)(bx, by);
+        // Get the normal vector at the boundary _point
+        let (_nx_ny) = (self.normal_function)(bx, by);
 
         // Find neighboring grid points for interpolation
         let neighbor_radius = 2; // Search within 2 grid points
@@ -964,10 +964,10 @@ impl ImmersedBoundary {
         let mut weights = Vec::new();
         let mut total_weight = 0.0;
 
-        for &((ni, nj), distance, (_gx, _gy)) in &interpolation_points {
+        for &((ni, nj), distance, (_gx_gy)) in &interpolation_points {
             // Use radial basis function weighting
             let weight = if distance < 1e-12 {
-                1.0 // Point coincides with grid point
+                1.0 // Point coincides with grid _point
             } else {
                 // Inverse distance squared weighting
                 1.0 / (distance * distance)
@@ -1009,7 +1009,7 @@ impl ImmersedBoundary {
     }
 
     /// Find the closest point on the boundary curve to a given point
-    fn find_closest_boundary_point(&self, px: f64, py: f64) -> PDEResult<(f64, f64)> {
+    fn find_closest_boundary_point(_px: f64, py: f64) -> PDEResult<(f64, f64)> {
         // Use a simple search along the parameterized boundary curve
         let mut min_distance = f64::INFINITY;
         let mut closest_point = (0.0, 0.0);
@@ -1020,7 +1020,7 @@ impl ImmersedBoundary {
             let t = i as f64 / (num_samples - 1) as f64; // Parameter from 0 to 1
             let (bx, by) = (self.boundary_curve)(t);
 
-            let distance = ((bx - px).powi(2) + (by - py).powi(2)).sqrt();
+            let distance = ((bx - _px).powi(2) + (by - py).powi(2)).sqrt();
             if distance < min_distance {
                 min_distance = distance;
                 closest_point = (bx, by);
@@ -1161,7 +1161,7 @@ mod tests {
         }
 
         // Source function: f(x,y) = 1 (constant source)
-        let source_fn = |_x: f64, _y: f64| 1.0;
+        let source_fn = |_x: f64_y: f64| 1.0;
 
         // Solve the PDE: ∇²u = 1 with u = 0 on boundary
         let solution = grid.solve_pde(Some(&source_fn), None).unwrap();

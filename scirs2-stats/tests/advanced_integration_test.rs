@@ -1,14 +1,14 @@
 //! Integration tests for Advanced mode functionality
 
 use ndarray::Array1;
-use scirs2_stats::advanced_error_enhancements::{AdvancedContextBuilder, AdvancedErrorMessages};
-use scirs2_stats::advanced_numerical_stability::{
+use scirs2__stats::advanced_error_enhancements::{AdvancedContextBuilder, AdvancedErrorMessages};
+use scirs2__stats::advanced_numerical_stability::{
     AdvancedNumericalStabilityAnalyzer, NumericalStabilityConfig,
 };
-use scirs2_stats::advanced_property_tests::AdvancedPropertyTester;
-use scirs2_stats::advanced_simd_optimizations::{advanced_batch_statistics, AdvancedSimdConfig};
-use scirs2_stats::parallel_enhancements::AdvancedParallelConfig;
-use scirs2_stats::{mean, var};
+use scirs2__stats::advanced_property_tests::AdvancedPropertyTester;
+use scirs2__stats::advanced_simd_optimizations::{advanced_batch_statistics, AdvancedSimdConfig};
+use scirs2__stats::parallel_enhancements::AdvancedParallelConfig;
+use scirs2__stats::{mean, var};
 
 #[test]
 #[allow(dead_code)]
@@ -149,8 +149,8 @@ mod property_tests {
     use quickcheck::TestResult;
 
     #[quickcheck::quickcheck]
-    fn test_advanced_error_context_properties(data_size: usize, memory_mb: f64) -> TestResult {
-        if data_size == 0 || memory_mb < 0.0 || memory_mb > 1e9 {
+    fn test_advanced_error_context_properties(_data_size: usize, memory_mb: f64) -> TestResult {
+        if _data_size == 0 || memory_mb < 0.0 || memory_mb > 1e9 {
             return TestResult::discard();
         }
 

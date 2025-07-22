@@ -75,13 +75,13 @@ pub struct LayerStatistics<F: Float + Debug> {
     pub is_frozen: bool,
 impl<F: Float + Debug + 'static> TransferLearningManager<F> {
     /// Create a new transfer learning manager
-    pub fn new(strategy: TransferStrategy, base_learning_rate: f64) -> Result<Self> {
+    pub fn new(_strategy: TransferStrategy, base_learning_rate: f64) -> Result<Self> {
         Ok(Self {
             layer_states: HashMap::new(),
             layer_order: Vec::new(),
-            strategy,
+            _strategy,
             base_learning_rate: F::from(base_learning_rate).ok_or_else(|| {
-                NeuralError::InvalidArchitecture("Invalid learning rate".to_string())
+                NeuralError::InvalidArchitecture("Invalid learning _rate".to_string())
             })?,
             current_epoch: 0,
             layer_stats: Arc::new(RwLock::new(HashMap::new())),
@@ -110,8 +110,7 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
             } => {
                 let backbone_layers = total_layers.saturating_sub(2); // Last 2 layers are "head"
                     let state = if i < backbone_layers {
-                        LayerState::ReducedLearningRate(*backbone_lr_ratio)
-                        LayerState::ReducedLearningRate(*head_lr_ratio)
+                        LayerState::ReducedLearningRate(*backbone_lr_ratio), LayerState::ReducedLearningRate(*head_lr_ratio)
             TransferStrategy::ProgressiveUnfreezing { .. } => {
                 // Start with all layers frozen
                 for layer_name in layer_names {
@@ -148,7 +147,7 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
     /// Get effective learning rate for a layer
     pub fn get_layer_learning_rate(&self, layer_name: &str) -> F {
         match self.layer_states.get(layer_name) {
-            Some(LayerState::Frozen) => F::zero(),
+            Some(LayerState::Frozen) =>, F::zero(),
             Some(LayerState::Trainable) => self.base_learning_rate,
             Some(LayerState::ReducedLearningRate(ratio)) => {
                 self.base_learning_rate * F::from(*ratio).unwrap_or(F::one())
@@ -285,8 +284,7 @@ impl PretrainedWeightLoader {
                     "Conv layer weights detected for {}: {:?}",
             1 => {
                 // Bias weights
-                    "Bias weights detected for {}: {:?}",
-            _ => {
+                    "Bias weights detected for {}: {:?}"_ => {
                 if !self.ignore_mismatches {
                     return Err(NeuralError::InvalidArchitecture(format!(
                         "Unsupported weight tensor dimensionality {} for layer {}",
@@ -377,17 +375,17 @@ pub struct WeightStatistics {
     pub l2_norm: f32,
 impl WeightStatistics {
     /// Compute statistics from a weight tensor
-    pub fn from_tensor(weights: &ArrayD<f32>) -> Self {
-        let shape = weights.shape().to_vec();
-        let param_count = weights.len();
-        let min = weights.iter().cloned().fold(f32::INFINITY, f32::min);
-        let max = weights.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
-        let sum: f32 = weights.sum();
+    pub fn from_tensor(_weights: &ArrayD<f32>) -> Self {
+        let shape = _weights.shape().to_vec();
+        let param_count = _weights.len();
+        let min = _weights.iter().cloned().fold(f32::INFINITY, f32::min);
+        let max = _weights.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+        let sum: f32 = _weights.sum();
         let mean = sum / param_count as f32;
         let variance: f32 =
-            weights.iter().map(|&x| (x - mean).powi(2)).sum::<f32>() / param_count as f32;
+            _weights.iter().map(|&x| (x - mean).powi(2)).sum::<f32>() / param_count as f32;
         let std = variance.sqrt();
-        let l2_norm = weights.iter().map(|&x| x * x).sum::<f32>().sqrt();
+        let l2_norm = _weights.iter().map(|&x| x * x).sum::<f32>().sqrt();
             shape,
             mean,
             std,
@@ -396,11 +394,11 @@ impl WeightStatistics {
             l2_norm,
 /// Weight compatibility report
 pub struct CompatibilityReport {
-    /// Layers with compatible weights
+    /// Layers with compatible _weights
     pub compatible: Vec<String>,
     /// Layers with incompatible weight shapes
     pub incompatible: Vec<WeightMismatch>,
-    /// Layers with missing weights
+    /// Layers with missing _weights
     pub missing: Vec<String>,
 /// Weight shape mismatch information
 pub struct WeightMismatch {
@@ -411,7 +409,7 @@ pub struct WeightMismatch {
     /// Actual weight shape in pretrained model
     pub actual_shape: Vec<usize>,
 impl CompatibilityReport {
-    /// Check if all weights are compatible
+    /// Check if all _weights are compatible
     pub fn is_fully_compatible(&self) -> bool {
         self.incompatible.is_empty() && self.missing.is_empty()
     /// Get compatibility percentage
@@ -585,20 +583,15 @@ impl ModelSurgery {
                         layer_name, new_shape
         Ok(applied_operations)
     fn add_layer_at_position(
-        _model_config: &mut ModelConfig,
-        _position: usize,
-        _layer_name: &str,
-        _layer_config: &LayerConfig,
+        _model_config: &mut ModelConfig, _position: usize_layer_name: &str, _layer_config: &LayerConfig,
         // Implementation would modify the model configuration
-    fn remove_layer(&self, _model_config: &mut ModelConfig, _layer_name: &str) -> Result<()> {
+    fn remove_layer(&self, _model_config: &mut ModelConfig_layer, _name: &str) -> Result<()> {
         // Implementation would remove the layer from model configuration
     fn replace_layer(
-        _old_layer: &str,
-        _new_layer: &str,
+        _old_layer: &str, _new_layer: &str,
         // Implementation would replace the layer in model configuration
     fn resize_layer(
-        _new_shape: &[usize],
-        _init_strategy: &WeightInitStrategy,
+        _new_shape: &[usize], _init_strategy: &WeightInitStrategy,
         // Implementation would resize the layer and reinitialize weights
 impl Default for ModelSurgery {
 /// Placeholder for model configuration
@@ -738,10 +731,10 @@ pub enum AdaptationMethod {
     CoralAlignment,
     > DomainAdaptation<F>
     /// Create new domain adaptation utility
-    pub fn new(method: AdaptationMethod) -> Self {
+    pub fn new(_method: AdaptationMethod) -> Self {
             source_stats: HashMap::new(),
             target_stats: HashMap::new(),
-            adaptation_method: method,
+            adaptation_method: _method,
     /// Compute domain statistics from data
     pub fn compute_domain_statistics(
         domain_name: String,

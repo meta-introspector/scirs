@@ -484,7 +484,7 @@ pub fn bernoulli_number(n: u32) -> SpecialResult<f64> {
         8 => return Ok(-1.0 / 30.0),
         10 => return Ok(5.0 / 66.0),
         12 => return Ok(-691.0 / 2730.0),
-        _ => {}
+        _ => {} // Fall through to the recurrence relation below
     }
 
     // For larger values, use recurrence relation
@@ -550,7 +550,7 @@ pub fn euler_number(n: u32) -> SpecialResult<f64> {
         6 => return Ok(-61.0),
         8 => return Ok(1385.0),
         10 => return Ok(-50521.0),
-        _ => {}
+        _ => {} // Fall through to computation below
     }
 
     // For larger values, use more efficient algorithms

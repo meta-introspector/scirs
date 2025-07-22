@@ -7,11 +7,12 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::array;
-use num_complex::Complex;
+use num__complex::Complex;
 
 use scirs2_linalg::complex::enhanced_ops::{
     det, hermitian_part, inner_product, is_hermitian, is_unitary, matrix_exp, matvec,
 };
+use ndarray::ArrayView1;
 // use scirs2_linalg::error::LinalgResult;
 // Matrix calculus is temporarily disabled
 // use scirs2_linalg::matrix_calculus::enhanced::{

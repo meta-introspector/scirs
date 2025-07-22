@@ -1,8 +1,8 @@
 //! Example demonstrating MDCT and MDST usage for audio processing
 
 use ndarray::{array, Array1};
-use scirs2_fft::mdct::{imdct, imdst, mdct, mdct_overlap_add, mdst};
-use scirs2_fft::window::Window;
+use scirs2__fft::mdct::{imdct, imdst, mdct, mdct_overlap_add, mdst};
+use scirs2__fft::window::Window;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

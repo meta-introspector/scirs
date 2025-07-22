@@ -3,10 +3,10 @@
 //! This module provides GPU acceleration for sparse matrix operations
 //! using the scirs2-core GPU backend system.
 
-use crate::csr_array::CsrArray;
+use crate::csr__array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
-use crate::sym_csr::SymCsrMatrix;
+use crate::sym__csr::SymCsrMatrix;
 use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
@@ -15,7 +15,7 @@ use std::fmt::Debug;
 
 // Import GPU kernel execution functions
 #[cfg(feature = "gpu")]
-use crate::gpu_kernel_execution::{GpuKernelConfig, MemoryStrategy};
+use crate::gpu_kernel__execution::{GpuKernelConfig, MemoryStrategy};
 
 // Import and re-export GPU capabilities from scirs2-core (only when GPU feature is enabled)
 #[cfg(feature = "gpu")]
@@ -44,24 +44,24 @@ pub struct GpuError(String);
 
 #[cfg(not(feature = "gpu"))]
 impl GpuError {
-    pub fn new(msg: &str) -> Self {
-        Self(msg.to_string())
+    pub fn new(_msg: &str) -> Self {
+        Self(_msg.to_string())
     }
 
-    pub fn invalid_buffer(msg: String) -> Self {
-        Self(msg)
+    pub fn invalid_buffer(_msg: String) -> Self {
+        Self(_msg)
     }
 
-    pub fn invalid_parameter(msg: String) -> Self {
-        Self(msg)
+    pub fn invalid_parameter(_msg: String) -> Self {
+        Self(_msg)
     }
 
-    pub fn kernel_compilation_error(msg: String) -> Self {
-        Self(msg)
+    pub fn kernel_compilation_error(_msg: String) -> Self {
+        Self(_msg)
     }
 
-    pub fn other(msg: String) -> Self {
-        Self(msg)
+    pub fn other(_msg: String) -> Self {
+        Self(_msg)
     }
 }
 
@@ -117,12 +117,12 @@ impl<T: Clone + Copy> GpuBuffer<T> {
     }
 
     pub fn copy_from_host(&mut self, host_data: &[T]) -> Result<(), GpuError> {
-        if host_data.len() != self.data.len() {
+        if host_data.len() != self._data.len() {
             return Err(GpuError::invalid_parameter(
-                "Host data length does not match buffer length".to_string(),
+                "Host _data length does not match buffer length".to_string(),
             ));
         }
-        self.data.copy_from_slice(host_data);
+        self._data.copy_from_slice(host_data);
         Ok(())
     }
 }
@@ -157,8 +157,8 @@ pub struct GpuDevice;
 
 #[cfg(feature = "gpu")]
 impl GpuDevice {
-    pub fn get_default(backend: GpuBackend) -> Result<Self, GpuError> {
-        let context = GpuContext::new(backend)?;
+    pub fn get_default(_backend: GpuBackend) -> Result<Self, GpuError> {
+        let context = GpuContext::new(_backend)?;
         Ok(Self { context })
     }
 
@@ -190,8 +190,7 @@ impl GpuDevice {
 
     pub fn compile_kernel(
         &self,
-        source: &str,
-        _entry_point: &str,
+        source: &str, _entry_point: &str,
     ) -> Result<GpuKernelHandle, GpuError> {
         self.context.execute(|compiler| compiler.compile(source))
     }
@@ -239,37 +238,29 @@ impl GpuDevice {
         Ok(())
     }
 
-    pub fn clear_buffer<T: GpuDataType>(&self, _buffer: &GpuBuffer<T>) -> Result<(), GpuError> {
-        // Clear buffer implementation for GPU
+    pub fn clear_buffer<T: GpuDataType>(&self_buffer: &GpuBuffer<T>) -> Result<(), GpuError> {
+        // Clear _buffer implementation for GPU
         Ok(())
     }
 
     pub fn set_kernel_arg<T: GpuDataType>(
-        &self,
-        _kernel: &GpuKernelHandle,
-        _index: usize,
-        _buffer: &GpuBuffer<T>,
+        &self_kernel: &GpuKernelHandle, _index: usize_buffer: &GpuBuffer<T>,
     ) -> Result<(), GpuError> {
-        // Set kernel argument implementation for GPU
+        // Set _kernel argument implementation for GPU
         Ok(())
     }
 
     pub fn set_kernel_arg_scalar<T>(
-        &self,
-        _kernel: &GpuKernelHandle,
-        _index: usize,
-        _value: &T,
+        &self_kernel: &GpuKernelHandle, _index: usize_value: &T,
     ) -> Result<(), GpuError> {
-        // Set scalar kernel argument implementation for GPU
+        // Set scalar _kernel argument implementation for GPU
         Ok(())
     }
 
     pub fn dispatch_kernel(
-        &self,
-        _kernel: &GpuKernelHandle,
-        _global_size: [u32; 3],
+        &self_kernel: &GpuKernelHandle_global, _size: [u32; 3],
     ) -> Result<(), GpuError> {
-        // Dispatch kernel implementation for GPU
+        // Dispatch _kernel implementation for GPU
         Ok(())
     }
 
@@ -317,9 +308,7 @@ impl GpuDevice {
     }
 
     pub fn compile_kernel(
-        &self,
-        _source: &str,
-        _entry_point: &str,
+        &self_source: &str, _entry_point: &str,
     ) -> Result<GpuKernelHandle, GpuError> {
         Ok(GpuKernelHandle)
     }
@@ -330,11 +319,7 @@ impl GpuDevice {
     }
 
     pub fn execute_kernel_with_args(
-        &self,
-        _kernel: &GpuKernelHandle,
-        _global_size: &[usize],
-        _local_size: &[usize],
-        _args: &[Box<dyn std::any::Any>],
+        &self_kernel: &GpuKernelHandle_global, _size: &[usize], _local_size: &[usize], _args: &[Box<dyn std::any::Any>],
     ) -> Result<(), GpuError> {
         // CPU fallback - just return success
         Ok(())
@@ -365,37 +350,29 @@ impl GpuDevice {
         Ok(())
     }
 
-    pub fn clear_buffer<T: GpuDataType>(&self, _buffer: &GpuBuffer<T>) -> Result<(), GpuError> {
+    pub fn clear_buffer<T: GpuDataType>(&self_buffer: &GpuBuffer<T>) -> Result<(), GpuError> {
         // No-op for CPU fallback
         Ok(())
     }
 
     pub fn set_kernel_arg<T: GpuDataType>(
-        &self,
-        _kernel: &GpuKernelHandle,
-        _index: usize,
-        _buffer: &GpuBuffer<T>,
+        &self_kernel: &GpuKernelHandle, _index: usize_buffer: &GpuBuffer<T>,
     ) -> Result<(), GpuError> {
         // No-op for CPU fallback
         Ok(())
     }
 
     pub fn set_kernel_arg_scalar<T>(
-        &self,
-        _kernel: &GpuKernelHandle,
-        _index: usize,
-        _value: &T,
+        &self_kernel: &GpuKernelHandle, _index: usize_value: &T,
     ) -> Result<(), GpuError> {
         // No-op for CPU fallback
         Ok(())
     }
 
     pub fn dispatch_kernel(
-        &self,
-        _kernel: &GpuKernelHandle,
-        _global_size: [u32; 3],
+        &self_kernel: &GpuKernelHandle_global, _size: [u32; 3],
     ) -> Result<(), GpuError> {
-        // Dispatch kernel implementation for GPU
+        // Dispatch _kernel implementation for GPU
         Ok(())
     }
 
@@ -436,10 +413,10 @@ pub struct SpMVKernel {
 }
 
 impl SpMVKernel {
-    pub fn new(device: &GpuDevice, _workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
+    pub fn new(_device: &GpuDevice_workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
         // Compile GPU kernels for actual hardware acceleration
 
-        match device.backend() {
+        match _device.backend() {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => {
                 // Compile CUDA SpMV kernel
@@ -499,7 +476,7 @@ impl SpMVKernel {
                 "#;
 
                 // Compile and validate CUDA kernel with enhanced error handling
-                let kernel_handle = device
+                let kernel_handle = _device
                     .compile_kernel(cuda_kernel_source, "spmv_csr_vectorized_kernel")
                     .map_err(|e| {
                         GpuError::kernel_compilation_error(format!(
@@ -510,7 +487,7 @@ impl SpMVKernel {
                 // Verify kernel compilation succeeded and store handle
                 Ok(Self {
                     kernel_handle: Some(kernel_handle),
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
 
@@ -519,7 +496,7 @@ impl SpMVKernel {
                 // GPU-enabled CUDA implementation
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
 
@@ -527,12 +504,7 @@ impl SpMVKernel {
                 // Compile OpenCL SpMV kernel
                 let opencl_kernel_source = r#"
                 __kernel void spmv_csr_kernel(
-                    const int rows,
-                    __global const int* restrict indptr,
-                    __global const int* restrict indices,
-                    __global const float* restrict data,
-                    __global const float* restrict x,
-                    __global float* restrict y
+                    const int rows__global const int* restrict indptr__global const int* restrict indices__global const float* restrict data__global const float* restrict x__global float* restrict y
                 ) {
                     int row = get_global_id(0);
                     if (row >= rows) return;
@@ -550,13 +522,7 @@ impl SpMVKernel {
                 }
                 
                 __kernel void spmv_csr_local_kernel(
-                    const int rows,
-                    __global const int* restrict indptr,
-                    __global const int* restrict indices,
-                    __global const float* restrict data,
-                    __global const float* restrict x,
-                    __global float* restrict y,
-                    __local float* sdata
+                    const int rows__global const int* restrict indptr__global const int* restrict indices__global const float* restrict data__global const float* restrict x__global float* restrict y__local float* sdata
                 ) {
                     int row = get_global_id(0);
                     int lid = get_local_id(0);
@@ -581,7 +547,7 @@ impl SpMVKernel {
                 "#;
 
                 // Compile and validate OpenCL kernel with enhanced error handling
-                let kernel_handle = device
+                let kernel_handle = _device
                     .compile_kernel(opencl_kernel_source, "spmv_csr_local_kernel")
                     .map_err(|e| {
                         GpuError::kernel_compilation_error(format!(
@@ -592,7 +558,7 @@ impl SpMVKernel {
                 // Verify kernel compilation succeeded and store handle
                 Ok(Self {
                     kernel_handle: Some(kernel_handle),
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
 
@@ -608,7 +574,7 @@ impl SpMVKernel {
                     constant int* indices [[buffer(2)]],
                     constant float* data [[buffer(3)]],
                     constant float* x [[buffer(4)]],
-                    device float* y [[buffer(5)]],
+                    _device float* y [[buffer(5)]],
                     uint row [[thread_position_in_grid]]
                 ) {
                     if (row >= rows) return;
@@ -631,7 +597,7 @@ impl SpMVKernel {
                     constant int* indices [[buffer(2)]],
                     constant float* data [[buffer(3)]],
                     constant float* x [[buffer(4)]],
-                    device float* y [[buffer(5)]],
+                    _device float* y [[buffer(5)]],
                     uint row [[thread_position_in_grid]],
                     uint simd_lane [[thread_index_in_simdgroup]]
                 ) {
@@ -651,7 +617,7 @@ impl SpMVKernel {
                 "#;
 
                 // Compile and validate Metal kernel with enhanced error handling
-                let kernel_handle = device
+                let kernel_handle = _device
                     .compile_kernel(metal_kernel_source, "spmv_csr_simdgroup_kernel")
                     .map_err(|e| {
                         GpuError::kernel_compilation_error(format!(
@@ -662,7 +628,7 @@ impl SpMVKernel {
                 // Verify kernel compilation succeeded and store handle
                 Ok(Self {
                     kernel_handle: Some(kernel_handle),
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
 
@@ -670,21 +636,21 @@ impl SpMVKernel {
                 // CPU implementation - no kernel handle needed
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
             GpuBackend::Rocm => {
                 // ROCm implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
             GpuBackend::Wgpu => {
                 // WebGPU implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
         }
@@ -740,8 +706,7 @@ impl SpMVKernel {
                 data,
                 x,
                 y,
-            ),
-            _ => {
+            , _ => {
                 // CPU fallback when GPU not available or not compiled with GPU support
                 self.execute_cpu_fallback(rows, cols, indptr, indices, data, x, y)
             }
@@ -869,8 +834,7 @@ impl SpMVKernel {
     #[allow(dead_code)]
     fn execute_cpu_fallback<T>(
         &self,
-        rows: usize,
-        _cols: usize,
+        rows: usize_cols: usize,
         indptr: &GpuBuffer<usize>,
         indices: &GpuBuffer<usize>,
         data: &GpuBuffer<T>,
@@ -943,10 +907,10 @@ pub struct SpMSKernel {
 }
 
 impl SpMSKernel {
-    pub fn new(device: &GpuDevice, _workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
+    pub fn new(_device: &GpuDevice_workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
         // Compile GPU kernels for advanced sparse operations
 
-        match device.backend() {
+        match _device.backend() {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => {
                 // Compile CUDA kernels for sparse matrix-matrix operations
@@ -1058,10 +1022,10 @@ impl SpMSKernel {
                 "#;
 
                 // Attempt to compile CUDA kernels
-                match device.compile_kernel(cuda_kernel_source, "spmm_csr_kernel") {
+                match _device.compile_kernel(cuda_kernel_source, "spmm_csr_kernel") {
                     Ok(kernel_handle) => Ok(Self {
                         kernel_handle: Some(kernel_handle),
-                        backend: device.backend(),
+                        backend: _device.backend(),
                     }),
                     Err(_) => {
                         // Fall back to CPU if CUDA compilation fails
@@ -1077,7 +1041,7 @@ impl SpMSKernel {
                 // GPU-enabled CUDA implementation
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
 
@@ -1087,16 +1051,7 @@ impl SpMSKernel {
                 __kernel void spmm_csr_kernel(
                     const int a_rows,
                     const int a_cols,
-                    const int b_cols,
-                    __global const int* restrict a_indptr,
-                    __global const int* restrict a_indices,
-                    __global const float* restrict a_data,
-                    __global const int* restrict b_indptr,
-                    __global const int* restrict b_indices,
-                    __global const float* restrict b_data,
-                    __global int* restrict c_indptr,
-                    __global int* restrict c_indices,
-                    __global float* restrict c_data
+                    const int b_cols__global const int* restrict a_indptr__global const int* restrict a_indices__global const float* restrict a_data__global const int* restrict b_indptr__global const int* restrict b_indices__global const float* restrict b_data__global int* restrict c_indptr__global int* restrict c_indices__global float* restrict c_data
                 ) {
                     int row = get_global_id(0);
                     if (row >= a_rows) return;
@@ -1130,12 +1085,7 @@ impl SpMSKernel {
                 }
                 
                 __kernel void triangular_solve_kernel(
-                    const int n,
-                    __global const int* restrict indptr,
-                    __global const int* restrict indices,
-                    __global const float* restrict data,
-                    __global const float* restrict b,
-                    __global float* restrict x
+                    const int n__global const int* restrict indptr__global const int* restrict indices__global const float* restrict data__global const float* restrict b__global float* restrict x
                 ) {
                     for (int i = 0; i < n; i++) {
                         float sum = b[i];
@@ -1159,12 +1109,7 @@ impl SpMSKernel {
                 }
                 
                 __kernel void symmetric_matvec_kernel(
-                    const int rows,
-                    __global const int* restrict indptr,
-                    __global const int* restrict indices,
-                    __global const float* restrict data,
-                    __global const float* restrict x,
-                    __global float* restrict y
+                    const int rows__global const int* restrict indptr__global const int* restrict indices__global const float* restrict data__global const float* restrict x__global float* restrict y
                 ) {
                     int row = get_global_id(0);
                     if (row >= rows) return;
@@ -1186,10 +1131,10 @@ impl SpMSKernel {
                 "#;
 
                 // Attempt to compile OpenCL kernels
-                match device.compile_kernel(opencl_kernel_source, "spmm_csr_kernel") {
+                match _device.compile_kernel(opencl_kernel_source, "spmm_csr_kernel") {
                     Ok(kernel_handle) => Ok(Self {
                         kernel_handle: Some(kernel_handle),
-                        backend: device.backend(),
+                        backend: _device.backend(),
                     }),
                     Err(_) => {
                         // Fall back to CPU if OpenCL compilation fails
@@ -1217,9 +1162,9 @@ impl SpMSKernel {
                     constant int* b_indptr [[buffer(6)]],
                     constant int* b_indices [[buffer(7)]],
                     constant float* b_data [[buffer(8)]],
-                    device int* c_indptr [[buffer(9)]],
-                    device int* c_indices [[buffer(10)]],
-                    device float* c_data [[buffer(11)]],
+                    _device int* c_indptr [[buffer(9)]],
+                    _device int* c_indices [[buffer(10)]],
+                    _device float* c_data [[buffer(11)]],
                     uint row [[thread_position_in_grid]]
                 ) {
                     if (row >= a_rows) return;
@@ -1258,7 +1203,7 @@ impl SpMSKernel {
                     constant int* indices [[buffer(2)]],
                     constant float* data [[buffer(3)]],
                     constant float* b [[buffer(4)]],
-                    device float* x [[buffer(5)]]
+                    _device float* x [[buffer(5)]]
                 ) {
                     for (int i = 0; i < n; i++) {
                         float sum = b[i];
@@ -1287,7 +1232,7 @@ impl SpMSKernel {
                     constant int* indices [[buffer(2)]],
                     constant float* data [[buffer(3)]],
                     constant float* x [[buffer(4)]],
-                    device float* y [[buffer(5)]],
+                    _device float* y [[buffer(5)]],
                     uint row [[thread_position_in_grid]]
                 ) {
                     if (row >= rows) return;
@@ -1301,7 +1246,7 @@ impl SpMSKernel {
                         
                         if (col != row) {
                             atomic_fetch_add_explicit(
-                                reinterpret_cast<device atomic<float>*>(&y[col]),
+                                reinterpret_cast<_device atomic<float>*>(&y[col]),
                                 val * x[row],
                                 memory_order_relaxed
                             );
@@ -1313,10 +1258,10 @@ impl SpMSKernel {
                 "#;
 
                 // Attempt to compile Metal kernels
-                match device.compile_kernel(metal_kernel_source, "spmm_csr_kernel") {
+                match _device.compile_kernel(metal_kernel_source, "spmm_csr_kernel") {
                     Ok(kernel_handle) => Ok(Self {
                         kernel_handle: Some(kernel_handle),
-                        backend: device.backend(),
+                        backend: _device.backend(),
                     }),
                     Err(_) => {
                         // Fall back to CPU if Metal compilation fails
@@ -1332,21 +1277,21 @@ impl SpMSKernel {
                 // CPU implementation - always succeeds
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
             GpuBackend::Rocm => {
                 // ROCm implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
             GpuBackend::Wgpu => {
                 // WebGPU implementation - no kernel handle needed for fallback
                 Ok(Self {
                     kernel_handle: None,
-                    backend: device.backend(),
+                    backend: _device.backend(),
                 })
             }
         }
@@ -1401,8 +1346,7 @@ impl SpMSKernel {
                 data,
                 x,
                 y,
-            ),
-            _ => {
+            , _ => {
                 // CPU fallback when GPU not available or kernel handle not found
                 self.execute_symmetric_cpu_fallback(rows, indptr, indices, data, x, y)
             }
@@ -1482,8 +1426,7 @@ impl SpMSKernel {
                 c_indptr,
                 c_indices,
                 c_data,
-            ),
-            _ => {
+            , _ => {
                 // CPU fallback when GPU not available or kernel handle not found
                 self.execute_spmm_cpu_fallback(
                     a_rows, a_cols, b_cols, a_indptr, a_indices, a_data, b_indptr, b_indices,
@@ -1542,8 +1485,7 @@ impl SpMSKernel {
                 data,
                 b,
                 x,
-            ),
-            _ => {
+            , _ => {
                 // CPU fallback when GPU not available or kernel handle not found
                 self.execute_triangular_solve_cpu_fallback(n, indptr, indices, data, b, x)
             }
@@ -1606,8 +1548,7 @@ impl SpMSKernel {
     #[allow(dead_code)]
     fn execute_spmm_cpu_fallback<T>(
         &self,
-        a_rows: usize,
-        _a_cols: usize,
+        a_rows: usize, _a_cols: usize,
         b_cols: usize,
         a_indptr: &GpuBuffer<usize>,
         a_indices: &GpuBuffer<usize>,
@@ -2177,8 +2118,8 @@ impl Default for GpuOptions {
 /// # Example
 ///
 /// ```rust
-/// use scirs2_sparse::csr_array::CsrArray;
-/// use scirs2_sparse::gpu_ops::{gpu_sparse_matvec, GpuOptions};
+/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2__sparse::gpu_ops::{gpu_sparse_matvec, GpuOptions};
 /// use ndarray::Array1;
 ///
 /// // Create a large sparse matrix
@@ -2282,12 +2223,12 @@ where
 
 /// Check if GPU acceleration should be used
 #[allow(dead_code)]
-fn should_use_gpu(rows: usize, cols: usize, nnz: usize, options: &GpuOptions) -> bool {
+fn should_use_gpu(_rows: usize, cols: usize, nnz: usize, options: &GpuOptions) -> bool {
     // Only use GPU for matrices larger than the threshold
-    let matrix_size = std::cmp::max(rows, cols);
+    let matrix_size = std::cmp::max(_rows, cols);
 
     // Consider sparsity as well - very sparse matrices might not benefit from GPU
-    let density = nnz as f64 / (rows * cols) as f64;
+    let density = nnz as f64 / (_rows * cols) as f64;
     let min_density = 0.001; // 0.1% density threshold
 
     matrix_size >= options.min_gpu_size
@@ -2313,9 +2254,7 @@ where
 #[cfg(not(feature = "gpu"))]
 #[allow(dead_code)]
 fn gpu_sparse_matvec_impl_wrapper<T, S>(
-    _matrix: &S,
-    _x: &ArrayView1<T>,
-    _options: &GpuOptions,
+    _matrix: &S_x: &ArrayView1<T>, _options: &GpuOptions,
 ) -> Result<Array1<T>, String>
 where
     T: Float + Debug + Copy + 'static + Send + Sync,
@@ -2440,9 +2379,7 @@ where
 #[cfg(not(feature = "gpu"))]
 #[allow(dead_code)]
 fn gpu_sym_sparse_matvec_impl_wrapper<T>(
-    _matrix: &SymCsrMatrix<T>,
-    _x: &ArrayView1<T>,
-    _options: &GpuOptions,
+    _matrix: &SymCsrMatrix<T>, _x: &ArrayView1<T>, _options: &GpuOptions,
 ) -> Result<Array1<T>, String>
 where
     T: Float + Debug + Copy + 'static + Send + Sync,
@@ -2465,7 +2402,7 @@ where
     let device = GpuDevice::get_default(options.backend)
         .map_err(|e| format!("Failed to create GPU device: {e}"))?;
 
-    let (rows, _cols) = matrix.shape();
+    let (rows_cols) = matrix.shape();
 
     // For symmetric matrices, we exploit symmetry by processing both directions
     let indptr = &matrix.indptr;
@@ -2532,14 +2469,14 @@ where
 
 /// CPU fallback implementation
 #[allow(dead_code)]
-fn cpu_sparse_matvec_fallback<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+fn cpu_sparse_matvec_fallback<T, S>(_matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (rows, _cols) = matrix.shape();
+    let (rows_cols) = _matrix.shape();
     let mut result = Array1::zeros(rows);
-    let (row_indices, col_indices, values) = matrix.find();
+    let (row_indices, col_indices, values) = _matrix.find();
 
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[i] = result[i] + values[k] * x[j];
@@ -2557,9 +2494,9 @@ pub struct GpuMemoryManager {
 
 impl GpuMemoryManager {
     /// Create a new GPU memory manager
-    pub fn new(backend: GpuBackend) -> Self {
+    pub fn new(_backend: GpuBackend) -> Self {
         Self {
-            backend,
+            _backend,
             allocated_buffers: Vec::new(),
         }
     }
@@ -2601,9 +2538,9 @@ pub struct GpuProfiler {
 
 impl GpuProfiler {
     /// Create a new GPU profiler
-    pub fn new(backend: GpuBackend) -> Self {
+    pub fn new(_backend: GpuBackend) -> Self {
         Self {
-            backend,
+            _backend,
             timing_data: Vec::new(),
         }
     }
@@ -2619,7 +2556,7 @@ impl GpuProfiler {
         if let Some(entry) = self
             .timing_data
             .iter_mut()
-            .find(|(name, _)| name == operation)
+            .find(|(name_)| name == operation)
         {
             entry.1 = duration_ms;
         }
@@ -2747,7 +2684,7 @@ impl AdvancedGpuOps {
         // Note: This implementation is O(nnz_a * nnz_b) which is not optimal
         // A proper implementation would convert B to CSC format first
 
-        let (a_rows, _a_cols) = a.shape();
+        let (a_rows_a_cols) = a.shape();
         let (_, b_cols) = b.shape();
 
         let mut result_data = Vec::new();
@@ -2937,9 +2874,9 @@ pub struct GpuKernelScheduler {
 
 impl GpuKernelScheduler {
     /// Create a new kernel scheduler
-    pub fn new(backend: GpuBackend) -> Self {
+    pub fn new(_backend: GpuBackend) -> Self {
         // In a real implementation, these would be queried from the GPU
-        let (available_memory, compute_units, warp_size) = match backend {
+        let (available_memory, compute_units, warp_size) = match _backend {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => (8_000_000_000, 108, 32), // Example RTX 3080 specs
             #[cfg(feature = "gpu")]
@@ -2952,7 +2889,7 @@ impl GpuKernelScheduler {
         };
 
         Self {
-            backend,
+            _backend,
             available_memory,
             compute_units,
             warp_size,
@@ -2960,7 +2897,7 @@ impl GpuKernelScheduler {
     }
 
     /// Calculate optimal workgroup size for a given problem
-    pub fn calculate_optimal_workgroup(&self, _rows: usize, _cols: usize, _nnz: usize) -> [u32; 3] {
+    pub fn calculate_optimal_workgroup(&self_rows: usize, _cols: usize_nnz: usize) -> [u32; 3] {
         let base_size = self.warp_size as u32;
 
         match self.backend {
@@ -3038,10 +2975,10 @@ pub struct OptimizedGpuOps {
 
 impl OptimizedGpuOps {
     /// Create a new optimized GPU operations handler
-    pub fn new(backend: GpuBackend) -> Self {
+    pub fn new(_backend: GpuBackend) -> Self {
         Self {
-            scheduler: GpuKernelScheduler::new(backend),
-            profiler: GpuProfiler::new(backend),
+            scheduler: GpuKernelScheduler::new(_backend),
+            profiler: GpuProfiler::new(_backend),
         }
     }
 
@@ -3101,7 +3038,7 @@ impl OptimizedGpuOps {
     where
         T: Float + Debug + Copy + 'static + Send + Sync + Default + GpuDataType,
     {
-        let (n, _) = matrix.shape();
+        let (n_) = matrix.shape();
         if b.len() != n {
             return Err(SparseError::DimensionMismatch {
                 expected: n,
@@ -3112,8 +3049,7 @@ impl OptimizedGpuOps {
         match method {
             "cg" => self.gpu_conjugate_gradient(matrix, b, preconditioner, max_iter, tol),
             "bicgstab" => self.gpu_bicgstab(matrix, b, preconditioner, max_iter, tol),
-            "gmres" => self.gpu_gmres(matrix, b, preconditioner, max_iter, tol),
-            _ => Err(SparseError::ValueError(format!(
+            "gmres" => self.gpu_gmres(matrix, b, preconditioner, max_iter, tol, _ => Err(SparseError::ValueError(format!(
                 "Unknown solver method: {method}"
             ))),
         }
@@ -3123,8 +3059,7 @@ impl OptimizedGpuOps {
     fn gpu_conjugate_gradient<T>(
         &mut self,
         matrix: &CsrArray<T>,
-        b: &ArrayView1<T>,
-        _preconditioner: Option<&CsrArray<T>>,
+        b: &ArrayView1<T>, _preconditioner: Option<&CsrArray<T>>,
         max_iter: usize,
         tol: f64,
     ) -> SparseResult<Array1<T>>
@@ -3146,7 +3081,7 @@ impl OptimizedGpuOps {
         // Simplified implementation - in reality this would be fully on GPU
         let mut r = b.to_owned();
         let mut p = r.clone();
-        let mut rsold = r.iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x);
+        let mut rsold = r._iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x);
 
         for _iter in 0..max_iter {
             // A * p (would be done on GPU)
@@ -3154,8 +3089,8 @@ impl OptimizedGpuOps {
 
             // alpha = rsold / (p^T * Ap)
             let pap = p
-                .iter()
-                .zip(ap.iter())
+                ._iter()
+                .zip(ap._iter())
                 .map(|(&pi, &api)| pi * api)
                 .fold(T::zero(), |acc, x| acc + x);
             let alpha = rsold / pap;
@@ -3170,7 +3105,7 @@ impl OptimizedGpuOps {
                 r[i] = r[i] - alpha * ap[i];
             }
 
-            let rsnew = r.iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x);
+            let rsnew = r._iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x);
 
             if rsnew.sqrt() < T::from(tol).unwrap() {
                 break;
@@ -3195,8 +3130,7 @@ impl OptimizedGpuOps {
     fn gpu_bicgstab<T>(
         &mut self,
         matrix: &CsrArray<T>,
-        b: &ArrayView1<T>,
-        _preconditioner: Option<&CsrArray<T>>,
+        b: &ArrayView1<T>, _preconditioner: Option<&CsrArray<T>>,
         max_iter: usize,
         tol: f64,
     ) -> SparseResult<Array1<T>>
@@ -3220,8 +3154,8 @@ impl OptimizedGpuOps {
 
         for _iter in 0..max_iter {
             let rho_new = r
-                .iter()
-                .zip(r_tilde.iter())
+                ._iter()
+                .zip(r_tilde._iter())
                 .map(|(&ri, &rti)| ri * rti)
                 .fold(T::zero(), |acc, x| acc + x);
 
@@ -3240,8 +3174,8 @@ impl OptimizedGpuOps {
 
             alpha = rho_new
                 / r_tilde
-                    .iter()
-                    .zip(v.iter())
+                    ._iter()
+                    .zip(v._iter())
                     .map(|(&rti, &vi)| rti * vi)
                     .fold(T::zero(), |acc, x| acc + x);
 
@@ -3253,7 +3187,7 @@ impl OptimizedGpuOps {
 
             // Check for convergence
             let s_norm = s
-                .iter()
+                ._iter()
                 .map(|&x| x * x)
                 .fold(T::zero(), |acc, x| acc + x)
                 .sqrt();
@@ -3268,11 +3202,11 @@ impl OptimizedGpuOps {
             let t = self.optimized_spmv(matrix, &s.view())?;
 
             omega = t
-                .iter()
-                .zip(s.iter())
+                ._iter()
+                .zip(s._iter())
                 .map(|(&ti, &si)| ti * si)
                 .fold(T::zero(), |acc, x| acc + x)
-                / t.iter()
+                / t._iter()
                     .map(|&ti| ti * ti)
                     .fold(T::zero(), |acc, x| acc + x);
 
@@ -3287,7 +3221,7 @@ impl OptimizedGpuOps {
             }
 
             let r_norm = r
-                .iter()
+                ._iter()
                 .map(|&x| x * x)
                 .fold(T::zero(), |acc, x| acc + x)
                 .sqrt();
@@ -3307,8 +3241,7 @@ impl OptimizedGpuOps {
     fn gpu_gmres<T>(
         &mut self,
         matrix: &CsrArray<T>,
-        b: &ArrayView1<T>,
-        _preconditioner: Option<&CsrArray<T>>,
+        b: &ArrayView1<T>, _preconditioner: Option<&CsrArray<T>>,
         max_iter: usize,
         tol: f64,
     ) -> SparseResult<Array1<T>>
@@ -3327,7 +3260,7 @@ impl OptimizedGpuOps {
         if let Some(_restart_iter) = (0..(max_iter / restart)).next() {
             let r = b.to_owned(); // r = b - A*x (x starts as zero)
             let beta = r
-                .iter()
+                ._iter()
                 .map(|&x| x * x)
                 .fold(T::zero(), |acc, x| acc + x)
                 .sqrt();
@@ -3351,8 +3284,8 @@ impl OptimizedGpuOps {
                 // Modified Gram-Schmidt
                 for i in 0..=j {
                     h[i][j] = v[i]
-                        .iter()
-                        .zip(w.iter())
+                        ._iter()
+                        .zip(w._iter())
                         .map(|(&vi, &wi)| vi * wi)
                         .fold(T::zero(), |acc, x| acc + x);
                 }
@@ -3365,7 +3298,7 @@ impl OptimizedGpuOps {
                 }
 
                 h[j + 1][j] = w_orth
-                    .iter()
+                    ._iter()
                     .map(|&x| x * x)
                     .fold(T::zero(), |acc, x| acc + x)
                     .sqrt();
@@ -3421,7 +3354,7 @@ where
 #[cfg(all(test, not(feature = "gpu")))]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
     use approx::assert_relative_eq;
 
     #[test]
@@ -3583,7 +3516,7 @@ mod tests {
         assert_eq!(workgroup_small, [32, 8, 1]); // Should use balanced approach
 
         // Test memory estimation
-        let memory_usage = scheduler.estimate_memory_usage::<f64>(1000, 1000, 10000);
+        let memory_usage = scheduler.estimate_memory__usage::<f64>(1000, 1000, 10000);
         assert!(memory_usage > 0);
 
         // Test memory capacity check
@@ -3808,7 +3741,7 @@ fn execute_spmv_kernel(
     y_buffer: &GpuBuffer<f32>,
     workgroup_size: [u32; 3],
 ) -> Result<(), GpuError> {
-    // Calculate dispatch size
+    // Calculate dispatch _size
     let num_groups = ((rows as u32 + workgroup_size[0] - 1) / workgroup_size[0]).max(1);
 
     // Set kernel arguments
@@ -3842,10 +3775,10 @@ fn execute_symmetric_spmv_kernel(
     y_buffer: &GpuBuffer<f32>,
     workgroup_size: [u32; 3],
 ) -> Result<(), GpuError> {
-    // Calculate dispatch size
+    // Calculate dispatch _size
     let num_groups = ((rows as u32 + workgroup_size[0] - 1) / workgroup_size[0]).max(1);
 
-    // Clear output buffer first (important for symmetric operations)
+    // Clear output _buffer first (important for symmetric operations)
     device.clear_buffer(y_buffer)?;
 
     // Set kernel arguments
@@ -3869,15 +3802,7 @@ fn execute_symmetric_spmv_kernel(
 #[cfg(not(feature = "gpu"))]
 #[allow(dead_code)]
 fn execute_spmv_kernel(
-    _device: &GpuDevice,
-    _kernel: &GpuKernelHandle,
-    _rows: usize,
-    _indptr_buffer: &GpuBuffer<u32>,
-    _indices_buffer: &GpuBuffer<u32>,
-    _data_buffer: &GpuBuffer<f32>,
-    _x_buffer: &GpuBuffer<f32>,
-    _y_buffer: &GpuBuffer<f32>,
-    _workgroup_size: [u32; 3],
+    _device: &GpuDevice_kernel: &GpuKernelHandle, _rows: usize_indptr_buffer: &GpuBuffer<u32>, _indices_buffer: &GpuBuffer<u32>, _data_buffer: &GpuBuffer<f32>, _x_buffer: &GpuBuffer<f32>, _y_buffer: &GpuBuffer<f32>, _workgroup_size: [u32; 3],
 ) -> Result<(), GpuError> {
     Err(GpuError::other("GPU feature not enabled".to_string()))
 }
@@ -3885,15 +3810,7 @@ fn execute_spmv_kernel(
 #[cfg(not(feature = "gpu"))]
 #[allow(dead_code)]
 fn execute_symmetric_spmv_kernel(
-    _device: &GpuDevice,
-    _kernel: &GpuKernelHandle,
-    _rows: usize,
-    _indptr_buffer: &GpuBuffer<u32>,
-    _indices_buffer: &GpuBuffer<u32>,
-    _data_buffer: &GpuBuffer<f32>,
-    _x_buffer: &GpuBuffer<f32>,
-    _y_buffer: &GpuBuffer<f32>,
-    _workgroup_size: [u32; 3],
+    _device: &GpuDevice_kernel: &GpuKernelHandle, _rows: usize_indptr_buffer: &GpuBuffer<u32>, _indices_buffer: &GpuBuffer<u32>, _data_buffer: &GpuBuffer<f32>, _x_buffer: &GpuBuffer<f32>, _y_buffer: &GpuBuffer<f32>, _workgroup_size: [u32; 3],
 ) -> Result<(), GpuError> {
     Err(GpuError::other("GPU feature not enabled".to_string()))
 }

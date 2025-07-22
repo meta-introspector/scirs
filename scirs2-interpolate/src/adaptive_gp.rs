@@ -19,7 +19,7 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_interpolate::adaptive_gp::{AdaptiveGaussianProcess, KernelType};
+//! use scirs2__interpolate::adaptive_gp::{AdaptiveGaussianProcess, KernelType};
 //!
 //! // Create sample data with noise
 //! let x = Array1::linspace(0.0_f64, 10.0_f64, 20);
@@ -397,7 +397,7 @@ where
             ));
         }
 
-        let (mean, _) = self.predict_with_uncertainty(x_new)?;
+        let (mean_) = self.predict_with_uncertainty(x_new)?;
         Ok(mean)
     }
 
@@ -467,7 +467,7 @@ where
 
     /// Fit a specific kernel type and return the fitted model
     fn fit_kernel(&mut self, kernel_type: KernelType) -> InterpolateResult<KernelModel<T>> {
-        // Initialize hyperparameters based on kernel type
+        // Initialize hyperparameters based on kernel _type
         let mut hyperparams = self.initialize_hyperparameters(kernel_type)?;
 
         let mut log_marginal_likelihood =
@@ -622,9 +622,9 @@ where
         let original_output_var = hyperparams.output_variance;
         for &multiplier in &[1.1, 0.9] {
             hyperparams.output_variance = original_output_var * T::from(multiplier).unwrap();
-            if let Ok(likelihood) = self.compute_log_marginal_likelihood(kernel_type, hyperparams) {
-                if likelihood > *current_likelihood {
-                    *current_likelihood = likelihood;
+            if let Ok(_likelihood) = self.compute_log_marginal_likelihood(kernel_type, hyperparams) {
+                if _likelihood > *current_likelihood {
+                    *current_likelihood = _likelihood;
                     improved = true;
                     break;
                 }
@@ -636,11 +636,11 @@ where
         for (i, &original_length_scale) in original_hyperparams.length_scales.iter().enumerate() {
             for &multiplier in &[1.2, 0.8] {
                 hyperparams.length_scales[i] = original_length_scale * T::from(multiplier).unwrap();
-                if let Ok(likelihood) =
+                if let Ok(_likelihood) =
                     self.compute_log_marginal_likelihood(kernel_type, hyperparams)
                 {
-                    if likelihood > *current_likelihood {
-                        *current_likelihood = likelihood;
+                    if _likelihood > *current_likelihood {
+                        *current_likelihood = _likelihood;
                         improved = true;
                         break;
                     }
@@ -653,9 +653,9 @@ where
         let original_noise_var = hyperparams.noise_variance;
         for &multiplier in &[1.1, 0.9] {
             hyperparams.noise_variance = original_noise_var * T::from(multiplier).unwrap();
-            if let Ok(likelihood) = self.compute_log_marginal_likelihood(kernel_type, hyperparams) {
-                if likelihood > *current_likelihood {
-                    *current_likelihood = likelihood;
+            if let Ok(_likelihood) = self.compute_log_marginal_likelihood(kernel_type, hyperparams) {
+                if _likelihood > *current_likelihood {
+                    *current_likelihood = _likelihood;
                     improved = true;
                     break;
                 }
@@ -844,7 +844,7 @@ where
             }
             _ => {
                 return Err(InterpolateError::InvalidValue(format!(
-                    "Kernel type {kernel_type:?} not implemented"
+                    "Kernel _type {kernel_type:?} not implemented"
                 )));
             }
         };

@@ -4,7 +4,7 @@
 //! showcasing improved performance, compression, and larger dataset handling.
 
 use ndarray::{Array2, Array3};
-use scirs2_io::netcdf::{
+use scirs2__io::netcdf::{
     create_netcdf4_with_data, read_netcdf, NetCDFFile, NetCDFFormat, NetCDFOptions,
 };
 use std::collections::HashMap;
@@ -106,7 +106,7 @@ fn demonstrate_netcdf4_convenience() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Pressure data (time only)
-    let pressure = Array2::from_shape_fn((24, 1), |(t, _)| 1013.25 - 2.0 * (t as f64 * 0.26).cos());
+    let pressure = Array2::from_shape_fn((24, 1), |(t_)| 1013.25 - 2.0 * (t as f64 * 0.26).cos());
     datasets.insert(
         "pressure".to_string(),
         (

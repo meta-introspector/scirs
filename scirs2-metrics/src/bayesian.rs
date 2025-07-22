@@ -6,6 +6,7 @@
 
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, Axis};
+use statrs::statistics::Statistics;
 
 /// Results from Bayesian model comparison
 #[derive(Debug, Clone)]
@@ -200,23 +201,23 @@ impl BayesianModelComparison {
     ) -> Result<f64> {
         if log_likelihood.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty likelihood array".to_string(),
+                "Empty _likelihood array".to_string(),
             ));
         }
 
-        // Calculate log(prior * likelihood) for each sample
-        let log_posterior: Array1<f64> = if let Some(prior) = log_prior {
-            if prior.len() != log_likelihood.len() {
+        // Calculate log(_prior * _likelihood) for each sample
+        let log_posterior: Array1<f64> = if let Some(_prior) = log_prior {
+            if _prior.len() != log_likelihood.len() {
                 return Err(MetricsError::InvalidInput(
-                    "Prior and likelihood arrays must have same length".to_string(),
+                    "Prior and _likelihood arrays must have same length".to_string(),
                 ));
             }
-            log_likelihood + prior
+            log_likelihood + _prior
         } else {
             log_likelihood.clone()
         };
 
-        // Harmonic mean: 1/E[1/L] where L is likelihood
+        // Harmonic mean: 1/E[1/L] where L is _likelihood
         // In log space: -log(mean(exp(-log_posterior)))
         let max_log_posterior = log_posterior
             .iter()
@@ -247,7 +248,7 @@ impl BayesianModelComparison {
     ) -> Result<f64> {
         if log_likelihood.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty log likelihood array".to_string(),
+                "Empty log _likelihood array".to_string(),
             ));
         }
 
@@ -266,10 +267,10 @@ impl BayesianModelComparison {
 
         let mut mean_log_likelihoods = Vec::new();
 
-        // For each temperature, compute the expected log likelihood
+        // For each temperature, compute the expected log _likelihood
         for &beta in &temperatures {
             let mean_log_like = if beta == 0.0 {
-                // At β=0, posterior equals prior, so expected log likelihood is marginal
+                // At β=0, posterior equals _prior, so expected log _likelihood is marginal
                 self.compute_marginal_log_likelihood(log_likelihood, log_prior)?
             } else {
                 // Compute importance-weighted expectation at temperature β
@@ -381,11 +382,10 @@ impl BayesianModelComparison {
     /// Compute marginal log likelihood (for β=0 case)
     fn compute_marginal_log_likelihood(
         &self,
-        log_likelihood: &Array1<f64>,
-        _log_prior: Option<&Array1<f64>>,
+        log_likelihood: &Array1<f64>, _log_prior: Option<&Array1<f64>>,
     ) -> Result<f64> {
-        // For β=0, we sample from the prior
-        // The expected log likelihood is the marginal likelihood
+        // For β=0, we sample from the _prior
+        // The expected log _likelihood is the marginal _likelihood
 
         // Use harmonic mean estimator as approximation
         // This is biased but gives a rough estimate
@@ -407,7 +407,7 @@ impl BayesianModelComparison {
         if harmonic_mean > 0.0 {
             Ok(-((harmonic_mean / n).ln()))
         } else {
-            Ok(-1000.0) // Very low likelihood
+            Ok(-1000.0) // Very low _likelihood
         }
     }
 
@@ -512,18 +512,18 @@ impl BayesianModelComparison {
     ) -> Result<f64> {
         if log_likelihood.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty log likelihood array".to_string(),
+                "Empty log _likelihood array".to_string(),
             ));
         }
 
         let n_samples = log_likelihood.len();
 
-        // Generate samples from prior (proposal distribution)
-        let n_prior_samples = (n_samples / 2).max(100); // Use half for prior samples
+        // Generate samples from _prior (proposal distribution)
+        let n_prior_samples = (n_samples / 2).max(100); // Use half for _prior samples
         let prior_samples =
             self.generate_prior_samples(log_likelihood, log_prior, n_prior_samples)?;
 
-        // Use importance sampling to bridge between prior and posterior
+        // Use importance sampling to bridge between _prior and posterior
         let log_evidence = self.iterative_bridge_sampling(
             log_likelihood,
             log_prior,
@@ -543,15 +543,15 @@ impl BayesianModelComparison {
         n_samples: usize,
     ) -> Result<Array1<f64>> {
         // Since we don't have direct access to the parameter space,
-        // we use a rejection sampling approach based on the likelihood
+        // we use a rejection sampling approach based on the _likelihood
 
         let mut prior_log_likes = Vec::new();
 
         if let Some(lp) = log_prior {
-            // Use prior-weighted importance sampling
+            // Use _prior-weighted importance sampling
             let weights = self.compute_prior_weights(lp)?;
 
-            // Sample indices according to prior weights
+            // Sample indices according to _prior weights
             for _ in 0..n_samples {
                 let sampled_idx = self.weighted_sample(&weights)?;
                 if sampled_idx < log_likelihood.len() {
@@ -559,7 +559,7 @@ impl BayesianModelComparison {
                 }
             }
         } else {
-            // Fallback: use bootstrap sampling with low-likelihood bias
+            // Fallback: use bootstrap sampling with low-_likelihood bias
             // This approximates sampling from a broader distribution
             let min_log_like = log_likelihood.iter().fold(f64::INFINITY, |a, &b| a.min(b));
             let _range = log_likelihood
@@ -569,7 +569,7 @@ impl BayesianModelComparison {
 
             for i in 0..n_samples {
                 // Use systematic sampling biased towards lower likelihoods
-                let bias_factor = 0.3; // Favor lower likelihood samples
+                let bias_factor = 0.3; // Favor lower _likelihood _samples
                 let u = (i as f64 + bias_factor) / n_samples as f64;
                 let target_quantile = u * 0.5; // Focus on lower half
 
@@ -581,7 +581,7 @@ impl BayesianModelComparison {
 
         if prior_log_likes.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Failed to generate prior samples".to_string(),
+                "Failed to generate _prior _samples".to_string(),
             ));
         }
 
@@ -632,8 +632,8 @@ impl BayesianModelComparison {
         max_iter: usize,
         tolerance: f64,
     ) -> Result<f64> {
-        let n1 = log_likelihood.len(); // Posterior samples
-        let n2 = prior_samples.len(); // Prior samples
+        let n1 = log_likelihood.len(); // Posterior _samples
+        let n2 = prior_samples.len(); // Prior _samples
 
         // Initialize with simple ratio estimate
         let mut log_r = self.initialize_bridge_estimate(log_likelihood, prior_samples)?;
@@ -682,14 +682,14 @@ impl BayesianModelComparison {
         let s1 = n1 as f64;
         let s2 = n2 as f64;
 
-        // Compute terms for posterior samples (samples from p₁)
+        // Compute terms for posterior _samples (_samples from p₁)
         let mut num_1 = 0.0;
         let mut den_1 = 0.0;
 
         for (i, &log_like) in log_likelihood.iter().enumerate() {
             let log_prior_val = log_prior.map(|lp| lp[i]).unwrap_or(0.0);
             let log_p1 = log_like + log_prior_val; // Log unnormalized posterior
-            let log_p2 = log_prior_val; // Log prior
+            let log_p2 = log_prior_val; // Log _prior
 
             // Bridge weights
             let log_denom =
@@ -704,14 +704,14 @@ impl BayesianModelComparison {
             }
         }
 
-        // Compute terms for prior samples (samples from p₂)
+        // Compute terms for _prior _samples (_samples from p₂)
         let mut num_2 = 0.0;
         let mut den_2 = 0.0;
 
         for &prior_log_like in prior_samples.iter() {
-            // For prior samples, we approximate the prior value
+            // For _prior _samples, we approximate the _prior value
             let log_p1 = prior_log_like; // Approximate log unnormalized posterior
-            let log_p2 = 0.0; // Approximate log prior (normalized)
+            let log_p2 = 0.0; // Approximate log _prior (normalized)
 
             let log_denom =
                 self.log_sum_exp(&[(s1 * log_p1).ln() + log_r_current, (s2 * log_p2).ln()]);
@@ -769,7 +769,7 @@ impl BayesianModelComparison {
     ) -> Result<f64> {
         if log_likelihood.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty likelihood array".to_string(),
+                "Empty _likelihood array".to_string(),
             ));
         }
 
@@ -794,11 +794,10 @@ impl BayesianModelComparison {
     /// Core nested sampling integration routine
     fn nested_sampling_integration(
         &self,
-        log_likelihood: &Array1<f64>,
-        _log_prior: Option<&Array1<f64>>,
+        log_likelihood: &Array1<f64>, _log_prior: Option<&Array1<f64>>,
         n_live: usize,
     ) -> Result<(f64, f64)> {
-        // Sort samples by likelihood to simulate nested sampling iterations
+        // Sort samples by _likelihood to simulate nested sampling iterations
         let mut indexed_samples: Vec<(usize, f64)> = log_likelihood
             .iter()
             .enumerate()
@@ -806,22 +805,22 @@ impl BayesianModelComparison {
             .collect();
         indexed_samples.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Initialize live points (highest likelihood samples)
+        // Initialize _live points (highest _likelihood samples)
         let live_start = indexed_samples.len().saturating_sub(n_live);
-        let mut live_points: Vec<(usize, f64)> = indexed_samples[live_start..].to_vec();
+        let mut _live_points: Vec<(usize, f64)> = indexed_samples[live_start..].to_vec();
 
         // Containers for evidence calculation
         let mut log_weights = Vec::new();
         let mut log_likes = Vec::new();
         let mut log_prior_volumes = Vec::new();
 
-        // Initial prior volume
+        // Initial _prior volume
         let mut log_x = 0.0; // log(1.0)
 
         // Nested sampling iterations
         let n_iterations = indexed_samples.len().saturating_sub(n_live);
         for iter in 0..n_iterations {
-            // Find point with minimum likelihood among live points
+            // Find point with minimum _likelihood among _live points
             let (min_idx, min_log_like) = live_points
                 .iter()
                 .enumerate()
@@ -842,10 +841,10 @@ impl BayesianModelComparison {
             log_likes.push(min_log_like);
             log_prior_volumes.push(log_x);
 
-            // Update prior volume
+            // Update _prior volume
             log_x = new_log_x;
 
-            // Replace minimum likelihood point with next sample from ordered list
+            // Replace minimum _likelihood point with next sample from ordered list
             if iter < n_iterations - 1 {
                 let replacement_idx = indexed_samples[iter].0;
                 let replacement_log_like = indexed_samples[iter].1;
@@ -853,7 +852,7 @@ impl BayesianModelComparison {
             }
         }
 
-        // Add final contribution from remaining live points
+        // Add final contribution from remaining _live points
         let final_log_x = log_x - (n_live as f64).ln();
         for (_, log_like) in &live_points {
             log_weights.push(final_log_x);
@@ -923,7 +922,7 @@ impl BayesianModelComparison {
             return Ok(0.0);
         }
 
-        // Compute relative contributions to evidence
+        // Compute relative contributions to _evidence
         let mut relative_contributions = Vec::new();
         for &log_term in log_terms {
             let contribution = (log_term - log_evidence).exp();
@@ -961,7 +960,7 @@ impl BayesianModelComparison {
         n_live: usize,
         n_total: usize,
     ) -> Result<f64> {
-        // Correction for finite number of live points
+        // Correction for finite number of _live points
         let live_point_correction = -(n_live as f64).ln() / 2.0;
 
         // Correction for finite sample size
@@ -971,7 +970,7 @@ impl BayesianModelComparison {
             -0.01 // Small penalty for very limited samples
         };
 
-        // Conservative correction: subtract error estimate for robustness
+        // Conservative correction: subtract _error estimate for robustness
         let conservative_correction = -log_evidence_error.abs();
 
         let corrected_evidence =
@@ -981,9 +980,9 @@ impl BayesianModelComparison {
     }
 
     /// Interpret Bayes factor strength using Jeffreys' scale
-    fn interpret_bayes_factor(bf: f64) -> String {
-        if bf < 1.0 {
-            let inv_bf = 1.0 / bf;
+    fn interpret_bayes_factor(_bf: f64) -> String {
+        if _bf < 1.0 {
+            let inv_bf = 1.0 / _bf;
             if inv_bf < 3.0 {
                 "Barely worth mentioning (favors B)".to_string()
             } else if inv_bf < 10.0 {
@@ -995,13 +994,13 @@ impl BayesianModelComparison {
             } else {
                 "Extreme evidence for B".to_string()
             }
-        } else if bf < 3.0 {
+        } else if _bf < 3.0 {
             "Barely worth mentioning (favors A)".to_string()
-        } else if bf < 10.0 {
+        } else if _bf < 10.0 {
             "Substantial evidence for A".to_string()
-        } else if bf < 30.0 {
+        } else if _bf < 30.0 {
             "Strong evidence for A".to_string()
-        } else if bf < 100.0 {
+        } else if _bf < 100.0 {
             "Very strong evidence for A".to_string()
         } else {
             "Extreme evidence for A".to_string()
@@ -1054,11 +1053,11 @@ impl BayesianInformationCriteria {
     ) -> Result<BayesianInformationResults> {
         if log_likelihood_samples.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty likelihood samples".to_string(),
+                "Empty likelihood _samples".to_string(),
             ));
         }
 
-        // Calculate WAIC and effective parameters
+        // Calculate WAIC and effective _parameters
         let (waic, p_waic) = self.calculate_waic(log_likelihood_samples)?;
 
         // Calculate LOO-CV
@@ -1087,7 +1086,7 @@ impl BayesianInformationCriteria {
         let (n_samples, n_obs) = log_likelihood_samples.dim();
         if n_samples == 0 || n_obs == 0 {
             return Err(MetricsError::InvalidInput(
-                "Empty likelihood samples".to_string(),
+                "Empty likelihood _samples".to_string(),
             ));
         }
 
@@ -1126,7 +1125,7 @@ impl BayesianInformationCriteria {
         let (n_samples, n_obs) = log_likelihood_samples.dim();
         if n_samples == 0 || n_obs == 0 {
             return Err(MetricsError::InvalidInput(
-                "Empty likelihood samples".to_string(),
+                "Empty likelihood _samples".to_string(),
             ));
         }
 
@@ -1178,12 +1177,12 @@ impl BayesianInformationCriteria {
 
         // Subtract maximum for numerical stability
         let max_weight = log_weights.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let weights: Array1<f64> = log_weights.mapv(|x| (x - max_weight).exp());
+        let _weights: Array1<f64> = log_weights.mapv(|x| (x - max_weight).exp());
 
         // Simple smoothing (in practice, would use Pareto tail fitting)
-        let sum_weights = weights.sum();
+        let sum_weights = _weights.sum();
         if sum_weights > 1e-10 {
-            Ok(weights / sum_weights)
+            Ok(_weights / sum_weights)
         } else {
             Ok(Array1::from_elem(n, 1.0 / n as f64))
         }
@@ -1248,21 +1247,21 @@ impl PosteriorPredictiveCheck {
     ) -> Result<PosteriorPredictiveResults> {
         if posterior_predictive_samples.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty posterior predictive samples".to_string(),
+                "Empty posterior predictive _samples".to_string(),
             ));
         }
 
         let (n_samples, n_obs) = posterior_predictive_samples.dim();
         if observed_data.len() != n_obs {
             return Err(MetricsError::InvalidInput(
-                "Observed data length doesn't match predictive samples".to_string(),
+                "Observed _data length doesn't match predictive _samples".to_string(),
             ));
         }
 
-        // Calculate test statistic for observed data
+        // Calculate test statistic for observed _data
         let observed_statistic = self.calculate_test_statistic(observed_data)?;
 
-        // Calculate test statistics for posterior predictive samples
+        // Calculate test statistics for posterior predictive _samples
         let mut predicted_statistics = Vec::with_capacity(n_samples);
         for i in 0..n_samples {
             let sample = posterior_predictive_samples.row(i).to_owned();
@@ -1380,11 +1379,11 @@ impl CredibleIntervalCalculator {
     ) -> Result<CredibleIntervalResults> {
         if posterior_samples.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty posterior samples".to_string(),
+                "Empty posterior _samples".to_string(),
             ));
         }
 
-        // Sort samples for quantile calculation
+        // Sort _samples for quantile calculation
         let mut sorted_samples = posterior_samples.to_vec();
         sorted_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -1505,7 +1504,7 @@ impl BayesianModelAveraging {
         let (n_models, n_obs) = predictions.dim();
         if model_scores.len() != n_models {
             return Err(MetricsError::InvalidInput(
-                "Number of model scores must match number of models".to_string(),
+                "Number of model _scores must match number of models".to_string(),
             ));
         }
 
@@ -1579,7 +1578,7 @@ impl BayesianModelAveraging {
         &self,
         log_marginal_likelihoods: &Array1<f64>,
     ) -> Result<Array1<f64>> {
-        // Normalize log marginal likelihoods to get model probabilities
+        // Normalize log marginal _likelihoods to get model probabilities
         let max_log_ml = log_marginal_likelihoods
             .iter()
             .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -1619,7 +1618,7 @@ impl BayesianModelAveraging {
 
     /// Calculate weights from cross-validation scores (higher is better)
     fn cross_validation_weights(&self, cv_scores: &Array1<f64>) -> Result<Array1<f64>> {
-        // Normalize CV scores to get weights
+        // Normalize CV _scores to get weights
         let min_score = cv_scores.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let shifted_scores: Array1<f64> = cv_scores.mapv(|x| x - min_score + 1e-6);
         let sum_scores = shifted_scores.sum();

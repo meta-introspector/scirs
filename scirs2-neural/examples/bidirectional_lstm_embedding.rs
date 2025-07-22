@@ -13,18 +13,18 @@ struct Embedding {
     weight: Array2<f32>,
 }
 impl Embedding {
-    fn new(vocab_size: usize, embedding_dim: usize) -> Self {
+    fn new(_vocab_size: usize, embedding_dim: usize) -> Self {
         // Xavier/Glorot initialization
         let bound = (3.0 / embedding_dim as f32).sqrt();
         // Create a random number generator
         let mut rng = SmallRng::seed_from_u64(42);
         // Initialize with random values
-        let mut weight = Array2::<f32>::zeros((vocab_size, embedding_dim));
+        let mut weight = Array2::<f32>::zeros((_vocab_size, embedding_dim));
         for elem in weight.iter_mut() {
             *elem = rng.random_range(-bound..bound);
         }
         Embedding {
-            vocab_size,
+            vocab_size: _vocab_size,
             embedding_dim,
             weight,
         }
@@ -60,12 +60,12 @@ struct BiLSTM {
     backward_cell: LSTMCell,
 }
 impl BiLSTM {
-    fn new(input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
         // Create forward and backward LSTM cells
-        let forward_cell = LSTMCell::new(input_size, hidden_size, batch_size);
-        let backward_cell = LSTMCell::new(input_size, hidden_size, batch_size);
+        let forward_cell = LSTMCell::new(_input_size, hidden_size, batch_size);
+        let backward_cell = LSTMCell::new(_input_size, hidden_size, batch_size);
         BiLSTM {
-            input_size,
+            input_size: _input_size,
             hidden_size,
             batch_size,
             forward_cell,
@@ -146,12 +146,12 @@ struct LSTMCell {
     c_t: Option<Array2<f32>>, // Current cell state [batch_size, hidden_size]
 }
 impl LSTMCell {
-    fn new(input_size: usize, hidden_size: usize, _batch_size: usize) -> Self {
-        let bound = (6.0 / (input_size + hidden_size) as f32).sqrt();
+    fn new(_input_size: usize, hidden_size: usize, _batch_size: usize) -> Self {
+        let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         let mut rng = SmallRng::seed_from_u64(42);
 
         // Input gate weights
-        let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_ii = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_hi = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_ii.iter_mut() {
             *elem = rng.random_range(-bound..bound);
@@ -162,7 +162,7 @@ impl LSTMCell {
         let b_i = Array1::zeros(hidden_size);
 
         // Forget gate weights (initialize forget gate bias to 1 to avoid vanishing gradients early in training)
-        let mut w_if = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_if = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_hf = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_if.iter_mut() {
             *elem = rng.random_range(-bound..bound);
@@ -173,7 +173,7 @@ impl LSTMCell {
         let b_f = Array1::ones(hidden_size);
 
         // Cell gate weights
-        let mut w_ig = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_ig = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_hg = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_ig.iter_mut() {
             *elem = rng.random_range(-bound..bound);
@@ -184,7 +184,7 @@ impl LSTMCell {
         let b_g = Array1::zeros(hidden_size);
 
         // Output gate weights
-        let mut w_io = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_io = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_ho = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_io.iter_mut() {
             *elem = rng.random_range(-bound..bound);
@@ -549,7 +549,7 @@ fn create_sentiment_dataset() -> (Vec<Vec<String>>, Vec<usize>) {
 }
 // Create vocabulary from tokenized texts
 #[allow(dead_code)]
-fn create_vocabulary(texts: &[Vec<String>]) -> (HashMap<String, usize>, HashMap<usize, String>) {
+fn create_vocabulary(_texts: &[Vec<String>]) -> (HashMap<String, usize>, HashMap<usize, String>) {
     let mut word_to_idx = HashMap::new();
     let mut idx_to_word = HashMap::new();
     // Special tokens
@@ -559,9 +559,9 @@ fn create_vocabulary(texts: &[Vec<String>]) -> (HashMap<String, usize>, HashMap<
         word_to_idx.insert(token.to_string(), i);
         idx_to_word.insert(i, token.to_string());
     }
-    // Add words from texts
+    // Add words from _texts
     let mut idx = special_tokens.len();
-    for text in texts {
+    for text in _texts {
         for word in text {
             if !word_to_idx.contains_key(word) {
                 word_to_idx.insert(word.clone(), idx);
@@ -591,9 +591,9 @@ fn tokenize_texts(
 }
 // Convert labels to one-hot encoded vectors
 #[allow(dead_code)]
-fn one_hot_encode(labels: &[usize], num_classes: usize) -> Array2<f32> {
-    let mut one_hot = Array2::<f32>::zeros((labels.len(), num_classes));
-    for (i, &label) in labels.iter().enumerate() {
+fn one_hot_encode(_labels: &[usize], num_classes: usize) -> Array2<f32> {
+    let mut one_hot = Array2::<f32>::zeros((_labels.len(), num_classes));
+    for (i, &label) in _labels.iter().enumerate() {
         if label < num_classes {
             one_hot[[i, label]] = 1.0;
         }
@@ -602,20 +602,20 @@ fn one_hot_encode(labels: &[usize], num_classes: usize) -> Array2<f32> {
 }
 // Shuffle the dataset
 #[allow(dead_code)]
-fn shuffle_dataset<T: Clone, U: Clone>(xs: &[T], ys: &[U]) -> (Vec<T>, Vec<U>) {
+fn shuffle_dataset<T: Clone, U: Clone>(_xs: &[T], ys: &[U]) -> (Vec<T>, Vec<U>) {
     assert_eq!(
-        xs.len(),
+        _xs.len(),
         ys.len(),
         "Data and labels must have the same length"
     );
-    let mut indices: Vec<usize> = (0..xs.len()).collect();
+    let mut indices: Vec<usize> = (0.._xs.len()).collect();
     let mut rng = SmallRng::seed_from_u64(42);
     use rand::seq::SliceRandom;
     indices.shuffle(&mut rng);
-    let mut shuffled_xs = Vec::with_capacity(xs.len());
+    let mut shuffled_xs = Vec::with_capacity(_xs.len());
     let mut shuffled_ys = Vec::with_capacity(ys.len());
     for &idx in &indices {
-        shuffled_xs.push(xs[idx].clone());
+        shuffled_xs.push(_xs[idx].clone());
         shuffled_ys.push(ys[idx].clone());
     }
     (shuffled_xs, shuffled_ys)
@@ -642,8 +642,7 @@ fn train_model(
     model: &mut BiLSTMClassifier,
     x_train: &Array2<usize>,
     y_train: &Array2<f32>,
-    num_epochs: usize,
-    _learning_rate: f32,
+    num_epochs: usize, _learning_rate: f32,
 ) {
     // Training loop
     for epoch in 0..num_epochs {
@@ -703,8 +702,8 @@ fn train_model(
 }
 // Evaluate the model on test data
 #[allow(dead_code)]
-fn evaluate_model(model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test: &[usize]) {
-    let predictions = model.predict(x_test);
+fn evaluate_model(_model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test: &[usize]) {
+    let predictions = _model.predict(x_test);
     // Calculate accuracy
     let mut correct = 0;
     for (pred, &true_label) in predictions.iter().zip(y_test.iter()) {
@@ -786,7 +785,7 @@ fn evaluate_model(model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test: 
 }
 // Example predictions
 #[allow(dead_code)]
-fn example_predictions(model: &mut BiLSTMClassifier, word_to_idx: &HashMap<String, usize>) {
+fn example_predictions(_model: &mut BiLSTMClassifier, word_to_idx: &HashMap<String, usize>) {
     let examples = [
         "this is a great movie with amazing performances",
         "the movie was okay but nothing really stood out",
@@ -807,7 +806,7 @@ fn example_predictions(model: &mut BiLSTMClassifier, word_to_idx: &HashMap<Strin
     let max_len = 20;
     let x = tokenize_texts(&tokenized, word_to_idx, max_len);
     // Make predictions
-    let predictions = model.predict(&x);
+    let predictions = _model.predict(&x);
     println!("\nExample Predictions:");
     for (i, example) in examples.iter().enumerate() {
         let sentiment = match predictions[i] {

@@ -1,7 +1,7 @@
 //! Example of using SGD optimizer for a simple optimization problem
 
 use ndarray::Array1;
-use scirs2_optim::optimizers::{Optimizer, SGD};
+use scirs2__optim::optimizers::{Optimizer, SGD};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

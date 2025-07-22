@@ -3,7 +3,7 @@
 //! This example demonstrates how to use the API stabilization analyzer
 //! to check readiness for the 0.1.0 stable release.
 
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     analyze_api_for_stable_release, analyze_api_with_config, quick_api_analysis,
     StabilizationConfig, StableReleaseReadiness, StrictnessLevel,
 };
@@ -124,19 +124,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             for result in &report.analysis_results {
                 match result.stability.level {
-                    scirs2_interpolate::api_stabilization_enhanced::ApiStabilityLevel::Stable => {
+                    scirs2_interpolate::api_stabilization, _enhanced::ApiStabilityLevel::Stable => {
                         stable_items.push(&result.item_name);
                     }
-                    scirs2_interpolate::api_stabilization_enhanced::ApiStabilityLevel::MostlyStable => {
+                    scirs2_interpolate::api_stabilization, _enhanced::ApiStabilityLevel::MostlyStable => {
                         stable_items.push(&result.item_name);
                     }
-                    scirs2_interpolate::api_stabilization_enhanced::ApiStabilityLevel::Unstable => {
+                    scirs2_interpolate::api_stabilization, _enhanced::ApiStabilityLevel::Unstable => {
                         unstable_items.push(&result.item_name);
                     }
-                    scirs2_interpolate::api_stabilization_enhanced::ApiStabilityLevel::Experimental => {
+                    scirs2_interpolate::api_stabilization, _enhanced::ApiStabilityLevel::Experimental => {
                         experimental_items.push(&result.item_name);
                     }
-                    scirs2_interpolate::api_stabilization_enhanced::ApiStabilityLevel::Deprecated => {
+                    scirs2_interpolate::api_stabilization, _enhanced::ApiStabilityLevel::Deprecated => {
                         // Skip deprecated items
                     }
                 }

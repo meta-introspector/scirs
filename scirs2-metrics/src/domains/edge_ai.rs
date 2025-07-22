@@ -15,7 +15,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_metrics::domains::edge_ai::EdgeAISuite;
+//! use scirs2__metrics::domains::edge_ai::EdgeAISuite;
 //! use ndarray::array;
 //!
 //! let mut edge_suite = EdgeAISuite::new();
@@ -238,9 +238,9 @@ impl EdgeAISuite {
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: EdgeAIConfig) -> Self {
+    pub fn with_config(_config: EdgeAIConfig) -> Self {
         Self {
-            config,
+            _config,
             baselines: EdgeBaselines::default(),
         }
     }
@@ -277,18 +277,18 @@ impl EdgeAISuite {
             self.percentile(&sorted_latencies, 99.0),
         ];
 
-        // Calculate throughput
-        let throughput = 1000.0 / avg_latency; // inferences per second
+        // Calculate _throughput
+        let _throughput = 1000.0 / avg_latency; // inferences per second
 
         // Calculate power metrics
         let avg_power = power_consumption.iter().sum::<f64>() / power_consumption.len() as f64;
-        let energy_efficiency = throughput / avg_power; // inferences per watt per second
+        let energy_efficiency = _throughput / avg_power; // inferences per watt per second
 
-        // Calculate memory usage
+        // Calculate memory _usage
         let memory_usage_avg = memory_usage.iter().sum::<f64>() / memory_usage.len() as f64;
 
-        // Estimate CPU utilization based on throughput vs target
-        let cpu_utilization = (throughput / target_throughput as f64 * 100.0).min(100.0);
+        // Estimate CPU utilization based on _throughput vs target
+        let cpu_utilization = (_throughput / target_throughput as f64 * 100.0).min(100.0);
 
         // Model size estimation (simplified)
         let model_size = memory_usage_avg * 0.6; // Assume 60% of memory is model
@@ -296,7 +296,7 @@ impl EdgeAISuite {
         Ok(EdgePerformanceMetrics {
             avg_latency,
             latency_percentiles,
-            throughput,
+            _throughput,
             avg_power,
             energy_efficiency,
             memory_usage: memory_usage_avg,
@@ -331,7 +331,7 @@ impl EdgeAISuite {
             0.0
         };
 
-        // Calculate client participation rate
+        // Calculate client _participation rate
         let client_participation_rate =
             client_participation.iter().sum::<f64>() / client_participation.len() as f64;
 
@@ -492,7 +492,7 @@ impl EdgeAISuite {
     ) -> Result<DomainEvaluationResult> {
         let mut result = DomainEvaluationResult::new();
 
-        // Primary metrics - most important for edge AI
+        // Primary _metrics - most important for edge AI
         result.add_primary_metric(
             "latency_efficiency".to_string(),
             self.config.target_latency_ms / edge_performance.avg_latency,
@@ -510,7 +510,7 @@ impl EdgeAISuite {
             self.calculate_deployment_readiness(edge_performance, compression_metrics),
         );
 
-        // Secondary metrics
+        // Secondary _metrics
         result.add_secondary_metric("avg_latency".to_string(), edge_performance.avg_latency);
         result.add_secondary_metric("throughput".to_string(), edge_performance.throughput);
         result.add_secondary_metric(
@@ -522,7 +522,7 @@ impl EdgeAISuite {
             network_metrics.bandwidth_efficiency,
         );
 
-        // Federated learning metrics (if applicable)
+        // Federated learning _metrics (if applicable)
         if let Some(fl_metrics) = federated_metrics {
             result.add_secondary_metric(
                 "communication_efficiency".to_string(),
@@ -536,7 +536,7 @@ impl EdgeAISuite {
             );
         }
 
-        // Privacy metrics (if applicable)
+        // Privacy _metrics (if applicable)
         if let Some(priv_metrics) = privacy_metrics {
             result.add_secondary_metric(
                 "privacy_utility_score".to_string(),
@@ -600,7 +600,7 @@ impl EdgeAISuite {
             return Ok(0.0);
         }
 
-        // Calculate KL divergence between client distributions
+        // Calculate KL divergence between client _distributions
         let mut total_divergence = 0.0;
         let mut comparisons = 0;
 

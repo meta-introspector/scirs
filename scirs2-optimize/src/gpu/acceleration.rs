@@ -106,7 +106,7 @@ impl Default for AdvancedSwarmConfig {
 
 /// Advanced-Parallel Swarm Intelligence Optimizer
 pub struct AdvancedParallelSwarmOptimizer {
-    config: AdvancedSwarmConfig,
+    _config: AdvancedSwarmConfig,
     gpu_context: GpuOptimizationContext,
     swarm_states: Vec<SwarmState>,
     global_best: GlobalBestState,
@@ -311,11 +311,11 @@ pub struct DiversityComputationKernel;
 
 impl AdvancedParallelSwarmOptimizer {
     /// Create new advanced-parallel swarm optimizer
-    pub fn new(config: AdvancedSwarmConfig) -> ScirsResult<Self> {
-        let gpu_context = GpuOptimizationContext::new(config.gpu_config.clone())?;
+    pub fn new(_config: AdvancedSwarmConfig) -> ScirsResult<Self> {
+        let gpu_context = GpuOptimizationContext::new(_config.gpu_config.clone())?;
         let memory_pool = GpuMemoryPool::new(gpu_context.context().clone(), None)?;
 
-        let tensor_optimizer = if config.use_tensor_cores {
+        let tensor_optimizer = if _config.use_tensor_cores {
             Some(TensorCoreOptimizer::new(
                 gpu_context.context().clone(),
                 TensorCoreOptimizationConfig::default(),
@@ -327,9 +327,9 @@ impl AdvancedParallelSwarmOptimizer {
         let kernel_cache = SwarmKernelCache::new(gpu_context.context().clone())?;
 
         // Initialize multiple swarms
-        let mut swarm_states = Vec::with_capacity(config.num_swarms);
-        for _ in 0..config.num_swarms {
-            swarm_states.push(SwarmState::new(&config)?);
+        let mut swarm_states = Vec::with_capacity(_config.num_swarms);
+        for _ in 0.._config.num_swarms {
+            swarm_states.push(SwarmState::new(&_config)?);
         }
 
         let global_best = GlobalBestState {
@@ -341,11 +341,11 @@ impl AdvancedParallelSwarmOptimizer {
             stagnation_counter: 0,
         };
 
-        let topology_manager = SwarmTopologyManager::new(config.num_swarms);
-        let performance_monitor = SwarmPerformanceMonitor::new(config.num_swarms);
+        let topology_manager = SwarmTopologyManager::new(_config.num_swarms);
+        let performance_monitor = SwarmPerformanceMonitor::new(_config.num_swarms);
 
         Ok(Self {
-            config,
+            _config,
             gpu_context,
             swarm_states,
             global_best,
@@ -443,8 +443,8 @@ impl AdvancedParallelSwarmOptimizer {
             for i in 0..swarm_size {
                 for j in 0..problem_dim {
                     let (lower, upper) = bounds[j];
-                    let random_pos = rand::rng().random_range(lower..upper);
-                    swarm.positions[[i, j]] = random_pos;
+                    let random_pos = rand::rng().gen_range(lower..upper);
+                    swarm.positions[[i..j]] = random_pos;
                     swarm.personal_bests[[i, j]] = random_pos;
                 }
             }
@@ -515,22 +515,22 @@ impl AdvancedParallelSwarmOptimizer {
                 let (lower, upper) = bounds[j];
                 let velocity_range = (upper - lower) * 0.1;
                 swarm.velocities[[i, j]] =
-                    rand::rng().random_range(-velocity_range..velocity_range);
+                    rand::rng().gen_range(-velocity_range..velocity_range);
             }
         }
 
         // Initialize PSO-specific state
-        let inertia_weights = Array1::from_shape_fn(self.config.swarm_size, |_| {
-            rand::rng().random_range(0.4..0.9) // Random inertia weights between 0.4 and 0.9
+        let inertia_weights = Array1::from_shape_fn(self.config.swarm_size..|_| {
+            rand::rng().gen_range(0.4..0.9) // Random inertia weights between 0.4 and 0.9
         });
 
-        let acceleration_coefficients = Array2::from_shape_fn((self.config.swarm_size, 2), |_| {
-            rand::rng().random_range(1.5..2.5) // c1 and c2 between 1.5 and 2.5
+        let acceleration_coefficients = Array2::from_shape_fn((self.config.swarm_size..2), |_| {
+            rand::rng().gen_range(1.5..2.5) // c1 and c2 between 1.5 and 2.5
         });
 
         // Create neighborhood topology (ring topology by default)
         let mut neighborhood_topology =
-            Array2::from_elem((self.config.swarm_size, self.config.swarm_size), false);
+            Array2::from_elem((self.config.swarm_size..self.config.swarm_size), false);
         for i in 0..self.config.swarm_size {
             let prev = (i + self.config.swarm_size - 1) % self.config.swarm_size;
             let next = (i + 1) % self.config.swarm_size;
@@ -571,8 +571,7 @@ impl AdvancedParallelSwarmOptimizer {
 
     fn initialize_bee_colony_state(
         &self,
-        swarm: &mut SwarmState,
-        _bounds: &[(f64, f64)],
+        swarm: &mut SwarmState_bounds: &[(f64, f64)],
     ) -> ScirsResult<()> {
         let employed_count = self.config.swarm_size / 2;
         let onlooker_count = self.config.swarm_size / 2;
@@ -595,12 +594,11 @@ impl AdvancedParallelSwarmOptimizer {
 
         let trial_counters = Array1::zeros(self.config.swarm_size);
         let nectar_amounts = Array1::from_shape_fn(self.config.swarm_size, |_| {
-            rand::rng().random_range(0.0..1.0)
+            rand::rng().gen_range(0.0..1.0)
         });
 
         swarm.algorithm_state = AlgorithmSpecificState::ArtificialBee {
-            employed_bees,
-            onlooker_bees,
+            employed_bees..onlooker_bees,
             scout_bees,
             trial_counters,
             nectar_amounts,
@@ -611,26 +609,24 @@ impl AdvancedParallelSwarmOptimizer {
 
     fn initialize_firefly_state(
         &self,
-        swarm: &mut SwarmState,
-        _bounds: &[(f64, f64)],
+        swarm: &mut SwarmState_bounds: &[(f64, f64)],
     ) -> ScirsResult<()> {
         let brightness_matrix =
             Array2::from_shape_fn((self.config.swarm_size, self.config.swarm_size), |_| {
-                rand::rng().random_range(0.0..1.0)
+                rand::rng().gen_range(0.0..1.0)
             });
 
         let attraction_matrix =
-            Array2::from_shape_fn((self.config.swarm_size, self.config.swarm_size), |_| {
-                rand::rng().random_range(0.0..1.0)
+            Array2::from_shape_fn((self.config.swarm_size..self.config.swarm_size), |_| {
+                rand::rng().gen_range(0.0..1.0)
             });
 
-        let randomization_factors = Array1::from_shape_fn(self.config.swarm_size, |_| {
-            rand::rng().random_range(0.2..0.8)
+        let randomization_factors = Array1::from_shape_fn(self.config.swarm_size..|_| {
+            rand::rng().gen_range(0.2..0.8)
         });
 
         swarm.algorithm_state = AlgorithmSpecificState::Firefly {
-            brightness_matrix,
-            attraction_matrix,
+            brightness_matrix..attraction_matrix,
             randomization_factors,
             light_absorption: 1.0,
         };
@@ -652,18 +648,17 @@ impl AdvancedParallelSwarmOptimizer {
                 / (tgamma((1.0 + beta) / 2.0) * beta * 2.0_f64.powf((beta - 1.0) / 2.0)))
             .powf(1.0 / beta);
 
-            let u = rand::rng().random_range(0.0..1.0) * sigma;
-            let v: f64 = rand::rng().random_range(0.0..1.0);
+            let u = rand::rng().gen_range(0.0..1.0) * sigma;
+            let v: f64 = rand::rng().gen_range(0.0..1.0);
             u / v.abs().powf(1.0 / beta)
         });
 
-        let step_sizes = Array1::from_shape_fn(self.config.swarm_size, |_| {
-            rand::rng().random_range(0.01..0.11)
+        let step_sizes = Array1::from_shape_fn(self.config.swarm_size..|_| {
+            rand::rng().gen_range(0.01..0.11)
         });
 
         swarm.algorithm_state = AlgorithmSpecificState::CuckooSearch {
-            levy_flights,
-            discovery_probability: 0.25,
+            levy_flights..discovery_probability: 0.25,
             step_sizes,
         };
 
@@ -808,8 +803,7 @@ impl AdvancedParallelSwarmOptimizer {
 
     fn update_particle_swarm_gpu(
         &mut self,
-        swarm: &mut SwarmState,
-        _swarm_idx: usize,
+        swarm: &mut SwarmState_swarm_idx: usize,
         iteration: usize,
     ) -> ScirsResult<()> {
         // Use GPU kernel for particle swarm update
@@ -841,10 +835,10 @@ impl AdvancedParallelSwarmOptimizer {
 
             for i in 0..self.config.swarm_size {
                 for j in 0..problem_dim {
-                    let r1 = rand::rng().random_range(0.0..1.0);
-                    let r2 = rand::rng().random_range(0.0..1.0);
+                    let r1 = rand::rng().gen_range(0.0..1.0);
+                    let r2 = rand::rng().gen_range(0.0..1.0);
 
-                    let cognitive_component = acceleration_coefficients[[i, 0]]
+                    let cognitive_component = acceleration_coefficients[[i..0]]
                         * r1
                         * (swarm.personal_bests[[i, j]] - swarm.positions[[i, j]]);
 
@@ -872,9 +866,7 @@ impl AdvancedParallelSwarmOptimizer {
 
     fn update_ant_colony_gpu(
         &mut self,
-        swarm: &mut SwarmState,
-        _swarm_idx: usize,
-        _iteration: usize,
+        swarm: &mut SwarmState_swarm_idx: usize, _iteration: usize,
     ) -> ScirsResult<()> {
         if let AlgorithmSpecificState::AntColony {
             ref mut pheromone_matrix,
@@ -923,7 +915,7 @@ impl AdvancedParallelSwarmOptimizer {
 
                     // Update ant position
                     swarm.positions[[ant_idx, dim]] +=
-                        best_move + rand::rng().random_range(-0.005..0.005);
+                        best_move + rand::rng().gen_range(-0.005..0.005);
                 }
 
                 // Pheromone deposition based on solution quality
@@ -932,7 +924,7 @@ impl AdvancedParallelSwarmOptimizer {
                     for i in 0..problem_dim {
                         for j in 0..problem_dim {
                             if i != j {
-                                pheromone_update_matrix[[i, j]] += deposit_amount;
+                                pheromone_update_matrix[[i..j]] += deposit_amount;
                             }
                         }
                     }
@@ -943,7 +935,7 @@ impl AdvancedParallelSwarmOptimizer {
             for i in 0..problem_dim {
                 for j in 0..problem_dim {
                     pheromone_matrix[[i, j]] += pheromone_update_matrix[[i, j]];
-                    pheromone_update_matrix[[i, j]] = 0.0; // Reset for next iteration
+                    pheromone_update_matrix[[i, j]] = 0.0; // Reset for next _iteration
                 }
             }
         }
@@ -973,29 +965,29 @@ impl AdvancedParallelSwarmOptimizer {
                 if employed_bees[i] {
                     // Generate new solution in neighborhood
                     let partner = loop {
-                        let p = rand::rng().random_range(0..self.config.swarm_size);
+                        let p = rand::rng().gen_range(0..self.config.swarm_size);
                         if p != i {
                             break p;
                         }
                     };
 
-                    let dimension = rand::rng().random_range(0..problem_dim);
-                    let phi = rand::rng().random_range(-1.0..1.0);
+                    let dimension = rand::rng().gen_range(0..problem_dim);
+                    let phi = rand::rng().gen_range(-1.0..1.0);
 
                     let mut new_position = swarm.positions.row(i).to_owned();
-                    new_position[dimension] = swarm.positions[[i, dimension]]
+                    new_position[dimension] = swarm.positions[[i..dimension]]
                         + phi
                             * (swarm.positions[[i, dimension]]
                                 - swarm.positions[[partner, dimension]]);
 
                     // Evaluate new position (simplified)
                     let new_fitness =
-                        swarm.current_fitness[i] + rand::rng().random_range(-0.05..0.05);
+                        swarm.current_fitness[i] + rand::rng().gen_range(-0.05..0.05);
 
                     // Greedy selection
                     if new_fitness < swarm.current_fitness[i] {
                         for j in 0..problem_dim {
-                            swarm.positions[[i, j]] = new_position[j];
+                            swarm.positions[[i..j]] = new_position[j];
                         }
                         swarm.current_fitness[i] = new_fitness;
                         trial_counters[i] = 0;
@@ -1012,16 +1004,16 @@ impl AdvancedParallelSwarmOptimizer {
                 if onlooker_bees[i] && total_nectar > 0.0 {
                     // Probability-based source selection
                     let mut cumulative = 0.0;
-                    let random_val = rand::rng().random_range(0.0..1.0);
+                    let random_val = rand::rng().gen_range(0.0..1.0);
 
                     for j in 0..self.config.swarm_size {
                         cumulative += nectar_amounts[j] / total_nectar;
                         if random_val <= cumulative {
                             // Follow employed bee j
-                            let dimension = rand::rng().random_range(0..problem_dim);
-                            let phi = rand::rng().random_range(-1.0..1.0);
+                            let dimension = rand::rng().gen_range(0..problem_dim);
+                            let phi = rand::rng().gen_range(-1.0..1.0);
 
-                            swarm.positions[[i, dimension]] = swarm.positions[[j, dimension]]
+                            swarm.positions[[i..dimension]] = swarm.positions[[j, dimension]]
                                 + phi
                                     * (swarm.positions[[j, dimension]]
                                         - swarm.local_best[dimension]);
@@ -1036,10 +1028,10 @@ impl AdvancedParallelSwarmOptimizer {
                 if trial_counters[i] > limit {
                     // Abandon solution and scout for new one
                     for j in 0..problem_dim {
-                        swarm.positions[[i, j]] = rand::rng().random_range(-1.0..1.0);
+                        swarm.positions[[i, j]] = rand::rng().gen_range(-1.0..1.0);
                     }
                     trial_counters[i] = 0;
-                    nectar_amounts[i] = rand::rng().random_range(0.0..1.0);
+                    nectar_amounts[i] = rand::rng().gen_range(0.0..1.0);
                 }
             }
         }
@@ -1048,11 +1040,7 @@ impl AdvancedParallelSwarmOptimizer {
     }
 
     fn update_firefly_gpu(
-        &mut self,
-        swarm: &mut SwarmState,
-        _swarm_idx: usize,
-        _iteration: usize,
-    ) -> ScirsResult<()> {
+        &mut self..swarm: &mut SwarmState_swarm_idx: usize, _iteration: usize,) -> ScirsResult<()> {
         if let AlgorithmSpecificState::Firefly {
             ref mut brightness_matrix,
             ref mut attraction_matrix,
@@ -1090,9 +1078,9 @@ impl AdvancedParallelSwarmOptimizer {
                         // Move firefly i towards j
                         for k in 0..problem_dim {
                             let randomization = alpha
-                                * rand::rng().random_range(-0.5..0.5)
+                                * rand::rng().gen_range(-0.5..0.5)
                                 * randomization_factors[i];
-                            swarm.positions[[i, k]] += attraction
+                            swarm.positions[[i..k]] += attraction
                                 * (swarm.positions[[j, k]] - swarm.positions[[i, k]])
                                 + randomization;
                         }
@@ -1111,8 +1099,8 @@ impl AdvancedParallelSwarmOptimizer {
                 if !moved {
                     for k in 0..problem_dim {
                         let randomization =
-                            alpha * rand::rng().random_range(-0.5..0.5) * randomization_factors[i];
-                        swarm.positions[[i, k]] += randomization;
+                            alpha * rand::rng().gen_range(-0.5..0.5) * randomization_factors[i];
+                        swarm.positions[[i..k]] += randomization;
                     }
                 }
             }
@@ -1150,23 +1138,23 @@ impl AdvancedParallelSwarmOptimizer {
                 }
 
                 // Evaluate new solution
-                let random_nest = rand::rng().random_range(0..self.config.swarm_size);
-                if rand::rng().random_range(0.0..1.0) < 0.5
+                let random_nest = rand::rng().gen_range(0..self.config.swarm_size);
+                if rand::rng().gen_range(0.0..1.0) < 0.5
                     && swarm.current_fitness[i] < swarm.current_fitness[random_nest]
                 {
                     // Replace the random nest if current solution is better
                     for j in 0..problem_dim {
-                        swarm.positions[[random_nest, j]] = swarm.positions[[i, j]];
+                        swarm.positions[[random_nest..j]] = swarm.positions[[i, j]];
                     }
                 }
             }
 
             // Abandon some nests and build new ones
             for i in 0..self.config.swarm_size {
-                if rand::rng().random_range(0.0..1.0) < discovery_probability {
+                if rand::rng().gen_range(0.0..1.0) < discovery_probability {
                     // Generate new random solution
                     for j in 0..problem_dim {
-                        swarm.positions[[i, j]] = rand::rng().random_range(-1.0..1.0);
+                        swarm.positions[[i..j]] = rand::rng().gen_range(-1.0..1.0);
                     }
                 }
             }
@@ -1181,13 +1169,13 @@ impl AdvancedParallelSwarmOptimizer {
             / (tgamma((1.0 + beta) / 2.0) * beta * 2.0_f64.powf((beta - 1.0) / 2.0)))
         .powf(1.0 / beta);
 
-        let u = rand::rng().random_range(0.0..1.0) * sigma;
-        let v: f64 = rand::rng().random_range(0.0..1.0);
+        let u = rand::rng().gen_range(0.0..1.0) * sigma;
+        let v: f64 = rand::rng().gen_range(0.0..1.0);
 
         u / v.abs().powf(1.0 / beta)
     }
 
-    fn update_global_best(&mut self, iteration: usize) -> ScirsResult<()> {
+    fn update_global_best(&mut self..iteration: usize) -> ScirsResult<()> {
         let mut improved = false;
 
         for (swarm_idx, swarm) in self.swarm_states.iter().enumerate() {
@@ -1238,7 +1226,7 @@ impl AdvancedParallelSwarmOptimizer {
                     SelectionStrategy::Random => {
                         // Random selection
                         (0..migration_count)
-                            .map(|_| rand::rng().random_range(0..self.config.swarm_size))
+                            .map(|_| rand::rng().gen_range(0..self.config.swarm_size))
                             .collect()
                     }
                     SelectionStrategy::Diverse => {
@@ -1251,7 +1239,7 @@ impl AdvancedParallelSwarmOptimizer {
                         // Select elite agents (top 10%)
                         let elite_count = (self.config.swarm_size as f64 * 0.1) as usize;
                         let mut indices: Vec<usize> = (0..self.config.swarm_size).collect();
-                        indices.sort_by(|&a, &b| {
+                        indices.sort_by(|&a..&b| {
                             self.swarm_states[source_swarm].current_fitness[a]
                                 .partial_cmp(&self.swarm_states[source_swarm].current_fitness[b])
                                 .unwrap()
@@ -1294,12 +1282,12 @@ impl AdvancedParallelSwarmOptimizer {
         if min_diversity < self.topology_manager.adaptation_rules.diversity_threshold {
             // Switch to more connected topology for better information sharing
             self.topology_manager.current_topology = match self.topology_manager.current_topology {
-                TopologyType::Ring => TopologyType::Star,
-                TopologyType::Star => TopologyType::Random,
-                TopologyType::Random => TopologyType::SmallWorld,
-                TopologyType::SmallWorld => TopologyType::ScaleFree,
-                TopologyType::ScaleFree => TopologyType::Adaptive,
-                TopologyType::Adaptive => TopologyType::Ring, // Cycle back
+                TopologyType::Ring =>, TopologyType::Star,
+                TopologyType::Star =>, TopologyType::Random,
+                TopologyType::Random =>, TopologyType::SmallWorld,
+                TopologyType::SmallWorld =>, TopologyType::ScaleFree,
+                TopologyType::ScaleFree =>, TopologyType::Adaptive,
+                TopologyType::Adaptive =>, TopologyType::Ring, // Cycle back
             };
         }
 
@@ -1344,14 +1332,13 @@ impl AdvancedParallelSwarmOptimizer {
             TopologyType::Random => {
                 // Random connections between swarms
                 for _ in 0..self.config.num_swarms {
-                    let source = rand::rng().random_range(0..self.config.num_swarms);
-                    let target = rand::rng().random_range(0..self.config.num_swarms);
+                    let source = rand::rng().gen_range(0..self.config.num_swarms);
+                    let target = rand::rng().gen_range(0..self.config.num_swarms);
                     if source != target {
                         self.topology_manager
                             .migration_patterns
                             .push(MigrationPattern {
-                                source_swarm: source,
-                                target_swarm: target,
+                                source_swarm: source..target, _swarm: target,
                                 migration_rate: 0.08,
                                 selection_strategy: SelectionStrategy::Random,
                             });
@@ -1387,10 +1374,10 @@ impl AdvancedParallelSwarmOptimizer {
             if diversity < self.config.diversity_threshold {
                 let reinit_count = (self.config.swarm_size as f64 * 0.1) as usize;
                 for i in 0..reinit_count {
-                    let idx = rand::rng().random_range(0..self.config.swarm_size);
+                    let idx = rand::rng().gen_range(0..self.config.swarm_size);
                     // Reinitialize position
                     for j in 0..swarm.positions.ncols() {
-                        swarm.positions[[idx, j]] = rand::rng().random_range(-1.0..1.0);
+                        swarm.positions[[idx..j]] = rand::rng().gen_range(-1.0..1.0);
                     }
                 }
             }
@@ -1399,7 +1386,7 @@ impl AdvancedParallelSwarmOptimizer {
         Ok(())
     }
 
-    fn compute_swarm_diversity(&self, swarm: &SwarmState) -> ScirsResult<f64> {
+    fn compute_swarm_diversity(&self..swarm: &SwarmState) -> ScirsResult<f64> {
         let n_agents = swarm.positions.nrows();
         let n_dims = swarm.positions.ncols();
 
@@ -1499,50 +1486,35 @@ impl AdvancedParallelSwarmOptimizer {
 
     // Static versions of GPU update methods to avoid borrowing conflicts
     fn update_particle_swarm_gpu_static(
-        _swarm: &mut SwarmState,
-        _swarm_idx: usize,
-        _iteration: usize,
-        _config: &AdvancedSwarmConfig,
+        _swarm: &mut SwarmState_swarm_idx: usize, _iteration: usize_config: &AdvancedSwarmConfig,
     ) -> ScirsResult<()> {
-        // Simplified static implementation for particle swarm
+        // Simplified static implementation for particle _swarm
         Ok(())
     }
 
     fn update_ant_colony_gpu_static(
-        _swarm: &mut SwarmState,
-        _swarm_idx: usize,
-        _iteration: usize,
-        _config: &AdvancedSwarmConfig,
+        _swarm: &mut SwarmState_swarm_idx: usize, _iteration: usize_config: &AdvancedSwarmConfig,
     ) -> ScirsResult<()> {
         // Simplified static implementation for ant colony
         Ok(())
     }
 
     fn update_bee_colony_gpu_static(
-        _swarm: &mut SwarmState,
-        _swarm_idx: usize,
-        _iteration: usize,
-        _config: &AdvancedSwarmConfig,
+        _swarm: &mut SwarmState_swarm_idx: usize, _iteration: usize_config: &AdvancedSwarmConfig,
     ) -> ScirsResult<()> {
         // Simplified static implementation for bee colony
         Ok(())
     }
 
     fn update_firefly_gpu_static(
-        _swarm: &mut SwarmState,
-        _swarm_idx: usize,
-        _iteration: usize,
-        _config: &AdvancedSwarmConfig,
+        _swarm: &mut SwarmState_swarm_idx: usize, _iteration: usize_config: &AdvancedSwarmConfig,
     ) -> ScirsResult<()> {
         // Simplified static implementation for firefly
         Ok(())
     }
 
     fn update_cuckoo_search_gpu_static(
-        _swarm: &mut SwarmState,
-        _swarm_idx: usize,
-        _iteration: usize,
-        _config: &AdvancedSwarmConfig,
+        _swarm: &mut SwarmState_swarm_idx: usize, _iteration: usize_config: &AdvancedSwarmConfig,
     ) -> ScirsResult<()> {
         // Simplified static implementation for cuckoo search
         Ok(())
@@ -1550,8 +1522,7 @@ impl AdvancedParallelSwarmOptimizer {
 
     // Static initialization methods to avoid borrowing conflicts
     fn initialize_particle_swarm_state_static(
-        swarm: &mut SwarmState,
-        _bounds: &[(f64, f64)],
+        swarm: &mut SwarmState_bounds: &[(f64, f64)],
         swarm_size: usize,
     ) -> ScirsResult<()> {
         swarm.algorithm_state = AlgorithmSpecificState::ParticleSwarm {
@@ -1563,8 +1534,7 @@ impl AdvancedParallelSwarmOptimizer {
     }
 
     fn initialize_ant_colony_state_static(
-        swarm: &mut SwarmState,
-        _bounds: &[(f64, f64)],
+        swarm: &mut SwarmState_bounds: &[(f64, f64)],
         swarm_size: usize,
     ) -> ScirsResult<()> {
         swarm.algorithm_state = AlgorithmSpecificState::AntColony {
@@ -1577,8 +1547,7 @@ impl AdvancedParallelSwarmOptimizer {
     }
 
     fn initialize_bee_colony_state_static(
-        swarm: &mut SwarmState,
-        _bounds: &[(f64, f64)],
+        swarm: &mut SwarmState_bounds: &[(f64, f64)],
         swarm_size: usize,
     ) -> ScirsResult<()> {
         swarm.algorithm_state = AlgorithmSpecificState::ArtificialBee {
@@ -1592,8 +1561,7 @@ impl AdvancedParallelSwarmOptimizer {
     }
 
     fn initialize_firefly_state_static(
-        swarm: &mut SwarmState,
-        _bounds: &[(f64, f64)],
+        swarm: &mut SwarmState_bounds: &[(f64, f64)],
         swarm_size: usize,
     ) -> ScirsResult<()> {
         swarm.algorithm_state = AlgorithmSpecificState::Firefly {
@@ -1606,8 +1574,7 @@ impl AdvancedParallelSwarmOptimizer {
     }
 
     fn initialize_cuckoo_search_state_static(
-        swarm: &mut SwarmState,
-        _bounds: &[(f64, f64)],
+        swarm: &mut SwarmState_bounds: &[(f64, f64)],
         swarm_size: usize,
     ) -> ScirsResult<()> {
         swarm.algorithm_state = AlgorithmSpecificState::CuckooSearch {
@@ -1620,25 +1587,25 @@ impl AdvancedParallelSwarmOptimizer {
 }
 
 impl SwarmState {
-    fn new(config: &AdvancedSwarmConfig) -> ScirsResult<Self> {
+    fn new(_config: &AdvancedSwarmConfig) -> ScirsResult<Self> {
         // This would be initialized properly with problem dimensions
         let dummy_dim = 10; // Placeholder
 
         Ok(Self {
-            positions: Array2::zeros((config.swarm_size, dummy_dim)),
-            velocities: Array2::zeros((config.swarm_size, dummy_dim)),
-            personal_bests: Array2::zeros((config.swarm_size, dummy_dim)),
-            personal_best_fitness: Array1::from_elem(config.swarm_size, f64::INFINITY),
-            current_fitness: Array1::from_elem(config.swarm_size, f64::INFINITY),
+            positions: Array2::zeros((_config.swarm_size, dummy_dim)),
+            velocities: Array2::zeros((_config.swarm_size, dummy_dim)),
+            personal_bests: Array2::zeros((_config.swarm_size, dummy_dim)),
+            personal_best_fitness: Array1::from_elem(_config.swarm_size, f64::INFINITY),
+            current_fitness: Array1::from_elem(_config.swarm_size, f64::INFINITY),
             local_best: Array1::zeros(dummy_dim),
             local_best_fitness: f64::INFINITY,
-            agent_parameters: Array2::zeros((config.swarm_size, 4)), // Algorithm-specific parameters
+            agent_parameters: Array2::zeros((_config.swarm_size, 4)), // Algorithm-specific parameters
             diversity: 1.0,
             algorithm_state: AlgorithmSpecificState::ParticleSwarm {
-                inertia_weights: Array1::zeros(config.swarm_size),
-                acceleration_coefficients: Array2::zeros((config.swarm_size, 2)),
+                inertia_weights: Array1::zeros(_config.swarm_size),
+                acceleration_coefficients: Array2::zeros((_config.swarm_size, 2)),
                 neighborhood_topology: Array2::from_elem(
-                    (config.swarm_size, config.swarm_size),
+                    (_config.swarm_size, _config.swarm_size),
                     false,
                 ),
             },
@@ -1647,8 +1614,8 @@ impl SwarmState {
 }
 
 impl SwarmTopologyManager {
-    fn new(num_swarms: usize) -> Self {
-        let communication_matrix = Array2::from_elem((num_swarms, num_swarms), 0.1);
+    fn new(_num_swarms: usize) -> Self {
+        let communication_matrix = Array2::from_elem((_num_swarms, _num_swarms), 0.1);
         let migration_patterns = Vec::new(); // Would be initialized with patterns
         let adaptation_rules = TopologyAdaptationRules {
             performance_threshold: 0.9,
@@ -1667,11 +1634,11 @@ impl SwarmTopologyManager {
 }
 
 impl SwarmPerformanceMonitor {
-    fn new(num_swarms: usize) -> Self {
+    fn new(_num_swarms: usize) -> Self {
         Self {
-            evaluations_per_swarm: vec![0; num_swarms],
-            convergence_rates: vec![0.0; num_swarms],
-            diversity_history: vec![Vec::new(); num_swarms],
+            evaluations_per_swarm: vec![0; _num_swarms],
+            convergence_rates: vec![0.0; _num_swarms],
+            diversity_history: vec![Vec::new(); _num_swarms],
             gpu_utilization: GPUUtilizationMetrics {
                 compute_utilization: 0.0,
                 memory_utilization: 0.0,
@@ -1685,9 +1652,9 @@ impl SwarmPerformanceMonitor {
 }
 
 impl SwarmKernelCache {
-    fn new(context: Arc<super::GpuContext>) -> ScirsResult<Self> {
+    fn new(_context: Arc<super::GpuContext>) -> ScirsResult<Self> {
         Ok(Self {
-            pso_kernel: ParticleSwarmKernel::new(Arc::clone(&context))?,
+            pso_kernel: ParticleSwarmKernel::new(Arc::clone(&_context))?,
             aco_kernel: AntColonyKernel,
             abc_kernel: ArtificialBeeKernel,
             firefly_kernel: FireflyKernel,
@@ -1847,8 +1814,8 @@ pub struct AccelerationManager {
 }
 
 impl AccelerationManager {
-    pub fn new(config: AccelerationConfig) -> Self {
-        Self { config }
+    pub fn new(_config: AccelerationConfig) -> Self {
+        Self { _config }
     }
 
     pub fn default() -> Self {

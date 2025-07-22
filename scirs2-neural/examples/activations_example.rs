@@ -153,6 +153,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 #[allow(dead_code)]
-fn convert_to_vec<F: Clone>(array: &Array<F, ndarray::IxDyn>) -> Vec<F> {
-    array.iter().cloned().collect()
+fn convert_to_vec<F: Clone>(_array: &Array<F, ndarray::IxDyn>) -> Vec<F> {
+    _array.iter().cloned().collect()
 }

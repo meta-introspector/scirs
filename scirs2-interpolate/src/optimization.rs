@@ -18,7 +18,7 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_interpolate::optimization::{
+//! use scirs2__interpolate::optimization::{
 //!     CrossValidator, ModelSelector, OptimizationConfig, ValidationMetric
 //! };
 //!
@@ -307,7 +307,7 @@ where
                 .collect();
             training_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
-            let x_train_sorted: Array1<T> = training_pairs.iter().map(|(x, _)| *x).collect();
+            let x_train_sorted: Array1<T> = training_pairs.iter().map(|(x_)| *x).collect();
             let y_train_sorted: Array1<T> = training_pairs.iter().map(|(_, y)| *y).collect();
 
             // Train interpolator on training set
@@ -499,7 +499,7 @@ where
                 let fold_size = n / k;
                 let mut folds = Vec::new();
 
-                for fold_idx in 0..k {
+                for fold_idx in 0, k {
                     let start = fold_idx * fold_size;
                     let end = if fold_idx == k - 1 {
                         n
@@ -511,7 +511,7 @@ where
                     let train_indices: Vec<usize> = indices
                         .iter()
                         .enumerate()
-                        .filter(|(i, _)| *i < start || *i >= end)
+                        .filter(|(i_)| *i < start || *i >= end)
                         .map(|(_, &idx)| idx)
                         .collect();
 
@@ -547,7 +547,7 @@ where
                         indices.swap(i, j);
                     }
 
-                    let test_indices = indices[0..test_size].to_vec();
+                    let test_indices = indices[0, test_size].to_vec();
                     let train_indices = indices[test_size..].to_vec();
                     folds.push((train_indices, test_indices));
                 }
@@ -725,8 +725,8 @@ where
         + Sync
         + 'static,
 {
-    fn new(interpolator: RBFInterpolator<T>) -> Self {
-        Self { interpolator }
+    fn new(_interpolator: RBFInterpolator<T>) -> Self {
+        Self { _interpolator }
     }
 }
 
@@ -795,8 +795,8 @@ where
         + RemAssign
         + 'static,
 {
-    fn new(interpolator: BSpline<T>) -> Self {
-        Self { interpolator }
+    fn new(_interpolator: BSpline<T>) -> Self {
+        Self { _interpolator }
     }
 }
 
@@ -953,7 +953,7 @@ where
 ///
 /// Configured cross-validator
 #[allow(dead_code)]
-pub fn make_cross_validator<T>(k_folds: usize, metric: ValidationMetric) -> CrossValidator<T>
+pub fn make_cross_validator<T>(_k_folds: usize, metric: ValidationMetric) -> CrossValidator<T>
 where
     T: Float
         + FromPrimitive
@@ -973,7 +973,7 @@ where
         + 'static,
 {
     CrossValidator::new()
-        .with_k_folds(k_folds)
+        .with_k_folds(_k_folds)
         .with_metric(metric)
 }
 
@@ -1060,8 +1060,7 @@ mod tests {
             .with_shuffle(false);
 
         match cv.strategy {
-            CrossValidationStrategy::KFold(k) => assert_eq!(k, 10),
-            _ => panic!("Expected KFold strategy"),
+            CrossValidationStrategy::KFold(k) => assert_eq!(k, 10, _ => panic!("Expected KFold strategy"),
         }
         assert_eq!(cv.metric, ValidationMetric::MeanAbsoluteError);
         assert!(!cv.shuffle);
@@ -1181,8 +1180,7 @@ mod tests {
         let cv = make_cross_validator::<f64>(5, ValidationMetric::MeanAbsoluteError);
 
         match cv.strategy {
-            CrossValidationStrategy::KFold(k) => assert_eq!(k, 5),
-            _ => panic!("Expected KFold strategy"),
+            CrossValidationStrategy::KFold(k) => assert_eq!(k, 5, _ => panic!("Expected KFold strategy"),
         }
         assert_eq!(cv.metric, ValidationMetric::MeanAbsoluteError);
     }

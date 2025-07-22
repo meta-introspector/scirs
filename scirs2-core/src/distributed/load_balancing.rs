@@ -118,9 +118,7 @@ impl LoadBalancer {
     }
 
     /// Update node load metrics
-    pub fn update_node_load(
-        &self,
-        node_id: &str,
+    pub fn update_node_load(&self, node_id: &str,
         cpu: f64,
         memory: f64,
         connections: usize,

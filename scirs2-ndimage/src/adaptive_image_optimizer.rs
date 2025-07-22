@@ -11,7 +11,7 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-use crate::advanced_fusion_algorithms::AdvancedConfig;
+use crate::advanced_fusion__algorithms::AdvancedConfig;
 use crate::error::{NdimageError, NdimageResult};
 
 /// Adaptive optimization system for Advanced mode operations
@@ -209,7 +209,7 @@ impl HardwareProfiler {
             cache_sizes: vec![32768, 262144, 8388608], // Default L1, L2, L3 sizes
             memory_bandwidth: 25.6e9,                  // 25.6 GB/s default
             cpu_frequency: 3.0e9,                      // 3 GHz default
-            num_cores: num_cpus::get(),
+            num_cores: num, _cpus: get(),
             simd_capabilities: Self::detect_simd_capabilities(),
         }
     }
@@ -392,14 +392,14 @@ impl RealTimeMonitor {
 
 impl AdaptiveAdvancedOptimizer {
     /// Create a new adaptive optimizer
-    pub fn new(config: AdaptiveOptimizerConfig) -> Self {
+    pub fn new(_config: AdaptiveOptimizerConfig) -> Self {
         Self {
             performance_history: Arc::new(RwLock::new(HashMap::new())),
             ml_predictor: Arc::new(Mutex::new(PerformancePredictionModel::new())),
             hardware_profiler: Arc::new(Mutex::new(HardwareProfiler::new())),
             parameter_controller: Arc::new(Mutex::new(ParameterController::new())),
             monitor: Arc::new(Mutex::new(RealTimeMonitor::new())),
-            config,
+            _config,
         }
     }
 
@@ -421,7 +421,7 @@ impl AdaptiveAdvancedOptimizer {
         // Get ML prediction for performance
         let mut optimized_config = base_config.clone();
 
-        if self.config.enable_prediction {
+        if self._config.enable_prediction {
             let ml_predictor = self.ml_predictor.lock().map_err(|_| {
                 NdimageError::ComputationError("Failed to acquire ML predictor lock".into())
             })?;

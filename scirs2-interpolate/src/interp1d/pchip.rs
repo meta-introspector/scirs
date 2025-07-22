@@ -59,7 +59,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::interp1d::pchip::PchipInterpolator;
+    /// use scirs2__interpolate::interp1d::pchip::PchipInterpolator;
     ///
     /// let x = array![0.0f64, 1.0, 2.0, 3.0];
     /// let y = array![0.0f64, 1.0, 4.0, 9.0];
@@ -245,12 +245,12 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
     /// # Returns
     ///
     /// The estimated derivative at the endpoint
-    fn edge_case(h0: F, h1: F, m0: F, m1: F) -> F {
+    fn edge_case(_h0: F, h1: F, m0: F, m1: F) -> F {
         // One-sided three-point estimate for the derivative
         let two = F::from_f64(2.0).unwrap();
         let three = F::from_f64(3.0).unwrap();
 
-        let d = ((two * h0 + h1) * m0 - h0 * m1) / (h0 + h1);
+        let d = ((two * _h0 + h1) * m0 - _h0 * m1) / (_h0 + h1);
 
         // Try to preserve shape
         let sign_d = if d >= F::zero() { F::one() } else { -F::one() };
@@ -371,7 +371,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_interpolate::pchip_interpolate;
+/// use scirs2__interpolate::pchip_interpolate;
 ///
 /// let x = array![0.0f64, 1.0, 2.0, 3.0];
 /// let y = array![0.0f64, 1.0, 4.0, 9.0];
@@ -386,7 +386,7 @@ pub fn pchip_interpolate<F: crate::traits::InterpolationFloat>(
     x_new: &ArrayView1<F>,
     extrapolate: bool,
 ) -> InterpolateResult<Array1<F>> {
-    let interp = PchipInterpolator::new(x, y, extrapolate)?;
+    let interp = PchipInterpolator::_new(x, y, extrapolate)?;
     interp.evaluate_array(x_new)
 }
 

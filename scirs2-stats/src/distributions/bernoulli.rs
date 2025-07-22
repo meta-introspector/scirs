@@ -6,8 +6,9 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Bernoulli as RandBernoulli, Distribution};
+use rand__distr::{Bernoulli as RandBernoulli, Distribution};
 use scirs2_core::validation::check_probability;
+use statrs::statistics::Statistics;
 
 /// Bernoulli distribution structure
 ///
@@ -36,7 +37,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// ```
@@ -73,7 +74,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let pmf_at_one = bern.pmf(1.0);
@@ -106,7 +107,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let log_pmf_at_one = bern.log_pmf(1.0);
@@ -148,7 +149,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let cdf_at_zero = bern.cdf(0.0);
@@ -180,7 +181,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let quant = bern.ppf(0.8).unwrap();
@@ -216,7 +217,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let samples = bern.rvs(10).unwrap();
@@ -251,7 +252,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let mean = bern.mean();
@@ -271,7 +272,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let variance = bern.var();
@@ -292,7 +293,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let std_dev = bern.std();
@@ -312,7 +313,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let skewness = bern.skewness();
@@ -342,7 +343,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let kurtosis = bern.kurtosis();
@@ -373,7 +374,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let entropy = bern.entropy();
@@ -404,7 +405,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let median = bern.median();
@@ -436,7 +437,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::bernoulli::Bernoulli;
+    /// use scirs2__stats::distributions::bernoulli::Bernoulli;
     ///
     /// let bern = Bernoulli::new(0.3f64).unwrap();
     /// let mode = bern.mode();
@@ -476,7 +477,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::distributions::bernoulli;
+/// use scirs2__stats::distributions::bernoulli;
 ///
 /// let b = bernoulli::bernoulli(0.3f64).unwrap();
 /// let pmf_at_one = b.pmf(1.0);

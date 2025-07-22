@@ -211,7 +211,7 @@ pub trait PerformanceCounter: Send + Sync {
     fn available_counters(&self) -> Vec<CounterType>;
 
     /// Check if a counter type is available
-    fn is_counter_available(&self, counter_type: &CounterType) -> bool;
+    fn is_available(&self, counter_type: &CounterType) -> bool;
 
     /// Start monitoring a counter
     fn start_counter(&self, counter_type: &CounterType) -> CoreResult<()>;
@@ -229,7 +229,7 @@ pub trait PerformanceCounter: Send + Sync {
     fn reset_counter(&self, counter_type: &CounterType) -> CoreResult<()>;
 
     /// Get counter overflow status
-    fn counter_overflow(&self, counter_type: &CounterType) -> CoreResult<bool>;
+    fn is_overflowed(&self, counter_type: &CounterType) -> CoreResult<bool>;
 }
 
 /// Linux perf_event implementation
@@ -287,12 +287,12 @@ impl PerformanceCounter for LinuxPerfCounter {
         ]
     }
 
-    fn is_counter_available(&self, counter_type: &CounterType) -> bool {
+    fn is_available(&self, counter_type: &CounterType) -> bool {
         self.counter_to_perf_config(counter_type).is_some()
     }
 
     fn start_counter(&self, counter_type: &CounterType) -> CoreResult<()> {
-        if let Some((_event_type, _config)) = self.counter_to_perf_config(counter_type) {
+        if let Some((_event_type_config)) = self.counter_to_perf_config(counter_type) {
             // In a real implementation, we would:
             // 1. Create perf_event_attr structure
             // 2. Call perf_event_open syscall
@@ -331,7 +331,6 @@ impl PerformanceCounter for LinuxPerfCounter {
                 CounterType::Instructions => 500_000,
                 CounterType::CacheReferences => 10_000,
                 CounterType::CacheMisses => 1_000,
-                _ => 0,
             };
 
             Ok(CounterValue::new(counter_type.clone(), mock_value))
@@ -358,7 +357,7 @@ impl PerformanceCounter for LinuxPerfCounter {
         }
     }
 
-    fn counter_overflow(&self, counter_type: &CounterType) -> CoreResult<bool> {
+    fn check_overflow(&self, counter_type: &CounterType) -> CoreResult<bool> {
         let counters = self.active_counters.read().unwrap();
         if counters.contains_key(counter_type) {
             // In real implementation: check counter overflow flag
@@ -385,7 +384,7 @@ impl WindowsPdhCounter {
     }
 
     /// Convert counter type to PDH counter path
-    fn counter_to_pdh_path(&self, counter_type: &CounterType) -> Option<String> {
+    fn counter_to_path(counter_type: &CounterType) -> Option<String> {
         match counter_type {
             CounterType::CpuCycles => Some("\\Processor(_Total)\\% Processor Time".to_string()),
             CounterType::CpuFrequency => {
@@ -414,12 +413,12 @@ impl PerformanceCounter for WindowsPdhCounter {
         ]
     }
 
-    fn is_counter_available(&self, counter_type: &CounterType) -> bool {
-        self.counter_to_pdh_path(counter_type).is_some()
+    fn is_counter_supported(&self, counter_type: &CounterType) -> bool {
+        Self::counter_to_path(counter_type).is_some()
     }
 
     fn start_counter(&self, counter_type: &CounterType) -> CoreResult<()> {
-        if let Some(path) = self.counter_to_pdh_path(counter_type) {
+        if let Some(path) = Self::counter_to_path(counter_type) {
             // In real implementation: PDH API calls
             let mut counters = self.active_counters.write().unwrap();
             counters.insert(counter_type.clone(), path);
@@ -463,7 +462,7 @@ impl PerformanceCounter for WindowsPdhCounter {
         Ok(results)
     }
 
-    fn reset_counter(&self, _counter_type: &CounterType) -> CoreResult<()> {
+    fn reset_counter(&self, counter_type: &CounterType) -> CoreResult<()> {
         // PDH counters can't be reset
         Err(
             HardwareCounterError::InvalidConfiguration("PDH counters cannot be reset".to_string())
@@ -471,7 +470,7 @@ impl PerformanceCounter for WindowsPdhCounter {
         )
     }
 
-    fn counter_overflow(&self, _counter_type: &CounterType) -> CoreResult<bool> {
+    fn check_overflow(&self, _counter_type: &CounterType) -> CoreResult<bool> {
         // PDH handles overflow internally
         Ok(false)
     }
@@ -521,7 +520,7 @@ impl PerformanceCounter for MacOSCounter {
         )
     }
 
-    fn start_counter(&self, counter_type: &CounterType) -> CoreResult<()> {
+    fn start_counter(&mut self, counter_type: &CounterType) -> CoreResult<()> {
         if self.is_counter_available(counter_type) {
             let mut counters = self.active_counters.write().unwrap();
             counters.insert(counter_type.clone(), true);
@@ -531,7 +530,7 @@ impl PerformanceCounter for MacOSCounter {
         }
     }
 
-    fn stop_counter(&self, counter_type: &CounterType) -> CoreResult<()> {
+    fn stop_counter(&mut self, counter_type: &CounterType) -> CoreResult<()> {
         let mut counters = self.active_counters.write().unwrap();
         if counters.remove(counter_type).is_some() {
             Ok(())
@@ -566,12 +565,12 @@ impl PerformanceCounter for MacOSCounter {
         Ok(results)
     }
 
-    fn reset_counter(&self, _counter_type: &CounterType) -> CoreResult<()> {
+    fn reset_counter(&mut self, counter_type: &CounterType) -> CoreResult<()> {
         // macOS counters typically can't be reset
         Ok(())
     }
 
-    fn counter_overflow(&self, _counter_type: &CounterType) -> CoreResult<bool> {
+    fn is_counter_overflowed(&self, counter_type: &CounterType) -> CoreResult<bool> {
         Ok(false)
     }
 }
@@ -784,7 +783,7 @@ impl PerformanceCounter for NoOpCounter {
         Vec::new()
     }
 
-    fn is_counter_available(&self, _counter_type: &CounterType) -> bool {
+    fn is_available(&self, _counter_type: &CounterType) -> bool {
         false
     }
 
@@ -804,11 +803,11 @@ impl PerformanceCounter for NoOpCounter {
         Err(HardwareCounterError::NotAvailable.into())
     }
 
-    fn reset_counter(&self, _counter_type: &CounterType) -> CoreResult<()> {
+    fn reset_counter(&mut self, _counter_type: &CounterType) -> CoreResult<()> {
         Err(HardwareCounterError::NotAvailable.into())
     }
 
-    fn counter_overflow(&self, _counter_type: &CounterType) -> CoreResult<bool> {
+    fn is_counter_overflowed(&self, _counter_type: &CounterType) -> CoreResult<bool> {
         Err(HardwareCounterError::NotAvailable.into())
     }
 }
@@ -1049,7 +1048,7 @@ mod tests {
     #[test]
     fn test_utils_functions() {
         // Test that utility functions don't panic
-        let _available = utils::counters_available();
+        let available = utils::counters_available();
         // Function should complete without panicking - no assertion needed
 
         // Test starting monitoring (may fail on unsupported platforms)

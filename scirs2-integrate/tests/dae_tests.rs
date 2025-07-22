@@ -1,10 +1,10 @@
 use ndarray::{array, Array1, ArrayView1};
-use scirs2_integrate::dae::{
+use scirs2__integrate::dae::{
     solve_higher_index_dae, solve_implicit_dae, solve_semi_explicit_dae, DAEIndex, DAEOptions,
     DAEStructure, DAEType,
 };
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::ODEMethod;
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::ODEMethod;
 use std::f64::consts::PI;
 
 #[test]
@@ -287,7 +287,7 @@ fn test_higher_index_dae() -> IntegrateResult<()> {
     let y0 = array![0.0]; // y = 2t gives y(0) = 0
 
     // Differential equation: x' = y
-    let f = |_t: f64, _x: ArrayView1<f64>, y: ArrayView1<f64>| -> Array1<f64> { array![y[0]] };
+    let f = |_t: f64_x: ArrayView1<f64>, y: ArrayView1<f64>| -> Array1<f64> { array![y[0]] };
 
     // Constraint equation: x = t²
     let g =

@@ -2,7 +2,7 @@
 // This example creates synthetic images and extracts various features
 
 use ndarray::{Array2, Array3};
-use scirs2_signal::image_features::{
+use scirs2__signal::image_features::{
     extract_color_image_features, extract_image_features, ImageFeatureOptions,
 };
 use std::collections::HashMap;
@@ -137,11 +137,11 @@ fn main() {
 
 // Helper function to print selected features
 #[allow(dead_code)]
-fn print_selected_features(features: &HashMap<String, f64>, image_type: &str) {
-    println!("\nSelected features for {}:", image_type);
+fn print_selected_features(_features: &HashMap<String, f64>, image_type: &str) {
+    println!("\nSelected _features for {}:", image_type);
     println!("------------------------------");
 
-    // Define categories of features to print
+    // Define categories of _features to print
     let categories = [
         (
             "Basic Statistics",
@@ -180,7 +180,7 @@ fn print_selected_features(features: &HashMap<String, f64>, image_type: &str) {
     ];
 
     if image_type.contains("Color") {
-        // For color images, print color-specific features
+        // For color images, print color-specific _features
         println!("\nColor Features:");
         println!("--------------");
         for key in &[
@@ -191,13 +191,13 @@ fn print_selected_features(features: &HashMap<String, f64>, image_type: &str) {
             "color_homogeneity",
             "hue_entropy",
         ] {
-            if let Some(value) = features.get(*key) {
+            if let Some(value) = _features.get(*key) {
                 println!("{:<25}: {:.6}", key, value);
             }
         }
     }
 
-    // Print features by category
+    // Print _features by category
     for (category, keys) in categories.iter() {
         let mut found = false;
         let mut category_printed = false;
@@ -217,7 +217,7 @@ fn print_selected_features(features: &HashMap<String, f64>, image_type: &str) {
             };
 
             for possible_key in possible_keys {
-                if let Some(value) = features.get(&possible_key) {
+                if let Some(value) = _features.get(&possible_key) {
                     if !category_printed {
                         println!("\n{}:", category);
                         println!("{}", "-".repeat(category.len() + 1));
@@ -231,14 +231,14 @@ fn print_selected_features(features: &HashMap<String, f64>, image_type: &str) {
         }
 
         if !found && !image_type.contains("Color") {
-            println!("\n{}: No features found", category);
+            println!("\n{}: No _features found", category);
         }
     }
 }
 
 // Helper function to compare features between two textures
 #[allow(dead_code)]
-fn compare_features(features1: &HashMap<String, f64>, features2: &HashMap<String, f64>) {
+fn compare_features(_features1: &HashMap<String, f64>, features2: &HashMap<String, f64>) {
     // Define the features to compare
     let texture_features = [
         "texture_contrast",
@@ -260,7 +260,7 @@ fn compare_features(features1: &HashMap<String, f64>, features2: &HashMap<String
     println!("{}", "-".repeat(70));
 
     for feature in texture_features.iter() {
-        if let (Some(val1), Some(val2)) = (features1.get(*feature), features2.get(*feature)) {
+        if let (Some(val1), Some(val2)) = (_features1.get(*feature), features2.get(*feature)) {
             let diff = val2 - val1;
             println!(
                 "{:<25} {:<15.6} {:<15.6} {:<15.6}",

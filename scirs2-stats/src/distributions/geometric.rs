@@ -6,7 +6,8 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Distribution, Geometric as RandGeometric};
+use rand__distr::{Distribution, Geometric as RandGeometric};
+use statrs::statistics::Statistics;
 
 /// Geometric distribution structure
 ///
@@ -34,13 +35,13 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// ```
     pub fn new(p: F) -> StatsResult<Self> {
         // Validate parameters
-        if p <= F::zero() || p > F::one() {
+        if p <= F::zero() || p >, F::one() {
             return Err(StatsError::DomainError(
                 "Success probability must be between 0 and 1, exclusive of 0".to_string(),
             ));
@@ -73,7 +74,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let pmf_at_2 = geom.pmf(2.0);
@@ -108,7 +109,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let log_pmf_at_2 = geom.log_pmf(2.0);
@@ -146,7 +147,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let cdf_at_2 = geom.cdf(2.0);
@@ -183,7 +184,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let quant = geom.ppf(0.5).unwrap();
@@ -238,7 +239,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let samples = geom.rvs(10).unwrap();
@@ -267,7 +268,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let mean = geom.mean();
@@ -289,7 +290,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let variance = geom.var();
@@ -311,7 +312,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let std_dev = geom.std();
@@ -331,7 +332,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let skewness = geom.skewness();
@@ -355,7 +356,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let kurtosis = geom.kurtosis();
@@ -379,7 +380,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let entropy = geom.entropy();
@@ -402,7 +403,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let median = geom.median();
@@ -426,7 +427,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::geometric::Geometric;
+    /// use scirs2__stats::distributions::geometric::Geometric;
     ///
     /// let geom = Geometric::new(0.3f64).unwrap();
     /// let mode = geom.mode();
@@ -438,8 +439,8 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     }
 
     // Helper method to check if a value is an integer
-    fn is_integer(value: F) -> bool {
-        value == value.floor()
+    fn is_integer(_value: F) -> bool {
+        _value == _value.floor()
     }
 }
 
@@ -459,7 +460,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::distributions;
+/// use scirs2__stats::distributions;
 ///
 /// let g = distributions::geom(0.3f64).unwrap();
 /// let pmf_at_2 = g.pmf(2.0);

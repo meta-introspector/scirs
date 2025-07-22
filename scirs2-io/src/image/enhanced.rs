@@ -194,11 +194,11 @@ impl EnhancedImageProcessor {
         new_height: u32,
         method: InterpolationMethod,
     ) -> Result<ImageData> {
-        let (height, width, channels) = image.data.dim();
+        let (_height, _width, channels) = image.data.dim();
         let raw_data = image.data.iter().cloned().collect::<Vec<u8>>();
 
         let img_buffer = if channels == 3 {
-            image::RgbImage::from_raw(width as u32, height as u32, raw_data)
+            image::RgbImage::from_raw(_width as u32, _height as u32, raw_data)
                 .ok_or_else(|| IoError::FormatError("Invalid RGB image dimensions".to_string()))?
         } else {
             return Err(IoError::FormatError(
@@ -209,10 +209,10 @@ impl EnhancedImageProcessor {
         let dynamic_img = image::DynamicImage::ImageRgb8(img_buffer);
 
         let filter = match method {
-            InterpolationMethod::Nearest => image::imageops::FilterType::Nearest,
-            InterpolationMethod::Linear => image::imageops::FilterType::Triangle,
-            InterpolationMethod::Cubic => image::imageops::FilterType::CatmullRom,
-            InterpolationMethod::Lanczos => image::imageops::FilterType::Lanczos3,
+            InterpolationMethod::Nearest =>, image::imageops::FilterType::Nearest,
+            InterpolationMethod::Linear =>, image::imageops::FilterType::Triangle,
+            InterpolationMethod::Cubic =>, image::imageops::FilterType::CatmullRom,
+            InterpolationMethod::Lanczos =>, image::imageops::FilterType::Lanczos3,
         };
 
         let resized_img = dynamic_img.resize(new_width, new_height, filter);
@@ -226,8 +226,8 @@ impl EnhancedImageProcessor {
         .map_err(|e| IoError::FormatError(e.to_string()))?;
 
         let mut new_metadata = image.metadata.clone();
-        new_metadata.width = new_width;
-        new_metadata.height = new_height;
+        new_metadata._width = new_width;
+        new_metadata._height = new_height;
 
         Ok(ImageData {
             data: resized_data,
@@ -246,7 +246,7 @@ impl EnhancedImageProcessor {
         let path = path.as_ref();
         let compression = compression.unwrap_or(self.compression.clone());
 
-        let (height, width, _) = image.data.dim();
+        let (height, width_) = image.data.dim();
         let raw_data = image.data.iter().cloned().collect::<Vec<u8>>();
 
         let img_buffer = image::RgbImage::from_raw(width as u32, height as u32, raw_data)
@@ -427,7 +427,7 @@ impl EnhancedImageProcessor {
 
     /// Apply Gaussian blur filter
     pub fn gaussian_blur(&self, image: &ImageData, radius: f32) -> Result<ImageData> {
-        let (height, width, _) = image.data.dim();
+        let (height, width_) = image.data.dim();
         let raw_data = image.data.iter().cloned().collect::<Vec<u8>>();
 
         let img_buffer = image::RgbImage::from_raw(width as u32, height as u32, raw_data)
@@ -487,15 +487,15 @@ impl EnhancedImageProcessor {
 
 // Conversion from our ImageFormat to image crate's ImageFormat
 impl From<ImageFormat> for image::ImageFormat {
-    fn from(format: ImageFormat) -> Self {
-        match format {
-            ImageFormat::PNG => image::ImageFormat::Png,
-            ImageFormat::JPEG => image::ImageFormat::Jpeg,
-            ImageFormat::BMP => image::ImageFormat::Bmp,
-            ImageFormat::TIFF => image::ImageFormat::Tiff,
-            ImageFormat::GIF => image::ImageFormat::Gif,
-            ImageFormat::WEBP => image::ImageFormat::WebP,
-            ImageFormat::Other => image::ImageFormat::Png, // Default fallback
+    fn from(_format: ImageFormat) -> Self {
+        match _format {
+            ImageFormat::PNG =>, image::ImageFormat::Png,
+            ImageFormat::JPEG =>, image::ImageFormat::Jpeg,
+            ImageFormat::BMP =>, image::ImageFormat::Bmp,
+            ImageFormat::TIFF =>, image::ImageFormat::Tiff,
+            ImageFormat::GIF =>, image::ImageFormat::Gif,
+            ImageFormat::WEBP =>, image::ImageFormat::WebP,
+            ImageFormat::Other =>, image::ImageFormat::Png, // Default fallback
         }
     }
 }
@@ -522,8 +522,8 @@ impl ImagePyramid {
 
         for level in 0..self.num_levels() {
             if let Some(level_image) = self.get_level(level) {
-                let width_diff = level_image.metadata.width.abs_diff(target_width);
-                let height_diff = level_image.metadata.height.abs_diff(target_height);
+                let width_diff = level_image.metadata._width.abs_diff(target_width);
+                let height_diff = level_image.metadata._height.abs_diff(target_height);
                 let total_diff = width_diff + height_diff;
 
                 if total_diff < best_diff {
@@ -546,9 +546,9 @@ impl ImagePyramid {
 /// Convenience functions for enhanced image operations
 /// Create an image pyramid with default configuration
 #[allow(dead_code)]
-pub fn create_image_pyramid(image: &ImageData) -> Result<ImagePyramid> {
+pub fn create_image_pyramid(_image: &ImageData) -> Result<ImagePyramid> {
     let processor = EnhancedImageProcessor::new();
-    processor.create_pyramid(image, PyramidConfig::default())
+    processor.create_pyramid(_image, PyramidConfig::default())
 }
 
 /// Save image with lossless compression
@@ -609,7 +609,7 @@ pub fn batch_convert_with_compression<P1: AsRef<Path>, P2: AsRef<Path>>(
         let file_stem = input_path
             .file_stem()
             .ok_or_else(|| IoError::FileError("Invalid file name".to_string()))?;
-        let output_filename = format!(
+        let output_filename = _format!(
             "{}.{}",
             file_stem.to_string_lossy(),
             target_format.extension()
@@ -756,7 +756,7 @@ mod tests {
         assert_eq!(max_size, 128);
 
         processor.clear_cache();
-        let (count, _) = processor.cache_stats();
+        let (count_) = processor.cache_stats();
         assert_eq!(count, 0);
     }
 }

@@ -4,15 +4,16 @@
 //! It extends the base SparseArray trait with methods specific to symmetric
 //! matrices.
 
-use crate::coo_array::CooArray;
-use crate::csr_array::CsrArray;
+use crate::coo__array::CooArray;
+use crate::csr__array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::{SparseArray, SparseSum};
-use crate::sym_coo::SymCooArray;
-use crate::sym_csr::SymCsrArray;
+use crate::sym__coo::SymCooArray;
+use crate::sym__csr::SymCsrArray;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
+use ndarray::ArrayView1;
 
 /// Trait for symmetric sparse arrays
 ///
@@ -155,7 +156,7 @@ where
             }
         }
 
-        use crate::sym_coo::SymCooMatrix;
+        use crate::sym__coo::SymCooMatrix;
         let sym_coo = SymCooMatrix::new(data, rows, cols, csr_inner.shape)?;
 
         Ok(SymCooArray::new(sym_coo))
@@ -217,7 +218,7 @@ where
         let csr = crate::csr::CsrMatrix::new(data, rows, cols, shape)?;
 
         // Create a symmetric CSR matrix without checking symmetry (we know it's symmetric)
-        use crate::sym_csr::SymCsrMatrix;
+        use crate::sym__csr::SymCsrMatrix;
 
         // Extract the lower triangular part (already in the correct format)
         let mut sym_data = Vec::new();
@@ -314,7 +315,7 @@ where
         self.to_array()
     }
 
-    fn set(&mut self, _i: usize, _j: usize, _value: T) -> SparseResult<()> {
+    fn set(&mut self_i: usize, _j: usize_value: T) -> SparseResult<()> {
         Err(SparseError::NotImplemented(
             "Setting individual elements in SymCsrArray is not supported. Convert to another format first.".to_string()
         ))
@@ -451,7 +452,7 @@ where
                     CsrMatrix::new(data.to_vec(), rows.to_vec(), cols.to_vec(), result.shape())?;
 
                 // Convert to SymCsrMatrix
-                use crate::sym_csr::SymCsrMatrix;
+                use crate::sym__csr::SymCsrMatrix;
                 let sym_csr = SymCsrMatrix::from_csr(&csr_matrix)?;
 
                 // Create and return SymCsrArray
@@ -528,7 +529,7 @@ where
                     CsrMatrix::new(data.to_vec(), rows.to_vec(), cols.to_vec(), result.shape())?;
 
                 // Convert to SymCsrMatrix
-                use crate::sym_csr::SymCsrMatrix;
+                use crate::sym__csr::SymCsrMatrix;
                 let sym_csr = SymCsrMatrix::from_csr(&csr_matrix)?;
 
                 // Create and return SymCsrArray
@@ -688,7 +689,7 @@ where
         self.to_array()
     }
 
-    fn set(&mut self, _i: usize, _j: usize, _value: T) -> SparseResult<()> {
+    fn set(&mut self_i: usize, _j: usize_value: T) -> SparseResult<()> {
         Err(SparseError::NotImplemented(
             "Setting individual elements in SymCooArray is not supported. Convert to another format first.".to_string()
         ))
@@ -850,7 +851,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sym_csr::{SymCsrArray, SymCsrMatrix};
+    use crate::sym__csr::{SymCsrArray, SymCsrMatrix};
 
     // Create a simple symmetric matrix for testing
     fn create_test_sym_csr() -> SymCsrArray<f64> {
@@ -901,7 +902,7 @@ mod tests {
         assert_eq!(coo.shape(), (3, 3));
 
         // Test that find() returns the full matrix elements
-        let (rows, _cols, _data) = sym_csr.find();
+        let (rows_cols_data) = sym_csr.find();
         assert!(rows.len() > sym_csr.nnz_stored()); // Should include symmetric pairs
     }
 

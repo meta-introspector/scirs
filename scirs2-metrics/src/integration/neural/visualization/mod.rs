@@ -8,7 +8,7 @@ mod precision_recall_curves;
 mod roc_curves;
 mod training_curves;
 
-pub use confusion_matrix::*;
-pub use precision_recall_curves::*;
-pub use roc_curves::*;
-pub use training_curves::*;
+pub use confusion__matrix::*;
+pub use precision_recall__curves::*;
+pub use roc__curves::*;
+pub use training__curves::*;

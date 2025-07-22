@@ -11,8 +11,8 @@
 
 use ndarray::{array, Array1, Array2};
 #[cfg(feature = "hdf5")]
-use scirs2_io::hdf5::{self, AttributeValue, CompressionOptions, DatasetOptions};
-use scirs2_io::{
+use scirs2__io::hdf5::{self, AttributeValue, CompressionOptions, DatasetOptions};
+use scirs2__io::{
     csv,
     matrix_market::{
         self, MMDataType, MMFormat, MMHeader, MMSparseMatrix, MMSymmetry, ParallelConfig,
@@ -311,7 +311,7 @@ fn test_matrix_market_parallel_round_trip() {
         read_result
     );
 
-    let (read_matrix, _stats) = read_result.unwrap();
+    let (read_matrix_stats) = read_result.unwrap();
 
     // Verify matrix integrity
     assert_eq!(read_matrix.rows, original_matrix.rows);

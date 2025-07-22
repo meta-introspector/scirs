@@ -134,7 +134,7 @@ where
             fun_clone,
             start_point.as_slice().unwrap(),
             method,
-            options.clone(),
+            _options.clone(),
         ) {
             Ok(result) => {
                 let minimum = LocalMinimum {
@@ -622,23 +622,23 @@ fn compute_cluster_distance(
 
 /// Extract feature vectors for clustering
 #[allow(dead_code)]
-fn extract_features<S>(minima: &[LocalMinimum<S>], options: &ClusteringOptions) -> Array2<f64>
+fn extract_features<S>(_minima: &[LocalMinimum<S>], options: &ClusteringOptions) -> Array2<f64>
 where
     S: Clone,
 {
-    let n = minima.len();
+    let n = _minima.len();
     if n == 0 {
         return Array2::zeros((0, 0));
     }
 
-    let coord_dim = minima[0].x.len();
+    let coord_dim = _minima[0].x.len();
     let func_dim = if options.use_function_values { 1 } else { 0 };
     let total_dim = coord_dim + func_dim;
 
     let mut features = Array2::zeros((n, total_dim));
 
     // Extract coordinates
-    for (i, minimum) in minima.iter().enumerate() {
+    for (i, minimum) in _minima.iter().enumerate() {
         for j in 0..coord_dim {
             features[[i, j]] = minimum.x[j];
         }
@@ -646,7 +646,7 @@ where
 
     // Add function values if requested
     if options.use_function_values {
-        for (i, minimum) in minima.iter().enumerate() {
+        for (i, minimum) in _minima.iter().enumerate() {
             features[[i, coord_dim]] = minimum.f * options.function_weight;
         }
     }
@@ -661,21 +661,21 @@ where
 
 /// Normalize feature matrix
 #[allow(dead_code)]
-fn normalize_features(features: &mut Array2<f64>, coord_dim: usize) {
-    let (n, _) = features.dim();
+fn normalize_features(_features: &mut Array2<f64>, coord_dim: usize) {
+    let (n_) = _features._dim();
     if n == 0 {
         return;
     }
 
     // Normalize coordinates only
     for j in 0..coord_dim {
-        let col = features.column(j);
+        let col = _features.column(j);
         let min_val = col.iter().fold(f64::INFINITY, |a, &b| f64::min(a, b));
         let max_val = col.iter().fold(f64::NEG_INFINITY, |a, &b| f64::max(a, b));
 
         if (max_val - min_val).abs() > 1e-10 {
             for i in 0..n {
-                features[[i, j]] = (features[[i, j]] - min_val) / (max_val - min_val);
+                _features[[i, j]] = (_features[[i, j]] - min_val) / (max_val - min_val);
             }
         }
     }
@@ -683,8 +683,8 @@ fn normalize_features(features: &mut Array2<f64>, coord_dim: usize) {
 
 /// Initialize centroids using k-means++ algorithm
 #[allow(dead_code)]
-fn initialize_centroids_plus_plus(features: &Array2<f64>, k: usize) -> Array2<f64> {
-    let (n, dim) = features.dim();
+fn initialize_centroids_plus_plus(_features: &Array2<f64>, k: usize) -> Array2<f64> {
+    let (n, dim) = _features.dim();
     let mut centroids = Array2::zeros((k, dim));
 
     if n == 0 || k == 0 {
@@ -693,7 +693,7 @@ fn initialize_centroids_plus_plus(features: &Array2<f64>, k: usize) -> Array2<f6
 
     // Choose first centroid randomly
     let first_idx = 0; // In practice, should be random
-    centroids.row_mut(0).assign(&features.row(first_idx));
+    centroids.row_mut(0).assign(&_features.row(first_idx));
 
     // Choose remaining centroids
     for c in 1..k {
@@ -701,7 +701,7 @@ fn initialize_centroids_plus_plus(features: &Array2<f64>, k: usize) -> Array2<f6
 
         // Compute distance to nearest centroid for each point
         for (i, distance) in distances.iter_mut().enumerate().take(n) {
-            let point = features.row(i);
+            let point = _features.row(i);
             for j in 0..c {
                 let centroid = centroids.row(j);
                 let dist = euclidean_distance(&point, &centroid);
@@ -714,10 +714,10 @@ fn initialize_centroids_plus_plus(features: &Array2<f64>, k: usize) -> Array2<f6
             .iter()
             .enumerate()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .unwrap_or(0);
 
-        centroids.row_mut(c).assign(&features.row(next_idx));
+        centroids.row_mut(c).assign(&_features.row(next_idx));
     }
 
     centroids
@@ -794,13 +794,13 @@ where
 
 /// Compute within-cluster sum of squares
 #[allow(dead_code)]
-fn compute_wcss<S>(minima: &[LocalMinimum<S>], centroids: &[ClusterCentroid]) -> f64
+fn compute_wcss<S>(_minima: &[LocalMinimum<S>], centroids: &[ClusterCentroid]) -> f64
 where
     S: Clone,
 {
     let mut wcss = 0.0;
 
-    for minimum in minima {
+    for minimum in _minima {
         if let Some(cluster_id) = minimum.cluster_id {
             if cluster_id < centroids.len() {
                 let centroid = &centroids[cluster_id];
@@ -815,18 +815,18 @@ where
 
 /// Compute silhouette score for clustering quality
 #[allow(dead_code)]
-fn compute_silhouette_score<S>(minima: &[LocalMinimum<S>]) -> Option<f64>
+fn compute_silhouette_score<S>(_minima: &[LocalMinimum<S>]) -> Option<f64>
 where
     S: Clone,
 {
-    if minima.len() < 2 {
+    if _minima.len() < 2 {
         return None;
     }
 
     let mut silhouette_sum = 0.0;
     let mut valid_points = 0;
 
-    for (i, minimum) in minima.iter().enumerate() {
+    for (i, minimum) in _minima.iter().enumerate() {
         if let Some(cluster_id) = minimum.cluster_id {
             // Compute intra-cluster distance
             let mut intra_sum = 0.0;
@@ -837,7 +837,7 @@ where
             let mut cluster_inter_sums: HashMap<usize, f64> = HashMap::new();
             let mut cluster_inter_counts: HashMap<usize, usize> = HashMap::new();
 
-            for (j, other) in minima.iter().enumerate() {
+            for (j, other) in _minima.iter().enumerate() {
                 if i == j {
                     continue;
                 }
@@ -907,68 +907,68 @@ pub enum StartPointStrategy {
 
 /// Generate random starting points
 #[allow(dead_code)]
-fn generate_random_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
-    let dim = bounds.len();
-    let mut points = Vec::new();
+fn generate_random_points(_bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
+    let dim = _bounds.len();
+    let mut _points = Vec::new();
 
     for _ in 0..num_points {
         let mut point = Array1::zeros(dim);
-        for (i, &(low, high)) in bounds.iter().enumerate() {
+        for (i, &(low, high)) in _bounds.iter().enumerate() {
             // Simple pseudo-random (in practice, use proper RNG)
-            let t = (i * num_points + points.len()) as f64 / (num_points * dim) as f64;
+            let t = (i * num_points + _points.len()) as f64 / (num_points * dim) as f64;
             let random_val = (t * 17.0).fract(); // Simple pseudo-random
             point[i] = low + random_val * (high - low);
         }
-        points.push(point);
+        _points.push(point);
     }
 
-    points
+    _points
 }
 
 /// Generate Latin Hypercube sampling points
 #[allow(dead_code)]
-fn generate_latin_hypercube_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
-    let dim = bounds.len();
-    let mut points = Vec::new();
+fn generate_latin_hypercube_points(_bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
+    let dim = _bounds.len();
+    let mut _points = Vec::new();
 
     // Simple Latin Hypercube implementation
     for i in 0..num_points {
         let mut point = Array1::zeros(dim);
-        for (j, &(low, high)) in bounds.iter().enumerate() {
+        for (j, &(low, high)) in _bounds.iter().enumerate() {
             let segment = (i as f64 + 0.5) / num_points as f64; // Center of segment
             point[j] = low + segment * (high - low);
         }
-        points.push(point);
+        _points.push(point);
     }
 
-    points
+    _points
 }
 
 /// Generate grid points
 #[allow(dead_code)]
-fn generate_grid_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
-    let dim = bounds.len();
+fn generate_grid_points(_bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
+    let dim = _bounds.len();
     if dim == 0 {
         return Vec::new();
     }
 
     let points_per_dim = ((num_points as f64).powf(1.0 / dim as f64)).ceil() as usize;
-    let mut points = Vec::new();
+    let mut _points = Vec::new();
 
     // Generate grid coordinates recursively
     fn generate_grid_recursive(
-        bounds: &[(f64, f64)],
+        _bounds: &[(f64, f64)],
         points_per_dim: usize,
         current_point: &mut Array1<f64>,
         dim_idx: usize,
-        points: &mut Vec<Array1<f64>>,
+        _points: &mut Vec<Array1<f64>>,
     ) {
-        if dim_idx >= bounds.len() {
-            points.push(current_point.clone());
+        if dim_idx >= _bounds.len() {
+            _points.push(current_point.clone());
             return;
         }
 
-        let (low, high) = bounds[dim_idx];
+        let (low, high) = _bounds[dim_idx];
         for i in 0..points_per_dim {
             let t = if points_per_dim == 1 {
                 0.5
@@ -976,28 +976,28 @@ fn generate_grid_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<
                 i as f64 / (points_per_dim - 1) as f64
             };
             current_point[dim_idx] = low + t * (high - low);
-            generate_grid_recursive(bounds, points_per_dim, current_point, dim_idx + 1, points);
+            generate_grid_recursive(_bounds, points_per_dim, current_point, dim_idx + 1, _points);
         }
     }
 
     let mut current_point = Array1::zeros(dim);
-    generate_grid_recursive(bounds, points_per_dim, &mut current_point, 0, &mut points);
+    generate_grid_recursive(_bounds, points_per_dim, &mut current_point, 0, &mut _points);
 
-    // Truncate to requested number of points
-    points.truncate(num_points);
-    points
+    // Truncate to requested number of _points
+    _points.truncate(num_points);
+    _points
 }
 
 /// Generate Sobol sequence points (simplified)
 #[allow(dead_code)]
-fn generate_sobol_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
+fn generate_sobol_points(_bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
     // Simplified Sobol sequence (in practice, use proper implementation)
-    let dim = bounds.len();
-    let mut points = Vec::new();
+    let dim = _bounds.len();
+    let mut _points = Vec::new();
 
     for i in 0..num_points {
         let mut point = Array1::zeros(dim);
-        for (j, &(low, high)) in bounds.iter().enumerate() {
+        for (j, &(low, high)) in _bounds.iter().enumerate() {
             // Van der Corput sequence for dimension j
             let mut n = i + 1;
             let base = 2 + j; // Different base for each dimension
@@ -1012,10 +1012,10 @@ fn generate_sobol_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1
 
             point[j] = low + result * (high - low);
         }
-        points.push(point);
+        _points.push(point);
     }
 
-    points
+    _points
 }
 
 #[cfg(test)]

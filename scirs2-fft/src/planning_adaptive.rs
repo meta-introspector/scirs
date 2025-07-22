@@ -116,7 +116,7 @@ use std::collections::HashMap;
 
 impl AdaptivePlanner {
     /// Create a new adaptive planner
-    pub fn new(size: &[usize], forward: bool, config: Option<AdaptivePlanningConfig>) -> Self {
+    pub fn new(_size: &[usize], forward: bool, config: Option<AdaptivePlanningConfig>) -> Self {
         let config = config.unwrap_or_default();
         let mut metrics = HashMap::new();
 
@@ -127,7 +127,7 @@ impl AdaptivePlanner {
         metrics.insert(PlanningStrategy::AutoTuned, StrategyMetrics::new());
 
         Self {
-            size: size.to_vec(),
+            _size: _size.to_vec(),
             forward,
             current_strategy: PlanningStrategy::CacheFirst, // Start with a reasonable default
             current_backend: PlannerBackend::default(),
@@ -258,8 +258,8 @@ pub struct AdaptiveExecutor {
 
 impl AdaptiveExecutor {
     /// Create a new adaptive executor
-    pub fn new(size: &[usize], forward: bool, config: Option<AdaptivePlanningConfig>) -> Self {
-        let planner = AdaptivePlanner::new(size, forward, config);
+    pub fn new(_size: &[usize], forward: bool, config: Option<AdaptivePlanningConfig>) -> Self {
+        let planner = AdaptivePlanner::new(_size, forward, config);
 
         Self {
             planner: Arc::new(Mutex::new(planner)),
@@ -313,7 +313,7 @@ impl AdaptiveExecutor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use num_complex::Complex64;
+    use num__complex::Complex64;
 
     #[test]
     fn test_adaptive_planner_basics() {

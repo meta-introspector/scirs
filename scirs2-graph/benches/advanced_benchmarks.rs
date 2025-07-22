@@ -9,17 +9,17 @@ use criterion::{
     black_box, criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion,
     PlotConfiguration,
 };
-use scirs2_graph::advanced::{
+use scirs2__graph::advanced::{
     create_advanced_processor, execute_with_advanced, AdvancedConfig, AdvancedProcessor,
 };
-use scirs2_graph::algorithms::betweenness_centrality;
-use scirs2_graph::algorithms::community::louvain_communities_result;
-use scirs2_graph::algorithms::connectivity::connected_components;
-use scirs2_graph::algorithms::shortest_path::dijkstra_path;
-use scirs2_graph::base::Graph;
-use scirs2_graph::generators::{barabasi_albert_graph, erdos_renyi_graph};
-use scirs2_graph::measures::pagerank_centrality;
-use scirs2_graph::pagerank;
+use scirs2__graph::algorithms::betweenness_centrality;
+use scirs2__graph::algorithms::community::louvain_communities_result;
+use scirs2__graph::algorithms::connectivity::connected_components;
+use scirs2__graph::algorithms::shortest_path::dijkstra_path;
+use scirs2__graph::base::Graph;
+use scirs2__graph::generators::{barabasi_albert_graph, erdos_renyi_graph};
+use scirs2__graph::measures::pagerank_centrality;
+use scirs2__graph::pagerank;
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -110,9 +110,9 @@ impl BenchmarkResults {
 
 /// Generate test graphs for benchmarking
 #[allow(dead_code)]
-fn generate_test_graph(size: usize, density: f64) -> Graph<i32, f64> {
+fn generate_test_graph(_size: usize, density: f64) -> Graph<i32, f64> {
     let mut rng = rand::thread_rng();
-    let graph = erdos_renyi_graph(size, density, &mut rng).unwrap();
+    let graph = erdos_renyi_graph(_size, density, &mut rng).unwrap();
 
     // Convert Graph<usize, f64> to Graph<i32, f64>
     let mut result = Graph::new();

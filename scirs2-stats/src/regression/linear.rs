@@ -4,7 +4,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::regression::{MultilinearRegressionResult, RegressionResults};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
-use scirs2_linalg::{lstsq, svd};
+use scirs2__linalg::{lstsq, svd};
 
 /// Perform multiple linear regression and return a tuple containing
 /// coefficients, residuals, rank, and singular values.
@@ -26,7 +26,7 @@ use scirs2_linalg::{lstsq, svd};
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_stats::multilinear_regression;
+/// use scirs2__stats::multilinear_regression;
 ///
 /// // Create a design matrix with 3 variables (including a constant term)
 /// let x = Array2::from_shape_vec((5, 3), vec![
@@ -41,7 +41,7 @@ use scirs2_linalg::{lstsq, svd};
 /// let y = array![4.0, 9.0, 14.0, 19.0, 24.0];
 ///
 /// // Perform multivariate regression
-/// let (coeffs, residuals, rank, _) = multilinear_regression(&x.view(), &y.view()).unwrap();
+/// let (coeffs, residuals, rank_) = multilinear_regression(&x.view(), &y.view()).unwrap();
 ///
 /// // Check results
 /// assert!((coeffs[0] - 1.0f64).abs() < 1e-10f64);  // intercept
@@ -80,7 +80,7 @@ where
     // to solve the linear system X beta = y
 
     // Compute the SVD of X
-    let (_u, s, _vt) = match svd(x, false, None) {
+    let (_u, s_vt) = match svd(x, false, None) {
         Ok(svd_result) => svd_result,
         Err(e) => {
             return Err(StatsError::ComputationError(format!(
@@ -162,7 +162,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_stats::linear_regression;
+/// use scirs2__stats::linear_regression;
 ///
 /// // Create a design matrix with 3 variables (including a constant term)
 /// let x = Array2::from_shape_vec((5, 3), vec![
@@ -226,7 +226,7 @@ where
         )));
     }
 
-    // Default confidence level is 0.95
+    // Default confidence _level is 0.95
     let _conf_level = conf_level.unwrap_or_else(|| F::from(0.95).unwrap());
 
     // Solve the linear system using least squares
@@ -361,7 +361,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::linregress;
+/// use scirs2__stats::linregress;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![2.0, 4.0, 6.0, 8.0, 10.0];  // y = 2*x
@@ -439,11 +439,11 @@ where
     let residual_ss = ss_y - ss_xy * ss_xy / ss_x;
 
     // Standard error of the estimate
-    let std_err = num_traits::Float::sqrt(residual_ss / df) / num_traits::Float::sqrt(ss_x);
+    let std_err = num_traits::Float::sqrt(residual_ss / df) / num, _traits::Float::sqrt(ss_x);
 
     // Calculate p-value from t-distribution
     // t = r * sqrt(df) / sqrt(1 - r^2)
-    let t_stat = r * num_traits::Float::sqrt(df) / num_traits::Float::sqrt(F::one() - r * r);
+    let t_stat = r * num_traits::Float::sqrt(df) / num, _traits::Float::sqrt(F::one() - r * r);
 
     // Calculate p-value using a two-tailed test
     // We're using a simple approximation for the p-value based on the t-statistic
@@ -479,12 +479,12 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::odr;
+/// use scirs2__stats::odr;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![2.0, 4.0, 6.0, 8.0, 10.0];  // y = 2*x
 ///
-/// let (params, _, _) = odr(&x.view(), &y.view(), None).unwrap();
+/// let (params__) = odr(&x.view(), &y.view(), None).unwrap();
 ///
 /// assert!((params[1] - 2.0f64).abs() < 1e-6);  // slope
 /// assert!(params[0].abs() < 1e-6);  // intercept (should be close to 0)
@@ -526,7 +526,7 @@ where
         [beta[0], beta[1]]
     } else {
         // Use linear regression for initial guess
-        let (slope, intercept, _, _, _) = linregress(x, y)?;
+        let (slope, intercept___) = linregress(x, y)?;
         [intercept, slope]
     };
 

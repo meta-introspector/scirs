@@ -38,13 +38,13 @@ impl Position {
 ///
 /// Nodes are placed evenly around a circle.
 #[allow(dead_code)]
-pub fn circular_layout<N, E, Ix>(graph: &Graph<N, E, Ix>, radius: f64) -> HashMap<N, Position>
+pub fn circular_layout<N, E, Ix>(_graph: &Graph<N, E, Ix>, radius: f64) -> HashMap<N, Position>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
     let mut layout = HashMap::new();
 
@@ -242,15 +242,15 @@ where
 ///
 /// Uses the second and third smallest eigenvectors of the Laplacian matrix.
 #[allow(dead_code)]
-pub fn spectral_layout<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, Position>>
+pub fn spectral_layout<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<HashMap<N, Position>>
 where
     N: Node + Clone + std::fmt::Debug,
-    E: EdgeWeight + Into<f64> + num_traits::Zero + num_traits::One + PartialOrd + Copy,
+    E: EdgeWeight + Into<f64> + num_traits::Zero + num, _traits::One + PartialOrd + Copy,
     Ix: petgraph::graph::IndexType,
 {
     use crate::spectral::{laplacian, LaplacianType};
 
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     if n < 2 {
@@ -262,7 +262,7 @@ where
     }
 
     // Get the Laplacian matrix
-    let _lap = laplacian(graph, LaplacianType::Normalized)?;
+    let _lap = laplacian(_graph, LaplacianType::Normalized)?;
 
     // For a proper implementation, we would compute eigenvectors here
     // For now, use a simple approximation based on node degrees
@@ -270,7 +270,7 @@ where
 
     // Use node degrees to spread out nodes
     let degrees: Vec<usize> = (0..n)
-        .map(|i| graph.neighbors(&nodes[i]).unwrap_or_default().len())
+        .map(|i| _graph.neighbors(&nodes[i]).unwrap_or_default().len())
         .collect();
 
     let max_degree = *degrees.iter().max().unwrap_or(&1) as f64;

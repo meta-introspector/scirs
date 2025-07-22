@@ -9,11 +9,15 @@
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, ArrayView1, Zip};
-use num_complex::Complex64;
+use ndarray::{Array1, Array2, ArrayView1, Zip, s};
+use num__complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
+use scirs2__fft::{fft, ifft};
+use std::time::Instant;
+use super::simd_convolve_1d;
 
+#[allow(unused_imports)]
 /// Configuration for performance optimization
 #[derive(Debug, Clone)]
 pub struct OptimizationConfig {
@@ -69,8 +73,7 @@ pub fn simd_convolve_1d(
     let out_size = match mode {
         "full" => n + k - 1,
         "same" => n,
-        "valid" => n - k + 1,
-        _ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
+        "valid" => n - k + 1_ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
     };
 
     let mut output = Array1::zeros(out_size);
@@ -93,8 +96,7 @@ pub fn simd_convolve_1d(
             let conv_start = match mode {
                 "full" => 0,
                 "same" => (k - 1) / 2,
-                "valid" => k - 1,
-                _ => 0,
+                "valid" => k - 1_ => 0,
             };
 
             // Compute convolution for this output position
@@ -120,8 +122,7 @@ pub fn simd_convolve_1d(
         let conv_start = match mode {
             "full" => 0,
             "same" => (k - 1) / 2,
-            "valid" => k - 1,
-            _ => 0,
+            "valid" => k - 1_ => 0,
         };
 
         let sig_start = out_idx.saturating_sub(conv_start);
@@ -146,8 +147,6 @@ pub fn memory_efficient_fft_convolve(
     kernel: &Array1<f64>,
     config: &OptimizationConfig,
 ) -> SignalResult<Array1<f64>> {
-    use scirs2_fft::{fft, ifft};
-
     let n = signal.len();
     let k = kernel.len();
 
@@ -691,11 +690,6 @@ fn next_power_of_two(n: usize) -> usize {
 
 /// Performance benchmarking utilities
 pub mod benchmark {
-    use super::simd_convolve_1d;
-    use crate::error::SignalResult;
-    use ndarray::Array1;
-    use std::time::Instant;
-
     /// Benchmark result
     #[derive(Debug)]
     pub struct BenchmarkResult {
@@ -729,9 +723,9 @@ pub mod benchmark {
 
         // Compute accuracy
         let diff = &result_standard - &result_optimized;
-        let max_error = diff.iter().map(|&x| x.abs()).fold(0.0, f64::max);
+        let max_error = diff.iter().map(|&x: &f64| x.abs()).fold(0.0, f64::max);
         let accuracy =
-            1.0 - max_error / result_standard.iter().map(|&x| x.abs()).fold(0.0, f64::max);
+            1.0 - max_error / result_standard.iter().map(|&x: &f64| x.abs()).fold(0.0, f64::max);
 
         Ok(BenchmarkResult {
             operation: "Convolution".to_string(),
@@ -746,7 +740,6 @@ pub mod benchmark {
 
 #[cfg(test)]
 mod tests {
-    use ndarray::Array1;
 
     #[test]
     fn test_simd_convolution() {

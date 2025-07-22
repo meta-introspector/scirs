@@ -171,7 +171,7 @@ pub trait ComplexNumber: ScientificNumber {
 
     /// Create a new complex number from real and imaginary parts
     #[must_use]
-    fn new(re: Self::RealPart, im: Self::RealPart) -> Self;
+    fn from_parts(re: Self::RealPart, im: Self::RealPart) -> Self;
 
     /// Returns the complex conjugate
     #[must_use]
@@ -1045,7 +1045,7 @@ pub mod advanced_simd {
 
         // Scalar fallback
         while i < len {
-            result[i] = a[i] * b[i] + c[i];
+            result[i] = a[i] * b[i] + c[0];
             i += 1;
         }
     }

@@ -86,19 +86,19 @@ pub struct Memristor {
 
 impl Memristor {
     /// Create new memristor with advanced model
-    pub fn new(params: MemristorParameters, model: MemristorModel) -> Self {
+    pub fn new(_params: MemristorParameters, model: MemristorModel) -> Self {
         let initial_resistance =
-            params.r_on + (params.r_off - params.r_on) * (1.0 - params.initial_x);
-        let variability_factor = if params.variability > 0.0 {
-            1.0 + (rand::rng().gen::<f64>() - 0.5) * 2.0 * params.variability
+            _params.r_on + (_params.r_off - _params.r_on) * (1.0 - _params.initial_x);
+        let variability_factor = if _params.variability > 0.0 {
+            1.0 + (rand::rng().gen::<f64>() - 0.5) * 2.0 * _params.variability
         } else {
             1.0
         };
 
         Self {
             resistance: initial_resistance * variability_factor,
-            state: params.initial_x,
-            params,
+            state: _params.initial_x,
+            _params,
             model,
             temperature: 300.0, // Room temperature in Kelvin
             variability_factor,
@@ -663,7 +663,7 @@ impl MemristiveOptimizer {
                 break;
             }
 
-            self.nit += 1;
+            self._nit += 1;
 
             // Periodic crossbar refresh to combat drift
             if iter % 100 == 0 {
@@ -674,8 +674,7 @@ impl MemristiveOptimizer {
         Ok(OptimizeResults::<f64> {
             x: self.best_parameters.clone(),
             fun: self.best_objective,
-            success: self.best_objective < 1e-6,
-            nit: self.nit,
+            success: self.best_objective < 1e-6_nit: self._nit,
             message: "Memristive optimization completed".to_string(),
         })
     }
@@ -721,7 +720,7 @@ impl MemristiveOptimizer {
         let n = self.parameters.len();
         let mut update = Array1::zeros(n);
 
-        // Simple decoding: map crossbar output back to parameter space
+        // Simple decoding: map crossbar _output back to parameter space
         for i in 0..n.min(crossbar_output.len()) {
             update[i] = crossbar_output[i] * self.learning_rate;
         }
@@ -786,14 +785,14 @@ pub fn memristive_gradient_descent<F>(
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
-    let params = MemristorParameters::default();
+    let _params = MemristorParameters::default();
     let model = MemristorModel::NonlinearIonicDrift;
 
     let mut optimizer = MemristiveOptimizer::new(
         initial_params.to_owned(),
         learning_rate,
         0.9, // momentum
-        params,
+        _params,
         model,
     );
 
@@ -840,7 +839,7 @@ where
     let params = MemristorParameters::default();
     let mut crossbar = MemristiveCrossbar::new(rows, cols, params, MemristorModel::TeamModel);
 
-    // Initialize crossbar with weights
+    // Initialize crossbar with _weights
     for i in 0..rows {
         for j in 0..cols {
             let _target_conductance = initial_weights[[i, j]].abs() * 1e-3; // Scale to conductance
@@ -854,7 +853,7 @@ where
     }
 
     for _iter in 0..max_nit {
-        // Get current weights from crossbar
+        // Get current _weights from crossbar
         let current_weights = crossbar.get_conductance_matrix();
         let objective_value = objective(&current_weights.view());
 

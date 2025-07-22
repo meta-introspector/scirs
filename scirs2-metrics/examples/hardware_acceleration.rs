@@ -4,9 +4,10 @@
 //! acceleration features for improved metrics computation performance.
 
 use ndarray::{Array1, Array2};
-use scirs2_metrics::error::Result;
-use scirs2_metrics::optimization::hardware::*;
+use scirs2__metrics::error::Result;
+use scirs2__metrics::optimization::hardware::*;
 use std::time::Instant;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
@@ -135,12 +136,12 @@ fn simd_distance_example() -> Result<()> {
 
 /// Test accuracy of SIMD distance computations
 #[allow(dead_code)]
-fn test_distance_accuracy(simd_metrics: &SimdDistanceMetrics) -> Result<()> {
+fn test_distance_accuracy(_simd_metrics: &SimdDistanceMetrics) -> Result<()> {
     // Test with small vectors (should use standard implementation)
     let small_a = Array1::from_vec(vec![1.0, 2.0, 3.0]);
     let small_b = Array1::from_vec(vec![4.0, 5.0, 6.0]);
 
-    let small_euclidean = simd_metrics.euclidean_distance_simd(&small_a, &small_b)?;
+    let small_euclidean = _simd_metrics.euclidean_distance_simd(&small_a, &small_b)?;
     let expected_small = ((3.0_f64).powi(2) + (3.0_f64).powi(2) + (3.0_f64).powi(2)).sqrt();
     println!("  Small vector Euclidean: {small_euclidean:.6} (expected: {expected_small:.6})");
 
@@ -217,7 +218,7 @@ fn simd_statistics_example() -> Result<()> {
 
 /// Test statistical computations with different distributions
 #[allow(dead_code)]
-fn test_statistical_distributions(simd_stats: &SimdStatistics) -> Result<()> {
+fn test_statistical_distributions(_simd_stats: &SimdStatistics) -> Result<()> {
     // Normal distribution approximation
     let normal_data = Array1::from_vec(
         (0..5000)
@@ -334,12 +335,12 @@ fn performance_benchmark_example() -> Result<()> {
 
 /// Benchmark distance computation performance
 #[allow(dead_code)]
-fn benchmark_distance_performance(size: usize) -> Result<()> {
+fn benchmark_distance_performance(_size: usize) -> Result<()> {
     let simd_metrics = SimdDistanceMetrics::new();
 
     // Create test data
-    let vector_a = Array1::from_vec((0..size).map(|i| (i as f64).sin()).collect());
-    let vector_b = Array1::from_vec((0..size).map(|i| (i as f64).cos()).collect());
+    let vector_a = Array1::from_vec((0.._size).map(|i| (i as f64).sin()).collect());
+    let vector_b = Array1::from_vec((0.._size).map(|i| (i as f64).cos()).collect());
 
     // Benchmark SIMD implementation
     let start_simd = Instant::now();
@@ -368,12 +369,12 @@ fn benchmark_distance_performance(size: usize) -> Result<()> {
 
 /// Benchmark statistical computation performance
 #[allow(dead_code)]
-fn benchmark_statistics_performance(size: usize) -> Result<()> {
+fn benchmark_statistics_performance(_size: usize) -> Result<()> {
     let simd_stats = SimdStatistics::new();
 
     // Create test data
     let data = Array1::from_vec(
-        (0..size)
+        (0.._size)
             .map(|i| (i as f64 * 0.001).sin() * 100.0)
             .collect(),
     );

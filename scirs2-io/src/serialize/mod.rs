@@ -47,7 +47,7 @@ pub enum SerializationFormat {
 ///
 /// ```no_run
 /// use ndarray::{Array2, IxDyn};
-/// use scirs2_io::serialize::{serialize_array, SerializationFormat};
+/// use scirs2__io::serialize::{serialize_array, SerializationFormat};
 ///
 /// let array = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 /// let array_dyn = array.into_dyn();
@@ -123,7 +123,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::{Array, IxDyn};
-/// use scirs2_io::serialize::{deserialize_array, SerializationFormat};
+/// use scirs2__io::serialize::{deserialize_array, SerializationFormat};
 ///
 /// // Binary deserialization
 /// let array = deserialize_array::<_, f64>("data.bin", SerializationFormat::Binary).unwrap();
@@ -133,20 +133,20 @@ where
 /// let array = deserialize_array::<_, f64>("data.json", SerializationFormat::JSON).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn deserialize_array<P, A>(path: P, format: SerializationFormat) -> Result<Array<A, IxDyn>>
+pub fn deserialize_array<P, A>(_path: P, format: SerializationFormat) -> Result<Array<A, IxDyn>>
 where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
 {
-    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
     let serialized: SerializedArray<A> = match format {
-        SerializationFormat::Binary => bincode::deserialize_from(reader)
+        SerializationFormat::Binary =>, bincode::deserialize_from(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
-        SerializationFormat::JSON => serde_json::from_reader(reader)
+        SerializationFormat::JSON =>, serde_json::from_reader(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
-        SerializationFormat::MessagePack => rmp_serde::from_read(reader)
+        SerializationFormat::MessagePack =>, rmp_serde::from_read(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
     };
 
@@ -196,7 +196,7 @@ pub struct SerializedArray<A> {
 ///
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2_io::serialize::{serialize_array_with_metadata, SerializationFormat};
+/// use scirs2__io::serialize::{serialize_array_with_metadata, SerializationFormat};
 /// use std::collections::HashMap;
 ///
 /// let array = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
@@ -277,13 +277,13 @@ where
 ///
 /// # Returns
 ///
-/// * `Result<(Array<A, IxDyn>, std::collections::HashMap<String, String>)>` - Deserialized array and metadata
+/// * `Result<(Array<A, IxDyn> + std::collections::HashMap<String, String>)>` - Deserialized array and metadata
 ///
 /// # Examples
 ///
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2_io::serialize::{deserialize_array_with_metadata, SerializationFormat};
+/// use scirs2__io::serialize::{deserialize_array_with_metadata, SerializationFormat};
 ///
 /// // Deserialize array with metadata
 /// let (array, metadata) = deserialize_array_with_metadata::<_, f64>(
@@ -298,7 +298,7 @@ where
 pub fn deserialize_array_with_metadata<P, A>(
     path: P,
     format: SerializationFormat,
-) -> Result<(Array<A, IxDyn>, std::collections::HashMap<String, String>)>
+) -> Result<(Array<A, IxDyn> + std::collections::HashMap<String, String>)>
 where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
@@ -307,11 +307,11 @@ where
     let reader = BufReader::new(file);
 
     let serialized: SerializedArray<A> = match format {
-        SerializationFormat::Binary => bincode::deserialize_from(reader)
+        SerializationFormat::Binary =>, bincode::deserialize_from(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
-        SerializationFormat::JSON => serde_json::from_reader(reader)
+        SerializationFormat::JSON =>, serde_json::from_reader(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
-        SerializationFormat::MessagePack => rmp_serde::from_read(reader)
+        SerializationFormat::MessagePack =>, rmp_serde::from_read(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
     };
 
@@ -342,7 +342,7 @@ where
 ///
 /// ```no_run
 /// use serde::{Serialize, Deserialize};
-/// use scirs2_io::serialize::{serialize_struct, SerializationFormat};
+/// use scirs2__io::serialize::{serialize_struct, SerializationFormat};
 ///
 /// #[derive(Serialize, Deserialize)]
 /// struct Person {
@@ -361,12 +361,12 @@ where
 /// serialize_struct("person.json", &person, SerializationFormat::JSON).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn serialize_struct<P, T>(path: P, data: &T, format: SerializationFormat) -> Result<()>
+pub fn serialize_struct<P, T>(_path: P, data: &T, format: SerializationFormat) -> Result<()>
 where
     P: AsRef<Path>,
     T: Serialize,
 {
-    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     match format {
@@ -405,7 +405,7 @@ where
 ///
 /// ```no_run
 /// use serde::{Serialize, Deserialize};
-/// use scirs2_io::serialize::{deserialize_struct, SerializationFormat};
+/// use scirs2__io::serialize::{deserialize_struct, SerializationFormat};
 ///
 /// #[derive(Serialize, Deserialize)]
 /// struct Person {
@@ -419,12 +419,12 @@ where
 /// println!("Name: {}, Age: {}, Height: {}", person.name, person.age, person.height);
 /// ```
 #[allow(dead_code)]
-pub fn deserialize_struct<P, T>(path: P, format: SerializationFormat) -> Result<T>
+pub fn deserialize_struct<P, T>(_path: P, format: SerializationFormat) -> Result<T>
 where
     P: AsRef<Path>,
     T: for<'de> Deserialize<'de>,
 {
-    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
     match format {
@@ -465,9 +465,9 @@ pub struct SparseMatrixCOO<A> {
 
 impl<A> SparseMatrixCOO<A> {
     /// Create a new sparse matrix in COO format
-    pub fn new(rows: usize, cols: usize) -> Self {
+    pub fn new(_rows: usize, cols: usize) -> Self {
         Self {
-            rows,
+            _rows,
             cols,
             row_indices: Vec::new(),
             col_indices: Vec::new(),
@@ -506,7 +506,7 @@ impl<A> SparseMatrixCOO<A> {
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2_io::serialize::{serialize_sparse_matrix, SparseMatrixCOO, SerializationFormat};
+/// use scirs2__io::serialize::{serialize_sparse_matrix, SparseMatrixCOO, SerializationFormat};
 ///
 /// // Create a sparse matrix
 /// let mut sparse = SparseMatrixCOO::<f64>::new(100, 100);
@@ -547,7 +547,7 @@ where
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2_io::serialize::{deserialize_sparse_matrix, SerializationFormat};
+/// use scirs2__io::serialize::{deserialize_sparse_matrix, SerializationFormat};
 ///
 /// // Deserialize sparse matrix
 /// let sparse = deserialize_sparse_matrix::<_, f64>("sparse.json", SerializationFormat::JSON).unwrap();
@@ -631,12 +631,12 @@ pub struct SparseMatrixCSC<A> {
 
 impl<A: Clone> SparseMatrix<A> {
     /// Create a new sparse matrix from COO data
-    pub fn from_coo(coo: SparseMatrixCOO<A>) -> Self {
-        let shape = (coo.rows, coo.cols);
+    pub fn from_coo(_coo: SparseMatrixCOO<A>) -> Self {
+        let shape = (_coo.rows, _coo.cols);
         Self {
             shape,
             format: SparseFormat::COO,
-            coo_data: coo,
+            _coo_data: _coo,
             csr_data: None,
             csc_data: None,
             metadata: HashMap::new(),
@@ -644,11 +644,11 @@ impl<A: Clone> SparseMatrix<A> {
     }
 
     /// Create a new sparse matrix with specified dimensions
-    pub fn new(rows: usize, cols: usize) -> Self {
+    pub fn new(_rows: usize, cols: usize) -> Self {
         Self {
-            shape: (rows, cols),
+            shape: (_rows, cols),
             format: SparseFormat::COO,
-            coo_data: SparseMatrixCOO::new(rows, cols),
+            coo_data: SparseMatrixCOO::new(_rows, cols),
             csr_data: None,
             csc_data: None,
             metadata: HashMap::new(),
@@ -858,7 +858,7 @@ impl<A: Clone> SparseMatrix<A> {
     /// Get memory usage estimate in bytes
     pub fn memory_usage(&self) -> usize {
         let coo_size = self.coo_data.values.len()
-            * (std::mem::size_of::<A>() + 2 * std::mem::size_of::<usize>());
+            * (std::mem::size_of::<A>() + 2 * std::mem::size, _of::<usize>());
 
         let csr_size = if let Some(ref csr) = self.csr_data {
             csr.values.len() * std::mem::size_of::<A>()
@@ -882,11 +882,11 @@ impl<A: Clone> SparseMatrix<A> {
 
 impl<A: Clone> SparseMatrixCSR<A> {
     /// Create a new CSR sparse matrix
-    pub fn new(rows: usize, cols: usize) -> Self {
+    pub fn new(_rows: usize, cols: usize) -> Self {
         Self {
-            rows,
+            _rows,
             cols,
-            row_ptrs: vec![0; rows + 1],
+            row_ptrs: vec![0; _rows + 1],
             col_indices: Vec::new(),
             values: Vec::new(),
             metadata: HashMap::new(),
@@ -918,9 +918,9 @@ impl<A: Clone> SparseMatrixCSR<A> {
 
 impl<A: Clone> SparseMatrixCSC<A> {
     /// Create a new CSC sparse matrix
-    pub fn new(rows: usize, cols: usize) -> Self {
+    pub fn new(_rows: usize, cols: usize) -> Self {
         Self {
-            rows,
+            _rows,
             cols,
             col_ptrs: vec![0; cols + 1],
             row_indices: Vec::new(),
@@ -981,13 +981,13 @@ where
 
 /// Convert Matrix Market format to enhanced sparse matrix
 #[allow(dead_code)]
-pub fn from_matrix_market<A>(mm_matrix: &crate::matrix_market::MMSparseMatrix<A>) -> SparseMatrix<A>
+pub fn from_matrix_market<A>(_mm_matrix: &crate::matrix_market::MMSparseMatrix<A>) -> SparseMatrix<A>
 where
     A: Clone,
 {
-    let mut coo = SparseMatrixCOO::new(mm_matrix.rows, mm_matrix.cols);
+    let mut coo = SparseMatrixCOO::new(_mm_matrix.rows, _mm_matrix.cols);
 
-    for entry in &mm_matrix.entries {
+    for entry in &_mm_matrix.entries {
         coo.push(entry.row, entry.col, entry.value.clone());
     }
 
@@ -1013,7 +1013,7 @@ where
 
 /// Convert enhanced sparse matrix to Matrix Market format
 #[allow(dead_code)]
-pub fn to_matrix_market<A>(sparse: &SparseMatrix<A>) -> crate::matrix_market::MMSparseMatrix<A>
+pub fn to_matrix_market<A>(_sparse: &SparseMatrix<A>) -> crate::matrix_market::MMSparseMatrix<A>
 where
     A: Clone,
 {
@@ -1022,15 +1022,15 @@ where
         format: crate::matrix_market::MMFormat::Coordinate,
         data_type: crate::matrix_market::MMDataType::Real, // Default, should be determined by A
         symmetry: crate::matrix_market::MMSymmetry::General, // Default
-        comments: vec!["Converted from enhanced sparse matrix".to_string()],
+        comments: vec!["Converted from enhanced _sparse matrix".to_string()],
     };
 
-    let entries = sparse
+    let entries = _sparse
         .coo_data
         .row_indices
         .iter()
-        .zip(sparse.coo_data.col_indices.iter())
-        .zip(sparse.coo_data.values.iter())
+        .zip(_sparse.coo_data.col_indices.iter())
+        .zip(_sparse.coo_data.values.iter())
         .map(|((&row, &col), value)| crate::matrix_market::SparseEntry {
             row,
             col,
@@ -1040,9 +1040,9 @@ where
 
     crate::matrix_market::MMSparseMatrix {
         header,
-        rows: sparse.shape.0,
-        cols: sparse.shape.1,
-        nnz: sparse.nnz(),
+        rows: _sparse.shape.0,
+        cols: _sparse.shape.1,
+        nnz: _sparse.nnz(),
         entries,
     }
 }
@@ -1102,26 +1102,26 @@ pub mod sparse_ops {
     }
 
     /// Matrix-vector multiplication for CSR format
-    pub fn csr_matvec<A>(matrix: &SparseMatrixCSR<A>, vector: &[A]) -> Result<Vec<A>>
+    pub fn csr_matvec<A>(_matrix: &SparseMatrixCSR<A>, vector: &[A]) -> Result<Vec<A>>
     where
         A: Clone + std::ops::Add<Output = A> + std::ops::Mul<Output = A> + Default,
     {
-        if vector.len() != matrix.cols {
+        if vector.len() != _matrix.cols {
             return Err(IoError::ValidationError(
-                "Vector dimension must match matrix columns".to_string(),
+                "Vector dimension must match _matrix columns".to_string(),
             ));
         }
 
-        let mut result = vec![A::default(); matrix.rows];
+        let mut result = vec![A::default(); _matrix.rows];
 
         for (row, result_elem) in result.iter_mut().enumerate() {
-            let start = matrix.row_ptrs[row];
-            let end = matrix.row_ptrs[row + 1];
+            let start = _matrix.row_ptrs[row];
+            let end = _matrix.row_ptrs[row + 1];
 
             let mut sum = A::default();
             for i in start..end {
-                let col = matrix.col_indices[i];
-                let val = matrix.values[i].clone();
+                let col = _matrix.col_indices[i];
+                let val = _matrix.values[i].clone();
                 sum = sum + (val * vector[col].clone());
             }
             *result_elem = sum;
@@ -1131,17 +1131,17 @@ pub mod sparse_ops {
     }
 
     /// Transpose a COO sparse matrix
-    pub fn transpose_coo<A>(matrix: &SparseMatrixCOO<A>) -> SparseMatrixCOO<A>
+    pub fn transpose_coo<A>(_matrix: &SparseMatrixCOO<A>) -> SparseMatrixCOO<A>
     where
         A: Clone,
     {
-        let mut result = SparseMatrixCOO::new(matrix.cols, matrix.rows);
+        let mut result = SparseMatrixCOO::new(_matrix.cols, _matrix.rows);
 
-        for ((row, col), value) in matrix
+        for ((row, col), value) in _matrix
             .row_indices
             .iter()
-            .zip(matrix.col_indices.iter())
-            .zip(matrix.values.iter())
+            .zip(_matrix.col_indices.iter())
+            .zip(_matrix.values.iter())
         {
             result.push(*col, *row, value.clone());
         }
@@ -1154,65 +1154,65 @@ pub mod sparse_ops {
 
 /// Convenience function to write an array to JSON format
 #[allow(dead_code)]
-pub fn write_array_json<P, A, S>(path: P, array: &ArrayBase<S, IxDyn>) -> Result<()>
+pub fn write_array_json<P, A, S>(_path: P, array: &ArrayBase<S, IxDyn>) -> Result<()>
 where
     P: AsRef<Path>,
     A: Serialize + Clone,
     S: ndarray::Data<Elem = A>,
 {
-    serialize_array::<P, A, S>(path, array, SerializationFormat::JSON)
+    serialize_array::<P, A, S>(_path, array, SerializationFormat::JSON)
 }
 
 /// Convenience function to read an array from JSON format
 #[allow(dead_code)]
-pub fn read_array_json<P, A>(path: P) -> Result<Array<A, IxDyn>>
+pub fn read_array_json<P, A>(_path: P) -> Result<Array<A, IxDyn>>
 where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
 {
-    deserialize_array(path, SerializationFormat::JSON)
+    deserialize_array(_path, SerializationFormat::JSON)
 }
 
 /// Convenience function to write an array to binary format
 #[allow(dead_code)]
-pub fn write_array_binary<P, A, S>(path: P, array: &ArrayBase<S, IxDyn>) -> Result<()>
+pub fn write_array_binary<P, A, S>(_path: P, array: &ArrayBase<S, IxDyn>) -> Result<()>
 where
     P: AsRef<Path>,
     A: Serialize + Clone,
     S: ndarray::Data<Elem = A>,
 {
-    serialize_array::<P, A, S>(path, array, SerializationFormat::Binary)
+    serialize_array::<P, A, S>(_path, array, SerializationFormat::Binary)
 }
 
 /// Convenience function to read an array from binary format
 #[allow(dead_code)]
-pub fn read_array_binary<P, A>(path: P) -> Result<Array<A, IxDyn>>
+pub fn read_array_binary<P, A>(_path: P) -> Result<Array<A, IxDyn>>
 where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
 {
-    deserialize_array(path, SerializationFormat::Binary)
+    deserialize_array(_path, SerializationFormat::Binary)
 }
 
 /// Convenience function to write an array to MessagePack format
 #[allow(dead_code)]
-pub fn write_array_messagepack<P, A, S>(path: P, array: &ArrayBase<S, IxDyn>) -> Result<()>
+pub fn write_array_messagepack<P, A, S>(_path: P, array: &ArrayBase<S, IxDyn>) -> Result<()>
 where
     P: AsRef<Path>,
     A: Serialize + Clone,
     S: ndarray::Data<Elem = A>,
 {
-    serialize_array::<P, A, S>(path, array, SerializationFormat::MessagePack)
+    serialize_array::<P, A, S>(_path, array, SerializationFormat::MessagePack)
 }
 
 /// Convenience function to read an array from MessagePack format
 #[allow(dead_code)]
-pub fn read_array_messagepack<P, A>(path: P) -> Result<Array<A, IxDyn>>
+pub fn read_array_messagepack<P, A>(_path: P) -> Result<Array<A, IxDyn>>
 where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
 {
-    deserialize_array(path, SerializationFormat::MessagePack)
+    deserialize_array(_path, SerializationFormat::MessagePack)
 }
 
 /// Zero-copy serialization of contiguous arrays
@@ -1309,13 +1309,13 @@ where
 ///
 /// The returned memory map must outlive any array views created from it.
 #[allow(dead_code)]
-pub fn deserialize_array_zero_copy<P>(path: P) -> Result<(ArrayMetadata, memmap2::Mmap)>
+pub fn deserialize_array_zero_copy<P>(_path: P) -> Result<(ArrayMetadata, memmap2::Mmap)>
 where
     P: AsRef<Path>,
 {
     use std::io::Read;
 
-    let mut file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+    let mut file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
 
     // Read metadata size hint (first 8 bytes)
     let mut size_buf = [0u8; 8];

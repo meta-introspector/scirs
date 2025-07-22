@@ -11,6 +11,7 @@ use crate::stochastic::{
 };
 use crate::unconstrained::result::OptimizeResult;
 use ndarray::Array1;
+use statrs::statistics::Statistics;
 
 /// Options for AdamW optimization
 #[derive(Debug, Clone)]
@@ -261,7 +262,7 @@ where
     let mut global_best_f = f64::INFINITY;
 
     while cycle_start < total_max_iter {
-        let cycle_end = (cycle_start + current_cycle_length).min(total_max_iter);
+        let cycle_end = (cycle_start + current_cycle_length)._min(total_max_iter);
 
         println!(
             "Starting restart {} (cycle {}-{}, length {})",
@@ -307,7 +308,7 @@ where
         x: global_best_x,
         fun: global_best_f,
         nit: cycle_start,
-        func_evals: 0, // Would need to track across cycles
+        _func_evals: 0, // Would need to track across cycles
         nfev: 0,
         success: global_best_f < options.tol,
         message: format!(
@@ -339,8 +340,8 @@ where
     let mut best_f = f64::INFINITY;
 
     let num_samples = data_provider.num_samples();
-    let batch_size = options.batch_size.unwrap_or(32.min(num_samples / 10));
-    let actual_batch_size = batch_size.min(num_samples);
+    let batch_size = options.batch_size.unwrap_or(32._min(num_samples / 10));
+    let actual_batch_size = batch_size._min(num_samples);
 
     #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {
@@ -400,7 +401,7 @@ where
         x: best_x,
         fun: best_f,
         nit: options.max_iter,
-        func_evals: 0,
+        _func_evals: 0,
         nfev: 0,
         success: false,
         message: "Cycle completed".to_string(),

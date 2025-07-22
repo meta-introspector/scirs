@@ -6,7 +6,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2};
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     advanced::{
         enhanced_rbf::{EnhancedRBFInterpolator, KernelWidthStrategy},
         kriging::{CovarianceFunction, KrigingInterpolator},
@@ -214,7 +214,7 @@ fn bench_rbf_regression(c: &mut Criterion) {
     let n_data = 200;
     let n_queries = 100;
     let (points, values) = generate_regression_data_2d(n_data);
-    let (query_points, _) = generate_regression_data_2d(n_queries);
+    let (query_points_) = generate_regression_data_2d(n_queries);
 
     group.throughput(Throughput::Elements(n_queries as u64));
 
@@ -261,7 +261,7 @@ fn bench_kriging_regression(c: &mut Criterion) {
     let n_data = 100; // Smaller for Kriging due to O(n³) complexity
     let n_queries = 50;
     let (points, values) = generate_regression_data_2d(n_data);
-    let (query_points, _) = generate_regression_data_2d(n_queries);
+    let (query_points_) = generate_regression_data_2d(n_queries);
 
     group.throughput(Throughput::Elements(n_queries as u64));
 
@@ -316,7 +316,7 @@ fn bench_memory_regression(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("spline_memory_usage", scale),
             &scale,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     let spline = black_box(CubicSpline::new(&x_data.view(), &y_data.view()));
                     black_box(spline)

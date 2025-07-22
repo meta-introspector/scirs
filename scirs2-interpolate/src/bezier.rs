@@ -41,7 +41,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::bezier::BezierCurve;
+    /// use scirs2__interpolate::bezier::BezierCurve;
     ///
     /// // Create a 2D cubic Bezier curve (degree 3) with 4 control points
     /// let control_points = array![
@@ -56,10 +56,10 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
     /// // Evaluate the curve at parameter t = 0.5 (midpoint)
     /// let point = curve.evaluate(0.5).unwrap();
     /// ```
-    pub fn new(control_points: &ArrayView2<F>) -> InterpolateResult<Self> {
-        if control_points.is_empty() {
+    pub fn new(_control_points: &ArrayView2<F>) -> InterpolateResult<Self> {
+        if _control_points.is_empty() {
             return Err(InterpolateError::invalid_input(
-                "Control points array cannot be empty".to_string(),
+                "Control _points array cannot be empty".to_string(),
             ));
         }
 
@@ -90,7 +90,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
     ///
     /// A point on the Bezier curve at parameter t
     pub fn evaluate(&self, t: F) -> InterpolateResult<Array1<F>> {
-        if t < F::zero() || t > F::one() {
+        if t < F::zero() || t >, F::one() {
             return Err(InterpolateError::OutOfBounds(format!(
                 "Parameter t must be in [0, 1], got {}",
                 t
@@ -183,7 +183,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
     ///
     /// A tuple of two Bezier curves: (left part, right part)
     pub fn split(&self, t: F) -> InterpolateResult<(Self, Self)> {
-        if t < F::zero() || t > F::one() {
+        if t < F::zero() || t >, F::one() {
             return Err(InterpolateError::OutOfBounds(format!(
                 "Parameter t must be in [0, 1], got {}",
                 t
@@ -283,7 +283,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::bezier::BezierSurface;
+    /// use scirs2__interpolate::bezier::BezierSurface;
     ///
     /// // Create a 3x3 grid of control points for a 3D Bezier surface
     /// let control_points = array![
@@ -303,22 +303,22 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
     /// // Evaluate the surface at parameters (u,v) = (0.5, 0.5)
     /// let point = surface.evaluate(0.5, 0.5).unwrap();
     /// ```
-    pub fn new(control_points: &ArrayView2<F>, nu: usize, nv: usize) -> InterpolateResult<Self> {
-        if control_points.is_empty() {
+    pub fn new(_control_points: &ArrayView2<F>, nu: usize, nv: usize) -> InterpolateResult<Self> {
+        if _control_points.is_empty() {
             return Err(InterpolateError::invalid_input(
-                "Control points array cannot be empty".to_string(),
+                "Control _points array cannot be empty".to_string(),
             ));
         }
 
         if nu == 0 || nv == 0 {
             return Err(InterpolateError::invalid_input(
-                "Number of control points in each direction must be positive".to_string(),
+                "Number of control _points in each direction must be positive".to_string(),
             ));
         }
 
         if control_points.shape()[0] != nu * nv {
             return Err(InterpolateError::invalid_input(format!(
-                "Expected {} control points for a {}x{} grid, got {}",
+                "Expected {} control _points for a {}x{} grid, got {}",
                 nu * nv,
                 nu,
                 nv,
@@ -357,7 +357,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
     ///
     /// A point on the Bezier surface at parameters (u, v)
     pub fn evaluate(&self, u: F, v: F) -> InterpolateResult<Array1<F>> {
-        if u < F::zero() || u > F::one() || v < F::zero() || v > F::one() {
+        if u < F::zero() || u > F::one() || v < F::zero() || v >, F::one() {
             return Err(InterpolateError::OutOfBounds(format!(
                 "Parameters (u,v) must be in [0, 1]x[0, 1], got ({}, {})",
                 u, v
@@ -534,7 +534,7 @@ pub fn bernstein<F: Float + FromPrimitive + std::fmt::Display>(
         )));
     }
 
-    if t < F::zero() || t > F::one() {
+    if t < F::zero() || t >, F::one() {
         return Err(InterpolateError::OutOfBounds(format!(
             "Parameter t must be in [0, 1], got {}",
             t

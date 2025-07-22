@@ -7,6 +7,7 @@
 
 use crate::error::{DatasetsError, Result};
 use ndarray::{Array1, Array2};
+use statrs::statistics::Statistics;
 
 /// Binning strategies for discretization
 #[derive(Debug, Clone, Copy)]
@@ -36,7 +37,7 @@ pub enum BinningStrategy {
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_datasets::utils::polynomial_features;
+/// use scirs2__datasets::utils::polynomial_features;
 ///
 /// let data = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
 /// let poly_features = polynomial_features(&data, 2, true).unwrap();
@@ -77,7 +78,7 @@ pub fn polynomial_features(
     let mut output = Array2::zeros((n_samples, n_output_features));
     let mut col_idx = 0;
 
-    // Add bias column if requested
+    // Add _bias column if requested
     if include_bias {
         output.column_mut(col_idx).fill(1.0);
     }
@@ -165,16 +166,16 @@ fn generate_polynomial_combinations(
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_datasets::utils::statistical_features;
+/// use scirs2__datasets::utils::statistical_features;
 ///
 /// let data = Array2::from_shape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]).unwrap();
 /// let stats_features = statistical_features(&data).unwrap();
 /// // Result includes 9 statistical measures for each of the 2 original features
 /// ```
 #[allow(dead_code)]
-pub fn statistical_features(data: &Array2<f64>) -> Result<Array2<f64>> {
-    let n_samples = data.nrows();
-    let n_features = data.ncols();
+pub fn statistical_features(_data: &Array2<f64>) -> Result<Array2<f64>> {
+    let n_samples = _data.nrows();
+    let n_features = _data.ncols();
 
     if n_samples == 0 || n_features == 0 {
         return Err(DatasetsError::InvalidFormat(
@@ -188,7 +189,7 @@ pub fn statistical_features(data: &Array2<f64>) -> Result<Array2<f64>> {
 
     for sample_idx in 0..n_samples {
         for feature_idx in 0..n_features {
-            let feature_values = data.column(feature_idx);
+            let feature_values = _data.column(feature_idx);
 
             // Calculate basic statistics
             let mean = feature_values.mean().unwrap_or(0.0);
@@ -229,8 +230,8 @@ pub fn statistical_features(data: &Array2<f64>) -> Result<Array2<f64>> {
 
 /// Calculates a specific quantile from sorted data
 #[allow(dead_code)]
-fn calculate_quantile(sorted_data: &[f64], quantile: f64) -> f64 {
-    if sorted_data.is_empty() {
+fn calculate_quantile(_sorted_data: &[f64], quantile: f64) -> f64 {
+    if _sorted_data.is_empty() {
         return 0.0;
     }
 
@@ -249,26 +250,26 @@ fn calculate_quantile(sorted_data: &[f64], quantile: f64) -> f64 {
 
 /// Calculates skewness (third moment)
 #[allow(dead_code)]
-fn calculate_skewness(data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f64 {
+fn calculate_skewness(_data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f64 {
     if std <= 1e-10 {
         return 0.0;
     }
 
-    let n = data.len() as f64;
-    let sum_cubed_deviations: f64 = data.iter().map(|&x| ((x - mean) / std).powi(3)).sum();
+    let n = _data.len() as f64;
+    let sum_cubed_deviations: f64 = _data.iter().map(|&x| ((x - mean) / std).powi(3)).sum();
 
     sum_cubed_deviations / n
 }
 
 /// Calculates kurtosis (fourth moment)
 #[allow(dead_code)]
-fn calculate_kurtosis(data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f64 {
+fn calculate_kurtosis(_data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f64 {
     if std <= 1e-10 {
         return 0.0;
     }
 
-    let n = data.len() as f64;
-    let sum_fourth_deviations: f64 = data.iter().map(|&x| ((x - mean) / std).powi(4)).sum();
+    let n = _data.len() as f64;
+    let sum_fourth_deviations: f64 = _data.iter().map(|&x| ((x - mean) / std).powi(4)).sum();
 
     (sum_fourth_deviations / n) - 3.0 // Excess kurtosis (subtract 3 for normal distribution)
 }
@@ -293,7 +294,7 @@ fn calculate_kurtosis(data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_datasets::utils::{create_binned_features, BinningStrategy};
+/// use scirs2__datasets::utils::{create_binned_features, BinningStrategy};
 ///
 /// let data = Array2::from_shape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]).unwrap();
 /// let binned = create_binned_features(&data, 3, BinningStrategy::Uniform).unwrap();
@@ -307,7 +308,7 @@ pub fn create_binned_features(
 ) -> Result<Array2<f64>> {
     if n_bins < 2 {
         return Err(DatasetsError::InvalidFormat(
-            "Number of bins must be at least 2".to_string(),
+            "Number of _bins must be at least 2".to_string(),
         ));
     }
 
@@ -376,9 +377,9 @@ fn calculate_bin_edges(
 
 /// Find the bin index for a given value
 #[allow(dead_code)]
-fn find_bin_index(value: f64, bin_edges: &[f64]) -> usize {
+fn find_bin_index(_value: f64, bin_edges: &[f64]) -> usize {
     for (i, &edge) in bin_edges.iter().enumerate().skip(1) {
-        if value <= edge {
+        if _value <= edge {
             return i - 1;
         }
     }

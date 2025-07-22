@@ -36,9 +36,9 @@ pub struct SGDGpu<A: Float + ScalarOperand + Debug> {
 
 impl<A: Float + ScalarOperand + Debug> SGDGpu<A> {
     /// Create a new GPU-accelerated SGD optimizer
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(_learning_rate: A) -> Self {
         Self {
-            cpu_optimizer: SGD::new(learning_rate),
+            cpu_optimizer: SGD::new(_learning_rate),
             gpu_memory: None,
             kernel_handle: None,
             momentum_kernel_handle: None,
@@ -48,9 +48,9 @@ impl<A: Float + ScalarOperand + Debug> SGDGpu<A> {
     }
 
     /// Create with momentum
-    pub fn with_momentum(learning_rate: A, momentum: A) -> Self {
+    pub fn with_momentum(_learning_rate: A, momentum: A) -> Self {
         Self {
-            cpu_optimizer: SGD::with_momentum(learning_rate, momentum),
+            cpu_optimizer: SGD::with_momentum(_learning_rate, momentum),
             gpu_memory: None,
             kernel_handle: None,
             momentum_kernel_handle: None,

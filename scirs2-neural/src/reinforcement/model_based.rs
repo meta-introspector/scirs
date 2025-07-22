@@ -11,6 +11,7 @@ use ndarray::concatenate;
 use ndarray::prelude::*;
 use rand::seq::SliceRandom;
 use rand::rng;
+use ndarray::ArrayView1;
 /// Dynamics model for predicting environment transitions
 pub struct DynamicsModel {
     state_dim: usize,
@@ -95,7 +96,7 @@ impl DynamicsModel {
         let mut state_loss = 0.0;
         let mut reward_loss = 0.0;
         for i in 0..batch_size {
-            let (pred_next_state, pred_reward, _) =
+            let (pred_next_state, pred_reward_) =
                 self.predict(&states.row(i), &actions.row(i))?;
             // State prediction loss
             let state_error = &pred_next_state - &next_states.row(i);
@@ -141,7 +142,7 @@ impl MPC {
         Ok(best_action_sequence[0].clone())
     /// Sample a random action sequence
     fn sample_action_sequence(&self) -> Result<Vec<Array1<f32>>> {
-        use rand_distr::{Distribution, Uniform};
+        use rand__distr::{Distribution, Uniform};
         let mut rng = rng();
         let mut sequence = Vec::with_capacity(self.horizon);
         for _ in 0..self.horizon {
@@ -167,7 +168,7 @@ impl MPC {
         let mut total_reward = 0.0;
         let mut discount = 1.0;
         for action in action_sequence {
-            let (next_state, reward, _) =
+            let (next_state, reward_) =
                 self.dynamics_model.predict(&state.view(), &action.view())?;
             total_reward += discount * reward;
             discount *= 0.99; // Discount factor
@@ -217,11 +218,11 @@ impl<P: Policy> Dyna<P> {
         if self.model_buffer.is_empty() {
             return Ok(());
         // Sample a state from buffer
-        let (state, _, _, _) = self.model_buffer.sample_single()?;
+        let (state___) = self.model_buffer.sample_single()?;
         // Sample action from policy
         let action = self.policy.sample_action(&state.view())?;
         // Predict next state and reward using model
-        let (next_state, reward, _) = self.dynamics_model.predict(&state.view(), &action.view())?;
+        let (next_state, reward_) = self.dynamics_model.predict(&state.view(), &action.view())?;
         // Update policy using simulated experience
         // (This would integrate with the policy's update mechanism)
 /// Buffer for storing model training data
@@ -233,18 +234,18 @@ struct ModelBuffer {
     capacity: usize,
     ptr: usize,
 impl ModelBuffer {
-    fn new(capacity: usize) -> Self {
-            states: Vec::with_capacity(capacity),
-            actions: Vec::with_capacity(capacity),
-            rewards: Vec::with_capacity(capacity),
-            next_states: Vec::with_capacity(capacity),
-            capacity,
+    fn new(_capacity: usize) -> Self {
+            states: Vec::with_capacity(_capacity),
+            actions: Vec::with_capacity(_capacity),
+            rewards: Vec::with_capacity(_capacity),
+            next_states: Vec::with_capacity(_capacity),
+            _capacity,
             ptr: 0,
     fn add(
         state: Array1<f32>,
         action: Array1<f32>,
         next_state: Array1<f32>,
-        if self.states.len() < self.capacity {
+        if self.states.len() < self._capacity {
             self.states.push(state);
             self.actions.push(action);
             self.rewards.push(reward);
@@ -253,7 +254,7 @@ impl ModelBuffer {
             self.actions[self.ptr] = action;
             self.rewards[self.ptr] = reward;
             self.next_states[self.ptr] = next_state;
-        self.ptr = (self.ptr + 1) % self.capacity;
+        self.ptr = (self.ptr + 1) % self._capacity;
     fn sample(&self, batch_size: usize) -> Result<ModelBatch> {
         let indices: Vec<usize> = (0..self.len())
             .collect::<Vec<_>>()
@@ -334,7 +335,7 @@ impl WorldModel {
 /// Encoder for world model
 struct Encoder {
 impl Encoder {
-    fn new(input_dim: usize, latent_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
+    fn new(_input_dim: usize, latent_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
         layers.push(Box::new(Dense::new(current_dim, latent_dim, None)?));
         Ok(Self { layers })
     fn encode(&self, state: &ArrayView1<f32>) -> Result<Array1<f32>> {
@@ -344,7 +345,7 @@ impl Encoder {
 /// Latent dynamics model
 struct LatentDynamics {
 impl LatentDynamics {
-    fn new(latent_dim: usize, action_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
+    fn new(_latent_dim: usize, action_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
         let input_dim = latent_dim + action_dim;
     fn predict(
         let input = concatenate![Axis(0), *latent, *action];
@@ -358,7 +359,7 @@ impl LatentDynamics {
 /// Decoder for world model
 struct Decoder {
 impl Decoder {
-    fn new(latent_dim: usize, output_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
+    fn new(_latent_dim: usize, output_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
         let mut current_dim = latent_dim;
     fn decode(&self, latent: &ArrayView1<f32>) -> Result<Array1<f32>> {
         let mut x = latent.to_owned().insert_axis(Axis(0));

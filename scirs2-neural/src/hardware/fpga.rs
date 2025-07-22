@@ -45,14 +45,14 @@ pub struct FPGADevice {
     profiler: PerformanceProfiler,
 impl FPGADevice {
     /// Create a new FPGA device
-    pub fn new(config: FPGAConfig) -> Result<Self> {
-        let dpr_manager = if config.vendor == FPGAVendor::Xilinx {
+    pub fn new(_config: FPGAConfig) -> Result<Self> {
+        let dpr_manager = if _config.vendor == FPGAVendor::Xilinx {
             Some(DPRManager::new()?)
         } else {
             None
         };
         Ok(Self {
-            config,
+            _config,
             bitstream_loaded: false,
             allocated_resources: ResourceAllocation::default(),
             kernel_cache: HashMap::new(),
@@ -136,9 +136,9 @@ pub struct FPGAKernel {
     pub precision: PrecisionConfig,
 impl FPGAKernel {
     /// Create a new FPGA kernel
-    pub fn new(name: String, operation: FPGAOperation) -> Self {
+    pub fn new(_name: String, operation: FPGAOperation) -> Self {
         Self {
-            name,
+            _name,
             operation,
             pipeline_depth: 1,
             parallelism: 1,
@@ -240,8 +240,8 @@ pub struct FPGACompiler {
     optimization_level: OptimizationLevel,
 impl FPGACompiler {
     /// Create a new FPGA compiler
-    pub fn new(target_device: FPGAConfig, optimization_level: OptimizationLevel) -> Self {
-            target_device,
+    pub fn new(_target_device: FPGAConfig, optimization_level: OptimizationLevel) -> Self {
+            _target_device,
             optimization_level,
     /// Compile a high-level operation to FPGA kernel
     pub fn compile_operation(
@@ -270,8 +270,7 @@ impl FPGACompiler {
                         padding,
                         in_channels,
                         out_channels,
-                    },
-            _ => Err(crate::error::NeuralError::NotImplemented(format!(
+                    }_ => Err(crate::error::NeuralError::NotImplemented(format!(
                 "Operation {} not supported for FPGA",
                 operation
             ))),

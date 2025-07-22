@@ -9,9 +9,9 @@ use crate::error::{NeuralError, Result};
 pub struct ConfigSerializer;
 impl ConfigSerializer {
     /// Serialize a model configuration to JSON
-    pub fn to_json(config: &ModelConfig, pretty: bool) -> Result<String> {
+    pub fn to_json(_config: &ModelConfig, pretty: bool) -> Result<String> {
         if pretty {
-            serde_json::to_string_pretty(config).map_err(|e| {
+            serde_json::to_string_pretty(_config).map_err(|e| {
                 NeuralError::SerializationError(format!("Failed to serialize to JSON: {}", e))
             })
         } else {
@@ -19,32 +19,32 @@ impl ConfigSerializer {
         }
     }
     /// Serialize a model configuration to YAML
-    pub fn to_yaml(config: &ModelConfig) -> Result<String> {
-        serde_yaml::to_string(config).map_err(|e| {
+    pub fn to_yaml(_config: &ModelConfig) -> Result<String> {
+        serde_yaml::to_string(_config).map_err(|e| {
             NeuralError::SerializationError(format!("Failed to serialize to YAML: {}", e))
         })
     /// Deserialize a model configuration from JSON
-    pub fn from_json(json: &str) -> Result<ModelConfig> {
-        serde_json::from_str(json).map_err(|e| {
+    pub fn from_json(_json: &str) -> Result<ModelConfig> {
+        serde_json::from_str(_json).map_err(|e| {
             NeuralError::DeserializationError(format!("Failed to deserialize from JSON: {}", e))
     /// Deserialize a model configuration from YAML
-    pub fn from_yaml(yaml: &str) -> Result<ModelConfig> {
-        serde_yaml::from_str(yaml).map_err(|e| {
+    pub fn from_yaml(_yaml: &str) -> Result<ModelConfig> {
+        serde_yaml::from_str(_yaml).map_err(|e| {
             NeuralError::DeserializationError(format!("Failed to deserialize from YAML: {}", e))
 }
 /// Helper for creating model configurations programmatically
 pub struct ConfigBuilder;
 impl ConfigBuilder {
     /// Create a ResNet configuration
-    pub fn resnet(num_layers: usize, num_classes: usize, in_channels: usize) -> ModelConfig {
+    pub fn resnet(_num_layers: usize, num_classes: usize, in_channels: usize) -> ModelConfig {
         use crate::models::architectures::ResNetConfig;
         ModelConfig::ResNet(ResNetConfig {
-            num_layers,
+            _num_layers,
             in_channels,
             num_classes,
             zero_init_residual: false,
     /// Create a Vision Transformer configuration
-    pub fn vit(image_size: usize, patch_size: usize, num_classes: usize) -> ModelConfig {
+    pub fn vit(_image_size: usize, patch_size: usize, num_classes: usize) -> ModelConfig {
         use crate::models::architectures::ViTConfig;
         ModelConfig::ViT(ViTConfig {
             image_size,
@@ -59,12 +59,12 @@ impl ConfigBuilder {
             classifier: "token".to_string(),
             include_top: true,
     /// Create a BERT configuration
-    pub fn bert(vocab_size: usize, hidden_size: usize, num_layers: usize) -> ModelConfig {
+    pub fn bert(_vocab_size: usize, hidden_size: usize, num_layers: usize) -> ModelConfig {
         use crate::models::architectures::BertConfig;
         ModelConfig::Bert(BertConfig {
             vocab_size,
             hidden_size,
-            num_hidden_layers: num_layers,
+            num_hidden_layers: _num_layers,
             num_attention_heads: hidden_size / 64,
             intermediate_size: hidden_size * 4,
             hidden_dropout_prob: 0.1,
@@ -74,7 +74,7 @@ impl ConfigBuilder {
             initializer_range: 0.02,
             layer_norm_eps: 1e-12,
     /// Create a GPT configuration
-    pub fn gpt(vocab_size: usize, n_embd: usize, n_layer: usize) -> ModelConfig {
+    pub fn gpt(_vocab_size: usize, n_embd: usize, n_layer: usize) -> ModelConfig {
         use crate::models::architectures::GPTConfig;
         ModelConfig::GPT(GPTConfig {
             n_ctx: 1024,
@@ -86,7 +86,7 @@ impl ConfigBuilder {
             resid_pdrop: 0.1,
             layer_norm_epsilon: 1e-5,
     /// Create an EfficientNet configuration
-    pub fn efficientnet(variant: char, num_classes: usize) -> ModelConfig {
+    pub fn efficientnet(_variant: char, num_classes: usize) -> ModelConfig {
         use crate::models::architectures::EfficientNetConfig;
         // Set width and depth multipliers based on variant
         let (width_multiplier, depth_multiplier) = match variant {
@@ -107,18 +107,17 @@ impl ConfigBuilder {
             depth_multiplier,
             dropout_rate: Some(0.2),
     /// Create a MobileNet configuration
-    pub fn mobilenet(version: usize, num_classes: usize) -> ModelConfig {
+    pub fn mobilenet(_version: usize, num_classes: usize) -> ModelConfig {
         use crate::models::architectures::{MobileNetConfig, MobileNetVersion};
         let version_enum = match version {
             1 => MobileNetVersion::V1,
             2 => MobileNetVersion::V2,
-            3 => MobileNetVersion::V3Large,
-            _ => MobileNetVersion::V2, // Default to V2
+            3 => MobileNetVersion::V3Large_ =>, MobileNetVersion::V2, // Default to V2
         ModelConfig::MobileNet(MobileNetConfig {
             version: version_enum,
             width_multiplier: 1.0,
     /// Create a ConvNeXt configuration
-    pub fn convnext(variant: &str, num_classes: usize) -> ModelConfig {
+    pub fn convnext(_variant: &str, num_classes: usize) -> ModelConfig {
         use crate::models::architectures::{ConvNeXtConfig, ConvNeXtVariant};
         let (variant_enum, depths, dims) = match variant.to_lowercase().as_str() {
             "tiny" => (
@@ -137,8 +136,7 @@ impl ConfigBuilder {
                 vec![192, 384, 768, 1536],
             "xlarge" => (
                 ConvNeXtVariant::XLarge,
-                vec![256, 512, 1024, 2048],
-            _ => (
+                vec![256, 512, 1024, 2048]_ => (
         ModelConfig::ConvNeXt(ConvNeXtConfig {
             variant: variant_enum,
             depths,
@@ -146,7 +144,7 @@ impl ConfigBuilder {
             dropout_rate: Some(0.1),
             layer_scale_init_value: 1e-6,
     /// Create a CLIP configuration
-    pub fn clip(image_size: usize, vocab_size: usize, num_classes: usize) -> ModelConfig {
+    pub fn clip(_image_size: usize, vocab_size: usize, num_classes: usize) -> ModelConfig {
         use crate::models::architectures::{CLIPConfig, CLIPTextConfig, ViTConfig};
         let vision_config = ViTConfig {
             patch_size: 16,

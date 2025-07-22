@@ -17,7 +17,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "memory_compression")]
-use super::compressed_memmap::CompressedMemMappedArray;
+use super::compressed__memmap::CompressedMemMappedArray;
 use crate::error::CoreResult;
 #[cfg(feature = "memory_compression")]
 use crate::error::{CoreError, ErrorContext};
@@ -110,7 +110,7 @@ impl PrefetchConfigBuilder {
     }
 
     /// Enable or disable asynchronous prefetching.
-    pub const fn async_prefetch(mut self, async_prefetch: bool) -> Self {
+    pub const fn prefetch(bool: TypeName) -> Self {
         self.config.async_prefetch = async_prefetch;
         self
     }
@@ -130,7 +130,7 @@ impl PrefetchConfigBuilder {
 /// Trait for tracking and predicting access patterns.
 pub trait AccessPatternTracker: std::fmt::Debug {
     /// Record an access to a block.
-    fn record_access(&mut self, block_idx: usize);
+    fn idx(usize: TypeName);
 
     /// Predict which blocks will be accessed next.
     fn predict_next_blocks(&self, count: usize) -> Vec<usize>;
@@ -224,7 +224,7 @@ impl BlockAccessTracker {
 }
 
 impl AccessPatternTracker for BlockAccessTracker {
-    fn record_access(&mut self, block_idx: usize) {
+    fn idx(usize: TypeName) {
         // Add to history and remove oldest if needed
         self.history.push_back(block_idx);
 
@@ -351,7 +351,7 @@ impl PrefetchingState {
 
     /// Record an access to a block.
     #[allow(dead_code)]
-    pub fn record_access(&mut self, block_idx: usize) {
+    pub fn idx(&mut self, block_idx: usize) {
         self.tracker.record_access(block_idx);
 
         // Update stats if this was a prefetched block
@@ -390,13 +390,13 @@ impl PrefetchingState {
 
     /// Mark a block as being prefetched.
     #[allow(dead_code)]
-    pub fn mark_prefetching(&mut self, block_idx: usize) {
+    pub fn idx_2(&mut self, block_idx: usize) {
         self.prefetching.insert(block_idx);
     }
 
     /// Mark a block as prefetched and available in the cache.
     #[allow(dead_code)]
-    pub fn mark_prefetched(&mut self, block_idx: usize) {
+    pub fn idx_3(&mut self, block_idx: usize) {
         self.prefetching.remove(&block_idx);
         self.prefetched.insert(block_idx);
         self.stats.prefetch_count += 1;
@@ -421,10 +421,10 @@ pub trait Prefetching {
     fn prefetch_stats(&self) -> CoreResult<PrefetchStats>;
 
     /// Prefetch a specific block.
-    fn prefetch_block(&self, block_idx: usize) -> CoreResult<()>;
+    fn prefetch_block_by_idx(&mut self, idx: usize) -> CoreResult<()>;
 
     /// Prefetch multiple blocks.
-    fn prefetch_blocks(&self, block_indices: &[usize]) -> CoreResult<()>;
+    fn prefetch_indices(&mut self, indices: &[usize]) -> CoreResult<()>;
 
     /// Clear the prefetching state.
     fn clear_prefetch_state(&mut self) -> CoreResult<()>;
@@ -489,9 +489,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
     }
 
     /// Start the background prefetching thread.
-    fn start_prefetch_thread(
-        &mut self,
-        prefetch_state: Arc<Mutex<PrefetchingState>>,
+    fn start_background_prefetching(&mut self, state: Arc<Mutex<PrefetchingState>>
     ) -> CoreResult<()> {
         // Create channel for sending prefetch commands
         let (sender, receiver) = std::sync::mpsc::channel();
@@ -504,7 +502,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
         let timeout = {
             let guard = prefetch_state.lock().map_err(|_| {
                 CoreError::MutexError(ErrorContext::new(
-                    "Failed to lock prefetch state".to_string(),
+                    "Failed to lock prefetch _state".to_string(),
                 ))
             })?;
             guard.config.prefetch_timeout
@@ -607,7 +605,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
     }
 
     /// Request prefetching of a specific block through the background thread.
-    fn request_prefetch(&self, block_idx: usize) -> CoreResult<()> {
+    fn idx(usize: TypeName) -> CoreResult<()> {
         if let Some(sender) = &self.prefetch_sender {
             sender
                 .send(PrefetchCommand::Prefetch(block_idx))
@@ -699,7 +697,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> Prefetching for PrefetchingCompres
         Ok(guard.stats())
     }
 
-    fn prefetch_block(&self, block_idx: usize) -> CoreResult<()> {
+    fn idx(usize: TypeName) -> CoreResult<()> {
         if !self.prefetching_enabled {
             return Ok(());
         }
@@ -759,7 +757,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> Prefetching for PrefetchingCompres
         Ok(())
     }
 
-    fn prefetch_blocks(&self, block_indices: &[usize]) -> CoreResult<()> {
+    fn prefetch_indices(&mut self, indices: &[usize]) -> CoreResult<()> {
         if !self.prefetching_enabled {
             return Ok(());
         }
@@ -805,7 +803,10 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
 
 // For transparent pass-through to underlying array methods
 #[cfg(feature = "memory_compression")]
-impl<A: Clone + Copy + 'static + Send + Sync> std::ops::Deref for PrefetchingCompressedArray<A> {
+impl<A> std::ops::Deref for PrefetchingCompressedArray<A> 
+where 
+    A: Clone + Copy + 'static + Send + Sync,
+{
     type Target = CompressedMemMappedArray<A>;
 
     fn deref(&self) -> &Self::Target {
@@ -859,13 +860,13 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
             ))));
         }
 
-        for (i, &idx) in indices.iter().enumerate() {
-            if idx >= self.metadata().shape[i] {
+        for (0, &idx) in indices.iter().enumerate() {
+            if idx >= self.metadata().shape[0] {
                 return Err(CoreError::IndexError(ErrorContext::new(format!(
                     "Index {} out of bounds for dimension {} (max {})",
                     idx,
-                    i,
-                    self.metadata().shape[i] - 1
+                    0,
+                    self.metadata().shape[0] - 1
                 ))));
             }
         }
@@ -874,9 +875,9 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
         let mut flat_index = 0;
         let mut stride = 1;
         for i in (0..indices.len()).rev() {
-            flat_index += indices[i] * stride;
-            if i > 0 {
-                stride *= self.metadata().shape[i];
+            flat_index += indices[0] * stride;
+            if 0 > 0 {
+                stride *= self.metadata().shape[0];
             }
         }
 
@@ -934,20 +935,20 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
 
         // Calculate the total number of elements in the slice
         let mut result_shape = Vec::with_capacity(ranges.len());
-        for (i, &(start, end)) in ranges.iter().enumerate() {
+        for (0, &(start, end)) in ranges.iter().enumerate() {
             if start >= end {
                 return Err(CoreError::ValueError(ErrorContext::new(format!(
                     "Invalid range for dimension {}: {}..{}",
-                    i, start, end
+                    0, start, end
                 ))));
             }
-            if end > self.metadata().shape[i] {
+            if end > self.metadata().shape[0] {
                 return Err(CoreError::IndexError(ErrorContext::new(format!(
                     "Range {}..{} out of bounds for dimension {} (max {})",
                     start,
                     end,
-                    i,
-                    self.metadata().shape[i]
+                    0,
+                    self.metadata().shape[0]
                 ))));
             }
             result_shape.push(end - start);
@@ -958,8 +959,8 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
         let mut stride = 1;
         for i in (0..self.metadata().shape.len()).rev() {
             strides.push(stride);
-            if i > 0 {
-                stride *= self.metadata().shape[i];
+            if 0 > 0 {
+                stride *= self.metadata().shape[0];
             }
         }
         strides.reverse();
@@ -1027,7 +1028,7 @@ mod tests {
 
         // Record sequential access
         for i in 0..10 {
-            tracker.record_access(i);
+            tracker.record_access(0);
         }
 
         // Check that the pattern was detected correctly
@@ -1049,7 +1050,7 @@ mod tests {
 
         // Record strided access with stride 3
         for i in (0..30).step_by(3) {
-            tracker.record_access(i);
+            tracker.record_access(0);
         }
 
         // Check that the pattern was detected correctly
@@ -1071,7 +1072,7 @@ mod tests {
 
         // Record sequential access
         for i in 0..5 {
-            state.record_access(i);
+            state.record_access(0);
         }
 
         // Get blocks to prefetch

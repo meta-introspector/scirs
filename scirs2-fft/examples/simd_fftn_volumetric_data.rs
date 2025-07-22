@@ -4,8 +4,8 @@
 //! processing volumetric (3D) data, which is common in scientific applications
 //! like medical imaging, fluid dynamics, and seismic data analysis.
 
-use num_complex::Complex64;
-use scirs2_fft::{fftn_adaptive, ifftn_adaptive, simd_support_available};
+use num__complex::Complex64;
+use scirs2__fft::{fftn_adaptive, ifftn_adaptive, simd_support_available};
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -68,13 +68,13 @@ fn main() {
 
 /// Generate a test volume with various frequency components
 #[allow(dead_code)]
-fn generate_test_volume(width: usize, height: usize, depth: usize) -> Vec<f64> {
-    let mut volume = vec![0.0; width * height * depth];
+fn generate_test_volume(_width: usize, height: usize, depth: usize) -> Vec<f64> {
+    let mut volume = vec![0.0; _width * height * depth];
 
     for z in 0..depth {
         for y in 0..height {
-            for x in 0..width {
-                let x_norm = x as f64 / width as f64;
+            for x in 0.._width {
+                let x_norm = x as f64 / _width as f64;
                 let y_norm = y as f64 / height as f64;
                 let z_norm = z as f64 / depth as f64;
 
@@ -97,7 +97,7 @@ fn generate_test_volume(width: usize, height: usize, depth: usize) -> Vec<f64> {
                     * (12.0 * PI * z_norm).sin();
 
                 // Combine the frequency components
-                let idx = z * width * height + y * width + x;
+                let idx = z * _width * height + y * _width + x;
                 volume[idx] = low_freq + mid_freq + high_freq;
             }
         }
@@ -108,12 +108,12 @@ fn generate_test_volume(width: usize, height: usize, depth: usize) -> Vec<f64> {
 
 /// Apply a frequency domain filter to volumetric (3D) data
 #[allow(dead_code)]
-fn frequency_domain_filter_3d(volume: &[f64], shape: &[usize], filter_type: &str) -> Vec<f64> {
-    // Step 1: Compute the N-dimensional FFT of the volume
-    let spectrum = fftn_adaptive(volume, Some(shape), None, None).unwrap();
+fn frequency_domain_filter_3d(_volume: &[f64], shape: &[usize], filter_type: &str) -> Vec<f64> {
+    // Step 1: Compute the N-dimensional FFT of the _volume
+    let spectrum = fftn_adaptive(_volume, Some(shape), None, None).unwrap();
 
     // Step 2: Create a frequency domain filter
-    let mut filter = vec![Complex64::new(0.0, 0.0); volume.len()];
+    let mut filter = vec![Complex64::new(0.0, 0.0); _volume.len()];
 
     // Calculate the center of the frequency domain
     let center_x = shape[0] / 2;
@@ -213,7 +213,7 @@ fn frequency_domain_filter_3d(volume: &[f64], shape: &[usize], filter_type: &str
     let filtered_volume_complex =
         ifftn_adaptive(&filtered_spectrum, Some(shape), None, None).unwrap();
 
-    // Step 5: Extract real part (the filtered volume)
+    // Step 5: Extract real part (the filtered _volume)
     let filtered_volume: Vec<f64> = filtered_volume_complex.iter().map(|c| c.re).collect();
 
     filtered_volume
@@ -221,7 +221,7 @@ fn frequency_domain_filter_3d(volume: &[f64], shape: &[usize], filter_type: &str
 
 /// Visualization information (simulation for a real system)
 #[allow(dead_code)]
-fn simulate_visualization(volume: &[f64], shape: &[usize]) {
+fn simulate_visualization(_volume: &[f64], shape: &[usize]) {
     println!("Visualizing volumetric data:");
     println!(
         "- Volume dimensions: {} x {} x {}",
@@ -231,7 +231,7 @@ fn simulate_visualization(volume: &[f64], shape: &[usize]) {
     // Find data range
     let mut min_val = f64::MAX;
     let mut max_val = f64::MIN;
-    for &val in volume {
+    for &val in _volume {
         min_val = min_val.min(val);
         max_val = max_val.max(val);
     }
@@ -244,7 +244,7 @@ fn simulate_visualization(volume: &[f64], shape: &[usize]) {
         for y in [0, shape[1] / 2, shape[1] - 1] {
             for x in [0, shape[0] / 2, shape[0] - 1] {
                 let idx = z * shape[0] * shape[1] + y * shape[0] + x;
-                println!("  ({},{},{}) = {:.6}", x, y, z, volume[idx]);
+                println!("  ({},{},{}) = {:.6}", x, y, z, _volume[idx]);
             }
         }
     }
@@ -252,5 +252,5 @@ fn simulate_visualization(volume: &[f64], shape: &[usize]) {
     println!(
         "In a real application, this data would be rendered using 3D visualization techniques"
     );
-    println!("such as volume rendering, isosurfaces, or slice views.");
+    println!("such as _volume rendering, isosurfaces, or slice views.");
 }

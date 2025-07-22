@@ -229,8 +229,8 @@ pub use crate::memory_efficient::MemoryMappedChunksParallel;
 #[cfg(feature = "array")]
 pub use crate::array::{
     is_masked, mask_array, masked_equal, masked_greater, masked_inside, masked_invalid,
-    masked_less, masked_outside, masked_where, record_array_from_arrays, record_array_from_records,
-    record_array_from_typed_arrays, ArrayError, FieldValue, MaskedArray, Record, RecordArray,
+    masked_less, masked_outside, masked_where, 
+    record_array_from_typed_arrays, record_array_fromrecords, ArrayError, FieldValue, MaskedArray, Record, RecordArray,
     NOMASK,
 };
 
@@ -282,7 +282,7 @@ pub use crate::numeric::*;
 pub use crate::parallel::*;
 #[cfg(feature = "parallel")]
 pub use crate::parallel_ops::{
-    is_parallel_enabled, num_threads, par_chunks, par_chunks_mut, par_join, par_range, par_scope,
+    is_parallel_enabled, num_threads, par_chunks, par_chunks_mut, par_join, par_scope,
 };
 // Re-export all parallel traits and types
 #[cfg(feature = "parallel")]
@@ -309,7 +309,7 @@ pub use crate::units::{
 pub use crate::utils::*;
 pub use crate::validation::production as validation_production;
 pub use crate::validation::{
-    check_array_finite, check_finite, check_in_bounds, check_positive, check_shape,
+    checkarray_finite, check_finite, check_in_bounds, check_positive, check_shape,
 };
 
 #[cfg(feature = "data_validation")]
@@ -323,7 +323,7 @@ pub use crate::validation::data::{
 // Production-level feature re-exports
 pub use crate::observability::{audit, tracing};
 pub use crate::stability::{
-    global_stability_manager, has_long_term_stability, validate_stability_requirements,
+    global_stability_manager,
     ApiContract, BreakingChange, BreakingChangeType, ConcurrencyContract, MemoryContract,
     NumericalContract, PerformanceContract, StabilityGuaranteeManager, StabilityLevel,
     UsageContext,
@@ -344,7 +344,7 @@ pub use crate::quantum_optimization::{
 };
 
 // Advanced JIT Compilation re-exports
-// pub use crate::advanced_jit_compilation::{
+// pub use crate::advanced_jit__compilation::{
 //     AdaptiveCodeGenerator, CompilationStatistics, JitAnalytics, JitCompilerConfig, JitProfiler,
 //     KernelCache, KernelMetadata, KernelPerformance, LlvmCompilationEngine, OptimizationResults,
 //     PerformanceImprovement, RuntimeOptimizer, advancedJitCompiler,
@@ -367,7 +367,7 @@ pub use crate::benchmarking::{
 };
 
 /// ``SciRS2`` core version information
-pub const fn version() -> &'static str {
+pub const fn _version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
@@ -390,7 +390,7 @@ pub fn __init() {
 #[cfg_attr(target_os = "linux", link_section = ".init_array")]
 #[cfg_attr(target_os = "macos", link_section = "__DATA,__mod_init_func")]
 #[cfg_attr(target_os = "windows", link_section = ".CRT$XCU")]
-static __INIT: extern "C" fn() = {
+static INIT: extern "C" fn() = {
     extern "C" fn __init_wrapper() {
         __init();
     }
@@ -610,7 +610,7 @@ pub mod alpha6_api {
         ///
         /// ```
         /// use scirs2_core::{CoreResult, CoreError};
-        /// # #[cfg(all(feature = "simd", feature = "parallel", feature = "memory_efficient"))]
+        /// # #[cfg(all(feature = simd, feature = parallel, feature = "memory_efficient"))]
         /// use scirs2_core::{
         ///     memory_efficient::AdaptiveChunkingParams,
         /// };
@@ -778,7 +778,7 @@ pub mod alpha6_api {
         ///         # #[cfg(feature = "profiling")]
         ///         let timer = Timer::new(self.name.clone());
         ///         # #[cfg(feature = "profiling")]
-        ///         let _timer_guard = timer.start();
+        ///         let timer_guard = timer.start();
         ///         
         ///         let result = operation()?;
         ///         

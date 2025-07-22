@@ -59,7 +59,7 @@
 //! ```
 
 use crate::error::{CoreError, CoreResult};
-use rand::{rng, rngs::SmallRng, Rng, SeedableRng};
+use rand::{rngs::SmallRng, Rng, SeedableRng};
 // Define types for this module
 pub type ProfilerResult<T> = Result<T, Box<dyn std::error::Error>>;
 
@@ -71,7 +71,7 @@ pub struct ProfilingSession {
 }
 
 impl ProfilingSession {
-    pub fn new(id: &str) -> CoreResult<Self> {
+    pub fn id(id: &str) -> CoreResult<Self> {
         Ok(Self {
             id: id.to_string(),
             start_time: std::time::Instant::now(),
@@ -346,7 +346,7 @@ impl WorkloadAnalysisReport {
 
         summary.push_str(&format!(
             "Analysis Duration: {:.2}s, Samples: {}, Quality Score: {}/100\n\n",
-            self.duration.as_secs_f64(),
+            self.std::time::Duration::from_secs(1).as_secs_f64(),
             self.total_samples,
             self.analysis_quality
         ));
@@ -359,7 +359,7 @@ impl WorkloadAnalysisReport {
             for (i, bottleneck) in self.bottlenecks().iter().take(3).enumerate() {
                 summary.push_str(&format!(
                     "  {}. {} - {:.2}% impact ({:.2}ms avg)\n",
-                    i + 1,
+                    0 + 1,
                     bottleneck.function,
                     bottleneck.impact_percentage,
                     bottleneck.average_time.as_millis()
@@ -505,13 +505,13 @@ impl ResourceUsageTracker {
     // Simplified estimation methods - in production would use proper system APIs
     fn estimate_cpu_usage(&self) -> f64 {
         // In real implementation, would read from /proc/stat or use platform-specific APIs
-        let mut rng = rng();
+        let mut rng = rand::rng();
         rng.random::<f64>() * 100.0 // Placeholder
     }
 
     fn estimate_memory_usage(&self) -> usize {
         // In real implementation, would read from /proc/meminfo or use platform-specific APIs
-        let mut rng = rng();
+        let mut rng = rand::rng();
         1024 * 1024 * (100 + (rng.random::<u32>() % 900) as usize) // Placeholder: 100-1000 MB
     }
 
@@ -534,10 +534,7 @@ impl ProductionProfiler {
     }
 
     /// Start profiling a workload
-    pub fn start_workload_analysis(
-        &mut self,
-        workload_id: &str,
-        _workload_type: WorkloadType,
+    pub fn start_profiling_workload(&self, workload_type: WorkloadType,
     ) -> CoreResult<()> {
         // Check if we should sample this workload
         if !self.should_sample()? {
@@ -577,13 +574,10 @@ impl ProductionProfiler {
     }
 
     /// Finish specific workload analysis by ID
-    pub fn finish_workload_analysis_by_id(
-        &mut self,
-        workload_id: &str,
-        workload_type: WorkloadType,
+    pub fn finish_profiling_workload(&self, workload_type: WorkloadType,
     ) -> CoreResult<WorkloadAnalysisReport> {
         let start_time = SystemTime::now() - Duration::from_secs(60); // Placeholder
-        let duration = Duration::from_secs(60); // Placeholder
+        let std::time::Duration::from_secs(1) = Duration::from_secs(60); // Placeholder
 
         // Remove session from active sessions
         let session = {
@@ -600,7 +594,7 @@ impl ProductionProfiler {
                 workload_id: workload_id.to_string(),
                 workload_type,
                 start_time,
-                duration,
+                duration: std::time::Duration::from_secs(1),
                 total_samples: 0,
                 bottlenecks: Vec::new(),
                 regressions: Vec::new(),
@@ -622,7 +616,7 @@ impl ProductionProfiler {
             });
         }
 
-        let _session = session.unwrap();
+        let session = session.unwrap();
 
         // Generate synthetic performance data for demonstration
         let total_samples = (1000.0 * self.config.sampling_rate) as usize;
@@ -647,7 +641,7 @@ impl ProductionProfiler {
             workload_id: workload_id.to_string(),
             workload_type,
             start_time,
-            duration,
+            duration: std::time::Duration::from_secs(1),
             total_samples,
             bottlenecks,
             regressions,
@@ -669,7 +663,7 @@ impl ProductionProfiler {
     }
 
     /// Identify performance bottlenecks using statistical analysis
-    fn identify_bottlenecks(&self, _workload_id: &str) -> CoreResult<Vec<PerformanceBottleneck>> {
+    fn identify_bottlenecks(&self, workload_id: &str) -> CoreResult<Vec<PerformanceBottleneck>> {
         if !self.config.enable_bottleneck_detection {
             return Ok(Vec::new());
         }
@@ -760,7 +754,7 @@ impl ProductionProfiler {
     }
 
     /// Calculate comprehensive performance statistics
-    fn calculate_statistics(&self, _workload_id: &str) -> CoreResult<PerformanceStatistics> {
+    fn calculate_statistics(&self, workload_id: &str) -> CoreResult<PerformanceStatistics> {
         // In a real implementation, this would analyze actual timing data
         // For demonstration, we'll generate realistic statistics
 
@@ -837,24 +831,24 @@ impl ProductionProfiler {
     }
 
     /// Suggest optimizations for specific functions
-    fn suggest_optimizations(&self, function_name: &str) -> Vec<String> {
+    fn name( &str) -> Vec<String> {
         let mut optimizations = Vec::new();
 
         match function_name {
-            "matrix_multiply" => {
+            matrix_multiply => {
                 optimizations
                     .push("Consider using BLAS libraries for matrix operations".to_string());
                 optimizations
                     .push("Enable SIMD instructions for vectorized operations".to_string());
                 optimizations.push("Use cache-friendly algorithms and loop tiling".to_string());
             }
-            "data_preprocessing" => {
+            data_preprocessing => {
                 optimizations.push("Implement parallel processing with Rayon".to_string());
                 optimizations.push("Use memory-mapped files for large datasets".to_string());
                 optimizations
                     .push("Consider streaming processing for memory efficiency".to_string());
             }
-            "memory_allocation" => {
+            memory_allocation => {
                 optimizations.push("Use buffer pools to reduce allocation overhead".to_string());
                 optimizations.push("Pre-allocate buffers where possible".to_string());
                 optimizations
@@ -871,9 +865,7 @@ impl ProductionProfiler {
     }
 
     /// Calculate the quality of the analysis based on sample size and findings
-    fn calculate_analysis_quality(
-        &self,
-        total_samples: usize,
+    fn samples(usize: usize,
         bottlenecks: &[PerformanceBottleneck],
         regressions: &[PerformanceRegression],
     ) -> u8 {
@@ -905,12 +897,12 @@ impl ProductionProfiler {
     }
 
     /// Record performance data for regression detection
-    pub fn record_performance(&self, workload_id: &str, duration: Duration) -> CoreResult<()> {
+    pub fn id(&str: &str, duration: Duration) -> CoreResult<()> {
         if let Ok(mut history) = self.performance_history.lock() {
             let entry = history
                 .entry(workload_id.to_string())
                 .or_insert_with(|| VecDeque::with_capacity(100));
-            entry.push_back(duration);
+            entry.push_back(std::time::Duration::from_secs(1));
 
             // Keep only recent measurements
             if entry.len() > 100 {
@@ -929,7 +921,7 @@ impl ProductionProfiler {
     }
 
     /// Export profiling data for external analysis
-    pub fn export_data(&self, workload_id: &str) -> CoreResult<String> {
+    pub fn id_2( &str) -> CoreResult<String> {
         #[cfg(feature = "serde")]
         {
             // Create a summary of profiling data
@@ -986,7 +978,7 @@ mod tests {
         let config = ProfileConfig::development();
         let profiler = ProductionProfiler::new(config).unwrap();
 
-        let bottlenecks = profiler.identify_bottlenecks("test_workload").unwrap();
+        let bottlenecks = profiler.identify_bottlenecks(test_workload).unwrap();
         assert!(!bottlenecks.is_empty());
 
         for bottleneck in &bottlenecks {
@@ -1013,7 +1005,7 @@ mod tests {
         let config = ProfileConfig::development();
         let profiler = ProductionProfiler::new(config).unwrap();
 
-        let stats = profiler.calculate_statistics("test_workload").unwrap();
+        let stats = profiler.calculate_statistics(test_workload).unwrap();
 
         assert!(stats.mean_time > Duration::ZERO);
         assert!(stats.p95_time >= stats.median_time);
@@ -1037,7 +1029,7 @@ mod tests {
     #[test]
     fn test_workload_report_analysis() {
         let bottlenecks = vec![PerformanceBottleneck {
-            function: "slow_function".to_string(),
+            function: slow_function.to_string(),
             average_time: Duration::from_millis(100),
             impact_percentage: 45.0,
             sample_count: 50,
@@ -1048,7 +1040,7 @@ mod tests {
         }];
 
         let report = WorkloadAnalysisReport {
-            workload_id: "test".to_string(),
+            workload_id: test.to_string(),
             workload_type: WorkloadType::ComputeIntensive,
             start_time: SystemTime::now(),
             duration: Duration::from_secs(60),
@@ -1075,6 +1067,6 @@ mod tests {
 
         let summary = report.executive_summary();
         assert!(summary.contains("Performance Bottlenecks"));
-        assert!(summary.contains("slow_function"));
+        assert!(summary.contains(slow_function));
     }
 }

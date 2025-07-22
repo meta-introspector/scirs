@@ -381,9 +381,9 @@ pub enum IssueResolution {
 
 impl<T: InterpolationFloat> SciPyParityCompletion<T> {
     /// Create new SciPy parity completion validator
-    pub fn new(config: ParityCompletionConfig) -> Self {
+    pub fn new(_config: ParityCompletionConfig) -> Self {
         Self {
-            config,
+            _config,
             feature_analysis: FeatureAnalysis {
                 fully_implemented: Vec::new(),
                 partially_implemented: Vec::new(),
@@ -392,8 +392,7 @@ impl<T: InterpolationFloat> SciPyParityCompletion<T> {
                 completion_percentage: 0.0,
             },
             completion_results: Vec::new(),
-            performance_comparisons: Vec::new(),
-            _phantom: PhantomData,
+            performance_comparisons: Vec::new(), _phantom: PhantomData,
         }
     }
 
@@ -445,7 +444,7 @@ impl<T: InterpolationFloat> SciPyParityCompletion<T> {
             SciPyFeature {
                 name: "Linear interpolation".to_string(),
                 scipy_path: "scipy.interpolate.interp1d(kind='linear')".to_string(),
-                scirs2_path: "scirs2_interpolate::interp1d::linear_interpolate".to_string(),
+                scirs2_path: "scirs2, _interpolate::interp1d::linear_interpolate".to_string(),
                 api_differences: vec![
                     "Function-based API vs class-based".to_string(),
                     "Rust Array types vs NumPy arrays".to_string(),
@@ -456,7 +455,7 @@ impl<T: InterpolationFloat> SciPyParityCompletion<T> {
             SciPyFeature {
                 name: "Cubic spline interpolation".to_string(),
                 scipy_path: "scipy.interpolate.CubicSpline".to_string(),
-                scirs2_path: "scirs2_interpolate::spline::CubicSpline".to_string(),
+                scirs2_path: "scirs2, _interpolate::spline::CubicSpline".to_string(),
                 api_differences: vec!["Similar API with Rust-specific improvements".to_string()],
                 implementation_notes: "Full implementation with derivatives and integrals"
                     .to_string(),
@@ -464,7 +463,7 @@ impl<T: InterpolationFloat> SciPyParityCompletion<T> {
             SciPyFeature {
                 name: "PCHIP interpolation".to_string(),
                 scipy_path: "scipy.interpolate.PchipInterpolator".to_string(),
-                scirs2_path: "scirs2_interpolate::interp1d::pchip_interpolate".to_string(),
+                scirs2_path: "scirs2, _interpolate::interp1d::pchip_interpolate".to_string(),
                 api_differences: vec!["Function-based API for simplicity".to_string()],
                 implementation_notes: "Shape-preserving interpolation fully implemented"
                     .to_string(),
@@ -472,7 +471,7 @@ impl<T: InterpolationFloat> SciPyParityCompletion<T> {
             SciPyFeature {
                 name: "RBF interpolation".to_string(),
                 scipy_path: "scipy.interpolate.Rbf".to_string(),
-                scirs2_path: "scirs2_interpolate::advanced::rbf::RBFInterpolator".to_string(),
+                scirs2_path: "scirs2, _interpolate::advanced::rbf::RBFInterpolator".to_string(),
                 api_differences: vec![
                     "Enhanced with additional kernels".to_string(),
                     "Better parameter auto-tuning".to_string(),
@@ -482,7 +481,7 @@ impl<T: InterpolationFloat> SciPyParityCompletion<T> {
             SciPyFeature {
                 name: "B-spline interpolation".to_string(),
                 scipy_path: "scipy.interpolate.BSpline".to_string(),
-                scirs2_path: "scirs2_interpolate::bspline::BSpline".to_string(),
+                scirs2_path: "scirs2, _interpolate::bspline::BSpline".to_string(),
                 api_differences: vec!["Additional convenience functions".to_string()],
                 implementation_notes: "Complete B-spline implementation with fast evaluation"
                     .to_string(),
@@ -1292,7 +1291,7 @@ mod tests {
     #[test]
     fn test_parity_completion_creation() {
         let config = ParityCompletionConfig::default();
-        let completion = SciPyParityCompletion::<f64>::new(config);
+        let completion = SciPyParityCompletion::<f64>::new(_config);
         assert_eq!(completion.completion_results.len(), 0);
     }
 

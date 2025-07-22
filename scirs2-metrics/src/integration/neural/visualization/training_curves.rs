@@ -17,10 +17,8 @@ pub struct TrainingHistoryVisualizer {
     history: Vec<HashMap<String, f64>>,
     /// Validation history data (epoch -> metric -> value)
     val_history: Option<Vec<HashMap<String, f64>>>,
-    /// X label (default: "Epoch")
-    x_label: String,
-    /// Y label (default: metric name)
-    y_label: Option<String>,
+    /// X label (default: "Epoch"), x_label: String,
+    /// Y label (default: metric name), y_label: Option<String>,
 }
 
 impl TrainingHistoryVisualizer {
@@ -117,7 +115,7 @@ pub fn training_history_visualization(
     let mut visualizer = TrainingHistoryVisualizer::new(
         format!("Training History ({})", metric_names.join(", ")),
         metric_names,
-        history,
+        _history,
     );
 
     if let Some(val_history) = val_history {

@@ -4,10 +4,10 @@
 //! cleaning, and other preprocessing operations.
 
 use crate::error::Result;
-use lazy_static::lazy_static;
+use lazy__static::lazy_static;
 use regex::Regex;
 use std::collections::HashSet;
-use unicode_normalization::UnicodeNormalization;
+use unicode__normalization::UnicodeNormalization;
 
 lazy_static! {
     static ref SPECIAL_CHARS: Regex = Regex::new(r"[^\w\s]").unwrap();
@@ -55,9 +55,9 @@ pub struct BasicNormalizer {
 
 impl BasicNormalizer {
     /// Create a new basic normalizer
-    pub fn new(lowercase: bool, unicode_normalization: bool) -> Self {
+    pub fn new(_lowercase: bool, unicode_normalization: bool) -> Self {
         Self {
-            lowercase,
+            _lowercase,
             unicode_normalization,
         }
     }
@@ -106,8 +106,7 @@ impl BasicTextCleaner {
         Self {
             remove_special_chars,
             remove_stopwords,
-            normalize_whitespace,
-            stopwords: DEFAULT_STOPWORDS.clone(),
+            normalize_whitespace_stopwords: DEFAULT_STOPWORDS.clone(),
         }
     }
 
@@ -122,7 +121,7 @@ impl BasicTextCleaner {
             remove_special_chars,
             remove_stopwords,
             normalize_whitespace,
-            stopwords,
+            _stopwords,
         }
     }
 
@@ -181,9 +180,9 @@ pub struct TextPreprocessor {
 
 impl TextPreprocessor {
     /// Create a new text preprocessor
-    pub fn new(normalizer: BasicNormalizer, cleaner: BasicTextCleaner) -> Self {
+    pub fn new(_normalizer: BasicNormalizer, cleaner: BasicTextCleaner) -> Self {
         Self {
-            normalizer,
+            _normalizer,
             cleaner,
         }
     }

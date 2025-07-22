@@ -83,19 +83,19 @@ pub struct AdaptiveToleranceState {
 
 impl AdaptiveToleranceState {
     /// Create new adaptive tolerance state
-    pub fn new(options: AdaptiveToleranceOptions, problem_dim: usize) -> Self {
+    pub fn new(_options: AdaptiveToleranceOptions, problem_dim: usize) -> Self {
         Self {
-            current_ftol: options.initial_ftol,
-            current_gtol: options.initial_gtol,
-            current_xtol: options.initial_xtol,
-            function_history: VecDeque::with_capacity(options.history_length),
-            gradient_history: VecDeque::with_capacity(options.history_length),
-            step_history: VecDeque::with_capacity(options.history_length),
+            current_ftol: _options.initial_ftol,
+            current_gtol: _options.initial_gtol,
+            current_xtol: _options.initial_xtol,
+            function_history: VecDeque::with_capacity(_options.history_length),
+            gradient_history: VecDeque::with_capacity(_options.history_length),
+            step_history: VecDeque::with_capacity(_options.history_length),
             function_scale: 1.0,
             gradient_scale: 1.0,
             stagnant_nit: 0,
             problem_dim,
-            options,
+            _options,
         }
     }
 
@@ -310,11 +310,11 @@ impl AdaptiveToleranceState {
 
     /// Get current Options struct with adapted tolerances
     pub fn get_current_options(&self, base_options: &Options) -> Options {
-        let mut options = base_options.clone();
-        options.ftol = self.current_ftol;
-        options.gtol = self.current_gtol;
-        options.xtol = self.current_xtol;
-        options
+        let mut _options = base_options.clone();
+        _options.ftol = self.current_ftol;
+        _options.gtol = self.current_gtol;
+        _options.xtol = self.current_xtol;
+        _options
     }
 
     /// Check if convergence is achieved with current tolerances

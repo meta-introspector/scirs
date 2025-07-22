@@ -302,7 +302,7 @@ impl DatasetCorrelation {
     }
 
     /// Update the correlation based on new evidence.
-    fn update(&mut self, primary_index: usize, related_indices: &[usize]) {
+    fn update_model(&mut self, primary_index: usize, related_indices: &[usize]) {
         self.occurrences += 1;
         self.last_observed = Instant::now();
 
@@ -354,7 +354,8 @@ impl DatasetCorrelation {
     }
 
     /// Predict related indices based on patterns in existing correlations.
-    fn predict_from_pattern(&self, primary_index: usize, _max_count: usize) -> Option<Vec<usize>> {
+    #[allow(unused_variables)]
+    fn predict_from_pattern(&self, primary_index: usize, max_count: usize) -> Option<Vec<usize>> {
         // Need at least 2 data points to detect a pattern
         if self.index_correlations.len() < 2 {
             return None;
@@ -523,7 +524,7 @@ impl CrossFilePrefetchManager {
                 });
 
             // Update the correlation: recent_index predicts current_index
-            correlation.update(recent_record.access.index, &[access.index]);
+            correlation.update_model(recent_record.access.index, &[access.index]);
         }
 
         // Clean up expired correlations
@@ -855,14 +856,14 @@ impl<A: Clone + Copy + Send + Sync + 'static> DatasetPrefetcher for MemoryMapped
         // but ensures the memory is mapped
 
         // Ensure the array is readable
-        let _array = self.array.as_array::<ndarray::IxDyn>()?;
+        self.array.asarray::<ndarray::IxDyn>()?;
 
         Ok(())
     }
 
     fn prefetch_all(&self) -> CoreResult<()> {
         // For memory-mapped arrays, just ensure the file is mapped
-        let _array = self.array.as_array::<ndarray::IxDyn>()?;
+        self.array.asarray::<ndarray::IxDyn>()?;
 
         Ok(())
     }
@@ -877,7 +878,7 @@ impl<A: Clone + Copy + Send + Sync + 'static> DatasetPrefetcher for MemoryMapped
 pub trait CompressedArrayPrefetchExt<A: Clone + Copy + Send + Sync + 'static> {
     /// Register with the cross-file prefetching system.
     #[allow(dead_code)]
-    fn register_for_cross_prefetch(
+    fn register_with_cross_file_prefetch(
         &self,
         dataset_id: DatasetId,
     ) -> CoreResult<Arc<CompressedArrayPrefetcher<A>>>;
@@ -887,7 +888,7 @@ pub trait CompressedArrayPrefetchExt<A: Clone + Copy + Send + Sync + 'static> {
 impl<A: Clone + Copy + Send + Sync + 'static> CompressedArrayPrefetchExt<A>
     for super::compressed_memmap::CompressedMemMappedArray<A>
 {
-    fn register_for_cross_prefetch(
+    fn register_with_cross_file_prefetch(
         &self,
         dataset_id: DatasetId,
     ) -> CoreResult<Arc<CompressedArrayPrefetcher<A>>> {
@@ -904,7 +905,7 @@ impl<A: Clone + Copy + Send + Sync + 'static> CompressedArrayPrefetchExt<A>
 pub trait MemoryMappedArrayPrefetchExt<A: Clone + Copy + Send + Sync + 'static> {
     /// Register with the cross-file prefetching system.
     #[allow(dead_code)]
-    fn register_for_cross_prefetch(
+    fn register_with_cross_file_prefetch(
         &self,
         dataset_id: DatasetId,
         chunk_size: usize,
@@ -914,7 +915,7 @@ pub trait MemoryMappedArrayPrefetchExt<A: Clone + Copy + Send + Sync + 'static> 
 impl<A: Clone + Copy + Send + Sync + 'static> MemoryMappedArrayPrefetchExt<A>
     for super::memmap::MemoryMappedArray<A>
 {
-    fn register_for_cross_prefetch(
+    fn register_with_cross_file_prefetch(
         &self,
         dataset_id: DatasetId,
         chunk_size: usize,
@@ -942,7 +943,7 @@ pub struct TrackedArray<A: Clone + Copy + 'static + Send + Sync, T> {
     dataset_id: DatasetId,
 
     /// Phantom for type parameter
-    _phantom: std::marker::PhantomData<A>,
+    phantom: std::marker::PhantomData<A>,
 }
 
 #[allow(dead_code)]
@@ -952,7 +953,7 @@ impl<A: Clone + Copy + 'static + Send + Sync, T> TrackedArray<A, T> {
         Self {
             array,
             dataset_id,
-            _phantom: std::marker::PhantomData,
+            phantom: std::marker::PhantomData,
         }
     }
 
@@ -1060,7 +1061,7 @@ mod tests {
         assert_eq!(correlation.occurrences, 0);
 
         // Update with some indices
-        correlation.update(10, &[20, 30, 40]);
+        correlation.update_model(10, &[20, 30, 40]);
 
         // Strength should increase
         assert!(correlation.strength > 0.0);
@@ -1071,7 +1072,7 @@ mod tests {
         assert_eq!(correlation.index_correlations[&10], vec![20, 30, 40]);
 
         // Update again
-        correlation.update(10, &[20, 30, 50]);
+        correlation.update_model(10, &[20, 30, 50]);
 
         // Strength should increase further
         assert!(correlation.strength > 0.1);

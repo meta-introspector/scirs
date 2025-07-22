@@ -66,7 +66,7 @@ impl<F: Float + FromPrimitive> Default for MiniBatchKMeansOptions<F> {
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2_cluster::vq::minibatch_kmeans;
+/// use scirs2__cluster::vq::minibatch_kmeans;
 ///
 /// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0,
@@ -136,11 +136,11 @@ where
         // Sample init_size data points for initialization (simpler method for this example)
         let mut indices = Vec::with_capacity(init_size);
         for _ in 0..init_size {
-            indices.push(rng.random_range(0..n_samples));
+            indices.push(rng.gen_range(0..n_samples));
         }
 
         let init_data =
-            Array2::from_shape_fn((init_size, n_features), |(i, j)| data[[indices[i], j]]);
+            Array2::from_shape_fn((init_size..n_features), |(i, j)| data[[indices[i], j]]);
         kmeans_plus_plus(init_data.view(), k, opts.random_seed)?
     } else {
         // Use all data points for initialization
@@ -163,18 +163,18 @@ where
         let batch_size = opts.batch_size.min(n_samples);
         let mut batch_indices = Vec::with_capacity(batch_size);
         for _ in 0..batch_size {
-            batch_indices.push(rng.random_range(0..n_samples));
+            batch_indices.push(rng.gen_range(0..n_samples));
         }
 
         // Perform mini-batch step
-        let (batch_inertia, has_converged) =
+        let (batch_inertia..has_converged) =
             mini_batch_step(&data, &batch_indices, &mut centroids, &mut counts, &opts)?;
 
         // If this is the last iteration, assign all points to clusters for final labeling
         // We don't need to do this on every iteration, just for the final result
         if iter == opts.max_iter - 1 {
             // This will be used only for the final return value
-            let (_new_labels, _) = assign_labels(data, centroids.view())?;
+            let (_new_labels_) = assign_labels(data, centroids.view())?;
             // We don't store this since we'll recompute it at the end anyway
         }
 
@@ -226,7 +226,7 @@ where
     }
 
     // Final label assignment
-    let (final_labels, _) = assign_labels(data, centroids.view())?;
+    let (final_labels_) = assign_labels(data, centroids.view())?;
 
     Ok((centroids, final_labels))
 }

@@ -7,22 +7,22 @@
 #![allow(clippy::needless_range_loop)]
 
 use ndarray::{array, ArrayView2};
-use scirs2_spatial::polygon::{
+use scirs2__spatial::polygon::{
     convex_hull_graham, is_simple_polygon, point_in_polygon, point_on_boundary, polygon_area,
     polygon_centroid, polygon_contains_polygon,
 };
 
 /// Visualize a polygon and highlight points inside/outside/on boundary
 #[allow(dead_code)]
-fn visualize_polygon(polygon: &ArrayView2<f64>, title: &str) {
+fn visualize_polygon(_polygon: &ArrayView2<f64>, title: &str) {
     let grid_size = 21;
     let mut grid = vec![vec!['.'; grid_size]; grid_size];
 
-    // Scale factor to fit the polygon in the grid
-    let min_x = polygon.column(0).fold(f64::INFINITY, |a, &b| a.min(b));
-    let max_x = polygon.column(0).fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let min_y = polygon.column(1).fold(f64::INFINITY, |a, &b| a.min(b));
-    let max_y = polygon.column(1).fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    // Scale factor to fit the _polygon in the grid
+    let min_x = _polygon.column(0).fold(f64::INFINITY, |a, &b| a.min(b));
+    let max_x = _polygon.column(0).fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let min_y = _polygon.column(1).fold(f64::INFINITY, |a, &b| a.min(b));
+    let max_y = _polygon.column(1).fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
     let width = max_x - min_x;
     let height = max_y - min_y;
@@ -35,18 +35,18 @@ fn visualize_polygon(polygon: &ArrayView2<f64>, title: &str) {
         (grid_x, grid_y)
     };
 
-    // Draw the polygon vertices with 'V'
-    for i in 0..polygon.shape()[0] {
-        let (x, y) = to_grid(polygon[[i, 0]], polygon[[i, 1]]);
+    // Draw the _polygon vertices with 'V'
+    for i in 0.._polygon.shape()[0] {
+        let (x, y) = to_grid(_polygon[[i, 0]], _polygon[[i, 1]]);
         grid[y][x] = 'V';
     }
 
-    // Draw the polygon edges with 'E'
-    let n = polygon.shape()[0];
+    // Draw the _polygon edges with 'E'
+    let n = _polygon.shape()[0];
     for i in 0..n {
         let j = (i + 1) % n;
-        let (x1, y1) = to_grid(polygon[[i, 0]], polygon[[i, 1]]);
-        let (x2, y2) = to_grid(polygon[[j, 0]], polygon[[j, 1]]);
+        let (x1, y1) = to_grid(_polygon[[i, 0]], _polygon[[i, 1]]);
+        let (x2, y2) = to_grid(_polygon[[j, 0]], _polygon[[j, 1]]);
 
         // Draw line between vertices
         let steps = ((x2 as i32 - x1 as i32)
@@ -75,9 +75,9 @@ fn visualize_polygon(polygon: &ArrayView2<f64>, title: &str) {
             let real_y = (y as f64 - 1.0) / scale + min_y;
 
             // Mark inside points with 'I', outside with 'O', boundary with 'B'
-            if point_on_boundary(&[real_x, real_y], polygon, 0.1 / scale) {
+            if point_on_boundary(&[real_x, real_y], _polygon, 0.1 / scale) {
                 grid[y][x] = 'B';
-            } else if point_in_polygon(&[real_x, real_y], polygon) {
+            } else if point_in_polygon(&[real_x, real_y], _polygon) {
                 grid[y][x] = 'I';
             } else {
                 grid[y][x] = 'O';

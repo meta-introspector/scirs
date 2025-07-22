@@ -7,7 +7,7 @@
 //! 4. Apply top-hat and black-hat transforms
 
 use image::DynamicImage;
-use scirs2_vision::preprocessing::{
+use scirs2__vision::preprocessing::{
     black_hat, closing, dilate, erode, morphological_gradient, opening, top_hat, StructuringElement,
 };
 use std::path::PathBuf;
@@ -83,7 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn process_image(img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
+fn process_image(_img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
     // Define structuring elements
     let rect_se = StructuringElement::Rectangle(3, 3);
     let ellipse_se = StructuringElement::Ellipse(5, 5);
@@ -91,42 +91,42 @@ fn process_image(img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
 
     // 1. Basic morphological operations
     println!("Applying erosion...");
-    let eroded = erode(img, rect_se)?;
+    let eroded = erode(_img, rect_se)?;
     println!("Erosion complete");
 
     println!("Applying dilation...");
-    let dilated = dilate(img, rect_se)?;
+    let dilated = dilate(_img, rect_se)?;
     println!("Dilation complete");
 
     // 2. Compound morphological operations
     println!("Applying opening...");
-    let opened = opening(img, ellipse_se)?;
+    let opened = opening(_img, ellipse_se)?;
     println!("Opening complete");
 
     println!("Applying closing...");
-    let closed = closing(img, ellipse_se)?;
+    let closed = closing(_img, ellipse_se)?;
     println!("Closing complete");
 
     // 3. Morphological gradient
     println!("Calculating morphological gradient...");
-    let gradient = morphological_gradient(img, cross_se)?;
+    let gradient = morphological_gradient(_img, cross_se)?;
     println!("Gradient calculation complete");
 
     // 4. Top-hat and black-hat transforms
     println!("Applying top-hat transform...");
-    let _top_hat_result = top_hat(img, ellipse_se)?;
+    let _top_hat_result = top_hat(_img, ellipse_se)?;
     println!("Top-hat transform complete");
 
     println!("Applying black-hat transform...");
-    let _black_hat_result = black_hat(img, ellipse_se)?;
+    let _black_hat_result = black_hat(_img, ellipse_se)?;
     println!("Black-hat transform complete");
 
     // Print some information about the results
     println!("Morphological operation results:");
     println!(
         "- Original image dimensions: {}x{}",
-        img.width(),
-        img.height()
+        _img.width(),
+        _img.height()
     );
     println!(
         "- Eroded image dimensions: {}x{}",

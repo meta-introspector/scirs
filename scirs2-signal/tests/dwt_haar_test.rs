@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod dwt_haar_tests {
     use approx::assert_relative_eq;
-    use scirs2_signal::dwt::{dwt_decompose, dwt_reconstruct, wavedec, waverec, Wavelet};
+    use scirs2__signal::dwt::{dwt_decompose, dwt_reconstruct, wavedec, waverec, Wavelet};
 
     #[test]
     fn test_haar_filters() {
@@ -23,6 +23,8 @@ mod dwt_haar_tests {
 
     #[test]
     fn test_haar_decomposition() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test with a simple signal
         let signal = vec![2.0, 2.0, 6.0, 6.0, 8.0, 8.0, 4.0, 4.0];
 
@@ -78,6 +80,8 @@ mod dwt_haar_tests {
 
     #[test]
     fn test_haar_boundary_extension() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test with a signal that's not a power of 2 length
         let signal = vec![1.0, 3.0, 5.0, 7.0, 9.0, 11.0];
 

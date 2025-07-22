@@ -59,9 +59,9 @@ impl Default for LevenshteinWeights {
 
 impl LevenshteinWeights {
     /// Create a new weight configuration with specific costs
-    pub fn new(insertion_cost: f64, deletion_cost: f64, substitution_cost: f64) -> Self {
+    pub fn new(_insertion_cost: f64, deletion_cost: f64, substitution_cost: f64) -> Self {
         Self {
-            insertion_cost,
+            _insertion_cost,
             deletion_cost,
             substitution_cost,
             char_substitution_costs: None,
@@ -69,11 +69,11 @@ impl LevenshteinWeights {
     }
 
     /// Create a weight configuration with equal costs
-    pub fn with_cost(cost: f64) -> Self {
+    pub fn with_cost(_cost: f64) -> Self {
         Self {
-            insertion_cost: cost,
-            deletion_cost: cost,
-            substitution_cost: cost,
+            insertion_cost: _cost,
+            deletion_cost: _cost,
+            substitution_cost: _cost,
             char_substitution_costs: None,
         }
     }
@@ -131,8 +131,8 @@ impl WeightedLevenshtein {
     }
 
     /// Create a WeightedLevenshtein with specific weights
-    pub fn with_weights(weights: LevenshteinWeights) -> Self {
-        Self { weights }
+    pub fn with_weights(_weights: LevenshteinWeights) -> Self {
+        Self { _weights }
     }
 }
 
@@ -267,12 +267,12 @@ impl DamerauLevenshteinWeights {
     }
 
     /// Create a weight configuration with equal costs
-    pub fn with_cost(cost: f64) -> Self {
+    pub fn with_cost(_cost: f64) -> Self {
         Self {
-            insertion_cost: cost,
-            deletion_cost: cost,
-            substitution_cost: cost,
-            transposition_cost: cost,
+            insertion_cost: _cost,
+            deletion_cost: _cost,
+            substitution_cost: _cost,
+            transposition_cost: _cost,
         }
     }
 }
@@ -286,8 +286,8 @@ impl WeightedDamerauLevenshtein {
     }
 
     /// Create a WeightedDamerauLevenshtein with specific weights
-    pub fn with_weights(weights: DamerauLevenshteinWeights) -> Self {
-        Self { weights }
+    pub fn with_weights(_weights: DamerauLevenshteinWeights) -> Self {
+        Self { _weights }
     }
 }
 

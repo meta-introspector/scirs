@@ -135,7 +135,7 @@ where
 
 /// Brent's method for scalar minimization
 #[allow(dead_code)]
-fn minimize_scalar_brent<F>(fun: F, options: Options) -> Result<ScalarOptimizeResult, OptimizeError>
+fn minimize_scalar_brent<F>(_fun: F, options: Options) -> Result<ScalarOptimizeResult, OptimizeError>
 where
     F: Fn(f64) -> f64,
 {
@@ -146,13 +146,13 @@ where
     const SQRT_EPS: f64 = 1.4901161193847656e-8;
 
     // Get initial bracket or use default
-    let (a, _b, c) = if let Some(bracket) = options.bracket {
+    let (a_b, c) = if let Some(bracket) = options.bracket {
         bracket
     } else {
         // Use simple bracketing strategy
         let x0 = 0.0;
         let x1 = 1.0;
-        bracket_minimum(&fun, x0, x1)?
+        bracket_minimum(&_fun, x0, x1)?
     };
 
     let tol = 3.0 * SQRT_EPS;
@@ -162,7 +162,7 @@ where
     let mut v = a + GOLDEN * (b - a);
     let mut w = v;
     let mut x = v;
-    let mut fx = fun(x);
+    let mut fx = _fun(x);
     let mut fv = fx;
     let mut fw = fx;
 
@@ -179,8 +179,7 @@ where
         // Check for convergence
         if (x - xm).abs() <= tol2 - 0.5 * (b - a) {
             return Ok(ScalarOptimizeResult {
-                x,
-                fun: fx,
+                x_fun: fx,
                 nit: iter,
                 function_evals: feval,
                 success: true,
@@ -235,7 +234,7 @@ where
             x + if d > 0.0 { tol1 } else { -tol1 }
         };
 
-        let fu = fun(u);
+        let fu = _fun(u);
         feval += 1;
 
         // Update bracket
@@ -436,7 +435,7 @@ where
     const GOLDEN: f64 = 0.6180339887498949; // (sqrt(5) - 1) / 2
 
     // Get initial bracket or use default
-    let (a, _b, c) = if let Some(bracket) = options.bracket {
+    let (a_b, c) = if let Some(bracket) = options.bracket {
         bracket
     } else {
         let x0 = 0.0;
@@ -497,7 +496,7 @@ where
 
 /// Bracket a minimum given two initial points
 #[allow(dead_code)]
-fn bracket_minimum<F>(fun: &F, xa: f64, xb: f64) -> Result<(f64, f64, f64), OptimizeError>
+fn bracket_minimum<F>(_fun: &F, xa: f64, xb: f64) -> Result<(f64, f64, f64), OptimizeError>
 where
     F: Fn(f64) -> f64,
 {
@@ -506,8 +505,8 @@ where
     const MAX_ITER: usize = 50;
 
     let (mut a, mut b) = (xa, xb);
-    let mut fa = fun(a);
-    let mut fb = fun(b);
+    let mut fa = _fun(a);
+    let mut fb = _fun(b);
 
     if fa < fb {
         std::mem::swap(&mut a, &mut b);
@@ -515,7 +514,7 @@ where
     }
 
     let mut c = b + GOLDEN_RATIO * (b - a);
-    let mut fc = fun(c);
+    let mut fc = _fun(c);
     let mut iter = 0;
 
     while fb >= fc {
@@ -525,32 +524,32 @@ where
         let ulim = b + 100.0 * (c - b);
 
         let fu = if (b - u) * (u - c) > 0.0 {
-            let fu = fun(u);
+            let fu = _fun(u);
             if fu < fc {
                 return Ok((b, u, c));
             } else if fu > fb {
                 return Ok((a, b, u));
             }
             let u = c + GOLDEN_RATIO * (c - b);
-            fun(u)
+            _fun(u)
         } else if (c - u) * (u - ulim) > 0.0 {
-            let fu = fun(u);
+            let fu = _fun(u);
             if fu < fc {
                 b = c;
                 fb = fc;
                 c = u;
                 fc = fu;
                 let u = c + GOLDEN_RATIO * (c - b);
-                fun(u)
+                _fun(u)
             } else {
                 fu
             }
         } else if (u - ulim) * (ulim - c) >= 0.0 {
             let u = ulim;
-            fun(u)
+            _fun(u)
         } else {
             let u = c + GOLDEN_RATIO * (c - b);
-            fun(u)
+            _fun(u)
         };
 
         a = b;

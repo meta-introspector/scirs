@@ -369,7 +369,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         });
 
-        let test_vector = Array2::from_shape_fn((n, 1), |(i, _)| (i as f64 + 1.0) / n as f64);
+        let test_vector = Array2::from_shape_fn((n, 1), |(i_)| (i_ as f64 + 1.0) / n as f64);
         let test_time = 1.0;
 
         let start_time = Instant::now();

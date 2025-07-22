@@ -122,7 +122,7 @@ pub fn save_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static, P: A
 ) -> Result<()> {
     let serialized = serialize_model(model)?;
     let bytes = match format {
-        SerializationFormat::JSON => serde_json::to_vec_pretty(&serialized)
+        SerializationFormat::JSON =>, serde_json::to_vec_pretty(&serialized)
             .map_err(|e| NeuralError::SerializationError(e.to_string()))?,
         SerializationFormat::CBOR => {
             let mut buf = Vec::new();
@@ -143,9 +143,7 @@ pub fn load_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static, P: A
 ) -> Result<Sequential<F>> {
     let bytes = fs::read(path).map_err(|e| NeuralError::IOError(e.to_string()))?;
     let serialized: SerializedModel = match format {
-        SerializationFormat::JSON => serde_json::from_slice(&bytes)
-        SerializationFormat::CBOR => serde_cbor::from_slice(&bytes)
-        SerializationFormat::MessagePack => rmp_serde::from_slice(&bytes)
+        SerializationFormat::JSON => serde_json::from_slice(&bytes), SerializationFormat::CBOR => serde_cbor::from_slice(&bytes), SerializationFormat::MessagePack => rmp_serde::from_slice(&bytes)
     deserialize_model(&serialized)
 /// Serialize model to SerializedModel
 #[allow(dead_code)]
@@ -335,8 +333,7 @@ fn create_conv2d_layer<F: Float + Debug + ScalarOperand + Send + Sync + 'static>
 ) -> Result<Conv2D<F>> {
     let padding_mode = match config.padding_mode.as_str() {
         "Same" => crate::layers::PaddingMode::Same,
-        "Valid" => crate::layers::PaddingMode::Valid,
-        _ => {
+        "Valid" => crate::layers::PaddingMode::Valid_ => {
             return Err(NeuralError::SerializationError(format!(
                 "Unsupported padding mode: {}",
                 config.padding_mode
@@ -434,19 +431,18 @@ pub enum ActivationFunction {
     Mish,
 impl ActivationFunction {
     /// Convert activation function name to ActivationFunction enum
-    pub fn from_name(name: &str) -> Option<Self> {
-        match name {
+    pub fn from_name(_name: &str) -> Option<Self> {
+        match _name {
             "relu" | "ReLU" => Some(ActivationFunction::ReLU),
             "sigmoid" | "Sigmoid" => Some(ActivationFunction::Sigmoid),
             "tanh" | "Tanh" => Some(ActivationFunction::Tanh),
             "softmax" | "Softmax" => Some(ActivationFunction::Softmax),
             "gelu" | "GELU" => Some(ActivationFunction::GELU),
             "swish" | "Swish" => Some(ActivationFunction::Swish),
-            "mish" | "Mish" => Some(ActivationFunction::Mish),
-            _ => {
-                if name.starts_with("leaky_relu") || name.starts_with("LeakyReLU") {
+            "mish" | "Mish" => Some(ActivationFunction::Mish, _ => {
+                if _name.starts_with("leaky_relu") || _name.starts_with("LeakyReLU") {
                     // Extract alpha value
-                    let parts: Vec<&str> = name.split('(').collect();
+                    let parts: Vec<&str> = _name.split('(').collect();
                     if parts.len() == 2 {
                         let alpha_str = parts[1].trim_end_matches(')');
                         if let Ok(alpha) = alpha_str.parse::<f64>() {
@@ -473,15 +469,15 @@ impl ActivationFunction {
             ActivationFunction::Mish => "mish".to_string(),
     /// Create activation function from enum
     pub fn create<F: Float + Debug + ScalarOperand + Send + Sync>(&self) -> Box<dyn Activation<F>> {
-            ActivationFunction::ReLU => Box::new(ReLU::new()),
-            ActivationFunction::Sigmoid => Box::new(Sigmoid::new()),
-            ActivationFunction::Tanh => Box::new(Tanh::new()),
-            ActivationFunction::Softmax => Box::new(Softmax::new(1)), // Default axis is 1
-            ActivationFunction::LeakyReLU(alpha) => Box::new(LeakyReLU::new(*alpha)),
-            ActivationFunction::ELU(alpha) => Box::new(ELU::new(*alpha)),
-            ActivationFunction::GELU => Box::new(GELU::new()),
-            ActivationFunction::Swish => Box::new(Swish::new(1.0)),
-            ActivationFunction::Mish => Box::new(Mish::new()),
+            ActivationFunction::ReLU =>, Box::new(ReLU::new()),
+            ActivationFunction::Sigmoid =>, Box::new(Sigmoid::new()),
+            ActivationFunction::Tanh =>, Box::new(Tanh::new()),
+            ActivationFunction::Softmax =>, Box::new(Softmax::new(1)), // Default axis is 1
+            ActivationFunction::LeakyReLU(alpha) =>, Box::new(LeakyReLU::new(*alpha)),
+            ActivationFunction::ELU(alpha) =>, Box::new(ELU::new(*alpha)),
+            ActivationFunction::GELU =>, Box::new(GELU::new()),
+            ActivationFunction::Swish =>, Box::new(Swish::new(1.0)),
+            ActivationFunction::Mish =>, Box::new(Mish::new()),
 /// Activation function factory
 pub struct ActivationFactory;
 impl ActivationFactory {

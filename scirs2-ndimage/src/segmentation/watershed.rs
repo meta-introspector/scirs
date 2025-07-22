@@ -70,7 +70,7 @@ impl<T: PartialOrd> Ord for PriorityPoint<T> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::segmentation::watershed;
+/// use scirs2__ndimage::segmentation::watershed;
 ///
 /// let image = array![
 ///     [0.5, 0.6, 0.7],
@@ -156,7 +156,7 @@ where
         }
 
         // Determine the label for this point
-        if let Some((most_common_label, _)) = neighbor_labels.iter().max_by_key(|&(_, count)| count)
+        if let Some((most_common_label_)) = neighbor_labels.iter().max_by_key(|&(_, count)| count)
         {
             output[[r, c]] = *most_common_label;
 
@@ -187,12 +187,12 @@ where
 
 /// Get the neighbors of a point in a 2D array
 #[allow(dead_code)]
-fn get_neighbors_2d<T>(array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
+fn get_neighbors_2d<T>(_array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
 where
     T: Float + std::fmt::Debug + Copy + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let mut neighbors = Vec::new();
-    let shape = array.shape();
+    let shape = _array.shape();
     let rows = shape[0];
     let cols = shape[1];
 
@@ -217,7 +217,7 @@ where
             let nr = new_row as usize;
             let nc = new_col as usize;
 
-            let value = array[[nr, nc]];
+            let value = _array[[nr, nc]];
             neighbors.push(PriorityPoint {
                 coords: vec![nr, nc],
                 priority: value,
@@ -230,12 +230,12 @@ where
 
 /// Get the face-connected neighbors of a point in a 2D array (4-connectivity)
 #[allow(dead_code)]
-fn get_face_neighbors_2d<T>(array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
+fn get_face_neighbors_2d<T>(_array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
 where
     T: Float + std::fmt::Debug + Copy + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let mut neighbors = Vec::new();
-    let shape = array.shape();
+    let shape = _array.shape();
     let rows = shape[0];
     let cols = shape[1];
 
@@ -251,7 +251,7 @@ where
             let nr = new_row as usize;
             let nc = new_col as usize;
 
-            let value = array[[nr, nc]];
+            let value = _array[[nr, nc]];
             neighbors.push(PriorityPoint {
                 coords: vec![nr, nc],
                 priority: value,
@@ -282,7 +282,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::segmentation::marker_watershed;
+/// use scirs2__ndimage::segmentation::marker_watershed;
 ///
 /// let image = array![
 ///     [0.5, 0.5, 0.5],
@@ -384,7 +384,7 @@ where
 
         // If we have labeled neighbors, assign this pixel to the most frequent label
         if !labels.is_empty() {
-            let (most_common_label, _) = labels.iter().max_by_key(|&(_, count)| count).unwrap();
+            let (most_common_label_) = labels.iter().max_by_key(|&(_, count)| count).unwrap();
 
             output[[r, c]] = *most_common_label;
 

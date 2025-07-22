@@ -49,7 +49,7 @@
 //!
 //! ```rust
 //! use ndarray::array;
-//! use scirs2_interpolate::spline::{CubicSpline, SplineBoundaryCondition};
+//! use scirs2__interpolate::spline::{CubicSpline, SplineBoundaryCondition};
 //!
 //! let x = array![0.0, 1.0, 2.0, 3.0];
 //! let y = array![0.0, 1.0, 4.0, 9.0];
@@ -300,8 +300,8 @@ impl<F: crate::traits::InterpolationFloat> CubicSplineBuilder<F> {
             .ok_or_else(|| InterpolateError::invalid_input("y coordinates not set".to_string()))?;
 
         match self.boundary_condition {
-            SplineBoundaryCondition::Natural => CubicSpline::new(&x.view(), &y.view()),
-            SplineBoundaryCondition::NotAKnot => CubicSpline::new_not_a_knot(&x.view(), &y.view()),
+            SplineBoundaryCondition::Natural =>, CubicSpline::new(&x.view(), &y.view()),
+            SplineBoundaryCondition::NotAKnot =>, CubicSpline::new_not_a_knot(&x.view(), &y.view()),
             SplineBoundaryCondition::Clamped(left_deriv, right_deriv) => {
                 let left_f = F::from_f64(left_deriv).ok_or_else(|| {
                     InterpolateError::ComputationError(format!(
@@ -317,7 +317,7 @@ impl<F: crate::traits::InterpolationFloat> CubicSplineBuilder<F> {
                 })?;
                 CubicSpline::new_clamped(&x.view(), &y.view(), left_f, right_f)
             }
-            SplineBoundaryCondition::Periodic => CubicSpline::new_periodic(&x.view(), &y.view()),
+            SplineBoundaryCondition::Periodic =>, CubicSpline::new_periodic(&x.view(), &y.view()),
             SplineBoundaryCondition::SecondDerivative(left_d2, right_d2) => {
                 let left_f = F::from_f64(left_d2).ok_or_else(|| {
                     InterpolateError::ComputationError(format!(
@@ -360,7 +360,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::spline::CubicSpline;
+    /// use scirs2__interpolate::spline::CubicSpline;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
@@ -1193,8 +1193,8 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// # Examples
     ///
     /// ```rust
-    /// # use scirs2_interpolate::spline::CubicSpline;
-    /// # use scirs2_interpolate::interp1d::ExtrapolateMode;
+    /// # use scirs2__interpolate::spline::CubicSpline;
+    /// # use scirs2__interpolate::interp1d::ExtrapolateMode;
     /// # use ndarray::{Array1, ArrayView1};
     /// #
     /// let x = Array1::from(vec![0.0, 1.0, 2.0, 3.0]);
@@ -1644,7 +1644,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     }
 
     /// Adaptive arc length integration using Simpson's rule
-    fn adaptive_arc_length_integration(&self, a: F, b: F, _tolerance: F) -> InterpolateResult<F> {
+    fn adaptive_arc_length_integration(&self, a: F, b: F_tolerance: F) -> InterpolateResult<F> {
         // Simple implementation using composite Simpson's rule
         let n = 100; // Number of subdivisions
         let n_f = F::from_usize(n).ok_or_else(|| {
@@ -1758,10 +1758,10 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// Array containing [f(x), f'(x), f''(x), ...] up to the requested order
     pub fn derivatives_all(&self, x_new: F, max_order: usize) -> InterpolateResult<Array1<F>> {
-        let order = max_order.min(3);
-        let mut result = Array1::zeros(order + 1);
+        let _order = max_order.min(3);
+        let mut result = Array1::zeros(_order + 1);
 
-        for i in 0..=order {
+        for i in 0..=_order {
             result[i] = self.derivative_n(x_new, i)?;
         }
 
@@ -1785,7 +1785,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::spline::CubicSpline;
+    /// use scirs2__interpolate::spline::CubicSpline;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
@@ -1871,7 +1871,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::spline::CubicSpline;
+    /// use scirs2__interpolate::spline::CubicSpline;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
@@ -2106,8 +2106,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
                     + F::from_f64(2.0).unwrap() * c * dx
                     + F::from_f64(3.0).unwrap() * d * dx * dx),
                 2 => Ok(F::from_f64(2.0).unwrap() * c + F::from_f64(6.0).unwrap() * d * dx),
-                3 => Ok(F::from_f64(6.0).unwrap() * d),
-                _ => unreachable!(),
+                3 => Ok(F::from_f64(6.0).unwrap() * d, _ => unreachable!(),
             }
         }
     }
@@ -2155,7 +2154,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
             }
         }
 
-        // Add discontinuity points if requested
+        // Add _discontinuity points if requested
         if include_discontinuity {
             for i in 1..self.x.len() - 1 {
                 let x_disc = self.x[i];
@@ -2262,7 +2261,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
         for &start in &start_points {
             let start_f = F::from_f64(start).unwrap_or_default();
             if let Ok(Some(root)) =
-                self.newton_raphson_cubic(a, b, c, d, start_f, tolerance, _max_iterations)
+                self.newton_raphson_cubic(a, b, c, d, start_f, tolerance_max_iterations)
             {
                 // Check if this root is already found
                 let mut is_new_root = true;
@@ -2323,8 +2322,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// Find roots related to derivative discontinuities
     fn find_derivative_discontinuity_roots(
         &self,
-        tolerance: F,
-        _max_iterations: usize,
+        tolerance: F_max_iterations: usize,
     ) -> InterpolateResult<Vec<F>> {
         let mut discontinuity_roots = Vec::new();
 
@@ -2346,7 +2344,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
                 let prev_third_deriv = prev_d_coeff * F::from_f64(6.0).unwrap_or_default();
 
                 // If signs are different, there's a discontinuity in the third derivative
-                if (third_deriv > F::zero()) != (prev_third_deriv > F::zero()) {
+                if (third_deriv > F::zero()) != (prev_third_deriv >, F::zero()) {
                     // Check if the function value at this knot is close to zero
                     let function_value = self.evaluate(x_knot)?;
                     if function_value.abs() < tolerance * F::from_f64(10.0).unwrap_or_default() {
@@ -3236,8 +3234,8 @@ fn integrate_segment<F: crate::traits::InterpolationFloat>(
 
 /// Check if a root is far enough from existing roots
 #[allow(dead_code)]
-fn root_far_enough<F: Float>(roots: &[F], candidate: F, tolerance: F) -> bool {
-    for &existing_root in roots {
+fn root_far_enough<F: Float>(_roots: &[F], candidate: F, tolerance: F) -> bool {
+    for &existing_root in _roots {
         if (candidate - existing_root).abs() < tolerance {
             return false;
         }
@@ -3263,7 +3261,7 @@ fn root_far_enough<F: Float>(roots: &[F], candidate: F, tolerance: F) -> bool {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_interpolate::spline::make_interp_spline;
+/// use scirs2__interpolate::spline::make_interp_spline;
 ///
 /// let x = array![0.0, 1.0, 2.0, 3.0];
 /// let y = array![0.0, 1.0, 4.0, 9.0];
@@ -3294,13 +3292,13 @@ pub fn make_interp_spline<F: InterpolationFloat>(
         "natural" => CubicSpline::new(x, y),
         "not-a-knot" => CubicSpline::new_not_a_knot(x, y),
         "clamped" => {
-            if let Some(params) = bc_params {
-                if params.len() != 2 {
+            if let Some(_params) = bc_params {
+                if _params.len() != 2 {
                     return Err(InterpolateError::invalid_input(
                         "clamped boundary conditions require 2 parameters: [first_deriv_start, first_deriv_end]".to_string(),
                     ));
                 }
-                CubicSpline::new_clamped(x, y, params[0], params[1])
+                CubicSpline::new_clamped(x, y, _params[0], _params[1])
             } else {
                 Err(InterpolateError::invalid_input(
                     "clamped boundary conditions require bc_params: [first_deriv_start, first_deriv_end]".to_string(),
@@ -3309,9 +3307,8 @@ pub fn make_interp_spline<F: InterpolationFloat>(
         },
         "periodic" => {
             CubicSpline::new_periodic(x, y)
-        },
-        _ => Err(InterpolateError::invalid_input(format!(
-            "Unknown boundary condition type: {}. Use 'natural', 'not-a-knot', 'clamped', or 'periodic'",
+        }_ => Err(InterpolateError::invalid_input(format!(
+            "Unknown boundary condition _type: {}. Use 'natural', 'not-a-knot', 'clamped', or 'periodic'",
             bc_type
         ))),
     }
@@ -3495,7 +3492,7 @@ where
 ///
 /// ```rust
 /// use ndarray::array;
-/// use scirs2_interpolate::spline::cubic_spline_scipy;
+/// use scirs2__interpolate::spline::cubic_spline_scipy;
 ///
 /// let x = array![0.0, 1.0, 2.0, 3.0];
 /// let y = array![0.0, 1.0, 4.0, 9.0];
@@ -3518,8 +3515,7 @@ pub fn cubic_spline_scipy<F: InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     bc_type: &str,
-    bc_values: Option<(F, F)>,
-    _extrapolate: bool,
+    bc_values: Option<(F, F)>, _extrapolate: bool,
 ) -> InterpolateResult<CubicSpline<F>> {
     match bc_type {
         "natural" => CubicSpline::new(x, y),
@@ -3529,13 +3525,12 @@ pub fn cubic_spline_scipy<F: InterpolationFloat>(
                 CubicSpline::new_clamped(x, y, left_deriv, right_deriv)
             } else {
                 Err(InterpolateError::invalid_input(
-                    "Clamped boundary conditions require derivative values".to_string(),
+                    "Clamped boundary conditions require derivative _values".to_string(),
                 ))
             }
         }
-        "periodic" => CubicSpline::new_periodic(x, y),
-        _ => Err(InterpolateError::invalid_input(format!(
-            "Unknown boundary condition type: {}",
+        "periodic" => CubicSpline::new_periodic(x, y, _ => Err(InterpolateError::invalid_input(format!(
+            "Unknown boundary condition _type: {}",
             bc_type
         ))),
     }

@@ -1,4 +1,4 @@
-use scirs2_special::{pbdv, pbdv_seq, pbvv, pbvv_seq, pbwa};
+use scirs2__special::{pbdv, pbdv_seq, pbvv, pbvv_seq, pbwa};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -104,9 +104,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let v = 2.0;
 
     // Verify the recurrence relation: D_{v+1}(x) = x*D_v(x) - v*D_{v-1}(x)
-    let (d_v_minus_1, _) = pbdv(v - 1.0, x)?;
-    let (d_v, _) = pbdv(v, x)?;
-    let (d_v_plus_1, _) = pbdv(v + 1.0, x)?;
+    let (d_v_minus_1_) = pbdv(v - 1.0, x)?;
+    let (d_v_) = pbdv(v, x)?;
+    let (d_v_plus_1_) = pbdv(v + 1.0, x)?;
 
     let recurrence_value = x * d_v - v * d_v_minus_1;
     println!("Recurrence relation for D_v:");
@@ -126,7 +126,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nAsymptotic Behavior of D_v(x) for Large x:");
 
     let large_x = 100.0;
-    let (d_large_x, _) = pbdv(v, large_x)?;
+    let (d_large_x_) = pbdv(v, large_x)?;
 
     // Asymptotic approximation: D_v(x) ≈ x^v * e^(-x²/4) for large x
     let asymptotic_approx = large_x.powf(v) * (-large_x * large_x / 4.0).exp();

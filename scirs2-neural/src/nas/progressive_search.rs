@@ -63,10 +63,10 @@ pub struct ProgressiveSearch {
     stagnation_counter: usize,
 impl ProgressiveSearch {
     /// Create a new progressive search
-    pub fn new(config: ProgressiveConfig) -> Result<Self> {
-        let initial_space = SearchSpace::new(config.initial_search_space.clone())?;
+    pub fn new(_config: ProgressiveConfig) -> Result<Self> {
+        let initial_space = SearchSpace::new(_config.initial_search_space.clone())?;
         Ok(Self {
-            config,
+            _config,
             current_stage: 0,
             search_spaces: vec![initial_space],
             stage_results: vec![Vec::new()],
@@ -213,8 +213,7 @@ impl ProgressiveSearch {
                     kernel_size: (5, 5),
                     stride: (1, 1),
                     filters: 256,
-                    kernel_size: (7, 7),
-            _ => {
+                    kernel_size: (7, 7, _ => {
                 // Add embedding and reshape layers
                 config.layer_types.push(LayerType::Embedding {
                     vocab_size: 10000,

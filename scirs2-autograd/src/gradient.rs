@@ -6,7 +6,7 @@ use crate::Float;
 use crate::FxHashMap;
 use crate::Graph;
 use std::cmp::Ordering;
-use std::collections::binary_heap::BinaryHeap;
+use std::collections::binary__heap::BinaryHeap;
 
 /// Returns gradient tensors of `xs`.
 ///
@@ -342,9 +342,9 @@ struct GradientInfo<'graph, F: Float> {
 
 impl<'graph, F: Float> GradientInfo<'graph, F> {
     #[inline]
-    fn new(on_backprop_path: bool) -> GradientInfo<'graph, F> {
+    fn new(_on_backprop_path: bool) -> GradientInfo<'graph, F> {
         GradientInfo {
-            on_backprop_path,
+            _on_backprop_path,
             gradients: SmallVec::new(),
         }
     }
@@ -379,12 +379,12 @@ fn has_child_on_path<T: Float>(
 // checks `candidate` node is an xs node or not.
 #[inline]
 #[allow(dead_code)]
-fn is_given_xs<'graph, F: Float, A>(candidate: usize, xs: &[A]) -> bool
+fn is_given_xs<'graph, F: Float, A>(_candidate: usize, xs: &[A]) -> bool
 where
     A: AsRef<Tensor<'graph, F>>,
 {
     for x in xs {
-        if x.as_ref().id == candidate {
+        if x.as_ref().id == _candidate {
             return true;
         }
     }

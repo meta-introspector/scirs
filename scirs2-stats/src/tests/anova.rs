@@ -47,7 +47,7 @@ pub struct AnovaResult<F> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::tests::anova::one_way_anova;
+/// use scirs2__stats::tests::anova::one_way_anova;
 ///
 /// // Create three groups for comparison
 /// let group1 = array![85.0, 82.0, 78.0, 88.0, 91.0];
@@ -65,7 +65,7 @@ pub struct AnovaResult<F> {
 /// let significant_differences = anova_result.p_value < 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn one_way_anova<F>(groups: &[&ArrayView1<F>]) -> StatsResult<AnovaResult<F>>
+pub fn one_way_anova<F>(_groups: &[&ArrayView1<F>]) -> StatsResult<AnovaResult<F>>
 where
     F: Float
         + std::iter::Sum<F>
@@ -75,15 +75,15 @@ where
         + std::fmt::Display
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
-    // Check if there are at least two groups
-    if groups.len() < 2 {
+    // Check if there are at least two _groups
+    if _groups.len() < 2 {
         return Err(StatsError::InvalidArgument(
-            "At least two groups are required for ANOVA".to_string(),
+            "At least two _groups are required for ANOVA".to_string(),
         ));
     }
 
     // Check if any group is empty
-    for (i, group) in groups.iter().enumerate() {
+    for (i, group) in _groups.iter().enumerate() {
         if group.is_empty() {
             return Err(StatsError::InvalidArgument(format!(
                 "Group {} is empty",
@@ -93,19 +93,19 @@ where
     }
 
     // Calculate the total number of observations
-    let n_total = groups.iter().map(|group| group.len()).sum::<usize>();
+    let n_total = _groups.iter().map(|group| group.len()).sum::<usize>();
 
     // Check if there's enough data for the analysis
-    if n_total <= groups.len() {
+    if n_total <= _groups.len() {
         return Err(StatsError::InvalidArgument(
-            "Not enough data for ANOVA (need more observations than groups)".to_string(),
+            "Not enough data for ANOVA (need more observations than _groups)".to_string(),
         ));
     }
 
     // Calculate the overall mean of all observations
     let mut all_values = Array1::<F>::zeros(n_total);
     let mut index = 0;
-    for group in groups {
+    for group in _groups {
         for &value in group.iter() {
             all_values[index] = value;
             index += 1;
@@ -114,10 +114,10 @@ where
     let grand_mean = mean(&all_values.view())?;
 
     // Calculate means for each group
-    let mut group_means = Vec::with_capacity(groups.len());
-    let mut group_sizes = Vec::with_capacity(groups.len());
+    let mut group_means = Vec::with_capacity(_groups.len());
+    let mut group_sizes = Vec::with_capacity(_groups.len());
 
-    for group in groups {
+    for group in _groups {
         group_means.push(mean(group)?);
         group_sizes.push(group.len());
     }
@@ -134,7 +134,7 @@ where
     }
 
     // Calculate error and total sum of squares
-    for (group, &group_mean) in groups.iter().zip(group_means.iter()) {
+    for (group, &group_mean) in _groups.iter().zip(group_means.iter()) {
         for &value in group.iter() {
             ss_error = ss_error + (value - group_mean).powi(2);
             ss_total = ss_total + (value - grand_mean).powi(2);
@@ -142,8 +142,8 @@ where
     }
 
     // Degrees of freedom
-    let df_treatment = groups.len() - 1;
-    let df_error = n_total - groups.len();
+    let df_treatment = _groups.len() - 1;
+    let df_error = n_total - _groups.len();
 
     // Mean squares
     let ms_treatment = ss_treatment / F::from(df_treatment).unwrap();
@@ -192,7 +192,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::tests::anova::{one_way_anova, tukey_hsd};
+/// use scirs2__stats::tests::anova::{one_way_anova, tukey_hsd};
 ///
 /// // Create three groups for comparison
 /// let group1 = array![85.0, 82.0, 78.0, 88.0, 91.0];
@@ -219,7 +219,7 @@ where
 pub type TukeyHSDResult<F> = Vec<(usize, usize, F, F, bool)>;
 
 #[allow(dead_code)]
-pub fn tukey_hsd<F>(groups: &[&ArrayView1<F>], alpha: F) -> StatsResult<TukeyHSDResult<F>>
+pub fn tukey_hsd<F>(_groups: &[&ArrayView1<F>], alpha: F) -> StatsResult<TukeyHSDResult<F>>
 where
     F: Float
         + std::iter::Sum<F>
@@ -229,21 +229,21 @@ where
         + std::fmt::Display
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
-    // Check if there are at least two groups
-    if groups.len() < 2 {
+    // Check if there are at least two _groups
+    if _groups.len() < 2 {
         return Err(StatsError::InvalidArgument(
-            "At least two groups are required for Tukey's HSD".to_string(),
+            "At least two _groups are required for Tukey's HSD".to_string(),
         ));
     }
 
     // Perform one-way ANOVA first to get the mean square error
-    let anova_result = one_way_anova(groups)?;
+    let anova_result = one_way_anova(_groups)?;
 
     // Calculate group means
-    let mut group_means = Vec::with_capacity(groups.len());
-    let mut group_sizes = Vec::with_capacity(groups.len());
+    let mut group_means = Vec::with_capacity(_groups.len());
+    let mut group_sizes = Vec::with_capacity(_groups.len());
 
-    for group in groups {
+    for group in _groups {
         group_means.push(mean(group)?);
         group_sizes.push(F::from(group.len()).unwrap());
     }
@@ -252,15 +252,15 @@ where
     // This is a simplification; in a real implementation, you would use a lookup table or function
     let critical_q = calculate_studentized_range_critical_value(
         alpha,
-        F::from(groups.len()).unwrap(),
+        F::from(_groups.len()).unwrap(),
         F::from(anova_result.df_error).unwrap(),
     )?;
 
     let mut results = Vec::new();
 
-    // Compare each pair of groups
-    for i in 0..groups.len() {
-        for j in (i + 1)..groups.len() {
+    // Compare each pair of _groups
+    for i in 0.._groups.len() {
+        for j in (i + 1).._groups.len() {
             // Calculate mean difference
             let mean_diff = (group_means[i] - group_means[j]).abs();
 
@@ -276,7 +276,7 @@ where
             // Approximation for the studentized range distribution
             let p_value = calculate_studentized_range_p_value(
                 q_stat,
-                F::from(groups.len()).unwrap(),
+                F::from(_groups.len()).unwrap(),
                 F::from(anova_result.df_error).unwrap(),
             );
 

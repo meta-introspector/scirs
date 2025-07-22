@@ -11,6 +11,7 @@ use std::fmt::Debug;
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{convolve, gaussian_filter};
 use crate::interpolation::{zoom, InterpolationOrder};
+use statrs::statistics::Statistics;
 
 /// Pre-trained model weights for feature detection
 #[derive(Clone, Debug)]
@@ -67,11 +68,11 @@ pub struct LearnedEdgeDetector {
 
 impl LearnedEdgeDetector {
     /// Create a new learned edge detector with pre-trained weights
-    pub fn new(weights: Option<FeatureDetectorWeights>, config: Option<MLDetectorConfig>) -> Self {
-        let weights = weights.unwrap_or_else(|| Self::default_weights());
+    pub fn new(_weights: Option<FeatureDetectorWeights>, config: Option<MLDetectorConfig>) -> Self {
+        let _weights = _weights.unwrap_or_else(|| Self::default_weights());
         let config = config.unwrap_or_default();
 
-        Self { weights, config }
+        Self { _weights, config }
     }
 
     /// Get default pre-trained weights (simplified example)
@@ -335,10 +336,10 @@ pub struct LearnedKeypointDescriptor {
 
 impl LearnedKeypointDescriptor {
     /// Create a new learned keypoint descriptor
-    pub fn new(patch_size: usize, descriptor_size: usize) -> Self {
+    pub fn new(_patch_size: usize, descriptor_size: usize) -> Self {
         // Initialize with random projection matrix (simplified)
         let weights =
-            Array2::from_shape_fn((descriptor_size, patch_size * patch_size), |(i, j)| {
+            Array2::from_shape_fn((descriptor_size, _patch_size * _patch_size), |(i, j)| {
                 // Simple deterministic "random" weights
                 ((i * 7 + j * 13) % 11) as f64 / 11.0 - 0.5
             });
@@ -416,10 +417,10 @@ pub struct SemanticFeatureExtractor {
 
 impl SemanticFeatureExtractor {
     /// Create a new semantic feature extractor
-    pub fn new(config: Option<MLDetectorConfig>) -> Self {
+    pub fn new(_config: Option<MLDetectorConfig>) -> Self {
         Self {
             feature_maps: HashMap::new(),
-            config: config.unwrap_or_default(),
+            _config: _config.unwrap_or_default(),
         }
     }
 
@@ -608,7 +609,7 @@ impl SemanticFeatureExtractor {
                 ]);
 
                 // Simple entropy approximation
-                let variance = window.var(0.0);
+                let variance = window.variance();
                 entropy[[i, j]] = (1.0 + variance).ln();
             }
         }
@@ -629,13 +630,13 @@ pub struct ObjectProposalGenerator {
 
 impl ObjectProposalGenerator {
     /// Create a new object proposal generator
-    pub fn new(config: Option<MLDetectorConfig>) -> Self {
+    pub fn new(_config: Option<MLDetectorConfig>) -> Self {
         Self {
             min_size: 16,
             max_size: 256,
             stride: 8,
             aspect_ratios: vec![0.5, 1.0, 2.0],
-            config: config.unwrap_or_default(),
+            _config: _config.unwrap_or_default(),
         }
     }
 
@@ -651,7 +652,7 @@ impl ObjectProposalGenerator {
         let (height, width) = image.dim();
         let mut proposals = Vec::new();
 
-        // Compute edge map if not provided
+        // Compute edge _map if not provided
         let edge_detector = LearnedEdgeDetector::new(None, None);
         let edges = if let Some(e) = edge_map {
             e.to_owned()
@@ -663,7 +664,7 @@ impl ObjectProposalGenerator {
         for scale in 0..self.config.pyramid_levels {
             let scale_factor = self.config.scale_factor.powi(scale as i32);
 
-            // Resize edge map for current scale
+            // Resize edge _map for current scale
             let scaled_height = ((height as f64) / scale_factor) as usize;
             let scaled_width = ((width as f64) / scale_factor) as usize;
 

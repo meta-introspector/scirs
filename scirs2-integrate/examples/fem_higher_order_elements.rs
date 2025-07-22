@@ -5,7 +5,7 @@
 //! on a unit square with different element types (linear, quadratic, cubic)
 //! to show convergence improvement with higher-order elements.
 
-use scirs2_integrate::pde::{
+use scirs2__integrate::pde::{
     finite_element::{ElementType, FEMOptions, FEMPoissonSolver, TriangularMesh},
     BoundaryCondition as GenericBoundaryCondition, BoundaryConditionType, BoundaryLocation,
 };
@@ -144,7 +144,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Compute L2 and maximum errors against exact solution
 #[allow(dead_code)]
 fn compute_errors(
-    result: &scirs2_integrate::pde::finite_element::FEMResult,
+    result: &scirs2_integrate::pde::finite, _element::FEMResult,
     exact_solution: &dyn Fn(f64, f64) -> f64,
 ) -> Result<(f64, f64), Box<dyn std::error::Error>> {
     let mut l2_error_squared = 0.0;
@@ -152,14 +152,14 @@ fn compute_errors(
     let mut _total_area = 0.0;
 
     // For each triangle in the mesh, compute the error
-    for element in &result.mesh.elements {
-        let [i, j, k] = element.nodes;
+    for _element in &result.mesh.elements {
+        let [i, j, k] = _element.nodes;
         let pi = &result.mesh.points[i];
         let pj = &result.mesh.points[j];
         let pk = &result.mesh.points[k];
 
         // Triangle area
-        let area = result.mesh.triangle_area(element);
+        let area = result.mesh.triangle_area(_element);
         _total_area += area;
 
         // Simple 3-point quadrature for error computation
@@ -175,10 +175,10 @@ fn compute_errors(
             let x = a * pi.x + b * pj.x + c * pk.x;
             let y = a * pi.y + b * pj.y + c * pk.y;
 
-            // Interpolated numerical solution (linear interpolation)
+            // Interpolated numerical _solution (linear interpolation)
             let u_numerical = a * result.u[i] + b * result.u[j] + c * result.u[k];
 
-            // Exact solution
+            // Exact _solution
             let u_exact = exact_solution(x, y);
 
             // Error

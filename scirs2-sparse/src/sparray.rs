@@ -185,8 +185,8 @@ where
 {
     fn clone(&self) -> Self {
         match self {
-            SparseSum::SparseArray(array) => SparseSum::SparseArray(array.copy()),
-            SparseSum::Scalar(value) => SparseSum::Scalar(*value),
+            SparseSum::SparseArray(array) =>, SparseSum::SparseArray(array.copy()),
+            SparseSum::Scalar(value) =>, SparseSum::Scalar(*value),
         }
     }
 }
@@ -234,8 +234,8 @@ where
         + 'static,
 {
     /// Create a new SparseArrayBase from a dense ndarray.
-    pub fn new(data: Array2<T>) -> Self {
-        Self { data }
+    pub fn new(_data: Array2<T>) -> Self {
+        Self { _data }
     }
 }
 
@@ -441,7 +441,7 @@ where
                 ))))
             }
             Some(1) => {
-                let (m, _) = self.shape();
+                let (m_) = self.shape();
                 let mut result = Array2::zeros((m, 1));
                 for i in 0..m {
                     let mut sum = T::zero();

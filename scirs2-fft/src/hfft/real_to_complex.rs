@@ -6,7 +6,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::ifft;
 use ndarray::{Array, Array2, ArrayView, ArrayView2, IxDyn};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 
@@ -34,7 +34,7 @@ use super::utility::try_as_complex;
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::hfft::ihfft;
+/// use scirs2__fft::hfft::ihfft;
 ///
 /// // Create a real-valued array
 /// let x = vec![5.0, -1.0, 2.0];
@@ -123,7 +123,7 @@ fn _ihfft_real(x: &[f64], n: Option<usize>, _norm: Option<&str>) -> FFTResult<Ve
     complex_input.resize(n_fft, Complex64::new(0.0, 0.0));
 
     // Compute the inverse FFT
-    // Note: We ignore the norm parameter for now as the ifft function doesn't support it yet
+    // Note: We ignore the _norm parameter for now as the ifft function doesn't support it yet
     let ifft_result = ifft(&complex_input, Some(n_fft))?;
 
     // Enforce Hermitian symmetry on the result
@@ -216,8 +216,7 @@ where
 fn _ihfft2_real(
     x: &ArrayView2<f64>,
     shape: Option<(usize, usize)>,
-    axes: Option<(usize, usize)>,
-    _norm: Option<&str>,
+    axes: Option<(usize, usize)>, _norm: Option<&str>,
 ) -> FFTResult<Array2<Complex64>> {
     // Extract dimensions
     let (n_rows, n_cols) = x.dim();
@@ -248,7 +247,7 @@ fn _ihfft2_real(
         }
 
         // Perform 1D IFFT for this column
-        // Note: We ignore the norm parameter for now
+        // Note: We ignore the _norm parameter for now
         let ifft_col = ifft(&col, Some(out_rows))?;
 
         // Store the result in the temporary array
@@ -269,7 +268,7 @@ fn _ihfft2_real(
         }
 
         // Perform 1D IFFT for this row
-        // Note: We ignore the norm parameter for now
+        // Note: We ignore the _norm parameter for now
         let ifft_row = ifft(&row, Some(out_cols))?;
 
         // Store the result
@@ -320,19 +319,19 @@ where
         // Special case for handling f64 input (common case)
         if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
             // Create a view with the correct type
-            let ptr = x.as_ptr() as *const f64;
-            let real_view = unsafe { ArrayView::from_shape_ptr(IxDyn(x.shape()), ptr) };
+            let ptr = _x.as_ptr() as *const f64;
+            let real_view = unsafe { ArrayView::from_shape_ptr(IxDyn(_x.shape()), ptr) };
 
             return _ihfftn_real(&real_view, shape, axes, norm, overwrite_x, workers);
         }
     }
 
     // For other types, convert to real and call the internal implementation
-    let x_shape = x.shape().to_vec();
+    let x_shape = _x.shape().to_vec();
 
     // Convert input to real array
     let real_input = Array::from_shape_fn(IxDyn(&x_shape), |idx| {
-        let val = x[idx.clone()];
+        let val = _x[idx.clone()];
 
         // Try direct conversion to f64
         if let Some(val_f64) = num_traits::cast::cast::<T, f64>(val) {
@@ -353,14 +352,12 @@ fn _ihfftn_real(
     x: &ArrayView<f64, IxDyn>,
     shape: Option<Vec<usize>>,
     axes: Option<Vec<usize>>,
-    norm: Option<&str>,
-    _overwrite_x: Option<bool>,
-    _workers: Option<usize>,
+    norm: Option<&str>, _overwrite_x: Option<bool>, _workers: Option<usize>,
 ) -> FFTResult<Array<Complex64, IxDyn>> {
-    // The overwrite_x and workers parameters are not used in this implementation
+    // The overwrite_x and _workers parameters are not used in this implementation
     // They are included for API compatibility with scipy's fftn
 
-    let x_shape = x.shape().to_vec();
+    let x_shape = _x.shape().to_vec();
     let ndim = x_shape.len();
 
     // Handle empty array case
@@ -405,8 +402,8 @@ fn _ihfftn_real(
 
     // Simple case: 1D transform
     if ndim == 1 {
-        let mut real_vals = Vec::with_capacity(x.len());
-        for &val in x.iter() {
+        let mut real_vals = Vec::with_capacity(_x.len());
+        for &val in _x.iter() {
             real_vals.push(val);
         }
 
@@ -422,7 +419,7 @@ fn _ihfftn_real(
 
     // Create a complex array from the real input
     let complex_input =
-        Array::from_shape_fn(IxDyn(&x_shape), |idx| Complex64::new(x[idx.clone()], 0.0));
+        Array::from_shape_fn(IxDyn(&x_shape), |idx| Complex64::new(_x[idx.clone()], 0.0));
 
     // For multi-dimensional transforms, we have to transform along each axis
     let mut array = complex_input;

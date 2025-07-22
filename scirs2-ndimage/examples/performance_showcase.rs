@@ -4,7 +4,7 @@
 //! SIMD acceleration, parallel processing, and optimized algorithms.
 
 use ndarray::Array2;
-use scirs2_ndimage::filters::{filter_functions, generic_filter, BorderMode};
+use scirs2__ndimage::filters::{filter_functions, generic_filter, BorderMode};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -59,17 +59,17 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn benchmark_filter<F>(input: &Array2<f64>, name: &str, filter_fn: F)
+fn benchmark_filter<F>(_input: &Array2<f64>, name: &str, filter_fn: F)
 where
     F: Fn(&[f64]) -> f64 + Send + Sync + Clone + 'static,
 {
     let start = Instant::now();
 
     let result =
-        generic_filter(input, filter_fn, &[3, 3], Some(BorderMode::Reflect), None).unwrap();
+        generic_filter(_input, filter_fn, &[3, 3], Some(BorderMode::Reflect), None).unwrap();
 
     let duration = start.elapsed();
-    let elements = input.len();
+    let elements = _input.len();
     let throughput = elements as f64 / duration.as_secs_f64() / 1_000_000.0; // Million elements per second
 
     println!(
@@ -80,6 +80,6 @@ where
     );
 
     // Verify the result is reasonable
-    assert_eq!(result.shape(), input.shape());
+    assert_eq!(result.shape(), _input.shape());
     assert!(result.iter().all(|&x| x.is_finite()));
 }

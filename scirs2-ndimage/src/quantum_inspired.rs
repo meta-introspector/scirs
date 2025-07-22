@@ -15,7 +15,7 @@
 //! - **Quantum Amplitude Amplification**: Enhanced feature detection through amplitude amplification
 
 use ndarray::{Array1, Array2, Array3, ArrayView2};
-use num_complex::Complex;
+use num__complex::Complex;
 use num_traits::{Float, FromPrimitive};
 use rand::Rng;
 use std::f64::consts::PI;
@@ -107,7 +107,7 @@ where
     let mut superposition_result = Array2::zeros((height, width));
     let num_states = filter_states.len();
 
-    // Create quantum superposition of all filter states
+    // Create quantum superposition of all filter _states
     for (state_idx, filter) in filter_states.iter().enumerate() {
         let state_amplitude = T::from_f64(1.0 / (num_states as f64).sqrt())
             .ok_or_else(|| NdimageError::ComputationError("Type conversion failed".to_string()))?;
@@ -121,7 +121,7 @@ where
         // Apply filter with quantum superposition
         let filtered = apply_quantum_convolution(&image, filter, phase, state_amplitude)?;
 
-        // Accumulate superposition states
+        // Accumulate superposition _states
         superposition_result = superposition_result + filtered;
     }
 
@@ -392,7 +392,7 @@ where
             // Quantum distance (uses quantum metric)
             let quantum_distance = calculate_quantum_distance((cy, cx), (y, x))?;
 
-            // Entanglement strength based on Bell inequality violation
+            // Entanglement _strength based on Bell inequality violation
             let entanglement = value_similarity
                 * T::from_f64((-quantum_distance * entanglement_strength).exp()).ok_or_else(
                     || {
@@ -412,36 +412,36 @@ where
 }
 
 #[allow(dead_code)]
-fn calculate_quantum_correlation<T>(value1: T, value2: T, strength: T) -> NdimageResult<T>
+fn calculate_quantum_correlation<T>(_value1: T, value2: T, strength: T) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
 {
     // Quantum correlation using CHSH inequality concept
-    let correlation = value1 * value2 * strength;
+    let correlation = _value1 * value2 * strength;
     Ok(correlation)
 }
 
 #[allow(dead_code)]
-fn normalize_quantum_correlations<T>(matrix: &mut Array2<T>) -> NdimageResult<()>
+fn normalize_quantum_correlations<T>(_matrix: &mut Array2<T>) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
 {
-    let max_val = matrix
+    let max_val = _matrix
         .iter()
         .cloned()
         .fold(T::zero(), |a, b| if a > b { a } else { b });
 
     if max_val > T::zero() {
-        matrix.mapv_inplace(|x| x / max_val);
+        _matrix.mapv_inplace(|x| x / max_val);
     }
 
     Ok(())
 }
 
 #[allow(dead_code)]
-fn calculate_quantum_distance(pos1: (usize, usize), pos2: (usize, usize)) -> NdimageResult<f64> {
-    let dx = (pos1.0 as f64 - pos2.0 as f64).abs();
-    let dy = (pos1.1 as f64 - pos2.1 as f64).abs();
+fn calculate_quantum_distance(_pos1: (usize, usize), pos2: (usize, usize)) -> NdimageResult<f64> {
+    let dx = (_pos1.0 as f64 - pos2.0 as f64).abs();
+    let dy = (_pos1.1 as f64 - pos2.1 as f64).abs();
 
     // Quantum metric includes phase factors
     let quantum_distance = (dx * dx + dy * dy).sqrt() * (1.0 + 0.1 * (dx + dy).sin());
@@ -451,8 +451,7 @@ fn calculate_quantum_distance(pos1: (usize, usize), pos2: (usize, usize)) -> Ndi
 
 #[allow(dead_code)]
 fn create_segmentation_hamiltonian<T>(
-    image: &ArrayView2<T>,
-    _num_segments: usize,
+    image: &ArrayView2<T>, _num_segments: usize,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -499,8 +498,8 @@ where
         })?;
 
     // Quantum annealing schedule with tunneling
-    let temp = initial_temp * (T::one() - progress).powi(2);
-    Ok(temp)
+    let _temp = initial_temp * (T::one() - progress).powi(2);
+    Ok(_temp)
 }
 
 #[allow(dead_code)]
@@ -568,8 +567,7 @@ fn apply_quantum_decoherence<T>(
 fn run_quantum_walk<T>(
     image: &ArrayView2<T>,
     start_pos: (usize, usize),
-    steps: usize,
-    _config: &QuantumConfig,
+    steps: usize_config: &QuantumConfig,
 ) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
@@ -595,7 +593,7 @@ where
         edge_strength = edge_strength + quantum_sum;
 
         // Move according to quantum probability
-        let prob_up = image[(y.saturating_sub(1), x)].to_f64().unwrap_or(0.0);
+        let prob_up = image[((y - 1), x)].to_f64().unwrap_or(0.0);
         let prob_right = image[(y, (x + 1).min(width - 1))].to_f64().unwrap_or(0.0);
         let total_prob = prob_up + prob_right;
 
@@ -662,7 +660,7 @@ where
     let (fh, fw) = target_feature.dim();
     let mut oracle = Array2::from_elem((height, width), false);
 
-    // Create oracle that identifies target feature locations
+    // Create oracle that identifies target _feature locations
     for y in 0..height.saturating_sub(fh) {
         for x in 0..width.saturating_sub(fw) {
             let mut match_score = T::zero();
@@ -689,8 +687,7 @@ where
 #[allow(dead_code)]
 fn apply_grover_iteration<T>(
     amplified_features: &mut Array2<T>,
-    oracle: &Array2<bool>,
-    _config: &QuantumConfig,
+    oracle: &Array2<bool>, _config: &QuantumConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -723,8 +720,7 @@ where
 /// Provides exponential improvements in certain frequency analysis tasks.
 #[allow(dead_code)]
 pub fn quantum_fourier_enhancement<T>(
-    image: ArrayView2<T>,
-    _config: &QuantumConfig,
+    image: ArrayView2<T>, _config: &QuantumConfig,
 ) -> NdimageResult<Array2<Complex<T>>>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
@@ -926,8 +922,7 @@ where
 
 #[allow(dead_code)]
 fn quantum_feature_map<T>(
-    image: &ArrayView2<T>,
-    _config: &QuantumConfig,
+    image: &ArrayView2<T>, _config: &QuantumConfig,
 ) -> NdimageResult<Array2<Complex<T>>>
 where
     T: Float + FromPrimitive + Copy,
@@ -953,8 +948,7 @@ where
 #[allow(dead_code)]
 fn quantum_kernel<T>(
     features1: &Array2<Complex<T>>,
-    features2: &Array2<Complex<T>>,
-    _config: &QuantumConfig,
+    features2: &Array2<Complex<T>>, _config: &QuantumConfig,
 ) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
@@ -981,21 +975,21 @@ where
 }
 
 #[allow(dead_code)]
-fn create_quantum_syndrome_generators<T>(redundancy_factor: usize) -> NdimageResult<Vec<Array1<T>>>
+fn create_quantum_syndrome_generators<T>(_redundancy_factor: usize) -> NdimageResult<Vec<Array1<T>>>
 where
     T: Float + FromPrimitive + Copy,
 {
     let mut generators = Vec::new();
 
     // Create Pauli-like syndrome generators
-    for i in 0..redundancy_factor {
-        let mut generator = Array1::zeros(redundancy_factor * 2);
+    for i in 0.._redundancy_factor {
+        let mut generator = Array1::zeros(_redundancy_factor * 2);
 
         // Create X and Z type stabilizers
-        for j in 0..redundancy_factor {
+        for j in 0.._redundancy_factor {
             if i == j {
                 generator[j] = T::one(); // X stabilizer
-                generator[j + redundancy_factor] = T::one(); // Z stabilizer
+                generator[j + _redundancy_factor] = T::one(); // Z stabilizer
             }
         }
 
@@ -1028,8 +1022,7 @@ where
 #[allow(dead_code)]
 fn quantum_error_detect_correct<T>(
     encoded_pixel: Array1<T>,
-    syndrome_generators: &[Array1<T>],
-    _config: &QuantumConfig,
+    syndrome_generators: &[Array1<T>], _config: &QuantumConfig,
 ) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy + 'static,
@@ -1050,19 +1043,19 @@ where
 }
 
 #[allow(dead_code)]
-fn majority_vote<T>(values: &[T]) -> NdimageResult<T>
+fn majority_vote<T>(_values: &[T]) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
 {
-    if values.is_empty() {
+    if _values.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "Empty values for majority vote".to_string(),
+            "Empty _values for majority vote".to_string(),
         ));
     }
 
-    // Simple average for continuous values
-    let sum = values.iter().fold(T::zero(), |acc, &x| acc + x);
-    let average = sum / T::from_usize(values.len()).unwrap();
+    // Simple average for continuous _values
+    let sum = _values.iter().fold(T::zero(), |acc, &x| acc + x);
+    let average = sum / T::from_usize(_values.len()).unwrap();
 
     Ok(average)
 }
@@ -1070,8 +1063,7 @@ where
 #[allow(dead_code)]
 fn image_to_tensor_network<T>(
     image: &ArrayView2<T>,
-    bond_dimension: usize,
-    _config: &QuantumConfig,
+    bond_dimension: usize, _config: &QuantumConfig,
 ) -> NdimageResult<Array3<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1085,7 +1077,7 @@ where
         for x in 0..width {
             let pixel = image[(y, x)];
 
-            // Decompose pixel into bond dimension components
+            // Decompose pixel into bond _dimension components
             for d in 0..bond_dimension {
                 let component = pixel / T::from_usize(bond_dimension).unwrap();
                 tensor_network[(y, x, d)] = component;
@@ -1106,7 +1098,7 @@ where
 {
     let (height, width, bond_dim) = tensor_network.dim();
 
-    // Apply quantum gates to tensor network
+    // Apply quantum gates to tensor _network
     for y in 0..height {
         for x in 0..width {
             for d in 0..bond_dim {
@@ -1133,10 +1125,10 @@ where
     T: Float + FromPrimitive + Copy,
 {
     let (height, width) = output_shape;
-    let (_, _, bond_dim) = tensor_network.dim();
+    let (__, bond_dim) = tensor_network.dim();
     let mut image = Array2::zeros((height, width));
 
-    // Contract tensor network back to image
+    // Contract tensor _network back to image
     for y in 0..height {
         for x in 0..width {
             let mut pixel_value = T::zero();
@@ -1153,11 +1145,11 @@ where
 }
 
 #[allow(dead_code)]
-fn initialize_variational_parameters<T>(num_layers: usize) -> NdimageResult<Array1<T>>
+fn initialize_variational_parameters<T>(_num_layers: usize) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Copy,
 {
-    let param_count = num_layers * 3; // 3 parameters per layer
+    let param_count = _num_layers * 3; // 3 parameters per layer
     let mut parameters = Array1::zeros(param_count);
     let mut rng = rand::rng();
 
@@ -1173,8 +1165,7 @@ where
 #[allow(dead_code)]
 fn apply_variational_circuit<T>(
     image: &Array2<T>,
-    parameters: &Array1<T>,
-    _config: &QuantumConfig,
+    parameters: &Array1<T>, _config: &QuantumConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1206,17 +1197,17 @@ where
 }
 
 #[allow(dead_code)]
-fn calculate_enhancement_cost<T>(enhanced: &Array2<T>, original: &Array2<T>) -> NdimageResult<T>
+fn calculate_enhancement_cost<T>(_enhanced: &Array2<T>, original: &Array2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = enhanced.dim();
+    let (height, width) = _enhanced.dim();
     let mut cost = T::zero();
 
     // Calculate image quality cost function
     for y in 0..height {
         for x in 0..width {
-            let diff = enhanced[(y, x)] - original[(y, x)];
+            let diff = _enhanced[(y, x)] - original[(y, x)];
             cost = cost + diff * diff;
         }
     }

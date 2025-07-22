@@ -8,7 +8,6 @@ use crate::error::Result;
 use crate::privacy::{DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
 use ndarray::{ArrayBase, Data, Dimension};
 use num_traits::Float;
-use scirs2_core::random;
 use std::collections::HashMap;
 
 /// Comprehensive privacy-utility tradeoff analyzer
@@ -1123,7 +1122,7 @@ pub struct UtilityDegradationPredictor<T: Float> {
 
 impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Create a new privacy-utility analyzer
-    pub fn new(config: AnalysisConfig) -> Self {
+    pub fn new(_config: AnalysisConfig) -> Self {
         Self {
             parameter_explorer: PrivacyParameterExplorer {
                 phantom: std::marker::PhantomData,
@@ -1152,7 +1151,7 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
             degradation_predictor: UtilityDegradationPredictor {
                 phantom: std::marker::PhantomData,
             },
-            config,
+            _config,
         }
     }
 
@@ -1544,13 +1543,10 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Optimize privacy budget allocation
     #[allow(dead_code)]
     pub fn optimize_budget_allocation(
-        &self,
-        _total_budget: &PrivacyBudget,
-        _iterations: usize,
-        _utility_threshold: T,
+        &self, _total_budget: &PrivacyBudget, _iterations: usize, _utility_threshold: T,
     ) -> Result<BudgetAllocation<T>> {
         // Implementation would go here
-        todo!("Implementation of budget allocation optimization")
+        todo!("Implementation of _budget allocation optimization")
     }
 
     /// Perform sensitivity analysis
@@ -1706,10 +1702,7 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Evaluate robustness
     #[allow(dead_code)]
     pub fn evaluate_robustness<D: Data<Elem = T> + Sync, Dim: Dimension>(
-        &self,
-        _data: &ArrayBase<D, Dim>,
-        _model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T> + Sync,
-        _config: &PrivacyConfiguration<T>,
+        &self_data: &ArrayBase<D, Dim>, _model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T> + Sync_config: &PrivacyConfiguration<T>,
     ) -> Result<RobustnessResults<T>> {
         // Implementation would go here
         todo!("Implementation of robustness evaluation")
@@ -1718,9 +1711,7 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Predict utility degradation
     #[allow(dead_code)]
     pub fn predict_utility_degradation(
-        &self,
-        _privacy_parameters: &[T],
-        _historical_data: &[(T, T)],
+        &self, _privacy_parameters: &[T], _historical_data: &[(T, T)],
     ) -> Result<Vec<DegradationPrediction<T>>> {
         // Implementation would go here
         todo!("Implementation of utility degradation prediction")
@@ -1729,9 +1720,7 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Assess privacy risk
     #[allow(dead_code)]
     pub fn assess_privacy_risk<D: Data<Elem = T> + Sync, Dim: Dimension>(
-        &self,
-        _data: &ArrayBase<D, Dim>,
-        _config: &PrivacyConfiguration<T>,
+        &self_data: &ArrayBase<D, Dim>, _config: &PrivacyConfiguration<T>,
     ) -> Result<PrivacyRiskAssessment<T>> {
         // Implementation would go here
         todo!("Implementation of privacy risk assessment")
@@ -1740,9 +1729,7 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Perform statistical significance testing
     #[allow(dead_code)]
     pub fn perform_statistical_tests(
-        &self,
-        _results: &[(T, T)],
-        _baseline: &[(T, T)],
+        &self_results: &[(T, T)], _baseline: &[(T, T)],
     ) -> Result<StatisticalTestResults<T>> {
         // Implementation would go here
         todo!("Implementation of statistical significance testing")
@@ -1918,9 +1905,9 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
                 }
             }
             SamplingStrategy::Random => {
-                let mut rng = random::rng();
+                let mut rng = scirs2_core::random::rng();
                 for _ in 0..range.num_samples {
-                    let value = rng.random_range(range.min, range.max);
+                    let value = rng.gen_range(range.min..range.max);
                     values.push(T::from(value).unwrap());
                 }
             }

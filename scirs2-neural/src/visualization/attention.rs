@@ -215,9 +215,9 @@ impl<
     > AttentionVisualizer<F>
 {
     /// Create a new attention visualizer
-    pub fn new(model: Sequential<F>, config: VisualizationConfig) -> Self {
+    pub fn new(_model: Sequential<F>, config: VisualizationConfig) -> Self {
         Self {
-            model,
+            _model,
             config,
             attention_cache: HashMap::new(),
         }
@@ -629,7 +629,7 @@ impl<
             .iter()
             .fold(F::zero(), |acc, &w| if w > acc { w } else { acc });
         let threshold = options.threshold.unwrap_or(0.1) as f32;
-            for (j, _key) in keys.iter().enumerate() {
+            for (j_key) in keys.iter().enumerate() {
                 if i < weights.nrows() && j < weights.ncols() {
                     let weight = weights[[i, j]].to_f32().unwrap_or(0.0);
                     if weight > threshold {
@@ -679,7 +679,7 @@ impl<
             let x = margin + (queries.len() + i) as f32 * node_spacing;
                 r#"  <circle cx="{}" cy="{}" r="4" class="key-node"/>
         // Draw attention arcs
-        for (i, _query) in queries.iter().enumerate() {
+        for (i_query) in queries.iter().enumerate() {
                         let x1 = margin + i as f32 * node_spacing;
                         let x2 = margin + (queries.len() + j) as f32 * node_spacing;
                         // Calculate arc parameters
@@ -742,8 +742,8 @@ impl<
             // Calculate average attention flow for this band
             let mut total_flow = 0.0;
             let mut flow_count = 0;
-            for (i, _query) in queries.iter().enumerate() {
-                for (j, _key) in keys.iter().enumerate() {
+            for (i_query) in queries.iter().enumerate() {
+                for (j_key) in keys.iter().enumerate() {
                     if i < weights.nrows() && j < weights.ncols() {
                         let weight = weights[[i, j]].to_f32().unwrap_or(0.0);
                         if weight > threshold {
@@ -856,8 +856,7 @@ impl<
                         min_weight = weight;
                     total_weight = total_weight + weight;
             let avg_weight = if !head_weights.is_empty() {
-                total_weight / F::from(head_weights.len()).unwrap()
-                F::zero()
+                total_weight / F::from(head_weights.len()).unwrap(), F::zero()
             };
             // Draw attention matrix for this head
             for (local_i, i) in (start_row..end_row).enumerate() {
@@ -974,8 +973,7 @@ impl<
                 html.push_str("<br>");
             </div>
             <div class="stats">
-                Max Attention: {:.3}<br>
-                Shape: {} x {}
+                Max Attention: {:.3}<br>, Shape: {} x {}
         </div>
                 rows,
                 cols
@@ -1010,7 +1008,7 @@ impl<
         Ok(svg)
     /// Export attention data as JSON
     fn export_attention_data_as_json(&self) -> Result<String> {
-        use serde_json::json;
+        use serde__json::json;
         let mut layers_data = serde_json::Map::new();
             let weights_data: Vec<Vec<f64>> = attention_data
                 .weights
@@ -1107,11 +1105,9 @@ mod tests {
         let range = HeadSelection::Range(2, 8);
         assert_eq!(all, HeadSelection::All);
         match specific {
-            HeadSelection::Specific(heads) => assert_eq!(heads.len(), 3),
-            _ => assert!(false, "Expected specific head selection"),
+            HeadSelection::Specific(heads) => assert_eq!(heads.len(), 3, _ => assert!(false, "Expected specific head selection"),
         match top_k {
-            HeadSelection::TopK(k) => assert_eq!(k, 5),
-            _ => assert!(false, "Expected top-k head selection"),
+            HeadSelection::TopK(k) => assert_eq!(k, 5, _ => assert!(false, "Expected top-k head selection"),
         match range {
             HeadSelection::Range(start, end) => {
                 assert_eq!(start, 2);
@@ -1128,8 +1124,7 @@ mod tests {
         assert_eq!(max, HeadAggregation::Max);
         assert_eq!(rollout, HeadAggregation::Rollout);
         match weighted {
-            HeadAggregation::WeightedMean(weights) => assert_eq!(weights.len(), 2),
-            _ => assert!(false, "Expected weighted mean aggregation"),
+            HeadAggregation::WeightedMean(weights) => assert_eq!(weights.len(), 2, _ => assert!(false, "Expected weighted mean aggregation"),
     fn test_highlight_styles() {
         let styles = [
             HighlightStyle::Border,

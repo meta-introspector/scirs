@@ -2,7 +2,7 @@
 
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::{Float, FromPrimitive, NumCast};
-use scirs2_linalg::{lowrank::randomized_svd, svd};
+use scirs2__linalg::{lowrank::randomized_svd, svd};
 use std::fmt::Debug;
 
 use super::common::DecompositionResult;
@@ -62,7 +62,7 @@ impl Default for SSAOptions {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_series::decomposition::{ssa_decomposition, SSAOptions};
+/// use scirs2__series::decomposition::{ssa_decomposition, SSAOptions};
 ///
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0];
 /// let mut options = SSAOptions::default();
@@ -74,11 +74,11 @@ impl Default for SSAOptions {
 /// println!("Residual: {:?}", result.residual);
 /// ```
 #[allow(dead_code)]
-pub fn ssa_decomposition<F>(ts: &Array1<F>, options: &SSAOptions) -> Result<DecompositionResult<F>>
+pub fn ssa_decomposition<F>(_ts: &Array1<F>, options: &SSAOptions) -> Result<DecompositionResult<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand + NumCast,
 {
-    let n = ts.len();
+    let n = _ts.len();
 
     // Check inputs
     if n < 3 {
@@ -113,7 +113,7 @@ where
 
     for i in 0..window_length {
         for j in 0..k {
-            trajectory_matrix[[i, j]] = ts[i + j];
+            trajectory_matrix[[i, j]] = _ts[i + j];
         }
     }
 
@@ -262,11 +262,11 @@ where
     // Calculate residual
     let mut residual = Array1::zeros(n);
     for i in 0..n {
-        residual[i] = ts[i] - trend[i] - seasonal[i];
+        residual[i] = _ts[i] - trend[i] - seasonal[i];
     }
 
     // Create result
-    let original = ts.clone();
+    let original = _ts.clone();
 
     Ok(DecompositionResult {
         trend,

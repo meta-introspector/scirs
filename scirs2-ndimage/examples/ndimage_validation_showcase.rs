@@ -12,7 +12,8 @@
 //! - Comprehensive performance monitoring
 
 use ndarray::{Array2, ArrayView2};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
+use statrs::statistics::Statistics;
     adaptive_advanced_optimizer::{AdaptiveAdvancedOptimizer, AdaptiveOptimizerConfig},
     error::NdimageResult,
     fusion_core::{
@@ -77,7 +78,7 @@ pub fn demonstrate_advanced_capabilities() -> NdimageResult<()> {
         println!("    ✓ Configuration optimized for cycle {}", cycle);
 
         // Run abbreviated processing with optimized config
-        let (processed, _state) = fusion_processing(test_image.view(), &optimized_config, None)?;
+        let (processed_state) = fusion_processing(test_image.view(), &optimized_config, None)?;
         println!("    ✓ Processing completed with optimized config");
         println!("    - Output shape: {:?}", processed.dim());
     }
@@ -108,13 +109,13 @@ pub fn demonstrate_advanced_capabilities() -> NdimageResult<()> {
 
 /// Create a sample test image for validation
 #[allow(dead_code)]
-fn create_test_image(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((height, width));
+fn create_test_image(_height: usize, width: usize) -> Array2<f64> {
+    let mut image = Array2::zeros((_height, width));
 
     // Create a complex test pattern with multiple features
-    for y in 0..height {
+    for y in 0.._height {
         for x in 0..width {
-            let y_norm = y as f64 / height as f64;
+            let y_norm = y as f64 / _height as f64;
             let x_norm = x as f64 / width as f64;
 
             // Combination of patterns to test different processing aspects
@@ -133,7 +134,7 @@ fn create_test_image(height: usize, width: usize) -> Array2<f64> {
 /// Create comprehensive Advanced configuration
 #[allow(dead_code)]
 fn create_advanced_config() -> AdvancedConfig {
-    use scirs2_ndimage::{
+    use scirs2__ndimage::{
         neuromorphic_computing::NeuromorphicConfig, quantum_inspired::QuantumConfig,
         quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
     };
@@ -226,7 +227,7 @@ mod tests {
         let test_image = create_test_image(32, 32);
         let config = create_advanced_config();
 
-        let (result, _state) = fusion_processing(test_image.view(), &config, None)?;
+        let (result_state) = fusion_processing(test_image.view(), &config, None)?;
 
         assert_eq!(result.dim(), (32, 32));
         assert!(result.iter().all(|&x| x.is_finite()));

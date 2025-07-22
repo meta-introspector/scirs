@@ -4,7 +4,7 @@
 //! that minimize allocations and use streaming/chunked processing for large datasets.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::ErrorMessages;
+use crate::error__standardization::ErrorMessages;
 #[cfg(feature = "memmap")]
 use memmap2::Mmap;
 use ndarray::{s, ArrayBase, ArrayViewMut1, Data, Ix1, Ix2};
@@ -13,6 +13,7 @@ use std::cmp::Ordering;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
+use statrs::statistics::Statistics;
 
 /// Chunk size for streaming operations (tuned for cache efficiency)
 const CHUNK_SIZE: usize = 8192;
@@ -41,17 +42,17 @@ where
     }
 
     let mut sum = F::zero();
-    let mut count = 0;
+    let mut _count = 0;
 
     // Process in chunks to maintain precision
-    while count < total_count {
+    while _count < total_count {
         let chunk_sum = data_iter
             .by_ref()
             .take(CHUNK_SIZE)
             .fold(F::zero(), |acc, val| acc + val);
 
         sum = sum + chunk_sum;
-        count += CHUNK_SIZE.min(total_count - count);
+        _count += CHUNK_SIZE.min(total_count - _count);
     }
 
     Ok(sum / F::from(total_count).unwrap())
@@ -109,22 +110,22 @@ where
 /// * `data` - Mutable array to normalize
 /// * `ddof` - Delta degrees of freedom for variance calculation
 #[allow(dead_code)]
-pub fn normalize_inplace<F>(data: &mut ArrayViewMut1<F>, ddof: usize) -> StatsResult<()>
+pub fn normalize_inplace<F>(_data: &mut ArrayViewMut1<F>, ddof: usize) -> StatsResult<()>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    let (mean, variance) = welford_variance(&data.to_owned(), ddof)?;
+    let (mean, variance) = welford_variance(&_data.to_owned(), ddof)?;
 
     if variance <= F::epsilon() {
         return Err(StatsError::InvalidArgument(
-            "Cannot normalize data with zero variance".to_string(),
+            "Cannot normalize _data with zero variance".to_string(),
         ));
     }
 
     let std_dev = variance.sqrt();
 
     // Normalize in-place
-    for val in data.iter_mut() {
+    for val in _data.iter_mut() {
         *val = (*val - mean) / std_dev;
     }
 
@@ -145,34 +146,34 @@ where
 ///
 /// The computed quantile value
 #[allow(dead_code)]
-pub fn quantile_quickselect<F>(data: &mut [F], q: F) -> StatsResult<F>
+pub fn quantile_quickselect<F>(_data: &mut [F], q: F) -> StatsResult<F>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    if data.is_empty() {
+    if _data.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Cannot compute quantile of empty array".to_string(),
         ));
     }
 
-    if q < F::zero() || q > F::one() {
+    if q < F::zero() || q >, F::one() {
         return Err(StatsError::domain("Quantile must be between 0 and 1"));
     }
 
-    let n = data.len();
+    let n = _data.len();
     let pos = q * F::from(n - 1).unwrap();
     let k = NumCast::from(pos.floor()).unwrap();
 
     // Use quickselect to find k-th element
-    quickselect(data, k);
+    quickselect(_data, k);
 
-    let lower = data[k];
+    let lower = _data[k];
 
     // Handle interpolation if needed
     let frac = pos - pos.floor();
     if frac > F::zero() && k + 1 < n {
-        quickselect(&mut data[(k + 1)..], 0);
-        let upper = data[k + 1];
+        quickselect(&mut _data[(k + 1)..], 0);
+        let upper = _data[k + 1];
         Ok(lower + frac * (upper - lower))
     } else {
         Ok(lower)
@@ -181,8 +182,8 @@ where
 
 /// Quickselect algorithm for finding k-th smallest element
 #[allow(dead_code)]
-fn quickselect<F: Float>(data: &mut [F], k: usize) {
-    let len = data.len();
+fn quickselect<F: Float>(_data: &mut [F], k: usize) {
+    let len = _data.len();
     if len <= 1 {
         return;
     }
@@ -191,7 +192,7 @@ fn quickselect<F: Float>(data: &mut [F], k: usize) {
     let mut right = len - 1;
 
     while left < right {
-        let pivot_idx = partition(data, left, right);
+        let pivot_idx = partition(_data, left, right);
 
         match k.cmp(&pivot_idx) {
             Ordering::Less => right = pivot_idx - 1,
@@ -203,21 +204,21 @@ fn quickselect<F: Float>(data: &mut [F], k: usize) {
 
 /// Partition function for quickselect
 #[allow(dead_code)]
-fn partition<F: Float>(data: &mut [F], left: usize, right: usize) -> usize {
+fn partition<F: Float>(_data: &mut [F], left: usize, right: usize) -> usize {
     let pivot_idx = left + (right - left) / 2;
-    let pivot = data[pivot_idx];
+    let pivot = _data[pivot_idx];
 
-    data.swap(pivot_idx, right);
+    _data.swap(pivot_idx, right);
 
     let mut store_idx = left;
-    for i in left..right {
-        if data[i] < pivot {
-            data.swap(i, store_idx);
+    for i in left, right {
+        if _data[i] < pivot {
+            _data.swap(i, store_idx);
             store_idx += 1;
         }
     }
 
-    data.swap(store_idx, right);
+    _data.swap(store_idx, right);
     store_idx
 }
 
@@ -394,12 +395,12 @@ pub struct IncrementalCovariance<F: Float> {
 #[allow(dead_code)]
 impl<F: Float + NumCast + ndarray::ScalarOperand + std::fmt::Display> IncrementalCovariance<F> {
     /// Create a new incremental covariance calculator
-    pub fn new(n_vars: usize) -> Self {
+    pub fn new(_n_vars: usize) -> Self {
         Self {
             n: 0,
-            means: ndarray::Array1::zeros(n_vars),
-            cov_matrix: ndarray::Array2::zeros((n_vars, n_vars)),
-            n_vars,
+            means: ndarray::Array1::zeros(_n_vars),
+            cov_matrix: ndarray::Array2::zeros((_n_vars, _n_vars)),
+            _n_vars,
         }
     }
 
@@ -472,10 +473,10 @@ pub struct RollingStats<F: Float> {
 #[allow(dead_code)]
 impl<F: Float + NumCast + std::fmt::Display> RollingStats<F> {
     /// Create a new rolling statistics calculator
-    pub fn new(window_size: usize) -> StatsResult<Self> {
-        if window_size == 0 {
+    pub fn new(_window_size: usize) -> StatsResult<Self> {
+        if _window_size == 0 {
             return Err(StatsError::InvalidArgument(
-                "Window size must be positive".to_string(),
+                "Window _size must be positive".to_string(),
             ));
         }
 
@@ -563,15 +564,15 @@ pub struct StreamingHistogram<F: Float> {
 
 impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
     /// Create a new streaming histogram
-    pub fn new(n_bins: usize, min_val: F, max_val: F) -> Self {
-        let bin_width = (max_val - min_val) / F::from(n_bins).unwrap();
-        let bins: Vec<F> = (0..=n_bins)
+    pub fn new(_n_bins: usize, min_val: F, max_val: F) -> Self {
+        let bin_width = (max_val - min_val) / F::from(_n_bins).unwrap();
+        let _bins: Vec<F> = (0..=_n_bins)
             .map(|i| min_val + F::from(i).unwrap() * bin_width)
             .collect();
 
         Self {
-            bins,
-            counts: vec![0; n_bins],
+            _bins,
+            counts: vec![0; _n_bins],
             min_val,
             max_val,
             total_count: 0,
@@ -626,17 +627,15 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
 /// Processes data from files in chunks without loading entire dataset.
 #[allow(dead_code)]
 pub struct OutOfCoreStats<F: Float> {
-    chunk_size: usize,
-    _phantom: std::marker::PhantomData<F>,
+    chunk_size: usize, _phantom: std::marker::PhantomData<F>,
 }
 
 #[allow(dead_code)]
 impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<F> {
     /// Create a new out-of-core statistics processor
-    pub fn new(chunk_size: usize) -> Self {
+    pub fn new(_chunk_size: usize) -> Self {
         Self {
-            chunk_size,
-            _phantom: std::marker::PhantomData,
+            chunk_size_phantom: std::marker::PhantomData,
         }
     }
 
@@ -656,11 +655,11 @@ impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<
         let mut line = String::new();
         let mut line_num = 0;
 
-        // Skip header if present
+        // Skip _header if present
         if has_header {
             reader
                 .read_line(&mut line)
-                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read header: {e}")))?;
+                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read _header: {e}")))?;
             line.clear();
         }
 
@@ -718,11 +717,11 @@ impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<
         let mut count = 0;
         let mut line = String::new();
 
-        // Skip header if present
+        // Skip _header if present
         if has_header {
             reader
                 .read_line(&mut line)
-                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read header: {e}")))?;
+                .map_err(|e| StatsError::InvalidArgument(format!("Failed to read _header: {e}")))?;
             line.clear();
         }
 

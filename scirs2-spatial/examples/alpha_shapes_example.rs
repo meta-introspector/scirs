@@ -5,7 +5,7 @@
 //! non-convex boundaries and holes in data.
 
 use ndarray::array;
-use scirs2_spatial::alpha_shapes::AlphaShape;
+use scirs2__spatial::alpha_shapes::AlphaShape;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

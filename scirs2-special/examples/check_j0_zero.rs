@@ -1,6 +1,6 @@
 #[allow(dead_code)]
 fn main() {
-    use scirs2_special::j0;
+    use scirs2__special::j0;
 
     // Theoretical zero from literature
     let theoretical_zero = 2.404825557695773;

@@ -107,14 +107,14 @@ impl ObjectDetectionMetrics {
         // Filter predictions by confidence
         let filtered_preds: Vec<_> = predictions
             .iter()
-            .filter(|(_, _, _, _, conf, _)| *conf >= self.confidence_threshold)
+            .filter(|(____, conf_)| *conf >= self.confidence_threshold)
             .collect();
 
-        // Calculate IoU for all prediction-ground truth pairs
+        // Calculate IoU for all prediction-ground _truth pairs
         let mut matches = Vec::new();
         let mut per_class_stats: HashMap<i32, (usize, usize)> = HashMap::new(); // (tp, fp + fn)
 
-        // Track which ground truth boxes have been matched
+        // Track which ground _truth boxes have been matched
         let mut gt_matched = vec![false; ground_truth.len()];
 
         // Sort predictions by confidence (descending)
@@ -126,11 +126,11 @@ impl ObjectDetectionMetrics {
         });
 
         for (_, pred) in sorted_preds {
-            let (px1, py1, px2, py2, _conf, pred_class) = *pred;
+            let (px1, py1, px2, py2_conf, pred_class) = *pred;
             let mut best_iou = 0.0;
             let mut best_gt_idx = None;
 
-            // Find best matching ground truth box
+            // Find best matching ground _truth box
             for (gt_idx, gt) in ground_truth.iter().enumerate() {
                 let (gx1, gy1, gx2, gy2, gt_class) = *gt;
 
@@ -143,7 +143,7 @@ impl ObjectDetectionMetrics {
                 }
             }
 
-            // Check if match is above threshold
+            // Check if match is above _threshold
             let is_true_positive = best_iou >= iou_threshold;
             if is_true_positive && best_gt_idx.is_some() {
                 gt_matched[best_gt_idx.unwrap()] = true;
@@ -161,10 +161,10 @@ impl ObjectDetectionMetrics {
             }
         }
 
-        // Count false negatives (unmatched ground truth)
+        // Count false negatives (unmatched ground _truth)
         for (gt_idx, gt) in ground_truth.iter().enumerate() {
             if !gt_matched[gt_idx] {
-                let (_, _, _, _, gt_class) = *gt;
+                let (____, gt_class) = *gt;
                 let stats = per_class_stats.entry(gt_class).or_insert((0, 0));
                 stats.1 += 1; // FN
             }
@@ -380,7 +380,7 @@ impl ImageClassificationMetrics {
     ) -> Result<f64> {
         if y_true.len() != y_prob.nrows() {
             return Err(MetricsError::InvalidInput(
-                "Length mismatch between true labels and probabilities".to_string(),
+                "Length mismatch between _true labels and probabilities".to_string(),
             ));
         }
 
@@ -392,7 +392,7 @@ impl ImageClassificationMetrics {
                 .row(i)
                 .iter()
                 .enumerate()
-                .map(|(idx, &prob)| (idx, prob))
+                .map(|(idx, &_prob)| (idx, _prob))
                 .collect();
 
             probs_with_idx
@@ -401,7 +401,7 @@ impl ImageClassificationMetrics {
             let top_k_classes: Vec<usize> = probs_with_idx
                 .into_iter()
                 .take(k)
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .collect();
 
             if top_k_classes.contains(&(true_label as usize)) {
@@ -444,7 +444,7 @@ impl SegmentationMetrics {
     ) -> Result<SegmentationResults> {
         if y_true.shape() != y_pred.shape() {
             return Err(MetricsError::InvalidInput(
-                "Shape mismatch between true and predicted masks".to_string(),
+                "Shape mismatch between _true and predicted masks".to_string(),
             ));
         }
 
@@ -545,9 +545,9 @@ impl SegmentationMetrics {
                 let pred_positive = *pred_pixel == class;
 
                 match (true_positive, pred_positive) {
-                    (true, true) => tp += 1,
-                    (false, true) => fp += 1,
-                    (true, false) => fn_count += 1,
+                    (_true, _true) => tp += 1,
+                    (false, _true) => fp += 1,
+                    (_true, false) => fn_count += 1,
                     (false, false) => {} // TN
                 }
             }

@@ -366,12 +366,12 @@ pub struct ReproducibilityStorage {
 
 impl ReproducibilityManager {
     /// Create a new reproducibility manager
-    pub fn new(config: ReproducibilityConfig) -> Self {
+    pub fn new(_config: ReproducibilityConfig) -> Self {
         Self {
             environments: HashMap::new(),
             reports: Vec::new(),
             verifications: Vec::new(),
-            config,
+            _config,
         }
     }
     
@@ -405,7 +405,7 @@ impl ReproducibilityManager {
         
         let report_id = uuid::Uuid::new_v4().to_string();
         let report = ReproducibilityReport {
-            id: report_id.clone(),
+            _id: report_id.clone(),
             experiment_id: experiment_id.to_string(),
             environment_id: environment_id.to_string(),
             reproducibility_score: score,
@@ -430,7 +430,7 @@ impl ReproducibilityManager {
         
         let verification_id = uuid::Uuid::new_v4().to_string();
         let verification = VerificationResult {
-            id: verification_id.clone(),
+            _id: verification_id.clone(),
             original_experiment_id: original_experiment_id.to_string(),
             reproduction_experiment_id: reproduction_experiment_id.to_string(),
             status: VerificationStatus::CloseMatch, // Placeholder
@@ -519,8 +519,7 @@ impl ReproducibilityManager {
     
     fn calculate_reproducibility_score(
         &self,
-        checklist: &ReproducibilityChecklist,
-        _environment: &EnvironmentSnapshot,
+        checklist: &ReproducibilityChecklist_environment: &EnvironmentSnapshot,
     ) -> (f64, Vec<ReproducibilityIssue>) {
         let mut score = 0.0;
         let mut issues = Vec::new();

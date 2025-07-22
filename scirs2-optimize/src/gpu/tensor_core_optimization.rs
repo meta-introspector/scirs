@@ -416,7 +416,7 @@ impl TensorCoreOptimizer {
             ));
         }
 
-        // Prepare batch arrays on GPU
+        // Prepare _batch arrays on GPU
         let mut a_ptrs = Vec::new();
         let mut b_ptrs = Vec::new();
         let mut c_ptrs = Vec::new();
@@ -430,7 +430,7 @@ impl TensorCoreOptimizer {
 
             if k1 != k2 {
                 return Err(ScirsError::InvalidInput(format!(
-                    "Matrix dimensions don't match for batch {}",
+                    "Matrix dimensions don't match for _batch {}",
                     i
                 )));
             }
@@ -443,7 +443,7 @@ impl TensorCoreOptimizer {
             k_array.push(k1 as i32);
         }
 
-        // Upload batch data to GPU
+        // Upload _batch data to GPU
         let gpu_a_ptrs = self.context.upload_ptr_array(&a_ptrs)?;
         let gpu_b_ptrs = self.context.upload_ptr_array(&b_ptrs)?;
         let gpu_c_ptrs = self.context.upload_ptr_array(&c_ptrs)?;
@@ -457,7 +457,7 @@ impl TensorCoreOptimizer {
             beta_batch.iter().map(|&x| x as f32).collect::<Vec<_>>(),
         ))?;
 
-        // Launch batch kernel
+        // Launch _batch kernel
         let tile_size = self.config.tile_size;
         let max_dim = m_array
             .iter()

@@ -189,7 +189,7 @@ impl<F: Float + FromPrimitive> Default for HDBSCANOptions<F> {
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2_cluster::{hdbscan, HDBSCANOptions};
+/// use scirs2__cluster::{hdbscan, HDBSCANOptions};
 ///
 /// // Example data with two clusters
 /// let data = Array2::from_shape_vec((10, 2), vec![
@@ -377,7 +377,7 @@ where
                 .iter()
                 .enumerate()
                 .filter(|(_, &l)| l == cluster_idx)
-                .map(|(i, _)| i)
+                .map(|(i_)| i)
                 .collect();
 
             if cluster_points.is_empty() {
@@ -441,7 +441,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2_cluster::{hdbscan, dbscan_clustering};
+/// use scirs2__cluster::{hdbscan, dbscan_clustering};
 ///
 /// // Example data with two clusters
 /// let data = Array2::from_shape_vec((10, 2), vec![
@@ -474,17 +474,17 @@ pub fn dbscan_clustering<F>(
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    // Check if there's a single-linkage tree in the result
+    // Check if there's a single-linkage tree in the _result
     let single_linkage_tree = match &hdbscan_result.single_linkage_tree {
         Some(tree) => tree,
         None => {
             return Err(ClusteringError::InvalidInput(
-                "HDBSCAN result doesn't contain a single-linkage tree".into(),
+                "HDBSCAN _result doesn't contain a single-linkage tree".into(),
             ))
         }
     };
 
-    // Convert cut_distance to lambda (reciprocal of distance)
+    // Convert cut_distance to lambda (reciprocal of _distance)
     let cut_lambda = if cut_distance > F::zero() {
         F::one() / cut_distance
     } else {
@@ -497,7 +497,7 @@ where
     let n_samples = hdbscan_result.labels.len();
     let mut union_find = UnionFind::new(n_samples);
 
-    // Convert distances to lambdas (1/distance)
+    // Convert distances to lambdas (1/_distance)
     let lambdas: Vec<F> = single_linkage_tree
         .distances
         .iter()
@@ -510,9 +510,9 @@ where
         })
         .collect();
 
-    // Process merges up to the cut distance
+    // Process merges up to the cut _distance
     for (i, &lambda) in lambdas.iter().enumerate() {
-        // Only consider merges below the cut distance (i.e., above the cut lambda)
+        // Only consider merges below the cut _distance (i.e., above the cut lambda)
         if lambda < cut_lambda {
             continue;
         }
@@ -587,17 +587,17 @@ where
 
 /// Get all leaf nodes (original points) in a subtree
 #[allow(dead_code)]
-fn get_leaves(node: i32, tree: &SingleLinkageTree<impl Float>, n_samples: i32) -> Vec<i32> {
+fn get_leaves(_node: i32, tree: &SingleLinkageTree<impl Float>, n_samples: i32) -> Vec<i32> {
     let mut leaves = Vec::new();
 
-    // If node is a leaf, return it
-    if node < n_samples && node >= 0 {
-        leaves.push(node);
+    // If _node is a leaf, return it
+    if _node < n_samples && _node >= 0 {
+        leaves.push(_node);
         return leaves;
     }
 
-    // Find index of this node in the tree
-    let node_idx = (node - n_samples) as usize;
+    // Find index of this _node in the tree
+    let node_idx = (_node - n_samples) as usize;
     if node_idx >= tree.left_child.len() {
         return leaves;
     }
@@ -629,8 +629,8 @@ fn get_leaves(node: i32, tree: &SingleLinkageTree<impl Float>, n_samples: i32) -
 ///
 /// The mutual reachability distance
 #[allow(dead_code)]
-fn mutual_reachability_distance<F: Float>(distance: F, core_dist1: F, core_dist2: F) -> F {
-    distance.max(core_dist1).max(core_dist2)
+fn mutual_reachability_distance<F: Float>(_distance: F, core_dist1: F, core_dist2: F) -> F {
+    _distance.max(core_dist1).max(core_dist2)
 }
 
 /// Compute core distances for each point in the dataset
@@ -660,7 +660,7 @@ where
 
     if min_samples > n_samples {
         return Err(ClusteringError::InvalidInput(format!(
-            "min_samples ({}) cannot be larger than the number of samples ({})",
+            "min_samples ({}) cannot be larger than the number of _samples ({})",
             min_samples, n_samples
         )));
     }
@@ -677,9 +677,9 @@ where
             let point2 = data.row(j).to_vec();
 
             let dist = match metric {
-                DistanceMetric::Euclidean => distance::euclidean(&point1, &point2),
-                DistanceMetric::Manhattan => distance::manhattan(&point1, &point2),
-                DistanceMetric::Chebyshev => distance::chebyshev(&point1, &point2),
+                DistanceMetric::Euclidean =>, distance::euclidean(&point1, &point2),
+                DistanceMetric::Manhattan =>, distance::manhattan(&point1, &point2),
+                DistanceMetric::Chebyshev =>, distance::chebyshev(&point1, &point2),
                 DistanceMetric::Minkowski => {
                     distance::minkowski(&point1, &point2, F::from(3.0).unwrap())
                 }
@@ -744,16 +744,16 @@ where
     let n_samples = data.shape()[0];
     let mut mutual_reachability = Array2::<F>::zeros((n_samples, n_samples));
 
-    // First calculate the mutual reachability distances
+    // First calculate the mutual reachability _distances
     for i in 0..n_samples {
         for j in (i + 1)..n_samples {
             let point1 = data.row(i).to_vec();
             let point2 = data.row(j).to_vec();
 
             let dist = match metric {
-                DistanceMetric::Euclidean => distance::euclidean(&point1, &point2),
-                DistanceMetric::Manhattan => distance::manhattan(&point1, &point2),
-                DistanceMetric::Chebyshev => distance::chebyshev(&point1, &point2),
+                DistanceMetric::Euclidean =>, distance::euclidean(&point1, &point2),
+                DistanceMetric::Manhattan =>, distance::manhattan(&point1, &point2),
+                DistanceMetric::Chebyshev =>, distance::chebyshev(&point1, &point2),
                 DistanceMetric::Minkowski => {
                     distance::minkowski(&point1, &point2, F::from(3.0).unwrap())
                 }
@@ -782,11 +782,11 @@ where
 ///
 /// * `Result<Vec<(usize, usize, F)>>` - MST edges as (source, target, distance) tuples
 #[allow(dead_code)]
-fn build_mst<F>(distances: &Array2<F>) -> Result<Vec<(usize, usize, F)>>
+fn build_mst<F>(_distances: &Array2<F>) -> Result<Vec<(usize, usize, F)>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    let n_samples = distances.shape()[0];
+    let n_samples = _distances.shape()[0];
     let mut mst_edges = Vec::with_capacity(n_samples - 1);
 
     // Use Prim's algorithm to build the MST
@@ -809,11 +809,11 @@ where
         // Mark current node as in MST
         in_mst[current_node] = true;
 
-        // Update distances for neighbors
+        // Update _distances for neighbors
         for j in 0..n_samples {
             // Skip nodes already in MST
             if !in_mst[j] {
-                let distance = distances[[current_node, j]];
+                let distance = _distances[[current_node, j]];
 
                 // If this provides a better path to j
                 if distance < min_distances[j] {
@@ -942,7 +942,7 @@ where
 
     // Union-find data structure to track clusters
     // Need to allocate space for all nodes including internal nodes
-    // For n samples, we'll have n-1 internal nodes in the hierarchy
+    // For n _samples, we'll have n-1 internal nodes in the hierarchy
     let total_nodes = n_samples + (n_samples - 1);
     let mut union_find = UnionFind::new(total_nodes);
 
@@ -1033,7 +1033,7 @@ where
         })
         .collect();
 
-    // Add an entry for the root of the tree with lambda 0
+    // Add an entry for the root of the _tree with lambda 0
     lambdas.push(F::zero());
 
     // Minimum lambda value for a cluster
@@ -1048,8 +1048,8 @@ where
     let mut node_sizes = vec![1; n_samples];
 
     // Extend node_sizes with merged nodes
-    for &size in &single_linkage_tree.sizes {
-        node_sizes.push(size);
+    for &_size in &single_linkage_tree.sizes {
+        node_sizes.push(_size);
     }
 
     // Process merges from earlier to later (increasing distance)
@@ -1064,7 +1064,7 @@ where
         // Current parent is the node created by this merge
         let current_parent = n_samples + i;
 
-        // Check if left and right children meet the minimum size requirement
+        // Check if left and right children meet the minimum _size requirement
         let left_size = node_sizes[left as usize];
         let right_size = node_sizes[right as usize];
 
@@ -1077,7 +1077,7 @@ where
                 id
             });
 
-            // Add to condensed tree
+            // Add to condensed _tree
             parent.push(current_parent as i32);
             child.push(mapped_left as i32);
             lambda_val.push(current_lambda);
@@ -1100,7 +1100,7 @@ where
                 id
             });
 
-            // Add to condensed tree
+            // Add to condensed _tree
             parent.push(current_parent as i32);
             child.push(mapped_right as i32);
             lambda_val.push(current_lambda);
@@ -1163,11 +1163,11 @@ fn extract_clusters<F>(
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    // Find the root node of the tree
+    // Find the root node of the _tree
     // The node with the highest ID is the root
     let root: i32 = condensed_tree.parent.iter().fold(0, |max, &p| max.max(p));
 
-    // Determine which nodes are leaves in the condensed tree
+    // Determine which nodes are leaves in the condensed _tree
     // Leaves are nodes that appear as children but not as parents
     let mut is_leaf = std::collections::HashSet::new();
     let mut parent_set = std::collections::HashSet::new();
@@ -1197,7 +1197,7 @@ where
     // For EOM (Excess of Mass), we compute the stability of each subtree
     // Recursively compute stability of all subtrees
     // The stability of a subtree is the sum of the differences in lambda values
-    // for each child times the size of the child cluster
+    // for each child times the size of the child _cluster
 
     // Track total stability for each subtree
     let mut subtree_stability = std::collections::HashMap::new();
@@ -1213,7 +1213,7 @@ where
     nodes_by_lambda.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
 
     // Process nodes from deepest to shallowest
-    for (idx, _) in nodes_by_lambda {
+    for (idx_) in nodes_by_lambda {
         let child = condensed_tree.child[idx];
         let parent = condensed_tree.parent[idx];
         let lambda = condensed_tree.lambda_val[idx];
@@ -1221,7 +1221,7 @@ where
 
         // Calculate stability
         if is_leaf.contains(&child) && child >= 0 {
-            // Leaf cluster's stability is its lambda times its size
+            // Leaf _cluster's stability is its lambda times its size
             let stability = lambda * F::from_usize(size).unwrap();
             subtree_stability.insert(child, stability);
         } else if child >= 0 {
@@ -1240,7 +1240,7 @@ where
                 .iter()
                 .zip(condensed_tree.parent.iter())
                 .find(|(_, &p)| p == parent && p != root)
-                .map(|(l, _)| *l)
+                .map(|(l_)| *l)
                 .unwrap_or(F::zero());
 
             // Lambda difference is the stability decrease
@@ -1272,7 +1272,7 @@ where
             .parent
             .iter()
             .zip(condensed_tree.child.iter())
-            .filter(|&(p, _)| *p == node)
+            .filter(|&(p_)| *p == node)
             .map(|(_, c)| *c)
             .collect();
 
@@ -1320,7 +1320,7 @@ where
             .unwrap_or(-1);
 
         if highest_child >= 0 {
-            // Assign all points to this single cluster
+            // Assign all points to this single _cluster
             let (labels, probabilities) =
                 assign_points_to_clusters(condensed_tree, &[highest_child], root, n_samples)?;
 
@@ -1369,16 +1369,16 @@ where
 
     // For each point, find its maximum lambda path to any cluster
     for point_idx in 0..n_samples {
-        // Points are stored with negative indices in the condensed tree
+        // Points are stored with negative indices in the condensed _tree
         let point_label = -(point_idx as i32 + 1);
 
-        // Find all edges connecting this point to the tree
+        // Find all edges connecting this point to the _tree
         let point_edges: Vec<(i32, F)> = condensed_tree
             .child
             .iter()
             .zip(condensed_tree.parent.iter())
             .zip(condensed_tree.lambda_val.iter())
-            .filter(|&((c, _), _)| *c == point_label)
+            .filter(|&((c_)_)| *c == point_label)
             .map(|((&_, &p), &lambda)| (p, lambda))
             .collect();
 
@@ -1395,7 +1395,7 @@ where
             let mut current_node = node;
             let mut path_max_lambda = lambda;
 
-            // Traverse up the tree to find a selected cluster
+            // Traverse up the _tree to find a selected cluster
             loop {
                 if leaf_cluster_map.contains_key(&current_node) {
                     // Found a path to a selected cluster
@@ -1412,7 +1412,7 @@ where
                     .iter()
                     .zip(condensed_tree.parent.iter())
                     .zip(condensed_tree.lambda_val.iter())
-                    .filter(|&((c, _), _)| *c == current_node)
+                    .filter(|&((c_)_)| *c == current_node)
                     .map(|((&_, &p), &lambda)| (p, lambda))
                     .collect();
 

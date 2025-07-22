@@ -1,5 +1,5 @@
 use ndarray::{array, Array2};
-use scirs2_stats::RegressionResults;
+use scirs2__stats::RegressionResults;
 
 #[allow(dead_code)]
 fn main() {

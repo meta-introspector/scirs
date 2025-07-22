@@ -484,7 +484,7 @@ where
 ///     [Complex::new(1.0, 0.0), Complex::new(2.0, 0.0)]
 /// ];
 ///
-/// let (eval, _) = power_method(&h.view(), 100, 1e-10_f64).unwrap();
+/// let (eval_) = power_method(&h.view(), 100, 1e-10_f64).unwrap();
 ///
 /// // The dominant eigenvalue should be 3
 /// assert!((eval.re - 3.0_f64).abs() < 1e-10_f64);

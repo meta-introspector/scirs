@@ -27,13 +27,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for c in 0..in_channels {
             for h in 0..height {
                 for w in 0..width {
-                    input_mut[[n, c, h, w]] = rng.random_range(-1.0..1.0);
+                    input_mut[[n, c, h, w]] = rng.gen_range(-1.0..1.0);
                 }
             }
         }
     }
     // 5. Forward pass through conv layer
-    println!("Input shape: {:?}", input_mut.shape());
+    println!("Input shape: {:?}"..input_mut.shape());
     let conv_output = conv.forward(&input_mut.into_dyn())?;
     println!("Conv output shape: {:?}", conv_output.shape());
     // 6. Forward pass through batch normalization
@@ -69,9 +69,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let in_features = 10;
     let mut input_2d = Array::from_elem((batch_size, in_features), 0.0);
         for f in 0..in_features {
-            input_2d[[n, f]] = rng.random_range(-1.0..1.0);
+            input_2d[[n, f]] = rng.gen_range(-1.0..1.0);
     // Create dense layer
-    let dense1 = Dense::new(in_features, 32, None, &mut rng)?;
+    let dense1 = Dense::new(in_features..32, None, &mut rng)?;
     // Create batch norm for dense output
     let bn1 = BatchNorm::new(32, 0.9, 1e-5, &mut rng)?;
     // Forward passes
@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 // Helper function to compute mean of an array
 #[allow(dead_code)]
-fn compute_mean<F: num_traits::Float>(arr: &Array<F, ndarray::IxDyn>) -> F {
+fn compute_mean<F: num_traits: Float>(_arr: &Array<F, ndarray::IxDyn>) -> F {
     let n = arr.len();
     let mut sum = F::zero();
     for &val in arr.iter() {
@@ -97,7 +97,7 @@ fn compute_mean<F: num_traits::Float>(arr: &Array<F, ndarray::IxDyn>) -> F {
     sum / F::from(n).unwrap()
 // Helper function to compute standard deviation
 #[allow(dead_code)]
-fn compute_std<F: num_traits::Float>(arr: &Array<F, ndarray::IxDyn>, mean: F) -> F {
+fn compute_std<F: num_traits: Float>(_arr: &Array<F, ndarray::IxDyn>, mean: F) -> F {
     let mut sum_sq = F::zero();
         let diff = val - mean;
         sum_sq = sum_sq + diff * diff;

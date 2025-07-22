@@ -8,12 +8,13 @@
 //! processing applications.
 
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
-use rustfft;
 use std::f64::consts::PI;
 use std::fmt::Debug;
+use rustfft;
 
+#[allow(unused_imports)]
 /// Compute the Hilbert transform of a real-valued signal.
 ///
 /// The Hilbert transform is a linear operator that takes a function of real variable
@@ -37,7 +38,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::hilbert;
+/// use scirs2__signal::hilbert;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a cosine signal
@@ -65,7 +66,7 @@ use std::fmt::Debug;
 /// let avg_magnitude = magnitudes.iter().sum::<f64>() / magnitudes.len() as f64;
 ///
 /// // Average magnitude should be reasonably close to 1.0 (allowing for FFT edge effects)
-/// assert!((avg_magnitude - 1.0).abs() < 0.5);
+/// assert!(((avg_magnitude - 1.0) as f64).abs() < 0.5);
 /// ```
 ///
 /// # References
@@ -181,7 +182,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::envelope;
+/// use scirs2__signal::envelope;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a windowed sine wave
@@ -237,7 +238,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::instantaneous_frequency;
+/// use scirs2__signal::instantaneous_frequency;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal (increasing frequency)
@@ -336,7 +337,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::instantaneous_phase;
+/// use scirs2__signal::instantaneous_phase;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a sine wave
@@ -410,8 +411,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_hilbert_transform() {
         // Test on a cosine wave
@@ -531,6 +531,8 @@ mod tests {
 
     #[test]
     fn test_instantaneous_frequency() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Generate a chirp signal (increasing frequency)
         let n = 1000;
         let fs = 1000.0; // 1000 Hz sampling
@@ -571,6 +573,8 @@ mod tests {
 
     #[test]
     fn test_instantaneous_phase() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Generate a sinusoidal signal
         let n = 1000;
         let freq = 10.0; // Hz

@@ -79,7 +79,7 @@ pub type AttentionViz<F> = AttentionVisualizer<F>;
 /// Combined visualization suite for comprehensive neural network analysis
 pub struct VisualizationSuite<F>
 where
-    F: num_traits::Float
+    F: num_traits: Float
         + std::fmt::Debug
         + ndarray::ScalarOperand
         + 'static

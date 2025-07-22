@@ -203,7 +203,7 @@ impl TestRunner {
                 if self.config.verbose {
                     println!("Test {} panicked: {}", test_name, error_msg);
                 }
-                Ok(TestResult::failure(duration, 1, format!("{error_msg}")))
+                Ok(TestResult::failure(duration, 1, error_msg))
             }
         }
     }
@@ -263,7 +263,7 @@ impl TestRunner {
                     return Ok(TestResult::failure(
                         start_time.elapsed(),
                         cases_executed,
-                        format!(":?{}, {}", i, e),
+                        format!("Iteration {}: {:?}", i, e),
                     )
                     .with_memory_usage(max_memory));
                 }
@@ -372,7 +372,7 @@ impl TestSuite {
                     results.push(TestResult::failure(
                         Duration::from_secs(0),
                         0,
-                        format!(":?{e}"),
+                        format!("{:?}", e),
                     ));
                 }
             }

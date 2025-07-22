@@ -119,7 +119,7 @@ impl SparseQuasiNewton {
         y_sparse: &CsrArray<f64>,
         sparsity_pattern: &CsrArray<f64>,
     ) -> Result<(), OptimizeError> {
-        // Convert sparse gradient difference to dense for computation
+        // Convert _sparse gradient difference to dense for computation
         let y = sparse_to_dense(y_sparse);
 
         let s_dot_y = s.dot(&y);
@@ -132,15 +132,15 @@ impl SparseQuasiNewton {
             self.h_inv_sparse = Some(create_sparse_identity(s.len(), sparsity_pattern)?);
         }
 
-        // Perform sparse BFGS update using the Sherman-Morrison-Woodbury formula
+        // Perform _sparse BFGS update using the Sherman-Morrison-Woodbury formula
         // This is a simplified version - a full implementation would use efficient
-        // sparse matrix operations throughout
+        // _sparse matrix operations throughout
         if let Some(ref mut h_inv) = self.h_inv_sparse {
-            // Convert to dense for update, then back to sparse
+            // Convert to dense for update, then back to _sparse
             let h_inv_dense = sparse_to_dense_matrix(h_inv);
             let h_inv_updated = dense_bfgs_update(&h_inv_dense, s, &y)?;
 
-            // Convert back to sparse format, preserving pattern
+            // Convert back to _sparse format, preserving _pattern
             *h_inv = dense_to_sparse_matrix(&h_inv_updated, sparsity_pattern)?;
         }
 
@@ -412,7 +412,7 @@ where
     F: FnMut(&ArrayView1<f64>) -> f64 + Sync,
 {
     if let Some(hessian_pattern) = &sparsity_info.hessian_pattern {
-        // Compute sparse Hessian using finite differences compatible with FnMut
+        // Compute _sparse Hessian using finite differences compatible with FnMut
         let sparse_hessian = compute_sparse_hessian_fnmut(fun, x, hessian_pattern, options)?;
 
         // Solve Hessian * p = -gradient for Newton direction
@@ -500,17 +500,17 @@ where
             identity_triplets.push((i, i, 1e-6));
         }
 
-        let rows: Vec<usize> = identity_triplets.iter().map(|(r, _, _)| *r).collect();
-        let cols: Vec<usize> = identity_triplets.iter().map(|(_, c, _)| *c).collect();
-        let data: Vec<f64> = identity_triplets.iter().map(|(_, _, d)| *d).collect();
+        let rows: Vec<usize> = identity_triplets.iter().map(|(r__)| *r).collect();
+        let cols: Vec<usize> = identity_triplets.iter().map(|(_, c_)| *c).collect();
+        let data: Vec<f64> = identity_triplets.iter().map(|(__, d)| *d).collect();
 
         CsrArray::from_triplets(&rows, &cols, &data, (n, n), false).map_err(|_| {
             OptimizeError::ComputationError("Failed to create sparse Hessian".to_string())
         })
     } else {
-        let rows: Vec<usize> = triplets.iter().map(|(r, _, _)| *r).collect();
-        let cols: Vec<usize> = triplets.iter().map(|(_, c, _)| *c).collect();
-        let data: Vec<f64> = triplets.iter().map(|(_, _, d)| *d).collect();
+        let rows: Vec<usize> = triplets.iter().map(|(r__)| *r).collect();
+        let cols: Vec<usize> = triplets.iter().map(|(_, c_)| *c).collect();
+        let data: Vec<f64> = triplets.iter().map(|(__, d)| *d).collect();
 
         CsrArray::from_triplets(&rows, &cols, &data, (n, n), false).map_err(|_| {
             OptimizeError::ComputationError("Failed to create sparse Hessian".to_string())
@@ -524,11 +524,11 @@ fn solve_sparse_newton_system(
     hessian: &CsrArray<f64>,
     gradient_sparse: &CsrArray<f64>,
 ) -> Result<Array1<f64>, OptimizeError> {
-    // Convert sparse gradient to dense
+    // Convert _sparse gradient to dense
     let gradient_dense = sparse_to_dense(gradient_sparse);
     let neg_gradient = -gradient_dense;
 
-    // For sparse systems, we can use iterative solvers or direct sparse solvers
+    // For _sparse systems, we can use iterative solvers or direct _sparse solvers
     // For now, convert to dense and use dense linear algebra
     let hessian_dense = sparse_to_dense_matrix(hessian);
 
@@ -542,9 +542,9 @@ fn solve_sparse_newton_system(
 // Helper functions for sparse operations
 
 #[allow(dead_code)]
-fn should_use_sparse(vector: &Array1<f64>, threshold: f64) -> bool {
-    let nnz = vector.iter().filter(|&&x| x.abs() > 1e-12).count();
-    let sparsity = nnz as f64 / vector.len() as f64;
+fn should_use_sparse(_vector: &Array1<f64>, threshold: f64) -> bool {
+    let nnz = _vector.iter().filter(|&&x| x.abs() > 1e-12).count();
+    let sparsity = nnz as f64 / _vector.len() as f64;
     sparsity < threshold
 }
 
@@ -571,21 +571,21 @@ fn dense_to_sparse_vector(
 }
 
 #[allow(dead_code)]
-fn sparse_to_dense(sparse: &CsrArray<f64>) -> Array1<f64> {
-    let n = sparse.ncols();
+fn sparse_to_dense(_sparse: &CsrArray<f64>) -> Array1<f64> {
+    let n = _sparse.ncols();
     let mut dense = Array1::zeros(n);
 
     // Extract non-zero values - this is a simplified implementation
     for col in 0..n {
-        dense[col] = sparse.get(0, col);
+        dense[col] = _sparse.get(0, col);
     }
 
     dense
 }
 
 #[allow(dead_code)]
-fn sparse_vector_norm(sparse: &CsrArray<f64>) -> f64 {
-    sparse.get_data().iter().map(|&x| x * x).sum::<f64>().sqrt()
+fn sparse_vector_norm(_sparse: &CsrArray<f64>) -> f64 {
+    _sparse.get_data().iter().map(|&x| x * x).sum::<f64>().sqrt()
 }
 
 #[allow(dead_code)]
@@ -631,11 +631,9 @@ fn apply_bounds_projection(p: &Array1<f64>, x: &Array1<f64>, options: &Options) 
 
 #[allow(dead_code)]
 fn refine_sparsity_pattern(
-    _sparsity_info: &mut SparsityInfo,
-    _current_gradient: &CsrArray<f64>,
-    _options: &EfficientSparseOptions,
+    _sparsity_info: &mut SparsityInfo_current, _gradient: &CsrArray<f64>, _options: &EfficientSparseOptions,
 ) -> Result<(), OptimizeError> {
-    // Adaptive refinement of sparsity pattern based on current gradient
+    // Adaptive refinement of sparsity pattern based on current _gradient
     // This is a simplified version - a full implementation would track
     // the evolution of sparsity patterns over iterations
     Ok(())
@@ -666,13 +664,13 @@ fn create_sparse_identity(
 }
 
 #[allow(dead_code)]
-fn sparse_to_dense_matrix(sparse: &CsrArray<f64>) -> Array2<f64> {
-    let (m, n) = (sparse.nrows(), sparse.ncols());
+fn sparse_to_dense_matrix(_sparse: &CsrArray<f64>) -> Array2<f64> {
+    let (m, n) = (_sparse.nrows(), _sparse.ncols());
     let mut dense = Array2::zeros((m, n));
 
     for i in 0..m {
         for j in 0..n {
-            dense[[i, j]] = sparse.get(i, j);
+            dense[[i, j]] = _sparse.get(i, j);
         }
     }
 
@@ -741,7 +739,7 @@ fn sparse_matrix_vector_product(
     matrix: &CsrArray<f64>,
     vector_sparse: &CsrArray<f64>,
 ) -> Result<Array1<f64>, OptimizeError> {
-    // Simplified sparse matrix-vector product
+    // Simplified _sparse matrix-vector product
     let vector_dense = sparse_to_dense(vector_sparse);
     let matrix_dense = sparse_to_dense_matrix(matrix);
     Ok(matrix_dense.dot(&vector_dense))

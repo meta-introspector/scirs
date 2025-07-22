@@ -164,8 +164,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> MetaOptimizer<A, D> {
 
     /// Meta-parameter based hyperparameter prediction
     fn meta_parameter_prediction(
-        &self,
-        _problem_features: &Array1<A>,
+        &self, _problem_features: &Array1<A>,
     ) -> Result<HashMap<String, A>> {
         let mut hyperparams = HashMap::new();
 
@@ -227,9 +226,9 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> MetaOptimizer<A, D> {
 
 impl<A: Float + ScalarOperand + Debug> HyperparameterPredictor<A> {
     /// Create a new hyperparameter predictor
-    pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> Self {
+    pub fn new(_input_size: usize, hidden_size: usize, output_size: usize) -> Self {
         // Initialize with small random weights
-        let input_weights = Array2::from_shape_fn((hidden_size, input_size), |_| {
+        let input_weights = Array2::from_shape_fn((hidden_size, _input_size), |_| {
             A::from(0.01).unwrap()
                 * (A::from(rand::random::<f64>()).unwrap() - A::from(0.5).unwrap())
         });
@@ -483,9 +482,9 @@ pub struct HyperparameterOptimizer<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug> HyperparameterOptimizer<A> {
     /// Create a new hyperparameter optimizer
-    pub fn new(strategy: HyperparameterStrategy) -> Self {
+    pub fn new(_strategy: HyperparameterStrategy) -> Self {
         Self {
-            strategy,
+            _strategy,
             best_hyperparameters: None,
             best_performance: None,
             trial_history: Vec::new(),
@@ -572,8 +571,7 @@ impl<A: Float + ScalarOperand + Debug> HyperparameterOptimizer<A> {
     /// Bayesian optimization suggestion (simplified)
     fn suggest_bayesian_optimization(
         &self,
-        bounds: &HashMap<String, (f64, f64)>,
-        _acquisition: AcquisitionFunction,
+        bounds: &HashMap<String, (f64, f64)>, _acquisition: AcquisitionFunction,
     ) -> Result<HashMap<String, A>> {
         // Simplified Bayesian optimization - in practice, this would use a Gaussian process
         if self.trial_history.is_empty() {
@@ -696,9 +694,9 @@ pub struct SGDMetaOptimizer<A: Float> {
 
 impl<A: Float> SGDMetaOptimizer<A> {
     /// Create a new SGD meta-optimizer
-    pub fn new(meta_params: Array1<A>, meta_lr: A) -> Self {
+    pub fn new(_meta_params: Array1<A>, meta_lr: A) -> Self {
         Self {
-            meta_params,
+            _meta_params,
             meta_lr,
         }
     }
@@ -742,8 +740,8 @@ pub struct UpdateNetwork<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug> UpdateNetwork<A> {
     /// Create a new update network
-    pub fn new(input_size: usize, output_size: usize) -> Self {
-        let weights = Array2::from_shape_fn((output_size, input_size), |_| {
+    pub fn new(_input_size: usize, output_size: usize) -> Self {
+        let weights = Array2::from_shape_fn((output_size, _input_size), |_| {
             A::from(0.01).unwrap()
                 * (A::from(rand::random::<f64>()).unwrap() - A::from(0.5).unwrap())
         });
@@ -898,7 +896,7 @@ impl<A: Float + ScalarOperand + Debug + 'static, D: Dimension> NeuralOptimizer<A
         gradients: &Array<A, D>,
         update_features: &Array1<A>,
     ) -> Result<Array<A, D>> {
-        // Simple approach: scale gradients by the update features
+        // Simple approach: scale gradients by the update _features
         let mut update = gradients.clone();
 
         if !update_features.is_empty() {

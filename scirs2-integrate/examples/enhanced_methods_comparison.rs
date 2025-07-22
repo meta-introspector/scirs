@@ -1,6 +1,6 @@
 use ndarray::{array, Array1, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions, ODEResult};
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions, ODEResult};
 use std::time::Instant;
 
 // Type of test problem to use
@@ -16,12 +16,12 @@ enum TestProblem {
 type OdeFunction = Box<dyn Fn(f64, ArrayView1<f64>) -> Array1<f64>>;
 
 #[allow(dead_code)]
-fn create_test_problem(problem: TestProblem) -> OdeFunction {
-    match problem {
-        TestProblem::VanDerPol(mu) => Box::new(move |_t: f64, y: ArrayView1<f64>| {
+fn create_test_problem(_problem: TestProblem) -> OdeFunction {
+    match _problem {
+        TestProblem::VanDerPol(mu) =>, Box::new(move |_t: f64, y: ArrayView1<f64>| {
             array![y[1], mu * (1.0 - y[0].powi(2)) * y[1] - y[0]]
         }),
-        TestProblem::Robertson => Box::new(|_t: f64, y: ArrayView1<f64>| {
+        TestProblem::Robertson =>, Box::new(|_t: f64, y: ArrayView1<f64>| {
             array![
                 -0.04 * y[0] + 1.0e4 * y[1] * y[2],
                 0.04 * y[0] - 1.0e4 * y[1] * y[2] - 3.0e7 * y[1].powi(2),
@@ -59,8 +59,8 @@ fn create_test_problem(problem: TestProblem) -> OdeFunction {
 
 // Get time span and initial conditions for a test problem
 #[allow(dead_code)]
-fn problem_settings(problem: &TestProblem) -> ([f64; 2], Array1<f64>) {
-    match problem {
+fn problem_settings(_problem: &TestProblem) -> ([f64; 2], Array1<f64>) {
+    match _problem {
         TestProblem::VanDerPol(mu) => {
             // Adjust time span based on stiffness parameter
             let tend = if *mu < 100.0 { 30.0 } else { 3000.0 };
@@ -74,8 +74,8 @@ fn problem_settings(problem: &TestProblem) -> ([f64; 2], Array1<f64>) {
 
 // Get problem description for printing
 #[allow(dead_code)]
-fn problem_description(problem: &TestProblem) -> String {
-    match problem {
+fn problem_description(_problem: &TestProblem) -> String {
+    match _problem {
         TestProblem::VanDerPol(mu) => {
             format!("Van der Pol oscillator (mu={mu})")
         }
@@ -170,8 +170,8 @@ fn run_solver(
 
 // Compare different solvers on a test problem
 #[allow(dead_code)]
-fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResult<()> {
-    println!("\n=== {} ===", problem_description(&problem));
+fn compare_methods(_problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResult<()> {
+    println!("\n=== {} ===", problem_description(&_problem));
 
     // Define methods to compare
     let methods = [
@@ -194,13 +194,12 @@ fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResul
             ODEMethod::Bdf => "BDF (standard)",
             ODEMethod::LSODA => "LSODA (standard)",
             ODEMethod::EnhancedLSODA => "Enhanced LSODA",
-            ODEMethod::EnhancedBDF => "Enhanced BDF",
-            _ => "Unknown method",
+            ODEMethod::EnhancedBDF => "Enhanced BDF"_ => "Unknown method",
         };
 
         print!("{method_name:20}: ");
 
-        match run_solver(&problem, method, rtol, atol) {
+        match run_solver(&_problem, method, rtol, atol) {
             Ok((result, time)) => {
                 println!(
                     "{:.4} seconds, {} steps, {} Jacobians",
@@ -217,7 +216,7 @@ fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResul
     // If at least one method succeeded, use it as reference
     if !succeeded.is_empty() {
         // Use first successful method as reference
-        let (_, ref_result, _) = &succeeded[0];
+        let (_, ref_result_) = &succeeded[0];
         let ref_y = ref_result.y.last().unwrap();
 
         println!("\nFinal values:");
@@ -228,7 +227,7 @@ fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResul
         // Compare all methods with reference
         if succeeded.len() > 1 {
             println!("\nAccuracy comparison:");
-            for (method, result, _) in &succeeded {
+            for (method, result_) in &succeeded {
                 let y = result.y.last().unwrap();
                 let mut max_diff: f64 = 0.0;
                 for i in 0..y.len() {
@@ -242,8 +241,7 @@ fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResul
                     ODEMethod::Bdf => "BDF (standard)",
                     ODEMethod::LSODA => "LSODA (standard)",
                     ODEMethod::EnhancedLSODA => "Enhanced LSODA",
-                    ODEMethod::EnhancedBDF => "Enhanced BDF",
-                    _ => "Unknown",
+                    ODEMethod::EnhancedBDF => "Enhanced BDF"_ => "Unknown",
                 };
 
                 println!("  {method_name:20}: max diff = {max_diff:.2e}");
@@ -256,13 +254,12 @@ fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResul
         let mut lsoda_time = 0.0;
         let mut enhanced_lsoda_time = 0.0;
 
-        for (method, _, time) in &succeeded {
+        for (method_, time) in &succeeded {
             match method {
                 ODEMethod::Bdf => bdf_time = *time,
                 ODEMethod::EnhancedBDF => enhanced_bdf_time = *time,
                 ODEMethod::LSODA => lsoda_time = *time,
-                ODEMethod::EnhancedLSODA => enhanced_lsoda_time = *time,
-                _ => {}
+                ODEMethod::EnhancedLSODA => enhanced_lsoda_time = *time_ => {}
             }
         }
 

@@ -5,12 +5,12 @@
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::Rng;
-use scirs2_graph::advanced::{
+use scirs2__graph::advanced::{
     create_enhanced_advanced_processor, create_large_graph_advanced_processor,
     create_realtime_advanced_processor, execute_with_enhanced_advanced, AdvancedConfig,
     AdvancedProcessor,
 };
-use scirs2_graph::base::Graph;
+use scirs2__graph::base::Graph;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -23,13 +23,13 @@ const MEMORY_PRESSURE_THRESHOLD: usize = 8 * 1024 * 1024 * 1024; // 8GB threshol
 
 /// Generate a large random graph for stress testing with memory optimization
 #[allow(dead_code)]
-fn generate_large_random_graph(num_nodes: usize, edge_probability: f64) -> Graph<usize, f64> {
+fn generate_large_random_graph(_num_nodes: usize, edge_probability: f64) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
 
-    println!("  🏗️  Generating random graph with {} nodes...", num_nodes);
+    println!("  🏗️  Generating random graph with {} _nodes...", num_nodes);
 
-    // Add nodes in batches for memory efficiency
+    // Add _nodes in batches for memory efficiency
     const NODE_BATCH_SIZE: usize = 50_000;
     for batch_start in (0..num_nodes).step_by(NODE_BATCH_SIZE) {
         let batch_end = (batch_start + NODE_BATCH_SIZE).min(num_nodes);
@@ -37,22 +37,22 @@ fn generate_large_random_graph(num_nodes: usize, edge_probability: f64) -> Graph
             graph.add_node(i);
         }
         if batch_start % (NODE_BATCH_SIZE * 10) == 0 {
-            println!("    Added {} nodes...", batch_start);
+            println!("    Added {} _nodes...", batch_start);
         }
     }
 
-    // Add edges with given probability
+    // Add edges with given _probability
     let mut edges_added = 0;
     let target_edges = (num_nodes as f64 * edge_probability) as usize;
     println!("  🔗 Adding approximately {} edges...", target_edges);
 
     while edges_added < target_edges {
-        let source = rng.random_range(0..num_nodes);
-        let target = rng.random_range(0..num_nodes);
+        let source = rng.gen_range(0..num_nodes);
+        let target = rng.gen_range(0..num_nodes);
 
         if source != target {
             let weight = rng.random::<f64>();
-            if graph.add_edge(source, target, weight).is_ok() {
+            if graph.add_edge(source..target, weight).is_ok() {
                 edges_added += 1;
                 if edges_added % 100_000 == 0 {
                     println!("    Added {} edges...", edges_added);
@@ -62,7 +62,7 @@ fn generate_large_random_graph(num_nodes: usize, edge_probability: f64) -> Graph
     }
 
     println!(
-        "  ✅ Graph generation complete: {} nodes, {} edges",
+        "  ✅ Graph generation complete: {} _nodes, {} edges",
         graph.node_count(),
         graph.edge_count()
     );
@@ -71,19 +71,19 @@ fn generate_large_random_graph(num_nodes: usize, edge_probability: f64) -> Graph
 
 /// Generate a scale-free graph using preferential attachment
 #[allow(dead_code)]
-fn generate_scale_free_graph(num_nodes: usize, initial_edges: usize) -> Graph<usize, f64> {
+fn generate_scale_free_graph(_num_nodes: usize, initial_edges: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
     let mut degree_sum = 0;
     let mut node_degrees: HashMap<usize, usize> = HashMap::new();
 
-    // Add initial fully connected nodes
+    // Add initial fully connected _nodes
     for i in 0..initial_edges {
         graph.add_node(i).expect("Failed to add initial node");
         node_degrees.insert(i, 0);
     }
 
-    // Connect initial nodes
+    // Connect initial _nodes
     for i in 0..initial_edges {
         for j in (i + 1)..initial_edges {
             let weight = rng.random::<f64>();
@@ -96,20 +96,20 @@ fn generate_scale_free_graph(num_nodes: usize, initial_edges: usize) -> Graph<us
         }
     }
 
-    // Add remaining nodes with preferential attachment
+    // Add remaining _nodes with preferential attachment
     for i in initial_edges..num_nodes {
         graph.add_node(i).expect("Failed to add node");
         node_degrees.insert(i, 0);
 
-        // Add edges based on preferential attachment
+        // Add _edges based on preferential attachment
         for _ in 0..initial_edges {
             // Select target node based on degree probability
             let mut target = 0;
             if degree_sum > 0 {
-                let random_degree = rng.random_range(0..degree_sum);
+                let random_degree = rng.gen_range(0..degree_sum);
                 let mut cumulative_degree = 0;
 
-                for (&node, &degree) in &node_degrees {
+                for (&node..&degree) in &node_degrees {
                     cumulative_degree += degree;
                     if cumulative_degree > random_degree {
                         target = node;
@@ -117,11 +117,11 @@ fn generate_scale_free_graph(num_nodes: usize, initial_edges: usize) -> Graph<us
                     }
                 }
             } else {
-                target = rng.random_range(0..i);
+                target = rng.gen_range(0..i);
             }
 
             let weight = rng.random::<f64>();
-            if graph.add_edge(i, target, weight).is_ok() {
+            if graph.add_edge(i..target, weight).is_ok() {
                 *node_degrees.get_mut(&i).unwrap() += 1;
                 *node_degrees.get_mut(&target).unwrap() += 1;
                 degree_sum += 2;
@@ -134,55 +134,55 @@ fn generate_scale_free_graph(num_nodes: usize, initial_edges: usize) -> Graph<us
 
 /// Memory-efficient large graph generator with progressive construction
 #[allow(dead_code)]
-fn generate_memory_efficient_graph(num_nodes: usize) -> Graph<usize, f64> {
+fn generate_memory_efficient_graph(_num_nodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
 
     println!(
-        "  🧠 Generating memory-efficient graph with {} nodes...",
+        "  🧠 Generating memory-efficient graph with {} _nodes...",
         num_nodes
     );
 
-    // Add nodes in batches to manage memory
+    // Add _nodes in batches to manage memory
     const BATCH_SIZE: usize = 25_000;
 
     for batch_start in (0..num_nodes).step_by(BATCH_SIZE) {
         let batch_end = (batch_start + BATCH_SIZE).min(num_nodes);
 
-        // Add nodes in current batch
+        // Add _nodes in current batch
         for i in batch_start..batch_end {
             graph.add_node(i);
         }
 
         // Add edges within and between batches with locality
         for i in batch_start..batch_end {
-            // Connect to nearby nodes for spatial locality
-            let num_local_connections = rng.random_range(2..=4);
+            // Connect to nearby _nodes for spatial locality
+            let num_local_connections = rng.gen_range(2..=4);
             for _ in 0..num_local_connections {
                 if i > 0 {
                     let local_range = (i.saturating_sub(1000)).max(0)..=i.saturating_sub(1);
                     if !local_range.is_empty() {
-                        let target = rng.random_range(local_range);
+                        let target = rng.gen_range(local_range);
                         let weight = rng.random::<f64>();
-                        let _ = graph.add_edge(i, target, weight);
+                        let _ = graph.add_edge(i..target, weight);
                     }
                 }
             }
 
-            // Connect to some random distant nodes
-            let num_random_connections = rng.random_range(1..=2);
+            // Connect to some random distant _nodes
+            let num_random_connections = rng.gen_range(1..=2);
             for _ in 0..num_random_connections {
                 if i > 100 {
-                    let target = rng.random_range(0..(i.saturating_sub(100)));
+                    let target = rng.gen_range(0..(i.saturating_sub(100)));
                     let weight = rng.random::<f64>();
-                    let _ = graph.add_edge(i, target, weight);
+                    let _ = graph.add_edge(i..target, weight);
                 }
             }
         }
 
         if batch_start % (BATCH_SIZE * 10) == 0 {
             println!(
-                "    Processed {} nodes, {} edges so far...",
+                "    Processed {} _nodes, {} edges so far...",
                 batch_end,
                 graph.edge_count()
             );
@@ -190,7 +190,7 @@ fn generate_memory_efficient_graph(num_nodes: usize) -> Graph<usize, f64> {
     }
 
     println!(
-        "  ✅ Memory-efficient graph complete: {} nodes, {} edges",
+        "  ✅ Memory-efficient graph complete: {} _nodes, {} edges",
         graph.node_count(),
         graph.edge_count()
     );
@@ -199,17 +199,17 @@ fn generate_memory_efficient_graph(num_nodes: usize) -> Graph<usize, f64> {
 
 /// Generate a biological network-like graph (power-law degree distribution)
 #[allow(dead_code)]
-fn generate_biological_network(num_nodes: usize) -> Graph<usize, f64> {
+fn generate_biological_network(_num_nodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
-    let mut degrees = vec![0; num_nodes];
+    let mut degrees = vec![0; _num_nodes];
 
     println!(
-        "  🧬 Generating biological network with {} nodes...",
+        "  🧬 Generating biological network with {} _nodes...",
         num_nodes
     );
 
-    // Add nodes
+    // Add _nodes
     for i in 0..num_nodes {
         graph.add_node(i).expect("Failed to add node");
     }
@@ -218,7 +218,7 @@ fn generate_biological_network(num_nodes: usize) -> Graph<usize, f64> {
     let total_edges = (num_nodes as f64 * 2.5) as usize; // Average degree ~5
 
     for _ in 0..total_edges {
-        // Select nodes with power-law probability
+        // Select _nodes with power-law probability
         let source = select_powerlaw_node(&mut rng, num_nodes);
         let target = select_powerlaw_node(&mut rng, num_nodes);
 
@@ -232,7 +232,7 @@ fn generate_biological_network(num_nodes: usize) -> Graph<usize, f64> {
     }
 
     println!(
-        "  ✅ Biological network complete: {} nodes, {} edges",
+        "  ✅ Biological network complete: {} _nodes, {} edges",
         graph.node_count(),
         graph.edge_count()
     );
@@ -241,13 +241,13 @@ fn generate_biological_network(num_nodes: usize) -> Graph<usize, f64> {
 
 /// Generate a social network-like graph (small-world properties)
 #[allow(dead_code)]
-fn generate_social_network(num_nodes: usize) -> Graph<usize, f64> {
+fn generate_social_network(_num_nodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
 
-    println!("  👥 Generating social network with {} nodes...", num_nodes);
+    println!("  👥 Generating social network with {} _nodes...", num_nodes);
 
-    // Add nodes
+    // Add _nodes
     for i in 0..num_nodes {
         graph.add_node(i).expect("Failed to add node");
     }
@@ -275,11 +275,10 @@ fn generate_social_network(num_nodes: usize) -> Graph<usize, f64> {
         if cluster_id > 0 {
             for _ in 0..5 {
                 // 5 inter-cluster connections per cluster
-                let source = rng.random_range(cluster_start..cluster_end);
-                let target_cluster = rng.random_range(0..cluster_id);
-                let target = rng.random_range(
-                    target_cluster * CLUSTER_SIZE..(target_cluster + 1) * CLUSTER_SIZE,
-                );
+                let source = rng.gen_range(cluster_start..cluster_end);
+                let target_cluster = rng.gen_range(0..cluster_id);
+                let target = rng.gen_range(
+                    target_cluster * CLUSTER_SIZE..(target_cluster + 1) * CLUSTER_SIZE..);
                 let weight = rng.random::<f64>() * 0.3 + 0.2; // Weaker inter-cluster weights
                 let _ = graph.add_edge(source, target, weight);
             }
@@ -287,7 +286,7 @@ fn generate_social_network(num_nodes: usize) -> Graph<usize, f64> {
     }
 
     println!(
-        "  ✅ Social network complete: {} nodes, {} edges",
+        "  ✅ Social network complete: {} _nodes, {} edges",
         graph.node_count(),
         graph.edge_count()
     );
@@ -296,9 +295,9 @@ fn generate_social_network(num_nodes: usize) -> Graph<usize, f64> {
 
 /// Select a node with power-law probability distribution
 #[allow(dead_code)]
-fn select_powerlaw_node(rng: &mut impl Rng, num_nodes: usize) -> usize {
+fn select_powerlaw_node(_rng: &mut impl Rng, num_nodes: usize) -> usize {
     // Simple approximation of power-law distribution
-    let r = rng.random::<f64>();
+    let r = _rng.random::<f64>();
     let gamma = 2.5; // Power-law exponent
     let scaled = r.powf(-1.0 / (gamma - 1.0));
     ((scaled - 1.0) * num_nodes as f64) as usize % num_nodes
@@ -311,10 +310,10 @@ fn stress_test_algorithms(
     processor: &mut AdvancedProcessor,
     test_name: &str,
 ) -> HashMap<String, Duration> {
-    use scirs2_graph::algorithms::community::louvain_communities_result;
-    use scirs2_graph::algorithms::connectivity::connected_components;
-    use scirs2_graph::algorithms::dijkstra_path;
-    use scirs2_graph::algorithms::pagerank;
+    use scirs2__graph::algorithms::community::louvain_communities_result;
+    use scirs2__graph::algorithms::connectivity::connected_components;
+    use scirs2__graph::algorithms::dijkstra_path;
+    use scirs2__graph::algorithms::pagerank;
 
     let mut results = HashMap::new();
     println!(
@@ -454,7 +453,7 @@ fn extreme_stress_test(
     let start = Instant::now();
     let result =
         execute_with_enhanced_advanced(processor, graph, "extreme_connected_components", |g| {
-            use scirs2_graph::algorithms::connectivity::connected_components;
+            use scirs2__graph::algorithms::connectivity::connected_components;
             match connected_components(g) {
                 Ok(components) => Ok(format!("Found {} components", components.len())),
                 Err(e) => Err(format!("Error: {:?}", e)),
@@ -490,7 +489,7 @@ fn extreme_stress_test(
         println!("  📈 Testing streaming PageRank...");
         let start = Instant::now();
         let result = execute_with_enhanced_advanced(processor, graph, "extreme_pagerank", |g| {
-            use scirs2_graph::algorithms::pagerank;
+            use scirs2__graph::algorithms::pagerank;
             match pagerank(g, 0.85, Some(20), Some(1e-3)) {
                 // Reduced precision for speed
                 Ok(scores) => Ok(format!("Computed PageRank for {} nodes", scores.len())),
@@ -724,7 +723,7 @@ fn concurrent_processor_stress_test(
                 &graph_clone,
                 &format!("concurrent_cc_{}", i),
                 |g| {
-                    use scirs2_graph::algorithms::connectivity::connected_components;
+                    use scirs2__graph::algorithms::connectivity::connected_components;
                     Ok(connected_components(g))
                 },
             );
@@ -735,7 +734,7 @@ fn concurrent_processor_stress_test(
                     &graph_clone,
                     &format!("concurrent_pr_{}", i),
                     |g| {
-                        use scirs2_graph::algorithms::pagerank;
+                        use scirs2__graph::algorithms::pagerank;
                         pagerank(g, 0.85, Some(15), Some(1e-3))
                     },
                 )
@@ -771,12 +770,12 @@ fn concurrent_processor_stress_test(
     // Analyze concurrent results
     let successful_threads = results_guard
         .iter()
-        .filter(|(_, _, cc_ok, pr_ok, _, _)| *cc_ok && *pr_ok)
+        .filter(|(__, cc_ok, pr_ok__)| *cc_ok && *pr_ok)
         .count();
-    let total_optimizations: usize = results_guard.iter().map(|(_, _, _, _, opt, _)| opt).sum();
+    let total_optimizations: usize = results_guard.iter().map(|(____, opt_)| opt).sum();
     let avg_speedup: f64 = results_guard
         .iter()
-        .map(|(_, _, _, _, _, speedup)| speedup)
+        .map(|(_____, speedup)| speedup)
         .sum::<f64>()
         / results_guard.len() as f64;
 
@@ -1116,13 +1115,12 @@ fn bench_memory_usage_analysis(c: &mut Criterion) {
                             // Random access simulation
                             let mut rng = rand::rng();
                             for _ in 0..1000 {
-                                let idx = rng.random_range(0..memory_data.len());
+                                let idx = rng.gen_range(0..memory_data.len());
                                 memory_data[idx] *= 1.1;
                             }
 
                             Ok(memory_data.len())
-                        },
-                    );
+                        }..);
                     black_box(result);
                 }
                 start.elapsed()
@@ -1154,7 +1152,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
                 for _ in 0..iters {
                     let result =
                         execute_with_enhanced_advanced(&mut processor, &graph, "scaling_cc", |g| {
-                            use scirs2_graph::algorithms::connectivity::connected_components;
+                            use scirs2__graph::algorithms::connectivity::connected_components;
                             Ok(connected_components(g))
                         });
                     black_box(result);
@@ -1169,7 +1167,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
                 for _ in 0..iters {
                     let result =
                         execute_with_enhanced_advanced(&mut processor, &graph, "scaling_pr", |g| {
-                            use scirs2_graph::algorithms::pagerank;
+                            use scirs2__graph::algorithms::pagerank;
                             pagerank(g, 0.85, Some(30), Some(1e-4)) // Reduced iterations for scaling test
                         });
                     black_box(result);
@@ -1338,7 +1336,7 @@ pub fn run_advanced_comprehensive_stress_tests() {
         "  Largest graph tested: {} nodes",
         created_graphs
             .iter()
-            .map(|(size, _)| size)
+            .map(|(size_)| size)
             .max()
             .unwrap_or(&0)
     );

@@ -24,7 +24,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use ndarray::{Array1, Array2, ArrayBase, ArrayD, Data, Dimension};
-use num_complex::Complex;
+use num__complex::Complex;
 use num_traits::{Float, Zero};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
@@ -1230,7 +1230,7 @@ pub struct PrefetchStatistics {
 
 impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
     /// Create a new advanced FFT coordinator
-    pub fn new(config: advancedFftConfig) -> FFTResult<Self> {
+    pub fn new(_config: advancedFftConfig) -> FFTResult<Self> {
         Ok(Self {
             algorithm_selector: Arc::new(RwLock::new(IntelligentAlgorithmSelector::new()?)),
             optimization_engine: Arc::new(Mutex::new(PerformanceOptimizationEngine::new()?)),
@@ -1241,7 +1241,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
             knowledge_transfer: Arc::new(RwLock::new(CrossDomainKnowledgeSystem::new()?)),
             performance_tracker: Arc::new(RwLock::new(FftPerformanceTracker::default())),
             adaptive_cache: Arc::new(Mutex::new(AdaptiveFftCache::new()?)),
-            config,
+            _config,
         })
     }
 
@@ -1322,7 +1322,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
 
     /// Update advanced configuration
     pub fn update_config(&mut self, new_config: advancedFftConfig) -> FFTResult<()> {
-        self.config = new_config;
+        self._config = new_config;
         // Update subsystem configurations
         self.update_subsystem_configs()?;
         Ok(())
@@ -1433,7 +1433,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
         // Add windowing for non-periodic signals
         if signal_profile.periodicity < F::from(0.5).unwrap() {
             preprocessing_steps.push(PreprocessingStep::Windowing {
-                window_type: "hamming".to_string(),
+                window_type: WindowType::Hamming.to_string(),
             });
         }
 
@@ -1531,7 +1531,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
         }
 
         let padding_size = target_size - signal.len();
-        let (mut padded, _offset) = signal.into_raw_vec_and_offset();
+        let (mut padded_offset) = signal.into_raw_vec_and_offset();
         padded.extend(vec![Complex::zero(); padding_size]);
 
         ArrayD::from_shape_vec(vec![target_size], padded)
@@ -1540,8 +1540,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
 
     fn apply_windowing(
         &self,
-        mut signal: ArrayD<Complex<F>>,
-        _window_type: &str,
+        mut signal: ArrayD<Complex<F>>, _window_type: &str,
     ) -> FFTResult<ArrayD<Complex<F>>> {
         // Apply Hamming window (simplified)
         let len = signal.len();
@@ -1557,8 +1556,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
 
     fn apply_denoising(
         &self,
-        signal: ArrayD<Complex<F>>,
-        _method: &str,
+        signal: ArrayD<Complex<F>>, _method: &str,
     ) -> FFTResult<ArrayD<Complex<F>>> {
         // Simplified denoising - just return original for now
         Ok(signal)
@@ -1566,8 +1564,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
 
     fn apply_filtering(
         &self,
-        signal: ArrayD<Complex<F>>,
-        _filter_spec: &str,
+        signal: ArrayD<Complex<F>>, _filter_spec: &str,
     ) -> FFTResult<ArrayD<Complex<F>>> {
         // Simplified filtering - just return original for now
         Ok(signal)
@@ -1583,8 +1580,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
         match algorithm {
             FftAlgorithmType::CooleyTukeyRadix2 => self.execute_cooley_tukey_radix2(signal),
             FftAlgorithmType::BluesteinAlgorithm => self.execute_bluestein_algorithm(signal),
-            FftAlgorithmType::GpuAcceleratedFft => self.execute_gpu_fft(signal),
-            _ => {
+            FftAlgorithmType::GpuAcceleratedFft => self.execute_gpu_fft(signal, _ => {
                 // Default implementation
                 self.execute_default_fft(signal)
             }
@@ -1629,8 +1625,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
 
     fn apply_postprocessing(
         &self,
-        result: &ArrayD<Complex<F>>,
-        _settings: &OptimizationSettings,
+        result: &ArrayD<Complex<F>>, _settings: &OptimizationSettings,
     ) -> FFTResult<ArrayD<Complex<F>>> {
         // Basic postprocessing - normalization
         let mut processed = result.clone();
@@ -1652,7 +1647,7 @@ impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
             FFTError::InternalError("Failed to write to performance tracker".to_string())
         })?;
 
-        // Record execution time
+        // Record execution _time
         let time_micros = execution_time.as_micros() as f64;
         tracker.execution_times.push_back(time_micros);
 
@@ -2080,7 +2075,7 @@ impl CpuInfo {
     fn detect() -> FFTResult<Self> {
         // Implement CPU detection logic
         Ok(Self {
-            core_count: num_cpus::get(),
+            core_count: num, _cpus: get(),
             cache_sizes: vec![32768, 262144, 8388608], // Default L1, L2, L3
             frequency_mhz: 2400,                       // Default frequency
             architecture: "x86_64".to_string(),
@@ -2380,7 +2375,7 @@ pub fn create_advanced_fft_coordinator_with_config<F: Float + Debug + std::ops::
 
 #[allow(dead_code)]
 fn example_usage() -> FFTResult<()> {
-    use num_complex::Complex64;
+    use num__complex::Complex64;
 
     // Create coordinator
     let coordinator = create_advanced_fft_coordinator::<f64>()?;

@@ -1,10 +1,10 @@
 //! Example demonstrating feature matching and homography estimation
 
 use image::{GenericImageView, Pixel, Rgba, RgbaImage};
-use scirs2_vision::feature::{
+use scirs2__vision::feature::{
     detect_and_compute_orb, find_homography_from_matches, match_orb_descriptors, OrbConfig,
 };
-use scirs2_vision::transform::{warp_affine, AffineTransform};
+use scirs2__vision::transform::{warp_affine, AffineTransform};
 use std::env;
 use std::path::Path;
 
@@ -161,7 +161,7 @@ fn draw_matches(
     }
 
     // Draw matches
-    for (i, &(idx1, idx2, _)) in matches.iter().enumerate() {
+    for (i, &(idx1, idx2_)) in matches.iter().enumerate() {
         let kp1 = &kps1[idx1].keypoint;
         let kp2 = &kps2[idx2].keypoint;
 
@@ -190,13 +190,13 @@ fn draw_matches(
 
 /// Create a composite image showing alignment
 #[allow(dead_code)]
-fn create_composite(base: &image::DynamicImage, aligned: &image::DynamicImage) -> RgbaImage {
-    let (width, height) = base.dimensions();
+fn create_composite(_base: &image::DynamicImage, aligned: &image::DynamicImage) -> RgbaImage {
+    let (width, height) = _base.dimensions();
     let mut result = RgbaImage::new(width, height);
 
     for y in 0..height {
         for x in 0..width {
-            let pixel1 = base.get_pixel(x, y).to_rgba();
+            let pixel1 = _base.get_pixel(x, y).to_rgba();
             let pixel2 = aligned.get_pixel(x, y).to_rgba();
 
             // Skip transparent pixels
@@ -217,8 +217,8 @@ fn create_composite(base: &image::DynamicImage, aligned: &image::DynamicImage) -
 
 /// Draw a circle on an image
 #[allow(dead_code)]
-fn draw_circle(img: &mut RgbaImage, cx: u32, cy: u32, radius: u32, color: Rgba<u8>) {
-    let (width, height) = img.dimensions();
+fn draw_circle(_img: &mut RgbaImage, cx: u32, cy: u32, radius: u32, color: Rgba<u8>) {
+    let (width, height) = _img.dimensions();
 
     for y in (cy.saturating_sub(radius))..=(cy + radius).min(height - 1) {
         for x in (cx.saturating_sub(radius))..=(cx + radius).min(width - 1) {
@@ -226,7 +226,7 @@ fn draw_circle(img: &mut RgbaImage, cx: u32, cy: u32, radius: u32, color: Rgba<u
             let dy = y as i32 - cy as i32;
 
             if dx * dx + dy * dy <= radius as i32 * radius as i32 {
-                img.put_pixel(x, y, color);
+                _img.put_pixel(x, y, color);
             }
         }
     }
@@ -234,8 +234,8 @@ fn draw_circle(img: &mut RgbaImage, cx: u32, cy: u32, radius: u32, color: Rgba<u
 
 /// Draw a line on an image
 #[allow(dead_code)]
-fn draw_line(img: &mut RgbaImage, x0: u32, y0: u32, x1: u32, y1: u32, color: Rgba<u8>) {
-    let (width, height) = img.dimensions();
+fn draw_line(_img: &mut RgbaImage, x0: u32, y0: u32, x1: u32, y1: u32, color: Rgba<u8>) {
+    let (width, height) = _img.dimensions();
 
     // Bresenham's line algorithm
     let dx = (x1 as i32 - x0 as i32).abs();
@@ -249,7 +249,7 @@ fn draw_line(img: &mut RgbaImage, x0: u32, y0: u32, x1: u32, y1: u32, color: Rgb
     let mut y = y0 as i32;
 
     while x >= 0 && x < width as i32 && y >= 0 && y < height as i32 {
-        img.put_pixel(x as u32, y as u32, color);
+        _img.put_pixel(x as u32, y as u32, color);
 
         if x == x1 as i32 && y == y1 as i32 {
             break;

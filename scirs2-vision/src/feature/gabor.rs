@@ -8,6 +8,7 @@ use crate::error::Result;
 use image::{DynamicImage, GrayImage, ImageBuffer, Luma};
 use ndarray::{Array2, Array3};
 use std::f32::consts::PI;
+use statrs::statistics::Statistics;
 
 /// Parameters for Gabor filter
 #[derive(Debug, Clone, Copy)]
@@ -47,16 +48,16 @@ impl Default for GaborParams {
 ///
 /// * 2D array containing the Gabor kernel
 #[allow(dead_code)]
-pub fn gabor_kernel(params: &GaborParams, size: usize) -> Array2<f32> {
+pub fn gabor_kernel(_params: &GaborParams, size: usize) -> Array2<f32> {
     let half_size = size as i32 / 2;
     let mut kernel = Array2::zeros((size, size));
 
-    let sigma_x = params.sigma;
-    let sigma_y = params.sigma / params.aspect_ratio;
+    let sigma_x = _params.sigma;
+    let sigma_y = _params.sigma / _params.aspect_ratio;
 
     // Pre-compute rotation values
-    let cos_theta = params.orientation.cos();
-    let sin_theta = params.orientation.sin();
+    let cos_theta = _params.orientation.cos();
+    let sin_theta = _params.orientation.sin();
 
     for y in -half_size..=half_size {
         for x in -half_size..=half_size {
@@ -70,7 +71,7 @@ pub fn gabor_kernel(params: &GaborParams, size: usize) -> Array2<f32> {
             .exp();
 
             // Sinusoidal carrier
-            let sinusoid = (2.0 * PI * x_theta / params.wavelength + params.phase).cos();
+            let sinusoid = (2.0 * PI * x_theta / _params.wavelength + _params.phase).cos();
 
             let value = gaussian * sinusoid;
             kernel[[(y + half_size) as usize, (x + half_size) as usize]] = value;
@@ -98,7 +99,7 @@ pub fn gabor_kernel(params: &GaborParams, size: usize) -> Array2<f32> {
 /// # Example
 ///
 /// ```rust
-/// use scirs2_vision::feature::{gabor_filter, GaborParams};
+/// use scirs2__vision::feature::{gabor_filter, GaborParams};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -113,8 +114,8 @@ pub fn gabor_kernel(params: &GaborParams, size: usize) -> Array2<f32> {
 /// # }
 /// ```
 #[allow(dead_code)]
-pub fn gabor_filter(img: &DynamicImage, params: &GaborParams) -> Result<GrayImage> {
-    let gray = img.to_luma8();
+pub fn gabor_filter(_img: &DynamicImage, params: &GaborParams) -> Result<GrayImage> {
+    let gray = _img.to_luma8();
     let (width, height) = gray.dimensions();
 
     // Determine kernel size based on sigma
@@ -188,8 +189,8 @@ impl Default for GaborBank {
 ///
 /// * Result containing 3D array of filter responses [n_filters, height, width]
 #[allow(dead_code)]
-pub fn gabor_filter_bank(img: &DynamicImage, bank: &GaborBank) -> Result<Array3<f32>> {
-    let gray = img.to_luma8();
+pub fn gabor_filter_bank(_img: &DynamicImage, bank: &GaborBank) -> Result<Array3<f32>> {
+    let gray = _img.to_luma8();
     let (width, height) = gray.dimensions();
 
     let n_filters = bank.wavelengths.len() * bank.orientations.len();
@@ -206,7 +207,7 @@ pub fn gabor_filter_bank(img: &DynamicImage, bank: &GaborBank) -> Result<Array3<
                 sigma: wavelength / 2.0, // Adjust sigma based on wavelength
             };
 
-            let filtered = gabor_filter(img, &params)?;
+            let filtered = gabor_filter(_img, &params)?;
 
             // Copy to responses array
             for y in 0..height as usize {
@@ -283,14 +284,14 @@ pub fn extract_gabor_features(
 ///
 /// * Result containing energy image (magnitude of complex Gabor response)
 #[allow(dead_code)]
-pub fn gabor_energy(img: &DynamicImage, params: &GaborParams) -> Result<GrayImage> {
+pub fn gabor_energy(_img: &DynamicImage, params: &GaborParams) -> Result<GrayImage> {
     // Real part (cosine)
-    let real_response = gabor_filter(img, params)?;
+    let real_response = gabor_filter(_img, params)?;
 
     // Imaginary part (sine)
     let mut sine_params = *params;
     sine_params.phase = params.phase + PI / 2.0;
-    let imag_response = gabor_filter(img, &sine_params)?;
+    let imag_response = gabor_filter(_img, &sine_params)?;
 
     let (width, height) = real_response.dimensions();
     let mut energy = ImageBuffer::new(width, height);

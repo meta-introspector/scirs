@@ -4,11 +4,12 @@
 //! Gaussian process interpolation, Kriging, Radial Basis Functions (RBF),
 //! and minimum energy interpolation.
 
-use super::core::InterpolationConfig;
 use crate::error::{SignalError, SignalResult};
+use crate::interpolate::core::InterpolationConfig;
 use ndarray::{Array1, Array2};
-use scirs2_linalg::{cholesky, solve, solve_triangular};
+use scirs2__linalg::{cholesky, solve, solve_triangular};
 
+#[allow(unused_imports)]
 /// Applies Gaussian process interpolation to fill missing values in a signal
 ///
 /// Gaussian process interpolation provides a probabilistic approach to interpolation
@@ -30,7 +31,7 @@ use scirs2_linalg::{cholesky, solve, solve_triangular};
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_signal::interpolate::advanced::gaussian_process_interpolate;
+/// use scirs2__signal::interpolate::advanced::gaussian_process_interpolate;
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 /// let result = gaussian_process_interpolate(&signal, 2.0, 1.0, 0.01).unwrap();
@@ -173,7 +174,7 @@ pub fn gaussian_process_interpolate(
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_signal::interpolate::{advanced::kriging_interpolate, core::InterpolationConfig};
+/// use scirs2__signal::interpolate::{advanced::kriging_interpolate, core::InterpolationConfig};
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
 /// let config = InterpolationConfig::default();
@@ -299,7 +300,7 @@ where
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_signal::interpolate::{advanced::rbf_interpolate, core::InterpolationConfig};
+/// use scirs2__signal::interpolate::{advanced::rbf_interpolate, core::InterpolationConfig};
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
 /// let config = InterpolationConfig::default();
@@ -410,7 +411,7 @@ where
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_signal::interpolate::{advanced::minimum_energy_interpolate, core::InterpolationConfig};
+/// use scirs2__signal::interpolate::{advanced::minimum_energy_interpolate, core::InterpolationConfig};
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, 4.0]);
 /// let config = InterpolationConfig::default();
@@ -522,17 +523,17 @@ pub mod variogram_models {
     /// * `range` - The range parameter (distance at which sill is reached)
     /// * `sill` - The sill parameter (maximum semivariance)
     /// * `nugget` - The nugget parameter (semivariance at distance 0)
-    pub fn spherical(range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
+    pub fn spherical(_range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
         move |h: f64| {
             if h <= 0.0 {
                 return 0.0;
             }
 
-            if h >= range {
+            if h >= _range {
                 return sill;
             }
 
-            let h_norm = h / range;
+            let h_norm = h / _range;
             nugget + (sill - nugget) * (1.5 * h_norm - 0.5 * h_norm.powi(3))
         }
     }
@@ -546,13 +547,13 @@ pub mod variogram_models {
     /// * `range` - The range parameter (practical range is 3 times this value)
     /// * `sill` - The sill parameter (maximum semivariance)
     /// * `nugget` - The nugget parameter (semivariance at distance 0)
-    pub fn exponential(range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
+    pub fn exponential(_range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
         move |h: f64| {
             if h <= 0.0 {
                 return 0.0;
             }
 
-            nugget + (sill - nugget) * (1.0 - (-3.0 * h / range).exp())
+            nugget + (sill - nugget) * (1.0 - (-3.0 * h / _range).exp())
         }
     }
 
@@ -565,13 +566,13 @@ pub mod variogram_models {
     /// * `range` - The range parameter (practical range is sqrt(3) times this value)
     /// * `sill` - The sill parameter (maximum semivariance)
     /// * `nugget` - The nugget parameter (semivariance at distance 0)
-    pub fn gaussian(range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
+    pub fn gaussian(_range: f64, sill: f64, nugget: f64) -> impl Fn(f64) -> f64 {
         move |h: f64| {
             if h <= 0.0 {
                 return 0.0;
             }
 
-            nugget + (sill - nugget) * (1.0 - (-9.0 * h * h / (range * range)).exp())
+            nugget + (sill - nugget) * (1.0 - (-9.0 * h * h / (_range * _range)).exp())
         }
     }
 
@@ -583,13 +584,13 @@ pub mod variogram_models {
     ///
     /// * `slope` - The slope parameter (rate of increase)
     /// * `nugget` - The nugget parameter (semivariance at distance 0)
-    pub fn linear(slope: f64, nugget: f64) -> impl Fn(f64) -> f64 {
+    pub fn linear(_slope: f64, nugget: f64) -> impl Fn(f64) -> f64 {
         move |h: f64| {
             if h <= 0.0 {
                 return 0.0;
             }
 
-            nugget + slope * h
+            nugget + _slope * h
         }
     }
 }
@@ -603,8 +604,8 @@ pub mod rbf_functions {
     /// # Arguments
     ///
     /// * `epsilon` - Shape parameter controlling the width of the basis function
-    pub fn gaussian(epsilon: f64) -> impl Fn(f64) -> f64 {
-        move |r: f64| (-epsilon * r * r).exp()
+    pub fn gaussian(_epsilon: f64) -> impl Fn(f64) -> f64 {
+        move |r: f64| (-_epsilon * r * r).exp()
     }
 
     /// Multiquadric RBF
@@ -614,8 +615,8 @@ pub mod rbf_functions {
     /// # Arguments
     ///
     /// * `epsilon` - Shape parameter
-    pub fn multiquadric(epsilon: f64) -> impl Fn(f64) -> f64 {
-        move |r: f64| (1.0 + epsilon * r * r).sqrt()
+    pub fn multiquadric(_epsilon: f64) -> impl Fn(f64) -> f64 {
+        move |r: f64| ((1.0 + _epsilon * r * r) as f64).sqrt()
     }
 
     /// Inverse multiquadric RBF
@@ -625,8 +626,8 @@ pub mod rbf_functions {
     /// # Arguments
     ///
     /// * `epsilon` - Shape parameter
-    pub fn inverse_multiquadric(epsilon: f64) -> impl Fn(f64) -> f64 {
-        move |r: f64| 1.0 / (1.0 + epsilon * r * r).sqrt()
+    pub fn inverse_multiquadric(_epsilon: f64) -> impl Fn(f64) -> f64 {
+        move |r: f64| 1.0 / ((1.0 + _epsilon * r * r) as f64).sqrt()
     }
 
     /// Thin plate spline RBF
@@ -647,9 +648,6 @@ pub mod rbf_functions {
 /// Unit tests for advanced interpolation methods
 #[cfg(test)]
 mod tests {
-    use crate::interpolate::core::InterpolationConfig;
-    use ndarray::Array1;
-
     #[test]
     fn test_gaussian_process_interpolate() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);

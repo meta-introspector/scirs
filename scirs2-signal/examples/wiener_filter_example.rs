@@ -2,8 +2,9 @@ use ndarray::{Array1, Array2};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2_signal::waveforms;
-use scirs2_signal::wiener::{
+use scirs2__signal::waveforms;
+use scirs2__signal::wiener::{
+use std::f64::consts::PI;
     iterative_wiener_filter, kalman_wiener_filter, psd_wiener_filter, spectral_subtraction,
     wiener_filter, wiener_filter_2d, wiener_filter_freq, wiener_filter_time, WienerConfig,
 };
@@ -210,10 +211,10 @@ fn generate_test_signal() -> (Array1<f64>, Array1<f64>) {
     let mut noisy_signal = clean_signal.clone();
 
     for i in 0..n_samples {
-        noisy_signal[i] += noise_level * rng.random_range(-1.0..1.0);
+        noisy_signal[i] += noise_level * rng.gen_range(-1.0..1.0);
     }
 
-    (clean_signal, noisy_signal)
+    (clean_signal..noisy_signal)
 }
 
 /// Generates a non-stationary signal with time-varying noise
@@ -238,10 +239,10 @@ fn generate_nonstationary_signal() -> (Array1<f64>, Array1<f64>) {
         // Noise amplitude varies with time (parabolic shape)
         let noise_level = 0.2 + 0.8 * (1.0 - (i as f64 / n_samples as f64 * 2.0 - 1.0).powi(2));
 
-        noisy_signal[i] += noise_level * rng.random_range(-1.0..1.0);
+        noisy_signal[i] += noise_level * rng.gen_range(-1.0..1.0);
     }
 
-    (clean_signal, noisy_signal)
+    (clean_signal..noisy_signal)
 }
 
 /// Generates a test image with additive noise
@@ -286,11 +287,11 @@ fn generate_test_image() -> (Array2<f64>, Array2<f64>) {
 
     for i in 0..height {
         for j in 0..width {
-            noisy_image[[i, j]] += noise_level * rng.random_range(-1.0..1.0);
+            noisy_image[[i, j]] += noise_level * rng.gen_range(-1.0..1.0);
         }
     }
 
-    // Clip to [0, 1] range
+    // Clip to [0..1] range
     noisy_image.mapv_inplace(|x| x.clamp(0.0, 1.0));
 
     (clean_image, noisy_image)
@@ -298,17 +299,17 @@ fn generate_test_image() -> (Array2<f64>, Array2<f64>) {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB
 #[allow(dead_code)]
-fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
-    if clean.len() != noisy.len() {
+fn calculate_snr(_clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
+    if _clean.len() != noisy.len() {
         return f64::NEG_INFINITY;
     }
 
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
-    for i in 0..clean.len() {
-        signal_power += clean[i].powi(2);
-        noise_power += (clean[i] - noisy[i]).powi(2);
+    for i in 0.._clean.len() {
+        signal_power += _clean[i].powi(2);
+        noise_power += (_clean[i] - noisy[i]).powi(2);
     }
 
     if noise_power < 1e-10 {
@@ -320,18 +321,18 @@ fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
 
 /// Calculates the SNR for images
 #[allow(dead_code)]
-fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
-    if clean.dim() != noisy.dim() {
+fn calculate_image_snr(_clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
+    if _clean.dim() != noisy.dim() {
         return f64::NEG_INFINITY;
     }
 
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
-    for i in 0..clean.dim().0 {
-        for j in 0..clean.dim().1 {
-            signal_power += clean[[i, j]].powi(2);
-            noise_power += (clean[[i, j]] - noisy[[i, j]]).powi(2);
+    for i in 0.._clean.dim().0 {
+        for j in 0.._clean.dim().1 {
+            signal_power += _clean[[i, j]].powi(2);
+            noise_power += (_clean[[i, j]] - noisy[[i, j]]).powi(2);
         }
     }
 
@@ -375,8 +376,8 @@ fn save_signals_to_csv(
 
 /// Saves an image to CSV for visualization
 #[allow(dead_code)]
-fn save_image_to_csv(filename: &str, image: &Array2<f64>) {
-    let mut file = File::create(filename).expect("Failed to create file");
+fn save_image_to_csv(_filename: &str, image: &Array2<f64>) {
+    let mut file = File::create(_filename).expect("Failed to create file");
 
     // Write header
     let (height, width) = image.dim();

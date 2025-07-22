@@ -1,6 +1,7 @@
 //! Example of DPSS (Discrete Prolate Spheroidal Sequence) windows for multitaper spectral estimation
 
-use scirs2_signal::window::{dpss, dpss_windows, get_window};
+use scirs2__signal::window::{dpss, dpss_windows, get_window};
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
 
-use crate::adaptive_selection::OptimizerType;
+use crate::adaptive__selection::OptimizerType;
 use crate::error::{OptimError, Result};
 use super::{
     LearnedOptimizerConfig, MetaOptimizationStrategy, NeuralOptimizerType,
@@ -2699,23 +2699,23 @@ pub struct TransformerOptimizerState<T: Float> {
 
 impl<T: Float + Send + Sync> TransformerOptimizer<T> {
     /// Create new transformer optimizer
-    pub fn new(config: TransformerBasedOptimizerConfig<T>) -> Result<Self> {
-        let transformer = TransformerArchitecture::new(&config)?;
+    pub fn new(_config: TransformerBasedOptimizerConfig<T>) -> Result<Self> {
+        let transformer = TransformerArchitecture::new(&_config)?;
         let positional_encoding = PositionalEncoding::new(
             PositionalEncodingType::Sinusoidal,
-            config.max_seq_length,
-            config.model_dim,
+            _config.max_seq_length,
+            _config.model_dim,
         )?;
         
         Ok(Self {
             transformer,
             positional_encoding,
-            attention_mechanism: MultiHeadAttention::new(&config)?,
+            attention_mechanism: MultiHeadAttention::new(&_config)?,
             feedforward_networks: Vec::new(),
-            meta_learning: TransformerMetaLearning::new(&config.meta_config)?,
+            meta_learning: TransformerMetaLearning::new(&_config.meta_config)?,
             sequence_processor: OptimizationSequenceProcessor::new()?,
-            memory_manager: TransformerMemoryManager::new(&config.memory_config)?,
-            config,
+            memory_manager: TransformerMemoryManager::new(&_config.memory_config)?,
+            _config,
             performance_tracker: TransformerPerformanceTracker::new()?,
             state: TransformerOptimizerState::new()?,
         })
@@ -2791,8 +2791,7 @@ impl<T: Float + Send + Sync> TransformerOptimizer<T> {
     }
     
     fn apply_update_rule<S, D>(
-        &self,
-        _update_rule: &UpdateRule<T>,
+        &self, _update_rule: &UpdateRule<T>,
         params: &ArrayBase<S, D>,
         gradients: &ArrayBase<S, D>,
     ) -> Result<Array<T, D>>
@@ -2815,9 +2814,7 @@ impl<T: Float + Send + Sync> TransformerOptimizer<T> {
     }
     
     fn update_internal_state(
-        &mut self,
-        _processed_sequence: &Array2<T>,
-        _updates: &Array<T, impl Dimension>,
+        &mut self, _processed_sequence: &Array2<T>, _updates: &Array<T, impl Dimension>,
     ) -> Result<()> {
         self.state.step += 1;
         Ok(())
@@ -2879,15 +2876,15 @@ impl<T: Float + Send + Sync> TransformerLayer<T> {
 }
 
 impl<T: Float + Send + Sync> FeedForwardNetwork<T> {
-    fn new(input_dim: usize, hidden_dim: usize, dropout_rate: f64) -> Result<Self> {
+    fn new(_input_dim: usize, hidden_dim: usize, dropout_rate: f64) -> Result<Self> {
         Ok(Self {
-            linear1: LinearLayer::new(input_dim, hidden_dim)?,
-            linear2: LinearLayer::new(hidden_dim, input_dim)?,
+            linear1: LinearLayer::new(_input_dim, hidden_dim)?,
+            linear2: LinearLayer::new(hidden_dim_input_dim)?,
             activation: ActivationFunction::GELU,
             dropout: DropoutLayer::new(dropout_rate),
             config: FFNConfig {
                 hidden_dim,
-                expansion_factor: hidden_dim as f64 / input_dim as f64,
+                expansion_factor: hidden_dim as f64 / _input_dim as f64,
                 activation_type: ActivationType::GELU,
                 dropout_rate,
                 use_gating: false,
@@ -2928,8 +2925,7 @@ impl<T: Float + Send + Sync> FeedForwardNetwork<T> {
             },
             ActivationFunction::Swish => {
                 output.mapv_inplace(|x| x / (T::one() + (-x).exp()));
-            },
-            _ => {
+            }_ => {
                 output.mapv_inplace(|x| x.tanh());
             }
         }
@@ -2939,11 +2935,11 @@ impl<T: Float + Send + Sync> FeedForwardNetwork<T> {
 }
 
 impl<T: Float + Send + Sync> LinearLayer<T> {
-    fn new(input_dim: usize, output_dim: usize) -> Result<Self> {
+    fn new(_input_dim: usize, output_dim: usize) -> Result<Self> {
         // Xavier initialization
-        let init_scale = T::from((2.0 / (input_dim + output_dim) as f64).sqrt()).unwrap();
+        let init_scale = T::from((2.0 / (_input_dim + output_dim) as f64).sqrt()).unwrap();
         
-        let weights = Array2::from_shape_fn((input_dim, output_dim), |(i, j)| {
+        let weights = Array2::from_shape_fn((_input_dim, output_dim), |(i, j)| {
             T::from((i as f64 * 0.01 + j as f64 * 0.02 - 0.5)).unwrap() * init_scale
         });
         
@@ -2977,12 +2973,12 @@ impl<T: Float + Send + Sync> LinearLayer<T> {
 }
 
 impl<T: Float + Send + Sync> LayerNormalization<T> {
-    fn new(dim: usize) -> Result<Self> {
+    fn new(_dim: usize) -> Result<Self> {
         Ok(Self {
-            weight: Array1::ones(dim),
-            bias: Array1::zeros(dim),
+            weight: Array1::ones(_dim),
+            bias: Array1::zeros(_dim),
             eps: T::from(1e-6).unwrap(),
-            dim,
+            _dim,
         })
     }
     
@@ -3018,9 +3014,9 @@ impl<T: Float + Send + Sync> LayerNormalization<T> {
 }
 
 impl<T: Float + Send + Sync> EmbeddingLayer<T> {
-    fn new(embedding_dim: usize, max_seq_length: usize) -> Result<Self> {
+    fn new(_embedding_dim: usize, max_seq_length: usize) -> Result<Self> {
         let init_scale = T::from(0.02).unwrap();
-        let embedding_weights = Array2::from_shape_fn((max_seq_length, embedding_dim), |(i, j)| {
+        let embedding_weights = Array2::from_shape_fn((max_seq_length, _embedding_dim), |(i, j)| {
             T::from((i as f64 * 0.01 + j as f64 * 0.02 - 0.5)).unwrap() * init_scale
         });
         
@@ -3058,12 +3054,12 @@ impl<T: Float + Send + Sync> EmbeddingLayer<T> {
 }
 
 impl<T: Float + Send + Sync> OutputProjection<T> {
-    fn new(input_dim: usize, output_dim: usize) -> Result<Self> {
+    fn new(_input_dim: usize, output_dim: usize) -> Result<Self> {
         Ok(Self {
-            projection_layer: LinearLayer::new(input_dim, output_dim)?,
+            projection_layer: LinearLayer::new(_input_dim, output_dim)?,
             output_activation: OutputActivation::Linear,
             config: OutputProjectionConfig {
-                input_dim,
+                _input_dim,
                 output_dim,
                 use_bias: true,
                 activation_type: ActivationType::Linear,
@@ -3077,9 +3073,9 @@ impl<T: Float + Send + Sync> OutputProjection<T> {
 }
 
 impl DropoutLayer {
-    fn new(dropout_rate: f64) -> Self {
+    fn new(_dropout_rate: f64) -> Self {
         Self {
-            dropout_rate,
+            _dropout_rate,
             training: true,
         }
     }
@@ -3158,43 +3154,43 @@ impl<T: Float + Send + Sync> ResidualConnections<T> {
 
 // Implementation stubs for major components
 impl<T: Float + Send + Sync> TransformerArchitecture<T> {
-    fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
+    fn new(_config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
         let mut layers = Vec::new();
         
         // Create transformer layers
-        for _ in 0..config.num_layers {
+        for _ in 0.._config.num_layers {
             let layer = TransformerLayer {
                 self_attention: MultiHeadAttention::new_with_config(
-                    config.model_dim,
-                    config.num_heads,
-                    config.dropout_rate,
+                    _config.model_dim,
+                    _config.num_heads,
+                    _config.dropout_rate,
                 )?,
                 feed_forward: FeedForwardNetwork::new(
-                    config.model_dim,
-                    config.ff_hidden_dim,
-                    config.dropout_rate,
+                    _config.model_dim,
+                    _config.ff_hidden_dim,
+                    _config.dropout_rate,
                 )?,
-                pre_norm1: LayerNormalization::new(config.model_dim)?,
-                pre_norm2: LayerNormalization::new(config.model_dim)?,
+                pre_norm1: LayerNormalization::new(_config.model_dim)?,
+                pre_norm2: LayerNormalization::new(_config.model_dim)?,
                 residual_connections: ResidualConnections::new()?,
-                dropout: DropoutLayer::new(config.dropout_rate),
+                dropout: DropoutLayer::new(_config.dropout_rate),
             };
             layers.push(layer);
         }
         
         Ok(Self {
             layers,
-            input_embedding: EmbeddingLayer::new(config.model_dim, config.max_seq_length)?,
-            output_projection: OutputProjection::new(config.model_dim, config.model_dim)?,
-            layer_norm: LayerNormalization::new(config.model_dim)?,
-            dropout: DropoutLayer::new(config.dropout_rate),
-            config: TransformerArchConfig {
-                model_dim: config.model_dim,
-                num_layers: config.num_layers,
-                num_heads: config.num_heads,
-                ff_hidden_dim: config.ff_hidden_dim,
-                max_seq_length: config.max_seq_length,
-                dropout_rate: config.dropout_rate,
+            input_embedding: EmbeddingLayer::new(_config.model_dim, _config.max_seq_length)?,
+            output_projection: OutputProjection::new(_config.model_dim, _config.model_dim)?,
+            layer_norm: LayerNormalization::new(_config.model_dim)?,
+            dropout: DropoutLayer::new(_config.dropout_rate),
+            _config: TransformerArchConfig {
+                model_dim: _config.model_dim,
+                num_layers: _config.num_layers,
+                num_heads: _config.num_heads,
+                ff_hidden_dim: _config.ff_hidden_dim,
+                max_seq_length: _config.max_seq_length,
+                dropout_rate: _config.dropout_rate,
             },
         })
     }
@@ -3238,10 +3234,10 @@ impl<T: Float + Send + Sync> TransformerArchitecture<T> {
 }
 
 impl<T: Float + Send + Sync> PositionalEncoding<T> {
-    fn new(encoding_type: PositionalEncodingType, max_length: usize, encoding_dim: usize) -> Result<Self> {
+    fn new(_encoding_type: PositionalEncodingType, max_length: usize, encoding_dim: usize) -> Result<Self> {
         let mut encoding_matrix = Array2::zeros((max_length, encoding_dim));
         
-        match encoding_type {
+        match _encoding_type {
             PositionalEncodingType::Sinusoidal => {
                 for pos in 0..max_length {
                     for i in 0..encoding_dim {
@@ -3296,14 +3292,14 @@ impl<T: Float + Send + Sync> PositionalEncoding<T> {
 }
 
 impl<T: Float + Send + Sync> MultiHeadAttention<T> {
-    fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
-        Self::new_with_config(config.model_dim, config.num_heads, config.dropout_rate)
+    fn new(_config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
+        Self::new_with_config(_config.model_dim, _config.num_heads, _config.dropout_rate)
     }
     
-    fn new_with_config(model_dim: usize, num_heads: usize, dropout_rate: f64) -> Result<Self> {
-        if model_dim % num_heads != 0 {
+    fn new_with_config(_model_dim: usize, num_heads: usize, dropout_rate: f64) -> Result<Self> {
+        if _model_dim % num_heads != 0 {
             return Err(OptimError::InvalidConfig(
-                format!("Model dimension {} must be divisible by number of heads {}", model_dim, num_heads)
+                format!("Model dimension {} must be divisible by number of _heads {}", model_dim, num_heads)
             ));
         }
         
@@ -3455,9 +3451,9 @@ impl<T: Float + Send + Sync> MultiHeadAttention<T> {
 }
 
 impl<T: Float + Send + Sync> TransformerMetaLearning<T> {
-    fn new(config: &TransformerMetaConfig<T>) -> Result<Self> {
+    fn new(_config: &TransformerMetaConfig<T>) -> Result<Self> {
         Ok(Self {
-            meta_strategy: config.strategy,
+            meta_strategy: _config.strategy,
             gradient_processor: GradientProcessor::new()?,
             update_rule_generator: UpdateRuleGenerator::new()?,
             context_integrator: ContextIntegrator::new()?,
@@ -3465,15 +3461,15 @@ impl<T: Float + Send + Sync> TransformerMetaLearning<T> {
             performance_tracker: PerformanceTracker::new()?,
             adaptation_mechanism: AdaptationMechanism::new()?,
             inner_loop_config: InnerLoopConfig {
-                num_steps: config.inner_steps,
-                learning_rate: T::from(config.inner_lr).unwrap(),
-                second_order: config.second_order,
+                num_steps: _config.inner_steps,
+                learning_rate: T::from(_config.inner_lr).unwrap(),
+                second_order: _config.second_order,
                 gradient_clip: Some(T::from(1.0).unwrap()),
             },
             outer_loop_config: OuterLoopConfig {
                 meta_learning_rate: T::from(0.001).unwrap(),
                 meta_batch_size: 32,
-                task_sampling: config.task_sampling,
+                task_sampling: _config.task_sampling,
                 meta_gradient_clip: Some(T::from(1.0).unwrap()),
             },
             state: MetaLearningState {
@@ -3531,7 +3527,7 @@ impl<T: Float + Send + Sync> TransformerMetaLearning<T> {
         Ok(base_momentum * stability_measure)
     }
     
-    fn determine_update_operations(&self, _context: &Array1<T>) -> Result<Vec<UpdateOperation>> {
+    fn determine_update_operations(&self_context: &Array1<T>) -> Result<Vec<UpdateOperation>> {
         // For now, use standard gradient descent operations
         Ok(vec![UpdateOperation::Multiply, UpdateOperation::Add])
     }
@@ -3627,12 +3623,12 @@ impl<T: Float + Send + Sync> OptimizationSequenceProcessor<T> {
 }
 
 impl<T: Float + Send + Sync> TransformerMemoryManager<T> {
-    fn new(config: &TransformerMemoryConfig<T>) -> Result<Self> {
+    fn new(_config: &TransformerMemoryConfig<T>) -> Result<Self> {
         let mut memory_stores = HashMap::new();
         
         // Initialize memory stores for each type
-        for memory_type in &config.memory_types {
-            let capacity = config.memory_capacities.get(memory_type).unwrap_or(&1024);
+        for memory_type in &_config.memory_types {
+            let capacity = _config.memory_capacities.get(memory_type).unwrap_or(&1024);
             let store = MemoryStore::new(*capacity)?;
             memory_stores.insert(*memory_type, store);
         }
@@ -3640,9 +3636,9 @@ impl<T: Float + Send + Sync> TransformerMemoryManager<T> {
         Ok(Self {
             memory_stores,
             access_patterns: HashMap::new(),
-            compression_manager: CompressionManager::new(config.compression_ratio)?,
-            garbage_collector: MemoryGarbageCollector::new(config.enable_gc)?,
-            config: config.clone(),
+            compression_manager: CompressionManager::new(_config.compression_ratio)?,
+            garbage_collector: MemoryGarbageCollector::new(_config.enable_gc)?,
+            _config: _config.clone(),
             usage_statistics: MemoryUsageStatistics {
                 total_allocations: 0,
                 total_deallocations: 0,
@@ -3655,7 +3651,7 @@ impl<T: Float + Send + Sync> TransformerMemoryManager<T> {
     
     fn store_memory(&mut self, memory_type: MemoryType, key: String, value: Array1<T>) -> Result<()> {
         let store = self.memory_stores.get_mut(&memory_type)
-            .ok_or_else(|| OptimError::InvalidConfig("Memory type not configured".to_string()))?;
+            .ok_or_else(|| OptimError::InvalidConfig("Memory _type not configured".to_string()))?;
         
         // Compress if enabled
         let compressed_value = if self.config.enable_compression {
@@ -3682,7 +3678,7 @@ impl<T: Float + Send + Sync> TransformerMemoryManager<T> {
     
     fn retrieve_memory(&mut self, memory_type: MemoryType, key: &str) -> Result<Option<Array1<T>>> {
         let store = self.memory_stores.get_mut(&memory_type)
-            .ok_or_else(|| OptimError::InvalidConfig("Memory type not configured".to_string()))?;
+            .ok_or_else(|| OptimError::InvalidConfig("Memory _type not configured".to_string()))?;
         
         if let Some(compressed_value) = store.retrieve(key)? {
             // Decompress if necessary
@@ -4120,10 +4116,10 @@ impl<T: Float + Send + Sync> MemoryManagement<T> {
 }
 
 impl<T: Float + Send + Sync> CompressionManager<T> {
-    fn new(compression_ratio: f64) -> Result<Self> {
+    fn new(_compression_ratio: f64) -> Result<Self> {
         Ok(Self {
             compression_type: CompressionType::PCA,
-            compression_ratio: T::from(compression_ratio).unwrap(),
+            compression_ratio: T::from(_compression_ratio).unwrap(),
             compression_model: CompressionModel::new()?,
         })
     }
@@ -4149,16 +4145,16 @@ impl<T: Float + Send + Sync> CompressionModel<T> {
 }
 
 impl<T: Float + Send + Sync> MemoryGarbageCollector<T> {
-    fn new(enabled: bool) -> Result<Self> {
+    fn new(_enabled: bool) -> Result<Self> {
         Ok(Self {
-            enabled,
+            _enabled,
             gc_strategy: GCStrategy::Generational,
             gc_frequency: Duration::from_secs(300),
             last_gc: Instant::now(),
         })
     }
     
-    fn collect(&mut self, _stores: &mut HashMap<MemoryType, MemoryStore<T>>, _patterns: &HashMap<String, AccessPattern>) -> Result<()> {
+    fn collect(&mut self_stores: &mut HashMap<MemoryType, MemoryStore<T>>, _patterns: &HashMap<String, AccessPattern>) -> Result<()> {
         // Simple GC - update last GC time
         self.last_gc = Instant::now();
         Ok(())
@@ -4166,10 +4162,10 @@ impl<T: Float + Send + Sync> MemoryGarbageCollector<T> {
 }
 
 impl<T: Float + Send + Sync> MemoryStore<T> {
-    fn new(capacity: usize) -> Result<Self> {
+    fn new(_capacity: usize) -> Result<Self> {
         Ok(Self {
             data: HashMap::new(),
-            capacity,
+            _capacity,
             current_size: 0,
         })
     }
@@ -4193,7 +4189,7 @@ impl<T: Float + Send + Sync> MetricsComputer<T> {
         })
     }
     
-    fn compute_metrics(&self, _result: &TransformerOptimizationResult<T>) -> Result<PerformanceMetrics<T>> {
+    fn compute_metrics(&self_result: &TransformerOptimizationResult<T>) -> Result<PerformanceMetrics<T>> {
         Ok(PerformanceMetrics {
             accuracy: T::from(0.9).unwrap(),
             loss: T::from(0.1).unwrap(),
@@ -4222,11 +4218,11 @@ impl<T: Float + Send + Sync> PerformancePredictor<T> {
         })
     }
     
-    fn update(&mut self, _history: &VecDeque<PerformanceRecord<T>>) -> Result<()> {
+    fn update(&mut self_history: &VecDeque<PerformanceRecord<T>>) -> Result<()> {
         Ok(())
     }
     
-    fn predict(&self, _history: &VecDeque<PerformanceRecord<T>>, _steps: usize) -> Result<Vec<PerformanceMetrics<T>>> {
+    fn predict(&self_history: &VecDeque<PerformanceRecord<T>>, _steps: usize) -> Result<Vec<PerformanceMetrics<T>>> {
         Ok(vec![PerformanceMetrics {
             accuracy: T::from(0.9).unwrap(),
             loss: T::from(0.1).unwrap(),
@@ -4246,7 +4242,7 @@ impl<T: Float + Send + Sync> AnomalyDetector<T> {
         })
     }
     
-    fn check_anomaly(&mut self, _history: &VecDeque<PerformanceRecord<T>>) -> Result<bool> {
+    fn check_anomaly(&mut self_history: &VecDeque<PerformanceRecord<T>>) -> Result<bool> {
         Ok(false)
     }
 }
@@ -4281,11 +4277,11 @@ impl<T: Float + Send + Sync> PredictionArchitecture<T> for TransformerPrediction
         Ok(sequence.clone())
     }
     
-    fn uncertainty(&self, _sequence: &Array2<T>) -> Result<Array1<T>> {
+    fn uncertainty(&self_sequence: &Array2<T>) -> Result<Array1<T>> {
         Ok(Array1::zeros(256))
     }
     
-    fn update(&mut self, _data: &[(Array2<T>, Array2<T>)]) -> Result<()> {
+    fn update(&mut self_data: &[(Array2<T>, Array2<T>)]) -> Result<()> {
         Ok(())
     }
 }

@@ -2,7 +2,7 @@
 
 use ndarray::{s, Array1, Array2, ScalarOperand};
 use num_traits::{Float, FromPrimitive, NumCast};
-use scirs2_linalg::{inv, solve};
+use scirs2__linalg::{inv, solve};
 use std::fmt::Debug;
 
 use crate::error::{Result, TimeSeriesError};
@@ -96,7 +96,7 @@ pub struct STRResult<F> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_series::decomposition::{str_decomposition, STROptions};
+/// use scirs2__series::decomposition::{str_decomposition, STROptions};
 ///
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0,
 ///                 1.5, 2.5, 3.5, 2.5, 1.5, 2.5, 3.5, 2.5, 1.5, 2.5, 3.5, 2.5];
@@ -110,11 +110,11 @@ pub struct STRResult<F> {
 /// println!("Residual: {:?}", result.residual);
 /// ```
 #[allow(dead_code)]
-pub fn str_decomposition<F>(ts: &Array1<F>, options: &STROptions) -> Result<STRResult<F>>
+pub fn str_decomposition<F>(_ts: &Array1<F>, options: &STROptions) -> Result<STRResult<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand + NumCast + std::iter::Sum,
 {
-    let n = ts.len();
+    let n = _ts.len();
 
     // Check inputs
     if n < 3 {
@@ -247,7 +247,7 @@ where
     // Step 4: Solve regularized least squares problem
     // (X^T X + λR) β = X^T y
     let xtx = design_matrix.t().dot(&design_matrix);
-    let xty = design_matrix.t().dot(ts);
+    let xty = design_matrix.t().dot(_ts);
 
     // Add regularization
     let system_matrix = xtx + regularization_matrix;
@@ -262,7 +262,7 @@ where
             // LASSO regression using coordinate descent
             solve_lasso(
                 &design_matrix,
-                ts,
+                _ts,
                 options.seasonal_lambda,
                 1000,
                 F::from(1e-6).unwrap(),
@@ -272,7 +272,7 @@ where
             // Elastic Net regression using coordinate descent
             solve_elastic_net(
                 &design_matrix,
-                ts,
+                _ts,
                 options.seasonal_lambda,
                 options.trend_lambda,
                 1000,
@@ -299,7 +299,7 @@ where
     }
 
     // Compute residuals
-    let mut residual = ts.clone();
+    let mut residual = _ts.clone();
     for i in 0..n {
         residual[i] = residual[i] - trend[i];
         for seasonal_component in &seasonal_components {
@@ -326,7 +326,7 @@ where
         trend,
         seasonal_components,
         residual,
-        original: ts.clone(),
+        original: _ts.clone(),
         trend_ci,
         seasonal_ci,
     };
@@ -366,10 +366,10 @@ where
     // Estimate residual variance
     let residual_variance = residual.mapv(|x| x * x).sum() / F::from_usize(n - p).unwrap();
 
-    // Compute covariance matrix: σ² (X^T X + λR)^(-1)
+    // Compute covariance _matrix: σ² (X^T X + λR)^(-1)
     let covariance_matrix = match matrix_inverse(system_matrix) {
         Ok(inv) => inv.mapv(|x| x * residual_variance),
-        Err(_) => return Ok((None, None)), // Skip CI if matrix is singular
+        Err(_) => return Ok((None, None)), // Skip CI if _matrix is singular
     };
 
     // Get t-distribution critical value (approximation for large samples)

@@ -18,6 +18,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 /// Model package format for deployment
 #[derive(Debug, Clone, PartialEq)]
 pub enum PackageFormat {
@@ -252,7 +253,7 @@ impl<
     > ModelPackager<F>
 {
     /// Create a new model packager
-    pub fn new(model: Sequential<F>, output_dir: PathBuf) -> Self {
+    pub fn new(_model: Sequential<F>, output_dir: PathBuf) -> Self {
         let metadata = PackageMetadata {
             name: "scirs2_model".to_string(),
             version: "1.0.0".to_string(),
@@ -281,7 +282,7 @@ impl<
             checksum: "".to_string(),
         };
         Self {
-            model,
+            _model,
             metadata,
             output_dir,
             optimization: OptimizationLevel::Basic,
@@ -379,8 +380,7 @@ impl<
         // Generate shared library (stub)
         let lib_extension = match platform {
             TargetPlatform::WindowsX64 => "dll",
-            TargetPlatform::MacOSX64 | TargetPlatform::MacOSArm64 => "dylib",
-            _ => "so",
+            TargetPlatform::MacOSX64 | TargetPlatform::MacOSArm64 => "dylib"_ => "so",
         let lib_path = self
             .output_dir
             .join(format!("libscirs2_model.{}", lib_extension));
@@ -452,14 +452,14 @@ impl<
             format: PackageFormat::Docker,
             output_paths: vec![model_path, dockerfile_path, compose_path, entrypoint_path],
     // Implementation stub methods (would contain actual code generation logic)
-    fn generate_runtime_binary(&self, path: &Path, _platform: &TargetPlatform) -> Result<()> {
+    fn generate_runtime_binary(&self, path: &Path_platform: &TargetPlatform) -> Result<()> {
         // Stub: Generate native runtime binary
         fs::write(path, b"#!/bin/bash\necho 'SciRS2 Model Runtime'\n")
         Ok(())
-    fn generate_wasm_module(&self, path: &Path, _config: &WasmConfig) -> Result<()> {
+    fn generate_wasm_module(&self, path: &Path_config: &WasmConfig) -> Result<()> {
         // Stub: Generate WebAssembly module
         fs::write(path, b"\x00asm\x01\x00\x00\x00") // WASM magic number
-    fn generate_js_bindings(&self, path: &Path, _config: &WasmConfig) -> Result<()> {
+    fn generate_js_bindings(&self, path: &Path_config: &WasmConfig) -> Result<()> {
         let js_code = r#"
 // SciRS2 Model JavaScript Bindings
 class SciRS2Model {
@@ -476,7 +476,7 @@ class SciRS2Model {
 export default SciRS2Model;
 "#;
         fs::write(path, js_code).map_err(|e| NeuralError::IOError(e.to_string()))?;
-    fn generate_c_header(&self, path: &Path, config: &CBindingConfig) -> Result<()> {
+    fn generate_c_header(&self, path: &Path_config: &CBindingConfig) -> Result<()> {
         let header_content = format!(
             r#"
 #ifndef {}
@@ -511,7 +511,7 @@ void scirs2_tensor_free(scirs2_tensor_t* tensor);
             config.header_guard, config.header_guard, config.header_guard
         );
         fs::write(path, header_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
-    fn generate_c_source(&self, path: &Path, _config: &CBindingConfig) -> Result<()> {
+    fn generate_c_source(&self, path: &Path_config: &CBindingConfig) -> Result<()> {
         let source_content = r#"
 #include "scirs2_model.h"
 #include <stdio.h>
@@ -536,16 +536,14 @@ void scirs2_tensor_free(scirs2_tensor_t* tensor) {
         memset(tensor, 0, sizeof(scirs2_tensor_t));
         fs::write(path, source_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
     fn generate_shared_library(
-        path: &Path,
-        _config: &CBindingConfig,
-        _platform: &TargetPlatform,
+        path: &Path_config: &CBindingConfig, _platform: &TargetPlatform,
     ) -> Result<()> {
         // Stub: Generate shared library binary
         fs::write(path, b"\x7fELF") // ELF magic for Linux
-    fn generate_android_aar(&self, path: &Path, _config: &MobileConfig) -> Result<()> {
+    fn generate_android_aar(&self, path: &Path_config: &MobileConfig) -> Result<()> {
         // Stub: Generate Android AAR package
         fs::write(path, b"PK\x03\x04") // ZIP magic (AAR is a ZIP)
-    fn generate_java_bindings(&self, path: &Path, _config: &MobileConfig) -> Result<()> {
+    fn generate_java_bindings(&self, path: &Path_config: &MobileConfig) -> Result<()> {
         let java_code = r#"
 package com.scirs2.model;
 public class SciRS2Model {
@@ -566,7 +564,7 @@ public class SciRS2Model {
     private native float[] nativePredict(long handle, float[] input);
     private native void nativeFreeModel(long handle);
         fs::write(path, java_code).map_err(|e| NeuralError::IOError(e.to_string()))?;
-    fn generate_ios_framework(&self, path: &Path, _config: &MobileConfig) -> Result<()> {
+    fn generate_ios_framework(&self, path: &Path_config: &MobileConfig) -> Result<()> {
         // Create framework directory structure
         fs::create_dir_all(path.join("Headers"))
         // Stub: Generate framework binary
@@ -587,7 +585,7 @@ public class SciRS2Model {
 </plist>"#;
         let plist_path = path.join("Info.plist");
         fs::write(&plist_path, plist_content).map_err(|e| NeuralError::IOError(e.to_string()))?;
-    fn generate_swift_bindings(&self, path: &Path, _config: &MobileConfig) -> Result<()> {
+    fn generate_swift_bindings(&self, path: &Path_config: &MobileConfig) -> Result<()> {
         let swift_code = r#"
 import Foundation
     private var handle: OpaquePointer?
@@ -627,8 +625,7 @@ class SciRS2Model:
     """SciRS2 neural network model for inference."""
     def __init__(self, model_path: str):
         """Initialize model from file.
-        Args:
-            model_path: Path to the model file
+        Args: model_path: Path to the model file
         """
         self.model_path = model_path
         self._model_data = None
@@ -654,10 +651,9 @@ class SciRS2Model:
     def get_output_specs(self) -> List[Dict[str, Any]]:
         """Get output tensor specifications."""
         return self._model_data.get('output_specs', [])
-def load_model(model_path: str) -> SciRS2Model:
+def load_model(model_path: str) ->, SciRS2Model:
     """Load a SciRS2 model from file.
-    Args:
-        model_path: Path to the model file
+    Args: model_path: Path to the model file
     Returns:
         Loaded SciRS2Model instance
     """
@@ -666,8 +662,7 @@ def load_model(model_path: str) -> SciRS2Model:
     fn generate_dockerfile(&self, path: &Path, platform: TargetPlatform) -> Result<()> {
         let base_image = match platform {
             TargetPlatform::LinuxX64 => "ubuntu:20.04",
-            TargetPlatform::LinuxArm64 => "arm64v8/ubuntu:20.04",
-            _ => "ubuntu:20.04",
+            TargetPlatform::LinuxArm64 => "arm64v8/ubuntu:20.04"_ => "ubuntu:20.04",
         let dockerfile_content = format!(
 FROM {}
 # Install dependencies
@@ -771,7 +766,7 @@ pub struct ServerStats {
     pub active_requests: usize,
     > ModelServer<F>
     /// Create a new model server
-    pub fn new(model: Sequential<F>, config: ServerConfig) -> Self {
+    pub fn new(_model: Sequential<F>, config: ServerConfig) -> Self {
             config,
             stats: ServerStats {
                 total_requests: 0,
@@ -779,7 +774,7 @@ pub struct ServerStats {
                 total_errors: 0,
                 avg_response_time_ms: 0.0,
                 active_requests: 0,
-    /// Start the model server (stub implementation)
+    /// Start the _model server (stub implementation)
     pub fn start(&mut self) -> Result<()> {
         println!("Starting SciRS2 Model Server on port {}", self.config.port);
         println!("Max batch size: {}", self.config.max_batch_size);

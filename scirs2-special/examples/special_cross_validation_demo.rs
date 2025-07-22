@@ -3,7 +3,7 @@
 //! This example shows how to validate special functions against
 //! multiple reference implementations like SciPy, GSL, and MPFR.
 
-use scirs2_special::{
+use scirs2__special::{
     bessel::{j0, y0},
     beta,
     cross_validation::{CrossValidator, PythonValidator},
@@ -89,8 +89,7 @@ fn python_validation() -> Result<(), Box<dyn std::error::Error>> {
             "gamma" => gamma(args[0]),
             "beta" => beta(args[0], args[1]),
             "j0" => j0(args[0]),
-            "erf" => erf(args[0]),
-            _ => continue,
+            "erf" => erf(args[0], _ => continue,
         };
 
         match py_validator.compute_reference(func_name, &args) {
@@ -147,30 +146,30 @@ fn comprehensive_validation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn print_summary(summary: &scirs2_special::cross_validation::ValidationSummary) {
-    println!("  Total tests: {}", summary.total_tests);
+fn print_summary(_summary: &scirs2_special: :cross, _validation::ValidationSummary) {
+    println!("  Total tests: {}", _summary.total_tests);
     println!(
         "  Passed: {} ({:.1}%)",
-        summary.passed,
-        100.0 * summary.passed as f64 / summary.total_tests as f64
+        _summary.passed,
+        100.0 * _summary.passed as f64 / _summary.total_tests as f64
     );
-    println!("  Failed: {}", summary.failed);
-    println!("  Max error: {:.2e}", summary.max_error);
-    println!("  Mean error: {:.2e}", summary.mean_error);
-    println!("  Max ULP error: {}", summary.max_ulp_error);
+    println!("  Failed: {}", _summary.failed);
+    println!("  Max error: {:.2e}", _summary.max_error);
+    println!("  Mean error: {:.2e}", _summary.mean_error);
+    println!("  Max ULP error: {}", _summary.max_ulp_error);
 }
 
 #[allow(dead_code)]
-fn print_detailed_summary(summary: &scirs2_special::cross_validation::ValidationSummary) {
-    println!("\n{} Validation:", summary.function);
+fn print_detailed_summary(_summary: &scirs2_special: :cross, _validation::ValidationSummary) {
+    println!("\n{} Validation:", _summary.function);
     println!(
         "  Tests: {} total, {} passed, {} failed",
-        summary.total_tests, summary.passed, summary.failed
+        _summary.total_tests, _summary.passed, _summary.failed
     );
 
-    if summary.failed > 0 {
+    if _summary.failed > 0 {
         println!("  Failed cases:");
-        for (i, result) in summary.failed_cases.iter().take(3).enumerate() {
+        for (i, result) in _summary.failed_cases.iter().take(3).enumerate() {
             println!(
                 "    {}: inputs={:?}, expected={:.6e}, computed={:.6e}, rel_err={:.2e}",
                 i + 1,
@@ -180,13 +179,13 @@ fn print_detailed_summary(summary: &scirs2_special::cross_validation::Validation
                 result.relative_error
             );
         }
-        if summary.failed > 3 {
-            println!("    ... and {} more", summary.failed - 3);
+        if _summary.failed > 3 {
+            println!("    ... and {} more", _summary.failed - 3);
         }
     }
 
     println!("  Error statistics:");
-    println!("    Max error: {:.2e}", summary.max_error);
-    println!("    Mean error: {:.2e}", summary.mean_error);
-    println!("    Max ULP error: {}", summary.max_ulp_error);
+    println!("    Max error: {:.2e}", _summary.max_error);
+    println!("    Mean error: {:.2e}", _summary.mean_error);
+    println!("    Max ULP error: {}", _summary.max_ulp_error);
 }

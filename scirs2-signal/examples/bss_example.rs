@@ -1,9 +1,12 @@
+use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2};
 use rand::rng;
-use rand_distr::{Distribution, Normal};
-use scirs2_signal::{bss, SignalError, SignalResult};
+use rand__distr::{Distribution, Normal};
+use scirs2__signal::{bss, SignalError, SignalResult};
 use std::fs::File;
 use std::io::Write;
+use statrs::statistics::Statistics;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> SignalResult<()> {
@@ -29,12 +32,12 @@ fn main() -> SignalResult<()> {
 
 /// Generate source signals for testing
 #[allow(dead_code)]
-fn generate_test_signals(n_samples: usize) -> Array2<f64> {
-    let mut sources = Array2::zeros((4, n_samples));
-    let t = Array1::linspace(0.0, 10.0, n_samples);
+fn generate_test_signals(_n_samples: usize) -> Array2<f64> {
+    let mut sources = Array2::zeros((4, _n_samples));
+    let t = Array1::linspace(0.0, 10.0, _n_samples);
 
     // Source 1: Sine wave
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         sources[[0, i]] = (t[i] * 2.0 * PI * 0.5).sin();
     }
 
@@ -64,13 +67,13 @@ fn generate_test_signals(n_samples: usize) -> Array2<f64> {
 
 /// Create a random mixing matrix
 #[allow(dead_code)]
-fn generate_mixing_matrix(n_sources: usize, n_mixtures: usize) -> Array2<f64> {
-    let mut mixing = Array2::zeros((n_mixtures, n_sources));
+fn generate_mixing_matrix(_n_sources: usize, n_mixtures: usize) -> Array2<f64> {
+    let mut mixing = Array2::zeros((n_mixtures, _n_sources));
     let mut rng = rng();
     let normal = Normal::new(0.0, 1.0).unwrap();
 
     for i in 0..n_mixtures {
-        for j in 0..n_sources {
+        for j in 0.._n_sources {
             mixing[[i, j]] = normal.sample(&mut rng);
         }
     }
@@ -94,9 +97,9 @@ fn generate_mixing_matrix(n_sources: usize, n_mixtures: usize) -> Array2<f64> {
 
 /// Add noise to signals
 #[allow(dead_code)]
-fn add_noise(signals: &Array2<f64>, noise_level: f64) -> Array2<f64> {
-    let (n_signals, n_samples) = signals.dim();
-    let mut noisy = signals.clone();
+fn add_noise(_signals: &Array2<f64>, noise_level: f64) -> Array2<f64> {
+    let (n_signals, n_samples) = _signals.dim();
+    let mut noisy = _signals.clone();
     let mut rng = rng();
     let normal = Normal::new(0.0, noise_level).unwrap();
 
@@ -111,9 +114,9 @@ fn add_noise(signals: &Array2<f64>, noise_level: f64) -> Array2<f64> {
 
 /// Calculate correlation between original and recovered sources
 #[allow(dead_code)]
-fn calculate_correlations(original: &Array2<f64>, recovered: &Array2<f64>) -> Array2<f64> {
-    let (n_orig, n_samples) = original.dim();
-    let (n_rec, _) = recovered.dim();
+fn calculate_correlations(_original: &Array2<f64>, recovered: &Array2<f64>) -> Array2<f64> {
+    let (n_orig, n_samples) = _original.dim();
+    let (n_rec_) = recovered.dim();
     let n = n_orig.min(n_rec);
 
     let mut correlations = Array2::zeros((n, n));
@@ -121,7 +124,7 @@ fn calculate_correlations(original: &Array2<f64>, recovered: &Array2<f64>) -> Ar
     for i in 0..n {
         for j in 0..n {
             // Calculate correlation coefficient
-            let orig = original.slice(s![i, ..]);
+            let orig = _original.slice(s![i, ..]);
             let rec = recovered.slice(s![j, ..]);
 
             let orig_mean = orig.mean().unwrap();
@@ -151,11 +154,11 @@ fn calculate_correlations(original: &Array2<f64>, recovered: &Array2<f64>) -> Ar
 
 /// Find best source matching and calculate overall recovery quality
 #[allow(dead_code)]
-fn calculate_recovery_quality(original: &Array2<f64>, recovered: &Array2<f64>) -> f64 {
-    let correlations = calculate_correlations(original, recovered);
+fn calculate_recovery_quality(_original: &Array2<f64>, recovered: &Array2<f64>) -> f64 {
+    let correlations = calculate_correlations(_original, recovered);
     let (n_orig, n_rec) = correlations.dim();
 
-    // For each original source, find the best matching recovered source
+    // For each _original source, find the best matching recovered source
     let mut total_correlation = 0.0;
     let mut used_indices = vec![false; n_rec];
 
@@ -182,14 +185,14 @@ fn calculate_recovery_quality(original: &Array2<f64>, recovered: &Array2<f64>) -
 
 /// Export signals to CSV for visualization
 #[allow(dead_code)]
-fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
+fn export_to_csv(_file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file =
-        File::create(file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
+        File::create(_file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     // Write header
     let header = signals
         .iter()
-        .map(|(name, _)| name.to_string())
+        .map(|(name_)| _name.to_string())
         .collect::<Vec<String>>()
         .join(",");
     writeln!(file, "{}", header).map_err(|e| SignalError::ComputationError(e.to_string()))?;
@@ -248,7 +251,7 @@ fn ica_example() -> SignalResult<()> {
     };
 
     // Apply FastICA
-    let (ica_sources, _ica_mixing) = bss::ica(
+    let (ica_sources_ica_mixing) = bss::ica(
         &noisy_mixed,
         Some(n_sources),
         bss::IcaMethod::FastICA,
@@ -261,7 +264,7 @@ fn ica_example() -> SignalResult<()> {
     println!("FastICA recovery quality: {:.4}", ica_quality);
 
     // Apply Infomax ICA
-    let (infomax_sources, _infomax_mixing) = bss::ica(
+    let (infomax_sources_infomax_mixing) = bss::ica(
         &noisy_mixed,
         Some(n_sources),
         bss::IcaMethod::Infomax,
@@ -274,7 +277,7 @@ fn ica_example() -> SignalResult<()> {
     println!("Infomax ICA recovery quality: {:.4}", infomax_quality);
 
     // Apply JADE ICA
-    let (jade_sources, _jade_mixing) = bss::ica(
+    let (jade_sources_jade_mixing) = bss::ica(
         &noisy_mixed,
         Some(n_sources),
         bss::IcaMethod::JADE,
@@ -324,12 +327,12 @@ fn ica_example() -> SignalResult<()> {
 
 /// Generate non-negative source signals for NMF testing
 #[allow(dead_code)]
-fn generate_non_negative_signals(n_samples: usize) -> Array2<f64> {
-    let mut sources = Array2::zeros((3, n_samples));
-    let t = Array1::linspace(0.0, 10.0, n_samples);
+fn generate_non_negative_signals(_n_samples: usize) -> Array2<f64> {
+    let mut sources = Array2::zeros((3, _n_samples));
+    let t = Array1::linspace(0.0, 10.0, _n_samples);
 
     // Source 1: Half-rectified sine wave
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         sources[[0, i]] = (t[i] * 2.0 * PI * 0.5).sin().max(0.0);
     }
 
@@ -392,7 +395,7 @@ fn nmf_example() -> SignalResult<()> {
     };
 
     // Apply NMF
-    let (nmf_sources, _nmf_mixing) = bss::nmf(&noisy_mixed, n_sources, &config)?;
+    let (nmf_sources_nmf_mixing) = bss::nmf(&noisy_mixed, n_sources, &config)?;
 
     // Calculate recovery quality
     let nmf_quality = calculate_recovery_quality(&sources, &nmf_sources);
@@ -469,7 +472,7 @@ fn pca_example() -> SignalResult<()> {
     };
 
     // Apply PCA
-    let (pca_sources, _pca_mixing) = bss::pca(&noisy_mixed, &config)?;
+    let (pca_sources_pca_mixing) = bss::pca(&noisy_mixed, &config)?;
 
     // Calculate recovery quality
     let pca_quality = calculate_recovery_quality(&sources, &pca_sources);
@@ -540,14 +543,14 @@ fn pca_example() -> SignalResult<()> {
 
 /// Generate sparse source signals for SCA testing
 #[allow(dead_code)]
-fn generate_sparse_signals(n_samples: usize) -> Array2<f64> {
-    let mut sources = Array2::zeros((3, n_samples));
-    let t = Array1::linspace(0.0, 10.0, n_samples);
+fn generate_sparse_signals(_n_samples: usize) -> Array2<f64> {
+    let mut sources = Array2::zeros((3, _n_samples));
+    let t = Array1::linspace(0.0, 10.0, _n_samples);
 
     // Source 1: Sparse spikes
     let _rng = rng();
     let threshold = 0.98;
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         if rand::random::<f64>() > threshold {
             sources[[0, i]] = 3.0 * (rand::random::<f64>() * 2.0 - 1.0);
         }
@@ -609,7 +612,7 @@ fn sparse_component_analysis_example() -> SignalResult<()> {
     };
 
     // Apply Sparse Component Analysis
-    let (sca_sources, _sca_mixing) = bss::sparse_component_analysis(
+    let (sca_sources_sca_mixing) = bss::sparse_component_analysis(
         &noisy_mixed,
         n_sources,
         0.1, // Sparsity parameter
@@ -713,11 +716,11 @@ fn compare_bss_methods() -> SignalResult<()> {
     };
 
     // Apply PCA
-    let (pca_sources, _) = bss::pca(&noisy_mixed, &config)?;
+    let (pca_sources_) = bss::pca(&noisy_mixed, &config)?;
     let pca_quality = calculate_recovery_quality(&sources, &pca_sources);
 
     // Apply FastICA
-    let (fastica_sources, _) = bss::ica(
+    let (fastica_sources_) = bss::ica(
         &noisy_mixed,
         Some(n_sources),
         bss::IcaMethod::FastICA,
@@ -727,7 +730,7 @@ fn compare_bss_methods() -> SignalResult<()> {
     let fastica_quality = calculate_recovery_quality(&sources, &fastica_sources);
 
     // Apply Infomax ICA
-    let (infomax_sources, _) = bss::ica(
+    let (infomax_sources_) = bss::ica(
         &noisy_mixed,
         Some(n_sources),
         bss::IcaMethod::Infomax,
@@ -737,7 +740,7 @@ fn compare_bss_methods() -> SignalResult<()> {
     let infomax_quality = calculate_recovery_quality(&sources, &infomax_sources);
 
     // Apply JADE ICA
-    let (jade_sources, _) = bss::ica(
+    let (jade_sources_) = bss::ica(
         &noisy_mixed,
         Some(n_sources),
         bss::IcaMethod::JADE,
@@ -747,7 +750,7 @@ fn compare_bss_methods() -> SignalResult<()> {
     let jade_quality = calculate_recovery_quality(&sources, &jade_sources);
 
     // Apply Joint Diagonalization
-    let (jd_sources, _) = bss::joint_diagonalization(&noisy_mixed, n_sources, &config)?;
+    let (jd_sources_) = bss::joint_diagonalization(&noisy_mixed, n_sources, &config)?;
     let jd_quality = calculate_recovery_quality(&sources, &jd_sources);
 
     // Print comparison

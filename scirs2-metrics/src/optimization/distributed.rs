@@ -31,9 +31,9 @@ pub struct AsyncSleep {
 }
 
 impl AsyncSleep {
-    pub fn new(duration: Duration) -> Self {
+    pub fn new(_duration: Duration) -> Self {
         Self {
-            duration,
+            _duration,
             start: None,
         }
     }
@@ -303,8 +303,7 @@ pub struct WorkerConnection {
     connection_pool: ConnectionPool,
     circuit_breaker: CircuitBreaker,
     last_used: Instant,
-    weight: f64,
-    _handle: Option<std::thread::JoinHandle<()>>,
+    weight: f64_handle: Option<std::thread::JoinHandle<()>>,
 }
 
 /// Load balancer trait for different strategies
@@ -380,10 +379,10 @@ pub struct ConnectionPool {
 }
 
 impl ConnectionPool {
-    pub fn new(max_connections: usize) -> Self {
+    pub fn new(_max_connections: usize) -> Self {
         Self {
-            available_connections: max_connections,
-            max_connections,
+            available_connections: _max_connections,
+            _max_connections,
             active_connections: 0,
             created_at: Instant::now(),
             last_cleanup: Instant::now(),
@@ -491,18 +490,18 @@ pub trait NetworkClient {
 
 impl DistributedMetricsCoordinator {
     /// Create a new advanced distributed metrics coordinator
-    pub fn new(config: DistributedConfig) -> Result<Self> {
+    pub fn new(_config: DistributedConfig) -> Result<Self> {
         let workers = Arc::new(RwLock::new(HashMap::new()));
 
         // Create load balancer based on strategy
-        let load_balancer = Self::create_load_balancer(&config.load_balancing)?;
+        let load_balancer = Self::create_load_balancer(&_config.load_balancing)?;
 
         // Create network client based on protocol
         let network_client =
-            Self::create_network_client(&config.network_protocol, &config.auth_config)?;
+            Self::create_network_client(&_config.network_protocol, &_config.auth_config)?;
 
         let coordinator = Self {
-            config: config.clone(),
+            _config: _config.clone(),
             workers,
             task_counter: Arc::new(RwLock::new(0)),
             load_balancer: Arc::new(Mutex::new(load_balancer)),
@@ -517,7 +516,7 @@ impl DistributedMetricsCoordinator {
         coordinator.initialize_workers()?;
 
         // Start background monitoring if enabled
-        if config.enable_monitoring {
+        if _config.enable_monitoring {
             coordinator.start_monitoring();
         }
 
@@ -666,7 +665,7 @@ impl DistributedMetricsCoordinator {
                     .as_secs(),
                 response_time: Duration::from_millis(0),
                 load_average: 0.0,
-                available_cores: num_cpus::get(),
+                available_cores: num, _cpus: get(),
                 gpu_usage: None,
                 worker_version: "1.0.0".to_string(),
                 capabilities: vec!["metrics".to_string()],
@@ -677,8 +676,7 @@ impl DistributedMetricsCoordinator {
             connection_pool: ConnectionPool::new(10),
             circuit_breaker: CircuitBreaker::new(5, Duration::from_secs(60)),
             last_used: Instant::now(),
-            weight: 1.0,
-            _handle: Some(handle),
+            weight: 1.0_handle: Some(handle),
         })
     }
 
@@ -830,8 +828,7 @@ impl DistributedMetricsCoordinator {
     fn create_intelligent_data_chunks(
         &self,
         y_true: &Array1<f64>,
-        y_pred: &Array1<f64>,
-        _task_info: &TaskInfo,
+        y_pred: &Array1<f64>, _task_info: &TaskInfo,
     ) -> Result<Vec<(Vec<f64>, Vec<f64>)>> {
         if y_true.len() != y_pred.len() {
             return Err(MetricsError::InvalidInput(
@@ -1029,7 +1026,7 @@ impl DistributedMetricsCoordinator {
         let mut handles = Vec::new();
 
         // Spawn threads for concurrent execution
-        for (i, _future) in futures.into_iter().enumerate() {
+        for (i_future) in futures.into_iter().enumerate() {
             let tx_clone = tx.clone();
             let handle = thread::spawn(move || {
                 // Since we can't use async runtime here, we'll use a blocking approach
@@ -1175,8 +1172,7 @@ impl DistributedMetricsCoordinator {
                     if retries >= self.config.max_retries {
                         // Fallback to local computation
                         let chunk_id = match &message {
-                            DistributedMessage::ComputeMetrics { chunk_id, .. } => *chunk_id,
-                            _ => 0,
+                            DistributedMessage::ComputeMetrics { chunk_id, .. } => *chunk_id_ => 0,
                         };
 
                         return Ok(ChunkResult {
@@ -1475,7 +1471,7 @@ impl DistributedMetricsCoordinator {
         let batch_size = y_true_batch.nrows();
         let mut batch_results = Vec::with_capacity(batch_size);
 
-        // Process each sample in the batch
+        // Process each sample in the _batch
         for i in 0..batch_size {
             let y_true_sample = y_true_batch.row(i).to_owned();
             let y_pred_sample = y_pred_batch.row(i).to_owned();
@@ -1767,8 +1763,7 @@ impl RoundRobinBalancer {
 impl LoadBalancer for RoundRobinBalancer {
     fn select_worker(
         &mut self,
-        workers: &HashMap<String, WorkerConnection>,
-        _task: &TaskInfo,
+        workers: &HashMap<String, WorkerConnection>, _task: &TaskInfo,
     ) -> Option<String> {
         let worker_ids: Vec<_> = workers.keys().cloned().collect();
         if worker_ids.is_empty() {
@@ -1781,7 +1776,7 @@ impl LoadBalancer for RoundRobinBalancer {
     }
 
     fn update_worker_metrics(&mut self, _worker_id: &str, _metrics: &WorkerMetrics) {
-        // Round-robin doesn't use metrics
+        // Round-robin doesn't use _metrics
     }
 
     fn get_strategy(&self) -> LoadBalancingStrategy {
@@ -1805,8 +1800,7 @@ impl LeastConnectionsBalancer {
 impl LoadBalancer for LeastConnectionsBalancer {
     fn select_worker(
         &mut self,
-        workers: &HashMap<String, WorkerConnection>,
-        _task: &TaskInfo,
+        workers: &HashMap<String, WorkerConnection>, _task: &TaskInfo,
     ) -> Option<String> {
         if workers.is_empty() {
             return None;
@@ -1851,10 +1845,10 @@ pub struct WeightedRoundRobinBalancer {
 }
 
 impl WeightedRoundRobinBalancer {
-    pub fn new(weights: HashMap<String, f64>) -> Self {
+    pub fn new(_weights: HashMap<String, f64>) -> Self {
         Self {
-            current_weights: weights.clone(),
-            weights,
+            current_weights: _weights.clone(),
+            _weights,
         }
     }
 }
@@ -1862,8 +1856,7 @@ impl WeightedRoundRobinBalancer {
 impl LoadBalancer for WeightedRoundRobinBalancer {
     fn select_worker(
         &mut self,
-        workers: &HashMap<String, WorkerConnection>,
-        _task: &TaskInfo,
+        workers: &HashMap<String, WorkerConnection>, _task: &TaskInfo,
     ) -> Option<String> {
         if workers.is_empty() {
             return None;
@@ -1931,8 +1924,7 @@ impl LoadBasedBalancer {
 impl LoadBalancer for LoadBasedBalancer {
     fn select_worker(
         &mut self,
-        workers: &HashMap<String, WorkerConnection>,
-        _task: &TaskInfo,
+        workers: &HashMap<String, WorkerConnection>, _task: &TaskInfo,
     ) -> Option<String> {
         if workers.is_empty() {
             return None;
@@ -1980,8 +1972,7 @@ impl LatencyBasedBalancer {
 impl LoadBalancer for LatencyBasedBalancer {
     fn select_worker(
         &mut self,
-        workers: &HashMap<String, WorkerConnection>,
-        _task: &TaskInfo,
+        workers: &HashMap<String, WorkerConnection>, _task: &TaskInfo,
     ) -> Option<String> {
         if workers.is_empty() {
             return None;
@@ -2018,11 +2009,11 @@ impl LoadBalancer for LatencyBasedBalancer {
 // Circuit Breaker Implementation
 
 impl CircuitBreaker {
-    pub fn new(failure_threshold: usize, timeout: Duration) -> Self {
+    pub fn new(_failure_threshold: usize, timeout: Duration) -> Self {
         Self {
             state: CircuitBreakerState::Closed,
             failure_count: 0,
-            failure_threshold,
+            _failure_threshold,
             timeout,
             last_failure_time: None,
             success_count: 0,
@@ -2198,10 +2189,10 @@ impl Default for RetryPolicy {
 }
 
 impl HttpConnectionPool {
-    pub fn new(max_connections_per_host: usize, max_idle_timeout: Duration) -> Self {
+    pub fn new(_max_connections_per_host: usize, max_idle_timeout: Duration) -> Self {
         Self {
             connections: HashMap::new(),
-            max_connections_per_host,
+            _max_connections_per_host,
             max_idle_timeout,
         }
     }
@@ -2260,9 +2251,9 @@ impl HttpConnectionPool {
 }
 
 impl HttpClient {
-    pub fn new(auth_config: Option<AuthConfig>) -> Result<Self> {
+    pub fn new(_auth_config: Option<AuthConfig>) -> Result<Self> {
         Ok(Self {
-            auth_config,
+            _auth_config,
             connection_pool: Arc::new(Mutex::new(HttpConnectionPool::new(
                 10,
                 Duration::from_secs(60),
@@ -2718,17 +2709,17 @@ impl HttpClient {
                 Ok(DistributedMessage::HealthCheckResponse { status })
             }
             _ => Err(MetricsError::ComputationError(
-                "Unknown message type in response".to_string(),
+                "Unknown _message type in response".to_string(),
             )),
         }
     }
 
     /// Parse a specific field from JSON string (simple implementation)
-    fn parse_json_field(json: &str, field_name: &str) -> Option<f64> {
+    fn parse_json_field(_json: &str, field_name: &str) -> Option<f64> {
         let pattern = format!("\"{}\"", field_name);
-        if let Some(field_start) = json.find(&pattern) {
-            if let Some(colon_pos) = json[field_start..].find(':') {
-                let after_colon = &json[field_start + colon_pos + 1..];
+        if let Some(field_start) = _json.find(&pattern) {
+            if let Some(colon_pos) = _json[field_start..].find(':') {
+                let after_colon = &_json[field_start + colon_pos + 1..];
                 let end_pos = after_colon
                     .find(',')
                     .or_else(|| after_colon.find('}'))
@@ -2781,8 +2772,7 @@ impl NetworkClient for HttpClient {
                         metrics_json.join(",")
                     )
                 }
-                DistributedMessage::HealthCheck => r#"{"type":"health_check"}"#.to_string(),
-                _ => r#"{"type":"unknown"}"#.to_string(),
+                DistributedMessage::HealthCheck => r#"{"type":"health_check"}"#.to_string(, _ => r#"{"type":"unknown"}"#.to_string(),
             };
 
             // Use a thread to perform blocking HTTP request
@@ -2832,12 +2822,12 @@ impl NetworkClient for HttpClient {
         self.parse_response(&response_json, message)
     }
 
-    fn establish_connection(&self, _address: &str) -> Result<()> {
+    fn establish_connection(&self_address: &str) -> Result<()> {
         // HTTP is stateless, no persistent connection needed
         Ok(())
     }
 
-    fn close_connection(&self, _address: &str) -> Result<()> {
+    fn close_connection(&self_address: &str) -> Result<()> {
         // HTTP is stateless, no persistent connection to close
         Ok(())
     }
@@ -2861,15 +2851,13 @@ impl HttpClient {
                 r#"{{"type": "ComputeMetrics", "task_id": "{}", "chunk_id": {}, "y_true": {:?}, "y_pred": {:?}, "metric_names": {:?}}}"#,
                 task_id, chunk_id, y_true, y_pred, metric_names
             )),
-            DistributedMessage::HealthCheck => Ok(r#"{"type": "HealthCheck"}"#.to_string()),
-            _ => Ok(r#"{"type": "Unknown"}"#.to_string()),
+            DistributedMessage::HealthCheck => Ok(r#"{"type": "HealthCheck"}"#.to_string(), _ => Ok(r#"{"type": "Unknown"}"#.to_string()),
         }
     }
 
     /// Parse HTTP response and convert to DistributedMessage
     fn parse_response(
-        &self,
-        _response_json: &str,
+        &self, _response_json: &str,
         original_message: &DistributedMessage,
     ) -> Result<DistributedMessage> {
         // Simple JSON parsing (in practice, use a proper JSON library)
@@ -2961,19 +2949,18 @@ impl HttpClient {
                     capabilities: vec!["metrics".to_string(), "http".to_string()],
                     health_score: 0.92,
                 },
-            }),
-            _ => Err(MetricsError::ComputationError(
-                "Unknown message type".to_string(),
+            }, _ => Err(MetricsError::ComputationError(
+                "Unknown _message type".to_string(),
             )),
         }
     }
 
-    fn establish_connection(&self, _address: &str) -> Result<()> {
+    fn establish_connection(&self_address: &str) -> Result<()> {
         // HTTP is connectionless, so this is a no-op
         Ok(())
     }
 
-    fn close_connection(&self, _address: &str) -> Result<()> {
+    fn close_connection(&self_address: &str) -> Result<()> {
         // HTTP is connectionless, so this is a no-op
         Ok(())
     }
@@ -2989,16 +2976,14 @@ pub struct GrpcClient {
 }
 
 impl GrpcClient {
-    pub fn new(auth_config: Option<AuthConfig>) -> Result<Self> {
-        Ok(Self { auth_config })
+    pub fn new(_auth_config: Option<AuthConfig>) -> Result<Self> {
+        Ok(Self { _auth_config })
     }
 }
 
 impl NetworkClient for GrpcClient {
     fn send_request(
-        &self,
-        _address: &str,
-        _message: &DistributedMessage,
+        &self_address: &str, _message: &DistributedMessage,
     ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
             // Simulate gRPC call
@@ -3031,9 +3016,7 @@ impl NetworkClient for GrpcClient {
     }
 
     fn send_request_sync(
-        &self,
-        _address: &str,
-        _message: &DistributedMessage,
+        &self_address: &str, _message: &DistributedMessage,
     ) -> Result<DistributedMessage> {
         // Simplified sync version
         std::thread::sleep(Duration::from_millis(30));
@@ -3063,12 +3046,12 @@ impl NetworkClient for GrpcClient {
         })
     }
 
-    fn establish_connection(&self, _address: &str) -> Result<()> {
+    fn establish_connection(&self_address: &str) -> Result<()> {
         // Establish persistent gRPC connection
         Ok(())
     }
 
-    fn close_connection(&self, _address: &str) -> Result<()> {
+    fn close_connection(&self_address: &str) -> Result<()> {
         // Close gRPC connection
         Ok(())
     }
@@ -3084,16 +3067,14 @@ pub struct TcpClient {
 }
 
 impl TcpClient {
-    pub fn new(auth_config: Option<AuthConfig>) -> Result<Self> {
-        Ok(Self { auth_config })
+    pub fn new(_auth_config: Option<AuthConfig>) -> Result<Self> {
+        Ok(Self { _auth_config })
     }
 }
 
 impl NetworkClient for TcpClient {
     fn send_request(
-        &self,
-        _address: &str,
-        _message: &DistributedMessage,
+        &self_address: &str, _message: &DistributedMessage,
     ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
             // Simulate TCP communication
@@ -3126,9 +3107,7 @@ impl NetworkClient for TcpClient {
     }
 
     fn send_request_sync(
-        &self,
-        _address: &str,
-        _message: &DistributedMessage,
+        &self_address: &str, _message: &DistributedMessage,
     ) -> Result<DistributedMessage> {
         // Simplified sync version
         std::thread::sleep(Duration::from_millis(20));
@@ -3158,12 +3137,12 @@ impl NetworkClient for TcpClient {
         })
     }
 
-    fn establish_connection(&self, _address: &str) -> Result<()> {
+    fn establish_connection(&self_address: &str) -> Result<()> {
         // Establish TCP connection
         Ok(())
     }
 
-    fn close_connection(&self, _address: &str) -> Result<()> {
+    fn close_connection(&self_address: &str) -> Result<()> {
         // Close TCP connection
         Ok(())
     }
@@ -3179,16 +3158,14 @@ pub struct WebSocketClient {
 }
 
 impl WebSocketClient {
-    pub fn new(auth_config: Option<AuthConfig>) -> Result<Self> {
-        Ok(Self { auth_config })
+    pub fn new(_auth_config: Option<AuthConfig>) -> Result<Self> {
+        Ok(Self { _auth_config })
     }
 }
 
 impl NetworkClient for WebSocketClient {
     fn send_request(
-        &self,
-        _address: &str,
-        _message: &DistributedMessage,
+        &self_address: &str, _message: &DistributedMessage,
     ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
             // tokio::time::sleep(Duration::from_millis(40)).await; // Commented out - missing tokio dependency
@@ -3220,9 +3197,7 @@ impl NetworkClient for WebSocketClient {
     }
 
     fn send_request_sync(
-        &self,
-        _address: &str,
-        _message: &DistributedMessage,
+        &self_address: &str, _message: &DistributedMessage,
     ) -> Result<DistributedMessage> {
         std::thread::sleep(Duration::from_millis(35));
         Ok(DistributedMessage::HealthCheckResponse {
@@ -3251,11 +3226,11 @@ impl NetworkClient for WebSocketClient {
         })
     }
 
-    fn establish_connection(&self, _address: &str) -> Result<()> {
+    fn establish_connection(&self_address: &str) -> Result<()> {
         Ok(())
     }
 
-    fn close_connection(&self, _address: &str) -> Result<()> {
+    fn close_connection(&self_address: &str) -> Result<()> {
         Ok(())
     }
 
@@ -3270,16 +3245,14 @@ pub struct UdpClient {
 }
 
 impl UdpClient {
-    pub fn new(auth_config: Option<AuthConfig>) -> Result<Self> {
-        Ok(Self { auth_config })
+    pub fn new(_auth_config: Option<AuthConfig>) -> Result<Self> {
+        Ok(Self { _auth_config })
     }
 }
 
 impl NetworkClient for UdpClient {
     fn send_request(
-        &self,
-        _address: &str,
-        _message: &DistributedMessage,
+        &self_address: &str, _message: &DistributedMessage,
     ) -> Pin<Box<dyn Future<Output = Result<DistributedMessage>> + Send>> {
         Box::pin(async move {
             // tokio::time::sleep(Duration::from_millis(10)).await; // Commented out - missing tokio dependency
@@ -3311,9 +3284,7 @@ impl NetworkClient for UdpClient {
     }
 
     fn send_request_sync(
-        &self,
-        _address: &str,
-        _message: &DistributedMessage,
+        &self_address: &str, _message: &DistributedMessage,
     ) -> Result<DistributedMessage> {
         std::thread::sleep(Duration::from_millis(5));
         Ok(DistributedMessage::HealthCheckResponse {
@@ -3342,12 +3313,12 @@ impl NetworkClient for UdpClient {
         })
     }
 
-    fn establish_connection(&self, _address: &str) -> Result<()> {
+    fn establish_connection(&self_address: &str) -> Result<()> {
         // UDP is connectionless
         Ok(())
     }
 
-    fn close_connection(&self, _address: &str) -> Result<()> {
+    fn close_connection(&self_address: &str) -> Result<()> {
         // UDP is connectionless
         Ok(())
     }

@@ -15,11 +15,11 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::generic_traits::{SpatialPoint, SpatialArray};
+//! use scirs2__spatial::generic_traits::{SpatialPoint, SpatialArray};
 //! use ndarray::array;
 //!
 //! // Generic distance calculation
-//! fn calculate_distance<T, P>(p1: &P, p2: &P) -> T
+//! fn calculate_distance<T, P>(_p1: &P, p2: &P) -> T
 //! where
 //!     T: SpatialScalar,
 //!     P: SpatialPoint<T>,
@@ -36,6 +36,7 @@
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
+use std::f64::consts::PI;
 
 /// Trait for scalar types that can be used in spatial computations
 ///
@@ -51,62 +52,62 @@ pub trait SpatialScalar:
     fn max_finite() -> Self;
 
     /// Convert from f64 (used for constants and literals)
-    fn from_f64(value: f64) -> Option<Self> {
-        NumCast::from(value)
+    fn from_f64(_value: f64) -> Option<Self> {
+        NumCast::from(_value)
     }
 
     /// Convert to f64 for interoperability
-    fn to_f64(&self) -> Option<f64> {
+    fn to_f64() -> Option<f64> {
         NumCast::from(*self)
     }
 
     /// Square root function
-    fn sqrt(self) -> Self {
+    fn sqrt() -> Self {
         Float::sqrt(self)
     }
 
     /// Absolute value function
-    fn abs(self) -> Self {
+    fn abs() -> Self {
         Float::abs(self)
     }
 
     /// Power function
-    fn powf(self, exp: Self) -> Self {
-        Float::powf(self, exp)
+    fn powf(_exp: Self) -> Self {
+        Float::powf(self_exp)
     }
 
     /// Natural logarithm
-    fn ln(self) -> Self {
+    fn ln() -> Self {
         Float::ln(self)
     }
 
     /// Exponential function
-    fn exp(self) -> Self {
+    fn exp() -> Self {
         Float::exp(self)
     }
 
     /// Sine function
-    fn sin(self) -> Self {
+    fn sin() -> Self {
         Float::sin(self)
     }
 
     /// Cosine function
-    fn cos(self) -> Self {
+    fn cos() -> Self {
         Float::cos(self)
     }
 
     /// Arctangent of y/x
-    fn atan2(self, other: Self) -> Self {
-        Float::atan2(self, other)
+    fn atan2(_other: Self) -> Self {
+        Float::atan2(self_other)
     }
 
     /// Check if the value is finite
-    fn is_finite(self) -> bool {
+    fn is_finite() -> bool {
         Float::is_finite(self)
     }
 
     /// Check if the value is NaN
-    fn is_nan(self) -> bool {
+    fn is_nan() -> bool {
         Float::is_nan(self)
     }
 
@@ -127,11 +128,11 @@ pub trait SpatialScalar:
 }
 
 impl SpatialScalar for f32 {
-    fn epsilon() -> Self {
+    fn epsilon(&self) -> Self {
         f32::EPSILON
     }
 
-    fn max_finite() -> Self {
+    fn max_finite(&self) -> Self {
         f32::MAX
     }
 
@@ -154,7 +155,6 @@ impl SpatialScalar for f32 {
             return Err("Slice lengths must match");
         }
 
-        use ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
 
@@ -168,7 +168,6 @@ impl SpatialScalar for f32 {
             return Err("Slice lengths must match");
         }
 
-        use ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
 
@@ -177,11 +176,11 @@ impl SpatialScalar for f32 {
 }
 
 impl SpatialScalar for f64 {
-    fn epsilon() -> Self {
+    fn epsilon(&self) -> Self {
         f64::EPSILON
     }
 
-    fn max_finite() -> Self {
+    fn max_finite(&self) -> Self {
         f64::MAX
     }
 
@@ -190,7 +189,6 @@ impl SpatialScalar for f64 {
             return Err("Slice lengths must match");
         }
 
-        use ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
 
@@ -204,7 +202,6 @@ impl SpatialScalar for f64 {
             return Err("Slice lengths must match");
         }
 
-        use ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
 
@@ -218,7 +215,6 @@ impl SpatialScalar for f64 {
             return Err("Slice lengths must match");
         }
 
-        use ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
 
@@ -232,10 +228,10 @@ impl SpatialScalar for f64 {
 /// allowing algorithms to work with vectors, arrays, and custom types.
 pub trait SpatialPoint<T: SpatialScalar> {
     /// Get the dimension of the point
-    fn dimension(&self) -> usize;
+    fn dimension() -> usize;
 
     /// Get the coordinate at the given index
-    fn coordinate(&self, index: usize) -> Option<T>;
+    fn coordinate(_index: usize) -> Option<T>;
 
     /// Get all coordinates as a slice if possible (for efficiency)
     fn as_slice(&self) -> Option<&[T]> {
@@ -243,16 +239,16 @@ pub trait SpatialPoint<T: SpatialScalar> {
     }
 
     /// Create a point from coordinates
-    fn from_coords(coords: &[T]) -> Self;
+    fn from_coords(_coords: &[T]) -> Self;
 
     /// Calculate squared Euclidean distance to another point
-    fn squared_distance_to(&self, other: &Self) -> T {
-        if self.dimension() != other.dimension() {
+    fn squared_distance_to(_other: &Self) -> T {
+        if self.dimension() != _other.dimension() {
             return T::max_finite();
         }
 
         // Try SIMD-optimized calculation if slices are available
-        if let (Some(slice_a), Some(slice_b)) = (self.as_slice(), other.as_slice()) {
+        if let (Some(slice_a), Some(slice_b)) = (self.as_slice(), _other.as_slice()) {
             if let Ok(simd_result) = T::simd_squared_euclidean_distance(slice_a, slice_b) {
                 return simd_result;
             }
@@ -261,7 +257,7 @@ pub trait SpatialPoint<T: SpatialScalar> {
         // Fallback to scalar calculation
         let mut sum = T::zero();
         for i in 0..self.dimension() {
-            if let (Some(a), Some(b)) = (self.coordinate(i), other.coordinate(i)) {
+            if let (Some(a), Some(b)) = (self.coordinate(i), _other.coordinate(i)) {
                 let diff = a - b;
                 sum = sum + diff * diff;
             }
@@ -270,18 +266,18 @@ pub trait SpatialPoint<T: SpatialScalar> {
     }
 
     /// Calculate Euclidean distance to another point
-    fn distance_to(&self, other: &Self) -> T {
-        SpatialScalar::sqrt(self.squared_distance_to(other))
+    fn distance_to(_other: &Self) -> T {
+        SpatialScalar::sqrt(self.squared_distance_to(_other))
     }
 
     /// Calculate Manhattan distance to another point
-    fn manhattan_distance_to(&self, other: &Self) -> T {
-        if self.dimension() != other.dimension() {
+    fn manhattan_distance_to(_other: &Self) -> T {
+        if self.dimension() != _other.dimension() {
             return T::max_finite();
         }
 
         // Try SIMD-optimized calculation if slices are available
-        if let (Some(slice_a), Some(slice_b)) = (self.as_slice(), other.as_slice()) {
+        if let (Some(slice_a), Some(slice_b)) = (self.as_slice(), _other.as_slice()) {
             if let Ok(simd_result) = T::simd_manhattan_distance(slice_a, slice_b) {
                 return simd_result;
             }
@@ -290,7 +286,7 @@ pub trait SpatialPoint<T: SpatialScalar> {
         // Fallback to scalar calculation
         let mut sum = T::zero();
         for i in 0..self.dimension() {
-            if let (Some(a), Some(b)) = (self.coordinate(i), other.coordinate(i)) {
+            if let (Some(a), Some(b)) = (self.coordinate(i), _other.coordinate(i)) {
                 sum = sum + SpatialScalar::abs(a - b);
             }
         }
@@ -315,7 +311,7 @@ pub trait SpatialArray<T: SpatialScalar, P: SpatialPoint<T>> {
     fn dimension(&self) -> Option<usize>;
 
     /// Get a point at the given index
-    fn get_point(&self, index: usize) -> Option<P>;
+    fn get_point(_index: usize) -> Option<P>;
 
     /// Iterate over all points
     fn iter_points(&self) -> Box<dyn Iterator<Item = P> + '_>;
@@ -352,20 +348,20 @@ pub trait SpatialArray<T: SpatialScalar, P: SpatialPoint<T>> {
 /// Trait for distance metrics
 pub trait DistanceMetric<T: SpatialScalar, P: SpatialPoint<T>> {
     /// Calculate distance between two points
-    fn distance(&self, p1: &P, p2: &P) -> T;
+    fn distance(_p1: &P, p2: &P) -> T;
 
     /// Calculate squared distance (if applicable, for efficiency)
-    fn squared_distance(&self, _p1: &P, _p2: &P) -> Option<T> {
+    fn squared_distance(_p1: &P_p2: &P) -> Option<T> {
         None
     }
 
     /// Check if this metric satisfies the triangle inequality
-    fn is_metric(&self) -> bool {
+    fn is_metric() -> bool {
         true
     }
 
     /// Get the name of this distance metric
-    fn name(&self) -> &'static str;
+    fn name() -> &'static str;
 }
 
 /// Euclidean distance metric
@@ -377,11 +373,11 @@ impl<T: SpatialScalar, P: SpatialPoint<T>> DistanceMetric<T, P> for EuclideanMet
         p1.distance_to(p2)
     }
 
-    fn squared_distance(&self, p1: &P, p2: &P) -> Option<T> {
-        Some(p1.squared_distance_to(p2))
+    fn squared_distance(_p1: &P, p2: &P) -> Option<T> {
+        Some(_p1.squared_distance_to(p2))
     }
 
-    fn name(&self) -> &'static str {
+    fn name() -> &'static str {
         "euclidean"
     }
 }
@@ -395,7 +391,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T>> DistanceMetric<T, P> for ManhattanMet
         p1.manhattan_distance_to(p2)
     }
 
-    fn name(&self) -> &'static str {
+    fn name() -> &'static str {
         "manhattan"
     }
 }
@@ -433,16 +429,16 @@ impl<T: SpatialScalar> SpatialPoint<T> for Vec<T> {
         self.len()
     }
 
-    fn coordinate(&self, index: usize) -> Option<T> {
-        self.get(index).copied()
+    fn coordinate(_index: usize) -> Option<T> {
+        self.get(_index).copied()
     }
 
-    fn as_slice(&self) -> Option<&[T]> {
+    fn as_slice() -> Option<&[T]> {
         Some(self.as_slice())
     }
 
-    fn from_coords(coords: &[T]) -> Self {
-        coords.to_vec()
+    fn from_coords(_coords: &[T]) -> Self {
+        _coords.to_vec()
     }
 }
 
@@ -452,11 +448,11 @@ impl<T: SpatialScalar> SpatialPoint<T> for &[T] {
         self.len()
     }
 
-    fn coordinate(&self, index: usize) -> Option<T> {
-        self.get(index).copied()
+    fn coordinate(_index: usize) -> Option<T> {
+        self.get(_index).copied()
     }
 
-    fn as_slice(&self) -> Option<&[T]> {
+    fn as_slice() -> Option<&[T]> {
         Some(self)
     }
 
@@ -476,17 +472,17 @@ impl<T: SpatialScalar, const N: usize> SpatialPoint<T> for [T; N] {
         N
     }
 
-    fn coordinate(&self, index: usize) -> Option<T> {
-        self.get(index).copied()
+    fn coordinate(_index: usize) -> Option<T> {
+        self.get(_index).copied()
     }
 
-    fn as_slice(&self) -> Option<&[T]> {
+    fn as_slice() -> Option<&[T]> {
         Some(self.as_slice())
     }
 
-    fn from_coords(coords: &[T]) -> Self {
+    fn from_coords(_coords: &[T]) -> Self {
         let mut result = [T::zero(); N];
-        for (i, &coord) in coords.iter().enumerate().take(N) {
+        for (i, &coord) in _coords.iter().enumerate().take(N) {
             result[i] = coord;
         }
         result
@@ -501,14 +497,14 @@ pub struct Point<T: SpatialScalar> {
 
 impl<T: SpatialScalar> Point<T> {
     /// Create a new point from coordinates
-    pub fn new(coords: Vec<T>) -> Self {
-        Self { coords }
+    pub fn new(_coords: Vec<T>) -> Self {
+        Self { _coords }
     }
 
     /// Create a point with the given dimension filled with zeros
-    pub fn zeros(dim: usize) -> Self {
+    pub fn zeros(_dim: usize) -> Self {
         Self {
-            coords: vec![T::zero(); dim],
+            coords: vec![T::zero(); _dim],
         }
     }
 
@@ -530,20 +526,20 @@ impl<T: SpatialScalar> Point<T> {
     }
 
     /// Get mutable access to coordinates
-    pub fn coords_mut(&mut self) -> &mut [T] {
+    pub fn coords_mut(&self) -> &mut [T] {
         &mut self.coords
     }
 
     /// Add another point (vector addition)
-    pub fn add(&self, other: &Point<T>) -> Option<Point<T>> {
-        if self.dimension() != other.dimension() {
+    pub fn add(_other: &Point<T>) -> Option<Point<T>> {
+        if self.dimension() != _other.dimension() {
             return None;
         }
 
         let coords: Vec<T> = self
             .coords
             .iter()
-            .zip(other.coords.iter())
+            .zip(_other.coords.iter())
             .map(|(&a, &b)| a + b)
             .collect();
 
@@ -551,15 +547,15 @@ impl<T: SpatialScalar> Point<T> {
     }
 
     /// Subtract another point (vector subtraction)
-    pub fn subtract(&self, other: &Point<T>) -> Option<Point<T>> {
-        if self.dimension() != other.dimension() {
+    pub fn subtract(_other: &Point<T>) -> Option<Point<T>> {
+        if self.dimension() != _other.dimension() {
             return None;
         }
 
         let coords: Vec<T> = self
             .coords
             .iter()
-            .zip(other.coords.iter())
+            .zip(_other.coords.iter())
             .map(|(&a, &b)| a - b)
             .collect();
 
@@ -567,19 +563,19 @@ impl<T: SpatialScalar> Point<T> {
     }
 
     /// Scale the point by a scalar
-    pub fn scale(&self, factor: T) -> Point<T> {
-        let coords: Vec<T> = self.coords.iter().map(|&c| c * factor).collect();
+    pub fn scale(_factor: T) -> Point<T> {
+        let coords: Vec<T> = self.coords.iter().map(|&c| c * _factor).collect();
         Point::new(coords)
     }
 
     /// Calculate the dot product with another point
-    pub fn dot(&self, other: &Point<T>) -> Option<T> {
-        if self.dimension() != other.dimension() {
+    pub fn dot(_other: &Point<T>) -> Option<T> {
+        if self.dimension() != _other.dimension() {
             return None;
         }
 
         // Try SIMD-optimized calculation
-        if let Ok(simd_result) = T::simd_dot_product(&self.coords, &other.coords) {
+        if let Ok(simd_result) = T::simd_dot_product(&self.coords, &_other.coords) {
             return Some(simd_result);
         }
 
@@ -587,7 +583,7 @@ impl<T: SpatialScalar> Point<T> {
         let dot_product = self
             .coords
             .iter()
-            .zip(other.coords.iter())
+            .zip(_other.coords.iter())
             .map(|(&a, &b)| a * b)
             .fold(T::zero(), |acc, x| acc + x);
 
@@ -620,16 +616,16 @@ impl<T: SpatialScalar> SpatialPoint<T> for Point<T> {
         self.coords.len()
     }
 
-    fn coordinate(&self, index: usize) -> Option<T> {
-        self.coords.get(index).copied()
+    fn coordinate(_index: usize) -> Option<T> {
+        self.coords.get(_index).copied()
     }
 
-    fn as_slice(&self) -> Option<&[T]> {
+    fn as_slice() -> Option<&[T]> {
         Some(&self.coords)
     }
 
-    fn from_coords(coords: &[T]) -> Self {
-        Point::new(coords.to_vec())
+    fn from_coords(_coords: &[T]) -> Self {
+        Point::new(_coords.to_vec())
     }
 }
 
@@ -638,19 +634,19 @@ pub mod utils {
     use super::*;
 
     /// Calculate pairwise distances between all points in a collection
-    pub fn pairwise_distances<T, P, A, M>(points: &A, metric: &M) -> Vec<T>
+    pub fn pairwise_distances<T, P, A, M>(_points: &A, metric: &M) -> Vec<T>
     where
         T: SpatialScalar,
         P: SpatialPoint<T>,
         A: SpatialArray<T, P>,
         M: DistanceMetric<T, P>,
     {
-        let n = points.len();
+        let n = _points.len();
         let mut distances = Vec::with_capacity(n * (n - 1) / 2);
 
         for i in 0..n {
             for j in (i + 1)..n {
-                if let (Some(p1), Some(p2)) = (points.get_point(i), points.get_point(j)) {
+                if let (Some(p1), Some(p2)) = (_points.get_point(i), _points.get_point(j)) {
                     distances.push(metric.distance(&p1, &p2));
                 }
             }
@@ -660,21 +656,21 @@ pub mod utils {
     }
 
     /// Find the centroid of a collection of points
-    pub fn centroid<T, P, A>(points: &A) -> Option<Point<T>>
+    pub fn centroid<T, P, A>(_points: &A) -> Option<Point<T>>
     where
         T: SpatialScalar,
         P: SpatialPoint<T>,
         A: SpatialArray<T, P>,
     {
-        if points.is_empty() {
+        if _points.is_empty() {
             return None;
         }
 
-        let n = points.len();
-        let dim = points.dimension()?;
+        let n = _points.len();
+        let dim = _points.dimension()?;
         let mut sum_coords = vec![T::zero(); dim];
 
-        for point in points.iter_points() {
+        for point in _points.iter_points() {
             for (i, sum_coord) in sum_coords.iter_mut().enumerate().take(dim) {
                 if let Some(coord) = point.coordinate(i) {
                     *sum_coord = *sum_coord + coord;
@@ -691,21 +687,21 @@ pub mod utils {
     }
 
     /// Calculate the convex hull using a generic algorithm
-    pub fn convex_hull_2d<T, P, A>(points: &A) -> Vec<Point<T>>
+    pub fn convex_hull_2d<T, P, A>(_points: &A) -> Vec<Point<T>>
     where
         T: SpatialScalar,
         P: SpatialPoint<T>,
         A: SpatialArray<T, P>,
     {
-        if points.len() < 3 {
-            return points
+        if _points.len() < 3 {
+            return _points
                 .iter_points()
                 .map(|p| Point::from_coords(p.as_slice().unwrap_or(&[])))
                 .collect();
         }
 
         // Simple implementation - in practice, you'd use more sophisticated algorithms
-        let mut hull_points: Vec<Point<T>> = points
+        let mut hull_points: Vec<Point<T>> = _points
             .iter_points()
             .map(|p| Point::from_coords(p.as_slice().unwrap_or(&[])))
             .collect();
@@ -726,8 +722,7 @@ pub mod utils {
 
 /// Integration with ndarray
 pub mod ndarray_integration {
-    use super::*;
-    use ndarray::{Array1, ArrayView1, ArrayView2, Axis};
+use ndarray::{ArrayView1, ArrayView2, Axis};
 
     /// Implementation of SpatialPoint for ndarray ArrayView1
     impl<T: SpatialScalar> SpatialPoint<T> for ArrayView1<'_, T> {
@@ -735,11 +730,11 @@ pub mod ndarray_integration {
             self.len()
         }
 
-        fn coordinate(&self, index: usize) -> Option<T> {
-            self.get(index).copied()
+        fn coordinate(_index: usize) -> Option<T> {
+            self.get(_index).copied()
         }
 
-        fn as_slice(&self) -> Option<&[T]> {
+        fn as_slice() -> Option<&[T]> {
             self.as_slice()
         }
 
@@ -758,16 +753,16 @@ pub mod ndarray_integration {
             self.len()
         }
 
-        fn coordinate(&self, index: usize) -> Option<T> {
-            self.get(index).copied()
+        fn coordinate(_index: usize) -> Option<T> {
+            self.get(_index).copied()
         }
 
-        fn as_slice(&self) -> Option<&[T]> {
+        fn as_slice() -> Option<&[T]> {
             self.as_slice()
         }
 
-        fn from_coords(coords: &[T]) -> Self {
-            Array1::from(coords.to_vec())
+        fn from_coords(_coords: &[T]) -> Self {
+            Array1::from(_coords.to_vec())
         }
     }
 
@@ -777,8 +772,8 @@ pub mod ndarray_integration {
     }
 
     impl<'a, T: SpatialScalar> NdArray2Wrapper<'a, T> {
-        pub fn new(array: ArrayView2<'a, T>) -> Self {
-            Self { array }
+        pub fn new(_array: ArrayView2<'a, T>) -> Self {
+            Self { _array }
         }
     }
 
@@ -795,15 +790,15 @@ pub mod ndarray_integration {
             }
         }
 
-        fn get_point(&self, index: usize) -> Option<Array1<T>> {
-            if index < self.len() {
-                Some(self.array.row(index).to_owned())
+        fn get_point(_index: usize) -> Option<Array1<T>> {
+            if _index < self.len() {
+                Some(self.array.row(_index).to_owned())
             } else {
                 None
             }
         }
 
-        fn iter_points(&self) -> Box<dyn Iterator<Item = Array1<T>> + '_> {
+        fn iter_points() -> Box<dyn Iterator<Item = Array1<T>> + '_> {
             Box::new(self.array.axis_iter(Axis(0)).map(|row| row.to_owned()))
         }
     }
@@ -811,7 +806,6 @@ pub mod ndarray_integration {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

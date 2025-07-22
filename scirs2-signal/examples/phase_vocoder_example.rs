@@ -3,7 +3,8 @@
 //! This example generates a chirp signal and applies different time stretching
 //! and pitch shifting operations using the phase vocoder.
 
-use scirs2_signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
+use scirs2__signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -144,12 +145,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Generate a chirp signal (frequency sweep)
 #[allow(dead_code)]
-fn generate_chirp(samples: usize, start_freq: f64, end_freq: f64, sample_rate: f64) -> Vec<f64> {
-    let mut signal = Vec::with_capacity(samples);
+fn generate_chirp(_samples: usize, start_freq: f64, end_freq: f64, sample_rate: f64) -> Vec<f64> {
+    let mut signal = Vec::with_capacity(_samples);
 
-    for i in 0..samples {
+    for i in 0.._samples {
         let t = i as f64 / sample_rate;
-        let duration = samples as f64 / sample_rate;
+        let duration = _samples as f64 / sample_rate;
 
         // Linear frequency sweep
         let _freq = start_freq + (end_freq - start_freq) * t / duration;
@@ -166,19 +167,19 @@ fn generate_chirp(samples: usize, start_freq: f64, end_freq: f64, sample_rate: f
 
 /// Calculate the RMS (Root Mean Square) value of a signal
 #[allow(dead_code)]
-fn calculate_rms(signal: &[f64]) -> f64 {
-    let sum_squared: f64 = signal.iter().map(|&x| x * x).sum();
-    (sum_squared / signal.len() as f64).sqrt()
+fn calculate_rms(_signal: &[f64]) -> f64 {
+    let sum_squared: f64 = _signal.iter().map(|&x| x * x).sum();
+    (sum_squared / _signal.len() as f64).sqrt()
 }
 
 /// Convert a semitone shift to a musical note name
 #[allow(dead_code)]
-fn semitone_to_note_name(semitones: f64) -> String {
-    if semitones == 0.0 {
+fn semitone_to_note_name(_semitones: f64) -> String {
+    if _semitones == 0.0 {
         return "unison".to_string();
     }
 
-    let semitones_int = semitones.round() as i32;
+    let semitones_int = _semitones.round() as i32;
 
     match semitones_int.abs() % 12 {
         0 => format!("{} octave", if semitones_int > 0 { "+" } else { "-" }),
@@ -222,7 +223,6 @@ fn semitone_to_note_name(semitones: f64) -> String {
         11 => format!(
             "major 7th {}",
             if semitones_int > 0 { "up" } else { "down" }
-        ),
-        _ => unreachable!(),
+        , _ => unreachable!(),
     }
 }

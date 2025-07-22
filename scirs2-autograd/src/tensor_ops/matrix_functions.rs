@@ -468,11 +468,11 @@ fn compute_matrix_pow_integer<F: Float + ndarray::ScalarOperand>(
 // Utility functions (reuse from other modules or implement here)
 
 #[allow(dead_code)]
-fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
-    let n = matrix.shape()[0];
+fn is_symmetric_matrix<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> bool {
+    let n = _matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
+            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > F::epsilon() * F::from(10.0).unwrap() {
                 return false;
             }
         }
@@ -489,7 +489,7 @@ fn is_positive_semidefinite<F: Float + ndarray::ScalarOperand + FromPrimitive>(
     }
 
     // Check eigenvalues
-    let (eigenvalues, _) = compute_symmetric_eigen(matrix)?;
+    let (eigenvalues_) = compute_symmetric_eigen(matrix)?;
     for &lambda in eigenvalues.iter() {
         if lambda < -F::epsilon() * F::from(10.0).unwrap() {
             return Ok(false);
@@ -568,9 +568,9 @@ fn compute_symmetric_eigen<F: Float + ndarray::ScalarOperand + FromPrimitive>(
 }
 
 #[allow(dead_code)]
-fn compute_matrix_inverse<F: Float>(matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F>, OpError> {
-    let n = matrix.shape()[0];
-    let mut a = matrix.to_owned();
+fn compute_matrix_inverse<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F>, OpError> {
+    let n = _matrix.shape()[0];
+    let mut a = _matrix.to_owned();
     let mut inv = Array2::<F>::eye(n);
 
     // Gauss-Jordan elimination

@@ -10,8 +10,10 @@
 //! - `boundary`: Signal extension methods for handling boundary conditions
 //! - `multiscale`: Multi-level transform functions for decomposition and reconstruction
 
+use crate::dwt::Wavelet;
 use ndarray::Array1;
 
+#[allow(unused_imports)]
 // Declare submodules
 mod boundary;
 mod filters;
@@ -39,18 +41,18 @@ pub struct DecompositionResult {
 
 impl DecompositionResult {
     /// Create from wavedec result
-    pub fn from_wavedec(coeffs: Vec<Vec<f64>>) -> Self {
-        if coeffs.len() < 2 {
+    pub fn from_wavedec(_coeffs: Vec<Vec<f64>>) -> Self {
+        if _coeffs.len() < 2 {
             panic!("wavedec result must have at least 2 arrays");
         }
 
         // Last element is approximation
-        let approx = Array1::from_vec(coeffs[coeffs.len() - 1].clone());
+        let approx = Array1::from_vec(_coeffs[_coeffs.len() - 1].clone());
 
         // All others are details (reverse order to go from coarsest to finest)
-        let mut details = Vec::with_capacity(coeffs.len() - 1);
-        for i in (0..coeffs.len() - 1).rev() {
-            details.push(Array1::from_vec(coeffs[i].clone()));
+        let mut details = Vec::with_capacity(_coeffs.len() - 1);
+        for i in (0.._coeffs.len() - 1).rev() {
+            details.push(Array1::from_vec(_coeffs[i].clone()));
         }
 
         Self { approx, details }

@@ -3,7 +3,7 @@
 //! This example shows how to use various filter design functions
 //! to create different types of digital filters.
 
-use scirs2_signal::filter::{butter_bandpass_bandstop, cheby1, FilterType};
+use scirs2__signal::filter::{butter_bandpass_bandstop, cheby1, FilterType};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -71,7 +71,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 4: Elliptic filter design
     println!("4. Elliptic Filter Design");
-    use scirs2_signal::filter::ellip;
+    use scirs2__signal::filter::ellip;
+use std::f64::consts::PI;
 
     let ellip_order = 3;
     let passband_ripple = 1.0;

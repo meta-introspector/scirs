@@ -85,8 +85,20 @@ impl Default for PrecisionContext {
 }
 
 impl PrecisionContext {
+    pub fn new() -> Self {
+        Self {
+            precision: 1e-15,  // Default to f64 precision
+            error_bounds: 0.0,
+            significant_digits: 15,
+            precision_loss_sources: Vec::new(),
+            condition_number: None,
+            is_stable: true,
+            last_updated: Instant::now(),
+        }
+    }
+
     /// Create a new precision context with given precision
-    pub fn new(precision: f64) -> Self {
+    pub fn with_precision(precision: f64) -> Self {
         Self {
             precision,
             significant_digits: precision as u32,
@@ -96,17 +108,17 @@ impl PrecisionContext {
 
     /// Create a precision context for single precision (f32)
     pub fn single_precision() -> Self {
-        Self::new(7.0) // Typical for f32
+        Self::with_precision(7.0) // Typical for f32
     }
 
     /// Create a precision context for double precision (f64)
     pub fn double_precision() -> Self {
-        Self::new(15.0) // Typical for f64
+        Self::with_precision(15.0) // Typical for f64
     }
 
     /// Create a precision context for extended precision
     pub fn extended_precision() -> Self {
-        Self::new(18.0) // Extended precision
+        Self::with_precision(18.0) // Extended precision
     }
 
     /// Update precision after an operation
@@ -201,24 +213,24 @@ impl PrecisionContext {
     }
 
     /// Check if the computation has acceptable precision
-    pub fn is_acceptable(&self, min_precision: f64) -> bool {
+    pub fn has_acceptable_precision(&self, min_precision: f64) -> bool {
         self.precision >= min_precision && self.is_stable
     }
 
     /// Generate precision warning if necessary
-    pub fn check_precision_warning(&self, min_acceptable: f64) -> Option<PrecisionWarning> {
-        if self.precision < min_acceptable {
+    pub fn check_acceptable(&self, threshold: f64) -> Option<PrecisionWarning> {
+        if self.precision < threshold {
             Some(PrecisionWarning {
                 current_precision: self.precision,
-                required_precision: min_acceptable,
-                severity: if self.precision < min_acceptable / 2.0 {
+                required_precision: threshold,
+                severity: if self.precision < threshold / 2.0 {
                     PrecisionLossSeverity::Severe
                 } else {
                     PrecisionLossSeverity::Moderate
                 },
                 message: format!(
                     "Precision ({:.2} digits) below acceptable threshold ({:.2} digits)",
-                    self.precision, min_acceptable
+                    self.precision, threshold
                 ),
                 suggestions: self.generate_suggestions(),
             })
@@ -278,6 +290,27 @@ impl PrecisionContext {
 
         suggestions
     }
+    
+    /// Check if precision falls below a minimum threshold and return a warning
+    pub fn check_precision_warning(&self, min_precision: f64) -> Option<PrecisionWarning> {
+        if self.precision < min_precision {
+            Some(PrecisionWarning {
+                current_precision: self.precision,
+                required_precision: min_precision,
+                severity: PrecisionLossSeverity::Severe,
+                message: format!(
+                    "Precision ({:.2} digits) below required minimum ({:.2} digits)",
+                    self.precision, min_precision
+                ),
+                suggestions: vec![
+                    "Use higher precision data types".to_string(),
+                    "Consider rescaling the problem".to_string(),
+                ],
+            })
+        } else {
+            None
+        }
+    }
 }
 
 /// Warning about precision loss
@@ -317,7 +350,7 @@ pub trait PrecisionTracked {
     fn precision_context_mut(&mut self) -> &mut PrecisionContext;
 
     /// Update precision after an operation
-    fn update_precision_after_op(&mut self, operation: &str, result_precision: f64) {
+    fn update_precision(&mut self, result_precision: f64, operation: &str) {
         self.precision_context_mut()
             .update_precision(result_precision, operation);
     }
@@ -368,7 +401,7 @@ where
     pub fn with_precision(value: T, precision: f64) -> Self {
         Self {
             value,
-            context: PrecisionContext::new(precision),
+            context: PrecisionContext::with_precision(precision),
         }
     }
 
@@ -778,7 +811,7 @@ mod tests {
 
     #[test]
     fn test_precision_warning() {
-        let context = PrecisionContext::new(2.0);
+        let context = PrecisionContext::with_precision(2.0);
         let warning = context.check_precision_warning(5.0);
         assert!(warning.is_some());
 
@@ -790,7 +823,7 @@ mod tests {
     #[test]
     fn test_precision_registry() {
         let registry = PrecisionRegistry::new();
-        let context = PrecisionContext::new(10.0);
+        let context = PrecisionContext::with_precision(10.0);
 
         registry
             .register_computation("test", context)

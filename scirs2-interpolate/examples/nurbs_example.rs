@@ -1,6 +1,6 @@
 use ndarray::array;
-use scirs2_interpolate::bspline::ExtrapolateMode;
-use scirs2_interpolate::nurbs::{make_nurbs_circle, make_nurbs_sphere, NurbsCurve, NurbsSurface};
+use scirs2__interpolate::bspline::ExtrapolateMode;
+use scirs2__interpolate::nurbs::{make_nurbs_circle, make_nurbs_sphere, NurbsCurve, NurbsSurface};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

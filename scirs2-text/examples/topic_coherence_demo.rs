@@ -1,6 +1,6 @@
 //! Topic coherence evaluation demonstration
 
-use scirs2_text::{
+use scirs2__text::{
     LatentDirichletAllocation, Tokenizer, Topic, TopicCoherence, TopicDiversity,
     WhitespaceTokenizer,
 };
@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let documents = vec![
         "Machine learning algorithms are used in artificial intelligence",
         "Deep learning neural networks process complex data patterns",
-        "Natural language processing enables text understanding",
+        "Natural language processing enables _text understanding",
         "Computer vision algorithms detect objects in images",
         "Reinforcement learning agents learn through trial and error",
         "Supervised learning requires labeled training data",

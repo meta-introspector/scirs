@@ -470,7 +470,7 @@ where
             Ok(result)
         }
         _ => Err(LinalgError::InvalidInputError(format!(
-            "Unsupported norm type: {norm_type}. Supported: 'fro', 'frobenius', '2', 'spectral'"
+            "Unsupported norm _type: {norm_type}. Supported: 'fro', 'frobenius', '2', 'spectral'"
         ))),
     }
 }
@@ -595,8 +595,8 @@ where
         .collect();
     pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-    for (i, (val, _)) in pairs.iter().enumerate() {
-        eigenvals[i] = *val;
+    for (i, (val_, _)) in pairs.iter().enumerate() {
+        eigenvals[i] = *val_;
     }
 
     Ok(eigenvals)
@@ -694,11 +694,11 @@ pub mod differential_operators {
     /// # Returns
     ///
     /// * Scalar field representing the divergence
-    pub fn matrix_divergence<F>(field: &Array3<F>, spacing: F) -> LinalgResult<Array1<F>>
+    pub fn matrix_divergence<F>(_field: &Array3<F>, spacing: F) -> LinalgResult<Array1<F>>
     where
         F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign,
     {
-        let n_points = field.len_of(Axis(2));
+        let n_points = _field.len_of(Axis(2));
         let mut divergence = Array1::zeros(n_points);
 
         for k in 1..n_points - 1 {
@@ -706,19 +706,19 @@ pub mod differential_operators {
 
             // ∂F₁₁/∂x (using central difference)
             div_k +=
-                (field[[0, 0, k + 1]] - field[[0, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+                (_field[[0, 0, k + 1]] - _field[[0, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
 
             // ∂F₁₂/∂y
             div_k +=
-                (field[[0, 1, k + 1]] - field[[0, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+                (_field[[0, 1, k + 1]] - _field[[0, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
 
             // ∂F₂₁/∂x
             div_k +=
-                (field[[1, 0, k + 1]] - field[[1, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+                (_field[[1, 0, k + 1]] - _field[[1, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
 
             // ∂F₂₂/∂y
             div_k +=
-                (field[[1, 1, k + 1]] - field[[1, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+                (_field[[1, 1, k + 1]] - _field[[1, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
 
             divergence[k] = div_k;
         }
@@ -745,11 +745,11 @@ pub mod differential_operators {
     /// # Returns
     ///
     /// * Scalar field representing the curl
-    pub fn matrix_curl_2d<F>(field: &Array3<F>, spacing: F) -> LinalgResult<Array1<F>>
+    pub fn matrix_curl_2d<F>(_field: &Array3<F>, spacing: F) -> LinalgResult<Array1<F>>
     where
         F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign,
     {
-        let n_points = field.len_of(Axis(2));
+        let n_points = _field.len_of(Axis(2));
         let mut curl = Array1::zeros(n_points);
 
         for k in 1..n_points - 1 {
@@ -757,19 +757,19 @@ pub mod differential_operators {
 
             // ∂F₁₂/∂x
             curl_k +=
-                (field[[0, 1, k + 1]] - field[[0, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+                (_field[[0, 1, k + 1]] - _field[[0, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
 
             // -∂F₁₁/∂y (approximated as derivative in k direction)
             curl_k -=
-                (field[[0, 0, k + 1]] - field[[0, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+                (_field[[0, 0, k + 1]] - _field[[0, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
 
             // ∂F₂₂/∂x
             curl_k +=
-                (field[[1, 1, k + 1]] - field[[1, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+                (_field[[1, 1, k + 1]] - _field[[1, 1, k - 1]]) / (F::from(2.0).unwrap() * spacing);
 
             // -∂F₂₁/∂y
             curl_k -=
-                (field[[1, 0, k + 1]] - field[[1, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
+                (_field[[1, 0, k + 1]] - _field[[1, 0, k - 1]]) / (F::from(2.0).unwrap() * spacing);
 
             curl[k] = curl_k;
         }
@@ -795,11 +795,11 @@ pub mod differential_operators {
     /// # Returns
     ///
     /// * Matrix field representing the Laplacian
-    pub fn matrix_laplacian<F>(field: &Array3<F>, spacing: F) -> LinalgResult<Array3<F>>
+    pub fn matrix_laplacian<F>(_field: &Array3<F>, spacing: F) -> LinalgResult<Array3<F>>
     where
         F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign,
     {
-        let (n_rows, n_cols, n_points) = field.dim();
+        let (n_rows, n_cols, n_points) = _field.dim();
         let mut laplacian = Array3::zeros((n_rows, n_cols, n_points));
 
         let h_sq = spacing * spacing;
@@ -808,9 +808,9 @@ pub mod differential_operators {
             for j in 0..n_cols {
                 for k in 1..n_points - 1 {
                     // Second derivative approximation: (f[k-1] - 2*f[k] + f[k+1]) / h²
-                    laplacian[[i, j, k]] = (field[[i, j, k - 1]]
-                        - F::from(2.0).unwrap() * field[[i, j, k]]
-                        + field[[i, j, k + 1]])
+                    laplacian[[i, j, k]] = (_field[[i, j, k - 1]]
+                        - F::from(2.0).unwrap() * _field[[i, j, k]]
+                        + _field[[i, j, k + 1]])
                         / h_sq;
                 }
             }
@@ -841,26 +841,26 @@ pub mod differential_operators {
     /// # Returns
     ///
     /// * Matrix field representing the gradient
-    pub fn matrix_gradient<F>(field: &Array3<F>, spacing: F) -> LinalgResult<Array3<F>>
+    pub fn matrix_gradient<F>(_field: &Array3<F>, spacing: F) -> LinalgResult<Array3<F>>
     where
         F: Float + Zero + One + Copy + Debug + ndarray::ScalarOperand + num_traits::NumAssign,
     {
-        let (n_rows, n_cols, n_points) = field.dim();
+        let (n_rows, n_cols, n_points) = _field.dim();
         let mut gradient = Array3::zeros((n_rows, n_cols, n_points));
 
         for i in 0..n_rows {
             for j in 0..n_cols {
                 for k in 1..n_points - 1 {
                     // Central difference: (f[k+1] - f[k-1]) / (2*h)
-                    gradient[[i, j, k]] = (field[[i, j, k + 1]] - field[[i, j, k - 1]])
+                    gradient[[i, j, k]] = (_field[[i, j, k + 1]] - _field[[i, j, k - 1]])
                         / (F::from(2.0).unwrap() * spacing);
                 }
 
                 // Handle boundaries with forward/backward differences
                 if n_points > 1 {
-                    gradient[[i, j, 0]] = (field[[i, j, 1]] - field[[i, j, 0]]) / spacing;
+                    gradient[[i, j, 0]] = (_field[[i, j, 1]] - _field[[i, j, 0]]) / spacing;
                     gradient[[i, j, n_points - 1]] =
-                        (field[[i, j, n_points - 1]] - field[[i, j, n_points - 2]]) / spacing;
+                        (_field[[i, j, n_points - 1]] - _field[[i, j, n_points - 2]]) / spacing;
                 }
             }
         }

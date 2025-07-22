@@ -143,8 +143,7 @@ impl<F: Float + Debug + 'static> PostTrainingQuantizer<F> {
             QuantizationBits::Mixed { weight_bits, .. } => match weight_bits {
                 8 => (-128i32, 127i32),
                 16 => (-32768i32, 32767i32),
-                4 => (-8i32, 7i32),
-                _ => {
+                4 => (-8i32, 7i32, _ => {
                     return Err(NeuralError::InvalidArchitecture(
                         "Unsupported bit width".to_string(),
                     ))
@@ -332,19 +331,18 @@ pub struct SparsityStatistics {
     pub memory_reduction: f64,
 impl<F: Float + Debug + 'static> ModelPruner<F> {
     /// Create a new model pruner
-    pub fn new(method: PruningMethod) -> Self {
-            method,
+    pub fn new(_method: PruningMethod) -> Self {
+            _method,
             pruning_masks: HashMap::new(),
             sparsity_stats: HashMap::new(),
-            current_step: 0,
-            _phantom: std::marker::PhantomData,
+            current_step: 0, _phantom: std::marker::PhantomData,
     /// Generate pruning mask for a layer
     pub fn generate_pruning_mask(
         &mut self,
         layer_name: String,
         weights: &ArrayD<F>,
     ) -> Result<ArrayD<bool>> {
-        let mask = match &self.method {
+        let mask = match &self._method {
             PruningMethod::MagnitudeBased { threshold } => {
                 self.magnitude_based_mask(weights, *threshold)?
             PruningMethod::TopK { k } => self.top_k_mask(weights, *k)?,
@@ -493,9 +491,9 @@ pub struct AccuracyMetrics {
     pub accuracy_loss: f64,
 impl CompressionAnalyzer {
     /// Create a new compression analyzer
-    pub fn new(original_size: usize) -> Self {
-            original_size,
-            compressed_size: original_size,
+    pub fn new(_original_size: usize) -> Self {
+            _original_size,
+            compressed_size: _original_size,
             speed_metrics: SpeedMetrics {
                 original_time_ms: 0.0,
                 compressed_time_ms: 0.0,
@@ -515,12 +513,12 @@ impl CompressionAnalyzer {
     pub fn update_accuracy_metrics(&mut self, metrics: AccuracyMetrics) {
         self.accuracy_metrics = metrics;
     /// Get compression ratio
-        self.original_size as f64 / self.compressed_size as f64
+        self._original_size as f64 / self.compressed_size as f64
     /// Get comprehensive analysis report
     pub fn generate_report(&self) -> CompressionReport {
         CompressionReport {
             compression_ratio: self.get_compression_ratio(),
-            size_reduction_mb: (self.original_size - self.compressed_size) as f64
+            size_reduction_mb: (self._original_size - self.compressed_size) as f64
                 / (1024.0 * 1024.0),
             speed_metrics: self.speed_metrics.clone(),
             accuracy_metrics: self.accuracy_metrics.clone(),

@@ -32,7 +32,7 @@ use std::collections::BTreeSet;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::advanced::matthews_corrcoef;
+/// use scirs2__metrics::classification::advanced::matthews_corrcoef;
 ///
 /// let y_true = array![1, 0, 1, 1, 0, 0];
 /// let y_pred = array![1, 0, 1, 0, 0, 1];
@@ -182,7 +182,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::advanced::balanced_accuracy_score;
+/// use scirs2__metrics::classification::advanced::balanced_accuracy_score;
 ///
 /// let y_true = array![0, 0, 0, 1, 1, 1];
 /// let y_pred = array![0, 0, 1, 1, 0, 1];
@@ -220,7 +220,7 @@ where
         ));
     }
 
-    // Get unique classes from true labels
+    // Get unique classes from _true labels
     let mut classes = BTreeSet::new();
     for yt in y_true.iter() {
         classes.insert(format!("{yt:?}"));
@@ -291,7 +291,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::advanced::cohen_kappa_score;
+/// use scirs2__metrics::classification::advanced::cohen_kappa_score;
 ///
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 0, 2, 0, 0, 2];
@@ -407,7 +407,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::advanced::brier_score_loss;
+/// use scirs2__metrics::classification::advanced::brier_score_loss;
 ///
 /// let y_true = array![0, 1, 1, 0];
 /// let y_prob = array![0.1, 0.9, 0.8, 0.4];
@@ -495,7 +495,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::advanced::jaccard_score;
+/// use scirs2__metrics::classification::advanced::jaccard_score;
 ///
 /// let y_true = array![0, 1, 1, 0, 1];
 /// let y_pred = array![0, 0, 1, 1, 1];
@@ -576,7 +576,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::advanced::hamming_loss;
+/// use scirs2__metrics::classification::advanced::hamming_loss;
 ///
 /// let y_true = array![0, 1, 0, 1];
 /// let y_pred = array![1, 1, 0, 0];
@@ -696,7 +696,7 @@ where
         let mut sample_loss = 0.0;
 
         for j in 0..n_classes {
-            let true_val: f64 = if let Some(val) = NumCast::from(
+            let _true_val: f64 = if let Some(val) = NumCast::from(
                 y_true
                     .get((i, j))
                     .ok_or_else(|| {
@@ -715,7 +715,7 @@ where
 
             // Only consider classes that are truly present (true_val > 0)
             if true_val > 0.0 {
-                let prob = y_prob
+                let _prob = y_prob
                     .get((i, j))
                     .ok_or_else(|| {
                         MetricsError::InvalidInput(
@@ -725,7 +725,7 @@ where
                     .max(eps)
                     .min(1.0 - eps);
 
-                sample_loss -= true_val * prob.ln();
+                sample_loss -= true_val * _prob.ln();
             }
         }
 
@@ -781,7 +781,7 @@ where
             MetricsError::InvalidInput("Index out of bounds accessing y_prob".to_string())
         })?;
 
-        let prob = y_pred_i.max(eps).min(1.0 - eps);
+        let _prob = y_pred_i.max(eps).min(1.0 - eps);
 
         let true_val_num: usize = if let Some(val) = NumCast::from(y_i.clone()) {
             val
@@ -793,10 +793,10 @@ where
 
         if true_val_num == 1 {
             // For class 1, use the probability as-is
-            loss -= prob.ln();
+            loss -= _prob.ln();
         } else if true_val_num == 0 {
             // For class 0, use 1 - probability
-            loss -= (1.0 - prob).ln();
+            loss -= (1.0 - _prob).ln();
         } else {
             return Err(MetricsError::InvalidInput(
                 format!("For binary classification with 1D arrays, y_true must contain only 0 or 1 values, got {true_val_num}")
@@ -954,7 +954,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::advanced::calibration_curve;
+/// use scirs2__metrics::classification::advanced::calibration_curve;
 ///
 /// let y_true = array![0, 0, 0, 0, 1, 1, 1, 1, 1];
 /// let y_prob = array![0.1, 0.2, 0.3, 0.4, 0.65, 0.7, 0.8, 0.9, 0.99];
@@ -1024,14 +1024,14 @@ where
 
     // Create bin edges
     let bin_edges = if strategy == "uniform" {
-        // Create uniform bins
+        // Create uniform _bins
         let mut edges = Vec::with_capacity(n_bins + 1);
         for i in 0..=n_bins {
             edges.push(i as f64 / n_bins as f64);
         }
         edges
     } else {
-        // Create quantile bins
+        // Create quantile _bins
         let mut probs_sorted: Vec<f64> = y_prob.iter().copied().collect();
         probs_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -1051,17 +1051,17 @@ where
     let mut counts = Array1::<f64>::zeros(n_bins);
 
     // Bin the probabilities and compute statistics
-    for (true_label, prob) in y_true.iter().zip(y_prob.iter()) {
+    for (true_label_prob) in y_true.iter().zip(y_prob.iter()) {
         // Find bin index
         let bin_idx = bin_edges
             .iter()
             .enumerate()
-            .filter(|(i, &edge)| *i < n_bins && prob >= &edge && prob <= &bin_edges[i + 1])
-            .map(|(i, _)| i)
+            .filter(|(i, &edge)| *i < n_bins && _prob >= &edge && _prob <= &bin_edges[i + 1])
+            .map(|(i_)| i)
             .next()
             .unwrap_or_else(|| {
-                // Handle edge case when prob is exactly 1.0
-                if (prob - 1.0).abs() < 1e-10 {
+                // Handle edge case when _prob is exactly 1.0
+                if (_prob - 1.0).abs() < 1e-10 {
                     n_bins - 1
                 } else {
                     0 // Default to first bin as a fallback
@@ -1069,12 +1069,12 @@ where
             });
 
         // Update bin statistics
-        prob_pred[bin_idx] += prob;
+        prob_pred[bin_idx] += _prob;
         prob_true[bin_idx] += *true_label as f64;
         counts[bin_idx] += 1.0;
     }
 
-    // Compute mean predicted probability and fraction of true positives for each bin
+    // Compute mean predicted probability and fraction of _true positives for each bin
     for i in 0..n_bins {
         if counts[i] > 0.0 {
             prob_pred[i] /= counts[i];

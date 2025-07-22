@@ -125,36 +125,36 @@ fn find_closest_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
     let mut min_i = 0;
     let mut min_j = 0;
 
-    // Loop through all pairs of active clusters
+    // Loop through all pairs of active _clusters
     for (i, &cluster_i) in active_clusters.iter().enumerate() {
         for (j, &cluster_j) in active_clusters.iter().enumerate() {
             if i >= j {
                 continue; // Only need to check each pair once
             }
 
-            // Calculate distance between clusters based on the linkage method
+            // Calculate distance between _clusters based on the linkage method
             let dist = match method {
                 LinkageMethod::Single => single_linkage(
-                    &clusters[cluster_i],
-                    &clusters[cluster_j],
+                    &_clusters[cluster_i],
+                    &_clusters[cluster_j],
                     distances,
                     n_samples,
                 )?,
                 LinkageMethod::Complete => complete_linkage(
-                    &clusters[cluster_i],
-                    &clusters[cluster_j],
+                    &_clusters[cluster_i],
+                    &_clusters[cluster_j],
                     distances,
                     n_samples,
                 )?,
                 LinkageMethod::Average => average_linkage(
-                    &clusters[cluster_i],
-                    &clusters[cluster_j],
+                    &_clusters[cluster_i],
+                    &_clusters[cluster_j],
                     distances,
                     n_samples,
                 )?,
                 LinkageMethod::Ward => ward_linkage(
-                    &clusters[cluster_i],
-                    &clusters[cluster_j],
+                    &_clusters[cluster_i],
+                    &_clusters[cluster_j],
                     distances,
                     n_samples,
                 )?,
@@ -163,8 +163,8 @@ fn find_closest_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
                 }
                 LinkageMethod::Median => median_linkage(cluster_i, cluster_j, centroids.unwrap()),
                 LinkageMethod::Weighted => weighted_linkage(
-                    &clusters[cluster_i],
-                    &clusters[cluster_j],
+                    &_clusters[cluster_i],
+                    &_clusters[cluster_j],
                     distances,
                     n_samples,
                 )?,
@@ -181,7 +181,7 @@ fn find_closest_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     if min_dist == F::infinity() {
         return Err(ClusteringError::ComputationError(
-            "Could not find minimum distance between clusters".into(),
+            "Could not find minimum distance between _clusters".into(),
         ));
     }
 
@@ -329,17 +329,15 @@ pub(crate) fn weighted_linkage<F: Float + FromPrimitive>(
 
 /// Updates the centroid for centroid-based methods
 pub(crate) fn update_centroid<F: Float + FromPrimitive>(
-    centroids: &mut Array2<F>,
-    _method: LinkageMethod,
-    _n_samples: usize,
+    centroids: &mut Array2<F>, _method: LinkageMethod_n_samples: usize,
     new_cluster_id: usize,
 ) {
     // This is a simplified placeholder. For a complete implementation,
     // we would need to store actual centroids and update them.
 
     // In a real implementation:
-    // 1. For centroid method: new_centroid = (n1*c1 + n2*c2)/(n1 + n2)
-    // 2. For median method: new_centroid = (c1 + c2)/2
+    // 1. For centroid _method: new_centroid = (n1*c1 + n2*c2)/(n1 + n2)
+    // 2. For median _method: new_centroid = (c1 + c2)/2
 
     // For now, we'll just set a dummy value to satisfy the type system
     centroids[[new_cluster_id, 0]] = F::one();

@@ -117,8 +117,8 @@ pub use matching::*;
 pub use motifs::*;
 pub use paths::*;
 pub use properties::*;
-pub use random_walk::*;
-pub use shortest_path::*;
+pub use random__walk::*;
+pub use shortest__path::*;
 pub use similarity::*;
 pub use transformations::*;
 pub use traversal::*;
@@ -166,12 +166,12 @@ where
     let mut parent: HashMap<N, N> = nodes.iter().map(|n| (n.clone(), n.clone())).collect();
     let mut rank: HashMap<N, usize> = nodes.iter().map(|n| (n.clone(), 0)).collect();
 
-    fn find<N: Node>(parent: &mut HashMap<N, N>, node: &N) -> N {
-        if parent[node] != *node {
-            let root = find(parent, &parent[node].clone());
-            parent.insert(node.clone(), root.clone());
+    fn find<N: Node>(_parent: &mut HashMap<N, N>, node: &N) -> N {
+        if _parent[node] != *node {
+            let root = find(_parent, &_parent[node].clone());
+            _parent.insert(node.clone(), root.clone());
         }
-        parent[node].clone()
+        _parent[node].clone()
     }
 
     fn union<N: Node>(
@@ -223,18 +223,18 @@ where
 /// Returns nodes in topological order if the graph is a DAG,
 /// otherwise returns an error indicating a cycle was found.
 #[allow(dead_code)]
-pub fn topological_sort<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<Vec<N>>
+pub fn topological_sort<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
     // Use petgraph's topological sort
-    match petgraph_toposort(graph.inner(), None) {
+    match petgraph_toposort(_graph.inner(), None) {
         Ok(indices) => {
             let sorted_nodes = indices
                 .into_iter()
-                .map(|idx| graph.inner()[idx].clone())
+                .map(|idx| _graph.inner()[idx].clone())
                 .collect();
             Ok(sorted_nodes)
         }
@@ -272,7 +272,7 @@ where
     let mut new_pr = vec![0.0; n];
 
     // Create node index mapping
-    let node_to_idx: HashMap<_, _> = nodes.iter().enumerate().map(|(i, &n)| (n, i)).collect();
+    let node_to_idx: HashMap<__> = nodes.iter().enumerate().map(|(i, &n)| (n, i)).collect();
 
     // Iterate until convergence
     for _ in 0..max_iterations {
@@ -415,7 +415,7 @@ where
 ///
 /// Measures how close a node is to all other nodes in the graph.
 #[allow(dead_code)]
-pub fn closeness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>, normalized: bool) -> HashMap<N, f64>
+pub fn closeness_centrality<N, E, Ix>(_graph: &Graph<N, E, Ix>, normalized: bool) -> HashMap<N, f64>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight
@@ -429,10 +429,10 @@ where
         + std::default::Default,
     Ix: IndexType,
 {
-    let node_indices: Vec<_> = graph.inner().node_indices().collect();
+    let node_indices: Vec<_> = _graph.inner().node_indices().collect();
     let nodes: Vec<N> = node_indices
         .iter()
-        .map(|&idx| graph.inner()[idx].clone())
+        .map(|&idx| _graph.inner()[idx].clone())
         .collect();
     let n = nodes.len();
     let mut centrality = HashMap::new();
@@ -444,7 +444,7 @@ where
         // Calculate shortest paths to all other nodes
         for other in &nodes {
             if node != other {
-                if let Ok(Some(path)) = dijkstra_path(graph, node, other) {
+                if let Ok(Some(path)) = dijkstra_path(_graph, node, other) {
                     let distance: f64 = path.total_weight.into();
                     total_distance += distance;
                     reachable_count += 1;
@@ -484,7 +484,7 @@ where
 {
     let node_indices: Vec<_> = graph.inner().node_indices().collect();
     let nodes: Vec<N> = node_indices
-        .iter()
+        ._iter()
         .map(|&idx| graph.inner()[idx].clone())
         .collect();
     let n = nodes.len();
@@ -495,8 +495,8 @@ where
 
     // Create adjacency matrix
     let mut adj_matrix = Array2::<f64>::zeros((n, n));
-    for (i, node_i) in nodes.iter().enumerate() {
-        for (j, node_j) in nodes.iter().enumerate() {
+    for (i, node_i) in nodes._iter().enumerate() {
+        for (j, node_j) in nodes._iter().enumerate() {
             if let Ok(weight) = graph.edge_weight(node_i, node_j) {
                 adj_matrix[[i, j]] = weight.into();
             }

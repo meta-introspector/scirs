@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use scirs2_spatial::pathplanning::{
+use scirs2__spatial::pathplanning::{
     PotentialConfig, PotentialField2DPlanner, PotentialFieldPlanner,
 };
 use std::time::Instant;
@@ -320,7 +320,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Simple ASCII visualization of a path with circular obstacles
 #[allow(dead_code)]
-fn print_ascii_visualization_circles(path: &[Array1<f64>], circles: &[([f64; 2], f64)]) {
+fn print_ascii_visualization_circles(_path: &[Array1<f64>], circles: &[([f64; 2], f64)]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
@@ -344,10 +344,10 @@ fn print_ascii_visualization_circles(path: &[Array1<f64>], circles: &[([f64; 2],
         }
     }
 
-    // Draw the path
-    for i in 0..path.len() - 1 {
-        let (x1, y1) = (path[i][0], path[i][1]);
-        let (x2, y2) = (path[i + 1][0], path[i + 1][1]);
+    // Draw the _path
+    for i in 0.._path.len() - 1 {
+        let (x1, y1) = (_path[i][0], _path[i][1]);
+        let (x2, y2) = (_path[i + 1][0], _path[i + 1][1]);
 
         // Scale to grid coordinates
         let (gx1, gy1) = (
@@ -382,12 +382,12 @@ fn print_ascii_visualization_circles(path: &[Array1<f64>], circles: &[([f64; 2],
 
     // Mark start and goal
     let (start_x, start_y) = (
-        (path[0][0] / 10.0 * SIZE as f64) as usize,
-        (path[0][1] / 10.0 * SIZE as f64) as usize,
+        (_path[0][0] / 10.0 * SIZE as f64) as usize,
+        (_path[0][1] / 10.0 * SIZE as f64) as usize,
     );
     let (goal_x, goal_y) = (
-        (path.last().unwrap()[0] / 10.0 * SIZE as f64) as usize,
-        (path.last().unwrap()[1] / 10.0 * SIZE as f64) as usize,
+        (_path.last().unwrap()[0] / 10.0 * SIZE as f64) as usize,
+        (_path.last().unwrap()[1] / 10.0 * SIZE as f64) as usize,
     );
 
     if start_x < SIZE && start_y < SIZE {
@@ -399,7 +399,7 @@ fn print_ascii_visualization_circles(path: &[Array1<f64>], circles: &[([f64; 2],
     }
 
     // Print the grid
-    println!("\nASCII Visualization (S=start, G=goal, #=obstacle, *=path):");
+    println!("\nASCII Visualization (S=start, G=goal, #=obstacle, *=_path):");
     for row in &grid {
         println!("{}", row.iter().collect::<String>());
     }
@@ -407,7 +407,7 @@ fn print_ascii_visualization_circles(path: &[Array1<f64>], circles: &[([f64; 2],
 
 /// Simple ASCII visualization of a path with polygon obstacles
 #[allow(dead_code)]
-fn print_ascii_visualization_polygons(path: &[Array1<f64>], polygons: &[Vec<[f64; 2]>]) {
+fn print_ascii_visualization_polygons(_path: &[Array1<f64>], polygons: &[Vec<[f64; 2]>]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
@@ -427,10 +427,10 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], polygons: &[Vec<[f64
         }
     }
 
-    // Draw the path
-    for i in 0..path.len() - 1 {
-        let (x1, y1) = (path[i][0], path[i][1]);
-        let (x2, y2) = (path[i + 1][0], path[i + 1][1]);
+    // Draw the _path
+    for i in 0.._path.len() - 1 {
+        let (x1, y1) = (_path[i][0], _path[i][1]);
+        let (x2, y2) = (_path[i + 1][0], _path[i + 1][1]);
 
         // Scale to grid coordinates
         let (gx1, gy1) = (
@@ -465,12 +465,12 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], polygons: &[Vec<[f64
 
     // Mark start and goal
     let (start_x, start_y) = (
-        (path[0][0] / 10.0 * SIZE as f64) as usize,
-        (path[0][1] / 10.0 * SIZE as f64) as usize,
+        (_path[0][0] / 10.0 * SIZE as f64) as usize,
+        (_path[0][1] / 10.0 * SIZE as f64) as usize,
     );
     let (goal_x, goal_y) = (
-        (path.last().unwrap()[0] / 10.0 * SIZE as f64) as usize,
-        (path.last().unwrap()[1] / 10.0 * SIZE as f64) as usize,
+        (_path.last().unwrap()[0] / 10.0 * SIZE as f64) as usize,
+        (_path.last().unwrap()[1] / 10.0 * SIZE as f64) as usize,
     );
 
     if start_x < SIZE && start_y < SIZE {
@@ -482,7 +482,7 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], polygons: &[Vec<[f64
     }
 
     // Print the grid
-    println!("\nASCII Visualization (S=start, G=goal, #=obstacle, *=path):");
+    println!("\nASCII Visualization (S=start, G=goal, #=obstacle, *=_path):");
     for row in &grid {
         println!("{}", row.iter().collect::<String>());
     }
@@ -490,7 +490,7 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], polygons: &[Vec<[f64
 
 /// Visualize a local minimum case with no path
 #[allow(dead_code)]
-fn print_local_minimum_visualization(start: [f64; 2], goal: [f64; 2], polygons: &[Vec<[f64; 2]>]) {
+fn print_local_minimum_visualization(_start: [f64; 2], goal: [f64; 2], polygons: &[Vec<[f64; 2]>]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
@@ -510,10 +510,10 @@ fn print_local_minimum_visualization(start: [f64; 2], goal: [f64; 2], polygons: 
         }
     }
 
-    // Mark start and goal
+    // Mark _start and goal
     let (start_x, start_y) = (
-        (start[0] / 10.0 * SIZE as f64) as usize,
-        (start[1] / 10.0 * SIZE as f64) as usize,
+        (_start[0] / 10.0 * SIZE as f64) as usize,
+        (_start[1] / 10.0 * SIZE as f64) as usize,
     );
     let (goal_x, goal_y) = (
         (goal[0] / 10.0 * SIZE as f64) as usize,
@@ -529,7 +529,7 @@ fn print_local_minimum_visualization(start: [f64; 2], goal: [f64; 2], polygons: 
     }
 
     // Print the grid
-    println!("\nASCII Visualization (S=start, G=goal, #=obstacle):");
+    println!("\nASCII Visualization (S=_start, G=goal, #=obstacle):");
     for row in &grid {
         println!("{}", row.iter().collect::<String>());
     }
@@ -537,11 +537,11 @@ fn print_local_minimum_visualization(start: [f64; 2], goal: [f64; 2], polygons: 
 
 /// Check if a point is inside a polygon using the ray casting algorithm
 #[allow(dead_code)]
-fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
-    let (x, y) = (point[0], point[1]);
+fn point_in_polygon(_point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
+    let (x, y) = (_point[0], _point[1]);
     let mut inside = false;
 
-    // Ray casting algorithm determines if the point is inside the polygon
+    // Ray casting algorithm determines if the _point is inside the polygon
     let n = polygon.len();
     for i in 0..n {
         let (x1, y1) = (polygon[i][0], polygon[i][1]);

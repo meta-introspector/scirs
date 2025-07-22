@@ -80,7 +80,7 @@ impl Default for UnifiedOptimizationConfig {
 
 /// Unified optimization pipeline
 pub struct UnifiedOptimizer<M: MPIInterface> {
-    config: UnifiedOptimizationConfig,
+    _config: UnifiedOptimizationConfig,
 
     // Optional components based on configuration
     distributed_context: Option<DistributedOptimizationContext<M>>,
@@ -96,24 +96,24 @@ pub struct UnifiedOptimizer<M: MPIInterface> {
 
 impl<M: MPIInterface> UnifiedOptimizer<M> {
     /// Create a new unified optimizer
-    pub fn new(config: UnifiedOptimizationConfig, mpi: Option<M>) -> ScirsResult<Self> {
-        let distributed_context = if config.use_distributed {
-            if let (Some(mpi_interface), Some(dist_config)) = (mpi, &config.distributed_config) {
+    pub fn new(_config: UnifiedOptimizationConfig, mpi: Option<M>) -> ScirsResult<Self> {
+        let distributed_context = if _config.use_distributed {
+            if let (Some(mpi_interface), Some(dist_config)) = (mpi, &_config.distributed_config) {
                 Some(DistributedOptimizationContext::new(
                     mpi_interface,
                     dist_config.clone(),
                 ))
             } else {
                 return Err(ScirsError::InvalidInput(error_context!(
-                    "MPI interface and distributed config required for distributed optimization"
+                    "MPI interface and distributed _config required for distributed optimization"
                 )));
             }
         } else {
             None
         };
 
-        let self_tuning_optimizer = if config.use_self_tuning {
-            let tuning_config = config
+        let self_tuning_optimizer = if _config.use_self_tuning {
+            let tuning_config = _config
                 .self_tuning_config
                 .clone()
                 .unwrap_or_else(SelfTuningConfig::default);
@@ -122,14 +122,14 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
             None
         };
 
-        let (gpu_context, acceleration_manager) = if config.use_gpu {
-            let gpu_config = config
+        let (gpu_context, acceleration_manager) = if _config.use_gpu {
+            let gpu_config = _config
                 .gpu_config
                 .clone()
                 .unwrap_or_else(GpuOptimizationConfig::default);
             let gpu_ctx = GpuOptimizationContext::new(gpu_config)?;
 
-            let accel_config = config
+            let accel_config = _config
                 .acceleration_config
                 .clone()
                 .unwrap_or_else(AccelerationConfig::default);
@@ -140,8 +140,8 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
             (None, None)
         };
 
-        let (visualizer, trajectory_tracker) = if config.enable_visualization {
-            let vis_config = config
+        let (visualizer, trajectory_tracker) = if _config.enable_visualization {
+            let vis_config = _config
                 .visualization_config
                 .clone()
                 .unwrap_or_else(VisualizationConfig::default);
@@ -153,7 +153,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         };
 
         Ok(Self {
-            config,
+            _config,
             distributed_context,
             self_tuning_optimizer,
             gpu_context,
@@ -411,8 +411,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
 
     /// Perform distributed line search
     fn distributed_line_search<F>(
-        &mut self,
-        _dist_ctx: &mut DistributedOptimizationContext<M>,
+        &mut self, _dist_ctx: &mut DistributedOptimizationContext<M>,
         function: &F,
         x: &Array1<f64>,
         direction: &Array1<f64>,
@@ -511,7 +510,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
     }
 
     /// Update specific algorithm parameters
-    fn update_algorithm_parameter(&mut self, _name: &str, _value: f64) -> ScirsResult<()> {
+    fn update_algorithm_parameter(&mut self_name: &str, _value: f64) -> ScirsResult<()> {
         // Update internal algorithm parameters based on self-tuning
         // This would be algorithm-specific
         Ok(())
@@ -782,7 +781,7 @@ mod tests {
         assert!(!config.use_distributed);
         assert!(config.use_self_tuning);
         assert!(!config.use_gpu);
-        assert!(config.enable_visualization);
+        assert!(_config.enable_visualization);
     }
 
     #[test]
@@ -802,7 +801,7 @@ mod tests {
     fn test_bounds_application() {
         // Test bounds constraint application
         let config = UnifiedOptimizationConfig::default();
-        let _optimizer: Result<UnifiedOptimizer<crate::distributed::MockMPI>, _> =
+        let _optimizer: Result<UnifiedOptimizer<crate::distributed::MockMPI>_> =
             UnifiedOptimizer::new(config, None);
 
         // This would test the bounds application logic

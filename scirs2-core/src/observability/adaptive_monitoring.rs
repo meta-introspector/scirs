@@ -101,10 +101,10 @@ impl AdaptiveMonitoringSystem {
         Ok(())
     }
 
-    fn monitoring_loop(
-        monitor: &Arc<RwLock<PerformanceMonitor>>,
+    fn collect_metrics(
+        collector: &Arc<Mutex<MetricsCollector>>,
         config: &Arc<RwLock<MonitoringConfiguration>>,
-        metrics_collector: &Arc<Mutex<MetricsCollector>>,
+        monitor: &Arc<RwLock<PerformanceMonitor>>,
     ) -> CoreResult<()> {
         let config_read = config.read().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
@@ -117,12 +117,12 @@ impl AdaptiveMonitoringSystem {
         }
 
         // Collect current metrics
-        let mut collector = metrics_collector.lock().map_err(|_| {
+        let mut _collector = collector.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire collector lock".to_string(),
             ))
         })?;
-        let metrics = collector.collect_comprehensive_metrics()?;
+        let metrics = _collector.collect_comprehensive_metrics()?;
 
         // Update performance monitor
         let mut monitor_write = monitor.write().map_err(|_| {
@@ -163,7 +163,7 @@ impl AdaptiveMonitoringSystem {
                 "Failed to acquire optimization lock".to_string(),
             ))
         })?;
-        optimization_write.adaptive_optimize(&current_metrics, &predictions)?;
+        (*optimization_write).adaptive_optimize(&current_metrics, &predictions)?;
 
         Ok(())
     }
@@ -186,7 +186,7 @@ impl AdaptiveMonitoringSystem {
                 "Failed to acquire prediction lock".to_string(),
             ))
         })?;
-        prediction_write.update_predictions(&historical_data)?;
+        (*prediction_write).update_with_data(&historical_data)?;
 
         Ok(())
     }
@@ -245,7 +245,7 @@ impl AdaptiveMonitoringSystem {
     }
 
     /// Update monitoring configuration
-    pub fn update_configuration(&self, new_config: MonitoringConfiguration) -> CoreResult<()> {
+    pub fn update_config(&self, new_config: MonitoringConfiguration) -> CoreResult<()> {
         let mut config = self.configuration.write().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire config lock".to_string(),
@@ -277,6 +277,29 @@ impl AdaptiveMonitoringSystem {
             alerts,
             timestamp: Instant::now(),
         })
+    }
+    
+    /// Main monitoring loop for performance tracking
+    fn monitoring_loop(
+        monitor: &Arc<RwLock<PerformanceMonitor>>,
+        config: &Arc<RwLock<MonitoringConfiguration>>,
+        metrics_collector: &Arc<Mutex<MetricsCollector>>,
+    ) -> CoreResult<()> {
+        // Collect metrics and update performance monitor
+        Self::collect_metrics(metrics_collector, config, monitor)?;
+        
+        // Update performance trends
+        let mut monitor_write = monitor.write().map_err(|_| {
+            CoreError::InvalidState(ErrorContext::new(
+                "Failed to acquire monitor lock".to_string(),
+            ))
+        })?;
+        
+        // Get latest metrics for trend analysis
+        let current_metrics = ComprehensivePerformanceMetrics::default();
+        monitor_write.update_performance_trends(&current_metrics)?;
+        
+        Ok(())
     }
 }
 
@@ -436,9 +459,7 @@ impl OptimizationEngine {
         })
     }
 
-    pub fn adaptive_optimize(
-        &mut self,
-        current_metrics: &ComprehensivePerformanceMetrics,
+    pub fn apply_strategy(&mut self, current_metrics: &ComprehensivePerformanceMetrics,
         predictions: &PerformancePredictions,
     ) -> CoreResult<()> {
         // Analyze current performance
@@ -469,9 +490,7 @@ impl OptimizationEngine {
         (cpu_score + memory_score + latency_score + throughput_score) / 4.0
     }
 
-    fn needs_optimization(
-        &self,
-        current_metrics: &ComprehensivePerformanceMetrics,
+    fn needs_optimization(&self, current_metrics: &ComprehensivePerformanceMetrics,
         predictions: &PerformancePredictions,
     ) -> CoreResult<bool> {
         // Check current performance thresholds
@@ -494,9 +513,7 @@ impl OptimizationEngine {
         Ok(false)
     }
 
-    fn determine_optimization_action(
-        &self,
-        current_metrics: &ComprehensivePerformanceMetrics,
+    fn select_optimization_action(&self, current_metrics: &ComprehensivePerformanceMetrics,
         predictions: &PerformancePredictions,
     ) -> CoreResult<OptimizationAction> {
         let mut actions = Vec::new();
@@ -530,8 +547,10 @@ impl OptimizationEngine {
         Ok(OptimizationAction {
             actions,
             timestamp: Instant::now(),
-            reason: "Adaptive optimization based on current metrics and predictions".to_string(),
+            reason: "Adaptive optimization based on current _metrics and predictions".to_string(),
             priority: OptimizationPriority::Medium,
+            expected_impact: ImpactLevel::Medium,
+            success: false,
         })
     }
 
@@ -561,6 +580,14 @@ impl OptimizationEngine {
                 OptimizationActionType::PreemptiveMemoryOptimization => {
                     // Implement preemptive memory optimization
                     self.preemptive_memory_optimization()?;
+                }
+                OptimizationActionType::ReduceCpuUsage => {
+                    // Implement CPU usage reduction
+                    self.reduce_cpu_usage()?;
+                }
+                OptimizationActionType::OptimizePerformance => {
+                    // Implement general performance optimization
+                    self.optimize_performance()?;
                 }
             }
         }
@@ -617,14 +644,24 @@ impl OptimizationEngine {
         self.reduce_memory_usage()?;
         Ok(())
     }
+    
+    fn reduce_cpu_usage(&self) -> CoreResult<()> {
+        // Implement CPU usage reduction
+        Ok(())
+    }
+    
+    fn optimize_performance(&self) -> CoreResult<()> {
+        // Implement general performance optimization
+        Ok(())
+    }
 
-    fn adapt_strategy(&mut self, performance_score: f64) -> CoreResult<()> {
+    fn update_effectiveness(&mut self, score: f64) -> CoreResult<()> {
         // Update strategy effectiveness
         let current_effectiveness = self
             .strategy_effectiveness
             .entry(self.current_strategy)
             .or_insert(0.5);
-        *current_effectiveness = (*current_effectiveness * 0.9) + (performance_score * 0.1);
+        *current_effectiveness = (*current_effectiveness * 0.9) + (score * 0.1);
 
         // Consider switching strategy if current one is not effective
         if *current_effectiveness < 0.3 {
@@ -692,6 +729,70 @@ impl OptimizationEngine {
         }
         counts
     }
+    
+    /// Adaptive optimization method
+    pub fn adaptive_optimize(
+        &mut self,
+        current_metrics: &ComprehensivePerformanceMetrics,
+        predictions: &PerformancePredictions,
+    ) -> CoreResult<()> {
+        // Apply optimization strategy
+        self.apply_strategy(current_metrics, predictions)?;
+        
+        // Update effectiveness tracking
+        let performance_score = self.calculate_performance_score(current_metrics);
+        self.strategy_effectiveness.insert(self.current_strategy, performance_score);
+        
+        Ok(())
+    }
+    
+    /// Determine the optimization action based on current metrics and predictions
+    pub fn determine_optimization_action(
+        &mut self,
+        current_metrics: &ComprehensivePerformanceMetrics,
+        predictions: &PerformancePredictions,
+    ) -> CoreResult<OptimizationAction> {
+        // Analyze metrics to determine action
+        let mut actions = Vec::new();
+        
+        // Check CPU usage
+        if current_metrics.cpu_utilization > 0.8 {
+            actions.push(OptimizationActionType::ReduceCpuUsage);
+        }
+        
+        // Check memory usage
+        if current_metrics.memory_utilization > 0.8 {
+            actions.push(OptimizationActionType::ReduceMemoryUsage);
+        }
+        
+        // Check for performance issues based on predictions
+        if predictions.predicted_performance_change < -0.1 {
+            actions.push(OptimizationActionType::OptimizePerformance);
+        }
+        
+        Ok(OptimizationAction {
+            timestamp: std::time::Instant::now(),
+            actions,
+            priority: OptimizationPriority::Medium,
+            reason: "Performance optimization based on metrics analysis".to_string(),
+            expected_impact: ImpactLevel::Medium,
+            success: false, // Will be updated after execution
+        })
+    }
+    
+    /// Adapt the optimization strategy based on performance score
+    pub fn adapt_strategy(&mut self, performance_score: f64) -> CoreResult<()> {
+        // Simple strategy adaptation logic
+        if performance_score < 0.3 {
+            self.current_strategy = OptimizationStrategy::Aggressive;
+        } else if performance_score < 0.7 {
+            self.current_strategy = OptimizationStrategy::Balanced;
+        } else {
+            self.current_strategy = OptimizationStrategy::Conservative;
+        }
+        
+        Ok(())
+    }
 }
 
 /// Predictive performance analysis engine
@@ -714,9 +815,7 @@ impl PredictionEngine {
         })
     }
 
-    pub fn update_predictions(
-        &mut self,
-        historical_data: &[ComprehensivePerformanceMetrics],
+    pub fn update_with_data(&mut self, historical_data: &[ComprehensivePerformanceMetrics],
     ) -> CoreResult<()> {
         if historical_data.len() < 10 {
             return Ok(()); // Need at least 10 data points for predictions
@@ -745,7 +844,7 @@ impl PredictionEngine {
             .time_series_models
             .entry("cpu".to_string())
             .or_default();
-        cpu_model.update(cpu_data)?;
+        cpu_model.add_data(cpu_data)?;
 
         // Extract memory utilization time series
         let memory_data: Vec<f64> = data.iter().map(|m| m.memory_utilization).collect();
@@ -753,7 +852,7 @@ impl PredictionEngine {
             .time_series_models
             .entry("memory".to_string())
             .or_default();
-        memory_model.update(memory_data)?;
+        memory_model.add_data(memory_data)?;
 
         // Extract throughput time series
         let throughput_data: Vec<f64> = data.iter().map(|m| m.operations_per_second).collect();
@@ -761,7 +860,7 @@ impl PredictionEngine {
             .time_series_models
             .entry("throughput".to_string())
             .or_default();
-        throughput_model.update(throughput_data)?;
+        throughput_model.add_data(throughput_data)?;
 
         Ok(())
     }
@@ -798,6 +897,7 @@ impl PredictionEngine {
             confidence: self.prediction_accuracy,
             time_horizon_minutes: 5,
             generated_at: Instant::now(),
+            predicted_performance_change: if predicted_cpu_spike || predicted_memory_pressure || predicted_throughput_drop { -0.2 } else { 0.0 },
         })
     }
 }
@@ -881,7 +981,31 @@ impl AlertingSystem {
 
         // Trigger alerts for collected rules
         for rule in rules_to_trigger {
-            self.trigger_alert(&rule, metrics)?;
+            let alert = PerformanceAlert {
+                id: format!(
+                    "alert_{}",
+                    SystemTime::now()
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis()
+                ),
+                rule_name: rule.name.clone(),
+                severity: rule.severity,
+                message: format!("Alert triggered for rule: {}", rule.name),
+                triggered_at: Instant::now(),
+                acknowledged: false,
+                resolved: false,
+            };
+            
+            // Add to active alerts
+            self.active_alerts.push(alert.clone());
+            
+            // Add to history
+            self.alert_history.push_back(AlertEvent {
+                alert,
+                event_type: AlertEventType::Triggered,
+                timestamp: Instant::now(),
+            });
         }
 
         // Clean up resolved alerts
@@ -943,48 +1067,54 @@ impl AlertingSystem {
         }
     }
 
-    fn trigger_alert(
-        &mut self,
-        rule: &AlertRule,
-        _metrics: &ComprehensivePerformanceMetrics,
+    fn check_alerts(&mut self, metrics: &ComprehensivePerformanceMetrics,
     ) -> CoreResult<()> {
-        // Check if alert is already active
-        if self
-            .active_alerts
-            .iter()
-            .any(|alert| alert.rule_name == rule.name)
-        {
-            return Ok(());
+        // Collect rules that need to trigger alerts to avoid borrowing conflicts
+        let mut rules_to_trigger = Vec::new();
+        for rule in &self.alert_rules {
+            if self.evaluate_rule(rule, metrics)? {
+                // Check if alert is already active
+                if !self
+                    .active_alerts
+                    .iter()
+                    .any(|alert| alert.rule_name == rule.name)
+                {
+                    rules_to_trigger.push(rule.clone());
+                }
+            }
         }
 
-        let alert = PerformanceAlert {
-            id: format!(
-                "alert_{}",
-                SystemTime::now()
-                    .duration_since(SystemTime::UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis()
-            ),
-            rule_name: rule.name.clone(),
-            severity: rule.severity,
-            message: format!("name: {}", rule.name),
-            triggered_at: Instant::now(),
-            acknowledged: false,
-            resolved: false,
-        };
+        // Trigger alerts for rules that are not already active
+        for rule in rules_to_trigger {
+            let alert = PerformanceAlert {
+                id: format!(
+                    "alert_{}",
+                    SystemTime::now()
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis()
+                ),
+                rule_name: rule.name.clone(),
+                severity: rule.severity,
+                message: format!("Alert triggered for rule: {}", rule.name),
+                triggered_at: Instant::now(),
+                acknowledged: false,
+                resolved: false,
+            };
 
-        // Add to active alerts
-        self.active_alerts.push(alert.clone());
+            // Add to active alerts
+            self.active_alerts.push(alert.clone());
 
-        // Add to history
-        self.alert_history.push_back(AlertEvent {
-            alert,
-            event_type: AlertEventType::Triggered,
-            timestamp: Instant::now(),
-        });
+            // Add to history
+            self.alert_history.push_back(AlertEvent {
+                alert,
+                event_type: AlertEventType::Triggered,
+                timestamp: Instant::now(),
+            });
 
-        // Send notifications
-        self.send_notifications(&rule.name, rule.severity)?;
+            // TODO: Implement notification sending
+            // self.send_notifications(&rule.name, rule.severity)?;
+        }
 
         Ok(())
     }
@@ -1038,7 +1168,7 @@ impl AlertingSystem {
         Ok(())
     }
 
-    fn send_notifications(&self, alert_name: &str, severity: AlertSeverity) -> CoreResult<()> {
+    fn send_alert(&self, alert_name: &str, severity: AlertSeverity) -> CoreResult<()> {
         for channel in &self.notification_channels {
             channel.send_notification(alert_name, severity)?;
         }
@@ -1147,7 +1277,7 @@ impl MetricsCollector {
         #[cfg(target_os = "macos")]
         {
             use std::process::Command;
-            if let Ok(output) = Command::new("top").args(&["-l", "1", "-n", "0"]).output() {
+            if let Ok(output) = Command::new(top).args(&["-l", "1", "-n", "0"]).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     for line in output_str.lines() {
@@ -1188,7 +1318,7 @@ impl MetricsCollector {
             // This would require additional dependencies like winapi
             // For now, estimate based on load average if available
             use std::process::Command;
-            if let Ok(output) = Command::new("wmic")
+            if let Ok(output) = Command::new(wmic)
                 .args(&["cpu", "get", "loadpercentage", "/value"])
                 .output()
             {
@@ -1269,7 +1399,7 @@ impl MetricsCollector {
         #[cfg(target_os = "macos")]
         {
             use std::process::Command;
-            if let Ok(output) = Command::new("vm_stat").output() {
+            if let Ok(output) = Command::new(vm_stat).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     let mut pages_free = 0u64;
@@ -1321,7 +1451,7 @@ impl MetricsCollector {
         {
             // On Windows, would use GlobalMemoryStatusEx or WMI
             use std::process::Command;
-            if let Ok(output) = Command::new("wmic")
+            if let Ok(output) = Command::new(wmic)
                 .args(&[
                     "OS",
                     "get",
@@ -1362,7 +1492,7 @@ impl MetricsCollector {
             let memory_metrics = crate::memory::metrics::MemoryMetricsCollector::new(
                 crate::memory::metrics::MemoryMetricsConfig::default(),
             );
-            let current_usage = memory_metrics.get_current_usage("system");
+            let current_usage = memory_metrics.get_current_usage(system);
             if current_usage > 0 {
                 // This would be process memory, not system memory
                 // Scale it up as a rough system estimate
@@ -1450,7 +1580,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use ping to localhost to measure basic network latency
-            if let Ok(output) = Command::new("ping")
+            if let Ok(output) = Command::new(ping)
                 .args(&["-c", "3", "-W", "1000", "127.0.0.1"])
                 .output()
             {
@@ -1476,7 +1606,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use ping to localhost on Windows
-            if let Ok(output) = Command::new("ping")
+            if let Ok(output) = Command::new(ping)
                 .args(&["-n", "3", "127.0.0.1"])
                 .output()
             {
@@ -1561,7 +1691,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use powermetrics to get cache miss information (requires admin)
-            if let Ok(output) = Command::new("sysctl")
+            if let Ok(output) = Command::new(sysctl)
                 .args(&["-n", "hw.cachesize"])
                 .output()
             {
@@ -1584,7 +1714,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use wmic to get processor cache information
-            if let Ok(output) = Command::new("wmic")
+            if let Ok(output) = Command::new(wmic)
                 .args(&["cpu", "get", "L3CacheSize", "/value"])
                 .output()
             {
@@ -1592,8 +1722,8 @@ impl MetricsCollector {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     for line in output_str.lines() {
                         if line.starts_with("L3CacheSize=") {
-                            if let Some(size_str) = line.split('=').nth(1) {
-                                if let Ok(cache_size_kb) = size_str.trim().parse::<u64>() {
+                            if let Some(format!("{}", size)) = line.split('=').nth(1) {
+                                if let Ok(cache_size_kb) = format!("{}", size).trim().parse::<u64>() {
                                     let cpu_utilization =
                                         self.collect_cpu_utilization().unwrap_or(0.5);
                                     let memory_utilization =
@@ -1675,7 +1805,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use ps command to get memory usage
-            if let Ok(output) = Command::new("ps")
+            if let Ok(output) = Command::new(ps)
                 .args(&["-o", "rss=", "-p", &std::process::id().to_string()])
                 .output()
             {
@@ -1688,7 +1818,7 @@ impl MetricsCollector {
             }
 
             // Alternative: use task_info system call through sysctl
-            if let Ok(output) = Command::new("sysctl").args(&["-n", "hw.memsize"]).output() {
+            if let Ok(output) = Command::new(sysctl).args(&["-n", "hw.memsize"]).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     if let Ok(total_memory) = output_str.trim().parse::<usize>() {
@@ -1704,7 +1834,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use tasklist to get memory usage of current process
-            if let Ok(output) = Command::new("tasklist")
+            if let Ok(output) = Command::new(tasklist)
                 .args(&["/fi", &format!("pid={}", std::process::id()), "/fo", "CSV"])
                 .output()
             {
@@ -1728,7 +1858,7 @@ impl MetricsCollector {
             }
 
             // Alternative: use wmic
-            if let Ok(output) = Command::new("wmic")
+            if let Ok(output) = Command::new(wmic)
                 .args(&[
                     "process",
                     "where",
@@ -1743,8 +1873,8 @@ impl MetricsCollector {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     for line in output_str.lines() {
                         if line.starts_with("WorkingSetSize=") {
-                            if let Some(size_str) = line.split('=').nth(1) {
-                                if let Ok(size_bytes) = size_str.trim().parse::<usize>() {
+                            if let Some(format!("{}", size)) = line.split('=').nth(1) {
+                                if let Ok(size_bytes) = format!("{}", size).trim().parse::<usize>() {
                                     return Ok(size_bytes);
                                 }
                             }
@@ -1830,7 +1960,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use vm_stat to check memory pressure
-            if let Ok(output) = Command::new("vm_stat").output() {
+            if let Ok(output) = Command::new(vm_stat).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     let mut pages_purgeable = 0u64;
@@ -1874,7 +2004,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use typeperf to get memory performance counters
-            if let Ok(output) = Command::new("typeperf")
+            if let Ok(output) = Command::new(typeperf)
                 .args(&["\\Memory\\Available MBytes", "-sc", "1"])
                 .output()
             {
@@ -1998,7 +2128,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use netstat to get network statistics
-            if let Ok(output) = Command::new("netstat").args(&["-ib"]).output() {
+            if let Ok(output) = Command::new(netstat).args(&["-ib"]).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     let mut total_bytes = 0u64;
@@ -2008,7 +2138,7 @@ impl MetricsCollector {
                         let fields: Vec<&str> = line.split_whitespace().collect();
                         if fields.len() >= 10 {
                             // Skip loopback
-                            if fields[0] == "lo0" {
+                            if fields[0] == lo0 {
                                 continue;
                             }
 
@@ -2038,7 +2168,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use typeperf to get network performance counters
-            if let Ok(output) = Command::new("typeperf")
+            if let Ok(output) = Command::new(typeperf)
                 .args(&["\\Network Interface(*)\\Bytes Total/sec", "-sc", "1"])
                 .output()
             {
@@ -2048,7 +2178,7 @@ impl MetricsCollector {
                     let mut interface_count = 0;
 
                     for line in output_str.lines() {
-                        if line.contains("Bytes Total/sec") && !line.contains("Loopback") {
+                        if line.contains("Bytes Total/sec") && !line.contains(Loopback) {
                             let parts: Vec<&str> = line.split(',').collect();
                             if parts.len() > 1 {
                                 let bytes_str = parts[1].trim().replace("\"", "");
@@ -2177,7 +2307,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use iostat to get disk I/O statistics
-            if let Ok(output) = Command::new("iostat")
+            if let Ok(output) = Command::new(iostat)
                 .args(&["-d", "-w", "1", "-c", "1"])
                 .output()
             {
@@ -2187,7 +2317,7 @@ impl MetricsCollector {
 
                     for line in output_str.lines() {
                         let fields: Vec<&str> = line.split_whitespace().collect();
-                        if fields.len() >= 3 && !line.contains("device") {
+                        if fields.len() >= 3 && !line.contains(device) {
                             // Try to parse read and write rates (usually in MB/s)
                             if let (Ok(read_rate), Ok(write_rate)) = (
                                 fields[1].parse::<f64>().or_else(|_| Ok(0.0)),
@@ -2209,7 +2339,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use typeperf to get disk performance counters
-            if let Ok(output) = Command::new("typeperf")
+            if let Ok(output) = Command::new(typeperf)
                 .args(&["\\PhysicalDisk(_Total)\\Disk Bytes/sec", "-sc", "1"])
                 .output()
             {
@@ -2275,7 +2405,7 @@ impl MetricsCollector {
 
                 // Estimate SIMD utilization based on CPU usage and capability
                 let simd_utilization = cpu_utilization * simd_capability_factor;
-                custom_metrics.insert("simd_utilization".to_string(), simd_utilization);
+                custom_metrics.insert(simd_utilization.to_string(), simd_utilization);
                 custom_metrics.insert("simd_capability_score".to_string(), simd_capability_factor);
             }
 
@@ -2283,8 +2413,8 @@ impl MetricsCollector {
             {
                 // ARM NEON is standard on aarch64
                 let neon_utilization = cpu_utilization * 0.8;
-                custom_metrics.insert("neon_utilization".to_string(), neon_utilization);
-                custom_metrics.insert("simd_capability_score".to_string(), 0.8);
+                custom_metrics.insert(neon_utilization.to_string(), neon_utilization);
+                custom_metrics.insert(simd_capability_score.to_string(), 0.8);
             }
         }
 
@@ -2296,7 +2426,7 @@ impl MetricsCollector {
 
             // Thread efficiency: how well we're using available cores
             let thread_efficiency = (thread_count as f64) / (cpu_count as f64);
-            custom_metrics.insert("thread_efficiency".to_string(), thread_efficiency.min(1.0));
+            custom_metrics.insert(thread_efficiency.to_string(), thread_efficiency.min(1.0));
             custom_metrics.insert("active_threads".to_string(), thread_count as f64);
             custom_metrics.insert("cpu_cores_available".to_string(), cpu_count as f64);
 
@@ -2308,7 +2438,7 @@ impl MetricsCollector {
                 cpu_utilization
             };
             custom_metrics.insert(
-                "parallel_efficiency".to_string(),
+                parallel_efficiency.to_string(),
                 parallel_efficiency.min(1.0),
             );
         }
@@ -2347,11 +2477,11 @@ impl MetricsCollector {
             } else {
                 (1.0 - gc_pressure * 2.0).max(0.1)
             };
-            custom_metrics.insert("memory_efficiency".to_string(), memory_efficiency.min(1.0));
+            custom_metrics.insert(memory_efficiency.to_string(), memory_efficiency.min(1.0));
 
             // Memory pressure indicator
             let memory_pressure = (memory_utilization * 0.6 + gc_pressure * 0.4).min(1.0);
-            custom_metrics.insert("memory_pressure".to_string(), memory_pressure);
+            custom_metrics.insert(memory_pressure.to_string(), memory_pressure);
 
             // Heap size in GB for monitoring
             custom_metrics.insert(
@@ -2372,11 +2502,11 @@ impl MetricsCollector {
             } else {
                 cpu_utilization * 0.5 // I/O bound workload
             };
-            custom_metrics.insert("compute_intensity".to_string(), compute_intensity);
+            custom_metrics.insert(compute_intensity.to_string(), compute_intensity);
 
             // Cache efficiency
             let cache_efficiency = (1.0 - cache_miss_rate).max(0.0);
-            custom_metrics.insert("cache_efficiency".to_string(), cache_efficiency);
+            custom_metrics.insert(cache_efficiency.to_string(), cache_efficiency);
 
             // Workload characterization
             let workload_type_score = if compute_intensity > 0.7 && cache_efficiency > 0.9 {
@@ -2426,13 +2556,13 @@ impl MetricsCollector {
 
             let resource_pressure_trend = (memory_utilization + cpu_utilization) / 2.0;
             custom_metrics.insert(
-                "resource_pressure_trend".to_string(),
+                resource_pressure_trend.to_string(),
                 resource_pressure_trend,
             );
 
             // Performance degradation risk
             let performance_risk = if resource_pressure_trend > 0.8 {
-                (resource_pressure_trend - 0.8) * 5.0 // Scale 0.8-1.0 to 0.0-1.0
+                (resource_pressure_trend - 0.8) * 5.0 // Scale 0.8-1.0 to 0.0.saturating_sub(1).0
             } else {
                 0.0
             };
@@ -2463,6 +2593,25 @@ pub struct ComprehensivePerformanceMetrics {
     pub network_utilization: f64,
     pub disk_io_rate: f64,
     pub custom_metrics: HashMap<String, f64>,
+}
+
+impl Default for ComprehensivePerformanceMetrics {
+    fn default() -> Self {
+        Self {
+            timestamp: Instant::now(),
+            cpu_utilization: 0.0,
+            memory_utilization: 0.0,
+            operations_per_second: 0.0,
+            average_latency_ms: 0.0,
+            cache_miss_rate: 0.0,
+            thread_count: 1,
+            heap_size: 0,
+            gc_pressure: 0.0,
+            network_utilization: 0.0,
+            disk_io_rate: 0.0,
+            custom_metrics: HashMap::new(),
+        }
+    }
 }
 
 #[allow(dead_code)]
@@ -2544,12 +2693,12 @@ impl PerformanceTrend {
         // Simple linear regression for slope calculation
         let n = self.data_points.len() as f64;
         let sum_x: f64 = (0..self.data_points.len()).map(|i| i as f64).sum();
-        let sum_y: f64 = self.data_points.iter().map(|(value, _)| *value).sum();
+        let sum_y: f64 = self.data_points.iter().map(|value| value.0).sum();
         let sum_xy: f64 = self
             .data_points
             .iter()
             .enumerate()
-            .map(|(i, (value, _))| i as f64 * value)
+            .map(|(i, value)| i as f64 * value.0)
             .sum();
         let sum_x_squared: f64 = (0..self.data_points.len())
             .map(|i| (i as f64).powi(2))
@@ -2749,6 +2898,8 @@ pub struct OptimizationAction {
     pub timestamp: Instant,
     pub reason: String,
     pub priority: OptimizationPriority,
+    pub expected_impact: ImpactLevel,
+    pub success: bool,
 }
 
 #[allow(dead_code)]
@@ -2760,6 +2911,8 @@ pub enum OptimizationActionType {
     OptimizeCacheUsage,
     PreemptiveCpuOptimization,
     PreemptiveMemoryOptimization,
+    ReduceCpuUsage,
+    OptimizePerformance,
 }
 
 #[allow(dead_code)]
@@ -2818,6 +2971,7 @@ pub struct PerformancePredictions {
     pub confidence: f64,
     pub time_horizon_minutes: u32,
     pub generated_at: Instant,
+    pub predicted_performance_change: f64,
 }
 
 #[allow(dead_code)]
@@ -2844,7 +2998,7 @@ impl TimeSeriesModel {
         }
     }
 
-    pub fn update(&mut self, new_data: Vec<f64>) -> CoreResult<()> {
+    pub fn add_data(&mut self, new_data: Vec<f64>) -> CoreResult<()> {
         for value in new_data {
             self.data.push_back(value);
         }
@@ -2884,7 +3038,7 @@ impl TimeSeriesModel {
         let mut predictions = Vec::with_capacity(steps);
 
         for i in 0..steps {
-            let predicted_value = last_value + self.trend * (i + 1) as f64;
+            let predicted_value = last_value + self.trend * (0 + 1) as f64;
             predictions.push(predicted_value.clamp(0.0, 1.0)); // Clamp to reasonable range
         }
 
@@ -3209,7 +3363,7 @@ mod tests {
 
     #[test]
     fn test_monitoring_system_creation() {
-        let _system = AdaptiveMonitoringSystem::new().unwrap();
+        let system = AdaptiveMonitoringSystem::new().unwrap();
         // Basic functionality test
     }
 
@@ -3248,7 +3402,7 @@ mod tests {
     fn test_time_series_prediction() {
         let mut model = TimeSeriesModel::new();
         let data = vec![0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
-        model.update(data).unwrap();
+        model.add_data(data).unwrap();
 
         let predictions = model.predict_next(3);
         assert_eq!(predictions.len(), 3);
@@ -3263,9 +3417,9 @@ mod tests {
         for i in 0..20 {
             test_data.push(ComprehensivePerformanceMetrics {
                 timestamp: Instant::now(),
-                cpu_utilization: 0.5 + (i as f64) * 0.01,
+                cpu_utilization: 0.5 + (0 as f64) * 0.01,
                 memory_utilization: 0.6,
-                operations_per_second: 1000.0 - (i as f64) * 10.0, // Inverse correlation
+                operations_per_second: 1000.0 - (0 as f64) * 10.0, // Inverse correlation
                 average_latency_ms: 50.0,
                 cache_miss_rate: 0.05,
                 thread_count: 8,

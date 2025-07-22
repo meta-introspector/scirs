@@ -46,10 +46,7 @@ type CLMem = *mut std::ffi::c_void;
 #[allow(dead_code)]
 const ADAM_KERNEL_OPENCL: &str = r#"
 __kernel void adam_update_f32(
-    __global float* params,
-    __global const float* grads,
-    __global float* m,
-    __global float* v,
+    __global float* params, __global const float* grads, __global float* m, __global float* v,
     const float lr,
     const float beta1,
     const float beta2,
@@ -88,9 +85,7 @@ __kernel void adam_update_f32(
 #[allow(dead_code)]
 const GEMM_KERNEL_OPENCL: &str = r#"
 __kernel void gemm_f32(
-    __global const float* A,
-    __global const float* B,
-    __global float* C,
+    __global const float* A, __global const float* B, __global float* C,
     const int M,
     const int N,
     const int K,
@@ -257,7 +252,7 @@ impl OpenCLContext {
 
     /// Allocate device memory (fallback)
     #[cfg(not(feature = "opencl"))]
-    pub fn allocate_device_memory(&self, size: usize) -> Result<CLMem, GpuError> {
+    pub fn allocate_device_memory_2(&self, size: usize) -> Result<CLMem, GpuError> {
         // Fallback implementation: return a simulated memory handle
         Ok((0x1000 + size) as CLMem)
     }
@@ -270,28 +265,26 @@ impl OpenCLContext {
     }
 
     #[cfg(not(feature = "opencl"))]
-    fn create_opencl_context(_device: CLDeviceId) -> Result<CLContext, GpuError> {
+    fn create_opencl_context(device: CLDeviceId) -> Result<CLContext, GpuError> {
         // Stub implementation
         Ok(0x2 as CLContext)
     }
 
     #[cfg(not(feature = "opencl"))]
-    fn create_command_queue(
-        _context: CLContext,
-        _device: CLDeviceId,
+    fn create_command_queue(context: CLContext, device: CLDeviceId
     ) -> Result<CLCommandQueue, GpuError> {
         // Stub implementation
         Ok(0x3 as CLCommandQueue)
     }
 
     #[cfg(not(feature = "opencl"))]
-    fn compile_opencl_source(_source: &str, _name: &str) -> Result<CLProgram, GpuError> {
+    fn compile_opencl_source(source: &str, name: &str) -> Result<CLProgram, GpuError> {
         // Stub implementation
         Ok(0x4 as CLProgram)
     }
 
     #[cfg(not(feature = "opencl"))]
-    fn create_kernel_from_program(_program: CLProgram, _name: &str) -> Result<CLKernel, GpuError> {
+    fn create_kernel_from_program(program: CLProgram, name: &str) -> Result<CLKernel, GpuError> {
         // Stub implementation
         Ok(0x5 as CLKernel)
     }
@@ -406,19 +399,15 @@ struct OpenCLCompiler {
 
 impl GpuCompilerImpl for OpenCLCompiler {
     fn compile(&self, source: &str) -> Result<Arc<dyn GpuKernelImpl>, GpuError> {
-        let _kernel = self.context.compile_kernel_internal(source, "kernel")?;
+        let kernel = self.context.compile_kernel_internal(source, "kernel")?;
         Ok(Arc::new(OpenCLKernelHandle {
-            kernel_name: "kernel".to_string(),
+            kernel_name: kernel.name.clone(),
             compiled_kernels: Arc::clone(&self.context.compiled_kernels),
             params: Arc::new(Mutex::new(HashMap::new())),
         }))
     }
 
-    fn compile_typed(
-        &self,
-        name: &str,
-        _input_type: std::any::TypeId,
-        _output_type: std::any::TypeId,
+    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId
     ) -> Arc<dyn GpuKernelImpl> {
         Arc::new(OpenCLKernelHandle {
             kernel_name: name.to_string(),
@@ -469,7 +458,7 @@ impl GpuKernelImpl for OpenCLKernelHandle {
         params.insert(name.to_string(), KernelParam::F64(value));
     }
 
-    fn dispatch(&self, work_groups: [u32; 3]) {
+    fn dispatch_workgroups(&self, work_groups: [u32; 3]) {
         #[cfg(feature = "opencl")]
         {
             // Real OpenCL kernel execution
@@ -501,7 +490,7 @@ impl GpuKernelImpl for OpenCLKernelHandle {
                 }
 
                 // Execute kernel
-                let _event = unsafe {
+                let event = unsafe {
                     execute_kernel
                         .set_global_work_size(work_groups[0] as usize)
                         .set_local_work_size(64)
@@ -610,7 +599,7 @@ impl GpuBufferImpl for OpenCLBuffer {
 impl Drop for OpenCLBuffer {
     fn drop(&mut self) {
         // Return buffer to memory pool if possible
-        if let Ok(_pool) = self.memory_pool.lock() {
+        if let Ok(mut pool) = self.memory_pool.lock() {
             #[cfg(feature = "opencl")]
             {
                 // In real implementation, would return buffer to pool
@@ -646,7 +635,7 @@ impl GpuBufferImpl for OpenCLCpuFallbackBuffer {
         }
 
         // Since this is a CPU fallback, we can use safe Rust internally
-        let _data_slice = std::slice::from_raw_parts(data, size);
+        let data_slice = std::slice::from_raw_parts(data, size);
         // We can't mutate self.data directly since &self is immutable
         // In a real implementation, this would require interior mutability
         eprintln!(

@@ -4,16 +4,18 @@
 //! of the Lomb-Scargle periodogram with comprehensive validation.
 
 use crate::error::{SignalError, SignalResult};
-use crate::lombscargle_enhanced::{LombScargleConfig, WindowType};
+use crate::lombscargle__enhanced::{LombScargleConfig, WindowType};
 use crate::window::{blackman, hamming, hann};
 use ndarray::ArrayView1;
 use num_traits::{Float, NumCast};
+use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::Arc;
 
+#[allow(unused_imports)]
 /// SIMD-optimized Lomb-Scargle result with validation metrics
 #[derive(Debug, Clone)]
 pub struct SimdLombScargleResult {
@@ -64,7 +66,7 @@ pub struct ValidationMetrics {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::lombscargle_simd::{simd_lombscargle, LombScargleConfig};
+/// use scirs2__signal::lombscargle_simd::{simd_lombscargle, LombScargleConfig};
 ///
 /// // Generate unevenly sampled data
 /// let times = vec![0.0, 0.1, 0.3, 0.7, 1.2, 1.5, 2.0, 2.1];
@@ -112,7 +114,7 @@ where
     let power = if config.use_fast && caps.has_simd() {
         compute_simd_fast_lombscargle(&times_f64, &windowed_values, &frequencies, config.tolerance)?
     } else {
-        compute_standard_lombscargle(&times_f64, &windowed_values, &frequencies)?
+        compute_standard_lombscargle(&times_f64, &windowed_values, &frequencies, None, None)?
     };
 
     // Compute validation metrics
@@ -146,27 +148,27 @@ where
 
 /// Enhanced input validation
 #[allow(dead_code)]
-fn validate_inputs<T, U>(times: &[T], values: &[U]) -> SignalResult<()>
+fn validate_inputs<T, U>(_times: &[T], values: &[U]) -> SignalResult<()>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if times.is_empty() || values.is_empty() {
+    if _times.is_empty() || values.is_empty() {
         return Err(SignalError::ValueError(
             "Input arrays cannot be empty".to_string(),
         ));
     }
 
-    if times.len() != values.len() {
+    if _times.len() != values.len() {
         return Err(SignalError::ShapeMismatch(format!(
             "Times and values must have same length: {} != {}",
-            times.len(),
+            _times.len(),
             values.len()
         )));
     }
 
     // Check for NaN or infinite values
-    for (i, &t) in times.iter().enumerate() {
+    for (i, &t) in _times.iter().enumerate() {
         if !t.is_finite() {
             return Err(SignalError::ValueError(format!(
                 "Non-finite time value at index {}: {:?}",
@@ -189,35 +191,35 @@ where
 
 /// Validate time series properties
 #[allow(dead_code)]
-fn validate_time_series(times: &[f64]) -> SignalResult<()> {
-    // Check if times are sorted
-    for i in 1..times.len() {
-        if times[i] <= times[i - 1] {
+fn validate_time_series(_times: &[f64]) -> SignalResult<()> {
+    // Check if _times are sorted
+    for i in 1.._times.len() {
+        if _times[i] <= _times[i - 1] {
             return Err(SignalError::ValueError(format!(
-                "Times must be strictly increasing: times[{}]={} <= times[{}]={}",
+                "Times must be strictly increasing: _times[{}]={} <= _times[{}]={}",
                 i,
-                times[i],
+                _times[i],
                 i - 1,
-                times[i - 1]
+                _times[i - 1]
             )));
         }
     }
 
     // Check for reasonable time span
-    let t_span = times[times.len() - 1] - times[0];
+    let t_span = _times[_times.len() - 1] - _times[0];
     if t_span <= 0.0 {
         return Err(SignalError::ValueError(
             "Time span must be positive".to_string(),
         ));
     }
 
-    // Check for duplicate times
-    let mut sorted_times = times.to_vec();
+    // Check for duplicate _times
+    let mut sorted_times = _times.to_vec();
     sorted_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
     for i in 1..sorted_times.len() {
         if (sorted_times[i] - sorted_times[i - 1]).abs() < 1e-15 {
             return Err(SignalError::ValueError(format!(
-                "Duplicate or near-duplicate times detected: {} and {}",
+                "Duplicate or near-duplicate _times detected: {} and {}",
                 sorted_times[i - 1],
                 sorted_times[i]
             )));
@@ -229,11 +231,11 @@ fn validate_time_series(times: &[f64]) -> SignalResult<()> {
 
 /// Convert numeric array to f64
 #[allow(dead_code)]
-fn convert_to_f64<T>(arr: &[T]) -> SignalResult<Vec<f64>>
+fn convert_to_f64<T>(_arr: &[T]) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
-    arr.iter()
+    _arr.iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
                 SignalError::ValueError(format!("Could not convert {:?} to f64", val))
@@ -244,8 +246,8 @@ where
 
 /// Apply window function
 #[allow(dead_code)]
-fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
-    let n = values.len();
+fn apply_window(_values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
+    let n = _values.len();
 
     let window = match config.window {
         WindowType::None => vec![1.0; n],
@@ -262,7 +264,7 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
                 custom.clone()
             } else {
                 return Err(SignalError::ValueError(
-                    "Custom window specified but no window values provided".to_string(),
+                    "Custom window specified but no window _values provided".to_string(),
                 ));
             }
         }
@@ -270,7 +272,7 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
 
     // Apply window with SIMD operations
     let mut windowed = vec![0.0; n];
-    let values_view = ArrayView1::from(values);
+    let values_view = ArrayView1::from(_values);
     let window_view = ArrayView1::from(&window);
     let windowed_view = ArrayView1::from_shape(n, &mut windowed).unwrap();
 
@@ -285,14 +287,14 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
 
 /// Compute frequency grid
 #[allow(dead_code)]
-fn compute_frequency_grid(times: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
-    let n = times.len();
-    let t_span = times[n - 1] - times[0];
+fn compute_frequency_grid(_times: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
+    let n = _times.len();
+    let t_span = _times[n - 1] - _times[0];
 
     // Enhanced sampling rate estimation
     let mut dts = vec![0.0; n - 1];
     for i in 0..n - 1 {
-        dts[i] = times[i + 1] - times[i];
+        dts[i] = _times[i + 1] - _times[i];
     }
     dts.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -339,7 +341,7 @@ fn compute_simd_fast_lombscargle(
     let mut power = vec![0.0; frequencies.len()];
 
     // Center the data
-    let mean_val: f64 = values.iter().sum::<f64>() / n as f64;
+    let mean_val: f64 = values.iter().sum::<f64>() / n  as f64;
     let mut values_centered = vec![0.0; n];
     let values_view = ArrayView1::from(values);
     let centered_view = ArrayView1::from_shape(n, &mut values_centered).unwrap();
@@ -348,7 +350,7 @@ fn compute_simd_fast_lombscargle(
     f64::simd_sub_scalar(&values_view, mean_val, &centered_view);
 
     // Precompute time shifts
-    let t_mean = times.iter().sum::<f64>() / n as f64;
+    let t_mean = times.iter().sum::<f64>() / n  as f64;
     let mut times_shifted = vec![0.0; n];
     let times_view = ArrayView1::from(times);
     let shifted_view = ArrayView1::from_shape(n, &mut times_shifted).unwrap();
@@ -378,14 +380,14 @@ fn compute_simd_fast_lombscargle(
 
 /// Compute tau offset using SIMD
 #[allow(dead_code)]
-fn compute_tau_simd(times: &[f64], omega: f64) -> f64 {
-    let n = times.len();
+fn compute_tau_simd(_times: &[f64], omega: f64) -> f64 {
+    let n = _times.len();
     let mut sin_sum = 0.0;
     let mut cos_sum = 0.0;
 
     // Process in SIMD-friendly chunks
     let chunk_size = 8;
-    let chunks = times.chunks_exact(chunk_size);
+    let chunks = _times.chunks_exact(chunk_size);
     let remainder = chunks.remainder();
 
     for chunk in chunks {
@@ -483,7 +485,7 @@ fn compute_validation_metrics(
     let peak_freq = frequencies[peak_idx];
 
     // Estimate SNR
-    let mean_power: f64 = power.iter().sum::<f64>() / n_freq as f64;
+    let mean_power: f64 = power.iter().sum::<f64>() / n_freq  as f64;
     let noise_est = power
         .iter()
         .filter(|&&p| (p - mean_power).abs() < mean_power)
@@ -491,7 +493,7 @@ fn compute_validation_metrics(
         / power
             .iter()
             .filter(|&&p| (p - mean_power).abs() < mean_power)
-            .count() as f64;
+            .count()  as f64;
 
     let snr = max_power / noise_est.max(1e-10);
 
@@ -551,8 +553,8 @@ fn compute_parallel_bootstrap_ci(
     let frequencies_arc = Arc::new(frequencies.to_vec());
     let config_arc = Arc::new(config.clone());
 
-    // Parallel bootstrap iterations
-    let bootstrap_powers: Vec<Vec<f64>> = (0..n_bootstrap)
+    // Parallel _bootstrap iterations
+    let _bootstrap_powers: Vec<Vec<f64>> = (0..n_bootstrap)
         .into_par_iter()
         .map(|iter| {
             let mut rng = rand::rng();
@@ -578,7 +580,7 @@ fn compute_parallel_bootstrap_ci(
             let sorted_times: Vec<f64> = indices.iter().map(|&i| resampled_times[i]).collect();
             let sorted_values: Vec<f64> = indices.iter().map(|&i| resampled_values[i]).collect();
 
-            // Compute periodogram for bootstrap sample
+            // Compute periodogram for _bootstrap sample
             compute_simd_fast_lombscargle(
                 &sorted_times,
                 &sorted_values,
@@ -610,12 +612,12 @@ fn compute_parallel_bootstrap_ci(
 
 /// Compute false alarm probability
 #[allow(dead_code)]
-fn compute_false_alarm_probability(power: &[f64], n_data: usize) -> SignalResult<Vec<f64>> {
-    let n_freq = power.len();
-    let n_eff = n_freq as f64; // Simplified; could use more sophisticated estimate
+fn compute_false_alarm_probability(_power: &[f64], n_data: usize) -> SignalResult<Vec<f64>> {
+    let n_freq = _power.len();
+    let n_eff = n_freq  as f64; // Simplified; could use more sophisticated estimate
 
     // Baluev (2008) approximation for FAP
-    let fap: Vec<f64> = power
+    let fap: Vec<f64> = _power
         .iter()
         .map(|&p| {
             let z = p;

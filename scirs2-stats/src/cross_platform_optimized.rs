@@ -6,7 +6,7 @@
 //! detection for ensuring consistent behavior across all supported platforms.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::ErrorMessages;
+use crate::error__standardization::ErrorMessages;
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, Zero, One};
 use serde::{Deserialize, Serialize};
@@ -251,36 +251,36 @@ pub struct AdvancedCrossPlatformTester {
 
 impl AdvancedCrossPlatformTester {
     /// Create new advanced cross-platform tester
-    pub fn new(config: AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(_config: AdvancedCrossPlatformConfig) -> Self {
         Self {
             platform_detector: Arc::new(RwLock::new(
-                PlatformDetector::new(&config)
+                PlatformDetector::new(&_config)
             )),
             consistency_tester: Arc::new(RwLock::new(
-                ConsistencyTester::new(&config)
+                ConsistencyTester::new(&_config)
             )),
             performance_analyzer: Arc::new(RwLock::new(
-                PerformanceVarianceAnalyzer::new(&config)
+                PerformanceVarianceAnalyzer::new(&_config)
             )),
             precision_validator: Arc::new(RwLock::new(
-                NumericalPrecisionValidator::new(&config)
+                NumericalPrecisionValidator::new(&_config)
             )),
             hardware_optimizer_tester: Arc::new(RwLock::new(
-                HardwareOptimizerTester::new(&config)
+                HardwareOptimizerTester::new(&_config)
             )),
             edge_case_generator: Arc::new(RwLock::new(
-                PlatformEdgeCaseGenerator::new(&config)
+                PlatformEdgeCaseGenerator::new(&_config)
             )),
             regression_detector: Arc::new(RwLock::new(
-                CrossPlatformRegressionDetector::new(&config)
+                CrossPlatformRegressionDetector::new(&_config)
             )),
             monitoring_system: Arc::new(RwLock::new(
-                ContinuousMonitoringSystem::new(&config)
+                ContinuousMonitoringSystem::new(&_config)
             )),
             result_aggregator: Arc::new(RwLock::new(
                 CrossPlatformResultAggregator::new()
             )),
-            config,
+            _config,
         }
     }
 
@@ -420,8 +420,8 @@ impl AdvancedCrossPlatformTester {
         let test_duration = start_time.elapsed();
 
         Ok(PlatformTestResult {
-            platform_id: target_platform.platform_id.clone(),
-            platform_type: target_platform.platform_type,
+            _platform_id: target_platform.platform_id.clone(),
+            _platform_type: target_platform.platform_type,
             functional_results,
             performance_results,
             precision_results,
@@ -489,7 +489,7 @@ impl AdvancedCrossPlatformTester {
         &self,
         monitoring_config: ContinuousMonitoringConfig,
     ) -> StatsResult<MonitoringSession> {
-        if !self.config.enable_continuous_monitoring {
+        if !self._config.enable_continuous_monitoring {
             return Err(StatsError::dimension_mismatch(
                 "Continuous monitoring is not enabled".to_string()
             ));
@@ -520,10 +520,8 @@ impl AdvancedCrossPlatformTester {
     // Helper methods for test execution and analysis
 
     fn execute_functional_tests<F>(
-        &self,
-        _function_name: &str,
-        functional_tests: &[FunctionalTest<F>],
-        _target_platform: &TargetPlatform,
+        &self, _function_name: &str,
+        functional_tests: &[FunctionalTest<F>], _target_platform: &TargetPlatform,
     ) -> StatsResult<Vec<FunctionalTestResult>>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -559,7 +557,7 @@ impl AdvancedCrossPlatformTester {
                 // Placeholder - would call actual variance function
                 TestExecutionResult::Success(F::from(1.0).unwrap())
             }
-            TestFunction::Custom(_, _) => {
+            TestFunction::Custom(__) => {
                 // Placeholder - would execute custom function
                 TestExecutionResult::Success(F::from(0.0).unwrap())
             }
@@ -577,10 +575,8 @@ impl AdvancedCrossPlatformTester {
     }
 
     fn execute_performance_tests<F>(
-        &self,
-        _function_name: &str,
-        performance_tests: &[PerformanceTest<F>],
-        _target_platform: &TargetPlatform,
+        &self, _function_name: &str,
+        performance_tests: &[PerformanceTest<F>], _target_platform: &TargetPlatform,
     ) -> StatsResult<Vec<PerformanceTestResult>>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -615,9 +611,9 @@ impl AdvancedCrossPlatformTester {
             
             // Execute the test function (placeholder)
             let _result = match &test.test_function {
-                TestFunction::Mean(_) => F::from(0.0).unwrap(),
-                TestFunction::Variance(_, _) => F::from(1.0).unwrap(),
-                TestFunction::Custom(_, _) => F::from(0.0).unwrap(),
+                TestFunction::Mean(_) =>, F::from(0.0).unwrap(),
+                TestFunction::Variance(__) =>, F::from(1.0).unwrap(),
+                TestFunction::Custom(__) =>, F::from(0.0).unwrap(),
             };
             
             let iter_time = iter_start.elapsed();
@@ -639,10 +635,8 @@ impl AdvancedCrossPlatformTester {
     }
 
     fn execute_precision_tests<F>(
-        &self,
-        _function_name: &str,
-        precision_tests: &[PrecisionTest<F>],
-        _target_platform: &TargetPlatform,
+        &self, _function_name: &str,
+        precision_tests: &[PrecisionTest<F>], _target_platform: &TargetPlatform,
     ) -> StatsResult<Vec<PrecisionTestResult>>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -670,9 +664,9 @@ impl AdvancedCrossPlatformTester {
         
         // Execute precision test and compare with expected result
         let actual_result = match &test.test_function {
-            TestFunction::Mean(_) => F::from(0.0).unwrap(),
-            TestFunction::Variance(_, _) => F::from(1.0).unwrap(),
-            TestFunction::Custom(_, _) => F::from(0.0).unwrap(),
+            TestFunction::Mean(_) =>, F::from(0.0).unwrap(),
+            TestFunction::Variance(__) =>, F::from(1.0).unwrap(),
+            TestFunction::Custom(__) =>, F::from(0.0).unwrap(),
         };
 
         let precision_error = if let Some(expected) = test.expected_result {
@@ -694,10 +688,8 @@ impl AdvancedCrossPlatformTester {
     }
 
     fn execute_hardware_optimization_tests<F>(
-        &self,
-        _function_name: &str,
-        hardware_tests: &[HardwareOptimizationTest<F>],
-        _target_platform: &TargetPlatform,
+        &self, _function_name: &str,
+        hardware_tests: &[HardwareOptimizationTest<F>], _target_platform: &TargetPlatform,
     ) -> StatsResult<Vec<HardwareOptimizationTestResult>>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -753,8 +745,7 @@ impl AdvancedCrossPlatformTester {
     }
 
     fn collect_platform_specific_metrics(
-        &self,
-        _target_platform: &TargetPlatform,
+        &self, _target_platform: &TargetPlatform,
     ) -> StatsResult<PlatformSpecificMetrics> {
         Ok(PlatformSpecificMetrics {
             cpu_utilization: 0.75,
@@ -772,22 +763,19 @@ impl AdvancedCrossPlatformTester {
     }
 
     fn calculate_overall_consistency_score(
-        &self,
-        _platform_results: &HashMap<String, PlatformTestResult>,
+        &self, _platform_results: &HashMap<String, PlatformTestResult>,
     ) -> f64 {
         0.92 // Placeholder
     }
 
     fn identify_critical_platform_issues(
-        &self,
-        _platform_results: &HashMap<String, PlatformTestResult>,
+        &self, _platform_results: &HashMap<String, PlatformTestResult>,
     ) -> Vec<CriticalPlatformIssue> {
         vec![] // Placeholder
     }
 
     fn generate_platform_recommendations(
-        &self,
-        _platform_results: &HashMap<String, PlatformTestResult>,
+        &self, _platform_results: &HashMap<String, PlatformTestResult>,
     ) -> Vec<PlatformRecommendation> {
         vec![] // Placeholder
     }
@@ -1613,15 +1601,14 @@ pub struct ConsistencyTester {
 }
 
 impl ConsistencyTester {
-    pub fn new(config: &AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(_config: &AdvancedCrossPlatformConfig) -> Self {
         Self {
-            tolerance: config.consistency_tolerance.clone(),
+            tolerance: _config.consistency_tolerance.clone(),
         }
     }
 
     pub fn analyze_consistency(
-        &self,
-        _platform_results: &HashMap<String, PlatformTestResult>,
+        &self, _platform_results: &HashMap<String, PlatformTestResult>,
     ) -> StatsResult<CrossPlatformConsistencyAnalysis> {
         // Placeholder implementation
         Ok(CrossPlatformConsistencyAnalysis {
@@ -1660,15 +1647,14 @@ pub struct PerformanceVarianceAnalyzer {
 }
 
 impl PerformanceVarianceAnalyzer {
-    pub fn new(config: &AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(_config: &AdvancedCrossPlatformConfig) -> Self {
         Self {
-            variance_tolerance: config.performance_variance_tolerance.clone(),
+            variance_tolerance: _config.performance_variance_tolerance.clone(),
         }
     }
 
     pub fn analyze_variance_across_platforms(
-        &self,
-        _platform_results: &HashMap<String, PlatformTestResult>,
+        &self, _platform_results: &HashMap<String, PlatformTestResult>,
     ) -> StatsResult<PerformanceVarianceAnalysis> {
         // Placeholder implementation
         Ok(PerformanceVarianceAnalysis {
@@ -1722,15 +1708,14 @@ pub struct NumericalPrecisionValidator {
 }
 
 impl NumericalPrecisionValidator {
-    pub fn new(config: &AdvancedCrossPlatformConfig) -> Self {
+    pub fn new(_config: &AdvancedCrossPlatformConfig) -> Self {
         Self {
-            tolerance: config.consistency_tolerance.clone(),
+            tolerance: _config.consistency_tolerance.clone(),
         }
     }
 
     pub fn validate_consistency_across_platforms(
-        &self,
-        _platform_results: &HashMap<String, PlatformTestResult>,
+        &self, _platform_results: &HashMap<String, PlatformTestResult>,
     ) -> StatsResult<NumericalPrecisionConsistencyResult> {
         // Placeholder implementation
         Ok(NumericalPrecisionConsistencyResult {
@@ -1761,8 +1746,7 @@ impl HardwareOptimizerTester {
     }
 
     pub fn test_optimizations_across_platforms(
-        &self,
-        _platform_results: &HashMap<String, PlatformTestResult>,
+        &self, _platform_results: &HashMap<String, PlatformTestResult>,
     ) -> StatsResult<HardwareOptimizationTestResult> {
         // Placeholder implementation
         Ok(HardwareOptimizationTestResult {
@@ -1798,9 +1782,7 @@ impl PlatformEdgeCaseGenerator {
     }
 
     pub fn test_platform_specific_edge_cases<F>(
-        &self,
-        _function_name: &str,
-        _test_suite: &CrossPlatformTestSuite<F>,
+        &self, _function_name: &str, _test_suite: &CrossPlatformTestSuite<F>,
     ) -> StatsResult<PlatformEdgeCaseResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -1836,10 +1818,7 @@ impl CrossPlatformRegressionDetector {
     }
 
     pub fn detect_regressions(
-        &self,
-        _function_name: &str,
-        _baseline: &ComprehensiveCrossPlatformResult,
-        _current: &ComprehensiveCrossPlatformResult,
+        &self, _function_name: &str, _baseline: &ComprehensiveCrossPlatformResult_current: &ComprehensiveCrossPlatformResult,
     ) -> StatsResult<CrossPlatformRegressionResult> {
         // Placeholder implementation
         Ok(CrossPlatformRegressionResult {
@@ -2048,9 +2027,9 @@ mod tests {
 
     #[test]
     fn test_regression_severity_ordering() {
-        assert!(RegressionSeverity::Critical as u8 > RegressionSeverity::Major as u8);
-        assert!(RegressionSeverity::Major as u8 > RegressionSeverity::Moderate as u8);
-        assert!(RegressionSeverity::Moderate as u8 > RegressionSeverity::Minor as u8);
+        assert!(RegressionSeverity::Critical as u8 >, RegressionSeverity::Major as u8);
+        assert!(RegressionSeverity::Major as u8 >, RegressionSeverity::Moderate as u8);
+        assert!(RegressionSeverity::Moderate as u8 >, RegressionSeverity::Minor as u8);
     }
 
     #[test]

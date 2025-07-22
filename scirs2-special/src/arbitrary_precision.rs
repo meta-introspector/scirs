@@ -35,15 +35,15 @@ impl Default for PrecisionContext {
 
 impl PrecisionContext {
     /// Create a new precision context with specified precision in bits
-    pub fn new(precision: u32) -> SpecialResult<Self> {
-        if precision == 0 || precision > MAX_PRECISION {
+    pub fn new(_precision: u32) -> SpecialResult<Self> {
+        if _precision == 0 || _precision > MAX_PRECISION {
             return Err(SpecialError::DomainError(format!(
                 "Precision must be between 1 and {} bits",
                 MAX_PRECISION
             )));
         }
         Ok(Self {
-            precision,
+            _precision,
             rounding: rug::float::Round::Nearest,
         })
     }

@@ -48,9 +48,9 @@ pub struct InPlaceSGD<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug> InPlaceSGD<A> {
     /// Create a new in-place SGD optimizer
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(_learning_rate: A) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             momentum: A::zero(),
             weight_decay: A::zero(),
         }
@@ -103,9 +103,9 @@ pub struct InPlaceAdam<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> InPlaceAdam<A, D> {
     /// Create a new in-place Adam optimizer
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(_learning_rate: A) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             beta1: A::from(0.9).unwrap(),
             beta2: A::from(0.999).unwrap(),
             epsilon: A::from(1e-8).unwrap(),
@@ -210,12 +210,12 @@ pub mod utils {
     use super::*;
 
     /// Apply a scalar operation in-place
-    pub fn scale_inplace<A, D>(array: &mut Array<A, D>, scalar: A)
+    pub fn scale_inplace<A, D>(_array: &mut Array<A, D>, scalar: A)
     where
         A: Float + ScalarOperand + MulAssign,
         D: Dimension,
     {
-        array.map_inplace(|x| *x *= scalar);
+        _array.map_inplace(|x| *x *= scalar);
     }
 
     /// Add arrays in-place (a += b)
@@ -237,22 +237,22 @@ pub mod utils {
     }
 
     /// Apply element-wise operation in-place
-    pub fn apply_inplace<A, D, F>(array: &mut Array<A, D>, f: F)
+    pub fn apply_inplace<A, D, F>(_array: &mut Array<A, D>, f: F)
     where
         A: Float + ScalarOperand,
         D: Dimension,
         F: Fn(&mut A),
     {
-        array.map_inplace(f);
+        _array.map_inplace(f);
     }
 
     /// Clip values in-place
-    pub fn clip_inplace<A, D>(array: &mut Array<A, D>, min: A, max: A)
+    pub fn clip_inplace<A, D>(_array: &mut Array<A, D>, min: A, max: A)
     where
         A: Float + ScalarOperand,
         D: Dimension,
     {
-        array.map_inplace(|x| {
+        _array.map_inplace(|x| {
             if *x < min {
                 *x = min;
             } else if *x > max {
@@ -262,14 +262,14 @@ pub mod utils {
     }
 
     /// Normalize array in-place (divide by its norm)
-    pub fn normalize_inplace<A, D>(array: &mut Array<A, D>)
+    pub fn normalize_inplace<A, D>(_array: &mut Array<A, D>)
     where
         A: Float + ScalarOperand + MulAssign,
         D: Dimension,
     {
-        let norm = array.mapv(|x| x * x).sum().sqrt();
+        let norm = _array.mapv(|x| x * x).sum().sqrt();
         if norm > A::zero() {
-            array.map_inplace(|x| *x *= A::one() / norm);
+            _array.map_inplace(|x| *x *= A::one() / norm);
         }
     }
 }
@@ -303,7 +303,7 @@ pub mod fused {
         let one_minus_beta2 = one - beta2;
 
         if let Some(wd) = weight_decay {
-            // Fused Adam with weight decay
+            // Fused Adam with weight _decay
             for ((((p, &g), m_val), v_val), bias_corrected) in params
                 .iter_mut()
                 .zip(gradients.iter())
@@ -311,7 +311,7 @@ pub mod fused {
                 .zip(v.iter_mut())
                 .zip(std::iter::repeat((bias1, bias2)))
             {
-                // Apply weight decay to gradient
+                // Apply weight _decay to gradient
                 let g_with_decay = g + *p * wd;
 
                 // Update momentum
@@ -326,7 +326,7 @@ pub mod fused {
                 *p = *p - lr * m_hat / (v_hat.sqrt() + epsilon);
             }
         } else {
-            // Fused Adam without weight decay
+            // Fused Adam without weight _decay
             for ((((p, &g), m_val), v_val), bias_corrected) in params
                 .iter_mut()
                 .zip(gradients.iter())
@@ -361,13 +361,13 @@ pub mod fused {
         A: Float + ScalarOperand,
         D: Dimension,
     {
-        if let Some(buf) = momentum_buf {
+        if let Some(_buf) = momentum_buf {
             if let Some(wd) = weight_decay {
-                // Fused SGD with momentum and weight decay
-                for (((p, &g), buf_val), _) in params
+                // Fused SGD with momentum and weight _decay
+                for (((p, &g), buf_val)_) in params
                     .iter_mut()
                     .zip(gradients.iter())
-                    .zip(buf.iter_mut())
+                    .zip(_buf.iter_mut())
                     .zip(std::iter::repeat(()))
                 {
                     let g_with_decay = g + *p * wd;
@@ -377,14 +377,14 @@ pub mod fused {
             } else {
                 // Fused SGD with momentum only
                 for ((p, &g), buf_val) in
-                    params.iter_mut().zip(gradients.iter()).zip(buf.iter_mut())
+                    params.iter_mut().zip(gradients.iter()).zip(_buf.iter_mut())
                 {
                     *buf_val = momentum * *buf_val + (A::one() - dampening) * g;
                     *p = *p - lr * *buf_val;
                 }
             }
         } else if let Some(wd) = weight_decay {
-            // Fused SGD with weight decay only
+            // Fused SGD with weight _decay only
             for (p, &g) in params.iter_mut().zip(gradients.iter()) {
                 *p = *p - lr * (g + *p * wd);
             }
@@ -417,15 +417,15 @@ pub mod fused {
         }
 
         if let Some(max_norm_val) = max_norm {
-            // Second pass: normalize if norm exceeds max_norm
+            // Second pass: normalize if _norm exceeds max_norm
             let norm_sq = gradients
                 .iter()
                 .map(|&x| x * x)
                 .fold(A::zero(), |acc, x| acc + x);
-            let norm = norm_sq.sqrt();
+            let _norm = norm_sq.sqrt();
 
-            if norm > max_norm_val {
-                let scale = max_norm_val / norm;
+            if _norm > max_norm_val {
+                let scale = max_norm_val / _norm;
                 for g in gradients.iter_mut() {
                     *g = *g * scale;
                 }
@@ -442,7 +442,7 @@ pub mod fused {
         A: Float + ScalarOperand,
         D: Dimension,
     {
-        // Apply value bounds first
+        // Apply value _bounds first
         if let Some((min_val, max_val)) = value_bounds {
             for p in params.iter_mut() {
                 if *p < min_val {
@@ -453,7 +453,7 @@ pub mod fused {
             }
         }
 
-        // Apply L2 norm constraint
+        // Apply L2 norm _constraint
         if let Some(max_norm) = l2_constraint {
             let norm_sq = params
                 .iter()
@@ -487,9 +487,9 @@ pub mod mixed_precision {
 
     impl LossScaler {
         /// Create a new loss scaler
-        pub fn new(initial_scale: f32) -> Self {
+        pub fn new(_initial_scale: f32) -> Self {
             Self {
-                scale: initial_scale,
+                _scale: _initial_scale,
                 growth_factor: 2.0,
                 backoff_factor: 0.5,
                 growth_interval: 2000,
@@ -596,9 +596,9 @@ pub mod gradient_checkpointing {
 
     impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCheckpointer<A, D> {
         /// Create a new gradient checkpointer
-        pub fn new(strategy: CheckpointStrategy) -> Self {
+        pub fn new(_strategy: CheckpointStrategy) -> Self {
             Self {
-                strategy,
+                _strategy,
                 checkpoints: std::collections::HashMap::new(),
                 memory_tracker: MemoryTracker::new(),
                 current_depth: 0,
@@ -684,12 +684,12 @@ pub mod gradient_checkpointing {
             let current_usage = self.memory_tracker.usage_ratio();
 
             if current_usage > target_memory_usage {
-                // Increase checkpointing frequency to reduce memory usage
+                // Increase checkpointing frequency to reduce memory _usage
                 self.strategy = match &self.strategy {
-                    CheckpointStrategy::Uniform { interval } => CheckpointStrategy::Uniform {
+                    CheckpointStrategy::Uniform { interval } =>, CheckpointStrategy::Uniform {
                         interval: (interval / 2).max(1),
                     },
-                    CheckpointStrategy::MemoryAware { .. } => CheckpointStrategy::MemoryAware {
+                    CheckpointStrategy::MemoryAware { .. } =>, CheckpointStrategy::MemoryAware {
                         memory_threshold: target_memory_usage * 0.8,
                     },
                     other => other.clone(),
@@ -697,10 +697,10 @@ pub mod gradient_checkpointing {
             } else if current_usage < target_memory_usage * 0.5 {
                 // Decrease checkpointing frequency to improve performance
                 self.strategy = match &self.strategy {
-                    CheckpointStrategy::Uniform { interval } => CheckpointStrategy::Uniform {
+                    CheckpointStrategy::Uniform { interval } =>, CheckpointStrategy::Uniform {
                         interval: interval * 2,
                     },
-                    CheckpointStrategy::MemoryAware { .. } => CheckpointStrategy::MemoryAware {
+                    CheckpointStrategy::MemoryAware { .. } =>, CheckpointStrategy::MemoryAware {
                         memory_threshold: target_memory_usage * 1.2,
                     },
                     other => other.clone(),
@@ -754,9 +754,9 @@ pub mod gradient_checkpointing {
 
             let mut current_activation = self.checkpoints[&checkpoint_depth].clone();
 
-            // Recompute forward from checkpoint to target depth
-            for depth in (checkpoint_depth + 1)..=target_depth {
-                current_activation = recompute_fn(depth, &current_activation)?;
+            // Recompute forward from checkpoint to target _depth
+            for _depth in (checkpoint_depth + 1)..=target_depth {
+                current_activation = recompute_fn(_depth, &current_activation)?;
             }
 
             Ok(current_activation)
@@ -889,9 +889,9 @@ pub mod gradient_checkpointing {
 
     impl<A: Float + ScalarOperand + Debug, D: Dimension> AutoCheckpointer<A, D> {
         /// Create a new auto checkpointer
-        pub fn new(initial_strategy: CheckpointStrategy, target_memory_ratio: f64) -> Self {
+        pub fn new(_initial_strategy: CheckpointStrategy, target_memory_ratio: f64) -> Self {
             Self {
-                checkpointer: GradientCheckpointer::new(initial_strategy),
+                checkpointer: GradientCheckpointer::new(_initial_strategy),
                 memory_history: VecDeque::with_capacity(100),
                 target_memory_ratio: target_memory_ratio.clamp(0.1, 0.9),
                 adaptation_frequency: 10,
@@ -1033,12 +1033,12 @@ pub mod adaptive {
 
     impl MemoryAwareBatchSizer {
         /// Create a new memory-aware batch sizer
-        pub fn new(initial_batch_size: usize) -> Self {
+        pub fn new(_initial_batch_size: usize) -> Self {
             Self {
-                initial_batch_size,
-                max_batch_size: initial_batch_size * 4,
-                min_batch_size: initial_batch_size.max(1) / 4,
-                current_batch_size: initial_batch_size,
+                _initial_batch_size,
+                max_batch_size: _initial_batch_size * 4,
+                min_batch_size: _initial_batch_size.max(1) / 4,
+                current_batch_size: _initial_batch_size,
                 memory_threshold: 0.8,
                 adaptation_factor: 1.2,
             }
@@ -1081,12 +1081,12 @@ pub mod adaptive {
     }
 
     /// Memory usage estimator for arrays
-    pub fn estimate_memory_usage<A, D>(arrays: &[&Array<A, D>]) -> usize
+    pub fn estimate_memory_usage<A, D>(_arrays: &[&Array<A, D>]) -> usize
     where
         A: Sized,
         D: Dimension,
     {
-        arrays
+        _arrays
             .iter()
             .map(|arr| arr.len() * std::mem::size_of::<A>())
             .sum()
@@ -1109,8 +1109,8 @@ pub use utils::{
 // Re-export new modules
 pub use adaptive::*;
 pub use fused::*;
-pub use gradient_checkpointing::*;
-pub use mixed_precision::*;
+pub use gradient__checkpointing::*;
+pub use mixed__precision::*;
 
 #[cfg(test)]
 mod tests {
@@ -1310,7 +1310,7 @@ mod tests {
 
     #[test]
     fn test_gradient_checkpointing_uniform() {
-        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+        let mut checkpointer: gradient_checkpointing: GradientCheckpointer<f64, ndarray::Ix1> =
             gradient_checkpointing::GradientCheckpointer::new(
                 gradient_checkpointing::CheckpointStrategy::Uniform { interval: 2 },
             );
@@ -1340,7 +1340,7 @@ mod tests {
 
     #[test]
     fn test_gradient_checkpointing_logarithmic() {
-        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+        let mut checkpointer: gradient_checkpointing: GradientCheckpointer<f64, ndarray::Ix1> =
             gradient_checkpointing::GradientCheckpointer::new(
                 gradient_checkpointing::CheckpointStrategy::Logarithmic { base: 2.0 },
             );
@@ -1362,7 +1362,7 @@ mod tests {
     #[test]
     fn test_gradient_checkpointing_custom() {
         let pattern = vec![true, false, false, true, false];
-        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+        let mut checkpointer: gradient_checkpointing: GradientCheckpointer<f64, ndarray::Ix1> =
             gradient_checkpointing::GradientCheckpointer::new(
                 gradient_checkpointing::CheckpointStrategy::Custom { pattern },
             );
@@ -1381,7 +1381,7 @@ mod tests {
 
     #[test]
     fn test_gradient_checkpointing_memory_tracking() {
-        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+        let mut checkpointer: gradient_checkpointing: GradientCheckpointer<f64, ndarray::Ix1> =
             gradient_checkpointing::GradientCheckpointer::new(
                 gradient_checkpointing::CheckpointStrategy::Uniform { interval: 1 },
             );
@@ -1406,7 +1406,7 @@ mod tests {
 
     #[test]
     fn test_checkpointed_forward() {
-        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+        let mut checkpointer: gradient_checkpointing: GradientCheckpointer<f64, ndarray::Ix1> =
             gradient_checkpointing::GradientCheckpointer::new(
                 gradient_checkpointing::CheckpointStrategy::Uniform { interval: 1 },
             );
@@ -1433,7 +1433,7 @@ mod tests {
 
     #[test]
     fn test_recompute_from_checkpoint() {
-        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+        let mut checkpointer: gradient_checkpointing: GradientCheckpointer<f64, ndarray::Ix1> =
             gradient_checkpointing::GradientCheckpointer::new(
                 gradient_checkpointing::CheckpointStrategy::Uniform { interval: 2 },
             );
@@ -1461,7 +1461,7 @@ mod tests {
 
     #[test]
     fn test_auto_checkpointer() {
-        let mut auto_checkpointer: gradient_checkpointing::AutoCheckpointer<f64, ndarray::Ix1> =
+        let mut auto_checkpointer: gradient, _checkpointing: AutoCheckpointer<f64, ndarray::Ix1> =
             gradient_checkpointing::AutoCheckpointer::new(
                 gradient_checkpointing::CheckpointStrategy::Uniform { interval: 2 },
                 0.6, // target 60% memory usage
@@ -1478,7 +1478,7 @@ mod tests {
 
         // Execute several steps
         for depth in 0..5 {
-            let (output, _checkpoint) = auto_checkpointer
+            let (output_checkpoint) = auto_checkpointer
                 .auto_step(depth, &input, forward_fn)
                 .unwrap();
             assert_eq!(output, 3.0); // 1 + 2
@@ -1524,7 +1524,7 @@ mod tests {
 
     #[test]
     fn test_checkpointing_strategy_optimization() {
-        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+        let mut checkpointer: gradient_checkpointing: GradientCheckpointer<f64, ndarray::Ix1> =
             gradient_checkpointing::GradientCheckpointer::new(
                 gradient_checkpointing::CheckpointStrategy::Uniform { interval: 4 },
             );
@@ -1550,7 +1550,7 @@ mod tests {
 
     #[test]
     fn test_checkpointing_disabled() {
-        let mut checkpointer: gradient_checkpointing::GradientCheckpointer<f64, ndarray::Ix1> =
+        let mut checkpointer: gradient_checkpointing: GradientCheckpointer<f64, ndarray::Ix1> =
             gradient_checkpointing::GradientCheckpointer::new(
                 gradient_checkpointing::CheckpointStrategy::Uniform { interval: 1 },
             );

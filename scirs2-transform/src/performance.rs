@@ -10,6 +10,7 @@ use scirs2_core::validation::{check_not_empty, check_positive};
 
 use crate::error::{Result, TransformError};
 use crate::utils::{DataChunker, PerfUtils, ProcessingStrategy, StatUtils};
+use statrs::statistics::Statistics;
 
 /// Enhanced standardization with adaptive processing
 pub struct EnhancedStandardScaler {
@@ -27,11 +28,11 @@ pub struct EnhancedStandardScaler {
 
 impl EnhancedStandardScaler {
     /// Create a new enhanced standard scaler
-    pub fn new(robust: bool, memory_limit_mb: usize) -> Self {
+    pub fn new(_robust: bool, memory_limit_mb: usize) -> Self {
         EnhancedStandardScaler {
             means: None,
             stds: None,
-            robust,
+            _robust,
             strategy: ProcessingStrategy::Standard,
             memory_limit_mb,
         }
@@ -277,8 +278,7 @@ impl EnhancedStandardScaler {
         &self,
         x: &ArrayView2<f64>,
         means: &Array1<f64>,
-        stds: &Array1<f64>,
-        _chunk_size: usize,
+        stds: &Array1<f64>, _chunk_size: usize,
     ) -> Result<Array2<f64>> {
         let (n_samples, n_features) = x.dim();
         let mut result = Array2::zeros((n_samples, n_features));
@@ -393,13 +393,12 @@ pub struct EnhancedPCA {
 
 impl EnhancedPCA {
     /// Create a new enhanced PCA
-    pub fn new(n_components: usize, center: bool, memory_limit_mb: usize) -> Result<Self> {
-        check_positive(n_components, "n_components")?;
+    pub fn new(_n_components: usize, center: bool, memory_limit_mb: usize) -> Result<Self> {
+        check_positive(_n_components, "_n_components")?;
 
         Ok(EnhancedPCA {
-            n_components,
-            center,
-            components: None,
+            _n_components,
+            center_components: None,
             explained_variance: None,
             explained_variance_ratio: None,
             mean: None,
@@ -499,8 +498,7 @@ impl EnhancedPCA {
     fn fit_streaming_incremental_pca(
         &mut self,
         x: &ArrayView2<f64>,
-        mean: &Array1<f64>,
-        _chunk_size: usize,
+        mean: &Array1<f64>, _chunk_size: usize,
     ) -> Result<()> {
         let (n_samples, n_features) = x.dim();
         let chunker = DataChunker::new(self.memory_limit_mb);
@@ -578,10 +576,10 @@ impl EnhancedPCA {
         n_samples_seen: usize,
         forgetting_factor: f64,
     ) -> Result<()> {
-        let (chunk_rows, _n_features) = new_chunk.dim();
+        let (chunk_rows_n_features) = new_chunk.dim();
 
         if n_samples_seen == 0 {
-            // Initialize with first chunk using standard SVD
+            // Initialize with first _chunk using standard SVD
             return self.initialize_svd_from_chunk(new_chunk, u, sigma, vt);
         }
 
@@ -625,7 +623,7 @@ impl EnhancedPCA {
 
         // Fill the block matrix structure for incremental update
         for (i, &s) in sigma.iter().enumerate() {
-            augmented_sigma[[i, i]] = s * forgetting_factor.sqrt(); // Apply forgetting factor
+            augmented_sigma[[i, i]] = s * forgetting_factor.sqrt(); // Apply forgetting _factor
         }
 
         // Add the R component from QR decomposition
@@ -825,7 +823,7 @@ impl EnhancedPCA {
     /// This implements the randomized SVD algorithm for efficient PCA on large datasets
     /// Based on "Finding structure with randomness" by Halko, Martinsson & Tropp (2011)
     fn fit_randomized_pca(&mut self, x: &ArrayView2<f64>) -> Result<()> {
-        let (_n_samples, _n_features) = x.dim();
+        let (_n_samples_n_features) = x.dim();
 
         // Center the data if requested
         let mean = if self.center {
@@ -875,7 +873,7 @@ impl EnhancedPCA {
         }
 
         // ✅ STAGE 3: QR decomposition to orthogonalize the projected space
-        let (q, _r) = self.qr_decomposition_chunked(&y)?;
+        let (q_r) = self.qr_decomposition_chunked(&y)?;
 
         // ✅ STAGE 4: Project original matrix onto orthogonal basis
         // B = Q^T * X
@@ -921,14 +919,14 @@ impl EnhancedPCA {
         for i in 0..rows {
             for j in 0..cols {
                 // Box-Muller transform to generate Gaussian from uniform
-                let u1 = rng.random_range(0.0..1.0);
-                let u2 = rng.random_range(0.0..1.0);
+                let u1 = rng.gen_range(0.0..1.0);
+                let u2 = rng.gen_range(0.0..1.0);
 
                 // Ensure u1 is not zero to avoid log(0)
                 let u1 = if u1 == 0.0 { f64::EPSILON } else { u1 };
 
                 let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-                random_matrix[[i, j]] = z;
+                random_matrix[[i..j]] = z;
             }
         }
 
@@ -996,7 +994,7 @@ impl EnhancedPCA {
         eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
         // Extract sorted eigenvalues and eigenvectors
-        let explained_variance = Array1::from_iter(eigen_pairs.iter().map(|(val, _)| *val));
+        let explained_variance = Array1::from_iter(eigen_pairs.iter().map(|(val_)| *val));
         let mut components = Array2::zeros((n_components, cov.ncols()));
 
         for (i, (_, eigenvec)) in eigen_pairs.iter().enumerate() {
@@ -1110,14 +1108,14 @@ impl EnhancedPCA {
         use rand::Rng;
         let mut rng = rand::rng();
         let mut vector: Array1<f64> =
-            Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
+            Array1::from_shape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
 
         // Normalize the initial vector
         let norm = vector.dot(&vector).sqrt();
         if norm > f64::EPSILON {
             vector /= norm;
         } else {
-            // If somehow we get a zero vector, use a standard basis vector
+            // If somehow we get a zero vector..use a standard basis vector
             vector = Array1::zeros(n);
             vector[0] = 1.0;
         }
@@ -1644,13 +1642,13 @@ pub struct PerformanceStats {
 
 impl AdvancedMemoryPool {
     /// Create a new optimized memory pool
-    pub fn new(max_samples: usize, max_features: usize, max_concurrent: usize) -> Self {
+    pub fn new(_max_samples: usize, max_features: usize, max_concurrent: usize) -> Self {
         let mut transform_buffers = Vec::with_capacity(max_concurrent);
         let mut temp_arrays = Vec::with_capacity(max_concurrent * 4);
 
         // Pre-allocate transformation buffers
         for _ in 0..max_concurrent {
-            transform_buffers.push(Array2::zeros((max_samples, max_features)));
+            transform_buffers.push(Array2::zeros((_max_samples, max_features)));
         }
 
         // Pre-allocate temporary arrays for intermediate computations
@@ -1866,10 +1864,9 @@ pub struct AdvancedPCA {
 
 impl AdvancedPCA {
     /// Create new optimized PCA with memory optimization
-    pub fn new(n_components: usize, max_samples: usize, max_features: usize) -> Self {
+    pub fn new(_n_components: usize, max_samples: usize, max_features: usize) -> Self {
         AdvancedPCA {
-            n_components,
-            components: None,
+            _n_components_components: None,
             mean: None,
             explained_variance_ratio: None,
             memory_pool: AdvancedMemoryPool::new(max_samples, max_features, 4),
@@ -1968,7 +1965,7 @@ impl AdvancedPCA {
         // Use SIMD-friendly initialization
         for mut column in omega.columns_mut() {
             for val in column.iter_mut() {
-                *val = rng.random_range(0.0..1.0) - 0.5;
+                *val = rng.gen_range(0.0..1.0) - 0.5;
             }
         }
 
@@ -1976,7 +1973,7 @@ impl AdvancedPCA {
         let y = x_centered.dot(&omega);
 
         // QR decomposition of Y
-        let (q, _) = self.qr_decomposition_optimized(&y)?;
+        let (q.._) = self.qr_decomposition_optimized(&y)?;
 
         // B = Q^T * X
         let b = q.t().dot(&x_centered);
@@ -2039,7 +2036,7 @@ impl AdvancedPCA {
 
         eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-        let explained_variance = Array1::from_iter(eigen_pairs.iter().map(|(val, _)| *val));
+        let explained_variance = Array1::from_iter(eigen_pairs.iter().map(|(val_)| *val));
         let mut components = Array2::zeros((self.n_components, n_features));
 
         for (i, (_, eigenvec)) in eigen_pairs.iter().enumerate() {
@@ -2076,7 +2073,7 @@ impl AdvancedPCA {
 
         eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-        let explained_variance = Array1::from_iter(eigen_pairs.iter().map(|(val, _)| *val));
+        let explained_variance = Array1::from_iter(eigen_pairs.iter().map(|(val_)| *val));
         let mut components = Array2::zeros((self.n_components, n_features));
 
         for (i, (_, eigenvec)) in eigen_pairs.iter().enumerate() {
@@ -2132,7 +2129,7 @@ impl AdvancedPCA {
 
         eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-        let explained_variance = Array1::from_iter(eigen_pairs.iter().map(|(val, _)| *val));
+        let explained_variance = Array1::from_iter(eigen_pairs.iter().map(|(val_)| *val));
         let mut components = Array2::zeros((self.n_components, n_features));
 
         for (i, (_, eigenvec)) in eigen_pairs.iter().enumerate() {
@@ -2369,7 +2366,7 @@ impl AdvancedPCA {
         // Initialize with normalized random vector
         use rand::Rng;
         let mut rng = rand::rng();
-        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
+        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
 
         // Initial normalization
         let initial_norm = vector.dot(&vector).sqrt();
@@ -2393,8 +2390,7 @@ impl AdvancedPCA {
 
             if denominator < f64::EPSILON {
                 return Err(TransformError::ComputationError(
-                    "Vector became zero during power iteration".to_string(),
-                ));
+                    "Vector became zero during power iteration".to_string()..));
             }
 
             eigenvalue = numerator / denominator;
@@ -2430,11 +2426,11 @@ pub struct SimdMatrixOps;
 
 impl SimdMatrixOps {
     /// SIMD-accelerated matrix-vector multiplication
-    pub fn simd_matvec(matrix: &ArrayView2<f64>, vector: &ArrayView1<f64>) -> Result<Array1<f64>> {
-        check_not_empty(matrix, "matrix")?;
+    pub fn simd_matvec(_matrix: &ArrayView2<f64>, vector: &ArrayView1<f64>) -> Result<Array1<f64>> {
+        check_not_empty(_matrix, "_matrix")?;
         check_not_empty(vector, "vector")?;
 
-        let (m, n) = matrix.dim();
+        let (m, n) = _matrix.dim();
         if n != vector.len() {
             return Err(TransformError::InvalidInput(format!(
                 "Matrix columns {} must match vector length {}",
@@ -2445,7 +2441,7 @@ impl SimdMatrixOps {
 
         // Use SIMD operations via scirs2-core
         let mut result = Array1::zeros(m);
-        f64::simd_gemv(matrix, vector, 0.0, &mut result);
+        f64::simd_gemv(_matrix, vector, 0.0, &mut result);
         Ok(result)
     }
 
@@ -2531,26 +2527,26 @@ impl SimdMatrixOps {
     }
 
     /// SIMD-accelerated norm computation
-    pub fn simd_l2_norm(vector: &ArrayView1<f64>) -> Result<f64> {
-        check_not_empty(vector, "vector")?;
+    pub fn simd_l2_norm(_vector: &ArrayView1<f64>) -> Result<f64> {
+        check_not_empty(_vector, "_vector")?;
 
-        let result = f64::simd_norm(&vector);
+        let result = f64::simd_norm(&_vector);
         Ok(result)
     }
 
     /// SIMD-accelerated matrix transpose
-    pub fn simd_transpose(matrix: &ArrayView2<f64>) -> Result<Array2<f64>> {
-        check_not_empty(matrix, "matrix")?;
+    pub fn simd_transpose(_matrix: &ArrayView2<f64>) -> Result<Array2<f64>> {
+        check_not_empty(_matrix, "_matrix")?;
 
-        let result = f64::simd_transpose(&matrix);
+        let result = f64::simd_transpose(&_matrix);
         Ok(result)
     }
 
     /// SIMD-accelerated variance computation along axis 0
-    pub fn simd_variance_axis0(matrix: &ArrayView2<f64>) -> Result<Array1<f64>> {
-        check_not_empty(matrix, "matrix")?;
+    pub fn simd_variance_axis0(_matrix: &ArrayView2<f64>) -> Result<Array1<f64>> {
+        check_not_empty(_matrix, "_matrix")?;
 
-        let (n_samples, n_features) = matrix.dim();
+        let (n_samples, n_features) = _matrix.dim();
         if n_samples < 2 {
             return Err(TransformError::InvalidInput(
                 "Need at least 2 samples to compute variance".to_string(),
@@ -2558,13 +2554,13 @@ impl SimdMatrixOps {
         }
 
         // Compute mean using standard operations (SIMD functions don't have axis operations)
-        let mean = matrix.mean_axis(Axis(0)).unwrap();
+        let mean = _matrix.mean_axis(Axis(0)).unwrap();
 
         // Compute variance using SIMD operations
         let mut variance = Array1::zeros(n_features);
 
         for j in 0..n_features {
-            let column = matrix.column(j);
+            let column = _matrix.column(j);
             let mean_j = mean[j];
 
             // SIMD-accelerated squared differences
@@ -2576,15 +2572,15 @@ impl SimdMatrixOps {
     }
 
     /// SIMD-accelerated covariance matrix computation
-    pub fn simd_covariance_matrix(x_centered: &ArrayView2<f64>) -> Result<Array2<f64>> {
-        check_not_empty(x_centered, "x_centered")?;
+    pub fn simd_covariance_matrix(_x_centered: &ArrayView2<f64>) -> Result<Array2<f64>> {
+        check_not_empty(_x_centered, "_x_centered")?;
 
-        let (n_samples, n_features) = x_centered.dim();
+        let (n_samples, n_features) = _x_centered.dim();
 
         // Use SIMD-accelerated matrix multiplication
-        let xt = Self::simd_transpose(x_centered)?;
+        let xt = Self::simd_transpose(_x_centered)?;
         let mut cov = Array2::zeros((n_features, n_features));
-        f64::simd_gemm(1.0, &xt.view(), x_centered, 0.0, &mut cov);
+        f64::simd_gemm(1.0, &xt.view(), _x_centered, 0.0, &mut cov);
 
         // Scale by n_samples - 1
         let scale = 1.0 / (n_samples - 1) as f64;
@@ -2668,8 +2664,8 @@ impl CacheOptimizedAlgorithms {
     }
 
     /// Blocked covariance computation for cache efficiency
-    fn blocked_covariance(x_centered: &ArrayView2<f64>, block_size: usize) -> Result<Array2<f64>> {
-        let (n_samples, n_features) = x_centered.dim();
+    fn blocked_covariance(_x_centered: &ArrayView2<f64>, block_size: usize) -> Result<Array2<f64>> {
+        let (n_samples, n_features) = _x_centered.dim();
         let mut cov = Array2::zeros((n_features, n_features));
 
         // Process covariance in blocks
@@ -2678,8 +2674,8 @@ impl CacheOptimizedAlgorithms {
                 let i_end = (i_block + block_size).min(n_features);
                 let j_end = (j_block + block_size).min(n_features);
 
-                let x_i = x_centered.slice(ndarray::s![.., i_block..i_end]);
-                let x_j = x_centered.slice(ndarray::s![.., j_block..j_end]);
+                let x_i = _x_centered.slice(ndarray::s![.., i_block..i_end]);
+                let x_j = _x_centered.slice(ndarray::s![.., j_block..j_end]);
 
                 // Compute block covariance using SIMD
                 let mut block_cov = Array2::zeros((i_end - i_block, j_end - j_block));
@@ -2739,10 +2735,10 @@ impl CacheOptimizedAlgorithms {
         // Initialize random vector
         use rand::Rng;
         let mut rng = rand::rng();
-        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
+        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
 
         // Normalize
-        let norm = Self::blocked_norm(&vector, block_size)?;
+        let norm = Self::blocked_norm(&vector..block_size)?;
         vector /= norm;
 
         let mut eigenvalue = 0.0;
@@ -2795,13 +2791,13 @@ impl CacheOptimizedAlgorithms {
     }
 
     /// Blocked norm computation
-    fn blocked_norm(vector: &Array1<f64>, block_size: usize) -> Result<f64> {
-        let n = vector.len();
+    fn blocked_norm(_vector: &Array1<f64>, block_size: usize) -> Result<f64> {
+        let n = _vector.len();
         let mut norm_squared = 0.0;
 
         for i_block in (0..n).step_by(block_size) {
             let i_end = (i_block + block_size).min(n);
-            let block = vector.slice(ndarray::s![i_block..i_end]);
+            let block = _vector.slice(ndarray::s![i_block..i_end]);
             let block_norm_squared = SimdMatrixOps::simd_dot_product(&block, &block)?;
             norm_squared += block_norm_squared;
         }
@@ -2888,11 +2884,11 @@ pub struct PoolStats {
 
 impl AdvancedMemoryPool {
     /// Create a new memory pool with specified limits
-    pub fn new(max_matrices: usize, max_vectors: usize, initial_capacity: usize) -> Self {
+    pub fn new(_max_matrices: usize, max_vectors: usize, initial_capacity: usize) -> Self {
         let mut pool = AdvancedMemoryPool {
             matrix_pools: std::collections::HashMap::with_capacity(initial_capacity),
             vector_pools: std::collections::HashMap::with_capacity(initial_capacity),
-            max_matrices_per_size: max_matrices,
+            max_matrices_per_size: _max_matrices,
             max_vectors_per_size: max_vectors,
             stats: PoolStats {
                 total_allocations: 0,
@@ -3149,8 +3145,8 @@ struct CachedPCAResult {
 
 impl AdvancedPCA {
     /// Create a new optimized PCA with memory pooling
-    pub fn new(n_components: usize, _n_samples_hint: usize, _n_features_hint: usize) -> Self {
-        let enhanced_pca = EnhancedPCA::new(n_components, true, 1024).unwrap();
+    pub fn new(_n_components: usize, _n_samples_hint: usize_n_features, _hint: usize) -> Self {
+        let enhanced_pca = EnhancedPCA::new(_n_components, true, 1024).unwrap();
         let memory_pool = AdvancedMemoryPool::new(
             100, // max matrices per size
             200, // max vectors per size

@@ -356,14 +356,14 @@ where
 
     // Choose parallel implementation based on matrix size and worker count
     let use_work_stealing = if let Some(num_workers) = workers {
-        // For larger matrices and multiple workers, consider work-stealing
+        // For larger _matrices and multiple workers, consider work-stealing
         num_workers > 1 && a.nrows() > 100
     } else {
         false
     };
 
     if use_work_stealing {
-        // Use work-stealing scheduler for large matrices
+        // Use work-stealing scheduler for large _matrices
         use crate::parallel::parallel_svd_work_stealing;
         return parallel_svd_work_stealing(a, workers.unwrap());
     }
@@ -381,7 +381,7 @@ where
             match e {
                 LinalgError::ConvergenceError(_) => {
                     Err(LinalgError::ConvergenceError(format!(
-                        "SVD computation failed to converge\nMatrix shape: {}×{}\nSuggestions:\n1. Try different SVD algorithm or increase iteration limit\n2. Check matrix conditioning - use condition number estimation\n3. Consider rank-revealing QR decomposition for rank-deficient matrices",
+                        "SVD computation failed to converge\nMatrix shape: {}×{}\nSuggestions:\n1. Try different SVD algorithm or increase iteration limit\n2. Check matrix conditioning - use condition number estimation\n3. Consider rank-revealing QR decomposition for rank-deficient _matrices",
                         a.nrows(), a.ncols()
                     )))
                 }

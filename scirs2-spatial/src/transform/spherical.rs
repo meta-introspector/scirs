@@ -35,7 +35,7 @@ use std::f64::consts::{PI, TAU};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::transform::spherical::cart_to_spherical;
+/// use scirs2__spatial::transform::spherical::cart_to_spherical;
 ///
 /// let cart = array![1.0, 1.0, 1.0]; // Point (1, 1, 1)
 /// let spherical = cart_to_spherical(&cart.view()).unwrap();
@@ -49,17 +49,17 @@ use std::f64::consts::{PI, TAU};
 ///
 /// Returns an error if the input array doesn't have exactly 3 elements
 #[allow(dead_code)]
-pub fn cart_to_spherical(cart: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
-    if cart.len() != 3 {
+pub fn cart_to_spherical(_cart: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
+    if _cart.len() != 3 {
         return Err(SpatialError::DimensionError(format!(
             "Cartesian coordinates must have 3 elements, got {}",
-            cart.len()
+            _cart.len()
         )));
     }
 
-    let x = cart[0];
-    let y = cart[1];
-    let z = cart[2];
+    let x = _cart[0];
+    let y = _cart[1];
+    let z = _cart[2];
 
     // Compute r (radius)
     let r = (x * x + y * y + z * z).sqrt();
@@ -112,7 +112,7 @@ pub fn cart_to_spherical(cart: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::transform::spherical::spherical_to_cart;
+/// use scirs2__spatial::transform::spherical::spherical_to_cart;
 /// use std::f64::consts::PI;
 ///
 /// // Point at r=2, theta=π/4 (45°), phi=π/3 (60°)
@@ -124,17 +124,17 @@ pub fn cart_to_spherical(cart: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
 ///
 /// Returns an error if the input array doesn't have exactly 3 elements
 #[allow(dead_code)]
-pub fn spherical_to_cart(spherical: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
-    if spherical.len() != 3 {
+pub fn spherical_to_cart(_spherical: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
+    if _spherical.len() != 3 {
         return Err(SpatialError::DimensionError(format!(
             "Spherical coordinates must have 3 elements, got {}",
-            spherical.len()
+            _spherical.len()
         )));
     }
 
-    let r = spherical[0];
-    let theta = spherical[1];
-    let phi = spherical[2];
+    let r = _spherical[0];
+    let theta = _spherical[1];
+    let phi = _spherical[2];
 
     // Check that r is non-negative
     if r < 0.0 {
@@ -172,7 +172,7 @@ pub fn spherical_to_cart(spherical: &ArrayView1<f64>) -> SpatialResult<Array1<f6
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::transform::spherical::cart_to_spherical_batch;
+/// use scirs2__spatial::transform::spherical::cart_to_spherical_batch;
 ///
 /// let cart = array![
 ///     [1.0, 0.0, 0.0],  // Point on x-axis
@@ -186,18 +186,18 @@ pub fn spherical_to_cart(spherical: &ArrayView1<f64>) -> SpatialResult<Array1<f6
 ///
 /// Returns an error if any row of the input array doesn't have exactly 3 elements
 #[allow(dead_code)]
-pub fn cart_to_spherical_batch(cart: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-    if cart.ncols() != 3 {
+pub fn cart_to_spherical_batch(_cart: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+    if _cart.ncols() != 3 {
         return Err(SpatialError::DimensionError(format!(
             "Cartesian coordinates must have 3 columns, got {}",
-            cart.ncols()
+            _cart.ncols()
         )));
     }
 
-    let n_points = cart.nrows();
+    let n_points = _cart.nrows();
     let mut result = Array2::zeros((n_points, 3));
 
-    for (i, row) in cart.rows().into_iter().enumerate() {
+    for (i, row) in _cart.rows().into_iter().enumerate() {
         let spherical = cart_to_spherical(&row)?;
         result.row_mut(i).assign(&spherical);
     }
@@ -219,7 +219,7 @@ pub fn cart_to_spherical_batch(cart: &ArrayView2<'_, f64>) -> SpatialResult<Arra
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::transform::spherical::spherical_to_cart_batch;
+/// use scirs2__spatial::transform::spherical::spherical_to_cart_batch;
 /// use std::f64::consts::PI;
 ///
 /// let spherical = array![
@@ -234,18 +234,18 @@ pub fn cart_to_spherical_batch(cart: &ArrayView2<'_, f64>) -> SpatialResult<Arra
 ///
 /// Returns an error if any row of the input array doesn't have exactly 3 elements
 #[allow(dead_code)]
-pub fn spherical_to_cart_batch(spherical: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-    if spherical.ncols() != 3 {
+pub fn spherical_to_cart_batch(_spherical: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+    if _spherical.ncols() != 3 {
         return Err(SpatialError::DimensionError(format!(
             "Spherical coordinates must have 3 columns, got {}",
-            spherical.ncols()
+            _spherical.ncols()
         )));
     }
 
-    let n_points = spherical.nrows();
+    let n_points = _spherical.nrows();
     let mut result = Array2::zeros((n_points, 3));
 
-    for (i, row) in spherical.rows().into_iter().enumerate() {
+    for (i, row) in _spherical.rows().into_iter().enumerate() {
         let cart = spherical_to_cart(&row)?;
         result.row_mut(i).assign(&cart);
     }
@@ -268,7 +268,7 @@ pub fn spherical_to_cart_batch(spherical: &ArrayView2<'_, f64>) -> SpatialResult
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::transform::spherical::geodesic_distance;
+/// use scirs2__spatial::transform::spherical::geodesic_distance;
 /// use std::f64::consts::PI;
 ///
 /// // North pole and a point on the equator
@@ -350,7 +350,7 @@ pub fn geodesic_distance(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::transform::spherical::spherical_triangle_area;
+/// use scirs2__spatial::transform::spherical::spherical_triangle_area;
 /// use std::f64::consts::PI;
 ///
 /// // Three points on a unit sphere
@@ -411,7 +411,6 @@ pub fn spherical_triangle_area(
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
 
     #[test]
     fn test_cart_to_spherical() {

@@ -19,21 +19,21 @@ pub struct Dual<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> Dual<F> {
     /// Create a new dual number
-    pub fn new(val: F, der: F) -> Self {
-        Dual { val, der }
+    pub fn new(_val: F, der: F) -> Self {
+        Dual { _val, der }
     }
 
     /// Create a constant dual number (zero derivative)
-    pub fn constant(val: F) -> Self {
+    pub fn constant(_val: F) -> Self {
         Dual {
-            val,
+            _val,
             der: F::zero(),
         }
     }
 
     /// Create a variable dual number (unit derivative)
-    pub fn variable(val: F) -> Self {
-        Dual { val, der: F::one() }
+    pub fn variable(_val: F) -> Self {
+        Dual { _val, der: F::one() }
     }
 
     /// Extract the value
@@ -47,7 +47,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute sin(x)
-    pub fn sin(self) -> Self {
+    pub fn sin(&self) -> Self {
         Dual {
             val: self.val.sin(),
             der: self.der * self.val.cos(),
@@ -55,7 +55,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute cos(x)
-    pub fn cos(self) -> Self {
+    pub fn cos(&self) -> Self {
         Dual {
             val: self.val.cos(),
             der: -self.der * self.val.sin(),
@@ -63,7 +63,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute exp(x)
-    pub fn exp(self) -> Self {
+    pub fn exp(&self) -> Self {
         let exp_val = self.val.exp();
         Dual {
             val: exp_val,
@@ -72,7 +72,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute ln(x)
-    pub fn ln(self) -> Self {
+    pub fn ln(&self) -> Self {
         Dual {
             val: self.val.ln(),
             der: self.der / self.val,
@@ -80,7 +80,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute sqrt(x)
-    pub fn sqrt(self) -> Self {
+    pub fn sqrt(&self) -> Self {
         let sqrt_val = self.val.sqrt();
         Dual {
             val: sqrt_val,
@@ -89,7 +89,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute x^y for constant y
-    pub fn powf(self, n: F) -> Self {
+    pub fn powf(n: F) -> Self {
         Dual {
             val: self.val.powf(n),
             der: self.der * n * self.val.powf(n - F::one()),
@@ -97,7 +97,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute abs(x)
-    pub fn abs(self) -> Self {
+    pub fn abs(&self) -> Self {
         if self.val >= F::zero() {
             self
         } else {
@@ -106,7 +106,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute tan(x)
-    pub fn tan(self) -> Self {
+    pub fn tan(&self) -> Self {
         let cos_val = self.val.cos();
         Dual {
             val: self.val.tan(),
@@ -115,7 +115,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute tanh(x)
-    pub fn tanh(self) -> Self {
+    pub fn tanh(&self) -> Self {
         let tanh_val = self.val.tanh();
         Dual {
             val: tanh_val,
@@ -124,7 +124,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute sinh(x)
-    pub fn sinh(self) -> Self {
+    pub fn sinh(&self) -> Self {
         Dual {
             val: self.val.sinh(),
             der: self.der * self.val.cosh(),
@@ -132,7 +132,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute cosh(x)
-    pub fn cosh(self) -> Self {
+    pub fn cosh(&self) -> Self {
         Dual {
             val: self.val.cosh(),
             der: self.der * self.val.sinh(),
@@ -140,7 +140,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute atan(x)
-    pub fn atan(self) -> Self {
+    pub fn atan(&self) -> Self {
         Dual {
             val: self.val.atan(),
             der: self.der / (F::one() + self.val * self.val),
@@ -148,7 +148,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute asin(x)
-    pub fn asin(self) -> Self {
+    pub fn asin(&self) -> Self {
         Dual {
             val: self.val.asin(),
             der: self.der / (F::one() - self.val * self.val).sqrt(),
@@ -156,7 +156,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute acos(x)
-    pub fn acos(self) -> Self {
+    pub fn acos(&self) -> Self {
         Dual {
             val: self.val.acos(),
             der: -self.der / (F::one() - self.val * self.val).sqrt(),
@@ -164,7 +164,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute atan2(y, x)
-    pub fn atan2(self, x: Self) -> Self {
+    pub fn atan2(x: Self) -> Self {
         let r2 = self.val * self.val + x.val * x.val;
         Dual {
             val: self.val.atan2(x.val),
@@ -173,40 +173,40 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute max(self, other)
-    pub fn max(self, other: Self) -> Self {
-        if self.val > other.val {
+    pub fn max(_other: Self) -> Self {
+        if self.val > _other.val {
             self
-        } else if self.val < other.val {
-            other
+        } else if self.val < _other.val {
+            _other
         } else {
             // When values are equal, average the derivatives
             Dual {
                 val: self.val,
-                der: (self.der + other.der) / F::from(2.0).unwrap(),
+                der: (self.der + _other.der) / F::from(2.0).unwrap(),
             }
         }
     }
 
     /// Compute min(self, other)
-    pub fn min(self, other: Self) -> Self {
-        if self.val < other.val {
+    pub fn min(_other: Self) -> Self {
+        if self.val < _other.val {
             self
-        } else if self.val > other.val {
-            other
+        } else if self.val > _other.val {
+            _other
         } else {
             // When values are equal, average the derivatives
             Dual {
                 val: self.val,
-                der: (self.der + other.der) / F::from(2.0).unwrap(),
+                der: (self.der + _other.der) / F::from(2.0).unwrap(),
             }
         }
     }
 
     /// Compute x^y where both x and y are dual numbers
-    pub fn pow(self, other: Self) -> Self {
-        let val = self.val.powf(other.val);
+    pub fn pow(_other: Self) -> Self {
+        let val = self.val.powf(_other.val);
         let der = if self.val > F::zero() {
-            val * (other.der * self.val.ln() + other.val * self.der / self.val)
+            val * (_other.der * self.val.ln() + _other.val * self.der / self.val)
         } else {
             F::zero() // Handle edge case
         };
@@ -316,7 +316,7 @@ impl<F: IntegrateFloat> Div<F> for Dual<F> {
     }
 }
 
-impl<F: IntegrateFloat> fmt::Display for Dual<F> {
+impl<F: IntegrateFloat>, fmt::Display for Dual<F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} + {}ε", self.val, self.der)
     }
@@ -332,29 +332,29 @@ pub struct DualVector<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> DualVector<F> {
     /// Create a new dual vector
-    pub fn new(values: Array1<F>, jacobian: Array1<Array1<F>>) -> Self {
-        DualVector { values, jacobian }
+    pub fn new(_values: Array1<F>, jacobian: Array1<Array1<F>>) -> Self {
+        DualVector { _values, jacobian }
     }
 
     /// Create from a regular vector with specified active variable
-    pub fn from_vector(values: ArrayView1<F>, active_var: usize) -> Self {
-        let n = values.len();
+    pub fn from_vector(_values: ArrayView1<F>, active_var: usize) -> Self {
+        let n = _values.len();
         let mut jacobian = Array1::from_elem(n, Array1::zeros(n));
 
         // Set the derivative of the active variable to 1
         jacobian[active_var][active_var] = F::one();
 
         DualVector {
-            values: values.to_owned(),
+            _values: _values.to_owned(),
             jacobian,
         }
     }
 
     /// Create a constant dual vector (zero derivatives)
-    pub fn constant(values: Array1<F>) -> Self {
-        let n = values.len();
+    pub fn constant(_values: Array1<F>) -> Self {
+        let n = _values.len();
         let jacobian = Array1::from_elem(n, Array1::zeros(n));
-        DualVector { values, jacobian }
+        DualVector { _values, jacobian }
     }
 
     /// Get the dimension
@@ -368,7 +368,7 @@ impl<F: IntegrateFloat> DualVector<F> {
     }
 
     /// Extract Jacobian
-    pub fn jacobian(&self) -> &Array1<Array1<F>> {
+    pub fn jacobian() -> &Array1<Array1<F>> {
         &self.jacobian
     }
 }

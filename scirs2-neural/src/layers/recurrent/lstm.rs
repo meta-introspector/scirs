@@ -110,7 +110,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
         // Validate parameters
         if input_size == 0 || hidden_size == 0 {
             return Err(NeuralError::InvalidArchitecture(
-                "Input size and hidden size must be positive".to_string(),
+                "Input _size and hidden _size must be positive".to_string(),
             ));
         }
         // Initialize weights with Xavier/Glorot initialization
@@ -142,13 +142,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
         // Initialize all weights and biases
         let weight_ii = create_weight_matrix(hidden_size, input_size, scale_ih)?;
         let weight_hi = create_weight_matrix(hidden_size, hidden_size, scale_hh)?;
-        let bias_ii: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
-        let bias_hi: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_ii: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_hi: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
         let weight_if = create_weight_matrix(hidden_size, input_size, scale_ih)?;
         let weight_hf = create_weight_matrix(hidden_size, hidden_size, scale_hh)?;
         // Initialize forget gate biases to 1.0 (common practice to help training)
-        let mut bias_if: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
-        let mut bias_hf: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
+        let mut bias_if: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
+        let mut bias_hf: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
         let one = F::one();
         for i in 0..hidden_size {
             bias_if[i] = one;
@@ -157,12 +157,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
 
         let weight_ig = create_weight_matrix(hidden_size, input_size, scale_ih)?;
         let weight_hg = create_weight_matrix(hidden_size, hidden_size, scale_hh)?;
-        let bias_ig: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
-        let bias_hg: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_ig: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_hg: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
         let weight_io = create_weight_matrix(hidden_size, input_size, scale_ih)?;
         let weight_ho = create_weight_matrix(hidden_size, hidden_size, scale_hh)?;
-        let bias_io: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
-        let bias_ho: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_io: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_ho: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
         // Initialize gradients
         let gradients = vec![
             Array::zeros(weight_ii.dim()),
@@ -246,13 +246,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
             )));
         }
         // Initialize gates
-        let mut i_gate: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
-        let mut f_gate: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
-        let mut g_gate: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
-        let mut o_gate: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
+        let mut i_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut f_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut g_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut o_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
         // Initialize new states
-        let mut new_c: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
-        let mut new_h: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
+        let mut new_c: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut new_h: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
         // Compute gates for each batch item
         for b in 0..batch_size {
             for i in 0..self.hidden_size {
@@ -384,8 +384,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
 
     fn backward(
         &self,
-        input: &Array<F, IxDyn>,
-        _grad_output: &Array<F, IxDyn>,
+        input: &Array<F, IxDyn>, _grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         // Retrieve cached values
         let input_ref = self.input_cache.read().map_err(|_| {

@@ -27,9 +27,9 @@ pub struct GradientCheckpointing {
     current_memory_mb: usize,
 impl GradientCheckpointing {
     /// Create a new gradient checkpointing manager
-    pub fn new(strategy: CheckpointStrategy, memory_threshold_mb: usize) -> Self {
+    pub fn new(_strategy: CheckpointStrategy, memory_threshold_mb: usize) -> Self {
         Self {
-            strategy,
+            _strategy,
             checkpoints: HashMap::new(),
             recompute_cache: HashMap::new(),
             memory_threshold_mb,
@@ -176,12 +176,12 @@ pub struct LayerInfo {
     pub num_parameters: usize,
 impl LayerInfo {
     /// Create layer info for a dense layer
-    pub fn dense(input_size: usize, output_size: usize) -> Self {
+    pub fn dense(_input_size: usize, output_size: usize) -> Self {
             layer_type: "Dense".to_string(),
-            compute_cost: (2 * input_size * output_size) as f32,
-            memory_cost: 4 * (input_size * output_size + output_size),
+            compute_cost: (2 * _input_size * output_size) as f32,
+            memory_cost: 4 * (_input_size * output_size + output_size),
             has_parameters: true,
-            num_parameters: input_size * output_size + output_size,
+            num_parameters: _input_size * output_size + output_size,
     /// Create layer info for a convolutional layer
     pub fn conv2d(
         in_channels: usize,
@@ -198,7 +198,7 @@ impl LayerInfo {
             memory_cost: 4 * (kernel_size * kernel_size * in_channels * out_channels),
             num_parameters: kernel_size * kernel_size * in_channels * out_channels,
     /// Create layer info for an activation layer
-    pub fn activation(name: &str, size: usize) -> Self {
+    pub fn activation(_name: &str, size: usize) -> Self {
             layer_type: format!("{} Activation", name),
             compute_cost: size as f32,
             memory_cost: 0,
@@ -245,7 +245,7 @@ impl CheckpointedModel {
             current = output;
         Ok(current)
     /// Backward pass with recomputation
-    pub fn backward(&mut self, grad_output: &ArrayView2<f32>) -> Result<Array2<f32>> {
+    pub fn backward(&self, grad_output: &ArrayView2<f32>) -> Result<Array2<f32>> {
         let mut current_grad = grad_output.to_owned();
         // Clear recompute cache before backward pass
         self.checkpointing.clear_recompute_cache();

@@ -47,19 +47,19 @@ pub struct ReverseVariable {
 
 impl ReverseVariable {
     /// Create a new variable
-    pub fn new(index: usize, value: f64) -> Self {
+    pub fn new(_index: usize, value: f64) -> Self {
         Self {
-            index,
+            _index,
             value,
             grad: 0.0,
         }
     }
 
     /// Create a constant variable (not in tape)
-    pub fn constant(value: f64) -> Self {
+    pub fn constant(_value: f64) -> Self {
         Self {
             index: usize::MAX, // Special index for constants
-            value,
+            _value,
             grad: 0.0,
         }
     }
@@ -95,8 +95,8 @@ impl ReverseVariable {
     }
 
     /// Create a variable from a scalar (convenience method)
-    pub fn from_scalar(value: f64) -> Self {
-        Self::constant(value)
+    pub fn from_scalar(_value: f64) -> Self {
+        Self::constant(_value)
     }
 
     /// Power operation (simple version without graph context)
@@ -612,7 +612,7 @@ pub fn div(
 
 /// Power operation (x^n) on computation graph
 #[allow(dead_code)]
-pub fn powi(graph: &mut ComputationGraph, input: &ReverseVariable, n: i32) -> ReverseVariable {
+pub fn powi(_graph: &mut ComputationGraph, input: &ReverseVariable, n: i32) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.powi(n));
     }
@@ -620,12 +620,12 @@ pub fn powi(graph: &mut ComputationGraph, input: &ReverseVariable, n: i32) -> Re
     let result_value = input.value.powi(n);
     let input_grad = (n as f64) * input.value.powi(n - 1);
 
-    graph.add_unary_op(UnaryOpType::Square, input, result_value, input_grad)
+    _graph.add_unary_op(UnaryOpType::Square, input, result_value, input_grad)
 }
 
 /// Exponential operation on computation graph
 #[allow(dead_code)]
-pub fn exp(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+pub fn exp(_graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.exp());
     }
@@ -633,12 +633,12 @@ pub fn exp(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
     let result_value = input.value.exp();
     let input_grad = result_value; // d/dx(e^x) = e^x
 
-    graph.add_unary_op(UnaryOpType::Exp, input, result_value, input_grad)
+    _graph.add_unary_op(UnaryOpType::Exp, input, result_value, input_grad)
 }
 
 /// Natural logarithm operation on computation graph
 #[allow(dead_code)]
-pub fn ln(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+pub fn ln(_graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.ln());
     }
@@ -646,12 +646,12 @@ pub fn ln(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVaria
     let result_value = input.value.ln();
     let input_grad = 1.0 / input.value;
 
-    graph.add_unary_op(UnaryOpType::Ln, input, result_value, input_grad)
+    _graph.add_unary_op(UnaryOpType::Ln, input, result_value, input_grad)
 }
 
 /// Sine operation on computation graph
 #[allow(dead_code)]
-pub fn sin(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+pub fn sin(_graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.sin());
     }
@@ -659,12 +659,12 @@ pub fn sin(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
     let result_value = input.value.sin();
     let input_grad = input.value.cos();
 
-    graph.add_unary_op(UnaryOpType::Sin, input, result_value, input_grad)
+    _graph.add_unary_op(UnaryOpType::Sin, input, result_value, input_grad)
 }
 
 /// Cosine operation on computation graph
 #[allow(dead_code)]
-pub fn cos(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+pub fn cos(_graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.cos());
     }
@@ -672,12 +672,12 @@ pub fn cos(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
     let result_value = input.value.cos();
     let input_grad = -input.value.sin();
 
-    graph.add_unary_op(UnaryOpType::Cos, input, result_value, input_grad)
+    _graph.add_unary_op(UnaryOpType::Cos, input, result_value, input_grad)
 }
 
 /// Tangent operation on computation graph
 #[allow(dead_code)]
-pub fn tan(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+pub fn tan(_graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.tan());
     }
@@ -686,12 +686,12 @@ pub fn tan(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
     let cos_val = input.value.cos();
     let input_grad = 1.0 / (cos_val * cos_val); // sec²(x) = 1/cos²(x)
 
-    graph.add_unary_op(UnaryOpType::Tan, input, result_value, input_grad)
+    _graph.add_unary_op(UnaryOpType::Tan, input, result_value, input_grad)
 }
 
 /// Square root operation on computation graph
 #[allow(dead_code)]
-pub fn sqrt(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+pub fn sqrt(_graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.sqrt());
     }
@@ -699,12 +699,12 @@ pub fn sqrt(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVar
     let result_value = input.value.sqrt();
     let input_grad = 0.5 / result_value; // d/dx(√x) = 1/(2√x)
 
-    graph.add_unary_op(UnaryOpType::Sqrt, input, result_value, input_grad)
+    _graph.add_unary_op(UnaryOpType::Sqrt, input, result_value, input_grad)
 }
 
 /// Absolute value operation on computation graph
 #[allow(dead_code)]
-pub fn abs(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+pub fn abs(_graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.abs());
     }
@@ -712,12 +712,12 @@ pub fn abs(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
     let result_value = input.value.abs();
     let input_grad = if input.value >= 0.0 { 1.0 } else { -1.0 };
 
-    graph.add_unary_op(UnaryOpType::Sqrt, input, result_value, input_grad)
+    _graph.add_unary_op(UnaryOpType::Sqrt, input, result_value, input_grad)
 }
 
 /// Sigmoid operation on computation graph
 #[allow(dead_code)]
-pub fn sigmoid(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+pub fn sigmoid(_graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         let exp_val = (-input.value).exp();
         return ReverseVariable::constant(1.0 / (1.0 + exp_val));
@@ -727,12 +727,12 @@ pub fn sigmoid(graph: &mut ComputationGraph, input: &ReverseVariable) -> Reverse
     let result_value = 1.0 / (1.0 + exp_neg_x);
     let input_grad = result_value * (1.0 - result_value); // σ'(x) = σ(x)(1-σ(x))
 
-    graph.add_unary_op(UnaryOpType::Exp, input, result_value, input_grad)
+    _graph.add_unary_op(UnaryOpType::Exp, input, result_value, input_grad)
 }
 
 /// Hyperbolic tangent operation on computation graph
 #[allow(dead_code)]
-pub fn tanh(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+pub fn tanh(_graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.tanh());
     }
@@ -740,12 +740,12 @@ pub fn tanh(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVar
     let result_value = input.value.tanh();
     let input_grad = 1.0 - result_value * result_value; // d/dx(tanh(x)) = 1 - tanh²(x)
 
-    graph.add_unary_op(UnaryOpType::Tan, input, result_value, input_grad)
+    _graph.add_unary_op(UnaryOpType::Tan, input, result_value, input_grad)
 }
 
 /// ReLU (Rectified Linear Unit) operation on computation graph
 #[allow(dead_code)]
-pub fn relu(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+pub fn relu(_graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.max(0.0));
     }
@@ -753,7 +753,7 @@ pub fn relu(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVar
     let result_value = input.value.max(0.0);
     let input_grad = if input.value > 0.0 { 1.0 } else { 0.0 };
 
-    graph.add_unary_op(UnaryOpType::Sqrt, input, result_value, input_grad)
+    _graph.add_unary_op(UnaryOpType::Sqrt, input, result_value, input_grad)
 }
 
 /// Leaky ReLU operation on computation graph
@@ -786,7 +786,7 @@ pub fn leaky_relu(
 /// This is a generic function that works with closures, using finite differences
 /// For functions that can be expressed in terms of AD operations, use reverse_gradient_with_tape
 #[allow(dead_code)]
-pub fn reverse_gradient<F>(func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
+pub fn reverse_gradient<F>(_func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
@@ -799,11 +799,11 @@ where
     for i in 0..n {
         let mut x_plus = x.to_owned();
         x_plus[i] += h;
-        let f_plus = func(&x_plus.view());
+        let f_plus = _func(&x_plus.view());
 
         let mut x_minus = x.to_owned();
         x_minus[i] -= h;
-        let f_minus = func(&x_minus.view());
+        let f_minus = _func(&x_minus.view());
 
         gradient[i] = (f_plus - f_minus) / (2.0 * h);
     }
@@ -813,7 +813,7 @@ where
 
 /// Compute gradient using reverse-mode AD with a function that directly uses AD operations
 #[allow(dead_code)]
-pub fn reverse_gradient_ad<F>(func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
+pub fn reverse_gradient_ad<F>(_func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
 where
     F: Fn(&mut ComputationGraph, &[ReverseVariable]) -> ReverseVariable,
 {
@@ -823,7 +823,7 @@ where
     let input_vars: Vec<ReverseVariable> = x.iter().map(|&xi| graph.variable(xi)).collect();
 
     // Evaluate function with the computation graph
-    let output = func(&mut graph, &input_vars);
+    let output = _func(&mut graph, &input_vars);
 
     // Perform backpropagation
     graph.backward(&output)?;
@@ -839,7 +839,7 @@ where
 
 /// Compute Hessian using reverse-mode automatic differentiation (finite differences for generic functions)
 #[allow(dead_code)]
-pub fn reverse_hessian<F>(func: F, x: &ArrayView1<f64>) -> Result<Array2<f64>, OptimizeError>
+pub fn reverse_hessian<F>(_func: F, x: &ArrayView1<f64>) -> Result<Array2<f64>, OptimizeError>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
@@ -855,13 +855,13 @@ where
                 // Diagonal element: f''(x) = (f(x+h) - 2f(x) + f(x-h)) / h²
                 let mut x_plus = x.to_owned();
                 x_plus[i] += h;
-                let f_plus = func(&x_plus.view());
+                let f_plus = _func(&x_plus.view());
 
-                let f_center = func(x);
+                let f_center = _func(x);
 
                 let mut x_minus = x.to_owned();
                 x_minus[i] -= h;
-                let f_minus = func(&x_minus.view());
+                let f_minus = _func(&x_minus.view());
 
                 hessian[[i, j]] = (f_plus - 2.0 * f_center + f_minus) / (h * h);
             } else {
@@ -873,26 +873,26 @@ where
                     x_pp[i] += h;
                     x_pp[j] += h;
                     #[allow(clippy::similar_names)]
-                    let f_pp = func(&x_pp.view());
+                    let f_pp = _func(&x_pp.view());
 
                     #[allow(clippy::similar_names)]
                     let mut x_pm = x.to_owned();
                     x_pm[i] += h;
                     x_pm[j] -= h;
                     #[allow(clippy::similar_names)]
-                    let f_pm = func(&x_pm.view());
+                    let f_pm = _func(&x_pm.view());
 
                     #[allow(clippy::similar_names)]
                     let mut x_mp = x.to_owned();
                     x_mp[i] -= h;
                     x_mp[j] += h;
                     #[allow(clippy::similar_names)]
-                    let f_mp = func(&x_mp.view());
+                    let f_mp = _func(&x_mp.view());
 
                     let mut x_mm = x.to_owned();
                     x_mm[i] -= h;
                     x_mm[j] -= h;
-                    let f_mm = func(&x_mm.view());
+                    let f_mm = _func(&x_mm.view());
 
                     hessian[[i, j]] = (f_pp - f_pm - f_mp + f_mm) / (4.0 * h * h);
                 }
@@ -905,7 +905,7 @@ where
 
 /// Compute Hessian using forward-over-reverse mode for AD functions
 #[allow(dead_code)]
-pub fn reverse_hessian_ad<F>(func: F, x: &ArrayView1<f64>) -> Result<Array2<f64>, OptimizeError>
+pub fn reverse_hessian_ad<F>(_func: F, x: &ArrayView1<f64>) -> Result<Array2<f64>, OptimizeError>
 where
     F: Fn(&mut ComputationGraph, &[ReverseVariable]) -> ReverseVariable,
 {
@@ -917,7 +917,7 @@ where
     for i in 0..n {
         // Create a function that returns the i-th component of the gradient
         let gradient_i_func = |x_val: &ArrayView1<f64>| -> f64 {
-            let grad = reverse_gradient_ad(&func, x_val).unwrap();
+            let grad = reverse_gradient_ad(&_func, x_val).unwrap();
             grad[i]
         };
 
@@ -935,8 +935,7 @@ where
 #[allow(dead_code)]
 pub fn reverse_gradient_with_tape<F>(
     func: F,
-    x: &ArrayView1<f64>,
-    _options: &ReverseADOptions,
+    x: &ArrayView1<f64>, _options: &ReverseADOptions,
 ) -> Result<Array1<f64>, OptimizeError>
 where
     F: Fn(&mut ComputationGraph, &[ReverseVariable]) -> ReverseVariable,
@@ -963,10 +962,10 @@ where
 
 /// Check if reverse mode is preferred for the given problem dimensions
 #[allow(dead_code)]
-pub fn is_reverse_mode_efficient(input_dim: usize, output_dim: usize) -> bool {
+pub fn is_reverse_mode_efficient(_input_dim: usize, output_dim: usize) -> bool {
     // Reverse mode is efficient when output dimension is small
     // Cost is O(output_dim * cost_of_function)
-    output_dim <= 10 || (output_dim <= input_dim && output_dim <= 20)
+    output_dim <= 10 || (output_dim <= _input_dim && output_dim <= 20)
 }
 
 /// Vector-Jacobian product using reverse-mode AD

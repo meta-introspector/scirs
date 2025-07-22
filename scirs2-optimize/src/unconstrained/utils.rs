@@ -119,8 +119,8 @@ pub fn check_convergence(
 
 /// Compute the norm of the difference between two arrays
 #[allow(dead_code)]
-pub fn array_diff_norm(x1: &ArrayView1<f64>, x2: &ArrayView1<f64>) -> f64 {
-    (x1 - x2).mapv(|x| x.powi(2)).sum().sqrt()
+pub fn array_diff_norm(_x1: &ArrayView1<f64>, x2: &ArrayView1<f64>) -> f64 {
+    (_x1 - x2).mapv(|x| x.powi(2)).sum().sqrt()
 }
 
 /// Clip step size to satisfy bounds
@@ -163,15 +163,15 @@ pub fn clip_step(
 
 /// Convert between Array1 and ArrayView1 consistently
 #[allow(dead_code)]
-pub fn to_array_view<T>(arr: &Array1<T>) -> ArrayView1<T> {
-    arr.view()
+pub fn to_array_view<T>(_arr: &Array1<T>) -> ArrayView1<T> {
+    _arr.view()
 }
 
 /// Initialize step size for line search
 #[allow(dead_code)]
-pub fn initial_step_size(grad_norm: f64, max_step: Option<f64>) -> f64 {
-    let default_step = if grad_norm > 0.0 {
-        1.0 / grad_norm
+pub fn initial_step_size(_grad_norm: f64, max_step: Option<f64>) -> f64 {
+    let default_step = if _grad_norm > 0.0 {
+        1.0 / _grad_norm
     } else {
         1.0
     };

@@ -4,9 +4,9 @@
 mod tests {
     use approx::assert_abs_diff_eq;
     use ndarray::Array1;
-    use scirs2_optim::metrics::{MetricBasedReduceOnPlateau, MetricOptimizer, MetricScheduler};
-    use scirs2_optim::optimizers::{Optimizer, SGD};
-    use scirs2_optim::schedulers::LearningRateScheduler;
+    use scirs2__optim::metrics::{MetricBasedReduceOnPlateau, MetricOptimizer, MetricScheduler};
+    use scirs2__optim::optimizers::{Optimizer, SGD};
+    use scirs2__optim::schedulers::LearningRateScheduler;
     use std::collections::HashMap;
 
     /// Test the MetricOptimizer with SGD
@@ -87,7 +87,7 @@ mod tests {
         let mut sgd: SGD<f64> = SGD::new(0.2);
 
         // Apply scheduler to optimizer
-        scheduler.apply_to::<ndarray::Ix1, _>(&mut sgd);
+        scheduler.apply_to::<ndarray::Ix1_>(&mut sgd);
 
         // Check that optimizer's learning rate was updated
         assert_abs_diff_eq!(
@@ -142,7 +142,7 @@ mod tests {
 
         // Test application to optimizer
         let mut sgd: SGD<f64> = SGD::new(0.2);
-        scheduler.apply_to::<ndarray::Ix1, _>(&mut sgd);
+        scheduler.apply_to::<ndarray::Ix1_>(&mut sgd);
         assert_abs_diff_eq!(
             <SGD<f64> as Optimizer<f64, ndarray::Ix1>>::get_learning_rate(&sgd),
             0.05

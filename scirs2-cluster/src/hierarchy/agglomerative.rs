@@ -18,9 +18,9 @@ pub(crate) fn cut_tree<F: Float + FromPrimitive + PartialOrd>(
     let mut labels = Array1::from_iter((0..n_samples).map(|_| 0));
 
     // Initialize the cluster memberships
-    let mut clusters: Vec<Vec<usize>> = (0..n_samples).map(|i| vec![i]).collect();
+    let mut _clusters: Vec<Vec<usize>> = (0..n_samples).map(|i| vec![i]).collect();
 
-    // Track which clusters are active
+    // Track which _clusters are active
     let mut active_clusters: Vec<usize> = (0..n_samples).collect();
 
     // Number of merges needed
@@ -40,11 +40,11 @@ pub(crate) fn cut_tree<F: Float + FromPrimitive + PartialOrd>(
 
         // Create a new cluster
         let new_cluster_id = n_samples + i;
-        let mut new_members = clusters[cluster1].clone();
-        new_members.extend(clusters[cluster2].clone());
-        clusters.push(new_members);
+        let mut new_members = _clusters[cluster1].clone();
+        new_members.extend(_clusters[cluster2].clone());
+        _clusters.push(new_members);
 
-        // Update active clusters
+        // Update active _clusters
         if let Some(pos) = active_clusters.iter().position(|&x| x == cluster1) {
             active_clusters.remove(pos);
         }
@@ -56,7 +56,7 @@ pub(crate) fn cut_tree<F: Float + FromPrimitive + PartialOrd>(
 
     // Assign cluster labels
     for (i, &cluster_id) in active_clusters.iter().enumerate() {
-        for &sample in &clusters[cluster_id] {
+        for &sample in &_clusters[cluster_id] {
             if sample < n_samples {
                 labels[sample] = i;
             }

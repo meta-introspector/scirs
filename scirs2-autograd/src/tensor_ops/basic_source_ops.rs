@@ -1,11 +1,11 @@
-use crate::ndarray_ext::NdArray;
+use crate::ndarray__ext::NdArray;
 use crate::op::OpError;
 use crate::Float;
 
 // Structure for Variable op which provides access to a variable in the graph
 pub struct Variable;
 
-impl<T: Float> crate::op::Op<T> for Variable {
+impl<T: Float>, crate::op::Op<T> for Variable {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), OpError> {
         // For a Variable op, the operation should just pass through any inputs
         // directly to the outputs, or return an empty array if no inputs exist
@@ -31,7 +31,7 @@ impl<T: Float> crate::op::Op<T> for Variable {
 // Structure for Const op which represents a constant value in the graph
 pub struct Const;
 
-impl<T: Float> crate::op::Op<T> for Const {
+impl<T: Float>, crate::op::Op<T> for Const {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), OpError> {
         // Similar implementation to Variable for now
         if ctx.inputs().is_empty() {
@@ -52,7 +52,7 @@ impl<T: Float> crate::op::Op<T> for Const {
 // Structure for Placeholder op which represents placeholders in the graph
 pub struct Placeholder;
 
-impl<T: Float> crate::op::Op<T> for Placeholder {
+impl<T: Float>, crate::op::Op<T> for Placeholder {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), OpError> {
         // Similar implementation to Variable
         if ctx.inputs().is_empty() {

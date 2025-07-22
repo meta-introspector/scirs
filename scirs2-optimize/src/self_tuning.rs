@@ -66,13 +66,13 @@ pub struct SelfTuningOptimizer {
 
 impl SelfTuningOptimizer {
     /// Create a new self-tuning optimizer
-    pub fn new(config: SelfTuningConfig) -> Self {
+    pub fn new(_config: SelfTuningConfig) -> Self {
         Self {
             parameter_manager: ParameterManager::new(),
-            performance_tracker: PerformanceTracker::new(config.memory_window),
-            adaptation_engine: AdaptationEngine::new(config.adaptation_strategy),
+            performance_tracker: PerformanceTracker::new(_config.memory_window),
+            adaptation_engine: AdaptationEngine::new(_config.adaptation_strategy),
             tuning_history: TuningHistory::new(),
-            config,
+            _config,
         }
     }
 
@@ -226,7 +226,7 @@ impl ParameterManager {
             if new_value < *min_bound || new_value > *max_bound {
                 return Err(ScirsError::InvalidInput(
                     scirs2_core::error::ErrorContext::new(format!(
-                        "Parameter {} value {:?} is out of bounds [{:?}, {:?}]",
+                        "Parameter {} _value {:?} is out of bounds [{:?}, {:?}]",
                         name, new_value, min_bound, max_bound
                     )),
                 ));
@@ -273,9 +273,9 @@ where
     T: Clone + PartialOrd + std::fmt::Debug + 'static + Send + Sync,
 {
     /// Create a new tunable parameter
-    pub fn new(current: T, min: T, max: T) -> Self {
+    pub fn new(_current: T, min: T, max: T) -> Self {
         Self {
-            current_value: current,
+            _current_value: _current,
             min_value: min,
             max_value: max,
             adaptation_rate: 0.1,
@@ -397,7 +397,7 @@ pub enum ParameterValue {
 }
 
 impl ParameterValue {
-    fn from_typed<T>(value: &T) -> Self
+    fn from_typed<T>(_value: &T) -> Self
     where
         T: std::fmt::Debug + 'static,
     {
@@ -408,45 +408,45 @@ impl ParameterValue {
 
         // Handle common types
         if type_id == TypeId::of::<f64>() {
-            if let Some(f_val) = (value as &dyn Any).downcast_ref::<f64>() {
+            if let Some(f_val) = (_value as &dyn Any).downcast_ref::<f64>() {
                 return ParameterValue::Float(*f_val);
             }
         } else if type_id == TypeId::of::<f32>() {
-            if let Some(f_val) = (value as &dyn Any).downcast_ref::<f32>() {
+            if let Some(f_val) = (_value as &dyn Any).downcast_ref::<f32>() {
                 return ParameterValue::Float(*f_val as f64);
             }
         } else if type_id == TypeId::of::<i64>() {
-            if let Some(i_val) = (value as &dyn Any).downcast_ref::<i64>() {
+            if let Some(i_val) = (_value as &dyn Any).downcast_ref::<i64>() {
                 return ParameterValue::Integer(*i_val);
             }
         } else if type_id == TypeId::of::<i32>() {
-            if let Some(i_val) = (value as &dyn Any).downcast_ref::<i32>() {
+            if let Some(i_val) = (_value as &dyn Any).downcast_ref::<i32>() {
                 return ParameterValue::Integer(*i_val as i64);
             }
         } else if type_id == TypeId::of::<usize>() {
-            if let Some(u_val) = (value as &dyn Any).downcast_ref::<usize>() {
+            if let Some(u_val) = (_value as &dyn Any).downcast_ref::<usize>() {
                 return ParameterValue::Integer(*u_val as i64);
             }
         } else if type_id == TypeId::of::<bool>() {
-            if let Some(b_val) = (value as &dyn Any).downcast_ref::<bool>() {
+            if let Some(b_val) = (_value as &dyn Any).downcast_ref::<bool>() {
                 return ParameterValue::Boolean(*b_val);
             }
         } else if type_id == TypeId::of::<String>() {
-            if let Some(s_val) = (value as &dyn Any).downcast_ref::<String>() {
+            if let Some(s_val) = (_value as &dyn Any).downcast_ref::<String>() {
                 return ParameterValue::String(s_val.clone());
             }
         } else if type_id == TypeId::of::<&str>() {
-            if let Some(s_val) = (value as &dyn Any).downcast_ref::<&str>() {
+            if let Some(s_val) = (_value as &dyn Any).downcast_ref::<&str>() {
                 return ParameterValue::String(s_val.to_string());
             }
         }
 
         // Fallback - try to parse as float from debug representation
-        let debug_str = format!("{:?}", value);
+        let debug_str = format!("{:?}", _value);
         if let Ok(f_val) = debug_str.parse::<f64>() {
             ParameterValue::Float(f_val)
         } else {
-            // Last resort - return a default value
+            // Last resort - return a default _value
             ParameterValue::Float(0.0)
         }
     }
@@ -455,8 +455,7 @@ impl ParameterValue {
     pub fn as_f64(&self) -> Option<f64> {
         match self {
             ParameterValue::Float(f) => Some(*f),
-            ParameterValue::Integer(i) => Some(*i as f64),
-            _ => None,
+            ParameterValue::Integer(i) => Some(*i as f64, _ => None,
         }
     }
 
@@ -464,16 +463,14 @@ impl ParameterValue {
     pub fn as_i64(&self) -> Option<i64> {
         match self {
             ParameterValue::Integer(i) => Some(*i),
-            ParameterValue::Float(f) => Some(*f as i64),
-            _ => None,
+            ParameterValue::Float(f) => Some(*f as i64, _ => None,
         }
     }
 
     /// Extract as bool if possible
     pub fn as_bool(&self) -> Option<bool> {
         match self {
-            ParameterValue::Boolean(b) => Some(*b),
-            _ => None,
+            ParameterValue::Boolean(b) => Some(*b, _ => None,
         }
     }
 }
@@ -489,9 +486,9 @@ struct PerformanceTracker {
 }
 
 impl PerformanceTracker {
-    fn new(memory_window: usize) -> Self {
+    fn new(_memory_window: usize) -> Self {
         Self {
-            memory_window,
+            _memory_window,
             function_values: VecDeque::new(),
             gradient_norms: VecDeque::new(),
             improvements: VecDeque::new(),
@@ -638,9 +635,9 @@ struct AdaptationEngine {
 }
 
 impl AdaptationEngine {
-    fn new(strategy: AdaptationStrategy) -> Self {
+    fn new(_strategy: AdaptationStrategy) -> Self {
         let rl_agent = if matches!(
-            strategy,
+            _strategy,
             AdaptationStrategy::ReinforcementLearning | AdaptationStrategy::Hybrid
         ) {
             Some(ReinforcementLearningAgent::new())
@@ -649,7 +646,7 @@ impl AdaptationEngine {
         };
 
         let bayesian_optimizer = if matches!(
-            strategy,
+            _strategy,
             AdaptationStrategy::BayesianOptimization | AdaptationStrategy::Hybrid
         ) {
             Some(BayesianParameterOptimizer::new())
@@ -658,7 +655,7 @@ impl AdaptationEngine {
         };
 
         Self {
-            strategy,
+            _strategy,
             rl_agent,
             bayesian_optimizer,
         }
@@ -705,8 +702,7 @@ impl AdaptationEngine {
     fn performance_based_adaptation(
         &self,
         parameter_manager: &mut ParameterManager,
-        metrics: &PerformanceMetrics,
-        _config: &SelfTuningConfig,
+        metrics: &PerformanceMetrics_config: &SelfTuningConfig,
     ) -> ScirsResult<AdaptationResult> {
         let mut changes = Vec::new();
         let mut parameters_changed = false;
@@ -773,8 +769,7 @@ impl AdaptationEngine {
         &mut self,
         agent: &mut ReinforcementLearningAgent,
         parameter_manager: &mut ParameterManager,
-        metrics: &PerformanceMetrics,
-        _config: &SelfTuningConfig,
+        metrics: &PerformanceMetrics_config: &SelfTuningConfig,
     ) -> ScirsResult<AdaptationResult> {
         let action = agent.select_action(metrics);
         let changes = agent.apply_action(action, parameter_manager)?;
@@ -789,8 +784,7 @@ impl AdaptationEngine {
     fn bayesian_adaptation(
         &mut self,
         parameter_manager: &mut ParameterManager,
-        metrics: &PerformanceMetrics,
-        _config: &SelfTuningConfig,
+        metrics: &PerformanceMetrics_config: &SelfTuningConfig,
     ) -> ScirsResult<AdaptationResult> {
         let suggestions = if let Some(ref mut optimizer) = self.bayesian_optimizer {
             optimizer.suggest_parameters(parameter_manager.current_values(), metrics)?
@@ -891,7 +885,7 @@ impl AdaptationEngine {
         match value {
             ParameterValue::Float(f) => {
                 let new_value = f * factor;
-                if let Some((min_bound, _)) = bounds {
+                if let Some((min_bound_)) = bounds {
                     if let Some(min_f) = min_bound.as_f64() {
                         if new_value >= min_f {
                             Some(ParameterValue::Float(new_value))
@@ -907,7 +901,7 @@ impl AdaptationEngine {
             }
             ParameterValue::Integer(i) => {
                 let new_value = ((i as f64) * factor) as i64;
-                if let Some((min_bound, _)) = bounds {
+                if let Some((min_bound_)) = bounds {
                     if let Some(min_i) = min_bound.as_i64() {
                         if new_value >= min_i {
                             Some(ParameterValue::Integer(new_value))
@@ -1161,7 +1155,7 @@ impl BayesianParameterOptimizer {
                 .iter()
                 .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-            if let Some((best_params, _)) = best_observation {
+            if let Some((best_params_)) = best_observation {
                 // Suggest parameter modifications based on best observation
                 for (name, value) in current_params {
                     if let Some(best_value) = best_params.get(name) {
@@ -1182,8 +1176,8 @@ impl BayesianParameterOptimizer {
                 if name.contains("step_size") || name.contains("learning_rate") {
                     // Add small random perturbation for exploration
                     use rand::{rng, Rng};
-                    let mut rng = rng();
-                    let perturbation_factor = 1.0 + (rng.random_range(-0.1..=0.1));
+                    let mut rng = rand::rng();
+                    let perturbation_factor = 1.0 + (rng.gen_range(-0.1..=0.1));
 
                     let perturbed_value = match value {
                         ParameterValue::Float(f) => {
@@ -1193,8 +1187,7 @@ impl BayesianParameterOptimizer {
                             let new_val = ((*i as f64) * perturbation_factor) as i64;
                             Some(ParameterValue::Integer(new_val.max(1)))
                         }
-                        _ => None,
-                    };
+                        _ => None..};
 
                     if let Some(new_value) = perturbed_value {
                         if new_value != *value {

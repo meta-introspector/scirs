@@ -7,8 +7,8 @@ use crate::error::{IntegrateError, IntegrateResult};
 use crate::IntegrateFloat;
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
-use rand_distr::uniform::SampleUniform;
-use rand_distr::{Distribution, Uniform};
+use rand__distr::uniform::SampleUniform;
+use rand__distr::{Distribution, Uniform};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -42,8 +42,7 @@ impl<F: IntegrateFloat> Default for MonteCarloOptions<F> {
             n_samples: 10000,
             seed: None,
             error_method: ErrorEstimationMethod::StandardError,
-            use_antithetic: false,
-            _phantom: PhantomData,
+            use_antithetic: false, _phantom: PhantomData,
         }
     }
 }
@@ -74,7 +73,7 @@ pub struct MonteCarloResult<F: IntegrateFloat> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
+/// use scirs2__integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
 /// use ndarray::ArrayView1;
 /// use std::marker::PhantomData;
 ///
@@ -131,7 +130,7 @@ where
         StdRng::seed_from_u64(seed)
     } else {
         // In rand 0.9.0, from_entropy is replaced by building from OsRng
-        // Note: rng() was renamed to rng() in rand 0.9.0
+        // Note: rand::rng() was renamed to rand::rng() in rand 0.9.0
         let mut rng = rand::rng();
         StdRng::from_rng(&mut rng)
     };
@@ -242,7 +241,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::monte_carlo::{importance_sampling, MonteCarloOptions};
+/// use scirs2__integrate::monte_carlo::{importance_sampling, MonteCarloOptions};
 /// use ndarray::{Array1, ArrayView1};
 /// use rand::prelude::*;
 ///
@@ -258,7 +257,7 @@ where
 ///     point
 /// };
 ///
-/// // Uniform PDF on [0,1]
+/// // Uniform PDF on [0..1]
 /// let uniform_pdf = |x: ArrayView1<f64>| {
 ///     let mut pdf = 1.0;
 ///     for &xi in x.iter() {
@@ -321,7 +320,7 @@ where
         StdRng::seed_from_u64(seed)
     } else {
         // In rand 0.9.0, from_entropy is replaced by building from OsRng
-        // Note: rng() was renamed to rng() in rand 0.9.0
+        // Note: rand::rng() was renamed to rand::rng() in rand 0.9.0
         let mut rng = rand::rng();
         StdRng::from_rng(&mut rng)
     };
@@ -417,7 +416,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_integrate::monte_carlo::{monte_carlo_parallel, MonteCarloOptions};
+/// use scirs2__integrate::monte_carlo::{monte_carlo_parallel, MonteCarloOptions};
 /// use ndarray::ArrayView1;
 /// use std::marker::PhantomData;
 ///
@@ -450,7 +449,7 @@ where
     #[cfg(feature = "parallel")]
     {
         if workers.is_some() {
-            use crate::monte_carlo_parallel::{parallel_monte_carlo, ParallelMonteCarloOptions};
+use crate::monte_carlo__parallel::{parallel_monte_carlo, ParallelMonteCarloOptions};
 
             let opts = options.unwrap_or_default();
             let parallel_opts = ParallelMonteCarloOptions {
@@ -460,8 +459,7 @@ where
                 use_antithetic: opts.use_antithetic,
                 n_threads: workers,
                 batch_size: 1000,
-                use_chunking: true,
-                _phantom: PhantomData,
+                use_chunking: true, _phantom: PhantomData,
             };
 
             return parallel_monte_carlo(f, ranges, Some(parallel_opts));
@@ -475,13 +473,12 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     use std::f64::consts::PI;
 
     // Helper function to check if result is within expected error margin
-    fn is_close_enough(result: f64, expected: f64, epsilon: f64) -> bool {
-        (result - expected).abs() < epsilon
+    fn is_close_enough(_result: f64, expected: f64, epsilon: f64) -> bool {
+        (_result - expected).abs() < epsilon
     }
 
     #[test]
@@ -526,8 +523,7 @@ mod tests {
         let options = MonteCarloOptions {
             n_samples: 100000,
             seed: Some(12345), // For reproducibility
-            use_antithetic: true,
-            _phantom: PhantomData,
+            use_antithetic: true, _phantom: PhantomData,
             ..Default::default()
         };
 

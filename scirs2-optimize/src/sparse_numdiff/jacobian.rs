@@ -13,9 +13,9 @@ use crate::error::OptimizeError;
 
 // Helper function to replace get_index and set_value_by_index which are not available in CsrArray
 #[allow(dead_code)]
-fn update_sparse_value(matrix: &mut CsrArray<f64>, row: usize, col: usize, value: f64) {
+fn update_sparse_value(_matrix: &mut CsrArray<f64>, row: usize, col: usize, value: f64) {
     // Only update if the position is non-zero in the sparsity pattern and set operation succeeds
-    if matrix.get(row, col) != 0.0 && matrix.set(row, col, value).is_err() {
+    if _matrix.get(row, col) != 0.0 && _matrix.set(row, col, value).is_err() {
         // If this fails, just silently continue
     }
 }
@@ -60,12 +60,12 @@ where
     let n = x.len(); // Input dimension
     let m = f0_ref.len(); // Output dimension
 
-    // If no sparsity pattern provided, create a dense one
+    // If no sparsity _pattern provided, create a dense one
     let sparsity_owned: CsrArray<f64>;
     let sparsity = match sparsity_pattern {
         Some(p) => p,
         None => {
-            // Create dense sparsity pattern
+            // Create dense sparsity _pattern
             let mut data = Vec::with_capacity(m * n);
             let mut rows = Vec::with_capacity(m * n);
             let mut cols = Vec::with_capacity(m * n);
@@ -87,8 +87,7 @@ where
     match options.method.as_str() {
         "2-point" => compute_jacobian_2point(func, x, f0_ref, sparsity, &options),
         "3-point" => compute_jacobian_3point(func, x, sparsity, &options),
-        "cs" => compute_jacobian_complex_step(func, x, sparsity, &options),
-        _ => Err(OptimizeError::ValueError(format!(
+        "cs" => compute_jacobian_complex_step(func, x, sparsity, &options, _ => Err(OptimizeError::ValueError(format!(
             "Unknown method: {}. Valid options are '2-point', '3-point', and 'cs'",
             options.method
         ))),
@@ -127,7 +126,7 @@ where
     let h = compute_step_sizes(x, options);
 
     // Create result matrix with the same sparsity pattern
-    let (rows, cols, _) = sparsity.find();
+    let (rows, cols_) = sparsity.find();
     let m = sparsity.shape().0;
     let n = sparsity.shape().1;
     let zeros = vec![0.0; rows.len()];
@@ -240,7 +239,7 @@ where
     let h = compute_step_sizes(x, options);
 
     // Create result matrix with the same sparsity pattern
-    let (rows, cols, _) = sparsity.find();
+    let (rows, cols_) = sparsity.find();
     let m = sparsity.shape().0;
     let n = sparsity.shape().1;
     let zeros = vec![0.0; rows.len()];
@@ -362,7 +361,7 @@ where
     let groups = determine_column_groups(transposed_csr, None, None)?;
 
     // Create result matrix with the same sparsity pattern
-    let (rows, cols, _) = sparsity.find();
+    let (rows, cols_) = sparsity.find();
     let zeros = vec![0.0; rows.len()];
     let mut jac = CsrArray::from_triplets(&rows.to_vec(), &cols.to_vec(), &zeros, (m, n), false)?;
 

@@ -186,7 +186,7 @@ where
             }
 
             // Project gradient on equality constraints (always active)
-            for (idx, _) in c_eq.iter().enumerate() {
+            for (idx_) in c_eq.iter().enumerate() {
                 let mut normal = Array1::zeros(n);
                 for j in 0..n {
                     normal[j] = a_eq[[idx, j]];
@@ -345,7 +345,7 @@ where
         }
 
         // Update equality constraint multipliers (can be any sign)
-        for (idx, _) in c_eq_new.iter().enumerate() {
+        for (idx_) in c_eq_new.iter().enumerate() {
             let mut normal = Array1::zeros(n);
             for j in 0..n {
                 normal[j] = a_eq_new[[idx, j]];

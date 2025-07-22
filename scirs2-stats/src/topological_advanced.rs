@@ -14,7 +14,7 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
-use scirs2_linalg::parallel_dispatch::ParallelConfig;
+use scirs2__linalg::parallel_dispatch::ParallelConfig;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -25,8 +25,7 @@ pub struct AdvancedTopologicalAnalyzer<F> {
     /// Cached simplicial complexes
     cache: TopologicalCache<F>,
     /// Performance metrics
-    performance: TopologicalPerformanceMetrics,
-    _phantom: PhantomData<F>,
+    performance: TopologicalPerformanceMetrics_phantom: PhantomData<F>,
 }
 
 /// Configuration for topological data analysis
@@ -588,7 +587,7 @@ where
         + std::fmt::Display,
 {
     /// Create new topological data analyzer
-    pub fn new(config: TopologicalConfig<F>) -> Self {
+    pub fn new(_config: TopologicalConfig<F>) -> Self {
         let cache = TopologicalCache {
             distance_matrices: HashMap::new(),
             simplicial_complexes: HashMap::new(),
@@ -615,10 +614,9 @@ where
         };
 
         Self {
-            config,
+            _config,
             cache,
-            performance,
-            _phantom: PhantomData,
+            performance_phantom: PhantomData,
         }
     }
 
@@ -628,7 +626,7 @@ where
         points: &ArrayView2<F>,
     ) -> StatsResult<TopologicalResults<F>> {
         check_array_finite(points, "points")?;
-        let (n_points, _dimension) = points.dim();
+        let (n_points_dimension) = points.dim();
 
         if n_points < 2 {
             return Err(StatsError::InvalidArgument(
@@ -697,7 +695,7 @@ where
         &mut self,
         points: &ArrayView2<F>,
     ) -> StatsResult<SimplicialComplex> {
-        let (_n_points, _) = points.dim();
+        let (_n_points_) = points.dim();
 
         // Compute distance matrix
         let distance_matrix = self.compute_distance_matrix(points)?;
@@ -706,8 +704,7 @@ where
         match self.config.filtration_config.filtration_type {
             FiltrationType::VietorisRips => self.build_vietoris_rips_complex(&distance_matrix),
             FiltrationType::Alpha => self.build_alpha_complex(points),
-            FiltrationType::Cech => self.build_cech_complex(points),
-            _ => {
+            FiltrationType::Cech => self.build_cech_complex(points, _ => {
                 // Default to Vietoris-Rips
                 self.build_vietoris_rips_complex(&distance_matrix)
             }
@@ -716,7 +713,7 @@ where
 
     /// Compute distance matrix between points
     fn compute_distance_matrix(&self, points: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        let (n_points, _) = points.dim();
+        let (n_points_) = points.dim();
         let mut distance_matrix = Array2::zeros((n_points, n_points));
 
         for i in 0..n_points {
@@ -854,7 +851,7 @@ where
     ) -> StatsResult<Vec<Simplex>> {
         let mut higher_simplices = Vec::new();
 
-        // Generate simplices by adding vertices to existing simplices
+        // Generate _simplices by adding vertices to existing _simplices
         for simplex in lower_simplices {
             let n_points = distance_matrix.nrows();
             for vertex in 0..n_points {
@@ -1020,7 +1017,7 @@ where
 
     /// Compute Mapper graph
     fn compute_mapper(&self, points: &ArrayView2<F>) -> StatsResult<MapperGraph<F>> {
-        let (_n_points, _) = points.dim();
+        let (_n_points_) = points.dim();
 
         // Simplified Mapper implementation
         let mut nodes = HashMap::new();
@@ -1117,8 +1114,7 @@ where
 
     /// Topological statistical inference
     fn topological_inference(
-        &self,
-        _points: &ArrayView2<F>,
+        &self_points: &ArrayView2<F>,
         persistence_diagrams: &HashMap<usize, PersistenceDiagram<F>>,
     ) -> StatsResult<TopologicalInferenceResults<F>> {
         let mut test_statistics = HashMap::new();
@@ -1359,8 +1355,7 @@ where
     /// Advanced-advanced topological machine learning with persistent features
     pub fn topological_machine_learning(
         &mut self,
-        data: &ArrayView2<F>,
-        _labels: Option<&ArrayView1<F>>,
+        data: &ArrayView2<F>, _labels: Option<&ArrayView1<F>>,
     ) -> StatsResult<TopologicalMLResult<F>> {
         // Extract topological features for machine learning
         let topological_features = (&*self).extract_topological_features(data)?;
@@ -2036,9 +2031,9 @@ where
         labels: &ArrayView1<F>,
         kernel_matrix: &Array2<F>,
     ) -> StatsResult<TopologicalPredictionResult<F>> {
-        let (n_samples, _) = features.dim();
+        let (n_samples_) = features.dim();
 
-        // Simplified topological SVM using kernel matrix
+        // Simplified topological SVM using kernel _matrix
         let mut predictions = Array1::zeros(n_samples);
         let mut confidence_scores = Array1::zeros(n_samples);
 
@@ -2086,7 +2081,7 @@ where
         &self,
         features: &Array2<F>,
     ) -> StatsResult<TopologicalClusteringResult<F>> {
-        let (n_samples, _) = features.dim();
+        let (n_samples_) = features.dim();
         let num_clusters = 3; // Simplified to 3 clusters
 
         // Simple k-means clustering on topological features

@@ -5,7 +5,7 @@
 //! It's particularly useful when the number of clusters is not known in advance,
 //! and works well for non-flat geometries.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::cmp::Ordering;
 use std::fmt::Debug;
@@ -59,12 +59,12 @@ impl<F: Float + FromPrimitive> Default for AffinityPropagationOptions<F> {
 ///
 /// * A similarity matrix where similarity(i, j) = -||x_i - x_j||^2
 #[allow(dead_code)]
-fn compute_similarity<F>(data: ArrayView2<F>) -> Result<Array2<F>>
+fn compute_similarity<F>(_data: ArrayView2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
+    let n_samples = _data.shape()[0];
+    let n_features = _data.shape()[1];
 
     let mut similarity = Array2::zeros((n_samples, n_samples));
 
@@ -77,7 +77,7 @@ where
                 // Compute negative squared Euclidean distance
                 let mut dist_sq = F::zero();
                 for k in 0..n_features {
-                    let diff = data[[i, k]] - data[[j, k]];
+                    let diff = _data[[i, k]] - _data[[j, k]];
                     dist_sq = dist_sq + diff * diff;
                 }
 
@@ -177,7 +177,7 @@ where
     let n_samples = similarity.shape()[0];
 
     // Verify damping is in the correct range
-    if options.damping < F::from(0.5).unwrap() || options.damping > F::one() {
+    if options.damping < F::from(0.5).unwrap() || options.damping >, F::one() {
         return Err(ClusteringError::InvalidInput(
             "Damping factor must be between 0.5 and 1.0".to_string(),
         ));
@@ -372,13 +372,13 @@ where
 ///
 /// * True if the label assignments are the same, false otherwise
 #[allow(dead_code)]
-fn compare_labels(labels1: ArrayView1<i32>, labels2: ArrayView1<i32>) -> bool {
-    if labels1.len() != labels2.len() {
+fn compare_labels(_labels1: ArrayView1<i32>, labels2: ArrayView1<i32>) -> bool {
+    if _labels1.len() != labels2.len() {
         return false;
     }
 
-    for i in 0..labels1.len() {
-        if labels1[i] != labels2[i] {
+    for i in 0.._labels1.len() {
+        if _labels1[i] != labels2[i] {
             return false;
         }
     }
@@ -407,8 +407,8 @@ fn compare_labels(labels1: ArrayView1<i32>, labels2: ArrayView1<i32>) -> bool {
 /// # Examples
 ///
 /// ```
-/// use ndarray::{Array2, ArrayView2};
-/// use scirs2_cluster::affinity::{affinity_propagation, AffinityPropagationOptions};
+/// use ndarray::{ArrayView1, Array2, ArrayView2};
+/// use scirs2__cluster::affinity::{affinity_propagation, AffinityPropagationOptions};
 ///
 /// // Example data with two clusters
 /// let data = Array2::from_shape_vec((6, 2), vec![

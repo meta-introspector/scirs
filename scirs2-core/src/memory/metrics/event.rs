@@ -60,8 +60,7 @@ pub struct MemoryEvent {
 
 impl MemoryEvent {
     /// Create a new memory event
-    pub fn new(
-        event_type: MemoryEventType,
+    pub fn new(event_type: MemoryEventType,
         component: impl Into<String>,
         size: usize,
         address: usize,
@@ -100,10 +99,16 @@ impl MemoryEvent {
     }
 }
 
+/// Capture current call stack (simplified implementation)
+fn capture_call_stack(skip_frames: usize) -> Vec<String> {
+    // In a real implementation, this would use backtrace crate or similar
+    vec![format!("frame_{}", skip_frames)]
+}
+
 /// Capture a call stack (simplified implementation)
 #[cfg(feature = "memory_call_stack")]
 #[allow(dead_code)]
-fn capture_call_stack(_skip_frames: usize) -> Vec<String> {
+fn capture_stack_frames(max_frames: usize) -> Vec<String> {
     // This is a placeholder. In a real implementation, we would use
     // the backtrace crate to capture the call stack.
     vec!["<callstack not available>".to_string()]
@@ -111,7 +116,7 @@ fn capture_call_stack(_skip_frames: usize) -> Vec<String> {
 
 #[cfg(not(feature = "memory_call_stack"))]
 #[allow(dead_code)]
-fn capture_call_stack(_skip_frames: usize) -> Vec<String> {
+fn capture_stack_frames(max_frames: usize) -> Vec<String> {
     Vec::new()
 }
 
@@ -145,9 +150,9 @@ mod tests {
             1024,
             0xdeadbeef,
         )
-        .with_context("TestContext");
+        .with_context(TestContext);
 
-        assert_eq!(event.context, Some("TestContext".to_string()));
+        assert_eq!(event.context, Some(TestContext.to_string()));
     }
 
     #[test]
@@ -162,7 +167,7 @@ mod tests {
         .with_metadata("key2", "value2");
 
         assert_eq!(event.metadata.len(), 2);
-        assert_eq!(event.metadata.get("key1"), Some(&"value1".to_string()));
-        assert_eq!(event.metadata.get("key2"), Some(&"value2".to_string()));
+        assert_eq!(event.metadata.get(key1), Some(&value1.to_string()));
+        assert_eq!(event.metadata.get(key2), Some(&value2.to_string()));
     }
 }

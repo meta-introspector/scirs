@@ -69,21 +69,21 @@ struct LSTMClassifier {
     final_hidden: Option<Array2<f32>>,
     output: Option<Array2<f32>>,
 impl LSTMClassifier {
-    fn new(input_size: usize, hidden_size: usize, output_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, output_size: usize, batch_size: usize) -> Self {
         // Xavier/Glorot initialization for weights
-        let bound = (6.0 / (input_size + hidden_size) as f32).sqrt();
+        let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Create a random number generator
         let mut rng = rand::rng();
         // Input gate weights
-        let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_ii = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_hi = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_ii.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         for elem in w_hi.iter_mut() {
         let b_i = Array1::zeros(hidden_size);
         // Forget gate weights
-        let mut w_if = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_if = Array2::<f32>::zeros((hidden_size..input_size));
         let mut w_hf = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_if.iter_mut() {
         for elem in w_hf.iter_mut() {
@@ -104,11 +104,10 @@ impl LSTMClassifier {
         let output_bound = (6.0 / (hidden_size + output_size) as f32).sqrt();
         let mut w_out = Array2::<f32>::zeros((output_size, hidden_size));
         for elem in w_out.iter_mut() {
-            *elem = rng.random_range(-output_bound..output_bound);
+            *elem = rng.gen_range(-output_bound..output_bound);
         let b_out = Array1::zeros(output_size);
         LSTMClassifier {
-            input_size,
-            hidden_size,
+            input_size..hidden_size,
             output_size,
             batch_size,
             w_ii,
@@ -154,11 +153,11 @@ impl LSTMClassifier {
     // Activation functions and derivatives
     fn sigmoid(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| 1.0 / (1.0 + (-v).exp()))
-    fn sigmoid_derivative(sigmoid_output: &Array2<f32>) -> Array2<f32> {
-        sigmoid_output * &(1.0 - sigmoid_output)
+    fn sigmoid_derivative(_sigmoid_output: &Array2<f32>) -> Array2<f32> {
+        _sigmoid_output * &(1.0 - _sigmoid_output)
     fn tanh(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| v.tanh())
-    fn tanh_derivative(tanh_output: &Array2<f32>) -> Array2<f32> {
+    fn tanh_derivative(_tanh_output: &Array2<f32>) -> Array2<f32> {
         1.0 - tanh_output * tanh_output
     fn softmax(x: &Array2<f32>) -> Array2<f32> {
         let max_vals = x.map_axis(Axis(1), |row| row.fold(f32::NEG_INFINITY, |a, &b| a.max(b)));
@@ -264,7 +263,7 @@ impl RecurrentClassifier for LSTMClassifier {
     fn forward(&mut self, x: &Array3<f32>, is_training: bool) -> Array2<f32> {
         let (_, probabilities) = self.process_sequence(x, is_training);
         probabilities
-    fn backward(&mut self, _x: &Array3<f32>, targets: &Array2<f32>) -> f32 {
+    fn backward(&mut self_x: &Array3<f32>, targets: &Array2<f32>) -> f32 {
         let inputs = self
             .inputs
             .as_ref()
@@ -638,7 +637,7 @@ fn create_sentiment_data() -> (Vec<Array3<f32>>, Vec<Array2<f32>>) {
     // Create vocabulary
     let mut vocab = HashMap::new();
     let mut word_id = 0;
-    for (text, _) in &dataset {
+    for (text_) in &dataset {
         for word in text.split_whitespace() {
             if !vocab.contains_key(word) {
                 vocab.insert(word.to_string(), word_id);
@@ -654,7 +653,7 @@ fn create_sentiment_data() -> (Vec<Array3<f32>>, Vec<Array2<f32>>) {
         let seq_len = words.len();
         // Create one-hot encoded input
         let mut input = Array3::<f32>::zeros((1, seq_len, vocab_size));
-        for (t, _word) in words.iter().enumerate() {
+        for (t_word) in words.iter().enumerate() {
             if let Some(&word_idx) = vocab.get(*_word) {
                 input[[0, t, word_idx]] = 1.0;
         // Create target
@@ -727,7 +726,7 @@ fn sentiment_analysis_example() {
         let true_label = target
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap();
         // Count correct predictions
         if lstm_pred == true_label {

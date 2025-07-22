@@ -24,7 +24,7 @@
 //!
 //! ```rust
 //! use ndarray::{Array1, Array2};
-//! use scirs2_interpolate::cache_aware::{
+//! use scirs2__interpolate::cache_aware::{
 //!     CacheAwareRBF, CacheOptimizedConfig
 //! };
 //!
@@ -111,7 +111,7 @@ where
     /// Precomputed coefficients (if available)
     coefficients: Option<Array1<F>>,
     /// Configuration
-    config: CacheOptimizedConfig,
+    _config: CacheOptimizedConfig,
     /// Performance statistics
     stats: CacheOptimizedStats,
 }
@@ -323,7 +323,7 @@ where
         let n = kernel_matrix.nrows();
         let mut augmented = Array2::zeros((n, n + 1));
 
-        // Copy kernel matrix and values vector
+        // Copy kernel _matrix and values vector
         for i in 0..n {
             for j in 0..n {
                 augmented[[i, j]] = kernel_matrix[[i, j]];
@@ -395,7 +395,7 @@ where
 
         let coefficients = self.coefficients.as_ref().unwrap();
         let n_queries = query_points.nrows();
-        let n_points = self.points.nrows();
+        let n_points = self._points.nrows();
         let block_size = self.config.block_size;
 
         let mut results = Array1::zeros(n_queries);
@@ -408,12 +408,12 @@ where
                 let query = query_points.row(query_idx);
                 let mut value = F::zero();
 
-                // Process training points in blocks
+                // Process training _points in blocks
                 for point_block in (0..n_points).step_by(block_size) {
                     let point_end = (point_block + block_size).min(n_points);
 
                     for point_idx in point_block..point_end {
-                        let point = self.points.row(point_idx);
+                        let point = self._points.row(point_idx);
                         let distance = self.compute_query_distance(&query, &point);
                         let kernel_value = self.apply_kernel_function(distance);
                         value = value + coefficients[point_idx] * kernel_value;

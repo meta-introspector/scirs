@@ -22,10 +22,10 @@ pub struct GaussLegendreQuadrature<F: IntegrateFloat> {
 impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     /// Safe conversion from f64 to F type
     #[allow(dead_code)]
-    fn safe_from_f64(value: f64) -> IntegrateResult<F> {
-        F::from_f64(value).ok_or_else(|| {
+    fn safe_from_f64(_value: f64) -> IntegrateResult<F> {
+        F::from_f64(_value).ok_or_else(|| {
             IntegrateError::ComputationError(format!(
-                "Failed to convert f64 constant {value} to target type"
+                "Failed to convert f64 constant {_value} to target type"
             ))
         })
     }
@@ -42,7 +42,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_integrate::gaussian::GaussLegendreQuadrature;
+    /// use scirs2__integrate::gaussian::GaussLegendreQuadrature;
     ///
     /// let quad = GaussLegendreQuadrature::<f64>::new(5).unwrap();
     /// assert_eq!(quad.nodes.len(), 5);
@@ -370,14 +370,14 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_integrate::gaussian::GaussLegendreQuadrature;
+    /// use scirs2__integrate::gaussian::GaussLegendreQuadrature;
     ///
     /// // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
     /// let quad = GaussLegendreQuadrature::<f64>::new(5).unwrap();
     /// let result = quad.integrate(|x| x * x, 0.0, 1.0);
     /// assert!((result - 1.0/3.0).abs() < 1e-10);
     /// ```
-    pub fn integrate<Func>(&self, f: Func, a: F, b: F) -> F
+    pub fn integrate<Func>(f: Func, a: F, b: F) -> F
     where
         Func: Fn(F) -> F,
     {
@@ -413,7 +413,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::gaussian::gauss_legendre;
+/// use scirs2__integrate::gaussian::gauss_legendre;
 ///
 /// // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
 /// let result = gauss_legendre(|x: f64| x * x, 0.0, 1.0, 5).unwrap();
@@ -444,7 +444,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::gaussian::multi_gauss_legendre;
+/// use scirs2__integrate::gaussian::multi_gauss_legendre;
 /// use ndarray::{Array1, ArrayView1};
 ///
 /// // Integrate f(x,y) = x²+y² over [0,1]×[0,1] (exact result: 2/3)

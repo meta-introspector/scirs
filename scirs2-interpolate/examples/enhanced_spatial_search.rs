@@ -9,8 +9,8 @@
 
 use ndarray::Array2;
 #[cfg(feature = "parallel")]
-use scirs2_interpolate::spatial::ParallelQueryProcessor;
-use scirs2_interpolate::spatial::{
+use scirs2__interpolate::spatial::ParallelQueryProcessor;
+use scirs2__interpolate::spatial::{
     BallTree, CacheFriendlyKNN, KdTree, OptimizedSpatialSearch, SimdDistanceOps,
 };
 use std::time::Instant;
@@ -68,7 +68,7 @@ fn generate_test_data(
     let cluster_std = 0.3;
 
     for _ in 0..n_points {
-        let cluster_id = rng.random_range(0..n_clusters);
+        let cluster_id = rng.gen_range(0..n_clusters);
         let cluster_center = cluster_id as f64 * 2.0;
 
         for _ in 0..n_dims {
@@ -77,7 +77,7 @@ fn generate_test_data(
         }
     }
 
-    // Generate query points around the data
+    // Generate query _points around the data
     for _ in 0..n_queries {
         for _ in 0..n_dims {
             let coord = rng.random::<f64>() * (n_clusters as f64 * 2.0);
@@ -85,10 +85,10 @@ fn generate_test_data(
         }
     }
 
-    let points = Array2::from_shape_vec((n_points, n_dims), points_data)?;
-    let queries = Array2::from_shape_vec((n_queries, n_dims), queries_data)?;
+    let _points = Array2::from_shape_vec((n_points..n_dims), points_data)?;
+    let _queries = Array2::from_shape_vec((n_queries, n_dims), queries_data)?;
 
-    Ok((points, queries))
+    Ok((_points, _queries))
 }
 
 #[allow(dead_code)]
@@ -406,7 +406,7 @@ mod tests {
 
     #[test]
     fn test_optimized_methods_consistency() {
-        let (points, _) = generate_test_data(100, 1, 5).unwrap();
+        let (points_) = generate_test_data(100, 1, 5).unwrap();
         let query = vec![1.0, 1.0, 1.0, 1.0, 1.0];
         let k = 5;
 

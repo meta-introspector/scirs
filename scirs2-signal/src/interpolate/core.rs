@@ -4,16 +4,17 @@
 //! functions that coordinate between different interpolation algorithms.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2};
+use ndarray::{Array1, Array2, s};
+use super::basic::{linear_interpolate, nearest_neighbor_interpolate};
+use super::spectral::{sinc_interpolate, spectral_interpolate};
+use super::spline::{cubic_hermite_interpolate, cubic_spline_interpolate};
+use crate::interpolate::InterpolationConfig;
 
+#[allow(unused_imports)]
 // Import the specific interpolation functions from their respective modules
 use super::advanced::{
     gaussian_process_interpolate, kriging_interpolate, minimum_energy_interpolate, rbf_interpolate,
 };
-use super::basic::{linear_interpolate, nearest_neighbor_interpolate};
-use super::spectral::{sinc_interpolate, spectral_interpolate};
-use super::spline::{cubic_hermite_interpolate, cubic_spline_interpolate};
-
 /// Configuration for interpolation algorithms
 #[derive(Debug, Clone)]
 pub struct InterpolationConfig {
@@ -213,33 +214,33 @@ pub fn interpolate_2d(
 ///
 /// * Interpolated image
 #[allow(dead_code)]
-pub fn nearest_neighbor_interpolate_2d(image: &Array2<f64>) -> SignalResult<Array2<f64>> {
-    let (n_rows, n_cols) = image.dim();
+pub fn nearest_neighbor_interpolate_2d(_image: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    let (n_rows, n_cols) = _image.dim();
 
     // Find all valid points
     let mut valid_points = Vec::new();
 
     for i in 0..n_rows {
         for j in 0..n_cols {
-            if !image[[i, j]].is_nan() {
-                valid_points.push(((i, j), image[[i, j]]));
+            if !_image[[i, j]].is_nan() {
+                valid_points.push(((i, j), _image[[i, j]]));
             }
         }
     }
 
     if valid_points.is_empty() {
         return Err(SignalError::ValueError(
-            "All values are missing in the input image".to_string(),
+            "All values are missing in the input _image".to_string(),
         ));
     }
 
     // Create result with all missing values initially
-    let mut result = image.clone();
+    let mut result = _image.clone();
 
     // Find nearest valid point for each missing point
     for i in 0..n_rows {
         for j in 0..n_cols {
-            if image[[i, j]].is_nan() {
+            if _image[[i, j]].is_nan() {
                 // Find nearest valid point
                 let mut min_dist = f64::MAX;
                 let mut min_value = 0.0;
@@ -276,12 +277,12 @@ pub fn nearest_neighbor_interpolate_2d(image: &Array2<f64>) -> SignalResult<Arra
 ///
 /// * Smoothed signal
 #[allow(dead_code)]
-pub fn smooth_signal(signal: &Array1<f64>, factor: f64) -> Array1<f64> {
-    let n = signal.len();
+pub fn smooth_signal(_signal: &Array1<f64>, factor: f64) -> Array1<f64> {
+    let n = _signal.len();
     let window_size = (n as f64 * factor).ceil() as usize;
     let half_window = window_size / 2;
 
-    let mut result = signal.clone();
+    let mut result = _signal.clone();
 
     for i in 0..n {
         let mut count = 0;
@@ -291,8 +292,8 @@ pub fn smooth_signal(signal: &Array1<f64>, factor: f64) -> Array1<f64> {
         let end = (i + half_window + 1).min(n);
 
         for j in start..end {
-            if !signal[j].is_nan() {
-                sum += signal[j];
+            if !_signal[j].is_nan() {
+                sum += _signal[j];
                 count += 1;
             }
         }
@@ -318,15 +319,15 @@ pub fn smooth_signal(signal: &Array1<f64>, factor: f64) -> Array1<f64> {
 ///
 /// * Signal with enforced monotonicity
 #[allow(dead_code)]
-pub fn enforce_monotonicity(signal: &Array1<f64>) -> Array1<f64> {
-    let n = signal.len();
-    let mut result = signal.clone();
+pub fn enforce_monotonicity(_signal: &Array1<f64>) -> Array1<f64> {
+    let n = _signal.len();
+    let mut result = _signal.clone();
 
     // Find all valid points
     let mut valid_indices = Vec::new();
 
     for i in 0..n {
-        if !signal[i].is_nan() {
+        if !_signal[i].is_nan() {
             valid_indices.push(i);
         }
     }
@@ -340,8 +341,8 @@ pub fn enforce_monotonicity(signal: &Array1<f64>) -> Array1<f64> {
     let mut decreasing = true;
 
     for i in 1..valid_indices.len() {
-        let prev = signal[valid_indices[i - 1]];
-        let curr = signal[valid_indices[i]];
+        let prev = _signal[valid_indices[i - 1]];
+        let curr = _signal[valid_indices[i]];
 
         if curr < prev {
             increasing = false;
@@ -389,7 +390,7 @@ pub fn enforce_monotonicity(signal: &Array1<f64>) -> Array1<f64> {
 ///
 /// * Index in valid_indices array of nearest valid point
 #[allow(dead_code)]
-pub fn find_nearest_valid_index(idx: usize, valid_indices: &[usize]) -> usize {
+pub fn find_nearest_valid_index(_idx: usize, valid_indices: &[usize]) -> usize {
     if valid_indices.is_empty() {
         return 0;
     }
@@ -398,10 +399,10 @@ pub fn find_nearest_valid_index(idx: usize, valid_indices: &[usize]) -> usize {
     let mut min_dist = usize::MAX;
 
     for (i, &valid_idx) in valid_indices.iter().enumerate() {
-        let dist = if valid_idx > idx {
-            valid_idx - idx
+        let dist = if valid_idx > _idx {
+            valid_idx - _idx
         } else {
-            idx - valid_idx
+            _idx - valid_idx
         };
 
         if dist < min_dist {
@@ -440,7 +441,7 @@ mod tests {
         let smoothed = smooth_signal(&signal, 0.2);
 
         // With 20% window size (1 element), result should be similar to original
-        assert!((smoothed[2] - 3.0).abs() < 1e-10);
+        assert!(((smoothed[2] - 3.0) as f64).abs() < 1e-10);
     }
 
     #[test]
@@ -471,7 +472,6 @@ mod tests {
 
     #[test]
     fn test_nearest_neighbor_interpolate_2d() {
-        use ndarray::Array2;
 
         let mut image = Array2::zeros((3, 3));
         image[[0, 0]] = 1.0;

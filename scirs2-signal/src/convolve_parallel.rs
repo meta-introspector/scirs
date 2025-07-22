@@ -9,12 +9,11 @@ use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 // Temporary replacement for par_iter_with_setup
 fn par_iter_with_setup<I, IT, S, F, R, RF, E>(
-    items: I,
-    _setup: S,
-    map_fn: F,
-    _reduce_fn: RF,
+    items: I_setup: S,
+    map_fn: F_reduce, _fn: RF,
 ) -> Result<Vec<R>, E>
 where
     I: IntoIterator<Item = IT>,
@@ -203,16 +202,16 @@ fn parallel_overlap_save_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
 
 /// Apply convolution mode (full, same, valid)
 #[allow(dead_code)]
-fn apply_conv_mode(result: Vec<f64>, na: usize, nv: usize, mode: &str) -> SignalResult<Vec<f64>> {
+fn apply_conv_mode(_result: Vec<f64>, na: usize, nv: usize, mode: &str) -> SignalResult<Vec<f64>> {
     match mode {
-        "full" => Ok(result),
+        "full" => Ok(_result),
         "same" => {
             let start = (nv - 1) / 2;
             let end = start + na;
-            if end <= result.len() {
-                Ok(result[start..end].to_vec())
+            if end <= _result.len() {
+                Ok(_result[start..end].to_vec())
             } else {
-                Ok(result)
+                Ok(_result)
             }
         }
         "valid" => {
@@ -222,9 +221,9 @@ fn apply_conv_mode(result: Vec<f64>, na: usize, nv: usize, mode: &str) -> Signal
                 ));
             }
             let start = nv - 1;
-            let end = result.len() - (nv - 1);
-            if start < end && end <= result.len() {
-                Ok(result[start..end].to_vec())
+            let end = _result.len() - (nv - 1);
+            if start < end && end <= _result.len() {
+                Ok(_result[start..end].to_vec())
             } else {
                 Ok(vec![])
             }
@@ -297,8 +296,7 @@ pub fn parallel_convolve2d_ndarray(
     let (out_rows, out_cols) = match mode {
         "full" => (img_rows + ker_rows - 1, img_cols + ker_cols - 1),
         "same" => (img_rows, img_cols),
-        "valid" => (img_rows - ker_rows + 1, img_cols - ker_cols + 1),
-        _ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
+        "valid" => (img_rows - ker_rows + 1, img_cols - ker_cols + 1, _ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
     };
 
     // Parallel processing over output rows
@@ -312,8 +310,7 @@ pub fn parallel_convolve2d_ndarray(
             let (i_start, i_offset) = match mode {
                 "full" => (0, out_i as isize),
                 "same" => (0, out_i as isize - (ker_rows / 2) as isize),
-                "valid" => (out_i, 0),
-                _ => (0, 0),
+                "valid" => (out_i, 0, _ => (0, 0),
             };
 
             for out_j in 0..out_cols {
@@ -321,8 +318,7 @@ pub fn parallel_convolve2d_ndarray(
                 let (j_start, j_offset) = match mode {
                     "full" => (0, out_j as isize),
                     "same" => (0, out_j as isize - (ker_cols / 2) as isize),
-                    "valid" => (out_j, 0),
-                    _ => (0, 0),
+                    "valid" => (out_j, 0, _ => (0, 0),
                 };
 
                 let mut sum = 0.0;

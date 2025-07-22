@@ -799,9 +799,9 @@ pub enum ModelType {
 
 impl MemoryOptimizer {
     /// Create a new memory optimizer
-    pub fn new(config: MemoryOptimizerConfig) -> Self {
+    pub fn new(_config: MemoryOptimizerConfig) -> Self {
         Self {
-            config,
+            _config,
             memory_tracker: AdvancedMemoryTracker::new(),
             leak_detector: MemoryLeakDetector::new(),
             optimization_engine: OptimizationEngine::new(),
@@ -969,7 +969,7 @@ impl MemoryOptimizer {
         })
     }
 
-    fn calculate_fragmentation(&self, _usage: &MemoryUsage) -> Result<FragmentationMetrics> {
+    fn calculate_fragmentation(&self_usage: &MemoryUsage) -> Result<FragmentationMetrics> {
         Ok(FragmentationMetrics {
             external_fragmentation: 0.15,        // 15%
             internal_fragmentation: 0.08,        // 8%
@@ -1258,7 +1258,7 @@ impl MemoryLeakDetector {
         Ok(())
     }
 
-    fn check_for_leaks(&mut self, _snapshots: &VecDeque<MemorySnapshot>) -> Result<()> {
+    fn check_for_leaks(&mut self_snapshots: &VecDeque<MemorySnapshot>) -> Result<()> {
         // Run leak detection algorithms
         Ok(())
     }
@@ -1305,8 +1305,7 @@ impl OptimizationEngine {
     }
 
     fn generate_recommendations(
-        &mut self,
-        _tracker: &AdvancedMemoryTracker,
+        &mut self_tracker: &AdvancedMemoryTracker,
     ) -> Vec<MemoryOptimizationRecommendation> {
         // Generate optimization recommendations
         vec![MemoryOptimizationRecommendation {
@@ -1348,8 +1347,7 @@ impl OptimizationEngine {
     }
 
     fn analyze_cost_benefit(
-        &self,
-        _recommendations: &[MemoryOptimizationRecommendation],
+        &self_recommendations: &[MemoryOptimizationRecommendation],
     ) -> CostBenefitReport {
         CostBenefitReport {
             total_potential_savings: 2000.0,
@@ -1396,8 +1394,8 @@ impl MemoryPatternAnalyzer {
         Ok(())
     }
 
-    fn analyze_snapshot(&mut self, _snapshot: &MemorySnapshot) -> Result<()> {
-        // Analyze memory patterns in snapshot
+    fn analyze_snapshot(&mut self_snapshot: &MemorySnapshot) -> Result<()> {
+        // Analyze memory patterns in _snapshot
         Ok(())
     }
 

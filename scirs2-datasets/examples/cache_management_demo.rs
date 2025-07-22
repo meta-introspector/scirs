@@ -4,7 +4,7 @@
 //! platform-specific cache directories, cache size limits, offline mode, and
 //! detailed cache statistics.
 
-use scirs2_datasets::{get_cache_dir, CacheManager, DatasetCache};
+use scirs2__datasets::{get_cache_dir, CacheManager, DatasetCache};
 
 #[allow(dead_code)]
 fn main() {

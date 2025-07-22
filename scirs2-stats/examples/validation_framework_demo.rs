@@ -4,10 +4,11 @@
 //! to comprehensively test statistical functions.
 
 use ndarray::Array1;
-use scirs2_stats::{
+use scirs2__stats::{
     comprehensive_validation_suite::*, descriptive::mean, numerical_stability_analyzer::*,
     property_based_validation::*, scipy_benchmark_framework::*,
 };
+use ndarray::ArrayView1;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

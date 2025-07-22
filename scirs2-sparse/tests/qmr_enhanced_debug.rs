@@ -1,4 +1,4 @@
-use scirs2_sparse::linalg::{qmr, IdentityOperator, QMROptions};
+use scirs2__sparse::linalg::{qmr, IdentityOperator, QMROptions};
 
 #[test]
 #[allow(dead_code)]

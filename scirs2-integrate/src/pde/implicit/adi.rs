@@ -9,7 +9,7 @@ use ndarray::{s, Array1, Array2, Array3, ArrayView1};
 use std::time::Instant;
 
 use super::ImplicitOptions;
-use crate::pde::finite_difference::FiniteDifferenceScheme;
+use crate::pde::finite__difference::FiniteDifferenceScheme;
 use crate::pde::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, PDEError, PDEResult,
     PDESolution, PDESolverInfo,
@@ -97,21 +97,21 @@ impl ADI2D {
             ));
         }
 
-        // Validate time range
+        // Validate time _range
         if time_range[0] >= time_range[1] {
             return Err(PDEError::DomainError(
-                "Invalid time range: start must be less than end".to_string(),
+                "Invalid time _range: start must be less than end".to_string(),
             ));
         }
 
-        // Validate boundary conditions
+        // Validate boundary _conditions
         if boundary_conditions.len() != 4 {
             return Err(PDEError::BoundaryConditions(
-                "2D parabolic PDE requires exactly 4 boundary conditions".to_string(),
+                "2D parabolic PDE requires exactly 4 boundary _conditions".to_string(),
             ));
         }
 
-        // Ensure we have boundary conditions for all four boundaries
+        // Ensure we have boundary _conditions for all four boundaries
         let has_lower_x = boundary_conditions
             .iter()
             .any(|bc| bc.location == BoundaryLocation::Lower && bc.dimension == 0);
@@ -127,7 +127,7 @@ impl ADI2D {
 
         if !has_lower_x || !has_upper_x || !has_lower_y || !has_upper_y {
             return Err(PDEError::BoundaryConditions(
-                "2D parabolic PDE requires boundary conditions for all four sides".to_string(),
+                "2D parabolic PDE requires boundary _conditions for all four sides".to_string(),
             ));
         }
 
@@ -170,7 +170,7 @@ impl ADI2D {
     }
 
     /// Set the finite difference scheme for spatial discretization
-    pub fn with_fd_scheme(mut self, scheme: FiniteDifferenceScheme) -> Self {
+    pub fn with_fd_scheme(mut scheme: FiniteDifferenceScheme) -> Self {
         self.fd_scheme = scheme;
         self
     }
@@ -778,8 +778,7 @@ impl ADI2D {
         &self,
         u: &mut Array2<f64>,
         x_grid: &Array1<f64>,
-        y_grid: &Array1<f64>,
-        _t: f64,
+        y_grid: &Array1<f64>, _t: f64,
     ) {
         let nx = x_grid.len();
         let ny = y_grid.len();
@@ -817,7 +816,7 @@ impl ADI2D {
     }
 
     /// Solve a tridiagonal linear system using the Thomas algorithm
-    fn solve_tridiagonal(&self, a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f64>> {
+    fn solve_tridiagonal(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f64>> {
         let n = b.len();
 
         // Extract the tridiagonal elements
@@ -859,15 +858,15 @@ impl ADI2D {
 
 /// Convert an ADIResult to a PDESolution
 impl From<ADIResult> for PDESolution<f64> {
-    fn from(result: ADIResult) -> Self {
+    fn from(_result: ADIResult) -> Self {
         let mut grids = Vec::new();
 
         // Add time grid
-        grids.push(result.t.clone());
+        grids.push(_result.t.clone());
 
         // Extract spatial grids from solution shape
-        let nx = result.u[0].shape()[0];
-        let ny = result.u[0].shape()[1];
+        let nx = _result.u[0].shape()[0];
+        let ny = _result.u[0].shape()[1];
 
         // Create spatial grids (we don't have the actual grid values, so use linspace)
         let x_grid = Array1::linspace(0.0, 1.0, nx);
@@ -878,7 +877,7 @@ impl From<ADIResult> for PDESolution<f64> {
 
         // Convert 3D arrays to 2D arrays for PDESolution format
         let mut values = Vec::new();
-        for u3d in result.u {
+        for u3d in _result.u {
             let mut u2d = Array2::zeros((nx, ny));
             for i in 0..nx {
                 for j in 0..ny {
@@ -890,8 +889,8 @@ impl From<ADIResult> for PDESolution<f64> {
 
         // Create solver info
         let info = PDESolverInfo {
-            num_iterations: result.num_linear_solves,
-            computation_time: result.computation_time,
+            num_iterations: _result.num_linear_solves,
+            computation_time: _result.computation_time,
             residual_norm: None,
             convergence_history: None,
             method: "ADI Method".to_string(),

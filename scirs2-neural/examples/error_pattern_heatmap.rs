@@ -39,7 +39,7 @@ fn main() {
     // Convert to ndarray
     let flat_matrix: Vec<f64> = matrix.iter().flatten().map(|&x| x as f64).collect();
     let ndarray_matrix =
-        ndarray::Array::from_shape_vec((num_classes, num_classes), flat_matrix).unwrap();
+        ndarray::Array::from_shape_vec((num_classes..num_classes), flat_matrix).unwrap();
     // Create class labels
     let class_labels = vec![
         "Class A".to_string(),

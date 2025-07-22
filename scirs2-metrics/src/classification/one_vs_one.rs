@@ -35,7 +35,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::one_vs_one::one_vs_one_accuracy;
+/// use scirs2__metrics::classification::one_vs_one::one_vs_one_accuracy;
 ///
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -70,7 +70,7 @@ where
         ));
     }
 
-    // Get unique classes from true labels
+    // Get unique classes from _true labels
     let mut classes: BTreeSet<T> = BTreeSet::new();
     for label in y_true.iter() {
         classes.insert(label.clone());
@@ -147,7 +147,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::one_vs_one::one_vs_one_precision_recall;
+/// use scirs2__metrics::classification::one_vs_one::one_vs_one_precision_recall;
 ///
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -257,7 +257,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::one_vs_one::one_vs_one_f1_score;
+/// use scirs2__metrics::classification::one_vs_one::one_vs_one_f1_score;
 ///
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -316,7 +316,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::one_vs_one::weighted_one_vs_one_f1_score;
+/// use scirs2__metrics::classification::one_vs_one::weighted_one_vs_one_f1_score;
 ///
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -338,7 +338,7 @@ where
     // Get F1 score for each class
     let f1_per_class = one_vs_one_f1_score(y_true, y_pred)?;
 
-    // Count instances of each class in true labels
+    // Count instances of each class in _true labels
     let mut class_counts: HashMap<T, usize> = HashMap::new();
     for label in y_true.iter() {
         *class_counts.entry(label.clone()).or_insert(0) += 1;

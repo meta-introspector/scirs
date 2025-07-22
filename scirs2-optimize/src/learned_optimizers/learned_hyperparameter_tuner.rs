@@ -12,6 +12,7 @@ use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
+use statrs::statistics::Statistics;
 
 /// Learned hyperparameter tuner with adaptive configuration
 #[derive(Debug, Clone)]
@@ -374,15 +375,15 @@ pub struct HyperparameterTuningStats {
 
 impl LearnedHyperparameterTuner {
     /// Create new learned hyperparameter tuner
-    pub fn new(config: LearnedOptimizationConfig) -> Self {
+    pub fn new(_config: LearnedOptimizationConfig) -> Self {
         let hyperparameter_space = HyperparameterSpace::create_default_space();
         let performance_database = PerformanceDatabase::new();
         let bayesian_optimizer = BayesianOptimizer::new();
         let multi_fidelity_evaluator = MultiFidelityEvaluator::new();
-        let hidden_size = config.hidden_size;
+        let hidden_size = _config.hidden_size;
 
         Self {
-            config,
+            _config,
             hyperparameter_space,
             performance_database,
             bayesian_optimizer,
@@ -515,7 +516,7 @@ impl LearnedHyperparameterTuner {
 
         // Parameter statistics
         features[3] = initial_params.mean().unwrap_or(0.0);
-        features[4] = initial_params.var(0.0).sqrt();
+        features[4] = initial_params.variance().sqrt();
         features[5] = initial_params.fold(-f64::INFINITY, |a, &b| a.max(b));
         features[6] = initial_params.fold(f64::INFINITY, |a, &b| a.min(b));
 
@@ -523,8 +524,7 @@ impl LearnedHyperparameterTuner {
         match problem.problem_class.as_str() {
             "quadratic" => features[7] = 1.0,
             "neural_network" => features[8] = 1.0,
-            "sparse" => features[9] = 1.0,
-            _ => features[10] = 1.0,
+            "sparse" => features[9] = 1.0_ => features[10] = 1.0,
         }
 
         // Budget and accuracy requirements
@@ -566,7 +566,7 @@ impl LearnedHyperparameterTuner {
         });
 
         // Select top configurations
-        for (record, _similarity) in similarities.into_iter().take(5) {
+        for (record_similarity) in similarities.into_iter().take(5) {
             configs.push(record.config.clone());
         }
 
@@ -625,16 +625,16 @@ impl LearnedHyperparameterTuner {
 
         // Sample discrete parameters
         for param in &self.hyperparameter_space.discrete_params {
-            let idx = rand::rng().random_range(0..param.values.len());
+            let idx = rand::rng().gen_range(0..param.values.len());
             let value = param.values[idx];
-            parameters.insert(param.name.clone(), ParameterValue::Discrete(value));
+            parameters.insert(param.name.clone()..ParameterValue::Discrete(value));
         }
 
         // Sample categorical parameters
         for param in &self.hyperparameter_space.categorical_params {
-            let idx = rand::rng().random_range(0..param.categories.len());
+            let idx = rand::rng().gen_range(0..param.categories.len());
             let value = param.categories[idx].clone();
-            parameters.insert(param.name.clone(), ParameterValue::Categorical(value));
+            parameters.insert(param.name.clone()..ParameterValue::Categorical(value));
         }
 
         Ok(HyperparameterConfig::new(parameters))
@@ -716,13 +716,11 @@ impl LearnedHyperparameterTuner {
     {
         // Extract optimization parameters from config
         let learning_rate = match config.parameters.get("learning_rate") {
-            Some(ParameterValue::Continuous(lr)) => *lr,
-            _ => 0.01,
+            Some(ParameterValue::Continuous(lr)) => *lr_ => 0.01,
         };
 
         let max_nit = match config.parameters.get("max_nit") {
-            Some(ParameterValue::Discrete(iters)) => (*iters as f64 * fidelity) as usize,
-            _ => (100.0 * fidelity) as usize,
+            Some(ParameterValue::Discrete(iters)) => (*iters as f64 * fidelity) as usize_ => (100.0 * fidelity) as usize,
         };
 
         // Simple optimization with extracted parameters
@@ -833,8 +831,7 @@ impl LearnedHyperparameterTuner {
 
     /// Select next configuration to evaluate
     fn select_next_configuration(
-        &self,
-        _problem_features: &Array1<f64>,
+        &self, _problem_features: &Array1<f64>,
     ) -> OptimizeResult<HyperparameterConfig> {
         // Use acquisition function to select next point
         let candidate_configs = self.generate_candidate_configurations(100)?;
@@ -857,13 +854,13 @@ impl LearnedHyperparameterTuner {
         &self,
         num_candidates: usize,
     ) -> OptimizeResult<Vec<HyperparameterConfig>> {
-        let mut candidates = Vec::new();
+        let mut _candidates = Vec::new();
 
         for _ in 0..num_candidates {
-            candidates.push(self.sample_random_configuration()?);
+            _candidates.push(self.sample_random_configuration()?);
         }
 
-        Ok(candidates)
+        Ok(_candidates)
     }
 
     /// Evaluate acquisition function
@@ -888,8 +885,7 @@ impl LearnedHyperparameterTuner {
                     0.0
                 }
             }
-            AcquisitionFunction::UpperConfidenceBound { beta } => mean + beta * variance.sqrt(),
-            _ => mean + variance.sqrt(), // Default UCB
+            AcquisitionFunction::UpperConfidenceBound { beta } => mean + beta * variance.sqrt(, _ => mean + variance.sqrt(), // Default UCB
         };
 
         Ok(acquisition_value)
@@ -916,8 +912,7 @@ impl LearnedHyperparameterTuner {
 
     /// Select fidelity level for evaluation
     fn select_fidelity_level(
-        &self,
-        _config: &HyperparameterConfig,
+        &self_config: &HyperparameterConfig,
         remaining_budget: f64,
     ) -> OptimizeResult<f64> {
         match &self.multi_fidelity_evaluator.selection_strategy {
@@ -926,7 +921,7 @@ impl LearnedHyperparameterTuner {
                 initial_fidelity,
                 adaptation_rate: _,
             } => {
-                // Simple adaptive strategy based on remaining budget
+                // Simple adaptive strategy based on remaining _budget
                 let budget_ratio = remaining_budget / self.tuning_stats.total_cost.max(1.0);
                 Ok(initial_fidelity * budget_ratio.max(0.1).min(1.0))
             }
@@ -1030,22 +1025,22 @@ impl HyperparameterSpace {
 
 impl HyperparameterConfig {
     /// Create new hyperparameter configuration
-    pub fn new(parameters: HashMap<String, ParameterValue>) -> Self {
-        let config_hash = Self::compute_hash(&parameters);
-        let embedding = Self::compute_embedding(&parameters);
+    pub fn new(_parameters: HashMap<String, ParameterValue>) -> Self {
+        let config_hash = Self::compute_hash(&_parameters);
+        let embedding = Self::compute_embedding(&_parameters);
 
         Self {
-            parameters,
+            _parameters,
             config_hash,
             embedding,
         }
     }
 
     /// Compute hash for configuration
-    fn compute_hash(parameters: &HashMap<String, ParameterValue>) -> u64 {
+    fn compute_hash(_parameters: &HashMap<String, ParameterValue>) -> u64 {
         // Simplified hash computation
         let mut hash = 0u64;
-        for (key, value) in parameters {
+        for (key, value) in _parameters {
             hash ^= Self::hash_string(key);
             hash ^= Self::hash_parameter_value(value);
         }
@@ -1061,20 +1056,20 @@ impl HyperparameterConfig {
     }
 
     /// Hash parameter value
-    fn hash_parameter_value(value: &ParameterValue) -> u64 {
-        match value {
+    fn hash_parameter_value(_value: &ParameterValue) -> u64 {
+        match _value {
             ParameterValue::Continuous(v) => v.to_bits(),
             ParameterValue::Discrete(v) => *v as u64,
-            ParameterValue::Categorical(s) => Self::hash_string(s),
+            ParameterValue::Categorical(s) =>, Self::hash_string(s),
         }
     }
 
     /// Compute embedding for configuration
-    fn compute_embedding(parameters: &HashMap<String, ParameterValue>) -> Array1<f64> {
+    fn compute_embedding(_parameters: &HashMap<String, ParameterValue>) -> Array1<f64> {
         let mut embedding = Array1::zeros(32); // Fixed embedding size
 
         let mut idx = 0;
-        for (_, value) in parameters {
+        for (_, value) in _parameters {
             if idx >= embedding.len() {
                 break;
             }

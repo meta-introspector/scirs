@@ -139,8 +139,8 @@ pub struct MutualInformation {
 
 impl MutualInformation {
     /// Create new mutual information metric with specified number of bins
-    pub fn new(bins: usize) -> Self {
-        Self { bins }
+    pub fn new(_bins: usize) -> Self {
+        Self { _bins }
     }
 }
 
@@ -202,9 +202,9 @@ pub struct NormalizedMutualInformation {
 
 impl NormalizedMutualInformation {
     /// Create new normalized mutual information metric
-    pub fn new(bins: usize) -> Self {
+    pub fn new(_bins: usize) -> Self {
         Self {
-            mi: MutualInformation::new(bins),
+            mi: MutualInformation::new(_bins),
         }
     }
 }
@@ -315,8 +315,8 @@ pub struct PeakSignalToNoiseRatio {
 
 impl PeakSignalToNoiseRatio {
     /// Create new PSNR metric with specified maximum pixel value
-    pub fn new(max_value: f64) -> Self {
-        Self { max_value }
+    pub fn new(_max_value: f64) -> Self {
+        Self { _max_value }
     }
 }
 
@@ -376,8 +376,8 @@ pub struct StructuralSimilarity {
 
 impl StructuralSimilarity {
     /// Create new SSIM metric with specified parameters
-    pub fn new(window_size: usize, k1: f64, k2: f64, l: f64) -> Self {
-        Self { window_size, k1, k2, l }
+    pub fn new(_window_size: usize, k1: f64, k2: f64, l: f64) -> Self {
+        Self { _window_size, k1, k2, l }
     }
 }
 
@@ -505,30 +505,30 @@ impl SimilarityMeasure for GradientCorrelation {
 
 /// Factory function to create similarity measure from metric type
 #[allow(dead_code)]
-pub fn create_similarity_measure(metric: SimilarityMetric) -> Box<dyn SimilarityMeasure> {
-    match metric {
-        SimilarityMetric::SumOfSquaredDifferences => Box::new(SumOfSquaredDifferences),
-        SimilarityMetric::NormalizedCrossCorrelation => Box::new(NormalizedCrossCorrelation),
-        SimilarityMetric::MutualInformation => Box::new(MutualInformation::default()),
-        SimilarityMetric::NormalizedMutualInformation => Box::new(NormalizedMutualInformation::default()),
-        SimilarityMetric::MeanSquaredError => Box::new(MeanSquaredError),
-        SimilarityMetric::PeakSignalToNoiseRatio => Box::new(PeakSignalToNoiseRatio::default()),
-        SimilarityMetric::StructuralSimilarity => Box::new(StructuralSimilarity::default()),
-        SimilarityMetric::GradientCorrelation => Box::new(GradientCorrelation),
+pub fn create_similarity_measure(_metric: SimilarityMetric) -> Box<dyn SimilarityMeasure> {
+    match _metric {
+        SimilarityMetric::SumOfSquaredDifferences =>, Box::new(SumOfSquaredDifferences),
+        SimilarityMetric::NormalizedCrossCorrelation =>, Box::new(NormalizedCrossCorrelation),
+        SimilarityMetric::MutualInformation =>, Box::new(MutualInformation::default()),
+        SimilarityMetric::NormalizedMutualInformation =>, Box::new(NormalizedMutualInformation::default()),
+        SimilarityMetric::MeanSquaredError =>, Box::new(MeanSquaredError),
+        SimilarityMetric::PeakSignalToNoiseRatio =>, Box::new(PeakSignalToNoiseRatio::default()),
+        SimilarityMetric::StructuralSimilarity =>, Box::new(StructuralSimilarity::default()),
+        SimilarityMetric::GradientCorrelation =>, Box::new(GradientCorrelation),
     }
 }
 
 // Helper functions
 
 #[allow(dead_code)]
-fn validate_dimensions(reference: &Array2<f32>, moving: &Array2<f32>) -> Result<()> {
-    if reference.dim() != moving.dim() {
+fn validate_dimensions(_reference: &Array2<f32>, moving: &Array2<f32>) -> Result<()> {
+    if _reference.dim() != moving.dim() {
         return Err(VisionError::InvalidParameter(
             "Reference and moving images must have the same dimensions".to_string(),
         ));
     }
     
-    let (height, width) = reference.dim();
+    let (height, width) = _reference.dim();
     if height == 0 || width == 0 {
         return Err(VisionError::InvalidParameter(
             "Images must have non-zero dimensions".to_string(),
@@ -579,14 +579,14 @@ fn compute_histograms(
 }
 
 #[allow(dead_code)]
-fn compute_gradient_magnitude(image: &Array2<f32>) -> Result<Array2<f32>> {
-    let (height, width) = image.dim();
+fn compute_gradient_magnitude(_image: &Array2<f32>) -> Result<Array2<f32>> {
+    let (height, width) = _image.dim();
     let mut gradient = Array2::zeros((height, width));
     
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
-            let gx = image[[y, x + 1]] - image[[y, x - 1]];
-            let gy = image[[y + 1, x]] - image[[y - 1, x]];
+            let gx = _image[[y, x + 1]] - _image[[y, x - 1]];
+            let gy = _image[[y + 1, x]] - _image[[y - 1, x]];
             gradient[[y, x]] = (gx * gx + gy * gy).sqrt();
         }
     }

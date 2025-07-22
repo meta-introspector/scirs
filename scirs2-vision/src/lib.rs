@@ -157,13 +157,13 @@ pub use transform::{
 pub use transform::perspective::warp_perspective as transform_warp_perspective;
 
 // Re-export SIMD operations
-pub use simd_ops::{
+pub use simd__ops::{
     check_simd_support, simd_convolve_2d, simd_gaussian_blur, simd_histogram_equalization,
     simd_normalize_image, simd_sobel_gradients, SimdPerformanceStats,
 };
 
 // Re-export GPU operations
-pub use gpu_ops::{
+pub use gpu__ops::{
     gpu_batch_process, gpu_convolve_2d, gpu_gaussian_blur, gpu_harris_corners, gpu_sobel_gradients,
     GpuBenchmark, GpuMemoryStats, GpuVisionContext,
 };
@@ -176,43 +176,43 @@ pub use streaming::{
 };
 
 // Re-export Advanced mode enhancements
-pub use quantum_inspired_streaming::{
+pub use quantum_inspired__streaming::{
     ProcessingDecision, QuantumAdaptiveStreamPipeline, QuantumAmplitude, QuantumAnnealingStage,
     QuantumEntanglementStage, QuantumProcessingState, QuantumStreamProcessor,
     QuantumSuperpositionStage,
 };
 
-pub use neuromorphic_streaming::{
+pub use neuromorphic__streaming::{
     AdaptiveNeuromorphicPipeline, EfficiencyMetrics, EventDrivenProcessor, EventStats,
     NeuromorphicEdgeDetector, NeuromorphicMode, NeuromorphicProcessingStats, PlasticSynapse,
     SpikingNeuralNetwork, SpikingNeuron,
 };
 
-pub use ai_optimization::{
+pub use ai__optimization::{
     ArchitecturePerformance, GeneticPipelineOptimizer, NeuralArchitectureSearch, PerformanceMetric,
     PipelineGenome, PredictiveScaler, ProcessingArchitecture, RLParameterOptimizer,
     ScalingRecommendation, SearchStrategy,
 };
 
 // Re-export advanced Advanced-mode features
-pub use scene_understanding::{
+pub use scene__understanding::{
     analyze_scene_with_reasoning, ContextualReasoningEngine, DetectedObject as SceneObject,
     SceneAnalysisResult, SceneGraph, SceneUnderstandingEngine, SpatialRelation,
     SpatialRelationType, TemporalInfo,
 };
 
-pub use visual_reasoning::{
+pub use visual__reasoning::{
     perform_advanced_visual_reasoning, QueryType, ReasoningAnswer, ReasoningStep,
     UncertaintyQuantification, VisualReasoningEngine, VisualReasoningQuery, VisualReasoningResult,
 };
 
-pub use activity_recognition::{
+pub use activity__recognition::{
     monitor_activities_realtime, recognize_activities_comprehensive, ActivityRecognitionEngine,
     ActivityRecognitionResult, ActivitySequence, ActivitySummary as ActivitySceneSummary,
     DetectedActivity, MotionCharacteristics, PersonInteraction, TemporalActivityModeler,
 };
 
-pub use visual_slam::{
+pub use visual__slam::{
     process_visual_slam, process_visual_slam_realtime, CameraPose, CameraTrajectory, LoopClosure,
     Map3D, SLAMResult, SLAMSystemState, SemanticMap, VisualSLAMSystem,
 };
@@ -226,7 +226,7 @@ pub use integration::{
 };
 
 // Re-export performance benchmarking functionality
-pub use performance_benchmark::{
+pub use performance__benchmark::{
     AdvancedBenchmarkSuite, BenchmarkConfig, BenchmarkResult, ComparisonMetrics,
     PerformanceMetrics as BenchmarkPerformanceMetrics, QualityMetrics, ResourceUsage,
     ScalabilityMetrics, StatisticalSummary,

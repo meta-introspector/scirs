@@ -1,10 +1,12 @@
 //! Color-specific feature extraction for images
 
 use crate::error::SignalResult;
+use crate::error::SignalResult;
 use ndarray::Array2;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Extract color-specific features from a color image
 #[allow(dead_code)]
 pub fn extract_color_features<T>(

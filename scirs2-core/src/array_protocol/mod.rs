@@ -80,9 +80,9 @@ pub trait ArrayProtocol: Any + Send + Sync {
     fn array_function(
         &self,
         func: &ArrayFunction,
-        _types: &[TypeId],
-        _args: &[Box<dyn Any>],
-        _kwargs: &HashMap<String, Box<dyn Any>>,
+        types: &[TypeId],
+        args: &[Box<dyn Any>],
+        kwargs: &HashMap<String, Box<dyn Any>>,
     ) -> Result<Box<dyn Any>, NotImplemented>;
 
     /// Get the array as Any for downcasting
@@ -175,7 +175,7 @@ impl ArrayFunction {
         Self {
             name,
             // Default implementation that returns NotImplemented
-            implementation: Arc::new(|_, _| {
+            implementation: Arc::new(|_args, _kwargs| {
                 Err(CoreError::NotImplementedError(ErrorContext::new(
                     "Function not implemented".to_string(),
                 )))
@@ -252,9 +252,7 @@ impl ArrayFunctionRegistry {
 
     /// Get cached dispatch entry for optimization
     #[must_use]
-    pub fn get_cached_dispatch(
-        &self,
-        func_name: &'static str,
+    pub fn get_cached_dispatch(&self, func_name: &'static str,
         types: &[TypeId],
     ) -> Option<&DispatchCacheEntry> {
         let key = (func_name, types.to_vec());
@@ -268,7 +266,7 @@ impl ArrayFunctionRegistry {
     }
 
     /// Cache dispatch result for future optimization
-    pub fn cache_dispatch_result(
+    pub fn cache_dispatch(
         &mut self,
         func_name: &'static str,
         types: Vec<TypeId>,
@@ -359,13 +357,13 @@ pub fn get_implementing_args(args: &[Box<dyn Any>]) -> Vec<(TypeId, &dyn ArrayPr
         }
     }
 
-    // Sort implementing args by TypeId for deterministic dispatch order
+    // Sort implementing _args by TypeId for deterministic dispatch order
     // This ensures consistent dispatch behavior across calls
-    implementing_args.sort_by_key(|&(type_id, _)| {
+    implementing_args.sort_by_key(|&_type_id_| {
         // Use TypeId hash for deterministic ordering
         use std::hash::{Hash, Hasher};
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        type_id.hash(&mut hasher);
+        std::any::TypeId::of::<i32>().hash(&mut hasher);
         hasher.finish()
     });
 
@@ -561,7 +559,7 @@ pub trait JITFunction: Send + Sync {
 /// A factory for creating JIT functions for specific array implementations.
 pub trait JITFunctionFactory: Send + Sync {
     /// Create a new JIT function for the given expression and array type.
-    fn create(&self, expression: &str, array_type_id: TypeId) -> CoreResult<Box<dyn JITFunction>>;
+    fn create_jit_function(&self, expression: &str, array_type_id: TypeId) -> CoreResult<Box<dyn JITFunction>>;
 
     /// Check if this factory supports the given array type.
     #[must_use]
@@ -603,7 +601,7 @@ impl JITFactoryRegistry {
 
     /// Get a JIT function factory that supports the given array type.
     #[must_use]
-    pub fn get_for_array_type(&self, array_type_id: TypeId) -> Option<&dyn JITFunctionFactory> {
+    pub fn get_factory_for_array_type(&self, array_type_id: TypeId) -> Option<&dyn JITFunctionFactory> {
         for factory in &self.factories {
             if factory.supports_array_type(array_type_id) {
                 return Some(&**factory);
@@ -616,8 +614,7 @@ impl JITFactoryRegistry {
 /// A wrapper for ndarray to implement the ArrayProtocol trait.
 #[derive(Debug, Clone)]
 pub struct NdarrayWrapper<T, D: ndarray::Dimension> {
-    array: ndarray::Array<T, D>,
-    _phantom: PhantomData<(T, D)>,
+    array: ndarray::Array<T, D>, phantom: PhantomData<(T, D)>,
 }
 
 impl<T, D> NdarrayWrapper<T, D>
@@ -630,7 +627,7 @@ where
     pub fn new(array: ndarray::Array<T, D>) -> Self {
         Self {
             array,
-            _phantom: PhantomData,
+            phantom: PhantomData,
         }
     }
 
@@ -647,7 +644,7 @@ where
     }
 
     /// Update the underlying array with a new one.
-    pub fn update_array(&mut self, new_array: ndarray::Array<T, D>) {
+    pub fn array_2(&mut self, new_array: ndarray::Array<T, D>) {
         self.array = new_array;
     }
 }
@@ -714,7 +711,7 @@ where
 
                     // Handle the case for f64 matrices
                     if TypeId::of::<T>() == TypeId::of::<f64>() {
-                        // Cast to concrete types we know how to handle
+                        // Cast to concrete _types we know how to handle
                         let a_f64 = unsafe {
                             &*(self as *const _ as *const NdarrayWrapper<f64, ndarray::Ix2>)
                         };
@@ -737,7 +734,7 @@ where
                     }
                     // Handle the case for f32 matrices
                     else if TypeId::of::<T>() == TypeId::of::<f32>() {
-                        // Cast to concrete types we know how to handle
+                        // Cast to concrete _types we know how to handle
                         let a_f32 = unsafe {
                             &*(self as *const _ as *const NdarrayWrapper<f32, ndarray::Ix2>)
                         };
@@ -928,7 +925,7 @@ impl<T: Clone + Send + Sync + 'static> DistributedArray for MockDistributedArray
         Ok(Box::new(self.clone()) as Box<dyn ArrayProtocol>)
     }
 
-    fn scatter(&self, _chunks: usize) -> CoreResult<Box<dyn DistributedArray>> {
+    fn scatter(&self, _num_chunks: usize) -> CoreResult<Box<dyn DistributedArray>> {
         // In a real implementation, this would scatter data to multiple nodes
         // For now, we just return self boxed as DistributedArray
         Ok(Box::new(self.clone()) as Box<dyn DistributedArray>)
@@ -1086,7 +1083,7 @@ where
 /// // Define and register a sum function
 /// fn register_sum_function() {
 ///     let implementation = Arc::new(
-///         move |args: &[Box<dyn Any>], _kwargs: &HashMap<String, Box<dyn Any>>| {
+///         move |args: &[Box<dyn Any>], kwargs: &HashMap<String, Box<dyn Any>>| {
 ///             if let Some(array) = args.get(0)
 ///                 .and_then(|arg| arg.downcast_ref::<ndarray::Array<f64, ndarray::Ix2>>()) {
 ///                 let sum = array.sum();
@@ -1389,24 +1386,24 @@ mod examples {
         let wrapped = NdarrayWrapper::new(array);
 
         // Create a JIT-enabled array
-        let jit_array: JITEnabledArray<f64, _> = JITEnabledArray::new(wrapped);
+        let jitarray: JITEnabledArray<f64, NdarrayWrapper<f64, ndarray::Ix2>> = JITEnabledArray::new(wrapped);
 
         // Check if JIT is supported
-        assert!(jit_array.supports_jit());
+        assert!(jitarray.supports_jit());
 
         // Compile a function
         let expression = "x + y";
-        let jit_function = jit_array.compile(expression).unwrap();
+        let jit_function = jitarray.compile(expression).unwrap();
 
         // Check the function's properties
         assert_eq!(jit_function.source(), expression);
 
         // Get JIT information
-        let info = jit_array.jit_info();
+        let info = jitarray.jit_info();
         assert_eq!(info.get("supports_jit").unwrap(), "true");
 
         // Test box_clone for JIT-enabled array
-        let jit_box: Box<dyn ArrayProtocol> = Box::new(jit_array);
+        let jit_box: Box<dyn ArrayProtocol> = Box::new(jitarray);
         let jit_clone = jit_box.clone();
 
         // Check the cloned JIT array
@@ -1456,7 +1453,7 @@ mod examples {
         let func_name = "scirs2::example::sum";
 
         // Create an ArrayFunction manually
-        let implementation = Arc::new(move |args: &[Box<dyn Any>], _kwargs: &HashMap<String, Box<dyn Any>>| {
+        let implementation = Arc::new(move |args: &[Box<dyn Any>], kwargs: &HashMap<String, Box<dyn Any>>| {
             if let Some(array) = args.get(0)
                 .and_then(|arg| arg.downcast_ref::<Array2<f64>>()) {
                 let sum = array.sum();
@@ -1556,7 +1553,7 @@ mod examples {
             fn array_function(
                 &self,
                 func: &ArrayFunction,
-                _types: &[std::any::TypeId],
+                _types: &[TypeId],
                 _args: &[Box<dyn Any>],
                 _kwargs: &HashMap<String, Box<dyn Any>>,
             ) -> Result<Box<dyn Any>, NotImplemented> {

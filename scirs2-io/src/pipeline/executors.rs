@@ -5,7 +5,7 @@
 
 use super::*;
 use crate::error::Result;
-use crossbeam_channel::Receiver;
+use crossbeam__channel::Receiver;
 #[cfg(feature = "async")]
 use futures::stream::{self, StreamExt};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -13,6 +13,7 @@ use std::thread;
 use std::time::Instant;
 #[cfg(feature = "async")]
 use tokio::runtime::Runtime;
+use std::path::PathBuf;
 
 /// Trait for pipeline executors
 pub trait PipelineExecutor<I, O> {
@@ -46,8 +47,8 @@ pub struct StreamingExecutor {
 }
 
 impl StreamingExecutor {
-    pub fn new(chunk_size: usize) -> Self {
-        Self { chunk_size }
+    pub fn new(_chunk_size: usize) -> Self {
+        Self { _chunk_size }
     }
 }
 
@@ -118,9 +119,9 @@ pub struct CachedExecutor {
 }
 
 impl CachedExecutor {
-    pub fn new(cache_dir: impl AsRef<Path>) -> Self {
+    pub fn new(_cache_dir: impl AsRef<Path>) -> Self {
         Self {
-            cache_dir: cache_dir.as_ref().to_path_buf(),
+            cache_dir: _cache_dir.as_ref().to_path_buf(),
         }
     }
 
@@ -179,8 +180,8 @@ pub struct DistributedExecutor {
 }
 
 impl DistributedExecutor {
-    pub fn new(num_workers: usize) -> Self {
-        Self { num_workers }
+    pub fn new(_num_workers: usize) -> Self {
+        Self { _num_workers }
     }
 }
 
@@ -221,9 +222,9 @@ pub struct CheckpointedExecutor {
 }
 
 impl CheckpointedExecutor {
-    pub fn new(checkpoint_dir: impl AsRef<Path>, interval: usize) -> Self {
+    pub fn new(_checkpoint_dir: impl AsRef<Path>, interval: usize) -> Self {
         Self {
-            checkpoint_dir: checkpoint_dir.as_ref().to_path_buf(),
+            checkpoint_dir: _checkpoint_dir.as_ref().to_path_buf(),
             checkpoint_interval: interval,
         }
     }
@@ -266,8 +267,8 @@ impl ExecutorFactory {
     }
 
     /// Create a streaming executor
-    pub fn streaming(chunk_size: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
-        Box::new(StreamingExecutor::new(chunk_size))
+    pub fn streaming(_chunk_size: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
+        Box::new(StreamingExecutor::new(_chunk_size))
     }
 
     /// Create an async executor
@@ -277,13 +278,13 @@ impl ExecutorFactory {
     }
 
     /// Create a cached executor
-    pub fn cached(cache_dir: impl AsRef<Path>) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
-        Box::new(CachedExecutor::new(cache_dir))
+    pub fn cached(_cache_dir: impl AsRef<Path>) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
+        Box::new(CachedExecutor::new(_cache_dir))
     }
 
     /// Create a distributed executor
-    pub fn distributed(num_workers: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
-        Box::new(DistributedExecutor::new(num_workers))
+    pub fn distributed(_num_workers: usize) -> Box<dyn PipelineExecutor<Vec<i32>, Vec<i32>>> {
+        Box::new(DistributedExecutor::new(_num_workers))
     }
 
     /// Create a checkpointed executor
@@ -330,9 +331,9 @@ pub struct BackpressureStreamingExecutor {
 }
 
 impl BackpressureStreamingExecutor {
-    pub fn new(chunk_size: usize, max_pending_chunks: usize) -> Self {
+    pub fn new(_chunk_size: usize, max_pending_chunks: usize) -> Self {
         Self {
-            chunk_size,
+            _chunk_size,
             max_pending_chunks,
             timeout: Duration::from_secs(30),
         }
@@ -420,9 +421,9 @@ pub struct StageMetrics {
 }
 
 impl<E> MonitoringExecutor<E> {
-    pub fn new(inner: E) -> Self {
+    pub fn new(_inner: E) -> Self {
         Self {
-            inner,
+            _inner,
             metrics_collector: Arc::new(Mutex::new(PipelineMetrics::default())),
         }
     }
@@ -478,9 +479,9 @@ pub struct RetryExecutor<E> {
 }
 
 impl<E> RetryExecutor<E> {
-    pub fn new(inner: E, max_retries: usize) -> Self {
+    pub fn new(_inner: E, max_retries: usize) -> Self {
         Self {
-            inner,
+            _inner,
             max_retries,
             retry_delay: Duration::from_secs(1),
             exponential_backoff: true,
@@ -546,8 +547,8 @@ pub enum Event {
 }
 
 impl EventDrivenExecutor {
-    pub fn new(event_receiver: Receiver<Event>) -> Self {
-        Self { event_receiver }
+    pub fn new(_event_receiver: Receiver<Event>) -> Self {
+        Self { _event_receiver }
     }
 }
 
@@ -590,8 +591,8 @@ pub struct ParallelStageExecutor {
 }
 
 impl ParallelStageExecutor {
-    pub fn new(max_parallelism: usize) -> Self {
-        Self { max_parallelism }
+    pub fn new(_max_parallelism: usize) -> Self {
+        Self { _max_parallelism }
     }
 }
 

@@ -6,7 +6,7 @@
 use crate::error::Result;
 use crate::stemming::PosTag;
 use crate::tokenize::Tokenizer;
-use lazy_static::lazy_static;
+use lazy__static::lazy_static;
 use regex::Regex;
 use scirs2_core::parallel_ops;
 use std::collections::HashMap;
@@ -102,13 +102,13 @@ impl PosTagger {
     }
 
     /// Create a new POS tagger with custom configuration
-    pub fn with_config(config: PosTaggerConfig) -> Self {
+    pub fn with_config(_config: PosTaggerConfig) -> Self {
         let mut tagger = Self {
             lexicon: HashMap::new(),
             transition_probs: HashMap::new(),
             emission_probs: HashMap::new(),
-            use_context: config.use_context,
-            smoothing_factor: config.smoothing_factor,
+            use_context: _config.use_context,
+            smoothing_factor: _config.smoothing_factor,
         };
 
         tagger.initialize_lexicon();
@@ -1116,7 +1116,7 @@ impl PosTagger {
         let mut best_final_prob = 0.0;
         let mut best_final_state = 0;
 
-        for (j, _) in pos_tags.iter().enumerate() {
+        for (j_) in pos_tags.iter().enumerate() {
             if dp[n - 1][j].0 > best_final_prob {
                 best_final_prob = dp[n - 1][j].0;
                 best_final_state = j;
@@ -1557,7 +1557,7 @@ impl ContextualDisambiguator {
     }
 
     /// Apply contextual disambiguation to a sequence
-    pub fn disambiguate(&self, _tokens: &[String], tags: &mut [PosTag], confidences: &mut [f64]) {
+    pub fn disambiguate(&self_tokens: &[String], tags: &mut [PosTag], confidences: &mut [f64]) {
         for i in 0..tags.len() {
             let left = if i > 0 {
                 Some(tags[i - 1].clone())
@@ -1987,20 +1987,20 @@ mod tests {
         // Test prefix analysis
         let predictions = analyzer.analyze("unhappy");
         assert!(!predictions.is_empty());
-        assert!(predictions.iter().any(|(tag, _)| *tag == PosTag::Adjective)); // un- prefix
+        assert!(predictions.iter().any(|(tag_)| *tag == PosTag::Adjective)); // un- prefix
 
         let predictions = analyzer.analyze("rebuild");
         assert!(!predictions.is_empty());
-        assert!(predictions.iter().any(|(tag, _)| *tag == PosTag::Verb)); // re- prefix
+        assert!(predictions.iter().any(|(tag_)| *tag == PosTag::Verb)); // re- prefix
 
         // Test word shape analysis
         let predictions = analyzer.analyze("JavaScript");
         assert!(!predictions.is_empty());
-        assert!(predictions.iter().any(|(tag, _)| *tag == PosTag::Noun)); // CamelCase shape
+        assert!(predictions.iter().any(|(tag_)| *tag == PosTag::Noun)); // CamelCase shape
 
         let predictions = analyzer.analyze("well-known");
         assert!(!predictions.is_empty());
-        assert!(predictions.iter().any(|(tag, _)| *tag == PosTag::Adjective)); // hyphenated shape
+        assert!(predictions.iter().any(|(tag_)| *tag == PosTag::Adjective)); // hyphenated shape
 
         // Test prediction method
         let prediction = analyzer.predict_pos("running");
@@ -2103,7 +2103,7 @@ mod tests {
         // Test capitalized technical terms
         let predictions = analyzer.analyze("PostgreSQL");
         assert!(!predictions.is_empty());
-        assert!(predictions.iter().any(|(tag, _)| *tag == PosTag::Noun));
+        assert!(predictions.iter().any(|(tag_)| *tag == PosTag::Noun));
     }
 
     #[test]

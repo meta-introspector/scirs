@@ -158,7 +158,7 @@ pub fn matmul<F: Float + Debug + Send + Sync + 'static>(
     let b_cols = b.data.shape()[1];
 
     // Create result matrix
-    let mut result_data_2d = Array::<F, _>::zeros((a_rows, b_cols));
+    let mut result_data_2d = Array::<F>::zeros((a_rows, b_cols));
 
     // Manually compute matrix multiplication
     for i in 0..a_rows {

@@ -1,4 +1,4 @@
-use scirs2_special::{
+use scirs2__special::{
     obl_ang1, obl_cv, obl_rad1, obl_rad2, pro_ang1, pro_cv, pro_cv_seq, pro_rad1, pro_rad2,
 };
 use std::error::Error;

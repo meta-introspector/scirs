@@ -5,6 +5,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::Float;
 use std::collections::HashMap;
 use std::f64::consts::PI;
+use statrs::statistics::Statistics;
 
 /// Uncertainty quantification analyzer
 pub struct UncertaintyQuantifier<F: Float> {
@@ -66,8 +67,8 @@ pub struct LcgRng {
 }
 
 impl LcgRng {
-    pub fn new(seed: u64) -> Self {
-        Self { state: seed }
+    pub fn new(_seed: u64) -> Self {
+        Self { state: _seed }
     }
 }
 
@@ -96,8 +97,8 @@ pub struct XorshiftRng {
 }
 
 impl XorshiftRng {
-    pub fn new(seed: u64) -> Self {
-        Self { state: seed.max(1) } // Ensure non-zero state
+    pub fn new(_seed: u64) -> Self {
+        Self { state: _seed.max(1) } // Ensure non-zero state
     }
 }
 
@@ -128,9 +129,9 @@ pub struct PcgRng {
 }
 
 impl PcgRng {
-    pub fn new(seed: u64) -> Self {
+    pub fn new(_seed: u64) -> Self {
         Self {
-            state: seed,
+            state: _seed,
             inc: 721347520444481703u64,
         }
     }
@@ -167,10 +168,10 @@ pub struct ChaChaRng {
 }
 
 impl ChaChaRng {
-    pub fn new(seed: u64) -> Self {
+    pub fn new(_seed: u64) -> Self {
         let mut state = [0u32; 16];
-        state[0] = seed as u32;
-        state[1] = (seed >> 32) as u32;
+        state[0] = _seed as u32;
+        state[1] = (_seed >> 32) as u32;
         Self { state, counter: 0 }
     }
 }
@@ -295,7 +296,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
     {
-        // Compute nonconformity scores on calibration set
+        // Compute nonconformity scores on _calibration set
         let cal_predictions = model(&x_calibration.view());
         let nonconformity_scores =
             self.compute_nonconformity_scores(&cal_predictions, y_calibration)?;
@@ -304,7 +305,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let adaptive_quantile =
             self.compute_adaptive_quantile(&nonconformity_scores, alpha, x_calibration)?;
 
-        // Make predictions on test set
+        // Make predictions on _test set
         let test_predictions = model(&x_test.view());
 
         // Compute prediction sets with local adaptation
@@ -328,7 +329,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
                 lower,
                 upper,
                 size,
-                contains_truth: None, // Unknown for test set
+                contains_truth: None, // Unknown for _test set
                 local_difficulty: local_adjustment,
                 adaptive_quantile: adjusted_quantile,
             });
@@ -380,7 +381,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         for _ in 0..self.n_mcmc_samples {
             let var_params = variational_parameters();
 
-            // Forward pass with variational parameters
+            // Forward pass with variational _parameters
             let (mean_pred, var_pred) = model(&x_test.view(), &var_params);
 
             // Compute KL divergence between posterior and prior
@@ -408,7 +409,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
         // Compute ensemble statistics
         for i in 0..n_samples {
-            let sample_means: Vec<F> = posterior_samples.iter().map(|(mean, _)| mean[i]).collect();
+            let sample_means: Vec<F> = posterior_samples.iter().map(|(mean_)| mean[i]).collect();
             let sample_vars: Vec<F> = posterior_samples.iter().map(|(_, var)| var[i]).collect();
 
             // Ensemble mean
@@ -857,15 +858,15 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn compute_mc_mean(&self, mc_predictions: &[Array1<F>]) -> Result<Array1<F>> {
         if mc_predictions.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "No MC predictions provided".to_string(),
+                "No MC _predictions provided".to_string(),
             ));
         }
 
         let n_samples = mc_predictions[0].len();
         let mut mean_pred = Array1::zeros(n_samples);
 
-        for predictions in mc_predictions {
-            mean_pred = mean_pred + predictions;
+        for _predictions in mc_predictions {
+            mean_pred = mean_pred + _predictions;
         }
 
         mean_pred = mean_pred / F::from(mc_predictions.len()).unwrap();
@@ -880,8 +881,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let n_samples = mean_pred.len();
         let mut variance = Array1::zeros(n_samples);
 
-        for predictions in mc_predictions {
-            let diff = predictions - mean_pred;
+        for _predictions in mc_predictions {
+            let diff = _predictions - mean_pred;
             variance = variance + &(&diff * &diff);
         }
 
@@ -952,8 +953,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     ) -> Result<Array1<F>> {
         let mut sensitivity = Array1::zeros(baseline_pred.len());
 
-        for pred in perturbed_preds {
-            let diff = pred - baseline_pred;
+        for _pred in perturbed_preds {
+            let diff = _pred - baseline_pred;
             sensitivity = sensitivity + &diff.mapv(|x| x.abs());
         }
 
@@ -1076,7 +1077,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             let bin_lower = F::from(bin).unwrap() / F::from(n_bins).unwrap();
             let bin_upper = F::from(bin + 1).unwrap() / F::from(n_bins).unwrap();
 
-            let (bin_accuracy, bin_confidence, _) =
+            let (bin_accuracy, bin_confidence_) =
                 self.compute_bin_metrics(predictions, y_true, bin_lower, bin_upper)?;
 
             let bin_error = (bin_accuracy - bin_confidence).abs();
@@ -1412,7 +1413,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let mut sorted_scores = nonconformity_scores.to_vec();
         sorted_scores.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Adaptive quantile level based on calibration data complexity
+        // Adaptive quantile level based on _calibration data complexity
         let data_complexity = self.estimate_data_complexity(x_calibration)?;
         let adjusted_alpha = alpha * (F::one() + data_complexity * F::from(0.1).unwrap());
 
@@ -1431,7 +1432,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         x_calibration: &Array2<F>,
         nonconformity_scores: &Array1<F>,
     ) -> Result<F> {
-        // Find k nearest neighbors in calibration set
+        // Find k nearest neighbors in _calibration set
         let k = 5.min(x_calibration.nrows());
         let mut distances = Vec::new();
 
@@ -1551,8 +1552,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     /// Compute conditional coverage analysis
     fn compute_conditional_coverage_analysis(
         &self,
-        prediction_sets: &[PredictionSet<F>],
-        _x_test: &Array2<F>,
+        prediction_sets: &[PredictionSet<F>], _x_test: &Array2<F>,
         cal_predictions: &Array1<F>,
         y_calibration: &Array1<F>,
     ) -> Result<HashMap<String, F>> {
@@ -1576,8 +1576,8 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let mut hard_count = 0;
 
         for (i, ps) in prediction_sets.iter().enumerate() {
-            // Estimate coverage based on prediction set characteristics and calibration data
-            // Use heuristic: coverage is higher for larger sets and lower difficulty cases
+            // Estimate coverage based on prediction set characteristics and _calibration data
+            // Use heuristic: coverage is higher for larger _sets and lower difficulty cases
             let base_coverage_prob = F::from(0.85).unwrap(); // Base coverage probability
             let difficulty_factor = F::one()
                 - (ps.local_difficulty - median_difficulty).abs()
@@ -1590,7 +1590,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
 
             let coverage_prob = base_coverage_prob * difficulty_factor * size_factor.min(F::one());
 
-            // Use calibration data as a proxy for expected coverage
+            // Use _calibration data as a proxy for expected coverage
             let cal_coverage_estimate = if i < cal_predictions.len() && i < y_calibration.len() {
                 let prediction_error = (cal_predictions[i] - y_calibration[i]).abs();
                 let mean_error = cal_predictions
@@ -1712,8 +1712,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn compute_variational_log_likelihood(
         &self,
         mean_pred: &Array1<F>,
-        var_pred: &Array1<F>,
-        _x_data: &ArrayView2<F>,
+        var_pred: &Array1<F>, _x_data: &ArrayView2<F>,
         y_data: &Array1<F>,
     ) -> Result<F> {
         let mut log_lik = F::zero();
@@ -2189,11 +2188,11 @@ pub struct CoverageAnalysis<F: Float> {
 
 /// Compute entropy of probability distribution
 #[allow(dead_code)]
-pub fn compute_entropy<F: Float + num_traits::FromPrimitive>(probabilities: &Array1<F>) -> F {
+pub fn compute_entropy<F: Float + num_traits::FromPrimitive>(_probabilities: &Array1<F>) -> F {
     let mut entropy = F::zero();
     let eps = F::from(1e-15).unwrap();
 
-    for &p in probabilities.iter() {
+    for &p in _probabilities.iter() {
         if p > eps {
             entropy = entropy - p * p.ln();
         }

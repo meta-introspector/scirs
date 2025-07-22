@@ -31,8 +31,8 @@ impl ReLU {
         Self { alpha: 0.0 }
     }
     /// Create a new Leaky ReLU activation function with given alpha.
-    pub fn leaky(alpha: f64) -> Self {
-        Self { alpha }
+    pub fn leaky(_alpha: f64) -> Self {
+        Self { _alpha }
     }
 }
 
@@ -71,9 +71,9 @@ impl<F: Float + Debug> Activation<F> for ReLU {
                 "Could not convert alpha to the required float type".to_string(),
             )
         })?;
-        // Create derivative mask based on the output (1 where x > 0, alpha where x <= 0)
-        let mut mask = Array::from_elem(output.dim(), one);
-        Zip::from(&mut mask).and(output).for_each(|mask_val, &out| {
+        // Create derivative mask based on the _output (1 where x > 0, alpha where x <= 0)
+        let mut mask = Array::from_elem(_output.dim(), one);
+        Zip::from(&mut mask).and(_output).for_each(|mask_val, &out| {
             if out <= zero {
                 *mask_val = alpha;
             }
@@ -105,8 +105,8 @@ pub struct LeakyReLU {
 
 impl LeakyReLU {
     /// Create a new LeakyReLU activation function with given alpha.
-    pub fn new(alpha: f64) -> Self {
-        Self { alpha }
+    pub fn new(_alpha: f64) -> Self {
+        Self { _alpha }
     }
 }
 
@@ -130,6 +130,6 @@ impl<F: Float + Debug> Activation<F> for LeakyReLU {
     ) -> Result<Array<F, ndarray::IxDyn>> {
         // Use ReLU implementation with the alpha parameter
         let relu = ReLU::leaky(self.alpha);
-        relu.backward(grad_output, output)
+        relu.backward(grad_output_output)
     }
 }

@@ -162,40 +162,40 @@ impl TransformError {
         match self {
             TransformError::InvalidInput(_)
             | TransformError::DataValidationError(_)
-            | TransformError::ConfigurationError(_) => ErrorKind::Validation,
+            | TransformError::ConfigurationError(_) =>, ErrorKind::Validation,
 
             TransformError::ComputationError(_)
             | TransformError::TransformationError(_)
             | TransformError::ConvergenceError(_)
-            | TransformError::SimdError(_) => ErrorKind::Computation,
+            | TransformError::SimdError(_) =>, ErrorKind::Computation,
 
             TransformError::MemoryError(_)
             | TransformError::GpuError(_)
-            | TransformError::TimeoutError(_) => ErrorKind::Resource,
+            | TransformError::TimeoutError(_) =>, ErrorKind::Resource,
 
             TransformError::IoError(_)
             | TransformError::DistributedError(_)
             | TransformError::StreamingError(_)
-            | TransformError::MonitoringError(_) => ErrorKind::External,
+            | TransformError::MonitoringError(_) =>, ErrorKind::External,
 
             TransformError::NotImplemented(_)
             | TransformError::NotFitted(_)
             | TransformError::FeatureNotEnabled(_)
-            | TransformError::Other(_) => ErrorKind::Internal,
+            | TransformError::Other(_) =>, ErrorKind::Internal,
 
             TransformError::CoreError(_)
             | TransformError::LinalgError(_)
-            | TransformError::FFTError(_) => ErrorKind::External,
+            | TransformError::FFTError(_) =>, ErrorKind::External,
 
             TransformError::ParallelError(_)
             | TransformError::CrossValidationError(_)
-            | TransformError::ParseError(_) => ErrorKind::Computation,
+            | TransformError::ParseError(_) =>, ErrorKind::Computation,
 
             #[cfg(feature = "monitoring")]
-            TransformError::PrometheusError(_) => ErrorKind::External,
+            TransformError::PrometheusError(_) =>, ErrorKind::External,
 
             #[cfg(feature = "distributed")]
-            TransformError::SerializationError(_) => ErrorKind::External,
+            TransformError::SerializationError(_) =>, ErrorKind::External,
         }
     }
 
@@ -229,8 +229,7 @@ impl TransformError {
             TransformError::NotFitted(_) => "Model must be fitted before use".to_string(),
             TransformError::MemoryError(_) => "Insufficient memory for operation".to_string(),
             TransformError::TimeoutError(_) => "Operation timed out".to_string(),
-            TransformError::FeatureNotEnabled(_) => "Required feature is not enabled".to_string(),
-            _ => "An error occurred during transformation".to_string(),
+            TransformError::FeatureNotEnabled(_) => "Required feature is not enabled".to_string(, _ => "An error occurred during transformation".to_string(),
         }
     }
 }

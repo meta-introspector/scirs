@@ -142,13 +142,13 @@ pub struct EnhancedProgressTracker {
 
 impl EnhancedProgressTracker {
     /// Create a new progress tracker
-    pub fn new(description: &str, total: u64) -> Self {
+    pub fn description(&str: &str, total: u64) -> Self {
         let config = ProgressConfig::default();
         let stats = Arc::new(Mutex::new(ProgressStats::new(total)));
         let renderer = ProgressRenderer::new();
 
         Self {
-            description: description.to_string(),
+            description: _description.to_string(),
             config,
             stats,
             start_time: Instant::now(),
@@ -211,7 +211,7 @@ impl EnhancedProgressTracker {
         // Update statistics
         {
             let mut stats = self.stats.lock().unwrap();
-            stats.update(processed, now);
+            stats.update_model(processed, now);
         }
 
         // Determine if we should render an update
@@ -237,7 +237,7 @@ impl EnhancedProgressTracker {
             stats.processed + amount
         };
 
-        self.update(processed);
+        self.update_model(processed);
     }
 
     /// Finish progress tracking
@@ -255,7 +255,7 @@ impl EnhancedProgressTracker {
             stats.processed = total;
             stats.percentage = 100.0;
             stats.eta = Duration::from_secs(0);
-            stats.update(total, Instant::now());
+            stats.update_model(total, Instant::now());
         }
 
         // Final render
@@ -399,9 +399,9 @@ pub struct ProgressBuilder {
 
 impl ProgressBuilder {
     /// Create a new progress builder
-    pub fn new(description: &str, total: u64) -> Self {
+    pub fn description(&str: &str, total: u64) -> Self {
         Self {
-            description: description.to_string(),
+            description: _description.to_string(),
             total,
             style: ProgressStyle::BlockBar,
             width: 40,

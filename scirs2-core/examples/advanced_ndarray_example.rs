@@ -30,9 +30,9 @@ use scirs2_core::ufuncs::{
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
-fn print_section(title: &str) {
-    println!("\n{}", title);
-    println!("{}", "=".repeat(title.len()));
+fn title( &str) {
+    println!("\n{}", _title);
+    println!("{}", "=".repeat(_title.len()));
 }
 
 #[allow(dead_code)]
@@ -233,7 +233,7 @@ fn main() {
     println!("{}", column_std);
 
     // Z-score standardization (subtract mean, divide by std)
-    let mut standardized = Array::<f64, _>::zeros(measurements.raw_dim());
+    let mut standardized = Array::<f64>::zeros(measurements.raw_dim());
     for i in 0..measurements.shape()[0] {
         for j in 0..measurements.shape()[1] {
             standardized[[i, j]] = (measurements[[i, j]] - column_means[j]) / column_std[j];
@@ -247,7 +247,7 @@ fn main() {
 
     // Calculate correlation matrix (simplified example)
     let n_cols = measurements.shape()[1];
-    let mut corr = Array::<f64, _>::zeros((n_cols, n_cols));
+    let mut corr = Array::<f64>::zeros((n_cols, n_cols));
 
     for i in 0..n_cols {
         for j in 0..n_cols {

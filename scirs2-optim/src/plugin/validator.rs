@@ -5,7 +5,7 @@
 //! compatibility checking across different platforms and configurations.
 
 use super::core::*;
-use super::template_generator::*;
+use super::template__generator::*;
 use crate::error::Result;
 use ndarray::{Array1, Array2, Axis};
 use num_traits::Float;
@@ -511,7 +511,7 @@ pub struct RecommendedLimits {
 
 impl EnhancedPluginValidator {
     /// Create a new enhanced plugin validator
-    pub fn new(config: ValidationConfig) -> Self {
+    pub fn new(_config: ValidationConfig) -> Self {
         let static_analyzer = StaticAnalyzer::new();
         let runtime_validator = RuntimeValidator::new();
         let performance_tester = PerformanceTester::new();
@@ -524,7 +524,7 @@ impl EnhancedPluginValidator {
             performance_tester,
             compatibility_checker,
             security_validator,
-            config}
+            _config}
     }
     
     /// Perform comprehensive validation
@@ -1066,7 +1066,7 @@ impl SecurityValidator {
 #[derive(Debug)]
 struct CyclomaticComplexityChecker;
 impl QualityChecker for CyclomaticComplexityChecker {
-    fn check_quality(&self, _plugin: &dyn OptimizerPlugin<f64>) -> QualityCheckResult {
+    fn check_quality(&self_plugin: &dyn OptimizerPlugin<f64>) -> QualityCheckResult {
         QualityCheckResult { score: 0.8, issues: vec![] }
     }
     fn name(&self) -> &str { "CyclomaticComplexity" }
@@ -1076,7 +1076,7 @@ impl QualityChecker for CyclomaticComplexityChecker {
 #[derive(Debug)]
 struct CodeDuplicationChecker;
 impl QualityChecker for CodeDuplicationChecker {
-    fn check_quality(&self, _plugin: &dyn OptimizerPlugin<f64>) -> QualityCheckResult {
+    fn check_quality(&self_plugin: &dyn OptimizerPlugin<f64>) -> QualityCheckResult {
         QualityCheckResult { score: 0.9, issues: vec![] }
     }
     fn name(&self) -> &str { "CodeDuplication" }
@@ -1086,7 +1086,7 @@ impl QualityChecker for CodeDuplicationChecker {
 #[derive(Debug)]
 struct TraitImplementationChecker;
 impl APIChecker for TraitImplementationChecker {
-    fn check_api(&self, _plugin: &dyn OptimizerPlugin<f64>) -> APICheckResult {
+    fn check_api(&self_plugin: &dyn OptimizerPlugin<f64>) -> APICheckResult {
         APICheckResult { compliant: true, issues: vec![] }
     }
     fn name(&self) -> &str { "TraitImplementation" }
@@ -1096,7 +1096,7 @@ impl APIChecker for TraitImplementationChecker {
 #[derive(Debug)]
 struct MethodSignatureChecker;
 impl APIChecker for MethodSignatureChecker {
-    fn check_api(&self, _plugin: &dyn OptimizerPlugin<f64>) -> APICheckResult {
+    fn check_api(&self_plugin: &dyn OptimizerPlugin<f64>) -> APICheckResult {
         APICheckResult { compliant: true, issues: vec![] }
     }
     fn name(&self) -> &str { "MethodSignature" }
@@ -1106,7 +1106,7 @@ impl APIChecker for MethodSignatureChecker {
 #[derive(Debug)]
 struct DocCoverageValidator;
 impl DocumentationValidator for DocCoverageValidator {
-    fn validate_docs(&self, _plugin: &dyn OptimizerPlugin<f64>) -> DocumentationValidationResult {
+    fn validate_docs(&self_plugin: &dyn OptimizerPlugin<f64>) -> DocumentationValidationResult {
         DocumentationValidationResult { coverage: 0.85, missing_docs: vec![] }
     }
     fn name(&self) -> &str { "DocCoverage" }
@@ -1231,7 +1231,7 @@ impl EdgeCaseGenerator for SizeEdgeCaseGenerator {
 #[derive(Debug)]
 struct ParameterBoundsChecker;
 impl InvariantChecker for ParameterBoundsChecker {
-    fn check_invariants(&self, _plugin: &dyn OptimizerPlugin<f64>, _context: &InvariantContext) -> InvariantCheckResult {
+    fn check_invariants(&self_plugin: &dyn OptimizerPlugin<f64>, _context: &InvariantContext) -> InvariantCheckResult {
         InvariantCheckResult { passed: true, violations: vec![] }
     }
     fn name(&self) -> &str { "ParameterBounds" }
@@ -1241,7 +1241,7 @@ impl InvariantChecker for ParameterBoundsChecker {
 #[derive(Debug)]
 struct MonotonicityChecker;
 impl InvariantChecker for MonotonicityChecker {
-    fn check_invariants(&self, _plugin: &dyn OptimizerPlugin<f64>, _context: &InvariantContext) -> InvariantCheckResult {
+    fn check_invariants(&self_plugin: &dyn OptimizerPlugin<f64>, _context: &InvariantContext) -> InvariantCheckResult {
         InvariantCheckResult { passed: true, violations: vec![] }
     }
     fn name(&self) -> &str { "Monotonicity" }
@@ -1428,9 +1428,9 @@ mod tests {
         fn initialize(&mut self, _param_shape: &[usize]) -> Result<()> { Ok(()) }
         fn reset(&mut self) -> Result<()> { Ok(()) }
         fn get_config(&self) -> OptimizerConfig { OptimizerConfig::default() }
-        fn set_config(&mut self, _config: OptimizerConfig) -> Result<()> { Ok(()) }
+        fn set_config(&mut self_config: OptimizerConfig) -> Result<()> { Ok(()) }
         fn get_state(&self) -> Result<OptimizerState> { Ok(OptimizerState::default()) }
-        fn set_state(&mut self, _state: OptimizerState) -> Result<()> { Ok(()) }
+        fn set_state(&mut self_state: OptimizerState) -> Result<()> { Ok(()) }
         fn clone_plugin(&self) -> Box<dyn OptimizerPlugin<f64>> { Box::new(MockValidationPlugin) }
     }
 

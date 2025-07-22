@@ -1,5 +1,5 @@
-use scirs2_graph::algorithms::decomposition::k_core_decomposition;
-use scirs2_graph::generators::create_graph;
+use scirs2__graph::algorithms::decomposition::k_core_decomposition;
+use scirs2__graph::generators::create_graph;
 
 #[allow(dead_code)]
 fn main() {

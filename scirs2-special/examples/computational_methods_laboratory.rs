@@ -14,7 +14,7 @@
 //! Run with: cargo run --example computational_methods_laboratory
 
 use ndarray::Array1;
-use scirs2_special::*;
+use scirs2__special::*;
 use std::f64::consts::PI;
 use std::io::{self, Write};
 use std::time::Instant;
@@ -42,8 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(5) => continued_fractions_workshop()?,
             Ok(6) => simd_and_parallel_optimization()?,
             Ok(7) => arbitrary_precision_computing()?,
-            Ok(8) => validation_and_testing_methods()?,
-            _ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(8) => validation_and_testing_methods()?_ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 
@@ -66,8 +65,8 @@ fn display_main_menu() {
 }
 
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> io::Result<String> {
-    print!("{prompt}");
+fn get_user_input(_prompt: &str) -> io::Result<String> {
+    print!("{_prompt}");
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
@@ -1021,8 +1020,7 @@ fn arbitrary_precision_computing() -> Result<(), Box<dyn std::error::Error>> {
             128 => "Extended precision",
             256 => "Mathematical research",
             512 => "Number theory",
-            1024 => "Advanced-high precision",
-            _ => "Specialized applications",
+            1024 => "Advanced-high precision"_ => "Specialized applications",
         };
 
         println!("{prec:<9}   {relative_speed:<14.2}x   {memory_usage:<12}x   {typical_use}");
@@ -1409,27 +1407,27 @@ fn demonstrate_high_precision_gamma() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 #[allow(dead_code)]
-fn measure_gamma_performance(data: &[f64]) -> u128 {
+fn measure_gamma_performance(_data: &[f64]) -> u128 {
     let start = Instant::now();
-    for &x in data {
+    for &x in _data {
         let _ = gamma(x);
     }
     start.elapsed().as_micros()
 }
 
 #[allow(dead_code)]
-fn measure_erf_performance(data: &[f64]) -> u128 {
+fn measure_erf_performance(_data: &[f64]) -> u128 {
     let start = Instant::now();
-    for &x in data {
+    for &x in _data {
         let _ = erf(x);
     }
     start.elapsed().as_micros()
 }
 
 #[allow(dead_code)]
-fn measure_j0_performance(data: &[f64]) -> u128 {
+fn measure_j0_performance(_data: &[f64]) -> u128 {
     let start = Instant::now();
-    for &x in data {
+    for &x in _data {
         let _ = bessel::j0(x);
     }
     start.elapsed().as_micros()
@@ -1439,7 +1437,7 @@ fn measure_j0_performance(data: &[f64]) -> u128 {
 fn stirling_approximation(x: f64, n_terms: usize) -> f64 {
     let mut result = (x - 0.5) * x.ln() - x + 0.5 * (2.0 * PI).ln();
 
-    // Add Stirling series terms
+    // Add Stirling series _terms
     let mut term = 1.0 / (12.0 * x);
     result += term;
 
@@ -1448,7 +1446,7 @@ fn stirling_approximation(x: f64, n_terms: usize) -> f64 {
         result += term;
     }
 
-    // Add more terms as needed...
+    // Add more _terms as needed...
 
     result
 }

@@ -19,6 +19,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::{Command as ProcessCommand, Stdio};
 use std::time::{Duration, Instant};
+use std::path::PathBuf;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ComprehensiveValidationResult {
@@ -129,9 +130,9 @@ impl Default for ValidationConfig {
 }
 
 impl ComprehensiveValidator {
-    fn new(project_path: PathBuf, config: ValidationConfig) -> Self {
+    fn new(_project_path: PathBuf, config: ValidationConfig) -> Self {
         Self {
-            project_path,
+            _project_path,
             config,
             start_time: Instant::now(),
         }
@@ -730,7 +731,7 @@ impl ComprehensiveValidator {
         }
 
         if has_critical_issues {
-            blocker_issues.push("Critical security or functionality issues must be resolved".to_string());
+            blocker_issues.push("Critical security or functionality _issues must be resolved".to_string());
         }
 
         if overall_score < 0.7 {

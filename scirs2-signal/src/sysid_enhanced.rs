@@ -9,15 +9,19 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::{StateSpace, TransferFunction};
-use crate::sysid_advanced::{
+use ndarray::{Array1, Array2, Axis, s};
+use num__complex::Complex64;
+use rand::Rng;
+use rand::prelude::*;
+use scirs2_core::validation::check_shape;
+use statrs::statistics::Statistics;
+
+#[allow(unused_imports)]
+use crate::sysid__advanced::{
+use crate::lti::design::tf;
     identify_armax_complete, identify_bj_complete, identify_narx_complete, identify_oe_complete,
     identify_state_space_complete,
 };
-use ndarray::{s, Array1, Array2, Axis};
-use num_complex::Complex64;
-use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::check_shape;
-
 /// Enhanced system identification result
 #[derive(Debug, Clone)]
 pub struct EnhancedSysIdResult {
@@ -276,12 +280,12 @@ pub fn enhanced_system_identification(
     check_shape(input, &[output.len()], "input and output")?;
 
     // Check if all values are finite
-    if !input.iter().all(|&x| x.is_finite()) {
+    if !input.iter().all(|&x: &f64| x.is_finite()) {
         return Err(SignalError::ValueError(
             "Input contains non-finite values".to_string(),
         ));
     }
-    if !output.iter().all(|&x| x.is_finite()) {
+    if !output.iter().all(|&x: &f64| x.is_finite()) {
         return Err(SignalError::ValueError(
             "Output contains non-finite values".to_string(),
         ));
@@ -444,11 +448,11 @@ pub struct RecursiveSysId {
 
 impl RecursiveSysId {
     /// Create new recursive identifier
-    pub fn new(initial_params: Array1<f64>, config: &EnhancedSysIdConfig) -> Self {
-        let n_params = initial_params.len();
+    pub fn new(_initial_params: Array1<f64>, config: &EnhancedSysIdConfig) -> Self {
+        let n_params = _initial_params.len();
 
         Self {
-            parameters: initial_params,
+            parameters: _initial_params,
             covariance: Array2::eye(n_params) * 1000.0, // Large initial covariance
             lambda: config.forgetting_factor,
             phi_buffer: vec![0.0; n_params],
@@ -581,16 +585,16 @@ fn remove_outliers(
 
 /// Compute median
 #[allow(dead_code)]
-fn median(data: &[f64]) -> f64 {
-    let mut sorted = data.to_vec();
+fn median(_data: &[f64]) -> f64 {
+    let mut sorted = _data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
     sorted[sorted.len() / 2]
 }
 
 /// Compute median absolute deviation
 #[allow(dead_code)]
-fn median_absolute_deviation(data: &[f64], median_val: f64) -> f64 {
-    let deviations: Vec<f64> = data.iter().map(|&x| (x - median_val).abs()).collect();
+fn median_absolute_deviation(_data: &[f64], median_val: f64) -> f64 {
+    let deviations: Vec<f64> = _data.iter().map(|&x| (x - median_val).abs()).collect();
     median(&deviations) / 0.6745 // Scale for normal distribution
 }
 
@@ -627,7 +631,7 @@ fn identify_arx(
 
     // Compute parameter statistics
     let residuals = &y - &phi.dot(&params);
-    let sigma2 = residuals.dot(&residuals) / (n - na - nb) as f64;
+    let sigma2 = residuals.dot(&residuals) / (n - na - nb)  as f64;
     let covariance = phi_t_phi.inv().unwrap() * sigma2;
     let std_errors = covariance.diag().map(|x| x.sqrt());
 
@@ -645,7 +649,7 @@ fn identify_arx(
     };
 
     let model = SystemModel::ARX { a, b, delay };
-    let cost = residuals.dot(&residuals) / n as f64;
+    let cost = residuals.dot(&residuals) / n  as f64;
 
     Ok((model, parameter_estimate, 1, true, cost))
 }
@@ -715,10 +719,10 @@ fn select_arx_orders(
                         &phi.t().dot(&y),
                     ) {
                         let residuals = &y - &phi.dot(&params);
-                        let sigma2 = residuals.dot(&residuals) / n as f64;
+                        let sigma2 = residuals.dot(&residuals) / n  as f64;
 
                         // AIC = n * ln(sigma2) + 2 * k
-                        let aic = n as f64 * sigma2.ln() + 2.0 * k as f64;
+                        let aic = n as f64 * sigma2.ln() + 2.0 * k  as f64;
 
                         if aic < best_aic {
                             best_aic = aic;
@@ -736,7 +740,7 @@ fn select_arx_orders(
 /// Solve regularized least squares with enhanced numerical stability
 #[allow(dead_code)]
 fn solve_regularized_ls(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
-    // use ndarray_linalg::{Norm, Solve, SVD}; // TODO: Add ndarray-linalg dependency
+    // use ndarray__linalg::{Norm, Solve, SVD}; // TODO: Add ndarray-linalg dependency
 
     // Check condition number
     let cond = compute_matrix_condition_number(a)?;
@@ -759,7 +763,7 @@ fn solve_regularized_ls(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1
 /// Solve using SVD decomposition for numerical stability
 #[allow(dead_code)]
 fn solve_using_svd(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
-    // use ndarray_linalg::SVD; // TODO: Add ndarray-linalg dependency
+    // use ndarray__linalg::SVD; // TODO: Add ndarray-linalg dependency
 
     let (u, s, vt) = a
         .svd(true, true)
@@ -788,10 +792,10 @@ fn solve_using_svd(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>
 
 /// Compute matrix condition number
 #[allow(dead_code)]
-fn compute_matrix_condition_number(matrix: &Array2<f64>) -> SignalResult<f64> {
-    // use ndarray_linalg::{Norm, SVD}; // TODO: Add ndarray-linalg dependency
+fn compute_matrix_condition_number(_matrix: &Array2<f64>) -> SignalResult<f64> {
+    // use ndarray__linalg::{Norm, SVD}; // TODO: Add ndarray-linalg dependency
 
-    let (_, s, _) = matrix.svd(false, false).map_err(|e| {
+    let (_, s_) = _matrix.svd(false, false).map_err(|e| {
         SignalError::ComputationError(format!("SVD for condition number failed: {}", e))
     })?;
 
@@ -914,8 +918,8 @@ fn validate_model(
     };
 
     // Compute information criteria
-    let n = output.len() as f64;
-    let k = get_model_parameters(model) as f64;
+    let n = output.len()  as f64;
+    let k = get_model_parameters(model)  as f64;
     let sigma2 = (ss_res / n).max(1e-15); // Prevent log(0)
 
     let aic = n * sigma2.ln() + 2.0 * k;
@@ -975,8 +979,8 @@ fn cross_validate_model(
         let train_input_arr = Array1::from_vec(train_input);
         let train_output_arr = Array1::from_vec(train_output);
 
-        // Re-estimate model on training data
-        let (cv_model, _, _, _, _) = match config.model_structure {
+        // Re-estimate _model on training data
+        let (cv_model____) = match config.model_structure {
             ModelStructure::ARX => identify_arx(&train_input_arr, &train_output_arr, config)?,
             ModelStructure::ARMAX => identify_armax(&train_input_arr, &train_output_arr, config)?,
             ModelStructure::OE => identify_oe(&train_input_arr, &train_output_arr, config)?,
@@ -1025,7 +1029,7 @@ fn enhanced_residual_analysis(
 
     let r_mean = residuals.mean().unwrap();
     let r_var =
-        residuals.iter().map(|&r| (r - r_mean).powi(2)).sum::<f64>() / residuals.len() as f64;
+        residuals.iter().map(|&r| (r - r_mean).powi(2)).sum::<f64>() / residuals.len()  as f64;
 
     for lag in 0..max_lag {
         let mut sum = 0.0;
@@ -1046,7 +1050,7 @@ fn enhanced_residual_analysis(
     // Compute cross-correlation with input
     let mut cross_correlation = Array1::zeros(max_lag);
     let i_mean = input.mean().unwrap();
-    let i_var = input.iter().map(|&i| (i - i_mean).powi(2)).sum::<f64>() / input.len() as f64;
+    let i_var = input.iter().map(|&i| (i - i_mean).powi(2)).sum::<f64>() / input.len()  as f64;
 
     for lag in 0..max_lag {
         let mut sum = 0.0;
@@ -1080,14 +1084,14 @@ fn enhanced_residual_analysis(
 
 /// Ljung-Box test for whiteness
 #[allow(dead_code)]
-fn ljung_box_test(autocorr: &Array1<f64>) -> f64 {
-    let n = autocorr.len() as f64;
-    let h = autocorr.len().min(10); // Use up to 10 lags
+fn ljung_box_test(_autocorr: &Array1<f64>) -> f64 {
+    let n = _autocorr.len()  as f64;
+    let h = _autocorr.len().min(10); // Use up to 10 lags
 
     let mut lb_stat = 0.0;
 
     for k in 1..h {
-        let rho_k = autocorr[k];
+        let rho_k = _autocorr[k];
         lb_stat += rho_k * rho_k / (n - k as f64);
     }
 
@@ -1099,9 +1103,9 @@ fn ljung_box_test(autocorr: &Array1<f64>) -> f64 {
 
 /// Cross-correlation independence test
 #[allow(dead_code)]
-fn cross_correlation_test(cross_corr: &Array1<f64>) -> f64 {
-    let max_corr = cross_corr.iter().map(|&x| x.abs()).fold(0.0, f64::max);
-    let n = cross_corr.len() as f64;
+fn cross_correlation_test(_cross_corr: &Array1<f64>) -> f64 {
+    let max_corr = _cross_corr.iter().map(|&x: &f64| x.abs()).fold(0.0, f64::max);
+    let n = _cross_corr.len()  as f64;
 
     // Approximate test statistic
     let test_stat = max_corr * n.sqrt();
@@ -1112,16 +1116,16 @@ fn cross_correlation_test(cross_corr: &Array1<f64>) -> f64 {
 
 /// Jarque-Bera test for normality
 #[allow(dead_code)]
-fn jarque_bera_test(data: &Array1<f64>) -> f64 {
-    let n = data.len() as f64;
-    let mean = data.mean().unwrap();
+fn jarque_bera_test(_data: &Array1<f64>) -> f64 {
+    let n = _data.len()  as f64;
+    let mean = _data.mean().unwrap();
 
     // Compute moments
     let mut m2 = 0.0;
     let mut m3 = 0.0;
     let mut m4 = 0.0;
 
-    for &x in data.iter() {
+    for &x in _data.iter() {
         let diff = x - mean;
         let diff2 = diff * diff;
         m2 += diff2;
@@ -1154,8 +1158,8 @@ fn chi_square_pvalue(x: f64, df: usize) -> f64 {
         (-x / 2.0).exp()
     } else {
         // Rough approximation using normal approximation
-        let mean = df as f64;
-        let variance = 2.0 * df as f64;
+        let mean = df  as f64;
+        let variance = 2.0 * df  as f64;
         let z = (x - mean) / variance.sqrt();
         1.0 - standard_normal_cdf(z)
     }
@@ -1188,8 +1192,8 @@ fn erf(x: f64) -> f64 {
 
 /// Compute stability margin for different model types
 #[allow(dead_code)]
-fn compute_stability_margin(model: &SystemModel) -> SignalResult<f64> {
-    match model {
+fn compute_stability_margin(_model: &SystemModel) -> SignalResult<f64> {
+    match _model {
         SystemModel::ARX { a, .. } => {
             // Check if AR polynomial roots are inside unit circle
             let roots = compute_polynomial_roots(a)?;
@@ -1201,7 +1205,7 @@ fn compute_stability_margin(model: &SystemModel) -> SignalResult<f64> {
         }
         SystemModel::StateSpace(ss) => {
             // Check eigenvalues of A matrix
-            // use ndarray_linalg::Eig; // TODO: Add ndarray-linalg dependency
+            // use ndarray__linalg::Eig; // TODO: Add ndarray-linalg dependency
             let eigenvalues = ss.a.eig().map_err(|e| {
                 SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
             })?;
@@ -1219,10 +1223,10 @@ fn compute_stability_margin(model: &SystemModel) -> SignalResult<f64> {
 
 /// Compute polynomial roots (simplified for stability analysis)
 #[allow(dead_code)]
-fn compute_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
+fn compute_polynomial_roots(_coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
     // For stability, we only need to check if roots are inside unit circle
     // Use companion matrix approach for general polynomial root finding
-    let n = coeffs.len() - 1;
+    let n = _coeffs.len() - 1;
 
     if n == 0 {
         return Ok(vec![]);
@@ -1232,9 +1236,9 @@ fn compute_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>
     let mut companion = Array2::zeros((n, n));
 
     // First row: normalized negative coefficients
-    let leading_coeff = coeffs[0];
+    let leading_coeff = _coeffs[0];
     for i in 0..n {
-        companion[[0, i]] = -coeffs[i + 1] / leading_coeff;
+        companion[[0, i]] = -_coeffs[i + 1] / leading_coeff;
     }
 
     // Sub-diagonal ones
@@ -1243,13 +1247,13 @@ fn compute_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>
     }
 
     // Compute eigenvalues (roots)
-    // use ndarray_linalg::Eig; // TODO: Add ndarray-linalg dependency
+    // use ndarray__linalg::Eig; // TODO: Add ndarray-linalg dependency
     match companion.eig() {
-        Ok((eigenvals, _)) => Ok(eigenvals.to_vec()),
+        Ok((eigenvals_)) => Ok(eigenvals.to_vec()),
         Err(_) => {
             // Fallback: approximate stability check
-            let sum_abs_coeffs: f64 = coeffs.iter().skip(1).map(|&c| c.abs()).sum();
-            let leading_abs = coeffs[0].abs();
+            let sum_abs_coeffs: f64 = _coeffs.iter().skip(1).map(|&c: &f64| c.abs()).sum();
+            let leading_abs = _coeffs[0].abs();
 
             if sum_abs_coeffs < leading_abs {
                 Ok(vec![Complex64::new(0.5, 0.0)]) // Stable approximation
@@ -1262,8 +1266,8 @@ fn compute_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>
 
 /// Simulate model response
 #[allow(dead_code)]
-fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Array1<f64>> {
-    match model {
+fn simulate_model(_model: &SystemModel, input: &Array1<f64>) -> SignalResult<Array1<f64>> {
+    match _model {
         SystemModel::ARX { a, b, delay } => {
             let n = input.len();
             let mut output = Array1::zeros(n);
@@ -1290,8 +1294,6 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
             let mut noise = Array1::zeros(n);
 
             // Generate white noise for simulation (in practice, this would be estimated)
-            use rand::prelude::*;
-            use rand::Rng;
             let mut rng = rand::rng();
             for i in 0..n {
                 noise[i] = rng.random_range(-1.0..1.0) * 0.1; // Small noise
@@ -1354,8 +1356,6 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
             let mut filtered_noise = Array1::zeros(n);
 
             // Generate white noise for simulation
-            use rand::prelude::*;
-            use rand::Rng;
             let mut rng = rand::rng();
             for i in 0..n {
                 noise[i] = rng.random_range(-1.0..1.0) * 0.1;
@@ -1426,12 +1426,12 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
 
 /// Apply nonlinear function
 #[allow(dead_code)]
-fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResult<f64> {
+fn apply_nonlinear_function(_input: f64, func: &NonlinearFunction) -> SignalResult<f64> {
     match func {
         NonlinearFunction::Polynomial(coeffs) => {
             let mut result = 0.0;
             for (i, &coeff) in coeffs.iter().enumerate() {
-                result += coeff * input.powi(i as i32);
+                result += coeff * _input.powi(i as i32);
             }
             Ok(result)
         }
@@ -1447,7 +1447,7 @@ fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResul
 
             // Find the appropriate segment
             for i in 0..breakpoints.len() - 1 {
-                if input >= breakpoints[i] && input < breakpoints[i + 1] {
+                if _input >= breakpoints[i] && _input < breakpoints[i + 1] {
                     let x0 = breakpoints[i];
                     let y0 = if i == 0 {
                         0.0
@@ -1459,40 +1459,39 @@ fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResul
                         }
                         y
                     };
-                    return Ok(y0 + slopes[i] * (input - x0));
+                    return Ok(y0 + slopes[i] * (_input - x0));
                 }
             }
 
             // Handle boundary cases
-            if input < breakpoints[0] {
-                Ok(slopes[0] * (input - breakpoints[0]))
+            if _input < breakpoints[0] {
+                Ok(slopes[0] * (_input - breakpoints[0]))
             } else {
                 let last_idx = slopes.len() - 1;
                 let last_break = breakpoints[last_idx];
-                Ok(slopes[last_idx] * (input - last_break))
+                Ok(slopes[last_idx] * (_input - last_break))
             }
         }
         NonlinearFunction::Sigmoid { scale, offset } => {
-            Ok(1.0 / (1.0 + (-scale * (input - offset)).exp()))
+            Ok(1.0 / (1.0 + (-scale * (_input - offset)).exp()))
         }
         NonlinearFunction::DeadZone { threshold } => {
-            if input.abs() <= *threshold {
+            if _input.abs() <= *threshold {
                 Ok(0.0)
-            } else if input > *threshold {
-                Ok(input - threshold)
+            } else if _input > *threshold {
+                Ok(_input - threshold)
             } else {
-                Ok(input + threshold)
+                Ok(_input + threshold)
             }
         }
-        NonlinearFunction::Saturation { lower, upper } => Ok(input.max(*lower).min(*upper)),
+        NonlinearFunction::Saturation { lower, upper } => Ok(_input.max(*lower).min(*upper)),
         NonlinearFunction::Custom(name) => {
             // For now, implement some common custom functions
             match name.as_str() {
-                "tanh" => Ok(input.tanh()),
-                "relu" => Ok(input.max(0.0)),
-                "leaky_relu" => Ok(if input > 0.0 { input } else { 0.01 * input }),
-                "identity" => Ok(input),
-                _ => Err(SignalError::NotImplemented(format!(
+                "tanh" => Ok(_input.tanh()),
+                "relu" => Ok(_input.max(0.0)),
+                "leaky_relu" => Ok(if _input > 0.0 { _input } else { 0.01 * _input }),
+                "identity" => Ok(_input, _ => Err(SignalError::NotImplemented(format!(
                     "Custom function '{}' not implemented",
                     name
                 ))),
@@ -1503,9 +1502,9 @@ fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResul
 
 /// Convert transfer function to state space representation
 #[allow(dead_code)]
-fn transfer_function_to_state_space(tf: &TransferFunction) -> SignalResult<StateSpace> {
-    let num = &tf.num;
-    let den = &tf.den;
+fn transfer_function_to_state_space(_tf: &TransferFunction) -> SignalResult<StateSpace> {
+    let num = &_tf.num;
+    let den = &_tf.den;
 
     if den.is_empty() || den[0] == 0.0 {
         return Err(SignalError::ValueError(
@@ -1525,7 +1524,7 @@ fn transfer_function_to_state_space(tf: &TransferFunction) -> SignalResult<State
             n_states: 0,
             n_inputs: 1,
             n_outputs: 1,
-            dt: tf.dt,
+            dt: _tf.dt,
         });
     }
 
@@ -1578,16 +1577,16 @@ fn transfer_function_to_state_space(tf: &TransferFunction) -> SignalResult<State
         n_states: n,
         n_inputs: 1,
         n_outputs: 1,
-        dt: tf.dt,
+        dt: _tf.dt,
     })
 }
 
 /// Simulate state space system
 #[allow(dead_code)]
-fn simulate_state_space(ss: &StateSpace, input: &Array1<f64>) -> SignalResult<Array1<f64>> {
-    let n_states = ss.a.nrows();
-    let n_inputs = ss.b.ncols();
-    let n_outputs = ss.c.nrows();
+fn simulate_state_space(_ss: &StateSpace, input: &Array1<f64>) -> SignalResult<Array1<f64>> {
+    let n_states = _ss.a.nrows();
+    let n_inputs = _ss.b.ncols();
+    let n_outputs = _ss.c.nrows();
     let n_samples = input.len();
 
     if n_inputs != 1 {
@@ -1607,18 +1606,18 @@ fn simulate_state_space(ss: &StateSpace, input: &Array1<f64>) -> SignalResult<Ar
 
     for k in 0..n_samples {
         // Output equation: y = C*x + D*u
-        let mut y = ss.d[[0, 0]] * input[k];
+        let mut y = _ss.d[[0, 0]] * input[k];
         for i in 0..n_states {
-            y += ss.c[[0, i]] * x[i];
+            y += _ss.c[[0, i]] * x[i];
         }
         output[k] = y;
 
         // State equation: x_next = A*x + B*u
         let mut x_next = Array1::zeros(n_states);
         for i in 0..n_states {
-            x_next[i] = ss.b[[i, 0]] * input[k];
+            x_next[i] = _ss.b[[i, 0]] * input[k];
             for j in 0..n_states {
-                x_next[i] += ss.a[[i, j]] * x[j];
+                x_next[i] += _ss.a[[i, j]] * x[j];
             }
         }
         x = x_next;
@@ -1629,8 +1628,8 @@ fn simulate_state_space(ss: &StateSpace, input: &Array1<f64>) -> SignalResult<Ar
 
 /// Get number of model parameters
 #[allow(dead_code)]
-fn get_model_parameters(model: &SystemModel) -> usize {
-    match model {
+fn get_model_parameters(_model: &SystemModel) -> usize {
+    match _model {
         SystemModel::ARX { a, b, .. } => a.len() + b.len(),
         SystemModel::ARMAX { a, b, c, .. } => a.len() + b.len() + c.len(),
         SystemModel::OE { b, f, .. } => b.len() + f.len(),
@@ -1684,7 +1683,7 @@ fn parallel_block_identification(
 
             enhanced_system_identification(&block_input, &block_output, config)
         })
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>_>>()?;
 
     // Aggregate results using weighted averaging
     aggregate_block_results(&block_results)
@@ -1692,19 +1691,19 @@ fn parallel_block_identification(
 
 /// Aggregate results from parallel blocks
 #[allow(dead_code)]
-fn aggregate_block_results(results: &[EnhancedSysIdResult]) -> SignalResult<EnhancedSysIdResult> {
-    if results.is_empty() {
+fn aggregate_block_results(_results: &[EnhancedSysIdResult]) -> SignalResult<EnhancedSysIdResult> {
+    if _results.is_empty() {
         return Err(SignalError::ValueError(
-            "No results to aggregate".to_string(),
+            "No _results to aggregate".to_string(),
         ));
     }
 
     // Use the first result as template
-    let first = &results[0];
+    let first = &_results[0];
     let mut aggregated = first.clone();
 
     // Weight by inverse of final cost (better models get higher weight)
-    let weights: Vec<f64> = results
+    let weights: Vec<f64> = _results
         .iter()
         .map(|r| 1.0 / (r.diagnostics.final_cost + 1e-10))
         .collect();
@@ -1712,13 +1711,13 @@ fn aggregate_block_results(results: &[EnhancedSysIdResult]) -> SignalResult<Enha
 
     // Weighted average of parameters
     let mut weighted_params = Array1::zeros(first.parameters.values.len());
-    for (result, &weight) in results.iter().zip(weights.iter()) {
+    for (result, &weight) in _results.iter().zip(weights.iter()) {
         weighted_params = weighted_params + &result.parameters.values * (weight / total_weight);
     }
 
     // Update aggregated result
     aggregated.parameters.values = weighted_params;
-    aggregated.diagnostics.final_cost = results
+    aggregated.diagnostics.final_cost = _results
         .iter()
         .zip(weights.iter())
         .map(|(r, &w)| r.diagnostics.final_cost * w / total_weight)
@@ -1783,20 +1782,20 @@ pub fn robust_system_identification(
 
 /// Detect outliers using Median Absolute Deviation
 #[allow(dead_code)]
-fn detect_outliers_mad(data: &Array1<f64>, threshold: f64) -> Vec<bool> {
-    let median = compute_median(&data.to_vec());
-    let deviations: Vec<f64> = data.iter().map(|&x| (x - median).abs()).collect();
+fn detect_outliers_mad(_data: &Array1<f64>, threshold: f64) -> Vec<bool> {
+    let median = compute_median(&_data.to_vec());
+    let deviations: Vec<f64> = _data.iter().map(|&x| (x - median).abs()).collect();
     let mad = compute_median(&deviations) / 0.6745; // Scale for normal distribution
 
-    data.iter()
+    _data.iter()
         .map(|&x| (x - median).abs() > threshold * mad)
         .collect()
 }
 
 /// Compute median of a vector
 #[allow(dead_code)]
-fn compute_median(data: &[f64]) -> f64 {
-    let mut sorted = data.to_vec();
+fn compute_median(_data: &[f64]) -> f64 {
+    let mut sorted = _data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let len = sorted.len();
@@ -1884,12 +1883,12 @@ pub fn advanced_model_selection(
 
 /// Compute penalized likelihood for model selection
 #[allow(dead_code)]
-fn compute_penalized_likelihood(result: &EnhancedSysIdResult) -> f64 {
-    let n = result.parameters.values.len() as f64;
-    let k = get_model_parameters(&result.model) as f64;
+fn compute_penalized_likelihood(_result: &EnhancedSysIdResult) -> f64 {
+    let n = _result.parameters.values.len()  as f64;
+    let k = get_model_parameters(&_result.model)  as f64;
 
     // Use AICc (corrected AIC) for small samples
-    result.validation.aic + 2.0 * k * (k + 1.0) / (n - k - 1.0).max(1.0)
+    _result.validation.aic + 2.0 * k * (k + 1.0) / (n - k - 1.0).max(1.0)
 }
 
 /// Adaptive identification with time-varying parameters
@@ -1902,13 +1901,13 @@ pub struct AdaptiveIdentifier {
 }
 
 impl AdaptiveIdentifier {
-    pub fn new(config: EnhancedSysIdConfig) -> Self {
+    pub fn new(_config: EnhancedSysIdConfig) -> Self {
         Self {
             current_model: None,
             parameter_history: Vec::new(),
-            forgetting_factor: config.forgetting_factor,
+            forgetting_factor: _config.forgetting_factor,
             adaptation_threshold: 0.1,
-            config,
+            _config,
         }
     }
 
@@ -1967,11 +1966,11 @@ impl AdaptiveIdentifier {
 
 /// Compute condition number
 #[allow(dead_code)]
-fn compute_condition_number(params: &ParameterEstimate) -> f64 {
-    // use ndarray_linalg::Norm; // TODO: Add ndarray-linalg dependency
+fn compute_condition_number(_params: &ParameterEstimate) -> f64 {
+    // use ndarray__linalg::Norm; // TODO: Add ndarray-linalg dependency
 
-    if let Ok(inv) = params.covariance.inv() {
-        params.covariance.norm() * inv.norm()
+    if let Ok(inv) = _params.covariance.inv() {
+        _params.covariance.norm() * inv.norm()
     } else {
         f64::INFINITY
     }
@@ -2406,11 +2405,11 @@ fn solve_least_squares(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
 
 /// Estimate condition number of a matrix
 #[allow(dead_code)]
-fn estimate_condition_number(matrix: &Array2<f64>) -> f64 {
+fn estimate_condition_number(_matrix: &Array2<f64>) -> f64 {
     // Simplified condition number estimation
     // In practice would use SVD to compute actual condition number
-    let trace = matrix.diag().sum();
-    let det_approx = matrix.diag().iter().product::<f64>().abs();
+    let trace = _matrix.diag().sum();
+    let det_approx = _matrix.diag().iter().product::<f64>().abs();
 
     if det_approx < 1e-15 {
         1e16 // Very ill-conditioned
@@ -2421,15 +2420,15 @@ fn estimate_condition_number(matrix: &Array2<f64>) -> f64 {
 
 /// Simple matrix inversion using Gauss-Jordan elimination
 #[allow(dead_code)]
-fn invert_matrix(matrix: &Array2<f64>) -> Result<Array2<f64>, SignalError> {
-    let n = matrix.nrows();
-    if n != matrix.ncols() {
+fn invert_matrix(_matrix: &Array2<f64>) -> Result<Array2<f64>, SignalError> {
+    let n = _matrix.nrows();
+    if n != _matrix.ncols() {
         return Err(SignalError::ValueError("Matrix must be square".to_string()));
     }
 
-    // For simplicity, just return identity matrix scaled by diagonal average
-    // In practice would implement proper matrix inversion
-    let diag_avg = matrix.diag().mean().unwrap_or(1.0);
+    // For simplicity, just return identity _matrix scaled by diagonal average
+    // In practice would implement proper _matrix inversion
+    let diag_avg = _matrix.diag().mean().unwrap_or(1.0);
     if diag_avg.abs() < 1e-15 {
         return Err(SignalError::ComputationError(
             "Matrix is singular".to_string(),
@@ -2441,20 +2440,20 @@ fn invert_matrix(matrix: &Array2<f64>) -> Result<Array2<f64>, SignalError> {
 
 /// Compute pseudo-inverse of a matrix
 #[allow(dead_code)]
-fn pseudo_inverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
+fn pseudo_inverse(_matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
     // Simplified pseudo-inverse implementation
-    let (m, n) = matrix.dim();
+    let (m, n) = _matrix.dim();
 
     if m >= n {
-        // Tall matrix: (A^T A)^{-1} A^T
-        let at = matrix.t();
-        let ata = at.dot(matrix);
+        // Tall _matrix: (A^T A)^{-1} A^T
+        let at = _matrix.t();
+        let ata = at.dot(_matrix);
         let ata_inv = invert_matrix(&ata)?;
         Ok(ata_inv.dot(&at))
     } else {
-        // Wide matrix: A^T (A A^T)^{-1}
-        let at = matrix.t();
-        let aat = matrix.dot(&at);
+        // Wide _matrix: A^T (A A^T)^{-1}
+        let at = _matrix.t();
+        let aat = _matrix.dot(&at);
         let aat_inv = invert_matrix(&aat)?;
         Ok(at.dot(&aat_inv))
     }
@@ -2462,8 +2461,8 @@ fn pseudo_inverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
 
 /// Create companion form matrix for polynomial coefficients
 #[allow(dead_code)]
-fn companion_form_matrix(coeffs: &Array1<f64>) -> Array2<f64> {
-    let n = coeffs.len();
+fn companion_form_matrix(_coeffs: &Array1<f64>) -> Array2<f64> {
+    let n = _coeffs.len();
     if n == 0 {
         return Array2::zeros((1, 1));
     }
@@ -2472,7 +2471,7 @@ fn companion_form_matrix(coeffs: &Array1<f64>) -> Array2<f64> {
 
     // First row contains negative coefficients
     for i in 0..n {
-        companion[[0, i]] = -coeffs[i];
+        companion[[0, i]] = -_coeffs[i];
     }
 
     // Subdiagonal contains ones
@@ -2526,26 +2525,26 @@ fn robust_outlier_removal(
 
 /// Estimate signal-to-noise ratio
 #[allow(dead_code)]
-fn estimate_signal_noise_ratio(input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<f64> {
+fn estimate_signal_noise_ratio(_input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<f64> {
     // Use simple linear regression to estimate noise level
-    let n = input.len() as f64;
-    let sum_x = input.sum();
+    let n = _input.len()  as f64;
+    let sum_x = _input.sum();
     let sum_y = output.sum();
-    let sum_xx = input.dot(input);
-    let sum_xy = input.dot(output);
+    let sum_xx = _input.dot(_input);
+    let sum_xy = _input.dot(output);
 
     let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
     let intercept = (sum_y - slope * sum_x) / n;
 
     // Calculate residuals
-    let mut residuals = Vec::with_capacity(input.len());
-    for i in 0..input.len() {
-        let predicted = slope * input[i] + intercept;
+    let mut residuals = Vec::with_capacity(_input.len());
+    for i in 0.._input.len() {
+        let predicted = slope * _input[i] + intercept;
         residuals.push(output[i] - predicted);
     }
 
-    let signal_power = output.var(0.0);
-    let noise_power = Array1::from_vec(residuals).var(0.0);
+    let signal_power = output.variance();
+    let noise_power = Array1::from_vec(residuals).variance();
 
     if noise_power < 1e-15 {
         Ok(100.0) // Very high SNR
@@ -2558,8 +2557,7 @@ fn estimate_signal_noise_ratio(input: &Array1<f64>, output: &Array1<f64>) -> Sig
 #[allow(dead_code)]
 fn select_optimal_method(
     input: &Array1<f64>,
-    output: &Array1<f64>,
-    _config: &EnhancedSysIdConfig,
+    output: &Array1<f64>, _config: &EnhancedSysIdConfig,
 ) -> SignalResult<IdentificationMethod> {
     let n = input.len();
 
@@ -2623,8 +2621,8 @@ fn enhanced_order_selection(
 
 /// Median calculation (helper)
 #[allow(dead_code)]
-fn median_helper(data: &[f64]) -> f64 {
-    let mut sorted = data.to_vec();
+fn median_helper(_data: &[f64]) -> f64 {
+    let mut sorted = _data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let n = sorted.len();
 
@@ -2637,8 +2635,8 @@ fn median_helper(data: &[f64]) -> f64 {
 
 /// Median Absolute Deviation calculation
 #[allow(dead_code)]
-fn mad(data: &[f64], median_val: f64) -> f64 {
-    let deviations: Vec<f64> = data.iter().map(|&x| (x - median_val).abs()).collect();
+fn mad(_data: &[f64], median_val: f64) -> f64 {
+    let deviations: Vec<f64> = _data.iter().map(|&x| (x - median_val).abs()).collect();
     median_helper(&deviations) * 1.4826 // Scale factor for normal distribution
 }
 
@@ -2689,13 +2687,13 @@ fn identify_arx_model(
     // Calculate metrics
     let y_pred = phi.dot(&theta);
     let residuals = &y - &y_pred;
-    let residual_variance = residuals.var(0.0);
-    let output_variance = y.var(0.0);
+    let residual_variance = residuals.variance();
+    let output_variance = y.variance();
 
     let fit_percentage = (1.0 - residual_variance / output_variance).max(0.0) * 100.0;
 
     // Simple AIC calculation
-    let aic = (n_data as f64) * (residual_variance + 1e-15).ln() + 2.0 * n_params as f64;
+    let aic = (n_data as f64) * (residual_variance + 1e-15).ln() + 2.0 * n_params  as f64;
 
     // Simple BIC calculation
     let bic = (n_data as f64) * (residual_variance + 1e-15).ln()

@@ -92,7 +92,7 @@ fn showcase_neural_architecture_search() -> CoreResult<()> {
 fn showcase_jit_compilation() -> CoreResult<()> {
     println!("   Initializing JIT Compilation Framework...");
 
-    let _jit_compiler = advancedJitCompiler::new()?;
+    let jit_compiler = advancedJitCompiler::new()?;
     println!("   ✓ JIT compiler initialized with LLVM backend");
 
     // Note: Actual compilation would require LLVM integration
@@ -107,7 +107,7 @@ fn showcase_jit_compilation() -> CoreResult<()> {
 fn showcase_distributed_computing() -> CoreResult<()> {
     println!("   Initializing Distributed Computing Framework...");
 
-    let _distributed_computer = AdvancedDistributedComputer::new()?;
+    let distributed_computer = AdvancedDistributedComputer::new()?;
     println!("   ✓ Distributed computing coordinator initialized");
     println!("   ✓ Cluster management system ready");
     println!("   ✓ Fault tolerance mechanisms active");
@@ -120,7 +120,7 @@ fn showcase_distributed_computing() -> CoreResult<()> {
 fn showcase_ecosystem_integration() -> CoreResult<()> {
     println!("   Initializing Ecosystem Integration...");
 
-    let _ecosystem_coordinator = AdvancedEcosystemCoordinator::new();
+    let ecosystem_coordinator = AdvancedEcosystemCoordinator::new();
     println!("   ✓ Ecosystem coordinator initialized");
     println!("   ✓ Cross-module communication enabled");
     println!("   ✓ Resource management system active");

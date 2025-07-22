@@ -52,8 +52,7 @@ impl<F: Float + Debug + Send + Sync> Clone for Dropout<F> {
             rng: Arc::new(RwLock::new(Box::new(rng))),
             training: self.training,
             input_cache: Arc::new(RwLock::new(None)),
-            mask_cache: Arc::new(RwLock::new(None)),
-            _phantom: PhantomData,
+            mask_cache: Arc::new(RwLock::new(None)), _phantom: PhantomData,
         }
     }
 }
@@ -82,8 +81,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dropout<F> {
             rng: Arc::new(RwLock::new(Box::new(rng.clone()))),
             training: true,
             input_cache: Arc::new(RwLock::new(None)),
-            mask_cache: Arc::new(RwLock::new(None)),
-            _phantom: PhantomData,
+            mask_cache: Arc::new(RwLock::new(None)), _phantom: PhantomData,
         })
     }
 
@@ -122,7 +120,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Drop
         }
 
         // In training mode, create a binary mask and apply it
-        let mut mask = Array::<F, _>::from_elem(input.dim(), F::one());
+        let mut mask = Array::<F, IxDyn>::from_elem(input.dim(), F::one());
         let one = F::one();
         let zero = F::zero();
 

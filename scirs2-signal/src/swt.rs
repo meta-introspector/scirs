@@ -17,6 +17,7 @@ use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Performs one level of the stationary wavelet transform.
 ///
 /// Unlike the standard DWT, the SWT does not downsample the signal after filtering.
@@ -38,8 +39,8 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::swt::{swt_decompose};
-/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2__signal::swt::{swt_decompose};
+/// use scirs2__signal::dwt::Wavelet;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -156,8 +157,8 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::swt::{swt_decompose, swt_reconstruct};
-/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2__signal::swt::{swt_decompose, swt_reconstruct};
+/// use scirs2__signal::dwt::Wavelet;
 ///
 /// // Generate a simple signal (power of 2 length for simplicity)
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -275,8 +276,8 @@ pub fn swt_reconstruct(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::swt::{swt};
-/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2__signal::swt::{swt};
+/// use scirs2__signal::dwt::Wavelet;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -365,8 +366,8 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::swt::{swt, iswt};
-/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2__signal::swt::{swt, iswt};
+/// use scirs2__signal::dwt::Wavelet;
 ///
 /// // Generate a simple signal (power of 2 length)
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -388,8 +389,8 @@ where
 /// assert!(rec_energy / orig_energy > 0.5); // At least 50% energy preserved
 /// ```
 #[allow(dead_code)]
-pub fn iswt(details: &[Vec<f64>], approx: &[f64], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
-    if details.is_empty() {
+pub fn iswt(_details: &[Vec<f64>], approx: &[f64], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
+    if _details.is_empty() {
         return Err(SignalError::ValueError(
             "Detail coefficients array is empty".to_string(),
         ));
@@ -401,11 +402,11 @@ pub fn iswt(details: &[Vec<f64>], approx: &[f64], wavelet: Wavelet) -> SignalRes
         ));
     }
 
-    let level = details.len();
+    let level = _details.len();
     let n = approx.len();
 
     // Check that all arrays have the same length
-    for detail in details {
+    for detail in _details {
         if detail.len() != n {
             return Err(SignalError::ValueError(
                 "All coefficient arrays must have the same length".to_string(),
@@ -419,7 +420,7 @@ pub fn iswt(details: &[Vec<f64>], approx: &[f64], wavelet: Wavelet) -> SignalRes
     // Reconstruct level by level, from the highest to the lowest
     for i in (0..level).rev() {
         let current_level = i + 1; // Level is 1-indexed
-        result = swt_reconstruct(&result, &details[i], wavelet, current_level)?;
+        result = swt_reconstruct(&result, &_details[i], wavelet, current_level)?;
     }
 
     Ok(result)
@@ -427,8 +428,8 @@ pub fn iswt(details: &[Vec<f64>], approx: &[f64], wavelet: Wavelet) -> SignalRes
 
 /// Helper function to extend the signal for filtering
 #[allow(dead_code)]
-fn extend_signal(signal: &[f64], filter_len: usize, mode: &str) -> SignalResult<Vec<f64>> {
-    let n = signal.len();
+fn extend_signal(_signal: &[f64], filter_len: usize, mode: &str) -> SignalResult<Vec<f64>> {
+    let n = _signal._len();
     let pad = filter_len - 1;
 
     let mut extended = Vec::with_capacity(n + 2 * pad);
@@ -438,11 +439,11 @@ fn extend_signal(signal: &[f64], filter_len: usize, mode: &str) -> SignalResult<
             // Symmetric padding (reflection)
             for idx in 0..pad {
                 let reflect_idx = if idx >= n { 2 * n - idx - 2 } else { idx };
-                extended.push(signal[reflect_idx]);
+                extended.push(_signal[reflect_idx]);
             }
 
-            // Original signal
-            extended.extend_from_slice(signal);
+            // Original _signal
+            extended.extend_from_slice(_signal);
 
             // End padding
             for i in 0..pad {
@@ -462,27 +463,27 @@ fn extend_signal(signal: &[f64], filter_len: usize, mode: &str) -> SignalResult<
                         0
                     }
                 };
-                extended.push(signal[reflect_idx]);
+                extended.push(_signal[reflect_idx]);
             }
         }
         "periodic" => {
             // Periodic padding (wrap around)
             for i in 0..pad {
-                extended.push(signal[n - pad + i]);
+                extended.push(_signal[n - pad + i]);
             }
 
-            // Original signal
-            extended.extend_from_slice(signal);
+            // Original _signal
+            extended.extend_from_slice(_signal);
 
             // End padding
-            for &value in signal.iter().take(pad) {
+            for &value in _signal.iter().take(pad) {
                 extended.push(value);
             }
         }
         "zero" => {
             // Zero padding
             extended.extend(vec![0.0; pad]);
-            extended.extend_from_slice(signal);
+            extended.extend_from_slice(_signal);
             extended.extend(vec![0.0; pad]);
         }
         _ => {
@@ -507,19 +508,19 @@ fn extend_signal(signal: &[f64], filter_len: usize, mode: &str) -> SignalResult<
 ///
 /// * The upsampled filter
 #[allow(dead_code)]
-fn upsample_filter(filter: &[f64], level: usize) -> Vec<f64> {
+fn upsample_filter(_filter: &[f64], level: usize) -> Vec<f64> {
     if level == 1 {
-        // At level 1, return the original filter
-        return filter.to_vec();
+        // At level 1, return the original _filter
+        return _filter.to_vec();
     }
 
     // For level > 1, insert 2^(level-1) - 1 zeros between each coefficient
     let zeros_to_insert = (1 << (level - 1)) - 1;
-    let new_len = filter.len() + (filter.len() - 1) * zeros_to_insert;
+    let new_len = _filter.len() + (_filter.len() - 1) * zeros_to_insert;
     let mut upsampled = vec![0.0; new_len];
 
-    // Insert filter coefficients with zeros in between
-    for (i, &coeff) in filter.iter().enumerate() {
+    // Insert _filter coefficients with zeros in between
+    for (i, &coeff) in _filter.iter().enumerate() {
         upsampled[i * (zeros_to_insert + 1)] = coeff;
     }
 
@@ -528,9 +529,9 @@ fn upsample_filter(filter: &[f64], level: usize) -> Vec<f64> {
 
 /// Helper function to upsample filter pairs
 #[allow(dead_code)]
-fn upsample_filters(dec_lo: &[f64], dec_hi: &[f64], level: usize) -> (Vec<f64>, Vec<f64>) {
+fn upsample_filters(_dec_lo: &[f64], dec_hi: &[f64], level: usize) -> (Vec<f64>, Vec<f64>) {
     (
-        upsample_filter(dec_lo, level),
+        upsample_filter(_dec_lo, level),
         upsample_filter(dec_hi, level),
     )
 }
@@ -632,6 +633,8 @@ mod tests {
 
     #[test]
     fn test_multi_level_swt() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test signal with increasing values
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 

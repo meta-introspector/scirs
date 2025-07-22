@@ -1,7 +1,7 @@
 //! Simple benchmark example to test FFT performance
 
-use num_complex::Complex64;
-use scirs2_fft::{fft, frft, rfft};
+use num__complex::Complex64;
+use scirs2__fft::{fft, frft, rfft};
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -45,7 +45,7 @@ fn main() {
     }
 
     // Compare with memory-efficient versions
-    use scirs2_fft::memory_efficient::{fft_inplace, FftMode};
+    use scirs2__fft::memory_efficient::{fft_inplace, FftMode};
 
     println!("\n\nMemory-Efficient Comparison (size=4096)");
     println!("======================================");

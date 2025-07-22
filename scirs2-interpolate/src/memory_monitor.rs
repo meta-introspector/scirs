@@ -16,7 +16,7 @@
 //! # Usage
 //!
 //! ```rust
-//! use scirs2_interpolate::memory_monitor::{MemoryMonitor, start_monitoring};
+//! use scirs2__interpolate::memory_monitor::{MemoryMonitor, start_monitoring};
 //!
 //! // Start global memory monitoring
 //! start_monitoring();
@@ -290,10 +290,10 @@ pub enum PerformanceGrade {
 
 impl MemoryMonitor {
     /// Create a new memory monitor
-    pub fn new(name: impl Into<String>) -> Self {
-        let name = name.into();
+    pub fn new(_name: impl Into<String>) -> Self {
+        let _name = _name.into();
         let monitor = Self {
-            name: name.clone(),
+            _name: _name.clone(),
             allocations: HashMap::new(),
             allocation_history: VecDeque::new(),
             peak_memory_bytes: 0,
@@ -305,7 +305,7 @@ impl MemoryMonitor {
         };
 
         // Register with global monitor
-        register_monitor(&name, monitor.clone());
+        register_monitor(&_name, monitor.clone());
         monitor
     }
 
@@ -391,7 +391,7 @@ impl MemoryMonitor {
         // Remove from long-lived allocations (simplified - would need better matching in production)
         self.leak_stats
             .long_lived_allocations
-            .retain(|k, _| !k.starts_with(&category));
+            .retain(|k_| !k.starts_with(&category));
 
         // Update performance metrics
         self.update_performance_metrics();
@@ -434,14 +434,14 @@ impl MemoryMonitor {
             .filter(|(_, timestamp)| {
                 now.duration_since(*timestamp) > self.leak_stats.leak_detection_threshold
             })
-            .map(|(size, _)| size)
+            .map(|(size_)| size)
             .sum();
 
         // Identify suspicious categories (categories with consistently growing memory)
         let suspicious_categories: Vec<String> = self.allocations
             .iter()
             .filter(|(_, &size)| size > 1024 * 1024) // More than 1MB
-            .map(|(cat, _)| cat.clone())
+            .map(|(cat_)| cat.clone())
             .collect();
 
         let has_potential_leaks =
@@ -496,8 +496,7 @@ impl MemoryMonitor {
             s if s >= 0.9 => PerformanceGrade::Excellent,
             s if s >= 0.7 => PerformanceGrade::Good,
             s if s >= 0.5 => PerformanceGrade::Fair,
-            s if s >= 0.3 => PerformanceGrade::Poor,
-            _ => PerformanceGrade::Critical,
+            s if s >= 0.3 => PerformanceGrade::Poor_ =>, PerformanceGrade::Critical,
         };
 
         PerformanceSummary {
@@ -674,13 +673,13 @@ pub fn stop_monitoring() {
 
 /// Register a memory monitor with the global system
 #[allow(dead_code)]
-fn register_monitor(name: &str, monitor: MemoryMonitor) {
+fn register_monitor(_name: &str, monitor: MemoryMonitor) {
     if let Some(global_monitor) = GLOBAL_MONITOR.get() {
         if let Ok(mut global) = global_monitor.lock() {
             if global.enabled && global.monitors.len() < global.max_monitors {
                 global
                     .monitors
-                    .insert(name.to_string(), Arc::new(Mutex::new(monitor)));
+                    .insert(_name.to_string(), Arc::new(Mutex::new(monitor)));
                 global.global_stats.active_interpolators = global.monitors.len();
             }
         }
@@ -689,11 +688,11 @@ fn register_monitor(name: &str, monitor: MemoryMonitor) {
 
 /// Update global memory statistics
 #[allow(dead_code)]
-fn update_global_stats(size_bytes: usize, is_allocation: bool) {
+fn update_global_stats(_size_bytes: usize, is_allocation: bool) {
     if let Some(global_monitor) = GLOBAL_MONITOR.get() {
         if let Ok(mut global) = global_monitor.lock() {
             if is_allocation {
-                global.global_stats.total_allocated_bytes += size_bytes;
+                global.global_stats.total_allocated_bytes += _size_bytes;
                 global.global_stats.total_allocations += 1;
 
                 if global.global_stats.total_allocated_bytes > global.global_stats.peak_total_bytes
@@ -723,14 +722,14 @@ pub fn get_global_stats() -> Option<GlobalMemoryStats> {
 
 /// Get report for a specific monitor
 #[allow(dead_code)]
-pub fn get_monitor_report(name: &str) -> Option<MemoryReport> {
+pub fn get_monitor_report(_name: &str) -> Option<MemoryReport> {
     GLOBAL_MONITOR
         .get()
         .and_then(|global_monitor| {
             global_monitor
                 .lock()
                 .ok()
-                .and_then(|global| global.monitors.get(name).cloned())
+                .and_then(|global| global.monitors.get(_name).cloned())
         })
         .and_then(|monitor| monitor.lock().ok().map(|m| m.generate_report()))
 }
@@ -891,9 +890,9 @@ impl Default for StressProfilingConfig {
 
 impl StressMemoryProfiler {
     /// Create a new stress memory profiler
-    pub fn new(name: impl Into<String>, config: Option<StressProfilingConfig>) -> Self {
+    pub fn new(_name: impl Into<String>, config: Option<StressProfilingConfig>) -> Self {
         Self {
-            base_monitor: MemoryMonitor::new(name),
+            base_monitor: MemoryMonitor::new(_name),
             stress_metrics: StressMemoryMetrics {
                 max_growth_rate: 0.0,
                 allocation_spikes: Vec::new(),
@@ -1075,7 +1074,7 @@ impl StressMemoryProfiler {
         self.stress_metrics.concurrent_overhead = overhead as f64 / concurrent_threads as f64;
 
         println!(
-            "Concurrent access overhead: {:.1}KB per thread ({} threads)",
+            "Concurrent access overhead: {:.1}KB per thread ({} _threads)",
             self.stress_metrics.concurrent_overhead / 1024.0,
             concurrent_threads
         );
@@ -1090,7 +1089,7 @@ impl StressMemoryProfiler {
         self.stress_metrics.recovery_time_seconds = recovery_time.as_secs_f64();
 
         println!(
-            "Memory recovery time: {:.2}s",
+            "Memory recovery _time: {:.2}s",
             self.stress_metrics.recovery_time_seconds
         );
     }
@@ -1232,8 +1231,7 @@ impl StressMemoryProfiler {
             s if s >= 0.9 => StressPerformanceGrade::Excellent,
             s if s >= 0.7 => StressPerformanceGrade::Good,
             s if s >= 0.5 => StressPerformanceGrade::Fair,
-            s if s >= 0.3 => StressPerformanceGrade::Poor,
-            _ => StressPerformanceGrade::Critical,
+            s if s >= 0.3 => StressPerformanceGrade::Poor_ =>, StressPerformanceGrade::Critical,
         }
     }
 
@@ -1362,8 +1360,8 @@ pub enum StressPerformanceGrade {
 
 /// Create a stress memory profiler for testing
 #[allow(dead_code)]
-pub fn create_stress_profiler(name: impl Into<String>) -> StressMemoryProfiler {
-    StressMemoryProfiler::new(name, None)
+pub fn create_stress_profiler(_name: impl Into<String>) -> StressMemoryProfiler {
+    StressMemoryProfiler::new(_name, None)
 }
 
 /// Create a stress memory profiler with custom configuration

@@ -41,9 +41,9 @@
 #![allow(dead_code)]
 
 use crate::{SpecialError, SpecialResult};
+use scirs2_core::validation::check_finite;
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive};
-use scirs2_core::validation::check_finite;
 use std::fmt::{Debug, Display};
 
 /// Maximum number of iterations for convergence
@@ -68,7 +68,7 @@ const TOLERANCE: f64 = 1e-15;
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::elliprc;
+/// use scirs2__special::elliprc;
 ///
 /// // RC(0, 1) = π/2
 /// let result = elliprc(0.0, 1.0).unwrap();
@@ -83,8 +83,8 @@ pub fn elliprc<T>(x: T, y: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
-    check_finite(x, "x")?;
-    check_finite(y, "y")?;
+    check_finite(x, "x value")?;
+    check_finite(y, "y value")?;
 
     let zero = T::from_f64(0.0).unwrap();
     let one = T::one();
@@ -161,7 +161,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::elliprf;
+/// use scirs2__special::elliprf;
 ///
 /// // RF(0, 1, 1) = π/2
 /// let result = elliprf(0.0, 1.0, 1.0).unwrap();
@@ -180,9 +180,9 @@ pub fn elliprf<T>(x: T, y: T, z: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
-    check_finite(x, "x")?;
-    check_finite(y, "y")?;
-    check_finite(z, "z")?;
+    check_finite(x, "x value")?;
+    check_finite(y, "y value")?;
+    check_finite(z, "z value")?;
 
     let zero = T::from_f64(0.0).unwrap();
     let one = T::one();
@@ -265,7 +265,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::elliprd;
+/// use scirs2__special::elliprd;
 ///
 /// // RD(0, 2, 1) = 3π/(4√2)
 /// let result = elliprd(0.0, 2.0, 1.0).unwrap();
@@ -277,9 +277,9 @@ pub fn elliprd<T>(x: T, y: T, z: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
-    check_finite(x, "x")?;
-    check_finite(y, "y")?;
-    check_finite(z, "z")?;
+    check_finite(x, "x value")?;
+    check_finite(y, "y value")?;
+    check_finite(z, "z value")?;
 
     let zero = T::from_f64(0.0).unwrap();
     let one = T::one();
@@ -368,7 +368,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::elliprg;
+/// use scirs2__special::elliprg;
 ///
 /// // Test basic functionality
 /// let result = elliprg(1.0, 2.0, 3.0).unwrap();
@@ -379,9 +379,9 @@ pub fn elliprg<T>(x: T, y: T, z: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
-    check_finite(x, "x")?;
-    check_finite(y, "y")?;
-    check_finite(z, "z")?;
+    check_finite(x, "x value")?;
+    check_finite(y, "y value")?;
+    check_finite(z, "z value")?;
 
     let zero = T::from_f64(0.0).unwrap();
     let two = T::from_f64(2.0).unwrap();
@@ -439,7 +439,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::elliprj;
+/// use scirs2__special::elliprj;
 ///
 /// // Test basic functionality
 /// let result = elliprj(1.0, 2.0, 3.0, 4.0).unwrap();
@@ -450,10 +450,10 @@ pub fn elliprj<T>(x: T, y: T, z: T, p: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
-    check_finite(x, "x")?;
-    check_finite(y, "y")?;
-    check_finite(z, "z")?;
-    check_finite(p, "p")?;
+    check_finite(x, "x value")?;
+    check_finite(y, "y value")?;
+    check_finite(z, "z value")?;
+    check_finite(p, "p value")?;
 
     let zero = T::from_f64(0.0).unwrap();
     let one = T::one();

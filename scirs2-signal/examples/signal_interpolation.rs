@@ -1,11 +1,13 @@
+use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
 // use plotters::prelude::*;
-use num_complex::Complex64;
+use num__complex::Complex64;
 use rand::{rng, Rng};
-use rand_distr::{Distribution, Normal};
-use scirs2_signal::{interpolate, SignalError, SignalResult};
+use rand__distr::{Distribution, Normal};
+use scirs2__signal::{interpolate, SignalError, SignalResult};
 use std::fs::File;
 use std::io::Write;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> SignalResult<()> {
@@ -31,17 +33,17 @@ fn main() -> SignalResult<()> {
 
 /// Generate a sine wave signal with some missing values
 #[allow(dead_code)]
-fn generate_test_signal(n_samples: usize, missing_rate: f64) -> Array1<f64> {
-    let mut signal = Array1::zeros(n_samples);
-    let x = Array1::linspace(0.0, 10.0, n_samples);
+fn generate_test_signal(_n_samples: usize, missing_rate: f64) -> Array1<f64> {
+    let mut signal = Array1::zeros(_n_samples);
+    let x = Array1::linspace(0.0, 10.0, _n_samples);
 
     // Generate sine wave
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         signal[i] = (x[i] * PI / 2.0).sin() + 0.5 * (x[i] * PI).cos();
     }
 
     // Randomly set some values as missing (NaN)
-    let mut rng = rng();
+    let mut rng = rand::rng();
     for i in 0..n_samples {
         if rng.random::<f64>() < missing_rate {
             signal[i] = f64::NAN;
@@ -53,14 +55,14 @@ fn generate_test_signal(n_samples: usize, missing_rate: f64) -> Array1<f64> {
 
 /// Export signal data to CSV for visualization
 #[allow(dead_code)]
-fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
+fn export_to_csv(_file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file =
-        File::create(file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
+        File::create(_file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     // Write header
     let header = signals
         .iter()
-        .map(|(name, _)| name.to_string())
+        .map(|(name_)| _name.to_string())
         .collect::<Vec<String>>()
         .join(",");
     writeln!(file, "{}", header).map_err(|e| SignalError::ComputationError(e.to_string()))?;
@@ -90,9 +92,9 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
 
 /// Export 2D data to CSV for visualization
 #[allow(dead_code)]
-fn export_2d_to_csv(file_name: &str, data: &Array2<f64>) -> SignalResult<()> {
+fn export_2d_to_csv(_file_name: &str, data: &Array2<f64>) -> SignalResult<()> {
     let mut file =
-        File::create(file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
+        File::create(_file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
     let (n_rows, n_cols) = data.dim();
 
     for i in 0..n_rows {
@@ -334,7 +336,7 @@ fn interpolate_bandlimited_signal() -> SignalResult<()> {
     let mut spectrum = vec![Complex64::new(0.0, 0.0); n_samples];
 
     // Add some frequency components
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let normal = Normal::<f64>::new(0.0, 1.0).unwrap();
 
     for i in 1..cutoff {
@@ -495,11 +497,11 @@ fn interpolate_2d_data() -> SignalResult<()> {
     }
 
     // Remove scattered points
-    let mut rng = rng();
+    let mut rng = rand::rng();
     for _ in 0..500 {
-        let i = rng.random_range(0..n_rows);
-        let j = rng.random_range(0..n_cols);
-        missing_image[[i, j]] = f64::NAN;
+        let i = rng.gen_range(0..n_rows);
+        let j = rng.gen_range(0..n_cols);
+        missing_image[[i..j]] = f64::NAN;
     }
 
     // Configure interpolation
@@ -520,8 +522,7 @@ fn interpolate_2d_data() -> SignalResult<()> {
     let linear_result = interpolate::interpolate_2d(
         &missing_image,
         interpolate::InterpolationMethod::Linear,
-        &config,
-    )?;
+        &config,)?;
 
     let spline_result = interpolate::interpolate_2d(
         &missing_image,
@@ -604,7 +605,7 @@ fn auto_interpolation_example() -> SignalResult<()> {
 
     // Case 1: Random missing values
     let mut signal1 = reference.clone();
-    let _rng = rng();
+    let _rng = rand::rng();
     for i in 0..n_samples {
         if _rng.random::<f64>() < 0.2 {
             signal1[i] = f64::NAN;

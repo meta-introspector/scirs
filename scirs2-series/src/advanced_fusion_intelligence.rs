@@ -19,13 +19,14 @@
 #![allow(missing_docs)]
 
 use ndarray::Array1;
-use num_complex::Complex;
+use num__complex::Complex;
 use num_traits::{Float, FromPrimitive};
 use rand::random_range;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 
 use crate::error::Result;
+use statrs::statistics::Statistics;
 
 // Missing type definitions for advanced fusion intelligence
 /// Advanced quantum error correction system
@@ -3573,13 +3574,13 @@ impl<
     > AdvancedFusionIntelligence<F>
 {
     /// Create the ultimate fusion intelligence system
-    pub fn new(num_cores: usize, qubits_per_core: usize) -> Result<Self> {
+    pub fn new(_num_cores: usize, qubits_per_core: usize) -> Result<Self> {
         let mut fusion_cores = Vec::new();
 
-        // Initialize fusion cores
-        for core_id in 0..num_cores {
-            let core = QuantumNeuromorphicCore::new(core_id, qubits_per_core)?;
-            fusion_cores.push(core);
+        // Initialize fusion _cores
+        for core_id in 0.._num_cores {
+            let _core = QuantumNeuromorphicCore::new(core_id, qubits_per_core)?;
+            fusion_cores.push(_core);
         }
 
         // Initialize meta-learning system
@@ -3600,7 +3601,7 @@ impl<
         // Initialize discovery system
         let discovery_system = AutonomousDiscoverySystem::new()?;
 
-        // Initialize prediction core
+        // Initialize prediction _core
         let prediction_core = AdvancedPredictiveCore::new()?;
 
         Ok(Self {
@@ -3861,7 +3862,7 @@ impl<
         training_data: &[(Array1<F>, Array1<F>)],
         awareness_level: F,
     ) -> Result<()> {
-        // Adjust learning based on simulated consciousness level
+        // Adjust learning based on simulated consciousness _level
         self.consciousness_simulator
             .set_awareness_level(awareness_level)?;
 
@@ -3934,7 +3935,7 @@ impl<
 
         Ok(EvolutionResult {
             final_fitness: best_fitness,
-            generations_evolved: generation,
+            _generations_evolved: generation,
             convergence_achieved: best_fitness >= performance_target,
             evolved_architecture: self.evolution_manager.get_current_architecture()?,
         })
@@ -3943,8 +3944,7 @@ impl<
     // Helper methods for quantum operations
     fn create_future_superposition(
         &self,
-        data: &Array1<F>,
-        _horizon: usize,
+        data: &Array1<F>, _horizon: usize,
     ) -> Result<Array1<Complex<F>>> {
         let size = data.len();
         let mut superposition = Array1::zeros(size);
@@ -3998,17 +3998,14 @@ impl<
 
     // Additional helper methods would be implemented here...
     fn generate_ensemble_prediction(
-        &self,
-        _quantum_state: &Array1<F>,
-        _spike_patterns: &[SpikePattern<F>],
+        &self, _quantum_state: &Array1<F>, _spike_patterns: &[SpikePattern<F>],
     ) -> Result<Array1<F>> {
         // Placeholder implementation
         Ok(Array1::zeros(10))
     }
 
     fn calculate_quantum_uncertainty_bounds(
-        &self,
-        _core_results: &[FusionCoreResult<F>],
+        &self, _core_results: &[FusionCoreResult<F>],
     ) -> Result<UncertaintyBounds<F>> {
         // Placeholder implementation
         Ok(UncertaintyBounds {
@@ -4019,15 +4016,13 @@ impl<
     }
 
     fn calculate_entanglement_measures(
-        &self,
-        _core_results: &[FusionCoreResult<F>],
+        &self, _core_results: &[FusionCoreResult<F>],
     ) -> Result<Array1<F>> {
         Ok(Array1::zeros(5))
     }
 
     fn calculate_coherence_metrics(
-        &self,
-        _core_results: &[FusionCoreResult<F>],
+        &self, _core_results: &[FusionCoreResult<F>],
     ) -> Result<Array1<F>> {
         Ok(Array1::zeros(5))
     }
@@ -4041,24 +4036,19 @@ impl<
     }
 
     fn track_plasticity_evolution(
-        &self,
-        _core_results: &[FusionCoreResult<F>],
+        &self, _core_results: &[FusionCoreResult<F>],
     ) -> Result<Array1<F>> {
         Ok(Array1::zeros(5))
     }
 
     fn detect_emergence_patterns(
-        &self,
-        _core_results: &[FusionCoreResult<F>],
+        &self, _core_results: &[FusionCoreResult<F>],
     ) -> Result<Vec<EmergencePattern<F>>> {
         Ok(Vec::new())
     }
 
     fn apply_conscious_learning(
-        &mut self,
-        _input: &Array1<F>,
-        _target: &Array1<F>,
-        _parameters: &LearningParameters<F>,
+        &mut self_input: &Array1<F>, _target: &Array1<F>, _parameters: &LearningParameters<F>,
     ) -> Result<()> {
         // Placeholder implementation
         Ok(())
@@ -4232,9 +4222,9 @@ pub struct LearningParameters<F: Float> {
 
 // Placeholder implementations for the major subsystems
 impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicCore<F> {
-    pub fn new(core_id: usize, qubits: usize) -> Result<Self> {
+    pub fn new(_core_id: usize, qubits: usize) -> Result<Self> {
         Ok(Self {
-            core_id,
+            _core_id,
             quantum_unit: QuantumProcessingUnit::new(qubits)?,
             neuromorphic_unit: NeuromorphicProcessingUnit::new()?,
             fusion_interface: QuantumNeuromorphicInterface::new()?,
@@ -4261,8 +4251,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicCore<F> {
 
     pub fn process_fusion_chunk(
         &mut self,
-        data: &Array1<F>,
-        _strategy: &OptimalLearningStrategy<F>,
+        data: &Array1<F>, _strategy: &OptimalLearningStrategy<F>,
     ) -> Result<FusionCoreResult<F>> {
         // Quantum processing
         let quantum_result = self.quantum_unit.process_quantum(data)?;
@@ -4287,8 +4276,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
             error_correction: QuantumErrorCorrectionAdvanced::new()?,
             algorithm_library: QuantumAlgorithmLibrary::new()?,
             coherence_optimizer: QuantumCoherenceOptimizer::new()?,
-            entanglement_network: QuantumEntanglementNetwork::new()?,
-            _phantom: std::marker::PhantomData,
+            entanglement_network: QuantumEntanglementNetwork::new()?_phantom: std::marker::PhantomData,
         })
     }
 
@@ -4532,7 +4520,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicProcessingUnit<F> {
             let time_diff = F::from(1.0).unwrap(); // Simplified time difference
             let stdp_window = F::from(20.0).unwrap(); // 20ms window
 
-            if pre_spike > F::from(0.5).unwrap() && post_spike > F::from(0.5).unwrap() {
+            if pre_spike > F::from(0.5).unwrap() && post_spike >, F::from(0.5).unwrap() {
                 // LTP - Long Term Potentiation
                 let ltp_strength = (-time_diff / stdp_window).exp();
                 plastic_output[i] =
@@ -4859,8 +4847,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
     /// Multi-scale temporal integration
     fn multi_scale_temporal_integration(
         &self,
-        data: &Array1<F>,
-        _weights: &(Array1<F>, Array1<F>),
+        data: &Array1<F>, _weights: &(Array1<F>, Array1<F>),
     ) -> Result<Array1<F>> {
         let n = data.len();
         let mut integrated_result = data.clone();
@@ -5549,14 +5536,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> MetaLearningCont
     ) -> Result<bool> {
         match condition.metric.as_str() {
             "accuracy_drop" => Ok(feedback < condition.threshold),
-            "learning_rate_decay" => Ok(feedback < condition.threshold),
-            _ => Ok(false),
+            "learning_rate_decay" => Ok(feedback < condition.threshold, _ => Ok(false),
         }
     }
 
     /// Executes adaptation rule based on trigger
     #[allow(dead_code)]
-    fn execute_adaptation_rule(&mut self, metric: &str, _feedback: F) -> Result<()> {
+    fn execute_adaptation_rule(&mut self, metric: &str_feedback: F) -> Result<()> {
         for rule in &self.adaptation_mechanism.adaptation_rules {
             if rule.condition.contains(metric) {
                 match rule.action.as_str() {
@@ -5599,13 +5585,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> MetaLearningCont
     pub fn transfer_knowledge(&self, target_task: &str, source_data: &Array1<F>) -> Result<Vec<F>> {
         let mut transferred_weights = Vec::new();
 
-        // Find most similar source task
+        // Find most similar source _task
         let best_source_idx = self.find_most_similar_task(target_task)?;
 
         if best_source_idx < self.knowledge_transfer.transfer_weights.len() {
             let base_weight = self.knowledge_transfer.transfer_weights[best_source_idx];
 
-            // Compute transfer weights based on data similarity
+            // Compute transfer weights based on _data similarity
             let data_similarity = self.compute_data_similarity(source_data)?;
             let adjusted_weight = base_weight * data_similarity;
 
@@ -5618,7 +5604,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> MetaLearningCont
     /// Finds most similar source task
     #[allow(dead_code)]
     fn find_most_similar_task(&self, target_task: &str) -> Result<usize> {
-        // Simple string similarity for task matching
+        // Simple string similarity for _task matching
         let mut best_similarity = F::zero();
         let mut best_idx = 0;
 
@@ -5830,7 +5816,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
             // Evaluate current population
             self.evaluate_population()?;
 
-            // Update best fitness
+            // Update best _fitness
             let generation_best = self.get_best_fitness()?;
             if generation_best > best_fitness {
                 best_fitness = generation_best;
@@ -5951,13 +5937,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         // Penalize for complex activation functions
         for layer in &individual.layers {
             let activation_penalty = match layer.activation {
-                ActivationFunction::ReLU => F::one(),
-                ActivationFunction::Sigmoid => F::from_f64(0.9).unwrap(),
-                ActivationFunction::Tanh => F::from_f64(0.85).unwrap(),
-                ActivationFunction::Softmax => F::from_f64(0.8).unwrap(),
-                ActivationFunction::GELU => F::from_f64(0.75).unwrap(),
-                ActivationFunction::Swish => F::from_f64(0.7).unwrap(),
-                ActivationFunction::Quantum => F::from_f64(0.6).unwrap(),
+                ActivationFunction::ReLU =>, F::one(),
+                ActivationFunction::Sigmoid =>, F::from_f64(0.9).unwrap(),
+                ActivationFunction::Tanh =>, F::from_f64(0.85).unwrap(),
+                ActivationFunction::Softmax =>, F::from_f64(0.8).unwrap(),
+                ActivationFunction::GELU =>, F::from_f64(0.75).unwrap(),
+                ActivationFunction::Swish =>, F::from_f64(0.7).unwrap(),
+                ActivationFunction::Quantum =>, F::from_f64(0.6).unwrap(),
             };
             score = score * activation_penalty;
         }
@@ -6066,13 +6052,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
 
         for layer in &architecture.layers {
             let gene_type = match layer.layer_type {
-                LayerType::Dense => GeneType::Dense,
-                LayerType::Convolutional => GeneType::Convolutional,
-                LayerType::LSTM => GeneType::LSTM,
-                LayerType::Dropout => GeneType::Dropout,
-                LayerType::Recurrent => GeneType::LSTM,
-                LayerType::Attention => GeneType::AttentionMechanism,
-                LayerType::Quantum => GeneType::QuantumLayer,
+                LayerType::Dense =>, GeneType::Dense,
+                LayerType::Convolutional =>, GeneType::Convolutional,
+                LayerType::LSTM =>, GeneType::LSTM,
+                LayerType::Dropout =>, GeneType::Dropout,
+                LayerType::Recurrent =>, GeneType::LSTM,
+                LayerType::Attention =>, GeneType::AttentionMechanism,
+                LayerType::Quantum =>, GeneType::QuantumLayer,
             };
 
             let mut parameters = HashMap::new();
@@ -6552,8 +6538,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     #[allow(dead_code)]
     fn structural_mutation(
         &self,
-        individual: &Architecture<F>,
-        _intensity: f64,
+        individual: &Architecture<F>, _intensity: f64,
     ) -> Result<Architecture<F>> {
         let mut mutated = individual.clone();
 
@@ -6576,8 +6561,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     #[allow(dead_code)]
     fn layer_addition_mutation(
         &self,
-        individual: &Architecture<F>,
-        _intensity: f64,
+        individual: &Architecture<F>, _intensity: f64,
     ) -> Result<Architecture<F>> {
         let mut mutated = individual.clone();
 
@@ -6589,8 +6573,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
                 activation: match random_range(0..4) {
                     0 => ActivationFunction::ReLU,
                     1 => ActivationFunction::Sigmoid,
-                    2 => ActivationFunction::Tanh,
-                    _ => ActivationFunction::Softmax,
+                    2 => ActivationFunction::Tanh_ =>, ActivationFunction::Softmax,
                 },
                 parameters: vec![F::from_f64(0.1).unwrap(), F::from_f64(0.01).unwrap()],
             };
@@ -6607,8 +6590,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
     #[allow(dead_code)]
     fn layer_removal_mutation(
         &self,
-        individual: &Architecture<F>,
-        _intensity: f64,
+        individual: &Architecture<F>, _intensity: f64,
     ) -> Result<Architecture<F>> {
         let mut mutated = individual.clone();
 
@@ -6727,7 +6709,7 @@ pub struct DiscoveredPatterns<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> ConsciousnessSimulator<F> {
     #[allow(dead_code)]
-    pub fn generate_attention_pattern(&self, _input: &Array1<F>) -> Result<Array1<F>> {
+    pub fn generate_attention_pattern(&self_input: &Array1<F>) -> Result<Array1<F>> {
         // Placeholder implementation - generates a simple attention pattern
         let pattern = Array1::from_vec(vec![F::from_f64(0.5).unwrap(); _input.len()]);
         Ok(pattern)
@@ -6745,14 +6727,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousnessSimulator<F> {
     }
 
     #[allow(dead_code)]
-    pub fn set_awareness_level(&mut self, _level: F) -> Result<()> {
-        // Placeholder implementation - sets awareness level
+    pub fn set_awareness_level(&mut self_level: F) -> Result<()> {
+        // Placeholder implementation - sets awareness _level
         // Note: self_awareness doesn't have an awareness_level field, so this is just a placeholder
         Ok(())
     }
 
     #[allow(dead_code)]
-    pub fn compute_attention_weights(&self, _data: &Array1<F>) -> Result<Array1<F>> {
+    pub fn compute_attention_weights(&self_data: &Array1<F>) -> Result<Array1<F>> {
         // Placeholder implementation - computes attention weights
         let weights = Array1::from_vec(vec![F::from_f64(0.5).unwrap(); _data.len()]);
         Ok(weights)
@@ -6762,8 +6744,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ConsciousnessSimulator<F> {
 impl<F: Float + Debug + Clone + FromPrimitive> MetacognitiveController<F> {
     #[allow(dead_code)]
     pub fn determine_learning_parameters(
-        &self,
-        _context: &Array1<F>,
+        &self_context: &Array1<F>,
     ) -> Result<LearningParameters<F>> {
         // Placeholder implementation - returns default learning parameters
         Ok(LearningParameters {
@@ -6833,7 +6814,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         let survivors: Vec<ArchitectureDNA> = indexed_candidates
             .iter()
             .take(survivors_count)
-            .map(|(i, _)| candidates[*i].clone())
+            .map(|(i_)| candidates[*i].clone())
             .collect();
 
         Ok(survivors)
@@ -6860,7 +6841,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
 
     #[allow(dead_code)]
     pub fn update_architecture(&mut self, new_generation: &[ArchitectureDNA]) -> Result<()> {
-        // Placeholder implementation - update with best architecture from generation
+        // Placeholder implementation - update with best architecture from _generation
         if let Some(best) = new_generation.first() {
             self.architecture_dna = best.clone();
         }
@@ -6875,11 +6856,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
 
     #[allow(dead_code)]
     pub fn evolve_architecture_from_results(
-        &mut self,
-        _results: &FusionProcessingResult<F>,
+        &mut self_results: &FusionProcessingResult<F>,
     ) -> Result<()> {
-        // Placeholder implementation - evolve architecture based on results
-        // In a real implementation, this would analyze the results and evolve the architecture
+        // Placeholder implementation - evolve architecture based on _results
+        // In a real implementation, this would analyze the _results and evolve the architecture
         Ok(())
     }
 }
@@ -6889,8 +6869,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
 impl<F: Float + Debug + Clone + FromPrimitive> AdvancedPredictiveCore<F> {
     #[allow(dead_code)]
     pub fn generate_impossible_predictions(
-        &self,
-        _data: &Array1<F>,
+        &self_data: &Array1<F>,
     ) -> Result<AdvancedPredictions<F>> {
         // Placeholder implementation - generates predictions
         Ok(AdvancedPredictions {
@@ -6913,7 +6892,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaLearningController<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> TemporalHypercomputingEngine<F> {
     #[allow(dead_code)]
-    pub fn analyze_multi_dimensional_time(&self, _data: &Array1<F>) -> Result<TemporalInsights<F>> {
+    pub fn analyze_multi_dimensional_time(&self_data: &Array1<F>) -> Result<TemporalInsights<F>> {
         // Placeholder implementation - returns temporal insights
         Ok(TemporalInsights {
             causality_strength: F::from_f64(0.7).unwrap(),
@@ -6925,7 +6904,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TemporalHypercomputingEngine<F> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> AutonomousDiscoverySystem<F> {
     #[allow(dead_code)]
-    pub fn discover_new_patterns(&self, _data: &Array1<F>) -> Result<Vec<DiscoveredPattern<F>>> {
+    pub fn discover_new_patterns(&self_data: &Array1<F>) -> Result<Vec<DiscoveredPattern<F>>> {
         // Placeholder implementation - returns discovered patterns
         let patterns = vec![
             DiscoveredPattern {

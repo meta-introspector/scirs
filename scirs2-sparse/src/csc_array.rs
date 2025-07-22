@@ -8,8 +8,8 @@ use num_traits::Float;
 use std::fmt::{self, Debug};
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::coo_array::CooArray;
-use crate::csr_array::CsrArray;
+use crate::coo__array::CooArray;
+use crate::csr__array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::{SparseArray, SparseSum};
 
@@ -184,12 +184,12 @@ where
         }
 
         if !sorted {
-            all_data.sort_by_key(|&(_, col, _)| col);
+            all_data.sort_by_key(|&(_, col_)| col);
         }
 
         // Count elements per column
         let mut col_counts = vec![0; shape.1];
-        for &(_, col, _) in &all_data {
+        for &(_, col_) in &all_data {
             col_counts[col] += 1;
         }
 
@@ -206,7 +206,7 @@ where
         let mut indices = Vec::with_capacity(nnz);
         let mut values = Vec::with_capacity(nnz);
 
-        for (row, _, val) in all_data {
+        for (row_, val) in all_data {
             indices.push(row);
             values.push(val);
         }
@@ -220,13 +220,13 @@ where
     }
 
     /// Checks if row indices are sorted for each column
-    fn check_sorted_indices(indices: &Array1<usize>, indptr: &Array1<usize>) -> bool {
+    fn check_sorted_indices(_indices: &Array1<usize>, indptr: &Array1<usize>) -> bool {
         for col in 0..indptr.len() - 1 {
             let start = indptr[col];
             let end = indptr[col + 1];
 
             for i in start..end.saturating_sub(1) {
-                if i + 1 < indices.len() && indices[i] > indices[i + 1] {
+                if i + 1 < _indices.len() && _indices[i] > _indices[i + 1] {
                     return false;
                 }
             }
@@ -533,7 +533,7 @@ where
             }
 
             // Sort by row index
-            col_data.sort_by_key(|&(row, _)| row);
+            col_data.sort_by_key(|&(row_)| row);
 
             // Put the sorted data back
             for (i, (row, val)) in col_data.into_iter().enumerate() {

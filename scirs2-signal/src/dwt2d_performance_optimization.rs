@@ -12,14 +12,15 @@
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::dwt2d::dwt2d_decompose;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2};
-// num_traits not used
+use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::check_positive;
 use std::collections::HashMap;
 use std::time::Instant;
 
+#[allow(unused_imports)]
+// num_traits not used
 /// Performance-optimized 2D wavelet transform result
 #[derive(Debug, Clone)]
 pub struct OptimizedDwt2dResult {
@@ -194,7 +195,7 @@ impl Default for PerformanceConfig {
                     avx512: false, // Conservative default
                     neon: false,   // x86 default
                 },
-                cpu_cores: num_cpus::get(),
+                cpu_cores: num, _cpus: get(),
                 l1_cache_size: 32 * 1024,       // 32KB default
                 l2_cache_size: 256 * 1024,      // 256KB default
                 l3_cache_size: 8 * 1024 * 1024, // 8MB default
@@ -299,8 +300,7 @@ enum ProcessingStrategy {
 /// Determine optimal processing strategy based on input characteristics
 #[allow(dead_code)]
 fn determine_optimal_strategy(
-    image: &Array2<f64>,
-    _wavelet: &Wavelet,
+    image: &Array2<f64>, _wavelet: &Wavelet,
     levels: usize,
     config: &PerformanceConfig,
 ) -> SignalResult<ProcessingStrategy> {
@@ -327,8 +327,8 @@ fn determine_optimal_strategy(
 
 /// Validate image dimensions and properties
 #[allow(dead_code)]
-fn validate_image_dimensions(image: &Array2<f64>) -> SignalResult<()> {
-    let (height, width) = image.dim();
+fn validate_image_dimensions(_image: &Array2<f64>) -> SignalResult<()> {
+    let (height, width) = _image.dim();
 
     if height == 0 || width == 0 {
         return Err(SignalError::ValueError(
@@ -343,7 +343,7 @@ fn validate_image_dimensions(image: &Array2<f64>) -> SignalResult<()> {
     }
 
     // Check for finite values
-    for (i, row) in image.outer_iter().enumerate() {
+    for (i, row) in _image.outer_iter().enumerate() {
         for (j, &val) in row.iter().enumerate() {
             if !val.is_finite() {
                 return Err(SignalError::ValueError(format!(
@@ -411,8 +411,7 @@ fn simd_optimized_decomposition(
 #[allow(dead_code)]
 fn simd_row_transform(
     image: &Array2<f64>,
-    wavelet: &Wavelet,
-    _config: &PerformanceConfig,
+    wavelet: &Wavelet_config: &PerformanceConfig,
 ) -> SignalResult<Array2<f64>> {
     let (height, width) = image.dim();
     let filters = wavelet.filters()?;
@@ -433,8 +432,7 @@ fn simd_row_transform(
 #[allow(dead_code)]
 fn simd_column_transform(
     image: &Array2<f64>,
-    wavelet: &Wavelet,
-    _config: &PerformanceConfig,
+    wavelet: &Wavelet_config: &PerformanceConfig,
 ) -> SignalResult<(Array2<f64>, Array2<f64>, Array2<f64>, Array2<f64>)> {
     let (height, width) = image.dim();
     let half_height = height / 2;
@@ -513,8 +511,7 @@ fn simd_1d_transform(
 fn parallel_optimized_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
-    levels: usize,
-    _config: &PerformanceConfig,
+    levels: usize_config: &PerformanceConfig,
 ) -> SignalResult<Vec<Array2<f64>>> {
     // For simplicity, fall back to standard decomposition with parallel row processing
     let mut current_image = image.clone();
@@ -558,8 +555,7 @@ fn tiled_optimized_decomposition(
 fn streaming_optimized_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
-    levels: usize,
-    _config: &PerformanceConfig,
+    levels: usize_config: &PerformanceConfig,
 ) -> SignalResult<Vec<Array2<f64>>> {
     // For simplicity, fall back to standard decomposition
     // A full implementation would process data in streaming chunks
@@ -718,8 +714,8 @@ fn assess_decomposition_quality(
 
 /// Calculate coefficient statistics
 #[allow(dead_code)]
-fn calculate_coefficient_stats(coeffs: &[f64]) -> CoefficientStatistics {
-    if coeffs.is_empty() {
+fn calculate_coefficient_stats(_coeffs: &[f64]) -> CoefficientStatistics {
+    if _coeffs.is_empty() {
         return CoefficientStatistics {
             dynamic_range: 0.0,
             sparsity_ratio: 1.0,
@@ -728,15 +724,15 @@ fn calculate_coefficient_stats(coeffs: &[f64]) -> CoefficientStatistics {
         };
     }
 
-    let max_val = coeffs.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let min_val = coeffs.iter().cloned().fold(f64::INFINITY, f64::min);
+    let max_val = _coeffs.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let min_val = _coeffs.iter().cloned().fold(f64::INFINITY, f64::min);
     let dynamic_range = max_val - min_val;
 
-    let near_zero_count = coeffs.iter().filter(|&&x| x.abs() < 1e-10).count();
-    let sparsity_ratio = near_zero_count as f64 / coeffs.len() as f64;
+    let near_zero_count = _coeffs.iter().filter(|&&x| x.abs() < 1e-10).count();
+    let sparsity_ratio = near_zero_count as f64 / _coeffs.len()  as f64;
 
     // Simple entropy calculation
-    let abs_coeffs: Vec<f64> = coeffs.iter().map(|&x| x.abs()).collect();
+    let abs_coeffs: Vec<f64> = _coeffs.iter().map(|&x: &f64| x.abs()).collect();
     let max_abs = abs_coeffs.iter().cloned().fold(0.0f64, f64::max);
     let entropy = if max_abs > 0.0 {
         let normalized: Vec<f64> = abs_coeffs.iter().map(|&x| x / max_abs).collect();
@@ -750,11 +746,11 @@ fn calculate_coefficient_stats(coeffs: &[f64]) -> CoefficientStatistics {
     };
 
     // Simple outlier detection (values > 3 standard deviations)
-    let mean = coeffs.iter().sum::<f64>() / coeffs.len() as f64;
-    let variance = coeffs.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / coeffs.len() as f64;
+    let mean = _coeffs.iter().sum::<f64>() / _coeffs.len()  as f64;
+    let variance = _coeffs.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _coeffs.len()  as f64;
     let std_dev = variance.sqrt();
     let outlier_threshold = 3.0 * std_dev;
-    let outlier_count = coeffs
+    let outlier_count = _coeffs
         .iter()
         .filter(|&&x| (x - mean).abs() > outlier_threshold)
         .count();
@@ -769,18 +765,18 @@ fn calculate_coefficient_stats(coeffs: &[f64]) -> CoefficientStatistics {
 
 /// Calculate Mean Squared Error between two images
 #[allow(dead_code)]
-fn calculate_mse(img1: &Array2<f64>, img2: &Array2<f64>) -> f64 {
-    if img1.dim() != img2.dim() {
+fn calculate_mse(_img1: &Array2<f64>, img2: &Array2<f64>) -> f64 {
+    if _img1.dim() != img2.dim() {
         return f64::INFINITY;
     }
 
-    let diff_sum: f64 = img1
+    let diff_sum: f64 = _img1
         .iter()
         .zip(img2.iter())
         .map(|(&a, &b)| (a - b).powi(2))
         .sum();
 
-    diff_sum / (img1.len() as f64)
+    diff_sum / (_img1.len() as f64)
 }
 
 /// Reconstruct image from subbands (simplified)
@@ -800,7 +796,7 @@ fn reconstruct_from_subbands(
 
 /// Generate performance optimization report
 #[allow(dead_code)]
-pub fn generate_performance_report(result: &OptimizedDwt2dResult) -> String {
+pub fn generate_performance_report(_result: &OptimizedDwt2dResult) -> String {
     let mut report = String::new();
 
     report.push_str("# 2D Wavelet Transform Performance Optimization Report\n\n");
@@ -809,68 +805,68 @@ pub fn generate_performance_report(result: &OptimizedDwt2dResult) -> String {
     report.push_str("## Performance Metrics\n");
     report.push_str(&format!(
         "- Total Computation Time: {:.2} ms\n",
-        result.performance_metrics.total_time_ms
+        _result.performance_metrics.total_time_ms
     ));
     report.push_str(&format!(
         "- SIMD Acceleration: {:.2}x\n",
-        result.performance_metrics.simd_acceleration
+        _result.performance_metrics.simd_acceleration
     ));
     report.push_str(&format!(
         "- Parallel Efficiency: {:.1}%\n",
-        result.performance_metrics.parallel_efficiency * 100.0
+        _result.performance_metrics.parallel_efficiency * 100.0
     ));
     report.push_str(&format!(
         "- Memory Bandwidth Utilization: {:.1}%\n",
-        result.performance_metrics.memory_bandwidth_utilization * 100.0
+        _result.performance_metrics.memory_bandwidth_utilization * 100.0
     ));
     report.push_str(&format!(
         "- Cache Hit Ratio: {:.1}%\n",
-        result.performance_metrics.cache_hit_ratio * 100.0
+        _result.performance_metrics.cache_hit_ratio * 100.0
     ));
     report.push_str(&format!(
         "- Operations per Second: {:.0}\n",
-        result.performance_metrics.operations_per_second
+        _result.performance_metrics.operations_per_second
     ));
 
     // Memory statistics
     report.push_str("\n## Memory Statistics\n");
     report.push_str(&format!(
         "- Peak Memory Usage: {} bytes\n",
-        result.memory_stats.peak_memory_bytes
+        _result.memory_stats.peak_memory_bytes
     ));
     report.push_str(&format!(
         "- Average Memory Usage: {} bytes\n",
-        result.memory_stats.average_memory_bytes
+        _result.memory_stats.average_memory_bytes
     ));
     report.push_str(&format!(
         "- Memory Allocations: {}\n",
-        result.memory_stats.allocation_count
+        _result.memory_stats.allocation_count
     ));
     report.push_str(&format!(
         "- Fragmentation Score: {:.3}\n",
-        result.memory_stats.fragmentation_score
+        _result.memory_stats.fragmentation_score
     ));
 
     // Quality assessment
     report.push_str("\n## Quality Assessment\n");
     report.push_str(&format!(
         "- Reconstruction PSNR: {:.2} dB\n",
-        result.quality_assessment.reconstruction_psnr
+        _result.quality_assessment.reconstruction_psnr
     ));
     report.push_str(&format!(
         "- Energy Conservation Error: {:.2e}\n",
-        result.quality_assessment.energy_conservation_error
+        _result.quality_assessment.energy_conservation_error
     ));
     report.push_str(&format!(
         "- Numerical Stability: {:.1}%\n",
-        result.quality_assessment.numerical_stability * 100.0
+        _result.quality_assessment.numerical_stability * 100.0
     ));
 
     // Optimization flags
     report.push_str("\n## Optimization Features Used\n");
     report.push_str(&format!(
         "- SIMD Vectorization: {}\n",
-        if result.optimization_flags.simd_enabled {
+        if _result.optimization_flags.simd_enabled {
             "✅"
         } else {
             "❌"
@@ -878,7 +874,7 @@ pub fn generate_performance_report(result: &OptimizedDwt2dResult) -> String {
     ));
     report.push_str(&format!(
         "- Parallel Processing: {}\n",
-        if result.optimization_flags.parallel_enabled {
+        if _result.optimization_flags.parallel_enabled {
             "✅"
         } else {
             "❌"
@@ -886,7 +882,7 @@ pub fn generate_performance_report(result: &OptimizedDwt2dResult) -> String {
     ));
     report.push_str(&format!(
         "- Cache Optimization: {}\n",
-        if result.optimization_flags.cache_optimization {
+        if _result.optimization_flags.cache_optimization {
             "✅"
         } else {
             "❌"
@@ -894,7 +890,7 @@ pub fn generate_performance_report(result: &OptimizedDwt2dResult) -> String {
     ));
     report.push_str(&format!(
         "- Memory Pooling: {}\n",
-        if result.optimization_flags.memory_pooling {
+        if _result.optimization_flags.memory_pooling {
             "✅"
         } else {
             "❌"

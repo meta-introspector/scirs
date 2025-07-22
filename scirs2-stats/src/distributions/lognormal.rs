@@ -6,6 +6,7 @@ use crate::distributions::normal::Normal;
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
+use statrs::statistics::Statistics;
 
 /// Lognormal distribution structure
 ///
@@ -38,11 +39,11 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::lognormal::Lognormal;
+    /// use scirs2__stats::distributions::lognormal::Lognormal;
     ///
     /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
     /// ```
-    pub fn new(mu: F, sigma: F, loc: F) -> StatsResult<Self> {
+    pub fn new(_mu: F, sigma: F, loc: F) -> StatsResult<Self> {
         if sigma <= F::zero() {
             return Err(StatsError::DomainError(
                 "Standard deviation must be positive".to_string(),
@@ -50,9 +51,9 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
         }
 
         // Create underlying normal distribution
-        match Normal::new(mu, sigma) {
+        match Normal::new(_mu, sigma) {
             Ok(norm) => Ok(Lognormal {
-                mu,
+                _mu,
                 sigma,
                 loc,
                 norm,
@@ -74,7 +75,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::lognormal::Lognormal;
+    /// use scirs2__stats::distributions::lognormal::Lognormal;
     ///
     /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
     /// let pdf_at_one = lognorm.pdf(1.0);
@@ -114,7 +115,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::lognormal::Lognormal;
+    /// use scirs2__stats::distributions::lognormal::Lognormal;
     ///
     /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
     /// let cdf_at_one = lognorm.cdf(1.0);
@@ -147,14 +148,14 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::lognormal::Lognormal;
+    /// use scirs2__stats::distributions::lognormal::Lognormal;
     ///
     /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
     /// let x = lognorm.ppf(0.5).unwrap();
     /// assert!((x - 1.0000001010066806) < 1e-7);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p > F::one() {
+        if p < F::zero() || p >, F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));
@@ -188,7 +189,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::lognormal::Lognormal;
+    /// use scirs2__stats::distributions::lognormal::Lognormal;
     ///
     /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
     /// let samples = lognorm.rvs(1000).unwrap();
@@ -216,7 +217,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::lognormal::Lognormal;
+    /// use scirs2__stats::distributions::lognormal::Lognormal;
     ///
     /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
     /// let mean = lognorm.mean();
@@ -238,7 +239,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::lognormal::Lognormal;
+    /// use scirs2__stats::distributions::lognormal::Lognormal;
     ///
     /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
     /// let var = lognorm.var();
@@ -261,7 +262,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::lognormal::Lognormal;
+    /// use scirs2__stats::distributions::lognormal::Lognormal;
     ///
     /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
     /// let median = lognorm.median();
@@ -280,7 +281,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::lognormal::Lognormal;
+    /// use scirs2__stats::distributions::lognormal::Lognormal;
     ///
     /// let lognorm = Lognormal::new(0.0f64, 1.0, 0.0).unwrap();
     /// let mode = lognorm.mode();
@@ -309,17 +310,17 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::distributions::lognormal;
+/// use scirs2__stats::distributions::lognormal;
 ///
 /// let lognorm = lognormal::lognormal(0.0f64, 1.0, 0.0).unwrap();
 /// let pdf_at_one = lognorm.pdf(1.0);
 /// ```
 #[allow(dead_code)]
-pub fn lognormal<F>(mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
+pub fn lognormal<F>(_mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    Lognormal::new(mu, sigma, loc)
+    Lognormal::new(_mu, sigma, loc)
 }
 
 /// Implementation of SampleableDistribution for Lognormal

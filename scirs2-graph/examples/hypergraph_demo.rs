@@ -4,7 +4,7 @@
 //! which are generalizations of graphs where edges can connect
 //! any number of vertices.
 
-use scirs2_graph::{Hypergraph, Result};
+use scirs2__graph::{Hypergraph, Result};
 
 #[allow(dead_code)]
 fn main() -> Result<()> {

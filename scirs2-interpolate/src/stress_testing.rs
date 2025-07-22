@@ -73,9 +73,9 @@ pub struct StressTestResults {
 }
 
 impl StressTestResults {
-    fn new(method_name: String, config: StressTestConfig) -> Self {
+    fn new(_method_name: String, config: StressTestConfig) -> Self {
         Self {
-            method_name,
+            _method_name,
             config,
             passed_tests: Vec::new(),
             failed_tests: Vec::new(),
@@ -270,12 +270,12 @@ pub mod stress_tests {
     use std::time::Instant;
 
     /// Stress test linear interpolation
-    pub fn test_linear_interpolation(config: &StressTestConfig) -> StressTestResults {
+    pub fn test_linear_interpolation(_config: &StressTestConfig) -> StressTestResults {
         let mut results =
-            StressTestResults::new("Linear Interpolation".to_string(), config.clone());
+            StressTestResults::new("Linear Interpolation".to_string(), _config.clone());
 
         // Test with large values
-        if config.test_large_values {
+        if _config.test_large_values {
             let (x, y) = extreme_data::large_values_1d(1000);
             let queries = Array1::linspace(x[0], x[x.len() - 1], 100);
 
@@ -292,7 +292,7 @@ pub mod stress_tests {
         }
 
         // Test with small values
-        if config.test_small_values {
+        if _config.test_small_values {
             let (x, y) = extreme_data::small_values_1d(1000);
             let queries = Array1::linspace(x[0], x[x.len() - 1], 100);
 
@@ -320,7 +320,7 @@ pub mod stress_tests {
         }
 
         // Test with large ranges
-        if config.test_large_ranges {
+        if _config.test_large_ranges {
             let (x, y) = extreme_data::large_range_1d(100);
             let queries = Array1::from_vec(vec![1e-5, 1e-2, 1.0, 1e2, 1e5]);
 
@@ -337,7 +337,7 @@ pub mod stress_tests {
         }
 
         // Test extreme extrapolation
-        if config.test_extreme_extrapolation {
+        if _config.test_extreme_extrapolation {
             let x = Array1::linspace(0.0, 1.0, 10);
             let y = x.mapv(|xi: f64| xi.sin());
             let queries = Array1::from_vec(vec![-100.0, -10.0, 10.0, 100.0]);
@@ -355,8 +355,8 @@ pub mod stress_tests {
         }
 
         // Performance test with large dataset
-        if config.max_dataset_size > 0 {
-            let n = config.max_dataset_size.min(1_000_000);
+        if _config.max_dataset_size > 0 {
+            let n = _config.max_dataset_size.min(1_000_000);
             let x = Array1::linspace(0.0, 100.0, n);
             let y = x.mapv(|xi: f64| xi.sin());
             let queries = Array1::linspace(0.0, 100.0, 10000);
@@ -376,11 +376,11 @@ pub mod stress_tests {
     }
 
     /// Stress test cubic spline interpolation
-    pub fn test_cubic_spline(config: &StressTestConfig) -> StressTestResults {
-        let mut results = StressTestResults::new("Cubic Spline".to_string(), config.clone());
+    pub fn test_cubic_spline(_config: &StressTestConfig) -> StressTestResults {
+        let mut results = StressTestResults::new("Cubic Spline".to_string(), _config.clone());
 
         // Test with nearly collinear points
-        if config.test_near_collinear {
+        if _config.test_near_collinear {
             let (x, y) = extreme_data::near_collinear_1d(100);
 
             match CubicSpline::new(&x.view(), &y.view()) {
@@ -407,7 +407,7 @@ pub mod stress_tests {
         }
 
         // Test with duplicate detection
-        if config.test_duplicates {
+        if _config.test_duplicates {
             let (x, y) = extreme_data::with_duplicates_1d(30);
 
             match CubicSpline::new(&x.view(), &y.view()) {
@@ -417,7 +417,7 @@ pub mod stress_tests {
         }
 
         // Test boundary conditions with extreme values
-        if config.test_large_values {
+        if _config.test_large_values {
             let n = 50;
             let x = Array1::linspace(0.0, 1.0, n);
             let scale = 1e100;
@@ -454,11 +454,11 @@ pub mod stress_tests {
     }
 
     /// Stress test RBF interpolation
-    pub fn test_rbf_interpolation(config: &StressTestConfig) -> StressTestResults {
-        let mut results = StressTestResults::new("RBF Interpolation".to_string(), config.clone());
+    pub fn test_rbf_interpolation(_config: &StressTestConfig) -> StressTestResults {
+        let mut results = StressTestResults::new("RBF Interpolation".to_string(), _config.clone());
 
         // Test with ill-conditioned matrices
-        if config.test_ill_conditioned {
+        if _config.test_ill_conditioned {
             let (points, values) = extreme_data::extreme_2d(50, "ill_conditioned");
 
             let kernels = [
@@ -495,7 +495,7 @@ pub mod stress_tests {
         }
 
         // Test with clustered points
-        if config.test_dense_grids {
+        if _config.test_dense_grids {
             let (points, values) = extreme_data::extreme_2d(200, "clustered");
 
             match RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 0.1) {
@@ -520,11 +520,11 @@ pub mod stress_tests {
     }
 
     /// Comprehensive stress test suite
-    pub fn run_all_stress_tests(config: &StressTestConfig) -> Vec<StressTestResults> {
+    pub fn run_all_stress_tests(_config: &StressTestConfig) -> Vec<StressTestResults> {
         vec![
-            test_linear_interpolation(config),
-            test_cubic_spline(config),
-            test_rbf_interpolation(config),
+            test_linear_interpolation(_config),
+            test_cubic_spline(_config),
+            test_rbf_interpolation(_config),
             // Add more method tests as needed
         ]
     }
@@ -535,9 +535,9 @@ pub mod stability {
     use super::*;
 
     /// Check if a matrix is ill-conditioned
-    pub fn condition_number_estimate(points: &ArrayView2<f64>) -> f64 {
+    pub fn condition_number_estimate(_points: &ArrayView2<f64>) -> f64 {
         // Simple estimate based on point spacing
-        let n = points.nrows();
+        let n = _points.nrows();
         if n < 2 {
             return 1.0;
         }
@@ -547,10 +547,9 @@ pub mod stability {
 
         for i in 0..n {
             for j in i + 1..n {
-                let dist: f64 = points
+                let dist: f64 = _points
                     .slice(ndarray::s![i, ..])
-                    .iter()
-                    .zip(points.slice(ndarray::s![j, ..]).iter())
+                    .iter..].iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();
@@ -568,20 +567,20 @@ pub mod stability {
     }
 
     /// Test for numerical overflow/underflow
-    pub fn test_numerical_limits(value: f64) -> InterpolateResult<()> {
-        if !value.is_finite() {
+    pub fn test_numerical_limits(_value: f64) -> InterpolateResult<()> {
+        if !_value.is_finite() {
             return Err(InterpolateError::invalid_input(
-                "Non-finite value encountered".to_string(),
+                "Non-finite _value encountered".to_string(),
             ));
         }
 
-        if value.abs() > F64_MAX / 100.0 {
+        if _value.abs() > F64_MAX / 100.0 {
             return Err(InterpolateError::invalid_input(
                 "Value approaching overflow".to_string(),
             ));
         }
 
-        if value != 0.0 && value.abs() < F64_MIN_POSITIVE * 100.0 {
+        if _value != 0.0 && _value.abs() < F64_MIN_POSITIVE * 100.0 {
             return Err(InterpolateError::invalid_input(
                 "Value approaching underflow".to_string(),
             ));

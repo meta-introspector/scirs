@@ -15,8 +15,6 @@
 //! This module provides neural network layers and models that work with
 //! any array type implementing the ArrayProtocol trait.
 
-use std::any::Any;
-
 use ndarray::{Array, Ix1};
 use rand::Rng;
 
@@ -25,8 +23,11 @@ use crate::array_protocol::operations::OperationError;
 use crate::array_protocol::{ArrayProtocol, NdarrayWrapper};
 
 /// Trait for neural network layers.
-pub trait Layer: Any + Send + Sync {
+pub trait Layer: Send + Sync {
     /// Forward pass through the layer.
+    /// Get the layer type name for serialization.
+    fn layer_type(&self) -> &str;
+
     fn forward(&self, inputs: &dyn ArrayProtocol)
         -> Result<Box<dyn ArrayProtocol>, OperationError>;
 
@@ -37,11 +38,7 @@ pub trait Layer: Any + Send + Sync {
     fn parameters_mut(&mut self) -> Vec<&mut Box<dyn ArrayProtocol>>;
 
     /// Update a specific parameter by name
-    fn update_parameter(
-        &mut self,
-        name: &str,
-        new_value: Box<dyn ArrayProtocol>,
-    ) -> Result<(), OperationError>;
+    fn update_parameter(&mut self, name: &str, value: Box<dyn ArrayProtocol>) -> Result<(), OperationError>;
 
     /// Get parameter names
     fn parameter_names(&self) -> Vec<String>;
@@ -58,8 +55,6 @@ pub trait Layer: Any + Send + Sync {
     /// Get the layer's name.
     fn name(&self) -> &str;
 
-    /// Downcast the layer to Any for type-specific operations.
-    fn as_any(&self) -> &dyn Any;
 }
 
 /// Linear (dense/fully-connected) layer.
@@ -98,7 +93,7 @@ impl Linear {
     }
 
     /// Create a new linear layer with randomly initialized weights.
-    pub fn with_shape(
+    pub fn new_random(
         name: &str,
         in_features: usize,
         out_features: usize,
@@ -109,13 +104,13 @@ impl Linear {
         let scale = (6.0 / (in_features + out_features) as f64).sqrt();
         let mut rng = rand::rng();
         let weights = Array::from_shape_fn((out_features, in_features), |_| {
-            (rng.random::<f64>() * 2.0 - 1.0) * scale
+            (rng.random::<f64>() * 2.0_f64 - 1.0) * scale
         });
 
         // Create bias if needed
         let bias = if with_bias {
-            let bias: Array<f64, Ix1> = Array::zeros(out_features);
-            Some(Box::new(NdarrayWrapper::new(bias)) as Box<dyn ArrayProtocol>)
+            let bias_array: Array<f64, Ix1> = Array::zeros(out_features);
+            Some(Box::new(NdarrayWrapper::new(bias_array)) as Box<dyn ArrayProtocol>)
         } else {
             None
         };
@@ -131,6 +126,10 @@ impl Linear {
 }
 
 impl Layer for Linear {
+    fn layer_type(&self) -> &str {
+        "Linear"
+    }
+
     fn forward(
         &self,
         inputs: &dyn ArrayProtocol,
@@ -171,18 +170,14 @@ impl Layer for Linear {
         params
     }
 
-    fn update_parameter(
-        &mut self,
-        name: &str,
-        new_value: Box<dyn ArrayProtocol>,
-    ) -> Result<(), OperationError> {
+    fn update_parameter(&mut self, name: &str, value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
         match name {
             "weights" => {
-                self.weights = new_value;
+                self.weights = value;
                 Ok(())
             }
             "bias" => {
-                self.bias = Some(new_value);
+                self.bias = Some(value);
                 Ok(())
             }
             _ => Err(OperationError::Other(format!("Unknown parameter: {name}"))),
@@ -213,9 +208,7 @@ impl Layer for Linear {
         &self.name
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
+    
 }
 
 /// Convolutional layer.
@@ -282,13 +275,13 @@ impl Conv2D {
         let mut rng = rand::rng();
         let filters = Array::from_shape_fn(
             (filter_height, filter_width, in_channels, out_channels),
-            |_| (rng.random::<f64>() * 2.0 - 1.0) * scale,
+            |_| (rng.random::<f64>() * 2.0_f64 - 1.0) * scale,
         );
 
         // Create bias if needed
         let bias = if with_bias {
-            let bias: Array<f64, Ix1> = Array::zeros(out_channels);
-            Some(Box::new(NdarrayWrapper::new(bias)) as Box<dyn ArrayProtocol>)
+            let bias_array: Array<f64, Ix1> = Array::zeros(out_channels);
+            Some(Box::new(NdarrayWrapper::new(bias_array)) as Box<dyn ArrayProtocol>)
         } else {
             None
         };
@@ -306,6 +299,10 @@ impl Conv2D {
 }
 
 impl Layer for Conv2D {
+    fn layer_type(&self) -> &str {
+        "Conv2D"
+    }
+
     fn forward(
         &self,
         inputs: &dyn ArrayProtocol,
@@ -347,18 +344,14 @@ impl Layer for Conv2D {
         params
     }
 
-    fn update_parameter(
-        &mut self,
-        name: &str,
-        new_value: Box<dyn ArrayProtocol>,
-    ) -> Result<(), OperationError> {
+    fn update_parameter(&mut self, name: &str, value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
         match name {
             "filters" => {
-                self.filters = new_value;
+                self.filters = value;
                 Ok(())
             }
             "bias" => {
-                self.bias = Some(new_value);
+                self.bias = Some(value);
                 Ok(())
             }
             _ => Err(OperationError::Other(format!("Unknown parameter: {name}"))),
@@ -389,9 +382,7 @@ impl Layer for Conv2D {
         &self.name
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
+    
 }
 
 /// Builder for creating Conv2D layers
@@ -516,16 +507,18 @@ impl MaxPool2D {
 }
 
 impl Layer for MaxPool2D {
+    fn layer_type(&self) -> &str {
+        "MaxPool2D"
+    }
+
     fn forward(
         &self,
         inputs: &dyn ArrayProtocol,
     ) -> Result<Box<dyn ArrayProtocol>, OperationError> {
-        crate::array_protocol::ml_ops::max_pool2d(
-            inputs,
-            self.kernel_size,
-            self.stride,
-            self.padding,
-        )
+        // TODO: Implement max_pool2d in ml_ops module
+        Err(OperationError::NotImplemented(
+            "max_pool2d not yet implemented".to_string(),
+        ))
     }
 
     fn parameters(&self) -> Vec<Box<dyn ArrayProtocol>> {
@@ -538,11 +531,7 @@ impl Layer for MaxPool2D {
         Vec::new()
     }
 
-    fn update_parameter(
-        &mut self,
-        name: &str,
-        _new_value: Box<dyn ArrayProtocol>,
-    ) -> Result<(), OperationError> {
+    fn update_parameter(&mut self, name: &str, _value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
         Err(OperationError::Other(format!(
             "MaxPool2D has no parameter: {name}"
         )))
@@ -569,9 +558,7 @@ impl Layer for MaxPool2D {
         &self.name
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
+    
 }
 
 /// Batch normalization layer.
@@ -607,7 +594,6 @@ impl BatchNorm {
         running_mean: Box<dyn ArrayProtocol>,
         running_var: Box<dyn ArrayProtocol>,
         epsilon: f64,
-        _momentum: f64, // Kept as parameter for API compatibility but not used
     ) -> Self {
         Self {
             name: name.to_string(),
@@ -646,6 +632,10 @@ impl BatchNorm {
 }
 
 impl Layer for BatchNorm {
+    fn layer_type(&self) -> &str {
+        "BatchNorm"
+    }
+
     fn forward(
         &self,
         inputs: &dyn ArrayProtocol,
@@ -668,18 +658,14 @@ impl Layer for BatchNorm {
         vec![&mut self.scale, &mut self.offset]
     }
 
-    fn update_parameter(
-        &mut self,
-        name: &str,
-        new_value: Box<dyn ArrayProtocol>,
-    ) -> Result<(), OperationError> {
+    fn update_parameter(&mut self, name: &str, value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
         match name {
             "scale" => {
-                self.scale = new_value;
+                self.scale = value;
                 Ok(())
             }
             "offset" => {
-                self.offset = new_value;
+                self.offset = value;
                 Ok(())
             }
             _ => Err(OperationError::Other(format!("Unknown parameter: {name}"))),
@@ -706,9 +692,7 @@ impl Layer for BatchNorm {
         &self.name
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
+    
 }
 
 /// Dropout layer.
@@ -739,6 +723,10 @@ impl Dropout {
 }
 
 impl Layer for Dropout {
+    fn layer_type(&self) -> &str {
+        "Dropout"
+    }
+
     fn forward(
         &self,
         inputs: &dyn ArrayProtocol,
@@ -756,11 +744,7 @@ impl Layer for Dropout {
         Vec::new()
     }
 
-    fn update_parameter(
-        &mut self,
-        name: &str,
-        _new_value: Box<dyn ArrayProtocol>,
-    ) -> Result<(), OperationError> {
+    fn update_parameter(&mut self, name: &str, _value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
         Err(OperationError::Other(format!(
             "Dropout has no parameter: {name}"
         )))
@@ -787,9 +771,7 @@ impl Layer for Dropout {
         &self.name
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
+    
 }
 
 /// Multi-head attention layer.
@@ -843,7 +825,7 @@ impl MultiHeadAttention {
     }
 
     /// Create a new multi-head attention layer with randomly initialized weights.
-    pub fn with_shape(name: &str, d_model: usize, num_heads: usize) -> Self {
+    pub fn with_params(name: &str, num_heads: usize, d_model: usize) -> Self {
         // Check if d_model is divisible by num_heads
         assert!(
             d_model % num_heads == 0,
@@ -855,19 +837,19 @@ impl MultiHeadAttention {
         let mut rng = rand::rng();
 
         let wq = Array::from_shape_fn((d_model, d_model), |_| {
-            (rng.random::<f64>() * 2.0 - 1.0) * scale
+            (rng.random::<f64>() * 2.0_f64 - 1.0) * scale
         });
 
         let wk = Array::from_shape_fn((d_model, d_model), |_| {
-            (rng.random::<f64>() * 2.0 - 1.0) * scale
+            (rng.random::<f64>() * 2.0_f64 - 1.0) * scale
         });
 
         let wv = Array::from_shape_fn((d_model, d_model), |_| {
-            (rng.random::<f64>() * 2.0 - 1.0) * scale
+            (rng.random::<f64>() * 2.0_f64 - 1.0) * scale
         });
 
         let wo = Array::from_shape_fn((d_model, d_model), |_| {
-            (rng.random::<f64>() * 2.0 - 1.0) * scale
+            (rng.random::<f64>() * 2.0_f64 - 1.0) * scale
         });
 
         Self {
@@ -884,6 +866,10 @@ impl MultiHeadAttention {
 }
 
 impl Layer for MultiHeadAttention {
+    fn layer_type(&self) -> &str {
+        "MultiHeadAttention"
+    }
+
     fn forward(
         &self,
         inputs: &dyn ArrayProtocol,
@@ -927,26 +913,22 @@ impl Layer for MultiHeadAttention {
         vec![&mut self.wq, &mut self.wk, &mut self.wv, &mut self.wo]
     }
 
-    fn update_parameter(
-        &mut self,
-        name: &str,
-        new_value: Box<dyn ArrayProtocol>,
-    ) -> Result<(), OperationError> {
+    fn update_parameter(&mut self, name: &str, value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
         match name {
             "wq" => {
-                self.wq = new_value;
+                self.wq = value;
                 Ok(())
             }
             "wk" => {
-                self.wk = new_value;
+                self.wk = value;
                 Ok(())
             }
             "wv" => {
-                self.wv = new_value;
+                self.wv = value;
                 Ok(())
             }
             "wo" => {
-                self.wo = new_value;
+                self.wo = value;
                 Ok(())
             }
             _ => Err(OperationError::Other(format!("Unknown parameter: {name}"))),
@@ -978,9 +960,7 @@ impl Layer for MultiHeadAttention {
         &self.name
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
+    
 }
 
 /// Sequential model that chains layers together.
@@ -1070,8 +1050,8 @@ impl Sequential {
     /// Backward pass through the model to compute gradients
     pub fn backward(
         &self,
-        _input: &dyn ArrayProtocol,
-        _grad_output: &dyn ArrayProtocol,
+        output: &dyn ArrayProtocol,
+        _target: &dyn ArrayProtocol,
     ) -> Result<crate::array_protocol::grad::GradientDict, crate::error::CoreError> {
         // For now, return an empty gradient dictionary
         // In a full implementation, this would compute gradients via backpropagation
@@ -1131,7 +1111,7 @@ impl Sequential {
         // Perform gradient descent update: param = param - learning_rate * gradient
         let current_param = &current_params[param_idx];
 
-        // Multiply gradient by learning rate
+        // Multiply gradient by learning _rate
         let scaled_gradient =
             crate::array_protocol::operations::multiply_by_scalar_f64(gradient, learning_rate)
                 .map_err(|e| {
@@ -1235,7 +1215,7 @@ pub fn create_simple_cnn(input_shape: (usize, usize, usize), num_classes: usize)
     // Flatten layer (implemented as a Linear layer with reshape)
 
     // Fully connected layers
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::new_random(
         "fc1",
         64 * (height / 4) * (width / 4), // Input features
         128,                             // Output features
@@ -1248,7 +1228,7 @@ pub fn create_simple_cnn(input_shape: (usize, usize, usize), num_classes: usize)
         None, // No fixed seed
     )));
 
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::new_random(
         "fc2",
         128,         // Input features
         num_classes, // Output features
@@ -1272,7 +1252,7 @@ mod tests {
 
         // Create a linear layer
         let weights = Array2::<f64>::eye(3);
-        let bias = Array::<f64, _>::ones(3);
+        let bias = Array1::<f64>::ones(3);
 
         let layer = Linear::new(
             "linear",
@@ -1304,7 +1284,7 @@ mod tests {
         let mut model = Sequential::new("test_model", Vec::new());
 
         // Add linear layers
-        model.add_layer(Box::new(Linear::with_shape(
+        model.add_layer(Box::new(Linear::new_random(
             "fc1",
             3,    // Input features
             2,    // Output features
@@ -1312,7 +1292,7 @@ mod tests {
             Some(ActivationFunc::ReLU),
         )));
 
-        model.add_layer(Box::new(Linear::with_shape(
+        model.add_layer(Box::new(Linear::new_random(
             "fc2",
             2,    // Input features
             1,    // Output features

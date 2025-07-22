@@ -1,8 +1,8 @@
 use ndarray::{Array1, Array2};
 use rand::distr::Uniform;
 use rand::prelude::*;
-use scirs2_cluster::density::optics::{extract_dbscan_clustering, extract_xi_clusters, optics};
-use scirs2_cluster::density::DistanceMetric;
+use scirs2__cluster::density::optics::{extract_dbscan_clustering, extract_xi_clusters, optics};
+use scirs2__cluster::density::DistanceMetric;
 
 #[allow(dead_code)]
 fn main() {
@@ -93,9 +93,9 @@ fn generate_data() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn print_cluster_stats(labels: &Array1<i32>) {
+fn print_cluster_stats(_labels: &Array1<i32>) {
     // Find number of clusters (max label + 1)
-    let max_label = labels.iter().max().unwrap_or(&-1);
+    let max_label = _labels.iter().max().unwrap_or(&-1);
     let num_clusters = if *max_label >= 0 {
         (max_label + 1) as usize
     } else {
@@ -107,7 +107,7 @@ fn print_cluster_stats(labels: &Array1<i32>) {
     // Count points in each cluster
     let mut cluster_counts = vec![0; num_clusters + 1]; // +1 for noise (-1)
 
-    for &label in labels.iter() {
+    for &label in _labels.iter() {
         if label == -1 {
             cluster_counts[num_clusters] += 1; // Count noise points
         } else {
@@ -122,6 +122,6 @@ fn print_cluster_stats(labels: &Array1<i32>) {
     println!("Noise points: {}", cluster_counts[num_clusters]);
 
     // Calculate percentage of noise
-    let noise_percentage = (cluster_counts[num_clusters] as f64 / labels.len() as f64) * 100.0;
+    let noise_percentage = (cluster_counts[num_clusters] as f64 / _labels.len() as f64) * 100.0;
     println!("Noise percentage: {:.1}%", noise_percentage);
 }

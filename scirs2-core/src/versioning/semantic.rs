@@ -4,7 +4,7 @@
 //! extensions for scientific computing environments. Provides `SemVer` 2.0.0
 //! compliance with additional features for research and enterprise use.
 
-use crate::error::CoreError;
+use crate::error::{CoreError, ErrorContext};
 use std::cmp::Ordering;
 use std::fmt;
 use std::str::FromStr;
@@ -39,9 +39,24 @@ impl Version {
             build_metadata: None,
         }
     }
+    
+    pub fn parse(version_str: &str) -> Result<Self, String> {
+        let parts: Vec<&str> = version_str.split('.').collect();
+        if parts.len() != 3 {
+            return Err(format!("Invalid version format: {}", version_str));
+        }
+        
+        Ok(Self {
+            major: parts[0].parse().map_err(|e| format!("Invalid major version: {}", e))?,
+            minor: parts[1].parse().map_err(|e| format!("Invalid minor version: {}", e))?,
+            patch: parts[2].parse().map_err(|e| format!("Invalid patch version: {}", e))?,
+            pre_release: None,
+            build_metadata: None,
+        })
+    }
 
     /// Create a version with pre-release
-    pub fn new_with_pre_release(major: u64, minor: u64, patch: u64, pre_release: String) -> Self {
+    pub fn release(major: u64, minor: u64, patch: u64, pre_release: String) -> Self {
         Self {
             major,
             minor,
@@ -52,8 +67,8 @@ impl Version {
     }
 
     /// Parse a version string
-    pub fn parse(version: &str) -> Result<Self, CoreError> {
-        let version = version.trim();
+    pub fn version(version_str: &str) -> Result<Self, CoreError> {
+        let version = version_str.trim();
 
         // Remove 'v' prefix if present
         let version = if version.starts_with('v') || version.starts_with('V') {
@@ -178,12 +193,12 @@ impl Version {
     }
 
     /// Set pre-release identifier
-    pub fn set_pre_release(&mut self, pre_release: Option<String>) {
+    pub fn release_2(&mut self, pre_release: Option<String>) {
         self.pre_release = pre_release;
     }
 
     /// Set build metadata
-    pub fn set_build_metadata(&mut self, build_metadata: Option<String>) {
+    pub fn metadata(&mut self, build_metadata: Option<String>) {
         self.build_metadata = build_metadata;
     }
 
@@ -224,7 +239,7 @@ impl FromStr for Version {
     type Err = CoreError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::parse(s)
+        Self::parse(s).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))
     }
 }
 
@@ -321,50 +336,50 @@ pub enum VersionConstraint {
 
 impl VersionConstraint {
     /// Parse a version constraint string
-    pub fn parse(constraint: &str) -> Result<Self, CoreError> {
-        let constraint = constraint.trim();
+    pub fn constraint(constraint_str: &str) -> Result<Self, CoreError> {
+        let constraint = constraint_str.trim();
 
         if constraint == "*" {
             return Ok(Self::Any);
         }
 
         if let Some(stripped) = constraint.strip_prefix(">=") {
-            let version = Version::parse(stripped)?;
+            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
             return Ok(Self::GreaterThanOrEqual(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix("<=") {
-            let version = Version::parse(stripped)?;
+            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
             return Ok(Self::LessThanOrEqual(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('>') {
-            let version = Version::parse(stripped)?;
+            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
             return Ok(Self::GreaterThan(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('<') {
-            let version = Version::parse(stripped)?;
+            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
             return Ok(Self::LessThan(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('~') {
-            let version = Version::parse(stripped)?;
+            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
             return Ok(Self::Tilde(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('^') {
-            let version = Version::parse(stripped)?;
+            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
             return Ok(Self::Caret(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('=') {
-            let version = Version::parse(stripped)?;
+            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
             return Ok(Self::Exact(version));
         }
 
         // Default to exact match
-        let version = Version::parse(constraint)?;
+        let version = Version::parse(constraint).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
         Ok(Self::Exact(version))
     }
 
@@ -376,19 +391,19 @@ impl VersionConstraint {
             Self::GreaterThanOrEqual(v) => version >= v,
             Self::LessThan(v) => version < v,
             Self::LessThanOrEqual(v) => version <= v,
-            Self::Compatible(v) => version.major() == v.major() && version >= v,
+            Self::Compatible(v) => version.major == v.major && version >= v,
             Self::Tilde(v) => {
-                version.major() == v.major() && version.minor() == v.minor() && version >= v
+                version.major == v.major && version.minor == v.minor && version >= v
             }
             Self::Caret(v) => {
                 if v.major() > 0 {
-                    version.major() == v.major() && version >= v
+                    version.major == v.major && version >= v
                 } else if v.minor() > 0 {
-                    version.major() == 0 && version.minor() == v.minor() && version >= v
+                    version.major == 0 && version.minor == v.minor && version >= v
                 } else {
-                    version.major() == 0
-                        && version.minor() == 0
-                        && version.patch() == v.patch()
+                    version.major == 0
+                        && version.minor == 0
+                        && version.patch == v.patch
                         && version >= v
                 }
             }
@@ -507,13 +522,13 @@ impl VersionBuilder {
     }
 
     /// Set pre-release identifier
-    pub fn pre_release(mut self, pre_release: &str) -> Self {
+    pub fn release(mut self, pre_release: &str) -> Self {
         self.pre_release = Some(pre_release.to_string());
         self
     }
 
     /// Set build metadata
-    pub fn build_metadata(mut self, build_metadata: &str) -> Self {
+    pub fn metadata(mut self, build_metadata: &str) -> Self {
         self.build_metadata = Some(build_metadata.to_string());
         self
     }
@@ -591,17 +606,17 @@ mod tests {
 
     #[test]
     fn test_version_constraints() {
-        let constraint = VersionConstraint::parse(">=1.2.0").unwrap();
+        let constraint = VersionConstraint::constraint(">=1.2.0").unwrap();
         let version = Version::parse("1.2.3").unwrap();
         assert!(constraint.matches(&version));
 
-        let constraint = VersionConstraint::parse("^1.2.0").unwrap();
+        let constraint = VersionConstraint::constraint("^1.2.0").unwrap();
         let version = Version::parse("1.5.0").unwrap();
         assert!(constraint.matches(&version));
         let version = Version::parse("2.0.0").unwrap();
         assert!(!constraint.matches(&version));
 
-        let constraint = VersionConstraint::parse("~1.2.0").unwrap();
+        let constraint = VersionConstraint::constraint("~1.2.0").unwrap();
         let version = Version::parse("1.2.5").unwrap();
         assert!(constraint.matches(&version));
         let version = Version::parse("1.3.0").unwrap();
@@ -633,8 +648,8 @@ mod tests {
     #[test]
     fn test_version_builder() {
         let version = VersionBuilder::new(1, 2, 3)
-            .pre_release("alpha.1")
-            .build_metadata("build.123")
+            .release("alpha.1")
+            .metadata("build.123")
             .build();
 
         assert_eq!(version.to_string(), "1.2.3-alpha.1+build.123");

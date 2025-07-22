@@ -1,6 +1,7 @@
-use scirs2_stats::distributions::gamma::Gamma;
-use scirs2_stats::traits::distribution::{ContinuousDistribution, Distribution};
+use scirs2__stats::distributions::gamma::Gamma;
+use scirs2__stats::traits::distribution::{ContinuousDistribution, Distribution};
 use std::f64;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

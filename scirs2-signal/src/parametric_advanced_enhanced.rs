@@ -11,17 +11,22 @@
 //! - Advanced model validation and diagnostics
 
 use crate::error::{SignalError, SignalResult};
-use crate::parametric::{
-    compute_parameter_change, detect_spectral_peaks, update_robust_weights, OrderSelection,
-};
-use crate::parametric_advanced::compute_eigendecomposition;
+use crate::parametric__advanced::compute_eigendecomposition;
 use crate::sysid::{detect_outliers, estimate_robust_scale};
-use ndarray::{s, Array1, Array2};
+use ndarray::{Array1, Array2, ArrayView1, s};
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
+use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
+use statrs::statistics::Statistics;
+use std::f64::consts::PI;
 
+#[allow(unused_imports)]
+use crate::parametric::{
+    compute_parameter_change, detect_spectral_peaks, update_robust_weights, OrderSelection,
+};
 /// Advanced-enhanced ARMA estimation result with comprehensive diagnostics
 #[derive(Debug, Clone)]
 pub struct AdvancedEnhancedARMAResult {
@@ -116,8 +121,6 @@ impl Default for AdvancedEnhancedConfig {
     }
 }
 
-use num_complex::Complex64;
-use std::f64::consts::PI;
 /// Advanced-enhanced ARMA estimation with SIMD acceleration and advanced numerics
 ///
 /// This function provides state-of-the-art ARMA parameter estimation using:
@@ -140,7 +143,7 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::parametric_advanced_enhanced::{advanced_enhanced_arma, AdvancedEnhancedConfig};
+/// use scirs2__signal::parametric_advanced_enhanced::{advanced_enhanced_arma, AdvancedEnhancedConfig};
 /// use ndarray::Array1;
 ///
 /// // Generate test signal with two sinusoids plus noise
@@ -157,7 +160,7 @@ use std::f64::consts::PI;
 /// });
 ///
 /// let config = AdvancedEnhancedConfig::default();
-/// let result = advanced_enhanced_arma(&signal, 4, 2, &config).unwrap();
+/// let result = advanced_enhanced_arma(&signal..4, 2, &config).unwrap();
 ///
 /// assert!(result.convergence_info.converged);
 /// assert!(result.diagnostics.is_stable);
@@ -201,7 +204,7 @@ where
 
     let n = signal_f64.len();
 
-    // Validate model order vs data length
+    // Validate model _order vs data length
     let min_samples = (ar_order + ma_order) * 5 + 50;
     if n < min_samples {
         return Err(SignalError::ValueError(format!(
@@ -220,7 +223,7 @@ where
 
     // Step 1: Initial AR parameter estimation using enhanced Burg method
     let simd_start = std::time::Instant::now();
-    let (initial_ar_coeffs, _reflection_coeffs, ar_variance) = if use_advanced_simd {
+    let (initial_ar_coeffs_reflection_coeffs, ar_variance) = if use_advanced_simd {
         enhanced_burg_method_simd(&signal_f64, ar_order, config)?
     } else {
         enhanced_burg_method_standard(&signal_f64, ar_order, config)?
@@ -355,7 +358,7 @@ pub fn adaptive_ar_spectral_estimation(
         let window_signal = &signal[start..end];
         let time_center = (start + end) as f64 / (2.0 * n as f64);
 
-        // Adaptive order selection for this window
+        // Adaptive _order selection for this window
         let optimal_order = if config.adaptive_order {
             select_optimal_order_adaptive(window_signal, config)?
         } else {
@@ -873,7 +876,7 @@ fn enhanced_burg_method_simd(
     let mut forward_errors: Vec<f64> = signal.to_vec();
     let mut backward_errors: Vec<f64> = signal.to_vec();
 
-    let mut variance = signal.var(0.0);
+    let mut variance = signal.variance();
 
     for m in 1..=order {
         // Compute reflection coefficient using SIMD-accelerated operations
@@ -986,7 +989,7 @@ fn update_prediction_errors_simd(
     let mut backward_result_view =
         ndarray::ArrayViewMut1::from(&mut new_backward_errors[1..length + 1]);
 
-    // new_forward = forward + coeff * backward[1..]
+    // new_forward = forward + _coeff * backward[1..]
     f64::simd_fma(
         &forward_view,
         &coeff_array.view(),
@@ -994,7 +997,7 @@ fn update_prediction_errors_simd(
         &mut forward_result_view,
     );
 
-    // new_backward[1..] = backward[1..] + coeff * forward
+    // new_backward[1..] = backward[1..] + _coeff * forward
     f64::simd_fma(
         &backward_slice_view,
         &coeff_array.view(),
@@ -1045,7 +1048,7 @@ fn enhanced_arma_estimation_sequential(
 
     let mut ar_coeffs = initial_ar_coeffs.clone();
     let mut residuals = compute_ar_residuals(signal, &ar_coeffs)?;
-    let mut noise_variance = residuals.var(0.0);
+    let mut noise_variance = residuals.variance();
 
     let mut convergence_history = Vec::new();
     let mut converged = false;
@@ -1062,7 +1065,7 @@ fn enhanced_arma_estimation_sequential(
 
         // Step 3: Compute residuals and variance
         residuals = compute_arma_residuals(signal, &ar_coeffs, &ma_coeffs)?;
-        noise_variance = residuals.var(0.0);
+        noise_variance = residuals.variance();
 
         // Check convergence
         let variance_change =
@@ -1121,22 +1124,19 @@ fn estimate_ma_given_ar(
 /// Estimate AR parameters given MA parameters
 #[allow(dead_code)]
 fn estimate_ar_given_ma(
-    signal: &Array1<f64>,
-    _ma_coeffs: &Array1<f64>,
-    ar_order: usize,
-    _config: &AdvancedEnhancedConfig,
+    signal: &Array1<f64>, _ma_coeffs: &Array1<f64>,
+    ar_order: usize, _config: &AdvancedEnhancedConfig,
 ) -> SignalResult<Array1<f64>> {
     // For simplicity, use least squares method
     // In practice, this would involve more sophisticated estimation
-    crate::parametric::least_squares_method(signal, ar_order).map(|(ar_coeffs, _, _)| ar_coeffs)
+    crate::parametric::least_squares_method(signal, ar_order).map(|(ar_coeffs__)| ar_coeffs)
 }
 
 /// Estimate MA parameters from residuals
 #[allow(dead_code)]
 fn estimate_ma_from_residuals(
     residuals: &Array1<f64>,
-    ma_order: usize,
-    _config: &AdvancedEnhancedConfig,
+    ma_order: usize, _config: &AdvancedEnhancedConfig,
 ) -> SignalResult<Array1<f64>> {
     // Use method of moments approach based on residual autocorrelations
     let mut ma_coeffs = Array1::zeros(ma_order + 1);
@@ -1161,10 +1161,10 @@ fn estimate_ma_from_residuals(
 
 /// Compute autocorrelation function
 #[allow(dead_code)]
-fn compute_autocorrelation(signal: &Array1<f64>, max_lag: usize) -> SignalResult<Array1<f64>> {
-    let n = signal.len();
-    let mean = signal.mean().unwrap_or(0.0);
-    let variance = signal.var(0.0);
+fn compute_autocorrelation(_signal: &Array1<f64>, max_lag: usize) -> SignalResult<Array1<f64>> {
+    let n = _signal.len();
+    let mean = _signal.mean().unwrap_or(0.0);
+    let variance = _signal.variance();
 
     if variance < 1e-12 {
         return Ok(Array1::zeros(max_lag + 1));
@@ -1172,19 +1172,19 @@ fn compute_autocorrelation(signal: &Array1<f64>, max_lag: usize) -> SignalResult
 
     let mut autocorr = Array1::zeros(max_lag + 1);
 
-    for lag in 0..=max_lag {
-        if lag >= n {
+    for _lag in 0..=max_lag {
+        if _lag >= n {
             break;
         }
 
         let mut sum = 0.0;
-        let valid_length = n - lag;
+        let valid_length = n - _lag;
 
         for i in 0..valid_length {
-            sum += (signal[i] - mean) * (signal[i + lag] - mean);
+            sum += (_signal[i] - mean) * (_signal[i + _lag] - mean);
         }
 
-        autocorr[lag] = sum / (valid_length as f64 * variance);
+        autocorr[_lag] = sum / (valid_length as f64 * variance);
     }
 
     Ok(autocorr)
@@ -1275,17 +1275,17 @@ fn compute_comprehensive_diagnostics(
     let condition_number = estimate_condition_number(ar_coeffs, ma_coeffs)?;
 
     // Information criteria
-    let n = signal.len() as f64;
+    let n = signal.len()  as f64;
     let p = ar_coeffs.len() - 1;
     let q = ma_coeffs.len() - 1;
     let k = p + q; // Number of parameters
 
     let log_likelihood = -0.5 * n * (noise_variance.ln() + 1.0 + 2.0 * PI.ln());
-    let aic = -2.0 * log_likelihood + 2.0 * k as f64;
+    let aic = -2.0 * log_likelihood + 2.0 * k  as f64;
     let bic = -2.0 * log_likelihood + (k as f64) * n.ln();
 
-    // Prediction error variance
-    let prediction_error_variance = residuals.var(0.0);
+    // Prediction error _variance
+    let prediction_error_variance = residuals._variance();
 
     // Ljung-Box test for residual autocorrelation
     let ljung_box_p_value = compute_ljung_box_test(residuals, 10);
@@ -1324,10 +1324,10 @@ fn compute_basic_diagnostics(
 
 /// Check if ARMA model is stable (roots inside unit circle)
 #[allow(dead_code)]
-fn check_model_stability(ar_coeffs: &Array1<f64>, ma_coeffs: &Array1<f64>) -> SignalResult<bool> {
+fn check_model_stability(_ar_coeffs: &Array1<f64>, ma_coeffs: &Array1<f64>) -> SignalResult<bool> {
     // Check AR polynomial roots
-    let ar_stable = if ar_coeffs.len() > 1 {
-        check_polynomial_stability(&ar_coeffs.slice(s![1..]).to_owned())?
+    let ar_stable = if _ar_coeffs.len() > 1 {
+        check_polynomial_stability(&_ar_coeffs.slice(s![1..]).to_owned())?
     } else {
         true
     };
@@ -1344,14 +1344,14 @@ fn check_model_stability(ar_coeffs: &Array1<f64>, ma_coeffs: &Array1<f64>) -> Si
 
 /// Check if polynomial roots are inside unit circle
 #[allow(dead_code)]
-fn check_polynomial_stability(coeffs: &Array1<f64>) -> SignalResult<bool> {
-    if coeffs.is_empty() {
+fn check_polynomial_stability(_coeffs: &Array1<f64>) -> SignalResult<bool> {
+    if _coeffs.is_empty() {
         return Ok(true);
     }
 
     // For now, use a simple heuristic - full implementation would compute actual roots
     // Check if sum of absolute coefficients < 1 (sufficient but not necessary condition)
-    let coeff_sum: f64 = coeffs.iter().map(|x| x.abs()).sum();
+    let coeff_sum: f64 = _coeffs.iter().map(|x| x.abs()).sum();
     Ok(coeff_sum < 1.0)
 }
 
@@ -1384,17 +1384,17 @@ fn estimate_condition_number(
 
 /// Compute Ljung-Box test for residual autocorrelation
 #[allow(dead_code)]
-fn compute_ljung_box_test(residuals: &Array1<f64>, max_lag: usize) -> Option<f64> {
+fn compute_ljung_box_test(_residuals: &Array1<f64>, max_lag: usize) -> Option<f64> {
     // Simplified implementation - full version would use proper statistical test
-    let autocorr = compute_autocorrelation(residuals, max_lag).ok()?;
+    let autocorr = compute_autocorrelation(_residuals, max_lag).ok()?;
 
     // Compute test statistic
-    let n = residuals.len() as f64;
+    let n = _residuals.len()  as f64;
     let mut test_stat = 0.0;
 
-    for lag in 1..=max_lag.min(autocorr.len() - 1) {
-        let rho = autocorr[lag];
-        test_stat += rho * rho / (n - lag as f64);
+    for _lag in 1..=max_lag.min(autocorr.len() - 1) {
+        let rho = autocorr[_lag];
+        test_stat += rho * rho / (n - _lag as f64);
     }
 
     test_stat *= n * (n + 2.0);
@@ -1467,7 +1467,7 @@ where
 
     // Check for finite values in frequencies
     for &freq in freqs_f64.iter() {
-        check_finite(freq, "frequency")?;
+        check_finite(freq, "frequency value")?;
     }
 
     let n_freqs = freqs_f64.len();
@@ -1561,7 +1561,7 @@ fn compute_polynomial_chunk_simd(
         let coeff = if is_ar { -coeffs[k] } else { coeffs[k] }; // Note: AR uses negative coefficients
 
         for (i, &omega) in omega_chunk.iter().enumerate() {
-            let phase = omega * k as f64;
+            let phase = omega * k  as f64;
             let complex_term = Complex64::new(phase.cos(), phase.sin());
             results[i] += coeff * complex_term;
         }
@@ -1609,7 +1609,7 @@ pub fn comprehensive_parametric_validation(
     check_positive(max_ma_order, "max_ma_order")?;
 
     let mut validation_result = ComprehensiveParametricValidationResult::default();
-    let mut issues = Vec::new();
+    let mut issues: Vec<String> = Vec::new();
     let start_time = std::time::Instant::now();
 
     // 1. SIMD-Accelerated Order Selection with Cross-Validation
@@ -1674,7 +1674,7 @@ pub fn comprehensive_parametric_validation(
     ];
 
     validation_result.overall_score =
-        score_components.iter().sum::<f64>() / score_components.len() as f64;
+        score_components.iter().sum::<f64>() / score_components.len()  as f64;
     validation_result.total_time_ms = start_time.elapsed().as_secs_f64() * 1000.0;
     validation_result.issues = issues;
 
@@ -1734,7 +1734,7 @@ fn cross_validation_order_selection(
     let mut best_score = f64::INFINITY;
     let mut optimal_orders = (1, 0);
 
-    // Test different order combinations
+    // Test different _order combinations
     for ar_order in 1..=max_ar_order.min(5) {
         // Limit for performance
         for ma_order in 0..=max_ma_order.min(3) {
@@ -1782,7 +1782,7 @@ fn cross_validation_order_selection(
                 }
             }
 
-            let mean_cv_error = fold_errors.iter().sum::<f64>() / fold_errors.len() as f64;
+            let mean_cv_error = fold_errors.iter().sum::<f64>() / fold_errors.len()  as f64;
             if mean_cv_error < best_score {
                 best_score = mean_cv_error;
                 optimal_orders = (ar_order, ma_order);
@@ -1839,11 +1839,11 @@ fn analyze_model_stability(
     ma_coeffs: &Array1<f64>,
 ) -> SignalResult<StabilityAnalysisResult> {
     // Simple stability check based on coefficient magnitudes
-    let ar_stable = ar_coeffs.iter().skip(1).all(|&coeff| coeff.abs() < 0.95);
-    let ma_stable = ma_coeffs.iter().skip(1).all(|&coeff| coeff.abs() < 0.95);
+    let ar_stable = ar_coeffs.iter().skip(1).all(|&coeff: &f64| coeff.abs() < 0.95);
+    let ma_stable = ma_coeffs.iter().skip(1).all(|&coeff: &f64| coeff.abs() < 0.95);
     let is_stable = ar_stable && ma_stable;
 
-    // Stability margin (minimum distance from instability)
+    // Stability _margin (minimum distance from instability)
     let ar_margin = ar_coeffs
         .iter()
         .skip(1)
@@ -1894,7 +1894,7 @@ fn benchmark_parametric_performance(
         times.push(start.elapsed().as_secs_f64() * 1000.0);
     }
 
-    let mean_time = times.iter().sum::<f64>() / times.len() as f64;
+    let mean_time = times.iter().sum::<f64>() / times.len()  as f64;
 
     let performance_score = if mean_time < 10.0 {
         100.0
@@ -1988,7 +1988,7 @@ mod tests {
 
         assert_eq!(psd.len(), frequencies.len());
         assert!(psd.iter().all(|&x| x > 0.0));
-        assert!(psd.iter().all(|&x| x.is_finite()));
+        assert!(psd.iter().all(|&x: &f64| x.is_finite()));
     }
 }
 
@@ -2127,10 +2127,10 @@ fn compute_arma_psd(
 ///
 /// * Frequency vector
 #[allow(dead_code)]
-fn generate_frequency_grid(n_freqs: usize, fs: f64) -> Vec<f64> {
+fn generate_frequency_grid(_n_freqs: usize, fs: f64) -> Vec<f64> {
     let nyquist = fs / 2.0;
-    (0..n_freqs)
-        .map(|i| i as f64 * nyquist / (n_freqs - 1) as f64)
+    (0.._n_freqs)
+        .map(|i| i as f64 * nyquist / (_n_freqs - 1) as f64)
         .collect()
 }
 
@@ -2154,7 +2154,7 @@ fn combine_multitaper_spectra(
 ) -> SignalResult<Vec<f64>> {
     if spectral_estimates.is_empty() {
         return Err(SignalError::ValueError(
-            "No spectral estimates provided".to_string(),
+            "No spectral _estimates provided".to_string(),
         ));
     }
 
@@ -2170,7 +2170,7 @@ fn combine_multitaper_spectra(
                 }
             }
             for val in &mut combined_psd {
-                *val /= spectral_estimates.len() as f64;
+                *val /= spectral_estimates.len()  as f64;
             }
         }
         CombinationMethod::Median => {
@@ -2194,7 +2194,7 @@ fn combine_multitaper_spectra(
                 }
             }
             for val in &mut combined_psd {
-                *val /= spectral_estimates.len() as f64;
+                *val /= spectral_estimates.len()  as f64;
             }
         }
         CombinationMethod::AdaptiveWeighting => {
@@ -2206,7 +2206,7 @@ fn combine_multitaper_spectra(
                 }
             }
             for val in &mut combined_psd {
-                *val /= spectral_estimates.len() as f64;
+                *val /= spectral_estimates.len()  as f64;
             }
         }
     }
@@ -2234,12 +2234,12 @@ fn compute_multitaper_confidence_intervals(
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     if spectral_estimates.is_empty() {
         return Err(SignalError::ValueError(
-            "No spectral estimates provided".to_string(),
+            "No spectral _estimates provided".to_string(),
         ));
     }
 
     let n_freqs = spectral_estimates[0].len();
-    let k = spectral_estimates.len() as f64;
+    let k = spectral_estimates.len()  as f64;
     let dof = 2.0 * k; // Degrees of freedom for chi-squared distribution
 
     // Chi-squared critical values for confidence interval
@@ -2271,7 +2271,7 @@ fn chi_squared_inverse_cdf(p: f64, dof: f64) -> f64 {
     let h = 2.0 / (9.0 * dof);
     let z = normal_inverse_cdf(p);
 
-    let term = 1.0 - h + z * (h * 2.0).sqrt();
+    let term = 1.0 - h + z * ((h * 2.0) as f64).sqrt();
     dof * term.powi(3)
 }
 
@@ -2316,10 +2316,10 @@ fn normal_inverse_cdf(p: f64) -> f64 {
 ///
 /// * Vector of eigenvalues
 #[allow(dead_code)]
-fn extract_taper_eigenvalues(tapers: &Array2<f64>, nw: f64) -> SignalResult<Array1<f64>> {
-    let k = tapers.nrows();
+fn extract_taper_eigenvalues(_tapers: &Array2<f64>, nw: f64) -> SignalResult<Array1<f64>> {
+    let k = _tapers.nrows();
 
-    // For DPSS tapers, eigenvalues are approximately given by
+    // For DPSS _tapers, eigenvalues are approximately given by
     // the concentration ratio λ_k ≈ (1 + cos(πk/(2NW+1))) / 2
     let mut eigenvalues = Vec::with_capacity(k);
 
@@ -2395,7 +2395,7 @@ fn generate_dpss_tapers(n: usize, nw: f64, k: usize) -> SignalResult<Array2<f64>
     for i in 0..k {
         for j in 0..n {
             // Simple window approximation (not true DPSS)
-            let t = j as f64 / n as f64;
+            let t = j as f64 / n  as f64;
             let taper_val = (PI * (i + 1) as f64 * t).sin();
             tapers[[i, j]] = taper_val;
         }
@@ -2435,8 +2435,8 @@ fn esprit_frequency_estimation(
 
 /// TODO: Implement Hankel matrix creation
 #[allow(dead_code)]
-fn create_hankel_matrix(signal: &[f64], subspace_dimension: usize) -> SignalResult<Array2<f64>> {
-    let n = signal.len();
+fn create_hankel_matrix(_signal: &[f64], subspace_dimension: usize) -> SignalResult<Array2<f64>> {
+    let n = _signal.len();
     if n < subspace_dimension {
         return Err(SignalError::ValueError(
             "Signal too short for Hankel matrix".to_string(),
@@ -2450,7 +2450,7 @@ fn create_hankel_matrix(signal: &[f64], subspace_dimension: usize) -> SignalResu
     for i in 0..rows {
         for j in 0..subspace_dimension {
             if i + j < n {
-                hankel[[i, j]] = signal[i + j];
+                hankel[[i, j]] = _signal[i + j];
             }
         }
     }
@@ -2460,8 +2460,8 @@ fn create_hankel_matrix(signal: &[f64], subspace_dimension: usize) -> SignalResu
 
 /// TODO: Implement sample covariance computation
 #[allow(dead_code)]
-fn compute_sample_covariance(data_matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
-    let (rows, cols) = data_matrix.dim();
+fn compute_sample_covariance(_data_matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    let (rows, cols) = _data_matrix.dim();
     let mut covariance = Array2::zeros((cols, cols));
 
     // Simple covariance estimation
@@ -2469,9 +2469,9 @@ fn compute_sample_covariance(data_matrix: &Array2<f64>) -> SignalResult<Array2<f
         for j in 0..cols {
             let mut sum = 0.0;
             for k in 0..rows {
-                sum += data_matrix[[k, i]] * data_matrix[[k, j]];
+                sum += _data_matrix[[k, i]] * _data_matrix[[k, j]];
             }
-            covariance[[i, j]] = sum / rows as f64;
+            covariance[[i, j]] = sum / rows  as f64;
         }
     }
 
@@ -2492,7 +2492,7 @@ fn estimate_number_of_signals(
 
 /// TODO: Implement adaptive order selection
 #[allow(dead_code)]
-fn select_optimal_order_adaptive(signal: &[f64], config: &AdaptiveARConfig) -> SignalResult<usize> {
+fn select_optimal_order_adaptive(_signal: &[f64], config: &AdaptiveARConfig) -> SignalResult<usize> {
     // Stub implementation - returns default order
     Ok(config.max_order.min(10))
 }

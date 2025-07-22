@@ -367,15 +367,15 @@ where
 
 /// Helper function to check matrix symmetry
 #[allow(dead_code)]
-fn check_matrix_symmetry<F>(matrix: &ArrayView2<F>, name: &str) -> LinalgResult<()>
+fn check_matrix_symmetry<F>(_matrix: &ArrayView2<F>, name: &str) -> LinalgResult<()>
 where
     F: Float + NumAssign,
 {
-    let n = matrix.nrows();
+    let n = _matrix.nrows();
 
     for i in 0..n {
         for j in 0..n {
-            if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() {
+            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > F::epsilon() {
                 return Err(LinalgError::ShapeError(format!(
                     "Matrix {name} must be symmetric for eigh_gen"
                 )));

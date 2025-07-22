@@ -5,7 +5,8 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::Array1;
-use scirs2_stats::distributions::{
+use scirs2__stats::distributions::{
+use statrs::statistics::Statistics;
     beta, binom, chi2, expon, f, gamma, norm, poisson, t, uniform, Beta, Binomial, ChiSquare,
     Exponential, Gamma, Normal, Poisson, StudentT, Uniform, F,
 };

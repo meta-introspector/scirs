@@ -63,7 +63,7 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2_interpolate::interp2d::{Interp2d, Interp2dKind};
+    /// use scirs2__interpolate::interp2d::{Interp2d, Interp2dKind};
     ///
     /// // Define grid
     /// let x = array![0.0, 1.0, 2.0];
@@ -139,7 +139,7 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2_interpolate::interp2d::{Interp2d, Interp2dKind};
+    /// use scirs2__interpolate::interp2d::{Interp2d, Interp2dKind};
     ///
     /// let x = array![0.0, 1.0, 2.0];
     /// let y = array![0.0, 1.0];
@@ -268,12 +268,12 @@ where
 
         for (i, &_y_val) in self.y.iter().enumerate() {
             let row = self.z.slice(ndarray::s![i, ..]);
-            let spline = CubicSpline::new(&self.x.view(), &row)?;
+            let spline = CubicSpline::_new(&self.x.view(), &row)?;
             values_at_x[i] = spline.evaluate(x_new)?;
         }
 
         // Create cubic spline along y direction
-        let y_spline = CubicSpline::new(&self.y.view(), &values_at_x.view())?;
+        let y_spline = CubicSpline::_new(&self.y.view(), &values_at_x.view())?;
         y_spline.evaluate(y_new)
     }
 
@@ -299,8 +299,8 @@ where
 
 /// Check if array is sorted in ascending order
 #[allow(dead_code)]
-fn is_sorted<F: PartialOrd>(arr: &ArrayView1<F>) -> bool {
-    for window in arr.windows(2) {
+fn is_sorted<F: PartialOrd>(_arr: &ArrayView1<F>) -> bool {
+    for window in _arr.windows(2) {
         if window[0] > window[1] {
             return false;
         }
@@ -310,16 +310,16 @@ fn is_sorted<F: PartialOrd>(arr: &ArrayView1<F>) -> bool {
 
 /// Find interval containing the value using binary search
 #[allow(dead_code)]
-fn find_interval<F: PartialOrd>(arr: &ArrayView1<F>, value: F) -> usize {
+fn find_interval<F: PartialOrd>(_arr: &ArrayView1<F>, value: F) -> usize {
     // Convert to slice to use binary_search_by
-    let slice: &[F] = arr.as_slice().unwrap();
+    let slice: &[F] = _arr.as_slice().unwrap();
     match slice.binary_search_by(|x| x.partial_cmp(&value).unwrap()) {
         Ok(idx) => idx,
         Err(idx) => {
             if idx == 0 {
                 0
-            } else if idx >= arr.len() {
-                arr.len() - 1
+            } else if idx >= _arr.len() {
+                _arr.len() - 1
             } else {
                 idx - 1
             }
@@ -335,7 +335,7 @@ fn find_interval<F: PartialOrd>(arr: &ArrayView1<F>, value: F) -> usize {
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_interpolate::interp2d::{interp2d, Interp2dKind};
+/// use scirs2__interpolate::interp2d::{interp2d, Interp2dKind};
 ///
 /// let x = array![0.0, 1.0, 2.0];
 /// let y = array![0.0, 1.0];

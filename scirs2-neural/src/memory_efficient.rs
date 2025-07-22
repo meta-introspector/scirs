@@ -28,6 +28,7 @@ use scirs2_linalg;
 // };
 #[cfg(feature = "cache")]
 use scirs2_core::cache::{CacheBuilder, TTLSizedCache};
+use statrs::statistics::Statistics;
 /// Memory usage tracking and reporting
 #[derive(Debug, Clone)]
 pub struct MemoryUsage {
@@ -81,10 +82,10 @@ pub struct MemoryPool<F: Float + Debug> {
     current_pool_size: usize,
 impl<F: Float + Debug + Clone + 'static> MemoryPool<F> {
     /// Create a new memory pool
-    pub fn new(max_pool_size_mb: usize) -> Self {
+    pub fn new(_max_pool_size_mb: usize) -> Self {
             available_tensors: HashMap::new(),
             usage: Arc::new(Mutex::new(MemoryUsage::new())),
-            max_pool_size: max_pool_size_mb * 1024 * 1024,
+            max_pool_size: _max_pool_size_mb * 1024 * 1024,
             current_pool_size: 0,
     /// Allocate or reuse a tensor with the given shape
     pub fn allocate(&mut self, shape: &[usize]) -> ArrayD<F> {
@@ -131,8 +132,8 @@ impl<F: Float + Debug + Clone + 'static> MemoryPool<F> {
         self.available_tensors.clear();
         self.current_pool_size = 0;
     /// Calculate memory usage for a tensor shape (assuming F is f32/f64)
-    fn calculate_bytes(shape: &[usize]) -> usize {
-        let elements: usize = shape.iter().product();
+    fn calculate_bytes(_shape: &[usize]) -> usize {
+        let elements: usize = _shape.iter().product();
         elements * std::mem::size_of::<F>()
     /// Get pool statistics
     pub fn get_pool_stats(&self) -> PoolStatistics {
@@ -165,7 +166,7 @@ pub struct GradientCheckpointing<F: Float + Debug> {
     memory_usage: Arc<RwLock<MemoryUsage>>,
 impl<F: Float + Debug + Clone + 'static + ndarray::ScalarOperand> GradientCheckpointing<F> {
     /// Create a new gradient checkpointing manager
-    pub fn new(memory_threshold_mb: f64) -> Self {
+    pub fn new(_memory_threshold_mb: f64) -> Self {
             checkpoint_layers: Vec::new(),
             checkpoints: HashMap::new(),
             memory_threshold_mb,
@@ -211,9 +212,7 @@ impl<F: Float + Debug + Clone + 'static + ndarray::ScalarOperand> GradientCheckp
     pub fn recompute_from_checkpoint<L>(
         &self,
         layers: &[L],
-        start_layer: &str,
-        _target_layer: &str,
-        _input: &ArrayD<F>,
+        start_layer: &str, _target_layer: &str, _input: &ArrayD<F>,
     ) -> Result<ArrayD<F>>
     where
         L: Layer<F>,
@@ -233,16 +232,16 @@ impl<F: Float + Debug + Clone + 'static + ndarray::ScalarOperand> GradientCheckp
 pub struct InPlaceOperations;
 impl InPlaceOperations {
     /// In-place ReLU activation
-    pub fn relu_inplace<F: Float + Debug>(array: &mut ArrayD<F>) {
-        array.mapv_inplace(|x| x.max(F::zero()));
+    pub fn relu_inplace<F: Float + Debug>(_array: &mut ArrayD<F>) {
+        _array.mapv_inplace(|x| x.max(F::zero()));
     /// In-place sigmoid activation
-    pub fn sigmoid_inplace<F: Float + Debug>(array: &mut ArrayD<F>) {
-        array.mapv_inplace(|x| F::one() / (F::one() + (-x).exp()));
+    pub fn sigmoid_inplace<F: Float + Debug>(_array: &mut ArrayD<F>) {
+        _array.mapv_inplace(|x| F::one() / (F::one() + (-x).exp()));
     /// In-place tanh activation
-    pub fn tanh_inplace<F: Float + Debug>(array: &mut ArrayD<F>) {
-        array.mapv_inplace(|x| x.tanh());
+    pub fn tanh_inplace<F: Float + Debug>(_array: &mut ArrayD<F>) {
+        _array.mapv_inplace(|x| x.tanh());
     /// In-place addition
-    pub fn add_inplace<F: Float + Debug>(target: &mut ArrayD<F>, source: &ArrayD<F>) -> Result<()> {
+    pub fn add_inplace<F: Float + Debug>(_target: &mut ArrayD<F>, source: &ArrayD<F>) -> Result<()> {
         if target.shape() != source.shape() {
             return Err(NeuralError::ShapeMismatch(
                 "Arrays must have the same shape for in-place addition".to_string(),
@@ -250,21 +249,21 @@ impl InPlaceOperations {
         for (t, &s) in target.iter_mut().zip(source.iter()) {
             *t = *t + s;
     /// In-place scalar multiplication
-    pub fn scale_inplace<F: Float + Debug>(array: &mut ArrayD<F>, factor: F) {
-        array.mapv_inplace(|x| x * factor);
+    pub fn scale_inplace<F: Float + Debug>(_array: &mut ArrayD<F>, factor: F) {
+        _array.mapv_inplace(|x| x * factor);
     /// In-place normalization (subtract mean, divide by std)
     pub fn normalize_inplace<F: Float + Debug + Clone + num_traits::FromPrimitive>(
         array: &mut ArrayD<F>,
     ) -> Result<()> {
-        let mean = array.mean().unwrap_or(F::zero());
-        let variance = array
+        let mean = _array.mean().unwrap_or(F::zero());
+        let variance = _array
             .mapv(|x| (x - mean) * (x - mean))
             .mean()
             .unwrap_or(F::zero());
         let std_dev = variance.sqrt();
         if std_dev == F::zero() {
             return Ok(()); // Avoid division by zero
-        array.mapv_inplace(|x| (x - mean) / std_dev);
+        _array.mapv_inplace(|x| (x - mean) / std_dev);
     /// In-place dropout (sets elements to zero based on probability)
     pub fn dropout_inplace<F: Float + Debug>(
         dropout_rate: f64,
@@ -273,7 +272,7 @@ impl InPlaceOperations {
             return Ok(());
         let keep_prob = 1.0 - dropout_rate;
         let scale_factor = F::from(1.0 / keep_prob).unwrap();
-        for element in array.iter_mut() {
+        for element in _array.iter_mut() {
             if rand::random::<f64>() < dropout_rate {
                 *element = F::zero();
             } else {
@@ -287,8 +286,8 @@ pub struct MemoryAwareBatchProcessor<F: Float + Debug> {
     /// Current memory usage threshold
 impl<F: Float + Debug + Clone + 'static> MemoryAwareBatchProcessor<F> {
     /// Create a new memory-aware batch processor
-    pub fn new(max_memory_mb: usize, memory_threshold_mb: f64, pool_size_mb: usize) -> Self {
-            max_batch_size: Self::calculate_max_batch_size(max_memory_mb),
+    pub fn new(_max_memory_mb: usize, memory_threshold_mb: f64, pool_size_mb: usize) -> Self {
+            max_batch_size: Self::calculate_max_batch_size(_max_memory_mb),
             memory_pool: MemoryPool::new(pool_size_mb),
     /// Process batches with automatic size adjustment based on memory usage
     pub fn process_batches<ProcessFn>(
@@ -324,9 +323,9 @@ impl<F: Float + Debug + Clone + 'static> MemoryAwareBatchProcessor<F> {
                 self.memory_pool.clear();
         Ok(results)
     /// Calculate maximum batch size based on available memory
-    fn calculate_max_batch_size(max_memory_mb: usize) -> usize {
+    fn calculate_max_batch_size(_max_memory_mb: usize) -> usize {
         // Heuristic: assume each sample uses ~1KB on average
-        let max_memory_bytes = max_memory_mb * 1024 * 1024;
+        let max_memory_bytes = _max_memory_mb * 1024 * 1024;
         let bytes_per_sample = 1024; // 1KB per sample estimate
         (max_memory_bytes / bytes_per_sample).max(1)
     /// Get current batch processor statistics
@@ -370,7 +369,7 @@ pub struct MemoryEfficientLayer {
     activation_cache: TTLSizedCache<String, ArrayD<f32>>,
 impl MemoryEfficientLayer {
     /// Create a new memory-efficient layer
-    pub fn new(input_size: usize, output_size: usize, chunk_size: Option<usize>) -> Result<Self> {
+    pub fn new(_input_size: usize, output_size: usize, chunk_size: Option<usize>) -> Result<Self> {
         let _weights_shape = [input_size, output_size];
         let default_chunk_size = chunk_size.unwrap_or(1024);
         #[cfg(feature = "memory_efficient")]
@@ -464,8 +463,7 @@ impl MemoryEfficientLayer {
         // Simple fallback using regular ndarray operations
         let input_2d = input_chunk
             .view()
-            .into_dimensionality::<ndarray::Ix2>()
-                NeuralError::DimensionMismatch(format!("Failed to convert to 2D: {}", e))
+            .into_dimensionality::<ndarray::Ix2>(), NeuralError::DimensionMismatch(format!("Failed to convert to 2D: {}", e))
         // For fallback, create a simple weight matrix
         let (_chunk_batch_size, input_size) = input_2d.dim();
         let weights_2d = ndarray::Array2::<f32>::zeros((input_size, output_size));

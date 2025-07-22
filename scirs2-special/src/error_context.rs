@@ -21,9 +21,9 @@ pub struct ErrorContext {
 
 impl ErrorContext {
     /// Create a new error context
-    pub fn new(function_name: impl Into<String>, operation: impl Into<String>) -> Self {
+    pub fn new(_function_name: impl Into<String>, operation: impl Into<String>) -> Self {
         Self {
-            function_name: function_name.into(),
+            function_name: _function_name.into(),
             operation: operation.into(),
             parameters: Vec::new(),
             additional_info: None,

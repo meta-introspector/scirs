@@ -69,9 +69,9 @@ pub struct DatabaseConfig {
 
 impl DatabaseConfig {
     /// Create a new database configuration
-    pub fn new(db_type: DatabaseType, database: impl Into<String>) -> Self {
+    pub fn new(_db_type: DatabaseType, database: impl Into<String>) -> Self {
         Self {
-            db_type,
+            _db_type,
             host: None,
             port: None,
             database: database.into(),
@@ -179,10 +179,10 @@ enum QueryType {
 
 impl QueryBuilder {
     /// Create a SELECT query
-    pub fn select(table: impl Into<String>) -> Self {
+    pub fn select(_table: impl Into<String>) -> Self {
         Self {
             query_type: QueryType::Select,
-            table: table.into(),
+            _table: _table.into(),
             columns: vec!["*".to_string()],
             conditions: Vec::new(),
             values: Vec::new(),
@@ -193,10 +193,10 @@ impl QueryBuilder {
     }
 
     /// Create an INSERT query
-    pub fn insert(table: impl Into<String>) -> Self {
+    pub fn insert(_table: impl Into<String>) -> Self {
         Self {
             query_type: QueryType::Insert,
-            table: table.into(),
+            _table: _table.into(),
             columns: Vec::new(),
             conditions: Vec::new(),
             values: Vec::new(),
@@ -290,24 +290,24 @@ impl QueryBuilder {
     pub fn build_mongo(&self) -> serde_json::Value {
         match self.query_type {
             QueryType::Select => {
-                let mut query = serde_json::json!({});
+                let mut query = serde_json::_json!({});
 
                 // Convert SQL-like conditions to MongoDB query
                 for condition in &self.conditions {
                     // Simple parsing - in real implementation would be more sophisticated
                     if let Some((field, value)) = condition.split_once(" = ") {
-                        query[field] = serde_json::json!(value.trim_matches('\''));
+                        query[field] = serde_json::_json!(value.trim_matches('\''));
                     }
                 }
 
-                serde_json::json!({
+                serde_json::_json!({
                     "collection": self.table,
                     "filter": query,
                     "limit": self.limit,
                     "skip": self.offset,
                 })
             }
-            _ => serde_json::json!({}),
+            _ => serde_json::_json!({}),
         }
     }
 }
@@ -325,9 +325,9 @@ pub struct ResultSet {
 
 impl ResultSet {
     /// Create new result set
-    pub fn new(columns: Vec<String>) -> Self {
+    pub fn new(_columns: Vec<String>) -> Self {
         Self {
-            columns,
+            _columns,
             rows: Vec::new(),
             metadata: Metadata::new(),
         }
@@ -473,39 +473,37 @@ pub struct DatabaseConnector;
 
 impl DatabaseConnector {
     /// Create a new database connection
-    pub fn connect(config: &DatabaseConfig) -> Result<Box<dyn DatabaseConnection>> {
-        match config.db_type {
+    pub fn connect(_config: &DatabaseConfig) -> Result<Box<dyn DatabaseConnection>> {
+        match _config.db_type {
             #[cfg(feature = "sqlite")]
-            DatabaseType::SQLite => Ok(Box::new(SQLiteConnection::new(config)?)),
+            DatabaseType::SQLite => Ok(Box::new(SQLiteConnection::new(_config)?)),
             #[cfg(not(feature = "sqlite"))]
             DatabaseType::SQLite => Err(IoError::UnsupportedFormat(
                 "SQLite support not enabled. Enable 'sqlite' feature.".to_string(),
             )),
 
             #[cfg(feature = "postgres")]
-            DatabaseType::PostgreSQL => Ok(Box::new(PostgreSQLConnection::new(config)?)),
+            DatabaseType::PostgreSQL => Ok(Box::new(PostgreSQLConnection::new(_config)?)),
             #[cfg(not(feature = "postgres"))]
             DatabaseType::PostgreSQL => Err(IoError::UnsupportedFormat(
                 "PostgreSQL support not enabled. Enable 'postgres' feature.".to_string(),
             )),
 
             #[cfg(feature = "mysql")]
-            DatabaseType::MySQL => Ok(Box::new(MySQLConnection::new(config)?)),
+            DatabaseType::MySQL => Ok(Box::new(MySQLConnection::new(_config)?)),
             #[cfg(not(feature = "mysql"))]
             DatabaseType::MySQL => Err(IoError::UnsupportedFormat(
                 "MySQL support not enabled. Enable 'mysql' feature.".to_string(),
             )),
 
             #[cfg(feature = "duckdb")]
-            DatabaseType::DuckDB => Ok(Box::new(DuckDBConnection::new(config)?)),
+            DatabaseType::DuckDB => Ok(Box::new(DuckDBConnection::new(_config)?)),
             #[cfg(not(feature = "duckdb"))]
             DatabaseType::DuckDB => Err(IoError::UnsupportedFormat(
                 "DuckDB support not enabled. Enable 'duckdb' feature.".to_string(),
-            )),
-
-            _ => Err(IoError::UnsupportedFormat(format!(
+            ), _ => Err(IoError::UnsupportedFormat(format!(
                 "Database type {:?} not yet implemented",
-                config.db_type
+                _config.db_type
             ))),
         }
     }
@@ -521,12 +519,12 @@ struct SQLiteConnection {
 
 #[cfg(feature = "sqlite")]
 impl SQLiteConnection {
-    fn new(config: &DatabaseConfig) -> Result<Self> {
-        let conn = SqliteConn::open(&config.database)
+    fn new(_config: &DatabaseConfig) -> Result<Self> {
+        let conn = SqliteConn::open(&_config.database)
             .map_err(|e| IoError::FileError(format!("Failed to open SQLite database: {}", e)))?;
 
         Ok(Self {
-            path: config.database.clone(),
+            path: _config.database.clone(),
             conn: Mutex::new(conn),
         })
     }
@@ -538,7 +536,7 @@ impl SQLiteConnection {
             DataType::BigInt => "BIGINT",
             DataType::Float => "REAL",
             DataType::Double => "REAL",
-            DataType::Decimal(_, _) => "DECIMAL",
+            DataType::Decimal(__) => "DECIMAL",
             DataType::Varchar(_) => "VARCHAR",
             DataType::Text => "TEXT",
             DataType::Boolean => "BOOLEAN",
@@ -590,7 +588,7 @@ impl DatabaseConnection for SQLiteConnection {
         self.execute_sql(&sql, &[])
     }
 
-    fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
+    fn execute_sql(&self, sql: &str_params: &[serde, _json::Value]) -> Result<ResultSet> {
         let conn = self.conn.lock().map_err(|e| {
             IoError::DatabaseError(format!("Failed to lock database connection: {}", e))
         })?;
@@ -609,20 +607,20 @@ impl DatabaseConnection for SQLiteConnection {
             let mut result = ResultSet::new(column_names);
 
             let rows = stmt
-                .query_map(rusqlite::params![], |row| {
+                .query_map(rusqlite::_params![], |row| {
                     let mut values = Vec::new();
                     for i in 0..column_count {
                         let value: rusqlite::types::Value = row.get(i)?;
                         let json_value = match value {
-                            rusqlite::types::Value::Null => serde_json::Value::Null,
+                            rusqlite::types::Value::Null =>, serde_json::Value::Null,
                             rusqlite::types::Value::Integer(i) => {
-                                serde_json::Value::Number(serde_json::Number::from(i))
+                                serde_json::Value::Number(serde, _json::Number::from(i))
                             }
-                            rusqlite::types::Value::Real(f) => serde_json::Value::Number(
+                            rusqlite::types::Value::Real(f) =>, serde_json::Value::Number(
                                 serde_json::Number::from_f64(f)
                                     .unwrap_or_else(|| serde_json::Number::from(0)),
                             ),
-                            rusqlite::types::Value::Text(s) => serde_json::Value::String(s),
+                            rusqlite::types::Value::Text(s) =>, serde_json::Value::String(s),
                             rusqlite::types::Value::Blob(b) => {
                                 serde_json::Value::String(hex::encode(b))
                             }
@@ -649,11 +647,11 @@ impl DatabaseConnection for SQLiteConnection {
         } else {
             // Handle INSERT, UPDATE, DELETE, CREATE, etc.
             let affected_rows = conn
-                .execute(sql, rusqlite::params![])
+                .execute(sql, rusqlite::_params![])
                 .map_err(|e| IoError::DatabaseError(format!("SQL execution failed: {}", e)))?;
 
             let mut result = ResultSet::new(vec!["rows_affected".to_string()]);
-            result.add_row(vec![serde_json::json!(affected_rows)]);
+            result.add_row(vec![serde_json::_json!(affected_rows)]);
             Ok(result)
         }
     }
@@ -835,9 +833,9 @@ pub mod timeseries {
     }
 
     impl TimeSeriesQuery {
-        pub fn new(measurement: impl Into<String>) -> Self {
+        pub fn new(_measurement: impl Into<String>) -> Self {
             Self {
-                measurement: measurement.into(),
+                _measurement: _measurement.into(),
                 start_time: None,
                 end_time: None,
                 tags: HashMap::new(),
@@ -878,11 +876,11 @@ pub mod bulk {
     }
 
     impl BulkLoader {
-        pub fn new(table: impl Into<String>, columns: Vec<impl Into<String>>) -> Self {
+        pub fn new(_table: impl Into<String>, columns: Vec<impl Into<String>>) -> Self {
             Self {
                 batch_size: 1000,
                 buffer: Vec::new(),
-                table: table.into(),
+                _table: _table.into(),
                 columns: columns.into_iter().map(|c| c.into()).collect(),
             }
         }
@@ -909,7 +907,7 @@ pub mod bulk {
             Ok(())
         }
 
-        pub fn flush(&mut self, _conn: &dyn DatabaseConnection) -> Result<usize> {
+        pub fn flush(&mut self_conn: &dyn DatabaseConnection) -> Result<usize> {
             let total = self.buffer.len();
             // In real implementation, would batch insert
             self.buffer.clear();
@@ -927,13 +925,13 @@ struct PostgreSQLConnection {
 
 #[cfg(feature = "postgres")]
 impl PostgreSQLConnection {
-    async fn new(config: &DatabaseConfig) -> Result<Self> {
+    async fn new(_config: &DatabaseConfig) -> Result<Self> {
         // Create actual PostgreSQL connection pool
-        let connection_string = Self::build_connection_string(config);
+        let connection_string = Self::build_connection_string(_config);
 
         let pool = PgPoolOptions::new()
             .max_connections(
-                config
+                _config
                     .options
                     .get("max_connections")
                     .and_then(|s| s.parse().ok())
@@ -944,20 +942,20 @@ impl PostgreSQLConnection {
             .map_err(|e| IoError::NetworkError(format!("PostgreSQL connection failed: {}", e)))?;
 
         Ok(Self {
-            config: config.clone(),
+            _config: _config.clone(),
             pool: Some(pool),
         })
     }
 
-    fn build_connection_string(config: &DatabaseConfig) -> String {
-        let host = config.host.as_deref().unwrap_or("localhost");
-        let port = config.port.unwrap_or(5432);
-        let user = config.username.as_deref().unwrap_or("postgres");
-        let password = config.password.as_deref().unwrap_or("");
+    fn build_connection_string(_config: &DatabaseConfig) -> String {
+        let host = _config.host.as_deref().unwrap_or("localhost");
+        let port = _config.port.unwrap_or(5432);
+        let user = _config.username.as_deref().unwrap_or("postgres");
+        let password = _config.password.as_deref().unwrap_or("");
 
         format!(
             "postgresql://{}:{}@{}:{}/{}",
-            user, password, host, port, config.database
+            user, password, host, port, _config.database
         )
     }
 }
@@ -995,8 +993,7 @@ impl DatabaseConnection for PostgreSQLConnection {
                         }
                     }
                     serde_json::Value::Bool(b) => query = query.bind(*b),
-                    serde_json::Value::Null => query = query.bind(Option::<String>::None),
-                    _ => query = query.bind(param.to_string()),
+                    serde_json::Value::Null => query = query.bind(Option::<String>::None, _ => query = query.bind(param.to_string()),
                 }
             }
 
@@ -1024,51 +1021,51 @@ impl DatabaseConnection for PostgreSQLConnection {
                 for (i, column) in row.columns().iter().enumerate() {
                     let value = match column.type_info().name() {
                         "INT4" | "INTEGER" => {
-                            if let Ok(val) = row.try_get::<i32, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<i32>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "INT8" | "BIGINT" => {
-                            if let Ok(val) = row.try_get::<i64, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<i64>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "FLOAT4" | "REAL" => {
-                            if let Ok(val) = row.try_get::<f32, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<f32>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "FLOAT8" | "DOUBLE PRECISION" => {
-                            if let Ok(val) = row.try_get::<f64, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<f64>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "VARCHAR" | "TEXT" | "CHAR" => {
-                            if let Ok(val) = row.try_get::<String, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<String>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "BOOL" => {
-                            if let Ok(val) = row.try_get::<bool, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<bool>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         _ => {
                             // Fallback to string conversion
-                            if let Ok(val) = row.try_get::<String, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<String>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
@@ -1248,8 +1245,7 @@ impl DatabaseConnection for PostgreSQLConnection {
                     "date" => DataType::Date,
                     "timestamp without time zone" => DataType::Timestamp,
                     "jsonb" | "json" => DataType::Json,
-                    "bytea" => DataType::Binary,
-                    _ => DataType::Text, // Default fallback
+                    "bytea" => DataType::Binary_ =>, DataType::Text, // Default fallback
                 };
 
                 columns.push(ColumnDef {
@@ -1280,7 +1276,7 @@ impl DatabaseConnection for PostgreSQLConnection {
                 Some(
                     pk_rows
                         .into_iter()
-                        .map(|row| row.get::<String, _>(0))
+                        .map(|row| row.get::<String>(0))
                         .collect(),
                 )
             };
@@ -1339,13 +1335,13 @@ struct MySQLConnection {
 
 #[cfg(feature = "mysql")]
 impl MySQLConnection {
-    async fn new(config: &DatabaseConfig) -> Result<Self> {
+    async fn new(_config: &DatabaseConfig) -> Result<Self> {
         // Create actual MySQL connection pool
-        let connection_string = Self::build_connection_string(config);
+        let connection_string = Self::build_connection_string(_config);
 
         let pool = MySqlPoolOptions::new()
             .max_connections(
-                config
+                _config
                     .options
                     .get("max_connections")
                     .and_then(|s| s.parse().ok())
@@ -1356,20 +1352,20 @@ impl MySQLConnection {
             .map_err(|e| IoError::NetworkError(format!("MySQL connection failed: {}", e)))?;
 
         Ok(Self {
-            config: config.clone(),
+            _config: _config.clone(),
             pool: Some(pool),
         })
     }
 
-    fn build_connection_string(config: &DatabaseConfig) -> String {
-        let host = config.host.as_deref().unwrap_or("localhost");
-        let port = config.port.unwrap_or(3306);
-        let user = config.username.as_deref().unwrap_or("root");
-        let password = config.password.as_deref().unwrap_or("");
+    fn build_connection_string(_config: &DatabaseConfig) -> String {
+        let host = _config.host.as_deref().unwrap_or("localhost");
+        let port = _config.port.unwrap_or(3306);
+        let user = _config.username.as_deref().unwrap_or("root");
+        let password = _config.password.as_deref().unwrap_or("");
 
         format!(
             "mysql://{}:{}@{}:{}/{}",
-            user, password, host, port, config.database
+            user, password, host, port, _config.database
         )
     }
 }
@@ -1408,8 +1404,7 @@ impl DatabaseConnection for MySQLConnection {
                         }
                     }
                     serde_json::Value::Bool(b) => query = query.bind(*b),
-                    serde_json::Value::Null => query = query.bind(Option::<String>::None),
-                    _ => query = query.bind(param.to_string()),
+                    serde_json::Value::Null => query = query.bind(Option::<String>::None, _ => query = query.bind(param.to_string()),
                 }
             }
 
@@ -1437,51 +1432,51 @@ impl DatabaseConnection for MySQLConnection {
                 for (i, column) in row.columns().iter().enumerate() {
                     let value = match column.type_info().name() {
                         "TINY" | "SHORT" | "LONG" => {
-                            if let Ok(val) = row.try_get::<i32, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<i32>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "LONGLONG" => {
-                            if let Ok(val) = row.try_get::<i64, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<i64>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "FLOAT" => {
-                            if let Ok(val) = row.try_get::<f32, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<f32>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "DOUBLE" => {
-                            if let Ok(val) = row.try_get::<f64, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<f64>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "VARCHAR" | "TEXT" | "CHAR" | "VAR_STRING" => {
-                            if let Ok(val) = row.try_get::<String, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<String>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "TINY" if column.type_info().name() == "BOOLEAN" => {
-                            if let Ok(val) = row.try_get::<bool, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<bool>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         _ => {
                             // Fallback to string conversion
-                            if let Ok(val) = row.try_get::<String, _>(i) {
-                                serde_json::json!(val)
+                            if let Ok(val) = row.try_get::<String>(i) {
+                                serde_json::_json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
@@ -1664,8 +1659,7 @@ impl DatabaseConnection for MySQLConnection {
                     "date" => DataType::Date,
                     "timestamp" | "datetime" => DataType::Timestamp,
                     "json" => DataType::Json,
-                    "blob" => DataType::Binary,
-                    _ => DataType::Text, // Default fallback
+                    "blob" => DataType::Binary_ =>, DataType::Text, // Default fallback
                 };
 
                 columns.push(ColumnDef {
@@ -1696,7 +1690,7 @@ impl DatabaseConnection for MySQLConnection {
                 Some(
                     pk_rows
                         .into_iter()
-                        .map(|row| row.get::<String, _>(0))
+                        .map(|row| row.get::<String>(0))
                         .collect(),
                 )
             };
@@ -1756,17 +1750,17 @@ struct DuckDBConnection {
 
 #[cfg(feature = "duckdb")]
 impl DuckDBConnection {
-    fn new(config: &DatabaseConfig) -> Result<Self> {
+    fn new(_config: &DatabaseConfig) -> Result<Self> {
         // Create actual DuckDB connection
-        let conn = if config.database == ":memory:" {
+        let conn = if _config.database == ":memory:" {
             DuckdbConn::open_in_memory()
         } else {
-            DuckdbConn::open(&config.database)
+            DuckdbConn::open(&_config.database)
         }
         .map_err(|e| IoError::ConnectionError(format!("DuckDB connection failed: {}", e)))?;
 
         Ok(Self {
-            config: config.clone(),
+            _config: _config.clone(),
             connection: Some(conn),
         })
     }
@@ -1800,8 +1794,7 @@ impl DatabaseConnection for DuckDBConnection {
                     }
                 }
                 serde_json::Value::Bool(b) => b as &dyn duckdb::ToSql,
-                serde_json::Value::Null => &None::<String> as &dyn duckdb::ToSql,
-                _ => &p.to_string() as &dyn duckdb::ToSql,
+                serde_json::Value::Null => &None::<String> as &dyn duckdb::ToSql_ => &p.to_string() as &dyn duckdb::ToSql,
             })
             .collect();
 
@@ -1823,14 +1816,14 @@ impl DatabaseConnection for DuckDBConnection {
                 for i in 0..column_count {
                     let value = match row.get_ref(i) {
                         Ok(val) => match val {
-                            duckdb::types::ValueRef::Null => serde_json::Value::Null,
-                            duckdb::types::ValueRef::Integer(i) => serde_json::json!(i),
-                            duckdb::types::ValueRef::Real(f) => serde_json::json!(f),
+                            duckdb::types::ValueRef::Null =>, serde_json::Value::Null,
+                            duckdb::types::ValueRef::Integer(i) =>, serde_json::_json!(i),
+                            duckdb::types::ValueRef::Real(f) =>, serde_json::_json!(f),
                             duckdb::types::ValueRef::Text(s) => {
-                                serde_json::json!(std::str::from_utf8(s).unwrap_or(""))
+                                serde_json::_json!(std::str::from_utf8(s).unwrap_or(""))
                             }
                             duckdb::types::ValueRef::Blob(b) => {
-                                serde_json::json!(base64::encode(b))
+                                serde_json::_json!(base64::encode(b))
                             }
                         },
                         Err(_) => serde_json::Value::Null,
@@ -1845,14 +1838,14 @@ impl DatabaseConnection for DuckDBConnection {
                 for i in 0..column_count {
                     let value = match row.get_ref(i) {
                         Ok(val) => match val {
-                            duckdb::types::ValueRef::Null => serde_json::Value::Null,
-                            duckdb::types::ValueRef::Integer(i) => serde_json::json!(i),
-                            duckdb::types::ValueRef::Real(f) => serde_json::json!(f),
+                            duckdb::types::ValueRef::Null =>, serde_json::Value::Null,
+                            duckdb::types::ValueRef::Integer(i) =>, serde_json::_json!(i),
+                            duckdb::types::ValueRef::Real(f) =>, serde_json::_json!(f),
                             duckdb::types::ValueRef::Text(s) => {
-                                serde_json::json!(std::str::from_utf8(s).unwrap_or(""))
+                                serde_json::_json!(std::str::from_utf8(s).unwrap_or(""))
                             }
                             duckdb::types::ValueRef::Blob(b) => {
-                                serde_json::json!(base64::encode(b))
+                                serde_json::_json!(base64::encode(b))
                             }
                         },
                         Err(_) => serde_json::Value::Null,
@@ -2039,8 +2032,7 @@ impl DatabaseConnection for DuckDBConnection {
                 "DATE" => DataType::Date,
                 "TIMESTAMP" => DataType::Timestamp,
                 "JSON" => DataType::Json,
-                "BLOB" => DataType::Binary,
-                _ => DataType::Text, // Default fallback
+                "BLOB" => DataType::Binary_ =>, DataType::Text, // Default fallback
             };
 
             columns.push(ColumnDef {
@@ -2170,11 +2162,10 @@ pub struct ConnectionPool {
 }
 
 impl ConnectionPool {
-    pub fn new(config: DatabaseConfig, max_connections: usize) -> Self {
+    pub fn new(_config: DatabaseConfig, max_connections: usize) -> Self {
         Self {
-            db_type: config.db_type,
-            config,
-            connections: Arc::new(Mutex::new(Vec::new())),
+            db_type: _config.db_type,
+            _config_connections: Arc::new(Mutex::new(Vec::new())),
             max_connections,
         }
     }
@@ -2230,12 +2221,12 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn new(connection: Box<dyn DatabaseConnection>) -> Result<Self> {
+    pub fn new(_connection: Box<dyn DatabaseConnection>) -> Result<Self> {
         let savepoint = format!("sp_{}", uuid::Uuid::new_v4());
-        connection.execute_sql(&format!("SAVEPOINT {savepoint}"), &[])?;
+        _connection.execute_sql(&format!("SAVEPOINT {savepoint}"), &[])?;
 
         Ok(Self {
-            connection,
+            _connection,
             savepoint,
             committed: false,
         })
@@ -2275,11 +2266,11 @@ pub struct PreparedStatement {
 }
 
 impl PreparedStatement {
-    pub fn new(sql: impl Into<String>) -> Result<Self> {
-        let sql = sql.into();
-        let param_count = sql.matches('?').count();
+    pub fn new(_sql: impl Into<String>) -> Result<Self> {
+        let _sql = _sql.into();
+        let param_count = _sql.matches('?').count();
 
-        Ok(Self { sql, param_count })
+        Ok(Self { _sql, param_count })
     }
 
     /// Execute with parameters
@@ -2448,7 +2439,7 @@ pub mod orm {
     /// Model trait for ORM functionality
     pub trait Model: Sized {
         fn table_name() -> &'static str;
-        fn from_row(row: &[serde_json::Value]) -> Result<Self>;
+        fn from_row(_row: &[serde_json::Value]) -> Result<Self>;
         fn to_row(&self) -> Vec<serde_json::Value>;
     }
 
@@ -2459,18 +2450,18 @@ pub mod orm {
     }
 
     impl<T: Model> ActiveRecord<T> {
-        pub fn new(model: T) -> Self {
+        pub fn new(_model: T) -> Self {
             Self {
-                model,
+                _model,
                 changed: false,
             }
         }
 
         /// Find by primary key
-        pub fn find(conn: &dyn DatabaseConnection, id: serde_json::Value) -> Result<T> {
+        pub fn find(_conn: &dyn DatabaseConnection, id: serde_json: Value) -> Result<T> {
             let query = QueryBuilder::select(T::table_name()).where_clause("id = ?");
 
-            let result = conn.execute_sql(&query.build_sql(), &[id])?;
+            let result = _conn.execute_sql(&query.build_sql(), &[id])?;
 
             if let Some(row) = result.rows.first() {
                 T::from_row(row)
@@ -2480,9 +2471,9 @@ pub mod orm {
         }
 
         /// Find all records
-        pub fn find_all(conn: &dyn DatabaseConnection) -> Result<Vec<T>> {
+        pub fn find_all(_conn: &dyn DatabaseConnection) -> Result<Vec<T>> {
             let query = QueryBuilder::select(T::table_name());
-            let result = conn.query(&query)?;
+            let result = _conn.query(&query)?;
 
             result.rows.iter().map(|row| T::from_row(row)).collect()
         }
@@ -2511,16 +2502,16 @@ pub mod cdc {
     pub enum ChangeEvent {
         Insert {
             table: String,
-            data: serde_json::Value,
+            data: serde_json: Value,
         },
         Update {
             table: String,
-            old: serde_json::Value,
-            new: serde_json::Value,
+            old: serde_json: Value,
+            new: serde_json: Value,
         },
         Delete {
             table: String,
-            data: serde_json::Value,
+            data: serde_json: Value,
         },
     }
 
@@ -2530,8 +2521,8 @@ pub mod cdc {
     }
 
     impl CDCListener {
-        pub fn new(receiver: mpsc::Receiver<ChangeEvent>) -> Self {
-            Self { receiver }
+        pub fn new(_receiver: mpsc::Receiver<ChangeEvent>) -> Self {
+            Self { _receiver }
         }
 
         /// Get next change event
@@ -2551,8 +2542,8 @@ pub mod cdc {
     }
 
     impl CDCPublisher {
-        pub fn new(sender: mpsc::Sender<ChangeEvent>) -> Self {
-            Self { sender }
+        pub fn new(_sender: mpsc::Sender<ChangeEvent>) -> Self {
+            Self { _sender }
         }
 
         /// Publish change event
@@ -2605,9 +2596,9 @@ pub mod replication {
     }
 
     impl ReplicatedConnection {
-        pub fn new(config: ReplicationConfig) -> Result<Self> {
-            let master = DatabaseConnector::connect(&config.master)?;
-            let replicas: Result<Vec<_>> = config
+        pub fn new(_config: ReplicationConfig) -> Result<Self> {
+            let master = DatabaseConnector::connect(&_config.master)?;
+            let replicas: Result<Vec<_>> = _config
                 .replicas
                 .iter()
                 .map(|cfg| DatabaseConnector::connect(cfg))
@@ -2616,7 +2607,7 @@ pub mod replication {
             Ok(Self {
                 master,
                 replicas: replicas?,
-                mode: config.mode,
+                mode: _config.mode,
                 read_preference: ReadPreference::Replica,
             })
         }
@@ -2684,7 +2675,7 @@ pub mod advanced_query {
     struct IndexHintRule;
 
     impl OptimizationRule for IndexHintRule {
-        fn optimize(&self, _query: &mut QueryBuilder) {
+        fn optimize(&self_query: &mut QueryBuilder) {
             // Add index hints based on conditions
         }
     }
@@ -2693,7 +2684,7 @@ pub mod advanced_query {
     struct JoinOrderRule;
 
     impl OptimizationRule for JoinOrderRule {
-        fn optimize(&self, _query: &mut QueryBuilder) {
+        fn optimize(&self_query: &mut QueryBuilder) {
             // Optimize join order based on statistics
         }
     }
@@ -2712,9 +2703,9 @@ pub mod advanced_query {
 
     impl QueryAnalyzer {
         /// Analyze query performance
-        pub fn analyze(query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<QueryStats> {
+        pub fn analyze(_query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<QueryStats> {
             let start = std::time::Instant::now();
-            let result = conn.query(query)?;
+            let result = conn._query(_query)?;
             let execution_time = start.elapsed();
 
             Ok(QueryStats {
@@ -2726,8 +2717,8 @@ pub mod advanced_query {
         }
 
         /// Get query execution plan
-        pub fn explain(query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<String> {
-            let explain_sql = format!("EXPLAIN {}", query.build_sql());
+        pub fn explain(_query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<String> {
+            let explain_sql = format!("EXPLAIN {}", _query.build_sql());
             let result = conn.execute_sql(&explain_sql, &[])?;
 
             // Format execution plan

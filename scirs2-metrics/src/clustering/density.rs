@@ -30,7 +30,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::density::local_density_factor;
+/// use scirs2__metrics::clustering::density::local_density_factor;
 ///
 /// // Create a simple dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![
@@ -186,7 +186,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::density::relative_density_index;
+/// use scirs2__metrics::clustering::density::relative_density_index;
 ///
 /// // Create a simple dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![
@@ -337,7 +337,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::density::density_based_cluster_validity;
+/// use scirs2__metrics::clustering::density::density_based_cluster_validity;
 ///
 /// // Create a simple dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![
@@ -515,7 +515,7 @@ where
         }
 
         // Calculate validity for this cluster
-        let validity = if min_separation > F::zero() || cluster_sparseness > F::zero() {
+        let validity = if min_separation > F::zero() || cluster_sparseness >, F::zero() {
             (min_separation - cluster_sparseness) / F::max(min_separation, cluster_sparseness)
         } else {
             F::zero()

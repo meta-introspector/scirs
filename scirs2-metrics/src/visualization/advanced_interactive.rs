@@ -754,7 +754,7 @@ pub enum ResponseAction {
     /// Update widget data
     UpdateData {
         widget_id: String,
-        data: serde_json::Value,
+        data: serde_json: Value,
     },
     /// Trigger another event
     TriggerEvent { event: WidgetEvent },
@@ -770,7 +770,7 @@ pub enum ResponseAction {
     /// Update dashboard state
     UpdateState {
         key: String,
-        value: serde_json::Value,
+        value: serde_json: Value,
     },
 }
 
@@ -896,7 +896,7 @@ pub trait DataSource {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataSourceConfig {
     /// Data source ID
-    pub id: String,
+    pub _id: String,
     /// Data source type
     pub source_type: DataSourceType,
     /// Connection settings
@@ -1618,7 +1618,7 @@ pub struct StateChange {
     /// Old value
     pub old_value: Option<serde_json::Value>,
     /// New value
-    pub new_value: serde_json::Value,
+    pub new_value: serde, _json: Value,
     /// Author
     pub author: String,
     /// Timestamp
@@ -1855,21 +1855,21 @@ impl Default for ExportConfig {
 
 impl InteractiveDashboard {
     /// Create new interactive dashboard
-    pub fn new(config: DashboardConfig) -> Result<Self> {
+    pub fn new(_config: DashboardConfig) -> Result<Self> {
         Ok(Self {
-            config: config.clone(),
+            _config: _config.clone(),
             widgets: Arc::new(RwLock::new(HashMap::new())),
             data_sources: Arc::new(RwLock::new(HashMap::new())),
             event_system: Arc::new(Mutex::new(EventSystem::new())),
-            layout_manager: Arc::new(Mutex::new(LayoutManager::new(config.layout.clone()))),
+            layout_manager: Arc::new(Mutex::new(LayoutManager::new(_config.layout.clone()))),
             renderer: Arc::new(Mutex::new(Box::new(DefaultRenderingEngine::new()))),
             update_manager: Arc::new(Mutex::new(UpdateManager::new(
-                config.realtime_config.clone(),
+                _config.realtime_config.clone(),
             ))),
             collaboration: Arc::new(Mutex::new(CollaborationManager::new(
-                config.collaboration_config.clone(),
+                _config.collaboration_config.clone(),
             ))),
-            state: Arc::new(RwLock::new(DashboardState::new(config))),
+            state: Arc::new(RwLock::new(DashboardState::new(_config))),
         })
     }
 
@@ -1896,7 +1896,7 @@ impl InteractiveDashboard {
     pub fn add_data_source(&self, data_source: Box<dyn DataSource + Send + Sync>) -> Result<()> {
         let source_id = data_source.get_id().to_string();
         let mut sources = self.data_sources.write().map_err(|_| {
-            MetricsError::ComputationError("Failed to acquire data source lock".to_string())
+            MetricsError::ComputationError("Failed to acquire data _source lock".to_string())
         })?;
         sources.insert(source_id, data_source);
         Ok(())
@@ -2169,9 +2169,9 @@ impl EventSystem {
 }
 
 impl LayoutManager {
-    fn new(config: LayoutConfig) -> Self {
+    fn new(_config: LayoutConfig) -> Self {
         let mut manager = Self {
-            layout_config: config.clone(),
+            layout_config: _config.clone(),
             widget_layouts: HashMap::new(),
             constraints: Vec::new(),
             responsive_rules: Vec::new(),
@@ -2334,8 +2334,7 @@ impl LayoutManager {
 
     /// Calculate absolute layout
     fn calculate_absolute_layout(
-        &self,
-        _viewport: &Size,
+        &self_viewport: &Size,
     ) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
 
@@ -2369,7 +2368,7 @@ impl LayoutManager {
                     .iter()
                     .enumerate()
                     .min_by_key(|(_, &height)| height)
-                    .map(|(idx, _)| idx)
+                    .map(|(idx_)| idx)
                     .unwrap_or(0);
 
                 let x = shortest_column as f64 * (column_width + grid_config.gap as f64)
@@ -2430,7 +2429,7 @@ impl LayoutManager {
         // Add basic constraint based on position and size
         if layout.position.x >= 0.0 && layout.position.y >= 0.0 {
             self.constraints.push(LayoutConstraint {
-                id: format!("layout_{}", widget_id),
+                _id: format!("layout_{}", widget_id),
                 constraint_type: ConstraintType::Check,
                 target_widgets: vec![widget_id.to_string()],
                 parameters: HashMap::from([
@@ -2513,11 +2512,9 @@ impl LayoutManager {
 
     /// Apply individual layout change
     fn apply_layout_change(
-        &self,
-        _position: &mut WidgetPosition,
-        _change: &LayoutChange,
+        &self_position: &mut WidgetPosition, _change: &LayoutChange,
     ) -> Result<()> {
-        // Implementation would modify position based on change
+        // Implementation would modify _position based on _change
         Ok(())
     }
 }
@@ -2542,7 +2539,7 @@ impl DefaultRenderingEngine {
 }
 
 impl RenderingEngine for DefaultRenderingEngine {
-    fn initialize(&mut self, _config: &DashboardConfig) -> Result<()> {
+    fn initialize(&mut self_config: &DashboardConfig) -> Result<()> {
         Ok(())
     }
 
@@ -2665,7 +2662,7 @@ impl RenderingEngine for DefaultRenderingEngine {
         Ok(())
     }
 
-    fn handle_resize(&self, _new_size: Size) -> Result<()> {
+    fn handle_resize(&self_new_size: Size) -> Result<()> {
         Ok(())
     }
 
@@ -2679,9 +2676,9 @@ impl RenderingEngine for DefaultRenderingEngine {
 }
 
 impl UpdateManager {
-    fn new(config: RealtimeConfig) -> Self {
+    fn new(_config: RealtimeConfig) -> Self {
         Self {
-            config,
+            _config,
             subscriptions: HashMap::new(),
             update_queue: VecDeque::new(),
             statistics: UpdateStatistics {
@@ -2706,9 +2703,9 @@ impl UpdateManager {
 }
 
 impl CollaborationManager {
-    fn new(config: Option<CollaborationConfig>) -> Self {
+    fn new(_config: Option<CollaborationConfig>) -> Self {
         Self {
-            config: config.unwrap_or_else(|| CollaborationConfig {
+            _config: _config.unwrap_or_else(|| CollaborationConfig {
                 enabled: false,
                 server_endpoint: String::new(),
                 auth_config: AuthConfig {
@@ -2755,9 +2752,7 @@ impl DefaultConflictResolver {
 
 impl ConflictResolver for DefaultConflictResolver {
     fn resolve_conflict(
-        &self,
-        _base: &SharedState,
-        _local: &SharedState,
+        &self_base: &SharedState, _local: &SharedState,
         remote: &SharedState,
     ) -> Result<SharedState> {
         // Last writer wins strategy
@@ -2768,16 +2763,16 @@ impl ConflictResolver for DefaultConflictResolver {
         local.version != remote.version
     }
 
-    fn merge_changes(&self, base: &SharedState, _changes: &[StateChange]) -> Result<SharedState> {
+    fn merge_changes(&self, base: &SharedState_changes: &[StateChange]) -> Result<SharedState> {
         // Simple implementation
         Ok(base.clone())
     }
 }
 
 impl DashboardState {
-    fn new(config: DashboardConfig) -> Self {
+    fn new(_config: DashboardConfig) -> Self {
         Self {
-            config,
+            _config,
             widgets: HashMap::new(),
             filters: HashMap::new(),
             selection: None,

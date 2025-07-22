@@ -6,7 +6,7 @@
 //! - Computation of moments of distributions on the sphere
 //! - Application to physics problems (electrostatic potential)
 
-use scirs2_integrate::lebedev::{lebedev_integrate, lebedev_rule, LebedevOrder};
+use scirs2__integrate::lebedev::{lebedev_integrate, lebedev_rule, LebedevOrder};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -44,7 +44,7 @@ fn main() {
 
     // Test with constant function f(x,y,z) = 1
     // The integral over the unit sphere should be 4π (the surface area)
-    let constant_result: f64 = lebedev_integrate(|_, _, _| 1.0, LebedevOrder::Order14).unwrap();
+    let constant_result: f64 = lebedev_integrate(|___| 1.0, LebedevOrder::Order14).unwrap();
     println!("Integrating f(x,y,z) = 1:");
     println!("  Result: {constant_result:.10}");
     println!("  Expected: {:.10} (4π)", 4.0 * PI);
@@ -52,7 +52,7 @@ fn main() {
 
     // Test with a function dependent on coordinates
     // Here we use f(x,y,z) = x^2, which should integrate to 4π/3
-    let x2_result: f64 = lebedev_integrate(|x, _, _| x * x, LebedevOrder::Order14).unwrap();
+    let x2_result: f64 = lebedev_integrate(|x__| x * x, LebedevOrder::Order14).unwrap();
     println!("\nIntegrating f(x,y,z) = x²:");
     println!("  Result: {x2_result:.10}");
     println!("  Expected: {:.10} (4π/3)", 4.0 * PI / 3.0);
@@ -74,21 +74,21 @@ fn main() {
     // due to orthogonality conditions
 
     // Y₁₀ ∝ z
-    let y10_result: f64 = lebedev_integrate(|_, _, z| z, LebedevOrder::Order14).unwrap();
+    let y10_result: f64 = lebedev_integrate(|__, z| z, LebedevOrder::Order14).unwrap();
     println!("Integrating Y₁₀ ∝ z:");
     println!("  Result: {y10_result:.10e}");
     println!("  Expected: 0 (by orthogonality)");
 
     // Y₂₀ ∝ (3z² - 1)
     let y20_result: f64 =
-        lebedev_integrate(|_, _, z| 3.0 * z * z - 1.0, LebedevOrder::Order14).unwrap();
+        lebedev_integrate(|__, z| 3.0 * z * z - 1.0, LebedevOrder::Order14).unwrap();
     println!("\nIntegrating Y₂₀ ∝ (3z² - 1):");
     println!("  Result: {y20_result:.10e}");
     println!("  Expected: 0 (by orthogonality)");
 
     // Y₂₂ ∝ (x² - y²)
     let y22_result: f64 =
-        lebedev_integrate(|x, y, _| x * x - y * y, LebedevOrder::Order14).unwrap();
+        lebedev_integrate(|x, y_| x * x - y * y, LebedevOrder::Order14).unwrap();
     println!("\nIntegrating Y₂₂ ∝ (x² - y²):");
     println!("  Result: {y22_result:.10e}");
     println!("  Expected: 0 (by orthogonality)");
@@ -113,7 +113,7 @@ fn main() {
         LebedevOrder::Order50,
     ] {
         // Skip orders that aren't implemented
-        if let Ok(result) = lebedev_integrate::<f64, _>(test_func, order) {
+        if let Ok(result) = lebedev_integrate::<f64>(test_func, order) {
             let error = (result - expected).abs();
             println!(
                 "  {:?} ({} points): {:.10} (error: {:.10e})",

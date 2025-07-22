@@ -5,7 +5,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use crate::fft::{fft, ifft};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 
@@ -83,16 +83,16 @@ impl Default for FilterSpec {
 ///
 /// * Filtered signal
 #[allow(dead_code)]
-pub fn frequency_filter<T>(signal: &[T], filter_spec: &FilterSpec) -> FFTResult<Vec<f64>>
+pub fn frequency_filter<T>(_signal: &[T], filter_spec: &FilterSpec) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
 {
-    // Limit signal size to avoid performance issues
+    // Limit _signal size to avoid performance issues
     let max_size = 1024;
-    let limit = signal.len().min(max_size);
+    let limit = _signal.len().min(max_size);
 
     // Convert input to f64
-    let input: Vec<f64> = signal
+    let input: Vec<f64> = _signal
         .iter()
         .take(limit)
         .map(|&val| {
@@ -117,7 +117,7 @@ where
     // Compute inverse FFT
     let result = ifft(&filtered_spectrum, None)?;
 
-    // Extract real part as the filtered signal
+    // Extract real part as the filtered _signal
     let filtered: Vec<f64> = result.iter().map(|c| c.re).collect();
 
     Ok(filtered)
@@ -134,9 +134,9 @@ where
 ///
 /// * Filter frequency response
 #[allow(dead_code)]
-fn design_frequency_response(filter_spec: &FilterSpec, size: usize) -> FFTResult<Vec<f64>> {
-    if let Some(ref coeffs) = filter_spec.custom_coeffs {
-        if filter_spec.filter_type == FilterType::Custom {
+fn design_frequency_response(_filter_spec: &FilterSpec, size: usize) -> FFTResult<Vec<f64>> {
+    if let Some(ref coeffs) = _filter_spec.custom_coeffs {
+        if _filter_spec.filter_type == FilterType::Custom {
             // Use custom coefficients directly
             return Ok(coeffs.clone());
         }
@@ -206,9 +206,9 @@ fn design_frequency_response(filter_spec: &FilterSpec, size: usize) -> FFTResult
 /// * `response` - Filter response to modify
 /// * `filter_spec` - Filter specification
 #[allow(dead_code)]
-fn apply_window_to_response(response: &mut [f64], filter_spec: &FilterSpec) {
+fn apply_window_to_response(_response: &mut [f64], filter_spec: &FilterSpec) {
     // This is a simplified implementation
-    let size = response.len();
+    let size = _response.len();
 
     match filter_spec.window {
         FilterWindow::Rectangular => {
@@ -216,28 +216,28 @@ fn apply_window_to_response(response: &mut [f64], filter_spec: &FilterSpec) {
         }
         FilterWindow::Hamming => {
             for i in 0..size {
-                if response[i] > 0.0 {
+                if _response[i] > 0.0 {
                     let window_val =
                         0.54 - 0.46 * (2.0 * std::f64::consts::PI * i as f64 / size as f64).cos();
-                    response[i] *= window_val;
+                    _response[i] *= window_val;
                 }
             }
         }
         FilterWindow::Hanning => {
             for i in 0..size {
-                if response[i] > 0.0 {
+                if _response[i] > 0.0 {
                     let window_val =
                         0.5 * (1.0 - (2.0 * std::f64::consts::PI * i as f64 / size as f64).cos());
-                    response[i] *= window_val;
+                    _response[i] *= window_val;
                 }
             }
         }
         FilterWindow::Blackman => {
             for i in 0..size {
-                if response[i] > 0.0 {
+                if _response[i] > 0.0 {
                     let x = 2.0 * std::f64::consts::PI * i as f64 / size as f64;
                     let window_val = 0.42 - 0.5 * x.cos() + 0.08 * (2.0 * x).cos();
-                    response[i] *= window_val;
+                    _response[i] *= window_val;
                 }
             }
         }
@@ -245,10 +245,10 @@ fn apply_window_to_response(response: &mut [f64], filter_spec: &FilterSpec) {
             let beta = filter_spec.kaiser_beta.unwrap_or(3.0);
             // Simplified Kaiser window implementation
             for i in 0..size {
-                if response[i] > 0.0 {
+                if _response[i] > 0.0 {
                     let x = 2.0 * i as f64 / size as f64 - 1.0;
                     let window_val = bessel_i0(beta * (1.0 - x * x).sqrt()) / bessel_i0(beta);
-                    response[i] *= window_val;
+                    _response[i] *= window_val;
                 }
             }
         }
@@ -299,19 +299,19 @@ fn bessel_i0(x: f64) -> f64 {
 ///
 /// * Convolution result
 #[allow(dead_code)]
-pub fn convolve<T, U>(signal: &[T], kernel: &[U]) -> FFTResult<Vec<f64>>
+pub fn convolve<T, U>(_signal: &[T], kernel: &[U]) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
     U: NumCast + Copy + Debug,
 {
     // Get sizes with limits to avoid performance issues
     let max_size = 512;
-    let signal_len = signal.len().min(max_size);
+    let signal_len = _signal.len().min(max_size);
     let kernel_len = kernel.len().min(max_size);
     let result_len = signal_len + kernel_len - 1;
 
     // Convert inputs to f64
-    let signal_f64: Vec<f64> = signal
+    let _signal_f64: Vec<f64> = _signal
         .iter()
         .take(signal_len)
         .map(|&val| {
@@ -366,18 +366,18 @@ where
 ///
 /// * Cross-correlation result
 #[allow(dead_code)]
-pub fn cross_correlate<T, U>(signal1: &[T], signal2: &[U]) -> FFTResult<Vec<f64>>
+pub fn cross_correlate<T, U>(_signal1: &[T], signal2: &[U]) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
     U: NumCast + Copy + Debug,
 {
     // Get sizes
-    let signal1_len = signal1.len();
+    let signal1_len = _signal1.len();
     let signal2_len = signal2.len();
     let result_len = signal1_len + signal2_len - 1;
 
     // Convert inputs to f64
-    let signal1_f64: Vec<f64> = signal1
+    let _signal1_f64: Vec<f64> = _signal1
         .iter()
         .map(|&val| {
             NumCast::from(val)
@@ -429,8 +429,8 @@ where
 ///
 /// * Filter coefficients
 #[allow(dead_code)]
-pub fn design_fir_filter(filter_spec: &FilterSpec) -> FFTResult<Vec<f64>> {
-    let order = filter_spec.order;
+pub fn design_fir_filter(_filter_spec: &FilterSpec) -> FFTResult<Vec<f64>> {
+    let order = _filter_spec.order;
 
     // Ensure order is odd for Type I filter (symmetric)
     let adjusted_order = if order % 2 == 0 { order + 1 } else { order };
@@ -520,11 +520,11 @@ pub fn design_fir_filter(filter_spec: &FilterSpec) -> FFTResult<Vec<f64>> {
 ///
 /// * Filtered signal
 #[allow(dead_code)]
-pub fn fir_filter<T>(signal: &[T], filter_coeffs: &[f64]) -> FFTResult<Vec<f64>>
+pub fn fir_filter<T>(_signal: &[T], filter_coeffs: &[f64]) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
 {
-    convolve(signal, filter_coeffs)
+    convolve(_signal, filter_coeffs)
 }
 
 #[cfg(test)]

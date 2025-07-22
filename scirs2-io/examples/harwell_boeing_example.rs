@@ -4,7 +4,7 @@
 //! including reading, writing, and converting between different formats.
 
 use ndarray::Array1;
-use scirs2_io::harwell_boeing::{self, ccs_to_hb, hb_to_ccs, HBMatrixType, HBSparseMatrix};
+use scirs2__io::harwell_boeing::{self, ccs_to_hb, hb_to_ccs, HBMatrixType, HBSparseMatrix};
 use tempfile::tempdir;
 
 #[allow(dead_code)]
@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn create_and_write_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
+fn create_and_write_matrix(_temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📝 Creating and Writing Harwell-Boeing Matrix...");
 
     // Create a simple sparse matrix in CCS format
@@ -82,10 +82,10 @@ fn create_and_write_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn s
 }
 
 #[allow(dead_code)]
-fn read_and_analyze_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
+fn read_and_analyze_matrix(_temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Reading and Analyzing Harwell-Boeing Matrix...");
 
-    let hb_file = temp_dir.path().join("example_matrix.hb");
+    let hb_file = _temp_dir.path().join("example_matrix.hb");
 
     // Read the matrix back
     let matrix = harwell_boeing::read_harwell_boeing(&hb_file)?;
@@ -264,50 +264,50 @@ fn demonstrate_different_matrix_types(
 }
 
 #[allow(dead_code)]
-fn verify_matrix_structure(matrix: &HBSparseMatrix<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn verify_matrix_structure(_matrix: &HBSparseMatrix<f64>) -> Result<(), Box<dyn std::error::Error>> {
     // Basic structural checks
     assert_eq!(
-        matrix.colptr.len(),
-        matrix.header.ncol + 1,
+        _matrix.colptr.len(),
+        _matrix.header.ncol + 1,
         "Column pointer array size mismatch"
     );
     assert_eq!(
-        matrix.rowind.len(),
-        matrix.header.nnzero,
+        _matrix.rowind.len(),
+        _matrix.header.nnzero,
         "Row index array size mismatch"
     );
 
-    if let Some(ref values) = matrix.values {
+    if let Some(ref values) = _matrix.values {
         assert_eq!(
             values.len(),
-            matrix.header.nnzero,
+            _matrix.header.nnzero,
             "Values array size mismatch"
         );
     }
 
     // Check column pointer monotonicity
-    for i in 1..matrix.colptr.len() {
+    for i in 1.._matrix.colptr.len() {
         assert!(
-            matrix.colptr[i] >= matrix.colptr[i - 1],
+            _matrix.colptr[i] >= _matrix.colptr[i - 1],
             "Column pointers are not monotonic at position {}",
             i
         );
     }
 
     // Check row indices are within bounds
-    for &row_idx in &matrix.rowind {
+    for &row_idx in &_matrix.rowind {
         assert!(
-            row_idx < matrix.header.nrow,
+            row_idx < _matrix.header.nrow,
             "Row index {} out of bounds (nrow={})",
             row_idx,
-            matrix.header.nrow
+            _matrix.header.nrow
         );
     }
 
     // Check first and last column pointers
-    assert_eq!(matrix.colptr[0], 0, "First column pointer should be 0");
+    assert_eq!(_matrix.colptr[0], 0, "First column pointer should be 0");
     assert_eq!(
-        matrix.colptr[matrix.header.ncol], matrix.header.nnzero,
+        _matrix.colptr[_matrix.header.ncol], _matrix.header.nnzero,
         "Last column pointer should equal nnzero"
     );
 
@@ -316,10 +316,10 @@ fn verify_matrix_structure(matrix: &HBSparseMatrix<f64>) -> Result<(), Box<dyn s
 }
 
 #[allow(dead_code)]
-fn estimate_storage_size(matrix: &HBSparseMatrix<f64>) -> usize {
-    let ptr_size = matrix.colptr.len() * std::mem::size_of::<usize>();
-    let idx_size = matrix.rowind.len() * std::mem::size_of::<usize>();
-    let val_size = if let Some(ref values) = matrix.values {
+fn estimate_storage_size(_matrix: &HBSparseMatrix<f64>) -> usize {
+    let ptr_size = _matrix.colptr.len() * std::mem::size_of::<usize>();
+    let idx_size = _matrix.rowind.len() * std::mem::size_of::<usize>();
+    let val_size = if let Some(ref values) = _matrix.values {
         values.len() * std::mem::size_of::<f64>()
     } else {
         0

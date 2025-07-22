@@ -253,7 +253,7 @@ impl<'a> InteriorPointSolver<'a> {
 
         let final_f = fun(&x.view());
         self.nfev += 1;
-        let (final_optimality, _feasibility) = self.compute_convergence_measures(
+        let (final_optimality_feasibility) = self.compute_convergence_measures(
             &grad(&x.view()),
             &None,
             &None,
@@ -291,8 +291,7 @@ impl<'a> InteriorPointSolver<'a> {
         c_eq: &Option<Array1<f64>>,
         c_ineq: &Option<Array1<f64>>,
         j_eq: &Option<Array2<f64>>,
-        j_ineq: &Option<Array2<f64>>,
-        _lambda_eq: &Array1<f64>,
+        j_ineq: &Option<Array2<f64>>, _lambda_eq: &Array1<f64>,
         lambda_ineq: &Array1<f64>,
         s: &Array1<f64>,
         barrier: f64,
@@ -342,8 +341,7 @@ impl<'a> InteriorPointSolver<'a> {
         c_ineq: &Option<Array1<f64>>,
         j_eq: &Option<Array2<f64>>,
         j_ineq: &Option<Array2<f64>>,
-        s: &Array1<f64>,
-        _lambda_eq: &Array1<f64>,
+        s: &Array1<f64>, _lambda_eq: &Array1<f64>,
         lambda_ineq: &Array1<f64>,
         barrier: f64,
     ) -> Result<NewtonDirectionResult, OptimizeError> {
@@ -468,8 +466,7 @@ impl<'a> InteriorPointSolver<'a> {
         j_eq: &Option<Array2<f64>>,
         j_ineq: &Option<Array2<f64>>,
         s: &Array1<f64>,
-        lambda_ineq: &Array1<f64>,
-        _barrier: f64,
+        lambda_ineq: &Array1<f64>, _barrier: f64,
     ) -> Result<NewtonDirectionResult, OptimizeError> {
         if self.m_ineq == 0 {
             // No inequality constraints, use standard Newton direction
@@ -481,14 +478,13 @@ impl<'a> InteriorPointSolver<'a> {
                 j_ineq,
                 s,
                 &Array1::zeros(self.m_eq),
-                lambda_ineq,
-                _barrier,
+                lambda_ineq_barrier,
             );
         }
 
         // Step 1: Compute predictor step (affine scaling direction)
-        // This is the Newton step with zero barrier parameter (affine scaling)
-        let (dx_aff, ds_aff, _dlambda_eq_aff, dlambda_ineq_aff) =
+        // This is the Newton step with zero _barrier parameter (affine scaling)
+        let (dx_aff, ds_aff_dlambda_eq_aff, dlambda_ineq_aff) =
             self.compute_affine_scaling_direction(g, c_eq, c_ineq, j_eq, j_ineq, s, lambda_ineq)?;
 
         // Step 2: Compute maximum step lengths for predictor step
@@ -523,7 +519,7 @@ impl<'a> InteriorPointSolver<'a> {
         // Ensure sigma is in reasonable bounds
         let sigma = sigma.max(0.0).min(1.0);
 
-        // Step 5: Compute target barrier parameter for corrector step
+        // Step 5: Compute target _barrier parameter for corrector step
         let sigma_mu = sigma * mu;
 
         // Step 6: Compute corrector step
@@ -629,10 +625,7 @@ impl<'a> InteriorPointSolver<'a> {
 
     /// Compute corrector direction combining predictor and centering
     fn compute_corrector_direction(
-        &self,
-        _g: &Array1<f64>,
-        _c_eq: &Option<Array1<f64>>,
-        _c_ineq: &Option<Array1<f64>>,
+        &self_g: &Array1<f64>, _c_eq: &Option<Array1<f64>>, _c_ineq: &Option<Array1<f64>>,
         j_eq: &Option<Array2<f64>>,
         j_ineq: &Option<Array2<f64>>,
         s: &Array1<f64>,
@@ -806,8 +799,7 @@ impl<'a> InteriorPointSolver<'a> {
         lambda_ineq: &Array1<f64>,
         dx: &Array1<f64>,
         ds: &Array1<f64>,
-        dlambda_ineq: &Array1<f64>,
-        _barrier: f64,
+        dlambda_ineq: &Array1<f64>, _barrier: f64,
     ) -> Result<f64, OptimizeError>
     where
         F: FnMut(&ArrayView1<f64>) -> f64,
@@ -865,10 +857,8 @@ fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, OptimizeError>
 pub fn minimize_interior_point<F, H, J>(
     fun: F,
     x0: Array1<f64>,
-    eq_con: Option<H>,
-    _eq_jac: Option<J>,
-    ineq_con: Option<H>,
-    _ineq_jac: Option<J>,
+    eq_con: Option<H>, _eq_jac: Option<J>,
+    ineq_con: Option<H>, _ineq_jac: Option<J>,
     options: Option<InteriorPointOptions>,
 ) -> Result<OptimizeResult<f64>, OptimizeError>
 where
@@ -923,19 +913,19 @@ where
 
 /// Compute gradient using finite differences
 #[allow(dead_code)]
-fn finite_diff_gradient<F>(fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
+fn finite_diff_gradient<F>(_fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,
 {
     let n = x.len();
     let mut grad = Array1::zeros(n);
-    let f0 = fun(x);
+    let f0 = _fun(x);
     let mut x_pert = x.to_owned();
 
     for i in 0..n {
         let h = eps * (1.0 + x[i].abs());
         x_pert[i] = x[i] + h;
-        let f_plus = fun(&x_pert.view());
+        let f_plus = _fun(&x_pert.view());
         grad[i] = (f_plus - f0) / h;
         x_pert[i] = x[i];
     }

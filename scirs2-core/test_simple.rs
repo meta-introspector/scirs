@@ -8,7 +8,7 @@ fn main() {
     println!("Testing imports...");
     
     // Test ecosystem coordinator
-    let _coordinator = scirs2_core::advanced_ecosystem_integration::advancedEcosystemCoordinator::new();
+    let coordinator = scirs2_core::advanced_ecosystem_integration::advancedEcosystemCoordinator::new();
     println!("✓ Ecosystem coordinator created");
     
     // Test distributed computer
@@ -22,7 +22,7 @@ fn main() {
     let objectives = scirs2_core::neural_architecture_search::OptimizationObjectives::default();
     let constraints = scirs2_core::neural_architecture_search::HardwareConstraints::default();
     let config = scirs2_core::neural_architecture_search::SearchConfig {
-        strategy: scirs2_core::neural_architecture_search::NASStrategy::Evolutionary,
+        strategy: scirs2_core: neural_architecture_search: :NASStrategy::Evolutionary,
         max_evaluations: 5,
         population_size: 3,
         max_generations: 2,

@@ -17,7 +17,7 @@
 //! ## IIR Filter Design
 //!
 //! ```rust
-//! use scirs2_signal::filter::{butter, FilterType};
+//! use scirs2__signal::filter::{butter, FilterType};
 //!
 //! // Design a 4th order Butterworth lowpass filter
 //! let (b, a) = butter(4, 0.3, FilterType::Lowpass).unwrap();
@@ -29,7 +29,7 @@
 //! ## FIR Filter Design
 //!
 //! ```rust
-//! use scirs2_signal::filter::firwin;
+//! use scirs2__signal::filter::firwin;
 //!
 //! // Design a 65-tap FIR lowpass filter with Hamming window
 //! let h = firwin(65, 0.3, "hamming", true).unwrap();
@@ -38,7 +38,7 @@
 //! ## Filter Application
 //!
 //! ```rust
-//! use scirs2_signal::filter::{butter, filtfilt};
+//! use scirs2__signal::filter::{butter, filtfilt};
 //!
 //! // Design filter and apply with zero phase delay
 //! let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -49,7 +49,7 @@
 //! ## Filter Analysis
 //!
 //! ```rust
-//! use scirs2_signal::filter::{butter, analyze_filter};
+//! use scirs2__signal::filter::{butter, analyze_filter};
 //!
 //! // Analyze filter characteristics
 //! let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -57,7 +57,12 @@
 //! println!("3dB cutoff: {:.3}", analysis.cutoff_3db);
 //! ```
 
+use crate::lti::TransferFunction;
+use num__complex::Complex64;
+use crate::lti::design::tf;
+
 // Re-export all public modules
+#[allow(unused_imports)]
 pub mod analysis;
 pub mod application;
 pub mod common;
@@ -116,12 +121,12 @@ pub use parallel::{
 };
 
 // Re-export enhanced parallel filter functions
-pub use parallel_enhanced::{
+pub use parallel__enhanced::{
     enhanced_parallel_filtfilt, ParallelFilterConfig as EnhancedParallelFilterConfig,
 };
 
 // Re-export Advanced enhanced parallel filter functions
-pub use parallel_advanced_enhanced::{
+pub use parallel_advanced__enhanced::{
     benchmark_parallel_filtering_operations, validate_parallel_filtering_accuracy,
     AdvancedParallelConfig, LockFreeStreamingFilter, ParallelFilterMetrics,
     ParallelMultiRateFilterBank, ParallelSpectralFilter, SparseParallelFilter,
@@ -130,10 +135,10 @@ pub use parallel_advanced_enhanced::{
 
 #[cfg(test)]
 mod tests {
-    use num_complex::Complex64;
-
     #[test]
     fn test_butter_filter_basic() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test basic Butterworth filter design
         let result = butter(4, 0.3, FilterType::Lowpass);
         assert!(result.is_ok());
@@ -173,6 +178,8 @@ mod tests {
 
     #[test]
     fn test_filtfilt_application() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test zero-phase filtering
         let (b, a) = butter(2, 0.3, "lowpass").unwrap();
         let signal = vec![1.0, 2.0, 3.0, 2.0, 1.0];
@@ -185,6 +192,8 @@ mod tests {
 
     #[test]
     fn test_notch_filter() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test specialized notch filter
         let result = notch_filter(0.25, 35.0);
         assert!(result.is_ok());
@@ -197,6 +206,8 @@ mod tests {
 
     #[test]
     fn test_stability_check() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test filter stability analysis
         let (_b, a) = butter(4, 0.2, "lowpass").unwrap();
         let result = check_filter_stability(&a);
@@ -209,6 +220,8 @@ mod tests {
 
     #[test]
     fn test_zpk_transform() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test zeros-poles-gain transformation
 
         let zeros = vec![Complex64::new(-1.0, 0.0)];
@@ -248,4 +261,9 @@ mod tests {
         assert!(validate_band_frequencies(0.4, 0.1).is_err());
         assert!(validate_band_frequencies(-0.1, 0.4).is_err());
     }
+}
+
+#[allow(dead_code)]
+fn tf(_num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
+    TransferFunction::new(_num, den)
 }

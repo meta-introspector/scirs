@@ -4,7 +4,7 @@
 //! processes data points sequentially, creating clusters on-the-fly.
 
 use crate::error::{ClusteringError, Result};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -35,7 +35,7 @@ use std::fmt::Debug;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_cluster::leader::leader_clustering;
+/// use scirs2__cluster::leader::leader_clustering;
 ///
 /// let data = array![
 ///     [1.0, 2.0],
@@ -140,15 +140,15 @@ pub struct LeaderClustering<F: Float> {
 
 impl<F: Float + Debug> LeaderClustering<F> {
     /// Create a new Leader clustering instance
-    pub fn new(threshold: F) -> Result<Self> {
-        if threshold <= F::zero() {
+    pub fn new(_threshold: F) -> Result<Self> {
+        if _threshold <= F::zero() {
             return Err(ClusteringError::InvalidInput(
                 "Threshold must be positive".to_string(),
             ));
         }
 
         Ok(Self {
-            threshold,
+            _threshold,
             leaders: Vec::new(),
         })
     }
@@ -257,7 +257,7 @@ pub struct LeaderNode<F: Float> {
 
 impl<F: Float + Debug> LeaderTree<F> {
     /// Build a hierarchical leader tree with multiple threshold levels
-    pub fn build_hierarchical(data: ArrayView2<F>, thresholds: &[F]) -> Result<Self> {
+    pub fn build_hierarchical(_data: ArrayView2<F>, thresholds: &[F]) -> Result<Self> {
         if thresholds.is_empty() {
             return Err(ClusteringError::InvalidInput(
                 "At least one threshold is required".to_string(),
@@ -266,7 +266,7 @@ impl<F: Float + Debug> LeaderTree<F> {
 
         // Start with the largest threshold
         let current_threshold = thresholds[0];
-        let (leaders, labels) = leader_clustering(data, current_threshold, euclidean_distance)?;
+        let (leaders, labels) = leader_clustering(_data, current_threshold, euclidean_distance)?;
 
         // Build root nodes
         let mut roots = Vec::new();
@@ -288,7 +288,7 @@ impl<F: Float + Debug> LeaderTree<F> {
         // Build lower levels if more thresholds provided
         if thresholds.len() > 1 {
             for root in &mut roots {
-                Self::build_subtree(data, root, &thresholds[1..])?;
+                Self::build_subtree(_data, root, &thresholds[1..])?;
             }
         }
 
@@ -349,8 +349,8 @@ impl<F: Float + Debug> LeaderTree<F> {
         self.roots.iter().map(|root| Self::count_nodes(root)).sum()
     }
 
-    fn count_nodes(node: &LeaderNode<F>) -> usize {
-        1 + node
+    fn count_nodes(_node: &LeaderNode<F>) -> usize {
+        1 + _node
             .children
             .iter()
             .map(|child| Self::count_nodes(child))

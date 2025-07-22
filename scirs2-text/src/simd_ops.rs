@@ -26,25 +26,25 @@ impl SimdStringOps {
     }
 
     /// Fast character counting using SIMD
-    pub fn count_chars(text: &str, target: char) -> usize {
-        if !Self::is_available() || text.len() < 64 {
+    pub fn count_chars(_text: &str, target: char) -> usize {
+        if !Self::is_available() || _text.len() < 64 {
             // Fallback to scalar for small strings or no SIMD
-            return text.chars().filter(|&c| c == target).count();
+            return _text.chars().filter(|&c| c == target).count();
         }
 
         // For ASCII characters, we can use byte-level SIMD
         if target.is_ascii() {
-            Self::count_bytes(text.as_bytes(), target as u8)
+            Self::count_bytes(_text.as_bytes(), target as u8)
         } else {
             // For non-ASCII, fallback to scalar
-            text.chars().filter(|&c| c == target).count()
+            _text.chars().filter(|&c| c == target).count()
         }
     }
 
     /// Count occurrences of a byte in a byte slice using SIMD
-    fn count_bytes(data: &[u8], target: u8) -> usize {
-        if !Self::is_available() || data.len() < 64 {
-            return data.iter().filter(|&&b| b == target).count();
+    fn count_bytes(_data: &[u8], target: u8) -> usize {
+        if !Self::is_available() || _data.len() < 64 {
+            return _data.iter().filter(|&&b| b == target).count();
         }
 
         // Advanced-optimized SIMD processing with larger chunks and prefetching
@@ -52,11 +52,11 @@ impl SimdStringOps {
         let mut count = 0usize;
 
         // Process complete chunks with advanced-vectorized counting
-        let chunks: Vec<_> = data.chunks(simd_chunk_size).collect();
+        let chunks: Vec<_> = _data.chunks(simd_chunk_size).collect();
 
         // Use parallel processing for large datasets
         use scirs2_core::parallel_ops::*;
-        if chunks.len() > 4 && data.len() > 4096 {
+        if chunks.len() > 4 && _data.len() > 4096 {
             let partial_counts: Vec<usize> = chunks
                 .par_iter()
                 .map(|chunk| {
@@ -109,16 +109,16 @@ impl SimdStringOps {
     }
 
     /// Fast whitespace detection using SIMD
-    pub fn find_whitespace_positions(text: &str) -> Vec<usize> {
-        if !Self::is_available() || !text.is_ascii() || text.len() < 64 {
-            return text
+    pub fn find_whitespace_positions(_text: &str) -> Vec<usize> {
+        if !Self::is_available() || !_text.is_ascii() || _text.len() < 64 {
+            return _text
                 .char_indices()
                 .filter(|(_, c)| c.is_whitespace())
-                .map(|(i, _)| i)
+                .map(|(i_)| i)
                 .collect();
         }
 
-        let bytes = text.as_bytes();
+        let bytes = _text.as_bytes();
         let mut positions = Vec::new();
 
         // SIMD detection for common ASCII whitespace characters
@@ -139,13 +139,13 @@ impl SimdStringOps {
     }
 
     /// Find positions of a specific byte using SIMD
-    fn find_byte_positions(data: &[u8], target: u8) -> Vec<usize> {
-        if data.len() < 64 {
-            return data
+    fn find_byte_positions(_data: &[u8], target: u8) -> Vec<usize> {
+        if _data.len() < 64 {
+            return _data
                 .iter()
                 .enumerate()
                 .filter(|(_, &b)| b == target)
-                .map(|(i, _)| i)
+                .map(|(i_)| i)
                 .collect();
         }
 
@@ -154,7 +154,7 @@ impl SimdStringOps {
 
         // Process in chunks for better performance
         let chunk_size = 64;
-        for (chunk_idx, chunk) in data.chunks(chunk_size).enumerate() {
+        for (chunk_idx, chunk) in _data.chunks(chunk_size).enumerate() {
             let base_idx = chunk_idx * chunk_size;
             for (i, &byte) in chunk.iter().enumerate() {
                 if byte == target {
@@ -167,12 +167,12 @@ impl SimdStringOps {
     }
 
     /// SIMD-accelerated case conversion for ASCII text
-    pub fn to_lowercase_ascii(text: &str) -> String {
-        if !Self::is_available() || !text.is_ascii() {
-            return text.to_lowercase();
+    pub fn to_lowercase_ascii(_text: &str) -> String {
+        if !Self::is_available() || !_text.is_ascii() {
+            return _text.to_lowercase();
         }
 
-        let bytes = text.as_bytes();
+        let bytes = _text.as_bytes();
 
         // Use optimized ASCII lowercase conversion
         let mut result = Vec::with_capacity(bytes.len());
@@ -189,12 +189,12 @@ impl SimdStringOps {
     }
 
     /// SIMD-accelerated substring search using byte comparison
-    pub fn find_substring(haystack: &str, needle: &str) -> Option<usize> {
-        if !Self::is_available() || !haystack.is_ascii() || !needle.is_ascii() {
-            return haystack.find(needle);
+    pub fn find_substring(_haystack: &str, needle: &str) -> Option<usize> {
+        if !Self::is_available() || !_haystack.is_ascii() || !needle.is_ascii() {
+            return _haystack.find(needle);
         }
 
-        let haystack_bytes = haystack.as_bytes();
+        let haystack_bytes = _haystack.as_bytes();
         let needle_bytes = needle.as_bytes();
 
         if needle_bytes.is_empty() {
@@ -207,7 +207,7 @@ impl SimdStringOps {
 
         // For short needles, use standard search
         if needle_bytes.len() < 8 {
-            return haystack.find(needle);
+            return _haystack.find(needle);
         }
 
         // SIMD-accelerated search for first byte matches
@@ -228,22 +228,22 @@ impl SimdStringOps {
     }
 
     /// SIMD-accelerated character validation
-    pub fn is_alphanumeric_ascii(text: &str) -> bool {
-        if !Self::is_available() || !text.is_ascii() {
-            return text.chars().all(|c| c.is_alphanumeric());
+    pub fn is_alphanumeric_ascii(_text: &str) -> bool {
+        if !Self::is_available() || !_text.is_ascii() {
+            return _text.chars().all(|c| c.is_alphanumeric());
         }
 
         // Use optimized validation
-        text.bytes().all(|b| b.is_ascii_alphanumeric())
+        _text.bytes().all(|b| b.is_ascii_alphanumeric())
     }
 
     /// SIMD-accelerated Hamming distance calculation
-    pub fn hamming_distance(s1: &str, s2: &str) -> Option<usize> {
-        if s1.len() != s2.len() {
+    pub fn hamming_distance(_s1: &str, s2: &str) -> Option<usize> {
+        if _s1.len() != s2.len() {
             return None;
         }
 
-        let bytes1 = s1.as_bytes();
+        let bytes1 = _s1.as_bytes();
         let bytes2 = s2.as_bytes();
 
         // Use optimized byte comparison
@@ -262,8 +262,8 @@ pub struct SimdEditDistance;
 
 impl SimdEditDistance {
     /// Compute Levenshtein distance with SIMD acceleration for the inner loop
-    pub fn levenshtein(s1: &str, s2: &str) -> usize {
-        let chars1: Vec<char> = s1.chars().collect();
+    pub fn levenshtein(_s1: &str, s2: &str) -> usize {
+        let chars1: Vec<char> = _s1.chars().collect();
         let chars2: Vec<char> = s2.chars().collect();
         let len1 = chars1.len();
         let len2 = chars2.len();
@@ -339,8 +339,8 @@ impl SimdEditDistance {
     }
 
     /// Scalar fallback for Levenshtein distance
-    fn levenshtein_scalar(chars1: &[char], chars2: &[char]) -> usize {
-        let len1 = chars1.len();
+    fn levenshtein_scalar(_chars1: &[char], chars2: &[char]) -> usize {
+        let len1 = _chars1.len();
         let len2 = chars2.len();
 
         let mut prev_row = vec![0; len2 + 1];
@@ -355,7 +355,7 @@ impl SimdEditDistance {
             curr_row[0] = i;
 
             for j in 1..=len2 {
-                let cost = if chars1[i - 1] == chars2[j - 1] { 0 } else { 1 };
+                let cost = if _chars1[i - 1] == chars2[j - 1] { 0 } else { 1 };
 
                 curr_row[j] = std::cmp::min(
                     std::cmp::min(
@@ -375,12 +375,12 @@ impl SimdEditDistance {
 
 impl SimdTextAnalyzer {
     /// Count word occurrences using SIMD-accelerated byte scanning
-    pub fn count_words(text: &str) -> usize {
-        if !SimdStringOps::is_available() || !text.is_ascii() {
-            return text.split_whitespace().count();
+    pub fn count_words(_text: &str) -> usize {
+        if !SimdStringOps::is_available() || !_text.is_ascii() {
+            return _text.split_whitespace().count();
         }
 
-        let bytes = text.as_bytes();
+        let bytes = _text.as_bytes();
         let mut word_count = 0;
         let mut in_word = false;
 
@@ -400,9 +400,9 @@ impl SimdTextAnalyzer {
     }
 
     /// Calculate character frequency using SIMD acceleration
-    pub fn char_frequency(text: &str) -> std::collections::HashMap<char, usize> {
-        if !SimdStringOps::is_available() || !text.is_ascii() {
-            return text
+    pub fn char_frequency(_text: &str) -> std::collections::HashMap<char, usize> {
+        if !SimdStringOps::is_available() || !_text.is_ascii() {
+            return _text
                 .chars()
                 .fold(std::collections::HashMap::new(), |mut acc, c| {
                     *acc.entry(c).or_insert(0) += 1;
@@ -410,9 +410,9 @@ impl SimdTextAnalyzer {
                 });
         }
 
-        // For ASCII text, use optimized byte processing
+        // For ASCII _text, use optimized byte processing
         let mut freq = std::collections::HashMap::new();
-        let bytes = text.as_bytes();
+        let bytes = _text.as_bytes();
 
         // Process in chunks for better SIMD utilization
         for chunk in bytes.chunks(1024) {
@@ -427,51 +427,51 @@ impl SimdTextAnalyzer {
     }
 
     /// Fast text length calculation (characters, not bytes)
-    pub fn text_length(text: &str) -> usize {
-        if text.is_ascii() {
+    pub fn text_length(_text: &str) -> usize {
+        if _text.is_ascii() {
             // For ASCII, character count equals byte count
-            text.len()
+            _text.len()
         } else {
             // For Unicode, fall back to standard counting
-            text.chars().count()
+            _text.chars().count()
         }
     }
 
     /// SIMD-accelerated line counting
-    pub fn count_lines(text: &str) -> usize {
-        if !SimdStringOps::is_available() || !text.is_ascii() {
-            return text.lines().count();
+    pub fn count_lines(_text: &str) -> usize {
+        if !SimdStringOps::is_available() || !_text.is_ascii() {
+            return _text.lines().count();
         }
 
         // Count newline characters efficiently
-        SimdStringOps::count_chars(text, '\n') + 1
+        SimdStringOps::count_chars(_text, '\n') + 1
     }
 
     /// Fast sentence approximation using SIMD
-    pub fn estimate_sentences(text: &str) -> usize {
-        if !SimdStringOps::is_available() || !text.is_ascii() {
-            return text.matches(&['.', '!', '?'][..]).count();
+    pub fn estimate_sentences(_text: &str) -> usize {
+        if !SimdStringOps::is_available() || !_text.is_ascii() {
+            return _text.matches(&['.', '!', '?'][..]).count();
         }
 
-        let period_count = SimdStringOps::count_chars(text, '.');
-        let exclamation_count = SimdStringOps::count_chars(text, '!');
-        let question_count = SimdStringOps::count_chars(text, '?');
+        let period_count = SimdStringOps::count_chars(_text, '.');
+        let exclamation_count = SimdStringOps::count_chars(_text, '!');
+        let question_count = SimdStringOps::count_chars(_text, '?');
 
         period_count + exclamation_count + question_count
     }
 
     /// SIMD-accelerated text comparison for exact equality
-    pub fn texts_equal(text1: &str, text2: &str) -> bool {
-        if text1.len() != text2.len() {
+    pub fn texts_equal(_text1: &str, text2: &str) -> bool {
+        if _text1.len() != text2.len() {
             return false;
         }
 
-        if !SimdStringOps::is_available() || text1.len() < 64 {
-            return text1 == text2;
+        if !SimdStringOps::is_available() || _text1.len() < 64 {
+            return _text1 == text2;
         }
 
         // Use optimized byte comparison for large texts
-        let bytes1 = text1.as_bytes();
+        let bytes1 = _text1.as_bytes();
         let bytes2 = text2.as_bytes();
 
         // Process in chunks for better performance
@@ -485,39 +485,39 @@ impl SimdTextAnalyzer {
     }
 
     /// Fast ASCII uppercase check using SIMD
-    pub fn is_uppercase_ascii(text: &str) -> bool {
-        if !SimdStringOps::is_available() || !text.is_ascii() {
-            return text.chars().all(|c| !c.is_lowercase());
+    pub fn is_uppercase_ascii(_text: &str) -> bool {
+        if !SimdStringOps::is_available() || !_text.is_ascii() {
+            return _text.chars().all(|c| !c.is_lowercase());
         }
 
-        text.bytes()
+        _text.bytes()
             .all(|b| !b.is_ascii_lowercase() || !b.is_ascii_alphabetic())
     }
 
     /// Fast ASCII lowercase check using SIMD
-    pub fn is_lowercase_ascii(text: &str) -> bool {
-        if !SimdStringOps::is_available() || !text.is_ascii() {
-            return text.chars().all(|c| !c.is_uppercase());
+    pub fn is_lowercase_ascii(_text: &str) -> bool {
+        if !SimdStringOps::is_available() || !_text.is_ascii() {
+            return _text.chars().all(|c| !c.is_uppercase());
         }
 
-        text.bytes()
+        _text.bytes()
             .all(|b| !b.is_ascii_uppercase() || !b.is_ascii_alphabetic())
     }
 }
 
 impl VectorizedStringOps {
     /// Vectorized character counting with true SIMD
-    pub fn count_chars_vectorized(text: &str, target: char) -> usize {
-        if !SimdStringOps::is_available() || !target.is_ascii() || !text.is_ascii() {
-            return text.chars().filter(|&c| c == target).count();
+    pub fn count_chars_vectorized(_text: &str, target: char) -> usize {
+        if !SimdStringOps::is_available() || !target.is_ascii() || !_text.is_ascii() {
+            return _text.chars().filter(|&c| c == target).count();
         }
 
-        let bytes = text.as_bytes();
+        let bytes = _text.as_bytes();
         let target_byte = target as u8;
         let mut count = 0;
 
         // Process in 16-byte chunks (SSE) or 32-byte chunks (AVX)
-        let chunk_size = if text.len() >= 256 { 32 } else { 16 };
+        let chunk_size = if _text.len() >= 256 { 32 } else { 16 };
         let mut chunks = bytes.chunks_exact(chunk_size);
 
         for chunk in &mut chunks {
@@ -534,13 +534,13 @@ impl VectorizedStringOps {
     }
 
     /// Count target byte in a chunk using vectorized operations
-    fn count_target_in_chunk(chunk: &[u8], target: u8) -> usize {
+    fn count_target_in_chunk(_chunk: &[u8], target: u8) -> usize {
         // This would use actual SIMD intrinsics in a real implementation
         // For now, we use an optimized scalar version that can be vectorized by the compiler
         let mut count = 0;
 
         // Unroll the loop for better vectorization
-        for bytes in chunk.chunks_exact(4) {
+        for bytes in _chunk.chunks_exact(4) {
             count += (bytes[0] == target) as usize;
             count += (bytes[1] == target) as usize;
             count += (bytes[2] == target) as usize;
@@ -548,7 +548,7 @@ impl VectorizedStringOps {
         }
 
         // Handle remaining bytes
-        for &byte in chunk.chunks_exact(4).remainder() {
+        for &byte in _chunk.chunks_exact(4).remainder() {
             count += (byte == target) as usize;
         }
 
@@ -556,15 +556,15 @@ impl VectorizedStringOps {
     }
 
     /// Vectorized byte transformation (e.g., case conversion)
-    pub fn transform_bytes_vectorized<F>(text: &str, transform: F) -> String
+    pub fn transform_bytes_vectorized<F>(_text: &str, transform: F) -> String
     where
         F: Fn(u8) -> u8 + Copy,
     {
-        if !SimdStringOps::is_available() || !text.is_ascii() {
-            return text.chars().map(|c| transform(c as u8) as char).collect();
+        if !SimdStringOps::is_available() || !_text.is_ascii() {
+            return _text.chars().map(|c| transform(c as u8) as char).collect();
         }
 
-        let bytes = text.as_bytes();
+        let bytes = _text.as_bytes();
         let mut result = Vec::with_capacity(bytes.len());
 
         // Process in SIMD-friendly chunks
@@ -584,12 +584,12 @@ impl VectorizedStringOps {
     }
 
     /// Parallel character classification using SIMD
-    pub fn classify_chars_vectorized(text: &str) -> (usize, usize, usize, usize) {
-        if !SimdStringOps::is_available() || !text.is_ascii() {
-            return Self::classify_chars_scalar(text);
+    pub fn classify_chars_vectorized(_text: &str) -> (usize, usize, usize, usize) {
+        if !SimdStringOps::is_available() || !_text.is_ascii() {
+            return Self::classify_chars_scalar(_text);
         }
 
-        let bytes = text.as_bytes();
+        let bytes = _text.as_bytes();
         let mut letter_count = 0;
         let mut digit_count = 0;
         let mut space_count = 0;
@@ -608,19 +608,18 @@ impl VectorizedStringOps {
     }
 
     /// Classify characters in a chunk
-    fn classify_chunk(chunk: &[u8]) -> (usize, usize, usize, usize) {
+    fn classify_chunk(_chunk: &[u8]) -> (usize, usize, usize, usize) {
         let mut letters = 0;
         let mut digits = 0;
         let mut spaces = 0;
         let mut others = 0;
 
         // Vectorizable classification
-        for &byte in chunk {
+        for &byte in _chunk {
             match byte {
                 b'a'..=b'z' | b'A'..=b'Z' => letters += 1,
                 b'0'..=b'9' => digits += 1,
-                b' ' | b'\t' | b'\n' | b'\r' => spaces += 1,
-                _ => others += 1,
+                b' ' | b'\t' | b'\n' | b'\r' => spaces += 1_ => others += 1,
             }
         }
 
@@ -628,13 +627,13 @@ impl VectorizedStringOps {
     }
 
     /// Scalar fallback for character classification
-    fn classify_chars_scalar(text: &str) -> (usize, usize, usize, usize) {
+    fn classify_chars_scalar(_text: &str) -> (usize, usize, usize, usize) {
         let mut letter_count = 0;
         let mut digit_count = 0;
         let mut space_count = 0;
         let mut other_count = 0;
 
-        for c in text.chars() {
+        for c in _text.chars() {
             if c.is_alphabetic() {
                 letter_count += 1;
             } else if c.is_numeric() {
@@ -650,12 +649,12 @@ impl VectorizedStringOps {
     }
 
     /// Vectorized string reversal
-    pub fn reverse_vectorized(text: &str) -> String {
-        if !SimdStringOps::is_available() || !text.is_ascii() || text.len() <= 1 {
-            return text.chars().rev().collect();
+    pub fn reverse_vectorized(_text: &str) -> String {
+        if !SimdStringOps::is_available() || !_text.is_ascii() || _text.len() <= 1 {
+            return _text.chars().rev().collect();
         }
 
-        let bytes = text.as_bytes();
+        let bytes = _text.as_bytes();
         let mut result = bytes.to_vec();
 
         // Simple and correct approach: reverse the byte array
@@ -666,29 +665,29 @@ impl VectorizedStringOps {
     }
 
     /// Vectorized longest common prefix
-    pub fn longest_common_prefix_vectorized(strings: &[&str]) -> String {
-        if strings.is_empty() {
+    pub fn longest_common_prefix_vectorized(_strings: &[&str]) -> String {
+        if _strings.is_empty() {
             return String::new();
         }
 
-        if strings.len() == 1 {
-            return strings[0].to_string();
+        if _strings.len() == 1 {
+            return _strings[0].to_string();
         }
 
         // Find minimum length
-        let min_len = strings.iter().map(|s| s.len()).min().unwrap_or(0);
+        let min_len = _strings.iter().map(|s| s.len()).min().unwrap_or(0);
         if min_len == 0 {
             return String::new();
         }
 
-        // Check if all strings are ASCII for SIMD optimization
-        let all_ascii = strings.iter().all(|s| s.is_ascii());
+        // Check if all _strings are ASCII for SIMD optimization
+        let all_ascii = _strings.iter().all(|s| s.is_ascii());
 
         if !SimdStringOps::is_available() || !all_ascii {
-            return Self::longest_common_prefix_scalar(strings);
+            return Self::longest_common_prefix_scalar(_strings);
         }
 
-        let first_bytes = strings[0].as_bytes();
+        let first_bytes = _strings[0].as_bytes();
         let mut prefix_len = 0;
 
         // Process in SIMD-friendly chunks
@@ -701,8 +700,8 @@ impl VectorizedStringOps {
             for pos in chunk_start..chunk_end {
                 let first_byte = first_bytes[pos];
 
-                // Check if all strings have the same byte at this position
-                for &s in &strings[1..] {
+                // Check if all _strings have the same byte at this position
+                for &s in &_strings[1..] {
                     if s.as_bytes()[pos] != first_byte {
                         all_match = false;
                         break;
@@ -721,16 +720,16 @@ impl VectorizedStringOps {
             }
         }
 
-        strings[0][..prefix_len].to_string()
+        _strings[0][..prefix_len].to_string()
     }
 
     /// Scalar fallback for longest common prefix
-    fn longest_common_prefix_scalar(strings: &[&str]) -> String {
-        let first = strings[0];
+    fn longest_common_prefix_scalar(_strings: &[&str]) -> String {
+        let first = _strings[0];
         let mut prefix_len = 0;
 
         for (i, ch) in first.char_indices() {
-            if strings[1..].iter().all(|s| s.chars().nth(i) == Some(ch)) {
+            if _strings[1..].iter().all(|s| s.chars().nth(i) == Some(ch)) {
                 prefix_len = i + ch.len_utf8();
             } else {
                 break;
@@ -743,16 +742,16 @@ impl VectorizedStringOps {
 
 impl SimdPatternMatcher {
     /// SIMD-accelerated multi-pattern search
-    pub fn find_multiple_patterns(text: &str, patterns: &[&str]) -> Vec<(usize, usize)> {
+    pub fn find_multiple_patterns(_text: &str, patterns: &[&str]) -> Vec<(usize, usize)> {
         if patterns.is_empty() {
             return Vec::new();
         }
 
         if !SimdStringOps::is_available()
-            || !text.is_ascii()
+            || !_text.is_ascii()
             || patterns.iter().any(|p| !p.is_ascii())
         {
-            return Self::find_patterns_scalar(text, patterns);
+            return Self::find_patterns_scalar(_text, patterns);
         }
 
         let mut matches = Vec::new();
@@ -762,24 +761,24 @@ impl SimdPatternMatcher {
         sorted_patterns.sort_by_key(|(_, pattern)| pattern.len());
 
         for (pattern_idx, pattern) in sorted_patterns {
-            let pattern_matches = Self::find_pattern_vectorized(text, pattern);
+            let pattern_matches = Self::find_pattern_vectorized(_text, pattern);
             for pos in pattern_matches {
                 matches.push((pos, pattern_idx));
             }
         }
 
         // Sort by position
-        matches.sort_by_key(|(pos, _)| *pos);
+        matches.sort_by_key(|(pos_)| *pos);
         matches
     }
 
     /// Find all occurrences of a single pattern using SIMD
-    fn find_pattern_vectorized(text: &str, pattern: &str) -> Vec<usize> {
+    fn find_pattern_vectorized(_text: &str, pattern: &str) -> Vec<usize> {
         if pattern.is_empty() {
             return Vec::new();
         }
 
-        let text_bytes = text.as_bytes();
+        let text_bytes = _text.as_bytes();
         let pattern_bytes = pattern.as_bytes();
         let first_byte = pattern_bytes[0];
 
@@ -804,18 +803,18 @@ impl SimdPatternMatcher {
     }
 
     /// Vectorized byte comparison
-    fn compare_bytes_vectorized(slice1: &[u8], slice2: &[u8]) -> bool {
-        if slice1.len() != slice2.len() {
+    fn compare_bytes_vectorized(_slice1: &[u8], slice2: &[u8]) -> bool {
+        if _slice1.len() != slice2.len() {
             return false;
         }
 
         // For small slices, use direct comparison
-        if slice1.len() < 16 {
-            return slice1 == slice2;
+        if _slice1.len() < 16 {
+            return _slice1 == slice2;
         }
 
         // Process in SIMD-friendly chunks
-        for (chunk1, chunk2) in slice1.chunks(64).zip(slice2.chunks(64)) {
+        for (chunk1, chunk2) in _slice1.chunks(64).zip(slice2.chunks(64)) {
             if chunk1 != chunk2 {
                 return false;
             }
@@ -825,18 +824,18 @@ impl SimdPatternMatcher {
     }
 
     /// Scalar fallback for pattern matching
-    fn find_patterns_scalar(text: &str, patterns: &[&str]) -> Vec<(usize, usize)> {
+    fn find_patterns_scalar(_text: &str, patterns: &[&str]) -> Vec<(usize, usize)> {
         let mut matches = Vec::new();
 
         for (pattern_idx, pattern) in patterns.iter().enumerate() {
             let mut start = 0;
-            while let Some(pos) = text[start..].find(pattern) {
+            while let Some(pos) = _text[start..].find(pattern) {
                 matches.push((start + pos, pattern_idx));
                 start += pos + 1;
             }
         }
 
-        matches.sort_by_key(|(pos, _)| *pos);
+        matches.sort_by_key(|(pos_)| *pos);
         matches
     }
 
@@ -858,7 +857,7 @@ impl SimdPatternMatcher {
         let pattern_len = pattern.len();
         let mut used_positions = std::collections::HashSet::new();
 
-        // Sliding window approach with SIMD-accelerated distance calculation
+        // Sliding window approach with SIMD-accelerated _distance calculation
         // Check all possible starting positions
         for start in 0..text.len() {
             // Skip if we've already used this position for a better match
@@ -877,15 +876,15 @@ impl SimdPatternMatcher {
             for len in min_len..=max_len {
                 if start + len <= text.len() {
                     let window = &text[start..start + len];
-                    let distance = Self::edit_distance_simd(window, pattern);
+                    let _distance = Self::edit_distance_simd(window, pattern);
 
-                    if distance <= max_distance && distance < best_distance {
-                        best_distance = distance;
+                    if _distance <= max_distance && _distance < best_distance {
+                        best_distance = _distance;
                         best_len = len;
                         best_match_found = true;
 
                         // If we find an exact match, we can break early
-                        if distance == 0 {
+                        if _distance == 0 {
                             break;
                         }
                     }
@@ -903,18 +902,18 @@ impl SimdPatternMatcher {
         }
 
         // Sort matches by position for consistency
-        matches.sort_by_key(|&(pos, _)| pos);
+        matches.sort_by_key(|&(pos_)| pos);
         matches
     }
 
     /// SIMD-accelerated edit distance for short strings
-    fn edit_distance_simd(s1: &str, s2: &str) -> usize {
-        if s1.len() > 64 || s2.len() > 64 {
-            return SimdEditDistance::levenshtein(s1, s2);
+    fn edit_distance_simd(_s1: &str, s2: &str) -> usize {
+        if _s1.len() > 64 || s2.len() > 64 {
+            return SimdEditDistance::levenshtein(_s1, s2);
         }
 
         // Use optimized algorithm for short strings
-        let chars1: Vec<char> = s1.chars().collect();
+        let chars1: Vec<char> = _s1.chars().collect();
         let chars2: Vec<char> = s2.chars().collect();
 
         if chars1.is_empty() {
@@ -955,8 +954,8 @@ impl SimdPatternMatcher {
     }
 
     /// Scalar fallback for fuzzy search
-    fn fuzzy_search_scalar(text: &str, pattern: &str, max_distance: usize) -> Vec<(usize, usize)> {
-        if pattern.is_empty() || text.is_empty() {
+    fn fuzzy_search_scalar(_text: &str, pattern: &str, max_distance: usize) -> Vec<(usize, usize)> {
+        if pattern.is_empty() || _text.is_empty() {
             return Vec::new();
         }
 
@@ -964,7 +963,7 @@ impl SimdPatternMatcher {
         let pattern_len = pattern.len();
 
         // Check all possible starting positions
-        for start in 0..text.len() {
+        for start in 0.._text.len() {
             let mut best_distance = usize::MAX;
             let mut best_match_found = false;
 
@@ -973,16 +972,16 @@ impl SimdPatternMatcher {
             let max_len = pattern_len + max_distance;
 
             for len in min_len..=max_len {
-                if start + len <= text.len() {
-                    let window = &text[start..start + len];
-                    let distance = SimdEditDistance::levenshtein(window, pattern);
+                if start + len <= _text.len() {
+                    let window = &_text[start..start + len];
+                    let _distance = SimdEditDistance::levenshtein(window, pattern);
 
-                    if distance <= max_distance && distance < best_distance {
-                        best_distance = distance;
+                    if _distance <= max_distance && _distance < best_distance {
+                        best_distance = _distance;
                         best_match_found = true;
 
                         // If we find an exact match, we can break early
-                        if distance == 0 {
+                        if _distance == 0 {
                             break;
                         }
                     }
@@ -998,9 +997,9 @@ impl SimdPatternMatcher {
     }
 
     /// Advanced pattern matching with wildcards
-    pub fn match_with_wildcards(text: &str, pattern: &str, wildcard: char) -> Vec<usize> {
-        if !SimdStringOps::is_available() || !text.is_ascii() || !pattern.is_ascii() {
-            return Self::wildcard_match_scalar(text, pattern, wildcard);
+    pub fn match_with_wildcards(_text: &str, pattern: &str, wildcard: char) -> Vec<usize> {
+        if !SimdStringOps::is_available() || !_text.is_ascii() || !pattern.is_ascii() {
+            return Self::wildcard_match_scalar(_text, pattern, wildcard);
         }
 
         let mut matches = Vec::new();
@@ -1011,9 +1010,9 @@ impl SimdPatternMatcher {
         }
 
         // SIMD-optimized wildcard matching
-        for start in 0..=text.len().saturating_sub(pattern_len) {
+        for start in 0..=_text.len().saturating_sub(pattern_len) {
             if Self::matches_pattern_with_wildcards(
-                &text[start..start + pattern_len],
+                &_text[start..start + pattern_len],
                 pattern,
                 wildcard,
             ) {
@@ -1025,12 +1024,12 @@ impl SimdPatternMatcher {
     }
 
     /// Check if text matches pattern with wildcards
-    fn matches_pattern_with_wildcards(text: &str, pattern: &str, wildcard: char) -> bool {
-        if text.len() != pattern.len() {
+    fn matches_pattern_with_wildcards(_text: &str, pattern: &str, wildcard: char) -> bool {
+        if _text.len() != pattern.len() {
             return false;
         }
 
-        let text_bytes = text.as_bytes();
+        let text_bytes = _text.as_bytes();
         let pattern_bytes = pattern.as_bytes();
         let wildcard_byte = wildcard as u8;
 
@@ -1045,12 +1044,12 @@ impl SimdPatternMatcher {
     }
 
     /// Scalar fallback for wildcard matching
-    fn wildcard_match_scalar(text: &str, pattern: &str, wildcard: char) -> Vec<usize> {
+    fn wildcard_match_scalar(_text: &str, pattern: &str, wildcard: char) -> Vec<usize> {
         let mut matches = Vec::new();
         let pattern_len = pattern.len();
 
-        for start in 0..=text.len().saturating_sub(pattern_len) {
-            let window = &text[start..start + pattern_len];
+        for start in 0..=_text.len().saturating_sub(pattern_len) {
+            let window = &_text[start..start + pattern_len];
             if window
                 .chars()
                 .zip(pattern.chars())
@@ -1069,16 +1068,16 @@ pub struct SimdNgramGenerator;
 
 impl SimdNgramGenerator {
     /// Generate character n-grams using SIMD-optimized sliding window
-    pub fn char_ngrams(text: &str, n: usize) -> Vec<String> {
-        if n == 0 || text.len() < n {
+    pub fn char_ngrams(_text: &str, n: usize) -> Vec<String> {
+        if n == 0 || _text.len() < n {
             return Vec::new();
         }
 
-        if !SimdStringOps::is_available() || !text.is_ascii() {
-            return Self::char_ngrams_scalar(text, n);
+        if !SimdStringOps::is_available() || !_text.is_ascii() {
+            return Self:: char, _ngrams_scalar(_text, n);
         }
 
-        let bytes = text.as_bytes();
+        let bytes = _text.as_bytes();
         let mut ngrams = Vec::with_capacity(bytes.len().saturating_sub(n - 1));
 
         // Process in SIMD-friendly chunks
@@ -1093,16 +1092,16 @@ impl SimdNgramGenerator {
     }
 
     /// Generate word n-grams using SIMD-accelerated tokenization
-    pub fn word_ngrams(text: &str, n: usize) -> Vec<Vec<String>> {
+    pub fn word_ngrams(_text: &str, n: usize) -> Vec<Vec<String>> {
         if n == 0 {
             return Vec::new();
         }
 
         // Use SIMD-accelerated word counting and splitting
-        let words: Vec<String> = if SimdStringOps::is_available() && text.is_ascii() {
-            Self::split_words_simd(text)
+        let words: Vec<String> = if SimdStringOps::is_available() && _text.is_ascii() {
+            Self::split_words_simd(_text)
         } else {
-            text.split_whitespace().map(|s| s.to_string()).collect()
+            _text.split_whitespace().map(|s| s.to_string()).collect()
         };
 
         if words.len() < n {
@@ -1118,29 +1117,29 @@ impl SimdNgramGenerator {
     }
 
     /// SIMD-accelerated word splitting
-    fn split_words_simd(text: &str) -> Vec<String> {
-        let whitespace_positions = SimdStringOps::find_whitespace_positions(text);
+    fn split_words_simd(_text: &str) -> Vec<String> {
+        let whitespace_positions = SimdStringOps::find_whitespace_positions(_text);
         let mut words = Vec::new();
         let mut start = 0;
 
         for &pos in &whitespace_positions {
             if pos > start {
-                words.push(text[start..pos].to_string());
+                words.push(_text[start..pos].to_string());
             }
             start = pos + 1;
         }
 
-        // Add final word if text doesn't end with whitespace
-        if start < text.len() {
-            words.push(text[start..].to_string());
+        // Add final word if _text doesn't end with whitespace
+        if start < _text.len() {
+            words.push(_text[start..].to_string());
         }
 
         words
     }
 
     /// Scalar fallback for character n-grams
-    fn char_ngrams_scalar(text: &str, n: usize) -> Vec<String> {
-        let chars: Vec<char> = text.chars().collect();
+    fn char_ngrams_scalar(_text: &str, n: usize) -> Vec<String> {
+        let chars: Vec<char> = _text.chars().collect();
         let mut ngrams = Vec::with_capacity(chars.len().saturating_sub(n - 1));
 
         for i in 0..=chars.len().saturating_sub(n) {
@@ -1151,19 +1150,19 @@ impl SimdNgramGenerator {
     }
 
     /// Calculate n-gram frequency distribution using SIMD
-    pub fn ngram_frequency(ngrams: &[String]) -> std::collections::HashMap<String, usize> {
+    pub fn ngram_frequency(_ngrams: &[String]) -> std::collections::HashMap<String, usize> {
         let mut frequency = std::collections::HashMap::new();
 
-        if SimdStringOps::is_available() && ngrams.len() > 1000 {
+        if SimdStringOps::is_available() && _ngrams.len() > 1000 {
             // For large datasets, use chunked processing for better cache performance
-            for chunk in ngrams.chunks(1024) {
+            for chunk in _ngrams.chunks(1024) {
                 for ngram in chunk {
                     *frequency.entry(ngram.clone()).or_insert(0) += 1;
                 }
             }
         } else {
             // Standard processing for smaller datasets
-            for ngram in ngrams {
+            for ngram in _ngrams {
                 *frequency.entry(ngram.clone()).or_insert(0) += 1;
             }
         }
@@ -1172,11 +1171,11 @@ impl SimdNgramGenerator {
     }
 
     /// Calculate n-gram similarity between two texts using Jaccard coefficient
-    pub fn ngram_similarity(text1: &str, text2: &str, n: usize) -> f64 {
+    pub fn ngram_similarity(_text1: &str, text2: &str, n: usize) -> f64 {
         let ngrams1: std::collections::HashSet<String> =
-            Self::char_ngrams(text1, n).into_iter().collect();
+            Self:: char, _ngrams(_text1, n).into_iter().collect();
         let ngrams2: std::collections::HashSet<String> =
-            Self::char_ngrams(text2, n).into_iter().collect();
+            Self:: char, _ngrams(text2, n).into_iter().collect();
 
         if ngrams1.is_empty() && ngrams2.is_empty() {
             return 1.0;
@@ -1194,13 +1193,13 @@ pub struct SimdTextSimilarity;
 
 impl SimdTextSimilarity {
     /// Calculate cosine similarity between two texts using SIMD-accelerated term frequency
-    pub fn cosine_similarity(text1: &str, text2: &str) -> f64 {
+    pub fn cosine_similarity(_text1: &str, text2: &str) -> f64 {
         if !SimdStringOps::is_available() {
-            return Self::cosine_similarity_scalar(text1, text2);
+            return Self::cosine_similarity_scalar(_text1, text2);
         }
 
-        let freq1 = SimdTextAnalyzer::char_frequency(text1);
-        let freq2 = SimdTextAnalyzer::char_frequency(text2);
+        let freq1 = SimdTextAnalyzer:: char, _frequency(_text1);
+        let freq2 = SimdTextAnalyzer:: char, _frequency(text2);
 
         Self::cosine_similarity_from_frequencies(&freq1, &freq2)
     }
@@ -1234,9 +1233,9 @@ impl SimdTextSimilarity {
     }
 
     /// Scalar fallback for cosine similarity
-    fn cosine_similarity_scalar(text1: &str, text2: &str) -> f64 {
+    fn cosine_similarity_scalar(_text1: &str, text2: &str) -> f64 {
         let words1: std::collections::HashMap<String, usize> =
-            text1
+            _text1
                 .split_whitespace()
                 .fold(std::collections::HashMap::new(), |mut acc, word| {
                     *acc.entry(word.to_string()).or_insert(0) += 1;
@@ -1274,13 +1273,13 @@ impl SimdTextSimilarity {
     }
 
     /// SIMD-accelerated Jaccard similarity
-    pub fn jaccard_similarity(text1: &str, text2: &str) -> f64 {
-        if !SimdStringOps::is_available() || !text1.is_ascii() || !text2.is_ascii() {
-            return Self::jaccard_similarity_scalar(text1, text2);
+    pub fn jaccard_similarity(_text1: &str, text2: &str) -> f64 {
+        if !SimdStringOps::is_available() || !_text1.is_ascii() || !text2.is_ascii() {
+            return Self::jaccard_similarity_scalar(_text1, text2);
         }
 
         // Use character-level analysis for ASCII text
-        let set1: std::collections::HashSet<u8> = text1.bytes().collect();
+        let set1: std::collections::HashSet<u8> = _text1.bytes().collect();
         let set2: std::collections::HashSet<u8> = text2.bytes().collect();
 
         if set1.is_empty() && set2.is_empty() {
@@ -1294,9 +1293,9 @@ impl SimdTextSimilarity {
     }
 
     /// Scalar fallback for Jaccard similarity
-    fn jaccard_similarity_scalar(text1: &str, text2: &str) -> f64 {
+    fn jaccard_similarity_scalar(_text1: &str, text2: &str) -> f64 {
         let words1: std::collections::HashSet<String> =
-            text1.split_whitespace().map(|s| s.to_string()).collect();
+            _text1.split_whitespace().map(|s| s.to_string()).collect();
         let words2: std::collections::HashSet<String> =
             text2.split_whitespace().map(|s| s.to_string()).collect();
 
@@ -1311,11 +1310,11 @@ impl SimdTextSimilarity {
     }
 
     /// Calculate semantic similarity using character overlap patterns
-    pub fn semantic_similarity(text1: &str, text2: &str) -> f64 {
+    pub fn semantic_similarity(_text1: &str, text2: &str) -> f64 {
         // Combine multiple similarity metrics
-        let cosine = Self::cosine_similarity(text1, text2);
-        let jaccard = Self::jaccard_similarity(text1, text2);
-        let ngram_sim = SimdNgramGenerator::ngram_similarity(text1, text2, 3);
+        let cosine = Self::cosine_similarity(_text1, text2);
+        let jaccard = Self::jaccard_similarity(_text1, text2);
+        let ngram_sim = SimdNgramGenerator::ngram_similarity(_text1, text2, 3);
 
         // Weighted combination
         cosine * 0.4 + jaccard * 0.3 + ngram_sim * 0.3
@@ -1327,13 +1326,13 @@ pub struct SimdTextNormalizer;
 
 impl SimdTextNormalizer {
     /// Normalize text using multiple SIMD operations in sequence
-    pub fn normalize_comprehensive(text: &str) -> String {
-        if !SimdStringOps::is_available() || !text.is_ascii() {
-            return Self::normalize_scalar(text);
+    pub fn normalize_comprehensive(_text: &str) -> String {
+        if !SimdStringOps::is_available() || !_text.is_ascii() {
+            return Self::normalize_scalar(_text);
         }
 
         // Apply multiple normalization steps using SIMD
-        let mut result = text.to_string();
+        let mut result = _text.to_string();
 
         // Convert to lowercase
         result = SimdStringOps::to_lowercase_ascii(&result);
@@ -1348,8 +1347,8 @@ impl SimdTextNormalizer {
     }
 
     /// SIMD-accelerated whitespace normalization
-    fn normalize_whitespace_simd(text: &str) -> String {
-        let bytes = text.as_bytes();
+    fn normalize_whitespace_simd(_text: &str) -> String {
+        let bytes = _text.as_bytes();
         let mut result = Vec::with_capacity(bytes.len());
         let mut prev_was_space = true; // Start as true to trim leading whitespace
 
@@ -1380,9 +1379,9 @@ impl SimdTextNormalizer {
     }
 
     /// SIMD-accelerated punctuation normalization
-    fn normalize_punctuation_simd(text: &str) -> String {
+    fn normalize_punctuation_simd(_text: &str) -> String {
         // Handle unicode punctuation normalization at character level first
-        let normalized_chars = text
+        let normalized_chars = _text
             .chars()
             .map(|c| match c {
                 '\u{2018}' | '\u{2019}' => '\'', // Left/right single quotes to apostrophe
@@ -1397,8 +1396,8 @@ impl SimdTextNormalizer {
     }
 
     /// Scalar fallback for normalization
-    fn normalize_scalar(text: &str) -> String {
-        let mut result = text.to_lowercase();
+    fn normalize_scalar(_text: &str) -> String {
+        let mut result = _text.to_lowercase();
 
         // Normalize whitespace
         result = result.split_whitespace().collect::<Vec<_>>().join(" ");
@@ -1412,26 +1411,26 @@ impl SimdTextNormalizer {
     }
 
     /// Remove accents and diacritics using SIMD when possible
-    pub fn remove_accents_simd(text: &str) -> String {
-        if text.is_ascii() {
-            // No accents in ASCII text
-            return text.to_string();
+    pub fn remove_accents_simd(_text: &str) -> String {
+        if _text.is_ascii() {
+            // No accents in ASCII _text
+            return _text.to_string();
         }
 
-        // For non-ASCII text, use Unicode normalization
-        use unicode_normalization::UnicodeNormalization;
-        text.nfd()
+        // For non-ASCII _text, use Unicode normalization
+        use unicode__normalization::UnicodeNormalization;
+        _text.nfd()
             .filter(|c| !unicode_normalization::char::is_combining_mark(*c))
             .collect()
     }
 
     /// Normalize numbers and special characters
-    pub fn normalize_numbers_simd(text: &str) -> String {
-        if !SimdStringOps::is_available() || !text.is_ascii() {
-            return Self::normalize_numbers_scalar(text);
+    pub fn normalize_numbers_simd(_text: &str) -> String {
+        if !SimdStringOps::is_available() || !_text.is_ascii() {
+            return Self::normalize_numbers_scalar(_text);
         }
 
-        VectorizedStringOps::transform_bytes_vectorized(text, |byte| {
+        VectorizedStringOps::transform_bytes_vectorized(_text, |byte| {
             match byte {
                 // Keep digits and basic punctuation
                 b'0'..=b'9' | b'.' | b',' | b'-' | b'+' => byte,
@@ -1444,9 +1443,9 @@ impl SimdTextNormalizer {
     }
 
     /// Scalar fallback for number normalization
-    fn normalize_numbers_scalar(text: &str) -> String {
+    fn normalize_numbers_scalar(_text: &str) -> String {
         // Basic number normalization
-        text.chars().collect()
+        _text.chars().collect()
     }
 }
 
@@ -1455,23 +1454,23 @@ pub struct SimdParallelProcessor;
 
 impl SimdParallelProcessor {
     /// Process multiple texts in parallel using SIMD operations
-    pub fn process_texts_parallel<F, R>(texts: &[String], processor: F) -> Vec<R>
+    pub fn process_texts_parallel<F, R>(_texts: &[String], processor: F) -> Vec<R>
     where
         F: Fn(&str) -> R + Send + Sync,
         R: Send,
     {
-        if !SimdStringOps::is_available() || texts.len() < 4 {
+        if !SimdStringOps::is_available() || _texts.len() < 4 {
             // Use sequential processing for small datasets or when SIMD unavailable
-            return texts.iter().map(|text| processor(text)).collect();
+            return _texts.iter().map(|text| processor(text)).collect();
         }
 
         // Use parallel processing with SIMD-optimized chunks
-        scirs2_core::parallel_ops::parallel_map(texts, |text: &String| processor(text.as_str()))
+        scirs2_core::parallel_ops::parallel_map(_texts, |text: &String| processor(text.as_str()))
     }
 
     /// Calculate similarity matrix for multiple texts using SIMD
-    pub fn similarity_matrix(texts: &[String]) -> Vec<Vec<f64>> {
-        let n = texts.len();
+    pub fn similarity_matrix(_texts: &[String]) -> Vec<Vec<f64>> {
+        let n = _texts.len();
         let mut matrix = vec![vec![0.0; n]; n];
 
         if !SimdStringOps::is_available() || n < 4 {
@@ -1479,7 +1478,7 @@ impl SimdParallelProcessor {
             for i in 0..n {
                 matrix[i][i] = 1.0; // Diagonal elements
                 for j in (i + 1)..n {
-                    let similarity = SimdTextSimilarity::cosine_similarity(&texts[i], &texts[j]);
+                    let similarity = SimdTextSimilarity::cosine_similarity(&_texts[i], &_texts[j]);
                     matrix[i][j] = similarity;
                     matrix[j][i] = similarity; // Symmetric matrix
                 }
@@ -1491,7 +1490,7 @@ impl SimdParallelProcessor {
                 .collect();
 
             let similarities = scirs2_core::parallel_ops::parallel_map(&pairs, |(i, j)| {
-                SimdTextSimilarity::cosine_similarity(&texts[*i], &texts[*j])
+                SimdTextSimilarity::cosine_similarity(&_texts[*i], &_texts[*j])
             });
 
             // Fill the matrix
@@ -1511,8 +1510,8 @@ impl SimdParallelProcessor {
     }
 
     /// Batch process text analysis using SIMD
-    pub fn batch_analyze(texts: &[String]) -> Vec<TextAnalysisResult> {
-        Self::process_texts_parallel(texts, |text| {
+    pub fn batch_analyze(_texts: &[String]) -> Vec<TextAnalysisResult> {
+        Self::process_texts_parallel(_texts, |text| {
             let word_count = SimdTextAnalyzer::count_words(text);
             let char_count = SimdTextAnalyzer::text_length(text);
             let line_count = SimdTextAnalyzer::count_lines(text);
@@ -1560,18 +1559,18 @@ pub struct AdvancedSIMDTextProcessor;
 
 impl AdvancedSIMDTextProcessor {
     /// Advanced-enhanced batch text processing with predictive optimization
-    pub fn advanced_batch_process(texts: &[String]) -> Vec<TextProcessingResult> {
+    pub fn advanced_batch_process(_texts: &[String]) -> Vec<TextProcessingResult> {
         use scirs2_core::parallel_ops::*;
 
-        if texts.len() < 100 {
+        if _texts.len() < 100 {
             // Sequential processing for small batches
-            texts
+            _texts
                 .iter()
                 .map(|text| Self::process_single_text(text))
                 .collect()
         } else {
             // Parallel processing with SIMD optimization
-            texts
+            _texts
                 .par_iter()
                 .map(|text| Self::process_single_text(text))
                 .collect()
@@ -1579,22 +1578,22 @@ impl AdvancedSIMDTextProcessor {
     }
 
     /// Process a single text with advanced-optimized SIMD operations
-    fn process_single_text(text: &str) -> TextProcessingResult {
-        let char_count = SimdStringOps::count_chars(text, ' ');
-        let whitespace_positions = SimdStringOps::find_whitespace_positions(text);
-        let is_alphanumeric = SimdStringOps::is_alphanumeric_ascii(text);
+    fn process_single_text(_text: &str) -> TextProcessingResult {
+        let char_count = SimdStringOps::count_chars(_text, ' ');
+        let whitespace_positions = SimdStringOps::find_whitespace_positions(_text);
+        let is_alphanumeric = SimdStringOps::is_alphanumeric_ascii(_text);
 
         TextProcessingResult {
             char_count,
             whitespace_count: whitespace_positions.len(),
             is_alphanumeric,
-            normalized_text: SimdTextNormalizer::normalize_comprehensive(text),
+            normalized_text: SimdTextNormalizer::normalize_comprehensive(_text),
         }
     }
 
     /// Optimized text similarity computation with SIMD
-    pub fn advanced_similarity_matrix(texts: &[String]) -> Vec<Vec<f64>> {
-        let n = texts.len();
+    pub fn advanced_similarity_matrix(_texts: &[String]) -> Vec<Vec<f64>> {
+        let n = _texts.len();
         let mut matrix = vec![vec![0.0; n]; n];
 
         // Parallel computation of similarity matrix with optimized loops
@@ -1603,7 +1602,7 @@ impl AdvancedSIMDTextProcessor {
                 let sim = if i == j {
                     1.0
                 } else {
-                    Self::advanced_text_similarity(&texts[i], &texts[j])
+                    Self::advanced_text_similarity(&_texts[i], &_texts[j])
                 };
                 matrix[i][j] = sim;
                 if i != j {
@@ -1616,13 +1615,13 @@ impl AdvancedSIMDTextProcessor {
     }
 
     /// Optimized text similarity using SIMD operations
-    fn advanced_text_similarity(text1: &str, text2: &str) -> f64 {
-        if text1 == text2 {
+    fn advanced_text_similarity(_text1: &str, text2: &str) -> f64 {
+        if _text1 == text2 {
             return 1.0;
         }
 
         // Use advanced SIMD-accelerated similarity computation
-        let words1 = SimdNgramGenerator::split_words_simd(text1);
+        let words1 = SimdNgramGenerator::split_words_simd(_text1);
         let words2 = SimdNgramGenerator::split_words_simd(text2);
 
         if words1.is_empty() && words2.is_empty() {
@@ -1648,7 +1647,7 @@ impl AdvancedSIMDTextProcessor {
     }
 
     /// Optimized pattern matching with multiple patterns simultaneously
-    pub fn advanced_multi_pattern_search(text: &str, patterns: &[String]) -> Vec<(usize, String)> {
+    pub fn advanced_multi_pattern_search(_text: &str, patterns: &[String]) -> Vec<(usize, String)> {
         use scirs2_core::parallel_ops::*;
 
         if patterns.is_empty() {
@@ -1664,7 +1663,7 @@ impl AdvancedSIMDTextProcessor {
                 .map(|pattern| {
                     let mut pattern_matches = Vec::new();
                     let mut start = 0;
-                    while let Some(pos) = SimdStringOps::find_substring(&text[start..], pattern) {
+                    while let Some(pos) = SimdStringOps::find_substring(&_text[start..], pattern) {
                         pattern_matches.push((start + pos, pattern.clone()));
                         start += pos + 1;
                     }
@@ -1680,14 +1679,14 @@ impl AdvancedSIMDTextProcessor {
             // Sequential search for few patterns
             for pattern in patterns {
                 let mut start = 0;
-                while let Some(pos) = SimdStringOps::find_substring(&text[start..], pattern) {
+                while let Some(pos) = SimdStringOps::find_substring(&_text[start..], pattern) {
                     matches.push((start + pos, pattern.clone()));
                     start += pos + 1;
                 }
             }
         }
 
-        matches.sort_by_key(|(pos, _)| *pos);
+        matches.sort_by_key(|(pos_)| *pos);
         matches
     }
 }
@@ -1714,7 +1713,7 @@ mod tests {
         let text = "hello world, hello rust!";
         assert_eq!(SimdStringOps::count_chars(text, 'l'), 5);
         assert_eq!(SimdStringOps::count_chars(text, 'o'), 3);
-        assert_eq!(SimdStringOps::count_chars(text, 'z'), 0);
+        assert_eq!(SimdStringOps::count_chars(_text, 'z'), 0);
     }
 
     #[test]
@@ -1819,7 +1818,7 @@ mod tests {
     #[test]
     fn test_simd_text_analyzer_char_frequency() {
         let text = "hello";
-        let freq = SimdTextAnalyzer::char_frequency(text);
+        let freq = SimdTextAnalyzer:: char, _frequency(text);
         assert_eq!(freq.get(&'h'), Some(&1));
         assert_eq!(freq.get(&'e'), Some(&1));
         assert_eq!(freq.get(&'l'), Some(&2));
@@ -1827,7 +1826,7 @@ mod tests {
 
         // Test with longer ASCII text
         let long_text = "a".repeat(100) + &"b".repeat(50);
-        let freq_long = SimdTextAnalyzer::char_frequency(&long_text);
+        let freq_long = SimdTextAnalyzer:: char, _frequency(&long_text);
         assert_eq!(freq_long.get(&'a'), Some(&100));
         assert_eq!(freq_long.get(&'b'), Some(&50));
     }
@@ -2032,7 +2031,7 @@ mod tests {
             .filter(|(_, distance)| *distance == 0)
             .collect();
         assert!(!exact_matches.is_empty());
-        assert!(exact_matches.iter().any(|(pos, _)| *pos == 0));
+        assert!(exact_matches.iter().any(|(pos_)| *pos == 0));
     }
 
     #[test]
@@ -2141,16 +2140,16 @@ mod tests {
     fn test_simd_ngram_generator() {
         // Test character n-grams
         let text = "hello";
-        let bigrams = SimdNgramGenerator::char_ngrams(text, 2);
+        let bigrams = SimdNgramGenerator:: char, _ngrams(text, 2);
         assert_eq!(bigrams, vec!["he", "el", "ll", "lo"]);
 
-        let trigrams = SimdNgramGenerator::char_ngrams(text, 3);
+        let trigrams = SimdNgramGenerator:: char, _ngrams(text, 3);
         assert_eq!(trigrams, vec!["hel", "ell", "llo"]);
 
         // Test edge cases
-        assert!(SimdNgramGenerator::char_ngrams("", 2).is_empty());
-        assert!(SimdNgramGenerator::char_ngrams("a", 2).is_empty());
-        assert_eq!(SimdNgramGenerator::char_ngrams("ab", 2), vec!["ab"]);
+        assert!(SimdNgramGenerator:: char, _ngrams("", 2).is_empty());
+        assert!(SimdNgramGenerator:: char, _ngrams("a", 2).is_empty());
+        assert_eq!(SimdNgramGenerator:: char, _ngrams("ab", 2), vec!["ab"]);
 
         // Test word n-grams
         let text = "hello world test";
@@ -2270,7 +2269,7 @@ mod tests {
 
         // Matrix should be symmetric
         for (i, row) in matrix.iter().enumerate().take(4) {
-            for (j, _) in row.iter().enumerate().take(4) {
+            for (j_) in row.iter().enumerate().take(4) {
                 assert_eq!(matrix[i][j], matrix[j][i]);
             }
         }
@@ -2314,16 +2313,16 @@ mod tests {
     #[test]
     fn test_simd_ngram_edge_cases() {
         // Test with n=0
-        assert!(SimdNgramGenerator::char_ngrams("hello", 0).is_empty());
+        assert!(SimdNgramGenerator:: char, _ngrams("hello", 0).is_empty());
         assert!(SimdNgramGenerator::word_ngrams("hello world", 0).is_empty());
 
         // Test with text shorter than n
-        assert!(SimdNgramGenerator::char_ngrams("hi", 5).is_empty());
+        assert!(SimdNgramGenerator:: char, _ngrams("hi", 5).is_empty());
         assert!(SimdNgramGenerator::word_ngrams("hello", 3).is_empty());
 
         // Test with Unicode text (should fall back to scalar)
         let unicode_text = "héllo wörld";
-        let ngrams = SimdNgramGenerator::char_ngrams(unicode_text, 2);
+        let ngrams = SimdNgramGenerator:: char, _ngrams(unicode_text, 2);
         assert!(!ngrams.is_empty());
         assert!(ngrams[0].chars().count() <= 2);
     }

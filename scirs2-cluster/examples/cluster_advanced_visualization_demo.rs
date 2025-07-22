@@ -9,7 +9,7 @@
 //! - Dimensionality reduction visualization
 
 use ndarray::{Array1, Array2};
-use scirs2_cluster::{
+use scirs2__cluster::{
     kmeans_simd,
     visualization::{
         // Animation capabilities
@@ -44,7 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Generate comprehensive test datasets
     let (data_2d, labels_2d, centroids_2d) = generate_2d_clustering_data();
     let (data_3d, labels_3d, centroids_3d) = generate_3d_clustering_data();
-    let (data_high_dim, labels_high_dim, _) = generate_high_dimensional_data();
+    let (data_high_dim, labels_high_dim_) = generate_high_dimensional_data();
 
     println!("📊 Generated test datasets:");
     println!(
@@ -467,34 +467,34 @@ fn generate_2d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
 
 /// Generate 2D clustering test data with specified size
 #[allow(dead_code)]
-fn generate_2d_clustering_data_size(size: usize) -> (Array2<f64>, Array1<i32>, Array2<f64>) {
+fn generate_2d_clustering_data_size(_size: usize) -> (Array2<f64>, Array1<i32>, Array2<f64>) {
     use rand::Rng;
 
     let mut rng = rand::rng();
     let n_clusters = 3;
-    let points_per_cluster = size / n_clusters;
+    let points_per_cluster = _size / n_clusters;
 
-    let mut data_vec = Vec::with_capacity(size * 2);
-    let mut labels_vec = Vec::with_capacity(size);
+    let mut data_vec = Vec::with_capacity(_size * 2);
+    let mut labels_vec = Vec::with_capacity(_size);
 
     let cluster_centers = [(1.0, 1.0), (4.0, 4.0), (7.0, 1.0)];
 
     for (cluster_id, &(cx, cy)) in cluster_centers.iter().enumerate() {
         let end_idx = if cluster_id == n_clusters - 1 {
-            size
+            _size
         } else {
             (cluster_id + 1) * points_per_cluster
         };
         let start_idx = cluster_id * points_per_cluster;
 
         for _ in start_idx..end_idx {
-            data_vec.push(cx + rng.random_range(-0.5..0.5));
-            data_vec.push(cy + rng.random_range(-0.5..0.5));
+            data_vec.push(cx + rng.gen_range(-0.5..0.5));
+            data_vec.push(cy + rng.gen_range(-0.5..0.5));
             labels_vec.push(cluster_id as i32);
         }
     }
 
-    let data = Array2::from_shape_vec((size, 2), data_vec).unwrap();
+    let data = Array2::from_shape_vec((_size..2), data_vec).unwrap();
     let labels = Array1::from_vec(labels_vec);
     let centroids = Array2::from_shape_vec((3, 2), vec![1.0, 1.0, 4.0, 4.0, 7.0, 1.0]).unwrap();
 
@@ -545,13 +545,13 @@ fn generate_high_dimensional_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
 
         for _ in 0..(n_samples / n_clusters) {
             for j in 0..n_features {
-                data_vec.push(cluster_center[j] + rng.random_range(-1.0..1.0));
+                data_vec.push(cluster_center[j] + rng.gen_range(-1.0..1.0));
             }
             labels_vec.push(cluster_id as i32);
         }
     }
 
-    let data = Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap();
+    let data = Array2::from_shape_vec((n_samples..n_features), data_vec).unwrap();
     let labels = Array1::from_vec(labels_vec);
     let centroids = Array2::zeros((n_clusters, n_features)); // Simplified for demo
 
@@ -568,7 +568,7 @@ fn generate_random_centroids(k: usize, n_features: usize) -> Array2<f64> {
 
     for i in 0..k {
         for j in 0..n_features {
-            centroids[[i, j]] = rng.random_range(-2.0..8.0);
+            centroids[[i, j]] = rng.gen_range(-2.0..8.0);
         }
     }
 

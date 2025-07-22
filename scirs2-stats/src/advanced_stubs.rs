@@ -91,7 +91,7 @@ pub fn create_exhaustive_numerical_stability_tester() -> AdvancedNumericalStabil
 }
 
 impl AdvancedNumericalStabilityAnalyzer {
-    pub fn analyze_statistical_stability<F, D>(&self, _data: &ndarray::ArrayBase<D, ndarray::Ix1>) -> ComprehensiveStabilityResult
+    pub fn analyze_statistical_stability<F, D>(&self_data: &ndarray::ArrayBase<D, ndarray::Ix1>) -> ComprehensiveStabilityResult
     where
         F: Float,
         D: ndarray::Data<Elem = F>
@@ -122,14 +122,12 @@ pub struct AdvancedSimdOptimizer {
 }
 
 impl AdvancedSimdOptimizer {
-    pub fn new(config: AdvancedSimdConfig) -> Self {
-        Self { config }
+    pub fn new(_config: AdvancedSimdConfig) -> Self {
+        Self { _config }
     }
 
     pub fn advanced_batch_statistics<F, D>(
-        &self,
-        _data_arrays: &[ndarray::ArrayView1<F>],
-        _operations: &[BatchOperation],
+        &self, _data_arrays: &[ndarray::ArrayView1<F>], _operations: &[BatchOperation],
     ) -> StatsResult<BatchResults<F>>
     where
         F: Float + Copy,

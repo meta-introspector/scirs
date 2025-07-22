@@ -8,7 +8,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::{fft, ifft};
 use crate::helper::next_fast_len;
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use rand::Rng;
 use rand::SeedableRng;
@@ -17,16 +17,16 @@ use std::time::Instant;
 
 /// Helper function to extract complex values from various types (for doctests)
 #[allow(dead_code)]
-pub fn try_as_complex<T: 'static + Copy>(val: T) -> Option<Complex64> {
+pub fn try_as_complex<T: 'static + Copy>(_val: T) -> Option<Complex64> {
     use std::any::Any;
 
     // Try to use runtime type checking with Any for complex types
-    if let Some(complex) = (&val as &dyn Any).downcast_ref::<Complex64>() {
+    if let Some(complex) = (&_val as &dyn Any).downcast_ref::<Complex64>() {
         return Some(*complex);
     }
 
     // Try to handle f32 complex numbers
-    if let Some(complex32) = (&val as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
+    if let Some(complex32) = (&_val as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
         return Some(Complex64::new(complex32.re as f64, complex32.im as f64));
     }
 
@@ -158,11 +158,11 @@ pub struct SparseFFT {
 
 impl SparseFFT {
     /// Create a new sparse FFT processor with the given configuration
-    pub fn new(config: SparseFFTConfig) -> Self {
-        let seed = config.seed.unwrap_or_else(rand::random);
+    pub fn new(_config: SparseFFTConfig) -> Self {
+        let seed = _config.seed.unwrap_or_else(rand::random);
         let rng = rand::rngs::StdRng::seed_from_u64(seed);
 
-        Self { config, rng }
+        Self { _config, rng }
     }
 
     /// Create a new sparse FFT processor with default configuration
@@ -426,7 +426,7 @@ impl SparseFFT {
                         // If local flatness is low, this segment contains significant components
                         if local_flatness < self.config.flatness_threshold {
                             // Find the strongest component in this segment
-                            if let Some((local_idx, _)) =
+                            if let Some((local_idx_)) =
                                 window.iter().enumerate().max_by(|(_, a), (_, b)| {
                                     a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
                                 })
@@ -595,7 +595,7 @@ impl SparseFFT {
     ) -> FFTResult<Vec<Complex64>> {
         if target_length < original_length {
             return Err(FFTError::DimensionError(format!(
-                "Target length {} must be greater than or equal to original length {}",
+                "Target _length {} must be greater than or equal to original _length {}",
                 target_length, original_length
             )));
         }
@@ -610,7 +610,7 @@ impl SparseFFT {
             spectrum[index] = *value;
         }
 
-        // Scale the frequencies to the new length
+        // Scale the frequencies to the new _length
         let mut high_res_spectrum = vec![Complex64::new(0.0, 0.0); target_length];
 
         // For components below the Nyquist frequency
@@ -633,7 +633,7 @@ impl SparseFFT {
 
         // Handle the negative frequencies (those above Nyquist in the original spectrum)
         if original_length % 2 == 0 {
-            // Even length case - map original negative frequencies to the new negative frequencies
+            // Even _length case - map original negative frequencies to the new negative frequencies
             #[allow(clippy::needless_range_loop)]
             for i in (original_nyquist + 1)..original_length {
                 // Calculate the relative position in the negative frequency range
@@ -644,12 +644,12 @@ impl SparseFFT {
                 }
             }
 
-            // If even length, also copy the Nyquist component
+            // If even _length, also copy the Nyquist component
             if original_length % 2 == 0 && target_length % 2 == 0 {
                 high_res_spectrum[target_nyquist] = spectrum[original_nyquist];
             }
         } else {
-            // Odd length case
+            // Odd _length case
             #[allow(clippy::needless_range_loop)]
             for i in (original_nyquist + 1)..original_length {
                 // Calculate the relative position in the negative frequency range
@@ -745,7 +745,7 @@ impl SparseFFT {
             .iter()
             .enumerate()
             .map(|(i, &val)| (i, val, val.norm()))
-            .filter(|(_, _, magnitude)| *magnitude > threshold)
+            .filter(|(__, magnitude)| *magnitude > threshold)
             .collect();
 
         // Sort by magnitude (descending)
@@ -757,7 +757,7 @@ impl SparseFFT {
         let mut selected_values = Vec::new();
 
         // Select top k components, ensuring hermitian symmetry for real signals
-        for &(idx, val, _) in significant_components.iter().take(k) {
+        for &(idx, val_) in significant_components.iter().take(k) {
             // If we've reached our target count, stop
             if selected_indices.len() >= k {
                 break;
@@ -790,9 +790,9 @@ impl SparseFFT {
             .iter()
             .zip(selected_values.iter())
             .collect();
-        pairs.sort_by_key(|&(idx, _)| *idx);
+        pairs.sort_by_key(|&(idx_)| *idx);
 
-        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx, _)| *idx).collect();
+        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx_)| *idx).collect();
         let sorted_values: Vec<_> = pairs.iter().map(|&(_, val)| *val).collect();
 
         Ok((sorted_values, sorted_indices))
@@ -866,7 +866,7 @@ impl SparseFFT {
         let mut selected_values = Vec::new();
 
         // For each high-scoring segment
-        for (segment_start, _) in segment_scores {
+        for (segment_start_) in segment_scores {
             // Don't process more segments than needed
             if selected_indices.len() >= k {
                 break;
@@ -885,7 +885,7 @@ impl SparseFFT {
                 .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
             // Take the top components from this segment
-            for (idx, _, val) in segment_components {
+            for (idx_, val) in segment_components {
                 // Stop if we've reached our target count
                 if selected_indices.len() >= k {
                     break;
@@ -951,9 +951,9 @@ impl SparseFFT {
             .iter()
             .zip(selected_values.iter())
             .collect();
-        pairs.sort_by_key(|&(idx, _)| *idx);
+        pairs.sort_by_key(|&(idx_)| *idx);
 
-        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx, _)| *idx).collect();
+        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx_)| *idx).collect();
         let sorted_values: Vec<_> = pairs.iter().map(|&(_, val)| *val).collect();
 
         Ok((sorted_values, sorted_indices))
@@ -1032,9 +1032,9 @@ impl SparseFFT {
             .iter()
             .zip(selected_values.iter())
             .collect();
-        pairs.sort_by_key(|&(idx, _)| *idx);
+        pairs.sort_by_key(|&(idx_)| *idx);
 
-        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx, _)| *idx).collect();
+        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx_)| *idx).collect();
         let sorted_values: Vec<_> = pairs.iter().map(|&(_, val)| *val).collect();
 
         Ok((sorted_values, sorted_indices))
@@ -1070,13 +1070,13 @@ impl SparseFFT {
         let mut sample_indices = Vec::with_capacity(m);
 
         for _ in 0..m {
-            let idx = self.rng.random_range(0..n);
+            let idx = self.rng.gen_range(0..n);
             sample_indices.push(idx);
             measurements.push(signal_complex[idx]);
         }
 
         // Create compressed sensing measurement matrix (simplified)
-        // In a real implementation, this would involve creating a proper measurement matrix
+        // In a real implementation..this would involve creating a proper measurement matrix
         // and solving the L1-minimization problem
 
         // For this demo, we'll just do a regular FFT and extract the k largest components
@@ -1125,9 +1125,9 @@ impl SparseFFT {
             .iter()
             .zip(selected_values.iter())
             .collect();
-        pairs.sort_by_key(|&(idx, _)| *idx);
+        pairs.sort_by_key(|&(idx_)| *idx);
 
-        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx, _)| *idx).collect();
+        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx_)| *idx).collect();
         let sorted_values: Vec<_> = pairs.iter().map(|&(_, val)| *val).collect();
 
         Ok((sorted_values, sorted_indices))
@@ -1241,9 +1241,9 @@ impl SparseFFT {
 
         // Sort by index to ensure consistent output
         let mut pairs: Vec<_> = indices.iter().zip(values.iter()).collect();
-        pairs.sort_by_key(|&(idx, _)| *idx);
+        pairs.sort_by_key(|&(idx_)| *idx);
 
-        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx, _)| *idx).collect();
+        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx_)| *idx).collect();
         let sorted_values: Vec<_> = pairs.iter().map(|&(_, val)| *val).collect();
 
         Ok((sorted_values, sorted_indices))
@@ -1323,9 +1323,9 @@ impl SparseFFT {
             .iter()
             .zip(selected_values.iter())
             .collect();
-        pairs.sort_by_key(|&(idx, _)| *idx);
+        pairs.sort_by_key(|&(idx_)| *idx);
 
-        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx, _)| *idx).collect();
+        let sorted_indices: Vec<_> = pairs.iter().map(|&(idx_)| *idx).collect();
         let sorted_values: Vec<_> = pairs.iter().map(|&(_, val)| *val).collect();
 
         Ok((sorted_values, sorted_indices))
@@ -1408,8 +1408,8 @@ impl SparseFFT {
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::sparse_fft;
-/// use scirs2_fft::sparse_fft::{SparseFFTAlgorithm, WindowFunction};
+/// use scirs2__fft::sparse_fft;
+/// use scirs2__fft::sparse_fft::{SparseFFTAlgorithm, WindowFunction};
 ///
 /// // Generate a sparse signal: a sum of 3 sinusoids
 /// let n = 1024;
@@ -1466,7 +1466,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::{sparse_fft, reconstruct_spectrum};
+/// use scirs2__fft::{sparse_fft, reconstruct_spectrum};
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1508,8 +1508,8 @@ pub fn reconstruct_spectrum(
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::{sparse_fft, reconstruct_time_domain};
-/// use num_complex::Complex64;
+/// use scirs2__fft::{sparse_fft, reconstruct_time_domain};
+/// use num__complex::Complex64;
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1562,7 +1562,7 @@ pub fn reconstruct_time_domain(
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::{sparse_fft, reconstruct_high_resolution};
+/// use scirs2__fft::{sparse_fft, reconstruct_high_resolution};
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1606,7 +1606,7 @@ pub fn reconstruct_high_resolution(
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::{sparse_fft, reconstruct_filtered};
+/// use scirs2__fft::{sparse_fft, reconstruct_filtered};
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1667,7 +1667,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::adaptive_sparse_fft;
+/// use scirs2__fft::adaptive_sparse_fft;
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1713,7 +1713,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::frequency_pruning_sparse_fft;
+/// use scirs2__fft::frequency_pruning_sparse_fft;
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1760,7 +1760,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::spectral_flatness_sparse_fft;
+/// use scirs2__fft::spectral_flatness_sparse_fft;
 /// use rand::{Rng, SeedableRng};
 ///
 /// // Generate a sparse signal with some noise
@@ -1802,7 +1802,7 @@ where
         ..SparseFFTConfig::default()
     };
 
-    // Apply the provided window function if specified
+    // Apply the provided window _function if specified
     if let Some(window) = window_function {
         config.window_function = window;
     }
@@ -1826,7 +1826,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::sparse_fft2;
+/// use scirs2__fft::sparse_fft2;
 ///
 /// // Generate a 2D sparse signal (8x8)
 /// let rows = 8;
@@ -1865,8 +1865,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::sparse_fft2;
-/// use scirs2_fft::sparse_fft::WindowFunction;
+/// use scirs2__fft::sparse_fft2;
+/// use scirs2__fft::sparse_fft::WindowFunction;
 ///
 /// // Generate a 2D sparse signal (8x8)
 /// let rows = 8;
@@ -1904,7 +1904,7 @@ where
         ..SparseFFTConfig::default()
     };
 
-    // Apply the provided window function if specified
+    // Apply the provided window _function if specified
     if let Some(window) = window_function {
         config.window_function = window;
     }
@@ -1928,7 +1928,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::sparse_fftn;
+/// use scirs2__fft::sparse_fftn;
 ///
 /// // Generate a 3D sparse signal (4x4x4)
 /// let shape = vec![4, 4, 4];
@@ -1963,8 +1963,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::sparse_fftn;
-/// use scirs2_fft::sparse_fft::WindowFunction;
+/// use scirs2__fft::sparse_fftn;
+/// use scirs2__fft::sparse_fft::WindowFunction;
 ///
 /// // Generate a 3D sparse signal (4x4x4)
 /// let shape = vec![4, 4, 4];
@@ -1998,7 +1998,7 @@ where
         ..SparseFFTConfig::default()
     };
 
-    // Apply the provided window function if specified
+    // Apply the provided window _function if specified
     if let Some(window) = window_function {
         config.window_function = window;
     }
@@ -2353,16 +2353,16 @@ mod tests {
     }
 
     /// Helper function to compute relative error between signals
-    fn compute_relative_error(original: &[Complex64], reconstructed: &[Complex64]) -> f64 {
+    fn compute_relative_error(_original: &[Complex64], reconstructed: &[Complex64]) -> f64 {
         // Make sure we're comparing signals of the same length
-        let len = std::cmp::min(original.len(), reconstructed.len());
+        let len = std::cmp::min(_original.len(), reconstructed.len());
 
         if len == 0 {
             return 1.0; // Return max error if signals are empty
         }
 
         // Normalize signals before comparing
-        let orig_energy: f64 = original.iter().take(len).map(|c| c.norm_sqr()).sum();
+        let orig_energy: f64 = _original.iter().take(len).map(|c| c.norm_sqr()).sum();
         let recon_energy: f64 = reconstructed.iter().take(len).map(|c| c.norm_sqr()).sum();
 
         // Compute scaling factors
@@ -2380,7 +2380,7 @@ mod tests {
         // Compute error between normalized signals
         let mut error_sum = 0.0;
         for i in 0..len {
-            let orig = original[i] * orig_scale;
+            let orig = _original[i] * orig_scale;
             let recon = reconstructed[i] * recon_scale;
             error_sum += (orig - recon).norm_sqr();
         }

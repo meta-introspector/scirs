@@ -11,12 +11,12 @@ use scirs2_core::error::CoreResult;
 use scirs2_core::memory_efficient::AdaptiveChunking;
 use scirs2_core::memory_efficient::MemoryMappedArray;
 
-use crate::chunked_v2::ChunkConfigV2;
+use crate::chunked__v2::ChunkConfigV2;
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{
     bilateral_filter, gaussian_filter, median_filter, uniform_filter, BorderMode,
 };
-use crate::mmap_io::create_temp_mmap;
+use crate::mmap__io::create_temp_mmap;
 
 /// Advanced configuration for memory-efficient filtering
 #[derive(Debug, Clone)]
@@ -59,13 +59,13 @@ where
     let config = config.unwrap_or_default();
 
     // Create temporary output file
-    let (mut output_mmap, _temp_path) = create_temp_mmap::<T>(input_mmap.shape())?;
+    let (mut output_mmap_temp_path) = create_temp_mmap::<T>(input_mmap.shape())?;
 
     // Determine chunking strategy
     let strategy = if config.adaptive {
         // Use adaptive chunking based on available memory
         let adaptive = AdaptiveChunking::new()
-            .with_target_memory(config.target_memory_usage)
+            .with_target_memory(_config.target_memory_usage)
             .with_element_size(std::mem::size_of::<T>());
 
         adaptive.compute_strategy(input_mmap.shape()).map_err(|e| {
@@ -142,8 +142,8 @@ where
     D: Dimension + 'static,
 {
     // Create temporary memory-mapped arrays
-    let (input_mmap, _input_temp) = create_temp_mmap::<T>(input.shape())?;
-    let (output_mmap, _output_temp) = create_temp_mmap::<T>(input.shape())?;
+    let (input_mmap_input_temp) = create_temp_mmap::<T>(input.shape())?;
+    let (output_mmap_output_temp) = create_temp_mmap::<T>(input.shape())?;
 
     // Copy input to memory-mapped array
     // (Simplified - would need proper implementation)
@@ -184,7 +184,7 @@ where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension + 'static,
 {
-    use crate::chunked_v2::process_chunked_v2;
+    use crate::chunked__v2::process_chunked_v2;
 
     let sigma_vec = sigma.to_vec();
     let border_mode = BorderMode::Reflect;
@@ -211,7 +211,7 @@ where
 /// Helper processor for Gaussian filter
 struct GaussianProcessorV2;
 
-impl<T: Float + Send + Sync, D: Dimension> crate::chunked_v2::ChunkProcessorV2<T, D>
+impl<T: Float + Send + Sync, D: Dimension>, crate::chunked_v2::ChunkProcessorV2<T, D>
     for GaussianProcessorV2
 {
     fn create_processor(
@@ -234,9 +234,9 @@ impl<T: Float + Send + Sync, D: Dimension> crate::chunked_v2::ChunkProcessorV2<T
 
 /// Check if separable filtering can be used
 #[allow(dead_code)]
-fn can_use_separable<T: Float>(sigma: &[T]) -> bool {
+fn can_use_separable<T: Float>(_sigma: &[T]) -> bool {
     // Separable filtering is beneficial when all sigmas are reasonably large
-    sigma.iter().all(|&s| {
+    _sigma.iter().all(|&s| {
         let s_f64: f64 = NumCast::from(s).unwrap_or(0.0);
         s_f64 > 0.5
     })
@@ -272,13 +272,13 @@ where
 
 /// Generate 1D Gaussian kernel
 #[allow(dead_code)]
-fn generate_gaussian_kernel_1d<T>(sigma: T) -> Array<T, Ix1>
+fn generate_gaussian_kernel_1d<T>(_sigma: T) -> Array<T, Ix1>
 where
     T: Float + FromPrimitive,
 {
     use ndarray::Array1;
 
-    let sigma_f64: f64 = NumCast::from(sigma).unwrap_or(1.0);
+    let _sigma_f64: f64 = NumCast::from(_sigma).unwrap_or(1.0);
     let truncate = 4.0;
     let kernel_size = (2.0 * truncate * sigma_f64).ceil() as usize + 1;
     let half_size = kernel_size / 2;
@@ -302,9 +302,7 @@ where
 /// Apply 1D convolution along a specific axis
 #[allow(dead_code)]
 fn convolve_1d_along_axis<T, D>(
-    input: &Array<T, D>,
-    _kernel: &Array<T, Ix1>,
-    _axis: usize,
+    input: &Array<T, D>, _kernel: &Array<T, Ix1>, _axis: usize,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync,
@@ -329,11 +327,11 @@ where
     let config = config.unwrap_or_default();
 
     // Bilateral filter is memory-intensive, so we always use chunking for large images
-    let input_size = input.len() * std::mem::size_of::<T>();
+    let input_size = input.len() * std::mem::size__of::<T>();
 
     if input_size > config.target_memory_usage / 2 {
         // Use chunked processing
-        use crate::chunked_v2::process_chunked_v2;
+        use crate::chunked__v2::process_chunked_v2;
 
         let op = move |chunk: &ArrayView<T, IxDyn>| -> CoreResult<Array<T, IxDyn>> {
             let chunk_2d = chunk.to_owned().into_dimensionality::<Ix2>().map_err(|_| {
@@ -360,7 +358,7 @@ where
 /// Helper processor for bilateral filter
 struct BilateralProcessorV2;
 
-impl<T: Float + Send + Sync> crate::chunked_v2::ChunkProcessorV2<T, Ix2> for BilateralProcessorV2 {
+impl<T: Float + Send + Sync>, crate::chunked_v2::ChunkProcessorV2<T, Ix2> for BilateralProcessorV2 {
     fn create_processor(
         &self,
     ) -> Box<

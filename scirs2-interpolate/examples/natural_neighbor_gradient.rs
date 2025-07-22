@@ -5,7 +5,7 @@
 
 use ndarray::{Array1, Array2};
 use rand::Rng;
-use scirs2_interpolate::voronoi::{
+use scirs2__interpolate::voronoi::{
     make_sibson_interpolator, GradientEstimation, InterpolateWithGradient, InterpolationMethod,
     NaturalNeighborInterpolator,
 };
@@ -37,14 +37,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut values_vec = Vec::with_capacity(n_points);
 
     for _ in 0..n_points {
-        let x = rng.random_range(0.0..2.0 * std::f64::consts::PI);
-        let y = rng.random_range(0.0..2.0 * std::f64::consts::PI);
+        let x = rng.gen_range(0.0..2.0 * std::f64::consts::PI);
+        let y = rng.gen_range(0.0..2.0 * std::f64::consts::PI);
 
         points_vec.push(x);
         points_vec.push(y);
 
         // Compute the function value
-        values_vec.push(test_function(x, y));
+        values_vec.push(test_function(x..y));
     }
 
     let points = Array2::from_shape_vec((n_points, 2), points_vec)?;

@@ -2,14 +2,14 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::{array, Ix1};
-use scirs2_metrics::classification::{accuracy_score, f1_score, precision_score, recall_score};
-use scirs2_metrics::integration::neural::{
+use scirs2__metrics::classification::{accuracy_score, f1_score, precision_score, recall_score};
+use scirs2__metrics::integration::neural::{
     neural_confusion_matrix_visualization, neural_precision_recall_curve_visualization,
     neural_roc_curve_visualization, training_history_visualization, MetricsCallback,
     NeuralMetricAdapter,
 };
-use scirs2_metrics::integration::traits::MetricComputation;
-use scirs2_metrics::regression::{mean_squared_error, r2_score};
+use scirs2__metrics::integration::traits::MetricComputation;
+use scirs2__metrics::regression::{mean_squared_error, r2_score};
 use std::collections::HashMap;
 
 /// Test that the neural metric adapter produces the same results as direct metric calls

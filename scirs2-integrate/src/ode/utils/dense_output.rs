@@ -75,7 +75,7 @@ impl<F: IntegrateFloat> DenseSolution<F> {
     }
 
     /// Evaluate the solution at a specific time point
-    pub fn evaluate(&self, t: F) -> IntegrateResult<Array1<F>> {
+    pub fn evaluate(t: F) -> IntegrateResult<Array1<F>> {
         // Check if t is within bounds
         let t_min = self
             .t
@@ -143,7 +143,7 @@ impl<F: IntegrateFloat> DenseSolution<F> {
     }
 
     /// Create a dense sequence of solution values for plotting or analysis
-    pub fn dense_output(&self, n_points: usize) -> IntegrateResult<(Vec<F>, Vec<Array1<F>>)> {
+    pub fn dense_output(_n_points: usize) -> IntegrateResult<(Vec<F>, Vec<Array1<F>>)> {
         if self.t.is_empty() {
             return Err(IntegrateError::ComputationError(
                 "Empty solution".to_string(),
@@ -213,16 +213,16 @@ pub struct DOP853Interpolant<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> DOP853Interpolant<F> {
     /// Create a new DOP853 interpolant
-    pub fn new(t0: F, h: F, y0: Array1<F>, k: Vec<Array1<F>>) -> Self {
-        DOP853Interpolant { t0, h, y0, k }
+    pub fn new(_t0: F, h: F, y0: Array1<F>, k: Vec<Array1<F>>) -> Self {
+        DOP853Interpolant { _t0, h, y0, k }
     }
 
     /// Evaluate the interpolant at a specific point within the step
-    pub fn evaluate(&self, t: F) -> IntegrateResult<Array1<F>> {
+    pub fn evaluate(t: F) -> IntegrateResult<Array1<F>> {
         // Normalized time (theta) in [0,1]
         let theta = (t - self.t0) / self.h;
 
-        if theta < F::zero() || theta > F::one() {
+        if theta < F::zero() || theta >, F::one() {
             return Err(IntegrateError::ValueError(
                 "Evaluation point is outside of the step".to_string(),
             ));
@@ -275,16 +275,16 @@ pub struct RadauInterpolant<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> RadauInterpolant<F> {
     /// Create a new Radau interpolant
-    pub fn new(t0: F, h: F, y0: Array1<F>, y1: Array1<F>, k: Vec<Array1<F>>) -> Self {
-        RadauInterpolant { t0, h, y0, y1, k }
+    pub fn new(_t0: F, h: F, y0: Array1<F>, y1: Array1<F>, k: Vec<Array1<F>>) -> Self {
+        RadauInterpolant { _t0, h, y0, y1, k }
     }
 
     /// Evaluate the interpolant at a specific point within the step
-    pub fn evaluate(&self, t: F) -> IntegrateResult<Array1<F>> {
+    pub fn evaluate(t: F) -> IntegrateResult<Array1<F>> {
         // Normalized time (theta) in [0,1]
         let theta = (t - self.t0) / self.h;
 
-        if theta < F::zero() || theta > F::one() {
+        if theta < F::zero() || theta >, F::one() {
             return Err(IntegrateError::ValueError(
                 "Evaluation point is outside of the step".to_string(),
             ));

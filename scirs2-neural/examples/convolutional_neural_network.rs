@@ -57,7 +57,7 @@ impl ActivationFunction {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
             }
-            ActivationFunction::Linear => Array::ones(x.dim()),
+            ActivationFunction::Linear =>, Array::ones(x.dim()),
         }
     }
     /// Get a string representation of the activation function
@@ -168,7 +168,7 @@ struct Conv2D {
     // #[serde(skip)]
     input: Option<Array4<f32>>,
     z: Option<Array4<f32>>, // Pre-activation
-    output: Option<Array4<f32>>,
+    _output: Option<Array4<f32>>,
 }
 
 impl Conv2D {
@@ -519,11 +519,11 @@ struct MaxPool2D {
 
 impl MaxPool2D {
     /// Create a new MaxPool2D layer
-    fn new(pool_size: (usize, usize), stride: Option<(usize, usize)>) -> Self {
-        // Default stride is same as pool size
-        let stride = stride.unwrap_or(pool_size);
+    fn new(_pool_size: (usize, usize), stride: Option<(usize, usize)>) -> Self {
+        // Default stride is same as pool _size
+        let stride = stride.unwrap_or(_pool_size);
         Self {
-            pool_size,
+            _pool_size,
             stride,
             max_indices: None,
         }
@@ -598,7 +598,7 @@ impl Layer for MaxPool2D {
         let output_height = output_shape[2];
         let output_width = output_shape[3];
 
-        // Calculate input dimensions from output and pooling parameters
+        // Calculate input dimensions from _output and pooling parameters
         let input_height = (output_height - 1) * self.stride.0 + self.pool_size.0;
         let input_width = (output_width - 1) * self.stride.1 + self.pool_size.1;
 
@@ -618,7 +618,7 @@ impl Layer for MaxPool2D {
         }
         dinput
     }
-    fn update_parameters(&mut self, _learning_rate: f32) {
+    fn update_parameters(&mut self_learning_rate: f32) {
         // MaxPool has no parameters to update
     }
 
@@ -672,7 +672,7 @@ impl Layer for Flatten {
         let reshaped_4d: Array4<f32> = reshaped.into_dimensionality().unwrap();
         reshaped_4d
     }
-    fn update_parameters(&mut self, _learning_rate: f32) {
+    fn update_parameters(&mut self_learning_rate: f32) {
         // Flatten has no parameters to update
     }
 
@@ -825,10 +825,10 @@ struct Sequential {
 
 impl Sequential {
     /// Create a new sequential model
-    fn new(loss_fn: LossFunction) -> Self {
+    fn new(_loss_fn: LossFunction) -> Self {
         Self {
             layers: Vec::new(),
-            loss_fn,
+            _loss_fn,
         }
     }
     /// Add a layer to the model
@@ -1004,10 +1004,10 @@ fn create_synthetic_dataset(
             );
         class_patterns.push(pattern);
     }
-    // Generate samples with noise
+    // Generate _samples with noise
     for i in 0..num_samples {
         // Assign a random class
-        let class = rng.gen_range(0..num_classes);
+        let class = rng.random_range(0..num_classes);
         // Add the class pattern with noise
         for h in 0..image_size.0 {
             for w in 0..image_size.1 {
@@ -1023,10 +1023,10 @@ fn create_synthetic_dataset(
 }
 // Helper function to find index of maximum value in array
 #[allow(dead_code)]
-fn argmax(arr: ArrayView1<f32>) -> usize {
+fn argmax(_arr: ArrayView1<f32>) -> usize {
     let mut max_idx = 0;
-    let mut max_val = arr[0];
-    for (idx, &val) in arr.iter().enumerate() {
+    let mut max_val = _arr[0];
+    for (idx, &val) in _arr.iter().enumerate() {
         if val > max_val {
             max_val = val;
             max_idx = idx;
@@ -1132,15 +1132,14 @@ fn train_cnn_example() -> Result<()> {
     // Make some example predictions
     println!("\nExample predictions:");
     for i in 0..5 {
-        let idx = rng.gen_range(0..test_size);
+        let idx = rng.random_range(0..test_size);
         let true_class = argmax(test_labels.row(idx));
         let predicted_class = argmax(predictions.row(idx));
         println!(
-            "Example {}: True class = {}, Predicted class = {}",
+            "Example {}: True class = {}..Predicted class = {}",
             i + 1,
             true_class,
-            predicted_class
-        );
+            predicted_class);
     }
     Ok(())
 }

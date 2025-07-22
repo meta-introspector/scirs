@@ -108,9 +108,9 @@ pub struct ErrorDistribution<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
     /// Create new advanced error estimator
-    pub fn new(tolerance: F, max_richardson_order: usize) -> Self {
+    pub fn new(_tolerance: F, max_richardson_order: usize) -> Self {
         Self {
-            tolerance,
+            _tolerance,
             max_richardson_order,
             solution_history: VecDeque::new(),
             step_size_history: VecDeque::new(),
@@ -129,11 +129,11 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
     where
         Func: Fn(F, &ArrayView1<F>) -> Array1<F>,
     {
-        // Store current solution and step size
+        // Store current _solution and step _size
         self.solution_history.push_back(current_solution.clone());
         self.step_size_history.push_back(step_size);
 
-        // Maintain history size (keep last 20 points)
+        // Maintain history _size (keep last 20 points)
         while self.solution_history.len() > 20 {
             self.solution_history.pop_front();
             self.step_size_history.pop_front();
@@ -147,7 +147,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
             quality_metrics: self.assess_solution_quality()?,
             recommended_step_size: step_size,
             confidence: F::from(0.5).unwrap(), // Default confidence
-            error_distribution: self.analyze_error_distribution(current_solution)?,
+            _error_distribution: self.analyze_error_distribution(current_solution)?,
         };
 
         // Richardson extrapolation if we have enough history
@@ -155,19 +155,19 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
             result.richardson_error = self.richardson_extrapolation()?;
         }
 
-        // Spectral error analysis
+        // Spectral _error analysis
         if self.solution_history.len() >= 5 {
             result.spectral_error = self.spectral_error_analysis()?;
         }
 
-        // Defect correction error estimate
+        // Defect correction _error estimate
         result.defect_error = self.defect_based_error(current_solution, &ode_function)?;
 
         // Compute overall confidence and recommendations
         result.confidence = self.compute_confidence(&result);
         result.recommended_step_size = self.recommend_step_size(&result, step_size);
 
-        // Store error estimate for history
+        // Store _error estimate for history
         self.error_history.push_back(result.primary_estimate);
         while self.error_history.len() > 20 {
             self.error_history.pop_front();
@@ -254,7 +254,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
         let h = *self.step_size_history.back().unwrap();
         let t = F::zero(); // Assuming we're at some time t
 
-        // Compute defect: residual when substituting numerical solution
+        // Compute defect: residual when substituting numerical _solution
         // into the original ODE
         let f_current = ode_function(t, &current_solution.view());
         let defect_norm = f_current.mapv(|x| x.abs()).sum() * h;
@@ -263,7 +263,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
     }
 
     /// Assess solution quality metrics
-    fn assess_solution_quality(&self) -> IntegrateResult<SolutionQualityMetrics<F>> {
+    fn assess_solution_quality() -> IntegrateResult<SolutionQualityMetrics<F>> {
         let mut metrics = SolutionQualityMetrics {
             smoothness: F::zero(),
             regularity: F::zero(),
@@ -396,15 +396,15 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
     }
 
     /// Compute confidence in error estimate
-    fn compute_confidence(&self, result: &ErrorAnalysisResult<F>) -> F {
+    fn compute_confidence(_result: &ErrorAnalysisResult<F>) -> F {
         let mut confidence_factors = Vec::new();
 
         // Confidence from multiple error estimates agreement
         let estimates = [
-            Some(result.primary_estimate),
-            result.richardson_error,
-            result.spectral_error,
-            result.defect_error,
+            Some(_result.primary_estimate),
+            _result.richardson_error,
+            _result.spectral_error,
+            _result.defect_error,
         ]
         .iter()
         .filter_map(|&est| est)
@@ -424,8 +424,8 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
         }
 
         // Confidence from solution quality
-        confidence_factors.push(result.quality_metrics.smoothness);
-        confidence_factors.push(F::one() / (F::one() + result.quality_metrics.oscillation_index));
+        confidence_factors.push(_result.quality_metrics.smoothness);
+        confidence_factors.push(F::one() / (F::one() + _result.quality_metrics.oscillation_index));
 
         // Average confidence factors
         if !confidence_factors.is_empty() {
@@ -437,31 +437,31 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
     }
 
     /// Recommend optimal step size based on error analysis
-    fn recommend_step_size(&self, result: &ErrorAnalysisResult<F>, current_step: F) -> F {
+    fn recommend_step_size(_result: &ErrorAnalysisResult<F>, current_step: F) -> F {
         let target_error = self.tolerance;
-        let current_error = result.primary_estimate;
+        let current_error = _result.primary_estimate;
 
         if current_error <= F::zero() {
             return current_step;
         }
 
         // Safety factor based on confidence
-        let safety_factor = F::from(0.8).unwrap() + F::from(0.15).unwrap() * result.confidence;
+        let safety_factor = F::from(0.8).unwrap() + F::from(0.15).unwrap() * _result.confidence;
 
-        // Standard step size controller (assumes 2nd order method)
+        // Standard _step size controller (assumes 2nd order method)
         let ratio = (target_error / current_error).powf(F::from(0.5).unwrap());
         let _basic_recommendation = current_step * ratio * safety_factor;
 
         // Adjust based on solution quality
-        let quality_factor = if result.quality_metrics.oscillation_index > F::from(0.1).unwrap() {
-            F::from(0.7).unwrap() // Reduce step size for oscillatory solutions
-        } else if result.quality_metrics.smoothness > F::from(0.8).unwrap() {
-            F::from(1.2).unwrap() // Increase step size for smooth solutions
+        let quality_factor = if _result.quality_metrics.oscillation_index > F::from(0.1).unwrap() {
+            F::from(0.7).unwrap() // Reduce _step size for oscillatory solutions
+        } else if _result.quality_metrics.smoothness > F::from(0.8).unwrap() {
+            F::from(1.2).unwrap() // Increase _step size for smooth solutions
         } else {
             F::one()
         };
 
-        // Limit step size changes
+        // Limit _step size changes
         let min_factor = F::from(0.2).unwrap();
         let max_factor = F::from(5.0).unwrap();
         let final_factor = (ratio * safety_factor * quality_factor)
@@ -474,17 +474,17 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
 
 impl<F: IntegrateFloat> RichardsonExtrapolator<F> {
     /// Create new Richardson extrapolator
-    pub fn new(order: usize) -> Self {
+    pub fn new(_order: usize) -> Self {
         Self {
-            order,
+            _order,
             step_ratios: vec![F::from(0.5).unwrap(), F::from(0.25).unwrap()],
             solutions: Vec::new(),
         }
     }
 
     /// Add solution for extrapolation
-    pub fn add_solution(&mut self, solution: Array1<F>) {
-        self.solutions.push(solution);
+    pub fn add_solution(_solution: Array1<F>) {
+        self.solutions.push(_solution);
         if self.solutions.len() > self.order + 1 {
             self.solutions.remove(0);
         }
@@ -530,17 +530,17 @@ impl<F: IntegrateFloat> RichardsonExtrapolator<F> {
 
 impl<F: IntegrateFloat> SpectralErrorIndicator<F> {
     /// Create new spectral error indicator
-    pub fn new(window_size: usize, decay_threshold: F) -> Self {
+    pub fn new(_window_size: usize, decay_threshold: F) -> Self {
         Self {
-            window_size,
+            _window_size,
             decay_threshold,
             history: VecDeque::new(),
         }
     }
 
     /// Add solution to history
-    pub fn add_solution(&mut self, solution: Array1<F>) {
-        self.history.push_back(solution);
+    pub fn add_solution(_solution: Array1<F>) {
+        self.history.push_back(_solution);
         while self.history.len() > self.window_size {
             self.history.pop_front();
         }

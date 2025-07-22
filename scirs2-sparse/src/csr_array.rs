@@ -42,7 +42,7 @@ use crate::sparray::{SparseArray, SparseSum};
 ///
 /// ## Basic Construction and Access
 /// ```
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a 3x3 matrix:
 /// // [1.0, 0.0, 2.0]
@@ -65,7 +65,7 @@ use crate::sparray::{SparseArray, SparseSum};
 ///
 /// ## Matrix Operations
 /// ```
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::csr_array::CsrArray;
 /// use ndarray::Array1;
 ///
 /// let rows = vec![0, 1, 2];
@@ -83,7 +83,7 @@ use crate::sparray::{SparseArray, SparseSum};
 ///
 /// ## Format Conversion
 /// ```
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// let rows = vec![0, 1];
 /// let cols = vec![0, 1];
@@ -233,7 +233,7 @@ where
     ///
     /// Create a simple 3x3 sparse matrix:
     /// ```
-    /// use scirs2_sparse::csr_array::CsrArray;
+    /// use scirs2__sparse::csr_array::CsrArray;
     ///
     /// // Create a 3x3 matrix with the following structure:
     /// // [1.0, 0.0, 2.0]
@@ -252,7 +252,7 @@ where
     ///
     /// Create an empty sparse matrix:
     /// ```
-    /// use scirs2_sparse::csr_array::CsrArray;
+    /// use scirs2__sparse::csr_array::CsrArray;
     ///
     /// let rows: Vec<usize> = vec![];
     /// let cols: Vec<usize> = vec![];
@@ -266,7 +266,7 @@ where
     ///
     /// Handle duplicate entries (they will be preserved):
     /// ```
-    /// use scirs2_sparse::csr_array::CsrArray;
+    /// use scirs2__sparse::csr_array::CsrArray;
     ///
     /// // Multiple entries at the same position
     /// let rows = vec![0, 0];
@@ -311,12 +311,12 @@ where
         }
 
         if !sorted {
-            all_data.sort_by_key(|&(row, col, _)| (row, col));
+            all_data.sort_by_key(|&(row, col_)| (row, col));
         }
 
         // Count elements per row
         let mut row_counts = vec![0; shape.0];
-        for &(row, _, _) in &all_data {
+        for &(row__) in &all_data {
             row_counts[row] += 1;
         }
 
@@ -347,13 +347,13 @@ where
     }
 
     /// Checks if column indices are sorted for each row
-    fn check_sorted_indices(indices: &Array1<usize>, indptr: &Array1<usize>) -> bool {
+    fn check_sorted_indices(_indices: &Array1<usize>, indptr: &Array1<usize>) -> bool {
         for row in 0..indptr.len() - 1 {
             let start = indptr[row];
             let end = indptr[row + 1];
 
             for i in start..end.saturating_sub(1) {
-                if i + 1 < indices.len() && indices[i] > indices[i + 1] {
+                if i + 1 < _indices.len() && _indices[i] > _indices[i + 1] {
                     return false;
                 }
             }
@@ -821,7 +821,7 @@ where
         let mut new_indices = Vec::new();
         let mut new_indptr = vec![0];
 
-        let (rows, _) = self.shape();
+        let (rows_) = self.shape();
 
         for row in 0..rows {
             let start = self.indptr[row];
@@ -847,7 +847,7 @@ where
             return;
         }
 
-        let (rows, _) = self.shape();
+        let (rows_) = self.shape();
 
         for row in 0..rows {
             let start = self.indptr[row];
@@ -864,7 +864,7 @@ where
             }
 
             // Sort by column index
-            row_data.sort_by_key(|&(col, _)| col);
+            row_data.sort_by_key(|&(col_)| col);
 
             // Put the sorted data back
             for (i, (col, val)) in row_data.into_iter().enumerate() {

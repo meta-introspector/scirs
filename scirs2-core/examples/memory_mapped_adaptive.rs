@@ -53,8 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Create test arrays of different shapes and sizes
 #[allow(dead_code)]
-fn create_test_arrays(
-    dir_path: &std::path::Path,
+fn path( &std::path::Path,
 ) -> Result<Vec<MemoryMappedArray<f64>>, Box<dyn std::error::Error>> {
     let mut arrays = Vec::new();
 
@@ -157,11 +156,11 @@ fn benchmark_fixed_chunks(
         }
 
         // Create fixed chunking strategy
-        let _strategy = ChunkingStrategy::Fixed(chunk_size);
+        let strategy = ChunkingStrategy::Fixed(chunk_size);
 
         // Calculate expected number of chunks
         let total_size = array.size;
-        let _expected_chunks = total_size.div_ceil(chunk_size);
+        let expected_chunks = total_size.div_ceil(chunk_size);
 
         // Measure performance
         let start = Instant::now();
@@ -169,7 +168,7 @@ fn benchmark_fixed_chunks(
         // Process chunks by summing all elements (simple operation)
         // Note: process_chunks method not available on MemoryMappedArray
         // For demo purposes, we'll process the whole array
-        let data = array.as_array::<ndarray::Ix1>()?;
+        let data = array.asarray::<ndarray::Ix1>()?;
         let sums = [data.sum()]; // Just one "chunk" for now
 
         let elapsed = start.elapsed();
@@ -231,8 +230,7 @@ fn benchmark_adaptive_chunks(
 
         // Extract the chunk size from the strategy
         let chunk_size = match adaptive_result.strategy {
-            ChunkingStrategy::Fixed(size) => size,
-            _ => panic!("Expected fixed chunking strategy"),
+            ChunkingStrategy::Fixed(size) => size_ => panic!("Expected fixed chunking strategy"),
         };
 
         // Calculate expected number of chunks
@@ -243,7 +241,7 @@ fn benchmark_adaptive_chunks(
         let start = Instant::now();
 
         // Process chunks using adaptive chunking
-        let result = array.process_chunks_adaptive(params, |chunk, _| chunk.iter().sum::<f64>())?;
+        let result = array.process_chunks_adaptive(params, |chunk_| chunk.iter().sum::<f64>())?;
 
         let elapsed = start.elapsed();
 
@@ -297,14 +295,14 @@ fn benchmark_adaptive_parallel(
     println!("{:-^80}", "");
 
     // First run sequential for baseline
-    let _seq_params = AdaptiveChunkingBuilder::new()
+    let seq_params = AdaptiveChunkingBuilder::new()
         .with_target_memory(1024 * 1024)  // 1MB target
         .build();
 
     let seq_start = Instant::now();
     // Note: process_chunks_adaptive not available on MemoryMappedArray
     // For demo purposes, we'll process the whole array
-    let data = array.as_array::<ndarray::Ix1>()?;
+    let data = array.asarray::<ndarray::Ix1>()?;
     let seq_result = [data.iter().map(|&x| (x * x).sqrt()).sum::<f64>()];
     let seq_elapsed = seq_start.elapsed();
 
@@ -323,7 +321,7 @@ fn benchmark_adaptive_parallel(
 
     for &workers in &worker_counts {
         // Create adaptive chunking parameters
-        let _params = AdaptiveChunkingBuilder::new()
+        let params = AdaptiveChunkingBuilder::new()
             .with_target_memory(1024 * 1024)  // 1MB target
             .optimize_for_parallel(true)
             .with_num_workers(workers)
@@ -341,7 +339,7 @@ fn benchmark_adaptive_parallel(
 
         // Note: process_chunks_parallel_adaptive not available on MemoryMappedArray
         // For demo purposes, we'll process the whole array
-        let data = array.as_array::<ndarray::Ix1>()?;
+        let data = array.asarray::<ndarray::Ix1>()?;
         let result = [data.iter().map(|&x| (x * x).sqrt()).sum::<f64>()];
 
         let elapsed = start.elapsed();

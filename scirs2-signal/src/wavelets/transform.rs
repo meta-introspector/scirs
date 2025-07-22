@@ -1,11 +1,13 @@
 //! Core wavelet transform implementations
 
-use super::cwt::{convolve_complex_same_complex, convolve_complex_same_real};
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
+use std::f64::consts::PI;
 use std::fmt::Debug;
+use super::cwt::{convolve_complex_same_complex, convolve_complex_same_real};
 
+#[allow(unused_imports)]
 /// Continuous wavelet transform
 ///
 /// # Arguments
@@ -24,7 +26,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::wavelets::{cwt, ricker};
+/// use scirs2__signal::wavelets::{cwt, ricker};
 ///
 /// // Generate a signal
 /// let signal: Vec<f64> = (0..100).map(|i| (i as f64 / 10.0).sin()).collect();
@@ -39,7 +41,7 @@ use std::fmt::Debug;
 /// You can also use it with complex signals:
 ///
 /// ```rust
-/// use scirs2_signal::wavelets::{cwt, morlet};
+/// use scirs2__signal::wavelets::{cwt, morlet};
 ///
 /// // Generate a real signal (CWT also works with complex signals)
 /// let signal: Vec<f64> = (0..100)
@@ -60,13 +62,13 @@ use std::fmt::Debug;
 /// assert_eq!(result[0].len(), signal.len());
 /// ```
 #[allow(dead_code)]
-pub fn cwt<T, F, W>(data: &[T], wavelet: F, scales: &[f64]) -> SignalResult<Vec<Vec<Complex64>>>
+pub fn cwt<T, F, W>(_data: &[T], wavelet: F, scales: &[f64]) -> SignalResult<Vec<Vec<Complex64>>>
 where
     T: NumCast + Debug + Copy,
     F: Fn(usize, f64) -> SignalResult<Vec<W>>,
     W: Into<Complex64> + Copy,
 {
-    if data.is_empty() {
+    if _data.is_empty() {
         return Err(SignalError::ValueError("Input array is empty".to_string()));
     }
 
@@ -76,19 +78,19 @@ where
 
     // Try to convert to f64 first for real-valued input
     let mut is_complex = false;
-    let data_real: Result<Vec<f64>, ()> = data
+    let _data_real: Result<Vec<f64>, ()> = _data
         .iter()
         .map(|&val| num_traits::cast::cast::<T, f64>(val).ok_or(()))
         .collect();
 
-    // Process data based on type
-    let data_complex: Vec<Complex64> = if let Ok(real_data) = data_real {
-        // Real data
+    // Process _data based on type
+    let _data_complex: Vec<Complex64> = if let Ok(real_data) = data_real {
+        // Real _data
         real_data.iter().map(|&r| Complex64::new(r, 0.0)).collect()
     } else {
-        // Complex data
+        // Complex _data
         is_complex = true;
-        data.iter()
+        _data.iter()
             .map(|&val| {
                 num_traits::cast::cast::<T, Complex64>(val).ok_or_else(|| {
                     SignalError::ValueError(format!("Could not convert {:?} to Complex64", val))
@@ -111,10 +113,10 @@ where
 
     // Compute transform for each scale
     for &scale in scales {
-        // Determine wavelet size - use at least data.len() points, but limit to reasonable size
+        // Determine wavelet size - use at least _data.len() points, but limit to reasonable size
         let n = std::cmp::min(
-            data.len() * 10,
-            std::cmp::max(data.len(), 10 * scale as usize),
+            _data.len() * 10,
+            std::cmp::max(_data.len(), 10 * scale as usize),
         );
 
         // Generate wavelet coefficients
@@ -134,7 +136,7 @@ where
         let convolved = if is_complex {
             convolve_complex_same_complex(&data_complex, &wavelet_complex)
         } else {
-            // For real data, we can use the simpler convolution
+            // For real _data, we can use the simpler convolution
             convolve_complex_same_real(&data_complex, &wavelet_complex)
         };
 

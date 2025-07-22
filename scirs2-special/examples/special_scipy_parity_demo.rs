@@ -4,7 +4,7 @@
 //! SciPy compatibility, including exponentially scaled Bessel functions,
 //! Dawson's integral, and the polygamma function.
 
-use scirs2_special::{
+use scirs2__special::{
     // Dawson's integral
     dawsn,
     // Exponentially scaled Bessel functions

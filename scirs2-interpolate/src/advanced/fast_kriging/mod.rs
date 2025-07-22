@@ -12,7 +12,7 @@
 //! These methods trade some accuracy for substantial performance improvements,
 //! making kriging feasible for datasets with thousands to millions of points.
 
-use crate::advanced::enhanced_kriging::{AnisotropicCovariance, TrendFunction};
+use crate::advanced::enhanced__kriging::{AnisotropicCovariance, TrendFunction};
 use crate::advanced::kriging::CovarianceFunction;
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
@@ -82,16 +82,16 @@ where
     pub fn confidence_intervals(&self, confidence_level: f64) -> InterpolateResult<Array2<F>> {
         if confidence_level <= 0.0 || confidence_level >= 1.0 {
             return Err(InterpolateError::InvalidValue(
-                "Confidence level must be between 0 and 1".to_string(),
+                "Confidence _level must be between 0 and 1".to_string(),
             ));
         }
 
         // Approximate z-score for normal distribution
         let z_score = F::from_f64(match confidence_level {
-            level if level > 0.99 => 2.576, // 99%
-            level if level > 0.95 => 1.96,  // 95%
-            level if level > 0.90 => 1.645, // 90%
-            level if level > 0.80 => 1.282, // 80%
+            _level if _level > 0.99 => 2.576, // 99%
+            _level if _level > 0.95 => 1.96,  // 95%
+            _level if _level > 0.90 => 1.645, // 90%
+            _level if _level > 0.80 => 1.282, // 80%
             _ => 1.96,                      // Default to 95%
         })
         .unwrap();
@@ -155,10 +155,10 @@ pub enum FastKrigingMethod {
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::fast_kriging::{
+/// use scirs2__interpolate::advanced::fast_kriging::{
 ///     FastKriging, FastKrigingMethod, FastKrigingBuilder
 /// };
-/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+/// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample data
 /// let n_points = 100; // Reduced for testing
@@ -266,10 +266,10 @@ where
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::fast_kriging::{
+/// use scirs2__interpolate::advanced::fast_kriging::{
 ///     FastKrigingBuilder, FastKrigingMethod
 /// };
-/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+/// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample data
 /// let points = Array2::<f64>::zeros((100, 2));
@@ -360,9 +360,9 @@ where
     ///
     /// This is used internally by the builder and shouldn't be called directly.
     /// Use `FastKrigingBuilder::build()` instead.
-    pub(crate) fn from_builder(builder: FastKrigingBuilder<F>) -> InterpolateResult<Self> {
-        let points = builder.points.ok_or(InterpolateError::MissingPoints)?;
-        let values = builder.values.ok_or(InterpolateError::MissingValues)?;
+    pub(crate) fn from_builder(_builder: FastKrigingBuilder<F>) -> InterpolateResult<Self> {
+        let points = _builder.points.ok_or(InterpolateError::MissingPoints)?;
+        let values = _builder.values.ok_or(InterpolateError::MissingValues)?;
 
         if points.nrows() != values.len() {
             return Err(InterpolateError::DimensionMismatch(
@@ -372,30 +372,29 @@ where
 
         // Create anisotropic covariance
         let anisotropic_cov = AnisotropicCovariance::new(
-            builder.cov_fn,
-            builder
+            _builder.cov_fn,
+            _builder
                 .length_scales
                 .unwrap_or_else(|| Array1::from_elem(points.ncols(), F::one())),
-            builder.sigma_sq,
-            builder.nugget,
+            _builder.sigma_sq,
+            _builder.nugget,
         );
 
         let mut kriging = Self {
             points,
             values,
             anisotropic_cov,
-            trend_fn: builder.trend_fn,
-            approx_method: builder.approx_method,
-            max_neighbors: builder.max_neighbors,
-            radius_multiplier: builder.radius_multiplier,
+            trend_fn: _builder.trend_fn,
+            approx_method: _builder.approx_method,
+            max_neighbors: _builder.max_neighbors,
+            radius_multiplier: _builder.radius_multiplier,
             low_rank_components: None,
             sparse_components: None,
             weights: Array1::zeros(0),
             basis_functions: None,
             trend_coeffs: None,
             optimize_parameters: false,
-            compute_exact_variance: false,
-            _phantom: PhantomData,
+            compute_exact_variance: false, _phantom: PhantomData,
         };
 
         // Pre-compute components based on approximation method
@@ -449,9 +448,9 @@ where
         &self,
         query_points: &ArrayView2<F>,
     ) -> InterpolateResult<FastPredictionResult<F>> {
-        if query_points.ncols() != self.points.ncols() {
+        if query_points.ncols() != self._points.ncols() {
             return Err(InterpolateError::DimensionMismatch(
-                "Query points must have same dimensionality as training points".to_string(),
+                "Query _points must have same dimensionality as training _points".to_string(),
             ));
         }
 
@@ -531,8 +530,7 @@ where
             trend_fn: TrendFunction::Constant,
             approx_method: FastKrigingMethod::Local,
             max_neighbors: DEFAULT_MAX_NEIGHBORS,
-            radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).unwrap(),
-            _phantom: PhantomData,
+            radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).unwrap(), _phantom: PhantomData,
         }
     }
 
@@ -608,22 +606,22 @@ mod tests {
     use crate::advanced::kriging::CovarianceFunction;
     use ndarray::{Array1, Array2};
 
-    fn create_test_data(n_points: usize, n_dims: usize) -> (Array2<f64>, Array1<f64>) {
-        let mut points = Array2::zeros((n_points, n_dims));
-        let mut values = Array1::zeros(n_points);
+    fn create_test_data(_n_points: usize, n_dims: usize) -> (Array2<f64>, Array1<f64>) {
+        let mut _points = Array2::zeros((_n_points, n_dims));
+        let mut values = Array1::zeros(_n_points);
 
         // Generate a simple test dataset with a known function
-        for i in 0..n_points {
+        for i in 0.._n_points {
             for d in 0..n_dims {
-                points[[i, d]] = (i as f64) / (n_points as f64) + (d as f64) * 0.1;
+                _points[[i, d]] = (i as f64) / (_n_points as f64) + (d as f64) * 0.1;
             }
             // Simple quadratic function
-            let x = points[[i, 0]];
-            let y = if n_dims > 1 { points[[i, 1]] } else { 0.0 };
+            let x = _points[[i, 0]];
+            let y = if n_dims > 1 { _points[[i, 1]] } else { 0.0 };
             values[i] = x * x + y * y + 0.1 * x * y;
         }
 
-        (points, values)
+        (_points, values)
     }
 
     #[test]
@@ -730,7 +728,7 @@ mod tests {
         let result = builder.build();
         assert!(result.is_err());
 
-        let (points, _) = create_test_data(5, 2);
+        let (points_) = create_test_data(5, 2);
         let builder = FastKrigingBuilder::<f64>::new().points(points);
 
         // Should fail without values

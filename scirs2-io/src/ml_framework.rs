@@ -28,6 +28,7 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 // Additional imports for networking
 #[cfg(feature = "async")]
 use std::collections::VecDeque;
+use std::path::PathBuf;
 
 /// Supported ML framework formats
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -111,10 +112,10 @@ pub struct MLTensor {
 
 impl MLTensor {
     /// Create new ML tensor
-    pub fn new(data: ArrayD<f32>, name: Option<String>) -> Self {
-        let shape = data.shape().to_vec();
+    pub fn new(_data: ArrayD<f32>, name: Option<String>) -> Self {
+        let shape = _data.shape().to_vec();
         Self {
-            data,
+            _data,
             metadata: TensorMetadata {
                 name,
                 shape,
@@ -159,11 +160,11 @@ pub struct MLModel {
 
 impl MLModel {
     /// Create new ML model
-    pub fn new(framework: MLFramework) -> Self {
+    pub fn new(_framework: MLFramework) -> Self {
         Self {
             metadata: ModelMetadata {
-                framework: format!("{:?}", framework),
-                framework_version: None,
+                _framework: format!("{:?}", _framework),
+                _framework_version: None,
                 model_name: None,
                 model_version: None,
                 architecture: None,
@@ -193,8 +194,8 @@ impl MLModel {
     }
 
     /// Load model from file
-    pub fn load(framework: MLFramework, path: impl AsRef<Path>) -> Result<Self> {
-        let converter = get_converter(framework);
+    pub fn load(_framework: MLFramework, path: impl AsRef<Path>) -> Result<Self> {
+        let converter = get_converter(_framework);
         converter.load_model(path.as_ref())
     }
 }
@@ -211,16 +212,16 @@ trait MLFrameworkConverter {
 
 /// Get appropriate converter for framework
 #[allow(dead_code)]
-fn get_converter(framework: MLFramework) -> Box<dyn MLFrameworkConverter> {
-    match framework {
-        MLFramework::PyTorch => Box::new(PyTorchConverter),
-        MLFramework::ONNX => Box::new(ONNXConverter),
-        MLFramework::SafeTensors => Box::new(SafeTensorsConverter),
-        MLFramework::TensorFlow => Box::new(TensorFlowConverter),
-        MLFramework::JAX => Box::new(JAXConverter),
-        MLFramework::MXNet => Box::new(MXNetConverter),
-        MLFramework::CoreML => Box::new(CoreMLConverter),
-        MLFramework::HuggingFace => Box::new(HuggingFaceConverter),
+fn get_converter(_framework: MLFramework) -> Box<dyn MLFrameworkConverter> {
+    match _framework {
+        MLFramework::PyTorch =>, Box::new(PyTorchConverter),
+        MLFramework::ONNX =>, Box::new(ONNXConverter),
+        MLFramework::SafeTensors =>, Box::new(SafeTensorsConverter),
+        MLFramework::TensorFlow =>, Box::new(TensorFlowConverter),
+        MLFramework::JAX =>, Box::new(JAXConverter),
+        MLFramework::MXNet =>, Box::new(MXNetConverter),
+        MLFramework::CoreML =>, Box::new(CoreMLConverter),
+        MLFramework::HuggingFace =>, Box::new(HuggingFaceConverter),
     }
 }
 
@@ -249,7 +250,7 @@ impl MLFrameworkConverter for PyTorchConverter {
 
     fn load_model(&self, path: &Path) -> Result<MLModel> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let model_dict: serde_json::Value = serde_json::from_reader(file)
+        let model_dict: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let mut model = MLModel::new(MLFramework::PyTorch);
@@ -283,7 +284,7 @@ impl MLFrameworkConverter for PyTorchConverter {
 
     fn load_tensor(&self, path: &Path) -> Result<MLTensor> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let tensor_dict: serde_json::Value = serde_json::from_reader(file)
+        let tensor_dict: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
         python_dict_to_tensor(&tensor_dict)
     }
@@ -320,7 +321,7 @@ impl MLFrameworkConverter for ONNXConverter {
 
     fn load_model(&self, path: &Path) -> Result<MLModel> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let onnx_model: serde_json::Value = serde_json::from_reader(file)
+        let onnx_model: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let mut model = MLModel::new(MLFramework::ONNX);
@@ -415,7 +416,7 @@ impl MLFrameworkConverter for ONNXConverter {
 
     fn load_tensor(&self, path: &Path) -> Result<MLTensor> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let tensor_data: serde_json::Value = serde_json::from_reader(file)
+        let tensor_data: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let shape: Vec<usize> = serde_json::from_value(tensor_data["shape"].clone())
@@ -467,7 +468,7 @@ impl MLFrameworkConverter for SafeTensorsConverter {
 
     fn load_model(&self, path: &Path) -> Result<MLModel> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let safetensors: serde_json::Value = serde_json::from_reader(file)
+        let safetensors: serde_json: Value = serde, _json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let mut model = MLModel::new(MLFramework::SafeTensors);
@@ -511,7 +512,7 @@ impl MLFrameworkConverter for SafeTensorsConverter {
 
     fn load_tensor(&self, path: &Path) -> Result<MLTensor> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let tensor_data: serde_json::Value = serde_json::from_reader(file)
+        let tensor_data: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let shape: Vec<usize> = serde_json::from_value(tensor_data["shape"].clone())
@@ -572,7 +573,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
 
     fn load_model(&self, path: &Path) -> Result<MLModel> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let tf_model: serde_json::Value = serde_json::from_reader(file)
+        let tf_model: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let mut model = MLModel::new(MLFramework::TensorFlow);
@@ -653,7 +654,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
 
     fn load_tensor(&self, path: &Path) -> Result<MLTensor> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let tensor_data: serde_json::Value = serde_json::from_reader(file)
+        let tensor_data: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         if let Some(tensor) = tensor_data.get("tensor") {
@@ -720,7 +721,7 @@ impl MLFrameworkConverter for JAXConverter {
 
     fn load_model(&self, path: &Path) -> Result<MLModel> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let jax_model: serde_json::Value = serde_json::from_reader(file)
+        let jax_model: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let mut model = MLModel::new(MLFramework::JAX);
@@ -774,7 +775,7 @@ impl MLFrameworkConverter for JAXConverter {
 
     fn load_tensor(&self, path: &Path) -> Result<MLTensor> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let tensor_data: serde_json::Value = serde_json::from_reader(file)
+        let tensor_data: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         if let Some(jax_array) = tensor_data.get("jax_array") {
@@ -805,7 +806,7 @@ impl MLFrameworkConverter for MXNetConverter {
             "version": "1.9.0",
             "symbol": {
                 "nodes": [],
-                "arg_nodes": model.weights.keys().enumerate().map(|(i, _name)| i).collect::<Vec<_>>(),
+                "arg_nodes": model.weights.keys().enumerate().map(|(i_name)| i).collect::<Vec<_>>(),
                 "node_row_ptr": [0, model.weights.len()],
                 "attrs": {
                     "mxnet_version": ["1.9.0", "int"]
@@ -828,7 +829,7 @@ impl MLFrameworkConverter for MXNetConverter {
 
     fn load_model(&self, path: &Path) -> Result<MLModel> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let mxnet_model: serde_json::Value = serde_json::from_reader(file)
+        let mxnet_model: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let mut model = MLModel::new(MLFramework::MXNet);
@@ -875,7 +876,7 @@ impl MLFrameworkConverter for MXNetConverter {
 
     fn load_tensor(&self, path: &Path) -> Result<MLTensor> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let tensor_data: serde_json::Value = serde_json::from_reader(file)
+        let tensor_data: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         if let Some(ndarray) = tensor_data.get("mxnet_ndarray") {
@@ -953,7 +954,7 @@ impl MLFrameworkConverter for CoreMLConverter {
 
     fn load_model(&self, path: &Path) -> Result<MLModel> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let coreml_model: serde_json::Value = serde_json::from_reader(file)
+        let coreml_model: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let mut model = MLModel::new(MLFramework::CoreML);
@@ -1055,7 +1056,7 @@ impl MLFrameworkConverter for CoreMLConverter {
 
     fn load_tensor(&self, path: &Path) -> Result<MLTensor> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let tensor_data: serde_json::Value = serde_json::from_reader(file)
+        let tensor_data: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         if let Some(multiarray) = tensor_data.get("coreml_multiarray") {
@@ -1109,7 +1110,7 @@ impl MLFrameworkConverter for HuggingFaceConverter {
 
         // Load config
         let config_file = File::open(&config_path).map_err(IoError::Io)?;
-        let config: serde_json::Value = serde_json::from_reader(config_file)
+        let config: serde_json: Value = serde, _json::from_reader(config_file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         // Load weights
@@ -1157,7 +1158,7 @@ struct GenericConverter;
 impl MLFrameworkConverter for GenericConverter {
     fn save_model(&self, model: &MLModel, path: &Path) -> Result<()> {
         // Fallback to a generic JSON format
-        let weights_map: serde_json::Map<String, serde_json::Value> = model
+        let weights_map: serde, _json: Map<String, serde_json::Value> = model
             .weights
             .iter()
             .map(|(name, tensor)| {
@@ -1186,7 +1187,7 @@ impl MLFrameworkConverter for GenericConverter {
 
     fn load_model(&self, path: &Path) -> Result<MLModel> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let generic_model: serde_json::Value = serde_json::from_reader(file)
+        let generic_model: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let mut model = MLModel::new(MLFramework::PyTorch); // Default framework
@@ -1238,7 +1239,7 @@ impl MLFrameworkConverter for GenericConverter {
 
     fn load_tensor(&self, path: &Path) -> Result<MLTensor> {
         let file = File::open(path).map_err(IoError::Io)?;
-        let tensor_data: serde_json::Value = serde_json::from_reader(file)
+        let tensor_data: serde, _json: Value = serde_json::from_reader(file)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         if let Some(generic_tensor) = tensor_data.get("generic_tensor") {
@@ -1256,7 +1257,7 @@ impl MLFrameworkConverter for GenericConverter {
             // Try to restore metadata if available
             if let Some(metadata) = generic_tensor.get("metadata") {
                 if let Ok(parsed_metadata) =
-                    serde_json::from_value::<TensorMetadata>(metadata.clone())
+                    serde_json::from, _value::<TensorMetadata>(metadata.clone())
                 {
                     tensor.metadata = parsed_metadata;
                 }
@@ -1271,21 +1272,21 @@ impl MLFrameworkConverter for GenericConverter {
 
 /// Helper functions for tensor conversions
 #[allow(dead_code)]
-fn tensor_to_python_dict(tensor: &MLTensor) -> Result<serde_json::Value> {
-    Ok(serde_json::json!({
-        "data": tensor.data.as_slice().unwrap().to_vec(),
-        "shape": tensor.metadata.shape,
-        "dtype": format!("{:?}", tensor.metadata.dtype),
-        "requires_grad": tensor.metadata.requires_grad,
+fn tensor_to_python_dict(_tensor: &MLTensor) -> Result<serde_json::Value> {
+    Ok(serde_json::_json!({
+        "data": _tensor.data.as_slice().unwrap().to_vec(),
+        "shape": _tensor.metadata.shape,
+        "dtype": format!("{:?}", _tensor.metadata.dtype),
+        "requires_grad": _tensor.metadata.requires_grad,
     }))
 }
 
 #[allow(dead_code)]
-fn python_dict_to_tensor(dict: &serde_json::Value) -> Result<MLTensor> {
-    let shape: Vec<usize> = serde_json::from_value(dict["shape"].clone())
+fn python_dict_to_tensor(_dict: &serde_json: :Value) -> Result<MLTensor> {
+    let shape: Vec<usize> = serde_json::from_value(_dict["shape"].clone())
         .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
-    let data: Vec<f32> = serde_json::from_value(dict["data"].clone())
+    let data: Vec<f32> = serde_json::from_value(_dict["data"].clone())
         .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     let array =
@@ -1293,7 +1294,7 @@ fn python_dict_to_tensor(dict: &serde_json::Value) -> Result<MLTensor> {
 
     let mut tensor = MLTensor::new(array, None);
 
-    if let Some(requires_grad) = dict.get("requires_grad").and_then(|v| v.as_bool()) {
+    if let Some(requires_grad) = _dict.get("requires_grad").and_then(|v| v.as_bool()) {
         tensor.metadata.requires_grad = requires_grad;
     }
 
@@ -1305,9 +1306,9 @@ pub mod converters {
     use super::*;
 
     /// Convert ndarray to ML tensor
-    pub fn from_ndarray<D>(array: ArrayView2<f32>, name: Option<String>) -> MLTensor {
-        let shape = array.shape().to_vec();
-        let data = array.to_owned().into_dyn();
+    pub fn from_ndarray<D>(_array: ArrayView2<f32>, name: Option<String>) -> MLTensor {
+        let shape = _array.shape().to_vec();
+        let data = _array.to_owned().into_dyn();
 
         MLTensor {
             data,
@@ -1323,25 +1324,25 @@ pub mod converters {
     }
 
     /// Convert ML tensor to ndarray
-    pub fn to_ndarray2(tensor: &MLTensor) -> Result<Array2<f32>> {
-        if tensor.metadata.shape.len() != 2 {
+    pub fn to_ndarray2(_tensor: &MLTensor) -> Result<Array2<f32>> {
+        if _tensor.metadata.shape.len() != 2 {
             return Err(IoError::Other("Tensor is not 2D".to_string()));
         }
 
-        let shape = (tensor.metadata.shape[0], tensor.metadata.shape[1]);
-        let data = tensor.data.as_slice().unwrap().to_vec();
+        let shape = (_tensor.metadata.shape[0], _tensor.metadata.shape[1]);
+        let data = _tensor.data.as_slice().unwrap().to_vec();
 
         Array2::from_shape_vec(shape, data).map_err(|e| IoError::Other(e.to_string()))
     }
 
     /// Convert between different ML frameworks
-    pub fn convert_model(model: &MLModel, _from: MLFramework, to: MLFramework) -> Result<MLModel> {
-        // For now, just copy the model with new framework metadata
+    pub fn convert_model(_model: &MLModel_from: MLFramework, to: MLFramework) -> Result<MLModel> {
+        // For now, just copy the _model with new framework metadata
         let mut new_model = MLModel::new(to);
-        new_model.metadata = model.metadata.clone();
+        new_model.metadata = _model.metadata.clone();
         new_model.metadata.framework = format!("{:?}", to);
-        new_model.weights = model.weights.clone();
-        new_model.config = model.config.clone();
+        new_model.weights = _model.weights.clone();
+        new_model.config = _model.config.clone();
 
         Ok(new_model)
     }
@@ -1360,9 +1361,9 @@ pub mod datasets {
 
     impl MLDataset {
         /// Create new dataset
-        pub fn new(features: Vec<MLTensor>) -> Self {
+        pub fn new(_features: Vec<MLTensor>) -> Self {
             Self {
-                features,
+                _features,
                 labels: None,
                 metadata: HashMap::new(),
             }
@@ -1586,9 +1587,9 @@ pub mod validation {
     }
 
     impl ModelValidator {
-        pub fn new(source: MLFramework, target: MLFramework, config: ValidationConfig) -> Self {
+        pub fn new(_source: MLFramework, target: MLFramework, config: ValidationConfig) -> Self {
             Self {
-                source_framework: source,
+                _source_framework: _source,
                 target_framework: target,
                 validation_config: config,
             }
@@ -1882,12 +1883,12 @@ pub mod validation {
         }
 
         /// Check operation compatibility (framework-specific)
-        fn check_operations(&self, _model: &MLModel) -> ValidationCheckResult {
+        fn check_operations(&self_model: &MLModel) -> ValidationCheckResult {
             let errors = Vec::new();
             let mut warnings = Vec::new();
             let mut recommendations = Vec::new();
 
-            // This would check specific operations/layers in the model
+            // This would check specific operations/layers in the _model
             // For now, provide a general compatibility assessment
             let unsupported_ops = self.get_unsupported_operations();
 
@@ -1904,7 +1905,7 @@ pub mod validation {
 
                 recommendations.push(ValidationRecommendation {
                     category: RecommendationCategory::Alternative,
-                    message: "Review the model architecture for framework-specific operations"
+                    message: "Review the _model architecture for framework-specific operations"
                         .to_string(),
                     priority: RecommendationPriority::High,
                     estimated_effort: EstimatedEffort::Medium,
@@ -2009,8 +2010,7 @@ pub mod validation {
 
         /// Generate conversion path
         fn generate_conversion_path(
-            &self,
-            _model: &MLModel,
+            &self_model: &MLModel,
             errors: &[ValidationError],
             warnings: &[ValidationWarning],
         ) -> Result<ConversionPath> {
@@ -2059,9 +2059,8 @@ pub mod validation {
             let complexity = match (errors.len(), warnings.len()) {
                 (0, 0..=2) => ConversionComplexity::Trivial,
                 (0, 3..=5) => ConversionComplexity::Simple,
-                (1..=2, _) => ConversionComplexity::Moderate,
-                (3..=5, _) => ConversionComplexity::Complex,
-                _ => ConversionComplexity::VeryComplex,
+                (1..=2_) => ConversionComplexity::Moderate,
+                (3..=5_) => ConversionComplexity::Complex_ =>, ConversionComplexity::VeryComplex,
             };
 
             Ok(ConversionPath {
@@ -2161,8 +2160,7 @@ pub mod validation {
                 ]
                 .iter()
                 .cloned()
-                .collect(),
-                _ => [DataType::Float32, DataType::Int32, DataType::Bool]
+                .collect(, _ => [DataType::Float32, DataType::Int32, DataType::Bool]
                     .iter()
                     .cloned()
                     .collect(),
@@ -2188,12 +2186,11 @@ pub mod validation {
                 DataType::Int64 if !supported.contains(&DataType::Int64) => Some(DataType::Int32),
                 DataType::Int16 if !supported.contains(&DataType::Int16) => Some(DataType::Int32),
                 DataType::Int8 if !supported.contains(&DataType::Int8) => Some(DataType::Int32),
-                DataType::UInt8 if !supported.contains(&DataType::UInt8) => Some(DataType::Int32),
-                _ => None,
+                DataType::UInt8 if !supported.contains(&DataType::UInt8) => Some(DataType::Int32, _ => None,
             }
         }
 
-        fn has_precision_loss_risk(&self, dtype: DataType, _target: MLFramework) -> bool {
+        fn has_precision_loss_risk(&self, dtype: DataType_target: MLFramework) -> bool {
             // Check if conversion might cause precision loss
             matches!(dtype, DataType::Float64 | DataType::Int64)
         }
@@ -2203,8 +2200,7 @@ pub mod validation {
                 MLFramework::PyTorch => 8,
                 MLFramework::TensorFlow => 8,
                 MLFramework::ONNX => 8,
-                MLFramework::CoreML => 5,
-                _ => 6,
+                MLFramework::CoreML => 5_ => 6,
             }
         }
 
@@ -2219,8 +2215,7 @@ pub mod validation {
             // Return framework-specific unsupported operations
             match self.target_framework {
                 MLFramework::CoreML => vec!["CustomOp".to_string(), "AdvancedRNN".to_string()],
-                MLFramework::ONNX => vec!["PyTorchSpecific".to_string()],
-                _ => Vec::new(),
+                MLFramework::ONNX => vec!["PyTorchSpecific".to_string()]_ =>, Vec::new(),
             }
         }
 
@@ -2319,11 +2314,11 @@ pub mod validation {
         use super::*;
 
         /// Quick compatibility check
-        pub fn quick_compatibility_check(source: MLFramework, target: MLFramework) -> f32 {
-            let validator = ModelValidator::new(source, target, ValidationConfig::default());
+        pub fn quick_compatibility_check(_source: MLFramework, target: MLFramework) -> f32 {
+            let validator = ModelValidator::new(_source, target, ValidationConfig::default());
             let compatibility_matrix = validator.get_framework_compatibility_matrix();
 
-            let source_key = format!("{:?}", source);
+            let source_key = format!("{:?}", _source);
             let target_key = format!("{:?}", target);
 
             if let Some(compatibility) = compatibility_matrix.get(&(source_key, target_key)) {
@@ -2482,8 +2477,8 @@ pub mod quantization {
 
     impl QuantizedTensor {
         /// Quantize a floating-point tensor
-        pub fn from_float_tensor(tensor: &MLTensor, bits: u8) -> Result<Self> {
-            let data = tensor.data.as_slice().unwrap();
+        pub fn from_float_tensor(_tensor: &MLTensor, bits: u8) -> Result<Self> {
+            let data = _tensor.data.as_slice().unwrap();
             let (min_val, max_val) = data
                 .iter()
                 .fold((f32::INFINITY, f32::NEG_INFINITY), |(min, max), &x| {
@@ -2503,7 +2498,7 @@ pub mod quantization {
                 data: quantized,
                 scale,
                 zero_point,
-                metadata: tensor.metadata.clone(),
+                metadata: _tensor.metadata.clone(),
             })
         }
 
@@ -2529,8 +2524,8 @@ pub mod quantization {
     }
 
     impl ModelQuantizer {
-        pub fn new(method: QuantizationMethod, bits: u8) -> Self {
-            Self { method, bits }
+        pub fn new(_method: QuantizationMethod, bits: u8) -> Self {
+            Self { _method, bits }
         }
 
         /// Quantize entire model
@@ -2668,9 +2663,9 @@ pub mod batch_processing {
     }
 
     impl BatchProcessor {
-        pub fn new(batch_size: usize) -> Self {
+        pub fn new(_batch_size: usize) -> Self {
             Self {
-                batch_size,
+                _batch_size,
                 prefetch_factor: 2,
             }
         }
@@ -2875,9 +2870,9 @@ pub mod serving {
 
     #[cfg(feature = "async")]
     impl ModelServer {
-        pub async fn new(model: MLModel, config: ServerConfig) -> Self {
+        pub async fn new(_model: MLModel, config: ServerConfig) -> Self {
             Self {
-                model: Arc::new(RwLock::new(model)),
+                _model: Arc::new(RwLock::new(_model)),
                 config,
                 metrics: Arc::new(Mutex::new(ServerMetrics::default())),
                 request_queue: Arc::new(Mutex::new(VecDeque::new())),
@@ -3164,8 +3159,8 @@ pub mod serving {
             let start_time = Instant::now();
 
             {
-                let mut model = self.model.write().await;
-                *model = new_model;
+                let mut _model = self._model.write().await;
+                *_model = new_model;
             }
 
             // Update metrics
@@ -3275,8 +3270,8 @@ pub mod serving {
         }
 
         /// Convert MLTensor to REST format
-        pub fn tensor_to_rest(tensor: &MLTensor) -> Vec<f32> {
-            tensor.data.as_slice().unwrap().to_vec()
+        pub fn tensor_to_rest(_tensor: &MLTensor) -> Vec<f32> {
+            _tensor.data.as_slice().unwrap().to_vec()
         }
 
         /// Convert REST format to MLTensor
@@ -3327,12 +3322,12 @@ pub mod serving {
         }
 
         /// Convert MLTensor to gRPC format
-        pub fn tensor_to_grpc(tensor: &MLTensor) -> GrpcTensor {
+        pub fn tensor_to_grpc(_tensor: &MLTensor) -> GrpcTensor {
             GrpcTensor {
-                name: tensor.metadata.name.clone().unwrap_or_default(),
-                shape: tensor.metadata.shape.iter().map(|&s| s as i64).collect(),
-                dtype: format!("{:?}", tensor.metadata.dtype),
-                data: tensor
+                name: _tensor.metadata.name.clone().unwrap_or_default(),
+                shape: _tensor.metadata.shape.iter().map(|&s| s as i64).collect(),
+                dtype: format!("{:?}", _tensor.metadata.dtype),
+                data: _tensor
                     .data
                     .as_slice()
                     .unwrap()
@@ -3343,11 +3338,11 @@ pub mod serving {
         }
 
         /// Convert gRPC format to MLTensor
-        pub fn grpc_to_tensor(grpc_tensor: &GrpcTensor) -> Result<MLTensor> {
-            let shape: Vec<usize> = grpc_tensor.shape.iter().map(|&s| s as usize).collect();
+        pub fn grpc_to_tensor(_grpc_tensor: &GrpcTensor) -> Result<MLTensor> {
+            let shape: Vec<usize> = _grpc_tensor.shape.iter().map(|&s| s as usize).collect();
 
             // Convert bytes back to f32
-            let float_data: Vec<f32> = grpc_tensor
+            let float_data: Vec<f32> = _grpc_tensor
                 .data
                 .chunks_exact(4)
                 .map(|chunk| {
@@ -3386,9 +3381,9 @@ pub mod serving {
 
     #[cfg(feature = "async")]
     impl LoadBalancer {
-        pub fn new(servers: Vec<ModelServer>, strategy: LoadBalancingStrategy) -> Self {
+        pub fn new(_servers: Vec<ModelServer>, strategy: LoadBalancingStrategy) -> Self {
             Self {
-                servers,
+                _servers,
                 strategy,
                 health_checker: HealthChecker {
                     check_interval: Duration::from_secs(30),
@@ -3513,12 +3508,12 @@ pub mod model_hub {
     }
 
     impl ModelDownloader {
-        pub fn new(config: HubConfig) -> Self {
+        pub fn new(_config: HubConfig) -> Self {
             #[cfg(feature = "reqwest")]
             let client = {
-                let mut builder = reqwest::Client::builder().user_agent(&config.user_agent);
+                let mut builder = reqwest::Client::builder().user_agent(&_config.user_agent);
 
-                if let Some(timeout) = config.timeout {
+                if let Some(timeout) = _config.timeout {
                     builder = builder.timeout(std::time::Duration::from_secs(timeout));
                 }
 
@@ -3526,7 +3521,7 @@ pub mod model_hub {
             };
 
             Self {
-                config,
+                _config,
                 #[cfg(feature = "reqwest")]
                 client,
             }
@@ -3794,7 +3789,7 @@ pub mod model_hub {
 
             // Create ONNX model info
             let model_info = ONNXModelInfo {
-                name: model_name.to_string(),
+                _name: model_name.to_string(),
                 opset_version: opset,
                 framework: "onnx".to_string(),
                 source: "onnx_zoo".to_string(),
@@ -3975,8 +3970,7 @@ pub mod model_hub {
                 "huggingface" => self.list_huggingface_models(filter).await,
                 "torchhub" => self.list_torchhub_models(filter).await,
                 "tfhub" => self.list_tfhub_models(filter).await,
-                "onnx" => self.list_onnx_models(filter).await,
-                _ => Err(IoError::UnsupportedFormat(format!(
+                "onnx" => self.list_onnx_models(filter).await_ => Err(IoError::UnsupportedFormat(format!(
                     "Unsupported hub: {}",
                     hub_type
                 ))),
@@ -4014,7 +4008,7 @@ pub mod model_hub {
         }
 
         #[cfg(feature = "async")]
-        async fn list_torchhub_models(&self, _filter: Option<&str>) -> Result<Vec<String>> {
+        async fn list_torchhub_models(&self_filter: Option<&str>) -> Result<Vec<String>> {
             // TorchHub models are typically GitHub repositories
             // This would require GitHub API integration for a complete implementation
             Ok(vec![
@@ -4025,7 +4019,7 @@ pub mod model_hub {
         }
 
         #[cfg(feature = "async")]
-        async fn list_tfhub_models(&self, _filter: Option<&str>) -> Result<Vec<String>> {
+        async fn list_tfhub_models(&self_filter: Option<&str>) -> Result<Vec<String>> {
             // TensorFlow Hub models - would require TFHub API
             Ok(vec![
                 "google/universal-sentence-encoder/4".to_string(),
@@ -4035,7 +4029,7 @@ pub mod model_hub {
         }
 
         #[cfg(feature = "async")]
-        async fn list_onnx_models(&self, _filter: Option<&str>) -> Result<Vec<String>> {
+        async fn list_onnx_models(&self_filter: Option<&str>) -> Result<Vec<String>> {
             // ONNX Model Zoo - would require GitHub API
             Ok(vec![
                 "vision/classification/resnet/model/resnet50-v1-7".to_string(),
@@ -4096,9 +4090,9 @@ pub mod model_hub {
     }
 
     impl ModelHubRegistry {
-        pub fn new(config: HubConfig) -> Self {
+        pub fn new(_config: HubConfig) -> Self {
             Self {
-                downloader: ModelDownloader::new(config),
+                downloader: ModelDownloader::new(_config),
                 registered_models: HashMap::new(),
             }
         }
@@ -4166,9 +4160,9 @@ pub mod model_hub {
         use super::*;
 
         /// Create HuggingFace model hub reference
-        pub fn huggingface(repo_id: &str) -> ModelHub {
+        pub fn huggingface(_repo_id: &str) -> ModelHub {
             ModelHub::HuggingFace {
-                repo_id: repo_id.to_string(),
+                repo_id: _repo_id.to_string(),
                 revision: None,
                 token: None,
                 use_auth_token: false,
@@ -4176,9 +4170,9 @@ pub mod model_hub {
         }
 
         /// Create HuggingFace model hub reference with token
-        pub fn huggingface_with_token(repo_id: &str, token: &str) -> ModelHub {
+        pub fn huggingface_with_token(_repo_id: &str, token: &str) -> ModelHub {
             ModelHub::HuggingFace {
-                repo_id: repo_id.to_string(),
+                repo_id: _repo_id.to_string(),
                 revision: None,
                 token: Some(token.to_string()),
                 use_auth_token: true,
@@ -4186,9 +4180,9 @@ pub mod model_hub {
         }
 
         /// Create TorchHub model reference
-        pub fn torchhub(repo: &str, model: &str) -> ModelHub {
+        pub fn torchhub(_repo: &str, model: &str) -> ModelHub {
             ModelHub::TorchHub {
-                repo: repo.to_string(),
+                _repo: _repo.to_string(),
                 model: model.to_string(),
                 force_reload: false,
                 trust_repo: true,
@@ -4196,18 +4190,18 @@ pub mod model_hub {
         }
 
         /// Create TensorFlow Hub model reference
-        pub fn tfhub(handle: &str) -> ModelHub {
+        pub fn tfhub(_handle: &str) -> ModelHub {
             ModelHub::TFHub {
-                handle: handle.to_string(),
+                _handle: _handle.to_string(),
                 signature: None,
                 output_key: None,
             }
         }
 
         /// Create ONNX Model Zoo reference
-        pub fn onnx_zoo(model_name: &str) -> ModelHub {
+        pub fn onnx_zoo(_model_name: &str) -> ModelHub {
             ModelHub::ONNX {
-                model_name: model_name.to_string(),
+                model_name: _model_name.to_string(),
                 opset: None,
             }
         }
@@ -4228,15 +4222,15 @@ pub mod pytorch_enhanced {
 
     impl PyTorchEnhancedConverter {
         /// Save tensor in PyTorch .pt format
-        pub fn save_pt_file(tensors: &HashMap<String, MLTensor>, path: &Path) -> Result<()> {
+        pub fn save_pt_file(_tensors: &HashMap<String, MLTensor>, path: &Path) -> Result<()> {
             // Create a simple pickle-like format
             let mut buffer = Vec::new();
 
             // Write header
             buffer.write_u32::<LittleEndian>(0x1950)?; // Pickle protocol
-            buffer.write_u32::<LittleEndian>(tensors.len() as u32)?;
+            buffer.write_u32::<LittleEndian>(_tensors.len() as u32)?;
 
-            for (name, tensor) in tensors {
+            for (name, tensor) in _tensors {
                 // Write tensor name
                 let name_bytes = name.as_bytes();
                 buffer.write_u32::<LittleEndian>(name_bytes.len() as u32)?;
@@ -4260,8 +4254,8 @@ pub mod pytorch_enhanced {
         }
 
         /// Load tensor from PyTorch .pt format
-        pub fn load_pt_file(path: &Path) -> Result<HashMap<String, MLTensor>> {
-            let data = std::fs::read(path).map_err(IoError::Io)?;
+        pub fn load_pt_file(_path: &Path) -> Result<HashMap<String, MLTensor>> {
+            let data = std::fs::read(_path).map_err(IoError::Io)?;
             let mut cursor = Cursor::new(data);
             let mut tensors = HashMap::new();
 
@@ -4524,13 +4518,13 @@ pub mod tensorflow_enhanced {
 
     impl TensorFlowEnhancedConverter {
         /// Create a new SavedModel from MLModel
-        pub fn create_saved_model(model: &MLModel) -> SavedModel {
+        pub fn create_saved_model(_model: &MLModel) -> SavedModel {
             let mut nodes = Vec::new();
             let mut signature_inputs = HashMap::new();
             let mut signature_outputs = HashMap::new();
 
             // Create nodes for each weight/variable
-            for (name, tensor) in &model.weights {
+            for (name, tensor) in &_model.weights {
                 let node = NodeDef {
                     name: name.clone(),
                     op: "Const".to_string(),
@@ -4578,8 +4572,8 @@ pub mod tensorflow_enhanced {
                 nodes.push(node);
             }
 
-            // Create signature from model metadata
-            for (name, shape) in &model.metadata.input_shapes {
+            // Create signature from _model metadata
+            for (name, shape) in &_model.metadata.input_shapes {
                 signature_inputs.insert(
                     name.clone(),
                     TensorInfo {
@@ -4599,7 +4593,7 @@ pub mod tensorflow_enhanced {
                 );
             }
 
-            for (name, shape) in &model.metadata.output_shapes {
+            for (name, shape) in &_model.metadata.output_shapes {
                 signature_outputs.insert(
                     name.clone(),
                     TensorInfo {
@@ -4645,7 +4639,7 @@ pub mod tensorflow_enhanced {
             SavedModel {
                 graph_def,
                 signature_defs,
-                variables: model.weights.clone(),
+                variables: _model.weights.clone(),
                 meta_info: MetaInfoDef {
                     meta_graph_version: "v2.12.0".to_string(),
                     stripped_op_list: OpList { op: Vec::new() },
@@ -4661,8 +4655,8 @@ pub mod tensorflow_enhanced {
         }
 
         /// Export to comprehensive SavedModel format
-        pub fn export_saved_model(model: &MLModel, path: &Path) -> Result<()> {
-            let saved_model = Self::create_saved_model(model);
+        pub fn export_saved_model(_model: &MLModel, path: &Path) -> Result<()> {
+            let saved_model = Self::create_saved_model(_model);
 
             // Create SavedModel directory structure
             let model_dir = path;
@@ -4772,7 +4766,7 @@ pub mod tensorflow_enhanced {
             // Write checkpoint file
             let checkpoint_path = variables_dir.join("checkpoint");
             let checkpoint_content =
-                "model_checkpoint_path: \"variables\"\nall_model_checkpoint_paths: \"variables\"\n"
+                "model_checkpoint_path: \"variables\"\nall_model_checkpoint, _paths: \"variables\"\n"
                     .to_string();
             std::fs::write(&checkpoint_path, checkpoint_content).map_err(IoError::Io)?;
 
@@ -4780,15 +4774,15 @@ pub mod tensorflow_enhanced {
         }
 
         /// Load from comprehensive SavedModel format
-        pub fn load_saved_model(path: &Path) -> Result<MLModel> {
-            let pb_path = path.join("saved_model.pb");
-            let variables_dir = path.join("variables");
+        pub fn load_saved_model(_path: &Path) -> Result<MLModel> {
+            let pb_path = _path.join("saved_model.pb");
+            let variables_dir = _path.join("variables");
             let variables_index_path = variables_dir.join("variables.index");
             let variables_data_path = variables_dir.join("variables.data-00000-of-00001");
 
             // Read saved_model.pb
             let pb_data = std::fs::read(&pb_path).map_err(IoError::Io)?;
-            let saved_model_proto: serde_json::Value = serde_json::from_slice(&pb_data)
+            let saved_model_proto: serde, _json: Value = serde_json::from_slice(&pb_data)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
             let mut model = MLModel::new(MLFramework::TensorFlow);
@@ -4858,7 +4852,7 @@ pub mod tensorflow_enhanced {
             // Load variables if they exist
             if variables_index_path.exists() && variables_data_path.exists() {
                 let index_data = std::fs::read(&variables_index_path).map_err(IoError::Io)?;
-                let index: serde_json::Value = serde_json::from_slice(&index_data)
+                let index: serde_json: Value = serde, _json::from_slice(&index_data)
                     .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
                 let variables_data = std::fs::read(&variables_data_path).map_err(IoError::Io)?;
@@ -4911,11 +4905,11 @@ pub mod tensorflow_enhanced {
         }
 
         /// Convert MLModel to protobuf-like binary format
-        pub fn to_protobuf_bytes(model: &MLModel) -> Result<Vec<u8>> {
-            let saved_model = Self::create_saved_model(model);
+        pub fn to_protobuf_bytes(_model: &MLModel) -> Result<Vec<u8>> {
+            let saved_model = Self::create_saved_model(_model);
 
             // Create variables map separately
-            let variables: serde_json::Map<String, serde_json::Value> = saved_model
+            let variables: serde_json: Map<String, serde_json::Value> = saved_model
                 .variables
                 .iter()
                 .map(|(name, tensor)| {
@@ -4947,8 +4941,8 @@ pub mod tensorflow_enhanced {
         }
 
         /// Parse protobuf-like binary format to MLModel
-        pub fn from_protobuf_bytes(data: &[u8]) -> Result<MLModel> {
-            let proto_data: serde_json::Value = serde_json::from_slice(data)
+        pub fn from_protobuf_bytes(_data: &[u8]) -> Result<MLModel> {
+            let proto_data: serde, _json: Value = serde_json::from_slice(_data)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
             let mut model = MLModel::new(MLFramework::TensorFlow);
@@ -4959,10 +4953,10 @@ pub mod tensorflow_enhanced {
                     let shape: Vec<usize> = serde_json::from_value(var_data["shape"].clone())
                         .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
-                    let data: Vec<f32> = serde_json::from_value(var_data["data"].clone())
+                    let _data: Vec<f32> = serde_json::from_value(var_data["_data"].clone())
                         .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
-                    let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
+                    let array = ArrayD::from_shape_vec(IxDyn(&shape), _data)
                         .map_err(|e| IoError::Other(e.to_string()))?;
 
                     model
@@ -5179,8 +5173,8 @@ pub mod onnx_enhanced {
 
     impl ONNXRuntime {
         /// Create new ONNX runtime with model
-        pub fn new(model: &MLModel) -> Result<Self> {
-            let graph = Self::create_onnx_graph(model)?;
+        pub fn new(_model: &MLModel) -> Result<Self> {
+            let graph = Self::create_onnx_graph(_model)?;
 
             Ok(Self {
                 session: None,
@@ -5191,8 +5185,8 @@ pub mod onnx_enhanced {
         }
 
         /// Create from ONNX file
-        pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
-            let model_path = path.as_ref();
+        pub fn from_file(_path: impl AsRef<Path>) -> Result<Self> {
+            let model_path = _path.as_ref();
             if !model_path.exists() {
                 return Err(IoError::Other(format!(
                     "ONNX model file not found: {:?}",
@@ -5254,13 +5248,13 @@ pub mod onnx_enhanced {
         }
 
         /// Create ONNX graph from MLModel
-        fn create_onnx_graph(model: &MLModel) -> Result<ONNXGraph> {
+        fn create_onnx_graph(_model: &MLModel) -> Result<ONNXGraph> {
             let mut initializers = Vec::new();
             let mut inputs = Vec::new();
             let mut outputs = Vec::new();
 
-            // Convert model weights to ONNX initializers
-            for (name, tensor) in &model.weights {
+            // Convert _model weights to ONNX initializers
+            for (name, tensor) in &_model.weights {
                 initializers.push(TensorProto {
                     name: name.clone(),
                     dims: tensor.metadata.shape.iter().map(|&d| d as i64).collect(),
@@ -5280,7 +5274,7 @@ pub mod onnx_enhanced {
             }
 
             // Create input specifications
-            for (name, shape) in &model.metadata.input_shapes {
+            for (name, shape) in &_model.metadata.input_shapes {
                 inputs.push(ValueInfo {
                     name: name.clone(),
                     type_proto: TypeProto {
@@ -5303,7 +5297,7 @@ pub mod onnx_enhanced {
             }
 
             // Create output specifications
-            for (name, shape) in &model.metadata.output_shapes {
+            for (name, shape) in &_model.metadata.output_shapes {
                 outputs.push(ValueInfo {
                     name: name.clone(),
                     type_proto: TypeProto {
@@ -5326,26 +5320,26 @@ pub mod onnx_enhanced {
             }
 
             Ok(ONNXGraph {
-                name: model
+                name: _model
                     .metadata
                     .model_name
                     .clone()
-                    .unwrap_or_else(|| "model".to_string()),
+                    .unwrap_or_else(|| "_model".to_string()),
                 inputs,
                 outputs,
-                nodes: Vec::new(), // Would be populated from actual ONNX model
+                nodes: Vec::new(), // Would be populated from actual ONNX _model
                 initializers,
                 version: 17, // ONNX opset version
                 producer_name: "SciRS2".to_string(),
                 producer_version: "0.1.0".to_string(),
                 domain: "".to_string(),
-                model_version: 1,
+                _model_version: 1,
                 doc_string: "Model converted from SciRS2 MLModel".to_string(),
             })
         }
 
         /// Parse ONNX model from bytes
-        fn parse_onnx_model(data: &[u8]) -> Result<ONNXGraph> {
+        fn parse_onnx_model(_data: &[u8]) -> Result<ONNXGraph> {
             // Simplified ONNX parsing - in practice would use protobuf
             // For now, create a minimal graph structure
             Ok(ONNXGraph {
@@ -5359,13 +5353,13 @@ pub mod onnx_enhanced {
                 producer_version: "Unknown".to_string(),
                 domain: "".to_string(),
                 model_version: 1,
-                doc_string: format!("Parsed ONNX model ({} bytes)", data.len()),
+                doc_string: format!("Parsed ONNX model ({} bytes)", _data.len()),
             })
         }
 
         /// Convert ML DataType to ONNX data type
-        fn ml_dtype_to_onnx(dtype: DataType) -> i32 {
-            match dtype {
+        fn ml_dtype_to_onnx(_dtype: DataType) -> i32 {
+            match _dtype {
                 DataType::Float32 => 1,
                 DataType::UInt8 => 2,
                 DataType::Int8 => 3,
@@ -5384,8 +5378,7 @@ pub mod onnx_enhanced {
         /// Create new ONNX session
         pub fn new(
             graph: &ONNXGraph,
-            providers: &[ExecutionProvider],
-            _options: &SessionOptions,
+            providers: &[ExecutionProvider], _options: &SessionOptions,
         ) -> Result<Self> {
             let mut input_names = Vec::new();
             let mut output_names = Vec::new();
@@ -5541,24 +5534,24 @@ pub mod onnx_enhanced {
 
     impl ONNXValidator {
         /// Validate ONNX graph
-        pub fn validate(graph: &ONNXGraph) -> Result<ValidationReport> {
+        pub fn validate(_graph: &ONNXGraph) -> Result<ValidationReport> {
             let mut warnings = Vec::new();
             let mut errors = Vec::new();
 
             // Check for empty inputs
-            if graph.inputs.is_empty() {
+            if _graph.inputs.is_empty() {
                 warnings.push("Graph has no inputs defined".to_string());
             }
 
             // Check for empty outputs
-            if graph.outputs.is_empty() {
+            if _graph.outputs.is_empty() {
                 errors.push("Graph has no outputs defined".to_string());
             }
 
             // Validate node connections
-            for node in &graph.nodes {
+            for node in &_graph.nodes {
                 for input in &node.inputs {
-                    if !Self::is_valid_input(input, graph) {
+                    if !Self::is_valid_input(input_graph) {
                         errors.push(format!(
                             "Node '{}' has invalid input '{}'",
                             node.name, input
@@ -5574,17 +5567,17 @@ pub mod onnx_enhanced {
             })
         }
 
-        fn is_valid_input(input_name: &str, graph: &ONNXGraph) -> bool {
+        fn is_valid_input(_input_name: &str, graph: &ONNXGraph) -> bool {
             // Check if input exists in graph inputs or initializers
-            graph.inputs.iter().any(|input| input.name == input_name)
+            graph.inputs.iter().any(|input| input._name == _input_name)
                 || graph
                     .initializers
                     .iter()
-                    .any(|init| init.name == input_name)
+                    .any(|init| init._name == _input_name)
                 || graph
                     .nodes
                     .iter()
-                    .any(|node| node.outputs.contains(&input_name.to_string()))
+                    .any(|node| node.outputs.contains(&_input_name.to_string()))
         }
     }
 
@@ -5600,21 +5593,21 @@ pub mod onnx_enhanced {
 
     impl ONNXEnhancedConverter {
         /// Convert MLModel to ONNX graph
-        pub fn to_onnx_graph(model: &MLModel) -> Result<ONNXGraph> {
-            ONNXRuntime::create_onnx_graph(model)
+        pub fn to_onnx_graph(_model: &MLModel) -> Result<ONNXGraph> {
+            ONNXRuntime::create_onnx_graph(_model)
         }
 
         /// Convert ONNX graph to MLModel
-        pub fn from_onnx_graph(graph: &ONNXGraph) -> Result<MLModel> {
+        pub fn from_onnx_graph(_graph: &ONNXGraph) -> Result<MLModel> {
             let mut model = MLModel::new(MLFramework::ONNX);
 
             // Convert ONNX metadata
-            model.metadata.model_name = Some(graph.name.clone());
+            model.metadata.model_name = Some(_graph.name.clone());
             model.metadata.framework = "ONNX".to_string();
-            model.metadata.framework_version = Some(graph.version.to_string());
+            model.metadata.framework_version = Some(_graph.version.to_string());
 
             // Convert inputs to metadata
-            for input in &graph.inputs {
+            for input in &_graph.inputs {
                 let shape: Vec<usize> = input
                     .type_proto
                     .tensor_type
@@ -5630,7 +5623,7 @@ pub mod onnx_enhanced {
             }
 
             // Convert outputs to metadata
-            for output in &graph.outputs {
+            for output in &_graph.outputs {
                 let shape: Vec<usize> = output
                     .type_proto
                     .tensor_type
@@ -5646,7 +5639,7 @@ pub mod onnx_enhanced {
             }
 
             // Convert initializers to weights
-            for initializer in &graph.initializers {
+            for initializer in &_graph.initializers {
                 let shape: Vec<usize> = initializer.dims.iter().map(|&d| d as usize).collect();
                 let data = initializer.float_data.clone();
 
@@ -5662,20 +5655,20 @@ pub mod onnx_enhanced {
         }
 
         /// Export ONNX model to file
-        pub fn export_onnx(graph: &ONNXGraph, path: impl AsRef<Path>) -> Result<()> {
+        pub fn export_onnx(_graph: &ONNXGraph, path: impl AsRef<Path>) -> Result<()> {
             let path = path.as_ref();
 
             // Simplified ONNX export - in practice would use protobuf serialization
-            let onnx_data = serde_json::json!({
+            let onnx_data = serde__json::json!({
                 "ir_version": 8,
-                "producer_name": graph.producer_name,
-                "producer_version": graph.producer_version,
-                "domain": graph.domain,
-                "model_version": graph.model_version,
-                "doc_string": graph.doc_string,
-                "graph": {
-                    "name": graph.name,
-                    "input": graph.inputs.iter().map(|input| {
+                "producer_name": _graph.producer_name,
+                "producer_version": _graph.producer_version,
+                "domain": _graph.domain,
+                "model_version": _graph.model_version,
+                "doc_string": _graph.doc_string,
+                "_graph": {
+                    "name": _graph.name,
+                    "input": _graph.inputs.iter().map(|input| {
                         serde_json::json!({
                             "name": input.name,
                             "type": {
@@ -5696,7 +5689,7 @@ pub mod onnx_enhanced {
                             }
                         })
                     }).collect::<Vec<_>>(),
-                    "output": graph.outputs.iter().map(|output| {
+                    "output": _graph.outputs.iter().map(|output| {
                         serde_json::json!({
                             "name": output.name,
                             "type": {
@@ -5717,7 +5710,7 @@ pub mod onnx_enhanced {
                             }
                         })
                     }).collect::<Vec<_>>(),
-                    "initializer": graph.initializers.iter().map(|init| {
+                    "initializer": _graph.initializers.iter().map(|init| {
                         serde_json::json!({
                             "name": init.name,
                             "dims": init.dims,
@@ -5725,7 +5718,7 @@ pub mod onnx_enhanced {
                             "float_data": init.float_data
                         })
                     }).collect::<Vec<_>>(),
-                    "node": graph.nodes.iter().map(|node| {
+                    "node": _graph.nodes.iter().map(|node| {
                         serde_json::json!({
                             "name": node.name,
                             "op_type": node.op_type,
@@ -5742,8 +5735,8 @@ pub mod onnx_enhanced {
         }
 
         /// Load ONNX model from file
-        pub fn load_onnx(path: impl AsRef<Path>) -> Result<ONNXGraph> {
-            ONNXRuntime::from_file(path).map(|runtime| runtime.graph)
+        pub fn load_onnx(_path: impl AsRef<Path>) -> Result<ONNXGraph> {
+            ONNXRuntime::from_file(_path).map(|runtime| runtime.graph)
         }
     }
 }
@@ -5769,9 +5762,9 @@ pub mod versioning {
 
     impl ModelVersion {
         /// Create a new version
-        pub fn new(major: u32, minor: u32, patch: u32) -> Self {
+        pub fn new(_major: u32, minor: u32, patch: u32) -> Self {
             Self {
-                major,
+                _major,
                 minor,
                 patch,
                 pre_release: None,
@@ -5792,18 +5785,18 @@ pub mod versioning {
         }
 
         /// Parse version from string (semver format)
-        pub fn parse(version: &str) -> Result<Self> {
-            let parts: Vec<&str> = version.split('.').collect();
+        pub fn parse(_version: &str) -> Result<Self> {
+            let parts: Vec<&str> = _version.split('.').collect();
             if parts.len() < 3 {
-                return Err(IoError::Other("Invalid version format".to_string()));
+                return Err(IoError::Other("Invalid _version format".to_string()));
             }
 
             let major = parts[0]
                 .parse()
-                .map_err(|_| IoError::Other("Invalid major version".to_string()))?;
+                .map_err(|_| IoError::Other("Invalid major _version".to_string()))?;
             let minor = parts[1]
                 .parse()
-                .map_err(|_| IoError::Other("Invalid minor version".to_string()))?;
+                .map_err(|_| IoError::Other("Invalid minor _version".to_string()))?;
 
             // Handle patch with potential pre-release/build metadata
             let patch_part = parts[2];
@@ -5817,24 +5810,24 @@ pub mod versioning {
 
             let patch = patch_str
                 .parse()
-                .map_err(|_| IoError::Other("Invalid patch version".to_string()))?;
+                .map_err(|_| IoError::Other("Invalid patch _version".to_string()))?;
 
-            let mut version = Self::new(major, minor, patch);
+            let mut _version = Self::new(major, minor, patch);
 
             if let Some(rest) = rest {
                 if patch_part.contains('-') {
                     if let Some(plus_pos) = rest.find('+') {
-                        version.pre_release = Some(rest[..plus_pos].to_string());
-                        version.build_metadata = Some(rest[plus_pos + 1..].to_string());
+                        _version.pre_release = Some(rest[..plus_pos].to_string());
+                        _version.build_metadata = Some(rest[plus_pos + 1..].to_string());
                     } else {
-                        version.pre_release = Some(rest.to_string());
+                        _version.pre_release = Some(rest.to_string());
                     }
                 } else {
-                    version.build_metadata = Some(rest.to_string());
+                    _version.build_metadata = Some(rest.to_string());
                 }
             }
 
-            Ok(version)
+            Ok(_version)
         }
 
         /// Check if this version is compatible with another
@@ -5891,13 +5884,13 @@ pub mod versioning {
 
     impl ModelProvenance {
         /// Create new provenance record
-        pub fn new(created_by: String) -> Self {
+        pub fn new(_created_by: String) -> Self {
             Self {
                 created_at: SystemTime::now()
                     .duration_since(UNIX_EPOCH)
                     .unwrap()
                     .as_secs(),
-                created_by,
+                _created_by,
                 source_data: None,
                 training_script: None,
                 environment: HashMap::new(),
@@ -6134,7 +6127,7 @@ pub mod versioning {
             provenance: ModelProvenance,
         ) -> Result<ModelVersion> {
             let version = if let Some(versions) = self.models.get(&model_name) {
-                if let Some((latest_version, _)) = versions.iter().last() {
+                if let Some((latest_version_)) = versions.iter().last() {
                     latest_version.next_patch()
                 } else {
                     ModelVersion::new(1, 0, 0)
@@ -6276,8 +6269,7 @@ pub mod versioning {
 
         /// Check compatibility between versions
         pub fn check_compatibility(
-            &self,
-            _model_name: &str,
+            &self, _model_name: &str,
             from_version: &ModelVersion,
             to_version: &ModelVersion,
         ) -> CompatibilityResult {
@@ -6346,7 +6338,7 @@ pub mod versioning {
         /// Import registry from JSON
         pub fn import_registry(&mut self, path: impl AsRef<Path>) -> Result<()> {
             let data = std::fs::read_to_string(path).map_err(IoError::Io)?;
-            let registry_data: serde_json::Value = serde_json::from_str(&data)
+            let registry_data: serde, _json: Value = serde_json::from_str(&data)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
             if let Some(models) = registry_data.get("models") {
@@ -6697,36 +6689,36 @@ pub mod versioning {
         }
 
         /// Simple checksum calculation for quick comparisons
-        fn calculate_simple_checksum(model: &MLModel) -> String {
+        fn calculate_simple_checksum(_model: &MLModel) -> String {
             use std::collections::hash_map::DefaultHasher;
             use std::hash::{Hash, Hasher};
 
             let mut hasher = DefaultHasher::new();
 
             // Hash basic properties
-            model.metadata.framework.hash(&mut hasher);
-            model.metadata.model_name.hash(&mut hasher);
-            model.weights.len().hash(&mut hasher);
+            _model.metadata.framework.hash(&mut hasher);
+            _model.metadata.model_name.hash(&mut hasher);
+            _model.weights.len().hash(&mut hasher);
 
             format!("{:x}", hasher.finish())
         }
 
         /// Quick version bump utilities
-        pub fn bump_patch(version: &ModelVersion) -> ModelVersion {
-            version.next_patch()
+        pub fn bump_patch(_version: &ModelVersion) -> ModelVersion {
+            _version.next_patch()
         }
 
-        pub fn bump_minor(version: &ModelVersion) -> ModelVersion {
-            version.next_minor()
+        pub fn bump_minor(_version: &ModelVersion) -> ModelVersion {
+            _version.next_minor()
         }
 
-        pub fn bump_major(version: &ModelVersion) -> ModelVersion {
-            version.next_major()
+        pub fn bump_major(_version: &ModelVersion) -> ModelVersion {
+            _version.next_major()
         }
 
         /// Create a changelog entry builder
-        pub fn changelog_entry(version: ModelVersion, author: String) -> ChangelogEntryBuilder {
-            ChangelogEntryBuilder::new(version, author)
+        pub fn changelog_entry(_version: ModelVersion, author: String) -> ChangelogEntryBuilder {
+            ChangelogEntryBuilder::new(_version, author)
         }
     }
 
@@ -6736,10 +6728,10 @@ pub mod versioning {
     }
 
     impl ChangelogEntryBuilder {
-        pub fn new(version: ModelVersion, author: String) -> Self {
+        pub fn new(_version: ModelVersion, author: String) -> Self {
             Self {
                 entry: ChangelogEntry {
-                    version,
+                    _version,
                     timestamp: SystemTime::now()
                         .duration_since(UNIX_EPOCH)
                         .unwrap()
@@ -6901,9 +6893,9 @@ pub mod error_handling {
     }
 
     impl RecoveryContext {
-        pub fn new(operation_name: String, config: RecoveryConfig) -> Self {
+        pub fn new(_operation_name: String, config: RecoveryConfig) -> Self {
             Self {
-                operation_name,
+                _operation_name,
                 attempt_count: AtomicUsize::new(0),
                 start_time: Instant::now(),
                 last_error: None,
@@ -7124,11 +7116,11 @@ pub mod error_handling {
         async fn handle_error(&self, error: &IoError, context: &RecoveryContext) -> Result<()> {
             // Convert IoError to MLFrameworkError for better handling
             let ml_error = match error {
-                IoError::Io(io_err) => MLFrameworkError::NetworkError {
+                IoError::Io(io_err) =>, MLFrameworkError::NetworkError {
                     attempts: context.attempt_count.load(Ordering::Relaxed),
                     last_error: io_err.to_string(),
                 },
-                IoError::UnsupportedFormat(msg) => MLFrameworkError::ConversionFailed {
+                IoError::UnsupportedFormat(msg) =>, MLFrameworkError::ConversionFailed {
                     from_framework: "unknown".to_string(),
                     to_framework: "unknown".to_string(),
                     reason: msg.clone(),
@@ -7154,10 +7146,10 @@ pub mod error_handling {
                 }
                 IoError::ValidationError(msg)
                 | IoError::ChecksumError(msg)
-                | IoError::IntegrityError(msg) => MLFrameworkError::ValidationFailed {
+                | IoError::IntegrityError(msg) =>, MLFrameworkError::ValidationFailed {
                     reasons: vec![msg.clone()],
                 },
-                IoError::NetworkError(msg) => MLFrameworkError::NetworkError {
+                IoError::NetworkError(msg) =>, MLFrameworkError::NetworkError {
                     attempts: context.attempt_count.load(Ordering::Relaxed),
                     last_error: msg.clone(),
                 },
@@ -7170,22 +7162,22 @@ pub mod error_handling {
                         reason: msg.clone(),
                     }
                 }
-                IoError::ConversionError(msg) => MLFrameworkError::ConversionFailed {
+                IoError::ConversionError(msg) =>, MLFrameworkError::ConversionFailed {
                     from_framework: "unknown".to_string(),
                     to_framework: "unknown".to_string(),
                     reason: msg.clone(),
                 },
-                IoError::NotFound(msg) => MLFrameworkError::ValidationFailed {
+                IoError::NotFound(msg) =>, MLFrameworkError::ValidationFailed {
                     reasons: vec![format!("Resource not found: {}", msg)],
                 },
-                IoError::ConfigError(msg) => MLFrameworkError::ValidationFailed {
+                IoError::ConfigError(msg) =>, MLFrameworkError::ValidationFailed {
                     reasons: vec![format!("Configuration error: {}", msg)],
                 },
-                IoError::DatabaseError(msg) => MLFrameworkError::NetworkError {
+                IoError::DatabaseError(msg) =>, MLFrameworkError::NetworkError {
                     attempts: context.attempt_count.load(Ordering::Relaxed),
                     last_error: format!("Database error: {}", msg),
                 },
-                IoError::Other(msg) => MLFrameworkError::RecoveryFailed {
+                IoError::Other(msg) =>, MLFrameworkError::RecoveryFailed {
                     reason: msg.clone(),
                     original_error: error.to_string(),
                 },
@@ -7254,7 +7246,7 @@ pub mod error_handling {
                 || {
                     // Simplified conversion logic
                     let mut converted_model = model.clone();
-                    converted_model.metadata.framework = format!("{:?}", to_framework);
+                    converted_model.metadata._framework = format!("{:?}", to_framework);
                     Ok(converted_model)
                 },
                 config,
@@ -7273,10 +7265,10 @@ pub mod error_handling {
     pub struct CpuFallback;
 
     impl FallbackStrategy for CpuFallback {
-        fn execute(&self, _context: &RecoveryContext) -> Result<Option<MLModel>> {
+        fn execute(&self_context: &RecoveryContext) -> Result<Option<MLModel>> {
             // Create a minimal CPU-compatible model
             let mut model = MLModel::new(MLFramework::PyTorch);
-            model.metadata.model_name = Some(format!("cpu_fallback_{}", _context.operation_name));
+            model.metadata.model_name = Some(format!("cpu_fallback_{}"_context.operation_name));
             model.metadata.parameters.insert(
                 "fallback_type".to_string(),
                 serde_json::Value::String("cpu".to_string()),
@@ -7297,7 +7289,7 @@ pub mod error_handling {
     pub struct CachedModelFallback;
 
     impl FallbackStrategy for CachedModelFallback {
-        fn execute(&self, _context: &RecoveryContext) -> Result<Option<MLModel>> {
+        fn execute(&self_context: &RecoveryContext) -> Result<Option<MLModel>> {
             // In a real implementation, this would check a cache
             // For now, return None to indicate no cached model available
             Ok(None)
@@ -7319,11 +7311,11 @@ pub mod error_handling {
     pub struct SimpleModelFallback;
 
     impl FallbackStrategy for SimpleModelFallback {
-        fn execute(&self, _context: &RecoveryContext) -> Result<Option<MLModel>> {
+        fn execute(&self_context: &RecoveryContext) -> Result<Option<MLModel>> {
             // Create a very simple identity model as fallback
             let mut model = MLModel::new(MLFramework::PyTorch);
             model.metadata.model_name =
-                Some(format!("simple_fallback_{}", _context.operation_name));
+                Some(format!("simple_fallback_{}"_context.operation_name));
             model.metadata.model_version = Some("fallback.1.0.0".to_string());
             model.metadata.parameters.insert(
                 "fallback_type".to_string(),
@@ -7332,8 +7324,8 @@ pub mod error_handling {
             Ok(Some(model))
         }
 
-        fn can_handle(&self, _error: &MLFrameworkError) -> bool {
-            // Can handle any error as last resort
+        fn can_handle(&self_error: &MLFrameworkError) -> bool {
+            // Can handle any _error as last resort
             true
         }
 
@@ -7346,7 +7338,7 @@ pub mod error_handling {
     pub struct NetworkErrorHandler;
 
     impl ErrorHandler for NetworkErrorHandler {
-        fn handle(&self, error: &MLFrameworkError, _context: &RecoveryContext) -> Result<()> {
+        fn handle(&self, error: &MLFrameworkError_context: &RecoveryContext) -> Result<()> {
             match error {
                 MLFrameworkError::NetworkError {
                     attempts,
@@ -7374,7 +7366,7 @@ pub mod error_handling {
     pub struct ResourceErrorHandler;
 
     impl ErrorHandler for ResourceErrorHandler {
-        fn handle(&self, error: &MLFrameworkError, _context: &RecoveryContext) -> Result<()> {
+        fn handle(&self, error: &MLFrameworkError_context: &RecoveryContext) -> Result<()> {
             match error {
                 MLFrameworkError::ResourceExhaustion {
                     resource,
@@ -7403,7 +7395,7 @@ pub mod error_handling {
     pub struct ValidationErrorHandler;
 
     impl ErrorHandler for ValidationErrorHandler {
-        fn handle(&self, error: &MLFrameworkError, _context: &RecoveryContext) -> Result<()> {
+        fn handle(&self, error: &MLFrameworkError_context: &RecoveryContext) -> Result<()> {
             match error {
                 MLFrameworkError::ValidationFailed { reasons } => {
                     if reasons.len() < 5 {
@@ -7442,9 +7434,9 @@ pub mod error_handling {
     }
 
     impl CircuitBreaker {
-        pub fn new(failure_threshold: usize, recovery_timeout: Duration) -> Self {
+        pub fn new(_failure_threshold: usize, recovery_timeout: Duration) -> Self {
             Self {
-                failure_threshold,
+                _failure_threshold,
                 recovery_timeout,
                 failure_count: AtomicUsize::new(0),
                 last_failure_time: std::sync::Mutex::new(None),
@@ -7665,9 +7657,9 @@ pub mod error_handling {
     }
 
     impl ErrorReporter {
-        pub fn new(log_level: LogLevel, max_error_history: usize) -> Self {
+        pub fn new(_log_level: LogLevel, max_error_history: usize) -> Self {
             Self {
-                log_level,
+                _log_level,
                 max_error_history,
                 error_history: std::sync::Mutex::new(Vec::new()),
             }

@@ -63,7 +63,7 @@ where
     let mut v = Array2::eye(n);
     let mut b = a.to_owned();
 
-    // Jacobi rotation iterations
+    // Jacobi rotation _iterations
     for _iter in 0..max_iterations {
         let mut max_off_diag = A::zero();
         let mut p = 0;
@@ -221,7 +221,7 @@ where
     let u = u_svd.dot(&vt);
 
     // Compute P = V * S * V^T (positive semidefinite part) if requested
-    let p = if compute_p {
+    let _p = if compute_p {
         let v = vt.t();
         let s_diag = Array2::from_diag(&s);
         Some(v.dot(&s_diag).dot(&vt))
@@ -229,7 +229,7 @@ where
         None
     };
 
-    Ok((u, p))
+    Ok((u, _p))
 }
 
 /// Iterative refinement for polar decomposition

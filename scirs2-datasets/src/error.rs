@@ -79,8 +79,7 @@ impl PartialEq for DatasetsError {
             (DatasetsError::GpuError(a), DatasetsError::GpuError(b)) => a == b,
             (DatasetsError::ComputationError(a), DatasetsError::ComputationError(b)) => a == b,
             (DatasetsError::ValidationError(a), DatasetsError::ValidationError(b)) => a == b,
-            (DatasetsError::Other(a), DatasetsError::Other(b)) => a == b,
-            _ => false,
+            (DatasetsError::Other(a), DatasetsError::Other(b)) => a == b_ => false,
         }
     }
 }

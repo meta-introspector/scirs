@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (r1 + i + r2 + 1) as f64 * 0.3
     });
 
-    let core3 = Array3::from_shape_fn((3, 2, 1), |(r1, i, _)| {
+    let core3 = Array3::from_shape_fn((3, 2, 1), |(r1, i_)| {
         // Third core: rank-3 to rank-1 (boundary)
         (r1 + i + 1) as f64 * 0.2
     });
@@ -182,10 +182,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("---------------------------");
 
     // Create two simple TT tensors for arithmetic
-    let core_a = Array3::from_shape_fn((1, 3, 1), |(_, i, _)| (i + 1) as f64);
+    let core_a = Array3::from_shape_fn((1, 3, 1), |(_, i_)| (i + 1) as f64);
     let tt_a = TTTensor::new(vec![core_a])?;
 
-    let core_b = Array3::from_shape_fn((1, 3, 1), |(_, i, _)| (i + 2) as f64);
+    let core_b = Array3::from_shape_fn((1, 3, 1), |(_, i_)| (i + 2) as f64);
     let tt_b = TTTensor::new(vec![core_b])?;
 
     println!(

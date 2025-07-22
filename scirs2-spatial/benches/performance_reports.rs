@@ -28,11 +28,11 @@ pub struct PerformanceReportGenerator {
 }
 
 impl PerformanceReportGenerator {
-    pub fn new(output_dir: &str) -> io::Result<Self> {
-        std::fs::create_dir_all(output_dir)?;
+    pub fn new(_output_dir: &str) -> io::Result<Self> {
+        std::fs::create_dir_all(_output_dir)?;
         Ok(Self {
             data_points: Vec::new(),
-            output_dir: output_dir.to_string(),
+            output_dir: _output_dir.to_string(),
         })
     }
 

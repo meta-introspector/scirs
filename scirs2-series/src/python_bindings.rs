@@ -20,6 +20,7 @@ use std::collections::HashMap;
 
 #[cfg(feature = "python")]
 use crate::{
+use statrs::statistics::Statistics;
     arima_models::{ArimaConfig, ArimaModel},
     utils::*,
 };
@@ -184,9 +185,9 @@ impl PyARIMA {
         seasonal_period: usize,
     ) -> Self {
         let config = ArimaConfig {
-            p,
-            d,
-            q,
+            _p,
+            _d,
+            _q,
             seasonal_p,
             seasonal_d,
             seasonal_q,
@@ -203,11 +204,11 @@ impl PyARIMA {
     /// Fit the ARIMA model
     fn fit(&mut self, data: &PyTimeSeries) -> PyResult<()> {
         let mut model = ArimaModel::new(self.config.p, self.config.d, self.config.q)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("{e}")))?;
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError_>(format!("{e}")))?;
 
         model
             .fit(&data.values)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}")))?;
 
         self.model = Some(model);
         self.data = Some(data.values.clone());
@@ -219,11 +220,11 @@ impl PyARIMA {
         match (&self.model, &self.data) {
             (Some(model), Some(data)) => {
                 let forecasts = model.forecast(steps, data).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}"))
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}"))
                 })?;
                 Ok(forecasts.into_pyarray(py))
             }
-            _ => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+            _ => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError_>(
                 "Model not fitted. Call fit() first.",
             )),
         }
@@ -267,7 +268,7 @@ impl PyARIMA {
 
                 Ok(summary)
             }
-            None => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
+            None => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError_>(
                 "Model not fitted. Call fit() first.",
             )),
         }
@@ -278,18 +279,18 @@ impl PyARIMA {
 #[cfg(feature = "python")]
 #[pyfunction]
 #[allow(dead_code)]
-fn calculate_statistics(data: &PyTimeSeries) -> PyResult<HashMap<String, f64>> {
-    let stats = calculate_basic_stats(&data.values)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
+fn calculate_statistics(_data: &PyTimeSeries) -> PyResult<HashMap<String, f64>> {
+    let stats = calculate_basic_stats(&_data.values)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}")))?;
     Ok(stats)
 }
 
 #[cfg(feature = "python")]
 #[pyfunction]
 #[allow(dead_code)]
-fn check_stationarity(data: &PyTimeSeries) -> PyResult<bool> {
-    let (_test_stat, p_value) = is_stationary(&data.values, None)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
+fn check_stationarity(_data: &PyTimeSeries) -> PyResult<bool> {
+    let (_test_stat, p_value) = is_stationary(&_data.values, None)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}")))?;
     // Consider stationary if p-value < 0.05 (5% significance level)
     Ok(p_value < 0.05)
 }
@@ -303,7 +304,7 @@ fn apply_differencing<'py>(
     periods: usize,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
     let differenced = difference_series(&data.values, periods)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}")))?;
     Ok(differenced.into_pyarray(py))
 }
 
@@ -316,7 +317,7 @@ fn apply_seasonal_differencing<'py>(
     periods: usize,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
     let differenced = seasonal_difference_series(&data.values, periods)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}")))?;
     Ok(differenced.into_pyarray(py))
 }
 
@@ -353,12 +354,11 @@ fn auto_arima(
     };
 
     let (_model, params) = crate::arima_models::auto_arima(&data.values, &options)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}")))?;
 
     let config = ArimaConfig {
-        p: params.pdq.0,
-        d: params.pdq.1,
-        q: params.pdq.2,
+        _p: params.pdq.0_d: params.pdq.1,
+        _q: params.pdq.2,
         seasonal_p: params.seasonal_pdq.0,
         seasonal_d: params.seasonal_pdq.1,
         seasonal_q: params.seasonal_pdq.2,

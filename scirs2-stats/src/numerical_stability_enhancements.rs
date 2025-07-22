@@ -6,7 +6,7 @@
 //! robust statistical computing operations across all numerical conditions.
 
 use crate::error::StatsResult;
-use crate::property_based_validation::ValidationReport;
+use crate::property_based__validation::ValidationReport;
 use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1};
 use num_traits::{Float, NumCast};
 use rand::Rng;
@@ -146,19 +146,19 @@ pub struct AdvancedNumericalStabilityTester {
 
 impl AdvancedNumericalStabilityTester {
     /// Create new numerical stability tester
-    pub fn new(config: AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(_config: AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            edge_case_generator: Arc::new(RwLock::new(EdgeCaseGenerator::new(&config))),
-            precision_analyzer: Arc::new(RwLock::new(PrecisionAnalyzer::new(&config))),
-            invariant_validator: Arc::new(RwLock::new(InvariantValidator::new(&config))),
-            cancellation_detector: Arc::new(RwLock::new(CancellationDetector::new(&config))),
-            overflow_monitor: Arc::new(RwLock::new(OverflowMonitor::new(&config))),
-            condition_analyzer: Arc::new(RwLock::new(ConditionAnalyzer::new(&config))),
-            convergence_tester: Arc::new(RwLock::new(ConvergenceTester::new(&config))),
-            monte_carlo_tester: Arc::new(RwLock::new(MonteCarloStabilityTester::new(&config))),
-            regression_tester: Arc::new(RwLock::new(RegressionTester::new(&config))),
+            edge_case_generator: Arc::new(RwLock::new(EdgeCaseGenerator::new(&_config))),
+            precision_analyzer: Arc::new(RwLock::new(PrecisionAnalyzer::new(&_config))),
+            invariant_validator: Arc::new(RwLock::new(InvariantValidator::new(&_config))),
+            cancellation_detector: Arc::new(RwLock::new(CancellationDetector::new(&_config))),
+            overflow_monitor: Arc::new(RwLock::new(OverflowMonitor::new(&_config))),
+            condition_analyzer: Arc::new(RwLock::new(ConditionAnalyzer::new(&_config))),
+            convergence_tester: Arc::new(RwLock::new(ConvergenceTester::new(&_config))),
+            monte_carlo_tester: Arc::new(RwLock::new(MonteCarloStabilityTester::new(&_config))),
+            regression_tester: Arc::new(RwLock::new(RegressionTester::new(&_config))),
             stability_history: Arc::new(RwLock::new(VecDeque::with_capacity(1000))),
-            config,
+            _config,
         }
     }
 
@@ -265,7 +265,7 @@ impl AdvancedNumericalStabilityTester {
 
         // Store results in history
         let stability_result = StabilityTestResult {
-            function_name: function_name.to_string(),
+            _function_name: function_name.to_string(),
             timestamp: SystemTime::now(),
             stability_score: results.overall_stability_score,
             critical_issues: results.critical_issues.len(),
@@ -285,8 +285,7 @@ impl AdvancedNumericalStabilityTester {
 
     /// Test edge case stability
     fn test_edge_case_stability<F, D, R>(
-        &self,
-        _function_name: &str,
+        &self, _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<EdgeCaseStabilityResult>
@@ -311,8 +310,7 @@ impl AdvancedNumericalStabilityTester {
 
     /// Analyze precision stability
     fn analyze_precision_stability<F, D, R>(
-        &self,
-        _function_name: &str,
+        &self, _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<PrecisionStabilityResult>
@@ -343,8 +341,7 @@ impl AdvancedNumericalStabilityTester {
 
     /// Detect catastrophic cancellation
     fn detect_catastrophic_cancellation<F, D, R>(
-        &self,
-        _function_name: &str,
+        &self, _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<CancellationDetectionResult>
@@ -359,8 +356,7 @@ impl AdvancedNumericalStabilityTester {
 
     /// Monitor overflow and underflow
     fn monitor_overflow_underflow<F, D, R>(
-        &self,
-        _function_name: &str,
+        &self, _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<OverflowMonitoringResult>
@@ -375,8 +371,7 @@ impl AdvancedNumericalStabilityTester {
 
     /// Analyze condition numbers
     fn analyze_condition_numbers<F, D, R>(
-        &self,
-        _function_name: &str,
+        &self, _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<ConditionAnalysisResult>
@@ -391,8 +386,7 @@ impl AdvancedNumericalStabilityTester {
 
     /// Test convergence stability
     fn test_convergence_stability<F, D, R>(
-        &self,
-        _function_name: &str,
+        &self, _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<ConvergenceStabilityResult>
@@ -407,8 +401,7 @@ impl AdvancedNumericalStabilityTester {
 
     /// Test Monte Carlo stability
     fn test_monte_carlo_stability<F, D, R>(
-        &self,
-        _function_name: &str,
+        &self, _function_name: &str,
         test_function: F,
         test_data: &ArrayBase<D, Ix1>,
     ) -> StatsResult<MonteCarloStabilityResult>
@@ -688,9 +681,9 @@ pub struct EdgeCaseGenerator {
 }
 
 impl EdgeCaseGenerator {
-    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
         }
     }
 
@@ -735,7 +728,7 @@ impl EdgeCaseGenerator {
             let empty_data = Array1::<R>::zeros(0);
             cases.push(EdgeCase {
                 edge_case_type: EdgeCaseType::EmptyArray,
-                data: empty_data,
+                _data: empty_data,
                 description: "Empty input array".to_string(),
             });
         }
@@ -745,7 +738,7 @@ impl EdgeCaseGenerator {
             let single_data = Array1::from_elem(1, test_data[0]);
             cases.push(EdgeCase {
                 edge_case_type: EdgeCaseType::SingleElement,
-                data: single_data,
+                _data: single_data,
                 description: "Single element array".to_string(),
             });
         }
@@ -754,7 +747,7 @@ impl EdgeCaseGenerator {
         let zero_data = Array1::zeros(data_size);
         cases.push(EdgeCase {
             edge_case_type: EdgeCaseType::AllZeros,
-            data: zero_data,
+            _data: zero_data,
             description: "All zeros array".to_string(),
         });
 
@@ -762,7 +755,7 @@ impl EdgeCaseGenerator {
         let ones_data = Array1::ones(data_size);
         cases.push(EdgeCase {
             edge_case_type: EdgeCaseType::AllOnes,
-            data: ones_data,
+            _data: ones_data,
             description: "All ones array".to_string(),
         });
 
@@ -787,7 +780,7 @@ impl EdgeCaseGenerator {
         );
         cases.push(EdgeCase {
             edge_case_type: EdgeCaseType::VerySmallValues,
-            data: small_data,
+            _data: small_data,
             description: "Very small positive values".to_string(),
         });
 
@@ -795,7 +788,7 @@ impl EdgeCaseGenerator {
         let large_data = Array1::from_elem(data_size, R::from(1e100).unwrap_or(R::max_value()));
         cases.push(EdgeCase {
             edge_case_type: EdgeCaseType::VeryLargeValues,
-            data: large_data,
+            _data: large_data,
             description: "Very large values".to_string(),
         });
 
@@ -812,7 +805,7 @@ impl EdgeCaseGenerator {
     {
         let mut cases = Vec::new();
 
-        // Scaled versions of original data
+        // Scaled versions of original _data
         let scales = vec![1e-10, 1e-5, 1e5, 1e10];
 
         for scale in scales {
@@ -820,7 +813,7 @@ impl EdgeCaseGenerator {
                 let scaled_data = test_data.mapv(|x| x * scale_val);
                 cases.push(EdgeCase {
                     edge_case_type: EdgeCaseType::ScaledData,
-                    data: scaled_data,
+                    _data: scaled_data,
                     description: format!("Data scaled by {}", scale),
                 });
             }
@@ -846,7 +839,7 @@ impl EdgeCaseGenerator {
             nan_data[0] = R::nan();
             cases.push(EdgeCase {
                 edge_case_type: EdgeCaseType::ContainsNaN,
-                data: nan_data,
+                _data: nan_data,
                 description: "Array containing NaN values".to_string(),
             });
         }
@@ -857,7 +850,7 @@ impl EdgeCaseGenerator {
             inf_data[0] = R::infinity();
             cases.push(EdgeCase {
                 edge_case_type: EdgeCaseType::ContainsInfinity,
-                data: inf_data,
+                _data: inf_data,
                 description: "Array containing infinite values".to_string(),
             });
         }
@@ -870,7 +863,7 @@ impl EdgeCaseGenerator {
             mixed_data[2] = R::neg_infinity();
             cases.push(EdgeCase {
                 edge_case_type: EdgeCaseType::MixedSpecialValues,
-                data: mixed_data,
+                _data: mixed_data,
                 description: "Array with mixed special values".to_string(),
             });
         }
@@ -885,9 +878,9 @@ pub struct PrecisionAnalyzer {
 }
 
 impl PrecisionAnalyzer {
-    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
         }
     }
 
@@ -920,9 +913,9 @@ pub struct InvariantValidator {
 }
 
 impl InvariantValidator {
-    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
         }
     }
 
@@ -949,8 +942,7 @@ impl InvariantValidator {
     }
 
     fn validate_basic_properties<F, D, R>(
-        &self,
-        _function_name: &str,
+        &self, _function_name: &str,
         test_function: &F,
         test_data: &ArrayBase<D, Ix1>,
         result: &mut InvariantValidationResult,
@@ -992,11 +984,7 @@ impl InvariantValidator {
     }
 
     fn validate_statistical_properties<F, D, R>(
-        &self,
-        _function_name: &str,
-        _test_function: &F,
-        _test_data: &ArrayBase<D, Ix1>,
-        _result: &mut InvariantValidationResult,
+        &self, _function_name: &str, _test_function: &F_test, _data: &ArrayBase<D, Ix1>, _result: &mut InvariantValidationResult,
     ) -> StatsResult<()>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -1015,9 +1003,9 @@ pub struct CancellationDetector {
 }
 
 impl CancellationDetector {
-    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
         }
     }
 
@@ -1033,7 +1021,7 @@ impl CancellationDetector {
     {
         let mut result = CancellationDetectionResult::new();
 
-        // Test with data that might cause cancellation
+        // Test with _data that might cause cancellation
         let test_cases = self.generate_cancellation_test_cases(test_data)?;
 
         for test_case in test_cases {
@@ -1106,9 +1094,9 @@ pub struct OverflowMonitor {
 }
 
 impl OverflowMonitor {
-    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
         }
     }
 
@@ -1198,9 +1186,9 @@ pub struct ConditionAnalyzer {
 }
 
 impl ConditionAnalyzer {
-    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
         }
     }
 
@@ -1282,9 +1270,9 @@ pub struct ConvergenceTester {
 }
 
 impl ConvergenceTester {
-    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
         }
     }
 
@@ -1349,9 +1337,9 @@ pub struct MonteCarloStabilityTester {
 }
 
 impl MonteCarloStabilityTester {
-    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
         }
     }
 
@@ -1414,7 +1402,7 @@ impl MonteCarloStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let mut rng = scirs2_core::rng();
+        let mut rng = rand::rng();
         let perturbation_magnitude = R::from(1e-12).unwrap_or(R::min_positive_value());
 
         let perturbed_data = test_data.mapv(|x| {
@@ -1434,9 +1422,9 @@ pub struct RegressionTester {
 }
 
 impl RegressionTester {
-    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
+    pub fn new(_config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             historical_results: Arc::new(RwLock::new(HashMap::new())),
         }
     }
@@ -1522,9 +1510,9 @@ pub struct ComprehensiveStabilityResult {
 }
 
 impl ComprehensiveStabilityResult {
-    pub fn new(function_name: String) -> Self {
+    pub fn new(_function_name: String) -> Self {
         Self {
-            function_name,
+            _function_name,
             test_duration: Duration::from_secs(0),
             overall_stability_score: 0.0,
             stability_assessment: StabilityAssessment::Unknown,
@@ -1630,7 +1618,7 @@ impl EdgeCaseStabilityResult {
         }
     }
 
-    pub fn add_test_result<R>(&mut self, _edge_case: EdgeCase<R>, result: EdgeCaseTestResult) {
+    pub fn add_test_result<R>(&mut self_edge_case: EdgeCase<R>, result: EdgeCaseTestResult) {
         self.total_cases += 1;
         match result.result_status {
             EdgeCaseResultStatus::Success => self.passed_cases += 1,
@@ -2001,9 +1989,9 @@ pub struct RegressionTestResult {
 }
 
 impl RegressionTestResult {
-    pub fn new(function_name: String) -> Self {
+    pub fn new(_function_name: String) -> Self {
         Self {
-            function_name,
+            _function_name,
             current_value: 0.0,
             historical_mean: 0.0,
             deviation: 0.0,
@@ -2175,7 +2163,7 @@ where
     let config = AdvancedNumericalStabilityConfig::default();
     let tester = AdvancedNumericalStabilityTester::new(config);
 
-    // Generate test data across multiple ranges
+    // Generate test data across multiple _ranges
     let mut comprehensive_result = ComprehensiveStabilityResult::new(function_name.to_string());
 
     for (min_val, max_val) in input_ranges {
@@ -2203,7 +2191,7 @@ where
 
 /// Generate test data for numerical stability testing
 #[allow(dead_code)]
-fn generate_stability_test_data(min_val: f64, max_val: f64, size: usize) -> Array1<f64> {
+fn generate_stability_test_data(_min_val: f64, max_val: f64, size: usize) -> Array1<f64> {
     use rand::{rngs::StdRng, Rng, SeedableRng};
 
     let mut rng = StdRng::seed_from_u64(42);
@@ -2212,11 +2200,11 @@ fn generate_stability_test_data(min_val: f64, max_val: f64, size: usize) -> Arra
     for i in 0..size {
         // Mix of different value types for comprehensive testing
         match i % 5 {
-            0 => data[i] = rng.random_range(min_val..max_val), // Random in range
+            0 => data[i] = rng.gen_range(min_val..max_val)..// Random in range
             1 => data[i] = min_val,                            // Minimum value
             2 => data[i] = max_val,                            // Maximum value
             3 => data[i] = (min_val + max_val) / 2.0,          // Midpoint
-            4 => data[i] = rng.random_range(min_val..max_val) * 1e-10, // Very small values
+            4 => data[i] = rng.gen_range(min_val..max_val) * 1e-10..// Very small values
             _ => unreachable!(),
         }
     }
@@ -2263,7 +2251,7 @@ pub fn test_variance_stability() -> StatsResult<ComprehensiveStabilityResult> {
 /// Test numerical stability of correlation function specifically
 #[allow(dead_code)]
 pub fn test_correlation_stability() -> StatsResult<ValidationReport> {
-    use crate::property_based_validation::{
+    use crate::property_based__validation::{
         CorrelationBounds, PropertyBasedValidator, PropertyTestConfig,
     };
 

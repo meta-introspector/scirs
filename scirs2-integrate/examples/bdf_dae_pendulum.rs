@@ -15,7 +15,7 @@
 use ndarray::{array, ArrayView1};
 use num_traits::Float;
 use plotters::prelude::*;
-use scirs2_integrate::{bdf_semi_explicit_dae, DAEIndex, DAEOptions, DAEType};
+use scirs2__integrate::{bdf_semi_explicit_dae, DAEIndex, DAEOptions, DAEType};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

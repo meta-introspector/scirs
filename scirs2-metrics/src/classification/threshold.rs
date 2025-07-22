@@ -44,7 +44,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```rust
 /// use ndarray::array;
-/// use scirs2_metrics::classification::threshold::precision_recall_curve;
+/// use scirs2__metrics::classification::threshold::precision_recall_curve;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_prob = array![0.1, 0.4, 0.35, 0.8];
@@ -94,13 +94,13 @@ where
         Array1::ones(n_samples)
     };
 
-    // Determine positive class label
+    // Determine positive class _label
     let pos_lbl = pos_label.unwrap_or_else(|| T::one());
 
     // Create binary labels based on pos_label
     let binary_true: Vec<bool> = y_true.iter().map(|&y| y == pos_lbl).collect();
 
-    // Create pairs of (probability, binary_label, weight) for sorting
+    // Create pairs of (probability, binary_label, _weight) for sorting
     let mut prob_label_weight: Vec<_> = y_prob
         .iter()
         .zip(binary_true.iter())
@@ -109,7 +109,7 @@ where
         .collect();
 
     // Sort by probability in descending order
-    prob_label_weight.sort_by(|(a, _, _), (b, _, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+    prob_label_weight.sort_by(|(a__), (b__)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
     // Extract unique threshold values
     let mut thresholds = Vec::new();
@@ -123,7 +123,7 @@ where
     }
     distinct_value_indices.push(prob_label_weight.len());
 
-    // Calculate true positive and false positive counts for each threshold
+    // Calculate _true positive and false positive counts for each threshold
     let mut tps = Vec::with_capacity(thresholds.len() + 1);
     let mut fps = Vec::with_capacity(thresholds.len() + 1);
 
@@ -143,11 +143,11 @@ where
         let idx_range = idx..distinct_value_indices[i + 1];
 
         for j in idx_range {
-            let (_, is_true_positive, weight) = prob_label_weight[j];
+            let (_, is_true_positive, _weight) = prob_label_weight[j];
             if is_true_positive {
-                tp_sum += weight;
+                tp_sum += _weight;
             } else {
-                fp_sum += weight;
+                fp_sum += _weight;
             }
         }
 
@@ -159,7 +159,7 @@ where
     let pos_weight: f64 = binary_true
         .iter()
         .zip(weights.iter())
-        .map(|(&true_val, &weight)| if true_val { weight } else { 0.0 })
+        .map(|(&true_val, &_weight)| if true_val { _weight } else { 0.0 })
         .sum();
 
     if pos_weight <= 0.0 {
@@ -218,12 +218,12 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::threshold::{precision_recall_curve, average_precision_score_from_curve};
+/// use scirs2__metrics::classification::threshold::{precision_recall_curve, average_precision_score_from_curve};
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_prob = array![0.1, 0.4, 0.35, 0.8];
 ///
-/// let (precision, recall, _) = precision_recall_curve(&y_true, &y_prob, None, None).unwrap();
+/// let (precision, recall_) = precision_recall_curve(&y_true, &y_prob, None, None).unwrap();
 /// let average_precision = average_precision_score_from_curve(&precision, &recall);
 /// ```
 #[allow(dead_code)]
@@ -270,7 +270,7 @@ where
 ///
 /// ```rust
 /// use ndarray::array;
-/// use scirs2_metrics::classification::threshold::average_precision_score;
+/// use scirs2__metrics::classification::threshold::average_precision_score;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_prob = array![0.1, 0.4, 0.35, 0.8];
@@ -290,7 +290,7 @@ where
     S2: Data<Elem = f64>,
     D1: Dimension,
 {
-    let (precision, recall, _) = precision_recall_curve(y_true, y_prob, pos_label, sample_weight)?;
+    let (precision, recall_) = precision_recall_curve(y_true, y_prob, pos_label, sample_weight)?;
     Ok(average_precision_score_from_curve(&precision, &recall))
 }
 
@@ -315,7 +315,7 @@ where
 ///
 /// ```rust
 /// use ndarray::array;
-/// use scirs2_metrics::classification::threshold::find_optimal_threshold;
+/// use scirs2__metrics::classification::threshold::find_optimal_threshold;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_prob = array![0.1, 0.4, 0.35, 0.8];
@@ -335,8 +335,7 @@ pub fn find_optimal_threshold<T, S1, S2, D1, F>(
     y_true: &ArrayBase<S1, D1>,
     y_prob: &ArrayBase<S2, Ix1>,
     pos_label: Option<T>,
-    score_func: F,
-    _sample_weight: Option<&ArrayBase<S2, Ix1>>,
+    score_func: F_sample, _weight: Option<&ArrayBase<S2, Ix1>>,
 ) -> Result<(f64, f64)>
 where
     T: Real + PartialOrd + Clone,
@@ -361,7 +360,7 @@ where
         ));
     }
 
-    // Determine positive class label
+    // Determine positive class _label
     let pos_lbl = pos_label.unwrap_or_else(|| T::one());
 
     // Convert y_true to i32 for the score function
@@ -371,10 +370,10 @@ where
         .collect();
 
     // Create pairs of (probability, index) for sorting
-    let mut prob_idx: Vec<_> = y_prob.iter().enumerate().map(|(i, &p)| (p, i)).collect();
+    let mut _prob_idx: Vec<_> = y_prob.iter().enumerate().map(|(i, &p)| (p, i)).collect();
 
     // Sort by probability in ascending order
-    prob_idx.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    prob_idx.sort_by(|(a_), (b_)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     // Extract unique threshold values
     let mut thresholds = Vec::new();
@@ -434,7 +433,7 @@ where
 ///
 /// ```rust
 /// use ndarray::array;
-/// use scirs2_metrics::classification::threshold::g_means_score;
+/// use scirs2__metrics::classification::threshold::g_means_score;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_pred = array![0.0, 1.0, 0.0, 1.0];
@@ -470,7 +469,7 @@ where
         ));
     }
 
-    // Determine positive class label
+    // Determine positive class _label
     let pos_lbl = pos_label.unwrap_or_else(|| T::one());
 
     // Compute confusion matrix
@@ -484,14 +483,14 @@ where
         let is_predicted_positive = *pred_val == pos_lbl;
 
         match (is_positive, is_predicted_positive) {
-            (true, true) => tp += 1,        // True positive
-            (true, false) => fn_count += 1, // False negative
-            (false, true) => fp += 1,       // False positive
+            (_true, _true) => tp += 1,        // True positive
+            (_true, false) => fn_count += 1, // False negative
+            (false_true) => fp += 1,       // False positive
             (false, false) => tn += 1,      // True negative
         }
     }
 
-    // Calculate sensitivity (true positive rate) and specificity (true negative rate)
+    // Calculate sensitivity (_true positive rate) and specificity (_true negative rate)
     let sensitivity = if tp + fn_count > 0 {
         tp as f64 / (tp + fn_count) as f64
     } else {
@@ -530,7 +529,7 @@ where
 ///
 /// ```rust
 /// use ndarray::array;
-/// use scirs2_metrics::classification::threshold::find_optimal_threshold_g_means;
+/// use scirs2__metrics::classification::threshold::find_optimal_threshold_g_means;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_prob = array![0.1, 0.4, 0.35, 0.8];
@@ -550,7 +549,7 @@ where
     S2: Data<Elem = f64>,
     D1: Dimension,
 {
-    // We don't need to use the positive label directly here as we pass it through
+    // We don't need to use the positive _label directly here as we pass it through
 
     // G-means score function
     let g_means_func = |y_true: &Array1<i32>, y_pred: &Array1<i32>| {

@@ -21,7 +21,7 @@
 
 use crate::distance::{Distance, EuclideanDistance};
 use crate::error::{SpatialError, SpatialResult};
-use crate::safe_conversions::*;
+use crate::safe__conversions::*;
 use ndarray::{Array1, Array2, ArrayView2};
 use num_traits::Float;
 use std::cmp::Ordering;
@@ -131,8 +131,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
             n_samples,
             n_features,
             leaf_size,
-            distance,
-            _phantom: PhantomData,
+            distance_phantom: PhantomData,
         };
 
         // Build the tree
@@ -168,12 +167,12 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
     /// # Returns
     ///
     /// * `SpatialResult<usize>` - Index of the root node of the subtree
-    fn build_subtree(&mut self, start_idx: usize, end_idx: usize) -> SpatialResult<usize> {
-        let n_points = end_idx - start_idx;
+    fn build_subtree(_start_idx: usize, end_idx: usize) -> SpatialResult<usize> {
+        let n_points = end_idx - _start_idx;
 
         // Calculate centroid of points in this node
         let mut centroid = vec![T::zero(); self.n_features];
-        for i in start_idx..end_idx {
+        for i in _start_idx..end_idx {
             let point_idx = self.indices[i];
             let point = self.data.row(point_idx);
 
@@ -276,12 +275,12 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         let _mid_idx = start_idx + (end_idx - start_idx) / 2;
         let mut new_indices = Vec::with_capacity(end_idx - start_idx);
 
-        for (i, _) in distances {
+        for (i_) in distances {
             new_indices.push(self.indices[i]);
         }
 
-        for (i, idx) in new_indices.into_iter().enumerate() {
-            self.indices[start_idx + i] = idx;
+        for (i_idx) in new_indices.into_iter().enumerate() {
+            self.indices[start_idx + i] = _idx;
         }
 
         Ok(())
@@ -326,7 +325,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         // Perform the recursive search
         self.query_recursive(0, point, k, &mut nearest_neighbors, &mut max_dist);
 
-        // Sort by distance
+        // Sort by _distance
         nearest_neighbors.sort_by(|a, b| {
             safe_partial_cmp(&a.0, &b.0, "balltree sort results").unwrap_or(Ordering::Equal)
         });
@@ -372,13 +371,13 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         // If this is a leaf node, check all points
         if node.left_child.is_none() {
             for i in node.start_idx..node.end_idx {
-                let idx = self.indices[i];
-                let row_vec = self.data.row(idx).to_vec();
-                let dist = self.distance.distance(point, row_vec.as_slice());
+                let _idx = self.indices[i];
+                let row_vec = self.data.row(_idx).to_vec();
+                let _dist = self.distance.distance(point, row_vec.as_slice());
 
-                if dist < *max_dist || nearest.len() < k {
+                if _dist < *max_dist || nearest.len() < k {
                     // Add this point to nearest neighbors
-                    nearest.push((dist, idx));
+                    nearest.push((_dist, _idx));
 
                     // If we have more than k points, remove the furthest
                     if nearest.len() > k {
@@ -390,7 +389,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                                 safe_partial_cmp(&a.0, &b.0, "balltree max distance")
                                     .unwrap_or(Ordering::Equal)
                             })
-                            .map(|(idx, _)| idx)
+                            .map(|(idx_)| _idx)
                             .unwrap_or(0);
 
                         // Remove that point
@@ -399,7 +398,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                         // Update max_dist to the new maximum distance
                         *max_dist = nearest
                             .iter()
-                            .map(|(dist, _)| *dist)
+                            .map(|(dist_)| *_dist)
                             .max_by(|a, b| {
                                 safe_partial_cmp(a, b, "balltree update max_dist")
                                     .unwrap_or(Ordering::Equal)
@@ -415,11 +414,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         // Determine which child to search first (closest to the query point)
         // Get child indices - we know they exist because this is not a leaf node
         let left_idx = match node.left_child {
-            Some(idx) => idx,
+            Some(_idx) => _idx,
             None => return, // Should not happen if tree is properly built
         };
         let right_idx = match node.right_child {
-            Some(idx) => idx,
+            Some(_idx) => _idx,
             None => return, // Should not happen if tree is properly built
         };
 
@@ -477,7 +476,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         // Search the tree recursively
         self.query_radius_recursive(0, point, radius, &mut result_indices, &mut result_distances);
 
-        // Sort by distance if needed
+        // Sort by _distance if needed
         if !result_indices.is_empty() {
             let mut idx_dist: Vec<(usize, T)> =
                 result_indices.into_iter().zip(result_distances).collect();
@@ -525,12 +524,12 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         // If this is a leaf node, check all points
         if node.left_child.is_none() {
             for i in node.start_idx..node.end_idx {
-                let idx = self.indices[i];
-                let row_vec = self.data.row(idx).to_vec();
+                let _idx = self.indices[i];
+                let row_vec = self.data.row(_idx).to_vec();
                 let dist = self.distance.distance(point, row_vec.as_slice());
 
                 if dist <= radius {
-                    indices.push(idx);
+                    indices.push(_idx);
                     distances.push(dist);
                 }
             }
@@ -539,11 +538,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
         // Otherwise, recursively search child nodes
         let left_idx = match node.left_child {
-            Some(idx) => idx,
+            Some(_idx) => _idx,
             None => return, // Should not happen if tree is properly built
         };
         let right_idx = match node.right_child {
-            Some(idx) => idx,
+            Some(_idx) => _idx,
             None => return, // Should not happen if tree is properly built
         };
 
@@ -640,11 +639,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                     > (other_node.end_idx - other_node.start_idx))
         {
             let left_idx = match self_node.left_child {
-                Some(idx) => idx,
+                Some(_idx) => _idx,
                 None => return, // Should not happen
             };
             let right_idx = match self_node.right_child {
-                Some(idx) => idx,
+                Some(_idx) => _idx,
                 None => return, // Should not happen
             };
 
@@ -652,11 +651,11 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
             self.query_radius_tree_recursive(right_idx, other, other_node_idx, radius, pairs);
         } else if other_node.left_child.is_some() {
             let left_idx = match other_node.left_child {
-                Some(idx) => idx,
+                Some(_idx) => _idx,
                 None => return, // Should not happen
             };
             let right_idx = match other_node.right_child {
-                Some(idx) => idx,
+                Some(_idx) => _idx,
                 None => return, // Should not happen
             };
 
@@ -681,7 +680,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
     }
 
     /// Get the leaf size
-    pub fn get_leaf_size(&self) -> usize {
+    pub fn get_leaf_size() -> usize {
         self.leaf_size
     }
 }
@@ -708,7 +707,6 @@ impl<T: Float + Send + Sync + 'static> BallTree<T, EuclideanDistance<T>> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::distance::euclidean;
     use approx::assert_relative_eq;
     use ndarray::arr2;
@@ -756,12 +754,12 @@ mod tests {
         let tree = BallTree::with_euclidean_distance(&data.view(), 2).unwrap();
 
         // Search with small radius
-        let (indices, _distances) = tree.query_radius(&[5.0, 6.0], 1.0, true).unwrap();
+        let (indices_distances) = tree.query_radius(&[5.0, 6.0], 1.0, true).unwrap();
         assert_eq!(indices.len(), 1);
         assert_eq!(indices[0], 2); // Only [5.0, 6.0] itself should be within radius 1.0
 
         // Search with larger radius
-        let (indices, _distances) = tree.query_radius(&[5.0, 6.0], 3.0, true).unwrap();
+        let (indices_distances) = tree.query_radius(&[5.0, 6.0], 3.0, true).unwrap();
         assert!(indices.len() > 1); // Should include neighbors
 
         // Test without distances

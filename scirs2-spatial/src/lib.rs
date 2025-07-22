@@ -1,3 +1,4 @@
+use crate::error::{SpatialError, SpatialResult};
 //! Spatial algorithms module
 //!
 //! This module provides implementations of various spatial algorithms,
@@ -34,7 +35,7 @@
 //! ### Distance Metrics
 //!
 //! ```
-//! use scirs2_spatial::distance::euclidean;
+//! use scirs2__spatial::distance::euclidean;
 //!
 //! let point1 = &[1.0, 2.0, 3.0];
 //! let point2 = &[4.0, 5.0, 6.0];
@@ -46,7 +47,7 @@
 //! ### KD-Tree for Nearest Neighbor Searches
 //!
 //! ```
-//! use scirs2_spatial::KDTree;
+//! use scirs2__spatial::KDTree;
 //! use ndarray::array;
 //!
 //! // Create points
@@ -68,7 +69,7 @@
 //! ### Distance Matrices
 //!
 //! ```
-//! use scirs2_spatial::distance::{pdist, euclidean};
+//! use scirs2__spatial::distance::{pdist, euclidean};
 //! use ndarray::array;
 //!
 //! // Create points
@@ -82,7 +83,7 @@
 //! ### Convex Hull
 //!
 //! ```
-//! use scirs2_spatial::convex_hull::ConvexHull;
+//! use scirs2__spatial::convex_hull::ConvexHull;
 //! use ndarray::array;
 //!
 //! // Create points
@@ -103,7 +104,7 @@
 //! ### Delaunay Triangulation
 //!
 //! ```
-//! use scirs2_spatial::delaunay::Delaunay;
+//! use scirs2__spatial::delaunay::Delaunay;
 //! use ndarray::array;
 //!
 //! // Create points
@@ -125,7 +126,7 @@
 //! ### Alpha Shapes
 //!
 //! ```
-//! use scirs2_spatial::AlphaShape;
+//! use scirs2__spatial::AlphaShape;
 //! use ndarray::array;
 //!
 //! // Create a point set with some outliers
@@ -155,7 +156,7 @@
 //! ### Halfspace Intersection
 //!
 //! ```
-//! use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
+//! use scirs2__spatial::halfspace::{HalfspaceIntersection, Halfspace};
 //! use ndarray::array;
 //!
 //! // Define halfspaces for a unit square: x ≥ 0, y ≥ 0, x ≤ 1, y ≤ 1
@@ -180,7 +181,7 @@
 //! ### Boolean Operations on Polygons
 //!
 //! ```
-//! use scirs2_spatial::boolean_ops::{polygon_union, polygon_intersection, polygon_difference};
+//! use scirs2__spatial::boolean_ops::{polygon_union, polygon_intersection, polygon_difference};
 //! use ndarray::array;
 //!
 //! // Define two overlapping squares
@@ -214,7 +215,7 @@
 //! ### Set-Based Distances
 //!
 //! ```
-//! use scirs2_spatial::set_distance::hausdorff_distance;
+//! use scirs2__spatial::set_distance::hausdorff_distance;
 //! use ndarray::array;
 //!
 //! // Create two point sets
@@ -229,7 +230,7 @@
 //! ### Polygon Operations
 //!
 //! ```
-//! use scirs2_spatial::polygon::{point_in_polygon, polygon_area, polygon_centroid};
+//! use scirs2__spatial::polygon::{point_in_polygon, polygon_area, polygon_centroid};
 //! use ndarray::array;
 //!
 //! // Create a polygon (square)
@@ -251,7 +252,7 @@
 //! ### Ball Tree for Nearest Neighbor Searches
 //!
 //! ```
-//! use scirs2_spatial::BallTree;
+//! use scirs2__spatial::BallTree;
 //! use ndarray::array;
 //!
 //! // Create points
@@ -273,7 +274,7 @@
 //! ### A* Pathfinding
 //!
 //! ```
-//! use scirs2_spatial::pathplanning::GridAStarPlanner;
+//! use scirs2__spatial::pathplanning::GridAStarPlanner;
 //!
 //! // Create a grid with some obstacles (true = obstacle, false = free space)
 //! let grid = vec![
@@ -302,7 +303,7 @@
 //! ### SIMD-Accelerated Distance Calculations
 //!
 //! ```
-//! use scirs2_spatial::simd_distance::{simd_euclidean_distance_batch, parallel_pdist};
+//! use scirs2__spatial::simd_distance::{simd_euclidean_distance_batch, parallel_pdist};
 //! use ndarray::array;
 //!
 //! // SIMD batch distance calculation between corresponding points
@@ -318,7 +319,7 @@
 //! println!("Distance matrix shape: {:?}", dist_matrix.shape());
 //!
 //! // High-performance k-nearest neighbors search
-//! use scirs2_spatial::simd_distance::simd_knn_search;
+//! use scirs2__spatial::simd_distance::simd_knn_search;
 //! let (indices, distances) = simd_knn_search(&points1.view(), &points.view(), 2, "euclidean").unwrap();
 //! println!("Nearest neighbor indices: {:?}", indices);
 //! ```
@@ -326,7 +327,7 @@
 //! ### Advanced-Optimized SIMD Clustering
 //!
 //! ```
-//! use scirs2_spatial::{AdvancedSimdKMeans, AdvancedSimdNearestNeighbors};
+//! use scirs2__spatial::{AdvancedSimdKMeans, AdvancedSimdNearestNeighbors};
 //! use ndarray::array;
 //!
 //! // Optimized SIMD K-means clustering
@@ -355,7 +356,7 @@
 //! ### Memory Pool Optimization
 //!
 //! ```
-//! use scirs2_spatial::{DistancePool, ClusteringArena, global_distance_pool};
+//! use scirs2__spatial::{DistancePool, ClusteringArena, global_distance_pool};
 //!
 //! // Use global memory pool for frequent allocations
 //! let pool = global_distance_pool();
@@ -375,7 +376,7 @@
 //! println!("Pool hit rate: {:.1}%", stats.hit_rate());
 //!
 //! // Use arena for temporary objects
-//! use scirs2_spatial::ClusteringArena;
+//! use scirs2__spatial::ClusteringArena;
 //! let arena = ClusteringArena::new();
 //! let temp_vec = arena.alloc_temp_vec::<f64>(500);
 //! // Temporary objects are freed when arena is reset
@@ -385,7 +386,7 @@
 //! ### GPU-Accelerated Massive-Scale Computing
 //!
 //! ```
-//! use scirs2_spatial::{GpuDistanceMatrix, GpuKMeans, report_gpu_status};
+//! use scirs2__spatial::{GpuDistanceMatrix, GpuKMeans, report_gpu_status};
 //! use ndarray::array;
 //!
 //! // Check GPU acceleration availability
@@ -410,7 +411,7 @@
 //! println!("GPU K-means completed: {} centroids", centroids.nrows());
 //!
 //! // Hybrid CPU-GPU processing
-//! use scirs2_spatial::HybridProcessor;
+//! use scirs2__spatial::HybridProcessor;
 //! let processor = HybridProcessor::new()?;
 //! let strategy = processor.choose_strategy(points.nrows());
 //! println!("Optimal strategy: {:?}", strategy);
@@ -419,7 +420,7 @@
 //! ### Advanced-Optimized KD-Tree for Maximum Performance
 //!
 //! ```
-//! use scirs2_spatial::{AdvancedKDTree, KDTreeConfig};
+//! use scirs2__spatial::{AdvancedKDTree, KDTreeConfig};
 //! use ndarray::array;
 //!
 //! // Create points dataset
@@ -462,7 +463,7 @@
 //! ### RRT Pathfinding
 //!
 //! ```
-//! use scirs2_spatial::pathplanning::{RRTConfig, RRT2DPlanner};
+//! use scirs2__spatial::pathplanning::{RRTConfig, RRT2DPlanner};
 //!
 //! // Create a configuration for RRT
 //! let config = RRTConfig {
@@ -517,7 +518,7 @@
 //!
 //! ```text
 //! // Temporarily disabled for optimization
-//! // use scirs2_spatial::quantum_classical_hybrid::{HybridSpatialOptimizer, HybridClusterer};
+//! // use scirs2__spatial::quantum_classical_hybrid::{HybridSpatialOptimizer, HybridClusterer};
 //! // use ndarray::array;
 //! //
 //! // // Quantum-classical hybrid spatial optimization
@@ -535,7 +536,7 @@
 //!
 //! ```text
 //! // Temporarily disabled for optimization
-//! // use scirs2_spatial::neuromorphic_quantum_fusion::{QuantumSpikingClusterer, NeuralQuantumOptimizer};
+//! // use scirs2__spatial::neuromorphic_quantum_fusion::{QuantumSpikingClusterer, NeuralQuantumOptimizer};
 //! // use ndarray::array;
 //! //
 //! // // Quantum-enhanced spiking neural clustering
@@ -554,7 +555,7 @@
 //!
 //! ```text
 //! // Temporarily disabled for optimization
-//! // use scirs2_spatial::next_gen_gpu_architecture::{QuantumGpuProcessor, PhotonicAccelerator};
+//! // use scirs2__spatial::next_gen_gpu_architecture::{QuantumGpuProcessor, PhotonicAccelerator};
 //! // use ndarray::array;
 //! //
 //! // // Quantum-GPU hybrid processing with tensor core enhancement
@@ -572,7 +573,7 @@
 //!
 //! ```text
 //! // Temporarily disabled for optimization
-//! // use scirs2_spatial::ai_driven_optimization::{AIAlgorithmSelector, MetaLearningOptimizer};
+//! // use scirs2__spatial::ai_driven_optimization::{AIAlgorithmSelector, MetaLearningOptimizer};
 //! // use ndarray::array;
 //! //
 //! // // AI automatically selects optimal algorithms and parameters
@@ -594,7 +595,7 @@
 //!
 //! ```text
 //! // Temporarily disabled for optimization
-//! // use scirs2_spatial::extreme_performance_optimization::{
+//! // use scirs2__spatial::extreme_performance_optimization::{
 //! //     ExtremeOptimizer, AdvancedfastDistanceMatrix, SelfOptimizingAlgorithm, create_ultimate_optimizer
 //! // };
 //! // use ndarray::array;
@@ -672,11 +673,11 @@ pub use kdtree::{KDTree, Rectangle};
 
 // KD-Tree optimizations for spatial operations
 pub mod kdtree_optimized;
-pub use kdtree_optimized::KDTreeOptimized;
+pub use kdtree__optimized::KDTreeOptimized;
 
 // Advanced-optimized KD-Tree with advanced performance features
 pub mod kdtree_advanced;
-pub use kdtree_advanced::{
+pub use kdtree__advanced::{
     AdvancedKDTree, BoundingBox as KDTreeBoundingBox, KDTreeConfig, TreeStatistics,
 };
 
@@ -694,7 +695,7 @@ pub use voronoi::{voronoi, Voronoi};
 
 // Spherical Voronoi diagrams
 pub mod spherical_voronoi;
-pub use spherical_voronoi::SphericalVoronoi;
+pub use spherical__voronoi::SphericalVoronoi;
 
 // Procrustes analysis
 pub mod procrustes;
@@ -702,11 +703,11 @@ pub use procrustes::{procrustes, procrustes_extended, ProcrustesParams};
 
 // Convex hull computation
 pub mod convex_hull;
-pub use convex_hull::{convex_hull, ConvexHull};
+pub use convex__hull::{convex_hull, ConvexHull};
 
 // Alpha shapes
 pub mod alpha_shapes;
-pub use alpha_shapes::AlphaShape;
+pub use alpha__shapes::AlphaShape;
 
 // Halfspace intersection
 pub mod halfspace;
@@ -714,7 +715,7 @@ pub use halfspace::{Halfspace, HalfspaceIntersection};
 
 // Boolean operations
 pub mod boolean_ops;
-pub use boolean_ops::{
+pub use boolean__ops::{
     compute_polygon_area, is_convex_polygon, is_self_intersecting, polygon_difference,
     polygon_intersection, polygon_symmetric_difference, polygon_union,
 };
@@ -734,7 +735,7 @@ pub use geospatial::{
 
 // Set-based distance metrics
 pub mod set_distance;
-pub use set_distance::{
+pub use set__distance::{
     directed_hausdorff, gromov_hausdorff_distance, hausdorff_distance, wasserstein_distance,
 };
 
@@ -805,38 +806,38 @@ pub use collision::continuous::continuous_sphere_sphere_collision;
 
 // Spatial statistics and pattern analysis
 pub mod spatial_stats;
-pub use spatial_stats::{
+pub use spatial__stats::{
     clark_evans_index, distance_weights_matrix, gearys_c, getis_ord_gi, local_morans_i, morans_i,
 };
 
 // SIMD-accelerated distance calculations
 pub mod simd_distance;
-pub use simd_distance::{
+pub use simd__distance::{
     parallel_cdist, parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch,
     simd_knn_search, simd_manhattan_distance, SimdMetric,
 };
 
 // Advanced-optimized SIMD clustering and distance operations
-pub use simd_distance::advanced_simd_clustering::{
+pub use simd__distance::advanced_simd__clustering::{
     AdvancedSimdKMeans, AdvancedSimdNearestNeighbors,
 };
-pub use simd_distance::bench::{
+pub use simd__distance::bench::{
     benchmark_distance_computation, report_simd_features, BenchmarkResults,
 };
-pub use simd_distance::mixed_precision_simd::{
+pub use simd__distance::mixed_precision__simd::{
     simd_euclidean_distance_batch_f32, simd_euclidean_distance_f32,
 };
 
 // Advanced-optimized memory pool system for spatial algorithms
 pub mod memory_pool;
-pub use memory_pool::{
+pub use memory__pool::{
     global_clustering_arena, global_distance_pool, ArenaStatistics, ClusteringArena,
     DistanceBuffer, DistancePool, IndexBuffer, MatrixBuffer, MemoryPoolConfig, PoolStatistics,
 };
 
 // GPU acceleration for massive-scale spatial computations
 pub mod gpu_accel;
-pub use gpu_accel::{
+pub use gpu__accel::{
     get_gpu_capabilities, global_gpu_device, is_gpu_acceleration_available, report_gpu_status,
     GpuCapabilities, GpuDevice, GpuDistanceMatrix, GpuKMeans, GpuNearestNeighbors, HybridProcessor,
     ProcessingStrategy,
@@ -844,7 +845,7 @@ pub use gpu_accel::{
 
 // Advanced-parallel algorithms with work-stealing and NUMA-aware optimizations
 pub mod advanced_parallel;
-pub use advanced_parallel::{
+pub use advanced__parallel::{
     get_numa_topology, initialize_global_pool, report_advanced_parallel_capabilities,
     AdvancedParallelDistanceMatrix, AdvancedParallelKMeans, MemoryStrategy, NumaTopology,
     PoolStatistics as AdvancedPoolStatistics, ThreadAffinityStrategy, WorkStealingConfig,
@@ -856,7 +857,7 @@ mod utils;
 
 // Quantum-inspired spatial algorithms for cutting-edge optimization
 pub mod quantum_inspired;
-pub use quantum_inspired::{
+pub use quantum__inspired::{
     QuantumAmplitude,
     QuantumClusterer,
     QuantumFeatureMapType,
@@ -899,14 +900,14 @@ pub use neuromorphic::{
 
 // Advanced GPU tensor core utilization for maximum performance
 pub mod tensor_cores;
-pub use tensor_cores::{
+pub use tensor__cores::{
     detect_tensor_core_capabilities, GpuArchitecture, PrecisionMode, TensorCoreCapabilities,
     TensorCoreClustering, TensorCoreDistanceMatrix, TensorCoreType, TensorLayout,
 };
 
 // Machine learning-based spatial optimization and adaptive algorithms
 pub mod ml_optimization;
-pub use ml_optimization::{
+pub use ml__optimization::{
     ActivationFunction, ClusteringParameters, ClusteringResult, DataState, DistanceMetric,
     Experience, NeuralSpatialOptimizer, ReinforcementLearningSelector, SpatialAlgorithm,
 };
@@ -920,7 +921,7 @@ pub use distributed::{
 
 // Real-time adaptive algorithm selection and optimization
 pub mod adaptive_selection;
-pub use adaptive_selection::{
+pub use adaptive__selection::{
     ActualPerformance, AdaptiveAlgorithmSelector, AlgorithmParameters, AlgorithmSelection,
     DataCharacteristics, ExecutionResult, PerformancePrediction, SelectedAlgorithm,
     SelectionContext,
@@ -928,41 +929,41 @@ pub use adaptive_selection::{
 
 // Quantum-classical hybrid algorithms for unprecedented performance breakthroughs
 pub mod quantum_classical_hybrid;
-pub use quantum_classical_hybrid::{
+pub use quantum_classical__hybrid::{
     HybridClusterer, HybridClusteringMetrics, HybridOptimizationResult, HybridPerformanceMetrics,
     HybridSpatialOptimizer, OptimizationStepResult,
 };
 
 // Neuromorphic-quantum fusion algorithms for revolutionary bio-quantum computing
 pub mod neuromorphic_quantum_fusion;
-pub use neuromorphic_quantum_fusion::{
+pub use neuromorphic_quantum__fusion::{
     FusionMetrics, NeuralQuantumOptimizationResult, NeuralQuantumOptimizer, QuantumSpikeEvent,
     QuantumSpikePattern, QuantumSpikingClusterer, QuantumSpikingNeuron,
 };
 
 // Next-generation GPU architecture support for future computing paradigms
 pub mod next_gen_gpu_architecture;
-pub use next_gen_gpu_architecture::{
+pub use next_gen_gpu__architecture::{
     NextGenGpuArchitecture, NextGenPerformanceMetrics, PhotonicAccelerator, PhotonicProcessingUnit,
     QuantumGpuProcessor, QuantumProcessingUnit,
 };
 
 // Generic traits and algorithms for flexible spatial computing
 pub mod generic_traits;
-pub use generic_traits::{
+pub use generic__traits::{
     ChebyshevMetric, EuclideanMetric, ManhattanMetric, Point, SpatialArray, SpatialPoint,
     SpatialScalar,
 };
 
 pub mod generic_algorithms;
-pub use generic_algorithms::{
+pub use generic__algorithms::{
     DBSCANResult, GMMResult, GenericConvexHull, GenericDBSCAN, GenericDistanceMatrix, GenericGMM,
     GenericKDTree, GenericKMeans, KMeansResult,
 };
 
 // AI-driven algorithm selection and optimization for intelligent spatial computing
 pub mod ai_driven_optimization;
-pub use ai_driven_optimization::{
+pub use ai_driven__optimization::{
     AIAlgorithmSelector, AdaptationRecord, AlgorithmCandidate, AlgorithmKnowledgeBase,
     AlgorithmMetadata, ComplexityModel, MetaLearningModel, MetaLearningOptimizer,
     MetaOptimizationResult, PerformanceModel, PerformanceRecord, PredictionNetworks,
@@ -971,7 +972,7 @@ pub use ai_driven_optimization::{
 
 // Extreme performance optimization pushing spatial computing beyond current limits
 pub mod extreme_performance_optimization;
-pub use extreme_performance_optimization::{
+pub use extreme_performance__optimization::{
     benchmark_extreme_optimizations, create_ultimate_optimizer, AdvancedfastDistanceMatrix,
     CacheHierarchyInfo, CacheObliviousSpatialAlgorithms, ExtremeMemoryAllocator, ExtremeOptimizer,
     ExtremePerformanceMetrics, HardwarePerformanceCounters, JitCompiler, LockFreeSpatialStructures,

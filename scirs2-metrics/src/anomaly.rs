@@ -12,7 +12,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2_metrics::anomaly::{
+//! use scirs2__metrics::anomaly::{
 //!     detection_accuracy, false_alarm_rate, miss_detection_rate,
 //!     anomaly_auc_score, anomaly_average_precision_score
 //! };
@@ -47,7 +47,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2_metrics::anomaly::{
+//! use scirs2__metrics::anomaly::{
 //!     kl_divergence, js_divergence, wasserstein_distance, maximum_mean_discrepancy
 //! };
 //!
@@ -79,7 +79,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2_metrics::anomaly::{
+//! use scirs2__metrics::anomaly::{
 //!     precision_recall_with_tolerance, point_adjusted_precision_recall, nab_score
 //! };
 //!
@@ -124,7 +124,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::detection_accuracy;
+/// use scirs2__metrics::anomaly::detection_accuracy;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 /// let y_pred = array![0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0];
@@ -162,8 +162,8 @@ where
     let total = y_true.len();
     let mut correct = 0;
 
-    for (truth, pred) in y_true.iter().zip(y_pred.iter()) {
-        if (truth > &zero && pred > &zero) || (truth == &zero && pred == &zero) {
+    for (truth_pred) in y_true.iter().zip(y_pred.iter()) {
+        if (truth > &zero && _pred > &zero) || (truth == &zero && _pred == &zero) {
             correct += 1;
         }
     }
@@ -190,7 +190,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::false_alarm_rate;
+/// use scirs2__metrics::anomaly::false_alarm_rate;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 /// let y_pred = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
@@ -228,10 +228,10 @@ where
     let mut false_alarms = 0;
     let mut total_normal = 0;
 
-    for (truth, pred) in y_true.iter().zip(y_pred.iter()) {
+    for (truth_pred) in y_true.iter().zip(y_pred.iter()) {
         if truth == &zero {
             total_normal += 1;
-            if pred > &zero {
+            if _pred > &zero {
                 false_alarms += 1;
             }
         }
@@ -265,7 +265,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::miss_detection_rate;
+/// use scirs2__metrics::anomaly::miss_detection_rate;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 /// let y_pred = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
@@ -303,10 +303,10 @@ where
     let mut missed_anomalies = 0;
     let mut total_anomalies = 0;
 
-    for (truth, pred) in y_true.iter().zip(y_pred.iter()) {
+    for (truth_pred) in y_true.iter().zip(y_pred.iter()) {
         if truth > &zero {
             total_anomalies += 1;
-            if pred == &zero {
+            if _pred == &zero {
                 missed_anomalies += 1;
             }
         }
@@ -340,7 +340,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::anomaly_auc_score;
+/// use scirs2__metrics::anomaly::anomaly_auc_score;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 /// let y_score = array![0.1, 0.2, 0.9, 0.3, 0.8, 0.2, 0.4, 0.95, 0.1, 0.05];
@@ -374,18 +374,18 @@ where
         ));
     }
 
-    // Collect pairs of (score, label) for sorting
-    let mut score_label: Vec<_> = y_score
+    // Collect pairs of (_score, label) for sorting
+    let mut _score_label: Vec<_> = y_score
         .iter()
         .zip(y_true.iter())
         .map(|(s, l)| (s.to_f64().unwrap_or(0.0), l.to_f64().unwrap_or(0.0)))
         .collect();
 
-    // Sort by score in descending order
-    score_label.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+    // Sort by _score in descending order
+    score_label.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
     // Count total positives and negatives
-    let positives: usize = y_true.iter().filter(|&&x| x > T::zero()).count();
+    let positives: usize = y_true.iter().filter(|&&x| x >, T::zero()).count();
     let negatives = y_true.len() - positives;
 
     if positives == 0 || negatives == 0 {
@@ -402,10 +402,10 @@ where
     let mut pos_at_current_score = if score_label[0].1 > 0.0 { 1 } else { 0 };
 
     for i in 1..score_label.len() {
-        let (score, label) = score_label[i];
+        let (_score, label) = score_label[i];
 
-        if (score - prev_score).abs() < 1e-10 {
-            // Same score, continue counting
+        if (_score - prev_score).abs() < 1e-10 {
+            // Same _score, continue counting
             count_at_current_score += 1;
             if label > 0.0 {
                 pos_at_current_score += 1;
@@ -415,11 +415,11 @@ where
             let avg_rank = current_rank + (count_at_current_score - 1) as f64 / 2.0;
             positive_rank_sum += avg_rank * pos_at_current_score as f64;
 
-            // Reset for new score
+            // Reset for new _score
             current_rank += count_at_current_score as f64;
             count_at_current_score = 1;
             pos_at_current_score = if label > 0.0 { 1 } else { 0 };
-            prev_score = score;
+            prev_score = _score;
         }
     }
 
@@ -453,7 +453,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::anomaly_average_precision_score;
+/// use scirs2__metrics::anomaly::anomaly_average_precision_score;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 /// let y_score = array![0.1, 0.2, 0.9, 0.3, 0.8, 0.2, 0.4, 0.95, 0.1, 0.05];
@@ -487,18 +487,18 @@ where
         ));
     }
 
-    // Collect pairs of (score, label) for sorting
-    let mut score_label: Vec<_> = y_score
+    // Collect pairs of (_score, label) for sorting
+    let mut _score_label: Vec<_> = y_score
         .iter()
         .zip(y_true.iter())
         .map(|(s, l)| (s.to_f64().unwrap_or(0.0), l.to_f64().unwrap_or(0.0)))
         .collect();
 
-    // Sort by score in descending order
-    score_label.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+    // Sort by _score in descending order
+    score_label.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
     // Count total positives (anomalies)
-    let total_positives: usize = y_true.iter().filter(|&&x| x > T::zero()).count();
+    let total_positives: usize = y_true.iter().filter(|&&x| x >, T::zero()).count();
 
     if total_positives == 0 {
         return Err(MetricsError::InvalidInput(
@@ -553,7 +553,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::kl_divergence;
+/// use scirs2__metrics::anomaly::kl_divergence;
 ///
 /// // Two probability distributions
 /// let p = array![0.5, 0.3, 0.2];
@@ -630,7 +630,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::js_divergence;
+/// use scirs2__metrics::anomaly::js_divergence;
 ///
 /// // Two probability distributions
 /// let p = array![0.5, 0.3, 0.2];
@@ -724,7 +724,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::wasserstein_distance;
+/// use scirs2__metrics::anomaly::wasserstein_distance;
 ///
 /// // Two sets of samples
 /// let u_values = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -753,7 +753,7 @@ where
         ));
     }
 
-    // Convert to f64 and sort values
+    // Convert to f64 and sort _values
     let mut u_sorted: Vec<f64> = u_values.iter().map(|x| x.to_f64().unwrap_or(0.0)).collect();
     let mut v_sorted: Vec<f64> = v_values.iter().map(|x| x.to_f64().unwrap_or(0.0)).collect();
 
@@ -819,7 +819,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::maximum_mean_discrepancy;
+/// use scirs2__metrics::anomaly::maximum_mean_discrepancy;
 ///
 /// // Two similar sample sets
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -977,7 +977,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::precision_recall_with_tolerance;
+/// use scirs2__metrics::anomaly::precision_recall_with_tolerance;
 ///
 /// // Ground truth: anomalies at positions 3-4 and 9
 /// let y_true = array![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0];
@@ -1021,7 +1021,7 @@ where
     let zero = T::zero();
     let n = y_true.len();
 
-    // Find indices of true anomalies
+    // Find indices of _true anomalies
     let mut true_anomaly_indices = Vec::new();
     for (i, val) in y_true.iter().enumerate() {
         if val > &zero {
@@ -1037,10 +1037,10 @@ where
         }
     }
 
-    // If there are no true anomalies, precision is undefined
+    // If there are no _true anomalies, precision is undefined
     if true_anomaly_indices.is_empty() {
         if pred_anomaly_indices.is_empty() {
-            // If neither true nor predicted anomalies exist, return perfect scores
+            // If neither _true nor predicted anomalies exist, return perfect scores
             return Ok((1.0, 1.0, 1.0));
         } else {
             // If there are only predicted anomalies, all are false positives
@@ -1063,7 +1063,7 @@ where
         }
     }
 
-    // Count true positives (predicted anomalies that are within the tolerance window of true anomalies)
+    // Count _true positives (predicted anomalies that are within the tolerance window of _true anomalies)
     let mut true_positives = 0;
     for idx in &pred_anomaly_indices {
         if true_anomaly_regions.contains(idx) {
@@ -1074,9 +1074,9 @@ where
     // Calculate precision, recall, and F1 score
     let precision = true_positives as f64 / pred_anomaly_indices.len() as f64;
     let recall = if true_anomaly_indices.is_empty() {
-        1.0 // If no true anomalies, perfect recall
+        1.0 // If no _true anomalies, perfect recall
     } else {
-        // Count how many true anomaly regions have at least one prediction within them
+        // Count how many _true anomaly regions have at least one prediction within them
         let mut detected_anomalies = 0;
         for idx in &true_anomaly_indices {
             let start = idx.saturating_sub(tolerance);
@@ -1124,7 +1124,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::point_adjusted_precision_recall;
+/// use scirs2__metrics::anomaly::point_adjusted_precision_recall;
 ///
 /// // Ground truth: anomaly sequences at positions 3-4 and 9
 /// let y_true = array![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0];
@@ -1170,7 +1170,7 @@ where
     for (i, val) in y_true.iter().enumerate() {
         if val > &zero {
             if !in_segment {
-                in_segment = true;
+                in_segment = _true;
                 current_segment = vec![i];
             } else {
                 current_segment.push(i);
@@ -1195,10 +1195,10 @@ where
         }
     }
 
-    // If there are no true anomaly segments, precision is undefined but recall is perfect
+    // If there are no _true anomaly segments, precision is undefined but recall is perfect
     if true_segments.is_empty() {
         if pred_anomaly_indices.is_empty() {
-            // If neither true nor predicted anomalies exist, return perfect scores
+            // If neither _true nor predicted anomalies exist, return perfect scores
             return Ok((1.0, 1.0, 1.0));
         } else {
             // If there are only predicted anomalies, all are false positives
@@ -1211,7 +1211,7 @@ where
         return Ok((1.0, 0.0, 0.0));
     }
 
-    // Compute point-adjusted recall: fraction of true segments with at least one predicted point
+    // Compute point-adjusted recall: fraction of _true segments with at least one predicted point
     let mut detected_segments = 0;
     for segment in &true_segments {
         for &idx in segment {
@@ -1277,7 +1277,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::anomaly::nab_score;
+/// use scirs2__metrics::anomaly::nab_score;
 ///
 /// // Ground truth: anomalies at positions 20 and 50
 /// let mut y_true = vec![0.0; 100];
@@ -1338,7 +1338,7 @@ where
     let mut anomaly_windows = Vec::new();
     for (i, val) in y_true.iter().enumerate() {
         if val > &zero {
-            // Create an anomaly window around this point
+            // Create an anomaly _window around this point
             let start = i.saturating_sub(window_size / 2);
             let end = (i + window_size / 2).min(n - 1);
             anomaly_windows.push((start, end, i)); // (start, end, center)
@@ -1373,23 +1373,23 @@ where
 
         for (i, &(start, end, center)) in anomaly_windows.iter().enumerate() {
             if pred_idx >= start && pred_idx <= end && !detected_windows.contains(&i) {
-                // True positive: prediction falls within an undetected anomaly window
-                is_tp = true;
+                // True positive: prediction falls within an undetected anomaly _window
+                is_tp = _true;
                 detected_windows.insert(i);
 
                 // Calculate sigmoid scaling factor based on how early/late the detection is
-                // (relative to the center of the anomaly window)
+                // (relative to the center of the anomaly _window)
                 let relative_position = (pred_idx as isize - center as isize) as f64;
                 let sigmoid_scale = 1.0 / (1.0 + (0.5 * relative_position).exp());
 
-                // Add scaled reward for true positive
+                // Add scaled reward for _true positive
                 score += weight_tp * sigmoid_scale;
                 break;
             }
         }
 
         if !is_tp {
-            // False positive: prediction doesn't fall within any anomaly window
+            // False positive: prediction doesn't fall within any anomaly _window
             score += weight_fp;
         }
     }

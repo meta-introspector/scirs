@@ -5,7 +5,7 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2};
-use rand_distr::{Distribution, Normal};
+use rand__distr::{Distribution, Normal};
 use scirs2_core::validation::*;
 use scirs2_core::Rng;
 use std::fmt::Debug;
@@ -51,26 +51,26 @@ pub struct HamiltonianMonteCarlo<T: DifferentiableTarget> {
 
 impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     /// Create a new HMC sampler
-    pub fn new(target: T, initial: Array1<f64>, step_size: f64, n_steps: usize) -> Result<Self> {
+    pub fn new(_target: T, initial: Array1<f64>, step_size: f64, n_steps: usize) -> Result<Self> {
         check_array_finite(&initial, "initial")?;
         check_positive(step_size, "step_size")?;
         check_positive(n_steps, "n_steps")?;
 
-        if initial.len() != target.dim() {
+        if initial.len() != _target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
-                "initial dimension ({}) must match target dimension ({})",
+                "initial dimension ({}) must match _target dimension ({})",
                 initial.len(),
-                target.dim()
+                _target.dim()
             )));
         }
 
         let dim = initial.len();
         let mass_matrix = Array2::eye(dim);
         let mass_inv = Array2::eye(dim);
-        let current_log_density = target.log_density(&initial);
+        let current_log_density = _target.log_density(&initial);
 
         Ok(Self {
-            target,
+            _target,
             position: initial,
             current_log_density,
             step_size,
@@ -99,7 +99,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
 
         // Compute inverse
         let mass_inv = scirs2_linalg::inv(&mass_matrix.view(), None).map_err(|e| {
-            StatsError::ComputationError(format!("Failed to invert mass matrix: {}", e))
+            StatsError::ComputationError(format!("Failed to invert mass _matrix: {}", e))
         })?;
 
         self.mass_matrix = mass_matrix;
@@ -215,14 +215,14 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.position.len();
-        let mut samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples, dim));
 
         for i in 0..n_samples {
             let sample = self.step(rng)?;
-            samples.row_mut(i).assign(&sample);
+            _samples.row_mut(i).assign(&sample);
         }
 
-        Ok(samples)
+        Ok(_samples)
     }
 
     /// Sample with burn-in
@@ -242,7 +242,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
         // Reset counters after burn-in
         self.reset_counters();
 
-        // Collect samples
+        // Collect _samples
         self.sample(n_samples, rng)
     }
 
@@ -295,9 +295,9 @@ pub struct DualAveragingAdaptation {
 
 impl DualAveragingAdaptation {
     /// Create new dual averaging adaptation
-    pub fn new(target: f64, initial_log_step: f64) -> Self {
+    pub fn new(_target: f64, initial_log_step: f64) -> Self {
         Self {
-            target,
+            _target,
             gamma: 0.05,
             t0: 10.0,
             kappa: 0.75,
@@ -329,8 +329,8 @@ impl DualAveragingAdaptation {
 
 impl<T: DifferentiableTarget> NoUTurnSampler<T> {
     /// Create new NUTS sampler
-    pub fn new(target: T, initial: Array1<f64>, initial_step_size: f64) -> Result<Self> {
-        let hmc = HamiltonianMonteCarlo::new(target, initial, initial_step_size, 1)?;
+    pub fn new(_target: T, initial: Array1<f64>, initial_step_size: f64) -> Result<Self> {
+        let hmc = HamiltonianMonteCarlo::new(_target, initial, initial_step_size, 1)?;
         let step_size_adaptation = DualAveragingAdaptation::new(0.8, initial_step_size.ln());
 
         Ok(Self {
@@ -375,8 +375,7 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
         position: Array1<f64>,
         momentum: Array1<f64>,
         log_u: f64,
-        depth: usize,
-        _rng: &mut R,
+        depth: usize_rng: &mut R,
     ) -> Result<(Array1<f64>, f64)> {
         if depth >= self.max_tree_depth {
             // Base case: return input position with low acceptance
@@ -420,14 +419,14 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
 
         // Sampling phase
         let dim = self.hmc.position.len();
-        let mut samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples, dim));
 
         for i in 0..n_samples {
             let sample = self.step(rng)?;
-            samples.row_mut(i).assign(&sample);
+            _samples.row_mut(i).assign(&sample);
         }
 
-        Ok(samples)
+        Ok(_samples)
     }
 }
 
@@ -446,17 +445,17 @@ pub struct MultivariateNormalHMC {
 
 impl MultivariateNormalHMC {
     /// Create new multivariate normal target
-    pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
-        check_array_finite(&mean, "mean")?;
+    pub fn new(_mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
+        check_array_finite(&_mean, "_mean")?;
         check_array_finite(&covariance, "covariance")?;
 
-        if covariance.nrows() != mean.len() || covariance.ncols() != mean.len() {
+        if covariance.nrows() != _mean.len() || covariance.ncols() != _mean.len() {
             return Err(StatsError::DimensionMismatch(format!(
                 "covariance shape ({}, {}) must be ({}, {})",
                 covariance.nrows(),
                 covariance.ncols(),
-                mean.len(),
-                mean.len()
+                _mean.len(),
+                _mean.len()
             )));
         }
 
@@ -474,11 +473,11 @@ impl MultivariateNormalHMC {
             ));
         }
 
-        let d = mean.len() as f64;
+        let d = _mean.len() as f64;
         let log_norm_const = -0.5 * (d * (2.0 * std::f64::consts::PI).ln() + det.ln());
 
         Ok(Self {
-            mean,
+            _mean,
             precision,
             log_norm_const,
         })
@@ -522,12 +521,12 @@ pub struct CustomDifferentiableTarget<F, G> {
 
 impl<F, G> CustomDifferentiableTarget<F, G> {
     /// Create new custom target
-    pub fn new(dim: usize, log_density_fn: F, gradient_fn: G) -> Result<Self> {
-        check_positive(dim, "dim")?;
+    pub fn new(_dim: usize, log_density_fn: F, gradient_fn: G) -> Result<Self> {
+        check_positive(_dim, "_dim")?;
         Ok(Self {
             log_density_fn,
             gradient_fn,
-            dim,
+            _dim,
         })
     }
 }

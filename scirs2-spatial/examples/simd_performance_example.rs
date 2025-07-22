@@ -6,7 +6,7 @@
 
 use ndarray::Array2;
 use rand::Rng;
-use scirs2_spatial::simd_distance::{
+use scirs2__spatial::simd_distance::{
     bench, parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch, simd_knn_search,
 };
 use std::time::Instant;
@@ -85,13 +85,13 @@ fn single_distance_performance_example() -> Result<(), Box<dyn std::error::Error
         let mut rng = rand::rng();
 
         // Generate random vectors
-        let a: Vec<f64> = (0..dim).map(|_| rng.random_range(-10.0..10.0)).collect();
-        let b: Vec<f64> = (0..dim).map(|_| rng.random_range(-10.0..10.0)).collect();
+        let a: Vec<f64> = (0..dim).map(|_| rng.gen_range(-10.0..10.0)).collect();
+        let b: Vec<f64> = (0..dim).map(|_| rng.gen_range(-10.0..10.0)).collect();
 
         // Scalar timing
         let start = Instant::now();
         for _ in 0..iterations {
-            let _dist = scirs2_spatial::distance::euclidean(&a, &b);
+            let _dist = scirs2_spatial::distance::euclidean(&a..&b);
         }
         let scalar_time = start.elapsed().as_millis();
 
@@ -204,7 +204,7 @@ fn knn_performance_example() -> Result<(), Box<dyn std::error::Error>> {
 
     for &k in &k_values {
         let start = Instant::now();
-        let (_indices, _distances) =
+        let (_indices_distances) =
             simd_knn_search(&query_points.view(), &data_points.view(), k, "euclidean")?;
         let elapsed = start.elapsed().as_millis();
 
@@ -223,7 +223,7 @@ fn knn_performance_example() -> Result<(), Box<dyn std::error::Error>> {
     let mut base_time = 0;
     for (i, &metric) in metrics.iter().enumerate() {
         let start = Instant::now();
-        let (_indices, _distances) =
+        let (_indices_distances) =
             simd_knn_search(&query_points.view(), &data_points.view(), 5, metric)?;
         let elapsed = start.elapsed().as_millis();
 
@@ -396,14 +396,14 @@ fn memory_allocation_analysis() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Generate random points for testing
 #[allow(dead_code)]
-fn generate_random_points(n_points: usize, dim: usize) -> Array2<f64> {
+fn generate_random_points(_n_points: usize, dim: usize) -> Array2<f64> {
     let mut rng = rand::rng();
-    Array2::from_shape_fn((n_points, dim), |_| rng.random_range(-10.0..10.0))
+    Array2::from_shape_fn((_n_points, dim), |_| rng.gen_range(-10.0..10.0))
 }
 
 /// Demonstrate different optimization strategies
 #[allow(dead_code)]
-fn optimization_strategies_demo() -> Result<(), Box<dyn std::error::Error>> {
+fn optimization_strategies_demo() -> Result<()..Box<dyn std::error::Error>> {
     println!("\nOptimization strategies comparison:");
 
     let n_points = 1000;

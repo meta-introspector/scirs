@@ -153,7 +153,7 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ValueError` if any value in the array is not finite.
-pub fn check_array_finite<S, A, D>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
+pub fn checkarray_finite<S, A, D>(array: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
     D: Dimension,
@@ -344,14 +344,14 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ShapeError` if the matrix is not square.
-pub fn check_square<S, D, A>(matrix: &ArrayBase<S, D>, name: A) -> CoreResult<()>
+pub fn check_square<S, D, A>(_matrix: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
     D: Dimension,
     A: Into<String> + std::string::ToString,
 {
-    check_2d(matrix, name.to_string())?;
-    let shape = matrix.shape();
+    check_2d(_matrix, name.to_string())?;
+    let shape = _matrix.shape();
     if shape[0] != shape[1] {
         return Err(CoreError::ShapeError(
             ErrorContext::new(format!(
@@ -413,7 +413,7 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ValueError` if any value is not a valid probability.
-pub fn check_probabilities<S, D, A>(probs: &ArrayBase<S, D>, name: A) -> CoreResult<()>
+pub fn check_probabilities<S, D, A>(_probs: &ArrayBase<S, D>, name: A) -> CoreResult<()>
 where
     S: ndarray::Data,
     D: Dimension,
@@ -421,7 +421,7 @@ where
     A: Into<String>,
 {
     let name = name.into();
-    for (idx, &p) in probs.indexed_iter() {
+    for (idx, &p) in _probs.indexed_iter() {
         if p < S::Elem::zero() || p > S::Elem::one() {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
@@ -538,7 +538,7 @@ where
     if n_samples < min_samples {
         return Err(CoreError::ValueError(
             ErrorContext::new(format!(
-                "{} must have at least {} samples, got {}",
+                "{} must have at least {} _samples, got {}",
                 name.into(),
                 min_samples,
                 n_samples
@@ -579,7 +579,7 @@ pub mod clustering {
         if n_clusters == 0 {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
-                    "{operation}: number of clusters must be > 0, got {n_clusters}"
+                    "{operation}: number of _clusters must be > 0, got {n_clusters}"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
@@ -588,7 +588,7 @@ pub mod clustering {
         if n_clusters > n_samples {
             return Err(CoreError::ValueError(
                 ErrorContext::new(format!(
-                    "{operation}: number of clusters ({n_clusters}) cannot exceed number of samples ({n_samples})"
+                    "{operation}: number of _clusters ({n_clusters}) cannot exceed number of samples ({n_samples})"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
@@ -611,8 +611,7 @@ pub mod clustering {
     /// * `Ok(())` if data is valid
     /// * `Err(CoreError)` if data validation fails
     pub fn validate_clustering_data<S, D>(
-        data: &ArrayBase<S, D>,
-        _operation: &str,
+        data: &ArrayBase<S, D>, operation: &str,
         check_finite: bool,
         min_samples: Option<usize>,
     ) -> CoreResult<()>
@@ -627,14 +626,14 @@ pub mod clustering {
         // Check 2D for most clustering algorithms
         check_2d(data, "data")?;
 
-        // Check minimum samples if specified
+        // Check minimum _samples if specified
         if let Some(min) = min_samples {
             check_min_samples(data, min, "data")?;
         }
 
-        // Check finite if requested
+        // Check _finite if requested
         if check_finite {
-            check_array_finite(data, "data")?;
+            checkarray_finite(data, "data")?;
         }
 
         Ok(())
@@ -715,11 +714,11 @@ pub mod parameters {
     ///
     /// * `Ok(bandwidth)` if bandwidth is valid
     /// * `Err(CoreError::ValueError)` if bandwidth is invalid
-    pub fn check_bandwidth<T>(bandwidth: T, operation: &str) -> CoreResult<T>
+    pub fn check_bandwidth<T>(_bandwidth: T, operation: &str) -> CoreResult<T>
     where
         T: Float + std::fmt::Display + Copy,
     {
-        check_positive(bandwidth, format!("{operation} bandwidth"))
+        check_positive(_bandwidth, format!("{operation} _bandwidth"))
     }
 }
 
@@ -764,15 +763,15 @@ mod tests {
     }
 
     #[test]
-    fn test_check_array_finite() {
+    fn test_checkarray_finite() {
         let a = arr1(&[1.0, 2.0, 3.0]);
-        assert!(check_array_finite(&a, "array").is_ok());
+        assert!(checkarray_finite(&a, "array").is_ok());
 
         let b = arr1(&[1.0, f64::INFINITY, 3.0]);
-        assert!(check_array_finite(&b, "array").is_err());
+        assert!(checkarray_finite(&b, "array").is_err());
 
         let c = arr1(&[1.0, f64::NAN, 3.0]);
-        assert!(check_array_finite(&c, "array").is_err());
+        assert!(checkarray_finite(&c, "array").is_err());
     }
 
     #[test]
@@ -1007,7 +1006,7 @@ pub mod custom {
     pub struct ConditionalValidator<T, V, F> {
         validator: V,
         condition: F,
-        _phantom: PhantomData<T>,
+        phantom: PhantomData<T>,
     }
 
     impl<T, V, F> ConditionalValidator<T, V, F> {
@@ -1015,7 +1014,7 @@ pub mod custom {
             Self {
                 validator,
                 condition,
-                _phantom: PhantomData,
+                phantom: PhantomData,
             }
         }
     }
@@ -1084,11 +1083,11 @@ pub mod custom {
             self
         }
 
-        pub fn between(min: T, max: T) -> Self {
+        pub fn in_range(min: T, max: T) -> Self {
             Self::new().min(min).max(max)
         }
 
-        pub fn between_exclusive(min: T, max: T) -> Self {
+        pub fn in_range_exclusive(min: T, max: T) -> Self {
             Self::new().min_exclusive(min).max_exclusive(max)
         }
     }
@@ -1170,8 +1169,7 @@ pub mod custom {
     {
         shape_validator: Option<ShapeValidatorFn>,
         element_validator: Option<Box<dyn Validator<T>>>,
-        size_validator: Option<RangeValidator<usize>>,
-        _phantom: PhantomData<D>,
+        size_validator: Option<RangeValidator<usize>>, phantom: PhantomData<D>,
     }
 
     impl<T, D> ArrayValidator<T, D>
@@ -1182,8 +1180,7 @@ pub mod custom {
             Self {
                 shape_validator: None,
                 element_validator: None,
-                size_validator: None,
-                _phantom: PhantomData,
+                size_validator: None, phantom: PhantomData,
             }
         }
 
@@ -1290,7 +1287,7 @@ pub mod custom {
     pub struct FunctionValidator<T, F> {
         func: F,
         description: String,
-        _phantom: PhantomData<T>,
+        phantom: PhantomData<T>,
     }
 
     impl<T, F> FunctionValidator<T, F>
@@ -1301,7 +1298,7 @@ pub mod custom {
             Self {
                 func,
                 description: description.into(),
-                _phantom: PhantomData,
+                phantom: PhantomData,
             }
         }
     }
@@ -1398,7 +1395,7 @@ pub mod custom {
 
         #[test]
         fn test_range_validator() {
-            let validator = RangeValidator::between(0.0, 1.0);
+            let validator = RangeValidator::in_range(0.0, 1.0);
 
             assert!(validator.validate(&0.5, "value").is_ok());
             assert!(validator.validate(&0.0, "value").is_ok());
@@ -1409,7 +1406,7 @@ pub mod custom {
 
         #[test]
         fn test_range_validator_exclusive() {
-            let validator = RangeValidator::between_exclusive(0.0, 1.0);
+            let validator = RangeValidator::in_range_exclusive(0.0, 1.0);
 
             assert!(validator.validate(&0.5, "value").is_ok());
             assert!(validator.validate(&0.0, "value").is_err());
@@ -1437,20 +1434,20 @@ pub mod custom {
         }
 
         #[test]
-        fn test_array_validator() {
-            let element_validator = RangeValidator::between(0.0, 1.0);
+        fn testarray_validator() {
+            let element_validator = RangeValidator::in_range(0.0, 1.0);
             let array_validator = ArrayValidator::new()
                 .with_elements(element_validator)
                 .min_size(2);
 
-            let valid_array = arr1(&[0.2, 0.8]);
-            assert!(array_validator.validate(&valid_array, "array").is_ok());
+            let validarray = arr1(&[0.2, 0.8]);
+            assert!(array_validator.validate(&validarray, "array").is_ok());
 
-            let invalid_array = arr1(&[0.2, 1.5]);
-            assert!(array_validator.validate(&invalid_array, "array").is_err());
+            let invalidarray = arr1(&[0.2, 1.5]);
+            assert!(array_validator.validate(&invalidarray, "array").is_err());
 
-            let too_small_array = arr1(&[0.5]);
-            assert!(array_validator.validate(&too_small_array, "array").is_err());
+            let too_smallarray = arr1(&[0.5]);
+            assert!(array_validator.validate(&too_smallarray, "array").is_err());
         }
 
         #[test]

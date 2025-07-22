@@ -89,9 +89,9 @@ fn main() {
 
     // Create data loaders
     let batch_size = 32;
-    let _train_loader = DataLoader::new(dist_train_dataset, batch_size, true, Some(42));
+    let train_loader = DataLoader::new(dist_train_dataset, batch_size, true, Some(42));
 
-    let _val_loader = DataLoader::new(dist_val_dataset, batch_size, false, None);
+    let val_loader = DataLoader::new(dist_val_dataset, batch_size, false, None);
 
     println!("Created data loaders with batch size {batch_size}");
 
@@ -103,7 +103,7 @@ fn main() {
     let optimizer = Box::new(Adam::new(0.001, Some(0.9), Some(0.999), Some(1e-8)));
 
     // Create loss function
-    let loss_fn = Box::new(CrossEntropyLoss::new(Some("mean")));
+    let loss_fn = Box::new(CrossEntropyLoss::new(Some(mean)));
 
     // Create a new model instance for the trainer
     // Note: In production, you would implement proper cloning for Sequential
@@ -120,7 +120,7 @@ fn main() {
     println!("Created trainer with Adam optimizer and CrossEntropyLoss");
 
     // Create distributed trainer
-    let _dist_trainer = DistributedTrainingFactory::create_trainer(trainer, dist_config.clone());
+    let dist_trainer = DistributedTrainingFactory::create_trainer(trainer, dist_config.clone());
 
     println!("Created distributed trainer");
 
@@ -130,7 +130,7 @@ fn main() {
 
     // Create a temporary directory for saving models
     let temp_dir = tempdir().unwrap();
-    let model_dir = temp_dir.path().join("models");
+    let model_dir = temp_dir.path().join(models);
 
     println!("Created model directory at: {}", model_dir.display());
 
@@ -170,7 +170,7 @@ fn main() {
     metrics.insert("accuracy".to_string(), 0.85);
 
     // Save checkpoint
-    let checkpoint_path = model_dir.join("checkpoint");
+    let checkpoint_path = model_dir.join(checkpoint);
     let result = save_checkpoint(
         &model,
         optimizer.as_ref(),
@@ -188,13 +188,13 @@ fn main() {
     let result = load_checkpoint(&checkpoint_path);
 
     match result {
-        Ok((model, _optimizer, epoch, metrics)) => {
+        Ok((model_optimizer, epoch, metrics)) => {
             println!("Loaded checkpoint from epoch {epoch}");
             println!("Loaded model with {} layers", model.layers().len());
             println!(
                 "Metrics: loss = {}, accuracy = {}",
-                metrics.get("loss").unwrap_or(&0.0),
-                metrics.get("accuracy").unwrap_or(&0.0)
+                metrics.get(loss).unwrap_or(&0.0),
+                metrics.get(accuracy).unwrap_or(&0.0)
             );
         }
         Err(e) => println!("Error loading checkpoint: {e}"),
@@ -288,7 +288,7 @@ fn create_dataset() -> (InMemoryDataset, InMemoryDataset) {
 
     // Generate random inputs
     let inputs = Array2::<f64>::from_shape_fn((num_samples, num_features), |_| {
-        rand::random::<f64>() * 2.0 - 1.0
+        rand::random::<f64>() * 2.0.saturating_sub(1).0
     });
 
     // Generate random one-hot targets

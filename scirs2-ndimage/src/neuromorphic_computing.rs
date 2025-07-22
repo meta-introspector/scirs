@@ -233,7 +233,7 @@ where
 {
     if image_sequence.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "Empty image sequence".to_string(),
+            "Empty image _sequence".to_string(),
         ));
     }
 
@@ -242,7 +242,7 @@ where
     // Initialize liquid (reservoir) neurons
     let mut reservoir = initialize_reservoir(reservoir_size, height, width, config)?;
 
-    // Process sequence through liquid state machine
+    // Process _sequence through liquid state machine
     let mut liquid_states = Vec::new();
 
     for (t, image) in image_sequence.iter().enumerate() {
@@ -364,7 +364,7 @@ where
     for (feature_idx, detector) in feature_detectors.iter().enumerate() {
         let (det_h, det_w) = detector.dim();
 
-        // Sliding window feature detection with temporal coding
+        // Sliding _window feature detection with temporal coding
         for y in 0..height.saturating_sub(det_h) {
             for x in 0..width.saturating_sub(det_w) {
                 let mut temporal_correlation = 0.0;
@@ -630,8 +630,7 @@ fn apply_stdp_learning(
 
 #[allow(dead_code)]
 fn spike_trains_to_image<T>(
-    spike_trains: ndarray::ArrayView3<f64>,
-    _config: &NeuromorphicConfig,
+    spike_trains: ndarray::ArrayView3<f64>, _config: &NeuromorphicConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -639,7 +638,7 @@ where
     let (time_steps, height, width) = spike_trains.dim();
     let mut image = Array2::zeros((height, width));
 
-    // Convert spike trains back to continuous values
+    // Convert spike _trains back to continuous values
     for y in 0..height {
         for x in 0..width {
             let mut _spike_count = 0.0;
@@ -770,9 +769,7 @@ fn apply_event_kernel(
 
 #[allow(dead_code)]
 fn initialize_reservoir(
-    reservoir_size: usize,
-    _height: usize,
-    _width: usize,
+    reservoir_size: usize, _height: usize_width: usize,
     config: &NeuromorphicConfig,
 ) -> NdimageResult<Array1<SpikingNeuron>> {
     let mut reservoir = Array1::from_elem(reservoir_size, SpikingNeuron::default());
@@ -788,16 +785,16 @@ fn initialize_reservoir(
 }
 
 #[allow(dead_code)]
-fn image_to_currents<T>(image: &ArrayView2<T>) -> NdimageResult<Array2<f64>>
+fn image_to_currents<T>(_image: &ArrayView2<T>) -> NdimageResult<Array2<f64>>
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = image.dim();
+    let (height, width) = _image.dim();
     let mut currents = Array2::zeros((height, width));
 
     for y in 0..height {
         for x in 0..width {
-            currents[(y, x)] = image[(y, x)].to_f64().unwrap_or(0.0);
+            currents[(y, x)] = _image[(y, x)].to_f64().unwrap_or(0.0);
         }
     }
 
@@ -836,10 +833,10 @@ fn update_reservoir_dynamics(
 }
 
 #[allow(dead_code)]
-fn capture_reservoir_state(reservoir: &Array1<SpikingNeuron>) -> NdimageResult<Array1<f64>> {
-    let mut state = Array1::zeros(reservoir.len());
+fn capture_reservoir_state(_reservoir: &Array1<SpikingNeuron>) -> NdimageResult<Array1<f64>> {
+    let mut state = Array1::zeros(_reservoir.len());
 
-    for (i, neuron) in reservoir.iter().enumerate() {
+    for (i, neuron) in _reservoir.iter().enumerate() {
         state[i] = neuron.membrane_potential;
     }
 
@@ -849,8 +846,7 @@ fn capture_reservoir_state(reservoir: &Array1<SpikingNeuron>) -> NdimageResult<A
 #[allow(dead_code)]
 fn readout_from_liquid_states(
     liquid_states: &[Array1<f64>],
-    output_shape: (usize, usize),
-    _config: &NeuromorphicConfig,
+    output_shape: (usize, usize), _config: &NeuromorphicConfig,
 ) -> NdimageResult<Array2<f64>> {
     let (height, width) = output_shape;
     let mut output = Array2::zeros((height, width));

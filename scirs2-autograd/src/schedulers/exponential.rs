@@ -13,7 +13,7 @@ use crate::Float;
 ///
 /// # Example
 /// ```
-/// use scirs2_autograd::schedulers::{ExponentialLR, LRScheduler};
+/// use scirs2__autograd::schedulers::{ExponentialLR, LRScheduler};
 ///
 /// let scheduler = ExponentialLR::new(0.1f32, 0.95f32);
 ///
@@ -44,10 +44,10 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// # Panics
     /// Panics if `gamma` is not positive
-    pub fn new(initial_lr: F, gamma: F) -> Self {
+    pub fn new(_initial_lr: F, gamma: F) -> Self {
         assert!(gamma > F::zero(), "gamma must be positive");
 
-        Self { initial_lr, gamma }
+        Self { _initial_lr, gamma }
     }
 
     /// Create an ExponentialLR scheduler with slow decay
@@ -57,8 +57,8 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn slow_decay(initial_lr: F) -> Self {
-        Self::new(initial_lr, F::from(0.99).unwrap())
+    pub fn slow_decay(_initial_lr: F) -> Self {
+        Self::new(_initial_lr, F::from(0.99).unwrap())
     }
 
     /// Create an ExponentialLR scheduler with moderate decay
@@ -68,8 +68,8 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn moderate_decay(initial_lr: F) -> Self {
-        Self::new(initial_lr, F::from(0.95).unwrap())
+    pub fn moderate_decay(_initial_lr: F) -> Self {
+        Self::new(_initial_lr, F::from(0.95).unwrap())
     }
 
     /// Create an ExponentialLR scheduler with fast decay
@@ -79,8 +79,8 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn fast_decay(initial_lr: F) -> Self {
-        Self::new(initial_lr, F::from(0.9).unwrap())
+    pub fn fast_decay(_initial_lr: F) -> Self {
+        Self::new(_initial_lr, F::from(0.9).unwrap())
     }
 
     /// Create an ExponentialLR scheduler from half-life
@@ -94,7 +94,7 @@ impl<F: Float> ExponentialLR<F> {
     ///
     /// # Returns
     /// ExponentialLR scheduler with appropriate gamma
-    pub fn from_half_life(initial_lr: F, half_life: usize) -> Self {
+    pub fn from_half_life(_initial_lr: F, half_life: usize) -> Self {
         assert!(half_life > 0, "half_life must be greater than 0");
 
         // gamma = 0.5^(1/half_life)
@@ -102,7 +102,7 @@ impl<F: Float> ExponentialLR<F> {
             .unwrap()
             .powf(F::one() / F::from(half_life).unwrap());
 
-        Self::new(initial_lr, gamma)
+        Self::new(_initial_lr, gamma)
     }
 
     /// Calculate the learning rate after a specific number of steps

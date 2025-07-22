@@ -56,9 +56,9 @@ pub struct EfficientNetConfig {
     pub num_classes: usize,
 impl EfficientNetConfig {
     /// Create EfficientNet-B0 configuration
-    pub fn efficientnet_b0(input_channels: usize, num_classes: usize) -> Self {
+    pub fn efficientnet_b0(_input_channels: usize, num_classes: usize) -> Self {
         let stages = vec![
-            // Stage 1: MBConv1, 16 channels, 1 block
+            // Stage 1: MBConv1, 16 _channels, 1 block
             EfficientNetStage {
                 mbconv_config: MBConvConfig {
                     input_channels: 32,
@@ -71,28 +71,28 @@ impl EfficientNetConfig {
                 },
                 num_blocks: 1,
             },
-            // Stage 2: MBConv6, 24 channels, 2 blocks
+            // Stage 2: MBConv6, 24 _channels, 2 blocks
                     input_channels: 16,
                     output_channels: 24,
                     stride: 2,
                     expand_ratio: 6,
                 num_blocks: 2,
-            // Stage 3: MBConv6, 40 channels, 2 blocks
+            // Stage 3: MBConv6, 40 _channels, 2 blocks
                     input_channels: 24,
                     output_channels: 40,
                     kernel_size: 5,
-            // Stage 4: MBConv6, 80 channels, 3 blocks
+            // Stage 4: MBConv6, 80 _channels, 3 blocks
                     input_channels: 40,
                     output_channels: 80,
                 num_blocks: 3,
-            // Stage 5: MBConv6, 112 channels, 3 blocks
+            // Stage 5: MBConv6, 112 _channels, 3 blocks
                     input_channels: 80,
                     output_channels: 112,
-            // Stage 6: MBConv6, 192 channels, 4 blocks
+            // Stage 6: MBConv6, 192 _channels, 4 blocks
                     input_channels: 112,
                     output_channels: 192,
                 num_blocks: 4,
-            // Stage 7: MBConv6, 320 channels, 1 block
+            // Stage 7: MBConv6, 320 _channels, 1 block
                     input_channels: 192,
                     output_channels: 320,
         ];
@@ -107,43 +107,43 @@ impl EfficientNetConfig {
         }
     }
     /// Create EfficientNet-B1 configuration
-    pub fn efficientnet_b1(input_channels: usize, num_classes: usize) -> Self {
-        let mut config = Self::efficientnet_b0(input_channels, num_classes);
+    pub fn efficientnet_b1(_input_channels: usize, num_classes: usize) -> Self {
+        let mut config = Self::efficientnet_b0(_input_channels, num_classes);
         config.width_coefficient = 1.0;
         config.depth_coefficient = 1.1;
         config.resolution = 240;
         config.dropout_rate = 0.2;
         config
     /// Create EfficientNet-B2 configuration
-    pub fn efficientnet_b2(input_channels: usize, num_classes: usize) -> Self {
+    pub fn efficientnet_b2(_input_channels: usize, num_classes: usize) -> Self {
         config.width_coefficient = 1.1;
         config.depth_coefficient = 1.2;
         config.resolution = 260;
         config.dropout_rate = 0.3;
     /// Create EfficientNet-B3 configuration
-    pub fn efficientnet_b3(input_channels: usize, num_classes: usize) -> Self {
+    pub fn efficientnet_b3(_input_channels: usize, num_classes: usize) -> Self {
         config.width_coefficient = 1.2;
         config.depth_coefficient = 1.4;
         config.resolution = 300;
     /// Create EfficientNet-B4 configuration
-    pub fn efficientnet_b4(input_channels: usize, num_classes: usize) -> Self {
+    pub fn efficientnet_b4(_input_channels: usize, num_classes: usize) -> Self {
         config.width_coefficient = 1.4;
         config.depth_coefficient = 1.8;
         config.resolution = 380;
         config.dropout_rate = 0.4;
     /// Create EfficientNet-B5 configuration
-    pub fn efficientnet_b5(input_channels: usize, num_classes: usize) -> Self {
+    pub fn efficientnet_b5(_input_channels: usize, num_classes: usize) -> Self {
         config.width_coefficient = 1.6;
         config.depth_coefficient = 2.2;
         config.resolution = 456;
     /// Create EfficientNet-B6 configuration
-    pub fn efficientnet_b6(input_channels: usize, num_classes: usize) -> Self {
+    pub fn efficientnet_b6(_input_channels: usize, num_classes: usize) -> Self {
         config.width_coefficient = 1.8;
         config.depth_coefficient = 2.6;
         config.resolution = 528;
         config.dropout_rate = 0.5;
     /// Create EfficientNet-B7 configuration
-    pub fn efficientnet_b7(input_channels: usize, num_classes: usize) -> Self {
+    pub fn efficientnet_b7(_input_channels: usize, num_classes: usize) -> Self {
         config.width_coefficient = 2.0;
         config.depth_coefficient = 3.1;
         config.resolution = 600;
@@ -167,7 +167,7 @@ struct SqueezeExcitation<F: Float + Debug + ScalarOperand + Send + Sync> {
     fc2: Conv2D<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> SqueezeExcitation<F> {
     /// Create a new Squeeze and Excitation block
-    pub fn new(input_channels: usize, squeeze_channels: usize) -> Result<Self> {
+    pub fn new(_input_channels: usize, squeeze_channels: usize) -> Result<Self> {
         let mut rng = SmallRng::seed_from_u64(42);
         // First 1x1 convolution (squeeze)
         let fc1 = Conv2D::new(
@@ -224,7 +224,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for SqueezeExcitat
                         result[[b, c, h, w]] = input[[b, c, h, w]] * scale;
         Ok(result)
     fn backward(
-        &self,
+        &mut self,
         _input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
@@ -261,14 +261,14 @@ struct MBConvBlock<F: Float + Debug + ScalarOperand + Send + Sync> {
     drop_connect_rate: F,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> MBConvBlock<F> {
     /// Create a new MBConv block
-    pub fn new(config: MBConvConfig) -> Result<Self> {
-        let input_channels = config.input_channels;
-        let output_channels = config.output_channels;
-        let expand_ratio = config.expand_ratio;
-        let kernel_size = config.kernel_size;
-        let stride = config.stride;
-        let use_se = config.use_se;
-        let drop_connect_rate = F::from(config.drop_connect_rate).unwrap();
+    pub fn new(_config: MBConvConfig) -> Result<Self> {
+        let input_channels = _config.input_channels;
+        let output_channels = _config.output_channels;
+        let expand_ratio = _config.expand_ratio;
+        let kernel_size = _config.kernel_size;
+        let stride = _config.stride;
+        let use_se = _config.use_se;
+        let drop_connect_rate = F::from(_config.drop_connect_rate).unwrap();
         // Check if we use skip connection
         let has_skip_connection = input_channels == output_channels && stride == 1;
         // Create expansion convolution if needed
@@ -395,10 +395,10 @@ pub struct EfficientNet<F: Float + Debug + ScalarOperand + Send + Sync> {
     dropout: Dropout<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> EfficientNet<F> {
     /// Create a new EfficientNet model
-    pub fn new(config: EfficientNetConfig) -> Result<Self> {
-        let num_classes = config.num_classes;
+    pub fn new(_config: EfficientNetConfig) -> Result<Self> {
+        let num_classes = _config.num_classes;
         // Initial stem convolution
-        let stem_channels = config.scale_channels(32);
+        let stem_channels = _config.scale_channels(32);
         let stem_conv = Conv2D::new(
             stem_channels,
             (3, 3),
@@ -408,10 +408,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> EfficientNet<F> {
         // Create MBConv blocks
         let mut blocks = Vec::new();
         let mut in_channels = stem_channels;
-        for stage in &config.stages {
+        for stage in &_config.stages {
             // Scale stage parameters
-            let num_blocks = config.scale_depth(stage.num_blocks);
-            let out_channels = config.scale_channels(stage.mbconv_config.output_channels);
+            let num_blocks = _config.scale_depth(stage.num_blocks);
+            let out_channels = _config.scale_channels(stage.mbconv_config.output_channels);
             // First block may have different input channels and stride
             let first_block_config = MBConvConfig {
                 input_channels: in_channels,
@@ -454,33 +454,33 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> EfficientNet<F> {
             classifier,
             dropout,
     /// Create EfficientNet-B0 model
-    pub fn efficientnet_b0(input_channels: usize, num_classes: usize) -> Result<Self> {
-        let config = EfficientNetConfig::efficientnet_b0(input_channels, num_classes);
+    pub fn efficientnet_b0(_input_channels: usize, num_classes: usize) -> Result<Self> {
+        let config = EfficientNetConfig::efficientnet_b0(_input_channels, num_classes);
         Self::new(config)
     /// Create EfficientNet-B1 model
-    pub fn efficientnet_b1(input_channels: usize, num_classes: usize) -> Result<Self> {
-        let config = EfficientNetConfig::efficientnet_b1(input_channels, num_classes);
+    pub fn efficientnet_b1(_input_channels: usize, num_classes: usize) -> Result<Self> {
+        let config = EfficientNetConfig::efficientnet_b1(_input_channels, num_classes);
     /// Create EfficientNet-B2 model
-    pub fn efficientnet_b2(input_channels: usize, num_classes: usize) -> Result<Self> {
-        let config = EfficientNetConfig::efficientnet_b2(input_channels, num_classes);
+    pub fn efficientnet_b2(_input_channels: usize, num_classes: usize) -> Result<Self> {
+        let config = EfficientNetConfig::efficientnet_b2(_input_channels, num_classes);
     /// Create EfficientNet-B3 model
-    pub fn efficientnet_b3(input_channels: usize, num_classes: usize) -> Result<Self> {
-        let config = EfficientNetConfig::efficientnet_b3(input_channels, num_classes);
+    pub fn efficientnet_b3(_input_channels: usize, num_classes: usize) -> Result<Self> {
+        let config = EfficientNetConfig::efficientnet_b3(_input_channels, num_classes);
     /// Create EfficientNet-B4 model
-    pub fn efficientnet_b4(input_channels: usize, num_classes: usize) -> Result<Self> {
-        let config = EfficientNetConfig::efficientnet_b4(input_channels, num_classes);
+    pub fn efficientnet_b4(_input_channels: usize, num_classes: usize) -> Result<Self> {
+        let config = EfficientNetConfig::efficientnet_b4(_input_channels, num_classes);
     /// Create EfficientNet-B5 model
-    pub fn efficientnet_b5(input_channels: usize, num_classes: usize) -> Result<Self> {
-        let config = EfficientNetConfig::efficientnet_b5(input_channels, num_classes);
+    pub fn efficientnet_b5(_input_channels: usize, num_classes: usize) -> Result<Self> {
+        let config = EfficientNetConfig::efficientnet_b5(_input_channels, num_classes);
     /// Create EfficientNet-B6 model
-    pub fn efficientnet_b6(input_channels: usize, num_classes: usize) -> Result<Self> {
-        let config = EfficientNetConfig::efficientnet_b6(input_channels, num_classes);
+    pub fn efficientnet_b6(_input_channels: usize, num_classes: usize) -> Result<Self> {
+        let config = EfficientNetConfig::efficientnet_b6(_input_channels, num_classes);
     /// Create EfficientNet-B7 model
-    pub fn efficientnet_b7(input_channels: usize, num_classes: usize) -> Result<Self> {
-        let config = EfficientNetConfig::efficientnet_b7(input_channels, num_classes);
+    pub fn efficientnet_b7(_input_channels: usize, num_classes: usize) -> Result<Self> {
+        let config = EfficientNetConfig::efficientnet_b7(_input_channels, num_classes);
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for EfficientNet<F> {
         // Check input shape
-        if shape.len() != 4 || shape[1] != self.config.input_channels {
+        if shape.len() != 4 || shape[1] != self.config._input_channels {
                 "Expected input shape [batch_size, {}, height, width], got {:?}",
                 self.config.input_channels, shape
         // Stem

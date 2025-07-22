@@ -2,10 +2,11 @@
 use ndarray::{s, Array1, Array2};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
-use scirs2_optim::optimizers::{Adam, Lookahead, SGD};
-use scirs2_optim::Optimizer;
+use scirs2__optim::optimizers::{Adam, Lookahead, SGD};
+use scirs2__optim::Optimizer;
 use std::error::Error;
 use std::time::Instant;
+// use statrs::statistics::Statistics; // statrs not available
 
 // Simple loss function for demonstration: linear regression with L2 loss
 #[allow(dead_code)]
@@ -81,7 +82,7 @@ fn train_model(
     let _duration = start_time.elapsed();
 
     // Final evaluation
-    let (final_loss, _, _) = compute_loss_and_gradient(&weights, &bias, x, y);
+    let (final_loss__) = compute_loss_and_gradient(&weights, &bias, x, y);
 
     Ok((weights, bias, final_loss))
 }

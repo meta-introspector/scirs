@@ -178,11 +178,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
         _input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
-        // Retrieve cached input
+        // Retrieve cached _input
         let input_ref = self.input_cache.read().unwrap();
         if input_ref.is_none() {
             return Err(NeuralError::InferenceError(
-                "No cached input for backward pass. Call forward() first.".to_string(),
+                "No cached _input for backward pass. Call forward() first.".to_string(),
             ));
         }
         let cached_input = input_ref.as_ref().unwrap();
@@ -225,7 +225,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
                 backward_grad_slices.iter().map(|s| s.view()).collect();
             let grad_backward_reversed = concatenate(Axis(1), &backward_grad_views)?.into_dyn();
 
-            // Reverse the input for backward processing
+            // Reverse the _input for backward processing
             let mut input_slices = Vec::new();
             for t in (0..seq_len).rev() {
                 let slice = cached_input.slice(ndarray::s![.., t..t + 1, ..]);
@@ -271,7 +271,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
         // Backward pass through forward layer
         let grad_input_forward = self.forward_layer.backward(cached_input, &grad_forward)?;
 
-        // For backward layer, we need to reverse the gradient and input
+        // For backward layer, we need to reverse the gradient and _input
         // Reverse the gradient for backward layer
         let mut backward_grad_slices = Vec::new();
         for t in (0..seq_len).rev() {
@@ -281,7 +281,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
         let backward_grad_views: Vec<_> = backward_grad_slices.iter().map(|s| s.view()).collect();
         let grad_backward_reversed = concatenate(Axis(1), &backward_grad_views)?.into_dyn();
 
-        // Reverse the input for backward layer
+        // Reverse the _input for backward layer
         let mut input_slices = Vec::new();
         for t in (0..seq_len).rev() {
             let slice = cached_input.slice(ndarray::s![.., t..t + 1, ..]);

@@ -19,7 +19,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use scirs2_text::transformer::{TransformerModel, TransformerConfig};
+//! use scirs2__text::transformer::{TransformerModel, TransformerConfig};
 //!
 //! // Configure the transformer
 //! let config = TransformerConfig {
@@ -50,7 +50,7 @@
 //! ### Multi-Head Attention
 //!
 //! ```rust
-//! use scirs2_text::transformer::MultiHeadAttention;
+//! use scirs2__text::transformer::MultiHeadAttention;
 //! use ndarray::Array2;
 //!
 //! let d_model = 512;
@@ -65,7 +65,7 @@
 //! ### Positional Encoding
 //!
 //! ```rust
-//! use scirs2_text::transformer::PositionalEncoding;
+//! use scirs2__text::transformer::PositionalEncoding;
 //!
 //! let d_model = 512;
 //! let max_len = 1000;
@@ -80,7 +80,7 @@
 //! ### Complete Encoder
 //!
 //! ```rust
-//! use scirs2_text::transformer::{TransformerEncoder, TransformerConfig};
+//! use scirs2__text::transformer::{TransformerEncoder, TransformerConfig};
 //!
 //! let config = TransformerConfig {
 //!     d_model: 256,
@@ -101,7 +101,7 @@
 //! ### Custom Attention Patterns
 //!
 //! ```rust
-//! use scirs2_text::transformer::MultiHeadAttention;
+//! use scirs2__text::transformer::MultiHeadAttention;
 //! use ndarray::Array2;
 //!
 //! let mut attention = MultiHeadAttention::new(512, 8).unwrap();
@@ -124,7 +124,7 @@
 //! ### Layer-wise Learning Rate Decay
 //!
 //! ```rust
-//! use scirs2_text::transformer::TransformerModel;
+//! use scirs2__text::transformer::TransformerModel;
 //!
 //! // Apply different learning rates to different layers
 //! let mut model = TransformerModel::new(config).unwrap();
@@ -195,6 +195,7 @@ use crate::error::{Result, TextError};
 use ndarray::{s, Array1, Array2, Array3, ArrayView2};
 use rand::{rng, Rng};
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 
 /// Configuration for transformer models
 #[derive(Debug, Clone)]
@@ -242,10 +243,10 @@ pub struct PositionalEncoding {
 
 impl PositionalEncoding {
     /// Create new positional encoding
-    pub fn new(max_len: usize, d_model: usize) -> Self {
-        let mut encodings = Array2::<f64>::zeros((max_len, d_model));
+    pub fn new(_max_len: usize, d_model: usize) -> Self {
+        let mut encodings = Array2::<f64>::zeros((_max_len, d_model));
 
-        for pos in 0..max_len {
+        for pos in 0.._max_len {
             for i in (0..d_model).step_by(2) {
                 let angle = pos as f64 / (10000.0_f64).powf(i as f64 / d_model as f64);
                 encodings[[pos, i]] = angle.sin();
@@ -287,10 +288,10 @@ pub struct MultiHeadAttention {
 
 impl MultiHeadAttention {
     /// Create new multi-head attention layer
-    pub fn new(d_model: usize, n_heads: usize) -> Result<Self> {
-        if d_model % n_heads != 0 {
+    pub fn new(_d_model: usize, n_heads: usize) -> Result<Self> {
+        if _d_model % n_heads != 0 {
             return Err(TextError::InvalidInput(
-                "d_model must be divisible by n_heads".to_string(),
+                "_d_model must be divisible by n_heads".to_string(),
             ));
         }
 
@@ -299,14 +300,13 @@ impl MultiHeadAttention {
         // Initialize weight matrices with Xavier initialization
         let scale = (2.0 / d_model as f64).sqrt();
 
-        let w_q = Array2::from_shape_fn((d_model, d_model), |_| rng().random_range(-scale..scale));
-        let w_k = Array2::from_shape_fn((d_model, d_model), |_| rng().random_range(-scale..scale));
-        let w_v = Array2::from_shape_fn((d_model, d_model), |_| rng().random_range(-scale..scale));
-        let w_o = Array2::from_shape_fn((d_model, d_model), |_| rng().random_range(-scale..scale));
+        let w_q = Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w_k = Array2::from_shape_fn((d_model..d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w_v = Array2::from_shape_fn((d_model..d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w_o = Array2::from_shape_fn((d_model..d_model), |_| rand::rng().gen_range(-scale..scale));
 
         Ok(Self {
-            d_model,
-            n_heads,
+            d_model..n_heads,
             d_k,
             w_q,
             w_k,
@@ -401,7 +401,7 @@ impl MultiHeadAttention {
 
     /// Reshape tensor for multi-head attention
     fn reshape_for_heads(&self, x: &Array2<f64>) -> Result<Array3<f64>> {
-        let (seq_len, _d_model) = x.dim();
+        let (seq_len_d_model) = x.dim();
         let reshaped = x
             .clone()
             .into_shape_with_order((seq_len, self.n_heads, self.d_k))
@@ -473,15 +473,15 @@ pub struct FeedForward {
 
 impl FeedForward {
     /// Create new feed-forward layer
-    pub fn new(d_model: usize, d_ff: usize) -> Self {
-        let scale = (2.0 / d_model as f64).sqrt();
+    pub fn new(_d_model: usize, d_ff: usize) -> Self {
+        let scale = (2.0 / _d_model as f64).sqrt();
 
-        let w1 = Array2::from_shape_fn((d_model, d_ff), |_| rng().random_range(-scale..scale));
-        let w2 = Array2::from_shape_fn((d_ff, d_model), |_| rng().random_range(-scale..scale));
+        let w1 = Array2::from_shape_fn((_d_model, d_ff), |_| rand::rng().gen_range(-scale..scale));
+        let w2 = Array2::from_shape_fn((d_ff.._d_model), |_| rand::rng().gen_range(-scale..scale));
         let b1 = Array1::zeros(d_ff);
-        let b2 = Array1::zeros(d_model);
+        let b2 = Array1::zeros(_d_model);
 
-        Self { w1, w2, b1, b2 }
+        Self { w1..w2, b1, b2 }
     }
 
     /// Forward pass through feed-forward network
@@ -540,10 +540,10 @@ pub struct LayerNorm {
 
 impl LayerNorm {
     /// Create new layer normalization
-    pub fn new(d_model: usize, eps: f64) -> Self {
+    pub fn new(_d_model: usize, eps: f64) -> Self {
         Self {
-            gamma: Array1::ones(d_model),
-            beta: Array1::zeros(d_model),
+            gamma: Array1::ones(_d_model),
+            beta: Array1::zeros(_d_model),
             eps,
         }
     }
@@ -602,13 +602,13 @@ pub struct TransformerEncoderLayer {
 
 impl TransformerEncoderLayer {
     /// Create new transformer encoder layer
-    pub fn new(config: &TransformerConfig) -> Result<Self> {
+    pub fn new(_config: &TransformerConfig) -> Result<Self> {
         Ok(Self {
-            self_attention: MultiHeadAttention::new(config.d_model, config.n_heads)?,
-            feed_forward: FeedForward::new(config.d_model, config.d_ff),
-            norm1: LayerNorm::new(config.d_model, 1e-6),
-            norm2: LayerNorm::new(config.d_model, 1e-6),
-            dropout: config.dropout,
+            self_attention: MultiHeadAttention::new(_config.d_model, _config.n_heads)?,
+            feed_forward: FeedForward::new(_config.d_model, _config.d_ff),
+            norm1: LayerNorm::new(_config.d_model, 1e-6),
+            norm2: LayerNorm::new(_config.d_model, 1e-6),
+            dropout: _config.dropout,
         })
     }
 
@@ -666,18 +666,18 @@ pub struct TransformerEncoder {
 
 impl TransformerEncoder {
     /// Create new transformer encoder
-    pub fn new(config: TransformerConfig) -> Result<Self> {
+    pub fn new(_config: TransformerConfig) -> Result<Self> {
         let mut layers = Vec::new();
-        for _ in 0..config.n_encoder_layers {
-            layers.push(TransformerEncoderLayer::new(&config)?);
+        for _ in 0.._config.n_encoder_layers {
+            layers.push(TransformerEncoderLayer::new(&_config)?);
         }
 
-        let position_encoding = PositionalEncoding::new(config.max_seq_len, config.d_model);
+        let position_encoding = PositionalEncoding::new(_config.max_seq_len, _config.d_model);
 
         Ok(Self {
             layers,
             position_encoding,
-            config,
+            _config,
         })
     }
 
@@ -731,15 +731,15 @@ pub struct TransformerDecoderLayer {
 
 impl TransformerDecoderLayer {
     /// Create new decoder layer
-    pub fn new(config: &TransformerConfig) -> Result<Self> {
+    pub fn new(_config: &TransformerConfig) -> Result<Self> {
         Ok(Self {
-            self_attention: MultiHeadAttention::new(config.d_model, config.n_heads)?,
-            cross_attention: MultiHeadAttention::new(config.d_model, config.n_heads)?,
-            feed_forward: FeedForward::new(config.d_model, config.d_ff),
-            norm1: LayerNorm::new(config.d_model, 1e-6),
-            norm2: LayerNorm::new(config.d_model, 1e-6),
-            norm3: LayerNorm::new(config.d_model, 1e-6),
-            dropout: config.dropout,
+            self_attention: MultiHeadAttention::new(_config.d_model, _config.n_heads)?,
+            cross_attention: MultiHeadAttention::new(_config.d_model, _config.n_heads)?,
+            feed_forward: FeedForward::new(_config.d_model, _config.d_ff),
+            norm1: LayerNorm::new(_config.d_model, 1e-6),
+            norm2: LayerNorm::new(_config.d_model, 1e-6),
+            norm3: LayerNorm::new(_config.d_model, 1e-6),
+            dropout: _config.dropout,
         })
     }
 
@@ -755,7 +755,7 @@ impl TransformerDecoderLayer {
         let self_attn_out = self.self_attention.forward(x, x, x, self_attn_mask)?;
         let x = self.norm1.forward((x.to_owned() + self_attn_out).view());
 
-        // Cross-attention with encoder output
+        // Cross-attention with encoder _output
         let cross_attn_out = self.cross_attention.forward(
             x.view(),
             encoder_output,
@@ -766,9 +766,9 @@ impl TransformerDecoderLayer {
 
         // Feed-forward with residual connection and layer norm
         let ff_out = self.feed_forward.forward(x.view());
-        let output = self.norm3.forward((x + ff_out).view());
+        let _output = self.norm3.forward((x + ff_out).view());
 
-        Ok(output)
+        Ok(_output)
     }
 }
 
@@ -781,18 +781,18 @@ pub struct TransformerDecoder {
 
 impl TransformerDecoder {
     /// Create new decoder
-    pub fn new(config: TransformerConfig) -> Result<Self> {
+    pub fn new(_config: TransformerConfig) -> Result<Self> {
         let mut layers = Vec::new();
-        for _ in 0..config.n_decoder_layers {
-            layers.push(TransformerDecoderLayer::new(&config)?);
+        for _ in 0.._config.n_decoder_layers {
+            layers.push(TransformerDecoderLayer::new(&_config)?);
         }
 
-        let position_encoding = PositionalEncoding::new(config.max_seq_len, config.d_model);
+        let position_encoding = PositionalEncoding::new(_config.max_seq_len, _config.d_model);
 
         Ok(Self {
             layers,
             position_encoding,
-            config,
+            _config,
         })
     }
 
@@ -833,14 +833,13 @@ pub struct TokenEmbedding {
 
 impl TokenEmbedding {
     /// Create new token embedding layer
-    pub fn new(vocab_size: usize, d_model: usize) -> Self {
+    pub fn new(_vocab_size: usize, d_model: usize) -> Self {
         let scale = (1.0 / d_model as f64).sqrt();
         let embeddings =
-            Array2::from_shape_fn((vocab_size, d_model), |_| rng().random_range(-scale..scale));
+            Array2::from_shape_fn((_vocab_size, d_model), |_| rand::rng().gen_range(-scale..scale));
 
         Self {
-            embeddings,
-            vocab_size,
+            embeddings.._vocab_size,
             d_model,
         }
     }
@@ -898,12 +897,12 @@ pub struct TransformerModel {
 
 impl TransformerModel {
     /// Create new transformer model
-    pub fn new(config: TransformerConfig, vocabulary: Vec<String>) -> Result<Self> {
+    pub fn new(_config: TransformerConfig, vocabulary: Vec<String>) -> Result<Self> {
         let vocab_size = vocabulary.len();
-        if vocab_size != config.vocab_size {
+        if vocab_size != _config.vocab_size {
             return Err(TextError::InvalidInput(format!(
-                "Vocabulary size {} doesn't match config {}",
-                vocab_size, config.vocab_size
+                "Vocabulary size {} doesn't match _config {}",
+                vocab_size, _config.vocab_size
             )));
         }
 
@@ -916,9 +915,9 @@ impl TransformerModel {
         }
 
         Ok(Self {
-            config: config.clone(),
-            token_embedding: TokenEmbedding::new(config.vocab_size, config.d_model),
-            encoder: TransformerEncoder::new(config)?,
+            _config: _config.clone(),
+            token_embedding: TokenEmbedding::new(_config.vocab_size, _config.d_model),
+            encoder: TransformerEncoder::new(_config)?,
             decoder: None, // Encoder-only model
             vocab_to_id,
             id_to_vocab,
@@ -947,12 +946,12 @@ impl TransformerModel {
     }
 
     /// Create new encoder-decoder transformer model
-    pub fn new_encoder_decoder(config: TransformerConfig, vocabulary: Vec<String>) -> Result<Self> {
+    pub fn new_encoder_decoder(_config: TransformerConfig, vocabulary: Vec<String>) -> Result<Self> {
         let vocab_size = vocabulary.len();
-        if vocab_size != config.vocab_size {
+        if vocab_size != _config.vocab_size {
             return Err(TextError::InvalidInput(format!(
-                "Vocabulary size {} doesn't match config {}",
-                vocab_size, config.vocab_size
+                "Vocabulary size {} doesn't match _config {}",
+                vocab_size, _config.vocab_size
             )));
         }
 
@@ -965,10 +964,10 @@ impl TransformerModel {
         }
 
         Ok(Self {
-            config: config.clone(),
-            token_embedding: TokenEmbedding::new(config.vocab_size, config.d_model),
-            encoder: TransformerEncoder::new(config.clone())?,
-            decoder: Some(TransformerDecoder::new(config)?),
+            _config: _config.clone(),
+            token_embedding: TokenEmbedding::new(_config.vocab_size, _config.d_model),
+            encoder: TransformerEncoder::new(_config.clone())?,
+            decoder: Some(TransformerDecoder::new(_config)?),
             vocab_to_id,
             id_to_vocab,
         })
@@ -988,7 +987,7 @@ impl TransformerModel {
         // Encode input
         let encoder_output = self.encode_tokens(input_tokens)?;
 
-        // Convert target tokens to IDs and embeddings
+        // Convert target _tokens to IDs and embeddings
         let target_ids: Result<Vec<usize>> = target_tokens
             .iter()
             .map(|token| {
@@ -1035,18 +1034,18 @@ impl TransformerModel {
         // Encode input
         let encoder_output = self.encode_tokens(input_tokens)?;
 
-        // Start with the start token
+        // Start with the start _token
         let mut generated_tokens = vec![start_token.to_string()];
 
         for _ in 0..max_length {
-            // Convert current tokens to embeddings
+            // Convert current _tokens to embeddings
             let current_ids: Result<Vec<usize>> = generated_tokens
                 .iter()
-                .map(|token| {
+                .map(|_token| {
                     self.vocab_to_id
-                        .get(token)
+                        .get(_token)
                         .copied()
-                        .ok_or_else(|| TextError::InvalidInput(format!("Unknown token: {token}")))
+                        .ok_or_else(|| TextError::InvalidInput(format!("Unknown _token: {_token}")))
                 })
                 .collect();
             let current_ids = current_ids?;
@@ -1073,7 +1072,7 @@ impl TransformerModel {
             // Get the last timestep output
             let last_output = decoder_output.row(decoder_output.nrows() - 1);
 
-            // Simple greedy selection (find token with highest logit)
+            // Simple greedy selection (find _token with highest logit)
             let mut best_token_id = 0;
             let mut best_score = last_output[0];
             for (i, &score) in last_output.iter().enumerate() {
@@ -1083,12 +1082,12 @@ impl TransformerModel {
                 }
             }
 
-            // Convert token ID back to string
-            if let Some(token) = self.id_to_vocab.get(&best_token_id) {
-                generated_tokens.push(token.clone());
+            // Convert _token ID back to string
+            if let Some(_token) = self.id_to_vocab.get(&best_token_id) {
+                generated_tokens.push(_token.clone());
 
-                // Stop if we hit an end token (you might want to customize this)
-                if token == "</s>" || token == "<eos>" {
+                // Stop if we hit an end _token (you might want to customize this)
+                if _token == "</s>" || _token == "<eos>" {
                     break;
                 }
             } else {

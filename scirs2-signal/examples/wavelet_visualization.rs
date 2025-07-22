@@ -1,8 +1,8 @@
 use ndarray::{s, Array2};
-use scirs2_signal::dwt::Wavelet;
-use scirs2_signal::dwt2d::{dwt2d_decompose, wavedec2};
-use scirs2_signal::swt2d::swt2d_decompose;
-use scirs2_signal::wavelet_vis::{
+use scirs2__signal::dwt::Wavelet;
+use scirs2__signal::dwt2d::{dwt2d_decompose, wavedec2};
+use scirs2__signal::swt2d::swt2d_decompose;
+use scirs2__signal::wavelet_vis::{
     arrange_coefficients_2d,
     // arrange_multilevel_coefficients_2d, // Will be used in a future refinement
     calculate_energy_2d,
@@ -62,8 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nArranging coefficients in standard layout (LL, HL, LH, HH)...");
     let _arranged_dwt = arrange_coefficients_2d(&dwt_decomp);
     println!(
-        "Arranged coefficients have shape: {:?}",
-        _arranged_dwt.shape()
+        "Arranged coefficients have shape: {:?}"_arranged_dwt.shape()
     );
 
     // Calculate energy distribution
@@ -152,11 +151,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         normalize_coefficients(&dwt_decomp.detail_h, NormalizationStrategy::MinMax, None);
 
     println!(
-        "Normalized approximation coefficients range: [{:.2}, {:.2}]",
-        _normalized_approx
+        "Normalized approximation coefficients range: [{:.2}, {:.2}]"_normalized_approx
             .iter()
-            .fold(f64::INFINITY, |a, &b| a.min(b)),
-        _normalized_approx
+            .fold(f64::INFINITY, |a, &b| a.min(b))_normalized_approx
             .iter()
             .fold(f64::NEG_INFINITY, |a, &b| a.max(b))
     );
@@ -214,10 +211,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     println!(
-        "Generated heatmaps with shapes: viridis={:?}, plasma={:?}, diverging={:?}",
-        _heatmap_viridis.shape(),
-        _heatmap_plasma.shape(),
-        _heatmap_diverging.shape()
+        "Generated heatmaps with shapes: viridis={:?}, plasma={:?}, diverging={:?}"_heatmap_viridis.shape()_heatmap_plasma.shape()_heatmap_diverging.shape()
     );
 
     // Summary of visualization options
@@ -236,11 +230,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to print a small array
 #[allow(dead_code)]
-fn print_array2(array: &ndarray::ArrayView2<f64>) {
-    let (rows, cols) = array.dim();
+fn print_array2(_array: &ndarray::ArrayView2<f64>) {
+    let (rows, cols) = _array.dim();
     for i in 0..rows {
         for j in 0..cols {
-            print!("{:.2} ", array[[i, j]]);
+            print!("{:.2} ", _array[[i, j]]);
         }
         println!();
     }

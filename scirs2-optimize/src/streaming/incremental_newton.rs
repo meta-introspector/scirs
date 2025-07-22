@@ -78,12 +78,12 @@ struct LBFGSHistory {
 }
 
 impl LBFGSHistory {
-    fn new(memory_size: usize) -> Self {
+    fn new(_memory_size: usize) -> Self {
         Self {
-            s_vectors: Vec::with_capacity(memory_size),
-            y_vectors: Vec::with_capacity(memory_size),
-            rho_values: Vec::with_capacity(memory_size),
-            memory_size,
+            s_vectors: Vec::with_capacity(_memory_size),
+            y_vectors: Vec::with_capacity(_memory_size),
+            rho_values: Vec::with_capacity(_memory_size),
+            _memory_size,
             current_pos: 0,
             stored_count: 0,
         }
@@ -159,12 +159,11 @@ impl<T: StreamingObjective> IncrementalNewton<T> {
     ) -> Self {
         let n_params = initial_parameters.len();
         let memory_size = match method {
-            IncrementalNewtonMethod::LBFGS(m) => m,
-            _ => 10, // Default memory size
+            IncrementalNewtonMethod::LBFGS(m) => m_ => 10, // Default memory size
         };
 
         Self {
-            parameters: initial_parameters,
+            _parameters: initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),

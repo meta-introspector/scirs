@@ -79,19 +79,19 @@ where
     D: Dimension,
     P: ChunkProcessor<T, D>,
 {
-    let shape = input.shape();
+    let _shape = input._shape();
     let ndim = input.ndim();
     let element_size = std::mem::size_of::<T>();
 
     // Calculate chunk dimensions based on target size
-    let total_elements = shape.iter().product::<usize>();
+    let total_elements = _shape.iter().product::<usize>();
     let target_elements_per_chunk = config.chunk_size_bytes / element_size;
 
     if total_elements <= target_elements_per_chunk {
         // Array is small enough to process as a single chunk
         let position = ChunkPosition {
             start: vec![0; ndim],
-            end: shape.to_vec(),
+            end: _shape.to_vec(),
         };
         let result = processor.process_chunk(input.clone(), &position)?;
         return Ok(result);
@@ -99,11 +99,11 @@ where
 
     // Calculate chunk sizes for each dimension
     let chunk_sizes =
-        calculate_chunk_sizes(shape, target_elements_per_chunk, config.min_chunk_size);
+        calculate_chunk_sizes(_shape, target_elements_per_chunk, config.min_chunk_size);
     let overlap = processor.required_overlap().max(config.overlap);
 
     // Generate chunk positions
-    let chunks = generate_chunk_positions(shape, &chunk_sizes, overlap);
+    let chunks = generate_chunk_positions(_shape, &chunk_sizes, overlap);
 
     // Process chunks
     let results = if config.parallel && chunks.len() > 1 {
@@ -143,7 +143,7 @@ where
     };
 
     // Combine results
-    processor.combine_chunks(results, shape)
+    processor.combine_chunks(results_shape)
 }
 
 /// Calculate optimal chunk sizes for each dimension
@@ -167,12 +167,12 @@ fn calculate_chunk_sizes(
     let mut current_elements: usize = chunk_sizes.iter().product();
 
     while current_elements > target_elements * 2 {
-        // Find the dimension with the largest chunk size relative to its total size
-        let (max_idx, _) = chunk_sizes
+        // Find the dimension with the largest chunk _size relative to its total _size
+        let (max_idx_) = chunk_sizes
             .iter()
             .enumerate()
-            .filter(|(i, &size)| size > min_chunk_size && size < shape[*i])
-            .max_by_key(|(i, &size)| size * 1000 / shape[*i])
+            .filter(|(i, &_size)| _size > min_chunk_size && _size < shape[*i])
+            .max_by_key(|(i, &_size)| _size * 1000 / shape[*i])
             .unwrap_or((0, &1));
 
         if chunk_sizes[max_idx] > min_chunk_size {
@@ -286,9 +286,9 @@ impl<T> GaussianChunkProcessor<T>
 where
     T: Float + FromPrimitive,
 {
-    pub fn new(sigma: Vec<T>, truncate: Option<T>, border_mode: BorderMode) -> Self {
+    pub fn new(_sigma: Vec<T>, truncate: Option<T>, border_mode: BorderMode) -> Self {
         Self {
-            sigma,
+            _sigma,
             truncate,
             border_mode,
         }
@@ -302,8 +302,7 @@ where
 {
     fn process_chunk(
         &mut self,
-        chunk: ArrayView<T, D>,
-        _position: &ChunkPosition,
+        chunk: ArrayView<T, D>, _position: &ChunkPosition,
     ) -> NdimageResult<Array<T, D>> {
         // Apply Gaussian filter to the chunk
         // This is a placeholder - actual implementation would call the gaussian filter
@@ -362,7 +361,7 @@ where
 
                 // Corresponding chunk region
                 let ch_start = if start > 0 { overlap / 2 } else { 0 };
-                let ch_end = chunk_result.shape()[dim]
+                let ch_end = chunk_result._shape()[dim]
                     - if end < output_shape[dim] {
                         overlap / 2
                     } else {
@@ -453,8 +452,7 @@ mod tests {
     impl<T: Clone + Zero, D: Dimension> ChunkProcessor<T, D> for IdentityProcessor {
         fn process_chunk(
             &mut self,
-            chunk: ArrayView<T, D>,
-            _position: &ChunkPosition,
+            chunk: ArrayView<T, D>, _position: &ChunkPosition,
         ) -> NdimageResult<Array<T, D>> {
             Ok(chunk.to_owned())
         }

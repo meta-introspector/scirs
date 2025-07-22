@@ -31,10 +31,10 @@ pub struct HyperParameter<F: Float + fmt::Debug + fmt::Display + FromPrimitive> 
 
 impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
     /// Create a new continuous hyperparameter
-    pub fn new<S: Into<String>>(name: S, value: F, min_value: F, max_value: F) -> Self {
+    pub fn new<S: Into<String>>(_name: S, value: F, min_value: F, max_value: F) -> Self {
         Self {
-            name: name.into(),
-            value,
+            _name: _name.into(),
+            _value,
             min_value,
             max_value,
             step: None,
@@ -53,7 +53,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
     ) -> Self {
         Self {
             name: name.into(),
-            value,
+            _value,
             min_value,
             max_value,
             step: Some(step),
@@ -63,7 +63,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
     }
 
     /// Create a new categorical hyperparameter
-    pub fn categorical<S: Into<String>>(name: S, value: F, values: Vec<F>) -> Result<Self> {
+    pub fn categorical<S: Into<String>>(_name: S, value: F, values: Vec<F>) -> Result<Self> {
         if values.is_empty() {
             return Err(MetricsError::InvalidArgument(
                 "Categorical values cannot be empty".to_string(),
@@ -77,7 +77,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
         }
 
         Ok(Self {
-            name: name.into(),
+            _name: _name.into(),
             value,
             min_value: F::zero(),
             max_value: F::from(values.len() - 1).unwrap(),
@@ -124,7 +124,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
         if self.is_categorical {
             if let Some(values) = &self.categorical_values {
                 let mut rng = rand::rng();
-                let idx = rng.random_range(0..values.len());
+                let idx = rng.gen_range(0..values.len());
                 return values[idx];
             }
         }
@@ -134,7 +134,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
         let rand_val = F::from(rng.random::<f64>()).unwrap() * range + self.min_value;
 
         if let Some(step) = self.step {
-            // For discrete parameters, round to the nearest step
+            // For discrete parameters..round to the nearest step
             let steps = ((rand_val - self.min_value) / step).round();
             self.min_value + steps * step
         } else {
@@ -234,7 +234,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterSearchR
         best_params: HashMap<String, F>,
     ) -> Self {
         Self {
-            metric_name: metric_name.into(),
+            _metric_name: metric_name.into(),
             mode,
             best_metric,
             best_params,
@@ -323,10 +323,10 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterTuner<F
         // Check for duplicate parameter names
         let mut names = std::collections::HashSet::new();
         for param in &params {
-            if !names.insert(param.name()) {
+            if !names.insert(param._name()) {
                 return Err(MetricsError::InvalidArgument(format!(
-                    "Duplicate parameter name: {}",
-                    param.name()
+                    "Duplicate parameter _name: {}",
+                    param._name()
                 )));
             }
         }
@@ -342,8 +342,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterTuner<F
             max_evals,
             best_value: None,
             best_params: HashMap::new(),
-            history: Vec::new(),
-            _phantom: PhantomData,
+            history: Vec::new(), _phantom: PhantomData,
         })
     }
 
@@ -369,9 +368,9 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterTuner<F
     pub fn update(&mut self, metric_value: F) -> Result<bool> {
         let current_params = self.get_current_params();
 
-        // Check if this is the best value so far
+        // Check if this is the best _value so far
         let is_best = match (self.best_value, self.mode) {
-            (None, _) => true,
+            (None_) => true,
             (Some(best), OptimizationMode::Maximize) => metric_value > best,
             (Some(best), OptimizationMode::Minimize) => metric_value < best,
         };
@@ -427,8 +426,8 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterTuner<F
             self.metric_name.clone(),
             self.mode,
             self.best_value.unwrap_or_else(|| match self.mode {
-                OptimizationMode::Maximize => F::neg_infinity(),
-                OptimizationMode::Minimize => F::infinity(),
+                OptimizationMode::Maximize =>, F::neg_infinity(),
+                OptimizationMode::Minimize =>, F::infinity(),
             }),
             self.best_params.clone(),
         );

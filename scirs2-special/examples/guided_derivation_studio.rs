@@ -43,10 +43,10 @@ struct DerivationSession {
 }
 
 impl DerivationSession {
-    fn new(title: String, steps: Vec<DerivationStep>, difficulty: u32) -> Self {
+    fn new(_title: String, steps: Vec<DerivationStep>, difficulty: u32) -> Self {
         let num_steps = steps.len();
         Self {
-            title,
+            _title,
             steps,
             current_step: 0,
             completed_steps: vec![false; num_steps],
@@ -92,8 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(5) => legendre_orthogonality_derivation()?,
             Ok(6) => hypergeometric_integral_derivation()?,
             Ok(7) => spherical_harmonics_derivation()?,
-            Ok(8) => wright_function_asymptotic_derivation()?,
-            _ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(8) => wright_function_asymptotic_derivation()?_ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 
@@ -531,7 +530,7 @@ fn legendre_orthogonality_derivation() -> Result<(), Box<dyn std::error::Error>>
     let steps = vec![
         DerivationStep {
             description: "Start with Legendre's differential equation".to_string(),
-            mathematical_content: "Legendre polynomials P_n(x) satisfy:\n\n(1-x²)P_n''(x) - 2xP_n'(x) + n(n+1)P_n(x) = 0\n\nThis can be written as:\nd/dx[(1-x²)P_n'(x)] + n(n+1)P_n(x) = 0".to_string(),
+            mathematical_content: "Legendre polynomials P_n(x), satisfy:\n\n(1-x²)P_n''(x) - 2xP_n'(x) + n(n+1)P_n(x) = 0\n\nThis can be written as:\nd/dx[(1-x²)P_n'(x)] + n(n+1)P_n(x) = 0".to_string(),
             hints: vec![
                 "This is Sturm-Liouville form with weight function w(x) = 1".to_string(),
                 "The equation is self-adjoint".to_string(),
@@ -1004,8 +1003,7 @@ fn run_derivation_session(
                     session.current_step += 1;
                     println!("✅ Step completed! Moving to next step...\n");
                 }
-                Ok(5) => show_session_progress(&session),
-                _ => println!("❌ Invalid choice. Please try again."),
+                Ok(5) => show_session_progress(&session, _ => println!("❌ Invalid choice. Please try again."),
             }
         } else {
             break;
@@ -1052,17 +1050,17 @@ fn run_derivation_session(
 }
 
 #[allow(dead_code)]
-fn display_session_status(session: &DerivationSession) {
+fn display_session_status(_session: &DerivationSession) {
     println!(
         "📊 Progress: {:.1}% ({}/{} steps completed)",
-        session.progress_percentage(),
-        session.completed_steps.iter().filter(|&&x| x).count(),
-        session.steps.len()
+        _session.progress_percentage(),
+        _session.completed_steps.iter().filter(|&&x| x).count(),
+        _session.steps.len()
     );
 
     // Progress bar
-    let completed = session.completed_steps.iter().filter(|&&x| x).count();
-    let total = session.steps.len();
+    let completed = _session.completed_steps.iter().filter(|&&x| x).count();
+    let total = _session.steps.len();
     let bar_length = 20;
     let filled = (completed * bar_length) / total;
 
@@ -1070,7 +1068,7 @@ fn display_session_status(session: &DerivationSession) {
     for i in 0..bar_length {
         if i < filled {
             print!("█");
-        } else if i == filled && session.current_step < total {
+        } else if i == filled && _session.current_step < total {
             print!("▶");
         } else {
             print!("░");
@@ -1080,9 +1078,9 @@ fn display_session_status(session: &DerivationSession) {
 }
 
 #[allow(dead_code)]
-fn show_hints(step: &DerivationStep, session: &mut DerivationSession) {
-    println!("\n💡 Hints for this step:");
-    for (i, hint) in step.hints.iter().enumerate() {
+fn show_hints(_step: &DerivationStep, session: &mut DerivationSession) {
+    println!("\n💡 Hints for this _step:");
+    for (i, hint) in _step.hints.iter().enumerate() {
         println!("{}. {}", i + 1, hint);
     }
     session.hints_used += 1;
@@ -1090,24 +1088,24 @@ fn show_hints(step: &DerivationStep, session: &mut DerivationSession) {
 }
 
 #[allow(dead_code)]
-fn show_alternatives(step: &DerivationStep) {
+fn show_alternatives(_step: &DerivationStep) {
     println!("\n🔄 Alternative approaches:");
-    for (i, approach) in step.alternative_approaches.iter().enumerate() {
+    for (i, approach) in _step.alternative_approaches.iter().enumerate() {
         println!("{}. {}", i + 1, approach);
     }
     println!();
 }
 
 #[allow(dead_code)]
-fn run_validation_questions(step: &DerivationStep) -> Result<(), Box<dyn std::error::Error>> {
-    if step.validation_questions.is_empty() {
-        println!("ℹ️ No validation questions for this step.");
+fn run_validation_questions(_step: &DerivationStep) -> Result<(), Box<dyn std::error::Error>> {
+    if _step.validation_questions.is_empty() {
+        println!("ℹ️ No validation questions for this _step.");
         return Ok(());
     }
 
     println!("\n❓ Validation Questions:");
 
-    for (i, question) in step.validation_questions.iter().enumerate() {
+    for (i, question) in _step.validation_questions.iter().enumerate() {
         println!("\nQuestion {}: {}", i + 1, question.question);
 
         for (j, option) in question.options.iter().enumerate() {
@@ -1138,23 +1136,23 @@ fn run_validation_questions(step: &DerivationStep) -> Result<(), Box<dyn std::er
 }
 
 #[allow(dead_code)]
-fn show_session_progress(session: &DerivationSession) {
+fn show_session_progress(_session: &DerivationSession) {
     println!("\n📊 Session Progress Report");
     println!("=========================");
-    println!("Derivation: {}", session.title);
-    println!("Difficulty: {}/5", session.difficulty_level);
+    println!("Derivation: {}", _session.title);
+    println!("Difficulty: {}/5", _session.difficulty_level);
     println!(
         "Time elapsed: {:.1} minutes",
-        session.start_time.elapsed().as_secs_f64() / 60.0
+        _session.start_time.elapsed().as_secs_f64() / 60.0
     );
-    println!("Hints used: {}", session.hints_used);
-    println!("Progress: {:.1}%", session.progress_percentage());
+    println!("Hints used: {}", _session.hints_used);
+    println!("Progress: {:.1}%", _session.progress_percentage());
 
     println!("\nStep Status:");
-    for (i, completed) in session.completed_steps.iter().enumerate() {
+    for (i, completed) in _session.completed_steps.iter().enumerate() {
         let status = if *completed {
             "✅"
-        } else if i == session.current_step {
+        } else if i == _session.current_step {
             "▶️"
         } else {
             "⏳"
@@ -1163,13 +1161,13 @@ fn show_session_progress(session: &DerivationSession) {
             "  Step {}: {} {}",
             i + 1,
             status,
-            session.steps[i].description
+            _session.steps[i].description
         );
     }
 
-    if !session.is_complete() {
+    if !_session.is_complete() {
         let remaining =
-            session.steps.len() - session.completed_steps.iter().filter(|&&x| x).count();
+            _session.steps.len() - _session.completed_steps.iter().filter(|&&x| x).count();
         println!("\n{} steps remaining.", remaining);
     }
 
@@ -1177,8 +1175,8 @@ fn show_session_progress(session: &DerivationSession) {
 }
 
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
-    print!("{}", prompt);
+fn get_user_input(_prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    print!("{}", _prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

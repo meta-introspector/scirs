@@ -108,20 +108,20 @@ where
     T: Float + FromPrimitive + Clone + Zero,
 {
     /// Create a new workspace with initial capacity
-    pub fn new(max_degree: usize) -> Self {
-        let initial_matrix_size = (max_degree + 1).max(16); // Reasonable minimum
+    pub fn new(_max_degree: usize) -> Self {
+        let initial_matrix_size = (_max_degree + 1).max(16); // Reasonable minimum
         Self {
-            coeffs: RefCell::new(Array1::zeros(max_degree + 1)),
-            poly_buf: RefCell::new(Array1::zeros(max_degree + 1)),
-            basis_buf: RefCell::new(Array1::zeros(max_degree + 1)),
+            coeffs: RefCell::new(Array1::zeros(_max_degree + 1)),
+            poly_buf: RefCell::new(Array1::zeros(_max_degree + 1)),
+            basis_buf: RefCell::new(Array1::zeros(_max_degree + 1)),
             matrix_buf: RefCell::new(Array2::zeros((initial_matrix_size, initial_matrix_size))),
             memory_stats: RefCell::new(WorkspaceMemoryStats::default()),
         }
     }
 
     /// Create a workspace optimized for large problems
-    pub fn new_large_problem(max_degree: usize, estimated_matrix_size: usize) -> Self {
-        let buffer_size = estimated_matrix_size.max(max_degree + 1);
+    pub fn new_large_problem(_max_degree: usize, estimated_matrix_size: usize) -> Self {
+        let buffer_size = estimated_matrix_size.max(_max_degree + 1);
         Self {
             coeffs: RefCell::new(Array1::zeros(buffer_size)),
             poly_buf: RefCell::new(Array1::zeros(buffer_size)),
@@ -379,7 +379,7 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::bspline::{BSpline, ExtrapolateMode};
+    /// use scirs2__interpolate::bspline::{BSpline, ExtrapolateMode};
     ///
     /// // Create a quadratic B-spline
     /// let knots = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
@@ -1185,7 +1185,7 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::bspline::{BSpline, ExtrapolateMode};
+    /// use scirs2__interpolate::bspline::{BSpline, ExtrapolateMode};
     ///
     /// let knots = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
     /// let coeffs = array![-1.0, 2.0, 0.0, -1.0];
@@ -1229,7 +1229,7 @@ where
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::bspline::{BSpline, ExtrapolateMode};
+    /// use scirs2__interpolate::bspline::{BSpline, ExtrapolateMode};
     ///
     /// let knots = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
     /// let coeffs = array![-1.0, 2.0, 0.0, -1.0];
@@ -1252,16 +1252,16 @@ where
         let mut derivative_splines = Vec::with_capacity(effective_max_order + 1);
         derivative_splines.push(self.clone()); // 0th derivative (original function)
 
-        for order in 1..=effective_max_order {
-            let deriv_spline = derivative_splines[order - 1].derivative_spline(1)?;
+        for _order in 1..=effective_max_order {
+            let deriv_spline = derivative_splines[_order - 1].derivative_spline(1)?;
             derivative_splines.push(deriv_spline);
         }
 
         // Evaluate all derivatives at all points
-        for order in 0..=effective_max_order {
-            let values = derivative_splines[order].evaluate_batch_fast(xs)?;
+        for _order in 0..=effective_max_order {
+            let values = derivative_splines[_order].evaluate_batch_fast(xs)?;
             for (i, &value) in values.iter().enumerate() {
-                result[[i, order]] = value;
+                result[[i_order]] = value;
             }
         }
 
@@ -1478,7 +1478,7 @@ where
         }
         _ => {
             return Err(InterpolateError::invalid_input(format!(
-                "unknown knot style: {}. Use one of 'uniform', 'average', or 'clamped'",
+                "unknown knot _style: {}. Use one of 'uniform', 'average', or 'clamped'",
                 knot_style
             )));
         }
@@ -1644,14 +1644,14 @@ where
 ///
 /// Returns the maximum distance from the main diagonal that contains non-zero elements.
 #[allow(dead_code)]
-fn estimate_bandwidth<T: Float + Zero + FromPrimitive>(matrix: &ArrayView2<T>) -> usize {
-    let n = matrix.nrows();
+fn estimate_bandwidth<T: Float + Zero + FromPrimitive>(_matrix: &ArrayView2<T>) -> usize {
+    let n = _matrix.nrows();
     let mut max_bandwidth = 0;
     let tolerance = T::from_f64(1e-14).unwrap();
 
     for i in 0..n {
         for j in 0..n {
-            if matrix[[i, j]].abs() > tolerance {
+            if _matrix[[i, j]].abs() > tolerance {
                 let bandwidth = if i > j { i - j } else { j - i };
                 max_bandwidth = max_bandwidth.max(bandwidth);
             }

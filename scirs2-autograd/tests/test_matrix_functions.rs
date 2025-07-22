@@ -1,6 +1,6 @@
 //! Tests for matrix functions (sqrtm, logm, powm)
 
-use ag::tensor_ops::*;
+use ag::tensor__ops::*;
 use ndarray::array;
 use scirs2_autograd as ag;
 

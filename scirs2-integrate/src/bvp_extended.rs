@@ -25,8 +25,7 @@ pub enum BoundaryConditionType<F: IntegrateFloat> {
 impl<F: IntegrateFloat> BoundaryConditionType<F> {
     /// Evaluate the boundary condition residual
     pub fn evaluate_residual(
-        &self,
-        _x: F,
+        &self_x: F,
         y: ArrayView1<F>,
         dydt: ArrayView1<F>,
         component: usize,
@@ -45,22 +44,22 @@ impl<F: IntegrateFloat> BoundaryConditionType<F> {
     }
 
     /// Get derivative of residual with respect to y[component]
-    pub fn derivative_y(&self, _component: usize) -> F {
+    pub fn derivative_y(_component: usize) -> F {
         match self {
-            BoundaryConditionType::Dirichlet { .. } => F::one(),
-            BoundaryConditionType::Neumann { .. } => F::zero(),
+            BoundaryConditionType::Dirichlet { .. } =>, F::one(),
+            BoundaryConditionType::Neumann { .. } =>, F::zero(),
             BoundaryConditionType::Robin { a, .. } => *a,
-            BoundaryConditionType::Periodic => F::one(),
+            BoundaryConditionType::Periodic =>, F::one(),
         }
     }
 
     /// Get derivative of residual with respect to dydt[component]  
-    pub fn derivative_dydt(&self, _component: usize) -> F {
+    pub fn derivative_dydt(_component: usize) -> F {
         match self {
-            BoundaryConditionType::Dirichlet { .. } => F::zero(),
-            BoundaryConditionType::Neumann { .. } => F::one(),
+            BoundaryConditionType::Dirichlet { .. } =>, F::zero(),
+            BoundaryConditionType::Neumann { .. } =>, F::one(),
             BoundaryConditionType::Robin { b, .. } => *b,
-            BoundaryConditionType::Periodic => F::zero(),
+            BoundaryConditionType::Periodic =>, F::zero(),
         }
     }
 }
@@ -78,8 +77,8 @@ pub struct ExtendedBoundaryConditions<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> ExtendedBoundaryConditions<F> {
     /// Create Dirichlet boundary conditions
-    pub fn dirichlet(left_values: Vec<F>, right_values: Vec<F>) -> Self {
-        let left = left_values
+    pub fn dirichlet(_left_values: Vec<F>, right_values: Vec<F>) -> Self {
+        let left = _left_values
             .into_iter()
             .map(|value| BoundaryConditionType::Dirichlet { value })
             .collect();
@@ -97,8 +96,8 @@ impl<F: IntegrateFloat> ExtendedBoundaryConditions<F> {
     }
 
     /// Create Neumann boundary conditions
-    pub fn neumann(left_values: Vec<F>, right_values: Vec<F>) -> Self {
-        let left = left_values
+    pub fn neumann(_left_values: Vec<F>, right_values: Vec<F>) -> Self {
+        let left = _left_values
             .into_iter()
             .map(|value| BoundaryConditionType::Neumann { value })
             .collect();
@@ -138,11 +137,11 @@ impl<F: IntegrateFloat> ExtendedBoundaryConditions<F> {
     }
 
     /// Create periodic boundary conditions
-    pub fn periodic(dimension: usize) -> Self {
+    pub fn periodic(_dimension: usize) -> Self {
         let condition = BoundaryConditionType::Periodic;
         Self {
-            left: vec![condition.clone(); dimension],
-            right: vec![condition; dimension],
+            left: vec![condition.clone(); _dimension],
+            right: vec![condition; _dimension],
             is_periodic: true,
         }
     }
@@ -184,7 +183,7 @@ where
     let n_dim = boundary_conditions.left.len();
     if boundary_conditions.right.len() != n_dim {
         return Err(IntegrateError::ValueError(
-            "Left and right boundary conditions must have same dimension".to_string(),
+            "Left and right boundary _conditions must have same dimension".to_string(),
         ));
     }
 
@@ -199,7 +198,7 @@ where
         y_init.push(Array1::zeros(n_dim));
     }
 
-    // Apply initial guess based on boundary conditions
+    // Apply initial guess based on boundary _conditions
     match boundary_conditions.left[0] {
         BoundaryConditionType::Dirichlet { value } => {
             if let BoundaryConditionType::Dirichlet { value: right_value } =
@@ -213,7 +212,7 @@ where
             }
         }
         _ => {
-            // For other boundary conditions, use zero initial guess
+            // For other boundary _conditions, use zero initial guess
         }
     }
 
@@ -240,7 +239,7 @@ where
         let n_dim = ya.len();
 
         if boundary_conditions.is_periodic {
-            // For periodic boundary conditions: u(a) = u(b), u'(a) = u'(b)
+            // For periodic boundary _conditions: u(a) = u(b), u'(a) = u'(b)
             let f_a = fun(a, ya);
             let f_b = fun(b, yb);
 
@@ -251,18 +250,18 @@ where
             }
             residuals
         } else {
-            // General boundary conditions
+            // General boundary _conditions
             let f_a = fun(a, ya);
             let f_b = fun(b, yb);
 
             let mut residuals = Array1::zeros(n_dim * 2);
 
-            // Left boundary conditions
+            // Left boundary _conditions
             for (i, bc) in boundary_conditions.left.iter().enumerate() {
                 residuals[i] = bc.evaluate_residual(a, ya, f_a.view(), i);
             }
 
-            // Right boundary conditions
+            // Right boundary _conditions
             for (i, bc) in boundary_conditions.right.iter().enumerate() {
                 residuals[i + n_dim] = bc.evaluate_residual(b, yb, f_b.view(), i);
             }
@@ -348,7 +347,7 @@ impl<F: IntegrateFloat> MultipointBVP<F> {
     }
 
     /// Add interior point with conditions
-    pub fn add_interior_point(&mut self, x: F, conditions: Vec<BoundaryConditionType<F>>) {
+    pub fn add_interior_point(x: F, conditions: Vec<BoundaryConditionType<F>>) {
         self.interior_points.push(x);
         self.interior_conditions.push(conditions);
     }
@@ -369,12 +368,12 @@ where
     FunType: Fn(F, ArrayView1<F>) -> Array1<F> + Copy,
 {
     if multipoint.interior_points.is_empty() {
-        // No interior points, solve as regular BVP
+        // No interior _points, solve as regular BVP
         solve_bvp_extended(fun, x_span, boundary_conditions, n_points, options)
     } else {
         // Multipoint BVP using segmented collocation approach
 
-        // Validate interior points are within domain and sorted
+        // Validate interior _points are within domain and sorted
         let [a, b] = x_span;
         let mut all_points = vec![a];
         all_points.extend(multipoint.interior_points.clone());
@@ -384,7 +383,7 @@ where
         for i in 1..all_points.len() {
             if all_points[i] <= all_points[i - 1] {
                 return Err(IntegrateError::ValueError(
-                    "Interior points must be unique and in ascending order".to_string(),
+                    "Interior _points must be unique and in ascending order".to_string(),
                 ));
             }
         }
@@ -402,7 +401,7 @@ where
             let n_seg_points = if i == n_segments - 1 {
                 points_per_segment
             } else {
-                points_per_segment - 1 // Avoid duplicating interior points
+                points_per_segment - 1 // Avoid duplicating interior _points
             };
 
             for j in 0..n_seg_points {
@@ -416,7 +415,7 @@ where
         let total_points = global_mesh.len();
         let mut y_solution: Array2<F> = Array2::zeros((total_points, n_dim));
 
-        // Apply boundary conditions at endpoints
+        // Apply boundary _conditions at endpoints
         apply_initial_boundary_values(&boundary_conditions, &mut y_solution, total_points, n_dim);
 
         // Set up collocation system
@@ -426,7 +425,7 @@ where
 
         // Newton's method for solving the collocation system
         for _iter in 0..options.max_iter {
-            // Compute residuals at all collocation points
+            // Compute residuals at all collocation _points
             compute_multipoint_residuals(
                 &fun,
                 &global_mesh,
@@ -501,19 +500,18 @@ where
 fn apply_initial_boundary_values<F: IntegrateFloat>(
     boundary_conditions: &ExtendedBoundaryConditions<F>,
     y_solution: &mut Array2<F>,
-    n_points: usize,
-    _n_dim: usize,
+    n_points: usize, _n_dim: usize,
 ) {
-    // Apply Dirichlet conditions at boundaries if available
-    for (dim, bc) in boundary_conditions.left.iter().enumerate() {
+    // Apply Dirichlet _conditions at boundaries if available
+    for (_dim, bc) in boundary_conditions.left.iter().enumerate() {
         if let BoundaryConditionType::Dirichlet { value } = bc {
-            y_solution[[0, dim]] = *value;
+            y_solution[[0_dim]] = *value;
         }
     }
 
-    for (dim, bc) in boundary_conditions.right.iter().enumerate() {
+    for (_dim, bc) in boundary_conditions.right.iter().enumerate() {
         if let BoundaryConditionType::Dirichlet { value } = bc {
-            y_solution[[n_points - 1, dim]] = *value;
+            y_solution[[n_points - 1, _dim]] = *value;
         }
     }
 }
@@ -584,8 +582,8 @@ fn apply_boundary_residuals<F: IntegrateFloat>(
     let y_left_next = y_solution.row(1);
     let dydt_left = (&y_left_next - &y_left) / h;
 
-    for (dim, bc) in boundary_conditions.left.iter().enumerate() {
-        residuals[dim] = bc.evaluate_residual(F::zero(), y_left, dydt_left.view(), dim);
+    for (_dim, bc) in boundary_conditions.left.iter().enumerate() {
+        residuals[_dim] = bc.evaluate_residual(F::zero(), y_left, dydt_left.view(), _dim);
     }
 
     // Right boundary
@@ -593,9 +591,9 @@ fn apply_boundary_residuals<F: IntegrateFloat>(
     let y_right_prev = y_solution.row(n_points - 2);
     let dydt_right = (&y_right - &y_right_prev) / h;
 
-    for (dim, bc) in boundary_conditions.right.iter().enumerate() {
-        residuals[(n_points - 1) * n_dim + dim] =
-            bc.evaluate_residual(F::zero(), y_right, dydt_right.view(), dim);
+    for (_dim, bc) in boundary_conditions.right.iter().enumerate() {
+        residuals[(n_points - 1) * n_dim + _dim] =
+            bc.evaluate_residual(F::zero(), y_right, dydt_right.view(), _dim);
     }
 }
 
@@ -802,13 +800,13 @@ fn gaussian_elimination<F: IntegrateFloat>(
 
 /// Transpose solution from row-major to column-major format
 #[allow(dead_code)]
-fn transpose_solution<F: IntegrateFloat>(y_solution: Array2<F>) -> Vec<Array1<F>> {
-    let n_points = y_solution.nrows();
-    let _n_dim = y_solution.ncols();
+fn transpose_solution<F: IntegrateFloat>(_y_solution: Array2<F>) -> Vec<Array1<F>> {
+    let n_points = _y_solution.nrows();
+    let _n_dim = _y_solution.ncols();
 
     let mut result = Vec::with_capacity(n_points);
     for i in 0..n_points {
-        result.push(y_solution.row(i).to_owned());
+        result.push(_y_solution.row(i).to_owned());
     }
 
     result

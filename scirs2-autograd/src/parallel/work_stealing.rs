@@ -195,15 +195,15 @@ struct WorkStealingArray<T> {
 
 impl<T> WorkStealingArray<T> {
     /// Create a new array with the given capacity
-    fn new(capacity: usize) -> Self {
-        assert!(capacity.is_power_of_two());
+    fn new(_capacity: usize) -> Self {
+        assert!(_capacity.is_power_of_two());
 
-        let mut data = Vec::with_capacity(capacity);
-        data.resize_with(capacity, || std::mem::MaybeUninit::uninit());
+        let mut data = Vec::with_capacity(_capacity);
+        data.resize_with(_capacity, || std::mem::MaybeUninit::uninit());
 
         Self {
-            capacity,
-            mask: capacity - 1,
+            _capacity,
+            mask: _capacity - 1,
             data,
         }
     }
@@ -242,14 +242,14 @@ where
     T: Send + 'static,
 {
     /// Create a new work-stealing scheduler
-    pub fn new(num_threads: usize) -> Self {
-        let deques = (0..num_threads)
+    pub fn new(_num_threads: usize) -> Self {
+        let deques = (0.._num_threads)
             .map(|_| Arc::new(WorkStealingDeque::new()))
             .collect();
 
         Self {
             deques,
-            num_threads,
+            _num_threads,
             round_robin: AtomicUsize::new(0),
         }
     }
@@ -359,7 +359,7 @@ impl WorkStealingStats {
             .iter()
             .enumerate()
             .max_by_key(|(_, &size)| size)
-            .map(|(id, _)| id)
+            .map(|(id_)| id)
     }
 
     /// Get the least loaded thread
@@ -368,7 +368,7 @@ impl WorkStealingStats {
             .iter()
             .enumerate()
             .min_by_key(|(_, &size)| size)
-            .map(|(id, _)| id)
+            .map(|(id_)| id)
     }
 }
 
@@ -384,27 +384,27 @@ where
     T: Send + 'static,
 {
     /// Create a new simple work-stealing pool
-    pub fn new<F>(num_threads: usize, task_processor: F) -> Self
+    pub fn new<F>(_num_threads: usize, task_processor: F) -> Self
     where
         F: Fn(T) + Send + Sync + Clone + 'static,
     {
-        let scheduler = WorkStealingScheduler::new(num_threads);
+        let scheduler = WorkStealingScheduler::new(_num_threads);
         let shutdown = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let mut worker_handles = Vec::with_capacity(num_threads);
+        let mut worker_handles = Vec::with_capacity(_num_threads);
 
-        for thread_id in 0..num_threads {
+        for thread_id in 0.._num_threads {
             let scheduler_clone = WorkStealingScheduler {
                 deques: scheduler.deques.clone(),
-                num_threads: scheduler.num_threads,
+                num_threads: scheduler._num_threads,
                 round_robin: AtomicUsize::new(0),
             };
             let shutdown_clone = Arc::clone(&shutdown);
-            let processor = task_processor.clone();
+            let _processor = task_processor.clone();
 
             let handle = std::thread::spawn(move || {
                 while !shutdown_clone.load(Ordering::Relaxed) {
                     if let Some(task) = scheduler_clone.try_get_task(thread_id) {
-                        processor(task);
+                        _processor(task);
                     } else {
                         // No work available, brief sleep
                         std::thread::sleep(std::time::Duration::from_micros(100));

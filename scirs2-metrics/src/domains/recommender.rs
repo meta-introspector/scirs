@@ -183,8 +183,8 @@ impl RecommenderRankingMetrics {
                 let relevant_items: HashSet<usize> = y_true[i]
                     .iter()
                     .enumerate()
-                    .filter(|(_, &score)| score > 0.0)
-                    .map(|(idx, _)| idx)
+                    .filter(|(_, &_score)| _score > 0.0)
+                    .map(|(idx_)| idx)
                     .collect();
 
                 let top_k_items: HashSet<usize> =
@@ -193,7 +193,7 @@ impl RecommenderRankingMetrics {
                 let has_hit = !relevant_items.is_disjoint(&top_k_items);
                 hit_scores.push(if has_hit { 1.0 } else { 0.0 });
 
-                // Collect recommended items for coverage calculation
+                // Collect recommended _items for coverage calculation
                 for &item_id in recommended_items[i].iter().take(k) {
                     recommended_items_set.insert(item_id);
                 }
@@ -249,7 +249,7 @@ impl RecommenderRankingMetrics {
                 .iter()
                 .enumerate()
                 .filter(|(_, &score)| score > 0.0)
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .collect();
 
             let mut rank = None;
@@ -348,8 +348,7 @@ impl RatingPredictionMetrics {
                 (1, 1) => tp += 1,
                 (0, 1) => fp += 1,
                 (0, 0) => _tn += 1,
-                (1, 0) => fn_count += 1,
-                _ => {
+                (1, 0) => fn_count += 1_ => {
                     return Err(MetricsError::InvalidInput(
                         "Invalid binary labels".to_string(),
                     ))
@@ -430,7 +429,7 @@ impl DiversityMetrics {
         // Calculate item coverage
         let all_recommended_items: HashSet<usize> = recommended_items
             .iter()
-            .flat_map(|items| items.iter())
+            .flat_map(|_items| _items.iter())
             .copied()
             .collect();
         let item_coverage = all_recommended_items.len() as f64 / total_catalog_size as f64;
@@ -438,7 +437,7 @@ impl DiversityMetrics {
         // Calculate user coverage
         let users_with_recommendations = recommended_items
             .iter()
-            .filter(|items| !items.is_empty())
+            .filter(|_items| !_items.is_empty())
             .count();
         let user_coverage = users_with_recommendations as f64 / total_users as f64;
 
@@ -474,16 +473,16 @@ impl DiversityMetrics {
         let mut total_diversity = 0.0;
         let mut count = 0;
 
-        for items in recommended_items {
-            if items.len() < 2 {
+        for _items in recommended_items {
+            if _items.len() < 2 {
                 continue;
             }
 
             let mut pairwise_distances = Vec::new();
-            for i in 0..items.len() {
-                for j in i + 1..items.len() {
-                    let item1_id = items[i];
-                    let item2_id = items[j];
+            for i in 0.._items.len() {
+                for j in i + 1.._items.len() {
+                    let item1_id = _items[i];
+                    let item2_id = _items[j];
 
                     if item1_id < features.nrows() && item2_id < features.nrows() {
                         let distance = self.cosine_distance(
@@ -526,8 +525,8 @@ impl DiversityMetrics {
     fn calculate_gini_coefficient(&self, recommended_items: &[Vec<usize>]) -> Result<f64> {
         // Count item frequencies
         let mut item_counts = HashMap::new();
-        for items in recommended_items {
-            for &item in items {
+        for _items in recommended_items {
+            for &item in _items {
                 *item_counts.entry(item).or_insert(0) += 1;
             }
         }
@@ -559,8 +558,8 @@ impl DiversityMetrics {
         let mut item_counts = HashMap::new();
         let mut total_recommendations = 0;
 
-        for items in recommended_items {
-            for &item in items {
+        for _items in recommended_items {
+            for &item in _items {
                 *item_counts.entry(item).or_insert(0) += 1;
                 total_recommendations += 1;
             }
@@ -588,21 +587,21 @@ impl DiversityMetrics {
         popularity_scores: &HashMap<usize, f64>,
         threshold: f64,
     ) -> Result<f64> {
-        // Identify long-tail items (below popularity threshold)
+        // Identify long-tail _items (below popularity threshold)
         let long_tail_items: HashSet<usize> = popularity_scores
             .iter()
             .filter(|(_, &popularity)| popularity < threshold)
-            .map(|(&item_id, _)| item_id)
+            .map(|(&item_id_)| item_id)
             .collect();
 
         if long_tail_items.is_empty() {
             return Ok(0.0);
         }
 
-        // Count recommended long-tail items
+        // Count recommended long-tail _items
         let recommended_long_tail: HashSet<usize> = recommended_items
             .iter()
-            .flat_map(|items| items.iter())
+            .flat_map(|_items| _items.iter())
             .filter(|&item_id| long_tail_items.contains(item_id))
             .copied()
             .collect();

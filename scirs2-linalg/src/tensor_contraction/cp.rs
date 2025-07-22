@@ -239,17 +239,17 @@ where
     pub fn compress(&self, new_rank: usize) -> LinalgResult<Self> {
         let current_rank = self.factors[0].shape()[1];
 
-        // Validate new rank
+        // Validate new _rank
         if new_rank > current_rank {
             return Err(LinalgError::ValueError(format!(
-                "New rank ({}) must be less than or equal to current rank ({})",
+                "New _rank ({}) must be less than or equal to current _rank ({})",
                 new_rank, current_rank
             )));
         }
 
         if new_rank == 0 {
             return Err(LinalgError::ValueError(
-                "New rank must be at least 1".to_string(),
+                "New _rank must be at least 1".to_string(),
             ));
         }
 
@@ -418,15 +418,15 @@ where
 
 // Unfolds a tensor along a specified mode
 #[allow(dead_code)]
-fn unfold_tensor<A>(tensor: &ArrayD<A>, mode: usize) -> LinalgResult<Array2<A>>
+fn unfold_tensor<A>(_tensor: &ArrayD<A>, mode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
 {
-    let shape = tensor.shape();
+    let shape = _tensor.shape();
 
     if mode >= shape.len() {
         return Err(LinalgError::ShapeError(format!(
-            "Mode {} is out of bounds for tensor with {} dimensions",
+            "Mode {} is out of bounds for _tensor with {} dimensions",
             mode,
             shape.len()
         )));
@@ -438,7 +438,7 @@ where
     let other_dims_prod: usize = shape
         .iter()
         .enumerate()
-        .filter(|&(i, _)| i != mode)
+        .filter(|&(i_)| i != mode)
         .map(|(_, &dim)| dim)
         .product();
 
@@ -446,13 +446,13 @@ where
     let mut result = Array2::zeros((mode_dim, other_dims_prod));
 
     // Helper function to calculate column index
-    fn calc_col_idx(idx: &[usize], shape: &[usize], mode: usize) -> usize {
+    fn calc_col_idx(_idx: &[usize], shape: &[usize], mode: usize) -> usize {
         let mut col_idx = 0;
         let mut stride = 1;
 
         for dim in (0..shape.len()).rev() {
             if dim != mode {
-                col_idx += idx[dim] * stride;
+                col_idx += _idx[dim] * stride;
                 stride *= shape[dim];
             }
         }
@@ -460,12 +460,12 @@ where
         col_idx
     }
 
-    // Populate the unfolded tensor
+    // Populate the unfolded _tensor
     for idx in ndarray::indices(shape) {
         let mode_idx = idx[mode];
         let idx_vec: Vec<usize> = idx.as_array_view().to_vec();
         let col_idx = calc_col_idx(&idx_vec, shape, mode);
-        result[[mode_idx, col_idx]] = tensor[idx.clone()];
+        result[[mode_idx, col_idx]] = _tensor[idx.clone()];
     }
 
     Ok(result)
@@ -473,11 +473,11 @@ where
 
 // Computes the Khatri-Rao product (columnwise Kronecker product) of all factors except one
 #[allow(dead_code)]
-fn khatri_rao_product<A>(factors: &[Array2<A>], skip_mode: usize) -> LinalgResult<Array2<A>>
+fn khatri_rao_product<A>(_factors: &[Array2<A>], skip_mode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
 {
-    let n_modes = factors.len();
+    let n_modes = _factors.len();
 
     if n_modes <= 1 {
         return Err(LinalgError::ValueError(
@@ -485,19 +485,19 @@ where
         ));
     }
 
-    let rank = factors[0].shape()[1];
+    let rank = _factors[0].shape()[1];
 
     // If we're skipping all but one matrix, return that matrix
     if n_modes == 2 && skip_mode < n_modes {
         let other_mode = if skip_mode == 0 { 1 } else { 0 };
-        return Ok(factors[other_mode].clone());
+        return Ok(_factors[other_mode].clone());
     }
 
     // Determine the number of rows in the result
-    let _n_rows: usize = factors
+    let _n_rows: usize = _factors
         .iter()
         .enumerate()
-        .filter(|&(i, _)| i != skip_mode)
+        .filter(|&(i_)| i != skip_mode)
         .map(|(_, f)| f.shape()[0])
         .product();
 
@@ -506,8 +506,8 @@ where
     let mut result_rows = 1;
 
     // Compute the Khatri-Rao product
-    for (mode, factor) in factors.iter().enumerate() {
-        if mode == skip_mode {
+    for (_mode, factor) in _factors.iter().enumerate() {
+        if _mode == skip_mode {
             continue;
         }
 
@@ -540,24 +540,24 @@ where
         }
     }
 
-    result.ok_or_else(|| LinalgError::ValueError("All factors were skipped".to_string()))
+    result.ok_or_else(|| LinalgError::ValueError("All _factors were skipped".to_string()))
 }
 
 // Computes the Gram matrix for ALS update
 #[allow(dead_code)]
-fn compute_gram_matrix<A>(factors: &[Array2<A>], skip_mode: usize) -> LinalgResult<Array2<A>>
+fn compute_gram_matrix<A>(_factors: &[Array2<A>], skip_mode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
 {
-    let _n_modes = factors.len();
-    let rank = factors[0].shape()[1];
+    let _n_modes = _factors.len();
+    let rank = _factors[0].shape()[1];
 
     // Initialize result with ones
     let mut gram = Array2::ones((rank, rank));
 
     // Compute the Gram matrix as the Hadamard product of all factor Gram matrices
-    for (mode, factor) in factors.iter().enumerate() {
-        if mode == skip_mode {
+    for (_mode, factor) in _factors.iter().enumerate() {
+        if _mode == skip_mode {
             continue;
         }
 
@@ -577,7 +577,7 @@ where
 
 // Computes the Moore-Penrose pseudoinverse using SVD
 #[allow(dead_code)]
-fn pseudo_inverse<A>(matrix: &Array2<A>) -> LinalgResult<Array2<A>>
+fn pseudo_inverse<A>(_matrix: &Array2<A>) -> LinalgResult<Array2<A>>
 where
     A: Clone
         + Float
@@ -590,7 +590,7 @@ where
         + 'static
         + ndarray::ScalarOperand,
 {
-    let (u, s, vt) = svd(&matrix.view(), false, None)?;
+    let (u, s, vt) = svd(&_matrix.view(), false, None)?;
 
     // Compute the pseudoinverse of the singular values
     let mut s_inv = Array2::zeros((s.len(), s.len()));
@@ -612,12 +612,12 @@ where
 
 // Normalizes the factor matrices and returns the weights
 #[allow(dead_code)]
-fn normalize_factors<A>(factors: &mut [Array2<A>]) -> Array1<A>
+fn normalize_factors<A>(_factors: &mut [Array2<A>]) -> Array1<A>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
 {
-    let _n_modes = factors.len();
-    let rank = factors[0].shape()[1];
+    let _n_modes = _factors.len();
+    let rank = _factors[0].shape()[1];
 
     // Initialize weights
     let mut weights = Array1::ones(rank);
@@ -625,7 +625,7 @@ where
     // For each component
     for r in 0..rank {
         // For each mode, compute the norm of the r-th column
-        for factor in factors.iter_mut() {
+        for factor in _factors.iter_mut() {
             let mut norm_sq = A::zero();
             for i in 0..factor.shape()[0] {
                 norm_sq += factor[[i, r]].powi(2);
@@ -758,9 +758,9 @@ mod tests {
 
         // Create factor matrices for the CP decomposition
         let factors = vec![
-            Array2::from_shape_fn((2, 1), |(i, _)| a[i]),
-            Array2::from_shape_fn((3, 1), |(j, _)| b[j]),
-            Array2::from_shape_fn((2, 1), |(k, _)| c[k]),
+            Array2::from_shape_fn((2, 1), |(i_)| a[i]),
+            Array2::from_shape_fn((3, 1), |(j_)| b[j]),
+            Array2::from_shape_fn((2, 1), |(k_)| c[k]),
         ];
 
         // Create CP decomposition

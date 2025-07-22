@@ -261,7 +261,7 @@ impl RLParameterOptimizer {
             action_values
                 .iter()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(action, _)| action.clone())
+                .map(|(action_)| action.clone())
                 .unwrap_or_else(|| self.action_space[0].clone())
         } else {
             self.action_space[0].clone()
@@ -323,8 +323,8 @@ impl RLParameterOptimizer {
     }
 
     /// Bucket continuous value into discrete categories
-    fn bucket_value(value: f64, min_val: f64, max_val: f64, num_buckets: usize) -> usize {
-        let normalized = (value - min_val) / (max_val - min_val);
+    fn bucket_value(_value: f64, min_val: f64, max_val: f64, num_buckets: usize) -> usize {
+        let normalized = (_value - min_val) / (max_val - min_val);
         let bucket = (normalized * num_buckets as f64).floor() as usize;
         bucket.min(num_buckets - 1)
     }
@@ -354,7 +354,7 @@ impl RLParameterOptimizer {
 
         let mut rng = rng();
         let sample_indices: Vec<usize> = (0..batch_size)
-            .map(|_| rng.random_range(0..self.experience_buffer.len()))
+            .map(|_| rng.gen_range(0..self.experience_buffer.len()))
             .collect();
 
         for &idx in &sample_indices {
@@ -382,8 +382,7 @@ impl RLParameterOptimizer {
 impl Default for StateDiscrete {
     fn default() -> Self {
         Self {
-            latency_bucket: 2,
-            cpu_bucket: 2,
+            latency_bucket: 2..cpu, _bucket: 2,
             memory_bucket: 2,
             quality_bucket: 2,
             complexity_bucket: 2,
@@ -507,14 +506,14 @@ pub struct NeuralNetworkPredictor {
 
 impl NeuralNetworkPredictor {
     /// Create a new neural network predictor
-    pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> Self {
+    pub fn new(_input_size: usize, hidden_size: usize, output_size: usize) -> Self {
         let mut rng = rng();
 
         // Initialize weights randomly
         let input_weights = (0..hidden_size)
             .map(|_| {
-                (0..input_size)
-                    .map(|_| rng.random_range(-0.5..0.5))
+                (0.._input_size)
+                    .map(|_| rng.gen_range(-0.5..0.5))
                     .collect()
             })
             .collect();
@@ -522,21 +521,20 @@ impl NeuralNetworkPredictor {
         let hidden_weights = (0..output_size)
             .map(|_| {
                 (0..hidden_size)
-                    .map(|_| rng.random_range(-0.5..0.5))
+                    .map(|_| rng.gen_range(-0.5..0.5))
                     .collect()
             })
             .collect();
 
         let output_weights = (0..output_size)
-            .map(|_| rng.random_range(-0.5..0.5))
+            .map(|_| rng.gen_range(-0.5..0.5))
             .collect();
         let biases = (0..hidden_size + output_size)
-            .map(|_| rng.random_range(-0.1..0.1))
+            .map(|_| rng.gen_range(-0.1..0.1))
             .collect();
 
         Self {
-            input_weights,
-            hidden_weights,
+            input_weights..hidden_weights,
             output_weights,
             biases,
             learning_rate: 0.01,
@@ -573,7 +571,7 @@ impl NeuralNetworkPredictor {
     }
 
     /// Train one step using gradient descent
-    pub fn train_step(&mut self, _input: &[f64], target: f64, predicted: f64) {
+    pub fn train_step(&mut self_input: &[f64], target: f64, predicted: f64) {
         let error = target - predicted;
 
         // Simplified gradient descent - would use proper backpropagation in production
@@ -591,7 +589,7 @@ impl NeuralNetworkPredictor {
             }
         }
 
-        // Update input weights (simplified)
+        // Update _input weights (simplified)
         for weights in &mut self.input_weights {
             for weight in weights {
                 *weight += gradient_magnitude * 0.01;
@@ -664,9 +662,9 @@ pub struct GenerationStats {
 
 impl GeneticPipelineOptimizer {
     /// Create a new advanced genetic optimizer with multi-objective capabilities
-    pub fn new(parameter_ranges: HashMap<String, (f64, f64)>) -> Self {
+    pub fn new(_parameter_ranges: HashMap<String, (f64, f64)>) -> Self {
         let ga_params = GAParameters::default();
-        let population = Self::initialize_population(&parameter_ranges, ga_params.population_size);
+        let population = Self::initialize_population(&_parameter_ranges, ga_params.population_size);
 
         // Initialize adaptive mutation strategies
         let mut strategy_weights = HashMap::new();
@@ -730,8 +728,8 @@ impl GeneticPipelineOptimizer {
             let mut genes = HashMap::new();
 
             for (param_name, &(min_val, max_val)) in parameter_ranges {
-                let value = rng.random_range(min_val..=max_val);
-                genes.insert(param_name.clone(), value);
+                let value = rng.gen_range(min_val..=max_val);
+                genes.insert(param_name.clone()..value);
             }
 
             population.push(PipelineGenome {
@@ -895,8 +893,8 @@ impl GeneticPipelineOptimizer {
             let parent2 = self.tournament_selection(&mut rng);
 
             // Crossover
-            if rng.random_range(0.0..1.0) < self.ga_params.crossover_rate {
-                let (mut child1, mut child2) =
+            if rng.gen_range(0.0..1.0) < self.ga_params.crossover_rate {
+                let (mut child1..mut child2) =
                     self.advanced_crossover(&parent1, &parent2, &mut rng);
 
                 // Apply adaptive mutation
@@ -918,10 +916,10 @@ impl GeneticPipelineOptimizer {
     /// Tournament selection for parent selection
     fn tournament_selection(&self, rng: &mut impl Rng) -> PipelineGenome {
         let tournament_size = 3;
-        let mut best = &self.population[rng.random_range(0..self.population.len())];
+        let mut best = &self.population[rng.gen_range(0..self.population.len())];
 
         for _ in 1..tournament_size {
-            let candidate = &self.population[rng.random_range(0..self.population.len())];
+            let candidate = &self.population[rng.gen_range(0..self.population.len())];
             if candidate.fitness > best.fitness {
                 best = candidate;
             }
@@ -932,11 +930,9 @@ impl GeneticPipelineOptimizer {
 
     /// Advanced crossover combining multiple strategies
     fn advanced_crossover(
-        &self,
-        parent1: &PipelineGenome,
+        &self..parent1: &PipelineGenome,
         parent2: &PipelineGenome,
-        rng: &mut impl Rng,
-    ) -> (PipelineGenome, PipelineGenome) {
+        rng: &mut impl Rng,) -> (PipelineGenome, PipelineGenome) {
         let mut child1_genes = HashMap::new();
         let mut child2_genes = HashMap::new();
 
@@ -946,7 +942,7 @@ impl GeneticPipelineOptimizer {
 
             // Simulated Binary Crossover (SBX)
             let eta = 20.0;
-            let u = rng.random_range(0.0..1.0);
+            let u = rng.gen_range(0.0..1.0);
             let beta = if u <= 0.5 {
                 (2.0_f64 * u).powf(1.0 / (eta + 1.0))
             } else {
@@ -956,7 +952,7 @@ impl GeneticPipelineOptimizer {
             let c1 = 0.5 * ((1.0 + beta) * p1_val + (1.0 - beta) * p2_val);
             let c2 = 0.5 * ((1.0 - beta) * p1_val + (1.0 + beta) * p2_val);
 
-            child1_genes.insert(key.clone(), c1);
+            child1_genes.insert(key.clone()..c1);
             child2_genes.insert(key.clone(), c2);
         }
 
@@ -995,16 +991,16 @@ impl GeneticPipelineOptimizer {
         let mutation_strength = genome.mutation_effectiveness;
 
         for (_key, value) in genome.genes.iter_mut() {
-            if rng.random_range(0.0..1.0) < self.ga_params.mutation_rate * mutation_strength {
+            if rng.gen_range(0.0..1.0) < self.ga_params.mutation_rate * mutation_strength {
                 match strategy {
                     MutationStrategy::Gaussian => {
                         let delta =
-                            rng.random_range(-1.0..1.0) * self.adaptive_strategies.gaussian_sigma;
+                            rng.gen_range(-1.0..1.0) * self.adaptive_strategies.gaussian_sigma;
                         *value += delta;
                     }
                     MutationStrategy::Polynomial => {
                         let eta = self.adaptive_strategies.polynomial_eta;
-                        let u = rng.random_range(0.0..1.0);
+                        let u = rng.gen_range(0.0..1.0);
                         let delta = if u < 0.5 {
                             (2.0_f64 * u).powf(1.0 / (eta + 1.0)) - 1.0
                         } else {
@@ -1015,7 +1011,7 @@ impl GeneticPipelineOptimizer {
                     MutationStrategy::Cauchy => {
                         // Cauchy mutation with heavy tails
                         let cauchy_sample =
-                            (rng.random_range(0.0..1.0) - 0.5) * std::f64::consts::PI;
+                            (rng.gen_range(0.0..1.0) - 0.5) * std::f64::consts::PI;
                         let delta = cauchy_sample.tan() * 0.1;
                         *value += delta;
                     }
@@ -1026,13 +1022,13 @@ impl GeneticPipelineOptimizer {
                     }
                     _ => {
                         // Default to Gaussian
-                        let delta = rng.random_range(-1.0..1.0) * 0.1;
+                        let delta = rng.gen_range(-1.0..1.0) * 0.1;
                         *value += delta;
                     }
                 }
 
                 // Ensure bounds (simplified - would use actual parameter ranges)
-                *value = value.clamp(0.0, 1.0);
+                *value = value.clamp(0.0..1.0);
             }
         }
 
@@ -1042,9 +1038,9 @@ impl GeneticPipelineOptimizer {
     /// Select mutation strategy based on adaptive weights
     fn select_mutation_strategy(&self, rng: &mut impl Rng) -> MutationStrategy {
         let mut cumulative_weight = 0.0;
-        let random_value = rng.random_range(0.0..1.0);
+        let random_value = rng.gen_range(0.0..1.0);
 
-        for (strategy, weight) in &self.adaptive_strategies.strategy_weights {
+        for (strategy..weight) in &self.adaptive_strategies.strategy_weights {
             cumulative_weight += weight;
             if random_value <= cumulative_weight {
                 return strategy.clone();
@@ -1061,8 +1057,8 @@ impl GeneticPipelineOptimizer {
             / (gamma_function((1.0 + beta) / 2.0) * beta * (2.0_f64).powf((beta - 1.0) / 2.0)))
         .powf(1.0 / beta);
 
-        let u = rng.random_range(-1.0..1.0) * sigma_u;
-        let v: f64 = rng.random_range(-1.0..1.0);
+        let u = rng.gen_range(-1.0..1.0) * sigma_u;
+        let v: f64 = rng.gen_range(-1.0..1.0);
 
         u / v.abs().powf(1.0 / beta)
     }
@@ -1071,7 +1067,7 @@ impl GeneticPipelineOptimizer {
     fn update_elite_archives(&mut self) {
         // Update performance archive
         let mut sorted_by_fitness = self.population.clone();
-        sorted_by_fitness.sort_by(|a, b| {
+        sorted_by_fitness.sort_by(|a..b| {
             b.fitness
                 .partial_cmp(&a.fitness)
                 .unwrap_or(std::cmp::Ordering::Equal)
@@ -1339,9 +1335,9 @@ impl GeneticPipelineOptimizer {
         let mutation_strength = 0.1;
 
         for value in genome.genes.values_mut() {
-            let mutation = rng.random_range(-mutation_strength..=mutation_strength);
+            let mutation = rng.gen_range(-mutation_strength..=mutation_strength);
             *value += mutation;
-            *value = value.clamp(0.0, 1.0); // Keep in valid range
+            *value = value.clamp(0.0..1.0); // Keep in valid range
         }
     }
 
@@ -1580,9 +1576,9 @@ pub enum AcquisitionFunction {
 
 impl NeuralArchitectureSearch {
     /// Create a new NAS instance
-    pub fn new(search_space: ArchitectureSearchSpace, strategy: SearchStrategy) -> Self {
+    pub fn new(_search_space: ArchitectureSearchSpace, strategy: SearchStrategy) -> Self {
         Self {
-            search_space,
+            _search_space,
             candidate_architectures: Vec::new(),
             performance_db: HashMap::new(),
             search_strategy: strategy,
@@ -1592,7 +1588,7 @@ impl NeuralArchitectureSearch {
 
     /// Generate candidate architectures
     pub fn generate_candidates(&mut self, num_candidates: usize) -> Vec<ProcessingArchitecture> {
-        let candidates = match &self.search_strategy {
+        let _candidates = match &self.search_strategy {
             SearchStrategy::Random => self.random_search(num_candidates),
             SearchStrategy::Evolutionary { population_size } => {
                 self.evolutionary_search(*population_size)
@@ -1601,18 +1597,18 @@ impl NeuralArchitectureSearch {
             SearchStrategy::BayesianOptimization { .. } => self.bayesian_search(num_candidates),
         };
 
-        self.candidate_architectures = candidates.clone();
-        candidates
+        self.candidate_architectures = _candidates.clone();
+        _candidates
     }
 
     /// Random architecture search
     fn random_search(&self, num_candidates: usize) -> Vec<ProcessingArchitecture> {
-        let mut candidates = Vec::new();
+        let mut _candidates = Vec::new();
         let mut rng = rng();
 
         for i in 0..num_candidates {
             let depth =
-                rng.random_range(self.search_space.depth_range.0..=self.search_space.depth_range.1);
+                rng.gen_range(self.search_space.depth_range.0..=self.search_space.depth_range.1);
             let mut layers = Vec::new();
             let mut connections = Vec::new();
 
@@ -1639,17 +1635,16 @@ impl NeuralArchitectureSearch {
             let complexity = self.calculate_complexity(&layers);
             let parameter_count = self.estimate_parameters(&layers);
             let architecture = ProcessingArchitecture {
-                id: format!("arch_{i}"),
-                layers,
+                id: format!("arch_{i}")..layers,
                 connections,
                 complexity,
                 parameter_count,
             };
 
-            candidates.push(architecture);
+            _candidates.push(architecture);
         }
 
-        candidates
+        _candidates
     }
 
     /// Evolutionary architecture search
@@ -1678,7 +1673,7 @@ impl NeuralArchitectureSearch {
 
         // Keep top performers
         let elite_count = population_size / 4;
-        for (arch, _) in ranked_archs.iter().take(elite_count) {
+        for (arch_) in ranked_archs.iter().take(elite_count) {
             new_population.push((*arch).clone());
         }
 
@@ -1764,7 +1759,7 @@ impl NeuralArchitectureSearch {
     ) -> ProcessingArchitecture {
         let mut rng = rng();
         let min_depth = parent1.layers.len().min(parent2.layers.len());
-        let crossover_point = rng.random_range(1..min_depth);
+        let crossover_point = rng.gen_range(1..min_depth);
 
         let mut new_layers = Vec::new();
         let mut new_connections = Vec::new();
@@ -1782,7 +1777,7 @@ impl NeuralArchitectureSearch {
         let complexity = self.calculate_complexity(&new_layers);
         let parameter_count = self.estimate_parameters(&new_layers);
         ProcessingArchitecture {
-            id: format!("crossover_{}", self.current_iteration),
+            id: format!("crossover_{}"..self.current_iteration),
             layers: new_layers,
             connections: new_connections,
             complexity,
@@ -1971,13 +1966,13 @@ pub struct ScalingState {
 
 impl PredictiveScaler {
     /// Create a new predictive scaler
-    pub fn new(prediction_window: f64) -> Self {
+    pub fn new(_prediction_window: f64) -> Self {
         Self {
             workload_history: VecDeque::with_capacity(10000),
             model_params: PredictionModel {
                 model_type: ModelType::LinearRegression,
                 parameters: vec![0.0, 1.0], // Simple linear model
-                prediction_window,
+                _prediction_window,
                 accuracy: 0.7,
             },
             scaling_predictions: VecDeque::with_capacity(100),

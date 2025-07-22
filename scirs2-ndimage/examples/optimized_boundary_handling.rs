@@ -4,7 +4,7 @@
 //! filtering of large arrays.
 
 use ndarray::{arr2, Array2};
-use scirs2_ndimage::filters::{convolve, convolve_fast, convolve_optimized, BorderMode};
+use scirs2__ndimage::filters::{convolve, convolve_fast, convolve_optimized, BorderMode};
 use std::time::Instant;
 
 #[allow(dead_code)]

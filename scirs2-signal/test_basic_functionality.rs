@@ -1,7 +1,9 @@
 //! Basic functionality test for scirs2-signal
 
-use scirs2_signal::filter::butter;
-use scirs2_signal::error::SignalResult;
+use crate::error::SignalResult;
+use scirs2__signal::filter::butter;
+use scirs2__signal::error::SignalResult;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> SignalResult<()> {

@@ -4,8 +4,8 @@
 //! algorithm compared to the standard decomposition method, particularly for the
 //! additivity property.
 
-use num_complex::Complex64;
-use scirs2_fft::{frft, frft_dft, frft_stable};
+use num__complex::Complex64;
+use scirs2__fft::{frft, frft_dft, frft_stable};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -206,14 +206,14 @@ fn test_cascaded_transforms() {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.norm_sqr().partial_cmp(&b.norm_sqr()).unwrap())
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .unwrap();
 
     let peak_ozaktas = final_ozaktas
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.norm_sqr().partial_cmp(&b.norm_sqr()).unwrap())
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .unwrap();
 
     println!("Peak preservation:");

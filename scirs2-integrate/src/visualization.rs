@@ -11,6 +11,8 @@ use crate::ode::ODEResult;
 use ndarray::{s, Array1, Array2, Array3};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
+use std::f64::consts::PI;
+// use statrs::statistics::Statistics;
 
 /// Data structure for plotting 2D phase space
 #[derive(Debug, Clone)]
@@ -52,7 +54,7 @@ pub struct PlotMetadata {
 }
 
 impl Default for PlotMetadata {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             title: "Numerical Integration Result".to_string(),
             xlabel: "X".to_string(),
@@ -142,7 +144,7 @@ pub enum ColorScheme {
 }
 
 impl Default for VisualizationEngine {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             output_format: OutputFormat::ASCII,
             color_scheme: ColorScheme::Viridis,
@@ -173,7 +175,7 @@ impl VisualizationEngine {
 
         if x_index >= n_vars || y_index >= n_vars {
             return Err(IntegrateError::ValueError(
-                "Variable index out of bounds".to_string(),
+                "Variable _index out of bounds".to_string(),
             ));
         }
 
@@ -305,13 +307,13 @@ impl VisualizationEngine {
     }
 
     /// Create basin of attraction visualization
-    pub fn create_basin_plot(&self, basin_analysis: &BasinAnalysis) -> Result<HeatMapPlot> {
-        let grid_size = basin_analysis.attractor_indices.nrows();
+    pub fn create_basin_plot(_basin_analysis: &BasinAnalysis) -> Result<HeatMapPlot> {
+        let grid_size = _basin_analysis.attractor_indices.nrows();
         let x = Array1::linspace(0.0, 1.0, grid_size);
         let y = Array1::linspace(0.0, 1.0, grid_size);
 
         // Convert attractor indices to f64 for plotting
-        let z = basin_analysis.attractor_indices.mapv(|x| x as f64);
+        let z = _basin_analysis.attractor_indices.mapv(|x| x as f64);
 
         let mut metadata = PlotMetadata::default();
         metadata.title = "Basin of Attraction".to_string();
@@ -322,19 +324,19 @@ impl VisualizationEngine {
     }
 
     /// Generate ASCII art representation of a 2D plot
-    pub fn render_ascii_plot(&self, data: &[(f64, f64)], width: usize, height: usize) -> String {
-        if data.is_empty() {
-            return "No data to plot".to_string();
+    pub fn render_ascii_plot(_data: &[(f64, f64)], width: usize, height: usize) -> String {
+        if _data.is_empty() {
+            return "No _data to plot".to_string();
         }
 
-        // Find data bounds
-        let x_min = data.iter().map(|(x, _)| *x).fold(f64::INFINITY, f64::min);
-        let x_max = data
+        // Find _data bounds
+        let x_min = _data.iter().map(|(x_)| *x).fold(f64::INFINITY, f64::min);
+        let x_max = _data
             .iter()
-            .map(|(x, _)| *x)
+            .map(|(x_)| *x)
             .fold(f64::NEG_INFINITY, f64::max);
-        let y_min = data.iter().map(|(_, y)| *y).fold(f64::INFINITY, f64::min);
-        let y_max = data
+        let y_min = _data.iter().map(|(_, y)| *y).fold(f64::INFINITY, f64::min);
+        let y_max = _data
             .iter()
             .map(|(_, y)| *y)
             .fold(f64::NEG_INFINITY, f64::max);
@@ -342,8 +344,8 @@ impl VisualizationEngine {
         // Create character grid
         let mut grid = vec![vec![' '; width]; height];
 
-        // Map data points to grid
-        for (x, y) in data {
+        // Map _data points to grid
+        for (x, y) in _data {
             let i = ((y - y_min) / (y_max - y_min) * (height - 1) as f64) as usize;
             let j = ((x - x_min) / (x_max - x_min) * (width - 1) as f64) as usize;
 
@@ -367,20 +369,20 @@ impl VisualizationEngine {
     }
 
     /// Export plot data to CSV format
-    pub fn export_csv(&self, plot: &PhaseSpacePlot) -> Result<String> {
+    pub fn export_csv(_plot: &PhaseSpacePlot) -> Result<String> {
         let mut csv = String::new();
 
         // Header
         csv.push_str("x,y");
-        if plot.colors.is_some() {
+        if _plot.colors.is_some() {
             csv.push_str(",color");
         }
         csv.push('\n');
 
         // Data
-        for i in 0..plot.x.len() {
-            csv.push_str(&format!("{},{}", plot.x[i], plot.y[i]));
-            if let Some(ref colors) = plot.colors {
+        for i in 0.._plot.x.len() {
+            csv.push_str(&format!("{},{}", _plot.x[i], _plot.y[i]));
+            if let Some(ref colors) = _plot.colors {
                 csv.push_str(&format!(",{}", colors[i]));
             }
             csv.push('\n');
@@ -597,7 +599,7 @@ impl VisualizationEngine {
 
         if x_index >= n_vars || y_index >= n_vars || z_index >= n_vars {
             return Err(IntegrateError::ValueError(
-                "Variable index out of bounds".to_string(),
+                "Variable _index out of bounds".to_string(),
             ));
         }
 
@@ -687,15 +689,15 @@ pub mod utils {
     use super::*;
 
     /// Generate color map values
-    pub fn generate_colormap(values: &[f64], scheme: ColorScheme) -> Vec<(u8, u8, u8)> {
-        let n = values.len();
+    pub fn generate_colormap(_values: &[f64], scheme: ColorScheme) -> Vec<(u8, u8, u8)> {
+        let n = _values.len();
         let mut colors = Vec::with_capacity(n);
 
-        let min_val = values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        let max_val = values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let min_val = _values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+        let max_val = _values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let range = max_val - min_val;
 
-        for &val in values {
+        for &val in _values {
             let normalized = if range > 0.0 {
                 (val - min_val) / range
             } else {
@@ -745,8 +747,8 @@ pub mod utils {
     }
 
     /// Calculate optimal grid resolution for vector field plots
-    pub fn optimal_grid_resolution(domain_size: (f64, f64), target_density: f64) -> (usize, usize) {
-        let (width, height) = domain_size;
+    pub fn optimal_grid_resolution(_domain_size: (f64, f64), target_density: f64) -> (usize, usize) {
+        let (width, height) = _domain_size;
         let area = width * height;
         let total_points = (area * target_density) as usize;
 
@@ -758,13 +760,13 @@ pub mod utils {
     }
 
     /// Create summary statistics for plot data
-    pub fn plot_statistics(data: &[f64]) -> PlotStatistics {
-        let n = data.len() as f64;
-        let mean = data.iter().sum::<f64>() / n;
-        let variance = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n;
+    pub fn plot_statistics(_data: &[f64]) -> PlotStatistics {
+        let n = _data.len() as f64;
+        let mean = _data.iter().sum::<f64>() / n;
+        let variance = _data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n;
         let std_dev = variance.sqrt();
 
-        let mut sorted_data = data.to_vec();
+        let mut sorted_data = _data.to_vec();
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let min = sorted_data[0];
@@ -776,7 +778,7 @@ pub mod utils {
         };
 
         PlotStatistics {
-            count: data.len(),
+            count: _data.len(),
             mean,
             std_dev,
             min,
@@ -1228,27 +1230,27 @@ impl InteractiveParameterExplorer {
         indices
     }
 
-    fn indices_to_parameters(&self, indices: &[usize]) -> Array1<f64> {
+    fn indices_to_parameters(_indices: &[usize]) -> Array1<f64> {
         let mut params = Array1::zeros(self.param_dimensions);
 
         for i in 0..self.param_dimensions {
             let (min, max) = self.param_bounds[i];
-            let fraction = indices[i] as f64 / (self.samples_per_dim - 1) as f64;
+            let fraction = _indices[i] as f64 / (self.samples_per_dim - 1) as f64;
             params[i] = min + fraction * (max - min);
         }
 
         params
     }
 
-    fn params_to_cache_key(&self, params: &Array1<f64>) -> String {
-        params
+    fn params_to_cache_key(_params: &Array1<f64>) -> String {
+        _params
             .iter()
             .map(|&p| format!("{p:.6}"))
             .collect::<Vec<_>>()
             .join(",")
     }
 
-    fn generate_coarse_grid(&self, resolution: usize) -> Vec<Array1<f64>> {
+    fn generate_coarse_grid(_resolution: usize) -> Vec<Array1<f64>> {
         let mut grid = Vec::new();
         let mut indices = vec![0; self.param_dimensions];
 
@@ -1257,7 +1259,7 @@ impl InteractiveParameterExplorer {
 
             for i in 0..self.param_dimensions {
                 let (min, max) = self.param_bounds[i];
-                let fraction = indices[i] as f64 / (resolution - 1) as f64;
+                let fraction = indices[i] as f64 / (_resolution - 1) as f64;
                 params[i] = min + fraction * (max - min);
             }
 
@@ -1267,7 +1269,7 @@ impl InteractiveParameterExplorer {
             let mut carry = 1;
             for i in (0..self.param_dimensions).rev() {
                 indices[i] += carry;
-                if indices[i] < resolution {
+                if indices[i] < _resolution {
                     carry = 0;
                     break;
                 } else {
@@ -1284,8 +1286,7 @@ impl InteractiveParameterExplorer {
     }
 
     fn identify_refinement_regions(
-        &self,
-        _points: &[Array1<f64>],
+        &self_points: &[Array1<f64>],
         responses: &[Array1<f64>],
     ) -> Result<Vec<ParameterRegion>> {
         let mut regions = Vec::new();
@@ -1306,7 +1307,7 @@ impl InteractiveParameterExplorer {
                     .partial_cmp(&b_norm)
                     .unwrap_or(std::cmp::Ordering::Equal)
             })
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .unwrap_or(0);
 
         let center = _points[best_idx].clone();
@@ -1317,18 +1318,17 @@ impl InteractiveParameterExplorer {
         Ok(regions)
     }
 
-    fn refine_region(&self, region: &ParameterRegion, resolution: usize) -> Vec<Array1<f64>> {
+    fn refine_region(_region: &ParameterRegion, resolution: usize) -> Vec<Array1<f64>> {
         let mut refined_points = Vec::new();
 
-        // Generate points within the region
+        // Generate points within the _region
         for _ in 0..resolution {
-            use rand::Rng;
             let mut rng = rand::rng();
-            let mut point = region.center.clone();
+            let mut point = _region.center.clone();
 
             for i in 0..self.param_dimensions {
                 let (min, max) = self.param_bounds[i];
-                let range = (max - min) * region.radius;
+                let range = (max - min) * _region.radius;
                 let offset = (rng.random::<f64>() - 0.5) * 2.0 * range;
                 point[i] = (point[i] + offset).max(min).min(max);
             }
@@ -1372,8 +1372,8 @@ impl InteractiveParameterExplorer {
         Ok(gradient)
     }
 
-    fn compute_exploration_metrics(&self, responses: &[Array1<f64>]) -> Result<ExplorationMetrics> {
-        if responses.is_empty() {
+    fn compute_exploration_metrics(_responses: &[Array1<f64>]) -> Result<ExplorationMetrics> {
+        if _responses.is_empty() {
             return Ok(ExplorationMetrics {
                 max_response_norm: 0.0,
                 min_response_norm: 0.0,
@@ -1383,7 +1383,7 @@ impl InteractiveParameterExplorer {
             });
         }
 
-        let norms: Vec<f64> = responses
+        let norms: Vec<f64> = _responses
             .iter()
             .map(|r| r.iter().map(|&x| x * x).sum::<f64>().sqrt())
             .collect();
@@ -1484,9 +1484,9 @@ pub struct BifurcationDiagramGenerator {
 
 impl BifurcationDiagramGenerator {
     /// Create new bifurcation diagram generator
-    pub fn new(parameter_range: (f64, f64), n_parameter_samples: usize) -> Self {
+    pub fn new(_parameter_range: (f64, f64), n_parameter_samples: usize) -> Self {
         Self {
-            parameter_range,
+            _parameter_range,
             n_parameter_samples,
             transient_steps: 1000,
             sampling_steps: 500,
@@ -1559,10 +1559,10 @@ impl BifurcationDiagramGenerator {
     }
 
     /// Analyze 1D attractor structure
-    fn analyze_1d_attractor(&self, states: &[f64]) -> Result<AttractorInfo> {
+    fn analyze_1d_attractor(_states: &[f64]) -> Result<AttractorInfo> {
         // Detect fixed points
         let mut representative_states = Vec::new();
-        let mut unique_states = states.to_vec();
+        let mut unique_states = _states.to_vec();
         unique_states.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         unique_states.dedup_by(|a, b| (*a - *b).abs() < self.fixed_point_tolerance);
 
@@ -1571,18 +1571,18 @@ impl BifurcationDiagramGenerator {
             representative_states.push(unique_states[0]);
         } else {
             // Periodic orbit or chaos
-            let period = self.detect_period(states)?;
+            let period = self.detect_period(_states)?;
 
             if period > 0 && period <= self.sampling_steps / 10 {
                 // Periodic orbit - sample one period
                 for i in 0..period {
-                    representative_states.push(states[states.len() - period + i]);
+                    representative_states.push(_states[_states.len() - period + i]);
                 }
             } else {
                 // Chaotic - sample representative points
-                let sample_rate = states.len() / 20;
-                for i in (0..states.len()).step_by(sample_rate) {
-                    representative_states.push(states[i]);
+                let sample_rate = _states.len() / 20;
+                for i in (0.._states.len()).step_by(sample_rate) {
+                    representative_states.push(_states[i]);
                 }
             }
         }
@@ -1602,14 +1602,14 @@ impl BifurcationDiagramGenerator {
     }
 
     /// Detect period of oscillation
-    fn detect_period(&self, states: &[f64]) -> Result<usize> {
+    fn detect_period(_states: &[f64]) -> Result<usize> {
         let max_period = (self.sampling_steps / 10).min(50);
 
         for period in 1..=max_period {
             let mut is_periodic = true;
 
-            for i in 0..(states.len() - period) {
-                if (states[i] - states[i + period]).abs() > self.period_tolerance {
+            for i in 0..(_states.len() - period) {
+                if (_states[i] - _states[i + period]).abs() > self.period_tolerance {
                     is_periodic = false;
                     break;
                 }
@@ -1651,9 +1651,8 @@ impl BifurcationDiagramGenerator {
                 info2.representative_states.len(),
             ) {
                 (1, 2) => crate::analysis::BifurcationType::PeriodDoubling,
-                (1, _) => crate::analysis::BifurcationType::PeriodDoubling,
-                (_, 1) => crate::analysis::BifurcationType::Fold,
-                _ => crate::analysis::BifurcationType::Unknown,
+                (1_) => crate::analysis::BifurcationType::PeriodDoubling,
+                (_, 1) => crate::analysis::BifurcationType::Fold_ =>, crate::analysis::BifurcationType::Unknown,
             };
 
             return Ok(Some(BifurcationPoint {
@@ -1708,7 +1707,6 @@ pub struct AttractorInfo {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]
@@ -1749,10 +1747,6 @@ mod tests {
 
 /// Advanced visualization features for scientific computing
 pub mod advanced_visualization {
-    use super::*;
-    use crate::ode::ODEResult;
-    use ndarray::{Array1, Array2};
-    use rand::Rng;
 
     /// Multi-dimensional data visualization engine
     pub struct MultiDimensionalVisualizer {
@@ -1855,23 +1849,23 @@ pub mod advanced_visualization {
         }
 
         /// Apply dimension reduction to data
-        fn apply_dimension_reduction(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
+        fn apply_dimension_reduction(_data: &Array2<f64>) -> Result<Array2<f64>> {
             match self.reduction_method {
-                DimensionReductionMethod::PCA => self.apply_pca(data),
-                DimensionReductionMethod::TSNE => self.apply_tsne(data),
-                DimensionReductionMethod::UMAP => self.apply_umap(data),
-                DimensionReductionMethod::LDA => self.apply_lda(data),
-                DimensionReductionMethod::MDS => self.apply_mds(data),
+                DimensionReductionMethod::PCA => self.apply_pca(_data),
+                DimensionReductionMethod::TSNE => self.apply_tsne(_data),
+                DimensionReductionMethod::UMAP => self.apply_umap(_data),
+                DimensionReductionMethod::LDA => self.apply_lda(_data),
+                DimensionReductionMethod::MDS => self.apply_mds(_data),
             }
         }
 
         /// Apply Principal Component Analysis
-        fn apply_pca(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
-            let (n_samples, n_features) = data.dim();
+        fn apply_pca(_data: &Array2<f64>) -> Result<Array2<f64>> {
+            let (n_samples, n_features) = _data.dim();
 
-            // Center the data
-            let mean = data.mean_axis(ndarray::Axis(0)).unwrap();
-            let centered_data = data - &mean.insert_axis(ndarray::Axis(0));
+            // Center the _data
+            let mean = _data.mean_axis(ndarray::Axis(0)).unwrap();
+            let centered_data = _data - &mean.insert_axis(ndarray::Axis(0));
 
             // Compute covariance matrix
             let cov_matrix = centered_data.t().dot(&centered_data) / (n_samples - 1) as f64;
@@ -1884,7 +1878,7 @@ pub mod advanced_visualization {
             eigenvalue_indices
                 .sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
 
-            // Project data onto principal components
+            // Project _data onto principal components
             let n_components = self.target_dimensions.min(n_features);
             let mut projected_data = Array2::zeros((n_samples, n_components));
 
@@ -1898,10 +1892,10 @@ pub mod advanced_visualization {
         }
 
         /// Apply t-SNE (simplified implementation)
-        fn apply_tsne(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
+        fn apply_tsne(_data: &Array2<f64>) -> Result<Array2<f64>> {
             // Simplified t-SNE implementation
             // In practice, would use a proper t-SNE algorithm
-            let (n_samples, _) = data.dim();
+            let (n_samples_) = _data.dim();
             let mut rng = rand::rng();
 
             // Random initialization
@@ -1918,7 +1912,7 @@ pub mod advanced_visualization {
 
             for _iter in 0..n_iterations {
                 // Compute pairwise similarities in high dimension
-                let p_similarities = self.compute_gaussian_similarities(data, 1.0)?;
+                let p_similarities = self.compute_gaussian_similarities(_data, 1.0)?;
 
                 // Compute pairwise similarities in low dimension
                 let q_similarities = self.compute_t_similarities(&embedding)?;
@@ -1944,28 +1938,28 @@ pub mod advanced_visualization {
         }
 
         /// Apply UMAP (simplified implementation)
-        fn apply_umap(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
+        fn apply_umap(_data: &Array2<f64>) -> Result<Array2<f64>> {
             // Simplified UMAP - in practice would use proper UMAP algorithm
             // For now, fall back to PCA
-            self.apply_pca(data)
+            self.apply_pca(_data)
         }
 
         /// Apply Linear Discriminant Analysis
-        fn apply_lda(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
+        fn apply_lda(_data: &Array2<f64>) -> Result<Array2<f64>> {
             // Simplified LDA - would need class labels for proper implementation
             // For now, fall back to PCA
-            self.apply_pca(data)
+            self.apply_pca(_data)
         }
 
         /// Apply Multidimensional Scaling
-        fn apply_mds(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
-            let n_samples = data.nrows();
+        fn apply_mds(_data: &Array2<f64>) -> Result<Array2<f64>> {
+            let n_samples = _data.nrows();
 
             // Compute distance matrix
             let mut distance_matrix = Array2::zeros((n_samples, n_samples));
             for i in 0..n_samples {
                 for j in i..n_samples {
-                    let dist = self.euclidean_distance(&data.row(i), &data.row(j));
+                    let dist = self.euclidean_distance(&_data.row(i), &_data.row(j));
                     distance_matrix[[i, j]] = dist;
                     distance_matrix[[j, i]] = dist;
                 }
@@ -1978,7 +1972,7 @@ pub mod advanced_visualization {
             let _n = n_samples as f64;
             let row_means = squared_distances.mean_axis(ndarray::Axis(1)).unwrap();
             let col_means = squared_distances.mean_axis(ndarray::Axis(0)).unwrap();
-            let grand_mean = squared_distances.mean().unwrap();
+            let grand_mean = squared_distances.iter().sum::<f64>() / squared_distances.len() as f64;
 
             let mut b_matrix = Array2::zeros((n_samples, n_samples));
             for i in 0..n_samples {
@@ -2013,31 +2007,30 @@ pub mod advanced_visualization {
         }
 
         /// Apply clustering to reduced data
-        fn apply_clustering(&self, data: &Array2<f64>) -> Result<Option<Vec<usize>>> {
+        fn apply_clustering(_data: &Array2<f64>) -> Result<Option<Vec<usize>>> {
             match self.clustering_method {
-                ClusteringMethod::KMeans { k } => Ok(Some(self.kmeans_clustering(data, k)?)),
+                ClusteringMethod::KMeans { k } => Ok(Some(self.kmeans_clustering(_data, k)?)),
                 ClusteringMethod::DBSCAN { eps, min_samples } => {
-                    Ok(Some(self.dbscan_clustering(data, eps, min_samples)?))
+                    Ok(Some(self.dbscan_clustering(_data, eps, min_samples)?))
                 }
                 ClusteringMethod::Hierarchical { n_clusters } => {
-                    Ok(Some(self.hierarchical_clustering(data, n_clusters)?))
+                    Ok(Some(self.hierarchical_clustering(_data, n_clusters)?))
                 }
                 ClusteringMethod::None => Ok(None),
             }
         }
 
         /// K-means clustering implementation
-        fn kmeans_clustering(&self, data: &Array2<f64>, k: usize) -> Result<Vec<usize>> {
-            use rand::Rng;
+        fn kmeans_clustering(_data: &Array2<f64>, k: usize) -> Result<Vec<usize>> {
             let mut rng = rand::rng();
-            let (n_samples, n_features) = data.dim();
+            let (n_samples, n_features) = _data.dim();
 
             // Initialize centroids randomly
             let mut centroids = Array2::zeros((k, n_features));
             for i in 0..k {
                 for j in 0..n_features {
-                    let min_val = data.column(j).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-                    let max_val = data
+                    let min_val = _data.column(j).iter().fold(f64::INFINITY, |a, &b| a.min(b));
+                    let max_val = _data
                         .column(j)
                         .iter()
                         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -2057,7 +2050,7 @@ pub mod advanced_visualization {
                     let mut best_cluster = 0;
 
                     for j in 0..k {
-                        let distance = self.euclidean_distance(&data.row(i), &centroids.row(j));
+                        let distance = self.euclidean_distance(&_data.row(i), &centroids.row(j));
                         if distance < min_distance {
                             min_distance = distance;
                             best_cluster = j;
@@ -2082,7 +2075,7 @@ pub mod advanced_visualization {
                     let cluster = labels[i];
                     cluster_counts[cluster] += 1;
                     for j in 0..n_features {
-                        centroids[[cluster, j]] += data[[i, j]];
+                        centroids[[cluster, j]] += _data[[i, j]];
                     }
                 }
 
@@ -2153,7 +2146,7 @@ pub mod advanced_visualization {
             let n_samples = data.nrows();
 
             // Initialize each point as its own cluster
-            let mut clusters: Vec<Vec<usize>> = (0..n_samples).map(|i| vec![i]).collect();
+            let mut _clusters: Vec<Vec<usize>> = (0..n_samples).map(|i| vec![i]).collect();
 
             // Compute initial distance matrix
             let mut distance_matrix = Array2::zeros((n_samples, n_samples));
@@ -2166,16 +2159,16 @@ pub mod advanced_visualization {
             }
 
             // Agglomerative clustering
-            while clusters.len() > n_clusters {
+            while _clusters.len() > n_clusters {
                 let mut min_distance = f64::INFINITY;
                 let mut merge_i = 0;
                 let mut merge_j = 1;
 
-                // Find closest clusters
-                for i in 0..clusters.len() {
-                    for j in i + 1..clusters.len() {
+                // Find closest _clusters
+                for i in 0.._clusters.len() {
+                    for j in i + 1.._clusters.len() {
                         let dist =
-                            self.cluster_distance(&clusters[i], &clusters[j], &distance_matrix);
+                            self.cluster_distance(&_clusters[i], &_clusters[j], &distance_matrix);
                         if dist < min_distance {
                             min_distance = dist;
                             merge_i = i;
@@ -2184,19 +2177,19 @@ pub mod advanced_visualization {
                     }
                 }
 
-                // Merge clusters
-                let mut merged_cluster = clusters[merge_i].clone();
-                merged_cluster.extend(&clusters[merge_j]);
+                // Merge _clusters
+                let mut merged_cluster = _clusters[merge_i].clone();
+                merged_cluster.extend(&_clusters[merge_j]);
 
-                // Remove old clusters and add merged cluster
-                clusters.remove(merge_j); // Remove j first (higher index)
-                clusters.remove(merge_i);
-                clusters.push(merged_cluster);
+                // Remove old _clusters and add merged cluster
+                _clusters.remove(merge_j); // Remove j first (higher index)
+                _clusters.remove(merge_i);
+                _clusters.push(merged_cluster);
             }
 
             // Assign labels
             let mut labels = vec![0; n_samples];
-            for (cluster_id, cluster) in clusters.iter().enumerate() {
+            for (cluster_id, cluster) in _clusters.iter().enumerate() {
                 for &point_id in cluster {
                     labels[point_id] = cluster_id;
                 }
@@ -2379,15 +2372,15 @@ pub mod advanced_visualization {
             Ok(similarities)
         }
 
-        fn compute_t_similarities(&self, embedding: &Array2<f64>) -> Result<Array2<f64>> {
-            let n = embedding.nrows();
+        fn compute_t_similarities(_embedding: &Array2<f64>) -> Result<Array2<f64>> {
+            let n = _embedding.nrows();
             let mut similarities = Array2::zeros((n, n));
 
             for i in 0..n {
                 for j in 0..n {
                     if i != j {
                         let dist_sq = self
-                            .euclidean_distance(&embedding.row(i), &embedding.row(j))
+                            .euclidean_distance(&_embedding.row(i), &_embedding.row(j))
                             .powi(2);
                         similarities[[i, j]] = 1.0 / (1.0 + dist_sq);
                     }
@@ -2403,11 +2396,11 @@ pub mod advanced_visualization {
             Ok(similarities)
         }
 
-        fn find_neighbors(&self, data: &Array2<f64>, point: usize, eps: f64) -> Vec<usize> {
+        fn find_neighbors(_data: &Array2<f64>, point: usize, eps: f64) -> Vec<usize> {
             let mut neighbors = Vec::new();
-            for i in 0..data.nrows() {
+            for i in 0.._data.nrows() {
                 if i != point {
-                    let dist = self.euclidean_distance(&data.row(point), &data.row(i));
+                    let dist = self.euclidean_distance(&_data.row(point), &_data.row(i));
                     if dist <= eps {
                         neighbors.push(i);
                     }
@@ -2523,7 +2516,7 @@ pub mod advanced_visualization {
     }
 
     impl Default for AnimationSettings {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 fps: 30.0,
                 loop_animation: true,
@@ -2560,7 +2553,7 @@ pub mod advanced_visualization {
 
             if x_index >= n_vars || y_index >= n_vars {
                 return Err(crate::error::IntegrateError::ValueError(
-                    "Variable index out of bounds".to_string(),
+                    "Variable _index out of bounds".to_string(),
                 ));
             }
 
@@ -2624,14 +2617,14 @@ pub mod advanced_visualization {
         }
 
         /// Advance to next frame
-        pub fn next_frame(&mut self) {
+        pub fn next_frame() {
             if !self.frames.is_empty() {
                 self.current_frame = (self.current_frame + 1) % self.frames.len();
             }
         }
 
         /// Go to previous frame
-        pub fn previous_frame(&mut self) {
+        pub fn previous_frame() {
             if !self.frames.is_empty() {
                 self.current_frame = if self.current_frame == 0 {
                     self.frames.len() - 1
@@ -2642,9 +2635,9 @@ pub mod advanced_visualization {
         }
 
         /// Set specific frame
-        pub fn set_frame(&mut self, frame_index: usize) {
-            if frame_index < self.frames.len() {
-                self.current_frame = frame_index;
+        pub fn set_frame(_frame_index: usize) {
+            if _frame_index < self.frames.len() {
+                self.current_frame = _frame_index;
             }
         }
 
@@ -2663,7 +2656,7 @@ pub mod advanced_visualization {
     }
 
     impl Default for StatisticalPlotter {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 confidence_level: 0.95,
                 bootstrap_samples: 1000,
@@ -2748,8 +2741,8 @@ pub mod advanced_visualization {
         }
 
         /// Create Q-Q plot for normality testing
-        pub fn create_qq_plot(&self, data: &[f64]) -> Result<QQPlot> {
-            let mut sorted_data = data.to_vec();
+        pub fn create_qq_plot(_data: &[f64]) -> Result<QQPlot> {
+            let mut sorted_data = _data.to_vec();
             sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
             let n = sorted_data.len();
@@ -2782,7 +2775,6 @@ pub mod advanced_visualization {
             data: &[f64],
             statistic: fn(&[f64]) -> f64,
         ) -> Result<(f64, f64)> {
-            use rand::Rng;
             let mut rng = rand::rng();
             let n = data.len();
             let mut bootstrap_stats = Vec::with_capacity(self.bootstrap_samples);
@@ -2811,14 +2803,14 @@ pub mod advanced_visualization {
         }
 
         /// Helper functions
-        fn calculate_box_statistics(&self, data: &[f64]) -> Result<BoxStatistics> {
-            let mut sorted_data = data.to_vec();
+        fn calculate_box_statistics(_data: &[f64]) -> Result<BoxStatistics> {
+            let mut sorted_data = _data.to_vec();
             sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
             let n = sorted_data.len();
             if n == 0 {
                 return Err(crate::error::IntegrateError::ValueError(
-                    "Cannot calculate statistics for empty data".to_string(),
+                    "Cannot calculate statistics for empty _data".to_string(),
                 ));
             }
 
@@ -2860,15 +2852,15 @@ pub mod advanced_visualization {
             })
         }
 
-        fn percentile(&self, sorted_data: &[f64], p: f64) -> f64 {
-            let n = sorted_data.len();
+        fn percentile(_sorted_data: &[f64], p: f64) -> f64 {
+            let n = _sorted_data.len();
             let index = (p / 100.0) * (n - 1) as f64;
             let lower = index.floor() as usize;
             let upper = index.ceil() as usize;
             let weight = index - lower as f64;
 
             if upper >= n {
-                sorted_data[n - 1]
+                _sorted_data[n - 1]
             } else if lower == upper {
                 sorted_data[lower]
             } else {
@@ -2898,23 +2890,23 @@ pub mod advanced_visualization {
             Ok(kde_values)
         }
 
-        fn silverman_bandwidth(&self, data: &[f64]) -> f64 {
-            let n = data.len() as f64;
-            let std_dev = self.standard_deviation(data);
+        fn silverman_bandwidth(_data: &[f64]) -> f64 {
+            let n = _data.len() as f64;
+            let std_dev = self.standard_deviation(_data);
             1.06 * std_dev * n.powf(-1.0 / 5.0)
         }
 
-        fn standard_deviation(&self, data: &[f64]) -> f64 {
-            let mean = data.iter().sum::<f64>() / data.len() as f64;
-            let variance = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64;
+        fn standard_deviation(_data: &[f64]) -> f64 {
+            let mean = _data.iter().sum::<f64>() / _data.len() as f64;
+            let variance = _data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / _data.len() as f64;
             variance.sqrt()
         }
 
-        fn gaussian_kernel(&self, u: f64) -> f64 {
+        fn gaussian_kernel(u: f64) -> f64 {
             (2.0 * std::f64::consts::PI).sqrt().recip() * (-0.5 * u * u).exp()
         }
 
-        fn inverse_normal_cdf(&self, p: f64) -> f64 {
+        fn inverse_normal_cdf(p: f64) -> f64 {
             // Simplified inverse normal CDF approximation
             if p <= 0.0 {
                 return f64::NEG_INFINITY;
@@ -3001,7 +2993,6 @@ pub mod advanced_visualization {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
 
         #[test]
         fn test_multi_dimensional_visualizer() {
@@ -3112,7 +3103,6 @@ pub mod advanced_visualization {
 
 /// Advanced visualization capabilities for specialized solvers
 pub mod specialized_visualizations {
-    use super::*;
     use crate::specialized::quantum::QuantumState;
 
     /// Quantum state visualization tools
@@ -3120,16 +3110,16 @@ pub mod specialized_visualizations {
 
     impl QuantumVisualizer {
         /// Create wave function visualization
-        pub fn visualize_wavefunction(state: &QuantumState) -> Result<HeatMapPlot> {
-            let probability_density = state.probability_density();
+        pub fn visualize_wavefunction(_state: &QuantumState) -> Result<HeatMapPlot> {
+            let probability_density = _state.probability_density();
 
             let mut metadata = PlotMetadata::default();
-            metadata.title = format!("Quantum State at t = {:.3}", state.t);
+            metadata.title = format!("Quantum State at t = {:.3}", _state.t);
             metadata.xlabel = "Position".to_string();
             metadata.ylabel = "Probability Density".to_string();
 
             Ok(HeatMapPlot {
-                x: state.x.clone(),
+                x: _state.x.clone(),
                 y: Array1::from_elem(1, 0.0), // 1D visualization
                 z: Array2::from_shape_vec(
                     (1, probability_density.len()),
@@ -3141,10 +3131,10 @@ pub mod specialized_visualizations {
         }
 
         /// Create complex phase visualization
-        pub fn visualize_complex_phase(state: &QuantumState) -> Result<PhaseSpacePlot> {
-            let real_parts: Vec<f64> = state.psi.iter().map(|c| c.re).collect();
-            let imag_parts: Vec<f64> = state.psi.iter().map(|c| c.im).collect();
-            let phases: Vec<f64> = state.psi.iter().map(|c| c.arg()).collect();
+        pub fn visualize_complex_phase(_state: &QuantumState) -> Result<PhaseSpacePlot> {
+            let real_parts: Vec<f64> = _state.psi.iter().map(|c| c.re).collect();
+            let imag_parts: Vec<f64> = _state.psi.iter().map(|c| c.im).collect();
+            let phases: Vec<f64> = _state.psi.iter().map(|c| c.arg()).collect();
 
             let mut metadata = PlotMetadata::default();
             metadata.title = "Complex Wave Function Phase".to_string();
@@ -3160,10 +3150,10 @@ pub mod specialized_visualizations {
         }
 
         /// Create expectation value evolution plot
-        pub fn visualize_expectation_evolution(states: &[QuantumState]) -> Result<PhaseSpacePlot> {
-            let times: Vec<f64> = states.iter().map(|s| s.t).collect();
-            let positions: Vec<f64> = states.iter().map(|s| s.expectation_position()).collect();
-            let momenta: Vec<f64> = states.iter().map(|s| s.expectation_momentum()).collect();
+        pub fn visualize_expectation_evolution(_states: &[QuantumState]) -> Result<PhaseSpacePlot> {
+            let times: Vec<f64> = _states.iter().map(|s| s.t).collect();
+            let positions: Vec<f64> = _states.iter().map(|s| s.expectation_position()).collect();
+            let momenta: Vec<f64> = _states.iter().map(|s| s.expectation_momentum()).collect();
 
             let mut metadata = PlotMetadata::default();
             metadata.title = "Quantum Expectation Values Evolution".to_string();
@@ -3260,15 +3250,15 @@ pub mod specialized_visualizations {
 
     impl FluidVisualizer {
         /// Create velocity field visualization
-        pub fn visualize_velocity_field(state: &FluidState) -> Result<VectorFieldPlot> {
-            if state.velocity.len() < 2 {
+        pub fn visualize_velocity_field(_state: &FluidState) -> Result<VectorFieldPlot> {
+            if _state.velocity.len() < 2 {
                 return Err(IntegrateError::ValueError(
                     "Need at least 2 velocity components".to_string(),
                 ));
             }
 
-            let u = &state.velocity[0];
-            let v = &state.velocity[1];
+            let u = &_state.velocity[0];
+            let v = &_state.velocity[1];
             let (ny, nx) = u.dim();
 
             let mut x_grid = Array2::zeros((ny, nx));
@@ -3277,14 +3267,14 @@ pub mod specialized_visualizations {
 
             for i in 0..ny {
                 for j in 0..nx {
-                    x_grid[[i, j]] = j as f64 * state.dx;
-                    y_grid[[i, j]] = i as f64 * state.dy;
+                    x_grid[[i, j]] = j as f64 * _state.dx;
+                    y_grid[[i, j]] = i as f64 * _state.dy;
                     magnitude[[i, j]] = (u[[i, j]].powi(2) + v[[i, j]].powi(2)).sqrt();
                 }
             }
 
             let mut metadata = PlotMetadata::default();
-            metadata.title = format!("Velocity Field at t = {:.3}", state.time);
+            metadata.title = format!("Velocity Field at t = {:.3}", _state.time);
             metadata.xlabel = "X Position".to_string();
             metadata.ylabel = "Y Position".to_string();
 
@@ -3299,34 +3289,34 @@ pub mod specialized_visualizations {
         }
 
         /// Create pressure field heatmap
-        pub fn visualize_pressure_field(state: &FluidState) -> Result<HeatMapPlot> {
-            let (ny, nx) = state.pressure.dim();
-            let x = Array1::from_iter((0..nx).map(|i| i as f64 * state.dx));
-            let y = Array1::from_iter((0..ny).map(|i| i as f64 * state.dy));
+        pub fn visualize_pressure_field(_state: &FluidState) -> Result<HeatMapPlot> {
+            let (ny, nx) = _state.pressure.dim();
+            let x = Array1::from_iter((0..nx).map(|i| i as f64 * _state.dx));
+            let y = Array1::from_iter((0..ny).map(|i| i as f64 * _state.dy));
 
             let mut metadata = PlotMetadata::default();
-            metadata.title = format!("Pressure Field at t = {:.3}", state.time);
+            metadata.title = format!("Pressure Field at t = {:.3}", _state.time);
             metadata.xlabel = "X Position".to_string();
             metadata.ylabel = "Y Position".to_string();
 
             Ok(HeatMapPlot {
                 x,
                 y,
-                z: state.pressure.clone(),
+                z: _state.pressure.clone(),
                 metadata,
             })
         }
 
         /// Create vorticity visualization
-        pub fn visualize_vorticity(state: &FluidState) -> Result<HeatMapPlot> {
-            if state.velocity.len() < 2 {
+        pub fn visualize_vorticity(_state: &FluidState) -> Result<HeatMapPlot> {
+            if _state.velocity.len() < 2 {
                 return Err(IntegrateError::ValueError(
                     "Need at least 2 velocity components".to_string(),
                 ));
             }
 
-            let u = &state.velocity[0];
-            let v = &state.velocity[1];
+            let u = &_state.velocity[0];
+            let v = &_state.velocity[1];
             let (ny, nx) = u.dim();
 
             let mut vorticity = Array2::zeros((ny, nx));
@@ -3334,17 +3324,17 @@ pub mod specialized_visualizations {
             // Compute vorticity using finite differences
             for i in 1..ny - 1 {
                 for j in 1..nx - 1 {
-                    let dvdx = (v[[i, j + 1]] - v[[i, j - 1]]) / (2.0 * state.dx);
-                    let dudy = (u[[i + 1, j]] - u[[i - 1, j]]) / (2.0 * state.dy);
+                    let dvdx = (v[[i, j + 1]] - v[[i, j - 1]]) / (2.0 * _state.dx);
+                    let dudy = (u[[i + 1, j]] - u[[i - 1, j]]) / (2.0 * _state.dy);
                     vorticity[[i, j]] = dvdx - dudy;
                 }
             }
 
-            let x = Array1::from_iter((0..nx).map(|i| i as f64 * state.dx));
-            let y = Array1::from_iter((0..ny).map(|i| i as f64 * state.dy));
+            let x = Array1::from_iter((0..nx).map(|i| i as f64 * _state.dx));
+            let y = Array1::from_iter((0..ny).map(|i| i as f64 * _state.dy));
 
             let mut metadata = PlotMetadata::default();
-            metadata.title = format!("Vorticity Field at t = {:.3}", state.time);
+            metadata.title = format!("Vorticity Field at t = {:.3}", _state.time);
             metadata.xlabel = "X Position".to_string();
             metadata.ylabel = "Y Position".to_string();
 
@@ -3371,7 +3361,7 @@ pub mod specialized_visualizations {
             let v = &state.velocity[1];
             let (ny, nx) = u.dim();
 
-            let mut streamlines = Vec::new();
+            let mut _streamlines = Vec::new();
 
             // Create evenly spaced starting points
             for i in 0..n_streamlines {
@@ -3415,7 +3405,7 @@ pub mod specialized_visualizations {
                 metadata.xlabel = "X Position".to_string();
                 metadata.ylabel = "Y Position".to_string();
 
-                streamlines.push(PhaseSpacePlot {
+                _streamlines.push(PhaseSpacePlot {
                     x: x_line,
                     y: y_line,
                     colors: None,
@@ -3423,20 +3413,20 @@ pub mod specialized_visualizations {
                 });
             }
 
-            Ok(streamlines)
+            Ok(_streamlines)
         }
 
         /// Create 3D fluid visualization
-        pub fn visualize_3d_velocity_magnitude(state: &FluidState3D) -> Result<SurfacePlot> {
-            if state.velocity.len() < 3 {
+        pub fn visualize_3d_velocity_magnitude(_state: &FluidState3D) -> Result<SurfacePlot> {
+            if _state.velocity.len() < 3 {
                 return Err(IntegrateError::ValueError(
                     "Need 3 velocity components for 3D".to_string(),
                 ));
             }
 
-            let u = &state.velocity[0];
-            let v = &state.velocity[1];
-            let w = &state.velocity[2];
+            let u = &_state.velocity[0];
+            let v = &_state.velocity[1];
+            let w = &_state.velocity[2];
             let (nz, ny, nx) = u.dim();
 
             // Take a slice at z = nz/2
@@ -3447,8 +3437,8 @@ pub mod specialized_visualizations {
 
             for i in 0..ny {
                 for j in 0..nx {
-                    x_grid[[i, j]] = j as f64 * state.dx;
-                    y_grid[[i, j]] = i as f64 * state.dy;
+                    x_grid[[i, j]] = j as f64 * _state.dx;
+                    y_grid[[i, j]] = i as f64 * _state.dy;
                     let vel_mag = (u[[z_slice, i, j]].powi(2)
                         + v[[z_slice, i, j]].powi(2)
                         + w[[z_slice, i, j]].powi(2))
@@ -3458,7 +3448,7 @@ pub mod specialized_visualizations {
             }
 
             let mut metadata = PlotMetadata::default();
-            metadata.title = format!("3D Velocity Magnitude at t = {:.3}", state.time);
+            metadata.title = format!("3D Velocity Magnitude at t = {:.3}", _state.time);
             metadata.xlabel = "X Position".to_string();
             metadata.ylabel = "Y Position".to_string();
 
@@ -3550,8 +3540,7 @@ pub mod specialized_visualizations {
         /// Create risk scenario analysis
         pub fn visualize_risk_scenarios(
             scenarios: &[String],
-            portfolio_values: &Array1<f64>,
-            _probabilities: &Array1<f64>,
+            portfolio_values: &Array1<f64>, _probabilities: &Array1<f64>,
         ) -> Result<HeatMapPlot> {
             // Create a simple bar chart representation as heatmap
             let n_scenarios = scenarios.len();
@@ -3571,11 +3560,10 @@ pub mod specialized_visualizations {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
 
         #[test]
         fn test_quantum_wavefunction_visualization() {
-            use num_complex::Complex64;
+            use num__complex::Complex64;
 
             let x = Array1::linspace(-5.0, 5.0, 100);
             let psi = x.mapv(|xi| Complex64::new((-xi * xi / 2.0_f64).exp(), 0.0));
@@ -3682,7 +3670,7 @@ pub enum ColormapType {
 }
 
 impl Default for ColorParameters {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             colormap: ColormapType::Viridis,
             vmin: 0.0,
@@ -3693,7 +3681,7 @@ impl Default for ColorParameters {
 }
 
 impl Default for AnimationParameters {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             n_frames: 100,
             frame_rate: 30.0,
@@ -3704,9 +3692,9 @@ impl Default for AnimationParameters {
 
 impl EnhancedPhaseSpacePlotter {
     /// Create new enhanced phase space plotter
-    pub fn new(resolution: usize) -> Self {
+    pub fn new(_resolution: usize) -> Self {
         Self {
-            resolution,
+            _resolution,
             color_params: ColorParameters::default(),
             animation_params: AnimationParameters::default(),
         }
@@ -3726,7 +3714,7 @@ impl EnhancedPhaseSpacePlotter {
         let properties =
             self.calculate_trajectory_properties_simd(trajectory_x, trajectory_y, time)?;
 
-        // Generate vector field if provided
+        // Generate vector _field if provided
         let vector_field_data = if let Some(field_fn) = vector_field {
             Some(self.generate_vector_field_simd(trajectory_x, trajectory_y, field_fn)?)
         } else {
@@ -3748,8 +3736,8 @@ impl EnhancedPhaseSpacePlotter {
             properties,
             metadata: PlotMetadata {
                 title: "Enhanced 2D Phase Space".to_string(),
-                xlabel: "x".to_string(),
-                ylabel: "y".to_string(),
+                xlabel: "_x".to_string(),
+                ylabel: "_y".to_string(),
                 annotations: HashMap::new(),
             },
         })
@@ -3786,8 +3774,8 @@ impl EnhancedPhaseSpacePlotter {
             properties,
             metadata: PlotMetadata {
                 title: "Enhanced 3D Phase Space".to_string(),
-                xlabel: "x".to_string(),
-                ylabel: "y".to_string(),
+                xlabel: "_x".to_string(),
+                ylabel: "_y".to_string(),
                 annotations: HashMap::new(),
             },
         })
@@ -4170,13 +4158,13 @@ impl EnhancedPhaseSpacePlotter {
     }
 
     /// Find critical points where velocity is minimal
-    fn find_critical_points_simd(&self, speed: &Array1<f64>) -> Result<Vec<usize>> {
-        let n = speed.len();
+    fn find_critical_points_simd(_speed: &Array1<f64>) -> Result<Vec<usize>> {
+        let n = _speed.len();
         let mut critical_points = Vec::new();
 
-        // Find local minima in speed
+        // Find local minima in _speed
         for i in 1..n - 1 {
-            if speed[i] < speed[i - 1] && speed[i] < speed[i + 1] {
+            if _speed[i] < _speed[i - 1] && _speed[i] < _speed[i + 1] {
                 critical_points.push(i);
             }
         }
@@ -4221,13 +4209,13 @@ impl EnhancedPhaseSpacePlotter {
     }
 
     /// Apply colormap using SIMD optimization
-    pub fn apply_colormap_simd(&self, values: &Array1<f64>) -> Result<Array2<f64>> {
-        let n = values.len();
+    pub fn apply_colormap_simd(_values: &Array1<f64>) -> Result<Array2<f64>> {
+        let n = _values.len();
         let mut colors = Array2::zeros((n, 3)); // RGB colors
 
         match self.color_params.colormap {
             ColormapType::Viridis => {
-                for (i, &val) in values.iter().enumerate() {
+                for (i, &val) in _values.iter().enumerate() {
                     let (r, g, b) = self.viridis_colormap(val);
                     colors[[i, 0]] = r;
                     colors[[i, 1]] = g;
@@ -4235,7 +4223,7 @@ impl EnhancedPhaseSpacePlotter {
                 }
             }
             ColormapType::Plasma => {
-                for (i, &val) in values.iter().enumerate() {
+                for (i, &val) in _values.iter().enumerate() {
                     let (r, g, b) = self.plasma_colormap(val);
                     colors[[i, 0]] = r;
                     colors[[i, 1]] = g;
@@ -4243,7 +4231,7 @@ impl EnhancedPhaseSpacePlotter {
                 }
             }
             ColormapType::Jet => {
-                for (i, &val) in values.iter().enumerate() {
+                for (i, &val) in _values.iter().enumerate() {
                     let (r, g, b) = self.jet_colormap(val);
                     colors[[i, 0]] = r;
                     colors[[i, 1]] = g;
@@ -4251,14 +4239,14 @@ impl EnhancedPhaseSpacePlotter {
                 }
             }
             ColormapType::Gray => {
-                for (i, &val) in values.iter().enumerate() {
+                for (i, &val) in _values.iter().enumerate() {
                     colors[[i, 0]] = val;
                     colors[[i, 1]] = val;
                     colors[[i, 2]] = val;
                 }
             }
             ColormapType::HSV => {
-                for (i, &val) in values.iter().enumerate() {
+                for (i, &val) in _values.iter().enumerate() {
                     let (r, g, b) = self.hsv_to_rgb(val * 360.0, 1.0, 1.0);
                     colors[[i, 0]] = r;
                     colors[[i, 1]] = g;
@@ -4271,7 +4259,7 @@ impl EnhancedPhaseSpacePlotter {
     }
 
     /// Viridis colormap implementation
-    fn viridis_colormap(&self, t: f64) -> (f64, f64, f64) {
+    fn viridis_colormap(t: f64) -> (f64, f64, f64) {
         let t = t.clamp(0.0, 1.0);
         let r = 0.267 + t * (0.005 - 0.267) + t * t * (0.329 - 0.005) + t * t * t * (0.984 - 0.329);
         let g = 0.005 + t * (0.333 - 0.005) + t * t * (0.624 - 0.333) + t * t * t * (0.906 - 0.624);
@@ -4280,7 +4268,7 @@ impl EnhancedPhaseSpacePlotter {
     }
 
     /// Plasma colormap implementation
-    fn plasma_colormap(&self, t: f64) -> (f64, f64, f64) {
+    fn plasma_colormap(t: f64) -> (f64, f64, f64) {
         let t = t.clamp(0.0, 1.0);
         let r = 0.050 + t * (0.513 - 0.050) + t * t * (0.925 - 0.513) + t * t * t * (0.941 - 0.925);
         let g = 0.030 + t * (0.078 - 0.030) + t * t * (0.416 - 0.078) + t * t * t * (0.980 - 0.416);
@@ -4289,7 +4277,7 @@ impl EnhancedPhaseSpacePlotter {
     }
 
     /// Jet colormap implementation
-    fn jet_colormap(&self, t: f64) -> (f64, f64, f64) {
+    fn jet_colormap(t: f64) -> (f64, f64, f64) {
         let t = t.clamp(0.0, 1.0);
         let r = if t < 0.35 {
             0.0
@@ -4323,7 +4311,7 @@ impl EnhancedPhaseSpacePlotter {
     }
 
     /// HSV to RGB conversion
-    fn hsv_to_rgb(&self, h: f64, s: f64, v: f64) -> (f64, f64, f64) {
+    fn hsv_to_rgb(h: f64, s: f64, v: f64) -> (f64, f64, f64) {
         let h = h % 360.0;
         let c = v * s;
         let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
@@ -4472,7 +4460,7 @@ pub struct ErrorVisualizationOptions {
 }
 
 impl Default for ErrorVisualizationOptions {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             show_absolute: true,
             show_relative: true,
@@ -4551,7 +4539,7 @@ impl ErrorVisualizationEngine {
         }
 
         let statistics = ErrorStatistics {
-            mean: errors.mean().unwrap_or(0.0),
+            mean: errors.iter().sum::<f64>() / errors.len() as f64,
             std_dev: errors.std(0.0),
             min: min_error,
             max: max_error,
@@ -4569,8 +4557,8 @@ impl ErrorVisualizationEngine {
     }
 
     /// Compute median of array
-    fn compute_median(&self, values: &Array1<f64>) -> f64 {
-        let mut sorted_values: Vec<f64> = values.iter().copied().collect();
+    fn compute_median(_values: &Array1<f64>) -> f64 {
+        let mut sorted_values: Vec<f64> = _values.iter().copied().collect();
         sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let n = sorted_values.len();
@@ -4586,8 +4574,8 @@ impl ErrorVisualizationEngine {
     }
 
     /// Compute percentile of array
-    fn compute_percentile(&self, values: &Array1<f64>, percentile: f64) -> f64 {
-        let mut sorted_values: Vec<f64> = values.iter().copied().collect();
+    fn compute_percentile(_values: &Array1<f64>, percentile: f64) -> f64 {
+        let mut sorted_values: Vec<f64> = _values.iter().copied().collect();
         sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let n = sorted_values.len();
@@ -4645,9 +4633,9 @@ pub struct ConvergenceVisualizer {
 
 impl ConvergenceVisualizer {
     /// Create new convergence visualizer
-    pub fn new(max_iterations: usize, tolerance: f64) -> Self {
+    pub fn new(_max_iterations: usize, tolerance: f64) -> Self {
         Self {
-            max_iterations,
+            _max_iterations,
             tolerance,
             track_multiple_metrics: true,
         }
@@ -4765,7 +4753,7 @@ impl ConvergenceVisualizer {
         y_data: &Array1<f64>,
         grid_size: usize,
     ) -> Result<PhaseDensityPlot> {
-        // Find data bounds with padding
+        // Find _data bounds with padding
         let x_min = x_data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let x_max = x_data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let y_min = y_data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
@@ -4815,8 +4803,8 @@ impl ConvergenceVisualizer {
     }
 
     /// Detect convergence point based on tolerance
-    fn detect_convergence_point(&self, residuals: &Array1<f64>) -> Option<usize> {
-        for (i, &residual) in residuals.iter().enumerate() {
+    fn detect_convergence_point(_residuals: &Array1<f64>) -> Option<usize> {
+        for (i, &residual) in _residuals.iter().enumerate() {
             if residual.abs() < self.tolerance {
                 return Some(i + 1);
             }
@@ -4825,25 +4813,25 @@ impl ConvergenceVisualizer {
     }
 
     /// Estimate convergence rate using linear regression on log data
-    fn estimate_convergence_rate(&self, residuals: &Array1<f64>) -> f64 {
-        if residuals.len() < 10 {
+    fn estimate_convergence_rate(_residuals: &Array1<f64>) -> f64 {
+        if _residuals.len() < 10 {
             return 0.0;
         }
 
         // Use last portion of data for rate estimation
-        let start_idx = residuals.len() / 2;
-        let end_idx = residuals.len();
+        let start_idx = _residuals.len() / 2;
+        let end_idx = _residuals.len();
         let _n_points = end_idx - start_idx;
 
         // Linear regression to estimate convergence rate
         let x: Array1<f64> = Array1::range(start_idx as f64, end_idx as f64, 1.0);
-        let y: Array1<f64> = residuals
+        let y: Array1<f64> = _residuals
             .slice(s![start_idx..end_idx])
             .mapv(|r| r.abs().log10());
 
         // Calculate slope using least squares
-        let x_mean = x.mean().unwrap_or(0.0);
-        let y_mean = y.mean().unwrap_or(0.0);
+        let x_mean = x.iter().sum::<f64>() / x.len() as f64;
+        let y_mean = y.iter().sum::<f64>() / y.len() as f64;
 
         let numerator: f64 = x
             .iter()
@@ -4853,20 +4841,20 @@ impl ConvergenceVisualizer {
         let denominator: f64 = x.iter().map(|&xi| (xi - x_mean).powi(2)).sum();
 
         if denominator.abs() > 1e-12 {
-            -numerator / denominator // Negative because residuals should decrease
+            -numerator / denominator // Negative because _residuals should decrease
         } else {
             0.0
         }
     }
 
     /// Create theoretical convergence line
-    fn create_theoretical_convergence(&self, iterations: &Array1<f64>, rate: f64) -> Array1<f64> {
+    fn create_theoretical_convergence(_iterations: &Array1<f64>, rate: f64) -> Array1<f64> {
         let initial_residual = self.tolerance * 10.0; // Start above tolerance
-        iterations.mapv(|iter| (initial_residual * (-rate * iter).exp()).log10())
+        _iterations.mapv(|iter| (initial_residual * (-rate * iter).exp()).log10())
     }
 
     /// Assign color to convergence curve
-    fn assign_curve_color(&self, existing_curves: &[ConvergenceCurve]) -> [f64; 3] {
+    fn assign_curve_color(_existing_curves: &[ConvergenceCurve]) -> [f64; 3] {
         let colors = [
             [0.0, 0.4470, 0.7410],    // Blue
             [0.8500, 0.3250, 0.0980], // Orange
@@ -4877,7 +4865,7 @@ impl ConvergenceVisualizer {
             [0.6350, 0.0780, 0.1840], // Red
         ];
 
-        let index = existing_curves.len() % colors.len();
+        let index = _existing_curves.len() % colors.len();
         colors[index]
     }
 
@@ -4891,8 +4879,8 @@ impl ConvergenceVisualizer {
             return 0.0;
         }
 
-        let x_mean = log_step_sizes.mean().unwrap_or(0.0);
-        let y_mean = log_errors.mean().unwrap_or(0.0);
+        let x_mean = log_step_sizes.iter().sum::<f64>() / log_step_sizes.len() as f64;
+        let y_mean = log_errors.iter().sum::<f64>() / log_errors.len() as f64;
 
         let numerator: f64 = log_step_sizes
             .iter()
@@ -5005,9 +4993,9 @@ pub struct BifurcationDiagramBuilder {
 
 impl BifurcationDiagramBuilder {
     /// Create new bifurcation diagram builder
-    pub fn new(param_range: (f64, f64), resolution: usize) -> Self {
+    pub fn new(_param_range: (f64, f64), resolution: usize) -> Self {
         Self {
-            param_range,
+            _param_range,
             resolution,
             transient_steps: 1000,
             points_per_param: 100,
@@ -5078,8 +5066,8 @@ impl BifurcationDiagramBuilder {
             let param = param_min + i as f64 * param_step;
             parameters.push(param);
 
-            // Integrate system and find Poincaré section crossings
-            let mut state = initial_state.clone();
+            // Integrate system and find Poincaré _section crossings
+            let mut _state = initial_state.clone();
             let dt = integration_time / (self.transient_steps + self.points_per_param) as f64;
 
             let mut points = Vec::new();
@@ -5087,13 +5075,13 @@ impl BifurcationDiagramBuilder {
 
             for _ in 0..(self.transient_steps + self.points_per_param) {
                 // Simple Euler integration
-                let derivative = system(&state, param);
-                state = &state + &(&derivative * dt);
+                let derivative = system(&_state, param);
+                _state = &_state + &(&derivative * dt);
 
-                // Check Poincaré section crossing
-                if poincare_section(&state) {
+                // Check Poincaré _section crossing
+                if poincare_section(&_state) {
                     if transient_count >= self.transient_steps {
-                        points.push(state[0]); // Store first coordinate
+                        points.push(_state[0]); // Store first coordinate
                     }
                     transient_count += 1;
                 }
@@ -5117,7 +5105,6 @@ impl BifurcationDiagramBuilder {
 
 #[cfg(test)]
 mod enhanced_visualization_tests {
-    use super::*;
 
     #[test]
     fn test_enhanced_plotter_initialization() {
@@ -5206,7 +5193,11 @@ mod enhanced_visualization_tests {
         assert!(properties.total_distance > 0.0);
 
         // For circular motion, speed should be approximately constant
-        let speed_variance = properties.speed.var(0.0);
+        let speed_variance = {
+            let speed = &properties.speed;
+            let mean = speed.iter().sum::<f64>() / speed.len() as f64;
+            speed.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / speed.len() as f64
+        };
         assert!(speed_variance < 0.1); // Should be low for circular motion
     }
 }
@@ -5237,7 +5228,7 @@ pub struct ConvergenceVisualizationOptions {
 }
 
 impl Default for ConvergenceVisualizationOptions {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             track_multiple_norms: true,
             show_confidence_intervals: true,
@@ -5289,9 +5280,9 @@ impl ConvergenceVisualizationEngine {
     }
 
     /// Track a new metric value
-    pub fn track_metric(&mut self, metric_name: &str, value: f64, time: f64) {
+    pub fn track_metric(_metric_name: &str, value: f64, time: f64) {
         self.metric_tracker
-            .add_metric_value(metric_name, value, time);
+            .add_metric_value(_metric_name, value, time);
     }
 
     /// Create convergence plot for a specific metric
@@ -5418,7 +5409,7 @@ impl ConvergenceVisualizationEngine {
     ) -> Result<StepSizeAnalysisPlot> {
         if step_sizes.len() != errors.len() {
             return Err(IntegrateError::ValueError(
-                "Step sizes and errors must have the same length".to_string(),
+                "Step _sizes and errors must have the same length".to_string(),
             ));
         }
 
@@ -5426,7 +5417,7 @@ impl ConvergenceVisualizationEngine {
         let error_array = Array1::from_vec(errors.to_vec());
 
         // Estimate order of convergence using linear regression
-        let (estimated_order, _r_squared) =
+        let (estimated_order_r_squared) =
             self.estimate_convergence_order(&step_size_array, &error_array)?;
 
         // Compute theoretical scaling
@@ -5451,15 +5442,15 @@ impl ConvergenceVisualizationEngine {
     }
 
     /// Smooth data using moving average
-    fn smooth_data(&self, data: &Array1<f64>) -> Result<Array1<f64>> {
-        let window_size = self.convergence_options.smoothing_window.min(data.len());
-        let mut smoothed = Array1::zeros(data.len());
+    fn smooth_data(_data: &Array1<f64>) -> Result<Array1<f64>> {
+        let window_size = self.convergence_options.smoothing_window.min(_data.len());
+        let mut smoothed = Array1::zeros(_data.len());
 
-        for i in 0..data.len() {
+        for i in 0.._data.len() {
             let start = i.saturating_sub(window_size / 2);
-            let end = (i + window_size / 2 + 1).min(data.len());
+            let end = (i + window_size / 2 + 1).min(_data.len());
 
-            let window_sum: f64 = data.slice(s![start..end]).sum();
+            let window_sum: f64 = _data.slice(s![start..end]).sum();
             smoothed[i] = window_sum / (end - start) as f64;
         }
 
@@ -5474,7 +5465,7 @@ impl ConvergenceVisualizationEngine {
     ) -> Result<Array1<f64>> {
         if x_data.len() < 2 || y_data.len() < 2 {
             return Err(IntegrateError::ValueError(
-                "Need at least 2 data points for theoretical convergence".to_string(),
+                "Need at least 2 _data points for theoretical convergence".to_string(),
             ));
         }
 
@@ -5529,22 +5520,22 @@ impl ConvergenceVisualizationEngine {
     }
 
     /// Generate distinct colors for multiple curves
-    fn generate_distinct_colors(&self, n_colors: usize) -> Vec<(f64, f64, f64)> {
-        let mut colors = Vec::new();
+    fn generate_distinct_colors(_n_colors: usize) -> Vec<(f64, f64, f64)> {
+        let mut _colors = Vec::new();
 
-        for i in 0..n_colors {
-            let hue = (i as f64 * 360.0 / n_colors as f64) % 360.0;
+        for i in 0.._n_colors {
+            let hue = (i as f64 * 360.0 / _n_colors as f64) % 360.0;
             let saturation = 0.8;
             let value = 0.9;
 
-            colors.push(self.hsv_to_rgb(hue, saturation, value));
+            _colors.push(self.hsv_to_rgb(hue, saturation, value));
         }
 
-        colors
+        _colors
     }
 
     /// Convert HSV to RGB
-    fn hsv_to_rgb(&self, h: f64, s: f64, v: f64) -> (f64, f64, f64) {
+    fn hsv_to_rgb(h: f64, s: f64, v: f64) -> (f64, f64, f64) {
         let h = h % 360.0;
         let c = v * s;
         let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
@@ -5568,27 +5559,27 @@ impl ConvergenceVisualizationEngine {
     }
 
     /// Interpolate data to a target length
-    fn interpolate_data(&self, data: &[f64], target_length: usize) -> Result<Array1<f64>> {
-        if data.is_empty() {
+    fn interpolate_data(_data: &[f64], target_length: usize) -> Result<Array1<f64>> {
+        if _data.is_empty() {
             return Err(IntegrateError::ValueError(
-                "Cannot interpolate empty data".to_string(),
+                "Cannot interpolate empty _data".to_string(),
             ));
         }
 
-        if data.len() == target_length {
-            return Ok(Array1::from_vec(data.to_vec()));
+        if _data.len() == target_length {
+            return Ok(Array1::from_vec(_data.to_vec()));
         }
 
         let mut interpolated = Array1::zeros(target_length);
-        let scale_factor = (data.len() - 1) as f64 / (target_length - 1) as f64;
+        let scale_factor = (_data.len() - 1) as f64 / (target_length - 1) as f64;
 
         for i in 0..target_length {
-            let exact_index = i as f64 * scale_factor;
+            let exact_index = i as f64 / target_length as f64 * scale_factor;
             let lower_index = exact_index.floor() as usize;
-            let upper_index = (lower_index + 1).min(data.len() - 1);
+            let upper_index = (lower_index + 1).min(_data.len() - 1);
             let fraction = exact_index - lower_index as f64;
 
-            interpolated[i] = data[lower_index] * (1.0 - fraction) + data[upper_index] * fraction;
+            interpolated[i] = _data[lower_index] * (1.0 - fraction) + _data[upper_index] * fraction;
         }
 
         Ok(interpolated)
@@ -5606,26 +5597,26 @@ impl MultiMetricTracker {
     }
 
     /// Add a metric value
-    pub fn add_metric_value(&mut self, metric_name: &str, value: f64, time: f64) {
+    pub fn add_metric_value(_metric_name: &str, value: f64, time: f64) {
         // Add to metrics
         self.metrics
-            .entry(metric_name.to_string())
+            .entry(_metric_name.to_string())
             .or_default()
             .push(value);
 
         // Add to time points
         self.time_points
-            .entry(metric_name.to_string())
+            .entry(_metric_name.to_string())
             .or_default()
             .push(time);
 
         // Update statistics
-        self.update_statistics(metric_name);
+        self.update_statistics(_metric_name);
     }
 
     /// Update statistics for a metric
-    fn update_statistics(&mut self, metric_name: &str) {
-        if let Some(values) = self.metrics.get(metric_name) {
+    fn update_statistics(_metric_name: &str) {
+        if let Some(values) = self.metrics.get(_metric_name) {
             if values.is_empty() {
                 return;
             }
@@ -5684,8 +5675,8 @@ impl MultiMetricTracker {
     }
 
     /// Get statistics for a metric
-    pub fn get_statistics(&self, metric_name: &str) -> Option<&MetricStatistics> {
-        self.statistics.get(metric_name)
+    pub fn get_statistics(_metric_name: &str) -> Option<&MetricStatistics> {
+        self.statistics.get(_metric_name)
     }
 
     /// Get all tracked metric names
@@ -5695,7 +5686,7 @@ impl MultiMetricTracker {
 }
 
 impl Default for ConvergenceVisualizationEngine {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -5705,10 +5696,11 @@ impl Default for ConvergenceVisualizationEngine {
 /// Provides advanced-performance 3D visualization with real-time updates,
 /// interactive controls, and GPU-accelerated rendering capabilities.
 pub mod advanced_interactive_3d {
-    use super::*;
-    use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex};
     use std::thread;
-    use std::time::{Duration, Instant};
+use std::time::{Duration, Instant};
+use crate::IntegrateError;
+use ndarray::Array2;
 
     /// Real-time interactive 3D visualization engine
     #[derive(Debug)]
@@ -7250,8 +7242,8 @@ pub mod advanced_interactive_3d {
         }
 
         /// Enable WebGL interface for browser integration
-        pub fn enable_webgl(&mut self, config: CanvasConfig) -> Result<()> {
-            self.webgl_interface = Some(WebGL3DInterface::new(config)?);
+        pub fn enable_webgl(_config: CanvasConfig) -> Result<()> {
+            self.webgl_interface = Some(WebGL3DInterface::new(_config)?);
             Ok(())
         }
 
@@ -7308,7 +7300,7 @@ pub mod advanced_interactive_3d {
         }
 
         /// Render current frame with GPU acceleration
-        pub fn render_frame(&mut self) -> Result<RenderingOutput> {
+        pub fn render_frame(&self) -> Result<RenderingOutput> {
             let start_time = Instant::now();
 
             // Get current data frame
@@ -7333,8 +7325,8 @@ pub mod advanced_interactive_3d {
         }
 
         /// Update interactive controls
-        pub fn update_controls(&mut self, control_input: ControlInput) -> Result<()> {
-            match control_input {
+        pub fn update_controls(_control_input: ControlInput) -> Result<()> {
+            match _control_input {
                 ControlInput::Camera(camera_input) => {
                     self.controls.camera.update(camera_input)?;
                 }
@@ -7365,9 +7357,9 @@ pub mod advanced_interactive_3d {
         }
 
         /// Import visualization state
-        pub fn import_state(&mut self, state: VisualizationState) -> Result<()> {
-            self.controls = state.controls;
-            self.render_pipeline = state.render_settings;
+        pub fn import_state(_state: VisualizationState) -> Result<()> {
+            self.controls = _state.controls;
+            self.render_pipeline = _state.render_settings;
             Ok(())
         }
 
@@ -7387,27 +7379,27 @@ pub mod advanced_interactive_3d {
         }
 
         /// Stop video recording
-        pub fn stop_video_recording(&mut self) -> Result<()> {
+        pub fn stop_video_recording(&self) -> Result<()> {
             // Finalize video encoding
             self.finalize_video_encoding()?;
             Ok(())
         }
 
         /// Generate interactive HTML export
-        pub fn export_to_html(&self, output_path: &str, config: HTMLExportConfig) -> Result<()> {
+        pub fn export_to_html(_output_path: &str, config: HTMLExportConfig) -> Result<()> {
             let html_generator = HTMLGenerator::new(config);
-            html_generator.generate_interactive_visualization(self, output_path)?;
+            html_generator.generate_interactive_visualization(self_output_path)?;
             Ok(())
         }
 
         /// Setup frame capture for video recording
-        fn setup_frame_capture(&mut self, _encoder: VideoEncoder) -> Result<()> {
+        fn setup_frame_capture(_encoder: VideoEncoder) -> Result<()> {
             // Implementation would setup frame capture pipeline
             Ok(())
         }
 
         /// Finalize video encoding
-        fn finalize_video_encoding(&mut self) -> Result<()> {
+        fn finalize_video_encoding(&self) -> Result<()> {
             // Implementation would finalize video file
             Ok(())
         }
@@ -7633,9 +7625,9 @@ pub mod advanced_interactive_3d {
     }
 
     impl VideoEncoder {
-        pub fn new(output_path: &str, config: VideoConfig) -> Result<Self> {
+        pub fn new(_output_path: &str, config: VideoConfig) -> Result<Self> {
             Ok(Self {
-                output_path: output_path.to_string(),
+                output_path: _output_path.to_string(),
                 config,
             })
         }
@@ -7648,14 +7640,12 @@ pub mod advanced_interactive_3d {
     }
 
     impl HTMLGenerator {
-        pub fn new(config: HTMLExportConfig) -> Self {
-            Self { config }
+        pub fn new(_config: HTMLExportConfig) -> Self {
+            Self { _config }
         }
 
         pub fn generate_interactive_visualization(
-            &self,
-            _engine: &Interactive3DEngine,
-            _output_path: &str,
+            &self_engine: &Interactive3DEngine_output, _path: &str,
         ) -> Result<()> {
             // Implementation would generate interactive HTML/WebGL export
             Ok(())
@@ -7665,7 +7655,7 @@ pub mod advanced_interactive_3d {
     // Implementation blocks for the various components
     impl GPU3DBackend {
         /// Detect hardware capabilities and initialize GPU backend
-        pub fn detect_and_initialize() -> Result<Self> {
+        pub fn detect_and_initialize(&self) -> Result<Self> {
             let hardware_caps = Hardware3DCapabilities::detect()?;
             let compute_shaders = ComputeShaderSet::load_default()?;
             let gpu_buffers = GPU3DBuffers::new();
@@ -7680,17 +7670,17 @@ pub mod advanced_interactive_3d {
         }
 
         /// Prepare GPU buffers for rendering
-        pub fn prepare_buffers(&mut self, frame: &StreamingFrame3D) -> Result<()> {
+        pub fn prepare_buffers(_frame: &StreamingFrame3D) -> Result<()> {
             // Convert double precision to single precision for GPU
-            let vertices_f32: Vec<f32> = frame.points.iter().map(|&x| x as f32).collect();
-            let colors_f32: Vec<f32> = frame.colors.iter().map(|&x| x as f32).collect();
+            let vertices_f32: Vec<f32> = _frame.points.iter().map(|&x| x as f32).collect();
+            let colors_f32: Vec<f32> = _frame.colors.iter().map(|&x| x as f32).collect();
 
             // Update vertex buffer
             self.gpu_buffers.vertex_buffers[0] = Array1::from_vec(vertices_f32);
             self.gpu_buffers.color_buffer = Array1::from_vec(colors_f32);
 
             // Update index buffer if mesh data is available
-            if let Some(ref indices) = frame.mesh_indices {
+            if let Some(ref indices) = _frame.mesh_indices {
                 self.gpu_buffers.index_buffer = indices.mapv(|x| x as u32);
             }
 
@@ -7700,7 +7690,7 @@ pub mod advanced_interactive_3d {
 
     impl Hardware3DCapabilities {
         /// Detect hardware capabilities
-        pub fn detect() -> Result<Self> {
+        pub fn detect(&self) -> Result<Self> {
             // Placeholder implementation - would use actual GPU detection
             Ok(Self {
                 max_texture_size: 4096,
@@ -7715,7 +7705,7 @@ pub mod advanced_interactive_3d {
 
     impl ComputeShaderSet {
         /// Load default shader set
-        pub fn load_default() -> Result<Self> {
+        pub fn load_default(&self) -> Result<Self> {
             Ok(Self {
                 vertex_shader: include_str!("shaders/vertex.glsl").to_string(),
                 fragment_shader: include_str!("shaders/fragment.glsl").to_string(),
@@ -7742,14 +7732,14 @@ pub mod advanced_interactive_3d {
 
     impl GPUBatchConfig {
         /// Optimize batch configuration for detected hardware
-        pub fn optimize_for_hardware(caps: &Hardware3DCapabilities) -> Self {
-            let vertex_batch_size = std::cmp::min(caps.max_vertex_buffer / 4, 100_000);
-            let max_concurrent_batches = caps.compute_units / 4;
+        pub fn optimize_for_hardware(_caps: &Hardware3DCapabilities) -> Self {
+            let vertex_batch_size = std::cmp::min(_caps.max_vertex_buffer / 4, 100_000);
+            let max_concurrent_batches = _caps.compute_units / 4;
 
             Self {
                 vertex_batch_size,
                 max_concurrent_batches,
-                memory_strategy: if caps.memory_bandwidth > 400.0 {
+                memory_strategy: if _caps.memory_bandwidth > 400.0 {
                     GPUMemoryStrategy::Streaming
                 } else {
                     GPUMemoryStrategy::Pooled
@@ -7776,7 +7766,7 @@ pub mod advanced_interactive_3d {
         }
 
         /// Generate next frame in the stream
-        pub fn generate_next_frame(&mut self) -> Result<StreamingFrame3D> {
+        pub fn generate_next_frame(&self) -> Result<StreamingFrame3D> {
             let timestamp = self.current_frame as f64 / self.streaming_fps;
 
             // Generate sample data (placeholder implementation)
@@ -7848,9 +7838,9 @@ pub mod advanced_interactive_3d {
         }
 
         /// Update streaming metrics
-        pub fn update_metrics(&mut self, frame_time: f64) {
-            self.stream_metrics.actual_fps = 1.0 / frame_time;
-            self.stream_metrics.processing_time = frame_time * 1000.0;
+        pub fn update_metrics(_frame_time: f64) {
+            self.stream_metrics.actual_fps = 1.0 / _frame_time;
+            self.stream_metrics.processing_time = _frame_time * 1000.0;
             // Additional metrics would be calculated here
         }
     }
@@ -7869,7 +7859,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for Camera3DControls {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 position: [0.0, 0.0, 5.0],
                 target: [0.0, 0.0, 0.0],
@@ -7885,7 +7875,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for AutoOrbitConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 speed: 0.5,
@@ -7897,7 +7887,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for Animation3DControls {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 playback_state: PlaybackState::Stopped,
                 speed_multiplier: 1.0,
@@ -7910,7 +7900,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for TimelineControls {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 current_time: 0.0,
                 total_duration: 10.0,
@@ -7922,7 +7912,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for FadeEffectConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 duration: 1.0,
@@ -7932,7 +7922,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for MorphingConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 algorithm: MorphingAlgorithm::LinearVertex,
@@ -7943,7 +7933,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for PathVisualizationConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 show_paths: false,
                 path_length: 100,
@@ -7955,7 +7945,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for ColorMapping3D {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 color_scheme: ColorScheme3D::Viridis,
                 value_range: (0.0, 1.0),
@@ -7967,7 +7957,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for OpacityMapping {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 opacity_range: (0.0, 1.0),
@@ -7977,7 +7967,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for Lighting3DConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 ambient: AmbientLight {
                     color: [0.2, 0.2, 0.2],
@@ -7998,7 +7988,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for GlobalIllumination {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 bounces: 3,
@@ -8009,7 +7999,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for ShadowConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: true,
                 resolution: 1024,
@@ -8021,7 +8011,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for TransparencyConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 blending_mode: BlendingMode::Alpha,
@@ -8032,7 +8022,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for SurfaceRenderingConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 style: SurfaceStyle::Solid,
                 wireframe: false,
@@ -8045,7 +8035,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for PointRenderingConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 point_size: 2.0,
                 point_shape: PointShape::Circle,
@@ -8057,7 +8047,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for VolumeRenderingConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 sampling_rate: 1.0,
@@ -8069,7 +8059,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for TransferFunction {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 color_points: vec![(0.0, 0.0, 0.0, 1.0, 0.0), (1.0, 1.0, 1.0, 1.0, 1.0)],
                 opacity_points: vec![(0.0, 0.0), (1.0, 1.0)],
@@ -8078,7 +8068,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for VolumeLighting {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 scattering: 0.1,
@@ -8089,7 +8079,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for ParameterControls3D {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 parameters: HashMap::new(),
                 parameter_groups: Vec::new(),
@@ -8100,7 +8090,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for ViewManipulation3D {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 navigation_mode: NavigationMode::Orbit,
                 viewport: ViewportControls::default(),
@@ -8111,7 +8101,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for ViewportControls {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 dimensions: (800, 600),
                 background_color: [0.1, 0.1, 0.2],
@@ -8124,7 +8114,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for MultiViewConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 viewport_count: 1,
@@ -8136,7 +8126,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for ViewLinking {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 link_camera: false,
                 link_time: true,
@@ -8147,7 +8137,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for Rendering3DPipeline {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 stages: vec![
                     RenderingStage {
@@ -8171,7 +8161,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for AntiAliasingConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 method: AntiAliasingMethod::FXAA,
                 samples: 4,
@@ -8181,7 +8171,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for DepthOfFieldConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 focus_distance: 5.0,
@@ -8192,7 +8182,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for MotionBlurConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 strength: 0.5,
@@ -8202,7 +8192,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for BloomConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 threshold: 1.0,
@@ -8213,7 +8203,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for ToneMappingConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 method: ToneMappingMethod::Linear,
                 exposure: 1.0,
@@ -8223,7 +8213,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for ColorGradingConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: false,
                 contrast: 1.0,
@@ -8235,7 +8225,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for RenderingOptimization {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 lod: LODConfig::default(),
                 frustum_culling: true,
@@ -8247,7 +8237,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for LODConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: true,
                 levels: vec![
@@ -8268,7 +8258,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for BatchingConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: true,
                 max_batch_size: 1000,
@@ -8278,7 +8268,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for InstancingConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: true,
                 max_instances: 10000,
@@ -8292,7 +8282,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for QualitySettings {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 quality_preset: QualityPreset::Medium,
                 texture_quality: TextureQuality::Medium,
@@ -8319,9 +8309,9 @@ pub mod advanced_interactive_3d {
         }
 
         /// Update frame timing metrics
-        pub fn update_frame_timing(&mut self, frame_time_ms: f64) {
-            self.frame_time = frame_time_ms;
-            self.fps = 1000.0 / frame_time_ms;
+        pub fn update_frame_timing(_frame_time_ms: f64) {
+            self.frame_time = _frame_time_ms;
+            self.fps = 1000.0 / _frame_time_ms;
         }
 
         /// Create performance snapshot
@@ -8332,10 +8322,10 @@ pub mod advanced_interactive_3d {
 
     impl WebGL3DInterface {
         /// Create new WebGL interface
-        pub fn new(canvas_config: CanvasConfig) -> Result<Self> {
+        pub fn new(_canvas_config: CanvasConfig) -> Result<Self> {
             Ok(Self {
                 webgl_version: WebGLVersion::WebGL2,
-                canvas_config,
+                _canvas_config,
                 js_interop: JSInteropConfig::default(),
                 wasm_integration: WasmConfig::default(),
                 browser_compat: BrowserCompatibility::default(),
@@ -8344,7 +8334,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for JSInteropConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 exported_functions: vec![
                     "update_camera".to_string(),
@@ -8358,7 +8348,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for WasmConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 memory_strategy: WasmMemoryStrategy::Dynamic,
                 threads: false,
@@ -8369,7 +8359,7 @@ pub mod advanced_interactive_3d {
     }
 
     impl Default for BrowserCompatibility {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 supported_browsers: vec![
                     BrowserInfo {
@@ -8398,7 +8388,7 @@ pub mod advanced_interactive_3d {
     impl Camera3DControls {
         /// Update camera controls
         pub fn update(&mut self, input: CameraInput) -> Result<()> {
-            if let Some((_dx, _dy)) = input.mouse_delta {
+            if let Some((_dx_dy)) = input.mouse_delta {
                 // Handle mouse rotation
                 let _sensitivity = self.rotation_sensitivity * 0.005;
                 // Implementation would update camera orientation
@@ -8430,10 +8420,9 @@ pub mod advanced_interactive_3d {
         pub fn update(&mut self, input: AnimationInput) -> Result<()> {
             if let Some(command) = input.playback_command {
                 self.playback_state = match command {
-                    PlaybackCommand::Play => PlaybackState::Playing,
-                    PlaybackCommand::Pause => PlaybackState::Paused,
-                    PlaybackCommand::Stop => PlaybackState::Stopped,
-                    _ => self.playback_state,
+                    PlaybackCommand::Play =>, PlaybackState::Playing,
+                    PlaybackCommand::Pause =>, PlaybackState::Paused,
+                    PlaybackCommand::Stop =>, PlaybackState::Stopped_ => self.playback_state,
                 };
             }
 
@@ -8541,8 +8530,7 @@ pub mod advanced_interactive_3d {
         /// Execute rendering pipeline
         pub fn execute(
             &self,
-            frame: &StreamingFrame3D,
-            _controls: &Interactive3DControls,
+            frame: &StreamingFrame3D_controls: &Interactive3DControls,
         ) -> Result<RenderingOutput> {
             let mut render_stats = RenderingStatistics {
                 vertices_processed: frame.points.len(),
@@ -8587,7 +8575,6 @@ pub mod advanced_interactive_3d {
     /// Test functionality for interactive 3D visualization
     #[cfg(test)]
     mod tests {
-        use super::*;
 
         #[test]
         fn test_interactive_3d_engine_creation() {

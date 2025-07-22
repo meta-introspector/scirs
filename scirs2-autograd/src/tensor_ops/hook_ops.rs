@@ -9,15 +9,15 @@ pub(crate) struct HookOp<T: Float, H: crate::hooks::Hook<T>> {
 
 impl<T: Float, H: crate::hooks::Hook<T>> HookOp<T, H> {
     #[inline]
-    pub fn new(hook: H) -> Self {
+    pub fn new(_hook: H) -> Self {
         HookOp {
             phantom: PhantomData,
-            hook,
+            _hook,
         }
     }
 }
 
-impl<T: Float, H: crate::hooks::Hook<T>> op::Op<T> for HookOp<T, H> {
+impl<T: Float, H: crate::hooks::Hook<T>>, op::Op<T> for HookOp<T, H> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let ret = ctx.input(0);
         self.hook.call(&ret);

@@ -218,8 +218,7 @@ impl Default for ImprovementReward {
 impl RewardFunction for ImprovementReward {
     fn compute_reward(
         &self,
-        prev_state: &OptimizationState,
-        _action: &OptimizationAction,
+        prev_state: &OptimizationState, _action: &OptimizationAction,
         new_state: &OptimizationState,
     ) -> f64 {
         // Reward for objective improvement
@@ -253,10 +252,10 @@ pub struct ExperienceBuffer {
 
 impl ExperienceBuffer {
     /// Create new experience buffer
-    pub fn new(max_size: usize) -> Self {
+    pub fn new(_max_size: usize) -> Self {
         Self {
-            buffer: Vec::with_capacity(max_size),
-            max_size,
+            buffer: Vec::with_capacity(_max_size),
+            _max_size,
             position: 0,
         }
     }
@@ -275,7 +274,7 @@ impl ExperienceBuffer {
     pub fn sample_batch(&self, batch_size: usize) -> Vec<Experience> {
         let mut batch = Vec::with_capacity(batch_size);
         for _ in 0..batch_size.min(self.buffer.len()) {
-            let idx = rng().random_range(0..self.buffer.len());
+            let idx = rand::rng().gen_range(0..self.buffer.len());
             batch.push(self.buffer[idx].clone());
         }
         batch
@@ -293,11 +292,9 @@ pub mod utils {
 
     /// Create optimization state from parameters and objective
     pub fn create_state<F>(
-        parameters: Array1<f64>,
-        objective: &F,
+        parameters: Array1<f64>..objective: &F,
         step: usize,
-        prev_state: Option<&OptimizationState>,
-    ) -> OptimizationState
+        prev_state: Option<&OptimizationState>,) -> OptimizationState
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -365,7 +362,7 @@ pub mod utils {
 
                 // Random direction as proxy for gradient
                 for i in 0..new_params.len() {
-                    let step = (rng().gen::<f64>() - 0.5) * learning_rate;
+                    let step = (rand::rng().gen::<f64>() - 0.5) * learning_rate;
                     new_params[i] += step;
                 }
 
@@ -374,7 +371,7 @@ pub mod utils {
             OptimizationAction::RandomPerturbation { magnitude } => {
                 let mut new_params = state.parameters.clone();
                 for i in 0..new_params.len() {
-                    let perturbation = (rng().gen::<f64>() - 0.5) * 2.0 * magnitude;
+                    let perturbation = (rand::rng().gen::<f64>() - 0.5) * 2.0 * magnitude;
                     new_params[i] += perturbation;
                 }
                 new_params
@@ -384,7 +381,7 @@ pub mod utils {
             } => {
                 // Update momentum (simplified)
                 for i in 0..momentum.len().min(state.parameters.len()) {
-                    let gradient_estimate = (rng().gen::<f64>() - 0.5) * 0.1;
+                    let gradient_estimate = (rand::rng().gen::<f64>() - 0.5) * 0.1;
                     momentum[i] =
                         momentum_coeff * momentum[i] + (1.0 - momentum_coeff) * gradient_estimate;
                 }
@@ -403,10 +400,10 @@ pub mod utils {
     }
 
     /// Check if optimization should terminate
-    pub fn should_terminate(state: &OptimizationState, max_steps: usize) -> bool {
-        state.step >= max_steps
-            || state.convergence_metrics.relative_objective_change < 1e-8
-            || state.convergence_metrics.steps_since_improvement > 50
+    pub fn should_terminate(_state: &OptimizationState, max_steps: usize) -> bool {
+        _state.step >= max_steps
+            || _state.convergence_metrics.relative_objective_change < 1e-8
+            || _state.convergence_metrics.steps_since_improvement > 50
     }
 }
 

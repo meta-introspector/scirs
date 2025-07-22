@@ -258,14 +258,14 @@ where
 ///
 /// This is a helper function for the semi-explicit DAE solver
 #[allow(dead_code)]
-fn solve_matrix_system<F>(matrix: ArrayView2<F>, b: ArrayView1<F>) -> IntegrateResult<Array1<F>>
+fn solve_matrix_system<F>(_matrix: ArrayView2<F>, b: ArrayView1<F>) -> IntegrateResult<Array1<F>>
 where
     F: IntegrateFloat + std::default::Default,
 {
-    use crate::dae::utils::linear_solvers::solve_linear_system;
+    use crate::dae::utils::linear__solvers::solve_linear_system;
 
     // Use our custom solver to solve the system
-    solve_linear_system(&matrix.view(), &b.view()).map_err(|err| {
+    solve_linear_system(&_matrix.view(), &b.view()).map_err(|err| {
         IntegrateError::ComputationError(format!("Failed to solve linear system: {err}"))
     })
 }
@@ -341,25 +341,24 @@ where
 
     // Initial step size (if not provided in options)
     let mut h = opts.h0.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(0.01).unwrap() // 1% of interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(0.01).unwrap() // 1% of interval
     });
 
     // Minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(1e-6).unwrap() // Very small relative to interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(1e-6).unwrap() // Very small relative to interval
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(0.1).unwrap() // 10% of interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(0.1).unwrap() // 10% of interval
     });
 
     // Function to evaluate the implicit BDF formula for a given step size and order
     let eval_bdf_formula = |y_new: ArrayView1<F>,
-                            y_history: &[Array1<F>],
-                            _y_prime_new: ArrayView1<F>,
+                            y_history: &[Array1<F>], _y_prime_new: ArrayView1<F>,
                             t_new: F,
                             k: usize,
                             step_size: F|
@@ -392,8 +391,7 @@ where
                 -F::from_f64(75.0 / 137.0).unwrap(),
                 F::from_f64(12.0 / 137.0).unwrap(),
                 -F::one(),
-            ],
-            _ => return Array1::zeros(n), // Invalid order, return zeros (will trigger error)
+            ]_ => return Array1::zeros(n), // Invalid order, return zeros (will trigger error)
         };
 
         // Compute the BDF approximation of the derivative
@@ -565,8 +563,7 @@ where
                     2 => F::from_f64(4.0 / 3.0).unwrap(),
                     3 => F::from_f64(18.0 / 11.0).unwrap(),
                     4 => F::from_f64(48.0 / 25.0).unwrap(),
-                    5 => F::from_f64(300.0 / 137.0).unwrap(),
-                    _ => F::one(), // Fallback to first-order if invalid
+                    5 => F::from_f64(300.0 / 137.0).unwrap(, _ =>, F::one(), // Fallback to first-order if invalid
                 };
 
                 let scale = bdf_coeff / h;
@@ -635,8 +632,7 @@ where
                             -F::from_f64(75.0 / 137.0).unwrap(),
                             F::from_f64(12.0 / 137.0).unwrap(),
                             -F::one(),
-                        ],
-                        _ => vec![F::one(), -F::one()], // Fallback to backward Euler
+                        ]_ => vec![F::one(), -F::one()], // Fallback to backward Euler
                     };
 
                     // Compute the BDF approximation of the derivative
@@ -856,7 +852,7 @@ where
             }
 
             // Apply Pantelides index reduction algorithm
-            use crate::dae::index_reduction::{DAEStructure, PantelidesReducer};
+use crate::dae::index__reduction::{DAEStructure, PantelidesReducer};
 
             // Create DAE structure
             let mut structure = DAEStructure::default();
@@ -902,7 +898,6 @@ where
 
         DAEIndex::HigherIndex => {
             // For very high-index systems, always apply index reduction first
-            use crate::dae::index_reduction::{DAEStructure, PantelidesReducer};
 
             // Create DAE structure
             let mut structure = DAEStructure::default();
@@ -1092,17 +1087,16 @@ fn solve_index1_dae_with_reduced_structure<F, FFunc, GFunc>(
     t_span: [F; 2],
     x0: Array1<F>,
     y0: Array1<F>,
-    options: DAEOptions<F>,
-    _structure: crate::dae::index_reduction::DAEStructure<F>,
+    options: DAEOptions<F>, _structure: crate::dae::index_reduction::DAEStructure<F>,
 ) -> IntegrateResult<DAEResult<F>>
 where
     F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 {
-    // After index reduction, we can solve the system as a standard index-1 DAE
+    // After index _reduction, we can solve the system as a standard index-1 DAE
     // Use BDF method for semi-explicit DAE systems
-    use crate::dae::methods::bdf_dae::bdf_semi_explicit_dae;
+    use crate::dae::methods::bdf__dae::bdf_semi_explicit_dae;
 
     bdf_semi_explicit_dae(f, g, t_span, x0, y0, options)
 }
@@ -1123,7 +1117,6 @@ where
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 {
     // For index-2 systems, use BDF method with modified options
-    use crate::dae::methods::bdf_dae::bdf_semi_explicit_dae;
 
     // Use smaller initial step size for index-2 systems
     let mut modified_options = options;
@@ -1154,7 +1147,6 @@ where
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 {
     // For index-3 systems, use BDF method with very strict tolerances
-    use crate::dae::methods::bdf_dae::bdf_semi_explicit_dae;
 
     // Use very small initial step size for index-3 systems
     let mut modified_options = options;
@@ -1176,9 +1168,7 @@ where
 #[allow(dead_code)]
 fn apply_dummy_derivative_method<F, FFunc, GFunc>(
     f: FFunc,
-    g: GFunc,
-    _x0: &Array1<F>,
-    _y0: &Array1<F>,
+    g: GFunc_x0: &Array1<F>, _y0: &Array1<F>,
 ) -> IntegrateResult<(
     impl Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
     impl Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,

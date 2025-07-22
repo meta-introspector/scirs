@@ -538,8 +538,7 @@ pub struct TransferResult {
 // Helper function implementations (simplified for demonstration)
 #[allow(dead_code)]
 fn apply_few_shot_learning<T>(
-    task: &TaskData<T>,
-    _config: &AdvancedMetaLearningConfig,
+    task: &TaskData<T>, _config: &AdvancedMetaLearningConfig,
 ) -> NdimageResult<FewShotResult>
 where
     T: Float + FromPrimitive + Copy,
@@ -558,8 +557,7 @@ where
 
 #[allow(dead_code)]
 fn apply_transfer_learning<T>(
-    task: &TaskData<T>,
-    _config: &AdvancedMetaLearningConfig,
+    task: &TaskData<T>, _config: &AdvancedMetaLearningConfig,
 ) -> NdimageResult<TransferResult>
 where
     T: Float + FromPrimitive + Copy,
@@ -578,8 +576,7 @@ where
 
 #[allow(dead_code)]
 fn extract_meta_learning_insights(
-    insights: &mut MetaLearningInsights,
-    _config: &AdvancedMetaLearningConfig,
+    insights: &mut MetaLearningInsights_config: &AdvancedMetaLearningConfig,
 ) -> NdimageResult<()> {
     // Extract insights (simplified)
     insights

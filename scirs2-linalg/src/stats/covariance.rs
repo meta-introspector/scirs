@@ -21,12 +21,12 @@ use crate::error::{LinalgError, LinalgResult};
 ///
 /// * Covariance matrix with shape (n_features, n_features)
 #[allow(dead_code)]
-pub fn covariance_matrix<F>(data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
+pub fn covariance_matrix<F>(_data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + Zero + num_traits::FromPrimitive + Send + Sync + ndarray::ScalarOperand + 'static,
 {
-    let n_samples = data.nrows();
-    let n_features = data.ncols();
+    let n_samples = _data.nrows();
+    let n_features = _data.ncols();
 
     if n_samples <= 1 {
         return Err(LinalgError::InvalidInputError(
@@ -43,10 +43,10 @@ where
     }
 
     // Compute mean for each feature
-    let mean = data.mean_axis(Axis(0)).unwrap();
+    let mean = _data.mean_axis(Axis(0)).unwrap();
 
-    // Center the data
-    let centered = data.to_owned() - &mean;
+    // Center the _data
+    let centered = _data.to_owned() - &mean;
 
     // Compute covariance matrix: X^T * X / (n - ddof)
     let mut cov = Array2::zeros((n_features, n_features));
@@ -82,12 +82,12 @@ where
 ///
 /// * Correlation matrix with shape (n_features, n_features)
 #[allow(dead_code)]
-pub fn correlation_matrix<F>(data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
+pub fn correlation_matrix<F>(_data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + Zero + num_traits::FromPrimitive + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // Compute covariance matrix
-    let cov = covariance_matrix(data, ddof)?;
+    let cov = covariance_matrix(_data, ddof)?;
     let n_features = cov.nrows();
 
     // Extract standard deviations (sqrt of diagonal elements)

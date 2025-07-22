@@ -84,8 +84,8 @@ impl Default for EdgeDetectionConfig {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::features::{edge_detector, EdgeDetectionConfig, EdgeDetectionAlgorithm, GradientMethod};
-/// use scirs2_ndimage::filters::BorderMode;
+/// use scirs2__ndimage::features::{edge_detector, EdgeDetectionConfig, EdgeDetectionAlgorithm, GradientMethod};
+/// use scirs2__ndimage::filters::BorderMode;
 ///
 /// // Use a larger test image to avoid overflow issues in doctests
 /// let image = array![
@@ -114,12 +114,12 @@ impl Default for EdgeDetectionConfig {
 /// let edge_magnitudes = edge_detector(&image, custom_config).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Array<f32, Ix2> {
+pub fn edge_detector(_image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Array<f32, Ix2> {
     match config.algorithm {
         EdgeDetectionAlgorithm::Canny => {
             // Already returns f32 values, so we just return it as is
             canny_impl(
-                image,
+                _image,
                 config.sigma,
                 config.low_threshold,
                 config.high_threshold,
@@ -129,7 +129,7 @@ pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Ar
         }
         EdgeDetectionAlgorithm::LoG => {
             let edges = laplacian_edges_impl(
-                image,
+                _image,
                 config.sigma,
                 config.low_threshold,
                 config.border_mode,
@@ -146,7 +146,7 @@ pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Ar
         }
         EdgeDetectionAlgorithm::Gradient => {
             let edges = gradient_edges_impl(
-                image,
+                _image,
                 config.gradient_method,
                 config.sigma,
                 config.border_mode,
@@ -185,7 +185,7 @@ pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Ar
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::features::{canny, GradientMethod};
+/// use scirs2__ndimage::features::{canny, GradientMethod};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -292,14 +292,14 @@ fn calculate_magnitude_and_direction(
     gradient_y: &ArrayD<f32>,
     shape: Ix2,
 ) -> (Array<f32, Ix2>, Array<f32, Ix2>) {
-    let magnitude = Array::<f32, _>::zeros(shape);
-    let mut direction = Array::<f32, _>::zeros(shape);
+    let magnitude = Array::<f32>::zeros(shape);
+    let mut direction = Array::<f32>::zeros(shape);
 
     // Create a copy to avoid mutable borrow conflict
-    let mut mag_copy = Array::<f32, _>::zeros(shape);
+    let mut mag_copy = Array::<f32>::zeros(shape);
 
     // Calculate gradient magnitude and direction
-    for (pos, _) in magnitude.indexed_iter() {
+    for (pos_) in magnitude.indexed_iter() {
         let idx_d = [pos.0, pos.1];
         let gx = gradient_x[idx_d.as_ref()];
         let gy = gradient_y[idx_d.as_ref()];
@@ -452,12 +452,12 @@ fn get_gradient_neighbors(
 
 /// Helper function to check if a pixel is connected to a strong edge
 #[allow(dead_code)]
-fn is_connected_to_strong_edge(row: usize, col: usize, edges: &Array<f32, Ix2>) -> bool {
+fn is_connected_to_strong_edge(_row: usize, col: usize, edges: &Array<f32, Ix2>) -> bool {
     let shape = edges.dim();
 
-    for i in (row.saturating_sub(1))..=(row + 1).min(shape.0 - 1) {
+    for i in (_row.saturating_sub(1))..=(_row + 1).min(shape.0 - 1) {
         for j in (col.saturating_sub(1))..=(col + 1).min(shape.1 - 1) {
-            if !(i == row && j == col) && edges[(i, j)] > 0.0 {
+            if !(i == _row && j == col) && edges[(i, j)] > 0.0 {
                 return true;
             }
         }
@@ -486,8 +486,8 @@ fn is_connected_to_strong_edge(row: usize, col: usize, edges: &Array<f32, Ix2>) 
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::features::laplacian_edges;
-/// use scirs2_ndimage::filters::BorderMode;
+/// use scirs2__ndimage::features::laplacian_edges;
+/// use scirs2__ndimage::filters::BorderMode;
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -603,8 +603,8 @@ fn laplacian_edges_impl(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::features::{gradient_edges, GradientMethod};
-/// use scirs2_ndimage::filters::BorderMode;
+/// use scirs2__ndimage::features::{gradient_edges, GradientMethod};
+/// use scirs2__ndimage::filters::BorderMode;
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -688,8 +688,8 @@ fn gradient_edges_impl(
 ///
 /// * Result containing the magnitude of edges
 #[allow(dead_code)]
-pub fn sobel_edges(image: &ArrayD<f32>) -> NdimageResult<ArrayD<f32>> {
-    edge_detector_simple(image, Some(GradientMethod::Sobel), None)
+pub fn sobel_edges(_image: &ArrayD<f32>) -> NdimageResult<ArrayD<f32>> {
+    edge_detector_simple(_image, Some(GradientMethod::Sobel), None)
 }
 
 /// Enhanced edge detector (compatible with previous API)
@@ -711,7 +711,7 @@ pub fn sobel_edges(image: &ArrayD<f32>) -> NdimageResult<ArrayD<f32>> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::features::{edge_detector_simple, GradientMethod};
+/// use scirs2__ndimage::features::{edge_detector_simple, GradientMethod};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -903,7 +903,7 @@ mod tests {
     #[test]
     fn test_laplacian_edges() {
         // Create a simple test image with a point
-        let mut image = Array::<f32, _>::zeros((5, 5));
+        let mut image = Array::<f32>::zeros((5, 5));
         image[[2, 2]] = 1.0;
 
         // Apply LoG filter

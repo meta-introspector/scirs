@@ -298,17 +298,17 @@ pub struct MemoryPool {
 
 impl MemoryPool {
     /// Create new memory pool
-    pub fn new(num_blocks: usize, block_size: usize) -> Self {
-        let mut blocks = Vec::with_capacity(num_blocks);
-        let mut available = Vec::with_capacity(num_blocks);
+    pub fn new(_num_blocks: usize, block_size: usize) -> Self {
+        let mut _blocks = Vec::with_capacity(_num_blocks);
+        let mut available = Vec::with_capacity(_num_blocks);
 
-        for i in 0..num_blocks {
-            blocks.push(vec![0u8; block_size]);
+        for i in 0.._num_blocks {
+            _blocks.push(vec![0u8; block_size]);
             available.push(i);
         }
 
         Self {
-            blocks,
+            _blocks,
             available,
             block_size,
             total_allocations: 0,
@@ -596,8 +596,8 @@ pub enum MemoryLayoutStrategy {
 
 impl AdvancedParallelStatsProcessor {
     /// Create new advanced-parallel processor
-    pub fn new(config: AdvancedParallelConfig) -> StatsResult<Self> {
-        let num_threads = config
+    pub fn new(_config: AdvancedParallelConfig) -> StatsResult<Self> {
+        let num_threads = _config
             .thread_pool_config
             .num_workers
             .unwrap_or_else(|| num_threads().max(1));
@@ -619,7 +619,7 @@ impl AdvancedParallelStatsProcessor {
         }
 
         Ok(Self {
-            config,
+            _config,
             execution_contexts,
             work_queue: Arc::new(Mutex::new(Vec::new())),
             performance_history: Arc::new(Mutex::new(Vec::new())),
@@ -900,8 +900,7 @@ impl AdvancedParallelStatsProcessor {
     fn create_variance_work_units<F>(
         &self,
         data: &ArrayView1<F>,
-        mean_val: F,
-        _ddof: usize,
+        mean_val: F, _ddof: usize,
         strategy: &OptimizationStrategy,
     ) -> StatsResult<Vec<WorkUnit<Vec<f64>>>>
     where
@@ -924,8 +923,8 @@ impl AdvancedParallelStatsProcessor {
                 .slice(s![start..end])
                 .iter()
                 .map(|&x| {
-                    let val = x.to_f64().unwrap_or(0.0);
-                    let diff = val - mean_f64;
+                    let _val = x.to_f64().unwrap_or(0.0);
+                    let diff = _val - mean_f64;
                     diff * diff
                 })
                 .collect();
@@ -1273,12 +1272,12 @@ pub fn create_advanced_parallel_processor() -> StatsResult<AdvancedParallelStats
 }
 
 #[allow(dead_code)]
-pub fn mean_advanced_parallel<F>(data: ArrayView1<F>) -> StatsResult<AdvancedParallelResult<F>>
+pub fn mean_advanced_parallel<F>(_data: ArrayView1<F>) -> StatsResult<AdvancedParallelResult<F>>
 where
     F: Float + NumCast + Send + Sync + Zero + std::iter::Sum + std::fmt::Display,
 {
     let processor = AdvancedParallelStatsProcessor::default()?;
-    processor.mean_advanced_parallel(data)
+    processor.mean_advanced_parallel(_data)
 }
 
 #[allow(dead_code)]

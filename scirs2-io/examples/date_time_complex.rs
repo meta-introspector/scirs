@@ -1,4 +1,4 @@
-use scirs2_io::csv::{read_csv_typed, write_csv_typed, ColumnType};
+use scirs2__io::csv::{read_csv_typed, write_csv_typed, ColumnType};
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;

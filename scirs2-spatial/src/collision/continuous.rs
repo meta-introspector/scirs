@@ -91,7 +91,7 @@ pub fn continuous_sphere_sphere_collision(
     // Calculate the time of collision
     let t = (-b - discriminant.sqrt()) / (2.0 * a);
 
-    // Check if the collision occurs within the time step
+    // Check if the collision occurs within the time _step
     if t >= 0.0 && t <= time_step {
         Some((
             t,
@@ -179,7 +179,7 @@ pub fn continuous_circle_circle_collision(
     // Calculate the time of collision
     let t = (-b - discriminant.sqrt()) / (2.0 * a);
 
-    // Check if the collision occurs within the time step
+    // Check if the collision occurs within the time _step
     if t >= 0.0 && t <= time_step {
         Some(t)
     } else {
@@ -228,9 +228,9 @@ pub fn continuous_point_triangle3d_collision(
     let intersection =
         super::narrowphase::ray_triangle3d_collision(point, &ray_direction, triangle);
 
-    // Check if the intersection occurs within the time step
+    // Check if the intersection occurs within the time _step
     match intersection {
-        Some((t, _hit_point, _barycentric)) => {
+        Some((t_hit_point_barycentric)) => {
             let actual_t = t / speed; // Convert from ray parameter to time
             if actual_t >= 0.0 && actual_t <= time_step {
                 Some(actual_t)
@@ -286,8 +286,8 @@ pub fn continuous_box3d_box3d_collision(
     let t_in = t_entry[0].max(t_entry[1]).max(t_entry[2]);
     let t_out = t_exit[0].min(t_exit[1]).min(t_exit[2]);
 
-    // If exit time is less than entry time, or entry time is after the time step,
-    // or exit time is negative, there is no collision within the time step
+    // If exit time is less than entry time, or entry time is after the time _step,
+    // or exit time is negative, there is no collision within the time _step
     if t_in > t_out || t_in > time_step || t_out < 0.0 {
         return None;
     }

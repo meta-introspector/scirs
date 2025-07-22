@@ -332,7 +332,7 @@ impl CrossPlatformValidator {
                     path.len(),
                     self.platform_info.max_path_length
                 ),
-                field: Some("path".to_string()),
+                field: Some(path.to_string()),
                 suggestion: Some("Use shorter path or enable long path support".to_string()),
                 severity: ValidationSeverity::Error,
             });
@@ -356,7 +356,7 @@ impl CrossPlatformValidator {
             result.errors.push(ValidationError {
                 code: "NULL_BYTE_IN_PATH".to_string(),
                 message: "Path contains null byte".to_string(),
-                field: Some("path".to_string()),
+                field: Some(path.to_string()),
                 suggestion: Some("Remove null bytes from path".to_string()),
                 severity: ValidationSeverity::Critical,
             });
@@ -375,7 +375,7 @@ impl CrossPlatformValidator {
                 result.errors.push(ValidationError {
                     code: "INVALID_WINDOWS_CHAR".to_string(),
                     message: format!("Character '{ch}' is invalid in Windows paths"),
-                    field: Some("path".to_string()),
+                    field: Some(path.to_string()),
                     suggestion: Some("Remove or replace invalid characters".to_string()),
                     severity: ValidationSeverity::Error,
                 });
@@ -396,7 +396,7 @@ impl CrossPlatformValidator {
                 result.errors.push(ValidationError {
                     code: "RESERVED_WINDOWS_NAME".to_string(),
                     message: format!("'{reserved}' is a reserved name on Windows"),
-                    field: Some("path".to_string()),
+                    field: Some(path.to_string()),
                     suggestion: Some("Use a different filename".to_string()),
                     severity: ValidationSeverity::Error,
                 });
@@ -410,7 +410,7 @@ impl CrossPlatformValidator {
             result.errors.push(ValidationError {
                 code: "INVALID_WINDOWS_ENDING".to_string(),
                 message: "Windows paths cannot end with spaces or periods".to_string(),
-                field: Some("path".to_string()),
+                field: Some(path.to_string()),
                 suggestion: Some("Remove trailing spaces or periods".to_string()),
                 severity: ValidationSeverity::Error,
             });
@@ -461,7 +461,7 @@ impl CrossPlatformValidator {
             result.errors.push(ValidationError {
                 code: "WASM_SANDBOX_VIOLATION".to_string(),
                 message: "WebAssembly paths cannot escape sandbox with '..'".to_string(),
-                field: Some("path".to_string()),
+                field: Some(path.to_string()),
                 suggestion: Some("Use paths relative to the WASM module".to_string()),
                 severity: ValidationSeverity::Critical,
             });
@@ -573,10 +573,7 @@ impl CrossPlatformValidator {
     }
 
     /// Validate SIMD operation compatibility
-    pub fn validate_simd_operation(
-        &mut self,
-        operation: &str,
-        vector_size: usize,
+    pub fn validate_simd_operation(&mut self, operation: &str, data_size: usize, vector_size: usize,
     ) -> ValidationResult {
         let mut result = ValidationResult {
             is_valid: true,
@@ -594,7 +591,7 @@ impl CrossPlatformValidator {
                     "Requested vector size {} exceeds platform maximum of {}",
                     vector_size, self.platform_info.simd_support.vector_width
                 ),
-                field: Some("vector_size".to_string()),
+                field: Some(vector_size.to_string()),
                 suggestion: Some(format!(
                     "Use vector size <= {}",
                     self.platform_info.simd_support.vector_width
@@ -609,7 +606,7 @@ impl CrossPlatformValidator {
             result.errors.push(ValidationError {
                 code: "AVX_NOT_SUPPORTED".to_string(),
                 message: "AVX instructions not supported on this platform".to_string(),
-                field: Some("operation".to_string()),
+                field: Some(operation.to_string()),
                 suggestion: Some("Use SSE fallback or check platform capabilities".to_string()),
                 severity: ValidationSeverity::Error,
             });
@@ -620,7 +617,7 @@ impl CrossPlatformValidator {
             result.errors.push(ValidationError {
                 code: "NEON_NOT_SUPPORTED".to_string(),
                 message: "NEON instructions not supported on this platform".to_string(),
-                field: Some("operation".to_string()),
+                field: Some(operation.to_string()),
                 suggestion: Some("Use scalar fallback".to_string()),
                 severity: ValidationSeverity::Error,
             });
@@ -665,7 +662,7 @@ impl CrossPlatformValidator {
                 message: format!(
                     "Allocation size {size} exceeds platform maximum of {max_alloc_size} for {purpose}"
                 ),
-                field: Some("size".to_string()),
+                field: Some(size.to_string()),
                 suggestion: Some("Reduce allocation size or use memory mapping".to_string()),
                 severity: ValidationSeverity::Error,
             });
@@ -742,7 +739,7 @@ impl Default for CrossPlatformValidator {
 /// Convenience functions for common cross-platform validations
 /// Validate that a path is appropriate for the current platform
 #[allow(dead_code)]
-pub fn validate_path_cross_platform(path: &str) -> CoreResult<()> {
+pub fn validate_path(path: &str) -> CoreResult<()> {
     let mut validator = CrossPlatformValidator::new()?;
     let result = validator.validate_file_path(path);
 
@@ -758,9 +755,9 @@ pub fn validate_path_cross_platform(path: &str) -> CoreResult<()> {
 
 /// Validate SIMD capability for an operation
 #[allow(dead_code)]
-pub fn validate_simd_capability(operation: &str, vector_size: usize) -> CoreResult<()> {
+pub fn validate_simd_capability(operation: &str, size: usize) -> CoreResult<()> {
     let mut validator = CrossPlatformValidator::new()?;
-    let result = validator.validate_simd_operation(operation, vector_size);
+    let result = validator.validate_simd_operation(operation, size, 128);
 
     if result.is_valid {
         Ok(())
@@ -844,11 +841,11 @@ mod tests {
         let mut validator = CrossPlatformValidator::new().unwrap();
 
         // Valid vector size
-        let result = validator.validate_simd_operation("add", 128);
+        let result = validator.validate_simd_operation("add", 128, 128);
         assert!(result.is_valid);
 
         // Too large vector size
-        let result = validator.validate_simd_operation("add", 10000);
+        let result = validator.validate_simd_operation("add", 10000, 10000);
         assert!(!result.is_valid);
     }
 
@@ -861,7 +858,7 @@ mod tests {
         assert!(result.is_valid);
 
         // Very large allocation
-        let _result = validator.validate_memory_allocation(usize::MAX - 1, "test");
+        let result = validator.validate_memory_allocation(usize::MAX - 1, "test");
         // Result depends on platform - 32-bit will fail, 64-bit might succeed
     }
 
@@ -870,15 +867,15 @@ mod tests {
         let validator = CrossPlatformValidator::new().unwrap();
 
         // These should return boolean values without panicking
-        let _memory_mapping = validator.is_feature_available(PlatformFeature::MemoryMapping);
-        let _avx = validator.is_feature_available(PlatformFeature::Avx);
-        let _neon = validator.is_feature_available(PlatformFeature::Neon);
+        let memory_mapping = validator.is_feature_available(PlatformFeature::MemoryMapping);
+        let avx = validator.is_feature_available(PlatformFeature::Avx);
+        let neon = validator.is_feature_available(PlatformFeature::Neon);
     }
 
     #[test]
     fn test_convenience_functions() {
         // These should not panic
-        let _ = validate_path_cross_platform("/tmp/test.txt");
+        let _ = validate_path("/tmp/test.txt");
         let _ = validate_simd_capability("add", 128);
         let _ = get_platform_info();
     }
@@ -888,9 +885,9 @@ mod tests {
         let validator = CrossPlatformValidator::new().unwrap();
 
         // Test WASM-specific feature detection
-        let _wasm_simd = validator.is_feature_available(PlatformFeature::WasmSimd128);
-        let _thread_support = validator.is_feature_available(PlatformFeature::ThreadSupport);
-        let _fs_access = validator.is_feature_available(PlatformFeature::FileSystemAccess);
+        let wasm_simd = validator.is_feature_available(PlatformFeature::WasmSimd128);
+        let thread_support = validator.is_feature_available(PlatformFeature::ThreadSupport);
+        let fs_access = validator.is_feature_available(PlatformFeature::FileSystemAccess);
 
         // These should return boolean values without panicking
         // Test passes if we reach here without panicking
@@ -904,11 +901,11 @@ mod tests {
         // Note: This test will behave differently on actual WASM vs native platforms
 
         // Test relative path (should be okay in WASM)
-        let _result = validator.validate_file_path("data/input.txt");
+        let result = validator.validate_file_path("data/input.txt");
         // Should be valid but may have warnings in WASM
 
         // Test sandbox escape attempt
-        let _result = validator.validate_file_path("../../../etc/passwd");
+        let result = validator.validate_file_path("../../../etc/passwd");
         // This would be rejected in actual WASM validation
 
         // Just ensure these don't panic
@@ -925,8 +922,8 @@ mod tests {
 
         // These should not panic
         let mut validator_mut = CrossPlatformValidator::new().unwrap();
-        let _small_result = validator_mut.validate_memory_allocation(small_alloc, "test");
-        let _large_result = validator_mut.validate_memory_allocation(large_alloc, "test");
+        let small_result = validator_mut.validate_memory_allocation(small_alloc, "test");
+        let large_result = validator_mut.validate_memory_allocation(large_alloc, "test");
 
         // Test passes if we reach here without panicking
     }
@@ -936,13 +933,13 @@ mod tests {
         let mut validator = CrossPlatformValidator::new().unwrap();
 
         // Test SIMD validation across different architectures
-        let result = validator.validate_simd_operation("generic_add", 64);
+        let result = validator.validate_simd_operation("generic_add", 64, 64);
         assert!(result.is_valid); // Should be supported on all platforms
 
-        let _result = validator.validate_simd_operation("avx2_multiply", 256);
+        let result = validator.validate_simd_operation("avx2_multiply", 256, 256);
         // Result depends on platform - should not panic
 
-        let _result = validator.validate_simd_operation("neon_add", 128);
+        let result = validator.validate_simd_operation("neon_add", 128, 128);
         // Result depends on platform - should not panic
 
         // Test passes if we reach here without panicking

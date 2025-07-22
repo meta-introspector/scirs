@@ -3,8 +3,6 @@
 #[cfg(test)]
 mod collision_tests {
     use super::super::continuous::*;
-    use super::super::narrowphase::*;
-    use super::super::shapes::*;
 
     #[test]
     fn test_point_circle_collision() {
@@ -176,7 +174,7 @@ mod collision_tests {
         assert!(ray_sphere_collision(&ray_origin3, &ray_direction3, &sphere).is_some());
 
         // Check the distance
-        let (distance, _hit_point) =
+        let (distance_hit_point) =
             ray_sphere_collision(&ray_origin1, &ray_direction1, &sphere).unwrap();
         assert!((distance - 4.0).abs() < 1e-10);
     }
@@ -205,7 +203,7 @@ mod collision_tests {
         assert!(ray_box3d_collision(&ray_origin3, &ray_direction3, &box3d).is_some());
 
         // Check the distance
-        let (distance, _exit_dist, _hit_point) =
+        let (distance_exit_dist_hit_point) =
             ray_box3d_collision(&ray_origin1, &ray_direction1, &box3d).unwrap();
         assert!((distance - 4.0).abs() < 1e-10);
     }
@@ -236,7 +234,7 @@ mod collision_tests {
         );
 
         assert!(collision_time.is_some());
-        let (time, _pos1, _pos2) = collision_time.unwrap();
+        let (time_pos1_pos2) = collision_time.unwrap();
         assert!((time - 1.5).abs() < 1e-10);
 
         // Now with a time step that's too short

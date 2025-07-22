@@ -3,7 +3,7 @@
 //! This example demonstrates the new parallel compression capabilities
 //! that can significantly improve performance when working with large datasets.
 
-use scirs2_io::compression::{
+use scirs2__io::compression::{
     self, benchmark_compression_algorithms, compress_data_parallel, decompress_data_parallel,
     CompressionAlgorithm, ParallelCompressionConfig,
 };
@@ -43,12 +43,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn generate_test_data(size: usize) -> Vec<u8> {
+fn generate_test_data(_size: usize) -> Vec<u8> {
     // Generate semi-random data that compresses well
-    let mut data = Vec::with_capacity(size);
+    let mut data = Vec::with_capacity(_size);
 
     // Create patterns that will compress well but still represent realistic data
-    for i in 0..size {
+    for i in 0.._size {
         let pattern = match i % 4 {
             0 => (i / 1000) as u8, // Slowly changing values
             1 => 0x42,             // Repeated bytes
@@ -69,7 +69,7 @@ fn generate_test_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_basic_parallel_compression(data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_basic_parallel_compression(_data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔧 Demonstrating Basic Parallel Compression...");
 
     let algorithm = CompressionAlgorithm::Zstd;
@@ -78,14 +78,14 @@ fn demonstrate_basic_parallel_compression(data: &[u8]) -> Result<(), Box<dyn std
 
     println!(
         "  📝 Compressing {} bytes with {:?} (level {})...",
-        data.len(),
+        _data.len(),
         algorithm,
         level.unwrap()
     );
 
     let start_time = Instant::now();
     let (compressed_data, compression_stats) =
-        compress_data_parallel(data, algorithm, level, config.clone())?;
+        compress_data_parallel(_data, algorithm, level, config.clone())?;
     let _compression_time = start_time.elapsed();
 
     println!("  📊 Compression Results:");
@@ -112,7 +112,7 @@ fn demonstrate_basic_parallel_compression(data: &[u8]) -> Result<(), Box<dyn std
         compression_stats.throughput_bps / 1_000_000.0
     );
 
-    println!("  📖 Decompressing data...");
+    println!("  📖 Decompressing _data...");
     let start_time = Instant::now();
     let (decompressed_data, decompression_stats) =
         decompress_data_parallel(&compressed_data, algorithm, config)?;
@@ -138,15 +138,15 @@ fn demonstrate_basic_parallel_compression(data: &[u8]) -> Result<(), Box<dyn std
         decompression_stats.throughput_bps / 1_000_000.0
     );
 
-    // Verify data integrity
-    assert_eq!(data, &decompressed_data, "Data integrity check failed!");
+    // Verify _data integrity
+    assert_eq!(_data, &decompressed_data, "Data integrity check failed!");
     println!("  ✅ Data integrity verified - perfect round-trip!");
 
     Ok(())
 }
 
 #[allow(dead_code)]
-fn demonstrate_performance_comparison(data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_performance_comparison(_data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚖️  Comparing Sequential vs Parallel Performance...");
 
     let algorithm = CompressionAlgorithm::Zstd;
@@ -156,7 +156,7 @@ fn demonstrate_performance_comparison(data: &[u8]) -> Result<(), Box<dyn std::er
     // Sequential compression
     println!("  🐌 Sequential compression...");
     let start_time = Instant::now();
-    let compressed_sequential = compression::compress_data(data, algorithm, level)?;
+    let compressed_sequential = compression::compress_data(_data, algorithm, level)?;
     let sequential_compression_time = start_time.elapsed().as_secs_f64() * 1000.0;
 
     let start_time = Instant::now();
@@ -166,16 +166,16 @@ fn demonstrate_performance_comparison(data: &[u8]) -> Result<(), Box<dyn std::er
     // Parallel compression
     println!("  ⚡ Parallel compression...");
     let (compressed_parallel, parallel_compression_stats) =
-        compress_data_parallel(data, algorithm, level, config.clone())?;
+        compress_data_parallel(_data, algorithm, level, config.clone())?;
     let (decompressed_parallel, parallel_decompression_stats) =
         decompress_data_parallel(&compressed_parallel, algorithm, config)?;
 
     // Verify both methods produce correct results
     assert_eq!(
-        data, &decompressed_sequential,
+        _data, &decompressed_sequential,
         "Sequential round-trip failed!"
     );
-    assert_eq!(data, &decompressed_parallel, "Parallel round-trip failed!");
+    assert_eq!(_data, &decompressed_parallel, "Parallel round-trip failed!");
 
     // Compare results
     println!("  📊 Performance Comparison:");
@@ -301,11 +301,11 @@ fn demonstrate_parallel_file_operations(
 }
 
 #[allow(dead_code)]
-fn demonstrate_algorithm_benchmarking(data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_algorithm_benchmarking(_data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🏁 Benchmarking Different Algorithms and Configurations...");
 
     // Use a smaller dataset for benchmarking to keep runtime reasonable
-    let benchmark_data = &data[0..(data.len() / 4).min(2_500_000)]; // Max 2.5MB for benchmarking
+    let benchmark_data = &_data[0..(_data.len() / 4).min(2_500_000)]; // Max 2.5MB for benchmarking
 
     let algorithms = vec![
         CompressionAlgorithm::Lz4,
@@ -331,7 +331,7 @@ fn demonstrate_algorithm_benchmarking(data: &[u8]) -> Result<(), Box<dyn std::er
     ];
 
     println!(
-        "  🔬 Running benchmark with {} bytes of data...",
+        "  🔬 Running benchmark with {} bytes of _data...",
         benchmark_data.len()
     );
     println!(

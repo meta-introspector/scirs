@@ -10,7 +10,7 @@
 
 use ndarray::{Array, IxDyn};
 use scirs2_autograd as ag;
-use scirs2_autograd::tensor_ops as T;
+use scirs2__autograd::tensor_ops as T;
 
 /// Test suite for custom activation functions
 #[cfg(test)]

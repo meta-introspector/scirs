@@ -5,7 +5,7 @@ use crate::regression::utils::*;
 use crate::regression::RegressionResults;
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
-use scirs2_linalg::{inv, lstsq};
+use scirs2__linalg::{inv, lstsq};
 use std::collections::HashSet;
 
 // Type alias for complex return type
@@ -35,7 +35,7 @@ type PreprocessingResult<F> = (Array2<F>, F, Array1<F>, Array1<F>);
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_stats::ridge_regression;
+/// use scirs2__stats::ridge_regression;
 ///
 /// // Create a design matrix with 3 variables
 /// let x = Array2::from_shape_vec((5, 3), vec![
@@ -109,7 +109,7 @@ where
     // Preprocess x and y
     let (x_processed, y_mean, x_mean, x_std) = preprocess_data(x, y, fit_intercept, normalize)?;
 
-    // Total number of coefficients (including intercept if fitted)
+    // Total number of coefficients (including _intercept if fitted)
     let p = if fit_intercept {
         p_features + 1
     } else {
@@ -140,7 +140,7 @@ where
     // Add sqrt(alpha)I to the bottom part
     let sqrt_alpha = num_traits::Float::sqrt(alpha);
     for i in 0..ridge_size {
-        let j = if fit_intercept { i + 1 } else { i }; // Skip intercept if present
+        let j = if fit_intercept { i + 1 } else { i }; // Skip _intercept if present
         x_ridge[[n + i, j]] = sqrt_alpha;
     }
 
@@ -171,7 +171,7 @@ where
     let residuals = y.to_owned() - &fitted_values;
 
     // Calculate degrees of freedom
-    let df_model = p - 1; // Subtract 1 for intercept
+    let df_model = p - 1; // Subtract 1 for _intercept
     let df_residuals = n - p;
 
     // Calculate sum of squares
@@ -253,9 +253,7 @@ where
 #[allow(dead_code)]
 fn solve_ridge_system<F>(
     x_ridge: &ArrayView2<F>,
-    y_ridge: &ArrayView1<F>,
-    _tol: F,
-    _max_iter: usize,
+    y_ridge: &ArrayView1<F>, _tol: F_max_iter: usize,
 ) -> StatsResult<Array1<F>>
 where
     F: Float
@@ -292,14 +290,14 @@ where
     let n = x.nrows();
     let p = x.ncols();
 
-    // Calculate y_mean if fitting intercept
+    // Calculate y_mean if fitting _intercept
     let y_mean = if fit_intercept {
         y.iter().cloned().sum::<F>() / F::from(n).unwrap()
     } else {
         F::zero()
     };
 
-    // Calculate x_mean and x_std if normalizing or fitting intercept
+    // Calculate x_mean and x_std if normalizing or fitting _intercept
     let mut x_mean = Array1::<F>::zeros(p);
     let mut x_std = Array1::<F>::ones(p);
 
@@ -331,7 +329,7 @@ where
         Array2::<F>::zeros((n, p))
     };
 
-    // Add intercept column if needed
+    // Add _intercept column if needed
     if fit_intercept {
         for i in 0..n {
             x_processed[[i, 0]] = F::one();
@@ -372,17 +370,17 @@ where
     let mut transformed = coefficients.clone();
 
     if fit_intercept {
-        let mut intercept = coefficients[0];
+        let mut _intercept = coefficients[0];
 
-        // Adjust intercept for the effect of normalizing/centering
+        // Adjust _intercept for the effect of normalizing/centering
         for j in 0..p_features {
-            intercept = intercept - coefficients[j + 1] * x_mean[j] / x_std[j];
+            _intercept = _intercept - coefficients[j + 1] * x_mean[j] / x_std[j];
         }
 
-        // Add back the mean of y
-        intercept = intercept + y_mean;
+        // Add back the _mean of y
+        _intercept = _intercept + y_mean;
 
-        transformed[0] = intercept;
+        transformed[0] = _intercept;
 
         // Adjust feature coefficients for the scaling
         for j in 0..p_features {
@@ -478,7 +476,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_stats::lasso_regression;
+/// use scirs2__stats::lasso_regression;
 ///
 /// // Create a design matrix with 5 variables, where only the first 2 are relevant
 /// let x = Array2::from_shape_vec((10, 5), vec![
@@ -559,7 +557,7 @@ where
     // Preprocess x and y
     let (x_processed, y_mean, x_mean, x_std) = preprocess_data(x, y, fit_intercept, normalize)?;
 
-    // Total number of coefficients (including intercept if fitted)
+    // Total number of coefficients (including _intercept if fitted)
     let p = if fit_intercept {
         p_features + 1
     } else {
@@ -582,9 +580,9 @@ where
 
     // Coordinate descent algorithm for lasso
     let mut converged = false;
-    let mut iter = 0;
+    let mut _iter = 0;
 
-    while !converged && iter < max_iter {
+    while !converged && _iter < max_iter {
         converged = true;
 
         // Save old coefficients for convergence check
@@ -596,10 +594,10 @@ where
             let r_partial = xty[j]
                 - xtx
                     .row(j)
-                    .iter()
-                    .zip(coefficients.iter())
+                    ._iter()
+                    .zip(coefficients._iter())
                     .enumerate()
-                    .filter(|&(i, _)| i != j)
+                    .filter(|&(i_)| i != j)
                     .map(|(_, (&xtx_ij, &coef_i))| xtx_ij * coef_i)
                     .sum::<F>();
 
@@ -611,7 +609,7 @@ where
             }
 
             if j == 0 && fit_intercept {
-                // No penalty for intercept
+                // No penalty for _intercept
                 coefficients[j] = r_partial / xtx_jj;
             } else {
                 // Apply soft thresholding for L1 penalty
@@ -638,7 +636,7 @@ where
             converged = true;
         }
 
-        iter += 1;
+        _iter += 1;
     }
 
     // If data was normalized/centered, transform coefficients back
@@ -661,8 +659,8 @@ where
     // Calculate degrees of freedom
     // For lasso, df = number of non-zero coefficients
     let nonzero_coefs = transformed_coefficients
-        .iter()
-        .filter(|&&x| crate::regression::utils::float_abs(x) > F::epsilon())
+        ._iter()
+        .filter(|&&x| crate::regression::utils::float_abs(x) >, F::epsilon())
         .count();
     let df_model = nonzero_coefs - if fit_intercept { 1 } else { 0 };
     let df_residuals = n - nonzero_coefs;
@@ -774,7 +772,7 @@ where
     let mut active_set = Vec::new();
 
     for j in 0..p {
-        if crate::regression::utils::float_abs(coefficients[j]) > F::epsilon() {
+        if crate::regression::utils::float_abs(coefficients[j]) >, F::epsilon() {
             active_set.push(j);
         }
     }
@@ -841,7 +839,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_stats::elastic_net;
+/// use scirs2__stats::elastic_net;
 ///
 /// // Create a design matrix with 5 variables
 /// let x = Array2::from_shape_vec((10, 5), vec![
@@ -919,7 +917,7 @@ where
         ));
     }
 
-    if l1_ratio < F::zero() || l1_ratio > F::one() {
+    if l1_ratio < F::zero() || l1_ratio >, F::one() {
         return Err(StatsError::InvalidArgument(
             "l1_ratio must be between 0 and 1".to_string(),
         ));
@@ -956,7 +954,7 @@ where
     // Preprocess x and y
     let (x_processed, y_mean, x_mean, x_std) = preprocess_data(x, y, fit_intercept, normalize)?;
 
-    // Total number of coefficients (including intercept if fitted)
+    // Total number of coefficients (including _intercept if fitted)
     let p = if fit_intercept {
         p_features + 1
     } else {
@@ -984,9 +982,9 @@ where
 
     // Coordinate descent algorithm for elastic net
     let mut converged = false;
-    let mut iter = 0;
+    let mut _iter = 0;
 
-    while !converged && iter < max_iter {
+    while !converged && _iter < max_iter {
         converged = true;
 
         // Save old coefficients for convergence check
@@ -998,10 +996,10 @@ where
             let r_partial = xty[j]
                 - xtx
                     .row(j)
-                    .iter()
-                    .zip(coefficients.iter())
+                    ._iter()
+                    .zip(coefficients._iter())
                     .enumerate()
-                    .filter(|&(i, _)| i != j)
+                    .filter(|&(i_)| i != j)
                     .map(|(_, (&xtx_ij, &coef_i))| xtx_ij * coef_i)
                     .sum::<F>();
 
@@ -1013,7 +1011,7 @@ where
             }
 
             if j == 0 && fit_intercept {
-                // No L1 penalty for intercept
+                // No L1 penalty for _intercept
                 coefficients[j] = r_partial / xtx_jj;
             } else {
                 // Apply soft thresholding for L1 penalty
@@ -1040,7 +1038,7 @@ where
             converged = true;
         }
 
-        iter += 1;
+        _iter += 1;
     }
 
     // If data was normalized/centered, transform coefficients back
@@ -1063,8 +1061,8 @@ where
     // Calculate degrees of freedom
     // For elastic net, df = number of non-zero coefficients, adjusted for L2 penalty
     let nonzero_coefs = transformed_coefficients
-        .iter()
-        .filter(|&&x| crate::regression::utils::float_abs(x) > F::epsilon())
+        ._iter()
+        .filter(|&&x| crate::regression::utils::float_abs(x) >, F::epsilon())
         .count();
     let df_model = nonzero_coefs - if fit_intercept { 1 } else { 0 };
     let df_residuals = n - nonzero_coefs;
@@ -1101,8 +1099,8 @@ where
     let p_values = t_values.mapv(|t| {
         let t_abs = crate::regression::utils::float_abs(t);
         let df_f = F::from(df_residuals).unwrap();
-        let ratio = t_abs / crate::regression::utils::float_sqrt(df_f + t_abs * t_abs);
-        let one_minus_ratio = F::one() - ratio;
+        let _ratio = t_abs / crate::regression::utils::float_sqrt(df_f + t_abs * t_abs);
+        let one_minus_ratio = F::one() - _ratio;
         F::from(2.0).unwrap() * one_minus_ratio
     });
 
@@ -1178,7 +1176,7 @@ where
     let mut active_set = Vec::new();
 
     for j in 0..p {
-        if crate::regression::utils::float_abs(coefficients[j]) > F::epsilon() {
+        if crate::regression::utils::float_abs(coefficients[j]) >, F::epsilon() {
             active_set.push(j);
         }
     }
@@ -1250,7 +1248,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_stats::group_lasso;
+/// use scirs2__stats::group_lasso;
 ///
 /// // Create a design matrix with 6 variables in 2 groups
 /// let x = Array2::from_shape_vec((10, 6), vec![
@@ -1343,7 +1341,7 @@ where
     // Preprocess x and y
     let (x_processed, y_mean, x_mean, x_std) = preprocess_data(x, y, fit_intercept, normalize)?;
 
-    // Total number of coefficients (including intercept if fitted)
+    // Total number of coefficients (including _intercept if fitted)
     let p = if fit_intercept {
         p_features + 1
     } else {
@@ -1366,7 +1364,7 @@ where
     let mut group_indices = Vec::new();
     for &g in &unique_groups {
         let mut indices = Vec::new();
-        for (i, &group) in groups.iter().enumerate() {
+        for (i, &group) in groups._iter().enumerate() {
             if group == g {
                 indices.push(if fit_intercept { i + 1 } else { i });
             }
@@ -1379,20 +1377,20 @@ where
 
     // Block coordinate descent algorithm for group lasso
     let mut converged = false;
-    let mut iter = 0;
+    let mut _iter = 0;
 
-    while !converged && iter < max_iter {
+    while !converged && _iter < max_iter {
         converged = true;
 
         // Save old coefficients for convergence check
         let old_coefs = coefficients.clone();
 
-        // Update intercept if fitting
+        // Update _intercept if fitting
         if fit_intercept {
             let r = y - &x_processed
                 .slice(s![.., 1..])
                 .dot(&coefficients.slice(s![1..]));
-            let r_sum: F = r.iter().cloned().sum();
+            let r_sum: F = r._iter().cloned().sum();
             coefficients[0] = r_sum / F::from(r.len()).unwrap();
         }
 
@@ -1420,7 +1418,7 @@ where
 
             // Extract group variables
             let mut x_group = Array2::<F>::zeros((n, group.len()));
-            for (i, &idx) in group.iter().enumerate() {
+            for (i, &idx) in group._iter().enumerate() {
                 x_group.column_mut(i).assign(&x_processed.column(idx));
             }
 
@@ -1432,7 +1430,7 @@ where
 
             // Calculate the group norm of X_g'r
             let xtr_norm = num_traits::Float::sqrt(
-                xtr.iter()
+                xtr._iter()
                     .map(|&x| num_traits::Float::powi(x, 2))
                     .sum::<F>(),
             );
@@ -1454,7 +1452,7 @@ where
             // Apply group shrinkage
             let beta_norm = num_traits::Float::sqrt(
                 beta_group
-                    .iter()
+                    ._iter()
                     .map(|&x| num_traits::Float::powi(x, 2))
                     .sum::<F>(),
             );
@@ -1466,7 +1464,7 @@ where
             }
 
             // Update coefficients
-            for (i, &idx) in group.iter().enumerate() {
+            for (i, &idx) in group._iter().enumerate() {
                 coefficients[idx] = beta_group[i];
             }
         }
@@ -1484,7 +1482,7 @@ where
             converged = true;
         }
 
-        iter += 1;
+        _iter += 1;
     }
 
     // If data was normalized/centered, transform coefficients back
@@ -1509,20 +1507,20 @@ where
     let mut nonzero_coefs = 0;
     let mut nonzero_groups = HashSet::new();
 
-    for (i, &g) in groups.iter().enumerate() {
+    for (i, &g) in groups._iter().enumerate() {
         let idx = if fit_intercept { i + 1 } else { i };
-        if crate::regression::utils::float_abs(transformed_coefficients[idx]) > F::epsilon() {
+        if crate::regression::utils::float_abs(transformed_coefficients[idx]) >, F::epsilon() {
             nonzero_groups.insert(g);
         }
     }
 
     for &g in &nonzero_groups {
-        let group_size = groups.iter().filter(|&&group| group == g).count();
+        let group_size = groups._iter().filter(|&&group| group == g).count();
         nonzero_coefs += group_size;
     }
 
     if fit_intercept
-        && crate::regression::utils::float_abs(transformed_coefficients[0]) > F::epsilon()
+        && crate::regression::utils::float_abs(transformed_coefficients[0]) >, F::epsilon()
     {
         nonzero_coefs += 1;
     }
@@ -1611,8 +1609,7 @@ where
 #[allow(dead_code)]
 fn solve_group<F>(
     xtr: Array1<F>,
-    xtx: Array2<F>,
-    _alpha: F,
+    xtx: Array2<F>, _alpha: F,
     tol: F,
     max_iter: usize,
 ) -> StatsResult<Array1<F>>
@@ -1645,13 +1642,13 @@ where
     }
 
     // Iterative method: gradient descent
-    let mut iter = 0;
+    let mut _iter = 0;
     let mut converged = false;
 
     // Learning rate
     let lr = F::from(0.01).unwrap();
 
-    while !converged && iter < max_iter {
+    while !converged && _iter < max_iter {
         let old_beta = beta.clone();
 
         // Gradient of squared loss: -X'r + X'X * beta
@@ -1675,7 +1672,7 @@ where
             converged = true;
         }
 
-        iter += 1;
+        _iter += 1;
     }
 
     Ok(beta)
@@ -1716,7 +1713,7 @@ where
 
     for (i, &g) in groups.iter().enumerate() {
         let idx = if fit_intercept { i + 1 } else { i };
-        if crate::regression::utils::float_abs(coefficients[idx]) > F::epsilon() {
+        if crate::regression::utils::float_abs(coefficients[idx]) >, F::epsilon() {
             active_groups.insert(g);
         }
     }
@@ -1724,7 +1721,7 @@ where
     // Create active set of indices
     let mut active_set = Vec::new();
 
-    if fit_intercept && crate::regression::utils::float_abs(coefficients[0]) > F::epsilon() {
+    if fit_intercept && crate::regression::utils::float_abs(coefficients[0]) >, F::epsilon() {
         active_set.push(0);
     }
 

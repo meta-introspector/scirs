@@ -31,9 +31,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> L
         }
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> Metric<F>
     fn update(
-        &mut self,
-        _predictions: &Array<F, IxDyn>,
-        _targets: &Array<F, IxDyn>,
+        &mut self_predictions: &Array<F, IxDyn>, _targets: &Array<F, IxDyn>,
         loss: Option<F>,
     ) {
         if let Some(loss) = loss {
@@ -61,11 +59,9 @@ pub struct AccuracyMetric<F: Float + Debug + ScalarOperand + FromPrimitive + Dis
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> AccuracyMetric<F> {
     /// Create a new accuracy metric
             correct: 0,
-            total: 0,
-            _phantom: PhantomData,
+            total: 0_phantom: PhantomData,
         predictions: &Array<F, IxDyn>,
-        targets: &Array<F, IxDyn>,
-        _loss: Option<F>,
+        targets: &Array<F, IxDyn>, _loss: Option<F>,
         // For multi-class classification, find the class with highest probability
         let preds = predictions.clone();
         let targets = targets.clone();
@@ -142,8 +138,8 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> P
             fp: 0,
             threshold: F::from(0.5).unwrap(),
     /// Create a new precision metric with a custom threshold
-    pub fn with_threshold(threshold: F) -> Self {
-            threshold,
+    pub fn with_threshold(_threshold: F) -> Self {
+            _threshold,
         // Handle binary classification first
         if predictions.shape()[predictions.ndim() - 1] == 1 || predictions.ndim() == 1 {
             let preds = predictions

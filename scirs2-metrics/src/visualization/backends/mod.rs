@@ -18,7 +18,7 @@ mod plotters;
 #[cfg(feature = "plotly_backend")]
 pub use self::plotly::PlotlyBackend;
 #[cfg(feature = "plotly_backend")]
-pub use self::plotly_interactive::{PlotlyInteractiveBackend, PlotlyInteractiveBackendInterface};
+pub use self::plotly__interactive::{PlotlyInteractiveBackend, PlotlyInteractiveBackendInterface};
 #[cfg(feature = "plotters_backend")]
 pub use self::plotters::PlottersBackend;
 
@@ -96,7 +96,7 @@ pub trait PlottingBackend {
 /// # Example
 ///
 /// ```
-/// use scirs2_metrics::visualization::backends;
+/// use scirs2__metrics::visualization::backends;
 ///
 /// let backend = backends::default_backend();
 /// ```
@@ -119,29 +119,19 @@ pub fn default_backend() -> impl PlottingBackend {
 
         impl PlottingBackend for NoopBackend {
             fn save_to_file(
-                &self,
-                _data: &VisualizationData,
-                _metadata: &VisualizationMetadata,
-                _options: &VisualizationOptions,
-                _path: impl AsRef<Path>,
+                &self_data: &VisualizationData, _metadata: &VisualizationMetadata_options: &VisualizationOptions, _path: impl AsRef<Path>,
             ) -> Result<(), Box<dyn Error>> {
                 Err("No visualization backend available. Enable either 'plotly_backend' or 'plotters_backend' feature.".into())
             }
 
             fn render_svg(
-                &self,
-                _data: &VisualizationData,
-                _metadata: &VisualizationMetadata,
-                _options: &VisualizationOptions,
+                &self_data: &VisualizationData, _metadata: &VisualizationMetadata_options: &VisualizationOptions,
             ) -> Result<Vec<u8>, Box<dyn Error>> {
                 Err("No visualization backend available. Enable either 'plotly_backend' or 'plotters_backend' feature.".into())
             }
 
             fn render_png(
-                &self,
-                _data: &VisualizationData,
-                _metadata: &VisualizationMetadata,
-                _options: &VisualizationOptions,
+                &self_data: &VisualizationData, _metadata: &VisualizationMetadata_options: &VisualizationOptions,
             ) -> Result<Vec<u8>, Box<dyn Error>> {
                 Err("No visualization backend available. Enable either 'plotly_backend' or 'plotters_backend' feature.".into())
             }
@@ -159,7 +149,7 @@ pub fn default_backend() -> impl PlottingBackend {
 /// # Example
 ///
 /// ```
-/// use scirs2_metrics::visualization::backends;
+/// use scirs2__metrics::visualization::backends;
 ///
 /// let backend = backends::default_interactive_backend();
 /// ```

@@ -25,7 +25,7 @@ use num_traits::{Float, NumCast};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::icc;
+/// use scirs2__stats::icc;
 ///
 /// // Create data for 5 subjects measured by 3 raters
 /// let data = array![
@@ -75,7 +75,7 @@ where
         ));
     }
 
-    // Set confidence level, default to 0.95
+    // Set confidence _level, default to 0.95
     let alpha = F::one() - conf_level.unwrap_or_else(|| F::from(0.95).unwrap());
 
     // Calculate mean for each subject and rater

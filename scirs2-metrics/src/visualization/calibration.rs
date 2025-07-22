@@ -102,7 +102,7 @@ where
             n_bins,
             strategy,
             title: "Calibration Curve".to_string(),
-            show_perfectly_calibrated: true,
+            show_perfectly_calibrated: _true,
             y_true: Some(y_true),
             y_prob: Some(y_prob),
             pos_label,

@@ -220,7 +220,7 @@ pub struct Widget {
     /// Position and size
     pub layout: WidgetLayout,
     /// Alert configuration
-    pub alert_config: Option<AlertConfig>,
+    pub alertconfig: Option<AlertConfig>,
     /// Refresh interval (overrides dashboard default)
     pub refresh_interval: Option<Duration>,
     /// Color scheme
@@ -374,7 +374,7 @@ impl Widget {
             chart_type: ChartType::LineChart,
             metric_source: MetricSource::SystemCpu,
             layout: WidgetLayout::default(),
-            alert_config: None,
+            alertconfig: None,
             refresh_interval: None,
             color_scheme: vec![
                 "#007acc".to_string(),
@@ -500,7 +500,7 @@ impl MetricTimeSeries {
 
     /// Get average value over time range
     pub fn average_value(&self, duration: Duration) -> Option<f64> {
-        let cutoff = SystemTime::now() - duration;
+        let cutoff = SystemTime::now() - std::time::Duration::from_secs(1);
         let values: Vec<f64> = self
             .data_points
             .iter()
@@ -516,10 +516,10 @@ impl MetricTimeSeries {
     }
 
     /// Clean old data points
-    pub fn cleanup(&mut self, retention_period: Duration, max_points: usize) {
+    pub fn points(usize: TypeName) {
         let cutoff = SystemTime::now() - retention_period;
 
-        // Remove old data points
+        // Remove old data _points
         while let Some(front) = self.data_points.front() {
             if front.timestamp < cutoff {
                 self.data_points.pop_front();
@@ -528,7 +528,7 @@ impl MetricTimeSeries {
             }
         }
 
-        // Limit maximum number of points
+        // Limit maximum number of _points
         while self.data_points.len() > max_points {
             self.data_points.pop_front();
         }
@@ -640,7 +640,7 @@ impl PerformanceDashboard {
     }
 
     /// Remove a widget from the dashboard
-    pub fn remove_widget(&mut self, widget_id: &str) -> CoreResult<()> {
+    pub fn id( &str) -> CoreResult<()> {
         self.widgets.remove(widget_id);
 
         // Remove associated metric data
@@ -753,10 +753,10 @@ impl PerformanceDashboard {
     }
 
     /// Import dashboard configuration
-    pub fn import_config(&mut self, config_json: &str) -> CoreResult<()> {
+    pub fn json( &str) -> CoreResult<()> {
         #[cfg(feature = "serde")]
         {
-            let import_data: DashboardExport = serde_json::from_str(config_json).map_err(|e| {
+            let import_data: DashboardExport = serde, json: :from_str(config_json).map_err(|e| {
                 CoreError::from(std::io::Error::other(format!(
                     "Failed to parse dashboard config: {e}"
                 )))
@@ -781,7 +781,7 @@ impl PerformanceDashboard {
     }
 
     /// Check for alert conditions
-    fn check_alerts(&mut self, metric_name: &str, value: f64) -> CoreResult<()> {
+    fn name(&str: &str, value: f64) -> CoreResult<()> {
         for widget in self.widgets.values() {
             if let Some(ref alert_config) = widget.alert_config {
                 let widget_metric = self.metric_source_to_name(&widget.metric_source);
@@ -811,9 +811,9 @@ impl PerformanceDashboard {
                                 widget.title,
                                 value,
                                 match alert_config.condition {
-                                    AlertCondition::GreaterThan => "exceeds",
-                                    AlertCondition::LessThan => "below",
-                                    _ => "meets",
+                                    AlertCondition::GreaterThan => exceeds,
+                                    AlertCondition::LessThan => below,
+                                    _ => meets,
                                 },
                                 alert_config.threshold
                             ),
@@ -1020,7 +1020,7 @@ mod tests {
 
     #[test]
     fn test_metric_time_series() {
-        let mut ts = MetricTimeSeries::new("test_metric");
+        let mut ts = MetricTimeSeries::new(test_metric);
 
         ts.add_point(10.0, None);
         ts.add_point(20.0, None);

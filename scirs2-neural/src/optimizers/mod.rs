@@ -13,7 +13,7 @@ use std::fmt::Debug;
 // Re-export scirs2-optim's optimizers when the feature is enabled
 // Note: scirs2_optim crate may not exist yet - commented out for compilation
 // #[cfg(feature = "optim")]
-// pub use scirs2_optim::optimizers as optim_optimizers;
+// pub use scirs2__optim::optimizers as optim_optimizers;
 /// Trait for neural network optimizers
 pub trait Optimizer<F: Float + Debug + ScalarOperand> {
     /// Update parameters based on gradients
@@ -70,7 +70,7 @@ pub mod sgd;
 pub use adagrad::Adagrad;
 pub use adam::Adam;
 pub use adamw::AdamW;
-pub use lr_scheduler_wrapper::{with_cosine_annealing, with_step_decay, LRSchedulerOptimizer};
+pub use lr_scheduler__wrapper::{with_cosine_annealing, with_step_decay, LRSchedulerOptimizer};
 pub use momentum::MomentumOptimizer;
 pub use radam::RAdam;
 pub use rmsprop::RMSprop;
@@ -82,7 +82,7 @@ pub use sgd::SGD;
 // use super::*;
 // use crate::NeuralError;
 // use ndarray::Dimension;
-// use scirs2_optim::optimizers as optim;
+// use scirs2__optim::optimizers as optim;
 // /// Wrapper for optim optimizers to conform to our Optimizer trait
 // pub struct OptimOptimizerWrapper<F, D, O>
 // where
@@ -94,9 +94,9 @@ pub use sgd::SGD;
 //     phantom: std::marker::PhantomData<(F, D)>,
 // }
 // impl<F, D, O> OptimOptimizerWrapper<F, D, O>
-//     pub fn new(optimizer: O) -> Self {
+//     pub fn new(_optimizer: O) -> Self {
 //         Self {
-//             optimizer,
+//             _optimizer,
 //             phantom: std::marker::PhantomData,
 //         }
 //     }

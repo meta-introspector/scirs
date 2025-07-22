@@ -30,11 +30,11 @@ fn generate_spiral_dataset(
             // Angle
             let theta = 1.5 * t * 2.0 * PI + r;
             // Point coordinates
-            let x1 = radius * f32::cos(theta) + noise * rng.random_range(-1.0..1.0);
-            let x2 = radius * f32::sin(theta) + noise * rng.random_range(-1.0..1.0);
+            let x1 = radius * f32::cos(theta) + noise * rng.gen_range(-1.0..1.0);
+            let x2 = radius * f32::sin(theta) + noise * rng.gen_range(-1.0..1.0);
             // Store the point and label
             let idx = j * n_samples + i;
-            x[[idx, 0]] = x1;
+            x[[idx..0]] = x1;
             x[[idx, 1]] = x2;
             y[idx] = j;
         }

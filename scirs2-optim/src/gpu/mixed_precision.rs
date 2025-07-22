@@ -81,10 +81,10 @@ pub struct DynamicLossScaler {
 
 impl DynamicLossScaler {
     /// Create a new dynamic loss scaler
-    pub fn new(config: MixedPrecisionConfig) -> Self {
+    pub fn new(_config: MixedPrecisionConfig) -> Self {
         Self {
-            scale: config.init_scale,
-            config,
+            scale: _config.init_scale,
+            _config,
             growth_tracker: 0,
             overflow_history: Vec::with_capacity(100),
         }
@@ -103,7 +103,7 @@ impl DynamicLossScaler {
         }
 
         if has_overflow {
-            // Decrease scale on overflow
+            // Decrease scale on _overflow
             self.scale = (self.scale * self.config.backoff_factor).max(self.config.min_scale);
             self.growth_tracker = 0;
         } else {
@@ -175,19 +175,18 @@ pub struct MixedPrecisionOptimizer<O, A: Float> {
 
 impl<O, A: Float> MixedPrecisionOptimizer<O, A> {
     /// Create a new mixed precision optimizer
-    pub fn new(optimizer: O, config: MixedPrecisionConfig) -> Self {
+    pub fn new(_optimizer: O, config: MixedPrecisionConfig) -> Self {
         let scaler = DynamicLossScaler::new(config.clone());
 
         Self {
-            optimizer,
+            _optimizer,
             scaler,
             gpu_context: None,
             master_weights: None,
             model_weights_half: None,
             gradients_half: None,
             overflow_flag: None,
-            config,
-            _phantom: PhantomData,
+            config_phantom: PhantomData,
         }
     }
 
@@ -288,8 +287,8 @@ pub mod tensor_core_utils {
     use super::*;
 
     /// Pad tensor dimensions for tensor core alignment
-    pub fn pad_for_tensor_cores(size: usize, alignment: usize) -> usize {
-        (size + alignment - 1) / alignment * alignment
+    pub fn pad_for_tensor_cores(_size: usize, alignment: usize) -> usize {
+        (_size + alignment - 1) / alignment * alignment
     }
 
     /// Check if dimensions are tensor core friendly
@@ -335,8 +334,8 @@ pub struct MixedPrecisionUtils;
 
 impl MixedPrecisionUtils {
     /// Convert FP32 to FP16 with saturation
-    pub fn float_to_half(values: &[f32]) -> Vec<u16> {
-        values
+    pub fn float_to_half(_values: &[f32]) -> Vec<u16> {
+        _values
             .iter()
             .map(|&v| {
                 let clamped = v.max(-65504.0).min(65504.0);
@@ -346,12 +345,12 @@ impl MixedPrecisionUtils {
     }
 
     /// Convert FP16 to FP32
-    pub fn half_to_float(values: &[u16]) -> Vec<f32> {
-        values.iter().map(|&v| F16::from_bits(v).to_f32()).collect()
+    pub fn half_to_float(_values: &[u16]) -> Vec<f32> {
+        _values.iter().map(|&v| F16::from_bits(v).to_f32()).collect()
     }
 
     /// Check if GPU supports tensor cores
-    pub fn has_tensor_core_support(gpu_context: &GpuContext) -> bool {
+    pub fn has_tensor_core_support(_gpu_context: &GpuContext) -> bool {
         // Check compute capability
         // Volta (7.0), Turing (7.5), Ampere (8.0+) have tensor cores
         true // Placeholder
@@ -371,8 +370,8 @@ impl F16 {
         0.0
     }
 
-    fn from_bits(bits: u16) -> Self {
-        F16(bits)
+    fn from_bits(_bits: u16) -> Self {
+        F16(_bits)
     }
 
     fn to_bits(&self) -> u16 {

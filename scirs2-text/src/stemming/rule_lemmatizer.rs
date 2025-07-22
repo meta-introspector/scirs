@@ -6,7 +6,7 @@
 //! for regular transformations.
 
 use crate::error::Result;
-use lazy_static::lazy_static;
+use lazy__static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 
@@ -116,7 +116,7 @@ impl RuleLemmatizer {
     }
 
     /// Create a new lemmatizer with custom configuration
-    pub fn with_config(config: LemmatizerConfig) -> Self {
+    pub fn with_config(_config: LemmatizerConfig) -> Self {
         let mut lemmatizer = Self {
             lemma_dict: HashMap::new(),
             verb_rules: Vec::new(),
@@ -124,7 +124,7 @@ impl RuleLemmatizer {
             adj_rules: Vec::new(),
             adv_rules: Vec::new(),
             exceptions: HashMap::new(),
-            config,
+            _config,
         };
 
         lemmatizer.initialize_rules();
@@ -633,15 +633,15 @@ impl RuleLemmatizer {
 
     /// Load lemmatization dictionary from a file
     /// File format: one entry per line, format: "word_form lemma" (tab or space separated)
-    pub fn from_dict_file(path: &str) -> Result<Self> {
+    pub fn from_dict_file(_path: &str) -> Result<Self> {
         use crate::error::TextError;
         use std::fs::File;
         use std::io::{BufRead, BufReader};
 
         let mut lemmatizer = Self::new();
 
-        let file = File::open(path).map_err(|e| {
-            TextError::IoError(format!("Failed to open dictionary file '{path}': {e}"))
+        let file = File::open(_path).map_err(|e| {
+            TextError::IoError(format!("Failed to open dictionary file '{_path}': {e}"))
         })?;
 
         let reader = BufReader::new(file);
@@ -651,7 +651,7 @@ impl RuleLemmatizer {
                 TextError::IoError(format!(
                     "Error reading line {} from '{}': {}",
                     line_num + 1,
-                    path,
+                    _path,
                     e
                 ))
             })?;
@@ -835,7 +835,7 @@ impl RuleLemmatizer {
         assert_eq!(
             words.len(),
             pos_tags.len(),
-            "Number of words and POS tags must match"
+            "Number of words and POS _tags must match"
         );
 
         words

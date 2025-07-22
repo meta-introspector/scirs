@@ -137,9 +137,9 @@ pub mod helpers {
     }
 
     /// Compute Frobenius norm using available operations
-    pub fn frobenius_norm<'g, F: ag::Float>(matrix: &ag::Tensor<'g, F>) -> ag::Tensor<'g, F> {
+    pub fn frobenius_norm<'g, F: ag::Float>(_matrix: &ag::Tensor<'g, F>) -> ag::Tensor<'g, F> {
         // ||A||_F = sqrt(sum(A .* A))
-        let squared = matrix * matrix;
+        let squared = _matrix * _matrix;
         let sum_squared = ag::tensor_ops::sum_all(squared);
         ag::tensor_ops::sqrt(sum_squared)
     }
@@ -276,8 +276,7 @@ pub mod helpers {
     ///
     /// This is a simplified rank estimation - actual rank would require full SVD
     pub fn rank_approximation<'g, F: ag::Float>(
-        _matrix: &ag::Tensor<'g, F>,
-        _tolerance: F,
+        _matrix: &ag::Tensor<'g, F>, _tolerance: F,
         ctx: &'g ag::Context<'g, F>,
     ) -> ag::Tensor<'g, F> {
         // For now, return a constant estimate

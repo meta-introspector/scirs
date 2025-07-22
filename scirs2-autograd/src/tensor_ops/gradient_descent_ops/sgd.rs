@@ -11,7 +11,7 @@ pub(crate) struct MomentumSGDOp<T: Float> {
     pub(crate) momentum: T,
 }
 
-impl<F: Float> crate::op::Op<F> for SGDOp<F> {
+impl<F: Float>, crate::op::Op<F> for SGDOp<F> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<F>) -> Result<(), crate::op::OpError> {
         // Clone the update to avoid borrow checking issues
         let update = ctx.input(1).to_owned();
@@ -27,7 +27,7 @@ impl<F: Float> crate::op::Op<F> for SGDOp<F> {
     }
 }
 
-impl<T: Float> crate::op::Op<T> for MomentumSGDOp<T> {
+impl<T: Float>, crate::op::Op<T> for MomentumSGDOp<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         // Clone the gradient to avoid borrow checking issues
         let grad = ctx.input(1).to_owned();

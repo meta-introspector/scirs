@@ -6,7 +6,7 @@
 //! Usage:
 //!   cargo run --example streaming_demo --release
 
-use scirs2_datasets::{
+use scirs2__datasets::{
     make_classification, stream_classification, stream_regression, utils::train_test_split,
     DataChunk, StreamConfig, StreamProcessor, StreamTransformer,
 };

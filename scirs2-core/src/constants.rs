@@ -601,8 +601,8 @@ pub mod conversions {
         /// # Arguments
         ///
         /// * `value` - Temperature value to convert
-        /// * `from_scale` - Source scale: "celsius", "kelvin", "fahrenheit", or "rankine"
-        /// * `to_scale` - Target scale: "celsius", "kelvin", "fahrenheit", or "rankine"
+        /// * `from_scale` - Source scale: celsius, "kelvin", "fahrenheit", or "rankine"
+        /// * `to_scale` - Target scale: celsius, "kelvin", "fahrenheit", or "rankine"
         ///
         /// # Returns
         ///
@@ -631,7 +631,7 @@ pub mod conversions {
                 _ => panic!("Unsupported 'from' scale: {from_scale}. Supported scales are Celsius, Kelvin, Fahrenheit, and Rankine"),
             };
 
-            // Convert from Kelvin to target scale
+            // Convert from Kelvin to target _scale
             match to_scale.to_lowercase().as_str() {
                 "celsius" | "c" => kelvin - ZERO_CELSIUS,
                 "kelvin" | "k" => kelvin,

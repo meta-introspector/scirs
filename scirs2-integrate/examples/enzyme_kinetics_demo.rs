@@ -5,7 +5,7 @@
 //! mechanisms, allosteric regulation, and pathway analysis.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2_integrate::ode::{
+use scirs2__integrate::ode::{
     enzyme_kinetics::{pathways, EnzymeMechanism, EnzymeParameters, RegulationType},
     solve_ivp, ODEMethod, ODEOptions,
 };
@@ -580,8 +580,7 @@ fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
             RegulationType::CompetitiveInhibition => 1.0 / (1.0 + effector_conc / ki),
             RegulationType::NonCompetitiveInhibition => 1.0 / (1.0 + effector_conc / ki),
             RegulationType::AllostericInhibition => 1.0 / (1.0 + (effector_conc / ki).powf(2.0)),
-            RegulationType::FeedbackInhibition => 1.0 / (1.0 + (effector_conc / ki).powf(4.0)),
-            _ => 1.0,
+            RegulationType::FeedbackInhibition => 1.0 / (1.0 + (effector_conc / ki).powf(4.0), _ => 1.0,
         };
 
         let remaining_activity = inhibition_factor * 100.0;

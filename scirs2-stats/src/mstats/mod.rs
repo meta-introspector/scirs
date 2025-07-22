@@ -19,20 +19,20 @@ pub struct MaskedArray<T> {
 
 impl<T: Copy> MaskedArray<T> {
     /// Create a new masked array
-    pub fn new(data: Array1<T>, mask: Array1<bool>) -> StatsResult<Self> {
-        if data.len() != mask.len() {
+    pub fn new(_data: Array1<T>, mask: Array1<bool>) -> StatsResult<Self> {
+        if _data.len() != mask.len() {
             return Err(StatsError::DimensionMismatch(
                 "Data and mask arrays must have the same length".to_string(),
             ));
         }
 
-        Ok(Self { data, mask })
+        Ok(Self { _data, mask })
     }
 
     /// Create a masked array with all values unmasked (valid)
-    pub fn from_data(data: Array1<T>) -> Self {
-        let mask = Array1::from_elem(data.len(), true);
-        Self { data, mask }
+    pub fn from_data(_data: Array1<T>) -> Self {
+        let mask = Array1::from_elem(_data.len(), true);
+        Self { _data, mask }
     }
 
     /// Get the valid (unmasked) values
@@ -66,20 +66,20 @@ pub struct MaskedArray2<T> {
 
 impl<T: Copy> MaskedArray2<T> {
     /// Create a new masked 2D array
-    pub fn new(data: Array2<T>, mask: Array2<bool>) -> StatsResult<Self> {
-        if data.shape() != mask.shape() {
+    pub fn new(_data: Array2<T>, mask: Array2<bool>) -> StatsResult<Self> {
+        if _data.shape() != mask.shape() {
             return Err(StatsError::DimensionMismatch(
                 "Data and mask arrays must have the same shape".to_string(),
             ));
         }
 
-        Ok(Self { data, mask })
+        Ok(Self { _data, mask })
     }
 
     /// Create a masked array with all values unmasked (valid)
-    pub fn from_data(data: Array2<T>) -> Self {
-        let mask = Array2::from_elem(data.dim(), true);
-        Self { data, mask }
+    pub fn from_data(_data: Array2<T>) -> Self {
+        let mask = Array2::from_elem(_data.dim(), true);
+        Self { _data, mask }
     }
 }
 
@@ -96,7 +96,7 @@ impl<T: Copy> MaskedArray2<T> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::mstats::{MaskedArray, masked_mean};
+/// use scirs2__stats::mstats::{MaskedArray, masked_mean};
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let mask = array![true, true, false, true, true]; // 3.0 is masked
@@ -106,11 +106,11 @@ impl<T: Copy> MaskedArray2<T> {
 /// assert!((mean - 3.0).abs() < 1e-10); // Mean of [1, 2, 4, 5] = 3.0
 /// ```
 #[allow(dead_code)]
-pub fn masked_mean<T>(masked_array: &MaskedArray<T>, _axis: Option<usize>) -> StatsResult<f64>
+pub fn masked_mean<T>(_masked_array: &MaskedArray<T>, _axis: Option<usize>) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
 {
-    if !masked_array.has_valid_values() {
+    if !_masked_array.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
@@ -196,11 +196,11 @@ where
 /// # Returns
 /// * Median of valid values
 #[allow(dead_code)]
-pub fn masked_median<T>(masked_array: &MaskedArray<T>) -> StatsResult<f64>
+pub fn masked_median<T>(_masked_array: &MaskedArray<T>) -> StatsResult<f64>
 where
     T: Copy + Into<f64> + PartialOrd,
 {
-    if !masked_array.has_valid_values() {
+    if !_masked_array.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
@@ -329,7 +329,7 @@ where
 
     match method {
         "pearson" => {
-            let x_values: Vec<f64> = valid_pairs.iter().map(|(x, _)| (*x).into()).collect();
+            let x_values: Vec<f64> = valid_pairs.iter().map(|(x_)| (*x).into()).collect();
             let y_values: Vec<f64> = valid_pairs.iter().map(|(_, y)| (*y).into()).collect();
 
             let x_mean: f64 = x_values.iter().sum::<f64>() / n;
@@ -358,7 +358,7 @@ where
             let mut x_values: Vec<(f64, usize)> = valid_pairs
                 .iter()
                 .enumerate()
-                .map(|(i, (x, _))| ((*x).into(), i))
+                .map(|(i, (x_))| ((*x).into(), i))
                 .collect();
             let mut y_values: Vec<(f64, usize)> = valid_pairs
                 .iter()
@@ -488,7 +488,7 @@ where
     }
 
     let n = valid_pairs.len() as f64;
-    let x_values: Vec<f64> = valid_pairs.iter().map(|(x, _)| (*x).into()).collect();
+    let x_values: Vec<f64> = valid_pairs.iter().map(|(x_)| (*x).into()).collect();
     let y_values: Vec<f64> = valid_pairs.iter().map(|(_, y)| (*y).into()).collect();
 
     let x_mean: f64 = x_values.iter().sum::<f64>() / n;
@@ -513,11 +513,11 @@ where
 /// # Returns
 /// * Skewness of valid values
 #[allow(dead_code)]
-pub fn masked_skew<T>(masked_array: &MaskedArray<T>, bias: bool) -> StatsResult<f64>
+pub fn masked_skew<T>(_masked_array: &MaskedArray<T>, bias: bool) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
 {
-    if !masked_array.has_valid_values() {
+    if !_masked_array.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
@@ -633,7 +633,7 @@ where
 /// # Returns
 /// * Trimmed mean of valid values
 #[allow(dead_code)]
-pub fn masked_tmean<T>(masked_array: &MaskedArray<T>, proportiontocut: f64) -> StatsResult<f64>
+pub fn masked_tmean<T>(_masked_array: &MaskedArray<T>, proportiontocut: f64) -> StatsResult<f64>
 where
     T: Copy + Into<f64> + PartialOrd,
 {

@@ -5,8 +5,8 @@
 
 use crate::backend::BackendContext;
 use crate::error::FFTResult;
-use crate::plan_cache::get_global_cache;
-use crate::worker_pool::get_global_pool;
+use crate::plan__cache::get_global_cache;
+use crate::worker__pool::get_global_pool;
 
 /// Context manager for FFT settings
 pub struct FftContext {
@@ -44,9 +44,9 @@ impl FftContext {
     }
 
     /// Set number of workers for this context
-    pub fn with_workers(mut self, _num_workers: usize) -> Self {
+    pub fn with_workers(mut self_num_workers: usize) -> Self {
         self.previous_workers = Some(self.worker_pool.get_workers());
-        // Note: Due to static reference limitation, we can't actually change workers
+        // Note: Due to static reference limitation, we can't actually change _workers
         // This is a design limitation that would need a different architecture
         self
     }
@@ -175,38 +175,38 @@ pub struct FftSettingsGuard {
 }
 
 impl FftSettingsGuard {
-    pub fn new(context: FftContext) -> Self {
-        Self { _context: context }
+    pub fn new(_context: FftContext) -> Self {
+        Self { _context: _context }
     }
 }
 
 /// Use specific FFT settings within a scope
 #[allow(dead_code)]
-pub fn with_fft_settings<F, R>(builder: FftContextBuilder, f: F) -> FFTResult<R>
+pub fn with_fft_settings<F, R>(_builder: FftContextBuilder, f: F) -> FFTResult<R>
 where
     F: FnOnce() -> R,
 {
-    let context = builder.build()?;
+    let context = _builder.build()?;
     let _guard = FftSettingsGuard::new(context);
     Ok(f())
 }
 
 /// Convenience function for using a specific backend
 #[allow(dead_code)]
-pub fn with_backend<F, R>(backend: &str, f: F) -> FFTResult<R>
+pub fn with_backend<F, R>(_backend: &str, f: F) -> FFTResult<R>
 where
     F: FnOnce() -> R,
 {
-    with_fft_settings(fft_context().backend(backend), f)
+    with_fft_settings(fft_context()._backend(_backend), f)
 }
 
 /// Convenience function for using specific number of workers
 #[allow(dead_code)]
-pub fn with_workers<F, R>(workers: usize, f: F) -> FFTResult<R>
+pub fn with_workers<F, R>(_workers: usize, f: F) -> FFTResult<R>
 where
     F: FnOnce() -> R,
 {
-    with_fft_settings(fft_context().workers(workers), f)
+    with_fft_settings(fft_context()._workers(_workers), f)
 }
 
 /// Convenience function for running without cache

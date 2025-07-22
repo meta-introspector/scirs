@@ -11,7 +11,7 @@ use flate2::Compression;
 use ndarray::{Array1, Array2, ArrayView2};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde__json::Value;
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fs::File;
@@ -44,23 +44,23 @@ pub trait SerializableModel: Serialize + for<'de> Deserialize<'de> {
     }
 
     /// Load the model from a compressed file
-    fn load_from_file_compressed<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path)
+    fn load_from_file_compressed<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::open(_path)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to open file: {}", e)))?;
         let decoder = GzDecoder::new(file);
         Self::load_from_reader(decoder)
     }
 
     /// Load the model from a file
-    fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let mut file = File::open(path)
+    fn load_from_file<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let mut file = File::open(_path)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to open file: {}", e)))?;
         Self::load_from_reader(&mut file)
     }
 
     /// Load the model from a reader
-    fn load_from_reader<R: Read>(reader: R) -> Result<Self> {
-        serde_json::from_reader(reader).map_err(|e| {
+    fn load_from_reader<R: Read>(_reader: R) -> Result<Self> {
+        serde_json::from_reader(_reader).map_err(|e| {
             ClusteringError::InvalidInput(format!("Failed to deserialize model: {}", e))
         })
     }
@@ -224,8 +224,8 @@ pub struct EnhancedModel<T: SerializableModel> {
 
 impl<T: SerializableModel> EnhancedModel<T> {
     /// Create a new enhanced model wrapper
-    pub fn new(model: T, metadata: EnhancedModelMetadata) -> Self {
-        let mut enhanced = Self { model, metadata };
+    pub fn new(_model: T, metadata: EnhancedModelMetadata) -> Self {
+        let mut enhanced = Self { _model, metadata };
         enhanced.update_integrity_hash();
         enhanced
     }
@@ -268,11 +268,11 @@ impl<T: SerializableModel> EnhancedModel<T> {
     }
 
     /// Import model with enhanced metadata from file
-    pub fn import_with_metadata<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path)
+    pub fn import_with_metadata<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::open(_path)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to open file: {}", e)))?;
         let reader = BufReader::new(file);
-        let enhanced_model: Self = serde_json::from_reader(reader)
+        let enhanced_model: Self = serde, _json::from_reader(reader)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to import model: {}", e)))?;
 
         // Validate integrity and compatibility
@@ -557,18 +557,18 @@ impl HierarchicalModel {
 
     /// Export dendrogram to JSON format
     pub fn to_json_tree(&self) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
         let n_nodes = self.linkage.nrows();
         if n_nodes == 0 {
-            return Ok(json!({}));
+            return Ok(_json!({}));
         }
 
         self.build_json_recursive(n_nodes + self.n_observations - 1)
     }
 
     fn build_json_recursive(&self, node_idx: usize) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
         if node_idx < self.n_observations {
             // Leaf node
@@ -578,7 +578,7 @@ impl HierarchicalModel {
                 node_idx.to_string()
             };
 
-            Ok(json!({
+            Ok(_json!({
                 "name": name,
                 "type": "leaf",
                 "index": node_idx
@@ -599,7 +599,7 @@ impl HierarchicalModel {
             let left_child = self.build_json_recursive(left)?;
             let right_child = self.build_json_recursive(right)?;
 
-            Ok(json!({
+            Ok(_json!({
                 "type": "internal",
                 "distance": distance,
                 "children": [left_child, right_child]
@@ -816,9 +816,9 @@ impl SerializableModel for LeaderModel {}
 
 impl LeaderModel {
     /// Create a new Leader model
-    pub fn new(leaders: Array2<f64>, threshold: f64, labels: Option<Array1<usize>>) -> Self {
+    pub fn new(_leaders: Array2<f64>, threshold: f64, labels: Option<Array1<usize>>) -> Self {
         Self {
-            leaders,
+            _leaders,
             threshold,
             labels,
         }
@@ -955,9 +955,9 @@ impl SerializableModel for LeaderTreeModel {}
 
 impl LeaderTreeModel {
     /// Create a new Leader tree model
-    pub fn new(roots: Vec<LeaderNodeModel>, threshold: f64, thresholds: Vec<f64>) -> Self {
+    pub fn new(_roots: Vec<LeaderNodeModel>, threshold: f64, thresholds: Vec<f64>) -> Self {
         Self {
-            roots,
+            _roots,
             threshold,
             thresholds,
         }
@@ -968,8 +968,8 @@ impl LeaderTreeModel {
         self.roots.iter().map(|root| Self::count_nodes(root)).sum()
     }
 
-    fn count_nodes(node: &LeaderNodeModel) -> usize {
-        1 + node
+    fn count_nodes(_node: &LeaderNodeModel) -> usize {
+        1 + _node
             .children
             .iter()
             .map(|child| Self::count_nodes(child))
@@ -977,11 +977,11 @@ impl LeaderTreeModel {
     }
 
     /// Convert from LeaderTree
-    pub fn from_leader_tree<F: num_traits::Float>(tree: &LeaderTree<F>) -> Self
+    pub fn from_leader_tree<F: num_traits: Float>(_tree: &LeaderTree<F>) -> Self
     where
         f64: From<F>,
     {
-        let roots = tree
+        let roots = _tree
             .roots
             .iter()
             .map(|node| Self::convert_node(node))
@@ -989,23 +989,23 @@ impl LeaderTreeModel {
 
         Self {
             roots,
-            threshold: tree.threshold.to_f64().unwrap_or(0.0),
-            thresholds: vec![tree.threshold.to_f64().unwrap_or(0.0)],
+            threshold: _tree.threshold.to_f64().unwrap_or(0.0),
+            thresholds: vec![_tree.threshold.to_f64().unwrap_or(0.0)],
         }
     }
 
-    fn convert_node<F: num_traits::Float>(node: &LeaderNode<F>) -> LeaderNodeModel
+    fn convert_node<F: num_traits: Float>(_node: &LeaderNode<F>) -> LeaderNodeModel
     where
         f64: From<F>,
     {
         LeaderNodeModel {
-            leader: node.leader.mapv(|x| x.to_f64().unwrap_or(0.0)),
-            children: node
+            leader: _node.leader.mapv(|x| x.to_f64().unwrap_or(0.0)),
+            children: _node
                 .children
                 .iter()
                 .map(|child| Self::convert_node(child))
                 .collect(),
-            members: node.members.clone(),
+            members: _node.members.clone(),
         }
     }
 }
@@ -1068,11 +1068,11 @@ pub fn leader_to_model(
 
 /// Convert Leader tree to a serializable model
 #[allow(dead_code)]
-pub fn leader_tree_to_model<F: num_traits::Float>(tree: &LeaderTree<F>) -> LeaderTreeModel
+pub fn leader_tree_to_model<F: num_traits: Float>(_tree: &LeaderTree<F>) -> LeaderTreeModel
 where
     f64: From<F>,
 {
-    LeaderTreeModel::from_leader_tree(tree)
+    LeaderTreeModel::from_leader_tree(_tree)
 }
 
 /// Convert Affinity Propagation output to a serializable model
@@ -1169,10 +1169,10 @@ fn current_timestamp() -> u64 {
 
 /// Format Unix timestamp to human-readable string
 #[allow(dead_code)]
-fn format_timestamp(timestamp: u64) -> String {
+fn format_timestamp(_timestamp: u64) -> String {
     // Simple formatting without chrono dependency
     // In production, you might want to use a proper date library
-    format!("1970-01-01T00:00:00Z+{}s", timestamp)
+    format!("1970-01-01T00:00:00Z+{}s", _timestamp)
 }
 
 /// Enhanced serialization utilities
@@ -1180,16 +1180,16 @@ pub mod enhanced {
     use super::*;
 
     /// Serialize with multiple format support
-    pub fn serialize_with_format<T: Serialize>(data: &T, format: ExportFormat) -> Result<Vec<u8>> {
+    pub fn serialize_with_format<T: Serialize>(_data: &T, format: ExportFormat) -> Result<Vec<u8>> {
         match format {
-            ExportFormat::Json => serde_json::to_vec_pretty(data).map_err(|e| {
+            ExportFormat::Json =>, serde_json::to_vec_pretty(_data).map_err(|e| {
                 ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e))
             }),
-            ExportFormat::Binary => bincode::serialize(data).map_err(|e| {
+            ExportFormat::Binary =>, bincode::serialize(_data).map_err(|e| {
                 ClusteringError::InvalidInput(format!("Binary serialization failed: {}", e))
             }),
             ExportFormat::CompressedJson => {
-                let json_data = serde_json::to_vec_pretty(data).map_err(|e| {
+                let json_data = serde_json::to_vec_pretty(_data).map_err(|e| {
                     ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e))
                 })?;
 
@@ -1202,19 +1202,18 @@ pub mod enhanced {
                 })
             }
             #[cfg(feature = "yaml")]
-            ExportFormat::Yaml => serde_yaml::to_vec(data).map_err(|e| {
+            ExportFormat::Yaml =>, serde_yaml::to_vec(_data).map_err(|e| {
                 ClusteringError::InvalidInput(format!("YAML serialization failed: {}", e))
             }),
             #[cfg(feature = "msgpack")]
-            ExportFormat::MessagePack => rmp_serde::to_vec(data).map_err(|e| {
+            ExportFormat::MessagePack =>, rmp_serde::to_vec(_data).map_err(|e| {
                 ClusteringError::InvalidInput(format!("MessagePack serialization failed: {}", e))
             }),
             #[cfg(feature = "cbor")]
-            ExportFormat::Cbor => serde_cbor::to_vec(data).map_err(|e| {
+            ExportFormat::Cbor =>, serde_cbor::to_vec(_data).map_err(|e| {
                 ClusteringError::InvalidInput(format!("CBOR serialization failed: {}", e))
-            }),
-            _ => Err(ClusteringError::InvalidInput(
-                "Unsupported format for this data type".to_string(),
+            }, _ => Err(ClusteringError::InvalidInput(
+                "Unsupported format for this _data type".to_string(),
             )),
         }
     }
@@ -1225,10 +1224,10 @@ pub mod enhanced {
         format: ExportFormat,
     ) -> Result<T> {
         match format {
-            ExportFormat::Json => serde_json::from_slice(data).map_err(|e| {
+            ExportFormat::Json =>, serde_json::from_slice(data).map_err(|e| {
                 ClusteringError::InvalidInput(format!("JSON deserialization failed: {}", e))
             }),
-            ExportFormat::Binary => bincode::deserialize(data).map_err(|e| {
+            ExportFormat::Binary =>, bincode::deserialize(data).map_err(|e| {
                 ClusteringError::InvalidInput(format!("Binary deserialization failed: {}", e))
             }),
             ExportFormat::CompressedJson => {
@@ -1243,18 +1242,17 @@ pub mod enhanced {
                 })
             }
             #[cfg(feature = "yaml")]
-            ExportFormat::Yaml => serde_yaml::from_slice(data).map_err(|e| {
+            ExportFormat::Yaml =>, serde_yaml::from_slice(data).map_err(|e| {
                 ClusteringError::InvalidInput(format!("YAML deserialization failed: {}", e))
             }),
             #[cfg(feature = "msgpack")]
-            ExportFormat::MessagePack => rmp_serde::from_slice(data).map_err(|e| {
+            ExportFormat::MessagePack =>, rmp_serde::from_slice(data).map_err(|e| {
                 ClusteringError::InvalidInput(format!("MessagePack deserialization failed: {}", e))
             }),
             #[cfg(feature = "cbor")]
-            ExportFormat::Cbor => serde_cbor::from_slice(data).map_err(|e| {
+            ExportFormat::Cbor =>, serde_cbor::from_slice(data).map_err(|e| {
                 ClusteringError::InvalidInput(format!("CBOR deserialization failed: {}", e))
-            }),
-            _ => Err(ClusteringError::InvalidInput(
+            }, _ => Err(ClusteringError::InvalidInput(
                 "Unsupported format for deserialization".to_string(),
             )),
         }
@@ -1277,12 +1275,12 @@ pub mod enhanced {
 
     impl<T: Serialize + for<'de> Deserialize<'de>> VersionedModel<T> {
         /// Create a new versioned model
-        pub fn new(data: T, metadata: ModelMetadata) -> Self {
+        pub fn new(_data: T, metadata: ModelMetadata) -> Self {
             Self {
                 version: "1.0.0".to_string(),
                 compatibility: vec!["1.0.0".to_string()],
                 migration_notes: None,
-                data,
+                _data,
                 metadata,
             }
         }
@@ -1299,7 +1297,7 @@ pub mod enhanced {
             } else {
                 Err(ClusteringError::InvalidInput(format!(
                     "Cannot migrate from {} to {}",
-                    self.version, target_version
+                    self._version, target_version
                 )))
             }
         }
@@ -1331,9 +1329,9 @@ pub mod performance {
     }
 
     /// Compression ratio analysis
-    pub fn analyze_compression<T: Serialize>(data: &T) -> Result<(f64, usize, usize)> {
-        let uncompressed = enhanced::serialize_with_format(data, ExportFormat::Json)?;
-        let compressed = enhanced::serialize_with_format(data, ExportFormat::CompressedJson)?;
+    pub fn analyze_compression<T: Serialize>(_data: &T) -> Result<(f64, usize, usize)> {
+        let uncompressed = enhanced::serialize_with_format(_data, ExportFormat::Json)?;
+        let compressed = enhanced::serialize_with_format(_data, ExportFormat::CompressedJson)?;
 
         let ratio = compressed.len() as f64 / uncompressed.len() as f64;
         Ok((ratio, uncompressed.len(), compressed.len()))
@@ -1379,7 +1377,7 @@ pub fn save_leader<P: AsRef<Path>>(
 
 /// Convenience function to save Leader tree results directly
 #[allow(dead_code)]
-pub fn save_leader_tree<P: AsRef<Path>, F: num_traits::Float>(
+pub fn save_leader_tree<P: AsRef<Path>, F: num_traits: Float>(
     path: P,
     tree: &LeaderTree<F>,
 ) -> Result<()>
@@ -1624,7 +1622,7 @@ impl AdvancedExport for KMeansModel {
 
     fn export_to_string(&self, format: ExportFormat) -> Result<String> {
         match format {
-            ExportFormat::Json => serde_json::to_string_pretty(self)
+            ExportFormat::Json =>, serde_json::to_string_pretty(self)
                 .map_err(|e| ClusteringError::InvalidInput(format!("Failed to serialize: {}", e))),
             ExportFormat::Csv => {
                 let mut result = String::new();
@@ -1658,11 +1656,11 @@ impl AdvancedExport for KMeansModel {
         let mut hyperparameters = HashMap::new();
         hyperparameters.insert(
             "n_clusters".to_string(),
-            serde_json::Value::Number(serde_json::Number::from(self.n_clusters)),
+            serde_json::Value::Number(serde, _json::Number::from(self.n_clusters)),
         );
         hyperparameters.insert(
             "n_iter".to_string(),
-            serde_json::Value::Number(serde_json::Number::from(self.n_iter)),
+            serde_json::Value::Number(serde, _json::Number::from(self.n_iter)),
         );
 
         let algorithm_config = Some(AlgorithmConfig {
@@ -1743,10 +1741,9 @@ impl AdvancedExport for HierarchicalModel {
 
     fn export_to_string(&self, format: ExportFormat) -> Result<String> {
         match format {
-            ExportFormat::Json => serde_json::to_string_pretty(self)
+            ExportFormat::Json =>, serde_json::to_string_pretty(self)
                 .map_err(|e| ClusteringError::InvalidInput(format!("Failed to serialize: {}", e))),
-            ExportFormat::Newick => self.to_newick(),
-            _ => Err(ClusteringError::InvalidInput(
+            ExportFormat::Newick => self.to_newick(, _ => Err(ClusteringError::InvalidInput(
                 "Format not supported for string export".to_string(),
             )),
         }
@@ -1767,7 +1764,7 @@ impl AdvancedExport for HierarchicalModel {
         );
         hyperparameters.insert(
             "n_observations".to_string(),
-            serde_json::Value::Number(serde_json::Number::from(self.n_observations)),
+            serde_json::Value::Number(serde, _json::Number::from(self.n_observations)),
         );
 
         let algorithm_config = Some(AlgorithmConfig {
@@ -1822,13 +1819,13 @@ pub mod compatibility {
     pub fn to_sklearn_format<T: SerializableModel + AdvancedExport>(
         model: &T,
     ) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
         let metadata = model.get_metadata();
         let model_data = model.export_to_string(ExportFormat::Json)?;
-        let model_json: serde_json::Value = serde_json::from_str(&model_data)?;
+        let model_json: serde, _json: Value = serde_json::from_str(&model_data)?;
 
-        Ok(json!({
+        Ok(_json!({
             "sklearn_version": "1.0.0",
             "scirs_version": "0.1.0-beta.1",
             "model_type": metadata.model_type,
@@ -1842,17 +1839,17 @@ pub mod compatibility {
     }
 
     /// Convert to SciPy hierarchical clustering format
-    pub fn to_scipy_linkage_format(linkage_matrix: &Array2<f64>) -> Result<serde_json::Value> {
-        use serde_json::json;
+    pub fn to_scipy_linkage_format(_linkage_matrix: &Array2<f64>) -> Result<serde_json::Value> {
+        use serde__json::_json;
 
-        // Convert linkage matrix to SciPy format
-        let linkage_data: Vec<Vec<f64>> = linkage_matrix
+        // Convert linkage _matrix to SciPy format
+        let linkage_data: Vec<Vec<f64>> = _linkage_matrix
             .rows()
             .into_iter()
             .map(|row| row.to_vec())
             .collect();
 
-        Ok(json!({
+        Ok(_json!({
             "linkage": linkage_data,
             "format": "scipy_linkage",
             "version": "1.9.0",
@@ -1861,42 +1858,41 @@ pub mod compatibility {
     }
 
     /// Create scikit-learn compatible parameter grid for hyperparameter tuning
-    pub fn create_sklearn_param_grid(algorithm: &str) -> Result<serde_json::Value> {
-        use serde_json::json;
+    pub fn create_sklearn_param_grid(_algorithm: &str) -> Result<serde_json::Value> {
+        use serde__json::_json;
 
-        match algorithm {
-            "kmeans" => Ok(json!({
+        match _algorithm {
+            "kmeans" => Ok(_json!({
                 "n_clusters": [2, 3, 4, 5, 6, 7, 8, 9, 10],
                 "init": ["k-means++", "random"],
                 "max_iter": [100, 200, 300],
                 "tol": [1e-4, 1e-5, 1e-6],
                 "random_state": [42]
             })),
-            "dbscan" => Ok(json!({
+            "dbscan" => Ok(_json!({
                 "eps": [0.1, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0],
                 "min_samples": [3, 5, 10, 15, 20],
                 "metric": ["euclidean", "manhattan", "cosine"]
             })),
-            "agglomerative" => Ok(json!({
+            "agglomerative" => Ok(_json!({
                 "n_clusters": [2, 3, 4, 5, 6, 7, 8, 9, 10],
                 "linkage": ["ward", "complete", "average", "single"],
                 "metric": ["euclidean", "manhattan", "cosine"]
-            })),
-            _ => Err(ClusteringError::InvalidInput(format!(
-                "Unknown algorithm for parameter grid: {}",
-                algorithm
+            }), _ => Err(ClusteringError::InvalidInput(format!(
+                "Unknown _algorithm for parameter grid: {}",
+                _algorithm
             ))),
         }
     }
 
     /// Convert ndarray to NumPy-compatible format
-    pub fn to_numpy_format(array: &Array2<f64>) -> Result<serde_json::Value> {
-        use serde_json::json;
+    pub fn to_numpy_format(_array: &Array2<f64>) -> Result<serde_json::Value> {
+        use serde__json::_json;
 
-        let shape = array.shape();
-        let data: Vec<f64> = array.iter().cloned().collect();
+        let shape = _array.shape();
+        let data: Vec<f64> = _array.iter().cloned().collect();
 
-        Ok(json!({
+        Ok(_json!({
             "data": data,
             "shape": [shape[0], shape[1]],
             "dtype": "float64",
@@ -1906,22 +1902,22 @@ pub mod compatibility {
     }
 
     /// Convert from NumPy-compatible format
-    pub fn from_numpy_format(numpy_data: &serde_json::Value) -> Result<Array2<f64>> {
-        let data: Vec<f64> = numpy_data["data"]
+    pub fn from_numpy_format(_numpy_data: &serde, _json: :Value) -> Result<Array2<f64>> {
+        let _data: Vec<f64> = _numpy_data["_data"]
             .as_array()
-            .ok_or_else(|| ClusteringError::InvalidInput("Missing data field".to_string()))?
+            .ok_or_else(|| ClusteringError::InvalidInput("Missing _data field".to_string()))?
             .iter()
             .map(|v| v.as_f64().unwrap_or(0.0))
             .collect();
 
-        let shape = numpy_data["shape"]
+        let shape = _numpy_data["shape"]
             .as_array()
             .ok_or_else(|| ClusteringError::InvalidInput("Missing shape field".to_string()))?;
 
         let nrows = shape[0].as_u64().unwrap_or(0) as usize;
         let ncols = shape[1].as_u64().unwrap_or(0) as usize;
 
-        Array2::from_shape_vec((nrows, ncols), data)
+        Array2::from_shape_vec((nrows, ncols), _data)
             .map_err(|e| ClusteringError::InvalidInput(format!("Shape mismatch: {}", e)))
     }
 
@@ -1931,7 +1927,7 @@ pub mod compatibility {
         labels: &Array1<i32>,
         feature_names: Option<&[String]>,
     ) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
         let n_samples = data.nrows();
         let n_features = data.ncols();
@@ -1946,8 +1942,8 @@ pub mod compatibility {
 
         // Add feature columns
         for (i, col) in data.columns().into_iter().enumerate() {
-            let col_name = if let Some(names) = feature_names {
-                names
+            let col_name = if let Some(_names) = feature_names {
+                _names
                     .get(i)
                     .cloned()
                     .unwrap_or_else(|| format!("feature_{}", i))
@@ -1956,18 +1952,18 @@ pub mod compatibility {
             };
 
             let col_data: Vec<f64> = col.iter().cloned().collect();
-            df_data.insert(col_name, json!(col_data));
+            df_data.insert(col_name, _json!(col_data));
         }
 
         // Add cluster labels
         let label_data: Vec<i32> = labels.iter().cloned().collect();
-        df_data.insert("cluster".to_string(), json!(label_data));
+        df_data.insert("cluster".to_string(), _json!(label_data));
 
         // Create columns list
         let mut cols: Vec<String> = (0..n_features)
             .map(|i| {
-                if let Some(names) = feature_names {
-                    names
+                if let Some(_names) = feature_names {
+                    _names
                         .get(i)
                         .cloned()
                         .unwrap_or_else(|| format!("feature_{}", i))
@@ -1978,7 +1974,7 @@ pub mod compatibility {
             .collect();
         cols.push("cluster".to_string());
 
-        Ok(json!({
+        Ok(_json!({
             "data": df_data,
             "index": (0..n_samples).collect::<Vec<_>>(),
             "columns": cols
@@ -1991,9 +1987,9 @@ pub mod compatibility {
         labels: Option<&Array1<i32>>,
         centers: Option<&Array2<f64>>,
     ) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
-        let mut r_data = json!({});
+        let mut r_data = _json!({});
 
         if let Some(linkage_matrix) = linkage {
             // R's hclust format
@@ -2009,7 +2005,7 @@ pub mod compatibility {
                 .map(|row| row[2])
                 .collect();
 
-            r_data["hclust"] = json!({
+            r_data["hclust"] = _json!({
                 "merge": merge_matrix,
                 "height": height,
                 "order": (1..=linkage_matrix.nrows() + 1).collect::<Vec<_>>(),
@@ -2021,7 +2017,7 @@ pub mod compatibility {
         }
 
         if let Some(cluster_labels) = labels {
-            r_data["clusters"] = json!(cluster_labels.iter().cloned().collect::<Vec<_>>());
+            r_data["clusters"] = _json!(cluster_labels.iter().cloned().collect::<Vec<_>>());
         }
 
         if let Some(cluster_centers) = centers {
@@ -2030,7 +2026,7 @@ pub mod compatibility {
                 .into_iter()
                 .map(|row| row.to_vec())
                 .collect();
-            r_data["centers"] = json!(centers_data);
+            r_data["centers"] = _json!(centers_data);
         }
 
         Ok(r_data)
@@ -2038,7 +2034,7 @@ pub mod compatibility {
 
     /// Import from scikit-learn compatible format
     pub fn from_sklearn_format<T: SerializableModel>(
-        sklearn_data: &serde_json::Value,
+        sklearn_data: &serde, _json: :Value,
     ) -> Result<T> {
         if let Some(model_data) = sklearn_data.get("model_data") {
             let model_str = serde_json::to_string(model_data)?;
@@ -2055,11 +2051,11 @@ pub mod compatibility {
     pub fn to_onnx_metadata<T: SerializableModel + AdvancedExport>(
         model: &T,
     ) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
         let metadata = model.get_metadata();
 
-        Ok(json!({
+        Ok(_json!({
             "ir_version": 7,
             "producer_name": "scirs2-cluster",
             "producer_version": "0.1.0-beta.1",
@@ -2082,13 +2078,13 @@ pub mod compatibility {
         epoch: Option<usize>,
         step: Option<usize>,
     ) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
         let metadata = model.get_metadata();
         let model_data = model.export_to_string(ExportFormat::Json)?;
-        let model_json: serde_json::Value = serde_json::from_str(&model_data)?;
+        let model_json: serde, _json: Value = serde_json::from_str(&model_data)?;
 
-        Ok(json!({
+        Ok(_json!({
             "pytorch_lightning_version": "1.6.0",
             "scirs_version": "0.1.0-beta.1",
             "epoch": epoch.unwrap_or(0),
@@ -2111,12 +2107,12 @@ pub mod compatibility {
         model: &T,
         model_uuid: Option<String>,
     ) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
         let metadata = model.get_metadata();
         let model_data = model.export_to_string(ExportFormat::Json)?;
 
-        Ok(json!({
+        Ok(_json!({
             "artifact_path": "model",
             "flavors": {
                 "scirs2": {
@@ -2130,7 +2126,7 @@ pub mod compatibility {
                     "python_version": "3.8.0"
                 }
             },
-            "model_uuid": model_uuid.unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
+            "model_uuid": model_uuid.unwrap_or_else(|| _uuid::Uuid::new_v4().to_string()),
             "run_id": null,
             "saved_input_example_info": null,
             "signature": {
@@ -2159,7 +2155,7 @@ pub mod compatibility {
         card.push_str(&format!("- {}\n", metadata.model_type));
         card.push_str(&format!("- unsupervised-learning\n"));
         card.push_str(&format!("model-index:\n"));
-        card.push_str(&format!("- name: {}\n", model_name));
+        card.push_str(&format!("- _name: {}\n", model_name));
         card.push_str(&format!("  results:\n"));
 
         if let Some(perf) = &metadata.performance_metrics {
@@ -2234,9 +2230,9 @@ pub mod compatibility {
 
         card.push_str("\n## Usage\n\n");
         card.push_str("```rust\n");
-        card.push_str("use scirs2_cluster::serialization::SerializableModel;\n");
+        card.push_str("use scirs2__cluster::serialization::SerializableModel;\n");
         card.push_str(&format!(
-            "use scirs2_cluster::serialization::{}Model;\n",
+            "use scirs2__cluster::serialization::{}Model;\n",
             metadata.model_type.to_uppercase()
         ));
         card.push_str("\n");
@@ -2257,11 +2253,11 @@ pub mod compatibility {
     pub fn to_arrow_schema<T: SerializableModel + AdvancedExport>(
         model: &T,
     ) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
         let metadata = model.get_metadata();
 
-        Ok(json!({
+        Ok(_json!({
             "schema": {
                 "fields": [
                     {
@@ -2309,7 +2305,7 @@ pub mod compatibility {
         model: &T,
         compress: bool,
     ) -> Result<Vec<u8>> {
-        let sklearn_data = to_sklearn_format(model)?;
+        let sklearn_data = compatibility::crate::serialization::compatibility::to_sklearn_format(model)?;
 
         if compress {
             enhanced::serialize_with_format(&sklearn_data, ExportFormat::CompressedJson)
@@ -2319,14 +2315,14 @@ pub mod compatibility {
     }
 
     /// Load from joblib-compatible format
-    pub fn from_joblib_format<T: SerializableModel>(data: &[u8], compressed: bool) -> Result<T> {
+    pub fn from_joblib_format<T: SerializableModel>(_data: &[u8], compressed: bool) -> Result<T> {
         let format = if compressed {
             ExportFormat::CompressedJson
         } else {
             ExportFormat::Json
         };
 
-        let sklearn_data: serde_json::Value = enhanced::deserialize_with_format(data, format)?;
+        let sklearn_data: serde, _json: Value = enhanced::deserialize_with_format(_data, format)?;
         from_sklearn_format(&sklearn_data)
     }
 
@@ -2336,17 +2332,17 @@ pub mod compatibility {
         cluster_centers: Option<&Array2<f64>>,
         n_clusters: Option<usize>,
     ) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
-        let mut result = json!({
+        let mut result = _json!({
             "labels_": labels.iter().cloned().collect::<Vec<_>>(),
             "n_clusters_": n_clusters.unwrap_or_else(|| {
                 labels.iter().map(|&x| x).max().unwrap_or(-1) as usize + 1
             })
         });
 
-        if let Some(centers) = cluster_centers {
-            result["cluster_centers_"] = to_numpy_format(centers)?;
+        if let Some(_centers) = cluster_centers {
+            result["cluster_centers_"] = to_numpy_format(_centers)?;
         }
 
         Ok(result)
@@ -2357,7 +2353,7 @@ pub mod compatibility {
         linkage_matrix: &Array2<f64>,
         labels: Option<&[String]>,
     ) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
         let n_obs = linkage_matrix.nrows() + 1;
 
@@ -2387,7 +2383,7 @@ pub mod compatibility {
             dcoord.push(vec![0.0, distance, distance, 0.0]);
         }
 
-        Ok(json!({
+        Ok(_json!({
             "icoord": icoord,
             "dcoord": dcoord,
             "ivl": labels.unwrap_or(&(0..n_obs).map(|i| i.to_string()).collect::<Vec<_>>()),
@@ -2402,7 +2398,7 @@ pub mod compatibility {
     ) -> Result<Vec<u8>> {
         // Create a pickle-like format using binary serialization
         // This is a simplified version - real pickle compatibility would need more work
-        let sklearn_data = to_sklearn_format(model)?;
+        let sklearn_data = compatibility::crate::serialization::compatibility::to_sklearn_format(model)?;
         enhanced::serialize_with_format(&sklearn_data, ExportFormat::Binary)
     }
 
@@ -2435,7 +2431,7 @@ pub mod compatibility {
         data: &Array2<f64>,
         feature_names: Option<&[String]>,
     ) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
         let n_clusters = labels.iter().map(|&x| x).max().unwrap_or(-1) as usize + 1;
         let mut cluster_stats = Vec::new();
@@ -2454,7 +2450,7 @@ pub mod compatibility {
                 .collect();
 
             let cluster_size = cluster_indices.len();
-            let mut cluster_data = json!({
+            let mut cluster_data = _json!({
                 "cluster_id": cluster_id,
                 "size": cluster_size,
                 "percentage": cluster_size as f64 / labels.len() as f64 * 100.0
@@ -2472,22 +2468,22 @@ pub mod compatibility {
                     *val /= cluster_size as f64;
                 }
 
-                cluster_data["centroid"] = json!(centroid);
+                cluster_data["centroid"] = _json!(centroid);
 
-                if let Some(names) = feature_names {
-                    let centroid_dict: std::collections::HashMap<_, _> = names
+                if let Some(_names) = feature_names {
+                    let centroid_dict: std::collections::HashMap<__> = _names
                         .iter()
                         .zip(centroid.iter())
                         .map(|(name, &val)| (name.clone(), val))
                         .collect();
-                    cluster_data["centroid_named"] = json!(centroid_dict);
+                    cluster_data["centroid_named"] = _json!(centroid_dict);
                 }
             }
 
             cluster_stats.push(cluster_data);
         }
 
-        Ok(json!({
+        Ok(_json!({
             "n_clusters": n_clusters,
             "n_samples": labels.len(),
             "clusters": cluster_stats
@@ -2537,10 +2533,10 @@ pub mod persistence {
 
     impl ModelRegistry {
         /// Create a new model registry
-        pub fn new<P: Into<PathBuf>>(base_directory: P) -> Self {
+        pub fn new<P: Into<PathBuf>>(_base_directory: P) -> Self {
             Self {
                 models: BTreeMap::new(),
-                base_directory: base_directory.into(),
+                base_directory: _base_directory.into(),
                 default_format: ExportFormat::Json,
             }
         }
@@ -2741,9 +2737,9 @@ pub mod persistence {
 
     impl BatchModelProcessor {
         /// Create a new batch processor
-        pub fn new<P: Into<PathBuf>>(target_directory: P, config: BatchConfig) -> Self {
+        pub fn new<P: Into<PathBuf>>(_target_directory: P, config: BatchConfig) -> Self {
             Self {
-                target_directory: target_directory.into(),
+                target_directory: _target_directory.into(),
                 config,
             }
         }
@@ -2850,11 +2846,11 @@ pub mod persistence {
                     ClusteringError::InvalidInput(format!("Failed to read archive entry: {}", e))
                 })?;
 
-                let path = entry.path().map_err(|e| {
-                    ClusteringError::InvalidInput(format!("Failed to get entry path: {}", e))
+                let _path = entry._path().map_err(|e| {
+                    ClusteringError::InvalidInput(format!("Failed to get entry _path: {}", e))
                 })?;
 
-                if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+                if let Some(file_name) = _path.file_name().and_then(|n| n.to_str()) {
                     if !file_name.ends_with("_metadata.json") {
                         let mut contents = String::new();
                         entry.read_to_string(&mut contents).map_err(|e| {
@@ -2873,7 +2869,7 @@ pub mod persistence {
 
                         let model_name = file_name
                             .rsplit_once('.')
-                            .map(|(name, _)| name)
+                            .map(|(name_)| name)
                             .unwrap_or(file_name);
                         models.push((model_name.to_string(), model));
                     }
@@ -2887,16 +2883,15 @@ pub mod persistence {
         pub fn convert_batch(
             &self,
             input_dir: &Path,
-            from_format: ExportFormat,
-            _to_format: ExportFormat,
+            from_format: ExportFormat_to, _format: ExportFormat,
         ) -> Result<usize> {
             let mut converted_count = 0;
 
             for entry in std::fs::read_dir(input_dir).map_err(|e| {
-                ClusteringError::InvalidInput(format!("Failed to read input directory: {}", e))
+                ClusteringError::InvalidInput(_format!("Failed to read input directory: {}", e))
             })? {
                 let entry = entry.map_err(|e| {
-                    ClusteringError::InvalidInput(format!("Failed to read directory entry: {}", e))
+                    ClusteringError::InvalidInput(_format!("Failed to read directory entry: {}", e))
                 })?;
 
                 let path = entry.path();
@@ -2905,7 +2900,7 @@ pub mod persistence {
                         if extension == format_extension(from_format) {
                             // Read and convert
                             let _content = std::fs::read(&path).map_err(|e| {
-                                ClusteringError::InvalidInput(format!("Failed to read file: {}", e))
+                                ClusteringError::InvalidInput(_format!("Failed to read file: {}", e))
                             })?;
 
                             // This is a simplified conversion - in practice, you'd need to know the model type
@@ -2921,8 +2916,8 @@ pub mod persistence {
     }
 
     /// Get file extension for export format
-    fn format_extension(format: ExportFormat) -> &'static str {
-        match format {
+    fn format_extension(_format: ExportFormat) -> &'static str {
+        match _format {
             ExportFormat::Json => "json",
             ExportFormat::Yaml => "yaml",
             ExportFormat::Csv => "csv",
@@ -3055,11 +3050,11 @@ pub mod compression {
         }
 
         /// Apply compression to data
-        fn apply_compression(data: &[u8], config: &CompressionConfig) -> Result<Vec<u8>> {
+        fn apply_compression(_data: &[u8], config: &CompressionConfig) -> Result<Vec<u8>> {
             match config.algorithm {
                 CompressionAlgorithm::Gzip => {
                     let mut encoder = GzEncoder::new(Vec::new(), Compression::new(config.level));
-                    encoder.write_all(data).map_err(|e| {
+                    encoder.write_all(_data).map_err(|e| {
                         ClusteringError::InvalidInput(format!("Compression failed: {}", e))
                     })?;
                     encoder.finish().map_err(|e| {
@@ -3069,25 +3064,24 @@ pub mod compression {
                         ))
                     })
                 }
-                CompressionAlgorithm::None => Ok(data.to_vec()),
+                CompressionAlgorithm::None => Ok(_data.to_vec()),
 
                 #[cfg(feature = "lz4_compression")]
                 CompressionAlgorithm::Lz4 => {
                     use lz4::block::{compress, CompressionMode};
                     let mode = match config.level {
                         0..=3 => CompressionMode::FAST(config.level as i32),
-                        4..=9 => CompressionMode::HIGHCOMPRESSION(config.level as i32),
-                        _ => CompressionMode::FAST(1),
+                        4..=9 => CompressionMode::HIGHCOMPRESSION(config.level as i32, _ =>, CompressionMode::FAST(1),
                     };
 
-                    compress(data, Some(mode), true).map_err(|e| {
+                    compress(_data, Some(mode), true).map_err(|e| {
                         ClusteringError::InvalidInput(format!("LZ4 compression failed: {}", e))
                     })
                 }
 
                 #[cfg(feature = "zstd_compression")]
                 CompressionAlgorithm::Zstd => {
-                    zstd::stream::encode_all(std::io::Cursor::new(data), config.level as i32)
+                    zstd::stream::encode_all(std::io::Cursor::new(_data), config.level as i32)
                         .map_err(|e| {
                             ClusteringError::InvalidInput(format!("Zstd compression failed: {}", e))
                         })
@@ -3099,12 +3093,11 @@ pub mod compression {
                     use bzip2::Compression as BzCompression;
 
                     let compression_level = match config.level {
-                        0..=9 => BzCompression::new(config.level),
-                        _ => BzCompression::new(6), // Default level
+                        0..=9 => BzCompression::new(config.level, _ =>, BzCompression::new(6), // Default level
                     };
 
                     let mut encoder = BzEncoder::new(Vec::new(), compression_level);
-                    encoder.write_all(data).map_err(|e| {
+                    encoder.write_all(_data).map_err(|e| {
                         ClusteringError::InvalidInput(format!("Bzip2 compression failed: {}", e))
                     })?;
                     encoder.finish().map_err(|e| {
@@ -3119,7 +3112,7 @@ pub mod compression {
                 _ => {
                     // Always fall back to gzip for unknown algorithms
                     let mut encoder = GzEncoder::new(Vec::new(), Compression::new(config.level));
-                    encoder.write_all(data).map_err(|e| {
+                    encoder.write_all(_data).map_err(|e| {
                         ClusteringError::InvalidInput(format!("Compression failed: {}", e))
                     })?;
                     encoder.finish().map_err(|e| {
@@ -3133,30 +3126,30 @@ pub mod compression {
         }
 
         /// Apply decompression to data
-        fn apply_decompression(data: &[u8], info: &CompressionInfo) -> Result<Vec<u8>> {
+        fn apply_decompression(_data: &[u8], info: &CompressionInfo) -> Result<Vec<u8>> {
             match info.algorithm.as_str() {
                 "Gzip" => {
-                    let mut decoder = GzDecoder::new(data);
+                    let mut decoder = GzDecoder::new(_data);
                     let mut decompressed = Vec::new();
                     decoder.read_to_end(&mut decompressed).map_err(|e| {
                         ClusteringError::InvalidInput(format!("Decompression failed: {}", e))
                     })?;
                     Ok(decompressed)
                 }
-                "None" => Ok(data.to_vec()),
+                "None" => Ok(_data.to_vec()),
 
                 #[cfg(feature = "lz4_compression")]
                 "Lz4" => {
                     use lz4::block::decompress;
                     // LZ4 requires knowing the original size, so we need to store it
                     // For now, we'll use a large buffer and hope it's enough
-                    decompress(data, None).map_err(|e| {
+                    decompress(_data, None).map_err(|e| {
                         ClusteringError::InvalidInput(format!("LZ4 decompression failed: {}", e))
                     })
                 }
 
                 #[cfg(feature = "zstd_compression")]
-                "Zstd" => zstd::stream::decode_all(std::io::Cursor::new(data)).map_err(|e| {
+                "Zstd" => zstd::stream::decode_all(std::io::Cursor::new(_data)).map_err(|e| {
                     ClusteringError::InvalidInput(format!("Zstd decompression failed: {}", e))
                 }),
 
@@ -3164,7 +3157,7 @@ pub mod compression {
                 "Bzip2" => {
                     use bzip2::read::BzDecoder;
 
-                    let mut decoder = BzDecoder::new(data);
+                    let mut decoder = BzDecoder::new(_data);
                     let mut decompressed = Vec::new();
                     decoder.read_to_end(&mut decompressed).map_err(|e| {
                         ClusteringError::InvalidInput(format!("Bzip2 decompression failed: {}", e))
@@ -3175,7 +3168,7 @@ pub mod compression {
                 // Fallback for unknown algorithms - always use gzip
                 _ => {
                     // Default to gzip for unknown algorithms
-                    let mut decoder = GzDecoder::new(data);
+                    let mut decoder = GzDecoder::new(_data);
                     let mut decompressed = Vec::new();
                     decoder.read_to_end(&mut decompressed).map_err(|e| {
                         ClusteringError::InvalidInput(format!("Decompression failed: {}", e))
@@ -3269,7 +3262,7 @@ pub enum AlgorithmState {
         parameters: HashMap<String, serde_json::Value>,
         iteration: usize,
         completed: bool,
-        state_data: serde_json::Value,
+        state_data: serde, _json: Value,
     },
 }
 
@@ -3307,17 +3300,17 @@ pub struct WorkflowConfig {
 
 impl ClusteringWorkflow {
     /// Create a new clustering workflow
-    pub fn new(id: String, name: String, algorithm: String) -> Self {
+    pub fn new(_id: String, name: String, algorithm: String) -> Self {
         let timestamp = current_timestamp();
         Self {
-            id,
+            _id,
             name,
             algorithm_state: AlgorithmState::Generic {
                 algorithm_name: algorithm.clone(),
                 parameters: HashMap::new(),
                 iteration: 0,
                 completed: false,
-                state_data: serde_json::Value::Null,
+                state_data: serde, _json: Value::Null,
             },
             data_hash: String::new(),
             training_history: Vec::new(),
@@ -3431,9 +3424,9 @@ impl Default for AutoSaveConfig {
 
 impl ClusteringWorkflowManager {
     /// Create a new workflow manager
-    pub fn new<P: Into<PathBuf>>(base_dir: P) -> Self {
+    pub fn new<P: Into<PathBuf>>(_base_dir: P) -> Self {
         Self {
-            base_dir: base_dir.into(),
+            base_dir: _base_dir.into(),
             auto_save_config: AutoSaveConfig::default(),
         }
     }
@@ -3575,13 +3568,13 @@ impl HierarchicalModel {
 
     /// Build JSON tree structure for dendrogram
     fn build_json_tree_structure(&self) -> Result<serde_json::Value> {
-        use serde_json::{json, Value};
+        use serde__json::{_json, Value};
 
         let n_samples = self.n_observations;
         let linkage = &self.linkage;
 
         if linkage.nrows() == 0 {
-            return Ok(json!({
+            return Ok(_json!({
                 "type": "dendrogram",
                 "n_samples": n_samples,
                 "tree": null,
@@ -3595,7 +3588,7 @@ impl HierarchicalModel {
         // Build the tree recursively
         let root_node = self.build_node_recursive(linkage.nrows() - 1, linkage, n_samples)?;
 
-        Ok(json!({
+        Ok(_json!({
             "type": "dendrogram",
             "n_samples": n_samples,
             "method": self.method,
@@ -3616,7 +3609,7 @@ impl HierarchicalModel {
         linkage: &Array2<f64>,
         n_samples: usize,
     ) -> Result<serde_json::Value> {
-        use serde_json::json;
+        use serde__json::_json;
 
         if merge_idx >= linkage.nrows() {
             return Err(ClusteringError::InvalidInput(format!(
@@ -3635,7 +3628,7 @@ impl HierarchicalModel {
         // Determine if children are leaves or internal nodes
         let left_child = if left_id < n_samples {
             // Leaf node
-            json!({
+            _json!({
                 "type": "leaf",
                 "id": left_id,
                 "label": self.labels.as_ref()
@@ -3652,7 +3645,7 @@ impl HierarchicalModel {
 
         let right_child = if right_id < n_samples {
             // Leaf node
-            json!({
+            _json!({
                 "type": "leaf",
                 "id": right_id,
                 "label": self.labels.as_ref()
@@ -3667,7 +3660,7 @@ impl HierarchicalModel {
             self.build_node_recursive(internal_idx, linkage, n_samples)?
         };
 
-        Ok(json!({
+        Ok(_json!({
             "type": "internal",
             "id": n_samples + merge_idx,
             "distance": distance,
@@ -3680,24 +3673,25 @@ impl HierarchicalModel {
 }
 
 /// Import functions for scikit-learn and SciPy models
-impl compatibility {
+pub mod compatibility {
+    use super::*;
     /// Import K-means model from scikit-learn JSON format
-    pub fn import_sklearn_kmeans<P: AsRef<Path>>(path: P) -> Result<KMeansModel> {
-        let content = std::fs::read_to_string(path)
+    pub fn import_sklearn_kmeans<P: AsRef<Path>>(_path: P) -> Result<KMeansModel> {
+        let content = std::fs::read_to_string(_path)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to read file: {}", e)))?;
 
-        let json_value: serde_json::Value = serde_json::from_str(&content)
+        let json_value: serde, _json: Value = serde_json::from_str(&content)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to parse JSON: {}", e)))?;
 
         parse_sklearn_json_format(&json_value)
     }
 
     /// Import hierarchical clustering from SciPy JSON format
-    pub fn import_scipy_hierarchy<P: AsRef<Path>>(path: P) -> Result<HierarchicalModel> {
-        let content = std::fs::read_to_string(path)
+    pub fn import_scipy_hierarchy<P: AsRef<Path>>(_path: P) -> Result<HierarchicalModel> {
+        let content = std::fs::read_to_string(_path)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to read file: {}", e)))?;
 
-        let json_value: serde_json::Value = serde_json::from_str(&content)
+        let json_value: serde, _json: Value = serde_json::from_str(&content)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to parse JSON: {}", e)))?;
 
         parse_scipy_json_format(&json_value)
@@ -3708,7 +3702,7 @@ impl compatibility {
         model: &T,
         path: &Path,
     ) -> Result<()> {
-        let sklearn_format = to_sklearn_format(model)?;
+        let sklearn_format = compatibility::crate::serialization::compatibility::to_sklearn_format(model)?;
         let json_string = serde_json::to_string_pretty(&sklearn_format).map_err(|e| {
             ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e))
         })?;
@@ -3734,20 +3728,20 @@ impl compatibility {
 
 /// Parse scikit-learn JSON format
 #[allow(dead_code)]
-fn parse_sklearn_json_format(json: &serde_json::Value) -> Result<KMeansModel> {
-    let cluster_centers = json
+fn parse_sklearn_json_format(_json: &serde_json: :Value) -> Result<KMeansModel> {
+    let cluster_centers = _json
         .get("cluster_centers_")
         .ok_or_else(|| ClusteringError::InvalidInput("Missing cluster_centers_".to_string()))?;
 
-    let n_clusters = json
+    let n_clusters = _json
         .get("n_clusters")
         .and_then(|v| v.as_u64())
         .ok_or_else(|| ClusteringError::InvalidInput("Missing or invalid n_clusters".to_string()))?
         as usize;
 
-    let n_iter = json.get("n_iter_").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
+    let n_iter = _json.get("n_iter_").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
 
-    let inertia = json.get("inertia_").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let inertia = _json.get("inertia_").and_then(|v| v.as_f64()).unwrap_or(0.0);
 
     // Parse centroids array
     let centroids_data = cluster_centers.as_array().ok_or_else(|| {
@@ -3790,18 +3784,18 @@ fn parse_sklearn_json_format(json: &serde_json::Value) -> Result<KMeansModel> {
 
 /// Parse SciPy JSON format
 #[allow(dead_code)]
-fn parse_scipy_json_format(json: &serde_json::Value) -> Result<HierarchicalModel> {
-    let linkage_data = json
+fn parse_scipy_json_format(_json: &serde_json: :Value) -> Result<HierarchicalModel> {
+    let linkage_data = _json
         .get("linkage")
         .ok_or_else(|| ClusteringError::InvalidInput("Missing linkage matrix".to_string()))?;
 
-    let n_observations = json
+    let n_observations = _json
         .get("n_observations")
         .and_then(|v| v.as_u64())
         .ok_or_else(|| ClusteringError::InvalidInput("Missing n_observations".to_string()))?
         as usize;
 
-    let method = json
+    let method = _json
         .get("method")
         .and_then(|v| v.as_str())
         .unwrap_or("ward")
@@ -3839,7 +3833,7 @@ fn parse_scipy_json_format(json: &serde_json::Value) -> Result<HierarchicalModel
     })?;
 
     // Parse labels if present
-    let labels = json.get("labels").and_then(|v| v.as_array()).map(|arr| {
+    let labels = _json.get("labels").and_then(|v| v.as_array()).map(|arr| {
         arr.iter()
             .filter_map(|v| v.as_str())
             .map(|s| s.to_string())

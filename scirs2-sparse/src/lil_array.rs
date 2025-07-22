@@ -8,8 +8,8 @@ use num_traits::Float;
 use std::fmt::{self, Debug};
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::coo_array::CooArray;
-use crate::csr_array::CsrArray;
+use crate::coo__array::CooArray;
+use crate::csr__array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::{SparseArray, SparseSum};
 
@@ -65,15 +65,15 @@ where
     ///
     /// # Returns
     /// A new empty `LilArray`
-    pub fn new(shape: (usize, usize)) -> Self {
-        let (rows, _) = shape;
+    pub fn new(_shape: (usize, usize)) -> Self {
+        let (rows_) = _shape;
         let data = vec![Vec::new(); rows];
         let indices = vec![Vec::new(); rows];
 
         Self {
             data,
             indices,
-            shape,
+            _shape,
         }
     }
 
@@ -129,7 +129,7 @@ where
                 .copied()
                 .zip(row_data.iter().copied())
                 .collect();
-            pairs.sort_by_key(|&(idx, _)| idx);
+            pairs.sort_by_key(|&(idx_)| idx);
 
             // Extract sorted data
             let mut sorted_data = Vec::with_capacity(row_data.len());
@@ -235,7 +235,7 @@ where
                     .collect();
 
                 // Sort by column index
-                pairs.sort_by_key(|&(idx, _)| idx);
+                pairs.sort_by_key(|&(idx_)| idx);
 
                 // Extract sorted data
                 self.indices[row].clear();
@@ -309,7 +309,7 @@ where
     }
 
     fn to_csr(&self) -> SparseResult<Box<dyn SparseArray<T>>> {
-        let (rows, _cols) = self.shape;
+        let (rows_cols) = self.shape;
         let nnz = self.nnz();
 
         let mut data = Vec::with_capacity(nnz);
@@ -538,7 +538,7 @@ where
             }
             Some(1) => {
                 // Sum over columns
-                let (rows, _) = self.shape;
+                let (rows_) = self.shape;
                 let mut result = Array1::<T>::zeros(rows);
 
                 for row in 0..rows {

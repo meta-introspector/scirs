@@ -12,8 +12,8 @@
 //! ```no_run
 //! # #[cfg(feature = "dashboard_server")]
 //! # {
-//! use scirs2_metrics::dashboard::{InteractiveDashboard, DashboardConfig};
-//! use scirs2_metrics::dashboard::server::start_http_server;
+//! use scirs2__metrics::dashboard::{InteractiveDashboard, DashboardConfig};
+//! use scirs2__metrics::dashboard::server::start_http_server;
 //!
 //! let dashboard = InteractiveDashboard::default();
 //! dashboard.add_metric("accuracy", 0.95).unwrap();
@@ -111,7 +111,7 @@ pub struct MetricDataPoint {
 
 impl MetricDataPoint {
     /// Create a new metric data point
-    pub fn new(name: String, value: f64) -> Self {
+    pub fn new(_name: String, value: f64) -> Self {
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or(Duration::from_secs(0))
@@ -119,15 +119,15 @@ impl MetricDataPoint {
 
         Self {
             timestamp,
-            name,
+            _name,
             value,
             metadata: HashMap::new(),
         }
     }
 
     /// Create a new metric data point with metadata
-    pub fn with_metadata(name: String, value: f64, metadata: HashMap<String, String>) -> Self {
-        let mut point = Self::new(name, value);
+    pub fn with_metadata(_name: String, value: f64, metadata: HashMap<String, String>) -> Self {
+        let mut point = Self::new(_name, value);
         point.metadata = metadata;
         point
     }
@@ -144,10 +144,10 @@ pub struct DashboardData {
 
 impl DashboardData {
     /// Create new dashboard data storage
-    pub fn new(config: DashboardConfig) -> Self {
+    pub fn new(_config: DashboardConfig) -> Self {
         Self {
             data_points: Arc::new(Mutex::new(Vec::new())),
-            config,
+            _config,
         }
     }
 
@@ -260,10 +260,10 @@ pub struct InteractiveDashboard {
 
 impl InteractiveDashboard {
     /// Create new interactive dashboard
-    pub fn new(config: DashboardConfig) -> Self {
-        let data = DashboardData::new(config.clone());
+    pub fn new(_config: DashboardConfig) -> Self {
+        let data = DashboardData::new(_config.clone());
 
-        Self { data, config }
+        Self { data, _config }
     }
 }
 
@@ -299,7 +299,7 @@ impl InteractiveDashboard {
     ) -> Result<()> {
         if metric_names.len() != values.len() {
             return Err(MetricsError::InvalidInput(
-                "Metric names and values must have same length".to_string(),
+                "Metric _names and values must have same length".to_string(),
             ));
         }
 
@@ -651,9 +651,9 @@ pub enum WidgetType {
 
 impl DashboardWidget {
     /// Create new line chart widget
-    pub fn line_chart(id: String, title: String, metrics: Vec<String>) -> Self {
+    pub fn line_chart(_id: String, title: String, metrics: Vec<String>) -> Self {
         Self {
-            id,
+            _id,
             title,
             metrics,
             widget_type: WidgetType::LineChart,
@@ -662,9 +662,9 @@ impl DashboardWidget {
     }
 
     /// Create new gauge widget
-    pub fn gauge(id: String, title: String, metric: String) -> Self {
+    pub fn gauge(_id: String, title: String, metric: String) -> Self {
         Self {
-            id,
+            _id,
             title,
             metrics: vec![metric],
             widget_type: WidgetType::Gauge,
@@ -673,9 +673,9 @@ impl DashboardWidget {
     }
 
     /// Create new table widget
-    pub fn table(id: String, title: String, metrics: Vec<String>) -> Self {
+    pub fn table(_id: String, title: String, metrics: Vec<String>) -> Self {
         Self {
-            id,
+            _id,
             title,
             metrics,
             widget_type: WidgetType::Table,

@@ -3,13 +3,13 @@
 //! This module provides functionality for the Normal (Gaussian) distribution.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_messages::{helpers, validation};
+use crate::error__messages::{helpers, validation};
 use crate::sampling::SampleableDistribution;
 use crate::traits::{ContinuousDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Distribution as RandDistribution, Normal as RandNormal};
+use rand__distr::{Distribution as RandDistribution, Normal as RandNormal};
 
 /// Normal distribution structure
 pub struct Normal<F: Float> {
@@ -36,23 +36,23 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::normal::Normal;
+    /// use scirs2__stats::distributions::normal::Normal;
     ///
     /// let norm = Normal::new(0.0f64, 1.0).unwrap();
     /// ```
-    pub fn new(loc: F, scale: F) -> StatsResult<Self> {
+    pub fn new(_loc: F, scale: F) -> StatsResult<Self> {
         // Validate scale parameter
         validation::ensure_positive(scale, "scale")?;
 
         // Convert to f64 for rand_distr
-        let loc_f64 = <f64 as NumCast>::from(loc)
-            .ok_or_else(|| helpers::numerical_error("failed to convert loc to f64"))?;
+        let loc_f64 = <f64 as NumCast>::from(_loc)
+            .ok_or_else(|| helpers::numerical_error("failed to convert _loc to f64"))?;
         let scale_f64 = <f64 as NumCast>::from(scale)
             .ok_or_else(|| helpers::numerical_error("failed to convert scale to f64"))?;
 
         match RandNormal::new(loc_f64, scale_f64) {
             Ok(rand_distr) => Ok(Normal {
-                loc,
+                _loc,
                 scale,
                 rand_distr,
             }),
@@ -73,7 +73,7 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::normal::Normal;
+    /// use scirs2__stats::distributions::normal::Normal;
     ///
     /// let norm = Normal::new(0.0f64, 1.0).unwrap();
     /// let pdf_at_zero = norm.pdf(0.0);
@@ -104,7 +104,7 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::normal::Normal;
+    /// use scirs2__stats::distributions::normal::Normal;
     ///
     /// let norm = Normal::new(0.0f64, 1.0).unwrap();
     /// let cdf_at_zero = norm.cdf(0.0);
@@ -141,14 +141,14 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::normal::Normal;
+    /// use scirs2__stats::distributions::normal::Normal;
     ///
     /// let norm = Normal::new(0.0f64, 1.0).unwrap();
     /// let x = norm.ppf(0.975).unwrap();
     /// assert!((x - 1.96).abs() < 1e-2);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p > F::one() {
+        if p < F::zero() || p >, F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));
@@ -204,7 +204,7 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::normal::Normal;
+    /// use scirs2__stats::distributions::normal::Normal;
     ///
     /// let norm = Normal::new(0.0f64, 1.0).unwrap();
     /// let samples = norm.rvs(1000).unwrap();

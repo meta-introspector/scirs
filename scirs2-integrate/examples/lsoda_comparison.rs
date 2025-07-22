@@ -1,5 +1,5 @@
 use ndarray::{array, ArrayView1};
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions, ODEResult};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions, ODEResult};
 use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
@@ -385,22 +385,22 @@ fn main() {
 
 // Helper function to save solution trajectory to a CSV file
 #[allow(dead_code)]
-fn save_trajectory(result: &ODEResult<f64>, filename: &str) {
+fn save_trajectory(_result: &ODEResult<f64>, filename: &str) {
     let mut file = File::create(filename).unwrap();
     writeln!(
         &mut file,
         "t,{}",
-        (0..result.y[0].len())
+        (0.._result.y[0].len())
             .map(|i| format!("y{}", i + 1))
             .collect::<Vec<_>>()
             .join(",")
     )
     .unwrap();
 
-    for i in 0..result.t.len() {
-        let t = result.t[i];
-        let y_values = (0..result.y[i].len())
-            .map(|j| format!("{:.10e}", result.y[i][j]))
+    for i in 0.._result.t.len() {
+        let t = _result.t[i];
+        let y_values = (0.._result.y[i].len())
+            .map(|j| format!("{:.10e}", _result.y[i][j]))
             .collect::<Vec<_>>()
             .join(",");
 

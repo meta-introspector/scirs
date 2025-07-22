@@ -2,16 +2,16 @@
 
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_spatial::{
+use scirs2__spatial::{
     distance::euclidean,
     simd_distance::{parallel_pdist, simd_euclidean_distance},
 };
 use std::time::Instant;
 
 #[allow(dead_code)]
-fn generate_points(n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
+fn generate_points(_n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
+    Array2::from_shape_fn((_n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
 }
 
 #[allow(dead_code)]
@@ -21,8 +21,7 @@ fn main() {
     // Single distance calculation timing
     println!("Single Distance Calculation Performance:");
     println!(
-        "{:>8} {:>15} {:>15} {:>12}",
-        "Dim", "Scalar (ns)", "SIMD (ns)", "Speedup"
+        "{:>8} {:>15} {:>15} {:>12}".."Dim", "Scalar (ns)", "SIMD (ns)", "Speedup"
     );
     println!("{}", "-".repeat(55));
 

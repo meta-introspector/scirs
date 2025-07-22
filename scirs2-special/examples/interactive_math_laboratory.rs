@@ -12,8 +12,8 @@
 //! Run with: cargo run --example interactive_math_laboratory
 
 use ndarray::Array1;
-use num_complex::Complex64;
-use scirs2_special::*;
+use num__complex::Complex64;
+use scirs2__special::*;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 use std::io::{self, Write};
@@ -540,7 +540,7 @@ impl MathLaboratory {
             .visualization_state
             .active_plots
             .iter()
-            .find(|p| p.id == plot_id)
+            .find(|p| p._id == plot_id)
             .ok_or("Plot not found")?;
 
         let mut output = String::new();
@@ -567,8 +567,7 @@ impl MathLaboratory {
                 expr if expr.contains("j1") => j1(x),
                 expr if expr.contains("erf") => erf(x),
                 expr if expr.contains("sin") => x.sin(),
-                expr if expr.contains("cos") => x.cos(),
-                _ => x * x, // Default quadratic
+                expr if expr.contains("cos") => x.cos(, _ => x * x, // Default quadratic
             };
 
             if y.is_finite() {
@@ -885,7 +884,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn setup_laboratory_session(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
+fn setup_laboratory_session(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 Laboratory Setup");
     println!("===================\n");
 
@@ -898,30 +897,29 @@ fn setup_laboratory_session(lab: &mut MathLaboratory) -> Result<(), Box<dyn std:
 
     let mode_choice = get_user_input("Choose exploration mode (1-5): ")?;
 
-    lab.current_session.exploration_mode = match mode_choice.as_str() {
+    _lab.current_session.exploration_mode = match mode_choice.as_str() {
         "1" => ExplorationMode::Guided,
         "2" => ExplorationMode::Exploratory,
         "3" => ExplorationMode::ProblemSolving,
         "4" => ExplorationMode::Research,
-        "5" => ExplorationMode::Teaching,
-        _ => ExplorationMode::Guided,
+        "5" => ExplorationMode::Teaching_ =>, ExplorationMode::Guided,
     };
 
     let difficulty = get_user_input("Preferred difficulty level (1-5): ")?;
     if let Ok(diff) = difficulty.parse::<u32>() {
-        lab.current_session.difficulty_preference = diff.min(5).max(1);
+        _lab.current_session.difficulty_preference = diff.min(5).max(1);
     }
 
     let focus_areas = get_user_input("Focus areas (e.g., 'gamma functions, bessel functions'): ")?;
-    lab.current_session.focus_areas = focus_areas
+    _lab.current_session.focus_areas = focus_areas
         .split(',')
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .collect();
 
     println!("\n✅ Laboratory session configured!");
-    println!("Mode: {:?}", lab.current_session.exploration_mode);
-    println!("Focus areas: {:?}", lab.current_session.focus_areas);
+    println!("Mode: {:?}", _lab.current_session.exploration_mode);
+    println!("Focus areas: {:?}", _lab.current_session.focus_areas);
 
     Ok(())
 }
@@ -943,7 +941,7 @@ fn display_laboratory_menu() {
 }
 
 #[allow(dead_code)]
-fn run_expression_evaluator(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
+fn run_expression_evaluator(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚡ Expression Evaluator & Calculator");
     println!("=====================================\n");
 
@@ -969,7 +967,7 @@ fn run_expression_evaluator(lab: &mut MathLaboratory) -> Result<(), Box<dyn std:
             }
             "history" => {
                 println!("\n📋 Recent Evaluations:");
-                for (i, expr) in lab.expression_history.iter().rev().take(10).enumerate() {
+                for (i, expr) in _lab.expression_history.iter().rev().take(10).enumerate() {
                     if let Some(result) = expr.result {
                         println!("  {}: {} = {:.8}", i + 1, expr.expression, result);
                     } else if let Some(ref error) = expr.error {
@@ -981,7 +979,7 @@ fn run_expression_evaluator(lab: &mut MathLaboratory) -> Result<(), Box<dyn std:
             _ => {}
         }
 
-        match lab.evaluate_expression(&input) {
+        match _lab.evaluate_expression(&input) {
             Ok(result) => {
                 println!("✅ Result: {:.12}", result);
 
@@ -1004,10 +1002,10 @@ fn run_expression_evaluator(lab: &mut MathLaboratory) -> Result<(), Box<dyn std:
 }
 
 #[allow(dead_code)]
-fn provide_mathematical_insights(expression: &str, result: f64) {
+fn provide_mathematical_insights(_expression: &str, result: f64) {
     // Provide context and insights about the result
 
-    if expression.contains("gamma") {
+    if _expression.contains("gamma") {
         if (result - 1.0).abs() < 1e-10 {
             println!("💡 This equals 1, which could be Γ(1) or Γ(2)");
         } else if (result - PI.sqrt()).abs() < 1e-10 {
@@ -1017,7 +1015,7 @@ fn provide_mathematical_insights(expression: &str, result: f64) {
         }
     }
 
-    if expression.contains("j0") || expression.contains("j1") {
+    if _expression.contains("j0") || _expression.contains("j1") {
         if result.abs() < 1e-10 {
             println!("💡 This is very close to zero - you may have found a Bessel function zero!");
         } else if result.abs() > 0.9 {
@@ -1027,7 +1025,7 @@ fn provide_mathematical_insights(expression: &str, result: f64) {
         }
     }
 
-    if expression.contains("erf") {
+    if _expression.contains("erf") {
         if (result - 1.0).abs() < 1e-10 {
             println!("💡 erf(∞) = 1, so you're evaluating at a large argument");
         } else if result.abs() < 1e-10 {
@@ -1046,26 +1044,26 @@ fn provide_mathematical_insights(expression: &str, result: f64) {
 }
 
 #[allow(dead_code)]
-fn suggest_corrections(input: &str) {
+fn suggest_corrections(_input: &str) {
     println!("💡 Suggestions:");
 
-    if input.contains("Gamma") || input.contains("GAMMA") {
+    if _input.contains("Gamma") || _input.contains("GAMMA") {
         println!("  • Try 'gamma' (lowercase) instead of 'Gamma'");
     }
 
-    if input.contains("sin") || input.contains("cos") || input.contains("tan") {
+    if _input.contains("sin") || _input.contains("cos") || _input.contains("tan") {
         println!("  • Trigonometric functions not yet implemented");
         println!("  • Available: gamma, j0, j1, erf, erfc, beta");
     }
 
-    if input.contains("factorial") || input.contains("!") {
+    if _input.contains("factorial") || _input.contains("!") {
         println!("  • Use gamma(n+1) instead of n!");
         println!("  • Example: 5! = gamma(6)");
     }
 
-    if input.chars().any(|c| c == '(' || c == ')') {
-        let open_parens = input.chars().filter(|&c| c == '(').count();
-        let close_parens = input.chars().filter(|&c| c == ')').count();
+    if _input.chars().any(|c| c == '(' || c == ')') {
+        let open_parens = _input.chars().filter(|&c| c == '(').count();
+        let close_parens = _input.chars().filter(|&c| c == ')').count();
         if open_parens != close_parens {
             println!(
                 "  • Check parentheses: {} open, {} close",
@@ -1109,14 +1107,14 @@ fn explore_theorems_interactively(
 }
 
 #[allow(dead_code)]
-fn explore_specific_theorem(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n📚 Theorem: {}", theorem.theorem_name);
-    println!("{}", "=".repeat(theorem.theorem_name.len() + 10));
+fn explore_specific_theorem(_theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
+    println!("\n📚 Theorem: {}", _theorem.theorem_name);
+    println!("{}", "=".repeat(_theorem.theorem_name.len() + 10));
     println!();
 
-    println!("📝 Statement: {}", theorem.statement);
-    println!("🎯 Difficulty: {}/5", theorem.difficulty_level);
-    println!("📋 Prerequisites: {}", theorem.prerequisites.join(", "));
+    println!("📝 Statement: {}", _theorem.statement);
+    println!("🎯 Difficulty: {}/5", _theorem.difficulty_level);
+    println!("📋 Prerequisites: {}", _theorem.prerequisites.join(", "));
     println!();
 
     loop {
@@ -1126,30 +1124,29 @@ fn explore_specific_theorem(theorem: &TheoremExplorer) -> Result<(), Box<dyn std
         println!("3. 🔗 See related theorems");
         println!("4. 🎯 View applications");
         println!("5. 🧪 Interactive verification");
-        println!("6. ← Back to theorem list");
+        println!("6. ← Back to _theorem list");
 
         let choice = get_user_input("Choice (1-6): ")?;
 
         match choice.as_str() {
-            "1" => step_through_proof(theorem)?,
-            "2" => work_with_examples(theorem)?,
+            "1" => step_through_proof(_theorem)?,
+            "2" => work_with_examples(_theorem)?,
             "3" => {
                 println!("\n🔗 Related theorems:");
-                for related in &theorem.related_theorems {
+                for related in &_theorem.related_theorems {
                     println!("  • {}", related);
                 }
                 wait_for_enter()?;
             }
             "4" => {
                 println!("\n🎯 Applications:");
-                for app in &theorem.applications {
+                for app in &_theorem.applications {
                     println!("  • {}", app);
                 }
                 wait_for_enter()?;
             }
-            "5" => interactive_verification(theorem)?,
-            "6" => break,
-            _ => println!("❌ Invalid choice"),
+            "5" => interactive_verification(_theorem)?,
+            "6" => break_ => println!("❌ Invalid choice"),
         }
     }
 
@@ -1157,12 +1154,12 @@ fn explore_specific_theorem(theorem: &TheoremExplorer) -> Result<(), Box<dyn std
 }
 
 #[allow(dead_code)]
-fn step_through_proof(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n📖 Proof of: {}", theorem.theorem_name);
-    println!("{}", "=".repeat(theorem.theorem_name.len() + 12));
+fn step_through_proof(_theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
+    println!("\n📖 Proof of: {}", _theorem.theorem_name);
+    println!("{}", "=".repeat(_theorem.theorem_name.len() + 12));
     println!();
 
-    for (i, step) in theorem.proof_steps.iter().enumerate() {
+    for (i, step) in _theorem.proof_steps.iter().enumerate() {
         println!("📝 Step {}: {}", step.step_number, step.description);
         println!("{}", "─".repeat(50));
         println!("{}", step.mathematical_content);
@@ -1210,11 +1207,10 @@ fn step_through_proof(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
                 provide_step_explanation(&question, step);
                 wait_for_enter()?;
             }
-            "5" => break,
-            _ => println!("❌ Invalid choice"),
+            "5" => break_ => println!("❌ Invalid choice"),
         }
 
-        if i < theorem.proof_steps.len() - 1 {
+        if i < _theorem.proof_steps.len() - 1 {
             println!("{}", "\n".to_string() + &"─".repeat(70) + "\n");
         }
     }
@@ -1222,16 +1218,16 @@ fn step_through_proof(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
     println!("\n🎉 Proof completed!");
     println!(
         "You've worked through the complete proof of: {}",
-        theorem.theorem_name
+        _theorem.theorem_name
     );
 
     Ok(())
 }
 
 #[allow(dead_code)]
-fn provide_step_explanation(question: &str, step: &ProofStep) {
-    // Provide context-aware explanations based on the question
-    let question_lower = question.to_lowercase();
+fn provide_step_explanation(_question: &str, step: &ProofStep) {
+    // Provide context-aware explanations based on the _question
+    let question_lower = _question.to_lowercase();
 
     if question_lower.contains("why") {
         println!("💭 The reasoning for this step:");
@@ -1255,11 +1251,11 @@ fn provide_step_explanation(question: &str, step: &ProofStep) {
 }
 
 #[allow(dead_code)]
-fn work_with_examples(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
+fn work_with_examples(_theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧮 Working with Examples");
     println!("========================\n");
 
-    for (i, example) in theorem.examples.iter().enumerate() {
+    for (i, example) in _theorem.examples.iter().enumerate() {
         println!("📚 Example {}: {}", i + 1, example.description);
         println!("{}", "─".repeat(40));
 
@@ -1269,8 +1265,8 @@ fn work_with_examples(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
             println!("  {} = {}", var, value);
         }
 
-        // Calculate result based on theorem
-        let calculated_result = calculate_theorem_result(theorem, &example.input_values);
+        // Calculate result based on _theorem
+        let calculated_result = calculate_theorem_result(_theorem, &example.input_values);
 
         println!("\nExpected result: {:.12}", example.expected_result);
         if let Some(result) = calculated_result {
@@ -1289,7 +1285,7 @@ fn work_with_examples(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
 
         println!("\n💡 Explanation: {}", example.explanation);
 
-        if i < theorem.examples.len() - 1 {
+        if i < _theorem.examples.len() - 1 {
             wait_for_enter()?;
             println!();
         }
@@ -1302,7 +1298,7 @@ fn work_with_examples(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
     if custom_input != "done" {
         // Parse and test custom values
         println!("🧮 Testing custom values...");
-        // Implementation would depend on specific theorem
+        // Implementation would depend on specific _theorem
     }
 
     Ok(())
@@ -1348,14 +1344,14 @@ fn calculate_theorem_result(
 }
 
 #[allow(dead_code)]
-fn interactive_verification(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
+fn interactive_verification(_theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧪 Interactive Verification");
     println!("===========================\n");
 
-    println!("🎯 Let's verify the theorem: {}", theorem.theorem_name);
-    println!("Enter values to test the theorem relationship.\n");
+    println!("🎯 Let's verify the _theorem: {}", _theorem.theorem_name);
+    println!("Enter values to test the _theorem relationship.\n");
 
-    match theorem.theorem_name.as_str() {
+    match _theorem.theorem_name.as_str() {
         "Gamma Function Reflection Formula" => loop {
             let z_input = get_user_input("Enter z value (0 < z < 1, or 'done'): ")?;
             if z_input == "done" {
@@ -1385,9 +1381,8 @@ fn interactive_verification(theorem: &TheoremExplorer) -> Result<(), Box<dyn std
             } else {
                 println!("❌ Invalid number format");
             }
-        },
-        _ => {
-            println!("Interactive verification not yet implemented for this theorem.");
+        }_ => {
+            println!("Interactive verification not yet implemented for this _theorem.");
         }
     }
 
@@ -1395,7 +1390,7 @@ fn interactive_verification(theorem: &TheoremExplorer) -> Result<(), Box<dyn std
 }
 
 #[allow(dead_code)]
-fn create_visualizations(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
+fn create_visualizations(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Mathematical Visualizations");
     println!("==============================\n");
 
@@ -1410,20 +1405,19 @@ fn create_visualizations(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::er
     let choice = get_user_input("Choose visualization type (1-6): ")?;
 
     match choice.as_str() {
-        "1" => create_function_plots(lab)?,
-        "2" => create_complex_visualizations(lab)?,
-        "3" => create_animations(lab)?,
-        "4" => create_comparative_plots(lab)?,
-        "5" => interactive_parameter_exploration(lab)?,
-        "6" => return Ok(()),
-        _ => println!("❌ Invalid choice"),
+        "1" => create_function_plots(_lab)?,
+        "2" => create_complex_visualizations(_lab)?,
+        "3" => create_animations(_lab)?,
+        "4" => create_comparative_plots(_lab)?,
+        "5" => interactive_parameter_exploration(_lab)?,
+        "6" => return Ok((), _ => println!("❌ Invalid choice"),
     }
 
     Ok(())
 }
 
 #[allow(dead_code)]
-fn create_function_plots(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
+fn create_function_plots(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Function Plotting");
     println!("===================\n");
 
@@ -1431,8 +1425,8 @@ fn create_function_plots(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::er
     let x_min = get_user_input("X minimum: ")?.parse::<f64>().unwrap_or(0.1);
     let x_max = get_user_input("X maximum: ")?.parse::<f64>().unwrap_or(5.0);
 
-    let plot_id = lab.create_plot(&function, (x_min, x_max))?;
-    let ascii_plot = lab.render_ascii_plot(&plot_id, 60, 20)?;
+    let plot_id = _lab.create_plot(&function, (x_min, x_max))?;
+    let ascii_plot = _lab.render_ascii_plot(&plot_id, 60, 20)?;
 
     println!("\n{}", ascii_plot);
 
@@ -1441,7 +1435,7 @@ fn create_function_plots(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::er
     let analyze = get_user_input("")?;
 
     if analyze.to_lowercase() == "y" {
-        let analysis = lab.analyze_function_behavior(&function, (x_min, x_max));
+        let analysis = _lab.analyze_function_behavior(&function, (x_min, x_max));
         display_function_analysis(&analysis);
     }
 
@@ -1449,40 +1443,40 @@ fn create_function_plots(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::er
 }
 
 #[allow(dead_code)]
-fn display_function_analysis(analysis: &FunctionAnalysis) {
-    println!("\n🔍 Function Analysis: {}", analysis.function_expr);
+fn display_function_analysis(_analysis: &FunctionAnalysis) {
+    println!("\n🔍 Function Analysis: {}", _analysis.function_expr);
     println!("{}", "=".repeat(30));
 
-    if !analysis.zeros.is_empty() {
+    if !_analysis.zeros.is_empty() {
         println!("🎯 Zeros found:");
-        for (i, &zero) in analysis.zeros.iter().take(5).enumerate() {
+        for (i, &zero) in _analysis.zeros.iter().take(5).enumerate() {
             println!("  Zero {}: x ≈ {:.6}", i + 1, zero);
         }
-        if analysis.zeros.len() > 5 {
-            println!("  ... and {} more", analysis.zeros.len() - 5);
+        if _analysis.zeros.len() > 5 {
+            println!("  ... and {} more", _analysis.zeros.len() - 5);
         }
     }
 
-    if !analysis.extrema.is_empty() {
+    if !_analysis.extrema.is_empty() {
         println!("\n📊 Extrema found:");
-        for (i, &(x, y)) in analysis.extrema.iter().take(3).enumerate() {
+        for (i, &(x, y)) in _analysis.extrema.iter().take(3).enumerate() {
             println!("  Extremum {}: ({:.6}, {:.6})", i + 1, x, y);
         }
-        if analysis.extrema.len() > 3 {
-            println!("  ... and {} more", analysis.extrema.len() - 3);
+        if _analysis.extrema.len() > 3 {
+            println!("  ... and {} more", _analysis.extrema.len() - 3);
         }
     }
 
-    if !analysis.asymptotes.is_empty() {
+    if !_analysis.asymptotes.is_empty() {
         println!("\n📈 Potential asymptotes:");
-        for &x in analysis.asymptotes.iter().take(3) {
+        for &x in _analysis.asymptotes.iter().take(3) {
             println!("  Near x = {:.6}", x);
         }
     }
 
-    if !analysis.discontinuities.is_empty() {
+    if !_analysis.discontinuities.is_empty() {
         println!("\n❌ Discontinuities:");
-        for &x in analysis.discontinuities.iter().take(3) {
+        for &x in _analysis.discontinuities.iter().take(3) {
             println!("  At x = {:.6}", x);
         }
     }
@@ -1524,8 +1518,7 @@ fn create_animations(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error
         "1" => animate_bessel_family()?,
         "2" => animate_gamma_poles()?,
         "3" => animate_error_convergence()?,
-        "4" => animate_parameter_variation()?,
-        _ => println!("❌ Invalid choice"),
+        "4" => animate_parameter_variation()?_ => println!("❌ Invalid choice"),
     }
 
     Ok(())
@@ -1550,8 +1543,7 @@ fn animate_bessel_family() -> Result<(), Box<dyn std::error::Error>> {
             let x = i as f64 * 0.5;
             let j_val = match n {
                 0 => j0(x),
-                1 => j1(x),
-                _ => jn(n, x),
+                1 => j1(x, _ => jn(n, x),
             };
 
             let normalized = ((j_val + 1.0) * 20.0) as i32;
@@ -1697,8 +1689,7 @@ fn interactive_parameter_exploration(
     match choice.as_str() {
         "1" => explore_bessel_parameters()?,
         "2" => explore_gamma_parameters()?,
-        "3" => explore_erf_parameters()?,
-        _ => println!("❌ Invalid choice"),
+        "3" => explore_erf_parameters()?_ => println!("❌ Invalid choice"),
     }
 
     Ok(())
@@ -1857,8 +1848,7 @@ fn run_function_analysis(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::e
         "2" => analyze_symmetry()?,
         "3" => study_asymptotic_behavior()?,
         "4" => investigate_numerical_properties()?,
-        "5" => explore_function_relationships()?,
-        _ => println!("❌ Invalid choice"),
+        "5" => explore_function_relationships()?_ => println!("❌ Invalid choice"),
     }
 
     Ok(())
@@ -2131,13 +2121,13 @@ fn explore_function_relationships() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn run_mathematical_discovery(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
+fn run_mathematical_discovery(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔬 Mathematical Discovery Engine");
     println!("================================\n");
 
     println!("🎯 Searching for patterns and relationships...");
 
-    let discoveries = lab.discover_patterns();
+    let discoveries = _lab.discover_patterns();
 
     if discoveries.is_empty() {
         println!("🔍 No new patterns detected in current session.");
@@ -2207,8 +2197,7 @@ fn run_computational_experiments(
         "2" => run_monte_carlo_experiments()?,
         "3" => analyze_parameter_sensitivity()?,
         "4" => benchmark_performance()?,
-        "5" => analyze_precision_requirements()?,
-        _ => println!("❌ Invalid choice"),
+        "5" => analyze_precision_requirements()?_ => println!("❌ Invalid choice"),
     }
 
     Ok(())
@@ -2461,41 +2450,41 @@ fn analyze_precision_requirements() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn display_session_summary(lab: &MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
+fn display_session_summary(_lab: &MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Laboratory Session Summary");
     println!("=============================\n");
 
-    let session_duration = lab.current_session.start_time.elapsed();
+    let session_duration = _lab.current_session.start_time.elapsed();
 
     println!("🔬 Session Information:");
-    println!("  Session ID: {}", lab.current_session.session_id);
+    println!("  Session ID: {}", _lab.current_session.session_id);
     println!(
         "  Duration: {:.1} minutes",
         session_duration.as_secs_f64() / 60.0
     );
-    println!("  Mode: {:?}", lab.current_session.exploration_mode);
-    println!("  Focus areas: {:?}", lab.current_session.focus_areas);
+    println!("  Mode: {:?}", _lab.current_session.exploration_mode);
+    println!("  Focus areas: {:?}", _lab.current_session.focus_areas);
 
     println!("\n📊 Activity Summary:");
-    println!("  Expressions evaluated: {}", lab.expression_history.len());
+    println!("  Expressions evaluated: {}", _lab.expression_history.len());
     println!(
         "  Active plots: {}",
-        lab.visualization_state.active_plots.len()
+        _lab.visualization_state.active_plots.len()
     );
-    println!("  Discoveries logged: {}", lab.discovery_log.len());
+    println!("  Discoveries logged: {}", _lab.discovery_log.len());
 
-    if !lab.expression_history.is_empty() {
+    if !_lab.expression_history.is_empty() {
         println!("\n🧮 Recent Evaluations:");
-        for (i, expr) in lab.expression_history.iter().rev().take(5).enumerate() {
+        for (i, expr) in _lab.expression_history.iter().rev().take(5).enumerate() {
             if let Some(result) = expr.result {
                 println!("  {}: {} = {:.8}", i + 1, expr.expression, result);
             }
         }
     }
 
-    if !lab.discovery_log.is_empty() {
+    if !_lab.discovery_log.is_empty() {
         println!("\n🔬 Discoveries:");
-        for discovery in &lab.discovery_log {
+        for discovery in &_lab.discovery_log {
             println!(
                 "  • {} (Significance: {}/10)",
                 discovery.description, discovery.significance
@@ -2504,17 +2493,17 @@ fn display_session_summary(lab: &MathLaboratory) -> Result<(), Box<dyn std::erro
     }
 
     println!("\n💡 Session Insights:");
-    analyze_session_patterns(lab);
+    analyze_session_patterns(_lab);
 
     Ok(())
 }
 
 #[allow(dead_code)]
-fn analyze_session_patterns(lab: &MathLaboratory) {
+fn analyze_session_patterns(_lab: &MathLaboratory) {
     // Analyze patterns in the user's exploration
     let mut function_usage = HashMap::new();
 
-    for expr in &lab.expression_history {
+    for expr in &_lab.expression_history {
         if expr.expression.contains("gamma") {
             *function_usage.entry("gamma").or_insert(0) += 1;
         }
@@ -2538,7 +2527,7 @@ fn analyze_session_patterns(lab: &MathLaboratory) {
 
     // Suggest next steps
     println!("\n🎯 Suggested next explorations:");
-    match lab.current_session.exploration_mode {
+    match _lab.current_session.exploration_mode {
         ExplorationMode::Guided => {
             println!("  • Try the theorem explorer for deeper understanding");
             println!("  • Use visualization tools to see function behavior");
@@ -2678,8 +2667,8 @@ fn wait_for_enter() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
-    print!("{}", prompt);
+fn get_user_input(_prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    print!("{}", _prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

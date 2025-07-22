@@ -2,7 +2,7 @@
 //!
 //! This module contains helper functions for the Hermitian Fast Fourier Transform operations.
 
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 
@@ -22,11 +22,11 @@ use std::fmt::Debug;
 ///
 /// * `Some(Complex64)` if the conversion was successful
 /// * `None` if the conversion failed
-pub(crate) fn try_as_complex<T: Copy + Debug + 'static + NumCast>(val: T) -> Option<Complex64> {
+pub(crate) fn try_as_complex<T: Copy + Debug + 'static + NumCast>(_val: T) -> Option<Complex64> {
     // Check if the value is a Complex64 directly
     if std::any::TypeId::of::<T>() == std::any::TypeId::of::<Complex64>() {
         unsafe {
-            let ptr = &val as *const T as *const Complex64;
+            let ptr = &_val as *const T as *const Complex64;
             return Some(*ptr);
         }
     }
@@ -34,7 +34,7 @@ pub(crate) fn try_as_complex<T: Copy + Debug + 'static + NumCast>(val: T) -> Opt
     // Check for complex32
     if std::any::TypeId::of::<T>() == std::any::TypeId::of::<num_complex::Complex32>() {
         unsafe {
-            let ptr = &val as *const T as *const num_complex::Complex32;
+            let ptr = &_val as *const T as *const num_complex::Complex32;
             let complex32 = *ptr;
             return Some(Complex64::new(complex32.re as f64, complex32.im as f64));
         }
@@ -45,7 +45,7 @@ pub(crate) fn try_as_complex<T: Copy + Debug + 'static + NumCast>(val: T) -> Opt
     let type_name = std::any::type_name::<T>();
     if type_name.contains("Complex") {
         // For complex types, try to get the representation and parse it
-        let debug_str = format!("{val:?}");
+        let debug_str = format!("{_val:?}");
 
         // Try to extract re and im values using split and parse
         let re_im: Vec<f64> = debug_str
@@ -65,7 +65,7 @@ pub(crate) fn try_as_complex<T: Copy + Debug + 'static + NumCast>(val: T) -> Opt
         ($type:ty) => {
             if std::any::TypeId::of::<T>() == std::any::TypeId::of::<$type>() {
                 unsafe {
-                    let ptr = &val as *const T as *const $type;
+                    let ptr = &_val as *const T as *const $type;
                     return Some(Complex64::new(*ptr as f64, 0.0));
                 }
             }
@@ -86,7 +86,7 @@ pub(crate) fn try_as_complex<T: Copy + Debug + 'static + NumCast>(val: T) -> Opt
 
     // For other potential complex types, try to parse from Debug representation
     // This is a more robust approach for complex types from other libraries
-    let debug_str = format!("{val:?}");
+    let debug_str = format!("{_val:?}");
     if debug_str.contains("Complex") || (debug_str.contains("re") && debug_str.contains("im")) {
         // Extract numbers from the debug string
         let re_im: Vec<f64> = debug_str

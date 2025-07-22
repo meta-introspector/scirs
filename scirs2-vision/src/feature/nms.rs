@@ -93,22 +93,22 @@ impl BoundingBox {
 ///
 /// * Vector of indices of boxes to keep
 #[allow(dead_code)]
-pub fn nms_boxes(boxes: &[BoundingBox], iou_threshold: f32) -> Vec<usize> {
-    if boxes.is_empty() {
+pub fn nms_boxes(_boxes: &[BoundingBox], iou_threshold: f32) -> Vec<usize> {
+    if _boxes.is_empty() {
         return vec![];
     }
 
-    // Sort boxes by score in descending order
-    let mut indices: Vec<usize> = (0..boxes.len()).collect();
+    // Sort _boxes by score in descending order
+    let mut indices: Vec<usize> = (0.._boxes.len()).collect();
     indices.sort_by(|&a, &b| {
-        boxes[b]
+        _boxes[b]
             .score
-            .partial_cmp(&boxes[a].score)
+            .partial_cmp(&_boxes[a].score)
             .unwrap_or(Ordering::Equal)
     });
 
     let mut keep = Vec::new();
-    let mut suppressed = vec![false; boxes.len()];
+    let mut suppressed = vec![false; _boxes.len()];
 
     for &idx in &indices {
         if suppressed[idx] {
@@ -117,10 +117,10 @@ pub fn nms_boxes(boxes: &[BoundingBox], iou_threshold: f32) -> Vec<usize> {
 
         keep.push(idx);
 
-        // Suppress boxes with high IoU
+        // Suppress _boxes with high IoU
         for &other_idx in &indices {
             if other_idx != idx && !suppressed[other_idx] {
-                let iou = boxes[idx].iou(&boxes[other_idx]);
+                let iou = _boxes[idx].iou(&_boxes[other_idx]);
                 if iou > iou_threshold {
                     suppressed[other_idx] = true;
                 }
@@ -135,16 +135,16 @@ pub fn nms_boxes(boxes: &[BoundingBox], iou_threshold: f32) -> Vec<usize> {
 ///
 /// Only suppress boxes of the same class
 #[allow(dead_code)]
-pub fn nms_boxes_class_aware(boxes: &[BoundingBox], iou_threshold: f32) -> Vec<usize> {
-    if boxes.is_empty() {
+pub fn nms_boxes_class_aware(_boxes: &[BoundingBox], iou_threshold: f32) -> Vec<usize> {
+    if _boxes.is_empty() {
         return vec![];
     }
 
-    // Group boxes by class
+    // Group _boxes by class
     let mut class_groups: std::collections::HashMap<Option<usize>, Vec<usize>> =
         std::collections::HashMap::new();
 
-    for (idx, box_) in boxes.iter().enumerate() {
+    for (idx, box_) in _boxes.iter().enumerate() {
         class_groups.entry(box_.class_id).or_default().push(idx);
     }
 
@@ -152,7 +152,7 @@ pub fn nms_boxes_class_aware(boxes: &[BoundingBox], iou_threshold: f32) -> Vec<u
 
     // Apply NMS within each class
     for indices in class_groups.values() {
-        let class_boxes: Vec<BoundingBox> = indices.iter().map(|&idx| boxes[idx]).collect();
+        let class_boxes: Vec<BoundingBox> = indices.iter().map(|&idx| _boxes[idx]).collect();
 
         let kept_in_class = nms_boxes(&class_boxes, iou_threshold);
 

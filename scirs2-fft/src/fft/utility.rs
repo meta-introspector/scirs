@@ -4,7 +4,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use ndarray::{Array, ArrayD, IxDyn};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use std::fmt::Debug;
 
 /// Try to convert a value to Complex64
@@ -20,12 +20,12 @@ use std::fmt::Debug;
 ///
 /// * `Some(Complex64)` if the conversion was successful
 /// * `None` if the conversion failed
-pub(crate) fn try_as_complex<T: Copy + Debug + 'static>(val: T) -> Option<Complex64> {
+pub(crate) fn try_as_complex<T: Copy + Debug + 'static>(_val: T) -> Option<Complex64> {
     // Check if the type is Complex64
     if std::any::TypeId::of::<T>() == std::any::TypeId::of::<Complex64>() {
         unsafe {
             // This is a bit of a hack, but necessary for type detection at runtime
-            let ptr = &val as *const T as *const Complex64;
+            let ptr = &_val as *const T as *const Complex64;
             return Some(*ptr);
         }
     }
@@ -91,14 +91,14 @@ pub fn next_power_of_two(n: usize) -> usize {
 ///
 /// Returns an error if the input size is zero or n is zero
 #[allow(dead_code)]
-pub fn validate_fft_size(input_size: usize, n: Option<usize>) -> FFTResult<usize> {
-    if input_size == 0 {
+pub fn validate_fft_size(_input_size: usize, n: Option<usize>) -> FFTResult<usize> {
+    if _input_size == 0 {
         return Err(FFTError::ValueError("Input cannot be empty".to_string()));
     }
 
     match n {
-        Some(0) => Err(FFTError::ValueError("FFT size cannot be zero".to_string())),
-        Some(size) => Ok(size),
+        Some(0) => Err(FFTError::ValueError("FFT _size cannot be zero".to_string())),
+        Some(_size) => Ok(_size),
         None => Ok(next_power_of_two(input_size)),
     }
 }
@@ -122,11 +122,11 @@ pub fn validate_fft_shapes(
     input_shape: &[usize],
     shape: Option<&[usize]>,
 ) -> FFTResult<Vec<usize>> {
-    match shape {
+    match _shape {
         Some(output_shape) => {
             if output_shape.len() != input_shape.len() {
                 return Err(FFTError::ValueError(
-                    "Output shape must have the same number of dimensions as input".to_string(),
+                    "Output _shape must have the same number of dimensions as input".to_string(),
                 ));
             }
             Ok(output_shape.to_vec())
@@ -150,20 +150,20 @@ pub fn validate_fft_shapes(
 ///
 /// Returns an error if any axis is out of bounds
 #[allow(dead_code)]
-pub fn validate_fft_axes(ndim: usize, axes: Option<&[usize]>) -> FFTResult<Vec<usize>> {
+pub fn validate_fft_axes(_ndim: usize, axes: Option<&[usize]>) -> FFTResult<Vec<usize>> {
     match axes {
         Some(axes) => {
             // Check for axes out of bounds
             for &axis in axes {
-                if axis >= ndim {
+                if axis >= _ndim {
                     return Err(FFTError::ValueError(format!(
-                        "Axis {axis} out of bounds for array of dimension {ndim}"
+                        "Axis {axis} out of bounds for array of dimension {_ndim}"
                     )));
                 }
             }
             Ok(axes.to_vec())
         }
-        None => Ok((0..ndim).collect()),
+        None => Ok((0.._ndim).collect()),
     }
 }
 
@@ -178,8 +178,8 @@ pub fn validate_fft_axes(ndim: usize, axes: Option<&[usize]>) -> FFTResult<Vec<u
 /// A new complex array with the specified shape
 /// Marked as dead code but kept for API consistency
 #[allow(dead_code)]
-pub fn zeros_like_complex(shape: &[usize]) -> ArrayD<Complex64> {
-    ArrayD::<Complex64>::zeros(IxDyn(shape))
+pub fn zeros_like_complex(_shape: &[usize]) -> ArrayD<Complex64> {
+    ArrayD::<Complex64>::zeros(IxDyn(_shape))
 }
 
 /// Expand a real array into a complex array with zero imaginary part
@@ -192,11 +192,11 @@ pub fn zeros_like_complex(shape: &[usize]) -> ArrayD<Complex64> {
 ///
 /// A complex array with the same shape
 #[allow(dead_code)]
-pub fn real_to_complex<D>(real_array: &Array<f64, D>) -> Array<Complex64, D>
+pub fn real_to_complex<D>(_real_array: &Array<f64, D>) -> Array<Complex64, D>
 where
     D: ndarray::Dimension,
 {
-    real_array.mapv(|x| Complex64::new(x, 0.0))
+    _real_array.mapv(|x| Complex64::new(x, 0.0))
 }
 
 /// Extract the real part of a complex array
@@ -209,11 +209,11 @@ where
 ///
 /// A real array with the same shape
 #[allow(dead_code)]
-pub fn complex_to_real<D>(complex_array: &Array<Complex64, D>) -> Array<f64, D>
+pub fn complex_to_real<D>(_complex_array: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,
 {
-    complex_array.mapv(|x| x.re)
+    _complex_array.mapv(|x| x.re)
 }
 
 /// Calculate the magnitude of a complex array (absolute values)
@@ -226,11 +226,11 @@ where
 ///
 /// A real array with the magnitude (absolute value) of each element
 #[allow(dead_code)]
-pub fn complex_magnitude<D>(complex_array: &Array<Complex64, D>) -> Array<f64, D>
+pub fn complex_magnitude<D>(_complex_array: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,
 {
-    complex_array.mapv(|x| x.norm())
+    _complex_array.mapv(|x| x.norm())
 }
 
 /// Calculate the phase angle of a complex array (in radians)
@@ -243,11 +243,11 @@ where
 ///
 /// A real array with the phase angle of each element
 #[allow(dead_code)]
-pub fn complex_angle<D>(complex_array: &Array<Complex64, D>) -> Array<f64, D>
+pub fn complex_angle<D>(_complex_array: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,
 {
-    complex_array.mapv(|x| x.arg())
+    _complex_array.mapv(|x| x.arg())
 }
 
 /// Calculate the power spectrum of a complex array (squared magnitude)
@@ -260,11 +260,11 @@ where
 ///
 /// A real array with the power spectrum (squared magnitude) of each element
 #[allow(dead_code)]
-pub fn power_spectrum<D>(complex_array: &Array<Complex64, D>) -> Array<f64, D>
+pub fn power_spectrum<D>(_complex_array: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,
 {
-    complex_array.mapv(|x| x.norm_sqr())
+    _complex_array.mapv(|x| x.norm_sqr())
 }
 
 /// Convert an array slice to an index vector
@@ -278,6 +278,6 @@ where
 /// A vector of indices for the slice
 /// Marked as dead code but kept for API consistency
 #[allow(dead_code)]
-pub fn slice_to_indices(slice: &[usize]) -> Vec<usize> {
-    slice.to_vec()
+pub fn slice_to_indices(_slice: &[usize]) -> Vec<usize> {
+    _slice.to_vec()
 }

@@ -2,7 +2,7 @@ use ndarray::{array, Array2};
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
-use scirs2_cluster::meanshift::{estimate_bandwidth, mean_shift, MeanShiftOptions};
+use scirs2__cluster::meanshift::{estimate_bandwidth, mean_shift, MeanShiftOptions};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

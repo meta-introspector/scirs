@@ -119,15 +119,15 @@ where
 /// assert_eq!(diag_matrix[[0, 1]], 0);
 /// ```
 #[allow(dead_code)]
-pub fn diag<T>(diag_values: ArrayView<T, Ix1>) -> Array<T, Ix2>
+pub fn _diag<T>(_diag_values: ArrayView<T, Ix1>) -> Array<T, Ix2>
 where
     T: Clone + Zero,
 {
-    let n = diag_values.len();
+    let n = _diag_values.len();
     let mut result = Array::<T, Ix2>::zeros((n, n));
 
     for i in 0..n {
-        result[[i, i]] = diag_values[i].clone();
+        result[[i, i]] = _diag_values[i].clone();
     }
 
     result
@@ -220,11 +220,11 @@ where
 /// assert_eq!(filled[[1, 2]], 7);
 /// ```
 #[allow(dead_code)]
-pub fn full<T>(rows: usize, cols: usize, value: T) -> Array<T, Ix2>
+pub fn full<T>(_rows: usize, cols: usize, value: T) -> Array<T, Ix2>
 where
     T: Clone,
 {
-    Array::<T, Ix2>::from_elem((rows, cols), value)
+    Array::<T, Ix2>::from_elem((_rows, cols), value)
 }
 
 /// Create a matrix filled with ones
@@ -249,11 +249,11 @@ where
 /// assert_eq!(ones_mat[[1, 2]], 1.0);
 /// ```
 #[allow(dead_code)]
-pub fn ones<T>(rows: usize, cols: usize) -> Array<T, Ix2>
+pub fn ones<T>(_rows: usize, cols: usize) -> Array<T, Ix2>
 where
     T: Clone + One,
 {
-    Array::<T, Ix2>::from_elem((rows, cols), T::one())
+    Array::<T, Ix2>::from_elem((_rows, cols), T::one())
 }
 
 /// Create a matrix filled with zeros
@@ -278,11 +278,11 @@ where
 /// assert_eq!(zeros_mat[[1, 2]], 0.0);
 /// ```
 #[allow(dead_code)]
-pub fn zeros<T>(rows: usize, cols: usize) -> Array<T, Ix2>
+pub fn zeros<T>(_rows: usize, cols: usize) -> Array<T, Ix2>
 where
     T: Clone + Zero,
 {
-    Array::<T, Ix2>::zeros((rows, cols))
+    Array::<T, Ix2>::zeros((_rows, cols))
 }
 
 /// Compute the Kronecker product of two 2D arrays
@@ -382,7 +382,7 @@ where
     }
 
     if first_row[0] != first_col[0] {
-        return Err("First element of row and column must match");
+        return Err("First element of _row and column must match");
     }
 
     let n = first_col.len(); // Number of rows
@@ -397,7 +397,7 @@ where
                 result[[i, j]] = first_row[j - i].clone();
             } else {
                 // Lower triangle from first_col
-                result[[i, j]] = first_col[i - j].clone();
+                result[[0, j]] = first_col[0 - j].clone();
             }
         }
     }
@@ -581,7 +581,7 @@ where
 
     // Last element of first_col must match first element of last_row
     if first_col[first_col.len() - 1] != last_row[0] {
-        return Err("Last element of first column must match first element of last row");
+        return Err("Last element of first column must match first element of last _row");
     }
 
     let n = first_col.len(); // Number of rows
@@ -741,18 +741,18 @@ where
             // Decreasing powers (last column is x^0)
             // Calculate highest power first: x^(n-1)
             for _p in 0..n - 1 {
-                power = power.clone() * x[i].clone();
+                power = power.clone() * x[0].clone();
             }
 
             for j in 0..n {
-                result[[i, j]] = power.clone();
+                result[[0, j]] = power.clone();
 
                 if j < n - 1 {
                     // For non-increasing powers, we need Div trait for T to handle division
                     // power = power.clone() / x[i].clone(); // This requires Div trait
 
                     // Use multiplication by reciprocal instead as a safer approach
-                    power = power.clone() * (T::one() / x[i].clone());
+                    power = power.clone() * (T::one() / x[0].clone());
                 }
             }
         }
@@ -805,7 +805,7 @@ mod tests {
     #[test]
     fn test_diag() {
         let values = array![1, 2, 3];
-        let diag_matrix = diag(values.view());
+        let diag_matrix = _diag(values.view());
         assert_eq!(diag_matrix.shape(), &[3, 3]);
         assert_eq!(diag_matrix[[0, 0]], 1);
         assert_eq!(diag_matrix[[1, 1]], 2);
@@ -962,9 +962,9 @@ mod tests {
         assert_eq!(v1.shape(), &[3, 3]);
         // Should be equivalent to [x^2, x^1, x^0]
         for i in 0..3 {
-            assert_abs_diff_eq!(v1[[i, 0]], x[i] * x[i]);
-            assert_abs_diff_eq!(v1[[i, 1]], x[i]);
-            assert_abs_diff_eq!(v1[[i, 2]], 1.0);
+            assert_abs_diff_eq!(v1[[0, 0]], x[0] * x[0]);
+            assert_abs_diff_eq!(v1[[0, 1]], x[0]);
+            assert_abs_diff_eq!(v1[[0, 2]], 1.0);
         }
 
         // Increasing powers from 0 to n-1
@@ -972,9 +972,9 @@ mod tests {
         assert_eq!(v2.shape(), &[3, 3]);
         // Should be equivalent to [x^0, x^1, x^2]
         for i in 0..3 {
-            assert_abs_diff_eq!(v2[[i, 0]], 1.0);
-            assert_abs_diff_eq!(v2[[i, 1]], x[i]);
-            assert_abs_diff_eq!(v2[[i, 2]], x[i] * x[i]);
+            assert_abs_diff_eq!(v2[[0, 0]], 1.0);
+            assert_abs_diff_eq!(v2[[0, 1]], x[0]);
+            assert_abs_diff_eq!(v2[[0, 2]], x[0] * x[0]);
         }
 
         // Specify 4 columns (decreasing power)
@@ -982,10 +982,10 @@ mod tests {
         assert_eq!(v3.shape(), &[3, 4]);
         // Should be equivalent to [x^3, x^2, x^1, x^0]
         for i in 0..3 {
-            assert_abs_diff_eq!(v3[[i, 0]], x[i] * x[i] * x[i]);
-            assert_abs_diff_eq!(v3[[i, 1]], x[i] * x[i]);
-            assert_abs_diff_eq!(v3[[i, 2]], x[i]);
-            assert_abs_diff_eq!(v3[[i, 3]], 1.0);
+            assert_abs_diff_eq!(v3[[0, 0]], x[0] * x[0] * x[0]);
+            assert_abs_diff_eq!(v3[[0, 1]], x[0] * x[0]);
+            assert_abs_diff_eq!(v3[[0, 2]], x[0]);
+            assert_abs_diff_eq!(v3[[0, 3]], 1.0);
         }
     }
 }

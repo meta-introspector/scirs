@@ -4,13 +4,13 @@
 //! hierarchical clustering results, including automatic cluster count estimation
 //! and distance-based cluster pruning.
 
-use ndarray::{Array1, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, Array1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};
-use crate::hierarchy::disjoint_set::DisjointSet;
+use crate::hierarchy::disjoint__set::DisjointSet;
 
 /// Extract flat clusters using multiple criteria simultaneously
 ///
@@ -36,7 +36,7 @@ pub fn extract_clusters_multi_criteria<F: Float + FromPrimitive + Debug + Partia
 ) -> Result<Array1<usize>> {
     let n_observations = linkage_matrix.shape()[0] + 1;
 
-    // Start with all observations in separate clusters
+    // Start with all observations in separate _clusters
     let mut disjoint_set = DisjointSet::new();
 
     // Initialize disjoint set with all observations
@@ -50,27 +50,27 @@ pub fn extract_clusters_multi_criteria<F: Float + FromPrimitive + Debug + Partia
         let cluster2 = linkage_matrix[[merge_idx, 1]].to_usize().unwrap();
         let distance = linkage_matrix[[merge_idx, 2]];
 
-        // Check distance threshold
+        // Check distance _threshold
         if let Some(dist_thresh) = distance_threshold {
             if distance > dist_thresh {
-                break; // Stop merging if distance exceeds threshold
+                break; // Stop merging if distance exceeds _threshold
             }
         }
 
-        // Check inconsistency threshold (if provided)
+        // Check inconsistency _threshold (if provided)
         if let Some(inconsist_thresh) = inconsistency_threshold {
             // Calculate inconsistency for this merge
             let inconsistency = calculate_merge_inconsistency(linkage_matrix, merge_idx)?;
             if inconsistency > inconsist_thresh {
-                break; // Stop merging if inconsistency exceeds threshold
+                break; // Stop merging if inconsistency exceeds _threshold
             }
         }
 
-        // Check maximum clusters
+        // Check maximum _clusters
         if let Some(max_clust) = max_clusters {
             let current_clusters = disjoint_set.num_sets();
             if current_clusters <= max_clust {
-                break; // Stop merging if we've reached desired number of clusters
+                break; // Stop merging if we've reached desired number of _clusters
             }
         }
 
@@ -79,7 +79,7 @@ pub fn extract_clusters_multi_criteria<F: Float + FromPrimitive + Debug + Partia
             // Both are original observations
             disjoint_set.union(cluster1, cluster2);
         } else {
-            // Need to handle merging of intermediate clusters
+            // Need to handle merging of intermediate _clusters
             // This is more complex and would require tracking cluster membership
             // For now, we'll use a simplified approach
         }
@@ -200,7 +200,7 @@ pub fn estimate_optimal_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
         candidates.push(sil_k);
     }
 
-    // Return the most frequently suggested number of clusters
+    // Return the most frequently suggested number of _clusters
     let mut counts = HashMap::new();
     for &k in &candidates {
         *counts.entry(k).or_insert(0) += 1;
@@ -209,7 +209,7 @@ pub fn estimate_optimal_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
     let optimal_k = counts
         .into_iter()
         .max_by_key(|(_, count)| *count)
-        .map(|(k, _)| k)
+        .map(|(k_)| k)
         .unwrap_or(2);
 
     Ok(optimal_k.max(1).min(n_observations))
@@ -223,15 +223,15 @@ fn estimate_clusters_elbow_method<F: Float + FromPrimitive + Debug + PartialOrd>
 ) -> Result<usize> {
     let n_observations = linkage_matrix.shape()[0] + 1;
 
-    // Calculate within-cluster sum of squares for different numbers of clusters
+    // Calculate within-cluster sum of squares for different numbers of _clusters
     let mut wcss_values = Vec::new();
 
     for k in 1..=max_clusters.min(n_observations) {
-        // Extract clusters
-        let clusters = extract_clusters_by_count(linkage_matrix, k)?;
+        // Extract _clusters
+        let _clusters = extract_clusters_by_count(linkage_matrix, k)?;
 
         // Calculate WCSS (approximated using merge distances)
-        let wcss = calculate_wcss_approximation(linkage_matrix, &clusters, k);
+        let wcss = calculate_wcss_approximation(linkage_matrix, &_clusters, k);
         wcss_values.push(wcss);
     }
 
@@ -262,10 +262,10 @@ fn estimate_clusters_distance_gap<F: Float + FromPrimitive + Debug + PartialOrd>
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(idx, _)| idx)
+        .map(|(idx_)| idx)
         .unwrap_or(0);
 
-    // The optimal number of clusters is n_observations - max_gap_idx
+    // The optimal number of _clusters is n_observations - max_gap_idx
     let optimal_k = (n_merges - max_gap_idx).min(max_clusters);
 
     Ok(optimal_k.max(1))
@@ -283,11 +283,11 @@ fn estimate_clusters_silhouette<F: Float + FromPrimitive + Debug + PartialOrd>(
     let mut best_k = 2;
 
     for k in 2..=max_clusters.min(n_observations) {
-        // Extract clusters
-        let clusters = extract_clusters_by_count(linkage_matrix, k)?;
+        // Extract _clusters
+        let _clusters = extract_clusters_by_count(linkage_matrix, k)?;
 
         // Calculate average silhouette score
-        let silhouette_score = calculate_silhouette_score(data, &clusters);
+        let silhouette_score = calculate_silhouette_score(data, &_clusters);
 
         if silhouette_score > best_silhouette {
             best_silhouette = silhouette_score;
@@ -308,7 +308,7 @@ fn extract_clusters_by_count<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     if n_clusters > n_observations {
         return Err(ClusteringError::InvalidInput(format!(
-            "Number of clusters {} cannot exceed number of observations {}",
+            "Number of _clusters {} cannot exceed number of observations {}",
             n_clusters, n_observations
         )));
     }
@@ -324,7 +324,7 @@ fn extract_clusters_by_count<F: Float + FromPrimitive + Debug + PartialOrd>(
         disjoint_set.make_set(i);
     }
 
-    // Process merges until we have the desired number of clusters
+    // Process merges until we have the desired number of _clusters
     let n_merges_to_perform = n_observations - n_clusters;
 
     for merge_idx in 0..n_merges_to_perform {
@@ -377,9 +377,7 @@ fn extract_clusters_by_count<F: Float + FromPrimitive + Debug + PartialOrd>(
 /// Calculate WCSS approximation using linkage matrix
 #[allow(dead_code)]
 fn calculate_wcss_approximation<F: Float + FromPrimitive + Debug + PartialOrd>(
-    linkage_matrix: ArrayView2<F>,
-    _clusters: &Array1<usize>,
-    _k: usize,
+    linkage_matrix: ArrayView2<F>, _clusters: &Array1<usize>, _k: usize,
 ) -> F {
     // Simplified WCSS calculation using merge distances
     // In a proper implementation, this would calculate the actual within-cluster sum of squares
@@ -397,15 +395,15 @@ fn calculate_wcss_approximation<F: Float + FromPrimitive + Debug + PartialOrd>(
 
 /// Find elbow point in a series of values
 #[allow(dead_code)]
-fn find_elbow_point<F: Float + FromPrimitive + Debug + PartialOrd>(values: &[F]) -> usize {
-    if values.len() < 3 {
+fn find_elbow_point<F: Float + FromPrimitive + Debug + PartialOrd>(_values: &[F]) -> usize {
+    if _values.len() < 3 {
         return 0;
     }
 
     // Calculate second derivatives
     let mut second_derivatives = Vec::new();
-    for i in 1..(values.len() - 1) {
-        let second_deriv = values[i + 1] - F::from_f64(2.0).unwrap() * values[i] + values[i - 1];
+    for i in 1..(_values.len() - 1) {
+        let second_deriv = _values[i + 1] - F::from_f64(2.0).unwrap() * _values[i] + _values[i - 1];
         second_derivatives.push(second_deriv.abs());
     }
 
@@ -414,7 +412,7 @@ fn find_elbow_point<F: Float + FromPrimitive + Debug + PartialOrd>(values: &[F])
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(idx, _)| idx + 1) // Adjust for offset
+        .map(|(idx_)| idx + 1) // Adjust for offset
         .unwrap_or(0)
 }
 
@@ -501,9 +499,9 @@ fn calculate_silhouette_score<F: Float + FromPrimitive + Debug + PartialOrd>(
 
 /// Calculate Euclidean distance between two points
 #[allow(dead_code)]
-fn euclidean_distance<F: Float + FromPrimitive>(point1: ArrayView1<F>, point2: ArrayView1<F>) -> F {
+fn euclidean_distance<F: Float + FromPrimitive>(_point1: ArrayView1<F>, point2: ArrayView1<F>) -> F {
     let mut sum = F::zero();
-    for (a, b) in point1.iter().zip(point2.iter()) {
+    for (a, b) in _point1.iter().zip(point2.iter()) {
         let diff = *a - *b;
         sum = sum + diff * diff;
     }
@@ -548,8 +546,8 @@ pub fn prune_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
     // Identify small clusters that need to be merged
     let small_clusters: Vec<_> = cluster_sizes
         .iter()
-        .filter_map(|(&cluster_id, &size)| {
-            if size < min_cluster_size {
+        .filter_map(|(&cluster_id, &_size)| {
+            if _size < min_cluster_size {
                 Some(cluster_id)
             } else {
                 None
@@ -577,19 +575,19 @@ pub fn prune_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
         let mut min_distance = F::infinity();
         let mut nearest_large_cluster = None;
 
-        for (&large_cluster_id, &size) in &cluster_sizes {
-            if size >= min_cluster_size && large_cluster_id != small_cluster_id {
+        for (&large_cluster_id, &_size) in &cluster_sizes {
+            if _size >= min_cluster_size && large_cluster_id != small_cluster_id {
                 let large_cluster_points: Vec<_> = (0..n_observations)
                     .filter(|&i| clusters[i] == large_cluster_id)
                     .collect();
 
-                // Calculate minimum distance between clusters
+                // Calculate minimum _distance between clusters
                 for &small_point in &small_cluster_points {
                     for &large_point in &large_cluster_points {
-                        let distance =
+                        let _distance =
                             euclidean_distance(data.row(small_point), data.row(large_point));
-                        if distance < min_distance {
-                            min_distance = distance;
+                        if _distance < min_distance {
+                            min_distance = _distance;
                             nearest_large_cluster = Some(large_cluster_id);
                         }
                     }
@@ -597,7 +595,7 @@ pub fn prune_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
             }
         }
 
-        // Merge if distance is within threshold
+        // Merge if _distance is within threshold
         if let Some(target_cluster) = nearest_large_cluster {
             if min_distance <= max_merge_distance {
                 for &point_idx in &small_cluster_points {

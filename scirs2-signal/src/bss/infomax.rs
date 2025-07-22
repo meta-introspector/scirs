@@ -2,12 +2,15 @@
 //!
 //! This module implements Infomax-based algorithms for blind source separation.
 
-use super::BssConfig;
 use crate::error::SignalResult;
-use ndarray::{s, Array2};
+use crate::error::SignalResult;
+use ndarray::{Array2, s};
 use rand::SeedableRng;
-use rand_distr::{Distribution, Normal};
+use rand__distr::{Distribution, Normal};
+use statrs::statistics::Statistics;
+use super::BssConfig;
 
+#[allow(unused_imports)]
 /// Implement Infomax algorithm for ICA
 ///
 /// Infomax is a neural network-based approach to ICA that maximizes information flow.
@@ -104,7 +107,7 @@ pub fn infomax_ica(
         }
     }
 
-    // Extract the independent components
+    // Extract the independent _components
     let sources = w.dot(signals);
 
     Ok((sources, w))
@@ -233,7 +236,7 @@ pub fn extended_infomax_ica(
         }
     }
 
-    // Extract the independent components
+    // Extract the independent _components
     let sources = w.dot(signals);
 
     Ok((sources, w))

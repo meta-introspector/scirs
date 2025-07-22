@@ -64,8 +64,8 @@ where
     /// # #[cfg(feature = "linalg")]
     /// # {
     /// use ndarray::array;
-    /// use scirs2_interpolate::constrained::{ConstrainedSpline, Constraint};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::constrained::{ConstrainedSpline, Constraint};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create monotonically increasing data
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
@@ -158,8 +158,7 @@ where
         y: &ArrayView1<T>,
         constraints: Vec<Constraint<T>>,
         num_knots: usize,
-        degree: usize,
-        _lambda: T,
+        degree: usize_lambda: T,
         extrapolate: ExtrapolateMode,
     ) -> InterpolateResult<Self> {
         Self::fit_internal(
@@ -210,24 +209,24 @@ where
             }
         }
 
-        // Generate knots
+        // Generate _knots
         let _n_internal = num_knots.unwrap_or(x.len() - degree - 1);
-        let knots = generate_knots(x, degree, "clamped")?;
+        let _knots = generate_knots(x, degree, "clamped")?;
 
         // Create coefficient matrix and solve the constrained system
         let coeffs = match method {
             FittingMethod::Interpolation => {
-                solve_constrained_system(x, y, &knots.view(), degree, &constraints)?
+                solve_constrained_system(x, y, &_knots.view(), degree, &constraints)?
             }
             FittingMethod::LeastSquares => {
-                solve_constrained_system(x, y, &knots.view(), degree, &constraints)?
+                solve_constrained_system(x, y, &_knots.view(), degree, &constraints)?
             }
             FittingMethod::Penalized => {
                 // Note: lambda parameter should be passed here
                 solve_penalized_system(
                     x,
                     y,
-                    &knots.view(),
+                    &_knots.view(),
                     degree,
                     &constraints,
                     T::from_f64(0.1).unwrap(),
@@ -236,7 +235,7 @@ where
         };
 
         // Create the B-spline
-        let bspline = BSpline::new(&knots.view(), &coeffs.view(), degree, extrapolate)?;
+        let bspline = BSpline::new(&_knots.view(), &coeffs.view(), degree, extrapolate)?;
 
         Ok(ConstrainedSpline {
             bspline,

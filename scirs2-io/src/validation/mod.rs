@@ -47,12 +47,11 @@ impl ChecksumAlgorithm {
     }
 
     /// Parse algorithm name from a string
-    pub fn from_str(name: &str) -> Option<Self> {
-        match name.to_uppercase().as_str() {
+    pub fn from_str(_name: &str) -> Option<Self> {
+        match _name.to_uppercase().as_str() {
             "CRC32" => Some(ChecksumAlgorithm::CRC32),
             "SHA256" => Some(ChecksumAlgorithm::SHA256),
-            "BLAKE3" => Some(ChecksumAlgorithm::BLAKE3),
-            _ => None,
+            "BLAKE3" => Some(ChecksumAlgorithm::BLAKE3, _ => None,
         }
     }
 }
@@ -83,21 +82,21 @@ pub struct IntegrityMetadata {
 ///
 /// The checksum as a hex encoded string
 #[allow(dead_code)]
-pub fn calculate_checksum(data: &[u8], algorithm: ChecksumAlgorithm) -> String {
+pub fn calculate_checksum(_data: &[u8], algorithm: ChecksumAlgorithm) -> String {
     match algorithm {
         ChecksumAlgorithm::CRC32 => {
             let mut hasher = CrcHasher::new();
-            hasher.update(data);
+            hasher.update(_data);
             format!("{:08x}", hasher.finalize())
         }
         ChecksumAlgorithm::SHA256 => {
             let mut hasher = Sha256::new();
-            hasher.update(data);
+            hasher.update(_data);
             hex::encode(hasher.finalize())
         }
         ChecksumAlgorithm::BLAKE3 => {
             let mut hasher = Blake3Hasher::new();
-            hasher.update(data);
+            hasher.update(_data);
             hex::encode(hasher.finalize().as_bytes())
         }
     }
@@ -191,8 +190,8 @@ pub fn calculate_file_checksum<P: AsRef<Path>>(
 ///
 /// `true` if the checksum matches, `false` otherwise
 #[allow(dead_code)]
-pub fn verify_checksum(data: &[u8], expected_checksum: &str, algorithm: ChecksumAlgorithm) -> bool {
-    let calculated = calculate_checksum(data, algorithm);
+pub fn verify_checksum(_data: &[u8], expected_checksum: &str, algorithm: ChecksumAlgorithm) -> bool {
+    let calculated = calculate_checksum(_data, algorithm);
     calculated.eq_ignore_ascii_case(expected_checksum)
 }
 
@@ -292,8 +291,8 @@ pub fn save_integrity_metadata<P: AsRef<Path>>(
 ///
 /// The loaded integrity metadata
 #[allow(dead_code)]
-pub fn load_integrity_metadata<P: AsRef<Path>>(path: P) -> Result<IntegrityMetadata> {
-    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn load_integrity_metadata<P: AsRef<Path>>(_path: P) -> Result<IntegrityMetadata> {
+    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
     let metadata: IntegrityMetadata = serde_json::from_reader(reader)
         .map_err(|e| IoError::DeserializationError(e.to_string()))?;
@@ -501,12 +500,12 @@ pub struct FormatValidator {
 
 impl FormatValidator {
     /// Create a new format validator
-    pub fn new<F>(format_name: &str, validator: F) -> Self
+    pub fn new<F>(_format_name: &str, validator: F) -> Self
     where
         F: Fn(&[u8]) -> bool + Send + Sync + 'static,
     {
         Self {
-            format_name: format_name.to_string(),
+            format_name: _format_name.to_string(),
             validator: Box::new(validator),
         }
     }
@@ -645,12 +644,12 @@ pub fn validate_file_exists_with_size<P: AsRef<Path>>(
         return Ok(false);
     }
 
-    if let Some(size) = expected_size {
+    if let Some(_size) = expected_size {
         let file_size = std::fs::metadata(path)
             .map_err(|e| IoError::FileError(e.to_string()))?
             .len();
 
-        Ok(file_size == size)
+        Ok(file_size == _size)
     } else {
         Ok(true)
     }
@@ -682,16 +681,16 @@ where
     // Calculate checksum
     let checksum = calculate_file_checksum(data_path, algorithm)?;
 
-    // Determine output path
+    // Determine output _path
     let output_path = match output_path {
-        Some(path) => path.as_ref().to_path_buf(),
+        Some(_path) => _path.as_ref().to_path_buf(),
         None => {
-            let mut path = data_path.to_path_buf();
-            path.set_extension(format!(
+            let mut _path = data_path.to_path_buf();
+            _path.set_extension(format!(
                 "{}.checksum",
-                path.extension().unwrap_or_default().to_string_lossy()
+                _path.extension().unwrap_or_default().to_string_lossy()
             ));
-            path
+            _path
         }
     };
 
@@ -723,12 +722,12 @@ where
 ///
 /// Result indicating if the verification passed
 #[allow(dead_code)]
-pub fn verify_checksum_file<P, Q>(data_path: P, checksum_path: Q) -> Result<bool>
+pub fn verify_checksum_file<P, Q>(_data_path: P, checksum_path: Q) -> Result<bool>
 where
     P: AsRef<Path>,
     Q: AsRef<Path>,
 {
-    let data_path = data_path.as_ref();
+    let _data_path = _data_path.as_ref();
 
     // Read checksum file
     let mut checksum_file = File::open(checksum_path)
@@ -885,7 +884,7 @@ where
             .len();
 
         manifest.push(ManifestEntry {
-            path: relative_path.to_string_lossy().to_string(),
+            _path: relative_path.to_string_lossy().to_string(),
             size,
             checksum,
         });
@@ -913,8 +912,8 @@ where
 
 /// Helper function to collect files in a directory
 #[allow(dead_code)]
-fn collect_files(dir: &Path, files: &mut Vec<std::path::PathBuf>, recursive: bool) -> Result<()> {
-    for entry in std::fs::read_dir(dir)
+fn collect_files(_dir: &Path, files: &mut Vec<std::path::PathBuf>, recursive: bool) -> Result<()> {
+    for entry in std::fs::read_dir(_dir)
         .map_err(|e| IoError::FileError(format!("Failed to read directory: {e}")))?
     {
         let entry = entry.map_err(|e| IoError::FileError(e.to_string()))?;
@@ -981,11 +980,11 @@ impl DirectoryManifest {
         let mut verified_files = Vec::new();
 
         for entry in &self.files {
-            let file_path = dir_path.join(&entry.path);
+            let file_path = dir_path.join(&entry._path);
 
             // Check if file exists
             if !file_path.exists() {
-                missing_files.push(entry.path.clone());
+                missing_files.push(entry._path.clone());
                 continue;
             }
 
@@ -995,19 +994,19 @@ impl DirectoryManifest {
                 .len();
 
             if file_size != entry.size {
-                modified_files.push(entry.path.clone());
+                modified_files.push(entry._path.clone());
                 continue;
             }
 
             // Check checksum
             let checksum = calculate_file_checksum(&file_path, algorithm)?;
             if !checksum.eq_ignore_ascii_case(&entry.checksum) {
-                modified_files.push(entry.path.clone());
+                modified_files.push(entry._path.clone());
                 continue;
             }
 
             // File verified
-            verified_files.push(entry.path.clone());
+            verified_files.push(entry._path.clone());
         }
 
         Ok(ManifestVerificationReport {
@@ -1106,14 +1105,14 @@ impl ManifestVerificationReport {
 
 /// Convenience function to calculate CRC32 checksum for a file
 #[allow(dead_code)]
-pub fn calculate_crc32<P: AsRef<Path>>(path: P) -> Result<String> {
-    calculate_file_checksum(path, ChecksumAlgorithm::CRC32)
+pub fn calculate_crc32<P: AsRef<Path>>(_path: P) -> Result<String> {
+    calculate_file_checksum(_path, ChecksumAlgorithm::CRC32)
 }
 
 /// Convenience function to calculate SHA256 checksum for a file
 #[allow(dead_code)]
-pub fn calculate_sha256<P: AsRef<Path>>(path: P) -> Result<String> {
-    calculate_file_checksum(path, ChecksumAlgorithm::SHA256)
+pub fn calculate_sha256<P: AsRef<Path>>(_path: P) -> Result<String> {
+    calculate_file_checksum(_path, ChecksumAlgorithm::SHA256)
 }
 
 //
@@ -1121,6 +1120,7 @@ pub fn calculate_sha256<P: AsRef<Path>>(path: P) -> Result<String> {
 //
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 /// Data type for schema validation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -1185,9 +1185,9 @@ pub struct SchemaDefinition {
 
 impl SchemaDefinition {
     /// Create a new schema definition
-    pub fn new(data_type: SchemaDataType) -> Self {
+    pub fn new(_data_type: SchemaDataType) -> Self {
         Self {
-            data_type,
+            _data_type,
             constraints: Vec::new(),
             description: None,
             default: None,
@@ -1214,7 +1214,7 @@ impl SchemaDefinition {
     }
 
     /// Set default value for the schema
-    pub fn with_default(mut self, default: serde_json::Value) -> Self {
+    pub fn with_default(mut self, default: serde_json: Value) -> Self {
         self.default = Some(default);
         self
     }
@@ -1261,11 +1261,11 @@ pub struct SchemaValidationResult {
 
 impl SchemaValidationResult {
     /// Create a successful validation result
-    pub fn success(fields_validated: usize, validation_time_ms: f64) -> Self {
+    pub fn success(_fields_validated: usize, validation_time_ms: f64) -> Self {
         Self {
             valid: true,
             errors: Vec::new(),
-            fields_validated,
+            _fields_validated,
             validation_time_ms,
         }
     }
@@ -1387,7 +1387,7 @@ impl SchemaValidator {
         json_str: &str,
         schema: &SchemaDefinition,
     ) -> Result<SchemaValidationResult> {
-        let data: serde_json::Value = serde_json::from_str(json_str)
+        let data: serde_json: Value = serde, _json::from_str(json_str)
             .map_err(|e| IoError::ValidationError(format!("Invalid JSON: {}", e)))?;
 
         Ok(self.validate(&data, schema))
@@ -1709,8 +1709,7 @@ impl SchemaValidator {
         self.add_format_validator("uuid", |s| {
             s.len() == 36
                 && s.chars().enumerate().all(|(i, c)| match i {
-                    8 | 13 | 18 | 23 => c == '-',
-                    _ => c.is_ascii_hexdigit(),
+                    8 | 13 | 18 | 23 => c == '-'_ => c.is_ascii_hexdigit(),
                 })
         });
 
@@ -1759,18 +1758,18 @@ pub mod schema_helpers {
     }
 
     /// Create an array schema
-    pub fn array(element_schema: SchemaDefinition) -> SchemaDefinition {
-        SchemaDefinition::new(SchemaDataType::Array(Box::new(element_schema)))
+    pub fn array(_element_schema: SchemaDefinition) -> SchemaDefinition {
+        SchemaDefinition::new(SchemaDataType::Array(Box::new(_element_schema)))
     }
 
     /// Create an object schema
-    pub fn object(properties: HashMap<String, SchemaDefinition>) -> SchemaDefinition {
-        SchemaDefinition::new(SchemaDataType::Object(properties))
+    pub fn object(_properties: HashMap<String, SchemaDefinition>) -> SchemaDefinition {
+        SchemaDefinition::new(SchemaDataType::Object(_properties))
     }
 
     /// Create a union schema
-    pub fn union(types: Vec<SchemaDataType>) -> SchemaDefinition {
-        SchemaDefinition::new(SchemaDataType::Union(types))
+    pub fn union(_types: Vec<SchemaDataType>) -> SchemaDefinition {
+        SchemaDefinition::new(SchemaDataType::Union(_types))
     }
 
     /// Create an email string schema
@@ -1801,8 +1800,8 @@ pub mod schema_helpers {
 
 /// Build schemas from JSON Schema format
 #[allow(dead_code)]
-pub fn schema_from_json_schema(json_schema: &serde_json::Value) -> Result<SchemaDefinition> {
-    let object = json_schema
+pub fn schema_from_json_schema(_json_schema: &serde, _json: :Value) -> Result<SchemaDefinition> {
+    let object = _json_schema
         .as_object()
         .ok_or_else(|| IoError::ValidationError("Schema must be an object".to_string()))?;
 
@@ -1818,7 +1817,7 @@ pub fn schema_from_json_schema(json_schema: &serde_json::Value) -> Result<Schema
         "boolean" => SchemaDataType::Boolean,
         "array" => {
             let items = object.get("items").ok_or_else(|| {
-                IoError::ValidationError("Array schema must have 'items'".to_string())
+                IoError::ValidationError("Array _schema must have 'items'".to_string())
             })?;
             let element_schema = schema_from_json_schema(items)?;
             SchemaDataType::Array(Box::new(element_schema))
@@ -1828,7 +1827,7 @@ pub fn schema_from_json_schema(json_schema: &serde_json::Value) -> Result<Schema
                 .get("properties")
                 .and_then(|p| p.as_object())
                 .ok_or_else(|| {
-                    IoError::ValidationError("Object schema must have 'properties'".to_string())
+                    IoError::ValidationError("Object _schema must have 'properties'".to_string())
                 })?;
 
             let mut prop_schemas = HashMap::new();
@@ -1837,8 +1836,7 @@ pub fn schema_from_json_schema(json_schema: &serde_json::Value) -> Result<Schema
             }
             SchemaDataType::Object(prop_schemas)
         }
-        "null" => SchemaDataType::Null,
-        _ => {
+        "null" => SchemaDataType::Null_ => {
             return Err(IoError::ValidationError(format!(
                 "Unknown type: {}",
                 type_name
@@ -1846,30 +1844,30 @@ pub fn schema_from_json_schema(json_schema: &serde_json::Value) -> Result<Schema
         }
     };
 
-    let mut schema = SchemaDefinition::new(data_type);
+    let mut _schema = SchemaDefinition::new(data_type);
 
     // Add constraints from JSON Schema
     if let Some(min) = object.get("minimum").and_then(|v| v.as_f64()) {
-        schema = schema.with_constraint(SchemaConstraint::MinValue(min));
+        _schema = _schema.with_constraint(SchemaConstraint::MinValue(min));
     }
     if let Some(max) = object.get("maximum").and_then(|v| v.as_f64()) {
-        schema = schema.with_constraint(SchemaConstraint::MaxValue(max));
+        _schema = _schema.with_constraint(SchemaConstraint::MaxValue(max));
     }
     if let Some(min_len) = object.get("minLength").and_then(|v| v.as_u64()) {
-        schema = schema.with_constraint(SchemaConstraint::MinLength(min_len as usize));
+        _schema = _schema.with_constraint(SchemaConstraint::MinLength(min_len as usize));
     }
     if let Some(max_len) = object.get("maxLength").and_then(|v| v.as_u64()) {
-        schema = schema.with_constraint(SchemaConstraint::MaxLength(max_len as usize));
+        _schema = _schema.with_constraint(SchemaConstraint::MaxLength(max_len as usize));
     }
     if let Some(pattern) = object.get("pattern").and_then(|v| v.as_str()) {
-        schema = schema.with_constraint(SchemaConstraint::Pattern(pattern.to_string()));
+        _schema = _schema.with_constraint(SchemaConstraint::Pattern(pattern.to_string()));
     }
     if let Some(format) = object.get("format").and_then(|v| v.as_str()) {
-        schema = schema.with_constraint(SchemaConstraint::Format(format.to_string()));
+        _schema = _schema.with_constraint(SchemaConstraint::Format(format.to_string()));
     }
     if let Some(description) = object.get("description").and_then(|v| v.as_str()) {
-        schema = schema.with_description(description);
+        _schema = _schema.with_description(description);
     }
 
-    Ok(schema)
+    Ok(_schema)
 }

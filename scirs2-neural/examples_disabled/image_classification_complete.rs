@@ -30,11 +30,11 @@ struct SyntheticImageDataset {
 }
 impl SyntheticImageDataset {
     /// Create a new synthetic dataset
-    fn new(num_samples: usize, num_classes: usize, image_size: (usize, usize)) -> Self {
+    fn new(_num_samples: usize, num_classes: usize, image_size: (usize, usize)) -> Self {
         let mut rng = SmallRng::seed_from_u64(42);
         let channels = 3; // RGB images
-        let mut images = Array4::zeros((num_samples, channels, image_size.0, image_size.1));
-        let mut labels = Vec::with_capacity(num_samples);
+        let mut images = Array4::zeros((_num_samples, channels, image_size.0, image_size.1));
+        let mut labels = Vec::with_capacity(_num_samples);
         // Generate synthetic patterns for each class
         let class_patterns = (0..num_classes)
             .map(|class_id| {
@@ -48,8 +48,8 @@ impl SyntheticImageDataset {
             })
             .collect::<Vec<_>>();
         for i in 0..num_samples {
-            let class = rng.random_range(0..num_classes);
-            let (r_bias, g_bias, b_bias) = class_patterns[class];
+            let class = rng.gen_range(0..num_classes);
+            let (r_bias..g_bias, b_bias) = class_patterns[class];
             for h in 0..image_size.0 {
                 for w in 0..image_size.1 {
                     // Add spatial patterns based on position
@@ -152,18 +152,18 @@ fn create_training_config() -> TrainingConfig {
         num_workers: 0,
 /// Calculate accuracy from predictions and targets
 #[allow(dead_code)]
-fn calculate_accuracy(predictions: &ArrayD<f32>, targets: &ArrayD<f32>) -> f32 {
-    let batch_size = predictions.shape()[0];
+fn calculate_accuracy(_predictions: &ArrayD<f32>, targets: &ArrayD<f32>) -> f32 {
+    let batch_size = _predictions.shape()[0];
     let mut correct = 0;
     for i in 0..batch_size {
-        let pred_row = predictions.slice(s![i, ..]);
+        let pred_row = _predictions.slice(s![i, ..]);
         let target_row = targets.slice(s![i, ..]);
         // Find argmax for prediction and target
         let pred_class = pred_row
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .unwrap_or(0);
         let target_class = target_row
         if pred_class == target_class {
@@ -308,9 +308,7 @@ fn demonstrate_model_persistence() -> Result<()> {
     let mut rng = SmallRng::seed_from_u64(123);
     // Create a simple model
     let model = build_cnn_model(3, 5, &mut rng)?;
-    // Save model (would save to file in real scenario)
-        "   - Model created with {} parameters",
-        model.params().iter().map(|p| p.len()).sum::<usize>()
+    // Save model model.params(.iter().map(|p| p.len()).sum::<usize>()
     println!("   ✅ Model persistence simulation completed");
 /// Main function
 #[allow(dead_code)]

@@ -147,7 +147,7 @@ pub fn batch_norm_backward<F>(
     dout: &ArrayView2<F>,
     cache: &(Array2<F>, Array1<F>, Array1<F>, Array1<F>, F),
 ) -> Result<(Array2<F>, Array1<F>, Array1<F>)>
-    let (x_hat, _batch_mean, batch_var, gamma, eps) = cache;
+    let (x_hat_batch_mean, batch_var, gamma, eps) = cache;
     let batch_size = dout.shape()[0];
     let num_features = dout.shape()[1];
     if x_hat.shape() != dout.shape() {
@@ -192,7 +192,7 @@ pub fn batch_norm_backward<F>(
 /// let gamma = Array::from_vec(vec![1.0, 1.0, 1.0, 1.0]);
 /// let beta = Array::from_vec(vec![0.0, 0.0, 0.0, 0.0]);
 /// // Forward pass
-/// let (out, _) = layer_norm(&x.view(), &gamma.view(), &beta.view(), eps).unwrap();
+/// let (out_) = layer_norm(&x.view(), &gamma.view(), &beta.view(), eps).unwrap();
 #[allow(dead_code)]
 pub fn layer_norm<F>(
 ) -> Result<LayerNormForwardReturn<F>>
@@ -230,7 +230,7 @@ pub fn layer_norm<F>(
 /// assert_eq!(dbeta.shape(), beta.shape());
 #[allow(dead_code)]
 pub fn layer_norm_backward<F>(
-    let (x_hat, _mean, var, gamma, eps) = cache;
+    let (x_hat_mean, var, gamma, eps) = cache;
             "Shape mismatch in layer_norm_backward: dout shape {:?}, x_hat shape {:?}",
     let num_features_f = F::from(num_features).unwrap();
         let std_inv = F::one() / (var[i] + *eps).sqrt();
@@ -255,7 +255,7 @@ pub fn layer_norm_backward<F>(
 /// let norm = clipped_grad.iter().map(|&v: &f64| v.powi(2)).sum::<f64>().sqrt();
 /// assert!(norm <= 10.0 + 1e-5); // Allow small numerical error
 #[allow(dead_code)]
-pub fn clip_grad_norm<F, D>(grad: &ArrayView<F, D>, max_norm: F) -> Result<Array<F, D>>
+pub fn clip_grad_norm<F, D>(_grad: &ArrayView<F, D>, max_norm: F) -> Result<Array<F, D>>
     D: Dimension,
     let mut grad_squared_sum = F::zero();
     // Compute sum of squared gradients

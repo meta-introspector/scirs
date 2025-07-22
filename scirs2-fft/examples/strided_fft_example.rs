@@ -1,6 +1,6 @@
 use ndarray::{s, Array2};
-use num_complex::Complex64;
-use scirs2_fft::{fft, fft_strided, fft_strided_complex, ifft_strided};
+use num__complex::Complex64;
+use scirs2__fft::{fft, fft_strided, fft_strided_complex, ifft_strided};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -91,13 +91,13 @@ fn main() {
 
 // Implement standard FFT along axis 0 (for comparison)
 #[allow(dead_code)]
-fn perform_standard_fft_axis0(arr: &Array2<f64>) -> Array2<Complex64> {
-    let (rows, cols) = (arr.shape()[0], arr.shape()[1]);
+fn perform_standard_fft_axis0(_arr: &Array2<f64>) -> Array2<Complex64> {
+    let (rows, cols) = (_arr.shape()[0], _arr.shape()[1]);
     let mut result = Array2::zeros((rows, cols));
 
     // Process each column
     for j in 0..cols {
-        let column: Vec<f64> = arr.slice(s![.., j]).to_vec();
+        let column: Vec<f64> = _arr.slice(s![.., j]).to_vec();
         let fft_result = fft(&column, None).unwrap();
 
         // Copy back to result
@@ -111,13 +111,13 @@ fn perform_standard_fft_axis0(arr: &Array2<f64>) -> Array2<Complex64> {
 
 // Implement standard FFT along axis 1 (for comparison)
 #[allow(dead_code)]
-fn perform_standard_fft_axis1(arr: &Array2<f64>) -> Array2<Complex64> {
-    let (rows, cols) = (arr.shape()[0], arr.shape()[1]);
+fn perform_standard_fft_axis1(_arr: &Array2<f64>) -> Array2<Complex64> {
+    let (rows, cols) = (_arr.shape()[0], _arr.shape()[1]);
     let mut result = Array2::zeros((rows, cols));
 
     // Process each row
     for i in 0..rows {
-        let row: Vec<f64> = arr.slice(s![i, ..]).to_vec();
+        let row: Vec<f64> = _arr.slice(s![i, ..]).to_vec();
         let fft_result = fft(&row, None).unwrap();
 
         // Copy back to result

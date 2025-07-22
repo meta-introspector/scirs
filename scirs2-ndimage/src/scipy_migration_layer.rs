@@ -62,9 +62,9 @@ pub struct MigrationWarning {
 
 impl SciPyCompatLayer {
     /// Create a new SciPy compatibility layer
-    pub fn new(config: CompatibilityConfig) -> Self {
+    pub fn new(_config: CompatibilityConfig) -> Self {
         Self {
-            config,
+            _config,
             warnings: Vec::new(),
         }
     }
@@ -359,18 +359,18 @@ impl SciPyCompatLayer {
         if return_indices == Some(true) {
             self.add_warning(
                 "distance_transform_edt",
-                "Returning indices not yet supported",
+                "Returning _indices not yet supported",
             );
         }
 
-        let distances = crate::morphology::distance_transform_edt(binary_input.view())?;
+        let _distances = crate::morphology::distance_transform_edt(binary_input.view())?;
 
         // Convert back to original type
-        let result_array = distances.mapv(|v| T::from_f64(v).unwrap_or(T::zero()));
+        let result_array = _distances.mapv(|v| T::from_f64(v).unwrap_or(T::zero()));
 
         Ok(DistanceTransformResult {
-            distances: Some(result_array),
-            indices: None,
+            _distances: Some(result_array),
+            _indices: None,
         })
     }
 }
@@ -486,8 +486,7 @@ impl SciPyCompatLayer {
             "constant" => Ok(BoundaryMode::Constant),
             "nearest" => Ok(BoundaryMode::Nearest),
             "mirror" => Ok(BoundaryMode::Mirror),
-            "wrap" => Ok(BoundaryMode::Wrap),
-            _ => {
+            "wrap" => Ok(BoundaryMode::Wrap, _ => {
                 self.add_warning_const(
                     "parameter_conversion",
                     &format!("Unknown mode '{}', using default 'reflect'", mode_str),
@@ -747,7 +746,7 @@ pub fn display_migration_guide() {
 This compatibility layer provides SciPy-compatible APIs for easy migration.
 
 Basic Usage:
-    use scirs2_ndimage::scipy_migration_layer as ndimage;
+    use scirs2__ndimage::scipy_migration_layer as ndimage;
     
     // Same API as SciPy
     let result = ndimage::gaussian_filter(input, sigma, None, None, None, None)?;
@@ -758,7 +757,7 @@ Key Differences:
 3. Performance characteristics may differ due to Rust optimizations
 
 Migration Steps:
-1. Replace `import scipy.ndimage` with `use scirs2_ndimage::scipy_migration_layer as ndimage;`
+1. Replace `import scipy.ndimage` with `use scirs2__ndimage::scipy_migration_layer as ndimage;`
 2. Add error handling for function calls
 3. Check migration warnings for any unsupported features
 4. Test thoroughly and report any compatibility issues

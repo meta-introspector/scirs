@@ -142,20 +142,19 @@ pub trait UncertaintyInterpolator<T: InterpolationFloat>: Interpolator<T> {
 
 /// Adaptive interpolator interface for methods that can refine their approximation
 pub trait AdaptiveInterpolator<T: InterpolationFloat>: Interpolator<T> {
-    /// Add new data points to refine the interpolation
+    /// Add new data _points to refine the interpolation
     fn add_points(
         &mut self,
         new_points: &ArrayView2<T>,
         new_values: &ArrayView1<T>,
     ) -> crate::InterpolateResult<()>;
 
-    /// Remove data points from the interpolation
+    /// Remove data _points from the interpolation
     fn remove_points(&mut self, indices: &[usize]) -> crate::InterpolateResult<()>;
 
     /// Update the interpolation with new data
     fn update(
-        &mut self,
-        points: &ArrayView2<T>,
+        &mut self_points: &ArrayView2<T>,
         values: &ArrayView1<T>,
     ) -> crate::InterpolateResult<()>;
 }
@@ -308,7 +307,7 @@ pub trait SerializableInterpolator<T: InterpolationFloat> {
     fn serialize(&self) -> crate::InterpolateResult<Vec<u8>>;
 
     /// Deserialize the interpolator from bytes
-    fn deserialize(data: &[u8]) -> crate::InterpolateResult<Self>
+    fn deserialize(_data: &[u8]) -> crate::InterpolateResult<Self>
     where
         Self: Sized;
 
@@ -400,7 +399,7 @@ pub mod validation {
     }
 
     /// Validate interpolator configuration parameters
-    pub fn validate_config<C: InterpolationConfig>(config: &C) -> crate::InterpolateResult<()> {
-        config.validate()
+    pub fn validate_config<C: InterpolationConfig>(_config: &C) -> crate::InterpolateResult<()> {
+        _config.validate()
     }
 }

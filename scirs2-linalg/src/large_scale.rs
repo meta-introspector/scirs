@@ -64,7 +64,7 @@ where
 
     if sketch_size < n {
         return Err(LinalgError::ShapeError(
-            "Sketch size must be at least n".to_string(),
+            "Sketch _size must be at least n".to_string(),
         ));
     }
 
@@ -176,7 +176,7 @@ where
                     v.mapv_inplace(|x| x / vnorm);
                 }
 
-                // Power iterations
+                // Power _iterations
                 for _ in 0..power_iterations {
                     // v = A^T * A * v
                     let av = a.dot(&v);
@@ -223,7 +223,7 @@ where
             Ok((sum_sq * scale).sqrt())
         }
         _ => Err(LinalgError::InvalidInputError(format!(
-            "Unknown norm type: {norm_type}"
+            "Unknown norm _type: {norm_type}"
         ))),
     }
 }
@@ -268,11 +268,11 @@ where
 
     if new_columns.shape()[0] != m {
         return Err(LinalgError::ShapeError(
-            "New columns must have same number of rows as U".to_string(),
+            "New _columns must have same number of rows as U".to_string(),
         ));
     }
 
-    // Project new columns onto current subspace
+    // Project new _columns onto current subspace
     let proj = current_u.t().dot(new_columns);
 
     // Compute orthogonal complement
@@ -317,7 +317,7 @@ where
     aug_vt
         .slice_mut(ndarray::s![..k, ..n_old])
         .assign(current_vt);
-    // Set identity block for new columns
+    // Set identity block for new _columns
     for i in 0..q_cols.min(n_new) {
         aug_vt[[k + i, n_old + i]] = A::one();
     }
@@ -372,7 +372,7 @@ where
         + Send
         + Sync,
 {
-    let (n, _) = (a.nrows(), a.ncols());
+    let n = a.nrows();
     let (n_b, n_rhs) = (b.nrows(), b.ncols());
 
     if n != n_b {
@@ -383,7 +383,7 @@ where
 
     if block_size == 0 || block_size > n_rhs {
         return Err(LinalgError::InvalidInputError(
-            "Invalid block size".to_string(),
+            "Invalid block _size".to_string(),
         ));
     }
 
@@ -519,10 +519,10 @@ where
     }
 
     // Orthogonalize initial block
-    let (q0, _) = crate::decomposition::qr(&q.view(), None)?;
+    let (q0_, _) = crate::decomposition::qr(&q.view(), None)?;
 
     // Build Krylov subspace
-    let mut q_blocks = vec![q0];
+    let mut q_blocks = vec![q0_];
     let mut t = Array2::zeros((total_size, total_size));
     let mut block_offsets = vec![0]; // Track cumulative column offsets
     block_offsets.push(q_blocks[0].ncols());

@@ -20,7 +20,7 @@
 //! # #[cfg(feature = "gpu")]
 //! # {
 //! use ndarray::Array1;
-//! use scirs2_interpolate::gpu_accelerated::{
+//! use scirs2__interpolate::gpu_accelerated::{
 //!     GpuRBFInterpolator, GpuConfig, GpuRBFKernel
 //! };
 //!
@@ -401,12 +401,12 @@ where
     fn fit_cpu(&mut self) -> InterpolateResult<()> {
         // Convert GPU kernel to CPU kernel
         let cpu_kernel = match self.kernel {
-            GpuRBFKernel::Gaussian => RBFKernel::Gaussian,
-            GpuRBFKernel::Multiquadric => RBFKernel::Multiquadric,
-            GpuRBFKernel::InverseMultiquadric => RBFKernel::InverseMultiquadric,
-            GpuRBFKernel::Linear => RBFKernel::Linear,
-            GpuRBFKernel::Cubic => RBFKernel::Cubic,
-            GpuRBFKernel::ThinPlate => RBFKernel::ThinPlateSpline,
+            GpuRBFKernel::Gaussian =>, RBFKernel::Gaussian,
+            GpuRBFKernel::Multiquadric =>, RBFKernel::Multiquadric,
+            GpuRBFKernel::InverseMultiquadric =>, RBFKernel::InverseMultiquadric,
+            GpuRBFKernel::Linear =>, RBFKernel::Linear,
+            GpuRBFKernel::Cubic =>, RBFKernel::Cubic,
+            GpuRBFKernel::ThinPlate =>, RBFKernel::ThinPlateSpline,
         };
 
         // Convert 1D data to 2D format expected by RBFInterpolator
@@ -433,7 +433,7 @@ where
             let eval_points_2d = Array2::from_shape_vec((x_eval.len(), 1), x_eval.to_vec())
                 .map_err(|e| {
                     InterpolateError::ComputationError(format!(
-                        "Failed to reshape eval points: {}",
+                        "Failed to reshape _eval points: {}",
                         e
                     ))
                 })?;
@@ -486,7 +486,7 @@ where
         match self.kernel {
             GpuRBFKernel::Gaussian => (-r * r).exp(),
             GpuRBFKernel::Multiquadric => (T::one() + r * r).sqrt(),
-            GpuRBFKernel::InverseMultiquadric => T::one() / (T::one() + r * r).sqrt(),
+            GpuRBFKernel::InverseMultiquadric =>, T::one() / (T::one() + r * r).sqrt(),
             GpuRBFKernel::Linear => r,
             GpuRBFKernel::Cubic => r * r * r,
             GpuRBFKernel::ThinPlate => {
@@ -500,7 +500,7 @@ where
     }
 
     /// Update evaluation statistics
-    fn update_evaluation_stats(&self, _compute_time: f64, _used_gpu: bool) {
+    fn update_evaluation_stats(&self_compute_time: f64, _used_gpu: bool) {
         // Update internal statistics
         // In a real implementation, this would update the stats structure
     }
@@ -532,14 +532,13 @@ where
         Self {
             gpu_config: GpuConfig::default(),
             batch_size: 2048,
-            stats: GpuStats::default(),
-            _phantom: std::marker::PhantomData,
+            stats: GpuStats::default(), _phantom: std::marker::PhantomData,
         }
     }
 
     /// Set GPU configuration
     pub fn with_gpu_config(mut self, config: GpuConfig) -> Self {
-        self.gpu_config = config;
+        self.gpu_config = _config;
         self
     }
 
@@ -562,10 +561,7 @@ where
     /// Evaluated values for all splines
     #[allow(dead_code)]
     pub fn batch_evaluate(
-        &mut self,
-        _coefficients: &Array2<T>,
-        _knots: &Array2<T>,
-        _x_eval: &ArrayView1<T>,
+        &mut self_coefficients: &Array2<T>, _knots: &Array2<T>, _x_eval: &ArrayView1<T>,
     ) -> InterpolateResult<Array2<T>> {
         // Placeholder implementation
         Err(InterpolateError::NotImplemented(
@@ -674,9 +670,9 @@ pub struct GpuMemoryManager {
 
 impl GpuMemoryManager {
     /// Create a new GPU memory manager
-    pub fn new(max_memory_bytes: u64) -> Self {
+    pub fn new(_max_memory_bytes: u64) -> Self {
         Self {
-            max_memory_usage: max_memory_bytes,
+            max_memory_usage: _max_memory_bytes,
             current_usage: 0,
             memory_pool: Vec::new(),
         }
@@ -737,10 +733,10 @@ impl Default for GpuKernelConfig {
 
 impl GpuKernelConfig {
     /// Calculate optimal kernel configuration for a given problem size
-    pub fn optimal_for_size(problem_size: usize) -> Self {
+    pub fn optimal_for_size(_problem_size: usize) -> Self {
         // Basic heuristic for kernel configuration
-        let block_size = 256.min(problem_size);
-        let grid_size = (problem_size + block_size - 1) / block_size;
+        let block_size = 256.min(_problem_size);
+        let grid_size = (_problem_size + block_size - 1) / block_size;
 
         Self {
             block_size,
@@ -779,16 +775,16 @@ pub mod gpu_utils {
     use super::*;
 
     /// Estimate memory requirements for RBF interpolation
-    pub fn estimate_rbf_memory_requirements(n_points: usize, n_eval: usize) -> u64 {
+    pub fn estimate_rbf_memory_requirements(_n_points: usize, n_eval: usize) -> u64 {
         let float_size = std::mem::size_of::<f64>() as u64;
 
-        // RBF matrix: n_points x n_points
-        let matrix_size = (n_points * n_points) as u64 * float_size;
+        // RBF matrix: _n_points x _n_points
+        let matrix_size = (_n_points * _n_points) as u64 * float_size;
 
-        // Input points and values
-        let data_size = (n_points * 2) as u64 * float_size;
+        // Input _points and values
+        let data_size = (_n_points * 2) as u64 * float_size;
 
-        // Evaluation points and results
+        // Evaluation _points and results
         let eval_size = (n_eval * 2) as u64 * float_size;
 
         // Temporary buffers (estimated at 50% overhead)
@@ -798,18 +794,18 @@ pub mod gpu_utils {
     }
 
     /// Check if problem size is suitable for GPU acceleration
-    pub fn is_gpu_worthwhile(n_points: usize, n_eval: usize) -> bool {
+    pub fn is_gpu_worthwhile(_n_points: usize, n_eval: usize) -> bool {
         // Heuristic: GPU acceleration typically worthwhile for larger problems
-        let total_operations = n_points * n_eval;
+        let total_operations = _n_points * n_eval;
         total_operations > 10000 // Threshold for GPU benefit
     }
 
     /// Get recommended GPU configuration for interpolation problem
-    pub fn recommend_gpu_config(n_points: usize, n_eval: usize) -> GpuConfig {
+    pub fn recommend_gpu_config(_n_points: usize, n_eval: usize) -> GpuConfig {
         let mut config = GpuConfig::default();
 
         // Adjust memory fraction based on problem size
-        let memory_req = estimate_rbf_memory_requirements(n_points, n_eval);
+        let memory_req = estimate_rbf_memory_requirements(_n_points, n_eval);
         if memory_req > 1_000_000_000 {
             // > 1GB
             config.max_memory_fraction = 0.9;

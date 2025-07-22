@@ -1,6 +1,6 @@
 use ndarray::{array, Array1, Array2};
 use rand::Rng;
-use scirs2_spatial::interpolate::{
+use scirs2__spatial::interpolate::{
     IDWInterpolator, NaturalNeighborInterpolator, RBFInterpolator, RBFKernel,
 };
 
@@ -134,14 +134,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Generate test function values for a set of points
 #[allow(dead_code)]
-fn generate_test_function(points: &Array2<f64>) -> Array1<f64> {
-    let n = points.nrows();
+fn generate_test_function(_points: &Array2<f64>) -> Array1<f64> {
+    let n = _points.nrows();
     let mut values = Array1::zeros(n);
 
     // Test function: f(x,y) = sin(pi*x) * cos(pi*y) + (x-0.5)^2 + (y-0.5)^2
     for i in 0..n {
-        let x = points[[i, 0]];
-        let y = points[[i, 1]];
+        let x = _points[[i, 0]];
+        let y = _points[[i, 1]];
 
         values[i] = (std::f64::consts::PI * x).sin() * (std::f64::consts::PI * y).cos()
             + (x - 0.5).powi(2)
@@ -153,18 +153,18 @@ fn generate_test_function(points: &Array2<f64>) -> Array1<f64> {
 
 /// Create a regular grid of points
 #[allow(dead_code)]
-fn create_grid(x_min: f64, x_max: f64, y_min: f64, y_max: f64, size: usize) -> Array2<f64> {
+fn create_grid(_x_min: f64, x_max: f64, y_min: f64, y_max: f64, size: usize) -> Array2<f64> {
     let n_points = size * size;
     let mut grid = Array2::zeros((n_points, 2));
 
-    let x_step = (x_max - x_min) / (size - 1) as f64;
+    let x_step = (x_max - _x_min) / (size - 1) as f64;
     let y_step = (y_max - y_min) / (size - 1) as f64;
 
     let mut idx = 0;
     for i in 0..size {
         let y = y_min + i as f64 * y_step;
         for j in 0..size {
-            let x = x_min + j as f64 * x_step;
+            let x = _x_min + j as f64 * x_step;
             grid[[idx, 0]] = x;
             grid[[idx, 1]] = y;
             idx += 1;
@@ -181,8 +181,8 @@ fn generate_random_points(n: usize, x_min: f64, x_max: f64, y_min: f64, y_max: f
     let mut points = Array2::zeros((n, 2));
 
     for i in 0..n {
-        points[[i, 0]] = rng.random_range(x_min..x_max);
-        points[[i, 1]] = rng.random_range(y_min..y_max);
+        points[[i, 0]] = rng.gen_range(x_min..x_max);
+        points[[i..1]] = rng.gen_range(y_min..y_max);
     }
 
     points
@@ -190,11 +190,11 @@ fn generate_random_points(n: usize, x_min: f64, x_max: f64, y_min: f64, y_max: f
 
 /// Print interpolation results as a grid
 #[allow(dead_code)]
-fn print_grid(size: usize, values: &Array1<f64>) {
-    for i in 0..size {
+fn print_grid(_size: usize, values: &Array1<f64>) {
+    for i in 0.._size {
         let mut row = String::new();
-        for j in 0..size {
-            let idx = i * size + j;
+        for j in 0.._size {
+            let idx = i * _size + j;
             row.push_str(&format!("{:.4}  ", values[idx]));
         }
         println!("  {row}");
@@ -203,12 +203,12 @@ fn print_grid(size: usize, values: &Array1<f64>) {
 
 /// Calculate the root mean square error between two arrays
 #[allow(dead_code)]
-fn calculate_rmse(truth: &Array1<f64>, pred: &Array1<f64>) -> f64 {
-    let n = truth.len();
+fn calculate_rmse(_truth: &Array1<f64>, pred: &Array1<f64>) -> f64 {
+    let n = _truth.len();
     let mut sum_sq_err = 0.0;
 
     for i in 0..n {
-        let err = truth[i] - pred[i];
+        let err = _truth[i] - pred[i];
         sum_sq_err += err * err;
     }
 

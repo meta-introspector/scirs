@@ -3,20 +3,23 @@
 //! This module provides parallel implementations of filtering operations
 //! for improved performance on multi-core systems.
 
+use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, ArrayView1};
-use num_complex::Complex64;
+use crate::savgol::savgol_coeffs;
+use ndarray::{Array1, Array2, ArrayView1, s};
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
+use rustfft::{FftPlanner, num_complex::Complex};
 use scirs2_core::parallel_ops::*;
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 // Temporary replacement for par_iter_with_setup
 fn par_iter_with_setup<I, IT, S, F, R, RF, E>(
-    items: I,
-    _setup: S,
-    map_fn: F,
-    _reduce_fn: RF,
+    items: I_setup: S,
+    map_fn: F_reduce, _fn: RF,
 ) -> Result<Vec<R>, E>
 where
     I: IntoIterator<Item = IT>,
@@ -153,7 +156,7 @@ fn parallel_filter_overlap_save(
     let n = x.len();
     let filter_len = b.len().max(a.len());
 
-    // Determine chunk size
+    // Determine chunk _size
     let chunk = chunk_size.unwrap_or_else(|| {
         // Auto-determine based on signal length and available cores
         let n_cores = num_cpus::get();
@@ -383,8 +386,7 @@ pub fn parallel_convolve2d(
     let (out_rows, out_cols) = match mode {
         "full" => (img_rows + ker_rows - 1, img_cols + ker_cols - 1),
         "same" => (img_rows, img_cols),
-        "valid" => (img_rows - ker_rows + 1, img_cols - ker_cols + 1),
-        _ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
+        "valid" => (img_rows - ker_rows + 1, img_cols - ker_cols + 1, _ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
     };
 
     // Padding for boundary handling
@@ -404,15 +406,13 @@ pub fn parallel_convolve2d(
         let row_offset = match mode {
             "full" => 0,
             "same" => ker_rows / 2,
-            "valid" => ker_rows - 1,
-            _ => 0,
+            "valid" => ker_rows - 1_ => 0,
         };
 
         let col_offset = match mode {
             "full" => 0,
             "same" => ker_cols / 2,
-            "valid" => ker_cols - 1,
-            _ => 0,
+            "valid" => ker_cols - 1_ => 0,
         };
 
         for j in 0..out_cols {
@@ -455,15 +455,15 @@ fn pad_image(
     pad_cols: usize,
     boundary: &str,
 ) -> SignalResult<Array2<f64>> {
-    let (rows, cols) = image.dim();
-    let padded_rows = rows + 2 * pad_rows;
-    let padded_cols = cols + 2 * pad_cols;
+    let (_rows_cols) = image.dim();
+    let padded_rows = _rows + 2 * pad_rows;
+    let padded_cols = _cols + 2 * pad_cols;
 
     let mut padded = Array2::zeros((padded_rows, padded_cols));
 
     // Copy original image to center
-    for i in 0..rows {
-        for j in 0..cols {
+    for i in 0.._rows {
+        for j in 0.._cols {
             padded[[i + pad_rows, j + pad_cols]] = image[[i, j]];
         }
     }
@@ -477,18 +477,18 @@ fn pad_image(
             // Reflect padding
             // Top and bottom
             for i in 0..pad_rows {
-                for j in 0..cols {
+                for j in 0.._cols {
                     padded[[i, j + pad_cols]] = image[[pad_rows - i - 1, j]];
-                    padded[[rows + pad_rows + i, j + pad_cols]] = image[[rows - i - 1, j]];
+                    padded[[_rows + pad_rows + i, j + pad_cols]] = image[[_rows - i - 1, j]];
                 }
             }
 
             // Left and right (including corners)
             for i in 0..padded_rows {
                 for j in 0..pad_cols {
-                    let src_i = i.saturating_sub(pad_rows).min(rows - 1);
+                    let src_i = i.saturating_sub(pad_rows).min(_rows - 1);
                     padded[[i, j]] = padded[[i, 2 * pad_cols - j - 1]];
-                    padded[[i, cols + pad_cols + j]] = padded[[i, cols + pad_cols - j - 1]];
+                    padded[[i, _cols + pad_cols + j]] = padded[[i, _cols + pad_cols - j - 1]];
                 }
             }
         }
@@ -496,8 +496,8 @@ fn pad_image(
             // Periodic boundary
             for i in 0..padded_rows {
                 for j in 0..padded_cols {
-                    let src_i = (i + rows - pad_rows) % rows;
-                    let src_j = (j + cols - pad_cols) % cols;
+                    let src_i = (i + _rows - pad_rows) % _rows;
+                    let src_j = (j + _cols - pad_cols) % _cols;
                     padded[[i, j]] = image[[src_i, src_j]];
                 }
             }
@@ -534,8 +534,6 @@ pub fn parallel_savgol_filter(
     deriv: usize,
     delta: f64,
 ) -> SignalResult<Array1<f64>> {
-    use crate::savgol::savgol_coeffs;
-
     // Get filter coefficients
     let coeffs = savgol_coeffs(
         window_length,
@@ -637,7 +635,7 @@ pub fn parallel_decimate_filter(
 ) -> SignalResult<Vec<f64>> {
     if decimation_factor == 0 {
         return Err(SignalError::ValueError(
-            "Decimation factor must be greater than 0".to_string(),
+            "Decimation _factor must be greater than 0".to_string(),
         ));
     }
 
@@ -682,7 +680,7 @@ pub fn parallel_fir_filter_bank(
 ) -> SignalResult<Vec<Vec<f64>>> {
     if filter_bank.is_empty() {
         return Err(SignalError::ValueError(
-            "Filter bank cannot be empty".to_string(),
+            "Filter _bank cannot be empty".to_string(),
         ));
     }
 
@@ -784,13 +782,13 @@ pub fn parallel_adaptive_lms_filter(
 ) -> SignalResult<(Vec<f64>, Vec<f64>, Vec<f64>)> {
     if signal.len() != desired.len() {
         return Err(SignalError::ValueError(
-            "Signal and desired response must have same length".to_string(),
+            "Signal and desired response must have same _length".to_string(),
         ));
     }
 
     if filter_length == 0 {
         return Err(SignalError::ValueError(
-            "Filter length must be greater than 0".to_string(),
+            "Filter _length must be greater than 0".to_string(),
         ));
     }
 
@@ -823,7 +821,6 @@ pub fn parallel_adaptive_lms_filter(
             let coeffs_array = Array1::from(coeffs.clone());
 
             // Use SIMD operations from scirs2-core
-            use scirs2_core::simd_ops::SimdUnifiedOps;
             output[i] = f64::simd_dot(&delay_array.view(), &coeffs_array.view());
 
             // Error calculation
@@ -872,7 +869,7 @@ pub fn parallel_wavelet_filter_bank(
     let mut current_signal = signal.to_vec();
 
     for level in 0..levels {
-        // Apply both filters in parallel
+        // Apply both _filters in parallel
         let filter_outputs: Vec<Vec<f64>> = par_iter_with_setup(
             [lowpass, highpass].iter().enumerate(),
             || {},
@@ -953,11 +950,11 @@ pub fn parallel_polyphase_filter(
     let n_phases = polyphase_filters.len();
     let filter_length = polyphase_filters[0].len();
 
-    // Verify all polyphase filters have same length
+    // Verify all polyphase _filters have same length
     for filter in polyphase_filters {
         if filter.len() != filter_length {
             return Err(SignalError::ValueError(
-                "All polyphase filters must have same length".to_string(),
+                "All polyphase _filters must have same length".to_string(),
             ));
         }
     }
@@ -979,7 +976,7 @@ pub fn parallel_polyphase_filter(
 
             let mut sample_sum = 0.0;
 
-            // Sum contributions from all polyphase filters
+            // Sum contributions from all polyphase _filters
             for (phase, filter_coeffs) in polyphase_filters.iter().enumerate() {
                 let mut filter_sum = 0.0;
 
@@ -1023,15 +1020,13 @@ pub fn parallel_fft_filter(
     impulse_response: &[f64],
     chunk_size: Option<usize>,
 ) -> SignalResult<Vec<f64>> {
-    use rustfft::{num_complex::Complex, FftPlanner};
-
     let fft_size = chunk_size.unwrap_or(4096);
     let ir_len = impulse_response.len();
     let useful_size = fft_size - ir_len + 1;
 
     if useful_size <= 0 {
         return Err(SignalError::ValueError(
-            "FFT size too small for impulse response length".to_string(),
+            "FFT _size too small for impulse _response length".to_string(),
         ));
     }
 
@@ -1040,7 +1035,7 @@ pub fn parallel_fft_filter(
     let fft = planner.plan_fft_forward(fft_size);
     let ifft = planner.plan_fft_inverse(fft_size);
 
-    // Zero-pad and FFT the impulse response
+    // Zero-pad and FFT the impulse _response
     let mut ir_padded: Vec<Complex<f64>> = impulse_response
         .iter()
         .map(|&x| Complex::new(x, 0.0))
@@ -1179,7 +1174,7 @@ pub fn parallel_filter_advanced(
             filter_length,
             step_size,
         } => {
-            let (output, _, _) = parallel_adaptive_lms_filter(
+            let (output__) = parallel_adaptive_lms_filter(
                 signal,
                 desired,
                 *filter_length,
@@ -1237,7 +1232,7 @@ pub fn parallel_median_filter(
 ) -> SignalResult<Vec<f64>> {
     if kernel_size % 2 == 0 {
         return Err(SignalError::ValueError(
-            "Kernel size must be odd".to_string(),
+            "Kernel _size must be odd".to_string(),
         ));
     }
 
@@ -1401,15 +1396,15 @@ pub enum MorphologicalOperation {
 
 /// Apply erosion operation at a specific index
 #[allow(dead_code)]
-fn apply_erosion(signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
+fn apply_erosion(_signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
     let half_se = se_len / 2;
     let mut min_val = f64::INFINITY;
 
     for (k, &se_val) in se.iter().enumerate() {
         if se_val > 0.0 {
             let sig_idx = idx + k;
-            if sig_idx >= half_se && sig_idx - half_se < signal.len() {
-                min_val = min_val.min(signal[sig_idx - half_se]);
+            if sig_idx >= half_se && sig_idx - half_se < _signal._len() {
+                min_val = min_val.min(_signal[sig_idx - half_se]);
             }
         }
     }
@@ -1423,15 +1418,15 @@ fn apply_erosion(signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
 
 /// Apply dilation operation at a specific index
 #[allow(dead_code)]
-fn apply_dilation(signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
+fn apply_dilation(_signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
     let half_se = se_len / 2;
     let mut max_val = f64::NEG_INFINITY;
 
     for (k, &se_val) in se.iter().enumerate() {
         if se_val > 0.0 {
             let sig_idx = idx + k;
-            if sig_idx >= half_se && sig_idx - half_se < signal.len() {
-                max_val = max_val.max(signal[sig_idx - half_se]);
+            if sig_idx >= half_se && sig_idx - half_se < _signal._len() {
+                max_val = max_val.max(_signal[sig_idx - half_se]);
             }
         }
     }
@@ -1467,7 +1462,7 @@ pub fn parallel_rank_order_filter(
 ) -> SignalResult<Vec<f64>> {
     if rank >= window_size {
         return Err(SignalError::ValueError(
-            "Rank must be less than window size".to_string(),
+            "Rank must be less than window _size".to_string(),
         ));
     }
 
@@ -1557,11 +1552,11 @@ pub fn parallel_bilateral_filter(
 ) -> SignalResult<Vec<f64>> {
     let n = signal.len();
     let half_window = window_size / 2;
-    let chunk = chunk_size.unwrap_or(512.min(n / num_cpus::get())); // Smaller chunks due to computational intensity
+    let chunk = chunk_size.unwrap_or(512.min(n / num_cpus::get())); // Smaller chunks due to computational _intensity
     let overlap = half_window;
 
-    // Precompute spatial kernel
-    let spatial_kernel: Vec<f64> = (0..window_size)
+    // Precompute _spatial kernel
+    let _spatial_kernel: Vec<f64> = (0..window_size)
         .map(|i| {
             let dist = (i as f64 - half_window as f64).abs();
             (-0.5 * (dist / sigma_spatial).powi(2)).exp()
@@ -1664,7 +1659,7 @@ pub fn parallel_cic_filter(
 ) -> SignalResult<Vec<f64>> {
     if decimation_factor == 0 || num_stages == 0 {
         return Err(SignalError::ValueError(
-            "Decimation factor and number of stages must be positive".to_string(),
+            "Decimation _factor and number of _stages must be positive".to_string(),
         ));
     }
 
@@ -1672,10 +1667,10 @@ pub fn parallel_cic_filter(
     let chunk = chunk_size.unwrap_or(2048.min(n / num_cpus::get()));
     let output_length = n / decimation_factor;
 
-    // Process signal in chunks for integrator stages
+    // Process signal in chunks for integrator _stages
     let mut integrator_output = signal.to_vec();
 
-    // Apply integrator stages in parallel chunks
+    // Apply integrator _stages in parallel chunks
     for _ in 0..num_stages {
         let chunk_results: Vec<Vec<f64>> = par_iter_with_setup(
             (0..n).step_by(chunk).enumerate(),
@@ -1722,7 +1717,7 @@ pub fn parallel_cic_filter(
         })
         .collect();
 
-    // Apply comb stages in parallel
+    // Apply comb _stages in parallel
     let mut comb_output = decimated;
 
     for _ in 0..num_stages {
@@ -1800,7 +1795,7 @@ where
                     SignalError::ValueError(format!("Could not convert {:?} to f64", val))
                 })
             })
-            .collect::<Result<Vec<f64>, _>>()?,
+            .collect::<Result<Vec<f64>_>>()?,
     );
 
     // Check if all values are finite
@@ -1820,7 +1815,7 @@ where
         return sequential_lfilter(b, a, &x_array.to_vec());
     }
 
-    // Determine optimal chunk size
+    // Determine optimal chunk _size
     let effective_chunk_size = chunk_size.unwrap_or_else(|| {
         let num_cores = num_cpus::get();
         (n / num_cores).max(1000)
@@ -2014,7 +2009,7 @@ pub fn parallel_matched_filter(
         }
     }
 
-    // Adjust final size
+    // Adjust final _size
     result.truncate(signal_len - template_len + 1);
     Ok(result)
 }
@@ -2226,7 +2221,7 @@ mod tests {
         let signal: Vec<f64> = (0..n).map(|i| (2.0 * PI * i as f64 / 10.0).sin()).collect();
         let desired: Vec<f64> = signal.iter().map(|&x| x * 0.5).collect(); // Attenuated version
 
-        let (output, coeffs, _error) =
+        let (output, coeffs_error) =
             parallel_adaptive_lms_filter(&signal, &desired, 10, 0.01, None).unwrap();
 
         assert_eq!(output.len(), n);

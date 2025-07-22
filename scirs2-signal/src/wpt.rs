@@ -13,12 +13,14 @@
 //! * Signal compression with best basis selection
 //! * Pattern recognition with improved time-frequency localization
 
-use crate::dwt::{dwt_decompose, dwt_reconstruct, Wavelet};
+use approx::assert_abs_diff_eq;
+use crate::dwt::{Wavelet, dwt_decompose, dwt_reconstruct};
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use std::collections::HashMap;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Node in the wavelet packet tree
 ///
 /// Each node represents a subband in the wavelet packet decomposition.
@@ -133,31 +135,31 @@ impl WaveletPacket {
     }
 
     /// Reconstruct this node from its children
-    pub fn reconstruct(left: &Self, right: &Self) -> SignalResult<Self> {
+    pub fn reconstruct(_left: &Self, right: &Self) -> SignalResult<Self> {
         // Check that the nodes are siblings
-        if left.level != right.level || left.parent_position() != right.parent_position() {
+        if _left.level != right.level || _left.parent_position() != right.parent_position() {
             return Err(SignalError::ValueError(
                 "Nodes are not siblings".to_string(),
             ));
         }
 
         // Check that the wavelet and mode match
-        if left.wavelet != right.wavelet || left.mode != right.mode {
+        if _left.wavelet != right.wavelet || _left.mode != right.mode {
             return Err(SignalError::ValueError(
                 "Wavelet or mode mismatch between siblings".to_string(),
             ));
         }
 
         // Perform one level of inverse DWT
-        let reconstructed = dwt_reconstruct(&left.data, &right.data, left.wavelet)?;
+        let reconstructed = dwt_reconstruct(&_left.data, &right.data, _left.wavelet)?;
 
         // Create parent node
         let parent = WaveletPacket::new(
-            left.level - 1,
-            left.parent_position().unwrap(),
+            _left.level - 1,
+            _left.parent_position().unwrap(),
             reconstructed,
-            left.wavelet,
-            &left.mode,
+            _left.wavelet,
+            &_left.mode,
         );
 
         Ok(parent)
@@ -201,12 +203,12 @@ pub struct WaveletPacketTree {
 
 impl WaveletPacketTree {
     /// Create a new wavelet packet tree from a signal
-    pub fn new<T>(data: &[T], wavelet: Wavelet, mode: Option<&str>) -> SignalResult<Self>
+    pub fn new<T>(_data: &[T], wavelet: Wavelet, mode: Option<&str>) -> SignalResult<Self>
     where
         T: Float + NumCast + Debug,
     {
         // Convert input to f64
-        let signal: Vec<f64> = data
+        let signal: Vec<f64> = _data
             .iter()
             .map(|&val| {
                 num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -248,7 +250,7 @@ impl WaveletPacketTree {
             let nodes_at_level: Vec<(usize, usize)> = self
                 .nodes
                 .keys()
-                .filter(|(l, _)| *l == current_level)
+                .filter(|(l_)| *l == current_level)
                 .cloned()
                 .collect();
 
@@ -288,7 +290,7 @@ impl WaveletPacketTree {
     pub fn get_level(&self, level: usize) -> Vec<&WaveletPacket> {
         self.nodes
             .iter()
-            .filter(|&((l, _), _)| *l == level)
+            .filter(|&((l_)_)| *l == level)
             .map(|(_, node)| node)
             .collect()
     }
@@ -455,7 +457,7 @@ impl WaveletPacketTree {
 
                     if original_energy > 1e-12 {
                         let energy_ratio = reconstructed_energy / original_energy;
-                        if (energy_ratio - 1.0).abs() > 0.1 {
+                        if ((energy_ratio - 1.0) as f64).abs() > 0.1 {
                             eprintln!("Warning: Energy conservation issue in WPT reconstruction. Ratio: {:.6}", energy_ratio);
                         }
                     }
@@ -483,7 +485,7 @@ impl WaveletPacketTree {
     /// - Reconstruction accuracy
     /// - Numerical stability
     pub fn validate_enhanced(&self) -> SignalResult<WaveletPacketValidationResult> {
-        let mut issues = Vec::new();
+        let mut issues: Vec<String> = Vec::new();
 
         // Check energy conservation across levels
         let original_energy: f64 = self.root.data.iter().map(|x| x * x).sum();
@@ -500,7 +502,7 @@ impl WaveletPacketTree {
                 let ratio = level_energy / original_energy;
                 energy_ratios.push(ratio);
 
-                if (ratio - 1.0).abs() > 0.01 {
+                if ((ratio - 1.0) as f64).abs() > 0.01 {
                     issues.push(format!(
                         "Energy conservation violation at level {}: ratio = {:.6}",
                         level, ratio
@@ -529,7 +531,7 @@ impl WaveletPacketTree {
                         .collect();
 
                     let max_error = errors.iter().fold(0.0, |a, &b| a.max(b));
-                    let mean_error = errors.iter().sum::<f64>() / errors.len() as f64;
+                    let mean_error = errors.iter().sum::<f64>() / errors.len()  as f64;
 
                     max_reconstruction_error = max_reconstruction_error.max(max_error);
                     mean_reconstruction_error = mean_reconstruction_error.max(mean_error);
@@ -655,8 +657,8 @@ impl WaveletPacketTree {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::wpt::wp_decompose;
-/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2__signal::wpt::wp_decompose;
+/// use scirs2__signal::dwt::Wavelet;
 ///
 /// // Create a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -708,8 +710,8 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::wpt::{wp_decompose, get_level_coefficients};
-/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2__signal::wpt::{wp_decompose, get_level_coefficients};
+/// use scirs2__signal::dwt::Wavelet;
 ///
 /// // Create a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -724,8 +726,8 @@ where
 /// assert_eq!(coeffs.len(), 4);
 /// ```
 #[allow(dead_code)]
-pub fn get_level_coefficients(tree: &WaveletPacketTree, level: usize) -> Vec<Vec<f64>> {
-    let mut nodes = tree.get_level(level);
+pub fn get_level_coefficients(_tree: &WaveletPacketTree, level: usize) -> Vec<Vec<f64>> {
+    let mut nodes = _tree.get_level(level);
 
     // Sort by position (left to right)
     nodes.sort_by_key(|node| node.position);
@@ -748,8 +750,8 @@ pub fn get_level_coefficients(tree: &WaveletPacketTree, level: usize) -> Vec<Vec
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::wpt::{wp_decompose, reconstruct_from_nodes};
-/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2__signal::wpt::{wp_decompose, reconstruct_from_nodes};
+/// use scirs2__signal::dwt::Wavelet;
 ///
 /// // Create a simple signal with power-of-2 length
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -778,8 +780,7 @@ pub fn reconstruct_from_nodes(
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_abs_diff_eq;
-
+use approx::{assert_relative_eq};
     #[test]
     fn test_wavelet_packet_path() {
         // Create some test nodes
@@ -797,6 +798,8 @@ mod tests {
 
     #[test]
     fn test_wavelet_packet_positions() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a test node
         let node = WaveletPacket::new(2, 3, vec![1.0, 2.0], Wavelet::Haar, "symmetric");
 
@@ -808,6 +811,8 @@ mod tests {
 
     #[test]
     fn test_wavelet_packet_decompose() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a signal with constant values
         let signal = vec![1.0; 8];
         let root = WaveletPacket::new(0, 0, signal, Wavelet::Haar, "symmetric");
@@ -857,6 +862,8 @@ mod tests {
 
     #[test]
     fn test_wp_decompose() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a test signal
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 
@@ -882,6 +889,8 @@ mod tests {
 
     #[test]
     fn test_wp_reconstruct() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple test signal with constant values
         let signal = vec![1.0; 8];
 

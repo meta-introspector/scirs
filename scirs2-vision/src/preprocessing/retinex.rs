@@ -18,8 +18,8 @@ use ndarray::{Array2, Array3};
 ///
 /// * Result containing enhanced image
 #[allow(dead_code)]
-pub fn single_scale_retinex(img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
-    let rgb = img.to_rgb8();
+pub fn single_scale_retinex(_img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
+    let rgb = _img.to_rgb8();
     let (width, height) = rgb.dimensions();
 
     // Convert to float and apply log
@@ -231,8 +231,8 @@ pub fn retinex_with_clahe(
 
 /// Gaussian blur for 3D arrays (color images)
 #[allow(dead_code)]
-fn gaussian_blur_3d(img: &Array3<f32>, sigma: f32) -> Result<Array3<f32>> {
-    let (height, width, channels) = img.dim();
+fn gaussian_blur_3d(_img: &Array3<f32>, sigma: f32) -> Result<Array3<f32>> {
+    let (height, width, channels) = _img.dim();
     let mut blurred = Array3::zeros((height, width, channels));
 
     // Create Gaussian kernel
@@ -241,7 +241,7 @@ fn gaussian_blur_3d(img: &Array3<f32>, sigma: f32) -> Result<Array3<f32>> {
 
     // Apply separable convolution to each channel
     for c in 0..channels {
-        let channel = img.index_axis(ndarray::Axis(2), c);
+        let channel = _img.index_axis(ndarray::Axis(2), c);
         let blurred_channel = separable_convolution(&channel, &kernel)?;
 
         for y in 0..height {
@@ -256,14 +256,14 @@ fn gaussian_blur_3d(img: &Array3<f32>, sigma: f32) -> Result<Array3<f32>> {
 
 /// Create 1D Gaussian kernel
 #[allow(dead_code)]
-fn create_gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
-    let mut kernel = vec![0.0; size];
-    let center = size / 2;
+fn create_gaussian_kernel(_size: usize, sigma: f32) -> Vec<f32> {
+    let mut kernel = vec![0.0; _size];
+    let center = _size / 2;
     let s = 2.0 * sigma * sigma;
 
     let mut sum = 0.0;
 
-    for (i, kernel_item) in kernel.iter_mut().enumerate().take(size) {
+    for (i, kernel_item) in kernel.iter_mut().enumerate().take(_size) {
         let x = i as f32 - center as f32;
         *kernel_item = (-x * x / s).exp();
         sum += *kernel_item;
@@ -279,8 +279,8 @@ fn create_gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
 
 /// Separable convolution (horizontal then vertical)
 #[allow(dead_code)]
-fn separable_convolution(img: &ndarray::ArrayView2<f32>, kernel: &[f32]) -> Result<Array2<f32>> {
-    let (height, width) = img.dim();
+fn separable_convolution(_img: &ndarray::ArrayView2<f32>, kernel: &[f32]) -> Result<Array2<f32>> {
+    let (height, width) = _img.dim();
     let kernel_size = kernel.len();
     let pad = kernel_size / 2;
 
@@ -294,7 +294,7 @@ fn separable_convolution(img: &ndarray::ArrayView2<f32>, kernel: &[f32]) -> Resu
             for (k, &kernel_k) in kernel.iter().enumerate().take(kernel_size) {
                 let sx = x as i32 + k as i32 - pad as i32;
                 if sx >= 0 && sx < width as i32 {
-                    sum += img[[y, sx as usize]] * kernel_k;
+                    sum += _img[[y, sx as usize]] * kernel_k;
                 }
             }
 
@@ -325,11 +325,11 @@ fn separable_convolution(img: &ndarray::ArrayView2<f32>, kernel: &[f32]) -> Resu
 
 /// Find min and max values in 2D array
 #[allow(dead_code)]
-fn find_min_max(arr: &ndarray::ArrayView2<f32>) -> (f32, f32) {
+fn find_min_max(_arr: &ndarray::ArrayView2<f32>) -> (f32, f32) {
     let mut min_val = f32::MAX;
     let mut max_val = f32::MIN;
 
-    for &val in arr.iter() {
+    for &val in _arr.iter() {
         min_val = min_val.min(val);
         max_val = max_val.max(val);
     }
@@ -339,9 +339,9 @@ fn find_min_max(arr: &ndarray::ArrayView2<f32>) -> (f32, f32) {
 
 /// Simplified Retinex with dynamic adaptation
 #[allow(dead_code)]
-pub fn adaptive_retinex(img: &DynamicImage, adaptation_level: f32) -> Result<DynamicImage> {
+pub fn adaptive_retinex(_img: &DynamicImage, adaptation_level: f32) -> Result<DynamicImage> {
     // Use different scales based on image size
-    let (width, height) = img.dimensions();
+    let (width, height) = _img.dimensions();
     let image_size = ((width * height) as f32).sqrt();
 
     let sigmas = vec![
@@ -350,7 +350,7 @@ pub fn adaptive_retinex(img: &DynamicImage, adaptation_level: f32) -> Result<Dyn
         image_size * 0.1 * adaptation_level,
     ];
 
-    multi_scale_retinex(img, &sigmas, None)
+    multi_scale_retinex(_img, &sigmas, None)
 }
 
 #[cfg(test)]

@@ -6,13 +6,14 @@
 //! networks, synaptic plasticity, and biological learning mechanisms.
 
 use crate::error::{DatasetsError, Result};
-use crate::neuromorphic_data_processor::NeuromorphicProcessor;
-use crate::quantum_enhanced_generators::QuantumDatasetGenerator;
+use crate::neuromorphic_data__processor::NeuromorphicProcessor;
+use crate::quantum_enhanced__generators::QuantumDatasetGenerator;
 use crate::utils::Dataset;
 use ndarray::{s, Array1, Array2, Array3};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
+use statrs::statistics::Statistics;
 
 /// Quantum-Neuromorphic Fusion Processor
 /// The ultimate synthesis of quantum computing and biological neural networks
@@ -120,11 +121,11 @@ impl Default for QuantumNeuromorphicFusion {
 
 impl QuantumNeuromorphicFusion {
     /// Create a new quantum-neuromorphic fusion processor
-    pub fn new(quantum_coupling: f64, coherence_time: Duration, adaptive_learning: bool) -> Self {
+    pub fn new(_quantum_coupling: f64, coherence_time: Duration, adaptive_learning: bool) -> Self {
         Self {
             quantum_engine: QuantumDatasetGenerator::default(),
             neuromorphic_engine: NeuromorphicProcessor::default(),
-            quantum_bio_coupling: quantum_coupling.clamp(0.0, 1.0),
+            quantum_bio_coupling: _quantum_coupling.clamp(0.0, 1.0),
             coherence_plasticity_factor: 0.5,
             quantum_decoherence_time: coherence_time,
             adaptive_learning_rate: if adaptive_learning { 0.001 } else { 0.0 },
@@ -159,12 +160,12 @@ impl QuantumNeuromorphicFusion {
     ) -> Result<QuantumBioFusionResult> {
         if n_samples == 0 || n_features == 0 {
             return Err(DatasetsError::InvalidFormat(
-                "Samples and features must be > 0".to_string(),
+                "Samples and _features must be > 0".to_string(),
             ));
         }
 
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => StdRng::from_rng(&mut rand::rng()),
         };
 
@@ -229,7 +230,7 @@ impl QuantumNeuromorphicFusion {
                 }
             }
 
-            // Extract final classical features from quantum-biological evolution
+            // Extract final classical _features from quantum-biological evolution
             for feature_idx in 0..n_features {
                 if feature_idx < quantum_neurons.len() {
                     // Fusion of quantum and biological information
@@ -256,7 +257,7 @@ impl QuantumNeuromorphicFusion {
         // Extract entanglement matrix
         let entanglement_matrix = self.extract_entanglement_matrix(&quantum_synapses)?;
 
-        // Generate emergent features from fusion dynamics
+        // Generate emergent _features from fusion dynamics
         let emergent_features =
             self.extract_fusion_features(&quantum_evolution, &spike_patterns)?;
 
@@ -290,7 +291,7 @@ impl QuantumNeuromorphicFusion {
         }
 
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => StdRng::from_rng(&mut rand::rng()),
         };
 
@@ -472,7 +473,7 @@ impl QuantumNeuromorphicFusion {
         n_neurons: usize,
         rng: &mut StdRng,
     ) -> Result<Vec<QuantumNeuron>> {
-        let mut neurons = Vec::with_capacity(n_neurons);
+        let mut _neurons = Vec::with_capacity(n_neurons);
 
         for neuron_idx in 0..n_neurons {
             // Initialize quantum state in superposition
@@ -486,7 +487,7 @@ impl QuantumNeuromorphicFusion {
                 .filter(|&i| i != neuron_idx && rng.random::<f64>() < 0.1)
                 .collect();
 
-            neurons.push(QuantumNeuron {
+            _neurons.push(QuantumNeuron {
                 membrane_potential: rng.random::<f64>() - 0.5,
                 quantum_state,
                 phase_evolution: 0.0,
@@ -497,7 +498,7 @@ impl QuantumNeuromorphicFusion {
             });
         }
 
-        Ok(neurons)
+        Ok(_neurons)
     }
 
     fn initialize_quantum_synapses(
@@ -519,11 +520,10 @@ impl QuantumNeuromorphicFusion {
                 quantum_amplitudes: (amplitude_real, amplitude_imag),
                 quantum_phase,
                 entangled_partner: if rng.random::<f64>() < 0.3 {
-                    Some(rng.random_range(0..n_synapses))
+                    Some(rng.gen_range(0..n_synapses))
                 } else {
                     None
-                },
-                coherence_time: self.quantum_decoherence_time,
+                }..coherence_time: self.quantum_decoherence_time,
                 coupling_strength: self.quantum_bio_coupling,
             });
         }
@@ -533,14 +533,12 @@ impl QuantumNeuromorphicFusion {
 
     fn evolve_quantum_states(
         &self,
-        neurons: &mut [QuantumNeuron],
-        _synapses: &[QuantumSynapse],
-        _time_step: usize,
+        neurons: &mut [QuantumNeuron], _synapses: &[QuantumSynapse]_time_step: usize,
         rng: &mut StdRng,
     ) -> Result<()> {
         for neuron in neurons.iter_mut() {
             // Quantum state evolution under Hamiltonian
-            let dt = 0.01; // Time step
+            let dt = 0.01; // Time _step
             let omega = 1.0; // Base frequency
 
             // Schrödinger evolution: |ψ(t+dt)⟩ = e^(-iHdt)|ψ(t)⟩
@@ -626,8 +624,7 @@ impl QuantumNeuromorphicFusion {
 
     fn quantum_bio_learning(
         &self,
-        synapses: &mut [QuantumSynapse],
-        _spike_response: &Array1<f64>,
+        synapses: &mut [QuantumSynapse], _spike_response: &Array1<f64>,
         time_step: usize,
     ) -> Result<f64> {
         let mut total_learning = 0.0;
@@ -730,7 +727,7 @@ impl QuantumNeuromorphicFusion {
                 let spike_slice = spike_patterns.slice(s![.., feature_idx, sample_idx]);
 
                 // Quantum feature: temporal coherence
-                let quantum_coherence = quantum_slice.var(0.0);
+                let quantum_coherence = quantum_slice.variance();
 
                 // Biological feature: spike rate and timing
                 let spike_rate = spike_slice.sum() / time_steps as f64;

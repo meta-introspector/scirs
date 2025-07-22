@@ -74,7 +74,7 @@ impl LinalgError {
         let base_msg = format!("Matrix is singular during {operation} operation");
         let rows = matrix_shape.0;
         let cols = matrix_shape.1;
-        let shape_info = format!("Matrix shape: {rows}×{cols}");
+        let shape_info = format!("Matrix _shape: {rows}×{cols}");
 
         let mut suggestions = vec![
             "Consider the following regularization approaches:".to_string(),
@@ -86,7 +86,7 @@ impl LinalgError {
 
         if let Some(cond) = condition_number {
             suggestions.push(format!(
-                "4. Condition number: {cond:.2e} (>1e12 indicates ill-conditioning)"
+                "4. Condition _number: {cond:.2e} (>1e12 indicates ill-conditioning)"
             ));
             if cond > 1e12 {
                 suggestions.push(
@@ -115,13 +115,13 @@ impl LinalgError {
         let base_msg = format!("Matrix is not positive definite during {operation} operation");
         let rows = matrix_shape.0;
         let cols = matrix_shape.1;
-        let shape_info = format!("Matrix shape: {rows}×{cols}");
+        let shape_info = format!("Matrix _shape: {rows}×{cols}");
 
         let mut suggestions = vec![
             "Consider the following regularization approaches:".to_string(),
             "1. Diagonal regularization: Add λI where λ > |most negative eigenvalue|".to_string(),
             "2. Modified Cholesky: Use algorithms that ensure positive definiteness".to_string(),
-            "3. Eigenvalue clipping: Replace negative eigenvalues with small positive values"
+            "3. Eigenvalue clipping: Replace negative _eigenvalues with small positive values"
                 .to_string(),
             "4. Use LDL decomposition instead of Cholesky for indefinite matrices".to_string(),
         ];
@@ -161,11 +161,11 @@ impl LinalgError {
             "4. Try different initial guess or starting point".to_string(),
         ];
 
-        if let Some(residual) = current_residual {
+        if let Some(_residual) = current_residual {
             suggestions.push(format!(
-                "5. Current residual: {residual:.2e} (target: {tolerance:.2e})"
+                "5. Current _residual: {_residual:.2e} (target: {tolerance:.2e})"
             ));
-            if residual / tolerance < 10.0 {
+            if _residual / tolerance < 10.0 {
                 suggestions.push(
                     "6. Close to convergence - try increasing iterations slightly".to_string(),
                 );
@@ -192,8 +192,8 @@ pub type LinalgResult<T> = Result<T, LinalgError>;
 
 /// Conversion from CoreError to LinalgError
 impl From<CoreError> for LinalgError {
-    fn from(error: CoreError) -> Self {
-        match error {
+    fn from(_error: CoreError) -> Self {
+        match _error {
             CoreError::ShapeError(msg) => LinalgError::ShapeError(msg.to_string()),
             CoreError::DimensionError(msg) => LinalgError::DimensionError(msg.to_string()),
             CoreError::IndexError(msg) => LinalgError::IndexError(msg.to_string()),
@@ -207,7 +207,7 @@ impl From<CoreError> for LinalgError {
                 LinalgError::ImplementationError(msg.to_string())
             }
             // For other CoreError variants, map to a generic LinalgError
-            _ => LinalgError::ComputationError(format!("Core error: {error}")),
+            _ => LinalgError::ComputationError(format!("Core _error: {_error}")),
         }
     }
 }
@@ -224,8 +224,8 @@ impl From<CoreError> for LinalgError {
 /// * `Ok(())` if the condition is true
 /// * `Err(LinalgError::DomainError)` if the condition is false
 #[allow(dead_code)]
-pub fn check_domain<S: AsRef<str>>(condition: bool, message: S) -> LinalgResult<()> {
-    if condition {
+pub fn check_domain<S: AsRef<str>>(_condition: bool, message: S) -> LinalgResult<()> {
+    if _condition {
         Ok(())
     } else {
         Err(LinalgError::DomainError(message.as_ref().to_string()))
@@ -249,8 +249,8 @@ pub fn check_domain<S: AsRef<str>>(condition: bool, message: S) -> LinalgResult<
 /// This is a linalg-specific wrapper around scirs2_core::validation functions.
 /// For new code, consider using scirs2_core::validation functions directly when possible.
 #[allow(dead_code)]
-pub fn check_dimensions<S: AsRef<str>>(condition: bool, message: S) -> LinalgResult<()> {
-    if condition {
+pub fn check_dimensions<S: AsRef<str>>(_condition: bool, message: S) -> LinalgResult<()> {
+    if _condition {
         Ok(())
     } else {
         Err(LinalgError::DimensionError(message.as_ref().to_string()))
@@ -274,8 +274,8 @@ pub fn check_dimensions<S: AsRef<str>>(condition: bool, message: S) -> LinalgRes
 /// This is a linalg-specific wrapper around scirs2_core::validation functions.
 /// For new code, consider using scirs2_core::validation functions directly when possible.
 #[allow(dead_code)]
-pub fn check_value<S: AsRef<str>>(condition: bool, message: S) -> LinalgResult<()> {
-    if condition {
+pub fn check_value<S: AsRef<str>>(_condition: bool, message: S) -> LinalgResult<()> {
+    if _condition {
         Ok(())
     } else {
         Err(LinalgError::ValueError(message.as_ref().to_string()))

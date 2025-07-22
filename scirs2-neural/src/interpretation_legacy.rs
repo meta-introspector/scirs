@@ -12,6 +12,7 @@ use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::iter::Sum;
+use statrs::statistics::Statistics;
 /// Distance metrics for counterfactual generation
 #[derive(Debug, Clone, PartialEq)]
 pub enum DistanceMetric {
@@ -420,7 +421,7 @@ impl<
         // Get activations and gradients for target layer
         let activations = self.activation_cache.get(target_layer).ok_or_else(|| {
             NeuralError::ComputationError(format!(
-                "Activations not found for layer: {}",
+                "Activations not found for _layer: {}",
                 target_layer
             ))
         })?;
@@ -492,16 +493,14 @@ impl<
                     let gamma_val = F::from(*gamma).unwrap();
                     let positive_part = gradient.mapv(|x| x.max(F::zero()));
                     let negative_part = gradient.mapv(|x| x.min(F::zero()));
-                    Ok(input * (positive_part * (F::one() + gamma_val) + negative_part))
-            LRPRule::AlphaBeta { alpha, beta } => {
+                    Ok(input * (positive_part * (F::one() + gamma_val) + negative_part)), LRPRule::AlphaBeta { alpha, beta } => {
                     let alpha_val = F::from(*alpha).unwrap();
                     let beta_val = F::from(*beta).unwrap();
                     Ok(input * (positive_part * alpha_val - negative_part * beta_val))
             LRPRule::ZPlus => {
                     let positive_input = input.mapv(|x| x.max(F::zero()));
                     Ok(positive_input * gradient)
-                    Ok(input.mapv(|x| x.max(F::zero())))
-            LRPRule::ZB { low, high } => {
+                    Ok(input.mapv(|x| x.max(F::zero()))), LRPRule::ZB { low, high } => {
                     let low_val = F::from(*low).unwrap();
                     let high_val = F::from(*high).unwrap();
                     let clamped_input = input.mapv(|x| x.max(low_val).min(high_val));
@@ -531,8 +530,7 @@ impl<
     fn create_baseline(&self, input: &ArrayD<F>, method: &BaselineMethod) -> Result<ArrayD<F>> {
             BaselineMethod::Zero => Ok(Array::zeros(input.raw_dim())),
             BaselineMethod::Random { seed: _ } => {
-                Ok(input.mapv(|_| F::from(rand::random::<f64>()).unwrap()))
-            BaselineMethod::GaussianBlur { sigma: _ } => {
+                Ok(input.mapv(|_| F::from(rand::random::<f64>()).unwrap())), BaselineMethod::GaussianBlur { sigma: _ } => {
                 let blurred = input.mapv(|x| x * F::from(0.5).unwrap());
                 Ok(blurred)
             BaselineMethod::TrainingMean => Ok(Array::zeros(input.raw_dim())),
@@ -581,8 +579,7 @@ impl<
         let num_bins = 10;
         let range = max_activation - min_activation;
         let bin_width = if range > F::zero() {
-            range / F::from(num_bins).unwrap()
-            F::one()
+            range / F::from(num_bins).unwrap(), F::one()
         };
         let mut histogram = vec![0u32; num_bins];
         let mut bin_edges = Vec::new();
@@ -726,7 +723,7 @@ pub struct InterpretationReport<F: Float + Debug> {
     pub layer_statistics: HashMap<String, LayerAnalysisStats<F>>,
     /// Summary of interpretation
     pub interpretation_summary: InterpretationSummary,
-impl<F: Float + Debug> std::fmt::Display for InterpretationReport<F> {
+impl<F: Float + Debug> + std::fmt::Display for InterpretationReport<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Neural Network Interpretation Report")?;
         writeln!(f, "===================================")?;

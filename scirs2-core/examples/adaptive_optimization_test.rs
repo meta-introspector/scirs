@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Register a simple workload
     let workload = WorkloadProfile::builder()
-        .with_name("test_workload")
+        .name_2(test_workload)
         .with_workload_type(WorkloadType::Balanced)
         .with_priority(Priority::Medium)
         .build();

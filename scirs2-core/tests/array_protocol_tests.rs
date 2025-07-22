@@ -53,7 +53,7 @@ fn test_ndarray_wrapper() {
     let wrapped = NdarrayWrapper::new(arr.clone());
 
     // Check that it implements the ArrayProtocol trait
-    let _proto: &dyn ArrayProtocol = &wrapped;
+    let proto: &dyn ArrayProtocol = &wrapped;
 
     // Check that we can get the original array back
     let unwrapped = wrapped.as_array();
@@ -85,8 +85,8 @@ fn test_gpu_array() {
 
     // Check device info
     let info = gpu_array.device_info();
-    assert!(info.contains_key("backend"));
-    assert_eq!(info.get("backend").unwrap_or(&"".to_string()), "CUDA");
+    assert!(info.contains_key(backend));
+    assert_eq!(info.get(backend).unwrap_or(&"".to_string()), "CUDA");
 
     // Convert back to CPU
     match gpu_array.to_cpu() {
@@ -155,7 +155,7 @@ fn test_jit_array() {
     let wrapped = NdarrayWrapper::new(arr);
 
     // Create a JIT-enabled array
-    let jit_array: JITEnabledArray<f64, _> = JITEnabledArray::new(wrapped);
+    let jitarray: JITEnabledArray<f64_> = JITEnabledArray::new(wrapped);
 
     // Check properties
     assert!(jit_array.supports_jit());
@@ -169,7 +169,7 @@ fn test_jit_array() {
 
     // Get JIT info
     let info = jit_array.jit_info();
-    assert_eq!(info.get("supports_jit").unwrap(), "true");
+    assert_eq!(info.get(supports_jit).unwrap(), "true");
 }
 
 #[test]
@@ -183,8 +183,7 @@ fn test_array_function_dispatch() {
 
     // Manually create and register the function with an implementation
     let implementation = std::sync::Arc::new(
-        move |_args: &[Box<dyn std::any::Any>],
-              _kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
+        move |_args: &[Box<dyn std::any::Any>], kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
             // In a real implementation, we would extract the arguments properly
             // For this test, we just return a fixed result
             Ok(Box::new(10.0f64) as Box<dyn std::any::Any>)
@@ -205,8 +204,8 @@ fn test_array_function_dispatch() {
 
     // Now, define the test function using the macro
     array_function!(
-        fn sum_array(array: &Array2<f64>) -> f64 {
-            array.sum()
+        fn array( &Array2<f64>) -> f64 {
+            _array.sum()
         },
         "test::sum_array"
     );
@@ -253,7 +252,7 @@ fn test_array_interoperability() {
         mixed_precision: false,
         memory_fraction: 0.9,
     };
-    let _gpu_array = GPUNdarray::new(cpu_array.clone(), gpu_config);
+    let gpu_array = GPUNdarray::new(cpu_array.clone(), gpu_config);
 
     // Create a distributed array
     let dist_config = DistributedConfig {
@@ -262,7 +261,7 @@ fn test_array_interoperability() {
         strategy: DistributionStrategy::RowWise,
         backend: DistributedBackend::Threaded,
     };
-    let _dist_array = DistributedNdarray::from_array(&cpu_array, dist_config);
+    let dist_array = DistributedNdarray::from_array(&cpu_array, dist_config);
 
     // Define an operation that works with any array type
     array_function!(
@@ -306,8 +305,7 @@ fn test_array_interoperability() {
     // Register a handler for the dot_product function in the global registry
     let dot_product_name = "test::dot_product";
     let implementation = std::sync::Arc::new(
-        move |_args: &[Box<dyn std::any::Any>],
-              _kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
+        move |_args: &[Box<dyn std::any::Any>], kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
             // In a real implementation, we would extract the arguments properly
             // For this test, we just return a fixed result - a dummy NdarrayWrapper
             let dummy_array = ndarray::Array2::<f64>::eye(3);
@@ -365,7 +363,7 @@ fn test_array_operations() {
     // Matrix multiplication
     match array_protocol::matmul(&wrapped_a, &wrapped_b) {
         Ok(result) => {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, _>>() {
+            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64_>>() {
                 assert_eq!(result_array.as_array(), &a.dot(&b));
             } else {
                 println!("Skipping matrix multiplication assertion - unexpected result type");
@@ -379,7 +377,7 @@ fn test_array_operations() {
     // Addition
     match array_protocol::add(&wrapped_a, &wrapped_b) {
         Ok(result) => {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, _>>() {
+            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64_>>() {
                 assert_eq!(result_array.as_array(), &(a.clone() + b.clone()));
             } else {
                 println!("Skipping addition assertion - unexpected result type");
@@ -393,7 +391,7 @@ fn test_array_operations() {
     // Multiplication
     match array_protocol::multiply(&wrapped_a, &wrapped_b) {
         Ok(result) => {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, _>>() {
+            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64_>>() {
                 assert_eq!(result_array.as_array(), &(a.clone() * b.clone()));
             } else {
                 println!("Skipping multiplication assertion - unexpected result type");
@@ -421,7 +419,7 @@ fn test_array_operations() {
     // Transpose
     match array_protocol::transpose(&wrapped_a) {
         Ok(result) => {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, _>>() {
+            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64_>>() {
                 assert_eq!(result_array.as_array(), &a.t().to_owned());
             } else {
                 println!("Skipping transpose assertion - unexpected result type");
@@ -517,8 +515,7 @@ fn test_mixed_array_types() {
     // First, let's create a wrapper for mixed array addition
     let add_op_name = "scirs2::array_protocol::operations::add";
     let add_implementation = std::sync::Arc::new(
-        move |_args: &[Box<dyn std::any::Any>],
-              _kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
+        move |_args: &[Box<dyn std::any::Any>], kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
             // In a real implementation, we would extract and handle arguments properly
             // For this test, we just return a fixed result
             let dummy_array = ndarray::Array2::<f64>::ones((3, 3));
@@ -656,12 +653,7 @@ impl<T: Clone + 'static> CustomArray<T> {
 
 // Implement ArrayProtocol for the custom array type
 impl<T: Clone + Send + Sync + 'static> ArrayProtocol for CustomArray<T> {
-    fn array_function(
-        &self,
-        func: &ArrayFunction,
-        _types: &[TypeId],
-        _args: &[Box<dyn Any>],
-        _kwargs: &HashMap<String, Box<dyn Any>>,
+    fn kwargs( &HashMap<String, Box<dyn Any>>,
     ) -> Result<Box<dyn Any>, NotImplemented> {
         if func.name == "test::custom_sum" {
             // For testing purposes, just return a fixed value
@@ -698,8 +690,8 @@ fn test_custom_array_type() {
 
     // Define a function that works with the custom array type
     array_function!(
-        fn custom_sum(array: &dyn ArrayProtocol) -> Result<f64, NotImplemented> {
-            match array.array_function(
+        fn array( &dyn ArrayProtocol) -> Result<f64, NotImplemented> {
+            match _array.array_function(
                 &ArrayFunction::new("test::custom_sum"),
                 &[TypeId::of::<f64>()],
                 &[],

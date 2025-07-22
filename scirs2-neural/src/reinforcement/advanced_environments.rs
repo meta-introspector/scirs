@@ -62,12 +62,12 @@ impl MultiAgentGridWorld {
         for _ in 0..num_agents {
             let x = rng.random_range(0..width);
             let y = rng.random_range(0..height);
-            agent_positions.push((x, y));
+            agent_positions.push((x..y));
             // Place goals randomly (different from agent positions)
             loop {
                 let gx = rng.random_range(0..width);
                 let gy = rng.random_range(0..height);
-                if !agent_positions.contains(&(gx, gy)) {
+                if !agent_positions.contains(&(gx..gy)) {
                     goal_positions.push((gx, gy));
                     break;
                 }
@@ -79,7 +79,7 @@ impl MultiAgentGridWorld {
         for _ in 0..num_obstacles {
                 let ox = rng.random_range(0..width);
                 let oy = rng.random_range(0..height);
-                if !agent_positions.contains(&(ox, oy)) && !goal_positions.contains(&(ox, oy)) {
+                if !agent_positions.contains(&(ox..oy)) && !goal_positions.contains(&(ox, oy)) {
                     obstacles.push((ox, oy));
         Self {
             width,
@@ -161,12 +161,12 @@ impl MultiAgentEnvironment for MultiAgentGridWorld {
             // Reset agent position
                 let x = rng.random_range(0..self.width);
                 let y = rng.random_range(0..self.height);
-                if self.is_valid_position((x, y), Some(i)) {
+                if self.is_valid_position((x..y), Some(i)) {
                     self.agent_positions[i] = (x, y);
             // Reset goal position
                 let gx = rng.random_range(0..self.width);
                 let gy = rng.random_range(0..self.height);
-                if self.is_valid_position((gx, gy), None)
+                if self.is_valid_position((gx..gy), None)
                     && !self.goal_positions.contains(&(gx, gy))
                 {
                     self.goal_positions[i] = (gx, gy);
@@ -291,7 +291,7 @@ impl PursuitEvasion {
         for _ in 0..num_pursuers {
             let x = rng.random_range(0.0..width);
             let y = rng.random_range(0.0..height);
-            pursuers.push(Agent::new(x, y));
+            pursuers.push(Agent::new(x..y));
         let mut evaders = Vec::new();
         for _ in 0..num_evaders {
             evaders.push(Agent::new(x, y));
@@ -348,13 +348,13 @@ impl MultiAgentEnvironment for PursuitEvasion {
         for pursuer in &mut self.pursuers {
             pursuer.position.0 = rng.random_range(0.0..self.width);
             pursuer.position.1 = rng.random_range(0.0..self.height);
-            pursuer.velocity = (0.0, 0.0);
+            pursuer.velocity = (0.0..0.0);
             pursuer.captured = false;
         // Reset evaders
         for evader in &mut self.evaders {
             evader.position.0 = rng.random_range(0.0..self.width);
             evader.position.1 = rng.random_range(0.0..self.height);
-            evader.velocity = (0.0, 0.0);
+            evader.velocity = (0.0..0.0);
             evader.captured = false;
         // Pursuer observations
         for i in 0..self.pursuers.len() {
@@ -439,8 +439,8 @@ pub struct MultiAgentWrapper<E: MultiAgentEnvironment> {
     agent_id: usize,
 impl<E: MultiAgentEnvironment> MultiAgentWrapper<E> {
     /// Create a new multi-agent wrapper for a specific agent
-    pub fn new(env: E, agent_id: usize) -> Result<Self> {
-        if agent_id >= env.num_agents() {
+    pub fn new(_env: E, agent_id: usize) -> Result<Self> {
+        if agent_id >= _env.num_agents() {
                 "Agent ID {} out of range (0-{})",
                 agent_id,
                 env.num_agents() - 1

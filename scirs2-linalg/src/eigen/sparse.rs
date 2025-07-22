@@ -25,7 +25,7 @@
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
 use num_complex::Complex;
 use num_traits::{Float, NumAssign};
-use rand::{prelude::*, rng};
+use rand::{prelude::*};
 use std::iter::Sum;
 
 use crate::error::{LinalgError, LinalgResult};
@@ -120,7 +120,7 @@ where
     let mut v_next = Array1::<F>::zeros(n);
 
     // Random initial vector
-    let mut rng = rng();
+    let mut rng = rand::rng();
     for i in 0..n {
         v_curr[i] = F::from(rng.random::<f64>()).unwrap();
     }
@@ -134,13 +134,13 @@ where
     let mut beta = Vec::with_capacity(max_iter);
 
     // Main Lanczos iteration
-    for iter in 0..max_iter.min(n - 1) {
+    for _iter in 0..max_iter.min(n - 1) {
         // Matrix-vector multiplication (parallel)
         matrix.matvec(&v_curr.view(), &mut v_next)?;
 
         // Orthogonalize against previous vector
-        if iter > 0 {
-            let beta_curr = beta[iter - 1];
+        if _iter > 0 {
+            let beta_curr = beta[_iter - 1];
             for j in 0..n {
                 v_next[j] -= beta_curr * v_prev[j];
             }
@@ -178,7 +178,7 @@ where
         v_next = Array1::<F>::zeros(n);
 
         // Check convergence of eigenvalues every few iterations
-        if iter > k && iter % 5 == 0 && check_lanczos_convergence(&alpha, &beta, k, tol) {
+        if _iter > k && _iter % 5 == 0 && check_lanczos_convergence(&alpha, &beta, k, tol) {
             break;
         }
     }
@@ -477,7 +477,7 @@ where
     let mut h_matrix = Array2::<F>::zeros((m + 1, m));
 
     // Random initial vector
-    let mut rng = rng();
+    let mut rng = rand::rng();
     for i in 0..n {
         v_vectors[0][i] = F::from(rng.random::<f64>()).unwrap();
     }
@@ -576,7 +576,7 @@ where
 
 // Helper function to check Arnoldi convergence
 #[allow(dead_code)]
-fn check_arnoldi_convergence<F: Float>(h_matrix: &Array2<F>, m: usize, k: usize, tol: F) -> bool {
+fn check_arnoldi_convergence<F: Float>(_h_matrix: &Array2<F>, m: usize, k: usize, tol: F) -> bool {
     // Simple convergence check based on subdiagonal elements
     if m < k + 1 {
         return false;
@@ -586,8 +586,8 @@ fn check_arnoldi_convergence<F: Float>(h_matrix: &Array2<F>, m: usize, k: usize,
     (0..k).all(|i| {
         let row = m - 1 - i;
         let col = m - 2 - i;
-        if row < h_matrix.nrows() && col < h_matrix.ncols() {
-            h_matrix[[row, col]].abs() < tol * F::from(10.0).unwrap()
+        if row < _h_matrix.nrows() && col < _h_matrix.ncols() {
+            _h_matrix[[row, col]].abs() < tol * F::from(10.0).unwrap()
         } else {
             true
         }
@@ -654,10 +654,10 @@ fn qr_algorithm_complex<F: Float + NumAssign + Sum + 'static>(
 
 // Simplified Householder QR for complex matrices
 #[allow(dead_code)]
-fn householder_qr_complex<F: Float + NumAssign + Sum>(matrix: &Array2<Complex<F>>) -> QrResult<F> {
-    let (m, n) = matrix.dim();
+fn householder_qr_complex<F: Float + NumAssign + Sum>(_matrix: &Array2<Complex<F>>) -> QrResult<F> {
+    let (m, n) = _matrix.dim();
     let mut q = Array2::<Complex<F>>::eye(m);
-    let mut r = matrix.clone();
+    let mut r = _matrix.clone();
 
     let min_dim = m.min(n);
 
@@ -745,7 +745,7 @@ fn apply_householder_right_complex<F: Float + NumAssign>(
     tau: Complex<F>,
     k: usize,
 ) {
-    let (m, _n) = matrix.dim();
+    let (m, n) = matrix.dim();
     let house_len = house_vec.len();
 
     for i in 0..m {
@@ -848,13 +848,7 @@ fn select_closest_complex_eigenvalues<F: Float>(
 /// This function is currently a placeholder and will be implemented in a future version.
 #[allow(dead_code)]
 pub fn eigs_gen<F, M1, M2>(
-    _a: &M1,
-    _b: &M2,
-    _k: usize,
-    _which: &str,
-    _target: F,
-    _max_iter: usize,
-    _tol: F,
+    _a: &M1, _b: &M2, _k: usize, _which: &str, _target: F, _max_iter: usize, _tol: F,
 ) -> SparseEigenResult<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -898,11 +892,7 @@ where
 /// This function is currently a placeholder and will be implemented in a future version.
 #[allow(dead_code)]
 pub fn svds<F, M>(
-    _matrix: &M,
-    _k: usize,
-    _which: &str,
-    _max_iter: usize,
-    _tol: F,
+    _matrix: &M, _k: usize, _which: &str, _max_iter: usize, _tol: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -944,8 +934,7 @@ where
 /// This function is currently a placeholder and will be implemented in a future version.
 #[allow(dead_code)]
 pub fn dense_to_sparse<F>(
-    _dense_matrix: &ArrayView2<F>,
-    _threshold: F,
+    _dense_matrix: &ArrayView2<F>, _threshold: F,
 ) -> LinalgResult<Box<dyn SparseMatrix<F>>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -978,10 +967,7 @@ where
     /// Create a new CSR matrix (placeholder implementation)
     pub fn new(
         nrows: usize,
-        ncols: usize,
-        _data: Vec<F>,
-        _indices: Vec<usize>,
-        _indptr: Vec<usize>,
+        ncols: usize, _data: Vec<F>, _indices: Vec<usize>, _indptr: Vec<usize>,
     ) -> Self {
         Self {
             nrows,

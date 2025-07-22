@@ -52,9 +52,9 @@ pub struct IndexRange {
 
 impl IndexRange {
     /// Create new index range
-    pub fn new(row_start: usize, row_end: usize, col_start: usize, col_end: usize) -> Self {
+    pub fn new(_row_start: usize, row_end: usize, col_start: usize, col_end: usize) -> Self {
         Self {
-            rows: (row_start, row_end),
+            rows: (_row_start, row_end),
             columns: (col_start, col_end),
         }
     }
@@ -228,9 +228,9 @@ impl DataDistribution {
             }
         }
         
-        // Calculate local shape (approximate)
+        // Calculate local _shape (approximate)
         let local_rows = owned_blocks.iter()
-            .map(|(gr, _)| {
+            .map(|(gr_)| {
                 let start_row = gr * block_rows;
                 let end_row = ((gr + 1) * block_rows).min(global_rows);
                 end_row - start_row
@@ -315,8 +315,7 @@ impl DataDistribution {
                 let local_row = global_row - self.owned_indices.rows.0;
                 let local_col = global_col - self.owned_indices.columns.0;
                 Some((local_row, local_col))
-            },
-            _ => None,
+            }_ => None,
         }
     }
     
@@ -332,8 +331,7 @@ impl DataDistribution {
             DistributionStrategy::BlockCyclic => {
                 // Simplified implementation
                 (local_row + self.owned_indices.rows.0, local_col + self.owned_indices.columns.0)
-            },
-            _ => (local_row, local_col),
+            }_ => (local_row, local_col),
         }
     }
 }
@@ -350,9 +348,9 @@ pub struct LoadBalancer {
 
 impl LoadBalancer {
     /// Create a new load balancer
-    pub fn new(config: &super::DistributedConfig) -> LinalgResult<Self> {
+    pub fn new(_config: &super::DistributedConfig) -> LinalgResult<Self> {
         let mut node_capabilities = HashMap::new();
-        for rank in 0..config.num_nodes {
+        for rank in 0.._config.num_nodes {
             // Assume equal capabilities initially
             node_capabilities.insert(rank, 1.0);
         }
@@ -542,7 +540,7 @@ impl MatrixPartitioner {
     }
     
     /// Get index range for a specific node (helper method)
-    fn get_node_range(node_rank: usize, distribution: &DataDistribution) -> Option<IndexRange> {
+    fn get_node_range(_node_rank: usize, distribution: &DataDistribution) -> Option<IndexRange> {
         // This is a simplified implementation
         // In practice, we'd need to reconstruct the range from the distribution strategy
         Some(distribution.owned_indices.clone())

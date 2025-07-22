@@ -1,7 +1,7 @@
 use crate::tensor::{Tensor, TensorInternal};
 
 use crate::error::OpError;
-use crate::ndarray_ext::{NdArrayView, RawNdArrayView};
+use crate::ndarray__ext::{NdArrayView, RawNdArrayView};
 use crate::op;
 use crate::variable::{VariableID, VariableNamespace};
 use crate::{tensor_ops as T, Evaluator};
@@ -59,12 +59,12 @@ impl<'graph, F: Float> Graph<F> {
             // Mark as visited to avoid cycles
             visited.insert(node_id);
 
-            // Get the node's dependencies (incoming nodes)
+            // Get the node's dependencies (incoming _nodes)
             let incoming = graph.access_inner(node_id).incoming_nodes.clone();
 
             // Process dependencies first (depth-first)
             for incoming_node in &incoming {
-                collect_nodes_topo(incoming_node.id, graph, eval_nodes, visited);
+                collect_nodes_topo(incoming_node._id, graph, eval_nodes, visited);
             }
 
             // Add this node after its dependencies
@@ -299,7 +299,7 @@ impl<'graph, F: Float> Graph<F> {
     }
 }
 
-impl<T: Float> fmt::Debug for Graph<T> {
+impl<T: Float>, fmt::Debug for Graph<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let set = &*self.node_set.borrow();
         let mut buf = format!("graph size: {}\n", set.len());
@@ -380,8 +380,7 @@ impl<'graph, 'env, F: Float> Context<'env, F> {
     pub fn eval(
         &'graph self,
         tensors: &[&Tensor<'graph, F>],
-        feeds: &HashMap<TensorID, RawNdArrayView<F>>,
-        _var_env: &'env VariableEnvironment<F>,
+        feeds: &HashMap<TensorID, RawNdArrayView<F>>, _var_env: &'env VariableEnvironment<F>,
     ) -> Vec<Result<NdArray<F>, OpError>> {
         // Create a temporary HashMap to store references
         let temp_feeds: HashMap<TensorID, &RawNdArrayView<F>> =

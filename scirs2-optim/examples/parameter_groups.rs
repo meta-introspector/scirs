@@ -4,7 +4,7 @@
 //! parts of a model, which is common in transfer learning and fine-tuning.
 
 use ndarray::{Array1, Array2};
-use scirs2_optim::{
+use scirs2__optim::{
     optimizers::GroupedAdam,
     parameter_groups::{GroupedOptimizer, ParameterGroupConfig},
 };
@@ -51,16 +51,16 @@ impl SimpleNetwork {
 
 /// Simulate gradients for demonstration
 #[allow(dead_code)]
-fn compute_gradients_2d(params: &[Array2<f64>]) -> Vec<Array2<f64>> {
-    params
+fn compute_gradients_2d(_params: &[Array2<f64>]) -> Vec<Array2<f64>> {
+    _params
         .iter()
         .map(|p| Array2::from_shape_vec(p.dim(), vec![0.01; p.len()]).unwrap())
         .collect()
 }
 
 #[allow(dead_code)]
-fn compute_gradients_1d(params: &[Array1<f64>]) -> Vec<Array1<f64>> {
-    params
+fn compute_gradients_1d(_params: &[Array1<f64>]) -> Vec<Array1<f64>> {
+    _params
         .iter()
         .map(|p| Array1::from_vec(vec![0.01; p.len()]))
         .collect()

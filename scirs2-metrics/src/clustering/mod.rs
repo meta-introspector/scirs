@@ -34,8 +34,8 @@ pub mod validation;
 pub use self::density::*;
 pub use self::distance::*;
 pub use self::evaluation::{dunn_index_enhanced, elbow_method};
-pub use self::external_metrics::*;
-pub use self::internal_metrics::*;
+pub use self::external__metrics::*;
+pub use self::internal__metrics::*;
 pub use self::validation::*;
 
 // Common utility functions that might be used across multiple submodules
@@ -127,7 +127,7 @@ where
     F: Float + NumCast + std::fmt::Debug,
     S: Data<Elem = F>,
 {
-    let (n_samples, _n_features) = x.dim();
+    let (n_samples_n_features) = x.dim();
     let mut distances = Array2::zeros((n_samples, n_samples));
 
     for i in 0..n_samples {

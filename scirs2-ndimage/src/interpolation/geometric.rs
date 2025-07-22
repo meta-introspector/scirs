@@ -44,7 +44,7 @@ where
 
     if zoom_factor <= T::zero() {
         return Err(NdimageError::InvalidInput(format!(
-            "Zoom factor must be positive, got {:?}",
+            "Zoom _factor must be positive, got {:?}",
             zoom_factor
         )));
     }
@@ -54,7 +54,7 @@ where
     let const_val = cval.unwrap_or_else(|| T::zero());
     let _prefilter_input = prefilter.unwrap_or(true);
 
-    // Calculate output shape - each dimension scaled by zoom factor
+    // Calculate output shape - each dimension scaled by zoom _factor
     let input_shape = input.shape();
     let output_shape: Vec<usize> = input_shape
         .iter()
@@ -82,7 +82,7 @@ where
             .as_array_view()
             .iter()
             .map(|&out_coord| {
-                // Scale back by zoom factor to get input coordinate
+                // Scale back by zoom _factor to get input coordinate
                 T::from_usize(out_coord).unwrap_or_else(|| T::zero()) / zoom_factor
             })
             .collect();

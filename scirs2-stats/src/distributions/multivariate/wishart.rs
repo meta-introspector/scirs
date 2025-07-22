@@ -6,11 +6,12 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use rand::rng;
-use rand_distr::{ChiSquared, Distribution, Normal as RandNormal};
+use rand__distr::{ChiSquared, Distribution, Normal as RandNormal};
 use std::fmt::Debug;
 
 // Import helper functions from the multivariate module
 use super::normal::{compute_cholesky, compute_inverse_from_cholesky};
+use statrs::statistics::Statistics;
 
 /// Implementation of the natural logarithm of the gamma function
 /// This is a workaround for the unstable gamma function in Rust
@@ -128,18 +129,18 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
     ///
     /// // Create a 2D Wishart distribution with 5 degrees of freedom
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
     /// let wishart = Wishart::new(scale, df).unwrap();
     /// ```
-    pub fn new<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Self>
+    pub fn new<D>(_scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Self>
     where
         D: Data<Elem = f64>,
     {
-        let scale_owned = scale.to_owned();
+        let scale_owned = _scale.to_owned();
         let dim = scale_owned.shape()[0];
 
         // Check if the matrix is square
@@ -162,7 +163,7 @@ impl Wishart {
             StatsError::DomainError("Scale matrix must be positive definite".to_string())
         })?;
 
-        // Compute determinant of the scale matrix
+        // Compute determinant of the _scale matrix
         let scale_det = {
             let mut det = 1.0;
             for i in 0..dim {
@@ -172,7 +173,7 @@ impl Wishart {
         };
 
         Ok(Wishart {
-            scale: scale_owned,
+            _scale: scale_owned,
             df,
             dim,
             scale_chol,
@@ -194,7 +195,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
@@ -274,7 +275,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
@@ -317,7 +318,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -419,7 +420,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -443,7 +444,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -468,7 +469,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;  // For 2x2 matrix, mode exists when df ≥ 3
@@ -508,18 +509,18 @@ impl Wishart {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distributions::multivariate;
+/// use scirs2__stats::distributions::multivariate;
 ///
 /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
 /// let df = 5.0;
 /// let wishart = multivariate::wishart(scale, df).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn wishart<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Wishart>
+pub fn wishart<D>(_scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Wishart>
 where
     D: Data<Elem = f64>,
 {
-    Wishart::new(scale, df)
+    Wishart::new(_scale, df)
 }
 
 /// Implementation of SampleableDistribution for Wishart

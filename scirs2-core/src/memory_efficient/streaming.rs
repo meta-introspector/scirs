@@ -425,19 +425,19 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
 
     /// Get the number of items in the buffer
     fn len(&self) -> usize {
-        let _guard = self.mutex.lock().unwrap();
+        let guard = self.mutex.lock().unwrap();
         self.data.len()
     }
 
     /// Check if the buffer is empty
     fn is_empty(&self) -> bool {
-        let _guard = self.mutex.lock().unwrap();
+        let guard = self.mutex.lock().unwrap();
         self.data.is_empty()
     }
 
     /// Close the buffer
     fn close(&mut self) {
-        let _guard = self.mutex.lock().unwrap();
+        let guard = self.mutex.lock().unwrap();
         self.closed = true;
         self.condvar.notify_all();
     }
@@ -445,13 +445,13 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
     /// Check if the buffer is closed
     #[allow(dead_code)]
     fn is_closed(&self) -> bool {
-        let _guard = self.mutex.lock().unwrap();
+        let guard = self.mutex.lock().unwrap();
         self.closed
     }
 
     /// Clear the buffer
     fn clear(&mut self) {
-        let _guard = self.mutex.lock().unwrap();
+        let guard = self.mutex.lock().unwrap();
         self.data.clear();
         self.condvar.notify_all();
     }
@@ -477,8 +477,10 @@ pub struct StreamProcessor<T: Clone + Send + 'static, U: Clone + Send + 'static>
     start_time: Arc<RwLock<Option<Instant>>>,
 }
 
-impl<T: Clone + Send + 'static, U: Clone + Send + 'static> std::fmt::Debug
-    for StreamProcessor<T, U>
+impl<T, U> std::fmt::Debug for StreamProcessor<T, U>
+where
+    T: Clone + Send + 'static,
+    U: Clone + Send + 'static,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("StreamProcessor")
@@ -584,7 +586,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
 
             // Rate limiting
             if rate_limit > 0 {
-                // Calculate the minimum time per batch
+                // Calculate the minimum _time per batch
                 let min_time_per_batch =
                     Duration::from_secs_f64(config.min_batch_size as f64 / rate_limit as f64);
 
@@ -726,7 +728,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
             // Handle the processing result
             match process_result {
                 Ok(output_batch) => {
-                    // Send the output to the output buffer
+                    // Send the output to the output _buffer
                     if !output_batch.is_empty() {
                         match output_buffer.lock().unwrap().push_batch(output_batch) {
                             Ok(_) => {}
@@ -845,7 +847,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
     }
 
     /// Pop a batch of processed data from the stream processor
-    pub fn pop_batch(&self, max_size: usize) -> Result<Vec<U>, CoreError> {
+    pub fn pop_batch(&self, batch_size: usize) -> Result<Vec<U>, CoreError> {
         // Check if the stream is running or completed
         let state = self.state.read().unwrap();
         if *state != StreamState::Running && *state != StreamState::Completed {
@@ -859,7 +861,7 @@ impl<T: Clone + Send + 'static, U: Clone + Send + 'static> StreamProcessor<T, U>
         self.output_buffer
             .lock()
             .unwrap()
-            .pop_batch(max_size, self.config.timeout_ms)
+            .pop_batch(batch_size, self.config.timeout_ms)
     }
 
     /// Get the current state of the stream processor
@@ -1558,7 +1560,7 @@ where
             pool.install(|| {
                 let results: Result<Vec<_>, _> = arrays
                     .par_iter()
-                    .map(process_fn_clone)
+                    .map(|array| process_fn_clone(array))
                     .collect();
 
                 results
@@ -1611,7 +1613,7 @@ impl<T> StreamError for std::result::Result<T, CoreError> {
 /// Extension to CoreError for stream errors
 impl CoreError {
     /// Create a new end of stream error
-    pub fn end_of_stream(message: &str) -> Self {
+    pub fn message(message: &str) -> Self {
         CoreError::EndOfStream(
             ErrorContext::new(message.to_string())
                 .with_location(ErrorLocation::new(file!(), line!())),
@@ -1619,7 +1621,7 @@ impl CoreError {
     }
 
     /// Create a new stream error
-    pub fn stream_error(message: &str) -> Self {
+    pub fn message_2(message: &str) -> Self {
         CoreError::StreamError(
             ErrorContext::new(message.to_string())
                 .with_location(ErrorLocation::new(file!(), line!())),
@@ -1627,7 +1629,7 @@ impl CoreError {
     }
 
     /// Create a new timeout error
-    pub fn timeout_error(message: &str) -> Self {
+    pub fn message_3(message: &str) -> Self {
         CoreError::TimeoutError(
             ErrorContext::new(message.to_string())
                 .with_location(ErrorLocation::new(file!(), line!())),

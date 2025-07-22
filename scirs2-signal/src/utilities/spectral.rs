@@ -9,6 +9,7 @@ use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Calculate the energy spectral density (ESD) of a signal.
 ///
 /// The energy spectral density describes how the energy of a signal
@@ -26,8 +27,8 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::energy_spectral_density;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::energy_spectral_density;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -38,11 +39,11 @@ use std::fmt::Debug;
 /// // ESD is proportional to PSD but scaled by the sample interval
 /// ```
 #[allow(dead_code)]
-pub fn energy_spectral_density<T>(psd: &[T], fs: f64) -> SignalResult<Vec<f64>>
+pub fn energy_spectral_density<T>(_psd: &[T], fs: f64) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
-    if psd.is_empty() {
+    if _psd.is_empty() {
         return Err(SignalError::ValueError("PSD array is empty".to_string()));
     }
 
@@ -53,7 +54,7 @@ where
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -82,8 +83,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::normalized_psd;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::normalized_psd;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -93,19 +94,19 @@ where
 ///
 /// // Sum of normalized PSD should be approximately 1.0
 /// let sum: f64 = norm_psd.iter().sum();
-/// assert!((sum - 1.0).abs() < 1e-10);
+/// assert!(((sum - 1.0) as f64).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn normalized_psd<T>(psd: &[T]) -> SignalResult<Vec<f64>>
+pub fn normalized_psd<T>(_psd: &[T]) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
-    if psd.is_empty() {
+    if _psd.is_empty() {
         return Err(SignalError::ValueError("PSD array is empty".to_string()));
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -146,8 +147,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_centroid;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_centroid;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -159,25 +160,25 @@ where
 /// assert!(centroid.is_finite());
 /// ```
 #[allow(dead_code)]
-pub fn spectral_centroid<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<f64>
+pub fn spectral_centroid<T, U>(_psd: &[T], freqs: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if psd.is_empty() || freqs.is_empty() {
+    if _psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if psd.len() != freqs.len() {
+    if _psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -235,8 +236,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_spread;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_spread;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -248,25 +249,25 @@ where
 /// assert!(spread >= 0.0);
 /// ```
 #[allow(dead_code)]
-pub fn spectral_spread<T, U>(psd: &[T], freqs: &[U], centroid: Option<f64>) -> SignalResult<f64>
+pub fn spectral_spread<T, U>(_psd: &[T], freqs: &[U], centroid: Option<f64>) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if psd.is_empty() || freqs.is_empty() {
+    if _psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if psd.len() != freqs.len() {
+    if _psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -296,7 +297,7 @@ where
     // Calculate or use provided centroid
     let centroid_val = match centroid {
         Some(c) => c,
-        None => spectral_centroid(psd, freqs)?,
+        None => spectral_centroid(_psd, freqs)?,
     };
 
     // Calculate weighted sum of squared differences from centroid
@@ -332,8 +333,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_skewness;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_skewness;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -443,8 +444,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_kurtosis;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_kurtosis;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -556,29 +557,29 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_flatness;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_flatness;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, _) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
+/// let (psd_) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
 /// let flatness = spectral_flatness(&psd).unwrap();
 ///
 /// // Flatness should be between 0 and 1
 /// assert!(flatness >= 0.0 && flatness <= 1.0);
 /// ```
 #[allow(dead_code)]
-pub fn spectral_flatness<T>(psd: &[T]) -> SignalResult<f64>
+pub fn spectral_flatness<T>(_psd: &[T]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
 {
-    if psd.is_empty() {
+    if _psd.is_empty() {
         return Err(SignalError::ValueError("PSD array is empty".to_string()));
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -633,15 +634,15 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_flux;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_flux;
 ///
 /// let signal1 = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let signal2 = vec![0.0, 1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd1, _) = periodogram(&signal1, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
-/// let (psd2, _) = periodogram(&signal2, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
+/// let (psd1_) = periodogram(&signal1, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
+/// let (psd2_) = periodogram(&signal2, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
 ///
 /// let flux = spectral_flux(&psd1, &psd2, "l2").unwrap();
 ///
@@ -649,25 +650,25 @@ where
 /// assert!(flux >= 0.0);
 /// ```
 #[allow(dead_code)]
-pub fn spectral_flux<T, U>(psd1: &[T], psd2: &[U], norm: &str) -> SignalResult<f64>
+pub fn spectral_flux<T, U>(_psd1: &[T], psd2: &[U], norm: &str) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if psd1.is_empty() || psd2.is_empty() {
+    if _psd1.is_empty() || psd2.is_empty() {
         return Err(SignalError::ValueError(
             "PSD arrays must not be empty".to_string(),
         ));
     }
 
-    if psd1.len() != psd2.len() {
+    if _psd1.len() != psd2.len() {
         return Err(SignalError::ValueError(
             "PSD arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let psd1_f64: Vec<f64> = psd1
+    let _psd1_f64: Vec<f64> = _psd1
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -696,7 +697,7 @@ where
     match norm.to_lowercase().as_str() {
         "l1" => {
             // Manhattan distance (L1 norm)
-            let flux = diff.iter().map(|&d| d.abs()).sum();
+            let flux = diff.iter().map(|&d: &f64| d.abs()).sum();
             Ok(flux)
         }
         "l2" => {
@@ -734,8 +735,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_rolloff;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_rolloff;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -747,18 +748,18 @@ where
 /// assert!(rolloff.is_finite());
 /// ```
 #[allow(dead_code)]
-pub fn spectral_rolloff<T, U>(psd: &[T], freqs: &[U], percentage: f64) -> SignalResult<f64>
+pub fn spectral_rolloff<T, U>(_psd: &[T], freqs: &[U], percentage: f64) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if psd.is_empty() || freqs.is_empty() {
+    if _psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if psd.len() != freqs.len() {
+    if _psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
@@ -771,7 +772,7 @@ where
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -831,29 +832,29 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_crest;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_crest;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
 ///
-/// let (psd, _) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
+/// let (psd_) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
 /// let crest = spectral_crest(&psd).unwrap();
 ///
 /// // Crest factor should be greater than or equal to 1.0
 /// assert!(crest >= 1.0);
 /// ```
 #[allow(dead_code)]
-pub fn spectral_crest<T>(psd: &[T]) -> SignalResult<f64>
+pub fn spectral_crest<T>(_psd: &[T]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
 {
-    if psd.is_empty() {
+    if _psd.is_empty() {
         return Err(SignalError::ValueError("PSD array is empty".to_string()));
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -897,8 +898,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_decrease;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_decrease;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -907,25 +908,25 @@ where
 /// let decrease = spectral_decrease(&psd, &freqs).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn spectral_decrease<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<f64>
+pub fn spectral_decrease<T, U>(_psd: &[T], freqs: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if psd.is_empty() || freqs.is_empty() {
+    if _psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if psd.len() != freqs.len() {
+    if _psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -987,8 +988,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_slope;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_slope;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -997,25 +998,25 @@ where
 /// let slope = spectral_slope(&psd, &freqs).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn spectral_slope<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<f64>
+pub fn spectral_slope<T, U>(_psd: &[T], freqs: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if psd.is_empty() || freqs.is_empty() {
+    if _psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if psd.len() != freqs.len() {
+    if _psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -1080,8 +1081,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_contrast;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_contrast;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -1092,18 +1093,18 @@ where
 /// assert_eq!(contrast.len(), 4);
 /// ```
 #[allow(dead_code)]
-pub fn spectral_contrast<T, U>(psd: &[T], freqs: &[U], n_bands: usize) -> SignalResult<Vec<f64>>
+pub fn spectral_contrast<T, U>(_psd: &[T], freqs: &[U], n_bands: usize) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if psd.is_empty() || freqs.is_empty() {
+    if _psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if psd.len() != freqs.len() {
+    if _psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
@@ -1111,18 +1112,18 @@ where
 
     if n_bands < 1 {
         return Err(SignalError::ValueError(
-            "Number of bands must be positive".to_string(),
+            "Number of _bands must be positive".to_string(),
         ));
     }
 
-    if psd.len() < n_bands * 2 {
+    if _psd.len() < n_bands * 2 {
         return Err(SignalError::ValueError(
-            "Not enough PSD points for requested number of bands".to_string(),
+            "Not enough PSD points for requested number of _bands".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -1159,7 +1160,7 @@ where
             .iter()
             .enumerate()
             .filter(|(_, &freq)| freq >= band_start && freq < band_end)
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .collect();
 
         if band_indices.is_empty() {
@@ -1217,8 +1218,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::spectral_bandwidth;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::spectral_bandwidth;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -1230,25 +1231,25 @@ where
 /// assert!(bandwidth.is_finite());
 /// ```
 #[allow(dead_code)]
-pub fn spectral_bandwidth<T, U>(psd: &[T], freqs: &[U], threshold_db: f64) -> SignalResult<f64>
+pub fn spectral_bandwidth<T, U>(_psd: &[T], freqs: &[U], threshold_db: f64) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if psd.is_empty() || freqs.is_empty() {
+    if _psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if psd.len() != freqs.len() {
+    if _psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -1323,8 +1324,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::dominant_frequency;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::dominant_frequency;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -1337,25 +1338,25 @@ where
 /// assert!(magnitude >= 0.0);
 /// ```
 #[allow(dead_code)]
-pub fn dominant_frequency<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<(f64, f64)>
+pub fn dominant_frequency<T, U>(_psd: &[T], freqs: &[U]) -> SignalResult<(f64, f64)>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    if psd.is_empty() || freqs.is_empty() {
+    if _psd.is_empty() || freqs.is_empty() {
         return Err(SignalError::ValueError(
             "PSD or frequency array is empty".to_string(),
         ));
     }
 
-    if psd.len() != freqs.len() {
+    if _psd.len() != freqs.len() {
         return Err(SignalError::ValueError(
             "PSD and frequency arrays must have the same length".to_string(),
         ));
     }
 
     // Convert to f64 for internal processing
-    let psd_f64: Vec<f64> = psd
+    let _psd_f64: Vec<f64> = _psd
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -1401,8 +1402,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spectral::periodogram;
-/// use scirs2_signal::utilities::spectral::dominant_frequencies;
+/// use scirs2__signal::spectral::periodogram;
+/// use scirs2__signal::utilities::spectral::dominant_frequencies;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -1444,7 +1445,7 @@ where
 
     if min_separation < 0.0 {
         return Err(SignalError::ValueError(
-            "Minimum separation must be non-negative".to_string(),
+            "Minimum _separation must be non-negative".to_string(),
         ));
     }
 
@@ -1492,7 +1493,7 @@ where
     // Sort by magnitude (descending)
     peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
-    // Select the top n peaks with the given minimum separation
+    // Select the top n peaks with the given minimum _separation
     let mut selected_peaks = Vec::new();
     let mut selected_indices = Vec::new();
 
@@ -1525,10 +1526,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
+use crate::utilities::spectral::spectral_flux;
+use crate::utilities::spectral::spectral_centroid;
+use crate::utilities::spectral::spectral_rolloff;
     #[test]
     fn test_energy_spectral_density() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple PSD
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let fs = 100.0; // Sample rate in Hz
@@ -1543,6 +1548,8 @@ mod tests {
 
     #[test]
     fn test_normalized_psd() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple PSD
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
 
@@ -1562,6 +1569,8 @@ mod tests {
 
     #[test]
     fn test_spectral_centroid() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a symmetric PSD with peak in the middle
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
@@ -1583,6 +1592,8 @@ mod tests {
 
     #[test]
     fn test_spectral_spread() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a symmetric PSD with peak in the middle
         let psd = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
@@ -1604,6 +1615,8 @@ mod tests {
 
     #[test]
     fn test_spectral_flatness() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a flat PSD (white noise-like)
         let psd = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
 
@@ -1652,6 +1665,8 @@ mod tests {
 
     #[test]
     fn test_spectral_rolloff() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a PSD with energy concentrated in first half
         let psd = vec![1.0, 2.0, 3.0, 4.0, 0.1, 0.1, 0.1];
         let freqs = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];

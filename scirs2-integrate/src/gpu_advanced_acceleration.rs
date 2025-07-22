@@ -257,8 +257,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         &self,
         t: F,
         y: &ArrayView1<F>,
-        h: F,
-        _f: impl Fn(F, &ArrayView1<F>) -> IntegrateResult<Array1<F>>,
+        h: F_f: impl Fn(F, &ArrayView1<F>) -> IntegrateResult<Array1<F>>,
     ) -> IntegrateResult<Array1<F>> {
         let start_time = Instant::now();
 
@@ -647,18 +646,15 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
 
     /// Benchmark a specific kernel configuration
     fn benchmark_kernel_config(
-        &self,
-        _kernel_name: &str,
-        _config: &KernelConfiguration,
-        _problem_size: usize,
+        &self, _kernel_name: &str, _config: &KernelConfiguration_problem_size: usize,
     ) -> IntegrateResult<Duration> {
         // Simplified benchmark - in real implementation would launch actual kernels
         Ok(Duration::from_micros(100))
     }
 
     /// Calculate optimal grid size for given problem size and block size
-    fn calculate_grid_size(&self, problem_size: usize, block_size: usize) -> (usize, usize, usize) {
-        let grid_size = problem_size.div_ceil(block_size);
+    fn calculate_grid_size(_problem_size: usize, block_size: usize) -> (usize, usize, usize) {
+        let grid_size = _problem_size.div_ceil(block_size);
         (grid_size, 1, 1)
     }
 
@@ -736,7 +732,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
                     last_optimized: Instant::now(),
                 });
 
-        // Update moving average of execution time
+        // Update moving average of execution _time
         perf_data.execution_count += 1;
         let alpha = 0.1; // Exponential moving average factor
         let old_avg = perf_data.avg_execution_time.as_nanos() as f64;
@@ -785,18 +781,18 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
     }
 
     /// Allocate memory for solution vectors with optimization
-    pub fn allocate_solution_vector(&mut self, size: usize) -> IntegrateResult<MemoryBlock<F>> {
-        self.allocate_block(size, MemoryBlockType::Solution)
+    pub fn allocate_solution_vector(_size: usize) -> IntegrateResult<MemoryBlock<F>> {
+        self.allocate_block(_size, MemoryBlockType::Solution)
     }
 
     /// Allocate memory for derivative vectors with optimization
-    pub fn allocate_derivative_vector(&mut self, size: usize) -> IntegrateResult<MemoryBlock<F>> {
-        self.allocate_block(size, MemoryBlockType::Derivative)
+    pub fn allocate_derivative_vector(_size: usize) -> IntegrateResult<MemoryBlock<F>> {
+        self.allocate_block(_size, MemoryBlockType::Derivative)
     }
 
     /// Allocate memory for temporary vectors
-    pub fn allocate_temporary_vector(&mut self, size: usize) -> IntegrateResult<MemoryBlock<F>> {
-        self.allocate_block(size, MemoryBlockType::Temporary)
+    pub fn allocate_temporary_vector(_size: usize) -> IntegrateResult<MemoryBlock<F>> {
+        self.allocate_block(_size, MemoryBlockType::Temporary)
     }
 
     /// Generic block allocation with type-aware optimization
@@ -846,10 +842,10 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
     }
 
     /// Find a suitable available block for reuse
-    fn find_suitable_block(&self, required_size: usize) -> Option<usize> {
+    fn find_suitable_block(_required_size: usize) -> Option<usize> {
         for (index, block) in self.available_blocks.iter().enumerate() {
-            // Block should be within 25% of required size for efficient reuse
-            if block.size >= required_size && block.size <= required_size * 5 / 4 {
+            // Block should be within 25% of required _size for efficient reuse
+            if block._size >= _required_size && block._size <= _required_size * 5 / 4 {
                 return Some(index);
             }
         }
@@ -857,8 +853,8 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
     }
 
     /// Deallocate a memory block back to the pool
-    pub fn deallocate(&mut self, block_id: usize) -> IntegrateResult<()> {
-        if let Some((size, _, _)) = self.allocated_blocks.remove(&block_id) {
+    pub fn deallocate(_block_id: usize) -> IntegrateResult<()> {
+        if let Some((size__)) = self.allocated_blocks.remove(&_block_id) {
             self.used_memory -= size * std::mem::size_of::<F>();
 
             // Note: In a real implementation, we would properly return the block to available_blocks
@@ -880,7 +876,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
     }
 
     /// Update fragmentation metrics
-    fn update_fragmentation_metrics(&mut self) {
+    fn update_fragmentation_metrics() {
         if self.total_memory == 0 {
             self.fragmentation_ratio = 0.0;
             return;
@@ -921,7 +917,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
 
 impl MultiGpuConfiguration {
     /// Detect and configure multi-GPU setup
-    pub fn detect_and_configure() -> IntegrateResult<Self> {
+    pub fn detect_and_configure(&self) -> IntegrateResult<Self> {
         let devices = Self::detect_gpu_devices()?;
         let load_balancing = LoadBalancingStrategy::Adaptive;
         let communication_channels = Vec::new(); // Would be initialized with actual GPU channels
@@ -936,13 +932,13 @@ impl MultiGpuConfiguration {
     }
 
     /// Create a CPU fallback configuration
-    pub fn cpu_fallback_config() -> IntegrateResult<Self> {
+    pub fn cpu_fallback_config(&self) -> IntegrateResult<Self> {
         let devices = vec![GpuDeviceInfo {
             device_id: 0,
             name: "CPU Fallback Mode".to_string(),
             total_memory: 8 * 1024 * 1024 * 1024, // 8GB system RAM
             compute_capability: (1, 0),           // Minimal capability
-            multiprocessor_count: num_cpus::get(),
+            multiprocessor_count: num, _cpus: get(),
             max_threads_per_block: 1,
             current_load: 0.0,
         }];
@@ -959,7 +955,7 @@ impl MultiGpuConfiguration {
     }
 
     /// Detect available GPU devices
-    fn detect_gpu_devices() -> IntegrateResult<Vec<GpuDeviceInfo>> {
+    fn detect_gpu_devices(&self) -> IntegrateResult<Vec<GpuDeviceInfo>> {
         // Simplified detection - real implementation would query GPU drivers
         Ok(vec![GpuDeviceInfo {
             device_id: 0,
@@ -973,13 +969,13 @@ impl MultiGpuConfiguration {
     }
 
     /// Calculate initial workload distribution ratios
-    fn calculate_initial_ratios(devices: &[GpuDeviceInfo]) -> Vec<f64> {
-        let total_compute_power: usize = devices
+    fn calculate_initial_ratios(_devices: &[GpuDeviceInfo]) -> Vec<f64> {
+        let total_compute_power: usize = _devices
             .iter()
             .map(|d| d.multiprocessor_count * d.max_threads_per_block)
             .sum();
 
-        devices
+        _devices
             .iter()
             .map(|d| {
                 let device_power = d.multiprocessor_count * d.max_threads_per_block;
@@ -1006,7 +1002,7 @@ impl RealTimeGpuMonitor {
     }
 
     /// Start real-time monitoring (would spawn background thread in real implementation)
-    pub fn start_monitoring(&mut self) -> IntegrateResult<()> {
+    pub fn start_monitoring(&self) -> IntegrateResult<()> {
         // Simplified - real implementation would start background monitoring
         Ok(())
     }
@@ -1029,7 +1025,7 @@ impl RealTimeGpuMonitor {
 }
 
 impl Default for PerformanceThresholds {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         PerformanceThresholds {
             max_gpu_utilization: 95.0,
             max_memory_utilization: 90.0,

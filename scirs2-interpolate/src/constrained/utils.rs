@@ -11,6 +11,7 @@ use std::fmt::{Debug, Display};
 
 use super::builder::FittingMethod;
 use super::types::{ConstrainedSpline, Constraint, ConstraintType};
+use ndarray::ArrayView1;
 
 impl<T> ConstrainedSpline<T>
 where
@@ -45,8 +46,8 @@ where
     /// # #[cfg(feature = "linalg")]
     /// # {
     /// use ndarray::array;
-    /// use scirs2_interpolate::constrained::{ConstrainedSpline, Constraint};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::constrained::{ConstrainedSpline, Constraint};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
     /// let y = array![0.0, 0.8, 1.5, 1.9, 2.3, 2.5];
@@ -183,8 +184,8 @@ where
     /// # #[cfg(feature = "linalg")]
     /// # {
     /// use ndarray::array;
-    /// use scirs2_interpolate::constrained::{ConstrainedSpline, Constraint};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::constrained::{ConstrainedSpline, Constraint};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
     /// let y = array![0.0, 0.8, 1.5, 1.9, 2.3, 2.5];
@@ -235,8 +236,8 @@ where
     /// # #[cfg(feature = "linalg")]
     /// # {
     /// use ndarray::array;
-    /// use scirs2_interpolate::constrained::{ConstrainedSpline, Constraint};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::constrained::{ConstrainedSpline, Constraint};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
     /// let y = array![0.0, 0.8, 1.5, 1.9, 2.3, 2.5];
@@ -263,9 +264,9 @@ where
         // Order 0 is the function value itself
         derivatives.push(self.evaluate(x)?);
 
-        // Compute derivatives of order 1 through max_order
-        for order in 1..=max_order {
-            derivatives.push(self.derivative(x, order)?);
+        // Compute derivatives of _order 1 through max_order
+        for _order in 1..=max_order {
+            derivatives.push(self.derivative(x_order)?);
         }
 
         Ok(derivatives)
@@ -291,8 +292,8 @@ where
     /// # #[cfg(feature = "linalg")]
     /// # {
     /// use ndarray::array;
-    /// use scirs2_interpolate::constrained::{ConstrainedSpline, Constraint};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::constrained::{ConstrainedSpline, Constraint};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
     /// let y = array![0.0, 0.8, 1.5, 1.9, 2.3, 2.5];
@@ -311,7 +312,7 @@ where
     /// let slope_at_2_5 = derivative_spline.evaluate(2.5).unwrap();
     /// # }
     /// ```
-    pub fn derivative_spline(&self, _order: usize) -> InterpolateResult<BSpline<T>> {
+    pub fn derivative_spline(&self_order: usize) -> InterpolateResult<BSpline<T>> {
         Err(crate::error::InterpolateError::NotImplemented(
             "derivative_spline method is not available for constrained splines".to_string(),
         ))
@@ -337,8 +338,8 @@ where
     /// # #[cfg(feature = "linalg")]
     /// # {
     /// use ndarray::array;
-    /// use scirs2_interpolate::constrained::{ConstrainedSpline, Constraint};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::constrained::{ConstrainedSpline, Constraint};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
     /// let y = array![1.0, 1.0, 1.0, 1.0, 1.0, 1.0]; // Constant function
@@ -382,8 +383,8 @@ where
     /// # #[cfg(feature = "linalg")]
     /// # {
     /// use ndarray::array;
-    /// use scirs2_interpolate::constrained::{ConstrainedSpline, Constraint};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::constrained::{ConstrainedSpline, Constraint};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0, 16.0, 25.0]; // Approximately x^2
@@ -426,8 +427,8 @@ where
     /// # #[cfg(feature = "linalg")]
     /// # {
     /// use ndarray::array;
-    /// use scirs2_interpolate::constrained::{ConstrainedSpline, Constraint};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::constrained::{ConstrainedSpline, Constraint};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
     /// let y = array![0.0, 0.8, 1.5, 1.9, 2.3, 2.5];
@@ -457,7 +458,7 @@ where
             let check_start = constraint.x_min.unwrap_or(domain_start);
             let check_end = constraint.x_max.unwrap_or(domain_end);
 
-            // Generate check points across the constraint region
+            // Generate check _points across the constraint region
             let step = (check_end - check_start) / T::from_usize(num_check_points - 1).unwrap();
 
             for i in 0..num_check_points {

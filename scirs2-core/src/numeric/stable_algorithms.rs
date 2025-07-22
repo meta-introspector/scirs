@@ -297,7 +297,7 @@ pub fn conjugate_gradient<T: Float + StableComputation>(
     }
 
     let b_norm = stable_norm_2(&b.to_vec());
-    let _initial_residual = r_norm_sq.sqrt();
+    let initial_residual = r_norm_sq.sqrt();
 
     let mut history = if config.adaptive_tolerance {
         Some(Vec::with_capacity(config.max_iterations))
@@ -616,7 +616,7 @@ where
     for j in 1..n {
         let factor = cast::<f64, T>(4.0_f64.powi(j as i32)).unwrap_or(T::one());
         for i in j..n {
-            d[[i, j]] = (factor * d[[i, j - 1]] - d[[i - 1, j - 1]]) / (factor - T::one());
+            d[[i, j]] = (factor * d[[i, j.saturating_sub(1)]] - d[[i.saturating_sub(1), j - 1]]) / (factor - T::one());
         }
     }
 

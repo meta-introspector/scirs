@@ -34,12 +34,12 @@ mod plan_map_serde {
         vec.serialize(serializer)
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<HashMap<PlanInfo, PlanMetrics>, D::Error>
+    pub fn deserialize<'de, D>(_deserializer: D) -> Result<HashMap<PlanInfo, PlanMetrics>, D::Error>
     where
         D: Deserializer<'de>,
     {
         // Deserialize as Vec and convert back to HashMap
-        let vec: Vec<(PlanInfo, PlanMetrics)> = Vec::deserialize(deserializer)?;
+        let vec: Vec<(PlanInfo, PlanMetrics)> = Vec::deserialize(_deserializer)?;
         Ok(vec.into_iter().collect())
     }
 }
@@ -115,9 +115,9 @@ pub struct PlanSerializationManager {
 
 impl PlanSerializationManager {
     /// Create a new plan serialization manager
-    pub fn new(db_path: impl AsRef<Path>) -> Self {
-        let db_path = db_path.as_ref().to_path_buf();
-        let database = Self::load_or_create_database(&db_path).unwrap_or_else(|_| {
+    pub fn new(_db_path: impl AsRef<Path>) -> Self {
+        let _db_path = _db_path.as_ref().to_path_buf();
+        let database = Self::load_or_create_database(&_db_path).unwrap_or_else(|_| {
             Arc::new(Mutex::new(PlanDatabase {
                 plans: HashMap::new(),
                 stats: PlanDatabaseStats::default(),
@@ -133,9 +133,9 @@ impl PlanSerializationManager {
     }
 
     /// Load an existing database or create a new one
-    fn load_or_create_database(path: &Path) -> FFTResult<Arc<Mutex<PlanDatabase>>> {
-        if path.exists() {
-            let file = File::open(path)
+    fn load_or_create_database(_path: &Path) -> FFTResult<Arc<Mutex<PlanDatabase>>> {
+        if _path.exists() {
+            let file = File::open(_path)
                 .map_err(|e| FFTError::IOError(format!("Failed to open plan database: {e}")))?;
             let reader = BufReader::new(file);
             let database: PlanDatabase = serde_json::from_reader(reader)
@@ -143,7 +143,7 @@ impl PlanSerializationManager {
             Ok(Arc::new(Mutex::new(database)))
         } else {
             // Create parent directories if they don't exist
-            if let Some(parent) = path.parent() {
+            if let Some(parent) = _path.parent() {
                 fs::create_dir_all(parent).map_err(|e| {
                     FFTError::IOError(format!("Failed to create directory for plan database: {e}"))
                 })?;
@@ -301,7 +301,7 @@ impl PlanSerializationManager {
 
         db.plans
             .iter()
-            .filter(|(info, _)| {
+            .filter(|(info_)| {
                 info.size == size && info.forward == forward && info.arch_id == arch_id
             })
             .min_by_key(|(_, metrics)| metrics.avg_execution_ns)
@@ -329,13 +329,13 @@ fn system_time_as_millis() -> u64 {
 
 /// Create a plan with timing measurement
 #[allow(dead_code)]
-pub fn create_and_time_plan(size: usize, forward: bool) -> (Arc<dyn rustfft::Fft<f64>>, u64) {
+pub fn create_and_time_plan(_size: usize, forward: bool) -> (Arc<dyn rustfft::Fft<f64>>, u64) {
     let start = Instant::now();
     let mut planner = FftPlanner::new();
     let plan = if forward {
-        planner.plan_fft_forward(size)
+        planner.plan_fft_forward(_size)
     } else {
-        planner.plan_fft_inverse(size)
+        planner.plan_fft_inverse(_size)
     };
     let elapsed_ns = start.elapsed().as_nanos() as u64;
 

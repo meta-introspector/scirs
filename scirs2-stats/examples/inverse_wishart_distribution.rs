@@ -1,5 +1,6 @@
 use ndarray::{array, Array2};
-use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
+use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,5 +1,5 @@
 use ndarray::ArrayView1;
-use scirs2_integrate::gaussian::{gauss_legendre, multi_gauss_legendre, GaussLegendreQuadrature};
+use scirs2__integrate::gaussian::{gauss_legendre, multi_gauss_legendre, GaussLegendreQuadrature};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

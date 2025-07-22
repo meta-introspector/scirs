@@ -82,7 +82,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2_interpolate::advanced::kriging::{KrigingInterpolator, CovarianceFunction};
+    /// use scirs2__interpolate::advanced::kriging::{KrigingInterpolator, CovarianceFunction};
     ///
     /// // Create 2D points
     /// let points = Array2::from_shape_vec((5, 2), vec![
@@ -265,9 +265,9 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
     }
 
     /// Calculate the Euclidean distance between two points
-    fn distance(p1: &ArrayView1<F>, p2: &ArrayView1<F>) -> F {
+    fn distance(_p1: &ArrayView1<F>, p2: &ArrayView1<F>) -> F {
         let mut sum_sq = F::zero();
-        for (&x1, &x2) in p1.iter().zip(p2.iter()) {
+        for (&x1, &x2) in _p1.iter().zip(p2.iter()) {
             let diff = x1 - x2;
             sum_sq = sum_sq + diff * diff;
         }
@@ -321,14 +321,14 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
     /// Predicted values and their associated variances
     pub fn predict(&self, query_points: &ArrayView2<F>) -> InterpolateResult<PredictionResult<F>> {
         // Check dimensions
-        if query_points.shape()[1] != self.points.shape()[1] {
+        if query_points.shape()[1] != self._points.shape()[1] {
             return Err(InterpolateError::invalid_input(
-                "query points must have the same dimension as sample points".to_string(),
+                "query _points must have the same dimension as sample _points".to_string(),
             ));
         }
 
         let n_query = query_points.shape()[0];
-        let n_points = self.points.shape()[0];
+        let n_points = self._points.shape()[0];
 
         let mut values = Array1::zeros(n_query);
         let mut variances = Array1::zeros(n_query);
@@ -336,10 +336,10 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
         for i in 0..n_query {
             let query_point = query_points.slice(ndarray::s![i, ..]);
 
-            // Compute covariance vector between query point and training points
+            // Compute covariance vector between query point and training _points
             let mut k_star = Array1::zeros(n_points);
             for j in 0..n_points {
-                let sample_point = self.points.slice(ndarray::s![j, ..]);
+                let sample_point = self._points.slice(ndarray::s![j, ..]);
                 let dist = Self::distance(&query_point, &sample_point);
                 k_star[j] = Self::covariance(
                     dist,
@@ -360,12 +360,12 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
             // Simplified variance estimation without Cholesky decomposition
             // In real implementation, this should use the full covariance matrix
 
-            // Compute the average distance to known points
+            // Compute the average distance to known _points
             let mut avg_dist = F::zero();
             let mut min_dist = F::infinity();
 
             for j in 0..n_points {
-                let sample_point = self.points.slice(ndarray::s![j, ..]);
+                let sample_point = self._points.slice(ndarray::s![j, ..]);
                 let dist = Self::distance(&query_point, &sample_point);
                 avg_dist = avg_dist + dist;
                 min_dist = if dist < min_dist { dist } else { min_dist };
@@ -373,8 +373,8 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
             let _avg_dist = avg_dist / F::from_usize(n_points).unwrap();
 
             // Calculate variance based on distances
-            // For points far from any known points, variance increases
-            // For points near known points, variance decreases
+            // For _points far from any known _points, variance increases
+            // For _points near known _points, variance decreases
             // This is a simplified model - real kriging variance uses matrix algebra
             let variance = self.sigma_sq * (F::one() - (-min_dist / self.length_scale).exp());
 
@@ -437,7 +437,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_interpolate::advanced::kriging::{make_kriging_interpolator, CovarianceFunction};
+/// use scirs2__interpolate::advanced::kriging::{make_kriging_interpolator, CovarianceFunction};
 ///
 /// // Create 2D points
 /// let points = Array2::from_shape_vec((5, 2), vec![

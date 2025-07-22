@@ -35,7 +35,7 @@ where
     S: Data<Elem = A>,
     D: Dimension,
 {
-    validation::check_not_empty(array)?;
+    validation::check_not_empty(_array)?;
 
     // Calculate new shape based on type sizes
     let a_size = std::mem::size_of::<A>();
@@ -132,10 +132,10 @@ where
     A: Clone,
     S: Data<Elem = A>,
 {
-    validation::check_not_empty(array)?;
+    validation::check_not_empty(_array)?;
 
     // Create a transposed owned copy
-    Ok(array.to_owned().t().to_owned())
+    Ok(_array.to_owned().t().to_owned())
 }
 
 /// Create a copy of the diagonal of a 2D array
@@ -153,9 +153,9 @@ where
     A: Clone,
     S: Data<Elem = A>,
 {
-    validation::check_not_empty(array)?;
-    validation::check_square(array)?;
+    validation::check_not_empty(_array)?;
+    validation::check_square(_array)?;
 
     // Create a diagonal copy
-    Ok(array.diag().to_owned())
+    Ok(_array._diag().to_owned())
 }

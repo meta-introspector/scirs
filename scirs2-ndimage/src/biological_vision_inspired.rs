@@ -23,6 +23,7 @@ use std::f64::consts::PI;
 
 use crate::error::{NdimageError, NdimageResult};
 use scirs2_core::parallel_ops::*;
+use statrs::statistics::Statistics;
 
 /// Configuration for biological vision algorithms
 #[derive(Debug, Clone)]
@@ -255,7 +256,7 @@ where
 {
     if image_sequence.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "Empty image sequence".to_string(),
+            "Empty image _sequence".to_string(),
         ));
     }
 
@@ -268,7 +269,7 @@ where
         center_surround_filters: create_center_surround_filters()?,
     };
 
-    // Process temporal sequence
+    // Process temporal _sequence
     for (t, image) in image_sequence.iter().enumerate() {
         // Photoreceptor adaptation
         update_photoreceptors(&mut retina.photoreceptors, image, t, config)?;
@@ -314,7 +315,7 @@ where
     // Initialize compound eye structure
     let mut compound_eye = initialize_compound_eye(height, width, config)?;
 
-    // Process temporal sequence for motion detection
+    // Process temporal _sequence for motion detection
     for window in image_sequence.windows(2) {
         let current_frame = window[0];
         let previous_frame = window[1];
@@ -400,14 +401,14 @@ where
 {
     if image_sequence.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "Empty image sequence".to_string(),
+            "Empty image _sequence".to_string(),
         ));
     }
 
     let (height, width) = image_sequence[0].dim();
     let mut predictive_system = initialize_predictive_coding_system(height, width, config)?;
 
-    // Process temporal sequence
+    // Process temporal _sequence
     for (t, image) in image_sequence.iter().enumerate() {
         // Generate predictions from higher levels
         generate_predictions(&mut predictive_system, t, config)?;
@@ -442,7 +443,7 @@ where
 {
     if color_image_sequence.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "Empty color sequence".to_string(),
+            "Empty color _sequence".to_string(),
         ));
     }
 
@@ -460,7 +461,7 @@ where
         color_memory: Vec::new(),
     };
 
-    // Process color sequence
+    // Process color _sequence
     for color_image in color_image_sequence {
         // Estimate illumination using biological algorithms
         estimate_illumination(&mut color_system, color_image, config)?;
@@ -512,7 +513,7 @@ where
         motion_tracks.push(track);
     }
 
-    // Process temporal sequence
+    // Process temporal _sequence
     for window_start in 0..image_sequence
         .len()
         .saturating_sub(config.motion_prediction_window)
@@ -594,7 +595,7 @@ fn forward_pass_cortical_layer(
     previous_layer: &CorticalLayer,
     config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
-    // Simplified forward pass - pool and transform features from previous layer
+    // Simplified forward pass - pool and transform features from previous _layer
     let scale_factor =
         previous_layer.feature_maps.len_of(Axis(1)) / current_layer.feature_maps.len_of(Axis(1));
 
@@ -604,7 +605,7 @@ fn forward_pass_cortical_layer(
                 let mut pooled_response = 0.0;
                 let mut count = 0;
 
-                // Pool from previous layer
+                // Pool from previous _layer
                 for dy in 0..scale_factor {
                     for dx in 0..scale_factor {
                         let prev_y = y * scale_factor + dy;
@@ -613,7 +614,7 @@ fn forward_pass_cortical_layer(
                         if prev_y < previous_layer.feature_maps.len_of(Axis(1))
                             && prev_x < previous_layer.feature_maps.len_of(Axis(2))
                         {
-                            // Combine features from previous layer
+                            // Combine features from previous _layer
                             for prev_feature_idx in 0..previous_layer.feature_maps.len_of(Axis(0)) {
                                 pooled_response +=
                                     previous_layer.feature_maps[(prev_feature_idx, prev_y, prev_x)];
@@ -642,7 +643,7 @@ fn backward_pass_cortical_layer(
     next_layer: &CorticalLayer,
     config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
-    // Simplified backward pass - generate predictions from higher layer
+    // Simplified backward pass - generate predictions from higher _layer
     let scale_factor =
         current_layer.feature_maps.len_of(Axis(1)) / next_layer.feature_maps.len_of(Axis(1));
 
@@ -655,7 +656,7 @@ fn backward_pass_cortical_layer(
                 if next_y < next_layer.feature_maps.len_of(Axis(1))
                     && next_x < next_layer.feature_maps.len_of(Axis(2))
                 {
-                    // Generate prediction from higher layer
+                    // Generate prediction from higher _layer
                     let mut prediction = 0.0;
                     for next_feature_idx in 0..next_layer.feature_maps.len_of(Axis(0)) {
                         prediction += next_layer.feature_maps[(next_feature_idx, next_y, next_x)];
@@ -849,7 +850,7 @@ fn update_ganglion_cells(
 ) -> NdimageResult<()> {
     let (height, width) = ganglion_cells.dim();
 
-    // Simple edge detection for ganglion cells
+    // Simple edge detection for ganglion _cells
     for y in 1..height - 1 {
         for x in 1..width - 1 {
             let horizontal_gradient = bipolar_cells[(y, x + 1)] - bipolar_cells[(y, x - 1)];
@@ -948,10 +949,7 @@ where
 
 #[allow(dead_code)]
 fn update_ommatidia_responses<T>(
-    _compound_eye: &mut CompoundEyeModel,
-    _current_frame: &ArrayView2<T>,
-    _previous_frame: &ArrayView2<T>,
-    _config: &BiologicalVisionConfig,
+    _compound_eye: &mut CompoundEyeModel_current, _frame: &ArrayView2<T>, _previous_frame: &ArrayView2<T>, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -961,58 +959,49 @@ where
 
 #[allow(dead_code)]
 fn compute_motion_detection(
-    _compound_eye: &mut CompoundEyeModel,
-    _config: &BiologicalVisionConfig,
+    _compound_eye: &mut CompoundEyeModel, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn detect_looming_objects(
-    _compound_eye: &mut CompoundEyeModel,
-    _config: &BiologicalVisionConfig,
+    _compound_eye: &mut CompoundEyeModel, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_wide_field_neurons(
-    _compound_eye: &mut CompoundEyeModel,
-    _config: &BiologicalVisionConfig,
+    _compound_eye: &mut CompoundEyeModel, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn add_feature_based_attention(
-    _attention_map: &mut Array2<f64>,
-    _feature_map: &Array3<f64>,
-    _weight: f64,
+    _attention_map: &mut Array2<f64>, _feature_map: &Array3<f64>, _weight: f64,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn apply_inhibition_of_return(
-    _attention_system: &mut AttentionSystem,
-    _config: &BiologicalVisionConfig,
+    _attention_system: &mut AttentionSystem, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn plan_saccade_sequence(
-    _attention_system: &mut AttentionSystem,
-    _config: &BiologicalVisionConfig,
+    _attention_system: &mut AttentionSystem, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn initialize_predictive_coding_system(
-    _height: usize,
-    _width: usize,
-    _config: &BiologicalVisionConfig,
+    _height: usize_width: usize, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<PredictiveCodingSystem> {
     Ok(PredictiveCodingSystem {
         prediction_models: Vec::new(),
@@ -1024,18 +1013,14 @@ fn initialize_predictive_coding_system(
 
 #[allow(dead_code)]
 fn generate_predictions(
-    _system: &mut PredictiveCodingSystem,
-    _time: usize,
-    _config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem_time: usize, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn compute_prediction_errors<T>(
-    _system: &mut PredictiveCodingSystem,
-    _image: &ArrayView2<T>,
-    _config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem_image: &ArrayView2<T>, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1045,33 +1030,28 @@ where
 
 #[allow(dead_code)]
 fn update_prediction_models(
-    _system: &mut PredictiveCodingSystem,
-    _config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem_config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn estimate_prediction_confidence(
-    _system: &mut PredictiveCodingSystem,
-    _config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem_config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn adapt_to_prediction_errors(
-    _system: &mut PredictiveCodingSystem,
-    _config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem_config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn estimate_illumination<T>(
-    _color_system: &mut ColorConstancySystem,
-    _color_image: &Array3<T>,
-    _config: &BiologicalVisionConfig,
+    _color_system: &mut ColorConstancySystem_color, _image: &Array3<T>, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1081,16 +1061,14 @@ where
 
 #[allow(dead_code)]
 fn adapt_to_illumination(
-    _color_system: &mut ColorConstancySystem,
-    _config: &BiologicalVisionConfig,
+    _color_system: &mut ColorConstancySystem, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn compute_surface_reflectance<T>(
-    _color_system: &mut ColorConstancySystem,
-    _color_image: &Array3<T>,
+    _color_system: &mut ColorConstancySystem_color, _image: &Array3<T>,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1100,9 +1078,7 @@ where
 
 #[allow(dead_code)]
 fn update_color_memory<T>(
-    _color_system: &mut ColorConstancySystem,
-    _color_image: &Array3<T>,
-    _config: &BiologicalVisionConfig,
+    _color_system: &mut ColorConstancySystem_color, _image: &Array3<T>, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1112,9 +1088,7 @@ where
 
 #[allow(dead_code)]
 fn update_motion_estimates<T>(
-    _track: &mut MotionTrack,
-    _window: &[ArrayView2<T>],
-    _config: &BiologicalVisionConfig,
+    _track: &mut MotionTrack_window: &[ArrayView2<T>], _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1124,17 +1098,14 @@ where
 
 #[allow(dead_code)]
 fn predict_future_positions(
-    _track: &mut MotionTrack,
-    _config: &BiologicalVisionConfig,
+    _track: &mut MotionTrack_config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_tracking_confidence<T>(
-    _track: &mut MotionTrack,
-    _window: &[ArrayView2<T>],
-    _config: &BiologicalVisionConfig,
+    _track: &mut MotionTrack_window: &[ArrayView2<T>], _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1144,10 +1115,7 @@ where
 
 #[allow(dead_code)]
 fn manage_tracks<T>(
-    _tracks: &mut Vec<MotionTrack>,
-    _image_sequence: &[ArrayView2<T>],
-    _window_start: usize,
-    _config: &BiologicalVisionConfig,
+    _tracks: &mut Vec<MotionTrack>, _image_sequence: &[ArrayView2<T>], _window_start: usize, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1649,7 +1617,7 @@ where
 
     if image_sequence.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "Empty image sequence".to_string(),
+            "Empty image _sequence".to_string(),
         ));
     }
 
@@ -1664,7 +1632,7 @@ where
         interference_matrix: Array2::zeros((vwm_config.memory_slots, vwm_config.memory_slots)),
     };
 
-    // Process image sequence through working memory
+    // Process image _sequence through working memory
     for (t, image) in image_sequence.iter().enumerate() {
         // Encode new information
         let encoded_features = encode_visual_features(image, config)?;
@@ -1738,7 +1706,7 @@ where
                 circadian_phase,
             )?;
 
-            // Color temperature adjustment based on circadian phase
+            // Color temperature adjustment based on circadian _phase
             let color_adjusted =
                 apply_circadian_color_adjustment(contrast_adapted, circadian_phase)?;
 
@@ -1765,7 +1733,7 @@ where
 {
     if image_history.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "Empty image history".to_string(),
+            "Empty image _history".to_string(),
         ));
     }
 
@@ -1884,7 +1852,7 @@ fn compute_direction_selective_response(
     let (height, width) = neighborhood.dim();
     let center = height / 2;
 
-    // Calculate local gradient in preferred direction
+    // Calculate local gradient in preferred _direction
     let cos_dir = preferred_direction.cos();
     let sin_dir = preferred_direction.sin();
 
@@ -1895,10 +1863,10 @@ fn compute_direction_selective_response(
             let dy = y as f64 - center as f64;
             let dx = x as f64 - center as f64;
 
-            // Project position onto preferred direction
+            // Project position onto preferred _direction
             let projection = dx * cos_dir + dy * sin_dir;
 
-            // Weight by distance and direction preference
+            // Weight by distance and _direction preference
             if projection > 0.0 {
                 let weight = projection / (dx * dx + dy * dy + 1.0).sqrt();
                 directional_response += neighborhood[(y, x)] * weight;
@@ -2412,19 +2380,19 @@ fn apply_memory_decay(
 }
 
 #[allow(dead_code)]
-fn compute_circadian_sensitivity(illumination: f64, circadian_phase: f64) -> NdimageResult<f64> {
+fn compute_circadian_sensitivity(_illumination: f64, circadian_phase: f64) -> NdimageResult<f64> {
     // Circadian modulation of visual sensitivity
     let circadian_factor = (circadian_phase * 2.0 * PI).cos() * 0.3 + 0.7;
-    let illumination_factor = 1.0 / (1.0 + (-illumination * 5.0).exp());
+    let illumination_factor = 1.0 / (1.0 + (-_illumination * 5.0).exp());
 
     Ok(circadian_factor * illumination_factor)
 }
 
 #[allow(dead_code)]
-fn compute_melanopsin_response(illumination: f64, circadian_phase: f64) -> NdimageResult<f64> {
+fn compute_melanopsin_response(_illumination: f64, circadian_phase: f64) -> NdimageResult<f64> {
     // Melanopsin response (ipRGCs) - sluggish, sustained response to light
     let melanopsin_sensitivity = 0.1 + 0.3 * (circadian_phase * 2.0 * PI + PI).cos().max(0.0);
-    let response = illumination * melanopsin_sensitivity;
+    let response = _illumination * melanopsin_sensitivity;
 
     Ok(response.min(1.0))
 }
@@ -2443,10 +2411,10 @@ fn apply_melanopsin_contrast_adaptation(
 }
 
 #[allow(dead_code)]
-fn apply_circadian_color_adjustment(pixel_value: f64, circadian_phase: f64) -> NdimageResult<f64> {
+fn apply_circadian_color_adjustment(_pixel_value: f64, circadian_phase: f64) -> NdimageResult<f64> {
     // Simplified color temperature adjustment
     let color_shift = (circadian_phase * 2.0 * PI).sin() * 0.1;
-    let adjusted_value = pixel_value + color_shift;
+    let adjusted_value = _pixel_value + color_shift;
 
     Ok(adjusted_value.max(0.0).min(1.0))
 }
@@ -2494,12 +2462,12 @@ where
         for x in 0..width {
             let values: Vec<f64> = medium_images
                 .iter()
-                .map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
+                ._map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
                 .collect();
 
             let mean = values.iter().sum::<f64>() / values.len() as f64;
             let variance =
-                values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
+                values.iter()._map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
 
             // Higher variance leads to less adaptation (more sensitive)
             let adaptation_factor = variance * 2.0 + 0.5;
@@ -2525,14 +2493,14 @@ where
         for x in 0..width {
             let values: Vec<f64> = all_images
                 .iter()
-                .map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
+                ._map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
                 .collect();
 
             // Calculate higher-order statistics
             let mean = values.iter().sum::<f64>() / values.len() as f64;
             let skewness = values
                 .iter()
-                .map(|v| ((v - mean) / (mean + 0.1)).powi(3))
+                ._map(|v| ((v - mean) / (mean + 0.1)).powi(3))
                 .sum::<f64>()
                 / values.len() as f64;
 
@@ -2561,7 +2529,7 @@ where
     for image in all_images {
         let global_activity = image
             .iter()
-            .map(|&x| x.to_f64().unwrap_or(0.0))
+            ._map(|&x| x.to_f64().unwrap_or(0.0))
             .sum::<f64>()
             / (height * width) as f64;
         global_activities.push(global_activity);
@@ -2573,7 +2541,7 @@ where
         for x in 0..width {
             let local_mean = all_images
                 .iter()
-                .map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
+                ._map(|img| img[(y, x)].to_f64().unwrap_or(0.0))
                 .sum::<f64>()
                 / all_images.len() as f64;
 

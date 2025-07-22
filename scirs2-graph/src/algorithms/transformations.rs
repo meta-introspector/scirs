@@ -18,22 +18,22 @@ use std::collections::HashSet;
 /// # Returns
 /// * A new graph representing the line graph
 #[allow(dead_code)]
-pub fn line_graph<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Graph<(N, N), (), Ix>
+pub fn line_graph<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Graph<(N, N), (), Ix>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone,
     Ix: IndexType,
 {
     let mut line_graph = Graph::new();
-    let edges = graph.edges();
+    let edges = _graph.edges();
 
-    // Each edge becomes a node in the line graph
+    // Each edge becomes a node in the line _graph
     let edge_nodes: Vec<(N, N)> = edges
         .iter()
         .map(|e| (e.source.clone(), e.target.clone()))
         .collect();
 
-    // Add all edge nodes to the line graph
+    // Add all edge nodes to the line _graph
     for edge_node in &edge_nodes {
         line_graph.add_node(edge_node.clone());
     }
@@ -44,7 +44,7 @@ where
             // Check if edges share a vertex
             if edge1.0 == edge2.0 || edge1.0 == edge2.1 || edge1.1 == edge2.0 || edge1.1 == edge2.1
             {
-                // Connect the corresponding nodes in the line graph
+                // Connect the corresponding nodes in the line _graph
                 let _ = line_graph.add_edge(edge1.clone(), edge2.clone(), ());
             }
         }
@@ -58,14 +58,14 @@ where
 /// For directed graphs, two vertices in the line graph are connected
 /// if the head of one edge equals the tail of another.
 #[allow(dead_code)]
-pub fn line_digraph<N, E, Ix>(digraph: &DiGraph<N, E, Ix>) -> DiGraph<(N, N), (), Ix>
+pub fn line_digraph<N, E, Ix>(_digraph: &DiGraph<N, E, Ix>) -> DiGraph<(N, N), (), Ix>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone,
     Ix: IndexType,
 {
     let mut line_digraph = DiGraph::new();
-    let edges = digraph.edges();
+    let edges = _digraph.edges();
 
     // Each edge becomes a node in the line graph
     let edge_nodes: Vec<(N, N)> = edges
@@ -100,7 +100,7 @@ where
 /// # Returns
 /// * A new graph containing only the specified nodes and edges between them
 #[allow(dead_code)]
-pub fn subgraph<N, E, Ix>(graph: &Graph<N, E, Ix>, nodes: &HashSet<N>) -> Graph<N, E, Ix>
+pub fn subgraph<N, E, Ix>(_graph: &Graph<N, E, Ix>, nodes: &HashSet<N>) -> Graph<N, E, Ix>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone,
@@ -110,13 +110,13 @@ where
 
     // Add specified nodes
     for node in nodes {
-        if graph.has_node(node) {
+        if _graph.has_node(node) {
             sub.add_node(node.clone());
         }
     }
 
     // Add edges between included nodes
-    for edge in graph.edges() {
+    for edge in _graph.edges() {
         if nodes.contains(&edge.source) && nodes.contains(&edge.target) {
             let _ = sub.add_edge(
                 edge.source.clone(),
@@ -131,7 +131,7 @@ where
 
 /// Extracts a subgraph from a directed graph
 #[allow(dead_code)]
-pub fn subdigraph<N, E, Ix>(digraph: &DiGraph<N, E, Ix>, nodes: &HashSet<N>) -> DiGraph<N, E, Ix>
+pub fn subdigraph<N, E, Ix>(_digraph: &DiGraph<N, E, Ix>, nodes: &HashSet<N>) -> DiGraph<N, E, Ix>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone,
@@ -141,13 +141,13 @@ where
 
     // Add specified nodes
     for node in nodes {
-        if digraph.has_node(node) {
+        if _digraph.has_node(node) {
             sub.add_node(node.clone());
         }
     }
 
     // Add edges between included nodes
-    for edge in digraph.edges() {
+    for edge in _digraph.edges() {
         if nodes.contains(&edge.source) && nodes.contains(&edge.target) {
             let _ = sub.add_edge(
                 edge.source.clone(),
@@ -171,7 +171,7 @@ where
 /// # Returns
 /// * A new graph containing the specified edges and their endpoints
 #[allow(dead_code)]
-pub fn edge_subgraph<N, E, Ix>(graph: &Graph<N, E, Ix>, edges: &[(N, N)]) -> Graph<N, E, Ix>
+pub fn edge_subgraph<N, E, Ix>(_graph: &Graph<N, E, Ix>, edges: &[(N, N)]) -> Graph<N, E, Ix>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone,
@@ -188,15 +188,15 @@ where
 
     // Add nodes
     for node in &included_nodes {
-        if graph.has_node(node) {
+        if _graph.has_node(node) {
             sub.add_node(node.clone());
         }
     }
 
     // Add specified edges
     for (u, v) in edges {
-        if graph.has_edge(u, v) {
-            if let Ok(weight) = graph.edge_weight(u, v) {
+        if _graph.has_edge(u, v) {
+            if let Ok(weight) = _graph.edge_weight(u, v) {
                 let _ = sub.add_edge(u.clone(), v.clone(), weight);
             }
         }
@@ -326,24 +326,24 @@ where
 /// The complement G̅ of a graph G has the same vertex set as G,
 /// but edge (u,v) is in G̅ if and only if (u,v) is not in G.
 #[allow(dead_code)]
-pub fn complement<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Graph<N, (), Ix>
+pub fn complement<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Graph<N, (), Ix>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
     let mut comp = Graph::new();
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
 
     // Add all nodes
     for node in &nodes {
         comp.add_node(node.clone());
     }
 
-    // Add edges that are NOT in the original graph
+    // Add edges that are NOT in the original _graph
     for (i, u) in nodes.iter().enumerate() {
         for v in nodes.iter().skip(i + 1) {
-            if !graph.has_edge(u, v) {
+            if !_graph.has_edge(u, v) {
                 let _ = comp.add_edge(u.clone(), v.clone(), ());
             }
         }
@@ -377,7 +377,7 @@ where
         filtered.add_node(node.clone());
     }
 
-    // Add edges with valid weights
+    // Add edges with valid _weights
     for edge in graph.edges() {
         if valid_weights.contains(&edge.weight) {
             let _ = filtered.add_edge(

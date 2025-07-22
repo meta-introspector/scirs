@@ -445,7 +445,7 @@ impl PeerReviewSystem {
     ) -> String {
         let session_id = uuid::Uuid::new_v4().to_string();
         let session = ReviewSession {
-            id: session_id.clone(),
+            _id: session_id.clone(),
             submission_id: submission_id.to_string(),
             review_type,
             status: ReviewSessionStatus::WaitingForReviewers,
@@ -482,7 +482,7 @@ impl PeerReviewSystem {
             
             let assignment_id = uuid::Uuid::new_v4().to_string();
             let assignment = ReviewAssignment {
-                id: assignment_id.clone(),
+                _id: assignment_id.clone(),
                 session_id: session_id.to_string(),
                 reviewer_id: reviewer_id.clone(),
                 assigned_at: now,
@@ -570,8 +570,8 @@ impl PeerReviewSystem {
         self.reviewers.values()
             .filter(|r| {
                 r.availability.available &&
-                r.expertise_areas.iter().any(|area| 
-                    area.to_lowercase().contains(&expertise_area.to_lowercase())) &&
+                r.expertise_areas.iter().any(|_area| 
+                    _area.to_lowercase().contains(&expertise_area.to_lowercase())) &&
                 r.availability.current_load < r.availability.max_reviews_per_month
             })
             .collect()
@@ -636,7 +636,7 @@ impl PeerReviewSystem {
             .map(|review| {
                 let quality_score = self.calculate_review_quality(review);
                 ReviewQualityAssessment {
-                    review_id: review.id.clone(),
+                    review_id: review._id.clone(),
                     quality_scores: HashMap::new(),
                     overall_quality: quality_score,
                     helpfulness: quality_score * 0.9, // Simplified
@@ -670,7 +670,7 @@ impl PeerReviewSystem {
         
         counts.into_iter()
             .max_by_key(|(_, count)| *count)
-            .map(|(rec, _)| rec.clone())
+            .map(|(rec_)| rec.clone())
             .unwrap_or(ReviewRecommendation::Borderline)
     }
     

@@ -3,7 +3,7 @@
 //! This example shows how to use various text processing capabilities
 //! including tokenization, stemming, and vectorization.
 
-use scirs2_text::{
+use scirs2__text::{
     preprocess::{BasicNormalizer, BasicTextCleaner, TextCleaner, TextNormalizer},
     stemming::{PorterStemmer, SimpleLemmatizer, Stemmer},
     tokenize::{NgramTokenizer, RegexTokenizer, Tokenizer, WordTokenizer},
@@ -119,7 +119,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Tokens: {tokens:?}");
 
     // Stem
-    let stemmed_tokens: Result<Vec<_>, _> = tokens
+    let stemmed_tokens: Result<Vec<_>_> = tokens
         .iter()
         .map(|token| porter_stemmer.stem(token))
         .collect();

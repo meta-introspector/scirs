@@ -23,8 +23,7 @@ pub struct AdvancedMultivariateAnalysis<F> {
     /// Fitted models
     models: HashMap<String, MultivariateModel<F>>,
     /// Performance metrics
-    performance: PerformanceMetrics,
-    _phantom: PhantomData<F>,
+    performance: PerformanceMetrics_phantom: PhantomData<F>,
 }
 
 /// Configuration for advanced multivariate analysis
@@ -58,8 +57,7 @@ pub enum DimensionalityReductionMethod<F> {
     /// Independent Component Analysis
     ICA {
         _algorithm: ICAAlgorithm,
-        n_components: usize,
-        _max_iter: usize,
+        n_components: usize, _max_iter: usize,
         tolerance: F,
     },
     /// Non-negative Matrix Factorization
@@ -550,17 +548,16 @@ where
         + ndarray::ScalarOperand,
 {
     /// Create new advanced multivariate analysis
-    pub fn new(config: AdvancedMultivariateConfig<F>) -> Self {
+    pub fn new(_config: AdvancedMultivariateConfig<F>) -> Self {
         Self {
-            config,
+            _config,
             models: HashMap::new(),
             performance: PerformanceMetrics {
                 computation_time: 0.0,
                 memory_usage: 0,
                 convergence_rate: 0.0,
                 stability_score: 0.0,
-            },
-            _phantom: PhantomData,
+            }_phantom: PhantomData,
         }
     }
 
@@ -632,8 +629,7 @@ where
             } => self.advanced_pca(data, *algorithm, *n_components),
             DimensionalityReductionMethod::ICA {
                 _algorithm,
-                n_components,
-                _max_iter,
+                n_components_max_iter,
                 tolerance,
             } => self.independent_component_analysis(
                 data,
@@ -652,8 +648,7 @@ where
                 n_neighbors,
                 min_dist,
                 spread,
-            } => self.umap_analysis(data, *n_components, *n_neighbors, *min_dist, *spread),
-            _ => {
+            } => self.umap_analysis(data, *n_components, *n_neighbors, *min_dist, *spread, _ => {
                 // Simplified fallback for other methods
                 self.advanced_pca(data, PCAVariant::Standard, 2)
             }
@@ -663,8 +658,7 @@ where
     /// Advanced PCA implementation
     fn advanced_pca(
         &self,
-        data: &ArrayView2<F>,
-        _variant: PCAVariant,
+        data: &ArrayView2<F>, _variant: PCAVariant,
         n_components: usize,
     ) -> StatsResult<MultivariateModel<F>> {
         let (n_samples, n_features) = data.dim();
@@ -684,8 +678,8 @@ where
         // Perform eigendecomposition (simplified)
         let (eigenvalues, eigenvectors) = self.eigen_decomposition_simd(&covariance.view())?;
 
-        // Select top components
-        let components = eigenvectors
+        // Select top _components
+        let _components = eigenvectors
             .slice(ndarray::s![.., 0..actual_components])
             .to_owned();
         let explained_variance = eigenvalues
@@ -697,7 +691,7 @@ where
         let singular_values = explained_variance.mapv(|x| x.sqrt());
 
         let pca_model = PCAModel {
-            components,
+            _components,
             explained_variance,
             explained_variance_ratio,
             singular_values,
@@ -748,17 +742,15 @@ where
     /// Independent Component Analysis
     fn independent_component_analysis(
         &self,
-        data: &ArrayView2<F>,
-        _algorithm: ICAAlgorithm,
-        n_components: usize,
-        _max_iter: usize,
+        data: &ArrayView2<F>, _algorithm: ICAAlgorithm,
+        n_components: usize, _max_iter: usize,
         tolerance: F,
     ) -> StatsResult<MultivariateModel<F>> {
         // Simplified ICA implementation
         let (n_samples, n_features) = data.dim();
         let actual_components = n_components.min(n_features);
 
-        let components = Array2::eye(actual_components);
+        let _components = Array2::eye(actual_components);
         let mixing_matrix = Array2::eye(actual_components);
         let sources = Array2::zeros((n_samples, actual_components));
         // Compute column-wise means
@@ -776,7 +768,7 @@ where
         };
 
         let ica_model = ICAModel {
-            components,
+            _components,
             mixing_matrix,
             sources,
             mean,
@@ -793,7 +785,7 @@ where
         n_components: usize,
         perplexity: F,
     ) -> StatsResult<MultivariateModel<F>> {
-        let (n_samples, _) = data.dim();
+        let (n_samples_) = data.dim();
 
         // Simplified t-SNE - would implement actual algorithm
         let embedding = Array2::zeros((n_samples, n_components));
@@ -819,7 +811,7 @@ where
         min_dist: F,
         spread: F,
     ) -> StatsResult<MultivariateModel<F>> {
-        let (n_samples, _) = data.dim();
+        let (n_samples_) = data.dim();
 
         // Simplified UMAP - would implement actual algorithm
         let embedding = Array2::zeros((n_samples, n_components));
@@ -845,7 +837,7 @@ where
     }
 
     /// Tensor analysis
-    fn tensor_analysis(&self, _data: &ArrayView2<F>) -> StatsResult<MultivariateModel<F>> {
+    fn tensor_analysis(&self_data: &ArrayView2<F>) -> StatsResult<MultivariateModel<F>> {
         // Simplified tensor analysis
         let tensor_model = TensorModel {
             decomposition_type: "CP".to_string(),
@@ -860,7 +852,7 @@ where
 
     /// Clustering analysis
     fn clustering_analysis(&self, data: &ArrayView2<F>) -> StatsResult<MultivariateModel<F>> {
-        let (n_samples, _) = data.dim();
+        let (n_samples_) = data.dim();
 
         // Simplified clustering
         let labels = Array1::zeros(n_samples);
@@ -884,7 +876,7 @@ where
     /// Multi-view analysis
     fn multiview_analysis(&self, views: &[&ArrayView2<F>]) -> StatsResult<MultivariateModel<F>> {
         let n_views = views.len();
-        let (n_samples, _) = views[0].dim();
+        let (n_samples_) = views[0].dim();
 
         // Simplified multi-view analysis
         let view_embeddings = vec![Array2::zeros((n_samples, 2)); n_views];
@@ -910,7 +902,7 @@ where
         let mut scores = HashMap::new();
         let mut trade_offs = HashMap::new();
 
-        for (method_name, _result) in results {
+        for (method_name_result) in results {
             scores.insert(method_name.clone(), F::from(0.8).unwrap());
             trade_offs.insert(
                 method_name.clone(),
@@ -941,8 +933,7 @@ where
     /// Validate results
     fn validate_results(
         &self,
-        results: &HashMap<String, MultivariateModel<F>>,
-        _data: &ArrayView2<F>,
+        results: &HashMap<String, MultivariateModel<F>>, _data: &ArrayView2<F>,
     ) -> StatsResult<ValidationResults<F>> {
         let mut cross_validation_scores = HashMap::new();
         let mut bootstrap_confidence_intervals = HashMap::new();
@@ -973,8 +964,7 @@ where
     /// Generate recommendations
     fn generate_recommendations(
         &self,
-        comparison: &MethodComparison<F>,
-        _validation: &ValidationResults<F>,
+        comparison: &MethodComparison<F>, _validation: &ValidationResults<F>,
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
 
@@ -984,7 +974,7 @@ where
 
         recommendations.push("Consider combining multiple methods for robust analysis".to_string());
         recommendations
-            .push("Validate results using cross-validation before deployment".to_string());
+            .push("Validate results using cross-_validation before deployment".to_string());
 
         recommendations
     }

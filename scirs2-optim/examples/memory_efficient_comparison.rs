@@ -1,23 +1,23 @@
 // Example demonstrating memory-efficient optimizers
 use ndarray::Array2;
-use scirs2_optim::memory_efficient::{InPlaceAdam, InPlaceOptimizer, InPlaceSGD};
-use scirs2_optim::optimizers::{Adam, SGD};
-use scirs2_optim::Optimizer;
+use scirs2__optim::memory_efficient::{InPlaceAdam, InPlaceOptimizer, InPlaceSGD};
+use scirs2__optim::optimizers::{Adam, SGD};
+use scirs2__optim::Optimizer;
 use std::error::Error;
 use std::time::Instant;
 
 // Function to measure memory usage (approximation)
 #[allow(dead_code)]
-fn estimate_memory_usage<T>(arrays: &[&T]) -> usize {
-    std::mem::size_of_val(arrays)
+fn estimate_memory_usage<T>(_arrays: &[&T]) -> usize {
+    std::mem::size_of_val(_arrays)
 }
 
 // Simple quadratic loss function: f(x) = (x - target)^2
 #[allow(dead_code)]
-fn compute_loss_and_gradient(params: &Array2<f64>, target: &Array2<f64>) -> (f64, Array2<f64>) {
-    let diff = params - target;
-    let loss = diff.mapv(|x| x * x).sum() / (params.nrows() * params.ncols()) as f64;
-    let grad = diff * 2.0 / (params.nrows() * params.ncols()) as f64;
+fn compute_loss_and_gradient(_params: &Array2<f64>, target: &Array2<f64>) -> (f64, Array2<f64>) {
+    let diff = _params - target;
+    let loss = diff.mapv(|x| x * x).sum() / (_params.nrows() * _params.ncols()) as f64;
+    let grad = diff * 2.0 / (_params.nrows() * _params.ncols()) as f64;
     (loss, grad)
 }
 
@@ -159,7 +159,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("\nUtility Functions Demo:");
     println!("----------------------");
 
-    use scirs2_optim::memory_efficient::{clip_inplace, normalize_inplace, scale_inplace};
+    use scirs2__optim::memory_efficient::{clip_inplace, normalize_inplace, scale_inplace};
 
     let mut test_array = Array2::from_elem((3, 3), 2.0);
     println!("Original array:\n{}", test_array);

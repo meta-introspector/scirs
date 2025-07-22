@@ -17,7 +17,7 @@ pub use geometric::*;
 pub use optimized::{
     map_coordinates_optimized, zoom_optimized, CoefficientCache, Interpolator1D, Interpolator2D,
 };
-pub use specialized_transforms::*;
+pub use specialized__transforms::*;
 pub use spline::*;
 pub use transform::*;
 pub use utils::*;

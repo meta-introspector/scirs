@@ -124,9 +124,9 @@ pub struct TrackedGpuContext {
 
 impl TrackedGpuContext {
     /// Create a new tracked GPU context
-    pub fn new(inner: GpuContext, component_name: impl Into<String>) -> Self {
+    pub fn new(context: GpuContext, component_name: impl Into<String>) -> Self {
         Self {
-            inner,
+            inner: context,
             component_name: component_name.into(),
         }
     }

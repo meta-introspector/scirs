@@ -367,7 +367,7 @@ impl WebGPUContext {
 
     /// Allocate device memory (fallback)
     #[cfg(not(feature = "wgpu_backend"))]
-    pub fn allocate_device_memory(&self, size: usize) -> Result<WgpuBuffer, GpuError> {
+    pub fn allocate_device_memory_2(&self, size: usize) -> Result<WgpuBuffer, GpuError> {
         // Fallback implementation: return a simulated buffer handle
         Ok((0x1000 + size) as WgpuBuffer)
     }
@@ -380,13 +380,13 @@ impl WebGPUContext {
     }
 
     #[cfg(not(feature = "wgpu_backend"))]
-    fn create_queue(_device: WgpuDevice) -> Result<WgpuQueue, GpuError> {
+    fn create_queue(device: WgpuDevice) -> Result<WgpuQueue, GpuError> {
         // Stub implementation
         Ok(0x2 as WgpuQueue)
     }
 
     #[cfg(not(feature = "wgpu_backend"))]
-    fn compile_wgsl_source(_source: &str, _name: &str) -> Result<WgpuComputePipeline, GpuError> {
+    fn compile_wgsl_source(source: &str, name: &str) -> Result<WgpuComputePipeline, GpuError> {
         // Stub implementation
         Ok(0x3 as WgpuComputePipeline)
     }
@@ -402,7 +402,7 @@ impl WebGPUContext {
             if trimmed.contains("@compute") {
                 // The function might be on the same line or the next line
                 let mut search_line = trimmed;
-                let mut search_idx = i;
+                let mut search_idx = 0;
 
                 // If @compute and function are not on the same line, check next line
                 if !search_line.contains("fn ") && search_idx + 1 < lines.len() {
@@ -525,9 +525,9 @@ struct WebGPUCompiler {
 
 impl GpuCompilerImpl for WebGPUCompiler {
     fn compile(&self, source: &str) -> Result<Arc<dyn GpuKernelImpl>, GpuError> {
-        let _shader = self.context.compile_shader_internal(source, "shader")?;
+        let shader = self.context.compile_shader_internal(source, "shader")?;
         Ok(Arc::new(WebGPUKernelHandle {
-            shader_name: "shader".to_string(),
+            shader_name: shader.name.clone(),
             compiled_shaders: Arc::clone(&self.context.compiled_shaders),
             params: Arc::new(Mutex::new(HashMap::new())),
             #[cfg(feature = "wgpu_backend")]
@@ -541,11 +541,7 @@ impl GpuCompilerImpl for WebGPUCompiler {
         }))
     }
 
-    fn compile_typed(
-        &self,
-        name: &str,
-        _input_type: std::any::TypeId,
-        _output_type: std::any::TypeId,
+    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId
     ) -> Arc<dyn GpuKernelImpl> {
         Arc::new(WebGPUKernelHandle {
             shader_name: name.to_string(),
@@ -617,13 +613,13 @@ impl GpuKernelImpl for WebGPUKernelHandle {
         params.insert(name.to_string(), KernelParam::F64(value));
     }
 
-    fn dispatch(&self, work_groups: [u32; 3]) {
+    fn dispatch_workgroups(&self, work_groups: [u32; 3]) {
         #[cfg(feature = "wgpu_backend")]
         {
             // Real WebGPU compute dispatch
             let shaders = self.compiled_shaders.lock().unwrap();
             if let Some(shader) = shaders.get(&self.shader_name) {
-                let _params = self.params.lock().unwrap();
+                let params = self.params.lock().unwrap();
 
                 // Create command encoder
                 let mut encoder =
@@ -643,7 +639,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                     // Set the compute pipeline
                     compute_pass.set_pipeline(&shader.pipeline);
 
-                    // Create and set bind groups with buffers and uniforms
+                    // Create and set bind _groups with buffers and uniforms
                     // TODO: Fix create_bind_group_from_params method
                     // if let Ok(bind_group) =
                     //     self.create_bind_group_from_params(&shader.bind_group_layout, &params)
@@ -841,7 +837,7 @@ impl GpuBufferImpl for WebGPUCpuFallbackBuffer {
         }
 
         // Since this is a CPU fallback, we can use safe Rust internally
-        let _data_slice = std::slice::from_raw_parts(data, size);
+        let data_slice = std::slice::from_raw_parts(data, size);
         // We can't mutate self.data directly since &self is immutable
         // In a real implementation, this would require interior mutability
         eprintln!(

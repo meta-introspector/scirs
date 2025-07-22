@@ -219,7 +219,7 @@ where
         let cost = 0.5 * weighted_res.iter().map(|&r| r * r).sum::<f64>();
 
         // Compute Jacobian
-        let (jac, _jac_evals) = match &jacobian {
+        let (jac_jac_evals) = match &jacobian {
             Some(jac_fn) => {
                 let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
                 njev += 1;

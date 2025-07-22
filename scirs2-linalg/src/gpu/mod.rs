@@ -373,7 +373,7 @@ impl GpuManager {
             .iter()
             .enumerate()
             .filter(|(_, device)| device.device_info().total_memory > memory_required)
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .collect();
 
         if suitable_devices.is_empty() {
@@ -560,7 +560,7 @@ pub trait GpuBackend: Send + Sync {
             .iter()
             .enumerate()
             .max_by_key(|(_, device)| device.total_memory)
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap();
 
         self.create_context(best_device)
@@ -681,7 +681,7 @@ pub fn should_use_gpu(
     threshold: usize,
     gpu_context: Option<&dyn GpuContext>,
 ) -> bool {
-    // GPU is beneficial for larger problems and when GPU context is available
+    // GPU is beneficial for larger problems and when GPU _context is available
     gpu_context.is_some() && matrix_elements > threshold
 }
 
@@ -726,11 +726,11 @@ mod tests {
         // Below threshold should not use GPU
         assert!(!should_use_gpu(100, 1000, None));
 
-        // Above threshold but no GPU context
+        // Above threshold but no GPU _context
         assert!(!should_use_gpu(2000, 1000, None));
 
-        // Would use GPU if context was available
-        // (We can't test with actual context without GPU backends)
+        // Would use GPU if _context was available
+        // (We can't test with actual _context without GPU backends)
     }
 
     #[test]

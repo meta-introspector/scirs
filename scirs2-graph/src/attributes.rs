@@ -30,29 +30,29 @@ pub enum AttributeValue {
 
 impl AttributeValue {
     /// Create a string attribute
-    pub fn string<S: Into<String>>(value: S) -> Self {
-        AttributeValue::String(value.into())
+    pub fn string<S: Into<String>>(_value: S) -> Self {
+        AttributeValue::String(_value.into())
     }
 
     /// Create an integer attribute
-    pub fn integer(value: i64) -> Self {
-        AttributeValue::Integer(value)
+    pub fn integer(_value: i64) -> Self {
+        AttributeValue::Integer(_value)
     }
 
     /// Create a float attribute
-    pub fn float(value: f64) -> Self {
-        AttributeValue::Float(value)
+    pub fn float(_value: f64) -> Self {
+        AttributeValue::Float(_value)
     }
 
     /// Create a boolean attribute
-    pub fn boolean(value: bool) -> Self {
-        AttributeValue::Boolean(value)
+    pub fn boolean(_value: bool) -> Self {
+        AttributeValue::Boolean(_value)
     }
 
     /// Create a JSON attribute from any serializable type
-    pub fn json<T: Serialize>(value: &T) -> Result<Self> {
+    pub fn json<T: Serialize>(_value: &T) -> Result<Self> {
         let json_value =
-            serde_json::to_value(value).map_err(|_| GraphError::SerializationError {
+            serde_json::to_value(_value).map_err(|_| GraphError::SerializationError {
                 format: "JSON".to_string(),
                 details: "Failed to serialize to JSON".to_string(),
             })?;
@@ -62,32 +62,28 @@ impl AttributeValue {
     /// Get the attribute as a string
     pub fn as_string(&self) -> Option<&str> {
         match self {
-            AttributeValue::String(s) => Some(s),
-            _ => None,
+            AttributeValue::String(s) => Some(s, _ => None,
         }
     }
 
     /// Get the attribute as an integer
     pub fn as_integer(&self) -> Option<i64> {
         match self {
-            AttributeValue::Integer(i) => Some(*i),
-            _ => None,
+            AttributeValue::Integer(i) => Some(*i, _ => None,
         }
     }
 
     /// Get the attribute as a float
     pub fn as_float(&self) -> Option<f64> {
         match self {
-            AttributeValue::Float(f) => Some(*f),
-            _ => None,
+            AttributeValue::Float(f) => Some(*f, _ => None,
         }
     }
 
     /// Get the attribute as a boolean
     pub fn as_boolean(&self) -> Option<bool> {
         match self {
-            AttributeValue::Boolean(b) => Some(*b),
-            _ => None,
+            AttributeValue::Boolean(b) => Some(*b, _ => None,
         }
     }
 
@@ -200,12 +196,12 @@ impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType
     }
 
     /// Create an attributed graph from an existing graph
-    pub fn from_graph(graph: Graph<N, E, Ix>) -> Self {
+    pub fn from_graph(_graph: Graph<N, E, Ix>) -> Self {
         AttributedGraph {
-            graph,
+            _graph,
             node_attributes: HashMap::new(),
             edge_attributes: HashMap::new(),
-            graph_attributes: HashMap::new(),
+            _graph_attributes: HashMap::new(),
         }
     }
 
@@ -522,12 +518,12 @@ impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType
     }
 
     /// Create an attributed directed graph from an existing directed graph
-    pub fn from_digraph(graph: DiGraph<N, E, Ix>) -> Self {
+    pub fn from_digraph(_graph: DiGraph<N, E, Ix>) -> Self {
         AttributedDiGraph {
-            graph,
+            _graph,
             node_attributes: HashMap::new(),
             edge_attributes: HashMap::new(),
-            graph_attributes: HashMap::new(),
+            _graph_attributes: HashMap::new(),
         }
     }
 
@@ -666,8 +662,8 @@ pub struct AttributeSummary {
 
 /// Helper function to compare attribute values with flexible type matching
 #[allow(dead_code)]
-fn matches_attribute_value(attr_value: &AttributeValue, target_value: &AttributeValue) -> bool {
-    match (attr_value, target_value) {
+fn matches_attribute_value(_attr_value: &AttributeValue, target_value: &AttributeValue) -> bool {
+    match (_attr_value, target_value) {
         (AttributeValue::String(a), AttributeValue::String(b)) => a == b,
         (AttributeValue::Integer(a), AttributeValue::Integer(b)) => a == b,
         (AttributeValue::Float(a), AttributeValue::Float(b)) => (a - b).abs() < f64::EPSILON,
@@ -691,8 +687,8 @@ pub struct AttributeView<'a, N: Node> {
 
 impl<'a, N: Node> AttributeView<'a, N> {
     /// Create a new attribute view
-    pub fn new(attributes: &'a HashMap<N, Attributes>) -> Self {
-        AttributeView { attributes }
+    pub fn new(_attributes: &'a HashMap<N, Attributes>) -> Self {
+        AttributeView { _attributes }
     }
 
     /// Find nodes with numeric attributes in a range
@@ -703,8 +699,7 @@ impl<'a, N: Node> AttributeView<'a, N> {
                 if let Some(attr_value) = attrs.get(key) {
                     let numeric_value = match attr_value {
                         AttributeValue::Integer(i) => Some(*i as f64),
-                        AttributeValue::Float(f) => Some(*f),
-                        _ => None,
+                        AttributeValue::Float(f) => Some(*f, _ => None,
                     };
 
                     if let Some(value) = numeric_value {

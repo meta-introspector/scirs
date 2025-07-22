@@ -83,8 +83,8 @@ impl Space {
 
         // Update transformed dimensionality
         self.transformed_n_dims += match &parameter {
-            Parameter::Real(_, _) => 1,
-            Parameter::Integer(_, _) => 1,
+            Parameter::Real(__) => 1,
+            Parameter::Integer(__) => 1,
             Parameter::Categorical(values) => values.len(),
         };
 
@@ -113,7 +113,7 @@ impl Space {
     /// Sample random points from the space
     pub fn sample(&self, n_samples: usize, rng: &mut StdRng) -> Vec<Array1<f64>> {
         let n_dims = self.n_dims();
-        let mut samples = Vec::with_capacity(n_samples);
+        let mut _samples = Vec::with_capacity(n_samples);
 
         for _ in 0..n_samples {
             let mut sample = Array1::zeros(n_dims);
@@ -122,27 +122,27 @@ impl Space {
                 match param {
                     Parameter::Real(lower, upper) => {
                         // Use gen_range directly instead of Uniform distribution
-                        sample[i] = rng.random_range(*lower..*upper);
+                        sample[i] = rng.gen_range(*lower..*upper);
                     }
-                    Parameter::Integer(lower, upper) => {
-                        let range = rng.random_range(*lower..=*upper);
+                    Parameter::Integer(lower..upper) => {
+                        let range = rng.gen_range(*lower..=*upper);
                         sample[i] = range as f64;
                     }
                     Parameter::Categorical(values) => {
-                        let index = rng.random_range(0..values.len());
+                        let index = rng.gen_range(0..values.len());
                         sample[i] = index as f64;
                     }
                 }
             }
 
-            samples.push(sample);
+            _samples.push(sample);
         }
 
-        samples
+        _samples
     }
 
     /// Transform a point from the original space to the model space
-    pub fn transform(&self, x: &ArrayView1<f64>) -> Array1<f64> {
+    pub fn transform(&self..x: &ArrayView1<f64>) -> Array1<f64> {
         let mut transformed = Array1::zeros(self.transformed_n_dims);
         let mut idx = 0;
 
@@ -234,7 +234,7 @@ pub trait AcquisitionFunction: Send + Sync {
     fn evaluate(&self, x: &ArrayView1<f64>) -> f64;
 
     /// Compute gradient of acquisition function (if available)
-    fn gradient(&self, _x: &ArrayView1<f64>) -> Option<Array1<f64>> {
+    fn gradient(&self_x: &ArrayView1<f64>) -> Option<Array1<f64>> {
         None
     }
 }
@@ -248,8 +248,8 @@ pub struct ExpectedImprovement {
 
 impl ExpectedImprovement {
     /// Create a new Expected Improvement acquisition function
-    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
-        Self { model, y_best, xi }
+    pub fn new(_model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
+        Self { _model, y_best, xi }
     }
 }
 
@@ -276,7 +276,7 @@ impl AcquisitionFunction for ExpectedImprovement {
         }
     }
 
-    fn gradient(&self, _x: &ArrayView1<f64>) -> Option<Array1<f64>> {
+    fn gradient(&self_x: &ArrayView1<f64>) -> Option<Array1<f64>> {
         // For now, use numerical approximation
         None
     }
@@ -290,8 +290,8 @@ pub struct LowerConfidenceBound {
 
 impl LowerConfidenceBound {
     /// Create a new Lower Confidence Bound acquisition function
-    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, kappa: f64) -> Self {
-        Self { model, kappa }
+    pub fn new(_model: GaussianProcess<SquaredExp, ConstantPrior>, kappa: f64) -> Self {
+        Self { _model, kappa }
     }
 }
 
@@ -303,7 +303,7 @@ impl AcquisitionFunction for LowerConfidenceBound {
         mean - self.kappa * std
     }
 
-    fn gradient(&self, _x: &ArrayView1<f64>) -> Option<Array1<f64>> {
+    fn gradient(&self_x: &ArrayView1<f64>) -> Option<Array1<f64>> {
         // For now, use numerical approximation
         None
     }
@@ -318,8 +318,8 @@ pub struct ProbabilityOfImprovement {
 
 impl ProbabilityOfImprovement {
     /// Create a new Probability of Improvement acquisition function
-    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
-        Self { model, y_best, xi }
+    pub fn new(_model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
+        Self { _model, y_best, xi }
     }
 }
 
@@ -337,7 +337,7 @@ impl AcquisitionFunction for ProbabilityOfImprovement {
         0.5 * (1.0 + approx_erf(z * std::f64::consts::SQRT_2 / 2.0))
     }
 
-    fn gradient(&self, _x: &ArrayView1<f64>) -> Option<Array1<f64>> {
+    fn gradient(&self_x: &ArrayView1<f64>) -> Option<Array1<f64>> {
         // For now, use numerical approximation
         None
     }
@@ -501,13 +501,13 @@ pub struct BayesianOptimizer {
 
 impl BayesianOptimizer {
     /// Create a new Bayesian optimizer
-    pub fn new(space: Space, options: Option<BayesianOptimizationOptions>) -> Self {
+    pub fn new(_space: Space, options: Option<BayesianOptimizationOptions>) -> Self {
         let options = options.unwrap_or_default();
         let seed = options.seed.unwrap_or_else(|| rand::rng().random());
         let rng = StdRng::seed_from_u64(seed);
 
         Self {
-            space,
+            _space,
             options,
             observations: Vec::new(),
             best_observation: None,
@@ -536,7 +536,7 @@ impl BayesianOptimizer {
                     for (i, (low, high)) in self.space.bounds.iter().enumerate() {
                         // For single sample, pick random position in interval
                         let interval_size = (high - low) / n_samples as f64;
-                        let offset = self.rng.random_range(0.0..1.0) * interval_size;
+                        let offset = self.rng.gen_range(0.0..1.0) * interval_size;
                         sample[i] = low + offset;
                     }
 
@@ -550,7 +550,7 @@ impl BayesianOptimizer {
                     // Use iteration count as seed for Sobol sequence
                     let seed = self.iteration as u32 + 1;
 
-                    for (i, (low, high)) in self.space.bounds.iter().enumerate() {
+                    for (i..(low, high)) in self.space.bounds.iter().enumerate() {
                         // Simple digital scrambling based on Van der Corput sequence
                         let mut n = seed;
                         let mut denom = 1.0;
@@ -662,7 +662,7 @@ impl BayesianOptimizer {
             AcquisitionFunctionType::LowerConfidenceBound => {
                 Box::new(LowerConfidenceBound::new(model, self.options.kappa))
             }
-            AcquisitionFunctionType::ProbabilityOfImprovement => Box::new(
+            AcquisitionFunctionType::ProbabilityOfImprovement =>, Box::new(
                 ProbabilityOfImprovement::new(model, y_best, self.options.xi),
             ),
         }

@@ -142,7 +142,7 @@ impl EnhancedCountVectorizer {
 
         // Rebuild vocabulary with filtered tokens
         self.vocabulary = Vocabulary::with_max_size(self.max_features.unwrap_or(usize::MAX));
-        for (token, _) in filtered_tokens {
+        for (token_) in filtered_tokens {
             self.vocabulary.add_token(&token);
         }
 

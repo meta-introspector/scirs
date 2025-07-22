@@ -11,14 +11,17 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::{LtiSystem, StateSpace, TransferFunction};
-use ndarray::{s, Array1, Array2};
-use num_complex::Complex64;
+use ndarray::{Array1, Array2, s};
+use num__complex::Complex64;
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::f64::consts::PI;
+use crate::lti::design::tf;
 
+#[allow(unused_imports)]
 /// Advanced-enhanced system identification result with quantum-inspired optimization
 #[derive(Debug, Clone)]
 pub struct AdvancedEnhancedSysIdResult {
@@ -636,8 +639,8 @@ fn perform_advanced_validation(
     let normalized_rmse = rmse / output_range;
 
     // Information criteria
-    let n = output.len() as f64;
-    let k = (2 * model.order) as f64;
+    let n = output.len()  as f64;
+    let k = (2 * model.order)  as f64;
     let aic = n * mse.ln() + 2.0 * k;
     let bic = n * mse.ln() + k * n.ln();
     let hannan_quinn = n * mse.ln() + 2.0 * k * (n.ln()).ln();
@@ -684,7 +687,7 @@ fn quick_parameter_estimation(
     order: usize,
 ) -> SignalResult<Vec<ParameterWithUncertainty>> {
     // Simplified least squares estimation for order selection
-    let (params, _) = regularized_least_squares(input, output, order, 1e-6)?;
+    let (params_) = regularized_least_squares(input, output, order, 1e-6)?;
 
     params
         .into_iter()
@@ -788,9 +791,9 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
 }
 
 #[allow(dead_code)]
-fn initialize_quantum_states(n_params: usize) -> Array2<Complex64> {
+fn initialize_quantum_states(_n_params: usize) -> Array2<Complex64> {
     // Initialize quantum superposition states
-    Array2::from_shape_fn((n_params, 8), |(i, j)| {
+    Array2::from_shape_fn((_n_params, 8), |(i, j)| {
         Complex64::new(
             (i as f64 * 0.1 + j as f64 * 0.05).cos(),
             (i as f64 * 0.1 + j as f64 * 0.05).sin(),
@@ -799,15 +802,15 @@ fn initialize_quantum_states(n_params: usize) -> Array2<Complex64> {
 }
 
 #[allow(dead_code)]
-fn measure_quantum_state(quantum_states: &Array2<Complex64>) -> Array1<f64> {
-    let (n_params, _) = quantum_states.dim();
+fn measure_quantum_state(_quantum_states: &Array2<Complex64>) -> Array1<f64> {
+    let (n_params_) = _quantum_states.dim();
     let mut params = Array1::zeros(n_params);
 
     for i in 0..n_params {
         // Expectation value of measurement
         let mut expectation = 0.0;
-        for j in 0..quantum_states.ncols() {
-            expectation += quantum_states[[i, j]].norm_sqr() * (j as f64 - 4.0) * 0.1;
+        for j in 0.._quantum_states.ncols() {
+            expectation += _quantum_states[[i, j]].norm_sqr() * (j as f64 - 4.0) * 0.1;
         }
         params[i] = expectation;
     }
@@ -907,7 +910,7 @@ fn compute_parameter_uncertainties(
             / (perturbation * perturbation);
 
         if second_deriv > 1e-12 {
-            uncertainties[i] = (1.0 / second_deriv).sqrt();
+            uncertainties[i] = ((1.0 / second_deriv) as f64).sqrt();
         } else {
             uncertainties[i] = 1.0; // Conservative estimate
         }
@@ -980,9 +983,9 @@ fn simulate_model_response(
 // Additional helper functions for metrics computation
 
 #[allow(dead_code)]
-fn compute_mse(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
-    let n = actual.len() as f64;
-    actual
+fn compute_mse(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
+    let n = _actual.len()  as f64;
+    _actual
         .iter()
         .zip(predicted.iter())
         .map(|(a, p)| (a - p).powi(2))
@@ -991,9 +994,9 @@ fn compute_mse(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
 }
 
 #[allow(dead_code)]
-fn compute_mae(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
-    let n = actual.len() as f64;
-    actual
+fn compute_mae(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
+    let n = _actual.len()  as f64;
+    _actual
         .iter()
         .zip(predicted.iter())
         .map(|(a, p)| (a - p).abs())
@@ -1002,17 +1005,17 @@ fn compute_mae(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
 }
 
 #[allow(dead_code)]
-fn compute_fit_percentage(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
-    let mse = compute_mse(actual, predicted);
-    let actual_var = compute_variance(actual);
+fn compute_fit_percentage(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
+    let mse = compute_mse(_actual, predicted);
+    let actual_var = compute_variance(_actual);
     (1.0 - mse / actual_var).max(0.0) * 100.0
 }
 
 #[allow(dead_code)]
-fn compute_r_squared(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
-    let actual_mean = actual.mean().unwrap_or(0.0);
-    let ss_tot: f64 = actual.iter().map(|&y| (y - actual_mean).powi(2)).sum();
-    let ss_res: f64 = actual
+fn compute_r_squared(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
+    let actual_mean = _actual.mean().unwrap_or(0.0);
+    let ss_tot: f64 = _actual.iter().map(|&y| (y - actual_mean).powi(2)).sum();
+    let ss_res: f64 = _actual
         .iter()
         .zip(predicted.iter())
         .map(|(&y, &p)| (y - p).powi(2))
@@ -1026,10 +1029,10 @@ fn compute_r_squared(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
 }
 
 #[allow(dead_code)]
-fn compute_variance(data: &Array1<f64>) -> f64 {
-    let mean = data.mean().unwrap_or(0.0);
-    let n = data.len() as f64;
-    data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n
+fn compute_variance(_data: &Array1<f64>) -> f64 {
+    let mean = _data.mean().unwrap_or(0.0);
+    let n = _data.len()  as f64;
+    _data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n
 }
 
 #[allow(dead_code)]
@@ -1041,8 +1044,8 @@ fn compute_aic(
     if let Some(tf) = &model.transfer_function {
         let predicted = simulate_model_response(tf, input)?;
         let mse = compute_mse(output, &predicted);
-        let n = output.len() as f64;
-        let k = (2 * model.order) as f64;
+        let n = output.len()  as f64;
+        let k = (2 * model.order)  as f64;
         Ok(n * mse.ln() + 2.0 * k)
     } else {
         Ok(f64::INFINITY)
@@ -1058,8 +1061,8 @@ fn compute_bic(
     if let Some(tf) = &model.transfer_function {
         let predicted = simulate_model_response(tf, input)?;
         let mse = compute_mse(output, &predicted);
-        let n = output.len() as f64;
-        let k = (2 * model.order) as f64;
+        let n = output.len()  as f64;
+        let k = (2 * model.order)  as f64;
         Ok(n * mse.ln() + k * n.ln())
     } else {
         Ok(f64::INFINITY)
@@ -1104,8 +1107,8 @@ fn compute_cross_validation_score(
 }
 
 #[allow(dead_code)]
-fn compute_stability_score(model: &SystemModel) -> SignalResult<f64> {
-    if let Some(tf) = &model.transfer_function {
+fn compute_stability_score(_model: &SystemModel) -> SignalResult<f64> {
+    if let Some(tf) = &_model.transfer_function {
         // Check if all poles are inside unit circle (for discrete) or left half-plane (for continuous)
         let poles = tf.poles()?;
         let stable_count = poles
@@ -1131,9 +1134,9 @@ fn analyze_complexity_accuracy_tradeoff(
 ) -> ComplexityAccuracyTradeoff {
     let mut pareto_frontier = Vec::new();
 
-    for (&order, criteria) in order_criteria.iter() {
-        let complexity = order as f64;
-        let accuracy = 1.0 / (1.0 + criteria.cross_validation_score); // Higher is better
+    for (&order, _criteria) in order_criteria.iter() {
+        let complexity = order  as f64;
+        let accuracy = 1.0 / (1.0 + _criteria.cross_validation_score); // Higher is better
         pareto_frontier.push((complexity, accuracy));
     }
 
@@ -1188,8 +1191,8 @@ fn find_alternative_orders(
 ) -> Vec<(usize, f64)> {
     let mut alternatives: Vec<_> = order_criteria
         .iter()
-        .filter(|(&order, _)| order != best_order)
-        .map(|(&order, criteria)| (order, 1.0 / (1.0 + criteria.cross_validation_score)))
+        .filter(|(&order_)| _order != best_order)
+        .map(|(&_order, _criteria)| (_order, 1.0 / (1.0 + _criteria.cross_validation_score)))
         .collect();
 
     alternatives.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
@@ -1203,7 +1206,7 @@ fn analyze_convergence(
 ) -> SignalResult<ConvergenceInfo> {
     // Simplified convergence analysis
     let avg_uncertainty =
-        parameters.iter().map(|p| p.standard_error).sum::<f64>() / parameters.len() as f64;
+        parameters.iter().map(|p| p.standard_error).sum::<f64>() / parameters.len()  as f64;
 
     Ok(ConvergenceInfo {
         converged: avg_uncertainty < config.convergence_tolerance * 10.0,
@@ -1308,9 +1311,9 @@ fn validate_time_domain(
 }
 
 #[allow(dead_code)]
-fn compute_stability_margin(tf: &TransferFunction) -> SignalResult<f64> {
-    let poles = tf.poles()?;
-    if tf.dt.is_some() {
+fn compute_stability_margin(_tf: &TransferFunction) -> SignalResult<f64> {
+    let poles = _tf.poles()?;
+    if _tf.dt.is_some() {
         // Discrete-time: distance from unit circle
         Ok(1.0
             - poles
@@ -1337,7 +1340,7 @@ fn estimate_noise_robustness(
     // Simplified noise robustness estimate
     let predicted = simulate_model_response(tf, input)?;
     let noise_level = compute_mse(output, &predicted).sqrt();
-    let signal_level = output.iter().map(|x| x.abs()).sum::<f64>() / output.len() as f64;
+    let signal_level = output.iter().map(|x| x.abs()).sum::<f64>() / output.len()  as f64;
 
     if signal_level > 1e-12 {
         Ok((signal_level / noise_level).min(100.0))
@@ -1347,29 +1350,29 @@ fn estimate_noise_robustness(
 }
 
 #[allow(dead_code)]
-fn compute_model_confidence(parameters: &[ParameterWithUncertainty]) -> f64 {
-    let avg_relative_uncertainty = parameters
+fn compute_model_confidence(_parameters: &[ParameterWithUncertainty]) -> f64 {
+    let avg_relative_uncertainty = _parameters
         .iter()
         .map(|p| p.standard_error / (p.value.abs() + 1e-12))
         .sum::<f64>()
-        / parameters.len() as f64;
+        / _parameters.len()  as f64;
 
     (1.0 - avg_relative_uncertainty).max(0.0).min(1.0)
 }
 
 #[allow(dead_code)]
-fn estimate_memory_usage(parameters: &[ParameterWithUncertainty]) -> f64 {
+fn estimate_memory_usage(_parameters: &[ParameterWithUncertainty]) -> f64 {
     // Simplified memory usage estimate in MB
     let base_usage = 10.0; // Base algorithm overhead
-    let param_usage = parameters.len() as f64 * 0.1; // Each parameter ~0.1 MB
+    let param_usage = _parameters.len() as f64 * 0.1; // Each parameter ~0.1 MB
     base_usage + param_usage
 }
 
 #[allow(dead_code)]
-fn estimate_flop_count(n_samples: usize, order: usize) -> u64 {
+fn estimate_flop_count(_n_samples: usize, order: usize) -> u64 {
     // Simplified FLOP count estimate
-    let matrix_ops = (n_samples * order * order) as u64;
-    let simulation_ops = (n_samples * order * 2) as u64;
+    let matrix_ops = (_n_samples * order * order) as u64;
+    let simulation_ops = (_n_samples * order * 2) as u64;
     matrix_ops + simulation_ops
 }
 
@@ -1383,24 +1386,24 @@ fn next_power_of_2(n: usize) -> usize {
 }
 
 #[allow(dead_code)]
-fn compute_fft_padded(signal: &Array1<f64>, nfft: usize) -> Vec<Complex64> {
+fn compute_fft_padded(_signal: &Array1<f64>, nfft: usize) -> Vec<Complex64> {
     // Simplified FFT computation (placeholder)
     let mut fft_result = vec![Complex64::new(0.0, 0.0); nfft];
 
-    for (i, &val) in signal.iter().enumerate() {
+    for (i, &val) in _signal.iter().enumerate() {
         if i < nfft {
             fft_result[i] = Complex64::new(val, 0.0);
         }
     }
 
     // Apply DFT (simplified implementation)
-    let n = fft_result.len() as f64;
+    let n = fft_result.len()  as f64;
     for k in 0..nfft {
         let mut sum = Complex64::new(0.0, 0.0);
-        for n_idx in 0..signal.len().min(nfft) {
+        for n_idx in 0.._signal.len().min(nfft) {
             let phase = -2.0 * PI * (k as f64) * (n_idx as f64) / n;
             let twiddle = Complex64::new(phase.cos(), phase.sin());
-            sum += Complex64::new(signal[n_idx], 0.0) * twiddle;
+            sum += Complex64::new(_signal[n_idx], 0.0) * twiddle;
         }
         fft_result[k] = sum;
     }
@@ -1410,8 +1413,6 @@ fn compute_fft_padded(signal: &Array1<f64>, nfft: usize) -> Vec<Complex64> {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
     #[test]
     fn test_advanced_enhanced_system_identification() {
         // Create test signals
@@ -1456,6 +1457,8 @@ mod tests {
 
     #[test]
     fn test_model_validation() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple test system
         let tf = TransferFunction::new(vec![1.0], vec![1.0, 0.5], None).unwrap();
         let model = SystemModel {

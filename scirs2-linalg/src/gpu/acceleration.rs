@@ -119,9 +119,9 @@ where
     }
 
     /// Create framework with custom configuration
-    pub fn with_config(config: AccelerationConfig) -> LinalgResult<Self> {
+    pub fn with_config(_config: AccelerationConfig) -> LinalgResult<Self> {
         let backend_manager = Arc::new(Mutex::new(super::initialize_gpu_manager()?));
-        let dispatcher = GpuOperationDispatcher::with_threshold(config.min_gpu_size);
+        let dispatcher = GpuOperationDispatcher::with_threshold(_config.min_gpu_size);
         let advanced_ops = AdvancedGpuOperations::new();
         let kernel_manager = Arc::new(Mutex::new(GpuKernelManager::new()));
 
@@ -132,7 +132,7 @@ where
             kernel_manager,
             contexts: HashMap::new(),
             profiler: GpuPerformanceProfiler::default(),
-            config,
+            config: _config,
         })
     }
 
@@ -250,7 +250,7 @@ where
             matrices_a
                 .iter()
                 .zip(matrices_b.iter())
-                .map(|(a, b)| self.accelerated_matmul(a, b))
+                .map(|(_a, _b)| self.accelerated_matmul(_a_b))
                 .collect()
         }
     }
@@ -317,8 +317,7 @@ where
     fn calculate_context_score(
         &self,
         context: &dyn GpuContext,
-        operation: &str,
-        _problem_size: usize,
+        operation: &str, _problem_size: usize,
     ) -> f64 {
         let device_info = context.device_info();
         let mut score = 0.0;
@@ -406,8 +405,7 @@ where
         // Estimate GFLOPS (rough approximation)
         let operations = match operation {
             "matmul" => problem_size as f64 * 2.0, // Rough estimate
-            "matvec" => problem_size as f64,
-            _ => problem_size as f64,
+            "matvec" => problem_size as f64_ => problem_size as f64,
         };
         let gflops = operations / (execution_time * 1e9);
 
@@ -415,7 +413,7 @@ where
             operation: operation.to_string(),
             problem_size,
             execution_time,
-            memory_usage: problem_size * std::mem::size_of::<T>(),
+            memory_usage: problem_size * std::mem::_size, _of::<T>(),
             device_type,
             gflops,
             memory_bandwidth_util: 0.8, // Placeholder
@@ -893,8 +891,7 @@ where
 
     /// Asynchronous matrix operations with streaming
     pub fn async_matmul_streamed(
-        &mut self,
-        _context: &dyn super::GpuContext,
+        &mut self_context: &dyn super::GpuContext,
         a: &ArrayView2<T>,
         b: &ArrayView2<T>,
     ) -> LinalgResult<StreamHandle<Array2<T>>> {
@@ -906,7 +903,7 @@ where
             priority: StreamPriority::Normal,
             dependencies: vec![],
             estimated_time: self.estimate_operation_time("matmul", a.len() + b.len()),
-            memory_requirement: (a.len() + b.len()) * std::mem::size_of::<T>(),
+            memory_requirement: (a.len() + b.len()) * std::mem::size, _of::<T>(),
         };
 
         // Queue operation
@@ -930,7 +927,7 @@ where
     }
 
     /// Optimize memory layout for better performance
-    pub fn optimize_memory_layout(&mut self, _context: &dyn super::GpuContext) -> LinalgResult<()> {
+    pub fn optimize_memory_layout(&mut self_context: &dyn super::GpuContext) -> LinalgResult<()> {
         // Implement memory defragmentation and layout optimization
         for (_, pool) in self.memory_pools.iter_mut() {
             pool.defragment()?;
@@ -952,10 +949,10 @@ where
         let (m, n, k) = dimensions;
         let element_size = std::mem::size_of::<T>();
 
-        // Reserve memory for 3 tiles (A, B, C) plus overhead
-        let usable_memory = available_memory / 4; // Use 25% of available memory
+        // Reserve _memory for 3 tiles (A, B, C) plus overhead
+        let usable_memory = available_memory / 4; // Use 25% of available _memory
 
-        // Calculate tile size that fits in memory
+        // Calculate tile size that fits in _memory
         let max_tile_elements = usable_memory / (3 * element_size);
         let tile_dim = (max_tile_elements as f64).powf(1.0 / 3.0) as usize;
 
@@ -963,8 +960,7 @@ where
     }
 
     fn gpu_tile_matmul(
-        &self,
-        _context: &dyn super::GpuContext,
+        &self_context: &dyn super::GpuContext,
         a: &Array2<T>,
         b: &Array2<T>,
     ) -> LinalgResult<Array2<T>> {
@@ -990,8 +986,7 @@ where
         // Estimate operation time based on historical data
         match operation {
             "matmul" => problem_size as f64 * 1e-9, // Rough estimate
-            "matvec" => problem_size as f64 * 5e-10,
-            _ => problem_size as f64 * 1e-9,
+            "matvec" => problem_size as f64 * 5e-10_ => problem_size as f64 * 1e-9,
         }
     }
 
@@ -1015,15 +1010,13 @@ where
 
 /// Handle for asynchronous stream operations
 pub struct StreamHandle<T> {
-    stream_id: String,
-    _phantom: std::marker::PhantomData<T>,
+    stream_id: String, _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> StreamHandle<T> {
-    fn new(stream_id: String) -> Self {
+    fn new(_stream_id: String) -> Self {
         Self {
-            stream_id,
-            _phantom: std::marker::PhantomData,
+            stream_id_phantom: std::marker::PhantomData,
         }
     }
 
@@ -1176,7 +1169,7 @@ impl PredictionModel {
         }
     }
 
-    fn update_enabled(&mut self, _enable: bool) {
+    fn update_enabled(&mut self_enable: bool) {
         // Update prediction model state
     }
 }
@@ -1194,15 +1187,13 @@ impl<T> CompressionEngine<T> {
 /// Mock GPU buffer implementation for testing
 #[derive(Debug)]
 pub struct MockGpuBuffer<T> {
-    size: usize,
-    _phantom: std::marker::PhantomData<T>,
+    size: usize_phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> MockGpuBuffer<T> {
-    pub fn new(size: usize) -> Self {
+    pub fn new(_size: usize) -> Self {
         Self {
-            size,
-            _phantom: std::marker::PhantomData,
+            _size_phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1215,11 +1206,11 @@ where
         self.size
     }
 
-    fn copy_from_host(&mut self, _data: &[T]) -> LinalgResult<()> {
+    fn copy_from_host(&mut self_data: &[T]) -> LinalgResult<()> {
         Ok(())
     }
 
-    fn copy_to_host(&self, _data: &mut [T]) -> LinalgResult<()> {
+    fn copy_to_host(&self_data: &mut [T]) -> LinalgResult<()> {
         Ok(())
     }
 

@@ -107,7 +107,7 @@ where
         observation: ObservationModel<F>,
     ) -> Self {
         Self {
-            state: initial_state,
+            _state: initial_state,
             transition,
             observation,
         }
@@ -292,7 +292,7 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     // K = P * H^T * S^-1
-    let temp = covariance.dot(&observation_matrix.t());
+    let temp = _covariance.dot(&observation_matrix.t());
 
     // Use pseudo-inverse for numerical stability
     let inv_innovation = pseudo_inverse(innovation_covariance)?;
@@ -301,11 +301,11 @@ where
 
 /// Matrix inversion using LU decomposition with partial pivoting
 #[allow(dead_code)]
-fn matrix_inverse<F>(matrix: &Array2<F>) -> Result<Array2<F>>
+fn matrix_inverse<F>(_matrix: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let (m, n) = matrix.dim();
+    let (m, n) = _matrix.dim();
     if m != n {
         return Err(TimeSeriesError::InvalidInput(
             "Matrix must be square for inversion".to_string(),
@@ -316,11 +316,11 @@ where
         return Ok(Array2::zeros((0, 0)));
     }
 
-    // Check for diagonal matrix (optimization)
+    // Check for diagonal _matrix (optimization)
     let mut is_diagonal = true;
     for i in 0..m {
         for j in 0..n {
-            if i != j && matrix[[i, j]].abs() > F::from(1e-12).unwrap() {
+            if i != j && _matrix[[i, j]].abs() > F::from(1e-12).unwrap() {
                 is_diagonal = false;
                 break;
             }
@@ -334,10 +334,10 @@ where
         // For diagonal matrices, invert the diagonal elements
         let mut inv = Array2::zeros((m, n));
         for i in 0..m {
-            let diag = matrix[[i, i]];
+            let diag = _matrix[[i, i]];
             if diag.abs() < F::from(1e-12).unwrap() {
                 return Err(TimeSeriesError::NumericalInstability(
-                    "Singular matrix: zero diagonal element".to_string(),
+                    "Singular _matrix: zero diagonal element".to_string(),
                 ));
             }
             inv[[i, i]] = F::one() / diag;
@@ -346,7 +346,7 @@ where
     }
 
     // General case: LU decomposition with partial pivoting
-    let mut lu = matrix.clone();
+    let mut lu = _matrix.clone();
     let mut perm = (0..n).collect::<Vec<_>>();
     let mut identity = Array2::eye(n);
 
@@ -381,7 +381,7 @@ where
         // Check for near-zero pivot
         if lu[[col, col]].abs() < F::from(1e-12).unwrap() {
             return Err(TimeSeriesError::NumericalInstability(
-                "Singular matrix: near-zero pivot".to_string(),
+                "Singular _matrix: near-zero pivot".to_string(),
             ));
         }
 
@@ -400,7 +400,7 @@ where
         }
     }
 
-    // Back substitution for each column of the identity matrix
+    // Back substitution for each column of the identity _matrix
     let mut inverse = Array2::zeros((n, n));
     for col in 0..n {
         let mut x = vec![F::zero(); n];
@@ -427,15 +427,15 @@ where
 
 /// Pseudo-inverse implementation using the matrix inverse with regularization
 #[allow(dead_code)]
-fn pseudo_inverse<F>(matrix: &Array2<F>) -> Result<Array2<F>>
+fn pseudo_inverse<F>(_matrix: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let (m, n) = matrix.dim();
+    let (m, n) = _matrix.dim();
 
     if m == n {
-        // Square matrix - try direct inversion
-        match matrix_inverse(matrix) {
+        // Square _matrix - try direct inversion
+        match matrix_inverse(_matrix) {
             Ok(inv) => return Ok(inv),
             Err(_) => {
                 // Fall through to regularized approach
@@ -445,8 +445,8 @@ where
 
     // For non-square or singular matrices, use (A'A + λI)^(-1) A'
     let regularization = F::from(1e-8).unwrap();
-    let at = matrix.t();
-    let ata = at.dot(matrix);
+    let at = _matrix.t();
+    let ata = at.dot(_matrix);
 
     // Add regularization to diagonal
     let mut regularized = ata.clone();
@@ -475,13 +475,13 @@ where
 
 /// Calculate log determinant of a matrix using LU decomposition
 #[allow(dead_code)]
-fn matrix_log_determinant<F>(matrix: &Array2<F>) -> F
+fn matrix_log_determinant<F>(_matrix: &Array2<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let n = matrix.nrows();
-    if n != matrix.ncols() {
-        return F::neg_infinity(); // Invalid matrix
+    let n = _matrix.nrows();
+    if n != _matrix.ncols() {
+        return F::neg_infinity(); // Invalid _matrix
     }
 
     if n == 0 {
@@ -489,7 +489,7 @@ where
     }
 
     // Create working copy for LU decomposition
-    let mut lu = matrix.clone();
+    let mut lu = _matrix.clone();
     let mut sign = F::one();
 
     // LU decomposition with partial pivoting
@@ -516,7 +516,7 @@ where
             sign = -sign; // Row swap changes determinant sign
         }
 
-        // Check for zero pivot (singular matrix)
+        // Check for zero pivot (singular _matrix)
         if lu[[col, col]].abs() < F::from(1e-12).unwrap() {
             return F::neg_infinity(); // log(0) = -infinity
         }
@@ -536,7 +536,7 @@ where
     for i in 0..n {
         let diag_element = lu[[i, i]];
         if diag_element.abs() < F::from(1e-12).unwrap() {
-            return F::neg_infinity(); // Singular matrix
+            return F::neg_infinity(); // Singular _matrix
         }
         log_det = log_det + diag_element.abs().ln();
     }
@@ -568,10 +568,10 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     /// Create a local level model (random walk plus noise)
-    pub fn local_level(sigma_level: F, sigma_obs: F) -> Result<Self> {
+    pub fn local_level(_sigma_level: F, sigma_obs: F) -> Result<Self> {
         let transition = StateTransition {
             transition_matrix: Array2::eye(1),
-            process_noise: Array2::from_elem((1, 1), sigma_level * sigma_level),
+            process_noise: Array2::from_elem((1, 1), _sigma_level * _sigma_level),
         };
 
         let observation = ObservationModel {
@@ -580,7 +580,7 @@ where
         };
 
         Ok(Self {
-            level: Some(transition),
+            _level: Some(transition),
             trend: None,
             seasonal: None,
             observation,
@@ -588,8 +588,8 @@ where
     }
 
     /// Create a local linear trend model
-    pub fn local_linear_trend(sigma_level: F, sigma_trend: F, sigma_obs: F) -> Result<Self> {
-        // State: [level, trend]
+    pub fn local_linear_trend(_sigma_level: F, sigma_trend: F, sigma_obs: F) -> Result<Self> {
+        // State: [_level_trend]
         let transition_matrix = Array2::from_shape_vec(
             (2, 2),
             vec![F::one(), F::one(), F::zero(), F::one()],
@@ -628,8 +628,8 @@ where
         };
 
         Ok(Self {
-            level: Some(transition),
-            trend: None,
+            _level: Some(transition),
+            _trend: None,
             seasonal: None,
             observation,
         })
@@ -891,7 +891,7 @@ where
             process_noise: Array2::from_elem((1, 1), sigma_level * sigma_level),
         };
 
-        // Seasonal component (sum-to-zero seasonal states)
+        // Seasonal component (sum-to-zero _seasonal states)
         let mut seasonal_matrix = Array2::zeros((period - 1, period - 1));
 
         // First row: [-1, -1, ..., -1]
@@ -913,11 +913,11 @@ where
             },
         };
 
-        // Observation model: observe level + first seasonal state
-        let obs_dim = 1 + (period - 1); // level + seasonal states
+        // Observation model: observe _level + first _seasonal state
+        let obs_dim = 1 + (period - 1); // _level + _seasonal states
         let mut obs_matrix = Array2::zeros((1, obs_dim));
-        obs_matrix[[0, 0]] = F::one(); // level
-        obs_matrix[[0, 1]] = F::one(); // first seasonal state
+        obs_matrix[[0, 0]] = F::one(); // _level
+        obs_matrix[[0, 1]] = F::one(); // first _seasonal state
 
         let observation = ObservationModel {
             observation_matrix: obs_matrix,
@@ -925,9 +925,8 @@ where
         };
 
         Ok(Self {
-            level: Some(level_transition),
-            trend: None,
-            seasonal: Some(seasonal_transition),
+            _level: Some(level_transition),
+            trend: None_seasonal: Some(seasonal_transition),
             observation,
         })
     }
@@ -960,9 +959,9 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     /// Create a new dynamic linear model
-    pub fn new(transition: StateTransition<F>, observation: ObservationModel<F>) -> Self {
+    pub fn new(_transition: StateTransition<F>, observation: ObservationModel<F>) -> Self {
         Self {
-            transition,
+            _transition,
             observation,
             control: None,
             control_matrix: None,

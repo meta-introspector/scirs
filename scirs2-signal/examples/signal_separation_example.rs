@@ -3,7 +3,8 @@
 //! This example shows how to use multi-band and harmonic/percussive
 //! separation methods for signal analysis and processing.
 
-use scirs2_signal::separation::{
+use scirs2__signal::separation::{
+use std::f64::consts::PI;
     harmonic_percussive_separation, multiband_separation, HarmonicPercussiveConfig, MultibandConfig,
 };
 
@@ -66,8 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             0 => "0-80 Hz".to_string(),
             1 => "80-200 Hz".to_string(),
             2 => "200-400 Hz".to_string(),
-            3 => "400-500 Hz".to_string(),
-            _ => format!("Band {}", i),
+            3 => "400-500 Hz".to_string(, _ => format!("Band {}", i),
         };
 
         println!(
@@ -122,7 +122,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let advanced_config = MultibandConfig {
         filter_order: 8, // Higher order for steeper rolloff
         overlap: 0.05,   // Less overlap between bands
-        filter_type: scirs2_signal::filter::FilterType::Lowpass, // Will be overridden per band
+        filter_type: scirs2, _signal: filter::FilterType::Lowpass, // Will be overridden per band
     };
 
     // More detailed frequency separation for audio analysis
@@ -180,7 +180,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Calculate RMS (Root Mean Square) of a signal
 #[allow(dead_code)]
-fn calculate_rms(signal: &Array1<f64>) -> f64 {
-    let mean_square: f64 = signal.iter().map(|&x| x * x).sum::<f64>() / signal.len() as f64;
+fn calculate_rms(_signal: &Array1<f64>) -> f64 {
+    let mean_square: f64 = _signal.iter().map(|&x| x * x).sum::<f64>() / _signal.len() as f64;
     mean_square.sqrt()
 }

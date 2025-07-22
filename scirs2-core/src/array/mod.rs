@@ -15,7 +15,7 @@ pub use masked_array::{
     masked_less, masked_outside, masked_where, ArrayError, MaskedArray, NOMASK,
 };
 pub use record_array::{
-    record_array_from_arrays, record_array_from_records, record_array_from_typed_arrays,
+    record_array_from_typed_arrays, record_array_fromrecords,
     FieldValue, Record, RecordArray,
 };
 
@@ -23,8 +23,8 @@ pub use record_array::{
 pub mod prelude {
     pub use super::{
         is_masked, mask_array, masked_equal, masked_greater, masked_inside, masked_invalid,
-        masked_less, masked_outside, masked_where, record_array_from_arrays,
-        record_array_from_records, record_array_from_typed_arrays, ArrayError, FieldValue,
+        masked_less, masked_outside, masked_where, 
+        record_array_from_typed_arrays, record_array_fromrecords, ArrayError, FieldValue,
         MaskedArray, Record, RecordArray, NOMASK,
     };
 }

@@ -1,8 +1,8 @@
 //! Simple example testing the CZT functionality
 
 use ndarray::Array1;
-use num_complex::Complex;
-use scirs2_fft::{czt, zoom_fft};
+use num__complex::Complex;
+use scirs2__fft::{czt, zoom_fft};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

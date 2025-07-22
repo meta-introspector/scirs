@@ -8,10 +8,11 @@
 //! - Sensitivity function analysis
 //! - Polynomial utility functions
 
-use super::systems::{LtiSystem, StateSpace, TransferFunction, ZerosPoleGain};
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
+use num__complex::Complex64;
+use super::systems::{LtiSystem, StateSpace, TransferFunction, ZerosPoleGain};
 
+#[allow(unused_imports)]
 /// Create a transfer function system from numerator and denominator coefficients
 ///
 /// This is a convenience function that wraps `TransferFunction::new()` with
@@ -30,14 +31,14 @@ use num_complex::Complex64;
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::tf;
+/// use scirs2__signal::lti::design::tf;
 ///
 /// // Create H(s) = (s + 1) / (s^2 + 2s + 1)
 /// let sys = tf(vec![1.0, 1.0], vec![1.0, 2.0, 1.0], None).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn tf(num: Vec<f64>, den: Vec<f64>, dt: Option<bool>) -> SignalResult<TransferFunction> {
-    TransferFunction::new(num, den, dt)
+pub fn tf(_num: Vec<f64>, den: Vec<f64>, dt: Option<bool>) -> SignalResult<TransferFunction> {
+    TransferFunction::new(_num, den, dt)
 }
 
 /// Create a zeros-poles-gain system
@@ -60,7 +61,7 @@ pub fn tf(num: Vec<f64>, den: Vec<f64>, dt: Option<bool>) -> SignalResult<Transf
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::zpk;
+/// use scirs2__signal::lti::design::zpk;
 ///
 /// // Create H(s) = 2 * (s + 1) / (s + 2)(s + 3)
 /// let sys = zpk(
@@ -101,7 +102,7 @@ pub fn zpk(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::ss;
+/// use scirs2__signal::lti::design::ss;
 ///
 /// // Create a simple integrator: dx/dt = u, y = x
 /// let sys = ss(
@@ -140,25 +141,25 @@ pub fn ss(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::{tf, c2d};
+/// use scirs2__signal::lti::design::{tf, c2d};
 ///
 /// let sys_ct = tf(vec![1.0], vec![1.0, 1.0], Some(false)).unwrap();
 /// let sys_dt = c2d(&sys_ct, 0.1).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn c2d<T: LtiSystem>(system: &T, _dt: f64) -> SignalResult<StateSpace> {
+pub fn c2d<T: LtiSystem>(_system: &T_dt: f64) -> SignalResult<StateSpace> {
     // Convert to state-space first
-    let ss_sys = system.to_ss()?;
+    let ss_sys = _system.to_ss()?;
 
-    // Ensure the system is continuous-time
-    if ss_sys.dt {
+    // Ensure the _system is continuous-time
+    if ss_sys._dt {
         return Err(SignalError::ValueError(
             "System is already discrete-time".to_string(),
         ));
     }
 
-    // For now, return a placeholder for the discretized system
-    // In practice, we would use the matrix exponential method: A_d = exp(A*dt)
+    // For now, return a placeholder for the discretized _system
+    // In practice, we would use the matrix exponential method: A_d = exp(A*_dt)
 
     Ok(StateSpace {
         a: ss_sys.a.clone(),
@@ -168,7 +169,7 @@ pub fn c2d<T: LtiSystem>(system: &T, _dt: f64) -> SignalResult<StateSpace> {
         n_states: ss_sys.n_states,
         n_inputs: ss_sys.n_inputs,
         n_outputs: ss_sys.n_outputs,
-        dt: true,
+        _dt: true,
     })
 }
 
@@ -189,15 +190,15 @@ pub fn c2d<T: LtiSystem>(system: &T, _dt: f64) -> SignalResult<StateSpace> {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::{tf, series};
+/// use scirs2__signal::lti::design::{tf, series};
 ///
 /// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();   // 1/(s+1)
 /// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();   // 2/(s+2)
 /// let series_sys = series(&g1, &g2).unwrap();              // 2/((s+1)(s+2))
 /// ```
 #[allow(dead_code)]
-pub fn series<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
-    let tf1 = g1.to_tf()?;
+pub fn series<T1: LtiSystem, T2: LtiSystem>(_g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
+    let tf1 = _g1.to_tf()?;
     let tf2 = g2.to_tf()?;
 
     // Check compatibility
@@ -232,15 +233,15 @@ pub fn series<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<Tr
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::{tf, parallel};
+/// use scirs2__signal::lti::design::{tf, parallel};
 ///
 /// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();   // 1/(s+1)
 /// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();   // 2/(s+2)
 /// let parallel_sys = parallel(&g1, &g2).unwrap();          // (3s+4)/((s+1)(s+2))
 /// ```
 #[allow(dead_code)]
-pub fn parallel<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
-    let tf1 = g1.to_tf()?;
+pub fn parallel<T1: LtiSystem, T2: LtiSystem>(_g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
+    let tf1 = _g1.to_tf()?;
     let tf2 = g2.to_tf()?;
 
     // Check compatibility
@@ -278,7 +279,7 @@ pub fn parallel<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::{tf, feedback};
+/// use scirs2__signal::lti::design::{tf, feedback};
 ///
 /// let g = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
 /// let h = tf(vec![1.0], vec![1.0], None).unwrap(); // Unity feedback
@@ -344,7 +345,7 @@ pub fn feedback<T1: LtiSystem>(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::{tf, sensitivity};
+/// use scirs2__signal::lti::design::{tf, sensitivity};
 ///
 /// let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap();
 /// let sens = sensitivity(&g, None).unwrap(); // Unity feedback
@@ -402,7 +403,7 @@ pub fn sensitivity<T1: LtiSystem>(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::{tf, complementary_sensitivity};
+/// use scirs2__signal::lti::design::{tf, complementary_sensitivity};
 ///
 /// let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap();
 /// let comp_sens = complementary_sensitivity(&g, None).unwrap(); // Unity feedback
@@ -459,7 +460,7 @@ pub fn complementary_sensitivity<T1: LtiSystem>(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::multiply_polynomials;
+/// use scirs2__signal::lti::design::multiply_polynomials;
 ///
 /// let p1 = vec![1.0, 2.0]; // x + 2
 /// let p2 = vec![1.0, 3.0]; // x + 3
@@ -467,14 +468,14 @@ pub fn complementary_sensitivity<T1: LtiSystem>(
 /// assert_eq!(result, vec![1.0, 5.0, 6.0]);
 /// ```
 #[allow(dead_code)]
-pub fn multiply_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
-    if p1.is_empty() || p2.is_empty() {
+pub fn multiply_polynomials(_p1: &[f64], p2: &[f64]) -> Vec<f64> {
+    if _p1.is_empty() || p2.is_empty() {
         return vec![0.0];
     }
 
-    let mut result = vec![0.0; p1.len() + p2.len() - 1];
+    let mut result = vec![0.0; _p1.len() + p2.len() - 1];
 
-    for (i, &a) in p1.iter().enumerate() {
+    for (i, &a) in _p1.iter().enumerate() {
         for (j, &b) in p2.iter().enumerate() {
             result[i + j] += a * b;
         }
@@ -501,7 +502,7 @@ pub fn multiply_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::add_polynomials;
+/// use scirs2__signal::lti::design::add_polynomials;
 ///
 /// let p1 = vec![1.0, 2.0]; // x + 2
 /// let p2 = vec![1.0, 3.0]; // x + 3
@@ -509,15 +510,15 @@ pub fn multiply_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
 /// assert_eq!(result, vec![2.0, 5.0]);
 /// ```
 #[allow(dead_code)]
-pub fn add_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
-    let max_len = p1.len().max(p2.len());
+pub fn add_polynomials(_p1: &[f64], p2: &[f64]) -> Vec<f64> {
+    let max_len = _p1.len().max(p2.len());
     let mut result = vec![0.0; max_len];
 
     // Pad with zeros from the front and add
-    let p1_offset = max_len - p1.len();
+    let p1_offset = max_len - _p1.len();
     let p2_offset = max_len - p2.len();
 
-    for (i, &val) in p1.iter().enumerate() {
+    for (i, &val) in _p1.iter().enumerate() {
         result[p1_offset + i] += val;
     }
 
@@ -546,7 +547,7 @@ pub fn add_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::design::subtract_polynomials;
+/// use scirs2__signal::lti::design::subtract_polynomials;
 ///
 /// let p1 = vec![2.0, 5.0]; // 2x + 5
 /// let p2 = vec![1.0, 3.0]; // x + 3
@@ -554,15 +555,15 @@ pub fn add_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
 /// assert_eq!(result, vec![1.0, 2.0]);
 /// ```
 #[allow(dead_code)]
-pub fn subtract_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
-    let max_len = p1.len().max(p2.len());
+pub fn subtract_polynomials(_p1: &[f64], p2: &[f64]) -> Vec<f64> {
+    let max_len = _p1.len().max(p2.len());
     let mut result = vec![0.0; max_len];
 
     // Pad with zeros from the front and subtract
-    let p1_offset = max_len - p1.len();
+    let p1_offset = max_len - _p1.len();
     let p2_offset = max_len - p2.len();
 
-    for (i, &val) in p1.iter().enumerate() {
+    for (i, &val) in _p1.iter().enumerate() {
         result[p1_offset + i] += val;
     }
 
@@ -587,20 +588,20 @@ pub fn subtract_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
 ///
 /// Tuple of (quotient, remainder) polynomial coefficients
 #[allow(dead_code)]
-pub fn divide_polynomials(dividend: &[f64], divisor: &[f64]) -> SignalResult<(Vec<f64>, Vec<f64>)> {
-    if divisor.is_empty() || divisor.iter().all(|&x| x.abs() < 1e-10) {
+pub fn divide_polynomials(_dividend: &[f64], divisor: &[f64]) -> SignalResult<(Vec<f64>, Vec<f64>)> {
+    if divisor.is_empty() || divisor.iter().all(|&x: &f64| x.abs() < 1e-10) {
         return Err(SignalError::ValueError(
             "Cannot divide by zero polynomial".to_string(),
         ));
     }
 
-    if dividend.len() < divisor.len() {
+    if _dividend.len() < divisor.len() {
         // Dividend has lower degree than divisor
-        return Ok((vec![0.0], dividend.to_vec()));
+        return Ok((vec![0.0], _dividend.to_vec()));
     }
 
-    let mut remainder = dividend.to_vec();
-    let mut quotient = vec![0.0; dividend.len() - divisor.len() + 1];
+    let mut remainder = _dividend.to_vec();
+    let mut quotient = vec![0.0; _dividend.len() - divisor.len() + 1];
 
     // Remove leading zeros from divisor
     let mut clean_divisor = divisor.to_vec();
@@ -652,14 +653,14 @@ pub fn divide_polynomials(dividend: &[f64], divisor: &[f64]) -> SignalResult<(Ve
 ///
 /// Value of the polynomial at x
 #[allow(dead_code)]
-pub fn evaluate_polynomial(coeffs: &[f64], x: f64) -> f64 {
-    if coeffs.is_empty() {
+pub fn evaluate_polynomial(_coeffs: &[f64], x: f64) -> f64 {
+    if _coeffs.is_empty() {
         return 0.0;
     }
 
     // Horner's method
-    let mut result = coeffs[0];
-    for &coeff in &coeffs[1..] {
+    let mut result = _coeffs[0];
+    for &coeff in &_coeffs[1..] {
         result = result * x + coeff;
     }
 
@@ -679,15 +680,15 @@ pub fn evaluate_polynomial(coeffs: &[f64], x: f64) -> f64 {
 ///
 /// Derivative polynomial coefficients
 #[allow(dead_code)]
-pub fn polynomial_derivative(coeffs: &[f64]) -> Vec<f64> {
-    if coeffs.len() <= 1 {
+pub fn polynomial_derivative(_coeffs: &[f64]) -> Vec<f64> {
+    if _coeffs.len() <= 1 {
         return vec![0.0];
     }
 
-    let mut derivative = Vec::with_capacity(coeffs.len() - 1);
-    let n = coeffs.len() - 1;
+    let mut derivative = Vec::with_capacity(_coeffs.len() - 1);
+    let n = _coeffs.len() - 1;
 
-    for (i, &coeff) in coeffs.iter().enumerate().take(coeffs.len() - 1) {
+    for (i, &coeff) in _coeffs.iter().enumerate().take(_coeffs.len() - 1) {
         let power = n - i;
         derivative.push(coeff * power as f64);
     }
@@ -697,8 +698,9 @@ pub fn polynomial_derivative(coeffs: &[f64]) -> Vec<f64> {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
+use crate::lti::{tf, TransferFunction};
+use crate::lti::design::tf;
     #[test]
     fn test_system_creation() {
         // Test transfer function creation
@@ -758,6 +760,8 @@ mod tests {
 
     #[test]
     fn test_feedback_connection() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test unity feedback of a first-order system
         // G(s) = 1/(s+1), unity feedback
         let g = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
@@ -774,6 +778,8 @@ mod tests {
 
     #[test]
     fn test_feedback_with_controller() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test feedback connection with a controller
         // G(s) = 1/(s+1), H(s) = 2 (proportional controller)
         let g = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();

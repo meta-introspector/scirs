@@ -12,8 +12,8 @@ use ndarray::{Array1, Array2, ArrayView2, Axis};
 
 /// Check if all values in an array are finite
 #[allow(dead_code)]
-fn check_array_finite(array: &ArrayView2<'_, f64>, name: &str) -> SpatialResult<()> {
-    for value in array.iter() {
+fn check_array_finite(_array: &ArrayView2<'_, f64>, name: &str) -> SpatialResult<()> {
+    for value in _array.iter() {
         if !value.is_finite() {
             return Err(SpatialError::ValueError(format!(
                 "Array '{name}' contains non-finite values"
@@ -140,8 +140,7 @@ pub fn procrustes(
 #[allow(dead_code)]
 fn procrustes_basic_impl(
     centered1: &ArrayView2<'_, f64>,
-    centered2: &ArrayView2<'_, f64>,
-    _mean1: &Array1<f64>,
+    centered2: &ArrayView2<'_, f64>, _mean1: &Array1<f64>,
     mean2: &Array1<f64>,
 ) -> SpatialResult<(Array2<f64>, Array2<f64>, f64)> {
     let n_points = centered1.nrows() as f64;
@@ -209,8 +208,7 @@ fn procrustes_basic_impl(
 pub fn procrustes_extended(
     data1: &ArrayView2<'_, f64>,
     data2: &ArrayView2<'_, f64>,
-    scaling: bool,
-    _reflection: bool,
+    scaling: bool_reflection: bool,
     translation: bool,
 ) -> SpatialResult<(Array2<f64>, ProcrustesParams, f64)> {
     // Validate inputs

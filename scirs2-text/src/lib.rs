@@ -17,7 +17,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use scirs2_text::{
+//! use scirs2__text::{
 //!     tokenize::WordTokenizer,
 //!     vectorize::TfidfVectorizer,
 //!     sentiment::LexiconSentimentAnalyzer,
@@ -121,31 +121,31 @@ pub use cleansing::{
     replace_urls, strip_html_tags, AdvancedTextCleaner,
 };
 pub use distance::{cosine_similarity, jaccard_similarity, levenshtein_distance};
-pub use domain_processors::{
+pub use domain__processors::{
     Domain, DomainProcessorConfig, FinancialTextProcessor, LegalTextProcessor,
     MedicalTextProcessor, NewsTextProcessor, PatentTextProcessor, ProcessedDomainText,
     ScientificTextProcessor, SocialMediaTextProcessor, UnifiedDomainProcessor,
 };
 pub use embeddings::{Word2Vec, Word2VecAlgorithm, Word2VecConfig};
-pub use enhanced_vectorize::{EnhancedCountVectorizer, EnhancedTfidfVectorizer};
+pub use enhanced__vectorize::{EnhancedCountVectorizer, EnhancedTfidfVectorizer};
 pub use error::{Result, TextError};
-pub use huggingface_compat::{
+pub use huggingface__compat::{
     ClassificationResult, FeatureExtractionPipeline, FillMaskPipeline, FillMaskResult,
     FormatConverter, HfConfig, HfEncodedInput, HfHub, HfModelAdapter, HfPipeline, HfTokenizer,
     HfTokenizerConfig, QuestionAnsweringPipeline, QuestionAnsweringResult,
     TextClassificationPipeline as HfTextClassificationPipeline, ZeroShotClassificationPipeline,
 };
-pub use information_extraction::{
+pub use information__extraction::{
     Entity, EntityType, ExtractedInformation, InformationExtractionPipeline, KeyPhraseExtractor,
     PatternExtractor, Relation, RelationExtractor, RuleBasedNER,
 };
-pub use ml_integration::{
+pub use ml__integration::{
     BatchTextProcessor, FeatureExtractionMode, MLTextPreprocessor, TextFeatures, TextMLPipeline,
 };
-pub use ml_sentiment::{
+pub use ml__sentiment::{
     ClassMetrics, EvaluationMetrics, MLSentimentAnalyzer, MLSentimentConfig, TrainingMetrics,
 };
-pub use model_registry::{
+pub use model__registry::{
     ModelMetadata, ModelRegistry, ModelType, PrebuiltModels, RegistrableModel,
     SerializableModelData,
 };
@@ -153,7 +153,7 @@ pub use multilingual::{
     Language, LanguageDetectionResult, LanguageDetector, MultilingualProcessor, ProcessedText,
     StopWords,
 };
-pub use neural_architectures::{
+pub use neural__architectures::{
     ActivationFunction, AdditiveAttention, BiLSTM, CNNLSTMHybrid, Conv1D, CrossAttention, Dropout,
     GRUCell, LSTMCell, LayerNorm as NeuralLayerNorm, MaxPool1D,
     MultiHeadAttention as NeuralMultiHeadAttention, MultiScaleCNN, PositionwiseFeedForward,
@@ -166,11 +166,11 @@ pub use performance::{
     AdvancedPerformanceMonitor, DetailedPerformanceReport, OptimizationRecommendation,
     PerformanceSummary, PerformanceThresholds,
 };
-pub use pos_tagging::{
+pub use pos__tagging::{
     PosAwareLemmatizer, PosTagResult, PosTagger, PosTaggerConfig, PosTaggingResult,
 };
 pub use preprocess::{BasicNormalizer, BasicTextCleaner, TextCleaner, TextNormalizer};
-pub use semantic_similarity::{
+pub use semantic__similarity::{
     LcsSimilarity, SemanticSimilarityEnsemble, SoftCosineSimilarity, WeightedJaccard,
     WordMoversDistance,
 };
@@ -178,12 +178,12 @@ pub use sentiment::{
     LexiconSentimentAnalyzer, RuleBasedSentimentAnalyzer, Sentiment, SentimentLexicon,
     SentimentResult, SentimentRules, SentimentWordCounts,
 };
-pub use simd_ops::{
+pub use simd__ops::{
     AdvancedSIMDTextProcessor, SimdEditDistance, SimdStringOps, SimdTextAnalyzer,
     TextProcessingResult,
 };
 pub use sparse::{CsrMatrix, DokMatrix, SparseMatrixBuilder, SparseVector};
-pub use sparse_vectorize::{
+pub use sparse__vectorize::{
     sparse_cosine_similarity, MemoryStats, SparseCountVectorizer, SparseTfidfVectorizer,
 };
 pub use spelling::{
@@ -198,17 +198,17 @@ pub use streaming::{
     AdvancedStreamingMetrics, AdvancedStreamingProcessor, ChunkedCorpusReader, MemoryMappedCorpus,
     ProgressTracker, StreamingTextProcessor, StreamingVectorizer,
 };
-pub use string_metrics::{
+pub use string__metrics::{
     AlignmentResult, DamerauLevenshteinMetric, Metaphone, NeedlemanWunsch, Nysiis,
     PhoneticAlgorithm, SmithWaterman, Soundex, StringMetric,
 };
 pub use summarization::{CentroidSummarizer, KeywordExtractor, TextRank};
-pub use text_coordinator::{
+pub use text__coordinator::{
     AdvancedBatchClassificationResult, AdvancedSemanticSimilarityResult, AdvancedTextConfig,
     AdvancedTextCoordinator, AdvancedTextResult, AdvancedTopicModelingResult,
 };
-pub use text_statistics::{ReadabilityMetrics, TextMetrics, TextStatistics};
-pub use token_filter::{
+pub use text__statistics::{ReadabilityMetrics, TextMetrics, TextStatistics};
+pub use token__filter::{
     CompositeFilter, CustomFilter, FrequencyFilter, LengthFilter, RegexFilter, StopwordsFilter,
     TokenFilter,
 };
@@ -217,8 +217,8 @@ pub use tokenize::{
     CharacterTokenizer, NgramTokenizer, RegexTokenizer, SentenceTokenizer, Tokenizer,
     WhitespaceTokenizer, WordTokenizer,
 };
-pub use topic_coherence::{TopicCoherence, TopicDiversity};
-pub use topic_modeling::{
+pub use topic__coherence::{TopicCoherence, TopicDiversity};
+pub use topic__modeling::{
     LatentDirichletAllocation, LdaBuilder, LdaConfig, LdaLearningMethod, Topic,
 };
 pub use transformer::{
@@ -232,7 +232,7 @@ pub use visualization::{
     TextAnalyticsDashboard, TopicVisualizer, VisualizationConfig, WordCloud,
 };
 pub use vocabulary::Vocabulary;
-pub use weighted_distance::{
+pub use weighted__distance::{
     DamerauLevenshteinWeights, LevenshteinWeights, WeightedDamerauLevenshtein, WeightedLevenshtein,
     WeightedStringMetric,
 };

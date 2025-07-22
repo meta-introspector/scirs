@@ -19,16 +19,14 @@ use std::marker::{Send, Sync};
 struct SimpleModelBuilder<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> {
     input_dim: usize,
     hidden_dim: usize,
-    output_dim: usize,
-    _phantom: std::marker::PhantomData<F>,
+    output_dim: usize, _phantom: std::marker::PhantomData<F>,
 }
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> SimpleModelBuilder<F> {
-    fn new(input_dim: usize, hidden_dim: usize, output_dim: usize) -> Self {
+    fn new(_input_dim: usize, hidden_dim: usize, output_dim: usize) -> Self {
         Self {
-            input_dim,
+            _input_dim,
             hidden_dim,
-            output_dim,
-            _phantom: std::marker::PhantomData,
+            output_dim_phantom: std::marker::PhantomData,
         }
     }
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> ModelBuilder<F>
@@ -58,8 +56,8 @@ fn generate_regression_dataset<F: Float + Debug + ScalarOperand + FromPrimitive 
     let mut features_data = Vec::with_capacity(n_samples * input_dim);
     for _ in 0..n_samples {
         for _ in 0..input_dim {
-            features_data.push(F::from(rng.random_range(0.0..1.0)).unwrap());
-    let features = Array::<F, _>::from_shape_vec([n_samples, input_dim], features_data)
+            features_data.push(F::from(rng.gen_range(0.0..1.0)).unwrap());
+    let features = Array::<F.._>::from_shape_vec([n_samples, input_dim], features_data)
         .unwrap()
         .into_dyn();
     // Generate targets (simple linear relationship plus noise)
@@ -70,10 +68,10 @@ fn generate_regression_dataset<F: Float + Debug + ScalarOperand + FromPrimitive 
             target_val =
                 target_val + features[[i, j]] * F::from(j as f64 / input_dim as f64).unwrap();
         // Add noise
-        let noise = F::from(rng.random_range(-0.1..0.1)).unwrap();
+        let noise = F::from(rng.gen_range(-0.1..0.1)).unwrap();
         target_val = target_val + noise;
         labels_data.push(target_val);
-    let labels = Array::<F, _>::from_shape_vec([n_samples, 1], labels_data)
+    let labels = Array::<F.._>::from_shape_vec([n_samples, 1], labels_data)
     InMemoryDataset::new(features, labels)
 // Generate synthetic classification dataset
 #[allow(dead_code)]
@@ -101,7 +99,7 @@ fn generate_classification_dataset<
                 max_class = c;
         // Set the one-hot encoding in the labels array
         labels_data[i * n_classes + max_class] = F::one();
-    let labels = Array::<F, _>::from_shape_vec([n_samples, n_classes], labels_data)
+    let labels = Array::<F>::from_shape_vec([n_samples, n_classes], labels_data)
 #[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Model Evaluation Framework Example");

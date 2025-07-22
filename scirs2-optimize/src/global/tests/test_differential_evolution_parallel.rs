@@ -8,9 +8,9 @@ use std::sync::Arc;
 
 // Test function that tracks the number of evaluations
 #[allow(dead_code)]
-fn test_function_with_counter(counter: Arc<AtomicUsize>) -> impl Fn(&ArrayView1<f64>) -> f64 {
+fn test_function_with_counter(_counter: Arc<AtomicUsize>) -> impl Fn(&ArrayView1<f64>) -> f64 {
     move |x: &ArrayView1<f64>| {
-        counter.fetch_add(1, Ordering::Relaxed);
+        _counter.fetch_add(1, Ordering::Relaxed);
         // Simple quadratic function with minimum at (1.0, 2.0)
         let x0 = x[0];
         let x1 = x[1];

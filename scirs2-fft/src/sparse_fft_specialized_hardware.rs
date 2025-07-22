@@ -4,8 +4,8 @@
 //! FPGAs, custom ASICs, and other domain-specific processors for sparse FFT operations.
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse_fft::{SparseFFTConfig, SparseFFTResult};
-use num_complex::Complex64;
+use crate::sparse__fft::{SparseFFTConfig, SparseFFTResult};
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -180,9 +180,9 @@ pub struct FPGAAccelerator {
 }
 
 impl FPGAAccelerator {
-    pub fn new(device_id: &str) -> Self {
+    pub fn new(_device_id: &str) -> Self {
         let mut info = AcceleratorInfo {
-            id: device_id.to_string(),
+            _id: _device_id.to_string(),
             accelerator_type: AcceleratorType::FPGA,
             name: "Generic FPGA Device".to_string(),
             vendor: "Xilinx/Intel/Lattice".to_string(),
@@ -322,16 +322,14 @@ impl HardwareAbstractionLayer for FPGAAccelerator {
     }
 
     fn execute_sparse_fft(
-        &mut self,
-        _input_handle: u64,
-        _output_handle: u64,
+        &mut self_input_handle: u64, _output_handle: u64,
         config: &SparseFFTConfig,
     ) -> FFTResult<Duration> {
         let start = Instant::now();
 
         // Simulate FPGA sparse FFT execution
         // FPGA can be highly optimized for specific algorithms
-        let signal_size = 1024; // Would be determined from input handle
+        let signal_size = 1024; // Would be determined from input _handle
         let sparsity = config.sparsity;
 
         // FPGA execution characteristics:
@@ -385,9 +383,9 @@ pub struct ASICAccelerator {
 }
 
 impl ASICAccelerator {
-    pub fn new(device_id: &str) -> Self {
+    pub fn new(_device_id: &str) -> Self {
         let mut info = AcceleratorInfo {
-            id: device_id.to_string(),
+            _id: _device_id.to_string(),
             accelerator_type: AcceleratorType::ASIC,
             name: "Sparse FFT ASIC v3".to_string(),
             vendor: "CustomChip Solutions".to_string(),
@@ -453,7 +451,7 @@ impl HardwareAbstractionLayer for ASICAccelerator {
         &self.info
     }
 
-    fn allocate_memory(&mut self, _size: usize) -> FFTResult<u64> {
+    fn allocate_memory(&mut self_size: usize) -> FFTResult<u64> {
         if !self.initialized {
             return Err(FFTError::ComputationError(
                 "ASIC not initialized".to_string(),
@@ -462,18 +460,18 @@ impl HardwareAbstractionLayer for ASICAccelerator {
         Ok(1) // ASIC has fixed memory layout
     }
 
-    fn free_memory(&mut self, _handle: u64) -> FFTResult<()> {
+    fn free_memory(&mut self_handle: u64) -> FFTResult<()> {
         Ok(()) // ASIC manages memory internally
     }
 
-    fn transfer_to_device(&mut self, _handle: u64, data: &[u8]) -> FFTResult<()> {
+    fn transfer_to_device(&mut self_handle: u64, data: &[u8]) -> FFTResult<()> {
         // Optimized dedicated interface
         let transfer_time_ns = data.len() as f64 / self.info.capabilities.memory_bandwidth_gb_s;
         std::thread::sleep(Duration::from_nanos(transfer_time_ns as u64));
         Ok(())
     }
 
-    fn transfer_from_device(&mut self, _handle: u64, data: &mut [u8]) -> FFTResult<()> {
+    fn transfer_from_device(&mut self_handle: u64, data: &mut [u8]) -> FFTResult<()> {
         let transfer_time_ns = data.len() as f64 / self.info.capabilities.memory_bandwidth_gb_s;
         std::thread::sleep(Duration::from_nanos(transfer_time_ns as u64));
         data.fill(0); // Simulate result data
@@ -481,9 +479,7 @@ impl HardwareAbstractionLayer for ASICAccelerator {
     }
 
     fn execute_sparse_fft(
-        &mut self,
-        _input_handle: u64,
-        _output_handle: u64,
+        &mut self_input_handle: u64, _output_handle: u64,
         config: &SparseFFTConfig,
     ) -> FFTResult<Duration> {
         let start = Instant::now();
@@ -534,10 +530,10 @@ pub struct SpecializedHardwareManager {
 
 impl SpecializedHardwareManager {
     /// Create a new specialized hardware manager
-    pub fn new(config: SparseFFTConfig) -> Self {
+    pub fn new(_config: SparseFFTConfig) -> Self {
         Self {
             accelerators: HashMap::new(),
-            config,
+            _config,
         }
     }
 
@@ -597,7 +593,7 @@ impl SpecializedHardwareManager {
         self.accelerators
             .iter()
             .filter(|(_, acc)| acc.is_available())
-            .map(|(id, _)| id.clone())
+            .map(|(id_)| id.clone())
             .collect()
     }
 
@@ -682,7 +678,7 @@ impl SpecializedHardwareManager {
             // Score based on suitability for the task
             let mut score = 0.0;
 
-            // Can handle the signal size?
+            // Can handle the signal _size?
             if info.capabilities.max_signal_size >= signal_size {
                 score += 10.0;
             } else {
@@ -750,7 +746,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sparse_fft::{SparseFFTAlgorithm, SparsityEstimationMethod};
+    use crate::sparse__fft::{SparseFFTAlgorithm, SparsityEstimationMethod};
 
     #[test]
     #[ignore = "Ignored for alpha-4 release - specialized hardware dependent test"]

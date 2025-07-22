@@ -5,7 +5,7 @@
 
 use crate::error::FFTResult;
 use crate::rfft::{irfft as irfft_basic, rfft as rfft_basic};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities};
 use std::fmt::Debug;
@@ -29,8 +29,8 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::simd_rfft::{rfft_simd};
-/// use scirs2_fft::simd_fft::NormMode;
+/// use scirs2__fft::simd_rfft::{rfft_simd};
+/// use scirs2__fft::simd_fft::NormMode;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -42,17 +42,17 @@ use std::fmt::Debug;
 /// assert_eq!(spectrum.len(), signal.len() / 2 + 1);
 /// ```
 #[allow(dead_code)]
-pub fn rfft_simd<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
+pub fn rfft_simd<T>(_input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // Use the basic rfft implementation which already handles the logic
-    let result = rfft_basic(input, n)?;
+    let result = rfft_basic(_input, n)?;
 
     // Apply normalization if requested
     if let Some(norm_str) = norm {
         let mut result_mut = result;
-        let n = input.len();
+        let n = _input.len();
         match norm_str {
             "backward" => {
                 let scale = 1.0 / (n as f64);
@@ -92,7 +92,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::simd_rfft::{rfft_simd, irfft_simd};
+/// use scirs2__fft::simd_rfft::{rfft_simd, irfft_simd};
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -109,17 +109,17 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn irfft_simd<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
+pub fn irfft_simd<T>(_input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // Use the basic irfft implementation
-    let result = irfft_basic(input, n)?;
+    let result = irfft_basic(_input, n)?;
 
     // Apply normalization if requested
     if let Some(norm_str) = norm {
         let mut result_mut = result;
-        let n = input.len();
+        let n = _input.len();
         match norm_str {
             "backward" => {
                 let scale = 1.0 / (n as f64);
@@ -171,32 +171,32 @@ where
 
 /// Adaptive IRFFT that automatically chooses the best implementation
 #[allow(dead_code)]
-pub fn irfft_adaptive<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
+pub fn irfft_adaptive<T>(_input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     let optimizer = AutoOptimizer::new();
     let caps = PlatformCapabilities::detect();
-    let size = n.unwrap_or_else(|| input.len() * 2 - 2);
+    let size = n.unwrap_or_else(|| _input.len() * 2 - 2);
 
     if caps.gpu_available && optimizer.should_use_gpu(size) {
         // Use GPU implementation when available
-        match irfft_gpu(input, n, norm) {
+        match irfft_gpu(_input, n, norm) {
             Ok(result) => Ok(result),
             Err(_) => {
                 // Fall back to SIMD implementation if GPU fails
-                irfft_simd(input, n, norm)
+                irfft_simd(_input, n, norm)
             }
         }
     } else {
-        irfft_simd(input, n, norm)
+        irfft_simd(_input, n, norm)
     }
 }
 
 /// GPU-accelerated RFFT implementation
 #[cfg(feature = "cuda")]
 #[allow(dead_code)]
-fn rfft_gpu<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
+fn rfft_gpu<T>(_input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -207,8 +207,8 @@ where
     let context = GpuContext::new()?;
     let device = context.default_device()?;
 
-    // Convert input to f32 for GPU processing
-    let input_f32: Vec<f32> = input.iter().filter_map(|&x| NumCast::from(x)).collect();
+    // Convert _input to f32 for GPU processing
+    let _input_f32: Vec<f32> = _input.iter().filter_map(|&x| NumCast::from(x)).collect();
 
     let size = n.unwrap_or(input_f32.len());
 
@@ -222,7 +222,7 @@ where
     let kernel_registry = device.kernel_registry();
     let fft_kernel = kernel_registry.get_specialized("fft_1d_forward", &params)?;
 
-    // Convert real input to complex format for GPU FFT
+    // Convert real _input to complex format for GPU FFT
     let complex_input: Vec<[f32; 2]> = input_f32.iter().map(|&x| [x, 0.0]).collect();
 
     // Create GPU buffers
@@ -257,7 +257,7 @@ where
 /// GPU-accelerated IRFFT implementation
 #[cfg(feature = "cuda")]
 #[allow(dead_code)]
-fn irfft_gpu<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
+fn irfft_gpu<T>(_input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -268,13 +268,13 @@ where
     let context = GpuContext::new()?;
     let device = context.default_device()?;
 
-    // For complex input, we need to handle the conversion properly
+    // For complex _input, we need to handle the conversion properly
     // This is a simplified implementation - a real one would handle complex types better
-    let size = n.unwrap_or_else(|| input.len() * 2 - 2);
+    let size = n.unwrap_or_else(|| _input.len() * 2 - 2);
 
     // Create kernel parameters for inverse FFT
     let params = KernelParams::new(DataType::Float32)
-        .with_input_dims(vec![input.len()])
+        .with_input_dims(vec![_input.len()])
         .with_output_dims(vec![size])
         .with_string_param("direction", "inverse")
         .with_string_param("dimension", "1d");
@@ -283,9 +283,9 @@ where
     let kernel_registry = device.kernel_registry();
     let ifft_kernel = kernel_registry.get_specialized("fft_1d_inverse", &params)?;
 
-    // Convert input to complex format for GPU processing
-    // This is simplified - real implementation would handle complex input properly
-    let complex_input: Vec<[f32; 2]> = input
+    // Convert _input to complex format for GPU processing
+    // This is simplified - real implementation would handle complex _input properly
+    let complex_input: Vec<[f32; 2]> = _input
         .iter()
         .map(|x| {
             let val: f32 = NumCast::from(*x).unwrap_or(0.0);
@@ -313,7 +313,7 @@ where
     let output_data = output_buffer.read_to_host()?;
     let result: Vec<f64> = output_data
         .iter()
-        .map(|&[real, _imag]| real as f64)
+        .map(|&[real_imag]| real as f64)
         .collect();
 
     Ok(result)

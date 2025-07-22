@@ -160,8 +160,7 @@ pub struct GANEvaluationMetrics<F: Float> {
     /// Enable LPIPS computation
     pub enable_lpips: bool,
     /// Random seed for reproducibility
-    pub random_seed: Option<u64>,
-    _phantom: std::marker::PhantomData<F>,
+    pub random_seed: Option<u64>, _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Default
@@ -179,8 +178,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> GANEva
             n_inception_features: 2048,
             n_kid_samples: 10000,
             enable_lpips: true,
-            random_seed: None,
-            _phantom: std::marker::PhantomData,
+            random_seed: None, _phantom: std::marker::PhantomData,
         }
     }
 
@@ -250,7 +248,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> GANEva
                 let mut valid_probs = 0;
 
                 for (&p_sample, &p_marginal) in sample_probs.iter().zip(marginal.iter()) {
-                    if p_sample > F::zero() && p_marginal > F::zero() {
+                    if p_sample > F::zero() && p_marginal >, F::zero() {
                         sample_kl = sample_kl + p_sample * (p_sample / p_marginal).ln();
                         valid_probs += 1;
                     }
@@ -478,8 +476,7 @@ pub struct ContrastiveLearningMetrics<F: Float> {
     /// Number of negative samples
     pub n_negatives: usize,
     /// Enable hard negative mining
-    pub enable_hard_negatives: bool,
-    _phantom: std::marker::PhantomData<F>,
+    pub enable_hard_negatives: bool, _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Default
@@ -498,8 +495,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         Self {
             temperature: F::from(0.1).unwrap(),
             n_negatives: 1024,
-            enable_hard_negatives: false,
-            _phantom: std::marker::PhantomData,
+            enable_hard_negatives: false, _phantom: std::marker::PhantomData,
         }
     }
 
@@ -578,11 +574,11 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
 
         if anchor_representations.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty representations".to_string(),
+                "Empty _representations".to_string(),
             ));
         }
 
-        // Normalize representations
+        // Normalize _representations
         let anchor_norm = self.l2_normalize(anchor_representations)?;
         let positive_norm = self.l2_normalize(positive_representations)?;
 
@@ -620,11 +616,11 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
 
         if n_pairs == 0 || n_negatives == 0 {
             return Err(MetricsError::InvalidInput(
-                "Empty representations".to_string(),
+                "Empty _representations".to_string(),
             ));
         }
 
-        // Normalize all representations
+        // Normalize all _representations
         let anchor_norm = self.l2_normalize(anchor_representations)?;
         let positive_norm = self.l2_normalize(positive_representations)?;
         let negative_norm = self.l2_normalize(negative_representations)?;
@@ -744,8 +740,7 @@ pub struct SelfSupervisedMetrics<F: Float> {
     /// Learning rate for linear probing
     pub probe_learning_rate: F,
     /// Number of clustering attempts
-    pub n_clustering_runs: usize,
-    _phantom: std::marker::PhantomData<F>,
+    pub n_clustering_runs: usize, _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Default
@@ -762,8 +757,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> SelfSu
         Self {
             n_probe_epochs: 100,
             probe_learning_rate: F::from(0.001).unwrap(),
-            n_clustering_runs: 5,
-            _phantom: std::marker::PhantomData,
+            n_clustering_runs: 5, _phantom: std::marker::PhantomData,
         }
     }
 
@@ -788,30 +782,30 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> SelfSu
         test_representations: &Array2<F>,
         test_labels: &Array1<usize>,
     ) -> Result<LinearProbingResult<F>> {
-        if representations.nrows() != labels.len() {
+        if _representations.nrows() != _labels.len() {
             return Err(MetricsError::InvalidInput(
-                "Mismatched representations and labels".to_string(),
+                "Mismatched _representations and _labels".to_string(),
             ));
         }
 
         if test_representations.nrows() != test_labels.len() {
             return Err(MetricsError::InvalidInput(
-                "Mismatched test representations and labels".to_string(),
+                "Mismatched test _representations and _labels".to_string(),
             ));
         }
 
         // Get number of classes
-        let n_classes = labels.iter().max().unwrap_or(&0) + 1;
-        let n_features = representations.ncols();
+        let n_classes = _labels.iter().max().unwrap_or(&0) + 1;
+        let n_features = _representations.ncols();
 
         // Initialize linear classifier weights (simplified to centroid-based)
         let mut class_centroids = Array2::zeros((n_classes, n_features));
         let mut class_counts = vec![0; n_classes];
 
         // Compute class centroids
-        for (i, &label) in labels.iter().enumerate() {
+        for (i, &label) in _labels.iter().enumerate() {
             for j in 0..n_features {
-                class_centroids[[label, j]] = class_centroids[[label, j]] + representations[[i, j]];
+                class_centroids[[label, j]] = class_centroids[[label, j]] + _representations[[i, j]];
             }
             class_counts[label] += 1;
         }
@@ -947,7 +941,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> SelfSu
     ) -> Result<ClusteringResult<F>> {
         if representations.nrows() != true_labels.len() {
             return Err(MetricsError::InvalidInput(
-                "Mismatched representations and labels".to_string(),
+                "Mismatched representations and _labels".to_string(),
             ));
         }
 
@@ -1158,7 +1152,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> SelfSu
                     let p_i = F::from(true_marginal[i]).unwrap() / F::from(n).unwrap();
                     let p_j = F::from(pred_marginal[j]).unwrap() / F::from(n).unwrap();
 
-                    if p_i > F::zero() && p_j > F::zero() {
+                    if p_i > F::zero() && p_j >, F::zero() {
                         mi = mi + p_ij * (p_ij / (p_i * p_j)).ln();
                     }
                 }
@@ -1240,7 +1234,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> SelfSu
         let n_samples = data.nrows();
         if n_samples != cluster_assignments.len() {
             return Err(MetricsError::InvalidInput(
-                "Data and assignments length mismatch".to_string(),
+                "Data and _assignments length mismatch".to_string(),
             ));
         }
 
@@ -1322,8 +1316,7 @@ pub struct FoundationModelMetrics<F: Float> {
     /// Number of shots for few-shot evaluation
     pub n_shots: Vec<usize>,
     /// Number of tasks for evaluation
-    pub n_tasks: usize,
-    _phantom: std::marker::PhantomData<F>,
+    pub n_tasks: usize, _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Default
@@ -1341,8 +1334,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     pub fn new() -> Self {
         Self {
             n_shots: vec![1, 5, 10],
-            n_tasks: 10,
-            _phantom: std::marker::PhantomData,
+            n_tasks: 10, _phantom: std::marker::PhantomData,
         }
     }
 
@@ -1422,7 +1414,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == class)
-                .map(|(i, _)| i)
+                .map(|(i_)| i)
                 .take(n_shot)
                 .collect();
 
@@ -1517,8 +1509,7 @@ pub struct MultimodalMetrics<F: Float> {
     /// Number of retrieval candidates
     pub n_retrieval_candidates: usize,
     /// Top-k values for retrieval evaluation
-    pub retrieval_k_values: Vec<usize>,
-    _phantom: std::marker::PhantomData<F>,
+    pub retrieval_k_values: Vec<usize>, _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Default
@@ -1534,8 +1525,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Multim
     pub fn new() -> Self {
         Self {
             n_retrieval_candidates: 1000,
-            retrieval_k_values: vec![1, 5, 10],
-            _phantom: std::marker::PhantomData,
+            retrieval_k_values: vec![1, 5, 10], _phantom: std::marker::PhantomData,
         }
     }
 
@@ -1554,7 +1544,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Multim
         ground_truth_pairs: &[(usize, usize)], // (query_idx, candidate_idx) pairs
     ) -> Result<CrossModalRetrievalResult<F>> {
         if query_embeddings.is_empty() || candidate_embeddings.is_empty() {
-            return Err(MetricsError::InvalidInput("Empty embeddings".to_string()));
+            return Err(MetricsError::InvalidInput("Empty _embeddings".to_string()));
         }
 
         if query_embeddings.ncols() != candidate_embeddings.ncols() {
@@ -1688,7 +1678,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Multim
 
         if paired_indices.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "No paired indices provided".to_string(),
+                "No paired _indices provided".to_string(),
             ));
         }
 

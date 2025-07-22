@@ -6,7 +6,7 @@
 
 use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
-use scirs2_linalg::{eigh, smallest_k_eigh};
+use scirs2__linalg::{eigh, smallest_k_eigh};
 use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};
@@ -39,17 +39,17 @@ pub enum AffinityMode {
 ///
 /// * The estimated number of clusters
 #[allow(dead_code)]
-fn eigengap_heuristic<F>(eigenvalues: &[F], max_clusters: usize) -> usize
+fn eigengap_heuristic<F>(_eigenvalues: &[F], max_clusters: usize) -> usize
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    // Find the largest eigengap among the first max_clusters eigenvalues
-    let n = eigenvalues.len();
+    // Find the largest eigengap among the first max_clusters _eigenvalues
+    let n = _eigenvalues.len();
     let mut max_gap = F::zero();
     let mut max_gap_idx = 1; // Default to 1 cluster
 
     for i in 0..(max_clusters.min(n - 1)) {
-        let gap = eigenvalues[i + 1] - eigenvalues[i];
+        let gap = _eigenvalues[i + 1] - _eigenvalues[i];
         if gap > max_gap {
             max_gap = gap;
             max_gap_idx = i + 1;
@@ -74,12 +74,12 @@ where
 ///
 /// * The normalized graph Laplacian matrix
 #[allow(dead_code)]
-fn normalized_laplacian<F>(affinity: &Array2<F>) -> Result<Array2<F>>
+fn normalized_laplacian<F>(_affinity: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    let n = affinity.shape()[0];
-    if n != affinity.shape()[1] {
+    let n = _affinity.shape()[0];
+    if n != _affinity.shape()[1] {
         return Err(ClusteringError::InvalidInput(
             "Affinity matrix must be square".to_string(),
         ));
@@ -88,7 +88,7 @@ where
     // Calculate row sums (degrees)
     let mut degrees = Array1::zeros(n);
     for i in 0..n {
-        degrees[i] = affinity.row(i).sum();
+        degrees[i] = _affinity.row(i).sum();
     }
 
     // Calculate D^(-1/2)
@@ -108,11 +108,11 @@ where
     for i in 0..n {
         for j in 0..n {
             if i == j {
-                // Diagonal elements of identity matrix I minus the normalized affinity
-                laplacian[[i, j]] = F::one() - affinity[[i, j]] * d_inv_sqrt[i] * d_inv_sqrt[j];
+                // Diagonal elements of identity matrix I minus the normalized _affinity
+                laplacian[[i, j]] = F::one() - _affinity[[i, j]] * d_inv_sqrt[i] * d_inv_sqrt[j];
             } else {
-                // Off-diagonal elements are the negative normalized affinity
-                laplacian[[i, j]] = -affinity[[i, j]] * d_inv_sqrt[i] * d_inv_sqrt[j];
+                // Off-diagonal elements are the negative normalized _affinity
+                laplacian[[i, j]] = -_affinity[[i, j]] * d_inv_sqrt[i] * d_inv_sqrt[j];
             }
         }
     }
@@ -131,12 +131,12 @@ where
 ///
 /// * Affinity matrix where each row has at most n_neighbors non-zero entries
 #[allow(dead_code)]
-fn knn_affinity<F>(data: ArrayView2<F>, n_neighbors: usize) -> Result<Array2<F>>
+fn knn_affinity<F>(_data: ArrayView2<F>, n_neighbors: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
+    let n_samples = _data.shape()[0];
+    let n_features = _data.shape()[1];
 
     // Ensure n_neighbors is valid
     if n_neighbors >= n_samples {
@@ -153,7 +153,7 @@ where
         for j in (i + 1)..n_samples {
             let mut dist_sq = F::zero();
             for k in 0..n_features {
-                let diff = data[[i, k]] - data[[j, k]];
+                let diff = _data[[i, k]] - _data[[j, k]];
                 dist_sq = dist_sq + diff * diff;
             }
             let dist = dist_sq.sqrt();
@@ -176,9 +176,9 @@ where
         // Sort by distance
         distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Select k nearest neighbors
-        for (j, _) in distances.iter().take(n_neighbors.min(distances.len())) {
-            // Create binary adjacency matrix (1 for neighbors, 0 otherwise)
+        // Select k nearest _neighbors
+        for (j_) in distances.iter().take(n_neighbors.min(distances.len())) {
+            // Create binary adjacency matrix (1 for _neighbors, 0 otherwise)
             affinity[[i, *j]] = F::one();
             // Make it symmetric
             affinity[[*j, i]] = F::one();
@@ -199,12 +199,12 @@ where
 ///
 /// * Affinity matrix where each element (i,j) is exp(-gamma * ||x_i - x_j||^2)
 #[allow(dead_code)]
-fn rbf_affinity<F>(data: ArrayView2<F>, gamma: F) -> Result<Array2<F>>
+fn rbf_affinity<F>(_data: ArrayView2<F>, gamma: F) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
 {
-    let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
+    let n_samples = _data.shape()[0];
+    let n_features = _data.shape()[1];
 
     if gamma <= F::zero() {
         return Err(ClusteringError::InvalidInput(
@@ -222,7 +222,7 @@ where
         for j in (i + 1)..n_samples {
             let mut dist_sq = F::zero();
             for k in 0..n_features {
-                let diff = data[[i, k]] - data[[j, k]];
+                let diff = _data[[i, k]] - _data[[j, k]];
                 dist_sq = dist_sq + diff * diff;
             }
 
@@ -309,7 +309,7 @@ impl<F: Float + FromPrimitive> Default for SpectralClusteringOptions<F> {
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2_cluster::spectral::{spectral_clustering, SpectralClusteringOptions, AffinityMode};
+/// use scirs2__cluster::spectral::{spectral_clustering, SpectralClusteringOptions, AffinityMode};
 ///
 /// // Example data with two ring-shaped clusters
 /// let data = Array2::from_shape_vec((20, 2), vec![
@@ -357,18 +357,18 @@ where
     let n_samples = data.shape()[0];
 
     // Use unified validation
-    validate_clustering_data(&data, "Spectral clustering", false, Some(2))
+    crate::validation::validate_clustering_data(&data, "Spectral clustering", false, Some(2))
         .map_err(|e| ClusteringError::InvalidInput(format!("Spectral clustering: {}", e)))?;
 
-    // Spectral clustering requires at least 2 clusters
+    // Spectral clustering requires at least 2 _clusters
     if n_clusters < 2 {
         return Err(ClusteringError::InvalidInput(format!(
-            "Spectral clustering: number of clusters must be >= 2, got {}",
+            "Spectral clustering: number of _clusters must be >= 2, got {}",
             n_clusters
         )));
     }
 
-    check_n_clusters_bounds(&data, n_clusters, "Spectral clustering")
+    crate::validation::check_n_clusters_bounds(&data, n_clusters, "Spectral clustering")
         .map_err(|e| ClusteringError::InvalidInput(format!("{}", e)))?;
 
     // Step 1: Create the affinity matrix
@@ -451,9 +451,9 @@ where
         smallest_k_eigh(&stabilized_laplacian.view(), k, max_iter, tolerance)?
     };
 
-    // Determine the actual number of clusters
+    // Determine the actual number of _clusters
     let actual_n_clusters = if opts.auto_n_clusters {
-        // Use eigengap heuristic to determine the number of clusters
+        // Use eigengap heuristic to determine the number of _clusters
         // When using the normalized Laplacian, we need the smaller eigenvalues
         eigengap_heuristic(&eigenvalues.to_vec(), n_clusters)
     } else {

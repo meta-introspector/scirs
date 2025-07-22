@@ -11,20 +11,20 @@ use std::path::Path;
 
 // Create a simple neural network model for the XOR problem
 #[allow(dead_code)]
-fn create_xor_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
+fn create_xor_model(_rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // XOR problem requires a hidden layer
     let input_dim = 2;
     let hidden_dim = 4;
     let output_dim = 1;
     // Input to hidden layer with ReLU activation
-    let dense1 = Dense::new(input_dim, hidden_dim, Some("relu"), rng)?;
+    let dense1 = Dense::new(input_dim, hidden_dim, Some("relu"), _rng)?;
     model.add_layer(dense1);
     // Optional dropout for regularization (low rate as XOR is small)
-    let dropout = Dropout::new(0.1, rng)?;
+    let dropout = Dropout::new(0.1, _rng)?;
     model.add_layer(dropout);
     // Hidden to output layer with sigmoid activation (binary output)
-    let dense2 = Dense::new(hidden_dim, output_dim, Some("sigmoid"), rng)?;
+    let dense2 = Dense::new(hidden_dim, output_dim, Some("sigmoid"), _rng)?;
     model.add_layer(dense2);
     Ok(model)
 }
@@ -78,8 +78,8 @@ fn train_model(
     Ok(())
 // Evaluate model performance on XOR problem
 #[allow(dead_code)]
-fn evaluate_model(model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>) -> Result<f32> {
-    let predictions = model.forward(&x.clone().into_dyn())?;
+fn evaluate_model(_model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>) -> Result<f32> {
+    let predictions = _model.forward(&x.clone().into_dyn())?;
     let binary_thresh = 0.5;
     println!("\nModel predictions:");
     println!("-----------------");
@@ -121,13 +121,13 @@ fn create_noisy_xor_dataset(
     let mut y = Array2::<f32>::zeros((size, 1));
     for i in 0..size {
         // Generate binary inputs with some randomness
-        let x1 = (rng.random_range(0.0..1.0) > 0.5) as i32 as f32;
-        let x2 = (rng.random_range(0.0..1.0) > 0.5) as i32 as f32;
+        let x1 = (rng.gen_range(0.0..1.0) > 0.5) as i32 as f32;
+        let x2 = (rng.gen_range(0.0..1.0) > 0.5) as i32 as f32;
         // Add some noise to inputs
-        x[[i, 0]] = x1 + rng.random_range(-noise_level / 2.0..noise_level / 2.0);
-        x[[i, 1]] = x2 + rng.random_range(-noise_level / 2.0..noise_level / 2.0);
+        x[[i..0]] = x1 + rng.gen_range(-noise_level / 2.0..noise_level / 2.0);
+        x[[i, 1]] = x2 + rng.gen_range(-noise_level / 2.0..noise_level / 2.0);
         // Standard XOR calculation for target
-        y[[i, 0]] = (x1 as i32 ^ x2 as i32) as f32;
+        y[[i..0]] = (x1 as i32 ^ x2 as i32) as f32;
 #[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Improved Model Serialization and Loading Example");
@@ -164,18 +164,18 @@ fn main() -> Result<()> {
     println!("\nLoading and evaluating models from each format:");
     // Load and evaluate JSON model
     println!("\n--- JSON Format ---");
-    let json_model = serialization::load_model::<f32, _>(json_path, SerializationFormat::JSON)?;
+    let json_model = serialization::load_model::<f32>(json_path, SerializationFormat::JSON)?;
     println!("JSON model loaded with {} layers", json_model.num_layers());
     evaluate_model(&json_model, &x_train, &y_train)?;
     // Load and evaluate CBOR model
     println!("\n--- CBOR Format ---");
-    let cbor_model = serialization::load_model::<f32, _>(cbor_path, SerializationFormat::CBOR)?;
+    let cbor_model = serialization::load_model::<f32>(cbor_path, SerializationFormat::CBOR)?;
     println!("CBOR model loaded with {} layers", cbor_model.num_layers());
     evaluate_model(&cbor_model, &x_train, &y_train)?;
     // Load and evaluate MessagePack model
     println!("\n--- MessagePack Format ---");
     let msgpack_model =
-        serialization::load_model::<f32, _>(msgpack_path, SerializationFormat::MessagePack)?;
+        serialization::load_model::<f32>(msgpack_path, SerializationFormat::MessagePack)?;
         "MessagePack model loaded with {} layers",
         msgpack_model.num_layers()
     evaluate_model(&msgpack_model, &x_train, &y_train)?;

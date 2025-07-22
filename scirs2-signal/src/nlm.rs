@@ -13,7 +13,7 @@
 //! # Example
 //! ```
 //! use ndarray::{Array1, Array2};
-//! use scirs2_signal::nlm::{nlm_denoise_1d, nlm_denoise_2d, NlmConfig};
+//! use scirs2__signal::nlm::{nlm_denoise_1d, nlm_denoise_2d, NlmConfig};
 //! use rand::Rng;
 //!
 //! // Create a test signal
@@ -32,15 +32,16 @@
 //!
 //! // Apply Non-Local Means denoising
 //! let config = NlmConfig::default();
-//! let denoised = nlm_denoise_1d(&noisy_signal, &config).unwrap();
+//! let denoised = nlm_denoise_1d(&noisy_signal..&config).unwrap();
 //! ```
 
-use ndarray::{s, Array1, Array2, Array3, Axis};
-use std::cmp;
-
 use crate::error::{SignalError, SignalResult};
+use ndarray::{Array1, Array2, Array3, Axis, s};
+use rand::Rng;
+use std::cmp;
 use std::f64::consts::PI;
 
+#[allow(unused_imports)]
 /// Configuration for Non-Local Means denoising
 #[derive(Debug, Clone)]
 pub struct NlmConfig {
@@ -95,15 +96,15 @@ impl Default for NlmConfig {
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::nlm::{nlm_denoise_1d, NlmConfig};
+/// use scirs2__signal::nlm::{nlm_denoise_1d, NlmConfig};
 ///
 /// let signal = Array1::from_vec(vec![1.2, 2.3, 3.1, 2.2, 1.3, 0.2, -0.3, -1.1]);
 /// let config = NlmConfig::default();
 /// let denoised = nlm_denoise_1d(&signal, &config).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn nlm_denoise_1d(signal: &Array1<f64>, config: &NlmConfig) -> SignalResult<Array1<f64>> {
-    let n = signal.len();
+pub fn nlm_denoise_1d(_signal: &Array1<f64>, config: &NlmConfig) -> SignalResult<Array1<f64>> {
+    let n = _signal.len();
 
     // Ensure patch size is valid
     if config.patch_size < 3 || config.patch_size % 2 == 0 {
@@ -123,14 +124,14 @@ pub fn nlm_denoise_1d(signal: &Array1<f64>, config: &NlmConfig) -> SignalResult<
     let half_patch = config.patch_size / 2;
     let half_search = config.search_window / 2;
 
-    // Pad signal for boundary handling
+    // Pad _signal for boundary handling
     let padded_signal = if config.boundary {
-        pad_signal_1d(signal, cmp::max(half_patch, half_search))
+        pad_signal_1d(_signal, cmp::max(half_patch, half_search))
     } else {
-        signal.clone()
+        _signal.clone()
     };
 
-    // Initialize denoised signal
+    // Initialize denoised _signal
     let mut denoised = Array1::zeros(n);
 
     // Determine step size for fast mode
@@ -159,7 +160,7 @@ pub fn nlm_denoise_1d(signal: &Array1<f64>, config: &NlmConfig) -> SignalResult<
     // Adjust filtering parameter based on noise level
     let h_adjusted = config.h.powi(2) * estimated_sigma.powi(2) * config.patch_size as f64;
 
-    // Process each point in the signal
+    // Process each point in the _signal
     for i in 0..n {
         // Get patch centered at current point
         let center_idx = i + (if config.boundary { half_search } else { 0 });
@@ -260,15 +261,15 @@ pub fn nlm_denoise_1d(signal: &Array1<f64>, config: &NlmConfig) -> SignalResult<
 /// # Example
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::nlm::{nlm_denoise_2d, NlmConfig};
+/// use scirs2__signal::nlm::{nlm_denoise_2d, NlmConfig};
 ///
 /// let image = Array2::from_shape_fn((10, 10), |(i, j)| (i + j) as f64 / 20.0);
 /// let config = NlmConfig::default();
 /// let denoised = nlm_denoise_2d(&image, &config).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn nlm_denoise_2d(image: &Array2<f64>, config: &NlmConfig) -> SignalResult<Array2<f64>> {
-    let (height, width) = image.dim();
+pub fn nlm_denoise_2d(_image: &Array2<f64>, config: &NlmConfig) -> SignalResult<Array2<f64>> {
+    let (height, width) = _image.dim();
 
     // Ensure patch size is valid
     if config.patch_size < 3 || config.patch_size % 2 == 0 {
@@ -288,14 +289,14 @@ pub fn nlm_denoise_2d(image: &Array2<f64>, config: &NlmConfig) -> SignalResult<A
     let half_patch = config.patch_size / 2;
     let half_search = config.search_window / 2;
 
-    // Pad image for boundary handling
+    // Pad _image for boundary handling
     let padded_image = if config.boundary {
-        pad_image_2d(image, cmp::max(half_patch, half_search))
+        pad_image_2d(_image, cmp::max(half_patch, half_search))
     } else {
-        image.clone()
+        _image.clone()
     };
 
-    // Initialize denoised image
+    // Initialize denoised _image
     let mut denoised = Array2::zeros((height, width));
 
     // Determine step size for fast mode
@@ -324,7 +325,7 @@ pub fn nlm_denoise_2d(image: &Array2<f64>, config: &NlmConfig) -> SignalResult<A
         }
     }
 
-    // Process each pixel in the image
+    // Process each pixel in the _image
     for i in 0..height {
         for j in 0..width {
             // Get patch centered at current pixel
@@ -495,7 +496,7 @@ pub fn nlm_block_matching_2d(
     // Determine step size for processing (subsampling the image)
     let step = config.step_size;
 
-    // Process the image in blocks
+    // Process the image in _blocks
     for i in (half_patch..height + half_search - half_patch).step_by(step) {
         for j in (half_patch..width + half_search - half_patch).step_by(step) {
             // Get reference patch
@@ -542,7 +543,7 @@ pub fn nlm_block_matching_2d(
                         similar_blocks.push((si, sj));
                         block_weights.push(weight);
 
-                        // Limit the number of blocks
+                        // Limit the number of _blocks
                         if similar_blocks.len() >= max_blocks {
                             break;
                         }
@@ -669,7 +670,7 @@ pub fn nlm_multiscale_2d(
             upsample_image(&denoised_scale, height, width)?
         };
 
-        // Compute weight for this scale (higher weights for finer scales)
+        // Compute weight for this scale (higher weights for finer _scales)
         let scale_weight = 1.0 / (2.0_f64.powi(scale as i32));
 
         // Accumulate weighted result
@@ -701,12 +702,12 @@ pub fn nlm_multiscale_2d(
 /// # Returns
 /// * The denoised color image
 #[allow(dead_code)]
-pub fn nlm_color_image(image: &Array3<f64>, config: &NlmConfig) -> SignalResult<Array3<f64>> {
-    let (height, width, channels) = image.dim();
+pub fn nlm_color_image(_image: &Array3<f64>, config: &NlmConfig) -> SignalResult<Array3<f64>> {
+    let (height, width, channels) = _image.dim();
 
     if channels != 3 {
         return Err(SignalError::ValueError(
-            "Input must be a 3-channel color image".to_string(),
+            "Input must be a 3-channel color _image".to_string(),
         ));
     }
 
@@ -714,14 +715,14 @@ pub fn nlm_color_image(image: &Array3<f64>, config: &NlmConfig) -> SignalResult<
     let half_patch = config.patch_size / 2;
     let half_search = config.search_window / 2;
 
-    // Pad image for boundary handling
+    // Pad _image for boundary handling
     let padded_image = if config.boundary {
-        pad_color_image(image, cmp::max(half_patch, half_search))
+        pad_color_image(_image, cmp::max(half_patch, half_search))
     } else {
-        image.clone()
+        _image.clone()
     };
 
-    // Initialize denoised image
+    // Initialize denoised _image
     let mut denoised = Array3::zeros((height, width, channels));
 
     // Compute estimated noise variance per channel
@@ -743,10 +744,10 @@ pub fn nlm_color_image(image: &Array3<f64>, config: &NlmConfig) -> SignalResult<
         1
     };
 
-    // Process each pixel in the image
+    // Process each pixel in the _image
     for i in 0..height {
         for j in 0..width {
-            // Current coordinates in padded image
+            // Current coordinates in padded _image
             let center_i = i + (if config.boundary { half_search } else { 0 });
             let center_j = j + (if config.boundary { half_search } else { 0 });
 
@@ -862,22 +863,22 @@ pub fn nlm_color_image(image: &Array3<f64>, config: &NlmConfig) -> SignalResult<
 
 /// Helper function to pad a 1D signal with reflection at boundaries
 #[allow(dead_code)]
-fn pad_signal_1d(signal: &Array1<f64>, pad_size: usize) -> Array1<f64> {
-    let n = signal.len();
+fn pad_signal_1d(_signal: &Array1<f64>, pad_size: usize) -> Array1<f64> {
+    let n = _signal.len();
     let mut padded = Array1::zeros(n + 2 * pad_size);
 
-    // Copy original signal
+    // Copy original _signal
     for i in 0..n {
-        padded[i + pad_size] = signal[i];
+        padded[i + pad_size] = _signal[i];
     }
 
     // Reflect boundaries
     for i in 0..pad_size {
         // Left boundary
-        padded[pad_size - 1 - i] = signal[i.min(n - 1)];
+        padded[pad_size - 1 - i] = _signal[i.min(n - 1)];
 
         // Right boundary
-        padded[n + pad_size + i] = signal[n - 1 - i.min(n - 1)];
+        padded[n + pad_size + i] = _signal[n - 1 - i.min(n - 1)];
     }
 
     padded
@@ -885,14 +886,14 @@ fn pad_signal_1d(signal: &Array1<f64>, pad_size: usize) -> Array1<f64> {
 
 /// Helper function to pad a 2D image with reflection at boundaries
 #[allow(dead_code)]
-fn pad_image_2d(image: &Array2<f64>, pad_size: usize) -> Array2<f64> {
-    let (height, width) = image.dim();
+fn pad_image_2d(_image: &Array2<f64>, pad_size: usize) -> Array2<f64> {
+    let (height, width) = _image.dim();
     let mut padded = Array2::zeros((height + 2 * pad_size, width + 2 * pad_size));
 
-    // Copy original image
+    // Copy original _image
     for i in 0..height {
         for j in 0..width {
-            padded[[i + pad_size, j + pad_size]] = image[[i, j]];
+            padded[[i + pad_size, j + pad_size]] = _image[[i, j]];
         }
     }
 
@@ -900,11 +901,11 @@ fn pad_image_2d(image: &Array2<f64>, pad_size: usize) -> Array2<f64> {
     for i in 0..pad_size {
         for j in 0..width {
             // Top edge
-            padded[[pad_size - 1 - i, j + pad_size]] = image[[i.min(height - 1), j]];
+            padded[[pad_size - 1 - i, j + pad_size]] = _image[[i.min(height - 1), j]];
 
             // Bottom edge
             padded[[height + pad_size + i, j + pad_size]] =
-                image[[height - 1 - i.min(height - 1), j]];
+                _image[[height - 1 - i.min(height - 1), j]];
         }
     }
 
@@ -934,13 +935,13 @@ fn pad_image_2d(image: &Array2<f64>, pad_size: usize) -> Array2<f64> {
 
 /// Helper function to pad a 3D color image with reflection at boundaries
 #[allow(dead_code)]
-fn pad_color_image(image: &Array3<f64>, pad_size: usize) -> Array3<f64> {
-    let (height, width, channels) = image.dim();
+fn pad_color_image(_image: &Array3<f64>, pad_size: usize) -> Array3<f64> {
+    let (height, width, channels) = _image.dim();
     let mut padded = Array3::zeros((height + 2 * pad_size, width + 2 * pad_size, channels));
 
     // Pad each channel separately
     for c in 0..channels {
-        let channel = image.index_axis(Axis(2), c).to_owned();
+        let channel = _image.index_axis(Axis(2), c).to_owned();
         let padded_channel = pad_image_2d(&channel, pad_size);
 
         for i in 0..padded_channel.dim().0 {
@@ -955,24 +956,24 @@ fn pad_color_image(image: &Array3<f64>, pad_size: usize) -> Array3<f64> {
 
 /// Helper function to extract a patch from a 1D signal
 #[allow(dead_code)]
-fn extract_patch_1d(signal: &Array1<f64>, center: usize, size: usize) -> Array1<f64> {
+fn extract_patch_1d(_signal: &Array1<f64>, center: usize, size: usize) -> Array1<f64> {
     let half_size = size / 2;
 
     // Check bounds to avoid panic
-    if center < half_size || center + half_size >= signal.len() {
+    if center < half_size || center + half_size >= _signal.len() {
         // Handle boundary case
         let mut patch = Array1::zeros(size);
         for i in 0..size {
             let idx = center as isize - half_size as isize + i as isize;
-            if idx >= 0 && idx < signal.len() as isize {
-                patch[i] = signal[idx as usize];
+            if idx >= 0 && idx < _signal.len() as isize {
+                patch[i] = _signal[idx as usize];
             }
         }
         patch
     } else {
         let start = center - half_size;
         let end = start + size;
-        signal.slice(s![start..end]).to_owned()
+        _signal.slice(s![start..end]).to_owned()
     }
 }
 
@@ -994,17 +995,17 @@ fn extract_patch_2d(
     {
         // Handle boundary case
         let mut patch = Array2::zeros((size, size));
-        for i in 0..size {
-            for j in 0..size {
-                let idx_i = center_i as isize - half_size as isize + i as isize;
-                let idx_j = center_j as isize - half_size as isize + j as isize;
+        for _i in 0..size {
+            for _j in 0..size {
+                let idx_i = center_i as isize - half_size as isize + _i as isize;
+                let idx_j = center_j as isize - half_size as isize + _j as isize;
 
                 if idx_i >= 0
                     && idx_j >= 0
                     && idx_i < image.dim().0 as isize
                     && idx_j < image.dim().1 as isize
                 {
-                    patch[[i, j]] = image[[idx_i as usize, idx_j as usize]];
+                    patch[[_i_j]] = image[[idx_i as usize, idx_j as usize]];
                 }
             }
         }
@@ -1021,18 +1022,18 @@ fn extract_patch_2d(
 
 /// Helper function to compute distance between two 1D patches
 #[allow(dead_code)]
-fn compute_patch_distance(patch1: &Array1<f64>, patch2: &Array1<f64>) -> f64 {
+fn compute_patch_distance(_patch1: &Array1<f64>, patch2: &Array1<f64>) -> f64 {
     // Ensure patches have the same size
-    if patch1.len() != patch2.len() {
+    if _patch1.len() != patch2.len() {
         return f64::INFINITY;
     }
 
     // Compute mean square difference
-    let n = patch1.len();
+    let n = _patch1.len();
     let mut sum_diff_sq = 0.0;
 
     for i in 0..n {
-        let diff = patch1[i] - patch2[i];
+        let diff = _patch1[i] - patch2[i];
         sum_diff_sq += diff * diff;
     }
 
@@ -1092,18 +1093,18 @@ fn compute_patch_distance_2d(
 
 /// Helper function to estimate noise standard deviation in a 1D signal
 #[allow(dead_code)]
-fn estimate_noise_sigma(signal: &Array1<f64>) -> f64 {
+fn estimate_noise_sigma(_signal: &Array1<f64>) -> f64 {
     // Use median absolute deviation method for robust estimation
 
     // Compute first-order differences
-    let n = signal.len();
+    let n = _signal.len();
     if n < 2 {
         return 0.0;
     }
 
     let mut diffs = Vec::with_capacity(n - 1);
     for i in 1..n {
-        diffs.push((signal[i] - signal[i - 1]).abs());
+        diffs.push((_signal[i] - _signal[i - 1]).abs());
     }
 
     // Sort differences and find median
@@ -1122,9 +1123,9 @@ fn estimate_noise_sigma(signal: &Array1<f64>) -> f64 {
 
 /// Helper function to estimate noise standard deviation in a 2D image
 #[allow(dead_code)]
-fn estimate_noise_sigma_2d(image: &Array2<f64>) -> f64 {
+fn estimate_noise_sigma_2d(_image: &Array2<f64>) -> f64 {
     // Use median absolute deviation of Laplacian for robust estimation
-    let (height, width) = image.dim();
+    let (height, width) = _image.dim();
     if height < 3 || width < 3 {
         return 0.0;
     }
@@ -1135,11 +1136,11 @@ fn estimate_noise_sigma_2d(image: &Array2<f64>) -> f64 {
     for i in 1..height - 1 {
         for j in 1..width - 1 {
             // 4-connected Laplacian
-            let lap_val = 4.0 * image[[i, j]]
-                - image[[i + 1, j]]
-                - image[[i - 1, j]]
-                - image[[i, j + 1]]
-                - image[[i, j - 1]];
+            let lap_val = 4.0 * _image[[i, j]]
+                - _image[[i + 1, j]]
+                - _image[[i - 1, j]]
+                - _image[[i, j + 1]]
+                - _image[[i, j - 1]];
             laplacian.push(lap_val.abs());
         }
     }
@@ -1164,9 +1165,9 @@ fn downsample_image(
     new_height: usize,
     new_width: usize,
 ) -> SignalResult<Array2<f64>> {
-    let (height, width) = image.dim();
+    let (_height_width) = image.dim();
 
-    if new_height > height || new_width > width {
+    if new_height > _height || new_width > _width {
         return Err(SignalError::ValueError(
             "Downsampled dimensions must be smaller than original".to_string(),
         ));
@@ -1176,8 +1177,8 @@ fn downsample_image(
     let mut downsampled = Array2::zeros((new_height, new_width));
 
     // Compute scale factors
-    let h_scale = height as f64 / new_height as f64;
-    let w_scale = width as f64 / new_width as f64;
+    let h_scale = _height as f64 / new_height as f64;
+    let w_scale = _width as f64 / new_width as f64;
 
     // Perform area-based downsampling
     for i in 0..new_height {
@@ -1192,8 +1193,8 @@ fn downsample_image(
             let mut sum = 0.0;
             let mut count = 0;
 
-            for si in src_i_start..cmp::min(src_i_end, height) {
-                for sj in src_j_start..cmp::min(src_j_end, width) {
+            for si in src_i_start..cmp::min(src_i_end_height) {
+                for sj in src_j_start..cmp::min(src_j_end_width) {
                     sum += image[[si, sj]];
                     count += 1;
                 }
@@ -1215,9 +1216,9 @@ fn upsample_image(
     new_height: usize,
     new_width: usize,
 ) -> SignalResult<Array2<f64>> {
-    let (height, width) = image.dim();
+    let (_height_width) = image.dim();
 
-    if new_height < height || new_width < width {
+    if new_height < _height || new_width < _width {
         return Err(SignalError::ValueError(
             "Upsampled dimensions must be larger than original".to_string(),
         ));
@@ -1227,8 +1228,8 @@ fn upsample_image(
     let mut upsampled = Array2::zeros((new_height, new_width));
 
     // Compute scale factors
-    let h_scale = (height - 1) as f64 / (new_height - 1) as f64;
-    let w_scale = (width - 1) as f64 / (new_width - 1) as f64;
+    let h_scale = (_height - 1) as f64 / (new_height - 1) as f64;
+    let w_scale = (_width - 1) as f64 / (new_width - 1) as f64;
 
     // Perform bilinear interpolation
     for i in 0..new_height {
@@ -1244,8 +1245,8 @@ fn upsample_image(
             let dj = src_j - j0 as f64;
 
             // Handle boundary cases
-            let i1 = cmp::min(i0 + 1, height - 1);
-            let j1 = cmp::min(j0 + 1, width - 1);
+            let i1 = cmp::min(i0 + 1, _height - 1);
+            let j1 = cmp::min(j0 + 1, _width - 1);
 
             // Bilinear interpolation
             upsampled[[i, j]] = (1.0 - di) * (1.0 - dj) * image[[i0, j0]]

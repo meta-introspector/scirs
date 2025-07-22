@@ -10,9 +10,7 @@ use std::marker::PhantomData;
 /// Fluent builder for constructing pipelines
 pub struct PipelineBuilder<I, O> {
     stages: Vec<Box<dyn PipelineStage>>,
-    config: PipelineConfig,
-    _input: PhantomData<I>,
-    _output: PhantomData<O>,
+    config: PipelineConfig_input: PhantomData<I>, _output: PhantomData<O>,
 }
 
 impl<I, O> Default for PipelineBuilder<I, O>
@@ -34,9 +32,7 @@ where
     pub fn new() -> Self {
         Self {
             stages: Vec::new(),
-            config: PipelineConfig::default(),
-            _input: PhantomData,
-            _output: PhantomData,
+            config: PipelineConfig::default(), _input: PhantomData_output: PhantomData,
         }
     }
 
@@ -82,9 +78,7 @@ where
         self.stages.push(function_stage(name, f));
         PipelineBuilder {
             stages: self.stages,
-            config: self.config,
-            _input: self._input,
-            _output: PhantomData,
+            config: self.config_input: self._input, _output: PhantomData,
         }
     }
 
@@ -120,9 +114,7 @@ where
         self.stages.push(stage);
         PipelineBuilder {
             stages: self.stages,
-            config: self.config,
-            _input: self._input,
-            _output: PhantomData,
+            config: self.config_input: self._input, _output: PhantomData,
         }
     }
 
@@ -164,9 +156,7 @@ where
     pub fn build(self) -> Pipeline<I, O> {
         Pipeline {
             stages: self.stages,
-            config: self.config,
-            _input: PhantomData,
-            _output: PhantomData,
+            config: self.config_input: PhantomData, _output: PhantomData,
         }
     }
 }
@@ -183,13 +173,13 @@ where
     I: 'static + Send + Sync,
 {
     /// Create a new branching pipeline builder
-    pub fn new<F>(selector: F) -> Self
+    pub fn new<F>(_selector: F) -> Self
     where
         F: Fn(&I) -> String + Send + Sync + 'static,
     {
         Self {
             branches: Vec::new(),
-            selector: Box::new(selector),
+            _selector: Box::new(_selector),
             config: PipelineConfig::default(),
         }
     }
@@ -294,13 +284,13 @@ where
     O: 'static + Send + Sync,
 {
     /// Create a new parallel pipeline builder
-    pub fn new<F>(combiner: F) -> Self
+    pub fn new<F>(_combiner: F) -> Self
     where
         F: Fn(Vec<O>) -> Result<O> + Send + Sync + 'static,
     {
         Self {
             pipelines: Vec::new(),
-            combiner: Box::new(combiner),
+            _combiner: Box::new(_combiner),
             config: PipelineConfig::default(),
         }
     }

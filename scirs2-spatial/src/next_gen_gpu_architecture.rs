@@ -28,7 +28,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::next_gen_gpu_architecture::{QuantumGpuProcessor, PhotonicAccelerator};
+//! use scirs2__spatial::next_gen_gpu_architecture::{QuantumGpuProcessor, PhotonicAccelerator};
 //! use ndarray::array;
 //!
 //! // Quantum-GPU hybrid processing
@@ -53,7 +53,7 @@
 
 use crate::error::SpatialResult;
 use ndarray::{Array1, Array2, Array3, ArrayView2};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use std::collections::VecDeque;
 use std::f64::consts::PI;
 
@@ -255,7 +255,7 @@ pub struct NextGenPerformanceMetrics {
 }
 
 impl Default for QuantumGpuProcessor {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -290,19 +290,19 @@ impl QuantumGpuProcessor {
     }
 
     /// Enable quantum coherence preservation
-    pub fn with_quantum_coherence_preservation(mut self, enabled: bool) -> Self {
+    pub fn with_quantum_coherence_preservation(mut enabled: bool) -> Self {
         self.quantum_coherence = enabled;
         self
     }
 
     /// Enable tensor core quantum enhancement
-    pub fn with_tensor_core_quantum_enhancement(mut self, enabled: bool) -> Self {
+    pub fn with_tensor_core_quantum_enhancement(mut enabled: bool) -> Self {
         self.tensor_quantum_enhancement = enabled;
         self
     }
 
     /// Enable holographic memory
-    pub fn with_holographic_memory(mut self, enabled: bool) -> Self {
+    pub fn with_holographic_memory(mut enabled: bool) -> Self {
         self.holographic_memory = enabled;
         self
     }
@@ -313,12 +313,12 @@ impl QuantumGpuProcessor {
         num_quantum_units: usize,
         num_classical_cores: usize,
     ) -> SpatialResult<()> {
-        // Initialize quantum processing units
+        // Initialize quantum processing _units
         self.quantum_units.clear();
         for i in 0..num_quantum_units {
             let qpu = QuantumProcessingUnit {
                 unit_id: i,
-                num_qubits: 64,               // Next-gen quantum units
+                num_qubits: 64,               // Next-gen quantum _units
                 coherence_time_ns: 1000000.0, // 1 millisecond coherence
                 gate_fidelity: 0.9999,        // Advanced-high fidelity
                 quantum_state: None,
@@ -328,7 +328,7 @@ impl QuantumGpuProcessor {
             self.quantum_units.push(qpu);
         }
 
-        // Initialize classical tensor cores
+        // Initialize classical tensor _cores
         self.classical_cores.clear();
         for i in 0..num_classical_cores {
             let core = ClassicalTensorCore {
@@ -347,7 +347,7 @@ impl QuantumGpuProcessor {
             self.classical_cores.push(core);
         }
 
-        // Initialize quantum entanglements between units
+        // Initialize quantum entanglements between _units
         if self.quantum_coherence {
             self.initialize_quantum_entanglements().await?;
         }
@@ -356,7 +356,7 @@ impl QuantumGpuProcessor {
     }
 
     /// Initialize quantum entanglements
-    async fn initialize_quantum_entanglements(&mut self) -> SpatialResult<()> {
+    async fn initialize_quantum_entanglements() -> SpatialResult<()> {
         // Create entanglement topology
         for i in 0..self.quantum_units.len() {
             for j in (i + 1)..self.quantum_units.len() {
@@ -376,7 +376,7 @@ impl QuantumGpuProcessor {
         &mut self,
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<Complex64>> {
-        let (n_points, _n_dims) = points.dim();
+        let (n_points_n_dims) = points.dim();
         let mut quantum_distances = Array2::zeros((n_points, n_points));
 
         // Initialize quantum processing if not done
@@ -501,7 +501,7 @@ impl QuantumGpuProcessor {
         points: &ArrayView2<'_, f64>,
         num_clusters: usize,
     ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
-        let (n_points, _n_dims) = points.dim();
+        let (n_points_n_dims) = points.dim();
 
         // Initialize quantum system if needed
         if self.quantum_units.is_empty() {
@@ -586,8 +586,8 @@ impl QuantumGpuProcessor {
     }
 
     /// Quantum measurement simulation
-    fn quantum_measurement(&self, state: &Array1<Complex64>) -> usize {
-        let probabilities: Vec<f64> = state.iter().map(|a| a.norm_sqr()).collect();
+    fn quantum_measurement(_state: &Array1<Complex64>) -> usize {
+        let probabilities: Vec<f64> = _state.iter().map(|a| a.norm_sqr()).collect();
         let total_prob: f64 = probabilities.iter().sum();
 
         if total_prob <= 0.0 {
@@ -613,7 +613,7 @@ impl QuantumGpuProcessor {
         points: &ArrayView2<'_, f64>,
         centroids: &Array2<f64>,
     ) -> SpatialResult<Array1<usize>> {
-        let (n_points, _) = points.dim();
+        let (n_points_) = points.dim();
         let mut assignments = Array1::zeros(n_points);
 
         for (i, point) in points.outer_iter().enumerate() {
@@ -711,9 +711,9 @@ impl QuantumGpuProcessor {
     }
 
     /// Apply quantum decoherence simulation
-    async fn apply_quantum_decoherence(&mut self, _iteration: usize) -> SpatialResult<()> {
+    async fn apply_quantum_decoherence(_iteration: usize) -> SpatialResult<()> {
         // Simulate quantum decoherence effects
-        let decoherence_rate = 0.99; // 1% decoherence per iteration
+        let decoherence_rate = 0.99; // 1% decoherence per _iteration
 
         for qpu in &mut self.quantum_units {
             qpu.gate_fidelity *= decoherence_rate;
@@ -791,7 +791,7 @@ pub struct PhotonicPerformanceMetrics {
 }
 
 impl Default for PhotonicAccelerator {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -815,19 +815,19 @@ impl PhotonicAccelerator {
     }
 
     /// Enable optical neural networks
-    pub fn with_optical_neural_networks(mut self, enabled: bool) -> Self {
+    pub fn with_optical_neural_networks(mut enabled: bool) -> Self {
         self.optical_neural_networks = enabled;
         self
     }
 
     /// Enable metamaterial optimization
-    pub fn with_metamaterial_optimization(mut self, enabled: bool) -> Self {
+    pub fn with_metamaterial_optimization(mut enabled: bool) -> Self {
         self.metamaterial_optimization = enabled;
         self
     }
 
     /// Enable temporal encoding
-    pub fn with_temporal_encoding(mut self, enabled: bool) -> Self {
+    pub fn with_temporal_encoding(mut enabled: bool) -> Self {
         self.temporal_encoding = enabled;
         self
     }
@@ -855,10 +855,10 @@ impl PhotonicAccelerator {
     }
 
     /// Initialize photonic processing system
-    async fn initialize_photonic_system(&mut self, num_units: usize) -> SpatialResult<()> {
+    async fn initialize_photonic_system(_num_units: usize) -> SpatialResult<()> {
         self.photonic_units.clear();
 
-        for i in 0..num_units {
+        for i in 0.._num_units {
             let unit = PhotonicProcessingUnit {
                 unit_id: i,
                 wavelength_range: (700.0 + i as f64 * 50.0, 750.0 + i as f64 * 50.0), // Different wavelengths
@@ -959,7 +959,7 @@ impl PhotonicAccelerator {
             }
         }
 
-        // Assign points to clusters based on optical similarity
+        // Assign points to _clusters based on optical similarity
         for (i, waveform) in waveforms.iter().enumerate() {
             let mut max_similarity = -1.0;
             let mut best_cluster = 0;
@@ -979,9 +979,9 @@ impl PhotonicAccelerator {
     }
 
     /// Find peaks in interference pattern
-    fn find_interference_peaks(&self, pattern: &Array1<Complex64>) -> Vec<usize> {
+    fn find_interference_peaks(_pattern: &Array1<Complex64>) -> Vec<usize> {
         let mut peaks = Vec::new();
-        let intensities: Vec<f64> = pattern.iter().map(|c| c.norm_sqr()).collect();
+        let intensities: Vec<f64> = _pattern.iter().map(|c| c.norm_sqr()).collect();
 
         for i in 1..intensities.len() - 1 {
             if intensities[i] > intensities[i - 1]
@@ -1000,14 +1000,14 @@ impl PhotonicAccelerator {
     }
 
     /// Calculate optical similarity between waveform and cluster
-    fn calculate_optical_similarity(&self, waveform: &Array1<Complex64>, cluster: usize) -> f64 {
+    fn calculate_optical_similarity(_waveform: &Array1<Complex64>, cluster: usize) -> f64 {
         // Simplified optical correlation calculation
         if cluster < self.photonic_units.len() {
             // Use wavelength-based similarity
             let unit_wavelength = (self.photonic_units[cluster].wavelength_range.0
                 + self.photonic_units[cluster].wavelength_range.1)
                 / 2.0;
-            let waveform_energy: f64 = waveform.iter().map(|c| c.norm_sqr()).sum();
+            let _waveform_energy: f64 = _waveform.iter().map(|c| c.norm_sqr()).sum();
 
             // Wavelength matching score
             let wavelength_score = 1.0 / (1.0 + (unit_wavelength - 725.0).abs() / 100.0);

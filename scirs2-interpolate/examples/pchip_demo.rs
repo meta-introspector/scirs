@@ -1,5 +1,5 @@
 use ndarray::{array, Array1};
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     cubic_interpolate, linear_interpolate, pchip_interpolate, PchipInterpolator,
 };
 

@@ -16,9 +16,9 @@ pub mod event_driven;
 pub mod energy_efficient;
 
 // Re-export key types
-pub use spike_based::{SpikingOptimizer, SpikingConfig, SpikeTrainOptimizer};
-pub use event_driven::{EventDrivenOptimizer, EventDrivenConfig, EventType};
-pub use energy_efficient::{EnergyEfficientOptimizer, EnergyOptimizationStrategy, EnergyBudget};
+pub use spike__based::{SpikingOptimizer, SpikingConfig, SpikeTrainOptimizer};
+pub use event__driven::{EventDrivenOptimizer, EventDrivenConfig, EventType};
+pub use energy__efficient::{EnergyEfficientOptimizer, EnergyOptimizationStrategy, EnergyBudget};
 
 /// Neuromorphic computing platform types
 #[derive(Debug, Clone, Copy)]
@@ -362,7 +362,7 @@ pub struct SpikeTrain<T: Float> {
 
 impl<T: Float + Send + Sync> SpikeTrain<T> {
     /// Create a new spike train from spike times
-    pub fn new(neuron_id: usize, spike_times: Vec<T>) -> Self {
+    pub fn new(_neuron_id: usize, spike_times: Vec<T>) -> Self {
         let spike_count = spike_times.len();
         let duration = if spike_count > 0 {
             spike_times[spike_count - 1] - spike_times[0]

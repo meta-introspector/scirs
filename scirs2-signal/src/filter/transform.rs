@@ -5,11 +5,14 @@
 //! transformations, and conversions between zeros-poles-gain and transfer function forms.
 
 use crate::error::{SignalError, SignalResult};
+use num__complex::Complex64;
 use num_traits::Zero;
-
+use std::f64::consts::PI;
 use super::common::FilterCoefficients;
-use num_complex::Complex64;
+use crate::lti::{tf, TransferFunction};
+use crate::lti::design::tf;
 
+#[allow(unused_imports)]
 /// Apply bilinear transform to convert analog filter to digital
 ///
 /// The bilinear transform is a method for converting analog filter designs to digital
@@ -30,7 +33,7 @@ use num_complex::Complex64;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::transform::bilinear_transform;
+/// use scirs2__signal::filter::transform::bilinear_transform;
 ///
 /// // Convert simple analog integrator to digital
 /// let analog_poles = vec![Complex64::new(0.0, 0.0)];
@@ -46,7 +49,7 @@ pub fn bilinear_transform(
 ) -> SignalResult<(Vec<Complex64>, Vec<Complex64>, f64)> {
     if sample_rate <= 0.0 {
         return Err(SignalError::ValueError(
-            "Sample rate must be positive".to_string(),
+            "Sample _rate must be positive".to_string(),
         ));
     }
 
@@ -93,7 +96,7 @@ pub fn bilinear_transform(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::transform::zpk_to_tf;
+/// use scirs2__signal::filter::transform::zpk_to_tf;
 ///
 /// // Convert simple first-order system
 /// let zeros = vec![];
@@ -207,7 +210,7 @@ pub fn zpk_to_tf(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::transform::tf_to_zpk;
+/// use scirs2__signal::filter::transform::tf_to_zpk;
 ///
 /// // Convert simple first-order transfer function
 /// let b = vec![1.0];
@@ -223,7 +226,7 @@ pub fn tf_to_zpk(b: &[f64], a: &[f64]) -> SignalResult<(Vec<Complex64>, Vec<Comp
     }
 
     // Find zeros (roots of numerator)
-    let zeros = if b.is_empty() || b.iter().all(|&x| x.abs() < 1e-15) {
+    let zeros = if b.is_empty() || b.iter().all(|&x: &f64| x.abs() < 1e-15) {
         Vec::new()
     } else {
         find_polynomial_roots(b)?
@@ -548,13 +551,13 @@ pub fn normalize_coefficients(b: &[f64], a: &[f64]) -> SignalResult<FilterCoeffi
 
 // Helper function for polynomial root finding
 #[allow(dead_code)]
-fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
-    if coeffs.is_empty() {
+fn find_polynomial_roots(_coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
+    if _coeffs.is_empty() {
         return Ok(Vec::new());
     }
 
     // Remove leading zeros
-    let mut trimmed_coeffs = coeffs.to_vec();
+    let mut trimmed_coeffs = _coeffs.to_vec();
     while trimmed_coeffs.len() > 1 && trimmed_coeffs[0].abs() < 1e-10 {
         trimmed_coeffs.remove(0);
     }
@@ -629,7 +632,7 @@ fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
     }
 
     for estimate in estimates {
-        let (p_val, _) = evaluate_polynomial_and_derivative(&trimmed_coeffs, estimate);
+        let (p_val_) = evaluate_polynomial_and_derivative(&trimmed_coeffs, estimate);
         if p_val.norm() < 1e-6 {
             roots.push(estimate);
         }
@@ -640,16 +643,16 @@ fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
 
 /// Evaluate polynomial and its derivative at a complex point
 #[allow(dead_code)]
-fn evaluate_polynomial_and_derivative(coeffs: &[f64], z: Complex64) -> (Complex64, Complex64) {
-    if coeffs.is_empty() {
+fn evaluate_polynomial_and_derivative(_coeffs: &[f64], z: Complex64) -> (Complex64, Complex64) {
+    if _coeffs.is_empty() {
         return (Complex64::zero(), Complex64::zero());
     }
 
-    let n = coeffs.len() - 1;
-    let mut p_val = Complex64::new(coeffs[0], 0.0);
+    let n = _coeffs.len() - 1;
+    let mut p_val = Complex64::new(_coeffs[0], 0.0);
     let mut p_prime = Complex64::zero();
 
-    for (i, &coeff) in coeffs.iter().enumerate().skip(1) {
+    for (i, &coeff) in _coeffs.iter().enumerate().skip(1) {
         let power = (n - i) as i32;
         p_prime = p_prime * z + p_val * Complex64::new(power as f64, 0.0);
         p_val = p_val * z + Complex64::new(coeff, 0.0);

@@ -9,9 +9,9 @@
 #![allow(dead_code)]
 
 use crate::error::{MetricsError, Result};
-use crate::optimization::quantum_acceleration::QuantumMetricsComputer;
+use crate::optimization::quantum__acceleration::QuantumMetricsComputer;
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
-use num_complex::Complex;
+use num__complex::Complex;
 use num_traits::Float;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -1051,19 +1051,19 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
     NeuromorphicMetricsComputer<F>
 {
     /// Create new neuromorphic metrics computer
-    pub fn new(config: NeuromorphicConfig) -> Result<Self> {
-        let topology = NetworkTopology::create_layered_topology(&config)?;
-        let spiking_network = SpikingNeuralNetwork::new(topology, &config)?;
-        let plasticity_manager = SynapticPlasticityManager::new(&config)?;
-        let learning_controller = AdaptiveLearningController::new(&config)?;
-        let pattern_recognizer = SpikePatternRecognizer::new(&config)?;
-        let homeostasis = HomeostaticController::new(&config)?;
-        let memory_system = NeuromorphicMemory::new(&config)?;
-        let performance_monitor = NeuromorphicPerformanceMonitor::new(&config)?;
-        let meta_learning = MetaLearningSystem::new(&config)?;
-        let realtime_adapter = RealtimeAdaptationEngine::new(&config)?;
-        let advanced_memory = AdvancedMemoryArchitecture::new(&config)?;
-        let consciousness_module = ConsciousnessSimulator::new(&config)?;
+    pub fn new(_config: NeuromorphicConfig) -> Result<Self> {
+        let topology = NetworkTopology::create_layered_topology(&_config)?;
+        let spiking_network = SpikingNeuralNetwork::new(topology, &_config)?;
+        let plasticity_manager = SynapticPlasticityManager::new(&_config)?;
+        let learning_controller = AdaptiveLearningController::new(&_config)?;
+        let pattern_recognizer = SpikePatternRecognizer::new(&_config)?;
+        let homeostasis = HomeostaticController::new(&_config)?;
+        let memory_system = NeuromorphicMemory::new(&_config)?;
+        let performance_monitor = NeuromorphicPerformanceMonitor::new(&_config)?;
+        let meta_learning = MetaLearningSystem::new(&_config)?;
+        let realtime_adapter = RealtimeAdaptationEngine::new(&_config)?;
+        let advanced_memory = AdvancedMemoryArchitecture::new(&_config)?;
+        let consciousness_module = ConsciousnessSimulator::new(&_config)?;
 
         Ok(Self {
             spiking_network,
@@ -1079,7 +1079,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
             realtime_adapter,
             advanced_memory,
             consciousness_module,
-            config,
+            _config,
         })
     }
 
@@ -1128,10 +1128,10 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
             // Compute current prediction
             let prediction = self.predict_sample(&sample)?;
 
-            // Evaluate accuracy
+            // Evaluate _accuracy
             let current_accuracy = self.evaluate_prediction_accuracy(&prediction)?;
 
-            // Adapt network if accuracy is below target
+            // Adapt network if _accuracy is below target
             if current_accuracy < target_accuracy {
                 self.adapt_network_structure(current_accuracy, target_accuracy)?;
                 self.adjust_learning_parameters(current_accuracy)?;
@@ -1213,17 +1213,17 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
         true_spikes: &[Vec<Instant>],
         pred_spikes: &[Vec<Instant>],
     ) -> Result<()> {
-        // Inject spikes into input layer
-        for (neuron_idx, spikes) in true_spikes.iter().enumerate() {
+        // Inject _spikes into input layer
+        for (neuron_idx_spikes) in true_spikes.iter().enumerate() {
             if neuron_idx < self.config.input_neurons / 2 {
-                self.spiking_network.inject_spikes(neuron_idx, spikes)?;
+                self.spiking_network.inject_spikes(neuron_idx_spikes)?;
             }
         }
 
-        for (neuron_idx, spikes) in pred_spikes.iter().enumerate() {
+        for (neuron_idx_spikes) in pred_spikes.iter().enumerate() {
             let input_neuron = self.config.input_neurons / 2 + neuron_idx;
             if input_neuron < self.config.input_neurons {
-                self.spiking_network.inject_spikes(input_neuron, spikes)?;
+                self.spiking_network.inject_spikes(input_neuron_spikes)?;
             }
         }
 
@@ -1280,8 +1280,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
             "correlation" => self.compute_spike_correlation(result),
             "mutual_information" => self.compute_mutual_information(result),
             "synchrony" => self.compute_network_synchrony(result),
-            "complexity" => self.compute_neural_complexity(result),
-            _ => Err(MetricsError::InvalidInput(format!(
+            "complexity" => self.compute_neural_complexity(result, _ => Err(MetricsError::InvalidInput(format!(
                 "Unknown neuromorphic metric: {}",
                 metric_type
             ))),
@@ -1351,7 +1350,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
             .spike_history
             .iter()
             .filter(|(_, spikes)| !spikes.is_empty())
-            .map(|(time, _)| time.as_secs_f64())
+            .map(|(time_)| time.as_secs_f64())
             .collect();
 
         if spike_times.len() < 2 {
@@ -1506,8 +1505,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
 
     fn store_memory_trace(
         &mut self,
-        sample: &ArrayView1<F>,
-        _prediction: &[F],
+        sample: &ArrayView1<F>, _prediction: &[F],
         accuracy: F,
     ) -> Result<()> {
         let memory_trace = MemoryTrace {
@@ -1549,12 +1547,12 @@ pub struct SimulationResult<F: Float> {
 }
 
 impl NetworkTopology {
-    fn create_layered_topology(config: &NeuromorphicConfig) -> Result<Self> {
-        let mut layer_sizes = vec![config.input_neurons];
-        for _ in 0..config.hidden_layers {
-            layer_sizes.push(config.neurons_per_layer);
+    fn create_layered_topology(_config: &NeuromorphicConfig) -> Result<Self> {
+        let mut layer_sizes = vec![_config.input_neurons];
+        for _ in 0.._config.hidden_layers {
+            layer_sizes.push(_config.neurons_per_layer);
         }
-        layer_sizes.push(config.output_neurons);
+        layer_sizes.push(_config.output_neurons);
 
         let connection_patterns = vec![ConnectionPattern::FullyConnected; layer_sizes.len() - 1];
         let recurrent_connections = Vec::new();
@@ -1568,7 +1566,7 @@ impl NetworkTopology {
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManager<F> {
-    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         let mut stdp_windows = HashMap::new();
 
         // Default STDP window
@@ -1589,7 +1587,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManage
             },
         );
 
-        let homeostatic_controllers = vec![HomeostaticController::new(config)?];
+        let homeostatic_controllers = vec![HomeostaticController::new(_config)?];
         let metaplasticity_state = MetaplasticityState {
             activity_history: VecDeque::new(),
             threshold_modulation: F::zero(),
@@ -1598,8 +1596,8 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManage
         };
 
         let learning_scheduler = LearningRateScheduler {
-            base_rate: F::from(config.learning_rate).unwrap(),
-            current_rate: F::from(config.learning_rate).unwrap(),
+            base_rate: F::from(_config.learning_rate).unwrap(),
+            current_rate: F::from(_config.learning_rate).unwrap(),
             policy: SchedulingPolicy::Constant,
             performance_metrics: VecDeque::new(),
         };
@@ -1640,8 +1638,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManage
     fn apply_stdp_to_synapse(
         &mut self,
         synapse: &mut Synapse<F>,
-        stdp_window: &STDPWindow<F>,
-        _time_step: Duration,
+        stdp_window: &STDPWindow<F>, _time_step: Duration,
     ) -> Result<()> {
         // Simplified STDP implementation
         let spike_timing_diff = synapse.plasticity_state.last_spike_diff;
@@ -1788,17 +1785,17 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> SynapticPlasticityManage
 }
 
 impl<F: Float> SpikingNeuralNetwork<F> {
-    pub fn new(topology: NetworkTopology, config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_topology: NetworkTopology, config: &NeuromorphicConfig) -> Result<Self> {
         // Create real neuromorphic network with proper initialization
         let mut layers = Vec::new();
 
         // Initialize layers with actual neurons
-        for &layer_size in &topology.layer_sizes {
+        for &layer_size in &_topology.layer_sizes {
             let mut neurons = Vec::new();
             for i in 0..layer_size {
                 let neuron_type = if layers.is_empty() {
                     NeuronType::Input
-                } else if layers.len() == topology.layer_sizes.len() - 1 {
+                } else if layers.len() == _topology.layer_sizes.len() - 1 {
                     NeuronType::Output
                 } else if i % 5 == 0 {
                     // 20% inhibitory neurons
@@ -1852,14 +1849,14 @@ impl<F: Float> SpikingNeuralNetwork<F> {
 
         // Initialize synaptic connections
         let mut synapses = SynapticConnections::new();
-        synapses.initialize_connections(&topology, &layers, config)?;
+        synapses.initialize_connections(&_topology, &layers, config)?;
 
         let current_time = Duration::from_secs(0);
         let spike_history = SpikeHistory::new();
         let network_state = NetworkState::new();
 
         Ok(Self {
-            topology,
+            _topology,
             layers,
             synapses,
             current_time,
@@ -2099,14 +2096,14 @@ impl<F: Float> SpikingNeuralNetwork<F> {
         let new_connections = (current_connections as f64 * factor) as usize;
 
         for _ in 0..new_connections {
-            let pre_neuron = rng.random_range(0..total_neurons);
-            let post_neuron = rng.random_range(0..total_neurons);
+            let pre_neuron = rng.gen_range(0..total_neurons);
+            let post_neuron = rng.gen_range(0..total_neurons);
 
             if pre_neuron != post_neuron
                 && !self
                     .synapses
                     .connections
-                    .contains_key(&(pre_neuron, post_neuron))
+                    .contains_key(&(pre_neuron..post_neuron))
             {
                 let weight = F::from(rng.random::<f64>() * 0.1 - 0.05).unwrap(); // Random weight [-0.05, 0.05]
                 let synapse_type = if weight > F::zero() {
@@ -2151,8 +2148,7 @@ impl<F: Float> SpikingNeuralNetwork<F> {
     // Helper methods for neuromorphic computation
     fn calculate_input_current(
         &self,
-        neuron: &SpikingNeuron<F>,
-        _layer_params: &LayerParameters<F>,
+        neuron: &SpikingNeuron<F>, _layer_params: &LayerParameters<F>,
     ) -> Result<F> {
         let mut total_current = F::zero();
 
@@ -2391,19 +2387,18 @@ impl<F: Float> SynapticConnections<F> {
                             let post_neuron = &layers[layer_idx + 1].neurons[post_local];
 
                             let weight = match (&pre_neuron.neuron_type, &post_neuron.neuron_type) {
-                                (NeuronType::Excitatory, _) => {
+                                (NeuronType:: Excitatory) => {
                                     F::from(rng.random::<f64>() * 0.1).unwrap()
                                 }
-                                (NeuronType::Inhibitory, _) => {
+                                (NeuronType:: Inhibitory) => {
                                     F::from(-rng.random::<f64>() * 0.1).unwrap()
                                 }
                                 _ => F::from((rng.random::<f64>() - 0.5) * 0.05).unwrap(),
                             };
 
                             let synapse_type = match pre_neuron.neuron_type {
-                                NeuronType::Excitatory => SynapseType::Excitatory,
-                                NeuronType::Inhibitory => SynapseType::Inhibitory,
-                                _ => SynapseType::Excitatory,
+                                NeuronType::Excitatory =>, SynapseType::Excitatory,
+                                NeuronType::Inhibitory => SynapseType::Inhibitory_ =>, SynapseType::Excitatory,
                             };
 
                             let synapse = Synapse {
@@ -2477,8 +2472,8 @@ impl<F: Float> SynapticConnections<F> {
                                     },
                                 };
 
-                                let delay = Duration::from_millis(rng.random_range(1..20));
-                                self.connections.insert((pre_global, post_global), synapse);
+                                let delay = Duration::from_millis(rng.gen_range(1..20));
+                                self.connections.insert((pre_global..post_global), synapse);
                                 self.delays.insert((pre_global, post_global), delay);
                             }
                         }
@@ -2520,8 +2515,8 @@ impl<F: Float> SynapticConnections<F> {
                                     },
                                 };
 
-                                let delay = Duration::from_millis(rng.random_range(1..20));
-                                self.connections.insert((pre_global, post_global), synapse);
+                                let delay = Duration::from_millis(rng.gen_range(1..20));
+                                self.connections.insert((pre_global..post_global), synapse);
                                 self.delays.insert((pre_global, post_global), delay);
                             }
                         }
@@ -2643,7 +2638,7 @@ impl<F: Float> NetworkState<F> {
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningController<F> {
-    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         let objectives = vec![
             LearningObjective {
                 name: "accuracy".to_string(),
@@ -2663,7 +2658,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
 
         let strategies = vec![
             AdaptationStrategy::GradientBased {
-                learning_rate: F::from(config.learning_rate).unwrap(),
+                learning_rate: F::from(_config.learning_rate).unwrap(),
             },
             AdaptationStrategy::Evolutionary {
                 population_size: 20,
@@ -2691,8 +2686,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
         for objective in &mut self.objectives {
             match objective.name.as_str() {
                 "accuracy" => objective.current = F::one() - error,
-                "efficiency" => objective.current = metric_value,
-                _ => {}
+                "efficiency" => objective.current = metric_value_ => {}
             }
         }
 
@@ -2829,19 +2823,19 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> HomeostaticController<F>
 }
 
 impl<F: Float + Send + Sync + std::iter::Sum + 'static> SpikePatternRecognizer<F> {
-    pub fn new(config: &NeuromorphicConfig) -> Result<Self> {
+    pub fn new(_config: &NeuromorphicConfig) -> Result<Self> {
         let pattern_templates = vec![
             SpikePattern {
                 name: "synchronous_burst".to_string(),
-                spatial_pattern: (0..config.output_neurons).collect(),
+                spatial_pattern: (0.._config.output_neurons).collect(),
                 temporal_pattern: vec![Duration::from_millis(0), Duration::from_millis(1)],
                 strength: F::from(0.8).unwrap(),
                 tolerance: F::from(0.1).unwrap(),
             },
             SpikePattern {
                 name: "sequential_activation".to_string(),
-                spatial_pattern: (0..config.output_neurons).collect(),
-                temporal_pattern: (0..config.output_neurons)
+                spatial_pattern: (0.._config.output_neurons).collect(),
+                temporal_pattern: (0.._config.output_neurons)
                     .map(|i| Duration::from_millis(i as u64 * 5))
                     .collect(),
                 strength: F::from(0.6).unwrap(),
@@ -3144,8 +3138,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> NeuromorphicPerformanceM
         Ok(Self {
             metrics,
             benchmarks,
-            efficiency,
-            config: monitoring_config,
+            efficiency_config: monitoring_config,
         })
     }
 
@@ -3688,12 +3681,12 @@ pub struct SensoryMemoryBuffer<F: Float> {
 
 impl<F: Float + Send + Sync + ndarray::ScalarOperand> SensoryMemoryBuffer<F> {
     /// Create new sensory memory buffer
-    pub fn new(capacity: usize, decay_rate: F) -> Self {
+    pub fn new(_capacity: usize, decay_rate: F) -> Self {
         Self {
-            capacity,
-            data: VecDeque::with_capacity(capacity),
+            _capacity,
+            data: VecDeque::with_capacity(_capacity),
             decay_rate,
-            timestamps: VecDeque::with_capacity(capacity),
+            timestamps: VecDeque::with_capacity(_capacity),
         }
     }
 
@@ -3753,11 +3746,11 @@ pub struct ShortTermMemoryWithChunking<F: Float> {
 
 impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
     /// Create new short-term memory with chunking
-    pub fn new(max_chunk_size: usize, max_chunks: usize, similarity_threshold: F) -> Self {
+    pub fn new(_max_chunk_size: usize, max_chunks: usize, similarity_threshold: F) -> Self {
         Self {
-            chunks: HashMap::new(),
+            _chunks: HashMap::new(),
             access_counts: HashMap::new(),
-            max_chunk_size,
+            _max_chunk_size,
             max_chunks,
             similarity_threshold,
         }
@@ -3782,7 +3775,7 @@ impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
                         .access_counts
                         .iter()
                         .min_by_key(|(_, &count)| count)
-                        .map(|(key, _)| key.clone())
+                        .map(|(key_)| key.clone())
                         .ok_or_else(|| {
                             MetricsError::ComputationError("No chunks available".to_string())
                         })?;
@@ -3832,7 +3825,7 @@ impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
             }
         }
 
-        Ok(best_match.map(|(key, _)| key))
+        Ok(best_match.map(|(key_)| key))
     }
 
     /// Calculate cosine similarity between two patterns
@@ -3863,7 +3856,7 @@ impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
     pub fn get_chunks_by_frequency(&self) -> Vec<String> {
         let mut chunks: Vec<_> = self.access_counts.iter().collect();
         chunks.sort_by(|a, b| b.1.cmp(a.1));
-        chunks.into_iter().map(|(key, _)| key.clone()).collect()
+        chunks.into_iter().map(|(key_)| key.clone()).collect()
     }
 }
 

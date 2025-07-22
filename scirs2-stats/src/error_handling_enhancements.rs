@@ -50,7 +50,7 @@ pub struct AdvancedErrorMessages;
 
 impl AdvancedErrorMessages {
     /// Memory exhaustion with intelligent suggestions
-    pub fn memory_exhaustion(required_mb: f64, available_mb: f64, data_size: usize) -> StatsError {
+    pub fn memory_exhaustion(_required_mb: f64, available_mb: f64, data_size: usize) -> StatsError {
         let suggestion = if data_size > 10_000_000 {
             "Consider using chunked processing or streaming algorithms for large datasets."
         } else if required_mb > available_mb * 0.8 {
@@ -61,7 +61,7 @@ impl AdvancedErrorMessages {
 
         StatsError::computation(format!(
             "Memory exhaustion: operation requires {:.1}MB but only {:.1}MB available. \
-             Data size: {} elements. Suggestion: {}",
+             Data _size: {} elements. Suggestion: {}",
             required_mb, available_mb, data_size, suggestion
         ))
     }
@@ -85,8 +85,7 @@ impl AdvancedErrorMessages {
                     "Check for memory pressure or system resource contention."
                 }
             }
-            x if x > 3.0 => "Consider optimizing data layout or using more efficient algorithms.",
-            _ => "Performance is within acceptable range but could be optimized.",
+            x if x > 3.0 => "Consider optimizing data layout or using more efficient algorithms."_ => "Performance is within acceptable range but could be optimized.",
         };
 
         StatsError::computation(format!(
@@ -116,11 +115,11 @@ impl AdvancedErrorMessages {
             x if x > 1e-12 => {
                 "Consider using numerically stable algorithms or regularization."
             }
-            _ => "Precision loss is minimal but monitor for accumulation in iterative algorithms."
+            _ => "Precision _loss is minimal but monitor for accumulation in iterative algorithms."
         };
 
         StatsError::computation(format!(
-            "Precision loss detected in {}: estimated error {:.2e}. Data: {}. Suggestion: {}",
+            "Precision _loss detected in {}: estimated error {:.2e}. Data: {}. Suggestion: {}",
             operation, precision_loss, data_characteristics, suggestion
         ))
     }
@@ -147,7 +146,7 @@ impl AdvancedErrorMessages {
                 min_data_size,
             } => {
                 format!(
-                    "Parallel processing recommended for {}: {} Minimum data size: {}",
+                    "Parallel processing recommended for {}: {} Minimum data _size: {}",
                     operation, reason, min_data_size
                 )
             }
@@ -180,7 +179,7 @@ impl AdvancedErrorMessages {
         };
 
         StatsError::computation(format!(
-            "Optimization opportunity: {} Data size: {} elements, Current time: {:.3}s",
+            "Optimization opportunity: {} Data _size: {} elements, Current time: {:.3}s",
             message,
             data_size,
             current_performance.as_secs_f64()
@@ -225,8 +224,7 @@ impl AdvancedErrorRecovery {
     /// Attempt automatic error recovery with performance optimization
     pub fn attempt_recovery(
         error: &StatsError,
-        context: &AdvancedErrorContext,
-        _operation: &str,
+        context: &AdvancedErrorContext_operation: &str,
     ) -> Option<RecoveryStrategy> {
         match error {
             StatsError::ComputationError(msg) if msg.contains("memory") => {
@@ -259,7 +257,7 @@ impl AdvancedErrorRecovery {
     }
 
     /// Generate context-aware recovery suggestions
-    pub fn generate_suggestions(error: &StatsError, context: &AdvancedErrorContext) -> Vec<String> {
+    pub fn generate_suggestions(_error: &StatsError, context: &AdvancedErrorContext) -> Vec<String> {
         let mut suggestions = Vec::new();
 
         // Data size-based suggestions
@@ -282,7 +280,7 @@ impl AdvancedErrorRecovery {
         }
 
         // General suggestions
-        match error {
+        match _error {
             StatsError::ComputationError(_) => {
                 suggestions.push("Check input data for edge cases or numerical issues".to_string());
             }
@@ -334,9 +332,9 @@ pub struct AdvancedContextBuilder {
 }
 
 impl AdvancedContextBuilder {
-    pub fn new(data_size: usize) -> Self {
+    pub fn new(_data_size: usize) -> Self {
         Self {
-            data_size,
+            _data_size,
             operation_start: Instant::now(),
             memory_usage_mb: 0.0,
             simd_enabled: false,

@@ -171,7 +171,7 @@ impl RBFKernel {
 /// # Examples
 ///
 /// ```
-/// use scirs2_spatial::interpolate::{RBFInterpolator, RBFKernel};
+/// use scirs2__spatial::interpolate::{RBFInterpolator, RBFKernel};
 /// use ndarray::array;
 ///
 /// // Create sample points and values
@@ -278,8 +278,7 @@ impl RBFInterpolator {
             Self::solve_rbf_system(points, values, kernel, epsilon, polynomial)?;
 
         Ok(Self {
-            points: points.to_owned(),
-            _values: values.to_owned(),
+            points: points.to_owned(), _values: values.to_owned(),
             dim,
             n_points,
             kernel,
@@ -300,8 +299,8 @@ impl RBFInterpolator {
     /// # Returns
     ///
     /// A reasonable default value for epsilon
-    fn default_epsilon(kernel: RBFKernel, points: &ArrayView2<'_, f64>) -> f64 {
-        match kernel {
+    fn default_epsilon(_kernel: RBFKernel, points: &ArrayView2<'_, f64>) -> f64 {
+        match _kernel {
             RBFKernel::Gaussian => {
                 // For Gaussian, a typical choice is 1 / (2 * average distance^2)
                 let avg_dist = Self::average_distance(points);
@@ -334,14 +333,14 @@ impl RBFInterpolator {
     /// # Returns
     ///
     /// The average distance between points
-    fn average_distance(points: &ArrayView2<'_, f64>) -> f64 {
-        let n_points = points.nrows();
+    fn average_distance(_points: &ArrayView2<'_, f64>) -> f64 {
+        let n_points = _points.nrows();
 
         if n_points <= 1 {
             return 0.0;
         }
 
-        // Sample a subset of pairs for efficiency if there are too many points
+        // Sample a subset of pairs for efficiency if there are too many _points
         let max_pairs = 1000;
         let mut total_dist = 0.0;
         let mut n_pairs = 0;
@@ -351,8 +350,8 @@ impl RBFInterpolator {
             // Use all pairs for small datasets
             for i in 0..n_points {
                 for j in (i + 1)..n_points {
-                    let pi = points.row(i);
-                    let pj = points.row(j);
+                    let pi = _points.row(i);
+                    let pj = _points.row(j);
                     total_dist += Self::euclidean_distance(&pi, &pj);
                     n_pairs += 1;
                 }
@@ -370,8 +369,8 @@ impl RBFInterpolator {
                     let pair = if i < j { (i, j) } else { (j, i) };
                     if !seen_pairs.contains(&pair) {
                         seen_pairs.insert(pair);
-                        let pi = points.row(i);
-                        let pj = points.row(j);
+                        let pi = _points.row(i);
+                        let pj = _points.row(j);
                         total_dist += Self::euclidean_distance(&pi, &pj);
                         n_pairs += 1;
                     }
@@ -511,23 +510,23 @@ impl RBFInterpolator {
     /// # Errors
     ///
     /// * If the point dimensions don't match the interpolator
-    pub fn interpolate(&self, point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn interpolate(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
         // Check dimension
-        if point.len() != self.dim {
+        if _point.len() != self.dim {
             return Err(SpatialError::DimensionError(format!(
-                "Query point has dimension {}, expected {}",
-                point.len(),
+                "Query _point has dimension {}, expected {}",
+                _point.len(),
                 self.dim
             )));
         }
 
-        // Evaluate the RBF interpolant at the query point
+        // Evaluate the RBF interpolant at the query _point
         let mut result = 0.0;
 
         // Sum over all RBF terms
         for i in 0..self.n_points {
             let pi = self.points.row(i);
-            let dist = Self::euclidean_distance(&pi, point);
+            let dist = Self::euclidean_distance(&pi, _point);
             result += self.weights[i] * self.kernel.apply(dist, self.epsilon);
         }
 
@@ -538,7 +537,7 @@ impl RBFInterpolator {
 
             // Linear terms
             for j in 0..self.dim {
-                result += poly_coefs[j + 1] * point[j];
+                result += poly_coefs[j + 1] * _point[j];
             }
         }
 
@@ -558,22 +557,22 @@ impl RBFInterpolator {
     /// # Errors
     ///
     /// * If the points dimensions don't match the interpolator
-    pub fn interpolate_many(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
+    pub fn interpolate_many(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
         // Check dimensions
-        if points.ncols() != self.dim {
+        if _points.ncols() != self.dim {
             return Err(SpatialError::DimensionError(format!(
-                "Query points have dimension {}, expected {}",
-                points.ncols(),
+                "Query _points have dimension {}, expected {}",
+                _points.ncols(),
                 self.dim
             )));
         }
 
-        let n_queries = points.nrows();
+        let n_queries = _points.nrows();
         let mut results = Array1::zeros(n_queries);
 
         // Interpolate each point
         for i in 0..n_queries {
-            let point = points.row(i);
+            let point = _points.row(i);
             results[i] = self.interpolate(&point)?;
         }
 
@@ -605,10 +604,10 @@ impl RBFInterpolator {
     /// # Returns
     ///
     /// Euclidean distance between the points
-    fn euclidean_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
+    fn euclidean_distance(_p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
         let mut sum_sq = 0.0;
-        for i in 0..p1.len().min(p2.len()) {
-            let diff = p1[i] - p2[i];
+        for i in 0.._p1.len().min(p2.len()) {
+            let diff = _p1[i] - p2[i];
             sum_sq += diff * diff;
         }
         sum_sq.sqrt()

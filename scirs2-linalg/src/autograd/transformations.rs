@@ -478,7 +478,7 @@ pub fn shear_matrix<F: Float + Debug + Send + Sync + 'static>(
     // Ensure shear_factor is a scalar
     if shear_factor.data.ndim() != 1 || shear_factor.data.len() != 1 {
         return Err(scirs2_autograd::error::AutogradError::ShapeMismatch(
-            "Shear factor must be a scalar tensor".to_string(),
+            "Shear _factor must be a scalar tensor".to_string(),
         ));
     }
 
@@ -497,14 +497,14 @@ pub fn shear_matrix<F: Float + Debug + Send + Sync + 'static>(
     let requires_grad = shear_factor.requires_grad;
 
     if requires_grad {
-        // Backward function for the shear factor
+        // Backward function for the shear _factor
         let backward = if requires_grad {
             Some(
                 Box::new(move |grad: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
                     // Convert gradient to nxn shape
                     let grad_2d = grad.clone().into_shape((n, n)).unwrap();
 
-                    // Gradient of shear matrix with respect to shear factor
+                    // Gradient of shear matrix with respect to shear _factor
                     // is just the (dim1, dim2) element of the gradien
                     let grad_shear = grad_2d[[dim1, dim2]];
 

@@ -362,7 +362,7 @@ impl SafeArithmetic {
     }
 
     /// Safe power operation for integers
-    pub fn safe_pow<T>(base: T, exp: u32) -> CoreResult<T>
+    pub fn safe_pow<T>(_base: T, exp: u32) -> CoreResult<T>
     where
         T: num_traits::PrimInt + fmt::Display,
     {
@@ -372,11 +372,11 @@ impl SafeArithmetic {
             return Ok(T::one());
         }
         if exp == 1 {
-            return Ok(base);
+            return Ok(_base);
         }
 
-        // For simplicity, just return the base for now - this would need proper implementation
-        Ok(base)
+        // For simplicity, just return the _base for now - this would need proper implementation
+        Ok(_base)
     }
 }
 
@@ -386,21 +386,21 @@ pub struct SafeArrayOps;
 impl SafeArrayOps {
     /// Safe array indexing with bounds checking
     pub fn safe_index<T>(array: &[T], index: usize) -> CoreResult<&T> {
-        array.get(index).ok_or_else(|| {
+        _array.get(index).ok_or_else(|| {
             CoreError::IndexError(ErrorContext::new(format!(
-                "Array index {} out of bounds for array of length {}",
+                "Array index {} out of bounds for _array of length {}",
                 index,
-                array.len()
+                _array.len()
             )))
         })
     }
 
     /// Safe mutable array indexing with bounds checking
     pub fn safe_index_mut<T>(array: &mut [T], index: usize) -> CoreResult<&mut T> {
-        let len = array.len();
-        array.get_mut(index).ok_or_else(|| {
+        let len = _array.len();
+        _array.get_mut(index).ok_or_else(|| {
             CoreError::IndexError(ErrorContext::new(format!(
-                "Array index {index} out of bounds for array of length {len}"
+                "Array index {index} out of bounds for _array of length {len}"
             )))
         })
     }
@@ -413,28 +413,28 @@ impl SafeArrayOps {
             ))));
         }
 
-        if end > array.len() {
+        if end > _array.len() {
             return Err(CoreError::IndexError(ErrorContext::new(format!(
-                "Slice end index {} out of bounds for array of length {}",
+                "Slice end index {} out of bounds for _array of length {}",
                 end,
-                array.len()
+                _array.len()
             ))));
         }
 
-        Ok(&array[start..end])
+        Ok(&_array[start..end])
     }
 
     /// Safe array copying with size validation
-    pub fn safe_copy<T: Copy>(src: &[T], dst: &mut [T]) -> CoreResult<()> {
-        if src.len() != dst.len() {
+    pub fn safe_copy<T: Copy>(_src: &[T], dst: &mut [T]) -> CoreResult<()> {
+        if _src.len() != dst.len() {
             return Err(CoreError::DimensionError(ErrorContext::new(format!(
                 "Source and destination arrays have different lengths: {} vs {}",
-                src.len(),
+                _src.len(),
                 dst.len()
             ))));
         }
 
-        dst.copy_from_slice(src);
+        dst.copy_from_slice(_src);
         Ok(())
     }
 }
@@ -449,7 +449,7 @@ pub struct ResourceGuard<T> {
 
 impl<T> ResourceGuard<T> {
     /// Create a new resource guard
-    pub fn new<F>(resource: T, cleanup: F) -> Self
+    pub fn new<F>(_resource: T, cleanup: F) -> Self
     where
         F: FnOnce(T) + Send + 'static,
     {
@@ -658,7 +658,7 @@ mod tests {
         let cleanup_called_clone = cleanup_called.clone();
 
         {
-            let _guard = ResourceGuard::new(42, move |_| {
+            let guard = ResourceGuard::new(42, move |_| {
                 *cleanup_called_clone.lock().unwrap() = true;
             });
         } // Guard is dropped here

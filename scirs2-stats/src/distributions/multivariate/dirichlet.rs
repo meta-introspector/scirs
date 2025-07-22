@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, ArrayBase, Data, Ix1};
 use rand::rng;
-use rand_distr::{Distribution, Gamma as RandGamma};
+use rand__distr::{Distribution, Gamma as RandGamma};
 use std::fmt::Debug;
 
 /// Implementation of the natural logarithm of the gamma function
@@ -99,20 +99,20 @@ impl Dirichlet {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
+    /// use scirs2__stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// // Create a 3D Dirichlet distribution with symmetric parameters (equivalent to a uniform distribution over the simplex)
     /// let alpha = array![1.0, 1.0, 1.0];
     /// let dirichlet = Dirichlet::new(alpha).unwrap();
     /// ```
-    pub fn new<D>(alpha: ArrayBase<D, Ix1>) -> StatsResult<Self>
+    pub fn new<D>(_alpha: ArrayBase<D, Ix1>) -> StatsResult<Self>
     where
         D: Data<Elem = f64>,
     {
-        let alpha_owned = alpha.to_owned();
+        let alpha_owned = _alpha.to_owned();
         let dim = alpha_owned.len();
 
-        // Check that all alpha values are positive
+        // Check that all _alpha values are positive
         for &a in alpha_owned.iter() {
             if a <= 0.0 {
                 return Err(StatsError::DomainError(
@@ -136,7 +136,7 @@ impl Dirichlet {
         log_norm_const -= lgamma(alpha_sum);
 
         Ok(Dirichlet {
-            alpha: alpha_owned,
+            _alpha: alpha_owned,
             dim,
             log_norm_const,
         })
@@ -156,7 +156,7 @@ impl Dirichlet {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
+    /// use scirs2__stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 1.0, 1.0];
     /// let dirichlet = Dirichlet::new(alpha).unwrap();
@@ -209,7 +209,7 @@ impl Dirichlet {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
+    /// use scirs2__stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 1.0, 1.0];
     /// let dirichlet = Dirichlet::new(alpha).unwrap();
@@ -263,7 +263,7 @@ impl Dirichlet {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
+    /// use scirs2__stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 2.0, 3.0];
     /// let dirichlet = Dirichlet::new(alpha).unwrap();
@@ -313,7 +313,7 @@ impl Dirichlet {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
+    /// use scirs2__stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 2.0, 3.0];
     /// let dirichlet = Dirichlet::new(alpha).unwrap();
@@ -344,7 +344,7 @@ impl Dirichlet {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distributions::multivariate;
+/// use scirs2__stats::distributions::multivariate;
 ///
 /// let alpha = array![1.0, 1.0, 1.0];
 /// let dirichlet = multivariate::dirichlet(&alpha).unwrap();
@@ -352,11 +352,11 @@ impl Dirichlet {
 /// let pdf_at_point = dirichlet.pdf(&point);
 /// ```
 #[allow(dead_code)]
-pub fn dirichlet<D>(alpha: &ArrayBase<D, Ix1>) -> StatsResult<Dirichlet>
+pub fn dirichlet<D>(_alpha: &ArrayBase<D, Ix1>) -> StatsResult<Dirichlet>
 where
     D: Data<Elem = f64>,
 {
-    Dirichlet::new(alpha.to_owned())
+    Dirichlet::new(_alpha.to_owned())
 }
 
 /// Implementation of SampleableDistribution for Dirichlet

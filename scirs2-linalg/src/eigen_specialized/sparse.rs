@@ -196,7 +196,7 @@ where
     }
 
     // Estimate the largest eigenvalue for shift-and-invert (unused in current implementation)
-    let (_largest_eigenvalue, _) = match power_iteration_with_convergence(a, max_iter, tol) {
+    let (_largest_eigenvalue_) = match power_iteration_with_convergence(a, max_iter, tol) {
         Ok((lambda, v)) => (lambda, v),
         Err(e) => return Err(e),
     };
@@ -266,7 +266,7 @@ where
     let mut rng = rand::rng();
     let mut b = Array1::zeros(n);
     for i in 0..n {
-        b[i] = F::from(rng.random_range(-1.0, 1.0)).unwrap_or(F::zero());
+        b[i] = F::from(rng.random_range(-1.0..1.0)).unwrap_or(F::zero());
     }
 
     // Normalize the vector

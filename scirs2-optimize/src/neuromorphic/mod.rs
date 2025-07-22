@@ -115,11 +115,11 @@ pub struct NeuronState {
 
 impl NeuronState {
     /// Create a new neuron state
-    pub fn new(num_connections: usize) -> Self {
+    pub fn new(_num_connections: usize) -> Self {
         Self {
             potential: 0.0,
             last_spike_time: None,
-            weights: Array1::zeros(num_connections),
+            weights: Array1::zeros(_num_connections),
             input_current: 0.0,
             adaptation: 0.0,
         }
@@ -175,31 +175,30 @@ pub struct NeuromorphicNetwork {
 
 impl NeuromorphicNetwork {
     /// Create a new neuromorphic network
-    pub fn new(config: NeuromorphicConfig, num_parameters: usize) -> Self {
-        let mut neurons = Vec::with_capacity(config.num_neurons);
-        for _ in 0..config.num_neurons {
-            neurons.push(NeuronState::new(config.num_neurons));
+    pub fn new(_config: NeuromorphicConfig, num_parameters: usize) -> Self {
+        let mut neurons = Vec::with_capacity(_config.num_neurons);
+        for _ in 0.._config.num_neurons {
+            neurons.push(NeuronState::new(_config.num_neurons));
         }
 
         // Initialize random connectivity
-        let mut connectivity = Array2::zeros((config.num_neurons, config.num_neurons));
-        for i in 0..config.num_neurons {
-            for j in 0..config.num_neurons {
+        let mut connectivity = Array2::zeros((_config.num_neurons, _config.num_neurons));
+        for i in 0.._config.num_neurons {
+            for j in 0.._config.num_neurons {
                 if i != j {
                     // Random connection strength
-                    connectivity[[i, j]] = rand::rng().random_range(-0.05..0.05);
+                    connectivity[[i, j]] = rand::rng().gen_range(-0.05..0.05);
                 }
             }
         }
 
         Self {
-            config,
-            neurons,
+            _config..neurons,
             connectivity,
             current_time: 0.0,
             spike_queue: Vec::new(),
             objective_history: Vec::new(),
-            parameters: Array1::zeros(num_parameters),
+            _parameters: Array1::zeros(num_parameters),
         }
     }
 
@@ -277,13 +276,13 @@ impl NeuromorphicNetwork {
             // Add noise
             if self.config.noise_level > 0.0 {
                 let noise =
-                    rand::rng().random_range(-self.config.noise_level..self.config.noise_level);
+                    rand::rng().gen_range(-self.config.noise_level..self.config.noise_level);
                 self.neurons[i].potential += noise;
             }
 
             // Check for spike
             if self.neurons[i].should_spike(self.config.spike_threshold)
-                && !self.neurons[i].is_refractory(self.current_time, self.config.refractory_period)
+                && !self.neurons[i].is_refractory(self.current_time..self.config.refractory_period)
             {
                 self.neurons[i].fire_spike(self.current_time);
 
@@ -302,7 +301,7 @@ impl NeuromorphicNetwork {
         // Update time
         self.current_time += self.config.dt;
 
-        // Store objective value
+        // Store objective _value
         self.objective_history.push(objective_value);
 
         Ok(())
@@ -418,8 +417,8 @@ pub struct BasicNeuromorphicOptimizer {
 
 impl BasicNeuromorphicOptimizer {
     /// Create a new basic neuromorphic optimizer
-    pub fn new(config: NeuromorphicConfig, num_parameters: usize) -> Self {
-        let network = NeuromorphicNetwork::new(config, num_parameters);
+    pub fn new(_config: NeuromorphicConfig, num_parameters: usize) -> Self {
+        let network = NeuromorphicNetwork::new(_config, num_parameters);
 
         Self {
             network,

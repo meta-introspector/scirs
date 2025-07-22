@@ -88,7 +88,7 @@ impl<F: Float> Op<F> for SimdUnaryOp {
         let input = ctx.input(0);
 
         let result = match self.operation {
-            SimdUnaryOperation::ReLU => input.mapv(|x| if x > F::zero() { x } else { F::zero() }),
+            SimdUnaryOperation::ReLU => input.mapv(|x| if x >, F::zero() { x } else { F::zero() }),
             SimdUnaryOperation::Sigmoid => input.mapv(|x| F::one() / (F::one() + (-x).exp())),
         };
 
@@ -150,7 +150,7 @@ impl<F: Float> Op<F> for ParallelReductionOp {
         Ok(())
     }
 
-    fn grad(&self, _ctx: &mut GradientContext<F>) {
+    fn grad(&self_ctx: &mut GradientContext<F>) {
         // Simplified gradient implementation
         // In practice, would implement proper gradient broadcasting
     }
@@ -160,8 +160,8 @@ impl<F: Float> Op<F> for ParallelReductionOp {
 
 /// Enable or disable SIMD optimizations
 #[allow(dead_code)]
-pub fn set_simd_enabled(enabled: bool) {
-    SIMD_ENABLED.store(enabled, Ordering::Relaxed);
+pub fn set_simd_enabled(_enabled: bool) {
+    SIMD_ENABLED.store(_enabled, Ordering::Relaxed);
 }
 
 /// Check if SIMD optimizations are enabled
@@ -172,8 +172,8 @@ pub fn is_simd_enabled() -> bool {
 
 /// Enable or disable parallel processing
 #[allow(dead_code)]
-pub fn set_parallel_enabled(enabled: bool) {
-    PARALLEL_ENABLED.store(enabled, Ordering::Relaxed);
+pub fn set_parallel_enabled(_enabled: bool) {
+    PARALLEL_ENABLED.store(_enabled, Ordering::Relaxed);
 }
 
 /// Check if parallel processing is enabled
@@ -184,10 +184,10 @@ pub fn is_parallel_enabled() -> bool {
 
 /// SIMD-optimized element-wise addition
 #[allow(dead_code)]
-pub fn simd_add<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = left.graph();
+pub fn simd_add<'g, F: Float>(_left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _left.graph();
     Tensor::builder(g)
-        .append_input(left, false)
+        .append_input(_left, false)
         .append_input(right, false)
         .build(SimdBinaryOp {
             operation: SimdBinaryOperation::Add,
@@ -196,10 +196,10 @@ pub fn simd_add<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Te
 
 /// SIMD-optimized element-wise multiplication
 #[allow(dead_code)]
-pub fn simd_mul<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = left.graph();
+pub fn simd_mul<'g, F: Float>(_left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _left.graph();
     Tensor::builder(g)
-        .append_input(left, false)
+        .append_input(_left, false)
         .append_input(right, false)
         .build(SimdBinaryOp {
             operation: SimdBinaryOperation::Mul,
@@ -208,10 +208,10 @@ pub fn simd_mul<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Te
 
 /// SIMD-optimized ReLU activation
 #[allow(dead_code)]
-pub fn simd_relu<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = tensor.graph();
+pub fn simd_relu<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _tensor.graph();
     Tensor::builder(g)
-        .append_input(tensor, false)
+        .append_input(_tensor, false)
         .build(SimdUnaryOp {
             operation: SimdUnaryOperation::ReLU,
         })
@@ -219,10 +219,10 @@ pub fn simd_relu<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 
 /// SIMD-optimized sigmoid activation
 #[allow(dead_code)]
-pub fn simd_sigmoid<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = tensor.graph();
+pub fn simd_sigmoid<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _tensor.graph();
     Tensor::builder(g)
-        .append_input(tensor, false)
+        .append_input(_tensor, false)
         .build(SimdUnaryOp {
             operation: SimdUnaryOperation::Sigmoid,
         })
@@ -232,8 +232,7 @@ pub fn simd_sigmoid<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 #[allow(dead_code)]
 pub fn cache_friendly_matmul<'g, F: Float>(
     left: &Tensor<'g, F>,
-    right: &Tensor<'g, F>,
-    _block_size: Option<usize>,
+    right: &Tensor<'g, F>, _block_size: Option<usize>,
 ) -> Tensor<'g, F> {
     crate::tensor_ops::matmul(left, right)
 }
@@ -242,8 +241,7 @@ pub fn cache_friendly_matmul<'g, F: Float>(
 #[allow(dead_code)]
 pub fn parallel_sum<'g, F: Float>(
     tensor: &Tensor<'g, F>,
-    axes: &[usize],
-    _keep_dims: bool,
+    axes: &[usize], _keep_dims: bool,
 ) -> Tensor<'g, F> {
     let axis = axes.first().copied().unwrap_or(0);
     let g = tensor.graph();

@@ -7,8 +7,8 @@
 //! - Converting between different representations
 
 use ndarray::{Array1, Array2};
-use scirs2_io::error::Result;
-use scirs2_io::matrix_market::{
+use scirs2__io::error::Result;
+use scirs2__io::matrix_market::{
     coo_to_sparse, read_dense_matrix, read_sparse_matrix, sparse_to_coo, write_dense_matrix,
     write_sparse_matrix, MMDataType, MMDenseMatrix, MMFormat, MMHeader, MMSparseMatrix, MMSymmetry,
     SparseEntry,

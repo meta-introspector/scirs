@@ -35,7 +35,7 @@ fn verify_norm_gradient_finite_diff<F: ag::Float>(
     h: F,
     tolerance: F,
 ) {
-    ag::run::<F, _, _>(|ctx| {
+    ag::run::<F>(|ctx| {
         let a = T::convert_to_tensor(matrix.clone(), ctx);
         
         // Compute analytical gradient
@@ -48,7 +48,7 @@ fn verify_norm_gradient_finite_diff<F: ag::Float>(
         // Compute numerical gradient using finite differences
         let mut numerical_grad = Array2::<F>::zeros(matrix.raw_dim());
         
-        for ((i, j), _) in matrix.indexed_iter() {
+        for ((i, j)_) in matrix.indexed_iter() {
             // Forward difference: f(x + h) - f(x - h) / (2h)
             let mut matrix_plus = matrix.clone();
             let mut matrix_minus = matrix.clone();
@@ -117,7 +117,7 @@ mod template_tests {
         // Test with nearly zero matrix
         let near_zero = array![[1e-10, 0.0], [0.0, 1e-10]];
         
-        ag::run::<f64, _, _>(|ctx| {
+        ag::run::<f64_>(|ctx| {
             let a = T::convert_to_tensor(near_zero, ctx);
             
             // All norms should handle near-zero matrices gracefully

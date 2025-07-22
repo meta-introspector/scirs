@@ -27,7 +27,7 @@ use ndarray::Array2;
 /// # Example
 ///
 /// ```rust
-/// use scirs2_vision::feature::laplacian_edges;
+/// use scirs2__vision::feature::laplacian_edges;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -101,11 +101,11 @@ pub fn laplacian_edges(
 ///
 /// * Result containing an edge image
 #[allow(dead_code)]
-pub fn laplacian_of_gaussian(img: &DynamicImage, sigma: f32, threshold: f32) -> Result<GrayImage> {
+pub fn laplacian_of_gaussian(_img: &DynamicImage, sigma: f32, threshold: f32) -> Result<GrayImage> {
     use crate::preprocessing::gaussian_blur;
 
     // First apply Gaussian blur
-    let blurred = gaussian_blur(img, sigma)?;
+    let blurred = gaussian_blur(_img, sigma)?;
 
     // Then apply Laplacian
     laplacian_edges(&blurred, threshold, true)
@@ -124,8 +124,8 @@ pub fn laplacian_of_gaussian(img: &DynamicImage, sigma: f32, threshold: f32) -> 
 ///
 /// * Result containing an edge image with zero-crossings marked
 #[allow(dead_code)]
-pub fn laplacian_zero_crossing(img: &DynamicImage, use_diagonal: bool) -> Result<GrayImage> {
-    let array = image_to_array(img)?;
+pub fn laplacian_zero_crossing(_img: &DynamicImage, use_diagonal: bool) -> Result<GrayImage> {
+    let array = image_to_array(_img)?;
     let (height, width) = array.dim();
 
     // Create Laplacian array
@@ -170,7 +170,7 @@ pub fn laplacian_zero_crossing(img: &DynamicImage, use_diagonal: bool) -> Result
                 || (center * laplacian[[y, x + 1]] < 0.0);
 
             if use_diagonal {
-                // Also check diagonal directions
+                // Also check _diagonal directions
                 let has_diagonal_crossing = (center * laplacian[[y - 1, x - 1]] < 0.0)
                     || (center * laplacian[[y - 1, x + 1]] < 0.0)
                     || (center * laplacian[[y + 1, x - 1]] < 0.0)

@@ -137,9 +137,9 @@ pub struct V73MatFile {
 
 impl V73MatFile {
     /// Create a new v7.3 MAT file handler
-    pub fn new(features: V73Features) -> Self {
+    pub fn new(_features: V73Features) -> Self {
         Self {
-            features,
+            _features,
             #[cfg(feature = "hdf5")]
             compression: None,
         }
@@ -282,7 +282,7 @@ impl V73MatFile {
         name: &str,
         cat_array: &CategoricalArray,
     ) -> Result<()> {
-        // Create a group for the categorical array
+        // Create a group for the categorical _array
         file.create_group(name)?;
         file.set_attribute(
             name,
@@ -391,7 +391,7 @@ impl V73MatFile {
         name: &str,
         func_handle: &FunctionHandle,
     ) -> Result<()> {
-        // Create a group for the function handle
+        // Create a group for the function _handle
         file.create_group(name)?;
         file.set_attribute(
             name,
@@ -470,7 +470,7 @@ impl V73MatFile {
         let real_part = array.mapv(|x| x.re);
         let imag_part = array.mapv(|x| x.im);
 
-        // Create a group for the complex array
+        // Create a group for the _complex array
         file.create_group(name)?;
         file.set_attribute(
             name,
@@ -506,7 +506,7 @@ impl V73MatFile {
         let real_part = array.mapv(|x| x.re);
         let imag_part = array.mapv(|x| x.im);
 
-        // Create a group for the complex array
+        // Create a group for the _complex array
         file.create_group(name)?;
         file.set_attribute(
             name,
@@ -555,8 +555,7 @@ impl V73MatFile {
                         "categorical" => self.read_categorical(file, name),
                         "datetime" => self.read_datetime(file, name),
                         "string" => self.read_string_array(file, name),
-                        "function_handle" => self.read_function_handle(file, name),
-                        _ => {
+                        "function_handle" => self.read_function_handle(file, name, _ => {
                             // Check if it's an object
                             if let Ok(AttributeValue::Bool(true)) =
                                 file.get_attribute(name, "MATLAB_object")
@@ -580,42 +579,42 @@ impl V73MatFile {
 
     // Read implementations would follow similar patterns...
     #[cfg(feature = "hdf5")]
-    fn read_table(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
+    fn read_table(&self_file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "Table reading not implemented yet".to_string(),
         ))
     }
 
     #[cfg(feature = "hdf5")]
-    fn read_categorical(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
+    fn read_categorical(&self_file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "Categorical reading not implemented yet".to_string(),
         ))
     }
 
     #[cfg(feature = "hdf5")]
-    fn read_datetime(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
+    fn read_datetime(&self_file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "DateTime reading not implemented yet".to_string(),
         ))
     }
 
     #[cfg(feature = "hdf5")]
-    fn read_string_array(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
+    fn read_string_array(&self_file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "String array reading not implemented yet".to_string(),
         ))
     }
 
     #[cfg(feature = "hdf5")]
-    fn read_function_handle(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
+    fn read_function_handle(&self_file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "Function handle reading not implemented yet".to_string(),
         ))
     }
 
     #[cfg(feature = "hdf5")]
-    fn read_object(&self, _file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
+    fn read_object(&self_file: &HDF5File, _name: &str) -> Result<ExtendedMatType> {
         Err(IoError::Other(
             "Object reading not implemented yet".to_string(),
         ))

@@ -5,7 +5,7 @@
 
 use ndarray::{s, Array2, Array3};
 use scirs2_core::memory_efficient::{AccessMode, ChunkingStrategy};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     chunked_v2::{convolve_chunked_v2, uniform_filter_chunked_v2, ChunkConfigBuilder},
     filters::{gaussian_filter, BorderMode},
     mmap_io::{
@@ -104,7 +104,7 @@ fn example_2_memory_mapped_processing() -> Result<(), Box<dyn std::error::Error>
     // Load the image as memory-mapped
     println!("Loading image as memory-mapped array...");
     let loaded_mmap =
-        load_image_mmap::<f64, ndarray::Ix2, _>(&image_path, &shape, 0, AccessMode::Read)?;
+        load_image_mmap::<f64, ndarray::Ix2_>(&image_path, &shape, 0, AccessMode::Read)?;
     println!("  ✓ Loaded with shape: {:?}", loaded_mmap.shape());
 
     // Process the memory-mapped image in chunks
@@ -287,7 +287,7 @@ fn example_5_filter_pipeline() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Helper function to display memory usage
 #[allow(dead_code)]
-fn print_memory_stats(label: &str, size_bytes: usize) {
+fn print_memory_stats(_label: &str, size_bytes: usize) {
     let size_mb = size_bytes as f64 / (1024.0 * 1024.0);
-    println!("{}: {:.2} MB", label, size_mb);
+    println!("{}: {:.2} MB", _label, size_mb);
 }

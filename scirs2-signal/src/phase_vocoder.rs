@@ -6,14 +6,16 @@
 //! analyze and modify signals while preserving their spectral characteristics.
 
 use crate::error::{SignalError, SignalResult};
+use crate::lombscargle__enhanced::WindowType;
 use crate::stft::{ShortTimeFft, StftConfig};
-// Arrays are not used directly in this file
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
-use rustfft;
 use std::f64::consts::PI;
 use std::fmt::Debug;
+use rustfft;
 
+#[allow(unused_imports)]
+// Arrays are not used directly in this file
 /// Phase vocoder configuration options
 #[derive(Debug, Clone)]
 pub struct PhaseVocoderConfig {
@@ -41,7 +43,7 @@ impl Default for PhaseVocoderConfig {
             time_stretch: 1.0,
             pitch_shift: None,
             preserve_formants: false,
-            window: "hann".to_string(),
+            window: WindowType::Hann.to_string(),
             phase_locking: true,
         }
     }
@@ -66,7 +68,7 @@ impl Default for PhaseVocoderConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
+/// use scirs2__signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a simple test signal (a sine wave)
@@ -87,13 +89,13 @@ impl Default for PhaseVocoderConfig {
 /// assert!(result.len() > 0);
 /// ```
 #[allow(dead_code)]
-pub fn phase_vocoder<T>(signal: &[T], config: &PhaseVocoderConfig) -> SignalResult<Vec<f64>>
+pub fn phase_vocoder<T>(_signal: &[T], config: &PhaseVocoderConfig) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
     // Validate input
-    if signal.is_empty() {
-        return Err(SignalError::ValueError("Input signal is empty".to_string()));
+    if _signal.is_empty() {
+        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
     }
 
     if config.time_stretch <= 0.0 {
@@ -103,7 +105,7 @@ where
     }
 
     // Convert input to f64
-    let signal_f64: Vec<f64> = signal
+    let _signal_f64: Vec<f64> = _signal
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -113,7 +115,7 @@ where
         .collect::<SignalResult<Vec<_>>>()?;
 
     // Apply pitch shift directly if no time stretch is needed
-    if (config.time_stretch - 1.0).abs() < 1e-6 && config.pitch_shift.is_some() {
+    if ((config.time_stretch - 1.0) as f64).abs() < 1e-6 && config.pitch_shift.is_some() {
         return pitch_shift(&signal_f64, config);
     }
 
@@ -219,7 +221,7 @@ where
         }
     }
 
-    // Synthesize the output signal
+    // Synthesize the output _signal
     let mut overlap_add = vec![0.0; (output_frames.len() + 1) * synthesis_hop + config.window_size];
 
     for (i, frame) in output_frames.iter().enumerate() {
@@ -244,7 +246,7 @@ where
         }
     }
 
-    // Extract the actual output signal (remove padding)
+    // Extract the actual output _signal (remove padding)
     let output_length =
         ((num_frames as f64) * (synthesis_hop as f64) / (analysis_hop as f64)) as usize;
     let output_signal: Vec<f64> = overlap_add
@@ -277,19 +279,19 @@ where
 ///
 /// * Pitch-shifted signal
 #[allow(dead_code)]
-fn pitch_shift<T>(signal: &[T], config: &PhaseVocoderConfig) -> SignalResult<Vec<f64>>
+fn pitch_shift<T>(_signal: &[T], config: &PhaseVocoderConfig) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
     // Validate input
-    if signal.is_empty() {
-        return Err(SignalError::ValueError("Input signal is empty".to_string()));
+    if _signal.is_empty() {
+        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
     }
 
     let pitch_shift_semitones = match config.pitch_shift {
         Some(val) => val,
         None => {
-            return Ok(signal
+            return Ok(_signal
                 .iter()
                 .map(|&x| NumCast::from(x).unwrap_or(0.0))
                 .collect())
@@ -300,7 +302,7 @@ where
     let pitch_factor = 2.0_f64.powf(pitch_shift_semitones / 12.0);
 
     // Convert input to f64
-    let signal_f64: Vec<f64> = signal
+    let _signal_f64: Vec<f64> = _signal
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -341,9 +343,9 @@ where
 ///
 /// * Resampled signal
 #[allow(dead_code)]
-fn resample(signal: &[f64], factor: f64) -> SignalResult<Vec<f64>> {
-    if signal.is_empty() {
-        return Err(SignalError::ValueError("Input signal is empty".to_string()));
+fn resample(_signal: &[f64], factor: f64) -> SignalResult<Vec<f64>> {
+    if _signal.is_empty() {
+        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
     }
 
     if factor <= 0.0 {
@@ -352,12 +354,12 @@ fn resample(signal: &[f64], factor: f64) -> SignalResult<Vec<f64>> {
         ));
     }
 
-    let signal_len = signal.len();
+    let signal_len = _signal.len();
     let new_n = (signal_len as f64 * factor).round() as usize;
 
     if new_n == 0 {
         return Err(SignalError::ValueError(
-            "Resampling factor too small for given signal".to_string(),
+            "Resampling factor too small for given _signal".to_string(),
         ));
     }
 
@@ -370,9 +372,9 @@ fn resample(signal: &[f64], factor: f64) -> SignalResult<Vec<f64>> {
         let frac = pos - idx as f64;
 
         if idx + 1 < signal_len {
-            *out = signal[idx] * (1.0 - frac) + signal[idx + 1] * frac;
+            *out = _signal[idx] * (1.0 - frac) + _signal[idx + 1] * frac;
         } else if idx < signal_len {
-            *out = signal[idx];
+            *out = _signal[idx];
         }
     });
 
@@ -451,7 +453,7 @@ fn preserve_formants(
                 let magnitude = frame_vec[k].norm();
                 let phase = frame_vec[k].arg();
 
-                // Calculate formant correction factor
+                // Calculate formant correction _factor
                 let correction_factor = if formant_envelope[warped_bin] > 1e-10 {
                     formant_envelope[k] / formant_envelope[warped_bin]
                 } else {
@@ -561,24 +563,24 @@ fn compute_spectral_envelope(
 ///
 /// * Frame with phase locking applied
 #[allow(dead_code)]
-fn apply_phase_locking(frame: Vec<Complex64>) -> Vec<Complex64> {
-    let n = frame.len();
+fn apply_phase_locking(_frame: Vec<Complex64>) -> Vec<Complex64> {
+    let n = _frame.len();
     let mut output = vec![Complex64::new(0.0, 0.0); n];
 
     // Apply phase locking using the principle of phase coherence
     // with neighboring frequency bins to preserve transients
     for i in 1..n - 1 {
-        let center_mag = frame[i].norm();
-        let center_phase = frame[i].arg();
+        let center_mag = _frame[i].norm();
+        let center_phase = _frame[i].arg();
 
-        let prev_mag = frame[i - 1].norm();
-        let prev_phase = frame[i - 1].arg();
+        let prev_mag = _frame[i - 1].norm();
+        let prev_phase = _frame[i - 1].arg();
 
-        let next_mag = frame[i + 1].norm();
-        let next_phase = frame[i + 1].arg();
+        let next_mag = _frame[i + 1].norm();
+        let next_phase = _frame[i + 1].arg();
 
         // Find the bin with highest magnitude
-        let (reference_phase, _) = if (center_mag >= prev_mag) && (center_mag >= next_mag) {
+        let (reference_phase_) = if (center_mag >= prev_mag) && (center_mag >= next_mag) {
             (center_phase, center_mag)
         } else if prev_mag >= next_mag {
             (prev_phase, prev_mag)
@@ -592,8 +594,8 @@ fn apply_phase_locking(frame: Vec<Complex64>) -> Vec<Complex64> {
 
     // Handle edge bins
     if n > 0 {
-        output[0] = frame[0];
-        output[n - 1] = frame[n - 1];
+        output[0] = _frame[0];
+        output[n - 1] = _frame[n - 1];
     }
 
     output
@@ -610,7 +612,7 @@ fn apply_phase_locking(frame: Vec<Complex64>) -> Vec<Complex64> {
 ///
 /// * Window function values
 #[allow(dead_code)]
-fn create_window(window_type: &str, length: usize) -> SignalResult<Vec<f64>> {
+fn create_window(_window_type: &str, length: usize) -> SignalResult<Vec<f64>> {
     if length == 0 {
         return Err(SignalError::ValueError(
             "Window length must be positive".to_string(),
@@ -643,7 +645,7 @@ fn create_window(window_type: &str, length: usize) -> SignalResult<Vec<f64>> {
         }
         _ => {
             return Err(SignalError::ValueError(format!(
-                "Unknown window type: {}",
+                "Unknown window _type: {}",
                 window_type
             )));
         }
@@ -662,16 +664,16 @@ fn create_window(window_type: &str, length: usize) -> SignalResult<Vec<f64>> {
 ///
 /// * Real-valued result of the inverse FFT
 #[allow(dead_code)]
-fn compute_ifft(signal: &[Complex64]) -> SignalResult<Vec<f64>> {
+fn compute_ifft(_signal: &[Complex64]) -> SignalResult<Vec<f64>> {
     // Instead of using the library FFT implementation directly, which might have issues with
     // numerical stability, use a more robust approach with rustfft
 
     // Create FFT planner
     let mut planner = rustfft::FftPlanner::new();
-    let ifft = planner.plan_fft_inverse(signal.len());
+    let ifft = planner.plan_fft_inverse(_signal.len());
 
     // Convert to rustfft Complex type
-    let mut buffer: Vec<rustfft::num_complex::Complex<f64>> = signal
+    let mut buffer: Vec<rustfft::num_complex::Complex<f64>> = _signal
         .iter()
         .map(|&c| rustfft::num_complex::Complex::<f64>::new(c.re, c.im))
         .collect();
@@ -681,7 +683,7 @@ fn compute_ifft(signal: &[Complex64]) -> SignalResult<Vec<f64>> {
 
     // Extract real part and scale
     // The scaling factor is 1/n for normalization of IFFT
-    let scale = 1.0 / signal.len() as f64;
+    let scale = 1.0 / _signal.len() as f64;
     let real_result: Vec<f64> = buffer.iter().map(|c| c.re * scale).collect();
 
     Ok(real_result)
@@ -689,10 +691,11 @@ fn compute_ifft(signal: &[Complex64]) -> SignalResult<Vec<f64>> {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_phase_vocoder_time_stretch() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a much smaller test signal to prevent numerical issues
         let sample_rate = 1000; // Reduced sample rate
         let duration = 0.1; // Shorter duration

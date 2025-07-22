@@ -19,8 +19,9 @@
 
 use crate::error::{Result, VisionError};
 use crate::feature::KeyPoint;
-use crate::gpu_ops::GpuVisionContext;
+use crate::gpu__ops::GpuVisionContext;
 use ndarray::{s, Array1, Array2, Array3, ArrayView2};
+use statrs::statistics::Statistics;
 
 /// Neural network model for feature detection and description
 pub struct NeuralFeatureNetwork {
@@ -99,15 +100,15 @@ pub struct SuperPointNet {
 
 impl SuperPointNet {
     /// Create a new SuperPoint network with default weights
-    pub fn new(config: Option<NeuralFeatureConfig>) -> Result<Self> {
-        let config = config.unwrap_or_default();
+    pub fn new(_config: Option<NeuralFeatureConfig>) -> Result<Self> {
+        let _config = _config.unwrap_or_default();
 
         // Initialize with synthetic weights for demonstration
         // In a real implementation, these would be loaded from a trained model
-        let detection_weights = Self::create_detection_weights(&config)?;
-        let descriptor_weights = Self::create_descriptor_weights(&config)?;
+        let detection_weights = Self::create_detection_weights(&_config)?;
+        let descriptor_weights = Self::create_descriptor_weights(&_config)?;
 
-        let gpu_context = if config.use_gpu {
+        let gpu_context = if _config.use_gpu {
             GpuVisionContext::new().ok()
         } else {
             None
@@ -117,7 +118,7 @@ impl SuperPointNet {
             detection_weights,
             descriptor_weights,
             gpu_context,
-            config,
+            _config,
         };
 
         Ok(Self { network })
@@ -227,7 +228,7 @@ impl SuperPointNet {
     /// CPU forward pass for feature detection
     fn cpu_forward_detection(&self, image: &ArrayView2<f32>) -> Result<Array2<f32>> {
         // Simplified CPU implementation using basic operations (avoid SIMD for tests)
-        let (_gx, _gy, magnitude) = self.compute_simple_gradients(image)?;
+        let (_gx_gy, magnitude) = self.compute_simple_gradients(image)?;
 
         // Use gradient magnitude as simple feature detector
         let (height, width) = magnitude.dim();
@@ -540,10 +541,10 @@ impl SuperPointNet {
         // For demonstration, create synthetic weights
 
         let conv_weights = vec![
-            Array3::from_shape_fn((64, 1, 3), |(_, _, _)| rand::random::<f32>() * 0.1),
-            Array3::from_shape_fn((64, 64, 3), |(_, _, _)| rand::random::<f32>() * 0.1),
-            Array3::from_shape_fn((128, 64, 3), |(_, _, _)| rand::random::<f32>() * 0.1),
-            Array3::from_shape_fn((128, 128, 3), |(_, _, _)| rand::random::<f32>() * 0.1),
+            Array3::from_shape_fn((64, 1, 3), |(___)| rand::random::<f32>() * 0.1),
+            Array3::from_shape_fn((64, 64, 3), |(___)| rand::random::<f32>() * 0.1),
+            Array3::from_shape_fn((128, 64, 3), |(___)| rand::random::<f32>() * 0.1),
+            Array3::from_shape_fn((128, 128, 3), |(___)| rand::random::<f32>() * 0.1),
         ];
 
         let conv_biases = vec![
@@ -568,7 +569,7 @@ impl SuperPointNet {
         ];
 
         // Detection head
-        let fc_weights = vec![Array2::from_shape_fn((65, 128), |(_, _)| {
+        let fc_weights = vec![Array2::from_shape_fn((65, 128), |(__)| {
             rand::random::<f32>() * 0.1
         })];
 
@@ -587,14 +588,14 @@ impl SuperPointNet {
     }
 
     /// Create synthetic descriptor weights for demonstration
-    fn create_descriptor_weights(config: &NeuralFeatureConfig) -> Result<ModelWeights> {
+    fn create_descriptor_weights(_config: &NeuralFeatureConfig) -> Result<ModelWeights> {
         // Descriptor head weights
         let fc_weights = vec![Array2::from_shape_fn(
-            (config.descriptor_dim, 128),
-            |(_, _)| rand::random::<f32>() * 0.1,
+            (_config.descriptor_dim, 128),
+            |(__)| rand::random::<f32>() * 0.1,
         )];
 
-        let fc_biases = vec![Array1::zeros(config.descriptor_dim)];
+        let fc_biases = vec![Array1::zeros(_config.descriptor_dim)];
 
         Ok(ModelWeights {
             conv_weights: Vec::new(),
@@ -737,9 +738,9 @@ pub struct AttentionFeatureMatcher {
 
 impl AttentionFeatureMatcher {
     /// Create a new attention-based feature matcher
-    pub fn new(attention_dim: usize, num_heads: usize) -> Self {
+    pub fn new(_attention_dim: usize, num_heads: usize) -> Self {
         Self {
-            attention_dim,
+            _attention_dim,
             num_heads,
             use_gpu: true,
         }
@@ -805,7 +806,7 @@ impl AttentionFeatureMatcher {
 
         let mut enhanced = Array2::zeros((n, desc_dim + pos_dim));
 
-        // Concatenate descriptors and positional encoding
+        // Concatenate descriptors and positional _encoding
         for i in 0..n {
             enhanced
                 .slice_mut(s![i, ..desc_dim])
@@ -933,9 +934,9 @@ impl Default for SIFTConfig {
 
 impl LearnedSIFT {
     /// Create a new Learned SIFT detector
-    pub fn new(config: Option<SIFTConfig>) -> Self {
+    pub fn new(_config: Option<SIFTConfig>) -> Self {
         Self {
-            sift_config: config.unwrap_or_default(),
+            sift_config: _config.unwrap_or_default(),
             enhancement_network: None,
         }
     }
@@ -1142,8 +1143,7 @@ impl LearnedSIFT {
     /// Refine keypoint locations with subpixel accuracy
     fn refine_keypoints(
         &self,
-        keypoints: &[KeyPoint],
-        _dog_space: &[Vec<Array2<f32>>],
+        keypoints: &[KeyPoint], _dog_space: &[Vec<Array2<f32>>],
     ) -> Result<Vec<KeyPoint>> {
         // Simplified subpixel refinement
         // In practice, this would use Taylor expansion and Hessian matrix
@@ -1153,8 +1153,7 @@ impl LearnedSIFT {
     /// Filter out edge responses and low contrast points
     fn filter_keypoints(
         &self,
-        keypoints: &[KeyPoint],
-        _dog_space: &[Vec<Array2<f32>>],
+        keypoints: &[KeyPoint], _dog_space: &[Vec<Array2<f32>>],
     ) -> Result<Vec<KeyPoint>> {
         let mut filtered = Vec::new();
 
@@ -1214,11 +1213,10 @@ impl LearnedSIFT {
     /// Enhance descriptors using neural network
     fn enhance_descriptors_neural(
         &self,
-        descriptors: &mut Array2<f32>,
-        _network: &NeuralFeatureNetwork,
+        descriptors: &mut Array2<f32>, _network: &NeuralFeatureNetwork,
     ) -> Result<()> {
         // Placeholder for neural enhancement
-        // In practice, this would apply a small neural network to enhance SIFT descriptors
+        // In practice, this would apply a small neural _network to enhance SIFT descriptors
 
         // Apply learned normalization
         for mut row in descriptors.rows_mut() {
@@ -1368,8 +1366,8 @@ mod tests {
             },
         ];
 
-        let desc1 = Array2::from_shape_fn((2, 64), |(_, _)| rand::random::<f32>());
-        let desc2 = Array2::from_shape_fn((2, 64), |(_, _)| rand::random::<f32>());
+        let desc1 = Array2::from_shape_fn((2, 64), |(__)| rand::random::<f32>());
+        let desc2 = Array2::from_shape_fn((2, 64), |(__)| rand::random::<f32>());
 
         let result =
             matcher.match_with_attention(&keypoints1, &desc1.view(), &keypoints2, &desc2.view());

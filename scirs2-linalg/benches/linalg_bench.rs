@@ -7,12 +7,12 @@ use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{s, Array1, Array2};
-use scirs2_linalg::blas::{dot, nrm2};
-use scirs2_linalg::mixed_precision::{
+use scirs2__linalg::blas::{dot, nrm2};
+use scirs2__linalg::mixed_precision::{
     mixed_precision_dot, mixed_precision_matmul, mixed_precision_solve,
 };
-use scirs2_linalg::prelude::*;
-use scirs2_linalg::structured::{solve_circulant, solve_toeplitz};
+use scirs2__linalg::prelude::*;
+use scirs2__linalg::structured::{solve_circulant, solve_toeplitz};
 use std::time::Duration;
 
 /// Create a well-conditioned test matrix
@@ -260,7 +260,7 @@ fn bench_complex_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("complex_operations");
 
     for &size in &[50, 100, 200] {
-        use num_complex::Complex64;
+        use num__complex::Complex64;
         let matrix = Array2::from_shape_fn((size, size), |(i, j)| {
             Complex64::new(((i + j) as f64 * 0.1).sin(), ((i - j) as f64 * 0.1).cos())
         });

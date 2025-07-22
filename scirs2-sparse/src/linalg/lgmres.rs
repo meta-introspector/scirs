@@ -126,7 +126,7 @@ where
 
     for _ in 0..options.max_iter {
         // Perform inner GMRES iterations
-        let (y, _new_r_norm, v_list) = inner_gmres(
+        let (y_new_r_norm, v_list) = inner_gmres(
             a,
             &r,
             options.inner_m,
@@ -193,8 +193,7 @@ where
 fn inner_gmres<F>(
     a: &dyn LinearOperator<F>,
     r0: &[F],
-    m: usize,
-    _augmented_vectors: &[Vec<F>],
+    m: usize_augmented_vectors: &[Vec<F>],
     preconditioner: Option<&dyn LinearOperator<F>>,
 ) -> SparseResult<(Vec<F>, F, Vec<Vec<F>>)>
 where
@@ -219,7 +218,7 @@ where
     let mut beta = vec![F::zero(); m + 2];
     beta[0] = r0_norm;
 
-    // Standard Arnoldi process (augmented vectors not implemented yet)
+    // Standard Arnoldi process (augmented _vectors not implemented yet)
     let mut k = 0; // Track actual iterations completed
     for j in 0..m {
         // Compute A*v[j] with preconditioning
@@ -318,7 +317,7 @@ where
         }
     }
 
-    // Collect Krylov vectors for augmentation
+    // Collect Krylov _vectors for augmentation
     let v_list: Vec<Vec<F>> = if k > 1 {
         v.into_iter().skip(1).take(k - 1).collect()
     } else {

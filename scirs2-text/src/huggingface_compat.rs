@@ -5,8 +5,8 @@
 //! integration with the broader ML ecosystem.
 
 use crate::error::{Result, TextError};
-use crate::model_registry::{ModelMetadata, ModelRegistry};
-use crate::pos_tagging::PosTagger;
+use crate::model__registry::{ModelMetadata, ModelRegistry};
+use crate::pos__tagging::PosTagger;
 use crate::tokenize::Tokenizer;
 use crate::transformer::{TransformerConfig, TransformerModel};
 use crate::vectorize::{TfidfVectorizer, Vectorizer};
@@ -22,6 +22,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "serde-support")]
 use serde_json;
+use std::path::PathBuf;
 
 /// Hugging Face model configuration format
 #[derive(Debug, Clone)]
@@ -66,7 +67,7 @@ impl Default for HfConfig {
 }
 
 impl HfConfig {
-    /// Convert to SciRS2 transformer config
+    /// Convert to SciRS2 transformer _config
     pub fn to_transformer_config(&self) -> Result<TransformerConfig> {
         Ok(TransformerConfig {
             d_model: self.hidden_size.unwrap_or(768),
@@ -81,16 +82,16 @@ impl HfConfig {
     }
 
     /// Create from transformer config
-    pub fn from_transformer_config(config: &TransformerConfig) -> Self {
+    pub fn from_transformer_config(_config: &TransformerConfig) -> Self {
         Self {
             architectures: vec!["TransformerModel".to_string()],
             model_type: "transformer".to_string(),
-            num_attention_heads: Some(config.n_heads),
-            hidden_size: Some(config.d_model),
-            intermediate_size: Some(config.d_ff),
-            num_hidden_layers: Some(config.n_encoder_layers),
-            vocab_size: Some(config.vocab_size),
-            max_position_embeddings: Some(config.max_seq_len),
+            num_attention_heads: Some(_config.n_heads),
+            hidden_size: Some(_config.d_model),
+            intermediate_size: Some(_config.d_ff),
+            num_hidden_layers: Some(_config.n_encoder_layers),
+            vocab_size: Some(_config.vocab_size),
+            max_position_embeddings: Some(_config.max_seq_len),
             #[cfg(feature = "serde-support")]
             extra_config: HashMap::new(),
         }
@@ -158,7 +159,7 @@ pub struct HfTokenizer {
 
 impl HfTokenizer {
     /// Create new HF-compatible tokenizer
-    pub fn new(tokenizer: Box<dyn Tokenizer>, config: HfTokenizerConfig) -> Self {
+    pub fn new(_tokenizer: Box<dyn Tokenizer>, config: HfTokenizerConfig) -> Self {
         // Create basic vocabulary (in practice, this would be loaded from files)
         let mut vocab = HashMap::new();
         let mut reverse_vocab = HashMap::new();
@@ -170,7 +171,7 @@ impl HfTokenizer {
         }
 
         Self {
-            tokenizer,
+            _tokenizer,
             config,
             vocab,
             reverse_vocab,
@@ -179,20 +180,20 @@ impl HfTokenizer {
 
     /// Tokenize text with HF-compatible output
     pub fn encode(&self, text: &str, add_special_tokens: bool) -> Result<HfEncodedInput> {
-        let mut tokens = self.tokenizer.tokenize(text)?;
+        let mut _tokens = self.tokenizer.tokenize(text)?;
 
-        // Add special tokens if requested
+        // Add special _tokens if requested
         if add_special_tokens {
             if let Some(bos_token) = &self.config.bos_token {
-                tokens.insert(0, bos_token.clone());
+                _tokens.insert(0, bos_token.clone());
             }
             if let Some(eos_token) = &self.config.eos_token {
-                tokens.push(eos_token.clone());
+                _tokens.push(eos_token.clone());
             }
         }
 
-        // Convert tokens to IDs
-        let input_ids: Vec<usize> = tokens
+        // Convert _tokens to IDs
+        let input_ids: Vec<usize> = _tokens
             .iter()
             .map(|token| {
                 self.vocab
@@ -202,7 +203,7 @@ impl HfTokenizer {
             })
             .collect();
 
-        // Create attention mask (1 for real tokens, 0 for padding)
+        // Create attention mask (1 for real _tokens, 0 for padding)
         let attention_mask = vec![1; input_ids.len()];
 
         // Token type IDs (all 0 for single sentence)
@@ -212,7 +213,7 @@ impl HfTokenizer {
             input_ids,
             attention_mask,
             token_type_ids: Some(token_type_ids),
-            tokens,
+            _tokens,
         })
     }
 
@@ -230,7 +231,7 @@ impl HfTokenizer {
 
     /// Decode token IDs back to text
     pub fn decode(&self, token_ids: &[usize], skip_special_tokens: bool) -> Result<String> {
-        let tokens: Vec<String> = token_ids
+        let _tokens: Vec<String> = token_ids
             .iter()
             .filter_map(|&id| self.reverse_vocab.get(&id))
             .filter(|token| {
@@ -243,7 +244,7 @@ impl HfTokenizer {
             .cloned()
             .collect();
 
-        Ok(tokens.join(" "))
+        Ok(_tokens.join(" "))
     }
 
     /// Get vocabulary size
@@ -277,9 +278,9 @@ pub struct HfModelAdapter {
 
 impl HfModelAdapter {
     /// Create new HF model adapter
-    pub fn new(config: HfConfig) -> Self {
+    pub fn new(_config: HfConfig) -> Self {
         Self {
-            config,
+            _config,
             registry: None,
             metadata: None,
         }
@@ -319,8 +320,8 @@ impl HfModelAdapter {
                 let file = fs::File::open(&config_file)
                     .map_err(|e| TextError::IoError(format!("Failed to open config file: {e}")))?;
                 let reader = BufReader::new(file);
-                let hf_config: HfConfig = serde_json::from_reader(reader).map_err(|e| {
-                    TextError::InvalidInput(format!("Failed to deserialize config: {e}"))
+                let hf_config: HfConfig = serde, _json::from_reader(reader).map_err(|e| {
+                    TextError::InvalidInput(format!("Failed to deserialize _config: {e}"))
                 })?;
                 hf_config.to_transformer_config()?
             }
@@ -345,8 +346,7 @@ impl HfModelAdapter {
 
     /// Save model to HF format directory
     pub fn save_to_hf_directory<P: AsRef<Path>>(
-        &self,
-        _model: &TransformerModel,
+        &self_model: &TransformerModel,
         output_path: P,
     ) -> Result<()> {
         let output_path = output_path.as_ref();
@@ -372,10 +372,10 @@ impl HfModelAdapter {
                 .map_err(|e| TextError::IoError(format!("Failed to write config: {e}")))?;
         }
 
-        // Save model weights in binary format
+        // Save _model weights in binary format
         let model_data = self.serialize_model_weights(_model)?;
         fs::write(output_path.join("pytorch_model.bin"), model_data)
-            .map_err(|e| TextError::IoError(format!("Failed to write model: {e}")))?;
+            .map_err(|e| TextError::IoError(format!("Failed to write _model: {e}")))?;
 
         // Save tokenizer configuration
         let tokenizer_config = HfTokenizerConfig::default();
@@ -421,8 +421,7 @@ impl HfModelAdapter {
             "translation" => Ok(HfPipeline::Translation(TranslationPipeline::new())),
             "token-classification" => Ok(HfPipeline::TokenClassification(
                 TokenClassificationPipeline::new(),
-            )),
-            _ => Err(TextError::InvalidInput(format!("Unsupported task: {task}"))),
+            ), _ => Err(TextError::InvalidInput(format!("Unsupported task: {task}"))),
         }
     }
 
@@ -1194,7 +1193,7 @@ impl HfHub {
 
         if !model_path.exists() {
             std::fs::create_dir_all(&model_path)
-                .map_err(|e| TextError::IoError(format!("Failed to create cache dir: {e}")))?;
+                .map_err(|e| TextError::IoError(format!("Failed to create cache _dir: {e}")))?;
 
             // Download model files
             self.download_model_files(model_id, &model_path)?;
@@ -1460,13 +1459,13 @@ impl HfHub {
             },
         ];
 
-        // Filter by task if specified
-        if let Some(task) = filter_task {
+        // Filter by _task if specified
+        if let Some(_task) = filter_task {
             models.retain(|model| {
                 model
                     .pipeline_tag
                     .as_ref()
-                    .is_some_and(|tag| tag.contains(task))
+                    .is_some_and(|tag| tag.contains(_task))
             });
         }
 
@@ -1484,7 +1483,7 @@ impl HfHub {
         let models = self.list_models(None, None)?;
         models
             .into_iter()
-            .find(|model| model.id == model_id)
+            .find(|model| model._id == model_id)
             .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {model_id}")))
     }
 
@@ -1510,7 +1509,7 @@ impl HfHub {
     }
 
     /// Get trending models
-    pub fn trending_models(&self, _period: &str, limit: Option<usize>) -> Result<Vec<HfModelInfo>> {
+    pub fn trending_models(&self_period: &str, limit: Option<usize>) -> Result<Vec<HfModelInfo>> {
         let mut models = self.list_models(None, None)?;
 
         // Sort by downloads (as a proxy for trending)
@@ -1557,30 +1556,30 @@ pub struct FormatConverter;
 
 impl FormatConverter {
     /// Convert HF config to SciRS2 transformer config
-    pub fn hf_to_scirs2_config(hf_config: &HfConfig) -> Result<TransformerConfig> {
-        hf_config.to_transformer_config()
+    pub fn hf_to_scirs2_config(_hf_config: &HfConfig) -> Result<TransformerConfig> {
+        _hf_config.to_transformer_config()
     }
 
     /// Convert SciRS2 transformer config to HF config
-    pub fn scirs2_to_hf_config(scirs2_config: &TransformerConfig) -> HfConfig {
-        HfConfig::from_transformer_config(scirs2_config)
+    pub fn scirs2_to_hf_config(_scirs2_config: &TransformerConfig) -> HfConfig {
+        HfConfig::from_transformer_config(_scirs2_config)
     }
 
     /// Convert HF tokenizer output to SciRS2 format
-    pub fn hf_to_scirs2_tokens(hf_encoded: &HfEncodedInput) -> Vec<String> {
-        hf_encoded.tokens.clone()
+    pub fn hf_to_scirs2_tokens(_hf_encoded: &HfEncodedInput) -> Vec<String> {
+        _hf_encoded.tokens.clone()
     }
 
     /// Convert SciRS2 tokens to HF format
-    pub fn scirs2_to_hf_tokens(tokens: &[String]) -> HfEncodedInput {
-        let input_ids: Vec<usize> = (0..tokens.len()).collect();
-        let attention_mask = vec![1; tokens.len()];
+    pub fn scirs2_to_hf_tokens(_tokens: &[String]) -> HfEncodedInput {
+        let input_ids: Vec<usize> = (0.._tokens.len()).collect();
+        let attention_mask = vec![1; _tokens.len()];
 
         HfEncodedInput {
             input_ids,
             attention_mask,
-            token_type_ids: Some(vec![0; tokens.len()]),
-            tokens: tokens.to_vec(),
+            token_type_ids: Some(vec![0; _tokens.len()]),
+            _tokens: _tokens.to_vec(),
         }
     }
 }
@@ -1731,14 +1730,14 @@ impl TextGenerationPipeline {
                 candidates = vec!["and", "the", "a"];
             }
 
-            if let Some(&next_word) = candidates.get(rng.random_range(0..candidates.len())) {
+            if let Some(&next_word) = candidates.get(rng.gen_range(0..candidates.len())) {
                 generated.push(' ');
                 generated.push_str(next_word);
             }
 
             // Add punctuation occasionally
-            if rng.random_range(0..10) == 0 {
-                let punct = [".", ",", ";"][rng.random_range(0..3)];
+            if rng.gen_range(0..10) == 0 {
+                let punct = ["."..",", ";"][rng.gen_range(0..3)];
                 generated.push_str(punct);
                 if punct == "." {
                     break; // End generation on period
@@ -1767,7 +1766,7 @@ impl TextGenerationPipeline {
 /// Text generation result
 #[derive(Debug, Clone)]
 pub struct TextGenerationResult {
-    /// Generated text
+    /// Generated _text
     pub generated_text: String,
     /// Generation score
     pub score: f64,
@@ -1817,7 +1816,7 @@ impl SummarizationPipeline {
 /// Summarization result
 #[derive(Debug, Clone)]
 pub struct SummarizationResult {
-    /// Summary text
+    /// Summary _text
     pub summary_text: String,
     /// Summarization score
     pub score: f64,
@@ -1945,8 +1944,7 @@ impl TranslationPipeline {
             ("fr", "en") => comprehensive_translations
                 .iter()
                 .map(|(en, fr)| (*fr, *en))
-                .collect(),
-            _ => {
+                .collect(, _ => {
                 // For unsupported language pairs, use a basic dictionary
                 vec![
                     ("hello", "hello"),
@@ -2026,7 +2024,7 @@ impl TranslationPipeline {
         let translation_ratio = if original_word_count > 0 {
             translations
                 .iter()
-                .filter(|(source, _)| {
+                .filter(|(source_)| {
                     text.to_lowercase()
                         .split_whitespace()
                         .any(|w| w.trim_matches(|c: char| !c.is_alphabetic()) == *source)
@@ -2049,7 +2047,7 @@ impl TranslationPipeline {
 /// Translation result
 #[derive(Debug, Clone)]
 pub struct TranslationResult {
-    /// Translated text
+    /// Translated _text
     pub translation_text: String,
     /// Translation score
     pub score: f64,
@@ -2418,8 +2416,7 @@ impl HfModelManager {
     pub fn save_model<P: AsRef<Path>>(
         &self,
         model: &TransformerModel,
-        output_path: P,
-        _model_id: &str,
+        output_path: P_model, _id: &str,
     ) -> Result<()> {
         let config = HfConfig::from_transformer_config(&model.config);
         let adapter = HfModelAdapter::new(config);

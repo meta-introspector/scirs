@@ -24,10 +24,10 @@ pub struct EvolutionaryStrategy {
 
 impl EvolutionaryStrategy {
     /// Create new evolutionary strategy
-    pub fn new(population_size: usize, dimensions: usize, sigma: f64) -> Self {
-        let mut population = Vec::with_capacity(population_size);
-        for _ in 0..population_size {
-            let individual = Array1::from_shape_fn(dimensions, |_| rng().gen::<f64>() - 0.5);
+    pub fn new(_population_size: usize, dimensions: usize, sigma: f64) -> Self {
+        let mut population = Vec::with_capacity(_population_size);
+        for _ in 0.._population_size {
+            let individual = Array1::from_shape_fn(dimensions, |_| rand::rng().gen::<f64>() - 0.5);
             population.push(individual);
         }
 
@@ -59,13 +59,13 @@ impl EvolutionaryStrategy {
 
         // Generate new population
         for i in elite_size..self.population_size {
-            let parent_idx = indices[rng().random_range(0..elite_size)];
+            let parent_idx = indices[rand::rng().gen_range(0..elite_size)];
             let parent = &self.population[parent_idx];
 
             // Mutate
             let mut offspring = parent.clone();
             for j in 0..offspring.len() {
-                offspring[j] += self.sigma * (rng().random_range(-0.5..0.5));
+                offspring[j] += self.sigma * (rand::rng().gen_range(-0.5..0.5));
             }
 
             self.population[i] = offspring;
@@ -73,7 +73,7 @@ impl EvolutionaryStrategy {
     }
 
     /// Get best individual
-    pub fn get_best(&self) -> (Array1<f64>, f64) {
+    pub fn get_best(&self) -> (Array1<f64>..f64) {
         let mut best_idx = 0;
         let mut best_fitness = self.fitness[0];
 
@@ -100,7 +100,7 @@ where
 {
     let mut es = EvolutionaryStrategy::new(50, initial_params.len(), 0.1);
 
-    // Initialize with initial params
+    // Initialize with initial _params
     es.population[0] = initial_params.to_owned();
 
     for _generation in 0..num_generations {
@@ -119,7 +119,7 @@ where
         jac: None,
         hess: None,
         constr: None,
-        nfev: num_generations * 50, // Population size * generations
+        nfev: num_generations * 50, // Population size * _generations
         njev: 0,
         nhev: 0,
         maxcv: 0,

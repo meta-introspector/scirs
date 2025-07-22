@@ -18,6 +18,7 @@ use std::rc::Rc;
 use ndarray::ArrayView1;
 
 use crate::error::{SpatialError, SpatialResult};
+use std::f64::consts::PI;
 
 /// A path found by the A* algorithm
 #[derive(Debug, Clone)]
@@ -30,8 +31,8 @@ pub struct Path<N> {
 
 impl<N> Path<N> {
     /// Create a new path with the given nodes and cost
-    pub fn new(nodes: Vec<N>, cost: f64) -> Self {
-        Path { nodes, cost }
+    pub fn new(_nodes: Vec<N>, cost: f64) -> Self {
+        Path { _nodes, cost }
     }
 
     /// Check if the path is empty
@@ -40,7 +41,7 @@ impl<N> Path<N> {
     }
 
     /// Get the length of the path (number of nodes)
-    pub fn len(&self) -> usize {
+    pub fn len() -> usize {
         self.nodes.len()
     }
 }
@@ -60,9 +61,9 @@ pub struct Node<N: Clone + Eq + Hash> {
 
 impl<N: Clone + Eq + Hash> Node<N> {
     /// Create a new node
-    pub fn new(state: N, parent: Option<Rc<Node<N>>>, g: f64, h: f64) -> Self {
+    pub fn new(_state: N, parent: Option<Rc<Node<N>>>, g: f64, h: f64) -> Self {
         Node {
-            state,
+            _state,
             parent,
             g,
             h,
@@ -70,7 +71,7 @@ impl<N: Clone + Eq + Hash> Node<N> {
     }
 
     /// Get the f-value (f = g + h)
-    pub fn f(&self) -> f64 {
+    pub fn f(&mut self) -> f64 {
         self.g + self.h
     }
 }
@@ -121,10 +122,10 @@ impl HashableFloat2D {
     }
 
     /// Convert from array representation
-    pub fn from_array(arr: [f64; 2]) -> Self {
+    pub fn from_array(_arr: [f64; 2]) -> Self {
         HashableFloat2D {
-            x: arr[0],
-            y: arr[1],
+            x: _arr[0],
+            y: _arr[1],
         }
     }
 
@@ -134,9 +135,9 @@ impl HashableFloat2D {
     }
 
     /// Calculate Euclidean distance to another point
-    pub fn distance(&self, other: &HashableFloat2D) -> f64 {
-        let dx = self.x - other.x;
-        let dy = self.y - other.y;
+    pub fn distance(_other: &HashableFloat2D) -> f64 {
+        let dx = self.x - _other.x;
+        let dy = self.y - _other.y;
         (dx * dx + dy * dy).sqrt()
     }
 }
@@ -172,7 +173,7 @@ pub struct AStarPlanner {
 }
 
 impl Default for AStarPlanner {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -187,13 +188,13 @@ impl AStarPlanner {
     }
 
     /// Set the maximum number of iterations
-    pub fn with_max_iterations(mut self, max_iterations: usize) -> Self {
+    pub fn with_max_iterations(mut max_iterations: usize) -> Self {
         self.max_iterations = Some(max_iterations);
         self
     }
 
     /// Set the heuristic weight (for weighted A*)
-    pub fn with_weight(mut self, weight: f64) -> Self {
+    pub fn with_weight(mut weight: f64) -> Self {
         if weight < 0.0 {
             self.weight = 0.0;
         } else {
@@ -297,15 +298,15 @@ impl AStarPlanner {
     }
 
     // Reconstruct the path from the goal node to the start node
-    fn reconstruct_path<N: Clone + Eq + Hash>(&self, goal_node: Rc<Node<N>>) -> Path<N> {
+    fn reconstruct_path<N: Clone + Eq + Hash>(_goal_node: Rc<Node<N>>) -> Path<N> {
         let mut path = Vec::new();
-        let mut current = Some(goal_node);
+        let mut current = Some(_goal_node);
         let mut cost = 0.0;
 
-        while let Some(node) = current {
-            path.push(node.state.clone());
-            cost = node.g;
-            current = node.parent.clone();
+        while let Some(_node) = current {
+            path.push(_node.state.clone());
+            cost = _node.g;
+            current = _node.parent.clone();
         }
 
         // Reverse the path so it goes from start to goal
@@ -365,9 +366,9 @@ impl GridAStarPlanner {
     ///
     /// * `grid` - 2D grid where true represents an obstacle
     /// * `diagonals_allowed` - Whether diagonal movements are allowed
-    pub fn new(grid: Vec<Vec<bool>>, diagonals_allowed: bool) -> Self {
+    pub fn new(_grid: Vec<Vec<bool>>, diagonals_allowed: bool) -> Self {
         GridAStarPlanner {
-            grid,
+            _grid,
             diagonals_allowed,
         }
     }
@@ -387,18 +388,18 @@ impl GridAStarPlanner {
     }
 
     /// Check if a position is valid and not an obstacle
-    pub fn is_valid(&self, pos: &[i32; 2]) -> bool {
+    pub fn is_valid(_pos: &[i32; 2]) -> bool {
         let (rows, cols) = (self.height() as i32, self.width() as i32);
 
-        if pos[0] < 0 || pos[0] >= rows || pos[1] < 0 || pos[1] >= cols {
+        if _pos[0] < 0 || _pos[0] >= rows || _pos[1] < 0 || _pos[1] >= cols {
             return false;
         }
 
-        !self.grid[pos[0] as usize][pos[1] as usize]
+        !self.grid[_pos[0] as usize][_pos[1] as usize]
     }
 
     /// Get valid neighbors for a given position
-    fn get_neighbors(&self, pos: &[i32; 2]) -> Vec<([i32; 2], f64)> {
+    fn get_neighbors(_pos: &[i32; 2]) -> Vec<([i32; 2], f64)> {
         let mut neighbors = Vec::new();
         let directions = if self.diagonals_allowed {
             // Include diagonal directions
@@ -418,7 +419,7 @@ impl GridAStarPlanner {
         };
 
         for dir in directions {
-            let neighbor = [pos[0] + dir[0], pos[1] + dir[1]];
+            let neighbor = [_pos[0] + dir[0], _pos[1] + dir[1]];
             if self.is_valid(&neighbor) {
                 // Cost is 1.0 for cardinal moves, sqrt(2) for diagonal moves
                 let cost = if dir[0] != 0 && dir[1] != 0 {
@@ -473,18 +474,18 @@ pub struct ContinuousAStarPlanner {
 
 impl ContinuousAStarPlanner {
     /// Create a new continuous space A* planner
-    pub fn new(obstacles: Vec<Vec<[f64; 2]>>, step_size: f64, collision_threshold: f64) -> Self {
+    pub fn new(_obstacles: Vec<Vec<[f64; 2]>>, step_size: f64, collision_threshold: f64) -> Self {
         ContinuousAStarPlanner {
-            obstacles,
+            _obstacles,
             step_size,
             collision_threshold,
         }
     }
 
     /// Check if a point is in collision with any obstacle
-    pub fn is_in_collision(&self, point: &[f64; 2]) -> bool {
+    pub fn is_in_collision(_point: &[f64; 2]) -> bool {
         for obstacle in &self.obstacles {
-            if Self::point_in_polygon(point, obstacle) {
+            if Self::point_in_polygon(_point, obstacle) {
                 return true;
             }
         }
@@ -492,21 +493,21 @@ impl ContinuousAStarPlanner {
     }
 
     /// Check if a line segment intersects with any obstacle
-    pub fn line_in_collision(&self, start: &[f64; 2], end: &[f64; 2]) -> bool {
+    pub fn line_in_collision(_start: &[f64; 2], end: &[f64; 2]) -> bool {
         // Discretize the line and check each point
-        let dx = end[0] - start[0];
-        let dy = end[1] - start[1];
+        let dx = end[0] - _start[0];
+        let dy = end[1] - _start[1];
         let distance = (dx * dx + dy * dy).sqrt();
         let steps = (distance / self.step_size).ceil() as usize;
 
         if steps == 0 {
-            return self.is_in_collision(start) || self.is_in_collision(end);
+            return self.is_in_collision(_start) || self.is_in_collision(end);
         }
 
         for i in 0..=steps {
             let t = i as f64 / steps as f64;
-            let x = start[0] + dx * t;
-            let y = start[1] + dy * t;
+            let x = _start[0] + dx * t;
+            let y = _start[1] + dy * t;
             if self.is_in_collision(&[x, y]) {
                 return true;
             }
@@ -516,7 +517,7 @@ impl ContinuousAStarPlanner {
     }
 
     /// Point-in-polygon test using ray casting algorithm
-    fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
+    fn point_in_polygon(_point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
         if polygon.len() < 3 {
             return false;
         }
@@ -530,8 +531,8 @@ impl ContinuousAStarPlanner {
             let xj = polygon[j][0];
             let yj = polygon[j][1];
 
-            let intersect = ((yi > point[1]) != (yj > point[1]))
-                && (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi) + xi);
+            let intersect = ((yi > _point[1]) != (yj > _point[1]))
+                && (_point[0] < (xj - xi) * (_point[1] - yi) / (yj - yi) + xi);
 
             if intersect {
                 inside = !inside;
@@ -544,7 +545,7 @@ impl ContinuousAStarPlanner {
     }
 
     /// Get valid neighbors for continuous space planning
-    fn get_neighbors(&self, pos: &[f64; 2], radius: f64) -> Vec<([f64; 2], f64)> {
+    fn get_neighbors(_pos: &[f64; 2], radius: f64) -> Vec<([f64; 2], f64)> {
         let mut neighbors = Vec::new();
 
         // Generate neighbors in a circle around the current position
@@ -552,12 +553,12 @@ impl ContinuousAStarPlanner {
 
         for i in 0..num_samples {
             let angle = 2.0 * std::f64::consts::PI * (i as f64) / (num_samples as f64);
-            let nx = pos[0] + radius * angle.cos();
-            let ny = pos[1] + radius * angle.sin();
+            let nx = _pos[0] + radius * angle.cos();
+            let ny = _pos[1] + radius * angle.sin();
             let neighbor = [nx, ny];
 
             // Check if the path to the neighbor is collision-free
-            if !self.line_in_collision(pos, &neighbor) {
+            if !self.line_in_collision(_pos, &neighbor) {
                 let cost = radius; // Cost is the distance
                 neighbors.push((neighbor, cost));
             }
@@ -612,14 +613,14 @@ impl ContinuousAStarPlanner {
         }
 
         let planner = AStarPlanner::new();
-        let radius = neighbor_radius;
+        let _radius = neighbor_radius;
         let planner_clone = self.clone();
 
         // Create neighbor and heuristic functions that work with the Point2D type
         let neighbors_fn = move |pos: &Point2D| {
             let float_pos = [pos.x as f64 / precision, pos.y as f64 / precision];
             planner_clone
-                .get_neighbors(&float_pos, radius)
+                .get_neighbors(&float_pos, _radius)
                 .into_iter()
                 .map(|(neighbor, cost)| (to_point(neighbor), cost))
                 .collect()

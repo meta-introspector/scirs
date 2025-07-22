@@ -6,12 +6,15 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::StateSpace;
-use crate::sysid_enhanced::{NonlinearFunction, ParameterEstimate, SystemModel};
-use ndarray::{s, Array1, Array2, Axis};
+use crate::sysid__enhanced::{NonlinearFunction, ParameterEstimate, SystemModel};
+use ndarray::{Array1, Array2, Axis, s};
+use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_shape;
-use scirs2_linalg::solve;
+use scirs2__linalg::solve;
+use statrs::statistics::Statistics;
 
+#[allow(unused_imports)]
 /// ARMAX model identification using iterative prediction error method
 ///
 /// ARMAX: A(q)y(t) = B(q)u(t) + C(q)e(t)
@@ -28,7 +31,7 @@ pub fn identify_armax_complete(
     check_shape(input, &[n], "input and output")?;
 
     // Initialize with ARX estimate
-    let (ar_init, b_init, _) = estimate_arx_ls(input, output, na, nb, delay)?;
+    let (ar_init, b_init_) = estimate_arx_ls(input, output, na, nb, delay)?;
 
     // Initialize MA coefficients
     let mut c_coeffs = Array1::zeros(nc + 1);
@@ -53,7 +56,7 @@ pub fn identify_armax_complete(
 
         // Compute cost
         let new_residuals = compute_armax_residuals(input, output, &new_a, &new_b, &new_c, delay)?;
-        let cost = new_residuals.mapv(|r| r * r).sum() / n as f64;
+        let cost = new_residuals.mapv(|r| r * r).sum() / n  as f64;
 
         // Check convergence
         if (prev_cost - cost).abs() < tolerance {
@@ -122,7 +125,7 @@ pub fn identify_oe_complete(
     let n = output.len();
 
     // Initialize using ARX model
-    let (ar_init, b_init, _) = estimate_arx_ls(input, output, nf, nb, delay)?;
+    let (ar_init, b_init_) = estimate_arx_ls(input, output, nf, nb, delay)?;
 
     // Convert AR to F polynomial (denominator)
     let mut f_coeffs = ar_init.clone();
@@ -169,7 +172,7 @@ pub fn identify_oe_complete(
     // Compute final statistics
     let y_final = simulate_oe_model(input, &b_coeffs, &f_coeffs, delay)?;
     let residuals = output - &y_final;
-    let cost = residuals.mapv(|r| r * r).sum() / n as f64;
+    let cost = residuals.mapv(|r| r * r).sum() / n  as f64;
 
     let params = concatenate_params(&b_coeffs, &f_coeffs, &Array1::zeros(0));
     let (covariance, std_errors, confidence_intervals) =
@@ -207,11 +210,10 @@ pub fn identify_bj_complete(
     let n = output.len();
 
     // Stage 1: Estimate B and F using OE model
-    let (oe_model, _, _, _, _) = identify_oe_complete(input, output, nb, nf, delay)?;
+    let (oe_model____) = identify_oe_complete(input, output, nb, nf, delay)?;
 
     let (b_coeffs, f_coeffs) = match oe_model {
-        SystemModel::OE { b, f, .. } => (b, f),
-        _ => {
+        SystemModel::OE { b, f, .. } => (b, f, _ => {
             return Err(SignalError::ComputationError(
                 "OE model estimation failed".to_string(),
             ))
@@ -249,7 +251,7 @@ pub fn identify_bj_complete(
             // Compute final statistics
             let y_final = simulate_bj_model(input, &new_b, &new_c, &new_d, &new_f, delay)?;
             let final_residuals = output - &y_final;
-            let cost = final_residuals.mapv(|r| r * r).sum() / n as f64;
+            let cost = final_residuals.mapv(|r| r * r).sum() / n  as f64;
 
             let params = concatenate_bj_params(&new_b, &new_c, &new_d, &new_f);
             let (covariance, std_errors, confidence_intervals) =
@@ -282,7 +284,7 @@ pub fn identify_bj_complete(
     // Return best estimate
     let y_final = simulate_bj_model(input, &b, &c, &d, &f, delay)?;
     let final_residuals = output - &y_final;
-    let cost = final_residuals.mapv(|r| r * r).sum() / n as f64;
+    let cost = final_residuals.mapv(|r| r * r).sum() / n  as f64;
 
     let params = concatenate_bj_params(&b, &c, &d, &f);
     let (covariance, std_errors, confidence_intervals) =
@@ -324,7 +326,7 @@ pub fn identify_state_space_complete(
     // Simulate to compute residuals
     let y_sim = simulate_state_space(&ss, input, &x0)?;
     let residuals = output - &y_sim;
-    let cost = residuals.mapv(|r| r * r).sum() / n as f64;
+    let cost = residuals.mapv(|r| r * r).sum() / n  as f64;
 
     // Extract parameters for statistics
     let params = state_space_to_params(&a, &b, &c, &d);
@@ -426,7 +428,7 @@ pub fn identify_narx_complete(
     // Compute residuals
     let y_pred = phi.dot(&theta);
     let residuals = output - &y_pred;
-    let cost = residuals.mapv(|r| r * r).sum() / n as f64;
+    let cost = residuals.mapv(|r| r * r).sum() / n  as f64;
 
     // Parameter statistics
     let (covariance, std_errors, confidence_intervals) =
@@ -506,7 +508,7 @@ fn estimate_arx_ls(
     let b = params.slice(s![na..]).to_owned();
 
     let residuals = &y - &phi.dot(&params);
-    let variance = residuals.mapv(|r| r * r).sum() / n_samples as f64;
+    let variance = residuals.mapv(|r| r * r).sum() / n_samples  as f64;
 
     Ok((a, b, variance))
 }
@@ -685,7 +687,7 @@ fn compute_oe_derivatives(
 
         // Gradient
         let error = y_sim - output;
-        gradient[i] = 2.0 * error.dot(&sensitivity) / n as f64;
+        gradient[i] = 2.0 * error.dot(&sensitivity) / n  as f64;
 
         // Hessian approximation (Gauss-Newton)
         for j in i..n_params {
@@ -701,7 +703,7 @@ fn compute_oe_derivatives(
             let y_plus2 = simulate_oe_model(input, &b_plus2, &f_plus2, delay)?;
             let sensitivity2 = (&y_plus2 - y_sim) / h;
 
-            hessian[[i, j]] = 2.0 * sensitivity.dot(&sensitivity2) / n as f64;
+            hessian[[i, j]] = 2.0 * sensitivity.dot(&sensitivity2) / n  as f64;
             hessian[[j, i]] = hessian[[i, j]];
         }
     }
@@ -875,12 +877,11 @@ fn update_bj_parameters(
     let y_clean = output - &y_noise;
 
     let (_, new_b, new_f) = {
-        let (oe_model, _, _, _, _) =
+        let (oe_model____) =
             identify_oe_complete(input, &y_clean, b.len(), f.len() - 1, delay)?;
 
         match oe_model {
-            SystemModel::OE { b, f, .. } => ((), b, f),
-            _ => ((), b.clone(), f.clone()),
+            SystemModel::OE { b, f, .. } => ((), b, f, _ => ((), b.clone(), f.clone()),
         }
     };
 
@@ -904,7 +905,7 @@ fn build_hankel_matrices(
 
     if n_cols <= 0 {
         return Err(SignalError::ValueError(
-            "Signal too short for block size".to_string(),
+            "Signal too short for block _size".to_string(),
         ));
     }
 
@@ -923,12 +924,12 @@ fn build_hankel_matrices(
 
 /// Oblique projection for subspace identification
 #[allow(dead_code)]
-fn oblique_projection(y_hankel: &Array2<f64>, u_hankel: &Array2<f64>) -> SignalResult<Array2<f64>> {
+fn oblique_projection(_y_hankel: &Array2<f64>, u_hankel: &Array2<f64>) -> SignalResult<Array2<f64>> {
     // Simplified: orthogonal projection
     let u_pinv = compute_pseudoinverse(u_hankel)?;
     let proj_perp_u = Array2::eye(u_hankel.ncols()) - u_hankel.t().dot(&u_pinv.t());
 
-    Ok(y_hankel.dot(&proj_perp_u))
+    Ok(_y_hankel.dot(&proj_perp_u))
 }
 
 /// Estimate B and D matrices for state space
@@ -992,8 +993,7 @@ fn build_narx_regression_matrix(
     // Determine number of nonlinear terms
     let n_nonlinear = match nonlinearity {
         NonlinearFunction::Polynomial(coeffs) => coeffs.len() - 1,
-        NonlinearFunction::PiecewiseLinear { breakpoints, .. } => breakpoints.len() + 1,
-        _ => 10, // Default number of basis functions
+        NonlinearFunction::PiecewiseLinear { breakpoints, .. } => breakpoints.len() + 1_ => 10, // Default number of basis functions
     };
 
     let n_features = na + nb + n_nonlinear;
@@ -1029,7 +1029,7 @@ fn build_narx_regression_matrix(
             _ => {
                 // Other nonlinearities: use radial basis functions
                 for k in 0..n_nonlinear {
-                    let center = -2.0 + 4.0 * k as f64 / n_nonlinear as f64;
+                    let center = -2.0 + 4.0 * k as f64 / n_nonlinear  as f64;
                     let width = 0.5;
                     let x = output[t - 1];
                     phi[[i, na + nb + k]] = (-(x - center).powi(2) / (2.0 * width * width)).exp();
@@ -1114,7 +1114,7 @@ fn compute_parameter_statistics(
     n: usize,
 ) -> SignalResult<(Array2<f64>, Array1<f64>, Vec<(f64, f64)>)> {
     let k = params.len();
-    let sigma2 = residuals.mapv(|r| r * r).sum() / (n - k) as f64;
+    let sigma2 = residuals.mapv(|r| r * r).sum() / (n - k)  as f64;
 
     // Simplified: assume diagonal covariance
     let covariance = Array2::eye(k) * sigma2;
@@ -1131,10 +1131,10 @@ fn compute_parameter_statistics(
 
 /// Compute autocorrelation
 #[allow(dead_code)]
-fn compute_autocorrelation(signal: &Array1<f64>, max_lag: usize) -> SignalResult<Vec<f64>> {
-    let n = signal.len();
-    let mean = signal.mean().unwrap_or(0.0);
-    let centered = signal - mean;
+fn compute_autocorrelation(_signal: &Array1<f64>, max_lag: usize) -> SignalResult<Vec<f64>> {
+    let n = _signal.len();
+    let mean = _signal.mean().unwrap_or(0.0);
+    let centered = _signal - mean;
 
     let mut r = vec![0.0; max_lag];
 
@@ -1143,7 +1143,7 @@ fn compute_autocorrelation(signal: &Array1<f64>, max_lag: usize) -> SignalResult
         for i in 0..(n - k) {
             sum += centered[i] * centered[i + k];
         }
-        r[k] = sum / n as f64;
+        r[k] = sum / n  as f64;
     }
 
     Ok(r)
@@ -1151,8 +1151,8 @@ fn compute_autocorrelation(signal: &Array1<f64>, max_lag: usize) -> SignalResult
 
 /// Compute pseudoinverse
 #[allow(dead_code)]
-fn compute_pseudoinverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
-    let (u, s, vt) = matrix
+fn compute_pseudoinverse(_matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    let (u, s, vt) = _matrix
         .svd(true, true)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
@@ -1198,9 +1198,7 @@ fn simulate_state_space(
 /// Simulate noise contribution for BJ model
 #[allow(dead_code)]
 fn simulate_noise_contribution(
-    output: &Array1<f64>,
-    _c: &Array1<f64>,
-    _d: &Array1<f64>,
+    output: &Array1<f64>, _c: &Array1<f64>, _d: &Array1<f64>,
 ) -> SignalResult<Array1<f64>> {
     // This is a placeholder - in practice would estimate the noise sequence
     Ok(Array1::zeros(output.len()))
@@ -1224,7 +1222,7 @@ mod tests {
                 + 0.1 * rng.random_range(-1.0..1.0);
         }
 
-        let (model, _, _, converged, _) =
+        let (model__, converged_) =
             identify_armax_complete(&input, &output, 2, 2, 1, 1).unwrap();
 
         assert!(converged);
@@ -1237,7 +1235,7 @@ mod tests {
         let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
         let output = Array1::from_shape_fn(n, |i| (i as f64 * 0.1 + 0.5).sin());
 
-        let (model, _, _, converged, _) =
+        let (model__, converged_) =
             identify_state_space_complete(&input, &output, 2).unwrap();
 
         assert!(converged);

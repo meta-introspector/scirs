@@ -3,7 +3,7 @@
 //! This example shows how to use the stress testing framework to validate
 //! interpolation methods under extreme conditions.
 
-use scirs2_interpolate::stress_testing::{extreme_data, stress_tests, StressTestConfig};
+use scirs2__interpolate::stress_testing::{extreme_data, stress_tests, StressTestConfig};
 
 #[allow(dead_code)]
 fn main() {
@@ -104,7 +104,7 @@ fn main() {
 
     // Demonstrate numerical stability checks
     println!("\n=== Numerical Stability Checks ===");
-    use scirs2_interpolate::stress_testing::stability;
+    use scirs2__interpolate::stress_testing::stability;
 
     let test_values = vec![
         1.0,
@@ -124,7 +124,7 @@ fn main() {
     println!("\n=== Condition Number Estimation ===");
 
     // Well-conditioned points
-    let (good_points, _) = extreme_data::extreme_2d(25, "random");
+    let (good_points_) = extreme_data::extreme_2d(25, "random");
     let good_cond = stability::condition_number_estimate(&good_points.view());
     println!(
         "Well-conditioned points: condition number ≈ {:.2e}",
@@ -132,7 +132,7 @@ fn main() {
     );
 
     // Ill-conditioned points
-    let (bad_points, _) = extreme_data::extreme_2d(25, "ill_conditioned");
+    let (bad_points_) = extreme_data::extreme_2d(25, "ill_conditioned");
     let bad_cond = stability::condition_number_estimate(&bad_points.view());
     println!(
         "Ill-conditioned points: condition number ≈ {:.2e}",

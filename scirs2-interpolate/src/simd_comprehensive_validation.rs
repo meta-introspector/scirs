@@ -358,14 +358,13 @@ pub struct PerformanceBaseline {
 
 impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
     /// Create a new SIMD performance validator
-    pub fn new(config: SimdValidationConfig) -> Self {
+    pub fn new(_config: SimdValidationConfig) -> Self {
         Self {
-            config,
+            _config,
             system_capabilities: SystemSimdCapabilities::detect(),
             results: Vec::new(),
             baselines: HashMap::new(),
-            architecture_results: HashMap::new(),
-            _phantom: PhantomData,
+            architecture_results: HashMap::new(), _phantom: PhantomData,
         }
     }
 
@@ -603,8 +602,7 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
                 "distance_matrix_computation" => SimdTestCategory::DistanceComputation,
                 "rbf_evaluation" | "spline_evaluation" => SimdTestCategory::BasisFunctions,
                 "bspline_basis_computation" => SimdTestCategory::BasisFunctions,
-                "polynomial_evaluation" => SimdTestCategory::PolynomialEvaluation,
-                _ => SimdTestCategory::BasicArithmetic,
+                "polynomial_evaluation" => SimdTestCategory::PolynomialEvaluation_ =>, SimdTestCategory::BasicArithmetic,
             };
 
             let result = self.validate_operation(operation, category)?;
@@ -818,7 +816,7 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
     /// Calculate memory bandwidth utilization
     fn calculate_bandwidth_utilization(&self, data_size: usize, duration: Duration) -> Option<f64> {
         if let Some(peak_bandwidth) = self.system_capabilities.memory_bandwidth.peak_bandwidth {
-            let bytes_transferred = data_size * std::mem::size_of::<T>();
+            let bytes_transferred = data_size * std::mem::_size_of::<T>();
             let bandwidth_used =
                 bytes_transferred as f64 / duration.as_secs_f64() / (1024.0 * 1024.0 * 1024.0);
             Some(bandwidth_used / peak_bandwidth)
@@ -1148,7 +1146,7 @@ mod tests {
     #[test]
     fn test_simd_validator_creation() {
         let config = SimdValidationConfig::default();
-        let validator = SimdPerformanceValidator::<f64>::new(config);
+        let validator = SimdPerformanceValidator::<f64>::new(_config);
         assert_eq!(validator.results.len(), 0);
     }
 

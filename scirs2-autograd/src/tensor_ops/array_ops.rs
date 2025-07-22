@@ -1,11 +1,11 @@
 use crate::ndarray;
 use crate::ndarray_ext;
 #[cfg(feature = "blas")]
-use crate::ndarray_ext::NdArrayViewMut;
-use crate::ndarray_ext::{NdArray, NdArrayView};
+use crate::ndarray__ext::NdArrayViewMut;
+use crate::ndarray__ext::{NdArray, NdArrayView};
 use crate::op;
 use crate::tensor::Tensor;
-use crate::tensor_ops::*;
+use crate::tensor__ops::*;
 use crate::Float;
 use ndarray::SliceInfoElem;
 use std::iter::FromIterator;
@@ -91,7 +91,7 @@ pub struct InferBinOpShape;
 
 pub struct Assign;
 
-impl<T: Float> op::Op<T> for Assign {
+impl<T: Float>, op::Op<T> for Assign {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let input1 = ctx.input(1).to_owned();
         ctx.input_mut(0).assign(&input1);
@@ -105,7 +105,7 @@ impl<T: Float> op::Op<T> for Assign {
     }
 }
 
-impl<T: Float> op::Op<T> for InferBinOpShape {
+impl<T: Float>, op::Op<T> for InferBinOpShape {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let a_shape_float = ctx.input(0);
         let b_shape_float = ctx.input(1);
@@ -150,7 +150,7 @@ impl<T: Float> op::Op<T> for InferBinOpShape {
     }
 }
 
-impl<T: Float> op::Op<T> for Shape {
+impl<T: Float>, op::Op<T> for Shape {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = &ctx.input(0);
         let shape_vec = ndarray_ext::shape_of_view(x);
@@ -165,7 +165,7 @@ impl<T: Float> op::Op<T> for Shape {
     }
 }
 
-impl<T: Float> op::Op<T> for Rank {
+impl<T: Float>, op::Op<T> for Rank {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let ret = NdArray::from_elem(ndarray::IxDyn(&[]), T::from(x.ndim()).unwrap());
@@ -178,7 +178,7 @@ impl<T: Float> op::Op<T> for Rank {
     }
 }
 
-impl<T: Float> op::Op<T> for Size {
+impl<T: Float>, op::Op<T> for Size {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let ret = NdArray::from_elem(ndarray::IxDyn(&[]), T::from(x.len()).unwrap());
@@ -191,7 +191,7 @@ impl<T: Float> op::Op<T> for Size {
     }
 }
 
-impl<T: Float> op::Op<T> for Reshape {
+impl<T: Float>, op::Op<T> for Reshape {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = &ctx.input(0);
         let shape_arr = &ctx.input(1);
@@ -252,7 +252,7 @@ impl<T: Float> op::Op<T> for Reshape {
     }
 }
 
-impl<T: Float> op::Op<T> for SetDiff1D {
+impl<T: Float>, op::Op<T> for SetDiff1D {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x0 = ctx.input(0);
         let x1 = &ctx.input(1);
@@ -292,7 +292,7 @@ impl<T: Float> op::Op<T> for SetDiff1D {
     }
 }
 
-impl<T: Float> op::Op<T> for IndexOp {
+impl<T: Float>, op::Op<T> for IndexOp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let i = if self.index < 0 {
@@ -328,7 +328,7 @@ impl<T: Float> op::Op<T> for IndexOp {
     }
 }
 
-impl<T: Float> op::Op<T> for IndexOpGrad {
+impl<T: Float>, op::Op<T> for IndexOpGrad {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let gy = &ctx.input(1);
@@ -364,7 +364,7 @@ impl<T: Float> op::Op<T> for IndexOpGrad {
     }
 }
 
-impl<T: Float> op::Op<T> for Gather {
+impl<T: Float>, op::Op<T> for Gather {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let param = &ctx.input(1);
         let indices = &ctx.input(0);
@@ -416,7 +416,7 @@ impl<T: Float> op::Op<T> for Gather {
     }
 }
 
-impl<T: Float> op::Op<T> for GatherGrad {
+impl<T: Float>, op::Op<T> for GatherGrad {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let indices = ctx.input(0);
         let param = &ctx.input(1);
@@ -494,7 +494,7 @@ impl<T: Float> op::Op<T> for GatherGrad {
 #[cfg(feature = "blas")]
 pub(crate) fn inplace_add_impl<F: Float>(mut a: NdArrayViewMut<F>, b: &NdArrayView<F>) {
     use crate::same_type;
-    use crate::tensor_ops::blas_ffi::{vdAdd, vsAdd, MklInt};
+    use crate::tensor__ops::blas_ffi::{vdAdd, vsAdd, MklInt};
     unsafe {
         if same_type::<F, f32>() {
             vsAdd(
@@ -517,7 +517,7 @@ pub(crate) fn inplace_add_impl<F: Float>(mut a: NdArrayViewMut<F>, b: &NdArrayVi
     }
 }
 
-impl<T: Float> op::Op<T> for AddN {
+impl<T: Float>, op::Op<T> for AddN {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let inputs_len = ctx.inputs().len();
         if 0 == inputs_len {
@@ -546,7 +546,7 @@ impl<T: Float> op::Op<T> for AddN {
     }
 }
 
-impl<T: Float> op::Op<T> for Clip<T> {
+impl<T: Float>, op::Op<T> for Clip<T> {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(move |a| a.min(self.max).max(self.min));
         ctx.append_output(ret);
@@ -568,7 +568,7 @@ impl<T: Float> op::Op<T> for Clip<T> {
     }
 }
 
-impl<T: Float> op::Op<T> for ClipGrad<T> {
+impl<T: Float>, op::Op<T> for ClipGrad<T> {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let mut ret = ctx.input(0).mapv(move |x| {
             // x > min && x < max
@@ -585,7 +585,7 @@ impl<T: Float> op::Op<T> for ClipGrad<T> {
     }
 }
 
-impl<T: Float> op::Op<T> for Concat {
+impl<T: Float>, op::Op<T> for Concat {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let mut views = Vec::with_capacity(ctx.inputs().len());
         for i in 0..ctx.inputs().len() {
@@ -635,7 +635,7 @@ impl<T: Float> op::Op<T> for Concat {
     }
 }
 
-impl<T: Float> op::Op<T> for ConcatGrad {
+impl<T: Float>, op::Op<T> for ConcatGrad {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let gy = ctx.input(0);
 
@@ -693,7 +693,7 @@ impl<T: Float> op::Op<T> for ConcatGrad {
     }
 }
 
-impl<T: Float> op::Op<T> for Tile {
+impl<T: Float>, op::Op<T> for Tile {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let axis = ndarray_ext::normalize_negative_axis(self.axis, x.ndim());
@@ -712,7 +712,7 @@ impl<T: Float> op::Op<T> for Tile {
     }
 }
 
-impl<T: Float> op::Op<T> for Split {
+impl<T: Float>, op::Op<T> for Split {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = &ctx.input(0);
         let axis = ndarray_ext::normalize_negative_axis(self.axis, x.ndim());
@@ -740,7 +740,7 @@ impl<T: Float> op::Op<T> for Split {
     }
 }
 
-impl<T: Float> op::Op<T> for SplitGrad {
+impl<T: Float>, op::Op<T> for SplitGrad {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let mut gx = NdArray::zeros(x.shape());
@@ -795,7 +795,7 @@ fn make_indices_for_split<T: Float>(
         .collect::<Vec<_>>()
 }
 
-impl<T: Float> op::Op<T> for Slice {
+impl<T: Float>, op::Op<T> for Slice {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let mut y = ctx.input(0);
         y.slice_collapse(self.indices.as_slice());
@@ -818,7 +818,7 @@ impl<T: Float> op::Op<T> for Slice {
     }
 }
 
-impl<T: Float> op::Op<T> for SliceGrad {
+impl<T: Float>, op::Op<T> for SliceGrad {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let mut gx = NdArray::zeros(x.shape());
@@ -843,7 +843,7 @@ impl<T: Float> op::Op<T> for SliceGrad {
         ctx.append_input_grad(1, None);
     }
 }
-impl<T: Float> op::Op<T> for Squeeze {
+impl<T: Float>, op::Op<T> for Squeeze {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let mut x = ctx.input(0).clone();
         let mut axes = ctx
@@ -873,7 +873,7 @@ impl<T: Float> op::Op<T> for Squeeze {
     }
 }
 
-impl<T: Float> op::Op<T> for ExpandDims {
+impl<T: Float>, op::Op<T> for ExpandDims {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0);
         let mut axes = ctx

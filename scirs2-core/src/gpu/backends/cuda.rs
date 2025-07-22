@@ -250,7 +250,7 @@ impl CudaContext {
     /// Create CUDA context for the device
     #[allow(dead_code)]
     #[cfg(feature = "cuda")]
-    fn create_cuda_context(_device: CUdevice) -> Result<CUcontext, GpuError> {
+    fn create_cuda_context(device: CUdevice) -> Result<CUcontext, GpuError> {
         // In real implementation: cuCtxCreate_v2(&mut context, 0, device)
         // For now, return a dummy context (actual implementation would need proper CUDA API calls)
         Ok(std::ptr::null_mut())
@@ -259,7 +259,7 @@ impl CudaContext {
     /// Create CUDA context for the device (fallback)
     #[allow(dead_code)]
     #[cfg(not(feature = "cuda"))]
-    fn create_cuda_context(_device: CUdevice) -> Result<CUcontext, GpuError> {
+    fn create_cuda_context(device: CUdevice) -> Result<CUcontext, GpuError> {
         // For stub: return a non-null pointer to simulate success
         Ok(0x1 as *mut c_void) // Non-null stub pointer
     }
@@ -337,14 +337,11 @@ impl CudaContext {
     /// Load PTX module into CUDA context
     #[allow(dead_code)]
     #[cfg(feature = "cuda")]
-    fn load_ptx_module(
-        _device: &CudaDevice,
-        ptx: Ptx,
-        _function_names: &[String],
+    fn load_ptx_module(device: &CudaDeviceHandle, ptx: Ptx, names: &[String]
     ) -> Result<Arc<impl std::any::Any>, GpuError> {
         // For now, return a placeholder module since cudarc API varies by version
         // In a real implementation, this would use the appropriate cudarc method
-        let _ptx_str = ptx; // Use the ptx parameter to avoid warnings
+        let ptx_str = ptx; // Use the ptx parameter to avoid warnings
         let module = std::sync::Arc::new(());
         Ok(Arc::new(module))
     }
@@ -352,10 +349,7 @@ impl CudaContext {
     /// Load PTX module into CUDA context (fallback)
     #[allow(dead_code)]
     #[cfg(not(feature = "cuda"))]
-    fn load_ptx_module(
-        _device: &i32,
-        _ptx: Ptx,
-        _function_names: &[String],
+    fn load_ptx_module(device: &i32, ptx: Ptx, names: &[String]
     ) -> Result<CUmodule, GpuError> {
         // Fallback implementation: return non-null pointer
         Ok(0x2 as *mut c_void)
@@ -363,7 +357,7 @@ impl CudaContext {
 
     /// Get kernel function from loaded module (fallback only - real impl uses CudaModule directly)
     #[cfg(not(feature = "cuda"))]
-    fn get_kernel_function(_module: CUmodule, _name: &str) -> Result<CUfunction, GpuError> {
+    fn get_kernel_function(module: CUmodule, name: &str) -> Result<CUfunction, GpuError> {
         // Fallback implementation: return non-null pointer
         Ok(0x3 as *mut c_void)
     }
@@ -380,14 +374,14 @@ impl CudaContext {
 
     /// Allocate device memory (fallback)
     #[cfg(not(feature = "cuda"))]
-    pub fn allocate_device_memory(&self, size: usize) -> Result<CUdeviceptr, GpuError> {
+    pub fn allocate_device_memory_2(&self, size: usize) -> Result<CUdeviceptr, GpuError> {
         // Fallback implementation: return a simulated device pointer
         Ok(0x1000 + size as CUdeviceptr) // Simulate unique device addresses
     }
 
     /// Free device memory
     #[cfg(feature = "cuda")]
-    pub fn free_device_memory(&self, _ptr: u64) -> Result<(), GpuError> {
+    pub fn free_device_memory(&self, ptr: u64) -> Result<(), GpuError> {
         // DevicePtr automatically deallocates when dropped
         Ok(())
     }
@@ -640,9 +634,9 @@ impl GpuCompilerImpl for CudaCompiler {
             #[cfg(feature = "cuda")]
             module: Arc::new(()),
             #[cfg(not(feature = "cuda"))]
-            module: ptr::null_mut(),
+            module: std::ptr::null_mut(),
             #[cfg(not(feature = "cuda"))]
-            function: ptr::null_mut(),
+            function: std::ptr::null_mut(),
             name: kernel_name.to_string(),
         };
 
@@ -657,11 +651,7 @@ impl GpuCompilerImpl for CudaCompiler {
         }))
     }
 
-    fn compile_typed(
-        &self,
-        name: &str,
-        _input_type: std::any::TypeId,
-        _output_type: std::any::TypeId,
+    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId
     ) -> Arc<dyn GpuKernelImpl> {
         Arc::new(CudaKernelHandle {
             kernel_name: name.to_string(),
@@ -743,9 +733,7 @@ impl CudaKernelHandle {
 
     /// Simulate kernel execution with computation modeling
     #[cfg(not(feature = "cuda"))]
-    fn simulate_kernel_execution(
-        &self,
-        work_groups: [u32; 3],
+    fn simulate_kernel_execution(&self, work_groups: [u32; 3],
         params: &HashMap<String, KernelParam>,
     ) {
         // Advanced simulation that models actual computation
@@ -762,7 +750,7 @@ impl CudaKernelHandle {
             computation_time * 1000.0
         );
 
-        // Simulate actual computation delay for realistic testing
+        // Simulate actual computation _delay for realistic testing
         std::thread::sleep(std::time::Duration::from_micros(
             (computation_time * 1_000_000.0) as u64,
         ));
@@ -802,9 +790,7 @@ impl CudaKernelHandle {
 
     /// Estimate kernel execution time for simulation
     #[allow(dead_code)]
-    fn estimate_kernel_time(
-        &self,
-        total_threads: u64,
+    fn estimate_kernel_time(&self, total_threads: u64,
         params: &HashMap<String, KernelParam>,
     ) -> f64 {
         // Model execution time based on kernel type and complexity
@@ -829,7 +815,7 @@ impl CudaKernelHandle {
 
     /// Simulate optimization algorithm effects on parameters
     #[allow(dead_code)]
-    fn simulate_optimization_effects(&self, _params: &HashMap<String, KernelParam>) {
+    fn simulate_optimization_effects(&self, params: &HashMap<String, KernelParam>) {
         // For optimization kernels, simulate parameter updates
         if self.kernel_name.contains("adam") || self.kernel_name.contains("lamb") {
             use std::collections::HashMap;
@@ -884,11 +870,11 @@ impl GpuKernelImpl for CudaKernelHandle {
     }
 
     /// Execute the kernel launch with comprehensive parameter marshaling and execution
-    fn dispatch(&self, work_groups: [u32; 3]) {
+    fn dispatch_workgroups(&self, work_groups: [u32; 3]) {
         #[cfg(debug_assertions)]
         {
             eprintln!(
-                "CUDA: Launching kernel '{}' with work groups [{}, {}, {}]",
+                "CUDA: Launching kernel '{}' with work _groups [{}, {}, {}]",
                 self.kernel_name, work_groups[0], work_groups[1], work_groups[2]
             );
         }
@@ -1074,24 +1060,12 @@ impl CudaOperations {
     /// Perform matrix multiplication using cuBLAS
     #[allow(clippy::too_many_arguments)]
     #[allow(dead_code)]
-    pub(crate) fn gemm_f32(
-        &self,
-        _m: i32,
-        _n: i32,
-        _k: i32,
-        _alpha: f32,
-        _a: &Arc<dyn GpuBufferImpl>,
-        _lda: i32,
-        _b: &Arc<dyn GpuBufferImpl>,
-        _ldb: i32,
-        _beta: f32,
-        _c: &Arc<dyn GpuBufferImpl>,
-        _ldc: i32,
+    pub(crate) fn gemm(&self, m: i32, n: i32, k: i32, lda: i32, ldb: i32, ldc: i32
     ) -> Result<(), GpuError> {
         // In real implementation: use cuBLAS cublasSgemm
         #[cfg(debug_assertions)]
         {
-            eprintln!("CUDA GEMM: {}x{} * {}x{} = {}x{}", _m, _k, _k, _n, _m, _n);
+            eprintln!("CUDA GEMM: {}x{} * {}x{} = {}x{}", m, k, k, n, m, n);
         }
 
         // Simulate successful operation

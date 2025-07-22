@@ -52,9 +52,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ActivityRegulariz
     /// * `name` - Optional name for the layer
     /// # Returns
     /// * A new activity regularization layer
-    pub fn new(l1_factor: Option<f64>, l2_factor: Option<f64>, name: Option<&str>) -> Result<Self> {
+    pub fn new(_l1_factor: Option<f64>, l2_factor: Option<f64>, name: Option<&str>) -> Result<Self> {
         // Validate that at least one regularization factor is provided
-        if l1_factor.is_none() && l2_factor.is_none() {
+        if _l1_factor.is_none() && l2_factor.is_none() {
             return Err(NeuralError::InvalidArchitecture(
                 "At least one of L1 or L2 regularization factor must be provided".to_string(),
             ));
@@ -74,8 +74,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ActivityRegulariz
             l2_factor: l2_factor.map(|x| F::from(x).unwrap()),
             name: name.map(String::from),
             input_cache: Arc::new(RwLock::new(None)),
-            activity_loss: Arc::new(RwLock::new(F::zero())),
-            _phantom: PhantomData,
+            activity_loss: Arc::new(RwLock::new(F::zero())), _phantom: PhantomData,
         })
     }
     /// Get the name of the layer
@@ -141,7 +140,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
         // The regularization is applied as an additional loss term
         Ok(input.clone())
     fn backward(
-        &self,
+        &mut self,
         _input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
@@ -163,7 +162,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
         let activity_grad = self.calculate_activity_gradients(cached_input);
         // Add activity regularization gradients to the incoming gradients
         Ok(grad_output + &activity_grad)
-    fn update(&mut self, _learning_rate: F) -> Result<()> {
+    fn update(&mut self, learning_rate: F) -> Result<()> {
         // ActivityRegularization has no learnable parameters
         Ok(())
     fn layer_type(&self) -> &str {
@@ -192,8 +191,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> L1ActivityRegular
     /// Create a new L1 activity regularization layer
     /// * `factor` - L1 regularization factor
     /// * A new L1 activity regularization layer
-    pub fn new(factor: f64, name: Option<&str>) -> Result<Self> {
-            inner: ActivityRegularization::new(Some(factor), None, name)?,
+    pub fn new(_factor: f64, name: Option<&str>) -> Result<Self> {
+            inner: ActivityRegularization::new(Some(_factor), None, name)?,
         self.inner.name()
         self.inner.get_activity_loss()
     for L1ActivityRegularization<F>

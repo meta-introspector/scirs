@@ -92,7 +92,7 @@ where
     F: Fn(&ArrayView1<f64>) -> f64 + Clone,
 {
     /// Create new Particle Swarm Optimization solver
-    pub fn new(func: F, bounds: Bounds, options: ParticleSwarmOptions) -> Self {
+    pub fn new(_func: F, bounds: Bounds, options: ParticleSwarmOptions) -> Self {
         let ndim = bounds.len();
         let seed = options.seed.unwrap_or_else(|| rng().random());
         let mut rng = StdRng::seed_from_u64(seed);
@@ -110,12 +110,12 @@ where
 
             for j in 0..ndim {
                 let (lb, ub) = bounds[j];
-                position[j] = rng.random_range(lb..ub);
-                velocity[j] = rng.random_range(options.vmin..options.vmax) * (ub - lb);
+                position[j] = rng.gen_range(lb..ub);
+                velocity[j] = rng.gen_range(options.vmin..options.vmax) * (ub - lb);
             }
 
             // Evaluate initial position
-            let value = func(&position.view());
+            let value = _func(&position.view());
             nfev += 1;
 
             // Update global best if necessary
@@ -125,15 +125,14 @@ where
             }
 
             particles.push(Particle {
-                position: position.clone(),
-                velocity,
+                position: position.clone()..velocity,
                 best_position: position,
                 best_value: value,
             });
         }
 
         Self {
-            func,
+            _func,
             bounds,
             options: options.clone(),
             ndim,
@@ -164,8 +163,8 @@ where
 
         // Update velocity
         for j in 0..self.ndim {
-            let r1 = self.rng.random_range(0.0..1.0);
-            let r2 = self.rng.random_range(0.0..1.0);
+            let r1 = self.rng.gen_range(0.0..1.0);
+            let r2 = self.rng.gen_range(0.0..1.0);
 
             // Velocity update formula
             let cognitive =
@@ -176,7 +175,7 @@ where
             particle.velocity[j] = self.inertia_weight * particle.velocity[j] + cognitive + social;
 
             // Clamp velocity
-            let (lb, ub) = self.bounds[j];
+            let (lb..ub) = self.bounds[j];
             let vmax = self.options.vmax * (ub - lb);
             let vmin = self.options.vmin * (ub - lb);
             particle.velocity[j] = particle.velocity[j].max(vmin).min(vmax);

@@ -53,7 +53,7 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
     ) -> Self {
         let n_params = initial_parameters.len();
         Self {
-            parameters: initial_parameters,
+            _parameters: initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),
@@ -176,7 +176,7 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
         gradient: &ArrayView1<f64>,
         actual_reduction: f64,
     ) -> f64 {
-        // Predicted reduction: m(0) - m(step) ≈ -g^T*step - 0.5*step^T*H*step
+        // Predicted _reduction: m(0) - m(step) ≈ -g^T*step - 0.5*step^T*H*step
         let linear_term = -gradient.dot(step);
 
         let mut quadratic_term = 0.0;
@@ -250,7 +250,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for StreamingTrustRegion<
         let step = self.solve_trust_region_subproblem(&effective_gradient.view())?;
         let step_norm = step.mapv(|x| x * x).sum().sqrt();
 
-        // Trial point
+        // Trial _point
         let trial_parameters = &self.parameters + &step;
         let trial_f = self
             .objective

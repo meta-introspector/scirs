@@ -4,7 +4,8 @@
 //! intelligent optimization, and streamlined statistical analysis workflows.
 
 use ndarray::Array1;
-use scirs2_stats::{
+use scirs2__stats::{
+use statrs::statistics::Statistics;
     api_standardization_enhanced::{
         quick_correlation, quick_descriptive, stats, AutoOptimizationLevel, CorrelationType,
         EnhancedCorrelationMethod, FluentStatsConfig, MemoryStrategy, ResultFormat,
@@ -121,7 +122,7 @@ fn demonstrate_method_chaining() -> Result<(), Box<dyn std::error::Error>> {
             println!("📊 Total operations: {}", results.iter().count());
 
             // Display hypothetical results
-            for (name, _result) in results.iter() {
+            for (name_result) in results.iter() {
                 println!("   ✓ {}", name);
             }
         }
@@ -152,7 +153,7 @@ fn demonstrate_intelligent_optimization() -> Result<(), Box<dyn std::error::Erro
     };
 
     let mut intelligent_stats =
-        scirs2_stats::api_standardization_enhanced::stats_with::<f64>(config)
+        scirs2_stats::api_standardization, _enhanced::stats_with::<f64>(config)
             .descriptive()
             .mean()
             .variance(1)
@@ -250,14 +251,14 @@ fn demonstrate_advanced_configuration() -> Result<(), Box<dyn std::error::Error>
 
     // Create examples with different configurations
     let _conservative_chain =
-        scirs2_stats::api_standardization_enhanced::stats_with::<f64>(FluentStatsConfig {
+        scirs2_stats::api_standardization, _enhanced::stats_with::<f64>(FluentStatsConfig {
             memory_strategy: MemoryStrategy::Conservative,
             result_format: ResultFormat::Minimal,
             ..Default::default()
         });
 
     let _performance_chain =
-        scirs2_stats::api_standardization_enhanced::stats_with::<f64>(FluentStatsConfig {
+        scirs2_stats::api_standardization, _enhanced::stats_with::<f64>(FluentStatsConfig {
             memory_strategy: MemoryStrategy::Performance,
             result_format: ResultFormat::Comprehensive,
             auto_optimization_level: AutoOptimizationLevel::Aggressive,
@@ -344,7 +345,7 @@ mod tests {
             ..Default::default()
         };
 
-        let _stats = scirs2_stats::api_standardization_enhanced::stats_with::<f64>(config);
+        let _stats = scirs2_stats::api_standardization, _enhanced::stats_with::<f64>(config);
         assert!(true); // Compilation test
     }
 }

@@ -106,7 +106,7 @@ pub mod builder_pattern {
     /// Example builder structure
     #[derive(Debug, Clone)]
     pub struct StandardInterpolatorBuilder<T: InterpolationFloat> {
-        config: factory_pattern::StandardConfig<T>,
+        config: factory_pattern: StandardConfig<T>,
     }
 
     impl<T: InterpolationFloat> StandardInterpolatorBuilder<T> {
@@ -207,13 +207,13 @@ pub mod error_handling {
     use crate::InterpolateError;
 
     /// Create standard dimension mismatch error using structured error type
-    pub fn dimension_mismatch(expected: usize, actual: usize, context: &str) -> InterpolateError {
-        InterpolateError::dimension_mismatch(expected, actual, context)
+    pub fn dimension_mismatch(_expected: usize, actual: usize, context: &str) -> InterpolateError {
+        InterpolateError::dimension_mismatch(_expected, actual, context)
     }
 
     /// Create standard empty data error using structured error type
-    pub fn empty_data(context: &str) -> InterpolateError {
-        InterpolateError::empty_data(context)
+    pub fn empty_data(_context: &str) -> InterpolateError {
+        InterpolateError::empty_data(_context)
     }
 
     /// Create standard invalid parameter error using structured error type
@@ -227,18 +227,18 @@ pub mod error_handling {
     }
 
     /// Create standard convergence failure error using structured error type
-    pub fn convergence_failure(method: &str, iterations: usize) -> InterpolateError {
-        InterpolateError::convergence_failure(method, iterations)
+    pub fn convergence_failure(_method: &str, iterations: usize) -> InterpolateError {
+        InterpolateError::convergence_failure(_method, iterations)
     }
 
     /// Create standard numerical instability error
-    pub fn numerical_instability(context: &str, details: &str) -> InterpolateError {
-        InterpolateError::numerical_instability(context, details)
+    pub fn numerical_instability(_context: &str, details: &str) -> InterpolateError {
+        InterpolateError::numerical_instability(_context, details)
     }
 
     /// Create standard insufficient points error
-    pub fn insufficient_points(required: usize, provided: usize, method: &str) -> InterpolateError {
-        InterpolateError::insufficient_points(required, provided, method)
+    pub fn insufficient_points(_required: usize, provided: usize, method: &str) -> InterpolateError {
+        InterpolateError::insufficient_points(_required, provided, method)
     }
 }
 
@@ -284,8 +284,7 @@ pub mod input_validation {
 
     /// Validate that data has sufficient points for the method
     pub fn validate_sufficient_points<T: InterpolationFloat>(
-        points: &ArrayView2<T>,
-        _values: &ArrayView1<T>,
+        points: &ArrayView2<T>, _values: &ArrayView1<T>,
         minimum_required: usize,
         method_name: &str,
     ) -> InterpolateResult<()> {
@@ -310,7 +309,7 @@ pub mod input_validation {
             return Err(InterpolateError::dimension_mismatch(
                 expected_dim,
                 query_points.ncols(),
-                &format!("{context} query points"),
+                &format!("{context} query _points"),
             ));
         }
 
@@ -320,7 +319,7 @@ pub mod input_validation {
                 if !val.is_finite() {
                     return Err(InterpolateError::InvalidInput {
                         message: format!(
-                            "Non-finite value found in {context} query points at position ({i}, {j}): {val}"
+                            "Non-finite value found in {context} query _points at position ({i}, {j}): {val}"
                         ),
                     });
                 }

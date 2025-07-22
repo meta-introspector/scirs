@@ -181,9 +181,9 @@ where
     F: Fn(&ArrayView1<f64>) -> f64 + Sync + Send,
 {
     /// Create a new parallel multi-start optimizer
-    pub fn new(objective: F, bounds: Vec<(f64, f64)>, options: ParallelOptions) -> Self {
+    pub fn new(_objective: F, bounds: Vec<(f64, f64)>, options: ParallelOptions) -> Self {
         ParallelMultiStart {
-            objective,
+            _objective,
             bounds,
             options,
         }
@@ -220,8 +220,8 @@ where
     }
 
     /// Find the best result among all runs
-    pub fn best_result(results: &[OptimizationResult]) -> Option<&OptimizationResult> {
-        results
+    pub fn best_result(_results: &[OptimizationResult]) -> Option<&OptimizationResult> {
+        _results
             .iter()
             .min_by(|a, b| a.function_value.partial_cmp(&b.function_value).unwrap())
     }
@@ -362,8 +362,7 @@ where
 #[allow(dead_code)]
 fn sequential_finite_diff_hessian<F>(
     f: &F,
-    x: ArrayView1<f64>,
-    _gradient: Option<&Array1<f64>>,
+    x: ArrayView1<f64>, _gradient: Option<&Array1<f64>>,
     eps: f64,
 ) -> Array1<f64>
 where
@@ -418,17 +417,17 @@ where
 
 /// Convert linear index to (i, j) coordinates in upper triangle
 #[allow(dead_code)]
-fn index_to_upper_triangle(idx: usize, _n: usize) -> (usize, usize) {
-    // Find row i such that i*(i+1)/2 <= idx < (i+1)*(i+2)/2
+fn index_to_upper_triangle(_idx: usize_n: usize) -> (usize, usize) {
+    // Find row i such that i*(i+1)/2 <= _idx < (i+1)*(i+2)/2
     let mut i = 0;
     let mut cumsum = 0;
 
-    while cumsum + i < idx {
+    while cumsum + i < _idx {
         i += 1;
         cumsum += i;
     }
 
-    let j = idx - cumsum;
+    let j = _idx - cumsum;
     (j, i)
 }
 

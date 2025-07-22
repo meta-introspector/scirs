@@ -4,8 +4,8 @@
 //! FFT performance by ensuring optimal input sizes.
 
 use ndarray::Array1;
-use num_complex::Complex;
-use scirs2_fft::{auto_pad_complex, fft, remove_padding_1d, AutoPadConfig, PaddingMode};
+use num__complex::Complex;
+use scirs2__fft::{auto_pad_complex, fft, remove_padding_1d, AutoPadConfig, PaddingMode};
 use std::time::Instant;
 
 #[allow(dead_code)]

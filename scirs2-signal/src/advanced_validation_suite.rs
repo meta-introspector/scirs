@@ -17,14 +17,18 @@
 //! - SciPy reference comparison
 
 use crate::error::SignalResult;
+use crate::dwt::Wavelet;
+use crate::error::SignalResult;
+use ndarray::{Array1, Array2, ArrayView1};
+use rand::SeedableRng;
+use std::collections::HashMap;
+use std::time::Instant;
+
+#[allow(unused_imports)]
 // use ndarray::{Array1, Array2, ArrayView1};
 // use scirs2_core::simd_ops::SimdUnifiedOps;
 // use scirs2_core::validation::{check_finite, check_positive};
-use rand::SeedableRng;
-use std::collections::HashMap;
 // use std::f64::consts::PI;
-use std::time::Instant;
-
 /// Advanced-comprehensive validation configuration for "Advanced mode"
 #[derive(Debug, Clone)]
 pub struct ComprehensiveValidationConfig {
@@ -369,7 +373,7 @@ pub struct ComprehensiveValidationSummary {
     /// Reliability score (0-100)
     pub reliability_score: f64,
     /// Critical issues requiring immediate attention
-    pub critical_issues: Vec<String>,
+    pub issues: Vec<String>,
     /// Warnings that should be addressed
     pub warnings: Vec<String>,
     /// Performance recommendations
@@ -577,9 +581,10 @@ pub fn run_comprehensive_validation(
     let mut passed_tests = 0;
     let mut failed_tests = 0;
     let mut warning_tests = 0;
-    let mut critical_issues = Vec::new();
+    let mut critical_issues: Vec<String> = Vec::new();
     let mut warnings = Vec::new();
     let mut recommendations = Vec::new();
+    let mut issues: Vec<String> = Vec::new();
 
     println!("🚀 Starting Advanced validation suite...");
     println!("Configuration: {:?}", config);
@@ -600,7 +605,7 @@ pub fn run_comprehensive_validation(
     } else {
         failed_tests += 10;
         passed_tests += 40;
-        critical_issues.push("Multitaper stability below acceptable threshold".to_string());
+        issues.push("Multitaper stability below acceptable threshold".to_string());
     }
 
     // 2. Enhanced Lomb-Scargle Validation
@@ -616,7 +621,7 @@ pub fn run_comprehensive_validation(
     } else {
         failed_tests += 5;
         passed_tests += 35;
-        critical_issues.push("Lomb-Scargle accuracy below acceptable threshold".to_string());
+        issues.push("Lomb-Scargle accuracy below acceptable threshold".to_string());
     }
 
     // 3. Parametric Spectral Estimation Validation
@@ -634,7 +639,7 @@ pub fn run_comprehensive_validation(
     } else {
         failed_tests += 10;
         passed_tests += 50;
-        critical_issues.push("Parametric estimation accuracy below threshold".to_string());
+        issues.push("Parametric estimation accuracy below threshold".to_string());
     }
 
     // 4. 2D Wavelet Validation
@@ -650,7 +655,7 @@ pub fn run_comprehensive_validation(
     } else {
         failed_tests += 5;
         passed_tests += 30;
-        critical_issues.push("2D wavelet reconstruction accuracy too low".to_string());
+        issues.push("2D wavelet reconstruction accuracy too low".to_string());
     }
 
     // 5. Wavelet Packet Validation
@@ -666,7 +671,7 @@ pub fn run_comprehensive_validation(
     } else {
         failed_tests += 5;
         passed_tests += 25;
-        critical_issues.push("Wavelet packet fidelity below threshold".to_string());
+        issues.push("Wavelet packet fidelity below threshold".to_string());
     }
 
     // 6. SIMD Validation
@@ -683,7 +688,7 @@ pub fn run_comprehensive_validation(
         } else {
             failed_tests += 5;
             passed_tests += 20;
-            critical_issues.push("SIMD accuracy below threshold".to_string());
+            issues.push("SIMD accuracy below threshold".to_string());
         }
     } else {
         // Create default results
@@ -712,7 +717,7 @@ pub fn run_comprehensive_validation(
         } else {
             failed_tests += 5;
             passed_tests += 15;
-            critical_issues.push("Parallel processing correctness below threshold".to_string());
+            issues.push("Parallel processing correctness below threshold".to_string());
         }
     } else {
         let _parallel_results = ParallelValidationResults {
@@ -860,7 +865,7 @@ pub fn run_comprehensive_validation(
         quality_score,
         performance_score: 85.0, // Placeholder
         reliability_score: 90.0, // Placeholder
-        critical_issues,
+        issues,
         warnings,
         performance_recommendations: vec!["Consider SIMD optimization for hot paths".to_string()],
         accuracy_recommendations: vec![
@@ -1013,8 +1018,7 @@ pub fn run_comprehensive_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_multitaper_validation(
-    _config: &ComprehensiveValidationConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<MultitaperAdvancedResults> {
     // Placeholder implementation - in a real implementation this would
     // call the actual multitaper validation functions
@@ -1059,8 +1063,7 @@ fn run_enhanced_multitaper_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_lombscargle_validation(
-    _config: &ComprehensiveValidationConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<LombScargleAdvancedResults> {
     // Placeholder implementation
     Ok(LombScargleAdvancedResults {
@@ -1089,8 +1092,7 @@ fn run_enhanced_lombscargle_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_parametric_validation(
-    _config: &ComprehensiveValidationConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<ParametricAdvancedResults> {
     // Placeholder implementation
     Ok(ParametricAdvancedResults {
@@ -1138,8 +1140,7 @@ fn run_enhanced_parametric_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_wavelet2d_validation(
-    _config: &ComprehensiveValidationConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<Wavelet2dAdvancedResults> {
     // Placeholder implementation
     Ok(Wavelet2dAdvancedResults {
@@ -1167,8 +1168,7 @@ fn run_enhanced_wavelet2d_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_wavelet_packet_validation(
-    _config: &ComprehensiveValidationConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<WaveletPacketAdvancedResults> {
     // Placeholder implementation
     Ok(WaveletPacketAdvancedResults {
@@ -1195,8 +1195,7 @@ fn run_enhanced_wavelet_packet_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_simd_validation(
-    _config: &ComprehensiveValidationConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<SimdValidationResults> {
     // Placeholder implementation
     Ok(SimdValidationResults {
@@ -1212,8 +1211,7 @@ fn run_enhanced_simd_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_parallel_validation(
-    _config: &ComprehensiveValidationConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<ParallelValidationResults> {
     // Placeholder implementation
     Ok(ParallelValidationResults {
@@ -1234,58 +1232,58 @@ fn run_enhanced_parallel_validation(
 
 /// Generate a comprehensive validation report in human-readable format
 #[allow(dead_code)]
-pub fn generate_comprehensive_report(results: &ComprehensiveValidationResult) -> String {
+pub fn generate_comprehensive_report(_results: &ComprehensiveValidationResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Advanced Validation Report\n\n");
     report.push_str(&format!(
         "**Execution Time**: {:.2} ms\n",
-        results.total_execution_time_ms
+        _results.total_execution_time_ms
     ));
     report.push_str(&format!(
         "**Peak Memory Usage**: {:.2} MB\n\n",
-        results.peak_memory_usage_mb
+        _results.peak_memory_usage_mb
     ));
 
     report.push_str("## Summary\n\n");
     report.push_str(&format!(
         "- **Total Tests**: {}\n",
-        results.summary.total_tests
+        _results.summary.total_tests
     ));
-    report.push_str(&format!("- **Passed**: {}\n", results.summary.passed_tests));
-    report.push_str(&format!("- **Failed**: {}\n", results.summary.failed_tests));
+    report.push_str(&format!("- **Passed**: {}\n", _results.summary.passed_tests));
+    report.push_str(&format!("- **Failed**: {}\n", _results.summary.failed_tests));
     report.push_str(&format!(
         "- **Warnings**: {}\n",
-        results.summary.warning_tests
+        _results.summary.warning_tests
     ));
     report.push_str(&format!(
         "- **Pass Rate**: {:.1}%\n",
-        results.summary.pass_rate
+        _results.summary.pass_rate
     ));
     report.push_str(&format!(
         "- **Quality Score**: {:.1}%\n",
-        results.summary.quality_score
+        _results.summary.quality_score
     ));
     report.push_str(&format!(
         "- **Performance Score**: {:.1}%\n",
-        results.summary.performance_score
+        _results.summary.performance_score
     ));
     report.push_str(&format!(
         "- **Reliability Score**: {:.1}%\n\n",
-        results.summary.reliability_score
+        _results.summary.reliability_score
     ));
 
-    if !results.summary.critical_issues.is_empty() {
+    if !_results.summary.issues.is_empty() {
         report.push_str("## Critical Issues\n\n");
-        for issue in &results.summary.critical_issues {
+        for issue in &_results.summary.issues {
             report.push_str(&format!("- ⚠️ {}\n", issue));
         }
         report.push_str("\n");
     }
 
-    if !results.summary.warnings.is_empty() {
+    if !_results.summary.warnings.is_empty() {
         report.push_str("## Warnings\n\n");
-        for warning in &results.summary.warnings {
+        for warning in &_results.summary.warnings {
             report.push_str(&format!("- ⚡ {}\n", warning));
         }
         report.push_str("\n");
@@ -1296,15 +1294,15 @@ pub fn generate_comprehensive_report(results: &ComprehensiveValidationResult) ->
     report.push_str(&format!("### Multitaper Spectral Estimation\n"));
     report.push_str(&format!(
         "- DPSS Accuracy: {:.1}%\n",
-        results.multitaper_results.dpss_accuracy_score
+        _results.multitaper_results.dpss_accuracy_score
     ));
     report.push_str(&format!(
         "- Stability Score: {:.1}%\n",
-        results.multitaper_results.stability_score
+        _results.multitaper_results.stability_score
     ));
     report.push_str(&format!(
         "- Performance Scaling: {:.1}%\n\n",
-        results
+        _results
             .multitaper_results
             .performance_scaling
             .scaling_efficiency
@@ -1313,68 +1311,68 @@ pub fn generate_comprehensive_report(results: &ComprehensiveValidationResult) ->
     report.push_str(&format!("### Lomb-Scargle Periodogram\n"));
     report.push_str(&format!(
         "- Analytical Accuracy: {:.1}%\n",
-        results.lombscargle_results.analytical_accuracy
+        _results.lombscargle_results.analytical_accuracy
     ));
     report.push_str(&format!(
         "- Peak Detection: {:.1}%\n",
-        results.lombscargle_results.peak_detection_accuracy
+        _results.lombscargle_results.peak_detection_accuracy
     ));
     report.push_str(&format!(
         "- Memory Efficiency: {:.1}%\n\n",
-        results.lombscargle_results.memory_efficiency
+        _results.lombscargle_results.memory_efficiency
     ));
 
     report.push_str(&format!("### Parametric Spectral Estimation\n"));
     report.push_str(&format!(
         "- AR Coefficient Accuracy: {:.1}%\n",
-        results
+        _results
             .parametric_results
             .ar_validation
             .coefficient_accuracy
     ));
     report.push_str(&format!(
         "- ARMA Coefficient Accuracy: {:.1}%\n",
-        results
+        _results
             .parametric_results
             .arma_validation
             .ar_coefficient_accuracy
     ));
     report.push_str(&format!(
         "- Order Selection: {:.1}%\n\n",
-        results.parametric_results.order_selection_accuracy
+        _results.parametric_results.order_selection_accuracy
     ));
 
     report.push_str(&format!("### 2D Wavelet Transforms\n"));
     report.push_str(&format!(
         "- Reconstruction Accuracy: {:.1}%\n",
-        results.wavelet2d_results.reconstruction_accuracy
+        _results.wavelet2d_results.reconstruction_accuracy
     ));
     report.push_str(&format!(
         "- Boundary Handling: {:.1}%\n",
-        results.wavelet2d_results.boundary_handling_score
+        _results.wavelet2d_results.boundary_handling_score
     ));
     report.push_str(&format!(
         "- Computational Efficiency: {:.1}%\n\n",
-        results.wavelet2d_results.computational_efficiency
+        _results.wavelet2d_results.computational_efficiency
     ));
 
     report.push_str(&format!("### SIMD Operations\n"));
     report.push_str(&format!(
         "- Operation Accuracy: {:.3}%\n",
-        results.simd_results.operation_accuracy
+        _results.simd_results.operation_accuracy
     ));
     report.push_str(&format!(
         "- Speedup Factor: {:.1}x\n",
-        results.simd_results.speedup_factor
+        _results.simd_results.speedup_factor
     ));
     report.push_str(&format!(
         "- Platform Consistency: {:.1}%\n\n",
-        results.simd_results.platform_consistency
+        _results.simd_results.platform_consistency
     ));
 
-    if !results.recommendations.is_empty() {
+    if !_results.recommendations.is_empty() {
         report.push_str("## Recommendations\n\n");
-        for rec in &results.recommendations {
+        for rec in &_results.recommendations {
             report.push_str(&format!("- {}\n", rec));
         }
     }

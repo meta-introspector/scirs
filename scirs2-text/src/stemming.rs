@@ -64,7 +64,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2_text::{LancasterStemmer, PorterStemmer, RuleLemmatizer, SimpleLemmatizer, SnowballStemmer, Stemmer};
+//! use scirs2__text::{LancasterStemmer, PorterStemmer, RuleLemmatizer, SimpleLemmatizer, SnowballStemmer, Stemmer};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let porter = PorterStemmer::new();
@@ -92,13 +92,13 @@ pub mod lancaster;
 pub mod rule_lemmatizer;
 
 use crate::error::{Result, TextError};
-use lazy_static::lazy_static;
+use lazy__static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 
 // Re-export stemmer and lemmatizer implementations
 pub use self::lancaster::LancasterStemmer;
-pub use self::rule_lemmatizer::{
+pub use self::rule__lemmatizer::{
     LemmatizerConfig, PosTag, RuleCondition, RuleLemmatizer, RuleLemmatizerBuilder,
 };
 
@@ -111,8 +111,8 @@ pub use self::rule_lemmatizer::{
 /// # Example
 ///
 /// ```
-/// use scirs2_text::stemming::create_pos_aware_lemmatizer;
-/// use scirs2_text::stemming::Stemmer;
+/// use scirs2__text::stemming::create_pos_aware_lemmatizer;
+/// use scirs2__text::stemming::Stemmer;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let lemmatizer = create_pos_aware_lemmatizer();
@@ -401,13 +401,12 @@ pub struct SnowballStemmer {
 
 impl SnowballStemmer {
     /// Create a new Snowball stemmer for a specific language
-    pub fn new(language: &str) -> Result<Self> {
-        match language.to_lowercase().as_str() {
+    pub fn new(_language: &str) -> Result<Self> {
+        match _language.to_lowercase().as_str() {
             "english" | "en" => Ok(Self {
-                language: "english".to_string(),
-            }),
-            _ => Err(TextError::InvalidInput(format!(
-                "Unsupported language: {language}"
+                _language: "english".to_string(),
+            }, _ => Err(TextError::InvalidInput(format!(
+                "Unsupported _language: {_language}"
             ))),
         }
     }
@@ -457,7 +456,7 @@ impl SnowballStemmer {
         }
 
         let mut stemmed = word.to_lowercase();
-        let (_r1, _r2) = self.find_r1_r2(&stemmed);
+        let (_r1_r2) = self.find_r1_r2(&stemmed);
 
         // Step 0: Remove trailing apostrophes
         if stemmed.ends_with("'s'") {
@@ -498,8 +497,7 @@ impl SnowballStemmer {
 impl Stemmer for SnowballStemmer {
     fn stem(&self, word: &str) -> Result<String> {
         match self.language.as_str() {
-            "english" => Ok(self.stem_english(word)),
-            _ => Err(TextError::InvalidInput(format!(
+            "english" => Ok(self.stem_english(word), _ => Err(TextError::InvalidInput(format!(
                 "Unsupported language: {}",
                 self.language
             ))),

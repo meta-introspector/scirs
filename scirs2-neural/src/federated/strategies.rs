@@ -44,13 +44,14 @@ impl RandomSelection {
         Self { seed: None }
     }
     /// Set seed for reproducibility
-    pub fn with_seed(seed: u64) -> Self {
-        Self { seed: Some(seed) }
+    pub fn with_seed(_seed: u64) -> Self {
+        Self { seed: Some(_seed) }
 impl ClientSelection for RandomSelection {
         _client_info: &HashMap<usize, ClientInfo>,
     ) -> Result<Vec<usize>> {
         use rand::prelude::*;
 use rand::rng;
+use rand::seq::SliceRandom;
         let mut rng = if let Some(seed) = self.seed {
             StdRng::seed_from_u64(seed)
         } else {
@@ -77,8 +78,8 @@ impl ImportanceSelection {
             reliability_weight: 0.2,
         }
     /// Set weights
-    pub fn with_weights(data: f32, compute: f32, reliability: f32) -> Self {
-            data_weight: data,
+    pub fn with_weights(_data: f32, compute: f32, reliability: f32) -> Self {
+            data_weight: _data,
             compute_weight: compute,
             reliability_weight: reliability,
     /// Calculate client importance score
@@ -105,7 +106,7 @@ impl ClientSelection for ImportanceSelection {
         Ok(scored_clients
             .into_iter()
             .take(num_select)
-            .map(|(id, _)| id)
+            .map(|(id_)| id)
             .collect())
         "ImportanceSelection"
 /// Power-aware client selection
@@ -116,16 +117,15 @@ pub struct PowerAwareSelection {
     prefer_plugged: bool,
 impl PowerAwareSelection {
     /// Create new power-aware selection
-    pub fn new(min_battery: f32) -> Self {
-            min_battery,
+    pub fn new(_min_battery: f32) -> Self {
+            _min_battery,
             prefer_plugged: true,
 impl ClientSelection for PowerAwareSelection {
         let mut eligible_clients: Vec<(usize, f32)> = available_clients
                 client_info.get(&client_id).and_then(|info| {
                     match info.battery_level {
                         None => Some((client_id, 2.0)), // Plugged device, highest priority
-                        Some(level) if level >= self.min_battery => Some((client_id, level)),
-                        _ => None, // Battery too low
+                        Some(level) if level >= self._min_battery => Some((client_id, level), _ => None, // Battery too low
                     }
                 })
         // Sort by power status (plugged first, then by battery level)
@@ -142,8 +142,8 @@ pub struct DiversitySelection {
     num_clusters: usize,
 impl DiversitySelection {
     /// Create new diversity selection
-    pub fn new(num_clusters: usize) -> Self {
-        Self { num_clusters }
+    pub fn new(_num_clusters: usize) -> Self {
+        Self { _num_clusters }
     /// Simple clustering based on label distribution
     fn cluster_clients(&self, client_info: &HashMap<usize, ClientInfo>) -> HashMap<usize, usize> {
         let mut clusters = HashMap::new();
@@ -155,7 +155,7 @@ impl DiversitySelection {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx, _)| idx % self.num_clusters)
+                .map(|(idx_)| idx % self.num_clusters)
                 .unwrap_or(0);
             clusters.insert(client_id, cluster);
         clusters
@@ -197,8 +197,8 @@ pub struct StratifiedSampling {
     sample_fraction: f32,
 impl StratifiedSampling {
     /// Create new stratified sampling
-    pub fn new(sample_fraction: f32) -> Self {
-        Self { sample_fraction }
+    pub fn new(_sample_fraction: f32) -> Self {
+        Self { _sample_fraction }
 impl SamplingStrategy for StratifiedSampling {
         let sample_size = (data_size as f32 * self.sample_fraction) as usize;
         let mut indices: Vec<usize> = (0..data_size).collect();
@@ -211,8 +211,8 @@ pub struct CyclicSampling {
     batch_size: usize,
 impl CyclicSampling {
     /// Create new cyclic sampling
-    pub fn new(batch_size: usize) -> Self {
-        Self { batch_size }
+    pub fn new(_batch_size: usize) -> Self {
+        Self { _batch_size }
 impl SamplingStrategy for CyclicSampling {
     fn sample(&self, data_size: usize, round: usize) -> Result<Vec<usize>> {
         let start = (round * self.batch_size) % data_size;

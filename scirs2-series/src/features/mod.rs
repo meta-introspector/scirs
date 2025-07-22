@@ -24,10 +24,10 @@ pub use statistical::*;
 #[allow(ambiguous_glob_reexports)]
 pub use temporal::*;
 #[allow(ambiguous_glob_reexports)]
-pub use turning_points::*;
+pub use turning__points::*;
 #[allow(ambiguous_glob_reexports)]
 pub use utils::*;
 #[allow(ambiguous_glob_reexports)]
 pub use wavelet::*;
 #[allow(ambiguous_glob_reexports)]
-pub use window_based::*;
+pub use window__based::*;

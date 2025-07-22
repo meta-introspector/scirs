@@ -8,6 +8,7 @@ use crate::error::{Result, TimeSeriesError};
 use ndarray::{Array1, Array2};
 use scirs2_core::validation::check_positive;
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 
 /// IoT sensor data types
 #[derive(Debug, Clone)]
@@ -65,7 +66,7 @@ pub struct EnvironmentalSensorAnalysis {
 
 impl EnvironmentalSensorAnalysis {
     /// Create new environmental sensor analysis
-    pub fn new(timestamps: Array1<i64>, sampling_interval: f64) -> Result<Self> {
+    pub fn new(_timestamps: Array1<i64>, sampling_interval: f64) -> Result<Self> {
         check_positive(sampling_interval, "sampling_interval")?;
 
         Ok(Self {
@@ -73,7 +74,7 @@ impl EnvironmentalSensorAnalysis {
             humidity: None,
             pressure: None,
             light: None,
-            timestamps,
+            _timestamps,
             sampling_interval,
         })
     }
@@ -274,14 +275,14 @@ pub struct MotionSensorAnalysis {
 
 impl MotionSensorAnalysis {
     /// Create new motion sensor analysis
-    pub fn new(timestamps: Array1<i64>, fs: f64) -> Result<Self> {
+    pub fn new(_timestamps: Array1<i64>, fs: f64) -> Result<Self> {
         check_positive(fs, "sampling_frequency")?;
 
         Ok(Self {
             acceleration: None,
             motion: None,
             gps: None,
-            timestamps,
+            _timestamps,
             fs,
         })
     }

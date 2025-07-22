@@ -505,19 +505,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Estimate matrix sparsity ratio
 #[allow(dead_code)]
-fn estimate_sparsity(matrix: &ArrayView2<f64>) -> f64 {
-    let (m, n) = matrix.dim();
+fn estimate_sparsity(_matrix: &ArrayView2<f64>) -> f64 {
+    let (m, n) = _matrix.dim();
     let total_elements = m * n;
     let tolerance = 1e-14;
 
-    let zero_elements = matrix.iter().filter(|&&val| val.abs() <= tolerance).count();
+    let zero_elements = _matrix.iter().filter(|&&val| val.abs() <= tolerance).count();
     zero_elements as f64 / total_elements as f64
 }
 
 /// Check if matrix is symmetric
 #[allow(dead_code)]
-fn check_symmetry(matrix: &ArrayView2<f64>) -> bool {
-    let (m, n) = matrix.dim();
+fn check_symmetry(_matrix: &ArrayView2<f64>) -> bool {
+    let (m, n) = _matrix.dim();
     if m != n {
         return false;
     }
@@ -525,7 +525,7 @@ fn check_symmetry(matrix: &ArrayView2<f64>) -> bool {
     let tolerance = 1e-12;
     for i in 0..n {
         for j in (i + 1)..n {
-            if (matrix[[i, j]] - matrix[[j, i]]).abs() > tolerance {
+            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > tolerance {
                 return false;
             }
         }

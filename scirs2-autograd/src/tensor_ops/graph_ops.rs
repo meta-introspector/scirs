@@ -4,7 +4,7 @@ use crate::Float;
 
 pub(crate) struct ControlDependency;
 
-impl<F: Float> op::Op<F> for ControlDependency {
+impl<F: Float>, op::Op<F> for ControlDependency {
     // Reuse the 1st input
     fn compute(&self, ctx: &mut op::ComputeContext<F>) -> Result<(), op::OpError> {
         let ret = ctx.input(0);

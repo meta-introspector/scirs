@@ -328,11 +328,11 @@ impl AdvancedPerformanceMonitor {
     }
 
     /// Create with custom thresholds
-    pub fn with_thresholds(thresholds: PerformanceThresholds) -> Self {
+    pub fn with_thresholds(_thresholds: PerformanceThresholds) -> Self {
         Self {
             metrics_history: Arc::new(RwLock::new(Vec::new())),
             realtime_aggregator: Arc::new(Mutex::new(RealtimeAggregator::new())),
-            alert_thresholds: thresholds,
+            alert_thresholds: _thresholds,
             resource_monitor: Arc::new(Mutex::new(SystemResourceMonitor::new())),
             optimization_engine: Arc::new(Mutex::new(OptimizationEngine::new())),
         }
@@ -469,59 +469,59 @@ impl AdvancedPerformanceMonitor {
         Ok(())
     }
 
-    fn calculate_avg_processing_time(data: &[PerformanceDataPoint]) -> Duration {
-        if data.is_empty() {
+    fn calculate_avg_processing_time(_data: &[PerformanceDataPoint]) -> Duration {
+        if _data.is_empty() {
             return Duration::from_millis(0);
         }
 
-        let total_ms: u128 = data.iter().map(|d| d.processing_time.as_millis()).sum();
-        Duration::from_millis((total_ms / data.len() as u128) as u64)
+        let total_ms: u128 = _data.iter().map(|d| d.processing_time.as_millis()).sum();
+        Duration::from_millis((total_ms / _data.len() as u128) as u64)
     }
 
-    fn calculate_avg_throughput(data: &[PerformanceDataPoint]) -> f64 {
-        if data.is_empty() {
+    fn calculate_avg_throughput(_data: &[PerformanceDataPoint]) -> f64 {
+        if _data.is_empty() {
             return 0.0;
         }
 
-        let total_throughput: f64 = data
+        let total_throughput: f64 = _data
             .iter()
             .map(|d| d.items_processed as f64 / d.processing_time.as_secs_f64())
             .sum();
-        total_throughput / data.len() as f64
+        total_throughput / _data.len() as f64
     }
 
-    fn calculate_avg_memory_usage(data: &[PerformanceDataPoint]) -> usize {
-        if data.is_empty() {
+    fn calculate_avg_memory_usage(_data: &[PerformanceDataPoint]) -> usize {
+        if _data.is_empty() {
             return 0;
         }
 
-        data.iter().map(|d| d.memory_usage).sum::<usize>() / data.len()
+        _data.iter().map(|d| d.memory_usage).sum::<usize>() / _data.len()
     }
 
-    fn calculate_avg_cache_hit_rate(data: &[PerformanceDataPoint]) -> f64 {
-        if data.is_empty() {
+    fn calculate_avg_cache_hit_rate(_data: &[PerformanceDataPoint]) -> f64 {
+        if _data.is_empty() {
             return 0.0;
         }
 
-        data.iter().map(|d| d.cache_hit_rate).sum::<f64>() / data.len() as f64
+        _data.iter().map(|d| d.cache_hit_rate).sum::<f64>() / _data.len() as f64
     }
 
-    fn analyze_trends(history: &[PerformanceDataPoint]) -> TrendAnalysis {
+    fn analyze_trends(_history: &[PerformanceDataPoint]) -> TrendAnalysis {
         TrendAnalysis {
             processing_time_trend: Self::calculate_trend(
-                &history
+                &_history
                     .iter()
                     .map(|d| d.processing_time.as_millis() as f64)
                     .collect::<Vec<_>>(),
             ),
             throughput_trend: Self::calculate_trend(
-                &history
+                &_history
                     .iter()
                     .map(|d| d.items_processed as f64 / d.processing_time.as_secs_f64())
                     .collect::<Vec<_>>(),
             ),
             memory_usage_trend: Self::calculate_trend(
-                &history
+                &_history
                     .iter()
                     .map(|d| d.memory_usage as f64)
                     .collect::<Vec<_>>(),
@@ -529,15 +529,15 @@ impl AdvancedPerformanceMonitor {
         }
     }
 
-    fn calculate_trend(values: &[f64]) -> TrendDirection {
-        if values.len() < 2 {
+    fn calculate_trend(_values: &[f64]) -> TrendDirection {
+        if _values.len() < 2 {
             return TrendDirection::Stable;
         }
 
-        let mid_point = values.len() / 2;
-        let first_half_avg = values[..mid_point].iter().sum::<f64>() / mid_point as f64;
+        let mid_point = _values.len() / 2;
+        let first_half_avg = _values[..mid_point].iter().sum::<f64>() / mid_point as f64;
         let second_half_avg =
-            values[mid_point..].iter().sum::<f64>() / (values.len() - mid_point) as f64;
+            _values[mid_point..].iter().sum::<f64>() / (_values.len() - mid_point) as f64;
 
         let change_rate = (second_half_avg - first_half_avg) / first_half_avg;
 
@@ -550,11 +550,11 @@ impl AdvancedPerformanceMonitor {
         }
     }
 
-    fn identify_bottlenecks(history: &[PerformanceDataPoint]) -> Vec<BottleneckAnalysis> {
+    fn identify_bottlenecks(_history: &[PerformanceDataPoint]) -> Vec<BottleneckAnalysis> {
         let mut bottlenecks = Vec::new();
 
         // Analyze processing time bottlenecks
-        let avg_processing_time = Self::calculate_avg_processing_time(history);
+        let avg_processing_time = Self::calculate_avg_processing_time(_history);
         if avg_processing_time.as_millis() > 500 {
             bottlenecks.push(BottleneckAnalysis {
                 component: "Processing Time".to_string(),
@@ -577,7 +577,7 @@ impl AdvancedPerformanceMonitor {
         }
 
         // Analyze memory usage bottlenecks
-        let avg_memory = Self::calculate_avg_memory_usage(history);
+        let avg_memory = Self::calculate_avg_memory_usage(_history);
         if avg_memory > 4 * 1024 * 1024 * 1024 {
             // 4GB
             bottlenecks.push(BottleneckAnalysis {
@@ -900,8 +900,7 @@ impl OptimizationEngine {
                 "processing_time_ms" => data_point.processing_time.as_millis() as f64,
                 "cpu_utilization" => data_point.cpu_utilization,
                 "memory_usage_mb" => data_point.memory_usage as f64 / (1024.0 * 1024.0),
-                "cache_hit_rate" => data_point.cache_hit_rate,
-                _ => return false,
+                "cache_hit_rate" => data_point.cache_hit_rate_ => return false,
             };
 
             match condition.operator {
@@ -918,7 +917,7 @@ impl OptimizationEngine {
         if let Some(optimization) = self
             .current_recommendations
             .iter()
-            .find(|r| r.id == optimization_id)
+            .find(|r| r._id == optimization_id)
         {
             let application = OptimizationApplication {
                 timestamp: Instant::now(),
@@ -936,7 +935,7 @@ impl OptimizationEngine {
 
             // Remove from current recommendations
             self.current_recommendations
-                .retain(|r| r.id != optimization_id);
+                .retain(|r| r._id != optimization_id);
 
             Ok(())
         } else {

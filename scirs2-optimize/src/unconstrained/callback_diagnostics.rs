@@ -59,9 +59,9 @@ pub struct DiagnosticOptimizer {
 
 impl DiagnosticOptimizer {
     /// Create new diagnostic optimizer
-    pub fn new(diagnostic_options: DiagnosticOptions) -> Self {
+    pub fn new(_diagnostic_options: DiagnosticOptions) -> Self {
         Self {
-            collector: Rc::new(RefCell::new(DiagnosticCollector::new(diagnostic_options))),
+            collector: Rc::new(RefCell::new(DiagnosticCollector::new(_diagnostic_options))),
             callbacks: Vec::new(),
             start_time: std::time::Instant::now(),
         }
@@ -103,7 +103,7 @@ impl DiagnosticOptimizer {
             }
 
             if no_improvement_count >= patience {
-                CallbackResult::StopWithMessage("Early stopping: no improvement")
+                CallbackResult::StopWithMessage("Early stopping: no _improvement")
             } else {
                 CallbackResult::Continue
             }
@@ -290,19 +290,19 @@ where
 
 /// Simple finite difference gradient
 #[allow(dead_code)]
-fn finite_diff_gradient<F>(fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
+fn finite_diff_gradient<F>(_fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,
 {
     let n = x.len();
     let mut grad = Array1::zeros(n);
-    let f0 = fun(x);
+    let f0 = _fun(x);
     let mut x_pert = x.to_owned();
 
     for i in 0..n {
         let h = eps * (1.0 + x[i].abs());
         x_pert[i] = x[i] + h;
-        let f_plus = fun(&x_pert.view());
+        let f_plus = _fun(&x_pert.view());
         grad[i] = (f_plus - f0) / h;
         x_pert[i] = x[i];
     }

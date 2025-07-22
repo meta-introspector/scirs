@@ -15,7 +15,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_integrate::pde::amr::{AMRGrid, RefinementCriteria, AMRSolver};
+//! use scirs2__integrate::pde::amr::{AMRGrid, RefinementCriteria, AMRSolver};
 //!
 //! // Create AMR grid with initial coarse mesh
 //! let mut grid = AMRGrid::new(64, 64, [0.0, 1.0], [0.0, 1.0]);
@@ -94,7 +94,7 @@ pub enum RefinementCriteria<F: IntegrateFloat> {
     // },
 }
 
-impl<F: IntegrateFloat> std::fmt::Debug for RefinementCriteria<F> {
+impl<F: IntegrateFloat> + std::fmt::Debug for RefinementCriteria<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::GradientBased {
@@ -127,26 +127,26 @@ impl<F: IntegrateFloat> std::fmt::Debug for RefinementCriteria<F> {
 
 impl<F: IntegrateFloat> RefinementCriteria<F> {
     /// Create gradient-based refinement criteria
-    pub fn gradient_based(threshold: F) -> Self {
+    pub fn gradient_based(_threshold: F) -> Self {
         Self::GradientBased {
-            threshold,
-            coarsen_threshold: threshold / F::from(4.0).unwrap(),
+            _threshold,
+            coarsen_threshold: _threshold / F::from(4.0).unwrap(),
         }
     }
 
     /// Create curvature-based refinement criteria
-    pub fn curvature_based(threshold: F) -> Self {
+    pub fn curvature_based(_threshold: F) -> Self {
         Self::CurvatureBased {
-            threshold,
-            coarsen_threshold: threshold / F::from(4.0).unwrap(),
+            _threshold,
+            coarsen_threshold: _threshold / F::from(4.0).unwrap(),
         }
     }
 
     /// Create error-based refinement criteria
-    pub fn error_based(threshold: F) -> Self {
+    pub fn error_based(_threshold: F) -> Self {
         Self::ErrorBased {
-            threshold,
-            coarsen_threshold: threshold / F::from(16.0).unwrap(),
+            _threshold,
+            coarsen_threshold: _threshold / F::from(16.0).unwrap(),
         }
     }
 
@@ -182,32 +182,32 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
     }
 
     /// Compute gradient magnitude at cell (i, j)
-    fn compute_gradient_magnitude(&self, solution: ArrayView2<F>, i: usize, j: usize) -> F {
-        let (nx, ny) = solution.dim();
+    fn compute_gradient_magnitude(_solution: ArrayView2<F>, i: usize, j: usize) -> F {
+        let (nx, ny) = _solution.dim();
 
         // Compute gradients using centered differences where possible
         let grad_x = if i == 0 {
-            solution[[1, j]] - solution[[0, j]]
+            _solution[[1, j]] - _solution[[0, j]]
         } else if i == nx - 1 {
-            solution[[nx - 1, j]] - solution[[nx - 2, j]]
+            _solution[[nx - 1, j]] - _solution[[nx - 2, j]]
         } else {
-            (solution[[i + 1, j]] - solution[[i - 1, j]]) / F::from(2.0).unwrap()
+            (_solution[[i + 1, j]] - _solution[[i - 1, j]]) / F::from(2.0).unwrap()
         };
 
         let grad_y = if j == 0 {
-            solution[[i, 1]] - solution[[i, 0]]
+            _solution[[i, 1]] - _solution[[i, 0]]
         } else if j == ny - 1 {
-            solution[[i, ny - 1]] - solution[[i, ny - 2]]
+            _solution[[i, ny - 1]] - _solution[[i, ny - 2]]
         } else {
-            (solution[[i, j + 1]] - solution[[i, j - 1]]) / F::from(2.0).unwrap()
+            (_solution[[i, j + 1]] - _solution[[i, j - 1]]) / F::from(2.0).unwrap()
         };
 
         (grad_x * grad_x + grad_y * grad_y).sqrt()
     }
 
     /// Compute curvature (second derivative magnitude) at cell (i, j)
-    fn compute_curvature(&self, solution: ArrayView2<F>, i: usize, j: usize) -> F {
-        let (nx, ny) = solution.dim();
+    fn compute_curvature(_solution: ArrayView2<F>, i: usize, j: usize) -> F {
+        let (nx, ny) = _solution.dim();
 
         if i == 0 || i == nx - 1 || j == 0 || j == ny - 1 {
             return F::zero(); // Can't compute curvature at boundaries
@@ -215,12 +215,12 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
 
         // Second derivatives using centered differences
         let d2_dx2 =
-            solution[[i + 1, j]] - F::from(2.0).unwrap() * solution[[i, j]] + solution[[i - 1, j]];
+            _solution[[i + 1, j]] - F::from(2.0).unwrap() * _solution[[i, j]] + _solution[[i - 1, j]];
         let d2_dy2 =
-            solution[[i, j + 1]] - F::from(2.0).unwrap() * solution[[i, j]] + solution[[i, j - 1]];
+            _solution[[i, j + 1]] - F::from(2.0).unwrap() * _solution[[i, j]] + _solution[[i, j - 1]];
         let d2_dxdy =
-            (solution[[i + 1, j + 1]] - solution[[i + 1, j - 1]] - solution[[i - 1, j + 1]]
-                + solution[[i - 1, j - 1]])
+            (_solution[[i + 1, j + 1]] - _solution[[i + 1, j - 1]] - _solution[[i - 1, j + 1]]
+                + _solution[[i - 1, j - 1]])
                 / F::from(4.0).unwrap();
 
         // Frobenius norm of Hessian matrix
@@ -237,17 +237,17 @@ impl<F: IntegrateFloat> RefinementCriteria<F> {
 
 impl<F: IntegrateFloat> AMRGrid<F> {
     /// Create new AMR grid with initial coarse level
-    pub fn new(nx: usize, ny: usize, domain_x: [F; 2], domain_y: [F; 2]) -> Self {
-        let dx = (domain_x[1] - domain_x[0]) / F::from(nx).unwrap();
+    pub fn new(_nx: usize, ny: usize, domain_x: [F; 2], domain_y: [F; 2]) -> Self {
+        let dx = (domain_x[1] - domain_x[0]) / F::from(_nx).unwrap();
         let dy = (domain_y[1] - domain_y[0]) / F::from(ny).unwrap();
 
         let coarse_level = GridLevel {
             level: 0,
-            nx,
+            _nx,
             ny,
             dx,
             dy,
-            refined: Array2::from_elem((nx, ny), false),
+            refined: Array2::from_elem((_nx, ny), false),
             children: HashMap::new(),
         };
 
@@ -266,7 +266,7 @@ impl<F: IntegrateFloat> AMRGrid<F> {
     }
 
     /// Refine grid based on criteria
-    pub fn refine(&mut self, criteria: &RefinementCriteria<F>) -> IntegrateResult<usize> {
+    pub fn refine(&self, criteria: &RefinementCriteria<F>) -> IntegrateResult<usize> {
         let mut total_refined = 0;
 
         // Process each level from coarse to fine
@@ -302,7 +302,7 @@ impl<F: IntegrateFloat> AMRGrid<F> {
     }
 
     /// Coarsen grid based on criteria
-    pub fn coarsen(&mut self, criteria: &RefinementCriteria<F>) -> IntegrateResult<usize> {
+    pub fn coarsen(&self, criteria: &RefinementCriteria<F>) -> IntegrateResult<usize> {
         let mut total_coarsened = 0;
 
         // Process from fine to coarse levels
@@ -421,7 +421,7 @@ impl<F: IntegrateFloat> AMRGrid<F> {
                     let mut averaged_value = F::zero();
                     let mut valid_children = 0;
 
-                    for (child_i, child_j, _) in &children {
+                    for (child_i, child_j_) in &children {
                         if let Some(&child_value) = self.solution.get(&(level, *child_i, *child_j))
                         {
                             averaged_value += child_value;
@@ -437,7 +437,7 @@ impl<F: IntegrateFloat> AMRGrid<F> {
                             .insert((parent_level, parent_i, parent_j), averaged_value);
 
                         // Remove child values
-                        for (child_i, child_j, _) in &children {
+                        for (child_i, child_j_) in &children {
                             self.solution.remove(&(level, *child_i, *child_j));
                         }
 
@@ -462,13 +462,13 @@ impl<F: IntegrateFloat> AMRGrid<F> {
     }
 
     /// Remove empty refinement levels from the hierarchy
-    fn cleanup_empty_levels(&mut self) {
+    fn cleanup_empty_levels(&self) {
         // Find the highest level with any refined cells or solution data
         let mut max_active_level = 0;
 
         for level in 0..self.levels.len() {
             let has_refined_cells = self.levels[level].refined.iter().any(|&x| x);
-            let has_solution_data = self.solution.keys().any(|(l, _, _)| *l == level);
+            let has_solution_data = self.solution.keys().any(|(l__)| *l == level);
 
             if has_refined_cells || has_solution_data {
                 max_active_level = level;
@@ -481,7 +481,7 @@ impl<F: IntegrateFloat> AMRGrid<F> {
     }
 
     /// Interpolate solution from parent cell to child cells
-    fn interpolate_to_children(&mut self, level: usize, i: usize, j: usize) -> IntegrateResult<()> {
+    fn interpolate_to_children(&self, level: usize, i: usize, j: usize) -> IntegrateResult<()> {
         let parent_value = self
             .solution
             .get(&(level, i, j))
@@ -564,9 +564,9 @@ pub struct AMRSolver<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> AMRSolver<F> {
     /// Create new AMR solver
-    pub fn new(grid: AMRGrid<F>, criteria: RefinementCriteria<F>) -> Self {
+    pub fn new(_grid: AMRGrid<F>, criteria: RefinementCriteria<F>) -> Self {
         Self {
-            grid,
+            _grid,
             criteria,
             amr_cycles: 0,
             max_amr_cycles: 5,
@@ -587,16 +587,16 @@ impl<F: IntegrateFloat> AMRSolver<F> {
     where
         ProblemFn: Fn(&AMRGrid<F>, ArrayView2<F>) -> PDEResult<Array2<F>>,
     {
-        // Initialize solution on coarse grid
+        // Initialize _solution on coarse grid
         let mut current_solution = initial_solution;
 
         for cycle in 0..self.max_amr_cycles {
             self.amr_cycles = cycle;
 
-            // Store current solution in grid
+            // Store current _solution in grid
             self.store_solution_in_grid(&current_solution)?;
 
-            // Refine grid based on current solution
+            // Refine grid based on current _solution
             let refined_cells = self.grid.refine(&self.criteria)?;
 
             // If no refinement occurred, we're done
@@ -615,7 +615,7 @@ impl<F: IntegrateFloat> AMRSolver<F> {
     }
 
     /// Store solution array in the AMR grid structure
-    fn store_solution_in_grid(&mut self, solution: &Array2<F>) -> IntegrateResult<()> {
+    fn store_solution_in_grid(&self, solution: &Array2<F>) -> IntegrateResult<()> {
         let (nx, ny) = solution.dim();
 
         // Clear existing solution

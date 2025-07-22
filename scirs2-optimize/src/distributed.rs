@@ -7,6 +7,7 @@
 use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::Rng;
+use statrs::statistics::Statistics;
 
 /// MPI interface abstraction for distributed optimization
 pub trait MPIInterface {
@@ -177,13 +178,13 @@ pub struct DistributedOptimizationContext<M: MPIInterface> {
 
 impl<M: MPIInterface> DistributedOptimizationContext<M> {
     /// Create a new distributed optimization context
-    pub fn new(mpi: M, config: DistributedConfig) -> Self {
-        let rank = mpi.rank();
-        let size = mpi.size();
+    pub fn new(_mpi: M, config: DistributedConfig) -> Self {
+        let rank = _mpi.rank();
+        let size = _mpi.size();
         let work_distribution = WorkDistribution::new(rank, size, config.distribution_strategy);
 
         Self {
-            mpi,
+            _mpi,
             config,
             rank,
             size,
@@ -235,7 +236,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
             )?;
 
             // Reshape into 2D array
-            let result =
+            let _result =
                 Array2::from_shape_vec((self.size as usize, local_result.len()), gathered_data)
                     .map_err(|e| {
                         ScirsError::InvalidInput(scirs2_core::error::ErrorContext::new(format!(
@@ -243,7 +244,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
                             e
                         )))
                     })?;
-            Ok(Some(result))
+            Ok(Some(_result))
         } else {
             self.mpi.gather(local_result.as_slice().unwrap(), None, 0)?;
             Ok(None)
@@ -275,9 +276,9 @@ struct WorkDistribution {
 }
 
 impl WorkDistribution {
-    fn new(rank: i32, size: i32, strategy: DistributionStrategy) -> Self {
+    fn new(_rank: i32, size: i32, strategy: DistributionStrategy) -> Self {
         Self {
-            rank,
+            _rank,
             size,
             strategy,
         }
@@ -334,7 +335,7 @@ impl WorkDistribution {
                 strategy: DistributionStrategy::MasterWorker,
             }
         } else {
-            // Workers split the work
+            // Workers split the _work
             let worker_count = self.size - 1;
             let work_per_worker = total_work / worker_count as usize;
             let remainder = total_work % worker_count as usize;
@@ -516,10 +517,8 @@ pub mod algorithms {
         }
 
         fn evaluate_local_population<F>(
-            &self,
-            function: &F,
-            population: &Array2<f64>,
-        ) -> ScirsResult<Array1<f64>>
+            &self..function: &F,
+            population: &Array2<f64>,) -> ScirsResult<Array1<f64>>
         where
             F: Fn(&ArrayView1<f64>) -> f64,
         {
@@ -541,9 +540,9 @@ pub mod algorithms {
             // Find local best
             let mut best_idx = 0;
             let mut best_fitness = local_fitness[0];
-            for (i, &fitness) in local_fitness.iter().enumerate() {
-                if fitness < best_fitness {
-                    best_fitness = fitness;
+            for (i, &_fitness) in local_fitness.iter().enumerate() {
+                if _fitness < best_fitness {
+                    best_fitness = _fitness;
                     best_idx = i;
                 }
             }
@@ -575,7 +574,7 @@ pub mod algorithms {
                     }
                 }
 
-                let [a, b, c] = [indices[0], indices[1], indices[2]];
+                let [a..b, c] = [indices[0], indices[1], indices[2]];
 
                 // Mutation and crossover
                 let j_rand = rng.random_range(0..dims);
@@ -599,12 +598,12 @@ pub mod algorithms {
             trial_population: &Array2<f64>,
             trial_fitness: &Array1<f64>,
         ) {
-            for i in 0..population.nrows() {
-                if trial_fitness[i] <= fitness[i] {
-                    for j in 0..population.ncols() {
-                        population[[i, j]] = trial_population[[i, j]];
+            for i in 0.._population.nrows() {
+                if trial_fitness[i] <= _fitness[i] {
+                    for j in 0.._population.ncols() {
+                        _population[[i, j]] = trial_population[[i, j]];
                     }
-                    fitness[i] = trial_fitness[i];
+                    _fitness[i] = trial_fitness[i];
                 }
             }
         }
@@ -623,7 +622,7 @@ pub mod algorithms {
                 .iter()
                 .enumerate()
                 .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(i, _)| i)
+                .map(|(i_)| i)
                 .unwrap_or(0);
 
             let _next_rank = (self.context.rank() + 1) % self.context.size();
@@ -780,10 +779,8 @@ pub mod algorithms {
         }
 
         fn evaluate_swarm<F>(
-            &self,
-            function: &F,
-            positions: &Array2<f64>,
-        ) -> ScirsResult<Array1<f64>>
+            &self..function: &F,
+            positions: &Array2<f64>,) -> ScirsResult<Array1<f64>>
         where
             F: Fn(&ArrayView1<f64>) -> f64,
         {
@@ -925,8 +922,8 @@ pub struct MockMPI {
 
 #[cfg(test)]
 impl MockMPI {
-    pub fn new(rank: i32, size: i32) -> Self {
-        Self { rank, size }
+    pub fn new(_rank: i32, size: i32) -> Self {
+        Self { _rank, size }
     }
 }
 
@@ -939,7 +936,7 @@ impl MPIInterface for MockMPI {
         self.size
     }
 
-    fn broadcast<T>(&self, _data: &mut [T], _root: i32) -> ScirsResult<()>
+    fn broadcast<T>(&self_data: &mut [T], _root: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync,
     {
@@ -947,10 +944,7 @@ impl MPIInterface for MockMPI {
     }
 
     fn gather<T>(
-        &self,
-        _send_data: &[T],
-        _recv_data: Option<&mut [T]>,
-        _root: i32,
+        &self, _send_data: &[T], _recv_data: Option<&mut [T]>, _root: i32,
     ) -> ScirsResult<()>
     where
         T: Clone + Send + Sync,
@@ -961,8 +955,7 @@ impl MPIInterface for MockMPI {
     fn allreduce<T>(
         &self,
         send_data: &[T],
-        recv_data: &mut [T],
-        _op: ReductionOp,
+        recv_data: &mut [T], _op: ReductionOp,
     ) -> ScirsResult<()>
     where
         T: Clone + Send + Sync + std::ops::Add<Output = T> + PartialOrd,
@@ -978,13 +971,13 @@ impl MPIInterface for MockMPI {
     fn barrier(&self) -> ScirsResult<()> {
         Ok(())
     }
-    fn send<T>(&self, _data: &[T], _dest: i32, _tag: i32) -> ScirsResult<()>
+    fn send<T>(&self_data: &[T], _dest: i32_tag: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync,
     {
         Ok(())
     }
-    fn recv<T>(&self, _data: &mut [T], _source: i32, _tag: i32) -> ScirsResult<()>
+    fn recv<T>(&self_data: &mut [T], _source: i32_tag: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync,
     {

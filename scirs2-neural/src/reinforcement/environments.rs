@@ -69,7 +69,7 @@ impl CartPole {
         x < -2.4 || x > 2.4 || theta < -0.2095 || theta > 0.2095 || self.steps >= self.max_steps
 impl Environment for CartPole {
     fn reset(&mut self) -> Result<Observation> {
-        use rand_distr::{Distribution, Uniform};
+        use rand__distr::{Distribution, Uniform};
         let mut rng = rng();
         let uniform = Uniform::new(-0.05, 0.05);
         self.state = Array1::from_vec(vec![
@@ -213,8 +213,8 @@ pub struct VectorizedEnvironment<E: Environment + Clone> {
     num_envs: usize,
 impl<E: Environment + Clone> VectorizedEnvironment<E> {
     /// Create a new vectorized environment
-    pub fn new(env_fn: impl Fn() -> E, num_envs: usize) -> Self {
-        let envs = (0..num_envs).map(|_| env_fn()).collect();
+    pub fn new(_env_fn: impl Fn() -> E, num_envs: usize) -> Self {
+        let envs = (0..num_envs).map(|_| _env_fn()).collect();
         Self { envs, num_envs }
     /// Reset all environments
     pub fn reset_all(&mut self) -> Result<Array2<f32>> {
@@ -267,7 +267,7 @@ mod tests {
         assert_eq!(obs.len(), 2);
         assert!(obs[0] >= -0.6 && obs[0] <= -0.4);
         let action = Array1::from_vec(vec![0.8]); // Go right
-        let (_, reward, _, _) = env.step(&action).unwrap();
+        let (_, reward__) = env.step(&action).unwrap();
         assert_eq!(reward, -1.0); // Not at goal yet
     fn test_pendulum() {
         let mut env = Pendulum::new();

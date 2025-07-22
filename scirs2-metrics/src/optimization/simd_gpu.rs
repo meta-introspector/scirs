@@ -607,7 +607,7 @@ impl SimdMetrics {
         let batch_size = y_true_batch.nrows();
         let mut results = Vec::with_capacity(batch_size);
 
-        // Simulate GPU computation with appropriate delays and batch processing
+        // Simulate GPU computation with appropriate delays and _batch processing
         let threads_per_block = gpu_info.max_threads_per_block.min(1024);
         let _blocks_needed = batch_size.div_ceil(threads_per_block as usize);
 
@@ -627,8 +627,7 @@ impl SimdMetrics {
                     "mse" => self.gpu_mse_kernel(&y_true_sample, &y_pred_sample)?,
                     "mae" => self.gpu_mae_kernel(&y_true_sample, &y_pred_sample)?,
                     "r2_score" => self.gpu_r2_kernel(&y_true_sample, &y_pred_sample)?,
-                    "correlation" => self.gpu_correlation_kernel(&y_true_sample, &y_pred_sample)?,
-                    _ => F::zero(),
+                    "correlation" => self.gpu_correlation_kernel(&y_true_sample, &y_pred_sample)?_ => F::zero(),
                 };
                 sample_results.insert(metric.to_string(), result);
             }
@@ -907,8 +906,7 @@ impl SimdMetrics {
 
         match nrows {
             1 => Ok(matrix[[0, 0]]),
-            2 => Ok(matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]),
-            _ => self.scalar_determinant_lu(matrix),
+            2 => Ok(matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]], _ => self.scalar_determinant_lu(matrix),
         }
     }
 

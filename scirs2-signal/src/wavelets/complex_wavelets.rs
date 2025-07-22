@@ -1,10 +1,11 @@
 //! Complex-valued wavelets (Morlet, Paul, etc.)
 
-use super::utils::factorial;
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use std::f64::consts::PI;
+use super::utils::factorial;
 
+#[allow(unused_imports)]
 /// Generate a Morlet wavelet
 ///
 /// The standard Morlet wavelet is defined as a complex exponential modulated by a Gaussian.
@@ -22,16 +23,16 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::wavelets::morlet;
+/// use scirs2__signal::wavelets::morlet;
 ///
 /// // Generate a Morlet wavelet with 100 points, central frequency 5.0, and scaling 1.0
 /// let wavelet = morlet(100, 5.0, 1.0).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn morlet(points: usize, w: f64, s: f64) -> SignalResult<Vec<Complex64>> {
-    if points == 0 {
+pub fn morlet(_points: usize, w: f64, s: f64) -> SignalResult<Vec<Complex64>> {
+    if _points == 0 {
         return Err(SignalError::ValueError(
-            "points must be greater than 0".to_string(),
+            "_points must be greater than 0".to_string(),
         ));
     }
 
@@ -42,10 +43,10 @@ pub fn morlet(points: usize, w: f64, s: f64) -> SignalResult<Vec<Complex64>> {
     }
 
     // Generate position vector
-    let mid_point = (points - 1) as f64 / 2.0;
-    let mut wavelet = Vec::with_capacity(points);
+    let mid_point = (_points - 1) as f64 / 2.0;
+    let mut wavelet = Vec::with_capacity(_points);
 
-    for i in 0..points {
+    for i in 0.._points {
         let t = (i as f64 - mid_point) / s;
 
         // Complex exponential term (oscillation)
@@ -83,7 +84,7 @@ pub fn morlet(points: usize, w: f64, s: f64) -> SignalResult<Vec<Complex64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::wavelets::complex_morlet;
+/// use scirs2__signal::wavelets::complex_morlet;
 ///
 /// // Generate a Complex Morlet wavelet with 100 points, center frequency 5.0,
 /// // bandwidth 1.0, symmetry 0.0 (symmetric), and scaling 1.0
@@ -172,16 +173,16 @@ pub fn complex_morlet(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::wavelets::paul;
+/// use scirs2__signal::wavelets::paul;
 ///
 /// // Generate a Paul wavelet with 100 points, order 4, and scaling 1.0
 /// let wavelet = paul(100, 4, 1.0).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn paul(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
-    if points == 0 {
+pub fn paul(_points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
+    if _points == 0 {
         return Err(SignalError::ValueError(
-            "points must be greater than 0".to_string(),
+            "_points must be greater than 0".to_string(),
         ));
     }
 
@@ -204,10 +205,10 @@ pub fn paul(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex
     let norm = (2.0_f64.powf(m) * fact_2m_1 / (std::f64::consts::PI * fact_m)).sqrt();
 
     // Generate position vector
-    let mid_point = (points - 1) as f64 / 2.0;
-    let mut wavelet = Vec::with_capacity(points);
+    let mid_point = (_points - 1) as f64 / 2.0;
+    let mut wavelet = Vec::with_capacity(_points);
 
-    for i in 0..points {
+    for i in 0.._points {
         let t = (i as f64 - mid_point) / scale;
 
         // The Paul wavelet formula is the same for t != 0
@@ -245,16 +246,16 @@ pub fn paul(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::wavelets::complex_gaussian;
+/// use scirs2__signal::wavelets::complex_gaussian;
 ///
 /// // Generate a Complex Gaussian wavelet with 100 points, order 1, and scaling 1.0
 /// let wavelet = complex_gaussian(100, 1, 1.0).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn complex_gaussian(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
-    if points == 0 {
+pub fn complex_gaussian(_points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
+    if _points == 0 {
         return Err(SignalError::ValueError(
-            "points must be greater than 0".to_string(),
+            "_points must be greater than 0".to_string(),
         ));
     }
 
@@ -271,8 +272,8 @@ pub fn complex_gaussian(points: usize, order: usize, scale: f64) -> SignalResult
     }
 
     // Generate position vector
-    let mid_point = (points - 1) as f64 / 2.0;
-    let mut wavelet = Vec::with_capacity(points);
+    let mid_point = (_points - 1) as f64 / 2.0;
+    let mut wavelet = Vec::with_capacity(_points);
 
     // Helper function to calculate the complex Gaussian derivative of specified order
     let cgauss_derivative = |t: f64, m: usize| -> Complex64 {
@@ -300,7 +301,7 @@ pub fn complex_gaussian(points: usize, order: usize, scale: f64) -> SignalResult
     };
 
     // Calculate wavelet values at each point
-    for i in 0..points {
+    for i in 0.._points {
         let t = (i as f64 - mid_point) / scale;
         let value = cgauss_derivative(t, order);
         wavelet.push(value);
@@ -332,7 +333,7 @@ pub fn complex_gaussian(points: usize, order: usize, scale: f64) -> SignalResult
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::wavelets::shannon;
+/// use scirs2__signal::wavelets::shannon;
 ///
 /// // Generate a Shannon wavelet with 100 points, center frequency 1.0, bandwidth 0.5, and scaling 1.0
 /// let wavelet = shannon(100, 1.0, 0.5, 1.0).unwrap();
@@ -369,7 +370,7 @@ pub fn shannon(
     }
 
     // Normalization factor for unit energy
-    let norm = scale.sqrt().recip() * (2.0 * bandwidth).sqrt();
+    let norm = scale.sqrt().recip() * ((2.0 * bandwidth) as f64).sqrt();
 
     // Generate position vector
     let mid_point = (points - 1) as f64 / 2.0;
@@ -386,7 +387,7 @@ pub fn shannon(
             (bandwidth * PI * t).sin() / (bandwidth * PI * t)
         };
 
-        // Modulate by complex exponential to shift to the center frequency
+        // Modulate by complex exponential to shift to the center _frequency
         let modulation = Complex64::new(0.0, 2.0 * PI * center_frequency * t).exp();
 
         // Final wavelet value
@@ -419,7 +420,7 @@ pub fn shannon(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::wavelets::fbsp;
+/// use scirs2__signal::wavelets::fbsp;
 ///
 /// // Generate a FBSP wavelet with 100 points, center frequency 1.0,
 /// // bandwidth 0.5, order 3, and scaling 1.0
@@ -475,7 +476,7 @@ pub fn fbsp(
         let t = (i as f64 - mid_point) / scale;
 
         // Compute the Fourier transform of a cardinal B-spline of order 'order'
-        // This is the frequency response of the B-spline
+        // This is the _frequency response of the B-spline
         let bspline_ft = |omega: f64| -> f64 {
             if omega.abs() < 1e-10 {
                 return 1.0; // Prevent division by zero
@@ -486,12 +487,12 @@ pub fn fbsp(
             sinc_term.powi(order as i32)
         };
 
-        // Calculate the B-spline wavelet in frequency domain
-        // We apply a frequency shift by the center frequency
+        // Calculate the B-spline wavelet in _frequency domain
+        // We apply a _frequency shift by the center _frequency
         let omega = 2.0 * PI * t * bandwidth;
         let bspline_value = bspline_ft(omega);
 
-        // Modulate by complex exponential to shift to the center frequency
+        // Modulate by complex exponential to shift to the center _frequency
         let modulation = Complex64::new(0.0, 2.0 * PI * center_frequency * t).exp();
 
         // Final wavelet value: B-spline modulated by complex exponential

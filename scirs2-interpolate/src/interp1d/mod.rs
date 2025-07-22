@@ -7,7 +7,7 @@ pub mod monotonic;
 pub mod pchip;
 
 // Re-export interpolation functions
-pub use basic_interp::{cubic_interpolate, linear_interpolate, nearest_interpolate};
+pub use basic__interp::{cubic_interpolate, linear_interpolate, nearest_interpolate};
 pub use monotonic::{
     hyman_interpolate, modified_akima_interpolate, monotonic_interpolate, steffen_interpolate,
     MonotonicInterpolator, MonotonicMethod,
@@ -79,7 +79,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> Interp1d<F> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::interp1d::{Interp1d, InterpolationMethod, ExtrapolateMode};
+    /// use scirs2__interpolate::interp1d::{Interp1d, InterpolationMethod, ExtrapolateMode};
     ///
     /// let x = array![0.0f64, 1.0, 2.0, 3.0];
     /// let y = array![0.0f64, 1.0, 4.0, 9.0];
@@ -231,7 +231,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> Interp1d<F> {
                 // This is not the most efficient approach, but it keeps the interface consistent
                 let extrapolate = self.extrapolate == ExtrapolateMode::Extrapolate
                     || self.extrapolate == ExtrapolateMode::Nearest;
-                let pchip = PchipInterpolator::new(&self.x.view(), &self.y.view(), extrapolate)?;
+                let pchip = PchipInterpolator::_new(&self.x.view(), &self.y.view(), extrapolate)?;
                 pchip.evaluate(x_new)
             }
         }

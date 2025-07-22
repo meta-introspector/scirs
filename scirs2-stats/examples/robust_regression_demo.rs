@@ -1,5 +1,6 @@
 use ndarray::{array, Array1, Array2};
-use scirs2_stats::regression::{
+use scirs2__stats::regression::{
+use statrs::statistics::Statistics;
     huber_regression, linear_regression, ransac, theilslopes, HuberT, RegressionResults,
 };
 
@@ -25,8 +26,8 @@ fn generate_data_with_outliers() -> (Array2<f64>, Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn print_regression_summary(name: &str, results: &RegressionResults<f64>) {
-    println!("\n{} Regression Results:", name);
+fn print_regression_summary(_name: &str, results: &RegressionResults<f64>) {
+    println!("\n{} Regression Results:", _name);
     println!("Coefficients: {:?}", results.coefficients);
     println!("R-squared: {:.4}", results.r_squared);
 
@@ -44,7 +45,7 @@ fn print_regression_summary(name: &str, results: &RegressionResults<f64>) {
         .iter()
         .enumerate()
         .filter(|(_, &is_inlier)| !is_inlier)
-        .map(|(idx, _)| idx)
+        .map(|(idx_)| idx)
         .collect();
     if !outlier_indices.is_empty() {
         println!("Outlier indices: {:?}", outlier_indices);

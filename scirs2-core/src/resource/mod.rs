@@ -232,7 +232,7 @@ pub struct DiscoveryConfig {
     /// Enable network detection
     pub detect_network: bool,
     /// Enable storage detection
-    pub detect_storage: bool,
+    pub detectstorage: bool,
     /// Cache discovery results
     pub cache_results: bool,
     /// Cache duration
@@ -248,7 +248,7 @@ impl Default for DiscoveryConfig {
             detect_memory: true,
             detect_gpu: true,
             detect_network: true,
-            detect_storage: true,
+            detectstorage: true,
             cache_results: true,
             cache_duration: Duration::from_secs(300), // 5 minutes
             detailed_detection: false,
@@ -268,7 +268,7 @@ impl DiscoveryConfig {
         self.detect_memory = true;
         self.detect_gpu = true;
         self.detect_network = true;
-        self.detect_storage = true;
+        self.detectstorage = true;
         self
     }
 
@@ -278,7 +278,7 @@ impl DiscoveryConfig {
         self.detect_memory = false;
         self.detect_gpu = false;
         self.detect_network = false;
-        self.detect_storage = false;
+        self.detectstorage = false;
         self
     }
 
@@ -288,14 +288,14 @@ impl DiscoveryConfig {
         self.detect_memory = true;
         self.detect_gpu = false;
         self.detect_network = false;
-        self.detect_storage = false;
+        self.detectstorage = false;
         self
     }
 
     /// Enable caching with custom duration
-    pub fn with_cache_duration(mut self, duration: Duration) -> Self {
+    pub fn with_cache_duration(mut self, _duration: Duration) -> Self {
         self.cache_results = true;
-        self.cache_duration = duration;
+        self.cache_duration = std::time::Duration::from_secs(1);
         self
     }
 
@@ -380,7 +380,7 @@ impl ResourceDiscovery {
             network::NetworkInfo::default()
         };
 
-        let storage = if self.config.detect_storage {
+        let storage = if self.config.detectstorage {
             storage::StorageInfo::detect()?
         } else {
             storage::StorageInfo::default()

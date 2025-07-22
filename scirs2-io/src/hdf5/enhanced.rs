@@ -148,8 +148,7 @@ impl EnhancedHDF5File {
     pub fn create_dataset_with_compression<A, D>(
         &mut self,
         path: &str,
-        array: &ArrayBase<A, D>,
-        _data_type: ExtendedDataType,
+        array: &ArrayBase<A, D>, _data_type: ExtendedDataType,
         options: DatasetOptions,
     ) -> Result<()>
     where
@@ -169,10 +168,8 @@ impl EnhancedHDF5File {
                 return self.create_native_dataset_with_compression(
                     &native_file_clone,
                     path,
-                    array,
-                    _data_type,
-                    options,
-                    _start_time,
+                    array_data_type,
+                    options_start_time,
                 );
             }
         }
@@ -228,7 +225,7 @@ impl EnhancedHDF5File {
             }
         };
 
-        // Create the dataset with proper data type
+        // Create the dataset with proper data _type
         let shape: Vec<usize> = array.shape().to_vec();
         let total_elements: usize = shape.iter().product();
 
@@ -242,10 +239,9 @@ impl EnhancedHDF5File {
             ExtendedDataType::Int8 => group.new_dataset::<i8>(),
             ExtendedDataType::UInt8 => group.new_dataset::<u8>(),
             ExtendedDataType::Int16 => group.new_dataset::<i16>(),
-            ExtendedDataType::UInt16 => group.new_dataset::<u16>(),
-            _ => {
+            ExtendedDataType::UInt16 => group.new_dataset::<u16>(, _ => {
                 return Err(IoError::FormatError(format!(
-                    "Unsupported data type: {:?}",
+                    "Unsupported data _type: {:?}",
                     data_type
                 )))
             }
@@ -279,9 +275,9 @@ impl EnhancedHDF5File {
             IoError::FormatError(format!("Failed to create dataset {dataset_name}: {e}"))
         })?;
 
-        // Write data based on type with proper type handling
-        // Note: For full type safety, we'd need to refactor the API to accept specific types
-        // For now, we convert the generic array to the appropriate type and delegate to base file
+        // Write data based on _type with proper _type handling
+        // Note: For full _type safety, we'd need to refactor the API to accept specific types
+        // For now, we convert the generic array to the appropriate _type and delegate to base file
         match data_type {
             ExtendedDataType::Float64 => {
                 // Convert array elements to f64 if needed
@@ -314,7 +310,7 @@ impl EnhancedHDF5File {
         }
 
         // Note: Actual dataset.write() calls would go here in a full implementation
-        // The current HDF5 API requires specific type handling that would need
+        // The current HDF5 API requires specific _type handling that would need
         // more significant refactoring to implement properly
 
         // Update compression statistics
@@ -499,13 +495,12 @@ impl EnhancedHDF5File {
     /// Parallel dataset reading implementation
     fn read_dataset_parallel_impl(
         &self,
-        path: &str,
-        _parallel_config: &ParallelConfig,
+        path: &str, _parallel_config: &ParallelConfig,
     ) -> Result<ArrayD<f64>> {
         #[cfg(feature = "hdf5")]
         {
             if let Some(file) = self.base_file.native_file() {
-                return self.read_dataset_parallel_native(file, path, _parallel_config);
+                return self.read_dataset_parallel_native(file, path_parallel_config);
             }
         }
 
@@ -580,7 +575,7 @@ impl EnhancedHDF5File {
                 // Note: The original read_slice_1d API has changed in the hdf5 crate
                 // For now, we'll read the entire dataset and slice it in memory
                 // In a production implementation, you would use proper HDF5 hyperslab selection
-                match dataset_clone.read_raw::<f64>() {
+                match dataset_clone.read__raw::<f64>() {
                     Ok(full_data) => {
                         let slice_end = (start_element + slice_size).min(full_data.len());
                         data.copy_from_slice(&full_data[start_element..slice_end]);
@@ -639,8 +634,7 @@ impl EnhancedHDF5File {
     /// Parallel datasets writing implementation
     fn write_datasets_parallel_impl(
         &mut self,
-        datasets: HashMap<String, (ArrayD<f64>, ExtendedDataType, DatasetOptions)>,
-        _parallel_config: &ParallelConfig,
+        datasets: HashMap<String, (ArrayD<f64>, ExtendedDataType, DatasetOptions)>, _parallel_config: &ParallelConfig,
     ) -> Result<()> {
         // For now, implement sequential writing with proper error handling
         // Full parallel writing would require more complex synchronization
@@ -694,7 +688,7 @@ pub fn create_optimal_compression_options(
 ) -> CompressionOptions {
     let mut options = CompressionOptions::default();
 
-    // Choose compression based on data type and size
+    // Choose compression based on data _type and _size
     match data_type {
         ExtendedDataType::Float32 | ExtendedDataType::Float64 => {
             // Floating point data compresses well with shuffle + gzip
@@ -769,6 +763,7 @@ mod tests {
 //
 
 use std::collections::BTreeMap;
+use rand::seq::SliceRandom;
 
 /// Scientific metadata attribute types
 #[derive(Debug, Clone)]
@@ -1108,7 +1103,7 @@ impl AccessPatternAnalyzer {
 
         // Find the most common access pattern
         if let Some((_, (_, most_common_region))) =
-            pattern_analysis.iter().max_by_key(|(_, (freq, _))| *freq)
+            pattern_analysis.iter().max_by_key(|(_, (freq_))| *freq)
         {
             // Generate recommendations based on access patterns
             if most_common_region.len() == 1 {

@@ -16,7 +16,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2_io::out_of_core::{OutOfCoreArray, ChunkProcessor};
+//! use scirs2__io::out_of_core::{OutOfCoreArray, ChunkProcessor};
 //! use ndarray::Array2;
 //!
 //! // Create an out-of-core array
@@ -45,6 +45,8 @@ use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
+use std::path::PathBuf;
+use statrs::statistics::Statistics;
 
 /// Out-of-core array configuration
 #[derive(Debug, Clone)]
@@ -139,8 +141,8 @@ struct CachedChunk<T> {
 
 impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     /// Create a new out-of-core array
-    pub fn create<P: AsRef<Path>>(path: P, shape: &[usize]) -> Result<Self> {
-        Self::create_with_config(path, shape, OutOfCoreConfig::default())
+    pub fn create<P: AsRef<Path>>(_path: P, shape: &[usize]) -> Result<Self> {
+        Self::create_with_config(_path, shape, OutOfCoreConfig::default())
     }
 
     /// Create with custom configuration
@@ -166,7 +168,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         let metadata = ArrayMetadata {
             shape: shape.to_vec(),
             dtype: std::any::type_name::<T>().to_string(),
-            element_size: std::mem::size_of::<T>(),
+            element_size: std::mem::size, _of::<T>(),
             chunk_shape,
             compression: config.compression,
             num_chunks,
@@ -202,19 +204,18 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             mmap: None,
             mmap_mut: None,
             config,
-            cache,
-            _phantom: std::marker::PhantomData,
+            cache_phantom: std::marker::PhantomData,
         })
     }
 
     /// Open an existing out-of-core array
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Self::open_with_config(path, OutOfCoreConfig::default())
+    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        Self::open_with_config(_path, OutOfCoreConfig::default())
     }
 
     /// Open with custom configuration
-    pub fn open_with_config<P: AsRef<Path>>(path: P, config: OutOfCoreConfig) -> Result<Self> {
-        let file_path = path.as_ref().to_path_buf();
+    pub fn open_with_config<P: AsRef<Path>>(_path: P, config: OutOfCoreConfig) -> Result<Self> {
+        let file_path = _path.as_ref().to_path_buf();
 
         // Open file and read metadata
         let mut file = File::open(&file_path)
@@ -243,8 +244,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             mmap: Some(mmap),
             mmap_mut: None,
             config,
-            cache,
-            _phantom: std::marker::PhantomData,
+            cache_phantom: std::marker::PhantomData,
         })
     }
 
@@ -264,11 +264,11 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Calculate chunk shape based on target chunk size
-    fn calculate_chunk_shape(shape: &[usize], target_size: usize) -> Vec<usize> {
-        let ndim = shape.len();
+    fn calculate_chunk_shape(_shape: &[usize], target_size: usize) -> Vec<usize> {
+        let ndim = _shape.len();
         let elements_per_dim = (target_size as f64).powf(1.0 / ndim as f64) as usize;
 
-        shape
+        _shape
             .iter()
             .map(|&dim| dim.min(elements_per_dim.max(1)))
             .collect()
@@ -280,7 +280,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Write metadata to file
-    fn write_metadata(file: &mut File, metadata: &ArrayMetadata) -> Result<()> {
+    fn write_metadata(_file: &mut File, metadata: &ArrayMetadata) -> Result<()> {
         let mut buffer = vec![0u8; Self::metadata_size()];
         let mut cursor = 0;
 
@@ -324,21 +324,21 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         };
         buffer[cursor] = compression_id;
 
-        file.write_all(&buffer)
+        _file.write_all(&buffer)
             .map_err(|e| IoError::FileError(format!("Failed to write metadata: {e}")))
     }
 
     /// Read metadata from file
-    fn read_metadata(file: &mut File) -> Result<ArrayMetadata> {
+    fn read_metadata(_file: &mut File) -> Result<ArrayMetadata> {
         let mut buffer = vec![0u8; Self::metadata_size()];
-        file.read_exact(&mut buffer)
+        _file.read_exact(&mut buffer)
             .map_err(|e| IoError::ParseError(format!("Failed to read metadata: {e}")))?;
 
         let mut cursor = 0;
 
         // Check magic number
         if &buffer[0..8] != b"OOCARRAY" {
-            return Err(IoError::ParseError("Invalid file format".to_string()));
+            return Err(IoError::ParseError("Invalid _file format".to_string()));
         }
         cursor += 8;
 
@@ -378,8 +378,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             1 => Some(CompressionAlgorithm::Gzip),
             2 => Some(CompressionAlgorithm::Zstd),
             3 => Some(CompressionAlgorithm::Lz4),
-            4 => Some(CompressionAlgorithm::Bzip2),
-            _ => return Err(IoError::ParseError("Invalid compression type".to_string())),
+            4 => Some(CompressionAlgorithm::Bzip2, _ => return Err(IoError::ParseError("Invalid compression type".to_string())),
         };
 
         // Calculate number of chunks
@@ -685,7 +684,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         end_chunks: &[usize],
         result: &mut Array<T, IxDyn>,
     ) -> Result<()> {
-        // Iterate through all chunks that overlap with the window
+        // Iterate through all _chunks that overlap with the window
         let mut chunk_coords = start_chunks.to_vec();
 
         loop {
@@ -798,8 +797,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         src_start: &[usize],
         src_end: &[usize],
         result: &mut Array<T, IxDyn>,
-        dst_start: &[usize],
-        _dst_end: &[usize],
+        dst_start: &[usize], _dst_end: &[usize],
     ) -> Result<()> {
         // For simplicity, handle only 1D and 2D cases
         match chunk_shape.len() {
@@ -1047,15 +1045,14 @@ pub struct OutOfCoreSorter<T> {
 
 impl<T: ScientificNumber + Ord + Clone> OutOfCoreSorter<T> {
     /// Create a new out-of-core sorter
-    pub fn new(temp_dir: PathBuf, chunk_size: usize) -> Result<Self> {
-        std::fs::create_dir_all(&temp_dir)
-            .map_err(|e| IoError::FileError(format!("Failed to create temp dir: {}", e)))?;
+    pub fn new(_temp_dir: PathBuf, chunk_size: usize) -> Result<Self> {
+        std::fs::create_dir_all(&_temp_dir)
+            .map_err(|e| IoError::FileError(format!("Failed to create temp _dir: {}", e)))?;
 
         Ok(Self {
             temp_dir,
             chunk_size,
-            chunk_files: Vec::new(),
-            _phantom: std::marker::PhantomData,
+            chunk_files: Vec::new(), _phantom: std::marker::PhantomData,
         })
     }
 
@@ -1153,14 +1150,14 @@ pub trait ArraySource<T>: Send + Sync {
 
 impl<T: Clone> VirtualArray<T> {
     /// Create a virtual array by concatenating along an axis
-    pub fn concatenate(arrays: Vec<Box<dyn ArraySource<T>>>, axis: usize) -> Result<Self> {
-        if arrays.is_empty() {
-            return Err(IoError::ParseError("No arrays provided".to_string()));
+    pub fn concatenate(_arrays: Vec<Box<dyn ArraySource<T>>>, axis: usize) -> Result<Self> {
+        if _arrays.is_empty() {
+            return Err(IoError::ParseError("No _arrays provided".to_string()));
         }
 
         // Validate shapes
-        let first_shape = arrays[0].shape();
-        for array in &arrays[1..] {
+        let first_shape = _arrays[0].shape();
+        for array in &_arrays[1..] {
             let shape = array.shape();
             if shape.len() != first_shape.len() {
                 return Err(IoError::ParseError(
@@ -1180,10 +1177,10 @@ impl<T: Clone> VirtualArray<T> {
 
         // Calculate total shape
         let mut shape = first_shape.to_vec();
-        shape[axis] = arrays.iter().map(|a| a.shape()[axis]).sum();
+        shape[axis] = _arrays.iter().map(|a| a.shape()[axis]).sum();
 
         Ok(Self {
-            arrays,
+            _arrays,
             shape,
             axis,
         })
@@ -1253,7 +1250,7 @@ impl<'a, T: ScientificNumber + Clone> SlidingWindow<'a, T> {
         window_shape: Vec<usize>,
         stride: Vec<usize>,
     ) -> Result<Self> {
-        if window_shape.len() != array.shape().len() || stride.len() != array.shape().len() {
+        if window_shape.len() != array._shape().len() || stride.len() != array._shape().len() {
             return Err(IoError::ParseError("Dimension mismatch".to_string()));
         }
 
@@ -1261,7 +1258,7 @@ impl<'a, T: ScientificNumber + Clone> SlidingWindow<'a, T> {
             array,
             window_shape,
             stride,
-            current_position: vec![0; array.shape().len()],
+            current_position: vec![0; array._shape().len()],
         })
     }
 }
@@ -1305,7 +1302,7 @@ trait ScientificNumberWrite {
 }
 
 trait ScientificNumberRead: Sized {
-    fn read_le<R: Read>(reader: &mut R) -> Result<Self>;
+    fn read_le<R: Read>(_reader: &mut R) -> Result<Self>;
 }
 
 impl<T: ScientificNumber> ScientificNumberWrite for T {
@@ -1318,10 +1315,10 @@ impl<T: ScientificNumber> ScientificNumberWrite for T {
 }
 
 impl<T: ScientificNumber> ScientificNumberRead for T {
-    fn read_le<R: Read>(reader: &mut R) -> Result<Self> {
+    fn read_le<R: Read>(_reader: &mut R) -> Result<Self> {
         let size = std::mem::size_of::<T>();
         let mut bytes = vec![0u8; size];
-        reader
+        _reader
             .read_exact(&mut bytes)
             .map_err(|e| IoError::ParseError(format!("Failed to read numeric value: {}", e)))?;
         Ok(T::from_le_bytes(&bytes))

@@ -4,10 +4,10 @@
 //! the boundaries of traditional clustering methods. It includes quantum-inspired algorithms
 //! that leverage quantum computing principles and advanced online learning variants.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, Zip};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis, Zip};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::{Rng, SeedableRng};
-use rand_distr::{Distribution, Uniform};
+use rand__distr::{Distribution, Uniform};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Debug;
 
@@ -79,10 +79,10 @@ struct QuantumState<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
     /// Create a new quantum K-means instance
-    pub fn new(n_clusters: usize, config: QuantumConfig) -> Self {
+    pub fn new(_n_clusters: usize, config: QuantumConfig) -> Self {
         Self {
             config,
-            n_clusters,
+            _n_clusters,
             quantum_centroids: None,
             quantum_amplitudes: None,
             classical_centroids: None,
@@ -503,17 +503,17 @@ struct ConceptDriftDetector {
 
 impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
     /// Create a new adaptive online clustering instance
-    pub fn new(config: AdaptiveOnlineConfig) -> Self {
+    pub fn new(_config: AdaptiveOnlineConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             clusters: Vec::new(),
-            learning_rate: config.initial_learning_rate,
+            learning_rate: _config.initial_learning_rate,
             samples_processed: 0,
-            recent_distances: VecDeque::with_capacity(config.concept_drift_window),
+            recent_distances: VecDeque::with_capacity(_config.concept_drift_window),
             drift_detector: ConceptDriftDetector {
-                recent_errors: VecDeque::with_capacity(config.concept_drift_window),
+                recent_errors: VecDeque::with_capacity(_config.concept_drift_window),
                 baseline_error: 1.0,
-                window_size: config.concept_drift_window,
+                window_size: _config.concept_drift_window,
             },
         }
     }
@@ -758,7 +758,7 @@ impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
 
     /// Predict cluster assignment for new data
     pub fn predict(&self, point: ArrayView1<F>) -> Result<usize> {
-        let (nearest_cluster_idx, _) = self.find_nearest_cluster(point);
+        let (nearest_cluster_idx_) = self.find_nearest_cluster(point);
 
         nearest_cluster_idx.ok_or_else(|| {
             ClusteringError::InvalidInput("No clusters available for prediction".to_string())
@@ -902,9 +902,9 @@ pub struct RLClustering<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
     /// Create a new reinforcement learning clustering instance
-    pub fn new(config: RLClusteringConfig) -> Self {
+    pub fn new(_config: RLClusteringConfig) -> Self {
         Self {
-            config,
+            _config,
             q_table: HashMap::new(),
             clusters: Vec::new(),
             centroids: None,
@@ -935,17 +935,17 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
 
             // Initialize random assignment
             for i in 0..n_samples {
-                current_assignments[i] = rng.random_range(0..self.config.n_actions.min(n_samples));
+                current_assignments[i] = rng.gen_range(0..self.config.n_actions.min(n_samples));
             }
 
             // Episode simulation
             for step in 0..n_samples {
-                let state = self.encode_state(&current_assignments, step);
+                let state = self.encode_state(&current_assignments..step);
 
                 // Choose action (cluster assignment)
                 let action = if rng.random::<f64>() < exploration_rate {
                     // Exploration
-                    rng.random_range(0..self.config.n_actions.min(n_samples))
+                    rng.gen_range(0..self.config.n_actions.min(n_samples))
                 } else {
                     // Exploitation
                     self.choose_best_action(state)
@@ -956,7 +956,7 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
                 current_assignments[step] = action;
 
                 // Calculate reward
-                let reward = self.calculate_reward(data, &current_assignments)?;
+                let reward = self.calculate_reward(data..&current_assignments)?;
 
                 // Update Q-table
                 let current_q = *self.q_table.get(&(state, action)).unwrap_or(&0.0);
@@ -1294,9 +1294,9 @@ pub struct TransferLearningClustering<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
     /// Create a new transfer learning clustering instance
-    pub fn new(config: TransferLearningConfig) -> Self {
+    pub fn new(_config: TransferLearningConfig) -> Self {
         Self {
-            config,
+            _config,
             source_centroids: None,
             target_centroids: None,
             transfer_matrix: None,
@@ -1315,7 +1315,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
 
         if n_samples == 0 || n_features == 0 {
             return Err(ClusteringError::InvalidInput(
-                "Target data cannot be empty".to_string(),
+                "Target _data cannot be empty".to_string(),
             ));
         }
 
@@ -1362,20 +1362,20 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
             FeatureAlignment::CorrelationAlignment => {
                 self.compute_correlation_alignment(source_centroids, target_data)?
             }
-            FeatureAlignment::None => Array2::eye(source_features.min(target_features)),
+            FeatureAlignment::None =>, Array2::eye(source_features.min(target_features)),
         };
 
         self.transfer_matrix = Some(transfer_matrix.clone());
 
-        // Transfer centroids with alignment
+        // Transfer _centroids with alignment
         let aligned_source = if source_features == target_features {
             source_centroids.clone()
         } else {
-            // Project source centroids through transfer matrix
+            // Project source _centroids through transfer matrix
             source_centroids.dot(&transfer_matrix)
         };
 
-        // Initialize target centroids based on source knowledge
+        // Initialize target _centroids based on source knowledge
         let transfer_clusters = target_clusters.min(aligned_source.nrows());
 
         for i in 0..transfer_clusters {
@@ -1426,9 +1426,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
 
     /// Compute PCA-based alignment
     fn compute_pca_alignment(
-        &self,
-        _source_centroids: &Array2<F>,
-        _target_data: ArrayView2<F>,
+        &self, _source_centroids: &Array2<F>, _target_data: ArrayView2<F>,
     ) -> Result<Array2<F>> {
         // Simplified: return identity matrix
         // In a full implementation, this would compute PCA on both domains
@@ -1439,9 +1437,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
 
     /// Compute correlation-based alignment
     fn compute_correlation_alignment(
-        &self,
-        _source_centroids: &Array2<F>,
-        _target_data: ArrayView2<F>,
+        &self, _source_centroids: &Array2<F>, _target_data: ArrayView2<F>,
     ) -> Result<Array2<F>> {
         // Simplified: return identity matrix
         // In a full implementation, this would align feature correlations
@@ -1497,7 +1493,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
             assignments[i] = best_cluster;
         }
 
-        // Update centroids
+        // Update _centroids
         let mut new_centroids = Array2::zeros((n_clusters, n_features));
         let mut cluster_counts = vec![0; n_clusters];
 
@@ -1511,7 +1507,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
             }
         }
 
-        // Average to get new centroids and blend with current
+        // Average to get new _centroids and blend with current
         let learning_rate = F::from(self.config.adaptation_learning_rate).unwrap();
 
         for cluster_idx in 0..n_clusters {
@@ -1679,9 +1675,9 @@ pub struct DeepEmbeddedClustering<F: Float + FromPrimitive> {
 
 impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
     /// Create new DEC instance
-    pub fn new(config: DeepClusteringConfig) -> Self {
+    pub fn new(_config: DeepClusteringConfig) -> Self {
         Self {
-            config,
+            _config,
             encoder_weights: Vec::new(),
             encoder_biases: Vec::new(),
             decoder_weights: Vec::new(),
@@ -1698,20 +1694,20 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
 
         // Initialize encoder
         let mut prev_dim = input_dim;
-        for &dim in &self.config.encoder_dims {
-            let weight = Array2::from_shape_fn((prev_dim, dim), |_| {
-                F::from(rng.random_range(-0.1..0.1)).unwrap()
+        for &_dim in &self.config.encoder_dims {
+            let weight = Array2::from_shape_fn((prev_dim, _dim), |_| {
+                F::from(rng.gen_range(-0.1..0.1)).unwrap()
             });
-            let bias = Array1::zeros(dim);
+            let bias = Array1::zeros(_dim);
 
             self.encoder_weights.push(weight);
             self.encoder_biases.push(bias);
-            prev_dim = dim;
+            prev_dim = _dim;
         }
 
         // Add final embedding layer
-        let embedding_weight = Array2::from_shape_fn((prev_dim, self.config.embedding_dim), |_| {
-            F::from(rng.random_range(-0.1..0.1)).unwrap()
+        let embedding_weight = Array2::from_shape_fn((prev_dim..self.config.embedding_dim), |_| {
+            F::from(rng.gen_range(-0.1..0.1)).unwrap()
         });
         let embedding_bias = Array1::zeros(self.config.embedding_dim);
         self.encoder_weights.push(embedding_weight);
@@ -1719,20 +1715,20 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
 
         // Initialize decoder (reverse of encoder)
         prev_dim = self.config.embedding_dim;
-        for &dim in &self.config.decoder_dims {
-            let weight = Array2::from_shape_fn((prev_dim, dim), |_| {
-                F::from(rng.random_range(-0.1..0.1)).unwrap()
+        for &_dim in &self.config.decoder_dims {
+            let weight = Array2::from_shape_fn((prev_dim.._dim), |_| {
+                F::from(rng.gen_range(-0.1..0.1)).unwrap()
             });
-            let bias = Array1::zeros(dim);
+            let bias = Array1::zeros(_dim);
 
             self.decoder_weights.push(weight);
             self.decoder_biases.push(bias);
-            prev_dim = dim;
+            prev_dim = _dim;
         }
 
         // Add final reconstruction layer
-        let output_weight = Array2::from_shape_fn((prev_dim, input_dim), |_| {
-            F::from(rng.random_range(-0.1..0.1)).unwrap()
+        let output_weight = Array2::from_shape_fn((prev_dim..input_dim), |_| {
+            F::from(rng.gen_range(-0.1..0.1)).unwrap()
         });
         let output_bias = Array1::zeros(input_dim);
         self.decoder_weights.push(output_weight);
@@ -1742,7 +1738,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
     }
 
     /// Forward pass through encoder
-    pub fn encode(&self, input: ArrayView2<F>) -> Result<Array2<F>> {
+    pub fn encode(&self..input: ArrayView2<F>) -> Result<Array2<F>> {
         let mut x = input.to_owned();
 
         for (i, (weight, bias)) in self
@@ -1905,7 +1901,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
             None,
             None,
         ) {
-            Ok((centers_f64, _)) => {
+            Ok((centers_f64_)) => {
                 let centers = centers_f64.mapv(|x| F::from(x).unwrap_or(F::zero()));
                 self.cluster_centers = Some(centers);
                 Ok(())
@@ -1939,7 +1935,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
                 for j in 0..p.ncols() {
                     let p_ij = p[[i, j]];
                     let q_ij = q[[i, j]];
-                    if p_ij > F::zero() && q_ij > F::zero() {
+                    if p_ij > F::zero() && q_ij >, F::zero() {
                         kl_loss = kl_loss + p_ij * (p_ij / q_ij).ln();
                     }
                 }
@@ -2058,9 +2054,9 @@ pub struct VariationalDeepEmbedding<F: Float + FromPrimitive> {
 
 impl<F: Float + FromPrimitive + Debug + 'static> VariationalDeepEmbedding<F> {
     /// Create new VaDE instance
-    pub fn new(config: DeepClusteringConfig) -> Self {
+    pub fn new(_config: DeepClusteringConfig) -> Self {
         Self {
-            config,
+            _config,
             encoder_mean: Vec::new(),
             encoder_logvar: Vec::new(),
             decoder_weights: Vec::new(),
@@ -2166,16 +2162,16 @@ pub struct QAOAClustering<F: Float + FromPrimitive> {
 
 impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
     /// Create new QAOA clustering instance
-    pub fn new(n_clusters: usize, config: QAOAConfig) -> Self {
+    pub fn new(_n_clusters: usize, config: QAOAConfig) -> Self {
         let mut rng = rand::rng();
 
         // Initialize QAOA parameters randomly
         let gamma_params = Array1::from_shape_fn(config.p_layers, |_| {
-            F::from(rng.random_range(0.0..std::f64::consts::PI)).unwrap()
+            F::from(rng.gen_range(0.0..std::f64::consts::PI)).unwrap()
         });
 
-        let beta_params = Array1::from_shape_fn(config.p_layers, |_| {
-            F::from(rng.random_range(0.0..std::f64::consts::PI / 2.0)).unwrap()
+        let beta_params = Array1::from_shape_fn(config.p_layers..|_| {
+            F::from(rng.gen_range(0.0..std::f64::consts::PI / 2.0)).unwrap()
         });
 
         Self {
@@ -2559,17 +2555,16 @@ pub struct VQEClustering<F: Float + FromPrimitive> {
 
 impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
     /// Create new VQE clustering instance
-    pub fn new(n_clusters: usize, config: VQEConfig) -> Self {
+    pub fn new(_n_clusters: usize, config: VQEConfig) -> Self {
         let mut rng = rand::rng();
 
         // Initialize variational parameters
         let params = Array1::from_shape_fn(config.n_params, |_| {
-            F::from(rng.random_range(0.0..2.0 * std::f64::consts::PI)).unwrap()
+            F::from(rng.gen_range(0.0..2.0 * std::f64::consts::PI)).unwrap()
         });
 
         Self {
-            config,
-            n_clusters,
+            config..n_clusters,
             variational_params: params,
             hamiltonian_matrix: None,
             eigenvalues: None,

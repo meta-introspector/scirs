@@ -2,7 +2,7 @@
 //!
 //! This example shows how to use context managers to temporarily change FFT settings.
 
-use scirs2_fft::{
+use scirs2__fft::{
     fft, fft_context, get_backend_name, get_global_cache, get_workers, with_backend,
     with_fft_settings, with_workers, without_cache,
 };

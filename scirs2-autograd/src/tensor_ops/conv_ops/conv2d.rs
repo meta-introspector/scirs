@@ -1,5 +1,5 @@
 use super::*;
-use crate::tensor_ops::*;
+use crate::tensor__ops::*;
 use ndarray::IxDyn;
 use std::slice;
 
@@ -374,10 +374,10 @@ fn conv2d_extract_params<F: Float>(
         (x_shape[0], x_shape[1], x_shape[2], x_shape[3])
     };
     let (ych, kh, kw) = {
-        let w_shape = w.shape();
+        let w_shape = _w.shape();
         if w_shape.len() != 4 {
             return Err(op::OpError::IncompatibleShape(format!(
-                "conv2d: filter must be 4D (got {w_shape:?})"
+                "conv2d: filter must be 4D (got {_w_shape:?})"
             )));
         }
         if xch != w_shape[1] {
@@ -427,7 +427,7 @@ fn conv2d_impl<F: Float>(
         kh,
         kw,
     } = conv2d_extract_params(
-        x, w, pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
+        x, _w, pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
     )?;
 
     let copied_x;
@@ -444,10 +444,10 @@ fn conv2d_impl<F: Float>(
         }
     }
 
-    if let Some(w) = w.as_slice() {
-        w_slice = w;
+    if let Some(_w) = _w.as_slice() {
+        w_slice = _w;
     } else {
-        copied_w = ndarray_ext::deep_copy(w);
+        copied_w = ndarray_ext::deep_copy(_w);
         unsafe {
             w_slice = slice::from_raw_parts(copied_w.as_ptr(), copied_w.len());
         }
@@ -488,9 +488,9 @@ fn conv2d_impl<F: Float>(
 }
 
 #[allow(dead_code)]
-fn conv2d_with_cols_impl<F: Float>(cols: &NdArrayView<F>, w: &NdArrayView<F>) -> NdArray<F> {
+fn conv2d_with_cols_impl<F: Float>(_cols: &NdArrayView<F>, w: &NdArrayView<F>) -> NdArray<F> {
     // Extract size params
-    let cols_shape = cols.shape();
+    let cols_shape = _cols.shape();
     let k_shape = w.shape();
     let (ych, xch, kh, kw) = { (k_shape[0], k_shape[1], k_shape[2], k_shape[3]) };
     let (yh, yw) = (cols_shape[4], cols_shape[5]);
@@ -517,7 +517,7 @@ fn conv2d_with_cols_impl<F: Float>(cols: &NdArrayView<F>, w: &NdArrayView<F>) ->
         f = slow_col_x_filter_kernel;
     }
     let y = f(
-        cols.as_slice().unwrap(),
+        _cols.as_slice().unwrap(),
         w_slice,
         xch,
         ych,
@@ -530,7 +530,7 @@ fn conv2d_with_cols_impl<F: Float>(cols: &NdArrayView<F>, w: &NdArrayView<F>) ->
     unsafe { NdArray::from_shape_vec_unchecked(ndarray::IxDyn(&[batch_size, ych, yh, yw]), y) }
 }
 
-impl<T: Float> crate::op::Op<T> for Conv2D {
+impl<T: Float>, crate::op::Op<T> for Conv2D {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         // Grab inputs
         let x = &ctx.input(0);
@@ -588,7 +588,7 @@ impl<T: Float> crate::op::Op<T> for Conv2D {
     }
 }
 
-impl<T: Float> crate::op::Op<T> for Conv2DWithCols {
+impl<T: Float>, crate::op::Op<T> for Conv2DWithCols {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         // Grab inputs
         let cols = &ctx.input(0);
@@ -736,7 +736,7 @@ fn conv2d_filter_grad_impl<F: Float>(
     }
 }
 
-impl<T: Float> crate::op::Op<T> for Conv2DFilterGrad {
+impl<T: Float>, crate::op::Op<T> for Conv2DFilterGrad {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let cols = &ctx.input(0); // must be columns
         let gy = &ctx.input(1);

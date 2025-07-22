@@ -174,20 +174,7 @@ pub fn qr<F: Float + Debug + Send + Sync + 'static>(
 
     if m >= 1 && n >= 1 {
         // First column Householder reflection
-        let x = r.slice(ndarray::s![.., 0]).to_owned();
-        let alpha = -x[0_usize].signum() * x.mapv(|v| v * v).sum().sqrt();
-        let mut u = x.clone();
-        u[0_usize] = u[0_usize] - alpha;
-        let u_norm = u.mapv(|v| v * v).sum().sqrt();
-
-        if u_norm > F::epsilon() {
-            u.mapv_inplace(|v| v / u_norm);
-
-            // Apply Householder reflection to R
-            for j in 0..n {
-                let dot_product = u
-                    .iter()
-                    .zip(r.slice(ndarray::s![.., j]).iter())
+        let x = r.slice(ndarray::s![.., 0]).to_ownedj].iter())
                     .fold(F::zero(), |acc, (&u_i, &r_i)| acc + u_i * r_i);
 
                 for i in 0..m {

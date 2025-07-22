@@ -153,8 +153,8 @@ pub struct BenchmarkRunner {
 }
 
 impl BenchmarkRunner {
-    pub fn new(config: BenchmarkConfig) -> Self {
-        Self { config }
+    pub fn new(_config: BenchmarkConfig) -> Self {
+        Self { _config }
     }
 
     /// Run all configured benchmark suites
@@ -274,8 +274,7 @@ impl BenchmarkRunner {
     #[allow(clippy::type_complexity)]
     fn run_with_memory_monitoring(
         &self,
-        mut cmd: Command,
-        _timeout: Duration,
+        mut cmd: Command_timeout: Duration,
         suite_name: &str,
     ) -> Result<(BenchmarkStatus, Option<MemoryUsage>, Option<String>), Box<dyn std::error::Error>>
     {
@@ -314,7 +313,7 @@ impl BenchmarkRunner {
             }
         });
 
-        // Wait for completion with timeout
+        // Wait for completion with _timeout
         let exit_status = child.wait()?;
         let status = if exit_status.success() {
             BenchmarkStatus::Success
@@ -459,7 +458,7 @@ impl BenchmarkRunner {
         }
         if peak_memory > 8192.0 {
             // 8GB threshold
-            warnings.push("High memory usage detected".to_string());
+            warnings.push("High _memory usage detected".to_string());
         }
 
         BenchmarkSummary {
@@ -475,11 +474,10 @@ impl BenchmarkRunner {
     }
 
     fn compare_with_baseline(
-        &self,
-        _results: &[BenchmarkSuiteResult],
+        &self_results: &[BenchmarkSuiteResult],
     ) -> Result<Option<BenchmarkComparison>, Box<dyn std::error::Error>> {
         // Placeholder for baseline comparison logic
-        // This would load baseline results and compare performance metrics
+        // This would load baseline _results and compare performance metrics
         Ok(None)
     }
 
@@ -653,8 +651,8 @@ trait CommandExt {
 }
 
 impl CommandExt for Command {
-    fn timeout(&mut self, _timeout: Duration) -> &mut Self {
-        // Simplified implementation - would need platform-specific timeout logic
+    fn timeout(&mut self_timeout: Duration) -> &mut Self {
+        // Simplified implementation - would need platform-specific _timeout logic
         self
     }
 }

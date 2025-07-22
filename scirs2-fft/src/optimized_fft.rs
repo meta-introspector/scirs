@@ -7,7 +7,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::{fft, ifft};
 use ndarray::{Array, ArrayBase, Data};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use rustfft::FftPlanner;
 use std::collections::HashMap;
@@ -162,9 +162,9 @@ impl PerformanceStats {
 
 impl OptimizedFFT {
     /// Create a new optimized FFT instance
-    pub fn new(config: OptimizedConfig) -> Self {
+    pub fn new(_config: OptimizedConfig) -> Self {
         Self {
-            config,
+            _config,
             stats: PerformanceStats::default(),
             collect_stats: false,
             metrics: Arc::new(Mutex::new(HashMap::new())),
@@ -263,8 +263,7 @@ impl OptimizedFFT {
             "radix2" => self.radix2_fft(&mut data),
             "bluestein" => self.bluestein_fft(&mut data),
             "prime_factor" => self.prime_factor_fft(&mut data),
-            "default" => self.default_fft(&data),
-            _ => self.default_fft(&data),
+            "default" => self.default_fft(&data, _ => self.default_fft(&data),
         }?;
 
         // Update statistics if enabled
@@ -324,8 +323,7 @@ impl OptimizedFFT {
         let result = match algorithm.as_str() {
             "radix2" => self.radix2_ifft(&data),
             "bluestein" => self.bluestein_ifft(&data),
-            "prime_factor" => self.prime_factor_ifft(&data),
-            _ => ifft(&data, Some(size)),
+            "prime_factor" => self.prime_factor_ifft(&data, _ => ifft(&data, Some(size)),
         }?;
 
         // Record metrics if enabled
@@ -443,33 +441,33 @@ impl OptimizedFFT {
         let original_collect = self.config.collect_metrics;
         self.config.collect_metrics = true;
 
-        // Ensure we don't exceed the maximum size limit
+        // Ensure we don't exceed the maximum _size limit
         let actual_max = max_size.min(self.config.max_fft_size);
 
-        for size in (min_size..=actual_max).step_by(step) {
+        for _size in (min_size..=actual_max).step_by(step) {
             // Generate test data
-            let data: Vec<f64> = (0..size).map(|i| (i as f64).sin()).collect();
+            let data: Vec<f64> = (0.._size).map(|i| (i as f64).sin()).collect();
 
             // Perform FFT
             let start = Instant::now();
-            let _ = self.fft(&data, Some(size))?;
+            let _ = self.fft(&data, Some(_size))?;
             let duration = start.elapsed();
 
             // Calculate MFLOPS
-            let op_count = 5.0 * size as f64 * (size as f64).log2();
+            let op_count = 5.0 * _size as f64 * (_size as f64).log2();
             let mflops = op_count / duration.as_secs_f64() / 1_000_000.0;
 
             // Store metrics
-            let algorithm = self.select_algorithm(size);
+            let algorithm = self.select_algorithm(_size);
             let metrics = PerformanceMetrics {
                 algorithm,
-                size,
+                _size,
                 duration,
                 mflops,
                 optimization_level: self.config.optimization_level,
             };
 
-            results.insert(size, metrics);
+            results.insert(_size, metrics);
         }
 
         // Restore original metrics collection setting
@@ -660,7 +658,7 @@ impl OptimizedFFT {
         // For optimal FFT performance, powers of 2 are generally best
         // But for this simplified implementation, we'll also consider other factors
 
-        // If requested size is already a power of 2, use it
+        // If requested _size is already a power of 2, use it
         if requested_size.is_power_of_two() {
             return requested_size;
         }
@@ -670,18 +668,18 @@ impl OptimizedFFT {
             return next_pow2;
         }
 
-        // Otherwise, try to find a size with small prime factors
+        // Otherwise, try to find a _size with small prime factors
         let mut best_size = requested_size;
         let mut best_score = usize::MAX;
 
         // Check sizes in the range [requested_size, next_pow2]
-        for size in requested_size..=next_pow2 {
+        for _size in requested_size..=next_pow2 {
             // Compute a "complexity score" based on prime factorization
-            let score = self.complexity_score(size);
+            let score = self.complexity_score(_size);
 
             if score < best_score {
                 best_score = score;
-                best_size = size;
+                best_size = _size;
             }
         }
 

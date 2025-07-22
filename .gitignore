@@ -66,4 +66,7 @@ scirs2-core/example.bin
 
 */temp_target/
 */local_target/
+**/src_backup_*/
+scirs2-signal/src_backup_*/
+
 

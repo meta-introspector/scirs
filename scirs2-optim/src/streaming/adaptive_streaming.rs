@@ -564,7 +564,7 @@ where
     O: Optimizer<A, D> + Send + Sync,
 {
     /// Create a new adaptive streaming optimizer
-    pub fn new(base_optimizer: O, config: StreamingConfig) -> Result<Self> {
+    pub fn new(_base_optimizer: O, config: StreamingConfig) -> Result<Self> {
         let lr_controller = AdaptiveLearningRateController::new(&config)?;
         let drift_detector = EnhancedDriftDetector::new(&config)?;
         let performance_tracker = PerformanceTracker::new(&config)?;
@@ -573,7 +573,7 @@ where
         let meta_learner = MetaLearner::new(&config)?;
 
         Ok(Self {
-            base_optimizer,
+            _base_optimizer,
             config,
             lr_controller,
             drift_detector,
@@ -581,8 +581,7 @@ where
             resource_manager,
             adaptive_buffer,
             meta_learner,
-            step_count: 0,
-            _phantom: std::marker::PhantomData,
+            step_count: 0, _phantom: std::marker::PhantomData,
         })
     }
 
@@ -890,8 +889,7 @@ where
         Ok(MetaState {
             data_features: performance.context.data_stats.feature_means.clone(),
             performance_features: Array1::from_vec(vec![match performance.primary_metric {
-                PerformanceMetric::Loss(l) => l,
-                _ => A::zero(),
+                PerformanceMetric::Loss(l) => l_ =>, A::zero(),
             }]),
             resource_features: Array1::from_vec(vec![
                 A::from(performance.context.resource_usage.cpu_percent).unwrap(),
@@ -939,8 +937,7 @@ where
         // Simplified reward computation based on performance improvement
         match performance.primary_metric {
             PerformanceMetric::Loss(loss) => Ok(-loss), // Negative loss as reward
-            PerformanceMetric::Accuracy(acc) => Ok(acc),
-            _ => Ok(A::zero()),
+            PerformanceMetric::Accuracy(acc) => Ok(acc, _ => Ok(A::zero()),
         }
     }
 
@@ -1079,9 +1076,7 @@ impl<A: Float + Default + Clone> AdaptiveLearningRateController<A> {
     }
 
     fn compute_adaptation(
-        &mut self,
-        _batch: &[StreamingDataPoint<A>],
-        _performance: &PerformanceSnapshot<A>,
+        &mut self_batch: &[StreamingDataPoint<A>], _performance: &PerformanceSnapshot<A>,
     ) -> Result<Option<Adaptation<A>>> {
         // Simplified adaptation logic
         Ok(None)
@@ -1100,14 +1095,13 @@ impl<A: Float + Default + Clone> EnhancedDriftDetector<A> {
         })
     }
 
-    fn detect_drift(&mut self, _batch: &[StreamingDataPoint<A>]) -> Result<bool> {
+    fn detect_drift(&mut self_batch: &[StreamingDataPoint<A>]) -> Result<bool> {
         // Simplified drift detection
         Ok(false)
     }
 
     fn compute_sensitivity_adaptation(
-        &mut self,
-        _performance: &PerformanceSnapshot<A>,
+        &mut self_performance: &PerformanceSnapshot<A>,
     ) -> Result<Option<Adaptation<A>>> {
         Ok(None)
     }
@@ -1241,8 +1235,7 @@ impl<A: Float + Default + Clone + Sum> TrendAnalyzer<A> {
             .iter()
             .map(|snapshot| match snapshot.primary_metric {
                 PerformanceMetric::Loss(l) => l,
-                PerformanceMetric::Accuracy(a) => a,
-                _ => A::zero(),
+                PerformanceMetric::Accuracy(a) => a_ =>, A::zero(),
             })
             .collect();
 
@@ -1412,8 +1405,7 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
             .iter()
             .map(|snapshot| match snapshot.primary_metric {
                 PerformanceMetric::Loss(l) => l,
-                PerformanceMetric::Accuracy(a) => a,
-                _ => A::zero(),
+                PerformanceMetric::Accuracy(a) => a_ =>, A::zero(),
             })
             .collect();
 
@@ -1434,8 +1426,7 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
             .iter()
             .map(|snapshot| match snapshot.primary_metric {
                 PerformanceMetric::Loss(l) => l,
-                PerformanceMetric::Accuracy(a) => a,
-                _ => A::zero(),
+                PerformanceMetric::Accuracy(a) => a_ =>, A::zero(),
             })
             .collect();
 
@@ -1467,8 +1458,7 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
             .iter()
             .map(|snapshot| match snapshot.primary_metric {
                 PerformanceMetric::Loss(l) => l,
-                PerformanceMetric::Accuracy(a) => a,
-                _ => A::zero(),
+                PerformanceMetric::Accuracy(a) => a_ =>, A::zero(),
             })
             .collect();
 
@@ -1579,8 +1569,7 @@ impl<A: Float + Default + Clone + Sum> AnomalyDetector<A> {
             .iter()
             .map(|s| match s.primary_metric {
                 PerformanceMetric::Loss(l) => l,
-                PerformanceMetric::Accuracy(a) => a,
-                _ => A::zero(),
+                PerformanceMetric::Accuracy(a) => a_ =>, A::zero(),
             })
             .collect();
 
@@ -1590,8 +1579,7 @@ impl<A: Float + Default + Clone + Sum> AnomalyDetector<A> {
 
         let current_value = match snapshot.primary_metric {
             PerformanceMetric::Loss(l) => l,
-            PerformanceMetric::Accuracy(a) => a,
-            _ => A::zero(),
+            PerformanceMetric::Accuracy(a) => a_ =>, A::zero(),
         };
 
         // Z-score based detection
@@ -1608,7 +1596,7 @@ impl<A: Float + Default + Clone + Sum> AnomalyDetector<A> {
         Ok(z_score > self.anomaly_threshold)
     }
 
-    fn isolation_based_detection(&self, _snapshot: &PerformanceSnapshot<A>) -> Result<bool> {
+    fn isolation_based_detection(&self_snapshot: &PerformanceSnapshot<A>) -> Result<bool> {
         // Simplified isolation forest approach
         // In practice, this would implement proper isolation forest algorithm
         Ok(false)
@@ -1634,8 +1622,7 @@ impl<A: Float + Default + Clone + Sum> AnomalyDetector<A> {
 
         let current_value = match snapshot.primary_metric {
             PerformanceMetric::Loss(l) => l,
-            PerformanceMetric::Accuracy(a) => -a,
-            _ => A::zero(),
+            PerformanceMetric::Accuracy(a) => -a_ =>, A::zero(),
         };
 
         let recent_avg =
@@ -1673,14 +1660,12 @@ impl<A: Float + Default + Clone> MetricAggregator<A> {
     fn update_accumulated_metrics(&mut self, snapshot: &PerformanceSnapshot<A>) -> Result<()> {
         let primary_value = match snapshot.primary_metric {
             PerformanceMetric::Loss(l) => l,
-            PerformanceMetric::Accuracy(a) => a,
-            _ => A::zero(),
+            PerformanceMetric::Accuracy(a) => a_ =>, A::zero(),
         };
 
         let metric_name = match snapshot.primary_metric {
             PerformanceMetric::Loss(_) => "loss",
-            PerformanceMetric::Accuracy(_) => "accuracy",
-            _ => "unknown",
+            PerformanceMetric::Accuracy(_) => "accuracy"_ => "unknown",
         }
         .to_string();
 
@@ -1741,8 +1726,7 @@ impl<A: Float + Default + Clone> MetricAggregator<A> {
             step: snapshot.step,
             primary_metric_value: match snapshot.primary_metric {
                 PerformanceMetric::Loss(l) => l,
-                PerformanceMetric::Accuracy(a) => a,
-                _ => A::zero(),
+                PerformanceMetric::Accuracy(a) => a_ =>, A::zero(),
             },
             secondary_metrics_count: snapshot.secondary_metrics.len(),
         };
@@ -1814,15 +1798,13 @@ impl<A: Float + Default + Clone + Sum> MetaLearner<A> {
     }
 
     fn suggest_lr_adaptation(
-        &mut self,
-        _batch: &[StreamingDataPoint<A>],
+        &mut self_batch: &[StreamingDataPoint<A>],
         performance: &PerformanceSnapshot<A>,
     ) -> Result<Option<Adaptation<A>>> {
         // Use meta-model to predict optimal learning rate
         let _current_performance = match performance.primary_metric {
             PerformanceMetric::Loss(l) => l,
-            PerformanceMetric::Accuracy(a) => a,
-            _ => A::zero(),
+            PerformanceMetric::Accuracy(a) => a_ =>, A::zero(),
         };
 
         // Simple heuristic: if performance is degrading, reduce LR; if improving, maintain or slightly increase
@@ -1845,8 +1827,7 @@ impl<A: Float + Default + Clone + Sum> MetaLearner<A> {
 
     fn suggest_buffer_adaptation(
         &mut self,
-        batch: &[StreamingDataPoint<A>],
-        _performance: &PerformanceSnapshot<A>,
+        batch: &[StreamingDataPoint<A>], _performance: &PerformanceSnapshot<A>,
     ) -> Result<Option<Adaptation<A>>> {
         // Suggest buffer size based on data characteristics and processing time
         let data_diversity = self.compute_data_diversity(batch)?;
@@ -1873,8 +1854,7 @@ impl<A: Float + Default + Clone + Sum> MetaLearner<A> {
         // Adjust drift sensitivity based on recent performance stability
         let _performance_value = match performance.primary_metric {
             PerformanceMetric::Loss(l) => l,
-            PerformanceMetric::Accuracy(a) => a,
-            _ => A::zero(),
+            PerformanceMetric::Accuracy(a) => a_ =>, A::zero(),
         };
 
         let recent_experiences: Vec<_> = self.experience_buffer.iter().rev().take(10).collect();
@@ -1953,10 +1933,10 @@ impl<A: Float + Default + Clone + Sum> MetaLearner<A> {
 }
 
 impl<A: Float + Default + Clone> MetaModel<A> {
-    fn new(model_type: MetaModelType) -> Self {
+    fn new(_model_type: MetaModelType) -> Self {
         Self {
             parameters: Array1::zeros(10), // Default parameter size
-            model_type,
+            _model_type,
             update_strategy: MetaUpdateStrategy::OnlineGradientDescent,
             performance_history: VecDeque::with_capacity(100),
         }
@@ -2308,12 +2288,12 @@ impl ResourceManager {
 }
 
 impl<A: Float + Default + Clone> AdaptiveBuffer<A> {
-    fn new(config: &StreamingConfig) -> Result<Self> {
+    fn new(_config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
-            buffer: VecDeque::with_capacity(config.buffer_size * 2),
-            current_size: config.buffer_size,
-            min_size: config.buffer_size / 2,
-            max_size: config.buffer_size * 2,
+            buffer: VecDeque::with_capacity(_config.buffer_size * 2),
+            current_size: _config.buffer_size,
+            min_size: _config.buffer_size / 2,
+            max_size: _config.buffer_size * 2,
             adaptation_strategy: BufferSizeStrategy::PerformanceAdaptive,
             quality_metrics: BufferQualityMetrics {
                 diversity_score: A::zero(),
@@ -2343,9 +2323,7 @@ impl<A: Float + Default + Clone> AdaptiveBuffer<A> {
     }
 
     fn compute_size_adaptation(
-        &mut self,
-        _batch: &[StreamingDataPoint<A>],
-        _drift_detected: bool,
+        &mut self_batch: &[StreamingDataPoint<A>], _drift_detected: bool,
     ) -> Result<Option<Adaptation<A>>> {
         Ok(None)
     }

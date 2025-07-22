@@ -7,15 +7,19 @@
 //! - BayesShrink and VisuShrink
 //! - Adaptive thresholding
 
-use crate::dwt::{wavedec, waverec, Wavelet};
+use crate::dwt::{Wavelet, wavedec, waverec};
 use crate::dwt2d::dwt2d_decompose;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, ArrayView1};
-// use num_complex::Complex64;
-use scirs2_core::parallel_ops::*;
+use ndarray::{Array1, Array2, ArrayView1, s};
+use rand::Rng;
+use rand::prelude::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
+use scirs2__fft::{fft, ifft};
 use std::f64;
+
+#[allow(unused_imports)]
+// use num__complex::Complex64;
 // use std::f64::consts::PI;
 
 /// Enhanced denoising configuration
@@ -555,17 +559,15 @@ pub fn denoise_bilateral_1d(
 
 /// Wiener filtering for signal denoising
 #[allow(dead_code)]
-pub fn denoise_wiener_1d(signal: &Array1<f64>, config: &WienerConfig) -> SignalResult<Array1<f64>> {
-    use scirs2_fft::{fft, ifft};
-
+pub fn denoise_wiener_1d(_signal: &Array1<f64>, config: &WienerConfig) -> SignalResult<Array1<f64>> {
     // Signal validation handled by algorithm
 
-    let n = signal.len();
+    let n = _signal.len();
 
     // Pad to power of 2 for efficient FFT
     let padded_size = n.next_power_of_two();
     let mut padded_signal = vec![0.0; padded_size];
-    padded_signal[..n].copy_from_slice(signal.as_slice().unwrap());
+    padded_signal[..n].copy_from_slice(_signal.as_slice().unwrap());
 
     // Convert to complex for FFT
     let complex_signal: Vec<_> = padded_signal
@@ -586,7 +588,7 @@ pub fn denoise_wiener_1d(signal: &Array1<f64>, config: &WienerConfig) -> SignalR
                 .iter()
                 .map(|c| c.norm_sqr())
                 .sum::<f64>()
-                / (padded_size - high_freq_start) as f64;
+                / (padded_size - high_freq_start)  as f64;
             high_freq_power
         }
         WienerNoiseEstimation::MinimumStatistics => {
@@ -599,7 +601,7 @@ pub fn denoise_wiener_1d(signal: &Array1<f64>, config: &WienerConfig) -> SignalR
                     .iter()
                     .map(|c| c.norm_sqr())
                     .sum::<f64>()
-                    / window_size as f64;
+                    / window_size  as f64;
                 min_power = min_power.min(window_power);
             }
             min_power
@@ -731,13 +733,12 @@ fn standard_denoise_1d(
         .zip(coeffs.details.iter())
         .map(|(rate, detail)| rate * detail.len() as f64)
         .sum();
-    let retention_rate = retained_coeffs / total_coeffs as f64;
+    let retention_rate = retained_coeffs / total_coeffs  as f64;
 
     let effective_df = compute_effective_df(&thresholded_coeffs);
 
     let risk_estimate = match config.threshold_rule {
-        ThresholdRule::SURE => Some(compute_sure_risk(&coeffs, &thresholds, noise_sigma)?),
-        _ => None,
+        ThresholdRule::SURE => Some(compute_sure_risk(&coeffs, &thresholds, noise_sigma)?, _ => None,
     };
 
     Ok(DenoiseResult {
@@ -784,7 +785,7 @@ fn translation_invariant_denoise_1d(
 
                 standard_denoise_1d(&shifted, &shift_config)
             })
-            .collect::<Result<Vec<_>, _>>()?
+            .collect::<Result<Vec<_>_>>()?
     } else {
         (0..n_shifts)
             .map(|shift| {
@@ -798,7 +799,7 @@ fn translation_invariant_denoise_1d(
 
                 standard_denoise_1d(&shifted, &shift_config)
             })
-            .collect::<Result<Vec<_>, _>>()?
+            .collect::<Result<Vec<_>_>>()?
     };
 
     // Average the unshifted results
@@ -807,17 +808,17 @@ fn translation_invariant_denoise_1d(
     for (shift, result) in shift_results.iter().enumerate() {
         // Unshift the denoised signal
         for i in 0..n {
-            averaged[(i + shift) % n] += result.signal[i] / n_shifts as f64;
+            averaged[(i + shift) % n] += result.signal[i] / n_shifts  as f64;
         }
 
         all_noise_estimates.push(result.noise_sigma);
     }
 
     // Aggregate diagnostics
-    let noise_sigma = all_noise_estimates.iter().sum::<f64>() / n_shifts as f64;
+    let noise_sigma = all_noise_estimates.iter().sum::<f64>() / n_shifts  as f64;
     let thresholds = shift_results[0].thresholds.clone(); // Use first shift's thresholds
     let retention_rate =
-        shift_results.iter().map(|r| r.retention_rate).sum::<f64>() / n_shifts as f64;
+        shift_results.iter().map(|r| r.retention_rate).sum::<f64>() / n_shifts  as f64;
     let effective_df = compute_effective_df_ti(&averaged, signal);
 
     Ok(DenoiseResult {
@@ -910,7 +911,7 @@ pub fn denoise_wavelet_2d(
     } else {
         // Also threshold approximation
         let noise_sigma = all_d_thresholds[0] / (2.0_f64).powf(levels as f64 / 2.0);
-        let (_, approx_thresholded, _) =
+        let (_, approx_thresholded_) =
             threshold_subband(approximations.last().unwrap(), noise_sigma, levels, config)?;
         approx_thresholded
     };
@@ -954,8 +955,8 @@ pub fn denoise_wavelet_2d(
 
 /// Estimate noise using median absolute deviation
 #[allow(dead_code)]
-fn estimate_noise_mad(coeffs: &Array1<f64>) -> f64 {
-    let mut abs_coeffs: Vec<f64> = coeffs.iter().map(|&x| x.abs()).collect();
+fn estimate_noise_mad(_coeffs: &Array1<f64>) -> f64 {
+    let mut abs_coeffs: Vec<f64> = _coeffs.iter().map(|&x: &f64| x.abs()).collect();
     abs_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let median = if abs_coeffs.len() % 2 == 0 {
@@ -969,8 +970,8 @@ fn estimate_noise_mad(coeffs: &Array1<f64>) -> f64 {
 
 /// Estimate noise in 2D using diagonal detail coefficients
 #[allow(dead_code)]
-fn estimate_noise_2d(detail: &Array2<f64>) -> f64 {
-    let flat_detail: Vec<f64> = detail.iter().cloned().collect();
+fn estimate_noise_2d(_detail: &Array2<f64>) -> f64 {
+    let flat_detail: Vec<f64> = _detail.iter().cloned().collect();
     let flat_array = Array1::from_vec(flat_detail);
     estimate_noise_mad(&flat_array)
 }
@@ -988,7 +989,7 @@ fn apply_thresholding(
 
     // Process each detail level
     for (level, detail) in coeffs.details.iter().enumerate() {
-        let n = detail.len() as f64;
+        let n = detail.len()  as f64;
 
         // Compute threshold
         let threshold = match config.threshold_rule {
@@ -1032,27 +1033,27 @@ fn apply_thresholding(
 
 /// Soft thresholding
 #[allow(dead_code)]
-fn soft_threshold(coeffs: &Array1<f64>, threshold: f64) -> (Array1<f64>, f64) {
-    let mut thresholded = Array1::zeros(coeffs.len());
+fn soft_threshold(_coeffs: &Array1<f64>, threshold: f64) -> (Array1<f64>, f64) {
+    let mut thresholded = Array1::zeros(_coeffs.len());
     let mut retained = 0;
 
-    for (i, &coeff) in coeffs.iter().enumerate() {
+    for (i, &coeff) in _coeffs.iter().enumerate() {
         if coeff.abs() > threshold {
             thresholded[i] = coeff.signum() * (coeff.abs() - threshold);
             retained += 1;
         }
     }
 
-    (thresholded, retained as f64 / coeffs.len() as f64)
+    (thresholded, retained as f64 / _coeffs.len() as f64)
 }
 
 /// Hard thresholding
 #[allow(dead_code)]
-fn hard_threshold(coeffs: &Array1<f64>, threshold: f64) -> (Array1<f64>, f64) {
-    let mut thresholded = coeffs.clone();
+fn hard_threshold(_coeffs: &Array1<f64>, threshold: f64) -> (Array1<f64>, f64) {
+    let mut thresholded = _coeffs.clone();
     let mut retained = 0;
 
-    for (i, &coeff) in coeffs.iter().enumerate() {
+    for (i, &coeff) in _coeffs.iter().enumerate() {
         if coeff.abs() <= threshold {
             thresholded[i] = 0.0;
         } else {
@@ -1060,17 +1061,17 @@ fn hard_threshold(coeffs: &Array1<f64>, threshold: f64) -> (Array1<f64>, f64) {
         }
     }
 
-    (thresholded, retained as f64 / coeffs.len() as f64)
+    (thresholded, retained as f64 / _coeffs.len() as f64)
 }
 
 /// Garotte thresholding
 #[allow(dead_code)]
-fn garotte_threshold(coeffs: &Array1<f64>, threshold: f64) -> (Array1<f64>, f64) {
-    let mut thresholded = Array1::zeros(coeffs.len());
+fn garotte_threshold(_coeffs: &Array1<f64>, threshold: f64) -> (Array1<f64>, f64) {
+    let mut thresholded = Array1::zeros(_coeffs.len());
     let mut retained = 0;
     let threshold_sq = threshold * threshold;
 
-    for (i, &coeff) in coeffs.iter().enumerate() {
+    for (i, &coeff) in _coeffs.iter().enumerate() {
         let coeff_sq = coeff * coeff;
         if coeff_sq > threshold_sq {
             thresholded[i] = coeff * (1.0 - threshold_sq / coeff_sq);
@@ -1078,16 +1079,16 @@ fn garotte_threshold(coeffs: &Array1<f64>, threshold: f64) -> (Array1<f64>, f64)
         }
     }
 
-    (thresholded, retained as f64 / coeffs.len() as f64)
+    (thresholded, retained as f64 / _coeffs.len() as f64)
 }
 
 /// SCAD thresholding
 #[allow(dead_code)]
-fn scad_threshold(coeffs: &Array1<f64>, threshold: f64, a: f64) -> (Array1<f64>, f64) {
-    let mut thresholded = Array1::zeros(coeffs.len());
+fn scad_threshold(_coeffs: &Array1<f64>, threshold: f64, a: f64) -> (Array1<f64>, f64) {
+    let mut thresholded = Array1::zeros(_coeffs.len());
     let mut retained = 0;
 
-    for (i, &coeff) in coeffs.iter().enumerate() {
+    for (i, &coeff) in _coeffs.iter().enumerate() {
         let abs_coeff = coeff.abs();
 
         if abs_coeff <= threshold {
@@ -1101,17 +1102,17 @@ fn scad_threshold(coeffs: &Array1<f64>, threshold: f64, a: f64) -> (Array1<f64>,
         }
     }
 
-    (thresholded, retained as f64 / coeffs.len() as f64)
+    (thresholded, retained as f64 / _coeffs.len() as f64)
 }
 
 /// Firm thresholding
 #[allow(dead_code)]
-fn firm_threshold(coeffs: &Array1<f64>, threshold: f64, alpha: f64) -> (Array1<f64>, f64) {
-    let mut thresholded = Array1::zeros(coeffs.len());
+fn firm_threshold(_coeffs: &Array1<f64>, threshold: f64, alpha: f64) -> (Array1<f64>, f64) {
+    let mut thresholded = Array1::zeros(_coeffs.len());
     let mut retained = 0;
     let upper_threshold = alpha * threshold;
 
-    for (i, &coeff) in coeffs.iter().enumerate() {
+    for (i, &coeff) in _coeffs.iter().enumerate() {
         let abs_coeff = coeff.abs();
 
         if abs_coeff <= threshold {
@@ -1126,17 +1127,17 @@ fn firm_threshold(coeffs: &Array1<f64>, threshold: f64, alpha: f64) -> (Array1<f
         }
     }
 
-    (thresholded, retained as f64 / coeffs.len() as f64)
+    (thresholded, retained as f64 / _coeffs.len() as f64)
 }
 
 /// Hyperbolic thresholding
 #[allow(dead_code)]
-fn hyperbolic_threshold(coeffs: &Array1<f64>, threshold: f64) -> (Array1<f64>, f64) {
-    let mut thresholded = Array1::zeros(coeffs.len());
+fn hyperbolic_threshold(_coeffs: &Array1<f64>, threshold: f64) -> (Array1<f64>, f64) {
+    let mut thresholded = Array1::zeros(_coeffs.len());
     let mut retained = 0;
     let threshold_sq = threshold * threshold;
 
-    for (i, &coeff) in coeffs.iter().enumerate() {
+    for (i, &coeff) in _coeffs.iter().enumerate() {
         let coeff_sq = coeff * coeff;
         if coeff_sq > threshold_sq {
             thresholded[i] = coeff * (coeff_sq - threshold_sq).sqrt() / coeff.abs();
@@ -1144,7 +1145,7 @@ fn hyperbolic_threshold(coeffs: &Array1<f64>, threshold: f64) -> (Array1<f64>, f
         }
     }
 
-    (thresholded, retained as f64 / coeffs.len() as f64)
+    (thresholded, retained as f64 / _coeffs.len() as f64)
 }
 
 /// Block thresholding
@@ -1180,14 +1181,14 @@ fn block_threshold(
         }
     }
 
-    let retention_rate = retained_blocks as f64 / n_blocks as f64;
+    let retention_rate = retained_blocks as f64 / n_blocks  as f64;
     Ok((thresholded, retention_rate))
 }
 
 /// Compute SURE threshold
 #[allow(dead_code)]
-fn compute_sure_threshold(coeffs: &Array1<f64>, noise_sigma: f64) -> SignalResult<f64> {
-    let n = coeffs.len() as f64;
+fn compute_sure_threshold(_coeffs: &Array1<f64>, noise_sigma: f64) -> SignalResult<f64> {
+    let n = _coeffs.len()  as f64;
     let max_threshold = noise_sigma * (2.0 * n.ln()).sqrt();
     let n_candidates = 100;
 
@@ -1195,8 +1196,8 @@ fn compute_sure_threshold(coeffs: &Array1<f64>, noise_sigma: f64) -> SignalResul
     let mut min_risk = f64::INFINITY;
 
     for i in 0..n_candidates {
-        let threshold = max_threshold * (i + 1) as f64 / n_candidates as f64;
-        let risk = sure_risk(coeffs, threshold, noise_sigma);
+        let threshold = max_threshold * (i + 1) as f64 / n_candidates  as f64;
+        let risk = sure_risk(_coeffs, threshold, noise_sigma);
 
         if risk < min_risk {
             min_risk = risk;
@@ -1209,14 +1210,14 @@ fn compute_sure_threshold(coeffs: &Array1<f64>, noise_sigma: f64) -> SignalResul
 
 /// SURE risk calculation
 #[allow(dead_code)]
-fn sure_risk(coeffs: &Array1<f64>, threshold: f64, noise_sigma: f64) -> f64 {
-    let n = coeffs.len() as f64;
+fn sure_risk(_coeffs: &Array1<f64>, threshold: f64, noise_sigma: f64) -> f64 {
+    let n = _coeffs.len()  as f64;
     let noise_var = noise_sigma * noise_sigma;
 
     let mut risk = -n * noise_var;
     let mut n_small = 0.0;
 
-    for &coeff in coeffs.iter() {
+    for &coeff in _coeffs.iter() {
         let abs_coeff = coeff.abs();
         if abs_coeff <= threshold {
             risk += coeff * coeff;
@@ -1231,8 +1232,8 @@ fn sure_risk(coeffs: &Array1<f64>, threshold: f64, noise_sigma: f64) -> f64 {
 
 /// Compute Bayes threshold
 #[allow(dead_code)]
-fn compute_bayes_threshold(coeffs: &Array1<f64>, noise_sigma: f64) -> f64 {
-    let variance = coeffs.iter().map(|&x| x * x).sum::<f64>() / coeffs.len() as f64;
+fn compute_bayes_threshold(_coeffs: &Array1<f64>, noise_sigma: f64) -> f64 {
+    let variance = _coeffs.iter().map(|&x| x * x).sum::<f64>() / _coeffs.len()  as f64;
     let signal_variance = (variance - noise_sigma * noise_sigma).max(0.0);
 
     if signal_variance > 0.0 {
@@ -1251,17 +1252,17 @@ fn compute_minimax_threshold(n: f64, noise_sigma: f64) -> f64 {
     if log_n < 2.0 {
         0.0
     } else {
-        noise_sigma * (0.3936 + 0.1829 * log_n).sqrt()
+        noise_sigma * ((0.3936 + 0.1829 * log_n) as f64).sqrt()
     }
 }
 
 /// Compute FDR threshold
 #[allow(dead_code)]
-fn compute_fdr_threshold(coeffs: &Array1<f64>, noise_sigma: f64, q: f64) -> SignalResult<f64> {
-    let n = coeffs.len();
+fn compute_fdr_threshold(_coeffs: &Array1<f64>, noise_sigma: f64, q: f64) -> SignalResult<f64> {
+    let n = _coeffs.len();
 
     // Sort coefficients by absolute value
-    let mut abs_coeffs: Vec<(usize, f64)> = coeffs
+    let mut abs_coeffs: Vec<(usize, f64)> = _coeffs
         .iter()
         .enumerate()
         .map(|(i, &c)| (i, c.abs()))
@@ -1273,7 +1274,7 @@ fn compute_fdr_threshold(coeffs: &Array1<f64>, noise_sigma: f64, q: f64) -> Sign
 
     for (k, &(_, abs_val)) in abs_coeffs.iter().enumerate() {
         let p_value = 2.0 * (1.0 - normal_cdf(abs_val / noise_sigma));
-        let fdr_threshold = q * (k + 1) as f64 / n as f64;
+        let fdr_threshold = q * (k + 1) as f64 / n  as f64;
 
         if p_value <= fdr_threshold {
             threshold = abs_val;
@@ -1286,9 +1287,9 @@ fn compute_fdr_threshold(coeffs: &Array1<f64>, noise_sigma: f64, q: f64) -> Sign
 
 /// Compute cross-validation threshold
 #[allow(dead_code)]
-fn compute_cv_threshold(coeffs: &Array1<f64>, noise_sigma: f64) -> SignalResult<f64> {
+fn compute_cv_threshold(_coeffs: &Array1<f64>, noise_sigma: f64) -> SignalResult<f64> {
     // Simplified CV: leave-one-out
-    let n = coeffs.len();
+    let n = _coeffs.len();
     let max_threshold = noise_sigma * (2.0 * (n as f64).ln()).sqrt();
     let n_candidates = 50;
 
@@ -1296,17 +1297,17 @@ fn compute_cv_threshold(coeffs: &Array1<f64>, noise_sigma: f64) -> SignalResult<
     let mut min_cv_error = f64::INFINITY;
 
     for i in 0..n_candidates {
-        let threshold = max_threshold * (i + 1) as f64 / n_candidates as f64;
+        let threshold = max_threshold * (i + 1) as f64 / n_candidates  as f64;
         let mut cv_error = 0.0;
 
         // Leave-one-out CV
         for j in 0..n {
-            let mut temp_coeffs = coeffs.to_vec();
+            let mut temp_coeffs = _coeffs.to_vec();
             temp_coeffs.remove(j);
 
             // Apply threshold to remaining coefficients
             let temp_array = Array1::from_vec(temp_coeffs);
-            let (thresholded, _) = soft_threshold(&temp_array, threshold);
+            let (thresholded_) = soft_threshold(&temp_array, threshold);
 
             // Estimate error at left-out position
             let predicted = if j > 0 && j < n - 1 {
@@ -1315,7 +1316,7 @@ fn compute_cv_threshold(coeffs: &Array1<f64>, noise_sigma: f64) -> SignalResult<
                 0.0
             };
 
-            cv_error += (coeffs[j] - predicted).powi(2);
+            cv_error += (_coeffs[j] - predicted).powi(2);
         }
 
         if cv_error < min_cv_error {
@@ -1346,15 +1347,13 @@ fn threshold_subband(
     let threshold = match config.threshold_rule {
         ThresholdRule::Universal => subband_sigma * (2.0 * (flat.len() as f64).ln()).sqrt(),
         ThresholdRule::SURE => compute_sure_threshold(&flat_array, subband_sigma)?,
-        ThresholdRule::Bayes => compute_bayes_threshold(&flat_array, subband_sigma),
-        _ => subband_sigma * (2.0 * (flat.len() as f64).ln()).sqrt(),
+        ThresholdRule::Bayes => compute_bayes_threshold(&flat_array, subband_sigma, _ => subband_sigma * (2.0 * (flat.len() as f64).ln()).sqrt(),
     };
 
     // Apply thresholding
     let (thresholded_flat, retention) = match config.method {
         ThresholdMethod::Soft => soft_threshold(&flat_array, threshold),
-        ThresholdMethod::Hard => hard_threshold(&flat_array, threshold),
-        _ => soft_threshold(&flat_array, threshold),
+        ThresholdMethod::Hard => hard_threshold(&flat_array, threshold, _ => soft_threshold(&flat_array, threshold),
     };
 
     // Reshape back to 2D
@@ -1366,11 +1365,11 @@ fn threshold_subband(
 
 /// Compute effective degrees of freedom
 #[allow(dead_code)]
-fn compute_effective_df(coeffs: &crate::dwt::DecompositionResult) -> f64 {
-    let mut df = coeffs.approx.len() as f64;
+fn compute_effective_df(_coeffs: &crate::dwt::DecompositionResult) -> f64 {
+    let mut df = _coeffs.approx.len()  as f64;
 
-    for detail in &coeffs.details {
-        df += detail.iter().filter(|&&x| x != 0.0).count() as f64;
+    for detail in &_coeffs.details {
+        df += detail.iter().filter(|&&x| x != 0.0).count()  as f64;
     }
 
     df
@@ -1378,13 +1377,13 @@ fn compute_effective_df(coeffs: &crate::dwt::DecompositionResult) -> f64 {
 
 /// Compute effective degrees of freedom for TI denoising
 #[allow(dead_code)]
-fn compute_effective_df_ti(denoised: &Array1<f64>, original: &Array1<f64>) -> f64 {
+fn compute_effective_df_ti(_denoised: &Array1<f64>, original: &Array1<f64>) -> f64 {
     // Estimate using divergence formula
-    let _n = denoised.len() as f64;
+    let _n = _denoised.len()  as f64;
     let mut div = 0.0;
     let h = 1e-6;
 
-    for i in 0..denoised.len() {
+    for i in 0.._denoised.len() {
         let mut perturbed = original.clone();
         perturbed[i] += h;
 
@@ -1422,15 +1421,15 @@ fn compute_quality_metrics(
     d_retention: &[f64],
 ) -> QualityMetrics {
     // SNR improvement estimate
-    let noise_estimate = (original - denoised).mapv(|x| x * x).sum() / original.len() as f64;
-    let signal_power = original.mapv(|x| x * x).sum() / original.len() as f64;
+    let noise_estimate = (original - denoised).mapv(|x| x * x).sum() / original.len()  as f64;
+    let signal_power = original.mapv(|x| x * x).sum() / original.len()  as f64;
     let snr_improvement = 10.0 * (signal_power / noise_estimate.max(1e-10)).log10();
 
-    // Edge preservation: higher retention in H and V indicates better edge preservation
+    // Edge preservation: higher _retention in H and V indicates better edge preservation
     let edge_preservation = (h_retention.iter().sum::<f64>() + v_retention.iter().sum::<f64>())
         / (2.0 * h_retention.len() as f64);
 
-    // Texture preservation: retention in all subbands
+    // Texture preservation: _retention in all subbands
     let texture_preservation = (h_retention.iter().sum::<f64>()
         + v_retention.iter().sum::<f64>()
         + d_retention.iter().sum::<f64>())
@@ -1540,8 +1539,8 @@ pub fn denoise_morphological_closing(
 
 /// Morphological erosion
 #[allow(dead_code)]
-fn morphological_erosion(signal: &Array1<f64>, radius: usize) -> Array1<f64> {
-    let n = signal.len();
+fn morphological_erosion(_signal: &Array1<f64>, radius: usize) -> Array1<f64> {
+    let n = _signal.len();
     let mut eroded = Array1::zeros(n);
 
     for i in 0..n {
@@ -1550,7 +1549,7 @@ fn morphological_erosion(signal: &Array1<f64>, radius: usize) -> Array1<f64> {
 
         let mut min_val = f64::INFINITY;
         for j in start..end {
-            min_val = min_val.min(signal[j]);
+            min_val = min_val.min(_signal[j]);
         }
         eroded[i] = min_val;
     }
@@ -1560,8 +1559,8 @@ fn morphological_erosion(signal: &Array1<f64>, radius: usize) -> Array1<f64> {
 
 /// Morphological dilation
 #[allow(dead_code)]
-fn morphological_dilation(signal: &Array1<f64>, radius: usize) -> Array1<f64> {
-    let n = signal.len();
+fn morphological_dilation(_signal: &Array1<f64>, radius: usize) -> Array1<f64> {
+    let n = _signal.len();
     let mut dilated = Array1::zeros(n);
 
     for i in 0..n {
@@ -1570,7 +1569,7 @@ fn morphological_dilation(signal: &Array1<f64>, radius: usize) -> Array1<f64> {
 
         let mut max_val = f64::NEG_INFINITY;
         for j in start..end {
-            max_val = max_val.max(signal[j]);
+            max_val = max_val.max(_signal[j]);
         }
         dilated[i] = max_val;
     }
@@ -1641,17 +1640,17 @@ pub fn denoise_guided_filter_1d(
 
 /// Box filter (moving average)
 #[allow(dead_code)]
-fn box_filter(signal: &Array1<f64>, radius: usize) -> Array1<f64> {
-    let n = signal.len();
+fn box_filter(_signal: &Array1<f64>, radius: usize) -> Array1<f64> {
+    let n = _signal.len();
     let mut filtered = Array1::zeros(n);
 
     for i in 0..n {
         let start = (i as i32 - radius as i32).max(0) as usize;
         let end = (i + radius + 1).min(n);
 
-        let sum: f64 = signal.slice(s![start..end]).sum();
+        let sum: f64 = _signal.slice(s![start..end]).sum();
         let count = end - start;
-        filtered[i] = sum / count as f64;
+        filtered[i] = sum / count  as f64;
     }
 
     filtered
@@ -1659,17 +1658,17 @@ fn box_filter(signal: &Array1<f64>, radius: usize) -> Array1<f64> {
 
 /// Median filtering for impulse noise removal
 #[allow(dead_code)]
-pub fn denoise_median_1d(signal: &Array1<f64>, window_size: usize) -> SignalResult<Array1<f64>> {
+pub fn denoise_median_1d(_signal: &Array1<f64>, window_size: usize) -> SignalResult<Array1<f64>> {
     // Signal validation handled by algorithm
     check_positive(window_size, "window_size")?;
 
     if window_size % 2 == 0 {
         return Err(SignalError::ValueError(
-            "Window size must be odd".to_string(),
+            "Window _size must be odd".to_string(),
         ));
     }
 
-    let n = signal.len();
+    let n = _signal.len();
     let mut filtered = Array1::zeros(n);
     let radius = window_size / 2;
 
@@ -1677,7 +1676,7 @@ pub fn denoise_median_1d(signal: &Array1<f64>, window_size: usize) -> SignalResu
         let start = (i as i32 - radius as i32).max(0) as usize;
         let end = (i + radius + 1).min(n);
 
-        let mut window: Vec<f64> = signal.slice(s![start..end]).to_vec();
+        let mut window: Vec<f64> = _signal.slice(s![start..end]).to_vec();
         window.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         filtered[i] = window[window.len() / 2];
@@ -1706,13 +1705,13 @@ impl Default for GuidedFilterConfig {
 
 /// Validate denoising configuration
 #[allow(dead_code)]
-fn validate_denoise_config(config: &DenoiseConfig) -> SignalResult<()> {
-    if let Some(levels) = config.levels {
+fn validate_denoise_config(_config: &DenoiseConfig) -> SignalResult<()> {
+    if let Some(levels) = _config.levels {
         check_positive(levels, "levels")?;
     }
-    check_positive(config.n_shifts, "n_shifts")?;
+    check_positive(_config.n_shifts, "n_shifts")?;
 
-    match config.threshold_rule {
+    match _config.threshold_rule {
         ThresholdRule::FDR { q } => {
             if q <= 0.0 || q >= 1.0 {
                 return Err(SignalError::ValueError(
@@ -1730,7 +1729,7 @@ fn validate_denoise_config(config: &DenoiseConfig) -> SignalResult<()> {
         _ => {}
     }
 
-    match config.method {
+    match _config.method {
         ThresholdMethod::SCAD { a } => {
             if a <= 2.0 {
                 return Err(SignalError::ValueError(
@@ -1756,38 +1755,38 @@ fn validate_denoise_config(config: &DenoiseConfig) -> SignalResult<()> {
 
 /// Estimate memory usage for signal processing
 #[allow(dead_code)]
-fn estimate_memory_usage(signal_length: usize) -> usize {
+fn estimate_memory_usage(_signal_length: usize) -> usize {
     // Rough estimate: signal + coefficients + intermediate buffers
-    let base_size = signal_length * std::mem::size_of::<f64>();
-    let wavelet_coeffs = signal_length * 2; // Approx 2x for all levels
-    let intermediate_buffers = signal_length * 4; // Various temp arrays
+    let base_size = _signal_length * std::mem::size_of::<f64>();
+    let wavelet_coeffs = _signal_length * 2; // Approx 2x for all levels
+    let intermediate_buffers = _signal_length * 4; // Various temp arrays
 
     base_size + wavelet_coeffs + intermediate_buffers
 }
 
 /// Compute numerical stability score for a signal
 #[allow(dead_code)]
-fn compute_numerical_stability(signal: &Array1<f64>) -> SignalResult<f64> {
-    let n = signal.len() as f64;
+fn compute_numerical_stability(_signal: &Array1<f64>) -> SignalResult<f64> {
+    let n = _signal.len()  as f64;
 
     // Check for NaN or infinite values
-    let finite_count = signal.iter().filter(|x| x.is_finite()).count() as f64;
+    let finite_count = _signal.iter().filter(|x| x.is_finite()).count()  as f64;
     if finite_count < n {
         return Ok(finite_count / n); // Partial stability
     }
 
     // Check dynamic range
-    let max_val = signal.iter().cloned().fold(0.0, f64::max);
-    let min_val = signal.iter().cloned().fold(0.0, f64::min);
+    let max_val = _signal.iter().cloned().fold(0.0, f64::max);
+    let min_val = _signal.iter().cloned().fold(0.0, f64::min);
     let dynamic_range = if min_val != 0.0 {
         max_val / min_val.abs()
     } else {
         max_val
     };
 
-    // Check for near-zero variance (constant signal)
-    let mean = signal.sum() / n;
-    let variance = signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / (n - 1.0);
+    // Check for near-zero variance (constant _signal)
+    let mean = _signal.sum() / n;
+    let variance = _signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / (n - 1.0);
 
     // Stability score based on dynamic range and variance
     let range_score = if dynamic_range < 1e12 {
@@ -1806,8 +1805,8 @@ fn compute_numerical_stability(signal: &Array1<f64>) -> SignalResult<f64> {
 
 /// Adaptive noise estimation using multiple scales
 #[allow(dead_code)]
-fn adaptive_noise_estimation(coeffs: &crate::dwt::DecompositionResult) -> SignalResult<f64> {
-    let n_levels = coeffs.details.len();
+fn adaptive_noise_estimation(_coeffs: &crate::dwt::DecompositionResult) -> SignalResult<f64> {
+    let n_levels = _coeffs.details.len();
     if n_levels == 0 {
         return Err(SignalError::ValueError(
             "No detail coefficients found".to_string(),
@@ -1817,7 +1816,7 @@ fn adaptive_noise_estimation(coeffs: &crate::dwt::DecompositionResult) -> Signal
     let mut noise_estimates = Vec::with_capacity(n_levels);
 
     // Estimate noise at each scale
-    for (level, detail) in coeffs.details.iter().enumerate() {
+    for (level, detail) in _coeffs.details.iter().enumerate() {
         let level_noise = estimate_noise_mad(detail);
 
         // Scale adjustment for different levels
@@ -1851,7 +1850,7 @@ fn apply_enhanced_thresholding(
 
     // Process each detail level
     for (level, detail) in coeffs.details.iter().enumerate() {
-        let n = detail.len() as f64;
+        let n = detail.len()  as f64;
 
         // Compute threshold with enhanced rules
         let threshold = match config.threshold_rule {
@@ -1877,8 +1876,7 @@ fn apply_enhanced_thresholding(
         let (thresholded_detail, retention) = if config.use_simd && detail.len() >= 64 {
             match config.method {
                 ThresholdMethod::Soft => simd_soft_threshold(detail, scaled_threshold)?,
-                ThresholdMethod::Hard => simd_hard_threshold(detail, scaled_threshold)?,
-                _ => match config.method {
+                ThresholdMethod::Hard => simd_hard_threshold(detail, scaled_threshold)?_ => match config.method {
                     ThresholdMethod::Garotte => garotte_threshold(detail, scaled_threshold),
                     ThresholdMethod::SCAD { a } => scad_threshold(detail, scaled_threshold, a),
                     ThresholdMethod::Firm { alpha } => {
@@ -1914,15 +1912,15 @@ fn apply_enhanced_thresholding(
 
 /// SIMD-optimized weighted sum calculation
 #[allow(dead_code)]
-fn simd_weighted_sum(weights: &[f64], arrays: &[Array1<f64>]) -> SignalResult<f64> {
-    if weights.len() != arrays.len() {
+fn simd_weighted_sum(_weights: &[f64], arrays: &[Array1<f64>]) -> SignalResult<f64> {
+    if _weights.len() != arrays.len() {
         return Err(SignalError::ShapeMismatch(
             "Weights and arrays must have the same length".to_string(),
         ));
     }
 
     let mut total = 0.0;
-    let weights_view = ArrayView1::from(weights);
+    let weights_view = ArrayView1::from(_weights);
 
     for (i, array) in arrays.iter().enumerate() {
         let array_sum = array.sum();
@@ -1934,12 +1932,12 @@ fn simd_weighted_sum(weights: &[f64], arrays: &[Array1<f64>]) -> SignalResult<f6
 
 /// SIMD-optimized circular shift
 #[allow(dead_code)]
-fn simd_circular_shift(signal: &Array1<f64>, shift: usize) -> SignalResult<Array1<f64>> {
-    let n = signal.len();
+fn simd_circular_shift(_signal: &Array1<f64>, shift: usize) -> SignalResult<Array1<f64>> {
+    let n = _signal.len();
     let shift = shift % n;
 
     if shift == 0 {
-        return Ok(signal.clone());
+        return Ok(_signal.clone());
     }
 
     let mut shifted = Array1::zeros(n);
@@ -1947,7 +1945,7 @@ fn simd_circular_shift(signal: &Array1<f64>, shift: usize) -> SignalResult<Array
 
     if capabilities.avx2_available && n >= 32 {
         // Use SIMD for large arrays
-        let signal_slice = signal.as_slice().unwrap();
+        let signal_slice = _signal.as_slice().unwrap();
         let mut shifted_slice = shifted.as_slice_mut().unwrap();
 
         // Copy in two chunks: [shift..n] -> [0..n-shift] and [0..shift] -> [n-shift..n]
@@ -1957,7 +1955,7 @@ fn simd_circular_shift(signal: &Array1<f64>, shift: usize) -> SignalResult<Array
     } else {
         // Fallback to scalar implementation
         for i in 0..n {
-            shifted[i] = signal[(i + shift) % n];
+            shifted[i] = _signal[(i + shift) % n];
         }
     }
 
@@ -1972,13 +1970,13 @@ fn simd_average_unshifted_results(
 ) -> SignalResult<Array1<f64>> {
     if shift_results.is_empty() {
         return Err(SignalError::ValueError(
-            "No shift results provided".to_string(),
+            "No shift _results provided".to_string(),
         ));
     }
 
     let n = shift_results[0].signal.len();
     let mut averaged = Array1::zeros(n);
-    let scale_factor = 1.0 / n_shifts as f64;
+    let scale_factor = 1.0 / n_shifts  as f64;
 
     for (shift, result) in shift_results.iter().enumerate() {
         let signal_view = result.signal.view();
@@ -1996,12 +1994,12 @@ fn simd_average_unshifted_results(
 
 /// SIMD-optimized soft thresholding
 #[allow(dead_code)]
-fn simd_soft_threshold(coeffs: &Array1<f64>, threshold: f64) -> SignalResult<(Array1<f64>, f64)> {
-    let n = coeffs.len();
+fn simd_soft_threshold(_coeffs: &Array1<f64>, threshold: f64) -> SignalResult<(Array1<f64>, f64)> {
+    let n = _coeffs.len();
     let mut thresholded = Array1::zeros(n);
     let mut retained = 0;
 
-    let coeffs_view = coeffs.view();
+    let coeffs_view = _coeffs.view();
     let mut thresholded_view = thresholded.view_mut();
 
     // Use SIMD operations for vectorized thresholding
@@ -2022,9 +2020,9 @@ fn simd_soft_threshold(coeffs: &Array1<f64>, threshold: f64) -> SignalResult<(Ar
 
 /// SIMD-optimized hard thresholding
 #[allow(dead_code)]
-fn simd_hard_threshold(coeffs: &Array1<f64>, threshold: f64) -> SignalResult<(Array1<f64>, f64)> {
-    let n = coeffs.len();
-    let mut thresholded = coeffs.clone();
+fn simd_hard_threshold(_coeffs: &Array1<f64>, threshold: f64) -> SignalResult<(Array1<f64>, f64)> {
+    let n = _coeffs.len();
+    let mut thresholded = _coeffs.clone();
     let mut retained = 0;
 
     let mut thresholded_view = thresholded.view_mut();
@@ -2047,7 +2045,7 @@ fn compute_snr_improvement(
     denoised: &Array1<f64>,
     noise_sigma: f64,
 ) -> f64 {
-    let signal_power = denoised.mapv(|x| x * x).sum() / denoised.len() as f64;
+    let signal_power = denoised.mapv(|x| x * x).sum() / denoised.len()  as f64;
     let noise_power = noise_sigma * noise_sigma;
 
     let snr_linear = signal_power / noise_power.max(1e-12);
@@ -2092,7 +2090,7 @@ fn memory_optimized_denoise_1d(
         let mut block_config = config.clone();
         block_config.memory_optimized = false; // Prevent recursion
 
-        let block_start_time = std::time::Instant::now();
+        let block_start_time = std::_time::Instant::now();
         let block_result = standard_denoise_1d(&block, &block_config)?;
 
         denoised_blocks.push(block_result.signal);
@@ -2140,12 +2138,12 @@ fn memory_optimized_denoise_1d(
     }
 
     // Aggregate diagnostics
-    let noise_sigma = noise_estimates.iter().sum::<f64>() / noise_estimates.len() as f64;
-    let retention_rate = all_retentions.iter().sum::<f64>() / all_retentions.len() as f64;
+    let noise_sigma = noise_estimates.iter().sum::<f64>() / noise_estimates.len()  as f64;
+    let retention_rate = all_retentions.iter().sum::<f64>() / all_retentions.len()  as f64;
     let stability_score = compute_numerical_stability(&denoised)?;
     let snr_improvement = compute_snr_improvement(signal, &denoised, noise_sigma);
 
-    let processing_time_ms = start_time.elapsed().as_millis() as f64;
+    let processing_time_ms = start_time.elapsed().as_millis()  as f64;
     let memory_usage_bytes = estimate_memory_usage(n) + initial_memory;
 
     Ok(DenoiseResult {
@@ -2153,7 +2151,7 @@ fn memory_optimized_denoise_1d(
         noise_sigma,
         thresholds: all_thresholds,
         retention_rate,
-        effective_df: 0.0, // Simplified for memory-optimized version
+        effective_df: 0.0, // Simplified for _memory-optimized version
         risk_estimate: None,
         processing_time_ms,
         memory_usage_bytes,
@@ -2164,23 +2162,23 @@ fn memory_optimized_denoise_1d(
 
 /// Compute signal energy
 #[allow(dead_code)]
-fn compute_energy(signal: &[f64]) -> f64 {
-    let signal_view = ArrayView1::from(signal);
+fn compute_energy(_signal: &[f64]) -> f64 {
+    let signal_view = ArrayView1::from(_signal);
     f64::simd_dot(&signal_view, &signal_view)
 }
 
 /// Compute total energy in wavelet packet tree
 #[allow(dead_code)]
-fn compute_tree_energy(tree: &crate::wpt::WaveletPacketTree) -> SignalResult<f64> {
+fn compute_tree_energy(_tree: &crate::wpt::WaveletPacketTree) -> SignalResult<f64> {
     let mut total_energy = 0.0;
 
     // Get all leaf nodes (terminal nodes)
     // TODO: Implement get_leaf_nodes method for WaveletPacketTree
     // For now, use all nodes as leaf nodes
-    let leaf_nodes: Vec<(usize, usize)> = tree.nodes.keys().cloned().collect();
+    let leaf_nodes: Vec<(usize, usize)> = _tree.nodes.keys().cloned().collect();
 
     for (level, position) in leaf_nodes {
-        if let Some(packet) = tree.get_node(level, position) {
+        if let Some(packet) = _tree.get_node(level, position) {
             let packet_energy = compute_energy(&packet.data);
             total_energy += packet_energy;
         }
@@ -2191,10 +2189,6 @@ fn compute_tree_energy(tree: &crate::wpt::WaveletPacketTree) -> SignalResult<f64
 
 #[cfg(test)]
 mod tests {
-    use ndarray::Array1;
-    use rand::prelude::*;
-    use rand::Rng;
-
     #[test]
     fn test_denoise_1d_basic() {
         let n = 256;
@@ -2255,8 +2249,8 @@ mod tests {
         let coeffs = Array1::from_vec(vec![0.1, -0.5, 1.2, -0.3, 2.0, -1.5]);
         let threshold = 0.4;
 
-        let (soft, _) = soft_threshold(&coeffs, threshold);
-        let (hard, _) = hard_threshold(&coeffs, threshold);
+        let (soft_) = soft_threshold(&coeffs, threshold);
+        let (hard_) = hard_threshold(&coeffs, threshold);
 
         // Check soft thresholding shrinks values
         assert!(soft[2].abs() < coeffs[2].abs());
@@ -2264,4 +2258,16 @@ mod tests {
         // Check hard thresholding preserves large values
         assert_eq!(hard[4], coeffs[4]);
     }
+}
+
+#[allow(dead_code)]
+fn next_power_of_two(n: usize) -> usize {
+    if n == 0 {
+        return 1;
+    }
+    let mut power = 1;
+    while power < n {
+        power <<= 1;
+    }
+    power
 }

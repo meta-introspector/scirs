@@ -8,13 +8,13 @@ use num_traits::Float;
 use std::fmt::{self, Debug};
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::coo_array::CooArray;
-use crate::csc_array::CscArray;
-use crate::csr_array::CsrArray;
-use crate::dia_array::DiaArray;
-use crate::dok_array::DokArray;
+use crate::coo__array::CooArray;
+use crate::csc__array::CscArray;
+use crate::csr__array::CsrArray;
+use crate::dia__array::DiaArray;
+use crate::dok__array::DokArray;
 use crate::error::{SparseError, SparseResult};
-use crate::lil_array::LilArray;
+use crate::lil__array::LilArray;
 use crate::sparray::{SparseArray, SparseSum};
 
 /// BSR Array format
@@ -91,8 +91,8 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2_sparse::bsr_array::BsrArray;
-    /// use scirs2_sparse::sparray::SparseArray;
+    /// use scirs2__sparse::bsr_array::BsrArray;
+    /// use scirs2__sparse::sparray::SparseArray;
     ///
     /// // Create a 4x4 sparse array with 2x2 blocks
     /// // [1 2 0 0]
@@ -182,8 +182,7 @@ where
             if idx_vec[0] >= _block_cols {
                 return Err(SparseError::ValueError(format!(
                     "index {} out of bounds (max {})",
-                    idx_vec[0],
-                    _block_cols - 1
+                    idx_vec[0]_block_cols - 1
                 )));
             }
         }
@@ -192,8 +191,7 @@ where
             rows,
             cols,
             block_size,
-            block_rows,
-            _block_cols,
+            block_rows_block_cols,
             data,
             indices,
             indptr,
@@ -210,8 +208,8 @@ where
     /// # Returns
     ///
     /// * A new empty BSR array
-    pub fn empty(shape: (usize, usize), block_size: (usize, usize)) -> SparseResult<Self> {
-        let (rows, cols) = shape;
+    pub fn empty(_shape: (usize, usize), block_size: (usize, usize)) -> SparseResult<Self> {
+        let (rows, cols) = _shape;
         let (r, c) = block_size;
 
         if r == 0 || c == 0 {
@@ -235,8 +233,7 @@ where
             rows,
             cols,
             block_size,
-            block_rows,
-            _block_cols,
+            block_rows_block_cols,
             data,
             indices,
             indptr,
@@ -315,7 +312,7 @@ where
         }
 
         // Now convert the DOK-like format to BSR
-        let mut rows_with_blocks: Vec<usize> = block_data.keys().map(|&(row, _)| row).collect();
+        let mut rows_with_blocks: Vec<usize> = block_data.keys().map(|&(row_)| row).collect();
         rows_with_blocks.sort();
         rows_with_blocks.dedup();
 
@@ -332,12 +329,12 @@ where
                 // Get all blocks for this row
                 let mut row_blocks: Vec<(usize, Vec<Vec<T>>)> = block_data
                     .iter()
-                    .filter(|&(&(r, _), _)| r == row_idx)
+                    .filter(|&(&(r_)_)| r == row_idx)
                     .map(|(&(_, c), block)| (c, block.clone()))
                     .collect();
 
                 // Sort by column index
-                row_blocks.sort_by_key(|&(col, _)| col);
+                row_blocks.sort_by_key(|&(col_)| col);
 
                 // Add to data and indices
                 for (col, block) in row_blocks {
@@ -752,7 +749,7 @@ where
             }
 
             // Sort by column index
-            row_blocks.sort_by_key(|&(col, _)| col);
+            row_blocks.sort_by_key(|&(col_)| col);
 
             // Add sorted blocks to new data structures
             for (col, block) in row_blocks {

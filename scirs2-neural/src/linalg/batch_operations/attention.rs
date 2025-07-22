@@ -243,7 +243,7 @@ pub fn multi_head_attention<F>(
                     k_head[[b, i, d]] = k_heads[[b, h, i, d]];
                     v_head[[b, i, d]] = v_heads[[b, h, i, d]];
         // Compute attention for this head
-        let (head_output, _) =
+        let (head_output_) =
             scaled_dot_product_attention(&q_head.view(), &k_head.view(), &v_head.view(), mask)?;
         // Store head output
                     head_outputs[[b, h, i, d]] = head_output[[b, i, d]];

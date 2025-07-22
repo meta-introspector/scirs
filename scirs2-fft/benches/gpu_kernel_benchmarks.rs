@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use rand::Rng;
-use scirs2_fft::{
+use scirs2__fft::{
     sparse_fft::{sparse_fft, SparseFFTAlgorithm, WindowFunction},
     sparse_fft_gpu::{gpu_sparse_fft, GPUBackend},
     sparse_fft_gpu_cuda::cuda_sparse_fft,
@@ -24,11 +24,11 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 
 // Helper to add noise to a signal
 #[allow(dead_code)]
-fn add_noise(signal: &[f64], noise_level: f64) -> Vec<f64> {
+fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
     let mut rng = rand::rng();
-    signal
+    _signal
         .iter()
-        .map(|&x| x + noise_level * rng.random_range(-1.0..1.0))
+        .map(|&x| x + noise_level * rng.gen_range(-1.0..1.0))
         .collect()
 }
 
@@ -40,7 +40,7 @@ fn bench_gpu_kernel_sublinear(c: &mut Criterion) {
     }
 
     let n = 1024;
-    let frequencies = vec![(30, 1.0), (70, 0.5), (150, 0.25)];
+    let frequencies = vec![(30..1.0), (70, 0.5), (150, 0.25)];
     let signal = create_sparse_signal(n, &frequencies);
     let noisy_signal = add_noise(&signal, 0.1);
 
@@ -163,7 +163,7 @@ fn bench_signal_sizes(c: &mut Criterion) {
         let signal = create_sparse_signal(size, &frequencies);
         let noisy_signal = add_noise(&signal, 0.1);
 
-        c.bench_with_input(BenchmarkId::new("gpu_kernel_size", size), &size, |b, _| {
+        c.bench_with_input(BenchmarkId::new("gpu_kernel_size", size), &size, |b_| {
             b.iter(|| {
                 cuda_sparse_fft(
                     &noisy_signal,

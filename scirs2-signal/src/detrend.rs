@@ -5,10 +5,11 @@
 //! spectral analysis or other signal processing operations.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2};
+use ndarray::{Array1, Array2, array};
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Detrend a signal by removing a linear trend or constant offset.
 ///
 /// This function removes a linear trend or constant offset from the input data.
@@ -30,7 +31,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::detrend;
+/// use scirs2__signal::detrend;
 ///
 /// // Create a signal with a linear trend
 /// let mut x = vec![0.0, 1.0, 2.0, 3.0, 4.0];
@@ -50,7 +51,7 @@ use std::fmt::Debug;
 /// Remove just the mean value:
 ///
 /// ```
-/// use scirs2_signal::detrend;
+/// use scirs2__signal::detrend;
 ///
 /// // Create a signal with a constant offset
 /// let x = vec![5.0, 6.0, 7.0, 8.0, 9.0];
@@ -126,7 +127,7 @@ where
                 .collect())
         }
         _ => Err(SignalError::ValueError(format!(
-            "Unknown detrend type: {detrend_str}. Must be 'linear', 'constant', or 'none'."
+            "Unknown detrend _type: {detrend_str}. Must be 'linear', 'constant', or 'none'."
         ))),
     }
 }
@@ -149,7 +150,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::detrend_axis;
+/// use scirs2__signal::detrend_axis;
 /// use ndarray::array;
 ///
 /// // Create a 2D array with a trend along columns
@@ -249,7 +250,7 @@ pub fn detrend_axis(
         }
         _ => {
             return Err(SignalError::ValueError(format!(
-                "Unknown detrend type: {detrend_str}. Must be 'linear', 'constant', or 'none'."
+                "Unknown detrend _type: {detrend_str}. Must be 'linear', 'constant', or 'none'."
             )));
         }
     }
@@ -274,7 +275,7 @@ pub fn detrend_axis(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::detrend_poly;
+/// use scirs2__signal::detrend_poly;
 ///
 /// // Create a signal with a quadratic trend: y = 0.1*x^2 + 0.5*x + 1
 /// let n = 10;
@@ -445,9 +446,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Vec<f64
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-    use ndarray::Array2;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_detrend_constant() {
         // Test signal with constant offset
@@ -480,6 +479,8 @@ mod tests {
 
     #[test]
     fn test_detrend_none() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test with no detrending
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let detrended = detrend(&signal, Some("none")).unwrap();
@@ -492,6 +493,8 @@ mod tests {
 
     #[test]
     fn test_detrend_axis() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a 2D array with trends along both axes
         let mut data = Array2::zeros((3, 4));
         for i in 0..3 {
@@ -559,6 +562,8 @@ mod tests {
 
     #[test]
     fn test_detrend_poly() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a signal with a cubic trend: y = 0.1*x^3 - 0.5*x^2 + 2*x - 3
         let n = 20;
         let mut signal = vec![0.0; n];

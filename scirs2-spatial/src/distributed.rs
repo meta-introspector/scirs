@@ -27,7 +27,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::distributed::{DistributedSpatialCluster, NodeConfig};
+//! use scirs2__spatial::distributed::{DistributedSpatialCluster, NodeConfig};
 //! use ndarray::array;
 //!
 //! // Create distributed spatial cluster
@@ -82,7 +82,7 @@ pub struct NodeConfig {
 }
 
 impl Default for NodeConfig {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -103,13 +103,13 @@ impl NodeConfig {
     }
 
     /// Configure node count
-    pub fn with_node_count(mut self, count: usize) -> Self {
+    pub fn with_node_count(mut count: usize) -> Self {
         self.node_count = count;
         self
     }
 
     /// Enable fault tolerance
-    pub fn with_fault_tolerance(mut self, enabled: bool) -> Self {
+    pub fn with_fault_tolerance(mut enabled: bool) -> Self {
         self.fault_tolerance = enabled;
         if enabled && self.replication_factor < 2 {
             self.replication_factor = 2;
@@ -118,13 +118,13 @@ impl NodeConfig {
     }
 
     /// Enable load balancing
-    pub fn with_load_balancing(mut self, enabled: bool) -> Self {
+    pub fn with_load_balancing(mut enabled: bool) -> Self {
         self.load_balancing = enabled;
         self
     }
 
     /// Enable compression
-    pub fn with_compression(mut self, enabled: bool) -> Self {
+    pub fn with_compression(mut enabled: bool) -> Self {
         self.compression = enabled;
         self
     }
@@ -580,13 +580,13 @@ pub struct IndexStatistics {
 
 impl DistributedSpatialCluster {
     /// Create new distributed spatial cluster
-    pub fn new(config: NodeConfig) -> SpatialResult<Self> {
+    pub fn new(_config: NodeConfig) -> SpatialResult<Self> {
         let mut nodes = Vec::new();
         let mut channels = HashMap::new();
 
         // Create node instances
-        for node_id in 0..config.node_count {
-            let (sender, _receiver) = mpsc::channel(1000);
+        for node_id in 0.._config.node_count {
+            let (sender_receiver) = mpsc::channel(1000);
             channels.insert(node_id, sender);
 
             let node = NodeInstance {
@@ -624,7 +624,7 @@ impl DistributedSpatialCluster {
 
         let communication = CommunicationLayer {
             channels,
-            compression_enabled: config.compression,
+            compression_enabled: _config.compression,
             stats: CommunicationStats {
                 messages_sent: 0,
                 messages_received: 0,
@@ -635,7 +635,7 @@ impl DistributedSpatialCluster {
         };
 
         let cluster_state = ClusterState {
-            active_nodes: (0..config.node_count).collect(),
+            active_nodes: (0.._config.node_count).collect(),
             total_data_points: 0,
             total_partitions: 0,
             health_score: 1.0,
@@ -643,12 +643,12 @@ impl DistributedSpatialCluster {
                 avg_query_latency_ms: 0.0,
                 throughput_qps: 0.0,
                 load_balance_score: 1.0,
-                fault_tolerance_level: if config.fault_tolerance { 0.8 } else { 0.0 },
+                fault_tolerance_level: if _config.fault_tolerance { 0.8 } else { 0.0 },
             },
         };
 
         Ok(Self {
-            config,
+            _config,
             nodes,
             master_node_id: 0,
             partitions: Arc::new(TokioRwLock::new(HashMap::new())),
@@ -660,7 +660,7 @@ impl DistributedSpatialCluster {
     }
 
     /// Default recovery strategies for different failure types
-    fn default_recovery_strategies() -> HashMap<FailureType, RecoveryStrategy> {
+    fn default_recovery_strategies(&self) -> HashMap<FailureType, RecoveryStrategy> {
         let mut strategies = HashMap::new();
         strategies.insert(FailureType::NodeUnresponsive, RecoveryStrategy::Restart);
         strategies.insert(FailureType::HighLatency, RecoveryStrategy::WaitAndRetry);
@@ -671,11 +671,11 @@ impl DistributedSpatialCluster {
     }
 
     /// Distribute data across cluster nodes
-    pub async fn distribute_data(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
-        let (n_points, _n_dims) = data.dim();
+    pub async fn distribute_data(_data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
+        let (n_points_n_dims) = _data.dim();
 
         // Create spatial partitions
-        let partitions = self.create_spatial_partitions(data).await?;
+        let partitions = self.create_spatial_partitions(_data).await?;
 
         // Distribute partitions to nodes
         self.assign_partitions_to_nodes(&partitions).await?;
@@ -725,7 +725,7 @@ impl DistributedSpatialCluster {
         }
 
         // Sort by Z-order
-        point_z_orders.sort_by_key(|(_, z_order, _)| *z_order);
+        point_z_orders.sort_by_key(|(_, z_order_)| *z_order);
 
         // Create partitions
         let points_per_partition = n_points.div_ceil(target_partitions);
@@ -745,7 +745,7 @@ impl DistributedSpatialCluster {
             let mut partition_min = Array1::from_elem(n_dims, f64::INFINITY);
             let mut partition_max = Array1::from_elem(n_dims, f64::NEG_INFINITY);
 
-            for (i, (_, _, point)) in point_z_orders[start_idx..end_idx].iter().enumerate() {
+            for (i, (__, point)) in point_z_orders[start_idx..end_idx].iter().enumerate() {
                 partition_data.row_mut(i).assign(point);
 
                 for (j, &coord) in point.iter().enumerate() {
@@ -837,7 +837,7 @@ impl DistributedSpatialCluster {
                 if let Some(ref existing_data) = node.local_data {
                     // Concatenate existing data with new partition data
                     let (existing_rows, cols) = existing_data.dim();
-                    let (new_rows, _) = partition.data.dim();
+                    let (new_rows_) = partition.data.dim();
                     let total_rows = existing_rows + new_rows;
 
                     let mut combined_data = Array2::zeros((total_rows, cols));
@@ -865,7 +865,7 @@ impl DistributedSpatialCluster {
                 if let Some(ref existing_data) = node.local_data {
                     // Concatenate existing data with new partition data
                     let (existing_rows, cols) = existing_data.dim();
-                    let (new_rows, _) = partition.data.dim();
+                    let (new_rows_) = partition.data.dim();
                     let total_rows = existing_rows + new_rows;
 
                     let mut combined_data = Array2::zeros((total_rows, cols));
@@ -893,7 +893,7 @@ impl DistributedSpatialCluster {
     }
 
     /// Build distributed spatial indices
-    async fn build_distributed_indices(&mut self) -> SpatialResult<()> {
+    async fn build_distributed_indices() -> SpatialResult<()> {
         // Build local indices on each node
         for node_arc in &self.nodes {
             let mut node = node_arc.write().await;
@@ -991,7 +991,7 @@ impl DistributedSpatialCluster {
     }
 
     /// Initialize centroids using distributed k-means++
-    async fn initialize_distributed_centroids(&self, k: usize) -> SpatialResult<Array2<f64>> {
+    async fn initialize_distributed_centroids(k: usize) -> SpatialResult<Array2<f64>> {
         // Get random first centroid from any node
         let first_centroid = self.get_random_point_from_cluster().await?;
 
@@ -1012,7 +1012,7 @@ impl DistributedSpatialCluster {
     }
 
     /// Get random point from any node in cluster
-    async fn get_random_point_from_cluster(&self) -> SpatialResult<Array1<f64>> {
+    async fn get_random_point_from_cluster() -> SpatialResult<Array1<f64>> {
         for node_arc in &self.nodes {
             let node = node_arc.read().await;
             if let Some(ref local_data) = node.local_data {
@@ -1061,14 +1061,14 @@ impl DistributedSpatialCluster {
     }
 
     /// Select next centroid using weighted probability
-    async fn select_next_centroid_weighted(&self, distances: &[f64]) -> SpatialResult<Array1<f64>> {
-        let total_distance: f64 = distances.iter().sum();
+    async fn select_next_centroid_weighted(_distances: &[f64]) -> SpatialResult<Array1<f64>> {
+        let total_distance: f64 = _distances.iter().sum();
         let target = rand::random::<f64>() * total_distance;
 
         let mut cumulative = 0.0;
         let mut point_index = 0;
 
-        for &distance in distances {
+        for &distance in _distances {
             cumulative += distance;
             if cumulative >= target {
                 break;
@@ -1104,7 +1104,7 @@ impl DistributedSpatialCluster {
         for (node_id, node_arc) in self.nodes.iter().enumerate() {
             let node = node_arc.read().await;
             if let Some(ref local_data) = node.local_data {
-                let (n_points, _) = local_data.dim();
+                let (n_points_) = local_data.dim();
                 let mut assignments = Array1::zeros(n_points);
 
                 for (i, point) in local_data.outer_iter().enumerate() {
@@ -1145,12 +1145,12 @@ impl DistributedSpatialCluster {
         let mut cluster_sums: HashMap<usize, Array1<f64>> = HashMap::new();
         let mut cluster_counts: HashMap<usize, usize> = HashMap::new();
 
-        for (node_id, assignments) in local_assignments {
+        for (node_id_assignments) in local_assignments {
             let node = self.nodes[*node_id].read().await;
             if let Some(ref local_data) = node.local_data {
                 let (_, n_dims) = local_data.dim();
 
-                for (i, &cluster) in assignments.iter().enumerate() {
+                for (i, &cluster) in _assignments.iter().enumerate() {
                     let point = local_data.row(i);
 
                     let cluster_sum = cluster_sums
@@ -1260,7 +1260,7 @@ impl DistributedSpatialCluster {
             let node = node_arc.read().await;
             if let Some(ref local_index) = node.local_index {
                 if let Some(ref kdtree) = local_index.local_index.kdtree {
-                    // Check if query point is within local bounds
+                    // Check if query _point is within local bounds
                     if local_index.local_index.bounds.contains(query_point) {
                         let (indices, distances) =
                             kdtree.query(query_point.as_slice().unwrap(), k)?;
@@ -1281,7 +1281,7 @@ impl DistributedSpatialCluster {
     }
 
     /// Get cluster statistics
-    pub async fn get_cluster_statistics(&self) -> SpatialResult<ClusterStatistics> {
+    pub async fn get_cluster_statistics() -> SpatialResult<ClusterStatistics> {
         let state = self.cluster_state.read().await;
         let _load_balancer = self.load_balancer.read().await;
         let communication = self.communication.read().await;

@@ -12,18 +12,18 @@ use std::collections::HashMap;
 
 // Helper functions for creating symbolic expressions
 #[allow(dead_code)]
-fn var<F: IntegrateFloat>(name: &str) -> SymbolicExpression<F> {
-    SymbolicExpression::var(name)
+fn var<F: IntegrateFloat>(_name: &str) -> SymbolicExpression<F> {
+    SymbolicExpression::var(_name)
 }
 
 #[allow(dead_code)]
-fn indexed_var<F: IntegrateFloat>(name: &str, index: usize) -> SymbolicExpression<F> {
-    SymbolicExpression::indexed_var(name, index)
+fn indexed_var<F: IntegrateFloat>(_name: &str, index: usize) -> SymbolicExpression<F> {
+    SymbolicExpression::indexed_var(_name, index)
 }
 
 #[allow(dead_code)]
-fn constant<F: IntegrateFloat>(value: F) -> SymbolicExpression<F> {
-    SymbolicExpression::constant(value)
+fn constant<F: IntegrateFloat>(_value: F) -> SymbolicExpression<F> {
+    SymbolicExpression::constant(_value)
 }
 
 /// Represents a symbolic Jacobian matrix
@@ -51,7 +51,7 @@ impl<F: IntegrateFloat> SymbolicJacobian<F> {
     }
 
     /// Evaluate the Jacobian at given state values
-    pub fn evaluate(&self, t: F, y: ArrayView1<F>) -> IntegrateResult<Array2<F>> {
+    pub fn evaluate(t: F, y: ArrayView1<F>) -> IntegrateResult<Array2<F>> {
         let n = self.state_vars.len();
         if y.len() != n {
             return Err(IntegrateError::DimensionMismatch(format!(
@@ -122,8 +122,8 @@ pub fn generate_jacobian<F: IntegrateFloat>(
 
     // Compute partial derivatives
     for (i, expr) in expressions.iter().enumerate() {
-        for (j, var) in state_vars.iter().enumerate() {
-            jacobian[[i, j]] = expr.differentiate(var);
+        for (j_var) in state_vars.iter().enumerate() {
+            jacobian[[i, j]] = expr.differentiate(_var);
         }
     }
 
@@ -152,31 +152,31 @@ impl<F: IntegrateFloat> SymbolicODEBuilder<F> {
     }
 
     /// Set the number of state variables
-    pub fn with_state_vars(mut self, n: usize) -> Self {
+    pub fn with_state_vars(mut n: usize) -> Self {
         self.state_vars = (0..n).map(|i| Variable::indexed("y", i)).collect();
         self
     }
 
     /// Set custom state variable names
-    pub fn with_named_vars(mut self, names: Vec<String>) -> Self {
+    pub fn with_named_vars(mut names: Vec<String>) -> Self {
         self.state_vars = names.into_iter().map(Variable::new).collect();
         self
     }
 
     /// Enable time dependence
-    pub fn with_time(mut self) -> Self {
+    pub fn with_time(&mut self) -> Self {
         self.time_var = Some(Variable::new("t"));
         self
     }
 
     /// Add an ODE expression
-    pub fn add_equation(mut self, expr: SymbolicExpression<F>) -> Self {
+    pub fn add_equation(mut expr: SymbolicExpression<F>) -> Self {
         self.expressions.push(expr);
         self
     }
 
     /// Build the symbolic Jacobian
-    pub fn build_jacobian(self) -> IntegrateResult<SymbolicJacobian<F>> {
+    pub fn build_jacobian() -> IntegrateResult<SymbolicJacobian<F>> {
         generate_jacobian(&self.expressions, &self.state_vars, self.time_var)
     }
 }
@@ -189,7 +189,7 @@ impl<F: IntegrateFloat> Default for SymbolicODEBuilder<F> {
 
 /// Example: Create a symbolic Jacobian for the Van der Pol oscillator
 #[allow(dead_code)]
-pub fn example_van_der_pol<F: IntegrateFloat>(mu: F) -> IntegrateResult<SymbolicJacobian<F>> {
+pub fn example_van_der_pol<F: IntegrateFloat>(_mu: F) -> IntegrateResult<SymbolicJacobian<F>> {
     use SymbolicExpression::*;
 
     // Variables: y[0] = x, y[1] = x'
@@ -198,13 +198,13 @@ pub fn example_van_der_pol<F: IntegrateFloat>(mu: F) -> IntegrateResult<Symbolic
 
     // Van der Pol equations:
     // dy[0]/dt = y[1]
-    // dy[1]/dt = mu * (1 - y[0]^2) * y[1] - y[0]
+    // dy[1]/dt = _mu * (1 - y[0]^2) * y[1] - y[0]
 
     let expr1 = y1.clone();
     let expr2 = Sub(
         Box::new(Mul(
             Box::new(Mul(
-                Box::new(Constant(mu)),
+                Box::new(Constant(_mu)),
                 Box::new(Sub(
                     Box::new(Constant(F::one())),
                     Box::new(Pow(
@@ -257,7 +257,6 @@ pub fn example_stiff_chemical<F: IntegrateFloat>() -> IntegrateResult<SymbolicJa
 /// Example: Create a symbolic Jacobian for a predator-prey system with seasonal effects
 #[allow(dead_code)]
 pub fn example_seasonal_predator_prey<F: IntegrateFloat>() -> IntegrateResult<SymbolicJacobian<F>> {
-    use SymbolicExpression::*;
 
     // Lotka-Volterra with seasonal variation
     // dx/dt = a*x*(1 + b*sin(2π*t)) - c*x*y
@@ -315,11 +314,9 @@ impl<F: IntegrateFloat> Clone for SymbolicJacobian<F> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_simple_jacobian() {
-        use SymbolicExpression::*;
 
         // System: dy/dt = -y
         let y = Var(Variable::new("y"));

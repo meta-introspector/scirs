@@ -20,23 +20,23 @@ use std::time::Instant;
 
 /// Safe slice casting replacement for bytemuck::cast_slice
 #[allow(dead_code)]
-fn cast_slice_to_bytes<T>(slice: &[T]) -> &[u8] {
+fn cast_slice_to_bytes<T>(_slice: &[T]) -> &[u8] {
     // SAFETY: This is safe because:
-    // 1. The pointer is derived from a valid slice
+    // 1. The pointer is derived from a valid _slice
     // 2. The size calculation is correct (len * size_of::<T>())
-    // 3. The lifetime is bounded by the input slice
+    // 3. The lifetime is bounded by the input _slice
     unsafe {
-        std::slice::from_raw_parts(
-            slice.as_ptr() as *const u8,
-            slice.len() * std::mem::size_of::<T>(),
+        std::_slice::from_raw_parts(
+            _slice.as_ptr() as *const u8,
+            _slice.len() * std::mem::size_of::<T>(),
         )
     }
 }
 
 /// Safe slice casting replacement for bytemuck::cast_slice (reverse)
 #[allow(dead_code)]
-fn cast_bytes_to_slice<T>(bytes: &[u8]) -> &[T] {
-    assert_eq!(bytes.len() % std::mem::size_of::<T>(), 0);
+fn cast_bytes_to_slice<T>(_bytes: &[u8]) -> &[T] {
+    assert_eq!(_bytes.len() % std::mem::size_of::<T>(), 0);
     // SAFETY: This is safe because:
     // 1. We assert that the byte length is a multiple of T's size
     // 2. The pointer is derived from a valid slice
@@ -44,8 +44,8 @@ fn cast_bytes_to_slice<T>(bytes: &[u8]) -> &[T] {
     // 4. The lifetime is bounded by the input slice
     unsafe {
         std::slice::from_raw_parts(
-            bytes.as_ptr() as *const T,
-            bytes.len() / std::mem::size_of::<T>(),
+            _bytes.as_ptr() as *const T,
+            _bytes.len() / std::mem::size_of::<T>(),
         )
     }
 }
@@ -57,9 +57,9 @@ use log;
 /// Advanced GPU-accelerated gamma function with intelligent fallback and performance monitoring
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-pub fn gamma_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+pub fn gamma_gpu<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float
+    F: num_traits: Float
         + num_traits::FromPrimitive
         + std::fmt::Debug
         + std::ops::AddAssign
@@ -67,11 +67,11 @@ where
         + Sync
         + 'static,
 {
-    use crate::gpu_context_manager::{get_gpu_pool, record_gpu_performance};
+    use crate::gpu_context__manager::{get_gpu_pool, record_gpu_performance};
     use scirs2_core::gpu::GpuBackend;
 
-    // Validate input dimensions
-    if input.len() != output.len() {
+    // Validate _input dimensions
+    if _input.len() != output.len() {
         return Err(SpecialError::ValueError(
             "Input and output arrays must have the same length".to_string(),
         ));
@@ -81,14 +81,14 @@ where
     let pool = get_gpu_pool();
     let element_size = std::mem::size_of::<F>();
 
-    if !pool.should_use_gpu(input.len(), element_size) {
+    if !pool.should_use_gpu(_input.len(), element_size) {
         #[cfg(feature = "gpu")]
         log::debug!(
             "Using CPU fallback for gamma computation (array size: {}, element size: {})",
-            input.len(),
+            _input.len(),
             element_size
         );
-        return gamma_cpu_fallback(input, output);
+        return gamma_cpu_fallback(_input, output);
     }
 
     // Try GPU execution with performance monitoring and intelligent retry
@@ -99,14 +99,14 @@ where
     while attempts < MAX_ATTEMPTS {
         attempts += 1;
 
-        match try_gamma_gpu_execution_enhanced(input, output) {
+        match try_gamma_gpu_execution_enhanced(_input, output) {
             Ok(backend_type) => {
                 let execution_time = start_time.elapsed();
                 record_gpu_performance(
                     backend_type,
                     execution_time,
                     true,
-                    input.len() * element_size,
+                    _input.len() * element_size,
                 );
                 #[cfg(feature = "gpu")]
                 log::debug!(
@@ -135,7 +135,7 @@ where
                         GpuBackend::Cpu,
                         start_time.elapsed(),
                         false,
-                        input.len() * element_size,
+                        _input.len() * element_size,
                     );
                     #[cfg(feature = "gpu")]
                     log::error!(
@@ -152,26 +152,26 @@ where
     }
 
     // Fall back to CPU implementation
-    gamma_cpu_fallback(input, output)
+    gamma_cpu_fallback(_input, output)
 }
 
 /// GPU-accelerated Bessel J0 function for arrays
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-pub fn j0_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+pub fn j0_gpu<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + Send + Sync + 'static,
+    F: num_traits: Float + num, _traits::FromPrimitive + std::fmt::Debug + Send + Sync + 'static,
 {
-    if input.len() != output.len() {
+    if _input.len() != output.len() {
         return Err(SpecialError::ValueError(
             "Input and output arrays must have the same length".to_string(),
         ));
     }
 
     // Try GPU execution first, fall back to CPU if GPU is not available
-    match try_j0_gpu_execution(input, output) {
+    match try_j0_gpu_execution(_input, output) {
         Ok(()) => Ok(()),
-        Err(SpecialError::GpuNotAvailable(_)) => j0_cpu_fallback(input, output),
+        Err(SpecialError::GpuNotAvailable(_)) => j0_cpu_fallback(_input, output),
         Err(e) => Err(e),
     }
 }
@@ -179,20 +179,20 @@ where
 /// GPU-accelerated error function (erf) for arrays
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-pub fn erf_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+pub fn erf_gpu<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float + num_traits::FromPrimitive + Send + Sync + 'static,
+    F: num_traits: Float + num, _traits::FromPrimitive + Send + Sync + 'static,
 {
-    if input.len() != output.len() {
+    if _input.len() != output.len() {
         return Err(SpecialError::ValueError(
             "Input and output arrays must have the same length".to_string(),
         ));
     }
 
     // Try GPU execution first, fall back to CPU if GPU is not available
-    match try_erf_gpu_execution(input, output) {
+    match try_erf_gpu_execution(_input, output) {
         Ok(()) => Ok(()),
-        Err(SpecialError::GpuNotAvailable(_)) => erf_cpu_fallback(input, output),
+        Err(SpecialError::GpuNotAvailable(_)) => erf_cpu_fallback(_input, output),
         Err(e) => Err(e),
     }
 }
@@ -200,9 +200,9 @@ where
 /// GPU-accelerated digamma function for arrays
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-pub fn digamma_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+pub fn digamma_gpu<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float
+    F: num_traits: Float
         + num_traits::FromPrimitive
         + Send
         + Sync
@@ -213,16 +213,16 @@ where
         + std::ops::MulAssign
         + std::ops::DivAssign,
 {
-    if input.len() != output.len() {
+    if _input.len() != output.len() {
         return Err(SpecialError::ValueError(
             "Input and output arrays must have the same length".to_string(),
         ));
     }
 
     // Try GPU execution first, fall back to CPU if GPU is not available
-    match try_digamma_gpu_execution(input, output) {
+    match try_digamma_gpu_execution(_input, output) {
         Ok(()) => Ok(()),
-        Err(SpecialError::GpuNotAvailable(_)) => digamma_cpu_fallback(input, output),
+        Err(SpecialError::GpuNotAvailable(_)) => digamma_cpu_fallback(_input, output),
         Err(e) => Err(e),
     }
 }
@@ -230,9 +230,9 @@ where
 /// GPU-accelerated log gamma function for arrays
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-pub fn log_gamma_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+pub fn log_gamma_gpu<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float
+    F: num_traits: Float
         + num_traits::FromPrimitive
         + Send
         + Sync
@@ -240,16 +240,16 @@ where
         + std::fmt::Debug
         + std::ops::AddAssign,
 {
-    if input.len() != output.len() {
+    if _input.len() != output.len() {
         return Err(SpecialError::ValueError(
             "Input and output arrays must have the same length".to_string(),
         ));
     }
 
     // Try GPU execution first, fall back to CPU if GPU is not available
-    match try_log_gamma_gpu_execution(input, output) {
+    match try_log_gamma_gpu_execution(_input, output) {
         Ok(()) => Ok(()),
-        Err(SpecialError::GpuNotAvailable(_)) => log_gamma_cpu_fallback(input, output),
+        Err(SpecialError::GpuNotAvailable(_)) => log_gamma_cpu_fallback(_input, output),
         Err(e) => Err(e),
     }
 }
@@ -257,9 +257,9 @@ where
 /// CPU fallback implementation for gamma function
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn gamma_cpu_fallback<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+fn gamma_cpu_fallback<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float
+    F: num_traits: Float
         + num_traits::FromPrimitive
         + std::fmt::Debug
         + std::ops::AddAssign
@@ -271,11 +271,11 @@ where
     #[cfg(feature = "parallel")]
     {
         use scirs2_core::parallel_ops::*;
-        if is_parallel_enabled() && input.len() > 1000 {
+        if is_parallel_enabled() && _input.len() > 1000 {
             use scirs2_core::parallel_ops::IntoParallelRefIterator;
             use scirs2_core::parallel_ops::IntoParallelRefMutIterator;
 
-            input
+            _input
                 .as_slice()
                 .unwrap()
                 .par_iter()
@@ -288,7 +288,7 @@ where
     }
 
     // Sequential processing as fallback or for small arrays
-    for (inp, out) in input.iter().zip(output.iter_mut()) {
+    for (inp, out) in _input.iter().zip(output.iter_mut()) {
         *out = gamma(*inp);
     }
 
@@ -298,19 +298,19 @@ where
 /// CPU fallback implementation for Bessel J0 function
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn j0_cpu_fallback<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+fn j0_cpu_fallback<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + Send + Sync,
+    F: num_traits: Float + num, _traits::FromPrimitive + std::fmt::Debug + Send + Sync,
 {
     use crate::bessel::j0;
     #[cfg(feature = "parallel")]
     {
         use scirs2_core::parallel_ops::*;
-        if is_parallel_enabled() && input.len() > 1000 {
+        if is_parallel_enabled() && _input.len() > 1000 {
             use scirs2_core::parallel_ops::IntoParallelRefIterator;
             use scirs2_core::parallel_ops::IntoParallelRefMutIterator;
 
-            input
+            _input
                 .as_slice()
                 .unwrap()
                 .par_iter()
@@ -322,7 +322,7 @@ where
         }
     }
 
-    for (inp, out) in input.iter().zip(output.iter_mut()) {
+    for (inp, out) in _input.iter().zip(output.iter_mut()) {
         *out = j0(*inp);
     }
 
@@ -332,19 +332,19 @@ where
 /// CPU fallback implementation for error function
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn erf_cpu_fallback<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
+fn erf_cpu_fallback<F>(_input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float + num_traits::FromPrimitive + Send + Sync,
+    F: num_traits: Float + num, _traits::FromPrimitive + Send + Sync,
 {
     use crate::erf::erf;
     #[cfg(feature = "parallel")]
     {
         use scirs2_core::parallel_ops::*;
-        if is_parallel_enabled() && input.len() > 1000 {
+        if is_parallel_enabled() && _input.len() > 1000 {
             use scirs2_core::parallel_ops::IntoParallelRefIterator;
             use scirs2_core::parallel_ops::IntoParallelRefMutIterator;
 
-            input
+            _input
                 .as_slice()
                 .unwrap()
                 .par_iter()
@@ -356,7 +356,7 @@ where
         }
     }
 
-    for (inp, out) in input.iter().zip(output.iter_mut()) {
+    for (inp, out) in _input.iter().zip(output.iter_mut()) {
         *out = erf(*inp);
     }
 
@@ -371,7 +371,7 @@ fn digamma_cpu_fallback<F>(
     output: &mut ArrayViewMut1<F>,
 ) -> SpecialResult<()>
 where
-    F: num_traits::Float
+    F: num_traits: Float
         + num_traits::FromPrimitive
         + Send
         + Sync
@@ -416,7 +416,7 @@ fn log_gamma_cpu_fallback<F>(
     output: &mut ArrayViewMut1<F>,
 ) -> SpecialResult<()>
 where
-    F: num_traits::Float
+    F: num_traits: Float
         + num_traits::FromPrimitive
         + Send
         + Sync
@@ -499,9 +499,9 @@ fn try_gamma_gpu_execution_enhanced<F>(
     output: &mut ArrayViewMut1<F>,
 ) -> SpecialResult<scirs2_core::gpu::GpuBackend>
 where
-    F: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + Send + Sync + 'static,
+    F: num_traits: Float + num, _traits::FromPrimitive + std::fmt::Debug + Send + Sync + 'static,
 {
-    use crate::gpu_context_manager::get_best_gpu_context;
+    use crate::gpu_context__manager::get_best_gpu_context;
     use scirs2_core::gpu::GpuBackend;
 
     // Get the best available GPU context with intelligent selection
@@ -561,7 +561,7 @@ fn try_j0_gpu_execution<F>(
     output: &mut ArrayViewMut1<F>,
 ) -> SpecialResult<()>
 where
-    F: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + Send + Sync + 'static,
+    F: num_traits: Float + num, _traits::FromPrimitive + std::fmt::Debug + Send + Sync + 'static,
 {
     let gpu_context = match create_gpu_context() {
         Ok(ctx) => ctx,
@@ -605,7 +605,7 @@ fn try_erf_gpu_execution<F>(
     output: &mut ArrayViewMut1<F>,
 ) -> SpecialResult<()>
 where
-    F: num_traits::Float + num_traits::FromPrimitive + Send + Sync + 'static,
+    F: num_traits: Float + num, _traits::FromPrimitive + Send + Sync + 'static,
 {
     let gpu_context = match create_gpu_context() {
         Ok(ctx) => ctx,
@@ -649,7 +649,7 @@ fn try_digamma_gpu_execution<F>(
     output: &mut ArrayViewMut1<F>,
 ) -> SpecialResult<()>
 where
-    F: num_traits::Float
+    F: num_traits: Float
         + num_traits::FromPrimitive
         + Send
         + Sync
@@ -702,7 +702,7 @@ fn try_log_gamma_gpu_execution<F>(
     output: &mut ArrayViewMut1<F>,
 ) -> SpecialResult<()>
 where
-    F: num_traits::Float
+    F: num_traits: Float
         + num_traits::FromPrimitive
         + Send
         + Sync
@@ -748,7 +748,7 @@ where
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
 fn create_gpu_context() -> Result<Arc<GpuContext>, GpuError> {
-    use crate::gpu_context_manager::get_best_gpu_context;
+    use crate::gpu_context__manager::get_best_gpu_context;
 
     match get_best_gpu_context() {
         Ok(context) => Ok(context),
@@ -788,7 +788,7 @@ fn create_gpu_buffer_typed<T>(
     data: &[T],
 ) -> SpecialResult<scirs2_core::gpu::GpuBuffer<f64>>
 where
-    T: num_traits::Float + 'static,
+    T: num_traits: Float + 'static,
 {
     // Validate input data for NaN/infinity before GPU transfer
     for (i, &val) in data.iter().enumerate() {
@@ -867,8 +867,8 @@ fn create_compute_pipeline(
 fn execute_compute_shader(
     ctx: &GpuContext,
     pipeline: &scirs2_core::gpu::GpuKernelHandle,
-    input_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
-    output_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
+    input_buffer: &scirs2_core: :gpu::GpuBuffer<f64>,
+    output_buffer: &scirs2_core: :gpu::GpuBuffer<f64>,
     array_len: usize,
 ) -> SpecialResult<()> {
     // Calculate workgroup count (assuming workgroup size of 256)
@@ -889,8 +889,8 @@ fn execute_compute_shader(
 fn execute_compute_shader_enhanced(
     ctx: &GpuContext,
     pipeline: &scirs2_core::gpu::GpuKernelHandle,
-    input_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
-    output_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
+    input_buffer: &scirs2_core: :gpu::GpuBuffer<f64>,
+    output_buffer: &scirs2_core: :gpu::GpuBuffer<f64>,
     array_len: usize,
 ) -> SpecialResult<()> {
     // Adaptive workgroup sizing based on array length
@@ -933,7 +933,7 @@ fn read_gpu_buffer_to_array<T>(
     output: &mut [T],
 ) -> SpecialResult<()>
 where
-    T: Copy + num_traits::FromPrimitive + num_traits::Zero,
+    T: Copy + num_traits::FromPrimitive + num, _traits::Zero,
 {
     let data = ctx
         .read_buffer(buffer)
@@ -961,7 +961,7 @@ fn read_gpu_buffer_to_array_typed<T>(
     output: &mut [T],
 ) -> SpecialResult<()>
 where
-    T: num_traits::Float + std::fmt::Debug + num_traits::FromPrimitive + num_traits::Zero,
+    T: num_traits: Float + std::fmt::Debug + num, _traits::FromPrimitive + num_traits::Zero,
 {
     let data = ctx.read_buffer(buffer).map_err(|e| {
         SpecialError::ComputationError(format!("Failed to read typed GPU buffer: {}", e))
@@ -1125,8 +1125,7 @@ where
 #[allow(dead_code)]
 fn get_or_create_shader_pipeline(
     ctx: &GpuContext,
-    shader_name: &str,
-    _shader_source: &str,
+    shader_name: &str, _shader_source: &str,
 ) -> SpecialResult<scirs2_core::gpu::GpuKernelHandle> {
     let cache = get_buffer_cache();
 
@@ -1170,10 +1169,9 @@ fn get_or_create_shader_pipeline(
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
 fn execute_compute_shader_with_validation(
-    ctx: &GpuContext,
-    _pipeline: &scirs2_core::gpu::GpuKernelHandle,
-    input_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
-    output_buffer: &scirs2_core::gpu::GpuBuffer<f64>,
+    ctx: &GpuContext_pipeline: &scirs2_core: :gpu::GpuKernelHandle,
+    input_buffer: &scirs2_core: :gpu::GpuBuffer<f64>,
+    output_buffer: &scirs2_core: :gpu::GpuBuffer<f64>,
     array_len: usize,
     function_name: &str,
 ) -> SpecialResult<()> {
@@ -1269,7 +1267,7 @@ fn read_gpu_buffer_with_validation<T>(
     output: &mut [T],
 ) -> SpecialResult<()>
 where
-    T: num_traits::Float + std::fmt::Debug + num_traits::FromPrimitive + num_traits::Zero,
+    T: num_traits: Float + std::fmt::Debug + num, _traits::FromPrimitive + num_traits::Zero,
 {
     let read_start = Instant::now();
 
@@ -1317,15 +1315,15 @@ where
 /// Validate gamma function results with mathematical properties
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn validate_gamma_results<F>(input: &ArrayView1<F>, output: &ArrayViewMut1<F>) -> SpecialResult<()>
+fn validate_gamma_results<F>(_input: &ArrayView1<F>, output: &ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float + std::fmt::Debug + num_traits::FromPrimitive,
+    F: num_traits: Float + std::fmt::Debug + num, _traits::FromPrimitive,
 {
     let mut error_count = 0;
     let zero = F::zero();
     let one = F::one();
 
-    for (i, (&x, &y)) in input.iter().zip(output.iter()).enumerate() {
+    for (i, (&x, &y)) in _input.iter().zip(output.iter()).enumerate() {
         // Check basic mathematical properties
         if x > zero {
             if !y.is_finite() {
@@ -1363,7 +1361,7 @@ where
         log::warn!(
             "Gamma validation found {} errors out of {} values",
             error_count,
-            input.len()
+            _input.len()
         );
     }
 
@@ -1373,15 +1371,15 @@ where
 /// General GPU computation results validation with enhanced statistics
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn validate_gpu_results<F>(output: &ArrayViewMut1<F>) -> SpecialResult<()>
+fn validate_gpu_results<F>(_output: &ArrayViewMut1<F>) -> SpecialResult<()>
 where
-    F: num_traits::Float + std::fmt::Debug,
+    F: num_traits: Float + std::fmt::Debug,
 {
     let mut nan_count = 0;
     let mut inf_count = 0;
     let mut subnormal_count = 0;
 
-    for (i, &val) in output.iter().enumerate() {
+    for (i, &val) in _output.iter().enumerate() {
         if val.is_nan() {
             nan_count += 1;
             if nan_count == 1 {

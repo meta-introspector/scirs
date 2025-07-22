@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use scirs2_spatial::pathplanning::{PRM2DPlanner, PRMConfig, PRMPlanner};
+use scirs2__spatial::pathplanning::{PRM2DPlanner, PRMConfig, PRMPlanner};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -212,10 +212,10 @@ fn print_ascii_visualization_circle(
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
     // Draw the circle obstacle
-    for y in 0..SIZE {
-        for x in 0..SIZE {
-            let px = x as f64 / (SIZE as f64) * 10.0;
-            let py = y as f64 / (SIZE as f64) * 10.0;
+    for _y in 0..SIZE {
+        for _x in 0..SIZE {
+            let px = _x as f64 / (SIZE as f64) * 10.0;
+            let py = _y as f64 / (SIZE as f64) * 10.0;
 
             // Check if the point is inside the circle
             let dx = px - circle_x;
@@ -223,7 +223,7 @@ fn print_ascii_visualization_circle(
             let dist_squared = dx * dx + dy * dy;
 
             if dist_squared < circle_radius * circle_radius {
-                grid[SIZE - 1 - y][x] = '#';
+                grid[SIZE - 1 - _y][_x] = '#';
             }
         }
     }
@@ -255,11 +255,11 @@ fn print_ascii_visualization_circle(
             } else {
                 j as f64 / (steps - 1) as f64
             };
-            let x = (gx1 as f64 * (1.0 - t) + gx2 as f64 * t).round() as usize;
-            let y = (gy1 as f64 * (1.0 - t) + gy2 as f64 * t).round() as usize;
+            let _x = (gx1 as f64 * (1.0 - t) + gx2 as f64 * t).round() as usize;
+            let _y = (gy1 as f64 * (1.0 - t) + gy2 as f64 * t).round() as usize;
 
-            if x < SIZE && y < SIZE {
-                grid[SIZE - 1 - y][x] = '*';
+            if _x < SIZE && _y < SIZE {
+                grid[SIZE - 1 - _y][_x] = '*';
             }
         }
     }
@@ -291,7 +291,7 @@ fn print_ascii_visualization_circle(
 
 /// Simple ASCII visualization of a path with polygon obstacles
 #[allow(dead_code)]
-fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f64; 2]>]) {
+fn print_ascii_visualization_polygons(_path: &[Array1<f64>], obstacles: &[Vec<[f64; 2]>]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
@@ -311,10 +311,10 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f6
         }
     }
 
-    // Draw the path
-    for i in 0..path.len() - 1 {
-        let (x1, y1) = (path[i][0], path[i][1]);
-        let (x2, y2) = (path[i + 1][0], path[i + 1][1]);
+    // Draw the _path
+    for i in 0.._path.len() - 1 {
+        let (x1, y1) = (_path[i][0], _path[i][1]);
+        let (x2, y2) = (_path[i + 1][0], _path[i + 1][1]);
 
         // Scale to grid coordinates
         let (gx1, gy1) = (
@@ -349,12 +349,12 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f6
 
     // Mark start and goal
     let (start_x, start_y) = (
-        (path[0][0] / 10.0 * SIZE as f64) as usize,
-        (path[0][1] / 10.0 * SIZE as f64) as usize,
+        (_path[0][0] / 10.0 * SIZE as f64) as usize,
+        (_path[0][1] / 10.0 * SIZE as f64) as usize,
     );
     let (goal_x, goal_y) = (
-        (path.last().unwrap()[0] / 10.0 * SIZE as f64) as usize,
-        (path.last().unwrap()[1] / 10.0 * SIZE as f64) as usize,
+        (_path.last().unwrap()[0] / 10.0 * SIZE as f64) as usize,
+        (_path.last().unwrap()[1] / 10.0 * SIZE as f64) as usize,
     );
 
     if start_x < SIZE && start_y < SIZE {
@@ -366,7 +366,7 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f6
     }
 
     // Print the grid
-    println!("\nASCII Visualization (S=start, G=goal, #=obstacle, *=path):");
+    println!("\nASCII Visualization (S=start, G=goal, #=obstacle, *=_path):");
     for row in &grid {
         println!("{}", row.iter().collect::<String>());
     }
@@ -374,11 +374,11 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f6
 
 /// Check if a point is inside a polygon using the ray casting algorithm
 #[allow(dead_code)]
-fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
-    let (x, y) = (point[0], point[1]);
+fn point_in_polygon(_point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
+    let (x, y) = (_point[0], _point[1]);
     let mut inside = false;
 
-    // Ray casting algorithm determines if the point is inside the polygon
+    // Ray casting algorithm determines if the _point is inside the polygon
     let n = polygon.len();
     for i in 0..n {
         let (x1, y1) = (polygon[i][0], polygon[i][1]);

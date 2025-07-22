@@ -32,7 +32,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// ## Basic 1D smoothing
 /// ```no_run
 /// use ndarray::array;
-/// use scirs2_ndimage::filters::gaussian_filter;
+/// use scirs2__ndimage::filters::gaussian_filter;
 ///
 /// let data = array![1.0, 5.0, 2.0, 8.0, 3.0];
 /// let smoothed = gaussian_filter(&data, 0.8, None, None).unwrap();
@@ -42,7 +42,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// ## 2D image smoothing with different border modes
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2_ndimage::filters::{gaussian_filter, BorderMode};
+/// use scirs2__ndimage::filters::{gaussian_filter, BorderMode};
 ///
 /// let image = Array2::from_shape_fn((10, 10), |(i, j)| {
 ///     ((i * j) as f64).sin()
@@ -58,7 +58,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// ## 3D volume smoothing
 /// ```no_run
 /// use ndarray::Array3;
-/// use scirs2_ndimage::filters::gaussian_filter;
+/// use scirs2__ndimage::filters::gaussian_filter;
 ///
 /// let volume = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| {
 ///     (i + j + k) as f64
@@ -185,15 +185,15 @@ where
 /// Generate a 1D Gaussian kernel for f64 filtering
 /// This function uses manual caching to avoid Result Clone issues
 #[allow(dead_code)]
-pub fn gaussian_kernel1d_f64(sigma: f64, truncate: f64) -> NdimageResult<Array1<f64>> {
+pub fn gaussian_kernel1d_f64(_sigma: f64, truncate: f64) -> NdimageResult<Array1<f64>> {
     // Manual caching using lazy_static or thread_local would be ideal here
     // but for simplicity, we'll just implement the function without caching for now
 
-    if sigma <= 0.0 {
+    if _sigma <= 0.0 {
         return Err(NdimageError::InvalidInput("Sigma must be positive".into()));
     }
 
-    let radius = (truncate * sigma).ceil();
+    let radius = (truncate * _sigma).ceil();
     let radius_int = radius as usize;
 
     let size = 2 * radius_int + 1;
@@ -211,10 +211,10 @@ pub fn gaussian_kernel1d_f64(sigma: f64, truncate: f64) -> NdimageResult<Array1<
         x_squared[i] = x_values[i] * x_values[i];
     }
 
-    // Calculate exp(-x^2/(2*sigma^2))
-    let two_sigma_squared = 2.0 * sigma * sigma;
+    // Calculate exp(-x^2/(2*_sigma^2))
+    let two_sigma_squared = 2.0 * _sigma * _sigma;
 
-    // Apply the Gaussian formula: exp(-x^2/(2*sigma^2))
+    // Apply the Gaussian formula: exp(-x^2/(2*_sigma^2))
     for i in 0..size {
         kernel[i] = (-x_squared[i] / two_sigma_squared).exp();
     }
@@ -290,7 +290,7 @@ where
         // We need to convert to Array2 to use the slice methods for 2D arrays
         let array2d = input
             .clone()
-            .into_dimensionality::<ndarray::Ix2>()
+            .into__dimensionality::<ndarray::Ix2>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D array".into()))?;
 
         let mut output = array2d.clone();
@@ -392,7 +392,7 @@ where
     // Process each position in the output array
     let indices: Vec<IxDyn> = output_dyn
         .indexed_iter()
-        .map(|(idx, _)| idx.clone())
+        .map(|(idx_)| idx.clone())
         .collect();
 
     // Helper function to convolve kernel with input at a specific position
@@ -668,7 +668,7 @@ where
         2 => {
             // For 2D arrays, use a specialized implementation with Ix2 dimensionality
             // This requires explicitly converting to and from Array2
-            let array2d = input.to_owned().into_dimensionality::<Ix2>().map_err(|_| {
+            let array2d = input.to_owned().into__dimensionality::<Ix2>().map_err(|_| {
                 NdimageError::DimensionError("Failed to convert to 2D array".into())
             })?;
 
@@ -846,15 +846,15 @@ where
 /// Generate a 1D Gaussian kernel for f32 filtering
 /// This function uses manual caching to avoid Result Clone issues
 #[allow(dead_code)]
-pub fn gaussian_kernel1d_f32(sigma: f32, truncate: f32) -> NdimageResult<Array1<f32>> {
+pub fn gaussian_kernel1d_f32(_sigma: f32, truncate: f32) -> NdimageResult<Array1<f32>> {
     // Manual caching using lazy_static or thread_local would be ideal here
     // but for simplicity, we'll just implement the function without caching for now
 
-    if sigma <= 0.0 {
+    if _sigma <= 0.0 {
         return Err(NdimageError::InvalidInput("Sigma must be positive".into()));
     }
 
-    let radius = (truncate * sigma).ceil();
+    let radius = (truncate * _sigma).ceil();
     let radius_int = radius as usize;
 
     let size = 2 * radius_int + 1;
@@ -872,10 +872,10 @@ pub fn gaussian_kernel1d_f32(sigma: f32, truncate: f32) -> NdimageResult<Array1<
         x_squared[i] = x_values[i] * x_values[i];
     }
 
-    // Calculate exp(-x^2/(2*sigma^2))
-    let two_sigma_squared = 2.0 * sigma * sigma;
+    // Calculate exp(-x^2/(2*_sigma^2))
+    let two_sigma_squared = 2.0 * _sigma * _sigma;
 
-    // Apply the Gaussian formula: exp(-x^2/(2*sigma^2))
+    // Apply the Gaussian formula: exp(-x^2/(2*_sigma^2))
     for i in 0..size {
         kernel[i] = (-x_squared[i] / two_sigma_squared).exp();
     }

@@ -18,10 +18,10 @@ pub struct NeuralODE {
 
 impl NeuralODE {
     /// Create new Neural ODE system
-    pub fn new(state_size: usize, dt: f64) -> Self {
+    pub fn new(_state_size: usize, dt: f64) -> Self {
         Self {
-            weights: Array1::from(vec![0.1; state_size * state_size]),
-            state: Array1::zeros(state_size),
+            weights: Array1::from(vec![0.1; _state_size * _state_size]),
+            state: Array1::zeros(_state_size),
             dt,
         }
     }
@@ -36,7 +36,7 @@ impl NeuralODE {
         let mut derivative = Array1::zeros(n);
 
         // Neural dynamics: dx/dt = -Wx + u
-        // where W is weight matrix, x is state, u is input (objective gradient)
+        // where W is weight matrix, x is state, u is input (objective _gradient)
         for i in 0..n {
             for j in 0..n {
                 let weight_idx = i * n + j;
@@ -45,7 +45,7 @@ impl NeuralODE {
                 }
             }
 
-            // Add objective gradient as driving input
+            // Add objective _gradient as driving input
             if i < objective_gradient.len() {
                 derivative[i] += objective_gradient[i];
             }
@@ -70,7 +70,7 @@ impl NeuralODE {
 
     /// Set initial state
     pub fn set_initial_state(&mut self, initial_state: &ArrayView1<f64>) {
-        self.state = initial_state.to_owned();
+        self._state = initial_state.to_owned();
     }
 }
 
@@ -102,19 +102,19 @@ where
 
 /// Compute finite difference gradient
 #[allow(dead_code)]
-fn compute_finite_difference_gradient<F>(objective: &F, params: &ArrayView1<f64>) -> Array1<f64>
+fn compute_finite_difference_gradient<F>(_objective: &F, params: &ArrayView1<f64>) -> Array1<f64>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
     let n = params.len();
     let mut gradient = Array1::zeros(n);
     let h = 1e-6;
-    let f0 = objective(params);
+    let f0 = _objective(params);
 
     for i in 0..n {
         let mut params_plus = params.to_owned();
         params_plus[i] += h;
-        let f_plus = objective(&params_plus.view());
+        let f_plus = _objective(&params_plus.view());
         gradient[i] = (f_plus - f0) / h;
     }
 

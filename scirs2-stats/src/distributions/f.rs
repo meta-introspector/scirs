@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Distribution, FisherF as RandFisherF};
+use rand__distr::{Distribution, FisherF as RandFisherF};
 use std::f64::consts::PI;
 
 /// F distribution structure
@@ -40,13 +40,13 @@ impl<T: Float + NumCast> F<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::f::F;
+    /// use scirs2__stats::distributions::f::F;
     ///
     /// // F distribution with 2 and 10 degrees of freedom
     /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
     /// ```
-    pub fn new(dfn: T, dfd: T, loc: T, scale: T) -> StatsResult<Self> {
-        if dfn <= T::zero() {
+    pub fn new(_dfn: T, dfd: T, loc: T, scale: T) -> StatsResult<Self> {
+        if _dfn <= T::zero() {
             return Err(StatsError::DomainError(
                 "Numerator degrees of freedom must be positive".to_string(),
             ));
@@ -65,12 +65,12 @@ impl<T: Float + NumCast> F<T> {
         }
 
         // Convert to f64 for rand_distr
-        let dfn_f64 = <f64 as NumCast>::from(dfn).unwrap();
+        let dfn_f64 = <f64 as NumCast>::from(_dfn).unwrap();
         let dfd_f64 = <f64 as NumCast>::from(dfd).unwrap();
 
         match RandFisherF::new(dfn_f64, dfd_f64) {
             Ok(rand_distr) => Ok(F {
-                dfn,
+                _dfn,
                 dfd,
                 loc,
                 scale,
@@ -95,7 +95,7 @@ impl<T: Float + NumCast> F<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::f::F;
+    /// use scirs2__stats::distributions::f::F;
     ///
     /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
     /// let pdf_at_one = f_dist.pdf(1.0);
@@ -162,7 +162,7 @@ impl<T: Float + NumCast> F<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::f::F;
+    /// use scirs2__stats::distributions::f::F;
     ///
     /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
     /// let cdf_at_one = f_dist.cdf(1.0);
@@ -226,7 +226,7 @@ impl<T: Float + NumCast> F<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::f::F;
+    /// use scirs2__stats::distributions::f::F;
     ///
     /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
     /// let samples = f_dist.rvs(1000).unwrap();

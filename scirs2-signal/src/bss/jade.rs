@@ -2,12 +2,13 @@
 //!
 //! This module implements the JADE algorithm for blind source separation.
 
-use super::{pca, BssConfig};
-use crate::error::SignalResult;
-use ndarray::{s, Array2};
-use scirs2_linalg::solve_multiple;
+use crate::error::{SignalError, SignalResult};
+use ndarray::{Array2, s};
+use scirs2__linalg::solve_multiple;
 use std::f64::consts::PI;
+use super::{BssConfig, pca};
 
+#[allow(unused_imports)]
 /// Implement JADE algorithm for ICA
 ///
 /// JADE uses Joint Approximate Diagonalization of Eigenmatrices.
@@ -109,7 +110,7 @@ pub fn jade_ica(
                 // Calculate rotation angle
                 let gamma = g12 - g11;
                 let theta = if g22.abs() < 1e-10 {
-                    PI / 4.0 * (g21 >= 0.0) as i32 as f64
+                    PI / 4.0 * (g21 >= 0.0) as f64
                 } else {
                     0.5 * (g21 / g22).atan()
                 };
@@ -149,7 +150,7 @@ pub fn jade_ica(
     // Unmixing matrix is V * Wpca
     let w = v.dot(&pca_unmixing);
 
-    // Extract the independent components
+    // Extract the independent _components
     let sources = w.dot(signals);
 
     Ok((sources, w))

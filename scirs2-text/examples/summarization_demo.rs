@@ -1,6 +1,6 @@
 //! Text summarization demonstration
 
-use scirs2_text::{CentroidSummarizer, KeywordExtractor, TextRank};
+use scirs2__text::{CentroidSummarizer, KeywordExtractor, TextRank};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let textrank = TextRank::new(3); // Extract 3 sentences
     let summary = textrank.summarize(text)?;
 
-    println!("Original text length: {} characters", text.len());
+    println!("Original _text length: {} characters", text.len());
     println!("Summary length: {} characters", summary.len());
     println!("\nSummary:");
     println!("{summary}\n");
@@ -67,7 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let keywords_with_pos = extractor.extract_keywords_with_positions(text)?;
 
-    for (keyword, _score, positions) in keywords_with_pos.iter().take(5) {
+    for (keyword_score, positions) in keywords_with_pos.iter().take(5) {
         println!("'{keyword}' appears at positions: {positions:?}");
     }
 

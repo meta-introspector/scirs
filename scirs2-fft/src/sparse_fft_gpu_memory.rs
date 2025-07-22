@@ -4,8 +4,8 @@
 //! implementations, including buffer allocation, reuse, and transfer optimization.
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse_fft_gpu::GPUBackend;
-use num_complex::Complex64;
+use crate::sparse_fft__gpu::GPUBackend;
+use num__complex::Complex64;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -266,7 +266,7 @@ impl BufferDescriptor {
         backend: GPUBackend,
     ) -> FFTResult<Self> {
         let mut descriptor = Self {
-            size,
+            _size,
             element_size,
             location,
             buffer_type,
@@ -294,7 +294,7 @@ impl BufferDescriptor {
         id: usize,
     ) -> FFTResult<Self> {
         let backend = init_gpu_backend()?;
-        Self::new(size, element_size, location, buffer_type, id, backend)
+        Self::new(_size, element_size, location, buffer_type, id, backend)
     }
 
     /// Allocate the actual memory based on location and backend
@@ -471,7 +471,7 @@ impl BufferDescriptor {
                                 /*
                                 device.htod_copy(host_data, device_ptr).map_err(|e| {
                                     FFTError::ComputationError(format!(
-                                        "Failed to copy data to CUDA GPU: {:?}",
+                                        "Failed to copy _data to CUDA GPU: {:?}",
                                         e
                                     ))
                                 })?;
@@ -500,7 +500,7 @@ impl BufferDescriptor {
                                         return Ok(());
                                     } else {
                                         return Err(FFTError::ComputationError(format!(
-                                            "Failed to copy data to HIP GPU: {:?}",
+                                            "Failed to copy _data to HIP GPU: {:?}",
                                             result
                                         )));
                                     }
@@ -517,7 +517,7 @@ impl BufferDescriptor {
                         {
                             if let Some(device_ptr) = self.sycl_device_ptr {
                                 // In a real SYCL implementation, this would:
-                                // 1. Use sycl::queue::memcpy() or similar to copy data
+                                // 1. Use sycl::queue::memcpy() or similar to copy _data
                                 // 2. Handle synchronization appropriately
                                 // 3. Return appropriate error codes
 
@@ -580,7 +580,7 @@ impl BufferDescriptor {
                                 /*
                                 device.dtoh_copy(device_ptr, host_data).map_err(|e| {
                                     FFTError::ComputationError(format!(
-                                        "Failed to copy data from CUDA GPU: {:?}",
+                                        "Failed to copy _data from CUDA GPU: {:?}",
                                         e
                                     ))
                                 })?;
@@ -609,7 +609,7 @@ impl BufferDescriptor {
                                         return Ok(());
                                     } else {
                                         return Err(FFTError::ComputationError(format!(
-                                            "Failed to copy data from HIP GPU: {:?}",
+                                            "Failed to copy _data from HIP GPU: {:?}",
                                             result
                                         )));
                                     }
@@ -760,8 +760,7 @@ impl GPUMemoryManager {
         max_memory: usize,
     ) -> Self {
         Self {
-            backend,
-            _device_id: device_id,
+            backend_device_id: device_id,
             allocation_strategy,
             max_memory,
             current_memory: 0,
@@ -788,7 +787,7 @@ impl GPUMemoryManager {
         location: BufferLocation,
         buffer_type: BufferType,
     ) -> FFTResult<BufferDescriptor> {
-        let total_size = size * element_size;
+        let total_size = _size * element_size;
 
         // Check if we're going to exceed the memory limit
         if self.max_memory > 0 && self.current_memory + total_size > self.max_memory {
@@ -800,7 +799,7 @@ impl GPUMemoryManager {
 
         // If using a cache strategy, check if we have an available buffer
         if self.allocation_strategy == AllocationStrategy::CacheBySize {
-            if let Some(buffers) = self.buffer_cache.get_mut(&size) {
+            if let Some(buffers) = self.buffer_cache.get_mut(&_size) {
                 if let Some(descriptor) = buffers
                     .iter()
                     .position(|b| b.buffer_type == buffer_type && b.location == location)
@@ -818,7 +817,7 @@ impl GPUMemoryManager {
 
         // Create descriptor with actual memory allocation
         let descriptor = BufferDescriptor::new(
-            size,
+            _size,
             element_size,
             location,
             buffer_type,
@@ -910,17 +909,16 @@ pub fn get_global_memory_manager() -> FFTResult<Arc<Mutex<GPUMemoryManager>>> {
 /// Memory-efficient GPU sparse FFT computation
 #[allow(dead_code)]
 pub fn memory_efficient_gpu_sparse_fft<T>(
-    signal: &[T],
-    _max_memory: usize,
+    signal: &[T], _max_memory: usize,
 ) -> FFTResult<Vec<Complex64>>
 where
     T: Clone + 'static,
 {
-    // Get the global memory manager
+    // Get the global _memory manager
     let manager = get_global_memory_manager()?;
     let _manager = manager.lock().unwrap();
 
-    // Determine optimal chunk size based on available memory
+    // Determine optimal chunk size based on available _memory
     let signal_len = signal.len();
     // let _element_size = std::mem::size_of::<Complex64>();
 

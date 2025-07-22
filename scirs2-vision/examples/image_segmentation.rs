@@ -7,8 +7,8 @@
 //! 4. Perform connected component labeling
 
 use image::DynamicImage;
-use scirs2_vision::preprocessing::{gaussian_blur, normalize_brightness};
-use scirs2_vision::segmentation::{
+use scirs2__vision::preprocessing::{gaussian_blur, normalize_brightness};
+use scirs2__vision::segmentation::{
     adaptive_threshold, connected_components, otsu_threshold, threshold_binary, AdaptiveMethod,
 };
 use std::path::PathBuf;
@@ -76,10 +76,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn process_image(img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
+fn process_image(_img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
     // 1. Preprocess the image
     println!("Preprocessing image...");
-    let normalized = normalize_brightness(img, 0.0, 1.0)?;
+    let normalized = normalize_brightness(_img, 0.0, 1.0)?;
     let blurred = gaussian_blur(&normalized, 1.0)?;
 
     // 2. Apply binary thresholding
@@ -112,8 +112,8 @@ fn process_image(img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
     println!("Segmentation results:");
     println!(
         "- Original image dimensions: {}x{}",
-        img.width(),
-        img.height()
+        _img.width(),
+        _img.height()
     );
     println!(
         "- Binary image dimensions: {}x{}",

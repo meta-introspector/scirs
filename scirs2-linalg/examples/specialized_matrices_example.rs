@@ -144,12 +144,12 @@ fn main() -> LinalgResult<()> {
 
 // Helper function to print a matrix
 #[allow(dead_code)]
-fn print_matrix<T: std::fmt::Display>(matrix: &Array2<T>) {
-    for i in 0..matrix.nrows() {
+fn print_matrix<T: std::fmt::Display>(_matrix: &Array2<T>) {
+    for i in 0.._matrix.nrows() {
         print!("[");
-        for j in 0..matrix.ncols() {
-            print!("{:6.2}", matrix[[i, j]]);
-            if j < matrix.ncols() - 1 {
+        for j in 0.._matrix.ncols() {
+            print!("{:6.2}", _matrix[[i, j]]);
+            if j < _matrix.ncols() - 1 {
                 print!(", ");
             }
         }

@@ -4,16 +4,16 @@
 //! to create static plots with plotters and interactive visualizations with egui.
 
 use ndarray::Array2;
-use scirs2_cluster::preprocess::standardize;
-use scirs2_cluster::vq::kmeans;
+use scirs2__cluster::preprocess::standardize;
+use scirs2__cluster::vq::kmeans;
 
 #[cfg(feature = "plotters")]
-use scirs2_cluster::{save_clustering_plot, PlotFormat, PlotOutput};
+use scirs2__cluster::{save_clustering_plot, PlotFormat, PlotOutput};
 
 #[cfg(feature = "egui")]
-use scirs2_cluster::launch_interactive_visualization;
+use scirs2__cluster::launch_interactive_visualization;
 
-use scirs2_cluster::VisualizationConfig;
+use scirs2__cluster::VisualizationConfig;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -48,15 +48,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Create visualization configuration
         let vis_config = VisualizationConfig {
-            color_scheme: scirs2_cluster::ColorScheme::ColorblindFriendly,
+            color_scheme: scirs2, _cluster: ColorScheme::ColorblindFriendly,
             point_size: 4.0,
             point_opacity: 0.8,
             show_centroids: true,
             show_boundaries: false,
-            boundary_type: scirs2_cluster::BoundaryType::ConvexHull,
+            boundary_type: scirs2, _cluster: BoundaryType::ConvexHull,
             interactive: false,
             animation: None,
-            dimensionality_reduction: scirs2_cluster::DimensionalityReduction::None,
+            dimensionality_reduction: scirs2, _cluster: DimensionalityReduction::None,
         };
 
         // PNG output configuration
@@ -119,15 +119,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Use mouse to pan and zoom, click clusters in the legend to highlight them.");
 
         let vis_config = VisualizationConfig {
-            color_scheme: scirs2_cluster::ColorScheme::Viridis,
+            color_scheme: scirs2, _cluster: ColorScheme::Viridis,
             point_size: 6.0,
             point_opacity: 0.9,
             show_centroids: true,
             show_boundaries: false,
-            boundary_type: scirs2_cluster::BoundaryType::Ellipse,
+            boundary_type: scirs2, _cluster: BoundaryType::Ellipse,
             interactive: true,
             animation: None,
-            dimensionality_reduction: scirs2_cluster::DimensionalityReduction::None,
+            dimensionality_reduction: scirs2, _cluster: DimensionalityReduction::None,
         };
 
         // Launch interactive visualization
@@ -154,7 +154,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn generate_sample_data() -> Vec<f64> {
     use rand::prelude::*;
-    use rand_distr::Normal;
+    use rand__distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(42);
     let mut data = Vec::with_capacity(600); // 300 points * 2 features

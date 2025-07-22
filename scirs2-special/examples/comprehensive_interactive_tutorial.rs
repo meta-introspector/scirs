@@ -11,7 +11,7 @@
 //!
 //! Run with: cargo run --example comprehensive_interactive_tutorial
 
-use scirs2_special::*;
+use scirs2__special::*;
 use std::collections::HashMap;
 use std::io::{self, Write};
 use std::time::{Duration, Instant, SystemTime};
@@ -566,9 +566,9 @@ struct ProgressRecord {
 }
 
 impl TutorialSystem {
-    fn new(user_name: String) -> Self {
+    fn new(_user_name: String) -> Self {
         Self {
-            user_profile: UserProfile::new(user_name),
+            user_profile: UserProfile::new(_user_name),
             available_modules: Self::initialize_modules(),
             current_session: TutorialSession::new(),
             learning_analytics: LearningAnalytics::new(),
@@ -1025,8 +1025,7 @@ impl TutorialSystem {
                 Ok(5) => self.visualization_laboratory()?,
                 Ok(6) => self.view_progress_analytics()?,
                 Ok(7) => self.customize_learning_preferences()?,
-                Ok(8) => self.access_help_and_resources()?,
-                _ => println!("❌ Invalid choice. Please try again.\n"),
+                Ok(8) => self.access_help_and_resources()?_ => println!("❌ Invalid choice. Please try again.\n"),
             }
         }
 
@@ -1100,7 +1099,7 @@ impl TutorialSystem {
         let dominant_style = style_scores
             .iter()
             .max_by_key(|(_, &score)| score)
-            .map(|(style, _)| style.clone())
+            .map(|(style_)| style.clone())
             .unwrap_or("Hybrid".to_string());
 
         self.user_profile.learning_style = match dominant_style.as_str() {
@@ -1109,8 +1108,7 @@ impl TutorialSystem {
             "Intuitive" => LearningStyle::Intuitive,
             "Applied" => LearningStyle::Applied,
             "Historical" => LearningStyle::Historical,
-            "Experimental" => LearningStyle::Experimental,
-            _ => LearningStyle::Hybrid(vec![LearningStyle::Visual, LearningStyle::Analytical]),
+            "Experimental" => LearningStyle::Experimental_ =>, LearningStyle::Hybrid(vec![LearningStyle::Visual, LearningStyle::Analytical]),
         };
 
         println!(
@@ -1234,8 +1232,7 @@ impl TutorialSystem {
                 for style in styles {
                     match style {
                         LearningStyle::Visual => self.deliver_visual_content(&module)?,
-                        LearningStyle::Analytical => self.deliver_analytical_content(&module)?,
-                        _ => {}
+                        LearningStyle::Analytical => self.deliver_analytical_content(&module)?_ => {}
                     }
                 }
             }
@@ -1273,8 +1270,7 @@ impl TutorialSystem {
                         println!("🖼️  2D Function Plot (x: {:?}, y: {:?})", domain, range);
                         self.ascii_plot_function_2d(domain.0, domain.1, 50, |x| {
                             match concept.name.as_str() {
-                                "Gamma Function" => gamma(x),
-                                _ => x.sin(), // default
+                                "Gamma Function" => gamma(x, _ => x.sin(), // default
                             }
                         });
                     }
@@ -1643,8 +1639,7 @@ impl TutorialSystem {
             Ok(1) => self.function_calculator_explorer()?,
             Ok(2) => self.concept_relationship_mapper()?,
             Ok(3) => self.live_function_visualization()?,
-            Ok(4) => self.expression_evaluator()?,
-            _ => println!("❌ Invalid choice."),
+            Ok(4) => self.expression_evaluator()?_ => println!("❌ Invalid choice."),
         }
 
         Ok(())
@@ -1690,8 +1685,7 @@ impl TutorialSystem {
                     "j0" => Some(j0(arg)),
                     "j1" => Some(j1(arg)),
                     "erf" => Some(erf(arg)),
-                    "erfc" => Some(erfc(arg)),
-                    _ => None,
+                    "erfc" => Some(erfc(arg), _ => None,
                 };
 
                 if let Some(value) = result {
@@ -1827,8 +1821,7 @@ impl TutorialSystem {
             let (x_min, x_max) = match func_name.as_str() {
                 "gamma" => (0.1, 5.0),
                 "j0" | "j1" => (0.0, 20.0),
-                "erf" | "erfc" => (-3.0, 3.0),
-                _ => {
+                "erf" | "erfc" => (-3.0, 3.0, _ => {
                     println!("❌ Unknown function");
                     continue;
                 }
@@ -1841,8 +1834,7 @@ impl TutorialSystem {
                 "j0" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| j0(x)),
                 "j1" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| j1(x)),
                 "erf" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| erf(x)),
-                "erfc" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| erfc(x)),
-                _ => {}
+                "erfc" => self.ascii_plot_function_2d(x_min, x_max, 60, |x| erfc(x), _ => {}
             }
             println!();
         }
@@ -1994,8 +1986,7 @@ impl TutorialSystem {
             Ok(1) => self.interactive_function_plots()?,
             Ok(2) => self.complex_function_visualization()?,
             Ok(3) => self.surface_plot_3d()?,
-            Ok(4) => self.function_animations()?,
-            _ => println!("❌ Invalid choice."),
+            Ok(4) => self.function_animations()?_ => println!("❌ Invalid choice."),
         }
 
         Ok(())
@@ -2173,8 +2164,7 @@ impl TutorialSystem {
             Ok(2) => self.customize_pacing()?,
             Ok(3) => self.customize_difficulty_tolerance()?,
             Ok(4) => self.customize_application_domains()?,
-            Ok(5) => self.customize_explanation_detail()?,
-            _ => println!("❌ Invalid choice."),
+            Ok(5) => self.customize_explanation_detail()?_ => println!("❌ Invalid choice."),
         }
 
         Ok(())
@@ -2202,8 +2192,7 @@ impl TutorialSystem {
             Ok(4) => LearningStyle::Applied,
             Ok(5) => LearningStyle::Historical,
             Ok(6) => LearningStyle::Experimental,
-            Ok(7) => LearningStyle::Hybrid(vec![LearningStyle::Visual, LearningStyle::Analytical]),
-            _ => {
+            Ok(7) => LearningStyle::Hybrid(vec![LearningStyle::Visual, LearningStyle::Analytical], _ => {
                 println!("❌ Invalid choice, keeping current preference.");
                 return Ok(());
             }
@@ -2317,8 +2306,7 @@ impl TutorialSystem {
             Ok(3) => self.show_faq()?,
             Ok(4) => self.show_external_references()?,
             Ok(5) => self.show_learning_tips()?,
-            Ok(6) => self.show_technical_support()?,
-            _ => println!("❌ Invalid choice."),
+            Ok(6) => self.show_technical_support()?_ => println!("❌ Invalid choice."),
         }
 
         Ok(())
@@ -2590,8 +2578,8 @@ impl TutorialSystem {
             let y = func(x);
             if y.is_finite() {
                 values.push((x, y));
-                y_min = y_min.min(y);
-                y_max = y_max.max(y);
+                y_min = y_min._min(y);
+                y_max = y_max._max(y);
             } else {
                 values.push((x, f64::NAN));
             }
@@ -2701,9 +2689,9 @@ struct GuidedProblem {
 }
 
 impl UserProfile {
-    fn new(name: String) -> Self {
+    fn new(_name: String) -> Self {
         Self {
-            name,
+            _name,
             learning_style: LearningStyle::Hybrid(vec![
                 LearningStyle::Visual,
                 LearningStyle::Analytical,
@@ -2837,8 +2825,8 @@ impl ConceptualGraph {
 
 // Utility functions
 #[allow(dead_code)]
-fn format_duration(duration: Duration) -> String {
-    let total_seconds = duration.as_secs();
+fn format_duration(_duration: Duration) -> String {
+    let total_seconds = _duration.as_secs();
     let hours = total_seconds / 3600;
     let minutes = (total_seconds % 3600) / 60;
 

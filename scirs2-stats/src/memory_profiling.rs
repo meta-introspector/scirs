@@ -8,6 +8,7 @@ use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, I
 use num_traits::{Float, NumCast};
 use std::collections::VecDeque;
 use std::sync::Arc;
+use statrs::statistics::Statistics;
 
 /// Memory usage profiler for statistical operations
 #[derive(Debug, Clone)]
@@ -191,10 +192,10 @@ impl MemoryAdaptiveAlgorithm {
     }
 
     /// Calculate optimal chunk size based on available memory
-    fn calculate_optimal_chunk_size(available_memory: usize) -> usize {
+    fn calculate_optimal_chunk_size(_available_memory: usize) -> usize {
         // Aim for chunks that fit comfortably in L3 cache (typically 8-32MB)
         let l3_cache_estimate = 8_000_000; // 8MB
-        let max_chunk = available_memory / 10; // Use at most 10% of available memory
+        let max_chunk = _available_memory / 10; // Use at most 10% of available _memory
 
         l3_cache_estimate.min(max_chunk).max(4096)
     }
@@ -206,7 +207,7 @@ impl MemoryAdaptiveAlgorithm {
 
     /// Get recommended algorithm based on data size
     pub fn recommend_algorithm<F: Float>(&self, data_size: usize) -> AlgorithmChoice {
-        let element_size = std::mem::size_of::<F>();
+        let element_size = std::mem::_size_of::<F>();
         let total_bytes = data_size * element_size;
 
         if total_bytes < 1_000_000 {
@@ -249,7 +250,7 @@ pub mod zero_copy {
     {
         let n = data.len();
         if window_size == 0 || window_size > n {
-            return Err(StatsError::invalid_argument("Invalid window size"));
+            return Err(StatsError::invalid_argument("Invalid window _size"));
         }
 
         let output_len = n - window_size + 1;
@@ -315,7 +316,7 @@ pub mod memory_mapped {
         }
 
         if count_processed != total_count {
-            return Err(StatsError::invalid_argument("Chunk count mismatch"));
+            return Err(StatsError::invalid_argument("Chunk _count mismatch"));
         }
 
         Ok(total_sum / F::from(total_count).unwrap())
@@ -333,19 +334,19 @@ pub mod memory_mapped {
 
         let mut mean = F::zero();
         let mut m2 = F::zero();
-        let mut count = 0;
+        let mut _count = 0;
 
         for chunk in data_chunks {
             for &value in chunk.iter() {
-                count += 1;
+                _count += 1;
                 let delta = value - mean;
-                mean = mean + delta / F::from(count).unwrap();
+                mean = mean + delta / F::from(_count).unwrap();
                 let delta2 = value - mean;
                 m2 = m2 + delta * delta2;
             }
         }
 
-        let variance = m2 / F::from(count - ddof).unwrap();
+        let variance = m2 / F::from(_count - ddof).unwrap();
         Ok((mean, variance))
     }
 }
@@ -360,10 +361,10 @@ pub struct RingBufferStats<F: Float> {
 
 impl<F: Float + NumCast + std::fmt::Display> RingBufferStats<F> {
     /// Create a new ring buffer with fixed capacity
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(_capacity: usize) -> Self {
         Self {
-            buffer: VecDeque::with_capacity(capacity),
-            capacity,
+            buffer: VecDeque::with_capacity(_capacity),
+            _capacity,
             sum: F::zero(),
             sum_squares: F::zero(),
         }
@@ -427,9 +428,9 @@ enum StatOperation {
 
 impl<F: Float + NumCast + std::iter::Sum + std::fmt::Display> LazyStatComputation<F> {
     /// Create a new lazy computation
-    pub fn new(data: Vec<F>) -> Self {
+    pub fn new(_data: Vec<F>) -> Self {
         Self {
-            data_ref: Arc::new(data),
+            _data_ref: Arc::new(_data),
             operations: Vec::new(),
         }
     }

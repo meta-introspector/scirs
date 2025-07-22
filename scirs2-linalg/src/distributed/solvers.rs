@@ -19,7 +19,7 @@ pub fn solve_linear_system<T>(
     b: &DistributedVector<T>,
 ) -> LinalgResult<DistributedVector<T>>
 where
-    T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+    T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
     let (m, n) = a.global_shape();
     
@@ -49,7 +49,7 @@ pub fn distributed_conjugate_gradient<T>(
     tolerance: T,
 ) -> LinalgResult<DistributedVector<T>>
 where
-    T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+    T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
     // Initialize solution vector
     let mut x = DistributedVector::from_local(
@@ -107,7 +107,7 @@ where
     }
     
     Err(LinalgError::ConvergenceError(format!(
-        "Conjugate gradient failed to converge in {} iterations",
+        "Conjugate gradient failed to converge in {} _iterations",
         max_iterations
     )))
 }
@@ -122,7 +122,7 @@ pub fn distributed_gmres<T>(
     tolerance: T,
 ) -> LinalgResult<DistributedVector<T>>
 where
-    T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+    T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
     let n = b.global_length();
     
@@ -246,7 +246,7 @@ where
     }
     
     Err(LinalgError::ConvergenceError(format!(
-        "GMRES failed to converge in {} iterations",
+        "GMRES failed to converge in {} _iterations",
         max_iterations
     )))
 }
@@ -260,7 +260,7 @@ pub fn distributed_bicgstab<T>(
     tolerance: T,
 ) -> LinalgResult<DistributedVector<T>>
 where
-    T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+    T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
     // Initialize solution vector
     let mut x = DistributedVector::from_local(
@@ -349,7 +349,7 @@ where
     }
     
     Err(LinalgError::ConvergenceError(format!(
-        "BiCGSTAB failed to converge in {} iterations",
+        "BiCGSTAB failed to converge in {} _iterations",
         max_iterations
     )))
 }
@@ -361,7 +361,7 @@ fn distributed_matvec<T>(
     x: &DistributedVector<T>,
 ) -> LinalgResult<DistributedVector<T>>
 where
-    T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+    T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
     // For simplicity, assume matrix and vector have compatible distributions
     // In practice, might need redistribution
@@ -382,7 +382,7 @@ fn scale_vector<T>(
     scalar: T,
 ) -> LinalgResult<DistributedVector<T>>
 where
-    T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+    T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
     let scaled_local = vector.local_data() * scalar;
     DistributedVector::from_local(scaled_local, vector.config.clone())
@@ -398,7 +398,7 @@ pub fn distributed_pcg<T>(
     tolerance: T,
 ) -> LinalgResult<DistributedVector<T>>
 where
-    T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+    T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
     // Initialize solution vector
     let mut x = DistributedVector::from_local(
@@ -451,7 +451,7 @@ where
     }
     
     Err(LinalgError::ConvergenceError(format!(
-        "Preconditioned CG failed to converge in {} iterations",
+        "Preconditioned CG failed to converge in {} _iterations",
         max_iterations
     )))
 }
@@ -459,7 +459,7 @@ where
 /// Trait for distributed preconditioners
 pub trait DistributedPreconditioner<T>
 where
-    T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+    T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
     /// Apply the preconditioner: y = M^(-1) * x
     fn apply(&self, x: &DistributedVector<T>) -> LinalgResult<DistributedVector<T>>;
@@ -473,18 +473,18 @@ pub struct JacobiPreconditioner<T> {
 
 impl<T> JacobiPreconditioner<T>
 where
-    T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+    T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
     /// Create a new Jacobi preconditioner
-    pub fn new(matrix: &DistributedMatrix<T>) -> LinalgResult<Self> {
+    pub fn new(_matrix: &DistributedMatrix<T>) -> LinalgResult<Self> {
         // Extract diagonal elements
-        let local_diag: Vec<T> = (0..matrix.local_shape().0)
-            .map(|i| matrix.local_data()[[i, i]])
+        let local_diag: Vec<T> = (0.._matrix.local_shape().0)
+            .map(|i| _matrix.local_data()[[i, i]])
             .collect();
         
         let diagonal = DistributedVector::from_local(
             Array1::from_vec(local_diag),
-            matrix.config.clone(),
+            _matrix.config.clone(),
         )?;
         
         Ok(Self { diagonal })
@@ -493,7 +493,7 @@ where
 
 impl<T> DistributedPreconditioner<T> for JacobiPreconditioner<T>
 where
-    T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+    T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
     fn apply(&self, x: &DistributedVector<T>) -> LinalgResult<DistributedVector<T>> {
         // y[i] = x[i] / diagonal[i]

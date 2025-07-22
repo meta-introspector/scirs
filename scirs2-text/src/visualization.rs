@@ -6,7 +6,7 @@
 
 use crate::error::{Result, TextError};
 use crate::sentiment::SentimentResult;
-use crate::topic_modeling::Topic;
+use crate::topic__modeling::Topic;
 use crate::vectorize::{CountVectorizer, TfidfVectorizer, Vectorizer};
 use ndarray::{Array1, Array2, ArrayView2, Axis};
 use std::collections::HashMap;
@@ -108,9 +108,9 @@ pub struct WordCloud {
 
 impl WordCloud {
     /// Create new word cloud from text
-    pub fn from_text(text: &str, config: VisualizationConfig) -> Result<Self> {
+    pub fn from_text(_text: &str, config: VisualizationConfig) -> Result<Self> {
         let mut vectorizer = CountVectorizer::new(false);
-        let documents = vec![text];
+        let documents = vec![_text];
         let matrix = vectorizer.fit_transform(&documents)?;
 
         let vocabulary_map = vectorizer.vocabulary_map();
@@ -339,8 +339,8 @@ pub struct AttentionVisualizer {
 
 impl AttentionVisualizer {
     /// Create new attention visualizer
-    pub fn new(config: VisualizationConfig) -> Self {
-        Self { config }
+    pub fn new(_config: VisualizationConfig) -> Self {
+        Self { _config }
     }
 
     /// Visualize attention weights as heatmap
@@ -469,8 +469,8 @@ pub struct EmbeddingVisualizer {
 
 impl EmbeddingVisualizer {
     /// Create new embedding visualizer
-    pub fn new(config: VisualizationConfig) -> Self {
-        Self { config }
+    pub fn new(_config: VisualizationConfig) -> Self {
+        Self { _config }
     }
 
     /// Visualize word embeddings using PCA projection to 2D
@@ -489,7 +489,7 @@ impl EmbeddingVisualizer {
             return Err(TextError::InvalidInput("No words to visualize".to_string()));
         }
 
-        // Collect embedding vectors
+        // Collect embedding _vectors
         let mut embeddings = Vec::new();
         let mut valid_words = Vec::new();
 
@@ -546,7 +546,7 @@ impl EmbeddingVisualizer {
 
         // Plot points and labels
         for (i, ((x, y), word)) in projected_points.iter().zip(&valid_words).enumerate() {
-            // Scale to plot area
+            // Scale to _plot area
             let scaled_x = margin + (x - min_x) / (max_x - min_x) * plot_width;
             let scaled_y = margin + (y - min_y) / (max_y - min_y) * plot_height;
 
@@ -644,8 +644,7 @@ impl EmbeddingVisualizer {
             1 => (x, c, 0.0),
             2 => (0.0, c, x),
             3 => (0.0, x, c),
-            4 => (x, 0.0, c),
-            _ => (c, 0.0, x),
+            4 => (x, 0.0, c, _ => (c, 0.0, x),
         };
 
         Color::new(
@@ -677,8 +676,8 @@ pub struct SentimentVisualizer {
 
 impl SentimentVisualizer {
     /// Create new sentiment visualizer
-    pub fn new(config: VisualizationConfig) -> Self {
-        Self { config }
+    pub fn new(_config: VisualizationConfig) -> Self {
+        Self { _config }
     }
 
     /// Create sentiment distribution chart
@@ -689,7 +688,7 @@ impl SentimentVisualizer {
     ) -> Result<String> {
         if sentiment_results.len() != labels.len() {
             return Err(TextError::InvalidInput(
-                "Number of sentiment results must match number of labels".to_string(),
+                "Number of sentiment _results must match number of labels".to_string(),
             ));
         }
 
@@ -834,10 +833,7 @@ impl SentimentVisualizer {
         radius: f64,
         start_angle: f64,
         end_angle: f64,
-        color: Color,
-        _label: &str,
-        _count: usize,
-        _total: usize,
+        color: Color_label: &str, _count: usize_total: usize,
     ) -> String {
         let x1 = center_x + radius * start_angle.cos();
         let y1 = center_y + radius * start_angle.sin();
@@ -887,8 +883,8 @@ pub struct TopicVisualizer {
 
 impl TopicVisualizer {
     /// Create new topic visualizer
-    pub fn new(config: VisualizationConfig) -> Self {
-        Self { config }
+    pub fn new(_config: VisualizationConfig) -> Self {
+        Self { _config }
     }
 
     /// Visualize topic word distributions
@@ -999,8 +995,7 @@ impl TopicVisualizer {
             1 => (x, c, 0.0),
             2 => (0.0, c, x),
             3 => (0.0, x, c),
-            4 => (x, 0.0, c),
-            _ => (c, 0.0, x),
+            4 => (x, 0.0, c, _ => (c, 0.0, x),
         };
 
         Color::new(
@@ -1031,8 +1026,8 @@ pub struct TextAnalyticsDashboard {
 
 impl TextAnalyticsDashboard {
     /// Create new analytics dashboard
-    pub fn new(config: VisualizationConfig) -> Self {
-        Self { config }
+    pub fn new(_config: VisualizationConfig) -> Self {
+        Self { _config }
     }
 
     /// Generate complete text analytics dashboard

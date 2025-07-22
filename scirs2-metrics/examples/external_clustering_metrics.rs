@@ -2,7 +2,7 @@
 /// to evaluate clustering algorithm performance.
 use ndarray::{array, Array2};
 use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
-use scirs2_metrics::clustering::{
+use scirs2__metrics::clustering::{
     adjusted_mutual_info_score, adjusted_rand_index, fowlkes_mallows_score,
     homogeneity_completeness_v_measure, normalized_mutual_info_score,
 };

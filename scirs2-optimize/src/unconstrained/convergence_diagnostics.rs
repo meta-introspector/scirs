@@ -347,10 +347,10 @@ impl Default for DiagnosticOptions {
 
 impl DiagnosticCollector {
     /// Create a new diagnostic collector
-    pub fn new(options: DiagnosticOptions) -> Self {
-        let history_window = options.history_window;
+    pub fn new(_options: DiagnosticOptions) -> Self {
+        let history_window = _options.history_window;
         Self {
-            options,
+            _options,
             nit: Vec::new(),
             start_time: Instant::now(),
             f_history: VecDeque::with_capacity(history_window),

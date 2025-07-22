@@ -19,13 +19,13 @@
 //! # Example
 //!
 //! ```rust
-//! use scirs2_cluster::advanced_benchmarking::{
+//! use scirs2__cluster::advanced_benchmarking::{
 //!     AdvancedBenchmark, BenchmarkConfig, create_comprehensive_report
 //! };
 //! use ndarray::Array2;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! let data = Array2::random((1000, 10), ndarray_rand::rand_distr::Uniform::new(-1.0, 1.0));
+//! let data = Array2::random((1000, 10), ndarray_rand::rand, _distr::Uniform::new(-1.0, 1.0));
 //!
 //! let config = BenchmarkConfig {
 //!     warmup_iterations: 10,
@@ -399,9 +399,9 @@ pub struct AdvancedBenchmark {
 
 impl AdvancedBenchmark {
     /// Create a new advanced benchmark with configuration
-    pub fn new(config: BenchmarkConfig) -> Self {
+    pub fn new(_config: BenchmarkConfig) -> Self {
         Self {
-            config,
+            _config,
             memory_tracker: Arc::new(AtomicUsize::new(0)),
         }
     }
@@ -748,7 +748,7 @@ impl AdvancedBenchmark {
                 (labels.mapv(|x| x as i32), centroids.nrows(), None, Some(10))
             }
             "dbscan" => {
-                let (labels, _) = dbscan(data, 0.5, 5)?;
+                let (labels_) = dbscan(data, 0.5, 5)?;
                 let n_clusters = labels
                     .iter()
                     .filter(|&&x| x >= 0)
@@ -799,7 +799,7 @@ impl AdvancedBenchmark {
 
         for &size in &sizes {
             if size > base_data.nrows() {
-                continue; // Skip sizes larger than available data
+                continue; // Skip sizes larger than available _data
             }
 
             let subset = base_data.slice(ndarray::s![0..size, ..]);
@@ -1124,7 +1124,7 @@ impl AdvancedBenchmark {
             }
             .to_string(),
             gpu_info: None, // Would detect GPU if available
-            cpu_cores: num_cpus::get(),
+            cpu_cores: num, _cpus: get(),
             cpu_frequency_mhz: None,
         }
     }
@@ -1140,7 +1140,7 @@ impl AdvancedBenchmark {
         let best_algo = results
             .iter()
             .min_by(|a, b| a.1.performance.mean.cmp(&b.1.performance.mean))
-            .map(|(name, _)| name);
+            .map(|(name_)| name);
 
         if let Some(best) = best_algo {
             recommendations.push(format!("Best performing algorithm: {}", best));
@@ -1150,7 +1150,7 @@ impl AdvancedBenchmark {
         let high_error_algos: Vec<&str> = results
             .iter()
             .filter(|(_, result)| result.error_rate > 0.05)
-            .map(|(name, _)| name.as_str())
+            .map(|(name_)| name.as_str())
             .collect();
 
         if !high_error_algos.is_empty() {
@@ -1170,7 +1170,7 @@ impl AdvancedBenchmark {
                     .map(|m| m.efficiency_score < 60.0)
                     .unwrap_or(false)
             })
-            .map(|(name, _)| name.as_str())
+            .map(|(name_)| name.as_str())
             .collect();
 
         if !memory_inefficient.is_empty() {
@@ -1183,8 +1183,8 @@ impl AdvancedBenchmark {
 
 /// Create a comprehensive HTML report from benchmark results
 #[allow(dead_code)]
-pub fn create_comprehensive_report(results: &BenchmarkResults, output_path: &str) -> Result<()> {
-    let html_content = generate_html_report(results);
+pub fn create_comprehensive_report(_results: &BenchmarkResults, output_path: &str) -> Result<()> {
+    let html_content = generate_html_report(_results);
 
     std::fs::write(output_path, html_content)
         .map_err(|e| ClusteringError::ComputationError(format!("Failed to write report: {}", e)))?;
@@ -1194,7 +1194,7 @@ pub fn create_comprehensive_report(results: &BenchmarkResults, output_path: &str
 
 /// Generate HTML report content
 #[allow(dead_code)]
-fn generate_html_report(results: &BenchmarkResults) -> String {
+fn generate_html_report(_results: &BenchmarkResults) -> String {
     format!(
         r#"
 <!DOCTYPE html>
@@ -1261,25 +1261,25 @@ fn generate_html_report(results: &BenchmarkResults) -> String {
 </body>
 </html>
 "#,
-        results.timestamp,
-        results.total_duration,
-        results.system_info.os,
-        results.system_info.cpu_cores,
-        generate_performance_table(results),
-        generate_regression_alerts_html(results),
-        generate_recommendations_html(results),
-        results.system_info.os,
-        results.system_info.cpu_cores,
-        results.system_info.total_memory_gb,
-        results.system_info.rust_version,
-        results.system_info.optimizations,
+        _results.timestamp,
+        _results.total_duration,
+        _results.system_info.os,
+        _results.system_info.cpu_cores,
+        generate_performance_table(_results),
+        generate_regression_alerts_html(_results),
+        generate_recommendations_html(_results),
+        _results.system_info.os,
+        _results.system_info.cpu_cores,
+        _results.system_info.total_memory_gb,
+        _results.system_info.rust_version,
+        _results.system_info.optimizations,
     )
 }
 
 /// Generate performance table HTML
 #[allow(dead_code)]
-fn generate_performance_table(results: &BenchmarkResults) -> String {
-    results.algorithm_results.iter()
+fn generate_performance_table(_results: &BenchmarkResults) -> String {
+    _results.algorithm_results.iter()
         .map(|(name, result)| {
             let quality = result.quality_metrics.silhouette_score
                 .map(|s| format!("{:.3}", s))
@@ -1300,11 +1300,11 @@ fn generate_performance_table(results: &BenchmarkResults) -> String {
 
 /// Generate regression alerts HTML
 #[allow(dead_code)]
-fn generate_regression_alerts_html(results: &BenchmarkResults) -> String {
-    if results.regression_alerts.is_empty() {
+fn generate_regression_alerts_html(_results: &BenchmarkResults) -> String {
+    if _results.regression_alerts.is_empty() {
         "<p class=\"success\">No performance regressions detected.</p>".to_string()
     } else {
-        results
+        _results
             .regression_alerts
             .iter()
             .map(|alert| {
@@ -1326,8 +1326,8 @@ fn generate_regression_alerts_html(results: &BenchmarkResults) -> String {
 
 /// Generate recommendations HTML
 #[allow(dead_code)]
-fn generate_recommendations_html(results: &BenchmarkResults) -> String {
-    results
+fn generate_recommendations_html(_results: &BenchmarkResults) -> String {
+    _results
         .recommendations
         .iter()
         .map(|rec| format!("<li>{}</li>", rec))

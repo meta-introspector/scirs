@@ -388,9 +388,9 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
     AdvancedExtrapolator<T>
 {
     /// Create a new advanced extrapolator
-    pub fn new(base_extrapolator: Extrapolator<T>) -> Self {
+    pub fn new(_base_extrapolator: Extrapolator<T>) -> Self {
         Self {
-            base_extrapolator,
+            _base_extrapolator,
             confidence_config: None,
             ensemble_config: None,
             adaptive_config: None,
@@ -401,7 +401,7 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
 
     /// Enable confidence-based extrapolation
     pub fn with_confidence(mut self, config: ConfidenceExtrapolationConfig<T>) -> Self {
-        self.confidence_config = Some(config);
+        self.confidence_config = Some(_config);
         self
     }
 
@@ -666,8 +666,7 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
     fn evaluate_extrapolation_quality(
         &self,
         method: ExtrapolationMethod,
-        x: T,
-        _result: T,
+        x: T_result: T,
     ) -> InterpolateResult<T> {
         // Simple scoring based on distance from domain and method stability
         let lower_bound = self.base_extrapolator.get_lower_bound();
@@ -683,13 +682,12 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
 
         // Score based on method characteristics and distance
         let base_score = match method {
-            ExtrapolationMethod::Linear => T::from(1.0).unwrap_or_default(), // Most stable
-            ExtrapolationMethod::Quadratic => T::from(2.0).unwrap_or_default(),
-            ExtrapolationMethod::Cubic => T::from(3.0).unwrap_or_default(),
-            ExtrapolationMethod::Akima => T::from(1.5).unwrap_or_default(), // Good stability
-            ExtrapolationMethod::Exponential => T::from(4.0).unwrap_or_default(),
-            ExtrapolationMethod::PowerLaw => T::from(4.0).unwrap_or_default(),
-            _ => T::from(5.0).unwrap_or_default(), // Other methods
+            ExtrapolationMethod::Linear =>, T::from(1.0).unwrap_or_default(), // Most stable
+            ExtrapolationMethod::Quadratic =>, T::from(2.0).unwrap_or_default(),
+            ExtrapolationMethod::Cubic =>, T::from(3.0).unwrap_or_default(),
+            ExtrapolationMethod::Akima =>, T::from(1.5).unwrap_or_default(), // Good stability
+            ExtrapolationMethod::Exponential =>, T::from(4.0).unwrap_or_default(),
+            ExtrapolationMethod::PowerLaw => T::from(4.0).unwrap_or_default(, _ =>, T::from(5.0).unwrap_or_default(), // Other methods
         };
 
         // Penalize methods more as distance increases
@@ -700,14 +698,13 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
 
     /// Fit autoregressive model to historical data
     fn fit_ar_model(
-        &self,
-        _x_data: &Array1<T>,
+        &self, _x_data: &Array1<T>,
         y_data: &Array1<T>,
         order: usize,
     ) -> InterpolateResult<Array1<T>> {
         if y_data.len() < order + 1 {
             return Err(InterpolateError::ComputationError(
-                "Insufficient data for AR model fitting".to_string(),
+                "Insufficient _data for AR model fitting".to_string(),
             ));
         }
 
@@ -751,14 +748,13 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
         coeffs: &Array1<T>,
         x_data: &Array1<T>,
         y_data: &Array1<T>,
-        x: T,
-        _config: &AutoregressiveExtrapolationConfig<T>,
+        x: T_config: &AutoregressiveExtrapolationConfig<T>,
     ) -> InterpolateResult<T> {
         let order = coeffs.len();
 
         if y_data.len() < order {
             return Err(InterpolateError::ComputationError(
-                "Insufficient data for AR prediction".to_string(),
+                "Insufficient _data for AR prediction".to_string(),
             ));
         }
 
@@ -1380,8 +1376,8 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
         // Choose b1 to control asymptotic behavior
         // For decay: b1 > 0, for growth: b1 < 0
         let b1 = match direction {
-            ExtrapolationDirection::Lower => T::from(0.1).unwrap(), // Mild growth
-            ExtrapolationDirection::Upper => T::from(-0.1).unwrap(), // Mild decay
+            ExtrapolationDirection::Lower =>, T::from(0.1).unwrap(), // Mild growth
+            ExtrapolationDirection::Upper =>, T::from(-0.1).unwrap(), // Mild decay
         };
 
         let a1 = deriv + a0 * b1;
@@ -1457,8 +1453,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
                     }
                 }
                 ExtrapolationMethod::Cubic => self.cubic_extrapolation(x, direction)?,
-                ExtrapolationMethod::Exponential => self.exponential_extrapolation(x, direction)?,
-                _ => self.linear_extrapolation(x, direction)?, // fallback
+                ExtrapolationMethod::Exponential => self.exponential_extrapolation(x, direction)?_ => self.linear_extrapolation(x, direction)?, // fallback
             };
 
             weighted_sum = weighted_sum + value * (*weight);
@@ -1544,8 +1539,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     /// Returns the nearest boundary value - equivalent to constant extrapolation
     /// but specifically designed for compatibility with SciPy's 'nearest' mode.
     fn nearest_extrapolation(
-        &self,
-        _x: T,
+        &self_x: T,
         direction: ExtrapolationDirection,
     ) -> InterpolateResult<T> {
         match direction {
@@ -1625,8 +1619,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     /// Uses zero derivatives at the boundaries for smooth extrapolation.
     /// This corresponds to "clamped" boundary conditions in spline theory.
     fn clamped_extrapolation(
-        &self,
-        _x: T,
+        &self_x: T,
         direction: ExtrapolationDirection,
     ) -> InterpolateResult<T> {
         // For clamped extrapolation, we use zero derivatives at boundaries
@@ -1660,8 +1653,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     ///
     /// Similar to constant extrapolation but optimized for structured grid data.
     fn grid_constant_extrapolation(
-        &self,
-        _x: T,
+        &self_x: T,
         direction: ExtrapolationDirection,
     ) -> InterpolateResult<T> {
         // For grid data, use the boundary values
@@ -1869,8 +1861,7 @@ pub fn make_exponential_extrapolator<T: Float + std::fmt::Display>(
     upper_value: T,
     lower_derivative: T,
     upper_derivative: T,
-    lower_rate: T,
-    _upper_rate: T,
+    lower_rate: T_upper, _rate: T,
 ) -> Extrapolator<T> {
     let params = ExtrapolationParameters::default().with_exponential_rate(lower_rate.abs());
 
@@ -1959,13 +1950,13 @@ pub fn make_autoregressive_extrapolator<
         regularization: T::from(1e-6).unwrap(),
     };
 
-    let mut extrapolator = AdvancedExtrapolator::new(base_extrapolator).with_autoregressive(config);
+    let mut _extrapolator = AdvancedExtrapolator::new(base_extrapolator).with_autoregressive(config);
 
     if let Some((x_data, y_data)) = historical_data {
-        extrapolator = extrapolator.with_historical_data(x_data, y_data);
+        _extrapolator = _extrapolator.with_historical_data(x_data, y_data);
     }
 
-    extrapolator
+    _extrapolator
 }
 
 #[cfg(test)]
@@ -2267,12 +2258,12 @@ pub fn make_boundary_preserving_extrapolator<
 
     match boundary_type {
         BoundaryType::Dirichlet => {
-            // Fixed value boundaries - use cubic for smooth transition
+            // Fixed _value boundaries - use cubic for smooth transition
             extrapolator.base_extrapolator.lower_method = ExtrapolationMethod::Cubic;
             extrapolator.base_extrapolator.upper_method = ExtrapolationMethod::Cubic;
         }
         BoundaryType::Neumann => {
-            // Fixed derivative boundaries - use quadratic
+            // Fixed _derivative boundaries - use quadratic
             extrapolator.base_extrapolator.lower_method = ExtrapolationMethod::Quadratic;
             extrapolator.base_extrapolator.upper_method = ExtrapolationMethod::Quadratic;
         }

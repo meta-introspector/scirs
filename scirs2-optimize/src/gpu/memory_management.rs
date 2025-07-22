@@ -33,9 +33,9 @@ pub struct GpuMemoryPool {
 
 impl GpuMemoryPool {
     /// Create a new GPU memory pool
-    pub fn new(context: Arc<GpuContext>, memory_limit: Option<usize>) -> ScirsResult<Self> {
+    pub fn new(_context: Arc<GpuContext>, memory_limit: Option<usize>) -> ScirsResult<Self> {
         Ok(Self {
-            context,
+            _context,
             pools: Arc::new(Mutex::new(HashMap::new())),
             allocated_blocks: Arc::new(Mutex::new(Vec::new())),
             memory_limit,
@@ -193,9 +193,9 @@ impl GpuMemoryBlock {
     }
 
     /// Cast to a specific type
-    pub fn as_typed<T: scirs2_core::GpuDataType>(&self) -> ScirsResult<&OptimGpuBuffer<T>> {
+    pub fn as_typed<T: scirs2_core: GpuDataType>(&self) -> ScirsResult<&OptimGpuBuffer<T>> {
         if let Some(ref buffer) = self.gpu_buffer {
-            // Safe casting through scirs2-core's type system
+            // Safe casting through scirs2-_core's type system
             buffer
                 .cast_type::<T>()
                 .map_err(|e| ScirsError::ComputationError(format!("Type casting failed: {}", e)))
@@ -242,7 +242,7 @@ impl GpuWorkspace {
     }
 
     /// Get a typed buffer view of the specified size
-    pub fn get_buffer<T: scirs2_core::GpuDataType>(
+    pub fn get_buffer<T: scirs2_core: GpuDataType>(
         &mut self,
         size: usize,
     ) -> ScirsResult<&OptimGpuBuffer<T>> {
@@ -259,7 +259,7 @@ impl GpuWorkspace {
         let total_elements: usize = dimensions.iter().product();
         let buffer = self.get_buffer::<T>(total_elements)?;
 
-        // Convert buffer to array using scirs2-core's reshape functionality
+        // Convert buffer to array using scirs2-_core's reshape functionality
         OptimGpuArray::from_buffer(buffer, dimensions)
             .map_err(|e| ScirsError::ComputationError(format!("Array creation failed: {}", e)))
     }
@@ -401,7 +401,7 @@ impl MemoryStats {
             report.push('\n');
             report.push_str("Memory Pools:\n");
             let mut pools: Vec<_> = self.pool_sizes.iter().collect();
-            pools.sort_by_key(|&(size, _)| size);
+            pools.sort_by_key(|&(size_)| size);
             for (&size, &count) in pools {
                 report.push_str(&format!("  {} bytes: {} blocks\n", size, count));
             }
@@ -448,9 +448,9 @@ pub mod optimization {
 
     impl MemoryOptimizer {
         /// Create a new memory optimizer
-        pub fn new(config: MemoryOptimizationConfig, pool: Arc<GpuMemoryPool>) -> Self {
+        pub fn new(_config: MemoryOptimizationConfig, pool: Arc<GpuMemoryPool>) -> Self {
             Self {
-                config,
+                _config,
                 pool,
                 optimization_stats: OptimizationStats::new(),
             }
@@ -551,9 +551,9 @@ pub mod utils {
     }
 
     /// Estimate memory usage for a given problem
-    pub fn estimate_memory_usage(problem_size: usize, batch_size: usize) -> usize {
+    pub fn estimate_memory_usage(_problem_size: usize, batch_size: usize) -> usize {
         // Rough estimation: input data + output data + temporary buffers
-        let input_size = batch_size * problem_size * 8; // f64
+        let input_size = batch_size * _problem_size * 8; // f64
         let output_size = batch_size * 8; // f64
         let temp_size = input_size; // Temporary arrays
 

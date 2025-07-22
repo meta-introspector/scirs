@@ -49,9 +49,9 @@ impl<F: Float + ScalarOperand + Debug> AdamW<F> {
     /// * `beta2` - Exponential decay rate for the second moment estimates (default: 0.999)
     /// * `epsilon` - Small constant for numerical stability (default: 1e-8)
     /// * `weight_decay` - Weight decay factor (default: 0.01)
-    pub fn new(learning_rate: F, beta1: F, beta2: F, epsilon: F, weight_decay: F) -> Self {
+    pub fn new(_learning_rate: F, beta1: F, beta2: F, epsilon: F, weight_decay: F) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             beta1,
             beta2,
             epsilon,
@@ -62,7 +62,7 @@ impl<F: Float + ScalarOperand + Debug> AdamW<F> {
         }
     }
     /// Creates a new AdamW optimizer with default hyperparameters
-    pub fn default_with_lr(learning_rate: F) -> Result<Self> {
+    pub fn default_with_lr(_learning_rate: F) -> Result<Self> {
         let beta1 = F::from(0.9).ok_or_else(|| {
             NeuralError::InvalidArgument(
                 "Failed to convert 0.9 to the appropriate floating point type".to_string(),
@@ -154,4 +154,4 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for AdamW<F> {
         self.learning_rate = lr;
 // Enable direct usage of scirs2-optim's AdamW when the optim feature is enabled
 #[cfg(feature = "optim")]
-pub use scirs2_optim::AdamW as OptimAdamW;
+pub use scirs2__optim::AdamW as OptimAdamW;

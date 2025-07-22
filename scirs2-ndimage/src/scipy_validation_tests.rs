@@ -287,7 +287,7 @@ mod tests {
     fn test_3d_consistency() {
         // Create a 3D volume with uniform slices
         let slice_2d = Array2::from_shape_fn((8, 8), |(i, j)| (i + j) as f64);
-        let volume_3d = Array3::from_shape_fn((8, 8, 5), |(i, j, _k)| (i + j) as f64);
+        let volume_3d = Array3::from_shape_fn((8, 8, 5), |(i, j_k)| (i + j) as f64);
 
         // Apply Gaussian filter to 2D slice
         let filtered_2d = gaussian_filter(&slice_2d, 1.0, None, None)

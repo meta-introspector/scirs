@@ -9,7 +9,7 @@
 
 use ndarray::{array, Array1, Array2};
 #[cfg(feature = "optim_integration")]
-use scirs2_metrics::integration::optim::{HyperParameter, HyperParameterTuner};
+use scirs2__metrics::integration::optim::{HyperParameter, HyperParameterTuner};
 use std::error::Error;
 
 #[cfg(feature = "optim_integration")]
@@ -72,8 +72,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("\nBest hyperparameters found:");
         for (name, value) in result.best_params() {
             match name.as_str() {
-                "hidden_size" | "num_epochs" => println!("  {}: {}", name, *value as usize),
-                _ => println!("  {name}: {value:.6}"),
+                "hidden_size" | "num_epochs" => println!("  {}: {}", name, *value as usize, _ => println!("  {name}: {value:.6}"),
             }
         }
         println!("Best accuracy: {:.6}", result.best_metric());
@@ -97,8 +96,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 /// Simulate training a simple neural network model for the XOR problem
 #[allow(dead_code)]
 fn simulate_model_training(
-    _x: &Array2<f64>,
-    _y: &Array1<f64>,
+    _x: &Array2<f64>, _y: &Array1<f64>,
     learning_rate: f64,
     hidden_size: usize,
     num_epochs: usize,
@@ -109,7 +107,7 @@ fn simulate_model_training(
     // Simulate how well the model will perform based on hyperparameters
     let base_accuracy = 0.6;
 
-    // Learning rate factor: too small or too large reduces accuracy
+    // Learning _rate factor: too small or too large reduces accuracy
     let lr_factor = if learning_rate < 0.005 {
         learning_rate / 0.005 // Too small
     } else if learning_rate > 0.05 {
@@ -118,7 +116,7 @@ fn simulate_model_training(
         1.0 // Good range
     };
 
-    // Hidden size factor: XOR needs at least 2 neurons, more is fine but less efficient
+    // Hidden _size factor: XOR needs at least 2 neurons, more is fine but less efficient
     let hidden_factor = if hidden_size < 3 {
         0.5 // Too small
     } else if hidden_size < 8 {
@@ -127,9 +125,9 @@ fn simulate_model_training(
         0.9 // Larger than needed
     };
 
-    // Epochs factor: more epochs generally better up to a point
+    // Epochs factor: more _epochs generally better up to a point
     let epoch_factor = if num_epochs < 100 {
-        0.7 + (num_epochs as f64 / 100.0) * 0.3 // Too few epochs
+        0.7 + (num_epochs as f64 / 100.0) * 0.3 // Too few _epochs
     } else if num_epochs < 300 {
         1.0 // Good range
     } else {

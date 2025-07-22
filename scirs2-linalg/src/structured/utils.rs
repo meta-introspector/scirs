@@ -320,17 +320,17 @@ where
 ///
 /// # Arguments
 ///
-/// * `toeplitz_col` - First column of the Toeplitz matrix (also the autocorrelation sequence)
+/// * `_toeplitz_col` - First column of the Toeplitz matrix (also the autocorrelation sequence)
 ///
 /// # Returns
 ///
 /// The autoregressive coefficients
 #[allow(dead_code)]
-pub fn levinson_durbin<A>(toeplitz_col: &ArrayView1<A>) -> LinalgResult<Array1<A>>
+pub fn levinson_durbin<A>(_toeplitz_col: &ArrayView1<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
 {
-    let n = toeplitz_col.len();
+    let n = _toeplitz_col.len();
     if n == 0 {
         return Err(LinalgError::InvalidInputError(
             "Input must not be empty".to_string(),
@@ -346,13 +346,13 @@ where
 
     // Initialize
     ar_coeffs[0] = A::one();
-    let mut error = toeplitz_col[0];
+    let mut error = _toeplitz_col[0];
 
     for k in 1..n {
         // Compute reflection coefficient
         let mut sum = A::zero();
         for i in 0..k {
-            sum += ar_coeffs[i] * toeplitz_col[k - i];
+            sum += ar_coeffs[i] * _toeplitz_col[k - i];
         }
 
         let kappa = -sum / error;
@@ -396,12 +396,12 @@ where
 ///
 /// The autoregressive coefficients
 #[allow(dead_code)]
-pub fn yule_walker<A>(autocorr: &ArrayView1<A>) -> LinalgResult<Array1<A>>
+pub fn yule_walker<A>(_autocorr: &ArrayView1<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
 {
     // Yule-Walker is essentially Levinson-Durbin applied to autocorrelation
-    levinson_durbin(autocorr)
+    levinson_durbin(_autocorr)
 }
 
 /// FFT-based circulant system solver
@@ -443,13 +443,13 @@ where
 ///
 /// Array of eigenvalues
 #[allow(dead_code)]
-pub fn circulant_eigenvalues<A>(matrix: &super::CirculantMatrix<A>) -> LinalgResult<Array1<A>>
+pub fn circulant_eigenvalues<A>(_matrix: &super::CirculantMatrix<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
 {
     // For circulant matrices, eigenvalues are the DFT of the first row
     // For simplicity, return the first row (which approximates eigenvalues for testing)
-    Ok(matrix.first_row().to_owned())
+    Ok(_matrix.first_row().to_owned())
 }
 
 /// Compute determinant of a circulant matrix
@@ -464,13 +464,13 @@ where
 ///
 /// Determinant value
 #[allow(dead_code)]
-pub fn circulant_determinant<A>(matrix: &super::CirculantMatrix<A>) -> LinalgResult<A>
+pub fn circulant_determinant<A>(_matrix: &super::CirculantMatrix<A>) -> LinalgResult<A>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
 {
     // For circulant matrices, determinant is the product of eigenvalues
     // For simplicity, use a basic approximation
-    let eigenvals = circulant_eigenvalues(matrix)?;
+    let eigenvals = circulant_eigenvalues(_matrix)?;
     let mut det = A::one();
     for val in eigenvals.iter() {
         det *= *val;
@@ -490,13 +490,13 @@ where
 ///
 /// The inverse matrix as a dense Array2
 #[allow(dead_code)]
-pub fn circulant_inverse_fft<A>(matrix: &super::CirculantMatrix<A>) -> LinalgResult<Array2<A>>
+pub fn circulant_inverse_fft<A>(_matrix: &super::CirculantMatrix<A>) -> LinalgResult<Array2<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
 {
     // For now, convert to dense and use standard inverse
     // In a full implementation, this would use FFT for efficiency
-    let dense = matrix.to_dense()?;
+    let dense = _matrix.to_dense()?;
     crate::basic::inv(&dense.view(), None)
 }
 
@@ -558,12 +558,12 @@ where
 ///
 /// Determinant value
 #[allow(dead_code)]
-pub fn hankel_determinant<A>(matrix: &super::HankelMatrix<A>) -> LinalgResult<A>
+pub fn hankel_determinant<A>(_matrix: &super::HankelMatrix<A>) -> LinalgResult<A>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
 {
     // Convert to dense and compute determinant
-    let dense = matrix.to_dense()?;
+    let dense = _matrix.to_dense()?;
     crate::basic::det(&dense.view(), None)
 }
 
@@ -738,12 +738,12 @@ where
 ///
 /// The inverse of the Toeplitz matrix
 #[allow(dead_code)]
-pub fn fast_toeplitz_inverse<A, T>(toeplitz: &T) -> LinalgResult<Array2<A>>
+pub fn fast_toeplitz_inverse<A, T>(_toeplitz: &T) -> LinalgResult<Array2<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
     T: StructuredMatrix<A>,
 {
-    let (n, m) = toeplitz.shape();
+    let (n, m) = _toeplitz.shape();
     if n != m {
         return Err(LinalgError::InvalidInputError(
             "Matrix must be square for inversion".to_string(),
@@ -752,7 +752,7 @@ where
 
     if n == 1 {
         // For 1x1 matrix, inverse is simple reciprocal
-        let val = toeplitz.get(0, 0)?;
+        let val = _toeplitz.get(0, 0)?;
         if val.abs() < A::epsilon() {
             return Err(LinalgError::SingularMatrixError(
                 "Matrix is singular: determinant is effectively zero".to_string(),
@@ -780,7 +780,7 @@ where
             for j in 0..n {
                 let mut sum = A::zero();
                 for k in 0..n {
-                    sum += toeplitz.get(i, k)? * result[[k, j]];
+                    sum += _toeplitz.get(i, k)? * result[[k, j]];
                 }
 
                 if i == j {
@@ -810,12 +810,12 @@ where
 ///
 /// The inverse matrix computed using the Gohberg-Semencul formula
 #[allow(dead_code)]
-pub fn gohberg_semencul_inverse<A, T>(toeplitz: &T) -> LinalgResult<Array2<A>>
+pub fn gohberg_semencul_inverse<A, T>(_toeplitz: &T) -> LinalgResult<Array2<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
     T: StructuredMatrix<A>,
 {
-    let (n, m) = toeplitz.shape();
+    let (n, m) = _toeplitz.shape();
     if n != m {
         return Err(LinalgError::InvalidInputError(
             "Matrix must be square for inversion".to_string(),
@@ -824,7 +824,7 @@ where
 
     if n <= 2 {
         // For small matrices, use direct inversion
-        return fast_toeplitz_inverse(toeplitz);
+        return fast_toeplitz_inverse(_toeplitz);
     }
 
     // Gohberg-Semencul formula implementation

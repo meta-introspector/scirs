@@ -270,7 +270,7 @@ impl PatternRecognizer {
         // Check for sequential access
         let mut sequential_count = 0;
         for i in 1..indices.len() {
-            if indices[i] == indices[i - 1] + 1 {
+            if indices[i] == indices[i.saturating_sub(1)] + 1 {
                 sequential_count += 1;
             }
         }
@@ -307,7 +307,7 @@ impl PatternRecognizer {
         for stride in 2..=20 {
             let mut stride_count = 0;
             for i in 1..indices.len() {
-                if indices[i].saturating_sub(indices[i - 1]) == stride {
+                if indices[i].saturating_sub(indices[i.saturating_sub(1)]) == stride {
                     stride_count += 1;
                 }
             }
@@ -356,7 +356,7 @@ impl PatternRecognizer {
             return;
         }
 
-        let _rows = dimensions[0];
+        let rows = dimensions[0];
         let cols = dimensions[1];
         let indices: Vec<_> = self.history.iter().cloned().collect();
 
@@ -390,7 +390,7 @@ impl PatternRecognizer {
                 let mut increasing = 0;
                 let mut decreasing = 0;
                 for i in 1..cols_in_row.len() {
-                    match cols_in_row[i].0.cmp(&cols_in_row[i - 1].0) {
+                    match cols_in_row[i].0.cmp(&cols_in_row[i.saturating_sub(1)].0) {
                         std::cmp::Ordering::Greater => increasing += 1,
                         std::cmp::Ordering::Less => decreasing += 1,
                         std::cmp::Ordering::Equal => {}
@@ -439,14 +439,14 @@ impl PatternRecognizer {
             return;
         }
 
-        let _rows = dimensions[0];
+        let rows = dimensions[0];
         let cols = dimensions[1];
         let indices: Vec<_> = self.history.iter().cloned().collect();
 
         // Check for main diagonal traversal
         let mut diagonal_matches = 0;
         for i in 1..indices.len() {
-            let prev_idx = indices[i - 1];
+            let prev_idx = indices[i.saturating_sub(1)];
             let curr_idx = indices[i];
 
             let prev_row = prev_idx / cols;
@@ -487,7 +487,7 @@ impl PatternRecognizer {
         // Check for anti-diagonal traversal
         let mut anti_diagonal_matches = 0;
         for i in 1..indices.len() {
-            let prev_idx = indices[i - 1];
+            let prev_idx = indices[i.saturating_sub(1)];
             let curr_idx = indices[i];
 
             let prev_row = prev_idx / cols;
@@ -600,7 +600,7 @@ impl PatternRecognizer {
 
         // Group consecutive accesses by stride
         for i in 1..indices.len() {
-            let stride = indices[i].saturating_sub(indices[i - 1]);
+            let stride = indices[i].saturating_sub(indices[i.saturating_sub(1)]);
             *block_strides.entry(stride).or_insert(0) += 1;
         }
 
@@ -642,7 +642,7 @@ impl PatternRecognizer {
             return;
         }
 
-        let _rows = dimensions[0];
+        let rows = dimensions[0];
         let cols = dimensions[1];
         let indices: Vec<_> = self.history.iter().cloned().collect();
 
@@ -657,8 +657,8 @@ impl PatternRecognizer {
             }
 
             let center_idx = indices[window_start];
-            let _center_row = center_idx / cols;
-            let _center_col = center_idx % cols;
+            let center_row = center_idx / cols;
+            let center_col = center_idx % cols;
 
             // Check if the next 4 accesses are neighbors of the center
             let mut neighbors_found = 0;
@@ -741,7 +741,7 @@ impl PatternRecognizer {
                     let pattern = RecognizedPattern::new(pattern, confidence)
                         .with_metadata("unique_indices", &unique_indices.to_string())
                         .with_metadata("max_index", &max_idx.to_string())
-                        .with_metadata("density", &format!(":.6{density}"));
+                        .with_metadata("density", &format!("{density:.6}"));
                     self.patterns.push(pattern);
                 }
             }
@@ -826,23 +826,18 @@ pub mod pattern_utils {
 
     /// Get the prefetch pattern for a complex pattern.
     #[allow(dead_code)]
-    pub fn get_prefetch_pattern(
-        pattern: &ComplexPattern,
-        dimensions: &[usize],
-        current_idx: usize,
-        prefetch_count: usize,
-    ) -> Vec<usize> {
+    pub fn get_prefetch_pattern(pattern: &ComplexPattern, dimensions: &[usize], current_idx: usize, prefetch_count: usize) -> Vec<usize> {
         match pattern {
             ComplexPattern::RowMajor => {
                 // For row-major, prefetch the next sequential indices
-                (1..=prefetch_count).map(|i| current_idx + i).collect()
+                (1..=prefetch_count).map(|0| current_idx + 0).collect()
             }
             ComplexPattern::ColumnMajor => {
                 if dimensions.len() >= 2 {
                     let stride = dimensions[0];
                     // For column-major, prefetch with stride equal to number of rows
                     (1..=prefetch_count)
-                        .map(|i| current_idx + stride * i)
+                        .map(|0| current_idx + stride * 0)
                         .collect()
                 } else {
                     // Default to sequential if dimensions unknown

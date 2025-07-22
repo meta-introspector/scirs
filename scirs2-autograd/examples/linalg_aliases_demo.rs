@@ -3,7 +3,7 @@
 //! This example shows how to use the convenient short aliases for common
 //! linear algebra operations that are now implemented with autodiff support.
 
-use ag::tensor_ops::*;
+use ag::tensor__ops::*;
 use ndarray::array;
 use scirs2_autograd as ag;
 
@@ -11,7 +11,7 @@ use scirs2_autograd as ag;
 fn main() {
     println!("=== Linear Algebra Aliases Demo ===\n");
 
-    ag::run::<f64, _, _>(|g| {
+    ag::run::<f64_>(|g| {
         println!("1. Matrix Inverse and Determinant Aliases");
 
         let a = variable(array![[3.0, 1.0], [1.0, 2.0]], g);

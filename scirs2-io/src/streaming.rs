@@ -16,7 +16,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2_io::streaming::{ChunkedReader, StreamingConfig};
+//! use scirs2__io::streaming::{ChunkedReader, StreamingConfig};
 //! use std::path::Path;
 //!
 //! // Read a large CSV file in 1MB chunks
@@ -125,8 +125,8 @@ pub struct ChunkedReader {
 
 impl ChunkedReader {
     /// Create a new chunked reader for the specified file
-    pub fn new<P: AsRef<Path>>(path: P, config: StreamingConfig) -> Result<Self> {
-        let file = File::open(path.as_ref())
+    pub fn new<P: AsRef<Path>>(_path: P, config: StreamingConfig) -> Result<Self> {
+        let file = File::open(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
         let reader = BufReader::with_capacity(config.buffer_size, file);
@@ -234,8 +234,8 @@ pub struct LineChunkedReader {
 
 impl LineChunkedReader {
     /// Create a new line-based chunked reader
-    pub fn new<P: AsRef<Path>>(path: P, config: StreamingConfig) -> Result<Self> {
-        let file = File::open(path.as_ref())
+    pub fn new<P: AsRef<Path>>(_path: P, config: StreamingConfig) -> Result<Self> {
+        let file = File::open(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
         let reader = BufReader::with_capacity(config.buffer_size, file);
@@ -346,8 +346,8 @@ pub struct StreamingCsvReader {
 
 impl StreamingCsvReader {
     /// Create a new streaming CSV reader
-    pub fn new<P: AsRef<Path>>(path: P, config: StreamingConfig) -> Result<Self> {
-        let line_reader = LineChunkedReader::new(path, config)?;
+    pub fn new<P: AsRef<Path>>(_path: P, config: StreamingConfig) -> Result<Self> {
+        let line_reader = LineChunkedReader::new(_path, config)?;
 
         Ok(Self {
             line_reader,
@@ -539,8 +539,8 @@ where
 
         match chunk_result {
             Ok(rows) => {
-                let header = reader.header();
-                result = processor(&rows, chunk_id, header)?;
+                let _header = reader._header();
+                result = processor(&rows, chunk_id, _header)?;
 
                 let chunk_time = chunk_start.elapsed().as_secs_f64() * 1000.0;
                 stats.update_chunk(0, chunk_time); // CSV doesn't track bytes easily
@@ -668,7 +668,7 @@ mod tests {
         let config = StreamingConfig::new().chunk_size(100);
 
         let (total_size, stats) =
-            process_file_chunked(&file_path, config, |chunk, _chunk_id| -> Result<usize> {
+            process_file_chunked(&file_path, config, |chunk_chunk_id| -> Result<usize> {
                 Ok(chunk.len())
             })
             .unwrap();

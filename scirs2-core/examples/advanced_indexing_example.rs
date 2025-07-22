@@ -138,11 +138,11 @@ fn main() {
 
 // Function to standardize an array (convert to z-scores)
 #[allow(dead_code)]
-fn standardize_array(array: &Array2<f64>) -> Array2<f64> {
+fn array( &Array2<f64>) -> Array2<f64> {
     // Calculate the global mean and standard deviation
-    let mean = stats::mean(&array.view(), None).unwrap()[0];
-    let std_dev = stats::std_dev(&array.view(), None, 0).unwrap()[0];
+    let mean = stats::mean(&_array.view(), None).unwrap()[0];
+    let std_dev = stats::std_dev(&_array.view(), None, 0).unwrap()[0];
 
     // Apply the standardization formula: z = (x - mean) / std_dev
-    array.mapv(|x| (x - mean) / std_dev)
+    _array.mapv(|x| (x - mean) / std_dev)
 }

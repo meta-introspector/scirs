@@ -7,7 +7,7 @@ mod cross_validation;
 mod metrics;
 mod test;
 mod validation;
-pub use cross_validation::*;
+pub use cross__validation::*;
 pub use metrics::*;
 pub use test::*;
 pub use validation::*;
@@ -88,20 +88,20 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
     Evaluator<F>
 {
     /// Create a new evaluator with the given configuration
-    pub fn new(config: EvaluationConfig) -> Result<Self> {
+    pub fn new(_config: EvaluationConfig) -> Result<Self> {
         let mut metrics = HashMap::new();
         // Initialize metrics
-        for metric_type in &config.metrics {
+        for metric_type in &_config.metrics {
             let metric: Box<dyn Metric<F>> = match metric_type {
-                MetricType::Loss => Box::new(LossMetric::new()),
-                MetricType::Accuracy => Box::new(AccuracyMetric::new()),
-                MetricType::Precision => Box::new(PrecisionMetric::new()),
-                MetricType::Recall => Box::new(RecallMetric::new()),
-                MetricType::F1Score => Box::new(F1ScoreMetric::new()),
-                MetricType::MeanSquaredError => Box::new(MeanSquaredErrorMetric::new()),
-                MetricType::MeanAbsoluteError => Box::new(MeanAbsoluteErrorMetric::new()),
-                MetricType::RSquared => Box::new(RSquaredMetric::new()),
-                MetricType::AUC => Box::new(AUCMetric::new()),
+                MetricType::Loss =>, Box::new(LossMetric::new()),
+                MetricType::Accuracy =>, Box::new(AccuracyMetric::new()),
+                MetricType::Precision =>, Box::new(PrecisionMetric::new()),
+                MetricType::Recall =>, Box::new(RecallMetric::new()),
+                MetricType::F1Score =>, Box::new(F1ScoreMetric::new()),
+                MetricType::MeanSquaredError =>, Box::new(MeanSquaredErrorMetric::new()),
+                MetricType::MeanAbsoluteError =>, Box::new(MeanAbsoluteErrorMetric::new()),
+                MetricType::RSquared =>, Box::new(RSquaredMetric::new()),
+                MetricType::AUC =>, Box::new(AUCMetric::new()),
                 MetricType::Custom(name) => {
                     return Err(Error::NotImplementedError(format!(
                         "Custom metric '{}' is not yet supported",

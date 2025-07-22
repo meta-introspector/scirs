@@ -36,7 +36,7 @@
 //! - Materials science imaging
 
 use ndarray::{s, Array2, Array3, ArrayView2};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     domain_specific::*, error::NdimageResult, features::*, filters::*, interpolation::*,
     measurements::*, morphology::*, segmentation::*,
 };
@@ -178,7 +178,7 @@ fn medical_imaging_applications() -> NdimageResult<()> {
     let distance_transform = {
         use ndarray::IxDyn;
         let mask_dyn = nuclei_mask.clone().into_dimensionality::<IxDyn>().unwrap();
-        let (distances, _) = distance_transform_edt(&mask_dyn, None, true, false)
+        let (distances_) = distance_transform_edt(&mask_dyn, None, true, false)
             .expect("Distance transform failed")?;
         distances.into_dimensionality::<ndarray::Ix2>().unwrap()
     };
@@ -294,7 +294,7 @@ fn industrial_inspection_applications() -> NdimageResult<()> {
     println!("Step 2: Find part boundaries");
     let part_mask = threshold_binary(&part_image.view(), 0.5)?;
     let part_properties = {
-        let (labeled, _) = label(&part_mask.view(), None)?;
+        let (labeled_) = label(&part_mask.view(), None)?;
         let props = region_properties(&labeled.view(), Some(&part_image.view()))?;
         props
             .into_iter()
@@ -313,7 +313,7 @@ fn industrial_inspection_applications() -> NdimageResult<()> {
         let circularity = 4.0 * std::f64::consts::PI * area / (perimeter * perimeter);
         let solidity = area / ((width * height) as f64);
 
-        println!("Results: Dimensional measurement:");
+        println!("Results: Dimensional, measurement: ");
         println!("   Width: {} pixels", width);
         println!("   Height: {} pixels", height);
         println!("   Area: {:.0} pixels²", area);
@@ -342,7 +342,7 @@ fn industrial_inspection_applications() -> NdimageResult<()> {
     println!("Step 3: Defect detection - missing components, broken traces");
     let defects = analyze_pcb_defects(&components, &traces)?;
 
-    println!("Results: PCB inspection:");
+    println!("Results: PCB, inspection: ");
     println!("   Components detected: {}", components.num_components);
     println!("   Trace length: {:.0} pixels", traces.total_length);
     println!("   Missing components: {}", defects.missing_components);
@@ -385,7 +385,7 @@ fn remote_sensing_applications() -> NdimageResult<()> {
     let moderate_area = moderate_vegetation.iter().sum::<u8>() as f64 / total_pixels * 100.0;
     let sparse_area = sparse_vegetation.iter().sum::<u8>() as f64 / total_pixels * 100.0;
 
-    println!("Results: Vegetation analysis:");
+    println!("Results: Vegetation, analysis: ");
     println!("   Healthy vegetation: {:.1}% of area", healthy_area);
     println!("   Moderate vegetation: {:.1}% of area", moderate_area);
     println!("   Sparse vegetation: {:.1}% of area", sparse_area);
@@ -464,7 +464,7 @@ fn remote_sensing_applications() -> NdimageResult<()> {
         cloud_shadows.iter().sum::<u8>() as f64 / cloud_shadows.len() as f64 * 100.0;
     let clear_coverage = clear_area.iter().sum::<u8>() as f64 / clear_area.len() as f64 * 100.0;
 
-    println!("Results: Cloud analysis:");
+    println!("Results: Cloud, analysis: ");
     println!("   Cloud coverage: {:.1}%", cloud_coverage);
     println!("   Cloud shadow coverage: {:.1}%", shadow_coverage);
     println!("   Clear area: {:.1}%", clear_coverage);
@@ -507,7 +507,7 @@ fn computer_vision_applications() -> NdimageResult<()> {
         .filter(|prop| prop.area > 100.0 && prop.area < 10000.0)  // Size filter
         .collect();
 
-    println!("Results: Object detection:");
+    println!("Results: Object, detection: ");
     println!("   Total objects detected: {}", num_objects);
     println!("   Moving objects (filtered): {}", moving_objects.len());
 
@@ -541,7 +541,7 @@ fn computer_vision_applications() -> NdimageResult<()> {
     println!("Step 3: Document structure analysis");
     let layout_analysis = analyze_document_layout(&text_lines, &document_image)?;
 
-    println!("Results: Document analysis:");
+    println!("Results: Document, analysis: ");
     println!("   Text lines detected: {}", layout_analysis.num_text_lines);
     println!(
         "   Paragraphs identified: {}",
@@ -574,7 +574,7 @@ fn computer_vision_applications() -> NdimageResult<()> {
     println!("Step 3: Face validation using geometric constraints");
     let validated_faces = validate_face_candidates(&face_candidates, &portrait_image)?;
 
-    println!("Results: Face detection:");
+    println!("Results: Face, detection: ");
     println!("   Face candidates: {}", face_candidates.num_candidates);
     println!("   Validated faces: {}", validated_faces.len());
 
@@ -613,7 +613,7 @@ fn scientific_imaging_applications() -> NdimageResult<()> {
             .clone()
             .into_dimensionality::<IxDyn>()
             .unwrap();
-        let (distances, _) = distance_transform_edt(&mask_dyn, None, true, false)
+        let (distances_) = distance_transform_edt(&mask_dyn, None, true, false)
             .expect("Distance transform failed")?;
         distances.into_dimensionality::<ndarray::Ix2>().unwrap()
     };
@@ -638,7 +638,7 @@ fn scientific_imaging_applications() -> NdimageResult<()> {
     let size_std =
         (sizes.iter().map(|&s| (s - mean_size).powi(2)).sum::<f64>() / sizes.len() as f64).sqrt();
 
-    println!("Results: Particle analysis:");
+    println!("Results: Particle, analysis: ");
     println!("   Total particles: {}", valid_particles.len());
     println!(
         "   Mean diameter: {:.1} ± {:.1} pixels",
@@ -676,7 +676,7 @@ fn scientific_imaging_applications() -> NdimageResult<()> {
         .filter(|star| star.magnitude >= 15.0)
         .collect();
 
-    println!("Results: Astronomical catalog:");
+    println!("Results: Astronomical, catalog: ");
     println!("   Total stars detected: {}", star_catalog.len());
     println!("   Bright stars (mag < 15): {}", bright_stars.len());
     println!("   Faint stars (mag >= 15): {}", faint_stars.len());
@@ -816,9 +816,9 @@ struct LatticeInfo {
 // Helper function implementations (simplified for demonstration)
 
 #[allow(dead_code)]
-fn create_medical_scan_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_medical_scan_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Simulate tissue background
@@ -841,16 +841,16 @@ fn create_medical_scan_simulation(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn enhance_medical_contrast(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
-    let stats = compute_image_stats(image);
+fn enhance_medical_contrast(_image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
+    let stats = compute_image_stats(_image);
     let mean = stats.2;
-    Ok(image.mapv(|x| ((x - mean) * 1.5 + mean).clamp(0.0, 1.0)))
+    Ok(_image.mapv(|x| ((x - mean) * 1.5 + mean).clamp(0.0, 1.0)))
 }
 
 #[allow(dead_code)]
-fn create_angiogram_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_angiogram_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Create vessel-like structures
@@ -875,14 +875,14 @@ fn create_angiogram_simulation(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn skeletonize_vessels(vessel_mask: &Array2<u8>) -> NdimageResult<Array2<u8>> {
+fn skeletonize_vessels(_vessel_mask: &Array2<u8>) -> NdimageResult<Array2<u8>> {
     // Simplified skeletonization
-    Ok(vessel_mask.clone())
+    Ok(_vessel_mask.clone())
 }
 
 #[allow(dead_code)]
-fn analyze_vessel_network(skeleton: &Array2<u8>) -> NdimageResult<VesselStats> {
-    let total_length = skeleton.iter().sum::<u8>() as f64;
+fn analyze_vessel_network(_skeleton: &Array2<u8>) -> NdimageResult<VesselStats> {
+    let total_length = _skeleton.iter().sum::<u8>() as f64;
     Ok(VesselStats {
         total_length,
         branch_points: 15, // Simplified
@@ -891,9 +891,9 @@ fn analyze_vessel_network(skeleton: &Array2<u8>) -> NdimageResult<VesselStats> {
 }
 
 #[allow(dead_code)]
-fn create_microscopy_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_microscopy_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Create cell-like circular structures
@@ -918,15 +918,15 @@ fn create_microscopy_simulation(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn estimate_perimeter(prop: &crate::measurements::RegionProperties) -> f64 {
+fn estimate_perimeter(_prop: &crate::measurements::RegionProperties) -> f64 {
     // Simplified perimeter estimation
-    4.0 * (prop.area / std::f64::consts::PI).sqrt()
+    4.0 * (_prop.area / std::f64::consts::PI).sqrt()
 }
 
 #[allow(dead_code)]
-fn create_surface_inspection_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_surface_inspection_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Base surface with lighting gradient
@@ -949,9 +949,9 @@ fn create_surface_inspection_simulation(height: usize, width: usize) -> Array2<f
 }
 
 #[allow(dead_code)]
-fn create_part_measurement_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_part_measurement_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Create rectangular part
@@ -964,9 +964,9 @@ fn create_part_measurement_simulation(height: usize, width: usize) -> Array2<f64
 }
 
 #[allow(dead_code)]
-fn create_pcb_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_pcb_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // PCB background
@@ -990,12 +990,12 @@ fn create_pcb_simulation(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn detect_pcb_components(pcb_image: &Array2<f64>) -> NdimageResult<ComponentStats> {
+fn detect_pcb_components(_pcb_image: &Array2<f64>) -> NdimageResult<ComponentStats> {
     Ok(ComponentStats { num_components: 12 })
 }
 
 #[allow(dead_code)]
-fn detect_pcb_traces(pcb_image: &Array2<f64>) -> NdimageResult<TraceStats> {
+fn detect_pcb_traces(_pcb_image: &Array2<f64>) -> NdimageResult<TraceStats> {
     Ok(TraceStats {
         total_length: 850.0,
     })
@@ -1013,9 +1013,9 @@ fn analyze_pcb_defects(
 }
 
 #[allow(dead_code)]
-fn create_satellite_bands_simulation(height: usize, width: usize) -> (Array2<f64>, Array2<f64>) {
-    let red_band = Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_satellite_bands_simulation(_height: usize, width: usize) -> (Array2<f64>, Array2<f64>) {
+    let red_band = Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Vegetation areas have lower red reflectance
@@ -1028,8 +1028,8 @@ fn create_satellite_bands_simulation(height: usize, width: usize) -> (Array2<f64
         }
     });
 
-    let nir_band = Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+    let nir_band = Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Vegetation areas have higher NIR reflectance
@@ -1046,9 +1046,9 @@ fn create_satellite_bands_simulation(height: usize, width: usize) -> (Array2<f64
 }
 
 #[allow(dead_code)]
-fn create_multispectral_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_multispectral_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Water bodies have low reflectance
@@ -1063,9 +1063,9 @@ fn create_multispectral_simulation(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_cloudy_satellite_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_cloudy_satellite_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Base earth surface
@@ -1083,15 +1083,15 @@ fn create_cloudy_satellite_simulation(height: usize, width: usize) -> Array2<f64
 }
 
 #[allow(dead_code)]
-fn detect_cloud_shadows(image: &Array2<f64>, cloud_mask: &Array2<u8>) -> NdimageResult<Array2<u8>> {
+fn detect_cloud_shadows(_image: &Array2<f64>, cloud_mask: &Array2<u8>) -> NdimageResult<Array2<u8>> {
     // Simplified shadow detection
-    Ok(Array2::zeros(image.dim()))
+    Ok(Array2::zeros(_image.dim()))
 }
 
 #[allow(dead_code)]
-fn create_scene_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_scene_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Background scene
@@ -1110,9 +1110,9 @@ fn create_scene_simulation(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_document_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_document_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // White background
@@ -1162,8 +1162,8 @@ fn compute_local_edge_density(
 }
 
 #[allow(dead_code)]
-fn segment_text_lines(text_mask: &Array2<u8>) -> NdimageResult<Array2<u32>> {
-    label(&text_mask.view(), None).map(|(labeled, _)| labeled)
+fn segment_text_lines(_text_mask: &Array2<u8>) -> NdimageResult<Array2<u32>> {
+    label(&_text_mask.view(), None).map(|(labeled_)| labeled)
 }
 
 #[allow(dead_code)]
@@ -1180,9 +1180,9 @@ fn analyze_document_layout(
 }
 
 #[allow(dead_code)]
-fn create_portrait_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_portrait_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Face region (simplified)
@@ -1195,8 +1195,8 @@ fn create_portrait_simulation(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn detect_skin_regions(image: &Array2<f64>) -> NdimageResult<Array2<u8>> {
-    Ok(image.mapv(|x| if x > 0.5 && x < 0.8 { 1u8 } else { 0u8 }))
+fn detect_skin_regions(_image: &Array2<f64>) -> NdimageResult<Array2<u8>> {
+    Ok(_image.mapv(|x| if x > 0.5 && x < 0.8 { 1u8 } else { 0u8 }))
 }
 
 #[allow(dead_code)]
@@ -1220,9 +1220,9 @@ fn validate_face_candidates(
 }
 
 #[allow(dead_code)]
-fn create_particle_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_particle_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Create particles of various sizes
@@ -1246,9 +1246,9 @@ fn create_particle_simulation(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_astronomy_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_astronomy_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Dark sky background
@@ -1276,8 +1276,8 @@ fn create_astronomy_simulation(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn detect_local_maxima(image: &Array2<f64>, threshold: f64) -> NdimageResult<Array2<u8>> {
-    Ok(image.mapv(|x| if x > threshold { 1u8 } else { 0u8 }))
+fn detect_local_maxima(_image: &Array2<f64>, threshold: f64) -> NdimageResult<Array2<u8>> {
+    Ok(_image.mapv(|x| if x > threshold { 1u8 } else { 0u8 }))
 }
 
 #[allow(dead_code)]
@@ -1305,14 +1305,14 @@ fn perform_star_photometry(
 }
 
 #[allow(dead_code)]
-fn create_crystal_simulation(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
+fn create_crystal_simulation(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
         // Create periodic lattice pattern
         let period = 20.0;
         let lattice = ((i as f64 / period).sin() * (j as f64 / period).cos() + 1.0) / 2.0;
 
         // Add some defects
-        let defect = if i == height / 2 && j > width / 3 && j < 2 * width / 3 {
+        let defect = if i == _height / 2 && j > width / 3 && j < 2 * width / 3 {
             -0.3 // Line defect
         } else {
             0.0
@@ -1323,7 +1323,7 @@ fn create_crystal_simulation(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn detect_crystal_lattice(image: &Array2<f64>) -> NdimageResult<LatticeInfo> {
+fn detect_crystal_lattice(_image: &Array2<f64>) -> NdimageResult<LatticeInfo> {
     Ok(LatticeInfo {
         spacing: 20.0,
         angle: 0.0,
@@ -1350,14 +1350,14 @@ fn detect_crystal_defects(
 }
 
 #[allow(dead_code)]
-fn create_watershed_markers(distance_map: &Array2<f64>, threshold: f64) -> Array2<u32> {
-    let mut markers = Array2::zeros(distance_map.dim());
+fn create_watershed_markers(_distance_map: &Array2<f64>, threshold: f64) -> Array2<u32> {
+    let mut markers = Array2::zeros(_distance_map.dim());
     let mut label = 1u32;
 
-    let (height, width) = distance_map.dim();
+    let (height, width) = _distance_map.dim();
     for i in 1..height - 1 {
         for j in 1..width - 1 {
-            if distance_map[[i, j]] > threshold {
+            if _distance_map[[i, j]] > threshold {
                 markers[[i, j]] = label;
                 label += 1;
             }
@@ -1368,9 +1368,9 @@ fn create_watershed_markers(distance_map: &Array2<f64>, threshold: f64) -> Array
 }
 
 #[allow(dead_code)]
-fn compute_image_stats(image: &Array2<f64>) -> (f64, f64, f64) {
-    let min = image.fold(f64::INFINITY, |acc, &x| acc.min(x));
-    let max = image.fold(f64::NEG_INFINITY, |acc, &x| acc.max(x));
-    let mean = image.sum() / image.len() as f64;
+fn compute_image_stats(_image: &Array2<f64>) -> (f64, f64, f64) {
+    let min = _image.fold(f64::INFINITY, |acc, &x| acc.min(x));
+    let max = _image.fold(f64::NEG_INFINITY, |acc, &x| acc.max(x));
+    let mean = _image.sum() / _image.len() as f64;
     (min, max, mean)
 }

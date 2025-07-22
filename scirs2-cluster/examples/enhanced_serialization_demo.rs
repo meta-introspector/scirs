@@ -8,7 +8,7 @@
 //! Run with: cargo run --example enhanced_serialization_demo
 
 use ndarray::{Array1, Array2};
-use scirs2_cluster::{
+use scirs2__cluster::{
     hierarchy::linkage,
     hierarchy::{LinkageMethod, Metric},
     preprocess::standardize,
@@ -79,7 +79,7 @@ fn create_sample_data() -> Result<Array2<f64>, Box<dyn std::error::Error>> {
 
 /// Demonstrate unified clustering workflow management
 #[allow(dead_code)]
-fn demo_unified_workflow(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_unified_workflow(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Demo 1: Unified Clustering Workflow Management");
     println!("=================================================");
 
@@ -102,11 +102,11 @@ fn demo_unified_workflow(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
     workflow.config.max_history_length = 50;
     workflow.config.hyperparameters.insert(
         "n_clusters".to_string(),
-        serde_json::Value::Number(serde_json::Number::from(3)),
+        serde_json::Value::Number(serde, _json::Number::from(3)),
     );
 
     // Simulate K-means training with state updates
-    let mut current_centroids = initialize_centroids(data, 3)?;
+    let mut current_centroids = initialize_centroids(_data, 3)?;
 
     for iteration in 0..10 {
         // Update algorithm state
@@ -145,7 +145,7 @@ fn demo_unified_workflow(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
     }
 
     // Run actual K-means and save final model
-    let (final_centroids, labels) = kmeans(data.view(), 3, None, None, None, None)?;
+    let (final_centroids, labels) = kmeans(_data.view(), 3, None, None, None, None)?;
     let kmeans_model = KMeansModel::new(final_centroids, 3, 10, 42.5, Some(labels));
     workflow.set_model(&kmeans_model)?;
 
@@ -181,25 +181,25 @@ fn demo_unified_workflow(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
 
 /// Demonstrate enhanced dendrogram JSON export
 #[allow(dead_code)]
-fn demo_dendrogram_json_export(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_dendrogram_json_export(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("🌳 Demo 2: Enhanced Dendrogram JSON Export");
     println!("==========================================");
 
     // Perform hierarchical clustering
-    let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean)?;
+    let linkage_matrix = linkage(_data.view(), LinkageMethod::Ward, Metric::Euclidean)?;
     println!(
         "🔗 Generated linkage matrix: {} merges",
         linkage_matrix.nrows()
     );
 
     // Create hierarchical model with labels
-    let labels = (0..data.nrows())
+    let labels = (0.._data.nrows())
         .map(|i| format!("Sample_{}", i))
         .collect::<Vec<String>>();
 
     let hier_model = HierarchicalModel::new(
         linkage_matrix,
-        data.nrows(),
+        _data.nrows(),
         "ward".to_string(),
         Some(labels),
     );
@@ -216,7 +216,7 @@ fn demo_dendrogram_json_export(data: &Array2<f64>) -> Result<(), Box<dyn std::er
     println!("🎯 JSON dendrogram export successful!");
 
     // Parse and display structure information
-    let json_data: serde_json::Value = serde_json::from_str(&json_dendrogram)?;
+    let json_data: serde, _json: Value = serde_json::from_str(&json_dendrogram)?;
     println!(
         "   - Format: {}",
         json_data["type"].as_str().unwrap_or("unknown")
@@ -246,12 +246,12 @@ fn demo_dendrogram_json_export(data: &Array2<f64>) -> Result<(), Box<dyn std::er
 
 /// Demonstrate scikit-learn and SciPy compatibility
 #[allow(dead_code)]
-fn demo_sklearn_scipy_compatibility(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_sklearn_scipy_compatibility(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("🐍 Demo 3: Scikit-learn/SciPy Compatibility");
     println!("===========================================");
 
     // Create K-means model
-    let (centroids, labels) = kmeans(data.view(), 3, None, None, None, None)?;
+    let (centroids, labels) = kmeans(_data.view(), 3, None, None, None, None)?;
     let kmeans_model = KMeansModel::new(centroids.clone(), 3, 15, 38.2, Some(labels));
 
     println!("🤖 Created K-means model:");
@@ -291,7 +291,7 @@ fn demo_sklearn_scipy_compatibility(data: &Array2<f64>) -> Result<(), Box<dyn st
     }
 
     // Demonstrate enhanced metadata export
-    use scirs2_cluster::serialization::AdvancedExport;
+    use scirs2__cluster::serialization::AdvancedExport;
     println!("\n📋 Model Metadata:");
     let metadata = kmeans_model.get_metadata();
     println!("   - Model type: {}", metadata.model_type);
@@ -333,10 +333,10 @@ fn initialize_centroids(
 
 /// Create test scikit-learn compatible JSON data
 #[allow(dead_code)]
-fn create_sklearn_test_data(centroids: &Array2<f64>) -> String {
-    use serde_json::json;
+fn create_sklearn_test_data(_centroids: &Array2<f64>) -> String {
+    use serde__json::json;
 
-    let centroids_vec: Vec<Vec<f64>> = centroids
+    let _centroids_vec: Vec<Vec<f64>> = _centroids
         .rows()
         .into_iter()
         .map(|row| row.iter().cloned().collect())
@@ -344,7 +344,7 @@ fn create_sklearn_test_data(centroids: &Array2<f64>) -> String {
 
     let sklearn_data = json!({
         "cluster_centers_": centroids_vec,
-        "n_clusters": centroids.nrows(),
+        "n_clusters": _centroids.nrows(),
         "n_iter_": 12,
         "inertia_": 45.7,
         "model_type": "KMeans",

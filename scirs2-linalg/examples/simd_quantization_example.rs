@@ -62,7 +62,7 @@ fn main() {
     println!("Reference matvec time: {:?}", ref_time);
 
     // Test with 8-bit symmetric quantization for matrix and vector
-    let (_v_q, _v_params) = quantize_vector(&v.view(), 8, QuantizationMethod::Symmetric);
+    let (_v_q_v_params) = quantize_vector(&v.view(), 8, QuantizationMethod::Symmetric);
 
     let start = Instant::now();
     let r_q_simd = simd_quantized_matvec(&a_q, &a_params, &v.view()).unwrap();
@@ -87,10 +87,10 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn generate_random_matrix(rows: usize, cols: usize) -> Array2<f32> {
-    let mut matrix = Array2::zeros((rows, cols));
+fn generate_random_matrix(_rows: usize, cols: usize) -> Array2<f32> {
+    let mut matrix = Array2::zeros((_rows, cols));
 
-    for i in 0..rows {
+    for i in 0.._rows {
         for j in 0..cols {
             matrix[[i, j]] = rand::random::<f32>() * 2.0 - 1.0; // Values between -1 and 1
         }
@@ -100,10 +100,10 @@ fn generate_random_matrix(rows: usize, cols: usize) -> Array2<f32> {
 }
 
 #[allow(dead_code)]
-fn generate_random_vector(length: usize) -> Array1<f32> {
-    let mut vector = Array1::zeros(length);
+fn generate_random_vector(_length: usize) -> Array1<f32> {
+    let mut vector = Array1::zeros(_length);
 
-    for i in 0..length {
+    for i in 0.._length {
         vector[i] = rand::random::<f32>() * 2.0 - 1.0; // Values between -1 and 1
     }
 

@@ -1,5 +1,6 @@
 use ndarray::{array, Array1, Array2};
-use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+use scirs2__stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -121,12 +122,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to calculate mean of samples
 #[allow(dead_code)]
-fn calculate_mean(samples: &Array2<f64>, n_samples: usize) -> Array1<f64> {
-    let mut mean = Array1::zeros(samples.shape()[1]);
+fn calculate_mean(_samples: &Array2<f64>, n_samples: usize) -> Array1<f64> {
+    let mut mean = Array1::zeros(_samples.shape()[1]);
 
     for i in 0..n_samples {
-        for j in 0..samples.shape()[1] {
-            mean[j] += samples[[i, j]];
+        for j in 0.._samples.shape()[1] {
+            mean[j] += _samples[[i, j]];
         }
     }
 
@@ -135,19 +136,19 @@ fn calculate_mean(samples: &Array2<f64>, n_samples: usize) -> Array1<f64> {
 
 // Helper function to calculate median of samples
 #[allow(dead_code)]
-fn calculate_median(samples: &Array2<f64>, n_samples: usize) -> Array1<f64> {
-    let dim = samples.shape()[1];
+fn calculate_median(_samples: &Array2<f64>, n_samples: usize) -> Array1<f64> {
+    let dim = _samples.shape()[1];
     let mut median = Array1::zeros(dim);
 
     for j in 0..dim {
-        let mut values: Vec<f64> = samples.column(j).to_vec();
+        let mut values: Vec<f64> = _samples.column(j).to_vec();
         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         if n_samples % 2 == 0 {
-            // Even number of samples, take average of middle two
+            // Even number of _samples, take average of middle two
             median[j] = (values[n_samples / 2 - 1] + values[n_samples / 2]) / 2.0;
         } else {
-            // Odd number of samples, take middle value
+            // Odd number of _samples, take middle value
             median[j] = values[n_samples / 2];
         }
     }
@@ -162,13 +163,13 @@ fn calculate_covariance(
     mean: &Array1<f64>,
     n_samples: usize,
 ) -> Array2<f64> {
-    let dim = samples.shape()[1];
+    let dim = _samples.shape()[1];
     let mut cov = Array2::zeros((dim, dim));
 
     for i in 0..n_samples {
         for j in 0..dim {
             for k in 0..dim {
-                cov[[j, k]] += (samples[[i, j]] - mean[j]) * (samples[[i, k]] - mean[k]);
+                cov[[j, k]] += (_samples[[i, j]] - mean[j]) * (_samples[[i, k]] - mean[k]);
             }
         }
     }

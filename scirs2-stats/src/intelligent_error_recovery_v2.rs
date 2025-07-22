@@ -396,8 +396,7 @@ pub struct AdvancedIntelligentErrorRecovery<F> {
     recovery_history: Arc<Mutex<VecDeque<RecoverySession>>>,
     strategy_success_rates: Arc<Mutex<HashMap<String, f64>>>,
     error_patterns: Arc<Mutex<HashMap<String, ErrorClassification>>>,
-    adaptive_parameters: Arc<Mutex<HashMap<String, f64>>>,
-    _phantom: PhantomData<F>,
+    adaptive_parameters: Arc<Mutex<HashMap<String, f64>>>, _phantom: PhantomData<F>,
 }
 
 impl<F> AdvancedIntelligentErrorRecovery<F>
@@ -406,14 +405,13 @@ where
         + std::fmt::Display,
 {
     /// Create new advanced error recovery system
-    pub fn new(config: AdvancedErrorRecoveryConfig) -> Self {
+    pub fn new(_config: AdvancedErrorRecoveryConfig) -> Self {
         Self {
-            config,
+            _config,
             recovery_history: Arc::new(Mutex::new(VecDeque::new())),
             strategy_success_rates: Arc::new(Mutex::new(HashMap::new())),
             error_patterns: Arc::new(Mutex::new(HashMap::new())),
-            adaptive_parameters: Arc::new(Mutex::new(HashMap::new())),
-            _phantom: PhantomData,
+            adaptive_parameters: Arc::new(Mutex::new(HashMap::new())), _phantom: PhantomData,
         }
     }
 
@@ -748,8 +746,7 @@ where
         match (strategy, classification) {
             (RecoveryStrategy::NumericalStabilization { .. }, ErrorClassification::NumericalInstability { .. }) => 0.9,
             (RecoveryStrategy::DataPreprocessing { .. }, ErrorClassification::DataQuality { .. }) => 0.85,
-            (RecoveryStrategy::AlgorithmSwitch { .. }, ErrorClassification::ConvergenceFailure { .. }) => 0.8,
-            _ => 0.6,
+            (RecoveryStrategy::AlgorithmSwitch { .. }, ErrorClassification::ConvergenceFailure { .. }) => 0.8_ => 0.6,
         }
     }
 

@@ -17,7 +17,7 @@
 //! # Example
 //! ```
 //! use ndarray::Array1;
-//! use scirs2_signal::robust::{alpha_trimmed_filter, hampel_filter};
+//! use scirs2__signal::robust::{alpha_trimmed_filter, hampel_filter};
 //!
 //! // Create a test signal with outliers
 //! let signal = Array1::from_vec(vec![1.0, 1.2, 1.1, 10.0, 1.3, 1.2, -5.0, 1.1]);
@@ -30,8 +30,9 @@
 //! ```
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2};
+use ndarray::{Array1, Array2, s};
 
+#[allow(unused_imports)]
 /// Configuration for robust filtering algorithms
 #[derive(Debug, Clone)]
 pub struct RobustConfig {
@@ -88,7 +89,7 @@ pub enum EdgeMode {
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::robust::alpha_trimmed_filter;
+/// use scirs2__signal::robust::alpha_trimmed_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let filtered = alpha_trimmed_filter(&signal, 3, 0.2).unwrap();
@@ -101,7 +102,7 @@ pub fn alpha_trimmed_filter(
 ) -> SignalResult<Array1<f64>> {
     if window_size % 2 == 0 || window_size < 3 {
         return Err(SignalError::ValueError(
-            "Window size must be odd and >= 3".to_string(),
+            "Window _size must be odd and >= 3".to_string(),
         ));
     }
 
@@ -125,7 +126,7 @@ pub fn alpha_trimmed_filter(
 
     if keep_count == 0 {
         return Err(SignalError::ValueError(
-            "Alpha value too large for given window size".to_string(),
+            "Alpha value too large for given window _size".to_string(),
         ));
     }
 
@@ -185,7 +186,7 @@ pub fn alpha_trimmed_filter(
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::robust::hampel_filter;
+/// use scirs2__signal::robust::hampel_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let (filtered, outliers) = hampel_filter(&signal, 3, 3.0).unwrap();
@@ -198,7 +199,7 @@ pub fn hampel_filter(
 ) -> SignalResult<(Array1<f64>, Vec<usize>)> {
     if window_size % 2 == 0 || window_size < 3 {
         return Err(SignalError::ValueError(
-            "Window size must be odd and >= 3".to_string(),
+            "Window _size must be odd and >= 3".to_string(),
         ));
     }
 
@@ -294,7 +295,7 @@ pub fn hampel_filter(
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::robust::winsorize_filter;
+/// use scirs2__signal::robust::winsorize_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let filtered = winsorize_filter(&signal, 3, 10.0).unwrap();
@@ -307,7 +308,7 @@ pub fn winsorize_filter(
 ) -> SignalResult<Array1<f64>> {
     if window_size % 2 == 0 || window_size < 3 {
         return Err(SignalError::ValueError(
-            "Window size must be odd and >= 3".to_string(),
+            "Window _size must be odd and >= 3".to_string(),
         ));
     }
 
@@ -390,7 +391,7 @@ pub fn winsorize_filter(
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::robust::huber_filter;
+/// use scirs2__signal::robust::huber_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let filtered = huber_filter(&signal, 3, 1.35).unwrap();
@@ -403,7 +404,7 @@ pub fn huber_filter(
 ) -> SignalResult<Array1<f64>> {
     if window_size % 2 == 0 || window_size < 3 {
         return Err(SignalError::ValueError(
-            "Window size must be odd and >= 3".to_string(),
+            "Window _size must be odd and >= 3".to_string(),
         ));
     }
 

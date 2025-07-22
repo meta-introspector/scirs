@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2_stats::{brown_forsythe, levene};
+use scirs2__stats::{brown_forsythe, levene};
 
 #[allow(dead_code)]
 fn main() {
@@ -89,9 +89,9 @@ fn main() {
 
 // Simple variance calculation for the example
 #[allow(dead_code)]
-fn variance(data: &ndarray::Array1<f64>) -> f64 {
-    let n = data.len() as f64;
-    let mean = data.sum() / n;
-    let sum_squared_diff = data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>();
+fn variance(_data: &ndarray::Array1<f64>) -> f64 {
+    let n = _data.len() as f64;
+    let mean = _data.sum() / n;
+    let sum_squared_diff = _data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>();
     sum_squared_diff / (n - 1.0) // Sample variance (unbiased)
 }

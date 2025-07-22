@@ -40,10 +40,10 @@ pub enum ExtendedWindow {
 
 /// Generate an extended window function
 #[allow(dead_code)]
-pub fn get_extended_window(window: ExtendedWindow, n: usize) -> FFTResult<Array1<f64>> {
+pub fn get_extended_window(_window: ExtendedWindow, n: usize) -> FFTResult<Array1<f64>> {
     let mut w = Array1::zeros(n);
 
-    match window {
+    match _window {
         ExtendedWindow::Chebyshev { attenuation_db } => {
             generate_chebyshev_window(&mut w, attenuation_db)?;
         }
@@ -251,7 +251,7 @@ fn generate_taylor_window(
     let n = w.len();
     if n_sidelobes == 0 {
         return Err(FFTError::ValueError(
-            "Number of sidelobes must be positive".to_string(),
+            "Number of _sidelobes must be positive".to_string(),
         ));
     }
 

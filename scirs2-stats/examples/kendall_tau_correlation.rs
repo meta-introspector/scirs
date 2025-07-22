@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2_stats::{kendall_tau, kendalltau};
+use scirs2__stats::{kendall_tau, kendalltau};
 
 #[allow(dead_code)]
 fn main() {

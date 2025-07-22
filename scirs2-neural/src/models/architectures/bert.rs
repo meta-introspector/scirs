@@ -144,7 +144,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BertEmbeddings
         let embeddings = self.dropout.forward(&embeddings)?;
         Ok(embeddings)
     fn backward(
-        &self,
+        &mut self,
         _input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
@@ -273,15 +273,15 @@ pub struct BertModel<
     config: BertConfig,
     BertModel<F>
     /// Create a new BERT model
-    pub fn new(config: BertConfig) -> Result<Self> {
-        let embeddings = BertEmbeddings::new(&config)?;
-        let encoder = BertEncoder::new(&config)?;
-        let pooler = BertPooler::new(&config)?;
+    pub fn new(_config: BertConfig) -> Result<Self> {
+        let embeddings = BertEmbeddings::new(&_config)?;
+        let encoder = BertEncoder::new(&_config)?;
+        let pooler = BertPooler::new(&_config)?;
         Ok(Self {
             embeddings,
             encoder,
             pooler,
-            config,
+            _config,
         })
     /// Create a BERT-Base-Uncased model
     pub fn bert_base_uncased() -> Result<Self> {

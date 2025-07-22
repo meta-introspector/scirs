@@ -12,7 +12,7 @@
 //! - Computational challenges and numerical strategies
 //! - Physical applications in scattering and wave propagation
 
-use scirs2_special::{
+use scirs2__special::{
     obl_ang1, obl_cv, obl_cv_seq, obl_rad1, pro_ang1, pro_cv, pro_cv_seq, pro_rad1,
 };
 use std::f64::consts::PI;
@@ -196,7 +196,7 @@ fn demonstrate_spheroidal_functions() {
 
     for &xi in &xi_large {
         match pro_rad1(0, 0, c_test, xi) {
-            Ok((r_val, _)) => {
+            Ok((r_val_)) => {
                 println!("    R₀,₀⁽¹⁾({c_test},ξ={xi}) = {r_val:12.4e}");
             }
             Err(_) => {
@@ -233,7 +233,7 @@ fn compare_prolate_oblate() {
     let eta = 0.5;
 
     match (pro_ang1(0, 1, c, eta), obl_ang1(0, 1, c, eta)) {
-        (Ok((s_pro, _)), Ok((s_obl, _))) => {
+        (Ok((s_pro_)), Ok((s_obl_))) => {
             println!("    At η = {eta}, c = {c}:");
             println!("      Prolate S₀,₁({c},{eta}) = {s_pro:8.4}");
             println!("      Oblate  S₀,₁({c},{eta}) = {s_obl:8.4}");

@@ -47,12 +47,12 @@ fn parse_benchmark_results() -> Result<Vec<BenchmarkData>, Box<dyn Error>> {
 
 /// Create performance comparison plot
 #[allow(dead_code)]
-fn create_performance_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
+fn create_performance_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
-    // Group data by operation
+    // Group _data by operation
     let mut grouped: HashMap<String, Vec<&BenchmarkData>> = HashMap::new();
-    for item in data {
+    for item in _data {
         grouped
             .entry(item.operation.clone())
             .or_default()
@@ -96,12 +96,12 @@ fn create_performance_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>>
 
 /// Create memory usage plot
 #[allow(dead_code)]
-fn create_memory_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
+fn create_memory_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
-    // Group data by operation
+    // Group _data by operation
     let mut grouped: HashMap<String, Vec<&BenchmarkData>> = HashMap::new();
-    for item in data {
+    for item in _data {
         if item.memory_kb.is_some() {
             grouped
                 .entry(item.operation.clone())
@@ -147,12 +147,12 @@ fn create_memory_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
 
 /// Create accuracy comparison plot
 #[allow(dead_code)]
-fn create_accuracy_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
+fn create_accuracy_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
-    // Group data by operation
+    // Group _data by operation
     let mut grouped: HashMap<String, Vec<&BenchmarkData>> = HashMap::new();
-    for item in data {
+    for item in _data {
         if item.accuracy.is_some() {
             grouped
                 .entry(item.operation.clone())
@@ -198,7 +198,7 @@ fn create_accuracy_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
 
 /// Create comparison table
 #[allow(dead_code)]
-fn create_comparison_table(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
+fn create_comparison_table(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut html = String::from(
         r#"
 <!DOCTYPE html>
@@ -239,7 +239,7 @@ fn create_comparison_table(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>>
 "#,
     );
 
-    for item in data {
+    for item in _data {
         html.push_str(&format!(
             "<tr>
                 <td class='operation'>{}</td>

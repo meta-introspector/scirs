@@ -1,5 +1,5 @@
 use ndarray::{array, Array2};
-use scirs2_interpolate::{BivariateInterpolator, RectBivariateSpline};
+use scirs2__interpolate::{BivariateInterpolator, RectBivariateSpline};
 
 #[allow(dead_code)]
 fn main() {

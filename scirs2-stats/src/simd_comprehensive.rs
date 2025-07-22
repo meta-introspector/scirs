@@ -74,8 +74,7 @@ impl Default for AdvancedComprehensiveSimdConfig {
 
 /// Advanced-comprehensive SIMD processor
 pub struct AdvancedComprehensiveSimdProcessor<F> {
-    config: AdvancedComprehensiveSimdConfig,
-    _phantom: PhantomData<F>,
+    config: AdvancedComprehensiveSimdConfig_phantom: PhantomData<F>,
 }
 
 /// Comprehensive statistical result with all metrics
@@ -152,16 +151,14 @@ where
     /// Create new advanced-comprehensive SIMD processor
     pub fn new() -> Self {
         Self {
-            config: AdvancedComprehensiveSimdConfig::default(),
-            _phantom: PhantomData,
+            config: AdvancedComprehensiveSimdConfig::default(), _phantom: PhantomData,
         }
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: AdvancedComprehensiveSimdConfig) -> Self {
+    pub fn with_config(_config: AdvancedComprehensiveSimdConfig) -> Self {
         Self {
-            config,
-            _phantom: PhantomData,
+            _config_phantom: PhantomData,
         }
     }
 
@@ -430,7 +427,7 @@ where
     fn simd_compute_quartiles(&self, sorted_data: &Array1<F>) -> StatsResult<(F, F, F)> {
         let n = sorted_data.len();
         if n == 0 {
-            return Err(StatsError::InvalidArgument("Empty data".to_string()));
+            return Err(StatsError::InvalidArgument("Empty _data".to_string()));
         }
 
         let q1_idx = n / 4;
@@ -508,7 +505,7 @@ where
 
         if trim_count * 2 >= n {
             return Err(StatsError::InvalidArgument(
-                "Trim fraction too large".to_string(),
+                "Trim _fraction too large".to_string(),
             ));
         }
 
@@ -597,7 +594,7 @@ where
                 let chunk = data.slice(ndarray::s![start..end]);
                 self.compute_comprehensive_stats_simd(&chunk)
             })
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>_>>()?;
 
         // Combine partial results using SIMD operations
         self.combine_comprehensive_results(&partial_results)
@@ -619,7 +616,7 @@ where
     ) -> StatsResult<ComprehensiveStatsResult<F>> {
         if partial_results.is_empty() {
             return Err(StatsError::InvalidArgument(
-                "No results to combine".to_string(),
+                "No _results to combine".to_string(),
             ));
         }
 
@@ -679,7 +676,7 @@ where
 
     /// SIMD-optimized row means computation
     fn simd_row_means(&self, data: &ArrayView2<F>) -> StatsResult<Array1<F>> {
-        let (n_rows, _n_cols) = data.dim();
+        let (n_rows_n_cols) = data.dim();
         let mut row_means = Array1::zeros(n_rows);
 
         for i in 0..n_rows {
@@ -705,7 +702,7 @@ where
 
     /// SIMD-optimized row standard deviations
     fn simd_row_stds(&self, data: &ArrayView2<F>, row_means: &Array1<F>) -> StatsResult<Array1<F>> {
-        let (n_rows, _) = data.dim();
+        let (n_rows_) = data.dim();
         let mut row_stds = Array1::zeros(n_rows);
 
         for i in 0..n_rows {
@@ -1116,7 +1113,7 @@ mod tests {
         let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let (sum, sum_sq, _sum_cube, _sum_quad, min_val, max_val) =
+        let (sum, sum_sq_sum_cube_sum_quad, min_val, max_val) =
             processor.simd_single_pass_moments(&data.view()).unwrap();
 
         assert!((sum - 15.0).abs() < 1e-10);

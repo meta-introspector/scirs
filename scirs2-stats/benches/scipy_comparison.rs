@@ -6,15 +6,15 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array1;
 use rand::prelude::*;
-use rand_distr::StandardNormal;
-use scirs2_stats::{
+use rand__distr::StandardNormal;
+use scirs2__stats::{
     kurtosis, mean, pearson_r, quantile, skewness, spearman_r, std, variance, QuantileInterpolation,
 };
 
 /// Generate large datasets for throughput testing
 #[allow(dead_code)]
 fn generate_large_dataset(n: usize) -> Array1<f64> {
-    let mut rng = rng();
+    let mut rng = rand::rng();
     Array1::from_shape_fn(n, |_| StandardNormal.sample(&mut rng))
 }
 
@@ -112,11 +112,11 @@ fn bench_correlation_matrix(c: &mut Criterion) {
         (10, 1000), // 10 variables, 1000 observations
     ];
 
-    use scirs2_stats::corrcoef;
+    use scirs2__stats::corrcoef;
 
     for (n_vars, n_obs) in configs {
         // Generate random data matrix
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let data: Vec<Array1<f64>> = (0..n_vars)
             .map(|_| Array1::from_shape_fn(n_obs, |_| StandardNormal.sample(&mut rng)))
             .collect();

@@ -32,7 +32,7 @@ use crate::error::{Result, TimeSeriesError};
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_series::trends::{estimate_spline_trend, SplineTrendOptions, SplineType, KnotPlacementStrategy};
+/// use scirs2__series::trends::{estimate_spline_trend, SplineTrendOptions, SplineType, KnotPlacementStrategy};
 ///
 /// // Create a sample time series with a trend and noise
 /// let n = 100;
@@ -53,31 +53,31 @@ use crate::error::{Result, TimeSeriesError};
 /// assert_eq!(trend.len(), ts.len());
 /// ```
 #[allow(dead_code)]
-pub fn estimate_spline_trend<F>(ts: &Array1<F>, options: &SplineTrendOptions) -> Result<Array1<F>>
+pub fn estimate_spline_trend<F>(_ts: &Array1<F>, options: &SplineTrendOptions) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if ts.len() < 4 {
+    if _ts.len() < 4 {
         return Err(TimeSeriesError::InsufficientData {
             message: "Time series too short for spline trend estimation".to_string(),
             required: 4,
-            actual: ts.len(),
+            actual: _ts.len(),
         });
     }
 
     // Generate knot positions based on the selected strategy
     let knots = match options.knot_placement {
-        KnotPlacementStrategy::Uniform => generate_uniform_knots(ts.len(), options.num_knots),
-        KnotPlacementStrategy::Quantile => generate_quantile_knots(ts.len(), options.num_knots),
+        KnotPlacementStrategy::Uniform => generate_uniform_knots(_ts.len(), options.num_knots),
+        KnotPlacementStrategy::Quantile => generate_quantile_knots(_ts.len(), options.num_knots),
         KnotPlacementStrategy::Custom => {
             if let Some(positions) = &options.knot_positions {
                 // Validate custom knot positions
                 for &pos in positions {
-                    if pos >= ts.len() {
+                    if pos >= _ts.len() {
                         return Err(TimeSeriesError::InvalidInput(format!(
                             "Custom knot position {} is out of bounds (time series length: {})",
                             pos,
-                            ts.len()
+                            _ts.len()
                         )));
                     }
                 }
@@ -99,11 +99,11 @@ where
 
     // Fit the appropriate spline type
     match options.spline_type {
-        SplineType::Cubic => fit_cubic_spline(ts, &knots, options.extrapolate),
-        SplineType::NaturalCubic => fit_natural_cubic_spline(ts, &knots, options.extrapolate),
-        SplineType::BSpline => fit_bspline(ts, &knots, options.degree, options.extrapolate),
+        SplineType::Cubic => fit_cubic_spline(_ts, &knots, options.extrapolate),
+        SplineType::NaturalCubic => fit_natural_cubic_spline(_ts, &knots, options.extrapolate),
+        SplineType::BSpline => fit_bspline(_ts, &knots, options.degree, options.extrapolate),
         SplineType::PSpline => fit_pspline(
-            ts,
+            _ts,
             &knots,
             options.degree,
             F::from_f64(options.lambda).unwrap(),
@@ -115,46 +115,46 @@ where
 /// Generates uniformly spaced knot positions
 #[allow(dead_code)]
 fn generate_uniform_knots(n: usize, num_knots: usize) -> Vec<usize> {
-    let mut knots = Vec::with_capacity(num_knots);
+    let mut _knots = Vec::with_capacity(num_knots);
 
     // Ensure first and last points are included
-    knots.push(0);
+    _knots.push(0);
 
     if num_knots > 2 {
         let step = (n - 1) as f64 / (num_knots - 1) as f64;
         for i in 1..(num_knots - 1) {
             let pos = (i as f64 * step).round() as usize;
-            knots.push(pos);
+            _knots.push(pos);
         }
     }
 
-    knots.push(n - 1);
-    knots
+    _knots.push(n - 1);
+    _knots
 }
 
 /// Generates knots at quantile positions of the data
 #[allow(dead_code)]
 fn generate_quantile_knots(n: usize, num_knots: usize) -> Vec<usize> {
-    let mut knots = Vec::with_capacity(num_knots);
+    let mut _knots = Vec::with_capacity(num_knots);
 
     // Ensure first and last points are included
-    knots.push(0);
+    _knots.push(0);
 
     if num_knots > 2 {
         for i in 1..(num_knots - 1) {
             let quantile = i as f64 / (num_knots - 1) as f64;
             let pos = (quantile * (n - 1) as f64).round() as usize;
-            knots.push(pos);
+            _knots.push(pos);
         }
     }
 
-    knots.push(n - 1);
-    knots
+    _knots.push(n - 1);
+    _knots
 }
 
 /// Fits a cubic spline to the time series data
 #[allow(dead_code)]
-fn fit_cubic_spline<F>(ts: &Array1<F>, knots: &[usize], extrapolate: bool) -> Result<Array1<F>>
+fn fit_cubic_spline<F>(_ts: &Array1<F>, knots: &[usize], extrapolate: bool) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -164,7 +164,7 @@ where
         ));
     }
 
-    let n = ts.len();
+    let n = _ts.len();
     let mut result = Array1::<F>::zeros(n);
 
     // For cubic spline, we solve a tridiagonal system to find the second derivatives
@@ -183,9 +183,9 @@ where
         a[[i, i + 1]] = h_i / F::from_f64(6.0).unwrap();
 
         // Right-hand side
-        let f_i_minus_1 = ts[knots[i - 1]];
-        let f_i = ts[knots[i]];
-        let f_i_plus_1 = ts[knots[i + 1]];
+        let f_i_minus_1 = _ts[knots[i - 1]];
+        let f_i = _ts[knots[i]];
+        let f_i_plus_1 = _ts[knots[i + 1]];
 
         let rhs = (f_i_plus_1 - f_i) / h_i - (f_i - f_i_minus_1) / h_i_minus_1;
         b.push(rhs);
@@ -207,8 +207,8 @@ where
         let x_right = knots[i + 1];
         let h = F::from_usize(x_right - x_left).unwrap();
 
-        let y_left = ts[x_left];
-        let y_right = ts[x_right];
+        let y_left = _ts[x_left];
+        let y_right = _ts[x_right];
 
         let d2_left = second_derivs[i];
         let d2_right = second_derivs[i + 1];
@@ -234,7 +234,7 @@ where
         let x_0 = knots[0];
         let x_1 = knots[1];
         let h = F::from_usize(x_1 - x_0).unwrap();
-        let _slope_left = (ts[x_1] - ts[x_0]) / h
+        let _slope_left = (_ts[x_1] - _ts[x_0]) / h
             - h * (F::from_f64(2.0).unwrap() * second_derivs[0] + second_derivs[1])
                 / F::from_f64(6.0).unwrap();
 
@@ -242,7 +242,7 @@ where
         let x_n_minus_1 = knots[num_knots - 2];
         let x_n = knots[num_knots - 1];
         let h = F::from_usize(x_n - x_n_minus_1).unwrap();
-        let _slope_right = (ts[x_n] - ts[x_n_minus_1]) / h
+        let _slope_right = (_ts[x_n] - _ts[x_n_minus_1]) / h
             + h * (second_derivs[num_knots - 2]
                 + F::from_f64(2.0).unwrap() * second_derivs[num_knots - 1])
                 / F::from_f64(6.0).unwrap();
@@ -257,15 +257,14 @@ where
 #[allow(dead_code)]
 fn fit_natural_cubic_spline<F>(
     ts: &Array1<F>,
-    knots: &[usize],
-    _extrapolate: bool,
+    knots: &[usize], _extrapolate: bool,
 ) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
     // Natural cubic spline is the same as cubic spline but with second derivatives
     // at the endpoints set to zero, which is already handled in fit_cubic_spline
-    fit_cubic_spline(ts, knots, _extrapolate)
+    fit_cubic_spline(ts, knots_extrapolate)
 }
 
 /// Fits a B-spline to the time series data
@@ -273,8 +272,7 @@ where
 fn fit_bspline<F>(
     ts: &Array1<F>,
     knots: &[usize],
-    degree: usize,
-    _extrapolate: bool,
+    degree: usize_extrapolate: bool,
 ) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -311,8 +309,7 @@ fn fit_pspline<F>(
     ts: &Array1<F>,
     knots: &[usize],
     degree: usize,
-    lambda: F,
-    _extrapolate: bool,
+    lambda: F_extrapolate: bool,
 ) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -345,17 +342,17 @@ where
 
 /// Creates a B-spline basis matrix
 #[allow(dead_code)]
-fn create_bspline_basis<F>(x_values: Vec<F>, knots: &[usize], degree: usize) -> Result<Array2<F>>
+fn create_bspline_basis<F>(_x_values: Vec<F>, knots: &[usize], degree: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = x_values.len();
+    let n = _x_values.len();
 
     // For a B-spline of degree p with n knots, we have n+p-1 basis functions
     let num_basis = knots.len() + degree - 1;
     let mut basis = Array2::<F>::zeros((n, num_basis));
 
-    // Convert knot indices to float x values
+    // Convert knot indices to float x _values
     let mut augmented_knots = Vec::with_capacity(knots.len() + 2 * degree);
 
     // Add p knots at the beginning and end for proper boundary behavior
@@ -424,12 +421,12 @@ where
 
 /// Solves a linear system for spline coefficients
 #[allow(dead_code)]
-fn solve_spline_system<F>(basis: &Array2<F>, ts: &Array1<F>) -> Result<Vec<F>>
+fn solve_spline_system<F>(_basis: &Array2<F>, ts: &Array1<F>) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
     let n = ts.len();
-    let p = basis.shape()[1];
+    let p = _basis.shape()[1];
 
     // Compute B'B
     let mut btb = Array2::<F>::zeros((p, p));
@@ -437,7 +434,7 @@ where
         for j in 0..p {
             let mut sum = F::zero();
             for k in 0..n {
-                sum = sum + basis[[k, i]] * basis[[k, j]];
+                sum = sum + _basis[[k, i]] * _basis[[k, j]];
             }
             btb[[i, j]] = sum;
         }
@@ -448,7 +445,7 @@ where
     for i in 0..p {
         let mut sum = F::zero();
         for k in 0..n {
-            sum = sum + basis[[k, i]] * ts[k];
+            sum = sum + _basis[[k, i]] * ts[k];
         }
         bty.push(sum);
     }
@@ -459,12 +456,12 @@ where
 
 /// Solves a regularized linear system for penalized spline coefficients
 #[allow(dead_code)]
-fn solve_regularized_system<F>(basis: Array2<F>, ts: &Array1<F>, lambda: F) -> Result<Vec<F>>
+fn solve_regularized_system<F>(_basis: Array2<F>, ts: &Array1<F>, lambda: F) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
     let n = ts.len();
-    let p = basis.shape()[1];
+    let p = _basis.shape()[1];
 
     // Compute B'B
     let mut btb = Array2::<F>::zeros((p, p));
@@ -472,7 +469,7 @@ where
         for j in 0..p {
             let mut sum = F::zero();
             for k in 0..n {
-                sum = sum + basis[[k, i]] * basis[[k, j]];
+                sum = sum + _basis[[k, i]] * _basis[[k, j]];
             }
             btb[[i, j]] = sum;
         }
@@ -510,7 +507,7 @@ where
     for i in 0..p {
         let mut sum = F::zero();
         for k in 0..n {
-            sum = sum + basis[[k, i]] * ts[k];
+            sum = sum + _basis[[k, i]] * ts[k];
         }
         bty.push(sum);
     }
@@ -616,12 +613,12 @@ where
     F: Float + FromPrimitive + Debug + 'static,
 {
     // First, compute the main trend estimate
-    let trend = estimate_spline_trend(ts, options)?;
+    let trend = estimate_spline_trend(ts_options)?;
 
     // Then compute confidence intervals
     let (lower, upper) =
         super::confidence::compute_trend_confidence_interval(ts, &trend, ci_options, |data| {
-            estimate_spline_trend(data, options)
+            estimate_spline_trend(data_options)
         })?;
 
     Ok(TrendWithConfidenceInterval {

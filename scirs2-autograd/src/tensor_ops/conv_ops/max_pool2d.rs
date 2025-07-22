@@ -165,7 +165,7 @@ impl_max_pool_grad!(f64, max_pool_grad_f64);
 impl_max_pool_grad_grad!(f32, max_pool_grad_grad_f32);
 impl_max_pool_grad_grad!(f64, max_pool_grad_grad_f64);
 
-impl<T: Float> crate::op::Op<T> for MaxPool2D {
+impl<T: Float>, crate::op::Op<T> for MaxPool2D {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let x_shape = x.shape();
@@ -244,7 +244,7 @@ impl<T: Float> crate::op::Op<T> for MaxPool2D {
     }
 }
 
-impl<T: Float> crate::op::Op<T> for MaxPool2DGrad {
+impl<T: Float>, crate::op::Op<T> for MaxPool2DGrad {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let gy = &ctx.input(0);
         let argmax = &ctx.input(1);
@@ -296,7 +296,7 @@ impl<T: Float> crate::op::Op<T> for MaxPool2DGrad {
     }
 }
 
-impl<T: Float> crate::op::Op<T> for MaxPool2DGradGrad {
+impl<T: Float>, crate::op::Op<T> for MaxPool2DGradGrad {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let ggx = &ctx.input(0);
         let x_shape = ggx.shape();

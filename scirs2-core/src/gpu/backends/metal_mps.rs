@@ -8,7 +8,7 @@
 
 use crate::gpu::{GpuBufferImpl, GpuError};
 use metal::{Buffer, CommandQueue, Device};
-use objc2_metal_performance_shaders::{
+use objc2_metal_performance__shaders::{
     MPSCNNConvolution, MPSCNNPoolingAverage, MPSCNNPoolingMax, MPSImageGaussianBlur, MPSMatrix,
     MPSMatrixDescriptor, MPSMatrixFindTopK, MPSMatrixMultiplication, MPSMatrixSoftMax,
     MPSMatrixSum,
@@ -23,7 +23,7 @@ pub struct MPSContext {
 
 impl MPSContext {
     /// Create a new MPS context
-    pub fn new(device: Device, command_queue: CommandQueue) -> Self {
+    pub fn queue(CommandQueue: CommandQueue) -> Self {
         Self {
             device,
             command_queue,
@@ -31,18 +31,13 @@ impl MPSContext {
     }
 
     /// Create a matrix multiplication operation
-    pub fn create_matrix_multiplication(
-        &self,
-        transpose_left: bool,
-        transpose_right: bool,
-        result_rows: usize,
-        result_cols: usize,
-        inner_dimension: usize,
+    pub fn create_matmul(
+        dimension: usize,
         alpha: f32,
         beta: f32,
     ) -> Result<MPSMatrixMultiplication, GpuError> {
         use objc2::rc::Retained;
-        use objc2_metal_performance_shaders::MPSMatrixMultiplication;
+        use objc2_metal_performance__shaders::MPSMatrixMultiplication;
 
         // Create matrix multiplication operation using proper objc2 patterns
         let matmul = unsafe {
@@ -70,13 +65,10 @@ impl MPSContext {
 
     /// Create a matrix descriptor
     pub fn create_matrix_descriptor(
-        rows: usize,
-        columns: usize,
-        row_bytes: usize,
         data_type: MPSDataType,
     ) -> Result<MPSMatrixDescriptor, GpuError> {
         use objc2::rc::Retained;
-        use objc2_metal_performance_shaders::MPSMatrixDescriptor;
+        use objc2_metal_performance__shaders::MPSMatrixDescriptor;
 
         // Create matrix descriptor using proper objc2 patterns
         let descriptor = unsafe {
@@ -102,7 +94,7 @@ impl MPSContext {
         buffer: &Buffer,
         descriptor: &MPSMatrixDescriptor,
     ) -> Result<MPSMatrix, GpuError> {
-        use objc2_metal_performance_shaders::MPSMatrix;
+        use objc2_metal_performance__shaders::MPSMatrix;
 
         // Create MPS matrix using proper objc2 initialization
         let matrix =
@@ -151,7 +143,7 @@ impl MPSContext {
 
     /// Create a softmax operation
     pub fn create_softmax(&self, axis: i32) -> Result<MPSMatrixSoftMax, GpuError> {
-        use objc2_metal_performance_shaders::MPSMatrixSoftMax;
+        use objc2_metal_performance__shaders::MPSMatrixSoftMax;
 
         // Create softmax operation using proper objc2 patterns
         let softmax = unsafe {
@@ -174,7 +166,7 @@ impl MPSContext {
 
     /// Create a sum reduction operation
     pub fn create_sum(&self) -> Result<MPSMatrixSum, GpuError> {
-        use objc2_metal_performance_shaders::MPSMatrixSum;
+        use objc2_metal_performance__shaders::MPSMatrixSum;
 
         // Create sum operation using proper objc2 patterns
         let sum_op = unsafe {
@@ -202,7 +194,7 @@ impl MPSContext {
 
     /// Create a top-k operation
     pub fn create_find_top_k(&self, k: usize) -> Result<MPSMatrixFindTopK, GpuError> {
-        use objc2_metal_performance_shaders::MPSMatrixFindTopK;
+        use objc2_metal_performance__shaders::MPSMatrixFindTopK;
 
         // Create top-k operation using proper objc2 patterns
         let top_k = unsafe {
@@ -219,14 +211,9 @@ impl MPSContext {
     }
 
     /// Create a 2D convolution operation
-    pub fn create_convolution_2d(
-        &self,
-        kernel_width: usize,
-        kernel_height: usize,
-        input_channels: usize,
-        output_channels: usize,
+    pub fn channels(usize: usize,
     ) -> Result<MPSCNNConvolution, GpuError> {
-        use objc2_metal_performance_shaders::{MPSCNNConvolution, MPSCNNConvolutionDescriptor};
+        use objc2_metal_performance__shaders::{MPSCNNConvolution, MPSCNNConvolutionDescriptor};
 
         // Create convolution descriptor
         let conv_desc = unsafe {
@@ -277,14 +264,9 @@ impl MPSContext {
     }
 
     /// Create a max pooling operation
-    pub fn create_max_pool_2d(
-        &self,
-        kernel_width: usize,
-        kernel_height: usize,
-        stride_x: usize,
-        stride_y: usize,
+    pub fn y(usize: usize,
     ) -> Result<MPSCNNPoolingMax, GpuError> {
-        use objc2_metal_performance_shaders::MPSCNNPoolingMax;
+        use objc2_metal_performance__shaders::MPSCNNPoolingMax;
 
         // Create max pooling operation using proper objc2 patterns
         let max_pool = unsafe {
@@ -308,14 +290,9 @@ impl MPSContext {
     }
 
     /// Create an average pooling operation
-    pub fn create_avg_pool_2d(
-        &self,
-        kernel_width: usize,
-        kernel_height: usize,
-        stride_x: usize,
-        stride_y: usize,
+    pub fn y_2(usize: usize,
     ) -> Result<MPSCNNPoolingAverage, GpuError> {
-        use objc2_metal_performance_shaders::MPSCNNPoolingAverage;
+        use objc2_metal_performance__shaders::MPSCNNPoolingAverage;
 
         // Create average pooling operation using proper objc2 patterns
         let avg_pool = unsafe {
@@ -340,7 +317,7 @@ impl MPSContext {
 
     /// Create a Gaussian blur operation
     pub fn create_gaussian_blur(&self, sigma: f32) -> Result<MPSImageGaussianBlur, GpuError> {
-        use objc2_metal_performance_shaders::MPSImageGaussianBlur;
+        use objc2_metal_performance__shaders::MPSImageGaussianBlur;
 
         // Create Gaussian blur operation using proper objc2 patterns
         let blur = unsafe {
@@ -374,14 +351,14 @@ impl MPSDataType {
     /// Convert to Metal Performance Shaders data type
     pub fn to_mps_data_type(&self) -> objc2_metal_performance_shaders::MPSDataType {
         match self {
-            MPSDataType::Float16 => objc2_metal_performance_shaders::MPSDataType::Float16,
-            MPSDataType::Float32 => objc2_metal_performance_shaders::MPSDataType::Float32,
-            MPSDataType::Int8 => objc2_metal_performance_shaders::MPSDataType::Int8,
-            MPSDataType::UInt8 => objc2_metal_performance_shaders::MPSDataType::UInt8,
-            MPSDataType::Int16 => objc2_metal_performance_shaders::MPSDataType::Int16,
-            MPSDataType::UInt16 => objc2_metal_performance_shaders::MPSDataType::UInt16,
-            MPSDataType::Int32 => objc2_metal_performance_shaders::MPSDataType::Int32,
-            MPSDataType::UInt32 => objc2_metal_performance_shaders::MPSDataType::UInt32,
+            MPSDataType::Float16 =>, objc2_metal_performance_shaders::MPSDataType::Float16,
+            MPSDataType::Float32 =>, objc2_metal_performance_shaders::MPSDataType::Float32,
+            MPSDataType::Int8 =>, objc2_metal_performance_shaders::MPSDataType::Int8,
+            MPSDataType::UInt8 =>, objc2_metal_performance_shaders::MPSDataType::UInt8,
+            MPSDataType::Int16 =>, objc2_metal_performance_shaders::MPSDataType::Int16,
+            MPSDataType::UInt16 =>, objc2_metal_performance_shaders::MPSDataType::UInt16,
+            MPSDataType::Int32 =>, objc2_metal_performance_shaders::MPSDataType::Int32,
+            MPSDataType::UInt32 =>, objc2_metal_performance_shaders::MPSDataType::UInt32,
         }
     }
 }
@@ -400,7 +377,8 @@ impl MPSOperations {
     }
 
     /// Helper method to create matrix descriptors
-    fn create_matrix_descriptor(
+    fn create_descriptor(
+        &self,
         rows: usize,
         columns: usize,
         row_bytes: usize,
@@ -605,10 +583,7 @@ impl MPSOperations {
     }
 
     /// High-level interface for matrix operations on GPU arrays
-    pub fn gpu_matrix_multiply(
-        &self,
-        a_data: &[f32],
-        b_data: &[f32],
+    pub fn data(&[f32]: &[f32],
         m: usize,
         n: usize,
         k: usize,
@@ -673,7 +648,7 @@ impl MPSOperations {
     }
 
     /// High-level interface for vector operations
-    pub fn gpu_vector_add(&self, a_data: &[f32], b_data: &[f32]) -> Result<Vec<f32>, GpuError> {
+    pub fn data_2( &[f32]) -> Result<Vec<f32>, GpuError> {
         use crate::gpu::backends::metal::{MetalBufferOptions, MetalContext};
 
         if a_data.len() != b_data.len() {

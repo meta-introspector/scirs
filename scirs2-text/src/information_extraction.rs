@@ -5,7 +5,7 @@
 
 use crate::error::Result;
 use crate::tokenize::{Tokenizer, WordTokenizer};
-use lazy_static::lazy_static;
+use lazy__static::lazy_static;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
@@ -980,8 +980,7 @@ impl ConfidenceScorer {
         // Pattern match confidence (based on entity type)
         let pattern_score = match entity.entity_type {
             EntityType::Email | EntityType::Url | EntityType::Phone => 1.0,
-            EntityType::Date | EntityType::Time | EntityType::Money | EntityType::Percentage => 0.9,
-            _ => 0.7,
+            EntityType::Date | EntityType::Time | EntityType::Money | EntityType::Percentage => 0.9_ => 0.7,
         };
         features.insert("pattern_match".to_string(), pattern_score);
 
@@ -1033,8 +1032,7 @@ impl ConfidenceScorer {
             }
             EntityType::Location => vec!["in", "at", "from", "to", "near", "City", "State"],
             EntityType::Money => vec!["cost", "price", "pay", "budget", "revenue", "profit"],
-            EntityType::Date => vec!["on", "in", "during", "until", "since", "when"],
-            _ => vec![],
+            EntityType::Date => vec!["on", "in", "during", "until", "since", "when"]_ => vec![],
         };
 
         let matches = keywords
@@ -1282,7 +1280,7 @@ impl DocumentInformationExtractor {
         relation_types
             .into_iter()
             .max_by_key(|(_, count)| *count)
-            .map(|(rel_type, _)| rel_type)
+            .map(|(rel_type_)| rel_type)
             .unwrap_or_else(|| "unknown".to_string())
     }
 
@@ -1625,7 +1623,7 @@ mod tests {
         let phrases = extractor.extract(text, &tokenizer).unwrap();
 
         assert!(!phrases.is_empty());
-        assert!(phrases.iter().any(|(p, _)| p.contains("machine learning")));
+        assert!(phrases.iter().any(|(p_)| p.contains("machine learning")));
     }
 
     #[test]

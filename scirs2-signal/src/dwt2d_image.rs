@@ -9,10 +9,10 @@
 //! Basic image denoising:
 //!
 //! ```
-//! use ndarray::{Array2, Array};
-//! use scirs2_signal::dwt::Wavelet;
-//! use scirs2_signal::dwt2d::wavedec2;
-//! use scirs2_signal::dwt2d_image::{denoise_image, DenoisingMethod};
+//! use ndarray::{Array, Array2};
+//! use scirs2__signal::dwt::Wavelet;
+//! use scirs2__signal::dwt2d::wavedec2;
+//! use scirs2__signal::dwt2d_image::{denoise_image, DenoisingMethod};
 //!
 //! // Create a simple noisy image (8x8)
 //! let mut image = Array2::zeros((8, 8));
@@ -32,11 +32,12 @@
 //! ```
 
 use crate::dwt::Wavelet;
-use crate::dwt2d::{wavedec2, waverec2, Dwt2dResult, ThresholdMethod};
+use crate::dwt2d::{Dwt2dResult, ThresholdMethod, wavedec2, waverec2};
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
 use std::f64;
 
+#[allow(unused_imports)]
 /// Denoising methods for wavelet-based image denoising
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DenoisingMethod {
@@ -79,8 +80,8 @@ pub enum DenoisingMethod {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::dwt::Wavelet;
-/// use scirs2_signal::dwt2d_image::{denoise_image, DenoisingMethod};
+/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2__signal::dwt2d_image::{denoise_image, DenoisingMethod};
 ///
 /// // Create a noisy image (32x32) - larger to avoid overflow issues
 /// let mut image = Array2::from_elem((32, 32), 0.0);
@@ -178,11 +179,11 @@ where
 
     // Convert denoising method to threshold method
     let threshold_method = match method {
-        DenoisingMethod::Hard => ThresholdMethod::Hard,
-        DenoisingMethod::Soft => ThresholdMethod::Soft,
-        DenoisingMethod::Garrote => ThresholdMethod::Garrote,
-        DenoisingMethod::VisuShrink => ThresholdMethod::Soft, // VisuShrink uses soft thresholding
-        DenoisingMethod::BayesShrink => ThresholdMethod::Soft, // BayesShrink uses soft thresholding
+        DenoisingMethod::Hard =>, ThresholdMethod::Hard,
+        DenoisingMethod::Soft =>, ThresholdMethod::Soft,
+        DenoisingMethod::Garrote =>, ThresholdMethod::Garrote,
+        DenoisingMethod::VisuShrink =>, ThresholdMethod::Soft, // VisuShrink uses soft thresholding
+        DenoisingMethod::BayesShrink =>, ThresholdMethod::Soft, // BayesShrink uses soft thresholding
     };
 
     // Apply thresholding to coefficients
@@ -213,8 +214,8 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::dwt::Wavelet;
-/// use scirs2_signal::dwt2d_image::detect_edges;
+/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2__signal::dwt2d_image::detect_edges;
 ///
 /// // Create a simple test image with a sharp edge
 /// let mut image = Array2::from_elem((8, 8), 0.0);
@@ -285,8 +286,8 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::dwt::Wavelet;
-/// use scirs2_signal::dwt2d_image::compress_image;
+/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2__signal::dwt2d_image::compress_image;
 ///
 /// // Create a test image
 /// let mut image = Array2::from_elem((16, 16), 0.0);
@@ -316,7 +317,7 @@ where
 {
     if !(0.0..=1.0).contains(&compression_ratio) {
         return Err(SignalError::ValueError(
-            "Compression ratio must be between 0.0 and 1.0".to_string(),
+            "Compression _ratio must be between 0.0 and 1.0".to_string(),
         ));
     }
 
@@ -336,26 +337,26 @@ where
     }
 
     // Count non-zero coefficients before compression
-    let (original_nonzeros, _) = count_nonzeros_multilevel(&coeffs, true);
+    let (original_nonzeros_) = count_nonzeros_multilevel(&coeffs, true);
 
-    // Calculate threshold to achieve target compression ratio
+    // Calculate threshold to achieve target compression _ratio
     if compression_ratio > 0.0 {
         // Get all coefficient values
         let mut all_coeffs = Vec::with_capacity(total_coeffs);
         for level in &coeffs {
             // Skip approximation coefficients at the coarsest level
             if level != coeffs.first().unwrap() {
-                all_coeffs.extend(level.approx.iter().map(|&x| x.abs()));
+                all_coeffs.extend(level.approx.iter().map(|&x: &f64| x.abs()));
             }
-            all_coeffs.extend(level.detail_h.iter().map(|&x| x.abs()));
-            all_coeffs.extend(level.detail_v.iter().map(|&x| x.abs()));
-            all_coeffs.extend(level.detail_d.iter().map(|&x| x.abs()));
+            all_coeffs.extend(level.detail_h.iter().map(|&x: &f64| x.abs()));
+            all_coeffs.extend(level.detail_v.iter().map(|&x: &f64| x.abs()));
+            all_coeffs.extend(level.detail_d.iter().map(|&x: &f64| x.abs()));
         }
 
         // Sort coefficients
         all_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Find threshold that gives desired compression ratio
+        // Find threshold that gives desired compression _ratio
         let threshold_idx = (all_coeffs.len() as f32 * compression_ratio) as usize;
         if threshold_idx < all_coeffs.len() {
             let threshold = all_coeffs[threshold_idx];
@@ -373,9 +374,9 @@ where
     }
 
     // Count non-zero coefficients after compression
-    let (compressed_nonzeros, _) = count_nonzeros_multilevel(&coeffs, true);
+    let (compressed_nonzeros_) = count_nonzeros_multilevel(&coeffs, true);
 
-    // Calculate actual compression ratio achieved
+    // Calculate actual compression _ratio achieved
     let actual_ratio = if original_nonzeros > 0 {
         1.0 - (compressed_nonzeros as f32 / original_nonzeros as f32)
     } else {
@@ -390,14 +391,14 @@ where
 
 /// Helper function to calculate statistics of detail coefficients.
 #[allow(dead_code)]
-fn calculate_detail_stats(decomp: &Dwt2dResult) -> (usize, WaveletEnergy) {
-    let detail_h_count = decomp.detail_h.iter().filter(|&&x| x != 0.0).count();
-    let detail_v_count = decomp.detail_v.iter().filter(|&&x| x != 0.0).count();
-    let detail_d_count = decomp.detail_d.iter().filter(|&&x| x != 0.0).count();
+fn calculate_detail_stats(_decomp: &Dwt2dResult) -> (usize, WaveletEnergy) {
+    let detail_h_count = _decomp.detail_h.iter().filter(|&&x| x != 0.0).count();
+    let detail_v_count = _decomp.detail_v.iter().filter(|&&x| x != 0.0).count();
+    let detail_d_count = _decomp.detail_d.iter().filter(|&&x| x != 0.0).count();
 
-    let detail_h_energy = decomp.detail_h.iter().map(|&x| x * x).sum();
-    let detail_v_energy = decomp.detail_v.iter().map(|&x| x * x).sum();
-    let detail_d_energy = decomp.detail_d.iter().map(|&x| x * x).sum();
+    let detail_h_energy = _decomp.detail_h.iter().map(|&x| x * x).sum();
+    let detail_v_energy = _decomp.detail_v.iter().map(|&x| x * x).sum();
+    let detail_d_energy = _decomp.detail_d.iter().map(|&x| x * x).sum();
 
     let total_count = detail_h_count + detail_v_count + detail_d_count;
 
@@ -413,9 +414,9 @@ fn calculate_detail_stats(decomp: &Dwt2dResult) -> (usize, WaveletEnergy) {
 
 /// Helper function to estimate noise variance from detail coefficients.
 #[allow(dead_code)]
-fn estimate_noise_variance(coeffs: &Array2<f64>) -> f64 {
+fn estimate_noise_variance(_coeffs: &Array2<f64>) -> f64 {
     // Median Absolute Deviation (MAD) estimator
-    let mut abs_coeffs: Vec<f64> = coeffs.iter().map(|&x| x.abs()).collect();
+    let mut abs_coeffs: Vec<f64> = _coeffs.iter().map(|&x: &f64| x.abs()).collect();
     abs_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     if abs_coeffs.is_empty() {
@@ -473,7 +474,7 @@ fn threshold_coefficients(
         // Optionally threshold approximation coefficients
         // (usually not done for the coarsest level)
         if !keep_approx && i > 0 {
-            for a in level.approx.iter_mut() {
+            for a in level._approx.iter_mut() {
                 *a = apply_threshold(*a, threshold, method);
             }
         }
@@ -501,16 +502,16 @@ fn apply_threshold(x: f64, threshold: f64, method: ThresholdMethod) -> f64 {
 
 /// Count non-zero coefficients in a multi-level wavelet decomposition.
 #[allow(dead_code)]
-fn count_nonzeros_multilevel(coeffs: &[Dwt2dResult], include_approx: bool) -> (usize, Vec<usize>) {
+fn count_nonzeros_multilevel(_coeffs: &[Dwt2dResult], include_approx: bool) -> (usize, Vec<usize>) {
     let mut total_nonzeros = 0;
-    let mut level_counts = Vec::with_capacity(coeffs.len());
+    let mut level_counts = Vec::with_capacity(_coeffs.len());
 
-    for level in coeffs {
+    for level in _coeffs {
         let mut level_count = 0;
 
         // Count approximation coefficients if requested
         if include_approx {
-            level_count += level.approx.iter().filter(|&&x| x != 0.0).count();
+            level_count += level._approx.iter().filter(|&&x| x != 0.0).count();
         }
 
         // Count detail coefficients
@@ -540,8 +541,6 @@ pub struct WaveletEnergy {
 
 #[cfg(test)]
 mod tests {
-    use crate::dwt::Wavelet;
-    use ndarray::Array2;
 
     #[test]
     fn test_denoise_image() {
@@ -596,6 +595,8 @@ mod tests {
 
     #[test]
     fn test_edge_detection() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a test image with edges
         let mut image = Array2::zeros((8, 8));
         for i in 0..8 {
@@ -631,6 +632,8 @@ mod tests {
 
     #[test]
     fn test_image_compression() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a test image
         let mut image = Array2::zeros((16, 16));
         for i in 0..16 {

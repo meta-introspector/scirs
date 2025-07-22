@@ -116,9 +116,9 @@ pub struct AdaptiveLRState<T: Float> {
 
 impl<T: Float + std::iter::Sum + ScalarOperand, P: PolicyNetwork<T>> TrustRegionOptimizer<T, P> {
     /// Create a new trust region optimizer
-    pub fn new(config: TrustRegionConfig<T>, policy: P) -> Self {
+    pub fn new(_config: TrustRegionConfig<T>, policy: P) -> Self {
         Self {
-            config,
+            _config,
             policy,
             fisher_matrix: None,
             natural_grad_state: NaturalGradientState {
@@ -278,9 +278,9 @@ impl<T: Float + std::iter::Sum + ScalarOperand, P: PolicyNetwork<T>> TrustRegion
     }
 
     /// Apply parameter update to policy network
-    fn apply_parameter_update(&mut self, _update: &Array1<T>) -> Result<()> {
-        // In practice, this would update the policy network parameters
-        // For now, we just store the update
+    fn apply_parameter_update(&mut self_update: &Array1<T>) -> Result<()> {
+        // In practice, this would _update the policy network parameters
+        // For now, we just store the _update
         Ok(())
     }
 

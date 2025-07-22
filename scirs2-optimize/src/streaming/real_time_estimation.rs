@@ -73,7 +73,7 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
         let window_size = config.window_size;
 
         Self {
-            parameters: initial_parameters,
+            _parameters: initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),
@@ -375,14 +375,14 @@ pub fn recursive_least_squares<T: StreamingObjective>(
     initial_uncertainty: Option<f64>,
 ) -> RealTimeEstimator<T> {
     let config = config.unwrap_or_default();
-    let uncertainty = initial_uncertainty.unwrap_or(1000.0);
+    let _uncertainty = initial_uncertainty.unwrap_or(1000.0);
 
     RealTimeEstimator::new(
         initial_parameters,
         objective,
         config,
         RealTimeMethod::RecursiveLeastSquares,
-        uncertainty,
+        _uncertainty,
     )
 }
 

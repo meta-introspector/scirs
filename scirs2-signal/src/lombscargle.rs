@@ -6,9 +6,11 @@
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
+use rand::Rng;
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Compute normalized Lomb-Scargle periodogram for unevenly sampled data.
 ///
 /// The Lomb-Scargle periodogram is a method for detecting periodic signals in
@@ -32,7 +34,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::lombscargle::{lombscargle, AutoFreqMethod};
+/// use scirs2__signal::lombscargle::{lombscargle, AutoFreqMethod};
 /// use ndarray::Array1;
 /// use std::f64::consts::PI;
 /// use rand::prelude::*;
@@ -70,7 +72,7 @@ use std::fmt::Debug;
 /// }
 ///
 /// // The frequency with maximum power should be close to 1 Hz
-/// assert!((freqs[max_idx] - 1.0).abs() < 0.1);
+/// assert!(((freqs[max_idx] - 1.0) as f64).abs() < 0.1);
 /// ```
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
@@ -156,10 +158,10 @@ where
         }
     }
 
-    // Check for adequate data length
+    // Check for adequate _data length
     if x_f64.len() < 3 {
         return Err(SignalError::ValueError(
-            "At least 3 data points are required for Lomb-Scargle analysis".to_string(),
+            "At least 3 _data points are required for Lomb-Scargle analysis".to_string(),
         ));
     }
 
@@ -188,12 +190,12 @@ where
     }
 
     // Check for reasonable signal variance
-    let signal_mean = y_f64.iter().sum::<f64>() / y_f64.len() as f64;
+    let signal_mean = y_f64.iter().sum::<f64>() / y_f64.len()  as f64;
     let signal_variance = y_f64
         .iter()
         .map(|&val| (val - signal_mean).powi(2))
         .sum::<f64>()
-        / y_f64.len() as f64;
+        / y_f64.len()  as f64;
 
     if signal_variance == 0.0 {
         eprintln!("Warning: Signal has zero variance (constant signal). Periodogram will be uninformative.");
@@ -211,10 +213,9 @@ where
         "standard" => NormalizationMethod::Standard,
         "model" => NormalizationMethod::Model,
         "log" => NormalizationMethod::Log,
-        "psd" => NormalizationMethod::Psd,
-        _ => {
+        "psd" => NormalizationMethod::Psd_ => {
             return Err(SignalError::ValueError(format!(
-                "Invalid normalization method. Valid options are 'standard', 'model', 'log', or 'psd', got {}",
+                "Invalid normalization _method. Valid options are 'standard', 'model', 'log', or 'psd', got {}",
                 normalization.unwrap_or("standard")
             )));
         }
@@ -253,7 +254,7 @@ where
             }
         }
 
-        // Validate frequency range against data
+        // Validate frequency range against _data
         let nyquist_freq = 0.5 / min_dt;
         let max_freq = f.iter().cloned().fold(0.0, f64::max);
         if max_freq > 10.0 * nyquist_freq {
@@ -295,7 +296,7 @@ where
         let min_resolution = 1.0 / time_range;
 
         if freq_resolution < min_resolution / 10.0 {
-            eprintln!("Warning: Frequency resolution ({:.2e}) is much finer than data time range allows ({:.2e}). Consider reducing frequency density.", 
+            eprintln!("Warning: Frequency resolution ({:.2e}) is much finer than _data time range allows ({:.2e}). Consider reducing frequency density.", 
                       freq_resolution, min_resolution);
         }
     }
@@ -330,7 +331,7 @@ where
     }
 
     // Statistical validation
-    let pgram_mean = pgram_vec.iter().sum::<f64>() / pgram_vec.len() as f64;
+    let pgram_mean = pgram_vec.iter().sum::<f64>() / pgram_vec.len()  as f64;
     let pgram_max = pgram_vec.iter().cloned().fold(0.0, f64::max);
     let pgram_min = pgram_vec.iter().cloned().fold(f64::INFINITY, f64::min);
 
@@ -376,8 +377,7 @@ impl std::str::FromStr for AutoFreqMethod {
         match s.to_lowercase().as_str() {
             "fft" => Ok(AutoFreqMethod::Fft),
             "linear" => Ok(AutoFreqMethod::Linear),
-            "log" => Ok(AutoFreqMethod::Log),
-            _ => Err(SignalError::ValueError(format!(
+            "log" => Ok(AutoFreqMethod::Log, _ => Err(SignalError::ValueError(format!(
                 "Invalid frequency method: '{}'. Valid options are: 'fft', 'linear', 'log'",
                 s
             ))),
@@ -522,10 +522,10 @@ fn _lombscargle_impl(
     let n_samples = t.len();
     let n_freqs = frequency.len();
 
-    // Center the data if requested
-    let (y_centered, _y_mean) = if center_data {
-        let mean = y.sum() / n_samples as f64;
-        (y - mean, mean)
+    // Center the _data if requested
+    let (y_centered_y_mean) = if center_data {
+        let _mean = y.sum() / n_samples  as f64;
+        (y - _mean, _mean)
     } else {
         (y.clone(), 0.0)
     };
@@ -538,7 +538,7 @@ fn _lombscargle_impl(
 
     if y2_sum == 0.0 {
         return Err(SignalError::ValueError(
-            "All data values are identical".to_string(),
+            "All _data values are identical".to_string(),
         ));
     }
 
@@ -579,9 +579,9 @@ fn _lombscargle_impl(
             NormalizationMethod::Standard => {
                 // Compute the generalized Lomb-Scargle periodogram
                 if fit_mean {
-                    // Include a constant offset (mean) in the model
+                    // Include a constant offset (_mean) in the model
                     let y_dot_h = y_centered.iter().sum::<f64>();
-                    let h_dot_h = n_samples as f64;
+                    let h_dot_h = n_samples  as f64;
 
                     // Calculate YY = sum(y^2)
                     let yy = y_centered.iter().map(|&y| y * y).sum::<f64>();
@@ -601,7 +601,7 @@ fn _lombscargle_impl(
                 // Normalize by the model chi-squared (Baluev 2008)
                 if fit_mean {
                     let y_dot_h = y_centered.iter().sum::<f64>();
-                    let h_dot_h = n_samples as f64;
+                    let h_dot_h = n_samples  as f64;
 
                     // Calculate YY = sum(y^2)
                     let yy = y_centered.iter().map(|&y| y * y).sum::<f64>();
@@ -623,7 +623,7 @@ fn _lombscargle_impl(
                 // Return the logarithm of the standard normalization
                 let standard = if fit_mean {
                     let y_dot_h = y_centered.iter().sum::<f64>();
-                    let h_dot_h = n_samples as f64;
+                    let h_dot_h = n_samples  as f64;
 
                     // Calculate YY = sum(y^2)
                     let yy = y_centered.iter().map(|&y| y * y).sum::<f64>();
@@ -644,7 +644,7 @@ fn _lombscargle_impl(
                 // Normalize for a power spectral density (Horne & Baliunas 1986)
                 if fit_mean {
                     let y_dot_h = y_centered.iter().sum::<f64>();
-                    let h_dot_h = n_samples as f64;
+                    let h_dot_h = n_samples  as f64;
 
                     // Calculate YY = sum(y^2)
                     let yy = y_centered.iter().map(|&y| y * y).sum::<f64>();
@@ -693,15 +693,15 @@ pub fn significance_levels(
 
     if fap_levels.is_empty() {
         return Err(SignalError::ValueError(
-            "No FAP levels provided".to_string(),
+            "No FAP _levels provided".to_string(),
         ));
     }
 
-    // Validate FAP levels
+    // Validate FAP _levels
     for &fap in fap_levels {
         if fap <= 0.0 || fap >= 1.0 {
             return Err(SignalError::ValueError(
-                "FAP levels must be between 0 and 1 (exclusive)".to_string(),
+                "FAP _levels must be between 0 and 1 (exclusive)".to_string(),
             ));
         }
     }
@@ -714,8 +714,7 @@ pub fn significance_levels(
             .map(|&p| -(n_samples as f64) * (1.0 - p).ln())
             .collect(),
         "log" => power.iter().map(|&p| p.exp()).collect(),
-        "psd" => power.iter().map(|&p| p * 2.0 / n_samples as f64).collect(),
-        _ => {
+        "psd" => power.iter().map(|&p| p * 2.0 / n_samples as f64).collect(, _ => {
             return Err(SignalError::ValueError(format!(
                 "Invalid normalization method: {}. Valid options are 'standard', 'model', 'log', or 'psd'",
                 normalization
@@ -723,7 +722,7 @@ pub fn significance_levels(
         }
     };
 
-    // Compute significance levels based on Chi-squared distribution
+    // Compute significance _levels based on Chi-squared distribution
     // For large N, -2*ln(FAP) follows a chi-squared distribution with 2 degrees of freedom
     let mut sig_levels = Vec::with_capacity(fap_levels.len());
 
@@ -736,8 +735,7 @@ pub fn significance_levels(
             "standard" => threshold,
             "model" => 1.0 - (-threshold / n_samples as f64).exp(),
             "log" => threshold.ln(),
-            "psd" => threshold * n_samples as f64 / 2.0,
-            _ => unreachable!(), // Already validated above
+            "psd" => threshold * n_samples as f64 / 2.0_ => unreachable!(), // Already validated above
         };
 
         sig_levels.push(power_threshold);
@@ -804,14 +802,14 @@ pub fn find_peaks(
     // Sort peaks by power (descending)
     peak_indices.sort_by(|&a, &b| power[b].partial_cmp(&power[a]).unwrap());
 
-    // Group peaks if a frequency window is specified
+    // Group peaks if a frequency _window is specified
     let mut result_freqs = Vec::new();
     let mut result_powers = Vec::new();
 
-    if let Some(window) = freq_window {
-        if window <= 0.0 {
+    if let Some(_window) = freq_window {
+        if _window <= 0.0 {
             return Err(SignalError::ValueError(
-                "Frequency window must be positive".to_string(),
+                "Frequency _window must be positive".to_string(),
             ));
         }
 
@@ -826,10 +824,10 @@ pub fn find_peaks(
             result_freqs.push(frequency[idx]);
             result_powers.push(power[idx]);
 
-            // Mark all peaks within the frequency window as used
+            // Mark all peaks within the frequency _window as used
             for &other_idx in &peak_indices {
                 if !used_indices[other_idx]
-                    && (frequency[other_idx] - frequency[idx]).abs() <= window
+                    && (frequency[other_idx] - frequency[idx]).abs() <= _window
                 {
                     used_indices[other_idx] = true;
                 }
@@ -848,12 +846,11 @@ pub fn find_peaks(
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
-    use std::f64::consts::PI;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_lombscargle_sine_wave() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a sine wave with known frequency
         let frequency = 0.2; // 0.2 Hz
         let n = 100;
@@ -898,7 +895,7 @@ mod tests {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap();
 
         // The frequency with maximum power should be close to the true frequency
@@ -949,6 +946,8 @@ mod tests {
 
     #[test]
     fn test_significance_levels() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a test periodogram
         let power = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
         let fap_levels = vec![0.01, 0.05, 0.1];
@@ -977,6 +976,8 @@ mod tests {
 
     #[test]
     fn test_find_peaks() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a test periodogram with known peaks
         let freq = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
         let power = vec![0.1, 0.5, 0.3, 0.8, 0.2, 0.9, 0.4, 0.7, 0.6, 0.3];
@@ -1006,6 +1007,8 @@ mod tests {
 
     #[test]
     fn test_lombscargle_multi_frequency() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a signal with two frequencies
         let freq1 = 0.1; // 0.1 Hz
         let freq2 = 0.3; // 0.3 Hz
@@ -1072,7 +1075,7 @@ mod tests {
         let tolerance = 0.05; // Allow 0.05 Hz tolerance
         let mut frequencies_found = 0;
 
-        for &(freq, _) in peaks.iter().take(4) {
+        for &(freq_) in peaks.iter().take(4) {
             // Check top 4 peaks
             if (freq - freq1).abs() < tolerance || (freq - freq2).abs() < tolerance {
                 frequencies_found += 1;
@@ -1081,4 +1084,16 @@ mod tests {
 
         assert!(frequencies_found >= 2);
     }
+}
+
+#[allow(dead_code)]
+fn next_power_of_two(n: usize) -> usize {
+    if n == 0 {
+        return 1;
+    }
+    let mut power = 1;
+    while power < n {
+        power <<= 1;
+    }
+    power
 }

@@ -8,7 +8,7 @@
 //! - Using nquad as a simpler interface
 
 use ndarray::Array1;
-use scirs2_integrate::cubature::{cubature, nquad, Bound, CubatureOptions};
+use scirs2__integrate::cubature::{cubature, nquad, Bound, CubatureOptions};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

@@ -56,11 +56,11 @@ mod simd_spectral {
 
     /// SIMD-accelerated vector operations for degree calculations
     #[allow(dead_code)]
-    pub fn simd_compute_degree_sqrt_inverse(degrees: &[f64]) -> Vec<f64> {
-        let mut result = vec![0.0; degrees.len()];
+    pub fn simd_compute_degree_sqrt_inverse(_degrees: &[f64]) -> Vec<f64> {
+        let mut result = vec![0.0; _degrees.len()];
 
         // Use chunked operations for better cache performance
-        for (deg, res) in degrees.iter().zip(result.iter_mut()) {
+        for (deg, res) in _degrees.iter().zip(result.iter_mut()) {
             *res = if *deg > 0.0 { 1.0 / deg.sqrt() } else { 0.0 };
         }
 
@@ -69,20 +69,20 @@ mod simd_spectral {
 
     /// SIMD-accelerated vector norm computation
     #[allow(dead_code)]
-    pub fn simd_norm(vector: &ArrayView1<f64>) -> f64 {
+    pub fn simd_norm(_vector: &ArrayView1<f64>) -> f64 {
         // Use scirs2-core SIMD operations for optimal performance
-        f64::simd_norm(vector)
+        f64::simd_norm(_vector)
     }
 
     /// SIMD-accelerated matrix-vector multiplication
     #[allow(dead_code)]
-    pub fn simd_matvec(matrix: &Array2<f64>, vector: &ArrayView1<f64>) -> Array1<f64> {
-        let (rows, _cols) = matrix.dim();
+    pub fn simd_matvec(_matrix: &Array2<f64>, vector: &ArrayView1<f64>) -> Array1<f64> {
+        let (rows_cols) = _matrix.dim();
         let mut result = Array1::zeros(rows);
 
         // Use SIMD operations for each row
         for i in 0..rows {
-            let row = matrix.row(i);
+            let row = _matrix.row(i);
             if let (Some(row_slice), Some(vec_slice)) = (row.as_slice(), vector.as_slice()) {
                 let row_view = ArrayView1::from(row_slice);
                 let vec_view = ArrayView1::from(vec_slice);
@@ -98,11 +98,11 @@ mod simd_spectral {
 
     /// SIMD-accelerated vector scaling and addition
     #[allow(dead_code)]
-    pub fn simd_axpy(alpha: f64, x: &ArrayView1<f64>, y: &mut ArrayViewMut1<f64>) {
-        // Compute y = alpha * x + y using SIMD
+    pub fn simd_axpy(_alpha: f64, x: &ArrayView1<f64>, y: &mut ArrayViewMut1<f64>) {
+        // Compute y = _alpha * x + y using SIMD
         if let (Some(x_slice), Some(y_slice)) = (x.as_slice(), y.as_slice_mut()) {
             let x_view = ArrayView1::from(x_slice);
-            let scaled_x = f64::simd_scalar_mul(&x_view, alpha);
+            let scaled_x = f64::simd_scalar_mul(&x_view, _alpha);
             let y_view = ArrayView1::from(&*y_slice);
             let result = f64::simd_add(&scaled_x.view(), &y_view);
             if let Some(result_slice) = result.as_slice() {
@@ -111,29 +111,29 @@ mod simd_spectral {
         } else {
             // Fallback for non-contiguous data
             for (x_val, y_val) in x.iter().zip(y.iter_mut()) {
-                *y_val += alpha * x_val;
+                *y_val += _alpha * x_val;
             }
         }
     }
 
     /// SIMD-accelerated Gram-Schmidt orthogonalization
     #[allow(dead_code)]
-    pub fn simd_gram_schmidt(vectors: &mut Array2<f64>) {
-        let (_n, k) = vectors.dim();
+    pub fn simd_gram_schmidt(_vectors: &mut Array2<f64>) {
+        let (_n, k) = _vectors.dim();
 
         for i in 0..k {
             // Normalize current vector
-            let mut current_col = vectors.column_mut(i);
+            let mut current_col = _vectors.column_mut(i);
             let norm = simd_norm(&current_col.view());
             if norm > 1e-12 {
                 current_col /= norm;
             }
 
-            // Orthogonalize against following vectors
+            // Orthogonalize against following _vectors
             for j in (i + 1)..k {
                 let (dot_product, current_column_data) = {
-                    let current_view = vectors.column(i);
-                    let next_col = vectors.column(j);
+                    let current_view = _vectors.column(i);
+                    let next_col = _vectors.column(j);
 
                     let dot = if let (Some(curr_slice), Some(next_slice)) =
                         (current_view.as_slice(), next_col.as_slice())
@@ -148,7 +148,7 @@ mod simd_spectral {
                     (dot, current_view.to_owned())
                 };
 
-                let mut next_col = vectors.column_mut(j);
+                let mut next_col = _vectors.column_mut(j);
 
                 // Subtract projection: next = next - dot * current
                 simd_axpy(-dot_product, &current_column_data.view(), &mut next_col);
@@ -238,7 +238,7 @@ fn deflated_lanczos_iteration(
     let mut rng = rand::rng();
     let mut v: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random::<f64>() - 0.5);
 
-    // Deflate against previous eigenvectors
+    // Deflate against previous _eigenvectors
     for j in 0..prev_eigenvectors.ncols() {
         let prev_vec = prev_eigenvectors.column(j);
         let proj = v.dot(&prev_vec);
@@ -260,7 +260,7 @@ fn deflated_lanczos_iteration(
     lanczos_vectors.column_mut(0).assign(&v);
     let mut w = matrix.dot(&v);
 
-    // Deflate w against previous eigenvectors
+    // Deflate w against previous _eigenvectors
     for j in 0..prev_eigenvectors.ncols() {
         let prev_vec = prev_eigenvectors.column(j);
         let proj = w.dot(&prev_vec);
@@ -284,7 +284,7 @@ fn deflated_lanczos_iteration(
 
         w = matrix.dot(&v);
 
-        // Deflate w against previous eigenvectors
+        // Deflate w against previous _eigenvectors
         for j in 0..prev_eigenvectors.ncols() {
             let prev_vec = prev_eigenvectors.column(j);
             let proj = w.dot(&prev_vec);
@@ -503,7 +503,7 @@ pub fn laplacian<N, E, Ix>(
 ) -> Result<Array2<f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
     let n = graph.node_count();
@@ -607,7 +607,7 @@ pub fn laplacian_digraph<N, E, Ix>(
 ) -> Result<Array2<f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
     let n = graph.node_count();
@@ -729,7 +729,7 @@ where
 
     // Compute the eigenvalues of the Laplacian
     // We only need the smallest 2 eigenvalues
-    let (eigenvalues, _) =
+    let (eigenvalues_) =
         compute_smallest_eigenvalues(&laplacian, 2).map_err(|e| GraphError::LinAlgError {
             operation: "eigenvalue_computation".to_string(),
             details: e,
@@ -750,20 +750,20 @@ where
 /// # Returns
 /// * The spectral radius as a f64
 #[allow(dead_code)]
-pub fn spectral_radius<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<f64>
+pub fn spectral_radius<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<f64>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
-    let n = graph.node_count();
+    let n = _graph.node_count();
 
     if n == 0 {
-        return Err(GraphError::InvalidGraph("Empty graph".to_string()));
+        return Err(GraphError::InvalidGraph("Empty _graph".to_string()));
     }
 
     // Get adjacency matrix
-    let adj_mat = graph.adjacency_matrix();
+    let adj_mat = _graph.adjacency_matrix();
     let mut adj_f64 = Array2::<f64>::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
@@ -830,21 +830,21 @@ where
 /// # Returns
 /// * The normalized cut value as a f64
 #[allow(dead_code)]
-pub fn normalized_cut<N, E, Ix>(graph: &Graph<N, E, Ix>, partition: &[bool]) -> Result<f64>
+pub fn normalized_cut<N, E, Ix>(_graph: &Graph<N, E, Ix>, partition: &[bool]) -> Result<f64>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
-    let n = graph.node_count();
+    let n = _graph.node_count();
 
     if n == 0 {
-        return Err(GraphError::InvalidGraph("Empty graph".to_string()));
+        return Err(GraphError::InvalidGraph("Empty _graph".to_string()));
     }
 
     if partition.len() != n {
         return Err(GraphError::InvalidGraph(
-            "Partition size does not match graph size".to_string(),
+            "Partition size does not match _graph size".to_string(),
         ));
     }
 
@@ -859,14 +859,14 @@ where
     }
 
     // Get adjacency matrix
-    let adj_mat = graph.adjacency_matrix();
+    let adj_mat = _graph.adjacency_matrix();
 
     // Compute cut(A,B), vol(A), and vol(B)
     let mut cut_ab = 0.0;
     let mut vol_a = 0.0;
     let mut vol_b = 0.0;
 
-    let _nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let _nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
 
     for i in 0..n {
         for j in 0..n {
@@ -923,13 +923,13 @@ where
 
     if n_clusters == 0 {
         return Err(GraphError::InvalidGraph(
-            "Number of clusters must be positive".to_string(),
+            "Number of _clusters must be positive".to_string(),
         ));
     }
 
     if n_clusters > n {
         return Err(GraphError::InvalidGraph(
-            "Number of clusters cannot exceed number of nodes".to_string(),
+            "Number of _clusters cannot exceed number of nodes".to_string(),
         ));
     }
 
@@ -937,7 +937,7 @@ where
     let laplacian_matrix = laplacian(graph, laplacian_type)?;
 
     // Compute the eigenvectors corresponding to the smallest n_clusters eigenvalues
-    let (_eigenvalues, _eigenvectors) = compute_smallest_eigenvalues(&laplacian_matrix, n_clusters)
+    let (_eigenvalues_eigenvectors) = compute_smallest_eigenvalues(&laplacian_matrix, n_clusters)
         .map_err(|e| GraphError::LinAlgError {
             operation: "spectral_clustering_eigenvalues".to_string(),
             details: e,
@@ -947,7 +947,7 @@ where
     let mut labels = Vec::with_capacity(graph.node_count());
     let mut rng = rand::rng();
     for _ in 0..graph.node_count() {
-        labels.push(rng.random_range(0..n_clusters));
+        labels.push(rng.gen_range(0..n_clusters));
     }
 
     Ok(labels)
@@ -961,7 +961,7 @@ where
 /// * `laplacian_type` - The type of Laplacian to use
 ///
 /// # Returns
-/// * A vector of cluster labels, one for each node in the graph
+/// * A vector of cluster labels..one for each node in the graph
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
 pub fn parallel_spectral_clustering<N, E, Ix>(
@@ -982,13 +982,13 @@ where
 
     if n_clusters == 0 {
         return Err(GraphError::InvalidGraph(
-            "Number of clusters must be positive".to_string(),
+            "Number of _clusters must be positive".to_string(),
         ));
     }
 
     if n_clusters > n {
         return Err(GraphError::InvalidGraph(
-            "Number of clusters cannot exceed number of nodes".to_string(),
+            "Number of _clusters cannot exceed number of nodes".to_string(),
         ));
     }
 
@@ -996,7 +996,7 @@ where
     let laplacian_matrix = parallel_laplacian(graph, laplacian_type)?;
 
     // Compute the eigenvectors using parallel eigenvalue computation
-    let (_eigenvalues, _eigenvectors) =
+    let (_eigenvalues_eigenvectors) =
         parallel_compute_smallest_eigenvalues(&laplacian_matrix, n_clusters).map_err(|e| {
             GraphError::LinAlgError {
                 operation: "parallel_spectral_clustering_eigenvalues".to_string(),
@@ -1020,7 +1020,7 @@ pub fn parallel_laplacian<N, E, Ix>(
 ) -> Result<Array2<f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
     let n = graph.node_count();
@@ -1204,8 +1204,7 @@ fn parallel_lanczos_eigenvalues(
 fn parallel_deflated_lanczos_iteration(
     matrix: &Array2<f64>,
     prev_eigenvectors: &Array2<f64>,
-    tolerance: f64,
-    _max_iterations: usize,
+    tolerance: f64, _max_iterations: usize,
 ) -> std::result::Result<(f64, Array1<f64>), String> {
     let n = matrix.shape()[0];
 
@@ -1213,7 +1212,7 @@ fn parallel_deflated_lanczos_iteration(
     let mut rng = rand::rng();
     let mut v: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random::<f64>() - 0.5);
 
-    // Parallel deflation against previous eigenvectors
+    // Parallel deflation against previous _eigenvectors
     for j in 0..prev_eigenvectors.ncols() {
         let prev_vec = prev_eigenvectors.column(j);
         let proj = parallel_dot_product(&v.view(), &prev_vec);
@@ -1245,17 +1244,17 @@ fn parallel_dot_product(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
 /// Parallel vector norm computation
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-fn parallel_norm(vector: &ArrayView1<f64>) -> f64 {
+fn parallel_norm(_vector: &ArrayView1<f64>) -> f64 {
     // Use SIMD norm computation
-    f64::simd_norm(vector)
+    f64::simd_norm(_vector)
 }
 
 /// Parallel AXPY operation: y = alpha * x + y
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-fn parallel_axpy(alpha: f64, x: &ArrayView1<f64>, y: &mut ArrayViewMut1<f64>) {
+fn parallel_axpy(_alpha: f64, x: &ArrayView1<f64>, y: &mut ArrayViewMut1<f64>) {
     // Use SIMD AXPY operation
-    simd_spectral::simd_axpy(alpha, x, y);
+    simd_spectral::simd_axpy(_alpha, x, y);
 }
 
 /// Parallel random clustering assignment (placeholder for full k-means implementation)
@@ -1267,7 +1266,7 @@ fn parallel_random_clustering(n: usize, k: usize) -> Vec<usize> {
         .into_par_iter()
         .map(|_i| {
             let mut rng = rand::rng();
-            rng.random_range(0..k)
+            rng.gen_range(0..k)
         })
         .collect()
 }
@@ -1279,7 +1278,7 @@ mod tests {
 
     #[test]
     fn test_laplacian_matrix() {
-        let mut graph: Graph<i32, f64> = Graph::new();
+        let mut graph: Graph<i32..f64> = Graph::new();
 
         // Create a simple graph:
         // 0 -- 1 -- 2

@@ -36,8 +36,8 @@ use std::marker::PhantomData;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::optimizers::{Lookahead, SGD};
-/// use scirs2_optim::Optimizer;
+/// use scirs2__optim::optimizers::{Lookahead, SGD};
+/// use scirs2__optim::Optimizer;
 ///
 /// // Create an inner optimizer
 /// let sgd = SGD::new(0.01);
@@ -81,30 +81,28 @@ where
     D: Dimension,
 {
     /// Creates a new Lookahead optimizer with the given inner optimizer and default settings
-    pub fn new(inner_optimizer: O) -> Self {
+    pub fn new(_inner_optimizer: O) -> Self {
         Self {
-            inner_optimizer,
+            _inner_optimizer,
             alpha: A::from(0.5).unwrap(), // Default alpha is 0.5
             k: 5,                         // Default k is 5
             current_step: 0,
             slow_weights: None,
             fast_weights: None,
-            use_slow_weights: false,
-            _phantom: PhantomData,
+            use_slow_weights: false, _phantom: PhantomData,
         }
     }
 
     /// Creates a new Lookahead optimizer with the specified alpha and k values
-    pub fn with_config(inner_optimizer: O, alpha: A, k: usize) -> Self {
+    pub fn with_config(_inner_optimizer: O, alpha: A, k: usize) -> Self {
         Self {
-            inner_optimizer,
+            _inner_optimizer,
             alpha,
             k,
             current_step: 0,
             slow_weights: None,
             fast_weights: None,
-            use_slow_weights: false,
-            _phantom: PhantomData,
+            use_slow_weights: false, _phantom: PhantomData,
         }
     }
 
@@ -174,8 +172,7 @@ where
             current_step: self.current_step,
             slow_weights: self.slow_weights.clone(),
             fast_weights: self.fast_weights.clone(),
-            use_slow_weights: self.use_slow_weights,
-            _phantom: PhantomData,
+            use_slow_weights: self.use_slow_weights, _phantom: PhantomData,
         }
     }
 }
@@ -278,7 +275,7 @@ mod tests {
     #[test]
     fn test_lookahead_creation() {
         let sgd = SGD::new(0.01);
-        let optimizer: Lookahead<f64, _, ndarray::Ix1> = Lookahead::new(sgd);
+        let optimizer: Lookahead<f64_, ndarray::Ix1> = Lookahead::new(sgd);
 
         assert_abs_diff_eq!(optimizer.alpha(), 0.5);
         assert_eq!(optimizer.k(), 5);
@@ -288,7 +285,7 @@ mod tests {
     #[test]
     fn test_lookahead_with_config() {
         let sgd = SGD::new(0.01);
-        let optimizer: Lookahead<f64, _, ndarray::Ix1> = Lookahead::with_config(sgd, 0.8, 10);
+        let optimizer: Lookahead<f64_, ndarray::Ix1> = Lookahead::with_config(sgd, 0.8, 10);
 
         assert_abs_diff_eq!(optimizer.alpha(), 0.8);
         assert_eq!(optimizer.k(), 10);
@@ -298,7 +295,7 @@ mod tests {
     fn test_lookahead_step() {
         let mut sgd = SGD::new(0.1);
         sgd.set_momentum(0.0);
-        let mut optimizer: Lookahead<f64, _, ndarray::Ix1> = Lookahead::with_config(sgd, 0.5, 2);
+        let mut optimizer: Lookahead<f64_, ndarray::Ix1> = Lookahead::with_config(sgd, 0.5, 2);
 
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
@@ -340,7 +337,7 @@ mod tests {
     fn test_slow_weights_for_eval() {
         let mut sgd = SGD::new(0.1);
         sgd.set_momentum(0.0);
-        let mut optimizer: Lookahead<f64, _, ndarray::Ix1> = Lookahead::with_config(sgd, 0.5, 2);
+        let mut optimizer: Lookahead<f64_, ndarray::Ix1> = Lookahead::with_config(sgd, 0.5, 2);
 
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
@@ -372,7 +369,7 @@ mod tests {
     #[test]
     fn test_reset() {
         let sgd = SGD::new(0.1);
-        let mut optimizer: Lookahead<f64, _, ndarray::Ix1> = Lookahead::new(sgd);
+        let mut optimizer: Lookahead<f64_, ndarray::Ix1> = Lookahead::new(sgd);
 
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);

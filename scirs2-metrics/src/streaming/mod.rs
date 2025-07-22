@@ -19,7 +19,7 @@
 //! ## Basic Streaming Classification Metrics
 //!
 //! ```
-//! use scirs2_metrics::streaming::StreamingClassificationMetrics;
+//! use scirs2__metrics::streaming::StreamingClassificationMetrics;
 //!
 //! let mut metrics = StreamingClassificationMetrics::new();
 //!
@@ -35,7 +35,7 @@
 //! ## Windowed Metrics
 //!
 //! ```
-//! use scirs2_metrics::streaming::WindowedClassificationMetrics;
+//! use scirs2__metrics::streaming::WindowedClassificationMetrics;
 //!
 //! let mut metrics = WindowedClassificationMetrics::new(100); // Window size of 100
 //!
@@ -56,7 +56,7 @@ use std::collections::VecDeque;
 
 // Re-export advanced streaming capabilities
 pub mod advanced_streaming;
-pub use advanced_streaming::{
+pub use advanced__streaming::{
     AdaptiveStreamingMetrics, AdwinDetector, AlertSeverity, AnomalyDetectionAlgorithm,
     AnomalySummary, ConceptDriftDetector, DdmDetector, DriftDetectionMethod, DriftStatus,
     PageHinkleyDetector, StreamingConfig, UpdateResult, WindowAdaptationStrategy,
@@ -105,8 +105,7 @@ impl StreamingClassificationMetrics {
             (1, 1) => self.true_positives += 1,
             (0, 1) => self.false_positives += 1,
             (0, 0) => self.true_negatives += 1,
-            (1, 0) => self.false_negatives += 1,
-            _ => {} // Handle multi-class later
+            (1, 0) => self.false_negatives += 1_ => {} // Handle multi-class later
         }
     }
 
@@ -114,7 +113,7 @@ impl StreamingClassificationMetrics {
     pub fn update_batch(&mut self, true_labels: &[i32], pred_labels: &[i32]) -> Result<()> {
         if true_labels.len() != pred_labels.len() {
             return Err(MetricsError::InvalidInput(
-                "True and predicted labels must have the same length".to_string(),
+                "True and predicted _labels must have the same length".to_string(),
             ));
         }
 
@@ -274,7 +273,7 @@ impl<F: Float> StreamingRegressionMetrics<F> {
     pub fn update_batch(&mut self, true_values: &[F], pred_values: &[F]) -> Result<()> {
         if true_values.len() != pred_values.len() {
             return Err(MetricsError::InvalidInput(
-                "True and predicted values must have the same length".to_string(),
+                "True and predicted _values must have the same length".to_string(),
             ));
         }
 
@@ -368,10 +367,10 @@ pub struct WindowedClassificationMetrics {
 
 impl WindowedClassificationMetrics {
     /// Creates a new windowed classification metrics calculator
-    pub fn new(window_size: usize) -> Self {
+    pub fn new(_window_size: usize) -> Self {
         Self {
-            window_size,
-            predictions: VecDeque::with_capacity(window_size),
+            _window_size,
+            predictions: VecDeque::with_capacity(_window_size),
             metrics: StreamingClassificationMetrics::new(),
         }
     }
@@ -473,10 +472,10 @@ pub struct WindowedRegressionMetrics<F: Float> {
 
 impl<F: Float> WindowedRegressionMetrics<F> {
     /// Creates a new windowed regression metrics calculator
-    pub fn new(window_size: usize) -> Self {
+    pub fn new(_window_size: usize) -> Self {
         Self {
-            window_size,
-            predictions: VecDeque::with_capacity(window_size),
+            _window_size,
+            predictions: VecDeque::with_capacity(_window_size),
         }
     }
 

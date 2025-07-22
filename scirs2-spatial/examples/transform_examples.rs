@@ -1,6 +1,6 @@
 use ndarray::array;
-use scirs2_spatial::transform::{RigidTransform, Rotation, RotationSpline, Slerp};
-use scirs2_spatial::SpatialResult;
+use scirs2__spatial::transform::{RigidTransform, Rotation, RotationSpline, Slerp};
+use scirs2__spatial::SpatialResult;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

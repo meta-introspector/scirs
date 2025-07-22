@@ -5,14 +5,14 @@
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Array3};
-use scirs2_linalg::tensor_contraction::{batch_matmul, contract, einsum, hosvd, mode_n_product};
+use scirs2__linalg::tensor_contraction::{batch_matmul, contract, einsum, hosvd, mode_n_product};
 use std::hint::black_box;
 use std::time::Duration;
 
 /// Create a test tensor of given dimensions with deterministic values
 #[allow(dead_code)]
-fn create_test_tensor_3d(d1: usize, d2: usize, d3: usize) -> Array3<f64> {
-    Array3::from_shape_fn((d1, d2, d3), |(i, j, k)| {
+fn create_test_tensor_3d(_d1: usize, d2: usize, d3: usize) -> Array3<f64> {
+    Array3::from_shape_fn((_d1, d2, d3), |(i, j, k)| {
         ((i + j + k + 1) as f64 * 0.1).sin()
     })
 }

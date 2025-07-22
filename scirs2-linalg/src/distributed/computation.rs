@@ -31,17 +31,17 @@ pub struct DistributedComputationEngine {
 
 impl DistributedComputationEngine {
     /// Create a new distributed computation engine
-    pub fn new(config: super::DistributedConfig) -> LinalgResult<Self> {
-        let communicator = Arc::new(DistributedCommunicator::new(&config)?);
-        let coordinator = Arc::new(DistributedCoordinator::new(&config)?);
-        let load_balancer = Arc::new(std::sync::Mutex::new(LoadBalancer::new(&config)?));
+    pub fn new(_config: super::DistributedConfig) -> LinalgResult<Self> {
+        let communicator = Arc::new(DistributedCommunicator::new(&_config)?);
+        let coordinator = Arc::new(DistributedCoordinator::new(&_config)?);
+        let load_balancer = Arc::new(std::sync::Mutex::new(LoadBalancer::new(&_config)?));
         let metrics = Arc::new(std::sync::Mutex::new(ComputationMetrics::new()));
         
         Ok(Self {
             communicator,
             coordinator,
             load_balancer,
-            config,
+            config: _config,
             metrics,
         })
     }
@@ -53,7 +53,7 @@ impl DistributedComputationEngine {
         b: &DistributedMatrix<T>,
     ) -> LinalgResult<DistributedMatrix<T>>
     where
-        T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+        T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
     {
         let start_time = Instant::now();
         
@@ -81,7 +81,7 @@ impl DistributedComputationEngine {
         inputs: &[&DistributedMatrix<T>],
     ) -> LinalgResult<R>
     where
-        T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+        T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
         F: Fn(&[&DistributedMatrix<T>]) -> LinalgResult<R> + Send + Sync,
         R: Send + Sync,
     {
@@ -118,13 +118,13 @@ impl DistributedComputationEngine {
         F: Fn() -> LinalgResult<R> + Send + Sync,
         R: Send + Sync,
     {
-        let mut retries = 0;
+        let mut _retries = 0;
         
         loop {
             match operation() {
                 Ok(result) => return Ok(result),
                 Err(e) => {
-                    if retries >= max_retries {
+                    if _retries >= max_retries {
                         return Err(e);
                     }
                     
@@ -133,8 +133,8 @@ impl DistributedComputationEngine {
                         self.handle_communication_failure()?;
                     }
                     
-                    retries += 1;
-                    std::thread::sleep(Duration::from_millis(100 * retries as u64));
+                    _retries += 1;
+                    std::thread::sleep(Duration::from_millis(100 * _retries as u64));
                 }
             }
         }
@@ -234,17 +234,16 @@ impl DistributedComputationEngine {
         b: &DistributedMatrix<T>,
     ) -> LinalgResult<DistributedMatrix<T>>
     where
-        T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
+        T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
     {
         // Use SIMD-accelerated GEMM for local computations
         a.gemm_simd(b, T::one(), T::zero())
     }
     
     fn implement_redistribution(
-        &self,
-        _plan: super::distribution::RedistributionPlan,
+        &self_plan: super::distribution::RedistributionPlan,
     ) -> LinalgResult<()> {
-        // Implement data redistribution based on the plan
+        // Implement data redistribution based on the _plan
         // This would involve:
         // 1. Coordinating with other nodes
         // 2. Transferring data
@@ -264,7 +263,7 @@ impl DistributedComputationEngine {
     }
     
     fn implement_memory_optimization(&self, total_memory: usize) -> LinalgResult<()> {
-        // Implement memory optimization strategies:
+        // Implement _memory optimization strategies:
         // 1. Data compression
         // 2. Out-of-core computation
         // 3. Memory-efficient algorithms
@@ -376,9 +375,9 @@ pub struct ComputationScheduler {
 
 impl ComputationScheduler {
     /// Create a new computation scheduler
-    pub fn new(strategy: SchedulingStrategy) -> Self {
+    pub fn new(_strategy: SchedulingStrategy) -> Self {
         Self {
-            strategy,
+            _strategy,
             operation_queue: std::sync::Mutex::new(std::collections::VecDeque::new()),
             node_capabilities: std::collections::HashMap::new(),
         }

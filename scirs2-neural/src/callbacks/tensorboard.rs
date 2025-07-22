@@ -6,6 +6,7 @@ use ndarray::ScalarOperand;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 /// TensorBoard logger callback that writes training metrics to TensorBoard.
 ///
 /// Note: This is a placeholder implementation. A full implementation would
@@ -27,12 +28,11 @@ impl<F: Float + Debug + ScalarOperand> TensorBoardLogger<F> {
     /// * `log_dir` - Directory to store TensorBoard logs
     /// * `log_histograms` - Whether to log histograms of model parameters
     /// * `update_freq` - Frequency of logging (in batches)
-    pub fn new<P: AsRef<Path>>(log_dir: P, log_histograms: bool, update_freq: usize) -> Self {
+    pub fn new<P: AsRef<Path>>(_log_dir: P, log_histograms: bool, update_freq: usize) -> Self {
         Self {
-            log_dir: log_dir.as_ref().to_path_buf(),
+            log_dir: _log_dir.as_ref().to_path_buf(),
             log_histograms,
-            update_freq,
-            _phantom: std::marker::PhantomData,
+            update_freq_phantom: std::marker::PhantomData,
         }
     }
 impl<F: Float + Debug + ScalarOperand> Callback<F> for TensorBoardLogger<F> {

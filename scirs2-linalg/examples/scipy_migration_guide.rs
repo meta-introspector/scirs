@@ -136,7 +136,7 @@ fn decompositions_migration() -> LinalgResult<()> {
     println!("Python: P, L, U = linalg.lu(a)");
     println!("Rust:   let (l, u, p) = lu(&a.view(), None)?;");
 
-    let (_l, _u, _p) = lu(&a.view(), None)?;
+    let (_l_u_p) = lu(&a.view(), None)?;
     println!("✅ LU decomposition successful");
 
     // QR decomposition
@@ -311,9 +311,9 @@ fn eigenvalue_migration() -> LinalgResult<()> {
     // Eigenvalues only (more efficient)
     println!("\n🔹 Eigenvalues Only");
     println!("Python: eigenvals = linalg.eigvals(a_sym)");
-    println!("Rust:   let (eigenvals, _) = eigh(&a_sym.view(), None)?;  // Ignore eigenvectors");
+    println!("Rust:   let (eigenvals_) = eigh(&a_sym.view(), None)?;  // Ignore eigenvectors");
 
-    let (eigenvals_only, _) = eigh(&a_sym.view(), None)?;
+    let (eigenvals_only) = eigh(&a_sym.view(), None)?;
     println!("Eigenvalues only: {:?}", eigenvals_only);
 
     println!("\n");

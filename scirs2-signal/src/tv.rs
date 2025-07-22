@@ -13,7 +13,7 @@
 //! # Example
 //! ```
 //! use ndarray::Array1;
-//! use scirs2_signal::tv::{tv_denoise_1d, TvConfig};
+//! use scirs2__signal::tv::{tv_denoise_1d, TvConfig};
 //! use rand::prelude::*;
 //!
 //! // Create a test signal with noise
@@ -35,10 +35,11 @@
 //! let denoised = tv_denoise_1d(&noisy_signal, 0.5, &config).unwrap();
 //! ```
 
-use ndarray::{Array1, Array2, Array3, Axis};
-
 use crate::error::{SignalError, SignalResult};
+use ndarray::{Array1, Array2, Array3, Axis};
+use rand::Rng;
 
+#[allow(unused_imports)]
 /// Variant of Total Variation regularization
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TvVariant {
@@ -101,7 +102,7 @@ impl Default for TvConfig {
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::tv::{tv_denoise_1d, TvConfig};
+/// use scirs2__signal::tv::{tv_denoise_1d, TvConfig};
 ///
 /// let signal = Array1::from_vec(vec![1.2, 2.3, 3.1, 2.2, 1.3, 0.2, -0.3, -1.1]);
 /// let config = TvConfig::default();
@@ -346,7 +347,7 @@ fn compute_tv_gradient_1d(
 /// # Example
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::tv::{tv_denoise_2d, TvConfig};
+/// use scirs2__signal::tv::{tv_denoise_2d, TvConfig};
 ///
 /// let image = Array2::from_shape_fn((10, 10), |(i, j)| (i + j) as f64 / 20.0);
 /// let config = TvConfig::default();

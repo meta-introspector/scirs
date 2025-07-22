@@ -7,12 +7,13 @@ use crate::activations::Activation;
 use rand::rng;
 use crate::error::{NeuralError, Result};
 use crate::layers::{Dense, Layer};
-use crate::nas::search_space::{Architecture, LayerType};
+use crate::nas::search__space::{Architecture, LayerType};
 use crate::nas::SearchSpace;
 use ndarray::concatenate;
 use ndarray::prelude::*;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
+use ndarray::ArrayView1;
 /// ENAS Controller that generates architectures
 pub struct ENASController {
     hidden_size: usize,
@@ -178,12 +179,12 @@ struct LayerConfig {
     weight_key: String,
 impl SuperNetwork {
     /// Create a new super network
-    pub fn new(search_space: &SearchSpace) -> Result<Self> {
+    pub fn new(_search_space: &SearchSpace) -> Result<Self> {
         let shared_weights = Arc::new(RwLock::new(HashMap::new()));
-        let max_layers = search_space.config.max_layers;
+        let max_layers = _search_space.config.max_layers;
         let mut layer_configs = vec![Vec::new(); max_layers];
         // Initialize shared weights for all possible layers
-        for (pos, layer_choice) in search_space.layer_choices.iter().enumerate() {
+        for (pos, layer_choice) in _search_space.layer_choices.iter().enumerate() {
             for layer_type in &layer_choice.choices {
                 let config = Self::create_layer_config(layer_type, pos)?;
                 layer_configs[pos].push(config);
@@ -191,11 +192,10 @@ impl SuperNetwork {
             max_layers,
             layer_configs,
     /// Create layer configuration
-    fn create_layer_config(layer_type: &LayerType, position: usize) -> Result<LayerConfig> {
+    fn create_layer_config(_layer_type: &LayerType, position: usize) -> Result<LayerConfig> {
         let (input_dim, output_dim) = match layer_type {
             LayerType::Dense(units) => (512, *units), // Placeholder dimensions
-            LayerType::Conv2D { filters, .. } => (64, *filters),
-            _ => (512, 512),
+            LayerType::Conv2D { filters, .. } => (64, *filters, _ => (512, 512),
         };
         let weight_key = format!("{:?}_pos_{}", layer_type, position);
         Ok(LayerConfig {
@@ -252,8 +252,7 @@ impl SuperNetwork {
             LayerType::Activation(name) => {
                 let activation = match name.as_str() {
                     "relu" => Activation::ReLU,
-                    "swish" => Activation::Swish,
-                    _ => Activation::ReLU,
+                    "swish" => Activation::Swish_ =>, Activation::ReLU,
                 };
                 Ok(activation.apply(&output))
             _ => Ok(output),
@@ -273,8 +272,8 @@ struct LSTMCell {
     w_o: Dense<f32>,
     w_g: Dense<f32>,
 impl LSTMCell {
-    fn new(input_dim: usize, hidden_dim: usize) -> Result<Self> {
-        let combined_dim = input_dim + hidden_dim;
+    fn new(_input_dim: usize, hidden_dim: usize) -> Result<Self> {
+        let combined_dim = _input_dim + hidden_dim;
             hidden_dim,
             w_i: Dense::new(combined_dim, hidden_dim, Some(Activation::Sigmoid))?,
             w_f: Dense::new(combined_dim, hidden_dim, Some(Activation::Sigmoid))?,
@@ -386,7 +385,7 @@ impl ENASTrainer {
         Ok(architectures[0].clone())
 /// Helper function to apply softmax with temperature
 #[allow(dead_code)]
-fn softmax(logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
+fn softmax(_logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
     let scaled_logits = logits / temperature;
     let max_logit = scaled_logits
         .iter()
@@ -397,7 +396,7 @@ fn softmax(logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
     exp_logits / sum
 /// Helper function to sample from categorical distribution
 #[allow(dead_code)]
-fn sample_categorical(probs: &Array1<f32>) -> Result<usize> {
+fn sample_categorical(_probs: &Array1<f32>) -> Result<usize> {
     let mut rng = rng();
     let uniform: f32 = rand::Rng::random(&mut rng);
     let mut cumsum = 0.0;

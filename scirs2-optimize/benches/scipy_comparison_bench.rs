@@ -135,42 +135,42 @@ fn get_benchmark_problems() -> Vec<BenchmarkConfig> {
     vec![
         BenchmarkConfig {
             name: "Rosenbrock",
-            function: test_functions::rosenbrock,
+            function: test_functions: rosenbrock,
             initial_points: vec![array![0.0, 0.0], array![-1.0, 1.0], array![2.0, 2.0]],
             optimal_value: 0.0,
             dimensions: vec![2],
         },
         BenchmarkConfig {
             name: "Sphere",
-            function: test_functions::sphere,
+            function: test_functions: sphere,
             initial_points: vec![array![1.0, 1.0], array![5.0, 5.0]],
             optimal_value: 0.0,
             dimensions: vec![2, 10, 50],
         },
         BenchmarkConfig {
             name: "Rastrigin",
-            function: test_functions::rastrigin,
+            function: test_functions: rastrigin,
             initial_points: vec![array![1.0, 1.0], array![4.0, 4.0]],
             optimal_value: 0.0,
             dimensions: vec![2, 10],
         },
         BenchmarkConfig {
             name: "Ackley",
-            function: test_functions::ackley,
+            function: test_functions: ackley,
             initial_points: vec![array![1.0, 1.0], array![2.5, 2.5]],
             optimal_value: 0.0,
             dimensions: vec![2, 10],
         },
         BenchmarkConfig {
             name: "Beale",
-            function: test_functions::beale,
+            function: test_functions: beale,
             initial_points: vec![array![1.0, 1.0], array![0.0, 0.0]],
             optimal_value: 0.0,
             dimensions: vec![2],
         },
         BenchmarkConfig {
             name: "Himmelblau",
-            function: test_functions::himmelblau,
+            function: test_functions: himmelblau,
             initial_points: vec![array![0.0, 0.0], array![1.0, 1.0]],
             optimal_value: 0.0,
             dimensions: vec![2],
@@ -342,10 +342,10 @@ fn bench_least_squares(c: &mut Criterion) {
                     let result = least_squares(
                         residual,
                         x0,
-                        scirs2_optimize::least_squares::Method::LevenbergMarquardt,
+                        scirs2_optimize::least, _squares::Method::LevenbergMarquardt,
                         None::<fn(&[f64], &[f64]) -> ndarray::Array2<f64>>,
                         data,
-                        Some(scirs2_optimize::least_squares::Options {
+                        Some(scirs2_optimize::least, _squares::Options {
                             ..Default::default()
                         }),
                     );

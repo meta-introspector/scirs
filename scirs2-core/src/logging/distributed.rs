@@ -51,8 +51,7 @@ pub struct DistributedLogEntry {
 
 impl DistributedLogEntry {
     /// Create a new distributed log entry
-    pub fn new(
-        node_id: String,
+    pub fn new(node_id: String,
         level: crate::logging::LogLevel,
         message: String,
         service: String,
@@ -92,7 +91,7 @@ impl DistributedLogEntry {
             .as_millis();
         let counter = COUNTER.fetch_add(1, Ordering::SeqCst);
 
-        format!(":x{timestamp, counter}")
+        format!("{:x}-{:x}", timestamp, counter)
     }
 
     /// Convert to JSON string
@@ -272,12 +271,7 @@ impl DistributedLogger {
     }
 
     /// Log with correlation ID for distributed tracing
-    pub fn log_with_correlation(
-        &self,
-        level: crate::logging::LogLevel,
-        message: &str,
-        service: &str,
-        correlation_id: &str,
+    pub fn log_with_correlation(&self, level: crate::logging::LogLevel, message: &str, service: &str, correlation_id: &str
     ) {
         let entry = DistributedLogEntry::new(
             self.config.node_id.clone(),
@@ -569,7 +563,7 @@ pub mod utils {
     use super::*;
 
     /// Create a simple distributed logging setup
-    pub fn create_simple_setup(node_role: NodeRole) -> DistributedLogger {
+    pub fn create_simple_logger(node_role: NodeRole) -> DistributedLogger {
         let config = DistributedConfig {
             node_role,
             ..Default::default()
@@ -594,7 +588,7 @@ pub mod utils {
 
         // Create producers pointing to aggregators
         let producer_config = DistributedConfig {
-            aggregators: aggregator_addresses,
+            aggregators: aggregator_addresses.clone(),
             node_role: NodeRole::Producer,
             ..Default::default()
         };

@@ -30,7 +30,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::clustering::external_metrics::adjusted_rand_index;
+/// use scirs2__metrics::clustering::external_metrics::adjusted_rand_index;
 ///
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![0, 0, 0, 1, 1, 1];
@@ -76,7 +76,7 @@ where
     // Count pairs
     let (mut sum_comb_a, mut sum_comb_b, mut sum_comb) = (0.0, 0.0, 0.0);
 
-    // Count terms for true labels
+    // Count terms for _true labels
     let mut a_counts: HashMap<String, usize> = HashMap::new();
     for lt in labels_true.iter() {
         let key = format!("{lt:?}");

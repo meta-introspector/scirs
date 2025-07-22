@@ -1,5 +1,5 @@
 use ndarray::{array, Array2};
-use scirs2_cluster::{
+use scirs2__cluster::{
     // Affinity Propagation
     affinity_propagation,
     // BIRCH
@@ -164,10 +164,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn print_results(labels: &ndarray::Array1<usize>, data: &Array2<f64>) {
-    // Count unique labels
+fn print_results(_labels: &ndarray::Array1<usize>, data: &Array2<f64>) {
+    // Count unique _labels
     let mut unique_labels = std::collections::HashSet::new();
-    for &label in labels.iter() {
+    for &label in _labels.iter() {
         unique_labels.insert(label);
     }
 
@@ -176,7 +176,7 @@ fn print_results(labels: &ndarray::Array1<usize>, data: &Array2<f64>) {
 
     // Calculate silhouette score if we have valid clusters
     if n_clusters > 1 {
-        match silhouette_score(data.view(), labels.mapv(|x| x as i32).view()) {
+        match silhouette_score(data.view(), _labels.mapv(|x| x as i32).view()) {
             Ok(score) => println!("   Silhouette score: {:.3}", score),
             Err(_) => println!("   Silhouette score: N/A"),
         }
@@ -185,13 +185,13 @@ fn print_results(labels: &ndarray::Array1<usize>, data: &Array2<f64>) {
     // Show label distribution
     let mut label_counts: std::collections::HashMap<usize, usize> =
         std::collections::HashMap::new();
-    for &label in labels.iter() {
+    for &label in _labels.iter() {
         *label_counts.entry(label).or_insert(0) += 1;
     }
 
     print!("   Label distribution: ");
     let mut sorted_labels: Vec<_> = label_counts.into_iter().collect();
-    sorted_labels.sort_by_key(|&(label, _)| label);
+    sorted_labels.sort_by_key(|&(label_)| label);
 
     for (i, (label, count)) in sorted_labels.iter().enumerate() {
         if i > 0 {

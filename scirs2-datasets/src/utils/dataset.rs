@@ -19,7 +19,7 @@ use std::collections::HashMap;
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_datasets::utils::Dataset;
+/// use scirs2__datasets::utils::Dataset;
 ///
 /// let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 /// let dataset = Dataset::new(data, None)
@@ -78,15 +78,15 @@ impl Dataset {
     ///
     /// ```rust
     /// use ndarray::{Array1, Array2};
-    /// use scirs2_datasets::utils::Dataset;
+    /// use scirs2__datasets::utils::Dataset;
     ///
     /// let data = Array2::zeros((100, 5));
     /// let target = Some(Array1::zeros(100));
     /// let dataset = Dataset::new(data, target);
     /// ```
-    pub fn new(data: Array2<f64>, target: Option<Array1<f64>>) -> Self {
+    pub fn new(_data: Array2<f64>, target: Option<Array1<f64>>) -> Self {
         Dataset {
-            data,
+            _data,
             target,
             target_names: None,
             feature_names: None,

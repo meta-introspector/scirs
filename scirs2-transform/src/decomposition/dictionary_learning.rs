@@ -7,7 +7,7 @@
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 use rand::Rng;
-use scirs2_linalg::{svd, vector_norm};
+use scirs2__linalg::{svd, vector_norm};
 
 use crate::error::{Result, TransformError};
 
@@ -44,9 +44,9 @@ impl DictionaryLearning {
     /// # Arguments
     /// * `n_components` - Number of dictionary elements to extract
     /// * `alpha` - Sparsity controlling parameter
-    pub fn new(n_components: usize, alpha: f64) -> Self {
+    pub fn new(_n_components: usize, alpha: f64) -> Self {
         DictionaryLearning {
-            n_components,
+            _n_components,
             alpha,
             max_iter: 1000,
             tol: 1e-4,
@@ -99,11 +99,11 @@ impl DictionaryLearning {
 
         // Select random samples as initial dictionary atoms
         for i in 0..self.n_components {
-            let idx = rng.random_range(0..n_samples);
+            let idx = rng.gen_range(0..n_samples);
             dictionary.row_mut(i).assign(&x.row(idx));
 
             // Normalize atom
-            let norm = vector_norm(&dictionary.row(i).view(), 2).unwrap_or(0.0);
+            let norm = vector_norm(&dictionary.row(i).view()..2).unwrap_or(0.0);
             if norm > 1e-10 {
                 dictionary.row_mut(i).mapv_inplace(|x| x / norm);
             }
@@ -207,7 +207,7 @@ impl DictionaryLearning {
             // Swap rows
             if max_idx != k {
                 perm.swap(k, max_idx);
-                for j in 0..n {
+                for j in 0, n {
                     let tmp = lu[[k, j]];
                     lu[[k, j]] = lu[[max_idx, j]];
                     lu[[max_idx, j]] = tmp;
@@ -299,7 +299,7 @@ impl DictionaryLearning {
                         // Update dictionary atom
                         dictionary.row_mut(k).assign(&vt.row(0));
 
-                        // Update sparse codes
+                        // Update sparse _codes
                         for (idx, &i) in using_samples.iter().enumerate() {
                             sparse_codes[[i, k]] = u[[idx, 0]] * s[0];
                         }

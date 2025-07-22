@@ -6,7 +6,7 @@
 //! speedups by processing multiple data elements simultaneously.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2_integrate::ode::{
+use scirs2__integrate::ode::{
     methods::{rk45_method, rk4_method},
     types::ODEOptions,
 };
@@ -15,11 +15,11 @@ use std::time::Instant;
 // SIMD methods are only available when the "simd" feature is enabled
 // Temporarily disabled SIMD methods due to implementation complexity
 // #[cfg(feature = "simd")]
-// use scirs2_integrate::ode::methods::{simd_rk45_method, simd_rk4_method};
+// use scirs2__integrate::ode::methods::{simd_rk45_method, simd_rk4_method};
 
 // Temporarily disabled SIMD utils due to implementation complexity
 // #[cfg(feature = "simd")]
-// use scirs2_integrate::ode::utils::{simd_ode_function_eval, simd_rk_step, SimdOdeOps};
+// use scirs2__integrate::ode::utils::{simd_ode_function_eval, simd_rk_step, SimdOdeOps};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -237,7 +237,7 @@ fn demonstrate_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
             ("Infinity norm", test_simd_inf_norm),
         ];
 
-        for (op_name, _test_func) in ops {
+        for (op_name_test_func) in ops {
             // SIMD version
             let start = Instant::now();
             let _result_simd = match op_name {
@@ -296,8 +296,7 @@ fn demonstrate_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
                     result.iter().sum::<f64>()
                 }
                 "L2 norm" => a.iter().map(|&x| x * x).sum::<f64>().sqrt(),
-                "Infinity norm" => a.iter().map(|&x| x.abs()).fold(0.0f64, |acc, x| acc.max(x)),
-                _ => 0.0,
+                "Infinity norm" => a.iter().map(|&x| x.abs()).fold(0.0f64, |acc, x| acc.max(x), _ => 0.0,
             };
             let std_time = start.elapsed();
 

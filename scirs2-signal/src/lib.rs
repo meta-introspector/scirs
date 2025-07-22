@@ -40,8 +40,8 @@
 //! ## Examples
 //!
 //! ```
-//! use scirs2_signal::filter::butter;
-//! use scirs2_signal::filter::filtfilt;
+//! use scirs2__signal::filter::butter;
+//! use scirs2__signal::filter::filtfilt;
 //!
 //! // Generate a simple signal and apply a Butterworth filter
 //! // let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -52,9 +52,18 @@
 //! // let filtered = filtfilt(&b, &a, &signal).unwrap();
 //! ```
 
+
+use crate::error::{SignalError, SignalResult};
+use crate::dwt::Wavelet;
+use crate::lti::design::tf;
+use crate::utilities::spectral::spectral_flux;
+use crate::utilities::spectral::spectral_centroid;
+use crate::utilities::spectral::spectral_rolloff;
+use crate::wpt2d::WaveletPacket2D;
 // BLAS backend linking handled through scirs2-core
 
 // Export error types
+#[allow(unused_imports)]
 pub mod error;
 pub use error::{SignalError, SignalResult};
 
@@ -195,7 +204,7 @@ pub mod wvd;
 pub use adaptive::{
     ApaFilter, FdlmsFilter, LmfFilter, LmsFilter, NlmsFilter, RlsFilter, SmLmsFilter, VsLmsFilter,
 };
-pub use advanced_filter::{
+pub use advanced__filter::{
     arbitrary_magnitude_design, constrained_least_squares_design, least_squares_design,
     minimax_design, parks_mcclellan, ArbitraryResponse, FilterDesignResult, FilterSpec, FilterType,
     ParksMcClellanConfig,
@@ -252,7 +261,7 @@ pub use filter::{
     StreamingFilterState,
     StreamingStats,
 };
-pub use filter_banks::{
+pub use filter__banks::{
     CosineModulatedFilterBank, FilterBankAnalysis, FilterBankType, FilterBankWindow, IirStabilizer,
     QmfBank, StabilizationMethod, WaveletFilterBank,
 };
@@ -260,7 +269,7 @@ pub use higher_order::{
     biamplitude, bicoherence, bispectrum, cumulative_bispectrum, detect_phase_coupling,
     skewness_spectrum, trispectrum, BispecEstimator, HigherOrderConfig,
 };
-pub use hr_spectral::{
+pub use hr__spectral::{
     esprit, minimum_variance, music, pisarenko, prony, HrSpectralConfig, HrSpectralMethod,
     HrSpectralResult,
 };
@@ -291,10 +300,10 @@ pub use kalman::{
 pub use lombscargle::{
     find_peaks as find_ls_peaks, lombscargle, significance_levels, AutoFreqMethod,
 };
-pub use lombscargle_simd::{simd_lombscargle, SimdLombScargleResult, ValidationMetrics};
+pub use lombscargle__simd::{simd_lombscargle, SimdLombScargleResult, ValidationMetrics};
 
 // Advanced Enhanced Lomb-Scargle Validation
-pub use lombscargle_optimized::{
+pub use lombscargle__optimized::{
     generate_advanced_lombscargle_report, run_advanced_lombscargle_validation,
     AdvancedLombScargleResult, CompleteSimdValidation, ComprehensiveAccuracyResult,
     MemoryProfilingResult, PerformanceRegressionResult, ScipyComparisonResult,
@@ -302,14 +311,14 @@ pub use lombscargle_optimized::{
 };
 
 // Advanced-enhanced Lomb-Scargle validation
-pub use lombscargle_advanced_enhanced_validation::{
+pub use lombscargle_advanced_enhanced__validation::{
     generate_advanced_enhanced_validation_report, run_advanced_enhanced_lombscargle_validation,
     AdvancedEnhancedLombScargleValidationResult, EdgeCaseValidationMetrics,
     LombScargleAccuracyValidation, StatisticalRobustnessMetrics,
 };
 
 // Advanced Edge Case Validation for Lomb-Scargle
-pub use lombscargle_edge_case_advanced_validation::{
+pub use lombscargle_edge_case_advanced__validation::{
     generate_advanced_edge_case_report, run_advanced_edge_case_validation,
     AdvancedEdgeCaseValidationResult, AliasingDetectionResult, MultiScaleSignalResult,
     NoiseToleranceResult, NonUniformGridResult, NumericalPrecisionResult, SparseSamplingResult,
@@ -319,12 +328,12 @@ pub use median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
 };
-pub use memory_efficient::{
+pub use memory__efficient::{
     memory_efficient_correlation, memory_efficient_fft, memory_efficient_filter,
     memory_efficient_spectrogram, MemoryCache, StreamingCorrelationResult, StreamingFFTResult,
     StreamingFilterResult, StreamingProcessor, StreamingSpectrogramResult,
 };
-pub use memory_optimized::{
+pub use memory__optimized::{
     memory_optimized_fft, memory_optimized_fir_filter, memory_optimized_spectrogram, MemoryConfig,
     MemoryOptimizedData, MemoryOptimizedResult, MemoryStats, TimingStats,
 };
@@ -336,29 +345,32 @@ pub use nlm::{
     nlm_block_matching_2d, nlm_color_image, nlm_denoise_1d, nlm_denoise_2d, nlm_multiscale_2d,
     NlmConfig,
 };
-pub use parallel_spectral::{parallel_welch, ParallelSpectralConfig, ParallelSpectralProcessor};
+#[cfg(feature = "parallel")]
+pub use parallel__spectral::{parallel_welch, ParallelSpectralConfig, ParallelSpectralProcessor};
+#[cfg(not(feature = "parallel"))]
+pub use parallel__spectral::ParallelSpectralProcessor;
 pub use parametric::{
     ar_spectrum, arma_spectrum, estimate_ar, estimate_arma, select_ar_order, ARMethod,
     OrderSelection,
 };
-pub use parametric_advanced::{
+pub use parametric__advanced::{
     estimate_var_model, high_resolution_spectral_estimation, AdvancedParametricConfig,
     HighResolutionMethod, HighResolutionResult, RegularizationMethod, VarModel,
 };
-pub use parametric_advanced_enhanced::{
+pub use parametric_advanced__enhanced::{
     adaptive_ar_spectral_estimation, advanced_enhanced_arma, advanced_enhanced_arma_spectrum,
     comprehensive_parametric_validation,
     high_resolution_spectral_estimation as advanced_high_resolution_spectral_estimation,
     multitaper_parametric_estimation, robust_parametric_spectral_estimation,
     AdvancedEnhancedARMAResult, ConvergenceInfo, ModelDiagnostics, PerformanceStats,
 };
-pub use parametric_enhanced::{
+pub use parametric__enhanced::{
     enhanced_parametric_estimation, DiagnosticStats, EnhancedParametricResult,
     ModelSelectionResult, ModelType, ParametricConfig,
 };
 
 // Comprehensive Parametric Optimization
-pub use parametric_comprehensive_optimization::{
+pub use parametric_comprehensive__optimization::{
     generate_comprehensive_optimization_report, run_comprehensive_parametric_optimization,
     ComplexityMetrics, ComprehensiveOptimizationConfig, ComprehensiveParametricResult,
     CrossValidationResults, ModelOrder, ModelTypePreference, OptimizationMethod,
@@ -377,18 +389,18 @@ pub use robust::{
 pub use separation::{
     harmonic_percussive_separation, multiband_separation, HarmonicPercussiveConfig, MultibandConfig,
 };
-pub use simd_advanced::{
+pub use simd__advanced::{
     benchmark_simd_operations, simd_apply_window, simd_autocorrelation, simd_complex_fft_butterfly,
     simd_cross_correlation, simd_fir_filter, SimdConfig,
 };
-pub use simd_memory_optimization::{
+pub use simd_memory__optimization::{
     benchmark_simd_memory_operations, simd_memory_efficient_fft, simd_optimized_convolution,
     simd_optimized_fir_filter, simd_optimized_matrix_multiply, SimdMemoryConfig, SimdMemoryResult,
 };
-pub use simd_ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
+pub use simd__ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
 
 // Advanced Enhanced SIMD Operations
-pub use simd_advanced_enhanced::{
+pub use simd_advanced__enhanced::{
     advanced_simd_dwt, advanced_simd_fft, advanced_simd_resample, advanced_simd_rfft,
     advanced_simd_stft, generate_simd_performance_report, AdvancedSimdConfig,
     FftPerformanceMetrics, SimdFftResult, SimdStftResult, SimdUtilizationStats, SimdWaveletResult,
@@ -405,7 +417,7 @@ pub use stft::{
     closest_stft_dual_window, create_cola_window, MemoryEfficientStft, MemoryEfficientStftConfig,
     MemoryInfo, ShortTimeFft,
 };
-pub use streaming_stft::{
+pub use streaming__stft::{
     RealTimeStft, RealTimeStftStatistics, StreamingStft, StreamingStftConfig,
     StreamingStftStatistics,
 };
@@ -432,7 +444,7 @@ pub use multitaper::{
 };
 
 // Enhanced multitaper validation with SciPy reference
-pub use multitaper_scipy_validation::{
+pub use multitaper_scipy__validation::{
     generate_multitaper_validation_report, run_scipy_multitaper_validation,
     EnhancedTestSignalConfig, MultitaperScipyValidationResult, PerformanceComparison,
     PrecisionAnalysisResult, SimdValidationMetrics, StatisticalValidationMetrics, TestResult,
@@ -441,29 +453,29 @@ pub use multitaper_scipy_validation::{
 
 // Wavelet transform functions already re-exported above
 pub use dwt2d::{dwt2d_decompose, dwt2d_reconstruct, wavedec2, waverec2, Dwt2dResult};
-pub use dwt2d_advanced_denoising::{
+pub use dwt2d_advanced__denoising::{
     advanced_wavelet_denoise_2d, context_adaptive_denoise, multiscale_edge_preserving_denoise,
     simd_threshold_coefficients, AdvancedDenoisingConfig, DenoisingMethod, NoiseEstimationMethod,
     ThresholdStrategy, WaveletDenoising2dResult,
 };
-pub use dwt2d_advanced_features::{
+pub use dwt2d_advanced__features::{
     advanced_wavelet_denoising, AdvancedWaveletConfig, AdvancedWaveletResult, DenoisingMetrics,
     EdgeMetrics, TextureFeatures, ThresholdMethod, ThresholdSelection,
 };
-pub use dwt2d_boundary_enhanced::{
+pub use dwt2d_boundary__enhanced::{
     dwt2d_decompose_enhanced, dwt2d_reconstruct_enhanced, generate_boundary_report,
     wavedec2_enhanced, waverec2_enhanced, AdaptiveBoundaryParams, ArtifactMeasures,
     BoundaryConfig2D, BoundaryInfo2D, BoundaryMode2D, BoundaryPreprocessing,
     BoundaryQualityMetrics, EnhancedDWT2DDecomposition, ExtensionInfo, WindowType, WindowingConfig,
 };
-pub use dwt2d_performance_optimization::{
+pub use dwt2d_performance__optimization::{
     generate_performance_report, optimized_dwt2d_decompose, MemoryConstraints, MemoryStatistics,
     OptimizationFlags, OptimizedDwt2dResult, PerformanceConfig, PerformanceMetrics, PlatformConfig,
     QualityAssessment,
 };
 
 // 2D wavelet advanced validation
-pub use dwt2d_advanced_validation::{
+pub use dwt2d_advanced__validation::{
     generate_dwt2d_comprehensive_report, run_dwt2d_comprehensive_validation,
     run_quick_dwt2d_validation, BoundaryValidationResult, CompressionValidationResult,
     ConsistencyAnalysisResult, DenoisingValidationResult, Dwt2dadvancedConfig, Dwt2dadvancedResult,
@@ -499,14 +511,14 @@ pub use wpt::{
     get_level_coefficients, reconstruct_from_nodes, wp_decompose, WaveletPacket, WaveletPacketTree,
 };
 pub use wpt2d::{wpt2d_full, wpt2d_selective, WaveletPacket2D, WaveletPacketTree2D};
-pub use wpt_enhanced_modern_validation::{
+pub use wpt_enhanced_modern__validation::{
     generate_enhanced_modern_validation_report, run_enhanced_modern_validation,
     AnomalyDetectionResult, CrossFrameworkValidationResult, EdgeCaseValidationResult,
     EnhancedModernValidationConfig, EnhancedModernValidationResult, GpuValidationResult,
     OptimizationValidationResult, PrecisionValidationResult, ResourceValidationResult,
     StreamingValidationResult,
 };
-pub use wpt_super_validation::{run_advanced_wpt_validation, AdvancedWptValidationResult};
+pub use wpt_super__validation::{run_advanced_wpt_validation, AdvancedWptValidationResult};
 
 // Note: wpt_enhanced_modern_validation functions are already imported above
 
@@ -520,14 +532,14 @@ pub use lti::{
 };
 
 // Enhanced LTI system identification functions
-pub use lti_enhanced_system_identification::{
+pub use lti_enhanced_system__identification::{
     advanced_enhanced_system_identification, AdaptationResults, AdvancedEnhancedSysIdConfig,
     AdvancedEnhancedSysIdResult, AdvancedValidationMetrics, ParameterWithUncertainty,
     PerformanceMetrics as LtiPerformanceMetrics, StructureSelectionResults, SystemModel,
 };
 
 // Advanced-enhanced controllability and observability analysis
-pub use lti_advanced_controllability_observability::{
+pub use lti_advanced_controllability__observability::{
     advanced_controllability_observability_analysis, AdvancedAnalysisConfig,
     AdvancedControllabilityAnalysis, AdvancedControllabilityObservabilityResult,
     AdvancedObservabilityAnalysis, AnalysisPerformanceMetrics, GeometricAnalysis,
@@ -537,7 +549,7 @@ pub use lti_advanced_controllability_observability::{
 
 // LTI system functions (using what's available)
 // Note: Some functions temporarily commented out due to module restructuring
-pub use lti_response::{impulse_response, lsim, step_response};
+pub use lti__response::{impulse_response, lsim, step_response};
 
 // Chirp Z-Transform functions
 pub use czt::{czt, czt_points};
@@ -553,12 +565,12 @@ pub use detrend::{detrend, detrend_axis, detrend_poly};
 pub use denoise::{denoise_wavelet, ThresholdSelect};
 
 // 2D Wavelet image processing functions
-pub use dwt2d_image::{
+pub use dwt2d__image::{
     compress_image, denoise_image, detect_edges, DenoisingMethod as ImageDenoisingMethod,
 };
 
 // Wavelet visualization utilities
-pub use wavelet_vis::{
+pub use wavelet__vis::{
     arrange_coefficients_2d, arrange_multilevel_coefficients_2d, calculate_energy_1d,
     calculate_energy_2d, calculate_energy_swt2d, colormaps, count_nonzero_coefficients,
     create_coefficient_heatmap, normalize_coefficients, NormalizationStrategy, WaveletCoeffCount,
@@ -576,7 +588,7 @@ pub mod measurements;
 pub use measurements::{peak_to_peak, peak_to_rms, rms, snr, thd};
 
 // Phase vocoder for time stretching and pitch shifting
-pub use phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
+pub use phase__vocoder::{phase_vocoder, PhaseVocoderConfig};
 
 // Empirical Mode Decomposition (EMD) for nonlinear and non-stationary signals
 pub use emd::{eemd, emd, hilbert_huang_spectrum, EmdConfig, EmdResult};
@@ -587,7 +599,7 @@ pub use features::{
 };
 
 // Feature extraction for image analysis
-pub use image_features::{
+pub use image__features::{
     extract_color_image_features, extract_image_features, ImageFeatureOptions,
 };
 
@@ -626,7 +638,7 @@ pub use sysid::{
     FreqResponseResult, ModelValidation, ParametricResult, RecursiveLeastSquares, SysIdConfig,
     TfEstimationMethod, TfEstimationResult,
 };
-pub use sysid_robust_enhancements::{
+pub use sysid_robust__enhancements::{
     analyze_model_stability, enhanced_cross_validation, estimate_signal_noise_ratio_advanced,
     robust_least_squares, CrossValidationResults as SysidCrossValidationResults,
     EnhancedModelValidation, PredictionIntervals, RobustSysIdConfig, RobustnessMetrics,
@@ -640,19 +652,19 @@ pub use sswt::{
 };
 
 // SciPy numerical validation functions
-pub use scipy_validation::{
+pub use scipy__validation::{
     generate_validation_report, load_reference_data, validate_all, ValidationConfig,
     ValidationResults, ValidationSummary, ValidationTestResult,
 };
 
 // Advanced comprehensive validation
-pub use advanced_comprehensive_validation::{
+pub use advanced_comprehensive__validation::{
     generate_comprehensive_report, run_comprehensive_validation, ComprehensiveValidationResult,
     PerformanceImprovements,
 };
 
 // Advanced validation suite
-pub use advanced_validation_suite::{
+pub use advanced_validation__suite::{
     generate_comprehensive_report as generate_comprehensive_validation_report,
     run_comprehensive_validation as run_suite_comprehensive_validation,
     run_full_comprehensive_validation, run_quick_comprehensive_validation,
@@ -668,7 +680,7 @@ pub use benchmarking::{
 };
 
 // Advanced mode coordination and comprehensive validation
-pub use advanced_mode_coordinator::{
+pub use advanced_mode__coordinator::{
     run_advanced_validation_with_config,
     run_quick_comprehensive_validation as run_quick_advanced_validation_coordinator,
     AdvancedConfig, AdvancedCoordinator, AdvancedResults,

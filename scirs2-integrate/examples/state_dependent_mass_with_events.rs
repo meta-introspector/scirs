@@ -8,8 +8,8 @@
 //! where the effective mass matrix depends on the bead's position.
 
 use ndarray::{array, Array2, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::{
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::{
     solve_ivp_with_events, terminal_event, EventAction, EventDirection, EventSpec, MassMatrix,
     ODEMethod, ODEOptions, ODEOptionsWithEvents,
 };
@@ -119,8 +119,7 @@ fn main() -> IntegrateResult<()> {
 
     type EventFunc = Box<dyn Fn(f64, ArrayView1<f64>) -> f64 + Send + Sync>;
     let event_funcs: Vec<EventFunc> = vec![
-        // Event 1: Velocity changes sign (turning points)
-        Box::new(|_t: f64, y: ArrayView1<f64>| y[1]),
+        // Event 1: Velocity changes sign (turning points), Box::new(|_t: f64, y: ArrayView1<f64>| y[1]),
         // Event 2: Bead passes through origin
         Box::new(|_t: f64, y: ArrayView1<f64>| y[0]),
         // Event 3: Bead reaches maximum allowed radius (terminal event)

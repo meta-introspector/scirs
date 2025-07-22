@@ -1,9 +1,10 @@
 //! DPSS (Slepian) window generation for multitaper spectral estimation.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2};
+use ndarray::{Array1, Array2, s};
 use std::f64::consts::PI;
 
+#[allow(unused_imports)]
 /// Compute Discrete Prolate Spheroidal Sequences (DPSS), also known as Slepian sequences.
 ///
 /// DPSS tapers are often used in multitaper spectral estimation and are designed
@@ -24,7 +25,7 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::multitaper::dpss;
+/// use scirs2__signal::multitaper::dpss;
 ///
 /// // Compute 4 DPSS tapers of length 64 with time-bandwidth product of 4
 /// let result = dpss(64, 4.0, 4, true).unwrap();
@@ -117,7 +118,7 @@ pub fn dpss(
 
     for i in 0..k {
         // Convert concentration from sin squared to sin
-        lambda[i] = (1.0 - sorted_eigvals[i]).sqrt();
+        lambda[i] = ((1.0 - sorted_eigvals[i]) as f64).sqrt();
 
         // Get eigenvector and normalize
         let mut v = sorted_eigvecs.slice(s![i, ..]).to_owned();
@@ -156,20 +157,20 @@ pub fn dpss(
 ///
 /// * Tuple of (eigenvalues, eigenvectors)
 #[allow(dead_code)]
-fn tridiagonal_eig(diag: &[f64], offdiag: &[f64]) -> SignalResult<(Vec<f64>, Array2<f64>)> {
-    if diag.is_empty() {
+fn tridiagonal_eig(_diag: &[f64], offdiag: &[f64]) -> SignalResult<(Vec<f64>, Array2<f64>)> {
+    if _diag.is_empty() {
         return Err(SignalError::ValueError(
             "Diagonal must have at least one element".to_string(),
         ));
     }
 
-    if offdiag.len() != diag.len() - 1 {
+    if offdiag.len() != _diag.len() - 1 {
         return Err(SignalError::ValueError(
             "Off-diagonal must have one fewer element than diagonal".to_string(),
         ));
     }
 
-    let mut n = diag.len();
+    let mut n = _diag.len();
     let mut eigvals = vec![0.0; n];
     let mut eigvecs = Array2::zeros((n, n));
 
@@ -179,7 +180,7 @@ fn tridiagonal_eig(diag: &[f64], offdiag: &[f64]) -> SignalResult<(Vec<f64>, Arr
     }
 
     // Copy diagonal and off-diagonal elements
-    let mut a = diag.to_vec();
+    let mut a = _diag.to_vec();
     let mut b = offdiag.to_vec();
 
     // Number of iterations for QR algorithm

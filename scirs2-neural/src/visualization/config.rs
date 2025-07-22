@@ -220,8 +220,7 @@ mod tests {
         ];
         let palette = ColorPalette::Custom(custom_colors.clone());
         match palette {
-            ColorPalette::Custom(colors) => assert_eq!(colors, custom_colors),
-            _ => assert!(false, "Expected custom color palette"),
+            ColorPalette::Custom(colors) => assert_eq!(colors, custom_colors, _ => assert!(false, "Expected custom color palette"),
     fn test_interactive_config() {
         let config = InteractiveConfig {
             enable_interaction: false,

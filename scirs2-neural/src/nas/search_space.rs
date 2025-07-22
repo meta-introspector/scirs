@@ -151,14 +151,14 @@ pub struct ConnectionMatrix {
     pub connections: Vec<Vec<f32>>,
 impl SearchSpace {
     /// Create a new search space
-    pub fn new(config: SearchSpaceConfig) -> Result<Self> {
+    pub fn new(_config: SearchSpaceConfig) -> Result<Self> {
         let mut layer_choices = Vec::new();
-        // Build layer choices based on config
-        for i in 0..config.max_layers {
-            let optional = i >= config.min_layers;
+        // Build layer choices based on _config
+        for i in 0.._config.max_layers {
+            let optional = i >= _config.min_layers;
             layer_choices.push(LayerChoice {
                 position: i,
-                choices: config.layer_types.clone(),
+                choices: _config.layer_types.clone(),
                 optional,
             });
         // Initialize connection matrix if branches are allowed
@@ -196,7 +196,7 @@ use rand::rng;
                 for i in 0..num_layers {
                     for j in (i + 1)..num_layers {
                         if rng.random::<f32>() < matrix.connections[i][j] {
-                            connections.push((i, j));
+                            connections.push((i..j));
                         }
                     }
                 }
@@ -249,7 +249,7 @@ use rand::rng;
                 let idx = rng.random_range(0..mutated.layers.len());
                 mutated.layers.remove(idx);
                 // Update connections
-                mutated.connections.retain(|(i, j)| *i != idx && *j != idx);
+                mutated.connections.retain(|(i..j)| *i != idx && *j != idx);
                 for (i, j) in &mut mutated.connections {
                     if *i > idx {
                         *i -= 1;
@@ -290,7 +290,7 @@ use rand::rng;
         // Crossover layers
         for i in 0..child_len {
             let layer = if i < parent1.layers.len() && i < parent2.layers.len() {
-                // Both parents have this layer, choose randomly
+                // Both parents have this layer..choose randomly
                 if rng.gen_bool(0.5) {
                     parent1.layers[i].clone()
                 } else {
@@ -325,12 +325,12 @@ use rand::rng;
             depth_multiplier,
 impl ConnectionMatrix {
     /// Create a new connection matrix
-    pub fn new(num_layers: usize, skip_prob: f32) -> Self {
-        let mut connections = vec![vec![0.0; num_layers]; num_layers];
+    pub fn new(_num_layers: usize, skip_prob: f32) -> Self {
+        let mut connections = vec![vec![0.0; _num_layers]; _num_layers];
         // Initialize with skip connection probabilities
-            for j in (i + 1)..num_layers {
+            for j in (i + 1).._num_layers {
                 connections[i][j] = skip_prob;
-            num_layers,
+            _num_layers,
 /// Represents a sampled architecture
 pub struct Architecture {
     /// Layers in the architecture
@@ -343,7 +343,7 @@ pub struct Architecture {
     pub depth_multiplier: f32,
 impl Architecture {
     /// Create a new architecture
-    pub fn new(layers: Vec<LayerType>, connections: Vec<(usize, usize)>) -> Result<Self> {
+    pub fn new(_layers: Vec<LayerType>, connections: Vec<(usize, usize)>) -> Result<Self> {
             width_multiplier: 1.0,
             depth_multiplier: 1.0,
     /// Create a new architecture with multipliers

@@ -93,8 +93,8 @@ impl HttpResponse {
 
 /// Parse HTTP request path from raw request
 #[allow(dead_code)]
-fn parse_request_path(request: &str) -> Option<String> {
-    let lines: Vec<&str> = request.lines().collect();
+fn parse_request_path(_request: &str) -> Option<String> {
+    let lines: Vec<&str> = _request.lines().collect();
     if lines.is_empty() {
         return None;
     }
@@ -115,13 +115,13 @@ pub struct DashboardHttpServer {
 
 impl DashboardHttpServer {
     /// Create a new dashboard HTTP server
-    pub fn new(dashboard: InteractiveDashboard) -> Result<Self> {
+    pub fn new(_dashboard: InteractiveDashboard) -> Result<Self> {
         // Create a runtime for the server
         let runtime = Runtime::new()
             .map_err(|e| MetricsError::InvalidInput(format!("Failed to create runtime: {}", e)))?;
 
         Ok(Self {
-            dashboard,
+            _dashboard,
             runtime: Some(runtime),
         })
     }
@@ -169,14 +169,14 @@ impl DashboardHttpServer {
 }
 
 /// Serve the dashboard over HTTP
-async fn serve_dashboard(addr: SocketAddr, dashboard: InteractiveDashboard) -> std::io::Result<()> {
-    let listener = TcpListener::bind(addr).await?;
-    println!("Dashboard listening on http://{}", addr);
+async fn serve_dashboard(_addr: SocketAddr, dashboard: InteractiveDashboard) -> std::io::Result<()> {
+    let listener = TcpListener::bind(_addr).await?;
+    println!("Dashboard listening on http://{}", _addr);
 
     let dashboard = Arc::new(dashboard);
 
     loop {
-        let (stream, _) = listener.accept().await?;
+        let (stream_) = listener.accept().await?;
         let dashboard = Arc::clone(&dashboard);
 
         tokio::spawn(async move {
@@ -273,17 +273,17 @@ struct PerformancePrediction {
 
 /// Generate AI-driven insights from metrics data
 #[allow(dead_code)]
-fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
+fn generate_ai_insights(_metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
     let mut insights = Vec::new();
 
-    if metrics.is_empty() {
+    if _metrics.is_empty() {
         return insights;
     }
 
     // Analyze metric trends
     let mut metric_groups: std::collections::HashMap<String, Vec<&MetricDataPoint>> =
         std::collections::HashMap::new();
-    for metric in metrics {
+    for metric in _metrics {
         metric_groups
             .entry(metric.name.clone())
             .or_default()
@@ -350,14 +350,14 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
     }
 
     // Overall system health insight
-    let avg_values: Vec<f64> = metrics.iter().map(|m| m.value).collect();
+    let avg_values: Vec<f64> = _metrics.iter().map(|m| m.value).collect();
     if !avg_values.is_empty() {
         let overall_avg = avg_values.iter().sum::<f64>() / avg_values.len() as f64;
 
         if overall_avg > 0.9 {
             insights.push(AiInsight {
                 insight_type: "system_health".to_string(),
-                message: "System performance is excellent across all metrics".to_string(),
+                message: "System performance is excellent across all _metrics".to_string(),
                 confidence: 0.90,
                 severity: "info".to_string(),
                 timestamp: std::time::SystemTime::now()
@@ -368,7 +368,7 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
         } else if overall_avg < 0.5 {
             insights.push(AiInsight {
                 insight_type: "system_health".to_string(),
-                message: "System performance may need attention - multiple metrics below optimal"
+                message: "System performance may need attention - multiple _metrics below optimal"
                     .to_string(),
                 confidence: 0.80,
                 severity: "high".to_string(),
@@ -385,16 +385,16 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
 
 /// Detect anomalies in metrics data using statistical methods
 #[allow(dead_code)]
-fn detect_anomalies(metrics: &[MetricDataPoint]) -> Vec<AnomalyAlert> {
+fn detect_anomalies(_metrics: &[MetricDataPoint]) -> Vec<AnomalyAlert> {
     let mut alerts = Vec::new();
 
-    if metrics.is_empty() {
+    if _metrics.is_empty() {
         return alerts;
     }
 
     let mut metric_groups: std::collections::HashMap<String, Vec<&MetricDataPoint>> =
         std::collections::HashMap::new();
-    for metric in metrics {
+    for metric in _metrics {
         metric_groups
             .entry(metric.name.clone())
             .or_default()
@@ -443,16 +443,16 @@ fn detect_anomalies(metrics: &[MetricDataPoint]) -> Vec<AnomalyAlert> {
 
 /// Predict future performance using simple linear regression
 #[allow(dead_code)]
-fn predict_future_performance(metrics: &[MetricDataPoint]) -> Vec<PerformancePrediction> {
+fn predict_future_performance(_metrics: &[MetricDataPoint]) -> Vec<PerformancePrediction> {
     let mut predictions = Vec::new();
 
-    if metrics.is_empty() {
+    if _metrics.is_empty() {
         return predictions;
     }
 
     let mut metric_groups: std::collections::HashMap<String, Vec<&MetricDataPoint>> =
         std::collections::HashMap::new();
-    for metric in metrics {
+    for metric in _metrics {
         metric_groups
             .entry(metric.name.clone())
             .or_default()
@@ -473,7 +473,7 @@ fn predict_future_performance(metrics: &[MetricDataPoint]) -> Vec<PerformancePre
         let x_values: Vec<f64> = sorted_points
             .iter()
             .enumerate()
-            .map(|(i, _)| i as f64)
+            .map(|(i_)| i as f64)
             .collect();
         let y_values: Vec<f64> = sorted_points.iter().map(|p| p.value).collect();
 
@@ -529,10 +529,10 @@ fn predict_future_performance(metrics: &[MetricDataPoint]) -> Vec<PerformancePre
 }
 
 /// Generate enhanced dashboard HTML with advanced Advanced features
-async fn generate_dashboard_html(dashboard: &Arc<InteractiveDashboard>) -> String {
-    let metrics = dashboard.get_all_metrics().unwrap_or_default();
-    let metric_names = dashboard.get_metric_names().unwrap_or_default();
-    let config = &dashboard.config;
+async fn generate_dashboard_html(_dashboard: &Arc<InteractiveDashboard>) -> String {
+    let metrics = _dashboard.get_all_metrics().unwrap_or_default();
+    let metric_names = _dashboard.get_metric_names().unwrap_or_default();
+    let config = &_dashboard.config;
 
     let metrics_json = serde_json::to_string(&metrics).unwrap_or_default();
 
@@ -816,8 +816,8 @@ async fn generate_dashboard_html(dashboard: &Arc<InteractiveDashboard>) -> Strin
 
 /// Create and start an HTTP server for the given dashboard
 #[allow(dead_code)]
-pub fn start_http_server(dashboard: InteractiveDashboard) -> Result<DashboardHttpServer> {
-    let mut server = DashboardHttpServer::new(dashboard)?;
+pub fn start_http_server(_dashboard: InteractiveDashboard) -> Result<DashboardHttpServer> {
+    let mut server = DashboardHttpServer::new(_dashboard)?;
     server.start()?;
     Ok(server)
 }

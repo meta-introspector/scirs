@@ -8,7 +8,7 @@
 //! All GPU operations MUST go through scirs2-core::gpu.
 
 use crate::error::{FFTError, FFTResult};
-use num_complex::Complex64;
+use num__complex::Complex64;
 
 /// Placeholder for GPU kernel implementations
 ///
@@ -20,16 +20,16 @@ pub struct GpuFftKernel {
 
 impl GpuFftKernel {
     /// Create a new GPU FFT kernel stub
-    pub fn new(name: &str) -> Self {
+    pub fn new(_name: &str) -> Self {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
         }
     }
 
     /// Execute the kernel (stub implementation)
     ///
     /// In the real implementation, this would dispatch to scirs2-core::gpu
-    pub fn execute(&self, _input: &[Complex64]) -> FFTResult<Vec<Complex64>> {
+    pub fn execute(&self_input: &[Complex64]) -> FFTResult<Vec<Complex64>> {
         Err(FFTError::NotImplementedError(format!(
             "GPU kernel '{}' not yet migrated to scirs2-core GPU system. \
              Direct GPU implementations are forbidden - all GPU operations must use scirs2-core::gpu",

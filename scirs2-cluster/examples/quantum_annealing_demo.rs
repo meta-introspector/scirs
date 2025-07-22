@@ -4,7 +4,7 @@
 //! showcasing its ability to find global optima using quantum tunneling effects.
 
 use ndarray::Array2;
-use scirs2_cluster::{
+use scirs2__cluster::{
     quantum_annealing_clustering, CoolingSchedule, QuantumAnnealingClustering,
     QuantumAnnealingConfig,
 };

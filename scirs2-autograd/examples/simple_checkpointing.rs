@@ -1,4 +1,4 @@
-use ag::tensor_ops::{self, checkpoint, matmul, ones, sum_all, tanh, CheckpointProfiler};
+use ag::tensor__ops::{self, checkpoint, matmul, ones, sum_all, tanh, CheckpointProfiler};
 use scirs2_autograd as ag;
 use std::time::Instant;
 
@@ -16,7 +16,7 @@ fn main() {
     );
 
     // Create a computation graph with a chain of operations
-    ag::run::<f32, _, _>(|ctx| {
+    ag::run::<f32_>(|ctx| {
         // Start tracking memory with the checkpoint profiler
         CheckpointProfiler::start_tracking();
 

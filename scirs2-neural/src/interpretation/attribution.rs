@@ -242,7 +242,7 @@ fn compute_model_gradients<F, M>(
             }
         grad.into_dyn()
         // Use gradient of maximum output
-        if let Some(max_idx) = output.iter().enumerate().max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)).map(|(i, _)| i) {
+        if let Some(max_idx) = output.iter().enumerate().max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)).map(|(i_)| i) {
             let shape = output.shape();
             let mut indices = vec![0; output.ndim()];
             let mut remaining = max_idx;
@@ -323,7 +323,7 @@ fn compute_numerical_gradient<F>(
     Ok(gradient.mapv(|x| x.abs()))
 /// Enhanced pseudo output computation with more realistic neural network patterns
 #[allow(dead_code)]
-fn compute_enhanced_pseudo_output<F>(input: &ArrayD<F>) -> F
+fn compute_enhanced_pseudo_output<F>(_input: &ArrayD<F>) -> F
     // Multi-layer pseudo neural network computation
     let input_flat = input.as_slice().unwrap_or(&[]);
     let len = input_flat.len();
@@ -336,7 +336,7 @@ fn compute_enhanced_pseudo_output<F>(input: &ArrayD<F>) -> F
         layer1_sum = layer1_sum + val * weight;
     let layer1_out = layer1_sum.tanh();
     // Layer 2: Non-linear transformation
-    let mean_val = input.sum() / F::from(len).unwrap();
+    let mean_val = _input.sum() / F::from(len).unwrap();
     let variance = {
         let sum_sq_diff = input_flat
             .iter()
@@ -356,13 +356,13 @@ fn compute_enhanced_pseudo_output<F>(input: &ArrayD<F>) -> F
     (layer1_out * layer1_out) * F::from(0.1).unwrap()
 /// Compute pseudo output value for numerical gradient computation (kept for compatibility)
 #[allow(dead_code)]
-fn compute_pseudo_output_value<F>(input: &ArrayD<F>) -> F
-    compute_enhanced_pseudo_output(input)
+fn compute_pseudo_output_value<F>(_input: &ArrayD<F>) -> F
+    compute_enhanced_pseudo_output(_input)
 /// Improved numerical gradient computation with adaptive step size
 #[allow(dead_code)]
 fn compute_adaptive_numerical_gradient<F>(
-    // Adaptive step size based on input magnitude
-    let input_magnitude = (input.mapv(|x| x * x).sum()).sqrt();
+    // Adaptive step size based on _input magnitude
+    let input_magnitude = (_input.mapv(|x| x * x).sum()).sqrt();
     let base_epsilon = F::from(1e-5).unwrap();
     let adaptive_epsilon = if input_magnitude > F::zero() {
         base_epsilon / input_magnitude.max(F::one())
@@ -376,11 +376,11 @@ fn compute_adaptive_numerical_gradient<F>(
             indices[i] = remaining / stride;
             remaining %= stride;
         // Use adaptive step size for this element
-        let element_val = input.get(&indices[..]).unwrap_or(&F::zero());
+        let element_val = _input.get(&indices[..]).unwrap_or(&F::zero());
         let local_epsilon = adaptive_epsilon * (F::one() + element_val.abs());
         // Create perturbed inputs with better numerical stability
-        let mut input_plus = input.clone();
-        let mut input_minus = input.clone();
+        let mut input_plus = _input.clone();
+        let mut input_minus = _input.clone();
         // Apply perturbation
         if let (Some(plus_elem), Some(minus_elem)) = (
             input_plus.get_mut(&indices[..]),
@@ -400,18 +400,18 @@ fn compute_adaptive_numerical_gradient<F>(
 pub fn compute_integrated_gradients_optimized<F, M>(
     baseline: &BaselineMethod,
     num_steps: usize,
-    let baseline_input = create_baseline(input, baseline)?;
-    let diff = input - &baseline_input;
+    let baseline_input = create_baseline(_input, baseline)?;
+    let diff = _input - &baseline_input;
     // Choose integration method based on number of steps and performance requirements
     let integration_result = if config.parallel && num_steps > 20 {
-        compute_integrated_gradients_parallel(model, input, &baseline_input, &diff, num_steps, target_class, config)
+        compute_integrated_gradients_parallel(model, _input, &baseline_input, &diff, num_steps, target_class, config)
         match num_steps {
             1..=10 => {
-                compute_integrated_gradients_gaussian_model(model, input, &baseline_input, &diff, num_steps, target_class, config)
+                compute_integrated_gradients_gaussian_model(model, _input, &baseline_input, &diff, num_steps, target_class, config)
             11..=50 => {
-                compute_integrated_gradients_simpson_model(model, input, &baseline_input, &diff, num_steps, target_class, config)
+                compute_integrated_gradients_simpson_model(model, _input, &baseline_input, &diff, num_steps, target_class, config)
             _ => {
-                compute_integrated_gradients_adaptive_model(model, input, &baseline_input, &diff, num_steps, target_class, config)
+                compute_integrated_gradients_adaptive_model(model, _input, &baseline_input, &diff, num_steps, target_class, config)
     }?;
     Ok(integration_result)
 /// Parallel integrated gradients computation
@@ -471,8 +471,7 @@ fn compute_integrated_gradients_simpson_model<F, M>(
         let weight = if i == 0 || i == n - 1 {
             F::one()
         } else if i % 2 == 1 {
-            F::from(4.0).unwrap()
-            F::from(2.0).unwrap()
+            F::from(4.0).unwrap(), F::from(2.0).unwrap()
     let simpson_factor = h / F::from(3.0).unwrap();
     Ok(diff * integrated_gradients * simpson_factor)
 /// Adaptive integration with model
@@ -547,7 +546,7 @@ pub fn compute_gradcam_attribution<F>(
         .get_cached_activations(target_layer)
         .ok_or_else(|| {
             NeuralError::ComputationError(format!(
-                "Activations not found for layer: {}",
+                "Activations not found for _layer: {}",
                 target_layer
             ))
         })?;
@@ -641,8 +640,7 @@ pub fn compute_lrp_attribution<F>(
                 let gamma_val = F::from(*gamma).unwrap();
                 let positive_part = gradient.mapv(|x| x.max(F::zero()));
                 let negative_part = gradient.mapv(|x| x.min(F::zero()));
-                Ok(input * (positive_part * (F::one() + gamma_val) + negative_part))
-        LRPRule::AlphaBeta { alpha, beta } => {
+                Ok(input * (positive_part * (F::one() + gamma_val) + negative_part)), LRPRule::AlphaBeta { alpha, beta } => {
             // Alpha-beta rule
                 let alpha_val = F::from(*alpha).unwrap();
                 let beta_val = F::from(*beta).unwrap();
@@ -651,8 +649,7 @@ pub fn compute_lrp_attribution<F>(
             // z+ rule - only positive activations
                 let positive_input = input.mapv(|x| x.max(F::zero()));
                 Ok(positive_input * gradient)
-                Ok(input.mapv(|x| x.max(F::zero())))
-        LRPRule::ZB { low, high } => {
+                Ok(input.mapv(|x| x.max(F::zero()))), LRPRule::ZB { low, high } => {
             // zB rule with bounds
                 let low_val = F::from(*low).unwrap();
                 let high_val = F::from(*high).unwrap();
@@ -660,19 +657,16 @@ pub fn compute_lrp_attribution<F>(
                 Ok(clamped_input * gradient)
 /// Create baseline input based on baseline method
 #[allow(dead_code)]
-pub fn create_baseline<F>(input: &ArrayD<F>, baseline: &BaselineMethod) -> Result<ArrayD<F>>
+pub fn create_baseline<F>(_input: &ArrayD<F>, baseline: &BaselineMethod) -> Result<ArrayD<F>>
     match baseline {
-        BaselineMethod::Zero => Ok(Array::zeros(input.raw_dim())),
+        BaselineMethod::Zero => Ok(Array::zeros(_input.raw_dim())),
         BaselineMethod::Random { seed: _ } => {
             // Generate random baseline (simplified)
-            Ok(input.mapv(|_| F::from(rand::random::<f64>()).unwrap()))
-        BaselineMethod::GaussianBlur { sigma: _ } => {
+            Ok(input.mapv(|_| F::from(rand::random::<f64>()).unwrap())), BaselineMethod::GaussianBlur { sigma: _ } => {
             // Gaussian blur baseline (simplified - just add small noise)
-            Ok(input.mapv(|x| x + F::from(rand::random::<f64>() * 0.1).unwrap()))
-        BaselineMethod::TrainingMean => {
+            Ok(input.mapv(|x| x + F::from(rand::random::<f64>() * 0.1).unwrap())), BaselineMethod::TrainingMean => {
             // Training mean baseline (simplified - use zeros)
-            Ok(Array::zeros(input.raw_dim()))
-        BaselineMethod::Custom(custom_baseline) => {
+            Ok(Array::zeros(input.raw_dim())), BaselineMethod::Custom(custom_baseline) => {
             // Convert f32 custom baseline to F type
             let converted_baseline = custom_baseline.mapv(|x| F::from(x).unwrap());
             // Ensure dimensions match
@@ -683,7 +677,7 @@ pub fn create_baseline<F>(input: &ArrayD<F>, baseline: &BaselineMethod) -> Resul
                 ))
 /// Helper function to resize attribution maps
 #[allow(dead_code)]
-fn resize_attribution<F>(attribution: &ArrayD<F>, target_dim: IxDyn) -> Result<ArrayD<F>>
+fn resize_attribution<F>(_attribution: &ArrayD<F>, target_dim: IxDyn) -> Result<ArrayD<F>>
     // Simplified resize that preserves attribution values
     let mut result = Array::zeros(target_dim.clone());
     // If converting from 2D to 3D, replicate across the first dimension
@@ -695,11 +689,11 @@ fn resize_attribution<F>(attribution: &ArrayD<F>, target_dim: IxDyn) -> Result<A
         let channels = target_slice[0];
         let height = target_slice[1];
         let width = target_slice[2];
-        // Replicate the 2D attribution across all channels
+        // Replicate the 2D _attribution across all channels
         for c in 0..channels {
-            for h in 0..std::cmp::min(height, attribution.shape()[0]) {
-                for w in 0..std::cmp::min(width, attribution.shape()[1]) {
-                    result[[c, h, w]] = attribution[[h, w]];
+            for h in 0..std::cmp::min(height, _attribution.shape()[0]) {
+                for w in 0..std::cmp::min(width, _attribution.shape()[1]) {
+                    result[[c, h, w]] = _attribution[[h, w]];
     } else if attr_ndim == target_ndim {
         // Same dimensions - direct copy with size adjustment
         let attr_shape = attribution.shape();
@@ -726,6 +720,7 @@ pub fn compute_smoothgrad_attribution<F>(
     noise_std: f64,
     use rand::prelude::*;
 use rand::rng;
+use statrs::statistics::Statistics;
     let mut rng = rng();
     let noise_std_f = F::from(noise_std).unwrap();
     let mut accumulated_attribution = ArrayD::zeros(input.raw_dim());
@@ -932,7 +927,7 @@ pub fn compute_input_x_gradient_attribution_optimized<F, M>(
 /// Optimized SmoothGrad attribution
 #[allow(dead_code)]
 pub fn compute_smoothgrad_attribution_optimized<F, M>(
-    use rand_distr::StandardNormal;
+    use rand__distr::StandardNormal;
     // Generate all noise samples upfront for better parallelization
     let noise_samples: Vec<ArrayD<F>> = (0..num_samples)
         .map(|_| {

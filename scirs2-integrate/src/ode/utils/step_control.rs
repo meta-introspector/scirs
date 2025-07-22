@@ -19,21 +19,21 @@ use ndarray::{Array1, ArrayView1};
 ///
 /// The normalized error
 #[allow(dead_code)]
-pub fn error_norm<F: IntegrateFloat>(error: &Array1<F>, y: &Array1<F>, rtol: F, atol: F) -> F {
+pub fn error_norm<F: IntegrateFloat>(_error: &Array1<F>, y: &Array1<F>, rtol: F, atol: F) -> F {
     // Calculate the denominator for normalization
     let scale = y
         .iter()
-        .zip(error.iter())
-        .map(|(y_i, _)| rtol * y_i.abs() + atol)
+        .zip(_error.iter())
+        .map(|(y_i_)| rtol * y_i.abs() + atol)
         .collect::<Array1<F>>();
 
-    // Calculate RMS of scaled error
+    // Calculate RMS of scaled _error
     let mut sum_sq = F::zero();
-    for (e, s) in error.iter().zip(scale.iter()) {
+    for (e, s) in _error.iter().zip(scale.iter()) {
         sum_sq += (*e / *s).powi(2);
     }
 
-    let n = F::from_usize(error.len()).unwrap();
+    let n = F::from_usize(_error.len()).unwrap();
     (sum_sq / n).sqrt()
 }
 
@@ -62,11 +62,11 @@ pub fn calculate_new_step_size<F: IntegrateFloat>(
     }
 
     // Standard step size calculation based on error estimate
-    let order = F::from_usize(error_order).unwrap();
+    let _order = F::from_usize(error_order).unwrap();
     let error_ratio = F::one() / error_norm;
 
-    // Calculate factor using the formula: safety * error_ratio^(1/order)
-    let factor = safety * error_ratio.powf(F::one() / order);
+    // Calculate factor using the formula: safety * error_ratio^(1/_order)
+    let factor = safety * error_ratio.powf(F::one() / _order);
 
     // Limit factor to reasonable bounds to prevent too large or small step sizes
     let factor_max = F::from_f64(10.0).unwrap();
@@ -80,7 +80,7 @@ pub fn calculate_new_step_size<F: IntegrateFloat>(
         factor
     };
 
-    // Apply factor to current step size
+    // Apply factor to _current step size
     h_current * factor
 }
 

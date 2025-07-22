@@ -4,9 +4,9 @@
 //! for Advanced clustering, enabling massive scalability and performance
 //! improvements for large-scale clustering tasks.
 
-use crate::advanced_clustering::{AdvancedClusterer, AdvancedClusteringResult};
+use crate::advanced__clustering::{AdvancedClusterer, AdvancedClusteringResult};
 use crate::error::{ClusteringError, Result};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -213,12 +213,12 @@ pub struct HybridGpuDistributedResult {
 
 impl GpuAdvancedClusterer {
     /// Create new GPU-accelerated Advanced clusterer
-    pub fn new(gpu_config: GpuAccelerationConfig) -> Self {
+    pub fn new(_gpu_config: GpuAccelerationConfig) -> Self {
         Self {
             base_clusterer: AdvancedClusterer::new(),
-            gpu_config: gpu_config.clone(),
-            memory_manager: GpuMemoryManager::new(&gpu_config),
-            kernel_executor: GpuKernelExecutor::new(&gpu_config),
+            gpu_config: _gpu_config.clone(),
+            memory_manager: GpuMemoryManager::new(&_gpu_config),
+            kernel_executor: GpuKernelExecutor::new(&_gpu_config),
             performance_monitor: GpuPerformanceMonitor::new(),
         }
     }
@@ -309,7 +309,7 @@ impl GpuAdvancedClusterer {
         // This would normally integrate with the base clusterer
 
         // For demonstration, create a basic result structure
-        use crate::advanced_clustering::AdvancedPerformanceMetrics;
+        use crate::advanced__clustering::AdvancedPerformanceMetrics;
 
         let performance = AdvancedPerformanceMetrics {
             silhouette_score: self.calculate_gpu_silhouette_score(
@@ -566,10 +566,10 @@ impl DistributedAdvancedClusterer {
         &self,
         worker_results: &[WorkerClusteringResult],
     ) -> Result<AdvancedClusteringResult> {
-        // Aggregate clustering results from all workers
+        // Aggregate clustering _results from all workers
         if worker_results.is_empty() {
             return Err(ClusteringError::InvalidInput(
-                "No worker results to aggregate".to_string(),
+                "No worker _results to aggregate".to_string(),
             ));
         }
 
@@ -634,7 +634,7 @@ impl DistributedAdvancedClusterer {
             .sum::<f64>()
             / worker_results.len() as f64;
 
-        use crate::advanced_clustering::AdvancedPerformanceMetrics;
+        use crate::advanced__clustering::AdvancedPerformanceMetrics;
 
         let aggregated_performance = AdvancedPerformanceMetrics {
             silhouette_score: 0.82, // Would be calculated from aggregated data
@@ -713,9 +713,9 @@ pub struct GpuMemoryManager {
 }
 
 impl GpuMemoryManager {
-    pub fn new(config: &GpuAccelerationConfig) -> Self {
+    pub fn new(_config: &GpuAccelerationConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             allocated_memory: 0,
             peak_memory: 0,
         }
@@ -764,21 +764,21 @@ pub struct GpuKernelExecutor {
 }
 
 impl GpuKernelExecutor {
-    pub fn new(config: &GpuAccelerationConfig) -> Self {
+    pub fn new(_config: &GpuAccelerationConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             kernel_stats: GpuKernelStats::default(),
         }
     }
 
-    pub fn initialize_kernels(&mut self, _data_shape: (usize, usize)) -> Result<()> {
-        // Initialize GPU kernels based on data shape and configuration
+    pub fn initialize_kernels(&mut self_data_shape: (usize, usize)) -> Result<()> {
+        // Initialize GPU kernels based on data _shape and configuration
         self.kernel_stats.kernels_initialized = true;
         Ok(())
     }
 
     pub fn preprocess_data(&mut self, gpu_data: &GpuTensor) -> Result<GpuTensor> {
-        // GPU-accelerated data preprocessing
+        // GPU-accelerated _data preprocessing
         self.kernel_stats.preprocessing_kernel_calls += 1;
         Ok(gpu_data.clone())
     }
@@ -853,9 +853,9 @@ pub struct DistributedLoadBalancer {
 }
 
 impl DistributedLoadBalancer {
-    pub fn new(worker_configs: &[WorkerNodeConfig]) -> Self {
+    pub fn new(_worker_configs: &[WorkerNodeConfig]) -> Self {
         Self {
-            worker_configs: worker_configs.to_vec(),
+            worker_configs: _worker_configs.to_vec(),
         }
     }
 

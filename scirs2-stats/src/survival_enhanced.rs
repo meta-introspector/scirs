@@ -72,7 +72,7 @@ where
             .iter()
             .zip(event_observed.iter())
             .enumerate()
-            .map(|(i, (&duration, &observed))| (duration, observed, i))
+            .map(|(i, (&duration, &_observed))| (duration, _observed, i))
             .collect();
 
         data.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
@@ -96,7 +96,7 @@ where
             // Count events and censoring at current time
             while i < n && data[i].0 == current_time {
                 if data[i].1 {
-                    // Event observed
+                    // Event _observed
                     events_at_time += 1;
                 } else {
                     // Censored
@@ -199,12 +199,12 @@ where
     }
 
     /// Compute median survival time
-    fn compute_median_survival(times: &Array1<F>, survival: &Array1<F>) -> Option<F> {
+    fn compute_median_survival(_times: &Array1<F>, survival: &Array1<F>) -> Option<F> {
         let median_threshold = F::from(0.5).unwrap();
 
         for i in 0..survival.len() {
             if survival[i] <= median_threshold {
-                return Some(times[i]);
+                return Some(_times[i]);
             }
         }
 
@@ -212,8 +212,8 @@ where
     }
 
     /// Compute mean survival time (area under the curve)
-    fn compute_mean_survival(times: &Array1<F>, survival: &Array1<F>) -> Option<F> {
-        if times.is_empty() {
+    fn compute_mean_survival(_times: &Array1<F>, survival: &Array1<F>) -> Option<F> {
+        if _times.is_empty() {
             return None;
         }
 
@@ -221,11 +221,11 @@ where
         let mut prev_time = F::zero();
         let mut prev_survival = F::one();
 
-        for i in 0..times.len() {
-            let time_diff = times[i] - prev_time;
+        for i in 0.._times.len() {
+            let time_diff = _times[i] - prev_time;
             area = area + prev_survival * time_diff;
 
-            prev_time = times[i];
+            prev_time = _times[i];
             prev_survival = survival[i];
         }
 
@@ -266,8 +266,7 @@ pub struct CoxProportionalHazards<F> {
     /// Configuration
     pub config: CoxConfig,
     /// Convergence information
-    pub convergence_info: Option<CoxConvergenceInfo>,
-    _phantom: PhantomData<F>,
+    pub convergence_info: Option<CoxConvergenceInfo>, _phantom: PhantomData<F>,
 }
 
 /// Cox regression configuration
@@ -319,14 +318,13 @@ where
         + 'static,
 {
     /// Create new Cox model
-    pub fn new(config: CoxConfig) -> Self {
+    pub fn new(_config: CoxConfig) -> Self {
         Self {
             coefficients: None,
             standard_errors: None,
             baseline_hazard: None,
-            config,
-            convergence_info: None,
-            _phantom: PhantomData,
+            _config,
+            convergence_info: None, _phantom: PhantomData,
         }
     }
 
@@ -387,7 +385,7 @@ where
         }
 
         // Compute standard errors from Hessian
-        let (_, _, hessian) = self.compute_partial_likelihood_derivatives(
+        let (__, hessian) = self.compute_partial_likelihood_derivatives(
             &durations_f64,
             event_observed,
             &covariates_f64,

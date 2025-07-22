@@ -5,11 +5,11 @@
 //! and automated optimization suggestions.
 
 use ndarray::Array2;
-use scirs2_cluster::advanced_benchmarking::{
+use scirs2__cluster::advanced_benchmarking::{
     create_comprehensive_report, AdvancedBenchmark, BenchmarkConfig, OptimizationPriority,
     RegressionSeverity,
 };
-use scirs2_cluster::preprocess::standardize;
+use scirs2__cluster::preprocess::standardize;
 use std::time::Duration;
 
 #[allow(dead_code)]
@@ -106,9 +106,9 @@ fn create_test_datasets() -> Vec<(String, Array2<f64>)> {
 
 /// Create benchmark configuration optimized for each dataset type
 #[allow(dead_code)]
-fn create_benchmark_config(dataset_name: &str) -> BenchmarkConfig {
-    match dataset_name {
-        name if name.contains("Small") => BenchmarkConfig {
+fn create_benchmark_config(_dataset_name: &str) -> BenchmarkConfig {
+    match _dataset_name {
+        _name if _name.contains("Small") => BenchmarkConfig {
             warmup_iterations: 10,
             measurement_iterations: 100,
             statistical_significance: 0.01,
@@ -120,7 +120,7 @@ fn create_benchmark_config(dataset_name: &str) -> BenchmarkConfig {
             cross_platform: true,
             ..Default::default()
         },
-        name if name.contains("Large") => BenchmarkConfig {
+        _name if _name.contains("Large") => BenchmarkConfig {
             warmup_iterations: 3,
             measurement_iterations: 20,
             statistical_significance: 0.05,
@@ -131,8 +131,7 @@ fn create_benchmark_config(dataset_name: &str) -> BenchmarkConfig {
             advanced_statistics: true,
             cross_platform: false,
             ..Default::default()
-        },
-        _ => BenchmarkConfig {
+        }_ => BenchmarkConfig {
             warmup_iterations: 5,
             measurement_iterations: 50,
             statistical_significance: 0.05,
@@ -149,11 +148,11 @@ fn create_benchmark_config(dataset_name: &str) -> BenchmarkConfig {
 
 /// Display a concise summary of benchmark results
 #[allow(dead_code)]
-fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
+fn display_benchmark_summary(_results: &scirs2_cluster: :advanced, _benchmarking::BenchmarkResults) {
     println!("   📈 Performance Summary:");
 
     // Find fastest and slowest algorithms
-    let mut algorithm_times: Vec<_> = results
+    let mut algorithm_times: Vec<_> = _results
         .algorithm_results
         .iter()
         .map(|(name, result)| (name, result.performance.mean))
@@ -169,7 +168,7 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
     }
 
     // Show memory usage summary
-    let memory_users: Vec<_> = results
+    let memory_users: Vec<_> = _results
         .algorithm_results
         .iter()
         .filter_map(|(name, result)| result.memory.as_ref().map(|mem| (name, mem.peak_memory_mb)))
@@ -182,7 +181,7 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
     }
 
     // Show quality metrics summary
-    let quality_scores: Vec<_> = results
+    let quality_scores: Vec<_> = _results
         .algorithm_results
         .iter()
         .filter_map(|(name, result)| {
@@ -203,14 +202,14 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
     }
 
     // Show regression alerts
-    match results.regression_alerts.len() {
+    match _results.regression_alerts.len() {
         0 => println!("      ✅ No performance regressions detected"),
         1 => println!("      ⚠️  1 performance regression detected"),
         n => println!("      🚨 {n} performance regressions detected"),
     }
 
     // Show critical optimization suggestions
-    let critical_suggestions = results
+    let critical_suggestions = _results
         .algorithm_results
         .values()
         .flat_map(|result| &result.optimization_suggestions)
@@ -225,7 +224,7 @@ fn display_benchmark_summary(results: &scirs2_cluster::advanced_benchmarking::Be
 /// Demonstrate advanced analytics capabilities
 #[allow(dead_code)]
 fn demonstrate_advanced_analytics(
-    results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults,
+    results: &scirs2_cluster::advanced, _benchmarking::BenchmarkResults,
     dataset_name: &str,
 ) {
     println!("   🧠 Advanced Analytics for {dataset_name}:");
@@ -245,11 +244,11 @@ fn demonstrate_advanced_analytics(
 
 /// Analyze performance patterns across algorithms
 #[allow(dead_code)]
-fn analyze_performance_patterns(results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
+fn analyze_performance_patterns(_results: &scirs2_cluster: :advanced, _benchmarking::BenchmarkResults) {
     println!("      📊 Performance Pattern Analysis:");
 
     // Calculate performance variance
-    let performance_values: Vec<f64> = results
+    let performance_values: Vec<f64> = _results
         .algorithm_results
         .values()
         .map(|result| result.performance.mean.as_secs_f64())
@@ -274,11 +273,11 @@ fn analyze_performance_patterns(results: &scirs2_cluster::advanced_benchmarking:
     }
 
     // Identify stable vs unstable algorithms
-    let unstable_algos: Vec<&str> = results
+    let unstable_algos: Vec<&str> = _results
         .algorithm_results
         .iter()
         .filter(|(_, result)| !result.performance.is_stable)
-        .map(|(name, _)| name.as_str())
+        .map(|(name_)| name.as_str())
         .collect();
 
     if !unstable_algos.is_empty() {
@@ -290,7 +289,7 @@ fn analyze_performance_patterns(results: &scirs2_cluster::advanced_benchmarking:
 /// Analyze optimization opportunities
 #[allow(dead_code)]
 fn analyze_optimization_opportunities(
-    results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults,
+    results: &scirs2_cluster::advanced, _benchmarking::BenchmarkResults,
 ) {
     println!("      🔧 Optimization Opportunity Analysis:");
 
@@ -327,10 +326,10 @@ fn analyze_optimization_opportunities(
 
 /// Analyze scalability insights
 #[allow(dead_code)]
-fn analyze_scalability_insights(results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
+fn analyze_scalability_insights(_results: &scirs2_cluster: :advanced, _benchmarking::BenchmarkResults) {
     println!("      📈 Scalability Analysis:");
 
-    let scalability_results: Vec<_> = results
+    let scalability_results: Vec<_> = _results
         .algorithm_results
         .iter()
         .filter_map(|(name, result)| result.scalability.as_ref().map(|s| (name, s)))
@@ -355,9 +354,9 @@ fn analyze_scalability_insights(results: &scirs2_cluster::advanced_benchmarking:
             .iter()
             .filter(|(_, s)| {
                 s.complexity_estimate
-                    == scirs2_cluster::advanced_benchmarking::ComplexityClass::Linear
+                    == scirs2_cluster::advanced, _benchmarking::ComplexityClass::Linear
             })
-            .map(|(name, _)| name.as_str())
+            .map(|(name_)| name.as_str())
             .collect();
 
         if !linear_algos.is_empty() {
@@ -371,8 +370,8 @@ fn analyze_scalability_insights(results: &scirs2_cluster::advanced_benchmarking:
 
 /// Analyze regression patterns
 #[allow(dead_code)]
-fn analyze_regression_patterns(results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
-    if results.regression_alerts.is_empty() {
+fn analyze_regression_patterns(_results: &scirs2_cluster: :advanced, _benchmarking::BenchmarkResults) {
+    if _results.regression_alerts.is_empty() {
         println!(
             "      ✅ Regression Analysis: All algorithms performing within expected parameters"
         );
@@ -383,7 +382,7 @@ fn analyze_regression_patterns(results: &scirs2_cluster::advanced_benchmarking::
 
     // Categorize by severity
     let mut severity_counts = std::collections::HashMap::new();
-    for alert in &results.regression_alerts {
+    for alert in &_results.regression_alerts {
         *severity_counts.entry(&alert.severity).or_insert(0) += 1;
     }
 
@@ -398,7 +397,7 @@ fn analyze_regression_patterns(results: &scirs2_cluster::advanced_benchmarking::
     }
 
     // Show most problematic algorithm
-    if let Some(worst_alert) = results.regression_alerts.iter().max_by(|a, b| {
+    if let Some(worst_alert) = _results.regression_alerts.iter().max_by(|a, b| {
         a.degradation_percent
             .partial_cmp(&b.degradation_percent)
             .unwrap()
@@ -412,15 +411,15 @@ fn analyze_regression_patterns(results: &scirs2_cluster::advanced_benchmarking::
 
 /// Create dense dataset with well-separated clusters
 #[allow(dead_code)]
-fn create_dense_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_dense_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand_distr::Normal;
+    use rand__distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(12345);
-    let mut data = Vec::with_capacity(n_samples * n_features);
+    let mut data = Vec::with_capacity(_n_samples * n_features);
 
     let n_clusters = 4;
-    let samples_per_cluster = n_samples / n_clusters;
+    let samples_per_cluster = _n_samples / n_clusters;
 
     // Create distinct cluster centers
     let cluster_centers = vec![
@@ -432,7 +431,7 @@ fn create_dense_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
 
     for (i, center) in cluster_centers.iter().enumerate() {
         let cluster_samples = if i == cluster_centers.len() - 1 {
-            n_samples - i * samples_per_cluster
+            _n_samples - i * samples_per_cluster
         } else {
             samples_per_cluster
         };
@@ -451,39 +450,39 @@ fn create_dense_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
 
 /// Create sparse dataset with noise
 #[allow(dead_code)]
-fn create_sparse_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_sparse_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
 
     let mut rng = StdRng::seed_from_u64(54321);
-    let mut data = Vec::with_capacity(n_samples * n_features);
+    let mut data = Vec::with_capacity(_n_samples * n_features);
 
-    for _ in 0..n_samples {
+    for _ in 0.._n_samples {
         for _ in 0..n_features {
             // 20% chance of non-zero value
             if rng.random::<f64>() < 0.2 {
-                data.push(rng.random_range(-5.0..5.0));
+                data.push(rng.gen_range(-5.0..5.0));
             } else {
                 data.push(0.0);
             }
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create high-dimensional dataset
 #[allow(dead_code)]
-fn create_high_dim_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_high_dim_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand_distr::Normal;
+    use rand__distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(98765);
-    let mut data = Vec::with_capacity(n_samples * n_features);
+    let mut data = Vec::with_capacity(_n_samples * n_features);
 
     // Only first few dimensions contain signal
     let signal_dims = 5;
 
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         let cluster_id = i % 3;
 
         for dim in 0..n_features {
@@ -494,43 +493,42 @@ fn create_high_dim_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
                 data.push(rng.sample(normal));
             } else {
                 // Noise dimensions
-                data.push(rng.random_range(-0.5..0.5));
+                data.push(rng.gen_range(-0.5..0.5));
             }
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create noisy dataset simulating real-world conditions
 #[allow(dead_code)]
-fn create_noisy_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_noisy_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand_distr::Normal;
+    use rand__distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(13579);
-    let mut data = Vec::with_capacity(n_samples * n_features);
+    let mut data = Vec::with_capacity(_n_samples * n_features);
 
     let n_clusters = 3;
     let noise_level = 1.5;
     let outlier_probability = 0.05; // 5% outliers
 
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         let cluster_id = i % n_clusters;
 
         for j in 0..n_features {
             let base_value = match cluster_id {
                 0 => 1.0 + j as f64 * 0.5,
-                1 => -1.0 + j as f64 * 0.3,
-                _ => 0.0 + j as f64 * 0.1,
+                1 => -1.0 + j as f64 * 0.3_ => 0.0 + j as f64 * 0.1,
             };
 
             let value = if rng.random::<f64>() < outlier_probability {
                 // Generate outlier
-                rng.random_range(-10.0..10.0)
+                rng.gen_range(-10.0..10.0)
             } else {
                 // Normal cluster member with noise
-                let normal = Normal::new(base_value, noise_level).unwrap();
+                let normal = Normal::new(base_value..noise_level).unwrap();
                 rng.sample(normal)
             };
 

@@ -44,7 +44,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2_sparse::csc::CscMatrix;
+    /// use scirs2__sparse::csc::CscMatrix;
     ///
     /// // Create a 3x3 sparse matrix with 5 non-zero elements
     /// let rows = vec![0, 0, 1, 2, 2];
@@ -70,7 +70,7 @@ where
 
         let (rows, cols) = shape;
 
-        // Check indices are within bounds
+        // Check _indices are within bounds
         if row_indices.iter().any(|&i| i >= rows) {
             return Err(SparseError::ValueError(
                 "Row index out of bounds".to_string(),
@@ -91,16 +91,16 @@ where
             .zip(data)
             .map(|((c, r), v)| (c, r, v))
             .collect();
-        triplets.sort_by_key(|&(c, r, _)| (c, r));
+        triplets.sort_by_key(|&(c, r_)| (c, r));
 
-        // Create indptr, indices, and data arrays
+        // Create indptr, _indices, and data arrays
         let nnz = triplets.len();
         let mut indptr = vec![0; cols + 1];
-        let mut indices = Vec::with_capacity(nnz);
+        let mut _indices = Vec::with_capacity(nnz);
         let mut data_out = Vec::with_capacity(nnz);
 
         // Count elements per column to build indptr
-        for &(c, _, _) in &triplets {
+        for &(c__) in &triplets {
             indptr[c + 1] += 1;
         }
 
@@ -109,9 +109,9 @@ where
             indptr[i] += indptr[i - 1];
         }
 
-        // Fill indices and data
+        // Fill _indices and data
         for (_, r, v) in triplets {
-            indices.push(r);
+            _indices.push(r);
             data_out.push(v);
         }
 
@@ -119,7 +119,7 @@ where
             rows,
             cols,
             indptr,
-            indices,
+            _indices,
             data: data_out,
         })
     }
@@ -221,8 +221,8 @@ where
         Self::from_raw_csc(values, col_ptrs, row_indices, shape)
     }
 
-    pub fn empty(shape: (usize, usize)) -> Self {
-        let (rows, cols) = shape;
+    pub fn empty(_shape: (usize, usize)) -> Self {
+        let (rows, cols) = _shape;
         let indptr = vec![0; cols + 1];
 
         CscMatrix {
@@ -396,7 +396,7 @@ impl CscMatrix<f64> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_sparse::csc::CscMatrix;
+    /// use scirs2__sparse::csc::CscMatrix;
     ///
     /// let rows = vec![0, 0, 1, 2, 2];
     /// let cols = vec![0, 2, 2, 0, 1];
@@ -436,7 +436,7 @@ impl CscMatrix<f64> {
 
 impl<T> CscMatrix<T>
 where
-    T: num_traits::Float
+    T: num_traits: Float
         + std::fmt::Debug
         + Copy
         + Default

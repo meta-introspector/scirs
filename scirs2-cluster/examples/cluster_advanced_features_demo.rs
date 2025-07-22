@@ -7,9 +7,9 @@
 //! - Various initialization methods
 
 use ndarray::{Array1, Array2};
-use scirs2_cluster::metrics::silhouette_score;
-use scirs2_cluster::preprocess::standardize;
-use scirs2_cluster::vq::{
+use scirs2__cluster::metrics::silhouette_score;
+use scirs2__cluster::preprocess::standardize;
+use scirs2__cluster::vq::{
     distance_to_centroids_simd, kmeans_with_options, minibatch_kmeans, pairwise_euclidean_simd,
     parallel_kmeans, weighted_kmeans, KMeansInit, KMeansOptions, MiniBatchKMeansOptions,
     ParallelKMeansOptions, WeightedKMeansOptions,
@@ -84,7 +84,7 @@ fn generate_sample_data() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn demo_initialization_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_initialization_methods(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("1. K-means with Different Initialization Methods");
     println!("================================================");
 
@@ -103,12 +103,12 @@ fn demo_initialization_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::er
         };
 
         let start = std::time::Instant::now();
-        let (_centroids, labels) = kmeans_with_options(data.view(), 3, Some(options))?;
+        let (_centroids, labels) = kmeans_with_options(_data.view(), 3, Some(options))?;
         let duration = start.elapsed();
 
         // Convert labels from usize to i32 for silhouette_score
         let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-        let silhouette = silhouette_score(data.view(), labels_i32.view())?;
+        let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
 
         println!(
             "  {:<12}: Silhouette = {:.3}, Time = {:?}",
@@ -120,7 +120,7 @@ fn demo_initialization_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::er
 }
 
 #[allow(dead_code)]
-fn demo_weighted_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_weighted_kmeans(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Weighted K-means Clustering");
     println!("==============================");
 
@@ -137,11 +137,11 @@ fn demo_weighted_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = weighted_kmeans(data.view(), weights.view(), 3, Some(options))?;
+    let (_centroids, labels) = weighted_kmeans(_data.view(), weights.view(), 3, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
 
     println!(
         "  Weighted K-means: Silhouette = {:.3}, Time = {:?}",
@@ -162,7 +162,7 @@ fn demo_weighted_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
 }
 
 #[allow(dead_code)]
-fn demo_parallel_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_parallel_kmeans(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("3. Parallel K-means Clustering");
     println!("==============================");
 
@@ -174,11 +174,11 @@ fn demo_parallel_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = parallel_kmeans(data.view(), 3, Some(options))?;
+    let (_centroids, labels) = parallel_kmeans(_data.view(), 3, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
 
     println!(
         "  Parallel K-means: Silhouette = {:.3}, Time = {:?}",
@@ -189,7 +189,7 @@ fn demo_parallel_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
 }
 
 #[allow(dead_code)]
-fn demo_minibatch_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_minibatch_kmeans(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("4. Mini-batch K-means Clustering");
     println!("=================================");
 
@@ -201,11 +201,11 @@ fn demo_minibatch_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
     };
 
     let start = std::time::Instant::now();
-    let (_centroids, labels) = minibatch_kmeans(data.view(), 3, Some(options))?;
+    let (_centroids, labels) = minibatch_kmeans(_data.view(), 3, Some(options))?;
     let duration = start.elapsed();
 
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
-    let silhouette = silhouette_score(data.view(), labels_i32.view())?;
+    let silhouette = silhouette_score(_data.view(), labels_i32.view())?;
 
     println!(
         "  Mini-batch K-means: Silhouette = {:.3}, Time = {:?}",
@@ -216,13 +216,13 @@ fn demo_minibatch_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
 }
 
 #[allow(dead_code)]
-fn demo_simd_distances(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_simd_distances(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("5. SIMD Distance Computations");
     println!("=============================");
 
     // Compute pairwise distances using SIMD
     let start = std::time::Instant::now();
-    let pairwise_distances = pairwise_euclidean_simd(data.view());
+    let pairwise_distances = pairwise_euclidean_simd(_data.view());
     let simd_duration = start.elapsed();
 
     println!(
@@ -242,7 +242,7 @@ fn demo_simd_distances(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Err
     )?;
 
     let start = std::time::Instant::now();
-    let centroid_distances = distance_to_centroids_simd(data.view(), centroids.view());
+    let centroid_distances = distance_to_centroids_simd(_data.view(), centroids.view());
     let simd_centroid_duration = start.elapsed();
 
     println!(
@@ -253,8 +253,8 @@ fn demo_simd_distances(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Err
     );
 
     // Verify SIMD results by comparing with a few manual calculations
-    let manual_dist = ((data[[0, 0]] - centroids[[0, 0]]).powi(2)
-        + (data[[0, 1]] - centroids[[0, 1]]).powi(2))
+    let manual_dist = ((_data[[0, 0]] - centroids[[0, 0]]).powi(2)
+        + (_data[[0, 1]] - centroids[[0, 1]]).powi(2))
     .sqrt();
     let simd_dist = centroid_distances[[0, 0]];
     println!(

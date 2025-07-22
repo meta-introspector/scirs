@@ -4,8 +4,9 @@
 //! Advanced mode with enhanced spectral analysis, advanced wavelets,
 //! performance optimizations, and comprehensive validation.
 
+use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
-use scirs2_signal::{
+use scirs2__signal::{
     // Advanced 2D wavelet denoising
     advanced_wavelet_denoise_2d,
     // SIMD memory optimization
@@ -28,6 +29,7 @@ use scirs2_signal::{
     ThresholdStrategy,
 };
 use std::time::Instant;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), SignalError> {
@@ -92,13 +94,11 @@ fn demo_advanced_wavelet_denoising() -> SignalResult<()> {
     let noise_level = 0.2;
     let mut rng = rand::rng();
     let noisy_image = Array2::from_shape_fn((image_size, image_size), |(i, j)| {
-        clean_image[[i, j]] + noise_level * rng.random_range(-1.0..1.0)
+        clean_image[[i, j]] + noise_level * rng.gen_range(-1.0..1.0)
     });
 
     println!(
-        "🖼️  Created test image: {}x{} pixels",
-        image_size, image_size
-    );
+        "🖼️  Created test image: {}x{} pixels"..image_size, image_size);
     println!("🔊 Added Gaussian noise (σ = {})", noise_level);
 
     // Test different denoising methods

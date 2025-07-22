@@ -1,7 +1,7 @@
 //! Search algorithms for Neural Architecture Search
 
 use crate::error::Result;
-use crate::nas::architecture_encoding::ArchitectureEncoding;
+use crate::nas::architecture__encoding::ArchitectureEncoding;
 use crate::nas::SearchResult;
 use ndarray::prelude::*;
 use ndarray::{s, Array1, Array2};
@@ -28,8 +28,8 @@ impl RandomSearch {
         Self { seed: None }
     }
     /// Create with a specific seed
-    pub fn with_seed(seed: u64) -> Self {
-        Self { seed: Some(seed) }
+    pub fn with_seed(_seed: u64) -> Self {
+        Self { seed: Some(_seed) }
 impl SearchAlgorithm for RandomSearch {
         _history: &[SearchResult],
     ) -> Result<Vec<Arc<dyn ArchitectureEncoding>>> {
@@ -47,7 +47,7 @@ use rand::rng;
             proposals.push(Arc::new(encoding) as Arc<dyn ArchitectureEncoding>);
         }
         Ok(proposals)
-    fn update(&mut self, _results: &[SearchResult]) -> Result<()> {
+    fn update(&mut self_results: &[SearchResult]) -> Result<()> {
         // Random search doesn't learn from history
         Ok(())
     fn name(&self) -> &str {
@@ -63,13 +63,13 @@ pub struct EvolutionarySearch {
     fitness_scores: Vec<f64>,
 impl EvolutionarySearch {
     /// Create a new evolutionary search algorithm
-    pub fn new(population_size: usize) -> Self {
+    pub fn new(_population_size: usize) -> Self {
         Self {
-            population_size,
+            _population_size,
             mutation_rate: 0.1,
             crossover_rate: 0.9,
             tournament_size: 3,
-            elite_size: population_size / 10,
+            elite_size: _population_size / 10,
             population: Vec::new(),
             fitness_scores: Vec::new(),
     /// Set mutation rate
@@ -101,7 +101,7 @@ impl SearchAlgorithm for EvolutionarySearch {
             return Ok(proposals);
         // Elite selection
         let mut elite_indices: Vec<usize> = (0..self.population.len()).collect();
-        elite_indices.sort_by(|&a, &b| {
+        elite_indices.sort_by(|&a..&b| {
             self.fitness_scores[b]
                 .partial_cmp(&self.fitness_scores[a])
                 .unwrap()
@@ -335,8 +335,7 @@ impl SearchAlgorithm for ReinforcementSearch {
                 },
                 3 => crate::nas::search_space::LayerType::Dropout(0.1 + (token % 4) as f32 * 0.1),
                 4 => crate::nas::search_space::LayerType::BatchNorm,
-                5 => crate::nas::search_space::LayerType::Activation("relu".to_string()),
-                _ => crate::nas::search_space::LayerType::MaxPool2D {
+                5 => crate::nas::search_space::LayerType::Activation("relu".to_string(), _ =>, crate::nas::search_space::LayerType::MaxPool2D {
                     pool_size: (2, 2),
                     stride: (2, 2),
             layers.push(layer_type);

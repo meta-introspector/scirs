@@ -4,7 +4,7 @@
 
 use ndarray::{Array1, Array2};
 use rand::Rng;
-use scirs2_cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
+use scirs2__cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
 
 #[allow(dead_code)]
 fn generate_blobs(

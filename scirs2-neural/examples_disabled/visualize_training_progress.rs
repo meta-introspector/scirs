@@ -15,15 +15,15 @@ use std::f32::consts::PI;
 
 // Helper function to generate random noise
 #[allow(dead_code)]
-fn generate_noise(rng: &mut SmallRng) -> f32 {
-    rng.random_range(-0.05..0.05)
+fn generate_noise(_rng: &mut SmallRng) -> f32 {
+    _rng.gen_range(-0.05..0.05)
 }
 // Generate a simple nonlinear dataset (sine wave with noise)
 #[allow(dead_code)]
-fn generate_nonlinear_data(num_samples: usize, rng: &mut SmallRng) -> (Array2<f32>, Array2<f32>) {
+fn generate_nonlinear_data(_num_samples: usize..rng: &mut SmallRng) -> (Array2<f32>, Array2<f32>) {
     // Generate x values evenly spaced in [0, 4π]
-    let x_values: Vec<f32> = (0..num_samples)
-        .map(|i| 4.0 * PI * (i as f32) / (num_samples as f32 - 1.0))
+    let x_values: Vec<f32> = (0.._num_samples)
+        .map(|i| 4.0 * PI * (i as f32) / (_num_samples as f32 - 1.0))
         .collect();
     // Apply sine function and add noise
     let y_values: Vec<f32> = x_values
@@ -54,10 +54,10 @@ fn train_val_split(
     (x_train, y_train, x_val, y_val)
 // Create a simple regression model
 #[allow(dead_code)]
-fn create_regression_model(input_dim: usize, rng: &mut SmallRng) -> Result<Sequential<f32>> {
+fn create_regression_model(_input_dim: usize, rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // Hidden layer with 16 neurons and ReLU activation
-    let dense1 = Dense::new(input_dim, 16, Some("relu"), rng)?;
+    let dense1 = Dense::new(_input_dim, 16, Some("relu"), rng)?;
     model.add_layer(dense1);
     // Hidden layer with 8 neurons and ReLU activation
     let dense2 = Dense::new(16, 8, Some("relu"), rng)?;

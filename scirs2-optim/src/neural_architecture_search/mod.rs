@@ -20,11 +20,11 @@ pub mod progressive_search;
 pub mod search_strategies;
 
 // Re-export key types
-pub use architecture_space::{
+pub use architecture__space::{
     ComponentType, ConnectionPattern, ConnectionType, OptimizerArchitecture, OptimizerComponent,
     SearchSpace,
 };
-pub use automated_hyperparameter_optimization::{
+pub use automated_hyperparameter__optimization::{
     BayesianOptimizationStrategy, HyperOptStrategy, HyperparameterConfig, HyperparameterOptimizer,
     HyperparameterSearchSpace, OptimizationResults,
 };
@@ -32,14 +32,14 @@ pub use controllers::{
     ArchitectureController, EvolutionaryController, RNNController, RandomController,
     TransformerController,
 };
-pub use multi_objective::{
+pub use multi__objective::{
     MOEADOptimizer, MultiObjectiveOptimizer, ParetoFront, WeightedSum, NSGA2,
 };
-pub use performance_evaluation::{BenchmarkSuite, PerformanceEvaluator, PerformancePredictor};
-pub use progressive_search::{
+pub use performance__evaluation::{BenchmarkSuite, PerformanceEvaluator, PerformancePredictor};
+pub use progressive__search::{
     ArchitectureProgression, ComplexityScheduler, ProgressiveNAS, SearchPhase,
 };
-pub use search_strategies::{
+pub use search__strategies::{
     BayesianOptimization, DifferentiableSearch, EvolutionarySearch, RandomSearch,
     ReinforcementLearningSearch, SearchStrategy,
 };
@@ -1263,44 +1263,44 @@ impl<
     > NeuralArchitectureSearch<T>
 {
     /// Create a new Neural Architecture Search engine
-    pub fn new(config: NASConfig<T>) -> Result<Self> {
+    pub fn new(_config: NASConfig<T>) -> Result<Self> {
         // Initialize search strategy
-        let search_strategy = Self::create_search_strategy(&config)?;
+        let search_strategy = Self::create_search_strategy(&_config)?;
 
         // Initialize evaluator
-        let evaluator = PerformanceEvaluator::new(config.evaluation_config.clone())?;
+        let evaluator = PerformanceEvaluator::new(_config.evaluation_config.clone())?;
 
         // Initialize multi-objective optimizer if needed
-        let multi_objective_optimizer = if config.multi_objective_config.objectives.len() > 1 {
+        let multi_objective_optimizer = if _config.multi_objective_config.objectives.len() > 1 {
             Some(Self::create_multi_objective_optimizer(
-                &config.multi_objective_config,
+                &_config.multi_objective_config,
             )?)
         } else {
             None
         };
 
         // Initialize architecture controller
-        let architecture_controller = Self::create_architecture_controller(&config)?;
+        let architecture_controller = Self::create_architecture_controller(&_config)?;
 
         // Initialize progressive search if enabled
-        let progressive_search = if config.progressive_search {
-            Some(ProgressiveNAS::new(&config)?)
+        let progressive_search = if _config.progressive_search {
+            Some(ProgressiveNAS::new(&_config)?)
         } else {
             None
         };
 
         // Initialize resource monitor
-        let resource_monitor = ResourceMonitor::new(config.resource_constraints.clone());
+        let resource_monitor = ResourceMonitor::new(_config.resource_constraints.clone());
 
         // Initialize performance predictor if enabled
-        let performance_predictor = if config.enable_performance_prediction {
-            Some(PerformancePredictor::new(&config.evaluation_config)?)
+        let performance_predictor = if _config.enable_performance_prediction {
+            Some(PerformancePredictor::new(&_config.evaluation_config)?)
         } else {
             None
         };
 
         Ok(Self {
-            config,
+            _config,
             search_strategy,
             evaluator,
             multi_objective_optimizer,
@@ -1650,15 +1650,15 @@ impl<
 
     /// Helper method implementations would continue...
     // Helper method implementations
-    fn create_search_strategy(config: &NASConfig<T>) -> Result<Box<dyn SearchStrategy<T>>> {
-        match config.search_strategy {
+    fn create_search_strategy(_config: &NASConfig<T>) -> Result<Box<dyn SearchStrategy<T>>> {
+        match _config.search_strategy {
             SearchStrategyType::Random => {
                 let strategy = search_strategies::RandomSearch::new(Some(42));
                 Ok(Box::new(strategy))
             }
             SearchStrategyType::Evolutionary => {
                 let strategy = search_strategies::EvolutionarySearch::new(
-                    config.population_size,
+                    _config.population_size,
                     0.1, // mutation_rate
                     0.8, // crossover_rate
                     3,   // tournament_size
@@ -1701,7 +1701,7 @@ impl<
             _ => {
                 // Default to evolutionary search for other types
                 let strategy =
-                    search_strategies::EvolutionarySearch::new(config.population_size, 0.1, 0.8, 3);
+                    search_strategies::EvolutionarySearch::new(_config.population_size, 0.1, 0.8, 3);
                 Ok(Box::new(strategy))
             }
         }
@@ -1721,8 +1721,7 @@ impl<
             )?)),
             MultiObjectiveAlgorithm::WeightedSum => Ok(Box::new(
                 multi_objective::WeightedSum::new(&config.objectives)?,
-            )),
-            _ => {
+            ), _ => {
                 // Default to NSGA2
                 Ok(Box::new(multi_objective::NSGA2::new(
                     config.pareto_front_size,
@@ -1868,8 +1867,7 @@ impl<
             ComponentType::AdaptiveRegularization => 31,
             ComponentType::LSTMOptimizer => 32,
             ComponentType::TransformerOptimizer => 33,
-            ComponentType::AttentionOptimizer => 34,
-            _ => 255, // Default for unknown types
+            ComponentType::AttentionOptimizer => 34_ => 255, // Default for unknown types
         }
     }
 
@@ -2023,7 +2021,7 @@ impl<
                     let top_indices: Vec<_> = arch_performance
                         .iter()
                         .take(10)
-                        .map(|(idx, _)| *idx)
+                        .map(|(idx_)| *idx)
                         .collect();
 
                     let mut new_best = Vec::new();
@@ -2100,7 +2098,7 @@ impl<T: Float> Default for SearchStatistics<T> {
 }
 
 impl<T: Float + Send + Sync> ResourceMonitor<T> {
-    fn new(constraints: ResourceConstraints<T>) -> Self {
+    fn new(_constraints: ResourceConstraints<T>) -> Self {
         Self {
             current_usage: ResourceUsage {
                 memory_gb: T::zero(),
@@ -2111,7 +2109,7 @@ impl<T: Float + Send + Sync> ResourceMonitor<T> {
                 network_gb: T::zero(),
             },
             usage_history: VecDeque::new(),
-            limits: constraints,
+            limits: _constraints,
             monitoring_enabled: true,
             violation_count: 0,
         }

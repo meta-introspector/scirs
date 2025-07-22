@@ -5,7 +5,7 @@
 
 #![allow(dead_code)]
 
-use scirs2_graph::numerical_accuracy_validation::{
+use scirs2__graph::numerical_accuracy_validation::{
     create_comprehensive_validation_suite, run_quick_validation, AdvancedNumericalValidator,
     GraphGenerator, ValidationAlgorithm, ValidationConfig, ValidationTestCase,
     ValidationTolerances,

@@ -172,7 +172,7 @@ where
                     return Err(LinalgError::singular_matrix_with_suggestions(
                         "triangular system solve (forward substitution)",
                         a.dim(),
-                        Some(1e16), // Very high condition number due to zero diagonal
+                        Some(1e16), // Very high condition number due to zero _diagonal
                     ));
                 }
                 x[i] = sum / a[[i, i]];
@@ -192,7 +192,7 @@ where
                     return Err(LinalgError::singular_matrix_with_suggestions(
                         "triangular system solve (back substitution)",
                         a.dim(),
-                        Some(1e16), // Very high condition number due to zero diagonal
+                        Some(1e16), // Very high condition number due to zero _diagonal
                     ));
                 }
                 x[i] = sum / a[[i, i]];

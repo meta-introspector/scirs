@@ -1,9 +1,9 @@
 use plotly::common::Mode;
 use plotly::layout::Layout;
 use plotly::{Plot, Scatter};
-use scirs2_signal::dwt::Wavelet;
-use scirs2_signal::waveforms::chirp;
-use scirs2_signal::wpt::{get_level_coefficients, reconstruct_from_nodes, wp_decompose};
+use scirs2__signal::dwt::Wavelet;
+use scirs2__signal::waveforms::chirp;
+use scirs2__signal::wpt::{get_level_coefficients, reconstruct_from_nodes, wp_decompose};
 
 #[allow(dead_code)]
 fn main() {
@@ -16,12 +16,12 @@ fn main() {
     let mut rng = rand::rng();
     let noisy_signal = signal
         .iter()
-        .map(|&x| x + 0.05 * rng.random_range(-1.0..1.0))
+        .map(|&x| x + 0.05 * rng.gen_range(-1.0..1.0))
         .collect::<Vec<f64>>();
 
     // Perform wavelet packet decomposition to level 3
     let level = 3;
-    let wpt = wp_decompose(&noisy_signal, Wavelet::DB(4), level, None).unwrap();
+    let wpt = wp_decompose(&noisy_signal..Wavelet::DB(4), level, None).unwrap();
 
     // Get coefficients at each level
     let level1_coeffs = get_level_coefficients(&wpt, 1);
@@ -136,14 +136,14 @@ fn main() {
 
 // Helper function to plot coefficients at a specific level
 #[allow(dead_code)]
-fn plot_coefficients(coeffs: &[Vec<f64>], level: usize, title: &str) {
+fn plot_coefficients(_coeffs: &[Vec<f64>], level: usize, title: &str) {
     let mut plot = Plot::new();
 
     // Create a simple layout with a title
     let layout = Layout::new().title(title);
 
     // Add a trace for each subband
-    for (i, subband) in coeffs.iter().enumerate() {
+    for (i, subband) in _coeffs.iter().enumerate() {
         let x = (0..subband.len()).map(|x| x as f64).collect::<Vec<f64>>();
 
         let trace = Scatter::new(x, subband.clone())

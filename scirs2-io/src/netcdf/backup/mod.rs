@@ -53,27 +53,27 @@ pub enum NetCDFDataType {
 }
 
 impl From<NetCDFDataType> for DataType {
-    fn from(dtype: NetCDFDataType) -> Self {
-        match dtype {
-            NetCDFDataType::Byte => DataType::Byte,
-            NetCDFDataType::Char => DataType::Char,
-            NetCDFDataType::Short => DataType::Short,
-            NetCDFDataType::Int => DataType::Int,
-            NetCDFDataType::Float => DataType::Float,
-            NetCDFDataType::Double => DataType::Double,
+    fn from(_dtype: NetCDFDataType) -> Self {
+        match _dtype {
+            NetCDFDataType::Byte =>, DataType::Byte,
+            NetCDFDataType::Char =>, DataType::Char,
+            NetCDFDataType::Short =>, DataType::Short,
+            NetCDFDataType::Int =>, DataType::Int,
+            NetCDFDataType::Float =>, DataType::Float,
+            NetCDFDataType::Double =>, DataType::Double,
         }
     }
 }
 
 impl From<DataType> for NetCDFDataType {
-    fn from(dtype: DataType) -> Self {
-        match dtype {
-            DataType::Byte => NetCDFDataType::Byte,
-            DataType::Char => NetCDFDataType::Char,
-            DataType::Short => NetCDFDataType::Short,
-            DataType::Int => NetCDFDataType::Int,
-            DataType::Float => NetCDFDataType::Float,
-            DataType::Double => NetCDFDataType::Double,
+    fn from(_dtype: DataType) -> Self {
+        match _dtype {
+            DataType::Byte =>, NetCDFDataType::Byte,
+            DataType::Char =>, NetCDFDataType::Char,
+            DataType::Short =>, NetCDFDataType::Short,
+            DataType::Int =>, NetCDFDataType::Int,
+            DataType::Float =>, NetCDFDataType::Float,
+            DataType::Double =>, NetCDFDataType::Double,
         }
     }
 }
@@ -117,7 +117,7 @@ impl NetCDFFile {
     /// # Examples
     ///
     /// ```no_run
-    /// use scirs2_io::netcdf::NetCDFFile;
+    /// use scirs2__io::netcdf::NetCDFFile;
     ///
     /// // Open a NetCDF file for reading
     /// let nc = NetCDFFile::open("data.nc", None).unwrap();
@@ -128,34 +128,33 @@ impl NetCDFFile {
     /// // List the variables
     /// println!("Variables: {:?}", nc.variables());
     /// ```
-    pub fn open<P: AsRef<Path>>(filename: P, options: Option<NetCDFOptions>) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(_filename: P, options: Option<NetCDFOptions>) -> Result<Self> {
         let opts = options.unwrap_or_default();
-        let path_str = filename.as_ref().to_string_lossy().to_string();
+        let path_str = _filename.as_ref().to_string_lossy().to_string();
         
         let file = match opts.mode.as_str() {
             "r" => {
                 // Open for reading
-                NC3File::open(filename).map_err(|e| IOError::FileOpenError(
+                NC3File::open(_filename).map_err(|e| IOError::FileOpenError(
                     format!("Failed to open NetCDF file '{}': {}", path_str, e)))?
             },
             "w" => {
                 // Open for writing (create new file)
-                NC3File::create(filename).map_err(|e| IOError::FileCreateError(
+                NC3File::create(_filename).map_err(|e| IOError::FileCreateError(
                     format!("Failed to create NetCDF file '{}': {}", path_str, e)))?
             },
             "a" => {
                 // Open for appending
                 // If file exists, open for reading and writing
                 // If file doesn't exist, create it
-                if filename.as_ref().exists() {
-                    NC3File::open(filename).map_err(|e| IOError::FileOpenError(
+                if _filename.as_ref().exists() {
+                    NC3File::open(_filename).map_err(|e| IOError::FileOpenError(
                         format!("Failed to open NetCDF file '{}': {}", path_str, e)))?
                 } else {
-                    NC3File::create(filename).map_err(|e| IOError::FileCreateError(
+                    NC3File::create(_filename).map_err(|e| IOError::FileCreateError(
                         format!("Failed to create NetCDF file '{}': {}", path_str, e)))?
                 }
-            },
-            _ => {
+            }_ => {
                 return Err(IOError::InvalidArgument(
                     format!("Invalid NetCDF file mode: {}", opts.mode)));
             }
@@ -193,7 +192,7 @@ impl NetCDFFile {
     /// * `Vec<String>` - List of variable names
     pub fn variables(&self) -> Vec<String> {
         self.file.variables()
-            .map(|(name, _)| name.to_string())
+            .map(|(name_)| name.to_string())
             .collect()
     }
     
@@ -237,7 +236,7 @@ impl NetCDFFile {
     /// # Examples
     ///
     /// ```no_run
-    /// use scirs2_io::netcdf::NetCDFFile;
+    /// use scirs2__io::netcdf::NetCDFFile;
     ///
     /// // Open a NetCDF file for reading
     /// let nc = NetCDFFile::open("data.nc", None).unwrap();
@@ -332,7 +331,7 @@ impl NetCDFFile {
     ///
     /// ```no_run
     /// use ndarray::Array;
-    /// use scirs2_io::netcdf::{NetCDFFile, NetCDFOptions, NetCDFDataType};
+    /// use scirs2__io::netcdf::{NetCDFFile, NetCDFOptions, NetCDFDataType};
     ///
     /// // Create a new NetCDF file
     /// let opts = NetCDFOptions {
@@ -467,8 +466,8 @@ mod convert {
     use netcdf3::DataValue;
     
     /// Convert a NetCDF data value to a string representation
-    pub fn data_value_to_string(value: &DataValue) -> String {
-        match value {
+    pub fn data_value_to_string(_value: &DataValue) -> String {
+        match _value {
             DataValue::Byte(v) => v.to_string(),
             DataValue::Char(v) => format!("{}", *v as char),
             DataValue::Short(v) => v.to_string(),

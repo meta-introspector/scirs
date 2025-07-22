@@ -4,6 +4,7 @@ use crate::error::Result;
 use crate::layers::Layer;
 use ndarray::prelude::*;
 use std::collections::VecDeque;
+use ndarray::ArrayView1;
 /// Memory-efficient trainer
 pub struct MemoryEfficientTrainer {
     /// Enable gradient accumulation
@@ -21,14 +22,14 @@ pub struct MemoryEfficientTrainer {
 }
 impl MemoryEfficientTrainer {
     /// Create a new memory-efficient trainer
-    pub fn new(memory_budget_mb: usize) -> Self {
+    pub fn new(_memory_budget_mb: usize) -> Self {
         Self {
             gradient_accumulation: true,
             accumulation_steps: 4,
             activation_checkpointing: true,
             weight_sharing: false,
             buffer_reuse: BufferReuseStrategy::Aggressive,
-            memory_pool: MemoryPool::new(memory_budget_mb * 1024 * 1024),
+            memory_pool: MemoryPool::new(_memory_budget_mb * 1024 * 1024),
         }
     }
     
@@ -170,30 +171,30 @@ struct MemoryPool {
     available: usize,
     buffers: VecDeque<Buffer>,
 impl MemoryPool {
-    fn new(size: usize) -> Self {
-            total_size: size,
-            available: size,
+    fn new(_size: usize) -> Self {
+            total_size: _size,
+            available: _size,
             buffers: VecDeque::new(),
     fn allocate(&mut self, size: usize) -> Option<Buffer> {
         // Try to reuse existing buffer
         for (i, buffer) in self.buffers.iter().enumerate() {
-            if !buffer.in_use && buffer.size >= size {
+            if !buffer.in_use && buffer._size >= _size {
                 let mut buffer = self.buffers.remove(i).unwrap();
                 buffer.in_use = true;
-                self.available -= buffer.size;
+                self.available -= buffer._size;
                 return Some(buffer);
         // Allocate new buffer if space available
-        if self.available >= size {
+        if self.available >= _size {
             let buffer = Buffer {
-                data: vec![0.0; size],
-                size,
+                data: vec![0.0; _size],
+                _size,
                 in_use: true,
-            self.available -= size;
+            self.available -= _size;
             Some(buffer)
             None
     fn release(&mut self, mut buffer: Buffer) {
         buffer.in_use = false;
-        self.available += buffer.size;
+        self.available += buffer._size;
         self.buffers.push_back(buffer);
 struct Buffer {
     data: Vec<f32>,
@@ -207,7 +208,7 @@ pub struct ActivationCheckpointing {
     checkpoints: Vec<CheckpointData>,
 impl ActivationCheckpointing {
     /// Create new activation checkpointing
-    pub fn new(checkpoint_interval: usize) -> Self {
+    pub fn new(_checkpoint_interval: usize) -> Self {
             checkpoint_interval,
             checkpoints: Vec::new(),
     /// Should checkpoint at this layer
@@ -237,7 +238,7 @@ pub struct EfficientDataLoader {
     pin_memory: bool,
 impl EfficientDataLoader {
     /// Create a new efficient data loader
-    pub fn new(batch_size: usize) -> Self {
+    pub fn new(_batch_size: usize) -> Self {
             batch_size,
             prefetch_factor: 2,
             pin_memory: true,

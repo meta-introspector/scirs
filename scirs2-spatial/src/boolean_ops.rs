@@ -18,7 +18,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::boolean_ops::{polygon_union, polygon_intersection};
+//! use scirs2__spatial::boolean_ops::{polygon_union, polygon_intersection};
 //! use ndarray::array;
 //!
 //! // Define two overlapping squares
@@ -63,17 +63,17 @@ impl Point2D {
     }
 
     #[allow(dead_code)]
-    fn distance_to(&self, other: &Point2D) -> f64 {
-        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
+    fn distance_to(_other: &Point2D) -> f64 {
+        ((self.x - _other.x).powi(2) + (self.y - _other.y).powi(2)).sqrt()
     }
 
-    fn cross_product(&self, other: &Point2D) -> f64 {
-        self.x * other.y - self.y * other.x
+    fn cross_product(_other: &Point2D) -> f64 {
+        self.x * _other.y - self.y * _other.x
     }
 
     #[allow(dead_code)]
-    fn dot_product(&self, other: &Point2D) -> f64 {
-        self.x * other.x + self.y * other.y
+    fn dot_product(_other: &Point2D) -> f64 {
+        self.x * _other.x + self.y * _other.y
     }
 }
 
@@ -105,21 +105,21 @@ struct LabeledPolygon {
 }
 
 impl LabeledPolygon {
-    fn from_array(vertices: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        if vertices.ncols() != 2 {
+    fn from_array(_vertices: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        if _vertices.ncols() != 2 {
             return Err(SpatialError::ValueError(
-                "Polygon vertices must be 2D".to_string(),
+                "Polygon _vertices must be 2D".to_string(),
             ));
         }
 
-        let points: Vec<Point2D> = vertices
+        let points: Vec<Point2D> = _vertices
             .outer_iter()
             .map(|row| Point2D::new(row[0], row[1]))
             .collect();
 
         if points.len() < 3 {
             return Err(SpatialError::ValueError(
-                "Polygon must have at least 3 vertices".to_string(),
+                "Polygon must have at least 3 _vertices".to_string(),
             ));
         }
 
@@ -136,7 +136,7 @@ impl LabeledPolygon {
         }
 
         Ok(LabeledPolygon {
-            vertices: points,
+            _vertices: points,
             edges,
             is_hole: false,
         })
@@ -151,7 +151,7 @@ impl LabeledPolygon {
         Array2::from_shape_vec((self.vertices.len(), 2), data).unwrap()
     }
 
-    fn is_point_inside(&self, point: &Point2D) -> bool {
+    fn is_point_inside(_point: &Point2D) -> bool {
         let mut inside = false;
         let n = self.vertices.len();
 
@@ -160,8 +160,8 @@ impl LabeledPolygon {
             let vi = &self.vertices[i];
             let vj = &self.vertices[j];
 
-            if ((vi.y > point.y) != (vj.y > point.y))
-                && (point.x < (vj.x - vi.x) * (point.y - vi.y) / (vj.y - vi.y) + vi.x)
+            if ((vi.y > _point.y) != (vj.y > _point.y))
+                && (_point.x < (vj.x - vi.x) * (_point.y - vi.y) / (vj.y - vi.y) + vi.x)
             {
                 inside = !inside;
             }
@@ -200,7 +200,7 @@ impl LabeledPolygon {
     }
 
     #[allow(dead_code)]
-    fn reverse(&mut self) {
+    fn reverse() {
         self.vertices.reverse();
         // Rebuild edges after reversing
         let mut edges = Vec::new();
@@ -232,7 +232,7 @@ impl LabeledPolygon {
 /// # Examples
 ///
 /// ```
-/// use scirs2_spatial::boolean_ops::polygon_union;
+/// use scirs2__spatial::boolean_ops::polygon_union;
 /// use ndarray::array;
 ///
 /// let poly1 = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -375,8 +375,8 @@ pub fn polygon_symmetric_difference(
 
 /// Find intersections between edges of two polygons
 #[allow(dead_code)]
-fn find_intersections(poly1: &mut LabeledPolygon, poly2: &mut LabeledPolygon) -> SpatialResult<()> {
-    for (i, edge1) in poly1.edges.iter_mut().enumerate() {
+fn find_intersections(_poly1: &mut LabeledPolygon, poly2: &mut LabeledPolygon) -> SpatialResult<()> {
+    for (i, edge1) in _poly1.edges.iter_mut().enumerate() {
         for (j, edge2) in poly2.edges.iter_mut().enumerate() {
             if let Some((intersection_point, t1, t2)) =
                 line_segment_intersection(&edge1.start, &edge1.end, &edge2.start, &edge2.end)
@@ -398,7 +398,7 @@ fn find_intersections(poly1: &mut LabeledPolygon, poly2: &mut LabeledPolygon) ->
     }
 
     // Sort intersection points along each edge
-    for edge in &mut poly1.edges {
+    for edge in &mut _poly1.edges {
         edge.intersection_points
             .sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap_or(Ordering::Equal));
     }
@@ -474,7 +474,7 @@ fn sutherland_hodgman_clip(
                 if is_inside(&vertex, &clip_edge_start, &clip_edge_end) {
                     if !is_inside(&s, &clip_edge_start, &clip_edge_end) {
                         // Entering the clip region
-                        if let Some((intersection, _, _)) =
+                        if let Some((intersection__)) =
                             line_segment_intersection(&s, &vertex, &clip_edge_start, &clip_edge_end)
                         {
                             output_vertices.push(intersection);
@@ -483,7 +483,7 @@ fn sutherland_hodgman_clip(
                     output_vertices.push(vertex);
                 } else if is_inside(&s, &clip_edge_start, &clip_edge_end) {
                     // Leaving the clip region
-                    if let Some((intersection, _, _)) =
+                    if let Some((intersection__)) =
                         line_segment_intersection(&s, &vertex, &clip_edge_start, &clip_edge_end)
                     {
                         output_vertices.push(intersection);
@@ -521,9 +521,9 @@ fn sutherland_hodgman_clip(
 
 /// Check if a point is inside relative to a directed edge
 #[allow(dead_code)]
-fn is_inside(point: &Point2D, edge_start: &Point2D, edge_end: &Point2D) -> bool {
+fn is_inside(_point: &Point2D, edge_start: &Point2D, edge_end: &Point2D) -> bool {
     let edge_vector = Point2D::new(edge_end.x - edge_start.x, edge_end.y - edge_start.y);
-    let point_vector = Point2D::new(point.x - edge_start.x, point.y - edge_start.y);
+    let point_vector = Point2D::new(_point.x - edge_start.x, _point.y - edge_start.y);
     edge_vector.cross_product(&point_vector) >= 0.0
 }
 
@@ -571,22 +571,22 @@ fn weiler_atherton_difference(
 
 /// Check if two polygons intersect
 #[allow(dead_code)]
-fn polygons_intersect(poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
+fn polygons_intersect(_poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
     // Quick check: if any vertex of one polygon is inside the other
-    for vertex in &poly1.vertices {
+    for vertex in &_poly1.vertices {
         if poly2.is_point_inside(vertex) {
             return true;
         }
     }
 
     for vertex in &poly2.vertices {
-        if poly1.is_point_inside(vertex) {
+        if _poly1.is_point_inside(vertex) {
             return true;
         }
     }
 
     // Check for edge intersections
-    for edge1 in &poly1.edges {
+    for edge1 in &_poly1.edges {
         for edge2 in &poly2.edges {
             if line_segment_intersection(&edge1.start, &edge1.end, &edge2.start, &edge2.end)
                 .is_some()
@@ -602,8 +602,7 @@ fn polygons_intersect(poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
 /// Build intersection graph for Weiler-Atherton algorithm
 #[allow(dead_code)]
 fn build_intersection_graph(
-    _poly1: &LabeledPolygon,
-    _poly2: &LabeledPolygon,
+    _poly1: &LabeledPolygon_poly2: &LabeledPolygon,
 ) -> SpatialResult<HashMap<String, Vec<Point2D>>> {
     // This is a simplified implementation
     // A full implementation would build a proper intersection graph
@@ -631,8 +630,7 @@ fn trace_union_boundary(
 #[allow(dead_code)]
 fn trace_difference_boundary(
     _graph: &HashMap<String, Vec<Point2D>>,
-    poly1: &LabeledPolygon,
-    _poly2: &LabeledPolygon,
+    poly1: &LabeledPolygon_poly2: &LabeledPolygon,
 ) -> SpatialResult<Vec<LabeledPolygon>> {
     // Simplified implementation: return the first polygon
     // A complete implementation would properly trace the difference boundary
@@ -641,12 +639,12 @@ fn trace_difference_boundary(
 
 /// Check if a polygon is convex
 #[allow(dead_code)]
-pub fn is_convex_polygon(vertices: &ArrayView2<'_, f64>) -> SpatialResult<bool> {
-    if vertices.ncols() != 2 {
+pub fn is_convex_polygon(_vertices: &ArrayView2<'_, f64>) -> SpatialResult<bool> {
+    if _vertices.ncols() != 2 {
         return Err(SpatialError::ValueError("Vertices must be 2D".to_string()));
     }
 
-    let n = vertices.nrows();
+    let n = _vertices.nrows();
     if n < 3 {
         return Ok(false);
     }
@@ -654,9 +652,9 @@ pub fn is_convex_polygon(vertices: &ArrayView2<'_, f64>) -> SpatialResult<bool> 
     let mut sign = 0i32;
 
     for i in 0..n {
-        let p1 = Point2D::new(vertices[[i, 0]], vertices[[i, 1]]);
-        let p2 = Point2D::new(vertices[[(i + 1) % n, 0]], vertices[[(i + 1) % n, 1]]);
-        let p3 = Point2D::new(vertices[[(i + 2) % n, 0]], vertices[[(i + 2) % n, 1]]);
+        let p1 = Point2D::new(_vertices[[i, 0]], _vertices[[i, 1]]);
+        let p2 = Point2D::new(_vertices[[(i + 1) % n, 0]], _vertices[[(i + 1) % n, 1]]);
+        let p3 = Point2D::new(_vertices[[(i + 2) % n, 0]], _vertices[[(i + 2) % n, 1]]);
 
         let v1 = Point2D::new(p2.x - p1.x, p2.y - p1.y);
         let v2 = Point2D::new(p3.x - p2.x, p3.y - p2.y);
@@ -679,20 +677,20 @@ pub fn is_convex_polygon(vertices: &ArrayView2<'_, f64>) -> SpatialResult<bool> 
 
 /// Compute the area of a polygon
 #[allow(dead_code)]
-pub fn compute_polygon_area(vertices: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-    let polygon = LabeledPolygon::from_array(vertices)?;
+pub fn compute_polygon_area(_vertices: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+    let polygon = LabeledPolygon::from_array(_vertices)?;
     Ok(polygon.compute_area())
 }
 
 /// Check if a polygon is self-intersecting
 #[allow(dead_code)]
-pub fn is_self_intersecting(vertices: &ArrayView2<'_, f64>) -> SpatialResult<bool> {
-    let polygon = LabeledPolygon::from_array(vertices)?;
-    let n = polygon.vertices.len();
+pub fn is__intersecting(_vertices: &ArrayView2<'_, f64>) -> SpatialResult<bool> {
+    let polygon = LabeledPolygon::from_array(_vertices)?;
+    let n = polygon._vertices.len();
 
     for i in 0..n {
-        let edge1_start = polygon.vertices[i];
-        let edge1_end = polygon.vertices[(i + 1) % n];
+        let edge1_start = polygon._vertices[i];
+        let edge1_end = polygon._vertices[(i + 1) % n];
 
         for j in (i + 2)..n {
             // Skip adjacent edges
@@ -700,8 +698,8 @@ pub fn is_self_intersecting(vertices: &ArrayView2<'_, f64>) -> SpatialResult<boo
                 continue;
             }
 
-            let edge2_start = polygon.vertices[j];
-            let edge2_end = polygon.vertices[(j + 1) % n];
+            let edge2_start = polygon._vertices[j];
+            let edge2_end = polygon._vertices[(j + 1) % n];
 
             if line_segment_intersection(&edge1_start, &edge1_end, &edge2_start, &edge2_end)
                 .is_some()
@@ -802,7 +800,7 @@ mod tests {
     }
 
     #[test]
-    fn test_self_intersection() {
+    fn test__intersection() {
         // Non-self-intersecting square
         let square = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
         assert!(!is_self_intersecting(&square.view()).unwrap());

@@ -16,7 +16,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2_io::network::NetworkClient;
+//! use scirs2__io::network::NetworkClient;
 //!
 //! // Create a network client
 //! let client = NetworkClient::new();
@@ -102,9 +102,9 @@ impl NetworkClient {
     }
 
     /// Create a new network client with custom configuration
-    pub fn with_config(config: NetworkConfig) -> Self {
+    pub fn with_config(_config: NetworkConfig) -> Self {
         Self {
-            config,
+            _config,
             #[cfg(feature = "reqwest")]
             http_client: None,
             cloud_provider: None,
@@ -260,16 +260,16 @@ impl NetworkClient {
 /// Convenience functions for common network operations
 /// Download a file from URL using default client
 #[cfg(feature = "reqwest")]
-pub async fn download_file<P: AsRef<Path>>(url: &str, local_path: P) -> Result<()> {
+pub async fn download_file<P: AsRef<Path>>(_url: &str, local_path: P) -> Result<()> {
     let client = NetworkClient::new();
-    client.download(url, local_path).await
+    client.download(_url, local_path).await
 }
 
 /// Upload a file to URL using default client
 #[cfg(feature = "reqwest")]
-pub async fn upload_file<P: AsRef<Path>>(local_path: P, url: &str) -> Result<()> {
+pub async fn upload_file<P: AsRef<Path>>(_local_path: P, url: &str) -> Result<()> {
     let client = NetworkClient::new();
-    client.upload(local_path, url).await
+    client.upload(_local_path, url).await
 }
 
 /// Download a file with caching support
@@ -288,17 +288,17 @@ pub async fn download_with_cache<P: AsRef<Path>>(
 
 /// Create a network client with cloud provider
 #[allow(dead_code)]
-pub fn create_cloud_client(provider: cloud::CloudProvider) -> NetworkClient {
-    NetworkClient::new().with_cloud_provider(provider)
+pub fn create_cloud_client(_provider: cloud::CloudProvider) -> NetworkClient {
+    NetworkClient::new().with_cloud_provider(_provider)
 }
 
 /// Batch download multiple files
 #[cfg(feature = "reqwest")]
-pub async fn batch_download(downloads: Vec<(&str, &str)>) -> Result<Vec<Result<()>>> {
+pub async fn batch_download(_downloads: Vec<(&str, &str)>) -> Result<Vec<Result<()>>> {
     let client = NetworkClient::new();
     let mut results = Vec::new();
 
-    for (url, local_path) in downloads {
+    for (url, local_path) in _downloads {
         let result = client.download(url, local_path).await;
         results.push(result);
     }

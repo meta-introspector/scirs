@@ -56,8 +56,7 @@ impl EulerConvention {
             "yxy" => Ok(EulerConvention::Yxy),
             "yzy" => Ok(EulerConvention::Yzy),
             "zxz" => Ok(EulerConvention::Zxz),
-            "zyz" => Ok(EulerConvention::Zyz),
-            _ => Err(SpatialError::ValueError(format!(
+            "zyz" => Ok(EulerConvention::Zyz, _ => Err(SpatialError::ValueError(format!(
                 "Invalid Euler convention: {s}"
             ))),
         }
@@ -75,7 +74,7 @@ impl EulerConvention {
 /// # Examples
 ///
 /// ```
-/// use scirs2_spatial::transform::Rotation;
+/// use scirs2__spatial::transform::Rotation;
 /// use ndarray::array;
 /// use std::f64::consts::PI;
 ///
@@ -131,23 +130,23 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     ///
     /// // Create a quaternion for a 90-degree rotation around the x-axis
     /// let quat = array![std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2, 0.0, 0.0];
     /// let rot = Rotation::from_quat(&quat.view()).unwrap();
     /// ```
-    pub fn from_quat(quat: &ArrayView1<f64>) -> SpatialResult<Self> {
-        if quat.len() != 4 {
+    pub fn from_quat(_quat: &ArrayView1<f64>) -> SpatialResult<Self> {
+        if _quat.len() != 4 {
             return Err(SpatialError::DimensionError(format!(
                 "Quaternion must have 4 elements, got {}",
-                quat.len()
+                _quat.len()
             )));
         }
 
         // Normalize the quaternion
-        let norm = (quat.iter().map(|&x| x * x).sum::<f64>()).sqrt();
+        let norm = (_quat.iter().map(|&x| x * x).sum::<f64>()).sqrt();
 
         if norm < 1e-10 {
             return Err(SpatialError::ComputationError(
@@ -155,10 +154,10 @@ impl Rotation {
             ));
         }
 
-        let normalized_quat = quat.to_owned() / norm;
+        let normalized_quat = _quat.to_owned() / norm;
 
         Ok(Rotation {
-            quat: normalized_quat,
+            _quat: normalized_quat,
         })
     }
 
@@ -175,7 +174,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     ///
     /// // Create a rotation matrix for a 90-degree rotation around the z-axis
@@ -186,19 +185,19 @@ impl Rotation {
     /// ];
     /// let rot = Rotation::from_matrix(&matrix.view()).unwrap();
     /// ```
-    pub fn from_matrix(matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        if matrix.shape() != [3, 3] {
+    pub fn from_matrix(_matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        if _matrix.shape() != [3, 3] {
             return Err(SpatialError::DimensionError(format!(
                 "Matrix must be 3x3, got {:?}",
-                matrix.shape()
+                _matrix.shape()
             )));
         }
 
-        // Check if the matrix is approximately orthogonal
-        let det = matrix[[0, 0]]
-            * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
-            - matrix[[0, 1]] * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
-            + matrix[[0, 2]] * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
+        // Check if the _matrix is approximately orthogonal
+        let det = _matrix[[0, 0]]
+            * (_matrix[[1, 1]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 1]])
+            - _matrix[[0, 1]] * (_matrix[[1, 0]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 0]])
+            + _matrix[[0, 2]] * (_matrix[[1, 0]] * _matrix[[2, 1]] - _matrix[[1, 1]] * _matrix[[2, 0]]);
 
         if (det - 1.0).abs() > 1e-6 {
             return Err(SpatialError::ValueError(format!(
@@ -206,11 +205,11 @@ impl Rotation {
             )));
         }
 
-        // Convert rotation matrix to quaternion using method from:
+        // Convert rotation _matrix to quaternion using method from:
         // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 
         let mut quat = Array1::zeros(4);
-        let m = matrix;
+        let m = _matrix;
 
         let trace = m[[0, 0]] + m[[1, 1]] + m[[2, 2]];
 
@@ -264,7 +263,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -272,11 +271,11 @@ impl Rotation {
     /// let angles = array![PI/2.0, 0.0, 0.0]; // 90 degrees around X
     /// let rot = Rotation::from_euler(&angles.view(), "xyz").unwrap();
     /// ```
-    pub fn from_euler(angles: &ArrayView1<f64>, convention: &str) -> SpatialResult<Self> {
-        if angles.len() != 3 {
+    pub fn from_euler(_angles: &ArrayView1<f64>, convention: &str) -> SpatialResult<Self> {
+        if _angles.len() != 3 {
             return Err(SpatialError::DimensionError(format!(
-                "Euler angles must have 3 elements, got {}",
-                angles.len()
+                "Euler _angles must have 3 elements, got {}",
+                _angles.len()
             )));
         }
 
@@ -284,10 +283,10 @@ impl Rotation {
         let mut quat = Array1::zeros(4);
 
         // Compute quaternions for individual rotations
-        let angles = angles.as_slice().unwrap();
-        let a = angles[0] / 2.0;
-        let b = angles[1] / 2.0;
-        let c = angles[2] / 2.0;
+        let _angles = _angles.as_slice().unwrap();
+        let a = _angles[0] / 2.0;
+        let b = _angles[1] / 2.0;
+        let c = _angles[2] / 2.0;
 
         let ca = a.cos();
         let sa = a.sin();
@@ -308,7 +307,7 @@ impl Rotation {
             }
             EulerConvention::Zyx => {
                 // Intrinsic rotation around Z, then Y, then X
-                // For ZYX: angles[0] = Z, angles[1] = Y, angles[2] = X
+                // For ZYX: _angles[0] = Z, _angles[1] = Y, _angles[2] = X
                 // So: ca = cos(Z/2), sa = sin(Z/2)
                 //     cb = cos(Y/2), sb = sin(Y/2)
                 //     cc = cos(X/2), sc = sin(X/2)
@@ -379,7 +378,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -387,16 +386,16 @@ impl Rotation {
     /// let rotvec = array![PI/2.0, 0.0, 0.0];
     /// let rot = Rotation::from_rotvec(&rotvec.view()).unwrap();
     /// ```
-    pub fn from_rotvec(rotvec: &ArrayView1<f64>) -> SpatialResult<Self> {
-        if rotvec.len() != 3 {
+    pub fn from_rotvec(_rotvec: &ArrayView1<f64>) -> SpatialResult<Self> {
+        if _rotvec.len() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Rotation vector must have 3 elements, got {}",
-                rotvec.len()
+                _rotvec.len()
             )));
         }
 
         // Compute the angle (magnitude of the rotation vector)
-        let angle = (rotvec[0] * rotvec[0] + rotvec[1] * rotvec[1] + rotvec[2] * rotvec[2]).sqrt();
+        let angle = (_rotvec[0] * _rotvec[0] + _rotvec[1] * _rotvec[1] + _rotvec[2] * _rotvec[2]).sqrt();
 
         let mut quat = Array1::zeros(4);
 
@@ -408,9 +407,9 @@ impl Rotation {
             quat[3] = 0.0;
         } else {
             // Extract the normalized axis
-            let x = rotvec[0] / angle;
-            let y = rotvec[1] / angle;
-            let z = rotvec[2] / angle;
+            let x = _rotvec[0] / angle;
+            let y = _rotvec[1] / angle;
+            let z = _rotvec[2] / angle;
 
             // Convert axis-angle to quaternion
             let half_angle = angle / 2.0;
@@ -434,7 +433,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -482,7 +481,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -490,8 +489,8 @@ impl Rotation {
     /// let angles = rot.as_euler("xyz").unwrap();
     /// // Should be approximately [PI/2, 0, 0]
     /// ```
-    pub fn as_euler(&self, convention: &str) -> SpatialResult<Array1<f64>> {
-        let conv = EulerConvention::from_str(convention)?;
+    pub fn as_euler(_convention: &str) -> SpatialResult<Array1<f64>> {
+        let conv = EulerConvention::from_str(_convention)?;
         let matrix = self.as_matrix();
 
         let mut angles = Array1::zeros(3);
@@ -633,7 +632,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -683,7 +682,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     ///
     /// let angles = array![0.0, 0.0, 0.0];
@@ -704,7 +703,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -735,7 +734,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -745,8 +744,8 @@ impl Rotation {
     /// let rotated = rot.apply(&vec.view());
     /// // Should be approximately [0, 1, 0]
     /// ```
-    pub fn apply(&self, vec: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
-        if vec.len() != 3 {
+    pub fn apply(_vec: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
+        if _vec.len() != 3 {
             return Err(SpatialError::DimensionError(
                 "Vector must have 3 elements".to_string(),
             ));
@@ -754,7 +753,7 @@ impl Rotation {
 
         // Convert to matrix and apply
         let matrix = self.as_matrix();
-        Ok(matrix.dot(vec))
+        Ok(matrix.dot(_vec))
     }
 
     /// Apply the rotation to multiple vectors
@@ -770,7 +769,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -781,15 +780,15 @@ impl Rotation {
     /// // First row should be approximately [0, 1, 0]
     /// // Second row should be approximately [-1, 0, 0]
     /// ```
-    pub fn apply_multiple(&self, vecs: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-        if vecs.ncols() != 3 {
+    pub fn apply_multiple(_vecs: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+        if _vecs.ncols() != 3 {
             return Err(SpatialError::DimensionError(
                 "Each vector must have 3 elements".to_string(),
             ));
         }
 
         let matrix = self.as_matrix();
-        Ok(vecs.dot(&matrix.t()))
+        Ok(_vecs.dot(&matrix.t()))
     }
 
     /// Combine this rotation with another (apply the other rotation after this one)
@@ -805,7 +804,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -816,17 +815,17 @@ impl Rotation {
     /// let rot2 = Rotation::from_euler(&angles2.view(), "xyz").unwrap();
     /// let combined = rot1.compose(&rot2);
     /// ```
-    pub fn compose(&self, other: &Rotation) -> Rotation {
+    pub fn compose(_other: &Rotation) -> Rotation {
         // Quaternion multiplication
         let w1 = self.quat[0];
         let x1 = self.quat[1];
         let y1 = self.quat[2];
         let z1 = self.quat[3];
 
-        let w2 = other.quat[0];
-        let x2 = other.quat[1];
-        let y2 = other.quat[2];
-        let z2 = other.quat[3];
+        let w2 = _other.quat[0];
+        let x2 = _other.quat[1];
+        let y2 = _other.quat[2];
+        let z2 = _other.quat[3];
 
         let result_quat = array![
             w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
@@ -853,7 +852,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     ///
     /// let identity = Rotation::identity();
@@ -861,7 +860,7 @@ impl Rotation {
     /// let rotated = identity.apply(&vec.view());
     /// // Should still be [1.0, 2.0, 3.0]
     /// ```
-    pub fn identity() -> Rotation {
+    pub fn identity(&self) -> Rotation {
         let quat = array![1.0, 0.0, 0.0, 0.0];
         Rotation { quat }
     }
@@ -875,19 +874,19 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     ///
     /// let random_rot = Rotation::random();
     /// ```
-    pub fn random() -> Rotation {
+    pub fn random(&self) -> Rotation {
         use rand::Rng;
         let mut rng = rand::rng();
 
         // Generate random quaternion using method from:
         // http://planning.cs.uiuc.edu/node198.html
-        let u1 = rng.random_range(0.0..1.0);
-        let u2 = rng.random_range(0.0..1.0);
-        let u3 = rng.random_range(0.0..1.0);
+        let u1 = rng.gen_range(0.0..1.0);
+        let u2 = rng.gen_range(0.0..1.0);
+        let u3 = rng.gen_range(0.0..1.0);
 
         let sqrt_u1 = u1.sqrt();
         let sqrt_1_minus_u1 = (1.0 - u1).sqrt();
@@ -895,8 +894,7 @@ impl Rotation {
         let two_pi_u3 = 2.0 * PI * u3;
 
         let quat = array![
-            sqrt_1_minus_u1 * (two_pi_u2 / 2.0).sin(),
-            sqrt_1_minus_u1 * (two_pi_u2 / 2.0).cos(),
+            sqrt_1_minus_u1 * (two_pi_u2 / 2.0).sin()..sqrt_1_minus_u1 * (two_pi_u2 / 2.0).cos(),
             sqrt_u1 * (two_pi_u3 / 2.0).sin(),
             sqrt_u1 * (two_pi_u3 / 2.0).cos()
         ];
@@ -918,7 +916,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -926,7 +924,7 @@ impl Rotation {
     /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
     /// let interpolated = rot1.slerp(&rot2, 0.5);
     /// ```
-    pub fn slerp(&self, other: &Rotation, t: f64) -> Rotation {
+    pub fn slerp(_other: &Rotation, t: f64) -> Rotation {
         // Ensure t is in [0, 1]
         let t = t.clamp(0.0, 1.0);
 
@@ -934,11 +932,11 @@ impl Rotation {
             return self.clone();
         }
         if t == 1.0 {
-            return other.clone();
+            return _other.clone();
         }
 
         let q1 = &self.quat;
-        let mut q2 = other.quat.clone();
+        let mut q2 = _other.quat.clone();
 
         // Compute dot product
         let mut dot = q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2] + q1[3] * q2[3];
@@ -985,7 +983,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::Rotation;
+    /// use scirs2__spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -994,9 +992,9 @@ impl Rotation {
     /// let distance = rot1.angular_distance(&rot2);
     /// assert!((distance - PI/2.0).abs() < 1e-10);
     /// ```
-    pub fn angular_distance(&self, other: &Rotation) -> f64 {
+    pub fn angular_distance(_other: &Rotation) -> f64 {
         let q1 = &self.quat;
-        let q2 = &other.quat;
+        let q2 = &_other.quat;
 
         // Compute dot product
         let dot = (q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2] + q1[3] * q2[3]).abs();
@@ -1013,8 +1011,6 @@ impl Rotation {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_rotation_identity() {

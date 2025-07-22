@@ -20,17 +20,17 @@ pub struct CorrelationResult<F> {
 
 impl<F: Float + std::fmt::Display> CorrelationResult<F> {
     /// Create a new correlation result with just the coefficient
-    pub fn new(coefficient: F) -> Self {
+    pub fn new(_coefficient: F) -> Self {
         Self {
-            coefficient,
+            _coefficient,
             p_value: None,
         }
     }
 
     /// Create a new correlation result with coefficient and p-value
-    pub fn with_p_value(coefficient: F, p_value: F) -> Self {
+    pub fn with_p_value(_coefficient: F, p_value: F) -> Self {
         Self {
-            coefficient,
+            _coefficient,
             p_value: Some(p_value),
         }
     }
@@ -53,8 +53,7 @@ impl CorrelationMethod {
         match s.to_lowercase().as_str() {
             "pearson" => Ok(CorrelationMethod::Pearson),
             "spearman" => Ok(CorrelationMethod::Spearman),
-            "kendall" | "kendall_tau" | "kendalltau" => Ok(CorrelationMethod::KendallTau),
-            _ => Err(crate::error::StatsError::InvalidArgument(format!(
+            "kendall" | "kendall_tau" | "kendalltau" => Ok(CorrelationMethod::KendallTau, _ => Err(crate::error::StatsError::InvalidArgument(format!(
                 "Invalid correlation method: '{}'",
                 s
             ))),
@@ -248,9 +247,9 @@ pub struct TestResult<F> {
 
 impl<F: Float + std::fmt::Display> TestResult<F> {
     /// Create a basic test result
-    pub fn new(statistic: F, p_value: F) -> Self {
+    pub fn new(_statistic: F, p_value: F) -> Self {
         Self {
-            statistic,
+            _statistic,
             p_value,
             df: None,
             effect_size: None,

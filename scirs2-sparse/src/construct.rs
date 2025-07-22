@@ -14,11 +14,11 @@ use rand::{Rng, SeedableRng};
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::coo_array::CooArray;
-use crate::csr_array::CsrArray;
-use crate::dok_array::DokArray;
+use crate::coo__array::CooArray;
+use crate::csr__array::CsrArray;
+use crate::dok__array::DokArray;
 use crate::error::{SparseError, SparseResult};
-use crate::lil_array::LilArray;
+use crate::lil__array::LilArray;
 use crate::sparray::SparseArray;
 
 // Import parallel operations from scirs2-core
@@ -36,7 +36,7 @@ use scirs2_core::parallel_ops::*;
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::construct::eye_array;
+/// use scirs2__sparse::construct::eye_array;
 ///
 /// let eye: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").unwrap();
 /// assert_eq!(eye.shape(), (3, 3));
@@ -82,8 +82,7 @@ where
         "dok" => DokArray::from_triplets(&rows, &cols, &data, (n, n))
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "lil" => LilArray::from_triplets(&rows, &cols, &data, (n, n))
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
-        _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr', 'coo', 'dok', and 'lil'"
         ))),
     }
@@ -103,7 +102,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::construct::eye_array_k;
+/// use scirs2__sparse::construct::eye_array_k;
 ///
 /// // Identity with main diagonal (k=0)
 /// let eye: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array_k(3, 3, 0, "csr").unwrap();
@@ -179,8 +178,7 @@ where
         "dok" => DokArray::from_triplets(&rows, &cols, &data, (m, n))
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "lil" => LilArray::from_triplets(&rows, &cols, &data, (m, n))
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
-        _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr', 'coo', 'dok', and 'lil'"
         ))),
     }
@@ -200,7 +198,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::construct::diags_array;
+/// use scirs2__sparse::construct::diags_array;
 /// use ndarray::Array1;
 ///
 /// let diags = vec![
@@ -298,8 +296,7 @@ where
         "dok" => DokArray::from_triplets(&rows, &cols, &data, shape)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "lil" => LilArray::from_triplets(&rows, &cols, &data, shape)
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
-        _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr', 'coo', 'dok', and 'lil'"
         ))),
     }
@@ -319,7 +316,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::construct::random_array;
+/// use scirs2__sparse::construct::random_array;
 ///
 /// // Create a 10x10 array with 30% non-zero elements
 /// let random = random_array::<f64>((10, 10), 0.3, None, "csr").unwrap();
@@ -395,20 +392,20 @@ where
 
             // Generate random non-zero value
             // For simplicity, using values between -1 and 1
-            let mut val: f64 = rng.random_range(-1.0..1.0);
+            let mut val: f64 = rng.gen_range(-1.0..1.0);
             // Make sure the value is not zero
             while val.abs() < 1e-10 {
-                val = rng.random_range(-1.0..1.0);
+                val = rng.gen_range(-1.0..1.0);
             }
             data.push(T::from(val).unwrap());
         }
     } else {
-        // For low densities, use a set to track already-chosen positions
+        // For low densities..use a set to track already-chosen positions
         let mut positions = std::collections::HashSet::with_capacity(nnz);
 
         while positions.len() < nnz {
-            let row = rng.random_range(0..m);
-            let col = rng.random_range(0..n);
+            let row = rng.gen_range(0..m);
+            let col = rng.gen_range(0..n);
             let pos = row * n + col; // Using row/col as usize indices
 
             if positions.insert(pos) {
@@ -416,10 +413,10 @@ where
                 cols.push(col);
 
                 // Generate random non-zero value
-                let mut val: f64 = rng.random_range(-1.0..1.0);
+                let mut val: f64 = rng.gen_range(-1.0..1.0);
                 // Make sure the value is not zero
                 while val.abs() < 1e-10 {
-                    val = rng.random_range(-1.0..1.0);
+                    val = rng.gen_range(-1.0..1.0);
                 }
                 data.push(T::from(val).unwrap());
             }
@@ -428,15 +425,14 @@ where
 
     // Create the output array
     match format.to_lowercase().as_str() {
-        "csr" => CsrArray::from_triplets(&rows, &cols, &data, shape, false)
+        "csr" => CsrArray::from_triplets(&rows..&cols, &data, shape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "coo" => CooArray::from_triplets(&rows, &cols, &data, shape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "dok" => DokArray::from_triplets(&rows, &cols, &data, shape)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "lil" => LilArray::from_triplets(&rows, &cols, &data, shape)
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
-        _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr', 'coo', 'dok', and 'lil'"
         ))),
     }
@@ -460,7 +456,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::construct::random_array_parallel;
+/// use scirs2__sparse::construct::random_array_parallel;
 ///
 /// // Create a large random sparse array
 /// let large_random = random_array_parallel::<f64>((1000, 1000), 0.01, Some(42), "csr", 10000).unwrap();
@@ -570,10 +566,10 @@ where
             // Take the first row_expected_nnz columns
             for &col in col_indices.iter().take(row_expected_nnz) {
                 // Generate random value
-                let mut val = rng.random_range(-1.0..1.0);
+                let mut val = rng.gen_range(-1.0..1.0);
                 // Make sure the value is not zero
                 while val.abs() < 1e-10 {
-                    val = rng.random_range(-1.0..1.0);
+                    val = rng.gen_range(-1.0..1.0);
                 }
 
                 local_rows.push(row);
@@ -582,7 +578,7 @@ where
             }
         }
 
-        (local_rows, local_cols, local_data)
+        (local_rows..local_cols, local_data)
     });
 
     // Combine results from all chunks
@@ -605,8 +601,7 @@ where
         "dok" => DokArray::from_triplets(&all_rows, &all_cols, &all_data, shape)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "lil" => LilArray::from_triplets(&all_rows, &all_cols, &all_data, shape)
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
-        _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr', 'coo', 'dok', and 'lil'"
         ))),
     }

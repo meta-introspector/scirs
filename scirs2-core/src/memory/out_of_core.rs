@@ -495,9 +495,9 @@ pub struct FileStorageBackend {
 
 impl FileStorageBackend {
     /// Create a new file storage backend
-    pub fn new<P: AsRef<Path>>(base_path: P) -> CoreResult<Self> {
-        let base_path = base_path.as_ref().to_path_buf();
-        std::fs::create_dir_all(&base_path)?;
+    pub fn new<P: AsRef<Path>>(_base_path: P) -> CoreResult<Self> {
+        let base_path = _base_path.as_ref().to_path_buf();
+        std::fs::create_dir_all(&_base_path)?;
 
         Ok(Self {
             base_path,
@@ -1069,16 +1069,16 @@ pub struct ArrayStatistics {
 pub struct OutOfCoreManager {
     arrays: RwLock<HashMap<String, Box<dyn std::any::Any + Send + Sync>>>,
     storage_backends: RwLock<HashMap<String, Arc<dyn StorageBackend>>>,
-    default_config: OutOfCoreConfig,
+    config: OutOfCoreConfig,
 }
 
 impl OutOfCoreManager {
     /// Create a new out-of-core manager
-    pub fn new(default_config: OutOfCoreConfig) -> Self {
+    pub fn new(config: OutOfCoreConfig) -> Self {
         Self {
             arrays: RwLock::new(HashMap::new()),
             storage_backends: RwLock::new(HashMap::new()),
-            default_config,
+            config,
         }
     }
 
@@ -1110,7 +1110,7 @@ impl OutOfCoreManager {
             Arc::new(FileStorageBackend::new("./out_of_core_data")?)
         };
 
-        let config = config.unwrap_or_else(|| self.default_config.clone());
+        let config = config.unwrap_or_else(|| self.config.clone());
         let array = Arc::new(OutOfCoreArray::new(
             array_id.clone(),
             shape,
@@ -1277,8 +1277,8 @@ pub mod utils {
 
     /// Helper function to recursively copy chunks from in-memory to out-of-core array
     fn copy_chunks_recursive<T>(
-        source_array: &Array<T, IxDyn>,
-        target_array: &OutOfCoreArray<T>,
+        sourcearray: &Array<T, IxDyn>,
+        targetarray: &OutOfCoreArray<T>,
         chunks_per_dim: &[usize],
         chunk_coords: &mut Vec<usize>,
         dimension: usize,

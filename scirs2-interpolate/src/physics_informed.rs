@@ -20,7 +20,7 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_interpolate::physics_informed::{
+//! use scirs2__interpolate::physics_informed::{
 //!     PhysicsInformedInterpolator, PhysicalConstraint, ConservationLaw
 //! };
 //!
@@ -400,8 +400,7 @@ where
     /// Convert physical constraints to constrained spline constraints
     fn convert_physical_constraints(
         constraints: &[PhysicalConstraint<T>],
-        x: &ArrayView1<T>,
-        _y: &ArrayView1<T>,
+        x: &ArrayView1<T>, _y: &ArrayView1<T>,
     ) -> InterpolateResult<Vec<Constraint<T>>> {
         let mut spline_constraints = Vec::new();
 
@@ -496,7 +495,7 @@ where
             return Ok(values.clone());
         }
 
-        // Calculate current integral (mass) using trapezoidal rule
+        // Calculate current integral (_mass) using trapezoidal rule
         let mut current_mass = T::zero();
         for i in 0..x_new.len() - 1 {
             let dx = x_new[i + 1] - x_new[i];
@@ -504,9 +503,9 @@ where
             current_mass += avg_value * dx;
         }
 
-        // Apply uniform scaling to conserve mass with improved robustness
+        // Apply uniform scaling to conserve _mass with improved robustness
         if current_mass.abs() < T::from(1e-12).unwrap() {
-            // If current mass is essentially zero, create a uniform distribution
+            // If current _mass is essentially zero, create a uniform distribution
             let domain_width = x_new[x_new.len() - 1] - x_new[0];
             let uniform_value = target_mass / domain_width;
             Ok(Array1::from_elem(values.len(), uniform_value))
@@ -518,7 +517,7 @@ where
             let bounded_scaling = scaling_factor.min(max_scaling).max(min_scaling);
             Ok(values * bounded_scaling)
         } else {
-            // If current mass is negative, redistribute to achieve target mass
+            // If current _mass is negative, redistribute to achieve target _mass
             let domain_width = x_new[x_new.len() - 1] - x_new[0];
             let uniform_value = target_mass / domain_width;
             Ok(Array1::from_elem(
@@ -539,7 +538,7 @@ where
             return Ok(values.clone());
         }
 
-        // Calculate current energy (integral of v^2)
+        // Calculate current _energy (integral of v^2)
         let mut current_energy = T::zero();
         for i in 0..x_new.len() - 1 {
             let dx = x_new[i + 1] - x_new[i];
@@ -548,9 +547,9 @@ where
             current_energy += avg_energy * dx;
         }
 
-        // Apply scaling to achieve target energy
+        // Apply scaling to achieve target _energy
         if current_energy.abs() < T::from(1e-12).unwrap() {
-            // If current energy is essentially zero, create a uniform distribution
+            // If current _energy is essentially zero, create a uniform distribution
             let domain_width = x_new[x_new.len() - 1] - x_new[0];
             let uniform_magnitude = (target_energy / domain_width).sqrt();
             Ok(Array1::from_elem(values.len(), uniform_magnitude))
@@ -562,7 +561,7 @@ where
             let bounded_scaling = energy_scaling.min(max_scaling).max(min_scaling);
             Ok(values * bounded_scaling)
         } else {
-            // If current energy is negative (shouldn't happen), use fallback
+            // If current _energy is negative (shouldn't happen), use fallback
             let domain_width = x_new[x_new.len() - 1] - x_new[0];
             let uniform_magnitude = (target_energy / domain_width).sqrt();
             Ok(Array1::from_elem(values.len(), uniform_magnitude))
@@ -581,11 +580,11 @@ where
             return Ok(values.clone());
         }
 
-        // Apply weight function if provided
+        // Apply weight _function if provided
         let weighted_values = if let Some(weights) = weight_function {
             if weights.len() != values.len() {
                 return Err(InterpolateError::DimensionMismatch(
-                    "Weight function length must match values length".to_string(),
+                    "Weight _function length must match values length".to_string(),
                 ));
             }
             values * weights
@@ -600,8 +599,7 @@ where
     /// Apply physics corrections for positivity and other constraints
     fn apply_physics_corrections(
         &self,
-        values: &Array1<T>,
-        _x_new: &ArrayView1<T>,
+        values: &Array1<T>, _x_new: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
         let mut corrected_values = values.clone();
 
@@ -645,12 +643,12 @@ where
         let mut corrected_values = values.clone();
         let mut current_variation = T::zero();
 
-        // Calculate current total variation
+        // Calculate current total _variation
         for i in 1..values.len() {
             current_variation += (values[i] - values[i - 1]).abs();
         }
 
-        // If current variation exceeds maximum, apply smoothing
+        // If current _variation exceeds maximum, apply smoothing
         if current_variation > max_variation {
             let smoothing_factor = max_variation / current_variation;
 
@@ -670,7 +668,7 @@ where
         values: &Array1<T>,
         x_new: &ArrayView1<T>,
     ) -> InterpolateResult<HashMap<String, T>> {
-        let mut violations = HashMap::new();
+        let mut violations = HashMap::_new();
 
         for (i, constraint) in self.config.constraints.iter().enumerate() {
             let violation_key = format!("constraint_{}", i);
@@ -739,7 +737,7 @@ where
         values: &Array1<T>,
         x_new: &ArrayView1<T>,
     ) -> InterpolateResult<HashMap<String, T>> {
-        let mut errors = HashMap::new();
+        let mut errors = HashMap::_new();
 
         for (i, conservation_law) in self.config.conservation_laws.iter().enumerate() {
             let error_key = format!("conservation_{}", i);

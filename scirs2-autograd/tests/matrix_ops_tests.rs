@@ -1,12 +1,12 @@
 use ag::ndarray::Array2;
-use ag::ndarray_ext::ArrayRng;
+use ag::ndarray__ext::ArrayRng;
 use ag::tensor_ops as T;
 use scirs2_autograd as ag;
 
 #[test]
 #[allow(dead_code)]
 fn test_matrix_inverse() {
-    ag::run::<f32, _, _>(|ctx| {
+    ag::run::<f32_>(|ctx| {
         // Create a simple test matrix with known inverse
         let a_data = Array2::<f32>::from_shape_vec((2, 2), vec![4.0, 7.0, 2.0, 6.0]).unwrap();
 
@@ -75,7 +75,7 @@ fn test_matrix_inverse() {
 #[test]
 #[allow(dead_code)]
 fn test_determinant() {
-    ag::run::<f32, _, _>(|ctx| {
+    ag::run::<f32_>(|ctx| {
         // Create a test matrix with known determinant
         let mut a_data = ag::ndarray::Array2::<f32>::eye(3);
         a_data[[0, 0]] = 2.0;
@@ -154,7 +154,7 @@ fn test_determinant() {
 #[test]
 #[allow(dead_code)]
 fn test_matrix_solve() {
-    ag::run::<f32, _, _>(|ctx| {
+    ag::run::<f32_>(|ctx| {
         // Create a simple system Ax = b with known solution
         let a_data = ag::ndarray::array![[2.0, 1.0], [1.0, 3.0]];
         let b_data = ag::ndarray::array![[5.0], [10.0]];
@@ -229,7 +229,7 @@ fn test_matrix_solve() {
 #[test]
 #[allow(dead_code)]
 fn test_qr_decomposition() {
-    ag::run::<f32, _, _>(|ctx| {
+    ag::run::<f32_>(|ctx| {
         let rng = &mut ArrayRng::<f32>::default();
 
         // Create a random matrix
@@ -309,7 +309,7 @@ fn test_qr_decomposition() {
 #[test]
 #[allow(dead_code)]
 fn test_matrix_exp() {
-    ag::run::<f32, _, _>(|ctx| {
+    ag::run::<f32_>(|ctx| {
         // Create a simple matrix to test exponential
         let a_data = ag::ndarray::array![[0.0, 1.0], [-1.0, 0.0]];
         // This is a rotation matrix, exp(A) should be rotation by 1 radian
@@ -373,7 +373,7 @@ fn test_matrix_exp() {
 #[test]
 #[allow(dead_code)]
 fn test_near_singular_matrix_operations() {
-    ag::run::<f32, _, _>(|ctx| {
+    ag::run::<f32_>(|ctx| {
         // Create a nearly singular matrix
         let mut a_data = Array2::<f32>::eye(3);
 
@@ -581,7 +581,7 @@ fn test_near_singular_matrix_operations() {
 #[test]
 #[allow(dead_code)]
 fn test_matrix_sqrt() {
-    ag::run::<f32, _, _>(|ctx| {
+    ag::run::<f32_>(|ctx| {
         // Create a positive definite matrix for testing matrix square root
         let a_data = ag::ndarray::array![[4.0, 1.0], [1.0, 9.0]];
 

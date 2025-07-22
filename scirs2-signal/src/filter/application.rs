@@ -5,10 +5,12 @@
 //! phase conversion, and matched filtering for signal detection.
 
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::{Float, NumCast, Zero};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Apply a digital filter forward and backward to a signal (zero-phase filtering)
 ///
 /// This function applies the filter forwards, then backwards to achieve zero-phase
@@ -28,8 +30,8 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::application::filtfilt;
-/// use scirs2_signal::filter::iir::butter;
+/// use scirs2__signal::filter::application::filtfilt;
+/// use scirs2__signal::filter::iir::butter;
 ///
 /// // Design a filter and apply it with zero phase delay
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -93,8 +95,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::application::lfilter;
-/// use scirs2_signal::filter::iir::butter;
+/// use scirs2__signal::filter::application::lfilter;
+/// use scirs2__signal::filter::iir::butter;
 ///
 /// // Design a filter and apply it to a signal
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -195,7 +197,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::application::minimum_phase;
+/// use scirs2__signal::filter::application::minimum_phase;
 ///
 /// // Convert a filter to minimum phase
 /// let b = vec![1.0, -2.0, 1.0]; // (z-1)^2, has zeros at z=1 (outside unit circle)
@@ -223,7 +225,7 @@ pub fn minimum_phase(b: &[f64], discrete_time: bool) -> SignalResult<Vec<f64>> {
 
     for zero in zeros {
         if discrete_time {
-            // For discrete-time: zeros inside unit circle are minimum phase
+            // For discrete-_time: zeros inside unit circle are minimum phase
             if zero.norm() > 1.0 {
                 // Reflect zero to its conjugate reciprocal: 1/conj(zero)
                 let min_zero = 1.0 / zero.conj();
@@ -234,7 +236,7 @@ pub fn minimum_phase(b: &[f64], discrete_time: bool) -> SignalResult<Vec<f64>> {
                 min_phase_zeros.push(zero);
             }
         } else {
-            // For continuous-time: zeros with negative real parts are minimum phase
+            // For continuous-_time: zeros with negative real parts are minimum phase
             if zero.re > 0.0 {
                 // Reflect zero to negative real part: -conj(zero)
                 let min_zero = -zero.conj();
@@ -284,8 +286,8 @@ pub fn minimum_phase(b: &[f64], discrete_time: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::application::group_delay;
-/// use scirs2_signal::filter::iir::butter;
+/// use scirs2__signal::filter::application::group_delay;
+/// use scirs2__signal::filter::iir::butter;
 ///
 /// // Compute group delay of a Butterworth filter
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -347,22 +349,22 @@ pub fn group_delay(b: &[f64], a: &[f64], w: &[f64]) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::application::matched_filter;
+/// use scirs2__signal::filter::application::matched_filter;
 ///
 /// // Design a matched filter for a simple pulse
 /// let template = vec![1.0, 1.0, 1.0, 0.0, 0.0];
 /// let mf = matched_filter(&template, true).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn matched_filter(template: &[f64], normalize: bool) -> SignalResult<Vec<f64>> {
-    if template.is_empty() {
+pub fn matched_filter(_template: &[f64], normalize: bool) -> SignalResult<Vec<f64>> {
+    if _template.is_empty() {
         return Err(SignalError::ValueError(
             "Template cannot be empty".to_string(),
         ));
     }
 
-    // Matched filter is the time-reversed (and conjugated for complex signals) template
-    let mut mf: Vec<f64> = template.iter().rev().copied().collect();
+    // Matched filter is the time-reversed (and conjugated for complex signals) _template
+    let mut mf: Vec<f64> = _template.iter().rev().copied().collect();
 
     if normalize {
         // Normalize to unit energy
@@ -396,7 +398,7 @@ pub fn matched_filter(template: &[f64], normalize: bool) -> SignalResult<Vec<f64
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::application::matched_filter_detect;
+/// use scirs2__signal::filter::application::matched_filter_detect;
 ///
 /// let signal = vec![0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0];
 /// let template = vec![1.0, 1.0, 1.0];
@@ -457,13 +459,13 @@ pub fn evaluate_transfer_function(b: &[f64], a: &[f64], w: f64) -> Complex64 {
 /// This is a basic implementation for demonstration purposes.
 /// Production code would use more robust algorithms like Jenkins-Traub or eigenvalue methods.
 #[allow(dead_code)]
-pub fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
-    if coeffs.is_empty() {
+pub fn find_polynomial_roots(_coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
+    if _coeffs.is_empty() {
         return Ok(Vec::new());
     }
 
     // Remove leading zeros
-    let mut trimmed_coeffs = coeffs.to_vec();
+    let mut trimmed_coeffs = _coeffs.to_vec();
     while trimmed_coeffs.len() > 1 && trimmed_coeffs[0].abs() < 1e-10 {
         trimmed_coeffs.remove(0);
     }
@@ -541,7 +543,7 @@ pub fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
 
     // Filter out potential spurious roots
     for estimate in estimates {
-        let (p_val, _) = evaluate_polynomial_and_derivative(&trimmed_coeffs, estimate);
+        let (p_val_) = evaluate_polynomial_and_derivative(&trimmed_coeffs, estimate);
         if p_val.norm() < 1e-6 {
             roots.push(estimate);
         }
@@ -552,16 +554,16 @@ pub fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
 
 /// Evaluate polynomial and its derivative at a complex point
 #[allow(dead_code)]
-fn evaluate_polynomial_and_derivative(coeffs: &[f64], z: Complex64) -> (Complex64, Complex64) {
-    if coeffs.is_empty() {
+fn evaluate_polynomial_and_derivative(_coeffs: &[f64], z: Complex64) -> (Complex64, Complex64) {
+    if _coeffs.is_empty() {
         return (Complex64::zero(), Complex64::zero());
     }
 
-    let n = coeffs.len() - 1;
-    let mut p_val = Complex64::new(coeffs[0], 0.0);
+    let n = _coeffs.len() - 1;
+    let mut p_val = Complex64::new(_coeffs[0], 0.0);
     let mut p_prime = Complex64::zero();
 
-    for (i, &coeff) in coeffs.iter().enumerate().skip(1) {
+    for (i, &coeff) in _coeffs.iter().enumerate().skip(1) {
         let power = (n - i) as i32;
         p_prime = p_prime * z + p_val * Complex64::new(power as f64, 0.0);
         p_val = p_val * z + Complex64::new(coeff, 0.0);
@@ -572,8 +574,8 @@ fn evaluate_polynomial_and_derivative(coeffs: &[f64], z: Complex64) -> (Complex6
 
 /// Reconstruct polynomial coefficients from roots
 #[allow(dead_code)]
-fn polynomial_from_roots(roots: &[Complex64]) -> Vec<f64> {
-    if roots.is_empty() {
+fn polynomial_from_roots(_roots: &[Complex64]) -> Vec<f64> {
+    if _roots.is_empty() {
         return vec![1.0];
     }
 
@@ -581,7 +583,7 @@ fn polynomial_from_roots(roots: &[Complex64]) -> Vec<f64> {
     let mut poly = vec![Complex64::new(1.0, 0.0)];
 
     // Multiply by (z - root) for each root
-    for &root in roots {
+    for &root in _roots {
         let mut new_poly = vec![Complex64::zero(); poly.len() + 1];
 
         // Multiply existing polynomial by z

@@ -22,11 +22,11 @@ pub struct ServerConfig {
     pub async_updates: bool,
 }
 impl From<&crate::federated::FederatedConfig> for ServerConfig {
-    fn from(config: &crate::federated::FederatedConfig) -> Self {
+    fn from(_config: &crate::federated::FederatedConfig) -> Self {
         Self {
-            min_clients: config.min_clients,
+            min_clients: _config.min_clients,
             round_timeout: 300, // 5 minutes default
-            aggregation_strategy: config.aggregation_strategy.clone(),
+            aggregation_strategy: _config.aggregation_strategy.clone(),
             adaptive_aggregation: false,
             async_updates: false,
             staleness_threshold: 5,
@@ -62,12 +62,11 @@ struct ClientContributions {
     performance_history: std::collections::HashMap<usize, Vec<f32>>,
 impl FederatedServer {
     /// Create a new federated server
-    pub fn new(config: ServerConfig) -> Result<Self> {
-        let aggregator: Box<dyn AggregationStrategy> = match config.aggregation_strategy.as_str() {
+    pub fn new(_config: ServerConfig) -> Result<Self> {
+        let aggregator: Box<dyn AggregationStrategy> = match _config.aggregation_strategy.as_str() {
             "fedavg" => Box::new(crate::federated::FedAvg::new()),
             "fedprox" => Box::new(crate::federated::FedProx::new(0.01)),
-            "fedyogi" => Box::new(crate::federated::FedYogi::new()),
-            _ => Box::new(crate::federated::FedAvg::new()),
+            "fedyogi" => Box::new(crate::federated::FedYogi::new(), _ =>, Box::new(crate::federated::FedAvg::new()),
         };
         Ok(Self {
             config,

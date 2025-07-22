@@ -330,11 +330,11 @@ pub struct AdaptiveSimdOptimizer {
 
 impl AdaptiveSimdOptimizer {
     /// Create new adaptive SIMD optimizer
-    pub fn new(config: AdaptiveSimdConfig) -> StatsResult<Self> {
+    pub fn new(_config: AdaptiveSimdConfig) -> StatsResult<Self> {
         let hardware_capabilities = Self::detect_hardware_capabilities()?;
 
         Ok(Self {
-            config,
+            _config,
             hardware_capabilities,
             strategy_cache: Arc::new(Mutex::new(HashMap::new())),
             performance_cache: Arc::new(Mutex::new(HashMap::new())),
@@ -647,8 +647,7 @@ impl AdaptiveSimdOptimizer {
                 SimdInstructionSet::SSE | SimdInstructionSet::SSE2 => 128,
                 SimdInstructionSet::AVX | SimdInstructionSet::AVX2 => 256,
                 SimdInstructionSet::AVX512 => 512,
-                SimdInstructionSet::NEON => 128,
-                _ => 128,
+                SimdInstructionSet::NEON => 128_ => 128,
             };
 
             // Conservative strategy
@@ -736,8 +735,7 @@ impl AdaptiveSimdOptimizer {
         match &characteristics.access_pattern {
             MemoryAccessPattern::Sequential => score *= 1.0,
             MemoryAccessPattern::Strided { .. } => score *= 0.8,
-            MemoryAccessPattern::Random => score *= 0.5,
-            _ => score *= 0.7,
+            MemoryAccessPattern::Random => score *= 0.5_ => score *= 0.7,
         }
 
         // Hardware compatibility bonus
@@ -800,8 +798,7 @@ impl AdaptiveSimdOptimizer {
         metrics.cache_hit_rate = match &characteristics.access_pattern {
             MemoryAccessPattern::Sequential => 0.95,
             MemoryAccessPattern::Strided { .. } => 0.8,
-            MemoryAccessPattern::Tiled { .. } => 0.9,
-            _ => 0.7,
+            MemoryAccessPattern::Tiled { .. } => 0.9_ => 0.7,
         };
 
         Ok(metrics)
@@ -809,8 +806,7 @@ impl AdaptiveSimdOptimizer {
 
     /// Try fallback strategy on failure
     fn try_fallback_strategy<F, T>(
-        &self,
-        _operation_name: &str,
+        &self, _operation_name: &str,
         data: ArrayView1<F>,
         operation: impl Fn(&ArrayView1<F>, &SimdStrategy) -> StatsResult<T> + Send + Sync,
         failed_strategy: &SimdStrategy,
@@ -819,9 +815,9 @@ impl AdaptiveSimdOptimizer {
         F: Float + NumCast + SimdUnifiedOps + Send + Sync + std::fmt::Display,
         T: Send + Sync + std::fmt::Display,
     {
-        // Create a conservative fallback strategy
+        // Create a conservative fallback _strategy
         let fallback_strategy = SimdStrategy {
-            name: "fallback_conservative".to_string(),
+            _name: "fallback_conservative".to_string(),
             instruction_set: SimdInstructionSet::SSE2, // Most widely supported
             vector_width: 128,
             memory_pattern: MemoryAccessPattern::Sequential,
@@ -844,11 +840,11 @@ impl AdaptiveSimdOptimizer {
 
                 Ok(SimdOptimizationResult {
                     result,
-                    strategy_used: fallback_strategy,
+                    _strategy_used: fallback_strategy,
                     metrics,
                     success: true,
                     fallback_info: Some(FallbackInfo {
-                        reason: format!("Primary strategy '{}' failed", failed_strategy.name),
+                        reason: format!("Primary _strategy '{}' failed", failed_strategy._name),
                         fallback_strategy: "conservative_sse2".to_string(),
                         performance_impact: 0.5, // Estimated 50% slower
                     }),
@@ -860,8 +856,7 @@ impl AdaptiveSimdOptimizer {
 
     /// Try matrix fallback strategy
     fn try_matrix_fallback_strategy<F, T>(
-        &self,
-        _operation_name: &str,
+        &self, _operation_name: &str,
         data: ArrayView2<F>,
         operation: impl Fn(&ArrayView2<F>, &SimdStrategy) -> StatsResult<T> + Send + Sync,
         failed_strategy: &SimdStrategy,
@@ -872,7 +867,7 @@ impl AdaptiveSimdOptimizer {
     {
         // Similar to vector fallback but for matrices
         let fallback_strategy = SimdStrategy {
-            name: "matrix_fallback_conservative".to_string(),
+            _name: "matrix_fallback_conservative".to_string(),
             instruction_set: SimdInstructionSet::SSE2,
             vector_width: 128,
             memory_pattern: MemoryAccessPattern::Sequential,
@@ -895,13 +890,13 @@ impl AdaptiveSimdOptimizer {
 
                 Ok(SimdOptimizationResult {
                     result,
-                    strategy_used: fallback_strategy,
+                    _strategy_used: fallback_strategy,
                     metrics,
                     success: true,
                     fallback_info: Some(FallbackInfo {
                         reason: format!(
-                            "Primary matrix strategy '{}' failed",
-                            failed_strategy.name
+                            "Primary matrix _strategy '{}' failed",
+                            failed_strategy._name
                         ),
                         fallback_strategy: "conservative_matrix_sse2".to_string(),
                         performance_impact: 0.6,
@@ -923,7 +918,7 @@ impl AdaptiveSimdOptimizer {
             return;
         }
 
-        let cache_key = format!("{}_{}", operation_name, strategy.name);
+        let cache_key = format!("{}_{}", operation_name, strategy._name);
 
         if let Ok(mut cache) = self.performance_cache.lock() {
             cache.insert(cache_key.clone(), metrics.clone());

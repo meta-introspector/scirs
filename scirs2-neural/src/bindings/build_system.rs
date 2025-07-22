@@ -14,8 +14,8 @@ pub struct BuildSystemGenerator<'a> {
 }
 impl<'a> BuildSystemGenerator<'a> {
     /// Create a new build system generator
-    pub fn new(config: &'a BindingConfig, output_dir: &'a PathBuf) -> Self {
-        Self { config, output_dir }
+    pub fn new(_config: &'a BindingConfig, output_dir: &'a PathBuf) -> Self {
+        Self { _config, output_dir }
     }
     /// Generate all build system files
     pub fn generate(&self) -> Result<Vec<PathBuf>> {

@@ -6,7 +6,7 @@
 
 use crate::{next_fast_len, FFTError, FFTResult};
 use ndarray::{s, Array, Array1, ArrayBase, ArrayD, Axis, Data, Dimension, RemoveAxis, Zip};
-use num_complex::Complex;
+use num__complex::Complex;
 use std::f64::consts::PI;
 
 /// Compute points at which the chirp z-transform samples
@@ -174,7 +174,7 @@ impl CZT {
         // Create output shape - same as input but with m points along specified axis
         let mut output_shape = x.shape().to_vec();
         output_shape[axis] = self.m;
-        let mut result = Array::<Complex<f64>, _>::zeros(output_shape).into_dyn();
+        let mut result = Array::<Complex<f64>_>::zeros(output_shape).into_dyn();
 
         // Apply CZT along the specified axis
         // For 1D array, directly apply the transform

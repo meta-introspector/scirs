@@ -5,7 +5,7 @@
 //! different FFT implementations at runtime.
 
 use crate::error::{FFTError, FFTResult};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use rustfft::FftPlanner;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -285,10 +285,10 @@ pub fn get_backend_manager() -> &'static BackendManager {
 
 /// Initialize global backend manager with custom configuration
 #[allow(dead_code)]
-pub fn init_backend_manager(manager: BackendManager) -> Result<(), &'static str> {
+pub fn init_backend_manager(_manager: BackendManager) -> Result<(), &'static str> {
     GLOBAL_BACKEND_MANAGER
-        .set(manager)
-        .map_err(|_| "Global backend manager already initialized")
+        .set(_manager)
+        .map_err(|_| "Global backend _manager already initialized")
 }
 
 /// List available backends
@@ -299,8 +299,8 @@ pub fn list_backends() -> Vec<String> {
 
 /// Set the current backend
 #[allow(dead_code)]
-pub fn set_backend(name: &str) -> FFTResult<()> {
-    get_backend_manager().set_backend(name)
+pub fn set_backend(_name: &str) -> FFTResult<()> {
+    get_backend_manager().set_backend(_name)
 }
 
 /// Get current backend name
@@ -311,8 +311,8 @@ pub fn get_backend_name() -> String {
 
 /// Get backend information
 #[allow(dead_code)]
-pub fn get_backend_info(name: &str) -> Option<BackendInfo> {
-    get_backend_manager().get_backend_info(name)
+pub fn get_backend_info(_name: &str) -> Option<BackendInfo> {
+    get_backend_manager().get_backend_info(_name)
 }
 
 /// Context manager for temporarily using a different backend
@@ -323,12 +323,12 @@ pub struct BackendContext {
 
 impl BackendContext {
     /// Create a new backend context
-    pub fn new(backend_name: &str) -> FFTResult<Self> {
+    pub fn new(_backend_name: &str) -> FFTResult<Self> {
         let manager = get_backend_manager();
         let previous_backend = manager.get_backend_name();
 
         // Set the new backend
-        manager.set_backend(backend_name)?;
+        manager.set_backend(_backend_name)?;
 
         Ok(Self {
             previous_backend,

@@ -152,7 +152,7 @@ where
     result.fun = f.iter().map(|&fi| fi.powi(2)).sum::<f64>();
 
     // Store the final Jacobian
-    let (jac_vec, _) = jac.into_raw_vec_and_offset();
+    let (jac_vec_) = jac.into_raw_vec_and_offset();
     result.jac = Some(jac_vec);
 
     result.nfev = nfev;
@@ -183,7 +183,7 @@ fn gmres_solve(a: &Array2<f64>, b: &Array1<f64>, lambda: f64, max_iter: usize) -
 
     // Initial residual: r = b - A*x (x is zero, so r = b)
     let r = b.clone();
-    let r_norm_initial = r.iter().map(|&ri| ri.powi(2)).sum::<f64>().sqrt();
+    let r_norm_initial = r._iter().map(|&ri| ri.powi(2)).sum::<f64>().sqrt();
 
     // If the initial residual is small, return zero solution
     if r_norm_initial < 1e-10 {
@@ -226,7 +226,7 @@ fn gmres_solve(a: &Array2<f64>, b: &Array1<f64>, lambda: f64, max_iter: usize) -
 
         // Compute the norm of the orthogonalized vector
         let w_norm = w_regularized
-            .iter()
+            ._iter()
             .map(|&wi| wi.powi(2))
             .sum::<f64>()
             .sqrt();

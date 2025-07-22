@@ -153,9 +153,7 @@ kernel void conv1d(
         // OpenCL kernel for 1D convolution
         let opencl_source = r#"
 __kernel void conv1d(
-    __global const float* input,
-    __global const float* kernel_data,
-    __global float* output,
+    __global const float* input__global const float* kernel_data__global float* output,
     const int input_length,
     const int kernel_length,
     const int output_length,
@@ -434,9 +432,7 @@ kernel void conv2d(
         let opencl_source = r#"
 // OpenCL 2D convolution implementation (simplified)
 __kernel void conv2d(
-    __global const float* input,
-    __global const float* kernel_data,
-    __global float* output,
+    __global const float* input__global const float* kernel_data__global float* output,
     const int batch_size,
     const int in_channels,
     const int out_channels,

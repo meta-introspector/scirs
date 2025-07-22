@@ -4,7 +4,7 @@
 //! machine learning domains, building on the adaptive selection framework to provide
 //! domain-aware optimization approaches.
 
-use crate::adaptive_selection::{OptimizerType, ProblemCharacteristics};
+use crate::adaptive__selection::{OptimizerType, ProblemCharacteristics};
 use crate::error::{OptimError, Result};
 use ndarray::ScalarOperand;
 use num_traits::Float;
@@ -244,11 +244,11 @@ pub enum RegularizationApproach<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A> {
     /// Create a new domain-specific selector
-    pub fn new(strategy: DomainStrategy) -> Self {
-        let config = Self::default_config_for_strategy(&strategy);
+    pub fn new(_strategy: DomainStrategy) -> Self {
+        let config = Self::default_config_for_strategy(&_strategy);
 
         Self {
-            strategy,
+            _strategy,
             config,
             domain_performance: HashMap::new(),
             transfer_knowledge: Vec::new(),
@@ -334,15 +334,14 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Optimize for computer vision tasks
     fn optimize_computer_vision(
-        &self,
-        _context: &OptimizationContext<A>,
+        &self_context: &OptimizationContext<A>,
         resolution_adaptive: bool,
         batch_norm_tuning: bool,
         augmentation_aware: bool,
     ) -> Result<DomainOptimizationConfig<A>> {
         let mut config = DomainOptimizationConfig::default();
 
-        // Resolution-adaptive optimization
+        // Resolution-_adaptive optimization
         if resolution_adaptive {
             let resolution_factor = self.estimate_resolution_factor(&_context.problem_chars);
             config.learning_rate =
@@ -354,7 +353,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
             }
         }
 
-        // Batch normalization tuning
+        // Batch normalization _tuning
         if batch_norm_tuning {
             config.optimizer_type = OptimizerType::AdamW; // Better for batch norm
             config
@@ -391,15 +390,14 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Optimize for natural language processing tasks
     fn optimize_natural_language(
-        &self,
-        _context: &OptimizationContext<A>,
+        &self_context: &OptimizationContext<A>,
         sequence_adaptive: bool,
         attention_optimized: bool,
         vocab_aware: bool,
     ) -> Result<DomainOptimizationConfig<A>> {
         let mut config = DomainOptimizationConfig::default();
 
-        // Sequence-adaptive optimization
+        // Sequence-_adaptive optimization
         if sequence_adaptive {
             let seq_length = _context.problem_chars.input_dim; // Assuming input_dim represents sequence length
 
@@ -429,7 +427,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
                 .insert("layer_decay_rate".to_string(), A::from(0.95).unwrap());
         }
 
-        // Vocabulary-aware optimization
+        // Vocabulary-_aware optimization
         if vocab_aware {
             let vocab_size = _context.problem_chars.output_dim; // Assuming output_dim represents vocab size
 
@@ -460,15 +458,14 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Optimize for recommendation systems
     fn optimize_recommendation_systems(
-        &self,
-        _context: &OptimizationContext<A>,
+        &self_context: &OptimizationContext<A>,
         collaborative_filtering: bool,
         matrix_factorization: bool,
         cold_start_aware: bool,
     ) -> Result<DomainOptimizationConfig<A>> {
         let mut config = DomainOptimizationConfig::default();
 
-        // Collaborative filtering optimization
+        // Collaborative _filtering optimization
         if collaborative_filtering {
             config.optimizer_type = OptimizerType::Adam; // Good for sparse data
             config.regularization_strength = A::from(0.01).unwrap(); // Prevent overfitting
@@ -477,7 +474,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
                 .insert("negative_sampling_rate".to_string(), A::from(5.0).unwrap());
         }
 
-        // Matrix factorization tuning
+        // Matrix _factorization tuning
         if matrix_factorization {
             config.learning_rate = A::from(0.01).unwrap(); // Lower LR for stability
             config
@@ -507,8 +504,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Optimize for time series tasks
     fn optimize_time_series(
-        &self,
-        _context: &OptimizationContext<A>,
+        &self_context: &OptimizationContext<A>,
         temporal_aware: bool,
         seasonality_adaptive: bool,
         multi_step: bool,
@@ -535,7 +531,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
                 .insert("trend_strength".to_string(), A::from(0.1).unwrap());
         }
 
-        // Multi-step ahead optimization
+        // Multi-_step ahead optimization
         if multi_step {
             config
                 .specialized_params
@@ -558,15 +554,14 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Optimize for reinforcement learning tasks
     fn optimize_reinforcement_learning(
-        &self,
-        _context: &OptimizationContext<A>,
+        &self_context: &OptimizationContext<A>,
         policy_gradient: bool,
         value_function: bool,
         exploration_aware: bool,
     ) -> Result<DomainOptimizationConfig<A>> {
         let mut config = DomainOptimizationConfig::default();
 
-        // Policy gradient optimization
+        // Policy _gradient optimization
         if policy_gradient {
             config.optimizer_type = OptimizerType::Adam;
             config.learning_rate = A::from(3e-4).unwrap(); // Standard RL learning rate
@@ -575,7 +570,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
                 .insert("entropy_coeff".to_string(), A::from(0.01).unwrap());
         }
 
-        // Value function optimization
+        // Value _function optimization
         if value_function {
             config
                 .specialized_params
@@ -762,8 +757,8 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
     }
 
     /// Create default configuration for a strategy
-    fn default_config_for_strategy(strategy: &DomainStrategy) -> DomainConfig<A> {
-        match strategy {
+    fn default_config_for_strategy(_strategy: &DomainStrategy) -> DomainConfig<A> {
+        match _strategy {
             DomainStrategy::ComputerVision { .. } => DomainConfig {
                 base_learning_rate: A::from(0.001).unwrap(),
                 recommended_batch_sizes: vec![32, 64, 128],
@@ -884,7 +879,7 @@ pub enum RecommendationType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::adaptive_selection::ProblemType;
+    use crate::adaptive__selection::ProblemType;
 
     #[test]
     fn test_domain_specific_selector_creation() {

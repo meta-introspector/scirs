@@ -194,7 +194,7 @@ impl CommunicationManager {
     }
 
     /// Send a message to a specific node
-    pub fn send_to_node(&self, node_id: &str, message: DistributedMessage) -> CoreResult<()> {
+    pub fn send_to(&self, node_id: &str, message: DistributedMessage) -> CoreResult<()> {
         if let Some(endpoint) = self.endpoints.get(node_id) {
             endpoint.send_message(message)?;
         } else {

@@ -5,11 +5,11 @@
 
 use crate::classification::{TextClassificationPipeline, TextFeatureSelector};
 use crate::embeddings::Word2Vec;
-use crate::enhanced_vectorize::{EnhancedCountVectorizer, EnhancedTfidfVectorizer};
+use crate::enhanced__vectorize::{EnhancedCountVectorizer, EnhancedTfidfVectorizer};
 use crate::error::{Result, TextError};
 use crate::multilingual::{Language, LanguageDetector};
 use crate::sentiment::LexiconSentimentAnalyzer;
-use crate::topic_modeling::LatentDirichletAllocation;
+use crate::topic__modeling::LatentDirichletAllocation;
 use crate::vectorize::{TfidfVectorizer, Vectorizer};
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;
@@ -62,9 +62,9 @@ pub struct MLTextPreprocessor {
 
 impl MLTextPreprocessor {
     /// Create a new ML text preprocessor
-    pub fn new(mode: FeatureExtractionMode) -> Self {
+    pub fn new(_mode: FeatureExtractionMode) -> Self {
         Self {
-            mode,
+            _mode,
             tfidf_vectorizer: None,
             enhanced_vectorizer: None,
             word_embeddings: None,
@@ -77,10 +77,7 @@ impl MLTextPreprocessor {
 
     /// Configure TF-IDF parameters
     pub fn with_tfidf_params(
-        mut self,
-        _min_df: f64,
-        _max_df: f64,
-        _max_features: Option<usize>,
+        mut self_min_df: f64, _max_df: f64, _max_features: Option<usize>,
     ) -> Self {
         // For now, use standard EnhancedTfidfVectorizer
         let vectorizer = EnhancedTfidfVectorizer::new();
@@ -351,8 +348,7 @@ impl MLTextPreprocessor {
                 Language::English => 1.0,
                 Language::Spanish => 2.0,
                 Language::French => 3.0,
-                Language::German => 4.0,
-                _ => 0.0,
+                Language::German => 4.0_ => 0.0,
             };
             features[[i, 1]] = result.confidence;
         }
@@ -405,9 +401,9 @@ impl TextMLPipeline {
     }
 
     /// Create a pipeline with specific feature extraction mode
-    pub fn with_mode(mode: FeatureExtractionMode) -> Self {
+    pub fn with_mode(_mode: FeatureExtractionMode) -> Self {
         Self {
-            preprocessor: MLTextPreprocessor::new(mode),
+            preprocessor: MLTextPreprocessor::new(_mode),
             classification_pipeline: None,
         }
     }
@@ -449,9 +445,9 @@ pub struct BatchTextProcessor {
 
 impl BatchTextProcessor {
     /// Create a new batch processor
-    pub fn new(batch_size: usize) -> Self {
+    pub fn new(_batch_size: usize) -> Self {
         Self {
-            batch_size,
+            _batch_size,
             preprocessor: MLTextPreprocessor::new(FeatureExtractionMode::TfIdf),
         }
     }
@@ -501,7 +497,7 @@ mod tests {
 
         for mode in modes {
             let preprocessor = MLTextPreprocessor::new(mode);
-            assert!(matches!(preprocessor.mode, _));
+            assert!(matches!(preprocessor.mode_));
         }
     }
 

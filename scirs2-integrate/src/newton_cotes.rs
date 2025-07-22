@@ -58,7 +58,7 @@ pub struct NewtonCotesResult<F: IntegrateFloat> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::newton_cotes::{newton_cotes, NewtonCotesType, NewtonCotesResult};
+/// use scirs2__integrate::newton_cotes::{newton_cotes, NewtonCotesType, NewtonCotesResult};
 ///
 /// // Generate a 5-point closed Newton-Cotes formula (Boole's rule)
 /// let result: NewtonCotesResult<f64> = newton_cotes(5, NewtonCotesType::Closed, None, None).unwrap();
@@ -408,8 +408,7 @@ fn calculate_error_coefficient<F: IntegrateFloat>(
                 5 => Ok(F::from(-8.0 / 945.0).unwrap()), // Boole's rule
                 6 => Ok(F::from(-275.0 / 12096.0).unwrap()),
                 7 => Ok(F::from(-9.0 / 1400.0).unwrap()),
-                8 => Ok(F::from(-8183.0 / 518400.0).unwrap()),
-                _ => {
+                8 => Ok(F::from(-8183.0 / 518400.0).unwrap(), _ => {
                     // For higher orders, use an approximation
                     let degree = if n % 2 == 0 { n } else { n + 1 } - 1;
                     let coeff = F::from(
@@ -425,8 +424,7 @@ fn calculate_error_coefficient<F: IntegrateFloat>(
             match n {
                 3 => Ok(F::from(1.0 / 4.0).unwrap()),
                 4 => Ok(F::from(-3.0 / 20.0).unwrap()),
-                5 => Ok(F::from(13.0 / 42.0).unwrap()),
-                _ => {
+                5 => Ok(F::from(13.0 / 42.0).unwrap(), _ => {
                     // For higher orders, use an approximation
                     let degree = n - 1;
                     let coeff = F::from(
@@ -546,13 +544,13 @@ mod tests {
     #[test]
     fn test_newton_cotes_integrate() {
         // Test integration of x^2 from 0 to 1 = 1/3
-        let (result, _) =
+        let (result_) =
             newton_cotes_integrate(|x| x * x, 0.0, 1.0, 3, NewtonCotesType::Closed).unwrap();
         assert_abs_diff_eq!(result, 1.0 / 3.0, epsilon = 1e-14);
 
         // Test integration of sin(x) from 0 to pi = 2
         // Simpson's rule gives 2π/3 ≈ 2.094, which has ~5% error
-        let (result, _) =
+        let (result_) =
             newton_cotes_integrate(|x| x.sin(), 0.0, PI, 3, NewtonCotesType::Closed).unwrap();
         assert_abs_diff_eq!(result, 2.0, epsilon = 0.1);
     }

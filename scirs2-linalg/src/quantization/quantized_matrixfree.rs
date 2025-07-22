@@ -422,11 +422,11 @@ where
 
         let global_max_val = block_data
             .iter()
-            .map(|(_, _, scale, _)| {
+            .map(|(_, _, scale_, _)| {
                 if method == QuantizationMethod::Symmetric {
-                    (*scale) * ((1 << (bits - 1)) - 1) as f32
+                    (*scale_) * ((1 << (bits - 1)) - 1) as f32
                 } else {
-                    (*scale) * ((1 << bits) - 1) as f32
+                    (*scale_) * ((1 << bits) - 1) as f32
                 }
             })
             .fold(f32::NEG_INFINITY, |a, b| a.max(b));
@@ -777,11 +777,11 @@ where
 
         let global_max_val = band_data
             .iter()
-            .map(|(_, _, scale, _)| {
+            .map(|(_, _, scale_, _)| {
                 if method == QuantizationMethod::Symmetric {
-                    (*scale) * ((1 << (bits - 1)) - 1) as f32
+                    (*scale_) * ((1 << (bits - 1)) - 1) as f32
                 } else {
-                    (*scale) * ((1 << bits) - 1) as f32
+                    (*scale_) * ((1 << bits) - 1) as f32
                 }
             })
             .fold(f32::NEG_INFINITY, |a, b| a.max(b));
@@ -862,18 +862,18 @@ where
 ///
 /// A LinearOperator that wraps the quantized operator
 #[allow(dead_code)]
-pub fn quantized_to_linear_operator<F>(op: &QuantizedMatrixFreeOp<F>) -> LinearOperator<F>
+pub fn quantized_to_linear_operator<F>(_op: &QuantizedMatrixFreeOp<F>) -> LinearOperator<F>
 where
     F: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug + 'static,
 {
-    let rows = op.nrows();
-    let cols = op.ncols();
-    let is_symmetric = op.is_symmetric();
-    let is_positive_definite = op.is_positive_definite();
+    let rows = _op.nrows();
+    let cols = _op.ncols();
+    let is_symmetric = _op.is_symmetric();
+    let is_positive_definite = _op.is_positive_definite();
 
-    // We need to clone op.op_fn, but can't directly due to the trait bound
+    // We need to clone _op.op_fn, but can't directly due to the trait bound
     // So we create a new closure that delegates to the original
-    let op_clone = op.clone();
+    let op_clone = _op.clone();
 
     let linear_op = if rows == cols {
         LinearOperator::new(rows, move |x: &ArrayView1<F>| match op_clone.apply(x) {
@@ -920,18 +920,18 @@ where
 
 /// Check if a matrix is symmetric
 #[allow(dead_code)]
-fn is_matrix_symmetric<F>(matrix: &ArrayView2<F>) -> bool
+fn is_matrix_symmetric<F>(_matrix: &ArrayView2<F>) -> bool
 where
     F: Float + PartialEq,
 {
-    let (rows, cols) = matrix.dim();
+    let (rows, cols) = _matrix.dim();
     if rows != cols {
         return false;
     }
 
     for i in 0..rows {
         for j in i + 1..cols {
-            if matrix[[i, j]] != matrix[[j, i]] {
+            if _matrix[[i, j]] != _matrix[[j, i]] {
                 return false;
             }
         }

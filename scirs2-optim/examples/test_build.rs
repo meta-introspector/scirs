@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2_optim::optimizers::{Adam, Optimizer};
+use scirs2__optim::optimizers::{Adam, Optimizer};
 
 #[allow(dead_code)]
 fn main() {

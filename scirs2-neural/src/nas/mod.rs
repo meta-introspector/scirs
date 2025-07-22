@@ -14,27 +14,28 @@ pub mod performance_estimation;
 pub mod progressive_search;
 pub mod search_algorithms;
 pub mod search_space;
-pub use architecture_encoding::{ArchitectureEncoding, GraphEncoding, SequentialEncoding};
+pub use architecture__encoding::{ArchitectureEncoding, GraphEncoding, SequentialEncoding};
 pub use controller::{ControllerConfig, NASController};
 pub use enas::{ENASController, ENASTrainer, SuperNetwork};
 pub use evaluator::{ArchitectureEvaluator, EvaluationMetrics};
-pub use hardware_aware::{HardwareAwareSearch, HardwareConstraints, LatencyPredictor};
-pub use multi_objective::{
+pub use hardware__aware::{HardwareAwareSearch, HardwareConstraints, LatencyPredictor};
+pub use multi__objective::{
     MultiObjectiveAlgorithm, MultiObjectiveConfig, MultiObjectiveOptimizer, MultiObjectiveSolution,
     Objective,
 };
-pub use performance_estimation::{
+pub use performance__estimation::{
     EarlyStoppingEstimator, LearningCurveEstimator, MultiFidelityEstimator, PerformanceEstimator,
     SuperNetEstimator, ZeroCostEstimator,
-pub use progressive_search::{ProgressiveConfig, ProgressiveSearch};
-pub use search_algorithms::{
+pub use progressive__search::{ProgressiveConfig, ProgressiveSearch};
+pub use search__algorithms::{
     BayesianOptimization, DifferentiableSearch, EvolutionarySearch, RandomSearch,
     ReinforcementSearch, SearchAlgorithm,
-pub use search_space::{SearchSpace, SearchSpaceConfig};
+pub use search__space::{SearchSpace, SearchSpaceConfig};
 use crate::error::Result;
 use crate::models::sequential::Sequential;
 use ndarray::prelude::*;
 use std::sync::Arc;
+use ndarray::ArrayView1;
 /// Configuration for Neural Architecture Search
 pub struct NASConfig {
     /// Search space configuration
@@ -101,11 +102,11 @@ pub struct SearchResult {
     pub flops: Option<usize>,
 impl NeuralArchitectureSearch {
     /// Create a new NAS instance
-    pub fn new(config: NASConfig) -> Result<Self> {
-        let controller = NASController::new(config.search_space.clone())?;
+    pub fn new(_config: NASConfig) -> Result<Self> {
+        let controller = NASController::new(_config.search_space.clone())?;
         let evaluator = ArchitectureEvaluator::new(ControllerConfig::default())?;
         Ok(Self {
-            config,
+            _config,
             controller,
             evaluator,
             best_architecture: None,

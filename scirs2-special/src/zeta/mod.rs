@@ -38,7 +38,7 @@ use std::ops::AddAssign;
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::zeta;
+/// use scirs2__special::zeta;
 ///
 /// // ζ(2) = π²/6 ≈ 1.645
 /// let z2 = zeta(2.0f64).unwrap();
@@ -99,7 +99,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::hurwitz_zeta;
+/// use scirs2__special::hurwitz_zeta;
 ///
 /// // The Riemann zeta function is a special case of the Hurwitz zeta function
 /// // ζ(s) = ζ(s, 1)
@@ -157,7 +157,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::{zeta, zetac};
+/// use scirs2__special::{zeta, zetac};
 ///
 /// // ζ(2) - 1 = π²/6 - 1 ≈ 0.645
 /// let z2c = zetac(2.0f64).unwrap();

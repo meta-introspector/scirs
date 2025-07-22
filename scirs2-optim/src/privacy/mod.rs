@@ -8,7 +8,6 @@
 use crate::error::{OptimError, Result};
 use ndarray::{Array, ArrayBase, Data, DataMut, Dimension, ScalarOperand};
 use num_traits::Float;
-use scirs2_core::random;
 use scirs2_core::ScientificNumber;
 use std::collections::VecDeque;
 use std::fmt::Debug;
@@ -26,7 +25,7 @@ pub mod utility_analysis;
 use crate::optimizers::Optimizer;
 
 // Re-export key utility analysis types
-pub use utility_analysis::{
+pub use utility__analysis::{
     AnalysisConfig, AnalysisMetadata, BudgetRecommendations, OptimalConfiguration, ParetoPoint,
     PrivacyConfiguration, PrivacyParameterSpace, PrivacyRiskAssessment, PrivacyUtilityAnalyzer,
     PrivacyUtilityResults, RobustnessResults, SensitivityResults, StatisticalTestResults,
@@ -160,7 +159,7 @@ where
     accountant: MomentsAccountant,
 
     /// Random number generator for noise
-    rng: scirs2_core::random::Random,
+    rng: scirs2_core: random::Random,
 
     /// Adaptive clipping state
     adaptive_clip_state: Option<AdaptiveClippingState>,
@@ -228,7 +227,7 @@ where
     O: Optimizer<A, D>,
 {
     /// Create a new differentially private optimizer
-    pub fn new(base_optimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
+    pub fn new(_base_optimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
         let accountant = MomentsAccountant::new(
             config.noise_multiplier,
             config.target_delta,
@@ -236,7 +235,7 @@ where
             config.dataset_size,
         );
 
-        let rng = random::rng();
+        let rng = scirs2_core::random::rng();
 
         let adaptive_clip_state = if config.adaptive_clipping {
             Some(AdaptiveClippingState {
@@ -257,8 +256,7 @@ where
             adaptive_clip_state,
             gradient_history: VecDeque::with_capacity(1000),
             audit_trail: Vec::new(),
-            step_count: 0,
-            _phantom: std::marker::PhantomData,
+            step_count: 0, _phantom: std::marker::PhantomData,
         })
     }
 
@@ -416,8 +414,8 @@ where
                 let sigma_f64 = noise_scale.to_f64().unwrap_or(1.0);
                 gradients.mapv_inplace(|g| {
                     // Use Box-Muller transformation for Gaussian noise
-                    let u1: f64 = self.rng.random_range(0.0, 1.0);
-                    let u2: f64 = self.rng.random_range(0.0, 1.0);
+                    let u1: f64 = self.rng.gen_range(0.0..1.0);
+                    let u2: f64 = self.rng.random_range(0.0..1.0);
                     let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                     let noise = A::from(z0 * sigma_f64).unwrap();
                     g + noise
@@ -427,7 +425,7 @@ where
                 // Implement Laplace distribution using transformation method
                 let scale_f64 = noise_scale.to_f64().unwrap_or(1.0);
                 gradients.mapv_inplace(|g| {
-                    let u: f64 = self.rng.random_range(0.0, 1.0);
+                    let u: f64 = self.rng.random_range(0.0..1.0);
                     let laplace_sample = if u < 0.5 {
                         scale_f64 * (2.0 * u).ln()
                     } else {
@@ -441,8 +439,8 @@ where
                 // Use Gaussian as fallback
                 let sigma_f64 = noise_scale.to_f64().unwrap_or(1.0);
                 gradients.mapv_inplace(|g| {
-                    let u1: f64 = self.rng.random_range(0.0, 1.0);
-                    let u2: f64 = self.rng.random_range(0.0, 1.0);
+                    let u1: f64 = self.rng.random_range(0.0..1.0);
+                    let u2: f64 = self.rng.random_range(0.0..1.0);
                     let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                     let noise = A::from(z0 * sigma_f64).unwrap();
                     g + noise
@@ -454,7 +452,7 @@ where
     }
 
     fn update_adaptive_clipping(&mut self, state: &mut AdaptiveClippingState, current_norm: f64) {
-        // Use exponential moving average to track gradient norm quantiles
+        // Use exponential moving average to track gradient _norm quantiles
         let alpha = self.config.adaptive_clip_lr;
 
         // Target the 50th percentile of gradient norms
@@ -717,7 +715,7 @@ mod tests {
         assert!(epsilon > 0.0);
         assert_eq!(delta, 1e-5);
 
-        let (epsilon2, _) = accountant.get_privacy_spent(200).unwrap();
+        let (epsilon2_) = accountant.get_privacy_spent(200).unwrap();
         assert!(epsilon2 > epsilon); // More steps should consume more budget
     }
 
@@ -740,7 +738,7 @@ mod tests {
             ..Default::default()
         };
 
-        let dp_optimizer: DifferentiallyPrivateOptimizer<_, _, ndarray::Ix1> =
+        let dp_optimizer: DifferentiallyPrivateOptimizer<__, ndarray::Ix1> =
             DifferentiallyPrivateOptimizer::new(sgd, dp_config).unwrap();
         let budget = dp_optimizer.get_privacy_budget();
 

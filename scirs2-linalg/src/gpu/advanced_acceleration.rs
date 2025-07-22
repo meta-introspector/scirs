@@ -907,7 +907,7 @@ impl<T> OperationDependencyGraph<T> {
         // Create input shapes from array views
         let input_shapes: Vec<TensorShape> = inputs.iter()
             .map(|arr| TensorShape {
-                dimensions: arr.shape().to_vec(),
+                dimensions: arr._shape().to_vec(),
                 element_type: ElementType::F32, // Simplified for now
                 memory_layout: MemoryLayout::RowMajor,
             })
@@ -915,7 +915,7 @@ impl<T> OperationDependencyGraph<T> {
         
         // Estimate memory requirements
         let total_input_size: usize = input_shapes.iter()
-            .map(|shape| shape.dimensions.iter().product::<usize>() * 4) // 4 bytes per f32
+            .map(|_shape| _shape.dimensions.iter().product::<usize>() * 4) // 4 bytes per f32
             .sum();
         let output_size = output_shape.dimensions.iter().product::<usize>() * 4;
         
@@ -1063,7 +1063,7 @@ impl AdvancedMultiGpuCoordinator {
         Ok(results)
     }
     
-    fn execute_on_gpu<T>(&self, _work: GpuWorkPartition) -> LinalgResult<Array2<T>> {
+    fn execute_on_gpu<T>(&self_work: GpuWorkPartition) -> LinalgResult<Array2<T>> {
         // Simplified GPU execution
         Ok(Array2::zeros((1, 1)))
     }
@@ -1098,7 +1098,7 @@ impl IntelligentPartitioner {
         }
     }
     
-    fn partition_workload(&self, _candidate: &FusionCandidate) -> LinalgResult<Vec<GpuWorkPartition>> {
+    fn partition_workload(&self_candidate: &FusionCandidate) -> LinalgResult<Vec<GpuWorkPartition>> {
         // Simplified partitioning
         Ok(vec![GpuWorkPartition {
             gpu_id: 0,
@@ -1309,8 +1309,8 @@ impl<T> AdvancedGpuTensorCoreScheduler<T> {
             .partition(|(_, analysis)| analysis.energy_consumption < low_energy_threshold);
         
         // Schedule low-energy operations first to allow for power down periods
-        schedule.extend(low_energy.into_iter().map(|(idx, _)| *idx));
-        schedule.extend(high_energy.into_iter().map(|(idx, _)| *idx));
+        schedule.extend(low_energy.into_iter().map(|(idx_)| *idx));
+        schedule.extend(high_energy.into_iter().map(|(idx_)| *idx));
         
         Ok(schedule)
     }
@@ -1332,7 +1332,7 @@ impl<T> AdvancedGpuTensorCoreScheduler<T> {
             let min_load_core = core_loads.iter()
                 .enumerate()
                 .min_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(core_idx, _)| core_idx)
+                .map(|(core_idx_)| core_idx)
                 .unwrap_or(0);
             
             schedule[min_load_core].push(*idx);
@@ -1394,8 +1394,7 @@ impl<T> AdvancedGpuTensorCoreScheduler<T> {
                     0.7
                 }
             },
-            GpuOperationType::Convolution => 0.8,
-            _ => 0.3, // Non-tensor-core operations
+            GpuOperationType::Convolution => 0.8_ => 0.3, // Non-tensor-core operations
         }
     }
     
@@ -1492,8 +1491,7 @@ impl BandwidthPredictor {
                 GpuOperationType::Convolution => (*data_size as f64).powf(1.3) * 1.2,
                 GpuOperationType::Reduction => (*data_size as f64).log2() * 0.5,
                 GpuOperationType::Transpose => *data_size as f64 * 0.3,
-                GpuOperationType::Normalization => *data_size as f64 * 0.4,
-                _ => *data_size as f64 * 0.1,
+                GpuOperationType::Normalization => *data_size as f64 * 0.4_ => *data_size as f64 * 0.1,
             }
         }).sum::<f64>();
         
@@ -1539,8 +1537,7 @@ impl BandwidthPredictor {
                 // Convolution followed by pooling - common CNN pattern
                 (GpuOperationType::Convolution, GpuOperationType::Reduction) => pattern_score *= 1.15,
                 // Memory-bound operations back-to-back - potential cache misses
-                (GpuOperationType::Transpose, GpuOperationType::Transpose) => pattern_score *= 0.8,
-                _ => {} // No special pattern
+                (GpuOperationType::Transpose, GpuOperationType::Transpose) => pattern_score *= 0.8_ => {} // No special pattern
             }
         }
         
@@ -1559,7 +1556,7 @@ impl BandwidthPredictor {
             Some(BandwidthPredictionModel::LinearRegression) => {
                 // Linear regression model: bandwidth = a * complexity + b * log(data_size) + c
                 let a = 2.3;  // Complexity coefficient
-                let b = 15.7; // Data size coefficient  
+                let b = 15.7; // Data _size coefficient  
                 let c = 45.2; // Base bandwidth
                 Ok(a * complexity + b * data_size.log10() + c)
             },
@@ -1580,8 +1577,7 @@ impl BandwidthPredictor {
                 let nn_pred = self.get_neural_prediction(complexity, data_size)?;
                 let ensemble_pred = 0.6 * linear_pred + 0.4 * nn_pred;
                 Ok(ensemble_pred)
-            },
-            _ => Ok(120.0), // Fallback bandwidth
+            }_ => Ok(120.0), // Fallback bandwidth
         }
     }
     

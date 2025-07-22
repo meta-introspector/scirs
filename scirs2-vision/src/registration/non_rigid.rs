@@ -19,8 +19,7 @@ pub struct LstsqResult {
 #[allow(dead_code)]
 fn lstsq(
     a: &ArrayView2<f64>,
-    b: &ArrayView1<f64>,
-    _rcond: Option<f64>,
+    b: &ArrayView1<f64>, _rcond: Option<f64>,
 ) -> std::result::Result<LstsqResult, String> {
     let (m, n) = a.dim();
 
@@ -131,16 +130,16 @@ pub struct ThinPlateSpline {
 
 impl ThinPlateSpline {
     /// Create a new TPS transformation from control points and targets
-    pub fn new(source_points: &[Point2D], target_points: &[Point2D]) -> Result<Self> {
-        if source_points.len() != target_points.len() {
+    pub fn new(_source_points: &[Point2D], target_points: &[Point2D]) -> Result<Self> {
+        if _source_points.len() != target_points.len() {
             return Err(VisionError::InvalidParameter(
-                "Source and target points must have same length".to_string(),
+                "Source and target _points must have same length".to_string(),
             ));
         }
 
         if source_points.len() < 3 {
             return Err(VisionError::InvalidParameter(
-                "Need at least 3 control points for TPS".to_string(),
+                "Need at least 3 control _points for TPS".to_string(),
             ));
         }
 
@@ -246,8 +245,7 @@ impl ThinPlateSpline {
 #[allow(dead_code)]
 pub fn register_non_rigid_points(
     source_points: &[(f64, f64)],
-    target_points: &[(f64, f64)],
-    _params: &RegistrationParams,
+    target_points: &[(f64, f64)], _params: &RegistrationParams,
 ) -> Result<RegistrationResult> {
     if source_points.len() != target_points.len() {
         return Err(VisionError::InvalidParameter(
@@ -304,9 +302,7 @@ pub fn register_non_rigid_points(
 #[allow(dead_code)]
 pub fn register_non_rigid_regularized(
     source_points: &[(f64, f64)],
-    target_points: &[(f64, f64)],
-    _regularization_weight: f64,
-    _params: &RegistrationParams,
+    target_points: &[(f64, f64)]_regularization_weight: f64, _params: &RegistrationParams,
 ) -> Result<RegistrationResult> {
     if source_points.len() != target_points.len() {
         return Err(VisionError::InvalidParameter(

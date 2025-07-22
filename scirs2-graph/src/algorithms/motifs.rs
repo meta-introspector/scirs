@@ -32,26 +32,26 @@ pub enum MotifType {
 
 /// Find all occurrences of a specified motif in the graph
 #[allow(dead_code)]
-pub fn find_motifs<N, E, Ix>(graph: &Graph<N, E, Ix>, motif_type: MotifType) -> Vec<Vec<N>>
+pub fn find_motifs<N, E, Ix>(_graph: &Graph<N, E, Ix>, motif_type: MotifType) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
     E: EdgeWeight + Send + Sync,
     Ix: IndexType + Send + Sync,
 {
     match motif_type {
-        MotifType::Triangle => find_triangles(graph),
-        MotifType::Square => find_squares(graph),
-        MotifType::Star3 => find_star3s(graph),
-        MotifType::Clique4 => find_clique4s(graph),
-        MotifType::Path3 => find_path3s(graph),
-        MotifType::BiFan => find_bi_fans(graph),
-        MotifType::FeedForwardLoop => find_feed_forward_loops(graph),
-        MotifType::BiDirectional => find_bidirectional_motifs(graph),
+        MotifType::Triangle => find_triangles(_graph),
+        MotifType::Square => find_squares(_graph),
+        MotifType::Star3 => find_star3s(_graph),
+        MotifType::Clique4 => find_clique4s(_graph),
+        MotifType::Path3 => find_path3s(_graph),
+        MotifType::BiFan => find_bi_fans(_graph),
+        MotifType::FeedForwardLoop => find_feed_forward_loops(_graph),
+        MotifType::BiDirectional => find_bidirectional_motifs(_graph),
     }
 }
 
 #[allow(dead_code)]
-fn find_triangles<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
+fn find_triangles<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
     E: EdgeWeight + Send + Sync,
@@ -60,17 +60,17 @@ where
     use scirs2_core::parallel_ops::*;
     use std::sync::Mutex;
 
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let triangles = Mutex::new(Vec::new());
 
     // Parallel triangle finding using edge-based approach for better performance
     nodes.par_iter().enumerate().for_each(|(_i, node_i)| {
-        if let Ok(neighbors_i) = graph.neighbors(node_i) {
+        if let Ok(neighbors_i) = _graph.neighbors(node_i) {
             let neighbors_i: Vec<_> = neighbors_i;
 
             for (j, node_j) in neighbors_i.iter().enumerate() {
                 for node_k in neighbors_i.iter().skip(j + 1) {
-                    if graph.has_edge(node_j, node_k) {
+                    if _graph.has_edge(node_j, node_k) {
                         let mut triangles_guard = triangles.lock().unwrap();
                         let mut triangle = vec![node_i.clone(), node_j.clone(), node_k.clone()];
                         triangle.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
@@ -89,30 +89,30 @@ where
 }
 
 #[allow(dead_code)]
-fn find_squares<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
+fn find_squares<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
     E: EdgeWeight + Send + Sync,
     Ix: IndexType + Send + Sync,
 {
     let mut squares = Vec::new();
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
 
     // For each quadruplet of nodes, check if they form a square
     for i in 0..nodes.len() {
         for j in i + 1..nodes.len() {
-            if !graph.has_edge(&nodes[i], &nodes[j]) {
+            if !_graph.has_edge(&nodes[i], &nodes[j]) {
                 continue;
             }
             for k in j + 1..nodes.len() {
-                if !graph.has_edge(&nodes[j], &nodes[k]) {
+                if !_graph.has_edge(&nodes[j], &nodes[k]) {
                     continue;
                 }
                 for l in k + 1..nodes.len() {
-                    if graph.has_edge(&nodes[k], &nodes[l])
-                        && graph.has_edge(&nodes[l], &nodes[i])
-                        && !graph.has_edge(&nodes[i], &nodes[k])
-                        && !graph.has_edge(&nodes[j], &nodes[l])
+                    if _graph.has_edge(&nodes[k], &nodes[l])
+                        && _graph.has_edge(&nodes[l], &nodes[i])
+                        && !_graph.has_edge(&nodes[i], &nodes[k])
+                        && !_graph.has_edge(&nodes[j], &nodes[l])
                     {
                         squares.push(vec![
                             nodes[i].clone(),
@@ -130,18 +130,18 @@ where
 }
 
 #[allow(dead_code)]
-fn find_star3s<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
+fn find_star3s<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
     E: EdgeWeight + Send + Sync,
     Ix: IndexType + Send + Sync,
 {
     let mut stars = Vec::new();
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
 
     // For each node as center, find if it has exactly 3 neighbors that aren't connected
     for center in &nodes {
-        if let Ok(neighbors) = graph.neighbors(center) {
+        if let Ok(neighbors) = _graph.neighbors(center) {
             let neighbor_list: Vec<N> = neighbors;
 
             if neighbor_list.len() >= 3 {
@@ -150,9 +150,9 @@ where
                     for j in i + 1..neighbor_list.len() {
                         for k in j + 1..neighbor_list.len() {
                             // Check that the neighbors aren't connected to each other
-                            if !graph.has_edge(&neighbor_list[i], &neighbor_list[j])
-                                && !graph.has_edge(&neighbor_list[j], &neighbor_list[k])
-                                && !graph.has_edge(&neighbor_list[i], &neighbor_list[k])
+                            if !_graph.has_edge(&neighbor_list[i], &neighbor_list[j])
+                                && !_graph.has_edge(&neighbor_list[j], &neighbor_list[k])
+                                && !_graph.has_edge(&neighbor_list[i], &neighbor_list[k])
                             {
                                 stars.push(vec![
                                     center.clone(),
@@ -172,29 +172,29 @@ where
 }
 
 #[allow(dead_code)]
-fn find_clique4s<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
+fn find_clique4s<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
     E: EdgeWeight + Send + Sync,
     Ix: IndexType + Send + Sync,
 {
     let mut cliques = Vec::new();
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
 
-    // For each quadruplet of nodes, check if they form a complete graph
+    // For each quadruplet of nodes, check if they form a complete _graph
     for i in 0..nodes.len() {
         for j in i + 1..nodes.len() {
-            if !graph.has_edge(&nodes[i], &nodes[j]) {
+            if !_graph.has_edge(&nodes[i], &nodes[j]) {
                 continue;
             }
             for k in j + 1..nodes.len() {
-                if !graph.has_edge(&nodes[i], &nodes[k]) || !graph.has_edge(&nodes[j], &nodes[k]) {
+                if !_graph.has_edge(&nodes[i], &nodes[k]) || !_graph.has_edge(&nodes[j], &nodes[k]) {
                     continue;
                 }
                 for l in k + 1..nodes.len() {
-                    if graph.has_edge(&nodes[i], &nodes[l])
-                        && graph.has_edge(&nodes[j], &nodes[l])
-                        && graph.has_edge(&nodes[k], &nodes[l])
+                    if _graph.has_edge(&nodes[i], &nodes[l])
+                        && _graph.has_edge(&nodes[j], &nodes[l])
+                        && _graph.has_edge(&nodes[k], &nodes[l])
                     {
                         cliques.push(vec![
                             nodes[i].clone(),
@@ -213,7 +213,7 @@ where
 
 /// Find all path motifs of length 3 (4 nodes in a line)
 #[allow(dead_code)]
-fn find_path3s<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
+fn find_path3s<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
     E: EdgeWeight + Send + Sync,
@@ -222,28 +222,28 @@ where
     use scirs2_core::parallel_ops::*;
     use std::sync::Mutex;
 
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let paths = Mutex::new(Vec::new());
 
     nodes.par_iter().for_each(|start_node| {
-        if let Ok(neighbors1) = graph.neighbors(start_node) {
+        if let Ok(neighbors1) = _graph.neighbors(start_node) {
             for middle1 in neighbors1 {
-                if let Ok(neighbors2) = graph.neighbors(&middle1) {
+                if let Ok(neighbors2) = _graph.neighbors(&middle1) {
                     for middle2 in neighbors2 {
                         if middle2 == *start_node {
                             continue;
                         }
 
-                        if let Ok(neighbors3) = graph.neighbors(&middle2) {
+                        if let Ok(neighbors3) = _graph.neighbors(&middle2) {
                             for end_node in neighbors3 {
                                 if end_node == middle1 || end_node == *start_node {
                                     continue;
                                 }
 
                                 // Check it's a path (no shortcuts)
-                                if !graph.has_edge(start_node, &middle2)
-                                    && !graph.has_edge(start_node, &end_node)
-                                    && !graph.has_edge(&middle1, &end_node)
+                                if !_graph.has_edge(start_node, &middle2)
+                                    && !_graph.has_edge(start_node, &end_node)
+                                    && !_graph.has_edge(&middle1, &end_node)
                                 {
                                     let mut path = vec![
                                         start_node.clone(),
@@ -271,7 +271,7 @@ where
 
 /// Find bi-fan motifs (2 nodes connected to the same 2 other nodes)
 #[allow(dead_code)]
-fn find_bi_fans<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
+fn find_bi_fans<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
     E: EdgeWeight + Send + Sync,
@@ -280,13 +280,13 @@ where
     use scirs2_core::parallel_ops::*;
     use std::sync::Mutex;
 
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let bi_fans = Mutex::new(Vec::new());
 
     nodes.par_iter().enumerate().for_each(|(i, node1)| {
         for node2 in nodes.iter().skip(i + 1) {
             if let (Ok(neighbors1), Ok(neighbors2)) =
-                (graph.neighbors(node1), graph.neighbors(node2))
+                (_graph.neighbors(node1), _graph.neighbors(node2))
             {
                 let neighbors1: HashSet<_> = neighbors1.into_iter().collect();
                 let neighbors2: HashSet<_> = neighbors2.into_iter().collect();
@@ -322,7 +322,7 @@ where
 
 /// Find feed-forward loop motifs (3 nodes with specific directed pattern)
 #[allow(dead_code)]
-fn find_feed_forward_loops<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
+fn find_feed_forward_loops<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
     E: EdgeWeight + Send + Sync,
@@ -331,22 +331,22 @@ where
     use scirs2_core::parallel_ops::*;
     use std::sync::Mutex;
 
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let ffls = Mutex::new(Vec::new());
 
     // Feed-forward loop: A->B, A->C, B->C (but not A<-B, A<-C, B<-C)
     nodes.par_iter().for_each(|node_a| {
-        if let Ok(out_neighbors_a) = graph.neighbors(node_a) {
+        if let Ok(out_neighbors_a) = _graph.neighbors(node_a) {
             let out_neighbors_a: Vec<_> = out_neighbors_a;
 
             for (i, node_b) in out_neighbors_a.iter().enumerate() {
                 for node_c in out_neighbors_a.iter().skip(i + 1) {
                     // Check if B->C exists and no back edges exist
-                    if graph.has_edge(node_b, node_c) {
+                    if _graph.has_edge(node_b, node_c) {
                         // Ensure it's a true feed-forward (no cycles back)
-                        if !graph.has_edge(node_b, node_a)
-                            && !graph.has_edge(node_c, node_a)
-                            && !graph.has_edge(node_c, node_b)
+                        if !_graph.has_edge(node_b, node_a)
+                            && !_graph.has_edge(node_c, node_a)
+                            && !_graph.has_edge(node_c, node_b)
                         {
                             let mut ffl = vec![node_a.clone(), node_b.clone(), node_c.clone()];
                             ffl.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
@@ -367,7 +367,7 @@ where
 
 /// Find bi-directional motifs (mutual connections between pairs of nodes)
 #[allow(dead_code)]
-fn find_bidirectional_motifs<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
+fn find_bidirectional_motifs<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
     E: EdgeWeight + Send + Sync,
@@ -376,13 +376,13 @@ where
     use scirs2_core::parallel_ops::*;
     use std::sync::Mutex;
 
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let bidirectionals = Mutex::new(Vec::new());
 
     nodes.par_iter().enumerate().for_each(|(i, node1)| {
         for node2 in nodes.iter().skip(i + 1) {
             // Check for bidirectional connection
-            if graph.has_edge(node1, node2) && graph.has_edge(node2, node1) {
+            if _graph.has_edge(node1, node2) && _graph.has_edge(node2, node1) {
                 let mut motif = vec![node1.clone(), node2.clone()];
                 motif.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
 
@@ -400,7 +400,7 @@ where
 /// Advanced motif counting with frequency analysis
 /// Returns a map of motif patterns to their occurrence counts
 #[allow(dead_code)]
-pub fn count_motif_frequencies<N, E, Ix>(graph: &Graph<N, E, Ix>) -> HashMap<MotifType, usize>
+pub fn count_motif_frequencies<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> HashMap<MotifType, usize>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
     E: EdgeWeight + Send + Sync,
@@ -422,7 +422,7 @@ where
     motif_types
         .par_iter()
         .map(|motif_type| {
-            let count = find_motifs(graph, *motif_type).len();
+            let count = find_motifs(_graph, *motif_type).len();
             (*motif_type, count)
         })
         .collect()

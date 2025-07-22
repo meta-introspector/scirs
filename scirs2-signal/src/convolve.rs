@@ -4,10 +4,13 @@
 //! of signals.
 
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
+use ndarray::Array2;
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
+use rustfft::FftPlanner;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Convolve two 1D arrays
 ///
 /// # Arguments
@@ -23,7 +26,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::convolve;
+/// use scirs2__signal::convolve;
 ///
 /// let a = vec![1.0, 2.0, 3.0];
 /// let v = vec![0.5, 0.5];
@@ -115,7 +118,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::correlate;
+/// use scirs2__signal::correlate;
 ///
 /// let a = vec![1.0, 2.0, 3.0];
 /// let v = vec![0.5, 0.5];
@@ -165,8 +168,6 @@ where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
-    use rustfft::FftPlanner;
-
     if a.is_empty() || v.is_empty() {
         return Err(SignalError::ValueError(
             "Input signals cannot be empty".to_string(),
@@ -306,8 +307,6 @@ pub fn convolve2d(
     v: &ndarray::Array2<f64>,
     mode: &str,
 ) -> SignalResult<ndarray::Array2<f64>> {
-    use ndarray::Array2;
-
     let (n_rows_a, n_cols_a) = a.dim();
     let (n_rows_v, n_cols_v) = v.dim();
 
@@ -404,8 +403,7 @@ pub fn convolve2d(
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_convolve_full() {
         let a = vec![1.0, 2.0, 3.0];

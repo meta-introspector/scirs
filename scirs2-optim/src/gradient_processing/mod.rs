@@ -59,8 +59,8 @@ impl<A: Float + ScalarOperand + Debug> GradientProcessor<A> {
     }
 
     /// Create a new gradient processor with a specific configuration
-    pub fn with_config(config: GradientClipConfig<A>) -> Self {
-        Self { config }
+    pub fn with_config(_config: GradientClipConfig<A>) -> Self {
+        Self { _config }
     }
 
     /// Set max value clipping
@@ -194,15 +194,15 @@ where
         ));
     }
 
-    // Calculate current L2 norm
-    let norm = gradients
+    // Calculate current L2 _norm
+    let _norm = gradients
         .iter()
         .fold(A::zero(), |acc, &x| acc + x * x)
         .sqrt();
 
-    // If norm exceeds max_norm, scale gradients
-    if norm > max_norm {
-        let scale = max_norm / norm;
+    // If _norm exceeds max_norm, scale gradients
+    if _norm > max_norm {
+        let scale = max_norm / _norm;
         gradients.mapv_inplace(|x| x * scale);
     }
 
@@ -225,10 +225,10 @@ where
         ));
     }
 
-    // Calculate current L1 norm
+    // Calculate current L1 _norm
     let l1_norm = gradients.iter().fold(A::zero(), |acc, &x| acc + x.abs());
 
-    // If norm exceeds max_l1_norm, scale gradients
+    // If _norm exceeds max_l1_norm, scale gradients
     if l1_norm > max_l1_norm {
         let scale = max_l1_norm / l1_norm;
         gradients.mapv_inplace(|x| x * scale);
@@ -239,31 +239,31 @@ where
 
 /// Compute gradient centralization
 #[allow(dead_code)]
-pub fn gradient_centralization<A, D>(gradients: &mut Array<A, D>) -> &mut Array<A, D>
+pub fn gradient_centralization<A, D>(_gradients: &mut Array<A, D>) -> &mut Array<A, D>
 where
     A: Float + ScalarOperand,
     D: Dimension,
 {
     // Calculate mean
-    let sum = gradients.iter().fold(A::zero(), |acc, &x| acc + x);
-    let mean = sum / A::from(gradients.len()).unwrap_or(A::one());
+    let sum = _gradients.iter().fold(A::zero(), |acc, &x| acc + x);
+    let mean = sum / A::from(_gradients.len()).unwrap_or(A::one());
 
     // Subtract mean from each element
-    gradients.mapv_inplace(|x| x - mean);
+    _gradients.mapv_inplace(|x| x - mean);
 
-    gradients
+    _gradients
 }
 
 /// Zero out small gradient values
 #[allow(dead_code)]
-pub fn zero_small_gradients<A, D>(gradients: &mut Array<A, D>, threshold: A) -> &mut Array<A, D>
+pub fn zero_small_gradients<A, D>(_gradients: &mut Array<A, D>, threshold: A) -> &mut Array<A, D>
 where
     A: Float + ScalarOperand,
     D: Dimension,
 {
     let abs_threshold = threshold.abs();
 
-    gradients.mapv_inplace(|x| {
+    _gradients.mapv_inplace(|x| {
         if x.abs() < abs_threshold {
             A::zero()
         } else {
@@ -271,7 +271,7 @@ where
         }
     });
 
-    gradients
+    _gradients
 }
 
 /// Gradient accumulation utility
@@ -294,11 +294,11 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientAccumulator<A, D> {
     ///
     /// * `accumulation_steps` - Number of micro-batches to accumulate before stepping
     /// * `average_gradients` - Whether to average gradients (true) or sum them (false)
-    pub fn new(accumulation_steps: usize, average_gradients: bool) -> Self {
+    pub fn new(_accumulation_steps: usize, average_gradients: bool) -> Self {
         Self {
             accumulated_gradients: None,
             num_accumulated: 0,
-            accumulation_steps,
+            _accumulation_steps,
             average_gradients,
         }
     }
@@ -396,10 +396,10 @@ where
         .fold(A::zero(), |acc, &x| acc + x * x)
         .sqrt();
 
-    if param_norm > A::zero() && grad_norm > A::zero() {
-        let ratio = grad_norm / param_norm;
-        if ratio > max_ratio {
-            let scale = max_ratio / ratio;
+    if param_norm > A::zero() && grad_norm >, A::zero() {
+        let _ratio = grad_norm / param_norm;
+        if _ratio > max_ratio {
+            let scale = max_ratio / _ratio;
             gradients.mapv_inplace(|x| x * scale);
         }
     }
@@ -465,25 +465,25 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientMask<A, D> {
     /// # Arguments
     ///
     /// * `mask` - Boolean mask indicating which parameters to update
-    pub fn new(mask: Array<bool, D>) -> Self {
+    pub fn new(_mask: Array<bool, D>) -> Self {
         Self {
-            mask,
+            _mask,
             lr_multipliers: None,
         }
     }
 
     /// Create a mask that freezes all parameters
-    pub fn freeze_all(shape: D) -> Self {
+    pub fn freeze_all(_shape: D) -> Self {
         Self {
-            mask: Array::from_elem(shape, false),
+            mask: Array::from_elem(_shape, false),
             lr_multipliers: None,
         }
     }
 
     /// Create a mask that updates all parameters
-    pub fn update_all(shape: D) -> Self {
+    pub fn update_all(_shape: D) -> Self {
         Self {
-            mask: Array::from_elem(shape, true),
+            mask: Array::from_elem(_shape, true),
             lr_multipliers: None,
         }
     }

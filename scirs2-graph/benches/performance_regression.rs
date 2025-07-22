@@ -5,7 +5,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use rand::{rngs::StdRng, SeedableRng};
-use scirs2_graph::*;
+use scirs2__graph::*;
 use std::time::Duration;
 
 /// Performance baselines established for regression testing

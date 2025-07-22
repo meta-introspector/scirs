@@ -49,16 +49,16 @@ where
     /// # Returns
     ///
     /// A new `CirculantMatrix` instance
-    pub fn new(first_row: ArrayView1<A>) -> LinalgResult<Self> {
-        if first_row.is_empty() {
+    pub fn new(_first_row: ArrayView1<A>) -> LinalgResult<Self> {
+        if _first_row.is_empty() {
             return Err(LinalgError::InvalidInputError(
-                "First row must not be empty".to_string(),
+                "First _row must not be empty".to_string(),
             ));
         }
 
         Ok(CirculantMatrix {
-            first_row: first_row.to_owned(),
-            n: first_row.len(),
+            first_row: _first_row.to_owned(),
+            n: _first_row.len(),
         })
     }
 
@@ -71,20 +71,20 @@ where
     /// # Returns
     ///
     /// A new `CirculantMatrix` instance
-    pub fn from_kernel(kernel: ArrayView1<A>) -> LinalgResult<Self> {
-        if kernel.is_empty() {
+    pub fn from_kernel(_kernel: ArrayView1<A>) -> LinalgResult<Self> {
+        if _kernel.is_empty() {
             return Err(LinalgError::InvalidInputError(
                 "Kernel must not be empty".to_string(),
             ));
         }
 
-        // For circular convolution, we need to reverse the kernel except the first element
-        let n = kernel.len();
+        // For circular convolution, we need to reverse the _kernel except the first element
+        let n = _kernel.len();
         let mut first_row = Array1::zeros(n);
 
-        first_row[0] = kernel[0];
+        first_row[0] = _kernel[0];
         for i in 1..n {
-            first_row[i] = kernel[n - i];
+            first_row[i] = _kernel[n - i];
         }
 
         Ok(CirculantMatrix { first_row, n })

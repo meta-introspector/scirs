@@ -22,7 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Test 1: Core spatial algorithms
     println!("📊 Testing core spatial algorithms...");
     let kdtree = KDTree::new(&points)?;
-    let (indices, _distances) = kdtree.query(&[0.5, 0.5], 2)?;
+    let (indices_distances) = kdtree.query(&[0.5, 0.5], 2)?;
     println!("✅ KDTree query successful: found {} neighbors", indices.len());
     
     let dist = euclidean(&[0.0, 0.0], &[1.0, 1.0]);

@@ -6,7 +6,7 @@
 //! Usage:
 //!   cargo run --example gpu_acceleration --release
 
-use scirs2_datasets::{
+use scirs2__datasets::{
     get_optimal_gpu_config, is_cuda_available, is_opencl_available, list_gpu_devices,
     make_blobs_auto_gpu, make_classification, make_classification_auto_gpu,
     make_regression_auto_gpu, GpuBackend, GpuBenchmark, GpuConfig, GpuContext, GpuMemoryConfig,
@@ -490,8 +490,7 @@ fn demonstrate_batch_processing() -> Result<(), Box<dyn std::error::Error>> {
             "regression" => {
                 make_regression_auto_gpu(samples, features, features / 2, 0.1, Some(42))?
             }
-            "clustering" => make_blobs_auto_gpu(samples, features, 8, 1.0, Some(42))?,
-            _ => unreachable!(),
+            "clustering" => make_blobs_auto_gpu(samples, features, 8, 1.0, Some(42))?_ => unreachable!(),
         };
 
         let duration = start.elapsed();

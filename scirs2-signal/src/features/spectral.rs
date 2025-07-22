@@ -1,9 +1,13 @@
 use crate::error::SignalResult;
-use crate::features::options::FeatureOptions;
 use crate::periodogram;
+use crate::error::SignalResult;
+use crate::features::options::FeatureOptions;
 use crate::utilities::spectral;
 use std::collections::HashMap;
+use crate::utilities::spectral::spectral_centroid;
+use crate::utilities::spectral::spectral_rolloff;
 
+#[allow(unused_imports)]
 /// Extract spectral features from a time series
 #[allow(dead_code)]
 pub fn extract_spectral_features(

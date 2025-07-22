@@ -34,15 +34,15 @@ where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
 {
     /// Create a new block diagonal matrix from a list of square blocks
-    pub fn new(blocks: Vec<Array2<A>>) -> LinalgResult<Self> {
-        if blocks.is_empty() {
+    pub fn new(_blocks: Vec<Array2<A>>) -> LinalgResult<Self> {
+        if _blocks.is_empty() {
             return Err(LinalgError::InvalidInput(
                 "At least one block is required".to_string(),
             ));
         }
 
-        // Check that all blocks are square
-        for (i, block) in blocks.iter().enumerate() {
+        // Check that all _blocks are square
+        for (i, block) in _blocks.iter().enumerate() {
             if block.nrows() != block.ncols() {
                 return Err(LinalgError::InvalidInput(format!(
                     "Block {} is not square: {}x{}",
@@ -54,24 +54,24 @@ where
         }
 
         // Calculate block offsets and total size
-        let mut block_offsets = Vec::with_capacity(blocks.len());
+        let mut block_offsets = Vec::with_capacity(_blocks.len());
         let mut offset = 0;
-        for block in &blocks {
+        for block in &_blocks {
             block_offsets.push(offset);
             offset += block.nrows();
         }
         let size = offset;
 
         Ok(Self {
-            blocks,
+            blocks: _blocks,
             size,
             block_offsets,
         })
     }
 
     /// Create a block diagonal matrix from a list of array views
-    pub fn from_views(blocks: Vec<ArrayView2<A>>) -> LinalgResult<Self> {
-        let owned_blocks: Vec<Array2<A>> = blocks.into_iter().map(|b| b.to_owned()).collect();
+    pub fn from_views(_blocks: Vec<ArrayView2<A>>) -> LinalgResult<Self> {
+        let owned_blocks: Vec<Array2<A>> = _blocks.into_iter().map(|b| b.to_owned()).collect();
         Self::new(owned_blocks)
     }
 
@@ -307,20 +307,20 @@ where
 
 /// Compute the determinant of a block diagonal matrix
 #[allow(dead_code)]
-pub fn block_diagonal_determinant<A>(matrix: &BlockDiagonalMatrix<A>) -> LinalgResult<A>
+pub fn block_diagonal_determinant<A>(_matrix: &BlockDiagonalMatrix<A>) -> LinalgResult<A>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
 {
-    matrix.determinant()
+    _matrix.determinant()
 }
 
 /// Create a block diagonal matrix from a list of arrays
 #[allow(dead_code)]
-pub fn create_block_diagonal<A>(blocks: Vec<Array2<A>>) -> LinalgResult<BlockDiagonalMatrix<A>>
+pub fn create_block_diagonal<A>(_blocks: Vec<Array2<A>>) -> LinalgResult<BlockDiagonalMatrix<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
 {
-    BlockDiagonalMatrix::new(blocks)
+    BlockDiagonalMatrix::new(_blocks)
 }
 
 #[cfg(test)]

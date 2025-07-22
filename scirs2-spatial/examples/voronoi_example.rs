@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2_spatial::voronoi::Voronoi;
+use scirs2__spatial::voronoi::Voronoi;
 
 #[allow(dead_code)]
 fn main() {

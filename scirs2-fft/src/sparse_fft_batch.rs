@@ -5,12 +5,12 @@
 //! especially on GPU hardware.
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse_fft::{
+use crate::sparse__fft::{
     SparseFFTAlgorithm, SparseFFTConfig, SparseFFTResult, SparsityEstimationMethod, WindowFunction,
 };
-use crate::sparse_fft_gpu::{GPUBackend, GPUSparseFFTConfig};
+use crate::sparse_fft__gpu::{GPUBackend, GPUSparseFFTConfig};
 
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::parallel_ops::*;
 use std::fmt::Debug;
@@ -73,13 +73,13 @@ pub fn batch_sparse_fft<T>(
 where
     T: NumCast + Copy + Debug + Sync + 'static,
 {
-    let config = batch_config.unwrap_or_default();
+    let _config = batch_config.unwrap_or_default();
     let alg = algorithm.unwrap_or(SparseFFTAlgorithm::Sublinear);
     let window = window_function.unwrap_or(WindowFunction::None);
 
     let start = Instant::now();
 
-    // Create sparse FFT config
+    // Create sparse FFT _config
     let fft_config = SparseFFTConfig {
         estimation_method: SparsityEstimationMethod::Manual,
         sparsity: k,
@@ -88,7 +88,7 @@ where
         ..SparseFFTConfig::default()
     };
 
-    let results = if config.use_parallel {
+    let results = if _config.use_parallel {
         // Process signals in parallel using Rayon
         signals
             .par_iter()
@@ -176,16 +176,16 @@ pub fn gpu_batch_sparse_fft<T>(
 where
     T: NumCast + Copy + Debug + Sync + 'static,
 {
-    let config = batch_config.unwrap_or_default();
+    let _config = batch_config.unwrap_or_default();
     let alg = algorithm.unwrap_or(SparseFFTAlgorithm::Sublinear);
     let window = window_function.unwrap_or(WindowFunction::None);
 
     // Calculate batch sizes
     let total_signals = signals.len();
-    let batch_size = config.max_batch_size.min(total_signals);
+    let batch_size = _config.max_batch_size.min(total_signals);
     let num_batches = total_signals.div_ceil(batch_size);
 
-    // Create sparse FFT config
+    // Create sparse FFT _config
     let base_fft_config = SparseFFTConfig {
         estimation_method: SparsityEstimationMethod::Manual,
         sparsity: k,
@@ -194,15 +194,15 @@ where
         ..SparseFFTConfig::default()
     };
 
-    // Create GPU config
+    // Create GPU _config
     let _gpu_config = GPUSparseFFTConfig {
         base_config: base_fft_config,
         backend,
         device_id,
         batch_size,
-        max_memory: config.max_memory_per_batch,
-        use_mixed_precision: config.use_mixed_precision,
-        use_inplace: config.use_inplace,
+        max_memory: _config.max_memory_per_batch,
+        use_mixed_precision: _config.use_mixed_precision,
+        use_inplace: _config.use_inplace,
         stream_count: 2, // Use 2 streams for overlap
     };
 
@@ -281,13 +281,13 @@ pub fn spectral_flatness_batch_sparse_fft<T>(
 where
     T: NumCast + Copy + Debug + Sync + 'static,
 {
-    let config = batch_config.unwrap_or_default();
+    let _config = batch_config.unwrap_or_default();
     let window = window_function.unwrap_or(WindowFunction::Hann); // Default to Hann for spectral flatness
     let device = device_id.unwrap_or(0);
 
     // Calculate batch sizes
     let total_signals = signals.len();
-    let batch_size = config.max_batch_size.min(total_signals);
+    let batch_size = _config.max_batch_size.min(total_signals);
     let num_batches = total_signals.div_ceil(batch_size);
 
     // Initialize the memory manager if GPU is used
@@ -296,7 +296,7 @@ where
             GPUBackend::CUDA,
             device,
             crate::AllocationStrategy::CacheBySize,
-            config.max_memory_per_batch.max(1024 * 1024 * 1024), // At least 1 GB
+            _config.max_memory_per_batch.max(1024 * 1024 * 1024), // At least 1 GB
         )?;
     }
 
@@ -348,7 +348,7 @@ where
         }
     } else {
         // CPU processing
-        if config.use_parallel {
+        if _config.use_parallel {
             // Process all signals in parallel using Rayon
             let parallel_results: FFTResult<Vec<_>> = signals
                 .par_iter()
@@ -447,12 +447,12 @@ mod tests {
     }
 
     // Helper to add noise to signals
-    fn add_noise(signal: &[f64], noise_level: f64) -> Vec<f64> {
+    fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
         use rand::Rng;
         let mut rng = rand::rng();
-        signal
+        _signal
             .iter()
-            .map(|&x| x + rng.random_range(-noise_level..noise_level))
+            .map(|&x| x + rng.gen_range(-noise_level..noise_level))
             .collect()
     }
 

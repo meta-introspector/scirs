@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ffi::{CString, c_int, c_void};
 use std::sync::{Arc, Mutex, RwLock};
+use std::path::PathBuf;
 
 /// MPI integration layer for distributed linear algebra
 #[derive(Debug)]
@@ -281,7 +282,7 @@ pub struct MPICommStats {
 
 impl MPICommunicator {
     /// Create a new MPI communicator
-    pub fn new(config: &MPIConfig) -> LinalgResult<Self> {
+    pub fn new(_config: &MPIConfig) -> LinalgResult<Self> {
         // Initialize MPI if not already done
         unsafe {
             let mut flag: c_int = 0;
@@ -361,7 +362,7 @@ impl MPICommunicator {
                 request_handle: request,
                 operation_id: operation_id.clone(),
                 start_time: std::time::Instant::now(),
-                expected_bytes: data.len() * std::mem::size_of::<T>(),
+                expected_bytes: data.len() * std::mem::size, _of::<T>(),
                 operation_type: RequestOperationType::PointToPoint,
             };
 
@@ -400,7 +401,7 @@ impl MPICommunicator {
                 request_handle: request,
                 operation_id: operation_id.clone(),
                 start_time: std::time::Instant::now(),
-                expected_bytes: buffer.len() * std::mem::size_of::<T>(),
+                expected_bytes: buffer.len() * std::mem::size, _of::<T>(),
                 operation_type: RequestOperationType::PointToPoint,
             };
 
@@ -679,9 +680,9 @@ pub struct CollectivePerformanceRecord {
 }
 
 impl MPICollectiveOps {
-    pub fn new(comm: Arc<MPICommunicator>) -> Self {
+    pub fn new(_comm: Arc<MPICommunicator>) -> Self {
         Self {
-            comm,
+            _comm,
             optimization_cache: HashMap::new(),
             performance_history: Vec::new(),
         }
@@ -729,8 +730,7 @@ impl MPICollectiveOps {
         match topology {
             TreeTopology::Binomial => self.binomial_tree_reduce(data, op),
             TreeTopology::Flat => self.flat_tree_reduce(data, op),
-            TreeTopology::Pipeline => self.pipeline_reduce(data, op),
-            _ => Err(LinalgError::NotImplementedError(
+            TreeTopology::Pipeline => self.pipeline_reduce(data, op, _ => Err(LinalgError::NotImplementedError(
                 "Custom tree topologies not yet implemented".to_string()
             )),
         }
@@ -1679,19 +1679,19 @@ pub enum SuggestionType {
 
 // FFI declarations for MPI (simplified)
 extern "C" {
-    fn mpi_init(argc: *mut c_int, argv: *mut *mut *mut i8) -> c_int;
-    fn mpi_initialized(flag: *mut c_int) -> c_int;
+    fn mpi_init(_argc: *mut c_int, argv: *mut *mut *mut i8) -> c_int;
+    fn mpi_initialized(_flag: *mut c_int) -> c_int;
     fn mpi_comm_world() -> *mut c_void;
-    fn mpi_comm_rank(comm: *mut c_void) -> c_int;
-    fn mpi_comm_size(comm: *mut c_void) -> c_int;
-    fn mpi_isend(buf: *const c_void, count: usize, datatype: c_int, dest: c_int, tag: c_int, comm: *mut c_void) -> *mut c_void;
-    fn mpi_irecv(buf: *mut c_void, count: usize, datatype: c_int, source: c_int, tag: c_int, comm: *mut c_void) -> *mut c_void;
-    fn mpi_wait(request: *mut c_void, status: *mut c_void) -> c_int;
-    fn mpi_bcast(buffer: *mut c_void, count: usize, datatype: c_int, root: c_int, comm: *mut c_void) -> c_int;
-    fn mpi_allreduce(sendbuf: *const c_void, recvbuf: *mut c_void, count: usize, datatype: c_int, op: c_int, comm: *mut c_void) -> c_int;
-    fn mpi_gather(sendbuf: *const c_void, sendcount: usize, sendtype: c_int, recvbuf: *mut c_void, recvcount: usize, recvtype: c_int, root: c_int, comm: *mut c_void) -> c_int;
-    fn mpi_scatter(sendbuf: *const c_void, sendcount: usize, sendtype: c_int, recvbuf: *mut c_void, recvcount: usize, recvtype: c_int, root: c_int, comm: *mut c_void) -> c_int;
-    fn mpi_barrier(comm: *mut c_void) -> c_int;
+    fn mpi_comm_rank(_comm: *mut c_void) -> c_int;
+    fn mpi_comm_size(_comm: *mut c_void) -> c_int;
+    fn mpi_isend(_buf: *const c_void, count: usize, datatype: c_int, dest: c_int, tag: c_int, comm: *mut c_void) -> *mut c_void;
+    fn mpi_irecv(_buf: *mut c_void, count: usize, datatype: c_int, source: c_int, tag: c_int, comm: *mut c_void) -> *mut c_void;
+    fn mpi_wait(_request: *mut c_void, status: *mut c_void) -> c_int;
+    fn mpi_bcast(_buffer: *mut c_void, count: usize, datatype: c_int, root: c_int, comm: *mut c_void) -> c_int;
+    fn mpi_allreduce(_sendbuf: *const c_void, recvbuf: *mut c_void, count: usize, datatype: c_int, op: c_int, comm: *mut c_void) -> c_int;
+    fn mpi_gather(_sendbuf: *const c_void, sendcount: usize, sendtype: c_int, recvbuf: *mut c_void, recvcount: usize, recvtype: c_int, root: c_int, comm: *mut c_void) -> c_int;
+    fn mpi_scatter(_sendbuf: *const c_void, sendcount: usize, sendtype: c_int, recvbuf: *mut c_void, recvcount: usize, recvtype: c_int, root: c_int, comm: *mut c_void) -> c_int;
+    fn mpi_barrier(_comm: *mut c_void) -> c_int;
     fn mpi_finalize() -> c_int;
 }
 
@@ -1703,7 +1703,7 @@ impl Default for MPIConfig {
             persistent_requests: true,
             enable_mpi_io: true,
             enable_rma: false,
-            buffer_strategy: BufferStrategy::Automatic,
+            _buffer_strategy: BufferStrategy::Automatic,
             collective_hints: CollectiveHints {
                 allreduce_algorithm: None,
                 allgather_algorithm: None,
@@ -1717,7 +1717,7 @@ impl Default for MPIConfig {
                 eager_threshold: 12 * 1024,
                 rendezvous_threshold: 64 * 1024,
                 max_segment_size: 1024 * 1024,
-                comm_threads: 1,
+                _comm_threads: 1,
                 numa_binding: true,
                 cpu_affinity: Vec::new(),
                 memory_alignment: 64,
@@ -1728,8 +1728,8 @@ impl Default for MPIConfig {
 
 impl MPIBackend {
     /// Create a new MPI backend
-    pub fn new(config: MPIConfig) -> LinalgResult<Self> {
-        let communicator = MPICommunicator::new(&config)?;
+    pub fn new(_config: MPIConfig) -> LinalgResult<Self> {
+        let communicator = MPICommunicator::new(&_config)?;
         let collectives = MPICollectiveOps::new(Arc::new(communicator));
         
         // Initialize other components...
@@ -2270,21 +2270,16 @@ impl AdvancedAdvancedMPIManager {
     }
 
     fn predict_optimal_process_count(
-        &self,
-        _workload: &WorkloadAnalysis,
-        _state: &SystemState,
-        _targets: &PerformanceTargets,
+        &self_workload: &WorkloadAnalysis, _state: &SystemState_targets: &PerformanceTargets,
     ) -> LinalgResult<u32> {
         // Implementation would use ML models to predict optimal process count
         Ok(4) // Simplified
     }
 
     fn analyze_communication_requirements(
-        &self,
-        _operations: &[String],
-        _data: &DataCharacteristics,
+        &self_operations: &[String], _data: &DataCharacteristics,
     ) -> LinalgResult<CommunicationRequirements> {
-        // Implementation would analyze data dependencies and communication patterns
+        // Implementation would analyze _data dependencies and communication patterns
         Ok(CommunicationRequirements::default())
     }
 }
@@ -2305,8 +2300,7 @@ impl DynamicProcessSpawner {
 
     pub fn spawn_processes_strategically(
         &mut self,
-        count: u32,
-        _system_state: &SystemState,
+        count: u32, _system_state: &SystemState,
     ) -> LinalgResult<Vec<i32>> {
         // Implementation would spawn MPI processes strategically
         let mut new_ranks = Vec::new();
@@ -2327,21 +2321,19 @@ impl PredictiveLoadBalancer {
         }
     }
 
-    pub fn update_performance_history(&mut self, _state: &SystemState) {
+    pub fn update_performance_history(&mut self_state: &SystemState) {
         // Implementation would update historical performance data
     }
 
     pub fn predict_future_performance(
-        &self,
-        _workload: &WorkloadPrediction,
+        &self_workload: &WorkloadPrediction,
     ) -> LinalgResult<PerformancePrediction> {
         // Implementation would use ML to predict future performance
         Ok(PerformancePrediction::default())
     }
 
     pub fn generate_balancing_plan(
-        &self,
-        _prediction: &PerformancePrediction,
+        &self_prediction: &PerformancePrediction,
     ) -> LinalgResult<LoadBalancingPlan> {
         // Implementation would generate optimal load balancing plan
         Ok(LoadBalancingPlan::default())
@@ -2362,8 +2354,7 @@ impl CommunicationPatternOptimizer {
     }
 
     pub fn generate_optimized_pattern(
-        &mut self,
-        _requirements: &CommunicationRequirements,
+        &mut self_requirements: &CommunicationRequirements,
     ) -> LinalgResult<OptimizedCommPattern> {
         // Implementation would generate optimized communication patterns
         Ok(OptimizedCommPattern::default())

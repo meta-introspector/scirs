@@ -224,7 +224,7 @@ fn demo_stable_matrix_ops() -> CoreResult<()> {
     }
 
     // QR decomposition
-    let (q, _r) = qr_decomposition_stable(&hilbert.view())?;
+    let (q_r) = qr_decomposition_stable(&hilbert.view())?;
     println!("\nQR decomposition completed");
     println!("Q orthogonality check (Q^T * Q):");
     let qtq = q.t().dot(&q);
@@ -251,7 +251,7 @@ fn demo_iterative_methods() -> CoreResult<()> {
     for i in 0..n {
         a[[i, i]] = 4.0;
         if i > 0 {
-            a[[i, i - 1]] = -1.0;
+            a[[i, i.saturating_sub(1)]] = -1.0;
             a[[i - 1, i]] = -1.0;
         }
     }

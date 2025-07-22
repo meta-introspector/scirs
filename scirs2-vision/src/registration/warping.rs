@@ -144,8 +144,7 @@ pub fn warp_image_gpu(
     #[cfg(debug_assertions)]
     {
         eprintln!(
-            "GPU warping attempted but falling back to CPU: operation_len={}",
-            _operation.len()
+            "GPU warping attempted but falling back to CPU: operation_len={}"_operation.len()
         );
     }
 
@@ -677,8 +676,7 @@ fn get_pixel_value(
     } else {
         match boundary {
             BoundaryMethod::Zero => 0.0,
-            BoundaryMethod::Constant(value) => value,
-            _ => 0.0, // Fallback
+            BoundaryMethod::Constant(value) => value_ => 0.0, // Fallback
         }
     }
 }
@@ -701,8 +699,7 @@ fn get_rgb_pixel_value(
     } else {
         match boundary {
             BoundaryMethod::Zero => 0.0,
-            BoundaryMethod::Constant(value) => value,
-            _ => 0.0, // Fallback
+            BoundaryMethod::Constant(value) => value_ => 0.0, // Fallback
         }
     }
 }
@@ -764,12 +761,12 @@ fn cubic_kernel(t: f32) -> f32 {
 
 /// Create a mesh grid for transformation mapping
 #[allow(dead_code)]
-pub fn create_mesh_grid(width: u32, height: u32) -> (Array2<f64>, Array2<f64>) {
-    let mut x_grid = Array2::zeros((height as usize, width as usize));
-    let mut y_grid = Array2::zeros((height as usize, width as usize));
+pub fn create_mesh_grid(_width: u32, height: u32) -> (Array2<f64>, Array2<f64>) {
+    let mut x_grid = Array2::zeros((height as usize, _width as usize));
+    let mut y_grid = Array2::zeros((height as usize, _width as usize));
 
     for y in 0..height {
-        for x in 0..width {
+        for x in 0.._width {
             x_grid[[y as usize, x as usize]] = x as f64;
             y_grid[[y as usize, x as usize]] = y as f64;
         }
@@ -884,7 +881,7 @@ pub fn rectify_stereo_pair(
         ));
     }
 
-    // Compute epipoles from fundamental matrix
+    // Compute epipoles from fundamental _matrix
     let (left_epipole, right_epipole) = compute_epipoles(fundamental_matrix)?;
 
     // Compute rectification transforms
@@ -924,23 +921,23 @@ pub fn rectify_stereo_pair(
 /// For left epipole: F * e_left = 0
 /// For right epipole: F^T * e_right = 0
 #[allow(dead_code)]
-fn compute_epipoles(fundamental_matrix: &TransformMatrix) -> Result<(Point2D, Point2D)> {
+fn compute_epipoles(_fundamental_matrix: &TransformMatrix) -> Result<(Point2D, Point2D)> {
     // Find left epipole (null space of F^T)
-    let left_epipole = find_null_space(&transpose_matrix(fundamental_matrix))?;
+    let left_epipole = find_null_space(&transpose_matrix(_fundamental_matrix))?;
 
     // Find right epipole (null space of F)
-    let right_epipole = find_null_space(fundamental_matrix)?;
+    let right_epipole = find_null_space(_fundamental_matrix)?;
 
     Ok((left_epipole, right_epipole))
 }
 
 /// Transpose a 3x3 matrix
 #[allow(dead_code)]
-fn transpose_matrix(matrix: &TransformMatrix) -> TransformMatrix {
+fn transpose_matrix(_matrix: &TransformMatrix) -> TransformMatrix {
     let mut transposed = Array2::zeros((3, 3));
     for i in 0..3 {
         for j in 0..3 {
-            transposed[[i, j]] = matrix[[j, i]];
+            transposed[[i, j]] = _matrix[[j, i]];
         }
     }
     transposed
@@ -948,7 +945,7 @@ fn transpose_matrix(matrix: &TransformMatrix) -> TransformMatrix {
 
 /// Find the null space of a 3x3 matrix (the eigenvector corresponding to the smallest eigenvalue)
 #[allow(dead_code)]
-fn find_null_space(matrix: &TransformMatrix) -> Result<Point2D> {
+fn find_null_space(_matrix: &TransformMatrix) -> Result<Point2D> {
     // Use power iteration to find the smallest eigenvalue and corresponding eigenvector
     // We solve (A^T * A) * v = lambda * v where lambda is the smallest eigenvalue
 
@@ -958,7 +955,7 @@ fn find_null_space(matrix: &TransformMatrix) -> Result<Point2D> {
     for i in 0..3 {
         for j in 0..3 {
             for k in 0..3 {
-                ata[[i, j]] += matrix[[k, i]] * matrix[[k, j]];
+                ata[[i, j]] += _matrix[[k, i]] * _matrix[[k, j]];
             }
         }
     }
@@ -1045,7 +1042,7 @@ fn compute_single_rectification_transform(
     center: (f64, f64),
     image_size: (u32, u32),
 ) -> Result<TransformMatrix> {
-    let (_width, _height) = image_size;
+    let (_width_height) = image_size;
     let (center_x, center_y) = center;
 
     // If epipole is at infinity (parallel cameras), use identity transform
@@ -1107,8 +1104,8 @@ fn compute_right_rectification_transform(
     let mut right_transform =
         compute_single_rectification_transform(right_epipole, center, image_size)?;
 
-    // Adjust the right transform to ensure epipolar lines match with left image
-    // This involves computing a corrective transform based on the fundamental matrix
+    // Adjust the right _transform to ensure epipolar lines match with left image
+    // This involves computing a corrective _transform based on the fundamental _matrix
 
     // For simplicity, we use the same approach as left image but with different parameters
     // In a full implementation, this would involve more sophisticated epipolar geometry
@@ -1129,8 +1126,7 @@ fn compute_right_rectification_transform(
 /// Compute vertical adjustment to align epipolar lines between left and right images
 #[allow(dead_code)]
 fn compute_vertical_alignment(
-    left_transform: &TransformMatrix,
-    _right_transform: &TransformMatrix,
+    left_transform: &TransformMatrix_right, _transform: &TransformMatrix,
     fundamental_matrix: &TransformMatrix,
     image_size: (u32, u32),
 ) -> Result<f64> {
@@ -1151,7 +1147,7 @@ fn compute_vertical_alignment(
         // Transform point through left rectification
         let left_rectified = transform_point(point, left_transform);
 
-        // Compute corresponding epipolar line in right image using fundamental matrix
+        // Compute corresponding epipolar line in right image using fundamental _matrix
         let epipolar_line = compute_epipolar_line(left_rectified, fundamental_matrix);
 
         // The y-coordinate of this line should be the same as the rectified left point
@@ -1172,9 +1168,9 @@ fn compute_vertical_alignment(
 
 /// Compute epipolar line in the right image corresponding to a point in the left image
 #[allow(dead_code)]
-fn compute_epipolar_line(point: Point2D, fundamental_matrix: &TransformMatrix) -> (f64, f64, f64) {
+fn compute_epipolar_line(_point: Point2D, fundamental_matrix: &TransformMatrix) -> (f64, f64, f64) {
     // Epipolar line l = F * p where p is in homogeneous coordinates
-    let p = [point.x, point.y, 1.0];
+    let p = [_point.x, _point.y, 1.0];
     let mut line = [0.0; 3];
 
     for i in 0..3 {
@@ -1188,13 +1184,13 @@ fn compute_epipolar_line(point: Point2D, fundamental_matrix: &TransformMatrix) -
 
 /// Compute y-intercept of an epipolar line at a given x coordinate
 #[allow(dead_code)]
-fn compute_epipolar_line_y_intercept(line: &(f64, f64, f64), x: f64) -> f64 {
-    let (a, b, c) = *line;
+fn compute_epipolar_line_y_intercept(_line: &(f64, f64, f64), x: f64) -> f64 {
+    let (a, b, c) = *_line;
 
     if b.abs() > 1e-10 {
         -(a * x + c) / b
     } else {
-        0.0 // Vertical line, return y=0
+        0.0 // Vertical _line, return y=0
     }
 }
 
@@ -1261,7 +1257,7 @@ pub fn stitch_images_streaming(
         ));
     }
 
-    let (_width, _height) = output_size;
+    let (_width_height) = output_size;
 
     // Configure tile-based processing parameters
     let tile_config = TileConfig::for_output_size(output_size);
@@ -1374,14 +1370,14 @@ impl TileConfig {
     /// # Returns
     ///
     /// * Optimal tile configuration
-    pub fn for_output_size(output_size: (u32, u32)) -> Self {
-        let (width, height) = output_size;
+    pub fn for_output_size(_output_size: (u32, u32)) -> Self {
+        let (width, height) = _output_size;
 
-        // Target tile size based on memory constraints (aim for ~64MB per tile)
+        // Target tile _size based on memory constraints (aim for ~64MB per tile)
         let target_tile_pixels = 16_777_216; // 16 megapixels
         let tile_dimension = (target_tile_pixels as f64).sqrt() as u32;
 
-        // Ensure tile size is reasonable
+        // Ensure tile _size is reasonable
         let tile_width = tile_dimension.min(width).max(512);
         let tile_height = tile_dimension.min(height).max(512);
 
@@ -1618,17 +1614,16 @@ impl StreamingPanoramaProcessor {
         warped_tile: &RgbImage,
     ) -> Result<()> {
         let tile_id = TileId {
-            x: tile_x,
-            y: tile_y,
+            _x: tile_x_y: tile_y,
         };
         let existing_tile = self.tile_cache.get_or_create_tile(tile_id)?;
 
         // Simple averaging blend
         let (tile_width, tile_height) = warped_tile.dimensions();
-        for y in 0..tile_height {
-            for x in 0..tile_width {
-                let new_pixel = warped_tile.get_pixel(x, y);
-                let existing_pixel = existing_tile.get_pixel_mut(x, y);
+        for _y in 0..tile_height {
+            for _x in 0..tile_width {
+                let new_pixel = warped_tile.get_pixel(_x_y);
+                let existing_pixel = existing_tile.get_pixel_mut(_x_y);
 
                 // Check if new pixel has valid data
                 if new_pixel[0] > 0 || new_pixel[1] > 0 || new_pixel[2] > 0 {
@@ -1720,13 +1715,13 @@ impl StreamingPanoramaProcessor {
         let tile_bounds = self.calculate_tile_bounds(tile_x, tile_y);
         let (start_x, start_y, tile_width, tile_height) = tile_bounds;
 
-        for y in 0..tile_height {
-            for x in 0..tile_width {
-                let output_x = start_x + x;
-                let output_y = start_y + y;
+        for _y in 0..tile_height {
+            for _x in 0..tile_width {
+                let output_x = start_x + _x;
+                let output_y = start_y + _y;
 
                 if output_x < self.output_size.0 && output_y < self.output_size.1 {
-                    let pixel = tile.get_pixel(x, y);
+                    let pixel = tile.get_pixel(_x_y);
                     output.put_pixel(output_x, output_y, *pixel);
                 }
             }
@@ -1760,10 +1755,10 @@ impl TileCache {
     /// # Returns
     ///
     /// * Result containing the cache
-    fn new(config: &TileConfig) -> Result<Self> {
+    fn new(_config: &TileConfig) -> Result<Self> {
         Ok(Self {
             tiles: std::collections::HashMap::new(),
-            config: config.clone(),
+            _config: _config.clone(),
             memory_usage: 0,
         })
     }
@@ -1820,7 +1815,7 @@ impl TileCache {
         // Simple LRU eviction strategy
         while self.memory_usage > self.config.memory_budget && !self.tiles.is_empty() {
             // Remove the first tile (in a real implementation, we'd use proper LRU)
-            if let Some((tile_id, _)) = self.tiles.iter().next() {
+            if let Some((tile_id_)) = self.tiles.iter().next() {
                 let tile_id = *tile_id;
                 let (tile_width, tile_height) = self.config.tile_size;
                 let tile_memory = (tile_width * tile_height * 3) as usize;
@@ -1839,17 +1834,17 @@ impl TileCache {
 /// Simple 3x3 matrix inversion for TransformMatrix
 /// Optimized implementation for 3x3 homogeneous transformation matrices
 #[allow(dead_code)]
-fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
-    if matrix.shape() != [3, 3] {
+fn invert_3x3_matrix(_matrix: &TransformMatrix) -> Result<TransformMatrix> {
+    if _matrix.shape() != [3, 3] {
         return Err(VisionError::InvalidParameter(
             "Matrix must be 3x3".to_string(),
         ));
     }
 
     // Compute determinant
-    let det = matrix[[0, 0]] * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
-        - matrix[[0, 1]] * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
-        + matrix[[0, 2]] * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
+    let det = _matrix[[0, 0]] * (_matrix[[1, 1]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 1]])
+        - _matrix[[0, 1]] * (_matrix[[1, 0]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 0]])
+        + _matrix[[0, 2]] * (_matrix[[1, 0]] * _matrix[[2, 1]] - _matrix[[1, 1]] * _matrix[[2, 0]]);
 
     if det.abs() < 1e-10 {
         return Err(VisionError::OperationError(
@@ -1859,16 +1854,16 @@ fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
 
     let mut inv = Array2::zeros((3, 3));
 
-    // Compute adjugate matrix
-    inv[[0, 0]] = (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
-    inv[[0, 1]] = (matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
-    inv[[0, 2]] = (matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
-    inv[[1, 0]] = (matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
-    inv[[1, 1]] = (matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
-    inv[[1, 2]] = (matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
-    inv[[2, 0]] = (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
-    inv[[2, 1]] = (matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
-    inv[[2, 2]] = (matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
+    // Compute adjugate _matrix
+    inv[[0, 0]] = (_matrix[[1, 1]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 1]]) / det;
+    inv[[0, 1]] = (_matrix[[0, 2]] * _matrix[[2, 1]] - _matrix[[0, 1]] * _matrix[[2, 2]]) / det;
+    inv[[0, 2]] = (_matrix[[0, 1]] * _matrix[[1, 2]] - _matrix[[0, 2]] * _matrix[[1, 1]]) / det;
+    inv[[1, 0]] = (_matrix[[1, 2]] * _matrix[[2, 0]] - _matrix[[1, 0]] * _matrix[[2, 2]]) / det;
+    inv[[1, 1]] = (_matrix[[0, 0]] * _matrix[[2, 2]] - _matrix[[0, 2]] * _matrix[[2, 0]]) / det;
+    inv[[1, 2]] = (_matrix[[0, 2]] * _matrix[[1, 0]] - _matrix[[0, 0]] * _matrix[[1, 2]]) / det;
+    inv[[2, 0]] = (_matrix[[1, 0]] * _matrix[[2, 1]] - _matrix[[1, 1]] * _matrix[[2, 0]]) / det;
+    inv[[2, 1]] = (_matrix[[0, 1]] * _matrix[[2, 0]] - _matrix[[0, 0]] * _matrix[[2, 1]]) / det;
+    inv[[2, 2]] = (_matrix[[0, 0]] * _matrix[[1, 1]] - _matrix[[0, 1]] * _matrix[[1, 0]]) / det;
 
     Ok(inv)
 }
@@ -2111,10 +2106,10 @@ pub fn compute_depth_map(
 
 /// Convert GrayImage to Array2<f32>
 #[allow(dead_code)]
-fn image_to_array2(image: &GrayImage) -> Array2<f32> {
-    let (width, height) = image.dimensions();
+fn image_to_array2(_image: &GrayImage) -> Array2<f32> {
+    let (width, height) = _image.dimensions();
     Array2::from_shape_fn((height as usize, width as usize), |(y, x)| {
-        image.get_pixel(x as u32, y as u32)[0] as f32 / 255.0
+        _image.get_pixel(x as u32, y as u32)[0] as f32 / 255.0
     })
 }
 
@@ -2232,8 +2227,7 @@ fn compute_cost_volume(
                         y,
                         disparity,
                         params.block_size,
-                    )?,
-                    _ => 0.0, // Simplified for other cost functions
+                    )?_ => 0.0, // Simplified for other cost functions
                 };
                 cost_volume[[y, x, d]] = cost;
                 x += 1;
@@ -2434,9 +2428,9 @@ fn compute_census_cost_simd(
 
 /// Compute Census transform for a block
 #[allow(dead_code)]
-fn compute_census_transform(image: &Array2<f32>, x: usize, y: usize, block_size: usize) -> u32 {
+fn compute_census_transform(_image: &Array2<f32>, x: usize, y: usize, block_size: usize) -> u32 {
     let half_block = block_size / 2;
-    let center_value = image[[y, x]];
+    let center_value = _image[[y, x]];
     let mut census = 0u32;
     let mut bit_index = 0;
 
@@ -2449,7 +2443,7 @@ fn compute_census_transform(image: &Array2<f32>, x: usize, y: usize, block_size:
             let py = (y as i32 + dy) as usize;
             let px = (x as i32 + dx) as usize;
 
-            if image[[py, px]] < center_value {
+            if _image[[py, px]] < center_value {
                 census |= 1 << bit_index;
             }
             bit_index += 1;
@@ -2508,8 +2502,8 @@ fn compute_hybrid_cost_simd(
 ///
 /// * Result containing aggregated cost volume
 #[allow(dead_code)]
-fn aggregate_costs_sgm(cost_volume: &Array3<f32>, sgm_params: &SgmParams) -> Result<Array3<f32>> {
-    let (height, width, num_disparities) = cost_volume.dim();
+fn aggregate_costs_sgm(_cost_volume: &Array3<f32>, sgm_params: &SgmParams) -> Result<Array3<f32>> {
+    let (height, width, num_disparities) = _cost_volume.dim();
     let mut aggregated_costs = Array3::zeros((height, width, num_disparities));
 
     // Define aggregation directions
@@ -2557,7 +2551,7 @@ fn aggregate_costs_direction(
     dx: i32,
     sgm_params: &SgmParams,
 ) -> Result<Array3<f32>> {
-    let (height, width, _num_disparities) = cost_volume.dim();
+    let (height, width_num_disparities) = cost_volume.dim();
     let mut direction_costs = cost_volume.clone();
 
     // Dynamic programming aggregation
@@ -2655,7 +2649,7 @@ fn aggregate_pixel_costs(
     let num_disparities = direction_costs.dim().2;
 
     for d in 0..num_disparities {
-        let raw_cost = direction_costs[[y, x, d]];
+        let raw_cost = direction_costs[[_y, _x, d]];
 
         // Find minimum cost from previous pixel with smoothness penalties
         let mut min_aggregated_cost = f32::INFINITY;
@@ -2677,7 +2671,7 @@ fn aggregate_pixel_costs(
             }
         }
 
-        direction_costs[[y, x, d]] = raw_cost + min_aggregated_cost;
+        direction_costs[[_y, _x, d]] = raw_cost + min_aggregated_cost;
     }
 }
 
@@ -2738,9 +2732,9 @@ fn compute_right_disparity(
     right_params.max_disparity = -params.min_disparity;
 
     let cost_volume = compute_cost_volume(right_image, left_image, &right_params)?;
-    let (right_disparity, _) = compute_disparity_wta(&cost_volume, &right_params)?;
+    let (right_disparity_) = compute_disparity_wta(&cost_volume, &right_params)?;
 
-    // Negate disparities to convert back to left image coordinate system
+    // Negate disparities to convert back to left _image coordinate system
     Ok(right_disparity.mapv(|d| -d))
 }
 
@@ -2867,9 +2861,9 @@ fn fill_holes_and_filter(
 
 /// Apply median filter to disparity map
 #[allow(dead_code)]
-fn apply_median_filter(disparity_map: &Array2<f32>, window_size: usize) -> Result<Array2<f32>> {
-    let (height, width) = disparity_map.dim();
-    let mut filtered = disparity_map.clone();
+fn apply_median_filter(_disparity_map: &Array2<f32>, window_size: usize) -> Result<Array2<f32>> {
+    let (height, width) = _disparity_map.dim();
+    let mut filtered = _disparity_map.clone();
     let half_window = window_size / 2;
 
     for y in half_window..height - half_window {
@@ -2878,7 +2872,7 @@ fn apply_median_filter(disparity_map: &Array2<f32>, window_size: usize) -> Resul
 
             for dy in -(half_window as i32)..=(half_window as i32) {
                 for dx in -(half_window as i32)..=(half_window as i32) {
-                    let val = disparity_map[[(y as i32 + dy) as usize, (x as i32 + dx) as usize]];
+                    let val = _disparity_map[[(y as i32 + dy) as usize, (x as i32 + dx) as usize]];
                     if !val.is_nan() {
                         values.push(val);
                     }
@@ -2948,31 +2942,31 @@ fn flood_fill_region_size(
     let mut stack = vec![(start_x, start_y)];
     let mut region_size = 0;
 
-    while let Some((x, y)) = stack.pop() {
-        if x >= width || y >= height || visited[[y, x]] {
+    while let Some((_x, _y)) = stack.pop() {
+        if _x >= width || _y >= height || visited[[_y_x]] {
             continue;
         }
 
-        let disparity = disparity_map[[y, x]];
-        if disparity.is_nan() || (disparity - target_disparity).abs() > range {
+        let _disparity = disparity_map[[_y_x]];
+        if _disparity.is_nan() || (_disparity - target_disparity).abs() > range {
             continue;
         }
 
-        visited[[y, x]] = true;
+        visited[[_y_x]] = true;
         region_size += 1;
 
         // Add neighbors
-        if x > 0 {
-            stack.push((x - 1, y));
+        if _x > 0 {
+            stack.push((_x - 1, _y));
         }
-        if x < width - 1 {
-            stack.push((x + 1, y));
+        if _x < width - 1 {
+            stack.push((_x + 1, _y));
         }
-        if y > 0 {
-            stack.push((x, y - 1));
+        if _y > 0 {
+            stack.push((_x, _y - 1));
         }
-        if y < height - 1 {
-            stack.push((x, y + 1));
+        if _y < height - 1 {
+            stack.push((_x, _y + 1));
         }
     }
 
@@ -2991,30 +2985,30 @@ fn flood_fill_mark_invalid(
     let (height, width) = disparity_map.dim();
     let mut stack = vec![(start_x, start_y)];
 
-    while let Some((x, y)) = stack.pop() {
-        if x >= width || y >= height {
+    while let Some((_x, _y)) = stack.pop() {
+        if _x >= width || _y >= height {
             continue;
         }
 
-        let disparity = disparity_map[[y, x]];
-        if disparity.is_nan() || (disparity - target_disparity).abs() > range {
+        let _disparity = disparity_map[[_y_x]];
+        if _disparity.is_nan() || (_disparity - target_disparity).abs() > range {
             continue;
         }
 
-        disparity_map[[y, x]] = f32::NAN;
+        disparity_map[[_y_x]] = f32::NAN;
 
         // Add neighbors
-        if x > 0 {
-            stack.push((x - 1, y));
+        if _x > 0 {
+            stack.push((_x - 1, _y));
         }
-        if x < width - 1 {
-            stack.push((x + 1, y));
+        if _x < width - 1 {
+            stack.push((_x + 1, _y));
         }
-        if y > 0 {
-            stack.push((x, y - 1));
+        if _y > 0 {
+            stack.push((_x, _y - 1));
         }
-        if y < height - 1 {
-            stack.push((x, y + 1));
+        if _y < height - 1 {
+            stack.push((_x, _y + 1));
         }
     }
 }
@@ -3024,8 +3018,7 @@ fn flood_fill_mark_invalid(
 fn compute_depth_map_stats(
     disparity_map: &Array2<f32>,
     confidence_map: &Array2<f32>,
-    processing_times: ProcessingTimes,
-    _params: &StereoMatchingParams,
+    processing_times: ProcessingTimes, _params: &StereoMatchingParams,
 ) -> DepthMapStats {
     let total_pixels = disparity_map.len();
     let valid_pixels = disparity_map.iter().filter(|&&d| !d.is_nan()).count();

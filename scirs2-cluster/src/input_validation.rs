@@ -4,7 +4,7 @@
 //! compatible with SciPy's validation patterns and provide consistent
 //! error messages across all clustering algorithms.
 
-use ndarray::{ArrayView1, ArrayView2, Axis};
+use ndarray::{ArrayView1, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -108,12 +108,12 @@ impl ValidationConfig {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::input_validation::{validate_clustering_data, ValidationConfig};
+/// use scirs2__cluster::input_validation::{validate_clustering_data, ValidationConfig};
 ///
 /// let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
 /// let config = ValidationConfig::for_kmeans();
 ///
-/// assert!(validate_clustering_data(data.view(), &config).is_ok());
+/// assert!(crate::validation::validate_clustering_data(data.view(), &config).is_ok());
 /// ```
 #[allow(dead_code)]
 pub fn validate_clustering_data<F: Float + FromPrimitive + Debug + PartialOrd>(
@@ -173,8 +173,8 @@ pub fn validate_clustering_data<F: Float + FromPrimitive + Debug + PartialOrd>(
 
 /// Validate that all values in the data are finite
 #[allow(dead_code)]
-fn validate_finite_values<F: Float + Debug>(data: ArrayView2<F>, prefix: &str) -> Result<()> {
-    for (i, row) in data.axis_iter(Axis(0)).enumerate() {
+fn validate_finite_values<F: Float + Debug>(_data: ArrayView2<F>, prefix: &str) -> Result<()> {
+    for (i, row) in _data.axis_iter(Axis(0)).enumerate() {
         for (j, &value) in row.iter().enumerate() {
             if !value.is_finite() {
                 return Err(ClusteringError::InvalidInput(format!(
@@ -201,17 +201,17 @@ fn validate_finite_values<F: Float + Debug>(data: ArrayView2<F>, prefix: &str) -
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
 #[allow(dead_code)]
-pub fn validate_n_clusters(n_clusters: usize, n_samples: usize, algorithm: &str) -> Result<()> {
-    if n_clusters == 0 {
+pub fn validate_n_clusters(_n_clusters: usize, n_samples: usize, algorithm: &str) -> Result<()> {
+    if _n_clusters == 0 {
         return Err(ClusteringError::InvalidInput(format!(
-            "{}: Number of clusters must be positive, got 0",
+            "{}: Number of _clusters must be positive, got 0",
             algorithm
         )));
     }
 
     if n_clusters > n_samples {
         return Err(ClusteringError::InvalidInput(format!(
-            "{}: Number of clusters ({}) cannot exceed number of samples ({})",
+            "{}: Number of _clusters ({}) cannot exceed number of _samples ({})",
             algorithm, n_clusters, n_samples
         )));
     }
@@ -242,27 +242,27 @@ pub fn validate_distance_parameter<F: Float + FromPrimitive + Debug + PartialOrd
     max_value: Option<F>,
     algorithm: &str,
 ) -> Result<()> {
-    if !value.is_finite() {
+    if !_value.is_finite() {
         return Err(ClusteringError::InvalidInput(format!(
             "{}: {} must be finite, got {:?}",
-            algorithm, param_name, value
+            algorithm, param_name, _value
         )));
     }
 
     if let Some(min_val) = min_value {
-        if value < min_val {
+        if _value < min_val {
             return Err(ClusteringError::InvalidInput(format!(
                 "{}: {} must be >= {:?}, got {:?}",
-                algorithm, param_name, min_val, value
+                algorithm, param_name, min_val, _value
             )));
         }
     }
 
     if let Some(max_val) = max_value {
-        if value > max_val {
+        if _value > max_val {
             return Err(ClusteringError::InvalidInput(format!(
                 "{}: {} must be <= {:?}, got {:?}",
-                algorithm, param_name, max_val, value
+                algorithm, param_name, max_val, _value
             )));
         }
     }
@@ -294,19 +294,19 @@ pub fn validate_integer_parameter(
     algorithm: &str,
 ) -> Result<()> {
     if let Some(min_val) = min_value {
-        if value < min_val {
+        if _value < min_val {
             return Err(ClusteringError::InvalidInput(format!(
                 "{}: {} must be >= {}, got {}",
-                algorithm, param_name, min_val, value
+                algorithm, param_name, min_val, _value
             )));
         }
     }
 
     if let Some(max_val) = max_value {
-        if value > max_val {
+        if _value > max_val {
             return Err(ClusteringError::InvalidInput(format!(
                 "{}: {} must be <= {}, got {}",
-                algorithm, param_name, max_val, value
+                algorithm, param_name, max_val, _value
             )));
         }
     }
@@ -335,7 +335,7 @@ pub fn validate_sample_weights<F: Float + FromPrimitive + Debug + PartialOrd>(
 ) -> Result<()> {
     if weights.len() != n_samples {
         return Err(ClusteringError::InvalidInput(format!(
-            "{}: Sample weights length ({}) must match number of samples ({})",
+            "{}: Sample weights length ({}) must match number of _samples ({})",
             algorithm,
             weights.len(),
             n_samples
@@ -395,14 +395,14 @@ pub fn validate_cluster_initialization<F: Float + FromPrimitive + Debug + Partia
 
     if init_clusters != n_clusters {
         return Err(ClusteringError::InvalidInput(format!(
-            "{}: Initial cluster centers must have {} clusters, got {}",
+            "{}: Initial cluster centers must have {} _clusters, got {}",
             algorithm, n_clusters, init_clusters
         )));
     }
 
     if init_features != n_features {
         return Err(ClusteringError::InvalidInput(format!(
-            "{}: Initial cluster centers must have {} features, got {}",
+            "{}: Initial cluster centers must have {} _features, got {}",
             algorithm, n_features, init_features
         )));
     }
@@ -512,7 +512,7 @@ pub fn suggest_clustering_algorithm<F: Float + FromPrimitive + Debug + PartialOr
 
     // Validate data first
     let config = ValidationConfig::default();
-    validate_clustering_data(data, &config)?;
+    crate::validation::validate_clustering_data(data, &config)?;
 
     let mut suggestions = Vec::new();
 
@@ -540,10 +540,10 @@ pub fn suggest_clustering_algorithm<F: Float + FromPrimitive + Debug + PartialOr
     if let Some(k) = n_clusters {
         if k <= 10 {
             suggestions.push(
-                "Small number of clusters: K-means with k-means++ initialization recommended",
+                "Small number of _clusters: K-means with k-means++ initialization recommended",
             );
         } else {
-            suggestions.push("Many clusters: Consider hierarchical clustering or DBSCAN");
+            suggestions.push("Many _clusters: Consider hierarchical clustering or DBSCAN");
         }
     } else {
         suggestions.push(
@@ -568,23 +568,23 @@ pub fn suggest_clustering_algorithm<F: Float + FromPrimitive + Debug + PartialOr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{Array1, Array2};
+    use ndarray::{ArrayView1, Array1, Array2};
 
     #[test]
     fn test_validate_clustering_data() {
         // Valid data
         let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let config = ValidationConfig::default();
-        assert!(validate_clustering_data(data.view(), &config).is_ok());
+        assert!(crate::validation::validate_clustering_data(data.view(), &config).is_ok());
 
         // Too few samples
         let small_data = Array2::from_shape_vec((1, 3), vec![1.0, 2.0, 3.0]).unwrap();
-        assert!(validate_clustering_data(small_data.view(), &config).is_err());
+        assert!(crate::validation::validate_clustering_data(small_data.view(), &config).is_err());
 
         // Non-finite values
         let invalid_data =
             Array2::from_shape_vec((3, 2), vec![1.0, 2.0, f64::NAN, 4.0, 5.0, 6.0]).unwrap();
-        assert!(validate_clustering_data(invalid_data.view(), &config).is_err());
+        assert!(crate::validation::validate_clustering_data(invalid_data.view(), &config).is_err());
     }
 
     #[test]

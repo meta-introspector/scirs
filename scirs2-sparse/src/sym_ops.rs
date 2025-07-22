@@ -10,8 +10,8 @@ use std::fmt::Debug;
 use std::ops::{Add, Mul};
 
 use crate::error::SparseResult;
-use crate::sym_coo::SymCooMatrix;
-use crate::sym_csr::SymCsrMatrix;
+use crate::sym__coo::SymCooMatrix;
+use crate::sym__csr::SymCsrMatrix;
 
 // Import parallel operations from scirs2-core
 use scirs2_core::parallel_ops::*;
@@ -36,8 +36,8 @@ use scirs2_core::parallel_ops::*;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_sparse::sym_csr::SymCsrMatrix;
-/// use scirs2_sparse::sym_ops::sym_csr_matvec;
+/// use scirs2__sparse::sym_csr::SymCsrMatrix;
+/// use scirs2__sparse::sym_ops::sym_csr_matvec;
 ///
 /// // Create a symmetric matrix
 /// let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
@@ -57,11 +57,11 @@ use scirs2_core::parallel_ops::*;
 /// assert_eq!(y[2], 9.0);
 /// ```
 #[allow(dead_code)]
-pub fn sym_csr_matvec<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+pub fn sym_csr_matvec<T>(_matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Send + Sync,
 {
-    let (n, _) = matrix.shape();
+    let (n_) = _matrix.shape();
     if x.len() != n {
         return Err(crate::error::SparseError::DimensionMismatch {
             expected: n,
@@ -69,13 +69,13 @@ where
         });
     }
 
-    let nnz = matrix.nnz();
+    let nnz = _matrix.nnz();
 
     // Use parallel implementation for larger matrices
     if nnz >= 1000 {
-        sym_csr_matvec_parallel(matrix, x)
+        sym_csr_matvec_parallel(_matrix, x)
     } else {
-        sym_csr_matvec_scalar(matrix, x)
+        sym_csr_matvec_scalar(_matrix, x)
     }
 }
 
@@ -88,7 +88,7 @@ fn sym_csr_matvec_parallel<T>(
 where
     T: Float + Debug + Copy + Add<Output = T> + Send + Sync,
 {
-    let (n, _) = matrix.shape();
+    let (n_) = matrix.shape();
     let mut y = Array1::zeros(n);
 
     // Determine optimal chunk size based on matrix size
@@ -139,18 +139,18 @@ where
 
 /// Scalar fallback version of symmetric CSR matrix-vector multiplication
 #[allow(dead_code)]
-fn sym_csr_matvec_scalar<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+fn sym_csr_matvec_scalar<T>(_matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T>,
 {
-    let (n, _) = matrix.shape();
+    let (n_) = _matrix.shape();
     let mut y = Array1::zeros(n);
 
     // Standard scalar implementation
     for i in 0..n {
-        for j in matrix.indptr[i]..matrix.indptr[i + 1] {
-            let col = matrix.indices[j];
-            let val = matrix.data[j];
+        for j in _matrix.indptr[i].._matrix.indptr[i + 1] {
+            let col = _matrix.indices[j];
+            let val = _matrix.data[j];
 
             y[i] = y[i] + val * x[col];
 
@@ -184,8 +184,8 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_sparse::sym_coo::SymCooMatrix;
-/// use scirs2_sparse::sym_ops::sym_coo_matvec;
+/// use scirs2__sparse::sym_coo::SymCooMatrix;
+/// use scirs2__sparse::sym_ops::sym_coo_matvec;
 ///
 /// // Create a symmetric matrix
 /// let rows = vec![0, 1, 1, 2, 2];
@@ -205,11 +205,11 @@ where
 /// assert_eq!(y[2], 9.0);
 /// ```
 #[allow(dead_code)]
-pub fn sym_coo_matvec<T>(matrix: &SymCooMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+pub fn sym_coo_matvec<T>(_matrix: &SymCooMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T>,
 {
-    let (n, _) = matrix.shape();
+    let (n_) = _matrix.shape();
     if x.len() != n {
         return Err(crate::error::SparseError::DimensionMismatch {
             expected: n,
@@ -220,10 +220,10 @@ where
     let mut y = Array1::zeros(n);
 
     // Process each non-zero element in the lower triangular part
-    for i in 0..matrix.data.len() {
-        let row = matrix.rows[i];
-        let col = matrix.cols[i];
-        let val = matrix.data[i];
+    for i in 0.._matrix.data.len() {
+        let row = _matrix.rows[i];
+        let col = _matrix.cols[i];
+        let val = _matrix.data[i];
 
         y[row] = y[row] + val * x[col];
 
@@ -265,7 +265,7 @@ pub fn sym_csr_rank1_update<T>(
 where
     T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + std::ops::AddAssign,
 {
-    let (n, _) = matrix.shape();
+    let (n_) = matrix.shape();
     if x.len() != n {
         return Err(crate::error::SparseError::DimensionMismatch {
             expected: n,
@@ -331,8 +331,8 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_sparse::sym_csr::SymCsrMatrix;
-/// use scirs2_sparse::sym_ops::sym_csr_quadratic_form;
+/// use scirs2__sparse::sym_csr::SymCsrMatrix;
+/// use scirs2__sparse::sym_ops::sym_csr_quadratic_form;
 ///
 /// // Create a symmetric matrix
 /// let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
@@ -350,12 +350,12 @@ where
 /// assert_eq!(result, 59.0);
 /// ```
 #[allow(dead_code)]
-pub fn sym_csr_quadratic_form<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<T>
+pub fn sym_csr_quadratic_form<T>(_matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<T>
 where
     T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + Send + Sync,
 {
     // First compute A * x
-    let ax = sym_csr_matvec(matrix, x)?;
+    let ax = sym_csr_matvec(_matrix, x)?;
 
     // Then compute x^T * (A * x)
     let mut result = T::zero();
@@ -381,8 +381,8 @@ where
 /// # Example
 ///
 /// ```
-/// use scirs2_sparse::sym_csr::SymCsrMatrix;
-/// use scirs2_sparse::sym_ops::sym_csr_trace;
+/// use scirs2__sparse::sym_csr::SymCsrMatrix;
+/// use scirs2__sparse::sym_ops::sym_csr_trace;
 ///
 /// // Create a symmetric matrix
 /// let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
@@ -397,19 +397,19 @@ where
 /// assert_eq!(trace, 5.0);
 /// ```
 #[allow(dead_code)]
-pub fn sym_csr_trace<T>(matrix: &SymCsrMatrix<T>) -> T
+pub fn sym_csr_trace<T>(_matrix: &SymCsrMatrix<T>) -> T
 where
     T: Float + Debug + Copy + Add<Output = T>,
 {
-    let (n, _) = matrix.shape();
+    let (n_) = _matrix.shape();
     let mut trace = T::zero();
 
     // Sum the diagonal elements
     for i in 0..n {
-        for j in matrix.indptr[i]..matrix.indptr[i + 1] {
-            let col = matrix.indices[j];
+        for j in _matrix.indptr[i].._matrix.indptr[i + 1] {
+            let col = _matrix.indices[j];
             if col == i {
-                trace = trace + matrix.data[j];
+                trace = trace + _matrix.data[j];
                 break;
             }
         }
@@ -421,8 +421,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sym_coo::SymCooMatrix;
-    use crate::sym_csr::SymCsrMatrix;
+    use crate::sym__coo::SymCooMatrix;
+    use crate::sym__csr::SymCsrMatrix;
     use crate::AsLinearOperator; // For the test_compare_with_standard_matvec test
     use approx::assert_relative_eq;
     use ndarray::Array1;

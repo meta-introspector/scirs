@@ -4,7 +4,7 @@
 //! algorithms for sparse matrices representing weighted graphs.
 
 use super::{num_vertices, to_adjacency_list, validate_graph};
-use crate::csr_array::CsrArray;
+use crate::csr__array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::Array1;
@@ -118,8 +118,7 @@ impl MSTAlgorithm {
         match s.to_lowercase().as_str() {
             "kruskal" => Ok(Self::Kruskal),
             "prim" => Ok(Self::Prim),
-            "auto" => Ok(Self::Auto),
-            _ => Err(SparseError::ValueError(format!(
+            "auto" => Ok(Self::Auto, _ => Err(SparseError::ValueError(format!(
                 "Unknown MST algorithm: {s}. Use 'kruskal', 'prim', or 'auto'"
             ))),
         }
@@ -144,8 +143,8 @@ impl MSTAlgorithm {
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::csgraph::minimum_spanning_tree;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::csgraph::minimum_spanning_tree;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a weighted graph
 /// let rows = vec![0, 0, 1, 1, 2];
@@ -237,7 +236,7 @@ where
             mst_edges.push(edge.clone());
             total_weight = total_weight + edge.weight;
 
-            // Set parent relationship (arbitrary choice for undirected tree)
+            // Set parent relationship (arbitrary choice for undirected _tree)
             if parent[edge.v] == -1 {
                 parent[edge.v] = edge.u as isize;
             } else if parent[edge.u] == -1 {
@@ -254,7 +253,7 @@ where
     // Check if graph is connected
     if mst_edges.len() != n - 1 {
         return Err(SparseError::ValueError(
-            "Graph is not connected - cannot compute spanning tree".to_string(),
+            "Graph is not connected - cannot compute spanning _tree".to_string(),
         ));
     }
 
@@ -340,7 +339,7 @@ where
     let vertices_in_mst = in_mst.iter().filter(|&&x| x).count();
     if vertices_in_mst != n {
         return Err(SparseError::ValueError(
-            "Graph is not connected - cannot compute spanning tree".to_string(),
+            "Graph is not connected - cannot compute spanning _tree".to_string(),
         ));
     }
 
@@ -355,7 +354,7 @@ where
 
 /// Build a sparse matrix representation of the MST from edges
 #[allow(dead_code)]
-fn build_mst_matrix<T>(edges: &[Edge<T>], n: usize) -> SparseResult<CsrArray<T>>
+fn build_mst_matrix<T>(_edges: &[Edge<T>], n: usize) -> SparseResult<CsrArray<T>>
 where
     T: Float + Debug + Copy + 'static,
 {
@@ -363,7 +362,7 @@ where
     let mut cols = Vec::new();
     let mut values = Vec::new();
 
-    for edge in edges {
+    for edge in _edges {
         // Add both directions for undirected tree
         rows.push(edge.u);
         cols.push(edge.v);
@@ -389,13 +388,13 @@ where
 ///
 /// True if the tree is a valid spanning tree, false otherwise
 #[allow(dead_code)]
-pub fn is_spanning_tree<T, S1, S2>(graph: &S1, tree: &S2, tol: T) -> SparseResult<bool>
+pub fn is_spanning_tree<T, S1, S2>(_graph: &S1, tree: &S2, tol: T) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,
     S1: SparseArray<T>,
     S2: SparseArray<T>,
 {
-    let n = num_vertices(graph);
+    let n = num_vertices(_graph);
     let m = num_vertices(tree);
 
     // Must have same number of vertices
@@ -409,13 +408,13 @@ where
         return Ok(false);
     }
 
-    // All edges in tree must exist in original graph with same weight
+    // All edges in tree must exist in original _graph with same weight
     let (tree_rows, tree_cols, tree_values) = tree.find();
 
     for (i, (&u, &v)) in tree_rows.iter().zip(tree_cols.iter()).enumerate() {
         if u < v {
             // Check each edge only once
-            let graph_weight = graph.get(u, v);
+            let graph_weight = _graph.get(u, v);
             let tree_weight = tree_values[i];
 
             if (graph_weight - tree_weight).abs() > tol {
@@ -440,12 +439,12 @@ where
 ///
 /// Total weight of the spanning tree
 #[allow(dead_code)]
-pub fn spanning_tree_weight<T, S>(tree: &S) -> SparseResult<T>
+pub fn spanning_tree_weight<T, S>(_tree: &S) -> SparseResult<T>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (row_indices, col_indices, values) = tree.find();
+    let (row_indices, col_indices, values) = _tree.find();
     let mut total_weight = T::zero();
 
     // Sum weights, counting each undirected edge only once
@@ -484,11 +483,11 @@ where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (total_weight, mst, _) = minimum_spanning_tree(graph, algorithm, true)?;
+    let (total_weight, mst_) = minimum_spanning_tree(graph, algorithm, true)?;
     let mst = mst.unwrap();
 
     // Simple heuristic: if there are edges with equal weights, multiple MSTs might exist
-    let (_, _, values) = graph.find();
+    let (__, values) = graph.find();
     let mut weights: Vec<_> = values.iter().copied().collect();
     weights.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
@@ -502,7 +501,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
     use approx::assert_relative_eq;
 
     fn create_test_graph() -> CsrArray<f64> {
@@ -544,7 +543,7 @@ mod tests {
     #[test]
     fn test_kruskal_mst() {
         let graph = create_test_graph();
-        let (total_weight, mst, _parents) = kruskal_mst(&graph, true).unwrap();
+        let (total_weight, mst_parents) = kruskal_mst(&graph, true).unwrap();
 
         // MST should have weight 5 (edges: 0-1 weight 1, 1-2 weight 1, 1-3 weight 3)
         assert_relative_eq!(total_weight, 5.0);
@@ -565,7 +564,7 @@ mod tests {
     #[test]
     fn test_prim_mst() {
         let graph = create_test_graph();
-        let (total_weight, mst, _parents) = prim_mst(&graph, 0, true).unwrap();
+        let (total_weight, mst_parents) = prim_mst(&graph, 0, true).unwrap();
 
         // Should produce the same weight as Kruskal
         assert_relative_eq!(total_weight, 5.0);
@@ -582,15 +581,15 @@ mod tests {
         let graph = create_test_graph();
 
         // Test Kruskal
-        let (weight_k, _, _) = minimum_spanning_tree(&graph, "kruskal", false).unwrap();
+        let (weight_k__) = minimum_spanning_tree(&graph, "kruskal", false).unwrap();
         assert_relative_eq!(weight_k, 5.0);
 
         // Test Prim
-        let (weight_p, _, _) = minimum_spanning_tree(&graph, "prim", false).unwrap();
+        let (weight_p__) = minimum_spanning_tree(&graph, "prim", false).unwrap();
         assert_relative_eq!(weight_p, 5.0);
 
         // Test auto selection
-        let (weight_a, _, _) = minimum_spanning_tree(&graph, "auto", false).unwrap();
+        let (weight_a__) = minimum_spanning_tree(&graph, "auto", false).unwrap();
         assert_relative_eq!(weight_a, 5.0);
     }
 
@@ -612,7 +611,7 @@ mod tests {
         // Single vertex graph
         let graph: CsrArray<f64> = CsrArray::from_triplets(&[], &[], &[], (1, 1), false).unwrap();
 
-        let (total_weight, mst, _) = minimum_spanning_tree(&graph, "kruskal", true).unwrap();
+        let (total_weight, mst_) = minimum_spanning_tree(&graph, "kruskal", true).unwrap();
         assert_relative_eq!(total_weight, 0.0);
 
         let mst = mst.unwrap();
@@ -627,7 +626,7 @@ mod tests {
         let data = vec![5.0, 5.0];
         let graph = CsrArray::from_triplets(&rows, &cols, &data, (2, 2), false).unwrap();
 
-        let (total_weight, mst, _) = minimum_spanning_tree(&graph, "prim", true).unwrap();
+        let (total_weight, mst_) = minimum_spanning_tree(&graph, "prim", true).unwrap();
         assert_relative_eq!(total_weight, 5.0);
 
         let mst = mst.unwrap();
@@ -655,7 +654,7 @@ mod tests {
         let graph =
             CsrArray::from_triplets(&all_rows, &all_cols, &all_data, (4, 4), false).unwrap();
 
-        let (total_weight, _, _) = minimum_spanning_tree(&graph, "kruskal", false).unwrap();
+        let (total_weight__) = minimum_spanning_tree(&graph, "kruskal", false).unwrap();
 
         // MST should use edges: 0-1 (1), 1-2 (2), 0-3 (3) for total weight 6
         assert_relative_eq!(total_weight, 6.0);
@@ -664,7 +663,7 @@ mod tests {
     #[test]
     fn test_spanning_tree_validation() {
         let graph = create_test_graph();
-        let (_, mst, _) = minimum_spanning_tree(&graph, "kruskal", true).unwrap();
+        let (_, mst_) = minimum_spanning_tree(&graph, "kruskal", true).unwrap();
         let mst = mst.unwrap();
 
         // Valid spanning tree

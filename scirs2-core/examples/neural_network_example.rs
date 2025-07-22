@@ -68,7 +68,7 @@ fn main() {
     // Create a convolutional layer
     println!("\nCreating and using a convolutional layer:");
 
-    let filters = Array::<f64, _>::ones((3, 3, 1, 6));
+    let filters = Array::<f64>::ones((3, 3, 1, 6));
     println!("Filters shape: {:?}", filters.shape());
 
     let conv = Conv2D::new(
@@ -83,7 +83,7 @@ fn main() {
     println!("Created convolutional layer: {}", conv.name());
 
     // Create a 4D input (batch_size, height, width, channels)
-    let input_4d = Array::<f64, _>::ones((1, 28, 28, 1));
+    let input_4d = Array::<f64>::ones((1, 28, 28, 1));
     println!("Input shape: {:?}", input_4d.shape());
 
     // Forward pass through convolutional layer

@@ -370,10 +370,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> LocalExplainer<F> {
             let mut test_instance = self.generate_test_instance(instance, feature_idx, i)?;
             test_instance[feature_idx] = instance[feature_idx]; // Keep anchor feature fixed
 
-            let prediction = model(&test_instance.insert_axis(Axis(0)).view())[0];
+            let _prediction = model(&test_instance.insert_axis(Axis(0)).view())[0];
 
-            // Check if prediction is similar to original (within some tolerance)
-            if (prediction - original_prediction).abs() < F::from(0.1).unwrap() {
+            // Check if _prediction is similar to original (within some tolerance)
+            if (_prediction - original_prediction).abs() < F::from(0.1).unwrap() {
                 correct_predictions += 1;
             }
         }
@@ -402,7 +402,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> LocalExplainer<F> {
         Ok(test_instance)
     }
 
-    fn compute_anchor_coverage(&self, _instance: &ArrayView1<F>, _feature_idx: usize) -> Result<F> {
+    fn compute_anchor_coverage(&self_instance: &ArrayView1<F>, _feature_idx: usize) -> Result<F> {
         // Simplified coverage computation
         Ok(F::from(0.5).unwrap())
     }

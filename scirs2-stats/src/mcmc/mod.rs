@@ -14,7 +14,7 @@ mod hamiltonian;
 mod metropolis;
 
 pub use advanced::*;
-pub use enhanced_hamiltonian::*;
+pub use enhanced__hamiltonian::*;
 pub use gibbs::*;
 pub use hamiltonian::*;
 pub use metropolis::*;

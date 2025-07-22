@@ -1,14 +1,16 @@
 //! Adaptive multitaper spectral estimation.
 
-use super::utils::compute_fft;
-use super::windows::dpss;
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
-// PI is only used in doc examples
-use num_complex::Complex64;
+use rand::Rng;
 use std::fmt::Debug;
+use super::utils::compute_fft;
+use super::windows::dpss;
 
+#[allow(unused_imports)]
+// PI is only used in doc examples
 /// Compute multitaper spectral density estimate with adaptively weighted spectra.
 ///
 /// This function uses the method of Thomson (1982) to adaptively weight the
@@ -31,7 +33,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::multitaper::adaptive_psd;
+/// use scirs2__signal::multitaper::adaptive_psd;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sinusoid with noise)

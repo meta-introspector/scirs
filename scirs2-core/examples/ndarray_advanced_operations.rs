@@ -6,9 +6,9 @@ use scirs2_core::ndarray_ext::manipulation::{
 };
 
 #[allow(dead_code)]
-fn print_section(title: &str) {
+fn title( &str) {
     println!("\n{title}");
-    println!("{}", "=".repeat(title.len()));
+    println!("{}", "=".repeat(_title.len()));
 }
 
 #[allow(dead_code)]
@@ -22,7 +22,7 @@ fn main() {
     let c = array![[5, 2, 3], [4, 1, 6]];
 
     // Demonstrate meshgrid
-    print_section("Meshgrid");
+    print_section(Meshgrid);
 
     let x = array![1, 2, 3];
     let y = array![4, 5];
@@ -129,7 +129,7 @@ fn main() {
     print_section("Complete Example: Gradient Magnitude");
 
     // Create a sample 2D function (like an image)
-    let img: Array<f64, _> = Array::from_shape_fn((5, 5), |(i, j)| {
+    let img: Array<f64_> = Array::from_shape_fn((5, 5), |(i, j)| {
         if i > 1 && i < 4 && j > 1 && j < 4 {
             10.0 // Higher value in the center
         } else {

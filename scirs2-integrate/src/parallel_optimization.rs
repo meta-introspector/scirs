@@ -110,24 +110,24 @@ pub enum BackoffStrategy {
 /// Trait for parallel tasks
 pub trait ParallelTask: Send {
     /// Execute the task
-    fn execute(&mut self) -> ParallelResult;
+    fn execute() -> ParallelResult;
 
     /// Estimate computational cost
     fn estimated_cost(&self) -> f64;
 
     /// Check if task can be subdivided
-    fn can_subdivide(&self) -> bool;
+    fn can_subdivide() -> bool;
 
     /// Subdivide task into smaller tasks
-    fn subdivide(self: Box<Self>) -> Vec<Box<dyn ParallelTask + Send>>;
+    fn subdivide(_self: Box<Self>) -> Vec<Box<dyn ParallelTask + Send>>;
 
     /// Get task priority
-    fn priority(&self) -> TaskPriority {
+    fn priority() -> TaskPriority {
         TaskPriority::Normal
     }
 
     /// Get preferred NUMA node
-    fn preferred_numa_node(&self) -> Option<usize> {
+    fn preferred_numa_node() -> Option<usize> {
         None
     }
 }
@@ -260,9 +260,9 @@ pub struct CachePerformanceMetrics {
 
 impl ParallelOptimizer {
     /// Create new parallel optimizer
-    pub fn new(num_threads: usize) -> Self {
+    pub fn new(_num_threads: usize) -> Self {
         Self {
-            num_threads,
+            _num_threads,
             thread_pool: None,
             numa_info: NumaTopology::detect(),
             load_balancer: LoadBalancingStrategy::Adaptive,
@@ -271,7 +271,7 @@ impl ParallelOptimizer {
     }
 
     /// Initialize thread pool
-    pub fn initialize(&mut self) -> IntegrateResult<()> {
+    pub fn initialize(&self) -> IntegrateResult<()> {
         let thread_pool = ThreadPool::new(self.num_threads, &self.work_stealing_config)?;
         self.thread_pool = Some(thread_pool);
         Ok(())
@@ -516,7 +516,6 @@ impl ParallelOptimizer {
         input: &ArrayView2<F>,
         op: ReductionOp,
     ) -> IntegrateResult<Array2<F>> {
-        use ReductionOp::*;
 
         let result_value = match op {
             Sum => input.sum(),
@@ -537,7 +536,7 @@ impl ParallelOptimizer {
 
 impl NumaTopology {
     /// Detect NUMA topology
-    pub fn detect() -> Self {
+    pub fn detect(&self) -> Self {
         // Simplified NUMA detection - in practice would use hwloc or similar
         let num_cores = thread::available_parallelism()
             .map(|n| n.get())
@@ -561,7 +560,7 @@ impl NumaTopology {
 }
 
 impl Default for WorkStealingConfig {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             max_steal_attempts: 10,
             steal_ratio: 0.5,
@@ -576,7 +575,7 @@ impl Default for WorkStealingConfig {
 
 impl ThreadPool {
     /// Create new thread pool
-    pub fn new(num_threads: usize, _config: &WorkStealingConfig) -> IntegrateResult<Self> {
+    pub fn new(_num_threads: usize, _config: &WorkStealingConfig) -> IntegrateResult<Self> {
         let task_queue = Arc::new(Mutex::new(TaskQueue {
             global_tasks: Vec::new(),
             pending_tasks: 0,
@@ -715,8 +714,7 @@ impl ThreadPool {
     }
 
     /// Shutdown the thread pool and wait for all threads to complete
-    pub fn shutdown(mut self) -> IntegrateResult<()> {
-        use std::sync::atomic::Ordering;
+    pub fn shutdown(&mut self) -> IntegrateResult<()> {
 
         // Signal all threads to shutdown
         self.shutdown.store(1, Ordering::Relaxed);
@@ -742,12 +740,12 @@ impl ThreadPool {
         global_queue: &Arc<Mutex<TaskQueue>>,
     ) -> Option<Box<dyn ParallelTask + Send>> {
         // In a full implementation, we'd need access to other workers' queues
-        // For now, increment steal attempts counter and try global queue again
+        // For now, increment steal attempts counter and try global _queue again
         if let Ok(mut local_q) = local_queue.lock() {
             local_q.steals_attempted += 1;
         }
 
-        // Try global queue one more time as fallback
+        // Try global _queue one more time as fallback
         if let Ok(mut global_q) = global_queue.lock() {
             let task = global_q.global_tasks.pop();
             if task.is_some() {
@@ -769,7 +767,6 @@ impl ThreadPool {
         global_queue: Arc<Mutex<TaskQueue>>,
         shutdown: Arc<AtomicUsize>,
     ) {
-        use std::sync::atomic::Ordering;
 
         loop {
             // Check for shutdown signal
@@ -777,13 +774,13 @@ impl ThreadPool {
                 break;
             }
 
-            // Try to get a task from local queue first
+            // Try to get a task from local _queue first
             let mut task_option = None;
             if let Ok(mut local_q) = local_queue.lock() {
                 task_option = local_q.tasks.pop();
             }
 
-            // If no local task, try global queue
+            // If no local task, try global _queue
             if task_option.is_none() {
                 if let Ok(mut global_q) = global_queue.lock() {
                     task_option = global_q.global_tasks.pop();
@@ -812,7 +809,6 @@ impl ThreadPool {
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
-        use std::sync::atomic::Ordering;
 
         // Signal shutdown
         self.shutdown.store(1, Ordering::Relaxed);
@@ -831,7 +827,6 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
         // Perform actual vectorized computation based on operation type
         let result: Array2<F> = match &self.operation {
             VectorOperation::ElementWise(op) => {
-                use ArithmeticOp::*;
                 match op {
                     Add(value) => self.input.mapv(|x| x + F::from(*value).unwrap()),
                     Multiply(value) => self.input.mapv(|x| x * F::from(*value).unwrap()),
@@ -858,7 +853,6 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
                 result
             }
             VectorOperation::Reduction(op) => {
-                use ReductionOp::*;
                 let result_value = match op {
                     Sum => self.input.sum(),
                     Product => self.input.fold(F::one(), |acc, &x| acc * x),
@@ -887,27 +881,27 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
         self.input.nrows() > self.chunk_size * 2
     }
 
-    fn subdivide(self: Box<Self>) -> Vec<Box<dyn ParallelTask + Send>> {
+    fn subdivide(_self: Box<Self>) -> Vec<Box<dyn ParallelTask + Send>> {
         // Only subdivide if the task is large enough and can benefit from parallelization
-        if self.input.len() < self.chunk_size * 2 {
-            return vec![self];
+        if _self.input.len() < _self.chunk_size * 2 {
+            return vec![_self];
         }
 
-        let num_chunks = self.input.nrows().div_ceil(self.chunk_size);
+        let num_chunks = _self.input.nrows().div_ceil(_self.chunk_size);
         let mut subtasks = Vec::with_capacity(num_chunks);
 
         for i in 0..num_chunks {
-            let start_row = i * self.chunk_size;
-            let end_row = ((i + 1) * self.chunk_size).min(self.input.nrows());
+            let start_row = i * _self.chunk_size;
+            let end_row = ((i + 1) * _self.chunk_size).min(_self.input.nrows());
 
-            if start_row < self.input.nrows() {
-                let chunk = self.input.slice(s![start_row..end_row, ..]).to_owned();
+            if start_row < _self.input.nrows() {
+                let chunk = _self.input.slice(s![start_row..end_row, ..]).to_owned();
 
                 let subtask = VectorizedComputeTask {
                     input: chunk,
-                    operation: self.operation.clone(),
-                    chunk_size: self.chunk_size,
-                    prefer_simd: self.prefer_simd,
+                    operation: _self.operation.clone(),
+                    chunk_size: _self.chunk_size,
+                    prefer_simd: _self.prefer_simd,
                 };
 
                 subtasks.push(Box::new(subtask) as Box<dyn ParallelTask + Send>);
@@ -915,7 +909,7 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
         }
 
         if subtasks.is_empty() {
-            vec![self]
+            vec![_self]
         } else {
             subtasks
         }
@@ -924,7 +918,6 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_parallel_optimizer_creation() {

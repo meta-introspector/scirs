@@ -11,6 +11,7 @@ use crate::unconstrained::utils::check_convergence;
 use crate::unconstrained::Options;
 use ndarray::{Array1, ArrayView1};
 use std::collections::VecDeque;
+use std::path::PathBuf;
 
 /// Memory optimization options for large-scale problems
 #[derive(Debug, Clone)]
@@ -52,10 +53,10 @@ struct MemoryPool {
 }
 
 impl MemoryPool {
-    fn new(max_size: usize) -> Self {
+    fn new(_max_size: usize) -> Self {
         Self {
             array_pool: VecDeque::new(),
-            max_pool_size: max_size,
+            max_pool_size: _max_size,
         }
     }
 
@@ -87,8 +88,8 @@ struct StreamingGradient {
 }
 
 impl StreamingGradient {
-    fn new(chunk_size: usize, eps: f64) -> Self {
-        Self { chunk_size, eps }
+    fn new(_chunk_size: usize, eps: f64) -> Self {
+        Self { _chunk_size, eps }
     }
 
     /// Compute gradient using chunked finite differences
@@ -366,7 +367,7 @@ fn compute_lbfgs_direction_memory_efficient(
     let mut q = get_array_from_pool(memory_pool, n, |_| g.clone());
     let mut alpha = vec![0.0; m];
 
-    // First loop: backward through history
+    // First loop: backward through _history
     for i in (0..m).rev() {
         let rho_i = 1.0 / y_history[i].dot(&s_history[i]);
         alpha[i] = rho_i * s_history[i].dot(&q);
@@ -385,7 +386,7 @@ fn compute_lbfgs_direction_memory_efficient(
     let mut r = get_array_from_pool(memory_pool, n, |_| gamma * &q);
     return_array_to_pool(memory_pool, q);
 
-    // Second loop: forward through history
+    // Second loop: forward through _history
     for i in 0..m {
         let rho_i = 1.0 / y_history[i].dot(&s_history[i]);
         let beta = rho_i * y_history[i].dot(&r);
@@ -411,13 +412,13 @@ where
     F: FnOnce(usize) -> Array1<f64>,
 {
     match memory_pool {
-        Some(pool) => {
-            let mut array = pool.get_array(size);
+        Some(_pool) => {
+            let mut array = _pool.get_array(size);
             if array.len() != size {
                 array = Array1::zeros(size);
             }
             let result = init_fn(size);
-            pool.return_array(array);
+            _pool.return_array(array);
             result
         }
         None => init_fn(size),
@@ -426,11 +427,11 @@ where
 
 /// Return array to memory pool
 #[allow(dead_code)]
-fn return_array_to_pool(memory_pool: &mut Option<MemoryPool>, array: Array1<f64>) {
-    if let Some(pool) = memory_pool {
-        pool.return_array(array);
+fn return_array_to_pool(_memory_pool: &mut Option<MemoryPool>, array: Array1<f64>) {
+    if let Some(_pool) = _memory_pool {
+        _pool.return_array(array);
     }
-    // If no pool, array will be dropped normally
+    // If no _pool, array will be dropped normally
 }
 
 /// Compute dot product in chunks to reduce memory usage
@@ -451,13 +452,13 @@ fn chunked_dot_product(a: &Array1<f64>, b: &Array1<f64>, chunk_size: usize) -> f
 
 /// Compute array norm in chunks to reduce memory usage
 #[allow(dead_code)]
-fn array_norm_chunked(array: &Array1<f64>, chunk_size: usize) -> f64 {
-    let n = array.len();
+fn array_norm_chunked(_array: &Array1<f64>, chunk_size: usize) -> f64 {
+    let n = _array.len();
     let mut sum_sq = 0.0;
 
     for chunk_start in (0..n).step_by(chunk_size) {
         let chunk_end = std::cmp::min(chunk_start + chunk_size, n);
-        let chunk = array.slice(ndarray::s![chunk_start..chunk_end]);
+        let chunk = _array.slice(ndarray::s![chunk_start..chunk_end]);
         sum_sq += chunk.mapv(|x| x.powi(2)).sum();
     }
 
@@ -468,12 +469,12 @@ fn array_norm_chunked(array: &Array1<f64>, chunk_size: usize) -> f64 {
 #[allow(dead_code)]
 fn estimate_memory_usage(n: usize, max_history: usize) -> usize {
     // Size of f64 in bytes
-    const F64_SIZE: usize = std::mem::size_of::<f64>();
+    const F64_SIZE: usize = std::mem::size, _of::<f64>();
 
     // Current point and gradient
     let current_vars = 2 * n * F64_SIZE;
 
-    // L-BFGS history (s and y vectors)
+    // L-BFGS _history (s and y vectors)
     let history_size = 2 * max_history * n * F64_SIZE;
 
     // Temporary arrays for computation
@@ -493,13 +494,13 @@ pub fn create_memory_efficient_optimizer(
     // Estimate parameters based on available memory
     let max_history = std::cmp::min(
         20,
-        available_bytes / (2 * problem_size * std::mem::size_of::<f64>() * 4),
+        available_bytes / (2 * problem_size * std::mem::_size_of::<f64>() * 4),
     )
     .max(1);
 
     let chunk_size = std::cmp::min(
         problem_size,
-        std::cmp::max(64, available_bytes / (8 * std::mem::size_of::<f64>())),
+        std::cmp::max(64, available_bytes / (8 * std::mem::_size_of::<f64>())),
     );
 
     MemoryOptions {

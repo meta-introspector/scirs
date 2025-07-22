@@ -11,18 +11,18 @@ pub mod student_t;
 pub mod wishart;
 
 pub use dirichlet::Dirichlet;
-pub use inverse_wishart::InverseWishart;
+pub use inverse__wishart::InverseWishart;
 pub use multinomial::Multinomial;
-pub use multivariate_lognormal::MultivariateLognormal;
+pub use multivariate__lognormal::MultivariateLognormal;
 pub use normal::MultivariateNormal;
-pub use student_t::MultivariateT;
+pub use student__t::MultivariateT;
 pub use wishart::Wishart;
 
 // Re-export convenience functions
 pub use dirichlet::dirichlet;
-pub use inverse_wishart::inverse_wishart;
+pub use inverse__wishart::inverse_wishart;
 pub use multinomial::multinomial;
-pub use multivariate_lognormal::multivariate_lognormal;
+pub use multivariate__lognormal::multivariate_lognormal;
 pub use normal::multivariate_normal;
-pub use student_t::multivariate_t;
+pub use student__t::multivariate_t;
 pub use wishart::wishart;

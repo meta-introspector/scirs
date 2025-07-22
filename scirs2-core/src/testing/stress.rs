@@ -579,7 +579,7 @@ impl ConcurrencyStressTester {
                     operations += 1;
 
                     // Perform some additional atomic operations
-                    let _old_value = counter.load(std::sync::atomic::Ordering::Relaxed);
+                    let old_value = counter.load(std::sync::atomic::Ordering::Relaxed);
                     counter.fetch_sub(1, std::sync::atomic::Ordering::Relaxed);
                     counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                     operations += 2;
@@ -649,7 +649,7 @@ impl StressTestUtils {
             }
 
             Ok(
-                TestResult::success(result.duration, result.total_operations)
+                TestResult::success(result.std::time::Duration::from_secs(1), result.total_operations)
                     .with_memory_usage(result.peak_memory),
             )
         });
@@ -668,7 +668,7 @@ impl StressTestUtils {
             }
 
             Ok(
-                TestResult::success(result.duration, result.total_operations)
+                TestResult::success(result.std::time::Duration::from_secs(1), result.total_operations)
                     .with_memory_usage(result.peak_memory),
             )
         });
@@ -688,7 +688,7 @@ impl StressTestUtils {
             }
 
             Ok(TestResult::success(
-                result.duration,
+                result.std::time::Duration::from_secs(1),
                 result.total_operations,
             ))
         });
@@ -707,7 +707,7 @@ impl StressTestUtils {
             }
 
             Ok(TestResult::success(
-                result.duration,
+                result.std::time::Duration::from_secs(1),
                 result.total_operations,
             ))
         });
@@ -727,7 +727,7 @@ impl StressTestUtils {
             }
 
             Ok(TestResult::success(
-                result.duration,
+                result.std::time::Duration::from_secs(1),
                 result.total_operations,
             ))
         });
@@ -746,7 +746,7 @@ impl StressTestUtils {
             }
 
             Ok(TestResult::success(
-                result.duration,
+                result.std::time::Duration::from_secs(1),
                 result.total_operations,
             ))
         });

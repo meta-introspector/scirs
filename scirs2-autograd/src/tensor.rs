@@ -19,7 +19,7 @@ use std::ops::{Add, Div, Mul, Sub};
 ///   - cheap to `Copy`
 ///   - Lazily evaluated to [ndarray::Array], i.e. the value is obtained only after call `Tensor::eval`, `Evaluator::run`, or `Optimizer::update`.
 /// - `Tensor` belongs to a particular [Graph] and is shorter lived than the graph
-///   - Note the lifetime parameter: `Tensor<'graph, _>`
+///   - Note the lifetime parameter: `Tensor<'graph_>`
 ///   - The graph is always wrapped in [Context]
 /// - `Tensor` can behave as a trainable variable when in-place operations are applied
 ///   - See [crate::variable]
@@ -47,7 +47,7 @@ use std::ops::{Add, Div, Mul, Sub};
 ///     // Evaluating multiple tensors at once.
 ///     // Note that although `random` node is required two times in this computation graph,
 ///     // it's evaluated only once since `Evaluator` is smart enough to avoid duplicated computations.
-///     let pair: Vec<Result<NdArray, _>> = ctx.evaluator().extend(&[mul, reshaped]).run();
+///     let pair: Vec<Result<NdArray>> = ctx.evaluator().extend(&[mul, reshaped]).run();
 /// });
 ///    ```
 #[derive(Clone, Copy)]
@@ -56,7 +56,7 @@ pub struct Tensor<'graph, F: Float> {
     pub(crate) graph: &'graph Graph<F>,
 }
 
-impl<F: Float> std::fmt::Debug for Tensor<'_, F> {
+impl<F: Float> + std::fmt::Debug for Tensor<'_, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Tensor")
             .field("id", &self.id)
@@ -159,10 +159,10 @@ impl<'graph, F: Float> Tensor<'graph, F> {
 
     /// Creates a new [TensorBuilder](struct.TensorBuilder.html).
     #[inline]
-    pub fn builder(graph: &'graph impl AsGraph<F>) -> TensorBuilder<'graph, F> {
+    pub fn builder(_graph: &'graph impl AsGraph<F>) -> TensorBuilder<'graph, F> {
         // Starts with default values
         TensorBuilder {
-            graph: graph.as_graph(),
+            _graph: _graph.as_graph(),
             shape: None,
             in_nodes: SmallVec::new(),
             differentiable: true,
@@ -178,7 +178,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     /// Useful in cases where you need to create a tensor using a run-time value of `x`.
     ///    ```
     /// use scirs2_autograd as ag;
-    /// use ag::tensor_ops::*;
+    /// use ag::tensor__ops::*;
     ///
     /// ag::run(|g| {
     ///     let x: ag::Tensor<f32> = standard_uniform(&[2, 3], g);
@@ -195,7 +195,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     ///
     ///    ```
     /// use scirs2_autograd as ag;
-    /// use ag::tensor_ops::*;
+    /// use ag::tensor__ops::*;
     ///
     /// ag::run(|g| {
     ///     let a: ag::Tensor<f32> = zeros(&[4, 2], g).register_hook(ag::hooks::Show);
@@ -222,7 +222,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     ///
     ///    ```
     /// use scirs2_autograd as ag;
-    /// use ag::tensor_ops::*;
+    /// use ag::tensor__ops::*;
     ///
     /// ag::run(|g| {
     ///     let a: ag::Tensor<f32> = zeros(&[4, 2], g).show();
@@ -242,7 +242,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     ///
     ///    ```
     /// use scirs2_autograd as ag;
-    /// use ag::tensor_ops::*;
+    /// use ag::tensor__ops::*;
     ///
     /// ag::run(|g| {
     ///     let a: ag::Tensor<f32> = zeros(&[4, 2], g).show_prefixed("My value:");
@@ -264,7 +264,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     ///
     ///    ```
     /// use scirs2_autograd as ag;
-    /// use ag::tensor_ops::*;
+    /// use ag::tensor__ops::*;
     ///
     /// ag::run(|g| {
     ///     let a: ag::Tensor<f32> = zeros(&[2, 3], g).show_shape();
@@ -281,7 +281,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     ///
     ///    ```
     /// use scirs2_autograd as ag;
-    /// use ag::tensor_ops::*;
+    /// use ag::tensor__ops::*;
     ///
     /// ag::run(|g| {
     ///     let a: ag::Tensor<f32> = zeros(&[2, 3], g).show_prefixed_shape("My shape:");
@@ -299,7 +299,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     ///
     ///    ```
     /// use scirs2_autograd as ag;
-    /// use ag::tensor_ops::*;
+    /// use ag::tensor__ops::*;
     ///
     /// ag::run(|g| {
     ///     let a: ag::Tensor<f32> = zeros(&[2, 3], g).print("This is `a`");
@@ -316,7 +316,7 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     ///
     ///    ```
     /// use scirs2_autograd as ag;
-    /// use ag::tensor_ops::*;
+    /// use ag::tensor__ops::*;
     ///
     /// ag::run(|g| {
     ///     let a: ag::Tensor<f32> = zeros(&[2, 3], g)
@@ -439,8 +439,8 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     }
 
     /// Creates a tensor from a vector of data and shape.
-    pub fn from_vec(data: Vec<F>, shape: Vec<usize>, graph: &'graph Graph<F>) -> Tensor<'graph, F> {
-        let array = match NdArray::from_shape_vec(ndarray::IxDyn(&shape), data) {
+    pub fn from_vec(_data: Vec<F>, shape: Vec<usize>, graph: &'graph Graph<F>) -> Tensor<'graph, F> {
+        let array = match NdArray::from_shape_vec(ndarray::IxDyn(&shape), _data) {
             Ok(arr) => arr,
             Err(_) => NdArray::zeros(ndarray::IxDyn(&shape)),
         };
@@ -568,7 +568,7 @@ impl<F: Float> TensorInternal<F> {
     }
 }
 
-impl<T: Float> fmt::Debug for TensorInternal<T> {
+impl<T: Float>, fmt::Debug for TensorInternal<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -607,7 +607,7 @@ impl<T: Float> AsRef<TensorInternal<T>> for TensorInternal<T> {
     }
 }
 
-impl<T: Float> fmt::Display for TensorInternal<T> {
+impl<T: Float>, fmt::Display for TensorInternal<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "name={}", self.get_op().name(),)
     }
@@ -631,9 +631,9 @@ pub(crate) struct IncomingTensor {
 impl<'graph> IncomingTensor {
     /// Instantiates a new immutable `IncomingTensor`.
     #[inline]
-    pub(crate) fn new<F: Float>(val: &Tensor<'graph, F>, array_selector: usize) -> IncomingTensor {
+    pub(crate) fn new<F: Float>(_val: &Tensor<'graph, F>, array_selector: usize) -> IncomingTensor {
         IncomingTensor {
-            id: val.id(),
+            id: _val.id(),
             allow_mut: false,
             array_selector,
         }
@@ -670,15 +670,15 @@ impl<'graph> IncomingTensor {
 ///    ```
 /// use scirs2_autograd as ag;
 /// use ag::op::{Op, OpError, ComputeContext, GradientContext};
-/// use ag::tensor_ops::*;
+/// use ag::tensor__ops::*;
 ///
 /// struct DummyOp {
 ///    a: f32
 /// }
 ///
 /// impl Op<f32> for DummyOp {
-///     fn compute(&self, _: &mut ComputeContext<f32>) -> Result<(), OpError> { Ok(()) }
-///     fn grad(&self, _: &mut GradientContext<f32>) {}
+///     fn compute(&self_: &mut ComputeContext<f32>) -> Result<(), OpError> { Ok(()) }
+///     fn grad(&self_: &mut GradientContext<f32>) {}
 /// }
 ///
 /// ag::run(|g: &mut ag::Context<f32>| {
@@ -710,18 +710,18 @@ pub(crate) struct KnownShape {
 }
 
 impl KnownShape {
-    pub(crate) fn new(shape: &[isize]) -> Self {
+    pub(crate) fn new(_shape: &[isize]) -> Self {
         let mut is_fully_defined = true;
-        for &a in shape {
+        for &a in _shape {
             if a == -1 {
                 is_fully_defined = false;
             } else if a <= -1 || a == 0 {
-                panic!("Given shape ({:?}) contains invalid dim size(s)", &shape);
+                panic!("Given _shape ({:?}) contains invalid dim size(s)", &_shape);
             }
         }
 
         Self {
-            shape: ShapeVec::from(shape),
+            _shape: ShapeVec::from(_shape),
             is_fully_defined,
         }
     }
@@ -890,11 +890,11 @@ impl<'graph, F: Float> TensorBuilder<'graph, F> {
 #[allow(dead_code)]
 pub(crate) struct Dummy;
 
-impl<T: Float> op::Op<T> for Dummy {
-    fn compute(&self, _: &mut op::ComputeContext<T>) -> Result<(), OpError> {
+impl<T: Float>, op::Op<T> for Dummy {
+    fn compute(&self_: &mut op::ComputeContext<T>) -> Result<(), OpError> {
         Ok(())
     }
-    fn grad(&self, _: &mut GradientContext<T>) {}
+    fn grad(&self_: &mut GradientContext<T>) {}
 }
 
 use crate::tensor_ops as T;
@@ -1003,7 +1003,7 @@ pub trait AsTensor<'graph, F: Float> {
 }
 
 impl<'graph, F: Float> AsTensor<'graph, F> for Tensor<'graph, F> {
-    fn as_tensor(&self, _: &'graph impl AsGraph<F>) -> Tensor<'graph, F> {
+    fn as_tensor(&self_: &'graph impl AsGraph<F>) -> Tensor<'graph, F> {
         *self
     }
 }

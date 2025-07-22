@@ -6,10 +6,10 @@
 //! 3. Extract feature points and compute descriptors
 
 use image::DynamicImage;
-use scirs2_vision::feature::{
+use scirs2__vision::feature::{
     canny_simple, detect_and_compute, extract_feature_coordinates, harris_corners, sobel_edges,
 };
-use scirs2_vision::preprocessing::{gaussian_blur, normalize_brightness};
+use scirs2__vision::preprocessing::{gaussian_blur, normalize_brightness};
 use std::path::PathBuf;
 
 #[allow(dead_code)]
@@ -56,10 +56,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn process_image(img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
+fn process_image(_img: &DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
     // 1. Preprocess the image
     println!("Preprocessing image...");
-    let normalized = normalize_brightness(img, 0.0, 1.0)?;
+    let normalized = normalize_brightness(_img, 0.0, 1.0)?;
     let blurred = gaussian_blur(&normalized, 1.0)?;
 
     // 2. Detect edges using Sobel

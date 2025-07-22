@@ -28,7 +28,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_cluster::advanced_clustering::{AdvancedClusterer, QuantumNeuromorphicCluster};
+//! use scirs2__cluster::advanced_clustering::{AdvancedClusterer, QuantumNeuromorphicCluster};
 //! use ndarray::array;
 //!
 //! // AI-driven Advanced clustering
@@ -47,16 +47,17 @@
 //! ```
 
 use crate::error::{ClusteringError, Result};
-use crate::quantum_clustering::{QAOAConfig, VQEConfig};
+use crate::quantum__clustering::{QAOAConfig, VQEConfig};
 use crate::vq::euclidean_distance;
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_complex::Complex64;
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use num__complex::Complex64;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 use std::time::Instant;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use statrs::statistics::Statistics;
 
 /// Advanced clusterer with AI-driven quantum-neuromorphic algorithms
 #[derive(Debug)]
@@ -394,8 +395,7 @@ impl AdvancedClusterer {
         match algorithm {
             "quantum_neuromorphic_kmeans" => 3.5,
             "ai_adaptive_clustering" => 2.8,
-            "meta_learned_clustering" => 2.2,
-            _ => 1.0,
+            "meta_learned_clustering" => 2.2_ => 1.0,
         }
     }
 
@@ -499,7 +499,7 @@ impl AIClusteringSelector {
         let best_algorithm = predicted_performance
             .iter()
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(alg, _)| alg.clone())
+            .map(|(alg_)| alg.clone())
             .unwrap_or_else(|| "quantum_neuromorphic_kmeans".to_string());
 
         Ok(best_algorithm)
@@ -1092,7 +1092,7 @@ impl QuantumNeuromorphicProcessor {
             let momentum_uncertainty = 1.0 / coherence.max(0.1); // Heisenberg-like principle
 
             // Feature space uncertainty
-            let feature_variance = point.var(0.0);
+            let feature_variance = point.variance();
             let uncertainty = momentum_uncertainty * feature_variance.sqrt();
 
             // Normalize uncertainty
@@ -1476,17 +1476,17 @@ impl MetaLearningClusterOptimizer {
         embedding[0] = data.nrows() as f64;
         embedding[1] = data.ncols() as f64;
         embedding[2] = data.mean().unwrap_or(0.0);
-        embedding[3] = data.var(0.0).mean().unwrap_or(0.0);
+        embedding[3] = data.variance().mean().unwrap_or(0.0);
         // ... additional features
         embedding
     }
 
     fn find_similar_tasks(&self, task_embedding: &Array1<f64>) -> Vec<String> {
-        // Find similar tasks based on embedding similarity
+        // Find similar tasks based on _embedding similarity
         self.task_embeddings
             .iter()
-            .filter_map(|(task_id, embedding)| {
-                let similarity = self.cosine_similarity(task_embedding, embedding);
+            .filter_map(|(task_id, _embedding)| {
+                let similarity = self.cosine_similarity(task_embedding_embedding);
                 if similarity > 0.8 {
                     Some(task_id.clone())
                 } else {
@@ -1642,10 +1642,7 @@ impl ContinualAdaptationEngine {
         Self
     }
     pub fn adapt_to_results(
-        &mut self,
-        _data: &ArrayView2<f64>,
-        _clusters: &Array1<usize>,
-        _metrics: &QuantumNeuromorphicMetrics,
+        &mut self_data: &ArrayView2<f64>, _clusters: &Array1<usize>, _metrics: &QuantumNeuromorphicMetrics,
     ) -> Result<()> {
         Ok(())
     }
@@ -1678,9 +1675,7 @@ impl FewShotClusterLearner {
         Self
     }
     pub fn adapt_parameters(
-        &self,
-        _similar_tasks: &[String],
-        _data: &ArrayView2<f64>,
+        &self, _similar_tasks: &[String], _data: &ArrayView2<f64>,
     ) -> Result<OptimizationParameters> {
         Ok(OptimizationParameters::default())
     }

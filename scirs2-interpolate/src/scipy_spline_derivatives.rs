@@ -92,8 +92,8 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
         axis: i32,
     ) -> InterpolateResult<Self> {
         let inner = match &bc_type {
-            SciPyBoundaryType::Natural => CubicSpline::new(x, y)?,
-            SciPyBoundaryType::NotAKnot => CubicSpline::new_not_a_knot(x, y)?,
+            SciPyBoundaryType::Natural =>, CubicSpline::new(x, y)?,
+            SciPyBoundaryType::NotAKnot =>, CubicSpline::new_not_a_knot(x, y)?,
             SciPyBoundaryType::Clamped((left, right)) => {
                 let left_deriv = T::from_f64(*left).ok_or_else(|| {
                     InterpolateError::ComputationError(
@@ -107,7 +107,7 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
                 })?;
                 CubicSpline::new_clamped(x, y, left_deriv, right_deriv)?
             }
-            SciPyBoundaryType::Periodic => CubicSpline::new_periodic(x, y)?,
+            SciPyBoundaryType::Periodic =>, CubicSpline::new_periodic(x, y)?,
             SciPyBoundaryType::SecondDerivative((left, right)) => {
                 let left_d2 = T::from_f64(*left).ok_or_else(|| {
                     InterpolateError::ComputationError(
@@ -144,7 +144,7 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     /// # Example
     /// ```rust
     /// use ndarray::array;
-    /// use scirs2_interpolate::scipy_spline_derivatives::{SciPyCompatibleCubicSpline, SciPyBoundaryType};
+    /// use scirs2__interpolate::scipy_spline_derivatives::{SciPyCompatibleCubicSpline, SciPyBoundaryType};
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
@@ -180,7 +180,7 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     /// # Example
     /// ```rust
     /// use ndarray::array;
-    /// use scirs2_interpolate::scipy_spline_derivatives::{SciPyCompatibleCubicSpline, SciPyBoundaryType};
+    /// use scirs2__interpolate::scipy_spline_derivatives::{SciPyCompatibleCubicSpline, SciPyBoundaryType};
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
@@ -218,7 +218,7 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
     /// # Example
     /// ```rust
     /// use ndarray::array;
-    /// use scirs2_interpolate::scipy_spline_derivatives::{SciPyCompatibleCubicSpline, SciPyBoundaryType};
+    /// use scirs2__interpolate::scipy_spline_derivatives::{SciPyCompatibleCubicSpline, SciPyBoundaryType};
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0];
@@ -332,9 +332,9 @@ impl<T: InterpolationFloat + std::ops::MulAssign + std::ops::DivAssign + std::op
     SciPyCompatibleBSpline<T>
 {
     /// Create a new SciPy-compatible BSpline
-    pub fn new(inner: BSpline<T>, extrapolate: bool, axis: i32) -> Self {
+    pub fn new(_inner: BSpline<T>, extrapolate: bool, axis: i32) -> Self {
         Self {
-            inner,
+            _inner,
             extrapolate,
             axis,
         }
@@ -693,11 +693,11 @@ where
 
 /// Create a SciPy-compatible BSpline
 #[allow(dead_code)]
-pub fn make_scipy_bspline<T>(inner: BSpline<T>, extrapolate: bool) -> SciPyCompatibleBSpline<T>
+pub fn make_scipy_bspline<T>(_inner: BSpline<T>, extrapolate: bool) -> SciPyCompatibleBSpline<T>
 where
     T: InterpolationFloat + std::ops::MulAssign + std::ops::DivAssign + std::ops::RemAssign,
 {
-    SciPyCompatibleBSpline::new(inner, extrapolate, 0)
+    SciPyCompatibleBSpline::new(_inner, extrapolate, 0)
 }
 
 /// Create a SciPy-compatible PPoly from coefficients and breakpoints

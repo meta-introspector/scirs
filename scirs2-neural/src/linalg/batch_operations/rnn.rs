@@ -46,7 +46,7 @@ type AdamUpdateReturn<F, D> = (Array<F, D>, Array<F, D>, Array<F, D>);
 /// let b_ih = Array::from_shape_fn(4 * hidden_size, |_| 0.1);
 /// let b_hh = Array::from_shape_fn(4 * hidden_size, |_| 0.1);
 /// // Forward pass
-/// let (h_next, c_next, _) = lstm_cell(
+/// let (h_next, c_next_) = lstm_cell(
 ///     &x.view(), &h_prev.view(), &c_prev.view(),
 ///     &w_ih.view(), &w_hh.view(), &b_ih.view(), &b_hh.view()
 /// ).unwrap();
@@ -159,7 +159,7 @@ fn sigmoid<F: Float>(x: F) -> F {
 /// let mut rng = StdRng::seed_from_u64(42);
 /// let (y_train, mask) = dropout(&x.view(), 0.5, &mut rng, true).unwrap();
 /// // Apply dropout in inference mode
-/// let (y_test, _) = dropout(&x.view(), 0.5, &mut rng, false).unwrap();
+/// let (y_test_) = dropout(&x.view(), 0.5, &mut rng, false).unwrap();
 /// // In inference mode, no elements should be dropped
 /// assert_eq!(y_test, x);
 #[allow(dead_code)]
@@ -351,8 +351,7 @@ pub fn adam_update<F, D>(
     Ok((w_new, m_new, v_new))
 // Helper function to zip three iterators for convenience
 #[allow(dead_code)]
-fn zip3<I1, I2, I3>(i1: I1, i2: I2, i3: I3) -> impl Iterator<Item = (I1::Item, I2::Item, I3::Item)>
-    I1: IntoIterator,
+fn zip3<I1, I2, I3>(_i1: I1, i2: I2, i3: I3) -> impl Iterator<Item = (I1::Item, I2::Item, I3::Item)>, I1: IntoIterator,
     I2: IntoIterator,
     I3: IntoIterator,
     i1.into_iter()

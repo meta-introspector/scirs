@@ -14,8 +14,8 @@ pub struct ExamplesDocsGenerator<'a> {
 }
 impl<'a> ExamplesDocsGenerator<'a> {
     /// Create a new examples and docs generator
-    pub fn new(config: &'a BindingConfig, output_dir: &'a PathBuf) -> Self {
-        Self { config, output_dir }
+    pub fn new(_config: &'a BindingConfig, output_dir: &'a PathBuf) -> Self {
+        Self { _config, output_dir }
     }
     /// Generate examples and documentation
     pub fn generate(&self) -> Result<(Vec<PathBuf>, Vec<PathBuf>)> {
@@ -121,14 +121,12 @@ INCLUDES = -I../include
 LIBS = -L../build -l{}
 TARGETS = basic_usage_c basic_usage_cpp
 .PHONY: all clean
-all: $(TARGETS)
-basic_usage_c: basic_usage.c
+all: $(TARGETS), basic_usage_c: basic_usage.c
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $< $(LIBS)
 basic_usage_cpp: basic_usage.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $< $(LIBS)
 clean:
-	rm -f $(TARGETS)
-help:
+	rm -f $(TARGETS), help:
 	@echo "Available targets:"
 	@echo "  all    - Build all examples"
 	@echo "  clean  - Remove example binaries"

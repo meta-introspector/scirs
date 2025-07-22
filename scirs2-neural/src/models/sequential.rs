@@ -51,9 +51,9 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Seque
     }
 
     /// Create a new sequential model from existing layers
-    pub fn from_layers(layers: Vec<Box<dyn Layer<F> + Send + Sync>>) -> Self {
+    pub fn from_layers(_layers: Vec<Box<dyn Layer<F> + Send + Sync>>) -> Self {
         Self {
-            layers,
+            _layers,
             layer_outputs: Vec::new(),
             input: None,
             history: History::default(),

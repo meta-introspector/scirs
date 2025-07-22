@@ -93,11 +93,11 @@ pub mod hessian_approximation {
         A: Float + ScalarOperand + Debug,
         D: Dimension,
     {
-        // Add new differences to history
+        // Add new differences to _history
         s_history.push_back(param_diff);
         y_history.push_back(grad_diff);
 
-        // Maintain maximum history size
+        // Maintain maximum _history size
         if s_history.len() > max_history {
             s_history.pop_front();
             y_history.pop_front();
@@ -123,7 +123,7 @@ pub mod hessian_approximation {
 
         let m = s_history.len();
         if m == 0 {
-            // No history, return scaled gradient
+            // No _history, return scaled gradient
             return Ok(gradient * initial_hessian_scale);
         }
 
@@ -206,13 +206,13 @@ pub mod hessian_approximation {
     }
 
     /// Gauss-Newton Hessian approximation for least squares problems
-    pub fn gauss_newton_approximation<A>(jacobian: &Array2<A>) -> Result<Array2<A>>
+    pub fn gauss_newton_approximation<A>(_jacobian: &Array2<A>) -> Result<Array2<A>>
     where
         A: Float + ScalarOperand + Debug,
     {
         // Gauss-Newton approximation: H ≈ J^T * J
-        let j_transpose = jacobian.t();
-        let hessian_approx = j_transpose.dot(jacobian);
+        let j_transpose = _jacobian.t();
+        let hessian_approx = j_transpose.dot(_jacobian);
         Ok(hessian_approx)
     }
 }
@@ -226,9 +226,9 @@ pub struct Newton<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug + Send + Sync> Newton<A> {
     /// Create a new Newton optimizer
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(_learning_rate: A) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             regularization: A::from(1e-6).unwrap(),
         }
     }
@@ -308,9 +308,9 @@ pub struct LBFGS<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> LBFGS<A, D> {
     /// Create a new L-BFGS optimizer
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(_learning_rate: A) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             max_history: 10,
             s_history: VecDeque::new(),
             y_history: VecDeque::new(),
@@ -371,8 +371,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> SecondOrderOp
     fn step_second_order(
         &mut self,
         params: &Array<A, D>,
-        gradients: &Array<A, D>,
-        _hessian_info: &HessianInfo<A, D>, // L-BFGS maintains its own history
+        gradients: &Array<A, D>, _hessian_info: &HessianInfo<A, D>, // L-BFGS maintains its own history
     ) -> Result<Array<A, D>> {
         self.step(params, gradients)
     }

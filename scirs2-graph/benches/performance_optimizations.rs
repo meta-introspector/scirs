@@ -10,7 +10,7 @@ use rand::rngs::StdRng;
 use rand::SeedableRng;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_graph::{
+use scirs2__graph::{
     generators,
     memory::{BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph, MemmapGraph},
     performance::*,
@@ -241,7 +241,7 @@ fn bench_memmap_operations(c: &mut Criterion) {
                 b.iter(|| {
                     let mut total = 0;
                     for node in 0..g.n_nodes.min(1000) {
-                        for (neighbor, _weight) in g.neighbors(node) {
+                        for (neighbor_weight) in g.neighbors(node) {
                             total += neighbor;
                         }
                     }
@@ -259,7 +259,7 @@ fn bench_memmap_operations(c: &mut Criterion) {
                     let mut total = 0;
                     for node in 0..g.node_count().min(1000) {
                         if let Ok(neighbors) = g.neighbors(node) {
-                            for (neighbor, _weight) in neighbors {
+                            for (neighbor_weight) in neighbors {
                                 total += neighbor;
                             }
                         }
@@ -289,7 +289,7 @@ fn bench_memmap_operations(c: &mut Criterion) {
             |b, g| {
                 b.iter(|| {
                     let mut edge_count = 0;
-                    let _ = g.stream_edges(|_u, _v, _w| {
+                    let _ = g.stream_edges(|_u_v_w| {
                         edge_count += 1;
                         edge_count < 10000 // Stop after 10k edges for performance
                     });
@@ -374,7 +374,7 @@ fn bench_lazy_metrics(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("lazy_metric_concurrent_access", size),
             &graph,
-            |b, _g| {
+            |b_g| {
                 use std::sync::Arc;
                 use std::thread;
 

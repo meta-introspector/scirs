@@ -79,7 +79,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2_sparse::csr::CsrMatrix;
+    /// use scirs2__sparse::csr::CsrMatrix;
     ///
     /// // Create a 3x3 sparse matrix with 5 non-zero elements
     /// let rows = vec![0, 0, 1, 2, 2];
@@ -105,7 +105,7 @@ where
 
         let (rows, cols) = shape;
 
-        // Check indices are within bounds
+        // Check _indices are within bounds
         if row_indices.iter().any(|&i| i >= rows) {
             return Err(SparseError::ValueError(
                 "Row index out of bounds".to_string(),
@@ -126,16 +126,16 @@ where
             .zip(data)
             .map(|((r, c), v)| (r, c, v))
             .collect();
-        triplets.sort_by_key(|&(r, c, _)| (r, c));
+        triplets.sort_by_key(|&(r, c_)| (r, c));
 
-        // Create indptr, indices, and data arrays
+        // Create indptr, _indices, and data arrays
         let nnz = triplets.len();
         let mut indptr = vec![0; rows + 1];
-        let mut indices = Vec::with_capacity(nnz);
+        let mut _indices = Vec::with_capacity(nnz);
         let mut data_out = Vec::with_capacity(nnz);
 
         // Count elements per row to build indptr
-        for &(r, _, _) in &triplets {
+        for &(r__) in &triplets {
             indptr[r + 1] += 1;
         }
 
@@ -144,9 +144,9 @@ where
             indptr[i] += indptr[i - 1];
         }
 
-        // Fill indices and data
+        // Fill _indices and data
         for (_r, c, v) in triplets {
-            indices.push(c);
+            _indices.push(c);
             data_out.push(v);
         }
 
@@ -154,7 +154,7 @@ where
             rows,
             cols,
             indptr,
-            indices,
+            _indices,
             data: data_out,
         })
     }
@@ -235,8 +235,8 @@ where
     /// # Returns
     ///
     /// * A new empty CSR matrix
-    pub fn empty(shape: (usize, usize)) -> Self {
-        let (rows, cols) = shape;
+    pub fn empty(_shape: (usize, usize)) -> Self {
+        let (rows, cols) = _shape;
         let indptr = vec![0; rows + 1];
 
         CsrMatrix {
@@ -371,12 +371,12 @@ impl<
             let mut self_entries: Vec<(usize, &T)> = (self_start..self_end)
                 .map(|j| (self.indices[j], &self.data[j]))
                 .collect();
-            self_entries.sort_by_key(|(col, _)| *col);
+            self_entries.sort_by_key(|(col_)| *col);
 
             let mut trans_entries: Vec<(usize, &T)> = (trans_start..trans_end)
                 .map(|j| (transposed.indices[j], &transposed.data[j]))
                 .collect();
-            trans_entries.sort_by_key(|(col, _)| *col);
+            trans_entries.sort_by_key(|(col_)| *col);
 
             // Compare columns and values
             for i in 0..self_entries.len() {
@@ -512,7 +512,7 @@ impl CsrMatrix<f64> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_sparse::csr::CsrMatrix;
+    /// use scirs2__sparse::csr::CsrMatrix;
     ///
     /// let rows = vec![0, 0, 1, 2, 2];
     /// let cols = vec![0, 2, 2, 0, 1];
@@ -568,7 +568,7 @@ impl CsrMatrix<f64> {
 
 impl<T> CsrMatrix<T>
 where
-    T: num_traits::Float
+    T: num_traits: Float
         + std::fmt::Debug
         + Copy
         + Default

@@ -1,4 +1,4 @@
-use ag::tensor_ops::*;
+use ag::tensor__ops::*;
 use ndarray::array;
 use scirs2_autograd as ag;
 
@@ -28,10 +28,10 @@ fn test_complete_linear_algebra_pipeline() {
 
         // Test decompositions
         // let (q, r) = qr(a); // QR not implemented yet
-        // let (_l, _u, _p) = lu(a); // LU not implemented yet
-        let (_u_svd, _s, _v) = svd(a);
+        // let (_l_u_p) = lu(a); // LU not implemented yet
+        let (_u_svd_s_v) = svd(a);
         let _chol = cholesky(&a);
-        let (_eigenvals, _eigenvecs) = eigen(a);
+        let (_eigenvals_eigenvecs) = eigen(a);
 
         // Test matrix operations
         let _inv = matrix_inverse(a);
@@ -197,13 +197,13 @@ fn test_gradient_flow_through_decompositions() {
         // assert!(grads_qr[0].eval(g).is_ok());
 
         // Test gradient through eigendecomposition
-        let (eigenvals, _) = eigen(a);
+        let (eigenvals_) = eigen(a);
         let loss_eigen = sum_all(square(eigenvals));
         let grads_eigen = grad(&[&loss_eigen], &[&a]);
         assert!(grads_eigen[0].eval(g).is_ok());
 
         // Test gradient through SVD
-        let (_, s, _) = svd(a);
+        let (_, s_) = svd(a);
         let loss_svd = sum_all(square(s));
         let grads_svd = grad(&[&loss_svd], &[&a]);
         assert!(grads_svd[0].eval(g).is_ok());

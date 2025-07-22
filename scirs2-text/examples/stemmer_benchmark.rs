@@ -1,4 +1,4 @@
-use scirs2_text::{LancasterStemmer, PorterStemmer, SnowballStemmer, Stemmer};
+use scirs2__text::{LancasterStemmer, PorterStemmer, SnowballStemmer, Stemmer};
 use std::error::Error;
 use std::time::{Duration, Instant};
 
@@ -124,6 +124,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 #[allow(dead_code)]
-fn words_per_ms(word_count: usize, iterations: usize, duration: Duration) -> f64 {
-    (word_count * iterations) as f64 / duration.as_millis() as f64
+fn words_per_ms(_word_count: usize, iterations: usize, duration: Duration) -> f64 {
+    (_word_count * iterations) as f64 / duration.as_millis() as f64
 }

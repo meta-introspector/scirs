@@ -73,9 +73,9 @@ pub struct RecoveryHint {
 
 impl RecoveryHint {
     /// Create a new recovery hint
-    pub fn new<S: Into<String>>(action: S, explanation: S, confidence: f64) -> Self {
+    pub fn new<S: Into<String>>(_action: S, explanation: S, confidence: f64) -> Self {
         Self {
-            action: action.into(),
+            action: _action.into(),
             explanation: explanation.into(),
             examples: Vec::new(),
             confidence: confidence.clamp(0.0, 1.0),
@@ -166,7 +166,7 @@ impl fmt::Display for ErrorSeverity {
 
 impl RecoverableError {
     /// Create a new recoverable error
-    pub fn new(error: CoreError) -> Self {
+    pub fn error(error: CoreError) -> Self {
         let (strategy, hints, retryable, severity) = Self::analyze_error(&error);
 
         Self {
@@ -364,9 +364,7 @@ impl RecoverableError {
                 ],
                 true,
                 ErrorSeverity::Warning,
-            ),
-
-            _ => (
+            ), _ => (
                 RecoveryStrategy::default(),
                 vec![
                     RecoveryHint::new(
@@ -451,7 +449,7 @@ pub enum CircuitState {
 
 impl CircuitBreaker {
     /// Create a new circuit breaker
-    pub fn new(failure_threshold: usize, timeout: Duration, recovery_timeout: Duration) -> Self {
+    pub fn timeout(failure_threshold: usize, timeout: Duration, recovery_timeout: Duration) -> Self {
         Self {
             failure_threshold,
             timeout,
@@ -462,6 +460,11 @@ impl CircuitBreaker {
                 state: CircuitState::Closed,
             })),
         }
+    }
+    
+    /// Create a new circuit breaker (alias for timeout method)
+    pub fn new(failure_threshold: usize, timeout: Duration, recovery_timeout: Duration) -> Self {
+        Self::timeout(failure_threshold, timeout, recovery_timeout)
     }
 
     /// Execute a function with circuit breaker protection
@@ -565,8 +568,13 @@ pub struct RetryExecutor {
 
 impl RetryExecutor {
     /// Create a new retry executor with the given strategy
-    pub fn new(strategy: RecoveryStrategy) -> Self {
+    pub fn strategy(strategy: RecoveryStrategy) -> Self {
         Self { strategy }
+    }
+    
+    /// Create a new retry executor (alias for strategy method)
+    pub fn new(strategy: RecoveryStrategy) -> Self {
+        Self::strategy(strategy)
     }
 
     /// Execute a function with retry logic
@@ -583,7 +591,7 @@ impl RetryExecutor {
                 max_delay,
                 multiplier,
             } => {
-                let mut delay = *initial_delay;
+                let mut _delay = *initial_delay;
                 let mut last_error = None;
 
                 for attempt in 0..*max_attempts {
@@ -593,10 +601,10 @@ impl RetryExecutor {
                             last_error = Some(err);
 
                             if attempt < max_attempts - 1 {
-                                std::thread::sleep(delay);
-                                delay = std::cmp::min(
+                                std::thread::sleep(_delay);
+                                _delay = std::cmp::min(
                                     Duration::from_nanos(
-                                        (delay.as_nanos() as f64 * multiplier) as u64,
+                                        (_delay.as_nanos() as f64 * multiplier) as u64,
                                     ),
                                     *max_delay,
                                 );
@@ -673,7 +681,7 @@ impl ErrorAggregator {
     }
 
     /// Create a new error aggregator with maximum error limit
-    pub fn with_max_errors(max_errors: usize) -> Self {
+    pub fn errors(max_errors: usize) -> Self {
         Self {
             errors: Vec::new(),
             max_errors: Some(max_errors),
@@ -693,7 +701,7 @@ impl ErrorAggregator {
 
     /// Add a simple error to the aggregator
     pub fn add_simple_error(&mut self, error: CoreError) {
-        self.add_error(RecoverableError::new(error));
+        self.add_error(RecoverableError::error(error));
     }
 
     /// Check if there are any errors
@@ -707,7 +715,7 @@ impl ErrorAggregator {
     }
 
     /// Get all errors
-    pub fn errors(&self) -> &[RecoverableError] {
+    pub fn errors_2(&self) -> &[RecoverableError] {
         &self.errors
     }
 
@@ -844,7 +852,7 @@ mod tests {
     #[test]
     fn test_recoverable_error_analysis() {
         let domain_error = CoreError::DomainError(ErrorContext::new("Test domain error"));
-        let recoverable = RecoverableError::new(domain_error);
+        let recoverable = RecoverableError::error(domain_error);
 
         assert!(!recoverable.retryable);
         assert_eq!(recoverable.severity, ErrorSeverity::Error);
@@ -856,12 +864,12 @@ mod tests {
         let cb = CircuitBreaker::new(2, Duration::from_millis(100), Duration::from_millis(500));
 
         // First failure
-        let result: std::result::Result<(), _> =
+        let result: std::result::Result<(), CoreError> =
             cb.execute(|| Err(CoreError::ComputationError(ErrorContext::new("Test error"))));
         assert!(result.is_err());
 
         // Second failure - should trigger circuit open
-        let result: std::result::Result<(), _> =
+        let result: std::result::Result<(), CoreError> =
             cb.execute(|| Err(CoreError::ComputationError(ErrorContext::new("Test error"))));
         assert!(result.is_err());
 

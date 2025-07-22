@@ -1,5 +1,5 @@
 use ndarray::{Array, Array1, Array2, IxDyn}; // arrayとDimは使用していない
-use scirs2_interpolate::interpnd::{
+use scirs2__interpolate::interpnd::{
     make_interp_nd, make_interp_scattered, map_coordinates, ExtrapolateMode, InterpolationMethod,
     ScatteredInterpolationMethod, ScatteredInterpolatorParams,
 };

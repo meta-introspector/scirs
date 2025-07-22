@@ -4,7 +4,7 @@
 //! integration systems, with support for parallel execution, resource management,
 //! and comprehensive result reporting across multiple platforms.
 
-use crate::benchmarking::cross_platform_tester::{
+use crate::benchmarking::cross_platform__tester::{
     CrossPlatformConfig, CrossPlatformTestReport, CrossPlatformTester, PerformanceThresholds,
     PlatformTarget, TestCategory,
 };
@@ -365,14 +365,14 @@ pub struct CIEnvironmentInfo {
 
 impl AutomatedTestRunner {
     /// Create a new automated test runner
-    pub fn new(config: AutomatedRunnerConfig) -> Self {
+    pub fn new(_config: AutomatedRunnerConfig) -> Self {
         let platform_matrix = PlatformMatrix::default();
         let execution_queue = Arc::new(Mutex::new(VecDeque::new()));
-        let resource_manager = ResourceManager::new(config.enable_resource_monitoring);
+        let resource_manager = ResourceManager::new(_config.enable_resource_monitoring);
         let results_aggregator = ResultsAggregator::new();
 
         Self {
-            config,
+            _config,
             platform_matrix,
             execution_queue,
             resource_manager,
@@ -596,15 +596,15 @@ impl AutomatedTestRunner {
         loop {
             // Get next execution
             let mut execution = {
-                let mut queue = match execution_queue.lock() {
-                    Ok(queue) => queue,
+                let mut _queue = match execution_queue.lock() {
+                    Ok(_queue) => _queue,
                     Err(_) => {
-                        eprintln!("Worker {} failed to acquire queue lock", worker_id);
+                        eprintln!("Worker {} failed to acquire _queue lock", worker_id);
                         break;
                     }
                 };
 
-                match queue
+                match _queue
                     .iter_mut()
                     .find(|e| e.status == ExecutionStatus::Queued)
                 {
@@ -630,8 +630,8 @@ impl AutomatedTestRunner {
 
             // Update execution status
             {
-                let mut queue = execution_queue.lock().unwrap();
-                if let Some(exec) = queue.iter_mut().find(|e| e.id == execution.id) {
+                let mut _queue = execution_queue.lock().unwrap();
+                if let Some(exec) = _queue.iter_mut().find(|e| e._id == execution._id) {
                     exec.end_time = Some(Instant::now());
                     exec.resource_usage = execution.resource_usage.clone();
                     exec.results = execution.results.clone();
@@ -662,21 +662,20 @@ impl AutomatedTestRunner {
 
     /// Execute test for a specific platform
     fn execute_platform_test(
-        execution: &mut TestExecution,
-        _config: &AutomatedRunnerConfig,
+        execution: &mut TestExecution_config: &AutomatedRunnerConfig,
     ) -> Result<()> {
         let start_time = Instant::now();
 
         // Setup platform environment
-        Self::setup_platform_environment(&execution.config)?;
+        Self::setup_platform_environment(&execution._config)?;
 
         // Create cross-platform tester configuration
         let mut test_config = CrossPlatformConfig::default();
         test_config.target_platforms = vec![execution.platform.clone()];
-        test_config.test_categories = execution.config.test_categories.clone();
+        test_config.test_categories = execution._config.test_categories.clone();
         test_config.performance_thresholds.insert(
             execution.platform.clone(),
-            execution.config.performance_thresholds.clone(),
+            execution._config.performance_thresholds.clone(),
         );
 
         // Run tests
@@ -699,20 +698,20 @@ impl AutomatedTestRunner {
         });
 
         // Cleanup platform environment
-        Self::cleanup_platform_environment(&execution.config)?;
+        Self::cleanup_platform_environment(&execution._config)?;
 
         Ok(())
     }
 
     /// Setup platform-specific environment
-    fn setup_platform_environment(config: &PlatformTestConfig) -> Result<()> {
+    fn setup_platform_environment(_config: &PlatformTestConfig) -> Result<()> {
         // Set environment variables
-        for (key, value) in &config.environment_variables {
+        for (key, value) in &_config.environment_variables {
             std::env::set_var(key, value);
         }
 
         // Run setup commands
-        for command in &config.setup_commands {
+        for command in &_config.setup_commands {
             let output = Command::new("sh")
                 .arg("-c")
                 .arg(command)
@@ -741,9 +740,9 @@ impl AutomatedTestRunner {
     }
 
     /// Cleanup platform-specific environment
-    fn cleanup_platform_environment(config: &PlatformTestConfig) -> Result<()> {
+    fn cleanup_platform_environment(_config: &PlatformTestConfig) -> Result<()> {
         // Run cleanup commands
-        for command in &config.cleanup_commands {
+        for command in &_config.cleanup_commands {
             let _ = Command::new("sh")
                 .arg("-c")
                 .arg(command)
@@ -1020,12 +1019,12 @@ impl PlatformMatrix {
 
 impl ResourceManager {
     /// Create new resource manager
-    fn new(monitoring_enabled: bool) -> Self {
+    fn new(_monitoring_enabled: bool) -> Self {
         Self {
-            available_cores: num_cpus::get(),
+            available_cores: num, _cpus: get(),
             available_memory: Self::get_available_memory(),
             allocated_resources: Arc::new(Mutex::new(HashMap::new())),
-            monitoring_enabled,
+            _monitoring_enabled,
         }
     }
 

@@ -7,13 +7,14 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
+use statrs::statistics::Statistics;
 
 /// SIMD-optimized comprehensive statistical summary
 ///
 /// Computes multiple statistics in a single pass with SIMD acceleration.
 /// This is more efficient than computing statistics separately.
 #[allow(dead_code)]
-pub fn comprehensive_stats_simd<F>(data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
+pub fn comprehensive_stats_simd<F>(_data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
 where
     F: Float
         + NumCast
@@ -24,36 +25,36 @@ where
         + std::iter::Sum<F>
         + num_traits::FromPrimitive,
 {
-    check_array_finite(data, "data")?;
+    check_array_finite(_data, "_data")?;
 
-    if data.is_empty() {
+    if _data.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Data array cannot be empty".to_string(),
         ));
     }
 
-    let n = data.len();
+    let n = _data.len();
     let n_f = F::from(n).unwrap();
 
     // Single-pass computation with SIMD
     let (sum, sum_sq, min_val, max_val) = if n > 32 {
         // SIMD path for large arrays
-        let sum = F::simd_sum(&data.view());
-        let sq_data = F::simd_mul(&data.view(), &data.view());
+        let sum = F::simd_sum(&_data.view());
+        let sq_data = F::simd_mul(&_data.view(), &_data.view());
         let sum_sq = F::simd_sum(&sq_data.view());
-        let min_val = F::simd_min_element(&data.view());
-        let max_val = F::simd_max_element(&data.view());
+        let min_val = F::simd_min_element(&_data.view());
+        let max_val = F::simd_max_element(&_data.view());
         (sum, sum_sq, min_val, max_val)
     } else {
         // Scalar fallback for small arrays
-        let sum = data.iter().fold(F::zero(), |acc, &x| acc + x);
-        let sum_sq = data.iter().fold(F::zero(), |acc, &x| acc + x * x);
-        let min_val = data
+        let sum = _data.iter().fold(F::zero(), |acc, &x| acc + x);
+        let sum_sq = _data.iter().fold(F::zero(), |acc, &x| acc + x * x);
+        let min_val = _data
             .iter()
-            .fold(data[0], |acc, &x| if x < acc { x } else { acc });
-        let max_val = data
+            .fold(_data[0], |acc, &x| if x < acc { x } else { acc });
+        let max_val = _data
             .iter()
-            .fold(data[0], |acc, &x| if x > acc { x } else { acc });
+            .fold(_data[0], |acc, &x| if x > acc { x } else { acc });
         (sum, sum_sq, min_val, max_val)
     };
 
@@ -71,7 +72,7 @@ where
     let (sum_cubed_dev, sum_fourth_dev) = if n > 32 {
         // SIMD path for moment computation
         let mean_vec = Array1::from_elem(n, mean);
-        let centered = F::simd_sub(&data.view(), &mean_vec.view());
+        let centered = F::simd_sub(&_data.view(), &mean_vec.view());
         let centered_sq = F::simd_mul(&centered.view(), &centered.view());
         let centered_cubed = F::simd_mul(&centered_sq.view(), &centered.view());
         let centered_fourth = F::simd_mul(&centered_sq.view(), &centered_sq.view());
@@ -83,7 +84,7 @@ where
         // Scalar fallback
         let mut sum_cubed_dev = F::zero();
         let mut sum_fourth_dev = F::zero();
-        for &x in data.iter() {
+        for &x in _data.iter() {
             let dev = x - mean;
             let dev_sq = dev * dev;
             sum_cubed_dev = sum_cubed_dev + dev_sq * dev;
@@ -157,7 +158,7 @@ where
 
     if window_size > data.len() {
         return Err(StatsError::InvalidArgument(
-            "Window size cannot be larger than data length".to_string(),
+            "Window _size cannot be larger than data length".to_string(),
         ));
     }
 
@@ -234,7 +235,7 @@ pub struct SlidingWindowStats<F> {
 ///
 /// Computes the full covariance matrix using SIMD operations for maximum efficiency.
 #[allow(dead_code)]
-pub fn covariance_matrix_simd<F>(data: &ArrayView2<F>) -> StatsResult<Array2<F>>
+pub fn covariance_matrix_simd<F>(_data: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
     F: Float
         + NumCast
@@ -245,9 +246,9 @@ where
         + std::iter::Sum<F>
         + num_traits::FromPrimitive,
 {
-    check_array_finite(data, "data")?;
+    check_array_finite(_data, "_data")?;
 
-    let (n_samples, n_features) = data.dim();
+    let (n_samples, n_features) = _data.dim();
 
     if n_samples < 2 {
         return Err(StatsError::InvalidArgument(
@@ -261,19 +262,19 @@ where
         let mut feature_means = Array1::zeros(n_features);
 
         for j in 0..n_features {
-            let column = data.column(j);
+            let column = _data.column(j);
             feature_means[j] = F::simd_sum(&column) / n_samples_f;
         }
         feature_means
     } else {
         // Scalar fallback
-        data.mean_axis(Axis(0)).unwrap()
+        _data.mean_axis(Axis(0)).unwrap()
     };
 
-    // Center the data
+    // Center the _data
     let mut centered_data = Array2::zeros((n_samples, n_features));
     for j in 0..n_features {
-        let column = data.column(j);
+        let column = _data.column(j);
         let mean_vec = Array1::from_elem(n_samples, means[j]);
 
         if n_samples > 32 {
@@ -321,13 +322,13 @@ where
 ///
 /// Computes multiple quantiles efficiently using SIMD-accelerated partitioning.
 #[allow(dead_code)]
-pub fn quantiles_batch_simd<F>(data: &ArrayView1<F>, quantiles: &[f64]) -> StatsResult<Array1<F>>
+pub fn quantiles_batch_simd<F>(_data: &ArrayView1<F>, quantiles: &[f64]) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
 {
-    check_array_finite(data, "data")?;
+    check_array_finite(_data, "_data")?;
 
-    if data.is_empty() {
+    if _data.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Data array cannot be empty".to_string(),
         ));
@@ -341,8 +342,8 @@ where
         }
     }
 
-    // Sort data for quantile computation
-    let mut sorted_data = data.to_owned();
+    // Sort _data for quantile computation
+    let mut sorted_data = _data.to_owned();
     sorted_data
         .as_slice_mut()
         .unwrap()
@@ -378,7 +379,7 @@ where
 /// Computes exponential moving average with SIMD acceleration for the
 /// element-wise operations.
 #[allow(dead_code)]
-pub fn exponential_moving_average_simd<F>(data: &ArrayView1<F>, alpha: F) -> StatsResult<Array1<F>>
+pub fn exponential_moving_average_simd<F>(_data: &ArrayView1<F>, alpha: F) -> StatsResult<Array1<F>>
 where
     F: Float
         + NumCast
@@ -389,23 +390,23 @@ where
         + std::iter::Sum<F>
         + num_traits::FromPrimitive,
 {
-    check_array_finite(data, "data")?;
+    check_array_finite(_data, "_data")?;
 
-    if data.is_empty() {
+    if _data.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Data array cannot be empty".to_string(),
         ));
     }
 
-    if alpha <= F::zero() || alpha > F::one() {
+    if alpha <= F::zero() || alpha >, F::one() {
         return Err(StatsError::InvalidArgument(
             "Alpha must be between 0 and 1".to_string(),
         ));
     }
 
-    let n = data.len();
+    let n = _data.len();
     let mut ema = Array1::zeros(n);
-    ema[0] = data[0];
+    ema[0] = _data[0];
 
     let one_minus_alpha = F::one() - alpha;
 
@@ -413,13 +414,13 @@ where
     if n > 64 {
         // For large arrays, use SIMD for the multiplication operations
         for i in 1..n {
-            // EMA[i] = alpha * data[i] + (1-alpha) * EMA[i-1]
-            ema[i] = alpha * data[i] + one_minus_alpha * ema[i - 1];
+            // EMA[i] = alpha * _data[i] + (1-alpha) * EMA[i-1]
+            ema[i] = alpha * _data[i] + one_minus_alpha * ema[i - 1];
         }
     } else {
         // Standard computation for smaller arrays
         for i in 1..n {
-            ema[i] = alpha * data[i] + one_minus_alpha * ema[i - 1];
+            ema[i] = alpha * _data[i] + one_minus_alpha * ema[i - 1];
         }
     }
 
@@ -430,7 +431,7 @@ where
 ///
 /// Normalizes data to have zero mean and unit variance using SIMD operations.
 #[allow(dead_code)]
-pub fn batch_normalize_simd<F>(data: &ArrayView2<F>, axis: Option<usize>) -> StatsResult<Array2<F>>
+pub fn batch_normalize_simd<F>(_data: &ArrayView2<F>, axis: Option<usize>) -> StatsResult<Array2<F>>
 where
     F: Float
         + NumCast
@@ -440,9 +441,9 @@ where
         + std::fmt::Display
         + num_traits::FromPrimitive,
 {
-    check_array_finite(data, "data")?;
+    check_array_finite(_data, "_data")?;
 
-    let (n_samples, n_features) = data.dim();
+    let (n_samples, n_features) = _data.dim();
 
     if n_samples == 0 || n_features == 0 {
         return Err(StatsError::InvalidArgument(
@@ -450,13 +451,13 @@ where
         ));
     }
 
-    let mut normalized = data.to_owned();
+    let mut normalized = _data.to_owned();
 
     match axis {
         Some(0) | None => {
             // Normalize along samples (column-wise)
             for j in 0..n_features {
-                let column = data.column(j);
+                let column = _data.column(j);
 
                 let (mean, std_dev) = if n_samples > 32 {
                     // SIMD path
@@ -481,7 +482,7 @@ where
                 // Normalize column
                 if std_dev > F::zero() {
                     for i in 0..n_samples {
-                        normalized[(i, j)] = (data[(i, j)] - mean) / std_dev;
+                        normalized[(i, j)] = (_data[(i, j)] - mean) / std_dev;
                     }
                 }
             }
@@ -489,7 +490,7 @@ where
         Some(1) => {
             // Normalize along features (row-wise)
             for i in 0..n_samples {
-                let row = data.row(i);
+                let row = _data.row(i);
 
                 let (mean, std_dev) = if n_features > 32 {
                     // SIMD path
@@ -514,7 +515,7 @@ where
                 // Normalize row
                 if std_dev > F::zero() {
                     for j in 0..n_features {
-                        normalized[(i, j)] = (data[(i, j)] - mean) / std_dev;
+                        normalized[(i, j)] = (_data[(i, j)] - mean) / std_dev;
                     }
                 }
             }
@@ -586,20 +587,20 @@ where
 ///
 /// Computes robust center and scale estimates that are less sensitive to outliers.
 #[allow(dead_code)]
-pub fn robust_statistics_simd<F>(data: &ArrayView1<F>) -> StatsResult<RobustStats<F>>
+pub fn robust_statistics_simd<F>(_data: &ArrayView1<F>) -> StatsResult<RobustStats<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy + std::fmt::Display,
 {
-    check_array_finite(data, "data")?;
+    check_array_finite(_data, "_data")?;
 
-    if data.is_empty() {
+    if _data.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Data array cannot be empty".to_string(),
         ));
     }
 
-    // Sort data for median computation
-    let mut sorted_data = data.to_owned();
+    // Sort _data for median computation
+    let mut sorted_data = _data.to_owned();
     sorted_data
         .as_slice_mut()
         .unwrap()
@@ -622,11 +623,11 @@ where
     if n > 32 {
         // SIMD path for computing absolute deviations
         let median_vec = Array1::from_elem(n, median);
-        let centered = F::simd_sub(&data.view(), &median_vec.view());
+        let centered = F::simd_sub(&_data.view(), &median_vec.view());
         deviations = F::simd_abs(&centered.view());
     } else {
         // Scalar fallback
-        for (i, &value) in data.iter().enumerate() {
+        for (i, &value) in _data.iter().enumerate() {
             deviations[i] = (value - median).abs();
         }
     }

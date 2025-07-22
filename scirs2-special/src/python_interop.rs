@@ -325,10 +325,10 @@ pub mod codegen {
     use regex::Regex;
 
     /// Generate Rust code equivalent to SciPy code
-    pub fn generate_rust_equivalent(scipy_code: &str) -> Result<String, String> {
+    pub fn generate_rust_equivalent(_scipy_code: &str) -> Result<String, String> {
         #[cfg(feature = "python-interop")]
         {
-            generate_rust_equivalent_regex(scipy_code)
+            generate_rust_equivalent_regex(_scipy_code)
         }
 
         #[cfg(not(feature = "python-interop"))]
@@ -338,7 +338,7 @@ pub mod codegen {
     }
 
     #[cfg(feature = "python-interop")]
-    fn generate_rust_equivalent_regex(scipy_code: &str) -> Result<String, String> {
+    fn generate_rust_equivalent_regex(_scipy_code: &str) -> Result<String, String> {
         let guide = MigrationGuide::new();
         let mut rust_code = String::new();
         let mut imports = std::collections::HashSet::new();
@@ -355,7 +355,7 @@ pub mod codegen {
         let mut found_functions = Vec::new();
         for (pattern, prefix) in patterns {
             let re = Regex::new(pattern).map_err(|e| e.to_string())?;
-            for cap in re.captures_iter(scipy_code) {
+            for cap in re.captures_iter(_scipy_code) {
                 if let Some(func_match) = cap.get(1) {
                     let funcs = func_match.as_str();
                     for func in funcs.split(',') {
@@ -379,8 +379,8 @@ pub mod codegen {
             rust_code.push('\n');
         }
 
-        // Generate code transformation hints
-        let mut transformed = scipy_code.to_string();
+        // Generate _code transformation hints
+        let mut transformed = _scipy_code.to_string();
         for (scipy_func, mapping) in &found_functions {
             // Add transformation comments
             code_lines.push(format!("// {} -> {}", scipy_func, mapping.scirs2_name));
@@ -394,7 +394,7 @@ pub mod codegen {
 
         // Add transformation notes
         if !found_functions.is_empty() {
-            rust_code.push_str("// Transformed code:\n");
+            rust_code.push_str("// Transformed _code:\n");
             rust_code.push_str(&format!("// {transformed}\n"));
 
             rust_code.push_str("\n// Notes:\n");
@@ -412,7 +412,7 @@ pub mod codegen {
         }
     }
 
-    fn generate_rust_equivalent_simple(scipy_code: &str) -> Result<String, String> {
+    fn generate_rust_equivalent_simple(_scipy_code: &str) -> Result<String, String> {
         let guide = MigrationGuide::new();
         let mut rust_code = String::new();
 
@@ -421,7 +421,7 @@ pub mod codegen {
 
         for func in known_functions {
             let scipy_pattern = format!("scipy.special.{func}");
-            if scipy_code.contains(&scipy_pattern) {
+            if _scipy_code.contains(&scipy_pattern) {
                 let full_name = format!("scipy.special.{func}");
                 if let Some(mapping) = guide.get_mapping(&full_name) {
                     let module_path = &mapping.module_path;
@@ -440,25 +440,25 @@ pub mod codegen {
     }
 
     /// Generate import statements for common migrations
-    pub fn generate_imports(scipy_imports: &[&str]) -> String {
-        let mut imports = String::from("// SciRS2 imports\n");
+    pub fn generate_imports(_scipy_imports: &[&str]) -> String {
+        let mut _imports = String::from("// SciRS2 _imports\n");
 
-        for &import in scipy_imports {
+        for &import in _scipy_imports {
             match import {
                 "gamma" | "gammaln" | "beta" => {
-                    imports.push_str("use scirs2_special::gamma::{gamma, gammaln, beta};\n");
+                    _imports.push_str("use scirs2_special::gamma::{gamma, gammaln, beta};\n");
                 }
                 "j0" | "j1" | "jv" => {
-                    imports.push_str("use scirs2_special::bessel::{j0, j1, jv};\n");
+                    _imports.push_str("use scirs2_special::bessel::{j0, j1, jv};\n");
                 }
                 "erf" | "erfc" => {
-                    imports.push_str("use scirs2_special::erf::{erf, erfc};\n");
+                    _imports.push_str("use scirs2_special::erf::{erf, erfc};\n");
                 }
                 _ => {}
             }
         }
 
-        imports
+        _imports
     }
 }
 

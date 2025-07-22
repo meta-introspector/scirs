@@ -1,6 +1,6 @@
 use ndarray::Array2;
-use num_complex::Complex64;
-use scirs2_fft::{
+use num__complex::Complex64;
+use scirs2__fft::{
     fft2, get_global_planner, init_global_planner, plan_ahead_of_time, FftPlanExecutor,
     PlanBuilder, PlanningConfig, PlanningStrategy,
 };

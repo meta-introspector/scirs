@@ -226,33 +226,33 @@ pub fn match_brief_descriptors(
         let mut second_best_distance = u32::MAX;
 
         for (j, desc2) in descriptors2.iter().enumerate() {
-            let distance = hamming_distance(&desc1.descriptor, &desc2.descriptor);
+            let _distance = hamming_distance(&desc1.descriptor, &desc2.descriptor);
 
-            if distance < best_distance {
+            if _distance < best_distance {
                 second_best_distance = best_distance;
-                best_distance = distance;
+                best_distance = _distance;
                 best_index = j;
-            } else if distance < second_best_distance {
-                second_best_distance = distance;
+            } else if _distance < second_best_distance {
+                second_best_distance = _distance;
             }
         }
 
-        // Apply distance threshold and ratio test
+        // Apply _distance threshold and ratio test
         if best_distance < max_distance && best_distance < (second_best_distance * 7 / 10) {
             matches.push((i, best_index, best_distance));
         }
     }
 
-    // Sort matches by distance
-    matches.sort_by_key(|&(_, _, dist)| dist);
+    // Sort matches by _distance
+    matches.sort_by_key(|&(__, dist)| dist);
 
     matches
 }
 
 /// Calculate Hamming distance between binary descriptors
 #[allow(dead_code)]
-pub fn hamming_distance(desc1: &[u32], desc2: &[u32]) -> u32 {
-    desc1
+pub fn hamming_distance(_desc1: &[u32], desc2: &[u32]) -> u32 {
+    _desc1
         .iter()
         .zip(desc2.iter())
         .map(|(&d1, &d2)| (d1 ^ d2).count_ones())
@@ -261,8 +261,8 @@ pub fn hamming_distance(desc1: &[u32], desc2: &[u32]) -> u32 {
 
 /// Convert Hamming distance to normalized similarity score
 #[allow(dead_code)]
-pub fn hamming_to_similarity(distance: u32, descriptor_bits: usize) -> f32 {
-    1.0 - (distance as f32) / (descriptor_bits as f32)
+pub fn hamming_to_similarity(_distance: u32, descriptor_bits: usize) -> f32 {
+    1.0 - (_distance as f32) / (descriptor_bits as f32)
 }
 
 #[cfg(test)]

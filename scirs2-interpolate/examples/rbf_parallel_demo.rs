@@ -4,7 +4,7 @@
 //! and compares performance with the serial version.
 
 use ndarray::{Array1, Array2};
-use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
 use std::time::Instant;
 
 #[allow(dead_code)]

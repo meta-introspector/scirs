@@ -1,4 +1,4 @@
-use scirs2_text::{
+use scirs2__text::{
     FrequencyFilter, LengthFilter, RegexFilter, Result, StopwordsFilter, TokenFilter, Tokenizer,
     WordTokenizer,
 };
@@ -11,7 +11,7 @@ fn main() -> Result<()> {
 
     // Create a sample text
     let text = "The quick brown fox jumps over the lazy dog. The fox is quick and brown.";
-    println!("Original text: {text}\n");
+    println!("Original text: {_text}\n");
 
     // Create a tokenizer
     let tokenizer = WordTokenizer::default();

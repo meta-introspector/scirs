@@ -1,6 +1,6 @@
-use ag::ndarray_ext::ArrayRng;
+use ag::ndarray__ext::ArrayRng;
 use ag::prelude::*;
-use ag::tensor_ops::*;
+use ag::tensor__ops::*;
 use scirs2_autograd as ag;
 use std::time::Instant;
 
@@ -100,8 +100,7 @@ fn main() {
                     15 => ctx.variable("w15"),
                     16 => ctx.variable("w16"),
                     17 => ctx.variable("w17"),
-                    18 => ctx.variable("w18"),
-                    _ => ctx.variable("w19"),
+                    18 => ctx.variable("w18", _ => ctx.variable("w19"),
                 };
 
                 let b = match i {
@@ -123,8 +122,7 @@ fn main() {
                     15 => ctx.variable("b15"),
                     16 => ctx.variable("b16"),
                     17 => ctx.variable("b17"),
-                    18 => ctx.variable("b18"),
-                    _ => ctx.variable("b19"),
+                    18 => ctx.variable("b18", _ => ctx.variable("b19"),
                 };
 
                 activation = relu(add(matmul(activation, w), b));
@@ -219,8 +217,7 @@ fn main() {
                     15 => ctx.variable("w15"),
                     16 => ctx.variable("w16"),
                     17 => ctx.variable("w17"),
-                    18 => ctx.variable("w18"),
-                    _ => ctx.variable("w19"),
+                    18 => ctx.variable("w18", _ => ctx.variable("w19"),
                 };
 
                 let b = match i {
@@ -242,8 +239,7 @@ fn main() {
                     15 => ctx.variable("b15"),
                     16 => ctx.variable("b16"),
                     17 => ctx.variable("b17"),
-                    18 => ctx.variable("b18"),
-                    _ => ctx.variable("b19"),
+                    18 => ctx.variable("b18", _ => ctx.variable("b19"),
                 };
 
                 let next_activation = relu(add(matmul(activation, w), b));

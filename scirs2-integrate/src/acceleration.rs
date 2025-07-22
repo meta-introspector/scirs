@@ -14,7 +14,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_integrate::acceleration::{AndersonAccelerator, AcceleratorOptions};
+//! use scirs2__integrate::acceleration::{AndersonAccelerator, AcceleratorOptions};
 //! use ndarray::Array1;
 //!
 //! // Create accelerator for 3D problem with memory depth 5
@@ -90,9 +90,9 @@ pub struct AndersonAccelerator<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> AndersonAccelerator<F> {
     /// Create a new Anderson accelerator
-    pub fn new(dimension: usize, options: AcceleratorOptions<F>) -> Self {
+    pub fn new(_dimension: usize, options: AcceleratorOptions<F>) -> Self {
         Self {
-            dimension,
+            _dimension,
             options,
             x_history: VecDeque::new(),
             g_history: VecDeque::new(),
@@ -103,12 +103,12 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
     }
 
     /// Create accelerator with default options
-    pub fn with_memory_depth(dimension: usize, memory_depth: usize) -> Self {
+    pub fn with_memory_depth(_dimension: usize, memory_depth: usize) -> Self {
         let options = AcceleratorOptions {
             memory_depth,
             ..Default::default()
         };
-        Self::new(dimension, options)
+        Self::new(_dimension, options)
     }
 
     /// Add a new iterate and return accelerated update if possible
@@ -124,7 +124,7 @@ impl<F: IntegrateFloat> AndersonAccelerator<F> {
         // Compute residual: r_k = G(x_k) - x_k
         let residual = &g_x_current.to_owned() - &x_current.to_owned();
 
-        // Store current iterate
+        // Store _current iterate
         self.x_history.push_back(x_current.to_owned());
         self.g_history.push_back(g_x_current.to_owned());
         self.residual_history.push_back(residual);

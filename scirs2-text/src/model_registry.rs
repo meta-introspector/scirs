@@ -13,6 +13,7 @@ use std::path::{Path, PathBuf};
 
 #[cfg(feature = "serde-support")]
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 /// Supported model types in the registry
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -89,9 +90,9 @@ pub struct ModelMetadata {
 
 impl ModelMetadata {
     /// Create new model metadata
-    pub fn new(id: String, name: String, model_type: ModelType) -> Self {
+    pub fn new(_id: String, name: String, model_type: ModelType) -> Self {
         Self {
-            id,
+            _id,
             name,
             version: "1.0.0".to_string(),
             model_type,
@@ -174,7 +175,7 @@ pub trait RegistrableModel {
     fn serialize(&self) -> Result<SerializableModelData>;
 
     /// Deserialize model from stored format
-    fn deserialize(data: &SerializableModelData) -> Result<Self>
+    fn deserialize(_data: &SerializableModelData) -> Result<Self>
     where
         Self: Sized;
 
@@ -199,12 +200,12 @@ pub struct ModelRegistry {
 
 impl ModelRegistry {
     /// Create new model registry
-    pub fn new<P: AsRef<Path>>(registry_dir: P) -> Result<Self> {
-        let registry_dir = registry_dir.as_ref().to_path_buf();
+    pub fn new<P: AsRef<Path>>(_registry_dir: P) -> Result<Self> {
+        let _registry_dir = _registry_dir.as_ref().to_path_buf();
 
         // Create registry directory if it doesn't exist
-        if !registry_dir.exists() {
-            fs::create_dir_all(&registry_dir).map_err(|e| {
+        if !_registry_dir.exists() {
+            fs::create_dir_all(&_registry_dir).map_err(|e| {
                 TextError::IoError(format!("Failed to create registry directory: {e}"))
             })?;
         }
@@ -600,7 +601,7 @@ impl ModelRegistry {
             .ok_or_else(|| TextError::InvalidInput(format!("Model not found: {model_id}")))?;
 
         let mut info = HashMap::new();
-        info.insert("id".to_string(), metadata.id.clone());
+        info.insert("_id".to_string(), metadata._id.clone());
         info.insert("name".to_string(), metadata.name.clone());
         info.insert("version".to_string(), metadata.version.clone());
         info.insert("type".to_string(), metadata.model_type.to_string());
@@ -895,8 +896,8 @@ impl PrebuiltModels {
     }
 
     /// Get pre-built model by ID
-    pub fn get_by_id(model_id: &str) -> Option<(TransformerConfig, ModelMetadata)> {
-        match model_id {
+    pub fn get_by_id(_model_id: &str) -> Option<(TransformerConfig, ModelMetadata)> {
+        match _model_id {
             "english_transformer_base" => Some(Self::english_transformer_base()),
             "multilingual_transformer" => Some(Self::multilingual_transformer()),
             "scientific_transformer" => Some(Self::scientific_transformer()),
@@ -904,8 +905,7 @@ impl PrebuiltModels {
             "large_transformer" => Some(Self::large_transformer()),
             "scibiert_large" => Some(Self::domain_scientific_large()),
             "medbert" => Some(Self::medical_transformer()),
-            "legalbert" => Some(Self::legal_transformer()),
-            _ => None,
+            "legalbert" => Some(Self::legal_transformer(), _ => None,
         }
     }
 }
@@ -1092,48 +1092,48 @@ impl RegistrableModel for crate::transformer::TransformerModel {
         })
     }
 
-    fn deserialize(data: &SerializableModelData) -> Result<Self> {
+    fn deserialize(_data: &SerializableModelData) -> Result<Self> {
         // Parse config
-        let d_model = data
+        let d_model = _data
             .config
             .get("d_model")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing d_model config".to_string()))?;
-        let n_heads = data
+        let n_heads = _data
             .config
             .get("n_heads")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing n_heads config".to_string()))?;
-        let d_ff = data
+        let d_ff = _data
             .config
             .get("d_ff")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing d_ff config".to_string()))?;
-        let n_encoder_layers = data
+        let n_encoder_layers = _data
             .config
             .get("n_encoder_layers")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| {
                 TextError::InvalidInput("Missing n_encoder_layers config".to_string())
             })?;
-        let n_decoder_layers = data
+        let n_decoder_layers = _data
             .config
             .get("n_decoder_layers")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| {
                 TextError::InvalidInput("Missing n_decoder_layers config".to_string())
             })?;
-        let max_seq_len = data
+        let max_seq_len = _data
             .config
             .get("max_seq_len")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing max_seq_len config".to_string()))?;
-        let dropout = data
+        let dropout = _data
             .config
             .get("dropout")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing dropout config".to_string()))?;
-        let vocab_size = data
+        let vocab_size = _data
             .config
             .get("vocab_size")
             .and_then(|s| s.parse().ok())
@@ -1150,8 +1150,8 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             vocab_size,
         };
 
-        // Reconstruct vocabulary from saved data
-        let vocabulary = data.vocabulary.clone().unwrap_or_else(|| {
+        // Reconstruct vocabulary from saved _data
+        let vocabulary = _data.vocabulary.clone().unwrap_or_else(|| {
             // Fallback to placeholder if vocabulary not saved
             (0..config.vocab_size)
                 .map(|i| format!("token_{i}"))
@@ -1163,8 +1163,8 @@ impl RegistrableModel for crate::transformer::TransformerModel {
 
         // Restore embedding weights
         if let (Some(embed_weights), Some(embed_shape)) = (
-            data.weights.get("token_embeddings"),
-            data.shapes.get("token_embeddings"),
+            _data.weights.get("token_embeddings"),
+            _data.shapes.get("token_embeddings"),
         ) {
             let embed_array = ndarray::Array::from_shape_vec(
                 (embed_shape[0], embed_shape[1]),
@@ -1176,8 +1176,8 @@ impl RegistrableModel for crate::transformer::TransformerModel {
 
         // Restore positional embeddings
         if let (Some(pos_embed_weights), Some(pos_embed_shape)) = (
-            data.weights.get("positional_embeddings"),
-            data.shapes.get("positional_embeddings"),
+            _data.weights.get("positional_embeddings"),
+            _data.shapes.get("positional_embeddings"),
         ) {
             let _pos_embed_array = ndarray::Array::from_shape_vec(
                 (pos_embed_shape[0], pos_embed_shape[1]),
@@ -1206,14 +1206,14 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 Some(wo_weights),
                 Some(wo_shape),
             ) = (
-                data.weights.get(&format!("encoder_{i}_attention_wq")),
-                data.shapes.get(&format!("encoder_{i}_attention_wq")),
-                data.weights.get(&format!("encoder_{i}_attention_wk")),
-                data.shapes.get(&format!("encoder_{i}_attention_wk")),
-                data.weights.get(&format!("encoder_{i}_attention_wv")),
-                data.shapes.get(&format!("encoder_{i}_attention_wv")),
-                data.weights.get(&format!("encoder_{i}_attention_wo")),
-                data.shapes.get(&format!("encoder_{i}_attention_wo")),
+                _data.weights.get(&format!("encoder_{i}_attention_wq")),
+                _data.shapes.get(&format!("encoder_{i}_attention_wq")),
+                _data.weights.get(&format!("encoder_{i}_attention_wk")),
+                _data.shapes.get(&format!("encoder_{i}_attention_wk")),
+                _data.weights.get(&format!("encoder_{i}_attention_wv")),
+                _data.shapes.get(&format!("encoder_{i}_attention_wv")),
+                _data.weights.get(&format!("encoder_{i}_attention_wo")),
+                _data.shapes.get(&format!("encoder_{i}_attention_wo")),
             ) {
                 let w_q =
                     ndarray::Array::from_shape_vec((wq_shape[0], wq_shape[1]), wq_weights.clone())
@@ -1240,12 +1240,12 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 Some(b1_weights),
                 Some(b2_weights),
             ) = (
-                data.weights.get(&format!("encoder_{i}_ff_w1")),
-                data.shapes.get(&format!("encoder_{i}_ff_w1")),
-                data.weights.get(&format!("encoder_{i}_ff_w2")),
-                data.shapes.get(&format!("encoder_{i}_ff_w2")),
-                data.weights.get(&format!("encoder_{i}_ff_b1")),
-                data.weights.get(&format!("encoder_{i}_ff_b2")),
+                _data.weights.get(&format!("encoder_{i}_ff_w1")),
+                _data.shapes.get(&format!("encoder_{i}_ff_w1")),
+                _data.weights.get(&format!("encoder_{i}_ff_w2")),
+                _data.shapes.get(&format!("encoder_{i}_ff_w2")),
+                _data.weights.get(&format!("encoder_{i}_ff_b1")),
+                _data.weights.get(&format!("encoder_{i}_ff_b2")),
             ) {
                 let w1 =
                     ndarray::Array::from_shape_vec((w1_shape[0], w1_shape[1]), w1_weights.clone())
@@ -1261,8 +1261,8 @@ impl RegistrableModel for crate::transformer::TransformerModel {
 
             // Restore layer norm parameters
             if let (Some(gamma1_weights), Some(beta1_weights)) = (
-                data.weights.get(&format!("encoder_{i}_ln1_gamma")),
-                data.weights.get(&format!("encoder_{i}_ln1_beta")),
+                _data.weights.get(&format!("encoder_{i}_ln1_gamma")),
+                _data.weights.get(&format!("encoder_{i}_ln1_beta")),
             ) {
                 let gamma1 = ndarray::Array::from_vec(gamma1_weights.clone());
                 let beta1 = ndarray::Array::from_vec(beta1_weights.clone());
@@ -1270,8 +1270,8 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             }
 
             if let (Some(gamma2_weights), Some(beta2_weights)) = (
-                data.weights.get(&format!("encoder_{i}_ln2_gamma")),
-                data.weights.get(&format!("encoder_{i}_ln2_beta")),
+                _data.weights.get(&format!("encoder_{i}_ln2_gamma")),
+                _data.weights.get(&format!("encoder_{i}_ln2_beta")),
             ) {
                 let gamma2 = ndarray::Array::from_vec(gamma2_weights.clone());
                 let beta2 = ndarray::Array::from_vec(beta2_weights.clone());
@@ -1287,8 +1287,8 @@ impl RegistrableModel for crate::transformer::TransformerModel {
 
         // Restore output projection weights
         if let (Some(output_weights), Some(output_shape)) = (
-            data.weights.get("output_projection"),
-            data.shapes.get("output_projection"),
+            _data.weights.get("output_projection"),
+            _data.shapes.get("output_projection"),
         ) {
             let _output_array = ndarray::Array::from_shape_vec(
                 ndarray::IxDyn(output_shape),
@@ -1382,27 +1382,26 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
         })
     }
 
-    fn deserialize(data: &SerializableModelData) -> Result<Self> {
-        let vector_size = data
+    fn deserialize(_data: &SerializableModelData) -> Result<Self> {
+        let vector_size = _data
             .config
             .get("vector_size")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing vector_size config".to_string()))?;
-        let window_size = data
+        let window_size = _data
             .config
             .get("window_size")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing window_size config".to_string()))?;
-        let min_count = data
+        let min_count = _data
             .config
             .get("min_count")
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| TextError::InvalidInput("Missing min_count config".to_string()))?;
 
-        let algorithm = match data.config.get("algorithm").map(|s| s.as_str()) {
+        let algorithm = match _data.config.get("algorithm").map(|s| s.as_str()) {
             Some("CBOW") => crate::embeddings::Word2VecAlgorithm::CBOW,
-            Some("SkipGram") => crate::embeddings::Word2VecAlgorithm::SkipGram,
-            _ => {
+            Some("SkipGram") => crate::embeddings::Word2VecAlgorithm::SkipGram_ => {
                 return Err(TextError::InvalidInput(
                     "Invalid or missing algorithm config".to_string(),
                 ))
@@ -1427,11 +1426,11 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
 
         // Restore vocabulary and embeddings if available
         if let (Some(vocab), Some(embed_weights), Some(embed_shape)) = (
-            data.vocabulary.as_ref(),
-            data.weights.get("embeddings"),
-            data.shapes.get("embeddings"),
+            _data.vocabulary.as_ref(),
+            _data.weights.get("embeddings"),
+            _data.shapes.get("embeddings"),
         ) {
-            // Restore the full model state from serialized data
+            // Restore the full model state from serialized _data
             let _embedding_matrix = ndarray::Array::from_shape_vec(
                 (embed_shape[0], embed_shape[1]),
                 embed_weights.clone(),
@@ -1449,11 +1448,11 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
             let mut restored_word2vec = word2vec;
 
             // Apply configuration parameters if available
-            if let Some(window_size) = data.config.get("window_size").and_then(|s| s.parse().ok()) {
+            if let Some(window_size) = _data.config.get("window_size").and_then(|s| s.parse().ok()) {
                 restored_word2vec = restored_word2vec.with_window_size(window_size);
             }
 
-            if let Some(negative_samples) = data
+            if let Some(negative_samples) = _data
                 .config
                 .get("negative_samples")
                 .and_then(|s| s.parse().ok())
@@ -1461,7 +1460,7 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
                 restored_word2vec = restored_word2vec.with_negative_samples(negative_samples);
             }
 
-            if let Some(learning_rate) = data
+            if let Some(learning_rate) = _data
                 .config
                 .get("learning_rate")
                 .and_then(|s| s.parse().ok())

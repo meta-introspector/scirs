@@ -23,11 +23,11 @@
 /// Each method offers different trade-offs between computational efficiency and
 /// prediction accuracy, enabling kriging to scale to much larger datasets.
 use ndarray::{Array1, Array2};
-use scirs2_interpolate::advanced::fast_kriging::{
+use scirs2__interpolate::advanced::fast_kriging::{
     make_fixed_rank_kriging, make_hodlr_kriging, make_local_kriging, FastKrigingBuilder,
     FastKrigingMethod,
 };
-use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -148,8 +148,8 @@ fn generate_synthetic_data(
     use scirs2_core::random::Random;
     let mut rng = Random::default();
 
-    // Create points using Latin Hypercube Sampling for better space filling
-    let mut points = Array2::zeros((n_points, n_dims));
+    // Create _points using Latin Hypercube Sampling for better space filling
+    let mut _points = Array2::zeros((n_points, n_dims));
 
     // Simple LHS implementation
     for d in 0..n_dims {
@@ -157,19 +157,19 @@ fn generate_synthetic_data(
             .map(|i| {
                 let bin_width = 1.0 / (n_points as f64);
                 let bin_min = i as f64 * bin_width;
-                bin_min + rng.random_range(0.0, bin_width)
+                bin_min + rng.gen_range(0.0..bin_width)
             })
             .collect();
 
         // Shuffle the dimension values
         for i in (1..values.len()).rev() {
-            let j = rng.random_range(0usize, i + 1);
+            let j = rng.gen_range(0usize..i + 1);
             values.swap(i, j);
         }
 
-        // Assign to points array
-        for i in 0..n_points {
-            points[[i, d]] = values[i] * 10.0; // Scale to [0, 10]
+        // Assign to _points array
+        for i in 0, n_points {
+            _points[[i, d]] = values[i] * 10.0; // Scale to [0, 10]
         }
     }
 
@@ -179,14 +179,14 @@ fn generate_synthetic_data(
     // Generate values with spatial pattern (2D example)
     for i in 0..n_points {
         if n_dims >= 2 {
-            let x = points[[i, 0]];
-            let y = points[[i, 1]];
+            let x = _points[[i, 0]];
+            let y = _points[[i, 1]];
 
             // Pattern: f(x,y) = sin(x/2) + cos(y/3) + x*y/50
             values[i] = f64::sin(x / 2.0) + f64::cos(y / 3.0) + (x * y / 50.0);
         } else {
             // 1D fallback
-            let x = points[[i, 0]];
+            let x = _points[[i, 0]];
             values[i] = f64::sin(x / 2.0);
         }
 
@@ -194,17 +194,17 @@ fn generate_synthetic_data(
         values[i] += noise_level * scirs2_core::random::sampling::random_standard_normal(&mut rng);
     }
 
-    Ok((points, values))
+    Ok((_points, values))
 }
 
 /// Generate a grid of points for prediction
 #[allow(dead_code)]
-fn generate_prediction_grid(n_grid: usize, n_dims: usize) -> Array2<f64> {
+fn generate_prediction_grid(_n_grid: usize, n_dims: usize) -> Array2<f64> {
     // For dimensions > 2, we'll just create a line through the space
     if n_dims > 2 {
-        let mut grid_points = Array2::zeros((n_grid, n_dims));
-        for i in 0..n_grid {
-            let t = 10.0 * (i as f64) / ((n_grid - 1) as f64);
+        let mut grid_points = Array2::zeros((_n_grid, n_dims));
+        for i in 0.._n_grid {
+            let t = 10.0 * (i as f64) / ((_n_grid - 1) as f64);
             for d in 0..n_dims {
                 grid_points[[i, d]] = t;
             }
@@ -221,7 +221,7 @@ fn generate_prediction_grid(n_grid: usize, n_dims: usize) -> Array2<f64> {
         return grid_points;
     }
 
-    // For 2D, create a regular grid
+    // For 2D, create a regular _grid
     let grid_size = n_grid * n_grid;
     let mut grid_points = Array2::zeros((grid_size, 2));
 
@@ -375,7 +375,7 @@ fn performance_scaling_example(
     medium_dataset: &(Array2<f64>, Array1<f64>),
     large_dataset: &(Array2<f64>, Array1<f64>),
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Measuring performance scaling across dataset sizes...");
+    println!("Measuring performance scaling across _dataset sizes...");
 
     // Create fixed test points for prediction
     let test_points = generate_prediction_grid(3, small_dataset.0.shape()[1]);
@@ -431,9 +431,9 @@ fn performance_scaling_example(
     // Explanation of scaling behavior
     println!("\nScaling behavior observations:");
     println!("- Local kriging: Build time is O(1), prediction scales with neighborhood size");
-    println!("- Fixed rank: Build time scales with dataset size, prediction time is constant");
+    println!("- Fixed rank: Build time scales with _dataset size, prediction time is constant");
     println!("- Tapering: Both build and prediction scale better than full kriging");
-    println!("- The optimal method depends on dataset size and prediction pattern");
+    println!("- The optimal method depends on _dataset size and prediction pattern");
 
     Ok(())
 }

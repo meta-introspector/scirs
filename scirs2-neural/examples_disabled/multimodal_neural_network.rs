@@ -37,12 +37,11 @@ impl Conv2D {
         let mut weight =
             Array4::<f32>::zeros((out_channels, in_channels, kernel_size, kernel_size));
         for elem in weight.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         let bias = Array::zeros(out_channels);
         Conv2D {
-            in_channels,
-            out_channels,
+            in_channels..out_channels,
             kernel_size,
             stride,
             padding,
@@ -99,20 +98,20 @@ impl Conv2D {
 // MaxPooling Layer
 struct MaxPool2D {
 impl MaxPool2D {
-    fn new(kernel_size: usize, stride: usize) -> Self {
+    fn new(_kernel_size: usize, stride: usize) -> Self {
         MaxPool2D {
         // x: [batch_size, channels, height, width]
         let channels = x.shape()[1];
         // Calculate output dimensions
-        let out_height = (height - self.kernel_size) / self.stride + 1;
-        let out_width = (width - self.kernel_size) / self.stride + 1;
+        let out_height = (height - self._kernel_size) / self.stride + 1;
+        let out_width = (width - self._kernel_size) / self.stride + 1;
         let mut output = Array4::<f32>::zeros((batch_size, channels, out_height, out_width));
         // Pooling operation
             for c in 0..channels {
                         let mut max_val = f32::NEG_INFINITY;
                         // Find maximum value in the window
-                        for kh in 0..self.kernel_size {
-                            for kw in 0..self.kernel_size {
+                        for kh in 0..self._kernel_size {
+                            for kw in 0..self._kernel_size {
                                 let h_pos = h_start + kh;
                                 let w_pos = w_start + kw;
                                 max_val = max_val.max(x[[b, c, h_pos, w_pos]]);
@@ -154,7 +153,7 @@ struct LSTMCell {
     w_ho: Array2<f32>, // Hidden to output gate
     b_o: Array1<f32>,  // Output gate bias
 impl LSTMCell {
-    fn new(input_size: usize, hidden_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize) -> Self {
         let bound = (6.0 / (input_size + hidden_size) as f32).sqrt();
         // Input gate weights
         let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
@@ -250,11 +249,11 @@ struct Embedding {
     embedding_dim: usize,
     weight: Array2<f32>,
 impl Embedding {
-    fn new(vocab_size: usize, embedding_dim: usize) -> Self {
+    fn new(_vocab_size: usize, embedding_dim: usize) -> Self {
         let bound = (3.0 / embedding_dim as f32).sqrt();
-        let mut weight = Array2::<f32>::zeros((vocab_size, embedding_dim));
+        let mut weight = Array2::<f32>::zeros((_vocab_size, embedding_dim));
         Embedding {
-            vocab_size,
+            _vocab_size,
             embedding_dim,
     fn forward(&self, x: &Array2<usize>) -> Array3<f32> {
         // x: [batch_size, seq_len] - Input token IDs
@@ -262,7 +261,7 @@ impl Embedding {
         let mut output = Array3::<f32>::zeros((batch_size, seq_len, self.embedding_dim));
             for t in 0..seq_len {
                 let token_id = x[[b, t]];
-                if token_id < self.vocab_size {
+                if token_id < self._vocab_size {
                     for e in 0..self.embedding_dim {
                         output[[b, t, e]] = self.weight[[token_id, e]];
 // Fully connected layer
@@ -270,7 +269,7 @@ struct Linear {
     in_features: usize,
     out_features: usize,
 impl Linear {
-    fn new(in_features: usize, out_features: usize) -> Self {
+    fn new(_in_features: usize, out_features: usize) -> Self {
         let bound = (6.0 / (in_features + out_features) as f32).sqrt();
         let mut weight = Array2::<f32>::zeros((out_features, in_features));
         let bias = Array::zeros(out_features);
@@ -349,7 +348,7 @@ impl MultiModalModel {
         let pool2_out_w = conv2_out_w / 2;
         let image_feature_size = 32 * pool2_out_h * pool2_out_w;
         // RNN layers
-        let embedding = Embedding::new(vocab_size, embedding_dim);
+        let embedding = Embedding::new(_vocab_size, embedding_dim);
         let lstm = LSTM::new(embedding_dim, hidden_size);
         let text_feature_size = hidden_size;
         // Combined feature size
@@ -495,17 +494,17 @@ fn generate_synthetic_text(
     (text_data, word_map)
 // Create labels for the synthetic data
 #[allow(dead_code)]
-fn generate_labels(num_samples: usize, num_classes: usize) -> (Array2<f32>, Array1<usize>) {
-    let mut one_hot = Array2::<f32>::zeros((num_samples, num_classes));
-    let mut indices = Array1::<usize>::zeros(num_samples);
+fn generate_labels(_num_samples: usize, num_classes: usize) -> (Array2<f32>, Array1<usize>) {
+    let mut one_hot = Array2::<f32>::zeros((_num_samples, num_classes));
+    let mut indices = Array1::<usize>::zeros(_num_samples);
         let class = n % num_classes;
         one_hot[[n, class]] = 1.0;
         indices[n] = class;
     (one_hot, indices)
 // Calculate accuracy
 #[allow(dead_code)]
-fn calculate_accuracy(predictions: &Array2<f32>, targets: &Array1<usize>) -> f32 {
-    let num_samples = predictions.shape()[0];
+fn calculate_accuracy(_predictions: &Array2<f32>, targets: &Array1<usize>) -> f32 {
+    let _num_samples = predictions.shape()[0];
     let mut correct = 0;
         // Get predicted class (argmax)
         let mut max_idx = 0;
@@ -517,13 +516,13 @@ fn calculate_accuracy(predictions: &Array2<f32>, targets: &Array1<usize>) -> f32
         // Check if prediction matches target
         if max_idx == targets[n] {
             correct += 1;
-    correct as f32 / num_samples as f32
+    correct as f32 / _num_samples as f32
 #[allow(dead_code)]
 fn main() {
     println!("Multi-Modal Neural Network (CNN + RNN) Example");
     println!("=============================================");
     // Configuration
-    let num_samples = 300;
+    let _num_samples = 300;
     let image_channels = 3; // RGB
     let image_height = 32;
     let image_width = 32;
@@ -534,12 +533,12 @@ fn main() {
     let max_text_len = 10;
     // Generate synthetic data
     println!("Generating synthetic data...");
-    let images = generate_synthetic_images(num_samples, image_channels, image_height, image_width);
-    let (text_data, word_map) = generate_synthetic_text(num_samples, vocab_size, max_text_len);
-    let (_, labels) = generate_labels(num_samples, num_classes);
+    let images = generate_synthetic_images(_num_samples, image_channels, image_height, image_width);
+    let (text_data, word_map) = generate_synthetic_text(_num_samples, vocab_size, max_text_len);
+    let (_, labels) = generate_labels(_num_samples, num_classes);
     // Split into train and test sets (80% train, 20% test)
-    let train_size = (num_samples as f32 * 0.8) as usize;
-    let test_size = num_samples - train_size;
+    let train_size = (_num_samples as f32 * 0.8) as usize;
+    let test_size = _num_samples - train_size;
     let train_images = images.slice(s![0..train_size, .., .., ..]).to_owned();
     let train_text = text_data.slice(s![0..train_size, ..]).to_owned();
     let train_labels = labels.slice(s![0..train_size]).to_owned();
@@ -579,8 +578,7 @@ fn main() {
         let true_class = match test_labels[i] {
             0 => "Square (Red)",
             1 => "Circle (Green)",
-            2 => "Triangle (Blue)",
-            _ => "Unknown",
+            2 => "Triangle (Blue)"_ => "Unknown",
         // Get predicted class
         let mut pred_class_idx = 0;
         let mut max_val = test_preds[[i, 0]];

@@ -18,7 +18,8 @@ use rsa::{traits::PaddingScheme, RsaPublicKey};
 #[cfg(feature = "crypto")]
 use sha2::{Digest, Sha256};
 #[cfg(feature = "crypto")]
-use x509_parser::prelude::*;
+use x509__parser::prelude::*;
+// use std::path::PathBuf; // Duplicate import
 
 /// Plugin loader for managing plugin loading and unloading
 #[derive(Debug)]
@@ -506,10 +507,10 @@ pub enum ThreatType {
 
 impl PluginLoader {
     /// Create a new plugin loader
-    pub fn new(config: LoaderConfig) -> Self {
-        let security_manager = SecurityManager::new(config.security_policy.clone());
+    pub fn new(_config: LoaderConfig) -> Self {
+        let security_manager = SecurityManager::new(_config.security_policy.clone());
         Self {
-            config,
+            _config,
             security_manager,
             loaded_plugins: HashMap::new(),
             dependency_graph: DependencyGraph::new(),
@@ -791,8 +792,7 @@ impl PluginLoader {
     fn load_plugin_from_registry(
         &mut self,
         name: &str,
-        version: Option<&str>,
-        _config: &PluginConfig,
+        version: Option<&str>, _config: &PluginConfig,
     ) -> Result<PluginLoadResult> {
         let start_time = std::time::Instant::now();
         let mut errors = Vec::new();
@@ -817,7 +817,7 @@ impl PluginLoader {
 
             if download_result.success {
                 // Verify package signature if required
-                if self.config.security_policy.signature_verification.enabled {
+                if self._config.security_policy.signature_verification.enabled {
                     let signature_valid =
                         self.verify_package_signature(&package_path, &plugin_info.signature)?;
                     if !signature_valid {
@@ -876,8 +876,7 @@ impl PluginLoader {
     /// Load plugin from HTTP URL
     fn load_plugin_from_http(
         &mut self,
-        url: &str,
-        _config: &PluginConfig,
+        url: &str_config: &PluginConfig,
     ) -> Result<PluginLoadResult> {
         let start_time = std::time::Instant::now();
         let mut errors = Vec::new();
@@ -901,10 +900,10 @@ impl PluginLoader {
                 }
             }
 
-            if download_result.size > self.config.security_policy.max_plugin_size {
+            if download_result.size > self._config.security_policy.max_plugin_size {
                 errors.push(format!(
                     "Plugin size ({} bytes) exceeds limit ({} bytes)",
-                    download_result.size, self.config.security_policy.max_plugin_size
+                    download_result.size, self._config.security_policy.max_plugin_size
                 ));
                 let _ = std::fs::remove_dir_all(&temp_dir);
                 return Ok(PluginLoadResult::failed_with_errors(errors));
@@ -1025,8 +1024,7 @@ impl PluginLoader {
         if let Some(extension) = path.extension() {
             match extension.to_str() {
                 Some("so") | Some("dylib") | Some("dll") => true,
-                Some("toml") if path.file_stem().and_then(|s| s.to_str()) == Some("plugin") => true,
-                _ => false,
+                Some("toml") if path.file_stem().and_then(|s| s.to_str()) == Some("plugin") => true_ => false,
             }
         } else {
             false
@@ -1133,12 +1131,10 @@ impl PluginLoader {
 
     /// Verify package signature (simulation)
     fn verify_package_signature(
-        &self,
-        _package_path: &Path,
-        _signature: &Option<String>,
+        &self, _package_path: &Path, _signature: &Option<String>,
     ) -> Result<bool> {
         // In production, this would verify cryptographic signatures
-        println!("🔐 Verifying package signature...");
+        println!("🔐 Verifying package _signature...");
         Ok(true) // Simulate successful verification
     }
 
@@ -1226,8 +1222,7 @@ impl PluginLoader {
                     "author" => metadata.plugin.author = value.to_string(),
                     "license" => metadata.plugin.license = value.to_string(),
                     "homepage" => metadata.plugin.homepage = Some(value.to_string()),
-                    "entry_point" => metadata.plugin.entry_point = value.to_string(),
-                    _ => {
+                    "entry_point" => metadata.plugin.entry_point = value.to_string(, _ => {
                         // Ignore unknown fields for now
                     }
                 }
@@ -1308,14 +1303,14 @@ impl DependencyGraph {
 }
 
 impl SecurityManager {
-    fn new(policy: SecurityPolicy) -> Self {
+    fn new(_policy: SecurityPolicy) -> Self {
         let crypto_validator = CryptographicValidator::new(
-            policy.trusted_cas.clone(),
-            policy.signature_verification.clone(),
+            _policy.trusted_cas.clone(),
+            _policy.signature_verification.clone(),
         );
 
         Self {
-            policy,
+            _policy,
             permission_validator: PermissionValidator::new(),
             code_scanner: CodeScanner::new(),
             crypto_validator,
@@ -1448,9 +1443,9 @@ impl SecurityManager {
         // Penalty for permission violations
         score -= violations.len() as f64 * 0.1;
 
-        // Penalty for signature verification failures
+        // Penalty for signature _verification failures
         if let Some(sig_result) = signature_verification {
-            if !sig_result.valid {
+            if !sig_result._valid {
                 score -= 0.4;
             }
             if !sig_result.chain_valid {
@@ -1513,17 +1508,16 @@ impl PermissionValidator {
 }
 
 impl CryptographicValidator {
-    fn new(trusted_cas: Vec<TrustedCA>, config: SignatureVerificationConfig) -> Self {
+    fn new(_trusted_cas: Vec<TrustedCA>, config: SignatureVerificationConfig) -> Self {
         Self {
-            trusted_cas,
+            _trusted_cas,
             config,
         }
     }
 
     fn verify_plugin_signature(
         &self,
-        path: &Path,
-        _metadata: &PluginMetadata,
+        path: &Path_metadata: &PluginMetadata,
     ) -> Result<SignatureVerificationResult> {
         // Look for signature file (plugin.sig or similar)
         let sig_path = path
@@ -1601,7 +1595,7 @@ impl CodeScanner {
         }
     }
 
-    fn scan_code(&self, _path: &Path) -> Result<Vec<SecurityThreat>> {
+    fn scan_code(&self_path: &Path) -> Result<Vec<SecurityThreat>> {
         // In a real implementation, this would scan the plugin code
         // for suspicious patterns and known malware signatures
         Ok(Vec::new())
@@ -1609,8 +1603,8 @@ impl CodeScanner {
 }
 
 impl PluginMetadata {
-    fn default_for_path(path: &Path) -> Self {
-        let name = path
+    fn default_for_path(_path: &Path) -> Self {
+        let name = _path
             .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("unknown")
@@ -1797,7 +1791,7 @@ pub struct SecurityFileScanResult {
 
 impl SecurityManager {
     /// Scan individual file for security issues
-    pub fn scan_file(&self, _path: &Path) -> Result<SecurityFileScanResult> {
+    pub fn scan_file(&self_path: &Path) -> Result<SecurityFileScanResult> {
         // Placeholder implementation
         Ok(SecurityFileScanResult {
             safe: true,
@@ -1815,11 +1809,11 @@ impl PluginLoader {
 
 impl PluginLoadResult {
     /// Create a failed result with errors
-    pub fn failed_with_errors(errors: Vec<String>) -> Self {
+    pub fn failed_with_errors(_errors: Vec<String>) -> Self {
         Self {
             success: false,
             plugin_info: None,
-            errors,
+            _errors,
             warnings: Vec::new(),
             load_time: std::time::Duration::from_secs(0),
             security_results: SecurityScanResult::default(),

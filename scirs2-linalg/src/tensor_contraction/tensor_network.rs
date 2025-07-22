@@ -45,13 +45,13 @@ where
     ///
     /// * If the number of indices does not match the number of dimensions in the tensor
     /// * If there are duplicate index names
-    pub fn new(data: ArrayD<A>, indices: Vec<String>) -> LinalgResult<Self> {
+    pub fn new(_data: ArrayD<A>, indices: Vec<String>) -> LinalgResult<Self> {
         // Check that the number of indices matches the number of dimensions
-        if indices.len() != data.ndim() {
+        if indices.len() != _data.ndim() {
             return Err(LinalgError::ShapeError(format!(
                 "Number of indices ({}) does not match number of tensor dimensions ({})",
                 indices.len(),
-                data.ndim()
+                _data.ndim()
             )));
         }
 
@@ -66,7 +66,7 @@ where
             }
         }
 
-        Ok(TensorNode { data, indices })
+        Ok(TensorNode { _data, indices })
     }
 
     /// Gets the shape of the tensor node.
@@ -116,12 +116,12 @@ where
         let current_indices: HashSet<_> = self.indices.iter().collect();
         if unique_new_indices != current_indices {
             return Err(LinalgError::ValueError(
-                "New order must contain exactly the same indices as the tensor node".to_string(),
+                "New _order must contain exactly the same indices as the tensor node".to_string(),
             ));
         }
 
         // Map from current indices to their positions
-        let index_positions: HashMap<_, _> = self
+        let index_positions: HashMap<_> = self
             .indices
             .iter()
             .enumerate()
@@ -412,10 +412,10 @@ where
         index_name: &str,
         position: usize,
     ) -> LinalgResult<TensorNode<A>> {
-        // Check that the index name doesn't already exist
+        // Check that the index _name doesn't already exist
         if self.indices.contains(&index_name.to_string()) {
             return Err(LinalgError::ValueError(format!(
-                "Index name '{}' already exists in tensor",
+                "Index _name '{}' already exists in tensor",
                 index_name
             )));
         }
@@ -510,8 +510,8 @@ where
     /// # Returns
     ///
     /// * `TensorNetwork` - A new tensor network
-    pub fn new(nodes: Vec<TensorNode<A>>) -> Self {
-        TensorNetwork { nodes }
+    pub fn new(_nodes: Vec<TensorNode<A>>) -> Self {
+        TensorNetwork { _nodes }
     }
 
     /// Adds a tensor node to the network.

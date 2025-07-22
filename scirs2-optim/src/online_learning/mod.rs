@@ -6,7 +6,6 @@
 use crate::error::{OptimError, Result};
 use ndarray::{Array, Array1, Dimension, ScalarOperand};
 use num_traits::Float;
-use scirs2_core::random;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 
@@ -292,28 +291,26 @@ pub struct OnlinePerformanceMetrics<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOptimizer<A, D> {
     /// Create a new online optimizer
-    pub fn new(strategy: OnlineLearningStrategy, initial_parameters: Array<A, D>) -> Self {
+    pub fn new(_strategy: OnlineLearningStrategy, initial_parameters: Array<A, D>) -> Self {
         let param_shape = initial_parameters.raw_dim();
         let gradient_accumulator = Array::zeros(param_shape.clone());
-        let second_moment_accumulator = match &strategy {
+        let second_moment_accumulator = match &_strategy {
             OnlineLearningStrategy::AdaptiveSGD {
                 adaptation_method: LearningRateAdaptation::Adam { .. },
                 ..
-            } => Some(Array::zeros(param_shape)),
-            _ => None,
+            } => Some(Array::zeros(param_shape), _ => None,
         };
 
-        let current_lr = match &strategy {
+        let current_lr = match &_strategy {
             OnlineLearningStrategy::AdaptiveSGD { initial_lr, .. } => A::from(*initial_lr).unwrap(),
-            OnlineLearningStrategy::OnlineNewton { .. } => A::from(0.01).unwrap(),
-            OnlineLearningStrategy::FTRL { .. } => A::from(0.1).unwrap(),
-            OnlineLearningStrategy::MirrorDescent { .. } => A::from(0.01).unwrap(),
-            OnlineLearningStrategy::AdaptiveMultiTask { .. } => A::from(0.001).unwrap(),
+            OnlineLearningStrategy::OnlineNewton { .. } =>, A::from(0.01).unwrap(),
+            OnlineLearningStrategy::FTRL { .. } =>, A::from(0.1).unwrap(),
+            OnlineLearningStrategy::MirrorDescent { .. } =>, A::from(0.01).unwrap(),
+            OnlineLearningStrategy::AdaptiveMultiTask { .. } =>, A::from(0.001).unwrap(),
         };
 
         Self {
-            strategy,
-            parameters: initial_parameters,
+            _strategy_parameters: initial_parameters,
             gradient_accumulator,
             second_moment_accumulator,
             current_lr,
@@ -597,9 +594,9 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
 
 impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOptimizer<A, D> {
     /// Create a new lifelong optimizer
-    pub fn new(strategy: LifelongStrategy) -> Self {
+    pub fn new(_strategy: LifelongStrategy) -> Self {
         Self {
-            strategy,
+            _strategy,
             task_optimizers: HashMap::new(),
             shared_knowledge: SharedKnowledge {
                 fisher_information: None,
@@ -691,9 +688,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
 
     /// Apply Elastic Weight Consolidation regularization
     fn apply_ewc_regularization(
-        &mut self,
-        _gradient: &Array<A, D>,
-        _importance_weight: f64,
+        &mut self_gradient: &Array<A, D>, _importance_weight: f64,
     ) -> Result<()> {
         // Simplified EWC implementation
         // In practice, this would compute Fisher Information Matrix and apply regularization
@@ -701,7 +696,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
     }
 
     /// Apply Progressive Networks strategy
-    fn apply_progressive_networks(&mut self, _gradient: &Array<A, D>) -> Result<()> {
+    fn apply_progressive_networks(&mut self_gradient: &Array<A, D>) -> Result<()> {
         // Simplified Progressive Networks implementation
         // In practice, this would manage lateral connections between task columns
         Ok(())
@@ -726,7 +721,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
                         self.memory_buffer.importance_scores.pop_front();
                     }
                     MemoryUpdateStrategy::Random => {
-                        let idx = random::rng().random_range(0, self.memory_buffer.examples.len());
+                        let idx = scirs2_core::random::rng().gen_range(0..self.memory_buffer.examples.len());
                         self.memory_buffer.examples.remove(idx);
                         self.memory_buffer.importance_scores.remove(idx);
                     }
@@ -738,7 +733,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
                             .iter()
                             .enumerate()
                             .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                            .map(|(idx, _)| idx)
+                            .map(|(idx_)| idx)
                         {
                             self.memory_buffer.examples.remove(min_idx);
                             self.memory_buffer.importance_scores.remove(min_idx);
@@ -760,14 +755,14 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
     }
 
     /// Apply meta-learning strategy
-    fn apply_meta_learning(&mut self, _gradient: &Array<A, D>) -> Result<()> {
+    fn apply_meta_learning(&mut self_gradient: &Array<A, D>) -> Result<()> {
         // Simplified meta-learning implementation
         // In practice, this would update meta-parameters based on task performance
         Ok(())
     }
 
     /// Apply Gradient Episodic Memory constraints
-    fn apply_gem_constraints(&mut self, _gradient: &Array<A, D>) -> Result<()> {
+    fn apply_gem_constraints(&mut self_gradient: &Array<A, D>) -> Result<()> {
         // Simplified GEM implementation
         // In practice, this would project gradients to satisfy memory constraints
         Ok(())

@@ -213,9 +213,9 @@ impl Default for CompatibilityConfig {
 
 impl SciPyCompatibilityChecker {
     /// Create a new compatibility checker
-    pub fn new(config: CompatibilityConfig) -> Self {
+    pub fn new(_config: CompatibilityConfig) -> Self {
         Self {
-            config,
+            _config,
             cached_results: None,
         }
     }
@@ -441,7 +441,7 @@ impl SciPyCompatibilityChecker {
             < 0.9
         {
             recommendations.push(
-                "Implement remaining high-priority SciPy functions for better API coverage"
+                "Implement remaining high-priority SciPy functions for better API _coverage"
                     .to_string(),
             );
         }
@@ -453,7 +453,7 @@ impl SciPyCompatibilityChecker {
 
         if !critical_missing.is_empty() {
             recommendations.push(format!(
-                "Implement {} critical missing features: {}",
+                "Implement {} critical missing _features: {}",
                 critical_missing.len(),
                 critical_missing
                     .iter()
@@ -511,8 +511,7 @@ impl SciPyCompatibilityChecker {
             "interp1d" | "CubicSpline" | "BSpline" | "griddata" | "RBFInterpolator" => {
                 FunctionCoverage::Complete
             }
-            "interp2d" | "interpn" | "RegularGridInterpolator" => FunctionCoverage::Partial,
-            _ => FunctionCoverage::Missing,
+            "interp2d" | "interpn" | "RegularGridInterpolator" => FunctionCoverage::Partial_ =>, FunctionCoverage::Missing,
         }
     }
 
@@ -526,8 +525,7 @@ impl SciPyCompatibilityChecker {
                 scirs2_param: "SplineBoundaryCondition enum".to_string(),
                 severity: DifferenceSeverity::Minor,
             }]),
-            "interp1d" => ParameterCompatibilityLevel::Identical,
-            _ => ParameterCompatibilityLevel::Incompatible(Vec::new()),
+            "interp1d" => ParameterCompatibilityLevel::Identical_ =>, ParameterCompatibilityLevel::Incompatible(Vec::new()),
         }
     }
 
@@ -644,8 +642,7 @@ impl CompatibilityReport {
             s if s >= 0.90 => "Very Good",
             s if s >= 0.80 => "Good",
             s if s >= 0.70 => "Fair",
-            s if s >= 0.60 => "Poor",
-            _ => "Very Poor",
+            s if s >= 0.60 => "Poor"_ => "Very Poor",
         }
     }
 }

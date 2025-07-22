@@ -87,7 +87,7 @@ pub struct CloudClient {
 
 impl CloudClient {
     /// Create a new cloud client
-    pub fn new(config: CloudConfig) -> Result<Self> {
+    pub fn new(_config: CloudConfig) -> Result<Self> {
         let cache_dir = dirs::cache_dir()
             .ok_or_else(|| DatasetsError::Other("Could not determine cache directory".to_string()))?
             .join("scirs2-datasets");
@@ -95,7 +95,7 @@ impl CloudClient {
         let external_client = ExternalClient::new()?;
 
         Ok(Self {
-            config,
+            _config,
             cache,
             external_client,
         })
@@ -186,8 +186,7 @@ impl CloudClient {
             )),
             CloudProvider::Azure => {
                 let account_name = match &self.config.credentials {
-                    CloudCredentials::AzureKey { account_name, .. } => account_name,
-                    _ => {
+                    CloudCredentials::AzureKey { account_name, .. } => account_name_ => {
                         return Err(DatasetsError::InvalidFormat(
                             "Azure requires account name in credentials".to_string(),
                         ))
@@ -279,12 +278,12 @@ impl CloudClient {
 
     #[allow(dead_code)]
     fn get_gcs_token(&self, key_file: &str) -> Result<String> {
-        // Load service account key file
+        // Load service account key _file
         let key_data = std::fs::read_to_string(key_file).map_err(|e| {
-            DatasetsError::LoadingError(format!("Failed to read key file {key_file}: {e}"))
+            DatasetsError::LoadingError(format!("Failed to read key _file {key_file}: {e}"))
         })?;
 
-        let service_account: serde_json::Value = serde_json::from_str(&key_data)
+        let service_account: serde, _json: Value = serde_json::from_str(&key_data)
             .map_err(|e| DatasetsError::SerdeError(format!("Invalid service account JSON: {e}")))?;
 
         // Extract required fields
@@ -343,14 +342,14 @@ impl CloudClient {
         // Azure requires RFC2822 format: "Wed, 27 Mar 2009 12:52:15 GMT"
         let timestamp = format_azure_timestamp(now.as_secs());
 
-        // Validate account key format (should be base64)
+        // Validate account _key format (should be base64)
         let account_key_bytes = base64_decode(account_key).map_err(|_| {
-            DatasetsError::AuthenticationError("Invalid base64 account key".to_string())
+            DatasetsError::AuthenticationError("Invalid base64 account _key".to_string())
         })?;
 
         if account_key_bytes.is_empty() {
             return Err(DatasetsError::AuthenticationError(
-                "Empty account key".to_string(),
+                "Empty account _key".to_string(),
             ));
         }
 
@@ -360,7 +359,7 @@ impl CloudClient {
             "GET\n\n\n\n\n\n\n\n\n\n\n\nx-ms-date:{timestamp}\nx-ms-version:2020-04-08\n/{account_name}"
         );
 
-        // Implement HMAC-SHA256 signing with the account key
+        // Implement HMAC-SHA256 signing with the account _key
         let signature = hmac_sha256(&account_key_bytes, string_to_sign.as_bytes())
             .map_err(DatasetsError::Other)?;
 
@@ -377,25 +376,25 @@ impl CloudClient {
     /// HMAC(K, m) = SHA256((K' ⊕ opad) || SHA256((K' ⊕ ipad) || m))
     /// where K' is the key padded to block size (64 bytes for SHA256)
     #[allow(dead_code)]
-    fn hmac_sha256(key: &[u8], message: &[u8]) -> Result<Vec<u8>> {
+    fn hmac_sha256(_key: &[u8], message: &[u8]) -> Result<Vec<u8>> {
         use sha2::{Digest, Sha256};
 
         const BLOCK_SIZE: usize = 64; // SHA256 block size
         const IPAD: u8 = 0x36;
         const OPAD: u8 = 0x5C;
 
-        // Step 1: Prepare the key
+        // Step 1: Prepare the _key
         let mut padded_key = [0u8; BLOCK_SIZE];
 
-        if key.len() > BLOCK_SIZE {
-            // If key is longer than block size, hash it first
+        if _key.len() > BLOCK_SIZE {
+            // If _key is longer than block size, hash it first
             let mut hasher = Sha256::new();
-            hasher.update(key);
+            hasher.update(_key);
             let hashed_key = hasher.finalize();
             padded_key[..hashed_key.len()].copy_from_slice(&hashed_key);
         } else {
-            // If key is shorter or equal, pad with zeros
-            padded_key[..key.len()].copy_from_slice(key);
+            // If _key is shorter or equal, pad with zeros
+            padded_key[.._key.len()].copy_from_slice(_key);
         }
 
         // Step 2: Create inner and outer padded keys
@@ -571,8 +570,7 @@ impl CloudClient {
 
     fn list_azure_objects(&self, prefix: Option<&str>) -> Result<Vec<String>> {
         let account_name = match &self.config.credentials {
-            CloudCredentials::AzureKey { account_name, .. } => account_name,
-            _ => {
+            CloudCredentials::AzureKey { account_name, .. } => account_name_ => {
                 return Err(DatasetsError::InvalidFormat(
                     "Azure requires account name".to_string(),
                 ))
@@ -591,7 +589,7 @@ impl CloudClient {
         };
 
         // Validate Azure credentials
-        let (account_name, _account_key) = match &self.config.credentials {
+        let (account_name_account_key) = match &self.config.credentials {
             CloudCredentials::AzureKey {
                 account_name,
                 account_key,
@@ -754,8 +752,8 @@ impl CloudClient {
 
 /// Helper function to format Azure timestamp in RFC2822 format
 #[allow(dead_code)]
-fn format_azure_timestamp(unix_timestamp: u64) -> String {
-    // This is a simplified timestamp formatter
+fn format_azure_timestamp(_unix_timestamp: u64) -> String {
+    // This is a simplified _timestamp formatter
     // In production, you'd use chrono or time crate for proper RFC2822 formatting
     let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     let months = [
@@ -764,13 +762,13 @@ fn format_azure_timestamp(unix_timestamp: u64) -> String {
 
     // Simple calculation - not accounting for leap years, etc.
     // This is just for demonstration
-    let day_of_week = ((unix_timestamp / 86400) + 4) % 7; // Unix epoch was Thursday
-    let day = ((unix_timestamp / 86400) % 365) % 31 + 1;
-    let month = ((unix_timestamp / 86400) % 365) % 12;
-    let year = 1970 + (unix_timestamp / 86400) / 365;
-    let hour = (unix_timestamp % 86400) / 3600;
-    let minute = (unix_timestamp % 3600) / 60;
-    let second = unix_timestamp % 60;
+    let day_of_week = ((_unix_timestamp / 86400) + 4) % 7; // Unix epoch was Thursday
+    let day = ((_unix_timestamp / 86400) % 365) % 31 + 1;
+    let month = ((_unix_timestamp / 86400) % 365) % 12;
+    let year = 1970 + (_unix_timestamp / 86400) / 365;
+    let hour = (_unix_timestamp % 86400) / 3600;
+    let minute = (_unix_timestamp % 3600) / 60;
+    let second = _unix_timestamp % 60;
 
     format!(
         "{}, {:02} {} {} {:02}:{:02}:{:02} GMT",
@@ -780,34 +778,34 @@ fn format_azure_timestamp(unix_timestamp: u64) -> String {
 
 /// Helper function to encode bytes as base64 (simplified implementation)
 #[allow(dead_code)]
-fn base64_encode(input: &[u8]) -> String {
+fn base64_encode(_input: &[u8]) -> String {
     // Simplified base64 encoder - in production you'd use base64 crate
     const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    if input.is_empty() {
+    if _input.is_empty() {
         return String::new();
     }
 
     let mut result = String::new();
     let mut i = 0;
 
-    while i < input.len() {
-        let b1 = input[i];
-        let b2 = if i + 1 < input.len() { input[i + 1] } else { 0 };
-        let b3 = if i + 2 < input.len() { input[i + 2] } else { 0 };
+    while i < _input.len() {
+        let b1 = _input[i];
+        let b2 = if i + 1 < _input.len() { _input[i + 1] } else { 0 };
+        let b3 = if i + 2 < _input.len() { _input[i + 2] } else { 0 };
 
         let triple = ((b1 as u32) << 16) | ((b2 as u32) << 8) | (b3 as u32);
 
         result.push(BASE64_CHARS[((triple >> 18) & 0x3F) as usize] as char);
         result.push(BASE64_CHARS[((triple >> 12) & 0x3F) as usize] as char);
 
-        if i + 1 < input.len() {
+        if i + 1 < _input.len() {
             result.push(BASE64_CHARS[((triple >> 6) & 0x3F) as usize] as char);
         } else {
             result.push('=');
         }
 
-        if i + 2 < input.len() {
+        if i + 2 < _input.len() {
             result.push(BASE64_CHARS[(triple & 0x3F) as usize] as char);
         } else {
             result.push('=');
@@ -821,14 +819,14 @@ fn base64_encode(input: &[u8]) -> String {
 
 /// Helper function to compute HMAC-SHA256 (simplified implementation)
 #[allow(dead_code)]
-fn hmac_sha256(key: &[u8], data: &[u8]) -> std::result::Result<Vec<u8>, String> {
+fn hmac_sha256(_key: &[u8], data: &[u8]) -> std::result::Result<Vec<u8>, String> {
     // Simplified HMAC implementation - in production you'd use hmac/sha2 crates
     // This is just a placeholder to make the code compile
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
-    key.hash(&mut hasher);
+    _key.hash(&mut hasher);
     data.hash(&mut hasher);
     let hash = hasher.finish();
 
@@ -838,20 +836,20 @@ fn hmac_sha256(key: &[u8], data: &[u8]) -> std::result::Result<Vec<u8>, String> 
 
 /// Helper function to decode base64 strings
 #[allow(dead_code)]
-fn base64_decode(input: &str) -> std::result::Result<Vec<u8>, String> {
+fn base64_decode(_input: &str) -> std::result::Result<Vec<u8>, String> {
     // Simple base64 decoder - in production you'd use base64 crate
     const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    let input = input.trim();
-    if input.is_empty() {
+    let _input = _input.trim();
+    if _input.is_empty() {
         return Ok(Vec::new());
     }
 
     // Remove padding
-    let input = input.trim_end_matches('=');
+    let _input = _input.trim_end_matches('=');
 
     // Validate characters
-    for ch in input.bytes() {
+    for ch in _input.bytes() {
         if !BASE64_CHARS.contains(&ch) {
             return Err("Invalid base64 character".to_string());
         }
@@ -859,7 +857,7 @@ fn base64_decode(input: &str) -> std::result::Result<Vec<u8>, String> {
 
     // This is a simplified decoder for demonstration
     // In production, use the base64 crate
-    Ok(input.as_bytes().to_vec())
+    Ok(_input.as_bytes().to_vec())
 }
 
 /// Pre-configured cloud clients for popular services
@@ -891,11 +889,10 @@ pub mod presets {
     }
 
     /// Create a GCS client with service account credentials
-    pub fn gcs_client(bucket: &str, key_file: &str) -> Result<CloudClient> {
+    pub fn gcs_client(_bucket: &str, key_file: &str) -> Result<CloudClient> {
         let config = CloudConfig {
             provider: CloudProvider::GCS,
-            region: None,
-            bucket: bucket.to_string(),
+            region: None_bucket: _bucket.to_string(),
             credentials: CloudCredentials::ServiceAccount {
                 key_file: key_file.to_string(),
             },
@@ -955,10 +952,9 @@ pub mod presets {
     }
 
     /// Create an anonymous S3 client for public buckets
-    pub fn public_s3_client(region: &str, bucket: &str) -> Result<CloudClient> {
+    pub fn public_s3_client(_region: &str, bucket: &str) -> Result<CloudClient> {
         let config = CloudConfig {
-            provider: CloudProvider::S3,
-            region: Some(region.to_string()),
+            provider: CloudProvider::S3_region: Some(_region.to_string()),
             bucket: bucket.to_string(),
             credentials: CloudCredentials::Anonymous,
             endpoint: None,
@@ -1005,13 +1001,13 @@ pub mod public_datasets {
 
     impl GCPPublicData {
         /// Load BigQuery public datasets (requires authentication)
-        pub fn bigquery_samples(key_file: &str) -> Result<CloudClient> {
-            gcs_client("bigquery-public-data", key_file)
+        pub fn bigquery_samples(_key_file: &str) -> Result<CloudClient> {
+            gcs_client("bigquery-public-data", _key_file)
         }
 
         /// Load Google Books Ngrams
-        pub fn books_ngrams(key_file: &str) -> Result<CloudClient> {
-            gcs_client("books", key_file)
+        pub fn books_ngrams(_key_file: &str) -> Result<CloudClient> {
+            gcs_client("books", _key_file)
         }
     }
 
@@ -1020,13 +1016,13 @@ pub mod public_datasets {
 
     impl AzureOpenData {
         /// Load COVID-19 tracking data
-        pub fn covid19_tracking(account_name: &str, account_key: &str) -> Result<CloudClient> {
-            azure_client(account_name, account_key, "covid19-tracking")
+        pub fn covid19_tracking(_account_name: &str, account_key: &str) -> Result<CloudClient> {
+            azure_client(_account_name, account_key, "covid19-tracking")
         }
 
         /// Load US Census data
-        pub fn us_census(account_name: &str, account_key: &str) -> Result<CloudClient> {
-            azure_client(account_name, account_key, "us-census")
+        pub fn us_census(_account_name: &str, account_key: &str) -> Result<CloudClient> {
+            azure_client(_account_name, account_key, "us-census")
         }
     }
 }

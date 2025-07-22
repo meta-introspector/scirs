@@ -47,18 +47,18 @@ impl Clone for CountVectorizer {
 
 impl CountVectorizer {
     /// Create a new count vectorizer
-    pub fn new(binary: bool) -> Self {
+    pub fn new(_binary: bool) -> Self {
         Self {
             tokenizer: Box::new(WordTokenizer::default()),
             vocabulary: Vocabulary::new(),
-            binary,
+            _binary,
         }
     }
 
     /// Create a count vectorizer with a custom tokenizer
-    pub fn with_tokenizer(tokenizer: Box<dyn Tokenizer + Send + Sync>, binary: bool) -> Self {
+    pub fn with_tokenizer(_tokenizer: Box<dyn Tokenizer + Send + Sync>, binary: bool) -> Self {
         Self {
-            tokenizer,
+            _tokenizer,
             vocabulary: Vocabulary::new(),
             binary,
         }
@@ -203,10 +203,10 @@ pub struct TfidfVectorizer {
 
 impl TfidfVectorizer {
     /// Create a new TF-IDF vectorizer
-    pub fn new(binary: bool, smooth_idf: bool, norm: Option<String>) -> Self {
+    pub fn new(_binary: bool, smooth_idf: bool, norm: Option<String>) -> Self {
         Self {
-            count_vectorizer: CountVectorizer::new(binary),
-            idf: None,
+            count_vectorizer: CountVectorizer::new(_binary),
+            _idf: None,
             smooth_idf,
             norm,
         }
@@ -221,7 +221,7 @@ impl TfidfVectorizer {
     ) -> Self {
         Self {
             count_vectorizer: CountVectorizer::with_tokenizer(tokenizer, binary),
-            idf: None,
+            _idf: None,
             smooth_idf,
             norm,
         }

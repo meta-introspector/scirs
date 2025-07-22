@@ -105,17 +105,17 @@ fn fused_quantized_matmul_chain_int8_symmetric(
     let scales: Vec<f32> = params.iter().map(|p| p.scale).collect();
 
     // Result dimensions
-    let (rows, _) = matrices[0].shape;
-    let (_, cols) = matrices.last().unwrap().shape;
-    let mut result = Array2::zeros((rows, cols));
+    let rows_ = matrices[0].shape.0;
+    let cols = matrices.last().unwrap().shape.1;
+    let mut result = Array2::zeros((rows_, cols));
 
     // Compute the fused scale factor - product of all scales
     let fused_scale: f32 = scales.iter().product();
 
     // Use block multiplication for better cache efficiency
     const BLOCK_SIZE: usize = 32;
-    for i0 in (0..rows).step_by(BLOCK_SIZE) {
-        let i_end = (i0 + BLOCK_SIZE).min(rows);
+    for i0 in (0..rows_).step_by(BLOCK_SIZE) {
+        let i_end = (i0 + BLOCK_SIZE).min(rows_);
 
         for j0 in (0..cols).step_by(BLOCK_SIZE) {
             let j_end = (j0 + BLOCK_SIZE).min(cols);
@@ -257,7 +257,7 @@ where
 
         // Convert back to the original type
         if output_quantize {
-            // In a complete implementation, we would quantize the result to the same bit depth
+            // In a complete implementation, we would _quantize the result to the same bit depth
             // But for simplicity, just convert back to the original type
             Ok(result_f32.mapv(|x| num_traits::FromPrimitive::from_f32(x).unwrap()))
         } else {

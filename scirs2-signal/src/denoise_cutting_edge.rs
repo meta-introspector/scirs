@@ -9,8 +9,11 @@
 //! - Learned iterative shrinkage thresholding (LISTA)
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, ArrayView1};
+use ndarray::{Array1, Array2, ArrayView1, s};
 use scirs2_core::parallel_ops::*;
+use std::f64::consts::PI;
+
+#[allow(unused_imports)]
 // use std::f64::consts::PI;
 
 /// Dictionary learning denoising configuration
@@ -164,14 +167,14 @@ pub fn denoise_dictionary_learning(
 /// This method groups similar patches and applies sparse coding in a collaborative
 /// manner, inspired by BM3D but using sparse coding instead of wavelet transforms.
 #[allow(dead_code)]
-pub fn denoise_nlsc(signal: &Array1<f64>, config: &NLSCConfig) -> SignalResult<Array1<f64>> {
-    if signal.iter().any(|&x| !x.is_finite()) {
+pub fn denoise_nlsc(_signal: &Array1<f64>, config: &NLSCConfig) -> SignalResult<Array1<f64>> {
+    if _signal.iter().any(|&x| !x.is_finite()) {
         return Err(SignalError::ValueError(
             "Signal contains non-finite values".to_string(),
         ));
     }
 
-    let n = signal.len();
+    let n = _signal.len();
     if n < config.patch_size {
         return Err(SignalError::ValueError(
             "Signal too short for patch size".to_string(),
@@ -181,17 +184,17 @@ pub fn denoise_nlsc(signal: &Array1<f64>, config: &NLSCConfig) -> SignalResult<A
     let mut denoised_signal = Array1::zeros(n);
     let mut weights: Array1<f64> = Array1::zeros(n);
 
-    // Process each position in the signal
+    // Process each position in the _signal
     for i in 0..(n - config.patch_size + 1) {
-        let reference_patch = signal.slice(s![i..i + config.patch_size]);
+        let reference_patch = _signal.slice(s![i..i + config.patch_size]);
 
         // Find similar patches
-        let similar_patches = find_similar_patches(signal, &reference_patch, i, config)?;
+        let similar_patches = find_similar_patches(_signal, &reference_patch, i, config)?;
 
         // Apply collaborative sparse coding
         let denoised_group = collaborative_sparse_coding(&similar_patches, config)?;
 
-        // Add denoised reference patch back to signal
+        // Add denoised reference patch back to _signal
         let denoised_patch = denoised_group.row(0);
         for (j, &val) in denoised_patch.iter().enumerate() {
             denoised_signal[i + j] += val;
@@ -204,7 +207,7 @@ pub fn denoise_nlsc(signal: &Array1<f64>, config: &NLSCConfig) -> SignalResult<A
         if weights[i] > 0.0 {
             denoised_signal[i] /= weights[i];
         } else {
-            denoised_signal[i] = signal[i];
+            denoised_signal[i] = _signal[i];
         }
     }
 
@@ -216,8 +219,8 @@ pub fn denoise_nlsc(signal: &Array1<f64>, config: &NLSCConfig) -> SignalResult<A
 /// Learned Iterative Shrinkage Thresholding Algorithm for denoising.
 /// This uses a learned unfolded network structure for sparse coding.
 #[allow(dead_code)]
-pub fn denoise_lista(signal: &Array1<f64>, config: &LISTAConfig) -> SignalResult<Array1<f64>> {
-    if signal.iter().any(|&x| !x.is_finite()) {
+pub fn denoise_lista(_signal: &Array1<f64>, config: &LISTAConfig) -> SignalResult<Array1<f64>> {
+    if _signal.iter().any(|&x| !x.is_finite()) {
         return Err(SignalError::ValueError(
             "Signal contains non-finite values".to_string(),
         ));
@@ -227,7 +230,7 @@ pub fn denoise_lista(signal: &Array1<f64>, config: &LISTAConfig) -> SignalResult
         Some(dict) => dict.clone(),
         None => {
             // Create a default DCT-based dictionary
-            create_dct_dictionary(signal.len(), signal.len() / 2)?
+            create_dct_dictionary(_signal.len(), _signal.len() / 2)?
         }
     };
 
@@ -237,7 +240,7 @@ pub fn denoise_lista(signal: &Array1<f64>, config: &LISTAConfig) -> SignalResult
     // LISTA iterations
     for layer in 0..config.num_layers {
         // Gradient step
-        let residual = signal - &dictionary.dot(&sparse_code);
+        let residual = _signal - &dictionary.dot(&sparse_code);
         let gradient = dictionary.t().dot(&residual);
         sparse_code = &sparse_code + config.step_size * &gradient;
 
@@ -251,7 +254,7 @@ pub fn denoise_lista(signal: &Array1<f64>, config: &LISTAConfig) -> SignalResult
         soft_threshold_inplace(&mut sparse_code, threshold);
     }
 
-    // Reconstruct denoised signal
+    // Reconstruct denoised _signal
     let denoised = dictionary.dot(&sparse_code);
     Ok(denoised)
 }
@@ -347,7 +350,7 @@ fn ksvd_dictionary_learning(
             let diff = &patch.to_owned() - &reconstruction;
             error += diff.dot(&diff);
         }
-        error /= num_patches as f64;
+        error /= num_patches  as f64;
 
         reconstruction_error = error;
 
@@ -437,7 +440,7 @@ fn solve_least_squares_subset(
     let patch_size = dictionary.nrows();
     let num_selected = selected_atoms.len();
 
-    // Create submatrix with selected atoms
+    // Create submatrix with selected _atoms
     let mut sub_dict = Array2::zeros((patch_size, num_selected));
     for (i, &atom_idx) in selected_atoms.iter().enumerate() {
         let atom = dictionary.column(atom_idx);
@@ -511,7 +514,7 @@ fn update_dictionary_atom(
     let mut error_matrix: Array2<f64> = Array2::zeros((patch_size, used_patches.len()));
 
     for (col_idx, &patch_idx) in used_patches.iter().enumerate() {
-        let patch = patches.row(patch_idx);
+        let patch = _patches.row(patch_idx);
         let mut reconstruction: Array1<f64> = Array1::zeros(patch_size);
 
         // Reconstruct without current atom
@@ -563,7 +566,7 @@ fn sparse_coding_denoise(
     dictionary: &Array2<f64>,
     config: &DictionaryDenoiseConfig,
 ) -> SignalResult<Array2<f64>> {
-    let (num_patches, _patch_size) = patches.dim();
+    let (num_patches_patch_size) = patches.dim();
     let mut denoised_patches = Array2::zeros(patches.dim());
 
     // Process each patch
@@ -597,7 +600,7 @@ fn reconstruct_from_patches(
     let mut weights: Array1<f64> = Array1::zeros(signal_length);
 
     let step = patch_size - overlap;
-    let (num_patches, _) = patches.dim();
+    let (num_patches_) = patches.dim();
 
     for patch_idx in 0..num_patches {
         let start_pos = patch_idx * step;
@@ -654,9 +657,9 @@ fn find_similar_patches(
     // Create matrix of similar patches
     let mut similar_patches = Array2::zeros((num_to_take, config.patch_size));
     for (idx, &(_, pos)) in candidates.iter().take(num_to_take).enumerate() {
-        let patch = signal.slice(s![pos..pos + config.patch_size]);
+        let _patch = signal.slice(s![pos..pos + config.patch_size]);
         for j in 0..config.patch_size {
-            similar_patches[[idx, j]] = patch[j];
+            similar_patches[[idx, j]] = _patch[j];
         }
     }
 
@@ -665,8 +668,8 @@ fn find_similar_patches(
 
 /// Compute distance between two patches
 #[allow(dead_code)]
-fn compute_patch_distance(patch1: &ArrayView1<f64>, patch2: &ArrayView1<f64>) -> f64 {
-    let diff = patch1.to_owned() - patch2.to_owned();
+fn compute_patch_distance(_patch1: &ArrayView1<f64>, patch2: &ArrayView1<f64>) -> f64 {
+    let diff = _patch1.to_owned() - patch2.to_owned();
     diff.dot(&diff)
 }
 
@@ -705,15 +708,15 @@ fn collaborative_sparse_coding(
 
 /// Create DCT (Discrete Cosine Transform) dictionary
 #[allow(dead_code)]
-fn create_dct_dictionary(signal_size: usize, dict_size: usize) -> SignalResult<Array2<f64>> {
-    let mut dictionary = Array2::zeros((signal_size, dict_size));
+fn create_dct_dictionary(_signal_size: usize, dict_size: usize) -> SignalResult<Array2<f64>> {
+    let mut dictionary = Array2::zeros((_signal_size, dict_size));
 
     for k in 0..dict_size {
-        for n in 0..signal_size {
+        for n in 0.._signal_size {
             let val = if k == 0 {
-                1.0 / (signal_size as f64).sqrt()
+                1.0 / (_signal_size as f64).sqrt()
             } else {
-                (2.0 / signal_size as f64).sqrt()
+                ((2.0 / signal_size as f64) as f64).sqrt()
                     * ((std::f64::consts::PI * k as f64 * (2.0 * n as f64 + 1.0))
                         / (2.0 * signal_size as f64))
                         .cos()
@@ -727,8 +730,8 @@ fn create_dct_dictionary(signal_size: usize, dict_size: usize) -> SignalResult<A
 
 /// Soft thresholding in-place
 #[allow(dead_code)]
-fn soft_threshold_inplace(coeffs: &mut Array1<f64>, threshold: f64) {
-    for coeff in coeffs.iter_mut() {
+fn soft_threshold_inplace(_coeffs: &mut Array1<f64>, threshold: f64) {
+    for coeff in _coeffs.iter_mut() {
         if coeff.abs() > threshold {
             *coeff = coeff.signum() * (coeff.abs() - threshold);
         } else {
@@ -757,15 +760,13 @@ pub fn denoise_adaptive_dictionary(
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::PI;
-
     #[test]
     fn test_dictionary_denoising() {
         // Create test signal
         let n = 128;
         let mut signal = Array1::zeros(n);
         for i in 0..n {
-            let t = i as f64 / n as f64;
+            let t = i as f64 / n  as f64;
             signal[i] = (2.0 * PI * 5.0 * t).sin() + 0.5 * (2.0 * PI * 10.0 * t).sin();
         }
 
@@ -785,7 +786,7 @@ mod tests {
         let denoised = denoise_dictionary_learning(&signal, &config).unwrap();
 
         assert_eq!(denoised.len(), signal.len());
-        assert!(denoised.iter().all(|&x| x.is_finite()));
+        assert!(denoised.iter().all(|&x: &f64| x.is_finite()));
     }
 
     #[test]
@@ -813,7 +814,7 @@ mod tests {
         let denoised = denoise_nlsc(&signal, &config).unwrap();
 
         assert_eq!(denoised.len(), signal.len());
-        assert!(denoised.iter().all(|&x| x.is_finite()));
+        assert!(denoised.iter().all(|&x: &f64| x.is_finite()));
     }
 
     #[test]
@@ -834,6 +835,6 @@ mod tests {
         let denoised = denoise_lista(&signal, &config).unwrap();
 
         assert_eq!(denoised.len(), signal.len());
-        assert!(denoised.iter().all(|&x| x.is_finite()));
+        assert!(denoised.iter().all(|&x: &f64| x.is_finite()));
     }
 }

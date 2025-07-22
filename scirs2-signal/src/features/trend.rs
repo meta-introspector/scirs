@@ -1,7 +1,9 @@
 use crate::error::SignalResult;
+use crate::error::SignalResult;
 use crate::features::statistical::calculate_std;
 use std::collections::HashMap;
 
+#[allow(unused_imports)]
 /// Extract trend features from a time series
 #[allow(dead_code)]
 pub fn extract_trend_features(
@@ -30,7 +32,7 @@ pub fn extract_trend_features(
 
     // Estimate non-linearity by calculating the ratio of variance
     // explained by quadratic fit vs. linear fit
-    let (_, _, r_squared_quad) = quadratic_regression(&x, signal);
+    let (__, r_squared_quad) = quadratic_regression(&x, signal);
 
     if r_squared < 1.0 {
         // Non-linearity score is how much better the quadratic fit is

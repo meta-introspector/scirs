@@ -5,7 +5,7 @@
 //! adaptive accuracy optimization, and cross-domain knowledge transfer.
 
 use ndarray::Array1;
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     advancedInterpolationConfig, create_advanced_interpolation_coordinator, InterpolationMethodType,
 };
 use std::f64::consts::PI;
@@ -327,10 +327,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create smooth function data for testing
 #[allow(dead_code)]
-fn create_smooth_function_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
+fn create_smooth_function_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::from_vec(
-        (0..n_points)
-            .map(|i| i as f64 * 2.0 * PI / (n_points - 1) as f64)
+        (0.._n_points)
+            .map(|i| i as f64 * 2.0 * PI / (_n_points - 1) as f64)
             .collect(),
     );
     let y = Array1::from_vec(
@@ -343,7 +343,7 @@ fn create_smooth_function_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
 
 /// Create noisy experimental data for testing
 #[allow(dead_code)]
-fn create_noisy_data(n_points: usize, noise_level: f64) -> (Array1<f64>, Array1<f64>) {
+fn create_noisy_data(_n_points: usize, noise_level: f64) -> (Array1<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
@@ -358,40 +358,38 @@ fn create_noisy_data(n_points: usize, noise_level: f64) -> (Array1<f64>, Array1<
         x.iter()
             .map(|&xi| {
                 let clean_signal = xi.exp() * (-xi / 2.0).exp() * (2.0 * xi).sin();
-                let noise = noise_level * rng.random_range(-1.0..1.0);
+                let noise = noise_level * rng.gen_range(-1.0..1.0);
                 clean_signal + noise
             })
-            .collect(),
-    );
+            .collect()..);
     (x, y)
 }
 
 /// Create sparse scattered data for testing
 #[allow(dead_code)]
-fn create_sparse_scattered_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
+fn create_sparse_scattered_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
     let mut rng = StdRng::seed_from_u64(123); // Fixed seed for reproducibility
 
-    let x = Array1::from_vec((0..n_points).map(|_| rng.random_range(-1.0..7.0)).collect());
+    let x = Array1::from_vec((0..n_points).map(|_| rng.gen_range(-1.0..7.0)).collect());
     let y = Array1::from_vec(
         x.iter()
             .map(|&xi| {
                 // Complex function with multiple features
                 xi.powf(3.0) - 3.0 * xi.powf(2.0) + 2.0 * xi + 1.0 + 0.5 * (xi * PI).sin()
             })
-            .collect(),
-    );
+            .collect()..);
     (x, y)
 }
 
 /// Create oscillatory signal data for testing
 #[allow(dead_code)]
-fn create_oscillatory_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
+fn create_oscillatory_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::from_vec(
-        (0..n_points)
-            .map(|i| i as f64 * 10.0 / (n_points - 1) as f64)
+        (0.._n_points)
+            .map(|i| i as f64 * 10.0 / (_n_points - 1) as f64)
             .collect(),
     );
     let y = Array1::from_vec(
@@ -410,25 +408,25 @@ fn create_oscillatory_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
 
 /// Create query points for interpolation
 #[allow(dead_code)]
-fn create_query_points(n_points: usize, start: f64, end: f64) -> Array1<f64> {
+fn create_query_points(_n_points: usize, start: f64, end: f64) -> Array1<f64> {
     Array1::from_vec(
-        (0..n_points)
-            .map(|i| start + (end - start) * i as f64 / (n_points - 1) as f64)
+        (0.._n_points)
+            .map(|i| start + (end - start) * i as f64 / (_n_points - 1) as f64)
             .collect(),
     )
 }
 
 /// Estimate interpolation accuracy
 #[allow(dead_code)]
-fn estimate_interpolation_accuracy(result: &Array1<f64>, x_new: &Array1<f64>) -> f64 {
+fn estimate_interpolation_accuracy(_result: &Array1<f64>, x_new: &Array1<f64>) -> f64 {
     // Mock implementation - in reality, this would compare against analytical solution
     // or use cross-validation
-    let mean_value = result.iter().sum::<f64>() / result.len() as f64;
-    let variance = result
+    let mean_value = _result.iter().sum::<f64>() / _result.len() as f64;
+    let variance = _result
         .iter()
         .map(|&x| (x - mean_value).powi(2))
         .sum::<f64>()
-        / result.len() as f64;
+        / _result.len() as f64;
 
     // Estimate based on smoothness
     1e-6 / (1.0 + variance.sqrt())
@@ -462,23 +460,22 @@ fn estimate_memory_efficiency(
         scirs2_interpolate::InterpolationMethodType::Linear => 1.0,
         scirs2_interpolate::InterpolationMethodType::NaturalNeighbor => 2.5,
         scirs2_interpolate::InterpolationMethodType::ShepardsMethod => 1.8,
-        scirs2_interpolate::InterpolationMethodType::RadialBasisFunction => 3.2,
-        _ => 2.0,
+        scirs2_interpolate::InterpolationMethodType::RadialBasisFunction => 3.2_ => 2.0,
     }
 }
 
 /// Estimate extrapolation quality
 #[allow(dead_code)]
-fn estimate_extrapolation_quality(result: &Array1<f64>) -> f64 {
+fn estimate_extrapolation_quality(_result: &Array1<f64>) -> f64 {
     // Mock implementation - assess boundary behavior
-    let n = result.len();
+    let n = _result.len();
     if n < 10 {
         return 0.5;
     }
 
-    let start_grad = (result[1] - result[0]).abs();
-    let end_grad = (result[n - 1] - result[n - 2]).abs();
-    let max_grad = result
+    let start_grad = (_result[1] - _result[0]).abs();
+    let end_grad = (_result[n - 1] - _result[n - 2]).abs();
+    let max_grad = _result
         .windows(2)
         .map(|w| (w[1] - w[0]).abs())
         .fold(0.0_f64, f64::max);
@@ -489,9 +486,9 @@ fn estimate_extrapolation_quality(result: &Array1<f64>) -> f64 {
 
 /// Estimate frequency preservation quality
 #[allow(dead_code)]
-fn estimate_frequency_preservation(result: &Array1<f64>) -> f64 {
+fn estimate_frequency_preservation(_result: &Array1<f64>) -> f64 {
     // Mock implementation - this would typically use FFT analysis
-    let n = result.len();
+    let n = _result.len();
     if n < 10 {
         return 0.5;
     }
@@ -499,8 +496,8 @@ fn estimate_frequency_preservation(result: &Array1<f64>) -> f64 {
     // Simple oscillation detection
     let mut sign_changes = 0;
     for i in 1..n - 1 {
-        let slope1 = result[i] - result[i - 1];
-        let slope2 = result[i + 1] - result[i];
+        let slope1 = _result[i] - _result[i - 1];
+        let slope2 = _result[i + 1] - _result[i];
         if slope1 * slope2 < 0.0 {
             sign_changes += 1;
         }
@@ -716,7 +713,7 @@ fn demonstrate_error_prediction(
 
 /// Create complex data for quantum optimization testing
 #[allow(dead_code)]
-fn create_complex_optimization_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
+fn create_complex_optimization_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
@@ -724,9 +721,8 @@ fn create_complex_optimization_data(n_points: usize) -> (Array1<f64>, Array1<f64
 
     let x = Array1::from_vec(
         (0..n_points)
-            .map(|_| rng.random_range(-1.5..11.5))
-            .collect(),
-    );
+            .map(|_| rng.gen_range(-1.5..11.5))
+            .collect()..);
     let y = Array1::from_vec(
         x.iter()
             .map(|&xi| {
@@ -734,12 +730,11 @@ fn create_complex_optimization_data(n_points: usize) -> (Array1<f64>, Array1<f64
                 let component1 = (xi * 0.5).sin() * xi.exp() * (-xi / 3.0).exp();
                 let component2 = 0.3 * (xi * 2.0 + PI / 3.0).cos() * (xi + 2.0).sqrt();
                 let component3 = 0.1 * (xi * 10.0).sin() / (1.0 + xi.abs());
-                let noise = 0.05 * rng.random_range(-1.0..1.0);
+                let noise = 0.05 * rng.gen_range(-1.0..1.0);
 
                 component1 + component2 + component3 + noise
             })
-            .collect(),
-    );
+            .collect()..);
     (x, y)
 }
 
@@ -754,8 +749,7 @@ fn estimate_parameter_optimization_quality(
         scirs2_interpolate::InterpolationMethodType::QuantumInspired => 0.95,
         scirs2_interpolate::InterpolationMethodType::Kriging => 0.90,
         scirs2_interpolate::InterpolationMethodType::RadialBasisFunction => 0.85,
-        scirs2_interpolate::InterpolationMethodType::BSpline => 0.80,
-        _ => 0.70,
+        scirs2_interpolate::InterpolationMethodType::BSpline => 0.80_ => 0.70,
     };
 
     // More parameters suggest more sophisticated optimization

@@ -89,8 +89,8 @@ where
     /// let first_row = array![1.0, 2.0, 3.0, 4.0];
     /// let circ = CirculantMatrix::new(first_row).unwrap();
     /// ```
-    pub fn new(first_row: Array1<F>) -> LinalgResult<Self> {
-        let size = first_row.len();
+    pub fn new(_first_row: Array1<F>) -> LinalgResult<Self> {
+        let size = _first_row.len();
         if size == 0 {
             return Err(LinalgError::ShapeError(
                 "Circulant matrix cannot be empty".to_string(),
@@ -98,7 +98,7 @@ where
         }
 
         Ok(CirculantMatrix {
-            first_row,
+            first_row: _first_row,
             size,
             eigenvalues: None,
         })
@@ -389,11 +389,11 @@ where
     /// let first_col = array![1.0, 4.0, 5.0]; // Note: first_row[0] == first_col[0]
     /// let toep = ToeplitzMatrix::new(first_row, first_col).unwrap();
     /// ```
-    pub fn new(first_row: Array1<F>, first_column: Array1<F>) -> LinalgResult<Self> {
-        let n = first_row.len();
+    pub fn new(_first_row: Array1<F>, first_column: Array1<F>) -> LinalgResult<Self> {
+        let n = _first_row.len();
         if n != first_column.len() {
             return Err(LinalgError::ShapeError(
-                "First row and column must have the same length".to_string(),
+                "First _row and _column must have the same length".to_string(),
             ));
         }
 
@@ -405,14 +405,14 @@ where
 
         // Check consistency: first_row[0] should equal first_column[0]
         let tolerance = F::epsilon() * F::from(100.0).unwrap_or(F::epsilon());
-        if (first_row[0] - first_column[0]).abs() > tolerance {
+        if (_first_row[0] - first_column[0]).abs() > tolerance {
             return Err(LinalgError::ShapeError(
-                "First element of row and column must be equal".to_string(),
+                "First element of _row and _column must be equal".to_string(),
             ));
         }
 
         Ok(ToeplitzMatrix {
-            first_row,
+            first_row: _first_row,
             first_column,
             size: n,
         })
@@ -427,8 +427,8 @@ where
     /// # Returns
     ///
     /// * Symmetric Toeplitz matrix
-    pub fn symmetric(diagonal_elements: Array1<F>) -> LinalgResult<Self> {
-        let n = diagonal_elements.len();
+    pub fn symmetric(_diagonal_elements: Array1<F>) -> LinalgResult<Self> {
+        let n = _diagonal_elements.len();
         if n == 0 {
             return Err(LinalgError::ShapeError(
                 "Toeplitz matrix cannot be empty".to_string(),
@@ -436,8 +436,8 @@ where
         }
 
         // For symmetric case, first_row and first_column are the same
-        let first_row = diagonal_elements.clone();
-        let first_column = diagonal_elements;
+        let first_row = _diagonal_elements.clone();
+        let first_column = _diagonal_elements;
 
         Ok(ToeplitzMatrix {
             first_row,

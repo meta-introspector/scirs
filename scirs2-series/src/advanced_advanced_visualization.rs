@@ -249,9 +249,9 @@ pub struct Advanced3DVisualization {
 
 impl Advanced3DVisualization {
     /// Create new 3D visualization
-    pub fn new(config: AdvancedPlotConfig) -> Self {
+    pub fn new(_config: AdvancedPlotConfig) -> Self {
         Self {
-            config,
+            _config,
             surfaces: Vec::new(),
             lighting: LightingConfig {
                 ambient_light: Color {
@@ -398,9 +398,9 @@ pub struct StreamingVisualization {
 
 impl StreamingVisualization {
     /// Create new streaming visualization
-    pub fn new(config: AdvancedPlotConfig, buffer_size: usize) -> Self {
+    pub fn new(_config: AdvancedPlotConfig, buffer_size: usize) -> Self {
         Self {
-            config,
+            _config,
             data_buffer: VecDeque::with_capacity(buffer_size),
             max_buffer_size: buffer_size,
         }
@@ -429,8 +429,8 @@ pub struct AdvancedExporter;
 
 impl AdvancedExporter {
     /// Export to interactive HTML with embedded JavaScript
-    pub fn export_interactive_html(plot: &StreamingVisualization, path: &str) -> Result<()> {
-        let html_content = plot.generate_plot()?;
+    pub fn export_interactive_html(_plot: &StreamingVisualization, path: &str) -> Result<()> {
+        let html_content = _plot.generate_plot()?;
 
         std::fs::write(path, html_content)
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to write HTML: {e}")))?;

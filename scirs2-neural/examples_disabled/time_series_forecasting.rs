@@ -1,6 +1,6 @@
 use ndarray::{s, Array, Array1, Array2, Array3};
 use rand::rng;
-use rand_distr::{Distribution, Normal, Uniform};
+use rand__distr::{Distribution, Normal, Uniform};
 use serde::{Deserialize, Serialize};
 use std::f32;
 use std::f32::consts::PI;
@@ -29,29 +29,29 @@ struct LSTMCell {
     c_t: Option<Array2<f32>>, // Current cell state [batch_size, hidden_size]
 }
 impl LSTMCell {
-    fn new(input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
         // Xavier/Glorot initialization
-        let bound = (6.0 / (input_size + hidden_size) as f32).sqrt();
+        let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Input gate weights
         let uniform = Uniform::new(-bound, bound).unwrap();
         let mut rng = rand::rng();
-        let w_ii = Array::from_shape_fn((hidden_size, input_size), |_| uniform.sample(&mut rng));
+        let w_ii = Array::from_shape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
         let w_hi = Array::from_shape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_i = Array1::zeros(hidden_size);
         // Forget gate weights (initialize forget gate bias to 1 to avoid vanishing gradients early in training)
-        let w_if = Array::from_shape_fn((hidden_size, input_size), |_| uniform.sample(&mut rng));
+        let w_if = Array::from_shape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
         let w_hf = Array::from_shape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_f = Array1::ones(hidden_size);
         // Cell gate weights
-        let w_ig = Array::from_shape_fn((hidden_size, input_size), |_| uniform.sample(&mut rng));
+        let w_ig = Array::from_shape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
         let w_hg = Array::from_shape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_g = Array1::zeros(hidden_size);
         // Output gate weights
-        let w_io = Array::from_shape_fn((hidden_size, input_size), |_| uniform.sample(&mut rng));
+        let w_io = Array::from_shape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
         let w_ho = Array::from_shape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_o = Array1::zeros(hidden_size);
         LSTMCell {
-            input_size,
+            _input_size,
             hidden_size,
             batch_size,
             w_ii,
@@ -111,13 +111,13 @@ struct TimeSeriesAttention {
     w_value: Array2<f32>,
     v_attention: Array1<f32>,
 impl TimeSeriesAttention {
-    fn new(hidden_size: usize) -> Self {
-        let bound = (6.0 / (hidden_size + hidden_size) as f32).sqrt();
+    fn new(_hidden_size: usize) -> Self {
+        let bound = (6.0 / (_hidden_size + _hidden_size) as f32).sqrt();
         let w_query =
-            Array::from_shape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
-        let w_key = Array::from_shape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
+            Array::from_shape_fn((_hidden_size, _hidden_size), |_| uniform.sample(&mut rng));
+        let w_key = Array::from_shape_fn((_hidden_size, _hidden_size), |_| uniform.sample(&mut rng));
         let w_value =
-        let v_attention = Array::from_shape_fn(hidden_size, |_| uniform.sample(&mut rng));
+        let v_attention = Array::from_shape_fn(_hidden_size, |_| uniform.sample(&mut rng));
         TimeSeriesAttention {
             w_query,
             w_key,
@@ -129,23 +129,23 @@ impl TimeSeriesAttention {
         keys: &Array3<f32>,
         values: &Array3<f32>,
     ) -> Array2<f32> {
-        // query: [batch_size, hidden_size] - Current hidden state
-        // keys: [batch_size, seq_len, hidden_size] - All hidden states from the sequence
-        // values: [batch_size, seq_len, hidden_size] - All hidden states from the sequence (usually same as keys)
+        // query: [batch_size_hidden_size] - Current hidden state
+        // keys: [batch_size, seq_len, _hidden_size] - All hidden states from the sequence
+        // values: [batch_size, seq_len, _hidden_size] - All hidden states from the sequence (usually same as keys)
         let batch_size = query.shape()[0];
         let seq_len = keys.shape()[1];
         // Project query, keys, and values
-        let q_proj = query.dot(&self.w_query); // [batch_size, hidden_size]
+        let q_proj = query.dot(&self.w_query); // [batch_size_hidden_size]
         // Prepare projected keys and values
-        let mut k_proj = Array3::<f32>::zeros((batch_size, seq_len, self.hidden_size));
-        let mut v_proj = Array3::<f32>::zeros((batch_size, seq_len, self.hidden_size));
+        let mut k_proj = Array3::<f32>::zeros((batch_size, seq_len, self._hidden_size));
+        let mut v_proj = Array3::<f32>::zeros((batch_size, seq_len, self._hidden_size));
         for b in 0..batch_size {
             for t in 0..seq_len {
                 let key = keys.slice(s![b, t, ..]).to_owned();
                 let value = values.slice(s![b, t, ..]).to_owned();
                 let k_p = key.dot(&self.w_key);
                 let v_p = value.dot(&self.w_value);
-                for h in 0..self.hidden_size {
+                for h in 0..self._hidden_size {
                     k_proj[[b, t, h]] = k_p[h];
                     v_proj[[b, t, h]] = v_p[h];
                 }
@@ -188,11 +188,11 @@ struct LSTMEncoder {
     // LSTM cells for each layer
     lstm_cells: Vec<LSTMCell>,
 impl LSTMEncoder {
-    fn new(input_size: usize, hidden_size: usize, num_layers: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, num_layers: usize, batch_size: usize) -> Self {
         let mut lstm_cells = Vec::with_capacity(num_layers);
         // Create LSTM cells for each layer
         for layer in 0..num_layers {
-            let layer_input_size = if layer == 0 { input_size } else { hidden_size };
+            let layer_input_size = if layer == 0 { _input_size } else { hidden_size };
             lstm_cells.push(LSTMCell::new(layer_input_size, hidden_size, batch_size));
         LSTMEncoder {
             num_layers,
@@ -211,7 +211,7 @@ impl LSTMEncoder {
             // Process through each layer
             let mut layer_input = x_t;
             for (layer_idx, cell) in self.lstm_cells.iter_mut().enumerate() {
-                let (h_t, _) = cell.forward(&layer_input);
+                let (h_t_) = cell.forward(&layer_input);
                 // Output of this layer becomes input to the next
                 layer_input = h_t.clone();
                 // Store hidden state if this is the last layer
@@ -310,7 +310,7 @@ impl TimeSeriesForecaster {
             // In a real implementation, we would concatenate them
             // For simplicity, we'll just use the decoder input and context separately
             // Run decoder LSTM cell
-            let (h_t, _) = self.decoder_cell.forward(&decoder_input);
+            let (h_t_) = self.decoder_cell.forward(&decoder_input);
             // Combine hidden state with context for output
             let mut combined = Array2::<f32>::zeros((batch_size, self.hidden_size));
             for b in 0..batch_size {
@@ -329,27 +329,27 @@ struct MinMaxScaler {
     max_vals: Array1<f32>,
 impl MinMaxScaler {
     #[allow(dead_code)]
-    fn new(min_vals: Array1<f32>, max_vals: Array1<f32>) -> Self {
-        MinMaxScaler { min_vals, max_vals }
-    fn fit(data: &Array2<f32>) -> Self {
-        let features = data.shape()[1];
+    fn new(_min_vals: Array1<f32>, max_vals: Array1<f32>) -> Self {
+        MinMaxScaler { _min_vals, max_vals }
+    fn fit(_data: &Array2<f32>) -> Self {
+        let features = _data.shape()[1];
         let mut min_vals = Array1::<f32>::zeros(features);
         let mut max_vals = Array1::<f32>::zeros(features);
         for f in 0..features {
-            let column = data.slice(s![.., f]);
+            let column = _data.slice(s![.., f]);
             let min_val = column.fold(f32::INFINITY, |a, &b| a.min(b));
             let max_val = column.fold(f32::NEG_INFINITY, |a, &b| a.max(b));
             min_vals[f] = min_val;
             max_vals[f] = max_val;
     fn transform(&self, data: &Array2<f32>) -> Array2<f32> {
-        let (rows, cols) = data.dim();
+        let (rows, cols) = _data.dim();
         let mut result = Array2::<f32>::zeros((rows, cols));
         for r in 0..rows {
             for c in 0..cols {
                 let min_val = self.min_vals[c];
                 let max_val = self.max_vals[c];
                 if max_val > min_val {
-                    result[[r, c]] = (data[[r, c]] - min_val) / (max_val - min_val);
+                    result[[r, c]] = (_data[[r, c]] - min_val) / (max_val - min_val);
                 } else {
                     result[[r, c]] = 0.0;
     fn inverse_transform(&self, data: &Array2<f32>) -> Array2<f32> {
@@ -377,10 +377,10 @@ fn create_sliding_window_dataset(
     (x, y)
 // Generate synthetic time series data
 #[allow(dead_code)]
-fn generate_synthetic_time_series(n_samples: usize, n_features: usize) -> Array2<f32> {
-    let mut data = Array2::<f32>::zeros((n_samples, n_features));
+fn generate_synthetic_time_series(_n_samples: usize, n_features: usize) -> Array2<f32> {
+    let mut data = Array2::<f32>::zeros((_n_samples, n_features));
     // Generate time range
-    let time: Vec<f32> = (0..n_samples).map(|i| i as f32 / 100.0).collect();
+    let time: Vec<f32> = (0.._n_samples).map(|i| i as f32 / 100.0).collect();
     // Feature 1: Sine wave with noise
     let normal = Normal::new(0.0, 0.1).unwrap();
     let mut rng = rand::rng();
@@ -400,13 +400,13 @@ fn generate_synthetic_time_series(n_samples: usize, n_features: usize) -> Array2
     if n_features > 2 {
         // Feature 3: Linear trend
         let normal = Normal::new(0.0, 0.05).unwrap();
-        for i in 0..n_samples {
-            let trend = i as f32 / n_samples as f32;
+        for i in 0.._n_samples {
+            let trend = i as f32 / _n_samples as f32;
             data[[i, 2]] = trend + noise;
     data
 // Mean Absolute Error calculation
 #[allow(dead_code)]
-fn mean_absolute_error(y_true: &Array3<f32>, y_pred: &Array3<f32>) -> f32 {
+fn mean_absolute_error(_y_true: &Array3<f32>, y_pred: &Array3<f32>) -> f32 {
     let batch_size = y_true.shape()[0];
     let forecast_horizon = y_true.shape()[1];
     let output_size = y_true.shape()[2];

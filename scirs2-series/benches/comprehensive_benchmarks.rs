@@ -9,7 +9,8 @@ use ndarray::{Array1, Array2, Array3};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
-use scirs2_series::{
+use scirs2__series::{
+use statrs::statistics::Statistics;
     advanced_training::{NeuralODE, TimeSeriesTransformer, TimeSeriesVAE, MAML},
     anomaly::AnomalyDetector,
     arima_models::ArimaModel,
@@ -102,12 +103,12 @@ pub mod data_generators {
     use super::*;
 
     /// Generate realistic financial time series data
-    pub fn generate_financial_data(size: usize, volatility: f64) -> Array1<f64> {
-        let mut data = Array1::zeros(size);
+    pub fn generate_financial_data(_size: usize, volatility: f64) -> Array1<f64> {
+        let mut data = Array1::zeros(_size);
         let mut price = 100.0;
         let mut rng_state = 42u64;
 
-        for i in 0..size {
+        for i in 0.._size {
             rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
             let random = (rng_state % 10000) as f64 / 10000.0 - 0.5;
 
@@ -120,12 +121,12 @@ pub mod data_generators {
     }
 
     /// Generate ECG-like biomedical data
-    pub fn generate_ecg_data(size: usize, heart_rate: f64) -> Array1<f64> {
-        let mut data = Array1::zeros(size);
+    pub fn generate_ecg_data(_size: usize, heart_rate: f64) -> Array1<f64> {
+        let mut data = Array1::zeros(_size);
         let sampling_rate = 250.0; // Hz
         let period = sampling_rate / (heart_rate / 60.0);
 
-        for i in 0..size {
+        for i in 0.._size {
             let t = i as f64 / sampling_rate;
             let beat_phase = (i as f64 % period) / period * 2.0 * std::f64::consts::PI;
 
@@ -148,11 +149,11 @@ pub mod data_generators {
     }
 
     /// Generate environmental sensor data with realistic patterns
-    pub fn generate_environmental_data(size: usize, sensor_type: &str) -> Array1<f64> {
-        let mut data = Array1::zeros(size);
+    pub fn generate_environmental_data(_size: usize, sensor_type: &str) -> Array1<f64> {
+        let mut data = Array1::zeros(_size);
         let mut rng_state = 42u64;
 
-        for i in 0..size {
+        for i in 0.._size {
             rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
             let random = (rng_state % 10000) as f64 / 10000.0;
 
@@ -242,8 +243,7 @@ fn advanced_bench_anomaly_detection(c: &mut Criterion) {
 
     for (config_name, size, noise_level) in configs.iter() {
         let data = match *config_name {
-            "financial" => data_generators::generate_financial_data(*size, *noise_level),
-            _ => generate_synthetic_data(*size, *noise_level),
+            "financial" => data_generators::generate_financial_data(*size, *noise_level, _ => generate_synthetic_data(*size, *noise_level),
         };
 
         group.throughput(Throughput::Elements(*size as u64));
@@ -280,8 +280,7 @@ fn advanced_bench_anomaly_detection(c: &mut Criterion) {
                                     window_size: 50,
                                     sigma_threshold: 3.0,
                                 },
-                            ),
-                            _ => unreachable!(),
+                            , _ => unreachable!(),
                         };
                         black_box(detector.detect(data).unwrap());
                     });
@@ -420,7 +419,7 @@ fn advanced_bench_advanced_training(c: &mut Criterion) {
                     let query_x = support_x.clone();
                     let query_y = support_y.clone();
 
-                    let task = scirs2_series::advanced_training::TaskData {
+                    let task = scirs2_series::advanced, _training::TaskData {
                         support_x,
                         support_y,
                         query_x,
@@ -439,8 +438,8 @@ fn advanced_bench_advanced_training(c: &mut Criterion) {
             |b, data| {
                 b.iter(|| {
                     let time_steps = Array1::from_iter((0..20).map(|i| i as f64 * 0.1));
-                    let solver_config = scirs2_series::advanced_training::ODESolverConfig {
-                        method: scirs2_series::advanced_training::IntegrationMethod::RungeKutta4,
+                    let solver_config = scirs2_series::advanced, _training::ODESolverConfig {
+                        method: scirs2_series: advanced, _training: :IntegrationMethod::RungeKutta4,
                         step_size: 0.1,
                         tolerance: 1e-6,
                     };
@@ -694,7 +693,7 @@ fn advanced_bench_memory_profiling(c: &mut Criterion) {
                     let processor = ChunkedProcessor::new(config);
 
                     // Simulate memory-constrained processing
-                    let mut stats = scirs2_series::out_of_core::StreamingStats::new();
+                    let mut stats = scirs2_series::out_of, _core::StreamingStats::new();
                     for chunk in data.chunks(1000) {
                         for &value in chunk {
                             stats.update(value);
@@ -736,8 +735,7 @@ fn advanced_bench_robustness(c: &mut Criterion) {
                 match *scenario_name {
                     "missing_values" => data[i] = f64::NAN,
                     "outliers" => data[i] += (random - 0.5) * 100.0,
-                    "noise_burst" => data[i] += (random - 0.5) * 50.0,
-                    _ => {}
+                    "noise_burst" => data[i] += (random - 0.5) * 50.0_ => {}
                 }
             }
         }
@@ -767,11 +765,11 @@ fn advanced_bench_robustness(c: &mut Criterion) {
 
 /// Utility function to generate synthetic data with various patterns
 #[allow(dead_code)]
-fn generate_synthetic_data(size: usize, noise_level: f64) -> Array1<f64> {
-    let mut data = Array1::zeros(size);
+fn generate_synthetic_data(_size: usize, noise_level: f64) -> Array1<f64> {
+    let mut data = Array1::zeros(_size);
     let mut rng_state = 42u64; // Simple LCG for reproducible random numbers
 
-    for i in 0..size {
+    for i in 0.._size {
         // Generate deterministic but pseudo-random data
         rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
         let random = (rng_state % 10000) as f64 / 10000.0;

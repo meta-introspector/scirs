@@ -30,7 +30,7 @@ impl Default for OutOfCoreConfig {
         OutOfCoreConfig {
             chunk_size_mb: 100,
             use_mmap: true,
-            n_threads: num_cpus::get(),
+            n_threads: num, _cpus: get(),
             temp_dir: std::env::temp_dir().to_string_lossy().to_string(),
         }
     }
@@ -55,7 +55,7 @@ pub trait OutOfCoreTransformer: Send + Sync {
 /// Reader for chunked array data from disk
 pub struct ChunkedArrayReader {
     file: BufReader<File>,
-    shape: (usize, usize),
+    _shape: (usize, usize),
     chunk_size: usize,
     current_row: usize,
     dtype_size: usize,
@@ -65,20 +65,20 @@ pub struct ChunkedArrayReader {
 
 impl ChunkedArrayReader {
     /// Create a new chunked array reader
-    pub fn new<P: AsRef<Path>>(path: P, shape: (usize, usize), chunk_size: usize) -> Result<Self> {
-        let file = File::open(path).map_err(|e| {
+    pub fn new<P: AsRef<Path>>(_path: P, shape: (usize, usize), chunk_size: usize) -> Result<Self> {
+        let file = File::open(_path).map_err(|e| {
             TransformError::TransformationError(format!("Failed to open file: {e}"))
         })?;
 
-        // Pre-allocate buffer pool for maximum chunk size
-        let max_chunk_bytes = chunk_size * shape.1 * std::mem::size_of::<f64>();
+        // Pre-allocate buffer pool for maximum chunk _size
+        let max_chunk_bytes = chunk_size * shape.1 * std::mem::_size_of::<f64>();
 
         Ok(ChunkedArrayReader {
             file: BufReader::new(file),
             shape,
             chunk_size,
             current_row: 0,
-            dtype_size: std::mem::size_of::<f64>(),
+            dtype_size: std::mem::_size, _of::<f64>(),
             buffer_pool: vec![0u8; max_chunk_bytes],
         })
     }
@@ -162,9 +162,9 @@ pub struct ChunkedArrayWriter {
 
 impl ChunkedArrayWriter {
     /// Create a new chunked array writer
-    pub fn new<P: AsRef<Path>>(path: P, shape: (usize, usize)) -> Result<Self> {
-        let path_str = path.as_ref().to_string_lossy().to_string();
-        let file = File::create(&path).map_err(|e| {
+    pub fn new<P: AsRef<Path>>(_path: P, shape: (usize, usize)) -> Result<Self> {
+        let path_str = _path.as_ref().to_string_lossy().to_string();
+        let file = File::create(&_path).map_err(|e| {
             TransformError::TransformationError(format!("Failed to create file: {e}"))
         })?;
 
@@ -176,7 +176,7 @@ impl ChunkedArrayWriter {
             file: BufWriter::new(file),
             shape,
             rows_written: 0,
-            path: path_str,
+            _path: path_str,
             write_buffer: Vec::with_capacity(buffer_capacity),
         })
     }
@@ -259,9 +259,9 @@ struct NormalizationStats {
 
 impl OutOfCoreNormalizer {
     /// Create a new out-of-core normalizer
-    pub fn new(method: NormalizationMethod) -> Self {
+    pub fn new(_method: NormalizationMethod) -> Self {
         OutOfCoreNormalizer {
-            method,
+            _method,
             stats: None,
         }
     }
@@ -417,7 +417,7 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
 
         match self.method {
             NormalizationMethod::MinMax
-            | NormalizationMethod::MinMaxCustom(_, _)
+            | NormalizationMethod::MinMaxCustom(__)
             | NormalizationMethod::ZScore
             | NormalizationMethod::MaxAbs => {
                 self.compute_simple_stats(chunks_iter, n_features)?;
@@ -527,7 +527,7 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
     }
 
     fn get_transform_shape(&self, input_shape: (usize, usize)) -> (usize, usize) {
-        input_shape // Normalization doesn't change shape
+        input_shape // Normalization doesn't change _shape
     }
 }
 
@@ -558,12 +558,12 @@ struct CsvChunkIterator {
 }
 
 impl CsvChunkIterator {
-    fn new(reader: BufReader<File>, chunk_size: usize, skip_header: bool) -> Self {
+    fn new(_reader: BufReader<File>, chunk_size: usize, skip_header: bool) -> Self {
         CsvChunkIterator {
-            reader,
+            _reader,
             chunk_size,
             skip_header,
-            header_skipped: false,
+            _header_skipped: false,
         }
     }
 }

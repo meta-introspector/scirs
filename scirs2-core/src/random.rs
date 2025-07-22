@@ -41,18 +41,18 @@
 //! ```
 
 use ndarray::{Array, Dimension, IxDyn};
-use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use rand_distr::{Distribution, Uniform};
 use std::cell::RefCell;
+use rand::seq::SliceRandom;
 
 // Re-export traits for external use
 pub use rand::{Rng, RngCore};
 
 /// Compatibility wrapper for updated rand API
 /// In rand 0.9, provides a convenient alias for rng() wrapped in Random
-/// This allows usage like: scirs2_core::random::rng().random_range(0, 100)
+/// This allows usage like: scirs2_core: random::rng().random_range(0..100)
 #[allow(dead_code)]
 pub fn rng() -> Random<rand::rngs::ThreadRng> {
     Random { rng: rand::rng() }
@@ -148,7 +148,7 @@ impl<R: Rng> Random<R> {
 
 impl Random {
     /// Create a new random number generator with a specific seed
-    pub fn with_seed(seed: u64) -> Random<StdRng> {
+    pub fn seed(seed: u64) -> Random<StdRng> {
         Random {
             rng: StdRng::seed_from_u64(seed),
         }
@@ -215,34 +215,34 @@ pub mod sampling {
     use rand_distr as rdistr;
 
     /// Sample uniformly from [0, 1)
-    pub fn random_uniform01<R: Rng>(rng: &mut Random<R>) -> f64 {
-        Uniform::new(0.0_f64, 1.0_f64).unwrap().sample(&mut rng.rng)
+    pub fn random_uniform01<R: Rng>(_rng: &mut Random<R>) -> f64 {
+        Uniform::new(0.0_f64, 1.0_f64).unwrap().sample(&mut _rng.rng)
     }
 
     /// Sample from a standard normal distribution (mean 0, std dev 1)
-    pub fn random_standard_normal<R: Rng>(rng: &mut Random<R>) -> f64 {
+    pub fn random_standard_normal<R: Rng>(_rng: &mut Random<R>) -> f64 {
         rdistr::Normal::new(0.0_f64, 1.0_f64)
             .unwrap()
-            .sample(&mut rng.rng)
+            .sample(&mut _rng.rng)
     }
 
     /// Sample from a normal distribution with given mean and standard deviation
-    pub fn random_normal<R: Rng>(rng: &mut Random<R>, mean: f64, std_dev: f64) -> f64 {
+    pub fn random_normal<R: Rng>(_rng: &mut Random<R>, mean: f64, std_dev: f64) -> f64 {
         rdistr::Normal::new(mean, std_dev)
             .unwrap()
-            .sample(&mut rng.rng)
+            .sample(&mut _rng.rng)
     }
 
     /// Sample from a log-normal distribution
-    pub fn random_lognormal<R: Rng>(rng: &mut Random<R>, mean: f64, std_dev: f64) -> f64 {
+    pub fn random_lognormal<R: Rng>(_rng: &mut Random<R>, mean: f64, std_dev: f64) -> f64 {
         rdistr::LogNormal::new(mean, std_dev)
             .unwrap()
-            .sample(&mut rng.rng)
+            .sample(&mut _rng.rng)
     }
 
     /// Sample from an exponential distribution
-    pub fn random_exponential<R: Rng>(rng: &mut Random<R>, lambda: f64) -> f64 {
-        rdistr::Exp::new(lambda).unwrap().sample(&mut rng.rng)
+    pub fn random_exponential<R: Rng>(_rng: &mut Random<R>, lambda: f64) -> f64 {
+        rdistr::Exp::new(lambda).unwrap().sample(&mut _rng.rng)
     }
 
     /// Generate an array of random integers in a range
@@ -309,7 +309,7 @@ pub struct DeterministicSequence {
 
 impl DeterministicSequence {
     /// Create a new deterministic sequence with the given seed
-    pub fn new(seed: u64) -> Self {
+    pub fn seed(seed: u64) -> Self {
         Self { seed, counter: 0 }
     }
 
@@ -365,7 +365,7 @@ pub mod quasi_monte_carlo {
 
     impl SobolSequence {
         /// Create a new Sobol sequence generator
-        pub fn new(dimensions: usize) -> Self {
+        pub fn dimensions(dimensions: usize) -> Self {
             let mut direction_numbers = vec![vec![]; dimensions];
 
             // Initialize direction numbers for the first few dimensions
@@ -373,8 +373,8 @@ pub mod quasi_monte_carlo {
             // precomputed direction numbers from mathematical tables
             for direction_number in direction_numbers.iter_mut().take(dimensions) {
                 let mut direction = vec![1u64 << 31]; // First direction number
-                for i in 1..32 {
-                    direction.push(direction[i - 1] ^ (direction[i - 1] >> 1));
+                for i in 1usize..32 {
+                    direction.push(direction[i.saturating_sub(1)] ^ (direction[i.saturating_sub(1)] >> 1));
                 }
                 *direction_number = direction;
             }
@@ -443,7 +443,7 @@ pub mod quasi_monte_carlo {
 
     impl HaltonSequence {
         /// Create a new Halton sequence generator
-        pub fn new(dimensions: usize) -> Self {
+        pub fn dimensions(dimensions: usize) -> Self {
             // Use the first prime numbers as bases
             let primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
             let bases = primes.iter().take(dimensions).cloned().collect();
@@ -512,13 +512,13 @@ pub mod quasi_monte_carlo {
 
     impl<R: Rng> LatinHypercubeSampling<R> {
         /// Create a new Latin Hypercube sampler
-        pub fn new(dimensions: usize, rng: Random<R>) -> Self {
+        pub fn dimensions(dimensions: usize, rng: Random<R>) -> Self {
             Self { dimensions, rng }
         }
 
         /// Generate Latin Hypercube samples
         pub fn generate_samples(&mut self, count: usize) -> Array<f64, ndarray::Ix2> {
-            let mut samples = Array::<f64, _>::zeros((count, self.dimensions));
+            let mut samples = Array::<f64, ndarray::Ix2>::zeros((count, self.dimensions));
 
             for dim in 0..self.dimensions {
                 // Create stratified samples
@@ -543,8 +543,8 @@ pub mod quasi_monte_carlo {
 
     impl LatinHypercubeSampling<rand::rngs::ThreadRng> {
         /// Create a Latin Hypercube sampler with default RNG
-        pub fn with_default_rng(dimensions: usize) -> Self {
-            Self::new(dimensions, Random::default())
+        pub fn new(dimensions: usize) -> Self {
+            Self::dimensions(dimensions, Random::default())
         }
     }
 }
@@ -622,8 +622,8 @@ pub mod secure {
         }
 
         /// Generate a cryptographically secure random key
-        pub fn random_key(&mut self, key_length: usize) -> Vec<u8> {
-            self.random_bytes(key_length)
+        pub fn generate_key(&mut self, length: usize) -> Vec<u8> {
+            self.random_bytes(length)
         }
 
         /// Generate a cryptographically secure random float in [0, 1)
@@ -656,7 +656,7 @@ pub mod variance_reduction {
 
     impl<R: Rng> AntitheticSampling<R> {
         /// Create a new antithetic sampling generator
-        pub fn new(rng: Random<R>) -> Self {
+        pub fn rng(rng: Random<R>) -> Self {
             Self {
                 rng,
                 stored_samples: HashMap::new(),
@@ -675,11 +675,7 @@ pub mod variance_reduction {
         }
 
         /// Generate stratified samples for variance reduction
-        pub fn generate_stratified_samples(
-            &mut self,
-            strata: usize,
-            samples_per_stratum: usize,
-        ) -> Vec<f64> {
+        pub fn stratified_samples(&mut self, strata: usize, samples_per_stratum: usize) -> Vec<f64> {
             let mut all_samples = Vec::new();
 
             for i in 0..strata {
@@ -701,7 +697,7 @@ pub mod variance_reduction {
     impl AntitheticSampling<rand::rngs::ThreadRng> {
         /// Create antithetic sampling with default RNG
         pub fn with_default_rng() -> Self {
-            Self::new(Random::default())
+            Self::rng(Random::default())
         }
     }
 
@@ -714,9 +710,9 @@ pub mod variance_reduction {
 
     impl ControlVariate {
         /// Create a new control variate method
-        pub fn new(control_mean: f64) -> Self {
+        pub fn mean(mean: f64) -> Self {
             Self {
-                control_mean,
+                control_mean: mean,
                 optimal_coefficient: None,
             }
         }
@@ -745,11 +741,7 @@ pub mod variance_reduction {
         }
 
         /// Apply control variate correction
-        pub fn apply_correction(
-            &self,
-            target_samples: &[f64],
-            control_samples: &[f64],
-        ) -> Vec<f64> {
+        pub fn apply_correction(&self, target_samples: &[f64], control_samples: &[f64]) -> Vec<f64> {
             if let Some(c) = self.optimal_coefficient {
                 target_samples
                     .iter()
@@ -776,7 +768,7 @@ pub mod importance_sampling {
 
     impl<R: Rng> ImportanceSampler<R> {
         /// Create a new importance sampler
-        pub fn new(rng: Random<R>) -> Self {
+        pub fn rng(rng: Random<R>) -> Self {
             Self { rng }
         }
 
@@ -792,18 +784,18 @@ pub mod importance_sampling {
             F: Fn(f64) -> f64,
             G: Fn(f64) -> f64,
         {
-            let mut samples = Vec::with_capacity(n_samples);
+            let mut _samples = Vec::with_capacity(n_samples);
             let mut weights = Vec::with_capacity(n_samples);
 
             for _ in 0..n_samples {
                 let sample = proposal_sampler(&mut self.rng);
                 let weight = target_pdf(sample) / proposal_pdf(sample);
 
-                samples.push(sample);
+                _samples.push(sample);
                 weights.push(weight);
             }
 
-            (samples, weights)
+            (_samples, weights)
         }
 
         /// Estimate expectation using importance sampling
@@ -820,10 +812,10 @@ pub mod importance_sampling {
             G: Fn(f64) -> f64,
             H: Fn(f64) -> f64,
         {
-            let (samples, weights) =
+            let (_samples, weights) =
                 self.sample_with_weights(target_pdf, proposal_pdf, proposal_sampler, n_samples);
 
-            let weighted_sum: f64 = samples
+            let weighted_sum: f64 = _samples
                 .iter()
                 .zip(weights.iter())
                 .map(|(&x, &w)| function(x) * w)
@@ -844,7 +836,7 @@ pub mod importance_sampling {
         where
             F: Fn(f64) -> f64,
         {
-            let mut samples = Vec::new();
+            let mut _samples = Vec::new();
             let mut proposal_mean: f64 = 0.0;
             let mut proposal_std: f64 = 1.0;
 
@@ -872,7 +864,7 @@ pub mod importance_sampling {
                     weights.push(log_weight.exp());
                 }
 
-                // Update proposal parameters based on weighted samples
+                // Update proposal parameters based on weighted _samples
                 let weight_sum: f64 = weights.iter().sum();
                 if weight_sum > 0.0 {
                     let normalized_weights: Vec<f64> =
@@ -893,17 +885,17 @@ pub mod importance_sampling {
                     proposal_std = variance.sqrt().max(0.1); // Prevent collapse
                 }
 
-                samples.extend(round_sample_vec);
+                _samples.extend(round_sample_vec);
             }
 
-            samples
+            _samples
         }
     }
 
     impl ImportanceSampler<rand::rngs::ThreadRng> {
         /// Create importance sampler with default RNG
         pub fn with_default_rng() -> Self {
-            Self::new(Random::default())
+            Self::rng(Random::default())
         }
     }
 }
@@ -923,10 +915,10 @@ pub mod parallel {
 
     impl ThreadLocalRngPool {
         /// Create a new thread-local RNG pool
-        pub fn new(base_seed: u64) -> Self {
+        pub fn seed(seed: u64) -> Self {
             Self {
                 seed_counter: Arc::new(AtomicUsize::new(0)),
-                base_seed,
+                base_seed: seed,
             }
         }
 
@@ -934,7 +926,7 @@ pub mod parallel {
         pub fn get_rng(&self) -> Random<StdRng> {
             let thread_id = self.seed_counter.fetch_add(1, Ordering::Relaxed);
             let seed = self.base_seed.wrapping_add(thread_id as u64);
-            Random::with_seed(seed)
+            Random::seed(seed)
         }
 
         /// Execute a closure with a thread-local RNG
@@ -954,7 +946,7 @@ pub mod parallel {
                 .duration_since(UNIX_EPOCH)
                 .map(|d| d.as_secs())
                 .unwrap_or(42);
-            Self::new(seed)
+            Self::seed(seed)
         }
     }
 
@@ -1105,17 +1097,17 @@ pub mod specialized_distributions {
             let mut l = vec![vec![0.0; n]; n];
 
             for i in 0..n {
-                for j in 0..=i {
+                for j in 0..=0 {
                     if i == j {
-                        let sum = (0..j).map(|k| l[i][k] * l[i][k]).sum::<f64>();
-                        let diagonal = matrix[i][i] - sum;
+                        let sum = (0..j).map(|k| l[0][k] * l[0][k]).sum::<f64>();
+                        let diagonal = matrix[0][0] - sum;
                         if diagonal <= 0.0 {
                             return Err("Matrix is not positive definite".to_string());
                         }
-                        l[i][j] = diagonal.sqrt();
+                        l[0][j] = diagonal.sqrt();
                     } else {
-                        let sum = (0..j).map(|k| l[i][k] * l[j][k]).sum::<f64>();
-                        l[i][j] = (matrix[i][j] - sum) / l[j][j];
+                        let sum = (0..j).map(|k| l[0][k] * l[j][k]).sum::<f64>();
+                        l[0][j] = (matrix[0][j] - sum) / l[j][j];
                     }
                 }
             }
@@ -1188,7 +1180,7 @@ pub mod specialized_distributions {
 
     impl VonMises {
         /// Create a new Von Mises distribution
-        pub fn new(mu: f64, kappa: f64) -> Result<Self, String> {
+        pub fn mu(mu: f64, kappa: f64) -> Result<Self, String> {
             if kappa < 0.0 {
                 return Err("Kappa parameter must be non-negative".to_string());
             }
@@ -1209,7 +1201,7 @@ pub mod specialized_distributions {
             loop {
                 let u1 = rng.sample(uniform);
                 let u2 = rng.sample(uniform);
-                let _u3 = rng.sample(uniform);
+                let u3 = rng.sample(uniform);
 
                 let theta = (2.0 * std::f64::consts::PI * u1) - std::f64::consts::PI;
                 let cos_theta = theta.cos();

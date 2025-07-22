@@ -1,4 +1,4 @@
-use crate::ndarray_ext::NdArray;
+use crate::ndarray__ext::NdArray;
 use crate::op::OpError;
 use crate::Float;
 
@@ -9,7 +9,7 @@ pub(crate) struct AdamOp<F: Float> {
     pub(crate) b2: F,
 }
 
-impl<F: Float> crate::op::Op<F> for AdamOp<F> {
+impl<F: Float>, crate::op::Op<F> for AdamOp<F> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<F>) -> Result<(), OpError> {
         // Since we can't modify inputs directly with input_mut, we need to
         // create new arrays for all our outputs and return them

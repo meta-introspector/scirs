@@ -114,8 +114,7 @@ impl DeviceManager {
                     available_memory: 7 * 1024 * 1024 * 1024, // 7GB
     /// Discover ROCm devices (AMD)
     fn discover_rocm_devices(
-        _devices: &mut HashMap<(AcceleratorType, usize), Arc<dyn Accelerator>>,
-        _device_info: &mut Vec<DeviceInfo>,
+        _devices: &mut HashMap<(AcceleratorType, usize), Arc<dyn Accelerator>>, _device_info: &mut Vec<DeviceInfo>,
         // ROCm device discovery would go here
     /// List all available devices
     pub fn list_devices(&self) -> Vec<DeviceInfo> {
@@ -237,10 +236,10 @@ pub struct MultiDeviceContext {
     distribution_strategy: DistributionStrategy,
 impl MultiDeviceContext {
     /// Create a new multi-device context
-    pub fn new(devices: Vec<Arc<dyn Accelerator>>, strategy: DistributionStrategy) -> Self {
-            devices,
+    pub fn new(_devices: Vec<Arc<dyn Accelerator>>, strategy: DistributionStrategy) -> Self {
+            _devices,
             distribution_strategy: strategy,
-    /// Distribute work across devices
+    /// Distribute work across _devices
     pub fn distribute_work<F>(&self, work_items: usize, work_fn: F) -> Result<()>
     where
         F: Fn(usize, &dyn Accelerator) -> Result<()> + Send + Sync,
@@ -248,8 +247,8 @@ impl MultiDeviceContext {
         match self.distribution_strategy {
             DistributionStrategy::RoundRobin => {
                 for (i, item) in (0..work_items).enumerate() {
-                    let device_idx = i % self.devices.len();
-                    work_fn(item, &*self.devices[device_idx])?;
+                    let device_idx = i % self._devices.len();
+                    work_fn(item, &*self._devices[device_idx])?;
                 }
             DistributionStrategy::LoadBalanced => {
                 // Simple load balancing based on available memory
@@ -260,7 +259,7 @@ impl MultiDeviceContext {
                         .iter()
                         .enumerate()
                         .min_by_key(|(_, &load)| load)
-                        .map(|(idx, _)| idx)
+                        .map(|(idx_)| idx)
                         .unwrap_or(0);
                     work_fn(item, &*self.devices[min_load_idx])?;
                     device_loads[min_load_idx] += 1;

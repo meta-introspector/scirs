@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::iter::Sum;
 use super::core::ModelInterpreter;
+use statrs::statistics::Statistics;
 /// Statistical analysis of layer activations
 #[derive(Debug, Clone)]
 pub struct LayerAnalysisStats<F: Float + Debug> {
@@ -84,7 +85,7 @@ where
     Ok(stats)
 /// Compute detailed statistics for layer activations
 #[allow(dead_code)]
-pub fn compute_layer_statistics<F>(activations: &ArrayD<F>) -> Result<LayerAnalysisStats<F>>
+pub fn compute_layer_statistics<F>(_activations: &ArrayD<F>) -> Result<LayerAnalysisStats<F>>
     let mean_activation = activations.mean().unwrap_or(F::zero());
     let variance = activations
         .mapv(|x| (x - mean_activation) * (x - mean_activation))
@@ -136,7 +137,7 @@ pub fn compute_layer_statistics<F>(activations: &ArrayD<F>) -> Result<LayerAnaly
     })
 /// Compute attribution statistics for a single attribution method
 #[allow(dead_code)]
-pub fn compute_attribution_statistics<F>(attribution: &ArrayD<F>) -> AttributionStatistics<F>
+pub fn compute_attribution_statistics<F>(_attribution: &ArrayD<F>) -> AttributionStatistics<F>
     let mean = attribution.mean().unwrap_or(F::zero());
     let abs_attribution = attribution.mapv(|x| x.abs());
     let mean_abs = abs_attribution.mean().unwrap_or(F::zero());
@@ -148,14 +149,14 @@ pub fn compute_attribution_statistics<F>(attribution: &ArrayD<F>) -> Attribution
         mean_absolute: mean_abs,
         max_absolute: max_abs,
         positive_attribution_ratio: positive_ratio,
-        total_positive_attribution: attribution
+        total_positive_attribution: _attribution
             .iter()
             .filter(|&&x| x > F::zero())
             .cloned()
             .sum(),
-        total_negative_attribution: attribution
+        total_negative_attribution: _attribution
             .filter(|&&x| x < F::zero())
-/// Generate interpretation summary across multiple attribution methods
+/// Generate interpretation summary across multiple _attribution methods
 #[allow(dead_code)]
 pub fn generate_interpretation_summary<F>(
     attributions: &HashMap<String, ArrayD<F>>,
@@ -166,10 +167,10 @@ pub fn generate_interpretation_summary<F>(
     if let Some((_, first_attribution)) = attributions.iter().next() {
         for i in 0..first_attribution.len() {
             let mut scores = Vec::new();
-            for attribution in attributions.values() {
-                if i < attribution.len() {
+            for _attribution in attributions.values() {
+                if i < _attribution.len() {
                     // Use iter() to access elements properly for multi-dimensional arrays
-                    if let Some(value) = attribution.iter().nth(i) {
+                    if let Some(value) = _attribution.iter().nth(i) {
                         scores.push(value.to_f64().unwrap_or(0.0));
                     }
                 }
@@ -213,11 +214,11 @@ pub fn find_most_important_features<F>(
     feature_scores
         .into_iter()
         .take(top_k)
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .collect()
 /// Compute interpretation confidence based on method consistency
 #[allow(dead_code)]
-pub fn compute_interpretation_confidence<F>(attributions: &HashMap<String, ArrayD<F>>) -> f64
+pub fn compute_interpretation_confidence<F>(_attributions: &HashMap<String, ArrayD<F>>) -> f64
     if attributions.len() < 2 {
         return 1.0; // Single method, assume full confidence
     // Compute pairwise correlations between attribution methods
@@ -256,7 +257,7 @@ pub fn compute_correlation<F>(x: &ArrayD<F>, y: &ArrayD<F>) -> f64
         numerator / denominator
 /// Analyze activation distribution patterns
 #[allow(dead_code)]
-pub fn analyze_activation_distribution<F>(stats: &LayerAnalysisStats<F>) -> HashMap<String, f64>
+pub fn analyze_activation_distribution<F>(_stats: &LayerAnalysisStats<F>) -> HashMap<String, f64>
     F: Float + Debug,
     let mut analysis = HashMap::new();
     analysis.insert(
@@ -268,7 +269,7 @@ pub fn analyze_activation_distribution<F>(stats: &LayerAnalysisStats<F>) -> Hash
     let total_activations: u32 = stats.histogram.iter().sum();
     if total_activations > 0 {
         // Find peak bin
-        let (peak_bin, _) = stats
+        let (peak_bin_) = stats
             .histogram
             .enumerate()
             .max_by_key(|(_, &count)| count)

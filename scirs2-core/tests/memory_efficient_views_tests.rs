@@ -55,7 +55,7 @@ mod tests {
         // Check the error type
         match result {
             Err(CoreError::ValidationError(ctx)) => {
-                assert!(ctx.message.contains("square"));
+                assert!(ctx.message.contains(square));
             }
             _ => panic!("Expected ValidationError"),
         }
@@ -75,7 +75,7 @@ mod tests {
 
         match transpose_result {
             Err(CoreError::ValidationError(ctx)) => {
-                assert!(ctx.message.contains("empty"));
+                assert!(ctx.message.contains(empty));
             }
             _ => panic!("Expected ValidationError"),
         }
@@ -90,7 +90,7 @@ mod tests {
 
         // This should panic with "not yet implemented"
         unsafe {
-            let _: ArrayView<u8, _> = scirs2_core::memory_efficient::view_as(&data).unwrap();
+            let _: ArrayView<u8_> = scirs2_core::memory_efficient::view_as(&data).unwrap();
         }
     }
 }

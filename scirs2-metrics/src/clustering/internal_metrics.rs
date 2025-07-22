@@ -54,7 +54,7 @@ pub struct SilhouetteAnalysis<F: Float> {
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::silhouette_score;
+/// use scirs2__metrics::clustering::silhouette_score;
 ///
 /// // Create a small dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![
@@ -106,7 +106,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::silhouette_samples;
+/// use scirs2__metrics::clustering::silhouette_samples;
 ///
 /// // Create a small dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![
@@ -158,7 +158,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::silhouette_scores_per_cluster;
+/// use scirs2__metrics::clustering::silhouette_scores_per_cluster;
 ///
 /// // Create a small dataset with 3 clusters
 /// let x = Array2::from_shape_vec((9, 2), vec![
@@ -211,7 +211,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::silhouette_analysis;
+/// use scirs2__metrics::clustering::silhouette_analysis;
 ///
 /// // Create a small dataset with 3 clusters
 /// let x = Array2::from_shape_vec((9, 2), vec![
@@ -289,7 +289,7 @@ where
     let empty_clusters: Vec<_> = clusters
         .iter()
         .filter(|(_, samples)| samples.is_empty())
-        .map(|(&label, _)| label)
+        .map(|(&label_)| label)
         .collect();
 
     if !empty_clusters.is_empty() {
@@ -413,7 +413,7 @@ where
     // Sort by cluster (ascending), then by silhouette value (descending)
     samples_with_scores.sort_by(|a, b| a.2.cmp(&b.2).then(b.1.partial_cmp(&a.1).unwrap()));
 
-    let sorted_indices = samples_with_scores.iter().map(|&(i, _, _)| i).collect();
+    let sorted_indices = samples_with_scores.iter().map(|&(i__)| i).collect();
 
     Ok(SilhouetteAnalysis {
         sample_values: silhouette_values,
@@ -444,7 +444,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::davies_bouldin_score;
+/// use scirs2__metrics::clustering::davies_bouldin_score;
 ///
 /// // Create a small dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![
@@ -579,7 +579,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::calinski_harabasz_score;
+/// use scirs2__metrics::clustering::calinski_harabasz_score;
 ///
 /// // Create a small dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![

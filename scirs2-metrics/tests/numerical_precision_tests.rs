@@ -5,7 +5,7 @@
 
 use approx::{assert_abs_diff_eq, assert_relative_eq};
 use ndarray::{array, Array2};
-use scirs2_metrics::{
+use scirs2__metrics::{
     anomaly::wasserstein_distance,
     classification::{accuracy_score, f1_score, precision_score, recall_score},
     clustering::{davies_bouldin_score, silhouette_score},

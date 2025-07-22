@@ -232,17 +232,17 @@ pub fn simd_scalar_mul_f64(a: &ArrayView1<f64>, scalar: f64) -> Array1<f64> {
 ///
 /// * Array of linearly spaced values
 #[allow(dead_code)]
-pub fn simd_linspace_f32(start: f32, end: f32, num: usize) -> Array1<f32> {
+pub fn linspace_f32(start_val: f32, end: f32, num: usize) -> Array1<f32> {
     if num < 2 {
-        return Array1::from_vec(vec![start]);
+        return Array1::from_vec(vec![start_val]);
     }
 
     let mut result = Array1::zeros(num);
-    let step = (end - start) / (num as f32 - 1.0);
+    let step = (end - start_val) / (num as f32 - 1.0);
 
     // Use scalar implementation for now - could be optimized with SIMD
     for (i, elem) in result.iter_mut().enumerate() {
-        *elem = start + step * i as f32;
+        *elem = start_val + step * i as f32;
     }
 
     // Make sure the last value is exactly end to avoid floating point precision issues
@@ -255,17 +255,17 @@ pub fn simd_linspace_f32(start: f32, end: f32, num: usize) -> Array1<f32> {
 
 /// SIMD accelerated linspace function for f64 values
 #[allow(dead_code)]
-pub fn simd_linspace_f64(start: f64, end: f64, num: usize) -> Array1<f64> {
+pub fn linspace_f64(start_val: f64, end: f64, num: usize) -> Array1<f64> {
     if num < 2 {
-        return Array1::from_vec(vec![start]);
+        return Array1::from_vec(vec![start_val]);
     }
 
     let mut result = Array1::zeros(num);
-    let step = (end - start) / (num as f64 - 1.0);
+    let step = (end - start_val) / (num as f64 - 1.0);
 
     // Use scalar implementation for now - could be optimized with SIMD
     for (i, elem) in result.iter_mut().enumerate() {
-        *elem = start + step * i as f64;
+        *elem = start_val + step * i as f64;
     }
 
     // Make sure the last value is exactly end to avoid floating point precision issues
@@ -324,13 +324,13 @@ pub fn simd_adaptive_add_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1
 
 /// Enhanced reduction operation using unified SIMD interface
 #[allow(dead_code)]
-pub fn simd_sum_f32_enhanced(input: &ArrayView1<f32>) -> f32 {
+pub fn simd_sum_f32(input: &ArrayView1<f32>) -> f32 {
     f32::simd_sum(input)
 }
 
 /// Enhanced reduction operation for f64 using unified SIMD interface
 #[allow(dead_code)]
-pub fn simd_sum_f64_enhanced(input: &ArrayView1<f64>) -> f64 {
+pub fn simd_sum_f64(input: &ArrayView1<f64>) -> f64 {
     f64::simd_sum(input)
 }
 

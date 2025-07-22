@@ -24,7 +24,7 @@ use std::ops::{AddAssign, MulAssign, SubAssign};
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::incomplete_gamma::gammainc_lower;
+/// use scirs2__special::incomplete_gamma::gammainc_lower;
 ///
 /// let result = gammainc_lower(2.0, 1.0).unwrap();
 /// assert!((result - 0.2642411176571153).abs() < 1e-10);
@@ -35,7 +35,7 @@ where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign,
 {
     check_positive(a, "a")?;
-    check_finite(x, "x")?;
+    check_finite(x, "x value")?;
 
     if x <= T::zero() {
         return Ok(T::zero());
@@ -87,7 +87,7 @@ where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign,
 {
     check_positive(a, "a")?;
-    check_finite(x, "x")?;
+    check_finite(x, "x value")?;
 
     if x <= T::zero() {
         return Ok(gamma(a));
@@ -152,7 +152,7 @@ where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign,
 {
     check_positive(a, "a")?;
-    check_finite(x, "x")?;
+    check_finite(x, "x value")?;
 
     if x <= T::zero() {
         return Ok(T::zero());
@@ -180,7 +180,7 @@ where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign,
 {
     check_positive(a, "a")?;
-    check_finite(x, "x")?;
+    check_finite(x, "x value")?;
 
     if x <= T::zero() {
         return Ok(T::one());

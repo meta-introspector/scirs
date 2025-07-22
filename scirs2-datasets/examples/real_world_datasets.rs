@@ -6,13 +6,14 @@
 //! Usage:
 //!   cargo run --example real_world_datasets --release
 
-use scirs2_datasets::{
+use scirs2__datasets::{
     list_real_world_datasets, load_adult, load_california_housing, load_heart_disease,
     load_red_wine_quality, load_titanic,
     utils::{k_fold_split, train_test_split},
     BenchmarkRunner, MLPipeline, RealWorldConfig,
 };
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -61,8 +62,7 @@ fn demonstrate_dataset_catalog() {
                 time_series.push(dataset)
             }
             "diabetes_readmission" | "heart_disease" => healthcare.push(dataset),
-            "credit_card_fraud" | "loan_default" => financial.push(dataset),
-            _ => {}
+            "credit_card_fraud" | "loan_default" => financial.push(dataset, _ => {}
         }
     }
 
@@ -456,8 +456,8 @@ fn format_number(n: usize) -> String {
 
 /// Demonstrate dataset information display
 #[allow(dead_code)]
-fn show_dataset_info(name: &str, dataset: &scirs2_datasets::utils::Dataset) {
-    println!("{name}:");
+fn show_dataset_info(_name: &str, dataset: &scirs2_datasets::utils::Dataset) {
+    println!("{_name}:");
     println!("  Samples: {}", format_number(dataset.n_samples()));
     println!("  Features: {}", dataset.n_features());
     println!(

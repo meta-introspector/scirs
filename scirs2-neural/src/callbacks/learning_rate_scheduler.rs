@@ -99,7 +99,7 @@ impl<F: Float + Debug + ScalarOperand> ReduceOnPlateau<F> {
     /// Create a new reduce on plateau scheduler
     /// * `patience` - Number of epochs with no improvement after which learning rate will be reduced
     /// * `threshold` - Threshold for measuring the new optimum
-    pub fn new(initial_lr: F, factor: F, patience: usize, threshold: F, min_lr: F) -> Self {
+    pub fn new(_initial_lr: F, factor: F, patience: usize, threshold: F, min_lr: F) -> Self {
             patience,
             threshold,
             monitor_val_loss: true,
@@ -171,8 +171,7 @@ impl<F: Float + Debug + ScalarOperand> CosineAnnealingLR<F> {
             max_lr,
             cycle_epochs,
             current_lr: max_lr,
-            total_steps,
-            _phantom: PhantomData,
+            total_steps_phantom: PhantomData,
     /// Get the initial learning rate (max_lr for cosine annealing)
         self.max_lr
     /// Calculate learning rate for the given step

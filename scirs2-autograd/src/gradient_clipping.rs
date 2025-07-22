@@ -76,8 +76,8 @@ impl<F: Float> Default for ClippingStats<F> {
 /// # Example
 /// ```
 /// use scirs2_autograd as ag;
-/// use scirs2_autograd::gradient_clipping::{ClipByValue, GradientClipper};
-/// use scirs2_autograd::tensor_ops::*;
+/// use scirs2__autograd::gradient_clipping::{ClipByValue, GradientClipper};
+/// use scirs2__autograd::tensor_ops::*;
 ///
 /// let mut env = ag::VariableEnvironment::new();
 /// let mut rng = ag::ndarray_ext::ArrayRng::<f32>::default();
@@ -107,14 +107,14 @@ impl<F: Float> ClipByValue<F> {
     ///
     /// # Panics
     /// Panics if `min_value` >= `max_value`
-    pub fn new(min_value: F, max_value: F) -> Self {
+    pub fn new(_min_value: F, max_value: F) -> Self {
         assert!(
-            min_value < max_value,
-            "min_value must be less than max_value"
+            _min_value < max_value,
+            "_min_value must be less than max_value"
         );
 
         Self {
-            min_value,
+            _min_value,
             max_value,
             last_clipped: std::cell::Cell::new(false),
         }
@@ -126,8 +126,8 @@ impl<F: Float> ClipByValue<F> {
     ///
     /// # Arguments
     /// * `max_abs_value` - Maximum absolute value allowed
-    pub fn symmetric(max_abs_value: F) -> Self {
-        Self::new(-max_abs_value, max_abs_value)
+    pub fn symmetric(_max_abs_value: F) -> Self {
+        Self::new(-_max_abs_value, _max_abs_value)
     }
 }
 
@@ -165,8 +165,8 @@ impl<F: Float> GradientClipper<F> for ClipByValue<F> {
 /// # Example
 /// ```
 /// use scirs2_autograd as ag;
-/// use scirs2_autograd::gradient_clipping::{ClipByNorm, GradientClipper};
-/// use scirs2_autograd::tensor_ops::*;
+/// use scirs2__autograd::gradient_clipping::{ClipByNorm, GradientClipper};
+/// use scirs2__autograd::tensor_ops::*;
 ///
 /// let mut env = ag::VariableEnvironment::new();
 /// let mut rng = ag::ndarray_ext::ArrayRng::<f32>::default();
@@ -195,11 +195,11 @@ impl<F: Float> ClipByNorm<F> {
     ///
     /// # Panics
     /// Panics if `max_norm` is not positive
-    pub fn new(max_norm: F) -> Self {
-        assert!(max_norm > F::zero(), "max_norm must be positive");
+    pub fn new(_max_norm: F) -> Self {
+        assert!(_max_norm > F::zero(), "_max_norm must be positive");
 
         Self {
-            max_norm,
+            _max_norm,
             last_clipped: std::cell::Cell::new(false),
             last_stats: std::cell::RefCell::new(ClippingStats::default()),
         }
@@ -265,8 +265,8 @@ impl<F: Float> GradientClipper<F> for ClipByNorm<F> {
 /// # Example
 /// ```
 /// use scirs2_autograd as ag;
-/// use scirs2_autograd::gradient_clipping::{ClipByGlobalNorm, GradientClipper};
-/// use scirs2_autograd::tensor_ops::*;
+/// use scirs2__autograd::gradient_clipping::{ClipByGlobalNorm, GradientClipper};
+/// use scirs2__autograd::tensor_ops::*;
 ///
 /// let mut env = ag::VariableEnvironment::new();
 /// let mut rng = ag::ndarray_ext::ArrayRng::<f32>::default();
@@ -295,11 +295,11 @@ impl<F: Float> ClipByGlobalNorm<F> {
     ///
     /// # Panics
     /// Panics if `max_norm` is not positive
-    pub fn new(max_norm: F) -> Self {
-        assert!(max_norm > F::zero(), "max_norm must be positive");
+    pub fn new(_max_norm: F) -> Self {
+        assert!(_max_norm > F::zero(), "_max_norm must be positive");
 
         Self {
-            max_norm,
+            _max_norm,
             last_clipped: std::cell::Cell::new(false),
             last_stats: std::cell::RefCell::new(ClippingStats::default()),
         }
@@ -378,16 +378,16 @@ impl<F: Float> AdaptiveClipByNorm<F> {
     /// # Arguments
     /// * `initial_max_norm` - Initial maximum norm threshold
     /// * `adaptation_rate` - Rate at which to adapt the threshold (0.0 to 1.0)
-    pub fn new(initial_max_norm: F, adaptation_rate: F) -> Self {
+    pub fn new(_initial_max_norm: F, adaptation_rate: F) -> Self {
         assert!(
             adaptation_rate >= F::zero() && adaptation_rate <= F::one(),
             "adaptation_rate must be between 0.0 and 1.0"
         );
 
         Self {
-            base_clipper: ClipByNorm::new(initial_max_norm),
+            base_clipper: ClipByNorm::new(_initial_max_norm),
             adaptation_rate,
-            current_threshold: std::cell::Cell::new(initial_max_norm),
+            current_threshold: std::cell::Cell::new(_initial_max_norm),
         }
     }
 
@@ -398,7 +398,7 @@ impl<F: Float> AdaptiveClipByNorm<F> {
 
     /// Manually update the threshold (for external adaptation logic)
     pub fn set_threshold(&self, new_threshold: F) {
-        assert!(new_threshold > F::zero(), "threshold must be positive");
+        assert!(new_threshold > F::zero(), "_threshold must be positive");
         self.current_threshold.set(new_threshold);
     }
 }
@@ -444,10 +444,10 @@ impl<F: Float> Tensor<'_, F> {
     /// # Arguments
     /// * `max_norm` - Maximum allowed norm
     pub fn clip_norm(self, max_norm: F) -> Self {
-        let norm = tensor_ops::frobenius_norm(self);
+        let _norm = tensor_ops::frobenius_norm(self);
         let max_norm_tensor = tensor_ops::scalar(max_norm, self.graph());
         let one_tensor = tensor_ops::scalar(F::one(), self.graph());
-        let ratio = max_norm_tensor / norm;
+        let ratio = max_norm_tensor / _norm;
         let clipping_factor = tensor_ops::minimum(one_tensor, ratio);
         self * clipping_factor
     }

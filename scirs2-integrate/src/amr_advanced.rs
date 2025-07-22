@@ -103,13 +103,13 @@ pub enum RefinementFlag {
 /// Trait for refinement criteria
 pub trait RefinementCriterion<F: IntegrateFloat>: Send + Sync {
     /// Evaluate refinement criterion for a cell
-    fn evaluate(&self, cell: &AdaptiveCell<F>, neighbors: &[&AdaptiveCell<F>]) -> F;
+    fn evaluate(_cell: &AdaptiveCell<F>, neighbors: &[&AdaptiveCell<F>]) -> F;
 
     /// Get criterion name
-    fn name(&self) -> &str;
+    fn name() -> &'static str;
 
     /// Get criterion weight in combined evaluation
-    fn weight(&self) -> F {
+    fn weight() -> F {
         F::one()
     }
 }
@@ -145,7 +145,7 @@ pub struct CurvatureRefinementCriterion<F: IntegrateFloat> {
 /// Load balancing strategy trait
 pub trait LoadBalancer<F: IntegrateFloat>: Send + Sync {
     /// Balance computational load across processors/threads
-    fn balance(&self, hierarchy: &mut MeshHierarchy<F>) -> IntegrateResult<()>;
+    fn balance(_hierarchy: &mut MeshHierarchy<F>) -> IntegrateResult<()>;
 }
 
 /// Zoltan-style geometric load balancer
@@ -202,9 +202,9 @@ pub struct AMRAdaptationResult<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     /// Create new advanced AMR manager
-    pub fn new(initial_mesh: AdaptiveMeshLevel<F>, max_levels: usize, min_cell_size: F) -> Self {
+    pub fn new(_initial_mesh: AdaptiveMeshLevel<F>, max_levels: usize, min_cell_size: F) -> Self {
         let mesh_hierarchy = MeshHierarchy {
-            levels: vec![initial_mesh],
+            _levels: vec![_initial_mesh],
             hierarchy_map: HashMap::new(),
             ghost_cells: HashMap::new(),
         };
@@ -258,7 +258,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         self.evaluate_refinement_criteria()?;
 
         // Step 3: Flag cells for refinement/coarsening
-        let (_refine_count, _coarsen_count) = self.flag_cells_for_adaptation()?;
+        let (_refine_count_coarsen_count) = self.flag_cells_for_adaptation()?;
 
         // Step 4: Perform refinement
         let cells_refined = self.refine_flagged_cells()?;
@@ -322,7 +322,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Evaluate all refinement criteria for all cells
-    fn evaluate_refinement_criteria(&mut self) -> IntegrateResult<()> {
+    fn evaluate_refinement_criteria(&self) -> IntegrateResult<()> {
         for level in &mut self.mesh_hierarchy.levels {
             let cell_ids: Vec<CellId> = level.cells.keys().cloned().collect();
 
@@ -368,7 +368,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Flag cells for refinement or coarsening
-    fn flag_cells_for_adaptation(&mut self) -> IntegrateResult<(usize, usize)> {
+    fn flag_cells_for_adaptation(&self) -> IntegrateResult<(usize, usize)> {
         let mut refine_count = 0;
         let mut coarsen_count = 0;
 
@@ -436,7 +436,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Refine flagged cells
-    fn refine_flagged_cells(&mut self) -> IntegrateResult<usize> {
+    fn refine_flagged_cells(&self) -> IntegrateResult<usize> {
         let mut cells_refined = 0;
 
         // Process each level separately to avoid borrowing issues
@@ -458,7 +458,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Refine a single cell
-    fn refine_cell(&mut self, cell_id: CellId) -> IntegrateResult<()> {
+    fn refine_cell(&self, cell_id: CellId) -> IntegrateResult<()> {
         let parent_cell = if let Some(level) = self.mesh_hierarchy.levels.get(cell_id.level) {
             level.cells.get(&cell_id).cloned()
         } else {
@@ -509,7 +509,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             }
 
             let child_cell = AdaptiveCell {
-                id: child_id,
+                _id: child_id,
                 center: child_center,
                 size: child_size,
                 solution: parent_cell.solution.clone(), // Inherit parent solution
@@ -548,7 +548,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Coarsen flagged cells
-    fn coarsen_flagged_cells(&mut self) -> IntegrateResult<usize> {
+    fn coarsen_flagged_cells(&self) -> IntegrateResult<usize> {
         let mut cells_coarsened = 0;
 
         // Process from finest to coarsest level
@@ -573,7 +573,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Coarsen children back to parent cell
-    fn coarsen_to_parent(&mut self, parent_id: CellId) -> IntegrateResult<bool> {
+    fn coarsen_to_parent(&self, parent_id: CellId) -> IntegrateResult<bool> {
         let child_ids = if let Some(children) = self.mesh_hierarchy.hierarchy_map.get(&parent_id) {
             children.clone()
         } else {
@@ -634,7 +634,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Update neighbor relationships after refinement
-    fn update_neighbor_relationships(&mut self, level: usize) -> IntegrateResult<()> {
+    fn update_neighbor_relationships(&self, level: usize) -> IntegrateResult<()> {
         // Collect neighbor relationships first to avoid borrowing conflicts
         let mut all_neighbor_relationships: Vec<(CellId, Vec<CellId>)> = Vec::new();
 
@@ -743,25 +743,25 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Check if two cells are geometric neighbors
-    fn are_cells_neighbors(&self, cell1: &AdaptiveCell<F>, cell2: &AdaptiveCell<F>) -> bool {
-        if cell1.center.len() != cell2.center.len() || cell1.center.len() < 3 {
+    fn are_cells_neighbors(_cell1: &AdaptiveCell<F>, cell2: &AdaptiveCell<F>) -> bool {
+        if _cell1.center.len() != cell2.center.len() || _cell1.center.len() < 3 {
             return false;
         }
 
-        let max_size = cell1.size.max(cell2.size);
+        let max_size = _cell1.size.max(cell2.size);
         let tolerance = max_size * F::from(1.1).unwrap(); // 10% tolerance
 
         // Calculate distance between cell centers
         let mut distance_squared = F::zero();
-        for i in 0..cell1.center.len() {
-            let diff = cell1.center[i] - cell2.center[i];
+        for i in 0.._cell1.center.len() {
+            let diff = _cell1.center[i] - cell2.center[i];
             distance_squared += diff * diff;
         }
 
         let distance = distance_squared.sqrt();
 
         // Cells are neighbors if distance is approximately equal to sum of half-sizes
-        let expected_distance = (cell1.size + cell2.size) / F::from(2.0).unwrap();
+        let expected_distance = (_cell1.size + cell2.size) / F::from(2.0).unwrap();
 
         distance <= tolerance && distance >= expected_distance * F::from(0.7).unwrap()
     }
@@ -829,8 +829,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Update ghost cells for parallel processing
-    fn update_ghost_cells(&mut self) -> IntegrateResult<()> {
-        use std::collections::HashSet;
+    fn update_ghost_cells(&self) -> IntegrateResult<()> {
 
         // Clear existing ghost cells
         self.mesh_hierarchy.ghost_cells.clear();
@@ -877,7 +876,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Calculate expected number of neighbors for a regular cell
-    fn calculate_expected_neighbors(&self) -> usize {
+    fn calculate_expected_neighbors() -> usize {
         // For a 3D structured grid, a regular internal cell should have 6 face neighbors
         // For 2D: 4 neighbors, for 1D: 2 neighbors
         // This is a simplification - actual count depends on mesh structure
@@ -906,15 +905,15 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             ];
 
             for (dir_idx, direction) in directions.iter().enumerate() {
-                // Calculate ghost cell position
+                // Calculate ghost _cell position
                 let mut ghost_center = boundary_cell.center.clone();
                 for i in 0..3 {
                     ghost_center[i] += direction[i] * cell_size;
                 }
 
-                // Check if a real cell exists at this position
+                // Check if a real _cell exists at this position
                 if !self.cell_exists_at_position(&ghost_center, level) {
-                    // Create ghost cell ID (using high indices to avoid conflicts)
+                    // Create ghost _cell ID (using high indices to avoid conflicts)
                     let ghost_id = CellId {
                         level,
                         index: 1_000_000 + boundary_cell.id.index * 10 + dir_idx,
@@ -934,12 +933,12 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         level: usize,
         ghost_cells: &mut Vec<CellId>,
     ) -> IntegrateResult<()> {
-        // Handle ghost cells needed for communication between mesh levels
+        // Handle ghost _cells needed for communication between mesh levels
 
-        // Check if we need ghost cells from coarser level
+        // Check if we need ghost _cells from coarser level
         if level > 0 {
             if let Some(current_level) = self.mesh_hierarchy.levels.get(level) {
-                for (cell_id, cell) in &current_level.cells {
+                for (cell_id, cell) in &current_level._cells {
                     // If this fine cell doesn't have a parent at the coarser level,
                     // it might need ghost cell communication
                     if cell.parent.is_none() {
@@ -953,10 +952,10 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             }
         }
 
-        // Check if we need ghost cells from finer level
+        // Check if we need ghost _cells from finer level
         if level + 1 < self.mesh_hierarchy.levels.len() {
             if let Some(current_level) = self.mesh_hierarchy.levels.get(level) {
-                for (cell_id, cell) in &current_level.cells {
+                for (cell_id, cell) in &current_level._cells {
                     // If this coarse cell has children at the finer level,
                     // it might need ghost cell communication
                     if !cell.children.is_empty() {
@@ -1262,7 +1261,7 @@ impl<F: IntegrateFloat + Send + Sync> RefinementCriterion<F> for GradientRefinem
         }
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "Gradient"
     }
 }
@@ -1316,7 +1315,7 @@ impl<F: IntegrateFloat + Send + Sync> RefinementCriterion<F> for FeatureDetectio
         feature_score
     }
 
-    fn name(&self) -> &str {
+    fn name() -> &'static str {
         "FeatureDetection"
     }
 }
@@ -1350,7 +1349,7 @@ impl<F: IntegrateFloat + Send + Sync> RefinementCriterion<F> for CurvatureRefine
         curvature
     }
 
-    fn name(&self) -> &str {
+    fn name() -> &'static str {
         "Curvature"
     }
 }

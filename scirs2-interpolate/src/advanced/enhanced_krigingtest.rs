@@ -67,8 +67,7 @@ pub struct EnhancedKriging<F> {
     n_samples: usize,
     basis_functions: Option<Array2<F>>,
     compute_full_covariance: bool,
-    use_exact_computation: bool,
-    _phantom: PhantomData<F>,
+    use_exact_computation: bool, _phantom: PhantomData<F>,
 }
 
 #[derive(Debug, Error)]
@@ -104,8 +103,7 @@ where
     n_samples: usize,
     compute_full_covariance: bool,
     use_exact_computation: bool,
-    optimize_parameters: bool,
-    _phantom: PhantomData<F>,
+    optimize_parameters: bool, _phantom: PhantomData<F>,
 }
 
 // Helper functions
@@ -149,8 +147,7 @@ where
             sigma_sq,
             nugget,
             angles,
-            extra_params: F::one(),
-            _phantom: PhantomData,
+            extra_params: F::one(), _phantom: PhantomData,
         }
     }
 }
@@ -182,8 +179,7 @@ where
             n_samples: 0,
             compute_full_covariance: false,
             use_exact_computation: true,
-            optimize_parameters: false,
-            _phantom: PhantomData,
+            optimize_parameters: false, _phantom: PhantomData,
         }
     }
 
@@ -222,7 +218,7 @@ where
     /// Set anisotropic length scales (one per dimension)
     pub fn with_length_scales(mut self, length_scales: Array1<F>) -> Self {
         if length_scales.iter().any(|&l| l <= F::zero()) {
-            panic!("Length scales must be positive");
+            panic!("Length _scales must be positive");
         }
         self.length_scales = Some(length_scales);
         self
@@ -231,7 +227,7 @@ where
     /// Set a single isotropic length scale
     pub fn with_length_scale(mut self, length_scale: F) -> Self {
         if length_scale <= F::zero() {
-            panic!("Length scale must be positive");
+            panic!("Length _scale must be positive");
         }
         self.length_scales = None; // Will be expanded in build
         self.sigma_sq = length_scale;
@@ -340,8 +336,7 @@ where
             n_samples: self.n_samples,
             basis_functions: None,
             compute_full_covariance: self.compute_full_covariance,
-            use_exact_computation: self.use_exact_computation,
-            _phantom: PhantomData,
+            use_exact_computation: self.use_exact_computation, _phantom: PhantomData,
         };
 
         Ok(kriging)

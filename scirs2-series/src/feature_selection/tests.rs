@@ -42,7 +42,7 @@ fn create_test_data() -> (Array2<f64>, Array1<f64>) {
 #[test]
 #[allow(dead_code)]
 fn test_variance_threshold() {
-    let (features, _) = create_test_data();
+    let (features_) = create_test_data();
 
     let result = FilterMethods::variance_threshold(&features, 0.1).unwrap();
 
@@ -91,7 +91,7 @@ fn test_f_test_selection() {
 #[test]
 #[allow(dead_code)]
 fn test_autocorrelation_filter() {
-    let (features, _) = create_test_data();
+    let (features_) = create_test_data();
 
     let result = FilterMethods::autocorrelation_filter(&features, 5, 0.1).unwrap();
 
@@ -204,7 +204,7 @@ fn test_lag_based_selection() {
 #[test]
 #[allow(dead_code)]
 fn test_seasonal_importance_selection() {
-    let (features, _) = create_test_data();
+    let (features_) = create_test_data();
 
     let result = TimeSeriesMethods::seasonal_importance_selection(&features, 12, Some(4)).unwrap();
 

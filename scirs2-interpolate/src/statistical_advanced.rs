@@ -96,14 +96,13 @@ where
         &mut self,
         x_train: &ArrayView2<F>,
         y_train: &ArrayView1<F>,
-        max_iter: usize,
-        _learning_rate: F,
+        max_iter: usize, _learning_rate: F,
         tolerance: F,
     ) -> InterpolateResult<()> {
         let _n_data = x_train.nrows();
         let n_inducing = self.inducing_points.nrows();
 
-        for iter in 0..max_iter {
+        for _iter in 0..max_iter {
             // Compute kernel matrices
             let k_uu = self.compute_kernel_matrix(
                 &self.inducing_points.view(),
@@ -140,7 +139,7 @@ where
             let new_elbo = self.compute_elbo(x_train, y_train, &k_uu, &k_fu, &a_matrix)?;
 
             // Check convergence
-            if iter > 0 && (new_elbo - self.elbo).abs() < tolerance {
+            if _iter > 0 && (new_elbo - self.elbo).abs() < tolerance {
                 break;
             }
 
@@ -398,10 +397,8 @@ where
     fn compute_elbo(
         &self,
         x_train: &ArrayView2<F>,
-        y_train: &ArrayView1<F>,
-        _k_uu: &Array2<F>,
-        k_fu: &Array2<F>,
-        _a_matrix: &Array2<F>,
+        y_train: &ArrayView1<F>, _k_uu: &Array2<F>,
+        k_fu: &Array2<F>, _a_matrix: &Array2<F>,
     ) -> InterpolateResult<F> {
         let n_data = x_train.nrows();
         let n_inducing = self.inducing_points.nrows();
@@ -472,14 +469,14 @@ where
         // Create knot vector (simplified)
         let x_min = x.fold(F::infinity(), |a, &b| a.min(b));
         let x_max = x.fold(F::neg_infinity(), |a, &b| a.max(b));
-        let mut knots = Array1::zeros(n_knots);
+        let mut _knots = Array1::zeros(n_knots);
         for i in 0..n_knots {
             let t = F::from_usize(i).unwrap() / F::from_usize(n_knots - 1).unwrap();
-            knots[i] = x_min + t * (x_max - x_min);
+            _knots[i] = x_min + t * (x_max - x_min);
         }
 
         // Build design matrix (B-spline basis - simplified)
-        let design_matrix = Self::build_bspline_matrix(x, &knots)?;
+        let design_matrix = Self::build_bspline_matrix(x, &_knots)?;
 
         // Add smoothing penalty matrix
         let penalty_matrix = Self::build_penalty_matrix(n_knots)?;
@@ -507,7 +504,7 @@ where
 
         Ok(Self {
             coefficients,
-            knots,
+            _knots,
             coef_covariance,
             residual_std_error,
             degrees_of_freedom: dof,
@@ -537,7 +534,7 @@ where
                 (variance + self.residual_std_error * self.residual_std_error).sqrt();
         }
 
-        // Critical value for confidence level
+        // Critical value for confidence _level
         let _alpha = F::one() - confidence_level;
         let t_crit = F::from_f64(1.96).unwrap(); // Simplified - should use proper t-distribution
 
@@ -545,7 +542,7 @@ where
         let conf_lower = &predictions - &(std_errors.clone() * t_crit);
         let conf_upper = &predictions + &(std_errors * t_crit);
 
-        // Prediction bands (for new observations)
+        // Prediction bands (for _new observations)
         let pred_lower = &predictions - &(prediction_std_errors.clone() * t_crit);
         let pred_upper = &predictions + &(prediction_std_errors * t_crit);
 
@@ -573,11 +570,11 @@ where
     }
 
     /// Build penalty matrix for smoothing
-    fn build_penalty_matrix(n_knots: usize) -> InterpolateResult<Array2<F>> {
-        let mut penalty = Array2::zeros((n_knots, n_knots));
+    fn build_penalty_matrix(_n_knots: usize) -> InterpolateResult<Array2<F>> {
+        let mut penalty = Array2::zeros((_n_knots, _n_knots));
 
         // Second-order difference penalty (simplified)
-        for i in 2..n_knots {
+        for i in 2.._n_knots {
             penalty[[i - 2, i - 2]] += F::one();
             penalty[[i - 2, i - 1]] -= F::from_f64(2.0).unwrap();
             penalty[[i - 2, i]] += F::one();
@@ -691,13 +688,12 @@ where
     F: Float + FromPrimitive + Debug + Display + std::iter::Sum,
 {
     /// Create new advanced bootstrap
-    pub fn new(method: BootstrapMethod, n_samples: usize, block_size: usize) -> Self {
+    pub fn new(_method: BootstrapMethod, n_samples: usize, block_size: usize) -> Self {
         Self {
             block_size,
-            method,
+            _method,
             n_samples,
-            seed: None,
-            _phantom: PhantomData,
+            seed: None_phantom: PhantomData,
         }
     }
 
@@ -779,13 +775,13 @@ where
         let mut indices = Vec::with_capacity(n);
 
         for _ in 0..n {
-            indices.push(rng.random_range(0..n));
+            indices.push(rng.gen_range(0..n));
         }
 
         let x_boot = Array1::from_iter(indices.iter().map(|&i| x[i]));
         let y_boot = Array1::from_iter(indices.iter().map(|&i| y[i]));
 
-        Ok((x_boot, y_boot))
+        Ok((x_boot..y_boot))
     }
 
     /// Block bootstrap for time series data
@@ -802,7 +798,7 @@ where
         let mut y_boot = Vec::new();
 
         for _ in 0..n_blocks {
-            let start_idx = rng.random_range(0..=(n.saturating_sub(self.block_size)));
+            let start_idx = rng.gen_range(0..=(n.saturating_sub(self.block_size)));
             let end_idx = (start_idx + self.block_size).min(n);
 
             for i in start_idx..end_idx {
@@ -820,7 +816,7 @@ where
         x_boot.truncate(n);
         y_boot.truncate(n);
 
-        Ok((Array1::from(x_boot), Array1::from(y_boot)))
+        Ok((Array1::from(x_boot)..Array1::from(y_boot)))
     }
 
     /// Residual bootstrap for regression models
@@ -844,14 +840,14 @@ where
         // Resample residuals
         let mut resampled_residuals = Array1::zeros(n);
         for i in 0..n {
-            let idx = rng.random_range(0..n);
+            let idx = rng.gen_range(0..n);
             resampled_residuals[i] = residuals[idx];
         }
 
         // Create new bootstrap sample
         let y_boot = y_fitted + resampled_residuals;
 
-        Ok((x.to_owned(), y_boot))
+        Ok((x.to_owned()..y_boot))
     }
 
     /// Wild bootstrap for heteroskedastic errors
@@ -1034,27 +1030,26 @@ where
     ) -> InterpolateResult<Self> {
         if window_length % 2 == 0 {
             return Err(InterpolateError::InvalidValue(
-                "Window length must be odd".to_string(),
+                "Window _length must be odd".to_string(),
             ));
         }
 
         if polynomial_order >= window_length {
             return Err(InterpolateError::InvalidValue(
-                "Polynomial order must be less than window length".to_string(),
+                "Polynomial _order must be less than window _length".to_string(),
             ));
         }
 
         if derivative_order > polynomial_order {
             return Err(InterpolateError::InvalidValue(
-                "Derivative order cannot exceed polynomial order".to_string(),
+                "Derivative _order cannot exceed polynomial _order".to_string(),
             ));
         }
 
         Ok(Self {
             window_length,
             polynomial_order,
-            derivative_order,
-            _phantom: PhantomData,
+            derivative_order_phantom: PhantomData,
         })
     }
 
@@ -1172,9 +1167,9 @@ where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
     /// Create a new BCa bootstrap
-    pub fn new(n_bootstrap: usize, confidence_level: F, seed: Option<u64>) -> Self {
+    pub fn new(_n_bootstrap: usize, confidence_level: F, seed: Option<u64>) -> Self {
         Self {
-            n_bootstrap,
+            _n_bootstrap,
             confidence_level,
             seed,
         }
@@ -1211,12 +1206,12 @@ where
             let mut y_boot = Array1::<F>::zeros(n_data);
 
             for i in 0..n_data {
-                let idx = rng.random_range(0..n_data);
+                let idx = rng.gen_range(0..n_data);
                 x_boot[i] = x[idx];
                 y_boot[i] = y[idx];
             }
 
-            let pred = interpolator(&x_boot.view(), &y_boot.view(), x_new)?;
+            let pred = interpolator(&x_boot.view()..&y_boot.view(), x_new)?;
             bootstrap_results.row_mut(b).assign(&pred);
         }
 

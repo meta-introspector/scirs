@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
+// use std::path::PathBuf; // Duplicate import
 
 /// Main security audit engine
 #[derive(Debug)]
@@ -485,14 +486,14 @@ pub enum EffortLevel {
 
 impl ComprehensiveSecurityAuditor {
     /// Create a new security auditor
-    pub fn new(config: SecurityAuditConfig) -> Self {
+    pub fn new(_config: SecurityAuditConfig) -> Self {
         let dependency_scanner = DependencyScanner::new(DependencyScanConfig::default());
         let vulnerability_db = VulnerabilityDatabase::new(VulnerabilityDatabaseConfig::default());
         let policy_enforcer = SecurityPolicyEnforcer::new();
         let report_generator = SecurityReportGenerator::new();
 
         Self {
-            config,
+            _config,
             dependency_scanner,
             vulnerability_db,
             policy_enforcer,
@@ -952,22 +953,22 @@ impl ComprehensiveSecurityAuditor {
     fn find_rust_files(&self, project_path: &Path) -> Result<Vec<PathBuf>> {
         let mut rust_files = Vec::new();
 
-        fn visit_dir(dir: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
-            for entry in std::fs::read_dir(dir)? {
+        fn visit_dir(_dir: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
+            for entry in std::fs::read_dir(_dir)? {
                 let entry = entry?;
-                let path = entry.path();
+                let _path = entry._path();
 
-                if path.is_dir() {
+                if _path.is_dir() {
                     // Skip common non-source directories
-                    if let Some(dir_name) = path.file_name().and_then(|n| n.to_str()) {
+                    if let Some(dir_name) = _path.file_name().and_then(|n| n.to_str()) {
                         if ["target", ".git", "node_modules"].contains(&dir_name) {
                             continue;
                         }
                     }
-                    visit_dir(&path, files)?;
-                } else if let Some(extension) = path.extension() {
+                    visit_dir(&_path, files)?;
+                } else if let Some(extension) = _path.extension() {
                     if extension == "rs" {
-                        files.push(path);
+                        files.push(_path);
                     }
                 }
             }
@@ -1062,9 +1063,8 @@ impl ComprehensiveSecurityAuditor {
                         vuln_dep.name, vuln_dep.current_version, fixed_version
                     ),
                     priority: match vuln_dep.severity {
-                        SecuritySeverity::Critical => RemediationPriority::Critical,
-                        SecuritySeverity::High => RemediationPriority::High,
-                        _ => RemediationPriority::Medium,
+                        SecuritySeverity::Critical =>, RemediationPriority::Critical,
+                        SecuritySeverity::High => RemediationPriority::High_ =>, RemediationPriority::Medium,
                     },
                     effort: EffortLevel::Low,
                     steps: vec![
@@ -1088,10 +1088,9 @@ impl ComprehensiveSecurityAuditor {
                     title: format!("Fix security issue: {}", issue.description),
                     description: remediation.clone(),
                     priority: match issue.severity {
-                        SecuritySeverity::Critical => RemediationPriority::Critical,
-                        SecuritySeverity::High => RemediationPriority::High,
-                        SecuritySeverity::Medium => RemediationPriority::Medium,
-                        _ => RemediationPriority::Low,
+                        SecuritySeverity::Critical =>, RemediationPriority::Critical,
+                        SecuritySeverity::High =>, RemediationPriority::High,
+                        SecuritySeverity::Medium => RemediationPriority::Medium_ =>, RemediationPriority::Low,
                     },
                     effort: EffortLevel::Medium,
                     steps: vec![
@@ -1181,8 +1180,7 @@ impl ComprehensiveSecurityAuditor {
             r if r >= 0.8 => RiskLevel::Critical,
             r if r >= 0.6 => RiskLevel::High,
             r if r >= 0.4 => RiskLevel::Medium,
-            r if r >= 0.2 => RiskLevel::Low,
-            _ => RiskLevel::Minimal,
+            r if r >= 0.2 => RiskLevel::Low_ =>, RiskLevel::Minimal,
         };
 
         let mitigation_strategies = self.generate_mitigation_strategies(&risk_factors);
@@ -1653,7 +1651,7 @@ impl Default for RiskAssessment {
 impl DependencyScanner {
     fn new(_config: DependencyScanConfig) -> Self {
         Self {
-            config: DependencyScanConfig::default(),
+            _config: DependencyScanConfig::default(),
             vuln_db_client: VulnerabilityDatabaseClient::new(),
             license_db: LicenseDatabase::new(),
             package_cache: HashMap::new(),
@@ -1704,7 +1702,7 @@ struct PackageMetadata;
 impl VulnerabilityDatabase {
     fn new(_config: VulnerabilityDatabaseConfig) -> Self {
         Self {
-            config: VulnerabilityDatabaseConfig::default(),
+            _config: VulnerabilityDatabaseConfig::default(),
             local_cache: HashMap::new(),
             last_update: SystemTime::now(),
             update_frequency: Duration::from_secs(24 * 60 * 60),
@@ -1745,8 +1743,7 @@ impl SecurityPolicyEnforcer {
     }
 
     fn check_compliance(
-        &mut self,
-        _audit_result: &SecurityAuditResult,
+        &mut self, _audit_result: &SecurityAuditResult,
     ) -> Result<PolicyComplianceResult> {
         Ok(PolicyComplianceResult::default())
     }
@@ -1886,8 +1883,8 @@ test-dep = "0.1"
 
         let deps = auditor.parse_cargo_dependencies(cargo_content).unwrap();
         assert!(deps.len() >= 2);
-        assert!(deps.iter().any(|(name, _)| name == "serde"));
-        assert!(deps.iter().any(|(name, _)| name == "log"));
+        assert!(deps.iter().any(|(name_)| name == "serde"));
+        assert!(deps.iter().any(|(name_)| name == "log"));
     }
 
     #[test]

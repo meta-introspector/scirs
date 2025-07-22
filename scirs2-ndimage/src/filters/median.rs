@@ -32,7 +32,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Basic 1D noise removal
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_ndimage::filters::{median_filter, BorderMode};
+/// use scirs2__ndimage::filters::{median_filter, BorderMode};
 ///
 /// // Remove impulse noise from a 1D signal
 /// let noisy_signal = Array1::from_vec(vec![1.0, 2.0, 100.0, 4.0, 5.0]);
@@ -43,7 +43,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## 2D image denoising
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_ndimage::filters::{median_filter, BorderMode};
+/// use scirs2__ndimage::filters::{median_filter, BorderMode};
 ///
 /// // Create a noisy image with salt-and-pepper noise
 /// let mut image = Array2::from_shape_fn((100, 100), |(i, j)| {
@@ -65,7 +65,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Different window sizes for varying noise levels
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_ndimage::filters::median_filter;
+/// use scirs2__ndimage::filters::median_filter;
 ///
 /// let noisy_image = Array2::from_shape_fn((50, 50), |(i, j)| {
 ///     if (i + j) % 10 == 0 { 255.0 } else { (i * j) as f64 }
@@ -84,7 +84,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## 3D volume processing
 /// ```
 /// use ndarray::Array3;
-/// use scirs2_ndimage::filters::median_filter;
+/// use scirs2__ndimage::filters::median_filter;
 ///
 /// let volume = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| {
 ///     if i == 10 && j == 10 && k == 10 { 1000.0 } else { (i + j + k) as f64 }

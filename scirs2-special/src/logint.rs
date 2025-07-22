@@ -53,7 +53,7 @@ const MEDIUM_EPS: f64 = 1e-10;
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::li;
+/// use scirs2__special::li;
 ///
 /// // Test for positive value
 /// let result = li(3.0).unwrap();
@@ -135,7 +135,7 @@ pub fn li(x: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::li_complex;
+/// use scirs2__special::li_complex;
 /// use num_complex::Complex64;
 ///
 /// // Test with real value
@@ -283,7 +283,7 @@ fn exponential_integral_complex(z: Complex64) -> Complex64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::e1;
+/// use scirs2__special::e1;
 ///
 /// // Test positive argument
 /// let result = e1(1.5).unwrap();
@@ -331,7 +331,7 @@ pub fn e1(x: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::expint;
+/// use scirs2__special::expint;
 ///
 /// // Test E₁
 /// let result1 = expint(1, 2.0).unwrap();
@@ -397,7 +397,7 @@ pub fn expint(n: i32, x: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::si;
+/// use scirs2__special::si;
 ///
 /// // Test at zero
 /// assert_eq!(si(0.0).unwrap(), 0.0);
@@ -465,7 +465,7 @@ pub fn si(x: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::ci;
+/// use scirs2__special::ci;
 ///
 /// let result = ci(1.0).unwrap();
 /// // Ci(1) ≈ 0.337
@@ -525,7 +525,7 @@ pub fn ci(x: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::shi;
+/// use scirs2__special::shi;
 ///
 /// // Test at zero
 /// assert_eq!(shi(0.0).unwrap(), 0.0);
@@ -586,7 +586,7 @@ pub fn shi(x: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::chi;
+/// use scirs2__special::chi;
 ///
 /// // Test positive value
 /// let result = chi(2.0).unwrap();
@@ -646,7 +646,7 @@ pub fn chi(x: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::polylog;
+/// use scirs2__special::polylog;
 ///
 /// let result = polylog(2.0, 0.5).unwrap();
 /// // Li₂(0.5) ≈ 0.582
@@ -820,7 +820,7 @@ fn zeta_function(s: f64) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::sici;
+/// use scirs2__special::sici;
 ///
 /// let (si_val, ci_val) = sici(1.0).unwrap();
 /// assert!((si_val - 0.946083).abs() < 1e-5);
@@ -847,7 +847,7 @@ pub fn sici(x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::shichi;
+/// use scirs2__special::shichi;
 ///
 /// let (shi_val, chi_val) = shichi(1.0).unwrap();
 /// assert!((shi_val - 1.057251).abs() < 1e-5);
@@ -880,7 +880,7 @@ pub fn shichi(x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::spence;
+/// use scirs2__special::spence;
 /// use std::f64::consts::PI;
 ///
 /// // Test spence(0) = π²/6

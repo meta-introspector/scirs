@@ -88,7 +88,7 @@ impl OptimizationLevel {
                 max_passes: 2,
                 level: self,
             },
-            OptimizationLevel::Standard => OptimizationConfig::default(),
+            OptimizationLevel::Standard =>, OptimizationConfig::default(),
             OptimizationLevel::Aggressive => OptimizationConfig {
                 constant_folding: true,
                 cse: true,
@@ -105,32 +105,28 @@ impl OptimizationLevel {
 
 /// Main graph optimizer
 pub struct GraphOptimizer<F: Float> {
-    config: OptimizationConfig,
-    _phantom: std::marker::PhantomData<F>,
+    config: OptimizationConfig_phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> GraphOptimizer<F> {
     /// Create a new graph optimizer with default configuration
     pub fn new() -> Self {
         Self {
-            config: OptimizationConfig::default(),
-            _phantom: std::marker::PhantomData,
+            config: OptimizationConfig::default(), _phantom: std::marker::PhantomData,
         }
     }
 
     /// Create a new graph optimizer with custom configuration
-    pub fn with_config(config: OptimizationConfig) -> Self {
+    pub fn with_config(_config: OptimizationConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 
     /// Create a new graph optimizer with specified optimization level
-    pub fn with_level(level: OptimizationLevel) -> Self {
+    pub fn with_level(_level: OptimizationLevel) -> Self {
         Self {
-            config: level.config(),
-            _phantom: std::marker::PhantomData,
+            config: _level.config(), _phantom: std::marker::PhantomData,
         }
     }
 
@@ -211,20 +207,19 @@ impl<F: Float> GraphOptimizer<F> {
     }
 
     /// Apply constant folding optimization
-    fn apply_constant_folding(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_constant_folding(&self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Temporarily disabled - would be implemented with constant_folding module
         Ok(0)
     }
 
     /// Apply dead code elimination
     fn apply_dead_code_elimination(
-        &self,
-        _graph: &mut Graph<F>,
+        &self_graph: &mut Graph<F>,
     ) -> Result<usize, OptimizationError> {
         // Simplified implementation - in a real optimizer, this would:
         // 1. Mark all reachable nodes from outputs
         // 2. Remove unreachable nodes
-        // 3. Update the graph structure
+        // 3. Update the _graph structure
 
         let eliminated_count = 0;
 
@@ -237,7 +232,7 @@ impl<F: Float> GraphOptimizer<F> {
     }
 
     /// Apply common subexpression elimination
-    fn apply_cse(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_cse(&self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Simplified implementation - in a real optimizer, this would:
         // 1. Build a hash table of equivalent expressions
         // 2. Replace duplicate expressions with references to the first occurrence
@@ -254,19 +249,18 @@ impl<F: Float> GraphOptimizer<F> {
 
     /// Apply expression simplification
     fn apply_expression_simplification(
-        &self,
-        _graph: &mut Graph<F>,
+        &self_graph: &mut Graph<F>,
     ) -> Result<usize, OptimizationError> {
         // Temporarily disabled - would be implemented with expression_simplification module
         Ok(0)
     }
 
     /// Apply operation fusion
-    fn apply_operation_fusion(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_operation_fusion(&self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Simplified implementation - in a real optimizer, this would:
         // 1. Identify fusable operation patterns
         // 2. Replace patterns with fused operations
-        // 3. Update the graph structure
+        // 3. Update the _graph structure
 
         let fused_count = 0;
 
@@ -279,7 +273,7 @@ impl<F: Float> GraphOptimizer<F> {
     }
 
     /// Apply memory optimization
-    fn apply_memory_optimization(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_memory_optimization(&self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Simplified implementation - in a real optimizer, this would:
         // 1. Analyze memory usage patterns
         // 2. Insert memory reuse opportunities
@@ -390,8 +384,7 @@ impl<F: Float> PatternMatcher<F> {
     /// Check if a tensor matches a pattern for simplification
     #[allow(dead_code)]
     pub(crate) fn matches_simplification_pattern(
-        &self,
-        _tensor_internal: &TensorInternal<F>,
+        &self, _tensor_internal: &TensorInternal<F>,
     ) -> Option<SimplificationPattern> {
         // Temporarily disabled - would be implemented with expression_simplification module
         None
@@ -400,9 +393,7 @@ impl<F: Float> PatternMatcher<F> {
     /// Check if tensors can be fused
     #[allow(dead_code)]
     pub(crate) fn can_fuse(
-        &self,
-        _tensor1: &TensorInternal<F>,
-        _tensor2: &TensorInternal<F>,
+        &self_tensor1: &TensorInternal<F>, _tensor2: &TensorInternal<F>,
     ) -> bool {
         // Temporarily disabled - would be implemented with fusion analysis
         false
@@ -418,9 +409,7 @@ impl<F: Float> PatternMatcher<F> {
     /// Check if a tensor is dead (unreachable from outputs)
     #[allow(dead_code)]
     pub(crate) fn is_dead(
-        &self,
-        _tensor_internal: &TensorInternal<F>,
-        _reachable: &HashSet<TensorID>,
+        &self, _tensor_internal: &TensorInternal<F>, _reachable: &HashSet<TensorID>,
     ) -> bool {
         // Temporarily disabled - would be implemented with reachability analysis
         false
@@ -464,16 +453,14 @@ pub enum SimplificationPattern {
 
 /// Optimization pass manager
 pub struct OptimizationPass<F: Float> {
-    name: String,
-    _phantom: std::marker::PhantomData<F>,
+    name: String_phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> OptimizationPass<F> {
     /// Create a new optimization pass
-    pub fn new(name: &str) -> Self {
+    pub fn new(_name: &str) -> Self {
         Self {
-            name: name.to_string(),
-            _phantom: std::marker::PhantomData,
+            _name: _name.to_string(), _phantom: std::marker::PhantomData,
         }
     }
 
@@ -483,7 +470,7 @@ impl<F: Float> OptimizationPass<F> {
     }
 
     /// Run this optimization pass on a graph
-    pub fn run(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    pub fn run(&self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Each pass would implement its specific optimization logic
         Ok(0)
     }
@@ -534,7 +521,7 @@ pub fn optimize_graph_with_config<F: Float>(
 
 /// Apply only constant folding optimization
 #[allow(dead_code)]
-pub fn apply_constant_folding<F: Float>(graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+pub fn apply_constant_folding<F: Float>(_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
     let config = OptimizationConfig {
         constant_folding: true,
         cse: false,
@@ -546,7 +533,7 @@ pub fn apply_constant_folding<F: Float>(graph: &mut Graph<F>) -> Result<usize, O
         level: OptimizationLevel::Basic,
     };
     let optimizer = GraphOptimizer::with_config(config);
-    let report = optimizer.optimize(graph)?;
+    let report = optimizer.optimize(_graph)?;
     Ok(report.constant_folding_applied)
 }
 
@@ -572,7 +559,7 @@ pub fn apply_dead_code_elimination<F: Float>(
 
 /// Apply common subexpression elimination
 #[allow(dead_code)]
-pub fn apply_cse<F: Float>(graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+pub fn apply_cse<F: Float>(_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
     let config = OptimizationConfig {
         constant_folding: false,
         cse: true,
@@ -584,7 +571,7 @@ pub fn apply_cse<F: Float>(graph: &mut Graph<F>) -> Result<usize, OptimizationEr
         level: OptimizationLevel::Standard,
     };
     let optimizer = GraphOptimizer::with_config(config);
-    let report = optimizer.optimize(graph)?;
+    let report = optimizer.optimize(_graph)?;
     Ok(report.cse_applied)
 }
 
@@ -605,12 +592,12 @@ impl<F: Float> ConstantFolder<F> {
     }
 
     /// Check if a tensor is constant
-    pub fn is_constant(&self, _tensor_id: TensorID) -> bool {
+    pub fn is_constant(&self_tensor_id: TensorID) -> bool {
         false
     }
 
     /// Get the constant value of a tensor if it's constant
-    pub fn get_constant_value(&self, _tensor_id: TensorID) -> Option<F> {
+    pub fn get_constant_value(&self_tensor_id: TensorID) -> Option<F> {
         None
     }
 

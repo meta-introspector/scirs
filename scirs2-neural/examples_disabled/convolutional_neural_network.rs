@@ -12,6 +12,7 @@ use ndarray::{s, Array, Array1, Array2, Array4, ArrayView1, Axis};
 use scirs2_neural::error::Result;
 use serde::{Deserialize, Serialize};
 use std::f32;
+use rand::seq::SliceRandom;
 /// Padding mode for convolutional layers
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 enum PaddingMode {
@@ -47,7 +48,7 @@ impl ActivationFunction {
             ActivationFunction::Tanh => {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
-            ActivationFunction::Linear => Array::ones(x.dim()),
+            ActivationFunction::Linear =>, Array::ones(x.dim()),
     /// Get a string representation of the activation function
     fn as_str(&self) -> &str {
             ActivationFunction::ReLU => "ReLU",
@@ -369,15 +370,15 @@ struct MaxPool2D {
     max_indices: Option<Array4<(usize, usize)>>, // Indices of max values
 impl MaxPool2D {
     /// Create a new MaxPool2D layer
-    fn new(pool_size: (usize, usize), stride: Option<(usize, usize)>) -> Self {
+    fn new(_pool_size: (usize, usize), stride: Option<(usize, usize)>) -> Self {
         // Default stride is same as pool size
-        let stride = stride.unwrap_or(pool_size);
-            pool_size,
+        let stride = stride.unwrap_or(_pool_size);
+            _pool_size,
             max_indices: None,
     /// Calculate output dimensions
         let channels = input_shape[1];
-        let output_height = (input_height - self.pool_size.0) / self.stride.0 + 1;
-        let output_width = (input_width - self.pool_size.1) / self.stride.1 + 1;
+        let output_height = (input_height - self._pool_size.0) / self.stride.0 + 1;
+        let output_width = (input_width - self._pool_size.1) / self.stride.1 + 1;
         [batch_size, channels, output_height, output_width]
 impl Layer for MaxPool2D {
         let input_shape = x.shape();
@@ -389,9 +390,9 @@ impl Layer for MaxPool2D {
         // Perform max pooling
             for c in 0..channels {
                     let h_start = h_out * self.stride.0;
-                    let h_end = h_start + self.pool_size.0;
+                    let h_end = h_start + self._pool_size.0;
                         let w_start = w_out * self.stride.1;
-                        let w_end = w_start + self.pool_size.1;
+                        let w_end = w_start + self._pool_size.1;
                         // Find maximum value in the pooling window
                         let mut max_val = f32::NEG_INFINITY;
                         let mut max_h = 0;
@@ -413,7 +414,7 @@ impl Layer for MaxPool2D {
         // Distribute gradients to max locations
                         let (max_h, max_w) = max_indices[[b, c, h_out, w_out]];
                         dinput[[b, c, max_h, max_w]] += grad_output[[b, c, h_out, w_out]];
-    fn update_parameters(&mut self, _learning_rate: f32) {
+    fn update_parameters(&mut self_learning_rate: f32) {
         // MaxPool has no parameters to update
             "MaxPool2D: {}x{} pool size, stride {:?}",
             self.pool_size.0, self.pool_size.1, self.stride
@@ -506,9 +507,9 @@ struct Sequential {
     loss_fn: LossFunction,
 impl Sequential {
     /// Create a new sequential model
-    fn new(loss_fn: LossFunction) -> Self {
+    fn new(_loss_fn: LossFunction) -> Self {
             layers: Vec::new(),
-            loss_fn,
+            _loss_fn,
     /// Add a layer to the model
     fn add<L: Layer + 'static>(&mut self, layer: L) -> &mut Self {
         self.layers.push(Box::new(layer));
@@ -524,7 +525,7 @@ impl Sequential {
         // Reshape predictions to 2D for loss computation
         let predictions_2d = predictions
             .into_shape_with_order((batch_size, output_size))
-        self.loss_fn.compute(&predictions_2d, targets)
+        self._loss_fn.compute(&predictions_2d, targets)
     /// Backward pass and update parameters
     fn backward(&mut self, x: &Array4<f32>, y: &Array2<f32>, learning_rate: f32) -> f32 {
         // Forward pass
@@ -533,7 +534,7 @@ impl Sequential {
         let loss = self.compute_loss(&predictions, y);
         // Reshape predictions to 2D for loss derivative
         // Compute gradient of loss with respect to predictions
-        let dloss = self.loss_fn.derivative(&predictions_2d, y);
+        let dloss = self._loss_fn.derivative(&predictions_2d, y);
         // Reshape back to 4D for backward pass
         let dloss_4d = dloss.into_shape_with_order(predictions.dim()).unwrap();
         // Backward pass through all layers
@@ -641,22 +642,22 @@ fn create_synthetic_dataset(
     // Generate samples with noise
     for i in 0..num_samples {
         // Assign a random class
-        let class = rng.random_range(0..num_classes);
+        let class = rng.gen_range(0..num_classes);
         // Add the class pattern with noise
         for h in 0..image_size.0 {
             for w in 0..image_size.1 {
                 let noise = rng.random::<f32>() * 0.3;
-                let pixel = (class_patterns[class][[h, w]] + noise).min(1.0);
+                let pixel = (class_patterns[class][[h..w]] + noise).min(1.0);
                 images[[i, 0, h, w]] = pixel;
         // One-hot encode the label
         labels[[i, class]] = 1.0;
     (images, labels)
 // Helper function to find index of maximum value in array
 #[allow(dead_code)]
-fn argmax(arr: ArrayView1<f32>) -> usize {
+fn argmax(_arr: ArrayView1<f32>) -> usize {
     let mut max_idx = 0;
-    let mut max_val = arr[0];
-    for (idx, &val) in arr.iter().enumerate() {
+    let mut max_val = _arr[0];
+    for (idx, &val) in _arr.iter().enumerate() {
         if val > max_val {
             max_val = val;
             max_idx = idx;
@@ -738,11 +739,11 @@ fn train_cnn_example() -> Result<()> {
     // Make some example predictions
     println!("\nExample predictions:");
     for i in 0..5 {
-        let idx = rng.random_range(0..test_size);
+        let idx = rng.gen_range(0..test_size);
         let true_class = argmax(test_labels.row(idx));
         let predicted_class = argmax(predictions.row(idx));
         println!(
-            "Example {}: True class = {}, Predicted class = {}",
+            "Example {}: True class = {}..Predicted class = {}",
             i + 1,
             true_class,
             predicted_class

@@ -22,8 +22,7 @@ pub struct EnhancedQMCGenerator<F> {
     /// Configuration
     pub config: EnhancedQMCConfig,
     /// Generator state
-    pub state: QMCGeneratorState,
-    _phantom: PhantomData<F>,
+    pub state: QMCGeneratorState_phantom: PhantomData<F>,
 }
 
 /// Enhanced sequence types with advanced algorithms
@@ -211,8 +210,7 @@ where
             sequence_type,
             dimension,
             config,
-            state,
-            _phantom: PhantomData,
+            state_phantom: PhantomData,
         };
 
         // Initialize scrambling and digital shifts if needed
@@ -291,8 +289,8 @@ where
         let mut chunk = Array2::zeros((chunk_size, self.dimension));
 
         for i in 0..chunk_size {
-            let index = start_index + i;
-            let point = self.compute_point_at_index(index)?;
+            let _index = start_index + i;
+            let point = self.compute_point_at_index(_index)?;
             chunk.row_mut(i).assign(&point);
         }
 
@@ -348,13 +346,12 @@ where
         &self,
         index: usize,
         owen_scrambling: bool,
-        digital_shift: bool,
-        _nested_scrambling: bool,
+        digital_shift: bool, _nested_scrambling: bool,
     ) -> StatsResult<Array1<F>> {
         let mut point = Array1::zeros(self.dimension);
 
         // Use simplified Sobol computation for now
-        // Full implementation would use proper direction numbers and scrambling
+        // Full implementation would use proper direction numbers and _scrambling
         for dim in 0..self.dimension {
             let mut result = 0u32;
             let mut idx = index;
@@ -369,7 +366,7 @@ where
                 base_power <<= 1;
             }
 
-            // Apply scrambling if enabled
+            // Apply _scrambling if enabled
             if owen_scrambling {
                 if let Some(ref matrices) = self.state.scrambling_matrices {
                     if dim < matrices.len() {
@@ -378,7 +375,7 @@ where
                 }
             }
 
-            // Apply digital shift if enabled
+            // Apply digital _shift if enabled
             if digital_shift {
                 if let Some(ref shifts) = self.state.digital_shifts {
                     if dim < shifts.len() {
@@ -396,9 +393,7 @@ where
     /// Compute enhanced Niederreiter sequence point
     fn compute_niederreiter_enhanced(
         &self,
-        index: usize,
-        _base_strategy: &BaseSelectionStrategy,
-        _matrix_optimization: bool,
+        index: usize_base_strategy: &BaseSelectionStrategy_matrix, _optimization: bool,
     ) -> StatsResult<Array1<F>> {
         // Simplified implementation
         let mut point = Array1::zeros(self.dimension);
@@ -415,9 +410,7 @@ where
     /// Compute improved Faure sequence point
     fn compute_faure_improved(
         &self,
-        index: usize,
-        _permutation_optimization: bool,
-        _radical_inverse_improvements: bool,
+        index: usize, _permutation_optimization: bool, _radical_inverse_improvements: bool,
     ) -> StatsResult<Array1<F>> {
         // Simplified implementation
         let mut point = Array1::zeros(self.dimension);
@@ -433,9 +426,7 @@ where
     /// Compute digital net point
     fn compute_digital_net(
         &self,
-        index: usize,
-        _net_params: &DigitalNetParams,
-        _construction_method: &NetConstructionMethod,
+        index: usize_net_params: &DigitalNetParams_construction, _method: &NetConstructionMethod,
     ) -> StatsResult<Array1<F>> {
         // Simplified implementation - use Sobol-like computation
         self.compute_sobol_advanced(index, false, false, false)
@@ -444,12 +435,9 @@ where
     /// Compute hybrid sequence point
     fn compute_hybrid_sequence(
         &self,
-        index: usize,
-        _primary: &EnhancedSequenceType,
-        _secondary: &EnhancedSequenceType,
-        _combination: &HybridCombinationStrategy,
+        index: usize_primary: &EnhancedSequenceType, _secondary: &EnhancedSequenceType_combination: &HybridCombinationStrategy,
     ) -> StatsResult<Array1<F>> {
-        // Simplified implementation - use primary sequence
+        // Simplified implementation - use _primary sequence
         self.compute_sobol_advanced(index, true, true, false)
     }
 
@@ -457,7 +445,7 @@ where
     fn initialize_randomization(&mut self) -> StatsResult<()> {
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rng()),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         // Initialize scrambling matrices
@@ -487,16 +475,14 @@ where
         match &self.sequence_type {
             EnhancedSequenceType::SobolAdvanced {
                 owen_scrambling, ..
-            } => *owen_scrambling,
-            _ => false,
+            } => *owen_scrambling_ => false,
         }
     }
 
     /// Check if sequence type needs digital shift
     fn needs_digital_shift(&self) -> bool {
         match &self.sequence_type {
-            EnhancedSequenceType::SobolAdvanced { digital_shift, .. } => *digital_shift,
-            _ => false,
+            EnhancedSequenceType::SobolAdvanced { digital_shift, .. } => *digital_shift_ => false,
         }
     }
 
@@ -506,8 +492,8 @@ where
 
         // Generate random permutation matrix
         for i in 0..32 {
-            let j = rng.random_range(0..32);
-            matrix[[i, j]] = 1;
+            let j = rng.gen_range(0..32);
+            matrix[[i..j]] = 1;
         }
 
         Ok(matrix)
@@ -617,7 +603,7 @@ where
         let mut max_discrepancy = 0.0;
         let num_test_points = 50.min(n);
 
-        let mut rng = rng();
+        let mut rng = rand::rng();
         for _ in 0..num_test_points {
             let mut test_point = Array1::zeros(d);
             for j in 0..d {

@@ -1,7 +1,7 @@
 //! Simple test for Advanced clustering functionality
 
 use ndarray::Array2;
-use scirs2_cluster::advanced_clustering::AdvancedClusterer;
+use scirs2__cluster::advanced_clustering::AdvancedClusterer;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

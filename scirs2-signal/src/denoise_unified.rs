@@ -4,17 +4,22 @@
 //! methods available in the scirs2-signal library. It allows users to easily
 //! switch between different denoising algorithms and compare their performance.
 
-use crate::denoise::{denoise_wavelet, ThresholdMethod, ThresholdSelect};
-use crate::denoise_advanced::{advanced_denoise, AdvancedDenoiseConfig, NoiseEstimation};
-use crate::denoise_cutting_edge::{denoise_dictionary_learning, DictionaryDenoiseConfig};
-use crate::denoise_enhanced::{
-    denoise_median_1d, denoise_total_variation_1d, denoise_wiener_1d, WienerConfig,
-};
-use crate::denoise_super_advanced::{advanced_advanced_denoise, AdvancedAdvancedDenoisingConfig};
+use crate::denoise::{ThresholdMethod, ThresholdSelect, denoise_wavelet};
+use crate::denoise__advanced::{AdvancedDenoiseConfig, NoiseEstimation, advanced_denoise};
+use crate::denoise_cutting__edge::{DictionaryDenoiseConfig, denoise_dictionary_learning};
+use crate::denoise_super__advanced::{AdvancedAdvancedDenoisingConfig, advanced_advanced_denoise};
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
 use serde::{Deserialize, Serialize};
+use statrs::statistics::Statistics;
+use std::f64::consts::PI;
+
+
+#[allow(unused_imports)]
+use crate::denoise__enhanced::{
+    denoise_median_1d, denoise_total_variation_1d, denoise_wiener_1d, WienerConfig,
+};
 // use std::f64::consts::PI;
 
 /// Unified denoising method selector
@@ -149,9 +154,9 @@ pub struct QualityMetrics {
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::denoise_unified::{denoise_unified, UnifiedDenoisingConfig, DenoisingMethod};
-/// use scirs2_signal::denoise::{ThresholdMethod, ThresholdSelect};
-/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2__signal::denoise_unified::{denoise_unified, UnifiedDenoisingConfig, DenoisingMethod};
+/// use scirs2__signal::denoise::{ThresholdMethod, ThresholdSelect};
+/// use scirs2__signal::dwt::Wavelet;
 ///
 /// // Create a noisy signal
 /// let signal = Array1::from_vec(vec![1.0, 2.0, 1.5, 3.0, 2.5, 1.0]);
@@ -163,7 +168,7 @@ pub struct QualityMetrics {
 /// // Use advanced wavelet denoising
 /// let advanced_config = UnifiedDenoisingConfig {
 ///     method: DenoisingMethod::WaveletAdvanced {
-///         config: scirs2_signal::denoise_advanced::AdvancedDenoiseConfig::default(),
+///         config: scirs2_signal: denoise_advanced: :AdvancedDenoiseConfig::default(),
 ///     },
 ///     ..Default::default()
 /// };
@@ -392,31 +397,31 @@ pub fn auto_select_denoising_method(
 
 /// Preprocess signal before denoising
 #[allow(dead_code)]
-fn preprocess_signal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
+fn preprocess_signal(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Basic preprocessing: remove DC offset
-    let mean = signal.mean().unwrap_or(0.0);
-    Ok(signal.mapv(|x| x - mean))
+    let mean = _signal.mean().unwrap_or(0.0);
+    Ok(_signal.mapv(|x| x - mean))
 }
 
 /// Postprocess signal after denoising
 #[allow(dead_code)]
-fn postprocess_signal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
+fn postprocess_signal(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Basic postprocessing: ensure no NaN or infinite values
-    let cleaned = signal.mapv(|x| if x.is_finite() { x } else { 0.0 });
+    let cleaned = _signal.mapv(|x| if x.is_finite() { x } else { 0.0 });
     Ok(cleaned)
 }
 
 /// Estimate noise level from signal
 #[allow(dead_code)]
-fn estimate_noise_level(signal: &Array1<f64>) -> f64 {
-    if signal.len() < 2 {
+fn estimate_noise_level(_signal: &Array1<f64>) -> f64 {
+    if _signal.len() < 2 {
         return 0.0;
     }
 
     // Use differences between adjacent samples as noise estimate
-    let mut diffs = Vec::with_capacity(signal.len() - 1);
-    for i in 0..signal.len() - 1 {
-        diffs.push((signal[i + 1] - signal[i]).abs());
+    let mut diffs = Vec::with_capacity(_signal.len() - 1);
+    for i in 0.._signal.len() - 1 {
+        diffs.push((_signal[i + 1] - _signal[i]).abs());
     }
 
     // Use median of differences as robust noise estimate
@@ -426,21 +431,21 @@ fn estimate_noise_level(signal: &Array1<f64>) -> f64 {
 
 /// Analyze signal complexity
 #[allow(dead_code)]
-fn analyze_signal_complexity(signal: &Array1<f64>) -> f64 {
-    if signal.len() < 4 {
+fn analyze_signal_complexity(_signal: &Array1<f64>) -> f64 {
+    if _signal.len() < 4 {
         return 0.0;
     }
 
     // Calculate second derivative as complexity measure
     let mut complexity_sum = 0.0;
-    for i in 1..signal.len() - 1 {
-        let second_deriv = signal[i + 1] - 2.0 * signal[i] + signal[i - 1];
+    for i in 1.._signal.len() - 1 {
+        let second_deriv = _signal[i + 1] - 2.0 * _signal[i] + _signal[i - 1];
         complexity_sum += second_deriv.abs();
     }
 
-    let signal_range = signal.mapv(|x| x.abs()).into_iter().fold(0.0, f64::max);
+    let signal_range = _signal.mapv(|x| x.abs()).into_iter().fold(0.0, f64::max);
     if signal_range > 0.0 {
-        (complexity_sum / ((signal.len() - 2) as f64)) / signal_range
+        (complexity_sum / ((_signal.len() - 2) as f64)) / signal_range
     } else {
         0.0
     }
@@ -512,12 +517,12 @@ fn calculate_quality_metrics(
 
 /// Calculate high-frequency energy (simple approximation)
 #[allow(dead_code)]
-fn calculate_high_frequency_energy(signal: &Array1<f64>) -> f64 {
-    if signal.len() < 2 {
+fn calculate_high_frequency_energy(_signal: &Array1<f64>) -> f64 {
+    if _signal.len() < 2 {
         return 0.0;
     }
 
-    signal
+    _signal
         .windows(2)
         .into_iter()
         .map(|window| (window[1] - window[0]).powi(2))
@@ -526,13 +531,13 @@ fn calculate_high_frequency_energy(signal: &Array1<f64>) -> f64 {
 
 /// Calculate SNR improvement
 #[allow(dead_code)]
-fn calculate_snr_improvement(original: &Array1<f64>, denoised: &Array1<f64>) -> Option<f64> {
-    if original.len() != denoised.len() {
+fn calculate_snr_improvement(_original: &Array1<f64>, denoised: &Array1<f64>) -> Option<f64> {
+    if _original.len() != denoised.len() {
         return None;
     }
 
     // Estimate noise as difference
-    let noise: Array1<f64> = original - denoised;
+    let noise: Array1<f64> = _original - denoised;
 
     let signal_power = denoised.mapv(|x| x * x).sum() / denoised.len() as f64;
     let noise_power = noise.mapv(|x| x * x).sum() / noise.len() as f64;
@@ -587,7 +592,7 @@ pub fn denoise_adaptive_hybrid(
 
     if fallback_methods.is_empty() {
         return Err(SignalError::ValueError(
-            "No fallback methods provided".to_string(),
+            "No fallback _methods provided".to_string(),
         ));
     }
 
@@ -631,7 +636,7 @@ pub fn denoise_adaptive_hybrid(
                         best_quality_score: quality_score,
                     });
 
-                    // Early termination if quality threshold is met
+                    // Early termination if quality _threshold is met
                     if quality_score >= quality_threshold {
                         break;
                     }
@@ -650,7 +655,7 @@ pub fn denoise_adaptive_hybrid(
     match best_result {
         Some(result) => Ok(result),
         None => Err(SignalError::ComputationError(
-            "All denoising methods failed".to_string(),
+            "All denoising _methods failed".to_string(),
         )),
     }
 }
@@ -682,7 +687,7 @@ fn calculate_adaptive_quality_score(
     let artifact_penalty = detect_artifacts(original, denoised);
     score += 0.1 * (1.0 - artifact_penalty);
 
-    // Bonus for reasonable noise level estimation
+    // Bonus for reasonable noise _level estimation
     if estimated_noise_level > 0.0 && estimated_noise_level < 10.0 {
         score += 0.05; // Small bonus
     }
@@ -692,12 +697,12 @@ fn calculate_adaptive_quality_score(
 
 /// Detect artifacts in denoised signal
 #[allow(dead_code)]
-fn detect_artifacts(original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
-    if original.len() != denoised.len() {
+fn detect_artifacts(_original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
+    if _original.len() != denoised.len() {
         return 1.0; // Maximum penalty for length mismatch
     }
 
-    let n = original.len();
+    let n = _original.len();
     if n < 3 {
         return 0.0; // Cannot detect artifacts in very short signals
     }
@@ -710,7 +715,7 @@ fn detect_artifacts(original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
     let mut denoised_hf_energy = 0.0;
 
     for i in 1..n {
-        let orig_diff = (original[i] - original[i - 1]).abs();
+        let orig_diff = (_original[i] - _original[i - 1]).abs();
         let denoised_diff = (denoised[i] - denoised[i - 1]).abs();
 
         orig_hf_energy += orig_diff;
@@ -729,14 +734,14 @@ fn detect_artifacts(original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
     // Check for ringing artifacts (oscillations around edges)
     let mut ringing_score = 0.0;
     for i in 2..n - 2 {
-        // Look for significant changes in original signal
-        let orig_change = (original[i + 1] - original[i - 1]).abs();
+        // Look for significant changes in _original signal
+        let orig_change = (_original[i + 1] - _original[i - 1]).abs();
         if orig_change > 0.1 {
             // Check for oscillations in denoised signal around this point
             let denoised_oscillation =
                 ((denoised[i - 2] - denoised[i]) + (denoised[i + 2] - denoised[i])).abs();
             let orig_smoothness =
-                ((original[i - 2] - original[i]) + (original[i + 2] - original[i])).abs();
+                ((_original[i - 2] - _original[i]) + (_original[i + 2] - _original[i])).abs();
 
             if orig_smoothness > 1e-10 && denoised_oscillation > orig_smoothness * 2.0 {
                 ringing_score += 1.0;
@@ -751,8 +756,8 @@ fn detect_artifacts(original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
     }
 
     // Check for unrealistic values
-    let orig_max = original.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let orig_min = original.iter().cloned().fold(f64::INFINITY, f64::min);
+    let orig_max = _original.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let orig_min = _original.iter().cloned().fold(f64::INFINITY, f64::min);
     let denoised_max = denoised.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
     let denoised_min = denoised.iter().cloned().fold(f64::INFINITY, f64::min);
 
@@ -798,13 +803,13 @@ pub fn denoise_non_local_means(
 
     if patch_size >= n {
         return Err(SignalError::ValueError(
-            "Patch size must be smaller than signal length".to_string(),
+            "Patch _size must be smaller than signal length".to_string(),
         ));
     }
 
     if search_window > n {
         return Err(SignalError::ValueError(
-            "Search window must not exceed signal length".to_string(),
+            "Search _window must not exceed signal length".to_string(),
         ));
     }
 
@@ -848,8 +853,8 @@ pub fn denoise_non_local_means(
 
 /// Calculate distance between patches centered at positions i and j
 #[allow(dead_code)]
-fn calculate_patch_distance(signal: &Array1<f64>, i: usize, j: usize, patch_size: usize) -> f64 {
-    let n = signal.len();
+fn calculate_patch_distance(_signal: &Array1<f64>, i: usize, j: usize, patch_size: usize) -> f64 {
+    let n = _signal.len();
     let half_patch = patch_size / 2;
 
     let i_start = if i >= half_patch { i - half_patch } else { 0 };
@@ -866,7 +871,7 @@ fn calculate_patch_distance(signal: &Array1<f64>, i: usize, j: usize, patch_size
 
     for k in start_offset..min_len {
         if i_start + k < n && j_start + k < n {
-            let diff = signal[i_start + k] - signal[j_start + k];
+            let diff = _signal[i_start + k] - _signal[j_start + k];
             distance += diff * diff;
             count += 1;
         }
@@ -881,10 +886,10 @@ fn calculate_patch_distance(signal: &Array1<f64>, i: usize, j: usize, patch_size
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::PI;
-
     #[test]
     fn test_unified_denoising_basic() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple test signal
         let n = 64;
         let signal: Array1<f64> = Array1::from_shape_fn(n, |i| {
@@ -902,6 +907,8 @@ mod tests {
 
     #[test]
     fn test_auto_select_denoising_method() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test with a simple signal
         let signal = Array1::from_vec(vec![1.0, 2.0, 1.5, 3.0, 2.5, 1.0]);
         let config = auto_select_denoising_method(&signal, None).unwrap();
@@ -915,6 +922,8 @@ mod tests {
 
     #[test]
     fn test_noise_level_estimation() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a signal with known characteristics
         let clean_signal = Array1::from_vec(vec![1.0; 100]);
         let noise_level = estimate_noise_level(&clean_signal);

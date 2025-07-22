@@ -160,7 +160,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
 
         // Update covariances for this layer
-        let (_input_cov, _output_cov) =
+        let (_input_cov_output_cov) =
             layer_optimizer.update_covariances(&layer_acts.view(), &layer_grads.view())?;
 
         println!("      - Covariance estimates updated");
@@ -247,7 +247,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
 
         // Update covariances
-        let (_input_cov, _output_cov) =
+        let (_input_cov_output_cov) =
             test_optimizer.update_covariances(&input_acts.view(), &output_grads.view())?;
 
         println!("   ✅ {} Configuration:", name);

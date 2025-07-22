@@ -7,6 +7,7 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::validation::*;
 use scirs2_linalg;
+use statrs::statistics::Statistics;
 
 /// Bayesian linear regression with normal-inverse-gamma prior
 ///
@@ -53,12 +54,12 @@ pub struct BayesianRegressionResult {
 
 impl BayesianLinearRegression {
     /// Create a new Bayesian linear regression model
-    pub fn new(n_features: usize, fit_intercept: bool) -> StatsResult<Self> {
-        check_positive(n_features, "n_features")?;
+    pub fn new(_n_features: usize, fit_intercept: bool) -> StatsResult<Self> {
+        check_positive(_n_features, "_n_features")?;
 
         // Default to weakly informative priors
-        let prior_mean = Array1::zeros(n_features);
-        let prior_precision = Array2::eye(n_features) * 1e-6; // Very small precision (large variance)
+        let prior_mean = Array1::zeros(_n_features);
+        let prior_precision = Array2::eye(_n_features) * 1e-6; // Very small precision (large variance)
         let prior_alpha = 1e-6; // Very small shape
         let prior_beta = 1e-6; // Very small scale
 
@@ -203,8 +204,7 @@ impl BayesianLinearRegression {
     /// Compute log marginal likelihood
     fn compute_log_marginal_likelihood(
         &self,
-        x: &Array2<f64>,
-        _y: &Array1<f64>,
+        x: &Array2<f64>, _y: &Array1<f64>,
         posterior_precision: &Array2<f64>,
         posterior_alpha: f64,
         posterior_beta: f64,

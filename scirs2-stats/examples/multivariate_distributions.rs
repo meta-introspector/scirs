@@ -1,7 +1,7 @@
 //! Example of using multivariate distributions in scirs2-stats
 
 use ndarray::{array, Array2, Axis};
-use scirs2_stats::distributions::multivariate;
+use scirs2__stats::distributions::multivariate;
 
 #[allow(dead_code)]
 fn main() {
@@ -86,13 +86,13 @@ fn main() {
 
 /// Calculate variance of a specific dimension in a matrix of samples
 #[allow(dead_code)]
-fn calculate_variance(samples: &Array2<f64>, dim: usize) -> f64 {
-    let n = samples.shape()[0];
-    let mean = samples.mean_axis(Axis(0)).unwrap()[dim];
+fn calculate_variance(_samples: &Array2<f64>, dim: usize) -> f64 {
+    let n = _samples.shape()[0];
+    let mean = _samples.mean_axis(Axis(0)).unwrap()[dim];
     let mut sum_sq = 0.0;
 
     for i in 0..n {
-        let diff = samples[[i, dim]] - mean;
+        let diff = _samples[[i, dim]] - mean;
         sum_sq += diff * diff;
     }
 
@@ -101,12 +101,12 @@ fn calculate_variance(samples: &Array2<f64>, dim: usize) -> f64 {
 
 /// Find maximum absolute value in a specific dimension
 #[allow(dead_code)]
-fn find_max_abs(samples: &Array2<f64>, dim: usize) -> f64 {
-    let n = samples.shape()[0];
+fn find_max_abs(_samples: &Array2<f64>, dim: usize) -> f64 {
+    let n = _samples.shape()[0];
     let mut max_abs = 0.0;
 
     for i in 0..n {
-        let abs_val = samples[[i, dim]].abs();
+        let abs_val = _samples[[i, dim]].abs();
         if abs_val > max_abs {
             max_abs = abs_val;
         }

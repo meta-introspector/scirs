@@ -63,11 +63,11 @@ pub struct EventDrivenOptimizer {
 
 impl EventDrivenOptimizer {
     /// Create new event-driven optimizer
-    pub fn new(initial_params: Array1<f64>) -> Self {
+    pub fn new(_initial_params: Array1<f64>) -> Self {
         Self {
             event_queue: BinaryHeap::new(),
             current_time: 0.0,
-            parameters: initial_params,
+            parameters: _initial_params,
         }
     }
 
@@ -141,7 +141,7 @@ where
 {
     let mut optimizer = EventDrivenOptimizer::new(initial_params.to_owned());
 
-    // Schedule initial events
+    // Schedule initial _events
     for i in 0..10 {
         let event = OptimizationEvent {
             time: i as f64 * 0.1,
@@ -151,7 +151,7 @@ where
         optimizer.schedule_event(event);
     }
 
-    // Process events
+    // Process _events
     for _ in 0..max_events {
         if !optimizer.process_next_event(&objective)? {
             break;

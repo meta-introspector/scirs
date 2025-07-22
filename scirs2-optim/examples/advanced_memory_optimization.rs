@@ -2,7 +2,7 @@
 use ndarray::{Array1, Array2};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
-use scirs2_optim::memory_efficient::{
+use scirs2__optim::memory_efficient::{
     adaptive::{get_memory_usage_ratio, MemoryAwareBatchSizer},
     fused::{fused_adam_update, fused_apply_constraints, fused_gradient_clip_normalize},
     mixed_precision::LossScaler,
@@ -10,6 +10,7 @@ use scirs2_optim::memory_efficient::{
 };
 use std::error::Error;
 use std::time::Instant;
+// use statrs::statistics::Statistics; // statrs not available
 
 // Comprehensive training example with all memory optimizations
 struct AdvancedTrainer {
@@ -37,13 +38,13 @@ struct AdvancedTrainer {
 }
 
 impl AdvancedTrainer {
-    fn new(input_size: usize, output_size: usize, initial_batch_size: usize) -> Self {
-        let weights = Array2::random((input_size, output_size), Uniform::new(-0.1, 0.1));
+    fn new(_input_size: usize, output_size: usize, initial_batch_size: usize) -> Self {
+        let weights = Array2::random((_input_size, output_size), Uniform::new(-0.1, 0.1));
         let bias = Array1::zeros(output_size);
 
         Self {
-            weights_m: Array2::zeros((input_size, output_size)),
-            weights_v: Array2::zeros((input_size, output_size)),
+            weights_m: Array2::zeros((_input_size, output_size)),
+            weights_v: Array2::zeros((_input_size, output_size)),
             bias_m: Array1::zeros(output_size),
             bias_v: Array1::zeros(output_size),
             weights,

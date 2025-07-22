@@ -29,7 +29,7 @@ pub use evaluation::{ConfusionMatrix, FeatureImportance, LearningCurve, ROCCurve
 pub use initializers::*;
 pub use metrics::*;
 pub use model_viz::{sequential_model_dataflow, sequential_model_summary, ModelVizOptions};
-// pub use positional_encoding::{
+// pub use positional__encoding::{
 //     LearnedPositionalEncoding, PositionalEncoding, PositionalEncodingFactory,
 //     PositionalEncodingType, RelativePositionalEncoding, SinusoidalPositionalEncoding,
 // }; // Disabled - module is broken
@@ -108,7 +108,7 @@ pub fn one_hot_encode<F: Float + Debug>(
     for (i, &idx) in indices.iter().enumerate() {
         if idx >= num_classes {
             return Err(NeuralError::InvalidArchitecture(format!(
-                "Index {idx} is out of bounds for {num_classes} classes"
+                "Index {idx} is out of bounds for {num_classes} _classes"
             )));
         }
         one_hot[[i, idx]] = F::one();
@@ -128,7 +128,7 @@ pub fn one_hot_encode<F: Float + Debug>(
 ///   let x = arr2(&[[1.0f64, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]]).into_dyn();
 ///   let y = arr2(&[[0.0f64], [1.0], [0.0], [1.0]]).into_dyn();
 ///   let (x_train, x_test, y_train, y_test) =
-///   train_test_split::<f64, _>(&x, &y, 0.25, true, &mut rng).unwrap();
+///   train_test_split::<f64>(&x, &y, 0.25, true, &mut rng).unwrap();
 ///   // Note: Since the implementation is incomplete (TODO in the code),
 ///   // we're just checking that the shapes are what we expect
 ///   assert_eq!(x_train.shape()[0], 3);

@@ -86,14 +86,14 @@ impl LKTracker {
     /// # Example
     ///
     /// ```rust
-    /// use scirs2_vision::feature::{LKTracker, TrackerParams};
+    /// use scirs2__vision::feature::{LKTracker, TrackerParams};
     ///
     /// let tracker = LKTracker::new(TrackerParams::default());
     /// ```
-    pub fn new(params: TrackerParams) -> Self {
+    pub fn new(_params: TrackerParams) -> Self {
         Self {
             features: Vec::new(),
-            params,
+            _params,
             prev_frame: None,
             next_id: 0,
             feature_points: Vec::new(),
@@ -114,7 +114,7 @@ impl LKTracker {
     /// # Example
     ///
     /// ```rust
-    /// use scirs2_vision::feature::{LKTracker, TrackerParams};
+    /// use scirs2__vision::feature::{LKTracker, TrackerParams};
     /// use image::{DynamicImage, RgbImage};
     ///
     /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -132,22 +132,22 @@ impl LKTracker {
         let gray_frame = frame.to_luma8();
 
         if let Some(prev_frame) = self.prev_frame.clone() {
-            // Track existing features
+            // Track existing _features
             self.track_features(&prev_frame, &gray_frame)?;
         }
 
-        // Add new features if provided and we have capacity
-        if let Some(features) = new_features {
-            self.add_new_features(features);
+        // Add new _features if provided and we have capacity
+        if let Some(_features) = new_features {
+            self.add_new_features(_features);
         }
 
         // Update previous frame
         self.prev_frame = Some(gray_frame);
 
         // Update feature points for next iteration
-        self.feature_points = self.features.iter().map(|f| f.position).collect();
+        self.feature_points = self._features.iter().map(|f| f.position).collect();
 
-        Ok(&self.features)
+        Ok(&self._features)
     }
 
     /// Track existing features using optical flow
@@ -248,11 +248,11 @@ impl LKTracker {
 
     /// Add new features to track
     fn add_new_features(&mut self, new_features: &[(f32, f32)]) {
-        let remaining_capacity = self.params.max_features.saturating_sub(self.features.len());
+        let remaining_capacity = self.params.max_features.saturating_sub(self._features.len());
 
         for &position in new_features.iter().take(remaining_capacity) {
-            // Check if this position is too close to existing features
-            let too_close = self.features.iter().any(|f| {
+            // Check if this position is too close to existing _features
+            let too_close = self._features.iter().any(|f| {
                 let distance = ((f.position.0 - position.0).powi(2)
                     + (f.position.1 - position.1).powi(2))
                 .sqrt();
@@ -260,7 +260,7 @@ impl LKTracker {
             });
 
             if !too_close {
-                self.features.push(TrackedFeature {
+                self._features.push(TrackedFeature {
                     position,
                     prev_position: position,
                     velocity: (0.0, 0.0),
@@ -338,10 +338,10 @@ impl PyramidTracker {
     /// # Returns
     ///
     /// * New pyramid tracker instance
-    pub fn new(levels: usize, params: TrackerParams) -> Self {
+    pub fn new(_levels: usize, params: TrackerParams) -> Self {
         let mut trackers = Vec::new();
 
-        for level in 0..levels {
+        for level in 0.._levels {
             let scale = 2.0_f32.powi(level as i32);
             let mut level_params = params.clone();
 
@@ -356,7 +356,7 @@ impl PyramidTracker {
 
         Self {
             trackers,
-            levels,
+            _levels,
             base_params: params,
         }
     }
@@ -377,13 +377,13 @@ impl PyramidTracker {
         for (level, tracker) in self.trackers.iter_mut().enumerate() {
             let level_frame = DynamicImage::ImageLuma8(pyramid[level].clone());
 
-            // Scale new features for this level
+            // Scale new _features for this level
             let scaled_features = if level == 0 {
-                new_features.map(|features| features.to_vec())
+                new_features.map(|_features| _features.to_vec())
             } else {
                 let scale = 2.0_f32.powi(level as i32);
-                new_features.map(|features| {
-                    features
+                new_features.map(|_features| {
+                    _features
                         .iter()
                         .map(|&(x, y)| (x / scale, y / scale))
                         .collect()
@@ -392,7 +392,7 @@ impl PyramidTracker {
 
             let level_features = tracker.update(&level_frame, scaled_features.as_deref())?;
 
-            // Scale features back to original resolution
+            // Scale _features back to original resolution
             let scale = 2.0_f32.powi(level as i32);
             for feature in level_features {
                 let mut scaled_feature = *feature;
@@ -470,8 +470,8 @@ mod tests {
     use super::*;
     use image::{ImageBuffer, Luma};
 
-    fn create_test_image(width: u32, height: u32) -> DynamicImage {
-        let img = ImageBuffer::from_fn(width, height, |x, y| {
+    fn create_test_image(_width: u32, height: u32) -> DynamicImage {
+        let img = ImageBuffer::from_fn(_width, height, |x, y| {
             let val = ((x + y) % 256) as u8;
             Luma([val])
         });

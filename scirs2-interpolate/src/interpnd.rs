@@ -81,7 +81,7 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
     ///
     /// ```rust
     /// use ndarray::{Array, Array1, Dim, IxDyn};
-    /// use scirs2_interpolate::interpnd::{
+    /// use scirs2__interpolate::interpnd::{
     ///     RegularGridInterpolator, InterpolationMethod, ExtrapolateMode
     /// };
     ///
@@ -181,7 +181,7 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
     ///
     /// ```rust
     /// use ndarray::{Array, Array1, Array2, IxDyn};
-    /// use scirs2_interpolate::interpnd::{
+    /// use scirs2__interpolate::interpnd::{
     ///     RegularGridInterpolator, InterpolationMethod, ExtrapolateMode
     /// };
     ///
@@ -540,13 +540,11 @@ pub enum ScatteredInterpolatorParams<F: Float + FromPrimitive + Debug + Display>
     None,
     /// Parameters for IDW (Inverse Distance Weighting)
     IDW {
-        /// Power parameter for IDW (default: 2.0)
-        power: F,
+        /// Power parameter for IDW (default: 2.0), power: F,
     },
     /// Parameters for RBF (Radial Basis Function)
     RBF {
-        /// Epsilon parameter for RBF (default: 1.0)
-        epsilon: F,
+        /// Epsilon parameter for RBF (default: 1.0), epsilon: F,
         /// Type of radial basis function
         rbf_type: RBFType,
     },
@@ -611,7 +609,7 @@ impl<
     ///
     /// ```rust
     /// use ndarray::{Array1, Array2};
-    /// use scirs2_interpolate::interpnd::{
+    /// use scirs2__interpolate::interpnd::{
     ///     ScatteredInterpolator, ScatteredInterpolationMethod,
     ///     ExtrapolateMode, ScatteredInterpolatorParams
     /// };
@@ -655,11 +653,11 @@ impl<
         let params = match params {
             Some(p) => p,
             None => match method {
-                ScatteredInterpolationMethod::Nearest => ScatteredInterpolatorParams::None,
-                ScatteredInterpolationMethod::IDW => ScatteredInterpolatorParams::IDW {
+                ScatteredInterpolationMethod::Nearest =>, ScatteredInterpolatorParams::None,
+                ScatteredInterpolationMethod::IDW =>, ScatteredInterpolatorParams::IDW {
                     power: F::from_f64(2.0).unwrap(),
                 },
-                ScatteredInterpolationMethod::RBF => ScatteredInterpolatorParams::RBF {
+                ScatteredInterpolationMethod::RBF =>, ScatteredInterpolatorParams::RBF {
                     epsilon: F::from_f64(1.0).unwrap(),
                     rbf_type: RBFType::Multiquadric,
                 },
@@ -765,8 +763,7 @@ impl<
     fn idw_interpolate(&self, point: &ArrayView1<F>) -> InterpolateResult<F> {
         // Get the power parameter
         let power = match self.params {
-            ScatteredInterpolatorParams::IDW { power } => power,
-            _ => F::from_f64(2.0).unwrap(), // Default to 2.0 if wrong params
+            ScatteredInterpolatorParams::IDW { power } => power_ =>, F::from_f64(2.0).unwrap(), // Default to 2.0 if wrong params
         };
 
         let mut sum_weights = F::from_f64(0.0).unwrap();
@@ -880,7 +877,7 @@ impl<
 /// ```
 /// use ndarray::{Array, Array1, Dim, IxDyn};
 /// use num_traits::Float;
-/// use scirs2_interpolate::interpnd::{
+/// use scirs2__interpolate::interpnd::{
 ///     make_interp_nd, InterpolationMethod, ExtrapolateMode
 /// };
 ///
@@ -986,13 +983,13 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
     let mut indices = vec![Vec::<F>::new(); n_dims];
     let mut shape = vec![1; n_dims];
 
-    for (i, grid) in new_grid.iter().enumerate() {
-        let mut idx = vec![F::from_f64(0.0).unwrap(); grid.len()];
-        for (j, val) in grid.iter().enumerate() {
+    for (i_grid) in new_grid.iter().enumerate() {
+        let mut idx = vec![F::from_f64(0.0).unwrap(); _grid.len()];
+        for (j, val) in _grid.iter().enumerate() {
             idx[j] = *val;
         }
         indices[i] = idx;
-        shape[i] = grid.len();
+        shape[i] = _grid.len();
     }
 
     // Calculate total number of points
@@ -1004,7 +1001,7 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
     // Create a 2D array of all points to interpolate
     let mut points = Array2::zeros((total_points, n_dims));
 
-    // Create a multi-index for traversing the grid
+    // Create a multi-index for traversing the _grid
     let mut multi_index = vec![0; n_dims];
 
     for flat_idx in 0..total_points {
@@ -1022,9 +1019,9 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
     }
 
     // Perform interpolation for all points
-    let values = interp.__call__(&points.view())?;
+    let _values = interp.__call__(&points.view())?;
 
-    // Reshape the result to match the output grid
+    // Reshape the result to match the output _grid
     let mut out_idx_vec = Vec::with_capacity(n_dims);
     for flat_idx in 0..total_points {
         // Convert flat index to multi-index
@@ -1039,7 +1036,7 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
         out_idx_vec.extend_from_slice(&multi_index[..n_dims]);
 
         // Set the value in the output array
-        *out_values.get_mut(out_idx_vec.as_slice()).unwrap() = values[flat_idx];
+        *out_values.get_mut(out_idx_vec.as_slice()).unwrap() = _values[flat_idx];
     }
 
     Ok(out_values)

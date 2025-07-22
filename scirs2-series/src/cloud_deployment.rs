@@ -391,7 +391,7 @@ pub struct ResourceRequirements {
 
 impl CloudDeploymentOrchestrator {
     /// Create a new cloud deployment orchestrator
-    pub fn new(config: DeploymentConfig) -> Self {
+    pub fn new(_config: DeploymentConfig) -> Self {
         let deployment_state = DeploymentState {
             status: DeploymentStatus::Initializing,
             active_instances: Vec::new(),
@@ -416,7 +416,7 @@ impl CloudDeploymentOrchestrator {
         };
 
         CloudDeploymentOrchestrator {
-            config,
+            _config,
             deployment_state,
             cost_tracker,
             health_monitor,
@@ -660,7 +660,7 @@ impl CloudDeploymentOrchestrator {
     }
 
     /// Select the best instance for a job based on resource requirements
-    fn select_best_instance(&self, _job: &CloudTimeSeriesJob) -> Result<&InstanceInfo> {
+    fn select_best_instance(&self_job: &CloudTimeSeriesJob) -> Result<&InstanceInfo> {
         // Simple selection based on lowest CPU utilization
         self.deployment_state
             .active_instances
@@ -688,24 +688,22 @@ impl CloudDeploymentOrchestrator {
 
     /// Execute forecasting job
     fn execute_forecasting_job(
-        &self,
-        _job: &CloudTimeSeriesJob,
+        &self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
-        println!("🔮 Executing forecasting job on {}", instance.instance_id);
-        // Simulate job execution
+        println!("🔮 Executing forecasting _job on {}", instance.instance_id);
+        // Simulate _job execution
         std::thread::sleep(Duration::from_millis(200));
         Ok(())
     }
 
     /// Execute anomaly detection job
     fn execute_anomaly_detection_job(
-        &self,
-        _job: &CloudTimeSeriesJob,
+        &self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(
-            "🕵️ Executing anomaly detection job on {}",
+            "🕵️ Executing anomaly detection _job on {}",
             instance.instance_id
         );
         std::thread::sleep(Duration::from_millis(150));
@@ -714,23 +712,21 @@ impl CloudDeploymentOrchestrator {
 
     /// Execute decomposition job
     fn execute_decomposition_job(
-        &self,
-        _job: &CloudTimeSeriesJob,
+        &self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
-        println!("🔍 Executing decomposition job on {}", instance.instance_id);
+        println!("🔍 Executing decomposition _job on {}", instance.instance_id);
         std::thread::sleep(Duration::from_millis(100));
         Ok(())
     }
 
     /// Execute feature extraction job
     fn execute_feature_extraction_job(
-        &self,
-        _job: &CloudTimeSeriesJob,
+        &self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(
-            "⚙️ Executing feature extraction job on {}",
+            "⚙️ Executing feature extraction _job on {}",
             instance.instance_id
         );
         std::thread::sleep(Duration::from_millis(180));
@@ -739,23 +735,21 @@ impl CloudDeploymentOrchestrator {
 
     /// Execute clustering job
     fn execute_clustering_job(
-        &self,
-        _job: &CloudTimeSeriesJob,
+        &self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
-        println!("🎯 Executing clustering job on {}", instance.instance_id);
+        println!("🎯 Executing clustering _job on {}", instance.instance_id);
         std::thread::sleep(Duration::from_millis(250));
         Ok(())
     }
 
     /// Execute change point detection job
     fn execute_changepoint_job(
-        &self,
-        _job: &CloudTimeSeriesJob,
+        &self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(
-            "📊 Executing change point detection job on {}",
+            "📊 Executing change point detection _job on {}",
             instance.instance_id
         );
         std::thread::sleep(Duration::from_millis(120));
@@ -764,12 +758,11 @@ impl CloudDeploymentOrchestrator {
 
     /// Execute neural training job
     fn execute_neural_training_job(
-        &self,
-        _job: &CloudTimeSeriesJob,
+        &self_job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(
-            "🧠 Executing neural training job on {}",
+            "🧠 Executing neural training _job on {}",
             instance.instance_id
         );
         std::thread::sleep(Duration::from_millis(500));
@@ -856,22 +849,19 @@ impl CloudDeploymentOrchestrator {
                 "t3.micro" => 0.0104,
                 "t3.small" => 0.0208,
                 "c5.large" => 0.085,
-                "c5.xlarge" => 0.17,
-                _ => 0.1,
+                "c5.xlarge" => 0.17_ => 0.1,
             },
             CloudPlatform::GCP => match self.config.resources.instance_type.as_str() {
                 "e2-micro" => 0.006,
                 "e2-small" => 0.012,
                 "n1-standard-1" => 0.0475,
-                "n1-standard-2" => 0.095,
-                _ => 0.08,
+                "n1-standard-2" => 0.095_ => 0.08,
             },
             CloudPlatform::Azure => match self.config.resources.instance_type.as_str() {
                 "B1s" => 0.0052,
                 "B2s" => 0.0208,
                 "D2s_v3" => 0.096,
-                "D4s_v3" => 0.192,
-                _ => 0.09,
+                "D4s_v3" => 0.192_ => 0.09,
             },
         }
     }
@@ -1080,7 +1070,7 @@ mod tests {
         let config = DeploymentConfig::development();
         assert_eq!(config.environment, "development");
         assert_eq!(config.resources.min_instances, 1);
-        assert_eq!(config.resources.max_instances, 2);
+        assert_eq!(_config.resources.max_instances, 2);
     }
 
     #[test]

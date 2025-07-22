@@ -26,8 +26,7 @@ pub struct AdvancedEnhancedSimdProcessor<F> {
     /// Performance statistics
     performance_stats: Arc<RwLock<PerformanceStatistics>>,
     /// Algorithm selection cache
-    algorithm_cache: Arc<RwLock<HashMap<String, OptimalAlgorithm>>>,
-    _phantom: PhantomData<F>,
+    algorithm_cache: Arc<RwLock<HashMap<String, OptimalAlgorithm>>>, _phantom: PhantomData<F>,
 }
 
 /// Detected CPU capabilities for SIMD optimization
@@ -263,15 +262,14 @@ where
     F: Float + NumCast + Copy + Send + Sync + 'static + std::fmt::Display + SimdUnifiedOps,
 {
     /// Create a new advanced-enhanced SIMD processor
-    pub fn new(config: AdvancedSimdConfig) -> StatsResult<Self> {
+    pub fn new(_config: AdvancedSimdConfig) -> StatsResult<Self> {
         let cpu_features = Self::detect_cpu_capabilities()?;
 
         Ok(Self {
             cpu_features,
-            config,
+            _config,
             performance_stats: Arc::new(RwLock::new(PerformanceStatistics::default())),
-            algorithm_cache: Arc::new(RwLock::new(HashMap::new())),
-            _phantom: PhantomData,
+            algorithm_cache: Arc::new(RwLock::new(HashMap::new())), _phantom: PhantomData,
         })
     }
 
@@ -291,7 +289,7 @@ where
             l1_cache_size: 32 * 1024,
             l2_cache_size: 256 * 1024,
             l3_cache_size: 8 * 1024 * 1024,
-            num_cores: num_cpus::get(),
+            num_cores: num, _cpus: get(),
             memory_bandwidth: 50.0, // GB/s estimate
         })
     }
@@ -312,8 +310,7 @@ where
             InstructionSet::AVX2 => self.mean_avx2(&data)?,
             InstructionSet::AVX => self.mean_avx(&data)?,
             InstructionSet::SSE2 => self.mean_sse2(&data)?,
-            InstructionSet::NEON => self.mean_neon(&data)?,
-            _ => self.mean_scalar(&data)?,
+            InstructionSet::NEON => self.mean_neon(&data)?_ => self.mean_scalar(&data)?,
         };
 
         // Record performance metrics
@@ -625,7 +622,7 @@ where
             mixed_precision: true,
             ..AdvancedSimdConfig::default()
         },
-        TargetPlatform::Generic => AdvancedSimdConfig::default(),
+        TargetPlatform::Generic =>, AdvancedSimdConfig::default(),
     };
 
     AdvancedEnhancedSimdProcessor::new(config)
@@ -715,7 +712,7 @@ where
                 name: "Scalar".to_string(),
                 instruction_set: InstructionSet::SSE2,
                 performance_score: 1.0,
-                memory_requirements: data_size * std::mem::size_of::<F>(),
+                memory_requirements: data_size * std::mem::_size, _of::<F>(),
                 accuracy_score: 1.0,
                 last_used: std::time::Instant::now(),
             }
@@ -725,7 +722,7 @@ where
                     name: "SimdBasic".to_string(),
                     instruction_set: InstructionSet::AVX,
                     performance_score: 2.0,
-                    memory_requirements: data_size * std::mem::size_of::<F>(),
+                    memory_requirements: data_size * std::mem::_size, _of::<F>(),
                     accuracy_score: 0.95,
                     last_used: std::time::Instant::now(),
                 }
@@ -734,7 +731,7 @@ where
                     name: "SimdStable".to_string(),
                     instruction_set: InstructionSet::AVX2,
                     performance_score: 1.8,
-                    memory_requirements: data_size * std::mem::size_of::<F>(),
+                    memory_requirements: data_size * std::mem::_size, _of::<F>(),
                     accuracy_score: 1.0,
                     last_used: std::time::Instant::now(),
                 }
@@ -744,7 +741,7 @@ where
                 name: "SimdOptimized".to_string(),
                 instruction_set: InstructionSet::AVX512F,
                 performance_score: 3.0,
-                memory_requirements: data_size * std::mem::size_of::<F>(),
+                memory_requirements: data_size * std::mem::_size, _of::<F>(),
                 accuracy_score: 0.98,
                 last_used: std::time::Instant::now(),
             }
@@ -754,7 +751,7 @@ where
                 name: "ParallelSimd".to_string(),
                 instruction_set: InstructionSet::AVX512F,
                 performance_score: 4.0,
-                memory_requirements: data_size * std::mem::size_of::<F>(),
+                memory_requirements: data_size * std::mem::_size, _of::<F>(),
                 accuracy_score: 0.95,
                 last_used: std::time::Instant::now(),
             }
@@ -798,8 +795,7 @@ where
         // Calculate variance with adaptive prefetching
         let prefetch_distance = match data.len() {
             0..=1000 => 1,
-            1001..=10000 => 4,
-            _ => 8,
+            1001..=10000 => 4_ => 8,
         };
 
         let mut sum_sq_diff = F::zero();

@@ -5,7 +5,7 @@ use crate::regression::utils::*;
 use crate::regression::{linregress, RegressionResults};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
-use scirs2_linalg::{inv, lstsq};
+use scirs2__linalg::{inv, lstsq};
 
 /// Results for Theil-Sen regression.
 pub struct TheilSlopesResult<F>
@@ -183,7 +183,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::theilslopes;
+/// use scirs2__stats::theilslopes;
 ///
 /// // Create data with an outlier
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -308,7 +308,7 @@ where
                 F::from(3.0).unwrap() * n_f * (n_f + F::one())
                     / (F::from(0.5).unwrap() * n_f * (n_f - F::one())),
             );
-            factor / (num_traits::Float::sqrt(n_f) * num_traits::Float::sqrt(n_f - F::one()))
+            factor / (num_traits::Float::sqrt(n_f) * num, _traits::Float::sqrt(n_f - F::one()))
         }
     };
 
@@ -397,7 +397,7 @@ where
 /// Simple example with an obvious outlier:
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_stats::ransac;
+/// use scirs2__stats::ransac;
 ///
 /// // Create data with outliers
 /// let x = Array2::from_shape_vec((10, 1), vec![
@@ -418,7 +418,7 @@ where
 /// Simpler example with fewer dimensions:
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_stats::ransac;
+/// use scirs2__stats::ransac;
 ///
 /// // Create 1D data with outlier, but in 2D form to match function requirements
 /// let mut x = Array2::zeros((5, 1));
@@ -499,13 +499,13 @@ where
     let _x_design =
         Array2::from_shape_fn((n, 2), |(i, j)| if j == 0 { F::one() } else { x[[i, 0]] });
 
-    // If residual threshold not provided, estimate it from the data
+    // If residual _threshold not provided, estimate it from the data
     let residual_threshold = if let Some(rt) = residual_threshold {
         rt
     } else {
-        // Estimate threshold from median absolute deviation of residuals from initial fit
+        // Estimate _threshold from median absolute deviation of residuals from initial fit
         let x_vec = Array1::from_shape_fn(n, |i| x[[i, 0]]);
-        let (slope, intercept, _, _, _) = linregress(&x_vec.view(), y)?;
+        let (slope, intercept___) = linregress(&x_vec.view(), y)?;
         let residuals = y
             .iter()
             .enumerate()
@@ -514,17 +514,17 @@ where
 
         let residuals_array = Array1::from(residuals);
 
-        // Use median absolute deviation as basis for threshold
+        // Use median absolute deviation as basis for _threshold
         let mad = crate::regression::utils::median_abs_deviation_from_zero(&residuals_array.view());
         mad * F::from(2.5).unwrap() // Typically 2.0-3.0 times MAD
     };
 
     // Initialize random number generator
     use scirs2_core::random::Random;
-    let mut rng = if let Some(seed) = random_seed {
-        Random::with_seed(seed)
+    let mut rng = if let Some(_seed) = random_seed {
+        Random::with_seed(_seed)
     } else {
-        // Use a random seed
+        // Use a random _seed
         use rand::Rng;
         let mut temp_rng = rand::rng();
         Random::with_seed(temp_rng.random())
@@ -594,7 +594,7 @@ where
             .map(|(&yi, &xi)| crate::regression::utils::float_abs(yi - (intercept + slope * xi)))
             .collect::<Vec<F>>();
 
-        // Count inliers (data points with residuals below threshold)
+        // Count inliers (data points with residuals below _threshold)
         let mut inlier_mask = vec![false; n];
         let mut inlier_count = 0;
 
@@ -633,7 +633,7 @@ where
             }
         }
 
-        // Check if we've done enough trials
+        // Check if we've done enough _trials
         if trial >= n_trials - 1 {
             break;
         }
@@ -866,7 +866,7 @@ where
 /// Basic example with an outlier:
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_stats::huber_regression;
+/// use scirs2__stats::huber_regression;
 ///
 /// // Create data with outliers
 /// let x = Array2::from_shape_vec((10, 1), vec![
@@ -887,7 +887,7 @@ where
 /// Using custom epsilon and regularization:
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_stats::huber_regression;
+/// use scirs2__stats::huber_regression;
 ///
 /// // Create data with outliers and some collinearity
 /// let x = Array2::from_shape_vec((10, 2), vec![
@@ -965,7 +965,7 @@ where
     let tol = tol.unwrap_or_else(|| F::from(1e-5).unwrap());
     let conf_level = conf_level.unwrap_or_else(|| F::from(0.95).unwrap());
 
-    // Create design matrix (add intercept if requested)
+    // Create design matrix (add _intercept if requested)
     let x_design = if fit_intercept {
         add_intercept(x)
     } else {
@@ -1016,7 +1016,7 @@ where
         }
 
         // Check for convergence
-        if weight_sum / F::from(n).unwrap() > F::one() - tol {
+        if weight_sum / F::from(n).unwrap() >, F::one() - tol {
             break;
         }
 
@@ -1035,7 +1035,7 @@ where
         // Update scale estimate
         sigma = crate::regression::utils::float_sqrt(
             new_residuals
-                .iter()
+                ._iter()
                 .map(|&r| crate::regression::utils::float_powi(r, 2))
                 .sum::<F>()
                 / F::from(n).unwrap(),
@@ -1066,14 +1066,14 @@ where
     let df_residuals = n - p;
 
     // Calculate sum of squares
-    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let y_mean = y._iter().cloned().sum::<F>() / F::from(n).unwrap();
     let ss_total = y
-        .iter()
+        ._iter()
         .map(|&yi| num_traits::Float::powi(yi - y_mean, 2))
         .sum::<F>();
 
     let ss_residual = residuals
-        .iter()
+        ._iter()
         .map(|&ri| num_traits::Float::powi(ri, 2))
         .sum::<F>();
 
@@ -1176,11 +1176,9 @@ where
 /// Calculate robust standard errors for Huber regression
 #[allow(dead_code)]
 fn calculate_huber_std_errors<F>(
-    x: &ArrayView2<F>,
-    _residuals: &ArrayView1<F>,
+    x: &ArrayView2<F>, _residuals: &ArrayView1<F>,
     weights: &ArrayView1<F>,
-    sigma: F,
-    _df: usize,
+    sigma: F_df: usize,
 ) -> StatsResult<Array1<F>>
 where
     F: Float
@@ -1220,7 +1218,7 @@ where
     // The diagonal elements of (X'WX)^-1 * sigma^2 are the variances of the coefficients
     let std_errors = xtx_inv
         .diag()
-        .mapv(|v| num_traits::Float::sqrt(v * num_traits::Float::powi(sigma, 2)));
+        .mapv(|v| num_traits::Float::sqrt(v * num, _traits::Float::powi(sigma, 2)));
 
     Ok(std_errors)
 }

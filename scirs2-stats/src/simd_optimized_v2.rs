@@ -264,8 +264,7 @@ where
 #[allow(dead_code)]
 fn chunked_simd_sum_squared_deviations<F, D>(
     x: &ArrayBase<D, Ix1>,
-    mean: F,
-    _config: &SimdConfig,
+    mean: F_config: &SimdConfig,
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -398,7 +397,7 @@ mod tests {
     #[test]
     fn test_stats_single_pass() {
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-        let (mean, var, min, max, _, _) = stats_simd_single_pass(&data.view(), None).unwrap();
+        let (mean, var, min, max__) = stats_simd_single_pass(&data.view(), None).unwrap();
 
         assert!((mean - 3.0).abs() < 1e-10);
         assert!((var - 2.5).abs() < 1e-10);

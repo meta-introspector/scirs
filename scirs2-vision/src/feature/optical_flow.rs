@@ -56,7 +56,7 @@ impl Default for LucasKanadeParams {
 /// # Example
 ///
 /// ```rust
-/// use scirs2_vision::feature::{lucas_kanade_flow, LucasKanadeParams};
+/// use scirs2__vision::feature::{lucas_kanade_flow, LucasKanadeParams};
 /// use image::{DynamicImage, RgbImage};
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -156,7 +156,7 @@ fn simple_lucas_kanade(
         let mut a12 = 0.0f32;
         let mut a22 = 0.0f32;
 
-        for ((ix_val, iy_val), _) in window_ix.iter().zip(window_iy.iter()).zip(window_i1.iter()) {
+        for ((ix_val, iy_val)_) in window_ix.iter().zip(window_iy.iter()).zip(window_i1.iter()) {
             a11 += ix_val * ix_val;
             a12 += ix_val * iy_val;
             a22 += iy_val * iy_val;
@@ -296,8 +296,8 @@ fn pyramidal_lucas_kanade(
 
 /// Build image pyramid
 #[allow(dead_code)]
-fn build_pyramid(img: &GrayImage, levels: usize) -> Vec<GrayImage> {
-    let mut pyramid = vec![img.clone()];
+fn build_pyramid(_img: &GrayImage, levels: usize) -> Vec<GrayImage> {
+    let mut pyramid = vec![_img.clone()];
 
     for _ in 1..levels {
         let prev = &pyramid[pyramid.len() - 1];
@@ -330,13 +330,13 @@ fn build_pyramid(img: &GrayImage, levels: usize) -> Vec<GrayImage> {
 
 /// Convert image to float array
 #[allow(dead_code)]
-fn image_to_float_array(img: &GrayImage) -> Array2<f32> {
-    let (width, height) = img.dimensions();
+fn image_to_float_array(_img: &GrayImage) -> Array2<f32> {
+    let (width, height) = _img.dimensions();
     let mut array = Array2::zeros((height as usize, width as usize));
 
     for y in 0..height {
         for x in 0..width {
-            array[[y as usize, x as usize]] = img.get_pixel(x, y)[0] as f32 / 255.0;
+            array[[y as usize, x as usize]] = _img.get_pixel(x, y)[0] as f32 / 255.0;
         }
     }
 
@@ -345,8 +345,8 @@ fn image_to_float_array(img: &GrayImage) -> Array2<f32> {
 
 /// Compute image gradients using Scharr operator
 #[allow(dead_code)]
-fn compute_gradients(img: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
-    let (height, width) = img.dim();
+fn compute_gradients(_img: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
+    let (height, width) = _img.dim();
     let mut ix = Array2::zeros((height, width));
     let mut iy = Array2::zeros((height, width));
 
@@ -361,7 +361,7 @@ fn compute_gradients(img: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
 
             for dy in -1..=1 {
                 for dx in -1..=1 {
-                    let pixel = img[[(y as i32 + dy) as usize, (x as i32 + dx) as usize]];
+                    let pixel = _img[[(y as i32 + dy) as usize, (x as i32 + dx) as usize]];
                     gx += pixel * scharr_x[(dy + 1) as usize][(dx + 1) as usize] / 32.0;
                     gy += pixel * scharr_y[(dy + 1) as usize][(dx + 1) as usize] / 32.0;
                 }
@@ -386,16 +386,16 @@ fn compute_gradients(img: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
 ///
 /// * RGB image with flow visualization
 #[allow(dead_code)]
-pub fn visualize_flow(flow: &Array2<FlowVector>, max_flow: Option<f32>) -> RgbImage {
-    let (height, width) = flow.dim();
+pub fn visualize_flow(_flow: &Array2<FlowVector>, max_flow: Option<f32>) -> RgbImage {
+    let (height, width) = _flow.dim();
     let mut result = RgbImage::new(width as u32, height as u32);
 
-    // Find maximum flow if not provided
+    // Find maximum _flow if not provided
     let max_magnitude = if let Some(max) = max_flow {
         max
     } else {
         let mut max = 0.0f32;
-        for flow_vec in flow.iter() {
+        for flow_vec in _flow.iter() {
             let magnitude = (flow_vec.u.powi(2) + flow_vec.v.powi(2)).sqrt();
             if magnitude > max {
                 max = magnitude;
@@ -406,7 +406,7 @@ pub fn visualize_flow(flow: &Array2<FlowVector>, max_flow: Option<f32>) -> RgbIm
 
     for y in 0..height {
         for x in 0..width {
-            let flow_vec = &flow[[y, x]];
+            let flow_vec = &_flow[[y, x]];
             let magnitude = (flow_vec.u.powi(2) + flow_vec.v.powi(2)).sqrt();
             let angle = flow_vec.v.atan2(flow_vec.u);
 
@@ -440,8 +440,7 @@ fn hsv_to_rgb(h: f32, s: f32, v: f32) -> (f32, f32, f32) {
         1 => (x, c, 0.0),
         2 => (0.0, c, x),
         3 => (0.0, x, c),
-        4 => (x, 0.0, c),
-        _ => (c, 0.0, x),
+        4 => (x, 0.0, c, _ => (c, 0.0, x),
     };
 
     (r + m, g + m, b + m)
@@ -451,11 +450,8 @@ fn hsv_to_rgb(h: f32, s: f32, v: f32) -> (f32, f32, f32) {
 #[allow(dead_code)]
 pub fn farneback_flow(
     img1: &DynamicImage,
-    img2: &DynamicImage,
-    _pyr_scale: f32,
-    _levels: usize,
-    winsize: usize,
-    _iterations: usize,
+    img2: &DynamicImage_pyr_scale: f32, _levels: usize,
+    winsize: usize_iterations: usize,
 ) -> Result<Array2<FlowVector>> {
     let gray1 = img1.to_luma8();
     let gray2 = img2.to_luma8();

@@ -1,9 +1,9 @@
 use ndarray::{array, Array1};
-use scirs2_interpolate::interp1d::monotonic::{
+use scirs2__interpolate::interp1d::monotonic::{
     hyman_interpolate, modified_akima_interpolate, monotonic_interpolate, steffen_interpolate,
     MonotonicMethod,
 };
-use scirs2_interpolate::pchip_interpolate;
+use scirs2__interpolate::pchip_interpolate;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -422,13 +422,13 @@ fn check_extrema(
     y_steffen: &Array1<f64>,
     y_akima: &Array1<f64>,
 ) {
-    // Find min and max of original data
+    // Find min and max of original _data
     let data_min = y_data.iter().fold(f64::INFINITY, |a, &b| f64::min(a, b));
     let data_max = y_data
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| f64::max(a, b));
 
-    // Find min and max of interpolated data
+    // Find min and max of interpolated _data
     let pchip_min = y_pchip.iter().fold(f64::INFINITY, |a, &b| f64::min(a, b));
     let pchip_max = y_pchip
         .iter()

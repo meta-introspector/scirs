@@ -13,6 +13,7 @@ use ndarray::{Array1, Array2, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
+use statrs::statistics::Statistics;
 
 /// Enhanced Principal Component Analysis with multiple algorithms
 pub struct EnhancedPCA<F> {
@@ -21,8 +22,7 @@ pub struct EnhancedPCA<F> {
     /// Configuration
     pub config: PCAConfig,
     /// Fitted results
-    pub results: Option<PCAResult<F>>,
-    _phantom: PhantomData<F>,
+    pub results: Option<PCAResult<F>>, _phantom: PhantomData<F>,
 }
 
 /// PCA algorithms
@@ -130,12 +130,11 @@ where
         + ScalarOperand,
 {
     /// Create new enhanced PCA analyzer
-    pub fn new(algorithm: PCAAlgorithm, config: PCAConfig) -> Self {
+    pub fn new(_algorithm: PCAAlgorithm, config: PCAConfig) -> Self {
         Self {
-            algorithm,
+            _algorithm,
             config,
-            results: None,
-            _phantom: PhantomData,
+            results: None_phantom: PhantomData,
         }
     }
 
@@ -263,7 +262,7 @@ where
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
-        let (n_samples, _n_features) = data.dim();
+        let (n_samples_n_features) = data.dim();
 
         // Convert to f64 for numerical stability
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());
@@ -272,9 +271,9 @@ where
         let (_u, s, vt) = scirs2_linalg::svd(&data_f64.view(), true, None)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
 
-        // Extract components and singular values
+        // Extract _components and singular values
         let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
-        let components = vt.slice(ndarray::s![..n_components, ..]).to_owned();
+        let _components = vt.slice(ndarray::s![..n_components, ..]).to_owned();
 
         // Compute explained variance
         let total_variance_f64 = s.mapv(|x| x * x).sum() / (n_samples - 1) as f64;
@@ -290,7 +289,7 @@ where
         }
 
         // Convert back to F type
-        let components_f = components.mapv(|x| F::from(x).unwrap());
+        let components_f = _components.mapv(|x| F::from(x).unwrap());
         let singular_values_f = singular_values.mapv(|x| F::from(x).unwrap());
         let explained_variance_f = explained_variance_f64.mapv(|x| F::from(x).unwrap());
         let explained_variance_ratio_f = explained_variance_ratio_f64.mapv(|x| F::from(x).unwrap());
@@ -299,7 +298,7 @@ where
         let total_variance_f = F::from(total_variance_f64).unwrap();
 
         Ok(PCAResult {
-            components: components_f,
+            _components: components_f,
             explained_variance: explained_variance_f,
             explained_variance_ratio: explained_variance_ratio_f,
             cumulative_variance_ratio: cumulative_variance_ratio_f,
@@ -320,7 +319,7 @@ where
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
-        let (n_samples, _) = data.dim();
+        let (n_samples_) = data.dim();
 
         // Compute covariance matrix
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());
@@ -344,7 +343,7 @@ where
         // Extract top n_components
         let selected_eigenvalues: Vec<f64> = eigen_pairs[..n_components]
             .iter()
-            .map(|(val, _)| *val)
+            .map(|(val_)| *val)
             .collect();
         let mut selected_eigenvectors = Array2::zeros((data.ncols(), n_components));
 
@@ -352,8 +351,8 @@ where
             selected_eigenvectors.column_mut(i).assign(eigenvec);
         }
 
-        // Transpose to get components as rows
-        let components = selected_eigenvectors.t().to_owned();
+        // Transpose to get _components as rows
+        let _components = selected_eigenvectors.t().to_owned();
 
         // Compute explained variance metrics
         let total_variance_f64 = eigenvalues.sum();
@@ -368,7 +367,7 @@ where
         }
 
         // Convert to F type
-        let components_f = components.mapv(|x| F::from(x).unwrap());
+        let components_f = _components.mapv(|x| F::from(x).unwrap());
         let singular_values_f = explained_variance_f64.mapv(|x| F::from(x.sqrt()).unwrap());
         let explained_variance_f = explained_variance_f64.mapv(|x| F::from(x).unwrap());
         let explained_variance_ratio_f = explained_variance_ratio_f64.mapv(|x| F::from(x).unwrap());
@@ -377,7 +376,7 @@ where
         let total_variance_f = F::from(total_variance_f64).unwrap();
 
         Ok(PCAResult {
-            components: components_f,
+            _components: components_f,
             explained_variance: explained_variance_f,
             explained_variance_ratio: explained_variance_ratio_f,
             cumulative_variance_ratio: cumulative_variance_ratio_f,
@@ -394,9 +393,7 @@ where
     fn fit_randomized(
         &self,
         data: &Array2<F>,
-        n_components: usize,
-        _n_iter: usize,
-        _n_oversamples: usize,
+        n_components: usize, _n_iter: usize_n, _oversamples: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -409,8 +406,7 @@ where
     fn fit_incremental(
         &self,
         data: &Array2<F>,
-        n_components: usize,
-        _batch_size: usize,
+        n_components: usize, _batch_size: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -423,9 +419,7 @@ where
     fn fit_sparse(
         &self,
         data: &Array2<F>,
-        n_components: usize,
-        _alpha: f64,
-        _max_iter: usize,
+        n_components: usize, _alpha: f64, _max_iter: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -438,9 +432,7 @@ where
     fn fit_robust(
         &self,
         data: &Array2<F>,
-        n_components: usize,
-        _lambda: f64,
-        _max_iter: usize,
+        n_components: usize, _lambda: f64, _max_iter: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -510,7 +502,7 @@ where
 
         if transformed_data.ncols() != results.n_components {
             return Err(StatsError::DimensionMismatch(format!(
-                "Transformed data columns ({}) must match n_components ({})",
+                "Transformed _data columns ({}) must match n_components ({})",
                 transformed_data.ncols(),
                 results.n_components
             )));
@@ -565,8 +557,7 @@ pub struct EnhancedFactorAnalysis<F> {
     /// Configuration
     pub config: FactorAnalysisConfig,
     /// Results
-    pub results: Option<FactorAnalysisResult<F>>,
-    _phantom: PhantomData<F>,
+    pub results: Option<FactorAnalysisResult<F>>, _phantom: PhantomData<F>,
 }
 
 /// Factor analysis configuration
@@ -638,14 +629,13 @@ where
         + ScalarOperand,
 {
     /// Create new factor analysis
-    pub fn new(n_factors: usize, config: FactorAnalysisConfig) -> StatsResult<Self> {
-        check_positive(n_factors, "n_factors")?;
+    pub fn new(_n_factors: usize, config: FactorAnalysisConfig) -> StatsResult<Self> {
+        check_positive(_n_factors, "_n_factors")?;
 
         Ok(Self {
-            n_factors,
+            _n_factors,
             config,
-            results: None,
-            _phantom: PhantomData,
+            results: None_phantom: PhantomData,
         })
     }
 

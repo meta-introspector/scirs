@@ -5,8 +5,8 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2};
-use num_complex::Complex64;
-use scirs2_fft::{
+use num__complex::Complex64;
+use scirs2__fft::{
     dct, dct::DCTType, dst, dst::DSTType, fft, fft2, fftn, frft, hfft::hfft, ifft, irfft, rfft,
     worker_pool::set_workers,
 };
@@ -37,10 +37,10 @@ impl Default for TestConfig {
 
 /// Generate test signals
 #[allow(dead_code)]
-fn generate_1d_signal(size: usize) -> (Vec<f64>, Vec<Complex64>) {
-    let real_signal: Vec<f64> = (0..size)
+fn generate_1d_signal(_size: usize) -> (Vec<f64>, Vec<Complex64>) {
+    let real_signal: Vec<f64> = (0.._size)
         .map(|i| {
-            let t = i as f64 / size as f64;
+            let t = i as f64 / _size as f64;
             (2.0 * PI * 10.0 * t).sin() + 0.5 * (2.0 * PI * 30.0 * t).cos()
         })
         .collect();
@@ -54,10 +54,10 @@ fn generate_1d_signal(size: usize) -> (Vec<f64>, Vec<Complex64>) {
 }
 
 #[allow(dead_code)]
-fn generate_2d_signal(size: usize) -> Array2<f64> {
-    Array2::from_shape_fn((size, size), |(i, j)| {
-        let x = i as f64 / size as f64;
-        let y = j as f64 / size as f64;
+fn generate_2d_signal(_size: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_size, _size), |(i, j)| {
+        let x = i as f64 / _size as f64;
+        let y = j as f64 / _size as f64;
         (2.0 * PI * (5.0 * x + 3.0 * y)).sin()
     })
 }
@@ -172,8 +172,7 @@ fn bench_specialized_transforms(c: &mut Criterion) {
                                 1 => DCTType::Type1,
                                 2 => DCTType::Type2,
                                 3 => DCTType::Type3,
-                                4 => DCTType::Type4,
-                                _ => DCTType::Type2,
+                                4 => DCTType::Type4_ =>, DCTType::Type2,
                             }),
                             None,
                         )
@@ -195,8 +194,7 @@ fn bench_specialized_transforms(c: &mut Criterion) {
                                 1 => DSTType::Type1,
                                 2 => DSTType::Type2,
                                 3 => DSTType::Type3,
-                                4 => DSTType::Type4,
-                                _ => DSTType::Type2,
+                                4 => DSTType::Type4_ =>, DSTType::Type2,
                             }),
                             None,
                         )

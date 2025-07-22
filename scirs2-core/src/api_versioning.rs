@@ -225,7 +225,7 @@ impl VersionRegistry {
     }
 
     /// Mark an API as deprecated with migration example
-    pub fn deprecate_api_with_migration(
+    pub fn deprecate_api_with_example(
         &mut self,
         name: &str,
         version: Version,
@@ -268,7 +268,7 @@ impl VersionRegistry {
     }
 
     /// Get all deprecated APIs in a version
-    pub fn deprecated_apis(&self, version: &Version) -> Vec<&ApiEntry> {
+    pub fn deprecated_apis_in_version(&self, version: &Version) -> Vec<&ApiEntry> {
         self.entries
             .iter()
             .filter(|entry| entry.deprecated.map(|dep| version >= &dep).unwrap_or(false))
@@ -1005,15 +1005,15 @@ pub fn global_api_checker() -> &'static Mutex<ApiCompatibilityChecker> {
 /// Helper function to create API signature from function metadata
 #[allow(dead_code)]
 pub fn create_api_signature(
-    name: impl Into<String>,
-    module: impl Into<String>,
+    name: &str,
+    module: &str,
     parameters: Vec<Parameter>,
     return_type: Option<String>,
     visibility: Visibility,
     stability: StabilityLevel,
 ) -> ApiSignature {
-    let name_str = name.into();
-    let module_str = module.into();
+    let name_str = name.to_string();
+    let module_str = module.to_string();
 
     // Create a simple hash based on function signature components
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -1021,7 +1021,15 @@ pub fn create_api_signature(
 
     name_str.hash(&mut hasher);
     module_str.hash(&mut hasher);
-    parameters.hash(&mut hasher);
+    // Hash each parameter
+    for param in &parameters {
+        param.name.hash(&mut hasher);
+        param.type_name.hash(&mut hasher);
+        param.is_optional.hash(&mut hasher);
+        if let Some(ref default) = param.default_value {
+            default.hash(&mut hasher);
+        }
+    }
     return_type.hash(&mut hasher);
     visibility.hash(&mut hasher);
 
@@ -1192,7 +1200,7 @@ pub fn check_current_compatibility() -> Result<CompatibilityCheckResult, String>
     // In a real implementation, this would be generated from actual code analysis
     let current_apis = get_test_frozen_apis();
 
-    Ok(checker_guard.check_compatibility(&current_apis))
+    Ok((*checker_guard).check_compatibility(&current_apis))
 }
 
 #[cfg(test)]
@@ -1254,7 +1262,7 @@ mod tests {
         assert_eq!(apis_v2.len(), 2); // OldArray is deprecated
 
         // Check deprecated APIs
-        let deprecated = registry.deprecated_apis(&v0_2_0);
+        let deprecated = registry.deprecated_apis_in_version(&v0_2_0);
         assert_eq!(deprecated.len(), 1);
         assert_eq!(deprecated[0].name, "OldArray");
     }

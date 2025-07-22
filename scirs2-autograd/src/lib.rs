@@ -49,7 +49,7 @@
 //! // MNIST digits classification model with multi-layer-perceptron
 //! use scirs2_autograd as ag;
 //! use ag::optimizers::adam::Adam;
-//! use ag::tensor_ops::*;
+//! use ag::tensor__ops::*;
 //! use ag::prelude::*;
 //!
 //! let mut env = ag::VariableEnvironment::new();
@@ -82,7 +82,7 @@
 //! ### Abstractions
 //! ```
 //! use scirs2_autograd as ag;
-//! use ag::tensor_ops::*;
+//! use ag::tensor__ops::*;
 //! use ag::ndarray;
 //!
 //! // Use `Tensor::map()` to create a new ndarray
@@ -150,13 +150,12 @@ pub mod tracing;
 pub mod variable;
 pub mod visualization;
 
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc__hash::{FxHashMap, FxHashSet};
 use std::any::TypeId;
 use std::fmt;
 
 /// A primitive type in this crate, which is actually a decorated `num_traits::Float`.
-pub trait Float:
-    num_traits::Float
+pub trait Float: num_traits: Float
     + num_traits::NumAssignOps
     + Copy
     + Send
@@ -222,9 +221,9 @@ pub(crate) fn same_type<A: 'static, B: 'static>() -> bool {
     TypeId::of::<A>() == TypeId::of::<B>()
 }
 
-pub use crate::ndarray_ext::array_gen;
+pub use crate::ndarray__ext::array_gen;
 
-pub use crate::ndarray_ext::{NdArray, NdArrayView, NdArrayViewMut};
+pub use crate::ndarray__ext::{NdArray, NdArrayView, NdArrayViewMut};
 
 pub use crate::evaluation::{Evaluator, Feeder};
 

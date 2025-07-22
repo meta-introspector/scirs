@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::Float;
 
-use crate::adaptive_selection::OptimizerType;
+use crate::adaptive__selection::OptimizerType;
 use crate::error::{OptimError, Result};
 use crate::gpu::{GpuOptimError, GpuOptimizerConfig};
 
@@ -396,11 +396,11 @@ impl Default for BenchmarkConfig {
 
 impl GpuOptimizerBenchmark {
     /// Create new benchmark suite
-    pub fn new(config: BenchmarkConfig) -> Result<Self> {
+    pub fn new(_config: BenchmarkConfig) -> Result<Self> {
         let mut contexts = HashMap::new();
 
         // Initialize GPU contexts for each backend
-        for backend in &config.backends {
+        for backend in &_config.backends {
             #[cfg(feature = "gpu")]
             {
                 if let Ok(context) = GpuContext::new(*backend) {
@@ -412,7 +412,7 @@ impl GpuOptimizerBenchmark {
         let data_generators = Self::create_default_data_generators();
 
         Ok(Self {
-            config,
+            _config,
             results: HashMap::new(),
             contexts,
             data_generators,
@@ -479,7 +479,7 @@ impl GpuOptimizerBenchmark {
         // Generate test data
         let (params, gradients) = data_generator.generate(problem_size)?;
 
-        // Create optimizer based on type and backend
+        // Create optimizer based on _type and backend
         let optimizer_config = self.create_optimizer_config(backend, optimizer_type);
 
         // Warmup runs
@@ -1052,8 +1052,8 @@ pub struct NormalDataGenerator {
 }
 
 impl NormalDataGenerator {
-    pub fn new(mean: f64, std: f64) -> Self {
-        Self { mean, std }
+    pub fn new(_mean: f64, std: f64) -> Self {
+        Self { _mean, std }
     }
 }
 
@@ -1089,8 +1089,8 @@ pub struct UniformDataGenerator {
 }
 
 impl UniformDataGenerator {
-    pub fn new(min: f64, max: f64) -> Self {
-        Self { min, max }
+    pub fn new(_min: f64, max: f64) -> Self {
+        Self { _min, max }
     }
 }
 
@@ -1134,8 +1134,8 @@ pub struct SparseDataGenerator {
 }
 
 impl SparseDataGenerator {
-    pub fn new(density: f64) -> Self {
-        Self { density }
+    pub fn new(_density: f64) -> Self {
+        Self { _density }
     }
 }
 
@@ -1191,8 +1191,8 @@ pub struct RealisticDataGenerator {
 }
 
 impl RealisticDataGenerator {
-    pub fn new(scenario: RealisticScenario) -> Self {
-        Self { scenario }
+    pub fn new(_scenario: RealisticScenario) -> Self {
+        Self { _scenario }
     }
 }
 
@@ -1327,7 +1327,7 @@ mod tests {
         let result = sparse_gen.generate(1000);
         assert!(result.is_ok());
 
-        let (params, _grads) = result.unwrap();
+        let (params_grads) = result.unwrap();
         let zero_count = params.iter().filter(|&&x| x == 0.0).count();
 
         // Should have approximately 90% zeros (some variance expected)

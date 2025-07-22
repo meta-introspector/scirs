@@ -8,6 +8,7 @@ use std::time::{Duration, Instant};
 
 use crate::memory::metrics::event::{MemoryEvent, MemoryEventType};
 use rand::prelude::*;
+use rand::Rng;
 #[cfg(feature = "memory_metrics")]
 use serde::{Deserialize, Serialize};
 
@@ -26,7 +27,7 @@ impl Default for Random {
 
 impl Random {
     fn random_range(&mut self, range: std::ops::Range<f64>) -> f64 {
-        self.rng.random_range(range.start..range.end)
+        self.rng.random_range(range)
     }
 }
 
@@ -88,8 +89,7 @@ pub struct ComponentMemoryStats {
 
 /// Memory usage report
 #[derive(Debug, Clone)]
-#[cfg_attr(
-    feature = "memory_metrics",
+#[cfg_attr(feature = "memory_metrics",
     derive(serde::Serialize, serde::Deserialize)
 )]
 pub struct MemoryReport {

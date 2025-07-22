@@ -7,6 +7,7 @@ use crate::error::{IntegrateError, IntegrateResult as Result};
 use ndarray::{s, Array1, Array2, Array3};
 use scirs2_core::constants::PI;
 use scirs2_core::simd_ops::SimdUnifiedOps;
+// use std::f64::consts::PI;
 
 /// Fluid state representation
 #[derive(Debug, Clone)]
@@ -74,7 +75,7 @@ pub struct NavierStokesParams {
 }
 
 impl Default for NavierStokesParams {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             nu: 0.01,
             rho: 1.0,
@@ -126,12 +127,12 @@ impl NavierStokesSolver {
             // Step 3: Correct velocity with pressure gradient
             let (u_new, v_new) = self.correct_velocity_2d(&u_star, &v_star, &pressure)?;
 
-            // Update state
+            // Update _state
             current.velocity = vec![u_new, v_new];
             current.pressure = pressure;
             current.time += self.params.dt;
 
-            // Save state at intervals
+            // Save _state at intervals
             if (step + 1) % save_interval == 0 {
                 states.push(current.clone());
             }
@@ -147,7 +148,7 @@ impl NavierStokesSolver {
     ) -> Result<(Array2<f64>, Array2<f64>)> {
         let u = &state.velocity[0];
         let v = &state.velocity[1];
-        let (_ny, _nx) = u.dim();
+        let (_ny_nx) = u.dim();
 
         let mut u_star = u.clone();
         let mut v_star = v.clone();
@@ -390,7 +391,7 @@ impl NavierStokesSolver {
     }
 
     /// Apply boundary conditions to velocity
-    fn apply_boundary_conditions_2d(&self, u: &mut Array2<f64>, v: &mut Array2<f64>) -> Result<()> {
+    fn apply_boundary_conditions_2d(u: &mut Array2<f64>, v: &mut Array2<f64>) -> Result<()> {
         let (ny, nx) = u.dim();
 
         // Left and right boundaries (x-direction)
@@ -531,28 +532,28 @@ impl NavierStokesSolver {
     }
 
     /// Apply boundary conditions to pressure
-    fn apply_pressure_boundary_conditions(&self, pressure: &mut Array2<f64>) -> Result<()> {
-        let (ny, nx) = pressure.dim();
+    fn apply_pressure_boundary_conditions(_pressure: &mut Array2<f64>) -> Result<()> {
+        let (ny, nx) = _pressure.dim();
 
-        // Neumann boundary conditions (zero gradient) for pressure
+        // Neumann boundary conditions (zero gradient) for _pressure
         // Left and right
         for j in 0..ny {
-            pressure[[j, 0]] = pressure[[j, 1]];
-            pressure[[j, nx - 1]] = pressure[[j, nx - 2]];
+            _pressure[[j, 0]] = _pressure[[j, 1]];
+            _pressure[[j, nx - 1]] = _pressure[[j, nx - 2]];
         }
 
         // Top and bottom
         for i in 0..nx {
-            pressure[[0, i]] = pressure[[1, i]];
-            pressure[[ny - 1, i]] = pressure[[ny - 2, i]];
+            _pressure[[0, i]] = _pressure[[1, i]];
+            _pressure[[ny - 1, i]] = _pressure[[ny - 2, i]];
         }
 
         Ok(())
     }
 
     /// Bilinear interpolation for semi-Lagrangian advection
-    fn bilinear_interpolate(&self, field: &Array2<f64>, x: f64, y: f64) -> Result<f64> {
-        let (ny, nx) = field.dim();
+    fn bilinear_interpolate(_field: &Array2<f64>, x: f64, y: f64) -> Result<f64> {
+        let (ny, nx) = _field.dim();
 
         // Clamp to domain
         let x = x.max(0.0).min((nx - 1) as f64);
@@ -567,28 +568,28 @@ impl NavierStokesSolver {
         let i = i.min(nx - 2);
         let j = j.min(ny - 2);
 
-        Ok(field[[j, i]] * (1.0 - fx) * (1.0 - fy)
-            + field[[j, i + 1]] * fx * (1.0 - fy)
-            + field[[j + 1, i]] * (1.0 - fx) * fy
-            + field[[j + 1, i + 1]] * fx * fy)
+        Ok(_field[[j, i]] * (1.0 - fx) * (1.0 - fy)
+            + _field[[j, i + 1]] * fx * (1.0 - fy)
+            + _field[[j + 1, i]] * (1.0 - fx) * fy
+            + _field[[j + 1, i + 1]] * fx * fy)
     }
 
     /// Create lid-driven cavity initial condition
-    pub fn lid_driven_cavity(nx: usize, ny: usize, _lid_velocity: f64) -> FluidState {
-        let mut u = Array2::zeros((ny, nx));
-        let v = Array2::zeros((ny, nx));
+    pub fn lid_driven_cavity(_nx: usize, ny: usize, _lid_velocity: f64) -> FluidState {
+        let mut u = Array2::zeros((ny, _nx));
+        let v = Array2::zeros((ny, _nx));
 
-        // Set lid velocity at top boundary
-        for i in 0..nx {
+        // Set lid _velocity at top boundary
+        for i in 0.._nx {
             u[[ny - 1, i]] = _lid_velocity;
         }
 
-        let pressure = Array2::zeros((ny, nx));
-        let dx = 1.0 / (nx - 1) as f64;
+        let pressure = Array2::zeros((ny, _nx));
+        let dx = 1.0 / (_nx - 1) as f64;
         let dy = 1.0 / (ny - 1) as f64;
 
         FluidState {
-            velocity: vec![u, v],
+            _velocity: vec![u, v],
             pressure,
             temperature: None,
             time: 0.0,
@@ -598,16 +599,16 @@ impl NavierStokesSolver {
     }
 
     /// Create Taylor-Green vortex initial condition
-    pub fn taylor_green_vortex(nx: usize, ny: usize, a: f64, b: f64) -> FluidState {
-        let dx = 2.0 * PI / (nx - 1) as f64;
+    pub fn taylor_green_vortex(_nx: usize, ny: usize, a: f64, b: f64) -> FluidState {
+        let dx = 2.0 * PI / (_nx - 1) as f64;
         let dy = 2.0 * PI / (ny - 1) as f64;
 
-        let mut u = Array2::zeros((ny, nx));
-        let mut v = Array2::zeros((ny, nx));
-        let mut pressure = Array2::zeros((ny, nx));
+        let mut u = Array2::zeros((ny, _nx));
+        let mut v = Array2::zeros((ny, _nx));
+        let mut pressure = Array2::zeros((ny, _nx));
 
         for j in 0..ny {
-            for i in 0..nx {
+            for i in 0.._nx {
                 let x = i as f64 * dx;
                 let y = j as f64 * dy;
 
@@ -631,7 +632,7 @@ impl NavierStokesSolver {
 /// Advanced computational optimizations for fluid dynamics
 pub mod cfd_optimizations {
     use super::*;
-    use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex};
 
     /// GPU-accelerated fluid dynamics solver
     pub struct GPUFluidSolver {
@@ -651,15 +652,15 @@ pub mod cfd_optimizations {
 
     impl GPUFluidSolver {
         /// Create new GPU-accelerated solver
-        pub fn new(nx: usize, ny: usize, nz: usize, use_gpu: bool) -> Self {
+        pub fn new(_nx: usize, ny: usize, nz: usize, use_gpu: bool) -> Self {
             Self {
-                nx,
+                _nx,
                 ny,
                 nz,
                 use_gpu,
                 device_id: 0,
                 memory_pool: if use_gpu {
-                    Some(Arc::new(Mutex::new(Vec::with_capacity(nx * ny * nz * 10))))
+                    Some(Arc::new(Mutex::new(Vec::with_capacity(_nx * ny * nz * 10))))
                 } else {
                     None
                 },
@@ -702,7 +703,7 @@ pub mod cfd_optimizations {
 
                 current_state.time += dt;
 
-                // Store results every few steps to save memory
+                // Store results every few _steps to save memory
                 if step % 10 == 0 || step == n_steps - 1 {
                     states.push(current_state.clone());
                 }
@@ -741,8 +742,7 @@ pub mod cfd_optimizations {
         /// Simulate GPU pressure Poisson solver
         fn gpu_pressure_poisson_solve(
             &self,
-            state: &FluidState3D,
-            _params: &NavierStokesParams,
+            state: &FluidState3D_params: &NavierStokesParams,
         ) -> Result<FluidState3D> {
             let mut new_state = state.clone();
 
@@ -788,8 +788,8 @@ pub mod cfd_optimizations {
         }
 
         /// Simulate GPU boundary condition application
-        fn gpu_apply_boundary_conditions(&self, state: &FluidState3D) -> Result<FluidState3D> {
-            let mut new_state = state.clone();
+        fn gpu_apply_boundary_conditions(_state: &FluidState3D) -> Result<FluidState3D> {
+            let mut new_state = _state.clone();
 
             // Simulate GPU kernel for boundary conditions
             for component in 0..3 {
@@ -801,23 +801,23 @@ pub mod cfd_optimizations {
         }
 
         /// Simulate GPU kernel for pressure solving
-        fn simulate_gpu_kernel_pressure(&self, pressure: &Array3<f64>) -> Result<Array3<f64>> {
-            let mut new_pressure = pressure.clone();
+        fn simulate_gpu_kernel_pressure(_pressure: &Array3<f64>) -> Result<Array3<f64>> {
+            let mut new_pressure = _pressure.clone();
 
             // Simulate GPU thread blocks processing in parallel
-            let (nx, ny, nz) = pressure.dim();
+            let (nx, ny, nz) = _pressure.dim();
 
             // Simulate Jacobi iteration on GPU
             for i in 1..nx - 1 {
                 for j in 1..ny - 1 {
                     for k in 1..nz - 1 {
                         new_pressure[[i, j, k]] = 0.16667
-                            * (pressure[[i + 1, j, k]]
-                                + pressure[[i - 1, j, k]]
-                                + pressure[[i, j + 1, k]]
-                                + pressure[[i, j - 1, k]]
-                                + pressure[[i, j, k + 1]]
-                                + pressure[[i, j, k - 1]]);
+                            * (_pressure[[i + 1, j, k]]
+                                + _pressure[[i - 1, j, k]]
+                                + _pressure[[i, j + 1, k]]
+                                + _pressure[[i, j - 1, k]]
+                                + _pressure[[i, j, k + 1]]
+                                + _pressure[[i, j, k - 1]]);
                     }
                 }
             }
@@ -878,9 +878,9 @@ pub mod cfd_optimizations {
         }
 
         /// Simulate GPU kernel for boundary conditions
-        fn simulate_gpu_kernel_boundaries(&self, velocity: &Array3<f64>) -> Result<Array3<f64>> {
-            let mut new_velocity = velocity.clone();
-            let (nx, ny, nz) = velocity.dim();
+        fn simulate_gpu_kernel_boundaries(_velocity: &Array3<f64>) -> Result<Array3<f64>> {
+            let mut new_velocity = _velocity.clone();
+            let (nx, ny, nz) = _velocity.dim();
 
             // Apply no-slip boundary conditions on all faces
             // x-faces
@@ -913,8 +913,7 @@ pub mod cfd_optimizations {
         /// Parallel pressure solve using CPU
         fn parallel_pressure_solve(
             &self,
-            state: &FluidState3D,
-            _params: &NavierStokesParams,
+            state: &FluidState3D_params: &NavierStokesParams,
         ) -> Result<FluidState3D> {
             let mut new_state = state.clone();
 
@@ -958,8 +957,8 @@ pub mod cfd_optimizations {
         }
 
         /// Parallel boundary condition application
-        fn parallel_boundary_conditions(&self, state: &FluidState3D) -> Result<FluidState3D> {
-            let mut new_state = state.clone();
+        fn parallel_boundary_conditions(_state: &FluidState3D) -> Result<FluidState3D> {
+            let mut new_state = _state.clone();
 
             // Apply boundary conditions in parallel for each component
             for velocity in new_state.velocity.iter_mut() {
@@ -982,8 +981,8 @@ pub mod cfd_optimizations {
         }
 
         /// Compute pressure residual for convergence checking
-        fn compute_pressure_residual(&self, state: &FluidState3D) -> Result<f64> {
-            let pressure = &state.pressure;
+        fn compute_pressure_residual(_state: &FluidState3D) -> Result<f64> {
+            let pressure = &_state.pressure;
             let (nx, ny, nz) = pressure.dim();
             let mut residual = 0.0;
 
@@ -1018,8 +1017,8 @@ pub mod cfd_optimizations {
         }
 
         /// Configure GPU streams for overlapped computation
-        pub fn configure_gpu_streams(&mut self, n_streams: usize) {
-            self.n_streams = n_streams;
+        pub fn configure_gpu_streams(_n_streams: usize) {
+            self._n_streams = _n_streams;
         }
     }
 
@@ -1064,7 +1063,6 @@ pub mod cfd_optimizations {
     /// Advanced turbulence models for high-fidelity CFD simulations
     pub mod advanced_turbulence_models {
         use crate::error::IntegrateResult as Result;
-        use ndarray::Array3;
 
         /// Spalart-Allmaras one-equation turbulence model
         pub struct SpalartAllmarasModel {
@@ -1093,7 +1091,7 @@ pub mod cfd_optimizations {
         }
 
         impl Default for SpalartAllmarasConstants {
-            fn default() -> Self {
+            fn default(&self) -> Self {
                 Self {
                     cb1: 0.1355,
                     cb2: 0.622,
@@ -1110,12 +1108,12 @@ pub mod cfd_optimizations {
 
         impl SpalartAllmarasModel {
             /// Create new Spalart-Allmaras model
-            pub fn new(nx: usize, ny: usize, nz: usize) -> Self {
+            pub fn new(_nx: usize, ny: usize, nz: usize) -> Self {
                 Self {
                     constants: SpalartAllmarasConstants::default(),
-                    nu_tilde: Array3::zeros((nx, ny, nz)),
-                    vorticity: Array3::zeros((nx, ny, nz)),
-                    wall_distance: Array3::zeros((nx, ny, nz)),
+                    nu_tilde: Array3::zeros((_nx, ny, nz)),
+                    vorticity: Array3::zeros((_nx, ny, nz)),
+                    wall_distance: Array3::zeros((_nx, ny, nz)),
                 }
             }
 
@@ -1295,7 +1293,7 @@ pub mod cfd_optimizations {
             }
 
             /// Get turbulent viscosity
-            pub fn get_turbulent_viscosity(&self, molecular_viscosity: f64) -> Array3<f64> {
+            pub fn get_turbulent_viscosity(_molecular_viscosity: f64) -> Array3<f64> {
                 let mut nu_t = Array3::zeros(self.nu_tilde.dim());
                 let (nx, ny, nz) = self.nu_tilde.dim();
 
@@ -1303,7 +1301,7 @@ pub mod cfd_optimizations {
                     for j in 0..ny {
                         for k in 0..nz {
                             let nu_tilde = self.nu_tilde[[i, j, k]];
-                            let chi = nu_tilde / molecular_viscosity;
+                            let chi = nu_tilde / _molecular_viscosity;
                             let fv1 = chi.powi(3) / (chi.powi(3) + self.constants.cv1.powi(3));
                             nu_t[[i, j, k]] = nu_tilde * fv1;
                         }
@@ -1346,7 +1344,7 @@ pub mod cfd_optimizations {
         }
 
         impl Default for KOmegaSSTConstants {
-            fn default() -> Self {
+            fn default(&self) -> Self {
                 Self {
                     beta_star: 0.09,
                     alpha_1: 5.0 / 9.0,
@@ -1365,11 +1363,11 @@ pub mod cfd_optimizations {
 
         impl KOmegaSSTModel {
             /// Create new k-omega SST model
-            pub fn new(nx: usize, ny: usize, nz: usize) -> Self {
+            pub fn new(_nx: usize, ny: usize, nz: usize) -> Self {
                 Self {
-                    k: Array3::zeros((nx, ny, nz)),
-                    omega: Array3::zeros((nx, ny, nz)),
-                    f1: Array3::zeros((nx, ny, nz)),
+                    k: Array3::zeros((_nx, ny, nz)),
+                    omega: Array3::zeros((_nx, ny, nz)),
+                    f1: Array3::zeros((_nx, ny, nz)),
                     constants: KOmegaSSTConstants::default(),
                 }
             }
@@ -1520,8 +1518,7 @@ pub mod cfd_optimizations {
 
             /// Solve omega transport equation
             fn solve_omega_equation(
-                &mut self,
-                _velocity: &[Array3<f64>],
+                &mut self_velocity: &[Array3<f64>],
                 nu: f64,
                 dt: f64,
                 dx: f64,
@@ -1615,9 +1612,9 @@ pub mod cfd_optimizations {
 
     impl MultigridSolver {
         /// Create new multigrid solver
-        pub fn new(n_levels: usize, smoother: SmootherType, cycle_type: CycleType) -> Self {
+        pub fn new(_n_levels: usize, smoother: SmootherType, cycle_type: CycleType) -> Self {
             Self {
-                n_levels,
+                _n_levels,
                 n_smooth: 3,
                 smoother,
                 cycle_type,
@@ -1653,7 +1650,7 @@ pub mod cfd_optimizations {
         }
 
         /// Perform one multigrid cycle
-        fn multigrid_cycle(&self, u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn multigrid_cycle(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
             match self.cycle_type {
                 CycleType::VCycle => self.v_cycle(u, f, 0),
                 CycleType::WCycle => self.w_cycle(u, f, 0),
@@ -1662,7 +1659,7 @@ pub mod cfd_optimizations {
         }
 
         /// V-cycle multigrid
-        fn v_cycle(&self, u: &Array3<f64>, f: &Array3<f64>, level: usize) -> Result<Array3<f64>> {
+        fn v_cycle(u: &Array3<f64>, f: &Array3<f64>, level: usize) -> Result<Array3<f64>> {
             if level == self.n_levels - 1 {
                 // Coarsest level - direct solve
                 return self.direct_solve(u, f);
@@ -1692,7 +1689,7 @@ pub mod cfd_optimizations {
         }
 
         /// W-cycle multigrid
-        fn w_cycle(&self, u: &Array3<f64>, f: &Array3<f64>, level: usize) -> Result<Array3<f64>> {
+        fn w_cycle(u: &Array3<f64>, f: &Array3<f64>, level: usize) -> Result<Array3<f64>> {
             if level == self.n_levels - 1 {
                 return self.direct_solve(u, f);
             }
@@ -1718,7 +1715,7 @@ pub mod cfd_optimizations {
         }
 
         /// F-cycle multigrid
-        fn f_cycle(&self, u: &Array3<f64>, f: &Array3<f64>, level: usize) -> Result<Array3<f64>> {
+        fn f_cycle(u: &Array3<f64>, f: &Array3<f64>, level: usize) -> Result<Array3<f64>> {
             if level == self.n_levels - 1 {
                 return self.direct_solve(u, f);
             }
@@ -1735,7 +1732,7 @@ pub mod cfd_optimizations {
         }
 
         /// Apply smoother
-        fn smooth(&self, u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn smooth(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
             let mut result = u.clone();
 
             for _iter in 0..self.n_smooth {
@@ -1751,7 +1748,7 @@ pub mod cfd_optimizations {
         }
 
         /// Jacobi smoother
-        fn jacobi_smooth(&self, u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn jacobi_smooth(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
             let mut new_u = u.clone();
             let (nx, ny, nz) = u.dim();
 
@@ -1774,7 +1771,7 @@ pub mod cfd_optimizations {
         }
 
         /// Gauss-Seidel smoother
-        fn gauss_seidel_smooth(&self, u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn gauss_seidel_smooth(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
             let mut new_u = u.clone();
             let (nx, ny, nz) = u.dim();
 
@@ -1797,7 +1794,7 @@ pub mod cfd_optimizations {
         }
 
         /// SOR smoother
-        fn sor_smooth(&self, u: &Array3<f64>, f: &Array3<f64>, omega: f64) -> Result<Array3<f64>> {
+        fn sor_smooth(u: &Array3<f64>, f: &Array3<f64>, omega: f64) -> Result<Array3<f64>> {
             let mut new_u = u.clone();
             let (nx, ny, nz) = u.dim();
 
@@ -1822,7 +1819,7 @@ pub mod cfd_optimizations {
         }
 
         /// Red-Black Gauss-Seidel smoother
-        fn red_black_gs_smooth(&self, u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn red_black_gs_smooth(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
             let mut new_u = u.clone();
             let (nx, ny, nz) = u.dim();
 
@@ -1866,8 +1863,8 @@ pub mod cfd_optimizations {
         }
 
         /// Restrict to coarser grid
-        fn restrict(&self, fine: &Array3<f64>) -> Result<Array3<f64>> {
-            let (nx, ny, nz) = fine.dim();
+        fn restrict(_fine: &Array3<f64>) -> Result<Array3<f64>> {
+            let (nx, ny, nz) = _fine.dim();
             let coarse = Array3::zeros((nx / 2 + 1, ny / 2 + 1, nz / 2 + 1));
 
             // Full weighting restriction (simplified)
@@ -1876,8 +1873,7 @@ pub mod cfd_optimizations {
 
         /// Prolongate from coarser grid
         fn prolongate(
-            &self,
-            _coarse: &Array3<f64>,
+            &self_coarse: &Array3<f64>,
             fine_dim: (usize, usize, usize),
         ) -> Result<Array3<f64>> {
             let fine = Array3::zeros(fine_dim);
@@ -1887,14 +1883,14 @@ pub mod cfd_optimizations {
         }
 
         /// Direct solve on coarsest grid
-        fn direct_solve(&self, _u: &Array3<f64>, _f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn direct_solve(_u: &Array3<f64>, _f: &Array3<f64>) -> Result<Array3<f64>> {
             // For very small grids, could use direct methods
             // For now, just return smoothed result
             Ok(Array3::zeros((3, 3, 3)))
         }
 
         /// Compute residual norm
-        fn compute_residual(&self, u: &Array3<f64>, f: &Array3<f64>) -> Result<f64> {
+        fn compute_residual(u: &Array3<f64>, f: &Array3<f64>) -> Result<f64> {
             let (nx, ny, nz) = u.dim();
             let mut residual = 0.0;
 
@@ -1918,7 +1914,7 @@ pub mod cfd_optimizations {
         }
 
         /// Compute residual as Array3
-        fn compute_residual_array(&self, u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn compute_residual_array(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
             let (nx, ny, nz) = u.dim();
             let mut residual = Array3::zeros((nx, ny, nz));
 
@@ -1985,13 +1981,13 @@ pub mod cfd_optimizations {
 
     impl AdaptiveCFDSolver {
         /// Create new adaptive CFD solver
-        pub fn new(base_levels: usize, max_level: usize, use_gpu: bool) -> Self {
+        pub fn new(_base_levels: usize, max_level: usize, use_gpu: bool) -> Self {
             Self {
-                base_levels,
+                _base_levels,
                 max_level,
                 refinement_criterion: RefinementCriterion::Combined,
                 load_balancing: LoadBalancingStrategy::Dynamic,
-                gpu_solver: if use_gpu {
+                _gpu_solver: if use_gpu {
                     Some(GPUFluidSolver::new(64, 64, 64, true))
                 } else {
                     None
@@ -2043,24 +2039,24 @@ pub mod cfd_optimizations {
         }
 
         /// Assess where mesh refinement is needed
-        fn assess_refinement_needs(&self, state: &FluidState3D) -> Result<Array3<bool>> {
-            let (nx, ny, nz) = state.velocity[0].dim();
+        fn assess_refinement_needs(_state: &FluidState3D) -> Result<Array3<bool>> {
+            let (nx, ny, nz) = _state.velocity[0].dim();
             let mut refinement_map = Array3::from_elem((nx, ny, nz), false);
 
             match self.refinement_criterion {
                 RefinementCriterion::VelocityGradient => {
-                    self.assess_velocity_gradient_refinement(state, &mut refinement_map)?;
+                    self.assess_velocity_gradient_refinement(_state, &mut refinement_map)?;
                 }
                 RefinementCriterion::PressureGradient => {
-                    self.assess_pressure_gradient_refinement(state, &mut refinement_map)?;
+                    self.assess_pressure_gradient_refinement(_state, &mut refinement_map)?;
                 }
                 RefinementCriterion::Vorticity => {
-                    self.assess_vorticity_refinement(state, &mut refinement_map)?;
+                    self.assess_vorticity_refinement(_state, &mut refinement_map)?;
                 }
                 RefinementCriterion::Combined => {
-                    self.assess_velocity_gradient_refinement(state, &mut refinement_map)?;
-                    self.assess_pressure_gradient_refinement(state, &mut refinement_map)?;
-                    self.assess_vorticity_refinement(state, &mut refinement_map)?;
+                    self.assess_velocity_gradient_refinement(_state, &mut refinement_map)?;
+                    self.assess_pressure_gradient_refinement(_state, &mut refinement_map)?;
+                    self.assess_vorticity_refinement(_state, &mut refinement_map)?;
                 }
             }
 
@@ -2177,15 +2173,14 @@ pub mod cfd_optimizations {
         }
 
         /// Check if refinement is needed
-        fn needs_refinement(&self, refinement_map: &Array3<bool>) -> bool {
-            refinement_map.iter().any(|&needs_refine| needs_refine)
+        fn needs_refinement(_refinement_map: &Array3<bool>) -> bool {
+            _refinement_map.iter().any(|&needs_refine| needs_refine)
         }
 
         /// Refine mesh based on refinement map
         fn refine_mesh(
             &self,
-            state: &FluidState3D,
-            _refinement_map: &Array3<bool>,
+            state: &FluidState3D_refinement_map: &Array3<bool>,
         ) -> Result<FluidState3D> {
             // For now, return the original state
             // In a full implementation, this would:
@@ -2217,21 +2212,21 @@ pub mod cfd_optimizations {
         }
 
         /// Compute pressure right-hand side
-        fn compute_pressure_rhs(&self, state: &FluidState3D) -> Result<Array3<f64>> {
-            let (nx, ny, nz) = state.velocity[0].dim();
+        fn compute_pressure_rhs(_state: &FluidState3D) -> Result<Array3<f64>> {
+            let (nx, ny, nz) = _state.velocity[0].dim();
             let mut rhs = Array3::zeros((nx, ny, nz));
 
             // Compute divergence of velocity
             for i in 1..nx - 1 {
                 for j in 1..ny - 1 {
                     for k in 1..nz - 1 {
-                        let div_u = (state.velocity[0][[i + 1, j, k]]
-                            - state.velocity[0][[i - 1, j, k]])
-                            / (2.0 * state.dx)
-                            + (state.velocity[1][[i, j + 1, k]] - state.velocity[1][[i, j - 1, k]])
-                                / (2.0 * state.dy)
-                            + (state.velocity[2][[i, j, k + 1]] - state.velocity[2][[i, j, k - 1]])
-                                / (2.0 * state.dz);
+                        let div_u = (_state.velocity[0][[i + 1, j, k]]
+                            - _state.velocity[0][[i - 1, j, k]])
+                            / (2.0 * _state.dx)
+                            + (_state.velocity[1][[i, j + 1, k]] - _state.velocity[1][[i, j - 1, k]])
+                                / (2.0 * _state.dy)
+                            + (_state.velocity[2][[i, j, k + 1]] - _state.velocity[2][[i, j, k - 1]])
+                                / (2.0 * _state.dz);
                         rhs[[i, j, k]] = div_u;
                     }
                 }
@@ -2267,7 +2262,6 @@ pub mod cfd_optimizations {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_divergence_free() {
@@ -2353,7 +2347,6 @@ mod tests {
 
 /// Advanced turbulence modeling for computational fluid dynamics
 pub mod turbulence_models {
-    use super::*;
     use ndarray::Array4;
 
     /// Large Eddy Simulation (LES) solver
@@ -2419,42 +2412,42 @@ pub mod turbulence_models {
             n_steps: usize,
         ) -> Result<Vec<FluidState3D>> {
             let dt = final_time / n_steps as f64;
-            let mut state = initial_state;
+            let mut _state = initial_state;
             let mut results = Vec::with_capacity(n_steps + 1);
-            results.push(state.clone());
+            results.push(_state.clone());
 
             for _step in 0..n_steps {
                 // Compute SGS stress tensor
-                let sgs_stress = self.compute_sgs_stress(&state)?;
+                let sgs_stress = self.compute_sgs_stress(&_state)?;
 
                 // Update velocity using filtered Navier-Stokes equations
-                state = self.update_velocity_3d(&state, &sgs_stress, dt)?;
+                _state = self.update_velocity_3d(&_state, &sgs_stress, dt)?;
 
                 // Apply boundary conditions
-                state = self.apply_boundary_conditions_3d(state)?;
+                _state = self.apply_boundary_conditions_3d(_state)?;
 
                 // Store result
-                results.push(state.clone());
+                results.push(_state.clone());
             }
 
             Ok(results)
         }
 
-        fn compute_sgs_stress(&self, state: &FluidState3D) -> Result<Array4<f64>> {
+        fn compute_sgs_stress(_state: &FluidState3D) -> Result<Array4<f64>> {
             let mut sgs_stress = Array4::zeros((3, 3, self.nx, self.ny));
 
             match self.sgs_model {
                 SGSModel::Smagorinsky => {
-                    self.compute_smagorinsky_stress(&mut sgs_stress, state)?;
+                    self.compute_smagorinsky_stress(&mut sgs_stress, _state)?;
                 }
                 SGSModel::DynamicSmagorinsky => {
-                    self.compute_dynamic_smagorinsky_stress(&mut sgs_stress, state)?;
+                    self.compute_dynamic_smagorinsky_stress(&mut sgs_stress, _state)?;
                 }
                 SGSModel::WALE => {
-                    self.compute_wale_stress(&mut sgs_stress, state)?;
+                    self.compute_wale_stress(&mut sgs_stress, _state)?;
                 }
                 SGSModel::Vreman => {
-                    self.compute_vreman_stress(&mut sgs_stress, state)?;
+                    self.compute_vreman_stress(&mut sgs_stress, _state)?;
                 }
             }
 
@@ -2485,7 +2478,7 @@ pub mod turbulence_models {
                     // Compute eddy viscosity
                     let nu_sgs = (self.cs * delta).powi(2) * s_mag;
 
-                    // Compute SGS stress tensor
+                    // Compute SGS _stress tensor
                     for ii in 0..3 {
                         for jj in 0..3 {
                             sgs_stress[[ii, jj, i, j]] =
@@ -2511,7 +2504,7 @@ pub mod turbulence_models {
             // Apply test filter to velocity field
             let filtered_velocity = self.apply_test_filter_3d(&state.velocity)?;
 
-            // Compute Leonard stress (resolved stress)
+            // Compute Leonard _stress (resolved _stress)
             let leonard_stress = self.compute_leonard_stress_3d(state, &filtered_velocity)?;
 
             // Compute strain rate for filtered field
@@ -2552,7 +2545,7 @@ pub mod turbulence_models {
                     // Compute eddy viscosity with dynamic coefficient
                     let nu_sgs = (cs_dynamic * delta).powi(2) * s_mag;
 
-                    // Compute SGS stress tensor
+                    // Compute SGS _stress tensor
                     for ii in 0..3 {
                         for jj in 0..3 {
                             sgs_stress[[ii, jj, i, j]] =
@@ -2614,7 +2607,7 @@ pub mod turbulence_models {
                     let denominator = (s_d_mag_sq.powf(2.5) + omega_mag_sq.powf(1.25)).max(1e-12);
                     let nu_sgs = (cw * delta).powi(2) * numerator / denominator;
 
-                    // Compute SGS stress tensor
+                    // Compute SGS _stress tensor
                     for ii in 0..3 {
                         for jj in 0..3 {
                             sgs_stress[[ii, jj, i, j]] = -2.0 * nu_sgs * s_d[[ii, jj]];
@@ -2684,22 +2677,22 @@ pub mod turbulence_models {
             Ok(())
         }
 
-        fn compute_strain_rate_tensor_3d(&self, state: &FluidState3D) -> Result<Array4<f64>> {
+        fn compute_strain_rate_tensor_3d(_state: &FluidState3D) -> Result<Array4<f64>> {
             let mut strain_rate = Array4::zeros((3, 3, self.nx, self.ny));
 
             // Compute derivatives using central differences
             for i in 1..(self.nx - 1) {
                 for j in 1..(self.ny - 1) {
                     // du/dx, du/dy, du/dz
-                    let dudx = (state.velocity[0][[i + 1, j]] - state.velocity[0][[i - 1, j]])
+                    let dudx = (_state.velocity[0][[i + 1, j]] - _state.velocity[0][[i - 1, j]])
                         / (2.0 * self.dx);
-                    let dudy = (state.velocity[0][[i, j + 1]] - state.velocity[0][[i, j - 1]])
+                    let dudy = (_state.velocity[0][[i, j + 1]] - _state.velocity[0][[i, j - 1]])
                         / (2.0 * self.dy);
 
                     // dv/dx, dv/dy, dv/dz
-                    let dvdx = (state.velocity[1][[i + 1, j]] - state.velocity[1][[i - 1, j]])
+                    let dvdx = (_state.velocity[1][[i + 1, j]] - _state.velocity[1][[i - 1, j]])
                         / (2.0 * self.dx);
-                    let dvdy = (state.velocity[1][[i, j + 1]] - state.velocity[1][[i, j - 1]])
+                    let dvdy = (_state.velocity[1][[i, j + 1]] - _state.velocity[1][[i, j - 1]])
                         / (2.0 * self.dy);
 
                     // Strain rate tensor components
@@ -2715,24 +2708,24 @@ pub mod turbulence_models {
             Ok(strain_rate)
         }
 
-        fn compute_velocity_gradient_3d(&self, state: &FluidState3D) -> Result<Array4<f64>> {
+        fn compute_velocity_gradient_3d(_state: &FluidState3D) -> Result<Array4<f64>> {
             let mut grad_u = Array4::zeros((3, 3, self.nx, self.ny));
 
             // Compute derivatives using central differences
             for i in 1..(self.nx - 1) {
                 for j in 1..(self.ny - 1) {
                     // Velocity gradients
-                    grad_u[[0, 0, i, j]] = (state.velocity[0][[i + 1, j]]
-                        - state.velocity[0][[i - 1, j]])
+                    grad_u[[0, 0, i, j]] = (_state.velocity[0][[i + 1, j]]
+                        - _state.velocity[0][[i - 1, j]])
                         / (2.0 * self.dx);
-                    grad_u[[0, 1, i, j]] = (state.velocity[0][[i, j + 1]]
-                        - state.velocity[0][[i, j - 1]])
+                    grad_u[[0, 1, i, j]] = (_state.velocity[0][[i, j + 1]]
+                        - _state.velocity[0][[i, j - 1]])
                         / (2.0 * self.dy);
-                    grad_u[[1, 0, i, j]] = (state.velocity[1][[i + 1, j]]
-                        - state.velocity[1][[i - 1, j]])
+                    grad_u[[1, 0, i, j]] = (_state.velocity[1][[i + 1, j]]
+                        - _state.velocity[1][[i - 1, j]])
                         / (2.0 * self.dx);
-                    grad_u[[1, 1, i, j]] = (state.velocity[1][[i, j + 1]]
-                        - state.velocity[1][[i, j - 1]])
+                    grad_u[[1, 1, i, j]] = (_state.velocity[1][[i, j + 1]]
+                        - _state.velocity[1][[i, j - 1]])
                         / (2.0 * self.dy);
                 }
             }
@@ -2740,7 +2733,7 @@ pub mod turbulence_models {
             Ok(grad_u)
         }
 
-        fn apply_test_filter_3d(&self, velocity: &[Array2<f64>]) -> Result<Vec<Array2<f64>>> {
+        fn apply_test_filter_3d(_velocity: &[Array2<f64>]) -> Result<Vec<Array2<f64>>> {
             let mut filtered = vec![Array2::zeros((self.nx, self.ny)); 3];
 
             // Simple box filter
@@ -2754,7 +2747,7 @@ pub mod turbulence_models {
                         let mut sum = 0.0;
                         for di in 0..filter_width {
                             for dj in 0..filter_width {
-                                sum += velocity[comp]
+                                sum += _velocity[comp]
                                     [[i - filter_width / 2 + di, j - filter_width / 2 + dj]];
                             }
                         }
@@ -2780,7 +2773,7 @@ pub mod turbulence_models {
                         // 2D case
                         for jj in 0..2 {
                             let unfiltered_product =
-                                state.velocity[ii][[i, j]] * state.velocity[jj][[i, j]];
+                                state._velocity[ii][[i, j]] * state._velocity[jj][[i, j]];
                             let filtered_product =
                                 filtered_velocity[ii][[i, j]] * filtered_velocity[jj][[i, j]];
                             leonard[[ii, jj, i, j]] = unfiltered_product - filtered_product;
@@ -2854,7 +2847,7 @@ pub mod turbulence_models {
                     let dpdy =
                         (state.pressure[[i, j + 1]] - state.pressure[[i, j - 1]]) / (2.0 * self.dy);
 
-                    // SGS stress divergence
+                    // SGS _stress divergence
                     let dsgs_xx_dx = (sgs_stress[[0, 0, i + 1, j]] - sgs_stress[[0, 0, i - 1, j]])
                         / (2.0 * self.dx);
                     let dsgs_xy_dy = (sgs_stress[[0, 1, i, j + 1]] - sgs_stress[[0, 1, i, j - 1]])
@@ -2883,7 +2876,7 @@ pub mod turbulence_models {
             })
         }
 
-        fn apply_boundary_conditions_3d(&self, mut state: FluidState3D) -> Result<FluidState3D> {
+        fn apply_boundary_conditions_3d(mut state: FluidState3D) -> Result<FluidState3D> {
             // No-slip boundary conditions
             for j in 0..self.ny {
                 state.velocity[0][[0, j]] = 0.0;
@@ -2965,41 +2958,41 @@ pub mod turbulence_models {
             max_iterations: usize,
             tolerance: f64,
         ) -> Result<RANSState> {
-            let mut state = initial_state;
+            let mut _state = initial_state;
 
             for _iteration in 0..max_iterations {
-                let old_residual = self.compute_residual(&state)?;
+                let old_residual = self.compute_residual(&_state)?;
 
                 // Update turbulence quantities
-                state = self.update_turbulence_quantities(&state)?;
+                _state = self.update_turbulence_quantities(&_state)?;
 
                 // Update mean flow
-                state = self.update_mean_flow(&state)?;
+                _state = self.update_mean_flow(&_state)?;
 
                 // Apply boundary conditions
-                state = self.apply_rans_boundary_conditions(state)?;
+                _state = self.apply_rans_boundary_conditions(_state)?;
 
                 // Check convergence
-                let new_residual = self.compute_residual(&state)?;
+                let new_residual = self.compute_residual(&_state)?;
                 if (old_residual - new_residual).abs() < tolerance {
                     break;
                 }
             }
 
-            Ok(state)
+            Ok(_state)
         }
 
-        fn update_turbulence_quantities(&self, state: &RANSState) -> Result<RANSState> {
+        fn update_turbulence_quantities(_state: &RANSState) -> Result<RANSState> {
             match self.turbulence_model {
-                RANSModel::KEpsilon => self.update_k_epsilon(state),
-                RANSModel::KOmega => self.update_k_omega(state),
-                RANSModel::KOmegaSST => self.update_k_omega_sst(state),
-                RANSModel::ReynoldsStress => self.update_reynolds_stress(state),
+                RANSModel::KEpsilon => self.update_k_epsilon(_state),
+                RANSModel::KOmega => self.update_k_omega(_state),
+                RANSModel::KOmegaSST => self.update_k_omega_sst(_state),
+                RANSModel::ReynoldsStress => self.update_reynolds_stress(_state),
             }
         }
 
-        fn update_k_epsilon(&self, state: &RANSState) -> Result<RANSState> {
-            let mut new_state = state.clone();
+        fn update_k_epsilon(_state: &RANSState) -> Result<RANSState> {
+            let mut new_state = _state.clone();
 
             // k-ε model constants
             let c_mu = 0.09;
@@ -3010,14 +3003,14 @@ pub mod turbulence_models {
 
             for i in 1..(self.nx - 1) {
                 for j in 1..(self.ny - 1) {
-                    let k = state.turbulent_kinetic_energy[[i, j]].max(1e-10);
-                    let epsilon = state.dissipation_rate[[i, j]].max(1e-10);
+                    let k = _state.turbulent_kinetic_energy[[i, j]].max(1e-10);
+                    let epsilon = _state.dissipation_rate[[i, j]].max(1e-10);
 
                     // Compute turbulent viscosity
                     let nu_t = c_mu * k * k / epsilon;
 
                     // Production term
-                    let production = self.compute_production_k_epsilon(state, i, j, nu_t)?;
+                    let production = self.compute_production_k_epsilon(_state, i, j, nu_t)?;
 
                     // Update k equation
                     let dk_dt = production - epsilon;
@@ -3034,8 +3027,8 @@ pub mod turbulence_models {
             Ok(new_state)
         }
 
-        fn update_k_omega(&self, state: &RANSState) -> Result<RANSState> {
-            let mut new_state = state.clone();
+        fn update_k_omega(_state: &RANSState) -> Result<RANSState> {
+            let mut new_state = _state.clone();
 
             // k-ω model constants
             let beta_star = 0.09;
@@ -3046,19 +3039,19 @@ pub mod turbulence_models {
 
             for i in 1..(self.nx - 1) {
                 for j in 1..(self.ny - 1) {
-                    let k = state.turbulent_kinetic_energy[[i, j]].max(1e-10);
-                    let omega = state
+                    let k = _state.turbulent_kinetic_energy[[i, j]].max(1e-10);
+                    let omega = _state
                         .specific_dissipation_rate
                         .as_ref()
                         .map(|arr| arr[[i, j]])
-                        .unwrap_or(state.dissipation_rate[[i, j]] / k)
+                        .unwrap_or(_state.dissipation_rate[[i, j]] / k)
                         .max(1e-10);
 
                     // Compute turbulent viscosity
                     let nu_t = k / omega;
 
                     // Production term
-                    let production = self.compute_production_k_omega(state, i, j, nu_t)?;
+                    let production = self.compute_production_k_omega(_state, i, j, nu_t)?;
 
                     // Update k equation
                     let dk_dt = production - beta_star * k * omega;
@@ -3076,15 +3069,15 @@ pub mod turbulence_models {
             Ok(new_state)
         }
 
-        fn update_k_omega_sst(&self, state: &RANSState) -> Result<RANSState> {
+        fn update_k_omega_sst(_state: &RANSState) -> Result<RANSState> {
             // SST model combines k-ε and k-ω models using blending functions
-            let f1 = self.compute_sst_blending_function(state)?;
+            let f1 = self.compute_sst_blending_function(_state)?;
 
-            let k_omega_state = self.update_k_omega(state)?;
-            let k_epsilon_state = self.update_k_epsilon(state)?;
+            let k_omega_state = self.update_k_omega(_state)?;
+            let k_epsilon_state = self.update_k_epsilon(_state)?;
 
             // Blend the results
-            let mut new_state = state.clone();
+            let mut new_state = _state.clone();
             for i in 0..self.nx {
                 for j in 0..self.ny {
                     let blend = f1[[i, j]];
@@ -3102,21 +3095,21 @@ pub mod turbulence_models {
             Ok(new_state)
         }
 
-        fn update_reynolds_stress(&self, state: &RANSState) -> Result<RANSState> {
+        fn update_reynolds_stress(_state: &RANSState) -> Result<RANSState> {
             // Simplified Reynolds Stress Model
-            let mut new_state = state.clone();
+            let mut new_state = _state.clone();
 
             // This would involve solving transport equations for all Reynolds stress components
             // For simplicity, we use an algebraic stress model
             for i in 1..(self.nx - 1) {
                 for j in 1..(self.ny - 1) {
-                    let k = state.turbulent_kinetic_energy[[i, j]].max(1e-10);
-                    let epsilon = state.dissipation_rate[[i, j]].max(1e-10);
+                    let k = _state.turbulent_kinetic_energy[[i, j]].max(1e-10);
+                    let epsilon = _state.dissipation_rate[[i, j]].max(1e-10);
 
                     // Compute strain rate
-                    let s11 = self.compute_strain_component(state, i, j, 0, 0)?;
-                    let s12 = self.compute_strain_component(state, i, j, 0, 1)?;
-                    let s22 = self.compute_strain_component(state, i, j, 1, 1)?;
+                    let s11 = self.compute_strain_component(_state, i, j, 0, 0)?;
+                    let s12 = self.compute_strain_component(_state, i, j, 0, 1)?;
+                    let s22 = self.compute_strain_component(_state, i, j, 1, 1)?;
 
                     // Algebraic stress relations
                     let c1 = 1.8;
@@ -3213,7 +3206,7 @@ pub mod turbulence_models {
             }
         }
 
-        fn compute_sst_blending_function(&self, _state: &RANSState) -> Result<Array2<f64>> {
+        fn compute_sst_blending_function(_state: &RANSState) -> Result<Array2<f64>> {
             let mut f1 = Array2::ones((self.nx, self.ny));
 
             // Simplified blending function for SST model
@@ -3228,32 +3221,32 @@ pub mod turbulence_models {
             Ok(f1)
         }
 
-        fn update_mean_flow(&self, state: &RANSState) -> Result<RANSState> {
-            let mut new_state = state.clone();
+        fn update_mean_flow(_state: &RANSState) -> Result<RANSState> {
+            let mut new_state = _state.clone();
 
             // Update mean velocity using RANS equations
             for i in 1..(self.nx - 1) {
                 for j in 1..(self.ny - 1) {
-                    let k = state.turbulent_kinetic_energy[[i, j]];
-                    let epsilon = state.dissipation_rate[[i, j]];
+                    let k = _state.turbulent_kinetic_energy[[i, j]];
+                    let epsilon = _state.dissipation_rate[[i, j]];
                     let nu_t = 0.09 * k * k / epsilon.max(1e-10);
 
                     // Compute convective and diffusive terms
-                    let u = state.mean_velocity[0][[i, j]];
-                    let v = state.mean_velocity[1][[i, j]];
+                    let u = _state.mean_velocity[0][[i, j]];
+                    let v = _state.mean_velocity[1][[i, j]];
 
                     // Simplified momentum equations with turbulent viscosity
-                    let du_dt = -u * (u - state.mean_velocity[0][[i - 1, j]]) / state.dx
+                    let du_dt = -u * (u - _state.mean_velocity[0][[i - 1, j]]) / _state.dx
                         + nu_t
-                            * (state.mean_velocity[0][[i + 1, j]] - 2.0 * u
-                                + state.mean_velocity[0][[i - 1, j]])
-                            / (state.dx * state.dx);
+                            * (_state.mean_velocity[0][[i + 1, j]] - 2.0 * u
+                                + _state.mean_velocity[0][[i - 1, j]])
+                            / (_state.dx * _state.dx);
 
-                    let dv_dt = -v * (v - state.mean_velocity[1][[i, j - 1]]) / state.dy
+                    let dv_dt = -v * (v - _state.mean_velocity[1][[i, j - 1]]) / _state.dy
                         + nu_t
-                            * (state.mean_velocity[1][[i, j + 1]] - 2.0 * v
-                                + state.mean_velocity[1][[i, j - 1]])
-                            / (state.dy * state.dy);
+                            * (_state.mean_velocity[1][[i, j + 1]] - 2.0 * v
+                                + _state.mean_velocity[1][[i, j - 1]])
+                            / (_state.dy * _state.dy);
 
                     new_state.mean_velocity[0][[i, j]] += self.relaxation_factor * du_dt;
                     new_state.mean_velocity[1][[i, j]] += self.relaxation_factor * dv_dt;
@@ -3263,7 +3256,7 @@ pub mod turbulence_models {
             Ok(new_state)
         }
 
-        fn apply_rans_boundary_conditions(&self, mut state: RANSState) -> Result<RANSState> {
+        fn apply_rans_boundary_conditions(mut state: RANSState) -> Result<RANSState> {
             // Apply boundary conditions for all variables
             for j in 0..self.ny {
                 // Walls
@@ -3294,19 +3287,19 @@ pub mod turbulence_models {
             Ok(state)
         }
 
-        fn compute_residual(&self, state: &RANSState) -> Result<f64> {
+        fn compute_residual(_state: &RANSState) -> Result<f64> {
             let mut residual = 0.0;
             let mut count = 0;
 
             for i in 1..(self.nx - 1) {
                 for j in 1..(self.ny - 1) {
                     // Continuity equation residual
-                    let dudx = (state.mean_velocity[0][[i + 1, j]]
-                        - state.mean_velocity[0][[i - 1, j]])
-                        / (2.0 * state.dx);
-                    let dvdy = (state.mean_velocity[1][[i, j + 1]]
-                        - state.mean_velocity[1][[i, j - 1]])
-                        / (2.0 * state.dy);
+                    let dudx = (_state.mean_velocity[0][[i + 1, j]]
+                        - _state.mean_velocity[0][[i - 1, j]])
+                        / (2.0 * _state.dx);
+                    let dvdy = (_state.mean_velocity[1][[i, j + 1]]
+                        - _state.mean_velocity[1][[i, j - 1]])
+                        / (2.0 * _state.dy);
 
                     residual += (dudx + dvdy).abs();
                     count += 1;
@@ -3384,7 +3377,7 @@ pub mod turbulence_models {
         ) -> Self {
             let (ny, nx) = initial_grid.dim();
             let initial_level = MeshLevel {
-                grid: initial_grid,
+                _grid: initial_grid,
                 cell_sizes: Array2::from_elem((ny, nx), 1.0),
                 active_cells: Array2::from_elem((ny, nx), true),
                 level: 0,
@@ -3522,7 +3515,7 @@ pub mod turbulence_models {
         }
 
         /// Check if cell should be refined
-        fn should_refine(&self, indicator: f64) -> bool {
+        fn should_refine(_indicator: f64) -> bool {
             let threshold = match self.refinement_criteria {
                 RefinementCriteria::VelocityGradient { threshold } => threshold,
                 RefinementCriteria::Vorticity { threshold } => threshold,
@@ -3531,7 +3524,7 @@ pub mod turbulence_models {
                 RefinementCriteria::Combined => 1.0, // Default threshold
             };
 
-            indicator > threshold
+            _indicator > threshold
         }
 
         /// Create new refined mesh level
@@ -3542,7 +3535,7 @@ pub mod turbulence_models {
         ) -> Result<()> {
             if parent_level >= self.mesh_levels.len() {
                 return Err(IntegrateError::ValueError(
-                    "Invalid parent level index".to_string(),
+                    "Invalid parent _level index".to_string(),
                 ));
             }
 
@@ -3577,14 +3570,14 @@ pub mod turbulence_models {
                 grid: new_grid,
                 cell_sizes: new_cell_sizes,
                 active_cells: new_active_cells,
-                level: parent_level + 1,
+                _level: parent_level + 1,
             };
 
-            // Add new level or update existing one
+            // Add new _level or update existing one
             if self.mesh_levels.len() <= parent_level + 1 {
                 self.mesh_levels.push(new_level);
             } else {
-                // Merge with existing level
+                // Merge with existing _level
                 self.merge_mesh_levels(parent_level + 1, new_level)?;
             }
 
@@ -3592,10 +3585,10 @@ pub mod turbulence_models {
         }
 
         /// Merge new refined cells with existing mesh level
-        fn merge_mesh_levels(&mut self, level_idx: usize, new_level: MeshLevel) -> Result<()> {
-            if level_idx >= self.mesh_levels.len() {
+        fn merge_mesh_levels(_level_idx: usize, new_level: MeshLevel) -> Result<()> {
+            if _level_idx >= self.mesh_levels.len() {
                 return Err(IntegrateError::ValueError(
-                    "Invalid level index for merging".to_string(),
+                    "Invalid _level index for merging".to_string(),
                 ));
             }
 
@@ -3617,7 +3610,7 @@ pub mod turbulence_models {
         }
 
         /// Coarsen mesh where refinement is no longer needed
-        fn coarsen_mesh(&mut self, indicators: &Array2<f64>) -> Result<()> {
+        fn coarsen_mesh(_indicators: &Array2<f64>) -> Result<()> {
             // Remove fine level cells where indicator is below coarsening threshold
             for level_idx in (1..self.mesh_levels.len()).rev() {
                 let level = &mut self.mesh_levels[level_idx];
@@ -3630,8 +3623,8 @@ pub mod turbulence_models {
                             let parent_j = j / 2;
                             let parent_i = i / 2;
 
-                            if parent_j < indicators.nrows() && parent_i < indicators.ncols() {
-                                let indicator = indicators[[parent_j, parent_i]];
+                            if parent_j < _indicators.nrows() && parent_i < _indicators.ncols() {
+                                let indicator = _indicators[[parent_j, parent_i]];
                                 if indicator < self.coarsening_threshold {
                                     level.active_cells[[j, i]] = false;
                                 }
@@ -3645,12 +3638,12 @@ pub mod turbulence_models {
         }
 
         /// Get current active mesh points for a given level
-        pub fn get_active_mesh_points(&self, level: usize) -> Result<Vec<(usize, usize)>> {
-            if level >= self.mesh_levels.len() {
-                return Err(IntegrateError::ValueError("Invalid mesh level".to_string()));
+        pub fn get_active_mesh_points(_level: usize) -> Result<Vec<(usize, usize)>> {
+            if _level >= self.mesh_levels.len() {
+                return Err(IntegrateError::ValueError("Invalid mesh _level".to_string()));
             }
 
-            let mesh_level = &self.mesh_levels[level];
+            let mesh_level = &self.mesh_levels[_level];
             let (ny, nx) = mesh_level.active_cells.dim();
             let mut active_points = Vec::new();
 
@@ -3716,10 +3709,10 @@ pub mod turbulence_models {
 
             // Initialize boundary layer thickness (simplified)
             let boundary_layer_thickness = Array1::from_shape_fn(nx, |i| {
-                let x = grid_x[i];
-                if x > 0.0 {
+                let _x = grid_x[i];
+                if _x > 0.0 {
                     // Blasius boundary layer thickness estimate
-                    5.0 * (x / reynolds_number).sqrt()
+                    5.0 * (_x / reynolds_number).sqrt()
                 } else {
                     0.0
                 }
@@ -3749,7 +3742,7 @@ pub mod turbulence_models {
             velocity: &[Array2<f64>],
             turbulent_quantities: &RANSState,
         ) -> Result<()> {
-            let (_ny, _nx) = turbulent_viscosity.dim();
+            let (_ny_nx) = turbulent_viscosity.dim();
 
             match self.wall_treatment {
                 WallTreatment::LowRe => {
@@ -3804,8 +3797,7 @@ pub mod turbulence_models {
         fn apply_wall_functions(
             &self,
             turbulent_viscosity: &mut Array2<f64>,
-            velocity: &[Array2<f64>],
-            _turbulent_quantities: &RANSState,
+            velocity: &[Array2<f64>], _turbulent_quantities: &RANSState,
         ) -> Result<()> {
             let (ny, nx) = turbulent_viscosity.dim();
 
@@ -3880,7 +3872,7 @@ pub mod turbulence_models {
         }
 
         /// Calculate y+ value
-        fn calculate_y_plus(&self, j: usize, i: usize, velocity: &[Array2<f64>]) -> Result<f64> {
+        fn calculate_y_plus(j: usize, i: usize, velocity: &[Array2<f64>]) -> Result<f64> {
             let y = self.wall_distance[[j, i]];
 
             // Estimate wall shear velocity
@@ -3900,9 +3892,9 @@ pub mod turbulence_models {
         }
 
         /// Calculate viscosity damping function for low-Re models
-        fn calculate_viscosity_damping_function(&self, re_t: f64, y_plus: f64) -> f64 {
+        fn calculate_viscosity_damping_function(_re_t: f64, y_plus: f64) -> f64 {
             // Simplified Launder-Sharma damping function
-            let f_mu = (1.0 - (-0.0165 * re_t).exp()) * (1.0 + 20.5 / (re_t + 1e-10));
+            let f_mu = (1.0 - (-0.0165 * _re_t).exp()) * (1.0 + 20.5 / (_re_t + 1e-10));
 
             // Additional near-wall damping
             let f_wall = 1.0 - (-y_plus / 25.0).exp();
@@ -3934,7 +3926,7 @@ pub mod turbulence_models {
         }
 
         /// Find edge velocity (free stream velocity)
-        fn find_edge_velocity(&self, i: usize, velocity: &[Array2<f64>]) -> Result<f64> {
+        fn find_edge_velocity(i: usize, velocity: &[Array2<f64>]) -> Result<f64> {
             let (ny, nx) = velocity[0].dim();
 
             if i >= nx {
@@ -3957,7 +3949,7 @@ pub mod turbulence_models {
             velocity: &[Array2<f64>],
             target_velocity: f64,
         ) -> Result<f64> {
-            let (ny, nx) = velocity[0].dim();
+            let (ny, nx) = _velocity[0].dim();
 
             if i >= nx {
                 return Ok(0.0);
@@ -3965,7 +3957,7 @@ pub mod turbulence_models {
 
             // Search from wall upward
             for j in 1..ny {
-                if velocity[0][[j, i]] >= target_velocity {
+                if _velocity[0][[j, i]] >= target_velocity {
                     return Ok(self.wall_distance[[j, i]]);
                 }
             }
@@ -3977,7 +3969,6 @@ pub mod turbulence_models {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
 
         #[test]
         fn test_les_solver() {
@@ -4039,7 +4030,7 @@ pub mod turbulence_models {
             let solver = LESolver::new(8, 8, 8, 0.1, 0.1, 0.1, SGSModel::WALE);
 
             let velocity = vec![
-                Array2::from_shape_fn((8, 8), |(i, _j)| (i as f64 * 0.1).sin()),
+                Array2::from_shape_fn((8, 8), |(i_j)| (i as f64 * 0.1).sin()),
                 Array2::zeros((8, 8)),
                 Array2::zeros((8, 8)),
             ];
@@ -4107,9 +4098,9 @@ pub struct CompressibleState {
 impl CompressibleFlowSolver {
     /// Create new compressible flow solver
     #[allow(clippy::too_many_arguments)]
-    pub fn new(nx: usize, ny: usize, nz: usize, dx: f64, dy: f64, dz: f64) -> Self {
+    pub fn new(_nx: usize, ny: usize, nz: usize, dx: f64, dy: f64, dz: f64) -> Self {
         Self {
-            nx,
+            _nx,
             ny,
             nz,
             dx,
@@ -4146,7 +4137,7 @@ impl CompressibleFlowSolver {
     }
 
     /// Solve compressible Euler/Navier-Stokes equations using SIMD
-    pub fn solve_step(&mut self, state: &mut CompressibleState, dt: f64) -> Result<()> {
+    pub fn solve_step(&self, state: &mut CompressibleState, dt: f64) -> Result<()> {
         // Update derived quantities
         self.update_derived_quantities_simd(state)?;
 
@@ -4227,7 +4218,7 @@ impl CompressibleFlowSolver {
     }
 
     /// Compute conservative fluxes using SIMD-optimized finite difference
-    fn compute_fluxes_simd(&self, state: &CompressibleState) -> Result<CompressibleFluxes> {
+    fn compute_fluxes_simd(_state: &CompressibleState) -> Result<CompressibleFluxes> {
         let mut density_flux = Array3::zeros((self.nx, self.ny, self.nz));
         let mut momentum_flux = vec![
             Array3::zeros((self.nx, self.ny, self.nz)),
@@ -4240,12 +4231,12 @@ impl CompressibleFlowSolver {
         for j in 1..self.ny - 1 {
             for k in 1..self.nz - 1 {
                 // Extract rows for SIMD processing
-                let density_row: Array1<f64> = state.density.slice(s![.., j, k]).to_owned();
-                let momentum_u_row: Array1<f64> = state.momentum[0].slice(s![.., j, k]).to_owned();
-                let momentum_v_row: Array1<f64> = state.momentum[1].slice(s![.., j, k]).to_owned();
-                let momentum_w_row: Array1<f64> = state.momentum[2].slice(s![.., j, k]).to_owned();
-                let energy_row: Array1<f64> = state.energy.slice(s![.., j, k]).to_owned();
-                let pressure_row: Array1<f64> = state.pressure.slice(s![.., j, k]).to_owned();
+                let density_row: Array1<f64> = _state.density.slice(s![.., j, k]).to_owned();
+                let momentum_u_row: Array1<f64> = _state.momentum[0].slice(s![.., j, k]).to_owned();
+                let momentum_v_row: Array1<f64> = _state.momentum[1].slice(s![.., j, k]).to_owned();
+                let momentum_w_row: Array1<f64> = _state.momentum[2].slice(s![.., j, k]).to_owned();
+                let energy_row: Array1<f64> = _state.energy.slice(s![.., j, k]).to_owned();
+                let pressure_row: Array1<f64> = _state.pressure.slice(s![.., j, k]).to_owned();
 
                 // Calculate velocity
                 let u_row = f64::simd_div(&momentum_u_row.view(), &density_row.view());
@@ -4342,7 +4333,7 @@ impl CompressibleFlowSolver {
     }
 
     /// Apply boundary conditions for compressible flow
-    fn apply_compressible_boundary_conditions(&self, state: &mut CompressibleState) -> Result<()> {
+    fn apply_compressible_boundary_conditions(_state: &mut CompressibleState) -> Result<()> {
         // Reflective boundary conditions for solid walls
         // Zero gradient for outflow boundaries
         // Prescribed values for inflow boundaries
@@ -4351,19 +4342,19 @@ impl CompressibleFlowSolver {
         for j in 0..self.ny {
             for k in 0..self.nz {
                 // Left boundary (reflective)
-                state.density[[0, j, k]] = state.density[[1, j, k]];
-                state.momentum[0][[0, j, k]] = -state.momentum[0][[1, j, k]]; // Reflect u
-                state.momentum[1][[0, j, k]] = state.momentum[1][[1, j, k]]; // Copy v
-                state.momentum[2][[0, j, k]] = state.momentum[2][[1, j, k]]; // Copy w
-                state.energy[[0, j, k]] = state.energy[[1, j, k]];
+                _state.density[[0, j, k]] = _state.density[[1, j, k]];
+                _state.momentum[0][[0, j, k]] = -_state.momentum[0][[1, j, k]]; // Reflect u
+                _state.momentum[1][[0, j, k]] = _state.momentum[1][[1, j, k]]; // Copy v
+                _state.momentum[2][[0, j, k]] = _state.momentum[2][[1, j, k]]; // Copy w
+                _state.energy[[0, j, k]] = _state.energy[[1, j, k]];
 
                 // Right boundary (outflow - zero gradient)
                 let last = self.nx - 1;
-                state.density[[last, j, k]] = state.density[[last - 1, j, k]];
-                state.momentum[0][[last, j, k]] = state.momentum[0][[last - 1, j, k]];
-                state.momentum[1][[last, j, k]] = state.momentum[1][[last - 1, j, k]];
-                state.momentum[2][[last, j, k]] = state.momentum[2][[last - 1, j, k]];
-                state.energy[[last, j, k]] = state.energy[[last - 1, j, k]];
+                _state.density[[last, j, k]] = _state.density[[last - 1, j, k]];
+                _state.momentum[0][[last, j, k]] = _state.momentum[0][[last - 1, j, k]];
+                _state.momentum[1][[last, j, k]] = _state.momentum[1][[last - 1, j, k]];
+                _state.momentum[2][[last, j, k]] = _state.momentum[2][[last - 1, j, k]];
+                _state.energy[[last, j, k]] = _state.energy[[last - 1, j, k]];
             }
         }
 
@@ -4373,19 +4364,19 @@ impl CompressibleFlowSolver {
     }
 
     /// Calculate adaptive time step based on CFL condition
-    pub fn calculate_adaptive_timestep(&self, state: &CompressibleState) -> f64 {
+    pub fn calculate_adaptive_timestep(_state: &CompressibleState) -> f64 {
         let mut max_eigenvalue: f64 = 0.0;
 
         for i in 0..self.nx {
             for j in 0..self.ny {
                 for k in 0..self.nz {
-                    let rho = state.density[[i, j, k]];
-                    let u = state.momentum[0][[i, j, k]] / rho;
-                    let v = state.momentum[1][[i, j, k]] / rho;
-                    let w = state.momentum[2][[i, j, k]] / rho;
+                    let rho = _state.density[[i, j, k]];
+                    let u = _state.momentum[0][[i, j, k]] / rho;
+                    let v = _state.momentum[1][[i, j, k]] / rho;
+                    let w = _state.momentum[2][[i, j, k]] / rho;
 
                     // Sound speed: c = √(γp/ρ)
-                    let c = (self.gamma * state.pressure[[i, j, k]] / rho).sqrt();
+                    let c = (self.gamma * _state.pressure[[i, j, k]] / rho).sqrt();
 
                     // Maximum eigenvalues in each direction
                     let lambda_x = (u.abs() + c) / self.dx;
@@ -4444,7 +4435,7 @@ pub struct TurbulenceConstants {
 }
 
 impl Default for TurbulenceConstants {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             c_mu: 0.09,
             c_1: 1.44,
@@ -4458,9 +4449,9 @@ impl Default for TurbulenceConstants {
 
 impl AdvancedTurbulenceModel {
     /// Create new turbulence model
-    pub fn new(model_type: TurbulenceModelType, nx: usize, ny: usize, nz: usize) -> Self {
+    pub fn new(_model_type: TurbulenceModelType, nx: usize, ny: usize, nz: usize) -> Self {
         Self {
-            model_type,
+            _model_type,
             constants: TurbulenceConstants::default(),
             wall_distance: Array3::ones((nx, ny, nz)),
         }
@@ -4994,7 +4985,7 @@ impl SpectralNavierStokesSolver {
     }
 
     /// Generate 1D wavenumber grid
-    fn wavenumber_grid_1d(&self, n: usize, l: f64) -> Array1<f64> {
+    fn wavenumber_grid_1d(n: usize, l: f64) -> Array1<f64> {
         let mut k = Array1::zeros(n);
         let fundamental = 2.0 * std::f64::consts::PI / l;
 
@@ -5187,12 +5178,12 @@ impl SpectralNavierStokesSolver {
     }
 
     /// Apply dealiasing in 2D
-    fn apply_dealiasing_2d(&self, field: &Array2<f64>) -> Result<Array2<f64>> {
+    fn apply_dealiasing_2d(_field: &Array2<f64>) -> Result<Array2<f64>> {
         match self.dealiasing {
-            DealiasingStrategy::None => Ok(field.clone()),
+            DealiasingStrategy::None => Ok(_field.clone()),
             DealiasingStrategy::TwoThirds => {
                 // Apply 2/3 rule dealiasing
-                let field_hat = self.fft_2d_forward(field)?;
+                let field_hat = self.fft_2d_forward(_field)?;
                 let mut dealiased_hat = field_hat.clone();
 
                 let cutoff_x = (2 * self.nx) / 3;
@@ -5213,17 +5204,17 @@ impl SpectralNavierStokesSolver {
             }
             _ => {
                 // Other dealiasing strategies would be implemented here
-                Ok(field.clone())
+                Ok(_field.clone())
             }
         }
     }
 
     /// Apply dealiasing in 3D
-    fn apply_dealiasing_3d(&self, field: &Array3<f64>) -> Result<Array3<f64>> {
+    fn apply_dealiasing_3d(_field: &Array3<f64>) -> Result<Array3<f64>> {
         match self.dealiasing {
-            DealiasingStrategy::None => Ok(field.clone()),
+            DealiasingStrategy::None => Ok(_field.clone()),
             DealiasingStrategy::TwoThirds => {
-                let field_hat = self.fft_3d_forward(field)?;
+                let field_hat = self.fft_3d_forward(_field)?;
                 let mut dealiased_hat = field_hat.clone();
                 let nz = self.nz.unwrap();
 
@@ -5255,13 +5246,13 @@ impl SpectralNavierStokesSolver {
 
                 self.fft_3d_backward(&dealiased_hat)
             }
-            _ => Ok(field.clone()),
+            _ => Ok(_field.clone()),
         }
     }
 
     /// Forward 2D FFT (simplified implementation)
     #[allow(dead_code)]
-    fn fft_2d_forward(&self, field: &Array2<f64>) -> Result<Array2<num_complex::Complex<f64>>> {
+    fn fft_2d_forward(_field: &Array2<f64>) -> Result<Array2<num_complex::Complex<f64>>> {
         let mut result = Array2::zeros((self.nx, self.ny));
 
         // Simplified FFT implementation using DFT for demonstration
@@ -5277,7 +5268,7 @@ impl SpectralNavierStokesSolver {
                             * (kx as f64 * x as f64 / self.nx as f64
                                 + ky as f64 * y as f64 / self.ny as f64);
                         let exp_factor = num_complex::Complex::new(phase.cos(), phase.sin());
-                        sum += field[[x, y]] * exp_factor;
+                        sum += _field[[x, y]] * exp_factor;
                     }
                 }
 
@@ -5321,7 +5312,7 @@ impl SpectralNavierStokesSolver {
 
     /// Forward 3D FFT (simplified implementation)
     #[allow(dead_code)]
-    fn fft_3d_forward(&self, field: &Array3<f64>) -> Result<Array3<num_complex::Complex<f64>>> {
+    fn fft_3d_forward(_field: &Array3<f64>) -> Result<Array3<num_complex::Complex<f64>>> {
         let nz = self.nz.unwrap();
         let mut result = Array3::zeros((self.nx, self.ny, nz));
 
@@ -5340,7 +5331,7 @@ impl SpectralNavierStokesSolver {
                                         + kz as f64 * z as f64 / nz as f64);
                                 let exp_factor =
                                     num_complex::Complex::new(phase.cos(), phase.sin());
-                                sum += field[[x, y, z]] * exp_factor;
+                                sum += _field[[x, y, z]] * exp_factor;
                             }
                         }
                     }
@@ -5454,9 +5445,7 @@ impl SpectralNavierStokesSolver {
 
 /// Advanced GPU memory pool manager for fluid dynamics computations
 pub mod advanced_gpu_acceleration {
-    use super::*;
     use std::collections::HashMap;
-    use std::sync::{Arc, Mutex};
 
     /// GPU memory pool for efficient memory management
     pub struct GPUMemoryPool {
@@ -5496,12 +5485,12 @@ pub mod advanced_gpu_acceleration {
         }
 
         /// Allocate GPU buffer from pool
-        pub fn allocate_buffer(&self, size: usize) -> Result<GPUBuffer> {
+        pub fn allocate_buffer(_size: usize) -> Result<GPUBuffer> {
             let mut pool = self.buffer_pool.lock().unwrap();
             let mut current = self.current_usage.lock().unwrap();
 
             // Try to reuse existing buffer
-            if let Some(buffers) = pool.get_mut(&size) {
+            if let Some(buffers) = pool.get_mut(&_size) {
                 if let Some(mut buffer) = buffers.pop() {
                     buffer.in_use = true;
                     return Ok(buffer);
@@ -5510,12 +5499,12 @@ pub mod advanced_gpu_acceleration {
 
             // Create new buffer
             let buffer = GPUBuffer {
-                size,
-                id: (*current as u64) << 32 | (size as u64 & 0xFFFFFFFF),
+                _size,
+                id: (*current as u64) << 32 | (_size as u64 & 0xFFFFFFFF),
                 in_use: true,
             };
 
-            *current += size;
+            *current += _size;
 
             // Update peak usage
             let mut peak = self.peak_usage.lock().unwrap();
@@ -5527,7 +5516,7 @@ pub mod advanced_gpu_acceleration {
         }
 
         /// Return buffer to pool
-        pub fn deallocate_buffer(&self, mut buffer: GPUBuffer) {
+        pub fn deallocate_buffer(mut buffer: GPUBuffer) {
             buffer.in_use = false;
             let mut pool = self.buffer_pool.lock().unwrap();
 
@@ -5563,14 +5552,13 @@ pub mod advanced_gpu_acceleration {
         }
 
         /// Detect optimal work group size based on hardware
-        fn detect_optimal_work_group_size() -> usize {
+        fn detect_optimal_work_group_size(&self) -> usize {
             // Simulate GPU hardware detection
             let cores = num_cpus::get();
             match cores {
                 1..=8 => 64,
                 9..=16 => 128,
-                17..=32 => 256,
-                _ => 512,
+                17..=32 => 256_ => 512,
             }
         }
 
@@ -5663,7 +5651,6 @@ pub mod advanced_gpu_acceleration {
 
 /// Neural network-based adaptive algorithm selection
 pub mod neural_adaptive_solver {
-    use super::*;
     use ndarray::array;
 
     /// Problem characteristics for neural network input
@@ -5751,7 +5738,7 @@ pub mod neural_adaptive_solver {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap_or(0);
 
             match max_idx {
@@ -5767,20 +5754,19 @@ pub mod neural_adaptive_solver {
                 },
                 2 => AlgorithmRecommendation::SemiImplicit {
                     theta: 0.5 + 0.3 * (characteristics.reynolds_number / 1000.0).min(1.0),
-                },
-                _ => AlgorithmRecommendation::Spectral {
+                }_ => AlgorithmRecommendation::Spectral {
                     dealiasing: characteristics.reynolds_number > 100.0,
                 },
             }
         }
 
         /// Sigmoid activation function
-        fn sigmoid(&self, x: &Array1<f64>) -> Array1<f64> {
+        fn sigmoid(x: &Array1<f64>) -> Array1<f64> {
             x.mapv(|v| 1.0 / (1.0 + (-v).exp()))
         }
 
         /// Softmax activation function
-        fn softmax(&self, x: &Array1<f64>) -> Array1<f64> {
+        fn softmax(x: &Array1<f64>) -> Array1<f64> {
             let max_val = x.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
             let exp_x = x.mapv(|v| (v - max_val).exp());
             let sum_exp = exp_x.sum();
@@ -5788,10 +5774,10 @@ pub mod neural_adaptive_solver {
         }
 
         /// Update neural network weights based on performance feedback
-        pub fn update_weights(&mut self, performance_feedback: f64) {
+        pub fn update_weights(_performance_feedback: f64) {
             // Simple gradient descent update (simplified)
             let learning_rate = 0.001;
-            let adjustment = learning_rate * (performance_feedback - 0.5);
+            let adjustment = learning_rate * (_performance_feedback - 0.5);
 
             self.weights_input_hidden
                 .mapv_inplace(|w| w * (1.0 + adjustment));
@@ -5803,7 +5789,6 @@ pub mod neural_adaptive_solver {
 
 /// Streaming computation optimization for large-scale simulations
 pub mod streaming_optimization {
-    use super::*;
 
     /// Streaming compute manager for memory-efficient large simulations
     pub struct StreamingComputeManager {
@@ -5819,8 +5804,8 @@ pub mod streaming_optimization {
 
     impl StreamingComputeManager {
         /// Create new streaming compute manager
-        pub fn new(memory_budget_gb: f64) -> Self {
-            let memory_budget = (memory_budget_gb * 1e9) as usize;
+        pub fn new(_memory_budget_gb: f64) -> Self {
+            let memory_budget = (_memory_budget_gb * 1e9) as usize;
             Self {
                 memory_budget,
                 current_usage: 0,
@@ -5830,10 +5815,10 @@ pub mod streaming_optimization {
         }
 
         /// Calculate optimal chunk size based on memory budget
-        fn calculate_optimal_chunk_size(memory_budget: usize) -> (usize, usize, usize) {
+        fn calculate_optimal_chunk_size(_memory_budget: usize) -> (usize, usize, usize) {
             // Assume 8 bytes per float64, 4 fields (u,v,w,p), safety factor of 2
             let bytes_per_cell = 8 * 4 * 2;
-            let max_cells = memory_budget / bytes_per_cell;
+            let max_cells = _memory_budget / bytes_per_cell;
 
             // Try to make chunks roughly cubic
             let cells_per_dim = (max_cells as f64).powf(1.0 / 3.0) as usize;
@@ -5849,7 +5834,7 @@ pub mod streaming_optimization {
             let (total_nx, total_ny, total_nz) = total_domain;
             let (chunk_nx, chunk_ny, chunk_nz) = self.chunk_size;
 
-            // Process domain in overlapping chunks
+            // Process _domain in overlapping chunks
             for i_chunk in 0..total_nx.div_ceil(chunk_nx) {
                 for j_chunk in 0..total_ny.div_ceil(chunk_ny) {
                     for k_chunk in 0..total_nz.div_ceil(chunk_nz) {
@@ -5878,8 +5863,8 @@ pub mod streaming_optimization {
         }
 
         /// Create fluid state for a chunk
-        fn create_chunk_state(&self, chunk_size: (usize, usize, usize)) -> Result<FluidState3D> {
-            let (nx, ny, nz) = chunk_size;
+        fn create_chunk_state(_chunk_size: (usize, usize, usize)) -> Result<FluidState3D> {
+            let (nx, ny, nz) = _chunk_size;
             Ok(FluidState3D {
                 velocity: vec![
                     Array3::zeros((nx, ny, nz)),
@@ -5896,8 +5881,8 @@ pub mod streaming_optimization {
         }
 
         /// Update memory usage tracking
-        fn update_memory_usage(&mut self, chunk_size: (usize, usize, usize)) {
-            let (nx, ny, nz) = chunk_size;
+        fn update_memory_usage(_chunk_size: (usize, usize, usize)) {
+            let (nx, ny, nz) = _chunk_size;
             let chunk_memory = nx * ny * nz * 8 * 4; // 4 fields, 8 bytes each
             self.current_usage = chunk_memory;
         }
@@ -5912,7 +5897,6 @@ pub mod streaming_optimization {
 
 /// Enhanced multiphase flow solver with advanced interface tracking
 pub mod multiphase_flow {
-    use super::*;
 
     /// Phase properties for multiphase simulations
     #[derive(Debug, Clone)]
@@ -6018,7 +6002,7 @@ pub mod multiphase_flow {
         }
 
         /// Initialize multiphase flow state
-        pub fn initialize_state(&self, dx: f64, dy: f64, dz: f64) -> MultiphaseFlowState {
+        pub fn initialize_state(_dx: f64, dy: f64, dz: f64) -> MultiphaseFlowState {
             let (nx, ny, nz) = self.grid_dims;
 
             let velocity = vec![
@@ -6052,7 +6036,7 @@ pub mod multiphase_flow {
             // Initialize level sets and phase fields based on tracking method
             let level_sets = match self.tracking_method {
                 InterfaceTrackingMethod::LevelSet | InterfaceTrackingMethod::CLSVOF => {
-                    self.initialize_level_sets(&volume_fractions, dx, dy, dz)
+                    self.initialize_level_sets(&volume_fractions, _dx, dy, dz)
                 }
                 _ => vec![Array3::zeros((nx, ny, nz)); self.n_phases - 1],
             };
@@ -6073,7 +6057,7 @@ pub mod multiphase_flow {
                 interface_normals: vec![Array3::zeros((nx, ny, nz)); 3],
                 interface_curvature: Array3::zeros((nx, ny, nz)),
                 time: 0.0,
-                dx,
+                _dx,
                 dy,
                 dz,
             }
@@ -6119,60 +6103,60 @@ pub mod multiphase_flow {
         }
 
         /// Initialize phase field variables for diffuse interface method
-        fn initialize_phase_fields(&self, volume_fractions: &[Array3<f64>]) -> Vec<Array3<f64>> {
-            volume_fractions.to_vec()
+        fn initialize_phase_fields(_volume_fractions: &[Array3<f64>]) -> Vec<Array3<f64>> {
+            _volume_fractions.to_vec()
         }
 
         /// Evolve multiphase flow for one time step
-        pub fn step(&self, state: &mut MultiphaseFlowState) -> Result<()> {
+        pub fn step(_state: &mut MultiphaseFlowState) -> Result<()> {
             // 1. Update interface tracking
-            self.update_interface_tracking(state)?;
+            self.update_interface_tracking(_state)?;
 
             // 2. Compute interface properties (normals, curvature)
-            self.compute_interface_properties(state)?;
+            self.compute_interface_properties(_state)?;
 
             // 3. Solve momentum equation with surface tension
-            self.solve_momentum_equation(state)?;
+            self.solve_momentum_equation(_state)?;
 
             // 4. Solve pressure correction
-            self.solve_pressure_correction(state)?;
+            self.solve_pressure_correction(_state)?;
 
             // 5. Update volume fractions/level sets
-            self.advect_interface(state)?;
+            self.advect_interface(_state)?;
 
             // 6. Enforce mass conservation
-            self.enforce_mass_conservation(state)?;
+            self.enforce_mass_conservation(_state)?;
 
-            state.time += self.dt;
+            _state.time += self.dt;
             Ok(())
         }
 
         /// Update interface tracking based on chosen method
-        fn update_interface_tracking(&self, state: &mut MultiphaseFlowState) -> Result<()> {
+        fn update_interface_tracking(_state: &mut MultiphaseFlowState) -> Result<()> {
             match self.tracking_method {
                 InterfaceTrackingMethod::VolumeOfFluid => {
-                    self.update_vof_interface(state)?;
+                    self.update_vof_interface(_state)?;
                 }
                 InterfaceTrackingMethod::LevelSet => {
-                    self.update_level_set_interface(state)?;
+                    self.update_level_set_interface(_state)?;
                 }
                 InterfaceTrackingMethod::PhaseField => {
-                    self.update_phase_field_interface(state)?;
+                    self.update_phase_field_interface(_state)?;
                 }
                 InterfaceTrackingMethod::CLSVOF => {
-                    self.update_clsvof_interface(state)?;
+                    self.update_clsvof_interface(_state)?;
                 }
             }
             Ok(())
         }
 
         /// Update Volume of Fluid interface
-        fn update_vof_interface(&self, state: &mut MultiphaseFlowState) -> Result<()> {
+        fn update_vof_interface(_state: &mut MultiphaseFlowState) -> Result<()> {
             let (nx, ny, nz) = self.grid_dims;
 
             // PLIC (Piecewise Linear Interface Calculation) reconstruction
             for phase_idx in 0..self.n_phases {
-                let vf = &mut state.volume_fractions[phase_idx];
+                let vf = &mut _state.volume_fractions[phase_idx];
 
                 // Apply geometric reconstruction and advection
                 for i in 1..nx - 1 {
@@ -6184,13 +6168,13 @@ pub mod multiphase_flow {
                                 let reconstructed_vf = self.apply_plic_advection(
                                     vf[[i, j, k]],
                                     &normal,
-                                    &state.velocity,
+                                    &_state.velocity,
                                     i,
                                     j,
                                     k,
-                                    state.dx,
-                                    state.dy,
-                                    state.dz,
+                                    _state.dx,
+                                    _state.dy,
+                                    _state.dz,
                                 );
                                 vf[[i, j, k]] = reconstructed_vf.max(0.0).min(1.0);
                             }
@@ -6229,8 +6213,7 @@ pub mod multiphase_flow {
         /// Apply PLIC advection
         fn apply_plic_advection(
             &self,
-            current_vf: f64,
-            _normal: &[f64; 3],
+            current_vf: f64, _normal: &[f64; 3],
             velocity: &[Array3<f64>],
             i: usize,
             j: usize,
@@ -6254,20 +6237,20 @@ pub mod multiphase_flow {
         }
 
         /// Update Level Set interface
-        fn update_level_set_interface(&self, _state: &mut MultiphaseFlowState) -> Result<()> {
+        fn update_level_set_interface(_state: &mut MultiphaseFlowState) -> Result<()> {
             // Level set advection and reinitialization
             // Implementation would include Hamilton-Jacobi equation solving
             Ok(())
         }
 
         /// Update Phase Field interface
-        fn update_phase_field_interface(&self, state: &mut MultiphaseFlowState) -> Result<()> {
+        fn update_phase_field_interface(_state: &mut MultiphaseFlowState) -> Result<()> {
             // Cahn-Hilliard equation for phase field evolution
-            let interface_width = 3.0 * state.dx.min(state.dy).min(state.dz);
+            let interface_width = 3.0 * _state.dx.min(_state.dy).min(_state.dz);
             let mobility = 1e-4;
 
             for phase_idx in 0..self.n_phases {
-                let phi = &mut state.phase_fields[phase_idx];
+                let phi = &mut _state.phase_fields[phase_idx];
                 let (nx, ny, nz) = phi.dim();
 
                 // Apply Cahn-Hilliard evolution
@@ -6275,7 +6258,7 @@ pub mod multiphase_flow {
                     for j in 1..ny - 1 {
                         for k in 1..nz - 1 {
                             let laplacian =
-                                self.compute_laplacian(phi, i, j, k, state.dx, state.dy, state.dz);
+                                self.compute_laplacian(phi, i, j, k, _state.dx, _state.dy, _state.dz);
                             let chemical_potential =
                                 self.compute_chemical_potential(phi[[i, j, k]], interface_width);
 
@@ -6316,19 +6299,19 @@ pub mod multiphase_flow {
         }
 
         /// Compute chemical potential for phase field
-        fn compute_chemical_potential(&self, phi: f64, interface_width: f64) -> f64 {
+        fn compute_chemical_potential(_phi: f64, interface_width: f64) -> f64 {
             let epsilon = interface_width * interface_width;
-            phi * (phi * phi - 1.0) / epsilon
+            _phi * (_phi * _phi - 1.0) / epsilon
         }
 
         /// Update Coupled Level Set - Volume of Fluid interface
-        fn update_clsvof_interface(&self, _state: &mut MultiphaseFlowState) -> Result<()> {
+        fn update_clsvof_interface(_state: &mut MultiphaseFlowState) -> Result<()> {
             // Combine advantages of both VOF and Level Set methods
             Ok(())
         }
 
         /// Compute interface properties (normals and curvature)
-        fn compute_interface_properties(&self, state: &mut MultiphaseFlowState) -> Result<()> {
+        fn compute_interface_properties(_state: &mut MultiphaseFlowState) -> Result<()> {
             let (nx, ny, nz) = self.grid_dims;
 
             // Compute interface normals and curvature
@@ -6338,27 +6321,27 @@ pub mod multiphase_flow {
                         match self.tracking_method {
                             InterfaceTrackingMethod::VolumeOfFluid => {
                                 let normal = self.compute_interface_normal_vof(
-                                    &state.volume_fractions[0],
+                                    &_state.volume_fractions[0],
                                     i,
                                     j,
                                     k,
                                 );
-                                state.interface_normals[0][[i, j, k]] = normal[0];
-                                state.interface_normals[1][[i, j, k]] = normal[1];
-                                state.interface_normals[2][[i, j, k]] = normal[2];
+                                _state.interface_normals[0][[i, j, k]] = normal[0];
+                                _state.interface_normals[1][[i, j, k]] = normal[1];
+                                _state.interface_normals[2][[i, j, k]] = normal[2];
                             }
                             InterfaceTrackingMethod::LevelSet => {
-                                if !state.level_sets.is_empty() {
+                                if !_state.level_sets.is_empty() {
                                     let curvature = self.compute_level_set_curvature(
-                                        &state.level_sets[0],
+                                        &_state.level_sets[0],
                                         i,
                                         j,
                                         k,
-                                        state.dx,
-                                        state.dy,
-                                        state.dz,
+                                        _state.dx,
+                                        _state.dy,
+                                        _state.dz,
                                     );
-                                    state.interface_curvature[[i, j, k]] = curvature;
+                                    _state.interface_curvature[[i, j, k]] = curvature;
                                 }
                             }
                             _ => {}
@@ -6411,32 +6394,32 @@ pub mod multiphase_flow {
         }
 
         /// Solve momentum equation with surface tension forces
-        fn solve_momentum_equation(&self, state: &mut MultiphaseFlowState) -> Result<()> {
-            let (_nx, _ny, _nz) = self.grid_dims;
+        fn solve_momentum_equation(_state: &mut MultiphaseFlowState) -> Result<()> {
+            let (_nx_ny_nz) = self.grid_dims;
 
             // Apply surface tension forces using Continuum Surface Force (CSF) model
             if self.use_continuum_surface_force {
-                self.apply_surface_tension_forces(state)?;
+                self.apply_surface_tension_forces(_state)?;
             }
 
             // Apply gravity and other body forces
-            self.apply_body_forces(state)?;
+            self.apply_body_forces(_state)?;
 
             Ok(())
         }
 
         /// Apply surface tension forces using CSF model
-        fn apply_surface_tension_forces(&self, state: &mut MultiphaseFlowState) -> Result<()> {
+        fn apply_surface_tension_forces(_state: &mut MultiphaseFlowState) -> Result<()> {
             let (nx, ny, nz) = self.grid_dims;
 
             for i in 1..nx - 1 {
                 for j in 1..ny - 1 {
                     for k in 1..nz - 1 {
                         // Compute surface tension force
-                        let curvature = state.interface_curvature[[i, j, k]];
-                        let normal_x = state.interface_normals[0][[i, j, k]];
-                        let normal_y = state.interface_normals[1][[i, j, k]];
-                        let normal_z = state.interface_normals[2][[i, j, k]];
+                        let curvature = _state.interface_curvature[[i, j, k]];
+                        let normal_x = _state.interface_normals[0][[i, j, k]];
+                        let normal_y = _state.interface_normals[1][[i, j, k]];
+                        let normal_z = _state.interface_normals[2][[i, j, k]];
 
                         let sigma = self.phase_properties[0].surface_tension;
                         let force_x = sigma * curvature * normal_x;
@@ -6444,10 +6427,10 @@ pub mod multiphase_flow {
                         let force_z = sigma * curvature * normal_z;
 
                         // Add to velocity field
-                        let rho = self.compute_local_density(state, i, j, k);
-                        state.velocity[0][[i, j, k]] += self.dt * force_x / rho;
-                        state.velocity[1][[i, j, k]] += self.dt * force_y / rho;
-                        state.velocity[2][[i, j, k]] += self.dt * force_z / rho;
+                        let rho = self.compute_local_density(_state, i, j, k);
+                        _state.velocity[0][[i, j, k]] += self.dt * force_x / rho;
+                        _state.velocity[1][[i, j, k]] += self.dt * force_y / rho;
+                        _state.velocity[2][[i, j, k]] += self.dt * force_z / rho;
                     }
                 }
             }
@@ -6456,7 +6439,7 @@ pub mod multiphase_flow {
         }
 
         /// Apply body forces (gravity, etc.)
-        fn apply_body_forces(&self, state: &mut MultiphaseFlowState) -> Result<()> {
+        fn apply_body_forces(_state: &mut MultiphaseFlowState) -> Result<()> {
             let gravity = -9.81; // m/s^2
             let (nx, ny, nz) = self.grid_dims;
 
@@ -6464,7 +6447,7 @@ pub mod multiphase_flow {
                 for j in 0..ny {
                     for k in 0..nz {
                         // Apply gravity in z-direction
-                        state.velocity[2][[i, j, k]] += self.dt * gravity;
+                        _state.velocity[2][[i, j, k]] += self.dt * gravity;
                     }
                 }
             }
@@ -6489,19 +6472,19 @@ pub mod multiphase_flow {
         }
 
         /// Solve pressure correction equation
-        fn solve_pressure_correction(&self, _state: &mut MultiphaseFlowState) -> Result<()> {
+        fn solve_pressure_correction(_state: &mut MultiphaseFlowState) -> Result<()> {
             // Pressure Poisson equation with variable density
             Ok(())
         }
 
         /// Advect interface using velocity field
-        fn advect_interface(&self, _state: &mut MultiphaseFlowState) -> Result<()> {
+        fn advect_interface(_state: &mut MultiphaseFlowState) -> Result<()> {
             // Interface advection based on tracking method
             Ok(())
         }
 
         /// Enforce mass conservation for each phase
-        fn enforce_mass_conservation(&self, state: &mut MultiphaseFlowState) -> Result<()> {
+        fn enforce_mass_conservation(_state: &mut MultiphaseFlowState) -> Result<()> {
             let (nx, ny, nz) = self.grid_dims;
 
             // Normalize volume fractions to ensure sum = 1
@@ -6510,18 +6493,18 @@ pub mod multiphase_flow {
                     for k in 0..nz {
                         let mut total_vf = 0.0;
                         for phase_idx in 0..self.n_phases {
-                            total_vf += state.volume_fractions[phase_idx][[i, j, k]];
+                            total_vf += _state.volume_fractions[phase_idx][[i, j, k]];
                         }
 
                         if total_vf > 1e-12 {
                             for phase_idx in 0..self.n_phases {
-                                state.volume_fractions[phase_idx][[i, j, k]] /= total_vf;
+                                _state.volume_fractions[phase_idx][[i, j, k]] /= total_vf;
                             }
                         } else {
                             // Default to first phase if all volume fractions are zero
-                            state.volume_fractions[0][[i, j, k]] = 1.0;
+                            _state.volume_fractions[0][[i, j, k]] = 1.0;
                             for phase_idx in 1..self.n_phases {
-                                state.volume_fractions[phase_idx][[i, j, k]] = 0.0;
+                                _state.volume_fractions[phase_idx][[i, j, k]] = 0.0;
                             }
                         }
                     }
@@ -6532,7 +6515,7 @@ pub mod multiphase_flow {
         }
 
         /// Compute adaptive time step based on CFL condition and surface tension
-        pub fn compute_adaptive_timestep(&self, state: &MultiphaseFlowState) -> f64 {
+        pub fn compute_adaptive_timestep(_state: &MultiphaseFlowState) -> f64 {
             let (nx, ny, nz) = self.grid_dims;
             let mut max_velocity: f64 = 1e-12;
             let mut max_curvature: f64 = 1e-12;
@@ -6541,20 +6524,20 @@ pub mod multiphase_flow {
             for i in 0..nx {
                 for j in 0..ny {
                     for k in 0..nz {
-                        let u = state.velocity[0][[i, j, k]];
-                        let v = state.velocity[1][[i, j, k]];
-                        let w = state.velocity[2][[i, j, k]];
+                        let u = _state.velocity[0][[i, j, k]];
+                        let v = _state.velocity[1][[i, j, k]];
+                        let w = _state.velocity[2][[i, j, k]];
                         let vel_mag = (u * u + v * v + w * w).sqrt();
                         max_velocity = max_velocity.max(vel_mag);
 
-                        let curvature = state.interface_curvature[[i, j, k]].abs();
+                        let curvature = _state.interface_curvature[[i, j, k]].abs();
                         max_curvature = max_curvature.max(curvature);
                     }
                 }
             }
 
             // CFL condition
-            let dx_min = state.dx.min(state.dy).min(state.dz);
+            let dx_min = _state.dx.min(_state.dy).min(_state.dz);
             let dt_cfl = self.cfl_number * dx_min / max_velocity;
 
             // Surface tension constraint
@@ -6577,9 +6560,6 @@ pub mod multiphase_flow {
 
 #[cfg(test)]
 mod advanced_performance_tests {
-    use super::advanced_gpu_acceleration::*;
-    use super::neural_adaptive_solver::*;
-    use super::streaming_optimization::*;
 
     #[test]
     fn test_gpu_memory_pool() {
@@ -6620,7 +6600,7 @@ mod advanced_performance_tests {
         let total_domain = (128, 128, 128);
 
         let mut processed_chunks = 0;
-        let result = manager.process_streaming(total_domain, |_chunk_state, _offset| {
+        let result = manager.process_streaming(total_domain, |_chunk_state_offset| {
             processed_chunks += 1;
             Ok(())
         });
@@ -6632,7 +6612,6 @@ mod advanced_performance_tests {
 
 #[cfg(test)]
 mod compressible_tests {
-    use super::*;
 
     #[test]
     fn test_compressible_solver_initialization() {

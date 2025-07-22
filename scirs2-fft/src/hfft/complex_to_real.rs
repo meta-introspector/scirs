@@ -6,7 +6,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::fft;
 use ndarray::{Array, Array2, ArrayView, ArrayView2, IxDyn};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 
@@ -35,8 +35,8 @@ use super::utility::try_as_complex;
 /// # Examples
 ///
 /// ```
-/// use num_complex::Complex64;
-/// use scirs2_fft::hfft;
+/// use num__complex::Complex64;
+/// use scirs2__fft::hfft;
 ///
 /// // Create a simple Hermitian-symmetric array (DC component is real)
 /// let x = vec![
@@ -121,7 +121,7 @@ fn _hfft_complex(x: &[Complex64], n: Option<usize>, _norm: Option<&str>) -> FFTR
     let mut output = Vec::with_capacity(n_real);
 
     // Compute FFT of the input
-    // Note: We ignore the norm parameter for now as the fft function doesn't support it yet
+    // Note: We ignore the _norm parameter for now as the fft function doesn't support it yet
     let fft_result = fft(x, Some(n_fft))?;
 
     // Extract real parts from the FFT result - the result should be real
@@ -207,8 +207,7 @@ where
 fn _hfft2_complex(
     x: &ArrayView2<Complex64>,
     shape: Option<(usize, usize)>,
-    axes: Option<(usize, usize)>,
-    _norm: Option<&str>,
+    axes: Option<(usize, usize)>, _norm: Option<&str>,
 ) -> FFTResult<Array2<f64>> {
     // Extract dimensions
     let (n_rows, n_cols) = x.dim();
@@ -236,7 +235,7 @@ fn _hfft2_complex(
         }
 
         // Perform 1D FFT for each column
-        // Note: We ignore the norm parameter for now
+        // Note: We ignore the _norm parameter for now
         let fft_col = fft(&col, Some(out_rows))?;
 
         // Store the result in the temporary array
@@ -257,7 +256,7 @@ fn _hfft2_complex(
         }
 
         // Perform 1D FFT for each row
-        // Note: We ignore the norm parameter for now
+        // Note: We ignore the _norm parameter for now
         let fft_row = fft(&row, Some(out_cols))?;
 
         // Store only the real part in the output
@@ -305,19 +304,19 @@ where
         // Special case for handling Complex64 input (common case)
         if std::any::TypeId::of::<T>() == std::any::TypeId::of::<Complex64>() {
             // Create a view with the correct type
-            let ptr = x.as_ptr() as *const Complex64;
-            let complex_view = unsafe { ArrayView::from_shape_ptr(IxDyn(x.shape()), ptr) };
+            let ptr = _x.as_ptr() as *const Complex64;
+            let complex_view = unsafe { ArrayView::from_shape_ptr(IxDyn(_x.shape()), ptr) };
 
             return _hfftn_complex(&complex_view, shape, axes, norm, overwrite_x, workers);
         }
     }
 
     // For other types, convert to complex and call the internal implementation
-    let x_shape = x.shape().to_vec();
+    let x_shape = _x.shape().to_vec();
 
     // Convert input to complex array
     let complex_input = Array::from_shape_fn(IxDyn(&x_shape), |idx| {
-        let val = x[idx.clone()];
+        let val = _x[idx.clone()];
 
         // Try to convert to complex directly
         if let Some(c) = try_as_complex(val) {
@@ -348,15 +347,12 @@ where
 fn _hfftn_complex(
     x: &ArrayView<Complex64, IxDyn>,
     shape: Option<Vec<usize>>,
-    axes: Option<Vec<usize>>,
-    _norm: Option<&str>,
-    _overwrite_x: Option<bool>,
-    _workers: Option<usize>,
+    axes: Option<Vec<usize>>, _norm: Option<&str>, _overwrite_x: Option<bool>, _workers: Option<usize>,
 ) -> FFTResult<Array<f64, IxDyn>> {
-    // The overwrite_x and workers parameters are not used in this implementation
+    // The overwrite_x and _workers parameters are not used in this implementation
     // They are included for API compatibility with scipy's fftn
 
-    let x_shape = x.shape().to_vec();
+    let x_shape = _x.shape().to_vec();
     let ndim = x_shape.len();
 
     // Handle empty array case
@@ -401,12 +397,12 @@ fn _hfftn_complex(
 
     // Simple case: 1D transform
     if ndim == 1 {
-        let mut complex_result = Vec::with_capacity(x.len());
-        for &val in x.iter() {
+        let mut complex_result = Vec::with_capacity(_x.len());
+        for &val in _x.iter() {
             complex_result.push(val);
         }
 
-        // Note: We ignore the norm parameter for now
+        // Note: We ignore the _norm parameter for now
         let fft_result = fft(&complex_result, Some(out_shape[0]))?;
         let mut real_result = Array::zeros(IxDyn(&[out_shape[0]]));
 
@@ -418,7 +414,7 @@ fn _hfftn_complex(
     }
 
     // For multi-dimensional transforms, we have to transform along each axis
-    let mut array = Array::from_shape_fn(IxDyn(&x_shape), |idx| x[idx.clone()]);
+    let mut array = Array::from_shape_fn(IxDyn(&x_shape), |idx| _x[idx.clone()]);
 
     // For each axis, perform a 1D transform along that axis
     for &axis in &transform_axes {
@@ -447,7 +443,7 @@ fn _hfftn_complex(
         }
 
         // Perform the 1D FFT
-        // Note: We ignore the norm parameter for now
+        // Note: We ignore the _norm parameter for now
         let fft_result = fft(&fiber, Some(axis_dim))?;
 
         // Store the result back in the working array

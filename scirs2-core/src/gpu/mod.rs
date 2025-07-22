@@ -207,12 +207,12 @@ impl GpuDevice {
     }
 
     /// Get the device ID
-    pub fn id(&self) -> usize {
+    pub fn device_id(&self) -> usize {
         self.device_id
     }
 
     /// Compile a kernel from source
-    pub fn compile_kernel(&self, _source: &str, entry_point: &str) -> Result<GpuKernel, GpuError> {
+    pub fn compile_kernel(&self, source: &str, entry_point: &str) -> Result<GpuKernel, GpuError> {
         // Placeholder implementation
         Ok(GpuKernel {
             backend: self.backend,
@@ -304,7 +304,7 @@ pub trait GpuDataType: Copy + Send + Sync + 'static {}
 pub struct GpuPtr<T: GpuDataType> {
     ptr: u64,
     size: usize,
-    _phantom: PhantomData<T>,
+    phantom: PhantomData<T>,
 }
 
 impl<T: GpuDataType> GpuPtr<T> {
@@ -313,7 +313,7 @@ impl<T: GpuDataType> GpuPtr<T> {
         Ok(GpuPtr {
             ptr: 0x1000_0000, // Placeholder address
             size,
-            _phantom: PhantomData,
+            phantom: PhantomData,
         })
     }
 
@@ -323,7 +323,7 @@ impl<T: GpuDataType> GpuPtr<T> {
     }
 
     /// Get the size in elements
-    pub fn size(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.size
     }
 }
@@ -382,7 +382,7 @@ impl GpuDataType for isize {}
 pub struct GpuBuffer<T: GpuDataType> {
     inner: Arc<dyn GpuBufferImpl>,
     size: usize,
-    _phantom: PhantomData<T>,
+    phantom: PhantomData<T>,
 }
 
 impl<T: GpuDataType> GpuBuffer<T> {
@@ -391,7 +391,7 @@ impl<T: GpuDataType> GpuBuffer<T> {
         Self {
             inner,
             size,
-            _phantom: PhantomData,
+            phantom: PhantomData,
         }
     }
 
@@ -634,7 +634,7 @@ impl GpuContext {
     }
 
     /// Get the backend name
-    pub const fn backend_name(&self) -> &str {
+    pub fn backend_name(&self) -> &str {
         match self.backend {
             GpuBackend::Cuda => "CUDA",
             GpuBackend::Rocm => "ROCm",
@@ -696,10 +696,7 @@ impl GpuContext {
     }
 
     /// Compile a kernel with metadata
-    fn compile_kernel_with_metadata(
-        &self,
-        source: &str,
-        _metadata: &kernels::KernelMetadata,
+    fn compile_kernel_with_metadata(&self, source: &str, metadata: &kernels::KernelMetadata,
     ) -> Result<GpuKernelHandle, GpuError> {
         self.execute(|compiler| compiler.compile(source))
     }
@@ -719,10 +716,7 @@ impl GpuContext {
     }
 
     /// Launch a kernel with the given parameters
-    pub fn launch_kernel(
-        &self,
-        kernel_name: &str,
-        grid_size: (usize, usize, usize),
+    pub fn launch_kernel(&self, kernel_name: &str, grid_size: (usize, usize, usize),
         block_size: (usize, usize, usize),
         args: &[DynamicKernelArg],
     ) -> Result<(), GpuError> {
@@ -777,11 +771,7 @@ impl GpuContext {
 
     /// Execute a kernel with dynamic compilation and parameter passing
     /// This method is expected by scirs2-vision for GPU operations
-    pub fn execute_kernel(
-        &self,
-        source: &str,
-        buffers: &[&dyn std::any::Any],
-        work_groups: (u32, u32, u32),
+    pub fn execute_kernel(&self, source: &str, buffers: &[GpuBuffer<f32>], work_groups: (u32, u32, u32),
         int_params: &[u32],
         float_params: &[f32],
     ) -> Result<(), GpuError> {
@@ -860,12 +850,7 @@ pub(crate) trait GpuCompilerImpl: Send + Sync {
     fn compile(&self, source: &str) -> Result<Arc<dyn GpuKernelImpl>, GpuError>;
 
     /// Compile a typed kernel
-    fn compile_typed(
-        &self,
-        name: &str,
-        input_type: std::any::TypeId,
-        output_type: std::any::TypeId,
-    ) -> Arc<dyn GpuKernelImpl>;
+    fn compile_typed(&self, name: &str, input_type: std::any::TypeId, output_type: std::any::TypeId) -> Arc<dyn GpuKernelImpl>;
 }
 
 /// GPU context implementation trait
@@ -942,18 +927,13 @@ impl GpuBufferImpl for CpuBuffer {
 struct CpuCompiler;
 
 impl GpuCompilerImpl for CpuCompiler {
-    fn compile(&self, _source: &str) -> Result<Arc<dyn GpuKernelImpl>, GpuError> {
+    fn compile(&self, source: &str) -> Result<Arc<dyn GpuKernelImpl>, GpuError> {
         // In a real implementation, we would parse and execute the kernel
         // For now, just return a dummy implementation
         Ok(Arc::new(CpuKernel))
     }
 
-    fn compile_typed(
-        &self,
-        _name: &str,
-        _input_type: std::any::TypeId,
-        _output_type: std::any::TypeId,
-    ) -> Arc<dyn GpuKernelImpl> {
+    fn compile_typed(&self, _name: &str, _input_type: std::any::TypeId, _output_type: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
         // In a real implementation, we would select an appropriate implementation
         // For now, just return a dummy implementation
         Arc::new(CpuKernel)
@@ -964,27 +944,27 @@ impl GpuCompilerImpl for CpuCompiler {
 struct CpuKernel;
 
 impl GpuKernelImpl for CpuKernel {
-    fn set_buffer(&self, _name: &str, _buffer: &Arc<dyn GpuBufferImpl>) {
+    fn set_buffer(&self, name: &str, buffer: &Arc<dyn GpuBufferImpl>) {
         // In a real implementation, we would store the buffer
     }
 
-    fn set_u32(&self, _name: &str, _value: u32) {
+    fn set_u32(&self, name: &str, value: u32) {
         // In a real implementation, we would store the value
     }
 
-    fn set_i32(&self, _name: &str, _value: i32) {
+    fn set_i32(&self, name: &str, value: i32) {
         // In a real implementation, we would store the value
     }
 
-    fn set_f32(&self, _name: &str, _value: f32) {
+    fn set_f32(&self, name: &str, value: f32) {
         // In a real implementation, we would store the value
     }
 
-    fn set_f64(&self, _name: &str, _value: f64) {
+    fn set_f64(&self, name: &str, value: f64) {
         // In a real implementation, we would store the value
     }
 
-    fn dispatch(&self, _work_groups: [u32; 3]) {
+    fn dispatch(&self, work_groups: [u32; 3]) {
         // In a real implementation, we would execute the kernel
     }
 }
@@ -1034,7 +1014,7 @@ mod tests {
 
         #[cfg(all(feature = "metal", target_os = "macos"))]
         assert!(GpuBackend::Metal.is_available());
-        #[cfg(not(all(feature = "metal", target_os = "macos")))]
+        #[cfg(not(all(feature = metal, target_os = "macos")))]
         assert!(!GpuBackend::Metal.is_available());
     }
 

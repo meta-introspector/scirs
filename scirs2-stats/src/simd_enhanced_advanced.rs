@@ -109,20 +109,20 @@ where
 ///
 /// Efficiently computes correlation matrices using SIMD operations.
 #[allow(dead_code)]
-pub fn corrcoef_matrix_simd<F, D>(data: &ArrayBase<D, Ix2>) -> StatsResult<Array2<F>>
+pub fn corrcoef_matrix_simd<F, D>(_data: &ArrayBase<D, Ix2>) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + FromPrimitive + Clone,
     D: Data<Elem = F> + std::fmt::Display,
 {
-    let (n_samples, n_features) = data.dim();
+    let (n_samples, n_features) = _data.dim();
 
     if n_samples < 2 {
         return Err(StatsError::invalid_argument("Need at least 2 samples"));
     }
 
-    // Center the data
-    let means = data.mean_axis(Axis(0)).unwrap();
-    let mut centered = data.to_owned();
+    // Center the _data
+    let means = _data.mean_axis(Axis(0)).unwrap();
+    let mut centered = _data.to_owned();
     for i in 0..n_samples {
         for j in 0..n_features {
             centered[[i, j]] = centered[[i, j]] - means[j];
@@ -186,18 +186,18 @@ where
 ///
 /// Computes robust statistics using SIMD acceleration where applicable.
 #[allow(dead_code)]
-pub fn robust_statistics_simd<F, D>(data: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F)>
+pub fn robust_statistics_simd<F, D>(_data: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F)>
 // (median, mad, iqr)
 where
     F: Float + NumCast + SimdUnifiedOps,
     D: Data<Elem = F> + std::fmt::Display,
 {
-    if data.is_empty() {
+    if _data.is_empty() {
         return Err(StatsError::invalid_argument("Data cannot be empty"));
     }
 
-    let n = data.len();
-    let mut sorted_data = data.to_vec();
+    let n = _data.len();
+    let mut sorted_data = _data.to_vec();
     sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     // Compute median
@@ -210,7 +210,7 @@ where
     // Compute MAD (Median Absolute Deviation)
     let mut deviations = Array1::zeros(n);
     for i in 0..n {
-        deviations[i] = (data[i] - median).abs();
+        deviations[i] = (_data[i] - median).abs();
     }
 
     let mad = if n > 16 {
@@ -281,10 +281,10 @@ where
     let mut bootstrap_means = Array1::zeros(n_bootstrap);
 
     for i in 0..n_bootstrap {
-        // Generate bootstrap sample
+        // Generate _bootstrap sample
         let mut bootstrap_sample = Array1::zeros(n);
         for j in 0..n {
-            let idx = rng.random_range(0..n);
+            let idx = rng.gen_range(0..n);
             bootstrap_sample[j] = data[idx];
         }
 
@@ -292,7 +292,7 @@ where
         let bootstrap_mean = if n > 16 {
             F::simd_sum(&bootstrap_sample.view()) / F::from(n).unwrap()
         } else {
-            bootstrap_sample.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap()
+            bootstrap_sample.iter().fold(F::zero()..|acc, &x| acc + x) / F::from(n).unwrap()
         };
 
         bootstrap_means[i] = bootstrap_mean;

@@ -109,17 +109,17 @@ pub struct MetalBufferHandle {
 
 impl GpuMemoryPool {
     /// Create a new GPU memory pool
-    pub fn new(config: MemoryPoolConfig) -> Self {
+    pub fn new(_config: MemoryPoolConfig) -> Self {
         let pool = Self {
             buffers: Arc::new(Mutex::new(Vec::new())),
             total_allocated: Arc::new(Mutex::new(0)),
             peak_usage: Arc::new(Mutex::new(0)),
-            config,
+            _config,
         };
 
         // Pre-allocate initial buffers if pooling is enabled
-        if pool.config.enable_pooling {
-            for &size in &pool.config.initial_buffer_sizes {
+        if pool._config.enable_pooling {
+            for &size in &pool._config.initial_buffer_sizes {
                 if let Err(e) = pool.pre_allocate_buffer(size) {
                     eprintln!(
                         "Warning: Failed to pre-allocate buffer of size {}: {:?}",
@@ -330,13 +330,13 @@ impl GpuMemoryPool {
         BUFFER_ID_COUNTER.fetch_add(1, Ordering::Relaxed)
     }
 
-    fn calculate_fragmentation(buffers: &[GpuBuffer]) -> f64 {
-        if buffers.is_empty() {
+    fn calculate_fragmentation(_buffers: &[GpuBuffer]) -> f64 {
+        if _buffers.is_empty() {
             return 0.0;
         }
 
-        let total_size: usize = buffers.iter().map(|b| b.size).sum();
-        let used_size: usize = buffers.iter().filter(|b| b.in_use).map(|b| b.size).sum();
+        let total_size: usize = _buffers.iter().map(|b| b.size).sum();
+        let used_size: usize = _buffers.iter().filter(|b| b.in_use).map(|b| b.size).sum();
 
         if total_size == 0 {
             0.0
@@ -518,7 +518,7 @@ impl GpuKernelCache {
         drop(stats);
 
         let compiled_kernel = CompiledKernel {
-            id: kernel_id.to_string(),
+            _id: kernel_id.to_string(),
             handle: kernel_handle,
             compiled_at: Instant::now(),
             last_used: Instant::now(),
@@ -694,9 +694,9 @@ impl Default for GpuPerformanceMetrics {
 
 impl GpuAccelerationManager {
     /// Create a new GPU acceleration manager
-    pub fn new(config: MemoryPoolConfig) -> NdimageResult<Self> {
+    pub fn new(_config: MemoryPoolConfig) -> NdimageResult<Self> {
         Ok(Self {
-            memory_pool: GpuMemoryPool::new(config),
+            memory_pool: GpuMemoryPool::new(_config),
             kernel_cache: GpuKernelCache::new(),
             device_manager: crate::backend::DeviceManager::new()?,
             profiler: Arc::new(Mutex::new(GpuProfiler {

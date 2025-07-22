@@ -98,7 +98,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
         // Validate parameters
         if input_size == 0 || hidden_size == 0 {
             return Err(NeuralError::InvalidArchitecture(
-                "Input size and hidden size must be positive".to_string(),
+                "Input _size and hidden _size must be positive".to_string(),
             ));
         }
         // Initialize weights with Xavier/Glorot initialization
@@ -106,7 +106,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
             NeuralError::InvalidArchitecture("Failed to convert scale factor".to_string())
         })?;
         let scale_hh = F::from(1.0 / (hidden_size as f64).sqrt()).ok_or_else(|| {
-            NeuralError::InvalidArchitecture("Failed to convert hidden size scale".to_string())
+            NeuralError::InvalidArchitecture("Failed to convert hidden _size scale".to_string())
         })?;
 
         // Helper function to create weight matrices
@@ -130,16 +130,16 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
         // Initialize all weights and biases
         let weight_ir = create_weight_matrix(hidden_size, input_size, scale_ih)?;
         let weight_hr = create_weight_matrix(hidden_size, hidden_size, scale_hh)?;
-        let bias_ir: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
-        let bias_hr: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_ir: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_hr: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
         let weight_iz = create_weight_matrix(hidden_size, input_size, scale_ih)?;
         let weight_hz = create_weight_matrix(hidden_size, hidden_size, scale_hh)?;
-        let bias_iz: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
-        let bias_hz: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_iz: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_hz: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
         let weight_in = create_weight_matrix(hidden_size, input_size, scale_ih)?;
         let weight_hn = create_weight_matrix(hidden_size, hidden_size, scale_hh)?;
-        let bias_in: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
-        let bias_hn: Array<F, _> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_in: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
+        let bias_hn: Array<F, IxDyn> = Array::zeros(IxDyn(&[hidden_size]));
         // Initialize gradients
         let gradients = vec![
             Array::zeros(weight_ir.dim()),
@@ -210,11 +210,11 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
             )));
         }
         // Initialize gates
-        let mut r_gate: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
-        let mut z_gate: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
-        let mut n_gate: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
+        let mut r_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut z_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
+        let mut n_gate: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
         // Initialize new hidden state
-        let mut new_h: Array<F, _> = Array::zeros((batch_size, self.hidden_size));
+        let mut new_h: Array<F, IxDyn> = Array::zeros(IxDyn(&[batch_size, self.hidden_size]));
         // Compute gates for each batch item
         for b in 0..batch_size {
             for i in 0..self.hidden_size {
@@ -325,8 +325,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for GRU<
 
     fn backward(
         &self,
-        input: &Array<F, IxDyn>,
-        _grad_output: &Array<F, IxDyn>,
+        input: &Array<F, IxDyn>, _grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         // Retrieve cached values
         let input_ref = self.input_cache.read().map_err(|_| {

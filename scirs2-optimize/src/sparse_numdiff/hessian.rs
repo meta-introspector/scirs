@@ -13,17 +13,17 @@ use crate::error::OptimizeError;
 
 // Helper function to replace get_index and set_value_by_index which are not available in CsrArray
 #[allow(dead_code)]
-fn update_sparse_value(matrix: &mut CsrArray<f64>, row: usize, col: usize, value: f64) {
+fn update_sparse_value(_matrix: &mut CsrArray<f64>, row: usize, col: usize, value: f64) {
     // Only update if the position is non-zero in the sparsity pattern and set operation succeeds
-    if matrix.get(row, col) != 0.0 && matrix.set(row, col, value).is_err() {
+    if _matrix.get(row, col) != 0.0 && _matrix.set(row, col, value).is_err() {
         // If this fails, just silently continue
     }
 }
 
 // Helper function to check if a position exists in the sparsity pattern
 #[allow(dead_code)]
-fn exists_in_sparsity(matrix: &CsrArray<f64>, row: usize, col: usize) -> bool {
-    matrix.get(row, col) != 0.0
+fn exists_in_sparsity(_matrix: &CsrArray<f64>, row: usize, col: usize) -> bool {
+    _matrix.get(row, col) != 0.0
 }
 
 /// Computes a sparse Hessian matrix using finite differences
@@ -65,14 +65,14 @@ where
         return compute_hessian_from_gradient(gradient_fn, x, g0, sparsity_pattern, &options);
     }
 
-    // If no sparsity pattern provided, create a dense one
+    // If no sparsity _pattern provided, create a dense one
     let sparsity_owned: CsrArray<f64>;
     let sparsity = match sparsity_pattern {
         Some(p) => {
-            // Validate sparsity pattern
+            // Validate sparsity _pattern
             if p.shape().0 != n || p.shape().1 != n {
                 return Err(OptimizeError::ValueError(format!(
-                    "Sparsity pattern shape {:?} does not match input dimension {}",
+                    "Sparsity _pattern shape {:?} does not match input dimension {}",
                     p.shape(),
                     n
                 )));
@@ -80,7 +80,7 @@ where
             p
         }
         None => {
-            // Create dense sparsity pattern
+            // Create dense sparsity _pattern
             let mut data = Vec::with_capacity(n * n);
             let mut rows = Vec::with_capacity(n * n);
             let mut cols = Vec::with_capacity(n * n);
@@ -98,7 +98,7 @@ where
         }
     };
 
-    // Ensure sparsity pattern is symmetric (Hessian is symmetric)
+    // Ensure sparsity _pattern is symmetric (Hessian is symmetric)
     // In practice, we only need to compute the upper triangle and then
     // fill in the lower triangle at the end
     let symmetric_sparsity = make_symmetric_sparsity(sparsity)?;
@@ -110,8 +110,7 @@ where
             compute_hessian_2point(func, x, f0_val, &symmetric_sparsity, &options)
         }
         "3-point" => compute_hessian_3point(func, x, &symmetric_sparsity, &options),
-        "cs" => compute_hessian_complex_step(func, x, &symmetric_sparsity, &options),
-        _ => Err(OptimizeError::ValueError(format!(
+        "cs" => compute_hessian_complex_step(func, x, &symmetric_sparsity, &options, _ => Err(OptimizeError::ValueError(format!(
             "Unknown method: {}. Valid options are '2-point', '3-point', and 'cs'",
             options.method
         ))),
@@ -191,7 +190,7 @@ where
     let h = compute_step_sizes(x, options);
 
     // Create result matrix with the same sparsity pattern as the upper triangle
-    let (rows, cols, _) = sparsity.find();
+    let (rows, cols_) = sparsity.find();
     let (m, n) = sparsity.shape();
     let zeros = vec![0.0; rows.len()];
     let mut hess = CsrArray::from_triplets(&rows.to_vec(), &cols.to_vec(), &zeros, (m, n), false)?;
@@ -338,7 +337,7 @@ where
     let h = compute_step_sizes(x, options);
 
     // Create result matrix with the same sparsity pattern as the upper triangle
-    let (rows, cols, _) = sparsity.find();
+    let (rows, cols_) = sparsity.find();
     let (m, n_cols) = sparsity.shape();
     let zeros = vec![0.0; rows.len()];
     let mut hess =
@@ -512,7 +511,7 @@ where
     let groups = determine_column_groups(sparsity, None, None)?;
 
     // Create result matrix with the same sparsity pattern
-    let (rows, cols, _) = sparsity.find();
+    let (rows, cols_) = sparsity.find();
     let zeros = vec![0.0; rows.len()];
     let mut hess = CsrArray::from_triplets(&rows.to_vec(), &cols.to_vec(), &zeros, (n, n), false)?;
 
@@ -585,7 +584,7 @@ where
 
 /// Computes a diagonal element of the Hessian using complex step method
 #[allow(dead_code)]
-fn compute_hessian_diagonal_complex_step<F>(func: &F, x: &ArrayView1<f64>, i: usize, h: f64) -> f64
+fn compute_hessian_diagonal_complex_step<F>(_func: &F, x: &ArrayView1<f64>, i: usize, h: f64) -> f64
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
@@ -602,11 +601,11 @@ where
     x_plus2[i] += 2.0 * h;
     x_minus2[i] -= 2.0 * h;
 
-    let f_plus = func(&x_plus.view());
-    let f_minus = func(&x_minus.view());
-    let f_plus2 = func(&x_plus2.view());
-    let f_minus2 = func(&x_minus2.view());
-    let f0 = func(x);
+    let f_plus = _func(&x_plus.view());
+    let f_minus = _func(&x_minus.view());
+    let f_plus2 = _func(&x_plus2.view());
+    let f_minus2 = _func(&x_minus2.view());
+    let f0 = _func(x);
 
     // 6th-order accurate second derivative formula
     // f''(x) ≈ (-f(x+2h) + 16f(x+h) - 30f(x) + 16f(x-h) - f(x-2h)) / (12h²)
@@ -659,8 +658,8 @@ where
 
 /// Ensures a sparsity pattern is symmetric
 #[allow(dead_code)]
-fn make_symmetric_sparsity(sparsity: &CsrArray<f64>) -> Result<CsrArray<f64>, OptimizeError> {
-    let (m, n) = sparsity.shape();
+fn make_symmetric_sparsity(_sparsity: &CsrArray<f64>) -> Result<CsrArray<f64>, OptimizeError> {
+    let (m, n) = _sparsity.shape();
     if m != n {
         return Err(OptimizeError::ValueError(
             "Sparsity pattern must be square for Hessian computation".to_string(),
@@ -668,7 +667,7 @@ fn make_symmetric_sparsity(sparsity: &CsrArray<f64>) -> Result<CsrArray<f64>, Op
     }
 
     // Convert to dense for simplicity
-    let dense = sparsity.to_array();
+    let dense = _sparsity.to_array();
     let dense_transposed = dense.t().to_owned();
 
     // Create arrays for the triplets
@@ -682,29 +681,29 @@ fn make_symmetric_sparsity(sparsity: &CsrArray<f64>) -> Result<CsrArray<f64>, Op
             if dense[[i, j]] > 0.0 || dense_transposed[[i, j]] > 0.0 {
                 rows.push(i);
                 cols.push(j);
-                data.push(1.0); // Binary sparsity pattern
+                data.push(1.0); // Binary _sparsity pattern
             }
         }
     }
 
-    // Create symmetric sparsity pattern
+    // Create symmetric _sparsity pattern
     Ok(CsrArray::from_triplets(&rows, &cols, &data, (n, n), false)?)
 }
 
 /// Fills the lower triangle of a Hessian matrix based on the upper triangle
 #[allow(dead_code)]
-fn fill_symmetric_hessian(upper: &CsrArray<f64>) -> Result<CsrArray<f64>, OptimizeError> {
-    let (n, _) = upper.shape();
-    if n != upper.shape().1 {
+fn fill_symmetric_hessian(_upper: &CsrArray<f64>) -> Result<CsrArray<f64>, OptimizeError> {
+    let (n_) = _upper.shape();
+    if n != _upper.shape().1 {
         return Err(OptimizeError::ValueError(
             "Hessian matrix must be square".to_string(),
         ));
     }
 
-    // We need to create a new symmetric matrix from the upper triangular matrix
+    // We need to create a new symmetric matrix from the _upper triangular matrix
 
-    // Convert the upper triangle matrix to dense temporarily
-    let upper_dense = upper.to_array();
+    // Convert the _upper triangle matrix to dense temporarily
+    let upper_dense = _upper.to_array();
 
     // Create arrays for the triplets
     let mut data = Vec::new();

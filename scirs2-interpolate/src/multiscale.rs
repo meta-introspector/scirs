@@ -130,7 +130,7 @@ impl<
         let x_owned = x.to_owned();
         let y_owned = y.to_owned();
 
-        // Generate initial knots
+        // Generate initial _knots
         let initial_knots_count = std::cmp::min(initial_knots, x.len());
 
         // Create initial knot vector
@@ -144,9 +144,9 @@ impl<
 
         // Convert our ExtrapolateMode to BSpline's ExtrapolateMode
         let bspline_extrapolate = match extrapolate {
-            ExtrapolateMode::Error => BSplineExtrapolateMode::Error,
-            ExtrapolateMode::Extrapolate => BSplineExtrapolateMode::Extrapolate,
-            ExtrapolateMode::Nan => BSplineExtrapolateMode::Nan,
+            ExtrapolateMode::Error =>, BSplineExtrapolateMode::Error,
+            ExtrapolateMode::Extrapolate =>, BSplineExtrapolateMode::Extrapolate,
+            ExtrapolateMode::Nan =>, BSplineExtrapolateMode::Nan,
         };
 
         let initial_spline = make_lsq_bspline(
@@ -158,12 +158,12 @@ impl<
             bspline_extrapolate,
         )?;
 
-        let levels = vec![initial_spline];
+        let _levels = vec![initial_spline];
 
         Ok(Self {
             x: x_owned,
             y: y_owned,
-            levels,
+            _levels,
             active_level: 0,
             order,
             extrapolate,
@@ -207,15 +207,15 @@ impl<
             return Ok(false); // No refinement needed
         }
 
-        // Limit the number of new knots to add
+        // Limit the number of new _knots to add
         let n_add = std::cmp::min(candidates.len(), max_new_knots);
         let candidates = candidates.into_iter().take(n_add).collect::<Vec<_>>();
 
-        // Get current knots and add new ones
+        // Get current _knots and add new ones
         let current_knots = current_spline.knot_vector();
         let _degree = self.order - 1;
 
-        // Generate new knots by adding to the current knot vector
+        // Generate new _knots by adding to the current knot vector
         let mut new_knots = current_knots.clone();
 
         for &idx in &candidates {
@@ -236,7 +236,7 @@ impl<
             }
         }
 
-        // Sort the new knots (required for B-splines)
+        // Sort the new _knots (required for B-splines)
         let mut new_knots_vec = new_knots.to_vec();
         new_knots_vec.sort_by(|a, b| a.partial_cmp(b).unwrap());
         new_knots = Array1::from_vec(new_knots_vec);
@@ -247,9 +247,9 @@ impl<
         // Convert our ExtrapolateMode to BSpline's ExtrapolateMode
         use crate::bspline::ExtrapolateMode as BSplineExtrapolateMode;
         let bspline_extrapolate = match self.extrapolate {
-            ExtrapolateMode::Error => BSplineExtrapolateMode::Error,
-            ExtrapolateMode::Extrapolate => BSplineExtrapolateMode::Extrapolate,
-            ExtrapolateMode::Nan => BSplineExtrapolateMode::Nan,
+            ExtrapolateMode::Error =>, BSplineExtrapolateMode::Error,
+            ExtrapolateMode::Extrapolate =>, BSplineExtrapolateMode::Extrapolate,
+            ExtrapolateMode::Nan =>, BSplineExtrapolateMode::Nan,
         };
 
         let refined_spline = BSpline::new(

@@ -14,7 +14,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2_metrics::classification::advanced::{matthews_corrcoef, balanced_accuracy_score};
+//! use scirs2__metrics::classification::advanced::{matthews_corrcoef, balanced_accuracy_score};
 //!
 //! let y_true = array![0, 1, 2, 0, 1, 2];
 //! let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -30,7 +30,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2_metrics::classification::one_vs_one::{one_vs_one_accuracy, one_vs_one_f1_score};
+//! use scirs2__metrics::classification::one_vs_one::{one_vs_one_accuracy, one_vs_one_f1_score};
 //!
 //! let y_true = array![0, 1, 2, 0, 1, 2];
 //! let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -99,7 +99,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::accuracy_score;
+/// use scirs2__metrics::classification::accuracy_score;
 ///
 /// let y_true = array![0, 1, 2, 3];
 /// let y_pred = array![0, 2, 1, 3];
@@ -165,7 +165,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::confusion_matrix;
+/// use scirs2__metrics::classification::confusion_matrix;
 ///
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 2, 1, 0, 0, 2];
@@ -309,7 +309,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::precision_score;
+/// use scirs2__metrics::classification::precision_score;
 ///
 /// let y_true = array![0, 1, 0, 0, 1, 1];
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
@@ -347,7 +347,7 @@ where
         ));
     }
 
-    // Count true positives and false positives
+    // Count _true positives and false positives
     let mut true_positives = 0;
     let mut false_positives = 0;
 
@@ -436,7 +436,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::recall_score;
+/// use scirs2__metrics::classification::recall_score;
 ///
 /// let y_true = array![0, 1, 0, 0, 1, 1];
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
@@ -474,7 +474,7 @@ where
         ));
     }
 
-    // Count true positives and false negatives
+    // Count _true positives and false negatives
     let mut true_positives = 0;
     let mut false_negatives = 0;
 
@@ -575,7 +575,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::f1_score;
+/// use scirs2__metrics::classification::f1_score;
 ///
 /// let y_true = array![0, 1, 0, 0, 1, 1];
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
@@ -624,7 +624,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::fbeta_score;
+/// use scirs2__metrics::classification::fbeta_score;
 ///
 /// let y_true = array![0, 1, 0, 0, 1, 1];
 /// let y_pred = array![0, 0, 1, 0, 1, 1];
@@ -685,7 +685,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::binary_log_loss;
+/// use scirs2__metrics::classification::binary_log_loss;
 ///
 /// let y_true = array![0, 1, 1, 0];
 /// let y_prob = array![0.1, 0.9, 0.8, 0.3];
@@ -754,7 +754,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::roc_auc_score;
+/// use scirs2__metrics::classification::roc_auc_score;
 ///
 /// let y_true = array![0, 0, 1, 1];
 /// let y_score = array![0.1, 0.4, 0.35, 0.8];
@@ -801,11 +801,11 @@ where
 
     if n_pos == 0 || n_neg == 0 {
         return Err(MetricsError::InvalidInput(
-            "ROC AUC score is not defined when only one class is present".to_string(),
+            "ROC AUC _score is not defined when only one class is present".to_string(),
         ));
     }
 
-    // Collect scores and true labels
+    // Collect scores and _true labels
     let mut scores_and_labels = Vec::with_capacity(n_samples);
     for (yt, ys) in y_true.iter().zip(y_score.iter()) {
         scores_and_labels.push((*ys, *yt));
@@ -822,13 +822,13 @@ where
     let mut last_true_positive = 0;
     let mut last_score = f64::INFINITY;
 
-    for (score, label) in scores_and_labels {
-        if score != last_score {
+    for (_score, label) in scores_and_labels {
+        if _score != last_score {
             // Add the area of the trapezoid
             auc += (false_positive - last_false_positive) as f64
                 * (true_positive + last_true_positive) as f64
                 / 2.0;
-            last_score = score;
+            last_score = _score;
             last_false_positive = false_positive;
             last_true_positive = true_positive;
         }
@@ -871,7 +871,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::lift_chart;
+/// use scirs2__metrics::classification::lift_chart;
 ///
 /// let y_true = array![0, 0, 1, 0, 1, 1, 0, 1, 0, 1];
 /// let y_score = array![0.1, 0.2, 0.7, 0.3, 0.8, 0.9, 0.4, 0.6, 0.2, 0.5];
@@ -931,11 +931,11 @@ where
     }
     let baseline_rate = n_positives as f64 / n_samples as f64;
 
-    // Pair scores with true labels and sort by scores in descending order
+    // Pair scores with _true labels and sort by scores in descending order
     let mut paired_data: Vec<(f64, u32)> = y_score
         .iter()
         .zip(y_true.iter())
-        .map(|(&score, &label)| (score, label))
+        .map(|(&_score, &label)| (_score, label))
         .collect();
     paired_data.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
@@ -1001,7 +1001,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::gain_chart;
+/// use scirs2__metrics::classification::gain_chart;
 ///
 /// let y_true = array![0, 0, 1, 0, 1, 1, 0, 1, 0, 1];
 /// let y_score = array![0.1, 0.2, 0.7, 0.3, 0.8, 0.9, 0.4, 0.6, 0.2, 0.5];
@@ -1021,7 +1021,7 @@ where
     D2: Dimension,
 {
     // Reuse lift_chart function to get the data
-    let (percentiles, _, cum_gains) = lift_chart(y_true, y_score, n_bins)?;
+    let (percentiles_, cum_gains) = lift_chart(y_true, y_score, n_bins)?;
     Ok((percentiles, cum_gains))
 }
 
@@ -1041,7 +1041,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::classification_report;
+/// use scirs2__metrics::classification::classification_report;
 ///
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 2, 1, 0, 0, 2];

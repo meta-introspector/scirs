@@ -27,9 +27,9 @@ pub struct SimpleLBFGS<A: Float + ScalarOperand + Debug> {
     prev_grad: Option<Array1<A>>}
 
 impl<A: Float + ScalarOperand + Debug> SimpleLBFGS<A> {
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(_learning_rate: A) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             history_size: 20,
             s_list: VecDeque::new(),
             y_list: VecDeque::new(),

@@ -1079,7 +1079,7 @@ impl<F: Float> InputValidationResult<F> {
 
 impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
     /// Create a new advanced interpolation coordinator
-    pub fn new(config: AdvancedInterpolationConfig) -> InterpolateResult<Self> {
+    pub fn new(_config: AdvancedInterpolationConfig) -> InterpolateResult<Self> {
         Ok(Self {
             method_selector: Arc::new(RwLock::new(IntelligentMethodSelector::new()?)),
             accuracy_optimizer: Arc::new(Mutex::new(AccuracyOptimizationEngine::new()?)),
@@ -1090,7 +1090,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
             memory_manager: Arc::new(Mutex::new(InterpolationMemoryManager::new()?)),
             performance_tracker: Arc::new(RwLock::new(InterpolationPerformanceTracker::default())),
             adaptive_cache: Arc::new(Mutex::new(AdaptiveInterpolationCache::new()?)),
-            config,
+            _config,
         })
     }
 
@@ -1100,7 +1100,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
         x_data: &ArrayBase<impl Data<Elem = F>, D>,
         y_data: &ArrayBase<impl Data<Elem = F>, D>,
     ) -> InterpolateResult<InterpolationRecommendation<F>> {
-        // Create data profile
+        // Create _data profile
         let data_profile = self.create_data_profile(x_data, y_data)?;
 
         // Get method recommendation
@@ -1124,7 +1124,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
                 expected_memory_usage: method_recommendation.expected_performance.memory_usage,
                 scalability_factor: 1.0, // Default value
             },
-            data_characteristics: data_profile,
+            _data_characteristics: data_profile,
         })
     }
 
@@ -1189,7 +1189,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
         &mut self,
         new_config: AdvancedInterpolationConfig,
     ) -> InterpolateResult<()> {
-        self.config = new_config;
+        self._config = new_config;
         // Update subsystem configurations
         self.update_subsystem_configs()?;
         Ok(())
@@ -1348,13 +1348,12 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
     ) -> InterpolateResult<AccuracyPrediction<F>> {
         // Base accuracy depends on method and data characteristics
         let base_accuracy = match method {
-            InterpolationMethodType::Linear => F::from(0.7).unwrap(),
-            InterpolationMethodType::CubicSpline => F::from(0.95).unwrap(),
-            InterpolationMethodType::BSpline => F::from(0.9).unwrap(),
-            InterpolationMethodType::RadialBasisFunction => F::from(0.92).unwrap(),
-            InterpolationMethodType::Kriging => F::from(0.88).unwrap(),
-            InterpolationMethodType::AkimaSpline => F::from(0.93).unwrap(),
-            _ => F::from(0.85).unwrap(),
+            InterpolationMethodType::Linear =>, F::from(0.7).unwrap(),
+            InterpolationMethodType::CubicSpline =>, F::from(0.95).unwrap(),
+            InterpolationMethodType::BSpline =>, F::from(0.9).unwrap(),
+            InterpolationMethodType::RadialBasisFunction =>, F::from(0.92).unwrap(),
+            InterpolationMethodType::Kriging =>, F::from(0.88).unwrap(),
+            InterpolationMethodType::AkimaSpline => F::from(0.93).unwrap(, _ =>, F::from(0.85).unwrap(),
         };
 
         // Adjust based on data characteristics
@@ -1389,8 +1388,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
     fn apply_preprocessing<D: Dimension>(
         &self,
         x_data: &ArrayBase<impl Data<Elem = F>, D>,
-        y_data: &ArrayBase<impl Data<Elem = F>, D>,
-        _parameters: &HashMap<String, F>,
+        y_data: &ArrayBase<impl Data<Elem = F>, D>, _parameters: &HashMap<String, F>,
     ) -> InterpolateResult<(ArrayD<F>, ArrayD<F>)> {
         // For now, just convert to dynamic arrays
         // In a real implementation, this would apply various preprocessing steps
@@ -1538,8 +1536,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
         &self,
         x_data: &ArrayBase<impl Data<Elem = F>, D1>,
         y_data: &ArrayBase<impl Data<Elem = F>, D2>,
-        x_new: &ArrayBase<impl Data<Elem = F>, D3>,
-        _parameters: &HashMap<String, F>,
+        x_new: &ArrayBase<impl Data<Elem = F>, D3>, _parameters: &HashMap<String, F>,
     ) -> InterpolateResult<ArrayD<F>> {
         // Enhanced cubic spline interpolation implementation
         if x_data.len() != y_data.len() {
@@ -1613,7 +1610,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
             d[j] = (c[j + 1] - c[j]) / (F::from(3.0).unwrap() * h[j]);
         }
 
-        // Evaluate spline at new points
+        // Evaluate spline at _new points
         let mut result = Vec::with_capacity(x_new_flat.len());
 
         for &xi in &x_new_flat {
@@ -1713,7 +1710,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
                     .iter()
                     .enumerate()
                     .min_by(|(_, &a), (_, &b)| (xi - a).abs().partial_cmp(&(xi - b).abs()).unwrap())
-                    .map(|(i, _)| i)
+                    .map(|(i_)| i)
                     .unwrap_or(0);
                 result.push(y_flat[nearest_idx]);
             }
@@ -1750,7 +1747,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
     ) -> InterpolateResult<ArrayD<F>> {
         // PCHIP (Piecewise Cubic Hermite Interpolating Polynomial)
         // For now, fallback to cubic spline with shape preservation
-        let parameters = HashMap::new();
+        let parameters = HashMap::_new();
         self.execute_cubic_spline_interpolation(x_data, y_data, x_new, &parameters)
     }
 
@@ -1761,7 +1758,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
         x_new: &ArrayBase<impl Data<Elem = F>, D3>,
     ) -> InterpolateResult<ArrayD<F>> {
         // Akima spline interpolation (robust to outliers)
-        let parameters = HashMap::new();
+        let parameters = HashMap::_new();
         self.execute_cubic_spline_interpolation(x_data, y_data, x_new, &parameters)
     }
 
@@ -1793,7 +1790,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
         let mut result = Vec::with_capacity(x_new_flat.len());
 
         for &xi in &x_new_flat {
-            let mut weights = Vec::new();
+            let mut weights = Vec::_new();
             let mut total_weight = F::zero();
 
             for &xj in &x_flat {
@@ -1962,8 +1959,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
     /// Apply numerical stability corrections to interpolation results
     fn apply_numerical_stability_correction(
         &self,
-        result: &ArrayD<F>,
-        _parameters: &HashMap<String, F>,
+        result: &ArrayD<F>, _parameters: &HashMap<String, F>,
     ) -> InterpolateResult<ArrayD<F>> {
         let mut corrected = result.clone();
 
@@ -2036,11 +2032,11 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
 
         // Check for basic dimensional consistency
         if x_data.len() != y_data.len() {
-            errors.push("X and Y data arrays must have the same length".to_string());
+            errors.push("X and Y _data arrays must have the same length".to_string());
         }
 
         if x_data.len() < 2 {
-            errors.push("Need at least 2 data points for interpolation".to_string());
+            errors.push("Need at least 2 _data points for interpolation".to_string());
         }
 
         // Check for finite values
@@ -2049,14 +2045,14 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
 
         if x_finite_count < x_data.len() {
             warnings.push(format!(
-                "{} non-finite values in X data",
+                "{} non-finite values in X _data",
                 x_data.len() - x_finite_count
             ));
         }
 
         if y_finite_count < y_data.len() {
             warnings.push(format!(
-                "{} non-finite values in Y data",
+                "{} non-finite values in Y _data",
                 y_data.len() - y_finite_count
             ));
         }
@@ -2091,11 +2087,11 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
         let dynamic_range = y_range.1 - y_range.0;
         if dynamic_range > F::from(1e15).unwrap() {
             warnings.push(
-                "Extremely large dynamic range in Y data may cause numerical issues".to_string(),
+                "Extremely large dynamic range in Y _data may cause numerical issues".to_string(),
             );
         }
 
-        // Check data distribution
+        // Check _data distribution
         let x_range = x_vec
             .iter()
             .fold((F::infinity(), F::neg_infinity()), |(min, max), &x| {
@@ -2105,7 +2101,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
         let x_span = x_range.1 - x_range.0;
         if x_span < F::from(1e-10).unwrap() {
             warnings.push(
-                "X data span is very small - interpolation may be ill-conditioned".to_string(),
+                "X _data span is very small - interpolation may be ill-conditioned".to_string(),
             );
         }
 
@@ -2123,7 +2119,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
     fn calculate_data_quality_score(&self, x_data: &[F], y_data: &[F]) -> f64 {
         let mut score = 1.0; // Perfect score
 
-        // Penalize for insufficient data
+        // Penalize for insufficient _data
         if x_data.len() < 10 {
             score *= 0.8;
         }
@@ -2200,7 +2196,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
             InterpolateError::ComputationError("Failed to write to performance tracker".to_string())
         })?;
 
-        // Record execution time
+        // Record execution _time
         let time_micros = execution_time.as_micros() as f64;
         tracker.execution_times.push_back(time_micros);
 
@@ -2532,8 +2528,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
             InterpolationMethodType::CubicSpline => (n, 2.0),
             InterpolationMethodType::BSpline => (n * n.log2(), 3.0),
             InterpolationMethodType::RadialBasisFunction => (n * n, 4.0),
-            InterpolationMethodType::Kriging => (n * n * n, 5.0),
-            _ => (n * n.log2(), 2.5),
+            InterpolationMethodType::Kriging => (n * n * n, 5.0, _ => (n * n.log2(), 2.5),
         };
 
         Ok(MethodPerformanceEstimate {

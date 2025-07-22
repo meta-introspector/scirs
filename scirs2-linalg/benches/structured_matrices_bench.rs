@@ -6,11 +6,11 @@
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2};
-use scirs2_linalg::prelude::*;
-use scirs2_linalg::specialized::{
+use scirs2__linalg::prelude::*;
+use scirs2__linalg::specialized::{
     block_diagonal_determinant, block_tridiagonal_lu, solve_block_diagonal, BlockDiagonalMatrix,
 };
-use scirs2_linalg::structured::{
+use scirs2__linalg::structured::{
     circulant_determinant, circulant_eigenvalues, circulant_inverse_fft, circulant_matvec_direct,
     circulant_matvec_fft, dft_matrix_multiply, fast_toeplitz_inverse, gohberg_semencul_inverse,
     hadamard_transform, hankel_determinant, hankel_matvec, hankel_matvec_fft, hankel_svd,
@@ -34,10 +34,10 @@ fn create_general_matrix(n: usize) -> Array2<f64> {
 
 /// Create block matrices for testing
 #[allow(dead_code)]
-fn create_block_matrices(block_size: usize, num_blocks: usize) -> Vec<Array2<f64>> {
+fn create_block_matrices(_block_size: usize, num_blocks: usize) -> Vec<Array2<f64>> {
     (0..num_blocks)
         .map(|k| {
-            Array2::from_shape_fn((block_size, block_size), |(i, j)| {
+            Array2::from_shape_fn((_block_size, _block_size), |(i, j)| {
                 ((i + j + k + 1) as f64 * 0.1).sin()
             })
         })
@@ -752,7 +752,7 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
                     total_size,
                 ),
                 &(&diagonal_blocks, &off_diagonal_blocks, &rhs),
-                |b, (diag, off_diag, _rhs)| {
+                |b, (diag, off_diag_rhs)| {
                     b.iter(|| {
                         let diag_cloned: Vec<_> = diag.to_vec();
                         let off_diag_cloned: Vec<_> = off_diag.to_vec();

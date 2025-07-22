@@ -82,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Verify that exp(A) ≈ cos(A) + sin(A) for antisymmetric matrix
     println!("5. Relationship with Matrix Exponential:");
-    let exp_antisym = scirs2_linalg::matrix_functions::expm(&scipy_matrix.view(), None)?;
+    let exp_antisym = scirs2_linalg::matrix, _functions::expm(&scipy_matrix.view(), None)?;
     let cos_plus_sin = &scipy_cos + &scipy_sin;
 
     println!("exp(A) = \n{:8.6}", exp_antisym);

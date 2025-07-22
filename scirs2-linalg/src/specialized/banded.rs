@@ -119,7 +119,7 @@ where
         let expected_rows = lower_bandwidth + upper_bandwidth + 1;
         if data.nrows() != expected_rows {
             return Err(LinalgError::ShapeError(format!(
-                "Data should have {expected_rows} rows for a matrix with lower bandwidth {lower_bandwidth} and upper bandwidth {upper_bandwidth}"
+                "Data should have {expected_rows} rows for a matrix with lower _bandwidth {lower_bandwidth} and upper _bandwidth {upper_bandwidth}"
             )));
         }
 

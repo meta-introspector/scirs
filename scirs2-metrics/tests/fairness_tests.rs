@@ -1,6 +1,6 @@
 use approx::assert_abs_diff_eq;
 use ndarray::{array, Array2};
-use scirs2_metrics::fairness::{
+use scirs2__metrics::fairness::{
     consistency_score, demographic_parity_difference, disparate_impact,
     equal_opportunity_difference, equalized_odds_difference,
 };

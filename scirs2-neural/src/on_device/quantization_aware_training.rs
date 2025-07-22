@@ -2,6 +2,7 @@
 
 use crate::error::Result;
 use ndarray::prelude::*;
+use statrs::statistics::Statistics;
 /// Quantization configuration
 #[derive(Debug, Clone)]
 pub struct QATConfig {
@@ -57,27 +58,27 @@ pub struct QuantizationAwareTraining {
     calibration_stats: CalibrationStats,
 impl QuantizationAwareTraining {
     /// Create a new QAT manager
-    pub fn new(config: QATConfig) -> Self {
-            config,
+    pub fn new(_config: QATConfig) -> Self {
+            _config,
             quantizers: Vec::new(),
             calibration_stats: CalibrationStats::new(),
     
     /// Quantize weights
     pub fn quantize_weights(&self, weights: &ArrayView2<f32>) -> Result<QuantizedTensor> {
-        let quantizer = match self.config.scheme {
-            QuantizationScheme::Symmetric => SymmetricQuantizer::new(self.config.weight_bits),
-            QuantizationScheme::Asymmetric => AsymmetricQuantizer::new(self.config.weight_bits),
-            QuantizationScheme::PerChannel => PerChannelQuantizer::new(self.config.weight_bits),
-            QuantizationScheme::Dynamic => DynamicQuantizer::new(self.config.weight_bits),
+        let quantizer = match self._config.scheme {
+            QuantizationScheme::Symmetric =>, SymmetricQuantizer::new(self._config.weight_bits),
+            QuantizationScheme::Asymmetric =>, AsymmetricQuantizer::new(self._config.weight_bits),
+            QuantizationScheme::PerChannel =>, PerChannelQuantizer::new(self._config.weight_bits),
+            QuantizationScheme::Dynamic =>, DynamicQuantizer::new(self._config.weight_bits),
         };
         
         quantizer.quantize(weights)
     /// Quantize activations
     pub fn quantize_activations(&self, activations: &ArrayView2<f32>) -> Result<QuantizedTensor> {
-            QuantizationScheme::Symmetric => SymmetricQuantizer::new(self.config.activation_bits),
-            QuantizationScheme::Asymmetric => AsymmetricQuantizer::new(self.config.activation_bits),
-            QuantizationScheme::PerChannel => PerChannelQuantizer::new(self.config.activation_bits),
-            QuantizationScheme::Dynamic => DynamicQuantizer::new(self.config.activation_bits),
+            QuantizationScheme::Symmetric =>, SymmetricQuantizer::new(self.config.activation_bits),
+            QuantizationScheme::Asymmetric =>, AsymmetricQuantizer::new(self.config.activation_bits),
+            QuantizationScheme::PerChannel =>, PerChannelQuantizer::new(self.config.activation_bits),
+            QuantizationScheme::Dynamic =>, DynamicQuantizer::new(self.config.activation_bits),
         quantizer.quantize(activations)
     /// Fake quantization for training
     pub fn fake_quantize(&self, tensor: &ArrayView2<f32>, is_weight: bool) -> Result<Array2<f32>> {
@@ -156,8 +157,8 @@ trait Quantizer {
 struct SymmetricQuantizer {
     bits: u8,
 impl SymmetricQuantizer {
-    fn new(bits: u8) -> Self {
-        Self { bits }
+    fn new(_bits: u8) -> Self {
+        Self { _bits }
 impl Quantizer for SymmetricQuantizer {
     fn quantize(&self, tensor: &ArrayView2<f32>) -> Result<QuantizedTensor> {
         let abs_max = tensor.iter()

@@ -58,9 +58,9 @@ where
     /// # Returns
     ///
     /// * `TensorTrain` - A new TensorTrain instance
-    pub fn new(cores: Vec<Array3<A>>, ranks: Vec<usize>, shape: Vec<usize>) -> LinalgResult<Self> {
+    pub fn new(_cores: Vec<Array3<A>>, ranks: Vec<usize>, shape: Vec<usize>) -> LinalgResult<Self> {
         // Validate input
-        if cores.is_empty() {
+        if _cores.is_empty() {
             return Err(LinalgError::ValueError(
                 "Cores list cannot be empty".to_string(),
             ));
@@ -80,16 +80,16 @@ where
             ));
         }
 
-        if cores.len() != shape.len() {
+        if _cores.len() != shape.len() {
             return Err(LinalgError::ShapeError(format!(
-                "Number of cores ({}) must match the shape length ({})",
-                cores.len(),
+                "Number of _cores ({}) must match the shape length ({})",
+                _cores.len(),
                 shape.len()
             )));
         }
 
         // Validate core dimensions
-        for (i, core) in cores.iter().enumerate() {
+        for (i, core) in _cores.iter().enumerate() {
             if core.ndim() != 3 {
                 return Err(LinalgError::ShapeError(format!(
                     "Core {} must be 3-dimensional, got {} dimensions",
@@ -127,7 +127,7 @@ where
         }
 
         Ok(TensorTrain {
-            cores,
+            _cores,
             ranks,
             shape,
         })
@@ -263,12 +263,12 @@ where
                     }
 
                     // Calculate flat index from multi-index
-                    fn flat_index(indices: &[usize], shape: &[usize]) -> usize {
+                    fn flat_index(_indices: &[usize], shape: &[usize]) -> usize {
                         let mut idx = 0;
                         let mut stride = 1;
 
-                        for i in (0..indices.len()).rev() {
-                            idx += indices[i] * stride;
+                        for i in (0.._indices.len()).rev() {
+                            idx += _indices[i] * stride;
                             if i > 0 {
                                 stride *= shape[i];
                             }
@@ -327,14 +327,14 @@ where
                     // We've reached a leaf node, copy the value
                     let mut source_idx = current_idx.clone();
                     source_idx.push(0); // Add the final dimension which is always 0 when ranks[n_dims] == 1
-                    final_result[current_idx.as_slice()] = result[source_idx.as_slice()].clone();
+                    final_result[current_idx.as_slice()] = _result[source_idx.as_slice()].clone();
                     return;
                 }
 
                 // Recursively process each index at the current depth
                 for i in 0..shape[depth] {
                     current_idx.push(i);
-                    set_values(result, final_result, current_idx, shape, depth + 1);
+                    set_values(_result, final_result, current_idx, shape, depth + 1);
                     current_idx.pop();
                 }
             }
@@ -676,7 +676,7 @@ where
 
 // Helper function for full SVD decomposition
 #[allow(dead_code)]
-fn svd<A>(matrix: &Array2<A>) -> LinalgResult<(Array2<A>, Array1<A>, Array2<A>)>
+fn svd<A>(_matrix: &Array2<A>) -> LinalgResult<(Array2<A>, Array1<A>, Array2<A>)>
 where
     A: Clone
         + Float
@@ -692,7 +692,7 @@ where
     use crate::decomposition::svd as svd_decomp;
 
     // Convert to view and call with full_matrices=false
-    let matrix_view = matrix.view();
+    let matrix_view = _matrix.view();
     svd_decomp(&matrix_view, false, None)
 }
 
@@ -764,13 +764,13 @@ where
 {
     let (u, s, vt) = svd(matrix)?;
 
-    // Compute the rank to use (minimum of max_rank and the number of singular values)
-    let rank = max_rank.min(s.len());
+    // Compute the _rank to use (minimum of max_rank and the number of singular values)
+    let _rank = max_rank.min(s.len());
 
     // Truncate the matrices
-    let u_trunc = u.slice(ndarray::s![.., ..rank]).to_owned();
-    let s_trunc = s.slice(ndarray::s![..rank]).to_owned();
-    let vt_trunc = vt.slice(ndarray::s![..rank, ..]).to_owned();
+    let u_trunc = u.slice(ndarray::s![.., .._rank]).to_owned();
+    let s_trunc = s.slice(ndarray::s![.._rank]).to_owned();
+    let vt_trunc = vt.slice(ndarray::s![.._rank, ..]).to_owned();
 
     Ok((u_trunc, s_trunc, vt_trunc))
 }
@@ -804,32 +804,32 @@ where
     };
 
     // Find the number of singular values to keep based on epsilon
-    let mut rank = 0;
+    let mut _rank = 0;
     for (i, &val) in s_norm.iter().enumerate() {
         if val < epsilon {
-            rank = i;
+            _rank = i;
             break;
         }
-        rank = i + 1;
+        _rank = i + 1;
     }
 
     // Ensure at least one singular value is kept
-    rank = rank.max(1);
+    _rank = _rank.max(1);
 
     // Apply max_rank constraint
-    rank = rank.min(max_rank);
+    _rank = _rank.min(max_rank);
 
     // Truncate the matrices
-    let u_trunc = u.slice(ndarray::s![.., ..rank]).to_owned();
-    let s_trunc = s.slice(ndarray::s![..rank]).to_owned();
-    let vt_trunc = vt.slice(ndarray::s![..rank, ..]).to_owned();
+    let u_trunc = u.slice(ndarray::s![.., .._rank]).to_owned();
+    let s_trunc = s.slice(ndarray::s![.._rank]).to_owned();
+    let vt_trunc = vt.slice(ndarray::s![.._rank, ..]).to_owned();
 
     Ok((u_trunc, s_trunc, vt_trunc))
 }
 
 // Helper function for QR decomposition
 #[allow(dead_code)]
-fn qr_decomposition<A>(matrix: &Array2<A>) -> LinalgResult<(Array2<A>, Array2<A>)>
+fn qr_decomposition<A>(_matrix: &Array2<A>) -> LinalgResult<(Array2<A>, Array2<A>)>
 where
     A: Clone
         + Float
@@ -845,7 +845,7 @@ where
     use crate::decomposition::qr;
 
     // Convert to view and call QR
-    let matrix_view = matrix.view();
+    let matrix_view = _matrix.view();
     let (q, r) = qr(&matrix_view, None)?;
     Ok((q, r))
 }

@@ -1,7 +1,7 @@
 // Integration tests for sampling and random modules
 use approx::assert_relative_eq;
 use ndarray::{array, Array1};
-use scirs2_stats::{
+use scirs2__stats::{
     distributions::{norm, poisson},
     random, sampling,
 };
@@ -117,22 +117,22 @@ fn test_statistical_properties() {
 
 // Helper functions for statistical calculations
 #[allow(dead_code)]
-fn custom_mean(arr: &Array1<f64>) -> f64 {
-    if arr.is_empty() {
+fn custom_mean(_arr: &Array1<f64>) -> f64 {
+    if _arr.is_empty() {
         return 0.0;
     }
-    let sum: f64 = arr.iter().sum();
-    sum / arr.len() as f64
+    let sum: f64 = _arr.iter().sum();
+    sum / _arr.len() as f64
 }
 
 #[allow(dead_code)]
-fn custom_std(arr: &Array1<f64>, ddof: usize) -> f64 {
-    if arr.len() <= ddof {
+fn custom_std(_arr: &Array1<f64>, ddof: usize) -> f64 {
+    if _arr.len() <= ddof {
         return 0.0;
     }
 
-    let mean = custom_mean(arr);
-    let sum_sq: f64 = arr.iter().map(|&x| (x - mean) * (x - mean)).sum();
-    let denominator = (arr.len() - ddof) as f64;
+    let mean = custom_mean(_arr);
+    let sum_sq: f64 = _arr.iter().map(|&x| (x - mean) * (x - mean)).sum();
+    let denominator = (_arr.len() - ddof) as f64;
     (sum_sq / denominator).sqrt()
 }

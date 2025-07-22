@@ -1,4 +1,4 @@
-use ag::tensor_ops::*;
+use ag::tensor__ops::*;
 use ndarray::array;
 use scirs2_autograd as ag;
 
@@ -6,7 +6,7 @@ use scirs2_autograd as ag;
 fn main() {
     println!("Testing SVD with larger matrices");
 
-    ag::run::<f64, _, _>(|g| {
+    ag::run::<f64_>(|g| {
         // Create a 3x3 matrix
         let matrix_data = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
         let matrix = convert_to_tensor(matrix_data.clone(), g);
@@ -155,7 +155,7 @@ fn main() {
         let matrix_var = variable(matrix_data.clone(), g);
 
         // Compute SVD
-        let (_u_var, s_var, _v_var) = svd(matrix_var);
+        let (_u_var, s_var_v_var) = svd(matrix_var);
 
         // Create a simple loss: sum of singular values
         let loss = sum_all(s_var);

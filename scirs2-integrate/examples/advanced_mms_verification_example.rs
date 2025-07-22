@@ -4,7 +4,7 @@
 //! 3D support, and automated verification workflows.
 
 use ndarray::Array1;
-use scirs2_integrate::{
+use scirs2__integrate::{
     ode::{solve_ivp, ODEMethod, ODEOptions},
     verification::{
         combined_solution, exponential_solution, polynomial_solution, trigonometric_solution_2d,
@@ -14,7 +14,8 @@ use scirs2_integrate::{
 };
 use std::f64::consts::PI;
 
-use scirs2_integrate::IntegrateError;
+use scirs2__integrate::IntegrateError;
+use ndarray::ArrayView1;
 
 type SolverFunction = Box<dyn Fn(&[f64]) -> Result<f64, IntegrateError>>;
 
@@ -65,7 +66,7 @@ fn exponential_ode_verification() -> Result<(), Box<dyn std::error::Error>> {
     for &h in &step_sizes {
         // Solve the manufactured ODE with implicit method
         let manufactured_rhs =
-            |t: f64, _y: ndarray::ArrayView1<f64>| Array1::from_vec(vec![problem.source_term(t)]);
+            |t: f64_y: ndarray::ArrayView1<f64>| Array1::from_vec(vec![problem.source_term(t)]);
 
         let options = ODEOptions {
             method: ODEMethod::Radau, // Good for stiff exponential decay

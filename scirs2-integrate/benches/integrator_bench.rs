@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::ArrayView1;
-use scirs2_integrate::{
+use scirs2__integrate::{
     gaussian::gauss_legendre,
     monte_carlo::{monte_carlo, MonteCarloOptions},
     quad::{quad, simpson, trapezoid},
@@ -57,8 +57,7 @@ fn bench_integrators(c: &mut Criterion) {
             |b, &n_samples| {
                 let options = MonteCarloOptions {
                     n_samples,
-                    seed: Some(42),
-                    _phantom: PhantomData,
+                    seed: Some(42), _phantom: PhantomData,
                     ..Default::default()
                 };
 

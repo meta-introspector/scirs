@@ -4,8 +4,8 @@
 //! various geometric domains. The mesh generator can create structured and
 //! unstructured meshes with quality control and refinement options.
 
-use scirs2_integrate::pde::finite_element::ElementType;
-use scirs2_integrate::pde::mesh_generation::{
+use scirs2__integrate::pde::finite_element::ElementType;
+use scirs2__integrate::pde::mesh_generation::{
     AutoMeshGenerator, BoundarySpecification, Domain, MeshGenerationParams,
 };
 
@@ -140,7 +140,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 6: Custom polygon mesh
     println!("6. Custom Polygon Mesh Generation");
-    use scirs2_integrate::pde::finite_element::Point;
+    use scirs2__integrate::pde::finite_element::Point;
 
     // Create a pentagon
     let mut pentagon_vertices = Vec::new();

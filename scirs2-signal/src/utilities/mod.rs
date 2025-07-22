@@ -7,6 +7,7 @@
 //!
 //! * `spectral` - Utilities for spectral analysis
 
+#[allow(unused_imports)]
 pub mod spectral;
 
 // Re-export commonly used functions from submodules

@@ -3,7 +3,7 @@
 //! This module provides comprehensive error diagnostics, monitoring, and intelligent
 //! recovery strategies for production statistical computing environments.
 
-use crate::error_handling_v2::ErrorCode;
+use crate::error_handling__v2::ErrorCode;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
@@ -402,8 +402,7 @@ impl ErrorMonitor {
     /// Generate actionable recommendations
     fn generate_recommendations(
         &self,
-        stats: &ErrorStatistics,
-        _issues: &[CriticalIssue],
+        stats: &ErrorStatistics_issues: &[CriticalIssue],
     ) -> Vec<Recommendation> {
         let mut recommendations = Vec::new();
 
@@ -427,7 +426,7 @@ impl ErrorMonitor {
         }
 
         // Recommendations based on frequent errors
-        for (code, _count) in &stats.top_errors {
+        for (code_count) in &stats.top_errors {
             match code {
                 ErrorCode::E3005 => {
                     recommendations.push(Recommendation {
@@ -662,8 +661,7 @@ impl HealthReport {
             90..=100 => "🟢 EXCELLENT",
             70..=89 => "🟡 GOOD",
             50..=69 => "🟠 FAIR",
-            30..=49 => "🔴 POOR",
-            _ => "🚨 CRITICAL",
+            30..=49 => "🔴 POOR"_ => "🚨 CRITICAL",
         };
         report.push_str(&format!("Status: {}\n\n", health_indicator));
 
@@ -754,8 +752,8 @@ pub fn global_monitor() -> &'static ErrorMonitor {
 
 /// Convenience function to record an error globally
 #[allow(dead_code)]
-pub fn record_global_error(code: ErrorCode, operation: impl Into<String>) {
-    global_monitor().record_error(code, operation);
+pub fn record_global_error(_code: ErrorCode, operation: impl Into<String>) {
+    global_monitor().record_error(_code, operation);
 }
 
 /// Convenience function to get global error statistics

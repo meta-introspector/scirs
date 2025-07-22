@@ -40,7 +40,7 @@ pub trait KDTreeOptimized<T: Float + Send + Sync + 'static, D> {
     /// # Returns
     ///
     /// * The Hausdorff distance between the two point sets
-    fn hausdorff_distance(&self, points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T>;
+    fn hausdorff_distance(_points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T>;
 
     /// Compute the approximate nearest neighbor for each point in a set
     ///
@@ -61,9 +61,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
     KDTreeOptimized<T, D> for KDTree<T, D>
 {
     fn directed_hausdorff_distance(
-        &self,
-        points: &ArrayView2<T>,
-        _seed: Option<u64>,
+        &self_points: &ArrayView2<T>, _seed: Option<u64>,
     ) -> SpatialResult<(T, usize, usize)> {
         // This method implements an approximate directed Hausdorff distance
         // using the KD-tree for acceleration. It's faster than the direct method
@@ -71,7 +69,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
 
         // Get dimensions and check compatibility
         let tree_dims = self.ndim();
-        let points_dims = points.shape()[1];
+        let points_dims = _points.shape()[1];
 
         if tree_dims != points_dims {
             return Err(crate::error::SpatialError::DimensionError(format!(
@@ -79,7 +77,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
             )));
         }
 
-        let n_points = points.shape()[0];
+        let n_points = _points.shape()[0];
 
         if n_points == 0 {
             return Err(crate::error::SpatialError::ValueError(
@@ -90,11 +88,11 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
         // For each point in the query set, find the nearest point in the tree
         // We then use the maximum of these minimum distances
         let mut max_dist = T::zero();
-        let mut max_i = 0; // Index in the tree points
-        let mut max_j = 0; // Index in the query points
+        let mut max_i = 0; // Index in the tree _points
+        let mut max_j = 0; // Index in the query _points
 
         for j in 0..n_points {
-            let query_point = points.row(j).to_vec();
+            let query_point = _points.row(j).to_vec();
 
             // Find the nearest point in the tree
             let (indices, distances) = self.query(&query_point, 1)?;
@@ -116,17 +114,17 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
         Ok((max_dist, max_i, max_j))
     }
 
-    fn hausdorff_distance(&self, points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T> {
+    fn hausdorff_distance(_points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T> {
         // First get the forward directed Hausdorff distance
-        let (dist_forward, _, _) = self.directed_hausdorff_distance(points, seed)?;
+        let (dist_forward__) = self.directed_hausdorff_distance(_points, seed)?;
 
-        // For the backward direction, we need to create a new KDTree on the points
-        let points_owned = points.to_owned();
+        // For the backward direction, we need to create a new KDTree on the _points
+        let points_owned = _points.to_owned();
         let points_tree = KDTree::new(&points_owned)?;
 
         // Get the backward directed Hausdorff distance using the points_tree
         // We perform the backward direction by simply reversing the query
-        let (dist_backward, _, _) =
+        let (dist_backward__) =
             points_tree.directed_hausdorff_distance(&points_owned.view(), seed)?;
 
         // Return the maximum of the two directed distances
@@ -138,12 +136,11 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
     }
 
     fn batch_nearest_neighbor(
-        &self,
-        points: &ArrayView2<T>,
+        &self_points: &ArrayView2<T>,
     ) -> SpatialResult<(Array1<usize>, Array1<T>)> {
         // Check dimensions
         let tree_dims = self.ndim();
-        let points_dims = points.shape()[1];
+        let points_dims = _points.shape()[1];
 
         if tree_dims != points_dims {
             return Err(crate::error::SpatialError::DimensionError(format!(
@@ -151,11 +148,11 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
             )));
         }
 
-        let n_points = points.shape()[0];
+        let n_points = _points.shape()[0];
         let mut indices = Array1::<usize>::zeros(n_points);
         let mut distances = Array1::<T>::zeros(n_points);
 
-        // Process points in batches for better cache locality
+        // Process _points in batches for better cache locality
         const BATCH_SIZE: usize = 32;
 
         for batch_start in (0..n_points).step_by(BATCH_SIZE) {
@@ -169,7 +166,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
                 let batch_results: Vec<_> = (batch_start..batch_end)
                     .into_par_iter()
                     .map(|i| {
-                        let point = points.row(i).to_vec();
+                        let point = _points.row(i).to_vec();
                         let (idx, dist) = self.query(&point, 1).unwrap();
                         (i, idx[0], dist[0])
                     })
@@ -185,7 +182,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
             #[cfg(not(feature = "parallel"))]
             {
                 for i in batch_start..batch_end {
-                    let point = points.row(i).to_vec();
+                    let point = _points.row(i).to_vec();
                     let (idx, dist) = self.query(&point, 1)?;
                     indices[i] = idx[0];
                     distances[i] = dist[0];
@@ -199,7 +196,6 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::array;
 
     #[test]

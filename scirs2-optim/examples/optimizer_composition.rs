@@ -8,10 +8,10 @@
 use ndarray::{s, Array1, Array2};
 use ndarray_rand::rand_distr::Normal;
 use ndarray_rand::RandomExt;
-use scirs2_optim::optimizer_composition::{
+use scirs2__optim::optimizer_composition::{
     ChainedOptimizer, ParallelOptimizer, ParameterGroup, SequentialOptimizer,
 };
-use scirs2_optim::optimizers::{Adam, Optimizer, RMSprop, SGD};
+use scirs2__optim::optimizers::{Adam, Optimizer, RMSprop, SGD};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -28,7 +28,7 @@ fn main() {
         n_samples, n_features
     );
 
-    let (x_train, y_train, true_weights, _true_bias) = generate_data(n_samples, n_features);
+    let (x_train, y_train, true_weights_true_bias) = generate_data(n_samples, n_features);
 
     // Define our optimization problem
     println!("\nRunning regression with different optimizer compositions...\n");
@@ -45,7 +45,7 @@ fn main() {
 
 /// Example demonstrating a sequential optimizer composition
 #[allow(dead_code)]
-fn sequential_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
+fn sequential_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
     println!("Sequential Optimizer Example");
     println!("----------------------------");
     println!(
@@ -68,11 +68,11 @@ fn sequential_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_
 
     for i in 0..n_iterations {
         // Forward pass (compute predictions)
-        let predictions = compute_predictions(x_train, &weights, bias);
+        let predictions = compute_predictions(_x_train, &weights, bias);
 
         // Compute loss and gradients
         let (loss, weight_grad, bias_grad) =
-            compute_gradients(x_train, y_train, &predictions, &weights, bias);
+            compute_gradients(_x_train, y_train, &predictions, &weights, bias);
 
         // Update weights using the sequential optimizer
         weights = sequential_optimizer.step(&weights, &weight_grad).unwrap();
@@ -90,7 +90,7 @@ fn sequential_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_
 
     // Compute final predictions and loss
     let predictions = compute_predictions(x_train, &weights, bias);
-    let (final_loss, _, _) = compute_gradients(x_train, y_train, &predictions, &weights, bias);
+    let (final_loss__) = compute_gradients(x_train, y_train, &predictions, &weights, bias);
 
     println!("\nResults:");
     println!("  Training time: {:?}", elapsed);
@@ -101,7 +101,7 @@ fn sequential_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_
 
 /// Example demonstrating a parallel optimizer composition
 #[allow(dead_code)]
-fn parallel_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
+fn parallel_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
     println!("Parallel Optimizer Example");
     println!("---------------------------");
     println!("Using different optimizers for different parameter groups\n");
@@ -182,7 +182,7 @@ fn parallel_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_fe
 
     // Compute final predictions and loss
     let predictions = compute_predictions(x_train, &combined_weights, bias);
-    let (final_loss, _, _) =
+    let (final_loss__) =
         compute_gradients(x_train, y_train, &predictions, &combined_weights, bias);
 
     println!("\nResults:");
@@ -201,7 +201,7 @@ fn parallel_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_fe
 
 /// Example demonstrating a chained optimizer composition
 #[allow(dead_code)]
-fn chained_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
+fn chained_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
     println!("Chained Optimizer Example");
     println!("-------------------------");
     println!("Using RMSprop wrapped with Adam\n");
@@ -222,11 +222,11 @@ fn chained_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_fea
 
     for i in 0..n_iterations {
         // Forward pass (compute predictions)
-        let predictions = compute_predictions(x_train, &weights, bias);
+        let predictions = compute_predictions(_x_train, &weights, bias);
 
         // Compute loss and gradients
         let (loss, weight_grad, bias_grad) =
-            compute_gradients(x_train, y_train, &predictions, &weights, bias);
+            compute_gradients(_x_train, y_train, &predictions, &weights, bias);
 
         // Update weights using the chained optimizer
         weights = chained_optimizer.step(&weights, &weight_grad).unwrap();
@@ -244,7 +244,7 @@ fn chained_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_fea
 
     // Compute final predictions and loss
     let predictions = compute_predictions(x_train, &weights, bias);
-    let (final_loss, _, _) = compute_gradients(x_train, y_train, &predictions, &weights, bias);
+    let (final_loss__) = compute_gradients(x_train, y_train, &predictions, &weights, bias);
 
     println!("\nResults:");
     println!("  Training time: {:?}", elapsed);
@@ -263,7 +263,7 @@ fn generate_data(
     let true_weights = Array1::random(n_features, Normal::new(0.0, 1.0).unwrap());
     let true_bias = 1.0;
 
-    // Generate random features
+    // Generate random _features
     let x = Array2::random((n_samples, n_features), Normal::new(0.0, 1.0).unwrap());
 
     // Generate target values with noise
@@ -285,9 +285,7 @@ fn compute_predictions(x: &Array2<f64>, weights: &Array1<f64>, bias: f64) -> Arr
 fn compute_gradients(
     x: &Array2<f64>,
     y: &Array1<f64>,
-    predictions: &Array1<f64>,
-    _weights: &Array1<f64>,
-    _bias: f64,
+    predictions: &Array1<f64>, _weights: &Array1<f64>, _bias: f64,
 ) -> (f64, Array1<f64>, f64) {
     // Compute the error
     let error = predictions - y;
@@ -295,7 +293,7 @@ fn compute_gradients(
     // Mean squared error loss
     let loss = (&error * &error).sum() / (2.0 * y.len() as f64);
 
-    // Gradients with respect to weights and bias
+    // Gradients with respect to _weights and _bias
     let weight_grad = x.t().dot(&error) / (y.len() as f64);
     let bias_grad = error.sum() / (y.len() as f64);
 

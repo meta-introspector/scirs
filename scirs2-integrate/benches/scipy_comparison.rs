@@ -5,10 +5,10 @@
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2};
-use scirs2_integrate::cubature::{cubature, CubatureOptions};
-use scirs2_integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
-use scirs2_integrate::quad::{quad, QuadOptions};
+use scirs2__integrate::cubature::{cubature, CubatureOptions};
+use scirs2__integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::quad::{quad, QuadOptions};
 use std::hint::black_box;
 
 /// Test problems for ODE benchmarking
@@ -27,9 +27,9 @@ mod ode_problems {
 
     /// Van der Pol oscillator (stiff for large mu): d²x/dt² - mu*(1-x²)*dx/dt + x = 0
     #[allow(dead_code)]
-    pub fn van_der_pol(mu: f64) -> impl Fn(f64, ndarray::ArrayView1<f64>) -> Array1<f64> + 'static {
+    pub fn van_der_pol(_mu: f64) -> impl Fn(f64, ndarray::ArrayView1<f64>) -> Array1<f64> + 'static {
         move |_t: f64, y: ndarray::ArrayView1<f64>| {
-            Array1::from_vec(vec![y[1], mu * (1.0 - y[0] * y[0]) * y[1] - y[0]])
+            Array1::from_vec(vec![y[1], _mu * (1.0 - y[0] * y[0]) * y[1] - y[0]])
         }
     }
 
@@ -243,8 +243,7 @@ fn bench_ode_solvers(c: &mut Criterion) {
                                 t_span,
                                 y0_array,
                                 Some(opts),
-                            ),
-                            _ => panic!("Unknown problem"),
+                            , _ => panic!("Unknown problem"),
                         };
 
                         black_box(result)
@@ -427,7 +426,7 @@ fn bench_parallel_operations(c: &mut Criterion) {
                 &(dim, n_samples),
                 |b, &(_dim, n_samples)| {
                     b.iter(|| {
-                        use scirs2_integrate::monte_carlo_parallel::{
+                        use scirs2__integrate::monte_carlo_parallel::{
                             parallel_monte_carlo, ParallelMonteCarloOptions,
                         };
 

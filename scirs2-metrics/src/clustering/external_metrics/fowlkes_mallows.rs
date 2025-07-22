@@ -31,7 +31,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::clustering::fowlkes_mallows_score;
+/// use scirs2__metrics::clustering::fowlkes_mallows_score;
 ///
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![0, 0, 0, 1, 1, 1];
@@ -75,13 +75,13 @@ where
     }
 
     // Count labels
-    let mut true_counts: HashMap<String, usize> = HashMap::new();
+    let mut _true_counts: HashMap<String, usize> = HashMap::new();
     for lt in labels_true.iter() {
         let key = format!("{lt:?}");
         *true_counts.entry(key).or_insert(0) += 1;
     }
 
-    let mut pred_counts: HashMap<String, usize> = HashMap::new();
+    let mut _pred_counts: HashMap<String, usize> = HashMap::new();
     for lp in labels_pred.iter() {
         let key = format!("{lp:?}");
         *pred_counts.entry(key).or_insert(0) += 1;
@@ -97,7 +97,7 @@ where
         }
     }
 
-    // Calculate sum of combinations from each cluster (for both true and pred)
+    // Calculate sum of combinations from each cluster (for both _true and _pred)
     let mut sum_comb_true = 0.0;
     for &count in true_counts.values() {
         if count > 1 {
@@ -112,7 +112,7 @@ where
         }
     }
 
-    // Special case: No pairs in true or pred clusters (all clusters have size 1)
+    // Special case: No pairs in _true or _pred clusters (all clusters have size 1)
     if sum_comb_true == 0.0 || sum_comb_pred == 0.0 {
         return Ok(1.0); // Perfect agreement
     }

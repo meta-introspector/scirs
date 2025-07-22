@@ -6,9 +6,10 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::Distribution;
+use rand__distr::Distribution;
 use scirs2_core::Rng;
 use statrs::function::gamma::ln_gamma;
+use statrs::statistics::Statistics;
 
 /// Negative Binomial distribution structure
 ///
@@ -40,7 +41,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// ```
@@ -52,7 +53,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
             ));
         }
 
-        if p <= F::zero() || p > F::one() {
+        if p <= F::zero() || p >, F::one() {
             return Err(StatsError::DomainError(
                 "Success probability must be between 0 and 1, exclusive of 0".to_string(),
             ));
@@ -74,7 +75,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let pmf_at_7 = nb.pmf(7.0);
@@ -161,7 +162,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let log_pmf_at_7 = nb.log_pmf(7.0);
@@ -247,7 +248,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let cdf_at_7 = nb.cdf(7.0);
@@ -293,7 +294,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let quant = nb.ppf(0.5).unwrap();
@@ -357,7 +358,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let samples = nb.rvs(10).unwrap();
@@ -384,7 +385,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
                 samples.push(F::from(sum).unwrap());
             }
         } else {
-            // For non-integer r, use gamma-Poisson mixture
+            // For non-integer r..use gamma-Poisson mixture
             let r_f64 = <f64 as num_traits::NumCast>::from(self.r).unwrap_or(1.0);
             let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap_or(0.5);
 
@@ -422,7 +423,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let mean = nb.mean();
@@ -444,7 +445,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let variance = nb.var();
@@ -466,7 +467,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let std_dev = nb.std();
@@ -486,7 +487,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let skewness = nb.skewness();
@@ -510,7 +511,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let kurtosis = nb.kurtosis();
@@ -534,7 +535,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let entropy = nb.entropy();
@@ -576,7 +577,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::negative_binomial::NegativeBinomial;
+    /// use scirs2__stats::distributions::negative_binomial::NegativeBinomial;
     ///
     /// let nb = NegativeBinomial::new(5.0f64, 0.3).unwrap();
     /// let mode = nb.mode();
@@ -597,8 +598,8 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     }
 
     // Helper method to check if a value is an integer
-    fn is_integer(value: F) -> bool {
-        value == value.floor()
+    fn is_integer(_value: F) -> bool {
+        _value == _value.floor()
     }
 
     // Helper method to calculate binomial coefficient C(n,k)
@@ -645,7 +646,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::distributions;
+/// use scirs2__stats::distributions;
 ///
 /// let nb = distributions::nbinom(5.0f64, 0.3).unwrap();
 /// let pmf_at_7 = nb.pmf(7.0);

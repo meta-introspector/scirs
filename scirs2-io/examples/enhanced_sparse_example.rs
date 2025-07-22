@@ -8,8 +8,8 @@
 //! - Memory efficiency analysis
 //! - Performance comparison between formats
 
-use scirs2_io::error::Result;
-use scirs2_io::serialize::{
+use scirs2__io::error::Result;
+use scirs2__io::serialize::{
     deserialize_enhanced_sparse_matrix, serialize_enhanced_sparse_matrix, sparse_ops,
     SerializationFormat, SparseMatrix,
 };
@@ -116,7 +116,7 @@ fn demonstrate_format_conversion() -> Result<()> {
         // Test row access in CSR
         let start = Instant::now();
         for i in 0..std::cmp::min(100, size) {
-            if let Some((cols, _vals)) = csr.row(i) {
+            if let Some((cols_vals)) = csr.row(i) {
                 let _row_nnz = cols.len();
             }
         }
@@ -134,7 +134,7 @@ fn demonstrate_format_conversion() -> Result<()> {
         // Test column access in CSC
         let start = Instant::now();
         for j in 0..std::cmp::min(100, size) {
-            if let Some((rows, _vals)) = csc.column(j) {
+            if let Some((rows_vals)) = csc.column(j) {
                 let _col_nnz = rows.len();
             }
         }
@@ -339,7 +339,7 @@ fn demonstrate_memory_analysis() -> Result<()> {
     let mut sparse = create_sample_sparse_matrix(size);
 
     let coo_memory = sparse.coo_data.values.len()
-        * (std::mem::size_of::<f64>() + 2 * std::mem::size_of::<usize>());
+        * (std::mem::size_of::<f64>() + 2 * std::mem::size, _of::<usize>());
 
     let csr = sparse.to_csr()?;
     let csr_memory = csr.values.len() * std::mem::size_of::<f64>()
@@ -360,21 +360,21 @@ fn demonstrate_memory_analysis() -> Result<()> {
 
 /// Create a sample sparse matrix (tridiagonal pattern)
 #[allow(dead_code)]
-fn create_sample_sparse_matrix(size: usize) -> SparseMatrix<f64> {
-    let mut sparse = SparseMatrix::new(size, size);
+fn create_sample_sparse_matrix(_size: usize) -> SparseMatrix<f64> {
+    let mut sparse = SparseMatrix::new(_size_size);
 
     // Main diagonal
-    for i in 0..size {
+    for i in 0.._size {
         sparse.insert(i, i, 2.0);
     }
 
     // Super-diagonal
-    for i in 0..size - 1 {
+    for i in 0.._size - 1 {
         sparse.insert(i, i + 1, -1.0);
     }
 
     // Sub-diagonal
-    for i in 1..size {
+    for i in 1.._size {
         sparse.insert(i, i - 1, -1.0);
     }
 
@@ -383,13 +383,13 @@ fn create_sample_sparse_matrix(size: usize) -> SparseMatrix<f64> {
 
 /// Format bytes in human-readable format
 #[allow(dead_code)]
-fn format_bytes(bytes: usize) -> String {
-    if bytes < 1024 {
-        format!("{}B", bytes)
-    } else if bytes < 1024 * 1024 {
-        format!("{:.1}KB", bytes as f64 / 1024.0)
+fn format_bytes(_bytes: usize) -> String {
+    if _bytes < 1024 {
+        format!("{}B", _bytes)
+    } else if _bytes < 1024 * 1024 {
+        format!("{:.1}KB", _bytes as f64 / 1024.0)
     } else {
-        format!("{:.1}MB", bytes as f64 / (1024.0 * 1024.0))
+        format!("{:.1}MB", _bytes as f64 / (1024.0 * 1024.0))
     }
 }
 
@@ -412,17 +412,17 @@ fn demonstrate_matrix_market_integration() -> Result<()> {
 mod benchmarks {
     use super::*;
 
-    pub fn benchmark_format_conversions(size: usize, iterations: usize) -> Result<()> {
+    pub fn benchmark_format_conversions(_size: usize, iterations: usize) -> Result<()> {
         println!(
             "Benchmarking format conversions for {}x{} matrix ({} iterations):",
-            size, size, iterations
+            _size, _size, iterations
         );
 
         let mut total_csr_time = std::time::Duration::new(0, 0);
         let mut total_csc_time = std::time::Duration::new(0, 0);
 
         for _ in 0..iterations {
-            let mut sparse = create_sample_sparse_matrix(size);
+            let mut sparse = create_sample_sparse_matrix(_size);
 
             let start = Instant::now();
             let _csr = sparse.to_csr()?;

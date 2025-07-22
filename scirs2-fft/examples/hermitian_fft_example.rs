@@ -1,5 +1,5 @@
-use num_complex::Complex64;
-use scirs2_fft::{hfft, ihfft};
+use num__complex::Complex64;
+use scirs2__fft::{hfft, ihfft};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

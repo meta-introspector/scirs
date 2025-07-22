@@ -34,11 +34,11 @@ impl PlotlyBackend {
     /// Map the scirs2-metrics color map to a plotly color scale
     fn map_color_scheme(&self, color_map: &ColorMap) -> ColorScale {
         match color_map {
-            ColorMap::BlueRed => ColorScale::Palette(ColorScalePalette::RdBu),
-            ColorMap::GreenRed => ColorScale::Palette(ColorScalePalette::Greens),
-            ColorMap::Grayscale => ColorScale::Palette(ColorScalePalette::Greys),
-            ColorMap::Viridis => ColorScale::Palette(ColorScalePalette::Viridis),
-            ColorMap::Magma => ColorScale::Palette(ColorScalePalette::Hot),
+            ColorMap::BlueRed =>, ColorScale::Palette(ColorScalePalette::RdBu),
+            ColorMap::GreenRed =>, ColorScale::Palette(ColorScalePalette::Greens),
+            ColorMap::Grayscale =>, ColorScale::Palette(ColorScalePalette::Greys),
+            ColorMap::Viridis =>, ColorScale::Palette(ColorScalePalette::Viridis),
+            ColorMap::Magma =>, ColorScale::Palette(ColorScalePalette::Hot),
         }
     }
 
@@ -46,8 +46,7 @@ impl PlotlyBackend {
     fn add_line_traces(
         &self,
         plot: &mut Plot,
-        data: &VisualizationData,
-        _metadata: &VisualizationMetadata,
+        data: &VisualizationData_metadata: &VisualizationMetadata,
     ) -> Result<(), Box<dyn Error>> {
         let default_name = vec!["Series 1".to_string()];
         let series_names = data.series_names.as_ref().unwrap_or(&default_name);
@@ -83,8 +82,7 @@ impl PlotlyBackend {
     fn add_scatter_traces(
         &self,
         plot: &mut Plot,
-        data: &VisualizationData,
-        _metadata: &VisualizationMetadata,
+        data: &VisualizationData_metadata: &VisualizationMetadata,
     ) -> Result<(), Box<dyn Error>> {
         let default_name = vec!["Series 1".to_string()];
         let series_names = data.series_names.as_ref().unwrap_or(&default_name);
@@ -120,8 +118,7 @@ impl PlotlyBackend {
     fn add_bar_traces(
         &self,
         plot: &mut Plot,
-        data: &VisualizationData,
-        _metadata: &VisualizationMetadata,
+        data: &VisualizationData_metadata: &VisualizationMetadata,
     ) -> Result<(), Box<dyn Error>> {
         let default_name = vec!["Series 1".to_string()];
         let series_names = data.series_names.as_ref().unwrap_or(&default_name);
@@ -153,8 +150,7 @@ impl PlotlyBackend {
     fn add_heatmap_traces(
         &self,
         plot: &mut Plot,
-        data: &VisualizationData,
-        _metadata: &VisualizationMetadata,
+        data: &VisualizationData_metadata: &VisualizationMetadata,
         options: &VisualizationOptions,
     ) -> Result<(), Box<dyn Error>> {
         if let Some(z_data) = &data.z {
@@ -176,8 +172,7 @@ impl PlotlyBackend {
     fn add_histogram_traces(
         &self,
         plot: &mut Plot,
-        data: &VisualizationData,
-        _metadata: &VisualizationMetadata,
+        data: &VisualizationData_metadata: &VisualizationMetadata,
     ) -> Result<(), Box<dyn Error>> {
         let default_name = vec!["Series 1".to_string()];
         let series_names = data.series_names.as_ref().unwrap_or(&default_name);
@@ -238,10 +233,7 @@ impl PlottingBackend for PlotlyBackend {
     }
 
     fn render_svg(
-        &self,
-        _data: &VisualizationData,
-        _metadata: &VisualizationMetadata,
-        _options: &VisualizationOptions,
+        &self_data: &VisualizationData, _metadata: &VisualizationMetadata_options: &VisualizationOptions,
     ) -> Result<Vec<u8>, Box<dyn Error>> {
         // Plotly doesn't directly support SVG generation in the Rust crate
         // We'll return an error indicating this limitation
@@ -252,10 +244,7 @@ impl PlottingBackend for PlotlyBackend {
     }
 
     fn render_png(
-        &self,
-        _data: &VisualizationData,
-        _metadata: &VisualizationMetadata,
-        _options: &VisualizationOptions,
+        &self_data: &VisualizationData, _metadata: &VisualizationMetadata_options: &VisualizationOptions,
     ) -> Result<Vec<u8>, Box<dyn Error>> {
         // Plotly doesn't directly support PNG generation in the Rust crate
         // We'll return an error indicating this limitation

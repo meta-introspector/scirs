@@ -44,8 +44,7 @@ impl FromStr for MMDataType {
             "real" => Ok(MMDataType::Real),
             "complex" => Ok(MMDataType::Complex),
             "integer" => Ok(MMDataType::Integer),
-            "pattern" => Ok(MMDataType::Pattern),
-            _ => Err(IoError::FormatError(format!("Unknown data type: {}", s))),
+            "pattern" => Ok(MMDataType::Pattern, _ => Err(IoError::FormatError(format!("Unknown data type: {}", s))),
         }
     }
 }
@@ -76,8 +75,7 @@ impl FromStr for MMFormat {
     fn from_str(s: &str) -> Result<Self> {
         match s.to_lowercase().as_str() {
             "coordinate" => Ok(MMFormat::Coordinate),
-            "array" => Ok(MMFormat::Array),
-            _ => Err(IoError::FormatError(format!("Unknown format: {}", s))),
+            "array" => Ok(MMFormat::Array, _ => Err(IoError::FormatError(format!("Unknown format: {}", s))),
         }
     }
 }
@@ -112,8 +110,7 @@ impl FromStr for MMSymmetry {
             "general" => Ok(MMSymmetry::General),
             "symmetric" => Ok(MMSymmetry::Symmetric),
             "hermitian" => Ok(MMSymmetry::Hermitian),
-            "skew-symmetric" => Ok(MMSymmetry::SkewSymmetric),
-            _ => Err(IoError::FormatError(format!("Unknown symmetry: {}", s))),
+            "skew-symmetric" => Ok(MMSymmetry::SkewSymmetric, _ => Err(IoError::FormatError(format!("Unknown symmetry: {}", s))),
         }
     }
 }
@@ -224,14 +221,14 @@ pub struct IOStats {
 
 impl MMHeader {
     /// Parse Matrix Market header line
-    pub fn parse_header(line: &str) -> Result<Self> {
-        if !line.starts_with("%%MatrixMarket") {
+    pub fn parse_header(_line: &str) -> Result<Self> {
+        if !_line.starts_with("%%MatrixMarket") {
             return Err(IoError::FormatError(
                 "Invalid Matrix Market header".to_string(),
             ));
         }
 
-        let parts: Vec<&str> = line.split_whitespace().collect();
+        let parts: Vec<&str> = _line.split_whitespace().collect();
         if parts.len() != 5 {
             return Err(IoError::FormatError(
                 "Invalid Matrix Market header format".to_string(),
@@ -281,14 +278,14 @@ impl MMHeader {
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2_io::matrix_market::read_sparse_matrix;
+/// use scirs2__io::matrix_market::read_sparse_matrix;
 ///
 /// let matrix = read_sparse_matrix("matrix.mtx").unwrap();
 /// println!("Matrix: {}x{} with {} non-zeros", matrix.rows, matrix.cols, matrix.nnz);
 /// ```
 #[allow(dead_code)]
-pub fn read_sparse_matrix<P: AsRef<Path>>(path: P) -> Result<MMSparseMatrix<f64>> {
-    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn read_sparse_matrix<P: AsRef<Path>>(_path: P) -> Result<MMSparseMatrix<f64>> {
+    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
     let mut lines = reader.lines();
@@ -402,8 +399,8 @@ pub fn read_sparse_matrix<P: AsRef<Path>>(path: P) -> Result<MMSparseMatrix<f64>
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2_io::matrix_market::{write_sparse_matrix, MMSparseMatrix, MMHeader, SparseEntry};
-/// use scirs2_io::matrix_market::{MMFormat, MMDataType, MMSymmetry};
+/// use scirs2__io::matrix_market::{write_sparse_matrix, MMSparseMatrix, MMHeader, SparseEntry};
+/// use scirs2__io::matrix_market::{MMFormat, MMDataType, MMSymmetry};
 ///
 /// let header = MMHeader {
 ///     object: "matrix".to_string(),
@@ -428,8 +425,8 @@ pub fn read_sparse_matrix<P: AsRef<Path>>(path: P) -> Result<MMSparseMatrix<f64>
 /// write_sparse_matrix("output.mtx", &matrix).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn write_sparse_matrix<P: AsRef<Path>>(path: P, matrix: &MMSparseMatrix<f64>) -> Result<()> {
-    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn write_sparse_matrix<P: AsRef<Path>>(_path: P, matrix: &MMSparseMatrix<f64>) -> Result<()> {
+    let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     // Write header
@@ -481,8 +478,8 @@ pub fn write_sparse_matrix<P: AsRef<Path>>(path: P, matrix: &MMSparseMatrix<f64>
 ///
 /// * `Result<MMDenseMatrix<f64>>` - The dense matrix or an error
 #[allow(dead_code)]
-pub fn read_dense_matrix<P: AsRef<Path>>(path: P) -> Result<MMDenseMatrix<f64>> {
-    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn read_dense_matrix<P: AsRef<Path>>(_path: P) -> Result<MMDenseMatrix<f64>> {
+    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
     let mut lines = reader.lines();
@@ -577,8 +574,8 @@ pub fn read_dense_matrix<P: AsRef<Path>>(path: P) -> Result<MMDenseMatrix<f64>> 
 ///
 /// * `Result<()>` - Success or an error
 #[allow(dead_code)]
-pub fn write_dense_matrix<P: AsRef<Path>>(path: P, matrix: &MMDenseMatrix<f64>) -> Result<()> {
-    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn write_dense_matrix<P: AsRef<Path>>(_path: P, matrix: &MMDenseMatrix<f64>) -> Result<()> {
+    let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     // Write header
@@ -619,10 +616,10 @@ pub fn write_dense_matrix<P: AsRef<Path>>(path: P, matrix: &MMDenseMatrix<f64>) 
 ///
 /// * `(Array1<usize>, Array1<usize>, Array1<f64>)` - Row indices, column indices, and values
 #[allow(dead_code)]
-pub fn sparse_to_coo(matrix: &MMSparseMatrix<f64>) -> (Array1<usize>, Array1<usize>, Array1<f64>) {
-    let rows: Vec<usize> = matrix.entries.iter().map(|e| e.row).collect();
-    let cols: Vec<usize> = matrix.entries.iter().map(|e| e.col).collect();
-    let values: Vec<f64> = matrix.entries.iter().map(|e| e.value).collect();
+pub fn sparse_to_coo(_matrix: &MMSparseMatrix<f64>) -> (Array1<usize>, Array1<usize>, Array1<f64>) {
+    let rows: Vec<usize> = _matrix.entries.iter().map(|e| e.row).collect();
+    let cols: Vec<usize> = _matrix.entries.iter().map(|e| e.col).collect();
+    let values: Vec<f64> = _matrix.entries.iter().map(|e| e.value).collect();
 
     (Array1::from(rows), Array1::from(cols), Array1::from(values))
 }
@@ -678,7 +675,7 @@ pub fn coo_to_sparse(
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2_io::matrix_market::{read_sparse_matrix_parallel, ParallelConfig};
+/// use scirs2__io::matrix_market::{read_sparse_matrix_parallel, ParallelConfig};
 ///
 /// let config = ParallelConfig::default();
 /// let (matrix, stats) = read_sparse_matrix_parallel("large_matrix.mtx", config).unwrap();
@@ -867,8 +864,8 @@ pub fn read_sparse_matrix_parallel<P: AsRef<Path>>(
 
 /// Parse a single matrix entry line
 #[allow(dead_code)]
-fn parse_matrix_entry(line: &str, header: &MMHeader) -> Result<SparseEntry<f64>> {
-    let parts: Vec<&str> = line.split_whitespace().collect();
+fn parse_matrix_entry(_line: &str, header: &MMHeader) -> Result<SparseEntry<f64>> {
+    let parts: Vec<&str> = _line.split_whitespace().collect();
     if parts.len() < 2 {
         return Err(IoError::FormatError("Invalid entry format".to_string()));
     }
@@ -912,8 +909,8 @@ fn parse_matrix_entry(line: &str, header: &MMHeader) -> Result<SparseEntry<f64>>
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2_io::matrix_market::{write_sparse_matrix_parallel, MMSparseMatrix, ParallelConfig};
-/// # use scirs2_io::matrix_market::{MMHeader, MMFormat, MMDataType, MMSymmetry, SparseEntry};
+/// use scirs2__io::matrix_market::{write_sparse_matrix_parallel, MMSparseMatrix, ParallelConfig};
+/// # use scirs2__io::matrix_market::{MMHeader, MMFormat, MMDataType, MMSymmetry, SparseEntry};
 ///
 /// # let header = MMHeader {
 /// #     object: "matrix".to_string(),
@@ -1009,7 +1006,7 @@ pub fn write_sparse_matrix_parallel<P: AsRef<Path>>(
             .into_inner()
             .unwrap();
 
-        all_formatted.sort_by_key(|&(idx, _)| idx);
+        all_formatted.sort_by_key(|&(idx_)| idx);
 
         for (_, lines) in all_formatted {
             for line in lines {
@@ -1059,11 +1056,11 @@ fn write_matrix_entry<W: Write>(
 
 /// Format a single matrix entry as a string
 #[allow(dead_code)]
-fn format_matrix_entry(entry: &SparseEntry<f64>, header: &MMHeader) -> String {
+fn format_matrix_entry(_entry: &SparseEntry<f64>, header: &MMHeader) -> String {
     if header.data_type == MMDataType::Pattern {
-        format!("{} {}", entry.row + 1, entry.col + 1)
+        format!("{} {}", _entry.row + 1, _entry.col + 1)
     } else {
-        format!("{} {} {}", entry.row + 1, entry.col + 1, entry.value)
+        format!("{} {} {}", _entry.row + 1, _entry.col + 1, _entry.value)
     }
 }
 
@@ -1098,10 +1095,10 @@ pub fn create_optimal_parallel_config(
         config.use_memory_mapping = true;
     }
 
-    // Adjust based on available memory
-    if let Some(memory) = available_memory {
+    // Adjust based on available _memory
+    if let Some(_memory) = available_memory {
         let entry_size = std::mem::size_of::<SparseEntry<f64>>();
-        let max_entries_in_memory = memory / (entry_size * 4); // Use 25% of available memory
+        let max_entries_in_memory = _memory / (entry_size * 4); // Use 25% of available _memory
 
         if nnz > max_entries_in_memory {
             config.chunk_size = config

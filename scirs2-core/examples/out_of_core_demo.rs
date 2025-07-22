@@ -80,7 +80,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let manager = OutOfCoreManager::default();
 
     // Create an array through the manager
-    let managed_array: Arc<OutOfCoreArray<f64>> =
+    let managedarray: Arc<OutOfCoreArray<f64>> =
         manager.create_array("managed_dataset".to_string(), vec![500, 500], None, None)?;
 
     println!("   - Created managed array: {:?}", managed_array.shape());

@@ -4,8 +4,8 @@
 //! These integrals arise in optics and electromagnetics, particularly in the
 //! study of diffraction patterns and are defined as:
 //!
-//! S(x) = ∫_0^x sin(πt²/2) dt
-//! C(x) = ∫_0^x cos(πt²/2) dt
+//! S(x) = ∫_0_^x sin(πt²/2) dt
+//! C(x) = ∫_0_^x cos(πt²/2) dt
 //!
 //! There are also modified Fresnel integrals that are used in certain applications.
 
@@ -21,8 +21,8 @@ use crate::error::{SpecialError, SpecialResult};
 ///
 /// The Fresnel integrals are defined as:
 ///
-/// S(x) = ∫_0^x sin(πt²/2) dt
-/// C(x) = ∫_0^x cos(πt²/2) dt
+/// S(x) = ∫_0_^x sin(πt²/2) dt
+/// C(x) = ∫_0_^x cos(πt²/2) dt
 ///
 /// # Arguments
 ///
@@ -35,7 +35,7 @@ use crate::error::{SpecialError, SpecialResult};
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::fresnel;
+/// use scirs2__special::fresnel;
 ///
 /// let (s, c) = fresnel(1.0).unwrap();
 /// println!("S(1.0) = {}, C(1.0) = {}", s, c);
@@ -75,7 +75,7 @@ pub fn fresnel(x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::fresnel_complex;
+/// use scirs2__special::fresnel_complex;
 /// use num_complex::Complex64;
 ///
 /// let z = Complex64::new(1.0, 0.5);
@@ -741,7 +741,7 @@ fn fresnel_complex_asymptotic(z: Complex64) -> SpecialResult<(Complex64, Complex
 ///
 /// The Fresnel sine integral is defined as:
 ///
-/// S(x) = ∫_0^x sin(πt²/2) dt
+/// S(x) = ∫_0_^x sin(πt²/2) dt
 ///
 /// # Arguments
 ///
@@ -754,7 +754,7 @@ fn fresnel_complex_asymptotic(z: Complex64) -> SpecialResult<(Complex64, Complex
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::fresnels;
+/// use scirs2__special::fresnels;
 ///
 /// let s = fresnels(1.0).unwrap();
 /// println!("S(1.0) = {}", s);
@@ -771,7 +771,7 @@ pub fn fresnels(x: f64) -> SpecialResult<f64> {
 ///
 /// The Fresnel cosine integral is defined as:
 ///
-/// C(x) = ∫_0^x cos(πt²/2) dt
+/// C(x) = ∫_0_^x cos(πt²/2) dt
 ///
 /// # Arguments
 ///
@@ -784,7 +784,7 @@ pub fn fresnels(x: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::fresnelc;
+/// use scirs2__special::fresnelc;
 ///
 /// let c = fresnelc(1.0).unwrap();
 /// println!("C(1.0) = {}", c);
@@ -815,7 +815,7 @@ pub fn fresnelc(x: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::mod_fresnel_plus;
+/// use scirs2__special::mod_fresnel_plus;
 ///
 /// let (f_plus, k_plus) = mod_fresnel_plus(1.0).unwrap();
 /// println!("F₊(1.0) = {} + {}i", f_plus.re, f_plus.im);
@@ -970,7 +970,7 @@ pub fn mod_fresnel_plus(x: f64) -> SpecialResult<(Complex64, Complex64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::mod_fresnel_minus;
+/// use scirs2__special::mod_fresnel_minus;
 ///
 /// let (f_minus, k_minus) = mod_fresnel_minus(1.0).unwrap();
 /// println!("F₋(1.0) = {} + {}i", f_minus.re, f_minus.im);

@@ -4,7 +4,7 @@
 //! that can significantly improve performance on multi-core systems.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::ErrorMessages;
+use crate::error__standardization::ErrorMessages;
 use crate::{mean, quantile, var, QuantileInterpolation};
 use ndarray::{s, Array1, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
@@ -148,7 +148,7 @@ where
 
     // Validate quantiles
     for &q in quantiles {
-        if q < F::zero() || q > F::one() {
+        if q < F::zero() || q >, F::one() {
             return Err(StatsError::domain("Quantiles must be between 0 and 1"));
         }
     }
@@ -248,7 +248,7 @@ where
 ///
 /// Correlation matrix
 #[allow(dead_code)]
-pub fn corrcoef_parallel<F, D>(data: &ArrayBase<D, Ix2>) -> StatsResult<ndarray::Array2<F>>
+pub fn corrcoef_parallel<F, D>(_data: &ArrayBase<D, Ix2>) -> StatsResult<ndarray::Array2<F>>
 where
     F: Float
         + NumCast
@@ -262,11 +262,11 @@ where
 {
     use crate::pearson_r;
 
-    let n_vars = data.ncols();
+    let n_vars = _data.ncols();
 
     if n_vars * n_vars < PARALLEL_THRESHOLD {
         // Use sequential version for small matrices
-        return crate::corrcoef(&data.view(), "pearson");
+        return crate::corrcoef(&_data.view(), "pearson");
     }
 
     let mut corr_matrix = ndarray::Array2::zeros((n_vars, n_vars));
@@ -278,8 +278,8 @@ where
 
     // Compute correlations in parallel
     let correlations: Vec<((usize, usize), F)> = parallel_map(&pairs, |&(i, j)| {
-        let var_i = data.slice(s![.., i]);
-        let var_j = data.slice(s![.., j]);
+        let var_i = _data.slice(s![.., i]);
+        let var_j = _data.slice(s![.., j]);
         let corr = pearson_r(&var_i, &var_j)?;
         Ok(((i, j), corr))
     })
@@ -330,10 +330,10 @@ where
     use crate::sampling::bootstrap;
 
     if n_samples < PARALLEL_THRESHOLD / data.len() {
-        // Sequential bootstrap for small number of samples
-        let samples = bootstrap(&data.view(), n_samples, seed)?;
+        // Sequential bootstrap for small number of _samples
+        let _samples = bootstrap(&data.view(), n_samples, seed)?;
         let mut results = Array1::zeros(n_samples);
-        for (i, sample) in samples.outer_iter().enumerate() {
+        for (i, sample) in _samples.outer_iter().enumerate() {
             results[i] = statistic(&sample)?;
         }
         return Ok(results);

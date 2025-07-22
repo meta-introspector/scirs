@@ -5,8 +5,8 @@
 //! optimal performance across different hardware configurations.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::ErrorMessages;
-use crate::simd_enhanced_core::{mean_enhanced, variance_enhanced, ComprehensiveStats};
+use crate::error__standardization::ErrorMessages;
+use crate::simd_enhanced__core::{mean_enhanced, variance_enhanced, ComprehensiveStats};
 use crossbeam;
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, One, Zero};
@@ -105,11 +105,11 @@ where
         + std::iter::Sum<F>,
 {
     /// Create a new advanced parallel processor
-    pub fn new(config: AdvancedParallelConfig) -> Self {
+    pub fn new(_config: AdvancedParallelConfig) -> Self {
         let capabilities = PlatformCapabilities::detect();
 
         Self {
-            config,
+            _config,
             capabilities,
             thread_pool: None,
             work_queue: Arc::new(Mutex::new(VecDeque::new())),
@@ -533,7 +533,7 @@ where
             .collect();
 
         // Combine results using parallel reduction
-        let (_final_mean, final_m2, _final_count) = results.into_iter().fold(
+        let (_final_mean, final_m2_final_count) = results.into_iter().fold(
             (F::zero(), F::zero(), 0),
             |(mean_a, m2_a, count_a), (mean_b, m2_b, count_b)| {
                 if count_b == 0 {
@@ -586,7 +586,7 @@ where
             })
             .collect();
 
-        // Fill the correlation matrix
+        // Fill the correlation _matrix
         for ((i, j), corr) in results {
             correlation_matrix[[i, j]] = corr;
         }
@@ -665,7 +665,7 @@ where
             .collect();
 
         // Combine results
-        let (total_mean, total_m2, total_m3, total_m4, _total_count) = results.into_iter().fold(
+        let (total_mean, total_m2, total_m3, total_m4_total_count) = results.into_iter().fold(
             (F::zero(), F::zero(), F::zero(), F::zero(), 0),
             |(mean_acc, m2_acc, m3_acc, m4_acc, count_acc), (mean, m2, m3, m4, count)| {
                 if count == 0 {
@@ -731,7 +731,7 @@ where
         D: Data<Elem = F> + Sync + Send,
     {
         use rand::{rng, Rng, SeedableRng};
-        use rand_chacha::ChaCha8Rng;
+        use rand__chacha::ChaCha8Rng;
 
         let num_threads = self
             .config
@@ -754,7 +754,7 @@ where
                     let mut rng = if let Some(seed) = seed {
                         ChaCha8Rng::seed_from_u64(seed + thread_id as u64)
                     } else {
-                        ChaCha8Rng::from_rng(&mut rng())
+                        ChaCha8Rng::from_rng(&mut rand::rng())
                     };
 
                     let mut local_results = Vec::with_capacity(samples_per_thread);
@@ -763,7 +763,7 @@ where
                     for _ in 0..samples_per_thread {
                         // Generate bootstrap sample
                         let bootstrap_indices: Vec<usize> =
-                            (0..n_data).map(|_| rng.random_range(0..n_data)).collect();
+                            (0..n_data).map(|_| rng.gen_range(0..n_data)).collect();
 
                         let bootstrap_sample: Vec<F> =
                             bootstrap_indices.into_iter().map(|i| data_arc[i]).collect();
@@ -780,7 +780,7 @@ where
         .unwrap();
 
         let mut all_results = partial_results.lock().unwrap();
-        all_results.truncate(n_samples); // Ensure exact number of samples
+        all_results.truncate(n_samples); // Ensure exact number of _samples
 
         Ok(Array1::from(all_results.clone()))
     }
@@ -788,8 +788,7 @@ where
 
 /// Simple thread pool for parallel execution
 struct ThreadPool {
-    workers: Vec<thread::JoinHandle<()>>,
-    sender: std::sync::mpsc::Sender<Message>,
+    workers: Vec<thread::JoinHandle<()>>..sender: std::sync::mpsc::Sender<Message>,
 }
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
@@ -800,16 +799,16 @@ enum Message {
 }
 
 impl ThreadPool {
-    fn new(size: usize, _config: AdvancedParallelConfig) -> StatsResult<ThreadPool> {
-        if size == 0 {
+    fn new(_size: usize_config: AdvancedParallelConfig) -> StatsResult<ThreadPool> {
+        if _size == 0 {
             return Err(ErrorMessages::invalid_probability("thread count", 0.0));
         }
 
         let (sender, receiver) = std::sync::mpsc::channel();
         let receiver = Arc::new(Mutex::new(receiver));
-        let mut workers = Vec::with_capacity(size);
+        let mut workers = Vec::with_capacity(_size);
 
-        for _id in 0..size {
+        for _id in 0.._size {
             let receiver = Arc::clone(&receiver);
 
             let worker = thread::spawn(move || loop {

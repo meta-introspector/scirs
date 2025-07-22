@@ -4,9 +4,9 @@
 //! external optimizers and schedulers without circular dependencies.
 
 use ndarray::array;
-use scirs2_metrics::classification::{accuracy_score, f1_score, precision_score, recall_score};
-use scirs2_metrics::integration::optim::{MetricOptimizer, SchedulerConfig};
-use scirs2_metrics::regression::{mean_squared_error, r2_score};
+use scirs2__metrics::classification::{accuracy_score, f1_score, precision_score, recall_score};
+use scirs2__metrics::integration::optim::{MetricOptimizer, SchedulerConfig};
+use scirs2__metrics::regression::{mean_squared_error, r2_score};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -282,7 +282,7 @@ fn external_scheduler_pattern_example() -> Result<(), Box<dyn std::error::Error>
 /// This shows what scirs2-optim would do to integrate with scirs2-metrics
 mod external_integration_example {
     use super::*;
-    use scirs2_metrics::integration::optim::{MetricSchedulerTrait, OptimizationMode};
+    use scirs2__metrics::integration::optim::{MetricSchedulerTrait, OptimizationMode};
 
     /// Mock external scheduler that implements the MetricSchedulerTrait
     pub struct ExternalReduceOnPlateau {
@@ -297,13 +297,13 @@ mod external_integration_example {
     }
 
     impl ExternalReduceOnPlateau {
-        pub fn from_config(config: &SchedulerConfig<f64>) -> Self {
+        pub fn from_config(_config: &SchedulerConfig<f64>) -> Self {
             Self {
-                current_lr: config.initial_lr,
-                factor: config.factor,
-                patience: config.patience,
-                min_lr: config.min_lr,
-                mode: config.mode,
+                current_lr: _config.initial_lr,
+                factor: _config.factor,
+                patience: _config.patience,
+                min_lr: _config.min_lr,
+                mode: _config.mode,
                 best_metric: None,
                 patience_counter: 0,
                 threshold: 1e-4,

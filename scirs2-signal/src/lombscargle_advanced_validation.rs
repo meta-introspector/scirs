@@ -9,6 +9,7 @@
 //! - Numerical accuracy under extreme conditions
 
 use crate::error::SignalResult;
+use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
 use ndarray::Array1;
 use num_traits::Float;
@@ -17,6 +18,7 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(unused_imports)]
 /// Advanced-comprehensive validation result
 #[derive(Debug, Clone)]
 pub struct AdvancedValidationResult {
@@ -176,7 +178,7 @@ impl Default for AdvancedValidationConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::lombscargle_advanced_validation::{run_advanced_validation, AdvancedValidationConfig};
+/// use scirs2__signal::lombscargle_advanced_validation::{run_advanced_validation, AdvancedValidationConfig};
 ///
 /// let config = AdvancedValidationConfig::default();
 /// let results = run_advanced_validation(&config).unwrap();
@@ -199,7 +201,7 @@ pub fn run_advanced_validation(
     config: &AdvancedValidationConfig,
 ) -> SignalResult<AdvancedValidationResult> {
     let start_time = Instant::now();
-    let mut issues = Vec::new();
+    let mut issues: Vec<ValidationIssue> = Vec::new();
 
     // Step 1: Basic accuracy validation
     println!("Running accuracy validation...");
@@ -323,12 +325,12 @@ fn validate_accuracy_comprehensive(
     let dynamic_range_score = validate_dynamic_range_handling(config.tolerance)?;
 
     let max_relative_error = all_errors.iter().cloned().fold(0.0, f64::max);
-    let mean_relative_error = all_errors.iter().sum::<f64>() / all_errors.len().max(1) as f64;
+    let mean_relative_error = all_errors.iter().sum::<f64>() / all_errors.len().max(1)  as f64;
     let peak_frequency_accuracy = 1.0 - peak_errors.iter().cloned().fold(0.0, f64::max);
     let spectral_leakage_level =
-        spectral_leakage_levels.iter().sum::<f64>() / spectral_leakage_levels.len().max(1) as f64;
+        spectral_leakage_levels.iter().sum::<f64>() / spectral_leakage_levels.len().max(1)  as f64;
     let noise_floor_estimation =
-        noise_floors.iter().sum::<f64>() / noise_floors.len().max(1) as f64;
+        noise_floors.iter().sum::<f64>() / noise_floors.len().max(1)  as f64;
 
     Ok(AccuracyMetrics {
         max_relative_error,
@@ -492,7 +494,7 @@ fn validate_memory_usage_comprehensive(
     }
 
     let allocation_efficiency =
-        allocation_scores.iter().sum::<f64>() / allocation_scores.len() as f64;
+        allocation_scores.iter().sum::<f64>() / allocation_scores.len()  as f64;
     let cache_efficiency_score = measure_cache_efficiency()?;
 
     Ok(MemoryMetrics {
@@ -532,9 +534,9 @@ fn validate_cross_platform_consistency(
 
 /// Determine overall validation status from issues
 #[allow(dead_code)]
-fn determine_validation_status(issues: &[ValidationIssue]) -> ValidationStatus {
-    let has_critical = issues.iter().any(|i| i.severity == IssueSeverity::Critical);
-    let has_warnings = issues.iter().any(|i| i.severity == IssueSeverity::Warning);
+fn determine_validation_status(_issues: &[ValidationIssue]) -> ValidationStatus {
+    let has_critical = _issues.iter().any(|i| i.severity == IssueSeverity::Critical);
+    let has_warnings = _issues.iter().any(|i| i.severity == IssueSeverity::Warning);
 
     if has_critical {
         ValidationStatus::Failed
@@ -594,16 +596,9 @@ fn validate_pure_sinusoid_accuracy(
 
     // Compute Lomb-Scargle
     let frequencies = Array1::linspace(0.1, 50.0, 500);
-    let (_freqs, power) = lombscargle(
-        times.as_slice().unwrap(),
-        signal.as_slice().unwrap(),
-        Some(frequencies.as_slice().unwrap()),
+    let (_freqs, power) = lombscargle(times.as_slice().unwrap(), signal.as_slice().unwrap(), Some(frequencies.as_slice().unwrap()), None, None, None,
         None,
-        None,
-        None,
-        None,
-        None,
-    )?;
+        None, None, None)?;
 
     // Find peak
     let peak_idx = power
@@ -653,33 +648,33 @@ fn validate_multicomponent_accuracy(
 }
 
 #[allow(dead_code)]
-fn validate_noise_floor_estimation(size: usize, tolerance: f64) -> SignalResult<f64> {
+fn validate_noise_floor_estimation(_size: usize, tolerance: f64) -> SignalResult<f64> {
     // Simplified implementation
     Ok(0.01) // Placeholder noise floor
 }
 
 #[allow(dead_code)]
-fn validate_dynamic_range_handling(tolerance: f64) -> SignalResult<f64> {
+fn validate_dynamic_range_handling(_tolerance: f64) -> SignalResult<f64> {
     // Simplified implementation
     Ok(0.95) // Good dynamic range handling score
 }
 
 #[allow(dead_code)]
-fn benchmark_signal_size(size: usize, iterations: usize) -> SignalResult<BenchmarkResult> {
+fn benchmark_signal_size(_size: usize, iterations: usize) -> SignalResult<BenchmarkResult> {
     let freq = 10.0;
     let fs = 100.0;
-    let t: Array1<f64> = Array1::linspace(0.0, (size - 1) as f64 / fs, size);
+    let t: Array1<f64> = Array1::linspace(0.0, (_size - 1) as f64 / fs, _size);
     let signal = t.mapv(|ti| (2.0 * PI * freq * ti).sin());
-    let frequencies = Array1::linspace(0.1, 50.0, size / 4);
+    let frequencies = Array1::linspace(0.1, 50.0, _size / 4);
 
     let start = Instant::now();
     for _ in 0..iterations {
-        let _ = lombscargle(t.as_slice().unwrap(), signal.as_slice().unwrap(), Some(frequencies.as_slice().unwrap()), None, None, None, None, None)?;
+        let _ = lombscargle(t.as_slice().unwrap(), signal.as_slice().unwrap(), Some(frequencies.as_slice().unwrap()), None, None, None, None, None, None, None, Some(false))?;
     }
-    let avg_time = start.elapsed().as_secs_f64() * 1000.0 / iterations as f64;
+    let avg_time = start.elapsed().as_secs_f64() * 1000.0 / iterations  as f64;
 
     // Estimate memory usage (simplified)
-    let memory_mb = (size * 16 + frequencies.len() * 8) as f64 / (1024.0 * 1024.0);
+    let memory_mb = (_size * 16 + frequencies.len() * 8) as f64 / (1024.0 * 1024.0);
 
     Ok(BenchmarkResult {
         execution_time_ms: avg_time,
@@ -698,7 +693,7 @@ fn benchmark_simd_performance(
 }
 
 #[allow(dead_code)]
-fn validate_simd_scalar_accuracy(config: &AdvancedValidationConfig) -> SignalResult<f64> {
+fn validate_simd_scalar_accuracy(_config: &AdvancedValidationConfig) -> SignalResult<f64> {
     // Compare SIMD and scalar results
     // Simplified implementation
     Ok(1e-14) // Very high accuracy
@@ -716,14 +711,14 @@ fn validate_individual_simd_operations(
 }
 
 #[allow(dead_code)]
-fn measure_simd_performance_gain(config: &AdvancedValidationConfig) -> SignalResult<f64> {
+fn measure_simd_performance_gain(_config: &AdvancedValidationConfig) -> SignalResult<f64> {
     // Simplified implementation
     Ok(2.8) // Good SIMD performance gain
 }
 
 #[allow(dead_code)]
-fn measure_memory_usage(size: usize) -> SignalResult<MemoryResult> {
-    let peak_mb = (size * 24) as f64 / (1024.0 * 1024.0); // Rough estimate
+fn measure_memory_usage(_size: usize) -> SignalResult<MemoryResult> {
+    let peak_mb = (_size * 24) as f64 / (1024.0 * 1024.0); // Rough estimate
     Ok(MemoryResult {
         peak_mb,
         allocation_efficiency: 0.85,
@@ -736,22 +731,22 @@ fn measure_cache_efficiency() -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn estimate_expected_time(size: usize) -> f64 {
+fn estimate_expected_time(_size: usize) -> f64 {
     // O(n log n) expected performance
-    (size as f64 * (size as f64).log2()) / 1e6
+    (_size as f64 * (_size as f64).log2()) / 1e6
 }
 
 #[allow(dead_code)]
-fn estimate_expected_memory(size: usize) -> f64 {
+fn estimate_expected_memory(_size: usize) -> f64 {
     // Linear memory usage expected
-    (size * 16) as f64 / (1024.0 * 1024.0)
+    (_size * 16) as f64 / (1024.0 * 1024.0)
 }
 
 #[allow(dead_code)]
-fn calculate_scalability_factor(execution_times: &HashMap<usize, f64>) -> f64 {
+fn calculate_scalability_factor(_execution_times: &HashMap<usize, f64>) -> f64 {
     // Analyze how execution time scales with input size
     // Ideal O(n log n) would give factor of 1.0
-    if execution_times.len() < 2 {
+    if _execution_times.len() < 2 {
         return 1.0;
     }
 
@@ -762,8 +757,8 @@ fn calculate_scalability_factor(execution_times: &HashMap<usize, f64>) -> f64 {
         return 1.0;
     }
 
-    let size1 = sizes[0] as f64;
-    let size2 = sizes[sizes.len() - 1] as f64;
+    let size1 = sizes[0]  as f64;
+    let size2 = sizes[sizes.len() - 1]  as f64;
     let time1 = execution_times[&(size1 as usize)];
     let time2 = execution_times[&(size2 as usize)];
 
@@ -774,9 +769,9 @@ fn calculate_scalability_factor(execution_times: &HashMap<usize, f64>) -> f64 {
 }
 
 #[allow(dead_code)]
-fn calculate_throughput(execution_times: &HashMap<usize, f64>) -> f64 {
+fn calculate_throughput(_execution_times: &HashMap<usize, f64>) -> f64 {
     // Calculate samples per second throughput
-    execution_times
+    _execution_times
         .iter()
         .map(|(&size, &time_ms)| size as f64 / (time_ms / 1000.0))
         .fold(0.0, f64::max)
@@ -805,7 +800,7 @@ mod tests {
     #[test]
     fn test_accuracy_validation() {
         let config = AdvancedValidationConfig::default();
-        let mut issues = Vec::new();
+        let mut issues: Vec<ValidationIssue> = Vec::new();
 
         let result = validate_accuracy_comprehensive(&config, &mut issues);
         assert!(result.is_ok());

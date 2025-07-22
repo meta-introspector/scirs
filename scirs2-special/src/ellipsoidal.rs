@@ -55,7 +55,7 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::ellip_harm;
+/// use scirs2__special::ellip_harm;
 ///
 /// let h2 = 0.1;
 /// let k2 = 0.2;
@@ -67,9 +67,9 @@ use std::f64::consts::PI;
 /// println!("E_{}^{}({}) = {:?}", n, p, s, result);
 /// ```
 #[allow(dead_code)]
-pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
+pub fn ellip_harm(_h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
     // Validate input parameters
-    if h2 < 0.0 || k2 < 0.0 {
+    if _h2 < 0.0 || k2 < 0.0 {
         return Err(SpecialError::ValueError(
             "Parameters h² and k² must be non-negative".to_string(),
         ));
@@ -120,8 +120,8 @@ pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult
     };
 
     // Apply correction factors for ellipsoidal geometry with stability checks
-    let h_factor = if h2 > 0.0 && h2 < 10.0 {
-        let correction = h2 * (n as f64 + 0.5) / (2.0 * n as f64 + 1.0);
+    let h_factor = if _h2 > 0.0 && _h2 < 10.0 {
+        let correction = _h2 * (n as f64 + 0.5) / (2.0 * n as f64 + 1.0);
         if correction < 100.0 {
             // Prevent extreme corrections
             1.0 + correction
@@ -182,7 +182,7 @@ pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::ellip_harm_2;
+/// use scirs2__special::ellip_harm_2;
 ///
 /// let h2 = 0.05;
 /// let k2 = 0.1;
@@ -194,9 +194,9 @@ pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult
 /// println!("F_{}^{}({}) = {:?}", n, p, s, result);
 /// ```
 #[allow(dead_code)]
-pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
+pub fn ellip_harm_2(_h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
     // Validate input parameters
-    if h2 < 0.0 || k2 < 0.0 {
+    if _h2 < 0.0 || k2 < 0.0 {
         return Err(SpecialError::ValueError(
             "Parameters h² and k² must be non-negative".to_string(),
         ));
@@ -217,7 +217,7 @@ pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResu
     // The second kind functions are related to the first kind
     // but with different normalization and asymptotic behavior
 
-    let first_kind = ellip_harm(h2, k2, n, p, s)?;
+    let first_kind = ellip_harm(_h2, k2, n, p, s)?;
 
     // Apply transformation for second kind with numerical stability
     let s_squared = s * s;
@@ -298,7 +298,7 @@ pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResu
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::ellip_normal;
+/// use scirs2__special::ellip_normal;
 ///
 /// let h2 = 0.1;
 /// let k2 = 0.05;
@@ -309,9 +309,9 @@ pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResu
 /// println!("N_{}^{}({}, {}) = {:?}", n, p, h2, k2, norm);
 /// ```
 #[allow(dead_code)]
-pub fn ellip_normal(h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> {
+pub fn ellip_normal(_h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> {
     // Validate input parameters
-    if h2 < 0.0 || k2 < 0.0 {
+    if _h2 < 0.0 || k2 < 0.0 {
         return Err(SpecialError::ValueError(
             "Parameters h² and k² must be non-negative".to_string(),
         ));
@@ -329,8 +329,8 @@ pub fn ellip_normal(h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> 
         .sqrt();
 
     // Ellipsoidal corrections
-    let h_correction = if h2 > 0.0 {
-        (1.0 + h2 * (n as f64 * n as f64 + n as f64 + 0.5) / (2.0 * n as f64 + 1.0)).sqrt()
+    let h_correction = if _h2 > 0.0 {
+        (1.0 + _h2 * (n as f64 * n as f64 + n as f64 + 0.5) / (2.0 * n as f64 + 1.0)).sqrt()
     } else {
         1.0
     };
@@ -365,7 +365,7 @@ pub fn ellip_normal(h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> 
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_special::ellip_harm_array;
+/// use scirs2__special::ellip_harm_array;
 ///
 /// let h2 = 0.1;
 /// let k2 = 0.05;
@@ -418,7 +418,7 @@ pub fn ellip_harm_array(
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::ellip_harm_coefficients;
+/// use scirs2__special::ellip_harm_coefficients;
 ///
 /// let h2 = 0.1;
 /// let k2 = 0.05;
@@ -444,7 +444,7 @@ pub fn ellip_harm_coefficients(
 
     if max_order > max_degree {
         return Err(SpecialError::ValueError(
-            "Maximum order cannot exceed maximum degree".to_string(),
+            "Maximum _order cannot exceed maximum _degree".to_string(),
         ));
     }
 
@@ -486,7 +486,7 @@ pub fn ellip_harm_coefficients(
 ///
 /// ```
 /// use num_complex::Complex64;
-/// use scirs2_special::ellip_harm_complex;
+/// use scirs2__special::ellip_harm_complex;
 ///
 /// let h2 = Complex64::new(0.1, 0.02);
 /// let k2 = Complex64::new(0.05, 0.01);

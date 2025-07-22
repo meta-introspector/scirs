@@ -10,7 +10,7 @@
 
 use ndarray::{Array, IxDyn};
 use scirs2_autograd as ag;
-use scirs2_autograd::tensor_ops as T;
+use scirs2__autograd::tensor_ops as T;
 
 /// Test advanced tensor indexing operations
 #[cfg(test)]
@@ -216,7 +216,7 @@ mod broadcasting_tests {
     fn test_broadcast_cache() {
         // Test cache operations
         T::clear_broadcast_cache();
-        let (size, _) = T::get_broadcast_cache_stats();
+        let (size_) = T::get_broadcast_cache_stats();
         assert_eq!(size, 0);
 
         // After some operations, cache should have entries
@@ -224,7 +224,7 @@ mod broadcasting_tests {
         let right_shape = vec![2, 3];
         let _ = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
 
-        let (size, _) = T::get_broadcast_cache_stats();
+        let (size_) = T::get_broadcast_cache_stats();
         assert!(size > 0);
     }
 }
@@ -388,7 +388,7 @@ mod efficient_operations_tests {
     fn test_efficient_reshape_cache() {
         // Test reshape cache operations
         T::clear_reshape_cache();
-        let (size, _) = T::get_reshape_cache_stats();
+        let (size_) = T::get_reshape_cache_stats();
         assert_eq!(size, 0);
     }
 

@@ -560,15 +560,15 @@ where
 
 // Helper function to unfold a tensor along a specified mode
 #[allow(dead_code)]
-fn unfold_tensor<A>(tensor: &ArrayD<A>, mode: usize) -> LinalgResult<Array2<A>>
+fn unfold_tensor<A>(_tensor: &ArrayD<A>, mode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
 {
-    let shape = tensor.shape();
+    let shape = _tensor.shape();
 
     if mode >= shape.len() {
         return Err(LinalgError::ShapeError(format!(
-            "Mode {} is out of bounds for tensor with {} dimensions",
+            "Mode {} is out of bounds for _tensor with {} dimensions",
             mode,
             shape.len()
         )));
@@ -580,7 +580,7 @@ where
     let other_dims_prod: usize = shape
         .iter()
         .enumerate()
-        .filter(|&(i, _)| i != mode)
+        .filter(|&(i_)| i != mode)
         .map(|(_, &dim)| dim)
         .product();
 
@@ -588,13 +588,13 @@ where
     let mut result = Array2::zeros((mode_dim, other_dims_prod));
 
     // Helper function to calculate column index
-    fn calc_col_idx(idx: &[usize], shape: &[usize], mode: usize) -> usize {
+    fn calc_col_idx(_idx: &[usize], shape: &[usize], mode: usize) -> usize {
         let mut col_idx = 0;
         let mut stride = 1;
 
         for dim in (0..shape.len()).rev() {
             if dim != mode {
-                col_idx += idx[dim] * stride;
+                col_idx += _idx[dim] * stride;
                 stride *= shape[dim];
             }
         }
@@ -602,12 +602,12 @@ where
         col_idx
     }
 
-    // Populate the unfolded tensor
+    // Populate the unfolded _tensor
     for idx in ndarray::indices(shape) {
         let mode_idx = idx[mode];
         let idx_vec: Vec<usize> = idx.as_array_view().to_vec();
         let col_idx = calc_col_idx(&idx_vec, shape, mode);
-        result[[mode_idx, col_idx]] = tensor[idx.clone()];
+        result[[mode_idx, col_idx]] = _tensor[idx.clone()];
     }
 
     Ok(result)
@@ -630,19 +630,19 @@ where
     // We don't need the unfolded core tensor here, we'll unfold the projected tensor later
     let _core_unfolded = unfold_tensor(core, skip_mode)?;
 
-    // For each mode except the one to skip, project the core tensor
+    // For each _mode except the one to skip, project the core tensor
     let mut projected_tensor = core.clone();
 
-    for (mode, factor) in factors.iter().enumerate() {
-        if mode == skip_mode {
+    for (_mode, factor) in factors.iter().enumerate() {
+        if _mode == skip_mode {
             continue;
         }
 
-        // Project the tensor along this mode
-        projected_tensor = mode_n_product(&projected_tensor.view(), &factor.view(), mode)?;
+        // Project the tensor along this _mode
+        projected_tensor = mode_n_product(&projected_tensor.view(), &factor.view(), _mode)?;
     }
 
-    // Unfold the projected tensor along the skipped mode
+    // Unfold the projected tensor along the skipped _mode
     let result = unfold_tensor(&projected_tensor, skip_mode)?;
 
     Ok(result)

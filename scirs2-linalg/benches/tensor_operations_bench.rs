@@ -5,22 +5,22 @@
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Array3, Array4, Axis};
-use scirs2_linalg::prelude::*;
+use scirs2__linalg::prelude::*;
 use std::hint::black_box;
 use std::time::Duration;
 
 /// Create a test tensor of given dimensions with deterministic values
 #[allow(dead_code)]
-fn create_test_tensor_3d(d1: usize, d2: usize, d3: usize) -> Array3<f64> {
-    Array3::from_shape_fn((d1, d2, d3), |(i, j, k)| {
+fn create_test_tensor_3d(_d1: usize, d2: usize, d3: usize) -> Array3<f64> {
+    Array3::from_shape_fn((_d1, d2, d3), |(i, j, k)| {
         ((i + j + k + 1) as f64 * 0.1).sin()
     })
 }
 
 /// Create a test tensor of given dimensions with deterministic values
 #[allow(dead_code)]
-fn create_test_tensor_4d(d1: usize, d2: usize, d3: usize, d4: usize) -> Array4<f64> {
-    Array4::from_shape_fn((d1, d2, d3, d4), |(i, j, k, l)| {
+fn create_test_tensor_4d(_d1: usize, d2: usize, d3: usize, d4: usize) -> Array4<f64> {
+    Array4::from_shape_fn((_d1, d2, d3, d4), |(i, j, k, l)| {
         ((i + j + k + l + 1) as f64 * 0.1).sin()
     })
 }

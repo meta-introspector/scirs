@@ -7,6 +7,7 @@ use std::fs::{self, File};
 use std::hash::{Hash, Hasher};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// The base directory name for caching datasets
 const CACHE_DIR_NAME: &str = "scirs2-datasets";
@@ -25,10 +26,10 @@ const CACHE_DIR_ENV: &str = "SCIRS2_CACHE_DIR";
 
 /// Compute SHA256 hash of a file
 #[allow(dead_code)]
-pub fn sha256_hash_file(path: &Path) -> std::result::Result<String, String> {
+pub fn sha256_hash_file(_path: &Path) -> std::result::Result<String, String> {
     use sha2::{Digest, Sha256};
 
-    let mut file = File::open(path).map_err(|e| format!("Failed to open file: {e}"))?;
+    let mut file = File::open(_path).map_err(|e| format!("Failed to open file: {e}"))?;
     let mut hasher = Sha256::new();
     let mut buffer = [0; 8192];
 
@@ -110,9 +111,9 @@ fn get_platform_cache_dir() -> Option<PathBuf> {
 
 /// Ensure a directory exists, creating it if necessary
 #[allow(dead_code)]
-fn ensure_directory_exists(dir: &Path) -> Result<()> {
-    if !dir.exists() {
-        fs::create_dir_all(dir).map_err(|e| {
+fn ensure_directory_exists(_dir: &Path) -> Result<()> {
+    if !_dir.exists() {
+        fs::create_dir_all(_dir).map_err(|e| {
             DatasetsError::CacheError(format!("Failed to create cache directory: {e}"))
         })?;
     }
@@ -154,9 +155,9 @@ pub fn fetch_data(
     }
 
     // If not in cache, fetch from the URL
-    let entry = match registry_entry {
-        Some(entry) => entry,
-        None => return Err(format!("No registry entry found for {filename}")),
+    let _entry = match registry_entry {
+        Some(_entry) => _entry,
+        None => return Err(format!("No registry _entry found for {filename}")),
     };
 
     // Create a temporary file to download to
@@ -164,7 +165,7 @@ pub fn fetch_data(
     let temp_file = temp_dir.path().join(filename);
 
     // Download the file
-    let response = ureq::get(entry.url)
+    let response = ureq::get(_entry.url)
         .call()
         .map_err(|e| format!("Failed to download {filename}: {e}"))?;
 
@@ -175,12 +176,12 @@ pub fn fetch_data(
     std::io::copy(&mut reader, &mut file).map_err(|e| format!("Failed to download file: {e}"))?;
 
     // Verify the SHA256 hash of the downloaded file if provided
-    if !entry.sha256.is_empty() {
+    if !_entry.sha256.is_empty() {
         let computed_hash = sha256_hash_file(&temp_file)?;
-        if computed_hash != entry.sha256 {
+        if computed_hash != _entry.sha256 {
             return Err(format!(
                 "SHA256 hash mismatch for {filename}: expected {}, got {computed_hash}",
-                entry.sha256
+                _entry.sha256
             ));
         }
     }
@@ -205,7 +206,7 @@ pub struct CacheKey {
 
 impl CacheKey {
     /// Create a new cache key from dataset name and configuration
-    pub fn new(name: &str, config: &crate::real_world::RealWorldConfig) -> Self {
+    pub fn new(_name: &str, config: &crate::real_world::RealWorldConfig) -> Self {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
@@ -217,7 +218,7 @@ impl CacheKey {
         config.random_state.hash(&mut hasher);
 
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             config_hash: format!("{:x}", hasher.finish()),
         }
     }
@@ -280,7 +281,7 @@ impl Default for DatasetCache {
 
 impl DatasetCache {
     /// Create a new dataset cache with the given cache directory and default memory cache
-    pub fn new(cache_dir: PathBuf) -> Self {
+    pub fn new(_cache_dir: PathBuf) -> Self {
         let mem_cache = RefCell::new(
             CacheBuilder::new()
                 .with_size(DEFAULT_CACHE_SIZE)
@@ -293,7 +294,7 @@ impl DatasetCache {
             .unwrap_or(false);
 
         DatasetCache {
-            cache_dir,
+            _cache_dir,
             mem_cache,
             max_cache_size: DEFAULT_MAX_CACHE_SIZE,
             offline_mode,
@@ -301,7 +302,7 @@ impl DatasetCache {
     }
 
     /// Create a new dataset cache with custom settings
-    pub fn with_config(cache_dir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
+    pub fn with_config(_cache_dir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
         let mem_cache = RefCell::new(
             CacheBuilder::new()
                 .with_size(cache_size)
@@ -314,7 +315,7 @@ impl DatasetCache {
             .unwrap_or(false);
 
         DatasetCache {
-            cache_dir,
+            _cache_dir,
             mem_cache,
             max_cache_size: DEFAULT_MAX_CACHE_SIZE,
             offline_mode,
@@ -465,8 +466,8 @@ impl DatasetCache {
     }
 
     /// Compute a hash for a filename or URL
-    pub fn hash_filename(name: &str) -> String {
-        let hash = blake3::hash(name.as_bytes());
+    pub fn hash_filename(_name: &str) -> String {
+        let hash = blake3::hash(_name.as_bytes());
         hash.to_hex().to_string()
     }
 
@@ -501,7 +502,7 @@ impl DatasetCache {
     /// for the new file plus some buffer space.
     fn cleanup_cache_to_fit(&self, needed_size: u64) -> Result<()> {
         if self.max_cache_size == 0 {
-            return Ok(()); // No size limit
+            return Ok(()); // No _size limit
         }
 
         let current_size = self.get_cache_size_bytes()?;
@@ -538,11 +539,11 @@ impl DatasetCache {
         }
 
         // Sort by modification time (oldest first)
-        files_with_times.sort_by_key(|(_, _, modified)| *modified);
+        files_with_times.sort_by_key(|(__, modified)| *modified);
 
         // Remove files until we've freed enough space
         let mut freed_size = 0u64;
-        for (path, size, _) in files_with_times {
+        for (path, size_) in files_with_times {
             if freed_size >= size_to_free {
                 break;
             }
@@ -557,7 +558,7 @@ impl DatasetCache {
             if let Err(e) = fs::remove_file(&path) {
                 eprintln!("Warning: Failed to remove cache file {path:?}: {e}");
             } else {
-                freed_size += size;
+                freed_size += _size;
             }
         }
 
@@ -640,9 +641,9 @@ impl DatasetCache {
 /// Downloads data from a URL and returns it as bytes, using the cache when possible
 #[cfg(feature = "download")]
 #[allow(dead_code)]
-pub fn download_data(url: &str, force_download: bool) -> Result<Vec<u8>> {
+pub fn download_data(_url: &str, force_download: bool) -> Result<Vec<u8>> {
     let cache = DatasetCache::default();
-    let cache_key = DatasetCache::hash_filename(url);
+    let cache_key = DatasetCache::hash_filename(_url);
 
     // Check if the data is already cached
     if !force_download && cache.is_cached(&cache_key) {
@@ -650,12 +651,12 @@ pub fn download_data(url: &str, force_download: bool) -> Result<Vec<u8>> {
     }
 
     // Download the data
-    let response = reqwest::blocking::get(url)
-        .map_err(|e| DatasetsError::DownloadError(format!("Failed to download from {url}: {e}")))?;
+    let response = reqwest::blocking::get(_url)
+        .map_err(|e| DatasetsError::DownloadError(format!("Failed to _download from {_url}: {e}")))?;
 
     if !response.status().is_success() {
         return Err(DatasetsError::DownloadError(format!(
-            "Failed to download from {url}: HTTP status {}",
+            "Failed to _download from {_url}: HTTP status {}",
             response.status()
         )));
     }
@@ -690,7 +691,7 @@ pub fn download_data(url: &str, force_download: bool) -> Result<Vec<u8>> {
 #[allow(dead_code)]
 pub fn download_data(_url: &str, _force_download: bool) -> Result<Vec<u8>> {
     Err(DatasetsError::Other(
-        "Download feature is not enabled. Recompile with --features download".to_string(),
+        "Download feature is not enabled. Recompile with --features _download".to_string(),
     ))
 }
 
@@ -709,9 +710,9 @@ impl CacheManager {
     }
 
     /// Create a new cache manager with custom settings
-    pub fn with_config(cache_dir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
+    pub fn with_config(_cache_dir: PathBuf, cache_size: usize, ttl_seconds: u64) -> Self {
         Self {
-            cache: DatasetCache::with_config(cache_dir, cache_size, ttl_seconds),
+            cache: DatasetCache::with_config(_cache_dir, cache_size, ttl_seconds),
         }
     }
 
@@ -721,7 +722,7 @@ impl CacheManager {
         if self.cache.is_cached(&name) {
             match self.cache.read_cached(&name) {
                 Ok(cached_data) => {
-                    match serde_json::from_slice::<crate::utils::Dataset>(&cached_data) {
+                    match serde_json::from, _slice::<crate::utils::Dataset>(&cached_data) {
                         Ok(dataset) => Ok(Some(dataset)),
                         Err(e) => {
                             // If deserialization fails, consider the cache entry invalid
@@ -1030,8 +1031,8 @@ impl CacheFileInfo {
 
 /// Format bytes as human-readable string
 #[allow(dead_code)]
-fn format_bytes(bytes: u64) -> String {
-    let size = bytes as f64;
+fn format_bytes(_bytes: u64) -> String {
+    let size = _bytes as f64;
     if size < 1024.0 {
         format!("{size} B")
     } else if size < 1024.0 * 1024.0 {
@@ -1114,9 +1115,9 @@ pub struct BatchOperations {
 
 impl BatchOperations {
     /// Create a new batch operations manager
-    pub fn new(cache: CacheManager) -> Self {
+    pub fn new(_cache: CacheManager) -> Self {
         Self {
-            cache,
+            _cache,
             parallel: true,
             max_retries: 3,
             retry_delay: std::time::Duration::from_millis(1000),
@@ -1581,7 +1582,7 @@ impl BatchOperations {
 
 /// Simple glob pattern matching for filenames
 #[allow(dead_code)]
-fn matches_glob_pattern(filename: &str, pattern: &str) -> bool {
+fn matches_glob_pattern(_filename: &str, pattern: &str) -> bool {
     if pattern == "*" {
         return true;
     }
@@ -1591,11 +1592,11 @@ fn matches_glob_pattern(filename: &str, pattern: &str) -> bool {
         if parts.len() == 2 {
             let prefix = parts[0];
             let suffix = parts[1];
-            return filename.starts_with(prefix) && filename.ends_with(suffix);
+            return _filename.starts_with(prefix) && _filename.ends_with(suffix);
         }
     }
 
-    filename == pattern
+    _filename == pattern
 }
 
 #[cfg(test)]

@@ -94,16 +94,16 @@ where
         return Ok(x);
     }
 
-    // Cache for AP product to avoid recomputation in adaptive precision mode
+    // Cache for AP product to avoid recomputation in adaptive _precision mode
     let mut ap;
 
-    // Tracking variables for adaptive precision
+    // Tracking variables for adaptive _precision
     let mut successive_slow_progress = 0;
     let mut previous_residual = rsold;
 
-    for (iteration, _) in (0..max_iter).enumerate() {
+    for (iteration_, _) in (0..max_iter).enumerate() {
         // Keep track of iteration number
-        let iter = iteration;
+        let _iter = iteration_;
 
         // Compute A*p
         ap = a.apply(&p.view())?;
@@ -113,7 +113,7 @@ where
 
         // Safety check for numerical stability
         if pap.abs() < F::epsilon() {
-            if iter == 0usize {
+            if _iter == 0usize {
                 return Err(LinalgError::ComputationError(
                     "Zero curvature detected in first iteration".to_string(),
                 ));
@@ -139,7 +139,7 @@ where
             break;
         }
 
-        // Adaptive precision strategy
+        // Adaptive _precision strategy
         if adaptive_precision {
             // Check if we're making good progress
             let ratio = rsnew / previous_residual;
@@ -238,10 +238,10 @@ where
         return Ok(x);
     }
 
-    // Get quantization parameters for potential precision adjustments
+    // Get quantization parameters for potential _precision adjustments
     // No direct parameter adjustments in this implementation
 
-    // Tracking variable for adaptive precision
+    // Tracking variable for adaptive _precision
     let mut reorth_step = if adaptive_precision { 1 } else { restart_iter };
 
     // Outer iteration (restarts)
@@ -389,7 +389,7 @@ where
             return Ok(x);
         }
 
-        // Adaptive precision strategy - adjust quantization on restart if needed
+        // Adaptive _precision strategy - adjust quantization on restart if needed
         if adaptive_precision {
             // Note: In a real implementation, we might adjust the quantization parameters
             // here, but that would require rebuilding the quantized operator, which is beyond
@@ -603,11 +603,11 @@ where
         return Ok(x);
     }
 
-    // Tracking variables for adaptive precision
+    // Tracking variables for adaptive _precision
     let mut successive_slow_progress = 0;
     let mut previous_residual = r.dot(&r);
 
-    for iter in 0..max_iter {
+    for _iter in 0..max_iter {
         // Compute A*p
         let ap = a.apply(&p.view())?;
 
@@ -616,7 +616,7 @@ where
 
         // Safety check for numerical stability
         if pap.abs() < F::epsilon() {
-            if iter == 0usize {
+            if _iter == 0usize {
                 return Err(LinalgError::ComputationError(
                     "Zero curvature detected in first iteration".to_string(),
                 ));
@@ -640,7 +640,7 @@ where
             break;
         }
 
-        // Adaptive precision strategy
+        // Adaptive _precision strategy
         if adaptive_precision {
             let r_squared = r.dot(&r);
 

@@ -2,11 +2,12 @@
 //!
 //! This module implements Joint BSS techniques for multi-dataset blind source separation.
 
-use super::{BssConfig, JadeMultiResult};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array2, Axis};
-use scirs2_linalg::{eigh, svd};
+use ndarray::{Array2, Axis, s};
+use scirs2__linalg::{eigh, svd};
+use super::{BssConfig, JadeMultiResult};
 
+#[allow(unused_imports)]
 /// Apply Joint Blind Source Separation (JBSS) to separate mixed signals from multiple datasets
 ///
 /// JBSS extends BSS to multiple datasets with shared sources but different mixing matrices.
@@ -23,8 +24,7 @@ use scirs2_linalg::{eigh, svd};
 #[allow(dead_code)]
 pub fn joint_bss(
     datasets: &[Array2<f64>],
-    n_components: usize,
-    _config: &BssConfig,
+    n_components: usize, _config: &BssConfig,
 ) -> SignalResult<JadeMultiResult> {
     if datasets.is_empty() {
         return Err(SignalError::ValueError("No datasets provided".to_string()));

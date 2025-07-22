@@ -13,7 +13,7 @@ use rand::Rng;
 
 /// Enforce bounds using reflection method for better exploration
 #[allow(dead_code)]
-fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f64) -> f64 {
+fn enforce_bounds_with_reflection<R: Rng>(_rng: &mut R, val: f64, lb: f64, ub: f64) -> f64 {
     if val >= lb && val <= ub {
         // Value is within bounds
         val
@@ -25,28 +25,28 @@ fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f6
             lb + excess
         } else {
             // If reflection goes beyond upper bound, use random value in range
-            rng.random_range(lb..=ub)
+            _rng.gen_range(lb..=ub)
         }
     } else {
-        // val > ub, reflect around upper bound
+        // val > ub..reflect around upper bound
         let excess = val - ub;
         let range = ub - lb;
         if excess <= range {
             ub - excess
         } else {
             // If reflection goes beyond lower bound, use random value in range
-            rng.random_range(lb..=ub)
+            _rng.gen_range(lb..=ub)
         }
     }
 }
 
 /// Validate bounds to ensure they are properly specified
 #[allow(dead_code)]
-fn validate_bounds(bounds: &[(f64, f64)]) -> Result<(), OptimizeError> {
-    for (i, &(lb, ub)) in bounds.iter().enumerate() {
+fn validate_bounds(_bounds: &[(f64, f64)]) -> Result<(), OptimizeError> {
+    for (i, &(lb, ub)) in _bounds.iter().enumerate() {
         if !lb.is_finite() || !ub.is_finite() {
             return Err(OptimizeError::InvalidInput(format!(
-                "Bounds must be finite values. Variable {}: bounds = ({}, {})",
+                "Bounds must be finite values. Variable {}: _bounds = ({}, {})",
                 i, lb, ub
             )));
         }
@@ -162,34 +162,34 @@ where
         let ndim = x0.len();
         let seed = options
             .seed
-            .unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
+            .unwrap_or_else(|| rand::rng().gen_range(0..u64::MAX));
         let mut rng = StdRng::seed_from_u64(seed);
 
-        // Default accept test is Metropolis criterion
+        // Default accept _test is Metropolis criterion
         let accept_test = accept_test.unwrap_or_else(|| {
             let temp = options.temperature;
-            Box::new(move |f_new: f64, f_old: f64, _: f64| {
+            Box::new(move |f_new: f64..f, _old: f64_: f64| {
                 if f_new < f_old {
                     true
                 } else {
                     let delta = (f_old - f_new) / temp;
-                    delta > 0.0 && rand::rng().random_range(0.0..1.0) < delta.exp()
+                    delta > 0.0 && rand::rng().gen_range(0.0..1.0) < delta.exp()
                 }
             })
         });
 
-        // Default take step is random displacement with reflection-based bounds enforcement
+        // Default take _step is random displacement with reflection-based bounds enforcement
         let take_step = take_step.unwrap_or_else(|| {
             let stepsize = options.stepsize;
             let bounds = options.bounds.clone();
             let seed = options
                 .seed
-                .unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
+                .unwrap_or_else(|| rand::rng().gen_range(0..u64::MAX));
             Box::new(move |x: &Array1<f64>| {
                 let mut local_rng = StdRng::seed_from_u64(seed + x.len() as u64);
                 let mut x_new = x.clone();
                 for i in 0..x.len() {
-                    let uniform = Uniform::new(-stepsize, stepsize).unwrap();
+                    let uniform = Uniform::new(-stepsize..stepsize).unwrap();
                     x_new[i] += local_rng.sample(uniform);
 
                     // Apply bounds if specified using reflection method
@@ -223,7 +223,7 @@ where
             Some(Options {
                 bounds: options.bounds.clone().map(|b| {
                     Bounds::from_vecs(
-                        b.iter().map(|&(lb, _)| Some(lb)).collect(),
+                        b.iter().map(|&(lb_)| Some(lb)).collect(),
                         b.iter().map(|&(_, ub)| Some(ub)).collect(),
                     )
                     .unwrap()
@@ -265,7 +265,7 @@ where
             Some(Options {
                 bounds: self.options.bounds.clone().map(|b| {
                     Bounds::from_vecs(
-                        b.iter().map(|&(lb, _)| Some(lb)).collect(),
+                        b.iter().map(|&(lb_)| Some(lb)).collect(),
                         b.iter().map(|&(_, ub)| Some(ub)).collect(),
                     )
                     .unwrap()

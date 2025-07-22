@@ -12,7 +12,7 @@ use std::hash::Hash;
 /// This function returns a mapping from each node to its core number (the maximum k for which
 /// the node belongs to the k-core).
 #[allow(dead_code)]
-pub fn k_core_decomposition<N, E, Ix>(graph: &Graph<N, E, Ix>) -> HashMap<N, usize>
+pub fn k_core_decomposition<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> HashMap<N, usize>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
@@ -22,8 +22,8 @@ where
     let mut degrees = HashMap::new();
 
     // Initialize degrees
-    for node in graph.nodes() {
-        degrees.insert(node.clone(), graph.neighbors(node).unwrap().len());
+    for node in _graph.nodes() {
+        degrees.insert(node.clone(), _graph.neighbors(node).unwrap().len());
     }
 
     // Create a sorted list of nodes by degree
@@ -32,7 +32,7 @@ where
     nodes_by_degree.sort_by_key(|&(_, d)| d);
 
     // Process nodes in order of increasing degree
-    let mut remaining_nodes: HashSet<N> = graph.nodes().into_iter().cloned().collect();
+    let mut remaining_nodes: HashSet<N> = _graph.nodes().into_iter().cloned().collect();
     let mut current_core;
 
     while !remaining_nodes.is_empty() {
@@ -58,7 +58,7 @@ where
             remaining_nodes.remove(&node);
 
             // Update degrees of neighbors
-            if let Ok(neighbors) = graph.neighbors(&node) {
+            if let Ok(neighbors) = _graph.neighbors(&node) {
                 for neighbor in neighbors {
                     if remaining_nodes.contains(&neighbor) {
                         if let Some(deg) = degrees.get_mut(&neighbor) {

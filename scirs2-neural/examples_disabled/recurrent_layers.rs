@@ -4,6 +4,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::f32;
+use statrs::statistics::Statistics;
 
 // Define a trait for recurrent layers
 trait RecurrentLayer {
@@ -40,24 +41,23 @@ struct SimpleRNN {
     inputs: Option<Array3<f32>>, // [batch_size, seq_len, input_size]
     hidden_states: Option<Array3<f32>>, // [batch_size, seq_len+1, hidden_size]
 impl SimpleRNN {
-    fn new(input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
         // Xavier/Glorot initialization for weights
-        let bound = (6.0 / (input_size + hidden_size) as f32).sqrt();
+        let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Create a random number generator
         let mut rng = rand::rng();
         // Initialize with random values
-        let mut w_ih = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_ih = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_hh = Array2::<f32>::zeros((hidden_size, hidden_size));
         for elem in w_ih.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         for elem in w_hh.iter_mut() {
         // Initialize biases to zero
         let b_ih = Array1::zeros(hidden_size);
         let b_hh = Array1::zeros(hidden_size);
         SimpleRNN {
-            input_size,
-            hidden_size,
+            input_size..hidden_size,
             batch_size,
             w_ih,
             w_hh,
@@ -74,9 +74,9 @@ impl SimpleRNN {
     // Activation function and its derivative
     fn tanh(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| v.tanh())
-    fn tanh_derivative(tanh_output: &Array2<f32>) -> Array2<f32> {
+    fn tanh_derivative(_tanh_output: &Array2<f32>) -> Array2<f32> {
         // derivative of tanh(x) is 1 - tanh(x)^2
-        tanh_output.mapv(|v| 1.0 - v * v)
+        _tanh_output.mapv(|v| 1.0 - v * v)
 impl RecurrentLayer for SimpleRNN {
     fn forward(&mut self, x: &Array3<f32>, is_training: bool) -> Array3<f32> {
         let batch_size = x.shape()[0];
@@ -281,8 +281,8 @@ impl LSTM {
     // Activation functions and derivatives
     fn sigmoid(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| 1.0 / (1.0 + (-v).exp()))
-    fn sigmoid_derivative(sigmoid_output: &Array2<f32>) -> Array2<f32> {
-        sigmoid_output * &(1.0 - sigmoid_output)
+    fn sigmoid_derivative(_sigmoid_output: &Array2<f32>) -> Array2<f32> {
+        _sigmoid_output * &(1.0 - _sigmoid_output)
         1.0 - tanh_output * tanh_output
 impl RecurrentLayer for LSTM {
         // Initialize states if None

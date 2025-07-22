@@ -149,7 +149,7 @@ pub mod medical {
         let top_hat = image.to_owned() - opened;
 
         // Enhance contrast
-        let two = safe_f64_to_float::<T>(2.0)?;
+        let two = safe_f64, _to_float: :<T>(2.0)?;
         let enhanced = image.to_owned() + top_hat * two;
 
         Ok(enhanced)
@@ -167,7 +167,7 @@ pub mod medical {
         let mut nodules = Vec::new();
 
         // Threshold to segment lung tissue
-        let threshold = safe_f64_to_float::<T>(-500.0)?; // Typical HU value for lung tissue
+        let threshold = safe_f64, _to_float: :<T>(-500.0)?; // Typical HU value for lung tissue
         let lung_mask = ct_slice.mapv(|x| x > threshold);
 
         // Apply morphological operations to clean up
@@ -180,9 +180,9 @@ pub mod medical {
         // Analyze each component
         for i in 1..=num_features {
             let component_mask = labels.mapv(|x| x == i);
-            let size = component_mask.iter().filter(|&&x| x).count();
+            let _size = component_mask.iter().filter(|&&x| x).count();
 
-            if size >= min_size && size <= max_size {
+            if _size >= min_size && _size <= max_size {
                 // Compute properties
                 let com = center_of_mass(&ct_slice.view(), Some(&component_mask.view()))?;
 
@@ -190,7 +190,7 @@ pub mod medical {
                 let coords: Vec<(usize, usize)> = component_mask
                     .indexed_iter()
                     .filter(|(_, &val)| val)
-                    .map(|((y, x), _)| (y, x))
+                    .map(|((y, x)_)| (y, x))
                     .collect();
 
                 let (cy, cx) = com;
@@ -219,14 +219,14 @@ pub mod medical {
 
                 nodules.push(Nodule {
                     center: com,
-                    size,
+                    _size,
                     circularity,
                     mean_intensity: ct_slice
                         .indexed_iter()
-                        .filter(|((y, x), _)| component_mask[[*y, *x]])
+                        .filter(|((y, x)_)| component_mask[[*y, *x]])
                         .map(|(_, &val)| safe_float_to_f64(val).unwrap_or(0.0))
                         .sum::<f64>()
-                        / size as f64,
+                        / _size as f64,
                 });
             }
         }
@@ -354,7 +354,7 @@ pub mod satellite {
             ));
         }
 
-        let (height, width, _) = image.dim();
+        let (height, width_) = image.dim();
         let mut cloud_mask = Array2::default((height, width));
 
         // Simple brightness test (clouds are bright in visible bands)
@@ -441,7 +441,7 @@ pub mod satellite {
                 // Replace intensity with pan
                 for i in 0..pan_h {
                     for j in 0..pan_w {
-                        let ratio = if intensity[[i, j]] > safe_f64_to_float::<T>(1e-10)? {
+                        let ratio = if intensity[[i, j]] > safe_f64, _to_float: :<T>(1e-10)? {
                             pan_image[[i, j]] / intensity[[i, j]]
                         } else {
                             T::one()
@@ -487,7 +487,7 @@ pub mod satellite {
                     // Apply Brovey transform
                     for i in 0..pan_h {
                         for j in 0..pan_w {
-                            if sum_upsampled[[i, j]] > safe_f64_to_float::<T>(1e-10)? {
+                            if sum_upsampled[[i, j]] > safe_f64, _to_float: :<T>(1e-10)? {
                                 sharpened[[i, j, band]] =
                                     upsampled[[i, j]] * pan_image[[i, j]] / sum_upsampled[[i, j]];
                             } else {
@@ -557,15 +557,15 @@ pub mod microscopy {
 
         // Apply threshold
         let binary = match params.threshold_method {
-            ThresholdMethod::Otsu => crate::segmentation::otsu_threshold(image)?,
-            ThresholdMethod::Adaptive => crate::segmentation::adaptive_threshold(
+            ThresholdMethod::Otsu =>, crate::segmentation::otsu_threshold(image)?,
+            ThresholdMethod::Adaptive =>, crate::segmentation::adaptive_threshold(
                 image,
                 21,
                 crate::segmentation::AdaptiveMethod::Gaussian,
-                safe_f64_to_float::<T>(5.0)?,
+                safe_f64, _to_float: :<T>(5.0)?,
             )?,
             ThresholdMethod::Fixed(thresh) => {
-                let thresh_t = safe_f64_to_float::<T>(thresh)?;
+                let thresh_t = safe_f64, _to_float: :<T>(thresh)?;
                 image.mapv(|x| x > thresh_t)
             }
         };
@@ -634,7 +634,7 @@ pub mod microscopy {
                     eccentricity,
                     mean_intensity: image
                         .indexed_iter()
-                        .filter(|((y, x), _)| mask[[*y, *x]])
+                        .filter(|((y, x)_)| mask[[*y, *x]])
                         .map(|(_, &val)| safe_float_to_f64(val).unwrap_or(0.0))
                         .sum::<f64>()
                         / area as f64,
@@ -686,11 +686,11 @@ pub mod microscopy {
         // Label nuclei
         let (mut labels, num_features) = label(&cleaned.view(), None)?;
 
-        // Filter by size
+        // Filter by _size
         let mut valid_count = 0;
         for i in 1..=num_features {
-            let size = labels.iter().filter(|&&x| x == i).count();
-            if size < min_size || size > max_size {
+            let _size = labels.iter().filter(|&&x| x == i).count();
+            if _size < min_size || _size > max_size {
                 // Remove this nucleus
                 labels.mapv_inplace(|x| if x == i { 0 } else { x });
             } else {

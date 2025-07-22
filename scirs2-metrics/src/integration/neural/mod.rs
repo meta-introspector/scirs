@@ -21,8 +21,8 @@
 //! ```no_run
 //! # #[cfg(feature = "neural_common")]
 //! # {
-//! use scirs2_metrics::integration::neural::NeuralMetricAdapter;
-//! use scirs2_metrics::integration::traits::MetricComputation;
+//! use scirs2__metrics::integration::neural::NeuralMetricAdapter;
+//! use scirs2__metrics::integration::traits::MetricComputation;
 //! use ndarray::{Array, IxDyn};
 //!
 //! // Create metric adapters
@@ -31,8 +31,8 @@
 //! let f1_score = NeuralMetricAdapter::<f64>::f1_score();
 //!
 //! // Use with neural network predictions and targets
-//! let predictions = Array::<f64, _>::zeros(IxDyn(&[10, 1]));
-//! let targets = Array::<f64, _>::zeros(IxDyn(&[10, 1]));
+//! let predictions = Array::<f64>::zeros(IxDyn(&[10, 1]));
+//! let targets = Array::<f64>::zeros(IxDyn(&[10, 1]));
 //!
 //! // Compute metrics
 //! let acc = accuracy.compute(&predictions, &targets).unwrap();
@@ -48,7 +48,7 @@
 //! ```no_run
 //! # #[cfg(feature = "neural_common")]
 //! # {
-//! use scirs2_metrics::integration::neural::{NeuralMetricAdapter, MetricsCallback};
+//! use scirs2__metrics::integration::neural::{NeuralMetricAdapter, MetricsCallback};
 //!
 //! // Create metric adapters
 //! let metrics = vec![
@@ -72,7 +72,7 @@
 //! ```no_run
 //! # #[cfg(feature = "neural_common")]
 //! # {
-//! use scirs2_metrics::integration::neural::{
+//! use scirs2__metrics::integration::neural::{
 //!     neural_roc_curve_visualization,
 //!     neural_precision_recall_curve_visualization,
 //!     neural_confusion_matrix_visualization,
@@ -82,8 +82,8 @@
 //! use std::collections::HashMap;
 //!
 //! // Example data
-//! let y_true = Array::<f64, _>::zeros(IxDyn(&[100]));
-//! let y_score = Array::<f64, _>::zeros(IxDyn(&[100]));
+//! let y_true = Array::<f64>::zeros(IxDyn(&[100]));
+//! let y_score = Array::<f64>::zeros(IxDyn(&[100]));
 //! let history = vec![HashMap::from([
 //!     ("loss".to_string(), 0.5),
 //!     ("accuracy".to_string(), 0.85),
@@ -107,7 +107,7 @@
 #[cfg(feature = "neural_common")]
 mod neural_adapter;
 #[cfg(feature = "neural_common")]
-pub use neural_adapter::*;
+pub use neural__adapter::*;
 
 // Neural-integration specific implementations that depend on neural crate
 #[cfg(feature = "neural_common")]
@@ -121,6 +121,6 @@ mod visualization;
 #[cfg(feature = "neural_common")]
 pub use callback::*;
 #[cfg(feature = "neural_common")]
-pub use deep_uncertainty::*;
+pub use deep__uncertainty::*;
 #[cfg(feature = "neural_common")]
 pub use visualization::*;

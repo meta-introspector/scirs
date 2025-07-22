@@ -8,7 +8,7 @@
 //!
 //! ```
 //! use ndarray::{array, Array2};
-//! use scirs2_interpolate::griddata::{griddata, GriddataMethod};
+//! use scirs2__interpolate::griddata::{griddata, GriddataMethod};
 //!
 //! // Scattered data points
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -75,7 +75,7 @@ pub enum GriddataMethod {
 /// ## Basic usage with scattered 2D data
 /// ```
 /// use ndarray::array;
-/// use scirs2_interpolate::griddata::{griddata, GriddataMethod};
+/// use scirs2__interpolate::griddata::{griddata, GriddataMethod};
 ///
 /// // Scattered data: z = x² + y²
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]];
@@ -95,7 +95,7 @@ pub enum GriddataMethod {
 /// ## Using different interpolation methods
 /// ```
 /// use ndarray::array;
-/// use scirs2_interpolate::griddata::{griddata, GriddataMethod};
+/// use scirs2__interpolate::griddata::{griddata, GriddataMethod};
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 /// let values = array![0.0, 1.0, 1.0];
@@ -213,7 +213,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_interpolate::griddata::{griddata_parallel, GriddataMethod};
+/// use scirs2__interpolate::griddata::{griddata_parallel, GriddataMethod};
 ///
 /// // Large dataset interpolation
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -474,8 +474,7 @@ where
 fn interpolate_single_nearest<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
-    query: &ndarray::ArrayView1<F>,
-    _fill_value: Option<F>,
+    query: &ndarray::ArrayView1<F>, _fill_value: Option<F>,
 ) -> Result<F, InterpolateError>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -768,7 +767,7 @@ where
     // Use inverse distance weighting as approximation to linear interpolation
     // This provides reasonable results for higher dimensions
     for i in 0..n_queries {
-        result[i] = interpolate_idw_linear(points, values, &xi.row(i), _default_fill)?;
+        result[i] = interpolate_idw_linear(points, values, &xi.row(i)_default_fill)?;
     }
 
     Ok(())
@@ -1046,7 +1045,7 @@ where
 
         // Perform local cubic interpolation using gradients
         match local_cubic_interpolation(points, values, &gradients.view(), &neighbors, x, y) {
-            Ok(value) => result[i] = value,
+            Ok(_value) => result[i] = _value,
             Err(_) => result[i] = default_fill,
         }
     }
@@ -1264,8 +1263,7 @@ fn griddata_rbf<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
     xi: &ArrayView2<F>,
-    kernel: RBFKernel,
-    _fill_value: Option<F>,
+    kernel: RBFKernel_fill_value: Option<F>,
 ) -> InterpolateResult<Array1<F>>
 where
     F: Float
@@ -1292,11 +1290,11 @@ where
 
 /// Estimate appropriate epsilon parameter for RBF interpolation
 #[allow(dead_code)]
-fn estimate_rbf_epsilon<F>(points: &ArrayView2<F>) -> F
+fn estimate_rbf_epsilon<F>(_points: &ArrayView2<F>) -> F
 where
     F: Float + FromPrimitive,
 {
-    let n_points = points.nrows();
+    let n_points = _points.nrows();
 
     if n_points < 2 {
         return F::one();
@@ -1309,14 +1307,14 @@ where
     for i in 0..n_points.min(100) {
         // Sample for efficiency
         let mut min_dist = F::infinity();
-        let point_i = points.slice(ndarray::s![i, ..]);
+        let point_i = _points.slice(ndarray::s![i, ..]);
 
         for j in 0..n_points {
             if i == j {
                 continue;
             }
 
-            let point_j = points.slice(ndarray::s![j, ..]);
+            let point_j = _points.slice(ndarray::s![j, ..]);
             let mut dist_sq = F::zero();
 
             for k in 0..point_i.len() {
@@ -1360,7 +1358,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_interpolate::griddata::make_regular_grid;
+/// use scirs2__interpolate::griddata::make_regular_grid;
 ///
 /// // Create a 2D grid from (0,0) to (1,1) with 3x3 points
 /// let bounds = vec![(0.0, 1.0), (0.0, 1.0)];
@@ -1372,19 +1370,19 @@ where
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 #[allow(dead_code)]
-pub fn make_regular_grid<F>(bounds: &[(F, F)], resolution: &[usize]) -> InterpolateResult<Array2<F>>
+pub fn make_regular_grid<F>(_bounds: &[(F, F)], resolution: &[usize]) -> InterpolateResult<Array2<F>>
 where
     F: Float + FromPrimitive + Clone,
 {
-    if bounds.len() != resolution.len() {
+    if _bounds.len() != resolution.len() {
         return Err(InterpolateError::shape_mismatch(
-            format!("bounds.len() = {}", bounds.len()),
+            format!("_bounds.len() = {}", _bounds.len()),
             format!("resolution.len() = {}", resolution.len()),
             "make_regular_grid dimension consistency",
         ));
     }
 
-    let n_dims = bounds.len();
+    let n_dims = _bounds.len();
     let total_points: usize = resolution.iter().product();
 
     let mut grid = Array2::zeros((total_points, n_dims));
@@ -1403,7 +1401,7 @@ where
         .enumerate()
     {
         for (dim, &idx) in indices.iter().enumerate() {
-            let (min_val, max_val) = bounds[dim];
+            let (min_val, max_val) = _bounds[dim];
             let coord = if resolution[dim] > 1 {
                 let t = F::from_usize(idx).unwrap() / F::from_usize(resolution[dim] - 1).unwrap();
                 min_val + t * (max_val - min_val)

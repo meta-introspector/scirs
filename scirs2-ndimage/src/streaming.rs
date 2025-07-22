@@ -78,18 +78,16 @@ pub struct OverlapInfo {
 
 /// Streaming processor for large arrays
 pub struct StreamProcessor<T> {
-    config: StreamConfig,
-    _phantom: std::marker::PhantomData<T>,
+    config: StreamConfig_phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> StreamProcessor<T>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
 {
-    pub fn new(config: StreamConfig) -> Self {
+    pub fn new(_config: StreamConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 
@@ -188,7 +186,7 @@ where
 
         while current_size > self.config.chunk_size && chunk_dims.iter().any(|&d| d > 1) {
             // Find largest dimension and halve it
-            let (max_idx, _) = chunk_dims
+            let (max_idx_) = chunk_dims
                 .iter()
                 .enumerate()
                 .filter(|(_, &d)| d > 1)
@@ -289,8 +287,7 @@ where
     fn write_chunk(
         &self,
         file: &mut BufWriter<File>,
-        chunk: &ArrayView<T, IxDyn>,
-        _chunk_info: &ChunkInfo,
+        chunk: &ArrayView<T, IxDyn>, _chunk_info: &ChunkInfo,
     ) -> NdimageResult<()> {
         let element_size = std::mem::size_of::<T>();
 
@@ -347,12 +344,12 @@ struct ChunkIterator {
 }
 
 impl ChunkIterator {
-    fn new(shape: &[usize], chunk_dims: &[usize], overlap: &[usize]) -> Self {
+    fn new(_shape: &[usize], chunk_dims: &[usize], overlap: &[usize]) -> Self {
         Self {
-            shape: shape.to_vec(),
+            _shape: _shape.to_vec(),
             chunk_dims: chunk_dims.to_vec(),
             overlap: overlap.to_vec(),
-            current: vec![0; shape.len()],
+            current: vec![0; _shape.len()],
             done: false,
         }
     }
@@ -420,8 +417,8 @@ pub struct StreamingGaussianFilter<T> {
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone> StreamingGaussianFilter<T> {
-    pub fn new(sigma: Vec<T>, truncate: Option<T>) -> Self {
-        Self { sigma, truncate }
+    pub fn new(_sigma: Vec<T>, truncate: Option<T>) -> Self {
+        Self { _sigma, truncate }
     }
 }
 
@@ -467,7 +464,7 @@ where
         }
 
         // For Gaussian filtering, we use weighted averaging in the overlap region
-        // Weight decreases towards the edges of each chunk to provide smooth blending
+        // Weight decreases towards the edges of each _chunk to provide smooth blending
 
         // Get the shapes for calculations
         let output_shape = output.shape();
@@ -476,7 +473,7 @@ where
         // Ensure shapes are compatible
         if output_shape != chunk_shape {
             return Err(NdimageError::DimensionError(
-                "Output and chunk shapes must match for overlap merging".to_string(),
+                "Output and _chunk shapes must match for overlap merging".to_string(),
             ));
         }
 
@@ -497,7 +494,7 @@ where
                 let weight = T::from_f64(distance_from_end as f64 / overlap_size as f64).unwrap();
                 *output_pixel = *output_pixel * (T::one() - weight) + chunk_pixel * weight;
             } else {
-                // Not in overlap region - use new chunk value directly
+                // Not in overlap region - use new _chunk value directly
                 *output_pixel = chunk_pixel;
             }
         }
@@ -573,20 +570,18 @@ mod tests {
 pub struct AdaptiveStreamProcessor<T> {
     base_config: StreamConfig,
     performance_monitor: PerformanceMonitor,
-    memory_manager: MemoryManager,
-    _phantom: std::marker::PhantomData<T>,
+    memory_manager: MemoryManager, _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> AdaptiveStreamProcessor<T>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
 {
-    pub fn new(base_config: StreamConfig) -> Self {
+    pub fn new(_base_config: StreamConfig) -> Self {
         Self {
-            base_config,
+            _base_config,
             performance_monitor: PerformanceMonitor::new(),
-            memory_manager: MemoryManager::new(),
-            _phantom: std::marker::PhantomData,
+            memory_manager: MemoryManager::new(), _phantom: std::marker::PhantomData,
         }
     }
 
@@ -664,7 +659,7 @@ where
         #[cfg(feature = "gpu")]
         if let Ok(device_manager) = crate::backend::device_detection::get_device_manager() {
             if let Ok(dm) = device_manager.lock() {
-                if let Some((backend, _device_id)) =
+                if let Some((backend_device_id)) =
                     dm.get_best_device(input.len() * std::mem::size_of::<T>())
                 {
                     return self.process_gpu_chunks(input, op, backend);
@@ -790,7 +785,7 @@ where
         D: Dimension,
         Op: GpuStreamableOp<T, D>,
     {
-        use crate::backend::GpuContext;
+        use crate::_backend::GpuContext;
 
         // Initialize GPU context
         let gpu_context = GpuContext::new()?;
@@ -925,7 +920,7 @@ impl PerformanceMonitor {
         self.history.push(PerformanceMetrics {
             chunk_size: current.chunk_size,
             processing_time: avg_time,
-            timestamp: std::time::Instant::now(),
+            timestamp: std::_time::Instant::now(),
         });
 
         new_config
@@ -1050,7 +1045,7 @@ where
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
 pub struct GpuContext {
-    // GPU-specific context information
+    // GPU-specific _context information
     device_id: u32,
     memory_pool: Option<*mut u8>,
 }
@@ -1070,13 +1065,13 @@ impl GpuContext {
         self.device_id
     }
 
-    pub fn allocate_memory(&mut self, _size: usize) -> NdimageResult<*mut u8> {
+    pub fn allocate_memory(&mut self_size: usize) -> NdimageResult<*mut u8> {
         // GPU memory allocation
         // This is a placeholder - would use actual GPU allocation APIs
         Ok(std::ptr::null_mut())
     }
 
-    pub fn free_memory(&mut self, _ptr: *mut u8) -> NdimageResult<()> {
+    pub fn free_memory(&mut self_ptr: *mut u8) -> NdimageResult<()> {
         // GPU memory deallocation
         // This is a placeholder - would use actual GPU deallocation APIs
         Ok(())
@@ -1100,7 +1095,7 @@ where
         .map_err(|e| NdimageError::IoError(format!("Failed to open input file: {}", e)))?;
 
     let mut input_reader: Box<dyn Read> = match compression {
-        CompressionType::None => Box::new(BufReader::new(input_file)),
+        CompressionType::None =>, Box::new(BufReader::new(input_file)),
         CompressionType::Gzip => {
             #[cfg(feature = "compression")]
             {
@@ -1145,7 +1140,7 @@ where
         .map_err(|e| NdimageError::IoError(format!("Failed to create output file: {}", e)))?;
 
     let mut output_writer: Box<dyn Write> = match compression {
-        CompressionType::None => Box::new(BufWriter::new(output_file)),
+        CompressionType::None =>, Box::new(BufWriter::new(output_file)),
         CompressionType::Gzip => {
             #[cfg(feature = "compression")]
             {

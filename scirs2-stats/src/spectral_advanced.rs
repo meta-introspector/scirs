@@ -14,7 +14,7 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2};
 use num_traits::{Float, FloatConst, NumCast, One, Zero};
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
-use scirs2_linalg::parallel_dispatch::ParallelConfig;
+use scirs2__linalg::parallel_dispatch::ParallelConfig;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -25,8 +25,7 @@ pub struct AdvancedSpectralAnalyzer<F> {
     /// Cached basis functions and transforms
     cache: SpectralCache<F>,
     /// Performance metrics
-    performance: SpectralPerformanceMetrics,
-    _phantom: PhantomData<F>,
+    performance: SpectralPerformanceMetrics_phantom: PhantomData<F>,
 }
 
 /// Configuration for advanced spectral analysis
@@ -402,7 +401,7 @@ where
         + std::fmt::Display,
 {
     /// Create a new advanced spectral analyzer
-    pub fn new(config: AdvancedSpectralConfig<F>) -> Self {
+    pub fn new(_config: AdvancedSpectralConfig<F>) -> Self {
         let cache = SpectralCache {
             windows: HashMap::new(),
             fft_plans: HashMap::new(),
@@ -433,10 +432,9 @@ where
         };
 
         Self {
-            config,
+            _config,
             cache,
-            performance,
-            _phantom: PhantomData,
+            performance_phantom: PhantomData,
         }
     }
 
@@ -714,8 +712,7 @@ where
     }
 
     fn ml_spectral_enhancement(
-        &mut self,
-        _signal: &ArrayView1<F>,
+        &mut self_signal: &ArrayView1<F>,
         psd: &Array2<F>,
     ) -> StatsResult<MLSpectralResults<F>> {
         let mut results = MLSpectralResults {
@@ -825,7 +822,7 @@ where
         frequencies
     }
 
-    fn generate_slepian_tapers(&mut self, n: usize, _nw: F, k: usize) -> StatsResult<Array2<F>> {
+    fn generate_slepian_tapers(&mut self, n: usize_nw: F, k: usize) -> StatsResult<Array2<F>> {
         // Simplified Slepian taper generation - would use proper DPSS implementation
         let mut tapers = Array2::zeros((n, k));
 
@@ -1047,7 +1044,7 @@ mod tests {
         let analyzer = AdvancedSpectralAnalyzer::<f64>::new(config);
 
         assert_eq!(analyzer.config.fs, 1.0);
-        assert_eq!(analyzer.config.multitaper_config.k, 7);
+        assert_eq!(analyzer._config.multitaper_config.k, 7);
     }
 
     #[test]

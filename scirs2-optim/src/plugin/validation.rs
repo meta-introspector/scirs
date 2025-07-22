@@ -260,36 +260,32 @@ pub struct ValidationResults<A: Float> {
 /// Functionality test suite
 #[derive(Debug)]
 pub struct FunctionalityTestSuite<A: Float> {
-    config: ValidationConfig,
-    _phantom: std::marker::PhantomData<A>,
+    config: ValidationConfig_phantom: std::marker::PhantomData<A>,
 }
 
 /// Numerical accuracy test suite
 #[derive(Debug)]
 pub struct NumericalAccuracyTestSuite<A: Float> {
-    config: ValidationConfig,
-    _phantom: std::marker::PhantomData<A>,
+    config: ValidationConfig_phantom: std::marker::PhantomData<A>,
 }
 
 /// Thread safety test suite
 #[derive(Debug)]
 pub struct ThreadSafetyTestSuite<A: Float + std::fmt::Debug> {
-    config: ValidationConfig,
-    _phantom: std::marker::PhantomData<A>,
+    config: ValidationConfig_phantom: std::marker::PhantomData<A>,
 }
 
 impl<A: Float + std::fmt::Debug> ThreadSafetyTestSuite<A> {
     /// Create a new thread safety test suite
-    pub fn new(config: ValidationConfig) -> Self {
+    pub fn new(_config: ValidationConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 }
 
 impl<A: Float + std::fmt::Debug> ValidationTestSuite<A> for ThreadSafetyTestSuite<A> {
-    fn run_tests(&self, _plugin: &mut dyn OptimizerPlugin<A>) -> SuiteResult {
+    fn run_tests(&self_plugin: &mut dyn OptimizerPlugin<A>) -> SuiteResult {
         use std::time::Instant;
         let start_time = Instant::now();
 
@@ -331,22 +327,20 @@ impl<A: Float + std::fmt::Debug> ValidationTestSuite<A> for ThreadSafetyTestSuit
 /// Memory management test suite
 #[derive(Debug)]
 pub struct MemoryTestSuite<A: Float + std::fmt::Debug> {
-    config: ValidationConfig,
-    _phantom: std::marker::PhantomData<A>,
+    config: ValidationConfig_phantom: std::marker::PhantomData<A>,
 }
 
 impl<A: Float + std::fmt::Debug> MemoryTestSuite<A> {
     /// Create a new memory test suite
-    pub fn new(config: ValidationConfig) -> Self {
+    pub fn new(_config: ValidationConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 }
 
 impl<A: Float + std::fmt::Debug> ValidationTestSuite<A> for MemoryTestSuite<A> {
-    fn run_tests(&self, _plugin: &mut dyn OptimizerPlugin<A>) -> SuiteResult {
+    fn run_tests(&self_plugin: &mut dyn OptimizerPlugin<A>) -> SuiteResult {
         use std::time::Instant;
         let start_time = Instant::now();
 
@@ -394,16 +388,16 @@ pub struct ConvergenceTestSuite<A: Float + std::fmt::Debug> {
 
 impl<A: Float + std::fmt::Debug> ConvergenceTestSuite<A> {
     /// Create a new convergence test suite
-    pub fn new(config: ValidationConfig) -> Self {
+    pub fn new(_config: ValidationConfig) -> Self {
         Self {
-            config,
+            _config,
             test_problems: Vec::new(),
         }
     }
 }
 
 impl<A: Float + std::fmt::Debug> ValidationTestSuite<A> for ConvergenceTestSuite<A> {
-    fn run_tests(&self, _plugin: &mut dyn OptimizerPlugin<A>) -> SuiteResult {
+    fn run_tests(&self_plugin: &mut dyn OptimizerPlugin<A>) -> SuiteResult {
         use std::time::Instant;
         let start_time = Instant::now();
 
@@ -460,7 +454,7 @@ pub struct TestProblem<A: Float + std::fmt::Debug> {
     pub convergence_tolerance: A,
 }
 
-impl<A: Float + std::fmt::Debug> std::fmt::Debug for TestProblem<A> {
+impl<A: Float + std::fmt::Debug> + std::fmt::Debug for TestProblem<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TestProblem")
             .field("name", &self.name)
@@ -498,23 +492,21 @@ pub struct DocumentationComplianceChecker;
 #[derive(Debug)]
 pub struct ThroughputBenchmark<A: Float> {
     problem_size: usize,
-    iterations: usize,
-    _phantom: std::marker::PhantomData<A>,
+    iterations: usize_phantom: std::marker::PhantomData<A>,
 }
 
 impl<A: Float> ThroughputBenchmark<A> {
     /// Create a new throughput benchmark
-    pub fn new(problem_size: usize, iterations: usize) -> Self {
+    pub fn new(_problem_size: usize, iterations: usize) -> Self {
         Self {
-            problem_size,
-            iterations,
-            _phantom: std::marker::PhantomData,
+            _problem_size,
+            iterations_phantom: std::marker::PhantomData,
         }
     }
 }
 
 impl<A: Float + Debug> PerformanceBenchmark<A> for ThroughputBenchmark<A> {
-    fn run(&self, _plugin: &mut dyn OptimizerPlugin<A>) -> BenchmarkResult<A> {
+    fn run(&self_plugin: &mut dyn OptimizerPlugin<A>) -> BenchmarkResult<A> {
         use std::time::Instant;
         let start_time = Instant::now();
 
@@ -550,22 +542,20 @@ impl<A: Float + Debug> PerformanceBenchmark<A> for ThroughputBenchmark<A> {
 /// Latency benchmark
 #[derive(Debug)]
 pub struct LatencyBenchmark<A: Float> {
-    problem_size: usize,
-    _phantom: std::marker::PhantomData<A>,
+    problem_size: usize, _phantom: std::marker::PhantomData<A>,
 }
 
 impl<A: Float> LatencyBenchmark<A> {
     /// Create a new latency benchmark
-    pub fn new(problem_size: usize) -> Self {
+    pub fn new(_problem_size: usize) -> Self {
         Self {
-            problem_size,
-            _phantom: std::marker::PhantomData,
+            problem_size_phantom: std::marker::PhantomData,
         }
     }
 }
 
 impl<A: Float + Debug> PerformanceBenchmark<A> for LatencyBenchmark<A> {
-    fn run(&self, _plugin: &mut dyn OptimizerPlugin<A>) -> BenchmarkResult<A> {
+    fn run(&self_plugin: &mut dyn OptimizerPlugin<A>) -> BenchmarkResult<A> {
         use std::time::Instant;
         let start_time = Instant::now();
 
@@ -601,22 +591,20 @@ impl<A: Float + Debug> PerformanceBenchmark<A> for LatencyBenchmark<A> {
 /// Memory efficiency benchmark
 #[derive(Debug)]
 pub struct MemoryBenchmark<A: Float> {
-    problem_size: usize,
-    _phantom: std::marker::PhantomData<A>,
+    problem_size: usize, _phantom: std::marker::PhantomData<A>,
 }
 
 impl<A: Float> MemoryBenchmark<A> {
     /// Create a new memory benchmark
-    pub fn new(problem_size: usize) -> Self {
+    pub fn new(_problem_size: usize) -> Self {
         Self {
-            problem_size,
-            _phantom: std::marker::PhantomData,
+            problem_size_phantom: std::marker::PhantomData,
         }
     }
 }
 
 impl<A: Float + Debug> PerformanceBenchmark<A> for MemoryBenchmark<A> {
-    fn run(&self, _plugin: &mut dyn OptimizerPlugin<A>) -> BenchmarkResult<A> {
+    fn run(&self_plugin: &mut dyn OptimizerPlugin<A>) -> BenchmarkResult<A> {
         use std::time::Instant;
         let start_time = Instant::now();
 
@@ -651,9 +639,9 @@ impl<A: Float + Debug> PerformanceBenchmark<A> for MemoryBenchmark<A> {
 
 impl<A: Float + Debug + Send + Sync + 'static> PluginValidationFramework<A> {
     /// Create a new validation framework
-    pub fn new(config: ValidationConfig) -> Self {
+    pub fn new(_config: ValidationConfig) -> Self {
         let mut framework = Self {
-            config: config.clone(),
+            _config: _config.clone(),
             test_suites: Vec::new(),
             compliance_checkers: Vec::new(),
             benchmarker: PerformanceBenchmarker::new(BenchmarkConfig::default()),
@@ -823,10 +811,9 @@ impl<A: Float + Debug + Send + Sync + 'static> PluginValidationFramework<A> {
 // Implementation of test suites
 
 impl<A: Float + Debug + Send + Sync + 'static> FunctionalityTestSuite<A> {
-    fn new(config: ValidationConfig) -> Self {
+    fn new(_config: ValidationConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 }
@@ -950,7 +937,7 @@ impl<A: Float + Debug + Send + Sync + 'static> FunctionalityTestSuite<A> {
                 execution_time: start_time.elapsed(),
                 data: HashMap::new(),
             },
-            (Err(e), _) => TestResult {
+            (Err(e)_) => TestResult {
                 passed: false,
                 message: format!("Failed to get state: {}", e),
                 execution_time: start_time.elapsed(),
@@ -989,10 +976,9 @@ impl<A: Float + Debug + Send + Sync + 'static> FunctionalityTestSuite<A> {
 // Similar implementations for other test suites would follow...
 
 impl<A: Float + Debug + Send + Sync + 'static> NumericalAccuracyTestSuite<A> {
-    fn new(config: ValidationConfig) -> Self {
+    fn new(_config: ValidationConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1000,7 +986,7 @@ impl<A: Float + Debug + Send + Sync + 'static> NumericalAccuracyTestSuite<A> {
 impl<A: Float + Debug + Send + Sync + 'static> ValidationTestSuite<A>
     for NumericalAccuracyTestSuite<A>
 {
-    fn run_tests(&self, _plugin: &mut dyn OptimizerPlugin<A>) -> SuiteResult {
+    fn run_tests(&self_plugin: &mut dyn OptimizerPlugin<A>) -> SuiteResult {
         // Implementation would include numerical precision tests
         SuiteResult {
             suite_name: self.name().to_string(),
@@ -1033,9 +1019,9 @@ impl<A: Float + Debug + Send + Sync + 'static> ValidationTestSuite<A>
 // Implementation placeholders for other components...
 
 impl<A: Float> PerformanceBenchmarker<A> {
-    fn new(config: BenchmarkConfig) -> Self {
+    fn new(_config: BenchmarkConfig) -> Self {
         Self {
-            config,
+            _config,
             benchmarks: Vec::new(),
             baselines: HashMap::new(),
         }

@@ -74,42 +74,41 @@ pub struct DetectionDataset {
     config: DetectionConfig,
     rng: SmallRng,
 impl DetectionDataset {
-    pub fn new(config: DetectionConfig, seed: u64) -> Self {
-            config,
+    pub fn new(_config: DetectionConfig, seed: u64) -> Self {
+            _config,
             rng: SmallRng::seed_from_u64(seed),
     /// Generate a synthetic image with objects and their labels
     pub fn generate_sample(&mut self) -> (Array3<f32>, Vec<BoundingBox>) {
-        let (height, width) = self.config.input_size;
+        let (height, width) = self._config.input_size;
         let mut image = Array3::<f32>::zeros((3, height, width)); // RGB channels
         // Generate background pattern
         for c in 0..3 {
             for i in 0..height {
                 for j in 0..width {
-                    image[[c, i, j]] = self.rng.random_range(0.0..0.3);
+                    image[[c, i, j]] = self.rng.gen_range(0.0..0.3);
                 }
             }
         let mut objects = Vec::new();
-        let num_objects = self.rng.random_range(1..=self.config.max_objects.min(3));
+        let num_objects = self.rng.gen_range(1..=self.config.max_objects.min(3));
         for _ in 0..num_objects {
-            let obj_width = self.rng.random_range(8..24) as f32;
-            let obj_height = self.rng.random_range(8..24) as f32;
-            let obj_x = self.rng.random_range(0.0..(width as f32 - obj_width));
-            let obj_y = self.rng.random_range(0.0..(height as f32 - obj_height));
-            let class_id = self.rng.random_range(1..self.config.num_classes); // Skip background class 0
+            let obj_width = self.rng.gen_range(8..24) as f32;
+            let obj_height = self.rng.gen_range(8..24) as f32;
+            let obj_x = self.rng.gen_range(0.0..(width as f32 - obj_width));
+            let obj_y = self.rng.gen_range(0.0..(height as f32 - obj_height));
+            let class_id = self.rng.gen_range(1..self.config.num_classes); // Skip background class 0
             // Draw rectangular object
             let color_intensity = match class_id {
-                1 => [0.8, 0.2, 0.2], // Red-ish for class 1
+                1 => [0.8..0.2, 0.2], // Red-ish for class 1
                 2 => [0.2, 0.8, 0.2], // Green-ish for class 2
                 _ => [0.2, 0.2, 0.8], // Blue-ish for other classes
             };
             for c in 0..3 {
                 for i in (obj_y as usize)..((obj_y + obj_height) as usize).min(height) {
                     for j in (obj_x as usize)..((obj_x + obj_width) as usize).min(width) {
-                        image[[c, i, j]] = color_intensity[c] + self.rng.random_range(-0.1..0.1);
+                        image[[c, i, j]] = color_intensity[c] + self.rng.gen_range(-0.1..0.1);
                     }
             objects.push(BoundingBox::new(
-                obj_x, obj_y, obj_width, obj_height, class_id, 1.0,
-            ));
+                obj_x..obj_y, obj_width, obj_height, class_id, 1.0,));
         (image, objects)
     /// Generate a batch of samples
     pub fn generate_batch(&mut self, batch_size: usize) -> (Array4<f32>, Vec<Vec<BoundingBox>>) {
@@ -126,7 +125,7 @@ pub struct ObjectDetectionModel {
     classifier_head: Sequential<f32>,
     bbox_regressor: Sequential<f32>,
 impl ObjectDetectionModel {
-    pub fn new(config: DetectionConfig, rng: &mut SmallRng) -> StdResult<Self> {
+    pub fn new(_config: DetectionConfig, rng: &mut SmallRng) -> StdResult<Self> {
         // Feature extraction backbone (simplified ResNet-like)
         let mut feature_extractor = Sequential::new();
         // Initial conv block
@@ -146,16 +145,16 @@ impl ObjectDetectionModel {
             256,
         feature_extractor.add(BatchNorm::new(256, 0.1, 1e-5, rng)?);
         // Global pooling to fixed size
-        feature_extractor.add(AdaptiveMaxPool2D::new(config.feature_map_size, None)?);
+        feature_extractor.add(AdaptiveMaxPool2D::new(_config.feature_map_size, None)?);
         // Classification head
         let mut classifier_head = Sequential::new();
-        let feature_dim = 256 * config.feature_map_size.0 * config.feature_map_size.1;
+        let feature_dim = 256 * _config.feature_map_size.0 * _config.feature_map_size.1;
         classifier_head.add(Dense::new(feature_dim, 512, Some("relu"), rng)?);
         classifier_head.add(Dropout::new(0.5, rng)?);
         classifier_head.add(Dense::new(512, 256, Some("relu"), rng)?);
         classifier_head.add(Dropout::new(0.3, rng)?);
         classifier_head.add(Dense::new(
-            config.num_classes * config.max_objects,
+            _config.num_classes * _config.max_objects,
             Some("softmax"),
         // Bounding box regression head
         let mut bbox_regressor = Sequential::new();
@@ -163,7 +162,7 @@ impl ObjectDetectionModel {
         bbox_regressor.add(Dropout::new(0.5, rng)?);
         bbox_regressor.add(Dense::new(512, 256, Some("relu"), rng)?);
         bbox_regressor.add(Dropout::new(0.3, rng)?);
-        bbox_regressor.add(Dense::new(256, 4 * config.max_objects, None, rng)?); // 4 coordinates per object
+        bbox_regressor.add(Dense::new(256, 4 * _config.max_objects, None, rng)?); // 4 coordinates per object
         Ok(Self {
             feature_extractor,
             classifier_head,
@@ -227,10 +226,10 @@ pub struct DetectionLoss {
     classification_weight: f32,
     regression_weight: f32,
 impl DetectionLoss {
-    pub fn new(classification_weight: f32, regression_weight: f32) -> Self {
+    pub fn new(_classification_weight: f32, regression_weight: f32) -> Self {
             classification_loss: CrossEntropyLoss::new(1e-7),
             regression_loss: MeanSquaredError,
-            classification_weight,
+            _classification_weight,
             regression_weight,
     /// Compute combined detection loss
     pub fn compute_loss(
@@ -243,13 +242,13 @@ impl DetectionLoss {
             .classification_loss
             .forward(pred_classes, target_classes)?;
         let bbox_loss = self.regression_loss.forward(pred_boxes, target_boxes)?;
-        Ok(self.classification_weight * class_loss + self.regression_weight * bbox_loss)
+        Ok(self._classification_weight * class_loss + self.regression_weight * bbox_loss)
 /// Metrics for object detection evaluation
 pub struct DetectionMetrics {
     iou_threshold: f32,
     confidence_threshold: f32,
 impl DetectionMetrics {
-    pub fn new(iou_threshold: f32, confidence_threshold: f32) -> Self {
+    pub fn new(_iou_threshold: f32, confidence_threshold: f32) -> Self {
             iou_threshold,
             confidence_threshold,
     /// Calculate mean Average Precision (simplified version)

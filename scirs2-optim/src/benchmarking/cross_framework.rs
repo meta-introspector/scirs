@@ -289,16 +289,16 @@ struct PythonScriptTemplates {
 
 impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
     /// Create a new cross-framework benchmark suite
-    pub fn new(config: CrossFrameworkConfig) -> Result<Self> {
+    pub fn new(_config: CrossFrameworkConfig) -> Result<Self> {
         let python_scripts = PythonScriptTemplates::new();
 
         // Create temporary directory
-        std::fs::create_dir_all(&config.temp_dir).map_err(|e| {
+        std::fs::create_dir_all(&_config.temp_dir).map_err(|e| {
             OptimError::InvalidConfig(format!("Failed to create temp directory: {}", e))
         })?;
 
         Ok(Self {
-            config,
+            _config,
             test_functions: Vec::new(),
             python_scripts,
             results: Vec::new(),
@@ -424,7 +424,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
     ) -> Result<CrossFrameworkBenchmarkResult<A>> {
         let mut optimizer_results = HashMap::new();
 
-        // Run SciRS2 optimizers
+        // Run SciRS2 _optimizers
         for (name, optimizer) in scirs2_optimizers {
             let identifier = OptimizerIdentifier {
                 framework: Framework::SciRS2,
@@ -437,14 +437,14 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
             optimizer_results.insert(identifier, summary);
         }
 
-        // Run PyTorch optimizers
+        // Run PyTorch _optimizers
         if self.config.enable_pytorch {
             let pytorch_results =
                 self.benchmark_pytorch_optimizers(test_function, problem_dim, batch_size)?;
             optimizer_results.extend(pytorch_results);
         }
 
-        // Run TensorFlow optimizers
+        // Run TensorFlow _optimizers
         if self.config.enable_tensorflow {
             let tensorflow_results =
                 self.benchmark_tensorflow_optimizers(test_function, problem_dim, batch_size)?;
@@ -454,7 +454,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         // Perform statistical analysis
         let statistical_comparison = self.perform_statistical_analysis(&optimizer_results)?;
 
-        // Rank optimizers by performance
+        // Rank _optimizers by performance
         let performance_ranking = self.rank_optimizers(&optimizer_results);
 
         // Analyze resource usage
@@ -462,7 +462,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         Ok(CrossFrameworkBenchmarkResult {
             config: self.config.clone(),
-            function_name: test_function.name.clone(),
+            _function_name: test_function.name.clone(),
             problem_dim,
             batch_size,
             optimizer_results,
@@ -477,8 +477,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
     fn benchmark_scirs2_optimizer(
         &self,
         test_function: &TestFunction<A>,
-        problem_dim: usize,
-        _batch_size: usize,
+        problem_dim: usize, _batch_size: usize,
         optimizer: &dyn Fn(&Array1<A>, &Array1<A>) -> Array1<A>,
     ) -> Result<OptimizerBenchmarkSummary<A>> {
         let mut convergence_times = Vec::new();
@@ -507,7 +506,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
             let mut converged = false;
 
             for iteration in 0..self.config.max_iterations {
-                let f_val = (test_function.function)(&x);
+                let f_val = (test_function._function)(&x);
                 let grad = (test_function.gradient)(&x);
                 let grad_norm = grad.mapv(|g| g * g).sum().sqrt();
 
@@ -533,7 +532,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
             // If didn't converge, record final state
             if !converged {
                 let elapsed = start_time.elapsed();
-                let f_val = (test_function.function)(&x);
+                let f_val = (test_function._function)(&x);
                 let grad = (test_function.gradient)(&x);
                 let grad_norm = grad.mapv(|g| g * g).sum().sqrt();
 
@@ -647,7 +646,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         // Parse results - simplified for now without serde_json
         let _results_json = String::from_utf8_lossy(&output.stdout);
-        // let results: HashMap<String, serde_json::Value> = serde_json::from_str(&results_json)
+        // let results: HashMap<String, serde_json::Value> = serde, _json::from_str(&results_json)
         //     .map_err(|e| OptimError::InvalidConfig(format!("Failed to parse PyTorch results: {}", e)))?;
         let results: HashMap<String, HashMap<String, f64>> = HashMap::new(); // Placeholder
 
@@ -705,7 +704,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         // Parse results - simplified for now without serde_json
         let _results_json = String::from_utf8_lossy(&output.stdout);
-        // let results: HashMap<String, serde_json::Value> = serde_json::from_str(&results_json)
+        // let results: HashMap<String, serde_json::Value> = serde, _json::from_str(&results_json)
         //     .map_err(|e| OptimError::InvalidConfig(format!("Failed to parse TensorFlow results: {}", e)))?;
         let results: HashMap<String, HashMap<String, f64>> = HashMap::new(); // Placeholder
 
@@ -879,7 +878,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         let cpu_usage = results
             .iter()
-            .map(|(id, _summary)| {
+            .map(|(id_summary)| {
                 (
                     id.clone(),
                     CpuStats {

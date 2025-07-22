@@ -24,8 +24,7 @@ pub struct AdvancedQuantumAnalyzer<F> {
     /// Quantum state cache
     cache: QuantumCache<F>,
     /// Performance metrics
-    performance: QuantumPerformanceMetrics,
-    _phantom: PhantomData<F>,
+    performance: QuantumPerformanceMetrics_phantom: PhantomData<F>,
 }
 
 /// Configuration for quantum-inspired statistical methods
@@ -604,7 +603,7 @@ where
         + std::iter::Sum<F>,
 {
     /// Create new quantum-inspired statistical analyzer
-    pub fn new(config: QuantumConfig<F>) -> Self {
+    pub fn new(_config: QuantumConfig<F>) -> Self {
         let cache = QuantumCache {
             quantum_states: HashMap::new(),
             compiled_circuits: HashMap::new(),
@@ -625,10 +624,9 @@ where
         };
 
         Self {
-            config,
+            _config,
             cache,
-            performance,
-            _phantom: PhantomData,
+            performance_phantom: PhantomData,
         }
     }
 
@@ -729,7 +727,7 @@ where
 
     /// Quantum amplitude estimation for enhanced Monte Carlo
     fn quantum_amplitude_estimation(&mut self, data: &ArrayView2<F>) -> StatsResult<QAEResults<F>> {
-        let (_n_samples, _) = data.dim();
+        let (_n_samples_) = data.dim();
 
         // Simplified QAE implementation
         let target_amplitude = F::from(0.3).unwrap(); // Would compute actual amplitude
@@ -896,7 +894,7 @@ where
     }
 
     /// Quantum neural network training and inference
-    fn quantum_neural_network(&mut self, _data: &ArrayView2<F>) -> StatsResult<QNNResults<F>> {
+    fn quantum_neural_network(&mut self_data: &ArrayView2<F>) -> StatsResult<QNNResults<F>> {
         let total_params: usize = self
             .config
             .qnn_config
@@ -1188,10 +1186,10 @@ where
         let dimension = bounds.len();
 
         // Enhanced quantum-inspired sampling with amplitude amplification
-        let samples = self.generate_quantum_samples(bounds, num_samples)?;
+        let _samples = self.generate_quantum_samples(bounds, num_samples)?;
 
         // Evaluate function with parallel processing
-        let values: Vec<F> = samples
+        let values: Vec<F> = _samples
             .outer_iter()
             .into_par_iter()
             .map(|sample| function(sample.as_slice().unwrap()))
@@ -1218,7 +1216,7 @@ where
         num_samples: usize,
     ) -> StatsResult<Array2<F>> {
         let dimension = bounds.len();
-        let mut samples = Array2::zeros((num_samples, dimension));
+        let mut _samples = Array2::zeros((num_samples, dimension));
 
         // Use quantum-inspired low-discrepancy sequences
         for i in 0..num_samples {
@@ -1226,11 +1224,11 @@ where
                 // Quantum-inspired quasi-random sequence
                 let t = F::from(i as f64 / num_samples as f64).unwrap();
                 let quasi_random = self.quantum_quasi_random(t, j);
-                samples[[i, j]] = *lower + (*upper - *lower) * quasi_random;
+                _samples[[i, j]] = *lower + (*upper - *lower) * quasi_random;
             }
         }
 
-        Ok(samples)
+        Ok(_samples)
     }
 
     /// Quantum-inspired quasi-random number generation
@@ -1331,7 +1329,7 @@ where
             }
         }
 
-        // Extract final latent variables
+        // Extract final latent _variables
         let latent_variables = self.extract_latent_variables(data, &variational_params)?;
 
         Ok(QuantumVariationalResult {
@@ -1377,7 +1375,7 @@ where
         data: &ArrayView2<F>,
         params: &QuantumVariationalParams<F>,
     ) -> StatsResult<F> {
-        let (_n_samples, _) = data.dim();
+        let (_n_samples_) = data.dim();
 
         // Simplified quantum ELBO computation
         // In practice, would use quantum circuits for probability estimation
@@ -1499,8 +1497,8 @@ where
         data: &ArrayView2<F>,
         params: &QuantumVariationalParams<F>,
     ) -> StatsResult<Array2<F>> {
-        let (n_samples, _) = data.dim();
-        let (num_latent, _) = params.means.dim();
+        let (n_samples_) = data.dim();
+        let (num_latent_) = params.means.dim();
 
         let mut latent_vars = Array2::zeros((n_samples, num_latent));
 
@@ -1525,7 +1523,7 @@ where
     ) -> StatsResult<QuantumEnsembleResult<F>> {
         let (_n_samples, n_features) = data.dim();
 
-        // Create quantum-inspired diverse models
+        // Create quantum-inspired diverse _models
         let mut quantum_models = Vec::new();
         let mut model_weights = Array1::zeros(num_quantum_models);
 
@@ -1647,7 +1645,7 @@ where
         labels: &ArrayView1<F>,
         model: &QuantumModel<F>,
     ) -> StatsResult<F> {
-        let (n_samples, _) = data.dim();
+        let (n_samples_) = data.dim();
         let mut total_loss = F::zero();
 
         for i in 0..n_samples {
@@ -1686,7 +1684,7 @@ where
         labels: &ArrayView1<F>,
         model: &QuantumModel<F>,
     ) -> StatsResult<F> {
-        let (n_samples, _) = data.dim();
+        let (n_samples_) = data.dim();
         let mut correct_predictions = 0;
 
         for i in 0..n_samples {
@@ -1708,9 +1706,7 @@ where
     /// Compute quantum model weight based on performance
     fn compute_quantum_model_weight(
         &self,
-        model: &QuantumModel<F>,
-        _data: &ArrayView2<F>,
-        _labels: &ArrayView1<F>,
+        model: &QuantumModel<F>, _data: &ArrayView2<F>, _labels: &ArrayView1<F>,
     ) -> StatsResult<F> {
         // Weight based on training fidelity and quantum advantages
         let base_weight = model.training_fidelity;
@@ -1726,7 +1722,7 @@ where
         models: &[QuantumModel<F>],
         weights: &Array1<F>,
     ) -> StatsResult<Array1<F>> {
-        let (n_samples, _) = data.dim();
+        let (n_samples_) = data.dim();
         let mut predictions = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
@@ -1749,7 +1745,7 @@ where
         data: &ArrayView2<F>,
         models: &[QuantumModel<F>],
     ) -> StatsResult<Array1<F>> {
-        let (n_samples, _) = data.dim();
+        let (n_samples_) = data.dim();
         let mut uncertainties = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
@@ -1890,13 +1886,12 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
     /// Advanced quantum teleportation-based data transfer
     pub fn quantum_teleportation_transfer(
         &mut self,
-        source_data: &ArrayView2<F>,
-        _target_encoding: QuantumFeatureEncoding,
+        source_data: &ArrayView2<F>, _target_encoding: QuantumFeatureEncoding,
     ) -> StatsResult<Array2<F>> {
         let (n_samples, n_features) = source_data.dim();
         let mut transferred_data = Array2::zeros((n_samples, n_features));
 
-        // Simulate quantum teleportation protocol for each data point
+        // Simulate quantum teleportation protocol for each _data point
         for i in 0..n_samples {
             for j in 0..n_features {
                 let original_value = source_data[[i, j]];
@@ -1966,8 +1961,8 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
     fn generate_quantum_noise(&self) -> F {
         // Simulate quantum noise from environmental decoherence
         use scirs2_core::rng;
-        let mut rng = rng();
-        let noise: f64 = rng.random_range(-0.01, 0.01);
+        let mut rng = rand::rng();
+        let noise: f64 = rng.gen_range(-0.01..0.01);
         F::from(noise).unwrap()
     }
 

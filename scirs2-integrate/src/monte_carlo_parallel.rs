@@ -6,18 +6,19 @@
 //! multiple CPU cores.
 
 use crate::error::{IntegrateError, IntegrateResult};
-use crate::monte_carlo::{ErrorEstimationMethod, MonteCarloOptions, MonteCarloResult};
+use crate::monte__carlo::{ErrorEstimationMethod, MonteCarloOptions, MonteCarloResult};
 use crate::IntegrateFloat;
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
-use rand_distr::uniform::SampleUniform;
-use rand_distr::{Distribution, Uniform};
+use rand__distr::uniform::SampleUniform;
+use rand__distr::{Distribution, Uniform};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
+use std::f64::consts::PI;
 
 #[cfg(feature = "parallel")]
-use scirs2_core::parallel_ops::{ThreadPoolBuilder, *};
+use scirs2_core::parallel_ops::ThreadPoolBuilder;
 
 /// Options for parallel Monte Carlo integration
 #[derive(Debug, Clone)]
@@ -49,24 +50,22 @@ impl<F: IntegrateFloat> Default for ParallelMonteCarloOptions<F> {
             use_antithetic: false,
             n_threads: None,  // Use all available cores
             batch_size: 1000, // Process 1000 samples per batch
-            use_chunking: true,
-            _phantom: PhantomData,
+            use_chunking: true, _phantom: PhantomData,
         }
     }
 }
 
 /// Convert regular MonteCarloOptions to ParallelMonteCarloOptions
 impl<F: IntegrateFloat> From<MonteCarloOptions<F>> for ParallelMonteCarloOptions<F> {
-    fn from(opts: MonteCarloOptions<F>) -> Self {
+    fn from(_opts: MonteCarloOptions<F>) -> Self {
         Self {
-            n_samples: opts.n_samples,
-            seed: opts.seed,
-            error_method: opts.error_method,
-            use_antithetic: opts.use_antithetic,
+            n_samples: _opts.n_samples,
+            seed: _opts.seed,
+            error_method: _opts.error_method,
+            use_antithetic: _opts.use_antithetic,
             n_threads: None,
             batch_size: 1000,
-            use_chunking: true,
-            _phantom: PhantomData,
+            use_chunking: true, _phantom: PhantomData,
         }
     }
 }
@@ -91,7 +90,7 @@ impl<F: IntegrateFloat> From<MonteCarloOptions<F>> for ParallelMonteCarloOptions
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::monte_carlo_parallel::{parallel_monte_carlo, ParallelMonteCarloOptions};
+/// use scirs2__integrate::monte_carlo_parallel::{parallel_monte_carlo, ParallelMonteCarloOptions};
 /// use ndarray::ArrayView1;
 /// use std::marker::PhantomData;
 ///
@@ -447,7 +446,7 @@ where
     rand_distr::StandardNormal: Distribution<F>,
 {
     let opts = options.unwrap_or_default();
-    let initial_samples = opts.n_samples.min(max_samples / 4); // Start with 25% of max samples
+    let initial_samples = opts.n_samples.min(max_samples / 4); // Start with 25% of max _samples
 
     // Initial estimation
     let mut current_opts = opts.clone();
@@ -464,7 +463,7 @@ where
             break;
         }
 
-        // Run additional samples
+        // Run additional _samples
         current_opts.n_samples = next_batch_size;
         let additional_result = parallel_monte_carlo(&f, ranges, Some(current_opts.clone()))?;
 
@@ -507,12 +506,11 @@ where
     rand_distr::StandardNormal: Distribution<F>,
 {
     // Convert to regular MonteCarloOptions and use sequential implementation
-    let regular_opts = options.map(|opts| crate::monte_carlo::MonteCarloOptions {
+    let regular_opts = options.map(|opts| crate::monte__carlo::MonteCarloOptions {
         n_samples: opts.n_samples,
         seed: opts.seed,
         error_method: opts.error_method,
-        use_antithetic: opts.use_antithetic,
-        _phantom: PhantomData,
+        use_antithetic: opts.use_antithetic, _phantom: PhantomData,
     });
 
     crate::monte_carlo::monte_carlo(f, ranges, regular_opts)
@@ -537,8 +535,7 @@ where
         n_samples: max_samples,
         seed: opts.seed,
         error_method: opts.error_method,
-        use_antithetic: opts.use_antithetic,
-        _phantom: PhantomData,
+        use_antithetic: opts.use_antithetic, _phantom: PhantomData,
     });
 
     crate::monte_carlo::monte_carlo(f, ranges, regular_opts)
@@ -546,9 +543,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
-    use ndarray::ArrayView1;
 
     #[test]
     #[cfg(feature = "parallel")]
@@ -624,8 +619,7 @@ mod tests {
             n_samples: 5000,
             seed: Some(789),
             error_method: ErrorEstimationMethod::BatchMeans,
-            use_antithetic: true,
-            _phantom: PhantomData,
+            use_antithetic: true, _phantom: PhantomData,
         };
 
         let parallel_opts: ParallelMonteCarloOptions<f64> = regular_opts.into();

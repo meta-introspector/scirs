@@ -18,7 +18,7 @@
 //! ## Loading toy datasets
 //!
 //! ```rust
-//! use scirs2_datasets::{load_iris, load_boston};
+//! use scirs2__datasets::{load_iris, load_boston};
 //!
 //! // Load the classic Iris dataset
 //! let iris = load_iris().unwrap();
@@ -32,7 +32,7 @@
 //! ## Generating synthetic datasets
 //!
 //! ```rust
-//! use scirs2_datasets::{make_classification, make_regression, make_blobs, make_spirals, make_moons};
+//! use scirs2__datasets::{make_classification, make_regression, make_blobs, make_spirals, make_moons};
 //!
 //! // Generate a classification dataset
 //! let classification = make_classification(100, 5, 3, 2, 4, Some(42)).unwrap();
@@ -57,7 +57,7 @@
 //! ## Cross-validation
 //!
 //! ```rust
-//! use scirs2_datasets::{load_iris, k_fold_split, stratified_k_fold_split};
+//! use scirs2__datasets::{load_iris, k_fold_split, stratified_k_fold_split};
 //!
 //! let iris = load_iris().unwrap();
 //!
@@ -75,7 +75,7 @@
 //! ## Dataset manipulation
 //!
 //! ```rust
-//! use scirs2_datasets::{load_iris, Dataset};
+//! use scirs2__datasets::{load_iris, Dataset};
 //!
 //! let iris = load_iris().unwrap();
 //!
@@ -129,13 +129,13 @@ pub mod quantum_enhanced_generators;
 pub mod quantum_neuromorphic_fusion;
 
 // Re-export commonly used functionality
-pub use adaptive_streaming_engine::{
+pub use adaptive_streaming__engine::{
     create_adaptive_engine, create_adaptive_engine_with_config, AdaptiveStreamConfig,
     AdaptiveStreamingEngine, AlertSeverity, AlertType, ChunkMetadata, DataCharacteristics,
     MemoryStrategy, PatternType, PerformanceMetrics, QualityAlert, QualityMetrics,
     StatisticalMoments, StreamChunk, TrendDirection, TrendIndicators,
 };
-pub use advanced_generators::{
+pub use advanced__generators::{
     make_adversarial_examples, make_anomaly_dataset, make_continual_learning_dataset,
     make_domain_adaptation_dataset, make_few_shot_dataset, make_multitask_dataset,
     AdversarialConfig, AnomalyConfig, AnomalyType, AttackMethod, ContinualLearningDataset,
@@ -149,7 +149,7 @@ pub use cloud::{
     CloudClient, CloudConfig, CloudCredentials, CloudProvider,
 };
 pub use distributed::{DistributedConfig, DistributedProcessor, ScalingMethod, ScalingParameters};
-pub use domain_specific::{
+pub use domain__specific::{
     astronomy::StellarDatasets,
     climate::ClimateDatasets,
     convenience::{
@@ -171,7 +171,7 @@ pub use external::{
     repositories::{GitHubRepository, KaggleRepository, UCIRepository},
     ExternalClient, ExternalConfig, ProgressCallback,
 };
-pub use ml_integration::{
+pub use ml__integration::{
     convenience::{create_experiment, cv_split, prepare_for_ml, train_test_split},
     CrossValidationResults, DataSplit, MLExperiment, MLPipeline, MLPipelineConfig,
     ScalingMethod as MLScalingMethod,
@@ -197,7 +197,7 @@ pub use gpu::{
     make_blobs_auto_gpu, make_classification_auto_gpu, make_regression_auto_gpu, GpuBackend,
     GpuBenchmark, GpuBenchmarkResults, GpuConfig, GpuContext, GpuDeviceInfo, GpuMemoryConfig,
 };
-pub use gpu_optimization::{
+pub use gpu__optimization::{
     benchmark_advanced_performance, generate_advanced_matrix, AdvancedGpuOptimizer,
     AdvancedKernelConfig, BenchmarkResult as AdvancedBenchmarkResult, DataLayout,
     LoadBalancingMethod, MemoryAccessPattern, PerformanceBenchmarkResults, SpecializationLevel,
@@ -207,19 +207,19 @@ pub use loaders::{
     load_csv, load_csv_legacy, load_csv_parallel, load_csv_streaming, load_json, load_raw,
     save_json, CsvConfig, DatasetChunkIterator, StreamingConfig,
 };
-pub use neuromorphic_data_processor::{
+pub use neuromorphic_data__processor::{
     create_neuromorphic_processor, create_neuromorphic_processor_with_topology, NetworkTopology,
     NeuromorphicProcessor, NeuromorphicTransform, SynapticPlasticity,
 };
-pub use quantum_enhanced_generators::{
+pub use quantum_enhanced__generators::{
     make_quantum_blobs, make_quantum_classification, make_quantum_regression,
     QuantumDatasetGenerator,
 };
-pub use quantum_neuromorphic_fusion::{
+pub use quantum_neuromorphic__fusion::{
     create_fusion_with_params, create_quantum_neuromorphic_fusion, QuantumBioFusionResult,
     QuantumInterference, QuantumNeuromorphicFusion,
 };
-pub use real_world::{
+pub use real__world::{
     list_real_world_datasets, load_adult, load_california_housing, load_heart_disease,
     load_red_wine_quality, load_titanic, RealWorldConfig, RealWorldDatasets,
 };

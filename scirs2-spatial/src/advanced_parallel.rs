@@ -19,7 +19,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::advanced_parallel::{AdvancedParallelDistanceMatrix, WorkStealingConfig};
+//! use scirs2__spatial::advanced_parallel::{AdvancedParallelDistanceMatrix, WorkStealingConfig};
 //! use ndarray::array;
 //!
 //! // Configure work-stealing parallel processing
@@ -36,7 +36,7 @@
 //! ```
 
 use crate::error::SpatialResult;
-use crate::memory_pool::DistancePool;
+use crate::memory__pool::DistancePool;
 use ndarray::{Array1, Array2, ArrayView2};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::VecDeque;
@@ -45,6 +45,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
+use std::f64::consts::PI;
 
 // Platform-specific imports for thread affinity
 #[cfg(any(target_os = "linux", target_os = "android"))]
@@ -74,7 +75,7 @@ pub struct WorkStealingConfig {
 }
 
 impl Default for WorkStealingConfig {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -96,44 +97,44 @@ impl WorkStealingConfig {
     }
 
     /// Configure NUMA awareness
-    pub fn with_numa_aware(mut self, enabled: bool) -> Self {
+    pub fn with_numa_aware(mut enabled: bool) -> Self {
         self.numa_aware = enabled;
         self
     }
 
     /// Configure work stealing
-    pub fn with_work_stealing(mut self, enabled: bool) -> Self {
+    pub fn with_work_stealing(mut enabled: bool) -> Self {
         self.work_stealing = enabled;
         self
     }
 
     /// Configure adaptive scheduling
-    pub fn with_adaptive_scheduling(mut self, enabled: bool) -> Self {
+    pub fn with_adaptive_scheduling(mut enabled: bool) -> Self {
         self.adaptive_scheduling = enabled;
         self
     }
 
     /// Set number of threads
-    pub fn with_threads(mut self, num_threads: usize) -> Self {
+    pub fn with_threads(mut num_threads: usize) -> Self {
         self.num_threads = num_threads;
         self
     }
 
     /// Configure chunk sizes
-    pub fn with_chunk_sizes(mut self, initial: usize, minimum: usize) -> Self {
+    pub fn with_chunk_sizes(mut initial: usize, minimum: usize) -> Self {
         self.initial_chunk_size = initial;
         self.min_chunk_size = minimum;
         self
     }
 
     /// Set thread affinity strategy
-    pub fn with_thread_affinity(mut self, strategy: ThreadAffinityStrategy) -> Self {
+    pub fn with_thread_affinity(mut strategy: ThreadAffinityStrategy) -> Self {
         self.thread_affinity = strategy;
         self
     }
 
     /// Set memory allocation strategy
-    pub fn with_memory_strategy(mut self, strategy: MemoryStrategy) -> Self {
+    pub fn with_memory_strategy(mut strategy: MemoryStrategy) -> Self {
         self.memory_strategy = strategy;
         self
     }
@@ -179,14 +180,14 @@ pub struct NumaTopology {
 }
 
 impl Default for NumaTopology {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::detect()
     }
 }
 
 impl NumaTopology {
     /// Detect NUMA topology
-    pub fn detect() -> Self {
+    pub fn detect(&self) -> Self {
         // In a real implementation, this would query the system for NUMA information
         // using libraries like hwloc or reading /sys/devices/system/node/
 
@@ -204,10 +205,10 @@ impl NumaTopology {
     }
 
     #[allow(clippy::needless_range_loop)]
-    fn create_default_distance_matrix(num_nodes: usize) -> Vec<Vec<u32>> {
-        let mut matrix = vec![vec![0; num_nodes]; num_nodes];
-        for i in 0..num_nodes {
-            for j in 0..num_nodes {
+    fn create_default_distance_matrix(_num_nodes: usize) -> Vec<Vec<u32>> {
+        let mut matrix = vec![vec![0; _num_nodes]; _num_nodes];
+        for i in 0.._num_nodes {
+            for j in 0.._num_nodes {
                 if i == j {
                     matrix[i][j] = 10; // Local access cost
                 } else {
@@ -219,17 +220,17 @@ impl NumaTopology {
     }
 
     /// Get optimal thread count for NUMA node
-    pub fn optimal_threads_per_node(&self, node: usize) -> usize {
-        if node < self.cores_per_node.len() {
-            self.cores_per_node[node]
+    pub fn optimal_threads_per_node(_node: usize) -> usize {
+        if _node < self.cores_per_node.len() {
+            self.cores_per_node[_node]
         } else {
             self.cores_per_node.first().copied().unwrap_or(1)
         }
     }
 
     /// Get memory capacity for NUMA node
-    pub fn memory_capacity(&self, node: usize) -> usize {
-        self.memory_per_node.get(node).copied().unwrap_or(0)
+    pub fn memory_capacity(_node: usize) -> usize {
+        self.memory_per_node.get(_node).copied().unwrap_or(0)
     }
 }
 
@@ -368,7 +369,7 @@ pub struct KDTreeConfig {
 }
 
 impl Default for KDTreeConfig {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             max_leaf_size: 32,
             cache_aware: true,
@@ -395,22 +396,22 @@ pub struct KDTreeChunkResult {
 
 impl WorkStealingPool {
     /// Create a new work-stealing thread pool
-    pub fn new(config: WorkStealingConfig) -> SpatialResult<Self> {
-        let numa_topology = if config.numa_aware {
+    pub fn new(_config: WorkStealingConfig) -> SpatialResult<Self> {
+        let numa_topology = if _config.numa_aware {
             NumaTopology::detect()
         } else {
             NumaTopology {
                 num_nodes: 1,
-                cores_per_node: vec![config.num_threads],
+                cores_per_node: vec![_config.num_threads],
                 memory_per_node: vec![0],
                 distance_matrix: vec![vec![10]],
             }
         };
 
-        let num_threads = if config.num_threads == 0 {
+        let num_threads = if _config.num_threads == 0 {
             numa_topology.cores_per_node.iter().sum()
         } else {
-            config.num_threads
+            _config.num_threads
         };
 
         let global_queue = Arc::new(Mutex::new(VecDeque::new()));
@@ -423,7 +424,7 @@ impl WorkStealingPool {
 
         // Create workers with NUMA-aware placement
         for thread_id in 0..num_threads {
-            let numa_node = if config.numa_aware {
+            let numa_node = if _config.numa_aware {
                 Self::assign_thread_to_numa_node(thread_id, &numa_topology)
             } else {
                 0
@@ -447,7 +448,7 @@ impl WorkStealingPool {
             let completed_work = Arc::clone(&completed_work);
             let active_workers = Arc::clone(&active_workers);
             let shutdown = Arc::clone(&shutdown);
-            let config_clone = config.clone();
+            let config_clone = _config.clone();
             let thread_id = worker.thread_id;
             let numa_node = worker.numa_node;
             let memory_pool = Arc::clone(&worker.memory_pool);
@@ -471,7 +472,7 @@ impl WorkStealingPool {
 
         Ok(Self {
             workers,
-            config,
+            _config,
             numa_topology,
             global_queue,
             completed_work,
@@ -482,10 +483,10 @@ impl WorkStealingPool {
     }
 
     /// Assign thread to optimal NUMA node
-    fn assign_thread_to_numa_node(thread_id: usize, topology: &NumaTopology) -> usize {
+    fn assign_thread_to_numa_node(_thread_id: usize, topology: &NumaTopology) -> usize {
         let mut thread_count = 0;
         for (node_id, &cores) in topology.cores_per_node.iter().enumerate() {
-            if thread_id < thread_count + cores {
+            if _thread_id < thread_count + cores {
                 return node_id;
             }
             thread_count += cores;
@@ -502,13 +503,12 @@ impl WorkStealingPool {
         completed_work: Arc<AtomicUsize>,
         active_workers: Arc<AtomicUsize>,
         shutdown: Arc<AtomicBool>,
-        config: WorkStealingConfig,
-        _memory_pool: Arc<DistancePool>,
+        config: WorkStealingConfig_memory_pool: Arc<DistancePool>,
     ) {
         // Set thread affinity if configured
         Self::set_thread_affinity(thread_id, numa_node, &config);
 
-        // Create empty work context (in real implementation, this would be shared)
+        // Create empty _work context (in real implementation, this would be shared)
         let work_context = WorkContext {
             distance_context: None,
             kmeans_context: None,
@@ -523,13 +523,13 @@ impl WorkStealingPool {
             if let Some(item) = work_item {
                 active_workers.fetch_add(1, Ordering::Relaxed);
 
-                // Process work item with context
+                // Process _work item with context
                 Self::process_work_item(item, &work_context);
 
                 completed_work.fetch_add(1, Ordering::Relaxed);
                 active_workers.fetch_sub(1, Ordering::Relaxed);
             } else {
-                // No work available, try work stealing or wait
+                // No _work available, try _work stealing or wait
                 if config.work_stealing {
                     Self::attempt_work_stealing(thread_id, &local_queue, &global_queue, &config);
                 }
@@ -541,16 +541,16 @@ impl WorkStealingPool {
     }
 
     /// Set thread affinity based on configuration
-    fn set_thread_affinity(thread_id: usize, numa_node: usize, config: &WorkStealingConfig) {
+    fn set_thread_affinity(_thread_id: usize, numa_node: usize, config: &WorkStealingConfig) {
         match config.thread_affinity {
             ThreadAffinityStrategy::Physical => {
                 // In a real implementation, this would use system APIs to set CPU affinity
                 // e.g., pthread_setaffinity_np on Linux, SetThreadAffinityMask on Windows
                 #[cfg(target_os = "linux")]
                 {
-                    if let Err(e) = Self::set_cpu_affinity_linux(thread_id) {
+                    if let Err(e) = Self::set_cpu_affinity_linux(_thread_id) {
                         eprintln!(
-                            "Warning: Failed to set CPU affinity for thread {thread_id}: {e}"
+                            "Warning: Failed to set CPU affinity for thread {_thread_id}: {e}"
                         );
                     }
                 }
@@ -565,18 +565,18 @@ impl WorkStealingPool {
                 }
             }
             ThreadAffinityStrategy::NumaAware => {
-                // Set affinity to NUMA node
+                // Set affinity to NUMA _node
                 #[cfg(target_os = "linux")]
                 {
                     if let Err(e) = Self::set_numa_affinity_linux(numa_node) {
-                        eprintln!("Warning: Failed to set NUMA affinity for node {numa_node}: {e}");
+                        eprintln!("Warning: Failed to set NUMA affinity for _node {numa_node}: {e}");
                     }
                 }
                 #[cfg(target_os = "windows")]
                 {
                     if let Err(e) = Self::set_numa_affinity_windows(numa_node) {
                         eprintln!(
-                            "Warning: Failed to set NUMA affinity for node {}: {}",
+                            "Warning: Failed to set NUMA affinity for _node {}: {}",
                             numa_node, e
                         );
                     }
@@ -611,10 +611,10 @@ impl WorkStealingPool {
 
     /// Set CPU affinity to a specific core on Linux
     #[cfg(target_os = "linux")]
-    fn set_cpu_affinity_linux(cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
+    fn set_cpu_affinity_linux(_cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
         unsafe {
             let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
-            libc::CPU_SET(cpu_id, &mut cpu_set);
+            libc::CPU_SET(_cpu_id, &mut cpu_set);
 
             let result = libc::sched_setaffinity(
                 0, // Current thread
@@ -632,13 +632,13 @@ impl WorkStealingPool {
 
     /// Set NUMA affinity to all CPUs in a NUMA node on Linux
     #[cfg(target_os = "linux")]
-    fn set_numa_affinity_linux(numa_node: usize) -> Result<(), Box<dyn std::error::Error>> {
+    fn set_numa_affinity_linux(_numa_node: usize) -> Result<(), Box<dyn std::error::Error>> {
         use std::fs;
 
-        // Read the CPU list for this NUMA node
-        let cpulist_path = format!("/sys/devices/system/node/node{numa_node}/cpulist");
+        // Read the CPU list for this NUMA _node
+        let cpulist_path = format!("/sys/devices/system/_node/_node{_numa_node}/cpulist");
         let cpulist = fs::read_to_string(&cpulist_path)
-            .map_err(|_| format!("Failed to read NUMA node {numa_node} CPU list"))?;
+            .map_err(|_| format!("Failed to read NUMA _node {numa_node} CPU list"))?;
 
         unsafe {
             let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
@@ -672,52 +672,51 @@ impl WorkStealingPool {
 
     /// Set CPU affinity to a specific core from custom list on Linux
     #[cfg(target_os = "linux")]
-    fn set_custom_cpu_affinity_linux(cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
+    fn set_custom_cpu_affinity_linux(_cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
         // Same implementation as set_cpu_affinity_linux
-        Self::set_cpu_affinity_linux(cpu_id)
+        Self::set_cpu_affinity_linux(_cpu_id)
     }
 
     /// Set CPU affinity on Windows
     #[cfg(target_os = "windows")]
-    fn set_cpu_affinity_windows(cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
+    fn set_cpu_affinity_windows(_cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
         // Windows implementation would use SetThreadAffinityMask
         // For now, return success as a fallback
-        let _ = cpu_id;
+        let _ = _cpu_id;
         Ok(())
     }
 
     /// Set NUMA affinity on Windows
     #[cfg(target_os = "windows")]
-    fn set_numa_affinity_windows(numa_node: usize) -> Result<(), Box<dyn std::error::Error>> {
+    fn set_numa_affinity_windows(_numa_node: usize) -> Result<(), Box<dyn std::error::Error>> {
         // Windows implementation would use SetThreadGroupAffinity
         // For now, return success as a fallback
-        let _ = numa_node;
+        let _ = _numa_node;
         Ok(())
     }
 
     /// Set custom CPU affinity on Windows
     #[cfg(target_os = "windows")]
-    fn set_custom_cpu_affinity_windows(cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
+    fn set_custom_cpu_affinity_windows(_cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
         // Same as set_cpu_affinity_windows
-        Self::set_cpu_affinity_windows(cpu_id)
+        Self::set_cpu_affinity_windows(_cpu_id)
     }
 
     /// Get work item from local or global queue
     fn get_work_item(
         local_queue: &Arc<Mutex<VecDeque<WorkItem>>>,
-        global_queue: &Arc<Mutex<VecDeque<WorkItem>>>,
-        _config: &WorkStealingConfig,
+        global_queue: &Arc<Mutex<VecDeque<WorkItem>>>, _config: &WorkStealingConfig,
     ) -> Option<WorkItem> {
-        // Try local queue first
-        if let Ok(mut queue) = local_queue.try_lock() {
-            if let Some(item) = queue.pop_front() {
+        // Try local _queue first
+        if let Ok(mut _queue) = local_queue.try_lock() {
+            if let Some(item) = _queue.pop_front() {
                 return Some(item);
             }
         }
 
-        // Try global queue
-        if let Ok(mut queue) = global_queue.try_lock() {
-            if let Some(item) = queue.pop_front() {
+        // Try global _queue
+        if let Ok(mut _queue) = global_queue.try_lock() {
+            if let Some(item) = _queue.pop_front() {
                 return Some(item);
             }
         }
@@ -727,47 +726,44 @@ impl WorkStealingPool {
 
     /// Attempt to steal work from other workers
     fn attempt_work_stealing(
-        _thread_id: usize,
-        _local_queue: &Arc<Mutex<VecDeque<WorkItem>>>,
-        _global_queue: &Arc<Mutex<VecDeque<WorkItem>>>,
-        _config: &WorkStealingConfig,
+        _thread_id: usize_local, _queue: &Arc<Mutex<VecDeque<WorkItem>>>, _global_queue: &Arc<Mutex<VecDeque<WorkItem>>>, _config: &WorkStealingConfig,
     ) {
         // Work stealing implementation would go here
         // This would attempt to steal work from other workers' local queues
     }
 
     /// Process a work item with shared computation context
-    fn process_work_item(item: WorkItem, context: &WorkContext) {
-        match item.work_type {
+    fn process_work_item(_item: WorkItem, context: &WorkContext) {
+        match _item.work_type {
             WorkType::DistanceMatrix => {
-                Self::process_distance_matrix_chunk(item.start, item.end, context);
+                Self::process_distance_matrix_chunk(_item.start, _item.end, context);
             }
             WorkType::KMeansClustering => {
-                Self::process_kmeans_chunk(item.start, item.end, context);
+                Self::process_kmeans_chunk(_item.start, _item.end, context);
             }
             WorkType::KDTreeBuild => {
-                Self::process_kdtree_chunk(item.start, item.end, context);
+                Self::process_kdtree_chunk(_item.start, _item.end, context);
             }
             WorkType::NearestNeighbor => {
-                Self::process_nn_chunk(item.start, item.end, context);
+                Self::process_nn_chunk(_item.start, _item.end, context);
             }
             WorkType::Custom(_name) => {
-                Self::process_custom_chunk(item.start, item.end, context);
+                Self::process_custom_chunk(_item.start, _item.end, context);
             }
         }
     }
 
     /// Process distance matrix computation chunk
-    fn process_distance_matrix_chunk(start: usize, end: usize, context: &WorkContext) {
+    fn process_distance_matrix_chunk(_start: usize, end: usize, context: &WorkContext) {
         if let Some(distance_context) = &context.distance_context {
-            use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
+            use crate::simd__distance::hardware_specific_simd::HardwareOptimizedDistances;
 
             let optimizer = HardwareOptimizedDistances::new();
             let points = &distance_context.points;
             let n_points = points.nrows();
 
             // Convert linear indices to (i, j) pairs for distance matrix
-            for linear_idx in start..end {
+            for linear_idx in _start..end {
                 let (i, j) = Self::linear_to_matrix_indices(linear_idx, n_points);
 
                 if i < j && i < n_points && j < n_points {
@@ -790,17 +786,16 @@ impl WorkStealingPool {
     }
 
     /// Process K-means clustering iteration chunk
-    fn process_kmeans_chunk(start: usize, end: usize, context: &WorkContext) {
+    fn process_kmeans_chunk(_start: usize, end: usize, context: &WorkContext) {
         if let Some(kmeans_context) = &context.kmeans_context {
-            use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
 
             let optimizer = HardwareOptimizedDistances::new();
             let points = &kmeans_context.points;
             let centroids = &kmeans_context.centroids;
             let k = centroids.nrows();
 
-            // Process point assignments for range [start, end)
-            for point_idx in start..end {
+            // Process point assignments for range [_start, end)
+            for point_idx in _start..end {
                 if point_idx < points.nrows() {
                     let point = points.row(point_idx);
                     let mut best_cluster = 0;
@@ -832,14 +827,14 @@ impl WorkStealingPool {
     }
 
     /// Process KD-tree construction chunk
-    fn process_kdtree_chunk(start: usize, end: usize, context: &WorkContext) {
+    fn process_kdtree_chunk(_start: usize, end: usize, context: &WorkContext) {
         if let Some(kdtree_context) = &context.kdtree_context {
             let points = &kdtree_context.points;
             let indices = &kdtree_context.indices;
             let depth = kdtree_context.depth;
 
             // Process subset of points for tree construction
-            let chunk_indices: Vec<usize> = indices[start..end.min(indices.len())].to_vec();
+            let chunk_indices: Vec<usize> = indices[_start..end.min(indices.len())].to_vec();
 
             if !chunk_indices.is_empty() {
                 // Build local subtree for this chunk
@@ -851,23 +846,22 @@ impl WorkStealingPool {
                 );
 
                 // Send result back
-                kdtree_context.result_sender.send((start, local_tree)).ok();
+                kdtree_context.result_sender.send((_start, local_tree)).ok();
             }
         }
     }
 
     /// Process nearest neighbor search chunk
-    fn process_nn_chunk(start: usize, end: usize, context: &WorkContext) {
+    fn process_nn_chunk(_start: usize, end: usize, context: &WorkContext) {
         if let Some(nn_context) = &context.nn_context {
-            use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
 
             let optimizer = HardwareOptimizedDistances::new();
             let query_points = &nn_context.query_points;
             let data_points = &nn_context.data_points;
             let k = nn_context.k;
 
-            // Process query points in range [start, end)
-            for query_idx in start..end {
+            // Process query points in range [_start, end)
+            for query_idx in _start..end {
                 if query_idx < query_points.nrows() {
                     let query = query_points.row(query_idx);
 
@@ -900,17 +894,17 @@ impl WorkStealingPool {
     }
 
     /// Process custom work chunk
-    fn process_custom_chunk(start: usize, end: usize, context: &WorkContext) {
+    fn process_custom_chunk(_start: usize, end: usize, context: &WorkContext) {
         if let Some(custom_context) = &context.custom_context {
             // Call user-provided processing function
-            (custom_context.process_fn)(start, end, &custom_context.user_data);
+            (custom_context.process_fn)(_start, end, &custom_context.user_data);
         }
     }
 
     /// Helper function to convert linear index to matrix indices
-    fn linear_to_matrix_indices(linear_idx: usize, n: usize) -> (usize, usize) {
+    fn linear_to_matrix_indices(_linear_idx: usize, n: usize) -> (usize, usize) {
         // For upper triangular matrix: convert linear index to (i, j) where i < j
-        let mut k = linear_idx;
+        let mut k = _linear_idx;
         let mut i = 0;
 
         while k >= n - i - 1 {
@@ -926,8 +920,7 @@ impl WorkStealingPool {
     fn build_local_kdtree_chunk(
         points: &Array2<f64>,
         indices: &[usize],
-        depth: usize,
-        _config: &KDTreeConfig,
+        depth: usize_config: &KDTreeConfig,
     ) -> KDTreeChunkResult {
         let n_dims = points.ncols();
         let splitting_dimension = depth % n_dims;
@@ -971,12 +964,12 @@ impl WorkStealingPool {
     }
 
     /// Submit work to the pool
-    pub fn submit_work(&self, work_items: Vec<WorkItem>) -> SpatialResult<()> {
-        self.total_work.store(work_items.len(), Ordering::Relaxed);
+    pub fn submit_work(_work_items: Vec<WorkItem>) -> SpatialResult<()> {
+        self.total_work.store(_work_items.len(), Ordering::Relaxed);
         self.completed_work.store(0, Ordering::Relaxed);
 
         let mut global_queue = self.global_queue.lock().unwrap();
-        for item in work_items {
+        for item in _work_items {
             global_queue.push_back(item);
         }
         drop(global_queue);
@@ -1048,14 +1041,14 @@ pub struct AdvancedParallelDistanceMatrix {
 
 impl AdvancedParallelDistanceMatrix {
     /// Create a new advanced-parallel distance matrix computer
-    pub fn new(config: WorkStealingConfig) -> SpatialResult<Self> {
-        let pool = WorkStealingPool::new(config.clone())?;
-        Ok(Self { pool, config })
+    pub fn new(_config: WorkStealingConfig) -> SpatialResult<Self> {
+        let pool = WorkStealingPool::new(_config.clone())?;
+        Ok(Self { pool, _config })
     }
 
     /// Compute distance matrix using advanced-parallel processing
-    pub fn compute_parallel(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-        let n_points = points.nrows();
+    pub fn compute_parallel(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+        let n_points = _points.nrows();
         let n_pairs = n_points * (n_points - 1) / 2;
         let mut result_matrix = Array2::zeros((n_points, n_points));
 
@@ -1066,7 +1059,7 @@ impl AdvancedParallelDistanceMatrix {
 
         // Create distance matrix context
         let _distance_context = DistanceMatrixContext {
-            points: points.to_owned(),
+            _points: _points.to_owned(),
             result_sender,
         };
 
@@ -1113,14 +1106,13 @@ impl AdvancedParallelDistanceMatrix {
 
         // Fill in any missing computations using fallback
         if collected_results < n_pairs {
-            use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
             let optimizer = HardwareOptimizedDistances::new();
 
             for i in 0..n_points {
                 for j in (i + 1)..n_points {
                     if result_matrix[[i, j]] == 0.0 && i != j {
-                        let point_i = points.row(i);
-                        let point_j = points.row(j);
+                        let point_i = _points.row(i);
+                        let point_j = _points.row(j);
 
                         if let Ok(distance) =
                             optimizer.euclidean_distance_optimized(&point_i, &point_j)
@@ -1204,12 +1196,12 @@ pub fn global_work_stealing_pool() -> SpatialResult<&'static Mutex<Option<WorkSt
 
 /// Initialize the global work-stealing pool with configuration
 #[allow(dead_code)]
-pub fn initialize_global_pool(config: WorkStealingConfig) -> SpatialResult<()> {
+pub fn initialize_global_pool(_config: WorkStealingConfig) -> SpatialResult<()> {
     let pool_mutex = global_work_stealing_pool()?;
     let mut pool_guard = pool_mutex.lock().unwrap();
 
     if pool_guard.is_none() {
-        *pool_guard = Some(WorkStealingPool::new(config)?);
+        *pool_guard = Some(WorkStealingPool::new(_config)?);
     }
 
     Ok(())
@@ -1352,7 +1344,7 @@ mod tests {
     #[test]
     fn test_work_context_structures() {
         // Test that work context structures can be created
-        let (sender, _receiver) = channel::<(usize, usize, f64)>();
+        let (sender_receiver) = channel::<(usize, usize, f64)>();
 
         let distance_context = DistanceMatrixContext {
             points: Array2::zeros((4, 2)),

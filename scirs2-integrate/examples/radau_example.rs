@@ -1,5 +1,5 @@
 use ndarray::{array, ArrayView1};
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -66,7 +66,7 @@ fn main() {
                         let b_diff = (**b - t).abs();
                         a_diff.partial_cmp(&b_diff).unwrap()
                     })
-                    .map(|(i, _)| i)
+                    .map(|(i_)| i)
                     .unwrap()
             });
 

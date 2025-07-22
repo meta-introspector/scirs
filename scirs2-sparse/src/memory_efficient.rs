@@ -3,7 +3,7 @@
 //! This module provides advanced memory optimization techniques for sparse matrix operations,
 //! including streaming algorithms, out-of-core processing, and cache-aware implementations.
 
-use crate::csr_array::CsrArray;
+use crate::csr__array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, ArrayView1};
@@ -27,11 +27,11 @@ pub struct MemoryTracker {
 
 impl MemoryTracker {
     /// Create a new memory tracker with given limit
-    pub fn new(memory_limit: usize) -> Self {
+    pub fn new(_memory_limit: usize) -> Self {
         Self {
             current_usage: 0,
             peak_usage: 0,
-            memory_limit,
+            _memory_limit,
         }
     }
 
@@ -104,7 +104,7 @@ where
     }
 
     let mut y = Array1::zeros(rows);
-    let element_size = std::mem::size_of::<T>();
+    let element_size = std::mem::_size_of::<T>();
 
     // Process matrix in chunks
     let num_chunks = rows.div_ceil(chunk_size);
@@ -117,8 +117,8 @@ where
         // Estimate memory usage for this chunk
         let chunk_memory = current_chunk_size * cols * element_size; // Worst case
 
-        if let Some(tracker) = memory_tracker.as_ref() {
-            if !tracker.can_allocate(chunk_memory) {
+        if let Some(_tracker) = memory_tracker.as_ref() {
+            if !_tracker.can_allocate(chunk_memory) {
                 return Err(SparseError::ValueError(
                     "Insufficient memory for chunk processing".to_string(),
                 ));
@@ -126,8 +126,8 @@ where
         }
 
         // Track memory allocation
-        if let Some(tracker) = memory_tracker.as_mut() {
-            tracker.allocate(chunk_memory)?;
+        if let Some(_tracker) = memory_tracker.as_mut() {
+            _tracker.allocate(chunk_memory)?;
         }
 
         // Extract chunk data
@@ -148,8 +148,8 @@ where
         }
 
         // Deallocate chunk memory
-        if let Some(tracker) = memory_tracker.as_mut() {
-            tracker.deallocate(chunk_memory);
+        if let Some(_tracker) = memory_tracker.as_mut() {
+            _tracker.deallocate(chunk_memory);
         }
     }
 
@@ -175,11 +175,11 @@ where
     T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,
 {
     /// Create a new out-of-core processor
-    pub fn new(memory_limit: usize) -> Self {
-        let chunk_size = memory_limit / (8 * std::mem::size_of::<T>()); // Conservative estimate
+    pub fn new(_memory_limit: usize) -> Self {
+        let chunk_size = _memory_limit / (8 * std::mem::size_of::<T>()); // Conservative estimate
 
         Self {
-            memory_limit,
+            _memory_limit,
             chunk_size,
             temp_storage: VecDeque::new(),
         }
@@ -262,7 +262,7 @@ where
         let mut result = Vec::new();
         let (b_row_indices, b_col_indices, b_values) = b.find();
 
-        // Create a more efficient representation of B for column access
+        // Create _a more efficient representation of B for column access
         let mut b_by_row: std::collections::HashMap<usize, Vec<(usize, T)>> =
             std::collections::HashMap::new();
         for (k, (&row, &col)) in b_row_indices.iter().zip(b_col_indices.iter()).enumerate() {
@@ -307,12 +307,7 @@ where
     /// Process a chunk of matrix multiplication
     #[allow(dead_code)]
     fn process_chunk_matmul<S1, S2>(
-        &mut self,
-        _a: &S1,
-        _b_csc: &S2,
-        _row_start: usize,
-        _row_end: usize,
-        _b_cols: usize,
+        &mut self_a: &S1_b, _csc: &S2_row_start: usize, _row_end: usize_b, _cols: usize,
     ) -> SparseResult<ChunkResult<T>>
     where
         S1: SparseArray<T>,
@@ -342,7 +337,7 @@ where
         let mut chunk_indptr = vec![0];
 
         let (a_row_indices, a_col_indices, a_values) = a.find();
-        let (b_row_indices, _b_col_indices, b_values) = b_csc.find();
+        let (b_row_indices_b_col_indices, b_values) = b_csc.find();
         let b_indptr = b_csc
             .get_indptr()
             .ok_or_else(|| SparseError::ValueError("CSC matrix must have indptr".to_string()))?;
@@ -441,7 +436,7 @@ impl CacheAwareOps {
         }
 
         let mut y = Array1::zeros(rows);
-        let elements_per_cache_line = cache_line_size / std::mem::size_of::<T>();
+        let elements_per_cache_line = cache_line_size / std::mem::_size_of::<T>();
 
         // Group operations by cache lines for better locality
         let (row_indices, col_indices, values) = matrix.find();
@@ -454,7 +449,7 @@ impl CacheAwareOps {
             .map(|((&row, &col), &val)| (row, col, val))
             .collect();
 
-        sorted_ops.sort_by_key(|&(_, col, _)| col);
+        sorted_ops.sort_by_key(|&(_, col_)| col);
 
         // Process in cache-friendly chunks
         for chunk in sorted_ops.chunks(elements_per_cache_line) {
@@ -479,7 +474,7 @@ impl CacheAwareOps {
         let (row_indices, col_indices, values) = matrix.find();
 
         // Group operations by cache lines
-        let elements_per_cache_line = cache_line_size / std::mem::size_of::<T>();
+        let elements_per_cache_line = cache_line_size / std::mem::_size_of::<T>();
 
         let mut transposed_triplets = Vec::new();
 
@@ -493,17 +488,17 @@ impl CacheAwareOps {
         }
 
         // Sort by new row index (original column)
-        transposed_triplets.sort_by_key(|&(new_row, _, _)| new_row);
+        transposed_triplets.sort_by_key(|&(new_row__)| new_row);
 
         let new_rows: Vec<usize> = transposed_triplets
             .iter()
-            .map(|&(new_row, _, _)| new_row)
+            .map(|&(new_row__)| new_row)
             .collect();
         let new_cols: Vec<usize> = transposed_triplets
             .iter()
-            .map(|&(_, new_col, _)| new_col)
+            .map(|&(_, new_col_)| new_col)
             .collect();
-        let new_values: Vec<T> = transposed_triplets.iter().map(|&(_, _, val)| val).collect();
+        let new_values: Vec<T> = transposed_triplets.iter().map(|&(__, val)| val).collect();
 
         CsrArray::from_triplets(&new_rows, &new_cols, &new_values, (cols, rows), false)
     }
@@ -524,11 +519,11 @@ where
     T: Float + Debug + Copy + 'static,
 {
     /// Create a new memory pool
-    pub fn new(pool_size_limit: usize) -> Self {
+    pub fn new(_pool_size_limit: usize) -> Self {
         Self {
             available_buffers: Vec::new(),
             allocated_buffers: Vec::new(),
-            pool_size_limit,
+            _pool_size_limit,
         }
     }
 
@@ -587,7 +582,7 @@ impl ChunkedOperations {
         let mut result_cols = Vec::new();
         let mut result_values = Vec::new();
 
-        let element_size = std::mem::size_of::<T>();
+        let element_size = std::mem::_size_of::<T>();
 
         // Extract elements from both matrices once
         let (a_rows_idx, a_cols_idx, a_values) = a.find();
@@ -601,13 +596,13 @@ impl ChunkedOperations {
             // Estimate memory for this chunk
             let chunk_memory = current_chunk_size * a_cols * element_size * 2; // For both matrices
 
-            if let Some(ref mut tracker) = memory_tracker {
-                if !tracker.can_allocate(chunk_memory) {
+            if let Some(ref mut _tracker) = memory_tracker {
+                if !_tracker.can_allocate(chunk_memory) {
                     return Err(SparseError::ValueError(
                         "Insufficient memory for chunked addition".to_string(),
                     ));
                 }
-                tracker.allocate(chunk_memory)?;
+                _tracker.allocate(chunk_memory)?;
             }
 
             // Use HashMap to efficiently combine elements
@@ -649,8 +644,8 @@ impl ChunkedOperations {
                 }
             }
 
-            if let Some(ref mut tracker) = memory_tracker {
-                tracker.deallocate(chunk_memory);
+            if let Some(ref mut _tracker) = memory_tracker {
+                _tracker.deallocate(chunk_memory);
             }
         }
 
@@ -679,7 +674,7 @@ impl ChunkedOperations {
         let mut result_cols = Vec::new();
         let mut result_values = Vec::new();
 
-        let element_size = std::mem::size_of::<T>();
+        let element_size = std::mem::_size_of::<T>();
 
         // Process matrix in chunks
         for chunk_start in (0..rows).step_by(chunk_size) {
@@ -689,13 +684,13 @@ impl ChunkedOperations {
             // Estimate memory for this chunk
             let chunk_memory = current_chunk_size * cols * element_size;
 
-            if let Some(ref mut tracker) = memory_tracker {
-                if !tracker.can_allocate(chunk_memory) {
+            if let Some(ref mut _tracker) = memory_tracker {
+                if !_tracker.can_allocate(chunk_memory) {
                     return Err(SparseError::ValueError(
                         "Insufficient memory for chunked scaling".to_string(),
                     ));
                 }
-                tracker.allocate(chunk_memory)?;
+                _tracker.allocate(chunk_memory)?;
             }
 
             // Extract and scale elements in the current chunk
@@ -712,8 +707,8 @@ impl ChunkedOperations {
                 }
             }
 
-            if let Some(ref mut tracker) = memory_tracker {
-                tracker.deallocate(chunk_memory);
+            if let Some(ref mut _tracker) = memory_tracker {
+                _tracker.deallocate(chunk_memory);
             }
         }
 
@@ -739,7 +734,7 @@ impl ChunkedOperations {
         let (rows, cols) = matrix.shape();
         let mut all_triplets = Vec::new();
 
-        let element_size = std::mem::size_of::<T>();
+        let element_size = std::mem::_size_of::<T>();
 
         // Process in chunks to minimize peak memory usage
         for chunk_start in (0..rows).step_by(chunk_size) {
@@ -749,13 +744,13 @@ impl ChunkedOperations {
             // Estimate memory for this chunk
             let chunk_memory = current_chunk_size * cols * element_size;
 
-            if let Some(ref mut tracker) = memory_tracker {
-                if !tracker.can_allocate(chunk_memory) {
+            if let Some(ref mut _tracker) = memory_tracker {
+                if !_tracker.can_allocate(chunk_memory) {
                     return Err(SparseError::ValueError(
                         "Insufficient memory for format conversion".to_string(),
                     ));
                 }
-                tracker.allocate(chunk_memory)?;
+                _tracker.allocate(chunk_memory)?;
             }
 
             // Extract triplets for this chunk
@@ -770,15 +765,15 @@ impl ChunkedOperations {
 
             all_triplets.extend(chunk_triplets);
 
-            if let Some(ref mut tracker) = memory_tracker {
-                tracker.deallocate(chunk_memory);
+            if let Some(ref mut _tracker) = memory_tracker {
+                _tracker.deallocate(chunk_memory);
             }
         }
 
         // Create the final matrix from all triplets
-        let result_rows: Vec<usize> = all_triplets.iter().map(|&(r, _, _)| r).collect();
-        let result_cols: Vec<usize> = all_triplets.iter().map(|&(_, c, _)| c).collect();
-        let result_values: Vec<T> = all_triplets.iter().map(|&(_, _, v)| v).collect();
+        let result_rows: Vec<usize> = all_triplets.iter().map(|&(r__)| r).collect();
+        let result_cols: Vec<usize> = all_triplets.iter().map(|&(_, c_)| c).collect();
+        let result_values: Vec<T> = all_triplets.iter().map(|&(__, v)| v).collect();
 
         CsrArray::from_triplets(
             &result_rows,
@@ -809,17 +804,17 @@ impl ChunkedOperations {
         let element_size = std::mem::size_of::<usize>();
         let memory_needed = rows * element_size * 4; // Conservative estimate
 
-        if let Some(ref mut tracker) = memory_tracker {
-            if !tracker.can_allocate(memory_needed) {
+        if let Some(ref mut _tracker) = memory_tracker {
+            if !_tracker.can_allocate(memory_needed) {
                 return Err(SparseError::ValueError(
                     "Insufficient memory for bandwidth reduction".to_string(),
                 ));
             }
-            tracker.allocate(memory_needed)?;
+            _tracker.allocate(memory_needed)?;
         }
 
         // Build adjacency list representation
-        let (row_indices, col_indices, _) = matrix.find();
+        let (row_indices, col_indices_) = matrix.find();
         let mut adj_list: Vec<Vec<usize>> = vec![Vec::new(); rows];
 
         for (&row, &col) in row_indices.iter().zip(col_indices.iter()) {
@@ -902,8 +897,8 @@ impl ChunkedOperations {
         let reordered_matrix =
             CsrArray::from_triplets(&perm_rows, &perm_cols, &perm_values, (rows, cols), false)?;
 
-        if let Some(ref mut tracker) = memory_tracker {
-            tracker.deallocate(memory_needed);
+        if let Some(ref mut _tracker) = memory_tracker {
+            _tracker.deallocate(memory_needed);
         }
 
         Ok((ordering, reordered_matrix))
@@ -913,7 +908,7 @@ impl ChunkedOperations {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
     use approx::assert_relative_eq;
 
     #[test]

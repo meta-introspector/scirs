@@ -8,8 +8,8 @@ use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, NumCast, Zero};
 use rand::prelude::*;
 use rand::{rngs::StdRng, SeedableRng};
-use rand_distr::uniform::SampleUniform;
-use rand_distr::{Distribution, StandardNormal};
+use rand__distr::uniform::SampleUniform;
+use rand__distr::{Distribution, StandardNormal};
 
 /// Generate random samples from a specified random distribution
 ///
@@ -26,8 +26,8 @@ use rand_distr::{Distribution, StandardNormal};
 /// # Examples
 ///
 /// ```
-/// use rand_distr::{Uniform, Distribution};
-/// use scirs2_stats::random::random_sample;
+/// use rand__distr::{Uniform, Distribution};
+/// use scirs2__stats::random::random_sample;
 ///
 /// // Generate 10 random numbers from a uniform distribution [0, 1)
 /// let uniform_dist = Uniform::new(0.0, 1.0).unwrap();
@@ -84,7 +84,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::random::uniform;
+/// use scirs2__stats::random::uniform;
 ///
 /// // Generate 5 random numbers from uniform distribution [0, 10)
 /// let samples = uniform(0.0, 10.0, 5, Some(123)).unwrap();
@@ -96,7 +96,7 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn uniform<F>(low: F, high: F, size: usize, seed: Option<u64>) -> StatsResult<Array1<F>>
+pub fn uniform<F>(_low: F, high: F, size: usize, seed: Option<u64>) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Zero + SampleUniform + std::fmt::Display,
 {
@@ -106,13 +106,13 @@ where
         ));
     }
 
-    if low >= high {
+    if _low >= high {
         return Err(StatsError::InvalidArgument(
             "Upper bound must be greater than lower bound".to_string(),
         ));
     }
 
-    let distribution = rand_distr::Uniform::new(low, high).map_err(|e| {
+    let distribution = rand_distr::Uniform::new(_low, high).map_err(|e| {
         StatsError::ComputationError(format!("Failed to create uniform distribution: {}", e))
     })?;
     random_sample(size, &distribution, seed)
@@ -134,7 +134,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::random::randint;
+/// use scirs2__stats::random::randint;
 ///
 /// // Generate 10 random integers from 1 to 100 (inclusive)
 /// let samples = randint(1, 101, 10, Some(42)).unwrap();
@@ -146,20 +146,20 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn randint(low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsResult<Array1<i64>> {
+pub fn randint(_low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsResult<Array1<i64>> {
     if size == 0 {
         return Err(StatsError::InvalidArgument(
             "Size must be positive".to_string(),
         ));
     }
 
-    if low >= high {
+    if _low >= high {
         return Err(StatsError::InvalidArgument(
             "Upper bound must be greater than lower bound".to_string(),
         ));
     }
 
-    let distribution = rand_distr::Uniform::new_inclusive(low, high - 1).map_err(|e| {
+    let distribution = rand_distr::Uniform::new_inclusive(_low, high - 1).map_err(|e| {
         StatsError::ComputationError(format!("Failed to create uniform distribution: {}", e))
     })?;
     random_sample(size, &distribution, seed)
@@ -179,7 +179,7 @@ pub fn randint(low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsResu
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::random::randn;
+/// use scirs2__stats::random::randn;
 ///
 /// // Generate 100 random numbers from standard normal distribution
 /// let samples = randn(100, Some(42)).unwrap();
@@ -193,8 +193,8 @@ pub fn randint(low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsResu
 /// assert!(mean.abs() < 0.3);
 /// ```
 #[allow(dead_code)]
-pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
-    if size == 0 {
+pub fn randn(_size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
+    if _size == 0 {
         return Err(StatsError::InvalidArgument(
             "Size must be positive".to_string(),
         ));
@@ -211,8 +211,8 @@ pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
     };
 
     let distribution = StandardNormal;
-    let mut result = Array1::zeros(size);
-    for i in 0..size {
+    let mut result = Array1::zeros(_size);
+    for i in 0.._size {
         result[i] = distribution.sample(&mut rng);
     }
 
@@ -237,7 +237,7 @@ pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::random::choice;
+/// use scirs2__stats::random::choice;
 ///
 /// // Create an array of choices
 /// let options = array![10, 20, 30, 40, 50];
@@ -403,7 +403,7 @@ where
             let mut indices: Vec<usize> = (0..n).collect();
 
             for i in 0..size {
-                let j = rng.random_range(i..n);
+                let j = rng.gen_range(i..n);
                 indices.swap(i, j);
                 result.push(a[indices[i]]);
             }
@@ -428,7 +428,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::random::permutation;
+/// use scirs2__stats::random::permutation;
 ///
 /// // Permute an array
 /// let arr = array![1, 2, 3, 4, 5];
@@ -470,7 +470,7 @@ where
 
     // Fisher-Yates shuffle
     for i in (1..n).rev() {
-        let j = rng.random_range(0..=i);
+        let j = rng.gen_range(0..=i);
         result.swap(i, j);
     }
 
@@ -491,7 +491,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::random::permutation_int;
+/// use scirs2__stats::random::permutation_int;
 ///
 /// // Generate a random permutation of integers from 0 to 9
 /// let perm = permutation_int(10, Some(42)).unwrap();
@@ -527,7 +527,7 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
 
     // Fisher-Yates shuffle
     for i in (1..n).rev() {
-        let j = rng.random_range(0..=i);
+        let j = rng.gen_range(0..=i);
         result.swap(i, j);
     }
 
@@ -550,7 +550,7 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::random::random_binary_matrix;
+/// use scirs2__stats::random::random_binary_matrix;
 ///
 /// // Generate a 5x5 binary matrix with 30% non-zero elements
 /// let matrix = random_binary_matrix(5, 5, 0.3, Some(42)).unwrap();
@@ -621,7 +621,7 @@ pub fn random_binary_matrix(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::random::bootstrap_sample;
+/// use scirs2__stats::random::bootstrap_sample;
 ///
 /// // Create an array
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -651,7 +651,7 @@ where
 
     if n_samples == 0 {
         return Err(StatsError::InvalidArgument(
-            "Number of samples must be positive".to_string(),
+            "Number of _samples must be positive".to_string(),
         ));
     }
 
@@ -697,7 +697,7 @@ mod tests {
         }
 
         // Test error cases
-        assert!(random_sample::<f64, _>(0, &uniform_dist, None).is_err());
+        assert!(random_sample::<f64>(0, &uniform_dist, None).is_err());
     }
 
     #[test]

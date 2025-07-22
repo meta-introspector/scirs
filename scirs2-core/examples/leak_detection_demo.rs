@@ -42,7 +42,7 @@ fn main() -> CoreResult<()> {
 
     // Demonstrate checkpoint-based leak detection
     println!("\n🎯 Creating memory checkpoint...");
-    let checkpoint = detector.create_checkpoint("demo_operation")?;
+    let checkpoint = detector.create_checkpoint(demo_operation)?;
     println!(
         "  ✅ Checkpoint '{}' created at {}",
         checkpoint.name,
@@ -89,7 +89,7 @@ fn main() -> CoreResult<()> {
     // Demonstrate RAII leak checking with guard
     println!("\n🛡️  Testing RAII leak guard...");
     {
-        let _guard = LeakCheckGuard::new(&detector, "raii_test")?;
+        let guard = LeakCheckGuard::new(&detector, "raii_test")?;
         println!("  📦 Guard created - will check on drop");
 
         // Simulate more allocations within guard scope

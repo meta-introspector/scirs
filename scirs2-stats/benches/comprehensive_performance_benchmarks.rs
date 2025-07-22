@@ -9,24 +9,25 @@ use ndarray::{Array1, Array2, Axis};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use scirs2_core::rng;
-use scirs2_stats::{
+use scirs2__stats::{
     correlation::*, descriptive::*, distributions::*, quantile::*, regression::linear::*, tests::*,
     traits::Distribution,
 };
 use std::time::Duration;
+use statrs::statistics::Statistics;
 
 /// Generate test data of various sizes for benchmarking
 #[allow(dead_code)]
-fn generate_test_data(size: usize, seed: u64) -> Array1<f64> {
+fn generate_test_data(_size: usize, seed: u64) -> Array1<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array1::from_iter((0..size).map(|_| rng.random::<f64>() * 100.0 - 50.0))
+    Array1::from_iter((0.._size).map(|_| rng.random::<f64>() * 100.0 - 50.0))
 }
 
 /// Generate matrix test data for multivariate benchmarks
 #[allow(dead_code)]
-fn generate_matrix_data(rows: usize, cols: usize, seed: u64) -> Array2<f64> {
+fn generate_matrix_data(_rows: usize, cols: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array2::from_shape_fn((rows, cols), |_| rng.random::<f64>() * 100.0 - 50.0)
+    Array2::from_shape_fn((_rows, cols), |_| rng.random::<f64>() * 100.0 - 50.0)
 }
 
 /// Generate correlated data for correlation benchmarks
@@ -681,8 +682,8 @@ def benchmark_scipy():
         
         # Time correlation
         start = time.time()
-        pearson_r, _ = stats.pearsonr(x, y)
-        spearman_r, _ = stats.spearmanr(x, y)
+        pearson_r_ = stats.pearsonr(x, y)
+        spearman_r_ = stats.spearmanr(x, y)
         scipy_corr_time = time.time() - start
         
         results[f"correlation_{size}"] = {

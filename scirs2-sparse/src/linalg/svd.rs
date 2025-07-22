@@ -36,8 +36,7 @@ impl SVDMethod {
             "lanczos" => Ok(Self::Lanczos),
             "randomized" | "random" => Ok(Self::Randomized),
             "power" => Ok(Self::Power),
-            "cross" | "cross_approximation" => Ok(Self::CrossApproximation),
-            _ => Err(SparseError::ValueError(format!("Unknown SVD method: {s}"))),
+            "cross" | "cross_approximation" => Ok(Self::CrossApproximation, _ => Err(SparseError::ValueError(format!("Unknown SVD method: {s}"))),
         }
     }
 }
@@ -117,8 +116,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::linalg::svds;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::linalg::svds;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a sparse matrix
 /// let rows = vec![0, 0, 1, 2, 2];
@@ -347,7 +346,7 @@ where
 
 /// Randomized SVD algorithm
 #[allow(dead_code)]
-fn randomized_svd<T, S>(matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
+fn randomized_svd<T, S>(_matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
 where
     T: Float
         + Debug
@@ -360,10 +359,10 @@ where
         + std::iter::Sum,
     S: SparseArray<T>,
 {
-    let (m, n) = matrix.shape();
+    let (m, n) = _matrix.shape();
     let l = k + options.n_oversamples;
 
-    // Generate random matrix
+    // Generate random _matrix
     let mut omega = Array2::zeros((n, l));
     for i in 0..n {
         for j in 0..l {
@@ -377,7 +376,7 @@ where
     let mut y = Array2::zeros((m, l));
     for j in 0..l {
         let omega_col = omega.column(j).to_owned();
-        let y_col = matrix_vector_product(matrix, &omega_col)?;
+        let y_col = matrix_vector_product(_matrix, &omega_col)?;
         for i in 0..m {
             y[[i, j]] = y_col[i];
         }
@@ -389,8 +388,8 @@ where
         let mut y_new = Array2::zeros((m, l));
         for j in 0..l {
             let y_col = y.column(j).to_owned();
-            let at_y_col = matrix_transpose_vector_product(matrix, &y_col)?;
-            let a_at_y_col = matrix_vector_product(matrix, &at_y_col)?;
+            let at_y_col = matrix_transpose_vector_product(_matrix, &y_col)?;
+            let a_at_y_col = matrix_vector_product(_matrix, &at_y_col)?;
             for i in 0..m {
                 y_new[[i, j]] = a_at_y_col[i];
             }
@@ -407,7 +406,7 @@ where
         let q_row = q.row(i).to_owned();
 
         // Compute A^T * q_row (equivalent to q_row^T * A)
-        let b_row = matrix_transpose_vector_product(matrix, &q_row)?;
+        let b_row = matrix_transpose_vector_product(_matrix, &q_row)?;
         for j in 0..n {
             b[[i, j]] = b_row[j];
         }
@@ -449,7 +448,7 @@ where
 
 /// Power method SVD (simplified implementation)
 #[allow(dead_code)]
-fn power_method_svd<T, S>(matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
+fn power_method_svd<T, S>(_matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
 where
     T: Float
         + Debug
@@ -464,7 +463,7 @@ where
 {
     // For now, fall back to Lanczos method
     // A full implementation would use deflation and multiple power iterations
-    lanczos_bidiag_svd(matrix, k, options)
+    lanczos_bidiag_svd(_matrix, k, options)
 }
 
 /// Cross-approximation SVD (simplified implementation)
@@ -493,7 +492,7 @@ where
 
 /// Matrix-vector product: y = A * x
 #[allow(dead_code)]
-fn matrix_vector_product<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
+fn matrix_vector_product<T, S>(_matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
     T: Float
         + Debug
@@ -506,7 +505,7 @@ where
         + std::iter::Sum,
     S: SparseArray<T>,
 {
-    let (m, n) = matrix.shape();
+    let (m, n) = _matrix.shape();
     if vector.len() != n {
         return Err(SparseError::DimensionMismatch {
             expected: n,
@@ -515,7 +514,7 @@ where
     }
 
     let mut result = Array1::zeros(m);
-    let (row_indices, col_indices, values) = matrix.find();
+    let (row_indices, col_indices, values) = _matrix.find();
 
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[i] = result[i] + values[k] * vector[j];
@@ -526,7 +525,7 @@ where
 
 /// Matrix-transpose-vector product: y = A^T * x
 #[allow(dead_code)]
-fn matrix_transpose_vector_product<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
+fn matrix_transpose_vector_product<T, S>(_matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
     T: Float
         + Debug
@@ -539,7 +538,7 @@ where
         + std::iter::Sum,
     S: SparseArray<T>,
 {
-    let (m, n) = matrix.shape();
+    let (m, n) = _matrix.shape();
     if vector.len() != m {
         return Err(SparseError::DimensionMismatch {
             expected: m,
@@ -548,7 +547,7 @@ where
     }
 
     let mut result = Array1::zeros(n);
-    let (row_indices, col_indices, values) = matrix.find();
+    let (row_indices, col_indices, values) = _matrix.find();
 
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[j] = result[j] + values[k] * vector[i];
@@ -617,7 +616,7 @@ where
 
 /// QR decomposition returning only Q (simplified implementation)
 #[allow(dead_code)]
-fn qr_decomposition_orthogonal<T>(matrix: &Array2<T>) -> SparseResult<Array2<T>>
+fn qr_decomposition_orthogonal<T>(_matrix: &Array2<T>) -> SparseResult<Array2<T>>
 where
     T: Float
         + Debug
@@ -629,8 +628,8 @@ where
         + 'static
         + std::iter::Sum,
 {
-    let (m, n) = matrix.dim();
-    let mut q = matrix.clone();
+    let (m, n) = _matrix.dim();
+    let mut q = _matrix.clone();
 
     // Simple Gram-Schmidt orthogonalization
     for j in 0..n {
@@ -665,7 +664,7 @@ where
 
 /// Dense SVD (placeholder implementation)
 #[allow(dead_code)]
-fn dense_svd<T>(matrix: &Array2<T>, k: usize) -> SparseResult<SVDResult<T>>
+fn dense_svd<T>(_matrix: &Array2<T>, k: usize) -> SparseResult<SVDResult<T>>
 where
     T: Float
         + Debug
@@ -677,7 +676,7 @@ where
         + 'static
         + std::iter::Sum,
 {
-    let (m, n) = matrix.dim();
+    let (m, n) = _matrix.dim();
     let rank = k.min(m).min(n);
 
     // Simplified implementation - in practice, use LAPACK or similar
@@ -697,7 +696,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
     use approx::assert_relative_eq;
 
     fn create_test_matrix() -> CsrArray<f64> {

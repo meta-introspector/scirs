@@ -6,8 +6,8 @@
 //! GPU backends (CUDA, HIP, SYCL).
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse_fft::{SparseFFTAlgorithm, WindowFunction};
-use num_complex::Complex64;
+use crate::sparse__fft::{SparseFFTAlgorithm, WindowFunction};
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 
@@ -105,14 +105,14 @@ pub struct FFTKernel {
 
 impl FFTKernel {
     /// Create a new FFT kernel
-    pub fn new(input_size: usize, input_address: usize, output_address: usize) -> Self {
+    pub fn new(_input_size: usize, input_address: usize, output_address: usize) -> Self {
         let mut config = KernelConfig::default();
-        // Calculate grid size based on input size and block size
-        config.grid_size = input_size.div_ceil(config.block_size);
+        // Calculate grid _size based on input _size and block _size
+        config.grid_size = _input_size.div_ceil(config.block_size);
 
         Self {
             config,
-            input_size,
+            _input_size,
             input_address,
             output_address,
         }
@@ -144,8 +144,8 @@ impl GPUKernel for FFTKernel {
             execution_time_ms,
             memory_bandwidth_gb_s: 500.0,
             compute_throughput_gflops: 10000.0,
-            bytes_transferred_to_device: self.input_size * std::mem::size_of::<Complex64>(),
-            bytes_transferred_from_device: self.input_size * std::mem::size_of::<Complex64>(),
+            bytes_transferred_to_device: self.input_size * std::mem::size, _of::<Complex64>(),
+            bytes_transferred_from_device: self.input_size * std::mem::size, _of::<Complex64>(),
             occupancy_percent: 80.0,
         };
 
@@ -190,7 +190,7 @@ impl SparseFFTKernel {
         window_function: WindowFunction,
     ) -> Self {
         let mut config = KernelConfig::default();
-        // Calculate grid size based on input size and block size
+        // Calculate grid _size based on input _size and block _size
         config.grid_size = input_size.div_ceil(config.block_size);
 
         Self {
@@ -282,8 +282,8 @@ impl GPUKernel for SparseFFTKernel {
             execution_time_ms,
             memory_bandwidth_gb_s: 450.0,
             compute_throughput_gflops: 9000.0,
-            bytes_transferred_to_device: self.input_size * std::mem::size_of::<Complex64>(),
-            bytes_transferred_from_device: (self.sparsity * 2) * std::mem::size_of::<Complex64>(),
+            bytes_transferred_to_device: self.input_size * std::mem::size, _of::<Complex64>(),
+            bytes_transferred_from_device: (self.sparsity * 2) * std::mem::size, _of::<Complex64>(),
             occupancy_percent: 75.0,
         };
 
@@ -337,7 +337,7 @@ impl KernelFactory {
         // Customize configuration based on GPU
         let mut config = KernelConfig::default();
 
-        // Set block size based on GPU capabilities
+        // Set block _size based on GPU capabilities
         config.block_size = if self.max_threads_per_block >= 1024 {
             1024
         } else if self.max_threads_per_block >= 512 {
@@ -346,10 +346,10 @@ impl KernelFactory {
             256
         };
 
-        // Calculate grid size
+        // Calculate grid _size
         config.grid_size = input_size.div_ceil(config.block_size);
 
-        // Set shared memory size
+        // Set shared memory _size
         config.shared_memory_size = std::cmp::min(
             self.shared_memory_per_block,
             16 * 1024, // 16 KB default
@@ -397,7 +397,7 @@ impl KernelFactory {
         // Customize configuration based on GPU and algorithm
         let mut config = KernelConfig::default();
 
-        // Optimize block size based on algorithm
+        // Optimize block _size based on algorithm
         config.block_size = match algorithm {
             SparseFFTAlgorithm::Sublinear => 256,
             SparseFFTAlgorithm::CompressedSensing => 512,
@@ -407,10 +407,10 @@ impl KernelFactory {
             SparseFFTAlgorithm::SpectralFlatness => 512,
         };
 
-        // Ensure block size is within GPU limits
+        // Ensure block _size is within GPU limits
         config.block_size = std::cmp::min(config.block_size, self.max_threads_per_block);
 
-        // Calculate grid size
+        // Calculate grid _size
         config.grid_size = input_size.div_ceil(config.block_size);
 
         // Optimize shared memory based on algorithm
@@ -487,9 +487,9 @@ pub struct KernelLauncher {
 
 impl KernelLauncher {
     /// Create a new kernel launcher
-    pub fn new(factory: KernelFactory) -> Self {
+    pub fn new(_factory: KernelFactory) -> Self {
         Self {
-            factory,
+            _factory,
             active_kernels: Vec::new(),
             total_memory_allocated: 0,
         }
@@ -497,7 +497,7 @@ impl KernelLauncher {
 
     /// Allocate memory for FFT operation
     pub fn allocate_fft_memory(&mut self, input_size: usize) -> FFTResult<(usize, usize)> {
-        let element_size = std::mem::size_of::<Complex64>();
+        let element_size = std::mem::_size_of::<Complex64>();
         let input_bytes = input_size * element_size;
         let output_bytes = input_size * element_size;
 
@@ -520,8 +520,8 @@ impl KernelLauncher {
         input_size: usize,
         sparsity: usize,
     ) -> FFTResult<(usize, usize, usize)> {
-        let element_size = std::mem::size_of::<Complex64>();
-        let index_size = std::mem::size_of::<usize>();
+        let element_size = std::mem::_size_of::<Complex64>();
+        let index_size = std::mem::_size_of::<usize>();
 
         let input_bytes = input_size * element_size;
         let output_values_bytes = sparsity * element_size;
@@ -582,7 +582,7 @@ impl KernelLauncher {
             window_function,
         )?;
 
-        // Apply window function if needed
+        // Apply window _function if needed
         if window_function != WindowFunction::None {
             // Launch window kernel first
             kernel.apply_window()?;
@@ -646,18 +646,18 @@ where
         gpu_arch.to_string(),
         vec![compute_capability],
         available_memory,
-        48 * 1024, // 48 KB shared memory per block
+        48 * 1024, // 48 KB shared _memory per block
         1024,      // 1024 threads per block
     );
 
     // Create kernel launcher
     let mut launcher = KernelLauncher::new(factory);
 
-    // Allocate memory
+    // Allocate _memory
     let (input_address, output_values_address, output_indices_address) =
         launcher.allocate_sparse_fft_memory(signal.len(), sparsity)?;
 
-    // In a real implementation, this would copy the signal to GPU memory
+    // In a real implementation, this would copy the signal to GPU _memory
 
     // Launch kernel
     let stats = launcher.launch_sparse_fft_kernel(
@@ -670,7 +670,7 @@ where
         window_function,
     )?;
 
-    // In a real implementation, this would copy the results back from GPU memory
+    // In a real implementation, this would copy the results back from GPU _memory
     // For now, just return dummy data
 
     // Create dummy frequency components
@@ -685,7 +685,7 @@ where
         indices.push(idx);
     }
 
-    // Free memory
+    // Free _memory
     launcher.free_all_memory();
 
     Ok((values, indices, stats))

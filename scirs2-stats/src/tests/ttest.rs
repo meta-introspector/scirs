@@ -53,7 +53,7 @@ pub struct TTestResult<F: Float + std::fmt::Display> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::tests::ttest::{ttest_1samp, Alternative};
+/// use scirs2__stats::tests::ttest::{ttest_1samp, Alternative};
 ///
 /// let data = array![5.1, 4.9, 6.2, 5.7, 5.5, 5.1, 5.2, 5.0];
 /// let null_mean = 5.0;
@@ -88,7 +88,7 @@ where
         + 'static
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
-    // Handle NaN values according to policy
+    // Handle NaN values according to _policy
     let data = match nan_policy {
         "propagate" => a.to_owned(),
         "raise" => {
@@ -144,7 +144,7 @@ where
             F::from(2.0).unwrap() * (F::one() - t_dist.cdf(abs_t))
         }
         Alternative::Less => t_dist.cdf(t_stat),
-        Alternative::Greater => F::one() - t_dist.cdf(t_stat),
+        Alternative::Greater =>, F::one() - t_dist.cdf(t_stat),
     };
 
     // Create additional info string
@@ -177,7 +177,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::tests::ttest::{ttest_ind, Alternative};
+/// use scirs2__stats::tests::ttest::{ttest_ind, Alternative};
 ///
 /// let group1 = array![5.1, 4.9, 6.2, 5.7, 5.5];
 /// let group2 = array![4.8, 5.2, 5.1, 4.7, 4.9];
@@ -209,7 +209,7 @@ where
         + 'static
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
-    // Handle NaN values according to policy
+    // Handle NaN values according to _policy
     let (data_a, data_b) = match nan_policy {
         "propagate" => (a.to_owned(), b.to_owned()),
         "raise" => {
@@ -306,7 +306,7 @@ where
             F::from(2.0).unwrap() * (F::one() - t_dist.cdf(abs_t))
         }
         Alternative::Less => t_dist.cdf(t_stat),
-        Alternative::Greater => F::one() - t_dist.cdf(t_stat),
+        Alternative::Greater =>, F::one() - t_dist.cdf(t_stat),
     };
 
     // Create additional info string
@@ -347,7 +347,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::tests::ttest::{ttest_rel, Alternative};
+/// use scirs2__stats::tests::ttest::{ttest_rel, Alternative};
 ///
 /// // Data from paired measurements (e.g., before and after treatment)
 /// let before = array![68.5, 70.2, 65.3, 72.1, 69.8];
@@ -501,7 +501,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::tests::ttest::{ttest_ind_from_stats, Alternative};
+/// use scirs2__stats::tests::ttest::{ttest_ind_from_stats, Alternative};
 ///
 /// // Descriptive statistics from two samples
 /// let mean1 = 5.48;
@@ -607,7 +607,7 @@ where
             F::from(2.0).unwrap() * (F::one() - t_dist.cdf(abs_t))
         }
         Alternative::Less => t_dist.cdf(t_stat),
-        Alternative::Greater => F::one() - t_dist.cdf(t_stat),
+        Alternative::Greater =>, F::one() - t_dist.cdf(t_stat),
     };
 
     // Create additional info string

@@ -2,14 +2,15 @@
 //!
 //! This module implements the main ICA interface for BSS techniques.
 
+use crate::error::{SignalError, SignalResult};
+use ndarray::{Array2, Axis};
+use scirs2__linalg::solve_multiple;
+use super::{BssConfig, IcaMethod, NonlinearityFunction, whiten_signals};
 use super::fastica::fast_ica;
 use super::infomax::{extended_infomax_ica, infomax_ica};
 use super::jade::jade_ica;
-use super::{whiten_signals, BssConfig, IcaMethod, NonlinearityFunction};
-use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, Axis};
-use scirs2_linalg::solve_multiple;
 
+#[allow(unused_imports)]
 /// Apply Independent Component Analysis (ICA) to separate mixed signals
 ///
 /// ICA finds statistically independent components that generated the mixed signals.
@@ -35,11 +36,11 @@ pub fn ica(
 ) -> SignalResult<(Array2<f64>, Array2<f64>)> {
     let (n_signals, n_samples) = signals.dim();
 
-    // Determine number of components
+    // Determine number of _components
     let n_comp = n_components.unwrap_or(n_signals);
     if n_comp > n_signals {
         return Err(SignalError::ValueError(format!(
-            "Number of components ({}) cannot exceed number of signals ({})",
+            "Number of _components ({}) cannot exceed number of signals ({})",
             n_comp, n_signals
         )));
     }

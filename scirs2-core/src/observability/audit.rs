@@ -1452,7 +1452,7 @@ impl AlertManager {
                         return Ok(());
                     }
 
-                    // Simple delay between commands
+                    // Simple _delay between commands
                     std::thread::sleep(Duration::from_millis(100));
                 }
 

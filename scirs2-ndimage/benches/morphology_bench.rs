@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array2, Array3};
-use scirs2_ndimage::morphology::{
+use scirs2__ndimage::morphology::{
     binary_dilation,
     binary_dilation_2d_optimized,
     binary_erosion,
@@ -168,7 +168,7 @@ fn bench_structuring_sizes(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("grey_erosion", format!("{}x{}", size, size)),
             &structure,
-            |b, _structure| {
+            |b_structure| {
                 b.iter(|| grey_erosion(black_box(&input), None, None, None, None, None).unwrap())
             },
         );

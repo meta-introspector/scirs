@@ -3,8 +3,12 @@
 //! This example demonstrates how to use the spectral utilities to analyze
 //! the characteristics of a signal's frequency content.
 
-use scirs2_signal::spectral::periodogram;
-use scirs2_signal::utilities::spectral::*;
+use scirs2__signal::spectral::periodogram;
+use scirs2__signal::utilities::spectral::*;
+use std::f64::consts::PI;
+use crate::utilities::spectral::spectral_flux;
+use crate::utilities::spectral::spectral_centroid;
+use crate::utilities::spectral::spectral_rolloff;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -92,13 +96,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut rng = rand::rng();
     for i in 0..n_samples {
         let t = i as f64 / fs;
-        let noise = rng.random_range(-0.5..0.5);
+        let noise = rng.gen_range(-0.5..0.5);
         let value = a1 * (2.0 * PI * f1 * t).sin() + a2 * (2.0 * PI * f2 * t).sin() + noise;
         signal2.push(value);
     }
 
     // Compute power spectral density for the second signal
-    let (psd2, _) = periodogram(
+    let (psd2.._) = periodogram(
         &signal2,
         Some(fs),
         Some("hann"),
@@ -122,12 +126,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut noisy_signal = Vec::with_capacity(n_samples);
         for i in 0..n_samples {
             let t = i as f64 / fs;
-            let noise = rng.random_range(-noise_level..noise_level);
+            let noise = rng.gen_range(-noise_level..noise_level);
             let value = a1 * (2.0 * PI * f1 * t).sin() + a2 * (2.0 * PI * f2 * t).sin() + noise;
             noisy_signal.push(value);
         }
 
-        let (noisy_psd, _) = periodogram(
+        let (noisy_psd.._) = periodogram(
             &noisy_signal,
             Some(fs),
             Some("hann"),

@@ -21,8 +21,7 @@ pub struct EnhancedBayesianRegression<F> {
     /// Inference method
     pub inference_method: InferenceMethod,
     /// Model configuration
-    pub config: BayesianRegressionConfig,
-    _phantom: PhantomData<F>,
+    pub config: BayesianRegressionConfig_phantom: PhantomData<F>,
 }
 
 /// Prior specification for Bayesian regression
@@ -140,7 +139,7 @@ where
 
         if response.len() != n {
             return Err(StatsError::DimensionMismatch(format!(
-                "Response length ({}) must match design matrix rows ({})",
+                "Response length ({}) must match design _matrix rows ({})",
                 response.len(),
                 n
             )));
@@ -148,7 +147,7 @@ where
 
         if prior.beta_mean.len() != p {
             return Err(StatsError::DimensionMismatch(format!(
-                "Prior mean length ({}) must match design matrix columns ({})",
+                "Prior mean length ({}) must match design _matrix columns ({})",
                 prior.beta_mean.len(),
                 p
             )));
@@ -169,8 +168,7 @@ where
             response,
             prior,
             inference_method,
-            config: BayesianRegressionConfig::default(),
-            _phantom: PhantomData,
+            config: BayesianRegressionConfig::default(), _phantom: PhantomData,
         })
     }
 
@@ -278,7 +276,7 @@ where
     fn fit_variational_bayes(&self) -> StatsResult<BayesianRegressionResult<F>> {
         let x = &self.design_matrix;
         let y = &self.response;
-        let (n, _p) = x.dim();
+        let (n_p) = x.dim();
 
         // Initialize variational parameters
         let mut q_beta_mean = self.prior.beta_mean.clone();
@@ -370,7 +368,7 @@ where
     fn fit_mcmc(&self) -> StatsResult<BayesianRegressionResult<F>> {
         use rand::rngs::StdRng;
         use rand::SeedableRng;
-        use rand_distr::{Distribution, Gamma};
+        use rand__distr::{Distribution, Gamma};
 
         let x = &self.design_matrix;
         let y = &self.response;
@@ -560,14 +558,11 @@ where
     /// Compute log marginal likelihood for exact inference
     fn compute_log_marginal_likelihood(
         &self,
-        xtx: &Array2<f64>,
-        _xty: &Array1<f64>,
-        prior_precision: &Array2<f64>,
-        _prior_mean: &Array1<f64>,
+        xtx: &Array2<f64>, _xty: &Array1<f64>,
+        prior_precision: &Array2<f64>, _prior_mean: &Array1<f64>,
         noise_shape: f64,
         noise_rate: f64,
-        n: f64,
-        _p: usize,
+        n: f64_p: usize,
     ) -> StatsResult<F> {
         // This is a simplified version - full implementation would include all normalization terms
         let posterior_precision = xtx + prior_precision;
@@ -588,8 +583,7 @@ where
     /// Compute Evidence Lower BOund (ELBO) for variational inference
     fn compute_elbo(
         &self,
-        q_beta_mean: &Array1<F>,
-        _q_beta_precision: &Array2<F>,
+        q_beta_mean: &Array1<F>, _q_beta_precision: &Array2<F>,
         q_noise_shape: F,
         q_noise_rate: F,
     ) -> StatsResult<F> {
@@ -603,13 +597,13 @@ where
     }
 
     /// Sample from multivariate normal distribution
-    fn sample_multivariate_normal<R: scirs2_core::Rng>(
+    fn sample_multivariate_normal<R: scirs2_core: Rng>(
         &self,
         mean: &Array1<f64>,
         covariance: &Array2<f64>,
         rng: &mut R,
     ) -> StatsResult<Array1<F>> {
-        use rand_distr::{Distribution, StandardNormal};
+        use rand__distr::{Distribution, StandardNormal};
 
         let d = mean.len();
 
@@ -652,10 +646,10 @@ where
         noise_precision_samples: &[F],
     ) -> StatsResult<bool> {
         if beta_samples.len() < 100 {
-            return Ok(false); // Need minimum samples for convergence assessment
+            return Ok(false); // Need minimum _samples for convergence assessment
         }
 
-        // Split samples into two halves for Gelman-Rubin diagnostic
+        // Split _samples into two halves for Gelman-Rubin diagnostic
         let n = beta_samples.len();
         let mid = n / 2;
 

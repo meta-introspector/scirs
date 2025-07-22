@@ -13,10 +13,10 @@ mod hierarchical;
 mod regression;
 mod variational;
 
-pub use advanced_mcmc::*;
+pub use advanced__mcmc::*;
 pub use conjugate::*;
 // Import enhanced regression with aliases to avoid conflicts
-pub use enhanced_regression::{
+pub use enhanced__regression::{
     bayesian_linear_regression_exact as enhanced_bayesian_linear_regression_exact,
     bayesian_linear_regression_vb as enhanced_bayesian_linear_regression_vb,
     BayesianRegressionConfig as EnhancedBayesianRegressionConfig,

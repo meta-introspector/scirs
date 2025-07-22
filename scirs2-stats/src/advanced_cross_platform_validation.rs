@@ -6,8 +6,8 @@
 //! are maintained across the entire ecosystem.
 
 use crate::error::StatsResult;
-use crate::numerical_stability_enhancements::create_exhaustive_numerical_stability_tester;
-use crate::unified_processor::{
+use crate::numerical_stability__enhancements::create_exhaustive_numerical_stability_tester;
+use crate::unified__processor::{
     create_advanced_processor, OptimizationMode, AdvancedProcessorConfig,
 };
 use ndarray::{Array1, ArrayView1};
@@ -15,6 +15,7 @@ use scirs2_core::simd_ops::PlatformCapabilities;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Instant;
+use statrs::statistics::Statistics;
 
 /// Platform information and capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -196,8 +197,7 @@ impl CrossPlatformValidator {
             s if s >= 0.95 => CompatibilityRating::Excellent,
             s if s >= 0.85 => CompatibilityRating::Good,
             s if s >= 0.70 => CompatibilityRating::Fair,
-            s if s >= 0.50 => CompatibilityRating::Poor,
-            _ => CompatibilityRating::Incompatible,
+            s if s >= 0.50 => CompatibilityRating::Poor_ =>, CompatibilityRating::Incompatible,
         };
 
         // Generate platform-specific warnings
@@ -710,14 +710,14 @@ fn generate_outlier_data(n: usize) -> Array1<f64> {
 }
 
 #[allow(dead_code)]
-fn generate_aligned_data(size: usize, _alignment: usize) -> Array1<f64> {
-    // Generate data with specific memory alignment for SIMD testing
-    Array1::from_shape_fn(size, |i| (i as f64).sin())
+fn generate_aligned_data(_size: usize_alignment: usize) -> Array1<f64> {
+    // Generate data with specific memory _alignment for SIMD testing
+    Array1::from_shape_fn(_size, |i| (i as f64).sin())
 }
 
 #[allow(dead_code)]
-fn generate_large_dataset(size: usize) -> Array1<f64> {
-    Array1::from_shape_fn(size, |i| (i as f64 * 0.001).sin() + (i as f64 * 0.01).cos())
+fn generate_large_dataset(_size: usize) -> Array1<f64> {
+    Array1::from_shape_fn(_size, |i| (i as f64 * 0.001).sin() + (i as f64 * 0.01).cos())
 }
 
 #[allow(dead_code)]
@@ -743,25 +743,25 @@ fn generate_cancellation_data(n: usize) -> Array1<f64> {
 }
 
 #[allow(dead_code)]
-fn generate_performance_test_data(size: usize) -> Array1<f64> {
-    Array1::from_shape_fn(size, |i| (i as f64).sin())
+fn generate_performance_test_data(_size: usize) -> Array1<f64> {
+    Array1::from_shape_fn(_size, |i| (i as f64).sin())
 }
 
 #[allow(dead_code)]
-fn estimate_memory_usage(data_size: usize) -> usize {
-    data_size * std::mem::size_of::<f64>() * 2 // Rough estimate
+fn estimate_memory_usage(_data_size: usize) -> usize {
+    _data_size * std::mem::_size_of::<f64>() * 2 // Rough estimate
 }
 
 #[allow(dead_code)]
-fn calculate_memory_efficiency(peak_usage: usize, data_size: usize) -> f64 {
-    let theoretical_minimum = data_size * std::mem::size_of::<f64>();
-    theoretical_minimum as f64 / peak_usage as f64
+fn calculate_memory_efficiency(_peak_usage: usize, data_size: usize) -> f64 {
+    let theoretical_minimum = data_size * std::mem::_size_of::<f64>();
+    theoretical_minimum as f64 / _peak_usage as f64
 }
 
 #[allow(dead_code)]
-fn estimate_expected_throughput(data_size: usize) -> f64 {
+fn estimate_expected_throughput(_data_size: usize) -> f64 {
     // Very rough estimate - should be calibrated per platform
-    match data_size {
+    match _data_size {
         n if n < 1000 => 1e6,    // 1M elements/sec
         n if n < 10000 => 5e6,   // 5M elements/sec
         n if n < 100000 => 10e6, // 10M elements/sec
@@ -770,40 +770,40 @@ fn estimate_expected_throughput(data_size: usize) -> f64 {
 }
 
 #[allow(dead_code)]
-fn estimate_expected_parallel_throughput(data_size: usize, thread_count: usize) -> f64 {
-    estimate_expected_throughput(data_size) * (thread_count as f64 * 0.8) // 80% parallel efficiency
+fn estimate_expected_parallel_throughput(_data_size: usize, thread_count: usize) -> f64 {
+    estimate_expected_throughput(_data_size) * (thread_count as f64 * 0.8) // 80% parallel efficiency
 }
 
 #[allow(dead_code)]
-fn time_scalar_operation(data: &Array1<f64>) -> std::time::Duration {
+fn time_scalar_operation(_data: &Array1<f64>) -> std::time::Duration {
     let start = Instant::now();
-    let _result = data.iter().sum::<f64>() / data.len() as f64;
+    let _result = _data.iter().sum::<f64>() / _data.len() as f64;
     start.elapsed()
 }
 
 #[allow(dead_code)]
-fn time_simd_operation(data: &Array1<f64>) -> std::time::Duration {
+fn time_simd_operation(_data: &Array1<f64>) -> std::time::Duration {
     let start = Instant::now();
     let optimizer = crate::advanced_simd_stats::AdvancedSimdOptimizer::new(
         crate::advanced_simd_stats::AdvancedSimdConfig::default(),
     );
-    let data_arrays = vec![data.view()];
+    let data_arrays = vec![_data.view()];
     let operations = vec![crate::advanced_simd_stats::BatchOperation::Mean];
     let _result = optimizer.advanced_batch_statistics(&data_arrays, &operations);
     start.elapsed()
 }
 
 #[allow(dead_code)]
-fn time_single_thread_operation(data: &Array1<f64>) -> std::time::Duration {
+fn time_single_thread_operation(_data: &Array1<f64>) -> std::time::Duration {
     let start = Instant::now();
-    let _result = data.mean();
+    let _result = _data.mean();
     start.elapsed()
 }
 
 #[allow(dead_code)]
-fn time_multi_thread_operation(data: &Array1<f64>) -> std::time::Duration {
+fn time_multi_thread_operation(_data: &Array1<f64>) -> std::time::Duration {
     let start = Instant::now();
-    let _result = crate::parallel_stats::mean_parallel(&data.view(), None);
+    let _result = crate::parallel_stats::mean_parallel(&_data.view(), None);
     start.elapsed()
 }
 

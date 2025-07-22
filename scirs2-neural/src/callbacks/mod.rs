@@ -71,26 +71,23 @@ pub struct FunctionCallback<F: Float + Debug + ScalarOperand + Send + Sync> {
     _phantom: std::marker::PhantomData<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> FunctionCallback<F> {
     /// Create a new function callback
-    pub fn new(func: Box<dyn Fn() -> Result<()> + Send + Sync>) -> Self {
+    pub fn new(_func: Box<dyn Fn() -> Result<()> + Send + Sync>) -> Self {
         Self {
-            func,
-            _phantom: std::marker::PhantomData,
+            _func_phantom: std::marker::PhantomData,
         }
     }
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Callback<F> for FunctionCallback<F> {
     fn on_event(
-        &mut self,
-        _timing: CallbackTiming,
-        _context: &mut CallbackContext<F>,
+        &mut self_timing: CallbackTiming, _context: &mut CallbackContext<F>,
     ) -> Result<()> {
         (self.func)()
-pub use callback_manager::CallbackManager;
+pub use callback__manager::CallbackManager;
 pub use checkpoint::ModelCheckpoint;
-pub use early_stopping::EarlyStopping;
-pub use gradient_clipping::{GradientClipping, GradientClippingMethod};
-pub use learning_rate_scheduler::{CosineAnnealingLR, ReduceOnPlateau, ScheduleMethod, StepDecay};
-pub use learning_rate_scheduler_trait::LearningRateScheduler;
+pub use early__stopping::EarlyStopping;
+pub use gradient__clipping::{GradientClipping, GradientClippingMethod};
+pub use learning_rate__scheduler::{CosineAnnealingLR, ReduceOnPlateau, ScheduleMethod, StepDecay};
+pub use learning_rate_scheduler__trait::LearningRateScheduler;
 #[cfg(feature = "metrics_integration")]
 pub use metrics::*;
 pub use tensorboard::TensorBoardLogger;
-pub use visualization_callback::VisualizationCallback;
+pub use visualization__callback::VisualizationCallback;

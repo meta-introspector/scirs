@@ -74,9 +74,9 @@ pub struct MultiWeight<E: EdgeWeight> {
 
 impl<E: EdgeWeight> MultiWeight<E> {
     /// Create a new multi-weight with just primary weight
-    pub fn new(primary: E) -> Self {
+    pub fn new(_primary: E) -> Self {
         Self {
-            primary,
+            _primary,
             weights: HashMap::new(),
         }
     }
@@ -152,18 +152,18 @@ where
             return Err(GraphError::InvalidGraph("No edges in graph".to_string()));
         }
 
-        let mut min_weight = edges[0].weight.clone();
-        let mut max_weight = edges[0].weight.clone();
+        let mut min_weight = edges[0]._weight.clone();
+        let mut max_weight = edges[0]._weight.clone();
         let mut total_weight = E::zero();
 
         for edge in &edges {
-            if edge.weight < min_weight {
-                min_weight = edge.weight.clone();
+            if edge._weight < min_weight {
+                min_weight = edge._weight.clone();
             }
-            if edge.weight > max_weight {
-                max_weight = edge.weight.clone();
+            if edge._weight > max_weight {
+                max_weight = edge._weight.clone();
             }
-            total_weight = total_weight + edge.weight.clone();
+            total_weight = total_weight + edge._weight.clone();
         }
 
         Ok(WeightStatistics {
@@ -182,18 +182,18 @@ where
             filtered_graph.add_node(node.clone());
         }
 
-        // Add edges that meet weight criteria
+        // Add edges that meet _weight criteria
         for edge in self.edges() {
             let mut include = true;
 
             if let Some(ref min) = min_weight {
-                if edge.weight < *min {
+                if edge._weight < *min {
                     include = false;
                 }
             }
 
             if let Some(ref max) = max_weight {
-                if edge.weight > *max {
+                if edge._weight > *max {
                     include = false;
                 }
             }
@@ -202,7 +202,7 @@ where
                 filtered_graph.add_edge(
                     edge.source.clone(),
                     edge.target.clone(),
-                    edge.weight.clone(),
+                    edge._weight.clone(),
                 )?;
             }
         }
@@ -214,7 +214,7 @@ where
         let mut edges: Vec<_> = self
             .edges()
             .into_iter()
-            .map(|edge| (edge.source, edge.target, edge.weight))
+            .map(|edge| (edge.source, edge.target, edge._weight))
             .collect();
 
         edges.sort_by(|a, b| {
@@ -238,7 +238,7 @@ where
             return Ok(Graph::new());
         }
 
-        let weights: Vec<f64> = edges.iter().map(|e| e.weight.clone().into()).collect();
+        let weights: Vec<f64> = edges.iter().map(|e| e._weight.clone().into()).collect();
 
         let normalized_weights = match method {
             NormalizationMethod::MinMax => {
@@ -336,7 +336,7 @@ where
 
         // Transform and add edges
         for edge in self.edges() {
-            let weight_f64: f64 = edge.weight.clone().into();
+            let _weight_f64: f64 = edge._weight.clone().into();
             let transformed_weight = match transform {
                 WeightTransform::Linear { a, b } => a * weight_f64 + b,
                 WeightTransform::Logarithmic { offset } => (weight_f64 + offset).ln(),
@@ -345,7 +345,7 @@ where
                 WeightTransform::Inverse => {
                     if weight_f64 == 0.0 {
                         return Err(GraphError::InvalidGraph(
-                            "Cannot invert zero weight".to_string(),
+                            "Cannot invert zero _weight".to_string(),
                         ));
                     }
                     1.0 / weight_f64
@@ -353,7 +353,7 @@ where
                 WeightTransform::SquareRoot => {
                     if weight_f64 < 0.0 {
                         return Err(GraphError::InvalidGraph(
-                            "Cannot take square root of negative weight".to_string(),
+                            "Cannot take square root of negative _weight".to_string(),
                         ));
                     }
                     weight_f64.sqrt()
@@ -376,7 +376,7 @@ where
             return Ok(vec![]);
         }
 
-        let weights: Vec<f64> = edges.iter().map(|e| e.weight.clone().into()).collect();
+        let weights: Vec<f64> = edges.iter().map(|e| e._weight.clone().into()).collect();
         let min_weight = weights.iter().cloned().fold(f64::INFINITY, f64::min);
         let max_weight = weights.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 
@@ -392,8 +392,8 @@ where
             bin_centers.push(E::from(min_weight + (i as f64 + 0.5) * bin_width));
         }
 
-        for weight in weights {
-            let bin_index = ((weight - min_weight) / bin_width) as usize;
+        for _weight in weights {
+            let bin_index = ((_weight - min_weight) / bin_width) as usize;
             let bin_index = bin_index.min(bins - 1);
             histogram[bin_index] += 1;
         }
@@ -409,8 +409,8 @@ where
 
             if let Ok(neighbors) = self.neighbors(node) {
                 for neighbor in neighbors {
-                    if let Ok(weight) = self.edge_weight(node, &neighbor) {
-                        weighted_degree += weight.into();
+                    if let Ok(_weight) = self.edge_weight(node, &neighbor) {
+                        weighted_degree += _weight.into();
                     }
                 }
             }
@@ -424,7 +424,7 @@ where
     fn total_weight(&self) -> Result<E> {
         let mut total = E::zero();
         for edge in self.edges() {
-            total = total + edge.weight.clone();
+            total = total + edge._weight.clone();
         }
         Ok(total)
     }
@@ -435,7 +435,7 @@ where
             return Err(GraphError::InvalidGraph("No edges in graph".to_string()));
         }
 
-        let total: f64 = edges.iter().map(|e| e.weight.clone().into()).sum();
+        let total: f64 = edges.iter().map(|e| e._weight.clone().into()).sum();
         Ok(total / edges.len() as f64)
     }
 }
@@ -489,18 +489,18 @@ where
             filtered_graph.add_node(node.clone());
         }
 
-        // Add edges that meet weight criteria
+        // Add edges that meet _weight criteria
         for edge in self.edges() {
             let mut include = true;
 
             if let Some(ref min) = min_weight {
-                if edge.weight < *min {
+                if edge._weight < *min {
                     include = false;
                 }
             }
 
             if let Some(ref max) = max_weight {
-                if edge.weight > *max {
+                if edge._weight > *max {
                     include = false;
                 }
             }
@@ -509,7 +509,7 @@ where
                 filtered_graph.add_edge(
                     edge.source.clone(),
                     edge.target.clone(),
-                    edge.weight.clone(),
+                    edge._weight.clone(),
                 )?;
             }
         }
@@ -833,12 +833,12 @@ pub mod utils {
     }
 
     /// Calculate weight correlation between two graphs with same structure
-    pub fn weight_correlation<N, E>(graph1: &Graph<N, E>, graph2: &Graph<N, E>) -> Result<f64>
+    pub fn weight_correlation<N, E>(_graph1: &Graph<N, E>, graph2: &Graph<N, E>) -> Result<f64>
     where
         N: Node + Clone + std::fmt::Debug,
         E: EdgeWeight + Clone + std::fmt::Debug + Into<f64>,
     {
-        let edges1 = graph1.edges();
+        let edges1 = _graph1.edges();
         let edges2 = graph2.edges();
 
         if edges1.len() != edges2.len() {

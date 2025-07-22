@@ -30,8 +30,8 @@ pub enum IntegrationError {
 }
 
 impl From<IntegrationError> for AutogradError {
-    fn from(err: IntegrationError) -> Self {
-        AutogradError::IntegrationError(err.to_string())
+    fn from(_err: IntegrationError) -> Self {
+        AutogradError::IntegrationError(_err.to_string())
     }
 }
 
@@ -212,9 +212,9 @@ pub struct ModuleInfo {
 
 impl ModuleInfo {
     /// Create new module information
-    pub fn new(name: String, version: String) -> Self {
+    pub fn new(_name: String, version: String) -> Self {
         Self {
-            name,
+            _name,
             version,
             features: Vec::new(),
             dependencies: Vec::new(),
@@ -269,42 +269,42 @@ pub fn init_integration_registry() -> &'static std::sync::Mutex<IntegrationRegis
 
 /// Register a module with the global registry
 #[allow(dead_code)]
-pub fn register_module(info: ModuleInfo) -> Result<(), IntegrationError> {
+pub fn register_module(_info: ModuleInfo) -> Result<(), IntegrationError> {
     let registry = init_integration_registry();
     let mut registry_guard = registry.lock().map_err(|_| {
         IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
     })?;
-    registry_guard.register_module(info)
+    registry_guard.register_module(_info)
 }
 
 /// Get module information from the global registry
 #[allow(dead_code)]
-pub fn get_module_info(name: &str) -> Result<Option<ModuleInfo>, IntegrationError> {
+pub fn get_module_info(_name: &str) -> Result<Option<ModuleInfo>, IntegrationError> {
     let registry = init_integration_registry();
     let registry_guard = registry.lock().map_err(|_| {
         IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
     })?;
-    Ok(registry_guard.get_module(name).cloned())
+    Ok(registry_guard.get_module(_name).cloned())
 }
 
 /// Check compatibility between two modules
 #[allow(dead_code)]
-pub fn check_compatibility(module1: &str, module2: &str) -> Result<bool, IntegrationError> {
+pub fn check_compatibility(_module1: &str, module2: &str) -> Result<bool, IntegrationError> {
     let registry = init_integration_registry();
     let registry_guard = registry.lock().map_err(|_| {
         IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
     })?;
-    registry_guard.check_module_compatibility(module1, module2)
+    registry_guard.check_module_compatibility(_module1, module2)
 }
 
 /// Update global integration configuration
 #[allow(dead_code)]
-pub fn update_global_config(config: IntegrationConfig) -> Result<(), IntegrationError> {
+pub fn update_global_config(_config: IntegrationConfig) -> Result<(), IntegrationError> {
     let registry = init_integration_registry();
     let mut registry_guard = registry.lock().map_err(|_| {
         IntegrationError::ModuleCompatibility("Failed to acquire registry lock".to_string())
     })?;
-    registry_guard.update_config(config);
+    registry_guard.update_config(_config);
     Ok(())
 }
 

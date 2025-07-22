@@ -1,14 +1,16 @@
 //! Power spectral density estimation using multitaper methods.
 
-use super::utils::compute_fft;
-use super::windows::dpss;
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
-// PI is only used in doc examples
-use num_complex::Complex64;
+use rand::Rng;
 use std::fmt::Debug;
+use super::utils::compute_fft;
+use super::windows::dpss;
 
+#[allow(unused_imports)]
+// PI is only used in doc examples
 /// Type alias for multitaper PSD calculation result
 pub type MultitaperResult = (Vec<f64>, Vec<f64>, Option<Array2<f64>>, Option<Array1<f64>>);
 
@@ -37,7 +39,7 @@ pub type MultitaperResult = (Vec<f64>, Vec<f64>, Option<Array2<f64>>, Option<Arr
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::multitaper::pmtm;
+/// use scirs2__signal::multitaper::pmtm;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sinusoid with noise)
@@ -105,8 +107,8 @@ where
     let return_onesided_val = return_onesided.unwrap_or(true);
     let return_tapers_val = return_tapers.unwrap_or(false);
 
-    // Compute DPSS tapers
-    let (tapers, eigenvalues_opt) = dpss(n, nw_val, k_val, true)?;
+    // Compute DPSS _tapers
+    let (_tapers, eigenvalues_opt) = dpss(n, nw_val, k_val, true)?;
 
     // Verify eigenvalues are available
     let eigenvalues = match eigenvalues_opt {
@@ -118,11 +120,11 @@ where
         }
     };
 
-    // Apply tapers to the signal
+    // Apply _tapers to the signal
     let mut tapered_signals = Array2::zeros((k_val, n));
     for i in 0..k_val {
         for j in 0..n {
-            tapered_signals[[i, j]] = x_f64[j] * tapers[[i, j]];
+            tapered_signals[[i, j]] = x_f64[j] * _tapers[[i, j]];
         }
     }
 
@@ -166,7 +168,7 @@ where
         f
     };
 
-    // Combine spectra from different tapers using eigenvalue weights
+    // Combine spectra from different _tapers using eigenvalue weights
     let mut psd = Vec::with_capacity(if return_onesided_val {
         nfft_val / 2 + 1
     } else {
@@ -211,7 +213,7 @@ where
 
     // Return results
     if return_tapers_val {
-        Ok((freqs, psd, Some(tapers), Some(eigenvalues)))
+        Ok((freqs, psd, Some(_tapers), Some(eigenvalues)))
     } else {
         Ok((freqs, psd, None, None))
     }
@@ -242,7 +244,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::multitaper::multitaper_spectrogram;
+/// use scirs2__signal::multitaper::multitaper_spectrogram;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a test signal with changing frequency
@@ -352,7 +354,7 @@ where
         f
     };
 
-    // Compute DPSS tapers once for the window size
+    // Compute DPSS tapers once for the window _size
     let (tapers, eigenvalues) = dpss(window_size_val, nw_val, k_val, true)?;
     // Verify eigenvalues are available
     let eigenvalues = match eigenvalues {

@@ -142,7 +142,7 @@ fn demonstrate_evolutionary_nas() -> CoreResult<()> {
     }
 
     // Analyze architecture composition
-    if let Some((best_arch, _)) = &search_results.best_architecture {
+    if let Some((best_arch_)) = &search_results.best_architecture {
         let layer_counts = count_layer_types(best_arch);
         println!("\n🏗️  Architecture Composition:");
         for (layer_type, count) in layer_counts {
@@ -399,7 +399,7 @@ fn demonstrate_multi_objective_optimization() -> CoreResult<()> {
         }
 
         // Analyze optimization focus
-        if let Some((best_arch, _)) = &search_results.best_architecture {
+        if let Some((best_arch_)) = &search_results.best_architecture {
             let layer_counts = count_layer_types(best_arch);
             let has_attention = layer_counts.contains_key(&LayerType::Attention);
             let has_conv = layer_counts.contains_key(&LayerType::Convolution2D);
@@ -519,7 +519,7 @@ fn demonstrate_hardware_aware_search() -> CoreResult<()> {
         }
 
         // Analyze hardware-specific optimizations
-        if let Some((best_arch, _)) = &search_results.best_architecture {
+        if let Some((best_arch_)) = &search_results.best_architecture {
             let layer_counts = count_layer_types(best_arch);
             println!("     * Layer distribution:");
             for (layer_type, count) in layer_counts {
@@ -614,7 +614,7 @@ fn demonstrate_meta_learning() -> CoreResult<()> {
         }
 
         // Analyze domain patterns
-        if let Some((best_arch, _)) = &search_results.best_architecture {
+        if let Some((best_arch_)) = &search_results.best_architecture {
             let layer_counts = count_layer_types(best_arch);
             println!("   - Dominant patterns discovered:");
             for (layer_type, count) in layer_counts.iter().take(3) {
@@ -649,13 +649,13 @@ fn demonstrate_meta_learning() -> CoreResult<()> {
 
 /// Analyze and display comprehensive search results
 #[allow(dead_code)]
-fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
+fn results( &SearchResults) -> CoreResult<()> {
     println!("\n📊 Comprehensive Search Analysis:");
     println!("================================");
 
     // Performance statistics
     println!("🏆 Performance Metrics:");
-    if let Some((_, perf)) = &results.best_architecture {
+    if let Some((_, perf)) = &_results.best_architecture {
         println!("   - Best accuracy: {:.4}", perf.accuracy);
         println!("   - Inference latency: {:?}", perf.latency);
         println!(
@@ -670,54 +670,54 @@ fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
     println!("\n📈 Search Statistics:");
     println!(
         "   - Total architectures evaluated: {}",
-        results.statistics.total_evaluations
+        _results.statistics.total_evaluations
     );
     println!(
         "   - Successful architectures: {}",
-        results.statistics.successful_evaluations
+        _results.statistics.successful_evaluations
     );
-    if let Some(convergence_gen) = results.statistics.convergence_generation {
+    if let Some(convergence_gen) = _results.statistics.convergence_generation {
         println!("   - Convergence generation: {convergence_gen}");
     }
 
     // Resource usage
     println!("\n💰 Resource Usage:");
-    println!("   - Total CPU time: {:?}", results.resource_usage.cpu_time);
+    println!("   - Total CPU time: {:?}", _results.resource_usage.cpu_time);
     println!(
         "   - Peak memory: {} MB",
-        results.resource_usage.memory_peak / (1024 * 1024)
+        _results.resource_usage.memory_peak / (1024 * 1024)
     );
     println!(
         "   - Total evaluations: {}",
-        results.resource_usage.evaluations_count
+        _results.resource_usage.evaluations_count
     );
 
     // Convergence analysis
-    if !results.progress_history.is_empty() {
-        let initial_fitness = results.progress_history[0].best_fitness;
-        let final_fitness = results.progress_history.last().unwrap().best_fitness;
+    if !_results.progress_history.is_empty() {
+        let initial_fitness = _results.progress_history[0].best_fitness;
+        let final_fitness = _results.progress_history.last().unwrap().best_fitness;
         let improvement = (final_fitness - initial_fitness) / initial_fitness * 100.0;
 
         println!("\n📉 Convergence Analysis:");
         println!("   - Initial best fitness: {initial_fitness:.4}");
         println!("   - Final best fitness: {final_fitness:.4}");
         println!("   - Total improvement: {improvement:.1}%");
-        println!("   - Progress points: {}", results.progress_history.len());
+        println!("   - Progress points: {}", _results.progress_history.len());
 
         // Show fitness evolution
-        let initial_avg = results.progress_history[0].avg_fitness;
-        let final_avg = results.progress_history.last().unwrap().avg_fitness;
+        let initial_avg = _results.progress_history[0].avg_fitness;
+        let final_avg = _results.progress_history.last().unwrap().avg_fitness;
         println!("   - Average fitness: {initial_avg:.3} → {final_avg:.3}");
     }
 
     // Meta-knowledge insights
-    if !results.meta_knowledge.best_practices.is_empty() {
+    if !_results.meta_knowledge.best_practices.is_empty() {
         println!("\n🧠 Meta-Knowledge Learned:");
         println!(
             "   - Best practices discovered: {}",
-            results.meta_knowledge.best_practices.len()
+            _results.meta_knowledge.best_practices.len()
         );
-        for (i, practice) in results
+        for (i, practice) in _results
             .meta_knowledge
             .best_practices
             .iter()
@@ -738,10 +738,10 @@ fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
 
 /// Count layer types in an architecture
 #[allow(dead_code)]
-fn count_layer_types(architecture: &Architecture) -> std::collections::HashMap<LayerType, usize> {
+fn architecture( &Architecture) -> std::collections::HashMap<LayerType, usize> {
     let mut counts = std::collections::HashMap::new();
 
-    for layer in &architecture.layers {
+    for layer in &_architecture.layers {
         *counts.entry(layer.layer_type).or_insert(0) += 1;
     }
 
@@ -863,7 +863,7 @@ mod tests {
                     skippable: false,
                 },
             ],
-            global_config: GlobalConfig {
+            globalconfig: GlobalConfig {
                 input_shape: vec![784],
                 output_size: 10,
                 learning_rate: 0.001,

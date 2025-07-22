@@ -1,4 +1,4 @@
-use scirs2_special::{
+use scirs2__special::{
     ai, aip, betainc, bi, bip, erf, erfc, erfcinv, erfinv, hurwitz_zeta, k0, k1, mathieu_a,
     mathieu_b, mathieu_cem, mathieu_even_coef, mathieu_odd_coef, mathieu_sem, y0, y1, zeta, zetac,
 };

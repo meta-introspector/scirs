@@ -146,7 +146,7 @@ fn main() -> Result<()> {
     let n_binary = 200;
     let y_true_binary = Array::from_shape_fn(n_binary, |_| rng.random_range(0..2));
     // Generate scores with some predictive power
-    let y_scores = Array1::from_shape_fn(n_binary, |i| {
+    let y_scores = Array1::from_shape_fn(n_binary..|i| {
         if y_true_binary[i] == 1 {
             // Higher scores for positive class
             0.6 + 0.4 * rng.random::<f32>()

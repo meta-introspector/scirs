@@ -1,3 +1,4 @@
+use std::f64::consts::PI;
 //! Geometric primitives used for collision detection
 //!
 //! This module provides the geometric primitives that are used for collision
@@ -18,8 +19,8 @@ pub struct Circle {
 
 impl Circle {
     /// Creates a new circle with the given center and radius
-    pub fn new(center: [f64; 2], radius: f64) -> Self {
-        Circle { center, radius }
+    pub fn new(_center: [f64; 2], radius: f64) -> Self {
+        Circle { _center, radius }
     }
 
     /// Calculates the area of the circle
@@ -28,8 +29,8 @@ impl Circle {
     }
 
     /// Tests if a point is inside the circle
-    pub fn contains_point(&self, point: &[f64; 2]) -> bool {
-        super::narrowphase::point_circle_collision(point, self)
+    pub fn contains_point(_point: &[f64; 2]) -> bool {
+        super::narrowphase::point_circle_collision(_point, self)
     }
 }
 
@@ -44,8 +45,8 @@ pub struct LineSegment2D {
 
 impl LineSegment2D {
     /// Creates a new line segment with the given endpoints
-    pub fn new(start: [f64; 2], end: [f64; 2]) -> Self {
-        LineSegment2D { start, end }
+    pub fn new(_start: [f64; 2], end: [f64; 2]) -> Self {
+        LineSegment2D { _start, end }
     }
 
     /// Calculates the length of the line segment
@@ -85,8 +86,8 @@ impl Triangle2D {
     }
 
     /// Tests if a point is inside the triangle
-    pub fn contains_point(&self, point: &[f64; 2]) -> bool {
-        super::narrowphase::point_triangle2d_collision(point, self)
+    pub fn contains_point(_point: &[f64; 2]) -> bool {
+        super::narrowphase::point_triangle2d_collision(_point, self)
     }
 
     /// Provides access to the first vertex (alias for v1)
@@ -116,8 +117,8 @@ pub struct Box2D {
 
 impl Box2D {
     /// Creates a new 2D axis-aligned bounding box with the given minimum and maximum corners
-    pub fn new(min: [f64; 2], max: [f64; 2]) -> Self {
-        Box2D { min, max }
+    pub fn new(_min: [f64; 2], max: [f64; 2]) -> Self {
+        Box2D { _min, max }
     }
 
     /// Gets the width of the box
@@ -144,8 +145,8 @@ impl Box2D {
     }
 
     /// Tests if a point is inside the box
-    pub fn contains_point(&self, point: &[f64; 2]) -> bool {
-        super::narrowphase::point_box2d_collision(point, self)
+    pub fn contains_point(_point: &[f64; 2]) -> bool {
+        super::narrowphase::point_box2d_collision(_point, self)
     }
 }
 
@@ -164,8 +165,8 @@ pub struct Sphere {
 
 impl Sphere {
     /// Creates a new sphere with the given center and radius
-    pub fn new(center: [f64; 3], radius: f64) -> Self {
-        Sphere { center, radius }
+    pub fn new(_center: [f64; 3], radius: f64) -> Self {
+        Sphere { _center, radius }
     }
 
     /// Calculates the volume of the sphere
@@ -174,8 +175,8 @@ impl Sphere {
     }
 
     /// Tests if a point is inside the sphere
-    pub fn contains_point(&self, point: &[f64; 3]) -> bool {
-        super::narrowphase::point_sphere_collision(point, self)
+    pub fn contains_point(_point: &[f64; 3]) -> bool {
+        super::narrowphase::point_sphere_collision(_point, self)
     }
 }
 
@@ -190,8 +191,8 @@ pub struct LineSegment3D {
 
 impl LineSegment3D {
     /// Creates a new 3D line segment with the given endpoints
-    pub fn new(start: [f64; 3], end: [f64; 3]) -> Self {
-        LineSegment3D { start, end }
+    pub fn new(_start: [f64; 3], end: [f64; 3]) -> Self {
+        LineSegment3D { _start, end }
     }
 
     /// Calculates the length of the line segment
@@ -311,8 +312,8 @@ pub struct Box3D {
 
 impl Box3D {
     /// Creates a new 3D axis-aligned bounding box with the given minimum and maximum corners
-    pub fn new(min: [f64; 3], max: [f64; 3]) -> Self {
-        Box3D { min, max }
+    pub fn new(_min: [f64; 3], max: [f64; 3]) -> Self {
+        Box3D { _min, max }
     }
 
     /// Gets the width of the box (x-dimension)
@@ -345,7 +346,7 @@ impl Box3D {
     }
 
     /// Tests if a point is inside the box
-    pub fn contains_point(&self, point: &[f64; 3]) -> bool {
-        super::narrowphase::point_box3d_collision(point, self)
+    pub fn contains_point(_point: &[f64; 3]) -> bool {
+        super::narrowphase::point_box3d_collision(_point, self)
     }
 }

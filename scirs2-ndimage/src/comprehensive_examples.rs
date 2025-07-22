@@ -68,7 +68,7 @@ impl ExampleTutorial {
                 "Learn how to apply Gaussian filters to reduce noise while preserving edges"
                     .to_string(),
             code_example: r#"
-use scirs2_ndimage::filters::{gaussian_filter, BorderMode};
+use scirs2__ndimage::filters::{gaussian_filter, BorderMode};
 use ndarray::Array2;
 
 // Create a noisy image (in practice, you'd load from file)
@@ -122,7 +122,7 @@ println!("Border modes: Reflect, Wrap, Constant");
                 "Use median filters to remove salt-and-pepper noise while preserving edges"
                     .to_string(),
             code_example: r#"
-use scirs2_ndimage::filters::{median_filter, BorderMode};
+use scirs2__ndimage::filters::{median_filter, BorderMode};
 use ndarray::Array2;
 
 // Create image with impulse noise
@@ -174,7 +174,7 @@ println!("Larger kernels remove more noise but may blur edges");
             title: "Edge Detection with Sobel and Laplacian Filters".to_string(),
             description: "Detect edges using gradient-based and Laplacian operators".to_string(),
             code_example: r#"
-use scirs2_ndimage::filters::{sobel, laplace, gaussian_filter};
+use scirs2__ndimage::filters::{sobel, laplace, gaussian_filter};
 use ndarray::Array2;
 
 // Create test image with clear edges
@@ -234,7 +234,7 @@ println!("Combined approach provides comprehensive edge information");
             title: "Binary Morphology for Shape Analysis".to_string(),
             description: "Use erosion, dilation, opening, and closing for shape processing".to_string(),
             code_example: r#"
-use scirs2_ndimage::morphology::{
+use scirs2__ndimage::morphology::{
     binary_erosion, binary_dilation, binary_opening, binary_closing,
     generate_binary_structure, disk_structure
 };
@@ -304,7 +304,7 @@ println!("- Closing: fills holes, connects nearby objects");
             description: "Apply morphological operations to grayscale images for various effects"
                 .to_string(),
             code_example: r#"
-use scirs2_ndimage::morphology::{
+use scirs2__ndimage::morphology::{
     grey_erosion, grey_dilation, grey_opening, grey_closing,
     white_tophat, black_tophat, morphological_gradient
 };
@@ -377,7 +377,7 @@ println!("- Contrast enhancement (combination of operations)");
             title: "Image Interpolation and Geometric Transformations".to_string(),
             description: "Resize, rotate, and transform images with various interpolation methods".to_string(),
             code_example: r#"
-use scirs2_ndimage::interpolation::{
+use scirs2__ndimage::interpolation::{
     zoom, rotate, shift, affine_transform, map_coordinates,
     InterpolationOrder, BoundaryMode
 };
@@ -432,8 +432,7 @@ let coords = Array2::from_shape_fn((2, 40 * 40), |(axis, idx)| {
     let j = idx % 40;
     match axis {
         0 => i as f64 + 2.0 * (j as f64 * 0.1).sin(), // Wavy distortion
-        1 => j as f64 + 1.0 * (i as f64 * 0.1).cos(),
-        _ => 0.0
+        1 => j as f64 + 1.0 * (i as f64 * 0.1).cos(, _ => 0.0
     }
 });
 
@@ -469,12 +468,12 @@ println!("- Custom coordinate mapping for complex distortions");
             description: "Extract quantitative information from images using measurement functions"
                 .to_string(),
             code_example: r#"
-use scirs2_ndimage::measurements::{
+use scirs2__ndimage::measurements::{
     center_of_mass, find_objects, moments, label, 
     sum_labels, mean_labels, variance_labels,
     extrema, region_properties
 };
-use scirs2_ndimage::morphology::label;
+use scirs2__ndimage::morphology::label;
 use ndarray::Array2;
 
 // Create test image with multiple objects
@@ -578,12 +577,12 @@ for (i, prop) in properties.iter().enumerate() {
             description: "Segment images into regions using thresholding and watershed algorithms"
                 .to_string(),
             code_example: r#"
-use scirs2_ndimage::segmentation::{
+use scirs2__ndimage::segmentation::{
     threshold_binary, otsu_threshold, adaptive_threshold,
     watershed, marker_watershed, AdaptiveMethod
 };
-use scirs2_ndimage::filters::gaussian_filter;
-use scirs2_ndimage::morphology::{binary_erosion, label};
+use scirs2__ndimage::filters::gaussian_filter;
+use scirs2__ndimage::morphology::{binary_erosion, label};
 use ndarray::Array2;
 
 // Create test image with multiple regions
@@ -690,11 +689,11 @@ println!("Created combined segmentation using multiple methods");
             title: "Feature Detection and Corner Finding".to_string(),
             description: "Detect corners, edges, and other features in images".to_string(),
             code_example: r#"
-use scirs2_ndimage::features::{
+use scirs2__ndimage::features::{
     canny, harris_corners, fast_corners, sobel_edges,
     gradient_edges, GradientMethod
 };
-use scirs2_ndimage::filters::gaussian_filter;
+use scirs2__ndimage::filters::gaussian_filter;
 use ndarray::Array2;
 
 // Create test image with corners and edges
@@ -822,8 +821,9 @@ println!("Created combined feature map with edges and corners");
             title: "Complete Image Analysis Workflow".to_string(),
             description: "Combine multiple techniques for comprehensive image analysis".to_string(),
             code_example: r#"
-use scirs2_ndimage::*;
+use scirs2__ndimage::*;
 use ndarray::Array2;
+use statrs::statistics::Statistics;
 
 // Simulate a real-world image analysis scenario:
 // Analyzing cellular structures in microscopy images

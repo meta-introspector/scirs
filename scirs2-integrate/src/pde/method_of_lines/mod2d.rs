@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use crate::ode::{solve_ivp, ODEOptions};
-use crate::pde::finite_difference::FiniteDifferenceScheme;
+use crate::pde::finite__difference::FiniteDifferenceScheme;
 use crate::pde::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, PDEError, PDEResult,
     PDESolution, PDESolverInfo,
@@ -91,22 +91,22 @@ impl MOLParabolicSolver2D {
             ));
         }
 
-        // Validate time range
+        // Validate time _range
         if time_range[0] >= time_range[1] {
             return Err(PDEError::DomainError(
-                "Invalid time range: start must be less than end".to_string(),
+                "Invalid time _range: start must be less than end".to_string(),
             ));
         }
 
-        // Validate boundary conditions
+        // Validate boundary _conditions
         if boundary_conditions.len() != 4 {
             return Err(PDEError::BoundaryConditions(
-                "2D parabolic PDE requires exactly 4 boundary conditions (one for each edge)"
+                "2D parabolic PDE requires exactly 4 boundary _conditions (one for each edge)"
                     .to_string(),
             ));
         }
 
-        // Ensure we have boundary conditions for all dimensions/edges
+        // Ensure we have boundary _conditions for all dimensions/edges
         let has_x_lower = boundary_conditions
             .iter()
             .any(|bc| bc.location == BoundaryLocation::Lower && bc.dimension == 0);
@@ -122,7 +122,7 @@ impl MOLParabolicSolver2D {
 
         if !has_x_lower || !has_x_upper || !has_y_lower || !has_y_upper {
             return Err(PDEError::BoundaryConditions(
-                "2D parabolic PDE requires boundary conditions for all edges of the domain"
+                "2D parabolic PDE requires boundary _conditions for all edges of the domain"
                     .to_string(),
             ));
         }
@@ -163,13 +163,13 @@ impl MOLParabolicSolver2D {
     }
 
     /// Set the finite difference scheme for spatial discretization
-    pub fn with_fd_scheme(mut self, scheme: FiniteDifferenceScheme) -> Self {
+    pub fn with_fd_scheme(mut scheme: FiniteDifferenceScheme) -> Self {
         self.fd_scheme = scheme;
         self
     }
 
     /// Solve the 2D parabolic PDE
-    pub fn solve(self) -> PDEResult<MOL2DResult> {
+    pub fn solve(&self) -> PDEResult<MOL2DResult> {
         let start_time = Instant::now();
 
         // Generate spatial grids
@@ -430,7 +430,7 @@ fn apply_boundary_condition_2d(
     match bc.bc_type {
         BoundaryConditionType::Dirichlet => {
             // Fixed value: u = bc.value
-            // For Dirichlet, we set dudt = 0 to maintain the fixed value
+            // For Dirichlet, we set dudt = 0 to maintain the _fixed value
             if let Some(i) = i_fixed {
                 for j in 0..j_range {
                     dudt[[j, i]] = 0.0;
@@ -915,16 +915,16 @@ fn apply_dirichlet_conditions_to_initial(
 
 /// Convert a MOL2DResult to a PDESolution
 impl From<MOL2DResult> for PDESolution<f64> {
-    fn from(result: MOL2DResult) -> Self {
+    fn from(_result: MOL2DResult) -> Self {
         let mut grids = Vec::new();
 
         // Add time grid
-        grids.push(result.t.clone());
+        grids.push(_result.t.clone());
 
         // Extract spatial grids from solution shape
-        let nt = result.t.len();
-        let ny = result.u.shape()[1];
-        let nx = result.u.shape()[2];
+        let nt = _result.t.len();
+        let ny = _result.u.shape()[1];
+        let nx = _result.u.shape()[2];
 
         // Create spatial grids (we don't have the actual grid values, so use linspace)
         let y_grid = Array1::linspace(0.0, 1.0, ny);
@@ -935,14 +935,14 @@ impl From<MOL2DResult> for PDESolution<f64> {
         // Convert the 3D array to 2D arrays, one per time step
         let mut values = Vec::new();
         for t_idx in 0..nt {
-            let time_slice = result.u.slice(s![t_idx, .., ..]).to_owned();
+            let time_slice = _result.u.slice(s![t_idx, .., ..]).to_owned();
             values.push(time_slice);
         }
 
         // Create solver info
         let info = PDESolverInfo {
             num_iterations: 0, // This information is not available directly
-            computation_time: result.computation_time,
+            computation_time: _result.computation_time,
             residual_norm: None,
             convergence_history: None,
             method: "Method of Lines (2D)".to_string(),

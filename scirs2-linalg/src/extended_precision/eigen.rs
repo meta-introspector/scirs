@@ -818,7 +818,7 @@ where
     // This is more stable than explicit QR for eigenvalues
 
     for l in 0..n {
-        let mut iter = 0;
+        let mut _iter = 0;
         loop {
             // Find small off-diagonal element
             let mut m = n - 1;
@@ -834,8 +834,8 @@ where
                 break; // Converged for this eigenvalue - e[l] is small
             }
 
-            iter += 1;
-            if iter > max_iter {
+            _iter += 1;
+            if _iter > max_iter {
                 break; // Max iterations reached
             }
 
@@ -1142,17 +1142,17 @@ where
         target_precision
     };
 
-    // Auto-detect if advanced-precision mode should be activated (more aggressive in advanced mode)
+    // Auto-_detect if advanced-_precision mode should be activated (more aggressive in advanced mode)
     let use_advanced_precision = auto_detect
         && (
             condition_number > A::from(1e12).unwrap() || target_precision <= A::from(1e-11).unwrap()
-            // Activate for high precision targets
+            // Activate for high _precision targets
         );
 
     if use_advanced_precision {
         advanced_precision_solver_internal(a, max_iter, adaptive_tolerance)
     } else {
-        // Use standard extended precision for well-conditioned matrices
+        // Use standard extended _precision for well-conditioned matrices
         extended_eigh(a, Some(max_iter), Some(adaptive_tolerance))
     }
 }
@@ -1371,12 +1371,12 @@ where
 
 /// Compute optimal Rayleigh quotient shift
 #[allow(dead_code)]
-fn compute_rayleigh_quotient_shift<A>(d1: A, d2: A, e: A) -> A
+fn compute_rayleigh_quotient_shift<A>(_d1: A, d2: A, e: A) -> A
 where
     A: Float + Zero + One + Copy,
 {
-    let trace = d1 + d2;
-    let det = d1 * d2 - e * e;
+    let trace = _d1 + d2;
+    let det = _d1 * d2 - e * e;
     let discriminant = trace * trace * A::from(0.25).unwrap() - det;
 
     if discriminant >= A::zero() {
@@ -1398,9 +1398,7 @@ where
 /// Apply QR step with Wilkinson shift
 #[allow(dead_code)]
 fn apply_qr_step_with_shift<A>(
-    d: &mut Array1<A>,
-    _e: &mut Array1<A>,
-    _q: &mut Array2<A>,
+    d: &mut Array1<A>, _e: &mut Array1<A>, _q: &mut Array2<A>,
     start: usize,
     shift: A,
 ) -> LinalgResult<()>
@@ -1456,12 +1454,12 @@ where
 
 /// Compute characteristic polynomial value at lambda
 #[allow(dead_code)]
-fn compute_characteristic_polynomial_value<A>(matrix: &Array2<A>, lambda: A) -> LinalgResult<A>
+fn compute_characteristic_polynomial_value<A>(_matrix: &Array2<A>, lambda: A) -> LinalgResult<A>
 where
     A: Float + Zero + One + Copy,
 {
-    let n = matrix.nrows();
-    let mut a_shifted = matrix.clone();
+    let n = _matrix.nrows();
+    let mut a_shifted = _matrix.clone();
 
     // Compute A - lambda*I
     for i in 0..n {
@@ -1474,33 +1472,33 @@ where
 
 /// Compute characteristic polynomial derivative at lambda
 #[allow(dead_code)]
-fn compute_characteristic_polynomial_derivative<A>(matrix: &Array2<A>, lambda: A) -> LinalgResult<A>
+fn compute_characteristic_polynomial_derivative<A>(_matrix: &Array2<A>, lambda: A) -> LinalgResult<A>
 where
     A: Float + Zero + One + Copy,
 {
     // Numerical derivative approximation
     let h = A::from(1e-8).unwrap();
-    let f_plus = compute_characteristic_polynomial_value(matrix, lambda + h)?;
-    let f_minus = compute_characteristic_polynomial_value(matrix, lambda - h)?;
+    let f_plus = compute_characteristic_polynomial_value(_matrix, lambda + h)?;
+    let f_minus = compute_characteristic_polynomial_value(_matrix, lambda - h)?;
 
     Ok((f_plus - f_minus) / (A::from(2.0).unwrap() * h))
 }
 
 /// Simple determinant computation for small matrices
 #[allow(dead_code)]
-fn compute_determinant_simple<A>(matrix: &Array2<A>) -> A
+fn compute_determinant_simple<A>(_matrix: &Array2<A>) -> A
 where
     A: Float + Zero + One + Copy,
 {
-    let n = matrix.nrows();
+    let n = _matrix.nrows();
 
     if n == 1 {
-        matrix[[0, 0]]
+        _matrix[[0, 0]]
     } else if n == 2 {
-        matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]
+        _matrix[[0, 0]] * _matrix[[1, 1]] - _matrix[[0, 1]] * _matrix[[1, 0]]
     } else {
         // For larger matrices, use cofactor expansion (simplified)
-        matrix[[0, 0]] // Placeholder - would implement full expansion
+        _matrix[[0, 0]] // Placeholder - would implement full expansion
     }
 }
 
@@ -1600,8 +1598,7 @@ where
 #[allow(dead_code)]
 fn inverse_iteration_refinement<A>(
     eigenvectors: &mut Array2<A>,
-    matrix: &Array2<A>,
-    _eigenvalue: A,
+    matrix: &Array2<A>, _eigenvalue: A,
     col_index: usize,
 ) -> LinalgResult<()>
 where
@@ -1618,20 +1615,20 @@ where
 
 /// Estimate matrix condition number for adaptive tolerance selection
 #[allow(dead_code)]
-fn estimate_condition_number<A>(matrix: &ArrayView2<A>) -> LinalgResult<A>
+fn estimate_condition_number<A>(_matrix: &ArrayView2<A>) -> LinalgResult<A>
 where
     A: Float + Zero + One + Copy + std::ops::AddAssign,
 {
-    // Simplified condition number estimation using matrix norm ratio
+    // Simplified condition number estimation using _matrix norm ratio
     // In practice, would use more sophisticated methods like SVD
-    let n = matrix.nrows();
+    let n = _matrix.nrows();
 
-    // Estimate largest eigenvalue (matrix norm)
+    // Estimate largest eigenvalue (_matrix norm)
     let mut max_row_sum = A::zero();
     for i in 0..n {
         let mut row_sum = A::zero();
         for j in 0..n {
-            row_sum += matrix[[i, j]].abs();
+            row_sum += _matrix[[i, j]].abs();
         }
         if row_sum > max_row_sum {
             max_row_sum = row_sum;
@@ -1639,9 +1636,9 @@ where
     }
 
     // Estimate smallest eigenvalue (simplified)
-    let mut min_diagonal = matrix[[0, 0]].abs();
+    let mut min_diagonal = _matrix[[0, 0]].abs();
     for i in 1..n {
-        let diag_val = matrix[[i, i]].abs();
+        let diag_val = _matrix[[i, i]].abs();
         if diag_val < min_diagonal && diag_val > A::epsilon() {
             min_diagonal = diag_val;
         }
@@ -1800,8 +1797,7 @@ mod tests {
 /// Compute eigenvector using inverse iteration in extended precision
 #[allow(dead_code)]
 fn compute_eigenvector_inverse_iteration<I>(
-    shifted_matrix: &Array2<num_complex::Complex<I>>,
-    _lambda: num_complex::Complex<I>,
+    shifted_matrix: &Array2<num_complex::Complex<I>>, _lambda: num_complex::Complex<I>,
     max_iter: usize,
     tol: I,
 ) -> Array1<num_complex::Complex<I>>

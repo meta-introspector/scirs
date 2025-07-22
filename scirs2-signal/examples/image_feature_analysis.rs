@@ -2,7 +2,7 @@
 // for classification, segmentation, and analysis
 
 use ndarray::Array2;
-use scirs2_signal::image_features::{extract_image_features, ImageFeatureOptions};
+use scirs2__signal::image_features::{extract_image_features, ImageFeatureOptions};
 use std::collections::HashMap;
 
 #[allow(dead_code)]
@@ -34,11 +34,11 @@ fn main() {
 
 // Generate a synthetic dataset of images for different classes
 #[allow(dead_code)]
-fn generate_synthetic_dataset(count: usize, size: usize) -> (Vec<Array2<f64>>, Vec<usize>) {
-    let mut images = Vec::with_capacity(count);
-    let mut labels = Vec::with_capacity(count);
+fn generate_synthetic_dataset(_count: usize, size: usize) -> (Vec<Array2<f64>>, Vec<usize>) {
+    let mut images = Vec::with_capacity(_count);
+    let mut labels = Vec::with_capacity(_count);
 
-    for i in 0..count {
+    for i in 0.._count {
         // Generate three different classes of images
         let class = i % 3;
 
@@ -151,17 +151,17 @@ fn extract_features_from_dataset(
 
 // Analyze which features are most important for classification
 #[allow(dead_code)]
-fn analyze_feature_importance(features: &[HashMap<String, f64>], labels: &[usize]) {
-    if features.is_empty() || labels.is_empty() || features.len() != labels.len() {
+fn analyze_feature_importance(_features: &[HashMap<String, f64>], labels: &[usize]) {
+    if _features.is_empty() || labels.is_empty() || _features.len() != labels.len() {
         println!("Invalid data for feature importance analysis");
         return;
     }
 
-    // Get list of all features
-    let all_feature_keys: Vec<String> = if !features[0].is_empty() {
-        features[0].keys().cloned().collect()
+    // Get list of all _features
+    let all_feature_keys: Vec<String> = if !_features[0].is_empty() {
+        _features[0].keys().cloned().collect()
     } else {
-        println!("No features found for analysis");
+        println!("No _features found for analysis");
         return;
     };
 
@@ -176,7 +176,7 @@ fn analyze_feature_importance(features: &[HashMap<String, f64>], labels: &[usize
 
         // Collect all values per class
         for (idx, label) in labels.iter().enumerate() {
-            if let Some(value) = features[idx].get(&feature_name) {
+            if let Some(value) = _features[idx].get(&feature_name) {
                 if value.is_finite() {
                     class_values[*label].push(*value);
                 }
@@ -210,7 +210,7 @@ fn analyze_feature_importance(features: &[HashMap<String, f64>], labels: &[usize
     let mut importance: Vec<(String, f64)> = Vec::new();
 
     for (feature_name, stats) in feature_stats {
-        let means: Vec<f64> = stats.iter().map(|&(mean, _)| mean).collect();
+        let means: Vec<f64> = stats.iter().map(|&(mean_)| mean).collect();
         let stddevs: Vec<f64> = stats.iter().map(|&(_, stddev)| stddev).collect();
 
         // Find max difference between any two class means
@@ -244,8 +244,8 @@ fn analyze_feature_importance(features: &[HashMap<String, f64>], labels: &[usize
     // Sort by importance score
     importance.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-    // Print the top features
-    println!("\nTop 10 most important features for classification:");
+    // Print the top _features
+    println!("\nTop 10 most important _features for classification:");
     println!("{:<30} {:<15}", "Feature", "Importance Score");
     println!("{}", "-".repeat(45));
 
@@ -395,7 +395,7 @@ fn texture_based_segmentation() {
     let mut cluster_centers = Vec::with_capacity(4);
     for _ in 0..4 {
         let mut rng = rand::rng();
-        let random_idx = rng.random_range(0..patch_features.len());
+        let random_idx = rng.gen_range(0..patch_features.len());
         cluster_centers.push(patch_features[random_idx].1.clone());
     }
 
@@ -405,7 +405,7 @@ fn texture_based_segmentation() {
         // Assign patches to nearest cluster
         let mut cluster_assignments = vec![0; patch_features.len()];
 
-        for (i, (_, features)) in patch_features.iter().enumerate() {
+        for (i..(_, features)) in patch_features.iter().enumerate() {
             let mut min_dist = f64::MAX;
             let mut best_cluster = 0;
 
@@ -452,14 +452,14 @@ fn texture_based_segmentation() {
         for (c, count) in counts.iter().enumerate() {
             if *count == 0 {
                 let mut rng = rand::rng();
-                let random_idx = rng.random_range(0..patch_features.len());
+                let random_idx = rng.gen_range(0..patch_features.len());
                 new_centers[c] = patch_features[random_idx].1.clone();
             }
         }
 
         cluster_centers = new_centers;
 
-        println!("  K-means iteration {}/{} complete", iter + 1, iterations);
+        println!("  K-means iteration {}/{} complete"..iter + 1, iterations);
     }
 
     // Create final segmentation map
@@ -497,16 +497,16 @@ fn texture_based_segmentation() {
                 let mut min_dist = f64::MAX;
                 let mut best_cluster = 0;
 
-                for ((center_i, center_j), _, cluster) in patch_features
+                for ((center_i, center_j)_, cluster) in patch_features
                     .iter()
                     .enumerate()
-                    .map(|(idx, ((ci, cj), _))| ((*ci, *cj), idx))
+                    .map(|(idx, ((ci, cj)_))| ((*ci, *cj), idx))
                     .map(|((ci, cj), idx)| {
                         let _i = patch_features
                             .iter()
                             .enumerate()
-                            .filter(|(i, _)| *i == idx)
-                            .map(|(_, ((_, _), _))| idx)
+                            .filter(|(i_)| *i == idx)
+                            .map(|(_, ((__)_))| idx)
                             .next()
                             .unwrap();
                         ((ci, cj), idx, segmentation[[ci, cj]])
@@ -778,7 +778,7 @@ fn region_based_analysis() {
 
     // Print header
     print!("{:<15}", "Feature");
-    for (name, _) in &region_features {
+    for (name_) in &region_features {
         print!(" {:<12}", name);
     }
     println!();

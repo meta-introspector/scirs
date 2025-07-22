@@ -1,5 +1,5 @@
 use ndarray::{array, Array2, ArrayView2};
-use scirs2_spatial::{error::SpatialResult, procrustes, procrustes_extended};
+use scirs2__spatial::{error::SpatialResult, procrustes, procrustes_extended};
 
 #[allow(dead_code)]
 fn main() -> SpatialResult<()> {
@@ -89,7 +89,7 @@ fn main() -> SpatialResult<()> {
     println!("Scale factor: {:.6} (should be 1.0)", params_no_scale.scale);
 
     // No reflection allowed
-    let (_transformed_no_reflection, _params_no_reflection, disparity_no_reflection) =
+    let (_transformed_no_reflection_params_no_reflection, disparity_no_reflection) =
         procrustes_extended(&points3d_a.view(), &points3d_b.view(), true, false, true)?;
 
     println!("\nWithout reflection:");
@@ -127,8 +127,8 @@ fn main() -> SpatialResult<()> {
 
 /// Utility function to print a matrix
 #[allow(dead_code)]
-fn print_matrix(mat: &ArrayView2<f64>) {
-    for row in mat.rows() {
+fn print_matrix(_mat: &ArrayView2<f64>) {
+    for row in _mat.rows() {
         print!("  [");
         for (j, &val) in row.iter().enumerate() {
             if j > 0 {

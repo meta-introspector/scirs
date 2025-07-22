@@ -6,6 +6,7 @@
 use crate::error::Result;
 use crate::models::sequential::Sequential;
 use ndarray::prelude::*;
+use ndarray::ArrayView1;
 /// EWC configuration
 #[derive(Debug, Clone)]
 pub struct EWCConfig {
@@ -52,8 +53,8 @@ struct ModelParameters {
     parameters: Vec<Array2<f32>>,
 impl EWC {
     /// Create a new EWC instance
-    pub fn new(config: EWCConfig) -> Self {
-            config,
+    pub fn new(_config: EWCConfig) -> Self {
+            _config,
             fisher_matrices: Vec::new(),
             optimal_params: Vec::new(),
             current_task: 0,
@@ -69,12 +70,12 @@ impl EWC {
             .enumerate()
         {
             let task_weight = self
-                .config
+                ._config
                 .decay_factor
                 .powi((self.current_task - task_idx) as i32);
             let task_loss = self.compute_task_loss(current_params, &optimal.parameters, fisher)?;
             total_loss += task_weight * task_loss;
-        Ok(self.config.lambda * total_loss)
+        Ok(self._config.lambda * total_loss)
     /// Compute loss for a single task
     fn compute_task_loss(
         &self,
@@ -83,7 +84,7 @@ impl EWC {
         fisher: &FisherMatrix,
     ) -> Result<f32> {
         let mut loss = 0.0;
-        if self.config.diagonal_fisher {
+        if self._config.diagonal_fisher {
             // Diagonal Fisher approximation
             if let Some(ref diagonal) = fisher.diagonal {
                 for (i, (curr, opt)) in current_params.iter().zip(optimal_params).enumerate() {

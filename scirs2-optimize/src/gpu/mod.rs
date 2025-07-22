@@ -8,6 +8,7 @@ use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuContext};
 use std::sync::Arc;
+use statrs::statistics::Statistics;
 
 // Note: Error conversion handled through scirs2_core::error system
 // GPU errors are automatically converted via CoreError type alias
@@ -86,17 +87,17 @@ pub trait GpuFunction {
 pub struct GpuOptimizationContext {
     config: GpuOptimizationConfig,
     context: Arc<GpuContext>,
-    memory_pool: memory_management::GpuMemoryPool,
+    memory_pool: memory, _management: GpuMemoryPool,
 }
 
 impl GpuOptimizationContext {
     /// Create a new GPU optimization context
-    pub fn new(config: GpuOptimizationConfig) -> ScirsResult<Self> {
-        let context = Arc::new(config.context.clone());
+    pub fn new(_config: GpuOptimizationConfig) -> ScirsResult<Self> {
+        let context = Arc::new(_config.context.clone());
         let memory_pool = memory_management::GpuMemoryPool::new_stub();
 
         Ok(Self {
-            config,
+            _config,
             context,
             memory_pool,
         })
@@ -125,7 +126,7 @@ impl GpuOptimizationContext {
     where
         T: Clone + Send + Sync + 'static + scirs2_core::GpuDataType,
     {
-        // Use scirs2-core GPU array creation
+        // Use scirs2-_core GPU array creation
         let shape = data.dim();
         let mut gpu_array = OptimGpuArray::zeros(&self.context, [shape.0, shape.1])?;
 
@@ -369,7 +370,7 @@ pub mod algorithms {
             for i in 0..self.population_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    population[[i, j]] = rng.random_range(low..=high);
+                    population[[i, j]] = rng.gen_range(low..=high);
                 }
             }
 
@@ -377,10 +378,8 @@ pub mod algorithms {
         }
 
         fn evaluate_population_gpu<F>(
-            &self,
-            function: &F,
-            population: &Array2<f64>,
-        ) -> ScirsResult<Array1<f64>>
+            &self..function: &F,
+            population: &Array2<f64>,) -> ScirsResult<Array1<f64>>
         where
             F: GpuFunction,
         {
@@ -403,19 +402,19 @@ pub mod algorithms {
                 // Select three random individuals different from current
                 let mut indices = Vec::new();
                 while indices.len() < 3 {
-                    let idx = rng.random_range(0..pop_size);
+                    let idx = rng.gen_range(0..pop_size);
                     if idx != i && !indices.contains(&idx) {
                         indices.push(idx);
                     }
                 }
 
-                let [a, b, c] = [indices[0], indices[1], indices[2]];
+                let [a..b, c] = [indices[0], indices[1], indices[2]];
 
                 // Mutation and crossover
-                let j_rand = rng.random_range(0..dims);
+                let j_rand = rng.gen_range(0..dims);
                 for j in 0..dims {
-                    if rng.random_range(0.0..1.0) < self.crossover_rate || j == j_rand {
-                        trial_population[[i, j]] = population[[a, j]]
+                    if rng.gen_range(0.0..1.0) < self.crossover_rate || j == j_rand {
+                        trial_population[[i..j]] = population[[a, j]]
                             + self.f_scale * (population[[b, j]] - population[[c, j]]);
                     } else {
                         trial_population[[i, j]] = population[[i, j]];
@@ -433,12 +432,12 @@ pub mod algorithms {
             trial_population: &Array2<f64>,
             trial_fitness: &Array1<f64>,
         ) -> ScirsResult<()> {
-            for i in 0..population.nrows() {
-                if trial_fitness[i] <= fitness[i] {
-                    for j in 0..population.ncols() {
-                        population[[i, j]] = trial_population[[i, j]];
+            for i in 0.._population.nrows() {
+                if trial_fitness[i] <= _fitness[i] {
+                    for j in 0.._population.ncols() {
+                        _population[[i, j]] = trial_population[[i, j]];
                     }
-                    fitness[i] = trial_fitness[i];
+                    _fitness[i] = trial_fitness[i];
                 }
             }
             Ok(())
@@ -464,9 +463,9 @@ pub mod algorithms {
 
     impl GpuParticleSwarm {
         /// Create a new GPU-accelerated particle swarm optimizer
-        pub fn new(context: GpuOptimizationContext, swarm_size: usize, max_nit: usize) -> Self {
+        pub fn new(_context: GpuOptimizationContext, swarm_size: usize, max_nit: usize) -> Self {
             Self {
-                context,
+                _context,
                 swarm_size,
                 max_nit,
                 w: 0.729,
@@ -573,7 +572,7 @@ pub mod algorithms {
             for i in 0..self.swarm_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    positions[[i, j]] = rng.random_range(low..=high);
+                    positions[[i, j]] = rng.gen_range(low..=high);
                 }
             }
 
@@ -581,10 +580,8 @@ pub mod algorithms {
         }
 
         fn evaluate_population_gpu<F>(
-            &self,
-            function: &F,
-            population: &Array2<f64>,
-        ) -> ScirsResult<Array1<f64>>
+            &self..function: &F,
+            population: &Array2<f64>,) -> ScirsResult<Array1<f64>>
         where
             F: GpuFunction,
         {
@@ -606,11 +603,11 @@ pub mod algorithms {
 
             for i in 0..swarm_size {
                 for j in 0..dims {
-                    let r1: f64 = rng.random_range(0.0..1.0);
-                    let r2: f64 = rng.random_range(0.0..1.0);
+                    let r1: f64 = rng.gen_range(0.0..1.0);
+                    let r2: f64 = rng.gen_range(0.0..1.0);
 
                     // Update velocity
-                    velocities[[i, j]] = self.w * velocities[[i, j]]
+                    velocities[[i..j]] = self.w * velocities[[i, j]]
                         + self.c1 * r1 * (personal_best[[i, j]] - positions[[i, j]])
                         + self.c2 * r2 * (global_best[j] - positions[[i, j]]);
 
@@ -646,9 +643,9 @@ pub mod utils {
     use super::*;
 
     /// Check if GPU acceleration is available and beneficial
-    pub fn should_use_gpu(problem_size: usize, batch_size: usize) -> bool {
+    pub fn should_use_gpu(_problem_size: usize, batch_size: usize) -> bool {
         // Heuristic: GPU is beneficial for large problems or large batches
-        problem_size * batch_size > 10000
+        _problem_size * batch_size > 10000
     }
 
     /// Estimate optimal batch size for GPU evaluation

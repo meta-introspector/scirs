@@ -4,7 +4,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use crate::fft::{fft, ifft};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use rand::{Rng, SeedableRng};
 use std::fmt::Debug;
@@ -39,11 +39,11 @@ pub struct SparseFFT {
 
 impl SparseFFT {
     /// Create a new sparse FFT processor with the given configuration
-    pub fn new(config: SparseFFTConfig) -> Self {
-        let seed = config.seed.unwrap_or_else(rand::random);
+    pub fn new(_config: SparseFFTConfig) -> Self {
+        let seed = _config.seed.unwrap_or_else(rand::random);
         let rng = rand::rngs::StdRng::seed_from_u64(seed);
 
-        Self { config, rng }
+        Self { _config, rng }
     }
 
     /// Create a new sparse FFT processor with default configuration
@@ -273,7 +273,7 @@ impl SparseFFT {
             _measurements.push(signal_complex[idx]);
         }
 
-        // For this demo, we'll just do a regular FFT and extract the k largest components
+        // For this demo..we'll just do a regular FFT and extract the k largest components
         let spectrum = fft(&signal_complex, None)?;
 
         // Find frequency components
@@ -424,11 +424,11 @@ impl SparseFFT {
         let selected_count = k.min(candidates.len());
         let selected_indices: Vec<usize> = candidates[..selected_count]
             .iter()
-            .map(|(_, i, _)| *i)
+            .map(|(_, i_)| *i)
             .collect();
         let selected_values: Vec<Complex64> = candidates[..selected_count]
             .iter()
-            .map(|(_, _, c)| *c)
+            .map(|(__, c)| *c)
             .collect();
 
         Ok((selected_values, selected_indices))
@@ -475,7 +475,7 @@ impl SparseFFT {
 
             // If flatness is low (indicates structure), find peak in this window
             if flatness < self.config.flatness_threshold {
-                if let Some((local_idx, _)) = window_mags
+                if let Some((local_idx_)) = window_mags
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
@@ -499,7 +499,7 @@ impl SparseFFT {
             let mut remaining_candidates: Vec<(f64, usize, Complex64)> = spectrum
                 .iter()
                 .enumerate()
-                .filter(|(i, _)| !selected_indices.contains(i))
+                .filter(|(i_)| !selected_indices.contains(i))
                 .map(|(i, &c)| (c.norm(), i, c))
                 .collect();
 
@@ -543,7 +543,7 @@ where
 
 /// Adaptive sparse FFT with automatic sparsity estimation
 #[allow(dead_code)]
-pub fn adaptive_sparse_fft<T>(signal: &[T], threshold: f64) -> FFTResult<SparseFFTResult>
+pub fn adaptive_sparse_fft<T>(_signal: &[T], threshold: f64) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -555,12 +555,12 @@ where
     };
 
     let mut processor = SparseFFT::new(config);
-    processor.sparse_fft(signal)
+    processor.sparse_fft(_signal)
 }
 
 /// Frequency pruning sparse FFT
 #[allow(dead_code)]
-pub fn frequency_pruning_sparse_fft<T>(signal: &[T], sensitivity: f64) -> FFTResult<SparseFFTResult>
+pub fn frequency_pruning_sparse_fft<T>(_signal: &[T], sensitivity: f64) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -572,7 +572,7 @@ where
     };
 
     let mut processor = SparseFFT::new(config);
-    processor.sparse_fft(signal)
+    processor.sparse_fft(_signal)
 }
 
 /// Spectral flatness sparse FFT
@@ -600,9 +600,7 @@ where
 /// 2D sparse FFT (placeholder implementation)
 #[allow(dead_code)]
 pub fn sparse_fft2<T>(
-    _signal: &[Vec<T>],
-    _k: usize,
-    _algorithm: Option<SparseFFTAlgorithm>,
+    _signal: &[Vec<T>], _k: usize_algorithm: Option<SparseFFTAlgorithm>,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -616,10 +614,7 @@ where
 /// N-dimensional sparse FFT (placeholder implementation)
 #[allow(dead_code)]
 pub fn sparse_fftn<T>(
-    _signal: &[T],
-    _shape: &[usize],
-    _k: usize,
-    _algorithm: Option<SparseFFTAlgorithm>,
+    _signal: &[T], _shape: &[usize], _k: usize_algorithm: Option<SparseFFTAlgorithm>,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,

@@ -5,7 +5,7 @@
 //! and the unified processing framework.
 
 use ndarray::{array, Array1, Array2};
-use scirs2_stats::{
+use scirs2__stats::{
     create_advanced_processor, create_numerical_stability_analyzer,
     parallel_enhancements::MatrixOperationType,
     unified_processor::{AdvancedMatrixOperation, AdvancedTimeSeriesOperation},
@@ -154,7 +154,7 @@ fn demonstrate_advanced_configurations() -> Result<(), Box<dyn std::error::Error
     let data = generate_sample_data(5000);
 
     for (name, config) in configs {
-        let mut processor = scirs2_stats::unified_processor::AdvancedUnifiedProcessor::new(config);
+        let mut processor = scirs2_stats::unified, _processor::AdvancedUnifiedProcessor::new(config);
 
         let start_time = Instant::now();
         let result = processor.process_comprehensive_statistics(&data.view())?;
@@ -460,11 +460,11 @@ fn generate_large_range_data(n: usize) -> Array1<f64> {
 }
 
 #[allow(dead_code)]
-fn generate_sample_matrix(rows: usize, cols: usize) -> Array2<f64> {
+fn generate_sample_matrix(_rows: usize, cols: usize) -> Array2<f64> {
     use std::f64::consts::PI;
 
-    Array2::from_shape_fn((rows, cols), |(i, j)| {
-        let x = i as f64 / rows as f64;
+    Array2::from_shape_fn((_rows, cols), |(i, j)| {
+        let x = i as f64 / _rows as f64;
         let y = j as f64 / cols as f64;
         (x * 2.0 * PI).sin() * (y * 2.0 * PI).cos() + 0.1 * ((i + j) as f64).sin()
     })

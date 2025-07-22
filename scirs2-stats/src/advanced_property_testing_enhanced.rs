@@ -129,21 +129,21 @@ pub struct AdvancedPropertyTester {
 
 impl AdvancedPropertyTester {
     /// Create new advanced property tester
-    pub fn new(config: AdvancedPropertyConfig) -> Self {
+    pub fn new(_config: AdvancedPropertyConfig) -> Self {
         Self {
             mathematical_properties: Arc::new(RwLock::new(MathematicalPropertyRegistry::new(
-                &config,
+                &_config,
             ))),
             statistical_properties: Arc::new(RwLock::new(StatisticalPropertyRegistry::new(
-                &config,
+                &_config,
             ))),
-            numerical_analyzer: Arc::new(RwLock::new(NumericalStabilityAnalyzer::new(&config))),
-            edge_case_generator: Arc::new(RwLock::new(IntelligentEdgeCaseGenerator::new(&config))),
-            fuzzing_engine: Arc::new(RwLock::new(AdvancedFuzzingEngine::new(&config))),
-            regression_detector: Arc::new(RwLock::new(RegressionDetector::new(&config))),
-            test_executor: Arc::new(RwLock::new(PropertyTestExecutor::new(&config))),
+            numerical_analyzer: Arc::new(RwLock::new(NumericalStabilityAnalyzer::new(&_config))),
+            edge_case_generator: Arc::new(RwLock::new(IntelligentEdgeCaseGenerator::new(&_config))),
+            fuzzing_engine: Arc::new(RwLock::new(AdvancedFuzzingEngine::new(&_config))),
+            regression_detector: Arc::new(RwLock::new(RegressionDetector::new(&_config))),
+            test_executor: Arc::new(RwLock::new(PropertyTestExecutor::new(&_config))),
             result_analyzer: Arc::new(RwLock::new(PropertyTestAnalyzer::new())),
-            config,
+            _config,
         }
     }
 
@@ -227,7 +227,7 @@ impl AdvancedPropertyTester {
 
         Ok(StatisticalPropertyTestResult {
             operation_type,
-            distributions_tested: test_distributions.len(),
+            _distributions_tested: test_distributions.len(),
             properties_tested: properties_count,
             property_results: test_results.clone(),
             test_duration,
@@ -263,7 +263,7 @@ impl AdvancedPropertyTester {
 
         Ok(NumericalStabilityTestResult {
             function_name: function_name.to_string(),
-            conditions_tested: condition_results.clone(),
+            _conditions_tested: condition_results.clone(),
             test_duration,
             overall_stability_score: self.calculate_overall_stability_score(&condition_results),
             stability_recommendations: self.generate_stability_recommendations(&condition_results),
@@ -436,7 +436,7 @@ impl AdvancedPropertyTester {
         };
 
         // Mathematical invariants
-        if self.config.enable_mathematical_invariants {
+        if self._config.enable_mathematical_invariants {
             results.mathematical_invariants = Some(self.test_mathematical_invariants(
                 function_name,
                 comprehensive_config.data_generator,
@@ -444,7 +444,7 @@ impl AdvancedPropertyTester {
         }
 
         // Statistical properties
-        if self.config.enable_statistical_properties {
+        if self._config.enable_statistical_properties {
             results.statistical_properties = Some(self.test_statistical_properties(
                 comprehensive_config.operation_type,
                 comprehensive_config.test_distributions,
@@ -452,7 +452,7 @@ impl AdvancedPropertyTester {
         }
 
         // Numerical stability
-        if self.config.enable_numerical_stability {
+        if self._config.enable_numerical_stability {
             results.numerical_stability = Some(self.test_numerical_stability(
                 function_name,
                 comprehensive_config.stability_conditions,
@@ -460,19 +460,19 @@ impl AdvancedPropertyTester {
         }
 
         // Edge case testing
-        if self.config.enable_edge_case_generation {
+        if self._config.enable_edge_case_generation {
             results.edge_case_testing =
                 Some(self.test_edge_cases(function_name, comprehensive_config.input_constraints)?);
         }
 
         // Fuzzing
-        if self.config.enable_fuzzing {
+        if self._config.enable_fuzzing {
             results.fuzzing_results =
                 Some(self.fuzz_test(function_name, comprehensive_config.fuzzing_config)?);
         }
 
         // Performance properties
-        if self.config.enable_performance_properties {
+        if self._config.enable_performance_properties {
             results.performance_properties = Some(self.test_performance_properties(
                 function_name,
                 comprehensive_config.performance_requirements,
@@ -480,7 +480,7 @@ impl AdvancedPropertyTester {
         }
 
         // Cross-implementation consistency
-        if self.config.enable_cross_implementation {
+        if self._config.enable_cross_implementation {
             results.cross_implementation = Some(self.test_cross_implementation_consistency(
                 function_name,
                 comprehensive_config.implementations,
@@ -580,12 +580,12 @@ impl AdvancedPropertyTester {
     {
         // Example: For operations like addition, a + b = b + a
         match test_data {
-            TestData::TwoArrays(_a, _b) => {
+            TestData::TwoArrays(_a_b) => {
                 // Placeholder - would implement actual commutativity check
                 Ok(true)
             }
             _ => Err(StatsError::dimension_mismatch(
-                "Invalid test data for commutativity".to_string(),
+                "Invalid test _data for commutativity".to_string(),
             )),
         }
     }
@@ -597,12 +597,12 @@ impl AdvancedPropertyTester {
     {
         // Example: For operations like addition, (a + b) + c = a + (b + c)
         match test_data {
-            TestData::ThreeArrays(_a, _b, _c) => {
+            TestData::ThreeArrays(_a_b_c) => {
                 // Placeholder - would implement actual associativity check
                 Ok(true)
             }
             _ => Err(StatsError::dimension_mismatch(
-                "Invalid test data for associativity".to_string(),
+                "Invalid test _data for associativity".to_string(),
             )),
         }
     }
@@ -664,8 +664,7 @@ impl AdvancedPropertyTester {
     fn test_statistical_property<F>(
         &self,
         property: &StatisticalProperty,
-        distribution: &TestDistribution<F>,
-        _operation_type: &StatisticalOperationType,
+        distribution: &TestDistribution<F>, _operation_type: &StatisticalOperationType,
     ) -> StatsResult<StatisticalPropertyResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -684,8 +683,7 @@ impl AdvancedPropertyTester {
     }
 
     fn test_single_edge_case<F>(
-        &self,
-        _function_name: &str,
+        &self, _function_name: &str,
         edge_case: &EdgeCase<F>,
     ) -> StatsResult<EdgeCaseResult>
     where
@@ -694,7 +692,7 @@ impl AdvancedPropertyTester {
     {
         // Placeholder implementation
         Ok(EdgeCaseResult {
-            edge_case_name: edge_case.name.clone(),
+            edge_case_name: edge_case._name.clone(),
             input_description: edge_case.description.clone(),
             execution_result: EdgeCaseExecutionResult::Success,
             output_analysis: OutputAnalysis::Normal,
@@ -703,8 +701,7 @@ impl AdvancedPropertyTester {
     }
 
     fn test_implementation_consistency<F>(
-        &self,
-        _implementations: &[Box<dyn Implementation<F>>],
+        &self_implementations: &[Box<dyn Implementation<F>>],
         test_case: &TestCase<F>,
     ) -> StatsResult<ConsistencyResult>
     where
@@ -723,13 +720,12 @@ impl AdvancedPropertyTester {
 
     // Analysis and scoring methods
 
-    fn calculate_numerical_stability_score(&self, _results: &[PropertyTestResult]) -> f64 {
+    fn calculate_numerical_stability_score(&self_results: &[PropertyTestResult]) -> f64 {
         0.95 // Placeholder
     }
 
     fn analyze_convergence_properties(
-        &self,
-        _results: &[StatisticalPropertyResult],
+        &self_results: &[StatisticalPropertyResult],
     ) -> ConvergenceAnalysis {
         ConvergenceAnalysis {
             convergence_rate: 0.95,
@@ -739,8 +735,7 @@ impl AdvancedPropertyTester {
     }
 
     fn analyze_distributional_robustness(
-        &self,
-        _results: &[StatisticalPropertyResult],
+        &self_results: &[StatisticalPropertyResult],
     ) -> DistributionalRobustness {
         DistributionalRobustness {
             robustness_score: 0.90,
@@ -749,22 +744,21 @@ impl AdvancedPropertyTester {
         }
     }
 
-    fn calculate_overall_stability_score(&self, _results: &[StabilityConditionResult]) -> f64 {
+    fn calculate_overall_stability_score(&self_results: &[StabilityConditionResult]) -> f64 {
         0.85 // Placeholder
     }
 
     fn generate_stability_recommendations(
-        &self,
-        _results: &[StabilityConditionResult],
+        &self_results: &[StabilityConditionResult],
     ) -> Vec<StabilityRecommendation> {
         vec![] // Placeholder
     }
 
-    fn identify_critical_failures(&self, _results: &[EdgeCaseResult]) -> Vec<CriticalFailure> {
+    fn identify_critical_failures(&self_results: &[EdgeCaseResult]) -> Vec<CriticalFailure> {
         vec![] // Placeholder
     }
 
-    fn analyze_boundary_behavior(&self, _results: &[EdgeCaseResult]) -> BoundaryBehaviorAnalysis {
+    fn analyze_boundary_behavior(&self_results: &[EdgeCaseResult]) -> BoundaryBehaviorAnalysis {
         BoundaryBehaviorAnalysis {
             boundary_smoothness: 0.90,
             discontinuities_detected: Vec::new(),
@@ -773,9 +767,7 @@ impl AdvancedPropertyTester {
     }
 
     fn generate_performance_property_tests<F>(
-        &self,
-        _function_name: &str,
-        _requirements: &PerformanceRequirements,
+        &self, _function_name: &str, _requirements: &PerformanceRequirements,
     ) -> StatsResult<Vec<PerformancePropertyTest>>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -785,11 +777,10 @@ impl AdvancedPropertyTester {
     }
 
     fn execute_performance_property_test(
-        &self,
-        _test: &PerformancePropertyTest,
+        &self_test: &PerformancePropertyTest,
     ) -> StatsResult<PerformanceTestResult> {
         Ok(PerformanceTestResult {
-            test_name: "placeholder".to_string(),
+            _test_name: "placeholder".to_string(),
             execution_time: Duration::from_millis(10),
             memory_usage: 1024,
             throughput: 1000.0,
@@ -797,7 +788,7 @@ impl AdvancedPropertyTester {
         })
     }
 
-    fn analyze_scalability(&self, _results: &[PerformanceTestResult]) -> ScalabilityAnalysis {
+    fn analyze_scalability(&self_results: &[PerformanceTestResult]) -> ScalabilityAnalysis {
         ScalabilityAnalysis {
             scalability_factor: 0.95,
             complexity_class: ComplexityClass::Linear,
@@ -806,8 +797,7 @@ impl AdvancedPropertyTester {
     }
 
     fn verify_computational_complexity(
-        &self,
-        _results: &[PerformanceTestResult],
+        &self_results: &[PerformanceTestResult],
     ) -> ComplexityVerification {
         ComplexityVerification {
             theoretical_complexity: ComplexityClass::Linear,
@@ -818,8 +808,7 @@ impl AdvancedPropertyTester {
     }
 
     fn analyze_implementation_consensus(
-        &self,
-        _results: &[ConsistencyResult],
+        &self_results: &[ConsistencyResult],
     ) -> ConsensusAnalysis {
         ConsensusAnalysis {
             consensus_strength: 0.95,
@@ -828,7 +817,7 @@ impl AdvancedPropertyTester {
         }
     }
 
-    fn detect_implementation_outliers(&self, _results: &[ConsistencyResult]) -> OutlierDetection {
+    fn detect_implementation_outliers(&self_results: &[ConsistencyResult]) -> OutlierDetection {
         OutlierDetection {
             outliers_detected: Vec::new(),
             outlier_criteria: OutlierCriteria::StatisticalDeviation,
@@ -836,20 +825,18 @@ impl AdvancedPropertyTester {
         }
     }
 
-    fn calculate_overall_score(&self, _results: &ComprehensivePropertyTestResult) -> f64 {
+    fn calculate_overall_score(&self_results: &ComprehensivePropertyTestResult) -> f64 {
         0.90 // Placeholder
     }
 
     fn identify_critical_issues(
-        &self,
-        _results: &ComprehensivePropertyTestResult,
+        &self_results: &ComprehensivePropertyTestResult,
     ) -> Vec<CriticalIssue> {
         vec![] // Placeholder
     }
 
     fn generate_comprehensive_recommendations(
-        &self,
-        _results: &ComprehensivePropertyTestResult,
+        &self_results: &ComprehensivePropertyTestResult,
     ) -> Vec<TestingRecommendation> {
         vec![] // Placeholder
     }
@@ -1645,10 +1632,10 @@ pub struct MathematicalPropertyRegistry {
 }
 
 impl MathematicalPropertyRegistry {
-    pub fn new(config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
         let mut registry = Self {
             properties: HashMap::new(),
-            thoroughness_level: config.thoroughness_level,
+            thoroughness_level: _config.thoroughness_level,
         };
         registry.initialize_standard_properties();
         registry
@@ -1712,10 +1699,10 @@ pub struct StatisticalPropertyRegistry {
 }
 
 impl StatisticalPropertyRegistry {
-    pub fn new(config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
         let mut registry = Self {
             properties: HashMap::new(),
-            thoroughness_level: config.thoroughness_level,
+            thoroughness_level: _config.thoroughness_level,
         };
         registry.initialize_statistical_properties();
         registry
@@ -1760,17 +1747,15 @@ pub struct NumericalStabilityAnalyzer {
 }
 
 impl NumericalStabilityAnalyzer {
-    pub fn new(config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
         Self {
-            tolerance: config.numerical_tolerance.clone(),
+            tolerance: _config.numerical_tolerance.clone(),
             stability_conditions: Vec::new(),
         }
     }
 
     pub fn test_stability_condition<F>(
-        &self,
-        _function_name: &str,
-        _condition: &NumericalStabilityCondition,
+        &self, _function_name: &str, _condition: &NumericalStabilityCondition,
     ) -> StatsResult<StabilityConditionResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -1778,7 +1763,7 @@ impl NumericalStabilityAnalyzer {
     {
         // Placeholder implementation
         Ok(StabilityConditionResult {
-            condition_name: _condition.condition_name.clone(),
+            _condition_name: _condition.condition_name.clone(),
             stability_score: 0.95,
             numerical_errors: Vec::new(),
             convergence_issues: Vec::new(),
@@ -1792,17 +1777,15 @@ pub struct IntelligentEdgeCaseGenerator {
 }
 
 impl IntelligentEdgeCaseGenerator {
-    pub fn new(config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
         Self {
-            generation_strategy: config.edge_case_strategy,
+            generation_strategy: _config.edge_case_strategy,
             edge_case_database: HashMap::new(),
         }
     }
 
     pub fn generate_edge_cases<F>(
-        &self,
-        _function_name: &str,
-        _constraints: &InputConstraints<F>,
+        &self, _function_name: &str, _constraints: &InputConstraints<F>,
     ) -> StatsResult<Vec<EdgeCase<F>>>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -1829,9 +1812,7 @@ impl AdvancedFuzzingEngine {
     }
 
     pub fn execute_fuzzing_campaign<F>(
-        &self,
-        _function_name: &str,
-        _config: &FuzzingConfig,
+        &self, _function_name: &str, _config: &FuzzingConfig,
     ) -> StatsResult<FuzzingCampaignResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -1907,10 +1888,7 @@ impl RegressionDetector {
     }
 
     pub fn detect_regressions<F>(
-        &self,
-        _function_name: &str,
-        _baseline: &ComprehensivePropertyTestResult,
-        _current: &ComprehensivePropertyTestResult,
+        &self, _function_name: &str, _baseline: &ComprehensivePropertyTestResult_current: &ComprehensivePropertyTestResult,
     ) -> StatsResult<RegressionDetectionResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static
@@ -1955,10 +1933,10 @@ pub struct PropertyTestExecutor {
 }
 
 impl PropertyTestExecutor {
-    pub fn new(config: &AdvancedPropertyConfig) -> Self {
+    pub fn new(_config: &AdvancedPropertyConfig) -> Self {
         Self {
-            timeout: config.test_timeout,
-            max_iterations: config.max_iterations,
+            timeout: _config.test_timeout,
+            max_iterations: _config.max_iterations,
             parallel_execution: true,
         }
     }
@@ -2113,9 +2091,9 @@ mod tests {
 
     #[test]
     fn test_edge_case_criticality_ordering() {
-        assert!(EdgeCaseCriticality::Critical as u8 > EdgeCaseCriticality::High as u8);
-        assert!(EdgeCaseCriticality::High as u8 > EdgeCaseCriticality::Medium as u8);
-        assert!(EdgeCaseCriticality::Medium as u8 > EdgeCaseCriticality::Low as u8);
+        assert!(EdgeCaseCriticality::Critical as u8 >, EdgeCaseCriticality::High as u8);
+        assert!(EdgeCaseCriticality::High as u8 >, EdgeCaseCriticality::Medium as u8);
+        assert!(EdgeCaseCriticality::Medium as u8 >, EdgeCaseCriticality::Low as u8);
     }
 
     #[test]
@@ -2163,8 +2141,8 @@ mod tests {
 
     #[test]
     fn test_vulnerability_severity_ordering() {
-        assert!(VulnerabilitySeverity::Critical as u8 > VulnerabilitySeverity::High as u8);
-        assert!(VulnerabilitySeverity::High as u8 > VulnerabilitySeverity::Medium as u8);
-        assert!(VulnerabilitySeverity::Medium as u8 > VulnerabilitySeverity::Low as u8);
+        assert!(VulnerabilitySeverity::Critical as u8 >, VulnerabilitySeverity::High as u8);
+        assert!(VulnerabilitySeverity::High as u8 >, VulnerabilitySeverity::Medium as u8);
+        assert!(VulnerabilitySeverity::Medium as u8 >, VulnerabilitySeverity::Low as u8);
     }
 }

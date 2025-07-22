@@ -117,9 +117,9 @@ impl ParallelElementWise {
 
     /// Calculate optimal chunk size for parallel processing
     #[allow(dead_code)]
-    fn calculate_chunk_size(total_size: usize, config: &ParallelConfig) -> usize {
+    fn calculate_chunk_size(_total_size: usize, config: &ParallelConfig) -> usize {
         if let Some(num_chunks) = config.num_chunks {
-            total_size.div_ceil(num_chunks)
+            _total_size.div_ceil(num_chunks)
         } else {
             // Use number of available threads
             let num_threads = std::thread::available_parallelism()
@@ -354,7 +354,7 @@ impl ParallelMatrix {
     }
 
     /// Calculate optimal block size for matrix multiplication
-    fn calculate_block_size(m: usize, n: usize, k: usize, _config: &ParallelConfig) -> usize {
+    fn calculate_block_size(m: usize, n: usize, k: usize_config: &ParallelConfig) -> usize {
         // Simple heuristic for cache-friendly block size
         let cache_size = 32 * 1024; // Assume 32KB L1 cache
         let element_size = std::mem::size_of::<f64>(); // Assume f64 for estimation
@@ -531,7 +531,7 @@ impl ParallelSort {
             });
         }
 
-        let sorted_indices: Vec<usize> = indices.into_iter().map(|(idx, _)| idx).collect();
+        let sorted_indices: Vec<usize> = indices.into_iter().map(|(idx_)| idx).collect();
 
         Array::from_shape_vec(array.raw_dim(), sorted_indices)
             .map_err(|_| ThreadPoolError::ExecutionFailed)
@@ -555,10 +555,10 @@ impl ParallelDispatcher {
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: ParallelConfig) -> Self {
+    pub fn with_config(_config: ParallelConfig) -> Self {
         let _ = init_thread_pool();
 
-        Self { config }
+        Self { _config }
     }
 
     /// Dispatch parallel element-wise operation

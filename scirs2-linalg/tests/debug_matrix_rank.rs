@@ -24,7 +24,7 @@ fn debug_nearly_singular_matrix_rank() {
     println!("Rank with tolerance 1e-12: {}", loose_tol_rank);
 
     // Let's also check what SVD gives us
-    let (_, s, _) = svd(&matrix.view(), false, None).unwrap();
+    let (_, s) = svd(&matrix.view(), false, None).unwrap();
     println!("Singular values: {:?}", s);
 
     // Calculate the default tolerance manually
@@ -55,7 +55,7 @@ fn debug_nearly_singular_matrix_rank() {
     let rank2 = matrix_rank(&matrix2.view(), None, None).unwrap();
     println!("Rank with default tolerance: {}", rank2);
 
-    let (_, s2, _) = svd(&matrix2.view(), false, None).unwrap();
+    let (_, s2) = svd(&matrix2.view(), false, None).unwrap();
     println!("Singular values: {:?}", s2);
 
     let default_tolerance2 = (max_dim as f64) * eps * s2[0];
@@ -83,7 +83,7 @@ fn debug_nearly_singular_matrix_rank() {
     let rank3 = matrix_rank(&matrix3.view(), None, None).unwrap();
     println!("Rank with default tolerance: {}", rank3);
 
-    let (_, s3, _) = svd(&matrix3.view(), false, None).unwrap();
+    let (_, s3) = svd(&matrix3.view(), false, None).unwrap();
     println!("Singular values: {:?}", s3);
 
     let default_tolerance3 = (max_dim as f64) * eps * s3[0];

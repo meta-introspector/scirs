@@ -172,11 +172,11 @@ pub mod message_passing {
 
     impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
         /// Create new message passing coordinator
-        pub fn new(coordinator_id: usize, config: MessagePassingConfig) -> Self {
+        pub fn new(_coordinator_id: usize, config: MessagePassingConfig) -> Self {
             let (coordinator_sender, coordinator_receiver) = mpsc::channel();
 
             Self {
-                coordinator_id,
+                _coordinator_id,
                 worker_channels: HashMap::new(),
                 coordinator_receiver,
                 coordinator_sender,
@@ -469,8 +469,7 @@ pub mod message_passing {
             new_centroids: &Array2<F>,
         ) -> Result<()> {
             let update_message = ClusteringMessage::UpdateCentroids {
-                round,
-                centroids: new_centroids.clone(),
+                round_centroids: new_centroids.clone(),
             };
 
             self.broadcast_message(update_message, MessagePriority::High)?;
@@ -662,9 +661,9 @@ pub struct WorkerHealthReport {
 }
 
 impl WorkerHealth {
-    pub fn new(worker_id: usize) -> Self {
+    pub fn new(_worker_id: usize) -> Self {
         Self {
-            worker_id,
+            _worker_id,
             status: WorkerStatus::Unknown,
             last_heartbeat: std::time::Instant::now(),
             consecutive_failures: 0,
@@ -837,9 +836,9 @@ pub struct FaultTolerantCoordinator<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug + Send + Sync> FaultTolerantCoordinator<F> {
     /// Create a new fault-tolerant coordinator
-    pub fn new(fault_config: FaultToleranceConfig) -> Self {
+    pub fn new(_fault_config: FaultToleranceConfig) -> Self {
         Self {
-            fault_config,
+            _fault_config,
             worker_health: HashMap::new(),
             failed_workers: HashSet::new(),
             checkpoints: Vec::new(),
@@ -1054,7 +1053,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> FaultTolerantCoordinator<F>
             .worker_health
             .iter()
             .filter(|(_, health)| health.is_healthy(self.fault_config.worker_timeout_ms))
-            .map(|(&id, _)| id)
+            .map(|(&id_)| _id)
             .collect();
 
         if healthy_workers.is_empty() {
@@ -1068,7 +1067,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> FaultTolerantCoordinator<F>
             .iter()
             .enumerate()
             .filter(|(_, p)| p.worker_id == failed_worker_id)
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .collect();
 
         // Redistribute to healthy workers using round-robin
@@ -1081,7 +1080,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> FaultTolerantCoordinator<F>
     }
 
     /// Replace failed worker with a new worker
-    fn replace_failed_worker(&mut self, _failed_worker_id: usize) -> Result<()> {
+    fn replace_failed_worker(&mut self_failed_worker_id: usize) -> Result<()> {
         if !self.fault_config.auto_replace_workers {
             return Err(ClusteringError::InvalidInput(
                 "Worker replacement is disabled".to_string(),
@@ -1173,7 +1172,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> FaultTolerantCoordinator<F>
             .worker_health
             .iter()
             .filter(|(_, health)| health.is_healthy(self.fault_config.worker_timeout_ms))
-            .map(|(&id, _)| id)
+            .map(|(&id_)| id)
             .collect();
 
         if healthy_workers.len() < replication_factor {
@@ -1313,8 +1312,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> FaultTolerantCoordinator<F>
     /// Update replica after data changes
     pub fn update_replicas(
         &mut self,
-        partition_id: usize,
-        _updated_partition: &DataPartition<F>,
+        partition_id: usize_updated, _partition: &DataPartition<F>,
     ) -> Result<()> {
         if !self.fault_config.enable_replication {
             return Ok(());
@@ -1327,7 +1325,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> FaultTolerantCoordinator<F>
                         // In a real implementation, this would send the updated data to replica workers
                         // For now, we just log the operation
                         println!(
-                            "Updating replica on worker {} for partition {}",
+                            "Updating replica on worker {} for _partition {}",
                             replica_worker_id, partition_id
                         );
                     }
@@ -1375,10 +1373,10 @@ pub struct DataPartition<F: Float> {
 }
 
 impl<F: Float> DataPartition<F> {
-    pub fn new(partition_id: usize, data: Array2<F>, worker_id: usize) -> Self {
+    pub fn new(_partition_id: usize, data: Array2<F>, worker_id: usize) -> Self {
         let checksum = Self::compute_checksum(&data);
         Self {
-            partition_id,
+            _partition_id,
             data,
             labels: None,
             worker_id,
@@ -1388,18 +1386,18 @@ impl<F: Float> DataPartition<F> {
         }
     }
 
-    fn compute_checksum(data: &Array2<F>) -> u64 {
+    fn compute_checksum(_data: &Array2<F>) -> u64 {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
         let mut hasher = DefaultHasher::new();
 
         // Hash the shape first
-        data.shape().hash(&mut hasher);
+        _data.shape().hash(&mut hasher);
 
-        // Hash the actual data values for better integrity checking
+        // Hash the actual _data values for better integrity checking
         // Convert float values to bits for consistent hashing
-        for row in data.rows() {
+        for row in _data.rows() {
             for &value in row.iter() {
                 // Convert to f64 and then to bits for consistent hashing across float types
                 let bits = value.to_f64().unwrap_or(0.0).to_bits();
@@ -1408,7 +1406,7 @@ impl<F: Float> DataPartition<F> {
         }
 
         // Also hash row/column strides for memory layout verification
-        if let Some(strides) = data.strides() {
+        if let Some(strides) = _data.strides() {
             for &stride in strides {
                 stride.hash(&mut hasher);
             }
@@ -1428,7 +1426,7 @@ impl<F: Float> DataPartition<F> {
     }
 
     pub fn remove_replica(&mut self, worker_id: usize) {
-        self.replica_workers.retain(|&id| id != worker_id);
+        self.replica_workers.retain(|&_id| _id != worker_id);
     }
 }
 
@@ -1512,11 +1510,11 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
     pub fn new_with_message_passing(
         k: usize,
         config: DistributedConfig,
-        message_config: message_passing::MessagePassingConfig,
+        message_config: message, _passing: MessagePassingConfig,
     ) -> Self {
-        let mut instance = Self::new(k, config.clone());
+        let mut instance = Self::new(k, _config.clone());
 
-        // Initialize message passing coordinator
+        // Initialize message _passing coordinator
         let coordinator_id = 0; // Coordinator is worker 0
         instance.message_coordinator = Some(message_passing::MessagePassingCoordinator::new(
             coordinator_id,
@@ -1524,7 +1522,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         ));
 
         // Initialize fault tolerance coordinator
-        instance.fault_coordinator = Some(FaultTolerantCoordinator::new(config.fault_tolerance));
+        instance.fault_coordinator = Some(FaultTolerantCoordinator::new(_config.fault_tolerance));
 
         instance
     }
@@ -1814,7 +1812,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
 
         for (i, &weight) in weights.iter().enumerate() {
             let size = if i == weights.len() - 1 {
-                // Last worker gets remaining samples
+                // Last worker gets remaining _samples
                 total_samples - assigned
             } else {
                 ((total_samples as f64 * weight / total_weight).round() as usize)
@@ -1919,8 +1917,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
     /// Spatial partitioning using simplified k-d tree approach
     fn spatial_partition(
         &self,
-        data: ArrayView2<F>,
-        _partition_sizes: &[usize],
+        data: ArrayView2<F>, _partition_sizes: &[usize],
     ) -> Result<Vec<DataPartition<F>>> {
         let n_features = data.ncols();
         let n_workers = self.config.n_workers;
@@ -1971,7 +1968,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             if start_idx < end_idx {
                 let partition_indices: Vec<usize> = split_values[start_idx..end_idx]
                     .iter()
-                    .map(|(idx, _)| *idx)
+                    .map(|(idx_)| *idx)
                     .collect();
 
                 let mut partition_data = Array2::zeros((partition_indices.len(), data.ncols()));
@@ -2156,14 +2153,13 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
     /// Round-robin partitioning
     fn round_robin_partition(
         &self,
-        data: ArrayView2<F>,
-        _partition_sizes: &[usize],
+        data: ArrayView2<F>, _partition_sizes: &[usize],
     ) -> Result<Vec<DataPartition<F>>> {
         let n_workers = self.config.n_workers;
         let mut worker_data: Vec<Vec<usize>> = vec![Vec::new(); n_workers];
 
         // Assign points in round-robin fashion
-        for (row_idx, _) in data.rows().into_iter().enumerate() {
+        for (row_idx_) in data.rows().into_iter().enumerate() {
             let worker_id = row_idx % n_workers;
             worker_data[worker_id].push(row_idx);
         }
@@ -2272,17 +2268,17 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         data: &Array2<F>,
         global_centroids: ArrayView2<F>,
     ) -> Result<(Array2<F>, Array1<usize>, F)> {
-        let mut centroids = global_centroids.to_owned();
+        let mut _centroids = global_centroids.to_owned();
         let mut labels = Array1::zeros(data.nrows());
         let mut prev_inertia = F::infinity();
 
         for _iter in 0..self.config.max_iterations_per_round {
-            // Assign points to nearest centroids
+            // Assign points to nearest _centroids
             for (i, point) in data.rows().into_iter().enumerate() {
                 let mut min_dist = F::infinity();
                 let mut best_cluster = 0;
 
-                for (j, centroid) in centroids.rows().into_iter().enumerate() {
+                for (j, centroid) in _centroids.rows().into_iter().enumerate() {
                     let dist = euclidean_distance(point, centroid);
                     if dist < min_dist {
                         min_dist = dist;
@@ -2292,7 +2288,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 labels[i] = best_cluster;
             }
 
-            // Update centroids
+            // Update _centroids
             let new_centroids = self.compute_local_centroids(data, &labels)?;
 
             // Calculate inertia
@@ -2303,11 +2299,11 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 break;
             }
 
-            centroids = new_centroids;
+            _centroids = new_centroids;
             prev_inertia = inertia;
         }
 
-        Ok((centroids, labels, prev_inertia))
+        Ok((_centroids, labels, prev_inertia))
     }
 
     /// Compute local centroids from data and labels
@@ -2406,7 +2402,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         new_centroids: &Array2<F>,
         round: usize,
     ) -> Result<ConvergenceMetrics> {
-        let old_centroids = self.centroids.as_ref().unwrap();
+        let old_centroids = self._centroids.as_ref().unwrap();
 
         // Compute maximum centroid movement
         let mut max_movement = 0.0;
@@ -2655,10 +2651,10 @@ pub struct LocalDendrogram {
 
 impl<F: Float + FromPrimitive + Debug + Send + Sync> DistributedHierarchical<F> {
     /// Create new distributed hierarchical clustering instance
-    pub fn new(linkage_method: LinkageMethod, config: DistributedConfig) -> Self {
+    pub fn new(_linkage_method: LinkageMethod, config: DistributedConfig) -> Self {
         Self {
             config,
-            linkage_method,
+            _linkage_method,
             partitions: Vec::new(),
             local_dendrograms: Vec::new(),
         }
@@ -2918,11 +2914,11 @@ pub mod utils {
 
     impl DynamicLoadBalancer {
         /// Create new dynamic load balancer
-        pub fn new(balancing_strategy: AdvancedBalancingStrategy) -> Self {
+        pub fn new(_balancing_strategy: AdvancedBalancingStrategy) -> Self {
             Self {
                 worker_profiles: HashMap::new(),
                 load_history: Vec::new(),
-                balancing_strategy,
+                _balancing_strategy,
                 rebalancing_threshold: 0.15, // 15% imbalance threshold
                 prediction_horizon: 10,
             }
@@ -2976,8 +2972,7 @@ pub mod utils {
         /// Predictive load balancing using time series forecasting
         fn predictive_balancing(
             &self,
-            data_size: usize,
-            _current_assignments: &HashMap<usize, usize>,
+            data_size: usize_current, _assignments: &HashMap<usize, usize>,
             model_type: &PredictionModel,
             look_ahead_steps: usize,
         ) -> Result<HashMap<usize, usize>> {
@@ -3070,7 +3065,7 @@ pub mod utils {
 
                 if converged {
                     println!(
-                        "Game theoretic balancing converged after {} iterations",
+                        "Game theoretic balancing converged after {} _iterations",
                         iteration + 1
                     );
                     break;
@@ -3098,7 +3093,7 @@ pub mod utils {
             let current = current_assignments[&worker_id];
             let others_total: usize = current_assignments
                 .iter()
-                .filter(|(&id, _)| id != worker_id)
+                .filter(|(&id_)| _id != worker_id)
                 .map(|(_, &assignment)| assignment)
                 .sum();
 
@@ -3158,22 +3153,22 @@ pub mod utils {
                 if rng.random::<f64>() < exploration_rate {
                     // Explore: random adjustment
                     let max_change = (current_assignment as f64 * 0.2) as usize; // Max 20% change
-                    let change = rng.random_range(0..=max_change * 2) as i32 - max_change as i32;
+                    let change = rng.gen_range(0..=max_change * 2) as i32 - max_change as i32;
                     let new_assignment = (current_assignment as i32 + change).max(0) as usize;
-                    new_assignments.insert(worker_id, new_assignment);
+                    new_assignments.insert(worker_id..new_assignment);
                 } else {
                     // Exploit: use learned policy
                     let optimal_assignment =
                         self.compute_learned_optimal_assignment(worker_id, data_size);
 
-                    // Apply learning rate to smooth transitions
+                    // Apply learning _rate to smooth transitions
                     let adjusted_assignment = current_assignment as f64
                         + learning_rate * (optimal_assignment as f64 - current_assignment as f64);
                     new_assignments.insert(worker_id, adjusted_assignment.round() as usize);
                 }
             }
 
-            // Normalize assignments to match total data size
+            // Normalize _assignments to match total data _size
             let total_assigned: usize = new_assignments.values().sum();
             if total_assigned != data_size && total_assigned > 0 {
                 let scale_factor = data_size as f64 / total_assigned as f64;
@@ -3230,10 +3225,10 @@ pub mod utils {
                 let max_assignment = if i == worker_ids.len() - 1 {
                     remaining // Last worker gets all remaining
                 } else {
-                    rng.random_range(0..=remaining)
+                    rng.gen_range(0..=remaining)
                 };
 
-                assignment.insert(worker_id, max_assignment);
+                assignment.insert(worker_id..max_assignment);
                 remaining = remaining.saturating_sub(max_assignment);
             }
 
@@ -3442,7 +3437,7 @@ pub mod utils {
         }
 
         /// Simplified ARIMA prediction
-        fn arima_predict(&self, data: &[f64], p: usize, d: usize, q: usize, _steps: usize) -> f64 {
+        fn arima_predict(&self, data: &[f64], p: usize, d: usize, q: usize_steps: usize) -> f64 {
             if data.len() < p.max(q) + d {
                 return data.last().copied().unwrap_or(0.5);
             }
@@ -3467,9 +3462,7 @@ pub mod utils {
         /// Simplified neural network prediction
         fn neural_network_predict(
             &self,
-            data: &[f64],
-            _hidden_layers: &[usize],
-            _steps: usize,
+            data: &[f64], _hidden_layers: &[usize], _steps: usize,
         ) -> f64 {
             // Simplified feedforward network simulation
             if data.len() < 3 {
@@ -3539,10 +3532,10 @@ pub mod utils {
     }
 
     /// Estimate optimal number of workers based on data size and memory constraints
-    pub fn estimate_optimal_workers(data_size_mb: f64, memory_limit_mb: f64) -> usize {
+    pub fn estimate_optimal_workers(_data_size_mb: f64, memory_limit_mb: f64) -> usize {
         let min_workers = 1;
         let max_workers = num_cpus::get().max(1);
-        let memory_based_workers = (data_size_mb / memory_limit_mb).ceil() as usize;
+        let memory_based_workers = (_data_size_mb / memory_limit_mb).ceil() as usize;
 
         memory_based_workers.clamp(min_workers, max_workers)
     }
@@ -3562,7 +3555,7 @@ pub mod utils {
         let mut best_efficiency = 0.0;
 
         for n_workers in min_workers..=max_workers {
-            // Compute parallel efficiency considering Amdahl's law
+            // Compute parallel _efficiency considering Amdahl's law
             let sequential_fraction = 1.0 / algorithm_complexity;
             let parallel_fraction = 1.0 - sequential_fraction;
 
@@ -3570,11 +3563,11 @@ pub mod utils {
             let theoretical_speedup =
                 1.0 / (sequential_fraction + parallel_fraction / n_workers as f64);
 
-            // Communication overhead penalty
+            // Communication _overhead penalty
             let comm_penalty = communication_overhead * (n_workers - 1) as f64 / n_workers as f64;
             let actual_speedup = theoretical_speedup * (1.0 - comm_penalty);
 
-            // Memory efficiency
+            // Memory _efficiency
             let memory_per_worker = data_size_mb / n_workers as f64;
             let memory_efficiency = if memory_per_worker <= memory_limit_mb {
                 1.0
@@ -3582,11 +3575,11 @@ pub mod utils {
                 memory_limit_mb / memory_per_worker
             };
 
-            // Overall efficiency
-            let efficiency = (actual_speedup / n_workers as f64) * memory_efficiency;
+            // Overall _efficiency
+            let _efficiency = (actual_speedup / n_workers as f64) * memory_efficiency;
 
-            if efficiency > best_efficiency && efficiency >= target_efficiency {
-                best_efficiency = efficiency;
+            if _efficiency > best_efficiency && _efficiency >= target_efficiency {
+                best_efficiency = _efficiency;
                 best_workers = n_workers;
             }
         }
@@ -3616,13 +3609,13 @@ pub mod utils {
 
             // Generate cluster center
             let center: Vec<f64> = (0..n_features)
-                .map(|_| rng.random_range(-10.0..10.0))
+                .map(|_| rng.gen_range(-10.0..10.0))
                 .collect();
 
             // Generate points around center
             for i in start_idx..end_idx {
                 for j in 0..n_features {
-                    data[[i, j]] = center[j] + rng.random_range(-2.0..2.0);
+                    data[[i..j]] = center[j] + rng.gen_range(-2.0..2.0);
                 }
             }
         }
@@ -3650,7 +3643,7 @@ pub mod utils {
         for i in 0..n_clusters {
             let center: Vec<f64> = (0..n_features)
                 .map(|j| {
-                    let base = (i as f64 * 10.0) + rng.random_range(-2.0..2.0);
+                    let base = (i as f64 * 10.0) + rng.gen_range(-2.0..2.0);
                     if j % 2 == 0 {
                         base
                     } else {
@@ -3675,8 +3668,8 @@ pub mod utils {
                 for j in 0..n_features {
                     // Cluster-specific variance
                     let cluster_variance = 1.0 + cluster as f64 * 0.5;
-                    let noise = rng.random_range(-noise_level..noise_level) * cluster_variance;
-                    data[[i, j]] = centers[cluster][j] + noise;
+                    let noise = rng.gen_range(-noise_level..noise_level) * cluster_variance;
+                    data[[i..j]] = centers[cluster][j] + noise;
                 }
             }
             point_idx = end_idx;
@@ -3685,7 +3678,7 @@ pub mod utils {
         // Generate outliers
         for i in n_normal..n_samples {
             for j in 0..n_features {
-                data[[i, j]] = rng.random_range(-50.0..50.0);
+                data[[i, j]] = rng.gen_range(-50.0..50.0);
             }
         }
 
@@ -3715,9 +3708,9 @@ pub mod utils {
     }
 
     /// Simulate centralized clustering time
-    fn simulate_centralized_clustering_time(data: &Array2<f64>, n_clusters: usize) -> f64 {
-        let n_samples = data.nrows();
-        let n_features = data.ncols();
+    fn simulate_centralized_clustering_time(_data: &Array2<f64>, n_clusters: usize) -> f64 {
+        let n_samples = _data.nrows();
+        let n_features = _data.ncols();
 
         // Simplified complexity model: O(n * k * d * iterations)
         let complexity = n_samples as f64 * n_clusters as f64 * n_features as f64 * 100.0;
@@ -3830,11 +3823,11 @@ pub mod observability {
     }
 
     impl AnomalyDetector {
-        pub fn new(window_size: usize, sensitivity: f64) -> Self {
+        pub fn new(_window_size: usize, sensitivity: f64) -> Self {
             Self {
                 baseline_metrics: HashMap::new(),
                 metric_windows: HashMap::new(),
-                window_size,
+                _window_size,
                 sensitivity,
             }
         }
@@ -3880,12 +3873,12 @@ pub mod observability {
     }
 
     impl DistributedMetricsCollector {
-        pub fn new(alert_thresholds: AlertThresholds) -> Self {
+        pub fn new(_alert_thresholds: AlertThresholds) -> Self {
             Self {
                 metrics_history: Arc::new(Mutex::new(VecDeque::new())),
                 resource_usage: Arc::new(Mutex::new(VecDeque::new())),
                 performance_baselines: HashMap::new(),
-                alert_thresholds,
+                _alert_thresholds,
                 anomaly_detector: AnomalyDetector::new(50, 2.5), // 50-sample window, 2.5 sigma
             }
         }
@@ -4475,7 +4468,7 @@ pub mod config_optimization {
         }
 
         /// Calculate confidence score for the optimization
-        fn calculate_confidence_score(&self, _config: &DistributedConfig) -> f64 {
+        fn calculate_confidence_score(&self_config: &DistributedConfig) -> f64 {
             // Simplified confidence calculation based on historical data and hardware match
             let hardware_match_score = 0.8; // Assume good hardware specification
             let workload_confidence = if self.workload_profile.real_time_requirements {
@@ -4717,11 +4710,11 @@ pub mod streaming {
     }
 
     impl<F: Float + FromPrimitive + Send + Sync + 'static> ConceptDriftDetector<F> {
-        pub fn new(window_size: usize, test_threshold: f64) -> Self {
+        pub fn new(_window_size: usize, test_threshold: f64) -> Self {
             Self {
                 reference_window: VecDeque::new(),
                 current_window: VecDeque::new(),
-                window_size,
+                _window_size,
                 test_threshold,
                 last_drift_time: std::time::Instant::now(),
                 min_drift_interval: Duration::from_secs(30),
@@ -4957,7 +4950,7 @@ pub mod streaming {
                 // Implement incremental K-means update
                 let learning_rate = F::from(0.1).unwrap(); // Adaptive learning rate
 
-                // For each new data point, update nearest centroid
+                // For each new _data point, update nearest centroid
                 for sample in new_data.rows() {
                     let mut min_distance = F::infinity();
                     let mut nearest_centroid_idx = 0;
@@ -5431,7 +5424,7 @@ pub mod edge_computing {
             for _iter in 0..10 {
                 let mut cluster_assignments = Vec::new();
                 let mut cluster_counts = vec![0; k];
-                let mut cluster_sums = Array2::zeros((k, data.ncols()));
+                let mut cluster_sums = Array2::zeros((k..data.ncols()));
 
                 // Assign points to nearest centroid
                 for point in data.rows() {
@@ -5587,7 +5580,7 @@ pub mod edge_computing {
             // Simplified region grouping - in practice would use geographic or network topology
             let mut regions = HashMap::new();
 
-            for (node_id, _config) in &self.edge_nodes {
+            for (node_id_config) in &self.edge_nodes {
                 // Simple hash-based grouping
                 let region_id = format!("region_{}", node_id.len() % 3);
                 regions
@@ -5844,9 +5837,9 @@ pub mod edge_computing {
 
         impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> RaftConsensus<F> {
             /// Create new Raft consensus instance
-            pub fn new(node_id: usize, peers: HashSet<usize>) -> Self {
+            pub fn new(_node_id: usize, peers: HashSet<usize>) -> Self {
                 Self {
-                    node_id,
+                    _node_id,
                     current_term: 0,
                     voted_for: None,
                     log: vec![],
@@ -5855,7 +5848,7 @@ pub mod edge_computing {
                     state: RaftState::Follower,
                     leader_id: None,
                     peers,
-                    election_timeout: Duration::from_millis(150 + (node_id * 50) as u64), // Randomized timeout
+                    election_timeout: Duration::from_millis(150 + (_node_id * 50) as u64), // Randomized timeout
                     last_heartbeat: Instant::now(),
                     clustering_state: ClusteringStateMachine::new(),
                     next_index: HashMap::new(),
@@ -6246,9 +6239,9 @@ pub mod edge_computing {
 
         impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> StreamingDistributedClustering<F> {
             /// Create new streaming distributed clustering instance
-            pub fn new(node_id: usize, config: StreamingConfig) -> Self {
+            pub fn new(_node_id: usize, config: StreamingConfig) -> Self {
                 Self {
-                    node_id,
+                    _node_id,
                     config: config.clone(),
                     stream_buffer: VecDeque::with_capacity(config.window_size),
                     current_model: None,
@@ -6390,7 +6383,7 @@ pub mod edge_computing {
                 let mut rng = rand::rng();
 
                 // Choose first centroid randomly
-                let first_idx = rng.random_range(0..n_samples);
+                let first_idx = rng.gen_range(0..n_samples);
                 centroids.row_mut(0).assign(&data.row(first_idx));
 
                 // Choose remaining centroids using k-means++ algorithm
@@ -6403,7 +6396,7 @@ pub mod edge_computing {
 
                         for l in 0..i {
                             let centroid = centroids.row(l);
-                            let dist = euclidean_distance(point, centroid);
+                            let dist = euclidean_distance(point..centroid);
                             if dist < min_dist {
                                 min_dist = dist;
                             }
@@ -6601,10 +6594,10 @@ pub mod edge_computing {
 
         impl<F: Float + Debug> ConceptDriftDetector<F> {
             /// Create new concept drift detector
-            pub fn new(delta: f64) -> Self {
+            pub fn new(_delta: f64) -> Self {
                 Self {
                     quality_window: VecDeque::new(),
-                    delta,
+                    _delta,
                     drift_points: Vec::new(),
                     current_concept: 0,
                     concept_boundaries: BTreeMap::new(),
@@ -6648,10 +6641,10 @@ pub mod edge_computing {
 
         impl<F: Float> ModelSyncState<F> {
             /// Create new model synchronization state
-            pub fn new(resolution_strategy: ConflictResolution) -> Self {
+            pub fn new(_resolution_strategy: ConflictResolution) -> Self {
                 Self {
                     pending_updates: HashMap::new(),
-                    resolution_strategy,
+                    _resolution_strategy,
                     version_vector: HashMap::new(),
                 }
             }

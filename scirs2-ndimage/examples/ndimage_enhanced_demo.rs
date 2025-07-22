@@ -13,7 +13,7 @@
 use ndarray::{Array2, ArrayView2};
 use std::time::Instant;
 
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     enhanced_validation::{
         validated_advanced_processing, ComprehensiveValidator, ValidationConfig,
     },
@@ -112,9 +112,9 @@ fn create_test_dataset() -> Vec<(String, Array2<f64>)> {
 
 /// Create random test image
 #[allow(dead_code)]
-fn create_random_image(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((height, width));
-    for y in 0..height {
+fn create_random_image(_height: usize, width: usize) -> Array2<f64> {
+    let mut image = Array2::zeros((_height, width));
+    for y in 0.._height {
         for x in 0..width {
             // Pseudo-random based on coordinates
             let val = ((x * 37 + y * 17) % 1000) as f64 / 1000.0;
@@ -126,12 +126,12 @@ fn create_random_image(height: usize, width: usize) -> Array2<f64> {
 
 /// Create structured test image with multiple patterns
 #[allow(dead_code)]
-fn create_structured_image(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((height, width));
+fn create_structured_image(_height: usize, width: usize) -> Array2<f64> {
+    let mut image = Array2::zeros((_height, width));
 
-    for y in 0..height {
+    for y in 0.._height {
         for x in 0..width {
-            let y_norm = y as f64 / height as f64;
+            let y_norm = y as f64 / _height as f64;
             let x_norm = x as f64 / width as f64;
 
             // Multi-scale patterns
@@ -153,12 +153,12 @@ fn create_structured_image(height: usize, width: usize) -> Array2<f64> {
 
 /// Create high frequency test image
 #[allow(dead_code)]
-fn create_high_frequency_image(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((height, width));
+fn create_high_frequency_image(_height: usize, width: usize) -> Array2<f64> {
+    let mut image = Array2::zeros((_height, width));
 
-    for y in 0..height {
+    for y in 0.._height {
         for x in 0..width {
-            let y_norm = y as f64 / height as f64;
+            let y_norm = y as f64 / _height as f64;
             let x_norm = x as f64 / width as f64;
 
             // High frequency patterns
@@ -175,17 +175,17 @@ fn create_high_frequency_image(height: usize, width: usize) -> Array2<f64> {
 
 /// Create edge case test image (extreme values, discontinuities)
 #[allow(dead_code)]
-fn create_edge_case_image(height: usize, width: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((height, width));
+fn create_edge_case_image(_height: usize, width: usize) -> Array2<f64> {
+    let mut image = Array2::zeros((_height, width));
 
-    for y in 0..height {
+    for y in 0.._height {
         for x in 0..width {
             // Create discontinuities and edge cases
             if x < width / 4 {
                 image[(y, x)] = 0.0; // Dark region
             } else if x < width / 2 {
                 image[(y, x)] = 1.0; // Bright region
-            } else if y < height / 2 {
+            } else if y < _height / 2 {
                 // Checkerboard pattern
                 image[(y, x)] = if (x + y) % 2 == 0 { 0.0 } else { 1.0 };
             } else {
@@ -202,7 +202,7 @@ fn create_edge_case_image(height: usize, width: usize) -> Array2<f64> {
 /// Create enhanced Advanced configuration
 #[allow(dead_code)]
 fn create_enhanced_config() -> AdvancedConfig {
-    use scirs2_ndimage::{
+    use scirs2__ndimage::{
         neuromorphic_computing::NeuromorphicConfig, quantum_inspired::QuantumConfig,
         quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
     };
@@ -230,23 +230,23 @@ fn create_enhanced_config() -> AdvancedConfig {
 
 /// Validate output properties
 #[allow(dead_code)]
-fn validate_output_properties<T>(output: &Array2<T>, test_name: &str) -> NdimageResult<()>
+fn validate_output_properties<T>(_output: &Array2<T>, test_name: &str) -> NdimageResult<()>
 where
-    T: num_traits::Float + Copy,
+    T: num_traits: Float + Copy,
 {
     // Check for NaN or infinite values
-    for &pixel in output.iter() {
+    for &pixel in _output.iter() {
         if !pixel.is_finite() {
             return Err(scirs2_ndimage::NdimageError::ComputationError(format!(
-                "Non-finite values in {} output",
+                "Non-finite values in {} _output",
                 test_name
             )));
         }
     }
 
-    // Check output range (assuming normalized output)
-    let min_val = output.iter().fold(T::infinity(), |a, &b| a.min(b));
-    let max_val = output.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
+    // Check _output range (assuming normalized _output)
+    let min_val = _output.iter().fold(T::infinity(), |a, &b| a.min(b));
+    let max_val = _output.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
 
     println!(
         "     - Output range: [{:.6}, {:.6}]",
@@ -259,20 +259,20 @@ where
 
 /// Print comprehensive performance summary
 #[allow(dead_code)]
-fn print_performance_summary(summary: &scirs2_ndimage::PerformanceSummary) {
+fn print_performance_summary(_summary: &scirs2_ndimage: :PerformanceSummary) {
     println!("\n📈 Performance Summary");
     println!("=====================");
-    println!("Total operations: {}", summary.total_operations);
-    println!("Total errors: {}", summary.error_count);
-    println!("Average quality: {:.3}", summary.average_quality());
+    println!("Total operations: {}", _summary.total_operations);
+    println!("Total errors: {}", _summary.error_count);
+    println!("Average quality: {:.3}", _summary.average_quality());
     println!(
         "Total processing time: {:?}",
-        summary.total_processing_time()
+        _summary.total_processing_time()
     );
 
-    if !summary.benchmarks.is_empty() {
+    if !_summary.benchmarks.is_empty() {
         println!("\n📊 Detailed Benchmarks:");
-        for (name, benchmark) in &summary.benchmarks {
+        for (name, benchmark) in &_summary.benchmarks {
             println!("  {}:", name);
             println!("    - Avg time: {:?}", benchmark.avg_time);
             println!("    - Quality: {:.3}", benchmark.quality_score);
@@ -283,7 +283,7 @@ fn print_performance_summary(summary: &scirs2_ndimage::PerformanceSummary) {
 
 /// Run stress tests with various configurations
 #[allow(dead_code)]
-fn run_stress_tests(validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
+fn run_stress_tests(_validator: &mut ComprehensiveValidator) -> NdimageResult<()> {
     println!("Running stress tests...");
 
     let stress_configs = vec![
@@ -297,8 +297,8 @@ fn run_stress_tests(validator: &mut ComprehensiveValidator) -> NdimageResult<()>
     for (name, config) in stress_configs {
         println!("  🔥 {}", name);
 
-        match validated_advanced_processing(stress_image.view(), &config, None, validator) {
-            Ok((_, _, report)) => {
+        match validated_advanced_processing(stress_image.view(), &config, None, _validator) {
+            Ok((__, report)) => {
                 println!(
                     "    ✓ Quality: {:.3}, Speed: {:.0} pixels/sec",
                     report.quality_score,
@@ -368,7 +368,7 @@ mod tests {
         let config = create_enhanced_config();
         let mut validator = ComprehensiveValidator::new();
 
-        let (output, _state, report) =
+        let (output_state, report) =
             validated_advanced_processing(test_image.view(), &config, None, &mut validator)?;
 
         assert_eq!(output.dim(), (16, 16));

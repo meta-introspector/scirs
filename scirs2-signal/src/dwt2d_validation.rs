@@ -6,14 +6,17 @@
 
 use crate::dwt::Wavelet;
 use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
-use crate::dwt2d_enhanced::{
+use crate::error::{SignalError, SignalResult};
+use ndarray::{Array2, s};
+use rand::Rng;
+use statrs::statistics::Statistics;
+use std::f64;
+use std::time::Instant;
+
+#[allow(unused_imports)]
+use crate::dwt2d__enhanced::{
     enhanced_dwt2d_decompose, wavedec2_enhanced, BoundaryMode, Dwt2dConfig, EnhancedDwt2dResult,
 };
-use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array2};
-use scirs2_core::Rng;
-use std::f64;
-
 /// 2D DWT validation result
 #[derive(Debug, Clone)]
 pub struct Dwt2dValidationResult {
@@ -105,12 +108,12 @@ pub fn validate_dwt2d(
     wavelet: Wavelet,
     tolerance: f64,
 ) -> SignalResult<Dwt2dValidationResult> {
-    let mut issues = Vec::new();
+    let mut issues: Vec<String> = Vec::new();
 
     // Check input
     if test_image.iter().any(|&x| !x.is_finite()) {
         return Err(SignalError::ValueError(
-            "Test image contains non-finite values".to_string(),
+            "Test _image contains non-finite values".to_string(),
         ));
     }
 
@@ -127,7 +130,7 @@ pub fn validate_dwt2d(
     // Test energy conservation
     let energy_conservation = test_energy_conservation(test_image, wavelet)?;
 
-    if (energy_conservation.energy_ratio - 1.0).abs() > tolerance * 10.0 {
+    if ((energy_conservation.energy_ratio - 1.0) as f64).abs() > tolerance * 10.0 {
         issues.push(format!(
             "Energy not conserved: ratio = {:.6}",
             energy_conservation.energy_ratio
@@ -151,7 +154,7 @@ pub fn validate_dwt2d(
     score += 40.0 * (1.0 - reconstruction_error.mean_error.min(1.0));
 
     // Energy conservation (30%)
-    score += 30.0 * (1.0 - (energy_conservation.energy_ratio - 1.0).abs().min(1.0));
+    score += 30.0 * ((1.0 - (energy_conservation.energy_ratio - 1.0) as f64).abs().min(1.0));
 
     // Boundary handling (20%)
     score += 20.0 * boundary_validation.continuity_score;
@@ -204,7 +207,7 @@ fn test_perfect_reconstruction(
     }
 
     let max_error = errors.iter().cloned().fold(0.0, f64::max);
-    let mean_error = errors.iter().sum::<f64>() / errors.len() as f64;
+    let mean_error = errors.iter().sum::<f64>() / errors.len()  as f64;
     let rmse = (sum_sq_error / errors.len() as f64).sqrt();
 
     // PSNR calculation
@@ -229,12 +232,12 @@ fn test_perfect_reconstruction(
 
 /// Test energy conservation
 #[allow(dead_code)]
-fn test_energy_conservation(image: &Array2<f64>, wavelet: Wavelet) -> SignalResult<EnergyMetrics> {
+fn test_energy_conservation(_image: &Array2<f64>, wavelet: Wavelet) -> SignalResult<EnergyMetrics> {
     // Input energy
-    let input_energy = compute_energy(image);
+    let input_energy = compute_energy(_image);
 
     // Decompose
-    let decomposition = dwt2d_decompose(image, wavelet, None)?;
+    let decomposition = dwt2d_decompose(_image, wavelet, None)?;
 
     // Subband energies
     let approx_energy = compute_energy(&decomposition.approx);
@@ -317,7 +320,7 @@ fn test_boundary_handling(
         }
     }
 
-    let n_modes = boundary_modes.len() as f64;
+    let n_modes = boundary_modes.len()  as f64;
     let edge_artifacts = total_artifacts / n_modes;
     let continuity_score = total_continuity / n_modes;
     let symmetry_accuracy = if symmetry_scores.is_empty() {
@@ -340,8 +343,6 @@ fn compare_performance(
     image: &Array2<f64>,
     wavelet: Wavelet,
 ) -> SignalResult<PerformanceComparison> {
-    use std::time::Instant;
-
     let n_runs = 10;
 
     // Time standard implementation
@@ -374,8 +375,8 @@ fn compare_performance(
 
 /// Compute energy of 2D array
 #[allow(dead_code)]
-fn compute_energy(array: &Array2<f64>) -> f64 {
-    array.iter().map(|&x| x * x).sum()
+fn compute_energy(_array: &Array2<f64>) -> f64 {
+    _array.iter().map(|&x| x * x).sum()
 }
 
 /// Compute structural similarity index (simplified)
@@ -405,9 +406,9 @@ fn compute_ssim(
 
             // Compute variances and covariance
             let var1 = window1.iter().map(|&x| (x - mu1).powi(2)).sum::<f64>()
-                / (window_size * window_size) as f64;
+                / (window_size * window_size)  as f64;
             let var2 = window2.iter().map(|&x| (x - mu2).powi(2)).sum::<f64>()
-                / (window_size * window_size) as f64;
+                / (window_size * window_size)  as f64;
 
             let mut cov = 0.0;
             for wi in 0..window_size {
@@ -415,7 +416,7 @@ fn compute_ssim(
                     cov += (window1[[wi, wj]] - mu1) * (window2[[wi, wj]] - mu2);
                 }
             }
-            cov /= (window_size * window_size) as f64;
+            cov /= (window_size * window_size)  as f64;
 
             // SSIM formula
             let ssim = (2.0 * mu1 * mu2 + c1) * (2.0 * cov + c2)
@@ -431,40 +432,40 @@ fn compute_ssim(
 
 /// Measure edge artifacts
 #[allow(dead_code)]
-fn measure_edge_artifacts(result: &EnhancedDwt2dResult) -> SignalResult<f64> {
+fn measure_edge_artifacts(_result: &EnhancedDwt2dResult) -> SignalResult<f64> {
     // Check for discontinuities at subband edges
     let mut total_artifacts = 0.0;
 
     // Check approximation edges
-    let (rows, cols) = result.approx.dim();
+    let (rows, cols) = _result.approx.dim();
     for i in 0..rows {
-        total_artifacts += (result.approx[[i, 0]] - result.approx[[i, 1]]).abs();
-        total_artifacts += (result.approx[[i, cols - 1]] - result.approx[[i, cols - 2]]).abs();
+        total_artifacts += (_result.approx[[i, 0]] - _result.approx[[i, 1]]).abs();
+        total_artifacts += (_result.approx[[i, cols - 1]] - _result.approx[[i, cols - 2]]).abs();
     }
 
     for j in 0..cols {
-        total_artifacts += (result.approx[[0, j]] - result.approx[[1, j]]).abs();
-        total_artifacts += (result.approx[[rows - 1, j]] - result.approx[[rows - 2, j]]).abs();
+        total_artifacts += (_result.approx[[0, j]] - _result.approx[[1, j]]).abs();
+        total_artifacts += (_result.approx[[rows - 1, j]] - _result.approx[[rows - 2, j]]).abs();
     }
 
     // Normalize by perimeter
-    let perimeter = 2.0 * (rows + cols) as f64;
+    let perimeter = 2.0 * (rows + cols)  as f64;
     Ok(total_artifacts / perimeter)
 }
 
 /// Measure boundary continuity
 #[allow(dead_code)]
-fn measure_boundary_continuity(result: &EnhancedDwt2dResult) -> SignalResult<f64> {
+fn measure_boundary_continuity(_result: &EnhancedDwt2dResult) -> SignalResult<f64> {
     // Measure smoothness of transitions
     let mut continuity_score = 0.0;
     let mut n_measurements = 0;
 
     // Check horizontal continuity
-    let (rows, _) = result.approx.dim();
+    let (rows_) = _result.approx.dim();
     for i in 1..rows - 1 {
-        let left_diff = (result.approx[[i, 0]] - result.approx[[i, 1]]).abs();
-        let right_diff = (result.approx[[i, 1]] - result.approx[[i, 2]]).abs();
-        continuity_score += 1.0 / (1.0 + (left_diff - right_diff).abs());
+        let left_diff = (_result.approx[[i, 0]] - _result.approx[[i, 1]]).abs();
+        let right_diff = (_result.approx[[i, 1]] - _result.approx[[i, 2]]).abs();
+        continuity_score += 1.0 / ((1.0 + (left_diff - right_diff) as f64).abs());
         n_measurements += 1;
     }
 
@@ -522,8 +523,8 @@ fn check_symmetry_preservation(
 
 /// Check if reconstruction is valid
 #[allow(dead_code)]
-fn is_valid_reconstruction(reconstructed: &Array2<f64>) -> bool {
-    reconstructed.iter().all(|&x| x.is_finite())
+fn is_valid_reconstruction(_reconstructed: &Array2<f64>) -> bool {
+    _reconstructed.iter().all(|&x: &f64| x.is_finite())
 }
 
 /// Validate multilevel decomposition
@@ -551,7 +552,7 @@ pub fn validate_multilevel_dwt2d(
 
     let energy_ratio = total_energy / input_energy;
 
-    if (energy_ratio - 1.0).abs() > tolerance * 10.0 {
+    if ((energy_ratio - 1.0) as f64).abs() > tolerance * 10.0 {
         return Ok(false);
     }
 
@@ -626,8 +627,8 @@ pub fn generate_test_images() -> Vec<(&'static str, Array2<f64>)> {
 
 /// Run comprehensive validation suite
 #[allow(dead_code)]
-pub fn run_comprehensive_validation(wavelet: Wavelet) -> SignalResult<()> {
-    println!("Running comprehensive 2D DWT validation for {:?}", wavelet);
+pub fn run_comprehensive_validation(_wavelet: Wavelet) -> SignalResult<()> {
+    println!("Running comprehensive 2D DWT validation for {:?}", _wavelet);
     println!("{}", "=".repeat(60));
 
     let test_images = generate_test_images();
@@ -636,7 +637,7 @@ pub fn run_comprehensive_validation(wavelet: Wavelet) -> SignalResult<()> {
     for (name, image) in test_images {
         println!("\nTesting with {} image:", name);
 
-        let result = validate_dwt2d(&image, wavelet, tolerance)?;
+        let result = validate_dwt2d(&image, _wavelet, tolerance)?;
 
         println!(
             "  Reconstruction error: {:.2e}",
@@ -659,7 +660,7 @@ pub fn run_comprehensive_validation(wavelet: Wavelet) -> SignalResult<()> {
         }
 
         // Test multilevel
-        if validate_multilevel_dwt2d(&image, wavelet, 3, tolerance)? {
+        if validate_multilevel_dwt2d(&image, _wavelet, 3, tolerance)? {
             println!("  ✓ Multilevel decomposition valid");
         } else {
             println!("  ✗ Multilevel decomposition failed");
@@ -671,8 +672,6 @@ pub fn run_comprehensive_validation(wavelet: Wavelet) -> SignalResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::dwt::Wavelet;
-
     #[test]
     fn test_validation_basic() {
         let image = Array2::eye(32);
@@ -687,7 +686,7 @@ mod tests {
         let image = Array2::from_elem((64, 64), 1.0);
         let metrics = test_energy_conservation(&image, Wavelet::DB(4)).unwrap();
 
-        assert!((metrics.energy_ratio - 1.0).abs() < 1e-10);
+        assert!(((metrics.energy_ratio - 1.0) as f64).abs() < 1e-10);
     }
 
     #[test]

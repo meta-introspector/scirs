@@ -19,7 +19,7 @@ use crate::optimizers::Optimizer;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::optimizers::{SGD, Optimizer};
+/// use scirs2__optim::optimizers::{SGD, Optimizer};
 ///
 /// // Initialize parameters and gradients
 /// let params = Array1::zeros(5);
@@ -49,9 +49,9 @@ impl<A: Float + ScalarOperand + Debug> SGD<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(_learning_rate: A) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             momentum: A::zero(),
             weight_decay: A::zero(),
             velocity: None,
@@ -65,9 +65,9 @@ impl<A: Float + ScalarOperand + Debug> SGD<A> {
     /// * `learning_rate` - The learning rate for parameter updates
     /// * `momentum` - The momentum factor (0.0 means no momentum)
     /// * `weight_decay` - The weight decay factor (L2 regularization)
-    pub fn new_with_config(learning_rate: A, momentum: A, weight_decay: A) -> Self {
+    pub fn new_with_config(_learning_rate: A, momentum: A, weight_decay: A) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             momentum,
             weight_decay,
             velocity: None,

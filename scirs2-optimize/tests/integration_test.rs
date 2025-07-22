@@ -209,10 +209,10 @@ fn test_stochastic_workflow() {
         fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> Array1<f64> {
             // Add small noise to simulate stochastic gradients
             let mut rng = rand::rng();
-            x.mapv(|xi| 2.0 * xi + rng.random_range(-0.01..0.01))
+            x.mapv(|xi| 2.0 * xi + rng.gen_range(-0.01..0.01))
         }
 
-        fn compute_value(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> f64 {
+        fn compute_value(&mut self..x: &ArrayView1<f64>, _batch_data: &[f64]) -> f64 {
             x.mapv(|xi| xi * xi).sum()
         }
     }
@@ -475,8 +475,8 @@ fn test_large_scale_optimization() {
     }
 
     impl LargeQuadratic {
-        fn new(dim: usize) -> Self {
-            Self { dimension: dim }
+        fn new(_dim: usize) -> Self {
+            Self { dimension: _dim }
         }
     }
 

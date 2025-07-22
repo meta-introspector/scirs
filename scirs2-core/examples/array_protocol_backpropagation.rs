@@ -15,6 +15,7 @@
 
 use ndarray::{array, Array1, Array2, Ix2};
 use scirs2_core::array_protocol::{
+use statrs::statistics::Statistics;
     self,
     grad::{Adam, GradientTensor, Optimizer, Variable},
     ml_ops::ActivationFunc,
@@ -49,7 +50,7 @@ fn main() {
     println!("\nCreating model parameters with gradient tracking:");
 
     // First layer parameters
-    let w1_array = Array2::<f64>::from_shape_fn((2, 4), |_| rand::random::<f64>() * 2.0 - 1.0);
+    let w1_array = Array2::<f64>::from_shape_fn((2, 4), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
     let b1_array = Array1::<f64>::zeros(4);
     println!(
         "Layer 1: {} -> {}",
@@ -58,7 +59,7 @@ fn main() {
     );
 
     // Second layer parameters
-    let w2_array = Array2::<f64>::from_shape_fn((4, 1), |_| rand::random::<f64>() * 2.0 - 1.0);
+    let w2_array = Array2::<f64>::from_shape_fn((4, 1), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
     let b2_array = Array1::<f64>::zeros(1);
     println!(
         "Layer 2: {} -> {}",
@@ -295,7 +296,7 @@ fn main() {
     // Create a data loader
     let batch_size = 4; // Use all samples in one batch for this small example
                         // Not using the data loader in this example as we'll create a new one for each epoch
-    let _data_loader = DataLoader::new(Box::new(dataset), batch_size, true, Some(42));
+    let data_loader = DataLoader::new(Box::new(dataset), batch_size, true, Some(42));
 
     println!(
         "Created dataset and data loader with batch size {}",
@@ -344,7 +345,7 @@ fn main() {
     );
 
     // Create loss function
-    let loss_fn = MSELoss::new(Some("mean"));
+    let loss_fn = MSELoss::new(Some(mean));
 
     // Training loop with automatic backpropagation
     println!("\nTraining with automatic backpropagation (10 epochs):");
@@ -418,7 +419,7 @@ fn main() {
                         {
                             // Get actual shape from the array
                             let shape = array.as_array().shape();
-                            let _grad_array = Array2::<f64>::from_elem((shape[0], shape[1]), 0.01);
+                            let grad_array = Array2::<f64>::from_elem((shape[0], shape[1]), 0.01);
 
                             // In a real implementation, we would set the gradient here
                             // Since we can't, we'll just log that it would happen
@@ -492,7 +493,7 @@ trait GradientTensorExt {
     fn to_scalar(&self) -> Option<f64>;
 
     /// Update parameter using its gradient
-    fn update_with_gradient(&mut self, learning_rate: f64);
+    fn rate( f64);
 
     /// Zero out the gradient
     fn zero_grad(&mut self);
@@ -532,10 +533,10 @@ impl GradientTensorExt for GradientTensor {
         None
     }
 
-    fn update_with_gradient(&mut self, learning_rate: f64) {
+    fn rate( f64) {
         // In a real implementation, this would:
         // 1. Access both the tensor data and its gradient
-        // 2. Update the tensor data using the gradient and learning rate
+        // 2. Update the tensor data using the gradient and learning _rate
         // For this example, we'll simulate a simple update
 
         // Get the underlying ndarray
@@ -552,12 +553,12 @@ impl GradientTensorExt for GradientTensor {
                     let grad_ndarray = grad_array.as_array();
 
                     // Update using gradient descent: w = w - lr * grad
-                    let _updated_array = &ndarray - &(grad_ndarray * learning_rate);
+                    let updated_array = &ndarray - &(grad_ndarray * learning_rate);
 
                     // In a real implementation, this would update the tensor data
                     // For this example, we'll just log that it would happen
                     println!(
-                        "Would update tensor data with gradient using learning rate {}",
+                        "Would update tensor data with gradient using learning _rate {}",
                         learning_rate
                     );
                 }

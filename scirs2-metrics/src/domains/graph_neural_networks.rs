@@ -1220,8 +1220,7 @@ impl GraphNeuralNetworkMetrics {
     pub fn evaluate_node_classification<F>(
         &mut self,
         y_true: &ArrayView1<i32>,
-        y_pred: &ArrayView1<i32>,
-        _y_proba: Option<&ArrayView2<F>>,
+        y_pred: &ArrayView1<i32>, _y_proba: Option<&ArrayView2<F>>,
         adjacency_matrix: &ArrayView2<i32>,
         node_features: Option<&ArrayView2<F>>,
         sensitive_attributes: Option<&ArrayView1<i32>>,
@@ -1232,15 +1231,15 @@ impl GraphNeuralNetworkMetrics {
         // Calculate basic classification metrics
         let accuracy = crate::classification::accuracy_score(y_true, y_pred)?;
         // Calculate precision, recall, and F1 score manually since precision_recall_fscore_support doesn't exist
-        let (_precision, _recall, f1_score) = self.calculate_precision_recall_f1(y_true, y_pred)?;
+        let (_precision_recall, f1_score) = self.calculate_precision_recall_f1(y_true, y_pred)?;
 
         let macro_f1 = f1_score.iter().sum::<f64>() / f1_score.len() as f64;
         let micro_f1 = self.node_metrics.calculate_micro_f1(y_true, y_pred)?;
 
-        // Calculate embedding quality if features provided
-        let embedding_quality = if let Some(features) = node_features {
+        // Calculate embedding quality if _features provided
+        let embedding_quality = if let Some(_features) = node_features {
             self.node_metrics
-                .calculate_embedding_quality(features, y_true, adjacency_matrix)?
+                .calculate_embedding_quality(_features, y_true, adjacency_matrix)?
         } else {
             0.0
         };
@@ -1250,12 +1249,12 @@ impl GraphNeuralNetworkMetrics {
             .node_metrics
             .calculate_homophily_ratio(adjacency_matrix, y_true)?;
 
-        // Calculate fairness metrics if sensitive attributes provided
+        // Calculate fairness metrics if sensitive _attributes provided
         let fairness_score = if let Some(sensitive_attrs) = sensitive_attributes {
             self.node_metrics
                 .calculate_fairness_score(y_true, y_pred, sensitive_attrs)?
         } else {
-            1.0 // Perfect fairness when no sensitive attributes
+            1.0 // Perfect fairness when no sensitive _attributes
         };
 
         Ok(NodeLevelResults {
@@ -1321,8 +1320,7 @@ impl GraphNeuralNetworkMetrics {
     pub fn evaluate_graph_classification<F>(
         &mut self,
         y_true: &ArrayView1<i32>,
-        y_pred: &ArrayView1<i32>,
-        _y_proba: Option<&ArrayView2<F>>,
+        y_pred: &ArrayView1<i32>, _y_proba: Option<&ArrayView2<F>>,
         graph_features: Option<&ArrayView2<F>>,
     ) -> Result<GraphLevelResults>
     where
@@ -1331,10 +1329,10 @@ impl GraphNeuralNetworkMetrics {
         // Calculate classification accuracy
         let classification_accuracy = crate::classification::accuracy_score(y_true, y_pred)?;
 
-        // Calculate property prediction accuracy if features provided
-        let property_prediction_acc = if let Some(features) = graph_features {
+        // Calculate property prediction accuracy if _features provided
+        let property_prediction_acc = if let Some(_features) = graph_features {
             self.graph_metrics
-                .calculate_property_prediction_accuracy(features, y_true)?
+                .calculate_property_prediction_accuracy(_features, y_true)?
         } else {
             classification_accuracy
         };
@@ -1354,11 +1352,10 @@ impl GraphNeuralNetworkMetrics {
     pub fn evaluate_graph_regression<F>(
         &mut self,
         y_true: &ArrayView1<F>,
-        y_pred: &ArrayView1<F>,
-        _graph_features: Option<&ArrayView2<F>>,
+        y_pred: &ArrayView1<F>, _graph_features: Option<&ArrayView2<F>>,
     ) -> Result<GraphLevelResults>
     where
-        F: Float + num_traits::NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
+        F: Float + num_traits::NumCast + std::fmt::Debug + scirs2_core::simd, _ops::SimdUnifiedOps,
     {
         // Calculate regression RMSE
         let mse = crate::regression::mean_squared_error(y_true, y_pred)?;
@@ -1416,7 +1413,7 @@ impl GraphNeuralNetworkMetrics {
         admet_predictions: Option<(&ArrayView1<i32>, &ArrayView1<i32>)>,
     ) -> Result<MolecularGraphResults>
     where
-        F: Float + num_traits::NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
+        F: Float + num_traits::NumCast + std::fmt::Debug + scirs2_core::simd, _ops::SimdUnifiedOps,
     {
         // Calculate property prediction RMSE
         let mse = crate::regression::mean_squared_error(y_true, y_pred)?;
@@ -1510,7 +1507,7 @@ impl GraphNeuralNetworkMetrics {
         y_true: &ArrayView1<i32>,
         y_scores: &ArrayView1<f64>,
     ) -> Result<f64> {
-        // Create pairs of scores and labels, then sort by score (descending)
+        // Create pairs of _scores and labels, then sort by score (descending)
         let mut score_label_pairs: Vec<(f64, i32)> = y_scores
             .iter()
             .zip(y_true.iter())
@@ -1792,7 +1789,7 @@ impl NodeLevelMetrics {
                 .iter()
                 .enumerate()
                 .filter(|(_, &l)| l == label)
-                .map(|(i, _)| i)
+                .map(|(i_)| i)
                 .collect();
 
             if cluster_indices.len() < 2 {
@@ -1876,8 +1873,7 @@ impl NodeLevelMetrics {
     }
 
     fn calculate_fairness_score(
-        &self,
-        _y_true: &ArrayView1<i32>,
+        &self, _y_true: &ArrayView1<i32>,
         y_pred: &ArrayView1<i32>,
         sensitive_attrs: &ArrayView1<i32>,
     ) -> Result<f64> {
@@ -1890,7 +1886,7 @@ impl NodeLevelMetrics {
                 .iter()
                 .enumerate()
                 .filter(|(_, &attr)| attr == group)
-                .map(|(i, _)| i)
+                .map(|(i_)| i)
                 .collect();
 
             if !group_indices.is_empty() {
@@ -1937,7 +1933,7 @@ impl EdgeLevelMetrics {
         let mut y_true = Vec::new();
         let mut y_scores = Vec::new();
 
-        // Positive edges
+        // Positive _edges
         for (i, &(u, v)) in edge_index_pred.iter().enumerate() {
             if edge_index_true.contains(&(u, v)) || edge_index_true.contains(&(v, u)) {
                 y_true.push(1);
@@ -1947,11 +1943,11 @@ impl EdgeLevelMetrics {
             y_scores.push(edge_scores[i].to_f64().unwrap());
         }
 
-        // Negative edges if provided
+        // Negative _edges if provided
         if let Some(neg_edges) = negative_edges {
             for _ in neg_edges {
                 y_true.push(0);
-                y_scores.push(0.1); // Low score for negative edges
+                y_scores.push(0.1); // Low score for negative _edges
             }
         }
 
@@ -1985,12 +1981,12 @@ impl EdgeLevelMetrics {
 
         scored_edges.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Convert true edges to set for fast lookup
+        // Convert _true edges to set for fast lookup
         let _true_edges_set: HashSet<(usize, usize)> = edge_index_true.iter().cloned().collect();
 
         let mut reciprocal_ranks = Vec::new();
 
-        // For each true edge, find its rank in the sorted list
+        // For each _true edge, find its rank in the sorted list
         for &true_edge in edge_index_true {
             for (rank, &(_, edge)) in scored_edges.iter().enumerate() {
                 if edge == true_edge || edge == (true_edge.1, true_edge.0) {
@@ -2035,7 +2031,7 @@ impl EdgeLevelMetrics {
 
         scored_edges.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Convert true edges to set for fast lookup
+        // Convert _true edges to set for fast lookup
         let true_edges_set: HashSet<(usize, usize)> = edge_index_true
             .iter()
             .flat_map(|&(u, v)| vec![(u, v), (v, u)]) // Handle undirected edges
@@ -2065,8 +2061,8 @@ impl EdgeLevelMetrics {
         edge_index_true: &[(usize, usize)],
         edge_index_pred: &[(usize, usize)],
     ) -> Result<f64> {
-        let true_set: HashSet<(usize, usize)> = edge_index_true.iter().cloned().collect();
-        let pred_set: HashSet<(usize, usize)> = edge_index_pred.iter().cloned().collect();
+        let _true_set: HashSet<(usize, usize)> = edge_index_true.iter().cloned().collect();
+        let _pred_set: HashSet<(usize, usize)> = edge_index_pred.iter().cloned().collect();
 
         let intersection = true_set.intersection(&pred_set).count();
         let union = true_set.union(&pred_set).count();
@@ -2494,7 +2490,7 @@ impl MolecularGraphMetrics {
         validity_checks.push(("admet", admet_score, 0.10)); // 10% weight
 
         // Calculate weighted average
-        let total_weight: f64 = validity_checks.iter().map(|(_, _, w)| w).sum();
+        let total_weight: f64 = validity_checks.iter().map(|(__, w)| w).sum();
         let weighted_sum: f64 = validity_checks
             .iter()
             .map(|(_, score, weight)| score * weight)
@@ -2551,8 +2547,7 @@ impl MolecularGraphMetrics {
             1 => 0.8,
             2 => 0.6,
             3 => 0.4,
-            4 => 0.2,
-            _ => 0.0,
+            4 => 0.2_ => 0.0,
         })
     }
 
@@ -2763,7 +2758,7 @@ impl Default for GraphNeuralNetworkMetrics {
 }
 
 impl GnnEvaluationReport {
-    fn new(results: &GnnEvaluationResults) -> Self {
+    fn new(_results: &GnnEvaluationResults) -> Self {
         Self {
             summary: GnnSummary {
                 overall_score: 0.75,
@@ -2775,7 +2770,7 @@ impl GnnEvaluationReport {
                 ],
                 improvements: vec!["Better graph generation".to_string()],
             },
-            detailed_results: results.clone(),
+            detailed_results: _results.clone(),
             insights: Vec::new(),
             recommendations: Vec::new(),
         }

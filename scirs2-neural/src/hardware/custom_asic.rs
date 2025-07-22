@@ -205,15 +205,15 @@ pub struct CustomASIC {
     runtime_state: Arc<Mutex<RuntimeState>>,
 impl CustomASIC {
     /// Create a new custom ASIC device
-    pub fn new(config: ASICConfig) -> Result<Self> {
-        let capabilities = Self::build_capabilities(&config);
-        let memory_manager = ASICMemoryManager::new(&config.memory_hierarchy);
+    pub fn new(_config: ASICConfig) -> Result<Self> {
+        let capabilities = Self::build_capabilities(&_config);
+        let memory_manager = ASICMemoryManager::new(&_config.memory_hierarchy);
         let instruction_cache =
-            InstructionCache::new(config.memory_hierarchy.cache_config.icache_size);
+            InstructionCache::new(_config.memory_hierarchy.cache_config.icache_size);
         let performance_counters = PerformanceCounters::new();
         let runtime_state = RuntimeState::new();
         Ok(Self {
-            config,
+            _config,
             capabilities,
             memory_manager: Arc::new(Mutex::new(memory_manager)),
             instruction_cache: Arc::new(Mutex::new(instruction_cache)),
@@ -222,14 +222,14 @@ impl CustomASIC {
         })
     }
     /// Build accelerator capabilities from ASIC config
-    fn build_capabilities(config: &ASICConfig) -> AcceleratorCapabilities {
+    fn build_capabilities(_config: &ASICConfig) -> AcceleratorCapabilities {
         // Calculate peak performance estimates
-        let peak_ops_per_cycle = config.processing_elements as f32 * 2.0; // Estimate
+        let peak_ops_per_cycle = _config.processing_elements as f32 * 2.0; // Estimate
         let clock_freq_ghz = 1.0; // Assume 1 GHz for simplicity
         let peak_tflops_fp32 = peak_ops_per_cycle * clock_freq_ghz;
         // Estimate memory bandwidth
-        let total_bandwidth = config.memory_hierarchy.external_memory.bandwidth
-            + config
+        let total_bandwidth = _config.memory_hierarchy.external_memory.bandwidth
+            + _config
                 .memory_hierarchy
                 .sram_levels
                 .iter()
@@ -581,8 +581,8 @@ struct ASICMemoryManager {
     allocations: HashMap<usize, MemoryAllocation>,
     next_addr: usize,
 impl ASICMemoryManager {
-    fn new(hierarchy: &MemoryHierarchy) -> Self {
-            hierarchy: hierarchy.clone(),
+    fn new(_hierarchy: &MemoryHierarchy) -> Self {
+            hierarchy: _hierarchy.clone(),
             allocations: HashMap::new(),
             next_addr: 0,
 /// Memory allocation information
@@ -594,7 +594,7 @@ struct MemoryAllocation {
 struct InstructionCache {
     cache: HashMap<usize, Vec<ASICInstruction>>,
 impl InstructionCache {
-    fn new(size: usize) -> Self {
+    fn new(_size: usize) -> Self {
             size,
             cache: HashMap::new(),
 /// Performance counters
@@ -656,9 +656,7 @@ impl Accelerator for CustomASIC {
         Ok(data)
     fn execute_kernel(
         &self,
-        kernel: &dyn Kernel,
-        _inputs: &[&DeviceBuffer],
-        _outputs: &mut [&mut DeviceBuffer],
+        kernel: &dyn Kernel_inputs: &[&DeviceBuffer], _outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
         println!("Executing kernel: {} on Custom ASIC", kernel.name());
     fn synchronize(&self) -> Result<()> {
@@ -728,7 +726,7 @@ mod tests {
     #[test]
     fn test_custom_asic_creation() {
         let config = create_test_asic_config();
-        let asic = CustomASIC::new(config).unwrap();
+        let asic = CustomASIC::new(_config).unwrap();
         assert_eq!(asic.accelerator_type(), AcceleratorType::ASIC);
         assert!(asic.is_available());
     fn test_asic_operation_compilation() {

@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2_spatial::distance::*;
+use scirs2__spatial::distance::*;
 
 #[allow(dead_code)]
 fn main() {

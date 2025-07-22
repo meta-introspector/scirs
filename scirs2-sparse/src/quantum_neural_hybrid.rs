@@ -4,8 +4,8 @@
 //! to create a hybrid optimization approach that leverages the best of both paradigms.
 
 use crate::error::SparseResult;
-use crate::neural_adaptive_sparse::{NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor};
-use crate::quantum_inspired_sparse::{QuantumSparseConfig, QuantumSparseProcessor};
+use crate::neural_adaptive__sparse::{NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor};
+use crate::quantum_inspired__sparse::{QuantumSparseConfig, QuantumSparseProcessor};
 use num_traits::{Float, NumAssign};
 use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -65,7 +65,7 @@ impl Default for QuantumNeuralConfig {
 
 /// Quantum-Neural hybrid sparse matrix processor
 pub struct QuantumNeuralHybridProcessor {
-    config: QuantumNeuralConfig,
+    _config: QuantumNeuralConfig,
     quantum_processor: QuantumSparseProcessor,
     neural_processor: NeuralAdaptiveSparseProcessor,
     hybrid_state: HybridState,
@@ -142,9 +142,9 @@ struct HybridMemory {
 
 impl QuantumNeuralHybridProcessor {
     /// Create a new quantum-neural hybrid processor
-    pub fn new(config: QuantumNeuralConfig) -> Self {
-        let quantum_processor = QuantumSparseProcessor::new(config.quantum_config.clone());
-        let neural_processor = NeuralAdaptiveSparseProcessor::new(config.neural_config.clone());
+    pub fn new(_config: QuantumNeuralConfig) -> Self {
+        let quantum_processor = QuantumSparseProcessor::new(_config.quantum_config.clone());
+        let neural_processor = NeuralAdaptiveSparseProcessor::new(_config.neural_config.clone());
 
         let hybrid_state = HybridState {
             quantum_coherence: 1.0,
@@ -172,7 +172,7 @@ impl QuantumNeuralHybridProcessor {
         };
 
         Self {
-            config,
+            _config,
             quantum_processor,
             neural_processor,
             hybrid_state,
@@ -276,20 +276,18 @@ impl QuantumNeuralHybridProcessor {
                     HybridProcessingMode::PureNeural
                 }
             }
-            HybridStrategy::Parallel => HybridProcessingMode::BalancedHybrid,
+            HybridStrategy::Parallel =>, HybridProcessingMode::BalancedHybrid,
             HybridStrategy::Adaptive => self.adaptive_mode_selection(rows, cols, indptr, indices),
-            HybridStrategy::Entangled => HybridProcessingMode::AdaptiveBlend,
-            HybridStrategy::QuantumNeural => HybridProcessingMode::QuantumDominant,
+            HybridStrategy::Entangled =>, HybridProcessingMode::AdaptiveBlend,
+            HybridStrategy::QuantumNeural =>, HybridProcessingMode::QuantumDominant,
         }
     }
 
     /// Adaptive mode selection based on current conditions
     fn adaptive_mode_selection(
         &self,
-        rows: usize,
-        _cols: usize,
-        indptr: &[usize],
-        _indices: &[usize],
+        rows: usize_cols: usize,
+        indptr: &[usize], _indices: &[usize],
     ) -> HybridProcessingMode {
         let quantum_score = self.hybrid_state.quantum_coherence * 0.7
             + self.hybrid_state.entanglement_strength * 0.3;
@@ -456,8 +454,7 @@ impl QuantumNeuralHybridProcessor {
     /// Adaptive blend processing
     fn adaptive_blend<T>(
         &mut self,
-        rows: usize,
-        _cols: usize,
+        rows: usize_cols: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -535,7 +532,7 @@ impl QuantumNeuralHybridProcessor {
         (1.0 / (1.0 + variance.sqrt())).min(1.0)
     }
 
-    fn calculate_pattern_familiarity(&self, _indptr: &[usize], _indices: &[usize]) -> f64 {
+    fn calculate_pattern_familiarity(&self_indptr: &[usize], _indices: &[usize]) -> f64 {
         // Simplified pattern familiarity based on memory
         let memory_size = self.hybrid_memory.neural_patterns.len();
         let max_memory = self.hybrid_memory.memory_capacity;
@@ -641,8 +638,8 @@ impl QuantumNeuralHybridProcessor {
 
     fn update_hybrid_learning(&mut self, mode: HybridProcessingMode, execution_time: f64) {
         let decision = HybridDecision {
-            timestamp: std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
+            timestamp: std::_time::SystemTime::now()
+                .duration_since(std::_time::UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_secs(),
             strategy_used: mode,

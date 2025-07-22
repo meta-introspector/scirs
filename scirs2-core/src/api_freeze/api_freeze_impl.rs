@@ -280,14 +280,14 @@ fn initialize_api_freeze_impl() {
 
 /// Check if an API is part of the frozen 1.0 API surface
 #[allow(dead_code)]
-pub fn is_api_frozen(api_name: &str, module: &str) -> bool {
+pub fn is_api_frozen(name: &str, module: &str) -> bool {
     let registry = global_registry_mut();
     let v1_0_0 = Version::new(1, 0, 0);
 
     registry
         .apis_in_version(&v1_0_0)
         .iter()
-        .any(|entry| entry.name == api_name && entry.module == module)
+        .any(|entry| entry.name == name && entry.module == module)
 }
 
 /// Generate a report of all frozen APIs
@@ -298,7 +298,7 @@ pub fn generate_frozen_api_report() -> String {
 
     let mut report = String::from("# Frozen APIs for scirs2-core 1.0\n\n");
 
-    let apis = registry.apis_in_version(&v1_0_0);
+    let apis = (*registry).apis_in_version(&v1_0_0);
     let total_apis = apis.len();
     let mut apis_by_module: std::collections::HashMap<&str, Vec<&str>> =
         std::collections::HashMap::new();

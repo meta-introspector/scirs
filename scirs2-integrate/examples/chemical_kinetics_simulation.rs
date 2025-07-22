@@ -1,6 +1,6 @@
 use ndarray::{array, Array1, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::time::Instant;
 
 /// This example demonstrates simulation of complex chemical reaction networks
@@ -249,8 +249,7 @@ where
             ODEMethod::Bdf => "BDF (standard)",
             ODEMethod::LSODA => "LSODA (standard)",
             ODEMethod::EnhancedLSODA => "Enhanced LSODA",
-            ODEMethod::EnhancedBDF => "Enhanced BDF",
-            _ => "Unknown method",
+            ODEMethod::EnhancedBDF => "Enhanced BDF"_ => "Unknown method",
         };
 
         print!("{method_name:20}: ");
@@ -288,7 +287,7 @@ where
     }
 
     // If we have at least one successful result, print the final state
-    if let Some((_, _, ref_result)) = method_results.first() {
+    if let Some((__, ref_result)) = method_results.first() {
         println!("\nFinal state:");
         let final_y = ref_result.y.last().unwrap();
         for (i, &val) in final_y.iter().enumerate() {
@@ -301,7 +300,7 @@ where
 
             // Find the fastest method
             let mut best_time = f64::MAX;
-            for (_, time, _) in &method_results {
+            for (_, time_) in &method_results {
                 let t = time.as_secs_f64();
                 if t < best_time {
                     best_time = t;
@@ -309,9 +308,9 @@ where
             }
 
             // Print relative performance
-            for (name, time, _) in &method_results {
+            for (_name, time_) in &method_results {
                 let relative = time.as_secs_f64() / best_time;
-                println!("  {name:20}: {relative:.2}x");
+                println!("  {_name:20}: {relative:.2}x");
             }
         }
     }
@@ -498,8 +497,8 @@ fn visualize_bz_reaction() -> IntegrateResult<()> {
 
 /// Estimate the oscillation period from time series data
 #[allow(dead_code)]
-fn estimate_oscillation_period(times: &[f64], values: &[f64]) -> IntegrateResult<f64> {
-    if times.len() < 10 || values.len() < 10 {
+fn estimate_oscillation_period(_times: &[f64], values: &[f64]) -> IntegrateResult<f64> {
+    if _times.len() < 10 || values.len() < 10 {
         return Err(scirs2_integrate::error::IntegrateError::ComputationError(
             "Not enough data points to estimate period".to_string(),
         ));
@@ -525,7 +524,7 @@ fn estimate_oscillation_period(times: &[f64], values: &[f64]) -> IntegrateResult
     // Calculate average period using time differences between peaks
     let mut total_period = 0.0;
     for i in 1..peaks.len() {
-        total_period += times[peaks[i]] - times[peaks[i - 1]];
+        total_period += _times[peaks[i]] - _times[peaks[i - 1]];
     }
 
     Ok(total_period / (peaks.len() - 1) as f64)

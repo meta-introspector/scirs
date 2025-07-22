@@ -13,7 +13,7 @@
 
 use ndarray::{Array2, ArrayBase, ArrayView1, Data, Ix2};
 use num_traits::{Float, FromPrimitive};
-use ordered_float::OrderedFloat;
+use ordered__float::OrderedFloat;
 use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -48,7 +48,7 @@ struct KdNode<F: Float> {
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_interpolate::spatial::kdtree::KdTree;
+/// use scirs2__interpolate::spatial::kdtree::KdTree;
 ///
 /// // Create sample 2D points
 /// let points = Array2::from_shape_vec((5, 2), vec![
@@ -106,11 +106,11 @@ where
     /// # Returns
     ///
     /// A new KD-tree for efficient nearest neighbor searches
-    pub fn new<S>(points: ArrayBase<S, Ix2>) -> InterpolateResult<Self>
+    pub fn new<S>(_points: ArrayBase<S, Ix2>) -> InterpolateResult<Self>
     where
         S: Data<Elem = F>,
     {
-        Self::with_leaf_size(points, 10)
+        Self::with_leaf_size(_points, 10)
     }
 
     /// Create a new KD-tree with a specified leaf size
@@ -123,30 +123,29 @@ where
     /// # Returns
     ///
     /// A new KD-tree for efficient nearest neighbor searches
-    pub fn with_leaf_size<S>(points: ArrayBase<S, Ix2>, leaf_size: usize) -> InterpolateResult<Self>
+    pub fn with_leaf_size<S>(_points: ArrayBase<S, Ix2>, leaf_size: usize) -> InterpolateResult<Self>
     where
         S: Data<Elem = F>,
     {
         // Convert to owned Array2 if it's not already
-        let points = points.to_owned();
-        if points.is_empty() {
+        let _points = _points.to_owned();
+        if _points.is_empty() {
             return Err(InterpolateError::InvalidValue(
                 "Points array cannot be empty".to_string(),
             ));
         }
 
-        let n_points = points.shape()[0];
-        let dim = points.shape()[1];
+        let n_points = _points.shape()[0];
+        let dim = _points.shape()[1];
 
         // For very small datasets, just use a simple linear search
         if n_points <= leaf_size {
             let mut tree = Self {
-                points,
+                _points,
                 nodes: Vec::new(),
                 root: None,
                 dim,
-                leaf_size,
-                _phantom: PhantomData,
+                leaf_size_phantom: PhantomData,
             };
 
             if n_points > 0 {
@@ -168,12 +167,11 @@ where
         let est_nodes = (2 * n_points / leaf_size).max(16);
 
         let mut tree = Self {
-            points,
+            _points,
             nodes: Vec::with_capacity(est_nodes),
             root: None,
             dim,
-            leaf_size,
-            _phantom: PhantomData,
+            leaf_size_phantom: PhantomData,
         };
 
         // Build the tree
@@ -333,7 +331,7 @@ where
         // Use a BinaryHeap as a priority queue to keep track of k nearest points
         // We use BinaryHeap as a max-heap, so we can easily remove the farthest point
         // when the heap is full
-        use ordered_float::OrderedFloat;
+        use ordered__float::OrderedFloat;
         use std::collections::BinaryHeap;
 
         let mut heap: BinaryHeap<(OrderedFloat<F>, usize)> = BinaryHeap::with_capacity(k + 1);
@@ -418,13 +416,13 @@ where
         let node = &self.nodes[node_idx];
 
         // Calculate distance to the current node's point
-        let point_idx = node.idx;
+        let point_idx = node._idx;
         let point = self.points.row(point_idx);
-        let dist = self.distance(&point.to_vec(), query);
+        let _dist = self.distance(&point.to_vec(), query);
 
         // Update best distance if this point is closer
-        if dist < *best_dist {
-            *best_dist = dist;
+        if _dist < *best_dist {
+            *best_dist = _dist;
             *best_idx = point_idx;
         }
 
@@ -472,7 +470,7 @@ where
         let node = &self.nodes[node_idx];
 
         // Calculate distance to the current node's point
-        let point_idx = node.idx;
+        let point_idx = node._idx;
         let point = self.points.row(point_idx);
         let dist = self.distance(&point.to_vec(), query);
 
@@ -491,7 +489,7 @@ where
 
         // Get the current farthest distance in our k-nearest set
         let farthest_dist = match heap.peek() {
-            Some(&(dist, _)) => dist.into_inner(),
+            Some(&(dist_)) => dist.into_inner(),
             None => F::infinity(),
         };
 
@@ -533,7 +531,7 @@ where
         let node = &self.nodes[node_idx];
 
         // Calculate distance to the current node's point
-        let point_idx = node.idx;
+        let point_idx = node._idx;
         let point = self.points.row(point_idx);
         let dist = self.distance(&point.to_vec(), query);
 
@@ -762,7 +760,7 @@ where
             return self.linear_k_nearest_neighbors_optimized(query, k, max_distance);
         }
 
-        use ordered_float::OrderedFloat;
+        use ordered__float::OrderedFloat;
         use std::collections::BinaryHeap;
 
         let mut heap: BinaryHeap<(OrderedFloat<F>, usize)> = BinaryHeap::with_capacity(k + 1);
@@ -783,7 +781,7 @@ where
             .map(|(dist, idx)| (idx, dist.into_inner()))
             .collect();
 
-        // Sort by distance (heap gives us reverse order)
+        // Sort by _distance (heap gives us reverse order)
         results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
 
         Ok(results)
@@ -804,18 +802,18 @@ where
 
         for i in 0..n_points {
             let point = self.points.row(i);
-            let dist = self.distance(&point.to_vec(), query);
+            let dist = self._distance(&point.to_vec(), query);
 
-            // Early termination if distance exceeds maximum
+            // Early termination if _distance exceeds maximum
             if dist <= max_dist {
                 distances.push((i, dist));
             }
         }
 
-        // Sort by distance
+        // Sort by _distance
         distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
 
-        // Return k nearest within max distance
+        // Return k nearest within max _distance
         distances.truncate(k);
         Ok(distances)
     }
@@ -833,22 +831,22 @@ where
         let node = &self.nodes[node_idx];
 
         // Calculate distance to the current node's point
-        let point_idx = node.idx;
+        let point_idx = node._idx;
         let point = self.points.row(point_idx);
         let dist = self.distance(&point.to_vec(), query);
 
-        // Add to heap if within search radius
+        // Add to heap if within search _radius
         if dist <= *search_radius {
             heap.push((OrderedFloat(dist), point_idx));
 
-            // If heap is too large, remove the farthest point and update search radius
+            // If heap is too large, remove the farthest point and update search _radius
             if heap.len() > k {
                 heap.pop();
             }
 
-            // Update search radius to the farthest point in current k-nearest set
+            // Update search _radius to the farthest point in current k-nearest set
             if heap.len() == k {
-                if let Some(&(max_dist, _)) = heap.peek() {
+                if let Some(&(max_dist_)) = heap.peek() {
                     *search_radius = max_dist.into_inner();
                 }
             }
@@ -864,7 +862,7 @@ where
             *search_radius
         } else {
             match heap.peek() {
-                Some(&(dist, _)) => dist.into_inner(),
+                Some(&(dist_)) => dist.into_inner(),
                 None => *search_radius,
             }
         };
@@ -922,7 +920,7 @@ where
         let neighbors = self.k_nearest_neighbors(query_slice, k)?;
 
         // Extract indices
-        let indices = neighbors.iter().map(|(idx, _)| *idx).collect::<Vec<_>>();
+        let indices = neighbors.iter().map(|(idx_)| *idx).collect::<Vec<_>>();
         Ok(Array1::from(indices))
     }
 }
@@ -930,38 +928,38 @@ where
 /// QuckSelect algorithm to find the k-th smallest element by a key function
 /// This modifies the slice to partition it
 #[allow(dead_code)]
-fn quickselect_by_key<T, F, K>(items: &mut [T], k: usize, key_fn: F)
+fn quickselect_by_key<T, F, K>(_items: &mut [T], k: usize, key_fn: F)
 where
     F: Fn(&T) -> K,
     K: PartialOrd,
 {
-    if items.len() <= 1 {
+    if _items.len() <= 1 {
         return;
     }
 
-    let len = items.len();
+    let len = _items.len();
 
     // Choose a pivot (middle element to avoid worst case on sorted data)
     let pivot_idx = len / 2;
-    items.swap(pivot_idx, len - 1);
+    _items.swap(pivot_idx, len - 1);
 
     // Partition around the pivot
     let mut store_idx = 0;
-    for i in 0..len - 1 {
-        if key_fn(&items[i]) <= key_fn(&items[len - 1]) {
-            items.swap(i, store_idx);
+    for i in 0, len - 1 {
+        if key_fn(&_items[i]) <= key_fn(&_items[len - 1]) {
+            _items.swap(i, store_idx);
             store_idx += 1;
         }
     }
 
     // Move pivot to its final place
-    items.swap(store_idx, len - 1);
+    _items.swap(store_idx, len - 1);
 
     // Recursively partition the right part only as needed
     match k.cmp(&store_idx) {
-        Ordering::Less => quickselect_by_key(&mut items[0..store_idx], k, key_fn),
+        Ordering::Less => quickselect_by_key(&mut _items[0..store_idx], k, key_fn),
         Ordering::Greater => {
-            quickselect_by_key(&mut items[store_idx + 1..], k - store_idx - 1, key_fn)
+            quickselect_by_key(&mut _items[store_idx + 1..], k - store_idx - 1, key_fn)
         }
         Ordering::Equal => (), // We found the k-th element
     }
@@ -1002,11 +1000,11 @@ mod tests {
 
         // Test near matches
         let query = vec![0.6, 0.6];
-        let (idx, _) = kdtree.nearest_neighbor(&query).unwrap();
+        let (idx_) = kdtree.nearest_neighbor(&query).unwrap();
         assert_eq!(idx, 4); // Should be closest to (0.5, 0.5)
 
         let query = vec![0.9, 0.1];
-        let (idx, _) = kdtree.nearest_neighbor(&query).unwrap();
+        let (idx_) = kdtree.nearest_neighbor(&query).unwrap();
         assert_eq!(idx, 1); // Should be closest to (1.0, 0.0)
     }
 

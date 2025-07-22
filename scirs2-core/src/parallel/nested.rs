@@ -162,7 +162,7 @@ impl NestedContext {
 
         // Create scheduler with appropriate configuration for this level
         let config = SchedulerConfigBuilder::new()
-            .num_workers(self.max_threads_at_level())
+            .workers(self.max_threads_at_level())
             .adaptive(true)
             .enable_stealing_heuristics(true)
             .enable_priorities(true)
@@ -287,7 +287,7 @@ pub struct ResourceUsageStats {
 pub struct NestedScope<'a> {
     context: Arc<NestedContext>,
     acquired_threads: usize,
-    _phantom: std::marker::PhantomData<&'a ()>,
+    phantom: std::marker::PhantomData<&'a ()>,
 }
 
 impl NestedScope<'_> {
@@ -371,7 +371,7 @@ where
     let scope = NestedScope {
         context,
         acquired_threads,
-        _phantom: std::marker::PhantomData,
+        phantom: std::marker::PhantomData,
     };
 
     // Execute function

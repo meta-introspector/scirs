@@ -142,7 +142,7 @@ pub struct ErrorOccurrence {
 
 impl ErrorOccurrence {
     /// Create a new error occurrence
-    pub fn new(error: &CoreError, context: String) -> Self {
+    pub fn error(error: &CoreError, context: String) -> Self {
         let error_type = format!("{error:?}")
             .split('(')
             .next()
@@ -223,7 +223,7 @@ impl ErrorDiagnostics {
 
     /// Record an error occurrence
     pub fn record_error(&self, error: &CoreError, context: String) {
-        let occurrence = ErrorOccurrence::new(error, context);
+        let occurrence = ErrorOccurrence::error(error, context);
 
         let mut history = self.error_history.lock().unwrap();
         history.push(occurrence);
@@ -236,7 +236,7 @@ impl ErrorDiagnostics {
 
     /// Analyze an error and provide comprehensive diagnostics
     pub fn analyze_error(&self, error: &CoreError) -> ErrorDiagnosticReport {
-        let mut report = ErrorDiagnosticReport::new(error.clone());
+        let mut report = ErrorDiagnosticReport::error(error.clone());
 
         // Add environment information
         report.environment = Some(self.environment.clone());
@@ -311,9 +311,7 @@ impl ErrorDiagnostics {
     }
 
     /// Generate contextual suggestions based on error analysis
-    fn generate_contextual_suggestions(
-        &self,
-        _error: &CoreError,
+    fn generate_contextual_suggestions(&self, error: &CoreError,
         report: &ErrorDiagnosticReport,
     ) -> Vec<String> {
         let mut suggestions = Vec::new();
@@ -349,7 +347,7 @@ impl ErrorDiagnostics {
 
         // Frequency-based suggestions
         if report.recent_occurrences.len() > 3 {
-            suggestions.push("This error has occurred frequently recently - consider reviewing input data or algorithm parameters".to_string());
+            suggestions.push("This _error has occurred frequently recently - consider reviewing input data or algorithm parameters".to_string());
         }
 
         suggestions
@@ -625,7 +623,6 @@ impl ErrorDiagnostics {
                 }
                 _ => {}
             },
-
             _ => {
                 // Generic domain-agnostic strategies
                 strategies.push("Consider using more robust numerical algorithms".to_string());
@@ -840,7 +837,7 @@ pub struct ErrorDiagnosticReport {
 
 impl ErrorDiagnosticReport {
     /// Create a new diagnostic report
-    pub fn new(error: CoreError) -> Self {
+    pub fn error(error: CoreError) -> Self {
         Self {
             error,
             environment: None,
@@ -883,8 +880,8 @@ impl ErrorDiagnosticReport {
                 arch = env.arch
             ));
             report.push_str(&format!(
-                "   `SciRS2` Version: {version}\n",
-                version = env.scirs2_version
+                "   `SciRS2` Version: {_version}\n",
+                _version = env.scirs2_version
             ));
 
             if let Some(cores) = env.cpu_cores {
@@ -992,16 +989,16 @@ impl fmt::Display for ErrorDiagnosticReport {
 
 /// Convenience function to create a diagnostic report for an error
 #[allow(dead_code)]
-pub fn diagnose_error(error: &CoreError) -> ErrorDiagnosticReport {
-    ErrorDiagnostics::global().analyze_error(error)
+pub fn error(err: &CoreError) -> ErrorDiagnosticReport {
+    ErrorDiagnostics::global().analyze_error(err)
 }
 
 /// Convenience function to create a diagnostic report with context
 #[allow(dead_code)]
-pub fn diagnose_error_with_context(error: &CoreError, context: String) -> ErrorDiagnosticReport {
+pub fn error_with_context(err: &CoreError, context: String) -> ErrorDiagnosticReport {
     let diagnostics = ErrorDiagnostics::global();
-    diagnostics.record_error(error, context);
-    diagnostics.analyze_error(error)
+    diagnostics.record_error(err, context);
+    diagnostics.analyze_error(err)
 }
 
 /// Macro to create a diagnostic error with automatic context
@@ -1033,7 +1030,7 @@ mod tests {
     #[test]
     fn test_error_occurrence() {
         let error = CoreError::DomainError(ErrorContext::new("Test error"));
-        let occurrence = ErrorOccurrence::new(&error, "test_context".to_string())
+        let occurrence = ErrorOccurrence::error(&error, "test_context".to_string())
             .with_location("test_function")
             .with_metadata("key", "value");
 
@@ -1056,7 +1053,7 @@ mod tests {
     #[test]
     fn test_diagnostic_report_generation() {
         let error = CoreError::ShapeError(ErrorContext::new("Shape mismatch"));
-        let report = diagnose_error(&error);
+        let report = ErrorDiagnostics::global().analyze_error(&error);
 
         let report_string = report.generate_report();
         assert!(report_string.contains("Error Diagnostic Report"));

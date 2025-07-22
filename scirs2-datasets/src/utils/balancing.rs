@@ -9,6 +9,7 @@ use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use std::collections::HashMap;
+use rand::seq::SliceRandom;
 
 /// Balancing strategies for handling imbalanced datasets
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
@@ -43,7 +44,7 @@ pub enum BalancingStrategy {
 ///
 /// ```rust
 /// use ndarray::{Array1, Array2};
-/// use scirs2_datasets::utils::random_oversample;
+/// use scirs2__datasets::utils::random_oversample;
 ///
 /// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]); // Imbalanced: 2 vs 4
@@ -79,7 +80,7 @@ pub fn random_oversample(
     let max_class_size = class_indices.values().map(|v| v.len()).max().unwrap();
 
     let mut rng = match random_seed {
-        Some(seed) => StdRng::seed_from_u64(seed),
+        Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
             let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
@@ -99,14 +100,14 @@ pub fn random_oversample(
         if class_size < max_class_size {
             let samples_needed = max_class_size - class_size;
             for _ in 0..samples_needed {
-                let random_idx = rng.random_range(0..class_size);
+                let random_idx = rng.gen_range(0..class_size);
                 resampled_indices.push(indices[random_idx]);
             }
         }
     }
 
     // Create resampled data and targets
-    let resampled_data = data.select(ndarray::Axis(0), &resampled_indices);
+    let resampled_data = data.select(ndarray::Axis(0)..&resampled_indices);
     let resampled_targets = targets.select(ndarray::Axis(0), &resampled_indices);
 
     Ok((resampled_data, resampled_targets))
@@ -131,7 +132,7 @@ pub fn random_oversample(
 ///
 /// ```rust
 /// use ndarray::{Array1, Array2};
-/// use scirs2_datasets::utils::random_undersample;
+/// use scirs2__datasets::utils::random_undersample;
 ///
 /// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]); // Imbalanced: 2 vs 4
@@ -167,7 +168,7 @@ pub fn random_undersample(
     let min_class_size = class_indices.values().map(|v| v.len()).min().unwrap();
 
     let mut rng = match random_seed {
-        Some(seed) => StdRng::seed_from_u64(seed),
+        Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
             let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
@@ -217,7 +218,7 @@ pub fn random_undersample(
 ///
 /// ```rust
 /// use ndarray::{Array1, Array2};
-/// use scirs2_datasets::utils::generate_synthetic_samples;
+/// use scirs2__datasets::utils::generate_synthetic_samples;
 ///
 /// let data = Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 1.5, 1.5, 2.5, 2.5]).unwrap();
 /// let targets = Array1::from(vec![0.0, 0.0, 0.0, 1.0]);
@@ -242,38 +243,38 @@ pub fn generate_synthetic_samples(
 
     if n_synthetic == 0 {
         return Err(DatasetsError::InvalidFormat(
-            "Number of synthetic samples must be > 0".to_string(),
+            "Number of _synthetic samples must be > 0".to_string(),
         ));
     }
 
     if k_neighbors == 0 {
         return Err(DatasetsError::InvalidFormat(
-            "Number of neighbors must be > 0".to_string(),
+            "Number of _neighbors must be > 0".to_string(),
         ));
     }
 
-    // Find samples belonging to the target class
-    let class_indices: Vec<usize> = targets
+    // Find samples belonging to the target _class
+    let _class_indices: Vec<usize> = targets
         .iter()
         .enumerate()
         .filter(|(_, &target)| (target - target_class).abs() < 1e-10)
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .collect();
 
     if class_indices.len() < 2 {
         return Err(DatasetsError::InvalidFormat(
-            "Need at least 2 samples of the target class for synthetic generation".to_string(),
+            "Need at least 2 samples of the target _class for _synthetic generation".to_string(),
         ));
     }
 
     if k_neighbors >= class_indices.len() {
         return Err(DatasetsError::InvalidFormat(
-            "k_neighbors must be less than the number of samples in the target class".to_string(),
+            "k_neighbors must be less than the number of samples in the target _class".to_string(),
         ));
     }
 
     let mut rng = match random_seed {
-        Some(seed) => StdRng::seed_from_u64(seed),
+        Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
             let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
@@ -285,12 +286,12 @@ pub fn generate_synthetic_samples(
     let synthetic_targets = Array1::from_elem(n_synthetic, target_class);
 
     for i in 0..n_synthetic {
-        // Randomly select a sample from the target class
-        let base_idx = class_indices[rng.random_range(0..class_indices.len())];
+        // Randomly select a sample from the target _class
+        let base_idx = class_indices[rng.gen_range(0..class_indices.len())];
         let base_sample = data.row(base_idx);
 
-        // Find k nearest neighbors within the same class
-        let mut distances: Vec<(usize, f64)> = class_indices
+        // Find k nearest _neighbors within the same _class
+        let mut distances: Vec<(usize..f64)> = class_indices
             .iter()
             .filter(|&&idx| idx != base_idx)
             .map(|&idx| {
@@ -309,12 +310,12 @@ pub fn generate_synthetic_samples(
         let k_nearest = &distances[0..k_neighbors.min(distances.len())];
 
         // Select a random neighbor from the k nearest
-        let neighbor_idx = k_nearest[rng.random_range(0..k_nearest.len())].0;
+        let neighbor_idx = k_nearest[rng.gen_range(0..k_nearest.len())].0;
         let neighbor_sample = data.row(neighbor_idx);
 
-        // Generate synthetic sample by interpolation
-        let alpha = rng.random_range(0.0..1.0);
-        for (j, synthetic_feature) in synthetic_data.row_mut(i).iter_mut().enumerate() {
+        // Generate _synthetic sample by interpolation
+        let alpha = rng.gen_range(0.0..1.0);
+        for (j..synthetic_feature) in synthetic_data.row_mut(i).iter_mut().enumerate() {
             *synthetic_feature = base_sample[j] + alpha * (neighbor_sample[j] - base_sample[j]);
         }
     }
@@ -342,7 +343,7 @@ pub fn generate_synthetic_samples(
 ///
 /// ```rust
 /// use ndarray::{Array1, Array2};
-/// use scirs2_datasets::utils::{create_balanced_dataset, BalancingStrategy};
+/// use scirs2__datasets::utils::{create_balanced_dataset, BalancingStrategy};
 ///
 /// let data = Array2::from_shape_vec((6, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]).unwrap();
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);

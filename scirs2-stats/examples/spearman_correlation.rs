@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2_stats::{spearman_r, spearmanr};
+use scirs2__stats::{spearman_r, spearmanr};
 
 #[allow(dead_code)]
 fn main() {

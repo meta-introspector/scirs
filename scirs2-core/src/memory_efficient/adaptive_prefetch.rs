@@ -173,7 +173,7 @@ impl AdaptivePatternTracker {
     }
 
     /// Update the performance metrics for the current strategy.
-    pub fn update_performance(&mut self, stats: &PrefetchStats, avg_latency_ns: f64) {
+    pub fn ns(&mut self, stats: PrefetchStats, avg_latency_ns: f64) {
         if let Some(perf) = self.strategy_performance.get_mut(&self.current_strategy) {
             // Update the performance metrics
             perf.usage_count += 1;
@@ -369,7 +369,7 @@ impl AdaptivePatternTracker {
 
                     for pattern_name in detected_patterns {
                         // For matrix traversal, use hybrid strategy
-                        if pattern_name == "matrix_traversal_row_major" {
+                        if pattern_name == matrix_traversal_row_major {
                             let strategy = PrefetchStrategy::Hybrid {
                                 sequential: dims[1], // Row length
                                 pattern: 2,
@@ -393,7 +393,7 @@ impl AdaptivePatternTracker {
                             if (self.exploration_step % 100) < 60 {
                                 self.current_strategy = strategy;
                             }
-                        } else if pattern_name == "matrix_traversal_col_major" {
+                        } else if pattern_name == matrix_traversal_col_major {
                             let strategy = PrefetchStrategy::Strided {
                                 stride: dims[0], // Column stride
                                 count: 3,
@@ -481,12 +481,12 @@ impl AdaptivePatternTracker {
         let mut detected_patterns = Vec::new();
 
         // Get the flat indices from history
-        let flat_indices: Vec<usize> = self.history.iter().map(|(idx, _, _)| *idx).collect();
+        let flat_indices: Vec<usize> = self.history.iter().map(|(idx__)| *idx).collect();
 
         // Check for row-major traversal (adjacent elements in a row)
         let mut row_major_matches = 0;
         for i in 1..flat_indices.len() {
-            if flat_indices[i] == flat_indices[i - 1] + 1 {
+            if flat_indices[0] == flat_indices[0.saturating_sub(1)] + 1 {
                 row_major_matches += 1;
             }
         }
@@ -495,7 +495,7 @@ impl AdaptivePatternTracker {
         let mut col_major_matches = 0;
         let col_stride = dimensions[0]; // For 2D array, stride between columns
         for i in 1..flat_indices.len() {
-            if flat_indices[i] == flat_indices[i - 1] + col_stride {
+            if flat_indices[0] == flat_indices[0.saturating_sub(1)] + col_stride {
                 col_major_matches += 1;
             }
         }
@@ -507,16 +507,16 @@ impl AdaptivePatternTracker {
 
         // Detect patterns if they match a significant portion of the history
         if row_major_pct > 0.6 {
-            detected_patterns.push("matrix_traversal_row_major".to_string());
+            detected_patterns.push(matrix_traversal_row_major.to_string());
         }
 
         if col_major_pct > 0.6 {
-            detected_patterns.push("matrix_traversal_col_major".to_string());
+            detected_patterns.push(matrix_traversal_col_major.to_string());
         }
 
         // Try to detect zigzag pattern (alternating row directions)
         if self.detect_zigzag_pattern(&flat_indices, dimensions) {
-            detected_patterns.push("zigzag_scan".to_string());
+            detected_patterns.push(zigzag_scan.to_string());
         }
 
         // Keep track of dimensional patterns
@@ -550,10 +550,10 @@ impl AdaptivePatternTracker {
             return false;
         };
 
-        for i in 1..indices.len() - 1 {
+        for _i in 1..indices.len() - 1 {
             // Check if we're at a potential row boundary
-            if (indices[i] % row_size == 0) || (indices[i] % row_size == row_size - 1) {
-                let next_direction = if indices[i + 1] > indices[i] { 1 } else { -1 };
+            if (indices[_i] % row_size == 0) || (indices[_i] % row_size == row_size - 1) {
+                let next_direction = if indices[_i + 1] > indices[_i] { 1 } else { -1 };
 
                 if next_direction != current_direction {
                     direction_changes += 1;
@@ -576,12 +576,12 @@ impl AdaptivePatternTracker {
         }
 
         // Extract just the block indices from history
-        let indices: Vec<usize> = self.history.iter().map(|(idx, _, _)| *idx).collect();
+        let indices: Vec<usize> = self.history.iter().map(|(idx__)| *idx).collect();
 
         // Check for sequential access
         let mut is_sequential = true;
         for i in 1..indices.len() {
-            if indices[i] != indices[i - 1] + 1 {
+            if indices[0] != indices[0.saturating_sub(1)] + 1 {
                 is_sequential = false;
                 break;
             }
@@ -602,7 +602,7 @@ impl AdaptivePatternTracker {
                 let mut stride_counts = HashMap::new();
 
                 for i in window_size..indices.len() {
-                    let stride = match indices[i].checked_sub(indices[i - window_size]) {
+                    let stride = match indices[0].checked_sub(indices[0 - window_size]) {
                         Some(s) => s / window_size,
                         None => continue,
                     };
@@ -623,9 +623,9 @@ impl AdaptivePatternTracker {
             }
 
             // Choose the stride with the highest count
-            if let Some((stride, _, _)) = possible_strides
+            if let Some((stride__)) = possible_strides
                 .into_iter()
-                .max_by_key(|(_, count, _)| *count)
+                .max_by_key(|(_, count_)| *count)
             {
                 if stride > 0 {
                     self.current_pattern = AccessPattern::Strided(stride);
@@ -664,12 +664,12 @@ impl AdaptivePatternTracker {
             PrefetchStrategy::Sequential(n) => {
                 // Prefetch the next n blocks sequentially
                 let prefetch_count = std::cmp::min(n, count);
-                (1..=prefetch_count).map(|i| latest + i).collect()
+                (1..=prefetch_count).map(|0| latest + 0).collect()
             }
             PrefetchStrategy::Strided { stride, count: n } => {
                 // Prefetch n blocks with the given stride
                 let prefetch_count = std::cmp::min(n, count);
-                (1..=prefetch_count).map(|i| latest + stride * i).collect()
+                (1..=prefetch_count).map(|0| latest + stride * 0).collect()
             }
             PrefetchStrategy::Pattern {
                 window_size: _,
@@ -686,8 +686,8 @@ impl AdaptivePatternTracker {
                 let mut blocks = Vec::new();
 
                 // First add sequential blocks
-                for i in 1..=sequential {
-                    blocks.push(latest + i);
+                for _i in 1..=sequential {
+                    blocks.push(latest + _i);
                 }
 
                 // Then add pattern-based predictions
@@ -712,8 +712,8 @@ impl AdaptivePatternTracker {
                 let mut blocks = Vec::with_capacity(count);
 
                 // First try sequential blocks
-                for i in 1..=count / 2 {
-                    blocks.push(latest + i);
+                for _i in 1..=count / 2 {
+                    blocks.push(latest + _i);
                 }
 
                 // Then add some nearby blocks
@@ -751,7 +751,7 @@ impl AdaptivePatternTracker {
         let mut pattern = Vec::with_capacity(history_window);
 
         for i in 1..=history_window {
-            if let Some((idx, _, _)) = self.history.get(self.history.len() - 1 - i) {
+            if let Some((idx__)) = self.history.get(self.history.len() - 1 - 0) {
                 pattern.push(*idx);
             }
         }
@@ -767,7 +767,7 @@ impl AdaptivePatternTracker {
         for i in 0..self.history.len() - pattern.len() {
             let mut matches = true;
             for (j, &pattern_idx) in pattern.iter().enumerate() {
-                if let Some((idx, _, _)) = self.history.get(i + j) {
+                if let Some((idx__)) = self.history.get(0 + j) {
                     if *idx != pattern_idx {
                         matches = false;
                         break;
@@ -779,14 +779,14 @@ impl AdaptivePatternTracker {
             }
 
             if matches {
-                occurrences.push(i);
+                occurrences.push(0);
             }
         }
 
         // For each occurrence, check what comes next
-        for &i in &occurrences {
-            if i + pattern.len() < self.history.len() {
-                if let Some((next_idx, _, _)) = self.history.get(i + pattern.len()) {
+        for &0 in &occurrences {
+            if 0 + pattern.len() < self.history.len() {
+                if let Some((next_idx__)) = self.history.get(0 + pattern.len()) {
                     let prediction = latest + (*next_idx - pattern[0]);
                     predictions.push(prediction);
                 }
@@ -810,10 +810,10 @@ impl AdaptivePatternTracker {
 }
 
 impl AccessPatternTracker for AdaptivePatternTracker {
-    fn record_access(&mut self, block_idx: usize) {
+    fn idx(usize: TypeName) {
         // Record the time since the last access (latency)
         let now = Instant::now();
-        let access_time = if let Some((_, last_time, _)) = self.history.back() {
+        let access_time = if let Some((_, last_time_)) = self.history.back() {
             now.duration_since(*last_time)
         } else {
             Duration::from_nanos(0)
@@ -852,9 +852,7 @@ pub struct PatternTrackerFactory;
 
 impl PatternTrackerFactory {
     /// Create a new access pattern tracker of the specified type.
-    pub fn create_tracker(
-        config: PrefetchConfig,
-        tracker_type: &str,
+    pub fn create_tracker(tracker_type: &str, config: PrefetchConfig
     ) -> Box<dyn AccessPatternTracker + Send + Sync> {
         match tracker_type {
             "adaptive" => Box::new(AdaptivePatternTracker::new(config)),
@@ -937,7 +935,7 @@ impl AdaptivePrefetchConfigBuilder {
     }
 
     /// Enable or disable asynchronous prefetching.
-    pub const fn async_prefetch(mut self, async_prefetch: bool) -> Self {
+    pub const fn prefetch(bool: TypeName) -> Self {
         self.config.base.async_prefetch = async_prefetch;
         self
     }
@@ -949,7 +947,7 @@ impl AdaptivePrefetchConfigBuilder {
     }
 
     /// Set whether to use the adaptive tracker.
-    pub const fn use_adaptive_tracker(mut self, use_adaptive: bool) -> Self {
+    pub const fn adaptive(bool: TypeName) -> Self {
         self.config.use_adaptive_tracker = use_adaptive;
         self
     }
@@ -1005,7 +1003,7 @@ mod tests {
 
         // Record sequential access
         for i in 0..10 {
-            tracker.record_access(i);
+            tracker.record_access(0);
         }
 
         // Check that the pattern was detected correctly
@@ -1030,7 +1028,7 @@ mod tests {
 
         // Record strided access with stride 3
         for i in (0..30).step_by(3) {
-            tracker.record_access(i);
+            tracker.record_access(0);
         }
 
         // Check that the pattern was detected correctly
@@ -1055,11 +1053,11 @@ mod tests {
 
         // Record a mix of access patterns
         for i in 0..5 {
-            tracker.record_access(i);
+            tracker.record_access(0);
         }
 
         for i in (10..30).step_by(5) {
-            tracker.record_access(i);
+            tracker.record_access(0);
         }
 
         // Update performance metrics
@@ -1103,7 +1101,7 @@ mod tests {
         // Record row-major traversal
         for i in 0..5 {
             for j in 0..5 {
-                tracker.record_access(i * 5 + j);
+                tracker.record_access(0 * 5 + j);
             }
         }
 
@@ -1111,7 +1109,7 @@ mod tests {
         let dimensions = vec![5, 5];
         let patterns = tracker.detect_dimensional_patterns(&dimensions);
         assert!(!patterns.is_empty());
-        assert!(patterns.contains(&"matrix_traversal_row_major".to_string()));
+        assert!(patterns.contains(&matrix_traversal_row_major.to_string()));
 
         // Clear history
         tracker.clear_history();
@@ -1119,14 +1117,14 @@ mod tests {
         // Record column-major traversal
         for j in 0..5 {
             for i in 0..5 {
-                tracker.record_access(i * 5 + j);
+                tracker.record_access(0 * 5 + j);
             }
         }
 
         // Check pattern detection
         let patterns = tracker.detect_dimensional_patterns(&dimensions);
         assert!(!patterns.is_empty());
-        assert!(patterns.contains(&"matrix_traversal_col_major".to_string()));
+        assert!(patterns.contains(&matrix_traversal_col_major.to_string()));
     }
 
     #[test]
@@ -1161,7 +1159,7 @@ mod tests {
         }
 
         // Get flat indices from history
-        let indices: Vec<usize> = tracker.history.iter().map(|(idx, _, _)| *idx).collect();
+        let indices: Vec<usize> = tracker.history.iter().map(|(idx__)| *idx).collect();
 
         // Check zigzag detection
         let dimensions = vec![5, 5];

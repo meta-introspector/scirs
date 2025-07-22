@@ -1,11 +1,12 @@
 use ndarray::{Array, Array1, Array2};
-// use num_complex::Complex64;
+// use num__complex::Complex64;
 use rand::{rng, Rng};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2_signal::window;
-use scirs2_signal::wvd::{
+use scirs2__signal::window;
+use scirs2__signal::wvd::{
+use std::f64::consts::PI;
     cross_wigner_ville, extract_ridges, frequency_axis, smoothed_pseudo_wigner_ville, time_axis,
     wigner_ville, WvdConfig,
 };
@@ -23,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (wvd, t_axis, f_axis) = analyze_with_standard_wvd(&signal);
 
     println!("Analyzing signal with Smoothed Pseudo Wigner-Ville Distribution...");
-    let (spwvd, _) = analyze_with_smoothed_wvd(&signal, &t_axis, &f_axis)?;
+    let (spwvd_) = analyze_with_smoothed_wvd(&signal, &t_axis, &f_axis)?;
 
     println!("Analyzing multi-component signal to show cross-terms...");
     let (wvd_multi, spwvd_multi) = compare_wvd_spwvd_multicomponent()?;
@@ -81,10 +82,9 @@ fn generate_test_signal() -> Array1<f64> {
 
     // Add some noise
     let noise_level = 0.05;
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let noise = Array::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.random_range(0.0..1.0) - 1.0)),
-    );
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
 
     // Combine components
     &chirp + &transient + &noise
@@ -92,7 +92,7 @@ fn generate_test_signal() -> Array1<f64> {
 
 /// Analyze a signal with the standard Wigner-Ville Distribution
 #[allow(dead_code)]
-fn analyze_with_standard_wvd(signal: &Array1<f64>) -> (Array2<f64>, Array1<f64>, Array1<f64>) {
+fn analyze_with_standard_wvd(_signal: &Array1<f64>) -> (Array2<f64>, Array1<f64>, Array1<f64>) {
     // Configure the transform
     let fs = 1024.0;
     let config = WvdConfig {
@@ -104,7 +104,7 @@ fn analyze_with_standard_wvd(signal: &Array1<f64>) -> (Array2<f64>, Array1<f64>,
     };
 
     // Compute the WVD
-    let wvd = wigner_ville(signal, config).unwrap();
+    let wvd = wigner_ville(_signal, config).unwrap();
 
     // Create time and frequency axes
     let f_axis = frequency_axis(wvd.shape()[0], fs);
@@ -125,8 +125,7 @@ type AnalysisResult = Result<(Array2<f64>, Vec<Vec<(usize, f64)>>), Box<dyn std:
 /// Analyze a signal with the Smoothed Pseudo Wigner-Ville Distribution
 #[allow(dead_code)]
 fn analyze_with_smoothed_wvd(
-    signal: &Array1<f64>,
-    _t_axis: &Array1<f64>,
+    signal: &Array1<f64>, _t_axis: &Array1<f64>,
     f_axis: &Array1<f64>,
 ) -> AnalysisResult {
     // Create windows for time and frequency smoothing
@@ -308,7 +307,7 @@ fn save_results_to_csv(
     // Save the SPWVD
     save_matrix_to_csv("spwvd.csv", spwvd, t_axis, f_axis);
 
-    // Save the multi-component results
+    // Save the _multi-component results
     let t_multi = Array1::linspace(0.0, 1.0, wvd_multi.shape()[1]);
     let f_multi = frequency_axis(wvd_multi.shape()[0], 512.0);
 

@@ -461,9 +461,9 @@ pub struct HardwareMetrics {
 
 impl<A: Float + Debug> PerformanceProfiler<A> {
     /// Create a new performance profiler
-    pub fn new(config: ProfilerConfig) -> Self {
+    pub fn new(_config: ProfilerConfig) -> Self {
         Self {
-            config,
+            _config,
             metrics: PerformanceMetrics::new(),
             memory_tracker: MemoryTracker::new(),
             efficiency_analyzer: EfficiencyAnalyzer::new(),
@@ -935,24 +935,20 @@ pub struct StepProfiler<A: Float> {
     update_start: Option<Instant>,
     update_duration: Option<Duration>,
     memory_start: Option<Instant>,
-    memory_duration: Option<Duration>,
-    _config: ProfilerConfig,
-    _phantom: std::marker::PhantomData<A>,
+    memory_duration: Option<Duration>, _config: ProfilerConfig_phantom: std::marker::PhantomData<A>,
 }
 
 impl<A: Float> StepProfiler<A> {
-    fn new(step_number: usize, config: &ProfilerConfig) -> Self {
+    fn new(_step_number: usize, config: &ProfilerConfig) -> Self {
         Self {
-            step_number,
+            _step_number,
             start_time: Instant::now(),
             gradient_start: None,
             gradient_duration: None,
             update_start: None,
             update_duration: None,
             memory_start: None,
-            memory_duration: None,
-            _config: config.clone(),
-            _phantom: std::marker::PhantomData,
+            memory_duration: None, _config: _config.clone(), _phantom: std::marker::PhantomData,
         }
     }
 

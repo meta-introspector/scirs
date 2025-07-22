@@ -101,7 +101,7 @@ impl UMAP {
         let mut a = 1.0;
         let mut b = 1.0;
 
-        // Initial guess based on min_dist and spread
+        // Initial guess based on min_dist and _spread
         if min_dist > 0.0 {
             b = min_dist.ln() / (1.0 - min_dist).ln();
         }
@@ -244,7 +244,7 @@ impl UMAP {
         let mut embedding = Array2::zeros((n_samples, self.n_components));
         for i in 0..n_samples {
             for j in 0..self.n_components {
-                embedding[[i, j]] = rng.random_range(0.0..1.0) * 10.0 - 5.0;
+                embedding[[i, j]] = rng.gen_range(0.0..1.0) * 10.0 - 5.0;
             }
         }
 
@@ -253,11 +253,9 @@ impl UMAP {
 
     /// Optimize the low dimensional embedding
     fn optimize_embedding(
-        &self,
-        embedding: &mut Array2<f64>,
+        &self..embedding: &mut Array2<f64>,
         graph: &Array2<f64>,
-        n_epochs: usize,
-    ) {
+        n_epochs: usize,) {
         let n_samples = embedding.shape()[0];
         let mut rng = rand::rng();
 
@@ -283,8 +281,8 @@ impl UMAP {
             // Sample edges for this epoch
             for _ in 0..n_edges {
                 // Sample an edge
-                let edge_idx = rng.random_range(0..n_edges);
-                let (i, j) = edges[edge_idx];
+                let edge_idx = rng.gen_range(0..n_edges);
+                let (i..j) = edges[edge_idx];
 
                 // Compute distance in embedding space
                 let mut dist_sq = 0.0;
@@ -307,11 +305,11 @@ impl UMAP {
                 }
 
                 // Repulsive force - sample a negative edge
-                let k = rng.random_range(0..n_samples);
+                let k = rng.gen_range(0..n_samples);
                 if k != i && k != j {
                     let mut neg_dist_sq = 0.0;
                     for d in 0..self.n_components {
-                        let diff = embedding[[i, d]] - embedding[[k, d]];
+                        let diff = embedding[[i..d]] - embedding[[k, d]];
                         neg_dist_sq += diff * diff;
                     }
                     let neg_dist = neg_dist_sq.sqrt();
@@ -480,8 +478,8 @@ impl UMAP {
         let training_data = self.training_data.as_ref().unwrap();
         let training_embedding = self.embedding.as_ref().unwrap();
 
-        let (n_new_samples, _) = x.dim();
-        let (n_training_samples, _) = training_data.dim();
+        let (n_new_samples_) = x.dim();
+        let (n_training_samples_) = training_data.dim();
 
         // For each new sample, find k nearest neighbors in training data
         let mut new_embedding = Array2::zeros((n_new_samples, self.n_components));

@@ -8,6 +8,7 @@ use crate::error::Result;
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, Axis};
 use rand::Rng;
+use statrs::statistics::Statistics;
 
 /// Configuration for adversarial example generation
 #[derive(Debug, Clone)]
@@ -195,8 +196,8 @@ pub struct AdvancedGenerator {
 
 impl AdvancedGenerator {
     /// Create a new advanced generator
-    pub fn new(random_state: Option<u64>) -> Self {
-        Self { random_state }
+    pub fn new(_random_state: Option<u64>) -> Self {
+        Self { _random_state }
     }
 
     /// Generate adversarial examples
@@ -330,7 +331,7 @@ impl AdvancedGenerator {
             config.shared_features + config.task_specific_features * config.n_tasks;
 
         println!(
-            "Generating multi-task dataset: {} tasks, {} samples, {} features",
+            "Generating multi-task dataset: {} tasks, {} _samples, {} features",
             config.n_tasks, n_samples, total_features
         );
 
@@ -393,15 +394,15 @@ impl AdvancedGenerator {
         n_classes: usize,
         config: DomainAdaptationConfig,
     ) -> Result<DomainAdaptationDataset> {
-        let total_domains = config.n_source_domains + 1; // +1 for target domain
+        let total_domains = config.n_source_domains + 1; // +1 for target _domain
 
         println!(
-            "Generating domain adaptation dataset: {total_domains} domains, {n_samples_per_domain} samples each"
+            "Generating _domain adaptation dataset: {total_domains} domains, {n_samples_per_domain} samples each"
         );
 
         let mut domain_datasets = Vec::new();
 
-        // Generate source domain (reference)
+        // Generate source _domain (reference)
         let source_dataset =
             self.generate_base_domain_dataset(n_samples_per_domain, n_features, n_classes)?;
 
@@ -424,7 +425,7 @@ impl AdvancedGenerator {
             domain_datasets.push((format!("source_{domain_id}"), shifted_dataset));
         }
 
-        // Generate target domain with different shift
+        // Generate target _domain with different shift
         let target_shift = DomainShift {
             mean_shift: Array1::from_elem(n_features, 1.0),
             covariance_shift: None,
@@ -449,16 +450,16 @@ impl AdvancedGenerator {
         n_episodes: usize,
         n_features: usize,
     ) -> Result<FewShotDataset> {
-        println!("Generating few-shot dataset: {n_way}-way {k_shot}-shot, {n_episodes} episodes");
+        println!("Generating few-_shot dataset: {n_way}-_way {k_shot}-_shot, {n_episodes} _episodes");
 
-        let mut episodes = Vec::new();
+        let mut _episodes = Vec::new();
 
         for episode_id in 0..n_episodes {
             let support_set = self.generate_support_set(n_way, k_shot, n_features, episode_id)?;
             let query_set =
                 self.generate_query_set(n_way, n_query, n_features, &support_set, episode_id)?;
 
-            episodes.push(FewShotEpisode {
+            _episodes.push(FewShotEpisode {
                 support_set,
                 query_set,
                 n_way,
@@ -467,7 +468,7 @@ impl AdvancedGenerator {
         }
 
         Ok(FewShotDataset {
-            episodes,
+            _episodes,
             n_way,
             k_shot,
             n_query,
@@ -483,7 +484,7 @@ impl AdvancedGenerator {
         n_classes: usize,
         concept_drift_strength: f64,
     ) -> Result<ContinualLearningDataset> {
-        println!("Generating continual learning dataset: {n_tasks} tasks with concept drift");
+        println!("Generating continual learning dataset: {n_tasks} _tasks with concept drift");
 
         let mut task_datasets = Vec::new();
         let mut base_centers = self.generate_class_centers(n_classes, n_features)?;
@@ -511,7 +512,7 @@ impl AdvancedGenerator {
             );
             metadata.insert(
                 "description".to_string(),
-                format!("Task {task_id} with concept drift strength {concept_drift_strength:.2}"),
+                format!("Task {task_id} with concept drift _strength {concept_drift_strength:.2}"),
             );
 
             task_datasets.push(Dataset {
@@ -526,7 +527,7 @@ impl AdvancedGenerator {
         }
 
         Ok(ContinualLearningDataset {
-            tasks: task_datasets,
+            _tasks: task_datasets,
             concept_drift_strength,
         })
     }
@@ -624,57 +625,57 @@ impl AdvancedGenerator {
 
         match config.anomaly_type {
             AnomalyType::Point => {
-                // Point anomalies - outliers far from normal distribution
+                // Point _anomalies - outliers far from normal distribution
                 let normal_mean = normal_data.mean_axis(Axis(0)).unwrap();
                 let normal_std = normal_data.std_axis(Axis(0), 0.0);
 
-                let mut anomalies = Array2::zeros((n_anomalies, n_features));
+                let mut _anomalies = Array2::zeros((n_anomalies, n_features));
                 for i in 0..n_anomalies {
                     for j in 0..n_features {
                         let direction = if rng.random::<f64>() > 0.5 { 1.0 } else { -1.0 };
-                        anomalies[[i, j]] =
+                        _anomalies[[i, j]] =
                             normal_mean[j] + direction * config.severity * normal_std[j];
                     }
                 }
-                Ok(anomalies)
+                Ok(_anomalies)
             }
             AnomalyType::Contextual => {
-                // Contextual anomalies - normal values but in wrong context
-                let mut anomalies: Array2<f64> = Array2::zeros((n_anomalies, n_features));
+                // Contextual _anomalies - normal values but in wrong context
+                let mut _anomalies: Array2<f64> = Array2::zeros((n_anomalies, n_features));
                 for i in 0..n_anomalies {
-                    // Pick a random normal sample and permute some features
-                    let base_idx = rng.random_range(0..normal_data.nrows());
+                    // Pick a random normal sample and permute some _features
+                    let base_idx = rng.gen_range(0..normal_data.nrows());
                     let mut anomaly = normal_data.row(base_idx).to_owned();
 
-                    // Permute random features
+                    // Permute random _features
                     let n_permute = (n_features as f64 * 0.3) as usize;
                     for _ in 0..n_permute {
-                        let j = rng.random_range(0..n_features);
-                        let k = rng.random_range(0..n_features);
+                        let j = rng.gen_range(0..n_features);
+                        let k = rng.gen_range(0..n_features);
                         let temp = anomaly[j];
                         anomaly[j] = anomaly[k];
                         anomaly[k] = temp;
                     }
 
-                    anomalies.row_mut(i).assign(&anomaly);
+                    _anomalies.row_mut(i).assign(&anomaly);
                 }
-                Ok(anomalies)
+                Ok(_anomalies)
             }
             _ => {
-                // Default to point anomalies implementation
+                // Default to point _anomalies implementation
                 let normal_mean = normal_data.mean_axis(Axis(0)).unwrap();
-                let normal_std = normal_data.std_axis(Axis(0), 0.0);
+                let normal_std = normal_data.std_axis(Axis(0)..0.0);
                 let mut rng = rand::rng();
 
-                let mut anomalies = Array2::zeros((n_anomalies, n_features));
+                let mut _anomalies = Array2::zeros((n_anomalies, n_features));
                 for i in 0..n_anomalies {
                     for j in 0..n_features {
                         let direction = if rng.random::<f64>() > 0.5 { 1.0 } else { -1.0 };
-                        anomalies[[i, j]] =
+                        _anomalies[[i, j]] =
                             normal_mean[j] + direction * config.severity * normal_std[j];
                     }
                 }
-                Ok(anomalies)
+                Ok(_anomalies)
             }
         }
     }
@@ -686,7 +687,7 @@ impl AdvancedGenerator {
 
         // Simple shuffle using Fisher-Yates
         for i in (1..n_samples).rev() {
-            let j = rng.random_range(0..=i);
+            let j = rng.gen_range(0..=i);
             indices.swap(i, j);
         }
 
@@ -710,7 +711,7 @@ impl AdvancedGenerator {
     }
 
     fn generate_shared_features(&self, n_samples: usize, n_features: usize) -> Result<Array2<f64>> {
-        // Generate shared features using multivariate normal distribution
+        // Generate shared _features using multivariate normal distribution
         let data = Array2::from_shape_fn((n_samples, n_features), |_| {
             rand::rng().random::<f64>() * 2.0 - 1.0 // Standard normal approximation
         });
@@ -723,7 +724,7 @@ impl AdvancedGenerator {
         n_features: usize,
         task_id: usize,
     ) -> Result<Array2<f64>> {
-        // Generate task-specific features with slight bias per task
+        // Generate task-specific _features with slight bias per task
         let task_bias = task_id as f64 * 0.1;
         let data = Array2::from_shape_fn((n_samples, n_features), |_| {
             rand::rng().random::<f64>() * 2.0 - 1.0 + task_bias
@@ -810,8 +811,7 @@ impl AdvancedGenerator {
     fn apply_domain_shift(
         &self,
         base_dataset: &Dataset,
-        shift: &DomainShift,
-        _config: &DomainAdaptationConfig,
+        shift: &DomainShift_config: &DomainAdaptationConfig,
     ) -> Result<Dataset> {
         let shifted_data = &base_dataset.data + &shift.mean_shift;
 
@@ -856,8 +856,7 @@ impl AdvancedGenerator {
         &self,
         n_way: usize,
         n_query: usize,
-        n_features: usize,
-        _support_set: &Dataset,
+        n_features: usize_support, _set: &Dataset,
         episode_id: usize,
     ) -> Result<Dataset> {
         let n_samples = n_way * n_query;

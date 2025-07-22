@@ -247,9 +247,9 @@ where
     F: Float + NumCast + Zero + One + Send + Sync + std::fmt::Display,
 {
     /// Create a new streaming statistics calculator
-    pub fn new(config: MemoryOptimizationConfig) -> Self {
+    pub fn new(_config: MemoryOptimizationConfig) -> Self {
         Self {
-            config,
+            _config,
             count: 0,
             sum: F::zero(),
             sum_squares: F::zero(),
@@ -343,7 +343,7 @@ where
 
     /// Estimate current memory usage
     fn estimate_memory_usage(&self) -> usize {
-        mem::size_of::<Self>() + self.computation_buffer.len() * mem::size_of::<F>()
+        mem::size_of::<Self>() + self.computation_buffer.len() * mem::size, _of::<F>()
     }
 
     /// Update memory profiling information
@@ -378,12 +378,12 @@ where
     F: Float + NumCast + Zero + One + Clone + 'static + std::fmt::Display,
 {
     /// Create a cache-optimized matrix with specified layout
-    pub fn new(data: Array2<F>, layout: MatrixLayout, cache_line_size: usize) -> Self {
+    pub fn new(_data: Array2<F>, layout: MatrixLayout, cache_line_size: usize) -> Self {
         let optimal_block_size =
-            Self::calculate_optimal_block_size(data.nrows(), data.ncols(), cache_line_size);
+            Self::calculate_optimal_block_size(_data.nrows(), _data.ncols(), cache_line_size);
 
         let mut matrix = Self {
-            data,
+            _data,
             block_size: optimal_block_size,
             memory_layout: layout,
             cache_line_size,
@@ -451,13 +451,13 @@ where
     }
 
     /// Calculate optimal block size for cache efficiency
-    fn calculate_optimal_block_size(rows: usize, cols: usize, cache_line_size: usize) -> usize {
-        let element_size = mem::size_of::<F>();
+    fn calculate_optimal_block_size(_rows: usize, cols: usize, cache_line_size: usize) -> usize {
+        let element_size = mem::_size_of::<F>();
         let elements_per_cache_line = cache_line_size / element_size;
 
-        // Find block size that maximizes cache utilization
+        // Find block _size that maximizes cache utilization
         let target_block_elements = (32 * 1024) / element_size; // Target 32KB blocks
-        let max_dimension = rows.max(cols);
+        let max_dimension = _rows.max(cols);
 
         ((target_block_elements as f64).sqrt() as usize)
             .min(max_dimension)
@@ -490,7 +490,7 @@ where
     }
 
     /// Convert matrix to blocked layout
-    fn convert_to_blocked_layout(&self, _row_major: bool) -> Array2<F> {
+    fn convert_to_blocked_layout(&self_row_major: bool) -> Array2<F> {
         // Simplified blocked layout conversion
         self.data.clone() // Placeholder implementation
     }
@@ -601,18 +601,18 @@ where
 
 impl AdaptiveStatsAllocator {
     /// Create a new adaptive allocator
-    pub fn new(config: MemoryOptimizationConfig) -> Self {
+    pub fn new(_config: MemoryOptimizationConfig) -> Self {
         let mut allocator = Self {
-            config: config.clone(),
+            _config: _config.clone(),
             memory_pools: HashMap::new(),
             allocation_patterns: Arc::new(RwLock::new(AllocationPatternAnalyzer::new())),
             global_stats: Arc::new(Mutex::new(MemoryProfile::new())),
         };
 
         // Initialize default memory pools
-        let _ = allocator.create_memory_pool("float_arrays", config.memory_pool_size / 4);
-        let _ = allocator.create_memory_pool("matrix_operations", config.memory_pool_size / 2);
-        let _ = allocator.create_memory_pool("temporary_buffers", config.memory_pool_size / 4);
+        let _ = allocator.create_memory_pool("float_arrays", _config.memory_pool_size / 4);
+        let _ = allocator.create_memory_pool("matrix_operations", _config.memory_pool_size / 2);
+        let _ = allocator.create_memory_pool("temporary_buffers", _config.memory_pool_size / 4);
 
         allocator
     }
@@ -660,7 +660,7 @@ impl AdaptiveStatsAllocator {
     }
 
     /// Predict optimal memory pool for allocation
-    fn predict_optimal_pool(&self, size: usize, _alignment: usize, operation_type: &str) -> String {
+    fn predict_optimal_pool(&self, size: usize_alignment: usize, operation_type: &str) -> String {
         if let Ok(analyzer) = self.allocation_patterns.read() {
             if let Some(pattern) = analyzer.get_pattern(operation_type) {
                 // Use pattern analysis to select optimal pool
@@ -738,7 +738,7 @@ impl AdaptiveStatsAllocator {
 
 impl MemoryPool {
     /// Create a new memory pool
-    fn new(pool_id: &str, size: usize) -> StatsResult<Self> {
+    fn new(_pool_id: &str, size: usize) -> StatsResult<Self> {
         let layout = Layout::from_size_align(size, 64) // 64-byte alignment for cache lines
             .map_err(|e| StatsError::ComputationError(format!("Invalid layout: {}", e)))?;
 
@@ -900,7 +900,7 @@ impl AllocationPatternAnalyzer {
         counts
             .into_iter()
             .max_by_key(|(_, count)| *count)
-            .map(|(value, _)| value)
+            .map(|(value_)| value)
             .unwrap_or(64) // Default alignment
     }
 
@@ -943,12 +943,12 @@ pub struct MemoryOptimizationSuite {
 
 impl MemoryOptimizationSuite {
     /// Create a new memory optimization suite
-    pub fn new(config: MemoryOptimizationConfig) -> Self {
-        let allocator = AdaptiveStatsAllocator::new(config.clone());
-        let cache_manager = CacheManager::new(config.memory_pool_size / 8); // Use 1/8 of pool for cache
+    pub fn new(_config: MemoryOptimizationConfig) -> Self {
+        let allocator = AdaptiveStatsAllocator::new(_config.clone());
+        let cache_manager = CacheManager::new(_config.memory_pool_size / 8); // Use 1/8 of pool for cache
 
         Self {
-            config,
+            _config,
             allocator,
             cache_manager,
         }
@@ -1121,9 +1121,9 @@ impl MemoryOptimizationSuite {
 }
 
 impl CacheManager {
-    fn new(cache_size: usize) -> Self {
+    fn new(_cache_size: usize) -> Self {
         Self {
-            cache_size,
+            _cache_size,
             cache_entries: HashMap::new(),
             access_order: VecDeque::new(),
             hit_count: 0,

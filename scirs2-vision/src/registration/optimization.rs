@@ -28,24 +28,24 @@ pub fn gradient_descent_optimize(
 ) -> Result<OptimizationResult> {
     use ndarray::Zip;
 
-    let mut params = initial_params.clone();
-    let mut prev_cost = cost_function(&params)?;
+    let mut _params = initial_params.clone();
+    let mut prev_cost = cost_function(&_params)?;
     let mut converged = false;
-    let mut iterations = 0;
+    let mut _iterations = 0;
 
     for i in 0..max_iterations {
-        iterations = i + 1;
+        _iterations = i + 1;
 
         // Compute gradient
-        let gradient = gradient_function(&params)?;
+        let gradient = gradient_function(&_params)?;
 
-        // Update parameters: params = params - learning_rate * gradient
-        Zip::from(&mut params)
+        // Update parameters: _params = _params - learning_rate * gradient
+        Zip::from(&mut _params)
             .and(&gradient)
             .for_each(|p, &g| *p -= learning_rate * g);
 
         // Compute new cost
-        let current_cost = cost_function(&params)?;
+        let current_cost = cost_function(&_params)?;
 
         // Check convergence
         if (prev_cost - current_cost).abs() < tolerance {
@@ -55,17 +55,17 @@ pub fn gradient_descent_optimize(
 
         // Check if cost is increasing (diverging)
         if current_cost > prev_cost {
-            // Optionally implement adaptive learning rate here
-            // For now, just continue with fixed learning rate
+            // Optionally implement adaptive learning _rate here
+            // For now, just continue with fixed learning _rate
         }
 
         prev_cost = current_cost;
     }
 
     Ok(OptimizationResult {
-        parameters: params,
+        parameters: _params,
         final_cost: prev_cost,
-        iterations,
+        _iterations,
         converged,
     })
 }
@@ -79,26 +79,26 @@ pub fn powell_optimize(
     tolerance: f64,
 ) -> Result<OptimizationResult> {
     let n = initial_params.len();
-    let mut params = initial_params.clone();
+    let mut _params = initial_params.clone();
     let mut directions = ndarray::Array2::eye(n);
     let mut converged = false;
-    let mut iterations = 0;
-    let mut prev_cost = cost_function(&params)?;
+    let mut _iterations = 0;
+    let mut prev_cost = cost_function(&_params)?;
 
     for iter in 0..max_iterations {
-        iterations = iter + 1;
-        let start_params = params.clone();
+        _iterations = iter + 1;
+        let start_params = _params.clone();
         let mut biggest_decrease = 0.0;
         let mut biggest_decrease_idx = 0;
 
         // Line search along each direction
         for i in 0..n {
-            let old_cost = cost_function(&params)?;
+            let old_cost = cost_function(&_params)?;
             let direction = directions.row(i).to_owned();
 
             // Perform line search along this direction
-            let (new_params, new_cost) = line_search(&params, &direction, cost_function, 1e-6)?;
-            params = new_params;
+            let (new_params, new_cost) = line_search(&_params, &direction, cost_function, 1e-6)?;
+            _params = new_params;
 
             let decrease = old_cost - new_cost;
             if decrease > biggest_decrease {
@@ -108,7 +108,7 @@ pub fn powell_optimize(
         }
 
         // Check convergence
-        let current_cost = cost_function(&params)?;
+        let current_cost = cost_function(&_params)?;
         if (prev_cost - current_cost).abs() < tolerance {
             converged = true;
             break;
@@ -117,7 +117,7 @@ pub fn powell_optimize(
         // Update search directions
         if iter > 0 && iter % n == 0 {
             // Calculate new direction
-            let new_direction = &params - &start_params;
+            let new_direction = &_params - &start_params;
             let new_dir_norm = new_direction.dot(&new_direction).sqrt();
 
             if new_dir_norm > 1e-10 {
@@ -128,8 +128,8 @@ pub fn powell_optimize(
                     .assign(&normalized_dir);
 
                 // Perform line search along the new direction
-                let (new_params, _) = line_search(&params, &normalized_dir, cost_function, 1e-6)?;
-                params = new_params;
+                let (new_params_) = line_search(&_params, &normalized_dir, cost_function, 1e-6)?;
+                _params = new_params;
             }
         }
 
@@ -137,9 +137,9 @@ pub fn powell_optimize(
     }
 
     Ok(OptimizationResult {
-        parameters: params,
+        parameters: _params,
         final_cost: prev_cost,
-        iterations,
+        _iterations,
         converged,
     })
 }
@@ -182,7 +182,7 @@ fn line_search(
         }
     }
 
-    // Return the optimal point
+    // Return the optimal _point
     let alpha = (a + b) / 2.0;
     let optimal_point = start_point + alpha * direction;
     let optimal_cost = cost_function(&optimal_point)?;

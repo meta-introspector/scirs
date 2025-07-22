@@ -14,7 +14,7 @@ fn is_close(a: f64, b: f64, epsilon: f64) -> bool {
 #[test]
 #[allow(dead_code)]
 fn test_frobenius_norm() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Test with a known matrix
         let a = T::convert_to_tensor(array![[3.0, 4.0], [5.0, 12.0]], ctx);
         let norm = T::frobenius_norm(a);
@@ -58,7 +58,7 @@ fn test_frobenius_norm() {
 #[test]
 #[allow(dead_code)]
 fn test_spectral_norm() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Test with a matrix that has a known largest singular value
         // For a 2x2 identity matrix, the spectral norm is 1.0
         let identity = T::eye(2, ctx);
@@ -103,7 +103,7 @@ fn test_spectral_norm() {
 #[test]
 #[allow(dead_code)]
 fn test_nuclear_norm() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Test with a matrix that has known singular values
         // For a 2x2 identity matrix, the nuclear norm is 2.0 (sum of singular values)
         let identity = T::eye(2, ctx);
@@ -170,7 +170,7 @@ fn test_nuclear_norm() {
 #[test]
 #[allow(dead_code)]
 fn test_norm_gradient_stability() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Test with a nearly singular matrix
         let mut a_data = Array2::<f64>::eye(3);
 

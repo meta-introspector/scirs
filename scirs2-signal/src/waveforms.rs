@@ -5,9 +5,11 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
-
+use rand::{Rng, SeedableRng, rng, rngs::StdRng};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Generate a chirp signal, a sine wave that increases/decreases in frequency.
 ///
 /// # Arguments
@@ -26,7 +28,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::waveforms::chirp;
+/// use scirs2__signal::waveforms::chirp;
 ///
 /// // Generate a linear chirp
 /// let t = (0..100).map(|i| i as f64 / 100.0).collect::<Vec<_>>();
@@ -91,7 +93,7 @@ where
             "logarithmic" => {
                 // Logarithmic frequency sweep
                 let k = (f1 / f0).powf(1.0 / t1);
-                if (k - 1.0).abs() < 1e-10 {
+                if ((k - 1.0) as f64).abs() < 1e-10 {
                     // If k is close to 1, use linear approximation
                     2.0 * PI * f0 * t
                 } else {
@@ -136,7 +138,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::waveforms::sawtooth;
+/// use scirs2__signal::waveforms::sawtooth;
 ///
 /// // Generate a basic sawtooth wave
 /// let t = (0..100).map(|i| i as f64 / 10.0).collect::<Vec<_>>();
@@ -205,7 +207,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::waveforms::square;
+/// use scirs2__signal::waveforms::square;
 ///
 /// // Generate a square wave with 50% duty cycle
 /// let t = (0..100).map(|i| i as f64 / 10.0).collect::<Vec<_>>();
@@ -278,7 +280,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::waveforms::gausspulse;
+/// use scirs2__signal::waveforms::gausspulse;
 ///
 /// // Generate a Gaussian pulse with 0.5 bandwidth
 /// let t = (0..100).map(|i| (i as f64 - 50.0) / 10.0).collect::<Vec<_>>();
@@ -292,8 +294,7 @@ pub fn gausspulse<T>(
     t: &[T],
     fc: f64,
     bw: f64,
-    bwr: Option<f64>,
-    _tpr: bool,
+    bwr: Option<f64>, _tpr: bool,
 ) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -350,10 +351,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_chirp_linear() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple time vector
         let t = vec![0.0, 0.1, 0.2, 0.3, 0.4];
 
@@ -365,12 +367,14 @@ mod tests {
 
         // The frequency increases linearly, so we can calculate expected values
         // and verify they match approximately
-        let phase_0_1 = 2.0 * PI * (1.0 * 0.1 + 0.5 * 9.0 * 0.1 * 0.1);
+        let phase_0_1: f64 = 2.0 * PI * (1.0 * 0.1 + 0.5 * 9.0 * 0.1 * 0.1);
         assert_relative_eq!(signal[1], phase_0_1.sin(), epsilon = 1e-10);
     }
 
     #[test]
     fn test_sawtooth() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a time vector covering multiple periods
         let t = vec![0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
@@ -387,6 +391,8 @@ mod tests {
 
     #[test]
     fn test_square() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a time vector covering multiple periods
         let t = vec![0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
@@ -413,6 +419,8 @@ mod tests {
 
     #[test]
     fn test_gausspulse() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a time vector centered at 0
         let t = vec![-0.1, -0.05, 0.0, 0.05, 0.1]; // Use smaller range to avoid large values
 
@@ -454,7 +462,7 @@ mod tests {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::waveforms::mls_sequence;
+/// use scirs2__signal::waveforms::mls_sequence;
 ///
 /// // Generate a 7-bit MLS (length 127)
 /// let mls = mls_sequence(7, None, None).unwrap();
@@ -468,11 +476,11 @@ pub fn mls_sequence(
 ) -> SignalResult<Vec<f64>> {
     if !(2..=31).contains(&register_length) {
         return Err(SignalError::ValueError(
-            "Register length must be between 2 and 31".to_string(),
+            "Register _length must be between 2 and 31".to_string(),
         ));
     }
 
-    // Default tap positions for maximum length sequences
+    // Default tap positions for maximum _length sequences
     let default_taps = match register_length {
         2 => vec![1, 2],
         3 => vec![2, 3],
@@ -503,10 +511,9 @@ pub fn mls_sequence(
         28 => vec![25, 28],
         29 => vec![27, 29],
         30 => vec![7, 28, 29, 30],
-        31 => vec![28, 31],
-        _ => {
+        31 => vec![28, 31]_ => {
             return Err(SignalError::ValueError(
-                "Invalid register length".to_string(),
+                "Invalid register _length".to_string(),
             ))
         }
     };
@@ -516,7 +523,7 @@ pub fn mls_sequence(
 
     if register == 0 {
         return Err(SignalError::ValueError(
-            "Initial state must be non-zero for MLS generation".to_string(),
+            "Initial _state must be non-zero for MLS generation".to_string(),
         ));
     }
 
@@ -582,7 +589,7 @@ pub fn prbs_sequence(
 
     for _ in 0..length {
         // Output LSB
-        let output = (state & 1) as f64;
+        let output = (state & 1)  as f64;
         sequence.push(output);
 
         // Calculate feedback
@@ -614,8 +621,8 @@ pub fn prbs_sequence(
 ///
 /// * Vector containing pink noise samples
 #[allow(dead_code)]
-pub fn pink_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
-    if length == 0 {
+pub fn pink_noise(_length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
+    if _length == 0 {
         return Err(SignalError::ValueError(
             "Length must be positive".to_string(),
         ));
@@ -637,9 +644,9 @@ pub fn pink_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
     let mut b5 = 0.0;
     let mut b6 = 0.0;
 
-    let mut pink = Vec::with_capacity(length);
+    let mut pink = Vec::with_capacity(_length);
 
-    for _ in 0..length {
+    for _ in 0.._length {
         let white = rng.random::<f64>() * 2.0 - 1.0; // Random in [-1, 1]
 
         b0 = 0.99886 * b0 + white * 0.0555179;
@@ -671,8 +678,8 @@ pub fn pink_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
 ///
 /// * Vector containing brown noise samples
 #[allow(dead_code)]
-pub fn brown_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
-    if length == 0 {
+pub fn brown_noise(_length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
+    if _length == 0 {
         return Err(SignalError::ValueError(
             "Length must be positive".to_string(),
         ));
@@ -684,10 +691,10 @@ pub fn brown_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
         _create_default_rng()
     };
 
-    let mut brown = Vec::with_capacity(length);
+    let mut brown = Vec::with_capacity(_length);
     let mut accumulator = 0.0;
 
-    for _ in 0..length {
+    for _ in 0.._length {
         let white = rng.random::<f64>() * 2.0 - 1.0;
         accumulator += white * 0.02; // Scale factor to prevent overflow
 
@@ -781,7 +788,7 @@ pub fn synchronized_sweep(
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     if sample_rate <= 0.0 || duration <= 0.0 {
         return Err(SignalError::ValueError(
-            "Sample rate and duration must be positive".to_string(),
+            "Sample _rate and duration must be positive".to_string(),
         ));
     }
 
@@ -797,17 +804,16 @@ pub fn synchronized_sweep(
     let sweep = match method.to_lowercase().as_str() {
         "linear" => {
             // Linear frequency sweep
-            let rate = (f2 - f1) / duration;
+            let _rate = (f2 - f1) / duration;
             t.iter()
                 .map(|&time| {
-                    let _freq = f1 + rate * time;
-                    let phase = 2.0 * PI * (f1 * time + 0.5 * rate * time * time);
+                    let _freq = f1 + _rate * time;
+                    let phase = 2.0 * PI * (f1 * time + 0.5 * _rate * time * time);
                     phase.sin()
                 })
                 .collect()
         }
-        "logarithmic" | "exponential" => exponential_sweep(&t, f1, f2, duration)?,
-        _ => {
+        "logarithmic" | "exponential" => exponential_sweep(&t, f1, f2, duration)?_ => {
             return Err(SignalError::ValueError(format!(
                 "Unknown sweep method: {}. Use 'linear' or 'logarithmic'",
                 method
@@ -832,8 +838,8 @@ pub fn synchronized_sweep(
 ///
 /// * Vector containing the mark positions
 #[allow(dead_code)]
-pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
-    if order < 2 {
+pub fn golomb_ruler(_order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
+    if _order < 2 {
         return Err(SignalError::ValueError(
             "Order must be at least 2".to_string(),
         ));
@@ -841,22 +847,22 @@ pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
 
     // Known optimal Golomb rulers for small orders
     let optimal_rulers: Vec<Vec<usize>> = vec![
-        vec![0, 1],                       // order 2
-        vec![0, 1, 3],                    // order 3
-        vec![0, 1, 4, 6],                 // order 4
-        vec![0, 1, 4, 9, 11],             // order 5
-        vec![0, 1, 4, 10, 12, 17],        // order 6
-        vec![0, 1, 4, 10, 18, 20, 25],    // order 7
-        vec![0, 1, 4, 9, 15, 22, 32, 34], // order 8
+        vec![0, 1],                       // _order 2
+        vec![0, 1, 3],                    // _order 3
+        vec![0, 1, 4, 6],                 // _order 4
+        vec![0, 1, 4, 9, 11],             // _order 5
+        vec![0, 1, 4, 10, 12, 17],        // _order 6
+        vec![0, 1, 4, 10, 18, 20, 25],    // _order 7
+        vec![0, 1, 4, 9, 15, 22, 32, 34], // _order 8
     ];
 
-    if order <= optimal_rulers.len() + 1 {
-        return Ok(optimal_rulers[order - 2].clone());
+    if _order <= optimal_rulers.len() + 1 {
+        return Ok(optimal_rulers[_order - 2].clone());
     }
 
-    if perfect && order > 8 {
+    if perfect && _order > 8 {
         return Err(SignalError::ValueError(
-            "Perfect Golomb rulers for order > 8 are computationally intensive".to_string(),
+            "Perfect Golomb rulers for _order > 8 are computationally intensive".to_string(),
         ));
     }
 
@@ -864,7 +870,7 @@ pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
     let mut ruler = vec![0];
     let mut max_position = 0;
 
-    for _ in 1..order {
+    for _ in 1.._order {
         let mut position = max_position + 1;
         let mut found = false;
 
@@ -903,9 +909,9 @@ pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
             }
 
             // Prevent infinite loops
-            if position > order * order {
+            if position > _order * _order {
                 return Err(SignalError::ValueError(
-                    "Could not generate Golomb ruler of requested order".to_string(),
+                    "Could not generate Golomb ruler of requested _order".to_string(),
                 ));
             }
         }
@@ -927,28 +933,28 @@ pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
 ///
 /// * Vector containing the perfect binary sequence (+1/-1 values)
 #[allow(dead_code)]
-pub fn perfect_binary_sequence(length: usize) -> SignalResult<Vec<f64>> {
-    if length < 3 {
+pub fn perfect_binary_sequence(_length: usize) -> SignalResult<Vec<f64>> {
+    if _length < 3 {
         return Err(SignalError::ValueError(
             "Length must be at least 3".to_string(),
         ));
     }
 
-    // Check if length is suitable (odd prime is best)
-    if length % 2 == 0 {
+    // Check if _length is suitable (odd prime is best)
+    if _length % 2 == 0 {
         return Err(SignalError::ValueError(
             "Length should be odd for optimal properties".to_string(),
         ));
     }
 
     // Generate using quadratic residues method for prime lengths
-    let mut sequence = Vec::with_capacity(length);
+    let mut sequence = Vec::with_capacity(_length);
 
-    for i in 0..length {
-        // Check if i is a quadratic residue modulo length
+    for i in 0.._length {
+        // Check if i is a quadratic residue modulo _length
         let mut is_residue = false;
-        for j in 0..length {
-            if (j * j) % length == i {
+        for j in 0.._length {
+            if (j * j) % _length == i {
                 is_residue = true;
                 break;
             }
@@ -961,23 +967,19 @@ pub fn perfect_binary_sequence(length: usize) -> SignalResult<Vec<f64>> {
 }
 
 // Helper functions for random number generation
-use rand::{rng, rngs::StdRng, Rng, SeedableRng};
-use std::f64::consts::PI;
-
 #[allow(dead_code)]
-fn _create_rng_from_seed(seed: u64) -> StdRng {
-    StdRng::seed_from_u64(seed)
+fn _create_rng_from_seed(_seed: u64) -> StdRng {
+    StdRng::seed_from_u64(_seed)
 }
 
 #[allow(dead_code)]
 fn _create_default_rng() -> StdRng {
-    let mut rng = rng();
+    let mut rng = rand::rng();
     StdRng::seed_from_u64(rng.gen::<u64>())
 }
 
 #[cfg(test)]
 mod special_signal_tests {
-    use approx::assert_relative_eq;
 
     #[test]
     fn test_mls_sequence() {
@@ -1092,6 +1094,8 @@ mod special_signal_tests {
 
     #[test]
     fn test_noise_reproducibility() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         let pink1 = pink_noise(100, Some(123)).unwrap();
         let pink2 = pink_noise(100, Some(123)).unwrap();
 

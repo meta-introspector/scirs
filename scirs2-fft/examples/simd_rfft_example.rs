@@ -3,10 +3,10 @@
 //! This example demonstrates the use of SIMD-accelerated real-valued FFT operations
 //! for improved performance, particularly on ARM platforms with NEON.
 
-use num_complex::Complex64;
-use scirs2_fft::rfft;
-use scirs2_fft::simd_fft::simd_support_available;
-use scirs2_fft::simd_rfft::rfft_adaptive;
+use num__complex::Complex64;
+use scirs2__fft::rfft;
+use scirs2__fft::simd_fft::simd_support_available;
+use scirs2__fft::simd_rfft::rfft_adaptive;
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
@@ -113,9 +113,9 @@ fn generate_test_signal(n: usize) -> Vec<f64> {
 
 /// Benchmark standard RFFT implementation
 #[allow(dead_code)]
-fn benchmark_standard_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
+fn benchmark_standard_rfft(_signal: &[f64]) -> (Vec<Complex64>, Duration) {
     let start = Instant::now();
-    let spectrum = rfft(signal, None).unwrap();
+    let spectrum = rfft(_signal, None).unwrap();
     let duration = start.elapsed();
 
     (spectrum, duration)
@@ -123,9 +123,9 @@ fn benchmark_standard_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
 
 /// Benchmark SIMD-accelerated RFFT implementation
 #[allow(dead_code)]
-fn benchmark_simd_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
+fn benchmark_simd_rfft(_signal: &[f64]) -> (Vec<Complex64>, Duration) {
     let start = Instant::now();
-    let spectrum = rfft_adaptive(signal, None, None).unwrap();
+    let spectrum = rfft_adaptive(_signal, None, None).unwrap();
     let duration = start.elapsed();
 
     (spectrum, duration)
@@ -133,11 +133,11 @@ fn benchmark_simd_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
 
 /// Analyze and print information about the signal's frequencies
 #[allow(dead_code)]
-fn analyze_frequencies(spectrum: &[Complex64], n: usize) {
+fn analyze_frequencies(_spectrum: &[Complex64], n: usize) {
     println!("\nFrequency Analysis:");
 
     // Calculate magnitudes
-    let magnitudes: Vec<f64> = spectrum
+    let magnitudes: Vec<f64> = _spectrum
         .iter()
         .map(|c| (c.re.powi(2) + c.im.powi(2)).sqrt())
         .collect();
@@ -168,7 +168,7 @@ fn analyze_frequencies(spectrum: &[Complex64], n: usize) {
     // Print top 5 peaks
     println!("Top frequency components:");
     for (i, (bin, magnitude)) in peaks.iter().take(5).enumerate() {
-        let freq = *bin as f64 * n as f64 / spectrum.len() as f64 / n as f64;
+        let freq = *bin as f64 * n as f64 / _spectrum.len() as f64 / n as f64;
         println!(
             "  Peak {}: bin {}, frequency {:.2} Hz, magnitude {:.2}",
             i + 1,

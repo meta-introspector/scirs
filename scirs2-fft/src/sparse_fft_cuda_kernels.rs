@@ -5,9 +5,9 @@
 //! Direct CUDA implementations are FORBIDDEN by the strict acceleration policy.
 
 use crate::error::{FFTError, FFTResult};
-use crate::gpu_kernel_stub::MIGRATION_MESSAGE;
-use crate::sparse_fft::{SparseFFTAlgorithm, SparseFFTResult, WindowFunction};
-use num_complex::Complex64;
+use crate::gpu_kernel__stub::MIGRATION_MESSAGE;
+use crate::sparse__fft::{SparseFFTAlgorithm, SparseFFTResult, WindowFunction};
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 
@@ -19,7 +19,7 @@ impl CUDAWindowKernel {
         Self
     }
 
-    pub fn apply(&self, _data: &mut [Complex64]) -> FFTResult<()> {
+    pub fn apply(&self_data: &mut [Complex64]) -> FFTResult<()> {
         Err(FFTError::NotImplementedError(MIGRATION_MESSAGE.to_string()))
     }
 }
@@ -32,7 +32,7 @@ impl CUDASublinearSparseFFTKernel {
         Self
     }
 
-    pub fn execute<T>(&self, _input: &[T], _k: usize) -> FFTResult<SparseFFTResult>
+    pub fn execute<T>(&self_input: &[T], _k: usize) -> FFTResult<SparseFFTResult>
     where
         T: NumCast + Copy + Debug,
     {
@@ -43,9 +43,7 @@ impl CUDASublinearSparseFFTKernel {
 /// Execute CUDA sublinear sparse FFT (stub)
 #[allow(dead_code)]
 pub fn execute_cuda_sublinear_sparse_fft<T>(
-    _input: &[T],
-    _k: usize,
-    _algorithm: SparseFFTAlgorithm,
+    _input: &[T], _k: usize_algorithm: SparseFFTAlgorithm,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug,
@@ -61,7 +59,7 @@ impl CUDACompressedSensingSparseFFTKernel {
         Self
     }
 
-    pub fn execute<T>(&self, _input: &[T], _k: usize) -> FFTResult<SparseFFTResult>
+    pub fn execute<T>(&self_input: &[T], _k: usize) -> FFTResult<SparseFFTResult>
     where
         T: NumCast + Copy + Debug,
     {
@@ -78,8 +76,7 @@ impl Default for CUDACompressedSensingSparseFFTKernel {
 /// Execute CUDA compressed sensing sparse FFT (stub)
 #[allow(dead_code)]
 pub fn execute_cuda_compressed_sensing_sparse_fft<T>(
-    _input: &[T],
-    _k: usize,
+    _input: &[T], _k: usize,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug,

@@ -470,7 +470,7 @@ impl NERMetrics {
         let mut true_bio = vec!["O".to_string(); num_tokens];
         let mut pred_bio = vec!["O".to_string(); num_tokens];
 
-        // Convert entities to BIO tags
+        // Convert _entities to BIO tags
         for (start, end, entity_type) in true_entities {
             if *start < num_tokens {
                 true_bio[*start] = format!("B-{}", entity_type);
@@ -505,7 +505,7 @@ impl NERMetrics {
 
         // Per-entity-type metrics
         let mut entity_types = HashSet::new();
-        for (_, _, entity_type) in true_entities.iter().chain(pred_entities.iter()) {
+        for (__, entity_type) in true_entities.iter().chain(pred_entities.iter()) {
             entity_types.insert(entity_type.clone());
         }
 
@@ -513,11 +513,11 @@ impl NERMetrics {
         for entity_type in entity_types {
             let true_type_entities: Vec<_> = true_entities
                 .iter()
-                .filter(|(_, _, t)| t == &entity_type)
+                .filter(|(__, t)| t == &entity_type)
                 .collect();
             let pred_type_entities: Vec<_> = pred_entities
                 .iter()
-                .filter(|(_, _, t)| t == &entity_type)
+                .filter(|(__, t)| t == &entity_type)
                 .collect();
 
             let type_tp = true_type_entities

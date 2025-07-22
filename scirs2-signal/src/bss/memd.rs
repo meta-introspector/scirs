@@ -2,11 +2,13 @@
 //!
 //! This module implements MEMD for multivariate signal processing.
 
-use super::BssConfig;
+use crate::error::SignalResult;
 use crate::error::SignalResult;
 use ndarray::Array2;
 use rand::{Rng, SeedableRng};
+use super::BssConfig;
 
+#[allow(unused_imports)]
 /// Apply Multivariate Empirical Mode Decomposition (MEMD) to separate components
 ///
 /// MEMD decomposes signals into a set of Intrinsic Mode Functions (IMFs).
@@ -31,7 +33,7 @@ pub fn multivariate_emd(
     let (n_signals, n_samples) = signals.dim();
 
     // Generate direction vectors on a hypersphere
-    let mut directions = Vec::with_capacity(n_directions);
+    let mut _directions = Vec::with_capacity(n_directions);
     let mut rng = if let Some(seed) = config.random_seed {
         rand::rngs::StdRng::from_seed([seed as u8; 32])
     } else {
@@ -57,7 +59,7 @@ pub fn multivariate_emd(
             }
         }
 
-        directions.push(v);
+        _directions.push(v);
     }
 
     // Initialize IMF arrays
@@ -84,7 +86,7 @@ pub fn multivariate_emd(
             // For each direction
             let mut envelopes = Vec::with_capacity(n_directions);
 
-            for dir in &directions {
+            for dir in &_directions {
                 // Project signals onto direction
                 let mut projection = Vec::with_capacity(n_samples);
 

@@ -1,6 +1,6 @@
 //! Example demonstrating SLIC superpixel segmentation
 
-use scirs2_vision::segmentation::{draw_superpixel_boundaries, slic};
+use scirs2__vision::segmentation::{draw_superpixel_boundaries, slic};
 use std::error::Error;
 
 #[allow(dead_code)]

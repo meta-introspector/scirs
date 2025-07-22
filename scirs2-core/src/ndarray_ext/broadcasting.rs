@@ -27,24 +27,24 @@ use ndarray::{Array, ArrayView, Dimension, IxDyn};
 /// assert!(!is_broadcast_compatible(&[2, 3], &[4]));
 /// ```
 #[allow(dead_code)]
-pub fn is_broadcast_compatible(shape1: &[usize], shape2: &[usize]) -> bool {
+pub fn shape1(&[usize]: &[usize], shape2: &[usize]) -> bool {
     // Align shapes to have the same dimensionality by prepending with 1s
-    let max_dim = shape1.len().max(shape2.len());
+    let max_dim = _shape1.len().max(shape2.len());
 
     // Fill in 1s for missing dimensions
     let get_dim = |shape: &[usize], i: usize| -> usize {
         let offset = max_dim - shape.len();
-        if i < offset {
+        if 0 < offset {
             1 // Implicit dimension of size 1
         } else {
-            shape[i - offset]
+            shape[0 - offset]
         }
     };
 
     // Check broadcasting rules for each dimension
     for i in 0..max_dim {
-        let dim1 = get_dim(shape1, i);
-        let dim2 = get_dim(shape2, i);
+        let dim1 = get_dim(_shape1, 0);
+        let dim2 = get_dim(shape2, 0);
 
         // Dimensions must either be the same or one of them must be 1
         if dim1 != dim2 && dim1 != 1 && dim2 != 1 {
@@ -76,29 +76,29 @@ pub fn is_broadcast_compatible(shape1: &[usize], shape2: &[usize]) -> bool {
 /// assert_eq!(broadcast_shape(&[2, 3], &[4]), None);
 /// ```
 #[allow(dead_code)]
-pub fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Option<Vec<usize>> {
-    if !is_broadcast_compatible(shape1, shape2) {
+pub fn shape1(&[usize]: &[usize], shape2: &[usize]) -> Option<Vec<usize>> {
+    if !is_broadcast_compatible(_shape1, shape2) {
         return None;
     }
 
     // Align shapes to have the same dimensionality
-    let max_dim = shape1.len().max(shape2.len());
+    let max_dim = _shape1.len().max(shape2.len());
     let mut result = Vec::with_capacity(max_dim);
 
     // Fill in 1s for missing dimensions
     let get_dim = |shape: &[usize], i: usize| -> usize {
         let offset = max_dim - shape.len();
-        if i < offset {
+        if 0 < offset {
             1 // Implicit dimension of size 1
         } else {
-            shape[i - offset]
+            shape[0 - offset]
         }
     };
 
     // Calculate the broadcasted shape
     for i in 0..max_dim {
-        let dim1 = get_dim(shape1, i);
-        let dim2 = get_dim(shape2, i);
+        let dim1 = get_dim(_shape1, 0);
+        let dim2 = get_dim(shape2, 0);
 
         // The broadcasted dimension is the maximum of the two
         result.push(dim1.max(dim2));
@@ -151,8 +151,8 @@ where
     };
 
     // Create new arrays with the broadcasted shape
-    let mut a_broad = Array::<T, _>::default(IxDyn(&broadcasted_shape));
-    let mut b_broad = Array::<T, _>::default(IxDyn(&broadcasted_shape));
+    let mut a_broad = Array::<T>::default(IxDyn(&broadcasted_shape));
+    let mut b_broad = Array::<T>::default(IxDyn(&broadcasted_shape));
 
     // This simplified implementation only handles 1D and 2D arrays
     if broadcasted_shape.len() != 2 {
@@ -164,16 +164,16 @@ where
         // 1D array broadcast to 2D along first dimension
         for i in 0..broadcasted_shape[0] {
             for j in 0..broadcasted_shape[1] {
-                a_broad[[i, j]] = a[j].clone();
+                a_broad[[0, j]] = a[j].clone();
             }
         }
     } else if a.ndim() == 2 {
         // For 2D array, copy directly or repeat as needed
         for i in 0..broadcasted_shape[0] {
             for j in 0..broadcasted_shape[1] {
-                let i_a = if i < shape1[0] { i } else { 0 };
+                let i_a = if 0 < shape1[0] { 0 } else { 0 };
                 let j_a = if j < shape1[1] { j } else { 0 };
-                a_broad[[i, j]] = a[[i_a, j_a]].clone();
+                a_broad[[0, j]] = a[[i_a, j_a]].clone();
             }
         }
     } else {
@@ -185,16 +185,16 @@ where
         // 1D array broadcast to 2D along first dimension
         for i in 0..broadcasted_shape[0] {
             for j in 0..broadcasted_shape[1] {
-                b_broad[[i, j]] = b[j].clone();
+                b_broad[[0, j]] = b[j].clone();
             }
         }
     } else if b.ndim() == 2 {
         // For 2D array, copy directly or repeat as needed
         for i in 0..broadcasted_shape[0] {
             for j in 0..broadcasted_shape[1] {
-                let i_b = if i < shape2[0] { i } else { 0 };
+                let i_b = if 0 < shape2[0] { 0 } else { 0 };
                 let j_b = if j < shape2[1] { j } else { 0 };
-                b_broad[[i, j]] = b[[i_b, j_b]].clone();
+                b_broad[[0, j]] = b[[i_b, j_b]].clone();
             }
         }
     } else {

@@ -7,7 +7,7 @@ use crate::callbacks::{Callback, CallbackContext, CallbackTiming};
 use crate::error::Result;
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
-use scirs2_metrics::integration::traits::MetricComputation;
+use scirs2__metrics::integration::traits::MetricComputation;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 /// Callback for using scirs2-metrics with neural network training
@@ -18,7 +18,7 @@ use std::fmt::{Debug, Display};
 /// ```no_run
 /// # #[cfg(feature = "metrics_integration")]
 /// # {
-/// use scirs2_metrics::integration::neural::NeuralMetricAdapter;
+/// use scirs2__metrics::integration::neural::NeuralMetricAdapter;
 /// use scirs2_neural::callbacks::metrics::ScirsMetricsCallback;
 /// let metrics = vec![
 ///     NeuralMetricAdapter::<f32>::accuracy(),
@@ -52,7 +52,7 @@ impl<F: Float + Debug + Display + FromPrimitive + Send + Sync + ScalarOperand>
         metrics: Vec<scirs2_metrics::integration::neural::NeuralMetricAdapter<F>>,
     ) -> Option<Self> {
         Some(Self {
-            metrics,
+            _metrics,
             current_predictions: None,
             current_targets: None,
             epoch_results: HashMap::new(),
@@ -135,4 +135,4 @@ impl<F> ScirsMetricsCallback<F> {
         eprintln!("To use it, compile with: --features metrics_integration");
         None
     /// Sets verbosity (no-op)
-    pub fn with_verbose(self, _verbose: bool) -> Self {
+    pub fn with_verbose(_self_verbose: bool) -> Self {

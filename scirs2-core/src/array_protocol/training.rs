@@ -19,7 +19,7 @@
 use std::fmt;
 use std::time::Instant;
 
-use ndarray::{Array, Dimension};
+use ndarray::{Array, Array0, Dimension};
 use rand::seq::SliceRandom;
 use rand::Rng;
 use rand::SeedableRng;
@@ -71,11 +71,7 @@ pub struct InMemoryDataset {
 
 impl InMemoryDataset {
     /// Create a new in-memory dataset.
-    pub fn new(
-        inputs: Vec<Box<dyn ArrayProtocol>>,
-        targets: Vec<Box<dyn ArrayProtocol>>,
-        input_shape: Vec<usize>,
-        output_shape: Vec<usize>,
+    pub fn new(inputs: Vec<Box<dyn ArrayProtocol>>, targets: Vec<Box<dyn ArrayProtocol>>, input_shape: Vec<usize>, output_shape: Vec<usize>
     ) -> Self {
         assert_eq!(
             inputs.len(),
@@ -92,16 +88,16 @@ impl InMemoryDataset {
     }
 
     /// Create an in-memory dataset from arrays.
-    pub fn from_arrays<T, D1, D2>(inputs: Array<T, D1>, targets: Array<T, D2>) -> Self
+    pub fn from_arrays<T, D1, D2>(_inputs: Array<T, D1>, targets: Array<T, D2>) -> Self
     where
         T: Clone + Send + Sync + 'static,
         D1: Dimension + Send + Sync,
         D2: Dimension + Send + Sync,
     {
-        let input_shape = inputs.shape().to_vec();
+        let input_shape = _inputs.shape().to_vec();
         let output_shape = targets.shape().to_vec();
 
-        // Handle batched inputs
+        // Handle batched _inputs
         let num_samples = input_shape[0];
         assert_eq!(
             num_samples, output_shape[0],
@@ -112,7 +108,7 @@ impl InMemoryDataset {
         let mut target_samples = Vec::with_capacity(num_samples);
 
         // Create dynamic arrays with the appropriate shape to handle arbitrary dimensions
-        let to_dyn_inputs = inputs.into_dyn();
+        let to_dyn_inputs = _inputs.into_dyn();
         let to_dyn_targets = targets.into_dyn();
 
         for i in 0..num_samples {
@@ -182,9 +178,7 @@ pub struct DataLoader {
 
 impl DataLoader {
     /// Create a new data loader.
-    pub fn new(
-        dataset: Box<dyn Dataset>,
-        batch_size: usize,
+    pub fn new(dataset: Box<dyn Dataset>, batch_size: usize,
         shuffle: bool,
         seed: Option<u64>,
     ) -> Self {
@@ -326,7 +320,7 @@ impl Loss for MSELoss {
                     .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
                 {
                     let mean = array.as_array().mean().unwrap();
-                    let result = Array::<f64, _>::from_elem((), mean);
+                    let result = Array0::<f64>::from_elem((), mean);
                     Ok(Box::new(NdarrayWrapper::new(result)))
                 } else {
                     Err(CoreError::NotImplementedError(ErrorContext::new(
@@ -341,7 +335,7 @@ impl Loss for MSELoss {
                     .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
                 {
                     let sum = array.as_array().sum();
-                    let result = Array::<f64, _>::from_elem((), sum);
+                    let result = Array0::<f64>::from_elem((), sum);
                     Ok(Box::new(NdarrayWrapper::new(result)))
                 } else {
                     Err(CoreError::NotImplementedError(ErrorContext::new(
@@ -363,7 +357,7 @@ impl Loss for MSELoss {
     ) -> CoreResult<Box<dyn ArrayProtocol>> {
         // Gradient of MSE loss: 2 * (predictions - targets)
         let diff = subtract(predictions, targets)?;
-        let factor = Box::new(NdarrayWrapper::new(ndarray::Array::<f64, _>::from_elem(
+        let factor = Box::new(NdarrayWrapper::new(ndarray::Array0::<f64>::from_elem(
             (),
             2.0,
         )));
@@ -380,7 +374,7 @@ impl Loss for MSELoss {
                 {
                     let n = array.as_array().len() as f64;
                     let scale_factor = Box::new(NdarrayWrapper::new(
-                        ndarray::Array::<f64, _>::from_elem((), 1.0 / n),
+                        ndarray::Array0::<f64>::from_elem((), 1.0 / n),
                     ));
                     Ok(multiply(scale_factor.as_ref(), grad.as_ref())?)
                 } else {
@@ -452,12 +446,12 @@ impl Loss for CrossEntropyLoss {
                 "none" => Ok(Box::new(NdarrayWrapper::new(losses))),
                 "mean" => {
                     let mean = losses.mean().unwrap();
-                    let result = Array::<f64, _>::from_elem((), mean);
+                    let result = Array0::<f64>::from_elem((), mean);
                     Ok(Box::new(NdarrayWrapper::new(result)))
                 }
                 "sum" => {
                     let sum = losses.sum();
-                    let result = Array::<f64, _>::from_elem((), sum);
+                    let result = Array0::<f64>::from_elem((), sum);
                     Ok(Box::new(NdarrayWrapper::new(result)))
                 }
                 _ => Err(CoreError::InvalidArgument(ErrorContext::new(format!(
@@ -492,7 +486,7 @@ impl Loss for CrossEntropyLoss {
                 {
                     let n = array.as_array().len() as f64;
                     let scale_factor = Box::new(NdarrayWrapper::new(
-                        ndarray::Array::<f64, _>::from_elem((), 1.0 / n),
+                        ndarray::Array0::<f64>::from_elem((), 1.0 / n),
                     ));
                     Ok(multiply(scale_factor.as_ref(), grad.as_ref())?)
                 } else {
@@ -608,10 +602,10 @@ impl fmt::Display for Metrics {
 /// Training progress callback trait.
 pub trait TrainingCallback {
     /// Called at the start of each epoch.
-    fn on_epoch_start(&mut self, epoch: usize, num_epochs: usize);
+    fn on_epoch_start(&mut self, epoch: usize, numepochs: usize);
 
     /// Called at the end of each epoch.
-    fn on_epoch_end(&mut self, epoch: usize, num_epochs: usize, metrics: &Metrics);
+    fn on_epoch_end(&mut self, epoch: usize, numepochs: usize, metrics: &Metrics);
 
     /// Called at the start of each batch.
     fn on_batch_start(&mut self, batch: usize, num_batches: usize);
@@ -620,7 +614,7 @@ pub trait TrainingCallback {
     fn on_batch_end(&mut self, batch: usize, num_batches: usize, loss: f64);
 
     /// Called at the start of training.
-    fn on_train_start(&mut self, num_epochs: usize);
+    fn on_train_start(&mut self, numepochs: usize);
 
     /// Called at the end of training.
     fn on_train_end(&mut self, metrics: &Metrics);
@@ -650,15 +644,15 @@ impl ProgressCallback {
 }
 
 impl TrainingCallback for ProgressCallback {
-    fn on_epoch_start(&mut self, epoch: usize, num_epochs: usize) {
+    fn on_epoch_start(&mut self, epoch: usize, numepochs: usize) {
         if self.verbose {
-            println!("Epoch {}/{}", epoch + 1, num_epochs);
+            println!("Epoch {}/{}", epoch + 1, numepochs);
         }
 
         self.epoch_start = Some(Instant::now());
     }
 
-    fn on_epoch_end(&mut self, _epoch: usize, _num_epochs: usize, metrics: &Metrics) {
+    fn on_epoch_end(&mut self, epoch: usize, numepochs: usize, metrics: &Metrics) {
         if self.verbose {
             if let Some(start) = self.epoch_start {
                 let duration = start.elapsed();
@@ -669,7 +663,7 @@ impl TrainingCallback for ProgressCallback {
         }
     }
 
-    fn on_batch_start(&mut self, _batch: usize, _num_batches: usize) {
+    fn on_batch_start(&mut self, batch: usize, num_batches: usize) {
         // No-op for this callback
     }
 
@@ -682,9 +676,9 @@ impl TrainingCallback for ProgressCallback {
         }
     }
 
-    fn on_train_start(&mut self, num_epochs: usize) {
+    fn on_train_start(&mut self, numepochs: usize) {
         if self.verbose {
-            println!("Starting training for {num_epochs} epochs");
+            println!("Starting training for {numepochs} epochs");
         }
 
         self.train_start = Some(Instant::now());
@@ -729,7 +723,11 @@ pub struct Trainer {
 
 impl Trainer {
     /// Create a new trainer.
-    pub fn new(model: Sequential, optimizer: Box<dyn Optimizer>, loss_fn: Box<dyn Loss>) -> Self {
+    pub fn new(
+        model: Sequential,
+        optimizer: Box<dyn Optimizer>,
+        loss_fn: Box<dyn Loss>,
+    ) -> Self {
         Self {
             model,
             optimizer,
@@ -748,13 +746,13 @@ impl Trainer {
     /// Train the model.
     pub fn train(
         &mut self,
-        mut train_loader: DataLoader,
-        num_epochs: usize,
-        mut val_loader: Option<DataLoader>,
+        train_loader: &mut DataLoader,
+        numepochs: usize,
+        mut val_loader: Option<&mut DataLoader>,
     ) -> CoreResult<()> {
         // Notify callbacks that training is starting
         for callback in &mut self.callbacks {
-            callback.on_train_start(num_epochs);
+            callback.on_train_start(numepochs);
         }
 
         // Initialize validation metrics if needed
@@ -763,7 +761,7 @@ impl Trainer {
         }
 
         // Train for the specified number of epochs
-        for epoch in 0..num_epochs {
+        for epoch in 0..numepochs {
             // Reset metrics
             self.train_metrics.reset();
             if let Some(metrics) = &mut self.val_metrics {
@@ -772,14 +770,14 @@ impl Trainer {
 
             // Notify callbacks that epoch is starting
             for callback in &mut self.callbacks {
-                callback.on_epoch_start(epoch, num_epochs);
+                callback.on_epoch_start(epoch, numepochs);
             }
 
             // Train on the training set
-            self.train_epoch(&mut train_loader)?;
+            self.train_epoch(train_loader)?;
 
             // Validate on the validation set if provided
-            if let Some(val_loader) = &mut val_loader {
+            if let Some(ref mut val_loader) = val_loader {
                 self.validate(val_loader)?;
             }
 
@@ -787,7 +785,7 @@ impl Trainer {
             for callback in &mut self.callbacks {
                 callback.on_epoch_end(
                     epoch,
-                    num_epochs,
+                    numepochs,
                     if let Some(val_metrics) = &self.val_metrics {
                         val_metrics
                     } else {
@@ -884,7 +882,7 @@ impl Trainer {
             let current_loss = self
                 .loss_fn
                 .forward(current_output.as_ref(), target.as_ref())?;
-            let _current_loss_value = if let Some(loss_array) = current_loss
+            let current_loss_value = if let Some(loss_array) = current_loss
                 .as_any()
                 .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
             {
@@ -923,7 +921,7 @@ impl Trainer {
         input: &dyn ArrayProtocol,
         target: &dyn ArrayProtocol,
         output: &dyn ArrayProtocol,
-        _loss: &dyn ArrayProtocol,
+        loss: &dyn ArrayProtocol,
     ) -> CoreResult<GradientDict> {
         // Start backpropagation from loss
         let mut gradients = GradientDict::new();

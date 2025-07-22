@@ -1,5 +1,5 @@
 use ndarray::{Array2, ArrayView1};
-use scirs2_integrate::{
+use scirs2__integrate::{
     gaussian::gauss_legendre,
     monte_carlo::{monte_carlo, MonteCarloOptions},
     quad,

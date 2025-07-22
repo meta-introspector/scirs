@@ -63,12 +63,12 @@ pub enum ConfigFormat {
     YAML,
 impl ModelConfig {
     /// Load a model configuration from a file
-    pub fn from_file<P: AsRef<Path>>(path: P, format: Option<ConfigFormat>) -> Result<Self> {
-        let path = path.as_ref();
+    pub fn from_file<P: AsRef<Path>>(_path: P, format: Option<ConfigFormat>) -> Result<Self> {
+        let _path = _path.as_ref();
         // Determine format from extension if not specified
         let format = if let Some(fmt) = format {
             fmt
-        } else if let Some(ext) = path.extension() {
+        } else if let Some(ext) = _path.extension() {
             if ext == "json" {
                 ConfigFormat::JSON
             } else if ext == "yaml" || ext == "yml" {
@@ -83,16 +83,16 @@ impl ModelConfig {
             return Err(Error::InvalidArgument("File has no extension".to_string()));
         };
         // Read file content
-        let mut file = fs::File::open(path)
+        let mut file = fs::File::open(_path)
             .map_err(|e| Error::IOError(format!("Failed to open config file: {}", e)))?;
         let mut content = String::new();
         file.read_to_string(&mut content)
             .map_err(|e| Error::IOError(format!("Failed to read config file: {}", e)))?;
         // Parse based on format
         match format {
-            ConfigFormat::JSON => serde_json::from_str(&content)
+            ConfigFormat::JSON =>, serde_json::from_str(&content)
                 .map_err(|e| Error::DeserializationError(format!("Failed to parse JSON: {}", e))),
-            ConfigFormat::YAML => serde_yaml::from_str(&content)
+            ConfigFormat::YAML =>, serde_yaml::from_str(&content)
                 .map_err(|e| Error::DeserializationError(format!("Failed to parse YAML: {}", e))),
         }
     }
@@ -125,19 +125,19 @@ impl ModelConfig {
         serde_yaml::to_string(self)
             .map_err(|e| Error::SerializationError(format!("Failed to serialize to YAML: {}", e)))
     /// Parse configuration from JSON string
-    pub fn from_json(json: &str) -> Result<Self> {
-        serde_json::from_str(json)
+    pub fn from_json(_json: &str) -> Result<Self> {
+        serde_json::from_str(_json)
             .map_err(|e| Error::DeserializationError(format!("Failed to parse JSON: {}", e)))
     /// Parse configuration from YAML string
-    pub fn from_yaml(yaml: &str) -> Result<Self> {
-        serde_yaml::from_str(yaml)
+    pub fn from_yaml(_yaml: &str) -> Result<Self> {
+        serde_yaml::from_str(_yaml)
             .map_err(|e| Error::DeserializationError(format!("Failed to parse YAML: {}", e)))
     /// Validate the configuration against schema and parameter constraints
     pub fn validate(&self) -> Result<()> {
         validation::validate_model_config(self)
     /// Create a model from this configuration
     pub fn create_model<
-        F: num_traits::Float
+        F: num_traits: Float
             + std::fmt::Debug
             + num_traits::NumAssign
             + ndarray::ScalarOperand
@@ -152,8 +152,7 @@ impl ModelConfig {
         match self {
             ModelConfig::ResNet(config) => {
                 let model = ResNet::<F>::new(config.clone())?;
-                Ok(Box::new(model))
-            ModelConfig::ViT(config) => {
+                Ok(Box::new(model)), ModelConfig::ViT(config) => {
                 let model = VisionTransformer::<F>::new(config.clone())?;
             ModelConfig::Bert(config) => {
                 let model = BertModel::<F>::new(config.clone())?;

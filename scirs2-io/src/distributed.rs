@@ -16,7 +16,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2_io::distributed::{DistributedReader, PartitionStrategy};
+//! use scirs2__io::distributed::{DistributedReader, PartitionStrategy};
 //! use ndarray::Array2;
 //!
 //! // Create a distributed reader for a large CSV file
@@ -37,7 +37,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::error::{IoError, Result};
-use crate::thread_pool::ThreadPool;
+use crate::thread__pool::ThreadPool;
 use ndarray::Array2;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
@@ -119,13 +119,13 @@ pub struct DistributedReader {
 
 impl DistributedReader {
     /// Create a new distributed reader
-    pub fn new<P: AsRef<Path>>(path: P) -> Self {
+    pub fn new<P: AsRef<Path>>(_path: P) -> Self {
         Self {
-            file_path: path.as_ref().to_path_buf(),
+            file_path: _path.as_ref().to_path_buf(),
             partition_strategy: PartitionStrategy::SizeBased {
                 chunk_size_bytes: 64 * 1024 * 1024,
             }, // 64MB default
-            num_workers: num_cpus::get(),
+            num_workers: num, _cpus: get(),
             worker_pool: None,
             progress_callback: None,
         }
@@ -347,7 +347,7 @@ impl DistributedReader {
 
         // Sort results by partition index and extract values
         let mut results_guard = results.lock().unwrap();
-        results_guard.sort_by_key(|(idx, _)| *idx);
+        results_guard.sort_by_key(|(idx_)| *idx);
 
         // Drain the results to own them, avoiding cloning issues
         let sorted_results: Vec<_> = results_guard.drain(..).collect();
@@ -395,10 +395,10 @@ impl std::fmt::Debug for MergeStrategy {
 
 impl DistributedWriter {
     /// Create a new distributed writer
-    pub fn new<P: AsRef<Path>>(output_dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(_output_dir: P) -> Self {
         Self {
-            output_dir: output_dir.as_ref().to_path_buf(),
-            num_partitions: num_cpus::get(),
+            output_dir: _output_dir.as_ref().to_path_buf(),
+            num_partitions: num, _cpus: get(),
             partition_naming: Arc::new(|idx| format!("partition_{idx:04}.dat")),
             merge_strategy: MergeStrategy::None,
         }
@@ -558,10 +558,10 @@ pub enum Distribution {
 
 impl DistributedArray {
     /// Create a new distributed array
-    pub fn new(shape: Vec<usize>, distribution: Distribution) -> Self {
+    pub fn new(_shape: Vec<usize>, distribution: Distribution) -> Self {
         Self {
             partitions: Vec::new(),
-            shape,
+            _shape,
             distribution,
         }
     }
@@ -723,6 +723,7 @@ impl DistributedFileSystem for LocalFileSystem {
 
 // Helper for s! macro
 use ndarray::s;
+use std::path::PathBuf;
 
 #[cfg(test)]
 mod tests {

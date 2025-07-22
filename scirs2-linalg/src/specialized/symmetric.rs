@@ -67,22 +67,22 @@ where
     ///
     /// * `SymmetricMatrix` if the input is valid
     /// * `LinalgError` if the input is not a valid lower triangular part
-    pub fn new(lower: ArrayView2<A>) -> LinalgResult<Self> {
-        let n = lower.nrows();
+    pub fn new(_lower: ArrayView2<A>) -> LinalgResult<Self> {
+        let n = _lower.nrows();
 
-        // Check that lower is at least a square matrix
-        if lower.ncols() != n {
+        // Check that _lower is at least a square matrix
+        if _lower.ncols() != n {
             return Err(LinalgError::ShapeError(format!(
                 "Lower triangular part must be square, got shape {:?}",
-                lower.shape()
+                _lower.shape()
             )));
         }
 
-        // Verify that only the lower triangular part is filled
+        // Verify that only the _lower triangular part is filled
         // Not strictly necessary, but good for validation
         for i in 0..n {
             for j in i + 1..n {
-                if lower[[i, j]] != A::zero() {
+                if _lower[[i, j]] != A::zero() {
                     return Err(LinalgError::InvalidInputError(
                         "Lower triangular part must have zeros above the diagonal".to_string(),
                     ));
@@ -91,7 +91,7 @@ where
         }
 
         Ok(Self {
-            data: lower.to_owned(),
+            data: _lower.to_owned(),
             n,
         })
     }

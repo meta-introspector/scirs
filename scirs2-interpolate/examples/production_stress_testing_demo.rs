@@ -3,7 +3,7 @@
 //! This example demonstrates how to use the production stress testing
 //! to validate readiness for production deployment.
 
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     run_production_stress_tests, run_quick_stress_tests, run_stress_tests_with_config,
     IssueSeverity, ProductionReadiness, StressTestConfig, TestStatus,
 };
@@ -137,14 +137,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Analyze stress test results in detail
 #[allow(dead_code)]
-fn analyze_stress_test_results(report: &scirs2_interpolate::StressTestReport) {
+fn analyze_stress_test_results(_report: &scirs2_interpolate: :StressTestReport) {
     println!("Detailed Analysis:");
 
     // Performance analysis
     let mut total_degradation = 0.0;
     let mut degradation_count = 0;
 
-    for result in &report.test_results {
+    for result in &_report.test_results {
         if result.performance.degradation_factor > 1.0
             && result.performance.degradation_factor < f64::INFINITY
         {
@@ -167,7 +167,7 @@ fn analyze_stress_test_results(report: &scirs2_interpolate::StressTestReport) {
     }
 
     // Memory analysis
-    let memory_leak_tests = report
+    let memory_leak_tests = _report
         .test_results
         .iter()
         .filter(|r| r.memory_usage.leak_detected)
@@ -183,7 +183,7 @@ fn analyze_stress_test_results(report: &scirs2_interpolate::StressTestReport) {
     }
 
     // Error analysis
-    let panic_tests = report
+    let panic_tests = _report
         .test_results
         .iter()
         .filter(|r| r.issues.iter().any(|i| i.description.contains("panic")))
@@ -196,7 +196,7 @@ fn analyze_stress_test_results(report: &scirs2_interpolate::StressTestReport) {
     }
 
     // Timeout analysis
-    let timeout_tests = report
+    let timeout_tests = _report
         .test_results
         .iter()
         .filter(|r| r.status == TestStatus::TimedOut)
@@ -211,21 +211,20 @@ fn analyze_stress_test_results(report: &scirs2_interpolate::StressTestReport) {
 
 /// Analyze results by test category
 #[allow(dead_code)]
-fn analyze_by_category(report: &scirs2_interpolate::StressTestReport) {
-    use scirs2_interpolate::StressTestCategory;
+fn analyze_by_category(_report: &scirs2_interpolate: :StressTestReport) {
+    use scirs2__interpolate::StressTestCategory;
     use std::collections::HashMap;
 
     let mut category_stats: HashMap<String, (usize, usize, usize)> = HashMap::new();
 
-    for result in &report.test_results {
+    for result in &_report.test_results {
         let category_name = format!("{:?}", result.category);
         let stats = category_stats.entry(category_name).or_insert((0, 0, 0));
 
         match result.status {
             TestStatus::Passed => stats.0 += 1,
             TestStatus::Failed | TestStatus::Error | TestStatus::TimedOut => stats.1 += 1,
-            TestStatus::PassedWithWarnings => stats.2 += 1,
-            _ => {}
+            TestStatus::PassedWithWarnings => stats.2 += 1_ => {}
         }
     }
 
@@ -251,8 +250,8 @@ fn analyze_by_category(report: &scirs2_interpolate::StressTestReport) {
 
 /// Provide production deployment guidance
 #[allow(dead_code)]
-fn provide_deployment_guidance(report: &scirs2_interpolate::StressTestReport) {
-    match report.production_readiness {
+fn provide_deployment_guidance(_report: &scirs2_interpolate: :StressTestReport) {
+    match _report.production_readiness {
         ProductionReadiness::Ready => {
             println!("✅ READY FOR PRODUCTION DEPLOYMENT");
             println!(
@@ -270,9 +269,9 @@ fn provide_deployment_guidance(report: &scirs2_interpolate::StressTestReport) {
                 "  The library has issues that should be addressed before production deployment:"
             );
 
-            if !report.critical_issues.is_empty() {
+            if !_report.critical_issues.is_empty() {
                 println!("  Critical Issues to Address:");
-                for (i, issue) in report.critical_issues.iter().enumerate() {
+                for (i, issue) in _report.critical_issues.iter().enumerate() {
                     if i < 5 {
                         // Show top 5 critical issues
                         println!("    {}. {}", i + 1, issue.description);
@@ -281,16 +280,16 @@ fn provide_deployment_guidance(report: &scirs2_interpolate::StressTestReport) {
                         }
                     }
                 }
-                if report.critical_issues.len() > 5 {
+                if _report.critical_issues.len() > 5 {
                     println!(
                         "    ... and {} more critical issues",
-                        report.critical_issues.len() - 5
+                        _report.critical_issues.len() - 5
                     );
                 }
             }
 
             println!("  Recommended Actions:");
-            for (i, recommendation) in report.recommendations.iter().enumerate() {
+            for (i, recommendation) in _report.recommendations.iter().enumerate() {
                 if i < 3 {
                     // Show top 3 recommendations
                     println!("    {}. {}", i + 1, recommendation);
@@ -301,8 +300,8 @@ fn provide_deployment_guidance(report: &scirs2_interpolate::StressTestReport) {
             println!("❌ NOT READY FOR PRODUCTION");
             println!("  CRITICAL: Do not deploy to production - serious issues detected");
 
-            let critical_count = report.critical_issues.len();
-            let failed_count = report.failed;
+            let critical_count = _report.critical_issues.len();
+            let failed_count = _report.failed;
 
             println!("  Issues Summary:");
             println!("    - {} critical issues", critical_count);
@@ -310,7 +309,7 @@ fn provide_deployment_guidance(report: &scirs2_interpolate::StressTestReport) {
 
             println!("  IMMEDIATE ACTIONS REQUIRED:");
 
-            let panics = report
+            let panics = _report
                 .test_results
                 .iter()
                 .filter(|r| r.issues.iter().any(|i| i.description.contains("panic")))
@@ -323,7 +322,7 @@ fn provide_deployment_guidance(report: &scirs2_interpolate::StressTestReport) {
                 );
             }
 
-            let blocking_issues = report
+            let blocking_issues = _report
                 .critical_issues
                 .iter()
                 .filter(|i| i.production_impact == scirs2_interpolate::ProductionImpact::Blocking)
@@ -339,7 +338,7 @@ fn provide_deployment_guidance(report: &scirs2_interpolate::StressTestReport) {
     }
 
     // Memory recommendations
-    let memory_issues = report
+    let memory_issues = _report
         .test_results
         .iter()
         .filter(|r| r.memory_usage.leak_detected || r.memory_usage.growth_rate > 1000.0)
@@ -353,7 +352,7 @@ fn provide_deployment_guidance(report: &scirs2_interpolate::StressTestReport) {
     }
 
     // Performance recommendations
-    let slow_tests = report
+    let slow_tests = _report
         .test_results
         .iter()
         .filter(|r| r.performance.degradation_factor > 10.0)

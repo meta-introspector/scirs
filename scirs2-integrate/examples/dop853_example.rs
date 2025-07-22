@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use ndarray::{array, ArrayView1};
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -46,7 +46,7 @@ fn main() {
             .iter()
             .enumerate()
             .min_by(|(_, &a), (_, &b)| (a - t).abs().partial_cmp(&(b - t).abs()).unwrap())
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap_or(0);
 
         let y0 = result.y[idx][0];

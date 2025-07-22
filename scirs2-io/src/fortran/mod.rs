@@ -20,7 +20,7 @@
 //! # Examples
 //!
 //! ```rust,no_run
-//! use scirs2_io::fortran::{FortranFile, RecordType, EndianMode};
+//! use scirs2__io::fortran::{FortranFile, RecordType, EndianMode};
 //! use ndarray::Array2;
 //!
 //! // Read a Fortran unformatted file
@@ -157,9 +157,9 @@ pub struct FortranFile<R> {
 
 impl FortranFile<BufReader<File>> {
     /// Open a Fortran unformatted file for reading
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path.as_ref())
-            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::open(_path.as_ref())
+            .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
         let reader = BufReader::new(file);
         Ok(Self {
             reader,
@@ -169,9 +169,9 @@ impl FortranFile<BufReader<File>> {
     }
 
     /// Open a Fortran unformatted file with custom configuration
-    pub fn open_with_config<P: AsRef<Path>>(path: P, config: FortranConfig) -> Result<Self> {
-        let file = File::open(path.as_ref())
-            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+    pub fn open_with_config<P: AsRef<Path>>(_path: P, config: FortranConfig) -> Result<Self> {
+        let file = File::open(_path.as_ref())
+            .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
         let reader = BufReader::new(file);
         Ok(Self {
             reader,
@@ -183,8 +183,8 @@ impl FortranFile<BufReader<File>> {
 
 impl FortranFile<BufWriter<File>> {
     /// Create a new Fortran unformatted file for writing
-    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::create(path.as_ref())
+    pub fn create<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         let writer = BufWriter::new(file);
         Ok(Self {
@@ -195,8 +195,8 @@ impl FortranFile<BufWriter<File>> {
     }
 
     /// Create a new Fortran unformatted file with custom configuration
-    pub fn create_with_config<P: AsRef<Path>>(path: P, config: FortranConfig) -> Result<Self> {
-        let file = File::create(path.as_ref())
+    pub fn create_with_config<P: AsRef<Path>>(_path: P, config: FortranConfig) -> Result<Self> {
+        let file = File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         let writer = BufWriter::new(file);
         Ok(Self {
@@ -216,8 +216,7 @@ impl<R: Read + Seek> FortranFile<R> {
                     .reader
                     .read_u32::<LittleEndian>()
                     .map(|v| v as usize)
-                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}"))),
-                _ => self
+                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}")), _ => self
                     .reader
                     .read_u32::<BigEndian>()
                     .map(|v| v as usize)
@@ -228,8 +227,7 @@ impl<R: Read + Seek> FortranFile<R> {
                     .reader
                     .read_u64::<LittleEndian>()
                     .map(|v| v as usize)
-                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}"))),
-                _ => self
+                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}")), _ => self
                     .reader
                     .read_u64::<BigEndian>()
                     .map(|v| v as usize)
@@ -654,8 +652,8 @@ impl<W: Write> FortranFile<W> {
 
 /// Read a complete Fortran unformatted file into memory
 #[allow(dead_code)]
-pub fn read_fortran_file<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<u8>>> {
-    let mut file = FortranFile::open(path)?;
+pub fn read_fortran_file<P: AsRef<Path>>(_path: P) -> Result<Vec<Vec<u8>>> {
+    let mut file = FortranFile::open(_path)?;
     let mut records = Vec::new();
 
     loop {
@@ -671,9 +669,9 @@ pub fn read_fortran_file<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<u8>>> {
 
 /// Detect the endianness and record marker size of a Fortran file
 #[allow(dead_code)]
-pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, RecordMarkerSize)> {
-    let mut file = File::open(path.as_ref())
-        .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+pub fn detect_fortran_format<P: AsRef<Path>>(_path: P) -> Result<(EndianMode, RecordMarkerSize)> {
+    let mut file = File::open(_path.as_ref())
+        .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
 
     // Read first 8 bytes
     let mut buffer = [0u8; 8];

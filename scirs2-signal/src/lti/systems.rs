@@ -8,9 +8,11 @@
 //! All system representations implement the `LtiSystem` trait for common operations.
 
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
+use crate::lti::TransferFunction;
+use num__complex::Complex64;
 use num_traits::Zero;
 
+#[allow(unused_imports)]
 /// A trait for all LTI system representations
 ///
 /// This trait provides a common interface for different LTI system representations,
@@ -81,7 +83,7 @@ pub trait LtiSystem {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::systems::TransferFunction;
+/// use scirs2__signal::lti::systems::TransferFunction;
 ///
 /// // Create H(s) = (s + 2) / (s^2 + 3s + 2)
 /// let tf = TransferFunction::new(
@@ -118,7 +120,7 @@ impl TransferFunction {
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2_signal::lti::systems::TransferFunction;
+    /// use scirs2__signal::lti::systems::TransferFunction;
     ///
     /// // Create a simple first-order continuous-time system: H(s) = 1 / (s + 1)
     /// let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
@@ -134,7 +136,7 @@ impl TransferFunction {
         }
 
         // Check if denominator is all zeros
-        if den.iter().all(|&x| x.abs() < 1e-10) {
+        if den.iter().all(|&x: &f64| x.abs() < 1e-10) {
             return Err(SignalError::ValueError(
                 "Denominator polynomial cannot be zero".to_string(),
             ));
@@ -289,7 +291,7 @@ impl LtiSystem for TransferFunction {
 
                 // For an impulse, the input at t[0] is 1/dt, and 0 otherwise
                 // Inject impulse: u[0] = 1/dt, which approximates a continuous impulse
-                for (j, _) in (0..ss.n_inputs).enumerate() {
+                for (j_) in (0..ss.n_inputs).enumerate() {
                     for (i, x_i) in x.iter_mut().enumerate().take(ss.n_states) {
                         *x_i += ss.b[i * ss.n_inputs + j] * (1.0 / dt);
                     }
@@ -448,7 +450,7 @@ impl LtiSystem for TransferFunction {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::systems::ZerosPoleGain;
+/// use scirs2__signal::lti::systems::ZerosPoleGain;
 ///
 /// // Create H(s) = 2 * (s + 1) / (s + 2)
 /// let zpk = ZerosPoleGain::new(
@@ -490,7 +492,7 @@ impl ZerosPoleGain {
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2_signal::lti::systems::ZerosPoleGain;
+    /// use scirs2__signal::lti::systems::ZerosPoleGain;
     ///
     /// // Create a simple first-order continuous-time system: H(s) = 1 / (s + 1)
     /// let zpk = ZerosPoleGain::new(
@@ -650,7 +652,7 @@ impl LtiSystem for ZerosPoleGain {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::systems::StateSpace;
+/// use scirs2__signal::lti::systems::StateSpace;
 ///
 /// // Create a simple integrator: dx/dt = u, y = x
 /// let ss = StateSpace::new(
@@ -706,7 +708,7 @@ impl StateSpace {
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2_signal::lti::systems::StateSpace;
+    /// use scirs2__signal::lti::systems::StateSpace;
     ///
     /// // Create a simple first-order system: dx/dt = -x + u, y = x
     /// let ss = StateSpace::new(
@@ -922,10 +924,12 @@ impl LtiSystem for StateSpace {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
+use crate::lti::design::tf;
     #[test]
     fn test_transfer_function_creation() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test creating a simple transfer function
         let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
         assert_eq!(tf.num.len(), 1);
@@ -1000,6 +1004,8 @@ mod tests {
 
     #[test]
     fn test_state_space_matrix_access() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         let ss = StateSpace::new(
             vec![-1.0, 0.0, 1.0, -2.0], // 2x2 A matrix
             vec![1.0, 0.0],             // 2x1 B matrix
@@ -1031,6 +1037,8 @@ mod tests {
 
     #[test]
     fn test_inconsistent_state_space_dimensions() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Invalid A matrix (not square)
         let result = StateSpace::new(
             vec![1.0, 2.0, 3.0], // 3 elements, not a perfect square
@@ -1041,4 +1049,9 @@ mod tests {
         );
         assert!(result.is_err());
     }
+}
+
+#[allow(dead_code)]
+fn tf(_num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
+    TransferFunction::new(_num, den)
 }

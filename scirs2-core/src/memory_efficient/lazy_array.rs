@@ -118,13 +118,18 @@ where
     }
 
     /// Create a new lazy array with a given shape but no concrete data
-    pub fn with_shape(shape: Vec<usize>) -> Self {
+    pub fn from_shape(shape: Vec<usize>) -> Self {
         Self {
             concrete_data: None,
             shape,
             ops: Vec::new(),
             sources: Vec::new(),
         }
+    }
+
+    /// Alias for from_shape for consistency with existing usage
+    pub fn with_shape(shape: Vec<usize>) -> Self {
+        Self::from_shape(shape)
     }
 
     /// Add a unary operation to the lazy array - immediate evaluation version

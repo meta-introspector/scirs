@@ -642,37 +642,37 @@ where
 }
 
 #[allow(dead_code)]
-fn reflect_coordinate(coord: isize, size: usize) -> usize {
+fn reflect_coordinate(_coord: isize, size: usize) -> usize {
     let size_i = size as isize;
-    if coord < 0 {
-        (-coord - 1).min(size_i - 1) as usize
-    } else if coord >= size_i {
-        (2 * size_i - coord - 1).max(0) as usize
+    if _coord < 0 {
+        (-_coord - 1).min(size_i - 1) as usize
+    } else if _coord >= size_i {
+        (2 * size_i - _coord - 1).max(0) as usize
     } else {
-        coord as usize
+        _coord as usize
     }
 }
 
 #[allow(dead_code)]
-fn clamp_coordinate(coord: isize, size: usize) -> usize {
-    coord.max(0).min(size as isize - 1) as usize
+fn clamp_coordinate(_coord: isize, size: usize) -> usize {
+    _coord.max(0).min(size as isize - 1) as usize
 }
 
 #[allow(dead_code)]
-fn wrap_coordinate(coord: isize, size: usize) -> usize {
+fn wrap_coordinate(_coord: isize, size: usize) -> usize {
     let size_i = size as isize;
-    ((coord % size_i + size_i) % size_i) as usize
+    ((_coord % size_i + size_i) % size_i) as usize
 }
 
 #[allow(dead_code)]
-fn mirror_coordinate(coord: isize, size: usize) -> usize {
+fn mirror_coordinate(_coord: isize, size: usize) -> usize {
     let size_i = size as isize;
     if size_i <= 1 {
         return 0;
     }
 
     let period = 2 * (size_i - 1);
-    let wrapped = ((coord % period + period) % period) as usize;
+    let wrapped = ((_coord % period + period) % period) as usize;
 
     if wrapped < size {
         wrapped
@@ -683,64 +683,64 @@ fn mirror_coordinate(coord: isize, size: usize) -> usize {
 
 /// Optimized quickselect algorithm for median finding
 #[allow(dead_code)]
-fn quickselect_median<T>(values: &mut [T]) -> Option<T>
+fn quickselect_median<T>(_values: &mut [T]) -> Option<T>
 where
     T: PartialOrd + Clone,
 {
-    let len = values.len();
+    let len = _values.len();
     let target = len / 2;
 
     if len == 0 {
         return None;
     }
 
-    Some(quickselect(values, target).clone())
+    Some(quickselect(_values, target).clone())
 }
 
 #[allow(dead_code)]
-fn quickselect<T>(values: &mut [T], k: usize) -> &T
+fn quickselect<T>(_values: &mut [T], k: usize) -> &T
 where
     T: PartialOrd,
 {
-    if values.len() == 1 {
-        return &values[0];
+    if _values.len() == 1 {
+        return &_values[0];
     }
 
-    let pivot_index = partition(values);
+    let pivot_index = partition(_values);
 
     if k == pivot_index {
-        &values[pivot_index]
+        &_values[pivot_index]
     } else if k < pivot_index {
-        quickselect(&mut values[..pivot_index], k)
+        quickselect(&mut _values[..pivot_index], k)
     } else {
-        quickselect(&mut values[pivot_index + 1..], k - pivot_index - 1)
+        quickselect(&mut _values[pivot_index + 1..], k - pivot_index - 1)
     }
 }
 
 #[allow(dead_code)]
-fn partition<T>(values: &mut [T]) -> usize
+fn partition<T>(_values: &mut [T]) -> usize
 where
     T: PartialOrd,
 {
-    let len = values.len();
+    let len = _values.len();
     let pivot_index = len / 2;
-    values.swap(pivot_index, len - 1);
+    _values.swap(pivot_index, len - 1);
 
     let mut store_index = 0;
-    for i in 0..len - 1 {
-        if values[i] <= values[len - 1] {
-            values.swap(i, store_index);
+    for i in 0, len - 1 {
+        if _values[i] <= _values[len - 1] {
+            _values.swap(i, store_index);
             store_index += 1;
         }
     }
 
-    values.swap(store_index, len - 1);
+    _values.swap(store_index, len - 1);
     store_index
 }
 
 /// Optimized sorting network for 9 elements (3x3 median)
 #[allow(dead_code)]
-fn median_9_elements<T>(values: &mut [T; 9]) -> T
+fn median_9_elements<T>(_values: &mut [T; 9]) -> T
 where
     T: PartialOrd + Clone,
 {
@@ -748,12 +748,12 @@ where
     // This uses minimal comparisons to find the median without full sorting
 
     // Sort in groups of 3
-    values[0..3].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
-    values[3..6].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
-    values[6..9].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    _values[0, 3].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    _values[3..6].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    _values[6..9].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     // Find median of medians
-    let mut medians = [values[1].clone(), values[4].clone(), values[7].clone()];
+    let mut medians = [_values[1].clone(), _values[4].clone(), _values[7].clone()];
     medians.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     medians[1].clone()

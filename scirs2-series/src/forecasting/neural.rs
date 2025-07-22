@@ -162,14 +162,14 @@ mod simple_nn {
 
     impl<F: Float + FromPrimitive> DenseLayer<F> {
         /// Create a new dense layer with random initialization
-        pub fn new(input_size: usize, output_size: usize) -> Self {
+        pub fn new(_input_size: usize, output_size: usize) -> Self {
             // Initialize with small random values (simplified Xavier initialization)
             let scale = F::from(0.1).unwrap();
-            let mut weights = Array2::zeros((input_size, output_size));
+            let mut weights = Array2::zeros((_input_size, output_size));
             let mut biases = Array1::zeros(output_size);
 
             // Simple pseudo-random initialization
-            for i in 0..input_size {
+            for i in 0.._input_size {
                 for j in 0..output_size {
                     let val = F::from((i * j + 1) as f64 * 0.001).unwrap() % scale;
                     weights[[i, j]] = val - scale / F::from(2).unwrap();
@@ -215,12 +215,11 @@ mod simple_nn {
     }
 
     /// Apply activation function to an array element-wise
-    pub fn apply_activation<F: Float>(arr: &Array1<F>, activation: &str) -> Array1<F> {
+    pub fn apply_activation<F: Float>(_arr: &Array1<F>, activation: &str) -> Array1<F> {
         match activation {
-            "tanh" => arr.mapv(tanh),
-            "sigmoid" => arr.mapv(sigmoid),
-            "relu" => arr.mapv(relu),
-            _ => arr.clone(),
+            "tanh" => _arr.mapv(tanh),
+            "sigmoid" => _arr.mapv(sigmoid),
+            "relu" => _arr.mapv(relu, _ => _arr.clone(),
         }
     }
 }
@@ -268,9 +267,9 @@ pub struct LSTMForecaster<F: Float + Debug + FromPrimitive> {
 
 impl<F: Float + Debug + FromPrimitive> LSTMForecaster<F> {
     /// Create a new LSTM forecaster
-    pub fn new(config: LSTMConfig) -> Self {
+    pub fn new(_config: LSTMConfig) -> Self {
         Self {
-            config,
+            _config,
             trained: false,
             loss_history: Vec::new(),
             input_layer: None,
@@ -380,7 +379,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for LSTMForecaster<F>
         }
 
         // Normalize data
-        let (normalized_data, _min_val, _max_val) = utils::normalize_data(data)?;
+        let (normalized_data_min_val_max_val) = utils::normalize_data(data)?;
         let (x_norm, y_norm) = utils::create_sliding_windows(
             &normalized_data,
             self.config.base.lookback_window,
@@ -463,8 +462,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for LSTMForecaster<F>
         let z_score = match confidence_level {
             c if c >= 0.99 => F::from(2.576).unwrap(),
             c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(),
-            _ => F::from(1.0).unwrap(),
+            c if c >= 0.90 => F::from(1.645).unwrap(, _ =>, F::from(1.0).unwrap(),
         };
 
         let margin = uncertainty * z_score;
@@ -512,9 +510,9 @@ pub struct TransformerForecaster<F: Float + Debug + FromPrimitive> {
 
 impl<F: Float + Debug + FromPrimitive> TransformerForecaster<F> {
     /// Create a new Transformer forecaster
-    pub fn new(config: TransformerConfig) -> Self {
+    pub fn new(_config: TransformerConfig) -> Self {
         Self {
-            config,
+            _config,
             trained: false,
             loss_history: Vec::new(),
             attention_layer: None,
@@ -598,7 +596,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for TransformerForeca
         }
 
         // Create sliding windows and normalize
-        let (normalized_data, _, _) = utils::normalize_data(data)?;
+        let (normalized_data__) = utils::normalize_data(data)?;
         let (x_norm, y_norm) = utils::create_sliding_windows(
             &normalized_data,
             self.config.base.lookback_window,
@@ -687,8 +685,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for TransformerForeca
         let z_score = match confidence_level {
             c if c >= 0.99 => F::from(2.576).unwrap(),
             c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(),
-            _ => F::from(1.0).unwrap(),
+            c if c >= 0.90 => F::from(1.645).unwrap(, _ =>, F::from(1.0).unwrap(),
         };
 
         let margin = uncertainty * z_score;
@@ -738,9 +735,9 @@ pub struct NBeatsForecaster<F: Float + Debug + FromPrimitive> {
 
 impl<F: Float + Debug + FromPrimitive> NBeatsForecaster<F> {
     /// Create a new N-BEATS forecaster
-    pub fn new(config: NBeatsConfig) -> Self {
+    pub fn new(_config: NBeatsConfig) -> Self {
         Self {
-            config,
+            _config,
             trained: false,
             loss_history: Vec::new(),
             stack_layers: Vec::new(),
@@ -869,7 +866,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
         }
 
         // Create sliding windows and normalize
-        let (normalized_data, _, _) = utils::normalize_data(data)?;
+        let (normalized_data__) = utils::normalize_data(data)?;
         let (x_norm, y_norm) = utils::create_sliding_windows(
             &normalized_data,
             self.config.base.lookback_window,
@@ -988,8 +985,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
         let z_score = match confidence_level {
             c if c >= 0.99 => F::from(2.576).unwrap(),
             c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(),
-            _ => F::from(1.0).unwrap(),
+            c if c >= 0.90 => F::from(1.645).unwrap(, _ =>, F::from(1.0).unwrap(),
         };
 
         let margin = uncertainty * z_score;
@@ -1029,13 +1025,13 @@ pub mod utils {
     ) -> Result<(Array2<F>, Array2<F>)> {
         if window_size == 0 || horizon == 0 {
             return Err(TimeSeriesError::InvalidInput(
-                "Window size and horizon must be positive".to_string(),
+                "Window _size and horizon must be positive".to_string(),
             ));
         }
 
         if data.len() < window_size + horizon {
             return Err(TimeSeriesError::InvalidInput(
-                "Data length is too short for the specified window size and horizon".to_string(),
+                "Data length is too short for the specified window _size and horizon".to_string(),
             ));
         }
 
@@ -1056,15 +1052,15 @@ pub mod utils {
     }
 
     /// Normalize data for neural network training
-    pub fn normalize_data<F: Float + FromPrimitive>(data: &Array1<F>) -> Result<(Array1<F>, F, F)> {
-        if data.is_empty() {
+    pub fn normalize_data<F: Float + FromPrimitive>(_data: &Array1<F>) -> Result<(Array1<F>, F, F)> {
+        if _data.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Data cannot be empty".to_string(),
             ));
         }
 
-        let min_val = data.iter().cloned().fold(data[0], F::min);
-        let max_val = data.iter().cloned().fold(data[0], F::max);
+        let min_val = _data.iter().cloned().fold(_data[0], F::min);
+        let max_val = _data.iter().cloned().fold(_data[0], F::max);
 
         if min_val == max_val {
             return Err(TimeSeriesError::InvalidInput(
@@ -1073,7 +1069,7 @@ pub mod utils {
         }
 
         let range = max_val - min_val;
-        let normalized = data.mapv(|x| (x - min_val) / range);
+        let normalized = _data.mapv(|x| (x - min_val) / range);
 
         Ok((normalized, min_val, max_val))
     }
@@ -1099,7 +1095,7 @@ pub mod utils {
     ) -> Result<TrainValSplit<F>> {
         if !(0.0..1.0).contains(&val_ratio) {
             return Err(TimeSeriesError::InvalidInput(
-                "Validation ratio must be between 0 and 1".to_string(),
+                "Validation _ratio must be between 0 and 1".to_string(),
             ));
         }
 
@@ -1329,14 +1325,14 @@ pub mod advanced {
         MultiScaleNeuralForecaster<F>
     {
         /// Create new multi-scale neural forecaster
-        pub fn new(config: MultiScaleConfig) -> Self {
+        pub fn new(_config: MultiScaleConfig) -> Self {
             // Configure individual models for different time scales
             let short_term_config = LSTMConfig {
                 base: NeuralConfig {
-                    lookback_window: config.short_term_window,
-                    forecast_horizon: config.forecast_horizon,
+                    lookback_window: _config.short_term_window,
+                    forecast_horizon: _config.forecast_horizon,
                     epochs: 50,
-                    learning_rate: config.learning_rate,
+                    learning_rate: _config.learning_rate,
                     ..Default::default()
                 },
                 hidden_size: 32,
@@ -1346,10 +1342,10 @@ pub mod advanced {
 
             let medium_term_config = TransformerConfig {
                 base: NeuralConfig {
-                    lookback_window: config.medium_term_window,
-                    forecast_horizon: config.forecast_horizon,
+                    lookback_window: _config.medium_term_window,
+                    forecast_horizon: _config.forecast_horizon,
                     epochs: 30,
-                    learning_rate: config.learning_rate * 0.5,
+                    learning_rate: _config.learning_rate * 0.5,
                     ..Default::default()
                 },
                 d_model: 64,
@@ -1360,10 +1356,10 @@ pub mod advanced {
 
             let long_term_config = NBeatsConfig {
                 base: NeuralConfig {
-                    lookback_window: config.long_term_window,
-                    forecast_horizon: config.forecast_horizon,
+                    lookback_window: _config.long_term_window,
+                    forecast_horizon: _config.forecast_horizon,
                     epochs: 20,
-                    learning_rate: config.learning_rate * 0.1,
+                    learning_rate: _config.learning_rate * 0.1,
                     ..Default::default()
                 },
                 num_stacks: 3,
@@ -1380,7 +1376,7 @@ pub mod advanced {
                 medium_term: TransformerForecaster::new(medium_term_config),
                 long_term: NBeatsForecaster::new(long_term_config),
                 combination_weights: None,
-                config,
+                _config,
                 trained: false,
             }
         }
@@ -1519,7 +1515,7 @@ pub mod advanced {
                     && medium_predictions[i].len() == targets[i].len()
                     && long_predictions[i].len() == targets[i].len()
                 {
-                    // Combine predictions using weights
+                    // Combine _predictions using weights
                     let combined = &short_predictions[i] * weights[0]
                         + &medium_predictions[i] * weights[1]
                         + &long_predictions[i] * weights[2];
@@ -1639,11 +1635,11 @@ pub mod advanced {
 
     impl<F: Float + Debug + Clone + FromPrimitive> OnlineNeuralForecaster<F> {
         /// Create new online neural forecaster
-        pub fn new(config: OnlineConfig) -> Self {
+        pub fn new(_config: OnlineConfig) -> Self {
             let lstm_config = LSTMConfig {
                 base: NeuralConfig {
                     lookback_window: 24,
-                    forecast_horizon: config.forecast_horizon,
+                    forecast_horizon: _config.forecast_horizon,
                     epochs: 20,
                     learning_rate: 0.001,
                     batch_size: 16,
@@ -1657,12 +1653,12 @@ pub mod advanced {
 
             Self {
                 base_model: LSTMForecaster::new(lstm_config),
-                data_buffer: VecDeque::with_capacity(config.buffer_size),
-                max_buffer_size: config.buffer_size,
-                incremental_lr: F::from(config.incremental_learning_rate).unwrap(),
-                update_frequency: config.update_frequency,
+                data_buffer: VecDeque::with_capacity(_config.buffer_size),
+                max_buffer_size: _config.buffer_size,
+                incremental_lr: F::from(_config.incremental_learning_rate).unwrap(),
+                update_frequency: _config.update_frequency,
                 observation_count: 0,
-                config,
+                _config,
             }
         }
 
@@ -1742,14 +1738,14 @@ pub mod advanced {
 
     impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> AttentionForecaster<F> {
         /// Create new attention-based forecaster
-        pub fn new(config: NeuralConfig) -> Self {
+        pub fn new(_config: NeuralConfig) -> Self {
             Self {
-                input_dim: config.lookback_window,
+                input_dim: _config.lookback_window,
                 hidden_dim: 64,
-                output_dim: config.forecast_horizon,
+                output_dim: _config.forecast_horizon,
                 attention_weights: None,
                 model_weights: None,
-                config,
+                _config,
                 trained: false,
                 loss_history: Vec::new(),
             }
@@ -1876,10 +1872,7 @@ pub mod advanced {
 
         /// Update parameters (simplified gradient descent)
         fn update_parameters(
-            &mut self,
-            _input: &Array1<F>,
-            _target: &Array1<F>,
-            _prediction: &Array1<F>,
+            &mut self_input: &Array1<F>, _target: &Array1<F>, _prediction: &Array1<F>,
         ) -> Result<()> {
             // Simplified parameter update
             // In practice, would compute gradients and update weights
@@ -1966,7 +1959,7 @@ pub mod advanced {
         trained: bool,
     }
 
-    impl<F: Float + Debug> std::fmt::Debug for EnsembleNeuralForecaster<F> {
+    impl<F: Float + Debug> + std::fmt::Debug for EnsembleNeuralForecaster<F> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             f.debug_struct("EnsembleNeuralForecaster")
                 .field("forecasters_count", &self.forecasters.len())
@@ -1993,11 +1986,11 @@ pub mod advanced {
 
     impl<F: Float + Debug + Clone + FromPrimitive> EnsembleNeuralForecaster<F> {
         /// Create new ensemble forecaster
-        pub fn new(ensemble_method: EnsembleMethod) -> Self {
+        pub fn new(_ensemble_method: EnsembleMethod) -> Self {
             Self {
                 forecasters: Vec::new(),
                 weights: None,
-                ensemble_method,
+                _ensemble_method,
                 model_names: Vec::new(),
                 trained: false,
             }
@@ -2420,7 +2413,7 @@ pub mod advanced {
 
     impl<F: Float + Debug + Clone + FromPrimitive + 'static> NeuralAutoML<F> {
         /// Create new AutoML system
-        pub fn new(search_strategy: SearchStrategy, max_evaluations: usize) -> Self {
+        pub fn new(_search_strategy: SearchStrategy, max_evaluations: usize) -> Self {
             let mut search_space = HashMap::new();
 
             // Define default search space
@@ -2459,8 +2452,7 @@ pub mod advanced {
                 search_space,
                 best_config: None,
                 search_strategy,
-                max_evaluations,
-                evaluations: 0,
+                max_evaluations_evaluations: 0,
             }
         }
 
@@ -2555,7 +2547,7 @@ pub mod advanced {
                     let idx = self.evaluations % options.len();
                     ParameterValue::String(options[idx].clone())
                 }
-                ParameterRange::Boolean => ParameterValue::Bool(self.evaluations % 2 == 0),
+                ParameterRange::Boolean =>, ParameterValue::Bool(self.evaluations % 2 == 0),
             }
         }
 
@@ -2659,7 +2651,7 @@ pub mod advanced {
                     Ok(Box::new(NBeatsForecaster::new(config)))
                 }
                 _ => Err(TimeSeriesError::InvalidInput(format!(
-                    "Unknown model type: {model_type}"
+                    "Unknown model _type: {model_type}"
                 ))),
             }
         }
@@ -2672,8 +2664,7 @@ pub mod advanced {
             default: f64,
         ) -> F {
             match params.get(name) {
-                Some(ParameterValue::Float(f)) => *f,
-                _ => F::from(default).unwrap(),
+                Some(ParameterValue::Float(f)) => *f_ =>, F::from(default).unwrap(),
             }
         }
 
@@ -2685,8 +2676,7 @@ pub mod advanced {
             default: usize,
         ) -> usize {
             match params.get(name) {
-                Some(ParameterValue::Int(i)) => *i,
-                _ => default,
+                Some(ParameterValue::Int(i)) => *i_ => default,
             }
         }
 

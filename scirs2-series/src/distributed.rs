@@ -10,6 +10,7 @@ use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
 use crate::error::{Result, TimeSeriesError};
+use statrs::statistics::Statistics;
 
 /// Configuration for distributed computing cluster
 #[derive(Debug, Clone)]
@@ -231,7 +232,7 @@ pub enum NodeStatus {
 
 /// Distributed time series processor
 pub struct DistributedProcessor<
-    F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + ndarray::ScalarOperand,
+    F: Float + Debug + Clone + num_traits::FromPrimitive + num, _traits::Zero + ndarray::ScalarOperand,
 > {
     /// Cluster configuration
     config: ClusterConfig,
@@ -270,11 +271,11 @@ impl<
     > DistributedProcessor<F>
 {
     /// Create a new distributed processor
-    pub fn new(config: ClusterConfig) -> Self {
+    pub fn new(_config: ClusterConfig) -> Self {
         let mut nodes = HashMap::new();
 
         // Initialize node information
-        for address in &config.nodes {
+        for address in &_config.nodes {
             nodes.insert(
                 address.clone(),
                 NodeInfo {
@@ -292,7 +293,7 @@ impl<
         }
 
         Self {
-            config,
+            _config,
             nodes,
             task_queue: Vec::new(),
             running_tasks: HashMap::new(),
@@ -328,8 +329,7 @@ impl<
     pub fn distributed_forecast(
         &mut self,
         data: &Array1<F>,
-        horizon: usize,
-        _method: &str,
+        horizon: usize_method: &str,
     ) -> Result<Array1<F>> {
         // Split data into chunks for parallel processing
         let chunk_size = self
@@ -430,7 +430,7 @@ impl<
                 info.status == NodeStatus::Available
                     && info.running_tasks < self.config.max_concurrent_tasks
             })
-            .map(|(address, _)| address)
+            .map(|(address_)| address)
             .collect();
 
         if available_nodes.is_empty() {
@@ -526,8 +526,7 @@ impl<
             TaskType::Forecasting => self.simulate_forecasting_task(task)?,
             TaskType::FeatureExtraction => self.simulate_feature_extraction_task(task)?,
             TaskType::AnomalyDetection => self.simulate_anomaly_detection_task(task)?,
-            TaskType::Decomposition => self.simulate_decomposition_task(task)?,
-            _ => {
+            TaskType::Decomposition => self.simulate_decomposition_task(task)?_ => {
                 // Generic processing
                 task.input_data.clone()
             }
@@ -548,7 +547,7 @@ impl<
             metrics: TaskMetrics {
                 execution_time,
                 executed_on: node_address.to_string(),
-                memory_usage: task.input_data.len() * std::mem::size_of::<F>(),
+                memory_usage: task.input_data.len() * std::mem::size, _of::<F>(),
                 cpu_utilization: 0.8,                    // Simulated
                 network_time: Duration::from_millis(10), // Simulated
             },
@@ -671,7 +670,7 @@ impl<
         // Sort forecasts by chunk index
         let mut indexed_forecasts: Vec<(usize, Array1<F>)> =
             chunk_indices.into_iter().zip(all_forecasts).collect();
-        indexed_forecasts.sort_by_key(|(index, _)| *index);
+        indexed_forecasts.sort_by_key(|(index_)| *index);
 
         // Aggregate by averaging (simple ensemble approach)
         let mut final_forecast = Array1::zeros(horizon);
@@ -720,17 +719,17 @@ impl<
         // Sort by window index
         let mut indexed_features: Vec<(usize, Array1<F>)> =
             window_indices.into_iter().zip(all_features).collect();
-        indexed_features.sort_by_key(|(index, _)| *index);
+        indexed_features.sort_by_key(|(index_)| *index);
 
         // Combine into matrix
         let num_windows = indexed_features.len();
         let feature_size = indexed_features[0].1.len().min(num_features);
         let mut result = Array2::zeros((num_windows, feature_size));
 
-        for (row, (_, features)) in indexed_features.iter().enumerate() {
+        for (row, (_, _features)) in indexed_features.iter().enumerate() {
             for col in 0..feature_size {
-                if col < features.len() {
-                    result[[row, col]] = features[col];
+                if col < _features.len() {
+                    result[[row, col]] = _features[col];
                 }
             }
         }
@@ -822,7 +821,7 @@ pub struct ClusterStatus {
 /// Convenience functions for common distributed operations
 #[allow(dead_code)]
 pub fn distributed_moving_average<
-    F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + ndarray::ScalarOperand,
+    F: Float + Debug + Clone + num_traits::FromPrimitive + num, _traits::Zero + ndarray::ScalarOperand,
 >(
     processor: &mut DistributedProcessor<F>,
     data: &Array1<F>,

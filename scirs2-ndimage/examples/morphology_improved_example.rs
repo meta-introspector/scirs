@@ -4,11 +4,11 @@
 //! handle dimensionality issues.
 
 use ndarray::{s, Array2, Array3};
-use scirs2_ndimage::morphology::simple_morph::{
+use scirs2__ndimage::morphology::simple_morph::{
     binary_closing_2d, binary_dilation_2d, binary_erosion_2d, binary_opening_2d, black_tophat_2d,
     grey_dilation_2d, grey_erosion_2d, morphological_gradient_2d, white_tophat_2d,
 };
-use scirs2_ndimage::morphology::{generate_binary_structure, Connectivity};
+use scirs2__ndimage::morphology::{generate_binary_structure, Connectivity};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -171,10 +171,10 @@ fn grayscale_3d_example() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to print a 2D binary array
 #[allow(dead_code)]
-fn print_binary_2d(arr: &Array2<bool>) {
-    for i in 0..arr.shape()[0] {
-        for j in 0..arr.shape()[1] {
-            if arr[[i, j]] {
+fn print_binary_2d(_arr: &Array2<bool>) {
+    for i in 0.._arr.shape()[0] {
+        for j in 0.._arr.shape()[1] {
+            if _arr[[i, j]] {
                 print!("█ ");
             } else {
                 print!("· ");
@@ -186,10 +186,10 @@ fn print_binary_2d(arr: &Array2<bool>) {
 
 // Helper function to print a 2D grayscale array
 #[allow(dead_code)]
-fn print_grayscale_2d(arr: &Array2<f64>) {
-    for i in 0..arr.shape()[0] {
-        for j in 0..arr.shape()[1] {
-            let val = arr[[i, j]];
+fn print_grayscale_2d(_arr: &Array2<f64>) {
+    for i in 0.._arr.shape()[0] {
+        for j in 0.._arr.shape()[1] {
+            let val = _arr[[i, j]];
             if val <= 0.0 {
                 print!("· ");
             } else if val < 0.5 {
@@ -208,8 +208,8 @@ fn print_grayscale_2d(arr: &Array2<f64>) {
 
 // Helper function to print a slice of a 3D binary array
 #[allow(dead_code)]
-fn print_binary_3d_slice(arr: &Array3<bool>, slice_idx: usize) {
-    let slice = arr.index_axis(ndarray::Axis(2), slice_idx);
+fn print_binary_3d_slice(_arr: &Array3<bool>, slice_idx: usize) {
+    let slice = _arr.index_axis(ndarray::Axis(2), slice_idx);
     for i in 0..slice.shape()[0] {
         for j in 0..slice.shape()[1] {
             if slice[[i, j]] {
@@ -224,8 +224,8 @@ fn print_binary_3d_slice(arr: &Array3<bool>, slice_idx: usize) {
 
 // Helper function to print a slice of a 3D grayscale array
 #[allow(dead_code)]
-fn print_grayscale_3d_slice(arr: &Array3<f64>, slice_idx: usize) {
-    let slice = arr.index_axis(ndarray::Axis(2), slice_idx);
+fn print_grayscale_3d_slice(_arr: &Array3<f64>, slice_idx: usize) {
+    let slice = _arr.index_axis(ndarray::Axis(2), slice_idx);
     for i in 0..slice.shape()[0] {
         for j in 0..slice.shape()[1] {
             let val = slice[[i, j]];

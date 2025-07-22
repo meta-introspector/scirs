@@ -34,8 +34,8 @@ impl Softmax {
     ///
     /// # Arguments
     /// * `axis` - The axis along which to apply softmax
-    pub fn new(axis: usize) -> Self {
-        Self { axis }
+    pub fn new(_axis: usize) -> Self {
+        Self { _axis }
     }
 }
 
@@ -113,16 +113,16 @@ impl<F: Float + Debug> Activation<F> for Softmax {
         // Softmax backward pass: grad_input = softmax * (grad_output - sum(grad_output * softmax))
         // This implements the full Jacobian-vector product for softmax
         
-        if output.ndim() == 1 && self.axis == 0 {
-            // Compute dot product of grad_output and output (softmax values)
+        if _output.ndim() == 1 && self.axis == 0 {
+            // Compute dot product of grad_output and _output (softmax values)
             let dot_product = grad_output
                 .iter()
-                .zip(output.iter())
+                .zip(_output.iter())
                 .map(|(&g, &s)| g * s)
                 .fold(F::zero(), |a, b| a + b);
 
             // Compute gradient: s * (grad_output - dot_product)
-            let grad_input = output
+            let grad_input = _output
                 .iter()
                 .zip(grad_output.iter())
                 .map(|(&s, &g)| s * (g - dot_product))
@@ -133,16 +133,16 @@ impl<F: Float + Debug> Activation<F> for Softmax {
 
         // Multi-dimensional case
         // Compute sum(grad_output * softmax) along the softmax axis
-        let weighted_sum = (grad_output * output).sum_axis(Axis(self.axis));
+        let weighted_sum = (grad_output * _output).sum_axis(Axis(self.axis));
 
         // Broadcast the weighted sum back to original shape
-        let mut sum_shape = output.shape().to_vec();
+        let mut sum_shape = _output.shape().to_vec();
         sum_shape[self.axis] = 1;
         let weighted_sum_reshaped = weighted_sum.into_shape_with_order(sum_shape)?;
-        let weighted_sum_broadcast = weighted_sum_reshaped.broadcast(output.shape()).unwrap();
+        let weighted_sum_broadcast = weighted_sum_reshaped.broadcast(_output.shape()).unwrap();
 
         // Compute gradient: softmax * (grad_output - weighted_sum)
-        let grad_input = output * (grad_output - &weighted_sum_broadcast);
+        let grad_input = _output * (grad_output - &weighted_sum_broadcast);
         
         Ok(grad_input)
     }
@@ -166,12 +166,12 @@ impl<F: Float + Debug + ScalarOperand> Layer<F> for Softmax {
         input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
-        // For softmax, we need the output, not the input for backward pass
-        let output = self.forward(input)?;
-        <Self as Activation<F>>::backward(self, grad_output, &output)
+        // For softmax, we need the _output, not the input for backward pass
+        let _output = self.forward(input)?;
+        <Self as Activation<F>>::backward(self, grad_output, &_output)
     }
 
-    fn update(&mut self, _learning_rate: F) -> Result<()> {
+    fn update(&mut self, learning_rate: F) -> Result<()> {
         Ok(())
     }
 }

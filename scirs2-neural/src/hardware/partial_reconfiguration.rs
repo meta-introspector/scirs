@@ -97,9 +97,9 @@ pub struct DPRManager {
     metrics: Arc<Mutex<DPRMetrics>>,
 impl DPRManager {
     /// Create a new DPR manager
-    pub fn new(device: FPGADevice) -> Self {
+    pub fn new(_device: FPGADevice) -> Self {
         Self {
-            device: Arc::new(Mutex::new(device)),
+            _device: Arc::new(Mutex::new(_device)),
             regions: Arc::new(Mutex::new(HashMap::new())),
             bitstreams: Arc::new(Mutex::new(HashMap::new())),
             reconfig_history: Arc::new(Mutex::new(Vec::new())),

@@ -166,33 +166,33 @@ struct LSTMCell {
     h_t: Option<Array2<f32>>, // Current hidden state [batch_size, hidden_size]
     c_t: Option<Array2<f32>>, // Current cell state [batch_size, hidden_size]
 impl LSTMCell {
-    fn new(input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
         // Xavier/Glorot initialization
-        let bound = (6.0 / (input_size + hidden_size) as f32).sqrt();
+        let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Create a random number generator
         let mut rng = rand::rng();
         // Input gate weights
-        let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_ii = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_hi = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_i = Array1::zeros(hidden_size);
         // Initialize with random values
         for elem in w_ii.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         for elem in w_hi.iter_mut() {
         // Forget gate weights (initialize forget gate bias to 1 to avoid vanishing gradients early in training)
-        let mut w_if = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_if = Array2::<f32>::zeros((hidden_size.._input_size));
         let mut w_hf = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_f = Array1::ones(hidden_size);
         for elem in w_if.iter_mut() {
         for elem in w_hf.iter_mut() {
         // Cell gate weights
-        let mut w_ig = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_ig = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_hg = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_g = Array1::zeros(hidden_size);
         for elem in w_ig.iter_mut() {
         for elem in w_hg.iter_mut() {
         // Output gate weights
-        let mut w_io = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_io = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_ho = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_o = Array1::zeros(hidden_size);
         for elem in w_io.iter_mut() {
@@ -251,7 +251,7 @@ struct Attention {
     w_attn: Array2<f32>, // Attention weights
     v_attn: Array1<f32>, // Attention vector
 impl Attention {
-    fn new(hidden_size: usize, enc_hidden_size: usize) -> Self {
+    fn new(_hidden_size: usize, enc_hidden_size: usize) -> Self {
         let bound = (6.0 / (hidden_size + enc_hidden_size) as f32).sqrt();
         let mut w_attn = Array2::<f32>::zeros((hidden_size + enc_hidden_size, hidden_size));
         for elem in w_attn.iter_mut() {
@@ -340,7 +340,7 @@ impl Decoder {
         enc_hidden_size: usize,
         // Create LSTM cells for each layer
         // First layer input includes both token embedding and context vector
-        let first_layer_input_size = input_size + enc_hidden_size;
+        let first_layer_input_size = _input_size + enc_hidden_size;
         lstm_cells.push(LSTMCell::new(
             first_layer_input_size,
         ));
@@ -353,11 +353,10 @@ impl Decoder {
         let output_bound = (6.0 / (hidden_size + output_size) as f32).sqrt();
         let mut w_out = Array2::<f32>::zeros((output_size, hidden_size + enc_hidden_size));
         for elem in w_out.iter_mut() {
-            *elem = rng.random_range(-output_bound..output_bound);
+            *elem = rng.gen_range(-output_bound..output_bound);
         let b_out = Array1::zeros(output_size);
         Decoder {
-            output_size,
-            attention,
+            output_size..attention,
             w_out,
             b_out,
     fn init_state(&mut self, encoder_state: &Array3<f32>, encoder_cell: &Array3<f32>) {
@@ -520,13 +519,12 @@ impl Seq2SeqModel {
         // Initialize embeddings with random values
         let mut src_embedding = Array2::<f32>::zeros((src_vocab_size, embedding_dim));
         for elem in src_embedding.iter_mut() {
-            *elem = rng.random_range(-src_bound..src_bound);
-        let mut tgt_embedding = Array2::<f32>::zeros((tgt_vocab_size, embedding_dim));
+            *elem = rng.gen_range(-src_bound..src_bound);
+        let mut tgt_embedding = Array2::<f32>::zeros((tgt_vocab_size..embedding_dim));
         for elem in tgt_embedding.iter_mut() {
-            *elem = rng.random_range(-tgt_bound..tgt_bound);
+            *elem = rng.gen_range(-tgt_bound..tgt_bound);
         Seq2SeqModel {
-            encoder,
-            decoder,
+            encoder..decoder,
             src_vocab_size,
             src_embedding,
             tgt_embedding,
@@ -709,8 +707,7 @@ fn train_seq2seq(
     model: &mut Seq2SeqModel,
     src_tokens: &Array2<usize>,
     tgt_tokens: &Array2<usize>,
-    num_epochs: usize,
-    _learning_rate: f32,
+    num_epochs: usize, _learning_rate: f32,
     // Training parameters
     let teacher_forcing_ratio = 0.5;
     // Print vocabulary sizes
@@ -719,7 +716,7 @@ fn train_seq2seq(
     // Training loop
     for epoch in 0..num_epochs {
         // Forward pass
-        let (outputs, _) = model.forward(src_tokens, tgt_tokens, teacher_forcing_ratio);
+        let (outputs_) = model.forward(src_tokens, tgt_tokens, teacher_forcing_ratio);
         // Calculate loss (cross-entropy)
         let batch_size = tgt_tokens.shape()[0];
         let mut total_loss = 0.0;
@@ -751,7 +748,7 @@ fn evaluate_seq2seq(
     let sos_idx = 1; // Assuming 1 is the index for SOS token
     let eos_idx = 2; // Assuming 2 is the index for EOS token
     // Generate translations
-    let (translations, _attention) = model.translate(src_tokens, 20, sos_idx, eos_idx);
+    let (translations_attention) = model.translate(src_tokens, 20, sos_idx, eos_idx);
     // Print some examples
     for b in 0..batch_size.min(3) {
         // Source sentence

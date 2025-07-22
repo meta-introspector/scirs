@@ -87,7 +87,7 @@ impl ParallelDecomposition {
             let config = WorkerConfig::new().with_workers(num_workers);
             let (m, n) = a.dim();
 
-            // Use parallel implementation for large matrices (only supports reduced form)
+            // Use parallel implementation for large _matrices (only supports reduced form)
             if m * n > config.parallel_threshold && !full_matrices {
                 return algorithms::parallel_svd(a, &config);
             }

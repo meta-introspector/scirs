@@ -5,7 +5,7 @@
 //! performance metrics.
 
 use ndarray::array;
-use scirs2_metrics::{
+use scirs2__metrics::{
     classification::curves::roc_curve,
     visualization::{
         backends::{default_interactive_backend, PlotlyInteractiveBackendInterface},

@@ -321,8 +321,7 @@ where
             NullHandling::Exclude => Ok((Array1::from_vec(finite_data), finite_count)),
             NullHandling::Fail if finite_count != data.len() => Err(StatsError::InvalidArgument(
                 "Null values encountered with Fail strategy".to_string(),
-            )),
-            _ => Ok((Array1::from_vec(finite_data), finite_count)),
+            ), _ => Ok((Array1::from_vec(finite_data), finite_count)),
         }
     }
 
@@ -347,8 +346,7 @@ where
     /// Compute statistics using SIMD optimizations
     fn compute_simd_optimized(
         &self,
-        data: &Array1<F>,
-        _warnings: &mut Vec<String>,
+        data: &Array1<F>, _warnings: &mut Vec<String>,
     ) -> StatsResult<DescriptiveStats<F>> {
         // Use SIMD-optimized descriptive statistics
         let mean = crate::descriptive_simd::mean_simd(&data.view())?;
@@ -383,8 +381,7 @@ where
     /// Compute statistics using parallel optimizations
     fn compute_parallel_optimized(
         &self,
-        data: &Array1<F>,
-        _warnings: &mut Vec<String>,
+        data: &Array1<F>, _warnings: &mut Vec<String>,
     ) -> StatsResult<DescriptiveStats<F>> {
         // Use parallel-optimized functions
         let mean = crate::parallel_stats::mean_parallel(&data.view())?;
@@ -419,8 +416,7 @@ where
     /// Compute statistics using standard methods
     fn compute_standard(
         &self,
-        data: &Array1<F>,
-        _warnings: &mut Vec<String>,
+        data: &Array1<F>, _warnings: &mut Vec<String>,
     ) -> StatsResult<DescriptiveStats<F>> {
         let mean = crate::descriptive::mean(&data.view())?;
         let variance = crate::descriptive::var(&data.view(), self.ddof.unwrap_or(1), None)?;
@@ -476,7 +472,7 @@ where
     fn compute_percentiles(&self, sorted_data: &[F]) -> StatsResult<[F; 3]> {
         let n = sorted_data.len();
         if n == 0 {
-            return Err(StatsError::InvalidArgument("Empty data".to_string()));
+            return Err(StatsError::InvalidArgument("Empty _data".to_string()));
         }
 
         let p25_idx = (n as f64 * 0.25) as usize;
@@ -506,7 +502,7 @@ where
     /// Estimate memory usage
     fn estimate_memory_usage(&self, sample_size: usize) -> Option<usize> {
         if self.config.include_metadata {
-            Some(sample_size * std::mem::size_of::<F>() * 2) // Rough estimate
+            Some(sample_size * std::mem::_size_of::<F>() * 2) // Rough estimate
         } else {
             None
         }
@@ -615,9 +611,8 @@ where
                     crate::correlation::pearson_r(&x, &y)?
                 }
             }
-            CorrelationMethod::Spearman => crate::correlation::spearman_r(&x, &y)?,
-            CorrelationMethod::Kendall => crate::correlation::kendall_tau(&x, &y, "b")?,
-            _ => {
+            CorrelationMethod::Spearman =>, crate::correlation::spearman_r(&x, &y)?,
+            CorrelationMethod::Kendall =>, crate::correlation::kendall_tau(&x, &y, "b")?_ => {
                 warnings.push("Advanced correlation methods not yet implemented".to_string());
                 crate::correlation::pearson_r(&x, &y)?
             }
@@ -700,8 +695,7 @@ where
     fn compute_statistical_inference(
         &self,
         correlation: F,
-        n: usize,
-        _warnings: &mut Vec<String>,
+        n: usize_warnings: &mut Vec<String>,
     ) -> StatsResult<(Option<F>, Option<(F, F)>)> {
         // Fisher's z-transformation for confidence intervals
         let z = ((F::one() + correlation) / (F::one() - correlation)).ln() * F::from(0.5).unwrap();
@@ -958,7 +952,7 @@ mod tests {
         let framework = APIValidationFramework::new();
         let signature = APISignature {
             function_name: "test_function".to_string(),
-            module_path: "scirs2_stats::test".to_string(),
+            module_path: "scirs2, _stats::test".to_string(),
             parameters: vec![ParameterSpec {
                 name: "data".to_string(),
                 param_type: "ArrayView1<f64>".to_string(),
@@ -1434,8 +1428,7 @@ impl APIValidationFramework {
             ValidationCategory::ErrorHandling => self.validate_error_handling(signature),
             ValidationCategory::Documentation => self.validate_documentation(signature),
             ValidationCategory::ScipyCompatibility => self.validate_scipy_compatibility(signature),
-            ValidationCategory::Performance => self.validate_performance(signature),
-            _ => ValidationResult {
+            ValidationCategory::Performance => self.validate_performance(signature, _ => ValidationResult {
                 passed: true,
                 messages: vec![],
                 suggested_fixes: vec![],
@@ -1625,9 +1618,9 @@ impl APIValidationFramework {
 
 impl ValidationReport {
     /// Create new validation report
-    pub fn new(function_name: String) -> Self {
+    pub fn new(_function_name: String) -> Self {
         Self {
-            function_name,
+            _function_name,
             results: HashMap::new(),
             overall_status: ValidationStatus::Passed,
             summary: ValidationSummary {

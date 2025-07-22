@@ -15,7 +15,7 @@ use crate::error::StatsResult;
 use ndarray::{Array1, Array2, Array3};
 use num_traits::{Float, NumCast};
 use rand::{rng, Rng};
-use rand_distr::{Distribution, Normal};
+use rand__distr::{Distribution, Normal};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::marker::PhantomData;
 use std::sync::RwLock;
@@ -38,8 +38,7 @@ where
     /// Convergence diagnostics
     diagnostics: ConvergenceDiagnostics<F>,
     /// Performance monitoring
-    performance_monitor: PerformanceMonitor,
-    _phantom: PhantomData<F>,
+    performance_monitor: PerformanceMonitor, _phantom: PhantomData<F>,
 }
 
 /// Advanced-advanced target distribution interface
@@ -62,27 +61,27 @@ where
     }
 
     /// Compute Hessian matrix (for manifold methods)
-    fn hessian(&self, _x: &Array1<F>) -> Option<Array2<F>> {
+    fn hessian(&self_x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 
     /// Compute Fisher information matrix
-    fn fisher_information(&self, _x: &Array1<F>) -> Option<Array2<F>> {
+    fn fisher_information(&self_x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 
     /// Compute Riemann metric tensor (for Riemannian methods)
-    fn riemann_metric(&self, _x: &Array1<F>) -> Option<Array2<F>> {
+    fn riemann_metric(&self_x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 
     /// Support for discontinuous model spaces (for Reversible Jump)
-    fn model_dimension(&self, _model_id: usize) -> usize {
+    fn model_dimension(&self_model_id: usize) -> usize {
         self.dim()
     }
 
     /// Model transition probability (for Reversible Jump)
-    fn model_transition_prob(&self, _from_model: usize, _to_model: usize) -> F {
+    fn model_transition_prob(&self_from_model: usize, _to_model: usize) -> F {
         F::zero()
     }
 
@@ -423,8 +422,8 @@ where
     T: AdvancedTarget<F> + 'static + std::fmt::Display,
 {
     /// Create new advanced MCMC sampler
-    pub fn new(target: T, config: AdvancedAdvancedConfig<F>) -> StatsResult<Self> {
-        let dim = target.dim();
+    pub fn new(_target: T, config: AdvancedAdvancedConfig<F>) -> StatsResult<Self> {
+        let dim = _target.dim();
 
         // Initialize chains
         let mut chains = Vec::with_capacity(config.num_chains);
@@ -438,13 +437,12 @@ where
         let performance_monitor = PerformanceMonitor::new();
 
         Ok(Self {
-            target,
+            _target,
             config,
             chains,
             adaptation_state,
             diagnostics,
-            performance_monitor,
-            _phantom: PhantomData,
+            performance_monitor_phantom: PhantomData,
         })
     }
 
@@ -513,8 +511,7 @@ where
             SamplingMethod::RiemannianHMC { .. } => self.riemannian_hmc_iteration(iteration),
             SamplingMethod::Ensemble { .. } => self.ensemble_iteration(iteration),
             SamplingMethod::SliceSampling { .. } => self.slice_sampling_iteration(iteration),
-            SamplingMethod::Langevin { .. } => self.langevin_iteration(iteration),
-            _ => {
+            SamplingMethod::Langevin { .. } => self.langevin_iteration(iteration, _ => {
                 // Fallback to basic Metropolis-Hastings
                 self.metropolis_iteration(iteration)
             }
@@ -522,7 +519,7 @@ where
     }
 
     /// Enhanced HMC iteration
-    fn enhanced_hmc_iteration(&mut self, _iteration: usize) -> StatsResult<()> {
+    fn enhanced_hmc_iteration(&mut self_iteration: usize) -> StatsResult<()> {
         // Implement enhanced HMC with SIMD optimizations
         // Process chains one at a time to avoid borrowing conflicts
         let num_chains = self.chains.len();
@@ -585,7 +582,7 @@ where
         // First half-step for momentum
         m = &m + &F::simd_scalar_mul(&gradient.view(), half_step);
 
-        // Full steps
+        // Full _steps
         for _ in 0..(num_steps - 1) {
             // Full step for position
             p = &p + &F::simd_scalar_mul(&m.view(), step_size);
@@ -612,7 +609,7 @@ where
         // Simplified - would implement proper sampling from multivariate normal
         let dim = self.target.dim();
         let normal = Normal::new(0.0, 1.0).unwrap();
-        let mut rng = rng();
+        let mut rng = rand::rng();
 
         let momentum: Array1<F> =
             Array1::from_shape_fn(dim, |_| F::from(normal.sample(&mut rng)).unwrap());
@@ -622,9 +619,7 @@ where
 
     /// Compute energy difference for Metropolis acceptance
     fn compute_energy_difference(
-        &self,
-        _old_pos: &Array1<F>,
-        _new_pos: &Array1<F>,
+        &self, _old_pos: &Array1<F>, _new_pos: &Array1<F>,
         old_momentum: &Array1<F>,
         new_momentum: &Array1<F>,
         old_log_density: F,
@@ -670,51 +665,51 @@ where
             true
         } else {
             let accept_prob = (-energy_diff).exp();
-            let mut rng = rng();
-            let u: f64 = rng.random_range(0.0..1.0);
+            let mut rng = rand::rng();
+            let u: f64 = rng.gen_range(0.0..1.0);
             F::from(u).unwrap() < accept_prob
         }
     }
 
     /// Stub implementations for other methods
-    fn nuts_iteration(&mut self, _iteration: usize) -> StatsResult<()> {
+    fn nuts_iteration(&mut self.._iteration: usize) -> StatsResult<()> {
         // Would implement NUTS algorithm
         Ok(())
     }
 
-    fn riemannian_hmc_iteration(&mut self, _iteration: usize) -> StatsResult<()> {
+    fn riemannian_hmc_iteration(&mut self_iteration: usize) -> StatsResult<()> {
         // Would implement Riemannian HMC
         Ok(())
     }
 
-    fn ensemble_iteration(&mut self, _iteration: usize) -> StatsResult<()> {
+    fn ensemble_iteration(&mut self_iteration: usize) -> StatsResult<()> {
         // Would implement ensemble sampler
         Ok(())
     }
 
-    fn slice_sampling_iteration(&mut self, _iteration: usize) -> StatsResult<()> {
+    fn slice_sampling_iteration(&mut self_iteration: usize) -> StatsResult<()> {
         // Would implement slice sampling
         Ok(())
     }
 
-    fn langevin_iteration(&mut self, _iteration: usize) -> StatsResult<()> {
+    fn langevin_iteration(&mut self_iteration: usize) -> StatsResult<()> {
         // Would implement Langevin dynamics
         Ok(())
     }
 
-    fn metropolis_iteration(&mut self, _iteration: usize) -> StatsResult<()> {
+    fn metropolis_iteration(&mut self_iteration: usize) -> StatsResult<()> {
         // Would implement basic Metropolis-Hastings
         Ok(())
     }
 
     /// Adapt sampler parameters
-    fn adapt_parameters(&mut self, _iteration: usize) -> StatsResult<()> {
+    fn adapt_parameters(&mut self_iteration: usize) -> StatsResult<()> {
         // Would implement adaptation algorithms
         Ok(())
     }
 
     /// Monitor convergence diagnostics
-    fn monitor_convergence(&mut self, _iteration: usize) -> StatsResult<()> {
+    fn monitor_convergence(&mut self_iteration: usize) -> StatsResult<()> {
         // Would implement convergence monitoring
         Ok(())
     }
@@ -782,9 +777,9 @@ impl<F> MCMCChain<F>
 where
     F: Float + NumCast + Copy + std::fmt::Display,
 {
-    fn new(id: usize, dim: usize, config: &AdvancedAdvancedConfig<F>) -> StatsResult<Self> {
+    fn new(_id: usize, dim: usize, config: &AdvancedAdvancedConfig<F>) -> StatsResult<Self> {
         Ok(Self {
-            id,
+            _id,
             current_position: Array1::zeros(dim),
             current_log_density: F::zero(),
             current_gradient: None,
@@ -802,10 +797,10 @@ impl<F> AdaptationState<F>
 where
     F: Float + NumCast + Copy + std::fmt::Display,
 {
-    fn new(dim: usize) -> Self {
+    fn new(_dim: usize) -> Self {
         Self {
-            sample_covariance: RwLock::new(Array2::eye(dim)),
-            sample_mean: RwLock::new(Array1::zeros(dim)),
+            sample_covariance: RwLock::new(Array2::eye(_dim)),
+            sample_mean: RwLock::new(Array1::zeros(_dim)),
             num_samples: RwLock::new(0),
             step_size_state: RwLock::new(StepSizeState {
                 log_step_size: F::from(-2.3).unwrap(), // log(0.1)
@@ -815,7 +810,7 @@ where
                 iteration: 0,
             }),
             mass_matrix_state: RwLock::new(MassMatrixState {
-                sample_covariance: Array2::eye(dim),
+                sample_covariance: Array2::eye(_dim),
                 regularization: F::from(1e-6).unwrap(),
                 adaptation_count: 0,
             }),
@@ -827,16 +822,16 @@ impl<F> ConvergenceDiagnostics<F>
 where
     F: Float + NumCast + Copy + std::fmt::Display,
 {
-    fn new(dim: usize) -> Self {
+    fn new(_dim: usize) -> Self {
         Self {
-            rhat: RwLock::new(Array1::ones(dim)),
-            ess: RwLock::new(Array1::zeros(dim)),
-            split_rhat: RwLock::new(Array1::ones(dim)),
-            rank_rhat: RwLock::new(Array1::ones(dim)),
-            mcse: RwLock::new(Array1::zeros(dim)),
-            autocorrelations: RwLock::new(Array2::zeros((dim, 100))),
-            geweke_z: RwLock::new(Array1::zeros(dim)),
-            heidelberger_welch: RwLock::new(vec![true; dim]),
+            rhat: RwLock::new(Array1::ones(_dim)),
+            ess: RwLock::new(Array1::zeros(_dim)),
+            split_rhat: RwLock::new(Array1::ones(_dim)),
+            rank_rhat: RwLock::new(Array1::ones(_dim)),
+            mcse: RwLock::new(Array1::zeros(_dim)),
+            autocorrelations: RwLock::new(Array2::zeros((_dim, 100))),
+            geweke_z: RwLock::new(Array1::zeros(_dim)),
+            heidelberger_welch: RwLock::new(vec![true; _dim]),
         }
     }
 }

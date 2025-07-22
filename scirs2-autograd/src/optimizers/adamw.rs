@@ -2,7 +2,7 @@
 
 use crate::optimizers::Optimizer;
 use crate::tensor::Tensor;
-use crate::tensor_ops::gradient_descent_ops::adamw;
+use crate::tensor__ops::gradient_descent_ops::adamw;
 use crate::variable::VariableID;
 use crate::{Context, Float, VariableEnvironment};
 
@@ -18,7 +18,7 @@ use crate::{Context, Float, VariableEnvironment};
 /// use ag::prelude::*;
 /// use ag::optimizers::AdamW;
 /// use ag::variable::NamespaceTrait;
-/// use ag::tensor_ops::*;
+/// use ag::tensor__ops::*;
 ///
 /// // Define parameters to optimize.
 /// let mut env = ag::VariableEnvironment::new();

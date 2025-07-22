@@ -6,7 +6,7 @@
 //! applications, and computer graphics.
 
 use ndarray::{array, Array2};
-use scirs2_spatial::boolean_ops::{
+use scirs2__spatial::boolean_ops::{
     compute_polygon_area, is_convex_polygon, is_self_intersecting, polygon_difference,
     polygon_intersection, polygon_symmetric_difference, polygon_union,
 };
@@ -338,15 +338,15 @@ fn self_intersection_example() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a regular hexagon with given radius and center
 #[allow(dead_code)]
-fn regular_hexagon(radius: f64, center_x: f64, center_y: f64) -> Array2<f64> {
+fn regular_hexagon(_radius: f64, center_x: f64, center_y: f64) -> Array2<f64> {
     let mut vertices = Vec::with_capacity(12); // 6 vertices * 2 coordinates
 
     for i in 0..6 {
         let angle = 2.0 * std::f64::consts::PI * (i as f64) / 6.0;
-        let x = center_x + radius * angle.cos();
-        let y = center_y + radius * angle.sin();
-        vertices.push(x);
-        vertices.push(y);
+        let _x = center_x + _radius * angle.cos();
+        let _y = center_y + _radius * angle.sin();
+        vertices.push(_x);
+        vertices.push(_y);
     }
 
     Array2::from_shape_vec((6, 2), vertices).unwrap()
@@ -377,16 +377,16 @@ fn create_star_polygon() -> Array2<f64> {
 
 /// Print polygon vertices (limited to first few vertices for readability)
 #[allow(dead_code)]
-fn print_vertices(poly: &Array2<f64>) {
+fn print_vertices(_poly: &Array2<f64>) {
     let max_vertices = 6; // Limit output for readability
-    let n = poly.nrows().min(max_vertices);
+    let n = _poly.nrows().min(max_vertices);
 
     print!("  Vertices:");
     for i in 0..n {
-        print!(" [{:.2}, {:.2}]", poly[[i, 0]], poly[[i, 1]]);
+        print!(" [{:.2}, {:.2}]", _poly[[i, 0]], _poly[[i, 1]]);
     }
-    if poly.nrows() > max_vertices {
-        print!(" ... ({} more)", poly.nrows() - max_vertices);
+    if _poly.nrows() > max_vertices {
+        print!(" ... ({} more)", _poly.nrows() - max_vertices);
     }
     println!();
 }

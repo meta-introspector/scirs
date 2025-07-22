@@ -22,8 +22,8 @@ use std::fmt::Debug;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::optimizer_composition::SequentialOptimizer;
-/// use scirs2_optim::optimizers::{SGD, Adam, Optimizer};
+/// use scirs2__optim::optimizer_composition::SequentialOptimizer;
+/// use scirs2__optim::optimizers::{SGD, Adam, Optimizer};
 ///
 /// // Create optimizers
 /// let sgd = SGD::new(0.1);
@@ -59,8 +59,8 @@ where
     /// # Arguments
     ///
     /// * `optimizers` - List of optimizers to apply in sequence
-    pub fn new(optimizers: Vec<Box<dyn Optimizer<A, D>>>) -> Self {
-        Self { optimizers }
+    pub fn new(_optimizers: Vec<Box<dyn Optimizer<A, D>>>) -> Self {
+        Self { _optimizers }
     }
 
     /// Add an optimizer to the sequence
@@ -146,7 +146,7 @@ where
     }
 
     fn set_learning_rate(&mut self, learning_rate: A) {
-        // Set the learning rate for all optimizers
+        // Set the learning _rate for all optimizers
         for optimizer in &mut self.optimizers {
             optimizer.set_learning_rate(learning_rate);
         }
@@ -176,9 +176,9 @@ where
     ///
     /// * `params` - The parameters in this group
     /// * `optimizer_index` - The index of the optimizer to use for this group
-    pub fn new(params: Array<A, D>, optimizer_index: usize) -> Self {
+    pub fn new(_params: Array<A, D>, optimizer_index: usize) -> Self {
         Self {
-            params,
+            _params,
             optimizer_index,
         }
     }
@@ -193,8 +193,8 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::optimizer_composition::{ParallelOptimizer, ParameterGroup};
-/// use scirs2_optim::optimizers::{SGD, Adam, Optimizer};
+/// use scirs2__optim::optimizer_composition::{ParallelOptimizer, ParameterGroup};
+/// use scirs2__optim::optimizers::{SGD, Adam, Optimizer};
 ///
 /// // Create optimizers
 /// let sgd = SGD::new(0.1);
@@ -278,19 +278,19 @@ where
         params: Array<A, D>,
         optimizer_index: usize,
     ) -> Result<usize> {
-        // Check if the optimizer index is valid
+        // Check if the optimizer _index is valid
         if optimizer_index >= self.optimizers.len() {
             return Err(OptimError::InvalidConfig(format!(
-                "Invalid optimizer index: {}. Only {} optimizers available.",
+                "Invalid optimizer _index: {}. Only {} optimizers available.",
                 optimizer_index,
                 self.optimizers.len()
             )));
         }
 
-        let index = self.parameter_groups.len();
+        let _index = self.parameter_groups.len();
         self.parameter_groups
             .push(ParameterGroup::new(params, optimizer_index));
-        Ok(index)
+        Ok(_index)
     }
 
     /// Get the number of optimizers
@@ -430,7 +430,7 @@ where
     A: Float + ScalarOperand + Debug,
     D: Dimension,
 {
-    fn step(&mut self, _params: &Array<A, D>, _gradients: &Array<A, D>) -> Result<Array<A, D>> {
+    fn step(&mut self_params: &Array<A, D>, _gradients: &Array<A, D>) -> Result<Array<A, D>> {
         // This implementation is a bit tricky since we have multiple parameter groups
         // We'll return an error message directing users to use update_all_parameters instead
         Err(OptimError::InvalidConfig(
@@ -475,7 +475,7 @@ where
     }
 
     fn set_learning_rate(&mut self, learning_rate: A) {
-        // Set the learning rate for all optimizers
+        // Set the learning _rate for all optimizers
         for optimizer in &mut self.optimizers {
             optimizer.set_learning_rate(learning_rate);
         }
@@ -492,8 +492,8 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::optimizer_composition::ChainedOptimizer;
-/// use scirs2_optim::optimizers::{SGD, Adam, Optimizer};
+/// use scirs2__optim::optimizer_composition::ChainedOptimizer;
+/// use scirs2__optim::optimizers::{SGD, Adam, Optimizer};
 ///
 /// // Create optimizers
 /// let inner = SGD::new(0.1);
@@ -529,8 +529,8 @@ where
     ///
     /// * `inner` - The inner optimizer, applied first
     /// * `outer` - The outer optimizer, applied to the result of the inner optimizer
-    pub fn new(inner: Box<dyn Optimizer<A, D>>, outer: Box<dyn Optimizer<A, D>>) -> Self {
-        Self { inner, outer }
+    pub fn new(_inner: Box<dyn Optimizer<A, D>>, outer: Box<dyn Optimizer<A, D>>) -> Self {
+        Self { _inner, outer }
     }
 
     /// Get a reference to the inner optimizer
@@ -573,7 +573,7 @@ where
     }
 
     fn set_learning_rate(&mut self, learning_rate: A) {
-        // Set the learning rate for both optimizers
+        // Set the learning _rate for both optimizers
         self.inner.set_learning_rate(learning_rate);
         self.outer.set_learning_rate(learning_rate);
     }

@@ -5,8 +5,8 @@
 //! and advanced quantum state visualizations without external dependencies.
 
 use crate::error::{ClusteringError, Result};
-use crate::advanced_clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
-use crate::advanced_visualization::{AdvancedVisualizationOutput, QuantumCoherencePlot, NeuromorphicAdaptationPlot};
+use crate::advanced__clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
+use crate::advanced__visualization::{AdvancedVisualizationOutput, QuantumCoherencePlot, NeuromorphicAdaptationPlot};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -356,12 +356,12 @@ impl Default for NativePlotConfig {
 
 impl AdvancedNativePlotter {
     /// Create a new native plotter
-    pub fn new(config: NativePlotConfig) -> Self {
+    pub fn new(_config: NativePlotConfig) -> Self {
         Self {
-            svg_canvas: SvgCanvas::new(config.width, config.height),
-            animation_engine: AnimationEngine::new(config.animation_fps),
+            svg_canvas: SvgCanvas::new(_config.width, _config.height),
+            animation_engine: AnimationEngine::new(_config.animation_fps),
             interactive_controller: InteractiveController::new(),
-            config,
+            _config,
         }
     }
 
@@ -857,7 +857,7 @@ impl AdvancedNativePlotter {
     }
 
     fn apply_quantum_color_enhancement(&self, base_color: String, quantum_factor: f64) -> String {
-        // Apply quantum shimmer effect to color
+        // Apply quantum shimmer effect to _color
         if base_color.starts_with("hsl") {
             // Extract hue, saturation, lightness
             if let Some(hsl_part) = base_color.strip_prefix("hsl(").and_then(|s| s.strip_suffix(")")) {
@@ -897,8 +897,7 @@ impl AdvancedNativePlotter {
             60..=119 => (x, c, 0.0),
             120..=179 => (0.0, c, x),
             180..=239 => (0.0, x, c),
-            240..=299 => (x, 0.0, c),
-            _ => (c, 0.0, x),
+            240..=299 => (x, 0.0, c, _ => (c, 0.0, x),
         };
 
         [
@@ -1202,9 +1201,9 @@ pub struct ExecutionSummary {
 // would provide the core rendering and interaction capabilities
 
 impl SvgCanvas {
-    pub fn new(width: usize, height: usize) -> Self {
+    pub fn new(_width: usize, height: usize) -> Self {
         Self {
-            width,
+            _width,
             height,
             elements: Vec::new(),
             styles: HashMap::new(),
@@ -1285,11 +1284,11 @@ impl SvgElement {
 }
 
 impl AnimationEngine {
-    pub fn new(fps: f64) -> Self {
+    pub fn new(_fps: f64) -> Self {
         Self {
             frames: Vec::new(),
             current_frame: 0,
-            frame_duration: 1000.0 / fps,
+            frame_duration: 1000.0 / _fps,
             total_duration: 0.0,
         }
     }
@@ -1371,8 +1370,7 @@ pub fn export_native_visualization(
                 .map_err(|e| ClusteringError::InvalidInput(format!("Failed to write HTML file: {}", e)))?;
             
             println!("🌐 Exported interactive Advanced visualization to {filename}.html");
-        },
-        _ => {
+        }_ => {
             return Err(ClusteringError::InvalidInput(format!("Unsupported export format: {}", format)));
         }
     }

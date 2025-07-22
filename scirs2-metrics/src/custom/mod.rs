@@ -16,7 +16,7 @@
 //! ## Defining a Custom Classification Metric
 //!
 //! ```
-//! use scirs2_metrics::custom::{ClassificationMetric, MetricResult};
+//! use scirs2__metrics::custom::{ClassificationMetric, MetricResult};
 //! use ndarray::Array1;
 //!
 //! struct CustomAccuracy;
@@ -48,7 +48,7 @@
 //! ## Defining a Custom Regression Metric
 //!
 //! ```
-//! use scirs2_metrics::custom::{RegressionMetric, MetricResult};
+//! use scirs2__metrics::custom::{RegressionMetric, MetricResult};
 //! use ndarray::Array1;
 //!
 //! struct LogCoshError;
@@ -306,9 +306,9 @@ pub struct CustomMetricResult<F: Float> {
 
 impl<F: Float> CustomMetricResults<F> {
     /// Creates a new results container
-    pub fn new(metric_type: &str) -> Self {
+    pub fn new(_metric_type: &str) -> Self {
         Self {
-            metric_type: metric_type.to_string(),
+            metric_type: _metric_type.to_string(),
             results: Vec::new(),
         }
     }
@@ -357,7 +357,7 @@ impl<F: Float> CustomMetricResults<F> {
     }
 }
 
-impl<F: Float + fmt::Display> fmt::Display for CustomMetricResults<F> {
+impl<F: Float + fmt::Display>, fmt::Display for CustomMetricResults<F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Custom {} Metrics:", self.metric_type)?;
         writeln!(f, "{:-<50}", "")?;

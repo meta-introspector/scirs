@@ -21,7 +21,7 @@
 //!
 //! ```rust
 //! use ndarray::{Array1, Array2};
-//! use scirs2_interpolate::structured_matrix::{BandMatrix, solve_band_system};
+//! use scirs2__interpolate::structured_matrix::{BandMatrix, solve_band_system};
 //!
 //! // Create a tridiagonal matrix for cubic spline interpolation
 //! let n = 100;
@@ -86,15 +86,15 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2_interpolate::structured_matrix::BandMatrix;
+    /// use scirs2__interpolate::structured_matrix::BandMatrix;
     ///
     /// // Create a tridiagonal matrix (1 sub, 1 super diagonal)
     /// let band_matrix = BandMatrix::<f64>::new(5, 1, 1);
     /// ```
-    pub fn new(size: usize, kl: usize, ku: usize) -> Self {
-        let band_data = Array2::zeros((kl + ku + 1, size));
+    pub fn new(_size: usize, kl: usize, ku: usize) -> Self {
+        let band_data = Array2::zeros((kl + ku + 1, _size));
         Self {
-            size,
+            _size,
             kl,
             ku,
             band_data,
@@ -108,14 +108,14 @@ where
     /// * `dense` - Dense matrix to extract band from
     /// * `kl` - Number of sub-diagonals to extract
     /// * `ku` - Number of super-diagonals to extract
-    pub fn from_dense(dense: &ArrayView2<T>, kl: usize, ku: usize) -> InterpolateResult<Self> {
-        if dense.nrows() != dense.ncols() {
+    pub fn from_dense(_dense: &ArrayView2<T>, kl: usize, ku: usize) -> InterpolateResult<Self> {
+        if _dense.nrows() != _dense.ncols() {
             return Err(InterpolateError::invalid_input(
                 "matrix must be square".to_string(),
             ));
         }
 
-        let size = dense.nrows();
+        let size = _dense.nrows();
         let mut band_matrix = Self::new(size, kl, ku);
 
         // Extract band elements
@@ -124,7 +124,7 @@ where
                 let diag_offset = j as isize - i as isize;
                 if diag_offset >= -(kl as isize) && diag_offset <= (ku as isize) {
                     let band_row = (ku as isize - diag_offset) as usize;
-                    band_matrix.band_data[[band_row, i]] = dense[[i, j]];
+                    band_matrix.band_data[[band_row, i]] = _dense[[i, j]];
                 }
             }
         }
@@ -319,11 +319,11 @@ where
     T: Float + Copy + Zero + AddAssign,
 {
     /// Create a new empty sparse matrix
-    pub fn new(nrows: usize, ncols: usize) -> Self {
-        let row_ptrs = vec![0; nrows + 1];
+    pub fn new(_nrows: usize, ncols: usize) -> Self {
+        let row_ptrs = vec![0; _nrows + 1];
 
         Self {
-            nrows,
+            _nrows,
             ncols,
             row_ptrs,
             col_indices: Vec::new(),
@@ -334,8 +334,8 @@ where
     /// Create a sparse matrix from a dense matrix
     ///
     /// Only stores non-zero elements based on the given tolerance.
-    pub fn from_dense(dense: &ArrayView2<T>, tolerance: T) -> Self {
-        let (nrows, ncols) = dense.dim();
+    pub fn from_dense(_dense: &ArrayView2<T>, tolerance: T) -> Self {
+        let (nrows, ncols) = _dense.dim();
         let mut row_ptrs = Vec::with_capacity(nrows + 1);
         let mut col_indices = Vec::new();
         let mut data = Vec::new();
@@ -345,7 +345,7 @@ where
         for i in 0..nrows {
             let mut row_nnz = 0;
             for j in 0..ncols {
-                let value = dense[[i, j]];
+                let value = _dense[[i, j]];
                 if value.abs() > tolerance {
                     col_indices.push(j);
                     data.push(value);
@@ -473,7 +473,7 @@ where
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_interpolate::structured_matrix::{BandMatrix, solve_band_system};
+/// use scirs2__interpolate::structured_matrix::{BandMatrix, solve_band_system};
 ///
 /// // Create a simple tridiagonal system
 /// let mut matrix = BandMatrix::new(3, 1, 1);
@@ -511,7 +511,7 @@ where
 {
     if rhs.len() != band_matrix.size() {
         return Err(InterpolateError::invalid_input(
-            "RHS vector size must match matrix size".to_string(),
+            "RHS vector size must match _matrix size".to_string(),
         ));
     }
 
@@ -652,7 +652,7 @@ where
     let n = sparse_matrix.nrows;
     if rhs.len() != n {
         return Err(InterpolateError::invalid_input(
-            "RHS vector size must match matrix size".to_string(),
+            "RHS vector size must match _matrix size".to_string(),
         ));
     }
 
@@ -681,7 +681,7 @@ where
 
             if diagonal.abs() < T::from_f64(1e-14).unwrap() {
                 return Err(InterpolateError::invalid_input(
-                    "matrix has zero diagonal element".to_string(),
+                    "_matrix has zero diagonal element".to_string(),
                 ));
             }
 
@@ -818,7 +818,7 @@ pub fn vectorized_matvec<T>(
 where
     T: Float + Copy + Zero + AddAssign + 'static,
 {
-    use crate::simd_optimized::is_simd_available;
+    use crate::simd__optimized::is_simd_available;
 
     let (m, n) = matrix.dim();
     if vector.len() != n {

@@ -191,9 +191,9 @@ impl Default for MLPipeline {
 
 impl MLPipeline {
     /// Create a new ML pipeline
-    pub fn new(config: MLPipelineConfig) -> Self {
+    pub fn new(_config: MLPipelineConfig) -> Self {
         Self {
-            config,
+            _config,
             fitted_scalers: None,
         }
     }
@@ -387,12 +387,11 @@ impl MLPipeline {
         // In a full implementation, you'd use the actual balancing utilities
         match strategy {
             BalancingStrategy::RandomUndersample => self.random_undersample(dataset, None),
-            BalancingStrategy::RandomOversample => self.random_oversample(dataset, None),
-            _ => Ok(dataset.clone()), // Placeholder for other strategies
+            BalancingStrategy::RandomOversample => self.random_oversample(dataset, None, _ => Ok(dataset.clone()), // Placeholder for other strategies
         }
     }
 
-    fn random_undersample(&self, dataset: &Dataset, _random_state: Option<u64>) -> Result<Dataset> {
+    fn random_undersample(&self, dataset: &Dataset_random_state: Option<u64>) -> Result<Dataset> {
         let target = dataset.target.as_ref().ok_or_else(|| {
             DatasetsError::InvalidFormat("Target required for balancing".to_string())
         })?;
@@ -410,12 +409,12 @@ impl MLPipeline {
         // Sample min_count samples from each class
         let mut selected_indices = Vec::new();
 
-        for (class, _) in class_counts {
+        for (class_) in class_counts {
             let class_indices: Vec<usize> = target
                 .iter()
                 .enumerate()
                 .filter(|(_, &val)| !val.is_nan() && val as i64 == class)
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .collect();
 
             let mut sampled_indices = class_indices;
@@ -495,7 +494,7 @@ impl MLPipeline {
 
             if samples_needed > 0 {
                 for _ in 0..samples_needed {
-                    let random_idx = rng.random_range(0..indices.len());
+                    let random_idx = rng.gen_range(0..indices.len());
                     all_indices.push(indices[random_idx]);
                 }
             }
@@ -505,7 +504,7 @@ impl MLPipeline {
         all_indices.shuffle(&mut *rng);
 
         // Create the oversampled dataset
-        let oversampled_data = dataset.data.select(Axis(0), &all_indices);
+        let oversampled_data = dataset.data.select(Axis(0)..&all_indices);
         let oversampled_target = target.select(Axis(0), &all_indices);
 
         Ok(Dataset {
@@ -687,8 +686,8 @@ impl MLPipeline {
         Ok(())
     }
 
-    fn percentile(sorted_values: &[f64], p: f64) -> Option<f64> {
-        if sorted_values.is_empty() {
+    fn percentile(_sorted_values: &[f64], p: f64) -> Option<f64> {
+        if _sorted_values.is_empty() {
             return None;
         }
 
@@ -704,8 +703,8 @@ impl MLPipeline {
         }
     }
 
-    fn compute_mad(sorted_values: &[f64], median: f64) -> f64 {
-        let deviations: Vec<f64> = sorted_values.iter().map(|&x| (x - median).abs()).collect();
+    fn compute_mad(_sorted_values: &[f64], median: f64) -> f64 {
+        let deviations: Vec<f64> = _sorted_values.iter().map(|&x| (x - median).abs()).collect();
 
         let mut sorted_deviations = deviations;
         sorted_deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -829,18 +828,18 @@ pub mod convenience {
     use super::*;
 
     /// Quick train/test split with default configuration
-    pub fn train_test_split(dataset: &Dataset, test_size: Option<f64>) -> Result<DataSplit> {
+    pub fn train_test_split(_dataset: &Dataset, test_size: Option<f64>) -> Result<DataSplit> {
         let mut config = MLPipelineConfig::default();
-        if let Some(size) = test_size {
-            config.test_size = size;
+        if let Some(_size) = test_size {
+            config.test_size = _size;
         }
 
         let pipeline = MLPipeline::new(config);
-        pipeline.train_test_split(dataset)
+        pipeline.train_test_split(_dataset)
     }
 
     /// Prepare dataset for ML with standard preprocessing
-    pub fn prepare_for_ml(dataset: &Dataset, scale: bool, balance: bool) -> Result<Dataset> {
+    pub fn prepare_for_ml(_dataset: &Dataset, scale: bool, balance: bool) -> Result<Dataset> {
         let mut config = MLPipelineConfig::default();
 
         if !scale {
@@ -852,7 +851,7 @@ pub mod convenience {
         }
 
         let mut pipeline = MLPipeline::new(config);
-        pipeline.prepare_dataset(dataset)
+        pipeline.prepare_dataset(_dataset)
     }
 
     /// Generate cross-validation folds
@@ -863,8 +862,8 @@ pub mod convenience {
     ) -> Result<CrossValidationFolds> {
         let mut config = MLPipelineConfig::default();
 
-        if let Some(folds) = n_folds {
-            config.cv_folds = folds;
+        if let Some(_folds) = n_folds {
+            config.cv_folds = _folds;
         }
 
         if let Some(strat) = stratify {
@@ -876,9 +875,9 @@ pub mod convenience {
     }
 
     /// Create a simple ML experiment
-    pub fn create_experiment(name: &str, dataset: &Dataset) -> MLExperiment {
+    pub fn create_experiment(_name: &str, dataset: &Dataset) -> MLExperiment {
         let pipeline = MLPipeline::default();
-        pipeline.create_experiment(name, dataset)
+        pipeline.create_experiment(_name, dataset)
     }
 }
 

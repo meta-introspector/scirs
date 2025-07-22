@@ -87,30 +87,30 @@ impl ThreadPool {
     }
 
     /// Create a new thread pool with custom configuration
-    pub fn with_config(config: ThreadPoolConfig) -> Self {
+    pub fn with_config(_config: ThreadPoolConfig) -> Self {
         let (sender, receiver) = channel();
         let receiver = Arc::new(Mutex::new(receiver));
 
         // Initialize stats with proper worker_stats vector
         let mut stats_data = ThreadPoolStats::new();
-        stats_data.worker_stats = (0..config.num_threads).map(WorkerStats::new).collect();
+        stats_data.worker_stats = (0.._config.num_threads).map(WorkerStats::new).collect();
         let stats = Arc::new(Mutex::new(stats_data));
 
-        let mut workers = Vec::with_capacity(config.num_threads);
+        let mut workers = Vec::with_capacity(_config.num_threads);
 
-        for id in 0..config.num_threads {
+        for id in 0.._config.num_threads {
             workers.push(Worker::new(
                 id,
                 Arc::clone(&receiver),
                 Arc::clone(&stats),
-                config.clone(),
+                _config.clone(),
             ));
         }
 
         ThreadPool {
             workers,
             sender,
-            config,
+            _config,
             stats,
         }
     }
@@ -188,11 +188,11 @@ impl ThreadPool {
     pub fn resize(&mut self, new_size: usize) -> Result<(), ThreadPoolError> {
         if new_size == 0 {
             return Err(ThreadPoolError::InvalidConfiguration(
-                "Thread pool size cannot be zero".into(),
+                "Thread pool _size cannot be zero".into(),
             ));
         }
 
-        // Implementation would recreate the thread pool with new size
+        // Implementation would recreate the thread pool with new _size
         // For now, just update the config
         self.config.num_threads = new_size;
         Ok(())
@@ -280,12 +280,12 @@ impl Worker {
     }
 
     fn set_thread_priority(_priority: ThreadPriority) {
-        // Platform-specific thread priority setting would go here
+        // Platform-specific thread _priority setting would go here
         // For now, this is a no-op
     }
 
     fn set_cpu_affinity(_worker_id: usize, _affinity: &CpuAffinity) {
-        // Platform-specific CPU affinity setting would go here
+        // Platform-specific CPU _affinity setting would go here
         // For now, this is a no-op
     }
 }
@@ -382,9 +382,9 @@ pub struct WorkerStats {
 }
 
 impl WorkerStats {
-    fn new(worker_id: usize) -> Self {
+    fn new(_worker_id: usize) -> Self {
         Self {
-            worker_id,
+            _worker_id,
             tasks_completed: 0,
             total_time: Duration::ZERO,
             queue_size: 0,
@@ -410,9 +410,9 @@ impl ParallelScheduler {
     }
 
     /// Create a scheduler with custom thread pool
-    pub fn with_thread_pool(thread_pool: Arc<ThreadPool>) -> Self {
+    pub fn with_thread_pool(_thread_pool: Arc<ThreadPool>) -> Self {
         Self {
-            thread_pool,
+            _thread_pool,
             config: SchedulerConfig::default(),
         }
     }
@@ -448,7 +448,7 @@ impl ParallelScheduler {
     }
 
     /// Check if an operation should be parallelized
-    fn should_parallelize<F, R>(&self, _operation: &F) -> bool
+    fn should_parallelize<F, R>(&self_operation: &F) -> bool
     where
         F: FnOnce() -> R + Send + 'static,
         R: Send + 'static,
@@ -539,9 +539,9 @@ pub fn init_thread_pool() -> Result<(), ThreadPoolError> {
 
 /// Initialize the global thread pool with custom configuration
 #[allow(dead_code)]
-pub fn init_thread_pool_with_config(config: ThreadPoolConfig) -> Result<(), ThreadPoolError> {
+pub fn init_thread_pool_with_config(_config: ThreadPoolConfig) -> Result<(), ThreadPoolError> {
     let mut pool = GLOBAL_THREAD_POOL.lock().unwrap();
-    *pool = Some(ThreadPool::with_config(config));
+    *pool = Some(ThreadPool::with_config(_config));
     Ok(())
 }
 
@@ -598,9 +598,9 @@ pub fn shutdown_global_thread_pool() -> Result<(), ThreadPoolError> {
 
 /// Set the number of threads for the global thread pool
 #[allow(dead_code)]
-pub fn set_global_thread_count(count: usize) -> Result<(), ThreadPoolError> {
+pub fn set_global_thread_count(_count: usize) -> Result<(), ThreadPoolError> {
     let config = ThreadPoolConfig {
-        num_threads: count,
+        num_threads: _count,
         ..Default::default()
     };
     init_thread_pool_with_config(config)

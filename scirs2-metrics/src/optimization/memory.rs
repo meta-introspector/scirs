@@ -87,8 +87,8 @@ impl ChunkedMetrics {
     ///
     /// ```
     /// use ndarray::Array1;
-    /// use scirs2_metrics::optimization::memory::{ChunkedMetrics, StreamingMetric};
-    /// use scirs2_metrics::error::Result;
+    /// use scirs2__metrics::optimization::memory::{ChunkedMetrics, StreamingMetric};
+    /// use scirs2__metrics::error::Result;
     ///
     /// // Example streaming implementation of mean absolute error
     /// struct StreamingMAE;
@@ -244,17 +244,15 @@ where
     pub fn new() -> Self {
         IncrementalMetrics {
             state: S::default(),
-            count: 0,
-            _marker: PhantomData,
+            count: 0_marker: PhantomData,
         }
     }
 
     /// Create a new IncrementalMetrics with the given state
-    pub fn with_state(state: S) -> Self {
+    pub fn with_state(_state: S) -> Self {
         IncrementalMetrics {
-            state,
-            count: 0,
-            _marker: PhantomData,
+            _state,
+            count: 0_marker: PhantomData,
         }
     }
 
@@ -349,7 +347,7 @@ pub trait MemoryMappedMetric<T> {
     fn finalize(&self, state: &Self::State) -> Result<f64>;
 }
 
-use crossbeam_utils::CachePadded;
+use crossbeam__utils::CachePadded;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2};
 use num_traits::Float;
 /// Zero-copy memory operations and custom allocators for high-performance metrics computation
@@ -774,8 +772,7 @@ impl ZeroCopyMemoryManager {
     pub fn create_view<'a, T>(&'a self, data: &'a [T]) -> ZeroCopyArrayView<'a, T> {
         ZeroCopyArrayView {
             data: NonNull::new(data.as_ptr() as *mut T).unwrap(),
-            len: data.len(),
-            _lifetime: std::marker::PhantomData,
+            len: data.len(), _lifetime: std::marker::PhantomData,
             memory_manager: self,
         }
     }
@@ -784,8 +781,7 @@ impl ZeroCopyMemoryManager {
     pub fn create_view_mut<'a, T>(&'a self, data: &'a mut [T]) -> ZeroCopyArrayViewMut<'a, T> {
         ZeroCopyArrayViewMut {
             data: NonNull::new(data.as_mut_ptr()).unwrap(),
-            len: data.len(),
-            _lifetime: std::marker::PhantomData,
+            len: data.len(), _lifetime: std::marker::PhantomData,
             memory_manager: self,
         }
     }
@@ -819,8 +815,7 @@ impl ZeroCopyMemoryManager {
 
         Ok(ZeroCopyArrayView {
             data: mapping.memory_region.cast::<T>(),
-            len,
-            _lifetime: std::marker::PhantomData,
+            len_lifetime: std::marker::PhantomData,
             memory_manager: self,
         })
     }
@@ -869,12 +864,12 @@ impl ZeroCopyMemoryManager {
 
 impl MemoryPool {
     /// Create a new memory pool
-    pub fn new(block_size: usize, alignment: usize, initial_capacity: usize) -> Self {
+    pub fn new(_block_size: usize, alignment: usize, initial_capacity: usize) -> Self {
         Self {
-            block_size,
+            _block_size,
             alignment,
             free_blocks: Arc::new(Mutex::new(Vec::with_capacity(initial_capacity))),
-            capacity: AtomicUsize::new(0),
+            _capacity: AtomicUsize::new(0),
             allocated_count: AtomicUsize::new(0),
             pool_stats: PoolStatistics::new(),
         }
@@ -995,13 +990,13 @@ impl SimdAlignedAllocator {
 
 impl ArenaAllocator {
     /// Create a new arena allocator
-    pub fn new(default_arena_size: usize) -> Result<Self> {
-        let initial_arena = Arc::new(Mutex::new(Arena::new(default_arena_size)?));
+    pub fn new(_default_arena_size: usize) -> Result<Self> {
+        let initial_arena = Arc::new(Mutex::new(Arena::new(_default_arena_size)?));
 
         Ok(Self {
             current_arena: initial_arena.clone(),
             arenas: vec![initial_arena],
-            default_arena_size,
+            _default_arena_size,
             arena_stats: ArenaStats::new(),
         })
     }
@@ -1044,8 +1039,8 @@ impl ArenaAllocator {
 
 impl Arena {
     /// Create a new arena
-    pub fn new(size: usize) -> Result<Self> {
-        let layout = Layout::from_size_align(size, 64) // 64-byte alignment for cache lines
+    pub fn new(_size: usize) -> Result<Self> {
+        let layout = Layout::from_size_align(_size, 64) // 64-byte alignment for cache lines
             .map_err(|_| MetricsError::MemoryError("Invalid arena layout".to_string()))?;
 
         let ptr = unsafe { alloc(layout) };
@@ -1057,7 +1052,7 @@ impl Arena {
 
         Ok(Self {
             memory: NonNull::new(ptr).unwrap(),
-            size,
+            _size,
             offset: 0,
             alignment: 64,
         })
@@ -1195,8 +1190,8 @@ pub struct PoolAllocator {
 }
 
 impl PoolAllocator {
-    pub fn new(block_size: usize) -> Self {
-        Self { block_size }
+    pub fn new(_block_size: usize) -> Self {
+        Self { _block_size }
     }
 }
 
@@ -1524,8 +1519,8 @@ impl<T> ZeroCopyBuffer<T> {
             // Need to reallocate
             let new_ptr = self.allocator.reallocate(
                 self.data.cast::<u8>(),
-                self.layout.size(),
-                new_size * size_of::<T>(),
+                self.layout._size(),
+                new_size * _size_of::<T>(),
                 self.layout.align(),
             )?;
 
@@ -1590,8 +1585,7 @@ impl<'a, T> ZeroCopyArrayView<'a, T> {
 
         Ok(ZeroCopyArrayView {
             data: unsafe { NonNull::new_unchecked(self.data.as_ptr().add(start)) },
-            len,
-            _lifetime: std::marker::PhantomData,
+            len_lifetime: std::marker::PhantomData,
             memory_manager: self.memory_manager,
         })
     }

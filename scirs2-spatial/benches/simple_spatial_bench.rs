@@ -6,15 +6,15 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_spatial::distance::{euclidean, manhattan, pdist};
+use scirs2__spatial::distance::{euclidean, manhattan, pdist};
 use std::hint::black_box;
 use std::time::Duration;
 
 // Simple data generator
 #[allow(dead_code)]
-fn generate_test_data(n_points: usize, dimensions: usize) -> Array2<f64> {
+fn generate_test_data(_n_points: usize, dimensions: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(42);
-    Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
+    Array2::from_shape_fn((_n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
 }
 
 // Basic distance calculation benchmark
@@ -22,7 +22,7 @@ fn generate_test_data(n_points: usize, dimensions: usize) -> Array2<f64> {
 fn bench_distance_calculations(c: &mut Criterion) {
     let mut group = c.benchmark_group("distance_calculations");
 
-    for &size in &[100, 500, 1000] {
+    for &size in &[100..500, 1000] {
         for &dim in &[3, 10, 50] {
             let points = generate_test_data(size, dim);
 
@@ -31,7 +31,7 @@ fn bench_distance_calculations(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("euclidean_pairwise", format!("{size}x{dim}")),
                 &(size, dim),
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         let mut total = 0.0;
                         for i in 0..points.nrows() {
@@ -49,7 +49,7 @@ fn bench_distance_calculations(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("manhattan_pairwise", format!("{size}x{dim}")),
                 &(size, dim),
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         let mut total = 0.0;
                         for i in 0..points.nrows() {
@@ -80,11 +80,11 @@ fn bench_distance_matrix(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(expected_ops as u64));
 
-        group.bench_with_input(BenchmarkId::new("pdist_euclidean", size), &size, |b, _| {
+        group.bench_with_input(BenchmarkId::new("pdist_euclidean", size), &size, |b_| {
             b.iter(|| black_box(pdist(&points, euclidean)))
         });
 
-        group.bench_with_input(BenchmarkId::new("pdist_manhattan", size), &size, |b, _| {
+        group.bench_with_input(BenchmarkId::new("pdist_manhattan", size), &size, |b_| {
             b.iter(|| black_box(pdist(&points, manhattan)))
         });
     }
@@ -109,7 +109,7 @@ fn bench_memory_scaling(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("memory_usage", format!("{memory_mb:.1}MB")),
             &size,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     let distances = pdist(&points, euclidean);
                     black_box(distances.sum())

@@ -7,8 +7,8 @@
 //! - Advanced optimization recommendations
 //! - Self-improving algorithmic components
 
-use scirs2_io::enhanced_algorithms::AdvancedPatternRecognizer;
-use scirs2_io::error::Result;
+use scirs2__io::enhanced_algorithms::AdvancedPatternRecognizer;
+use scirs2__io::error::Result;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -57,7 +57,7 @@ fn main() -> Result<()> {
 
 /// Demonstrate multi-scale pattern analysis capabilities
 #[allow(dead_code)]
-fn demonstrate_multiscale_analysis(recognizer: &mut AdvancedPatternRecognizer) -> Result<()> {
+fn demonstrate_multiscale_analysis(_recognizer: &mut AdvancedPatternRecognizer) -> Result<()> {
     println!("🔬 Multi-Scale Pattern Analysis");
     println!("==============================");
 
@@ -76,7 +76,7 @@ fn demonstrate_multiscale_analysis(recognizer: &mut AdvancedPatternRecognizer) -
         println!("   Size: {} bytes", data.len());
 
         let start_time = Instant::now();
-        let analysis = recognizer.analyze_patterns(&data)?;
+        let analysis = _recognizer.analyze_patterns(&data)?;
         let analysis_time = start_time.elapsed();
 
         println!("   Analysis Time: {:.2} ms", analysis_time.as_millis());
@@ -236,7 +236,7 @@ fn demonstrate_emergent_pattern_detection(
 
 /// Demonstrate meta-pattern recognition
 #[allow(dead_code)]
-fn demonstrate_meta_pattern_recognition(recognizer: &mut AdvancedPatternRecognizer) -> Result<()> {
+fn demonstrate_meta_pattern_recognition(_recognizer: &mut AdvancedPatternRecognizer) -> Result<()> {
     println!("🔗 Meta-Pattern Recognition");
     println!("===========================");
 
@@ -267,7 +267,7 @@ fn demonstrate_meta_pattern_recognition(recognizer: &mut AdvancedPatternRecogniz
     for (dataset_name, data) in meta_pattern_datasets {
         println!("🎯 {}", dataset_name);
 
-        let analysis = recognizer.analyze_patterns(&data)?;
+        let analysis = _recognizer.analyze_patterns(&data)?;
 
         println!("   Individual Patterns:");
         for (pattern_type, score) in &analysis.pattern_scores {
@@ -520,7 +520,7 @@ fn demonstrate_algorithmic_self_improvement(
 
 /// Demonstrate real-world data analysis
 #[allow(dead_code)]
-fn demonstrate_real_world_analysis(recognizer: &mut AdvancedPatternRecognizer) -> Result<()> {
+fn demonstrate_real_world_analysis(_recognizer: &mut AdvancedPatternRecognizer) -> Result<()> {
     println!("🌍 Real-World Data Analysis");
     println!("===========================");
 
@@ -543,7 +543,7 @@ fn demonstrate_real_world_analysis(recognizer: &mut AdvancedPatternRecognizer) -
     for (domain_name, data) in real_world_scenarios {
         println!("🔍 Domain: {}", domain_name);
 
-        let analysis = recognizer.analyze_patterns(&data)?;
+        let analysis = _recognizer.analyze_patterns(&data)?;
 
         // Extract domain-specific insights
         let primary_pattern = analysis
@@ -556,8 +556,7 @@ fn demonstrate_real_world_analysis(recognizer: &mut AdvancedPatternRecognizer) -
             x if x > 0.8 => "Very High",
             x if x > 0.6 => "High",
             x if x > 0.4 => "Moderate",
-            x if x > 0.2 => "Low",
-            _ => "Very Low",
+            x if x > 0.2 => "Low"_ => "Very Low",
         };
 
         println!("   Data Size: {} bytes", data.len());
@@ -566,7 +565,7 @@ fn demonstrate_real_world_analysis(recognizer: &mut AdvancedPatternRecognizer) -
             "   Primary Pattern: {} (Score: {:.3})",
             primary_pattern
                 .as_ref()
-                .map(|(k, _)| k.as_str())
+                .map(|(k_)| k.as_str())
                 .unwrap_or("None"),
             primary_pattern.as_ref().map(|(_, v)| *v).unwrap_or(0.0)
         );
@@ -656,21 +655,21 @@ fn demonstrate_real_world_analysis(recognizer: &mut AdvancedPatternRecognizer) -
 // Data generation functions for various scenarios
 
 #[allow(dead_code)]
-fn generate_repetitive_pattern(size: usize) -> Vec<u8> {
+fn generate_repetitive_pattern(_size: usize) -> Vec<u8> {
     let pattern = vec![1, 2, 3, 4, 5];
-    (0..size).map(|i| pattern[i % pattern.len()]).collect()
+    (0.._size).map(|i| pattern[i % pattern.len()]).collect()
 }
 
 #[allow(dead_code)]
-fn generate_sequential_data(size: usize) -> Vec<u8> {
-    (0..size).map(|i| (i % 256) as u8).collect()
+fn generate_sequential_data(_size: usize) -> Vec<u8> {
+    (0.._size).map(|i| (i % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn generate_fractal_data(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_fractal_data(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
-            let x = i as f32 / size as f32;
+            let x = i as f32 / _size as f32;
             let fractal = (x * 16.0).sin() * (x * 32.0).cos() * (x * 64.0).sin();
             ((fractal * 127.0 + 128.0) as u8).min(255)
         })
@@ -678,15 +677,15 @@ fn generate_fractal_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_random_noise(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_random_noise(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| ((i * 1103515245 + 12345) % 256) as u8)
         .collect()
 }
 
 #[allow(dead_code)]
-fn generate_mixed_complexity_data(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_mixed_complexity_data(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             if i % 3 == 0 {
                 (i % 10) as u8 // Simple pattern
@@ -700,13 +699,13 @@ fn generate_mixed_complexity_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_simple_repetition(size: usize) -> Vec<u8> {
-    (0..size).map(|i| (i % 4) as u8).collect()
+fn generate_simple_repetition(_size: usize) -> Vec<u8> {
+    (0.._size).map(|i| (i % 4) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn generate_nested_repetition(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_nested_repetition(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let outer = (i / 16) % 4;
             let inner = i % 4;
@@ -716,8 +715,8 @@ fn generate_nested_repetition(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_fractal_evolution(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_fractal_evolution(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let scale1 = ((i as f32 * 0.1).sin() * 127.0 + 128.0) as u8;
             let scale2 = ((i as f32 * 0.05).sin() * 63.0 + 64.0) as u8;
@@ -727,8 +726,8 @@ fn generate_fractal_evolution(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_adaptive_pattern(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_adaptive_pattern(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let adaptation = (i as f32 / 100.0).tanh();
             let base_pattern = (i % 8) as f32;
@@ -738,10 +737,10 @@ fn generate_adaptive_pattern(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_emergent_complexity(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_emergent_complexity(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
-            let chaos = if i > size / 2 {
+            let chaos = if i > _size / 2 {
                 ((i * i * i) % 256) as u8
             } else {
                 (i % 16) as u8
@@ -753,13 +752,13 @@ fn generate_emergent_complexity(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_compression_repetition_data(size: usize) -> Vec<u8> {
+fn generate_compression_repetition_data(_size: usize) -> Vec<u8> {
     let mut data = Vec::new();
     let mut i = 0;
-    while data.len() < size {
+    while data.len() < _size {
         let run_length = 8 + (i % 16);
         let value = (i % 32) as u8;
-        for _ in 0..run_length.min(size - data.len()) {
+        for _ in 0..run_length.min(_size - data.len()) {
             data.push(value);
         }
         i += 1;
@@ -768,10 +767,10 @@ fn generate_compression_repetition_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_sequential_entropy_data(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_sequential_entropy_data(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
-            if i < size / 2 {
+            if i < _size / 2 {
                 (i % 256) as u8 // Sequential
             } else {
                 ((i * 1234567 + 987654321) % 256) as u8 // High entropy
@@ -781,8 +780,8 @@ fn generate_sequential_entropy_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_fractal_periodicity_data(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_fractal_periodicity_data(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let periodic = ((i % 32) as f32 * 0.2).sin();
             let fractal = (i as f32 * 0.1).sin() * (i as f32 * 0.05).cos();
@@ -792,8 +791,8 @@ fn generate_fractal_periodicity_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_multi_pattern_convergence(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_multi_pattern_convergence(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let pattern1 = (i % 16) as u8;
             let pattern2 = ((i * i) % 64) as u8;
@@ -804,8 +803,8 @@ fn generate_multi_pattern_convergence(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_database_scenario(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_database_scenario(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             if i % 100 < 20 {
                 // Header/metadata
@@ -819,8 +818,8 @@ fn generate_database_scenario(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_image_scenario(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_image_scenario(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let x = i % 64;
             let y = i / 64;
@@ -832,8 +831,8 @@ fn generate_image_scenario(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_scientific_scenario(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_scientific_scenario(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let measurement = (i as f32 * 0.01).exp().sin() * 127.0 + 128.0;
             let quantization_noise = ((i * 7) % 8) as f32;
@@ -843,8 +842,8 @@ fn generate_scientific_scenario(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_network_scenario(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_network_scenario(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             if i % 64 < 8 {
                 // Packet headers
@@ -858,8 +857,8 @@ fn generate_network_scenario(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_sensor_scenario(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_sensor_scenario(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let sensor_reading = (i as f32 * 0.1).sin() * 100.0 + 128.0;
             let noise = ((i * 3) % 20) as f32;
@@ -869,8 +868,8 @@ fn generate_sensor_scenario(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_training_data_type_a(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_training_data_type_a(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let pattern = vec![1, 2, 4, 8, 16, 32, 64, 128];
             pattern[i % pattern.len()]
@@ -879,15 +878,15 @@ fn generate_training_data_type_a(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_training_data_type_b(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_training_data_type_b(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| ((i as f32 * 0.1).sin().powi(2) * 255.0) as u8)
         .collect()
 }
 
 #[allow(dead_code)]
-fn generate_training_data_type_c(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_training_data_type_c(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let fibonacci_like = (i % 256) + ((i + 1) % 256);
             (fibonacci_like % 256) as u8
@@ -896,8 +895,8 @@ fn generate_training_data_type_c(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_validation_data(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_validation_data(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let mixed = ((i % 64) as f32 * 0.1).cos() * 127.0 + 128.0;
             mixed as u8
@@ -906,8 +905,8 @@ fn generate_validation_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_challenge_data(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_challenge_data(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let chaotic =
                 (i as f32 * 3.14159 / 100.0).sin() * (i as f32 * 2.71828 / 150.0).cos() * 127.0
@@ -918,8 +917,8 @@ fn generate_challenge_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_financial_time_series(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_financial_time_series(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let trend = (i as f32 * 0.001).exp();
             let volatility = (i as f32 * 0.1).sin() * 0.2 + 1.0;
@@ -930,9 +929,9 @@ fn generate_financial_time_series(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_genomic_sequence(size: usize) -> Vec<u8> {
+fn generate_genomic_sequence(_size: usize) -> Vec<u8> {
     let bases = vec![0, 1, 2, 3]; // A, T, G, C
-    (0..size)
+    (0.._size)
         .map(|i| {
             if i % 20 < 5 {
                 // Repetitive region
@@ -946,8 +945,8 @@ fn generate_genomic_sequence(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_network_trace(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_network_trace(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             if i % 1500 < 40 {
                 // Packet header
@@ -964,8 +963,8 @@ fn generate_network_trace(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_iot_sensor_data(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_iot_sensor_data(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let base_signal = (i as f32 * 0.05).sin() * 100.0 + 128.0;
             let noise = ((i * 7) % 40) as f32 - 20.0;
@@ -976,8 +975,8 @@ fn generate_iot_sensor_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_audio_signal(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_audio_signal(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let fundamental = (i as f32 * 0.2).sin() * 80.0;
             let harmonic = (i as f32 * 0.4).sin() * 40.0;
@@ -988,8 +987,8 @@ fn generate_audio_signal(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_image_compression_data(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_image_compression_data(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             let x = i % 128;
             let y = i / 128;

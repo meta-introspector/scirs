@@ -4,8 +4,8 @@
 //! using the scirs2-fft library.
 
 use ndarray::array;
-use num_complex::Complex64;
-use scirs2_fft::{
+use num__complex::Complex64;
+use scirs2__fft::{
     fft, fft2, fftfreq, frft, hilbert, ifft, ifft2, irfft, rfft, spectrogram,
     window::{get_window, Window},
 };
@@ -280,7 +280,7 @@ fn windowing_example() {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.norm().partial_cmp(&b.norm()).unwrap())
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .unwrap()
     };
 
@@ -343,7 +343,7 @@ fn frequency_analysis_example() {
     peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
     println!("Top frequency components detected:");
-    for (i, &(freq, power, _)) in peaks.iter().take(3).enumerate() {
+    for (i, &(freq, power_)) in peaks.iter().take(3).enumerate() {
         println!(
             "  Peak {}: {:.1} Hz, amplitude: {:.2}",
             i + 1,

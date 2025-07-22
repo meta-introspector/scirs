@@ -1,6 +1,6 @@
 //! Parallel processing demonstration
 
-use scirs2_text::{
+use scirs2__text::{
     ParallelCorpusProcessor, ParallelTextProcessor, ParallelTokenizer, ParallelVectorizer,
     TfidfVectorizer, WordTokenizer,
 };
@@ -92,7 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Processed token statistics in {duration:.2?}");
     println!(
         "Average tokens per document: {:.2}",
-        token_stats.iter().map(|(count, _)| *count).sum::<usize>() as f64
+        token_stats.iter().map(|(count_)| *count).sum::<usize>() as f64
             / token_stats.len() as f64
     );
     println!(
@@ -109,7 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
 
     // Import the Vectorizer trait to use its methods
-    use scirs2_text::Vectorizer;
+    use scirs2__text::Vectorizer;
     vectorizer.fit(&text_refs)?;
     let fit_duration = start.elapsed();
 
@@ -173,7 +173,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Processed {} documents in {:.2?}", texts.len(), duration);
     println!(
         "Average words per document: {:.2}",
-        result.iter().map(|(words, _)| words).sum::<usize>() as f64 / result.len() as f64
+        result.iter().map(|(words_)| words).sum::<usize>() as f64 / result.len() as f64
     );
     println!(
         "Average characters per document: {:.2}",
@@ -204,8 +204,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     })?;
     let duration = start.elapsed();
 
-    let total_words: usize = summary.iter().map(|(_, words, _)| words).sum();
-    let total_chars: usize = summary.iter().map(|(_, _, chars)| chars).sum();
+    let total_words: usize = summary.iter().map(|(_, words_)| words).sum();
+    let total_chars: usize = summary.iter().map(|(__, chars)| chars).sum();
 
     println!("Processed large corpus in {duration:.2?}");
     println!("Total words: {total_words}");
@@ -219,7 +219,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn create_test_texts(size: usize) -> Vec<String> {
+fn create_test_texts(_size: usize) -> Vec<String> {
     // Sample text fragments to combine randomly
     let subjects = [
         "Machine learning",
@@ -281,10 +281,10 @@ fn create_test_texts(size: usize) -> Vec<String> {
         "increasingly",
     ];
 
-    let mut texts = Vec::with_capacity(size);
+    let mut texts = Vec::with_capacity(_size);
     let mut rng = rand::rng();
 
-    for _ in 0..size {
+    for _ in 0.._size {
         let subject = subjects[rng.next_u32() as usize % subjects.len()];
         let verb = verbs[rng.next_u32() as usize % verbs.len()];
         let object = objects[rng.next_u32() as usize % objects.len()];

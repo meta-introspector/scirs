@@ -18,6 +18,7 @@ use rand::random;
 use std::fmt;
 
 use crate::error::{IntegrateError, IntegrateResult};
+use std::f64::consts::PI;
 
 /// Result type for QMC integration
 #[derive(Clone, Debug)]
@@ -28,7 +29,7 @@ pub struct QMCQuadResult<T> {
     pub standard_error: T,
 }
 
-impl<T: fmt::Display> fmt::Display for QMCQuadResult<T> {
+impl<T: fmt::Display>, fmt::Display for QMCQuadResult<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -41,28 +42,28 @@ impl<T: fmt::Display> fmt::Display for QMCQuadResult<T> {
 /// Trait for quasi-random number generators
 pub trait QRNGEngine: Send + Sync {
     /// Generate n points in d dimensions in the unit hypercube [0,1]^d
-    fn random(&mut self, n: usize) -> Array2<f64>;
+    fn random(n: usize) -> Array2<f64>;
 
     /// Dimensionality of the generator
-    fn dim(&self) -> usize;
+    fn dim() -> usize;
 
     /// Create a new instance from a seed
-    fn new_from_seed(&self, seed: u64) -> Box<dyn QRNGEngine>;
+    fn new_from_seed(_seed: u64) -> Box<dyn QRNGEngine>;
 }
 
 /// Simple pseudorandom number generator for benchmarking
 pub struct RandomGenerator {
     dim: usize,
-    // We don't use the seed for random generation, just for new_from_seed
+    // We don't use the _seed for random generation, just for new_from_seed
     _seed: u64,
 }
 
 impl RandomGenerator {
     /// Create a new random number generator
-    pub fn new(dim: usize, seed: Option<u64>) -> Self {
+    pub fn new(_dim: usize, seed: Option<u64>) -> Self {
         let _seed = seed.unwrap_or_else(random::<u64>);
 
-        Self { dim, _seed }
+        Self { dim_seed }
     }
 }
 
@@ -83,8 +84,8 @@ impl QRNGEngine for RandomGenerator {
         self.dim
     }
 
-    fn new_from_seed(&self, seed: u64) -> Box<dyn QRNGEngine> {
-        Box::new(Self::new(self.dim, Some(seed)))
+    fn new_from_seed(_seed: u64) -> Box<dyn QRNGEngine> {
+        Box::new(Self::new(self.dim, Some(_seed)))
     }
 }
 
@@ -99,15 +100,15 @@ pub struct Sobol {
 
 impl Sobol {
     /// Create a new Sobol sequence generator
-    pub fn new(dim: usize, seed: Option<u64>) -> Self {
+    pub fn new(_dim: usize, seed: Option<u64>) -> Self {
         let seed = seed.unwrap_or_else(random::<u64>);
 
         let mut sobol = Self {
-            dim,
+            _dim,
             seed,
             curr_index: 0,
             direction_numbers: Vec::new(),
-            last_point: vec![0; dim],
+            last_point: vec![0; _dim],
         };
 
         sobol.initialize_direction_numbers();
@@ -115,7 +116,7 @@ impl Sobol {
     }
 
     /// Initialize direction numbers for Sobol sequence
-    fn initialize_direction_numbers(&mut self) {
+    fn initialize_direction_numbers() {
         self.direction_numbers = vec![Vec::new(); self.dim];
 
         // First dimension uses powers of 2
@@ -192,7 +193,7 @@ impl Sobol {
     }
 
     /// Calculate bit length of a number
-    fn bit_length(&self, mut n: u64) -> usize {
+    fn bit_length(mut n: u64) -> usize {
         let mut length = 0;
         while n > 0 {
             length += 1;
@@ -202,7 +203,7 @@ impl Sobol {
     }
 
     /// Generate van der Corput direction number as fallback
-    fn van_der_corput_direction_number(&self, i: usize, base: u64) -> u64 {
+    fn van_der_corput_direction_number(i: usize, base: u64) -> u64 {
         if i == 0 {
             1u64 << 63
         } else {
@@ -221,7 +222,7 @@ impl Sobol {
     }
 
     /// Generate a Sobol sequence point using proper Sobol algorithm
-    fn generate_point(&mut self) -> Vec<f64> {
+    fn generate_point(&self) -> Vec<f64> {
         if self.curr_index == 0 {
             self.curr_index = 1;
             return vec![0.0; self.dim];
@@ -266,8 +267,8 @@ impl QRNGEngine for Sobol {
         self.dim
     }
 
-    fn new_from_seed(&self, seed: u64) -> Box<dyn QRNGEngine> {
-        Box::new(Self::new(self.dim, Some(seed)))
+    fn new_from_seed(_seed: u64) -> Box<dyn QRNGEngine> {
+        Box::new(Self::new(self.dim, Some(_seed)))
     }
 }
 
@@ -280,18 +281,18 @@ pub struct Halton {
 
 impl Halton {
     /// Create a new Halton sequence generator
-    pub fn new(dim: usize, seed: Option<u64>) -> Self {
+    pub fn new(_dim: usize, seed: Option<u64>) -> Self {
         let seed = seed.unwrap_or_else(random::<u64>);
 
         Self {
-            dim,
+            _dim,
             seed,
             curr_index: 0,
         }
     }
 
     /// Generate a Halton sequence point
-    fn generate_point(&mut self) -> Vec<f64> {
+    fn generate_point(&self) -> Vec<f64> {
         let first_primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53];
         let mut result = vec![0.0; self.dim];
 
@@ -342,8 +343,8 @@ impl QRNGEngine for Halton {
         self.dim
     }
 
-    fn new_from_seed(&self, seed: u64) -> Box<dyn QRNGEngine> {
-        Box::new(Self::new(self.dim, Some(seed)))
+    fn new_from_seed(_seed: u64) -> Box<dyn QRNGEngine> {
+        Box::new(Self::new(self.dim, Some(_seed)))
     }
 }
 
@@ -356,11 +357,11 @@ pub struct Faure {
 
 impl Faure {
     /// Create a new Faure sequence generator
-    pub fn new(dim: usize, seed: Option<u64>) -> Self {
+    pub fn new(_dim: usize, seed: Option<u64>) -> Self {
         let seed = seed.unwrap_or_else(random::<u64>);
 
         Self {
-            dim,
+            _dim,
             seed,
             curr_index: 0,
         }
@@ -370,7 +371,7 @@ impl Faure {
     ///
     /// The Faure sequence is based on a prime base p >= dim, where p is the smallest
     /// prime number greater than or equal to the dimension.
-    fn generate_point(&mut self) -> Vec<f64> {
+    fn generate_point(&self) -> Vec<f64> {
         let base = self.find_prime_base(self.dim);
         let mut result = vec![0.0; self.dim];
 
@@ -388,7 +389,7 @@ impl Faure {
     }
 
     /// Find the smallest prime >= n
-    fn find_prime_base(&self, n: usize) -> usize {
+    fn find_prime_base(n: usize) -> usize {
         if n <= 2 {
             return 2;
         }
@@ -401,7 +402,7 @@ impl Faure {
     }
 
     /// Simple primality test
-    fn is_prime(&self, n: usize) -> bool {
+    fn is_prime(n: usize) -> bool {
         if n < 2 {
             return false;
         }
@@ -422,13 +423,13 @@ impl Faure {
     }
 
     /// Generate d-th coordinate using Faure construction
-    fn faure_coordinate(&self, index: usize, dimension: usize, base: usize) -> f64 {
-        if index == 0 {
+    fn faure_coordinate(_index: usize, dimension: usize, base: usize) -> f64 {
+        if _index == 0 {
             return 0.0;
         }
 
-        // Convert index to base-p representation and apply Faure matrix
-        let digits = self.to_base_digits(index, base);
+        // Convert _index to base-p representation and apply Faure matrix
+        let digits = self.to_base_digits(_index, base);
         let mut result = 0.0;
         let mut base_power = base as f64;
 
@@ -443,7 +444,7 @@ impl Faure {
     }
 
     /// Convert integer to base-p digits (least significant first)
-    fn to_base_digits(&self, mut n: usize, base: usize) -> Vec<usize> {
+    fn to_base_digits(mut n: usize, base: usize) -> Vec<usize> {
         if n == 0 {
             return vec![0];
         }
@@ -458,7 +459,7 @@ impl Faure {
 
     /// Simplified Faure matrix element (for educational implementation)
     /// In practice, this would use precomputed Pascal triangle modulo p
-    fn faure_matrix_element(&self, i: usize, dimension: usize, base: usize) -> usize {
+    fn faure_matrix_element(i: usize, dimension: usize, base: usize) -> usize {
         // Simplified implementation using binomial coefficients mod p
         // For a proper implementation, use Lucas' theorem and Pascal's triangle
         if dimension == 0 {
@@ -493,8 +494,8 @@ impl QRNGEngine for Faure {
         self.dim
     }
 
-    fn new_from_seed(&self, seed: u64) -> Box<dyn QRNGEngine> {
-        Box::new(Self::new(self.dim, Some(seed)))
+    fn new_from_seed(_seed: u64) -> Box<dyn QRNGEngine> {
+        Box::new(Self::new(self.dim, Some(_seed)))
     }
 }
 
@@ -539,7 +540,7 @@ pub fn scale<T: Float + FromPrimitive>(
 ///
 /// ```
 /// use ndarray::{Array1, ArrayView1};
-/// use scirs2_integrate::qmc::{qmc_quad, Halton};
+/// use scirs2__integrate::qmc::{qmc_quad, Halton};
 ///
 /// let f = |x: ArrayView1<f64>| x[0].powi(2) * x[1].exp();
 /// let a = Array1::from_vec(vec![0.0, 0.0]);
@@ -612,10 +613,10 @@ where
     let volume = (0..dim).map(|i| b_mod[i] - a_mod[i]).product::<f64>();
     let delta = volume / (n_points as f64);
 
-    // Prepare for multiple estimates
-    let mut estimates = Array1::<f64>::zeros(n_estimates);
+    // Prepare for multiple _estimates
+    let mut _estimates = Array1::<f64>::zeros(n_estimates);
 
-    // Generate independent samples and compute estimates
+    // Generate independent samples and compute _estimates
     for i in 0..n_estimates {
         // Generate QMC sample
         let sample = qrng.random(n_points);
@@ -623,7 +624,7 @@ where
         // Scale to integration domain
         let x = scale(&sample, &a_mod, &b_mod);
 
-        // Evaluate function at sample points
+        // Evaluate function at sample _points
         let mut sum = 0.0;
 
         if log {
@@ -644,13 +645,13 @@ where
                 sum_exp += (val - max_val).exp();
             }
 
-            estimates[i] = max_val + sum_exp.ln() + delta.ln();
+            _estimates[i] = max_val + sum_exp.ln() + delta.ln();
         } else {
             for j in 0..n_points {
                 sum += func(x.slice(s![j, ..]));
             }
 
-            estimates[i] = sum * delta;
+            _estimates[i] = sum * delta;
         }
 
         // Get a new QRNG for next estimate with different scrambling
@@ -662,19 +663,19 @@ where
     let integral = if log {
         let mut max_val = f64::NEG_INFINITY;
         for i in 0..n_estimates {
-            if estimates[i] > max_val {
-                max_val = estimates[i];
+            if _estimates[i] > max_val {
+                max_val = _estimates[i];
             }
         }
 
         let mut sum_exp = 0.0;
         for i in 0..n_estimates {
-            sum_exp += (estimates[i] - max_val).exp();
+            sum_exp += (_estimates[i] - max_val).exp();
         }
 
         max_val + (sum_exp / (n_estimates as f64)).ln()
     } else {
-        estimates.sum() / (n_estimates as f64)
+        _estimates.sum() / (n_estimates as f64)
     };
 
     // Compute standard error
@@ -685,7 +686,7 @@ where
             let mut variance = 0.0;
 
             for i in 0..n_estimates {
-                let diff = (estimates[i] - mean).exp();
+                let diff = (_estimates[i] - mean).exp();
                 variance += (diff - 1.0).powi(2);
             }
 
@@ -695,7 +696,7 @@ where
             let mean = integral;
             let mut variance = 0.0;
 
-            for estimate in estimates.iter().take(n_estimates) {
+            for estimate in _estimates.iter().take(n_estimates) {
                 variance += (estimate - mean).powi(2);
             }
 
@@ -748,7 +749,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::qmc::{qmc_quad_parallel, Halton};
+/// use scirs2__integrate::qmc::{qmc_quad_parallel, Halton};
 /// use ndarray::{Array1, ArrayView1};
 ///
 /// let f = |x: ArrayView1<f64>| x[0].powi(2) * x[1].exp();
@@ -905,21 +906,21 @@ where
 {
     use scirs2_core::parallel_ops::*;
 
-    // Generate estimates in parallel
-    let estimates: Vec<f64> = (0..n_estimates)
+    // Generate _estimates in parallel
+    let _estimates: Vec<f64> = (0..n_estimates)
         .into_par_iter()
         .map(|_| {
             // Each thread gets its own QRNG instance with different seed
             let mut local_qrng = qrng.new_from_seed(rand::random());
 
-            // Sample points
-            let points = local_qrng.random(n_points);
+            // Sample _points
+            let _points = local_qrng.random(n_points);
 
-            // Transform points to integration domain and evaluate function
+            // Transform _points to integration domain and evaluate function
             let mut sum = 0.0;
 
             for i in 0..n_points {
-                let point = points.row(i);
+                let point = _points.row(i);
 
                 // Transform from [0,1]^d to [a,b]^d
                 let mut transformed_point = Array1::zeros(a.len());
@@ -947,7 +948,7 @@ where
         })
         .collect();
 
-    compute_qmc_result(estimates, log, sign)
+    compute_qmc_result(_estimates, log, sign)
 }
 
 #[cfg(not(feature = "parallel"))]
@@ -966,17 +967,17 @@ fn sequential_qmc_integration<F>(
 where
     F: Fn(ArrayView1<f64>) -> f64,
 {
-    let mut estimates = Vec::with_capacity(n_estimates);
+    let mut _estimates = Vec::with_capacity(n_estimates);
 
     for _ in 0..n_estimates {
-        // Sample points
-        let points = qrng.random(n_points);
+        // Sample _points
+        let _points = qrng.random(n_points);
 
-        // Transform points to integration domain and evaluate function
+        // Transform _points to integration domain and evaluate function
         let mut sum = 0.0;
 
         for i in 0..n_points {
-            let point = points.row(i);
+            let point = _points.row(i);
 
             // Transform from [0,1]^d to [a,b]^d
             let mut transformed_point = Array1::zeros(a.len());
@@ -1002,10 +1003,10 @@ where
             sum * volume
         };
 
-        estimates.push(estimate);
+        _estimates.push(estimate);
     }
 
-    compute_qmc_result(estimates, log, sign)
+    compute_qmc_result(_estimates, log, sign)
 }
 
 #[allow(dead_code)]
@@ -1077,9 +1078,7 @@ fn compute_qmc_result(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_abs_diff_eq;
-    use ndarray::Array1;
 
     #[test]
     fn test_qmc_integral_1d() {

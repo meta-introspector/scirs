@@ -20,7 +20,7 @@ mod tests;
 pub use embedded::EmbeddedMethods;
 pub use filter::FilterMethods;
 pub use selector::FeatureSelector;
-pub use time_series::TimeSeriesMethods;
+pub use time__series::TimeSeriesMethods;
 pub use wrapper::WrapperMethods;
 
 /// Feature selection result containing selected features and their scores

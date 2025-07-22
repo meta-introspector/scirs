@@ -19,12 +19,12 @@ pub struct IC0Preconditioner<F> {
 
 impl<F: Float + NumAssign + Sum + Debug + 'static> IC0Preconditioner<F> {
     /// Create a new IC(0) preconditioner from a symmetric positive definite matrix
-    pub fn new(matrix: &CsrMatrix<F>) -> SparseResult<Self> {
-        let n = matrix.rows();
-        if n != matrix.cols() {
+    pub fn new(_matrix: &CsrMatrix<F>) -> SparseResult<Self> {
+        let n = _matrix.rows();
+        if n != _matrix.cols() {
             return Err(SparseError::DimensionMismatch {
                 expected: n,
-                found: matrix.cols(),
+                found: _matrix.cols(),
             });
         }
 
@@ -34,15 +34,15 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> IC0Preconditioner<F> {
         let mut l_indptr = vec![0];
 
         for i in 0..n {
-            let row_start = matrix.indptr[i];
-            let row_end = matrix.indptr[i + 1];
+            let row_start = _matrix.indptr[i];
+            let row_end = _matrix.indptr[i + 1];
 
             // Copy lower triangular entries
             for k in row_start..row_end {
-                let j = matrix.indices[k];
+                let j = _matrix.indices[k];
                 if j <= i {
                     l_indices.push(j);
-                    l_data.push(matrix.data[k]);
+                    l_data.push(_matrix.data[k]);
                 }
             }
             l_indptr.push(l_indices.len());
@@ -127,7 +127,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> IC0Preconditioner<F> {
             }
         }
 
-        // Create the L factor as a CSR matrix
+        // Create the L factor as a CSR _matrix
         let l_factor = CsrMatrix::from_raw_csr(l_data, l_indptr, l_indices, (n, n))?;
 
         Ok(Self { l_factor })

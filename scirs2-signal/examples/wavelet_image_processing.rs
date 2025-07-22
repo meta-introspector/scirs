@@ -1,6 +1,6 @@
 use ndarray::Array2;
-use scirs2_signal::dwt::Wavelet;
-use scirs2_signal::dwt2d_image::{compress_image, denoise_image, detect_edges, DenoisingMethod};
+use scirs2__signal::dwt::Wavelet;
+use scirs2__signal::dwt2d_image::{compress_image, denoise_image, detect_edges, DenoisingMethod};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -136,16 +136,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to create a test image
 #[allow(dead_code)]
-fn create_test_image(width: usize, height: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((height, width));
+fn create_test_image(_width: usize, height: usize) -> Array2<f64> {
+    let mut image = Array2::zeros((height, _width));
 
     // Create a circular intensity pattern
-    let center_x = (width / 2) as f64;
+    let center_x = (_width / 2) as f64;
     let center_y = (height / 2) as f64;
-    let max_radius = (width.min(height) / 2) as f64;
+    let max_radius = (_width.min(height) / 2) as f64;
 
     for y in 0..height {
-        for x in 0..width {
+        for x in 0.._width {
             // Base pattern - circular gradient
             let dx = x as f64 - center_x;
             let dy = y as f64 - center_y;
@@ -165,17 +165,17 @@ fn create_test_image(width: usize, height: usize) -> Array2<f64> {
 
 // Helper function to create an image with edges
 #[allow(dead_code)]
-fn create_edge_test_image(width: usize, height: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((height, width));
+fn create_edge_test_image(_width: usize, height: usize) -> Array2<f64> {
+    let mut image = Array2::zeros((height, _width));
 
     // Horizontal edge at 1/3 from top
     let h_edge = height / 3;
 
     // Vertical edge at 2/3 from left
-    let v_edge = width * 2 / 3;
+    let v_edge = _width * 2 / 3;
 
     for y in 0..height {
-        for x in 0..width {
+        for x in 0.._width {
             if y >= h_edge {
                 image[[y, x]] += 50.0;
             }
@@ -195,15 +195,15 @@ fn create_edge_test_image(width: usize, height: usize) -> Array2<f64> {
 
 // Helper function to create a more complex image
 #[allow(dead_code)]
-fn create_complex_image(width: usize, height: usize) -> Array2<f64> {
-    let mut image = Array2::zeros((height, width));
+fn create_complex_image(_width: usize, height: usize) -> Array2<f64> {
+    let mut image = Array2::zeros((height, _width));
 
     for y in 0..height {
-        for x in 0..width {
+        for x in 0.._width {
             // Multiple frequency components
             let val1 = (x as f64 * 0.2).sin() * (y as f64 * 0.1).sin() * 50.0;
             let val2 = (x as f64 * 0.05).cos() * (y as f64 * 0.05).cos() * 30.0;
-            let val3 = ((x as f64 - width as f64 / 2.0).powi(2)
+            let val3 = ((x as f64 - _width as f64 / 2.0).powi(2)
                 + (y as f64 - height as f64 / 2.0).powi(2))
             .sqrt()
                 * 0.1;
@@ -217,15 +217,15 @@ fn create_complex_image(width: usize, height: usize) -> Array2<f64> {
 
 // Helper function to print image statistics
 #[allow(dead_code)]
-fn print_image_stats(image: &Array2<f64>, label: &str) {
-    let min_val = image.iter().cloned().fold(f64::INFINITY, f64::min);
-    let max_val = image.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+fn print_image_stats(_image: &Array2<f64>, label: &str) {
+    let min_val = _image.iter().cloned().fold(f64::INFINITY, f64::min);
+    let max_val = _image.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 
     let mut sum = 0.0;
     let mut sum_sq = 0.0;
     let mut nonzero_count = 0;
 
-    for &val in image.iter() {
+    for &val in _image.iter() {
         sum += val;
         sum_sq += val * val;
         if val != 0.0 {
@@ -233,32 +233,32 @@ fn print_image_stats(image: &Array2<f64>, label: &str) {
         }
     }
 
-    let mean = sum / (image.len() as f64);
-    let variance = sum_sq / (image.len() as f64) - mean * mean;
+    let mean = sum / (_image.len() as f64);
+    let variance = sum_sq / (_image.len() as f64) - mean * mean;
     let std_dev = variance.sqrt();
 
     println!("{}:", label);
-    println!("  Dimensions: {}x{}", image.dim().0, image.dim().1);
+    println!("  Dimensions: {}x{}", _image.dim().0, _image.dim().1);
     println!("  Range: [{:.2}, {:.2}]", min_val, max_val);
     println!("  Mean: {:.2}, StdDev: {:.2}", mean, std_dev);
     println!(
         "  Non-zero values: {} ({:.1}%)",
         nonzero_count,
-        100.0 * nonzero_count as f64 / image.len() as f64
+        100.0 * nonzero_count as f64 / _image.len() as f64
     );
 }
 
 // Calculate mean squared error between two images
 #[allow(dead_code)]
-fn calculate_mse(original: &Array2<f64>, processed: &Array2<f64>) -> f64 {
-    if original.shape() != processed.shape() {
+fn calculate_mse(_original: &Array2<f64>, processed: &Array2<f64>) -> f64 {
+    if _original.shape() != processed.shape() {
         return f64::NAN;
     }
 
     let mut sum_squared_error = 0.0;
-    let n = original.len() as f64;
+    let n = _original.len() as f64;
 
-    for (a, b) in original.iter().zip(processed.iter()) {
+    for (a, b) in _original.iter().zip(processed.iter()) {
         let error = a - b;
         sum_squared_error += error * error;
     }
@@ -268,15 +268,15 @@ fn calculate_mse(original: &Array2<f64>, processed: &Array2<f64>) -> f64 {
 
 // Calculate peak signal-to-noise ratio
 #[allow(dead_code)]
-fn calculate_psnr(original: &Array2<f64>, processed: &Array2<f64>) -> f64 {
-    let mse = calculate_mse(original, processed);
+fn calculate_psnr(_original: &Array2<f64>, processed: &Array2<f64>) -> f64 {
+    let mse = calculate_mse(_original, processed);
     if mse <= 1e-10 {
         return f64::INFINITY; // Perfect match
     }
 
     // Find data range (max value - min value)
-    let min_val = original.iter().cloned().fold(f64::INFINITY, f64::min);
-    let max_val = original.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let min_val = _original.iter().cloned().fold(f64::INFINITY, f64::min);
+    let max_val = _original.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
     let data_range = max_val - min_val;
 
     // PSNR formula: 20 * log10(MAX / sqrt(MSE))

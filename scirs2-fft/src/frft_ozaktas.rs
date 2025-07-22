@@ -10,7 +10,7 @@
 
 use crate::error::FFTResult;
 use crate::fft::{fft, ifft};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::Zero;
 use std::f64::consts::PI;
 
@@ -191,11 +191,11 @@ fn handle_near_special_angles(x: &[Complex64], phi: f64) -> FFTResult<Vec<Comple
 
 /// Post-processing to improve numerical accuracy
 #[allow(dead_code)]
-fn post_process_result(result: &mut [Complex64], alpha: f64) {
+fn post_process_result(_result: &mut [Complex64], alpha: f64) {
     // Apply phase correction for improved accuracy
     let phase = alpha * PI / 4.0;
     let phase_correction = Complex64::from_polar(1.0, phase);
-    for val in result.iter_mut() {
+    for val in _result.iter_mut() {
         *val *= phase_correction;
     }
 

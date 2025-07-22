@@ -207,17 +207,17 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create a diagonal preconditioner from matrix diagonal
-    pub fn new(matrix: &ArrayView2<F>) -> LinalgResult<Self> {
-        let (m, n) = matrix.dim();
+    pub fn new(_matrix: &ArrayView2<F>) -> LinalgResult<Self> {
+        let (m, n) = _matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "Diagonal preconditioner requires square matrix".to_string(),
+                "Diagonal preconditioner requires square _matrix".to_string(),
             ));
         }
 
         let mut inverse_diagonal = Array1::zeros(n);
         for i in 0..n {
-            let diag_elem = matrix[[i, i]];
+            let diag_elem = _matrix[[i, i]];
             if diag_elem.abs() < F::epsilon() {
                 // Regularize small diagonal elements
                 inverse_diagonal[i] = F::one();
@@ -259,11 +259,11 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create incomplete LU preconditioner with specified fill level
-    pub fn new(matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
-        let (m, n) = matrix.dim();
+    pub fn new(_matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
+        let (m, n) = _matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "ILU preconditioner requires square matrix".to_string(),
+                "ILU preconditioner requires square _matrix".to_string(),
             ));
         }
 
@@ -271,8 +271,8 @@ where
         let mut l_factor = Array2::zeros((n, n));
         let mut u_factor = Array2::zeros((n, n));
 
-        // Copy matrix to working array
-        let mut working_matrix = matrix.to_owned();
+        // Copy _matrix to working array
+        let mut working_matrix = _matrix.to_owned();
 
         // Perform incomplete LU factorization
         for k in 0..n {
@@ -383,16 +383,16 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create incomplete Cholesky preconditioner
-    pub fn new(matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
-        let (m, n) = matrix.dim();
+    pub fn new(_matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
+        let (m, n) = _matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "Incomplete Cholesky requires square matrix".to_string(),
+                "Incomplete Cholesky requires square _matrix".to_string(),
             ));
         }
 
         let mut l_factor = Array2::zeros((n, n));
-        let mut working_matrix = matrix.to_owned();
+        let mut working_matrix = _matrix.to_owned();
 
         // Perform incomplete Cholesky factorization
         for k in 0..n {
@@ -490,11 +490,11 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create block Jacobi preconditioner with specified block size
-    pub fn new(matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
-        let (m, n) = matrix.dim();
+    pub fn new(_matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
+        let (m, n) = _matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "Block Jacobi requires square matrix".to_string(),
+                "Block Jacobi requires square _matrix".to_string(),
             ));
         }
 
@@ -509,7 +509,7 @@ where
             let current_block_size = end_idx - start_idx;
 
             // Extract diagonal block
-            let block = matrix.slice(ndarray::s![start_idx..end_idx, start_idx..end_idx]);
+            let block = _matrix.slice(ndarray::s![start_idx..end_idx, start_idx..end_idx]);
 
             // Compute block inverse (using LU decomposition for robustness)
             let (p, l, u) = lu(&block, None)?;
@@ -608,20 +608,20 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create polynomial preconditioner using Neumann series
-    pub fn new(matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
-        let (m, n) = matrix.dim();
+    pub fn new(_matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
+        let (m, n) = _matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "Polynomial preconditioner requires square matrix".to_string(),
+                "Polynomial preconditioner requires square _matrix".to_string(),
             ));
         }
 
         // Estimate spectral radius for scaling
-        let matrix_norm = matrix_norm(matrix, "fro", None)?;
+        let matrix_norm = matrix_norm(_matrix, "fro", None)?;
         let scaling = F::one() / matrix_norm;
 
         Ok(Self {
-            matrix: matrix.to_owned(),
+            matrix: _matrix.to_owned(),
             degree: config.polynomial_degree,
             scaling,
             size: n,
@@ -675,62 +675,62 @@ where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     /// Create adaptive preconditioner based on matrix properties
-    pub fn new(matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
-        let (m, n) = matrix.dim();
+    pub fn new(_matrix: &ArrayView2<F>, config: &PreconditionerConfig) -> LinalgResult<Self> {
+        let (m, n) = _matrix.dim();
         if m != n {
             return Err(LinalgError::ShapeError(
-                "Preconditioner requires square matrix".to_string(),
+                "Preconditioner requires square _matrix".to_string(),
             ));
         }
 
-        // Analyze matrix properties
-        let condition_estimate = Self::estimate_condition_number(matrix)?;
-        let is_symmetric = Self::check_symmetry(matrix);
-        let is_positive_definite = is_symmetric && Self::check_positive_definite(matrix);
-        let sparsity = Self::estimate_sparsity(matrix);
+        // Analyze _matrix properties
+        let condition_estimate = Self::estimate_condition_number(_matrix)?;
+        let is_symmetric = Self::check_symmetry(_matrix);
+        let is_positive_definite = is_symmetric && Self::check_positive_definite(_matrix);
+        let sparsity = Self::estimate_sparsity(_matrix);
 
-        // Select preconditioner based on matrix properties
+        // Select preconditioner based on _matrix properties
         if condition_estimate < F::from(10.0).unwrap() {
             // Well-conditioned: use simple diagonal preconditioner
-            Ok(Self::Diagonal(DiagonalPreconditioner::new(matrix)?))
+            Ok(Self::Diagonal(DiagonalPreconditioner::new(_matrix)?))
         } else if is_positive_definite && sparsity > 0.8 {
             // Sparse SPD: use incomplete Cholesky
             Ok(Self::IncompleteCholesky(
-                IncompleteCholeskyPreconditioner::new(matrix, config)?,
+                IncompleteCholeskyPreconditioner::new(_matrix, config)?,
             ))
         } else if sparsity > 0.7 {
             // Sparse general: use incomplete LU
             Ok(Self::IncompleteLU(IncompleteLUPreconditioner::new(
-                matrix, config,
+                _matrix, config,
             )?))
         } else if n <= 1000 {
             // Medium size: use block Jacobi
             Ok(Self::BlockJacobi(BlockJacobiPreconditioner::new(
-                matrix, config,
+                _matrix, config,
             )?))
         } else {
             // Large dense: use polynomial preconditioner
             Ok(Self::Polynomial(PolynomialPreconditioner::new(
-                matrix, config,
+                _matrix, config,
             )?))
         }
     }
 
     /// Estimate condition number using power iteration
-    fn estimate_condition_number(matrix: &ArrayView2<F>) -> LinalgResult<F> {
-        let n = matrix.nrows();
+    fn estimate_condition_number(_matrix: &ArrayView2<F>) -> LinalgResult<F> {
+        let n = _matrix.nrows();
         let mut x = Array1::from_vec(vec![F::one(); n]);
         let norm_x = (x.iter().map(|&val| val * val).sum::<F>()).sqrt();
         x /= norm_x;
 
         // Power iteration for largest eigenvalue
         for _ in 0..10 {
-            let y = matrix.dot(&x);
+            let y = _matrix.dot(&x);
             let norm_y = (y.iter().map(|&val| val * val).sum::<F>()).sqrt();
             x = y / norm_y;
         }
 
-        let lambda_max = x.dot(&matrix.dot(&x));
+        let lambda_max = x.dot(&_matrix.dot(&x));
 
         // Rough estimate: condition number ≈ λ_max / λ_min
         // For simplicity, assume λ_min is roughly λ_max / n
@@ -738,8 +738,8 @@ where
     }
 
     /// Check if matrix is symmetric
-    fn check_symmetry(matrix: &ArrayView2<F>) -> bool {
-        let (m, n) = matrix.dim();
+    fn check_symmetry(_matrix: &ArrayView2<F>) -> bool {
+        let (m, n) = _matrix.dim();
         if m != n {
             return false;
         }
@@ -747,7 +747,7 @@ where
         let tolerance = F::from(1e-12).unwrap();
         for i in 0..n {
             for j in (i + 1)..n {
-                if (matrix[[i, j]] - matrix[[j, i]]).abs() > tolerance {
+                if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > tolerance {
                     return false;
                 }
             }
@@ -756,27 +756,27 @@ where
     }
 
     /// Check if symmetric matrix is positive definite (simplified)
-    fn check_positive_definite(matrix: &ArrayView2<F>) -> bool {
-        let n = matrix.nrows();
+    fn check_positive_definite(_matrix: &ArrayView2<F>) -> bool {
+        let n = _matrix.nrows();
 
         // Check diagonal elements are positive
         for i in 0..n {
-            if matrix[[i, i]] <= F::zero() {
+            if _matrix[[i, i]] <= F::zero() {
                 return false;
             }
         }
 
         // Additional check: try Cholesky decomposition
-        cholesky(matrix, None).is_ok()
+        cholesky(_matrix, None).is_ok()
     }
 
     /// Estimate sparsity ratio
-    fn estimate_sparsity(matrix: &ArrayView2<F>) -> f64 {
-        let (m, n) = matrix.dim();
+    fn estimate_sparsity(_matrix: &ArrayView2<F>) -> f64 {
+        let (m, n) = _matrix.dim();
         let total_elements = m * n;
         let tolerance = F::from(1e-14).unwrap();
 
-        let zero_elements = matrix.iter().filter(|&&val| val.abs() <= tolerance).count();
+        let zero_elements = _matrix.iter().filter(|&&val| val.abs() <= tolerance).count();
         zero_elements as f64 / total_elements as f64
     }
 }
@@ -894,7 +894,7 @@ where
 
     // Initialize solution vector
     let mut x = match initial_guess {
-        Some(guess) => guess.to_owned(),
+        Some(_guess) => _guess.to_owned(),
         None => Array1::zeros(n),
     };
 
@@ -917,7 +917,7 @@ where
         // Check convergence
         let residual_norm = (r.iter().map(|&val| val * val).sum::<F>()).sqrt();
         if residual_norm < tolerance {
-            println!("PCG converged in {} iterations", iteration + 1);
+            println!("PCG converged in {} _iterations", iteration + 1);
             return Ok(x);
         }
 
@@ -955,7 +955,7 @@ where
 
     // Initialize solution vector
     let mut x = match initial_guess {
-        Some(guess) => guess.to_owned(),
+        Some(_guess) => _guess.to_owned(),
         None => Array1::zeros(n),
     };
 
@@ -965,7 +965,7 @@ where
         let r_norm = (r.iter().map(|&val| val * val).sum::<F>()).sqrt();
 
         if r_norm < tolerance {
-            println!("Preconditioned GMRES converged in {outer_iter} outer iterations");
+            println!("Preconditioned GMRES converged in {outer_iter} outer _iterations");
             return Ok(x);
         }
 
@@ -1045,8 +1045,7 @@ impl Default for PreconditionerAnalysis {
 /// Analyze preconditioner performance and effectiveness
 #[allow(dead_code)]
 pub fn analyze_preconditioner<F>(
-    matrix: &ArrayView2<F>,
-    _preconditioner: &dyn PreconditionerOp<F>,
+    matrix: &ArrayView2<F>, _preconditioner: &dyn PreconditionerOp<F>,
 ) -> LinalgResult<PreconditionerAnalysis>
 where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,

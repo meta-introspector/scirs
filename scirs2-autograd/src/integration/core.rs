@@ -131,8 +131,7 @@ impl Parameter {
     pub fn as_float(&self) -> Option<f64> {
         match self {
             Parameter::Float(val) => Some(*val),
-            Parameter::Int(val) => Some(*val as f64),
-            _ => None,
+            Parameter::Int(val) => Some(*val as f64, _ => None,
         }
     }
 
@@ -140,32 +139,28 @@ impl Parameter {
     pub fn as_int(&self) -> Option<i64> {
         match self {
             Parameter::Int(val) => Some(*val),
-            Parameter::Float(val) => Some(*val as i64),
-            _ => None,
+            Parameter::Float(val) => Some(*val as i64, _ => None,
         }
     }
 
     /// Get parameter as boolean
     pub fn as_bool(&self) -> Option<bool> {
         match self {
-            Parameter::Bool(val) => Some(*val),
-            _ => None,
+            Parameter::Bool(val) => Some(*val, _ => None,
         }
     }
 
     /// Get parameter as string
     pub fn as_string(&self) -> Option<&String> {
         match self {
-            Parameter::String(val) => Some(val),
-            _ => None,
+            Parameter::String(val) => Some(val, _ => None,
         }
     }
 
     /// Get parameter as float array
     pub fn as_float_array(&self) -> Option<&[f64]> {
         match self {
-            Parameter::FloatArray(val) => Some(val),
-            _ => None,
+            Parameter::FloatArray(val) => Some(val, _ => None,
         }
     }
 }
@@ -189,9 +184,9 @@ pub struct PipelineInfo {
 
 impl PipelineInfo {
     /// Create new pipeline info
-    pub fn new(pipeline_id: String, total_stages: usize, initiating_module: String) -> Self {
+    pub fn new(_pipeline_id: String, total_stages: usize, initiating_module: String) -> Self {
         Self {
-            pipeline_id,
+            _pipeline_id,
             current_stage: 0,
             total_stages,
             initiating_module,
@@ -233,12 +228,11 @@ pub struct ModuleAdapter<F: Float> {
 
 impl<F: Float> ModuleAdapter<F> {
     /// Create new module adapter
-    pub fn new(module_info: ModuleInfo, config: IntegrationConfig) -> Self {
+    pub fn new(_module_info: ModuleInfo, config: IntegrationConfig) -> Self {
         Self {
-            module_info,
+            _module_info,
             config,
-            conversions: Arc::new(RwLock::new(HashMap::new())),
-            _phantom: std::marker::PhantomData,
+            conversions: Arc::new(RwLock::new(HashMap::new())), _phantom: std::marker::PhantomData,
         }
     }
 
@@ -250,7 +244,7 @@ impl<F: Float> ModuleAdapter<F> {
     ) -> Result<SciRS2Data<'a, F>, IntegrationError> {
         let mut adapted_data = data.clone();
 
-        // Add module compatibility metadata
+        // Add _module compatibility metadata
         adapted_data
             .metadata
             .insert("source_module".to_string(), self.module_info.name.clone());
@@ -482,8 +476,8 @@ pub fn validate_cross_module_data<F: Float>(
 
 /// Create module adapter with default configuration
 #[allow(dead_code)]
-pub fn create_module_adapter<F: Float>(module_info: ModuleInfo) -> ModuleAdapter<F> {
-    ModuleAdapter::new(module_info, IntegrationConfig::default())
+pub fn create_module_adapter<F: Float>(_module_info: ModuleInfo) -> ModuleAdapter<F> {
+    ModuleAdapter::new(_module_info, IntegrationConfig::default())
 }
 
 #[cfg(test)]

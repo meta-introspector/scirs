@@ -5,9 +5,9 @@
 
 use crate::construct;
 use crate::error::SparseResult;
-use crate::sym_coo::{SymCooArray, SymCooMatrix};
-use crate::sym_csr::{SymCsrArray, SymCsrMatrix};
-use crate::sym_sparray::SymSparseArray;
+use crate::sym__coo::{SymCooArray, SymCooMatrix};
+use crate::sym__csr::{SymCsrArray, SymCsrMatrix};
+use crate::sym__sparray::SymSparseArray;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
@@ -26,7 +26,7 @@ use std::ops::{Add, Div, Mul, Sub};
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::construct_sym::eye_sym_array;
+/// use scirs2__sparse::construct_sym::eye_sym_array;
 ///
 /// // Create a 3x3 symmetric identity matrix in CSR format
 /// let eye = eye_sym_array::<f64>(3, "csr").unwrap();
@@ -117,7 +117,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::construct_sym::tridiagonal_sym_array;
+/// use scirs2__sparse::construct_sym::tridiagonal_sym_array;
 ///
 /// // Create a 3x3 tridiagonal matrix with main diagonal [2, 2, 2]
 /// // and off-diagonal [1, 1]
@@ -284,7 +284,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::construct_sym::banded_sym_array;
+/// use scirs2__sparse::construct_sym::banded_sym_array;
 ///
 /// // Create a 5x5 symmetric banded matrix with:
 /// // - Main diagonal: [2, 2, 2, 2, 2]
@@ -425,7 +425,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::construct_sym::random_sym_array;
+/// use scirs2__sparse::construct_sym::random_sym_array;
 ///
 /// // Create a 10x10 symmetric random matrix with 20% density
 /// let random = random_sym_array::<f64>(10, 0.2, "csr").unwrap();

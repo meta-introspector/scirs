@@ -1,14 +1,16 @@
+use crate::error::{SignalError, SignalResult};
+use ndarray::{Array1, Array2, Array3, s};
+use rand::Rng;
+use scirs2__linalg::{cholesky, inv};
+use statrs::statistics::Statistics;
+
 // Kalman filtering module
 //
 // This module implements various Kalman filtering techniques for signal processing,
 // including standard Kalman filter, extended Kalman filter, unscented Kalman filter,
 // and ensemble Kalman filter.
 
-use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, Array3};
-use rand::Rng;
-use scirs2_linalg::{cholesky, inv};
-
+#[allow(unused_imports)]
 /// Configuration for Kalman filter
 #[derive(Debug, Clone)]
 pub struct KalmanConfig {
@@ -107,7 +109,7 @@ pub fn kalman_filter(
     }
 
     // Initialize state estimate
-    let mut x = match initial_x {
+    let mut _x = match initial_x {
         Some(x0) => {
             if x0.len() != n_states {
                 return Err(SignalError::DimensionMismatch(
@@ -169,7 +171,7 @@ pub fn kalman_filter(
     // Run Kalman filter
     for i in 0..n_samples {
         // Predict step
-        let x_pred = f.dot(&x);
+        let x_pred = f.dot(&_x);
         let p_pred = f.dot(&p).dot(&f.t()) + &adaptive_q;
 
         // Update step
@@ -189,12 +191,12 @@ pub fn kalman_filter(
         };
 
         // State and covariance update
-        x = &x_pred + &k.dot(&innovation);
+        _x = &x_pred + &k.dot(&innovation);
         p = &p_pred - &k.dot(&innovation_cov).dot(&k.t());
 
         // Store state
         for j in 0..n_states {
-            x_history[[i, j]] = x[j];
+            x_history[[i, j]] = _x[j];
         }
 
         // Adaptive filtering (if enabled)
@@ -236,7 +238,7 @@ pub fn kalman_filter(
                 // Adaptive estimation of Q
                 // This is a simplified approach - in practice, estimating Q is more complex
                 // than estimating R and might require more sophisticated techniques
-                let pred_err = &x - &x_pred;
+                let pred_err = &_x - &x_pred;
                 let pred_err_col = pred_err
                     .clone()
                     .into_shape_with_order((pred_err.len(), 1))
@@ -291,7 +293,7 @@ where
     let n_measurements = z.shape()[1];
 
     // Initialize state estimate
-    let mut x = initial_x;
+    let mut _x = initial_x;
 
     // Initialize state covariance
     let mut p = match &config.initial_p {
@@ -338,8 +340,8 @@ where
     // Run Extended Kalman filter
     for i in 0..n_samples {
         // Predict step
-        let x_pred = f_func(&x);
-        let f_jac = f_jacobian(&x);
+        let x_pred = f_func(&_x);
+        let f_jac = f_jacobian(&_x);
         let p_pred = f_jac.dot(&p).dot(&f_jac.t()) + &q;
 
         // Update step
@@ -359,12 +361,12 @@ where
         };
 
         // State and covariance update
-        x = &x_pred + &k.dot(&innovation);
+        _x = &x_pred + &k.dot(&innovation);
         p = &p_pred - &k.dot(&innovation_cov).dot(&k.t());
 
         // Store state
         for j in 0..n_states {
-            x_history[[i, j]] = x[j];
+            x_history[[i, j]] = _x[j];
         }
     }
 
@@ -411,10 +413,10 @@ where
     let kappa = ukf_params.kappa;
 
     // Initialize state estimate
-    let mut x = initial_x;
+    let mut _x = initial_x;
 
     // Initialize state covariance
-    let mut p = match &config.initial_p {
+    let mut p = match &_config.initial_p {
         Some(p0) => {
             if p0.shape()[0] != n_states || p0.shape()[1] != n_states {
                 return Err(SignalError::DimensionMismatch(
@@ -427,7 +429,7 @@ where
     };
 
     // Process noise covariance
-    let q = match &config.q {
+    let q = match &_config.q {
         Some(q) => {
             if q.shape()[0] != n_states || q.shape()[1] != n_states {
                 return Err(SignalError::DimensionMismatch(
@@ -436,11 +438,11 @@ where
             }
             q.clone()
         }
-        None => Array2::<f64>::eye(n_states) * config.process_noise_scale,
+        None => Array2::<f64>::eye(n_states) * _config.process_noise_scale,
     };
 
     // Measurement noise covariance
-    let r = match &config.r {
+    let r = match &_config.r {
         Some(r) => {
             if r.shape()[0] != n_measurements || r.shape()[1] != n_measurements {
                 return Err(SignalError::DimensionMismatch(
@@ -449,7 +451,7 @@ where
             }
             r.clone()
         }
-        None => Array2::<f64>::eye(n_measurements) * config.measurement_noise_scale,
+        None => Array2::<f64>::eye(n_measurements) * _config.measurement_noise_scale,
     };
 
     // UKF parameters
@@ -473,7 +475,7 @@ where
     // Run Unscented Kalman filter
     for i in 0..n_samples {
         // Generate sigma points
-        let sigma_points = generate_sigma_points(&x, &p, gamma)?;
+        let sigma_points = generate_sigma_points(&_x, &p, gamma)?;
 
         // Predict sigma points through state transition function
         let mut predicted_sigmas = Vec::with_capacity(2 * n_states + 1);
@@ -546,12 +548,12 @@ where
 
         // Update state and covariance
         let innovation = z.slice(s![i, ..]).to_owned() - z_pred;
-        x = &x_pred + &k.dot(&innovation);
+        _x = &x_pred + &k.dot(&innovation);
         p = &p_pred - &k.dot(&s).dot(&k.t());
 
         // Store state
         for j in 0..n_states {
-            x_history[[i, j]] = x[j];
+            x_history[[i, j]] = _x[j];
         }
     }
 
@@ -651,8 +653,8 @@ where
         None => Array2::<f64>::eye(n_states) * 1.0,
     };
 
-    // Initialize ensemble
-    let mut ensemble = Vec::with_capacity(n_ensemble);
+    // Initialize _ensemble
+    let mut _ensemble = Vec::with_capacity(n_ensemble);
     let mut rng = rand::rng();
 
     for _ in 0..n_ensemble {
@@ -673,7 +675,7 @@ where
         };
 
         let x_perturbed = &initial_x + &sqrt_p.dot(&perturbation);
-        ensemble.push(x_perturbed);
+        _ensemble.push(x_perturbed);
     }
 
     // Measurement noise covariance
@@ -695,24 +697,24 @@ where
     // Run Ensemble Kalman filter
     for i in 0..n_samples {
         // Forecast step
-        for ensemble_item in ensemble.iter_mut().take(n_ensemble) {
+        for ensemble_item in _ensemble.iter_mut().take(n_ensemble) {
             *ensemble_item = f_func(ensemble_item);
         }
 
-        // Calculate ensemble mean
+        // Calculate _ensemble mean
         let mut x_mean = Array1::<f64>::zeros(n_states);
-        for e in &ensemble {
+        for e in &_ensemble {
             x_mean = &x_mean + e;
         }
         x_mean /= n_ensemble as f64;
 
-        // Calculate measured ensemble
+        // Calculate measured _ensemble
         let mut measured_ensemble = Vec::with_capacity(n_ensemble);
-        for e in &ensemble {
+        for e in &_ensemble {
             measured_ensemble.push(h_func(e));
         }
 
-        // Calculate measured ensemble mean
+        // Calculate measured _ensemble mean
         let mut z_mean = Array1::<f64>::zeros(n_measurements);
         for me in &measured_ensemble {
             z_mean = &z_mean + me;
@@ -724,7 +726,7 @@ where
         let mut pzz = Array2::<f64>::zeros((n_measurements, n_measurements));
 
         for j in 0..n_ensemble {
-            let x_diff = &ensemble[j] - &x_mean;
+            let x_diff = &_ensemble[j] - &x_mean;
             let z_diff = &measured_ensemble[j] - &z_mean;
 
             let x_diff_col = x_diff
@@ -761,7 +763,7 @@ where
             }
         };
 
-        // Update ensemble members
+        // Update _ensemble members
         for j in 0..n_ensemble {
             // Generate perturbed observation
             let perturbed_z = &z.slice(s![i, ..]).to_owned()
@@ -774,14 +776,14 @@ where
                     noise
                 };
 
-            // Update ensemble member
+            // Update _ensemble member
             let innovation = &perturbed_z - &measured_ensemble[j];
-            ensemble[j] = &ensemble[j] + &k.dot(&innovation);
+            _ensemble[j] = &_ensemble[j] + &k.dot(&innovation);
         }
 
-        // Recalculate ensemble mean as state estimate
+        // Recalculate _ensemble mean as state estimate
         let mut x_updated = Array1::<f64>::zeros(n_states);
-        for e in &ensemble {
+        for e in &_ensemble {
             x_updated = &x_updated + e;
         }
         x_updated /= n_ensemble as f64;
@@ -913,13 +915,13 @@ pub fn kalman_denoise_color(
     measurement_variance: Option<f64>,
     joint_channels: bool,
 ) -> SignalResult<Array3<f64>> {
-    let (height, width, channels) = image.dim();
-    let mut output = Array3::<f64>::zeros((height, width, channels));
+    let (height, width, _channels) = image.dim();
+    let mut output = Array3::<f64>::zeros((height, width, _channels));
 
     if joint_channels {
         // Process each pixel as a vector measurement
-        let f = Array2::<f64>::eye(channels) * 1.0;
-        let h = Array2::<f64>::eye(channels) * 1.0;
+        let f = Array2::<f64>::eye(_channels) * 1.0;
+        let h = Array2::<f64>::eye(_channels) * 1.0;
 
         let config = KalmanConfig {
             process_noise_scale: process_variance.unwrap_or(1e-5),
@@ -938,7 +940,7 @@ pub fn kalman_denoise_color(
 
                 // Create a measurement array
                 let n_neighbors = neighbors.len();
-                let mut z = Array2::<f64>::zeros((n_neighbors, channels));
+                let mut z = Array2::<f64>::zeros((n_neighbors, _channels));
                 for (idx, neighbor) in neighbors.iter().enumerate() {
                     z.slice_mut(s![idx, ..]).assign(neighbor);
                 }
@@ -957,7 +959,7 @@ pub fn kalman_denoise_color(
         }
 
         // Process each column to further smooth the result
-        let mut column_output = Array3::<f64>::zeros((height, width, channels));
+        let mut column_output = Array3::<f64>::zeros((height, width, _channels));
         for j in 0..width {
             for i in 0..height {
                 // Create a time series of neighboring pixels vertically
@@ -968,7 +970,7 @@ pub fn kalman_denoise_color(
 
                 // Create a measurement array
                 let n_neighbors = neighbors.len();
-                let mut z = Array2::<f64>::zeros((n_neighbors, channels));
+                let mut z = Array2::<f64>::zeros((n_neighbors, _channels));
                 for (idx, neighbor) in neighbors.iter().enumerate() {
                     z.slice_mut(s![idx, ..]).assign(neighbor);
                 }
@@ -990,7 +992,7 @@ pub fn kalman_denoise_color(
         output = (&output + &column_output) / 2.0;
     } else {
         // Process each channel independently
-        for c in 0..channels {
+        for c in 0.._channels {
             let channel = image.slice(s![.., .., c]).to_owned();
             let denoised_channel =
                 kalman_denoise_2d(&channel, process_variance, measurement_variance)?;
@@ -1040,7 +1042,7 @@ fn kalman_filter_vector_measurement(
     }
 
     // Initialize state estimate
-    let mut x = match initial_x {
+    let mut _x = match initial_x {
         Some(x0) => {
             if x0.len() != n_states {
                 return Err(SignalError::DimensionMismatch(
@@ -1097,7 +1099,7 @@ fn kalman_filter_vector_measurement(
     // Run Kalman filter
     for i in 0..n_samples {
         // Predict step
-        let x_pred = f.dot(&x);
+        let x_pred = f.dot(&_x);
         let p_pred = f.dot(&p).dot(&f.t()) + &q;
 
         // Update step
@@ -1116,11 +1118,11 @@ fn kalman_filter_vector_measurement(
         };
 
         // State and covariance update
-        x = &x_pred + &k.dot(&innovation);
+        _x = &x_pred + &k.dot(&innovation);
         p = &p_pred - &k.dot(&innovation_cov).dot(&k.t());
 
         // Store state
-        x_history.slice_mut(s![i, ..]).assign(&x);
+        x_history.slice_mut(s![i, ..]).assign(&_x);
     }
 
     Ok(x_history)
@@ -1145,7 +1147,7 @@ pub fn estimate_noise_parameters(
 
     if window_size >= n {
         return Err(SignalError::InvalidArgument(
-            "Window size must be smaller than signal length".to_string(),
+            "Window _size must be smaller than signal length".to_string(),
         ));
     }
 

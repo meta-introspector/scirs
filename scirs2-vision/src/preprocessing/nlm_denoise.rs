@@ -27,7 +27,7 @@ use std::sync::Mutex;
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_vision::preprocessing::nlm_denoise;
+/// use scirs2__vision::preprocessing::nlm_denoise;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
 /// let noisy_image = Array2::zeros((100, 100));
@@ -294,8 +294,8 @@ pub fn nlm_denoise_parallel(
 
 /// Pad an array with reflected boundary conditions
 #[allow(dead_code)]
-fn pad_reflect(array: &Array2<f32>, pad_size: usize) -> Array2<f32> {
-    let (height, width) = array.dim();
+fn pad_reflect(_array: &Array2<f32>, pad_size: usize) -> Array2<f32> {
+    let (height, width) = _array.dim();
     let new_height = height + 2 * pad_size;
     let new_width = width + 2 * pad_size;
 
@@ -304,7 +304,7 @@ fn pad_reflect(array: &Array2<f32>, pad_size: usize) -> Array2<f32> {
     // Copy original data
     padded
         .slice_mut(s![pad_size..pad_size + height, pad_size..pad_size + width])
-        .assign(array);
+        .assign(_array);
 
     // Pad top and bottom
     for i in 0..pad_size {

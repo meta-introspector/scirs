@@ -6,7 +6,7 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use ndarray::{Array2, ArrayBase, Axis, Data};
 use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
-use scirs2_transform::*;
+use scirs2__transform::*;
 
 const SAMPLE_SIZES: &[usize] = &[100, 1000, 10_000];
 const FEATURE_SIZES: &[usize] = &[10, 50, 100];
@@ -77,7 +77,7 @@ fn bench_normalization(c: &mut Criterion) {
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
 fn bench_simd_normalization(c: &mut Criterion) {
-    use scirs2_transform::normalize_simd::*;
+    use scirs2__transform::normalize_simd::*;
 
     let mut group = c.benchmark_group("SIMD_Normalization");
 

@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
+use ndarray::ArrayView1;
 
 /// API consistency validation framework
 pub struct APIConsistencyValidator {
@@ -390,9 +391,9 @@ impl Default for NamingConventions {
 
 impl APIConsistencyValidator {
     /// Create new API consistency validator
-    pub fn new(config: ValidationConfig) -> Self {
+    pub fn new(_config: ValidationConfig) -> Self {
         Self {
-            config,
+            _config,
             results: ValidationResults::new(),
             function_registry: FunctionRegistry::new(),
         }
@@ -1191,9 +1192,9 @@ pub struct ValidationReport {
 }
 
 impl ValidationReport {
-    pub fn new(results: &ValidationResults) -> Self {
+    pub fn new(_results: &ValidationResults) -> Self {
         Self {
-            results: results.clone(),
+            _results: _results.clone(),
         }
     }
 

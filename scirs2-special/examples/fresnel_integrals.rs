@@ -1,4 +1,4 @@
-use scirs2_special::{fresnel, fresnelc, fresnels, mod_fresnel_minus, mod_fresnel_plus};
+use scirs2__special::{fresnel, fresnelc, fresnels, mod_fresnel_minus, mod_fresnel_plus};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

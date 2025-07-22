@@ -28,7 +28,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::adaptive_selection::{AdaptiveAlgorithmSelector, SelectionContext};
+//! use scirs2__spatial::adaptive_selection::{AdaptiveAlgorithmSelector, SelectionContext};
 //! use ndarray::array;
 //!
 //! // Create adaptive selector with multiple strategies
@@ -64,6 +64,7 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
+use statrs::statistics::Statistics;
 
 /// Adaptive algorithm selector
 #[derive(Debug)]
@@ -555,7 +556,7 @@ pub struct CachedSelection {
 }
 
 impl Default for SelectionContext {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -572,7 +573,7 @@ impl SelectionContext {
             quality_tolerance: 0.1,
             user_preferences: HashMap::new(),
             environmental_constraints: EnvironmentalConstraints {
-                available_cores: num_cpus::get(),
+                available_cores: num, _cpus: get(),
                 available_memory: 8_000_000_000, // 8GB default
                 gpu_available: false,
                 network_bandwidth: None,
@@ -583,32 +584,32 @@ impl SelectionContext {
     }
 
     /// Configure accuracy priority
-    pub fn with_accuracy_priority(mut self, priority: f64) -> Self {
+    pub fn with_accuracy_priority(mut priority: f64) -> Self {
         self.accuracy_priority = priority.clamp(0.0, 1.0);
         self
     }
 
     /// Configure speed priority
-    pub fn with_speed_priority(mut self, priority: f64) -> Self {
+    pub fn with_speed_priority(mut priority: f64) -> Self {
         self.speed_priority = priority.clamp(0.0, 1.0);
         self
     }
 
     /// Configure memory constraint
-    pub fn with_memory_constraint(mut self, bytes: usize) -> Self {
+    pub fn with_memory_constraint(mut bytes: usize) -> Self {
         self.memory_constraint = bytes;
         self
     }
 
     /// Configure real-time requirement
-    pub fn with_real_time_requirement(mut self, required: bool) -> Self {
+    pub fn with_real_time_requirement(mut required: bool) -> Self {
         self.real_time_requirement = required;
         self
     }
 }
 
 impl Default for AdaptiveAlgorithmSelector {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -670,7 +671,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Enable performance learning
-    pub fn with_performance_learning(mut self, enabled: bool) -> Self {
+    pub fn with_performance_learning(mut enabled: bool) -> Self {
         self.performance_learning = enabled;
         if enabled {
             self.strategies.push(SelectionStrategy::HistoryBased);
@@ -679,7 +680,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Enable resource awareness
-    pub fn with_resource_awareness(mut self, enabled: bool) -> Self {
+    pub fn with_resource_awareness(mut enabled: bool) -> Self {
         self.resource_awareness = enabled;
         if enabled {
             self.strategies.push(SelectionStrategy::ResourceAware);
@@ -688,7 +689,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Enable quality optimization
-    pub fn with_quality_optimization(mut self, enabled: bool) -> Self {
+    pub fn with_quality_optimization(mut enabled: bool) -> Self {
         self.quality_optimization = enabled;
         if enabled {
             self.strategies.push(SelectionStrategy::QualityOptimized);
@@ -697,7 +698,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Enable ensemble methods
-    pub fn with_ensemble_methods(mut self, enabled: bool) -> Self {
+    pub fn with_ensemble_methods(mut enabled: bool) -> Self {
         self.ensemble_methods = enabled;
         if enabled {
             self.strategies.push(SelectionStrategy::EnsembleBased);
@@ -786,7 +787,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Default feature extractors for pattern analysis
-    fn default_feature_extractors() -> Vec<FeatureExtractor> {
+    fn default_feature_extractors(&self) -> Vec<FeatureExtractor> {
         vec![
             FeatureExtractor {
                 name: "basic_stats".to_string(),
@@ -894,16 +895,14 @@ impl AdaptiveAlgorithmSelector {
             0..=99 => SizeCategory::Tiny,
             100..=999 => SizeCategory::Small,
             1000..=99_999 => SizeCategory::Medium,
-            100_000..=999_999 => SizeCategory::Large,
-            _ => SizeCategory::Huge,
+            100_000..=999_999 => SizeCategory::Large_ =>, SizeCategory::Huge,
         };
 
         // Categorize dimensionality
         let dimensionality_category = match n_dims {
             1..=3 => DimensionalityCategory::Low,
             4..=20 => DimensionalityCategory::Medium,
-            21..=100 => DimensionalityCategory::High,
-            _ => DimensionalityCategory::VeryHigh,
+            21..=100 => DimensionalityCategory::High_ =>, DimensionalityCategory::VeryHigh,
         };
 
         // Estimate density
@@ -950,8 +949,8 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Estimate data density
-    fn estimate_data_density(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-        let (n_points, _) = data.dim();
+    fn estimate_data_density(_data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+        let (n_points_) = _data.dim();
 
         if n_points < 2 {
             return Ok(0.0);
@@ -966,10 +965,10 @@ impl AdaptiveAlgorithmSelector {
 
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = data
+                    let dist: f64 = _data
                         .row(i)
                         .iter()
-                        .zip(data.row(j).iter())
+                        .zip(_data.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -994,8 +993,8 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Estimate clustering tendency (Hopkins-like statistic)
-    fn estimate_clustering_tendency(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-        let (n_points, n_dims) = data.dim();
+    fn estimate_clustering_tendency(_data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+        let (n_points, n_dims) = _data.dim();
 
         if n_points < 10 {
             return Ok(0.5);
@@ -1010,10 +1009,10 @@ impl AdaptiveAlgorithmSelector {
             let mut min_dist = f64::INFINITY;
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = data
+                    let dist: f64 = _data
                         .row(i)
                         .iter()
-                        .zip(data.row(j).iter())
+                        .zip(_data.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -1024,7 +1023,7 @@ impl AdaptiveAlgorithmSelector {
         }
 
         // Random point distances
-        let bounds = self.get_data_bounds(data);
+        let bounds = self.get_data_bounds(_data);
         for _ in 0..sample_size {
             let random_point: Array1<f64> = Array1::from_shape_fn(n_dims, |i| {
                 rand::random::<f64>() * (bounds[i].1 - bounds[i].0) + bounds[i].0
@@ -1034,7 +1033,7 @@ impl AdaptiveAlgorithmSelector {
             for j in 0..n_points {
                 let dist: f64 = random_point
                     .iter()
-                    .zip(data.row(j).iter())
+                    .zip(_data.row(j).iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();
@@ -1051,8 +1050,8 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Estimate noise level in data
-    fn estimate_noise_level(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-        let (n_points, _n_dims) = data.dim();
+    fn estimate_noise_level(_data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+        let (n_points_n_dims) = _data.dim();
 
         if n_points < 10 {
             return Ok(0.0);
@@ -1069,10 +1068,10 @@ impl AdaptiveAlgorithmSelector {
 
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = data
+                    let dist: f64 = _data
                         .row(i)
                         .iter()
-                        .zip(data.row(j).iter())
+                        .zip(_data.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -1160,12 +1159,12 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Get data bounds for each dimension
-    fn get_data_bounds(&self, data: &ArrayView2<'_, f64>) -> Vec<(f64, f64)> {
-        let (_, n_dims) = data.dim();
+    fn get_data_bounds(_data: &ArrayView2<'_, f64>) -> Vec<(f64, f64)> {
+        let (_, n_dims) = _data.dim();
         let mut bounds = Vec::new();
 
         for dim in 0..n_dims {
-            let column = data.column(dim);
+            let column = _data.column(dim);
             let min_val = column.fold(f64::INFINITY, |a, &b| a.min(b));
             let max_val = column.fold(f64::NEG_INFINITY, |a, &b| a.max(b));
             bounds.push((min_val, max_val));
@@ -1175,7 +1174,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Update resource monitor
-    async fn update_resource_monitor(&mut self) -> SpatialResult<()> {
+    async fn update_resource_monitor() -> SpatialResult<()> {
         // In a real implementation, this would query system resources
         self.resource_monitor.cpu_usage = 0.5; // Simulated
         self.resource_monitor.memory_usage = 4_000_000_000; // 4GB
@@ -1259,8 +1258,7 @@ impl AdaptiveAlgorithmSelector {
     async fn predict_performance(
         &self,
         algorithm: &SelectedAlgorithm,
-        characteristics: &DataCharacteristics,
-        _context: &SelectionContext,
+        characteristics: &DataCharacteristics_context: &SelectionContext,
     ) -> SpatialResult<PerformancePrediction> {
         // Base predictions (would use machine learning models in practice)
         let (base_time, base_memory, base_accuracy) = match algorithm {
@@ -1402,8 +1400,7 @@ impl AdaptiveAlgorithmSelector {
     /// Select best candidate from evaluations
     fn select_best_candidate(
         &self,
-        evaluations: Vec<AlgorithmEvaluation>,
-        _context: &SelectionContext,
+        evaluations: Vec<AlgorithmEvaluation>, _context: &SelectionContext,
     ) -> SpatialResult<AlgorithmSelection> {
         let best_evaluation = evaluations
             .into_iter()
@@ -1450,7 +1447,7 @@ impl AdaptiveAlgorithmSelector {
                 .cache
                 .iter()
                 .min_by_key(|(_, v)| v.timestamp)
-                .map(|(k, _)| k.clone());
+                .map(|(k_)| k.clone());
 
             if let Some(key) = oldest_key {
                 cache.cache.remove(&key);
@@ -1462,8 +1459,7 @@ impl AdaptiveAlgorithmSelector {
 
     /// Execute selected algorithm
     async fn execute_algorithm(
-        &self,
-        _selection: &AlgorithmSelection,
+        &self_selection: &AlgorithmSelection,
         data: &ArrayView2<'_, f64>,
     ) -> SpatialResult<AlgorithmResult> {
         // Simulate algorithm execution

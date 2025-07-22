@@ -150,13 +150,13 @@ where
             thresholds: None,
             auc: None,
             title: "Interactive ROC Curve".to_string(),
-            show_auc: true,
-            show_baseline: true,
+            show_auc: _true,
+            show_baseline: _true,
             y_true: Some(y_true),
             y_score: Some(y_score),
             pos_label,
             current_threshold_idx: None,
-            show_metrics: true,
+            show_metrics: _true,
             interactive_options: InteractiveOptions::default(),
         }
     }
@@ -270,7 +270,7 @@ where
     /// * Result containing self for method chaining
     pub fn with_threshold_value(mut self, threshold: f64) -> Result<Self> {
         // Ensure thresholds are computed
-        let (_, _, thresholds, _) = self.compute_roc()?;
+        let (__, thresholds_) = self.compute_roc()?;
 
         if thresholds.is_empty() {
             return Err(MetricsError::InvalidInput(
@@ -361,7 +361,7 @@ where
             ));
         }
 
-        let (_, _, thresholds, _) = self.compute_roc()?;
+        let (__, thresholds_) = self.compute_roc()?;
 
         if threshold_idx >= thresholds.len() {
             return Err(MetricsError::InvalidArgument(
@@ -459,7 +459,7 @@ where
         metrics.insert("f1_score".to_string(), f1);
 
         // Add threshold value
-        let (_, _, thresholds, _) = self.compute_roc()?;
+        let (__, thresholds_) = self.compute_roc()?;
         metrics.insert("threshold".to_string(), thresholds[threshold_idx]);
 
         Ok(metrics)
@@ -471,7 +471,7 @@ where
     ///
     /// * The current threshold index or the middle index if not set
     pub fn get_current_threshold_idx(&self) -> Result<usize> {
-        let (_, _, thresholds, _) = self.compute_roc()?;
+        let (__, thresholds_) = self.compute_roc()?;
 
         if thresholds.is_empty() {
             return Err(MetricsError::InvalidInput(
@@ -480,8 +480,7 @@ where
         }
 
         match self.current_threshold_idx {
-            Some(idx) if idx < thresholds.len() => Ok(idx),
-            _ => Ok(thresholds.len() / 2), // Default to middle threshold
+            Some(idx) if idx < thresholds.len() => Ok(idx, _ => Ok(thresholds.len() / 2), // Default to middle threshold
         }
     }
 }

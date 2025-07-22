@@ -125,8 +125,7 @@ pub struct AdvancedAdvancedStreamingProcessor<F> {
     change_detector: Arc<Mutex<ChangePointDetector<F>>>,
     anomaly_detector: Arc<Mutex<AnomalyDetector<F>>>,
     ml_model: Option<Arc<Mutex<IncrementalMLModel<F>>>>,
-    compression_engine: Arc<Mutex<CompressionEngine<F>>>,
-    _phantom: PhantomData<F>,
+    compression_engine: Arc<Mutex<CompressionEngine<F>>>, _phantom: PhantomData<F>,
 }
 
 /// Change point detection using advanced algorithms
@@ -134,8 +133,7 @@ pub struct ChangePointDetector<F> {
     algorithm: ChangePointAlgorithm,
     window_data: VecDeque<F>,
     threshold: f64,
-    last_detection: Option<Instant>,
-    _phantom: PhantomData<F>,
+    last_detection: Option<Instant>, _phantom: PhantomData<F>,
 }
 
 /// Change point detection algorithms
@@ -158,8 +156,7 @@ pub struct AnomalyDetector<F> {
     algorithm: AnomalyDetectionAlgorithm,
     baseline_statistics: StreamingStatistics<F>,
     detection_threshold: f64,
-    anomaly_history: VecDeque<(Instant, F, AnomalyType)>,
-    _phantom: PhantomData<F>,
+    anomaly_history: VecDeque<(Instant, F, AnomalyType)>, _phantom: PhantomData<F>,
 }
 
 /// Anomaly detection algorithms
@@ -190,8 +187,7 @@ pub struct IncrementalMLModel<F> {
     model_type: MLModelType,
     parameters: HashMap<String, F>,
     training_data: VecDeque<Array1<F>>,
-    model_performance: ModelPerformance<F>,
-    _phantom: PhantomData<F>,
+    model_performance: ModelPerformance<F>, _phantom: PhantomData<F>,
 }
 
 /// Types of incremental ML models
@@ -225,8 +221,7 @@ pub struct CompressionEngine<F> {
     algorithm: CompressionAlgorithm,
     compression_ratio: f64,
     historical_data: VecDeque<CompressedDataPoint<F>>,
-    metadata: CompressionMetadata,
-    _phantom: PhantomData<F>,
+    metadata: CompressionMetadata_phantom: PhantomData<F>,
 }
 
 /// Compression algorithms for streaming data
@@ -374,9 +369,9 @@ where
         + std::fmt::Display,
 {
     /// Create a new advanced streaming processor
-    pub fn new(config: AdvancedStreamingConfig) -> Self {
+    pub fn new(_config: AdvancedStreamingConfig) -> Self {
         let windowing_strategy = WindowingStrategy::Sliding {
-            size: config.default_window_size,
+            size: _config.default_window_size,
         };
         let processing_mode = StreamProcessingMode::Adaptive;
 
@@ -397,7 +392,7 @@ where
         };
 
         Self {
-            config,
+            _config,
             windowing_strategy,
             processing_mode,
             buffer: Arc::new(RwLock::new(VecDeque::new())),
@@ -405,8 +400,7 @@ where
             change_detector: Arc::new(Mutex::new(ChangePointDetector::new())),
             anomaly_detector: Arc::new(Mutex::new(AnomalyDetector::new())),
             ml_model: None,
-            compression_engine: Arc::new(Mutex::new(CompressionEngine::new())),
-            _phantom: PhantomData,
+            compression_engine: Arc::new(Mutex::new(CompressionEngine::new())), _phantom: PhantomData,
         }
     }
 
@@ -529,7 +523,7 @@ where
             }
             WindowingStrategy::TimeBased { duration } => {
                 let cutoff = Instant::now() - *duration;
-                while let Some((timestamp, _)) = buffer.front() {
+                while let Some((timestamp_)) = buffer.front() {
                     if *timestamp < cutoff {
                         buffer.pop_front();
                     } else {
@@ -561,7 +555,7 @@ where
     ) -> StatsResult<usize> {
         let stats = self.statistics.read().unwrap();
 
-        // Base the window size on variance and throughput
+        // Base the window _size on variance and throughput
         let variance_factor = if stats.variance > F::zero() {
             (stats.variance.sqrt()).to_f64().unwrap_or(1.0)
         } else {
@@ -635,7 +629,7 @@ where
     }
 
     /// Update incremental ML model
-    fn update_ml_model(&self, _value: F) -> StatsResult<()> {
+    fn update_ml_model(&self_value: F) -> StatsResult<()> {
         // Implementation would depend on the specific ML model type
         // This is a placeholder for the incremental learning logic
         Ok(())
@@ -767,8 +761,7 @@ where
             },
             window_data: VecDeque::new(),
             threshold: 0.05,
-            last_detection: None,
-            _phantom: PhantomData,
+            last_detection: None, _phantom: PhantomData,
         }
     }
 
@@ -837,8 +830,7 @@ where
             algorithm: AnomalyDetectionAlgorithm::ZScore { threshold: 3.0 },
             baseline_statistics: baseline,
             detection_threshold: 0.05,
-            anomaly_history: VecDeque::new(),
-            _phantom: PhantomData,
+            anomaly_history: VecDeque::new(), _phantom: PhantomData,
         }
     }
 
@@ -888,8 +880,7 @@ where
                 compression_ratio: 1.0,
                 reconstruction_accuracy: 1.0,
                 algorithm_used: "PAA".to_string(),
-            },
-            _phantom: PhantomData,
+            }_phantom: PhantomData,
         }
     }
 

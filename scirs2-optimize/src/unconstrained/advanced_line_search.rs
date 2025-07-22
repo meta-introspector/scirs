@@ -131,10 +131,10 @@ pub struct NonMonotoneState {
 }
 
 impl NonMonotoneState {
-    fn new(max_memory: usize) -> Self {
+    fn new(_max_memory: usize) -> Self {
         Self {
             f_history: VecDeque::new(),
-            max_memory,
+            _max_memory,
         }
     }
 
@@ -171,19 +171,19 @@ where
 {
     match options.method {
         LineSearchMethod::HagerZhang => {
-            hager_zhang_line_search(fun, grad_fun, x, f0, direction, grad0, options, bounds)
+            hager_zhang_line_search(_fun, grad_fun, x, f0, direction, grad0, options, bounds)
         }
         LineSearchMethod::NonMonotone => non_monotone_line_search(
-            fun, grad_fun, x, f0, direction, grad0, options, bounds, nm_state,
+            _fun, grad_fun, x, f0, direction, grad0, options, bounds, nm_state,
         ),
         LineSearchMethod::EnhancedStrongWolfe => {
-            enhanced_strong_wolfe(fun, grad_fun, x, f0, direction, grad0, options, bounds)
+            enhanced_strong_wolfe(_fun, grad_fun, x, f0, direction, grad0, options, bounds)
         }
         LineSearchMethod::MoreThuente => {
-            more_thuente_line_search(fun, grad_fun, x, f0, direction, grad0, options, bounds)
+            more_thuente_line_search(_fun, grad_fun, x, f0, direction, grad0, options, bounds)
         }
         LineSearchMethod::Adaptive => {
-            adaptive_line_search(fun, grad_fun, x, f0, direction, grad0, options, bounds)
+            adaptive_line_search(_fun, grad_fun, x, f0, direction, grad0, options, bounds)
         }
     }
 }
@@ -242,7 +242,7 @@ where
 
     // Try initial step
     let x_new = x + alpha * direction;
-    let phi = fun(&x_new.view());
+    let phi = _fun(&x_new.view());
     n_fev += 1;
     stats.max_f_eval = stats.max_f_eval.max(phi);
 
@@ -320,7 +320,7 @@ where
 
         // Evaluate at new point
         let x_new = x + alpha * direction;
-        let phi = fun(&x_new.view());
+        let phi = _fun(&x_new.view());
         n_fev += 1;
         stats.max_f_eval = stats.max_f_eval.max(phi);
     }
@@ -343,7 +343,7 @@ where
         }
 
         let x_new = x + alpha * direction;
-        let phi = fun(&x_new.view());
+        let phi = _fun(&x_new.view());
         n_fev += 1;
         stats.max_f_eval = stats.max_f_eval.max(phi);
 
@@ -401,7 +401,7 @@ where
     // Return best point found
     stats.final_width = (alpha_hi - alpha_lo).abs();
     let x_final = x + alpha_lo * direction;
-    let f_final = fun(&x_final.view());
+    let f_final = _fun(&x_final.view());
     n_fev += 1;
 
     Ok(LineSearchResult {
@@ -512,7 +512,7 @@ where
     #[allow(clippy::explicit_counter_loop)]
     for i in 0..options.max_ls_iter {
         let x_new = x + alpha * direction;
-        let phi = fun(&x_new.view());
+        let phi = _fun(&x_new.view());
         n_fev += 1;
         stats.max_f_eval = stats.max_f_eval.max(phi);
 
@@ -525,7 +525,7 @@ where
                 let dphi = grad_new.dot(direction);
 
                 if dphi >= options.c2 * dphi0 {
-                    // Update non-monotone state
+                    // Update non-monotone _state
                     if let Some(nm_state) = nm_state {
                         nm_state.update(phi);
                     }
@@ -631,7 +631,7 @@ where
     #[allow(clippy::explicit_counter_loop)]
     for i in 0..options.max_ls_iter {
         let x_new = x + alpha * direction;
-        let phi = fun(&x_new.view());
+        let phi = _fun(&x_new.view());
         n_fev += 1;
         stats.max_f_eval = stats.max_f_eval.max(phi);
 
@@ -640,7 +640,7 @@ where
             // Enter zoom phase
             stats.n_bracket = 1;
             return enhanced_zoom(
-                fun, grad_fun, x, direction, alpha_prev, alpha, phi_prev, phi, f0, dphi0, options,
+                _fun, grad_fun, x, direction, alpha_prev, alpha, phi_prev, phi, f0, dphi0, options,
                 &mut stats, &mut n_fev, &mut n_gev,
             );
         }
@@ -668,7 +668,7 @@ where
             // Enter zoom phase
             stats.n_bracket = 1;
             return enhanced_zoom(
-                fun, grad_fun, x, direction, alpha, alpha_prev, phi, phi_prev, f0, dphi0, options,
+                _fun, grad_fun, x, direction, alpha, alpha_prev, phi, phi_prev, f0, dphi0, options,
                 &mut stats, &mut n_fev, &mut n_gev,
             );
         }
@@ -681,8 +681,7 @@ where
             InterpolationStrategy::Cubic => {
                 interpolate_cubic(alpha, alpha_max, phi, f0, dphi, dphi0)
             }
-            InterpolationStrategy::Quadratic => interpolate_quadratic(alpha, phi, f0, dphi, dphi0),
-            _ => 2.0 * alpha,
+            InterpolationStrategy::Quadratic => interpolate_quadratic(alpha, phi, f0, dphi, dphi0, _ => 2.0 * alpha,
         };
 
         alpha = alpha.min(alpha_max);
@@ -738,7 +737,7 @@ where
         };
 
         let x_new = x + alpha * direction;
-        let phi = fun(&x_new.view());
+        let phi = _fun(&x_new.view());
         *n_fev += 1;
         stats.max_f_eval = stats.max_f_eval.max(phi);
 
@@ -797,7 +796,7 @@ where
 {
     // More-Thuente is complex to implement fully here
     // For now, use enhanced Strong Wolfe as a sophisticated alternative
-    enhanced_strong_wolfe(fun, grad_fun, x, f0, direction, grad0, options, bounds)
+    enhanced_strong_wolfe(_fun, grad_fun, x, f0, direction, grad0, options, bounds)
 }
 
 /// Adaptive line search that adjusts parameters based on problem characteristics
@@ -841,7 +840,7 @@ where
     // Try primary method
     match adaptive_options.method {
         LineSearchMethod::HagerZhang => hager_zhang_line_search(
-            fun,
+            _fun,
             grad_fun,
             x,
             f0,
@@ -851,7 +850,7 @@ where
             bounds,
         ),
         LineSearchMethod::EnhancedStrongWolfe => enhanced_strong_wolfe(
-            fun,
+            _fun,
             grad_fun,
             x,
             f0,
@@ -859,11 +858,10 @@ where
             grad0,
             &adaptive_options,
             bounds,
-        ),
-        _ => {
+        , _ => {
             // Fallback to Hager-Zhang
             hager_zhang_line_search(
-                fun,
+                _fun,
                 grad_fun,
                 x,
                 f0,
@@ -892,16 +890,16 @@ fn interpolate_cubic(
     if d2_term >= 0.0 {
         let d2 = d2_term.sqrt();
         let alpha_c = alpha * (1.0 - (dphi + d2 - d1) / (dphi - dphi0 + 2.0 * d2));
-        alpha_c.max(1.1 * alpha).min(0.9 * alpha_max)
+        alpha_c._max(1.1 * alpha).min(0.9 * alpha_max)
     } else {
         2.0 * alpha
     }
 }
 
 #[allow(dead_code)]
-fn interpolate_quadratic(alpha: f64, phi: f64, phi0: f64, _dphi: f64, dphi0: f64) -> f64 {
-    let alpha_q = -dphi0 * alpha * alpha / (2.0 * (phi - phi0 - dphi0 * alpha));
-    alpha_q.max(1.1 * alpha)
+fn interpolate_quadratic(_alpha: f64, phi: f64, phi0: f64_dphi: f64, dphi0: f64) -> f64 {
+    let alpha_q = -dphi0 * _alpha * _alpha / (2.0 * (phi - phi0 - dphi0 * _alpha));
+    alpha_q.max(1.1 * _alpha)
 }
 
 #[allow(dead_code)]
@@ -909,8 +907,7 @@ fn interpolate_cubic_zoom(
     alpha_lo: f64,
     alpha_hi: f64,
     phi_lo: f64,
-    phi_hi: f64,
-    _phi0: f64,
+    phi_hi: f64, _phi0: f64,
     dphi0: f64,
 ) -> f64 {
     let d = alpha_hi - alpha_lo;
@@ -930,13 +927,13 @@ fn interpolate_cubic_zoom(
 }
 
 #[allow(dead_code)]
-fn interpolate_quadratic_zoom(alpha_lo: f64, alpha_hi: f64, phi_lo: f64, phi_hi: f64) -> f64 {
-    let d = alpha_hi - alpha_lo;
+fn interpolate_quadratic_zoom(_alpha_lo: f64, alpha_hi: f64, phi_lo: f64, phi_hi: f64) -> f64 {
+    let d = alpha_hi - _alpha_lo;
     let a = (phi_hi - phi_lo) / (d * d);
 
     if a > 0.0 {
-        let alpha_q = alpha_lo + 0.5 * d;
-        alpha_q.max(alpha_lo + 0.01 * d).min(alpha_hi - 0.01 * d)
+        let alpha_q = _alpha_lo + 0.5 * d;
+        alpha_q.max(_alpha_lo + 0.01 * d).min(alpha_hi - 0.01 * d)
     } else {
         0.5 * (alpha_lo + alpha_hi)
     }
@@ -944,8 +941,8 @@ fn interpolate_quadratic_zoom(alpha_lo: f64, alpha_hi: f64, phi_lo: f64, phi_hi:
 
 /// Create a non-monotone state for algorithms that need it
 #[allow(dead_code)]
-pub fn create_non_monotone_state(memory_size: usize) -> NonMonotoneState {
-    NonMonotoneState::new(memory_size)
+pub fn create_non_monotone_state(_memory_size: usize) -> NonMonotoneState {
+    NonMonotoneState::new(_memory_size)
 }
 
 #[cfg(test)]

@@ -1,4 +1,4 @@
-use crate::ndarray_ext::NdArray;
+use crate::ndarray__ext::NdArray;
 use crate::op::OpError;
 use crate::Float;
 
@@ -10,7 +10,7 @@ pub(crate) struct AdamWOp<F: Float> {
     pub(crate) weight_decay: F,
 }
 
-impl<F: Float> crate::op::Op<F> for AdamWOp<F> {
+impl<F: Float>, crate::op::Op<F> for AdamWOp<F> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<F>) -> Result<(), OpError> {
         // AdamW requires the same 5 inputs as Adam
         // param, grad, m, v, t

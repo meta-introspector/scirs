@@ -31,7 +31,7 @@ use crate::error::{Result, TimeSeriesError};
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_series::trends::{estimate_piecewise_trend, PiecewiseTrendOptions, BreakpointMethod, SegmentModelType};
+/// use scirs2__series::trends::{estimate_piecewise_trend, PiecewiseTrendOptions, BreakpointMethod, SegmentModelType};
 ///
 /// // Create a sample time series with a piecewise trend and noise
 /// let n = 100;
@@ -230,11 +230,11 @@ where
 
 /// Detects breakpoints using the PELT (Pruned Exact Linear Time) algorithm
 #[allow(dead_code)]
-fn detect_breakpoints_pelt<F>(ts: &Array1<F>, options: &PiecewiseTrendOptions) -> Result<Vec<usize>>
+fn detect_breakpoints_pelt<F>(_ts: &Array1<F>, options: &PiecewiseTrendOptions) -> Result<Vec<usize>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = ts.len();
+    let n = _ts.len();
     let min_segment = options.min_segment_length;
     let penalty_value = options
         .penalty
@@ -242,10 +242,10 @@ where
         .unwrap_or_else(|| {
             // Default penalty based on criterion
             match options.criterion {
-                BreakpointCriterion::AIC => F::from_f64(2.0).unwrap(),
-                BreakpointCriterion::BIC => F::from_f64((n as f64).ln()).unwrap(),
-                BreakpointCriterion::ModifiedBIC => F::from_f64((n as f64).ln().powf(1.5)).unwrap(),
-                BreakpointCriterion::RSS => F::from_f64(15.0).unwrap(), // Arbitrary default
+                BreakpointCriterion::AIC =>, F::from_f64(2.0).unwrap(),
+                BreakpointCriterion::BIC =>, F::from_f64((n as f64).ln()).unwrap(),
+                BreakpointCriterion::ModifiedBIC =>, F::from_f64((n as f64).ln().powf(1.5)).unwrap(),
+                BreakpointCriterion::RSS =>, F::from_f64(15.0).unwrap(), // Arbitrary default
             }
         });
 
@@ -267,7 +267,7 @@ where
                 continue;
             }
 
-            let segment_ts = ts.slice(ndarray::s![s..t]);
+            let segment_ts = _ts.slice(ndarray::s![s..t]);
             let segment_cost =
                 calculate_segment_cost(&segment_ts, options.segment_model, options.criterion)?;
 
@@ -380,7 +380,7 @@ where
         }
 
         // Find the pair with the lowest merge cost
-        if let Some((idx, _)) = merge_costs.iter().min_by(|(_, cost1), (_, cost2)| {
+        if let Some((idx_)) = merge_costs.iter().min_by(|(_, cost1), (_, cost2)| {
             cost1
                 .partial_cmp(cost2)
                 .unwrap_or(std::cmp::Ordering::Equal)
@@ -567,18 +567,18 @@ where
 
 /// Fits a linear model to a segment
 #[allow(dead_code)]
-fn fit_linear_model<F>(segment_ts: &ArrayView1<F>) -> Result<Array1<F>>
+fn fit_linear_model<F>(_segment_ts: &ArrayView1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = segment_ts.len();
+    let n = _segment_ts.len();
 
     // Create x values: 0, 1, 2, ...
     let x_values: Vec<F> = (0..n).map(|i| F::from_usize(i).unwrap()).collect();
 
     // Calculate means
     let mean_x = F::from_usize(n - 1).unwrap() / F::from_f64(2.0).unwrap();
-    let mean_y = segment_ts.sum() / F::from_usize(n).unwrap();
+    let mean_y = _segment_ts.sum() / F::from_usize(n).unwrap();
 
     // Calculate covariance and variance
     let mut cov_xy = F::zero();
@@ -586,7 +586,7 @@ where
 
     for i in 0..n {
         let x_dev = x_values[i] - mean_x;
-        let y_dev = segment_ts[i] - mean_y;
+        let y_dev = _segment_ts[i] - mean_y;
 
         cov_xy = cov_xy + x_dev * y_dev;
         var_x = var_x + x_dev * x_dev;
@@ -612,11 +612,11 @@ where
 
 /// Fits a polynomial model of specified degree to a segment
 #[allow(dead_code)]
-fn fit_polynomial_model<F>(segment_ts: &ArrayView1<F>, degree: usize) -> Result<Array1<F>>
+fn fit_polynomial_model<F>(_segment_ts: &ArrayView1<F>, degree: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = segment_ts.len();
+    let n = _segment_ts.len();
 
     if n <= degree {
         return Err(TimeSeriesError::InsufficientData {
@@ -727,7 +727,7 @@ where
         }
 
         // Eliminate below
-        for i in (k + 1)..n {
+        for i in (k + 1), n {
             let factor = a_lu[[i, k]] / a_lu[[k, k]];
             a_lu[[i, k]] = factor; // Store multiplier
 
@@ -852,12 +852,12 @@ where
     F: Float + FromPrimitive + Debug + 'static,
 {
     // First, compute the main trend estimate
-    let trend = estimate_piecewise_trend(ts, options)?;
+    let trend = estimate_piecewise_trend(ts_options)?;
 
     // Then compute confidence intervals
     let (lower, upper) =
         super::confidence::compute_trend_confidence_interval(ts, &trend, ci_options, |data| {
-            estimate_piecewise_trend(data, options)
+            estimate_piecewise_trend(data_options)
         })?;
 
     Ok(TrendWithConfidenceInterval {

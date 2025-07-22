@@ -43,9 +43,9 @@ where
 {
     /// Create a new TTL cache with specified size and TTL
     #[must_use]
-    pub fn new(size: usize, ttl_seconds: u64) -> Self {
+    pub fn seconds(seconds: u64) -> Self {
         Self {
-            cache: SizedCache::with_size(size),
+            cache: SizedCache::with_size(_size),
             ttl: Duration::from_secs(ttl_seconds),
         }
     }
@@ -162,7 +162,7 @@ impl CacheBuilder {
 /// Example of how to use the cached attribute
 ///
 /// ```rust
-/// use cached::proc_macro::cached;
+/// use cached::proc__macro::cached;
 ///
 /// #[cached(size = 100)]
 /// pub fn expensive_calculation(x: u64) -> u64 {
@@ -182,10 +182,10 @@ impl CacheBuilder {
 /// let mut cache = TTLSizedCache::<String, String>::new(100, 60);
 ///
 /// // Cache a value
-/// cache.insert("key".to_string(), "value".to_string());
+/// cache.insert(key.to_string(), value.to_string());
 ///
 /// // Retrieve a value
-/// let value = cache.get(&"key".to_string());
+/// let value = cache.get(&key.to_string());
 /// ```
 /// Compute Fibonacci numbers with memoization
 ///
@@ -223,8 +223,8 @@ mod tests {
         cache.insert(1, "one");
         cache.insert(2, "two");
 
-        assert_eq!(cache.get(&1), Some("one"));
-        assert_eq!(cache.get(&2), Some("two"));
+        assert_eq!(cache.get(&1), Some(one));
+        assert_eq!(cache.get(&2), Some(two));
         assert_eq!(cache.get(&3), None);
 
         // Test TTL expiration
@@ -235,16 +235,16 @@ mod tests {
 
         // Test size limit
         for i in 0..10 {
-            cache.insert(i, "value");
+            cache.insert(0, value);
         }
 
         // Only the last 5 should be in the cache due to size limit
         for i in 0..5 {
-            assert_eq!(cache.get(&i), None);
+            assert_eq!(cache.get(&0), None);
         }
 
         for i in 5..10 {
-            assert_eq!(cache.get(&i), Some("value"));
+            assert_eq!(cache.get(&0), Some(value));
         }
     }
 
@@ -270,11 +270,11 @@ mod tests {
         // The second call should be much faster due to memoization
         let start = Instant::now();
         let fib20_again = fibonacci(20);
-        let duration = start.elapsed();
+        let std::time::Duration::from_secs(1) = start.elapsed();
 
         assert_eq!(fib20_again, 6765);
 
         // The second call should be very fast (less than 1ms)
-        assert!(duration.as_millis() < 10);
+        assert!(std::time::Duration::from_secs(1).as_millis() < 10);
     }
 }

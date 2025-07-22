@@ -9,9 +9,9 @@ use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function for safe conversion of hardcoded constants
 #[allow(dead_code)]
-fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
-    T::from_i32(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
+fn safe_i32_to_float<T: Float + FromPrimitive>(_value: i32) -> NdimageResult<T> {
+    T::from_i32(_value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", _value))
     })
 }
 
@@ -35,7 +35,7 @@ fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::filters::{sobel, BorderMode};
+/// use scirs2__ndimage::filters::{sobel, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],
@@ -127,7 +127,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::filters::{laplace, BorderMode};
+/// use scirs2__ndimage::filters::{laplace, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],
@@ -210,7 +210,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::filters::{prewitt, BorderMode};
+/// use scirs2__ndimage::filters::{prewitt, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],
@@ -304,7 +304,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::filters::{roberts, BorderMode};
+/// use scirs2__ndimage::filters::{roberts, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],
@@ -406,7 +406,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::filters::{gradient_magnitude, BorderMode};
+/// use scirs2__ndimage::filters::{gradient_magnitude, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],
@@ -508,7 +508,7 @@ where
 
 // Helper function to apply Prewitt filter along y-axis (vertical gradient)
 #[allow(dead_code)]
-fn prewitt_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn prewitt_2d_x<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -525,12 +525,12 @@ where
     kernel[[2, 2]] = -T::one();
 
     // Apply convolution
-    convolve(input, &kernel, Some(*mode))
+    convolve(_input, &kernel, Some(*mode))
 }
 
 // Helper function to apply Prewitt filter along x-axis (horizontal gradient)
 #[allow(dead_code)]
-fn prewitt_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn prewitt_2d_y<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -547,12 +547,12 @@ where
     kernel[[2, 2]] = T::one();
 
     // Apply convolution
-    convolve(input, &kernel, Some(*mode))
+    convolve(_input, &kernel, Some(*mode))
 }
 
 // Helper function to apply Sobel filter along y-axis (vertical gradient)
 #[allow(dead_code)]
-fn sobel_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn sobel_2d_x<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -569,12 +569,12 @@ where
     kernel[[2, 2]] = -T::one();
 
     // Apply convolution
-    convolve(input, &kernel, Some(*mode))
+    convolve(_input, &kernel, Some(*mode))
 }
 
 // Helper function to apply Sobel filter along x-axis (horizontal gradient)
 #[allow(dead_code)]
-fn sobel_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn sobel_2d_y<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -591,12 +591,12 @@ where
     kernel[[2, 2]] = T::one();
 
     // Apply convolution
-    convolve(input, &kernel, Some(*mode))
+    convolve(_input, &kernel, Some(*mode))
 }
 
 // Helper function to apply Roberts Cross filter for the x-component
 #[allow(dead_code)]
-fn roberts_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn roberts_2d_x<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -608,12 +608,12 @@ where
     kernel[[1, 1]] = -T::one();
 
     // Apply convolution - this applies the kernel at each position
-    convolve(input, &kernel, Some(*mode))
+    convolve(_input, &kernel, Some(*mode))
 }
 
 // Helper function to apply Roberts Cross filter for the y-component
 #[allow(dead_code)]
-fn roberts_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn roberts_2d_y<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -625,7 +625,7 @@ where
     kernel[[1, 0]] = -T::one();
 
     // Apply convolution
-    convolve(input, &kernel, Some(*mode))
+    convolve(_input, &kernel, Some(*mode))
 }
 
 // Helper function to apply 4-connected Laplace filter (for 2D arrays)
@@ -1026,7 +1026,7 @@ mod tests {
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::filters::{scharr, BorderMode};
+/// use scirs2__ndimage::filters::{scharr, BorderMode};
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0],
@@ -1101,7 +1101,7 @@ where
 
 // Helper function to apply Scharr filter along y-axis (vertical gradient)
 #[allow(dead_code)]
-fn scharr_2d_x<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn scharr_2d_x<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -1118,12 +1118,12 @@ where
     kernel[[2, 2]] = safe_i32_to_float(-3)?;
 
     // Apply convolution
-    convolve(input, &kernel, Some(*mode))
+    convolve(_input, &kernel, Some(*mode))
 }
 
 // Helper function to apply Scharr filter along x-axis (horizontal gradient)
 #[allow(dead_code)]
-fn scharr_2d_y<T>(input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
+fn scharr_2d_y<T>(_input: &Array<T, Ix2>, mode: &BorderMode) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
 {
@@ -1140,12 +1140,12 @@ where
     kernel[[2, 2]] = safe_i32_to_float(3)?;
 
     // Apply convolution
-    convolve(input, &kernel, Some(*mode))
+    convolve(_input, &kernel, Some(*mode))
 }
 
 /// N-dimensional Sobel filter implementation
 #[allow(dead_code)]
-fn sobel_nd<T, D>(input: &Array<T, D>, axis: usize, mode: &BorderMode) -> NdimageResult<Array<T, D>>
+fn sobel_nd<T, D>(_input: &Array<T, D>, axis: usize, mode: &BorderMode) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
     D: Dimension,
@@ -1154,12 +1154,12 @@ where
 
     // First apply the derivative filter [-1, 0, 1] along the specified axis
     let deriv_kernel = array![-T::one(), T::zero(), T::one()];
-    let mut result = correlate1d(input, &deriv_kernel, axis, Some(*mode), None)?;
+    let mut result = correlate1d(_input, &deriv_kernel, axis, Some(*mode), None)?;
 
     // Then apply the smoothing filter [1, 2, 1] along all other axes
     let smooth_kernel = array![T::one(), safe_i32_to_float(2)?, T::one()];
 
-    for ax in 0..input.ndim() {
+    for ax in 0.._input.ndim() {
         if ax != axis {
             result = correlate1d(&result, &smooth_kernel, ax, Some(*mode), None)?;
         }

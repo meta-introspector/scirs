@@ -9,6 +9,7 @@ use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
 use std::io::{self, Write};
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,8 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(7) => elliptic_integral_tutorial()?,
             Ok(8) => spherical_harmonics_tutorial()?,
             Ok(9) => array_operations_tutorial()?,
-            Ok(10) => advanced_features_tutorial()?,
-            _ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(10) => advanced_features_tutorial()?_ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 
@@ -60,8 +60,8 @@ fn display_main_menu() {
 }
 
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> io::Result<String> {
-    print!("{}", prompt);
+fn get_user_input(_prompt: &str) -> io::Result<String> {
+    print!("{}", _prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
@@ -202,8 +202,7 @@ fn bessel_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
                         if order <= 3 {
                             let derivative = match order {
                                 0 => -j1(value),
-                                1 => (j0(value) - jn(2, value)) / 2.0,
-                                _ => (jn(order - 1, value) - jn(order + 1, value)) / 2.0,
+                                1 => (j0(value) - jn(2, value)) / 2.0_ => (jn(order - 1, value) - jn(order + 1, value)) / 2.0,
                             };
                             println!("J'_{}({}) = {:.10}", order, value, derivative);
                         }
@@ -341,8 +340,7 @@ fn error_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
                     println!("❌ Invalid number");
                 }
             }
-            "5" => break,
-            _ => println!("❌ Invalid choice"),
+            "5" => break_ => println!("❌ Invalid choice"),
         }
     }
 
@@ -372,8 +370,7 @@ fn orthogonal_polynomial_tutorial() -> Result<(), Box<dyn std::error::Error>> {
             2 => println!("(3x² - 1)/2"),
             3 => println!("(5x³ - 3x)/2"),
             4 => println!("(35x⁴ - 30x² + 3)/8"),
-            5 => println!("(63x⁵ - 70x³ + 15x)/8"),
-            _ => unreachable!(),
+            5 => println!("(63x⁵ - 70x³ + 15x)/8", _ => unreachable!(),
         }
     }
 
@@ -431,8 +428,7 @@ fn orthogonal_polynomial_tutorial() -> Result<(), Box<dyn std::error::Error>> {
             "2" => evaluate_polynomial("Hermite", |n, x| hermite(n, x))?,
             "3" => evaluate_polynomial("Laguerre", |n, x| laguerre(n, x))?,
             "4" => evaluate_polynomial("Chebyshev", |n, x| chebyshev(n, x))?,
-            "5" => break,
-            _ => println!("❌ Invalid choice"),
+            "5" => break_ => println!("❌ Invalid choice"),
         }
     }
 
@@ -441,18 +437,18 @@ fn orthogonal_polynomial_tutorial() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn evaluate_polynomial<F>(name: &str, func: F) -> Result<(), Box<dyn std::error::Error>>
+fn evaluate_polynomial<F>(_name: &str, func: F) -> Result<(), Box<dyn std::error::Error>>
 where
     F: Fn(usize, f64) -> f64,
 {
-    let n_input = get_user_input(&format!("Enter degree n for {} polynomial: ", name))?;
+    let n_input = get_user_input(&format!("Enter degree n for {} polynomial: ", _name))?;
     let x_input = get_user_input("Enter x value: ")?;
 
     match (n_input.parse::<usize>(), x_input.parse::<f64>()) {
         (Ok(n), Ok(x)) => {
             if n <= 20 {
                 let result = func(n, x);
-                println!("{}_{}({}) = {:.10}", name, n, x, result);
+                println!("{}_{}({}) = {:.10}", _name, n, x, result);
             } else {
                 println!("❌ Degree too large (max 20)");
             }
@@ -561,8 +557,7 @@ fn hypergeometric_function_tutorial() -> Result<(), Box<dyn std::error::Error>> 
                 let result = pochhammer(a, n);
                 println!("({})_{} = {:.10}", a, n, result);
             }
-            "4" => break,
-            _ => println!("❌ Invalid choice"),
+            "4" => break_ => println!("❌ Invalid choice"),
         }
     }
 
@@ -704,8 +699,7 @@ fn wright_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
                     println!();
                 }
             }
-            "4" => break,
-            _ => println!("❌ Invalid choice"),
+            "4" => break_ => println!("❌ Invalid choice"),
         }
     }
 
@@ -891,8 +885,7 @@ fn elliptic_integral_tutorial() -> Result<(), Box<dyn std::error::Error>> {
                 );
                 println!("Ratio: {:.4}", period / small_angle_period);
             }
-            "5" => break,
-            _ => println!("❌ Invalid choice"),
+            "5" => break_ => println!("❌ Invalid choice"),
         }
     }
 
@@ -1114,8 +1107,7 @@ fn spherical_harmonics_tutorial() -> Result<(), Box<dyn std::error::Error>> {
                 println!("Higher |m| values generally have more nodes and");
                 println!("more complex angular structure.");
             }
-            "5" => break,
-            _ => println!("❌ Invalid choice"),
+            "5" => break_ => println!("❌ Invalid choice"),
         }
     }
 
@@ -1354,8 +1346,7 @@ fn array_operations_tutorial() -> Result<(), Box<dyn std::error::Error>> {
                         "1" => array.mapv(|x| gamma(x)),
                         "2" => array.mapv(|x| j0(x)),
                         "3" => array.mapv(|x| erf(x)),
-                        "4" => array.mapv(|x| sinc(x)),
-                        _ => {
+                        "4" => array.mapv(|x| sinc(x), _ => {
                             println!("❌ Invalid function choice");
                             continue;
                         }
@@ -1425,8 +1416,7 @@ fn array_operations_tutorial() -> Result<(), Box<dyn std::error::Error>> {
                 println!("• Export to various formats");
                 println!("• Interface with data analysis tools");
             }
-            "5" => break,
-            _ => println!("❌ Invalid choice"),
+            "5" => break_ => println!("❌ Invalid choice"),
         }
     }
 
@@ -1738,11 +1728,11 @@ fn advanced_features_tutorial() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Simple ASCII plotting function for demonstrations
 #[allow(dead_code)]
-fn plot_function_ascii<F>(title: &str, x_min: f64, x_max: f64, width: usize, f: F)
+fn plot_function_ascii<F>(_title: &str, x_min: f64, x_max: f64, width: usize, f: F)
 where
     F: Fn(f64) -> f64,
 {
-    println!("📈 {}", title);
+    println!("📈 {}", _title);
 
     let mut values = Vec::new();
     let mut y_min = f64::INFINITY;
@@ -1754,8 +1744,8 @@ where
         let y = f(x);
         if y.is_finite() {
             values.push((x, y));
-            y_min = y_min.min(y);
-            y_max = y_max.max(y);
+            y_min = y_min._min(y);
+            y_max = y_max._max(y);
         }
     }
 

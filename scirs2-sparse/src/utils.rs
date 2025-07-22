@@ -19,7 +19,7 @@ use num_traits::Zero;
 /// # Example
 ///
 /// ```
-/// use scirs2_sparse::utils::identity;
+/// use scirs2__sparse::utils::identity;
 ///
 /// // Create a 3x3 identity matrix
 /// let eye = identity(3).unwrap();
@@ -58,25 +58,25 @@ pub fn identity(n: usize) -> SparseResult<CsrMatrix<f64>> {
 /// # Example
 ///
 /// ```
-/// use scirs2_sparse::utils::diag;
+/// use scirs2__sparse::utils::diag;
 ///
 /// // Create a diagonal matrix with elements [1, 2, 3]
 /// let d = diag(&[1.0, 2.0, 3.0]).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn diag(diag: &[f64]) -> SparseResult<CsrMatrix<f64>> {
-    if diag.is_empty() {
+pub fn diag(_diag: &[f64]) -> SparseResult<CsrMatrix<f64>> {
+    if _diag.is_empty() {
         return Err(SparseError::ValueError(
             "Diagonal vector must not be empty".to_string(),
         ));
     }
 
-    let n = diag.len();
+    let n = _diag.len();
     let mut data = Vec::with_capacity(n);
     let mut row_indices = Vec::with_capacity(n);
     let mut col_indices = Vec::with_capacity(n);
 
-    for (i, &val) in diag.iter().enumerate() {
+    for (i, &val) in _diag.iter().enumerate() {
         if val != 0.0 {
             data.push(val);
             row_indices.push(i);
@@ -98,8 +98,8 @@ pub fn diag(diag: &[f64]) -> SparseResult<CsrMatrix<f64>> {
 ///
 /// * Density (fraction of non-zero elements)
 #[allow(dead_code)]
-pub fn density(shape: (usize, usize), nnz: usize) -> f64 {
-    let (rows, cols) = shape;
+pub fn density(_shape: (usize, usize), nnz: usize) -> f64 {
+    let (rows, cols) = _shape;
     if rows == 0 || cols == 0 {
         return 0.0;
     }
@@ -117,8 +117,8 @@ pub fn density(shape: (usize, usize), nnz: usize) -> f64 {
 ///
 /// * true if the matrix is symmetric, false otherwise
 #[allow(dead_code)]
-pub fn is_symmetric(matrix: &CsrMatrix<f64>) -> bool {
-    let (rows, cols) = matrix.shape();
+pub fn is_symmetric(_matrix: &CsrMatrix<f64>) -> bool {
+    let (rows, cols) = _matrix.shape();
 
     // Must be square
     if rows != cols {
@@ -126,8 +126,8 @@ pub fn is_symmetric(matrix: &CsrMatrix<f64>) -> bool {
     }
 
     // Check if A = A^T
-    let transposed = matrix.transpose();
-    let a_dense = matrix.to_dense();
+    let transposed = _matrix.transpose();
+    let a_dense = _matrix.to_dense();
     let at_dense = transposed.to_dense();
 
     for i in 0..rows {
@@ -152,14 +152,14 @@ pub fn is_symmetric(matrix: &CsrMatrix<f64>) -> bool {
 ///
 /// * Random sparse matrix in CSR format
 #[allow(dead_code)]
-pub fn random(shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f64>> {
+pub fn random(_shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f64>> {
     if !(0.0..=1.0).contains(&density) {
         return Err(SparseError::ValueError(format!(
             "Density must be between 0 and 1, got {density}"
         )));
     }
 
-    let (rows, cols) = shape;
+    let (rows, cols) = _shape;
     if rows == 0 || cols == 0 {
         return Err(SparseError::ValueError(
             "Matrix dimensions must be positive".to_string(),
@@ -172,7 +172,7 @@ pub fn random(shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f64
 
     if nnz == 0 {
         // Return empty matrix
-        return CsrMatrix::new(Vec::new(), Vec::new(), Vec::new(), shape);
+        return CsrMatrix::new(Vec::new(), Vec::new(), Vec::new(), _shape);
     }
 
     // Generate random non-zero elements
@@ -189,19 +189,19 @@ pub fn random(shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f64
     let mut rng = rand::rng();
 
     while count < nnz {
-        let i = rng.random_range(0..rows);
-        let j = rng.random_range(0..cols);
+        let i = rng.gen_range(0..rows);
+        let j = rng.gen_range(0..cols);
 
         if !used[i][j] {
             used[i][j] = true;
-            data.push(rng.random_range(-1.0..1.0));
+            data.push(rng.gen_range(-1.0..1.0));
             row_indices.push(i);
             col_indices.push(j);
             count += 1;
         }
     }
 
-    CsrMatrix::new(data, row_indices, col_indices, shape)
+    CsrMatrix::new(data..row_indices, col_indices, _shape)
 }
 
 /// Calculate the sparsity pattern of a matrix
@@ -214,12 +214,12 @@ pub fn random(shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f64
 ///
 /// * Vector of vectors representing the sparsity pattern (1 for non-zero, 0 for zero)
 #[allow(dead_code)]
-pub fn sparsity_pattern<T>(matrix: &CsrMatrix<T>) -> Vec<Vec<usize>>
+pub fn sparsity_pattern<T>(_matrix: &CsrMatrix<T>) -> Vec<Vec<usize>>
 where
     T: Clone + Copy + Zero + PartialEq,
 {
-    let (rows, cols) = matrix.shape();
-    let dense = matrix.to_dense();
+    let (rows, cols) = _matrix.shape();
+    let dense = _matrix.to_dense();
 
     let mut pattern = vec![vec![0; cols]; rows];
 

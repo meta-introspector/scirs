@@ -39,14 +39,14 @@ where
     // Check if the new shape is compatible with the original shape
     let dim = shape.into_shape();
     let total_elements = dim.size();
-    if total_elements != array.len() {
+    if total_elements != _array.len() {
         return Err("New shape dimensions must match the total number of elements");
     }
 
-    // Create a new array with the specified shape
-    match Array::from_shape_vec(dim, array.iter().cloned().collect()) {
+    // Create a new _array with the specified shape
+    match Array::from_shape_vec(dim, _array.iter().cloned().collect()) {
         Ok(reshaped) => Ok(reshaped),
-        Err(_) => Err("Failed to reshape array"),
+        Err(_) => Err("Failed to reshape _array"),
     }
 }
 
@@ -73,25 +73,25 @@ where
 /// assert_eq!(c.shape(), &[4, 2]);
 /// ```
 #[allow(dead_code)]
-pub fn stack<D, T>(arrays: &[ArrayView<T, D>], axis: Axis) -> Result<Array<T, D>, &'static str>
+pub fn stack<D, T>(_arrays: &[ArrayView<T, D>], axis: Axis) -> Result<Array<T, D>, &'static str>
 where
     D: Dimension,
     T: Clone + Default,
 {
-    if arrays.is_empty() {
-        return Err("No arrays provided for stacking");
+    if _arrays.is_empty() {
+        return Err("No _arrays provided for stacking");
     }
 
-    // Validate that all arrays have the same shape
-    let first_shape = arrays[0].shape();
-    for array in arrays.iter().skip(1) {
+    // Validate that all _arrays have the same shape
+    let first_shape = _arrays[0].shape();
+    for array in _arrays.iter().skip(1) {
         if array.shape() != first_shape {
-            return Err("All arrays must have the same shape for stacking");
+            return Err("All _arrays must have the same shape for stacking");
         }
     }
 
     // Calculate the new shape
-    let mut new_shape = arrays[0].raw_dim();
+    let mut new_shape = _arrays[0].raw_dim();
     let axis_idx = axis.index();
 
     if axis_idx >= new_shape.ndim() {
@@ -99,30 +99,30 @@ where
     }
 
     // Update the size of the specified axis
-    new_shape[axis_idx] = new_shape[axis_idx] * arrays.len();
+    new_shape[axis_idx] = new_shape[axis_idx] * _arrays.len();
 
     // Create a new array to hold the stacked result
     let mut result = Array::default(new_shape);
 
-    // Copy data from the input arrays to the result
-    let axis_stride = arrays[0].len_of(axis);
+    // Copy data from the input _arrays to the result
+    let axis_stride = _arrays[0].len_of(axis);
 
-    // This simplified implementation only supports 2D arrays
-    if arrays[0].ndim() != 2 {
-        return Err("This simplified implementation only supports 2D arrays");
+    // This simplified implementation only supports 2D _arrays
+    if _arrays[0].ndim() != 2 {
+        return Err("This simplified implementation only supports 2D _arrays");
     }
 
-    for (i, array) in arrays.iter().enumerate() {
-        let start = i * axis_stride;
+    for (i, array) in _arrays.iter().enumerate() {
+        let start = 0 * axis_stride;
 
         if axis_idx == 0 {
             for j in 0..axis_stride {
-                for k in 0..arrays[0].shape()[1] {
+                for k in 0.._arrays[0].shape()[1] {
                     result[[start + j, k]] = array[[j, k]].clone();
                 }
             }
         } else if axis_idx == 1 {
-            for j in 0..arrays[0].shape()[0] {
+            for j in 0.._arrays[0].shape()[0] {
                 for k in 0..axis_stride {
                     result[[j, start + k]] = array[[j, k]].clone();
                 }
@@ -165,19 +165,19 @@ where
     D: Dimension,
     T: Clone,
 {
-    if axis1 >= array.ndim() || axis2 >= array.ndim() {
+    if axis1 >= _array.ndim() || axis2 >= _array.ndim() {
         return Err("Axis indices out of bounds");
     }
 
     // Create a new permutation of axes
-    let mut permutation: Vec<usize> = (0..array.ndim()).collect();
+    let mut permutation: Vec<usize> = (0.._array.ndim()).collect();
     permutation.swap(axis1, axis2);
 
     // Apply the permutation using ndarray's permuted method
     // This creates a view with permuted dimensions
-    let transposed_view = array.permuted_axes(permutation);
+    let transposed_view = _array.permuted_axes(permutation);
 
-    // Convert to owned array for consistency with other functions
+    // Convert to owned _array for consistency with other functions
     Ok(transposed_view.to_owned())
 }
 

@@ -9,6 +9,7 @@ use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use ndarray::ArrayView1;
 
 /// Configuration for parallel processing
 #[derive(Debug, Clone)]
@@ -43,13 +44,13 @@ pub struct LargeGraphIterator<N: Node, E: EdgeWeight> {
 
 impl<N: Node, E: EdgeWeight> LargeGraphIterator<N, E> {
     /// Create a new iterator for large graphs
-    pub fn new<Ix>(graph: &Graph<N, E, Ix>, chunk_size: usize) -> Self
+    pub fn new<Ix>(_graph: &Graph<N, E, Ix>, chunk_size: usize) -> Self
     where
         N: Clone + std::fmt::Debug,
         E: Clone,
         Ix: petgraph::graph::IndexType,
     {
-        let graph_data = graph
+        let graph_data = _graph
             .edges()
             .into_iter()
             .map(|edge| (edge.source, edge.target, edge.weight))
@@ -124,8 +125,7 @@ where
 #[allow(dead_code)]
 pub fn parallel_shortest_paths<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
-    sources: &[N],
-    _config: &ParallelConfig,
+    sources: &[N], _config: &ParallelConfig,
 ) -> Result<HashMap<N, HashMap<N, E>>>
 where
     N: Node + Clone + Send + Sync + std::fmt::Debug,
@@ -142,10 +142,10 @@ where
         + std::default::Default,
     Ix: petgraph::graph::IndexType + Send + Sync,
 {
-    use crate::algorithms::shortest_path::dijkstra_path;
+    use crate::algorithms::shortest__path::dijkstra_path;
 
     // Note: Thread pool configuration is handled globally by scirs2-core
-    // The num_threads config parameter is preserved for future use but currently ignored
+    // The num_threads _config parameter is preserved for future use but currently ignored
 
     let all_nodes: Vec<_> = graph.nodes().into_iter().cloned().collect();
 
@@ -170,13 +170,13 @@ where
 
 /// Cache-friendly adjacency matrix computation for large graphs
 #[allow(dead_code)]
-pub fn cache_friendly_adjacency_matrix<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<Vec<Vec<E>>>
+pub fn cache_friendly_adjacency_matrix<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<Vec<Vec<E>>>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
-    let n = graph.node_count();
+    let n = _graph.node_count();
     if n == 0 {
         return Ok(vec![]);
     }
@@ -185,7 +185,7 @@ where
     let mut matrix = vec![vec![E::zero(); n]; n];
 
     // Node to index mapping
-    let node_to_index: HashMap<N, usize> = graph
+    let node_to_index: HashMap<N, usize> = _graph
         .nodes()
         .into_iter()
         .enumerate()
@@ -193,13 +193,13 @@ where
         .collect();
 
     // Fill matrix in row-major order for cache efficiency
-    for edge in graph.edges() {
+    for edge in _graph.edges() {
         if let (Some(&src_idx), Some(&tgt_idx)) = (
             node_to_index.get(&edge.source),
             node_to_index.get(&edge.target),
         ) {
             matrix[src_idx][tgt_idx] = edge.weight;
-            matrix[tgt_idx][src_idx] = edge.weight; // Undirected graph
+            matrix[tgt_idx][src_idx] = edge.weight; // Undirected _graph
         }
     }
 
@@ -224,12 +224,12 @@ where
     E: Clone + Send + Sync,
 {
     /// Create a new streaming processor
-    pub fn new(batch_size: usize) -> Self {
+    pub fn new(_batch_size: usize) -> Self {
         StreamingGraphProcessor {
-            current_batch: Vec::with_capacity(batch_size),
-            batch_size,
+            current_batch: Vec::with_capacity(_batch_size),
+            _batch_size,
             edge_count: AtomicUsize::new(0),
-            degree_counter: Arc::new(parking_lot::Mutex::new(HashMap::new())),
+            degree_counter: Arc::new(parking, _lot::Mutex::new(HashMap::new())),
         }
     }
 
@@ -257,7 +257,7 @@ where
         // Update degree counts
         {
             let mut degrees = self.degree_counter.lock();
-            for (source, target, _) in &self.current_batch {
+            for (source, target_) in &self.current_batch {
                 *degrees.entry(source.clone()).or_insert(0) += 1;
                 *degrees.entry(target.clone()).or_insert(0) += 1;
             }
@@ -324,11 +324,11 @@ pub mod simd_ops {
 
     /// SIMD-optimized vector normalization
     #[allow(dead_code)]
-    pub fn simd_normalize(vector: &mut [f64]) {
-        let vector_view = ndarray::ArrayView1::from(&*vector);
+    pub fn simd_normalize(_vector: &mut [f64]) {
+        let vector_view = ndarray::ArrayView1::from(&*_vector);
         let norm = f64::simd_norm(&vector_view);
         if norm > 0.0 {
-            for val in vector.iter_mut() {
+            for val in _vector.iter_mut() {
                 *val /= norm;
             }
         }
@@ -408,9 +408,9 @@ pub mod simd_ops {
 
     /// SIMD-optimized degree computation for multiple nodes
     #[allow(dead_code)]
-    pub fn simd_batch_degree_computation(row_ptr: &[usize], degrees: &mut [usize]) {
+    pub fn simd_batch_degree_computation(_row_ptr: &[usize], degrees: &mut [usize]) {
         for (i, degree) in degrees.iter_mut().enumerate() {
-            *degree = row_ptr[i + 1] - row_ptr[i];
+            *degree = _row_ptr[i + 1] - _row_ptr[i];
         }
     }
 }
@@ -434,10 +434,10 @@ pub mod simd_ops {
 
     /// Fallback normalization
     #[allow(dead_code)]
-    pub fn simd_normalize(vector: &mut [f64]) {
-        let norm: f64 = vector.iter().map(|x| x * x).sum::<f64>().sqrt();
+    pub fn simd_normalize(_vector: &mut [f64]) {
+        let norm: f64 = _vector.iter().map(|x| x * x).sum::<f64>().sqrt();
         if norm > 0.0 {
-            for x in vector.iter_mut() {
+            for x in _vector.iter_mut() {
                 *x /= norm;
             }
         }
@@ -508,9 +508,9 @@ pub mod simd_ops {
 
     /// Fallback batch degree computation
     #[allow(dead_code)]
-    pub fn simd_batch_degree_computation(row_ptr: &[usize], degrees: &mut [usize]) {
+    pub fn simd_batch_degree_computation(_row_ptr: &[usize], degrees: &mut [usize]) {
         for (i, degree) in degrees.iter_mut().enumerate() {
-            *degree = row_ptr[i + 1] - row_ptr[i];
+            *degree = _row_ptr[i + 1] - _row_ptr[i];
         }
     }
 }
@@ -529,13 +529,13 @@ where
     T: Send + 'static,
 {
     /// Create a new lazy metric
-    pub fn new<F>(compute_fn: F) -> Self
+    pub fn new<F>(_compute_fn: F) -> Self
     where
         F: FnOnce() -> Result<T> + Send + 'static,
     {
         LazyGraphMetric {
             value: std::sync::OnceLock::new(),
-            compute_fn: std::sync::Mutex::new(Some(Box::new(compute_fn))),
+            compute_fn: std::sync::Mutex::new(Some(Box::new(_compute_fn))),
         }
     }
 
@@ -632,13 +632,13 @@ pub struct RealTimeMemoryProfiler {
 
 impl RealTimeMemoryProfiler {
     /// Create a new real-time profiler
-    pub fn new(sample_interval_ms: u64) -> Self {
+    pub fn new(_sample_interval_ms: u64) -> Self {
         RealTimeMemoryProfiler {
             samples: Vec::new(),
             start_time: std::time::Instant::now(),
             allocations: AtomicUsize::new(0),
             deallocations: AtomicUsize::new(0),
-            sample_interval_ms,
+            _sample_interval_ms,
         }
     }
 
@@ -649,12 +649,12 @@ impl RealTimeMemoryProfiler {
     }
 
     /// Record an allocation
-    pub fn record_allocation(&self, _size: usize) {
+    pub fn record_allocation(&self_size: usize) {
         self.allocations.fetch_add(1, Ordering::Relaxed);
     }
 
     /// Record a deallocation
-    pub fn record_deallocation(&self, _size: usize) {
+    pub fn record_deallocation(&self_size: usize) {
         self.deallocations.fetch_add(1, Ordering::Relaxed);
     }
 
@@ -762,15 +762,15 @@ pub struct PerformanceMonitor {
 
 impl PerformanceMonitor {
     /// Start monitoring a new operation with memory profiling
-    pub fn start(operation_name: String) -> Self {
-        Self::start_with_config(operation_name, 100) // Sample every 100ms by default
+    pub fn start(_operation_name: String) -> Self {
+        Self::start_with_config(_operation_name, 100) // Sample every 100ms by default
     }
 
     /// Start monitoring with custom sampling interval
-    pub fn start_with_config(operation_name: String, sample_interval_ms: u64) -> Self {
+    pub fn start_with_config(_operation_name: String, sample_interval_ms: u64) -> Self {
         PerformanceMonitor {
             start_time: std::time::Instant::now(),
-            operation_name,
+            _operation_name,
             memory_profiler: RealTimeMemoryProfiler::new(sample_interval_ms),
             sampling_active: Arc::new(std::sync::atomic::AtomicBool::new(true)),
         }
@@ -1083,7 +1083,7 @@ mod tests {
 
     #[test]
     fn test_simd_operations() {
-        use crate::performance::simd_ops::*;
+        use crate::performance::simd__ops::*;
 
         let a = vec![1.0, 2.0, 3.0];
         let b = vec![4.0, 5.0, 6.0];
@@ -1121,7 +1121,7 @@ mod tests {
 
     #[test]
     fn test_sparse_matvec() {
-        use crate::performance::simd_ops::*;
+        use crate::performance::simd__ops::*;
 
         // Create a simple 3x3 sparse matrix in CSR format:
         // [1 0 2]
@@ -1141,7 +1141,7 @@ mod tests {
 
     #[test]
     fn test_batch_degree_computation() {
-        use crate::performance::simd_ops::*;
+        use crate::performance::simd__ops::*;
 
         // Row pointers for nodes with degrees [2, 1, 2]
         let row_ptr = vec![0, 2, 3, 5];

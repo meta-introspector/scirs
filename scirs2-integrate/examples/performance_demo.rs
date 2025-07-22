@@ -4,10 +4,11 @@
 //! methods and provides a simple timing framework for basic comparisons.
 
 use ndarray::Array1;
-use scirs2_integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
-use scirs2_integrate::quad::{quad, QuadOptions};
+use scirs2__integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::quad::{quad, QuadOptions};
 use std::time::Instant;
+use ndarray::ArrayView1;
 
 /// Simple timing utility
 #[allow(dead_code)]
@@ -283,7 +284,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Parallel Monte Carlo Performance:");
         println!("---------------------------------");
 
-        use scirs2_integrate::monte_carlo_parallel::{
+        use scirs2__integrate::monte_carlo_parallel::{
             parallel_monte_carlo, ParallelMonteCarloOptions,
         };
 
@@ -291,7 +292,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let ranges = vec![(-2.0, 2.0), (-2.0, 2.0)];
 
         // Sequential
-        let (seq_time, _seq_result) = time_function(
+        let (seq_time_seq_result) = time_function(
             || {
                 let opts = MonteCarloOptions {
                     n_samples,
@@ -303,7 +304,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         // Parallel
-        let (par_time, _par_result) = time_function(
+        let (par_time_par_result) = time_function(
             || {
                 let opts = ParallelMonteCarloOptions {
                     n_samples,

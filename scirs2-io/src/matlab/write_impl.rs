@@ -26,9 +26,9 @@ const MI_UINT64: i32 = 13;
 
 /// Write MAT file header (simplified version)
 #[allow(dead_code)]
-pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
+pub fn write_mat_header<W: Write>(_writer: &mut W) -> Result<()> {
     // Write "MATLAB" magic string
-    writer
+    _writer
         .write_all(b"MATLAB")
         .map_err(|e| IoError::FileError(format!("Failed to write header: {e}")))?;
 
@@ -37,7 +37,7 @@ pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
     let description_len = description.len();
 
     // Write the description
-    writer
+    _writer
         .write_all(description)
         .map_err(|e| IoError::FileError(format!("Failed to write description: {e}")))?;
 
@@ -49,16 +49,16 @@ pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
     // Write padding (spaces or nulls)
     if padding_needed > 0 {
         let padding = vec![0u8; padding_needed];
-        writer
+        _writer
             .write_all(&padding)
             .map_err(|e| IoError::FileError(format!("Failed to write padding: {e}")))?;
     }
 
     // Write subsystem data offset (4 bytes: version + endianness at positions 124-128)
-    writer
+    _writer
         .write_u16::<LittleEndian>(0x0100) // Version
         .map_err(|e| IoError::FileError(format!("Failed to write version: {e}")))?;
-    writer
+    _writer
         .write_u16::<LittleEndian>(0x4D49) // Endianness indicator "MI"
         .map_err(|e| IoError::FileError(format!("Failed to write endianness: {e}")))?;
 
@@ -75,7 +75,7 @@ pub fn write_variable<W: Write + Seek>(
     // Write matrix element header (MI_MATRIX)
     writer
         .write_i32::<LittleEndian>(MI_MATRIX)
-        .map_err(|e| IoError::FileError(format!("Failed to write matrix type: {e}")))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write matrix _type: {e}")))?;
 
     // Placeholder for size - we'll calculate and update this at the end
     let size_pos = writer
@@ -111,8 +111,8 @@ pub fn write_variable<W: Write + Seek>(
         }
         _ => {
             return Err(IoError::Other(format!(
-                "Data type not yet supported in simplified writer: {:?}",
-                std::any::type_name::<MatType>()
+                "Data _type not yet supported in simplified writer: {:?}",
+                std::any::_type_name::<MatType>()
             )));
         }
     }
@@ -152,7 +152,7 @@ fn write_matrix_header_content<W: Write + Seek>(
     // Write array flags
     writer
         .write_i32::<LittleEndian>(MI_UINT32)
-        .map_err(|e| IoError::FileError(format!("Failed to write flags type: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write flags _type: {}", e)))?;
     writer
         .write_i32::<LittleEndian>(8)
         .map_err(|e| IoError::FileError(format!("Failed to write flags size: {}", e)))?;
@@ -172,7 +172,7 @@ fn write_matrix_header_content<W: Write + Seek>(
     let dims_size = (shape.len() * 4) as i32;
     writer
         .write_i32::<LittleEndian>(MI_INT32)
-        .map_err(|e| IoError::FileError(format!("Failed to write dims type: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write dims _type: {}", e)))?;
     writer
         .write_i32::<LittleEndian>(dims_size)
         .map_err(|e| IoError::FileError(format!("Failed to write dims size: {}", e)))?;
@@ -197,7 +197,7 @@ fn write_matrix_header_content<W: Write + Seek>(
     let name_len = name_bytes.len() as i32;
     writer
         .write_i32::<LittleEndian>(MI_INT8)
-        .map_err(|e| IoError::FileError(format!("Failed to write name type: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write name _type: {}", e)))?;
     writer
         .write_i32::<LittleEndian>(name_len)
         .map_err(|e| IoError::FileError(format!("Failed to write name size: {}", e)))?;
@@ -218,17 +218,17 @@ fn write_matrix_header_content<W: Write + Seek>(
 
 /// Write double precision data
 #[allow(dead_code)]
-fn write_double_data<W: Write>(writer: &mut W, array: &ArrayD<f64>) -> Result<()> {
+fn write_double_data<W: Write>(_writer: &mut W, array: &ArrayD<f64>) -> Result<()> {
     let data_size = (array.len() * 8) as i32;
-    writer
+    _writer
         .write_i32::<LittleEndian>(MI_DOUBLE)
         .map_err(|e| IoError::FileError(format!("Failed to write double type: {}", e)))?;
-    writer
+    _writer
         .write_i32::<LittleEndian>(data_size)
         .map_err(|e| IoError::FileError(format!("Failed to write double size: {}", e)))?;
 
     for &value in array.iter() {
-        writer
+        _writer
             .write_f64::<LittleEndian>(value)
             .map_err(|e| IoError::FileError(format!("Failed to write double value: {}", e)))?;
     }
@@ -236,7 +236,7 @@ fn write_double_data<W: Write>(writer: &mut W, array: &ArrayD<f64>) -> Result<()
     // Pad to 8-byte boundary
     let padding = (8 - (data_size % 8)) % 8;
     if padding > 0 {
-        writer
+        _writer
             .write_all(&vec![0u8; padding as usize])
             .map_err(|e| IoError::FileError(format!("Failed to write double padding: {}", e)))?;
     }
@@ -246,17 +246,17 @@ fn write_double_data<W: Write>(writer: &mut W, array: &ArrayD<f64>) -> Result<()
 
 /// Write single precision data
 #[allow(dead_code)]
-fn write_single_data<W: Write>(writer: &mut W, array: &ArrayD<f32>) -> Result<()> {
+fn write_single_data<W: Write>(_writer: &mut W, array: &ArrayD<f32>) -> Result<()> {
     let data_size = (array.len() * 4) as i32;
-    writer
+    _writer
         .write_i32::<LittleEndian>(MI_SINGLE)
         .map_err(|e| IoError::FileError(format!("Failed to write single type: {}", e)))?;
-    writer
+    _writer
         .write_i32::<LittleEndian>(data_size)
         .map_err(|e| IoError::FileError(format!("Failed to write single size: {}", e)))?;
 
     for &value in array.iter() {
-        writer
+        _writer
             .write_f32::<LittleEndian>(value)
             .map_err(|e| IoError::FileError(format!("Failed to write single value: {}", e)))?;
     }
@@ -264,7 +264,7 @@ fn write_single_data<W: Write>(writer: &mut W, array: &ArrayD<f32>) -> Result<()
     // Pad to 8-byte boundary
     let padding = (8 - (data_size % 8)) % 8;
     if padding > 0 {
-        writer
+        _writer
             .write_all(&vec![0u8; padding as usize])
             .map_err(|e| IoError::FileError(format!("Failed to write single padding: {}", e)))?;
     }
@@ -274,17 +274,17 @@ fn write_single_data<W: Write>(writer: &mut W, array: &ArrayD<f32>) -> Result<()
 
 /// Write int32 data
 #[allow(dead_code)]
-fn write_int32_data<W: Write>(writer: &mut W, array: &ArrayD<i32>) -> Result<()> {
+fn write_int32_data<W: Write>(_writer: &mut W, array: &ArrayD<i32>) -> Result<()> {
     let data_size = (array.len() * 4) as i32;
-    writer
+    _writer
         .write_i32::<LittleEndian>(MI_INT32)
         .map_err(|e| IoError::FileError(format!("Failed to write int32 type: {}", e)))?;
-    writer
+    _writer
         .write_i32::<LittleEndian>(data_size)
         .map_err(|e| IoError::FileError(format!("Failed to write int32 size: {}", e)))?;
 
     for &value in array.iter() {
-        writer
+        _writer
             .write_i32::<LittleEndian>(value)
             .map_err(|e| IoError::FileError(format!("Failed to write int32 value: {}", e)))?;
     }
@@ -292,7 +292,7 @@ fn write_int32_data<W: Write>(writer: &mut W, array: &ArrayD<i32>) -> Result<()>
     // Pad to 8-byte boundary
     let padding = (8 - (data_size % 8)) % 8;
     if padding > 0 {
-        writer
+        _writer
             .write_all(&vec![0u8; padding as usize])
             .map_err(|e| IoError::FileError(format!("Failed to write int32 padding: {}", e)))?;
     }
@@ -302,17 +302,17 @@ fn write_int32_data<W: Write>(writer: &mut W, array: &ArrayD<i32>) -> Result<()>
 
 /// Write logical data (as uint8)
 #[allow(dead_code)]
-fn write_logical_data<W: Write>(writer: &mut W, array: &ArrayD<bool>) -> Result<()> {
+fn write_logical_data<W: Write>(_writer: &mut W, array: &ArrayD<bool>) -> Result<()> {
     let data_size = array.len() as i32;
-    writer
+    _writer
         .write_i32::<LittleEndian>(MI_UINT8)
         .map_err(|e| IoError::FileError(format!("Failed to write logical type: {}", e)))?;
-    writer
+    _writer
         .write_i32::<LittleEndian>(data_size)
         .map_err(|e| IoError::FileError(format!("Failed to write logical size: {}", e)))?;
 
     for &value in array.iter() {
-        writer
+        _writer
             .write_u8(if value { 1 } else { 0 })
             .map_err(|e| IoError::FileError(format!("Failed to write logical value: {}", e)))?;
     }
@@ -320,7 +320,7 @@ fn write_logical_data<W: Write>(writer: &mut W, array: &ArrayD<bool>) -> Result<
     // Pad to 8-byte boundary
     let padding = (8 - (data_size % 8)) % 8;
     if padding > 0 {
-        writer
+        _writer
             .write_all(&vec![0u8; padding as usize])
             .map_err(|e| IoError::FileError(format!("Failed to write logical padding: {}", e)))?;
     }

@@ -17,7 +17,7 @@ use crate::schedulers::LearningRateScheduler;
 /// # Examples
 ///
 /// ```
-/// use scirs2_optim::schedulers::{LinearDecay, LearningRateScheduler};
+/// use scirs2__optim::schedulers::{LinearDecay, LearningRateScheduler};
 ///
 /// // Create a scheduler with initial learning rate 0.1, final learning rate 0.001,
 /// // and total steps 100
@@ -61,13 +61,13 @@ impl<A: Float + Debug> LinearDecay<A> {
     /// * `initial_lr` - Initial learning rate
     /// * `final_lr` - Final learning rate
     /// * `total_steps` - Total number of steps
-    pub fn new(initial_lr: A, final_lr: A, total_steps: usize) -> Self {
+    pub fn new(_initial_lr: A, final_lr: A, total_steps: usize) -> Self {
         Self {
-            initial_lr,
+            _initial_lr,
             final_lr,
             total_steps,
             step: 0,
-            current_lr: initial_lr,
+            current_lr: _initial_lr,
         }
     }
 }

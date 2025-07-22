@@ -156,7 +156,7 @@ impl CountVectorizer {
         self.vocabulary.clear();
         self.feature_names.clear();
 
-        for (idx, (term, _)) in filtered_terms.into_iter().enumerate() {
+        for (idx, (term_)) in filtered_terms.into_iter().enumerate() {
             self.vocabulary.insert(term.clone(), idx);
             self.feature_names.push(term);
         }
@@ -376,9 +376,9 @@ pub struct HashingVectorizer {
 
 impl HashingVectorizer {
     /// Create a new hashing vectorizer
-    pub fn new(n_features: usize) -> Self {
+    pub fn new(_n_features: usize) -> Self {
         HashingVectorizer {
-            n_features,
+            _n_features,
             lowercase: true,
             token_pattern: Regex::new(r"\b\w+\b").unwrap(),
             binary: false,
@@ -455,8 +455,7 @@ impl HashingVectorizer {
                 let row = result.row(i).to_owned();
                 let norm_value = match norm_type.as_str() {
                     "l1" => row.iter().map(|v: &f64| v.abs()).sum::<f64>(),
-                    "l2" => row.dot(&row).sqrt(),
-                    _ => continue,
+                    "l2" => row.dot(&row).sqrt(, _ => continue,
                 };
 
                 if norm_value > 0.0 {
@@ -532,10 +531,10 @@ impl StreamingCountVectorizer {
                     if let Some(max_feat) = self.max_features {
                         if self.vocabulary.len() >= max_feat {
                             // Find least frequent term to replace
-                            if let Some((min_token, _)) = self
+                            if let Some((min_token_)) = self
                                 .vocabulary
                                 .iter()
-                                .min_by_key(|(t, _)| self.doc_freq.get(*t).unwrap_or(&0))
+                                .min_by_key(|(t_)| self.doc_freq.get(*t).unwrap_or(&0))
                             {
                                 let min_token = min_token.clone();
                                 let min_freq = self.doc_freq.get(&min_token).unwrap_or(&0);

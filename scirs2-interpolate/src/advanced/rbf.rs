@@ -3,7 +3,7 @@
 //! This module provides RBF interpolation methods for scattered data.
 
 use crate::error::{InterpolateError, InterpolateResult};
-use crate::numerical_stability::{
+use crate::numerical__stability::{
     assess_matrix_condition, solve_with_stability_monitoring, ConditionReport, StabilityLevel,
 };
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
@@ -83,7 +83,7 @@ impl<
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// // Create 2D points
     /// let points = Array2::from_shape_vec((5, 2), vec![
@@ -141,7 +141,7 @@ impl<
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// // Create 2D points
     /// let points = Array2::from_shape_vec((5, 2), vec![
@@ -208,7 +208,7 @@ impl<
 
         let n_points = points.shape()[0];
 
-        // Set up parallel workers if specified
+        // Set up _parallel workers if specified
         if use_parallel && workers > 0 {
             // Thread pool configuration is now handled globally by scirs2-core
             // The number of threads is managed centrally
@@ -237,15 +237,15 @@ impl<
 
         for i in 0..n_points {
             for j in 0..n_points {
-                let point_i = points.slice(ndarray::s![i, ..]);
-                let point_j = points.slice(ndarray::s![j, ..]);
+                let point_i = _points.slice(ndarray::s![i, ..]);
+                let point_j = _points.slice(ndarray::s![j, ..]);
 
                 let r = Self::distance(&point_i, &point_j);
                 a_matrix[[i, j]] = Self::rbf_kernel(r, epsilon, kernel);
             }
         }
 
-        Self::finalize_construction(points, values, &a_matrix, kernel, epsilon)
+        Self::finalize_construction(_points, values, &a_matrix, kernel, epsilon)
     }
 
     /// Build RBF matrix using parallel computation
@@ -265,8 +265,8 @@ impl<
                 let i = idx / n_points;
                 let j = idx % n_points;
 
-                let point_i = points.slice(ndarray::s![i, ..]);
-                let point_j = points.slice(ndarray::s![j, ..]);
+                let point_i = _points.slice(ndarray::s![i, ..]);
+                let point_j = _points.slice(ndarray::s![j, ..]);
 
                 let r = Self::distance(&point_i, &point_j);
                 Self::rbf_kernel(r, epsilon, kernel)
@@ -277,7 +277,7 @@ impl<
             InterpolateError::ComputationError(format!("Failed to construct RBF matrix: {e}"))
         })?;
 
-        Self::finalize_construction(points, values, &a_matrix, kernel, epsilon)
+        Self::finalize_construction(_points, values, &a_matrix, kernel, epsilon)
     }
 
     /// Complete the RBF interpolator construction after matrix is built
@@ -290,10 +290,10 @@ impl<
     ) -> InterpolateResult<Self> {
         let n_points = points.shape()[0];
 
-        // Assess matrix condition before solving
+        // Assess _matrix condition before solving
         let condition_report = assess_matrix_condition(&a_matrix.view()).ok();
 
-        // Create working matrix for potential regularization
+        // Create working _matrix for potential regularization
         let mut working_matrix = a_matrix.clone();
 
         // Warn about potential numerical issues
@@ -318,7 +318,7 @@ impl<
         }
 
         // Solve the linear system with stability monitoring
-        let (coefficients, _solve_report) =
+        let (coefficients_solve_report) =
             solve_with_stability_monitoring(&working_matrix, &values.to_owned()).or_else(|_| {
                 // Silently fall back to regularized solver
 
@@ -357,9 +357,9 @@ impl<
     }
 
     /// Calculate the Euclidean distance between two points
-    fn distance(p1: &ArrayView1<F>, p2: &ArrayView1<F>) -> F {
+    fn distance(_p1: &ArrayView1<F>, p2: &ArrayView1<F>) -> F {
         let mut sum_sq = F::zero();
-        for (&x1, &x2) in p1.iter().zip(p2.iter()) {
+        for (&x1, &x2) in _p1.iter().zip(p2.iter()) {
             let diff = x1 - x2;
             sum_sq += diff * diff;
         }
@@ -374,7 +374,7 @@ impl<
         match kernel {
             RBFKernel::Gaussian => (-r2 / eps2).exp(),
             RBFKernel::Multiquadric => (r2 + eps2).sqrt(),
-            RBFKernel::InverseMultiquadric => F::one() / (r2 + eps2).sqrt(),
+            RBFKernel::InverseMultiquadric =>, F::one() / (r2 + eps2).sqrt(),
             RBFKernel::ThinPlateSpline => {
                 if r == F::zero() {
                     return F::zero();
@@ -410,7 +410,7 @@ impl<
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// // Training data: function z = x² + y²
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -435,14 +435,14 @@ impl<
     /// - For repeated evaluations, consider caching distance computations
     pub fn interpolate(&self, query_points: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check dimensions
-        if query_points.shape()[1] != self.points.shape()[1] {
+        if query_points.shape()[1] != self._points.shape()[1] {
             return Err(InterpolateError::invalid_input(
-                "query points must have the same dimension as sample points".to_string(),
+                "query _points must have the same dimension as sample _points".to_string(),
             ));
         }
 
         let n_query = query_points.shape()[0];
-        let n_points = self.points.shape()[0];
+        let n_points = self._points.shape()[0];
         let mut result = Array1::zeros(n_query);
 
         for i in 0..n_query {
@@ -450,7 +450,7 @@ impl<
             let query_point = query_points.slice(ndarray::s![i, ..]);
 
             for j in 0..n_points {
-                let sample_point = self.points.slice(ndarray::s![j, ..]);
+                let sample_point = self._points.slice(ndarray::s![j, ..]);
                 let r = Self::distance(&query_point, &sample_point);
                 let rbf_value = Self::rbf_kernel(r, self.epsilon, self.kernel);
                 sum += self.coefficients[j] * rbf_value;
@@ -491,8 +491,8 @@ impl<
     ///
     /// ```
     /// use ndarray::Array2;
-    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
-    /// use scirs2_interpolate::numerical_stability::StabilityLevel;
+    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2__interpolate::numerical_stability::StabilityLevel;
     ///
     /// // Create interpolator (example data)
     /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
@@ -547,15 +547,15 @@ impl<
     /// # Examples
     ///
     /// ```
-    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
     /// // Use rbf.fit() to train the interpolator before prediction
     /// ```
-    pub fn new_unfitted(kernel: RBFKernel, epsilon: F) -> Self {
+    pub fn new_unfitted(_kernel: RBFKernel, epsilon: F) -> Self {
         Self {
             points: Array2::zeros((0, 0)),
             coefficients: Array1::zeros(0),
-            kernel,
+            _kernel,
             epsilon,
             condition_report: None,
         }
@@ -579,7 +579,7 @@ impl<
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
     ///
@@ -617,7 +617,7 @@ impl<
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
     ///
@@ -631,7 +631,7 @@ impl<
     /// ```
     pub fn predict(&self, query_points: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check if the interpolator has been fitted
-        if self.points.is_empty() {
+        if self._points.is_empty() {
             return Err(InterpolateError::shape_mismatch(
                 "Interpolator must be fitted before prediction".to_string(),
                 "Call fit() method first".to_string(),

@@ -21,14 +21,14 @@ use image::{DynamicImage, GrayImage, Luma};
 /// # Example
 ///
 /// ```
-/// use scirs2_vision::preprocessing::gamma_correction;
+/// use scirs2__vision::preprocessing::gamma_correction;
 /// use image::open;
 ///
 /// let img = open("examples/input/input.jpg").unwrap();
 /// let corrected = gamma_correction(&img, 2.2).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn gamma_correction(img: &DynamicImage, gamma: f32) -> Result<DynamicImage> {
+pub fn gamma_correction(_img: &DynamicImage, gamma: f32) -> Result<DynamicImage> {
     if gamma <= 0.0 {
         return Err(VisionError::InvalidParameter(
             "Gamma must be positive".to_string(),
@@ -44,7 +44,7 @@ pub fn gamma_correction(img: &DynamicImage, gamma: f32) -> Result<DynamicImage> 
         })
         .collect();
 
-    match img {
+    match _img {
         DynamicImage::ImageLuma8(gray) => {
             let mut result = GrayImage::new(gray.width(), gray.height());
             for (x, y, pixel) in gray.enumerate_pixels() {
@@ -54,7 +54,7 @@ pub fn gamma_correction(img: &DynamicImage, gamma: f32) -> Result<DynamicImage> 
         }
         _ => {
             // For color images, apply gamma to each channel
-            let rgb = img.to_rgb8();
+            let rgb = _img.to_rgb8();
             let mut result = image::RgbImage::new(rgb.width(), rgb.height());
 
             for (x, y, pixel) in rgb.enumerate_pixels() {
@@ -87,15 +87,15 @@ pub fn gamma_correction(img: &DynamicImage, gamma: f32) -> Result<DynamicImage> 
 ///
 /// * Result containing the auto gamma-corrected image
 #[allow(dead_code)]
-pub fn auto_gamma_correction(img: &DynamicImage, target_brightness: f32) -> Result<DynamicImage> {
+pub fn auto_gamma_correction(_img: &DynamicImage, target_brightness: f32) -> Result<DynamicImage> {
     if target_brightness <= 0.0 || target_brightness >= 1.0 {
         return Err(VisionError::InvalidParameter(
-            "Target brightness must be between 0.0 and 1.0".to_string(),
+            "Target _brightness must be between 0.0 and 1.0".to_string(),
         ));
     }
 
-    // Calculate current mean brightness
-    let gray = img.to_luma8();
+    // Calculate current mean _brightness
+    let gray = _img.to_luma8();
     let mut sum = 0u64;
     for pixel in gray.pixels() {
         sum += pixel[0] as u64;
@@ -106,10 +106,10 @@ pub fn auto_gamma_correction(img: &DynamicImage, target_brightness: f32) -> Resu
 
     // Avoid division by zero or log of zero
     if mean_brightness < 0.001 {
-        return gamma_correction(img, 0.5); // Apply strong brightening
+        return gamma_correction(_img, 0.5); // Apply strong brightening
     }
 
-    // Calculate gamma to achieve target brightness
+    // Calculate gamma to achieve target _brightness
     // Using: target = current^(1/gamma)
     // Therefore: gamma = log(current) / log(target)
     let gamma = mean_brightness.ln() / target_brightness.ln();
@@ -117,7 +117,7 @@ pub fn auto_gamma_correction(img: &DynamicImage, target_brightness: f32) -> Resu
     // Clamp gamma to reasonable range
     let gamma = gamma.clamp(0.1, 10.0);
 
-    gamma_correction(img, gamma)
+    gamma_correction(_img, gamma)
 }
 
 /// Apply adaptive gamma correction
@@ -144,13 +144,13 @@ pub fn adaptive_gamma_correction(
 
     if min_gamma <= 0.0 || max_gamma <= 0.0 || min_gamma > max_gamma {
         return Err(VisionError::InvalidParameter(
-            "Invalid gamma range".to_string(),
+            "Invalid gamma _range".to_string(),
         ));
     }
 
     if window_size == 0 {
         return Err(VisionError::InvalidParameter(
-            "Window size must be positive".to_string(),
+            "Window _size must be positive".to_string(),
         ));
     }
 

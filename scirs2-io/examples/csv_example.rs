@@ -1,5 +1,5 @@
 use ndarray::{array, Array1};
-use scirs2_io::csv::{
+use scirs2__io::csv::{
     read_csv, write_csv, write_csv_columns, CsvReaderConfig, CsvWriterConfig, LineEnding,
 };
 use std::error::Error;

@@ -4,7 +4,7 @@
 //! cross-platform validation, automated regression detection, and intelligent
 //! optimization recommendations for statistical computing operations.
 
-use scirs2_stats::{
+use scirs2__stats::{
     benchmark_suite_enhanced::{
         create_enhanced_benchmark_suite, EnhancedBenchmarkConfig, ImplementationEffort,
         MLModelConfig, PlatformTarget, RecommendationCategory, RecommendationPriority,
@@ -36,10 +36,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         enable_regression_detection: true,
         enable_optimization_recommendations: true,
         ml_model_config: MLModelConfig {
-            model_type: scirs2_stats::benchmark_suite_enhanced::MLModelType::RandomForest,
-            feature_selection: scirs2_stats::benchmark_suite_enhanced::FeatureSelectionStrategy::AutomaticImportance,
+            model_type: scirs2, _stats: benchmark_suite_enhanced: :MLModelType::RandomForest,
+            feature_selection: scirs2, _stats: benchmark_suite_enhanced: :FeatureSelectionStrategy::AutomaticImportance,
             training_retention_days: 30,
-            retraining_frequency: scirs2_stats::benchmark_suite_enhanced::RetrainingFrequency::Weekly,
+            retraining_frequency: scirs2, _stats: benchmark_suite_enhanced: :RetrainingFrequency::Weekly,
             confidence_threshold: 0.8,
         },
         platform_targets: vec![
@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🚀 Quick AI Analysis Example");
     println!("============================");
 
-    match scirs2_stats::benchmark_suite_enhanced::run_quick_ai_analysis(
+    match scirs2_stats::benchmark_suite, _enhanced::run_quick_ai_analysis(
         100000,
         "correlation_matrix",
     ) {
@@ -104,7 +104,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn display_benchmark_results(
-    report: &scirs2_stats::benchmark_suite_enhanced::EnhancedBenchmarkReport,
+    report: &scirs2_stats::benchmark_suite, _enhanced::EnhancedBenchmarkReport,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Enhanced Benchmark Results");
     println!("=============================\n");
@@ -245,7 +245,7 @@ fn display_benchmark_results(
 #[allow(dead_code)]
 fn display_recommendation(
     index: usize,
-    rec: &scirs2_stats::benchmark_suite_enhanced::IntelligentRecommendation,
+    rec: &scirs2_stats::benchmark_suite, _enhanced::IntelligentRecommendation,
 ) {
     let priority_emoji = match rec.priority {
         RecommendationPriority::Critical => "🚨",
@@ -344,7 +344,7 @@ mod tests {
         assert!(config.enable_cross_platform);
         assert!(config.enable_regression_detection);
         assert!(config.enable_optimization_recommendations);
-        assert_eq!(config.regression_sensitivity, 0.05);
+        assert_eq!(_config.regression_sensitivity, 0.05);
     }
 
     #[test]
@@ -364,7 +364,7 @@ mod tests {
         let config = MLModelConfig::default();
         assert_eq!(
             config.model_type,
-            scirs2_stats::benchmark_suite_enhanced::MLModelType::RandomForest
+            scirs2_stats::benchmark_suite, _enhanced::MLModelType::RandomForest
         );
         assert_eq!(config.confidence_threshold, 0.8);
         assert_eq!(config.training_retention_days, 90);

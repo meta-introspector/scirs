@@ -111,40 +111,40 @@ enum ForwardOpData<T: Float> {
 
 impl<T: Float + Default + Clone> DualNumber<T> {
     /// Create a new dual number
-    pub fn new(value: T, tangent: T) -> Self {
-        Self { value, tangent }
+    pub fn new(_value: T, tangent: T) -> Self {
+        Self { _value, tangent }
     }
 
     /// Create a constant (zero tangent)
-    pub fn constant(value: T) -> Self {
-        Self::new(value, T::zero())
+    pub fn constant(_value: T) -> Self {
+        Self::new(_value, T::zero())
     }
 
     /// Create a variable (unit tangent)
-    pub fn variable(value: T) -> Self {
-        Self::new(value, T::one())
+    pub fn variable(_value: T) -> Self {
+        Self::new(_value, T::one())
     }
 }
 
 impl<T: Float + Default + Clone> VectorDual<T> {
     /// Create a new vector dual number
-    pub fn new(value: Array1<T>, tangent: Array1<T>) -> Self {
-        Self { value, tangent }
+    pub fn new(_value: Array1<T>, tangent: Array1<T>) -> Self {
+        Self { _value, tangent }
     }
 
     /// Create a constant vector
-    pub fn constant(value: Array1<T>) -> Self {
-        let tangent = Array1::zeros(value.len());
-        Self::new(value, tangent)
+    pub fn constant(_value: Array1<T>) -> Self {
+        let tangent = Array1::zeros(_value.len());
+        Self::new(_value, tangent)
     }
 
     /// Create a variable vector with unit tangent in direction i
-    pub fn variable(value: Array1<T>, direction: usize) -> Self {
-        let mut tangent = Array1::zeros(value.len());
+    pub fn variable(_value: Array1<T>, direction: usize) -> Self {
+        let mut tangent = Array1::zeros(_value.len());
         if direction < tangent.len() {
             tangent[direction] = T::one();
         }
-        Self::new(value, tangent)
+        Self::new(_value, tangent)
     }
 }
 
@@ -370,7 +370,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
                         .variables
                         .iter()
                         .find(|(_, &id)| id == op.output)
-                        .map(|(name, _)| name.clone())
+                        .map(|(name_)| name.clone())
                         .ok_or_else(|| {
                             OptimError::InvalidConfig("Variable not found".to_string())
                         })?;
@@ -675,7 +675,7 @@ pub struct ForwardModeStats {
 }
 
 // Implement arithmetic operations for dual numbers
-impl<T: Float + Default + Clone> std::ops::Add for DualNumber<T> {
+impl<T: Float + Default + Clone> + std::ops::Add for DualNumber<T> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self {
@@ -686,7 +686,7 @@ impl<T: Float + Default + Clone> std::ops::Add for DualNumber<T> {
     }
 }
 
-impl<T: Float + Default + Clone> std::ops::Sub for DualNumber<T> {
+impl<T: Float + Default + Clone> + std::ops::Sub for DualNumber<T> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self {
@@ -697,7 +697,7 @@ impl<T: Float + Default + Clone> std::ops::Sub for DualNumber<T> {
     }
 }
 
-impl<T: Float + Default + Clone> std::ops::Mul for DualNumber<T> {
+impl<T: Float + Default + Clone> + std::ops::Mul for DualNumber<T> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self {
@@ -708,7 +708,7 @@ impl<T: Float + Default + Clone> std::ops::Mul for DualNumber<T> {
     }
 }
 
-impl<T: Float + Default + Clone> std::ops::Div for DualNumber<T> {
+impl<T: Float + Default + Clone> + std::ops::Div for DualNumber<T> {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self {

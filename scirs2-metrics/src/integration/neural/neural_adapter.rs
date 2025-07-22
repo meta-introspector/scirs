@@ -26,8 +26,7 @@ pub struct NeuralMetricAdapter<
     targets: Option<Array<F, IxDyn>>,
 }
 
-impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUnifiedOps>
-    std::fmt::Debug for NeuralMetricAdapter<F>
+impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUnifiedOps> + std::fmt::Debug for NeuralMetricAdapter<F>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut builder = f.debug_struct("NeuralMetricAdapter");
@@ -48,11 +47,11 @@ impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUni
     NeuralMetricAdapter<F>
 {
     /// Create a new neural metric adapter
-    pub fn new(name: &str, metric_fn: MetricFn<F>) -> Self {
+    pub fn new(_name: &str, metric_fn: MetricFn<F>) -> Self {
         #[cfg(feature = "neural_common")]
         {
             Self {
-                name: name.to_string(),
+                _name: _name.to_string(),
                 metric_fn,
                 predictions: None,
                 targets: None,
@@ -62,7 +61,7 @@ impl<F: Float + Debug + Display + FromPrimitive + scirs2_core::simd_ops::SimdUni
         #[cfg(not(feature = "neural_common"))]
         {
             Self {
-                name: name.to_string(),
+                _name: _name.to_string(),
                 metric_fn,
             }
         }
@@ -224,8 +223,7 @@ mod neural_trait_impl {
         fn update(
             &mut self,
             predictions: &Array<F, IxDyn>,
-            targets: &Array<F, IxDyn>,
-            _loss: Option<F>,
+            targets: &Array<F, IxDyn>, _loss: Option<F>,
         ) {
             // Store predictions and targets for later computation
             self.predictions = Some(predictions.clone());

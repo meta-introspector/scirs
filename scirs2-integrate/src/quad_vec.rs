@@ -26,7 +26,7 @@ pub struct QuadVecResult<T> {
     pub success: bool,
 }
 
-impl<T: fmt::Display> fmt::Display for QuadVecResult<T> {
+impl<T: fmt::Display>, fmt::Display for QuadVecResult<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -66,7 +66,7 @@ pub struct QuadVecOptions {
 }
 
 impl Default for QuadVecOptions {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             epsabs: 1e-10,
             epsrel: 1e-8,
@@ -139,11 +139,11 @@ impl Ord for Subinterval {
 
 /// Compute a norm for error estimation
 #[allow(dead_code)]
-fn compute_norm(array: &Array1<f64>, norm_type: NormType) -> f64 {
+fn compute_norm(_array: &Array1<f64>, norm_type: NormType) -> f64 {
     match norm_type {
         NormType::Max => {
             let mut max_abs = 0.0;
-            for &val in array.iter() {
+            for &val in _array.iter() {
                 let abs_val = val.abs();
                 if abs_val > max_abs {
                     max_abs = abs_val;
@@ -153,7 +153,7 @@ fn compute_norm(array: &Array1<f64>, norm_type: NormType) -> f64 {
         }
         NormType::L2 => {
             let mut sum_squares = 0.0;
-            for &val in array.iter() {
+            for &val in _array.iter() {
                 sum_squares += val * val;
             }
             sum_squares.sqrt()
@@ -181,7 +181,7 @@ fn compute_norm(array: &Array1<f64>, norm_type: NormType) -> f64 {
 ///
 /// ```
 /// use ndarray::{Array1, arr1};
-/// use scirs2_integrate::quad_vec::{quad_vec, QuadVecOptions};
+/// use scirs2__integrate::quad_vec::{quad_vec, QuadVecOptions};
 ///
 /// // Integrate a function that returns a 2D vector
 /// let f = |x: f64| arr1(&[x.sin(), x.cos()]);
@@ -377,14 +377,14 @@ where
 
 /// Compute a property of all intervals combined
 #[allow(dead_code)]
-fn get_total<F, T>(heap: &BinaryHeap<Subinterval>, extra: &Subinterval, extract: F) -> Array1<T>
+fn get_total<F, T>(_heap: &BinaryHeap<Subinterval>, extra: &Subinterval, extract: F) -> Array1<T>
 where
     F: Fn(&Subinterval) -> &Array1<T>,
     T: Clone + num_traits::Zero,
 {
     let mut result = extract(extra).clone();
 
-    for interval in heap.iter() {
+    for interval in _heap.iter() {
         let property = extract(interval);
 
         for (i, val) in property.iter().enumerate() {

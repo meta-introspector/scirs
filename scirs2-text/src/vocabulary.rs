@@ -28,18 +28,18 @@ impl Vocabulary {
     }
 
     /// Create a new vocabulary with a maximum size
-    pub fn with_max_size(max_size: usize) -> Self {
+    pub fn with_max_size(_max_size: usize) -> Self {
         Self {
             token_to_id: HashMap::new(),
             id_to_token: HashMap::new(),
-            max_size: Some(max_size),
+            max_size: Some(_max_size),
         }
     }
 
     /// Create a vocabulary from a list of tokens
-    pub fn from_tokens(tokens: &[String]) -> Self {
+    pub fn from_tokens(_tokens: &[String]) -> Self {
         let mut vocab = Self::new();
-        for token in tokens {
+        for token in _tokens {
             vocab.add_token(token);
         }
         vocab
@@ -108,7 +108,7 @@ impl Vocabulary {
             .map(|(id, token)| (*id, token))
             .collect();
 
-        tokens.sort_by_key(|(id, _)| *id);
+        tokens.sort_by_key(|(id_)| *id);
 
         // Write each token on a new line
         for (_, token) in tokens {
@@ -119,8 +119,8 @@ impl Vocabulary {
     }
 
     /// Load a vocabulary from a file
-    pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path).map_err(|e| TextError::IoError(e.to_string()))?;
+    pub fn load_from_file<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::open(_path).map_err(|e| TextError::IoError(e.to_string()))?;
 
         let reader = BufReader::new(file);
         let mut vocab = Self::new();
@@ -136,13 +136,13 @@ impl Vocabulary {
 
     /// Prune the vocabulary to only include the most common tokens
     pub fn prune(&mut self, token_counts: &HashMap<String, usize>, min_count: usize) {
-        // Create a new vocabulary with only tokens that meet the minimum count
+        // Create a new vocabulary with only tokens that meet the minimum _count
         let mut new_token_to_id = HashMap::new();
         let mut new_id_to_token = HashMap::new();
 
         let mut new_id = 0;
-        for (token, count) in token_counts {
-            if *count >= min_count && self.contains(token) {
+        for (token_count) in token_counts {
+            if *_count >= min_count && self.contains(token) {
                 new_token_to_id.insert(token.clone(), new_id);
                 new_id_to_token.insert(new_id, token.clone());
                 new_id += 1;

@@ -25,9 +25,9 @@
 //! let tracing = TracingSystem::new(config)?;
 //!
 //! // Create a traced operation using SpanBuilder
-//! let span = SpanBuilder::new("matrix_multiplication")
+//! let span = SpanBuilder::new(matrix_multiplication)
 //!     .with_attribute("size", "1000x1000")
-//!     .with_component("linalg")
+//!     .with_component(linalg)
 //!     .start(&tracing)?;
 //!
 //! // Perform operation with automatic performance tracking
@@ -242,13 +242,13 @@ impl TraceContext {
 
         let version = u8::from_str_radix(parts[0], 16).map_err(|_| {
             CoreError::ComputationError(crate::error::ErrorContext::new(
-                "Invalid version in traceparent".to_string(),
+                "Invalid _version in traceparent".to_string(),
             ))
         })?;
 
         if version != TRACE_VERSION {
             return Err(CoreError::ComputationError(
-                crate::error::ErrorContext::new("Unsupported traceparent version".to_string()),
+                crate::error::ErrorContext::new("Unsupported traceparent _version".to_string()),
             ));
         }
 
@@ -523,8 +523,10 @@ impl ActiveSpan {
     {
         // Set current span context in thread-local storage
         CURRENT_SPAN.with(|current| {
-            let _guard = current.borrow_mut().replace(self.span.clone());
-            f()
+            let _prev = current.replace(Some(self.span.clone()));
+            let result = f();
+            current.replace(_prev);
+            result
         })
     }
 
@@ -538,7 +540,7 @@ impl ActiveSpan {
         // For async contexts, we would typically use tokio-tracing
         // For now, we'll provide a basic implementation
         CURRENT_SPAN.with(|current| {
-            let _guard = current.borrow_mut().replace(self.span.clone());
+            let _prev = current.borrow_mut().replace(self.span.clone());
             // Note: This is a simplified implementation
             // In production, you'd want proper async context propagation
         });
@@ -1039,7 +1041,7 @@ pub struct TracingMetrics {
 /// Trait for implementing sampling strategies
 pub trait TracingSampler {
     /// Determine if a trace should be sampled
-    fn should_sample(&self, context: &TraceContext, operation_name: &str) -> bool;
+    fn should_sample(&self, context: &TraceContext, span_name: &str) -> bool;
 }
 
 /// Probability-based sampler
@@ -1056,7 +1058,7 @@ impl ProbabilitySampler {
 }
 
 impl TracingSampler for ProbabilitySampler {
-    fn should_sample(&self, _context: &TraceContext, _operation_name: &str) -> bool {
+    fn should_sample(&self, _context: &TraceContext, _span_name: &str) -> bool {
         if self.sampling_rate >= 1.0 {
             true
         } else if self.sampling_rate <= 0.0 {
@@ -1128,7 +1130,7 @@ impl AdaptiveSampler {
 }
 
 impl TracingSampler for AdaptiveSampler {
-    fn should_sample(&self, _context: &TraceContext, _operation_name: &str) -> bool {
+    fn should_sample(&self, _context: &TraceContext, _span_name: &str) -> bool {
         self.total_count.fetch_add(1, Ordering::Relaxed);
 
         let current_rate = self.adjust_sampling_rate();
@@ -1183,7 +1185,7 @@ impl RateLimitingSampler {
 }
 
 impl TracingSampler for RateLimitingSampler {
-    fn should_sample(&self, _context: &TraceContext, _operation_name: &str) -> bool {
+    fn should_sample(&self, _context: &TraceContext, _span_name: &str) -> bool {
         self.reset_window_if_needed();
 
         let current_count = self.sample_count.load(Ordering::Relaxed);
@@ -1595,7 +1597,7 @@ impl ResourceAttribution {
         self
     }
 
-    pub fn with_gpu_usage(mut self, memory_bytes: u64, compute_time_ns: u64) -> Self {
+    pub fn with_gpu_stats(mut self, memory_bytes: u64, compute_time_ns: u64) -> Self {
         self.gpu_memory_bytes = Some(memory_bytes);
         self.gpu_compute_time_ns = Some(compute_time_ns);
         self
@@ -1731,7 +1733,7 @@ pub fn example_matrix_computation_with_tracing() -> Result<(), CoreError> {
     };
 
     let tracing = TracingSystem::new(config)?;
-    let _adaptive_sampler = AdaptiveSampler::new(0.1, 1000.0); // 10% base rate, target 1000 samples/sec
+    let adaptive_sampler = AdaptiveSampler::new(0.1, 1000.0); // 10% base rate, target 1000 samples/sec
     let batch_exporter = BatchExporter::new(
         Box::new(ConsoleExporter::new(true)),
         50,                     // batch size
@@ -1745,12 +1747,12 @@ pub fn example_matrix_computation_with_tracing() -> Result<(), CoreError> {
     computation_span.add_attribute("matrix_size", "1000x1000")?;
     computation_span.add_attribute("algorithm", "block_multiplication")?;
 
-    let _result = computation_span.in_span(|| {
+    let result = computation_span.in_span(|| {
         // Start memory allocation span
         let alloc_span = tracing.start_span("memory_allocation")?;
         alloc_span.add_attribute("allocation_size", "8MB")?;
 
-        let _memory_result = alloc_span.in_span(|| {
+        let memory_result = alloc_span.in_span(|| {
             // Simulate memory allocation
             std::thread::sleep(Duration::from_millis(10));
             "allocated"
@@ -1760,7 +1762,7 @@ pub fn example_matrix_computation_with_tracing() -> Result<(), CoreError> {
         let compute_span = tracing.start_span("matrix_compute")?;
         compute_span.add_metric("flops", 2_000_000_000.0)?; // 2 billion operations
 
-        let _compute_result = compute_span.in_span(|| {
+        let compute_result = compute_span.in_span(|| {
             // Simulate computation
             std::thread::sleep(Duration::from_millis(100));
             "computed"
@@ -1929,7 +1931,7 @@ mod tests {
             sampler.should_sample(&context, "test");
         }
 
-        let (total, _sampled, rate) = sampler.get_stats();
+        let (total, sampled, rate) = sampler.get_stats();
         assert_eq!(total, 10);
         assert!((0.0..=1.0).contains(&rate));
     }

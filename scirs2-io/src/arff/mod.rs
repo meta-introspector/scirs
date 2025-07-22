@@ -53,8 +53,7 @@ impl ArffValue {
     /// Try to convert the value to a float if possible
     pub fn to_f64(&self) -> Option<f64> {
         match self {
-            ArffValue::Numeric(val) => Some(*val),
-            _ => None,
+            ArffValue::Numeric(val) => Some(*val, _ => None,
         }
     }
 
@@ -72,15 +71,15 @@ impl ArffValue {
 
 /// Parse attribute definition from ARFF file
 #[allow(dead_code)]
-fn parse_attribute(line: &str) -> Result<(String, AttributeType)> {
+fn parse_attribute(_line: &str) -> Result<(String, AttributeType)> {
     // Expected format: @attribute name type
-    let line = line.trim();
-    if !line.starts_with("@attribute") {
+    let _line = _line.trim();
+    if !_line.starts_with("@attribute") {
         return Err(IoError::FormatError("Invalid attribute format".to_string()));
     }
 
     // Split into parts: @attribute, name, type
-    let parts: Vec<&str> = line.splitn(3, ' ').collect();
+    let parts: Vec<&str> = _line.splitn(3, ' ').collect();
     if parts.len() < 3 {
         return Err(IoError::FormatError("Invalid attribute format".to_string()));
     }
@@ -137,18 +136,18 @@ fn parse_attribute(line: &str) -> Result<(String, AttributeType)> {
 
 /// Parse an ARFF data line into ArffValue instances
 #[allow(dead_code)]
-fn parse_data_line(line: &str, attributes: &[(String, AttributeType)]) -> Result<Vec<ArffValue>> {
-    let line = line.trim();
-    if line.is_empty() {
-        return Err(IoError::FormatError("Empty data line".to_string()));
+fn parse_data_line(_line: &str, attributes: &[(String, AttributeType)]) -> Result<Vec<ArffValue>> {
+    let _line = _line.trim();
+    if _line.is_empty() {
+        return Err(IoError::FormatError("Empty data _line".to_string()));
     }
 
     let mut values = Vec::new();
-    let parts: Vec<&str> = line.split(',').collect();
+    let parts: Vec<&str> = _line.split(',').collect();
 
     if parts.len() != attributes.len() {
         return Err(IoError::FormatError(format!(
-            "Data line has {} values but expected {}",
+            "Data _line has {} values but expected {}",
             parts.len(),
             attributes.len()
         )));
@@ -227,7 +226,7 @@ fn parse_data_line(line: &str, attributes: &[(String, AttributeType)]) -> Result
 /// # Example
 ///
 /// ```no_run
-/// use scirs2_io::arff::read_arff;
+/// use scirs2__io::arff::read_arff;
 /// use std::path::Path;
 ///
 /// let arff_data = read_arff(Path::new("dataset.arff")).unwrap();
@@ -236,8 +235,8 @@ fn parse_data_line(line: &str, attributes: &[(String, AttributeType)]) -> Result
 /// println!("Number of instances: {}", arff_data.data.shape()[0]);
 /// ```
 #[allow(dead_code)]
-pub fn read_arff<P: AsRef<Path>>(path: P) -> Result<ArffData> {
-    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn read_arff<P: AsRef<Path>>(_path: P) -> Result<ArffData> {
+    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
     let mut relation = String::new();
@@ -342,14 +341,14 @@ pub fn read_arff<P: AsRef<Path>>(path: P) -> Result<ArffData> {
 /// # Example
 ///
 /// ```no_run
-/// use scirs2_io::arff::{read_arff, get_numeric_matrix};
+/// use scirs2__io::arff::{read_arff, get_numeric_matrix};
 /// use std::path::Path;
 ///
 /// let arff_data = read_arff(Path::new("iris.arff")).unwrap();
 /// // Get only the first 4 numeric attributes from the Iris dataset
 /// let numeric_attrs = arff_data.attributes.iter()
 ///     .take(4)
-///     .map(|(name, _)| name.clone())
+///     .map(|(name_)| name.clone())
 ///     .collect::<Vec<_>>();
 ///
 /// let matrix = get_numeric_matrix(&arff_data, &numeric_attrs).unwrap();
@@ -360,13 +359,13 @@ pub fn get_numeric_matrix(
     arff_data: &ArffData,
     numeric_attributes: &[String],
 ) -> Result<Array2<f64>> {
-    // Find indices of requested attributes
+    // Find indices of requested _attributes
     let mut indices = Vec::new();
     let mut attr_names = Vec::new();
 
     for attr_name in numeric_attributes {
         let mut found = false;
-        for (i, (name, attr_type)) in arff_data.attributes.iter().enumerate() {
+        for (i, (name, attr_type)) in arff_data._attributes.iter().enumerate() {
             if name == attr_name {
                 match attr_type {
                     AttributeType::Numeric => {
@@ -392,14 +391,14 @@ pub fn get_numeric_matrix(
     }
 
     // Create output matrix
-    let num_instances = arff_data.data.shape()[0];
+    let num_instances = arff_data._data.shape()[0];
     let num_selected = indices.len();
     let mut output = Array2::from_elem((num_instances, num_selected), f64::NAN);
 
     // Fill output matrix
     for (out_col, &in_col) in indices.iter().enumerate() {
         for row in 0..num_instances {
-            match &arff_data.data[[row, in_col]] {
+            match &arff_data._data[[row, in_col]] {
                 ArffValue::Numeric(val) => {
                     output[[row, out_col]] = *val;
                 }
@@ -430,7 +429,7 @@ pub fn get_numeric_matrix(
 /// # Example
 ///
 /// ```no_run
-/// use scirs2_io::arff::{ArffData, ArffValue, AttributeType, write_arff};
+/// use scirs2__io::arff::{ArffData, ArffValue, AttributeType, write_arff};
 /// use ndarray::Array2;
 /// use std::path::Path;
 ///
@@ -452,8 +451,8 @@ pub fn get_numeric_matrix(
 /// write_arff(Path::new("weather.arff"), &arff_data).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
-    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn write_arff<P: AsRef<Path>>(_path: P, arff_data: &ArffData) -> Result<()> {
+    let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     // Write relation
@@ -495,12 +494,12 @@ pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
         .map_err(|e| IoError::FileError(format!("Failed to write attribute: {e}")))?;
     }
 
-    // Write data section header
-    writeln!(writer, "\n@data")
-        .map_err(|e| IoError::FileError(format!("Failed to write data header: {e}")))?;
+    // Write _data section header
+    writeln!(writer, "\n@_data")
+        .map_err(|e| IoError::FileError(format!("Failed to write _data header: {e}")))?;
 
-    // Write data lines
-    let shape = arff_data.data.shape();
+    // Write _data lines
+    let shape = arff_data._data.shape();
     let num_instances = shape[0];
     let num_attributes = shape[1];
 
@@ -508,15 +507,15 @@ pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
         let mut line = String::new();
 
         for j in 0..num_attributes {
-            let value = &arff_data.data[[i, j]];
+            let value = &arff_data._data[[i, j]];
             let attr_type = &arff_data.attributes[j].1;
 
             let value_str = match (value, attr_type) {
-                (ArffValue::Missing, _) => "?".to_string(),
-                (ArffValue::Numeric(val), _) => val.to_string(),
-                (ArffValue::String(val), _) => format_arff_string(val),
-                (ArffValue::Date(val), _) => format_arff_string(val),
-                (ArffValue::Nominal(val), _) => format_arff_string(val),
+                (ArffValue:: Missing) => "?".to_string(),
+                (ArffValue::Numeric(val)_) => val.to_string(),
+                (ArffValue::String(val)_) => format_arff_string(val),
+                (ArffValue::Date(val)_) => format_arff_string(val),
+                (ArffValue::Nominal(val)_) => format_arff_string(val),
             };
 
             if j > 0 {
@@ -526,7 +525,7 @@ pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
         }
 
         writeln!(writer, "{line}")
-            .map_err(|e| IoError::FileError(format!("Failed to write data line: {e}")))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write _data line: {e}")))?;
     }
 
     Ok(())
@@ -547,7 +546,7 @@ pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
 /// # Example
 ///
 /// ```no_run
-/// use scirs2_io::arff::numeric_matrix_to_arff;
+/// use scirs2__io::arff::numeric_matrix_to_arff;
 /// use ndarray::Array2;
 /// use std::path::Path;
 ///
@@ -558,7 +557,7 @@ pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
 /// let arff_data = numeric_matrix_to_arff("simple_data", &attribute_names, &matrix);
 ///
 /// // Now you can write it to a file
-/// use scirs2_io::arff::write_arff;
+/// use scirs2__io::arff::write_arff;
 /// write_arff(Path::new("simple_data.arff"), &arff_data).unwrap();
 /// ```
 #[allow(dead_code)]

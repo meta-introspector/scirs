@@ -16,6 +16,7 @@ use num_traits::Float;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
 use std::iter::Sum;
+use statrs::statistics::Statistics;
 
 /// Feature importance calculator with advanced methods
 pub struct FeatureImportanceCalculator<F: Float> {
@@ -28,8 +29,7 @@ pub struct FeatureImportanceCalculator<F: Float> {
     /// Use proper random number generation
     pub use_proper_rng: bool,
     /// Enable SIMD acceleration
-    pub enable_simd: bool,
-    _phantom: std::marker::PhantomData<F>,
+    pub enable_simd: bool, _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> Default
@@ -48,8 +48,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
             random_seed: None,
             n_shap_background: 100,
             use_proper_rng: true,
-            enable_simd: true,
-            _phantom: std::marker::PhantomData,
+            enable_simd: true, _phantom: std::marker::PhantomData,
         }
     }
 
@@ -282,9 +281,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
 
     /// Compute gain-based importance (for tree-like models)
     pub fn gain_importance<M>(
-        &self,
-        _model: &M,
-        _x_test: &Array2<F>,
+        &self_model: &M_x, _test: &Array2<F>,
         feature_names: &[String],
         tree_splits: &[TreeSplit<F>],
     ) -> Result<HashMap<String, F>>
@@ -311,8 +308,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         &self,
         model: &M,
         x_instance: &ArrayView1<F>,
-        x_background: &Array2<F>,
-        _score_fn: S,
+        x_background: &Array2<F>, _score_fn: S,
         feature_names: &[String],
         n_samples: usize,
     ) -> Result<HashMap<String, F>>
@@ -323,10 +319,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         let mut lime_scores = HashMap::new();
         let _n_features = x_instance.len();
 
-        // Generate perturbed samples around the instance
+        // Generate perturbed _samples around the _instance
         let perturbed_samples = self.generate_lime_samples(x_instance, x_background, n_samples)?;
 
-        // Compute model predictions for perturbed samples
+        // Compute model predictions for perturbed _samples
         let predictions = model(&perturbed_samples.view());
 
         // Fit linear model to approximate local behavior
@@ -355,7 +351,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
     {
         let mut ig_scores = HashMap::new();
 
-        // Generate interpolated path from baseline to instance
+        // Generate interpolated path from _baseline to _instance
         let interpolated_samples =
             self.generate_interpolated_path(x_baseline, x_instance, n_steps)?;
 
@@ -480,8 +476,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         &self,
         model: &M,
         x_test: &Array2<F>,
-        x_background: &Array2<F>,
-        _score_fn: &S,
+        x_background: &Array2<F>, _score_fn: &S,
         coalition: &[bool],
         feature_idx: usize,
     ) -> Result<F>
@@ -527,7 +522,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
 
         for (feature_idx, &in_coalition) in coalition.iter().enumerate() {
             if !in_coalition && feature_idx < x_background.ncols() {
-                // Replace with background value
+                // Replace with _background value
                 let bg_mean = x_background.column(feature_idx).mean().unwrap_or(F::zero());
                 for row_idx in 0..sample.nrows() {
                     sample[[row_idx, feature_idx]] = bg_mean;
@@ -546,7 +541,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
         n_samples: usize,
     ) -> Result<Array2<F>> {
         let n_features = x_instance.len();
-        let mut samples = Array2::zeros((n_samples, n_features));
+        let mut _samples = Array2::zeros((n_samples, n_features));
 
         let seed = self.random_seed.unwrap_or(42);
         let mut rng_state = seed;
@@ -557,16 +552,16 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
 
                 if (rng_state % 2) == 0 {
                     // Use original feature value
-                    samples[[i, j]] = x_instance[j];
+                    _samples[[i, j]] = x_instance[j];
                 } else {
-                    // Use background value
+                    // Use _background value
                     let bg_mean = x_background.column(j).mean().unwrap_or(F::zero());
-                    samples[[i, j]] = bg_mean;
+                    _samples[[i, j]] = bg_mean;
                 }
             }
         }
 
-        Ok(samples)
+        Ok(_samples)
     }
 
     /// Fit linear approximation for LIME
@@ -781,14 +776,14 @@ where
     let permutation_importance =
         calculator.permutation_importance(model, x_test, y_test, score_fn, feature_names)?;
 
-    // SHAP values (if background data provided)
+    // SHAP values (if _background data provided)
     let shap_values = if let Some(bg_data) = x_background {
         Some(calculator.shap_importance(model, x_test, bg_data, score_fn, feature_names)?)
     } else {
         None
     };
 
-    // LIME importance (using first instance if background provided)
+    // LIME importance (using first instance if _background provided)
     let lime_importance = if let Some(bg_data) = x_background {
         if x_test.nrows() > 0 {
             Some(calculator.lime_importance(
@@ -806,7 +801,7 @@ where
         None
     };
 
-    // Integrated gradients (using first instance if background provided)
+    // Integrated gradients (using first instance if _background provided)
     let integrated_gradients = if let Some(bg_data) = x_background {
         if x_test.nrows() > 0 && bg_data.nrows() > 0 {
             Some(calculator.integrated_gradients_importance(
@@ -823,9 +818,9 @@ where
         None
     };
 
-    // Gain-based importance (if tree splits provided)
-    let gain_importance = if let Some(splits) = tree_splits {
-        Some(calculator.gain_importance(model, x_test, feature_names, splits)?)
+    // Gain-based importance (if tree _splits provided)
+    let gain_importance = if let Some(_splits) = tree_splits {
+        Some(calculator.gain_importance(model, x_test, feature_names, _splits)?)
     } else {
         None
     };
@@ -899,7 +894,7 @@ fn compute_mutual_information_improved<F: Float + num_traits::FromPrimitive + st
             let p_x = x_hist[i] / n_total;
             let p_y = y_hist[j] / n_total;
 
-            if p_xy > F::zero() && p_x > F::zero() && p_y > F::zero() {
+            if p_xy > F::zero() && p_x > F::zero() && p_y >, F::zero() {
                 let ratio: F = p_xy / (p_x * p_y);
                 mi = mi + p_xy * ratio.ln();
             }
@@ -924,7 +919,7 @@ fn create_bins<F: Float + num_traits::FromPrimitive>(
 
     let bin_width = (max_val - min_val) / F::from(n_bins).unwrap();
 
-    let bins: Vec<usize> = values
+    let _bins: Vec<usize> = values
         .iter()
         .map(|&val| {
             let bin_idx = ((val - min_val) / bin_width).to_usize().unwrap_or(0);
@@ -932,7 +927,7 @@ fn create_bins<F: Float + num_traits::FromPrimitive>(
         })
         .collect();
 
-    Ok(bins)
+    Ok(_bins)
 }
 
 /// Compute joint histogram
@@ -959,7 +954,7 @@ fn compute_marginal_histogram<F: Float + num_traits::FromPrimitive>(
 ) -> Result<Vec<F>> {
     let mut hist = vec![F::zero(); n_bins];
 
-    for &bin_idx in bins {
+    for &bin_idx in _bins {
         hist[bin_idx] = hist[bin_idx] + F::one();
     }
 

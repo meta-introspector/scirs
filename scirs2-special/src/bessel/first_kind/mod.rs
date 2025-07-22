@@ -37,7 +37,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::first_kind::j0;
+/// use scirs2__special::bessel::first_kind::j0;
 ///
 /// // J₀(0) = 1
 /// assert!((j0(0.0f64) - 1.0).abs() < 1e-10);
@@ -160,7 +160,7 @@ fn enhanced_asymptotic_j0<F: Float + FromPrimitive>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::first_kind::j1;
+/// use scirs2__special::bessel::first_kind::j1;
 ///
 /// // J₁(0) = 0
 /// assert!(j1(0.0f64).abs() < 1e-10);
@@ -292,7 +292,7 @@ fn enhanced_asymptotic_j1<F: Float + FromPrimitive>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::first_kind::{j0, j1, jn};
+/// use scirs2__special::bessel::first_kind::{j0, j1, jn};
 ///
 /// // J₀(x) comparison
 /// let x = 3.0f64;
@@ -424,7 +424,7 @@ pub fn jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::first_kind::{j0, j1, jv};
+/// use scirs2__special::bessel::first_kind::{j0, j1, jv};
 ///
 /// // Integer order comparisons
 /// let x = 2.0f64;
@@ -726,7 +726,7 @@ fn enhanced_asymptotic_jn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::first_kind::j0e;
+/// use scirs2__special::bessel::first_kind::j0e;
 ///
 /// // For real arguments, j0e(x) = j0(x)
 /// let x = 2.0f64;
@@ -758,7 +758,7 @@ pub fn j0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::first_kind::j1e;
+/// use scirs2__special::bessel::first_kind::j1e;
 ///
 /// // For real arguments, j1e(x) = j1(x)
 /// let x = 2.0f64;
@@ -791,7 +791,7 @@ pub fn j1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::first_kind::jne;
+/// use scirs2__special::bessel::first_kind::jne;
 ///
 /// // For real arguments, jne(n, x) = jn(n, x)
 /// let x = 2.0f64;
@@ -824,7 +824,7 @@ pub fn jne<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::first_kind::jve;
+/// use scirs2__special::bessel::first_kind::jve;
 ///
 /// // For real arguments, jve(v, x) = jv(v, x)
 /// let x = 2.0f64;

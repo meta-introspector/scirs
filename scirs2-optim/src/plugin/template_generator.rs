@@ -336,7 +336,7 @@ pub struct MarkdownValidator;
 
 impl AdvancedTemplateGenerator {
     /// Create a new advanced template generator
-    pub fn new(config: TemplateGeneratorConfig) -> Self {
+    pub fn new(_config: TemplateGeneratorConfig) -> Self {
         let mut template_registry = TemplateRegistry::new();
         template_registry.register_builtin_templates();
         
@@ -352,7 +352,7 @@ impl AdvancedTemplateGenerator {
         let validator = TemplateValidator::new();
         
         Self {
-            config,
+            _config,
             template_registry,
             generators,
             validator,
@@ -425,7 +425,7 @@ impl AdvancedTemplateGenerator {
         
         // Generate project metadata
         let project_metadata = ProjectMetadata {
-            name: project_name.to_string(),
+            _name: project_name.to_string(),
             template_name: template_name.to_string(),
             template_version: template.version().unwrap_or("unknown".to_string()),
             generated_at: chrono::Utc::now().to_rfc3339(),
@@ -711,7 +711,7 @@ impl OptimizerCoreGenerator {
 //! This plugin implements the {} optimization algorithm.
 //! Generated with scirs2-optim template generator v{}
 
-use scirs2_optim::plugin::*;
+use scirs2__optim::plugin::*;
 use ndarray::{{Array1, Array2}};
 use num_traits::Float;
 use serde::{{Serialize, Deserialize}};
@@ -719,7 +719,7 @@ use serde::{{Serialize, Deserialize}};
 /// {} optimizer configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct {}Config<T: Float> {{
-    /// Learning rate
+    /// Learning _rate
     pub learning_rate: T,
     /// Add additional parameters here
 }}
@@ -766,7 +766,7 @@ impl<T: Float> Default for {}State<T> {{
 
 impl<T: Float> {}<T> {{
     /// Create a new {} optimizer
-    pub fn new(config: {}Config<T>) -> Self {{
+    pub fn new(_config: {}Config<T>) -> Self {{
         let info = create_plugin_info("{}", env!("CARGO_PKG_VERSION"), "Auto-generated");
         let mut capabilities = create_basic_capabilities();
         capabilities.momentum = true; // Enable if using momentum
@@ -780,12 +780,12 @@ impl<T: Float> {}<T> {{
         }}
     }}
     
-    /// Update learning rate
+    /// Update learning _rate
     pub fn set_learning_rate(&mut self, learning_rate: T) {{
         self.config.learning_rate = learning_rate;
     }}
     
-    /// Get current learning rate
+    /// Get current learning _rate
     pub fn learning_rate(&self) -> T {{
         self.config.learning_rate
     }}
@@ -821,7 +821,7 @@ impl<T: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<T> for 
     }}
     
     fn initialize(&mut self, param_shape: &[usize]) -> Result<()> {{
-        // Initialize state based on parameter shape
+        // Initialize state based on parameter _shape
         Ok(())
     }}
     
@@ -842,7 +842,7 @@ impl<T: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<T> for 
     
     fn set_config(&mut self, config: OptimizerConfig) -> Result<()> {{
         self.config.learning_rate = T::from(config.learning_rate)
-            .ok_or_else(|| OptimError::InvalidConfig("Invalid learning rate".to_string()))?;
+            .ok_or_else(|| OptimError::InvalidConfig("Invalid learning _rate".to_string()))?;
         Ok(())
     }}
     
@@ -886,7 +886,7 @@ impl<T: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPluginFactory<
     fn create_optimizer(&self, config: OptimizerConfig) -> Result<Box<dyn OptimizerPlugin<T>>> {{
         let plugin_config = {}Config {{
             learning_rate: T::from(config.learning_rate)
-                .ok_or_else(|| OptimError::InvalidConfig("Invalid learning rate".to_string()))?,
+                .ok_or_else(|| OptimError::InvalidConfig("Invalid learning _rate".to_string()))?,
         }};
         
         Ok(Box::new({}<T>::new(plugin_config)))
@@ -899,7 +899,7 @@ impl<T: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPluginFactory<
     fn validate_config(&self, config: &OptimizerConfig) -> Result<()> {{
         if config.learning_rate <= 0.0 {{
             return Err(OptimError::InvalidConfig(
-                "Learning rate must be positive".to_string(),
+                "Learning _rate must be positive".to_string(),
             ));
         }}
         Ok(())
@@ -923,7 +923,7 @@ impl<T: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPluginFactory<
             "learning_rate".to_string(),
             FieldSchema {{
                 field_type: FieldType::Float {{ min: Some(0.0), max: None }},
-                description: "Learning rate for {} optimization".to_string(),
+                description: "Learning _rate for {} optimization".to_string(),
                 default_value: Some(ConfigValue::Float({})),
                 constraints: vec![ValidationConstraint::Positive],
                 required: true,
@@ -1028,13 +1028,13 @@ impl CodeGenerator for TestSuiteGenerator {
 }
 
 impl TestSuiteGenerator {
-    fn generate_test_code(&self, name: &str, _config: &TemplateGeneratorConfig) -> Result<String> {
+    fn generate_test_code(&self, name: &str_config: &TemplateGeneratorConfig) -> Result<String> {
         let content = format!(
             r#"//! Integration tests for {} optimizer
 //!
 //! These tests validate the complete functionality of the {} optimizer plugin.
 
-use scirs2_optim::plugin::*;
+use scirs2__optim::plugin::*;
 use ndarray::{{Array1, Array2}};
 
 mod common;
@@ -1043,8 +1043,8 @@ use common::*;
 #[test]
 #[allow(dead_code)]
 fn test_{}_basic_functionality() {{
-    let config = {}Config::default();
-    let mut optimizer = {}<f64>::new(config);
+    let _config = {}Config::default();
+    let mut optimizer = {}<f64>::new(_config);
     
     // Test basic step
     let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
@@ -1061,8 +1061,8 @@ fn test_{}_basic_functionality() {{
 #[test]
 #[allow(dead_code)]
 fn test_{}_convergence() {{
-    let config = {}Config::default();
-    let mut optimizer = {}<f64>::new(config);
+    let _config = {}Config::default();
+    let mut optimizer = {}<f64>::new(_config);
     
     // Test convergence on quadratic function
     let mut params = Array1::from_vec(vec![1.0, 1.0]);
@@ -1076,7 +1076,7 @@ fn test_{}_convergence() {{
         // Check if converged
         let distance = (&params - &target).mapv(|x| x * x).sum().sqrt();
         if distance < 1e-6 {{
-            println!("Converged in {{}} iterations", _iteration + 1);
+            println!("Converged in {{}} iterations"_iteration + 1);
             break;
         }}
     }}
@@ -1089,8 +1089,8 @@ fn test_{}_convergence() {{
 #[test]
 #[allow(dead_code)]
 fn test_{}_state_serialization() {{
-    let config = {}Config::default();
-    let mut optimizer = {}<f64>::new(config);
+    let _config = {}Config::default();
+    let mut optimizer = {}<f64>::new(_config);
     
     // Take a few steps to build up state
     let params = Array1::from_vec(vec![1.0, 2.0]);
@@ -1120,8 +1120,8 @@ fn test_{}_state_serialization() {{
 #[test]
 #[allow(dead_code)]
 fn test_{}_plugin_interface() {{
-    let config = {}Config::default();
-    let optimizer = {}<f64>::new(config);
+    let _config = {}Config::default();
+    let optimizer = {}<f64>::new(_config);
     
     // Test plugin metadata
     assert_eq!(optimizer.name(), "{}");
@@ -1139,11 +1139,11 @@ fn test_{}_plugin_interface() {{
 fn test_{}_factory() {{
     let factory = {}Factory;
     
-    // Test default config
+    // Test default _config
     let default_config = factory.default_config();
     assert!(default_config.learning_rate > 0.0);
     
-    // Test config validation
+    // Test _config validation
     let mut invalid_config = default_config.clone();
     invalid_config.learning_rate = -1.0;
     assert!(factory.validate_config(&invalid_config).is_err());
@@ -1158,8 +1158,8 @@ fn test_{}_factory() {{
 #[test]
 #[allow(dead_code)]
 fn test_{}_performance_characteristics() {{
-    let config = {}Config::default();
-    let mut optimizer = {}<f64>::new(config);
+    let _config = {}Config::default();
+    let mut optimizer = {}<f64>::new(_config);
     
     // Test with different problem sizes
     for size in &[10, 100, 1000] {{
@@ -1188,20 +1188,20 @@ fn test_{}_performance_characteristics() {{
         Ok(content)
     }
     
-    fn generate_benchmark_code(&self, name: &str, _config: &TemplateGeneratorConfig) -> Result<String> {
+    fn generate_benchmark_code(&self, name: &str_config: &TemplateGeneratorConfig) -> Result<String> {
         let content = format!(
             r#"//! Benchmarks for {} optimizer
 //!
 //! These benchmarks measure the performance characteristics of the {} optimizer.
 
 use criterion::{{black_box, criterion_group, criterion_main, Criterion}};
-use scirs2_optim::plugin::*;
+use scirs2__optim::plugin::*;
 use ndarray::Array1;
 
 #[allow(dead_code)]
 fn benchmark_{}_step(c: &mut Criterion) {{
-    let config = {}Config::default();
-    let mut optimizer = {}<f64>::new(config);
+    let _config = {}Config::default();
+    let mut optimizer = {}<f64>::new(_config);
     
     let params = Array1::ones(1000);
     let gradients = Array1::ones(1000) * 0.1;
@@ -1218,8 +1218,8 @@ fn benchmark_{}_scalability(c: &mut Criterion) {{
     let mut group = c.benchmark_group("{} scalability");
     
     for size in &[10, 100, 1000, 10000] {{
-        let config = {}Config::default();
-        let mut optimizer = {}<f64>::new(config);
+        let _config = {}Config::default();
+        let mut optimizer = {}<f64>::new(_config);
         
         let params = Array1::ones(*size);
         let gradients = Array1::ones(*size) * 0.1;
@@ -1227,7 +1227,7 @@ fn benchmark_{}_scalability(c: &mut Criterion) {{
         group.bench_with_input(
             criterion::BenchmarkId::new("size", size),
             size,
-            |b, _size| {{
+            |b_size| {{
                 b.iter(|| {{
                     black_box(optimizer.step(black_box(&params), black_box(&gradients)).unwrap())
                 }})
@@ -1324,17 +1324,18 @@ Add this plugin to your `Cargo.toml`:
 ### Basic Usage
 
 ```rust
-use scirs2_optim::plugin::*;
+use scirs2__optim::plugin::*;
 use {}::*;
 use ndarray::Array1;
+use std::path::PathBuf;
 
 // Create optimizer configuration
-let config = {}Config {{
+let _config = {}Config {{
     learning_rate: 0.001,
 }};
 
 // Create optimizer instance
-let mut optimizer = {}<f64>::new(config);
+let mut optimizer = {}<f64>::new(_config);
 
 // Use in optimization loop
 let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
@@ -1348,8 +1349,8 @@ let updated_params = optimizer.step(&params, &gradients)?;
 ```rust
 // Using the plugin factory
 let factory = {}Factory;
-let config = factory.default_config();
-let optimizer = factory.create_optimizer(config)?;
+let _config = factory.default_config();
+let optimizer = factory.create_optimizer(_config)?;
 
 // State serialization
 let state = optimizer.get_state()?;
@@ -1438,7 +1439,7 @@ Licensed under the MIT License. See [LICENSE](LICENSE) for details.
         Ok(content)
     }
     
-    fn generate_lib_docs(&self, name: &str, _config: &TemplateGeneratorConfig) -> Result<String> {
+    fn generate_lib_docs(&self, name: &str_config: &TemplateGeneratorConfig) -> Result<String> {
         let content = format!(
             r#"# {} Optimizer Library Documentation
 
@@ -1449,7 +1450,7 @@ The {} optimizer plugin is structured as follows:
 ```
 src/
 ├── lib.rs          # Main library with optimizer implementation
-├── config.rs       # Configuration structures
+├── _config.rs       # Configuration structures
 ├── state.rs        # State management
 └── factory.rs      # Plugin factory implementation
 
@@ -1480,7 +1481,7 @@ The main optimizer struct implementing the `OptimizerPlugin` trait:
 
 ```rust
 pub struct {}<T: Float> {{
-    config: {}Config<T>,
+    _config: {}Config<T>,
     state: {}State<T>,
     info: PluginInfo,
     capabilities: PluginCapabilities,
@@ -1551,8 +1552,8 @@ optimizer.set_state(state)?;
 
 ```rust
 let factory = {}Factory;
-let config = factory.default_config();
-let mut optimizer = factory.create_optimizer(config)?;
+let _config = factory.default_config();
+let mut optimizer = factory.create_optimizer(_config)?;
 ```
 
 ## Performance Considerations
@@ -1600,7 +1601,7 @@ The plugin can be extended by:
 struct BenchmarkGenerator;
 
 impl CodeGenerator for BenchmarkGenerator {
-    fn generate(&self, _template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
+    fn generate(&self_template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
         // Implementation would generate comprehensive benchmark suites
         Ok(vec![])
     }
@@ -1613,7 +1614,7 @@ impl CodeGenerator for BenchmarkGenerator {
 struct ExampleGenerator;
 
 impl CodeGenerator for ExampleGenerator {
-    fn generate(&self, _template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
+    fn generate(&self_template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
         // Implementation would generate usage examples
         Ok(vec![])
     }
@@ -1626,7 +1627,7 @@ impl CodeGenerator for ExampleGenerator {
 struct CICDGenerator;
 
 impl CodeGenerator for CICDGenerator {
-    fn generate(&self, _template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
+    fn generate(&self_template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
         // Implementation would generate GitHub Actions, Travis CI, etc.
         Ok(vec![])
     }
@@ -1639,7 +1640,7 @@ impl CodeGenerator for CICDGenerator {
 struct ConfigurationGenerator;
 
 impl CodeGenerator for ConfigurationGenerator {
-    fn generate(&self, _template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
+    fn generate(&self_template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
         // Implementation would generate Cargo.toml, plugin manifests, etc.
         Ok(vec![])
     }
@@ -1895,8 +1896,8 @@ impl TemplateValidationRule for ParameterValidationRule {
 struct StructureValidationRule;
 
 impl TemplateValidationRule for StructureValidationRule {
-    fn validate(&self, _template: &PluginTemplate) -> ValidationResult {
-        // Validate template structure
+    fn validate(&self_template: &PluginTemplate) -> ValidationResult {
+        // Validate _template structure
         ValidationResult {
             passed: true,
             message: "Template structure is valid".to_string(),
@@ -1956,10 +1957,10 @@ impl TemplateExtractor {
         Self
     }
     
-    fn extract_template(&self, _analysis: PluginAnalysis, template_name: &str) -> Result<PluginTemplate> {
-        // Extract template structure from analysis
+    fn extract_template(&self_analysis: PluginAnalysis, template_name: &str) -> Result<PluginTemplate> {
+        // Extract template structure from _analysis
         Ok(PluginTemplate {
-            name: template_name.to_string(),
+            _name: template_name.to_string(),
             description: "Extracted template".to_string(),
             category: TemplateCategory::BasicOptimizer,
             complexity: ComplexityLevel::Intermediate,
@@ -2081,12 +2082,12 @@ mod tests {
 
     // Helper function to convert TemplateInfo to PluginTemplate for testing
     impl From<TemplateInfo> for PluginTemplate {
-        fn from(info: TemplateInfo) -> Self {
+        fn from(_info: TemplateInfo) -> Self {
             PluginTemplate {
-                name: info.name,
-                description: info.description,
-                category: info.category,
-                complexity: info.complexity,
+                name: _info.name,
+                description: _info.description,
+                category: _info.category,
+                complexity: _info.complexity,
                 structure: EnhancedTemplateStructure {
                     core_files: vec![],
                     test_files: vec![],
@@ -2097,7 +2098,7 @@ mod tests {
                     benchmark_files: vec![],
                     resource_files: vec![],
                 },
-                required_features: info.required_features,
+                required_features: _info.required_features,
                 parameters: HashMap::new(),
             }
         }

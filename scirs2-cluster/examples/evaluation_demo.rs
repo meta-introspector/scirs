@@ -4,8 +4,8 @@
 //! assess the quality of different clustering results.
 
 use ndarray::{Array1, Array2};
-use scirs2_cluster::metrics::{davies_bouldin_score, silhouette_score};
-use scirs2_cluster::vq::{kmeans2, MinitMethod, MissingMethod};
+use scirs2__cluster::metrics::{davies_bouldin_score, silhouette_score};
+use scirs2__cluster::vq::{kmeans2, MinitMethod, MissingMethod};
 
 #[allow(dead_code)]
 fn generate_dataset() -> (Array2<f64>, Array1<i32>) {
@@ -47,18 +47,18 @@ fn generate_dataset() -> (Array2<f64>, Array1<i32>) {
 }
 
 #[allow(dead_code)]
-fn evaluate_clustering(data: &Array2<f64>, labels: &Array1<usize>) {
+fn evaluate_clustering(_data: &Array2<f64>, labels: &Array1<usize>) {
     // Convert usize labels to i32 for metric functions
     let labels_i32: Array1<i32> = labels.mapv(|x| x as i32);
 
     // Calculate silhouette score
-    let silhouette = silhouette_score(data.view(), labels_i32.view()).unwrap_or_else(|e| {
+    let silhouette = silhouette_score(_data.view(), labels_i32.view()).unwrap_or_else(|e| {
         eprintln!("Failed to calculate silhouette score: {}", e);
         0.0
     });
 
     // Calculate Davies-Bouldin score
-    let davies_bouldin = davies_bouldin_score(data.view(), labels_i32.view()).unwrap_or_else(|e| {
+    let davies_bouldin = davies_bouldin_score(_data.view(), labels_i32.view()).unwrap_or_else(|e| {
         eprintln!("Failed to calculate Davies-Bouldin score: {}", e);
         f64::INFINITY
     });
@@ -74,7 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Clustering Evaluation Metrics Demo");
     println!("=================================\n");
 
-    let (data, _true_labels) = generate_dataset();
+    let (data_true_labels) = generate_dataset();
 
     // Test with different numbers of clusters
     let test_k_values = vec![2, 3, 4, 5];

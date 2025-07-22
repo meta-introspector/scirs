@@ -73,7 +73,7 @@ impl<F: Float> GraphRewriter<F> {
     }
 
     /// Apply graph rewriting optimizations
-    pub fn rewrite_graph(&mut self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    pub fn rewrite_graph(&mut self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         let mut total_transformations = 0;
 
         // Apply fusion patterns
@@ -89,7 +89,7 @@ impl<F: Float> GraphRewriter<F> {
     }
 
     /// Apply operation fusion
-    fn apply_operation_fusion(&mut self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_operation_fusion(&mut self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         let mut fused_count = 0;
 
         for pattern in &self.fusion_patterns {
@@ -107,16 +107,14 @@ impl<F: Float> GraphRewriter<F> {
 
     /// Find candidates for fusion based on a pattern
     fn find_fusion_candidates(
-        &self,
-        _graph: &Graph<F>,
-        _pattern: &FusionPattern<F>,
+        &self_graph: &Graph<F>, _pattern: &FusionPattern<F>,
     ) -> Result<Vec<FusionCandidate>, OptimizationError> {
-        // Scan the graph for sequences of operations that match the fusion pattern
+        // Scan the _graph for sequences of operations that match the fusion _pattern
         Ok(Vec::new())
     }
 
     /// Check if a fusion candidate can be safely fused
-    fn can_fuse_safely(&self, _candidate: &FusionCandidate) -> bool {
+    fn can_fuse_safely(&self_candidate: &FusionCandidate) -> bool {
         // Check constraints:
         // - No intermediate outputs used elsewhere
         // - Compatible tensor shapes
@@ -127,17 +125,14 @@ impl<F: Float> GraphRewriter<F> {
 
     /// Apply fusion to a candidate
     fn apply_fusion(
-        &self,
-        _graph: &mut Graph<F>,
-        _pattern: &FusionPattern<F>,
-        _candidate: &FusionCandidate,
+        &self_graph: &mut Graph<F>, _pattern: &FusionPattern<F>, _candidate: &FusionCandidate,
     ) -> Result<(), OptimizationError> {
         // Replace the sequence of operations with a single fused operation
         Ok(())
     }
 
     /// Apply rewrite rules
-    fn apply_rewrite_rules(&mut self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_rewrite_rules(&mut self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         let mut rewritten_count = 0;
 
         for rule in &self.rewrite_rules {
@@ -153,25 +148,20 @@ impl<F: Float> GraphRewriter<F> {
 
     /// Find candidates for rewriting based on a rule
     fn find_rewrite_candidates(
-        &self,
-        _graph: &Graph<F>,
-        _rule: &RewriteRule<F>,
+        &self_graph: &Graph<F>, _rule: &RewriteRule<F>,
     ) -> Result<Vec<RewriteCandidate>, OptimizationError> {
         Ok(Vec::new())
     }
 
     /// Apply a rewrite rule to a candidate
     fn apply_rewrite(
-        &self,
-        _graph: &mut Graph<F>,
-        _rule: &RewriteRule<F>,
-        _candidate: &RewriteCandidate,
+        &self_graph: &mut Graph<F>, _rule: &RewriteRule<F>, _candidate: &RewriteCandidate,
     ) -> Result<(), OptimizationError> {
         Ok(())
     }
 
     /// Apply structural optimizations
-    fn apply_structural_optimizations(&mut self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_structural_optimizations(&mut self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         let mut optimized_count = 0;
 
         // Loop fusion
@@ -187,14 +177,14 @@ impl<F: Float> GraphRewriter<F> {
     }
 
     /// Apply loop fusion optimization
-    fn apply_loop_fusion(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn apply_loop_fusion(&self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Identify loops that can be fused together
         // This is particularly useful for element-wise operations
         Ok(0)
     }
 
     /// Optimize memory layout
-    fn optimize_memory_layout(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+    fn optimize_memory_layout(&self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
         // Optimize tensor layouts for better cache performance
         // - Ensure contiguous memory access patterns
         // - Minimize memory fragmentation
@@ -203,8 +193,8 @@ impl<F: Float> GraphRewriter<F> {
     }
 
     /// Optimize data flow
-    fn optimize_data_flow(&self, _graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
-        // Optimize the flow of data through the graph
+    fn optimize_data_flow(&self_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+        // Optimize the flow of data through the _graph
         // - Minimize temporary allocations
         // - Reorder operations for better pipeline utilization
         // - Reduce memory bandwidth requirements
@@ -232,19 +222,17 @@ pub struct FusionPattern<F: Float> {
     /// Type of fusion
     fusion_type: FusionType,
     /// Optional constraints
-    constraints: Vec<FusionConstraint>,
-    _phantom: std::marker::PhantomData<F>,
+    constraints: Vec<FusionConstraint>, _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> FusionPattern<F> {
     /// Create a new fusion pattern
-    pub fn new(name: &str, operations: Vec<&str>, fusion_type: FusionType) -> Self {
+    pub fn new(_name: &str, operations: Vec<&str>, fusion_type: FusionType) -> Self {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             operations: operations.into_iter().map(|s| s.to_string()).collect(),
             fusion_type,
-            constraints: Vec::new(),
-            _phantom: std::marker::PhantomData,
+            constraints: Vec::new(), _phantom: std::marker::PhantomData,
         }
     }
 
@@ -270,8 +258,8 @@ impl<F: Float> FusionPattern<F> {
     }
 
     /// Check if this pattern matches a sequence of nodes
-    pub fn matches(&self, _nodes: &[&Node<F>]) -> bool {
-        // Check if the sequence of nodes matches this pattern
+    pub fn matches(&self_nodes: &[&Node<F>]) -> bool {
+        // Check if the sequence of _nodes matches this pattern
         false
     }
 }
@@ -316,8 +304,7 @@ pub struct FusionCandidate<F: Float> {
     /// Expected benefit of fusion
     pub benefit: f32,
     /// Type of fusion
-    pub fusion_type: FusionType,
-    _phantom: std::marker::PhantomData<F>,
+    pub fusion_type: FusionType, _phantom: std::marker::PhantomData<F>,
 }
 
 /// Rule for graph rewriting
@@ -380,8 +367,7 @@ pub struct RewriteCandidate<F: Float> {
     /// Nodes involved in the rewrite
     pub nodes: Vec<TensorID>,
     /// Expected benefit
-    pub benefit: f32,
-    _phantom: std::marker::PhantomData<F>,
+    pub benefit: f32_phantom: std::marker::PhantomData<F>,
 }
 
 /// Operation scheduler for optimizing execution order
@@ -398,7 +384,7 @@ impl<F: Float> OperationScheduler<F> {
     }
 
     /// Schedule operations for optimal execution
-    pub fn schedule(&self, _graph: &Graph<F>) -> Result<Vec<*const Node<F>>, OptimizationError> {
+    pub fn schedule(&self_graph: &Graph<F>) -> Result<Vec<*const Node<F>>, OptimizationError> {
         // Create an optimal execution schedule considering:
         // - Data dependencies
         // - Memory usage patterns
@@ -408,13 +394,13 @@ impl<F: Float> OperationScheduler<F> {
     }
 
     /// Find operations that can be executed in parallel
-    pub fn find_parallel_opportunities(&self, _graph: &Graph<F>) -> Vec<ParallelGroup<F>> {
+    pub fn find_parallel_opportunities(&self_graph: &Graph<F>) -> Vec<ParallelGroup<F>> {
         // Identify groups of operations that can be executed concurrently
         Vec::new()
     }
 
     /// Optimize memory access patterns
-    pub fn optimize_memory_access(&self, _schedule: &[*const Node<F>]) -> Vec<*const Node<F>> {
+    pub fn optimize_memory_access(&self_schedule: &[*const Node<F>]) -> Vec<*const Node<F>> {
         // Reorder operations to minimize memory access costs
         Vec::new()
     }
@@ -449,7 +435,7 @@ impl<F: Float> MemoryAccessAnalyzer<F> {
     }
 
     /// Analyze memory access patterns in a graph
-    pub fn analyze(&self, _graph: &Graph<F>) -> MemoryAccessProfile {
+    pub fn analyze(&self_graph: &Graph<F>) -> MemoryAccessProfile {
         // Analyze:
         // - Sequential vs random access patterns
         // - Cache locality
@@ -465,7 +451,7 @@ impl<F: Float> MemoryAccessAnalyzer<F> {
     }
 
     /// Suggest optimizations based on access patterns
-    pub fn suggest_optimizations(&self, _profile: &MemoryAccessProfile) -> Vec<String> {
+    pub fn suggest_optimizations(&self_profile: &MemoryAccessProfile) -> Vec<String> {
         vec![
             "Consider loop tiling for better cache locality".to_string(),
             "Use in-place operations to reduce memory usage".to_string(),
@@ -497,8 +483,8 @@ pub struct MemoryAccessProfile {
 
 /// Check if two operations can be fused
 #[allow(dead_code)]
-pub fn can_fuse_operations(op1: &str, op2: &str) -> bool {
-    match (op1, op2) {
+pub fn can_fuse_operations(_op1: &str, op2: &str) -> bool {
+    match (_op1, op2) {
         // Element-wise operations can often be fused
         ("Add", "Mul") | ("Mul", "Add") => true,
         ("Sub", "Mul") | ("Mul", "Sub") => true,
@@ -515,19 +501,19 @@ pub fn can_fuse_operations(op1: &str, op2: &str) -> bool {
 
 /// Estimate the benefit of fusing operations
 #[allow(dead_code)]
-pub fn estimate_fusion_benefit(operations: &[&str]) -> f32 {
-    // Simple heuristic: more operations fused = higher benefit
+pub fn estimate_fusion_benefit(_operations: &[&str]) -> f32 {
+    // Simple heuristic: more _operations fused = higher benefit
     // In practice, this would consider:
     // - Memory access patterns
     // - Computational intensity
     // - Hardware characteristics
-    operations.len() as f32 * 0.1
+    _operations.len() as f32 * 0.1
 }
 
 /// Check if operations have compatible memory layouts
 #[allow(dead_code)]
 pub fn check_memory_layout_compatibility<F: Float>(_nodes: &[TensorID]) -> bool {
-    // Check if all nodes have compatible tensor layouts for fusion
+    // Check if all _nodes have compatible tensor layouts for fusion
     true
 }
 

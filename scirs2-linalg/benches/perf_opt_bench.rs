@@ -2,7 +2,7 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array2, ShapeBuilder};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
-use scirs2_linalg::prelude::*;
+use scirs2__linalg::prelude::*;
 use std::hint::black_box;
 
 #[allow(dead_code)]
@@ -25,14 +25,14 @@ fn bench_matmul_optimizations(c: &mut Criterion) {
         let b = Array2::<f64>::random((*size, *size).f(), Uniform::new(-1.0, 1.0));
 
         // Standard ndarray matrix multiplication
-        group.bench_with_input(BenchmarkId::new("standard", size), size, |bench, _| {
+        group.bench_with_input(BenchmarkId::new("standard", size), size, |bench_| {
             bench.iter(|| {
                 let _result = black_box(a.dot(&b));
             });
         });
 
         // Our blocked matrix multiplication
-        group.bench_with_input(BenchmarkId::new("blocked", size), size, |bench, _| {
+        group.bench_with_input(BenchmarkId::new("blocked", size), size, |bench_| {
             bench.iter(|| {
                 let _result =
                     black_box(blocked_matmul(&a.view(), &b.view(), &config_blocked).unwrap());
@@ -40,7 +40,7 @@ fn bench_matmul_optimizations(c: &mut Criterion) {
         });
 
         // Adaptive algorithm selection
-        group.bench_with_input(BenchmarkId::new("adaptive", size), size, |bench, _| {
+        group.bench_with_input(BenchmarkId::new("adaptive", size), size, |bench_| {
             bench.iter(|| {
                 let _result =
                     black_box(blocked_matmul(&a.view(), &b.view(), &config_adaptive).unwrap());
@@ -61,14 +61,14 @@ fn bench_inplace_operations(c: &mut Criterion) {
         let b = Array2::<f64>::random((*size, *size).f(), Uniform::new(-1.0, 1.0));
 
         // Standard addition (creates new array)
-        group.bench_with_input(BenchmarkId::new("standard_add", size), size, |bench, _| {
+        group.bench_with_input(BenchmarkId::new("standard_add", size), size, |bench_| {
             bench.iter(|| {
                 let _result = black_box(&a + &b);
             });
         });
 
         // In-place addition
-        group.bench_with_input(BenchmarkId::new("inplace_add", size), size, |bench, _| {
+        group.bench_with_input(BenchmarkId::new("inplace_add", size), size, |bench_| {
             bench.iter(|| {
                 let mut a_copy = a.clone();
                 inplace_add(&mut a_copy.view_mut(), &b.view()).unwrap();
@@ -80,7 +80,7 @@ fn bench_inplace_operations(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("standard_scale", size),
             size,
-            |bench, _| {
+            |bench_| {
                 bench.iter(|| {
                     let _result = black_box(&a * 2.5);
                 });
@@ -88,7 +88,7 @@ fn bench_inplace_operations(c: &mut Criterion) {
         );
 
         // In-place scaling
-        group.bench_with_input(BenchmarkId::new("inplace_scale", size), size, |bench, _| {
+        group.bench_with_input(BenchmarkId::new("inplace_scale", size), size, |bench_| {
             bench.iter(|| {
                 let mut a_copy = a.clone();
                 let _ = black_box(inplace_scale(&mut a_copy.view_mut(), 2.5));
@@ -108,14 +108,14 @@ fn bench_transpose_optimizations(c: &mut Criterion) {
         let a = Array2::<f64>::random((*size, *size).f(), Uniform::new(-1.0, 1.0));
 
         // Standard transpose
-        group.bench_with_input(BenchmarkId::new("standard", size), size, |bench, _| {
+        group.bench_with_input(BenchmarkId::new("standard", size), size, |bench_| {
             bench.iter(|| {
                 let _result = black_box(a.t().to_owned());
             });
         });
 
         // Optimized transpose
-        group.bench_with_input(BenchmarkId::new("optimized", size), size, |bench, _| {
+        group.bench_with_input(BenchmarkId::new("optimized", size), size, |bench_| {
             bench.iter(|| {
                 let _result = black_box(optimized_transpose(&a.view()).unwrap());
             });
@@ -140,7 +140,7 @@ fn bench_parallel_vs_serial(c: &mut Criterion) {
             .with_block_size(64)
             .with_algorithm(OptAlgorithm::Blocked);
 
-        group.bench_with_input(BenchmarkId::new("serial", size), size, |bench, _| {
+        group.bench_with_input(BenchmarkId::new("serial", size), size, |bench_| {
             bench.iter(|| {
                 let _result =
                     black_box(blocked_matmul(&a.view(), &b.view(), &config_serial).unwrap());
@@ -153,7 +153,7 @@ fn bench_parallel_vs_serial(c: &mut Criterion) {
             .with_parallel_threshold(0) // Always use parallel
             .with_algorithm(OptAlgorithm::Blocked);
 
-        group.bench_with_input(BenchmarkId::new("parallel", size), size, |bench, _| {
+        group.bench_with_input(BenchmarkId::new("parallel", size), size, |bench_| {
             bench.iter(|| {
                 let _result =
                     black_box(blocked_matmul(&a.view(), &b.view(), &config_parallel).unwrap());

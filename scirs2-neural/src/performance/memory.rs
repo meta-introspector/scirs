@@ -32,9 +32,9 @@ impl MemoryEfficientProcessor {
     /// // Create processor with specific limits
     /// let processor = MemoryEfficientProcessor::new(Some(256), Some(1024));
     /// ```
-    pub fn new(chunk_size: Option<usize>, max_memory_mb: Option<usize>) -> Self {
+    pub fn new(_chunk_size: Option<usize>, max_memory_mb: Option<usize>) -> Self {
         Self {
-            chunk_size: chunk_size.unwrap_or(1024),
+            chunk_size: _chunk_size.unwrap_or(1024),
             max_memory_mb: max_memory_mb.unwrap_or(512),
         }
     }
@@ -162,10 +162,10 @@ where
     T: Clone + Default,
 {
     /// Create a new memory pool
-    pub fn new(max_pool_size: usize) -> Self {
+    pub fn new(_max_pool_size: usize) -> Self {
             available_tensors: Vec::new(),
             in_use: 0,
-            max_pool_size,
+            _max_pool_size,
     /// Get a tensor from the pool or create a new one
     pub fn get_tensor(&mut self, shape: &[usize]) -> ArrayD<T> {
         // Check if we have a compatible tensor in the pool
@@ -354,11 +354,11 @@ pub struct MemoryEfficientProcessor;
     pub fn new(_chunk_size: Option<usize>, _max_memory_mb: Option<usize>) -> Self {
         Self
     /// Process input data in chunks to reduce memory usage
-    pub fn process_in_chunks<F, T>(&self, _input: &ArrayD<f32>, _processor: F) -> Result<ArrayD<T>>
+    pub fn process_in_chunks<F, T>(&mut self,
+        _input: &ArrayD<f32>, _processor: F) -> Result<ArrayD<T>>
         Err(NeuralError::ComputationError(
             "Memory efficient processing requires 'memory_efficient' feature".to_string(),
         ))
     /// Perform memory-efficient forward pass
-        _input: &ArrayD<f32>,
-        _forward_fn: F,
+        _input: &ArrayD<f32>, _forward_fn: F,
             "Memory efficient forward requires 'memory_efficient' feature".to_string(),

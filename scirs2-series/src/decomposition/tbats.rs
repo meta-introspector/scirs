@@ -5,11 +5,12 @@
 
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::{Float, FromPrimitive, NumCast};
-use scirs2_linalg::solve;
+use scirs2__linalg::solve;
 use std::fmt::Debug;
 
 use super::common::box_cox_transform;
 use crate::error::{Result, TimeSeriesError};
+use statrs::statistics::Statistics;
 
 /// Options for TBATS (Trigonometric seasonality, Box-Cox transformation, ARMA errors, Trend and Seasonal components)
 #[derive(Debug, Clone)]
@@ -122,7 +123,7 @@ pub struct TBATSParameters {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_series::decomposition::{tbats_decomposition, TBATSOptions};
+/// use scirs2__series::decomposition::{tbats_decomposition, TBATSOptions};
 ///
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0,
 ///                 1.5, 2.5, 3.5, 2.5, 1.5, 2.5, 3.5, 2.5, 1.5, 2.5, 3.5, 2.5];
@@ -137,11 +138,11 @@ pub struct TBATSParameters {
 /// println!("Residuals: {:?}", result.residuals);
 /// ```
 #[allow(dead_code)]
-pub fn tbats_decomposition<F>(ts: &Array1<F>, options: &TBATSOptions) -> Result<TBATSResult<F>>
+pub fn tbats_decomposition<F>(_ts: &Array1<F>, options: &TBATSOptions) -> Result<TBATSResult<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum + ScalarOperand + NumCast,
 {
-    let n = ts.len();
+    let n = _ts.len();
 
     // Check inputs
     if n < 3 {
@@ -185,15 +186,15 @@ where
     }
 
     // Step 1: Apply Box-Cox transformation if requested
-    let (transformed_ts, _lambda) = if options.use_box_cox {
+    let (transformed_ts_lambda) = if options.use_box_cox {
         let lambda = options.box_cox_lambda.unwrap_or_else(|| {
             // Estimate optimal lambda using profile likelihood (simplified)
-            estimate_box_cox_lambda(ts)
+            estimate_box_cox_lambda(_ts)
         });
-        let transformed = box_cox_transform(ts, lambda)?;
+        let transformed = box_cox_transform(_ts, lambda)?;
         (transformed, Some(lambda))
     } else {
-        (ts.clone(), None)
+        (_ts.clone(), None)
     };
 
     // Step 2: Determine number of Fourier terms for each seasonal component
@@ -241,7 +242,7 @@ where
         seasonal_components,
         residuals,
         level,
-        original: ts.clone(),
+        original: _ts.clone(),
         transformed: if options.use_box_cox {
             Some(transformed_ts)
         } else {
@@ -256,15 +257,15 @@ where
 
 /// Estimate optimal Box-Cox lambda parameter
 #[allow(dead_code)]
-fn estimate_box_cox_lambda<F>(ts: &Array1<F>) -> f64
+fn estimate_box_cox_lambda<F>(_ts: &Array1<F>) -> f64
 where
     F: Float + FromPrimitive + Debug,
 {
     // Simplified estimation - in practice, would use profile likelihood
-    let variance = ts.var(F::zero());
-    let mean = ts.mean().unwrap_or(F::zero());
+    let variance = _ts.var(F::zero());
+    let mean = _ts.mean().unwrap_or(F::zero());
 
-    if variance > F::zero() && mean > F::zero() {
+    if variance > F::zero() && mean >, F::zero() {
         // Use coefficient of variation to guide lambda selection
         let cv = variance.sqrt() / mean;
         if cv.to_f64().unwrap_or(1.0) > 0.3 {
@@ -279,10 +280,10 @@ where
 
 /// Calculate the size of the state vector
 #[allow(dead_code)]
-fn calculate_state_size(options: &TBATSOptions, fourier_terms: &[usize]) -> usize {
+fn calculate_state_size(_options: &TBATSOptions, fourier_terms: &[usize]) -> usize {
     let mut size = 1; // Level
 
-    if options.use_trend {
+    if _options.use_trend {
         size += 1; // Trend
     }
 

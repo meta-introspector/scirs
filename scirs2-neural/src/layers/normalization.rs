@@ -76,15 +76,15 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Clone for LayerNo
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm<F> {
     /// Create a new layer normalization layer
-    pub fn new<R: Rng>(normalized_shape: usize, eps: f64, _rng: &mut R) -> Result<Self> {
-        let gamma = Array::<F, _>::from_elem(IxDyn(&[normalized_shape]), F::one());
-        let beta = Array::<F, _>::from_elem(IxDyn(&[normalized_shape]), F::zero());
+    pub fn new<R: Rng>(_normalized_shape: usize, eps: f64, _rng: &mut R) -> Result<Self> {
+        let gamma = Array::<F, IxDyn>::from_elem(IxDyn(&[_normalized_shape]), F::one());
+        let beta = Array::<F, IxDyn>::from_elem(IxDyn(&[_normalized_shape]), F::zero());
 
-        let dgamma = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[
-            normalized_shape,
+        let dgamma = Arc::new(RwLock::new(Array::<F, IxDyn>::zeros(IxDyn(&[
+            _normalized_shape,
         ]))));
-        let dbeta = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[
-            normalized_shape,
+        let dbeta = Arc::new(RwLock::new(Array::<F, IxDyn>::zeros(IxDyn(&[
+            _normalized_shape,
         ]))));
 
         let eps = F::from(eps).ok_or_else(|| {
@@ -92,7 +92,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm<F> {
         })?;
 
         Ok(Self {
-            normalized_shape: vec![normalized_shape],
+            normalized_shape: vec![_normalized_shape],
             gamma,
             beta,
             dgamma,
@@ -151,8 +151,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
             .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape input: {e}")))?;
 
         // Compute mean and variance for each sample
-        let mut mean = Array::<F, _>::zeros(IxDyn(&[batch_size, 1]));
-        let mut var = Array::<F, _>::zeros(IxDyn(&[batch_size, 1]));
+        let mut mean = Array::<F, IxDyn>::zeros(IxDyn(&[batch_size, 1]));
+        let mut var = Array::<F, IxDyn>::zeros(IxDyn(&[batch_size, 1]));
 
         for i in 0..batch_size {
             let mut sum = F::zero();
@@ -178,7 +178,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
         }
 
         // Normalize and apply gamma/beta
-        let mut normalized = Array::<F, _>::zeros((batch_size, feat_dim));
+        let mut normalized = Array::<F, IxDyn>::zeros(IxDyn(&[batch_size, feat_dim]));
         for i in 0..batch_size {
             for j in 0..feat_dim {
                 let x_norm = (reshaped[[i, j]] - mean[[i, 0]]) / (var[[i, 0]] + self.eps).sqrt();
@@ -291,9 +291,9 @@ pub struct BatchNorm<F: Float + Debug + Send + Sync> {
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> BatchNorm<F> {
     /// Create a new batch normalization layer
-    pub fn new<R: Rng>(num_features: usize, momentum: f64, eps: f64, _rng: &mut R) -> Result<Self> {
-        let gamma = Array::<F, _>::from_elem(IxDyn(&[num_features]), F::one());
-        let beta = Array::<F, _>::from_elem(IxDyn(&[num_features]), F::zero());
+    pub fn new<R: Rng>(_num_features: usize, momentum: f64, eps: f64, _rng: &mut R) -> Result<Self> {
+        let gamma = Array::<F, IxDyn>::from_elem(IxDyn(&[_num_features]), F::one());
+        let beta = Array::<F, IxDyn>::from_elem(IxDyn(&[_num_features]), F::zero());
 
         let momentum = F::from(momentum).ok_or_else(|| {
             NeuralError::InvalidArchitecture("Failed to convert momentum to type F".to_string())
@@ -304,7 +304,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> BatchNorm<F> {
         })?;
 
         Ok(Self {
-            num_features,
+            num_features: _num_features,
             gamma,
             beta,
             eps,

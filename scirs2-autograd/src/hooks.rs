@@ -29,7 +29,7 @@
 //!
 //! ```
 use super::*;
-use crate::ndarray_ext::NdArrayView;
+use crate::ndarray__ext::NdArrayView;
 use std::marker::PhantomData;
 
 /// Trait for hooks
@@ -62,7 +62,7 @@ impl<T: Float, FUN: Fn(&NdArrayView<T>) + Send + Sync> Hook<T> for Raw<T, FUN> {
 }
 
 impl<T: Float> Hook<T> for Print {
-    fn call(&self, _: &crate::ndarray_ext::NdArrayView<T>) {
+    fn call(&self_: &crate::ndarray_ext::NdArrayView<T>) {
         println!("{}", self.0);
     }
 }

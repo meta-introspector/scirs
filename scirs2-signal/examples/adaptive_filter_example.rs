@@ -6,7 +6,8 @@
 //! - Echo cancellation
 //! - Equalization
 
-use scirs2_signal::adaptive::{LmsFilter, NlmsFilter, RlsFilter};
+use scirs2__signal::adaptive::{LmsFilter, NlmsFilter, RlsFilter};
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -48,7 +49,7 @@ fn main() {
     }
 
     // Run adaptation
-    let (_outputs, errors, _mse) = lms.adapt_batch(&inputs, &desired).unwrap();
+    let (_outputs, errors_mse) = lms.adapt_batch(&inputs, &desired).unwrap();
 
     println!("Final LMS weights: {:?}", lms.weights());
     println!("Target weights:    {:?}", unknown_system);
@@ -103,7 +104,7 @@ fn main() {
     let mut noise_estimate = Vec::with_capacity(signal_length);
 
     for i in 0..signal_length {
-        let (noise_est, _error, _mse) = nlms.adapt(noise_signal[i], noisy_signal[i]).unwrap();
+        let (noise_est_error_mse) = nlms.adapt(noise_signal[i], noisy_signal[i]).unwrap();
         noise_estimate.push(noise_est);
 
         // Clean estimate = noisy signal - noise estimate
@@ -152,8 +153,8 @@ fn main() {
         }
 
         // Adapt both filters
-        let (_out_lms, err_lms, _) = lms_comp.adapt(input, desired).unwrap();
-        let (_out_rls, err_rls, _) = rls_comp.adapt(input, desired).unwrap();
+        let (_out_lms, err_lms_) = lms_comp.adapt(input, desired).unwrap();
+        let (_out_rls, err_rls_) = rls_comp.adapt(input, desired).unwrap();
 
         lms_weights_history.push(lms_comp.weights().to_vec());
         rls_weights_history.push(rls_comp.weights().to_vec());
@@ -242,7 +243,7 @@ fn main() {
 
     for i in 0..num_echo_samples {
         // Adapt filter using far-end as input and microphone as desired
-        let (echo_estimate, _error, _mse) = echo_canceler
+        let (echo_estimate_error_mse) = echo_canceler
             .adapt(far_end_signal[i], microphone_signal[i])
             .unwrap();
 
@@ -294,8 +295,8 @@ fn main() {
 
 /// Calculate Signal-to-Noise Ratio in dB
 #[allow(dead_code)]
-fn calculate_snr(signal: &[f64], noise: &[f64]) -> f64 {
-    let signal_power: f64 = signal.iter().map(|&x| x * x).sum::<f64>() / signal.len() as f64;
+fn calculate_snr(_signal: &[f64], noise: &[f64]) -> f64 {
+    let _signal_power: f64 = _signal.iter().map(|&x| x * x).sum::<f64>() / _signal.len() as f64;
     let noise_power: f64 = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len() as f64;
 
     if noise_power > 1e-10 {
@@ -307,8 +308,8 @@ fn calculate_snr(signal: &[f64], noise: &[f64]) -> f64 {
 
 /// Extract noise from difference between clean estimate and true clean signal
 #[allow(dead_code)]
-fn get_noise_from_clean(clean_estimate: &[f64], true_clean: &[f64]) -> Vec<f64> {
-    clean_estimate
+fn get_noise_from_clean(_clean_estimate: &[f64], true_clean: &[f64]) -> Vec<f64> {
+    _clean_estimate
         .iter()
         .zip(true_clean.iter())
         .map(|(&est, &true_val)| est - true_val)
@@ -317,19 +318,19 @@ fn get_noise_from_clean(clean_estimate: &[f64], true_clean: &[f64]) -> Vec<f64> 
 
 /// Find convergence point (sample number where error drops below threshold)
 #[allow(dead_code)]
-fn find_convergence_point(errors: &[f64], threshold_ratio: f64) -> usize {
-    if errors.is_empty() {
+fn find_convergence_point(_errors: &[f64], threshold_ratio: f64) -> usize {
+    if _errors.is_empty() {
         return 0;
     }
 
-    let final_error = errors[errors.len() - 1];
-    let threshold = final_error + threshold_ratio * errors[0];
+    let final_error = _errors[_errors.len() - 1];
+    let threshold = final_error + threshold_ratio * _errors[0];
 
-    for (i, &error) in errors.iter().enumerate() {
+    for (i, &error) in _errors.iter().enumerate() {
         if error <= threshold {
             return i;
         }
     }
 
-    errors.len() - 1
+    _errors.len() - 1
 }

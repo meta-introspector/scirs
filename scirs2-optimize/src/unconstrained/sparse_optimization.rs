@@ -364,13 +364,13 @@ fn compute_lbfgs_direction(
 ) -> Array1<f64> {
     let m = s_history.len();
     if m == 0 {
-        return -g; // Steepest descent if no history
+        return -g; // Steepest descent if no _history
     }
 
     let mut q = g.clone();
     let mut alpha = vec![0.0; m];
 
-    // First loop: backward through history
+    // First loop: backward through _history
     for i in (0..m).rev() {
         let rho_i = 1.0 / y_history[i].dot(&s_history[i]);
         alpha[i] = rho_i * s_history[i].dot(&q);
@@ -385,7 +385,7 @@ fn compute_lbfgs_direction(
     };
     let mut r = gamma * q;
 
-    // Second loop: forward through history
+    // Second loop: forward through _history
     for i in 0..m {
         let rho_i = 1.0 / y_history[i].dot(&s_history[i]);
         let beta = rho_i * y_history[i].dot(&r);
@@ -418,13 +418,13 @@ where
         // Create a small random perturbation
         let mut x_pert = x.to_owned();
         for i in 0..n {
-            x_pert[i] += 1e-6 * rand::rng().random_range(-0.5..0.5);
+            x_pert[i] += 1e-6 * rand::rng().gen_range(-0.5..0.5);
         }
 
         // Compute gradient at this point
         let options = SparseFiniteDiffOptions::default();
         if let Ok(grad) =
-            finite_difference_gradient_sparse(&mut fun.clone(), &x_pert.view(), &options)
+            finite_difference_gradient_sparse(&mut fun.clone()..&x_pert.view(), &options)
         {
             for i in 0..n {
                 if grad[i].abs() > threshold {

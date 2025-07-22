@@ -8,6 +8,7 @@ use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use std::collections::{HashMap, HashSet};
 
 use crate::error::{MetricsError, Result};
+use rand::seq::SliceRandom;
 
 /// Type alias for nested cross-validation result
 /// Represents outer train indices, outer test indices, and inner fold splits
@@ -32,7 +33,7 @@ pub type NestedCVResult = Vec<(Vec<usize>, Vec<usize>, Vec<(Vec<usize>, Vec<usiz
 /// # Examples
 ///
 /// ```
-/// use scirs2_metrics::evaluation::cross_validation::k_fold_cross_validation;
+/// use scirs2__metrics::evaluation::cross_validation::k_fold_cross_validation;
 ///
 /// let splits = k_fold_cross_validation(10, 3, false, None).unwrap();
 /// assert_eq!(splits.len(), 3); // 3 folds
@@ -57,13 +58,13 @@ pub fn k_fold_cross_validation(
 
     if n_folds < 2 {
         return Err(MetricsError::InvalidInput(
-            "Number of folds must be at least 2".to_string(),
+            "Number of _folds must be at least 2".to_string(),
         ));
     }
 
     if n_folds > n {
         return Err(MetricsError::InvalidInput(format!(
-            "Number of folds ({}) cannot be greater than number of samples ({})",
+            "Number of _folds ({}) cannot be greater than number of samples ({})",
             n_folds, n
         )));
     }
@@ -74,9 +75,9 @@ pub fn k_fold_cross_validation(
     // Shuffle if requested
     if shuffle {
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => {
-                // In rand 0.9.0, use rng() instead of rng()
+                // In rand 0.9.0, use rand::rng() instead of rand::rng()
                 let mut r = rand::rng();
                 StdRng::from_rng(&mut r)
             }
@@ -91,9 +92,9 @@ pub fn k_fold_cross_validation(
         .collect::<Vec<_>>();
 
     let mut current = 0;
-    let mut folds = Vec::with_capacity(n_folds);
+    let mut _folds = Vec::with_capacity(n_folds);
 
-    // Create folds
+    // Create _folds
     for fold_size in fold_sizes {
         // Extract test indices for this fold
         let test_indices = indices[current..(current + fold_size)].to_vec();
@@ -103,11 +104,11 @@ pub fn k_fold_cross_validation(
         train_indices.extend_from_slice(&indices[0..current]);
         train_indices.extend_from_slice(&indices[(current + fold_size)..]);
 
-        folds.push((train_indices, test_indices));
+        _folds.push((train_indices, test_indices));
         current += fold_size;
     }
 
-    Ok(folds)
+    Ok(_folds)
 }
 
 /// Leave-one-out cross-validation (LOOCV)
@@ -126,7 +127,7 @@ pub fn k_fold_cross_validation(
 /// # Examples
 ///
 /// ```
-/// use scirs2_metrics::evaluation::cross_validation::leave_one_out_cv;
+/// use scirs2__metrics::evaluation::cross_validation::leave_one_out_cv;
 ///
 /// let splits = leave_one_out_cv(5).unwrap();
 /// assert_eq!(splits.len(), 5); // 5 splits for 5 samples
@@ -184,7 +185,7 @@ pub fn leave_one_out_cv(n: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::evaluation::cross_validation::stratified_k_fold;
+/// use scirs2__metrics::evaluation::cross_validation::stratified_k_fold;
 ///
 /// let y = array![0, 0, 0, 1, 1, 1, 2, 2, 2];
 /// let splits = stratified_k_fold(&y, 3, true, Some(42)).unwrap();
@@ -210,13 +211,13 @@ where
 
     if n_folds < 2 {
         return Err(MetricsError::InvalidInput(
-            "Number of folds must be at least 2".to_string(),
+            "Number of _folds must be at least 2".to_string(),
         ));
     }
 
     if n_folds > n_samples {
         return Err(MetricsError::InvalidInput(format!(
-            "Number of folds ({}) cannot be greater than number of samples ({})",
+            "Number of _folds ({}) cannot be greater than number of samples ({})",
             n_folds, n_samples
         )));
     }
@@ -243,9 +244,9 @@ where
 
     // Initialize random number generator if needed
     let mut rng = match random_seed {
-        Some(seed) => Some(StdRng::seed_from_u64(seed)),
+        Some(_seed) => Some(StdRng::seed_from_u64(_seed)),
         None if shuffle => {
-            // In rand 0.9.0, use rng() instead of rng()
+            // In rand 0.9.0, use rand::rng() instead of rand::rng()
             let mut r = rand::rng();
             Some(StdRng::from_rng(&mut r))
         }
@@ -261,12 +262,12 @@ where
         }
     }
 
-    // Allocate samples to folds, respecting the class distribution
-    let mut folds = vec![Vec::new(); n_folds];
+    // Allocate samples to _folds, respecting the class distribution
+    let mut _folds = vec![Vec::new(); n_folds];
 
     for indices in class_counts.values() {
         for (i, &idx) in indices.iter().enumerate() {
-            folds[i % n_folds].push(idx);
+            _folds[i % n_folds].push(idx);
         }
     }
 
@@ -274,10 +275,10 @@ where
     let mut splits = Vec::with_capacity(n_folds);
 
     for i in 0..n_folds {
-        let test_indices = folds[i].clone();
+        let test_indices = _folds[i].clone();
 
         let mut train_indices = Vec::with_capacity(n_samples - test_indices.len());
-        for (j, fold) in folds.iter().enumerate() {
+        for (j, fold) in _folds.iter().enumerate() {
             if j != i {
                 train_indices.extend_from_slice(fold);
             }
@@ -314,7 +315,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_metrics::evaluation::cross_validation::time_series_split;
+/// use scirs2__metrics::evaluation::cross_validation::time_series_split;
 ///
 /// let splits = time_series_split(10, 3, 2, 0, None).unwrap();
 /// assert_eq!(splits.len(), 3); // 3 splits
@@ -357,13 +358,13 @@ pub fn time_series_split(
         ));
     }
 
-    let mut splits = Vec::with_capacity(n_splits);
+    let mut _splits = Vec::with_capacity(n_splits);
 
-    // Calculate the size needed for all splits
+    // Calculate the _size needed for all _splits
     let size_needed = (n_splits - 1) * (test_size + gap) + test_size;
     if size_needed > n {
         return Err(MetricsError::InvalidInput(format!(
-            "Cannot perform {} splits with test_size={} and gap={} on {} samples",
+            "Cannot perform {} _splits with test_size={} and gap={} on {} samples",
             n_splits, test_size, gap, n
         )));
     }
@@ -371,7 +372,7 @@ pub fn time_series_split(
     // Determine the end of the first test set
     let mut test_end = n - (n_splits - 1) * (test_size + gap);
 
-    // Create splits
+    // Create _splits
     for _ in 0..n_splits {
         let train_end = test_end - gap - test_size;
         let test_start = train_end + gap;
@@ -386,13 +387,13 @@ pub fn time_series_split(
         let train_indices: Vec<usize> = (train_start..train_end).collect();
         let test_indices: Vec<usize> = (test_start..test_start + test_size).collect();
 
-        splits.push((train_indices, test_indices));
+        _splits.push((train_indices, test_indices));
 
         // Update for next split
         test_end += test_size + gap;
     }
 
-    Ok(splits)
+    Ok(_splits)
 }
 
 /// Grouped K-fold cross-validator
@@ -415,7 +416,7 @@ pub fn time_series_split(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::evaluation::grouped_k_fold;
+/// use scirs2__metrics::evaluation::grouped_k_fold;
 ///
 /// // Each sample belongs to one of three groups: A, B, or C
 /// let groups = array!["A", "A", "A", "B", "B", "C", "C", "C"];
@@ -465,7 +466,7 @@ where
 
     if n_folds < 2 {
         return Err(MetricsError::InvalidInput(
-            "Number of folds must be at least 2".to_string(),
+            "Number of _folds must be at least 2".to_string(),
         ));
     }
 
@@ -479,7 +480,7 @@ where
 
     if n_folds > n_groups {
         return Err(MetricsError::InvalidInput(format!(
-            "Number of folds ({}) cannot be greater than number of groups ({})",
+            "Number of _folds ({}) cannot be greater than number of groups ({})",
             n_folds, n_groups
         )));
     }
@@ -493,8 +494,8 @@ where
     // Convert map values to a vector of sample index vectors
     let groups_list: Vec<Vec<usize>> = group_indices.values().cloned().collect();
 
-    // Assign groups to folds using a greedy approach to balance fold sizes
-    let mut folds: Vec<Vec<usize>> = vec![Vec::new(); n_folds];
+    // Assign groups to _folds using a greedy approach to balance fold sizes
+    let mut _folds: Vec<Vec<usize>> = vec![Vec::new(); n_folds];
     let mut fold_sizes = vec![0; n_folds];
 
     // Sort groups by size (largest first) for better balancing
@@ -510,10 +511,10 @@ where
             .iter()
             .enumerate()
             .min_by_key(|&(_, &size)| size)
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap();
 
-        folds[fold_idx].extend_from_slice(&indices);
+        _folds[fold_idx].extend_from_slice(&indices);
         fold_sizes[fold_idx] += indices.len();
     }
 
@@ -521,11 +522,11 @@ where
     let mut splits = Vec::with_capacity(n_folds);
 
     for i in 0..n_folds {
-        let test_indices = folds[i].clone();
+        let test_indices = _folds[i].clone();
 
-        // Combine all other folds for training
+        // Combine all other _folds for training
         let mut train_indices = Vec::with_capacity(n_samples - test_indices.len());
-        for (j, fold) in folds.iter().enumerate() {
+        for (j, fold) in _folds.iter().enumerate() {
             if j != i {
                 train_indices.extend_from_slice(fold);
             }
@@ -562,7 +563,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_metrics::evaluation::nested_cross_validation;
+/// use scirs2__metrics::evaluation::nested_cross_validation;
 ///
 /// let nested_cv = nested_cross_validation(20, 5, 3, true, Some(42)).unwrap();
 /// assert_eq!(nested_cv.len(), 5); // 5 outer folds
@@ -603,17 +604,17 @@ pub fn nested_cross_validation(
     // Get outer fold splits
     let outer_splits = k_fold_cross_validation(n, outer_n_folds, shuffle, random_seed)?;
 
-    // For each outer fold, create inner folds
+    // For each outer fold, create inner _folds
     let mut nested_splits = Vec::with_capacity(outer_n_folds);
 
-    // If random seed is provided, we need different seeds for each inner CV
+    // If random _seed is provided, we need different seeds for each inner CV
     // (This is used in the inner_seed calculation below)
 
     for (outer_fold_idx, (outer_train, outer_test)) in outer_splits.into_iter().enumerate() {
-        // Generate a new seed for inner fold based on the outer fold index
-        let inner_seed = random_seed.map(|seed| seed.wrapping_add(outer_fold_idx as u64));
+        // Generate a new _seed for inner fold based on the outer fold index
+        let inner_seed = random_seed.map(|_seed| _seed.wrapping_add(outer_fold_idx as u64));
 
-        // Create inner folds using only the outer training data
+        // Create inner _folds using only the outer training data
         let n_inner = outer_train.len();
         let inner_raw_splits =
             k_fold_cross_validation(n_inner, inner_n_folds, shuffle, inner_seed)?;
@@ -856,7 +857,7 @@ mod tests {
 
         // Check that all samples are used in the outer folds
         let mut all_test_indices = Vec::new();
-        for (_, outer_test, _) in &nested_cv {
+        for (_, outer_test_) in &nested_cv {
             all_test_indices.extend_from_slice(outer_test);
         }
         all_test_indices.sort_unstable();

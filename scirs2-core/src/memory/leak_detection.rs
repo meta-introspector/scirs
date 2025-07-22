@@ -28,12 +28,12 @@
 //! let mut detector = LeakDetector::new(config)?;
 //!
 //! // Start monitoring a function
-//! let checkpoint = detector.create_checkpoint("matrix_operations")?;
+//! let checkpoint = detector.create_checkpoint(matrix_operations)?;
 //!
 //! // Perform operations that might leak memory
 //! fn perform_matrix_calculations() {
 //!     // Example computation that could potentially leak memory
-//!     let _matrix: Vec<Vec<f64>> = (0..100).map(|i| vec![i as f64; 100]).collect();
+//!     let matrix: Vec<Vec<f64>> = (0..100).map(|i| vec![i as f64; 100]).collect();
 //! }
 //! perform_matrix_calculations();
 //!
@@ -985,7 +985,7 @@ impl Drop for LeakCheckGuard<'_> {
 #[macro_export]
 macro_rules! check_leaks {
     ($detector:expr, $name:expr, $block:block) => {{
-        let _guard = $crate::memory::leak_detection::LeakCheckGuard::new($detector, $name)?;
+        let guard = $crate::memory::leak_detection::LeakCheckGuard::new($detector, $name)?;
         $block
     }};
 }
@@ -1050,7 +1050,7 @@ mod tests {
         let detector = LeakDetector::new(config).unwrap();
 
         {
-            let _guard = LeakCheckGuard::new(&detector, "test_guard").unwrap();
+            let guard = LeakCheckGuard::new(&detector, "test_guard").unwrap();
             // Simulate some work that might leak memory
             detector.track_allocation(1024 * 1024, 0x12345678).unwrap();
         } // Guard drops here and checks for leaks

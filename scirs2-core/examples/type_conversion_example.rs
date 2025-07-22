@@ -1,4 +1,4 @@
-use num_complex::Complex64;
+use num__complex::Complex64;
 use scirs2_core::types::{ComplexExt, ComplexOps, NumericConversion};
 
 #[allow(dead_code)]
@@ -57,7 +57,7 @@ fn numeric_conversion_example() {
 fn numeric_conversion_error_example() {
     // Try to convert a value that's too large for the target type
     let large_value: f64 = 1e20;
-    let result: Result<i32, _> = large_value.to_numeric();
+    let result: Result<i32_> = large_value.to_numeric();
 
     match result {
         Ok(value) => println!("Conversion succeeded: {}", value),
@@ -66,7 +66,7 @@ fn numeric_conversion_error_example() {
 
     // Try to convert a negative value to an unsigned type
     let negative_value: i32 = -5;
-    let result: Result<u32, _> = negative_value.to_numeric();
+    let result: Result<u32_> = negative_value.to_numeric();
 
     match result {
         Ok(value) => println!("Conversion succeeded: {}", value),
@@ -75,7 +75,7 @@ fn numeric_conversion_error_example() {
 
     // Try to convert a float with fractional part to an integer
     let fraction_value: f64 = 42.75;
-    let result: Result<i32, _> = fraction_value.to_numeric();
+    let result: Result<i32_> = fraction_value.to_numeric();
 
     match result {
         Ok(value) => println!("Conversion succeeded: {}", value),
@@ -184,7 +184,7 @@ fn batch_conversion_example() {
     let float_values = vec![1.1, 2.2, 3.3, 4.4, 5.5];
 
     // Convert to integers with error checking
-    let int_result: Result<Vec<i32>, _> = convert::slice_to_numeric(&float_values);
+    let int_result: Result<Vec<i32>_> = convert::slice_to_numeric(&float_values);
     match int_result {
         Ok(ints) => println!("Slice conversion with error checking: {:?}", ints),
         Err(err) => println!("Conversion failed: {}", err),

@@ -667,11 +667,11 @@ impl EnhancedGpuEngine {
     }
 
     /// Select the best available backend
-    fn select_best_backend(backends: &[Box<dyn GpuBackend + Send + Sync>]) -> usize {
+    fn select_best_backend(_backends: &[Box<dyn GpuBackend + Send + Sync>]) -> usize {
         let mut best_index = 0;
         let mut best_score = 0.0;
 
-        for (i, backend) in backends.iter().enumerate() {
+        for (i, backend) in _backends.iter().enumerate() {
             let info = backend.get_info();
             // Score based on compute units and memory
             let score = info.compute_units as f64 + (info.global_memory as f64 / 1_000_000_000.0);
@@ -807,8 +807,7 @@ impl EnhancedGpuEngine {
         match backend.get_name() {
             "CUDA" => self.generate_cuda_correlation_kernel(n),
             "OpenCL" => self.generate_opencl_correlation_kernel(n),
-            "WebGPU" => self.generate_webgpu_correlation_kernel(n),
-            _ => Err(MetricsError::ComputationError(
+            "WebGPU" => self.generate_webgpu_correlation_kernel(n, _ => Err(MetricsError::ComputationError(
                 "Unsupported backend for kernel generation".to_string(),
             )),
         }
@@ -963,9 +962,7 @@ extern "C" __global__ void compute_correlation(
         let source = format!(
             r#"
 __kernel void compute_correlation(
-    __global const float* restrict x,
-    __global const float* restrict y,
-    __global float* restrict result,
+    __global const float* restrict x__global const float* restrict y__global float* restrict result,
     const int n
 ) {{
     __local float local_x[{work_group_size}];
@@ -1282,8 +1279,7 @@ fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
     /// Benchmark correlation kernel with specific parameters
     fn benchmark_correlation_kernel(
         &mut self,
-        size: usize,
-        _params: &KernelOptimizationParams,
+        size: usize_params: &KernelOptimizationParams,
     ) -> Result<f64> {
         // Generate test data
         let x: Vec<f32> = (0..size).map(|i| (i as f32) * 0.001).collect();
@@ -1593,20 +1589,20 @@ impl GpuBackend for CudaBackend {
         })
     }
 
-    fn copy_to_gpu(&self, _handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(&self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
         // Simulate memory copy
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn copy_from_gpu(&self, _handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(&self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
         // Simulate memory copy
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn execute_kernel(&self, _kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
-        // Simulate kernel execution
+    fn execute_kernel(&self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
+        // Simulate _kernel execution
         std::thread::sleep(Duration::from_micros(10));
         Ok(())
     }
@@ -1695,17 +1691,17 @@ impl GpuBackend for OpenClBackend {
         })
     }
 
-    fn copy_to_gpu(&self, _handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(&self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn copy_from_gpu(&self, _handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(&self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn execute_kernel(&self, _kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
+    fn execute_kernel(&self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
         std::thread::sleep(Duration::from_micros(10));
         Ok(())
     }
@@ -1789,17 +1785,17 @@ impl GpuBackend for WebGpuBackend {
         })
     }
 
-    fn copy_to_gpu(&self, _handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(&self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(2));
         Ok(())
     }
 
-    fn copy_from_gpu(&self, _handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(&self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(2));
         Ok(())
     }
 
-    fn execute_kernel(&self, _kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
+    fn execute_kernel(&self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
         std::thread::sleep(Duration::from_micros(15));
         Ok(())
     }

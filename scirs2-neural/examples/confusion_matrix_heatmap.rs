@@ -19,7 +19,7 @@ fn main() {
     // Generate predicted labels with controlled accuracy
     let mut y_pred = Vec::with_capacity(n_samples);
     for &true_label in &y_true {
-        // 80% chance to predict correctly, 20% chance of error
+        // 80% chance to predict correctly..20% chance of error
         if rng.random::<f64>() < 0.8 {
             y_pred.push(true_label);
         } else {

@@ -15,9 +15,9 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_metrics::domains::quantum_ml::QuantumMLSuite;
+//! use scirs2__metrics::domains::quantum_ml::QuantumMLSuite;
 //! use ndarray::array;
-//! use num_complex::Complex64;
+//! use num__complex::Complex64;
 //!
 //! let mut qml_suite = QuantumMLSuite::new();
 //!
@@ -40,7 +40,7 @@
 use crate::domains::{DomainEvaluationResult, DomainMetrics};
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::{Float, One, Zero};
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -211,9 +211,9 @@ impl QuantumMLSuite {
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: QuantumMetricsConfig) -> Self {
+    pub fn with_config(_config: QuantumMetricsConfig) -> Self {
         Self {
-            config,
+            _config,
             computation_cache: HashMap::new(),
         }
     }
@@ -368,7 +368,7 @@ impl QuantumMLSuite {
     ) -> Result<QuantumAdvantageMetrics> {
         if quantum_results.len() != classical_results.len() {
             return Err(MetricsError::InvalidInput(
-                "Quantum and classical results must have the same length".to_string(),
+                "Quantum and classical _results must have the same length".to_string(),
             ));
         }
 
@@ -501,8 +501,8 @@ impl QuantumMLSuite {
 
     // Helper methods
 
-    fn state_norm(state: &Array1<Complex64>) -> f64 {
-        state.iter().map(|c| c.norm_sqr()).sum::<f64>().sqrt()
+    fn state_norm(_state: &Array1<Complex64>) -> f64 {
+        _state.iter().map(|c| c.norm_sqr()).sum::<f64>().sqrt()
     }
 
     fn channel_to_choi(&self, channel: &Array2<Complex64>) -> Result<Array2<Complex64>> {
@@ -660,7 +660,7 @@ impl QuantumMLSuite {
     fn is_two_qubit_gate(&self, gate: &QuantumGate) -> bool {
         matches!(
             gate,
-            QuantumGate::CNOT(_, _) | QuantumGate::CZ(_, _) | QuantumGate::SWAP(_, _)
+            QuantumGate::CNOT(__) | QuantumGate::CZ(__) | QuantumGate::SWAP(__)
         )
     }
 
@@ -805,7 +805,7 @@ impl Default for QuantumMLSuite {
 mod tests {
     use super::*;
     use ndarray::array;
-    use num_complex::Complex64;
+    use num__complex::Complex64;
 
     #[test]
     fn test_quantum_state_fidelity() {

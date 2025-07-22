@@ -5,6 +5,7 @@
 
 use crate::error::StatsError;
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 
 /// Error suggestion engine that provides intelligent recovery suggestions
 pub struct SuggestionEngine {
@@ -295,9 +296,9 @@ let log_transformed = data.mapv(|x| x.ln());
                         r#"
 // Log-sum-exp trick
 #[allow(dead_code)]
-fn log_sum_exp(values: &[f64]) -> f64 {
-    let max_val = values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let sum = values.iter().map(|&x| (x - max_val).exp()).sum::<f64>();
+fn log_sum_exp(_values: &[f64]) -> f64 {
+    let max_val = _values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let sum = _values.iter().map(|&x| (x - max_val).exp()).sum::<f64>();
     max_val + sum.ln()
 }
                     "#
@@ -401,8 +402,8 @@ impl ErrorFormatter {
 
 /// Quick error diagnosis tool
 #[allow(dead_code)]
-pub fn diagnose_error(error: &StatsError) -> DiagnosisReport {
-    let error_str = error.to_string().to_lowercase();
+pub fn diagnose_error(_error: &StatsError) -> DiagnosisReport {
+    let error_str = _error.to_string().to_lowercase();
 
     let error_type = if error_str.contains("dimension") {
         ErrorType::DimensionMismatch
@@ -423,9 +424,8 @@ pub fn diagnose_error(error: &StatsError) -> DiagnosisReport {
     };
 
     let severity = match error_type {
-        ErrorType::NumericalOverflow | ErrorType::SingularMatrix => Severity::High,
-        ErrorType::ConvergenceFailure | ErrorType::InvalidValues => Severity::Medium,
-        _ => Severity::Low,
+        ErrorType::NumericalOverflow | ErrorType::SingularMatrix =>, Severity::High,
+        ErrorType::ConvergenceFailure | ErrorType::InvalidValues => Severity::Medium_ =>, Severity::Low,
     };
 
     let likely_causes = match error_type {

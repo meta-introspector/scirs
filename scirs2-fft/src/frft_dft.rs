@@ -6,7 +6,7 @@
 use crate::error::FFTResult;
 use crate::fft::{fft, ifft};
 use ndarray::Array2;
-use num_complex::Complex64;
+use num__complex::Complex64;
 use std::f64::consts::PI;
 
 /// Compute the Fractional Fourier Transform using DFT eigenvector decomposition
@@ -122,8 +122,7 @@ fn compute_dft_eigenvalues(n: usize) -> Vec<Complex64> {
             0 => Complex64::new(1.0, 0.0),
             1 => Complex64::new(0.0, -1.0),
             2 => Complex64::new(-1.0, 0.0),
-            3 => Complex64::new(0.0, 1.0),
-            _ => unreachable!(),
+            3 => Complex64::new(0.0, 1.0, _ => unreachable!(),
         };
     }
 
@@ -138,8 +137,7 @@ fn hermite_function(n: usize, x: f64) -> Complex64 {
         0 => 1.0,
         1 => 2.0 * x,
         2 => 4.0 * x * x - 2.0,
-        3 => 8.0 * x * x * x - 12.0 * x,
-        _ => {
+        3 => 8.0 * x * x * x - 12.0 * x_ => {
             // Higher order approximation
             let mut h_prev = 4.0 * x * x - 2.0;
             let mut h_curr = 8.0 * x * x * x - 12.0 * x;

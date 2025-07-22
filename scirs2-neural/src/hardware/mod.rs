@@ -12,15 +12,15 @@ pub mod memory_mapping;
 pub mod model_partitioning;
 pub mod partial_reconfiguration;
 pub use accelerator::{Accelerator, AcceleratorCapabilities, AcceleratorType};
-pub use custom_asic::{ASICConfig, ASICOperation, CustomASIC, DataType, NativeOperation};
-pub use device_manager::{DeviceInfo, DeviceManager, DeviceSelector};
+pub use custom__asic::{ASICConfig, ASICOperation, CustomASIC, DataType, NativeOperation};
+pub use device__manager::{DeviceInfo, DeviceManager, DeviceSelector};
 pub use fpga::{FPGAConfig, FPGADevice, FPGAKernel};
-pub use kernel_compiler::{CompilationTarget, KernelCompiler, OptimizationLevel};
-pub use memory_mapping::{BufferAllocation, MemoryLayout, MemoryMapRequirements, MemoryMapper};
-pub use model_partitioning::{
+pub use kernel__compiler::{CompilationTarget, KernelCompiler, OptimizationLevel};
+pub use memory__mapping::{BufferAllocation, MemoryLayout, MemoryMapRequirements, MemoryMapper};
+pub use model__partitioning::{
     LayerProfile, ModelPartition, ModelPartitioner, PartitioningStrategy,
 };
-pub use partial_reconfiguration::{
+pub use partial__reconfiguration::{
     DPRManager, PartialBitstream, PartialRegion, ReconfigurationState,
 use crate::error::Result;
 use ndarray::prelude::*;
@@ -119,17 +119,17 @@ pub struct HardwareContext {
     config: HardwareConfig,
 impl HardwareContext {
     /// Create a new hardware context
-    pub fn new(config: HardwareConfig) -> Result<Self> {
+    pub fn new(_config: HardwareConfig) -> Result<Self> {
         let device_manager = DeviceManager::new()?;
-        let active_device = device_manager.get_device(config.device_type, config.device_id)?;
-        let memory_mapper = MemoryMapper::new(active_device.clone(), config.memory_strategy)?;
-        let kernel_compiler = KernelCompiler::new(config.optimization_level);
+        let active_device = device_manager.get_device(_config.device_type, _config.device_id)?;
+        let memory_mapper = MemoryMapper::new(active_device.clone(), _config.memory_strategy)?;
+        let kernel_compiler = KernelCompiler::new(_config.optimization_level);
         Ok(Self {
             device_manager,
             active_device,
             memory_mapper,
             kernel_compiler,
-            config,
+            _config,
         })
     /// List available devices
     pub fn list_devices(&self) -> Vec<DeviceInfo> {
@@ -203,13 +203,13 @@ pub struct KernelFusion {
     max_fusion_depth: usize,
 impl KernelFusion {
     /// Create a new kernel fusion optimizer
-    pub fn new(enabled: bool) -> Self {
-            enabled,
+    pub fn new(_enabled: bool) -> Self {
+            _enabled,
             fusion_threshold: 2,
             max_fusion_depth: 5,
     /// Analyze and fuse eligible kernels
     pub fn optimize_kernels(&self, kernels: Vec<KernelDescriptor>) -> Result<Vec<FusedKernel>> {
-        if !self.enabled || kernels.len() < self.fusion_threshold {
+        if !self._enabled || kernels.len() < self.fusion_threshold {
             // Convert kernels to fused kernels without fusion
             return Ok(kernels
                 .into_iter()

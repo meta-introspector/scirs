@@ -1,5 +1,5 @@
 use ndarray::{array, ArrayView1};
-use scirs2_integrate::{
+use scirs2__integrate::{
     gaussian::gauss_legendre,
     monte_carlo::{monte_carlo, MonteCarloOptions},
     ode::{solve_ivp, ODEMethod, ODEOptions},
@@ -11,14 +11,14 @@ use std::time::Instant;
 
 /// A helper function to time and report the result of an integration method
 #[allow(dead_code)]
-fn time_integration<F, R>(name: &str, f: F) -> R
+fn time_integration<F, R>(_name: &str, f: F) -> R
 where
     F: FnOnce() -> R,
 {
     let start = Instant::now();
     let result = f();
     let elapsed = start.elapsed();
-    println!("{name}: {elapsed:?}");
+    println!("{_name}: {elapsed:?}");
     result
 }
 
@@ -128,8 +128,7 @@ fn main() {
     let mc_2d_result = time_integration("Monte Carlo 2D (n=100,000)", || {
         let options = MonteCarloOptions {
             n_samples: 100_000,
-            seed: Some(42),
-            _phantom: PhantomData,
+            seed: Some(42), _phantom: PhantomData,
             ..Default::default()
         };
 

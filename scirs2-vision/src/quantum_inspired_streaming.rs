@@ -24,6 +24,7 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
+use statrs::statistics::Statistics;
 
 /// Quantum-inspired amplitude for representing processing states
 #[derive(Debug, Clone)]
@@ -36,8 +37,8 @@ pub struct QuantumAmplitude {
 
 impl QuantumAmplitude {
     /// Create a new quantum amplitude
-    pub fn new(real: f64, imaginary: f64) -> Self {
-        Self { real, imaginary }
+    pub fn new(_real: f64, imaginary: f64) -> Self {
+        Self { _real, imaginary }
     }
 
     /// Calculate the probability (amplitude squared)
@@ -70,12 +71,12 @@ pub struct QuantumProcessingState {
 
 impl QuantumProcessingState {
     /// Create a new quantum processing state
-    pub fn new(stage_names: &[String]) -> Self {
+    pub fn new(_stage_names: &[String]) -> Self {
         let mut stage_amplitudes = HashMap::new();
 
         // Initialize amplitudes in superposition
-        for stage_name in stage_names {
-            let amplitude = QuantumAmplitude::new(1.0 / (stage_names.len() as f64).sqrt(), 0.0);
+        for stage_name in _stage_names {
+            let amplitude = QuantumAmplitude::new(1.0 / (_stage_names.len() as f64).sqrt(), 0.0);
             stage_amplitudes.insert(stage_name.clone(), amplitude);
         }
 
@@ -168,8 +169,8 @@ impl QuantumProcessingState {
         self.stage_amplitudes
             .keys()
             .enumerate()
-            .find(|(_, name)| name.as_str() == stage_name)
-            .map(|(index, _)| index)
+            .find(|(_, _name)| _name.as_str() == stage_name)
+            .map(|(index_)| index)
     }
 
     /// Update entanglement matrix based on current quantum correlations
@@ -315,15 +316,15 @@ pub struct QuantumHamiltonian {
 
 impl QuantumHamiltonian {
     /// Create a new quantum Hamiltonian
-    pub fn new(stage_names: &[String]) -> Self {
+    pub fn new(_stage_names: &[String]) -> Self {
         let mut stage_energies = HashMap::new();
         let mut external_fields = HashMap::new();
 
         // Initialize with random energies representing computational costs
         let mut rng = rand::rng();
-        for stage_name in stage_names {
-            stage_energies.insert(stage_name.clone(), rng.random_range(0.1..2.0));
-            external_fields.insert(stage_name.clone(), 0.0);
+        for stage_name in _stage_names {
+            stage_energies.insert(stage_name.clone(), rng.gen_range(0.1..2.0));
+            external_fields.insert(stage_name.clone()..0.0);
         }
 
         let n_stages = stage_names.len();
@@ -377,15 +378,15 @@ pub struct QuantumStreamProcessor {
 
 impl QuantumStreamProcessor {
     /// Create a new quantum stream processor
-    pub fn new(stage_names: Vec<String>) -> Self {
-        let quantum_state = QuantumProcessingState::new(&stage_names);
-        let hamiltonian = QuantumHamiltonian::new(&stage_names);
+    pub fn new(_stage_names: Vec<String>) -> Self {
+        let quantum_state = QuantumProcessingState::new(&_stage_names);
+        let hamiltonian = QuantumHamiltonian::new(&_stage_names);
         let performance_history = HashMap::new();
 
         Self {
             quantum_state,
             hamiltonian,
-            stage_names,
+            _stage_names,
             performance_history,
             time_step: 0.01,
             last_measurement: Instant::now(),
@@ -516,13 +517,13 @@ pub struct QuantumAnnealingStage {
 
 impl QuantumAnnealingStage {
     /// Create a new quantum annealing stage
-    pub fn new(initial_parameters: HashMap<String, f64>) -> Self {
-        let best_parameters = initial_parameters.clone();
+    pub fn new(_initial_parameters: HashMap<String, f64>) -> Self {
+        let best_parameters = _initial_parameters.clone();
 
         Self {
             temperature: 100.0,
             cooling_rate: 0.99,
-            parameters: initial_parameters,
+            _parameters: _initial_parameters,
             best_parameters,
             best_cost: f64::INFINITY,
             step_counter: 0,
@@ -539,9 +540,9 @@ impl QuantumAnnealingStage {
 
         let mut param_entries: Vec<_> = neighbor_params.iter_mut().collect();
         if let Some((_param_name, param_value)) = param_entries.choose_mut(&mut rng) {
-            let perturbation = rng.random_range(-0.1..0.1) * self.temperature / 100.0;
+            let perturbation = rng.gen_range(-0.1..0.1) * self.temperature / 100.0;
             **param_value += perturbation;
-            **param_value = param_value.clamp(0.0, 1.0); // Keep in valid range
+            **param_value = param_value.clamp(0.0..1.0); // Keep in valid range
         }
 
         let neighbor_cost = cost_function(&neighbor_params);
@@ -629,9 +630,9 @@ pub struct QuantumEntanglementStage {
 
 impl QuantumEntanglementStage {
     /// Create a new quantum entanglement stage
-    pub fn new(feature_dimension: usize, entanglement_strength: f64) -> Self {
+    pub fn new(_feature_dimension: usize, entanglement_strength: f64) -> Self {
         Self {
-            correlation_matrix: Array2::eye(feature_dimension),
+            correlation_matrix: Array2::eye(_feature_dimension),
             entanglement_strength,
             feature_history: Vec::new(),
             max_history: 50,
@@ -645,16 +646,16 @@ impl QuantumEntanglementStage {
 
         // Extract basic statistical features
         let mean = frame.data.mean().unwrap_or(0.0) as f64;
-        let variance = frame.data.var(0.0) as f64;
+        let variance = frame.data.variance() as f64;
         features.push(mean);
         features.push(variance);
 
         // Extract gradient-based features
-        if let Ok((_grad_x, _grad_y, magnitude)) =
+        if let Ok((_grad_x_grad_y, magnitude)) =
             crate::simd_ops::simd_sobel_gradients(&frame.data.view())
         {
             let grad_mean = magnitude.mean().unwrap_or(0.0) as f64;
-            let grad_variance = magnitude.var(0.0) as f64;
+            let grad_variance = magnitude.variance() as f64;
             features.push(grad_mean);
             features.push(grad_variance);
         } else {
@@ -834,19 +835,17 @@ struct ProcessingVariant {
 
 impl QuantumSuperpositionStage {
     /// Create a new quantum superposition stage
-    pub fn new(num_variants: usize) -> Self {
+    pub fn new(_num_variants: usize) -> Self {
         let mut processing_variants = Vec::new();
         let mut superposition_weights = Vec::new();
         let mut rng = rand::rng();
 
-        // Create multiple processing variants
-        for i in 0..num_variants {
+        // Create multiple processing _variants
+        for i in 0.._num_variants {
             let variant = ProcessingVariant {
                 name: format!("Variant_{i}"),
-                sigma: rng.random_range(0.5..2.0),
-                threshold: rng.random_range(0.05..0.3),
-                enhancement_factor: rng.random_range(0.8..1.2),
-            };
+                sigma: rng.gen_range(0.5..2.0)..threshold: rng.gen_range(0.05..0.3),
+                enhancement_factor: rng.gen_range(0.8..1.2)..};
 
             processing_variants.push(variant);
             superposition_weights.push(1.0 / (num_variants as f64).sqrt());
@@ -965,8 +964,8 @@ pub struct QuantumAdaptiveStreamPipeline {
 
 impl QuantumAdaptiveStreamPipeline {
     /// Create a new quantum adaptive streaming pipeline
-    pub fn new(stage_names: Vec<String>) -> Self {
-        let quantum_processor = QuantumStreamProcessor::new(stage_names);
+    pub fn new(_stage_names: Vec<String>) -> Self {
+        let quantum_processor = QuantumStreamProcessor::new(_stage_names);
 
         Self {
             quantum_processor,

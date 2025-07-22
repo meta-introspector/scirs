@@ -1,6 +1,6 @@
 use ndarray::{array, Array2};
 use plotters::prelude::*;
-use scirs2_stats::{huber_regression, ransac, theilslopes};
+use scirs2__stats::{huber_regression, ransac, theilslopes};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Compute ordinary least squares regression for comparison
     let ols_result = scirs2_stats::linregress(&x_values.view(), &y.view()).unwrap();
-    let (ols_slope, ols_intercept, _, _, _) = ols_result;
+    let (ols_slope, ols_intercept___) = ols_result;
 
     // Print results
     println!("Theil-Sen Regression Results:");

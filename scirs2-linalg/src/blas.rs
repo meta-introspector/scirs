@@ -174,7 +174,7 @@ where
 /// assert!((y[2] - 12.0).abs() < 1e-10); // 2*3 + 6 = 12
 /// ```
 #[allow(dead_code)]
-pub fn axpy<F>(alpha: F, x: &ArrayView1<F>, y: &mut Array1<F>)
+pub fn axpy<F>(_alpha: F, x: &ArrayView1<F>, y: &mut Array1<F>)
 where
     F: Float + NumAssign,
 {
@@ -183,7 +183,7 @@ where
     }
 
     for i in 0..x.len() {
-        y[i] += alpha * x[i];
+        y[i] += _alpha * x[i];
     }
 }
 
@@ -211,7 +211,7 @@ where
 /// assert!((y[1] - 18.0).abs() < 1e-10); // 3*2 + 4*3 = 18
 /// ```
 #[allow(dead_code)]
-pub fn gemv<F>(alpha: F, a: &ArrayView2<F>, x: &ArrayView1<F>, beta: F, y: &mut Array1<F>)
+pub fn gemv<F>(_alpha: F, a: &ArrayView2<F>, x: &ArrayView1<F>, beta: F, y: &mut Array1<F>)
 where
     F: Float + NumAssign,
 {
@@ -233,7 +233,7 @@ where
         for j in 0..x.len() {
             sum += row[j] * x[j];
         }
-        y[i] += alpha * sum;
+        y[i] += _alpha * sum;
     }
 }
 
@@ -263,7 +263,7 @@ where
 /// assert!((c[[1, 1]] - 50.0).abs() < 1e-10); // 3*6 + 4*8 = 50
 /// ```
 #[allow(dead_code)]
-pub fn gemm<F>(alpha: F, a: &ArrayView2<F>, b: &ArrayView2<F>, beta: F, c: &mut Array2<F>)
+pub fn gemm<F>(_alpha: F, a: &ArrayView2<F>, b: &ArrayView2<F>, beta: F, c: &mut Array2<F>)
 where
     F: Float + NumAssign,
 {
@@ -287,7 +287,7 @@ where
             for k in 0..a.ncols() {
                 sum += a[[i, k]] * b[[k, j]];
             }
-            c[[i, j]] += alpha * sum;
+            c[[i, j]] += _alpha * sum;
         }
     }
 }

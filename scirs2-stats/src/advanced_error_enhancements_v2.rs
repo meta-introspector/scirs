@@ -5,7 +5,7 @@
 //! for production-grade statistical computing.
 
 use crate::error::StatsError;
-use crate::error_standardization::PerformanceImpact;
+use crate::error__standardization::PerformanceImpact;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -448,9 +448,9 @@ pub struct RecoveryStatistics {
 
 impl AdvancedErrorEngine {
     /// Create new error enhancement engine
-    pub fn new(config: ErrorEngineConfig) -> Self {
+    pub fn new(_config: ErrorEngineConfig) -> Self {
         Self {
-            config,
+            _config,
             error_history: Vec::new(),
             performance_cache: HashMap::new(),
             recovery_stats: HashMap::new(),
@@ -587,7 +587,7 @@ impl AdvancedErrorEngine {
         if context.data_characteristics.size_info.total_elements == 0 {
             if let Some(pos) = causes
                 .iter()
-                .position(|(cause, _)| cause.contains("Insufficient"))
+                .position(|(cause_)| cause.contains("Insufficient"))
             {
                 causes[pos].1 = 0.95;
             }
@@ -598,11 +598,11 @@ impl AdvancedErrorEngine {
     }
 
     /// Find related errors that often occur together
-    fn find_related_errors(&self, _error: &StatsError) -> Vec<String> {
+    fn find_related_errors(&self_error: &StatsError) -> Vec<String> {
         // In a real implementation, this would use machine learning
-        // to find patterns in error co-occurrence
+        // to find patterns in _error co-occurrence
         vec![
-            "DimensionMismatch often precedes this error".to_string(),
+            "DimensionMismatch often precedes this _error".to_string(),
             "Consider checking for NaN values".to_string(),
             "Verify input data preprocessing".to_string(),
         ]
@@ -666,8 +666,7 @@ impl AdvancedErrorEngine {
         let (time_complexity, space_complexity) = match context.function_name.as_str() {
             name if name.contains("sort") => ("O(n log n)".to_string(), "O(n)".to_string()),
             name if name.contains("corr") => ("O(n)".to_string(), "O(1)".to_string()),
-            name if name.contains("matrix") => ("O(n³)".to_string(), "O(n²)".to_string()),
-            _ => ("O(n)".to_string(), "O(1)".to_string()),
+            name if name.contains("matrix") => ("O(n³)".to_string(), "O(n²)".to_string(), _ => ("O(n)".to_string(), "O(1)".to_string()),
         };
 
         ComplexityAnalysis {
@@ -747,12 +746,12 @@ use ndarray::Array1;
 use rand::{rng, seq::SliceRandom};
 
 #[allow(dead_code)]
-fn bootstrap_augment(data: &Array1<f64>, target_size: usize) -> Array1<f64> {
-    let mut rng = rng();
+fn bootstrap_augment(_data: &Array1<f64>, target_size: usize) -> Array1<f64> {
+    let mut rng = rand::rng();
     let mut augmented = Vec::with_capacity(target_size);
     
     for _ in 0..target_size {
-        let sample = data.as_slice().unwrap().choose(&mut rng).unwrap();
+        let sample = _data.as_slice().unwrap().choose(&mut rng).unwrap();
         augmented.push(*sample);
     }
     
@@ -786,9 +785,9 @@ fn bootstrap_augment(data: &Array1<f64>, target_size: usize) -> Array1<f64> {
                         r#"
 // Example: Ridge regularization for matrix operations
 #[allow(dead_code)]
-fn add_ridge_regularization(matrix: &mut Array2<f64>, lambda: f64) {
-    for i in 0..matrix.nrows().min(matrix.ncols()) {
-        matrix[[i, i]] += lambda;
+fn add_ridge_regularization(_matrix: &mut Array2<f64>, lambda: f64) {
+    for i in 0.._matrix.nrows().min(_matrix.ncols()) {
+        _matrix[[i, i]] += lambda;
     }
 }
 "#
@@ -826,8 +825,7 @@ fn add_ridge_regularization(matrix: &mut Array2<f64>, lambda: f64) {
 
     /// Assess performance impact
     fn assess_performance_impact(
-        &self,
-        _error: &StatsError,
+        &self_error: &StatsError,
         context: &OperationContext,
     ) -> PerformanceAssessment {
         let baseline = PerformanceMetrics {
@@ -863,8 +861,7 @@ fn add_ridge_regularization(matrix: &mut Array2<f64>, lambda: f64) {
     /// Generate UX recommendations
     fn generate_ux_recommendations(
         &self,
-        error: &StatsError,
-        _diagnostics: &IntelligentDiagnostics,
+        error: &StatsError_diagnostics: &IntelligentDiagnostics,
     ) -> UXRecommendations {
         UXRecommendations {
             message_improvements: vec![
@@ -925,7 +922,7 @@ pub fn create_enhanced_error_context(
         function_name: function_name.to_string(),
         module_path: module_path.to_string(),
         data_characteristics: DataCharacteristics {
-            size_info: SizeInfo {
+            _size_info: SizeInfo {
                 dimensions: vec![data_size],
                 total_elements: data_size,
                 memory_footprint: data_size * 8,
@@ -955,7 +952,7 @@ pub fn create_enhanced_error_context(
         execution_environment: ExecutionEnvironment {
             cpu_info: CpuInfo {
                 architecture: "x86_64".to_string(),
-                core_count: num_cpus::get(),
+                core_count: num, _cpus: get(),
                 simd_support: vec!["AVX2".to_string(), "SSE4.2".to_string()],
                 cache_sizes: vec![32_768, 262_144, 8_388_608], // L1, L2, L3
             },
@@ -966,7 +963,7 @@ pub fn create_enhanced_error_context(
             },
             optimization_level: OptimizationLevel::Release,
             threading_info: ThreadingInfo {
-                thread_count: num_cpus::get(),
+                thread_count: num, _cpus: get(),
                 thread_affinity: None,
                 numa_topology: None,
             },

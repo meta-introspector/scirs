@@ -10,6 +10,7 @@ use ndarray::Array2;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+use std::path::PathBuf;
 
 /// File reading stage
 pub struct FileReadStage {
@@ -27,9 +28,9 @@ pub enum FileFormat {
 }
 
 impl FileReadStage {
-    pub fn new(path: impl AsRef<Path>, format: FileFormat) -> Self {
+    pub fn new(_path: impl AsRef<Path>, format: FileFormat) -> Self {
         Self {
-            path: path.as_ref().to_path_buf(),
+            _path: _path.as_ref().to_path_buf(),
             format,
         }
     }
@@ -47,7 +48,7 @@ impl PipelineStage for FileReadStage {
             }
             FileFormat::Json => {
                 let file = File::open(&self.path).map_err(IoError::Io)?;
-                let value: serde_json::Value = serde_json::from_reader(file)
+                let value: serde_json: Value = serde, _json::from_reader(file)
                     .map_err(|e| IoError::SerializationError(e.to_string()))?;
                 Box::new(value) as Box<dyn Any + Send + Sync>
             }
@@ -74,7 +75,7 @@ impl PipelineStage for FileReadStage {
                     }
                     "json" => {
                         let file = File::open(&self.path).map_err(IoError::Io)?;
-                        let value: serde_json::Value = serde_json::from_reader(file)
+                        let value: serde_json: Value = serde, _json::from_reader(file)
                             .map_err(|e| IoError::SerializationError(e.to_string()))?;
                         Box::new(value) as Box<dyn Any + Send + Sync>
                     }
@@ -114,9 +115,9 @@ pub struct FileWriteStage {
 }
 
 impl FileWriteStage {
-    pub fn new(path: impl AsRef<Path>, format: FileFormat) -> Self {
+    pub fn new(_path: impl AsRef<Path>, format: FileFormat) -> Self {
         Self {
-            path: path.as_ref().to_path_buf(),
+            _path: _path.as_ref().to_path_buf(),
             format,
         }
     }
@@ -258,9 +259,9 @@ pub trait DataTransformer: Send + Sync {
 }
 
 impl TransformStage {
-    pub fn new(name: &str, transformer: Box<dyn DataTransformer>) -> Self {
+    pub fn new(_name: &str, transformer: Box<dyn DataTransformer>) -> Self {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             transformer,
         }
     }
@@ -291,12 +292,12 @@ pub struct AggregationStage<T> {
 }
 
 impl<T: 'static + Send + Sync> AggregationStage<T> {
-    pub fn new<F>(name: &str, aggregator: F) -> Self
+    pub fn new<F>(_name: &str, aggregator: F) -> Self
     where
         F: Fn(Vec<T>) -> Result<T> + Send + Sync + 'static,
     {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             aggregator: Box::new(aggregator),
         }
     }
@@ -334,12 +335,12 @@ pub struct FilterStage<T> {
 }
 
 impl<T: 'static + Send + Sync + Clone> FilterStage<T> {
-    pub fn new<F>(name: &str, predicate: F) -> Self
+    pub fn new<F>(_name: &str, predicate: F) -> Self
     where
         F: Fn(&T) -> bool + Send + Sync + 'static,
     {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             predicate: Box::new(predicate),
         }
     }
@@ -383,9 +384,9 @@ pub trait DataEnricher: Send + Sync {
 }
 
 impl EnrichmentStage {
-    pub fn new(name: &str, enricher: Box<dyn DataEnricher>) -> Self {
+    pub fn new(_name: &str, enricher: Box<dyn DataEnricher>) -> Self {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             enricher,
         }
     }
@@ -416,9 +417,9 @@ pub struct CacheStage {
 }
 
 impl CacheStage {
-    pub fn new(cache_key: &str, cache_dir: impl AsRef<Path>) -> Self {
+    pub fn new(_cache_key: &str, cache_dir: impl AsRef<Path>) -> Self {
         Self {
-            cache_key: cache_key.to_string(),
+            cache_key: _cache_key.to_string(),
             cache_dir: cache_dir.as_ref().to_path_buf(),
         }
     }
@@ -486,9 +487,9 @@ pub trait Monitor: Send + Sync {
 }
 
 impl MonitoringStage {
-    pub fn new(name: &str, monitor: Box<dyn Monitor>) -> Self {
+    pub fn new(_name: &str, monitor: Box<dyn Monitor>) -> Self {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             monitor,
         }
     }
@@ -527,9 +528,9 @@ pub trait ErrorHandler: Send + Sync {
 }
 
 impl ErrorHandlingStage {
-    pub fn new(name: &str, handler: Box<dyn ErrorHandler>) -> Self {
+    pub fn new(_name: &str, handler: Box<dyn ErrorHandler>) -> Self {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             handler,
         }
     }
@@ -572,9 +573,9 @@ pub struct RetryErrorHandler {
 }
 
 impl RetryErrorHandler {
-    pub fn new(max_retries: usize) -> Self {
+    pub fn new(_max_retries: usize) -> Self {
         Self {
-            max_retries,
+            _max_retries,
             retry_delay: Duration::from_secs(1),
         }
     }
@@ -618,8 +619,7 @@ pub struct SkipErrorHandler;
 
 impl ErrorHandler for SkipErrorHandler {
     fn handle_error(
-        &self,
-        _error: IoError,
+        &self_error: IoError,
         mut data: PipelineData<Box<dyn Any + Send + Sync>>,
     ) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
         // Mark as skipped in metadata
@@ -637,15 +637,14 @@ pub struct FallbackErrorHandler<T: Any + Send + Sync + Clone + 'static> {
 }
 
 impl<T: Any + Send + Sync + Clone + 'static> FallbackErrorHandler<T> {
-    pub fn new(fallback_value: T) -> Self {
-        Self { fallback_value }
+    pub fn new(_fallback_value: T) -> Self {
+        Self { _fallback_value }
     }
 }
 
 impl<T: Any + Send + Sync + Clone + 'static> ErrorHandler for FallbackErrorHandler<T> {
     fn handle_error(
-        &self,
-        _error: IoError,
+        &self_error: IoError,
         mut data: PipelineData<Box<dyn Any + Send + Sync>>,
     ) -> Result<PipelineData<Box<dyn Any + Send + Sync>>> {
         // Replace data with fallback value

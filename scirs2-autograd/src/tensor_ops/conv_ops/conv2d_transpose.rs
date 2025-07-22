@@ -1,5 +1,5 @@
 use super::*;
-use crate::tensor_ops::*;
+use crate::tensor__ops::*;
 
 pub struct Conv2DTranspose {
     pub pad: usize,
@@ -44,7 +44,7 @@ fn conv2d_transpose_extract_params<F: Float>(
         ));
     }
     let gy_shape = gy.shape();
-    let f_shape = w.shape();
+    let f_shape = _w.shape();
 
     let batch_size = gy_shape[0];
     let ych = gy_shape[1];
@@ -109,7 +109,7 @@ fn conv2d_transpose_impl<F: Float>(
         kh,
         kw,
     } = conv2d_transpose_extract_params(
-        gy, w, pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
+        gy, _w, pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
     )?;
 
     // sgemm params
@@ -131,10 +131,10 @@ fn conv2d_transpose_impl<F: Float>(
         }
     }
 
-    if let Some(w) = w.as_slice() {
-        w_slice = w;
+    if let Some(_w) = _w.as_slice() {
+        w_slice = _w;
     } else {
-        copied_w = ndarray_ext::deep_copy(w);
+        copied_w = ndarray_ext::deep_copy(_w);
         unsafe {
             w_slice = slice::from_raw_parts(copied_w.as_ptr(), copied_w.len());
         }
@@ -245,7 +245,7 @@ fn conv2d_transpose_impl<F: Float>(
     }
 }
 
-impl<T: Float> crate::op::Op<T> for Conv2DTranspose {
+impl<T: Float>, crate::op::Op<T> for Conv2DTranspose {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let gy = &ctx.input(0); // (batch, ych, yh, yw)
         let w = &ctx.input(1); // (ych, xch, kh, kw)
@@ -310,7 +310,7 @@ fn conv2d_transpose_filter_grad_impl<F: Float>(
     stride_h: usize,
     stride_w: usize,
 ) -> NdArray<F> {
-    let k_shape = w.shape();
+    let k_shape = _w.shape();
     let x_shape = x.shape();
     let gy_shape = gy.shape();
 
@@ -429,7 +429,7 @@ fn conv2d_transpose_filter_grad_impl<F: Float>(
     }
 }
 
-impl<T: Float> crate::op::Op<T> for Conv2DTransposeFilterGrad {
+impl<T: Float>, crate::op::Op<T> for Conv2DTransposeFilterGrad {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let gy = &ctx.input(0);
         let x = &ctx.input(1);

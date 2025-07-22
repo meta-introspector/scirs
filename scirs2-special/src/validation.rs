@@ -10,75 +10,75 @@ use scirs2_core::validation;
 
 /// Check if a value is positive (> 0)
 #[allow(dead_code)]
-pub fn check_positive<T>(value: T, name: &str) -> SpecialResult<T>
+pub fn check_positive<T>(_value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy + Zero,
 {
-    validation::check_positive(value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{name} must be positive, got {value}")))
+    validation::check_positive(_value, name)
+        .map_err(|_| SpecialError::DomainError(format!("{name} must be positive, got {_value}")))
 }
 
 /// Check if a value is non-negative (>= 0)
 #[allow(dead_code)]
-pub fn check_non_negative<T>(value: T, name: &str) -> SpecialResult<T>
+pub fn check_non_negative<T>(_value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy + Zero,
 {
-    validation::check_non_negative(value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{name} must be non-negative, got {value}")))
+    validation::check_non_negative(_value, name)
+        .map_err(|_| SpecialError::DomainError(format!("{name} must be non-negative, got {_value}")))
 }
 
 /// Check if a value is finite
 #[allow(dead_code)]
-pub fn check_finite<T>(value: T, name: &str) -> SpecialResult<T>
+pub fn check_finite<T>(_value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
 {
-    validation::check_finite(value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{name} must be finite, got {value}")))
+    validation::check_finite(_value, name)
+        .map_err(|_| SpecialError::DomainError(format!("{name} must be finite, got {_value}")))
 }
 
 /// Check if a value is within bounds (inclusive)
 #[allow(dead_code)]
-pub fn check_in_bounds<T>(value: T, min: T, max: T, name: &str) -> SpecialResult<T>
+pub fn check_in_bounds<T>(_value: T, min: T, max: T, name: &str) -> SpecialResult<T>
 where
     T: PartialOrd + std::fmt::Display + Copy,
 {
-    validation::check_in_bounds(value, min, max, name).map_err(|_| {
-        SpecialError::DomainError(format!("{name} must be in [{min}, {max}], got {value}"))
+    validation::check_in_bounds(_value, min, max, name).map_err(|_| {
+        SpecialError::DomainError(format!("{name} must be in [{min}, {max}], got {_value}"))
     })
 }
 
 /// Check if a probability value is valid (0 <= p <= 1)
 #[allow(dead_code)]
-pub fn check_probability<T>(value: T, name: &str) -> SpecialResult<T>
+pub fn check_probability<T>(_value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
 {
-    validation::check_probability(value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{name} must be in [0, 1], got {value}")))
+    validation::check_probability(_value, name)
+        .map_err(|_| SpecialError::DomainError(format!("{name} must be in [0, 1], got {_value}")))
 }
 
 /// Check if all values in an array are finite
 #[allow(dead_code)]
-pub fn check_array_finite<S, D>(array: &ArrayBase<S, D>, name: &str) -> SpecialResult<()>
+pub fn check_array_finite<S, D>(_array: &ArrayBase<S, D>, name: &str) -> SpecialResult<()>
 where
     S: ndarray::Data,
     D: Dimension,
     S::Elem: Float + std::fmt::Display,
 {
-    validation::check_array_finite(array, name)
+    validation::checkarray_finite(_array, name)
         .map_err(|_| SpecialError::DomainError(format!("{name} must contain only finite values")))
 }
 
 /// Check if an array is not empty
 #[allow(dead_code)]
-pub fn check_not_empty<S, D>(array: &ArrayBase<S, D>, name: &str) -> SpecialResult<()>
+pub fn check_not_empty<S, D>(_array: &ArrayBase<S, D>, name: &str) -> SpecialResult<()>
 where
     S: ndarray::Data,
     D: Dimension,
 {
-    validation::check_not_empty(array, name)
+    validation::check_not_empty(_array, name)
         .map_err(|_| SpecialError::ValueError(format!("{name} cannot be empty")))
 }
 
@@ -142,9 +142,9 @@ pub fn check_order_m(l: i32, m: i32) -> SpecialResult<i32> {
 
 /// Check convergence parameters
 #[allow(dead_code)]
-pub fn check_convergence_params(max_iter: usize, tolerance: f64) -> SpecialResult<()> {
-    if max_iter == 0 {
-        return Err(SpecialError::ValueError("max_iter must be > 0".to_string()));
+pub fn check_convergence_params(_max_iter: usize, tolerance: f64) -> SpecialResult<()> {
+    if _max_iter == 0 {
+        return Err(SpecialError::ValueError("_max_iter must be > 0".to_string()));
     }
     check_positive(tolerance, "tolerance")?;
     Ok(())
@@ -152,16 +152,16 @@ pub fn check_convergence_params(max_iter: usize, tolerance: f64) -> SpecialResul
 
 /// Helper to convert convergence failures to ConvergenceError
 #[allow(dead_code)]
-pub fn convergence_error(function: &str, iterations: usize) -> SpecialError {
+pub fn convergence_error(_function: &str, iterations: usize) -> SpecialError {
     SpecialError::ConvergenceError(format!(
-        "{function} did not converge after {iterations} iterations"
+        "{_function} did not converge after {iterations} iterations"
     ))
 }
 
 /// Helper to convert not implemented features to NotImplementedError
 #[allow(dead_code)]
-pub fn not_implemented(feature: &str) -> SpecialError {
-    SpecialError::NotImplementedError(format!("{feature} is not yet implemented"))
+pub fn not_implemented(_feature: &str) -> SpecialError {
+    SpecialError::NotImplementedError(format!("{_feature} is not yet implemented"))
 }
 
 #[cfg(test)]

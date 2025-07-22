@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests {
     // use super::*; // Unused import, commenting out
-    use crate::pde::finite_element::{
+    use crate::pde::finite__element::{
         ElementType, FEMOptions, FEMPoissonSolver, HigherOrderMeshGenerator, Point, ShapeFunctions,
         TriangularMesh, TriangularQuadrature,
     };
@@ -51,7 +51,7 @@ mod tests {
         // Test that quadrature rules integrate polynomials exactly
 
         // Test 1-point rule integrates constants exactly
-        let (xi, _eta, w) = TriangularQuadrature::get_rule(1).unwrap();
+        let (xi_eta, w) = TriangularQuadrature::get_rule(1).unwrap();
         let mut integral = 0.0;
         for i in 0..xi.len() {
             integral += w[i]; // integrating f(xi,eta) = 1
@@ -114,7 +114,7 @@ mod tests {
         // Create a small mesh
         let mesh = TriangularMesh::generate_rectangular((0.0, 1.0), (0.0, 1.0), 2, 2);
 
-        let source_term = |_x: f64, _y: f64| 1.0;
+        let source_term = |_x: f64_y: f64| 1.0;
 
         let boundary_conditions = vec![GenericBoundaryCondition {
             dimension: 0,
@@ -188,7 +188,7 @@ mod tests {
         // Create a simple mesh and test that stiffness matrices are symmetric
         let mesh = TriangularMesh::generate_rectangular((0.0, 1.0), (0.0, 1.0), 3, 3);
 
-        let source_term = |_x: f64, _y: f64| 0.0;
+        let source_term = |_x: f64_y: f64| 0.0;
         let boundary_conditions = vec![GenericBoundaryCondition {
             dimension: 0,
             location: BoundaryLocation::Lower,
@@ -210,7 +210,7 @@ mod tests {
         // Get the first higher-order element for testing
         if let Some(ho_elements) = &solver.higher_order_elements {
             if !ho_elements.is_empty() {
-                let (a_e, _b_e) = solver
+                let (a_e_b_e) = solver
                     .element_matrices_higher_order(&ho_elements[0])
                     .unwrap();
 

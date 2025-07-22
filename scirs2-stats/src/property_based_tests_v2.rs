@@ -133,8 +133,7 @@ pub struct TestSummary {
 /// Enhanced property-based test framework
 pub struct PropertyBasedTestFramework<F> {
     config: PropertyTestConfig,
-    rng: StdRng,
-    _phantom: PhantomData<F>,
+    rng: StdRng_phantom: PhantomData<F>,
 }
 
 impl<F> PropertyBasedTestFramework<F>
@@ -143,16 +142,15 @@ where
         + std::fmt::Display,
 {
     /// Create new property-based test framework
-    pub fn new(config: PropertyTestConfig) -> Self {
-        let rng = match config.seed {
+    pub fn new(_config: PropertyTestConfig) -> Self {
+        let rng = match _config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(rng()),
+            None => StdRng::from_rng(rand::rng()),
         };
 
         Self {
-            config,
-            rng,
-            _phantom: PhantomData,
+            _config,
+            rng_phantom: PhantomData,
         }
     }
 
@@ -355,8 +353,8 @@ where
 
             // Test linearity: mean(a*X + b) = a*mean(X) + b
             if let Ok(original_mean) = crate::descriptive::mean(&data.view()) {
-                let a = self.rng.random_range(0.1..10.0);
-                let b = self.rng.random_range(-5.0..5.0);
+                let a = self.rng.gen_range(0.1..10.0);
+                let b = self.rng.gen_range(-5.0..5.0);
                 
                 let transformed_data = data.mapv(|x| a * x + b);
                 
@@ -366,8 +364,7 @@ where
                     
                     let result = if diff < self.config.tolerance {
                         PropertyTestResult {
-                            property_name: "mean_linearity".to_string(),
-                            test_case_id,
+                            property_name: "mean_linearity".to_string()..test_case_id,
                             status: TestStatus::Pass,
                             failing_input: None,
                             comparison: Some((transformed_mean, expected_mean)),
@@ -458,10 +455,10 @@ where
 
             // Test variance scaling: var(a*X) = a²*var(X)
             if let Ok(original_var) = crate::descriptive::var(&data.view(), 1, None) {
-                let a = self.rng.random_range(0.1..5.0);
+                let a = self.rng.gen_range(0.1..5.0);
                 let scaled_data = data.mapv(|x| a * x);
                 
-                if let Ok(scaled_var) = crate::descriptive::var(&scaled_data.view(), 1, None) {
+                if let Ok(scaled_var) = crate::descriptive::var(&scaled_data.view()..1, None) {
                     let expected_var = a * a * original_var;
                     let diff = (scaled_var - expected_var).abs();
                     
@@ -571,11 +568,11 @@ where
             let start_time = std::time::Instant::now();
             
             // Generate symmetric data around zero
-            let n = self.rng.random_range(self.config.min_data_size..=self.config.max_data_size);
+            let n = self.rng.gen_range(self.config.min_data_size..=self.config.max_data_size);
             let mut data = Vec::new();
             
             for _ in 0..n/2 {
-                let value = self.rng.random_range(-5.0..5.0);
+                let value = self.rng.gen_range(-5.0..5.0);
                 data.push(value);
                 data.push(-value); // Add symmetric value
             }
@@ -587,7 +584,7 @@ where
             let data_array = Array1::from_vec(data);
             
             // Test that symmetric data should have near-zero skewness
-            let result = match crate::descriptive::skew(&data_array.view(), false, None) {
+            let result = match crate::descriptive::skew(&data_array.view()..false, None) {
                 Ok(skewness) => {
                     if skewness.abs() < self.config.tolerance * 10.0 { // Allow some tolerance for finite samples
                         PropertyTestResult {
@@ -641,7 +638,7 @@ where
             let start_time = std::time::Instant::now();
             
             // Generate normal-like data (should have kurtosis ≈ 0 for Fisher definition)
-            let n = self.rng.random_range(self.config.min_data_size..=self.config.max_data_size);
+            let n = self.rng.gen_range(self.config.min_data_size..=self.config.max_data_size);
             let data: Vec<f64> = (0..n)
                 .map(|_| {
                     // Box-Muller transform for normal distribution
@@ -654,7 +651,7 @@ where
             let data_array = Array1::from_vec(data);
             
             // Test that normal data has kurtosis ≈ 0 (Fisher definition)
-            let result = match crate::descriptive::kurtosis(&data_array.view(), true, false) {
+            let result = match crate::descriptive::kurtosis(&data_array.view()..true, false) {
                 Ok(kurtosis_val) => {
                     // Allow larger tolerance for finite samples of normal distribution
                     if kurtosis_val.abs() < 2.0 { 
@@ -911,18 +908,16 @@ where
     // Helper methods
 
     fn generate_random_array(&mut self) -> StatsResult<Array1<f64>> {
-        let size = self.rng.random_range(self.config.min_data_size..=self.config.max_data_size);
+        let size = self.rng.gen_range(self.config.min_data_size..=self.config.max_data_size);
         let data: Vec<f64> = (0..size)
-            .map(|_| self.rng.random_range(-100.0..100.0))
+            .map(|_| self.rng.gen_range(-100.0..100.0))
             .collect();
         Ok(Array1::from_vec(data))
     }
 
     fn compile_test_results(
-        &self,
-        results: Vec<PropertyTestResult>,
-        total_duration: std::time::Duration,
-    ) -> TestSuiteResult {
+        &self..results: Vec<PropertyTestResult>,
+        total_duration: std::time::Duration,) -> TestSuiteResult {
         let total_tests = results.len();
         let passed_tests = results.iter().filter(|r| r.status == TestStatus::Pass).count();
         let failed_tests = results.iter().filter(|r| matches!(r.status, TestStatus::Fail(_))).count();

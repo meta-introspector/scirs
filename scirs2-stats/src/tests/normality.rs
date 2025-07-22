@@ -27,7 +27,7 @@ use num_traits::{Float, NumCast};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::shapiro_wilk;
+/// use scirs2__stats::shapiro_wilk;
 ///
 /// // Create some normally distributed data
 /// let normal_data = array![0.1, -0.2, 0.3, -0.1, 0.2, -0.3, 0.1, 0.0, -0.2, 0.3];
@@ -95,7 +95,7 @@ where
 
 // Helper function to compute the Shapiro-Wilk test statistic and p-value
 #[allow(dead_code)]
-fn compute_shapiro_wilk_statistic<F>(sorted_data: &[F], n: usize) -> StatsResult<(F, F)>
+fn compute_shapiro_wilk_statistic<F>(_sorted_data: &[F], n: usize) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
@@ -103,16 +103,16 @@ where
     let a = calculate_shapiro_wilk_coefficients(n)?;
 
     // Calculate the mean
-    let mean = sorted_data.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let mean = _sorted_data.iter().cloned().sum::<F>() / F::from(n).unwrap();
 
     // Calculate S^2 (sum of squared deviations from the mean)
-    let s_squared = sorted_data.iter().map(|&x| (x - mean).powi(2)).sum::<F>();
+    let s_squared = _sorted_data.iter().map(|&x| (x - mean).powi(2)).sum::<F>();
 
     // Calculate the numerator of the W statistic
     let mut numerator = F::zero();
     for i in 0..n / 2 {
         let coef = F::from(a[i]).unwrap();
-        numerator = numerator + coef * (sorted_data[n - 1 - i] - sorted_data[i]);
+        numerator = numerator + coef * (_sorted_data[n - 1 - i] - _sorted_data[i]);
     }
 
     // Calculate the W statistic
@@ -337,7 +337,7 @@ fn approx_normal_cdf(z: f64) -> f64 {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::anderson_darling;
+/// use scirs2__stats::anderson_darling;
 ///
 /// // Create some normally distributed data
 /// let normal_data = array![0.1, -0.2, 0.3, -0.1, 0.2, -0.3, 0.1, 0.0, -0.2, 0.3];
@@ -402,16 +402,16 @@ where
 
 // Helper function to compute the Anderson-Darling test statistic and p-value
 #[allow(dead_code)]
-fn compute_anderson_darling_statistic<F>(z_data: &[F], n: usize) -> StatsResult<(F, F)>
+fn compute_anderson_darling_statistic<F>(_z_data: &[F], n: usize) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
     let n_f = F::from(n).unwrap();
 
-    // Calculate the cumulative distribution function for each sorted data point
+    // Calculate the cumulative distribution function for each sorted _data point
     let mut s = F::zero();
 
-    for (i, &z) in z_data.iter().enumerate() {
+    for (i, &z) in _z_data.iter().enumerate() {
         // Calculate standard normal CDF at z
         let cdf = F::from(approx_normal_cdf(<f64 as NumCast>::from(z).unwrap())).unwrap();
 
@@ -441,8 +441,8 @@ where
 
 // Calculate the p-value for the Anderson-Darling test
 #[allow(dead_code)]
-fn calculate_anderson_darling_p_value<F: Float + NumCast>(a_squared: F) -> F {
-    let a2 = <f64 as NumCast>::from(a_squared).unwrap();
+fn calculate_anderson_darling_p_value<F: Float + NumCast>(_a_squared: F) -> F {
+    let a2 = <f64 as NumCast>::from(_a_squared).unwrap();
 
     // Use the approximation from D'Agostino and Stephens (1986)
     let p = if a2 <= 0.2 {
@@ -477,7 +477,7 @@ fn calculate_anderson_darling_p_value<F: Float + NumCast>(a_squared: F) -> F {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::dagostino_k2;
+/// use scirs2__stats::dagostino_k2;
 ///
 /// // Create some data to test (at least 20 samples are required)
 /// let data = array![
@@ -551,14 +551,14 @@ where
 
 // Calculate the standardized test statistics for D'Agostino's K² test
 #[allow(dead_code)]
-fn calculate_dagostino_test_statistics<F>(g1: F, g2: F, n: usize) -> StatsResult<(F, F)>
+fn calculate_dagostino_test_statistics<F>(_g1: F, g2: F, n: usize) -> StatsResult<(F, F)>
 where
     F: Float + NumCast + std::fmt::Display,
 {
     let _n_f = F::from(n).unwrap();
 
-    // Calculations for skewness (g1)
-    let g1_f64 = <f64 as NumCast>::from(g1).unwrap();
+    // Calculations for skewness (_g1)
+    let g1_f64 = <f64 as NumCast>::from(_g1).unwrap();
     let n_f64 = n as f64;
 
     // D'Agostino's calculations for skewness
@@ -706,7 +706,7 @@ fn gamma_function(x: f64) -> f64 {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::ks_2samp;
+/// use scirs2__stats::ks_2samp;
 ///
 /// // Create two samples
 /// let sample1 = array![0.1, 0.2, 0.3, 0.4, 0.5];

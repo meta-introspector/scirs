@@ -135,7 +135,7 @@ where
         }
 
         // Compute multipliers and eliminate k-th column
-        for i in k + 1..n {
+        for i in (k + 1)..n {
             lu[[i, k]] = lu[[i, k]] / lu[[k, k]];
 
             for j in k + 1..m {
@@ -353,7 +353,7 @@ where
         s[new_idx] = eigenvalues[old_idx].abs().sqrt();
     }
 
-    // Build U and V matrices with improved orthogonality
+    // Build U and V _matrices with improved orthogonality
     let (u, vt) = if use_ata {
         // We computed V from A^T*A, now compute U = A*V*S^(-1)
         let mut v_sorted = Array2::<F>::zeros((m, rank));
@@ -414,7 +414,7 @@ where
         (u_sorted, vt)
     };
 
-    // Handle full matrices case with better orthogonalization
+    // Handle full _matrices case with better orthogonalization
     let final_u = if full_matrices && u.ncols() < n {
         extend_to_orthogonal_basis(u, n)
     } else {
@@ -474,27 +474,27 @@ where
 
 /// Modified Gram-Schmidt orthogonalization for better numerical stability
 #[allow(dead_code)]
-fn modified_gram_schmidt<F>(matrix: &mut Array2<F>)
+fn modified_gram_schmidt<F>(_matrix: &mut Array2<F>)
 where
     F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
 {
-    let n_cols = matrix.ncols();
+    let n_cols = _matrix.ncols();
 
     for i in 0..n_cols {
         // Normalize column i
-        let mut col_i = matrix.column(i).to_owned();
+        let mut col_i = _matrix.column(i).to_owned();
         let norm = col_i.dot(&col_i).sqrt();
 
         if norm > F::from(1e-14).unwrap() {
             col_i /= norm;
-            matrix.column_mut(i).assign(&col_i);
+            _matrix.column_mut(i).assign(&col_i);
 
             // Orthogonalize subsequent columns against column i
             for j in (i + 1)..n_cols {
-                let mut col_j = matrix.column(j).to_owned();
+                let mut col_j = _matrix.column(j).to_owned();
                 let proj = col_i.dot(&col_j);
                 col_j = col_j - &col_i * proj;
-                matrix.column_mut(j).assign(&col_j);
+                _matrix.column_mut(j).assign(&col_j);
             }
         }
     }
@@ -502,20 +502,20 @@ where
 
 /// Extend a matrix to form a complete orthogonal basis
 #[allow(dead_code)]
-fn extend_to_orthogonal_basis<F>(matrix: Array2<F>, target_size: usize) -> Array2<F>
+fn extend_to_orthogonal_basis<F>(_matrix: Array2<F>, target_size: usize) -> Array2<F>
 where
     F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
 {
-    let current_cols = matrix.ncols();
+    let current_cols = _matrix.ncols();
     if current_cols >= target_size {
-        return matrix;
+        return _matrix;
     }
 
-    let n_rows = matrix.nrows();
+    let n_rows = _matrix.nrows();
     let mut extended = Array2::<F>::zeros((n_rows, target_size));
     extended
         .slice_mut(ndarray::s![.., 0..current_cols])
-        .assign(&matrix);
+        .assign(&_matrix);
 
     // Add orthogonal vectors using QR decomposition approach
     for k in current_cols..target_size {

@@ -5,8 +5,8 @@
 //! selection insights.
 
 use ndarray::Array2;
-use scirs2_cluster::advanced_clustering::AdvancedClusterer;
-use scirs2_cluster::advanced_visualization::{
+use scirs2__cluster::advanced_clustering::AdvancedClusterer;
+use scirs2__cluster::advanced_visualization::{
     create_advanced_visualization_report, visualize_advanced_results, AdvancedVisualizationConfig,
     AdvancedVisualizer, QuantumColorScheme, VisualizationExportFormat,
 };
@@ -134,7 +134,7 @@ fn create_sample_data() -> Array2<f64> {
 
 #[allow(dead_code)]
 fn display_visualization_insights(
-    output: &scirs2_cluster::advanced_visualization::AdvancedVisualizationOutput,
+    output: &scirs2_cluster::advanced, _visualization::AdvancedVisualizationOutput,
 ) {
     println!("\n📈 Visualization Insights:");
     println!("  📊 Cluster Plot:");
@@ -220,7 +220,7 @@ fn display_visualization_insights(
 #[allow(dead_code)]
 fn demonstrate_visualization_configurations(
     data: &Array2<f64>,
-    result: &scirs2_cluster::advanced_clustering::AdvancedClusteringResult,
+    result: &scirs2_cluster::advanced, _clustering::AdvancedClusteringResult,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎨 Demonstrating different visualization configurations...");
 

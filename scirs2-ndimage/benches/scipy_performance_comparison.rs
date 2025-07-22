@@ -5,10 +5,10 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2, Array3, Array4};
-use scirs2_ndimage::filters::*;
-use scirs2_ndimage::interpolation::*;
-use scirs2_ndimage::measurements::*;
-use scirs2_ndimage::morphology::*;
+use scirs2__ndimage::filters::*;
+use scirs2__ndimage::interpolation::*;
+use scirs2__ndimage::measurements::*;
+use scirs2__ndimage::morphology::*;
 use std::time::Duration;
 
 /// Benchmark filters against baseline implementations

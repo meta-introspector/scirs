@@ -1,8 +1,8 @@
 // use ndarray::Array1;
-// use num_complex::Complex64;
-use scirs2_signal::stft::{ShortTimeFft, StftConfig};
-use scirs2_signal::waveforms::chirp;
-use scirs2_signal::window;
+// use num__complex::Complex64;
+use scirs2__signal::stft::{ShortTimeFft, StftConfig};
+use scirs2__signal::waveforms::chirp;
+use scirs2__signal::window;
 use std::error::Error;
 // use std::f64::consts::PI;
 

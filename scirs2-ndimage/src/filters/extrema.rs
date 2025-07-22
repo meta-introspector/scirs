@@ -32,7 +32,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::filters::{minimum_filter, BorderMode};
+/// use scirs2__ndimage::filters::{minimum_filter, BorderMode};
 ///
 /// let input = array![[1.0, 2.0, 3.0],
 ///                     [4.0, 5.0, 6.0],
@@ -84,7 +84,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::filters::{maximum_filter, BorderMode};
+/// use scirs2__ndimage::filters::{maximum_filter, BorderMode};
 ///
 /// let input = array![[1.0, 2.0, 3.0],
 ///                     [4.0, 5.0, 6.0],
@@ -518,8 +518,7 @@ where
 fn extrema_filter_nd_general<T, D>(
     input: &Array<T, D>,
     size: &[usize],
-    mode: &BorderMode,
-    _origin: &[isize],
+    mode: &BorderMode_origin: &[isize],
     filter_type: FilterType,
     pad_width: &[(usize, usize)],
 ) -> NdimageResult<Array<T, D>>
@@ -589,20 +588,20 @@ where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone,
     D: Dimension + 'static,
 {
-    let ndim = input.ndim();
+    let ndim = _input.ndim();
 
     // Helper function to convert linear index to n-dimensional coordinates
-    fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
-        let mut coords = vec![0; shape.len()];
-        for i in (0..shape.len()).rev() {
-            coords[i] = index % shape[i];
-            index /= shape[i];
+    fn index_to_coords(mut index: usize_shape: &[usize]) -> Vec<usize> {
+        let mut coords = vec![0; _shape.len()];
+        for i in (0.._shape.len()).rev() {
+            coords[i] = index % _shape[i];
+            index /= _shape[i];
         }
         coords
     }
 
-    // Iterate through each position in the input array
-    for linear_idx in 0..input.len() {
+    // Iterate through each position in the _input array
+    for linear_idx in 0.._input.len() {
         let coords = index_to_coords(linear_idx, input_shape);
 
         // Initialize extrema with the first element in the window
@@ -623,7 +622,7 @@ where
             // Get value at this window position
             let val = padded_input[&*actual_coords];
 
-            // Update extrema based on filter type
+            // Update extrema based on filter _type
             match filter_type {
                 FilterType::Min => {
                     if val < extrema {
@@ -684,15 +683,15 @@ where
 {
     use scirs2_core::parallel_ops::*;
 
-    let ndim = input.ndim();
-    let total_elements = input.len();
+    let ndim = _input.ndim();
+    let total_elements = _input.len();
 
     // Helper function to convert linear index to n-dimensional coordinates
-    fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
-        let mut coords = vec![0; shape.len()];
-        for i in (0..shape.len()).rev() {
-            coords[i] = index % shape[i];
-            index /= shape[i];
+    fn index_to_coords(mut index: usize_shape: &[usize]) -> Vec<usize> {
+        let mut coords = vec![0; _shape.len()];
+        for i in (0.._shape.len()).rev() {
+            coords[i] = index % _shape[i];
+            index /= _shape[i];
         }
         coords
     }
@@ -721,7 +720,7 @@ where
                 // Get value at this window position
                 let val = padded_input[&*actual_coords];
 
-                // Update extrema based on filter type
+                // Update extrema based on filter _type
                 match filter_type {
                     FilterType::Min => {
                         if val < extrema {
@@ -755,7 +754,7 @@ where
         .collect();
 
     // Convert results back to n-dimensional array
-    let output = Array::from_shape_vec(input.raw_dim(), results)
+    let output = Array::from_shape_vec(_input.raw_dim(), results)
         .map_err(|_| NdimageError::DimensionError("Failed to create output array".into()))?;
 
     Ok(output)

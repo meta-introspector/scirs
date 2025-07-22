@@ -28,7 +28,7 @@ pub trait IntegrateFloat:
     + std::iter::Sum
 {
     /// Convert to f64 for interfacing with GPU kernels
-    fn to_f64(self) -> Option<f64>;
+    fn to_f64() -> Option<f64>;
 }
 
 // Specific implementations for common float types

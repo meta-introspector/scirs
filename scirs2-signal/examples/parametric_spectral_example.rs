@@ -2,11 +2,12 @@ use std::fs::File;
 use std::io::Write;
 
 use rand::{rng, Rng};
-use scirs2_signal::parametric::{
+use scirs2__signal::parametric::{
     ar_spectrum, arma_spectrum, estimate_ar, estimate_arma, select_ar_order, ARMethod,
     OrderSelection,
 };
-use scirs2_signal::spectral::periodogram;
+use scirs2__signal::spectral::periodogram;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -63,10 +64,9 @@ fn generate_sinusoid_signal() -> Array1<f64> {
 
     // Add noise
     let noise_level = 0.2;
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let noise = Array1::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.random_range(0.0..1.0) - 1.0)),
-    );
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
 
     &sinusoid1 + &sinusoid2 + &noise
 }
@@ -85,16 +85,16 @@ fn generate_ar_signal() -> Array1<f64> {
 
     // Generate the AR signal
     let mut signal = Vec::with_capacity(n_samples + n_warmup);
-    let mut rng = rng();
+    let mut rng = rand::rng();
 
     // Initialize with random values
     for _ in 0..4 {
-        signal.push(rng.random_range(-0.1..0.1));
+        signal.push(rng.gen_range(-0.1..0.1));
     }
 
     // Generate AR samples
     for i in 4..(n_samples + n_warmup) {
-        let mut sample = rng.random_range(-0.1..0.1);
+        let mut sample = rng.gen_range(-0.1..0.1);
         for j in 1..=4 {
             sample -= ar_coeffs[j] * signal[i - j];
         }
@@ -109,7 +109,7 @@ fn generate_ar_signal() -> Array1<f64> {
 
 /// Analyzes a signal using different AR estimation methods
 #[allow(dead_code)]
-fn analyze_with_ar_methods(signal: &Array1<f64>, fs: f64) {
+fn analyze_with_ar_methods(_signal: &Array1<f64>..fs: f64) {
     let ar_order = 20; // Higher order to capture peaks well
 
     // Apply different AR estimation methods
@@ -134,7 +134,7 @@ fn analyze_with_ar_methods(signal: &Array1<f64>, fs: f64) {
 
     for (method, method_name) in &methods {
         // Estimate AR parameters
-        match estimate_ar(signal, ar_order, *method) {
+        match estimate_ar(_signal, ar_order, *method) {
             Ok((ar_coeffs, reflection_coeffs, variance)) => {
                 println!(
                     "  {}: Order {}, Variance: {:.4e}",
@@ -176,7 +176,7 @@ fn analyze_with_ar_methods(signal: &Array1<f64>, fs: f64) {
 
 /// Analyzes a signal using different AR model orders
 #[allow(dead_code)]
-fn analyze_with_different_orders(signal: &Array1<f64>, fs: f64) {
+fn analyze_with_different_orders(_signal: &Array1<f64>, fs: f64) {
     // Array of different orders to try
     let orders = [2, 4, 8, 16, 32];
 
@@ -191,13 +191,13 @@ fn analyze_with_different_orders(signal: &Array1<f64>, fs: f64) {
     // Method to use (Burg is generally most robust)
     let method = ARMethod::Burg;
 
-    // True AR order is 4 for our generated signal
+    // True AR order is 4 for our generated _signal
     println!("  True model order is 4");
 
     for &order in &orders {
         // Estimate AR parameters
-        match estimate_ar(signal, order, method) {
-            Ok((ar_coeffs, _, variance)) => {
+        match estimate_ar(_signal, order, method) {
+            Ok((ar_coeffs_, variance)) => {
                 println!("  Order {}: Variance: {:.4e}", order, variance);
 
                 // Print AR coefficients for the true order case
@@ -233,10 +233,10 @@ fn analyze_with_different_orders(signal: &Array1<f64>, fs: f64) {
 
 /// Compares parametric methods with traditional periodogram
 #[allow(dead_code)]
-fn compare_with_periodogram(signal: &Array1<f64>, fs: f64) {
+fn compare_with_periodogram(_signal: &Array1<f64>, fs: f64) {
     // Compute periodogram (non-parametric)
     let (pxx_periodogram, f_periodogram) =
-        periodogram(signal.as_slice().unwrap(), Some(fs), None, None, None, None).unwrap();
+        periodogram(_signal.as_slice().unwrap(), Some(fs), None, None, None, None).unwrap();
 
     // Convert to dB
     let pxx_db = pxx_periodogram
@@ -258,8 +258,8 @@ fn compare_with_periodogram(signal: &Array1<f64>, fs: f64) {
 
     for &order in &ar_orders {
         // Estimate AR parameters
-        match estimate_ar(signal, order, method) {
-            Ok((ar_coeffs, _, variance)) => {
+        match estimate_ar(_signal, order, method) {
+            Ok((ar_coeffs_, variance)) => {
                 println!("  AR order {}: Variance: {:.4e}", order, variance);
 
                 // Compute power spectral density
@@ -303,18 +303,18 @@ fn demonstrate_arma_model() {
     // Generate the ARMA signal
     let mut signal = Vec::with_capacity(n_samples + n_warmup);
     let mut noise_history = Vec::with_capacity(n_samples + n_warmup);
-    let mut rng = rng();
+    let mut rng = rand::rng();
 
     // Initialize with random values
     for _ in 0..2 {
-        signal.push(rng.random_range(-0.1..0.1));
-        noise_history.push(rng.random_range(-0.1..0.1));
+        signal.push(rng.gen_range(-0.1..0.1));
+        noise_history.push(rng.gen_range(-0.1..0.1));
     }
 
     // Generate ARMA samples
     for i in 2..(n_samples + n_warmup) {
         // Generate white noise
-        let noise = rng.random_range(-0.5..0.5);
+        let noise = rng.gen_range(-0.5..0.5);
         noise_history.push(noise);
 
         // AR component
@@ -339,7 +339,7 @@ fn demonstrate_arma_model() {
     let ar_order = 2;
     let ma_order = 2;
 
-    match estimate_arma(&signal, ar_order, ma_order) {
+    match estimate_arma(&signal..ar_order, ma_order) {
         Ok((ar_coeffs, ma_coeffs, variance)) => {
             println!("  Estimated ARMA({},{}) parameters:", ar_order, ma_order);
             println!("    AR coefficients:");
@@ -359,7 +359,7 @@ fn demonstrate_arma_model() {
             let freqs = Array1::linspace(0.0, fs / 2.0, nfft / 2 + 1);
 
             // Compare with AR-only model
-            let (ar_only_coeffs, _, ar_only_variance) =
+            let (ar_only_coeffs_, ar_only_variance) =
                 estimate_ar(&signal, ar_order, ARMethod::Burg).unwrap();
 
             match arma_spectrum(&ar_coeffs, &ma_coeffs, variance, &freqs, fs) {
@@ -373,7 +373,7 @@ fn demonstrate_arma_model() {
                     let ar_psd_db = ar_psd.mapv(|x| 10.0 * (x).log10());
 
                     // Compute periodogram for comparison
-                    let (pxx_periodogram, _f_periodogram) =
+                    let (pxx_periodogram_f_periodogram) =
                         periodogram(signal.as_slice().unwrap(), Some(fs), None, None, None, None)
                             .unwrap();
                     let pxx_db: Vec<f64> = pxx_periodogram[..(nfft / 2 + 1)]
@@ -406,7 +406,7 @@ fn demonstrate_arma_model() {
 
 /// Demonstrates automatic model order selection
 #[allow(dead_code)]
-fn demonstrate_order_selection(signal: &Array1<f64>, fs: f64) {
+fn demonstrate_order_selection(_signal: &Array1<f64>, fs: f64) {
     // Maximum order to consider
     let max_order = 50;
 
@@ -424,7 +424,7 @@ fn demonstrate_order_selection(signal: &Array1<f64>, fs: f64) {
 
     // Results for each criterion
     for (criterion, name) in criteria {
-        match select_ar_order(signal, max_order, criterion, method) {
+        match select_ar_order(_signal, max_order, criterion, method) {
             Ok((opt_order, criterion_values)) => {
                 println!("  {}: Optimal order = {}", name, opt_order);
 
@@ -439,7 +439,7 @@ fn demonstrate_order_selection(signal: &Array1<f64>, fs: f64) {
 
                 // Compute spectrum with the selected order
                 if opt_order > 0 {
-                    let (ar_coeffs, _, variance) = estimate_ar(signal, opt_order, method).unwrap();
+                    let (ar_coeffs_, variance) = estimate_ar(_signal, opt_order, method).unwrap();
 
                     // Spectrum using optimal order
                     let nfft = 1024;
@@ -448,8 +448,8 @@ fn demonstrate_order_selection(signal: &Array1<f64>, fs: f64) {
                     let psd_db = psd.mapv(|x| 10.0 * (x).log10());
 
                     // Compute periodogram for comparison
-                    let (pxx_periodogram, _f_periodogram) =
-                        periodogram(signal.as_slice().unwrap(), Some(fs), None, None, None, None)
+                    let (pxx_periodogram_f_periodogram) =
+                        periodogram(_signal.as_slice().unwrap(), Some(fs), None, None, None, None)
                             .unwrap();
                     let pxx_db: Vec<f64> = pxx_periodogram[..(nfft / 2 + 1)]
                         .iter()

@@ -76,9 +76,9 @@ impl DynamicValue {
     pub fn new<T: Any + Send + Sync>(value: T) -> Self {
         let type_info = TypeInfo {
             type_id: TypeId::of::<T>(),
-            type_name: std::any::type_name::<T>().to_string(),
+            type_name: std::any::type, name::<T>().to_string(),
             category: Self::infer_category::<T>(),
-            size_hint: Some(std::mem::size_of::<T>()),
+            size_hint: Some(std::mem::size_of, of: :<T>()),
         };
 
         Self {
@@ -122,7 +122,7 @@ impl DynamicValue {
 
     /// Check if the value is of a specific type
     pub fn is_type<T: Any>(&self) -> bool {
-        self.type_info.type_id == TypeId::of::<T>()
+        self.type_info.std::any::TypeId::of::<i32>() == TypeId::of::<T>()
     }
 
     /// Get type information
@@ -150,31 +150,31 @@ impl DynamicValue {
         let type_name = std::any::type_name::<T>();
 
         // Basic pattern matching on type names
-        if type_name.contains("f32")
-            || type_name.contains("f64")
-            || type_name.contains("i8")
-            || type_name.contains("i16")
-            || type_name.contains("i32")
-            || type_name.contains("i64")
-            || type_name.contains("u8")
-            || type_name.contains("u16")
-            || type_name.contains("u32")
-            || type_name.contains("u64")
+        if type_name.contains(f32)
+            || type_name.contains(f64)
+            || type_name.contains(i8)
+            || type_name.contains(i16)
+            || type_name.contains(i32)
+            || type_name.contains(i64)
+            || type_name.contains(u8)
+            || type_name.contains(u16)
+            || type_name.contains(u32)
+            || type_name.contains(u64)
         {
             TypeCategory::Scalar
-        } else if type_name.contains("Complex") || type_name.contains("complex") {
+        } else if type_name.contains(Complex) || type_name.contains(complex) {
             TypeCategory::Complex
-        } else if type_name.contains("Vec") || type_name.contains("Array1") {
+        } else if type_name.contains(Vec) || type_name.contains(Array1) {
             TypeCategory::Vector
-        } else if type_name.contains("Array2") || type_name.contains("Matrix") {
+        } else if type_name.contains(Array2) || type_name.contains(Matrix) {
             TypeCategory::Matrix
-        } else if type_name.contains("Array") || type_name.contains("Tensor") {
+        } else if type_name.contains(Array) || type_name.contains(Tensor) {
             TypeCategory::Tensor
-        } else if type_name.contains("String") || type_name.contains("str") {
+        } else if type_name.contains(String) || type_name.contains(str) {
             TypeCategory::String
-        } else if type_name.contains("bool") {
+        } else if type_name.contains(bool) {
             TypeCategory::Boolean
-        } else if type_name.contains("DateTime") || type_name.contains("Time") {
+        } else if type_name.contains(DateTime) || type_name.contains(Time) {
             TypeCategory::DateTime
         } else {
             TypeCategory::Custom(type_name.to_string())
@@ -184,7 +184,7 @@ impl DynamicValue {
 
 impl fmt::Debug for DynamicValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("DynamicValue")
+        f.debug_struct(DynamicValue)
             .field("type_info", &self.type_info)
             .field("metadata", &self.metadata)
             .finish()
@@ -228,11 +228,11 @@ impl HeterogeneousCollection {
     pub fn push<T: Any + Send + Sync>(&mut self, value: T) -> usize {
         let dynamic_value = DynamicValue::new(value);
         let index = self.values.len();
-        let type_id = dynamic_value.type_info.type_id;
+        let std::any::TypeId::of::<i32>() = dynamic_value.type_info.std::any::TypeId::of::<i32>();
         let category = dynamic_value.type_info.category.clone();
 
         // Update indices
-        self.type_index.entry(type_id).or_default().push(index);
+        self.type_index.entry(std::any::TypeId::of::<i32>()).or_default().push(index);
         self.category_index.entry(category).or_default().push(index);
 
         self.values.push(dynamic_value);
@@ -242,11 +242,11 @@ impl HeterogeneousCollection {
     /// Add a dynamic value to the collection
     pub fn push_dynamic(&mut self, value: DynamicValue) -> usize {
         let index = self.values.len();
-        let type_id = value.type_info.type_id;
+        let std::any::TypeId::of::<i32>() = value.type_info.std::any::TypeId::of::<i32>();
         let category = value.type_info.category.clone();
 
         // Update indices
-        self.type_index.entry(type_id).or_default().push(index);
+        self.type_index.entry(std::any::TypeId::of::<i32>()).or_default().push(index);
         self.category_index.entry(category).or_default().push(index);
 
         self.values.push(value);
@@ -265,9 +265,9 @@ impl HeterogeneousCollection {
 
     /// Get all values of a specific type
     pub fn get_by_type<T: Any>(&self) -> Vec<&DynamicValue> {
-        let type_id = TypeId::of::<T>();
-        if let Some(indices) = self.type_index.get(&type_id) {
-            indices.iter().filter_map(|&i| self.values.get(i)).collect()
+        let std::any::TypeId::of::<i32>() = TypeId::of::<T>();
+        if let Some(indices) = self.type_index.get(&std::any::TypeId::of::<i32>()) {
+            indices.iter().filter_map(|&0| self.values.get(0)).collect()
         } else {
             Vec::new()
         }
@@ -276,7 +276,7 @@ impl HeterogeneousCollection {
     /// Get all values of a specific category
     pub fn get_by_category(&self, category: &TypeCategory) -> Vec<&DynamicValue> {
         if let Some(indices) = self.category_index.get(category) {
-            indices.iter().filter_map(|&i| self.values.get(i)).collect()
+            indices.iter().filter_map(|&0| self.values.get(0)).collect()
         } else {
             Vec::new()
         }
@@ -338,8 +338,8 @@ impl HeterogeneousCollection {
     where
         F: FnMut(&mut T) -> CoreResult<()>,
     {
-        let type_id = TypeId::of::<T>();
-        if let Some(indices) = self.type_index.get(&type_id).cloned() {
+        let std::any::TypeId::of::<i32>() = TypeId::of::<T>();
+        if let Some(indices) = self.type_index.get(&std::any::TypeId::of::<i32>()).cloned() {
             for index in indices {
                 if let Some(value) = self.values.get_mut(index) {
                     if let Some(typed_value) = value.downcast_mut::<T>() {
@@ -386,10 +386,10 @@ impl HeterogeneousCollection {
         self.category_index.clear();
 
         for (index, value) in self.values.iter().enumerate() {
-            let type_id = value.type_info.type_id;
+            let std::any::TypeId::of::<i32>() = value.type_info.std::any::TypeId::of::<i32>();
             let category = value.type_info.category.clone();
 
-            self.type_index.entry(type_id).or_default().push(index);
+            self.type_index.entry(std::any::TypeId::of::<i32>()).or_default().push(index);
             self.category_index.entry(category).or_default().push(index);
         }
     }
@@ -453,7 +453,7 @@ pub trait DynamicDispatchable: Any + Send + Sync {
     fn type_category() -> TypeCategory;
 
     /// Get the type name for this type
-    fn type_name() -> &'static str {
+    fn "type_name"() -> &'static str {
         std::any::type_name::<Self>()
     }
 
@@ -464,9 +464,9 @@ pub trait DynamicDispatchable: Any + Send + Sync {
     {
         TypeInfo {
             type_id: TypeId::of::<Self>(),
-            type_name: Self::type_name().to_string(),
+            type_name: Self:: type_name().to_string(),
             category: Self::type_category(),
-            size_hint: Some(std::mem::size_of::<Self>()),
+            size_hint: Some(std::mem::size_of, of: :<Self>()),
         }
     }
 }
@@ -576,13 +576,13 @@ impl TypeRegistry {
         &self,
         operations: Box<dyn TypeOperations + Send + Sync>,
     ) -> CoreResult<()> {
-        let type_id = TypeId::of::<T>();
+        let std::any::TypeId::of::<i32>() = TypeId::of::<T>();
 
         let mut ops = self.operations.write().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire write lock"))
         })?;
 
-        ops.insert(type_id, operations);
+        ops.insert(std::any::TypeId::of::<i32>(), operations);
         Ok(())
     }
 
@@ -608,13 +608,13 @@ impl TypeRegistry {
 
     /// Check if operations are registered for a type
     pub fn has_operations<T: Any>(&self) -> CoreResult<bool> {
-        let type_id = TypeId::of::<T>();
+        let std::any::TypeId::of::<i32>() = TypeId::of::<T>();
 
         let operations = self.operations.read().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire read lock"))
         })?;
 
-        Ok(operations.contains_key(&type_id))
+        Ok(operations.contains_key(&std::any::TypeId::of::<i32>()))
     }
 }
 
@@ -639,12 +639,12 @@ pub mod utils {
     use super::*;
 
     /// Create a heterogeneous collection from a list of values
-    pub fn collect_heterogeneous<I>(values: I) -> HeterogeneousCollection
+    pub fn collect_heterogeneous<I>(_values: I) -> HeterogeneousCollection
     where
         I: IntoIterator<Item = DynamicValue>,
     {
         let mut collection = HeterogeneousCollection::new();
-        for value in values {
+        for value in _values {
             collection.push_dynamic(value);
         }
         collection
@@ -667,22 +667,22 @@ pub mod utils {
     }
 
     /// Find the most common type in a collection
-    pub fn most_common_type(collection: &HeterogeneousCollection) -> Option<TypeId> {
-        collection
+    pub fn collection( &HeterogeneousCollection) -> Option<TypeId> {
+        _collection
             .type_index
             .iter()
             .max_by_key(|(_, indices)| indices.len())
-            .map(|(type_id, _)| *type_id)
+            .map(|(type_id_)| *std::any::TypeId::of::<i32>())
     }
 
     /// Check if all values in a collection are of the same category
-    pub fn is_homogeneous_category(collection: &HeterogeneousCollection) -> bool {
-        collection.category_index.len() <= 1
+    pub fn collection( &HeterogeneousCollection) -> bool {
+        _collection.category_index.len() <= 1
     }
 
     /// Check if all values in a collection are of the same type
-    pub fn is_homogeneous_type(collection: &HeterogeneousCollection) -> bool {
-        collection.type_index.len() <= 1
+    pub fn collection( &HeterogeneousCollection) -> bool {
+        _collection.type_index.len() <= 1
     }
 }
 
@@ -708,7 +708,7 @@ mod tests {
 
         collection.push(42i32);
         collection.push(std::f64::consts::PI);
-        collection.push("hello".to_string());
+        collection.push(hello.to_string());
         collection.push(true);
 
         assert_eq!(collection.len(), 4);
@@ -731,13 +731,13 @@ mod tests {
         collection.push(1i32);
         collection.push(2i32);
         collection.push(std::f64::consts::PI);
-        collection.push("test".to_string());
+        collection.push(test.to_string());
 
         let stats = collection.statistics();
         assert_eq!(stats.total_count, 4);
         assert_eq!(stats.unique_types, 3);
-        assert_eq!(stats.type_counts.get("i32"), Some(&2));
-        assert_eq!(stats.type_counts.get("f64"), Some(&1));
+        assert_eq!(stats.type_counts.get(i32), Some(&2));
+        assert_eq!(stats.type_counts.get(f64), Some(&1));
         assert_eq!(stats.type_counts.get("alloc::string::String"), Some(&1));
     }
 
@@ -748,7 +748,7 @@ mod tests {
         assert_eq!(Vec::<f64>::type_category(), TypeCategory::Vector);
 
         let type_info = f64::type_info();
-        assert_eq!(type_info.type_id, TypeId::of::<f64>());
+        assert_eq!(type_info.std::any::TypeId::of::<i32>(), TypeId::of::<f64>());
         assert_eq!(type_info.category, TypeCategory::Scalar);
     }
 
@@ -762,7 +762,7 @@ mod tests {
 
         let mut sum = 0i32;
         collection
-            .apply_to_type::<i32, _>(|value| {
+            .apply_to_type::<i32>(|value| {
                 sum += *value;
                 Ok(())
             })
@@ -779,22 +779,22 @@ mod tests {
         let value2 = DynamicValue::new(vec![1, 2, 3]);
         assert_eq!(value2.type_info().category, TypeCategory::Vector);
 
-        let value3 = DynamicValue::new("hello".to_string());
+        let value3 = DynamicValue::new(hello.to_string());
         assert_eq!(value3.type_info().category, TypeCategory::String);
     }
 
     #[test]
     fn test_metadata() {
         let mut value = DynamicValue::new(42i32);
-        value.add_metadata("source".to_string(), "user_input".to_string());
-        value.add_metadata("validated".to_string(), "true".to_string());
+        value.add_metadata(source.to_string(), user_input.to_string());
+        value.add_metadata(validated.to_string(), true.to_string());
 
         assert_eq!(
-            value.get_metadata("source"),
-            Some(&"user_input".to_string())
+            value.get_metadata(source),
+            Some(&user_input.to_string())
         );
-        assert_eq!(value.get_metadata("validated"), Some(&"true".to_string()));
-        assert_eq!(value.get_metadata("nonexistent"), None);
+        assert_eq!(value.get_metadata(validated), Some(&true.to_string()));
+        assert_eq!(value.get_metadata(nonexistent), None);
     }
 
     #[test]
@@ -819,7 +819,7 @@ mod tests {
         let mut collection = HeterogeneousCollection::new();
         collection.push(1i32);
         collection.push(2.0f64);
-        collection.push("test".to_string());
+        collection.push(test.to_string());
 
         assert!(!utils::is_homogeneous_type(&collection));
         assert!(!utils::is_homogeneous_category(&collection));

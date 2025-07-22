@@ -53,9 +53,9 @@ pub struct OperationMetrics {
 }
 
 impl AdaptiveMemoryManager {
-    pub fn new(constraints: MemoryConstraints) -> Self {
+    pub fn new(_constraints: MemoryConstraints) -> Self {
         Self {
-            constraints,
+            _constraints,
             current_usage: Arc::new(Mutex::new(0)),
             peak_usage: Arc::new(Mutex::new(0)),
             operation_history: Arc::new(Mutex::new(VecDeque::with_capacity(100))),
@@ -281,7 +281,7 @@ where
             initialized = true;
         } else if chunk_vars != n_vars {
             return Err(StatsError::DimensionMismatch(
-                "All chunks must have the same number of variables".to_string(),
+                "All _chunks must have the same number of variables".to_string(),
             ));
         }
 
@@ -384,7 +384,7 @@ where
         let transformed = matrix_multiply(&centered_data.view(), &eigenvectors.view())?;
 
         let result = PCAResult {
-            components: eigenvectors,
+            _components: eigenvectors,
             explained_variance: eigenvalues,
             transformed_data: transformed,
             mean: means,
@@ -442,7 +442,7 @@ where
             initialized = true;
         } else if chunk_features != n_features {
             return Err(StatsError::DimensionMismatch(
-                "All chunks must have same number of features".to_string(),
+                "All _chunks must have same number of features".to_string(),
             ));
         }
 
@@ -480,12 +480,12 @@ where
     }
 
     // Simplified eigendecomposition (would use proper SVD in production)
-    let (components, explained_variance) =
+    let (_components, explained_variance) =
         compute_eigendecomposition(&running_cov.view(), n_components)?;
 
     // Record memory usage
     let memory_used =
-        n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size_of::<F>();
+        n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size, _of::<F>();
     manager.record_operation(OperationMetrics {
         operation_type: "streaming_pca_enhanced".to_string(),
         memory_used,
@@ -494,7 +494,7 @@ where
     });
 
     Ok(PCAResult {
-        components,
+        _components,
         explained_variance,
         transformed_data: Array2::zeros((0, 0)), // Would project data in second pass
         mean: running_mean,
@@ -535,7 +535,7 @@ where
                 let j = {
                     use rand::Rng;
                     let mut rng = rand::rng();
-                    rng.random_range(0..total_count)
+                    rng.gen_range(0..total_count)
                 };
                 if j < values.len() {
                     values[j] = value;
@@ -549,7 +549,7 @@ where
     }
 
     // Adaptive bin count using Freedman-Diaconis rule
-    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    values.sort_by(|a..b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
     let q75_idx = (values.len() as f64 * 0.75) as usize;
     let q25_idx = (values.len() as f64 * 0.25) as usize;
     let iqr = values[q75_idx] - values[q25_idx];
@@ -577,7 +577,7 @@ where
     }
 
     // Second pass would count values into bins (simplified here)
-    // In practice, you'd iterate through chunks again
+    // In practice, you'd iterate through _chunks again
     for &value in values.iter() {
         if value >= min_val && value <= max_val {
             let bin_idx = ((value - min_val) / bin_width)
@@ -588,7 +588,7 @@ where
         }
     }
 
-    let memory_used = n_bins * (std::mem::size_of::<F>() + std::mem::size_of::<usize>());
+    let memory_used = n_bins * (std::mem::size_of::<F>() + std::mem::size, _of::<usize>());
     manager.record_operation(OperationMetrics {
         operation_type: "streaming_histogram_adaptive".to_string(),
         memory_used,
@@ -657,26 +657,26 @@ impl<F> P2Estimator<F>
 where
     F: Float + NumCast + Copy + PartialOrd + std::fmt::Display,
 {
-    fn new(quantile: f64) -> Self {
+    fn new(_quantile: f64) -> Self {
         let mut estimator = Self {
-            quantile,
+            _quantile,
             markers: [F::zero(); 5],
             positions: [1.0, 2.0, 3.0, 4.0, 5.0],
             desired_positions: [
                 1.0,
-                1.0 + 2.0 * quantile,
-                1.0 + 4.0 * quantile,
-                3.0 + 2.0 * quantile,
+                1.0 + 2.0 * _quantile,
+                1.0 + 4.0 * _quantile,
+                3.0 + 2.0 * _quantile,
                 5.0,
             ],
-            increment: [0.0, quantile / 2.0, quantile, (1.0 + quantile) / 2.0, 1.0],
+            increment: [0.0, _quantile / 2.0, _quantile, (1.0 + _quantile) / 2.0, 1.0],
             count: 0,
         };
 
         // Initialize desired positions
-        estimator.desired_positions[1] = 1.0 + 2.0 * quantile;
-        estimator.desired_positions[2] = 1.0 + 4.0 * quantile;
-        estimator.desired_positions[3] = 3.0 + 2.0 * quantile;
+        estimator.desired_positions[1] = 1.0 + 2.0 * _quantile;
+        estimator.desired_positions[2] = 1.0 + 4.0 * _quantile;
+        estimator.desired_positions[3] = 3.0 + 2.0 * _quantile;
 
         estimator
     }
@@ -817,7 +817,7 @@ where
             initialized = true;
         } else if chunk_features != n_features {
             return Err(StatsError::DimensionMismatch(
-                "All chunks must have same number of features".to_string(),
+                "All _chunks must have same number of features".to_string(),
             ));
         }
 
@@ -867,7 +867,7 @@ where
     let coefficients = solve_linear_system(&xtx.view(), &xty.view())?;
 
     let memory_used =
-        n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size_of::<F>();
+        n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size, _of::<F>();
     manager.record_operation(OperationMetrics {
         operation_type: "streaming_regression_enhanced".to_string(),
         memory_used,
@@ -1018,8 +1018,7 @@ where
                     let corr = match method {
                         "pearson" => crate::pearson_r(&col_i, &col_j)?,
                         "spearman" => crate::spearman_r(&col_i, &col_j)?,
-                        "kendall" => crate::kendall_tau(&col_i, &col_j, "b")?,
-                        _ => {
+                        "kendall" => crate::kendall_tau(&col_i, &col_j, "b")?_ => {
                             return Err(StatsError::InvalidArgument(format!(
                                 "Unknown method: {}",
                                 method
@@ -1038,11 +1037,11 @@ where
 }
 
 #[allow(dead_code)]
-fn compute_covariance_from_centered<F>(data: &ArrayView2<F>) -> StatsResult<Array2<F>>
+fn compute_covariance_from_centered<F>(_data: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Zero + Copy + std::fmt::Display,
 {
-    let (n_obs, n_vars) = data.dim();
+    let (n_obs, n_vars) = _data.dim();
     let mut cov_matrix = Array2::<F>::zeros((n_vars, n_vars));
     let n_f = F::from(n_obs - 1).unwrap(); // Sample covariance
 
@@ -1050,7 +1049,7 @@ where
         for j in i..n_vars {
             let mut cov = F::zero();
             for k in 0..n_obs {
-                cov = cov + data[[k, i]] * data[[k, j]];
+                cov = cov + _data[[k, i]] * _data[[k, j]];
             }
             cov = cov / n_f;
             cov_matrix[[i, j]] = cov;
@@ -1200,10 +1199,10 @@ where
     // Batch size for incremental processing
     let batch_size = manager.get_optimal_chunk_size(n_obs, std::mem::size_of::<F>() * n_vars);
 
-    // Initialize components with random orthogonal matrix
-    let mut components = Array2::<F>::zeros((n_vars, n_components));
+    // Initialize _components with random orthogonal matrix
+    let mut _components = Array2::<F>::zeros((n_vars, n_components));
     for i in 0..n_components {
-        components[[i % n_vars, i]] = F::one();
+        _components[[i % n_vars, i]] = F::one();
     }
 
     let mut explained_variance = Array1::<F>::zeros(n_components);
@@ -1222,9 +1221,9 @@ where
             }
         }
 
-        // Update components using simplified incremental update
+        // Update _components using simplified incremental update
         for k in 0..n_components {
-            let component = components.column(k).to_owned();
+            let component = _components.column(k).to_owned();
 
             // Project batch onto current component
             let mut projections = Array1::<F>::zeros(batch.nrows());
@@ -1255,7 +1254,7 @@ where
 
             if norm > F::epsilon() {
                 for j in 0..n_vars {
-                    components[[j, k]] = new_component[j] / norm;
+                    _components[[j, k]] = new_component[j] / norm;
                 }
 
                 // Update explained variance
@@ -1277,14 +1276,14 @@ where
             let mut projection = F::zero();
             for j in 0..n_vars {
                 let centered_val = data[[i, j]] - means[j];
-                projection = projection + centered_val * components[[j, k]];
+                projection = projection + centered_val * _components[[j, k]];
             }
             transformed_data[[i, k]] = projection;
         }
     }
 
     Ok(PCAResult {
-        components,
+        _components,
         explained_variance,
         transformed_data,
         mean: means.clone(),
@@ -1292,12 +1291,12 @@ where
 }
 
 #[allow(dead_code)]
-fn check_array_finite_2d<F, D>(arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
+fn check_array_finite_2d<F, D>(_arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,
     D: Data<Elem = F>,
 {
-    for &val in arr.iter() {
+    for &val in _arr.iter() {
         if !val.is_finite() {
             return Err(StatsError::InvalidArgument(format!(
                 "{} contains non-finite values",

@@ -91,11 +91,11 @@ impl DocumentationSite {
             functions: vec![
                 FunctionDoc {
                     name: "gaussian_filter".to_string(),
-                    signature: "pub fn gaussian_filter<T>(input: &ArrayD<T>, sigma: f64) -> ArrayD<T>".to_string(),
+                    signature: "pub fn gaussian_filter<T>(_input: &ArrayD<T>, sigma: f64) -> ArrayD<T>".to_string(),
                     description: "Apply Gaussian filter to n-dimensional array".to_string(),
                     parameters: vec![
                         Parameter {
-                            name: "input".to_string(),
+                            name: "_input".to_string(),
                             param_type: "&ArrayD<T>".to_string(),
                             description: "Input n-dimensional array".to_string(),
                             optional: false,
@@ -109,7 +109,7 @@ impl DocumentationSite {
                     ],
                     returns: "ArrayD<T> - Filtered array".to_string(),
                     examples: vec![
-                        r#"use scirs2_ndimage::filters::gaussian_filter;
+                        r#"use scirs2__ndimage::filters::gaussian_filter;
 use ndarray::Array2;
 
 let image = Array2::from_elem((100, 100), 1.0f64);
@@ -123,11 +123,11 @@ assert_eq!(filtered.shape(), image.shape());"#.to_string(),
                 },
                 FunctionDoc {
                     name: "median_filter".to_string(),
-                    signature: "pub fn median_filter<T>(input: &ArrayD<T>, size: usize) -> ArrayD<T>".to_string(),
+                    signature: "pub fn median_filter<T>(_input: &ArrayD<T>, size: usize) -> ArrayD<T>".to_string(),
                     description: "Apply median filter to remove noise while preserving edges".to_string(),
                     parameters: vec![
                         Parameter {
-                            name: "input".to_string(),
+                            name: "_input".to_string(),
                             param_type: "&ArrayD<T>".to_string(),
                             description: "Input n-dimensional array".to_string(),
                             optional: false,
@@ -141,7 +141,7 @@ assert_eq!(filtered.shape(), image.shape());"#.to_string(),
                     ],
                     returns: "ArrayD<T> - Filtered array".to_string(),
                     examples: vec![
-                        r#"use scirs2_ndimage::filters::median_filter;
+                        r#"use scirs2__ndimage::filters::median_filter;
 use ndarray::Array2;
 
 let noisy_image = Array2::from_elem((50, 50), 128.0f64);
@@ -168,11 +168,11 @@ let filtered = median_filter(&noisy_image, 3);
             functions: vec![
                 FunctionDoc {
                     name: "binary_erosion".to_string(),
-                    signature: "pub fn binary_erosion(input: &ArrayD<bool>, structure: &ArrayD<bool>) -> ArrayD<bool>".to_string(),
+                    signature: "pub fn binary_erosion(_input: &ArrayD<bool>, structure: &ArrayD<bool>) -> ArrayD<bool>".to_string(),
                     description: "Perform binary erosion operation".to_string(),
                     parameters: vec![
                         Parameter {
-                            name: "input".to_string(),
+                            name: "_input".to_string(),
                             param_type: "&ArrayD<bool>".to_string(),
                             description: "Input binary array".to_string(),
                             optional: false,
@@ -186,7 +186,7 @@ let filtered = median_filter(&noisy_image, 3);
                     ],
                     returns: "ArrayD<bool> - Eroded binary array".to_string(),
                     examples: vec![
-                        r#"use scirs2_ndimage::morphology::binary_erosion;
+                        r#"use scirs2__ndimage::morphology::binary_erosion;
 use ndarray::Array2;
 
 let binary_image = Array2::from_elem((10, 10), true);
@@ -200,11 +200,11 @@ let eroded = binary_erosion(&binary_image, &structure);"#.to_string(),
                 },
                 FunctionDoc {
                     name: "distance_transform_edt".to_string(),
-                    signature: "pub fn distance_transform_edt(input: &ArrayD<bool>) -> ArrayD<f64>".to_string(),
+                    signature: "pub fn distance_transform_edt(_input: &ArrayD<bool>) -> ArrayD<f64>".to_string(),
                     description: "Compute Euclidean distance transform using optimized algorithm".to_string(),
                     parameters: vec![
                         Parameter {
-                            name: "input".to_string(),
+                            name: "_input".to_string(),
                             param_type: "&ArrayD<bool>".to_string(),
                             description: "Input binary array".to_string(),
                             optional: false,
@@ -212,7 +212,7 @@ let eroded = binary_erosion(&binary_image, &structure);"#.to_string(),
                     ],
                     returns: "ArrayD<f64> - Distance transform".to_string(),
                     examples: vec![
-                        r#"use scirs2_ndimage::morphology::distance_transform_edt;
+                        r#"use scirs2__ndimage::morphology::distance_transform_edt;
 use ndarray::Array2;
 
 let binary_image = Array2::from_elem((100, 100), false);
@@ -239,11 +239,11 @@ let distances = distance_transform_edt(&binary_image);
             functions: vec![
                 FunctionDoc {
                     name: "affine_transform".to_string(),
-                    signature: "pub fn affine_transform<T>(input: &ArrayD<T>, matrix: &Array2<f64>) -> ArrayD<T>".to_string(),
+                    signature: "pub fn affine_transform<T>(_input: &ArrayD<T>, matrix: &Array2<f64>) -> ArrayD<T>".to_string(),
                     description: "Apply affine transformation to n-dimensional array".to_string(),
                     parameters: vec![
                         Parameter {
-                            name: "input".to_string(),
+                            name: "_input".to_string(),
                             param_type: "&ArrayD<T>".to_string(),
                             description: "Input array to transform".to_string(),
                             optional: false,
@@ -257,7 +257,7 @@ let distances = distance_transform_edt(&binary_image);
                     ],
                     returns: "ArrayD<T> - Transformed array".to_string(),
                     examples: vec![
-                        r#"use scirs2_ndimage::interpolation::affine_transform;
+                        r#"use scirs2__ndimage::interpolation::affine_transform;
 use ndarray::{Array2, array};
 
 let image = Array2::from_elem((50, 50), 1.0f64);
@@ -283,16 +283,16 @@ let rotated = affine_transform(&image, &rotation_matrix);"#.to_string(),
             description: "Statistical measurements and region analysis".to_string(),
             functions: vec![FunctionDoc {
                 name: "center_of_mass".to_string(),
-                signature: "pub fn center_of_mass<T>(input: &ArrayD<T>) -> Vec<f64>".to_string(),
+                signature: "pub fn center_of_mass<T>(_input: &ArrayD<T>) -> Vec<f64>".to_string(),
                 description: "Calculate center of mass of n-dimensional array".to_string(),
                 parameters: vec![Parameter {
-                    name: "input".to_string(),
+                    name: "_input".to_string(),
                     param_type: "&ArrayD<T>".to_string(),
                     description: "Input array".to_string(),
                     optional: false,
                 }],
                 returns: "Vec<f64> - Center of mass coordinates".to_string(),
-                examples: vec![r#"use scirs2_ndimage::measurements::center_of_mass;
+                examples: vec![r#"use scirs2__ndimage::measurements::center_of_mass;
 use ndarray::Array2;
 
 let image = Array2::from_elem((100, 100), 1.0f64);
@@ -362,7 +362,7 @@ let volume = Array3::from_elem((50, 50, 50), 1.0f64);
 ### Applying Filters
 
 ```rust
-use scirs2_ndimage::filters::gaussian_filter;
+use scirs2__ndimage::filters::gaussian_filter;
 
 let filtered = gaussian_filter(&image, 2.0);
 ```
@@ -392,7 +392,7 @@ Edge detection is crucial for feature extraction and object recognition.
 ### Sobel Filter
 
 ```rust
-use scirs2_ndimage::filters::sobel_filter;
+use scirs2__ndimage::filters::sobel_filter;
 
 let edges = sobel_filter(&image);
 ```
@@ -400,7 +400,7 @@ let edges = sobel_filter(&image);
 ### Canny Edge Detection
 
 ```rust
-use scirs2_ndimage::filters::canny_edge_detector;
+use scirs2__ndimage::filters::canny_edge_detector;
 
 let edges = canny_edge_detector(&image, 0.1, 0.2);
 ```
@@ -412,7 +412,7 @@ let edges = canny_edge_detector(&image, 0.1, 0.2);
 Preserves edges while reducing noise:
 
 ```rust
-use scirs2_ndimage::filters::bilateral_filter;
+use scirs2__ndimage::filters::bilateral_filter;
 
 let denoised = bilateral_filter(&noisy_image, 5.0, 10.0);
 ```
@@ -422,7 +422,7 @@ let denoised = bilateral_filter(&noisy_image, 5.0, 10.0);
 Advanced denoising technique:
 
 ```rust
-use scirs2_ndimage::filters::non_local_means;
+use scirs2__ndimage::filters::non_local_means;
 
 let denoised = non_local_means(&noisy_image, 0.1, 7, 21);
 ```
@@ -449,7 +449,7 @@ in images. It's particularly useful for binary images but can be extended to gra
 ### Erosion and Dilation
 
 ```rust
-use scirs2_ndimage::morphology::{binary_erosion, binary_dilation};
+use scirs2__ndimage::morphology::{binary_erosion, binary_dilation};
 use ndarray::Array2;
 
 let structure = Array2::from_elem((3, 3), true);
@@ -460,7 +460,7 @@ let dilated = binary_dilation(&binary_image, &structure);
 ### Opening and Closing
 
 ```rust
-use scirs2_ndimage::morphology::{binary_opening, binary_closing};
+use scirs2__ndimage::morphology::{binary_opening, binary_closing};
 
 let opened = binary_opening(&binary_image, &structure);
 let closed = binary_closing(&binary_image, &structure);
@@ -471,7 +471,7 @@ let closed = binary_closing(&binary_image, &structure);
 ### Skeletonization
 
 ```rust
-use scirs2_ndimage::morphology::skeletonize;
+use scirs2__ndimage::morphology::skeletonize;
 
 let skeleton = skeletonize(&binary_image);
 ```
@@ -479,7 +479,7 @@ let skeleton = skeletonize(&binary_image);
 ### Distance Transform
 
 ```rust
-use scirs2_ndimage::morphology::distance_transform_edt;
+use scirs2__ndimage::morphology::distance_transform_edt;
 
 let distances = distance_transform_edt(&binary_image);
 ```
@@ -502,7 +502,7 @@ SciRS2 NDImage automatically uses SIMD instructions when available:
 
 ```rust
 // Enable SIMD features
-use scirs2_ndimage::filters::gaussian_filter_simd;
+use scirs2__ndimage::filters::gaussian_filter_simd;
 
 let filtered = gaussian_filter_simd(&large_image, 2.0);
 ```
@@ -512,7 +512,7 @@ let filtered = gaussian_filter_simd(&large_image, 2.0);
 Large arrays are automatically processed in parallel:
 
 ```rust
-use scirs2_ndimage::parallel::ParallelConfig;
+use scirs2__ndimage::parallel::ParallelConfig;
 
 // Configure parallel processing
 ParallelConfig::set_num_threads(8);
@@ -526,7 +526,7 @@ let result = expensive_operation(&huge_image);
 For supported operations, GPU acceleration provides significant speedup:
 
 ```rust
-use scirs2_ndimage::gpu::{GpuContext, gpu_gaussian_filter};
+use scirs2__ndimage::gpu::{GpuContext, gpu_gaussian_filter};
 
 let gpu_ctx = GpuContext::new()?;
 let gpu_result = gpu_gaussian_filter(&gpu_ctx, &image, 2.0)?;
@@ -539,7 +539,7 @@ let gpu_result = gpu_gaussian_filter(&gpu_ctx, &image, 2.0)?;
 For very large datasets that don't fit in memory:
 
 ```rust
-use scirs2_ndimage::streaming::StreamProcessor;
+use scirs2__ndimage::streaming::StreamProcessor;
 
 let processor = StreamProcessor::new("large_image.tiff")?;
 let result = processor.apply_filter(gaussian_filter, 2.0)?;
@@ -550,7 +550,7 @@ let result = processor.apply_filter(gaussian_filter, 2.0)?;
 Reduce memory usage with in-place operations:
 
 ```rust
-use scirs2_ndimage::filters::gaussian_filter_inplace;
+use scirs2__ndimage::filters::gaussian_filter_inplace;
 
 gaussian_filter_inplace(&mut image, 2.0);
 ```
@@ -573,7 +573,7 @@ gaussian_filter_inplace(&mut image, 2.0);
                 description: "Process medical images with specialized filters and analysis".to_string(),
                 category: "Medical".to_string(),
                 code: r#"
-use scirs2_ndimage::domain_specific::medical::*;
+use scirs2__ndimage::domain_specific::medical::*;
 use ndarray::Array3;
 
 // Load medical volume (e.g., CT scan)
@@ -597,7 +597,7 @@ println!("Detected {} potential nodules", nodules.len());
                 description: "Analyze satellite imagery for environmental monitoring".to_string(),
                 category: "Remote Sensing".to_string(),
                 code: r#"
-use scirs2_ndimage::domain_specific::satellite::*;
+use scirs2__ndimage::domain_specific::satellite::*;
 use ndarray::Array3;
 
 // Multi-spectral satellite image (bands: R, G, B, NIR)
@@ -627,8 +627,8 @@ println!("Processed satellite image with {} water pixels", water_mask.iter().fil
                 description: "Process video frames in real-time with optimized algorithms".to_string(),
                 category: "Computer Vision".to_string(),
                 code: r#"
-use scirs2_ndimage::streaming::*;
-use scirs2_ndimage::features::*;
+use scirs2__ndimage::streaming::*;
+use scirs2__ndimage::features::*;
 use ndarray::Array3;
 
 // Setup streaming video processor
@@ -664,8 +664,8 @@ while let Some(frame) = video_processor.next_frame()? {
                 description: "Advanced analysis techniques for scientific imaging".to_string(),
                 category: "Scientific".to_string(),
                 code: r#"
-use scirs2_ndimage::measurements::*;
-use scirs2_ndimage::segmentation::*;
+use scirs2__ndimage::measurements::*;
+use scirs2__ndimage::segmentation::*;
 use ndarray::Array2;
 
 // Scientific image (e.g., microscopy, astronomy)
@@ -810,7 +810,7 @@ println!("Analysis complete: {} regions found", regions.len());
                 <pre><code class="language-toml">[dependencies]
 scirs2-ndimage = "{}"
 ndarray = "0.16"</code></pre>
-                <pre><code class="language-rust">use scirs2_ndimage::filters::gaussian_filter;
+                <pre><code class="language-rust">use scirs2__ndimage::filters::gaussian_filter;
 use ndarray::Array2;
 
 let image = Array2::from_elem((100, 100), 1.0f64);
@@ -1200,8 +1200,7 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
                 let difficulty_class = match tutorial.difficulty.as_str() {
                     "Beginner" => "difficulty-beginner",
                     "Intermediate" => "difficulty-intermediate",
-                    "Advanced" => "difficulty-advanced",
-                    _ => "difficulty-beginner",
+                    "Advanced" => "difficulty-advanced"_ => "difficulty-beginner",
                 };
 
                 format!(
@@ -2453,7 +2452,7 @@ pub fn export_documentation_to_formats() -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn export_to_markdown(doc_site: &DocumentationSite) -> Result<()> {
+fn export_to_markdown(_doc_site: &DocumentationSite) -> Result<()> {
     let mut markdown = String::new();
 
     markdown.push_str(&format!("# {}\n\n", doc_site.title));
@@ -2477,8 +2476,8 @@ fn export_to_markdown(doc_site: &DocumentationSite) -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn export_to_json(doc_site: &DocumentationSite) -> Result<()> {
-    let json_data = serde_json::to_string_pretty(doc_site)?;
+fn export_to_json(_doc_site: &DocumentationSite) -> Result<()> {
+    let json_data = serde_json::to_string_pretty(_doc_site)?;
     let mut file = fs::File::create("docs/documentation.json")?;
     file.write_all(json_data.as_bytes())?;
 

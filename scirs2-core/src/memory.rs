@@ -378,7 +378,7 @@ pub struct ZeroCopyView<'a, T, D>
 where
     D: Dimension,
 {
-    _phantom: PhantomData<T>,
+    phantom: PhantomData<T>,
     inner: ndarray::ArrayView<'a, T, D>,
 }
 
@@ -389,7 +389,7 @@ where
     /// Create a new zero-copy view from an array
     pub fn new(array: &'a ndarray::Array<T, D>) -> Self {
         Self {
-            _phantom: PhantomData,
+            phantom: PhantomData,
             inner: array.view(),
         }
     }

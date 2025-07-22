@@ -37,9 +37,9 @@ impl Default for ThreadPoolConfig {
 
 /// Initialize the global thread pool configuration
 #[allow(dead_code)]
-pub fn init_thread_pool(config: ThreadPoolConfig) -> Result<(), String> {
+pub fn init_thread_pool(_config: ThreadPoolConfig) -> Result<(), String> {
     THREAD_POOL_CONFIG
-        .set(Arc::new(Mutex::new(config)))
+        .set(Arc::new(Mutex::new(_config)))
         .map_err(|_| "Thread pool already initialized".to_string())
 }
 
@@ -54,13 +54,13 @@ pub fn get_thread_pool_config() -> ThreadPoolConfig {
 
 /// Update thread pool configuration
 #[allow(dead_code)]
-pub fn update_thread_pool_config<F>(update_fn: F) -> Result<(), String>
+pub fn update_thread_pool_config<F>(_update_fn: F) -> Result<(), String>
 where
     F: FnOnce(&mut ThreadPoolConfig),
 {
     if let Some(config) = THREAD_POOL_CONFIG.get() {
         let mut config = config.lock().unwrap();
-        update_fn(&mut *config);
+        _update_fn(&mut *config);
         Ok(())
     } else {
         Err("Thread pool not initialized".to_string())
@@ -90,9 +90,9 @@ pub fn current_worker_info() -> Option<WorkerInfo> {
 
 /// Set worker information for the current thread
 #[allow(dead_code)]
-pub fn set_worker_info(info: WorkerInfo) {
+pub fn set_worker_info(_info: WorkerInfo) {
     WORKER_INFO.with(|cell| {
-        *cell.borrow_mut() = Some(info);
+        *cell.borrow_mut() = Some(_info);
     });
 }
 
@@ -171,11 +171,11 @@ pub struct AdaptiveThreadPool {
 }
 
 impl AdaptiveThreadPool {
-    pub fn new(min_threads: usize, max_threads: usize) -> Self {
+    pub fn new(_min_threads: usize, max_threads: usize) -> Self {
         Self {
-            min_threads,
+            _min_threads,
             max_threads,
-            current_threads: Arc::new(Mutex::new(min_threads)),
+            current_threads: Arc::new(Mutex::new(_min_threads)),
             load_threshold: 0.8,
         }
     }
@@ -204,12 +204,12 @@ pub struct WorkStealingQueue<T> {
 }
 
 impl<T: Send> WorkStealingQueue<T> {
-    pub fn new(num_queues: usize) -> Self {
-        let queues = (0..num_queues)
+    pub fn new(_num_queues: usize) -> Self {
+        let _queues = (0.._num_queues)
             .map(|_| Arc::new(Mutex::new(Vec::new())))
             .collect();
 
-        Self { queues }
+        Self { _queues: _queues }
     }
 
     /// Push work to a specific queue

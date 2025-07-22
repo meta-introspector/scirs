@@ -27,10 +27,10 @@ pub struct LiquidStateMachine {
 
 impl LiquidStateMachine {
     /// Create new LSM
-    pub fn new(input_size: usize, reservoir_size: usize, output_size: usize) -> Self {
+    pub fn new(_input_size: usize, reservoir_size: usize, output_size: usize) -> Self {
         // Initialize random weights
         let mut reservoir_weights = Array2::zeros((reservoir_size, reservoir_size));
-        let mut input_weights = Array2::zeros((reservoir_size, input_size));
+        let mut input_weights = Array2::zeros((reservoir_size, _input_size));
         let output_weights = Array2::zeros((output_size, reservoir_size));
 
         // Random sparse connectivity for reservoir
@@ -129,27 +129,27 @@ where
     let output_size = input_size;
 
     let mut lsm = LiquidStateMachine::new(input_size, reservoir_size, output_size);
-    let mut params = initial_params.to_owned();
+    let mut _params = initial_params.to_owned();
 
     for _iter in 0..num_nit {
         // Use current parameters as input
-        lsm.update_reservoir(&params.view());
+        lsm.update_reservoir(&_params.view());
 
         // Get output (parameter updates)
         let updates = lsm.compute_output();
 
         // Apply updates
-        for i in 0..params.len() {
+        for i in 0.._params.len() {
             if i < updates.len() {
-                params[i] += 0.01 * updates[i];
+                _params[i] += 0.01 * updates[i];
             }
         }
 
         // Evaluate objective for potential training signal
-        let _obj_val = objective(&params.view());
+        let _obj_val = objective(&_params.view());
     }
 
-    Ok(params)
+    Ok(_params)
 }
 
 #[allow(dead_code)]

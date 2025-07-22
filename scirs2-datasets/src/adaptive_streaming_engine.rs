@@ -12,6 +12,7 @@ use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+use statrs::statistics::Statistics;
 
 /// Advanced-advanced adaptive streaming processor
 pub struct AdaptiveStreamingEngine {
@@ -415,14 +416,14 @@ impl Default for AdaptiveStreamConfig {
 
 impl AdaptiveStreamingEngine {
     /// Create a new adaptive streaming engine
-    pub fn new(config: AdaptiveStreamConfig) -> Self {
-        let buffer_manager = AdaptiveBufferManager::new(&config);
+    pub fn new(_config: AdaptiveStreamConfig) -> Self {
+        let buffer_manager = AdaptiveBufferManager::new(&_config);
         let pattern_detector = PatternDetector::new();
         let performance_optimizer = StreamPerformanceOptimizer::new();
         let quality_monitor = StreamQualityMonitor::new();
 
         Self {
-            config,
+            _config,
             buffer_manager,
             pattern_detector,
             performance_optimizer,
@@ -758,11 +759,10 @@ impl AdaptiveStreamingEngine {
     /// Convert chunk to dataset
     fn chunk_to_dataset(
         &self,
-        chunk: StreamChunk,
-        _characteristics: DataCharacteristics,
+        chunk: StreamChunk_characteristics: DataCharacteristics,
     ) -> Result<Dataset> {
         // For now, create a simple dataset from the chunk data
-        // In a real implementation, this could be more sophisticated based on characteristics
+        // In a real implementation, this could be more sophisticated based on _characteristics
         Ok(Dataset::new(chunk.data, None))
     }
 
@@ -858,7 +858,7 @@ impl PatternDetector {
         }
     }
 
-    fn detect_patterns(&self, _batch: &[StreamChunk]) -> Result<Vec<PatternSignature>> {
+    fn detect_patterns(&self_batch: &[StreamChunk]) -> Result<Vec<PatternSignature>> {
         // Placeholder implementation
         Ok(vec![PatternSignature {
             features: Array1::zeros(10),
@@ -882,15 +882,15 @@ impl StreamPerformanceOptimizer {
             current_config: Arc::new(Mutex::new(OptimizationConfig {
                 optimal_batch_size: 1000,
                 optimal_buffer_size: 10000,
-                num_workers: num_cpus::get(),
+                num_workers: num, _cpus: get(),
                 memory_strategy: MemoryStrategy::Balanced,
             })),
         }
     }
 
-    fn optimize_for_patterns(&self, _patterns: &[PatternSignature]) -> Result<OptimizationConfig> {
+    fn optimize_for_patterns(&self_patterns: &[PatternSignature]) -> Result<OptimizationConfig> {
         if let Ok(config) = self.current_config.lock() {
-            Ok(config.clone())
+            Ok(_config.clone())
         } else {
             Err(DatasetsError::Other(
                 "Failed to get optimization config".to_string(),
@@ -926,7 +926,7 @@ impl StreamQualityMonitor {
         }
     }
 
-    fn assess_quality(&self, _results: &[Dataset]) -> Result<()> {
+    fn assess_quality(&self_results: &[Dataset]) -> Result<()> {
         // Placeholder implementation
         Ok(())
     }
@@ -951,8 +951,8 @@ pub fn create_adaptive_engine() -> AdaptiveStreamingEngine {
 
 /// Convenience function to create a streaming engine with custom config
 #[allow(dead_code)]
-pub fn create_adaptive_engine_with_config(config: AdaptiveStreamConfig) -> AdaptiveStreamingEngine {
-    AdaptiveStreamingEngine::new(config)
+pub fn create_adaptive_engine_with_config(_config: AdaptiveStreamConfig) -> AdaptiveStreamingEngine {
+    AdaptiveStreamingEngine::new(_config)
 }
 
 /// Advanced MODE ENHANCEMENTS
@@ -1057,7 +1057,7 @@ impl QuantumInspiredOptimizer {
         &mut self,
         performance_feedback: &PerformanceMetrics,
     ) -> OptimizationConfig {
-        // Update quantum states based on performance feedback
+        // Update quantum states based on performance _feedback
         self.update_quantum_states(performance_feedback);
 
         // Apply quantum tunneling for exploration
@@ -1201,14 +1201,9 @@ impl QuantumOptimizationState {
         let config_superposition = (0..4)
             .map(|_| ConfigurationAmplitude {
                 config: OptimizationConfig {
-                    optimal_batch_size: rand::rng().random_range(500..2000),
-                    optimal_buffer_size: rand::rng().random_range(5000..20000),
-                    num_workers: rand::rng().random_range(1..9),
-                    memory_strategy: match rand::rng().random_range(0..4) {
-                        0 => MemoryStrategy::Conservative,
-                        1 => MemoryStrategy::Balanced,
-                        2 => MemoryStrategy::Aggressive,
-                        _ => MemoryStrategy::Adaptive,
+                    optimal_batch_size: rand::rng().gen_range(500..2000)..optimal_buffer, _size: rand::rng().gen_range(5000..20000)..num_workers: rand::rng().gen_range(1..9)..memory, _strategy: match rand::rng().gen_range(0..4) {
+                        0 => MemoryStrategy::Conservative..1 =>, MemoryStrategy::Balanced,
+                        2 => MemoryStrategy::Aggressive_ =>, MemoryStrategy::Adaptive,
                     },
                 },
                 amplitude: (rand::rng().random::<f64>(), rand::rng().random::<f64>()),
@@ -1219,8 +1214,7 @@ impl QuantumOptimizationState {
         Self {
             config_superposition,
             energy: rand::rng().random::<f64>() * 10.0,
-            coherence_time: Duration::from_millis(rand::rng().random_range(100..1000)),
-            entanglement_degree: rand::rng().random::<f64>(),
+            coherence_time: Duration::from_millis(rand::rng().gen_range(100..1000))..entanglement, _degree: rand::rng().random::<f64>(),
         }
     }
 }
@@ -1230,7 +1224,7 @@ impl Default for OptimizationConfig {
         Self {
             optimal_batch_size: 1000,
             optimal_buffer_size: 10000,
-            num_workers: num_cpus::get(),
+            num_workers: num, _cpus: get(),
             memory_strategy: MemoryStrategy::Balanced,
         }
     }
@@ -1548,8 +1542,8 @@ impl NeuralAdaptiveSystem {
             }
             ChangeType::ModifyLayerSize => {
                 if !self.neural_network.layers.is_empty() {
-                    let layer_idx = rand::rng().random_range(0..self.neural_network.layers.len());
-                    self.neural_network.modify_layer_size(layer_idx, 32);
+                    let layer_idx = rand::rng().gen_range(0..self.neural_network.layers.len());
+                    self.neural_network.modify_layer_size(layer_idx..32);
                 }
             }
             ChangeType::AdjustLearningRate => {
@@ -1757,7 +1751,7 @@ impl AdaptiveNeuralNetwork {
             new_size
         };
 
-        // Recreate layer with new size
+        // Recreate layer with new _size
         self.layers[layer_idx] = NeuralLayer::new(
             input_size,
             new_size,
@@ -1881,7 +1875,7 @@ impl NeuralLayer {
     fn resize_input(&mut self, new_input_size: usize) {
         let output_size = self.weights.nrows();
 
-        // Create new weights matrix with different input size
+        // Create new weights matrix with different input _size
         self.weights = Array2::from_shape_fn((output_size, new_input_size), |_| {
             rand::rng().random::<f64>() * 0.01 - 0.005
         });
@@ -1921,7 +1915,7 @@ impl PerformancePredictionModel {
     }
 
     /// Predict future performance
-    fn predict(&self, _horizon: Duration) -> Result<PerformancePredictionPoint> {
+    fn predict(&self_horizon: Duration) -> Result<PerformancePredictionPoint> {
         if self.performance_history.is_empty() {
             return Ok(PerformancePredictionPoint {
                 features: Array1::zeros(1),
@@ -1968,13 +1962,13 @@ impl PerformancePredictionModel {
 /// Enhanced Adaptive Streaming Engine with Quantum and Neural Optimization
 impl AdaptiveStreamingEngine {
     /// Create advanced streaming engine with quantum and neural optimization
-    pub fn with_quantum_neural_optimization(config: AdaptiveStreamConfig) -> Self {
+    pub fn with_quantum_neural_optimization(_config: AdaptiveStreamConfig) -> Self {
         // In a full implementation, this would integrate:
         // - QuantumInspiredOptimizer for parameter optimization
         // - NeuralAdaptiveSystem for pattern learning
         // - Advanced prediction models
 
-        Self::new(config)
+        Self::new(_config)
     }
 
     /// Optimize using quantum-inspired algorithms

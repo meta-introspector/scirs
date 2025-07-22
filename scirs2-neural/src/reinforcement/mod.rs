@@ -15,27 +15,28 @@ pub mod policy_optimization;
 pub mod replay_buffer;
 pub mod trpo;
 pub mod value;
-pub use actor_critic::{ActorCritic, A2C, A3C, PPO, SAC as ActorCriticSAC};
-pub use advanced_algorithms::{
+pub use actor__critic::{ActorCritic, A2C, A3C, PPO, SAC as ActorCriticSAC};
+pub use advanced__algorithms::{
     IMPALAConfig, RainbowConfig, RainbowDQN, TD3Config, IMPALA, TD3,
     SAC, SACConfig, ExplorationStrategy, ExplorationStrategyType, ExplorationConfig,
     MADDPG, MADDPGConfig, EnhancedQNetwork,
 };
-pub use advanced_environments::{
+pub use advanced__environments::{
     MultiAgentEnvironment, MultiAgentGridWorld, MultiAgentWrapper, PursuitEvasion,
 pub use algorithms::{RLAlgorithm, TrainingConfig};
 pub use curiosity::{EpisodicCuriosity, NoveltyExploration, ICM, RND};
 pub use environments::{Action, Environment, Observation, Reward};
-pub use model_based::{Dyna, DynamicsModel, WorldModel, MPC};
+pub use model__based::{Dyna, DynamicsModel, WorldModel, MPC};
 pub use policy::{Policy, PolicyGradient, PolicyNetwork};
-pub use policy_optimization::{
+pub use policy__optimization::{
     CuriosityConfig, CuriosityDrivenAgent, MAMLAgent, MAMLConfig, NPGConfig, NaturalPolicyGradient,
-pub use replay_buffer::{PrioritizedReplayBuffer, ReplayBuffer, ReplayBufferTrait};
+pub use replay__buffer::{PrioritizedReplayBuffer, ReplayBuffer, ReplayBufferTrait};
 pub use trpo::{TRPOConfig, TRPO};
 pub use value::{DoubleDQN, QNetwork, ValueNetwork, DQN};
 use crate::error::Result;
 use ndarray::prelude::*;
 use std::sync::Arc;
+use ndarray::ArrayView1;
 /// Configuration for reinforcement learning
 #[derive(Debug, Clone)]
 pub struct RLConfig {
@@ -133,7 +134,7 @@ pub struct RLTrainer<E: Environment> {
     episode_lengths: Vec<usize>,
 impl<E: Environment> RLTrainer<E> {
     /// Create a new RL trainer
-    pub fn new(agent: Arc<dyn RLAgent>, environment: E, config: RLConfig) -> Self {
+    pub fn new(_agent: Arc<dyn RLAgent>, environment: E, config: RLConfig) -> Self {
         let replay_buffer = if config.buffer_size > 0 {
             Some(ReplayBuffer::new(config.buffer_size))
         } else {
@@ -159,7 +160,7 @@ impl<E: Environment> RLTrainer<E> {
                 // Select action
                 let action = self.agent.act(&state.view(), true)?;
                 // Take action in environment
-                let (next_state, reward, done_flag, _info) = self.environment.step(&action)?;
+                let (next_state, reward, done_flag_info) = self.environment.step(&action)?;
                 // Store experience if using replay buffer
                 if let Some(buffer) = &mut self.replay_buffer {
                     buffer.add(

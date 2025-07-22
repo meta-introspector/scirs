@@ -24,9 +24,9 @@ struct MemorySafetyValidator;
 
 impl MemorySafetyValidator {
     /// Validate allocation parameters for safety
-    fn validate_allocation_params(ptr: *mut u8, size: usize) -> Result<(), GpuOptimError> {
+    fn validate_allocation_params(_ptr: *mut u8, size: usize) -> Result<(), GpuOptimError> {
         // Check for null pointer
-        if ptr.is_null() {
+        if _ptr.is_null() {
             return Err(GpuOptimError::InvalidState(
                 "Null pointer provided".to_string(),
             ));
@@ -47,15 +47,15 @@ impl MemorySafetyValidator {
         }
 
         // Check memory alignment
-        if (ptr as usize) % GPU_MEMORY_ALIGNMENT != 0 {
+        if (_ptr as usize) % GPU_MEMORY_ALIGNMENT != 0 {
             return Err(GpuOptimError::InvalidState(format!(
                 "Pointer {:p} is not aligned to {} bytes",
-                ptr, GPU_MEMORY_ALIGNMENT
+                _ptr, GPU_MEMORY_ALIGNMENT
             )));
         }
 
         // Check for potential integer overflow in size calculations
-        if let None = ptr as usize + size {
+        if let None = _ptr as usize + size {
             return Err(GpuOptimError::InvalidState(
                 "Size calculation overflow".to_string(),
             ));
@@ -79,23 +79,23 @@ impl MemorySafetyValidator {
     }
 
     /// Validate memory canary to detect buffer overflows
-    fn validate_canary(ptr: *mut u8, expected_canary: u64) -> Result<(), GpuOptimError> {
+    fn validate_canary(_ptr: *mut u8, expected_canary: u64) -> Result<(), GpuOptimError> {
         // In a real implementation, this would check memory protection
         // For now, we'll do basic validation
-        if ptr.is_null() {
+        if _ptr.is_null() {
             return Err(GpuOptimError::InvalidState(
-                "Null pointer during canary validation".to_string(),
+                "Null pointer during _canary validation".to_string(),
             ));
         }
 
-        // TODO: In full implementation, read canary from memory and compare
+        // TODO: In full implementation, read _canary from memory and compare
         // This would require GPU memory read capabilities
         Ok(())
     }
 
     /// Safely calculate pointer offset with bounds checking
-    fn safe_ptr_add(ptr: *mut u8, offset: usize) -> Result<*mut u8, GpuOptimError> {
-        let ptr_addr = ptr as usize;
+    fn safe_ptr_add(_ptr: *mut u8, offset: usize) -> Result<*mut u8, GpuOptimError> {
+        let ptr_addr = _ptr as usize;
 
         // Check for overflow
         let new_addr = ptr_addr.checked_add(offset).ok_or_else(|| {
@@ -165,11 +165,11 @@ struct MemoryBlock {
 
 impl MemoryBlock {
     /// Create a new memory block with safety validation
-    fn new(ptr: *mut u8, size: usize) -> Result<Self, GpuOptimError> {
+    fn new(_ptr: *mut u8, size: usize) -> Result<Self, GpuOptimError> {
         // Validate input parameters
-        MemorySafetyValidator::validate_allocation_params(ptr, size)?;
+        MemorySafetyValidator::validate_allocation_params(_ptr, size)?;
 
-        let non_null_ptr = NonNull::new(ptr).ok_or_else(|| {
+        let non_null_ptr = NonNull::new(_ptr).ok_or_else(|| {
             GpuOptimError::InvalidState("Null pointer in memory block".to_string())
         })?;
 
@@ -178,7 +178,7 @@ impl MemoryBlock {
 
         let now = std::time::Instant::now();
         Ok(Self {
-            ptr: non_null_ptr,
+            _ptr: non_null_ptr,
             size,
             in_use: true,
             allocated_at: now,
@@ -453,8 +453,8 @@ impl CudaMemoryPool {
 
     /// Create memory pool for specific GPU
     #[cfg(feature = "gpu")]
-    pub fn new_with_gpu(gpu_id: usize) -> Result<Self, GpuOptimError> {
-        let context = Arc::new(GpuContext::new_with_device(gpu_id)?);
+    pub fn new_with_gpu(_gpu_id: usize) -> Result<Self, GpuOptimError> {
+        let context = Arc::new(GpuContext::new_with_device(_gpu_id)?);
 
         Ok(Self {
             free_blocks: HashMap::new(),
@@ -687,8 +687,7 @@ impl CudaMemoryPool {
             1025..=2048 => 2048,
             2049..=4096 => 4096,
             4097..=8192 => 8192,
-            8193..=16384 => 16384,
-            _ => size.next_power_of_two(),
+            8193..=16384 => 16384_ => size.next_power_of_two(),
         }
     }
 
@@ -3446,12 +3445,12 @@ pub struct PerformanceDataPoint {
 
 impl AdvancedGpuMemoryPool {
     /// Create a new advanced GPU memory pool
-    pub fn new(config: GpuMemoryPoolConfig) -> Result<Self, GpuOptimError> {
-        let base_pool = CudaMemoryPool::new(config.base_config)?;
-        let memory_tiers = Self::initialize_memory_tiers(&config)?;
-        let compaction_engine = MemoryCompactionEngine::new(config.compaction_config);
-        let predictive_allocator = PredictiveAllocator::new(config.prediction_config);
-        let health_monitor = MemoryHealthMonitor::new(config.health_config);
+    pub fn new(_config: GpuMemoryPoolConfig) -> Result<Self, GpuOptimError> {
+        let base_pool = CudaMemoryPool::new(_config.base_config)?;
+        let memory_tiers = Self::initialize_memory_tiers(&_config)?;
+        let compaction_engine = MemoryCompactionEngine::new(_config.compaction_config);
+        let predictive_allocator = PredictiveAllocator::new(_config.prediction_config);
+        let health_monitor = MemoryHealthMonitor::new(_config.health_config);
         let advanced_strategies = AdvancedAllocationStrategies::new();
         let bandwidth_optimizer = MemoryBandwidthOptimizer::new();
         let kernel_aware_allocator = KernelAwareAllocator::new();
@@ -3672,7 +3671,7 @@ impl MemoryHealthMonitor {
         Self {
             health_metrics: HealthMetrics::default(),
             thresholds: HealthThresholds::default(),
-            config: HealthMonitorConfig::default(),
+            _config: HealthMonitorConfig::default(),
             alerts: HealthAlertSystem::default(),
             health_history: VecDeque::new(),
         }
@@ -3778,10 +3777,10 @@ impl Default for KernelPerformancePredictor {
 
 impl BatchBuffer {
     /// Create a new batch buffer
-    pub fn new(ptr: *mut u8, size: usize, buffer_type: BatchBufferType) -> Self {
+    pub fn new(_ptr: *mut u8, size: usize, buffer_type: BatchBufferType) -> Self {
         let now = std::time::Instant::now();
         Self {
-            ptr,
+            _ptr,
             size,
             in_use: false,
             created_at: now,
@@ -3811,12 +3810,12 @@ impl BatchBuffer {
 
 impl CudaMemoryPool {
     /// Create a new memory pool
-    pub fn new(max_pool_size: usize) -> Self {
+    pub fn new(_max_pool_size: usize) -> Self {
         Self {
             free_blocks: HashMap::new(),
             all_blocks: Vec::new(),
             stats: MemoryStats::default(),
-            max_pool_size,
+            _max_pool_size,
             min_block_size: 256, // Don't pool allocations smaller than 256 bytes
             enable_defrag: true,
             gpu_context: None,
@@ -3829,16 +3828,16 @@ impl CudaMemoryPool {
     }
 
     /// Create a new memory pool with custom configuration
-    pub fn with_large_batch_config(max_pool_size: usize, config: LargeBatchConfig) -> Self {
+    pub fn with_large_batch_config(_max_pool_size: usize, config: LargeBatchConfig) -> Self {
         Self {
             free_blocks: HashMap::new(),
             all_blocks: Vec::new(),
             stats: MemoryStats::default(),
-            max_pool_size,
+            _max_pool_size,
             min_block_size: 256,
             enable_defrag: true,
             gpu_context: None,
-            large_batch_config: config,
+            large_batch_config: _config,
             allocation_strategy: AllocationStrategy::default(),
             adaptive_sizing: AdaptiveSizing::default(),
             pressure_monitor: MemoryPressureMonitor::default(),
@@ -4585,9 +4584,9 @@ pub struct ThreadSafeMemoryPool {
 
 impl ThreadSafeMemoryPool {
     /// Create a new thread-safe memory pool
-    pub fn new(max_pool_size: usize) -> Self {
+    pub fn new(_max_pool_size: usize) -> Self {
         Self {
-            pool: Arc::new(Mutex::new(CudaMemoryPool::new(max_pool_size))),
+            pool: Arc::new(Mutex::new(CudaMemoryPool::new(_max_pool_size))),
         }
     }
 

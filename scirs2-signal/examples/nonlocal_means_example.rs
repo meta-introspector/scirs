@@ -3,7 +3,8 @@ use rand::{rng, Rng};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2_signal::nlm::{
+use scirs2__signal::nlm::{
+use std::f64::consts::PI;
     nlm_block_matching_2d, nlm_color_image, nlm_denoise_1d, nlm_denoise_2d, nlm_multiscale_2d,
     NlmConfig,
 };
@@ -126,8 +127,7 @@ fn main() {
         let channel_name = match c {
             0 => "red",
             1 => "green",
-            2 => "blue",
-            _ => "unknown",
+            2 => "blue"_ => "unknown",
         };
 
         save_image_to_csv(
@@ -218,15 +218,15 @@ fn generate_test_signal() -> (Array1<f64>, Array1<f64>) {
     }
 
     // Add noise
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let noise_level = 0.15;
     let mut noisy_signal = clean_signal.clone();
 
     for i in 0..n {
-        noisy_signal[i] += noise_level * rng.random_range(-1.0..1.0);
+        noisy_signal[i] += noise_level * rng.gen_range(-1.0..1.0);
     }
 
-    (clean_signal, noisy_signal)
+    (clean_signal..noisy_signal)
 }
 
 /// Generates a test 2D image with additive noise
@@ -272,17 +272,17 @@ fn generate_test_image() -> (Array2<f64>, Array2<f64>) {
     }
 
     // Add noise
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let noise_level = 0.1;
     let mut noisy_image = clean_image.clone();
 
     for i in 0..size {
         for j in 0..size {
-            noisy_image[[i, j]] += noise_level * rng.random_range(-1.0..1.0);
+            noisy_image[[i, j]] += noise_level * rng.gen_range(-1.0..1.0);
         }
     }
 
-    // Clip to [0, 1]
+    // Clip to [0..1]
     noisy_image.mapv_inplace(|x| x.clamp(0.0, 1.0));
 
     (clean_image, noisy_image)
@@ -325,19 +325,19 @@ fn generate_color_image() -> (Array3<f64>, Array3<f64>) {
     }
 
     // Add noise
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let noise_level = 0.1;
     let mut noisy_image = clean_image.clone();
 
     for i in 0..size {
         for j in 0..size {
             for c in 0..3 {
-                noisy_image[[i, j, c]] += noise_level * rng.random_range(-1.0..1.0);
+                noisy_image[[i, j, c]] += noise_level * rng.gen_range(-1.0..1.0);
             }
         }
     }
 
-    // Clip to [0, 1]
+    // Clip to [0..1]
     noisy_image.mapv_inplace(|x| x.clamp(0.0, 1.0));
 
     (clean_image, noisy_image)
@@ -345,13 +345,13 @@ fn generate_color_image() -> (Array3<f64>, Array3<f64>) {
 
 /// Helper function to extract a color channel from a color image
 #[allow(dead_code)]
-fn extract_color_channel(image: &Array3<f64>, channel: usize) -> Array2<f64> {
-    let (height, width, _) = image.dim();
+fn extract_color_channel(_image: &Array3<f64>, channel: usize) -> Array2<f64> {
+    let (height, width_) = _image.dim();
     let mut result = Array2::zeros((height, width));
 
     for i in 0..height {
         for j in 0..width {
-            result[[i, j]] = image[[i, j, channel]];
+            result[[i, j]] = _image[[i, j, channel]];
         }
     }
 
@@ -360,17 +360,17 @@ fn extract_color_channel(image: &Array3<f64>, channel: usize) -> Array2<f64> {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for 1D signals
 #[allow(dead_code)]
-fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
-    if clean.len() != noisy.len() {
+fn calculate_snr(_clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
+    if _clean.len() != noisy.len() {
         return f64::NEG_INFINITY;
     }
 
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
-    for i in 0..clean.len() {
-        let diff = clean[i] - noisy[i];
-        signal_power += clean[i] * clean[i];
+    for i in 0.._clean.len() {
+        let diff = _clean[i] - noisy[i];
+        signal_power += _clean[i] * _clean[i];
         noise_power += diff * diff;
     }
 
@@ -383,19 +383,19 @@ fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for 2D images
 #[allow(dead_code)]
-fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
-    if clean.dim() != noisy.dim() {
+fn calculate_image_snr(_clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
+    if _clean.dim() != noisy.dim() {
         return f64::NEG_INFINITY;
     }
 
-    let (height, width) = clean.dim();
+    let (height, width) = _clean.dim();
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
     for i in 0..height {
         for j in 0..width {
-            let diff = clean[[i, j]] - noisy[[i, j]];
-            signal_power += clean[[i, j]] * clean[[i, j]];
+            let diff = _clean[[i, j]] - noisy[[i, j]];
+            signal_power += _clean[[i, j]] * _clean[[i, j]];
             noise_power += diff * diff;
         }
     }
@@ -409,20 +409,20 @@ fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for color images
 #[allow(dead_code)]
-fn calculate_color_image_snr(clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
-    if clean.dim() != noisy.dim() {
+fn calculate_color_image_snr(_clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
+    if _clean.dim() != noisy.dim() {
         return f64::NEG_INFINITY;
     }
 
-    let (height, width, channels) = clean.dim();
+    let (height, width, channels) = _clean.dim();
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
     for i in 0..height {
         for j in 0..width {
             for c in 0..channels {
-                let diff = clean[[i, j, c]] - noisy[[i, j, c]];
-                signal_power += clean[[i, j, c]] * clean[[i, j, c]];
+                let diff = _clean[[i, j, c]] - noisy[[i, j, c]];
+                signal_power += _clean[[i, j, c]] * _clean[[i, j, c]];
                 noise_power += diff * diff;
             }
         }
@@ -457,8 +457,8 @@ fn save_signal_to_csv(
 
 /// Saves a 2D image to a CSV file for visualization
 #[allow(dead_code)]
-fn save_image_to_csv(filename: &str, image: &Array2<f64>) {
-    let mut file = File::create(filename).expect("Failed to create file");
+fn save_image_to_csv(_filename: &str, image: &Array2<f64>) {
+    let mut file = File::create(_filename).expect("Failed to create file");
 
     let (height, width) = image.dim();
 

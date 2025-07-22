@@ -16,7 +16,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_integrate::autotuning::{HardwareDetector, AutoTuner, TuningProfile};
+//! use scirs2__integrate::autotuning::{HardwareDetector, AutoTuner, TuningProfile};
 //!
 //! // Detect hardware automatically
 //! let hardware = HardwareDetector::detect();
@@ -31,6 +31,7 @@ use crate::common::IntegrateFloat;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
+use std::f64::consts::PI;
 
 /// Hardware characteristics detected at runtime
 #[derive(Debug, Clone)]
@@ -85,7 +86,7 @@ pub struct HardwareDetector;
 
 impl HardwareDetector {
     /// Detect hardware characteristics
-    pub fn detect() -> HardwareInfo {
+    pub fn detect(&self) -> HardwareInfo {
         // Use cached detection result
         static HARDWARE_INFO: OnceLock<HardwareInfo> = OnceLock::new();
 
@@ -93,7 +94,7 @@ impl HardwareDetector {
     }
 
     /// Perform actual hardware detection
-    fn detect_hardware() -> HardwareInfo {
+    fn detect_hardware(&self) -> HardwareInfo {
         let cpu_cores = Self::detect_cpu_cores();
         let cpu_threads = Self::detect_cpu_threads();
         let cpu_model = Self::detect_cpu_model();
@@ -118,7 +119,7 @@ impl HardwareDetector {
     }
 
     /// Detect number of physical CPU cores
-    fn detect_cpu_cores() -> usize {
+    fn detect_cpu_cores(&self) -> usize {
         // Try to get physical core count
         if let Some(cores) = std::thread::available_parallelism().ok().map(|n| n.get()) {
             // This gives logical cores, estimate physical cores
@@ -130,7 +131,7 @@ impl HardwareDetector {
     }
 
     /// Detect number of logical CPU threads
-    fn detect_cpu_threads() -> usize {
+    fn detect_cpu_threads(&self) -> usize {
         std::thread::available_parallelism()
             .ok()
             .map(|n| n.get())
@@ -138,12 +139,12 @@ impl HardwareDetector {
     }
 
     /// Detect CPU model
-    fn detect_cpu_model() -> String {
+    fn detect_cpu_model(&self) -> String {
         format!("{} CPU", std::env::consts::ARCH)
     }
 
     /// Detect cache sizes
-    fn detect_cache_sizes() -> (usize, usize, usize) {
+    fn detect_cache_sizes(&self) -> (usize, usize, usize) {
         // Use reasonable defaults based on architecture
         #[cfg(target_arch = "x86_64")]
         {
@@ -165,14 +166,14 @@ impl HardwareDetector {
     }
 
     /// Detect total memory size
-    fn detect_memory_size() -> usize {
+    fn detect_memory_size(&self) -> usize {
         // Simple heuristic based on available system memory
         // In practice, you'd use platform-specific APIs
         8 * 1024 * 1024 * 1024 // Default to 8GB
     }
 
     /// Detect available SIMD features
-    fn detect_simd_features() -> Vec<SimdFeature> {
+    fn detect_simd_features(&self) -> Vec<SimdFeature> {
         let mut features = Vec::new();
 
         #[cfg(target_arch = "x86_64")]
@@ -220,7 +221,7 @@ impl HardwareDetector {
     }
 
     /// Estimate memory bandwidth using a simple benchmark
-    fn estimate_memory_bandwidth() -> Option<f64> {
+    fn estimate_memory_bandwidth(&self) -> Option<f64> {
         // Simple bandwidth estimation
         let size = 10 * 1024 * 1024; // 10MB
         let data: Vec<u64> = vec![1; size / 8];
@@ -241,7 +242,7 @@ impl HardwareDetector {
     }
 
     /// Detect GPU information
-    fn detect_gpu() -> Option<GpuInfo> {
+    fn detect_gpu(&self) -> Option<GpuInfo> {
         // Use scirs2-core's GPU detection functionality
         let detection_result = scirs2_core::gpu::backends::detect_gpu_backends();
 
@@ -255,8 +256,7 @@ impl HardwareDetector {
                     scirs2_core::gpu::GpuBackend::Cuda => "NVIDIA".to_string(),
                     scirs2_core::gpu::GpuBackend::Rocm => "AMD".to_string(),
                     scirs2_core::gpu::GpuBackend::Metal => "Apple".to_string(),
-                    scirs2_core::gpu::GpuBackend::OpenCL => "Unknown".to_string(),
-                    _ => "Unknown".to_string(),
+                    scirs2_core::gpu::GpuBackend::OpenCL => "Unknown".to_string(, _ => "Unknown".to_string(),
                 },
                 model: device.device_name,
                 memory_size: device.memory_bytes.unwrap_or(0) as usize,
@@ -294,15 +294,15 @@ pub struct AutoTuner {
 
 impl AutoTuner {
     /// Create new auto-tuner with detected hardware
-    pub fn new(hardware: HardwareInfo) -> Self {
+    pub fn new(_hardware: HardwareInfo) -> Self {
         Self {
-            hardware,
+            _hardware,
             cache: HashMap::new(),
         }
     }
 
     /// Create auto-tuner with automatic hardware detection
-    pub fn auto() -> Self {
+    pub fn auto(&self) -> Self {
         Self::new(HardwareDetector::detect())
     }
 
@@ -322,19 +322,19 @@ impl AutoTuner {
         // Determine optimal thread count
         let num_threads = self.optimal_thread_count(problem_size);
 
-        // Determine optimal block size based on cache
+        // Determine optimal block _size based on cache
         let block_size = self.optimal_block_size(problem_size);
 
-        // Determine chunk size for parallel distribution
+        // Determine chunk _size for parallel distribution
         let chunk_size = self.optimal_chunk_size(problem_size, num_threads);
 
         // Determine if SIMD should be used
         let use_simd = !self.hardware.simd_features.is_empty() && problem_size >= 64;
 
-        // Determine memory pool size
+        // Determine memory pool _size
         let memory_pool_size = self.optimal_memory_pool_size(problem_size);
 
-        // Determine tolerances based on problem size
+        // Determine tolerances based on problem _size
         let (default_tolerance, max_iterations) = self.optimal_tolerances(problem_size);
 
         // Determine GPU usage
@@ -386,9 +386,9 @@ impl AutoTuner {
     }
 
     /// Determine optimal chunk size for parallel distribution
-    fn optimal_chunk_size(&self, problem_size: usize, num_threads: usize) -> usize {
+    fn optimal_chunk_size(_problem_size: usize, num_threads: usize) -> usize {
         if num_threads <= 1 {
-            problem_size
+            _problem_size
         } else {
             // Balance between parallelization overhead and load balancing
             let min_chunk = 100; // Minimum chunk to avoid excessive overhead
@@ -399,16 +399,16 @@ impl AutoTuner {
 
     /// Determine optimal memory pool size
     fn optimal_memory_pool_size(&self, problem_size: usize) -> usize {
-        // Use a fraction of available memory based on problem size
-        let base_size = problem_size * 8 * 4; // 4x problem size in bytes
+        // Use a fraction of available memory based on problem _size
+        let base_size = problem_size * 8 * 4; // 4x problem _size in bytes
         let max_pool = self.hardware.memory_size / 8; // Use up to 1/8 of system memory
 
         base_size.min(max_pool).max(1024 * 1024) // At least 1MB
     }
 
     /// Determine optimal tolerances and iteration limits
-    fn optimal_tolerances(&self, problem_size: usize) -> (f64, usize) {
-        if problem_size < 1000 {
+    fn optimal_tolerances(_problem_size: usize) -> (f64, usize) {
+        if _problem_size < 1000 {
             (1e-12, 100) // High accuracy for small problems
         } else if problem_size < 100000 {
             (1e-10, 500) // Moderate accuracy for medium problems
@@ -476,14 +476,14 @@ pub struct AlgorithmTuner;
 
 impl AlgorithmTuner {
     /// Tune parameters for matrix operations
-    pub fn tune_matrix_operations(hardware: &HardwareInfo, matrix_size: usize) -> TuningProfile {
-        let tuner = AutoTuner::new(hardware.clone());
+    pub fn tune_matrix_operations(_hardware: &HardwareInfo, matrix_size: usize) -> TuningProfile {
+        let tuner = AutoTuner::new(_hardware.clone());
 
         let mut profile = tuner.tune_for_problem_size(matrix_size * matrix_size);
 
         // Matrix-specific adjustments
         if matrix_size >= 1000 {
-            profile.block_size = 64; // Good block size for matrix multiplication
+            profile.block_size = 64; // Good block _size for matrix multiplication
             profile.use_simd = true;
         }
 

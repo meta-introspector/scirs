@@ -1,9 +1,9 @@
 use ndarray::{Array1, Array2};
-use scirs2_cluster::metrics::{
+use scirs2__cluster::metrics::{
     adjusted_rand_index, calinski_harabasz_score, davies_bouldin_score,
     homogeneity_completeness_v_measure, normalized_mutual_info, silhouette_score,
 };
-use scirs2_cluster::vq::{kmeans2, MinitMethod, MissingMethod};
+use scirs2__cluster::vq::{kmeans2, MinitMethod, MissingMethod};
 
 #[allow(dead_code)]
 fn main() {

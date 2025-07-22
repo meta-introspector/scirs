@@ -256,8 +256,7 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn compute_singular_values(
-        &self,
-        _matrix: &Array<F, IxDyn>,
+        &self_matrix: &Array<F, IxDyn>,
     ) -> Result<Vec<f64>, StabilityError> {
         // Simplified - would use actual SVD computation
         Ok(vec![10.0, 5.0, 1.0, 0.1])
@@ -312,21 +311,19 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn estimate_inverse_frobenius_norm(
-        &self,
-        _matrix: &Array<F, IxDyn>,
+        &self_matrix: &Array<F, IxDyn>,
     ) -> Result<f64, StabilityError> {
         // Simplified estimation
         Ok(0.1)
     }
 
-    fn estimate_inverse_one_norm(&self, _matrix: &Array<F, IxDyn>) -> Result<f64, StabilityError> {
+    fn estimate_inverse_one_norm(&self_matrix: &Array<F, IxDyn>) -> Result<f64, StabilityError> {
         // Simplified estimation
         Ok(0.1)
     }
 
     fn estimate_inverse_infinity_norm(
-        &self,
-        _matrix: &Array<F, IxDyn>,
+        &self_matrix: &Array<F, IxDyn>,
     ) -> Result<f64, StabilityError> {
         // Simplified estimation
         Ok(0.1)
@@ -342,8 +339,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         match max_condition {
             x if x < 1e3 => ConditioningAssessment::WellConditioned,
             x if x < 1e6 => ConditioningAssessment::ModeratelyConditioned,
-            x if x < 1e12 => ConditioningAssessment::IllConditioned,
-            _ => ConditioningAssessment::SeverelyIllConditioned,
+            x if x < 1e12 => ConditioningAssessment::IllConditioned_ =>, ConditioningAssessment::SeverelyIllConditioned,
         }
     }
 
@@ -581,9 +577,7 @@ impl<F: Float> NumericalAnalyzer<F> {
     // Helper methods for roundoff error analysis
 
     fn analyze_machine_epsilon_effects<Func>(
-        &self,
-        _function: &Func,
-        _input: &Tensor<F>,
+        &self_function: &Func, _input: &Tensor<F>,
     ) -> Result<f64, StabilityError>
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
@@ -593,9 +587,7 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn analyze_catastrophic_cancellation<Func>(
-        &self,
-        _function: &Func,
-        _input: &Tensor<F>,
+        &self_function: &Func, _input: &Tensor<F>,
     ) -> Result<CancellationAnalysis, StabilityError>
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
@@ -608,9 +600,7 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn estimate_total_roundoff_error<Func>(
-        &self,
-        _function: &Func,
-        _input: &Tensor<F>,
+        &self_function: &Func, _input: &Tensor<F>,
     ) -> Result<f64, StabilityError>
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
@@ -620,9 +610,7 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn analyze_precision_sensitivity<Func>(
-        &self,
-        _function: &Func,
-        _input: &Tensor<F>,
+        &self_function: &Func, _input: &Tensor<F>,
     ) -> Result<PrecisionSensitivityAnalysis, StabilityError>
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
@@ -647,8 +635,7 @@ impl<F: Float> NumericalAnalyzer<F> {
 
     fn generate_random_perturbation<'a>(
         &self,
-        input: &'a Tensor<'a, F>,
-        _uncertainty: &Tensor<F>,
+        input: &'a Tensor<'a, F>, _uncertainty: &Tensor<F>,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Simplified - would generate actual random perturbation
         let perturbed = *input;
@@ -685,22 +672,18 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn compute_std_tensor<'a>(
-        &self,
-        _tensors: &[Tensor<F>],
-        _mean: &Tensor<'a, F>,
+        &self_tensors: &[Tensor<F>], _mean: &Tensor<'a, F>,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Simplified - would compute actual standard deviation
         let shape = _mean.shape();
         let std_data = vec![F::from(0.1).unwrap(); _mean.data().len()];
-        Ok(Tensor::from_vec(std_data, shape.to_vec(), _mean.graph()))
+        Ok(Tensor::from_vec(std_data, shape.to_vec()_mean.graph()))
     }
 
     fn compute_confidence_interval<'a>(
-        &self,
-        _tensors: &[Tensor<'a, F>],
-        _confidence: f64,
+        &self_tensors: &[Tensor<'a, F>], _confidence: f64,
     ) -> Result<(Tensor<'a, F>, Tensor<'a, F>), StabilityError> {
-        // Simplified - would compute actual confidence interval
+        // Simplified - would compute actual _confidence interval
         let lower = _tensors[0];
         let upper = _tensors[0];
         Ok((lower, upper))
@@ -722,17 +705,14 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn estimate_critical_perturbation_size(
-        &self,
-        _sensitivities: &[f64],
+        &self_sensitivities: &[f64],
     ) -> Result<f64, StabilityError> {
         // Simplified estimation
         Ok(1e-8)
     }
 
     fn test_nan_production<Func>(
-        &self,
-        _function: &Func,
-        _input: &Tensor<F>,
+        &self_function: &Func, _input: &Tensor<F>,
     ) -> Result<bool, StabilityError>
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
@@ -741,9 +721,7 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn test_infinite_output<Func>(
-        &self,
-        _function: &Func,
-        _input: &Tensor<F>,
+        &self_function: &Func, _input: &Tensor<F>,
     ) -> Result<bool, StabilityError>
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
@@ -752,9 +730,7 @@ impl<F: Float> NumericalAnalyzer<F> {
     }
 
     fn test_extreme_sensitivity<Func>(
-        &self,
-        _function: &Func,
-        _input: &Tensor<F>,
+        &self_function: &Func, _input: &Tensor<F>,
     ) -> Result<bool, StabilityError>
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
@@ -930,9 +906,7 @@ where
 /// Analyze error propagation through a computation
 #[allow(dead_code)]
 pub fn analyze_error_propagation<'a, F: Float, Func>(
-    _function: Func,
-    _input: &'a Tensor<'a, F>,
-    _uncertainty: &'a Tensor<'a, F>,
+    _function: Func_input: &'a Tensor<'a, F>, _uncertainty: &'a Tensor<'a, F>,
 ) -> Result<ErrorPropagationAnalysis<'a, F>, StabilityError>
 where
     Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,

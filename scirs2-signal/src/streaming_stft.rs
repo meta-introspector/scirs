@@ -25,14 +25,14 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_signal::streaming_stft::{StreamingStft, StreamingStftConfig};
+//! use scirs2__signal::streaming_stft::{StreamingStft, StreamingStftConfig};
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!
 //! // Configure streaming STFT
 //! let config = StreamingStftConfig {
 //!     frame_length: 512,
 //!     hop_length: 256,
-//!     window: "hann".to_string(),
+//!     window: WindowType::Hann.to_string(),
 //!     ..Default::default()
 //! };
 //!
@@ -48,11 +48,15 @@
 //! ```
 
 use crate::error::{SignalError, SignalResult};
+use crate::lombscargle__enhanced::WindowType;
 use crate::window::get_window;
 use ndarray::Array1;
-use num_complex::Complex64;
+use num__complex::Complex64;
 use std::collections::VecDeque;
+use std::f64::consts::PI;
+use ndarray::{s};
 
+#[allow(unused_imports)]
 /// Configuration for streaming STFT
 #[derive(Debug, Clone)]
 pub struct StreamingStftConfig {
@@ -81,7 +85,7 @@ impl Default for StreamingStftConfig {
         Self {
             frame_length: 512,
             hop_length: 256,
-            window: "hann".to_string(),
+            window: WindowType::Hann.to_string(),
             center: true,
             pad_mode: "constant".to_string(),
             magnitude_only: false,
@@ -129,43 +133,43 @@ impl StreamingStft {
     ///
     /// # Returns
     /// * New streaming STFT processor instance
-    pub fn new(config: StreamingStftConfig) -> SignalResult<Self> {
+    pub fn new(_config: StreamingStftConfig) -> SignalResult<Self> {
         // Validate configuration
-        if config.frame_length == 0 {
+        if _config.frame_length == 0 {
             return Err(SignalError::ValueError(
                 "Frame length must be greater than 0".to_string(),
             ));
         }
 
-        if config.hop_length == 0 {
+        if _config.hop_length == 0 {
             return Err(SignalError::ValueError(
                 "Hop length must be greater than 0".to_string(),
             ));
         }
 
-        if config.hop_length > config.frame_length {
+        if _config.hop_length > _config.frame_length {
             return Err(SignalError::ValueError(
                 "Hop length should not exceed frame length".to_string(),
             ));
         }
 
-        if config.power <= 0.0 {
+        if _config.power <= 0.0 {
             return Err(SignalError::ValueError(
                 "Power must be positive".to_string(),
             ));
         }
 
         // Generate window function
-        let window = get_window(&config.window, config.frame_length, true)?;
+        let window = get_window(&_config.window, _config.frame_length, true)?;
         let window_array = Array1::from(window);
 
         // Initialize input buffer
         let mut input_buffer = VecDeque::new();
 
         // Pre-fill buffer for centering if needed
-        if config.center {
-            let pad_length = config.frame_length / 2;
-            match config.pad_mode.as_str() {
+        if _config.center {
+            let pad_length = _config.frame_length / 2;
+            match _config.pad_mode.as_str() {
                 "constant" => {
                     for _ in 0..pad_length {
                         input_buffer.push_back(0.0);
@@ -181,7 +185,7 @@ impl StreamingStft {
                 _ => {
                     return Err(SignalError::ValueError(format!(
                         "Unknown pad mode: {}",
-                        config.pad_mode
+                        _config.pad_mode
                     )));
                 }
             }
@@ -191,7 +195,7 @@ impl StreamingStft {
         let fft_plan = None; // We'll use the direct FFT function
 
         Ok(Self {
-            config,
+            _config,
             window: window_array,
             input_buffer,
             samples_processed: 0,
@@ -211,23 +215,23 @@ impl StreamingStft {
         &mut self,
         input_frame: &Array1<f64>,
     ) -> SignalResult<Option<Array1<Complex64>>> {
-        // Add input frame to buffer
+        // Add input _frame to buffer
         for &sample in input_frame.iter() {
             self.input_buffer.push_back(sample);
         }
 
         self.samples_processed += input_frame.len();
 
-        // Check if we have enough samples for a frame
+        // Check if we have enough samples for a _frame
         if self.input_buffer.len() >= self.config.frame_length {
-            // Extract windowed frame
-            let mut frame = Array1::<f64>::zeros(self.config.frame_length);
+            // Extract windowed _frame
+            let mut _frame = Array1::<f64>::zeros(self.config.frame_length);
             for i in 0..self.config.frame_length {
-                frame[i] = self.input_buffer[i];
+                _frame[i] = self.input_buffer[i];
             }
 
             // Apply window
-            let windowed_frame = &frame * &self.window;
+            let windowed_frame = &_frame * &self.window;
 
             // Compute FFT
             let spectrum = self.compute_fft(&windowed_frame)?;
@@ -496,7 +500,7 @@ impl RealTimeStft {
     pub fn process_block(&mut self, input_block: &Array1<f64>) -> SignalResult<usize> {
         if input_block.len() != self.block_size {
             return Err(SignalError::ValueError(format!(
-                "Input block size {} does not match expected size {}",
+                "Input _block size {} does not match expected size {}",
                 input_block.len(),
                 self.block_size
             )));
@@ -504,7 +508,7 @@ impl RealTimeStft {
 
         let mut new_spectra_count = 0;
 
-        // Process the block
+        // Process the _block
         if let Some(spectrum) = self.streaming_stft.process_frame(input_block)? {
             // Add to output buffer
             self.output_buffer.push_back(spectrum);
@@ -581,8 +585,6 @@ pub struct RealTimeStftStatistics {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::PI;
-
     #[test]
     fn test_streaming_stft_creation() {
         let config = StreamingStftConfig::default();

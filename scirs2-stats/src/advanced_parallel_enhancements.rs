@@ -6,8 +6,8 @@
 //! performance on large-scale statistical computations.
 
 use crate::error::StatsResult;
-use crate::error_handling_enhancements::{AdvancedContextBuilder, AdvancedErrorMessages};
-use crate::error_standardization::ErrorMessages;
+use crate::error_handling__enhancements::{AdvancedContextBuilder, AdvancedErrorMessages};
+use crate::error__standardization::ErrorMessages;
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::{num_threads, par_chunks, parallel_map, ParallelIterator};
@@ -81,10 +81,10 @@ pub struct AdvancedParallelProcessor {
 
 impl AdvancedParallelProcessor {
     /// Create a new advanced-parallel processor
-    pub fn new(config: AdvancedParallelConfig) -> Self {
+    pub fn new(_config: AdvancedParallelConfig) -> Self {
         Self {
-            adaptive_chunk_size: AtomicUsize::new(config.min_chunk_size),
-            config,
+            adaptive_chunk_size: AtomicUsize::new(_config.min_chunk_size),
+            _config,
             performance_history: Arc::new(Mutex::new(Vec::new())),
         }
     }
@@ -286,13 +286,12 @@ impl AdvancedParallelProcessor {
 
     fn determine_optimal_parallelization(
         &self,
-        data_size: usize,
-        _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
+        data_size: usize, _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
     ) -> StatsResult<(usize, usize)> {
         let max_threads = self.config.max_threads.min(num_threads());
         let min_chunk = self.config.min_chunk_size;
 
-        // Adaptive logic based on data size and historical performance
+        // Adaptive logic based on data _size and historical performance
         let optimal_threads = if data_size < min_chunk * 2 {
             1
         } else if data_size < min_chunk * max_threads {
@@ -312,8 +311,7 @@ impl AdvancedParallelProcessor {
 
     fn process_batch_static<F, D>(
         &self,
-        data: &ArrayBase<D, Ix1>,
-        _num_threads: usize,
+        data: &ArrayBase<D, Ix1>, _num_threads: usize,
         chunk_size: usize,
     ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
@@ -334,8 +332,7 @@ impl AdvancedParallelProcessor {
 
     fn process_batch_dynamic<F, D>(
         &self,
-        data: &ArrayBase<D, Ix1>,
-        _num_threads: usize,
+        data: &ArrayBase<D, Ix1>, _num_threads: usize,
     ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
@@ -343,13 +340,12 @@ impl AdvancedParallelProcessor {
         + std::fmt::Display,
     {
         // Work-stealing implementation would go here
-        self.process_batch_static(data, _num_threads, self.config.min_chunk_size)
+        self.process_batch_static(data_num_threads, self.config.min_chunk_size)
     }
 
     fn process_batch_guided<F, D>(
         &self,
-        data: &ArrayBase<D, Ix1>,
-        _num_threads: usize,
+        data: &ArrayBase<D, Ix1>, _num_threads: usize,
         initial_chunk_size: usize,
     ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
@@ -358,14 +354,13 @@ impl AdvancedParallelProcessor {
         + std::fmt::Display,
     {
         // Guided scheduling with decreasing chunk sizes
-        self.process_batch_static(data, _num_threads, initial_chunk_size)
+        self.process_batch_static(data_num_threads, initial_chunk_size)
     }
 
     fn process_batch_adaptive<F, D>(
         &self,
         data: &ArrayBase<D, Ix1>,
-        num_threads: usize,
-        _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
+        num_threads: usize, _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
     ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
@@ -494,10 +489,10 @@ impl AdvancedParallelProcessor {
         let current_chunk_size = self.adaptive_chunk_size.load(Ordering::Relaxed);
 
         let new_chunk_size = if metrics.parallel_efficiency < 0.7 {
-            // Increase chunk size if efficiency is low
+            // Increase chunk _size if efficiency is low
             (current_chunk_size * 11 / 10).min(data_size / 2)
         } else if metrics.parallel_efficiency > 0.9 && metrics.load_balance_factor > 0.8 {
-            // Decrease chunk size if efficiency is very high and load is balanced
+            // Decrease chunk _size if efficiency is very high and load is balanced
             (current_chunk_size * 9 / 10).max(self.config.min_chunk_size)
         } else {
             current_chunk_size
@@ -895,8 +890,7 @@ impl AdvancedParallelProcessor {
         &self,
         data: &ArrayBase<D, Ix1>,
         window_size: usize,
-        operations: &[TimeSeriesOperation],
-        _threads: usize,
+        operations: &[TimeSeriesOperation], _threads: usize,
     ) -> StatsResult<AdvancedParallelTimeSeriesResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,

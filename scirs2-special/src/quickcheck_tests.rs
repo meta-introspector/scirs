@@ -98,7 +98,7 @@ impl Arbitrary for ReasonableComplex {
 
 /// Helper function to run QuickCheck tests with custom configuration
 #[allow(dead_code)]
-pub fn run_quickcheck_test<F, P>(prop: F, config: &TestConfig) -> bool
+pub fn run_quickcheck_test<F, P>(_prop: F, config: &TestConfig) -> bool
 where
     F: Fn(P) -> bool + Send + Sync + 'static + quickcheck::Testable,
     P: Arbitrary + Clone + Send + std::fmt::Debug + 'static,
@@ -106,13 +106,13 @@ where
     QuickCheck::new()
         .tests(config.test_count)
         .max_tests(config.max_iterations)
-        .quickcheck(prop);
+        .quickcheck(_prop);
     true
 }
 
 /// Helper function to run QuickCheck tests that return TestResult
 #[allow(dead_code)]
-pub fn run_quickcheck_test_result<F, P>(prop: F, config: &TestConfig) -> bool
+pub fn run_quickcheck_test_result<F, P>(_prop: F, config: &TestConfig) -> bool
 where
     F: Fn(P) -> TestResult + Send + Sync + 'static + quickcheck::Testable,
     P: Arbitrary + Clone + Send + std::fmt::Debug + 'static,
@@ -120,14 +120,14 @@ where
     QuickCheck::new()
         .tests(config.test_count)
         .max_tests(config.max_iterations)
-        .quickcheck(prop);
+        .quickcheck(_prop);
     true
 }
 
 #[cfg(test)]
 mod gamma_properties {
     use super::*;
-    use quickcheck_macros::quickcheck;
+    use quickcheck__macros::quickcheck;
 
     /// Optimized gamma recurrence relation test with early termination
     #[quickcheck]
@@ -215,7 +215,7 @@ mod gamma_properties {
 #[cfg(test)]
 mod bessel_properties {
     use super::*;
-    use quickcheck_macros::quickcheck;
+    use quickcheck__macros::quickcheck;
 
     #[quickcheck]
     fn bessel_j_derivative_relation(x: PositiveF64) -> bool {
@@ -280,7 +280,7 @@ mod bessel_properties {
 #[cfg(test)]
 mod error_function_properties {
     use super::*;
-    use quickcheck_macros::quickcheck;
+    use quickcheck__macros::quickcheck;
 
     #[quickcheck]
     fn erf_odd_function(x: f64) -> bool {
@@ -329,7 +329,7 @@ mod error_function_properties {
 #[cfg(test)]
 mod orthogonal_polynomial_properties {
     use super::*;
-    use quickcheck_macros::quickcheck;
+    use quickcheck__macros::quickcheck;
 
     #[quickcheck]
     fn legendre_symmetry(n: SmallInt, x: f64) -> bool {
@@ -381,7 +381,7 @@ mod orthogonal_polynomial_properties {
 #[cfg(test)]
 mod complex_function_properties {
     use super::*;
-    use quickcheck_macros::quickcheck;
+    use quickcheck__macros::quickcheck;
 
     #[quickcheck]
     fn complex_erf_conjugate_symmetry(z: ReasonableComplex) -> bool {
@@ -418,7 +418,7 @@ mod complex_function_properties {
 #[cfg(test)]
 mod statistical_function_properties {
     use super::*;
-    use quickcheck_macros::quickcheck;
+    use quickcheck__macros::quickcheck;
 
     #[quickcheck]
     fn logistic_bounds(x: f64) -> bool {
@@ -439,15 +439,15 @@ mod statistical_function_properties {
     }
 
     #[quickcheck]
-    fn softmax_sum_to_one(xs: Vec<f64>) -> bool {
-        if xs.is_empty() || xs.len() > 100 {
+    fn softmax_sum_to_one(_xs: Vec<f64>) -> bool {
+        if _xs.is_empty() || _xs.len() > 100 {
             return true;
         }
 
         // Clamp values to reasonable range
-        let xs: Vec<f64> = xs.iter().map(|&x| x.clamp(-50.0, 50.0)).collect();
+        let _xs: Vec<f64> = _xs.iter().map(|&x| x.clamp(-50.0, 50.0)).collect();
 
-        let xs_array = ndarray::Array1::from(xs.clone());
+        let xs_array = ndarray::Array1::from(_xs.clone());
         let softmax_result = crate::statistical::softmax(xs_array.view());
         let sum: f64 = match softmax_result {
             Ok(arr) => arr.iter().sum(),
@@ -458,20 +458,20 @@ mod statistical_function_properties {
     }
 
     #[quickcheck]
-    fn logsumexp_accuracy(xs: Vec<f64>) -> bool {
-        if xs.is_empty() || xs.len() > 100 {
+    fn logsumexp_accuracy(_xs: Vec<f64>) -> bool {
+        if _xs.is_empty() || _xs.len() > 100 {
             return true;
         }
 
         // Clamp to reasonable range
-        let xs: Vec<f64> = xs.iter().map(|&x| x.clamp(-100.0, 100.0)).collect();
+        let _xs: Vec<f64> = _xs.iter().map(|&x| x.clamp(-100.0, 100.0)).collect();
 
-        let xs_array = ndarray::Array1::from(xs.clone());
+        let xs_array = ndarray::Array1::from(_xs.clone());
         let lse_result = crate::statistical::logsumexp(xs_array.view());
         let lse = lse_result.unwrap_or(f64::NAN);
 
         // Direct calculation (may overflow)
-        let direct: f64 = xs.iter().map(|&x| x.exp()).sum::<f64>().ln();
+        let direct: f64 = _xs.iter().map(|&x| x.exp()).sum::<f64>().ln();
 
         if !lse.is_finite() || !direct.is_finite() {
             // If direct overflows but logsumexp doesn't, that's good
@@ -497,11 +497,11 @@ mod integration {
     #[test]
     fn test_quickcheck_infrastructure() {
         // Basic test to ensure QuickCheck is working
-        fn prop_reversing_twice_is_identity(xs: Vec<i32>) -> bool {
-            let mut rev = xs.clone();
+        fn prop_reversing_twice_is_identity(_xs: Vec<i32>) -> bool {
+            let mut rev = _xs.clone();
             rev.reverse();
             rev.reverse();
-            xs == rev
+            _xs == rev
         }
 
         quickcheck::quickcheck(prop_reversing_twice_is_identity as fn(Vec<i32>) -> bool);

@@ -138,7 +138,7 @@ impl<T: Clone> RTree<T> {
                         results.truncate(k);
 
                         // Update max_distance
-                        if let Some((_, _, dist)) = results.last() {
+                        if let Some((__, dist)) = results.last() {
                             max_distance = *dist;
                         }
                     }
@@ -181,28 +181,28 @@ impl<T: Clone> RTree<T> {
     ///
     /// A `SpatialResult` containing a vector of pairs of data from both trees that satisfy the predicate,
     /// or an error if the R-trees have different dimensions
-    pub fn spatial_join<U, P>(&self, other: &RTree<U>, predicate: P) -> SpatialResult<Vec<(T, U)>>
+    pub fn spatial_join<U, P>(_other: &RTree<U>, predicate: P) -> SpatialResult<Vec<(T, U)>>
     where
         U: Clone,
         P: Fn(&Rectangle, &Rectangle) -> SpatialResult<bool>,
     {
-        if self.ndim() != other.ndim() {
+        if self.ndim() != _other.ndim() {
             return Err(crate::error::SpatialError::DimensionError(format!(
                 "RTrees have different dimensions: {} and {}",
                 self.ndim(),
-                other.ndim()
+                _other.ndim()
             )));
         }
 
         let mut results = Vec::new();
 
         // If either tree is empty, return an empty result
-        if self.is_empty() || other.is_empty() {
+        if self.is_empty() || _other.is_empty() {
             return Ok(results);
         }
 
         // Perform the join
-        self.spatial_join_internal(&self.root, &other.root, &predicate, &mut results)?;
+        self.spatial_join_internal(&self.root, &_other.root, &predicate, &mut results)?;
 
         Ok(results)
     }

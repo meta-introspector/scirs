@@ -10,6 +10,7 @@ use crate::error::TimeSeriesError;
 use ndarray::{s, Array1, Array2};
 use scirs2_core::validation::check_array_finite;
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 
 /// Result type for causality testing
 pub type CausalityResult<T> = Result<T, TimeSeriesError>;
@@ -178,9 +179,9 @@ impl CausalityTester {
     }
 
     /// Create a new causality tester with a random seed
-    pub fn with_seed(seed: u64) -> Self {
+    pub fn with_seed(_seed: u64) -> Self {
         Self {
-            random_seed: Some(seed),
+            random_seed: Some(_seed),
         }
     }
 
@@ -452,7 +453,7 @@ impl CausalityTester {
 
         if intervention_point >= y.len() {
             return Err(TimeSeriesError::InvalidInput(
-                "Intervention point must be within the time series".to_string(),
+                "Intervention _point must be within the time series".to_string(),
             ));
         }
 
@@ -779,8 +780,8 @@ impl CausalityTester {
             te_values.push(te_result.transfer_entropy);
         }
 
-        // Calculate p-value as proportion of bootstrap samples >= observed value
-        let count = te_values.iter().filter(|&&te| te >= observed_te).count();
+        // Calculate p-value as proportion of _bootstrap samples >= observed value
+        let count = te_values.iter().filter(|&&_te| _te >= observed_te).count();
         Ok(count as f64 / n_bootstrap as f64)
     }
 
@@ -834,7 +835,7 @@ impl CausalityTester {
     ) -> CausalityResult<f64> {
         if library_size >= x_manifold.nrows() {
             return Err(TimeSeriesError::InvalidInput(
-                "Library size too large".to_string(),
+                "Library _size too large".to_string(),
             ));
         }
 
@@ -845,7 +846,7 @@ impl CausalityTester {
         for i in 0..n_pred {
             let query_point = x_manifold.row(library_size + i);
 
-            // Find nearest neighbors in the library
+            // Find nearest _neighbors in the library
             let mut distances = Vec::new();
             for j in 0..library_size {
                 let library_point = x_manifold.row(j);
@@ -855,7 +856,7 @@ impl CausalityTester {
 
             distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
-            // Use nearest neighbors to predict y value
+            // Use nearest _neighbors to predict y value
             let mut weighted_sum = 0.0;
             let mut weight_sum = 0.0;
 
@@ -938,7 +939,7 @@ impl CausalityTester {
             self.fisher_yates_shuffle(&mut y_shuffled);
 
             let ccm_result = self.convergent_cross_mapping(x, &y_shuffled, config)?;
-            correlations.push(ccm_result.correlation);
+            correlations.push(ccm_result._correlation);
         }
 
         // Calculate p-value
@@ -962,12 +963,12 @@ impl CausalityTester {
         // Prepare design matrix with lag terms
         let n = pre_y.len();
         let p = pre_x.ncols();
-        let mut design_matrix = Array2::zeros((n - 1, p + 1)); // +1 for lagged y
+        let mut design_matrix = Array2::zeros((n - 1, p + 1)); // +1 for lagged _y
         let mut response = Array1::zeros(n - 1);
 
         for i in 1..n {
             response[i - 1] = pre_y[i];
-            design_matrix[[i - 1, 0]] = pre_y[i - 1]; // Lagged y
+            design_matrix[[i - 1, 0]] = pre_y[i - 1]; // Lagged _y
             for j in 0..p {
                 design_matrix[[i - 1, j + 1]] = pre_x[[i - 1, j]];
             }
@@ -982,7 +983,7 @@ impl CausalityTester {
         // Calculate residual standard error
         let fitted = design_matrix.dot(&beta);
         let residuals = &response - &fitted;
-        let mse = residuals.mapv(|x| x * x).sum() / (n - 1 - beta.len()) as f64;
+        let mse = residuals.mapv(|_x| _x * _x).sum() / (n - 1 - beta.len()) as f64;
         let std_error = mse.sqrt();
 
         // Predict post-intervention values
@@ -996,7 +997,7 @@ impl CausalityTester {
         for i in 0..n_post {
             let mut x_new = Array1::zeros(p + 1);
 
-            // Use last observed value or previous prediction as lagged y
+            // Use last observed value or previous prediction as lagged _y
             if i == 0 {
                 x_new[0] = pre_y[pre_y.len() - 1];
             } else {

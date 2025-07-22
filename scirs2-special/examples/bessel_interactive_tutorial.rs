@@ -6,32 +6,32 @@
 //! Run with: cargo run --example bessel_interactive_tutorial
 
 use ndarray::Array1;
-use scirs2_special::bessel::*;
-use scirs2_special::{j0_zeros, j1_zeros};
+use scirs2__special::bessel::*;
+use scirs2__special::{j0_zeros, j1_zeros};
 use std::io::{self, Write};
 
 /// Helper function to generate multiple J0 zeros
-fn generate_j0_zeros(num_zeros: usize) -> Result<Vec<f64>, String> {
-    let mut zeros = Vec::new();
-    for k in 1..=num_zeros {
+fn generate_j0_zeros(_num_zeros: usize) -> Result<Vec<f64>, String> {
+    let mut _zeros = Vec::new();
+    for k in 1..=_num_zeros {
         match j0_zeros::<f64>(k) {
-            Ok(zero) => zeros.push(zero),
+            Ok(zero) => _zeros.push(zero),
             Err(e) => return Err(format!("Error computing J₀ zero {}: {}", k, e)),
         }
     }
-    Ok(zeros)
+    Ok(_zeros)
 }
 
 /// Helper function to generate multiple J1 zeros
-fn generate_j1_zeros(num_zeros: usize) -> Result<Vec<f64>, String> {
-    let mut zeros = Vec::new();
-    for k in 1..=num_zeros {
+fn generate_j1_zeros(_num_zeros: usize) -> Result<Vec<f64>, String> {
+    let mut _zeros = Vec::new();
+    for k in 1..=_num_zeros {
         match j1_zeros::<f64>(k) {
-            Ok(zero) => zeros.push(zero),
+            Ok(zero) => _zeros.push(zero),
             Err(e) => return Err(format!("Error computing J₁ zero {}: {}", k, e)),
         }
     }
-    Ok(zeros)
+    Ok(_zeros)
 }
 
 #[allow(dead_code)]
@@ -184,8 +184,7 @@ fn explore_bessel_j() {
             2 => explore_bessel_zeros(),
             3 => explore_recurrence_relations(),
             4 => compare_bessel_orders(),
-            5 => break,
-            _ => println!("Invalid choice."),
+            5 => break_ => println!("Invalid choice."),
         }
     }
 }
@@ -205,8 +204,7 @@ fn calculate_bessel_j_values() {
 
     let result = match n {
         0 => j0(x),
-        1 => j1(x),
-        _ => jn(n as i32, x),
+        1 => j1(x, _ => jn(n as i32, x),
     };
 
     println!("\nResult: J{}({}) = {:.10}", n, x, result);
@@ -267,8 +265,7 @@ fn explore_bessel_zeros() {
                 println!("Error computing J₁ zeros: {}", e);
                 return;
             }
-        },
-        _ => {
+        }_ => {
             println!("Only n=0 and n=1 supported for zero finding in this demo.");
             return;
         }
@@ -280,8 +277,7 @@ fn explore_bessel_zeros() {
         // Verify it's actually a zero
         let function_value: f64 = match n {
             0 => j0(*zero),
-            1 => j1(*zero),
-            _ => 0.0,
+            1 => j1(*zero, _ => 0.0,
         };
         if function_value.abs() < 1e-10 {
             print!("  ✓");
@@ -357,8 +353,7 @@ fn compare_bessel_orders() {
     for n in 0..=5 {
         let val = match n {
             0 => j0(x),
-            1 => j1(x),
-            _ => jn(n, x),
+            1 => j1(x, _ => jn(n, x),
         };
 
         let behavior = if n == 0 {
@@ -468,8 +463,7 @@ fn explore_spherical_bessel() {
 
         let elementary = match n {
             0 => format!("sin(x)/x, -cos(x)/x"),
-            1 => format!("sin(x)/x² - cos(x)/x, -cos(x)/x² - sin(x)/x"),
-            _ => "Complex expression".to_string(),
+            1 => format!("sin(x)/x² - cos(x)/x, -cos(x)/x² - sin(x)/x", _ => "Complex expression".to_string(),
         };
 
         println!(
@@ -518,8 +512,7 @@ fn practical_applications() {
         2 => heat_conduction_demo(),
         3 => waveguide_demo(),
         4 => quantum_mechanics_demo(),
-        5 => return,
-        _ => println!("Invalid choice."),
+        5 => return_ => println!("Invalid choice."),
     }
 }
 
@@ -792,8 +785,7 @@ fn interactive_plotting() {
         1 => plot_regular_bessel(),
         2 => plot_modified_bessel(),
         3 => plot_spherical_bessel(),
-        4 => plot_custom_comparison(),
-        _ => println!("Invalid choice."),
+        4 => plot_custom_comparison(, _ => println!("Invalid choice."),
     }
 }
 
@@ -1010,8 +1002,7 @@ fn plot_custom_comparison() {
             for n in 0..=4 {
                 let val = match n {
                     0 => j0(x),
-                    1 => j1(x),
-                    _ => jn(n, x),
+                    1 => j1(x, _ => jn(n, x),
                 };
                 println!("J{}({}) = {:8.5}", n, x, val);
             }
@@ -1124,8 +1115,7 @@ fn quiz_section() {
         5 => println!("🌟 Perfect! You're a Bessel function expert!"),
         4 => println!("🎉 Excellent! You have strong understanding of Bessel functions."),
         3 => println!("👍 Good job! You understand the basics well."),
-        2 => println!("📚 Not bad! Review the theory and try again."),
-        _ => println!("🤔 Consider reviewing the tutorial sections for better understanding."),
+        2 => println!("📚 Not bad! Review the theory and try again.", _ => println!("🤔 Consider reviewing the tutorial sections for better understanding."),
     }
 }
 

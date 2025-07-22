@@ -26,7 +26,7 @@ pub mod ttest;
 
 // Re-export test functions
 pub use anova::{one_way_anova, tukey_hsd};
-pub use chi2_test::{chi2_gof, chi2_independence, chi2_yates};
+pub use chi2__test::{chi2_gof, chi2_independence, chi2_yates};
 pub use homogeneity::{bartlett, brown_forsythe, levene};
 pub use nonparametric::{friedman, kruskal_wallis, mann_whitney, wilcoxon};
 pub use normality::{anderson_darling, dagostino_k2, ks_2samp, shapiro_wilk};
@@ -51,7 +51,7 @@ pub use ttest::{
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::{ttest_1samp, Alternative};
+/// use scirs2__stats::{ttest_1samp, Alternative};
 ///
 /// let data = array![5.1, 4.9, 6.2, 5.7, 5.5, 5.1, 5.2, 5.0];
 /// let null_mean = 5.0;
@@ -105,7 +105,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::{ttest_ind, Alternative};
+/// use scirs2__stats::{ttest_ind, Alternative};
 ///
 /// let group1 = array![5.1, 4.9, 6.2, 5.7, 5.5];
 /// let group2 = array![4.8, 5.2, 5.1, 4.7, 4.9];
@@ -129,9 +129,7 @@ where
 pub fn ttest_ind<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
-    equal_var: bool,
-    _alternative: Alternative,
-    _nan_policy: &str,
+    equal_var: bool, _alternative: Alternative_nan_policy: &str,
 ) -> StatsResult<TTestResult<F>>
 where
     F: Float
@@ -209,8 +207,7 @@ where
     Ok(TTestResult {
         statistic: t_stat,
         pvalue: p_value,
-        df,
-        alternative: Alternative::TwoSided,
+        df_alternative: Alternative::TwoSided,
         info: None,
     })
 }
@@ -230,7 +227,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::{ttest_rel, Alternative};
+/// use scirs2__stats::{ttest_rel, Alternative};
 ///
 /// // Data from paired measurements (e.g., before and after treatment)
 /// let before = array![68.5, 70.2, 65.3, 72.1, 69.8];
@@ -249,9 +246,7 @@ where
 #[allow(dead_code)]
 pub fn ttest_rel<F>(
     x: &ArrayView1<F>,
-    y: &ArrayView1<F>,
-    _alternative: Alternative,
-    _nan_policy: &str,
+    y: &ArrayView1<F>, _alternative: Alternative_nan_policy: &str,
 ) -> StatsResult<TTestResult<F>>
 where
     F: Float
@@ -312,7 +307,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::{kstest, distributions};
+/// use scirs2__stats::{kstest, distributions};
 ///
 /// // Test if data follows a normal distribution
 /// let data = array![0.2, 0.5, -0.3, 0.1, -0.4, 0.3, -0.2, 0.0, 0.1, -0.1];
@@ -389,7 +384,7 @@ where
 
 /// Calculate the p-value for the Kolmogorov-Smirnov test
 #[allow(dead_code)]
-fn calculate_ks_p_value<F: Float + NumCast>(ks_stat: F, n: F) -> F {
+fn calculate_ks_p_value<F: Float + NumCast>(_ks_stat: F, n: F) -> F {
     // Use the asymptotic distribution approximation
     // valid for large n (typically n > 35)
 
@@ -400,7 +395,7 @@ fn calculate_ks_p_value<F: Float + NumCast>(ks_stat: F, n: F) -> F {
     let n_effective = n;
 
     // Calculate the test statistic
-    let z = ks_stat * n_effective.sqrt();
+    let z = _ks_stat * n_effective.sqrt();
 
     // Approximate p-value calculation
     // Using the formula from Marsaglia et al. (2003)
@@ -449,7 +444,7 @@ fn calculate_ks_p_value<F: Float + NumCast>(ks_stat: F, n: F) -> F {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::shapiro;
+/// use scirs2__stats::shapiro;
 ///
 /// // Test if data follows a normal distribution
 /// let data = array![0.2, 0.5, -0.3, 0.1, -0.4, 0.3, -0.2, 0.0, 0.1, -0.1, 0.4, -0.5];

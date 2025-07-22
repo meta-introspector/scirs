@@ -1,4 +1,4 @@
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -10,8 +10,8 @@ use scirs2_core::validation::{
     check_array_finite, check_positive, clustering::validate_clustering_data,
     parameters::check_unit_interval,
 };
-use scirs2_spatial::distance::EuclideanDistance;
-use scirs2_spatial::kdtree::KDTree;
+use scirs2__spatial::distance::EuclideanDistance;
+use scirs2__spatial::kdtree::KDTree;
 
 /// Configuration options for Mean Shift algorithm
 pub struct MeanShiftOptions<T: Float> {
@@ -109,7 +109,7 @@ impl<T: Float> Hash for FloatPoint<T> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_cluster::meanshift::estimate_bandwidth;
+/// use scirs2__cluster::meanshift::estimate_bandwidth;
 ///
 /// let data = array![
 ///     [1.0, 1.0], [2.0, 1.0], [1.0, 0.0],
@@ -123,8 +123,7 @@ impl<T: Float> Hash for FloatPoint<T> {
 pub fn estimate_bandwidth<T: Float + Display + FromPrimitive + Send + Sync + 'static>(
     data: &ArrayView2<T>,
     quantile: Option<T>,
-    n_samples: Option<usize>,
-    _random_state: Option<u64>,
+    n_samples: Option<usize>, _random_state: Option<u64>,
 ) -> Result<T, ClusteringError> {
     // Check that all data is finite
     check_array_finite(data, "data")?;
@@ -132,7 +131,7 @@ pub fn estimate_bandwidth<T: Float + Display + FromPrimitive + Send + Sync + 'st
     let quantile = quantile.unwrap_or_else(|| T::from(0.3).unwrap());
     let _quantile = check_unit_interval(quantile, "quantile", "estimate_bandwidth")?;
 
-    // Select a subset of samples if specified
+    // Select a subset of _samples if specified
     let data = if let Some(n) = n_samples {
         if n >= data.nrows() {
             data.to_owned()
@@ -231,8 +230,8 @@ pub fn get_bin_seeds<T: Float + Display + FromPrimitive + Send + Sync + 'static>
     // Select only bins with enough points
     let seeds: Vec<Vec<T>> = bin_sizes
         .into_iter()
-        .filter(|(_, freq)| *freq >= min_bin_freq)
-        .map(|(point, _)| point.0)
+        .filter(|(_, _freq)| *_freq >= min_bin_freq)
+        .map(|(point_)| point.0)
         .collect();
 
     // If all points are seeds, just return the original data
@@ -296,7 +295,7 @@ fn mean_shift_single_seed<
 
     loop {
         // Find points within bandwidth
-        let (indices, _) = match kdtree.query_radius(&my_mean.to_vec(), bandwidth) {
+        let (indices_) = match kdtree.query_radius(&my_mean.to_vec(), bandwidth) {
             Ok((idx, distances)) => (idx, distances),
             Err(_) => return (my_mean.to_vec(), 0, completed_iterations),
         };
@@ -311,7 +310,7 @@ fn mean_shift_single_seed<
         let mut sum = Array1::zeros(my_mean.dim());
         for &idx in &indices {
             let row_clone = data.row(idx).to_owned();
-            for (s, v) in sum.iter_mut().zip(row_clone.iter()) {
+            for (s, v) in sum.iter_mut().zip(row_clone._iter()) {
                 *s = *s + *v;
             }
         }
@@ -319,7 +318,7 @@ fn mean_shift_single_seed<
 
         // Compute Euclidean distance manually for convergence check
         let mut dist_squared = T::zero();
-        for (a, b) in my_mean.iter().zip(my_old_mean.iter()) {
+        for (a, b) in my_mean._iter().zip(my_old_mean._iter()) {
             dist_squared = dist_squared + (*a - *b) * (*a - *b);
         }
         let dist = dist_squared.sqrt();
@@ -332,7 +331,7 @@ fn mean_shift_single_seed<
     }
 
     // Find number of points within bandwidth of final position
-    let (indices, _) = match kdtree.query_radius(&my_mean.to_vec(), bandwidth) {
+    let (indices_) = match kdtree.query_radius(&my_mean.to_vec(), bandwidth) {
         Ok((idx, distances)) => (idx, distances),
         Err(_) => return (my_mean.to_vec(), 0, completed_iterations),
     };
@@ -355,7 +354,7 @@ fn mean_shift_single_seed<
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_cluster::meanshift::{mean_shift, MeanShiftOptions};
+/// use scirs2__cluster::meanshift::{mean_shift, MeanShiftOptions};
 ///
 /// let data = array![
 ///     [1.0, 1.0], [2.0, 1.0], [1.0, 0.0],
@@ -413,9 +412,9 @@ impl<
     > MeanShift<T>
 {
     /// Create a new Mean Shift instance with the given options.
-    pub fn new(options: MeanShiftOptions<T>) -> Self {
+    pub fn new(_options: MeanShiftOptions<T>) -> Self {
         Self {
-            options,
+            _options,
             cluster_centers_: None,
             labels_: None,
             n_iter_: 0,
@@ -425,7 +424,7 @@ impl<
     /// Fit the Mean Shift model to the data.
     pub fn fit(&mut self, data: &ArrayView2<T>) -> Result<&mut Self, ClusteringError> {
         // Use comprehensive clustering data validation
-        validate_clustering_data(data, "Mean Shift", true, Some(1))?;
+        crate::validation::validate_clustering_data(data, "Mean Shift", true, Some(1))?;
 
         let (n_samples, n_features) = data.dim();
 
@@ -499,7 +498,7 @@ impl<
 
         // Convert to Array2
         let mut sorted_centers = Array2::zeros((sorted_by_intensity.len(), n_features));
-        for (i, (center, _)) in sorted_by_intensity.iter().enumerate() {
+        for (i, (center_)) in sorted_by_intensity.iter().enumerate() {
             for (j, &val) in center.0.iter().enumerate() {
                 sorted_centers[[i, j]] = val;
             }
@@ -518,7 +517,7 @@ impl<
 
         for i in 0..sorted_centers.nrows() {
             if unique[i] {
-                let (indices, _) = kdtree
+                let (indices_) = kdtree
                     .query_radius(&sorted_centers.row(i).to_vec(), merge_threshold)
                     .map_err(|e| {
                         ClusteringError::ComputationError(format!("Failed to query KDTree: {}", e))
@@ -538,7 +537,7 @@ impl<
             .iter()
             .enumerate()
             .filter(|&(_, &is_unique)| is_unique)
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .collect();
 
         let mut cluster_centers = Array2::zeros((unique_indices.len(), n_features));
@@ -633,7 +632,7 @@ impl<
             let batch = data.slice(ndarray::s![i..end, ..]);
 
             for (row_idx, row) in batch.rows().into_iter().enumerate() {
-                let (indices, _) = kdtree.query(&row.to_vec(), 1).map_err(|e| {
+                let (indices_) = kdtree.query(&row.to_vec(), 1).map_err(|e| {
                     ClusteringError::ComputationError(format!("Failed to query KDTree: {}", e))
                 })?;
 
@@ -653,7 +652,7 @@ impl<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{array, Array2};
+    use ndarray::{ArrayView1, array, Array2};
     use std::collections::HashSet;
 
     #[test]

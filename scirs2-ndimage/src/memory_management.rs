@@ -54,16 +54,14 @@ impl Default for MemoryConfig {
 /// Buffer pool for reusing allocated arrays
 pub struct BufferPool<T, D> {
     buffers: Vec<Array<T, D>>,
-    max_buffers: usize,
-    _phantom: PhantomData<T>,
+    max_buffers: usize, _phantom: PhantomData<T>,
 }
 
 impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> BufferPool<T, D> {
-    pub fn new(max_buffers: usize) -> Self {
+    pub fn new(_max_buffers: usize) -> Self {
         Self {
-            buffers: Vec::new(),
-            max_buffers,
-            _phantom: PhantomData,
+            _buffers: Vec::new(),
+            max_buffers_phantom: PhantomData,
         }
     }
 
@@ -119,8 +117,7 @@ where
 
 /// Memory-efficient wrapper for array operations
 pub struct MemoryEfficientOp<T, D> {
-    config: MemoryConfig,
-    _phantom: PhantomData<(T, D)>,
+    config: MemoryConfig_phantom: PhantomData<(T, D)>,
 }
 
 impl<
@@ -128,10 +125,9 @@ impl<
         D: Dimension + 'static,
     > MemoryEfficientOp<T, D>
 {
-    pub fn new(config: MemoryConfig) -> Self {
+    pub fn new(_config: MemoryConfig) -> Self {
         Self {
-            config,
-            _phantom: PhantomData,
+            _config_phantom: PhantomData,
         }
     }
 
@@ -171,24 +167,24 @@ impl<
 
 /// Estimate memory usage for an operation
 #[allow(dead_code)]
-pub fn estimate_memory_usage<T, D>(shape: &[usize]) -> usize
+pub fn estimate_memory_usage<T, D>(_shape: &[usize]) -> usize
 where
     T: Float + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
-    let elements: usize = shape.iter().product();
+    let elements: usize = _shape.iter().product();
     elements * std::mem::size_of::<T>()
 }
 
 /// Check if an operation would exceed memory limit
 #[allow(dead_code)]
-pub fn check_memory_limit<T, D>(shape: &[usize], limit: Option<usize>) -> NdimageResult<()>
+pub fn check_memory_limit<T, D>(_shape: &[usize], limit: Option<usize>) -> NdimageResult<()>
 where
     T: Float + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     if let Some(max_bytes) = limit {
-        let required = estimate_memory_usage::<T, D>(shape);
+        let required = estimate_memory_usage::<T, D>(_shape);
         if required > max_bytes {
             return Err(NdimageError::MemoryError(format!(
                 "Operation would require {} bytes, exceeding limit of {} bytes",
@@ -256,8 +252,8 @@ impl<
         T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
     > ThresholdOp<T>
 {
-    pub fn new(threshold: T, value: T) -> Self {
-        Self { threshold, value }
+    pub fn new(_threshold: T, value: T) -> Self {
+        Self { _threshold, value }
     }
 }
 
@@ -283,8 +279,7 @@ impl<
 /// Memory-efficient array slicing that avoids copies when possible
 #[allow(dead_code)]
 pub fn slice_efficiently<'a, T, D, S>(
-    array: &'a ArrayBase<S, D>,
-    _slice_info: &[std::ops::Range<usize>],
+    array: &'a ArrayBase<S, D>, _slice_info: &[std::ops::Range<usize>],
 ) -> ArrayView<'a, T, D>
 where
     T: Float + std::ops::AddAssign + std::ops::DivAssign + 'static,
@@ -297,12 +292,12 @@ where
 
 /// Zero-copy transpose for 2D arrays
 #[allow(dead_code)]
-pub fn transpose_view<T, S>(array: &ArrayBase<S, ndarray::Ix2>) -> Array2<T>
+pub fn transpose_view<T, S>(_array: &ArrayBase<S, ndarray::Ix2>) -> Array2<T>
 where
     T: Float + Copy,
     S: Data<Elem = T>,
 {
-    array.t().to_owned()
+    _array.t().to_owned()
 }
 
 #[cfg(test)]

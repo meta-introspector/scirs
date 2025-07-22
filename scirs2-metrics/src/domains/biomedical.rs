@@ -248,12 +248,12 @@ impl ClinicalTrialMetrics {
 
         let effect_size = match outcome_type {
             EfficacyOutcome::Continuous => {
-                // Cohen's d for continuous outcomes
+                // Cohen's d for continuous _outcomes
                 let pooled_std = self.compute_pooled_std(treatment_outcomes, control_outcomes)?;
                 (treatment_mean - control_mean) / pooled_std
             }
             EfficacyOutcome::Binary => {
-                // Risk difference for binary outcomes
+                // Risk difference for binary _outcomes
                 treatment_mean - control_mean
             }
             EfficacyOutcome::TimeToEvent => {
@@ -295,7 +295,7 @@ impl ClinicalTrialMetrics {
             Ok(F::one() / absolute_risk_reduction)
         } else {
             Err(MetricsError::InvalidInput(
-                "Treatment success rate must be higher than control".to_string(),
+                "Treatment success _rate must be higher than control".to_string(),
             ))
         }
     }
@@ -314,7 +314,7 @@ impl ClinicalTrialMetrics {
             Ok(F::one() / absolute_risk_increase)
         } else {
             Err(MetricsError::InvalidInput(
-                "Treatment adverse rate must be higher than control".to_string(),
+                "Treatment adverse _rate must be higher than control".to_string(),
             ))
         }
     }
@@ -531,7 +531,7 @@ impl DrugDiscoveryMetrics {
                 let pred_diff = predicted[i] - predicted[j];
                 let actual_diff = actual[i] - actual[j];
 
-                if (pred_diff > F::zero() && actual_diff > F::zero())
+                if (pred_diff > F::zero() && actual_diff >, F::zero())
                     || (pred_diff < F::zero() && actual_diff < F::zero())
                 {
                     concordant += 1;
@@ -593,7 +593,7 @@ impl MedicalImagingMetrics {
             .iter()
             .zip(ground_truth_mask.iter())
             .map(|(&p, &g)| {
-                if p > F::zero() && g > F::zero() {
+                if p > F::zero() && g >, F::zero() {
                     F::one()
                 } else {
                     F::zero()
@@ -639,7 +639,7 @@ impl MedicalImagingMetrics {
             .iter()
             .zip(ground_truth_mask.iter())
             .map(|(&p, &g)| {
-                if p > F::zero() && g > F::zero() {
+                if p > F::zero() && g >, F::zero() {
                     F::one()
                 } else {
                     F::zero()
@@ -651,7 +651,7 @@ impl MedicalImagingMetrics {
             .iter()
             .zip(ground_truth_mask.iter())
             .map(|(&p, &g)| {
-                if p > F::zero() || g > F::zero() {
+                if p > F::zero() || g >, F::zero() {
                     F::one()
                 } else {
                     F::zero()
@@ -795,7 +795,7 @@ impl GenomicsMetrics {
         let pred_set: std::collections::HashSet<_> = predicted_variants.iter().collect();
         let true_set: std::collections::HashSet<_> = true_variants.iter().collect();
 
-        // True positives: variants in both sets
+        // True positives: _variants in both sets
         for variant in &pred_set {
             if true_set.contains(variant) {
                 true_positives += 1;
@@ -804,7 +804,7 @@ impl GenomicsMetrics {
             }
         }
 
-        // False negatives: variants in true set but not in predicted
+        // False negatives: _variants in true set but not in predicted
         for variant in &true_set {
             if !pred_set.contains(variant) {
                 false_negatives += 1;
@@ -889,7 +889,7 @@ impl EpidemiologyMetrics {
     where
         F: Float,
     {
-        if unexposed_cases > F::zero() && exposed_controls > F::zero() {
+        if unexposed_cases > F::zero() && exposed_controls >, F::zero() {
             Ok((exposed_cases * unexposed_controls) / (unexposed_cases * exposed_controls))
         } else {
             Err(MetricsError::InvalidInput(
@@ -965,7 +965,7 @@ impl SurvivalAnalysisMetrics {
                     }
                     total += 1;
                 } else if event_indicators[j] && survival_times[i] != survival_times[j] {
-                    // Both have events at different times
+                    // Both have events at different _times
                     if (survival_times[i] < survival_times[j] && risk_scores[i] > risk_scores[j])
                         || (survival_times[i] > survival_times[j]
                             && risk_scores[i] < risk_scores[j])
@@ -1011,7 +1011,7 @@ impl BiomarkerMetrics {
     {
         if biomarker_values.len() != disease_status.len() {
             return Err(MetricsError::InvalidInput(
-                "Biomarker values and disease status must have same length".to_string(),
+                "Biomarker _values and disease _status must have same length".to_string(),
             ));
         }
 
@@ -1066,7 +1066,7 @@ impl BiomarkerMetrics {
             }
         }
 
-        if total_positives > F::zero() && total_negatives > F::zero() {
+        if total_positives > F::zero() && total_negatives >, F::zero() {
             Ok(auc / (total_positives * total_negatives))
         } else {
             Ok(F::from(0.5).unwrap())

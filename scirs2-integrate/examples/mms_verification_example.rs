@@ -4,7 +4,7 @@
 //! of accuracy of numerical methods by comparing against known exact solutions.
 
 use ndarray::{Array1, Array2};
-use scirs2_integrate::{
+use scirs2__integrate::{
     ode::{solve_ivp, ODEMethod, ODEOptions},
     verification::{
         polynomial_solution, trigonometric_solution_2d, ConvergenceAnalysis, ErrorAnalysis,
@@ -51,7 +51,7 @@ fn ode_verification_example() -> Result<(), Box<dyn std::error::Error>> {
     for &h in &step_sizes {
         // Solve the manufactured ODE: y' = 2 + 6t
         let manufactured_rhs =
-            |t: f64, _y: ndarray::ArrayView1<f64>| Array1::from_vec(vec![problem.source_term(t)]);
+            |t: f64_y: ndarray::ArrayView1<f64>| Array1::from_vec(vec![problem.source_term(t)]);
 
         let options = ODEOptions {
             method: ODEMethod::RK45,

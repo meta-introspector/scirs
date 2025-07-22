@@ -235,10 +235,7 @@ impl RateLimiterState {
         }
     }
 
-    fn should_allow_fixed_window(
-        &mut self,
-        max_events: u32,
-        window_duration: Duration,
+    fn should_allow_fixed_window(&mut self, max_events: u32, window_duration: Duration,
         now: Instant,
     ) -> RateLimitDecision {
         // Remove events outside the current window
@@ -259,10 +256,7 @@ impl RateLimiterState {
         }
     }
 
-    fn should_allow_sliding_window(
-        &mut self,
-        max_events: u32,
-        window_duration: Duration,
+    fn should_allow_sliding_window(&mut self, max_events: u32, window_duration: Duration,
         now: Instant,
     ) -> RateLimitDecision {
         // Remove events outside the sliding window
@@ -288,10 +282,7 @@ impl RateLimiterState {
         }
     }
 
-    fn should_allow_token_bucket(
-        &mut self,
-        capacity: u32,
-        refill_rate: f64,
+    fn should_allow_token_bucket(&mut self, capacity: u32, refill_rate: f64,
         now: Instant,
     ) -> RateLimitDecision {
         // Refill tokens based on elapsed time
@@ -313,21 +304,18 @@ impl RateLimiterState {
         }
     }
 
-    fn should_allow_exponential_backoff(
-        &mut self,
-        initial_delay: Duration,
-        max_delay: Duration,
+    fn should_allow_exponential_backoff(&mut self, initial_delay: Duration, max_delay: Duration,
         multiplier: f64,
         now: Instant,
     ) -> RateLimitDecision {
         if now >= self.next_allowed_time {
-            // Reset delay after successful allowance
+            // Reset _delay after successful allowance
             self.current_delay = initial_delay;
             self.next_allowed_time = now + self.current_delay;
             RateLimitDecision::Allow
         } else {
             self.suppressed_count += 1;
-            // Increase delay for next time
+            // Increase _delay for next time
             self.current_delay = Duration::from_secs_f64(
                 (self.current_delay.as_secs_f64() * multiplier).min(max_delay.as_secs_f64()),
             );
@@ -343,11 +331,7 @@ impl RateLimiterState {
         }
     }
 
-    fn should_allow_adaptive(
-        &mut self,
-        base_max_events: u32,
-        base_window: Duration,
-        load_threshold: f64,
+    fn should_allow_adaptive(&mut self, base_max_events: u32, base_window: Duration, load_threshold: f64,
         now: Instant,
     ) -> RateLimitDecision {
         // Simple adaptive strategy: adjust limits based on system load

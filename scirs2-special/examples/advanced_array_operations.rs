@@ -4,7 +4,8 @@
 //! including lazy evaluation, GPU acceleration, and multidimensional support.
 
 use ndarray::{Array, Array1};
-use scirs2_special::array_ops::{
+use scirs2__special::array_ops::{
+use statrs::statistics::Statistics;
     convenience::{self, ConfigBuilder},
     ArrayConfig, Backend,
 };
@@ -246,8 +247,8 @@ async fn demo_large_array_processing() -> Result<(), Box<dyn std::error::Error>>
     println!("  Mean: {:.6}", result.mean().unwrap());
 
     // Memory usage estimation
-    use scirs2_special::array_ops::memory_efficient;
-    let memory_usage = memory_efficient::estimate_memory_usage::<f64>(result.shape(), 2);
+    use scirs2__special::array_ops::memory_efficient;
+    let memory_usage = memory_efficient::estimate_memory, _usage::<f64>(result.shape(), 2);
     println!(
         "Estimated memory usage: {:.2} MB",
         memory_usage as f64 / (1024.0 * 1024.0)
@@ -297,8 +298,8 @@ async fn demo_memory_efficient_operations() -> Result<(), Box<dyn std::error::Er
     println!("Created 2D array with shape {:?}", shape);
 
     // Check memory limits
-    use scirs2_special::array_ops::memory_efficient;
-    let memory_needed = memory_efficient::estimate_memory_usage::<f64>(
+    use scirs2__special::array_ops::memory_efficient;
+    let memory_needed = memory_efficient::estimate_memory, _usage::<f64>(
         array_2d.shape(),
         3, // input, output, temporary
     );
@@ -308,11 +309,11 @@ async fn demo_memory_efficient_operations() -> Result<(), Box<dyn std::error::Er
     );
 
     let config = ArrayConfig::default();
-    let within_limit = memory_efficient::check_memory_limit::<f64>(array_2d.shape(), 3, &config);
+    let within_limit = memory_efficient::check_memory, _limit::<f64>(array_2d.shape(), 3, &config);
     println!("Within memory limit: {}", within_limit);
 
     // Process with chunking for memory efficiency
-    use scirs2_special::array_ops::vectorized;
+    use scirs2__special::array_ops::vectorized;
     let chunked_result = vectorized::process_chunks(&array_2d, &config, |x: f64| x * 2.0 + 1.0)?;
 
     println!("Chunked processing completed");

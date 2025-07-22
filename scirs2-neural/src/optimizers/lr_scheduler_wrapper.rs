@@ -39,13 +39,12 @@ impl<O, S, F> LRSchedulerOptimizer<O, S, F>
     /// * `total_steps` - The total number of steps for calculating progress
     /// # Returns
     /// A new LRSchedulerOptimizer
-    pub fn new(optimizer: O, scheduler: S, total_steps: usize) -> Self {
+    pub fn new(_optimizer: O, scheduler: S, total_steps: usize) -> Self {
         Self {
-            optimizer,
+            _optimizer,
             scheduler,
             step: 0,
-            total_steps,
-            _phantom: std::marker::PhantomData,
+            total_steps_phantom: std::marker::PhantomData,
         }
     }
     /// Get a reference to the underlying optimizer

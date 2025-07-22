@@ -27,7 +27,7 @@ use num_traits::{Float, NumAssign};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::features::harris_corners;
+/// use scirs2__ndimage::features::harris_corners;
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -68,7 +68,7 @@ pub fn harris_corners(
     }
 
     // Step 3: Gaussian filtering to smooth the derivatives
-    let sigma = 0.5 * (block_size as f32 - 1.0) / 3.0; // scale sigmas based on block size
+    let sigma = 0.5 * (block_size as f32 - 1.0) / 3.0; // scale sigmas based on block _size
                                                        // Use specialized f32 version that doesn't require Send/Sync bounds
     ix2 =
         crate::filters::gaussian_filter_f32(&ix2, sigma, Some(BorderMode::Reflect), None).unwrap();
@@ -157,7 +157,7 @@ pub fn harris_corners(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::features::fast_corners;
+/// use scirs2__ndimage::features::fast_corners;
 ///
 /// let image = array![
 ///     [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -172,11 +172,11 @@ pub fn harris_corners(
 /// let corners = fast_corners(&image, 0.3, 9);
 /// ```
 #[allow(dead_code)]
-pub fn fast_corners<T>(image: &Array<T, Ix2>, threshold: T, n: usize) -> Array<bool, Ix2>
+pub fn fast_corners<T>(_image: &Array<T, Ix2>, threshold: T, n: usize) -> Array<bool, Ix2>
 where
     T: Float + NumAssign + num_traits::FromPrimitive,
 {
-    let shape = image.raw_dim();
+    let shape = _image.raw_dim();
     let (rows, cols) = (shape[0], shape[1]);
     let mut corners = Array::from_elem(shape, false);
 
@@ -210,7 +210,7 @@ where
     // Examine each pixel (except the border)
     for row in 3..(rows - 3) {
         for col in 3..(cols - 3) {
-            let center_value = image[(row, col)];
+            let center_value = _image[(row, col)];
             let high_threshold = center_value + threshold;
             let low_threshold = center_value - threshold;
 
@@ -230,7 +230,7 @@ where
                     let (dy, dx) = circle_points[idx];
                     let r = (row as isize + dy) as usize;
                     let c = (col as isize + dx) as usize;
-                    let pixel_value = image[(r, c)];
+                    let pixel_value = _image[(r, c)];
 
                     if pixel_value > high_threshold {
                         consecutive_brighter += 1;
@@ -257,7 +257,7 @@ where
                         let (dy, dx) = circle_points[idx];
                         let r = (row as isize + dy) as usize;
                         let c = (col as isize + dx) as usize;
-                        let pixel_value = image[(r, c)];
+                        let pixel_value = _image[(r, c)];
 
                         if pixel_value > high_threshold {
                             consecutive_brighter += 1;

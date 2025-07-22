@@ -3,7 +3,7 @@
 //! This example demonstrates how to use streaming metrics for real-time
 //! evaluation and large dataset handling.
 
-use scirs2_metrics::streaming::{
+use scirs2__metrics::streaming::{
     StreamingClassificationMetrics, StreamingRegressionMetrics, WindowedClassificationMetrics,
     WindowedRegressionMetrics,
 };
@@ -130,16 +130,16 @@ fn large_dataset_example() -> Result<(), Box<dyn std::error::Error + Send + Sync
 
 /// Generates synthetic data for a chunk
 #[allow(dead_code)]
-fn generate_synthetic_chunk(start_idx: usize, size: usize) -> (Vec<i32>, Vec<i32>) {
+fn generate_synthetic_chunk(_start_idx: usize, size: usize) -> (Vec<i32>, Vec<i32>) {
     let mut true_labels = Vec::with_capacity(size);
     let mut pred_labels = Vec::with_capacity(size);
 
     for i in 0..size {
-        let idx = start_idx + i;
-        let true_label = (idx % 3) as i32 % 2; // Some pattern
+        let _idx = _start_idx + i;
+        let true_label = (_idx % 3) as i32 % 2; // Some pattern
 
         // Introduce some noise in predictions
-        let pred_label = if (idx * 7) % 10 < 8 {
+        let pred_label = if (_idx * 7) % 10 < 8 {
             true_label
         } else {
             1 - true_label

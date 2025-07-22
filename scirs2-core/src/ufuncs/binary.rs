@@ -6,7 +6,7 @@
 
 use ndarray::{Array, ArrayView, Dimension, IxDyn, ShapeBuilder};
 use crate::ufuncs::core::{UFunc, UFuncKind, apply_binary, register_ufunc};
-use crate::ndarray_ext::broadcasting::{broadcast_arrays, broadcast_apply};
+use crate::ndarray__ext::broadcasting::{broadcast_arrays, broadcast_apply};
 use std::sync::Once;
 
 static INIT: Once = Once::new();
@@ -207,7 +207,7 @@ where
     broadcast_apply(a_view, b_view, |x, y| x + y).unwrap_or_else(|_| {
         // If broadcasting fails, assume arrays are the same shape
         // and apply operation directly
-        let mut result = Array::<f64, _>::zeros(a.raw_dim().into_dyn());
+        let mut result = Array::<f64>::zeros(a.raw_dim().into_dyn());
 
         let add_ufunc = AddUFunc;
         if let Err(_) = add_ufunc.apply(&[&a.view(), &b.view()], &mut result) {
@@ -265,7 +265,7 @@ where
     broadcast_apply(a_view, b_view, |x, y| x - y).unwrap_or_else(|_| {
         // If broadcasting fails, assume arrays are the same shape
         // and apply operation directly
-        let mut result = Array::<f64, _>::zeros(a.raw_dim().into_dyn());
+        let mut result = Array::<f64>::zeros(a.raw_dim().into_dyn());
 
         let subtract_ufunc = SubtractUFunc;
         if let Err(_) = subtract_ufunc.apply(&[&a.view(), &b.view()], &mut result) {
@@ -323,7 +323,7 @@ where
     broadcast_apply(a_view, b_view, |x, y| x * y).unwrap_or_else(|_| {
         // If broadcasting fails, assume arrays are the same shape
         // and apply operation directly
-        let mut result = Array::<f64, _>::zeros(a.raw_dim().into_dyn());
+        let mut result = Array::<f64>::zeros(a.raw_dim().into_dyn());
 
         let multiply_ufunc = MultiplyUFunc;
         if let Err(_) = multiply_ufunc.apply(&[&a.view(), &b.view()], &mut result) {
@@ -387,7 +387,7 @@ where
     }).unwrap_or_else(|_| {
         // If broadcasting fails, assume arrays are the same shape
         // and apply operation directly
-        let mut result = Array::<f64, _>::zeros(a.raw_dim().into_dyn());
+        let mut result = Array::<f64>::zeros(a.raw_dim().into_dyn());
 
         let divide_ufunc = DivideUFunc;
         if let Err(_) = divide_ufunc.apply(&[&a.view(), &b.view()], &mut result) {
@@ -445,7 +445,7 @@ where
     broadcast_apply(a_view, b_view, |x, y| x.powf(*y)).unwrap_or_else(|_| {
         // If broadcasting fails, assume arrays are the same shape
         // and apply operation directly
-        let mut result = Array::<f64, _>::zeros(a.raw_dim().into_dyn());
+        let mut result = Array::<f64>::zeros(a.raw_dim().into_dyn());
 
         let power_ufunc = PowerUFunc;
         if let Err(_) = power_ufunc.apply(&[&a.view(), &b.view()], &mut result) {

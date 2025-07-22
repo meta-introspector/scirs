@@ -4,7 +4,7 @@
 //! including skewness and kurtosis, using scirs2-core's unified SIMD operations.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::ErrorMessages;
+use crate::error__standardization::ErrorMessages;
 use ndarray::{Array1, ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
@@ -30,7 +30,7 @@ use scirs2_core::{
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::moments_simd::skewness_simd;
+/// use scirs2__stats::moments_simd::skewness_simd;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let skew = skewness_simd(&data.view(), false).unwrap();

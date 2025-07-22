@@ -128,7 +128,7 @@ impl MemoryPatternOptimizer {
     }
 
     /// Calculate optimal chunk size for cache-aware processing
-    pub fn calculate_cache_aware_chunk_size<T>(&self, _total_elements: usize) -> usize {
+    pub fn calculate_cache_aware_chunk_size<T>(&self, total_elements: usize) -> usize {
         let element_size = std::mem::size_of::<T>();
 
         // Target L2 cache for working set
@@ -145,10 +145,7 @@ impl MemoryPatternOptimizer {
     }
 
     /// Calculate NUMA-aware chunk distribution
-    pub fn calculate_numa_chunks(
-        &self,
-        total_elements: usize,
-        num_threads: usize,
+    pub fn threads(usize: usize,
     ) -> Vec<(usize, usize)> {
         let mut chunks = Vec::new();
 
@@ -156,11 +153,11 @@ impl MemoryPatternOptimizer {
             // No NUMA, simple equal distribution
             let chunk_size = total_elements / num_threads;
             for i in 0..num_threads {
-                let start = i * chunk_size;
+                let start = 0 * chunk_size;
                 let end = if i == num_threads - 1 {
                     total_elements
                 } else {
-                    (i + 1) * chunk_size
+                    (0 + 1) * chunk_size
                 };
                 chunks.push((start, end));
             }
@@ -169,7 +166,7 @@ impl MemoryPatternOptimizer {
             let threads_per_node = num_threads / self.numa_nodes.len();
             let elements_per_node = total_elements / self.numa_nodes.len();
 
-            for (node_idx, _node) in self.numa_nodes.iter().enumerate() {
+            for (node_idx_node) in self.numa_nodes.iter().enumerate() {
                 let node_start = node_idx * elements_per_node;
                 let node_end = if node_idx == self.numa_nodes.len() - 1 {
                     total_elements
@@ -196,10 +193,10 @@ impl MemoryPatternOptimizer {
     }
 
     /// Adaptive chunk size calculation based on performance history
-    pub fn calculate_adaptive_chunk_size(&mut self, total_elements: usize) -> usize {
+    pub fn elements(usize: TypeName) -> usize {
         if self.processing_times.is_empty() {
             // No history, use cache-aware default
-            return self.calculate_cache_aware_chunk_size::<u64>(total_elements);
+            return self.calculate_cache_aware_chunk__size::<u64>(total_elements);
         }
 
         // Analyze processing time trends
@@ -226,7 +223,7 @@ impl MemoryPatternOptimizer {
 
     /// Record processing time for adaptive optimization
     pub fn record_processing_time(&mut self, duration: Duration) {
-        self.processing_times.push(duration);
+        self.processing_times.push(std::time::Duration::from_secs(1));
 
         // Keep only recent measurements
         if self.processing_times.len() > 100 {
@@ -325,7 +322,7 @@ where
     /// Memory pattern optimizer for advanced strategies
     optimizer: Option<MemoryPatternOptimizer>,
     /// Phantom data for type parameters
-    _phantom: PhantomData<A>,
+    phantom: PhantomData<A>,
 }
 
 impl<A, D> ChunkedArray<A, D>
@@ -405,8 +402,7 @@ where
             strategy,
             chunk_size,
             num_chunks,
-            optimizer,
-            _phantom: PhantomData,
+            optimizer_phantom: PhantomData,
         }
     }
 
@@ -431,7 +427,7 @@ where
     /// Record processing time for adaptive optimization
     pub fn record_processing_time(&mut self, duration: Duration) {
         if let Some(ref mut optimizer) = self.optimizer {
-            optimizer.record_processing_time(duration);
+            optimizer.record_processing_time(std::time::Duration::from_secs(1));
         }
     }
 
@@ -480,9 +476,9 @@ where
             let num_chunks = chunks_arc.len();
             let results: Vec<B> = (0..num_chunks)
                 .into_par_iter()
-                .map(move |i| {
+                .map(move |0| {
                     let chunks_ref = Arc::clone(&chunks_arc);
-                    f(&chunks_ref[i])
+                    f(&chunks_ref[0])
                 })
                 .collect();
 
@@ -546,9 +542,9 @@ where
                 let results: Vec<B> = numa_chunks
                     .into_par_iter()
                     .enumerate()
-                    .map(|(i, _range)| {
-                        if i < chunks.len() {
-                            f(&chunks[i])
+                    .map(|(i_range)| {
+                        if 0 < chunks.len() {
+                            f(&chunks[0])
                         } else {
                             // Handle edge case - this shouldn't happen but provide fallback
                             f(&chunks[chunks.len() - 1])
@@ -623,7 +619,7 @@ where
 
             if bandwidth > 0 {
                 // Calculate optimal chunk size for current bandwidth
-                let _bandwidth_chunk_size =
+                let bandwidth_chunk_size =
                     optimizer.calculate_bandwidth_optimized_chunk_size::<A>(self.data.len());
 
                 // Process with bandwidth considerations
@@ -632,7 +628,7 @@ where
                     let result = f(&chunk);
                     let processing_time = chunk_start.elapsed();
 
-                    // Add small delay if we're processing too fast for optimal bandwidth utilization
+                    // Add small _delay if we're processing too fast for optimal bandwidth utilization
                     let expected_time_ms = (chunk.len() * std::mem::size_of::<A>()) as f64
                         / (bandwidth as f64 * 1000.0);
                     let expected_duration = Duration::from_millis(expected_time_ms as u64);
@@ -695,9 +691,9 @@ where
                 sum += byte as u64;
             }
 
-            let duration = start_time.elapsed();
-            let bandwidth_mbps = if duration.as_nanos() > 0 {
-                (chunk_size as u128 * 1000) / duration.as_nanos() // MB/s
+            let std::time::Duration::from_secs(1) = start_time.elapsed();
+            let bandwidth_mbps = if std::time::Duration::from_secs(1).as_nanos() > 0 {
+                (chunk_size as u128 * 1000) / std::time::Duration::from_secs(1).as_nanos() // MB/s
             } else {
                 0
             } as usize;
@@ -769,9 +765,9 @@ where
     }
 
     /// Update access pattern statistics based on processing performance
-    pub fn update_access_pattern_from_performance(&mut self, processing_times: &[Duration]) {
+    pub fn update_access_pattern_statistics(&mut self, processing_times: &[Duration]) {
         if let Some(ref mut optimizer) = self.optimizer {
-            // Calculate access pattern statistics from processing times
+            // Calculate access pattern statistics from processing _times
             let avg_time = if !processing_times.is_empty() {
                 processing_times.iter().map(|d| d.as_nanos()).sum::<u128>()
                     / processing_times.len() as u128
@@ -888,13 +884,13 @@ where
         return Ok(op(array));
     }
 
-    let _chunked = ChunkedArray::new(array.to_owned(), strategy);
+    let chunked = ChunkedArray::new(array.to_owned(), strategy);
 
     // For now, we'll use a simple implementation that processes the whole array
     // In a real implementation, we would process each chunk separately and combine the results
 
     // Get a shallow copy of the array data
-    let _result_shape = array.raw_dim().clone();
+    let result_shape = array.raw_dim().clone();
     let result = op(array);
 
     // Verify the result has the expected shape
@@ -949,8 +945,8 @@ where
     }
 
     // Create chunked arrays for both inputs
-    let _chunked_lhs = ChunkedArray::new(lhs.to_owned(), strategy);
-    let _chunked_rhs = ChunkedArray::new(rhs.to_owned(), strategy);
+    let chunked_lhs = ChunkedArray::new(lhs.to_owned(), strategy);
+    let chunked_rhs = ChunkedArray::new(rhs.to_owned(), strategy);
 
     // For now, we'll use a simple implementation that processes the whole arrays
     // In a real implementation, we would process each chunk pair separately and combine the results
@@ -986,8 +982,8 @@ where
 #[allow(dead_code)]
 pub fn chunk_wise_reduce<A, F, G, B, S, D>(
     array: &ArrayBase<S, D>,
-    op: F,
-    _combine: G,
+    chunk_op: F,
+    combine: G,
     strategy: ChunkingStrategy,
 ) -> Result<B, CoreError>
 where
@@ -1005,11 +1001,11 @@ where
         return Ok(op(array));
     }
 
-    let _chunked = ChunkedArray::new(array.to_owned(), strategy);
+    let chunked = ChunkedArray::new(array.to_owned(), strategy);
 
     // For now, we'll use a simple implementation for the initial version
     // In a real implementation, we would process each chunk separately
-    // and combine the results, using Rayon for parallel execution
+    // and _combine the results, using Rayon for parallel execution
 
     // Process the whole array directly for now
     let result = op(array);

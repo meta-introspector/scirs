@@ -6,7 +6,7 @@ use ndarray::Array;
 use num_traits::Float;
 use std::fmt::Debug;
 // Import from scirs2-optim
-use scirs2_optim::optimizers as optim_optimizers;
+use scirs2__optim::optimizers as optim_optimizers;
 /// Stochastic Gradient Descent (SGD) optimizer.
 ///
 /// SGD is the simplest optimization algorithm, which updates parameters by
@@ -28,7 +28,7 @@ use scirs2_optim::optimizers as optim_optimizers;
 /// sgd.update(&mut params, &grads).unwrap();
 pub struct SGD<F: Float + Debug> {
     /// Inner SGD optimizer from scirs2-optim
-    inner: optim_optimizers::SGD<F>,
+    inner: optim_optimizers: SGD<F>,
     /// Weight decay (L2 regularization)
     weight_decay: F,
 }
@@ -38,12 +38,12 @@ impl<F: Float + Debug> SGD<F> {
     /// # Arguments
     /// * `learning_rate` - Learning rate for the optimizer
     /// * `momentum` - Optional momentum factor (between 0 and 1)
-    pub fn new(learning_rate: F, momentum: Option<F>) -> Self {
+    pub fn new(_learning_rate: F, momentum: Option<F>) -> Self {
         let momentum_value = momentum.unwrap_or(F::zero());
         
         Self {
-            inner: optim_optimizers::SGD::new_with_config(
-                learning_rate,
+            inner: optim_optimizers: SGD::new_with_config(
+                _learning_rate,
                 momentum_value,
                 F::zero() // No weight decay by default
             ),
@@ -54,7 +54,7 @@ impl<F: Float + Debug> SGD<F> {
     /// Create a new SGD optimizer with weight decay
     /// * `momentum` - Momentum factor (between 0 and 1)
     /// * `weight_decay` - Weight decay factor (L2 regularization)
-    pub fn new_with_decay(learning_rate: F, momentum: F, weight_decay: F) -> Self {
+    pub fn new_with_decay(_learning_rate: F, momentum: F, weight_decay: F) -> Self {
                 momentum,
                 weight_decay
             weight_decay,

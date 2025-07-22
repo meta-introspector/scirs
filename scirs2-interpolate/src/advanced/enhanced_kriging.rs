@@ -326,15 +326,13 @@ where
             sigma_sq: F::from_f64(1.0).unwrap(),
             angles: None,
             nugget: F::from_f64(1e-10).unwrap(),
-            extra_params: F::from_f64(1.0).unwrap(),
-            _trend_fn: TrendFunction::Constant,
+            extra_params: F::from_f64(1.0).unwrap(), _trend_fn: TrendFunction::Constant,
             anisotropic_cov: None,
             priors: None,
             n_samples: 0,
             compute_full_covariance: false,
             use_exact_computation: true,
-            optimize_parameters: false,
-            _phantom: PhantomData,
+            optimize_parameters: false, _phantom: PhantomData,
         }
     }
 
@@ -535,8 +533,7 @@ where
         Ok(EnhancedKriging {
             points,
             values,
-            anisotropic_cov,
-            _trend_fn: self._trend_fn,
+            anisotropic_cov_trend_fn: self._trend_fn,
             cov_matrix,
             cholesky_factor: Some(cholesky_factor),
             weights,
@@ -545,8 +542,7 @@ where
             n_samples: self.n_samples,
             basis_functions,
             compute_full_covariance: self.compute_full_covariance,
-            use_exact_computation: self.use_exact_computation,
-            _phantom: PhantomData,
+            use_exact_computation: self.use_exact_computation, _phantom: PhantomData,
         })
     }
 
@@ -605,7 +601,7 @@ where
     }
 
     /// Compute polynomial basis size for given degree
-    fn compute_polynomial_basis_size(n_dims: usize, degree: usize) -> usize {
+    fn compute_polynomial_basis_size(_n_dims: usize, degree: usize) -> usize {
         if degree == 0 {
             return 1;
         }
@@ -706,8 +702,8 @@ where
     }
 
     /// Cholesky decomposition
-    fn cholesky_decomposition(matrix: &Array2<F>) -> InterpolateResult<Array2<F>> {
-        let n = matrix.shape()[0];
+    fn cholesky_decomposition(_matrix: &Array2<F>) -> InterpolateResult<Array2<F>> {
+        let n = _matrix.shape()[0];
         let mut cholesky = Array2::zeros((n, n));
 
         for i in 0..n {
@@ -718,7 +714,7 @@ where
                     for k in 0..j {
                         sum += cholesky[[j, k]] * cholesky[[j, k]];
                     }
-                    let val = matrix[[j, j]] - sum;
+                    let val = _matrix[[j, j]] - sum;
                     if val <= F::zero() {
                         return Err(InterpolateError::numerical_error(
                             "Matrix is not positive definite for Cholesky decomposition"
@@ -732,7 +728,7 @@ where
                     for k in 0..j {
                         sum += cholesky[[i, k]] * cholesky[[j, k]];
                     }
-                    cholesky[[i, j]] = (matrix[[i, j]] - sum) / cholesky[[j, j]];
+                    cholesky[[i, j]] = (_matrix[[i, j]] - sum) / cholesky[[j, j]];
                 }
             }
         }
@@ -741,32 +737,32 @@ where
     }
 
     /// Forward substitution for lower triangular matrix
-    fn forward_substitution(lower: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>> {
-        let n = lower.shape()[0];
+    fn forward_substitution(_lower: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>> {
+        let n = _lower.shape()[0];
         let mut solution = Array1::zeros(n);
 
         for i in 0..n {
             let mut sum = F::zero();
             for j in 0..i {
-                sum += lower[[i, j]] * solution[j];
+                sum += _lower[[i, j]] * solution[j];
             }
-            solution[i] = (rhs[i] - sum) / lower[[i, i]];
+            solution[i] = (rhs[i] - sum) / _lower[[i, i]];
         }
 
         Ok(solution)
     }
 
     /// Backward substitution for upper triangular matrix
-    fn backward_substitution(lower: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>> {
-        let n = lower.shape()[0];
+    fn backward_substitution(_lower: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>> {
+        let n = _lower.shape()[0];
         let mut solution = Array1::zeros(n);
 
         for i in (0..n).rev() {
             let mut sum = F::zero();
             for j in (i + 1)..n {
-                sum += lower[[j, i]] * solution[j]; // Use transpose of lower triangular
+                sum += _lower[[j, i]] * solution[j]; // Use transpose of _lower triangular
             }
-            solution[i] = (rhs[i] - sum) / lower[[i, i]];
+            solution[i] = (rhs[i] - sum) / _lower[[i, i]];
         }
 
         Ok(solution)
@@ -901,8 +897,7 @@ where
             variance_prior: None,
             nugget_prior: None,
             n_samples: 1000, // Default to 1000 samples
-            optimize_parameters: true,
-            _phantom: PhantomData,
+            optimize_parameters: true, _phantom: PhantomData,
         }
     }
 
@@ -1175,14 +1170,14 @@ where
     /// Prediction results with enhanced Bayesian information
     pub fn predict(&self, query_points: &ArrayView2<F>) -> InterpolateResult<PredictionResult<F>> {
         // Check dimensions
-        if query_points.shape()[1] != self.points.shape()[1] {
+        if query_points.shape()[1] != self._points.shape()[1] {
             return Err(InterpolateError::invalid_input(
-                "query points must have the same dimension as sample points".to_string(),
+                "query _points must have the same dimension as sample _points".to_string(),
             ));
         }
 
         let n_query = query_points.shape()[0];
-        let n_points = self.points.shape()[0];
+        let n_points = self._points.shape()[0];
 
         let mut values = Array1::zeros(n_query);
         let mut variances = Array1::zeros(n_query);
@@ -1190,10 +1185,10 @@ where
         for i in 0..n_query {
             let query_point = query_points.slice(ndarray::s![i, ..]);
 
-            // Compute covariance vector k* between query point and training points
+            // Compute covariance vector k* between query point and training _points
             let mut k_star = Array1::zeros(n_points);
             for j in 0..n_points {
-                let sample_point = self.points.slice(ndarray::s![j, ..]);
+                let sample_point = self._points.slice(ndarray::s![j, ..]);
                 let dist = EnhancedKrigingBuilder::compute_anisotropic_distance(
                     &query_point,
                     &sample_point,
@@ -1279,7 +1274,7 @@ where
 
         let n_query = query_points.shape()[0];
 
-        // For this implementation, generate simple posterior samples
+        // For this implementation, generate simple posterior _samples
         // In a full implementation, this would use MCMC or other sampling methods
         let mut posterior_samples = Array2::zeros((n_samples, n_query));
 
@@ -1314,7 +1309,7 @@ where
 
         // Compute log marginal likelihood (simplified)
         let log_marginal_likelihood = F::from_f64(-0.5).unwrap()
-            * F::from_usize(self.points.shape()[0]).unwrap()
+            * F::from_usize(self._points.shape()[0]).unwrap()
             * F::from_f64(2.0 * std::f64::consts::PI).unwrap().ln();
 
         Ok(BayesianPredictionResult {
@@ -1408,8 +1403,8 @@ where
 ///
 /// ```rust,no_run
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::enhanced_kriging::make_enhanced_kriging;
-/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+/// use scirs2__interpolate::advanced::enhanced_kriging::make_enhanced_kriging;
+/// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample 2D spatial data
 /// let points = Array2::from_shape_vec((4, 2), vec![
@@ -1435,10 +1430,7 @@ where
 #[allow(dead_code)]
 pub fn make_enhanced_kriging<F>(
     points: &ArrayView2<F>,
-    values: &ArrayView1<F>,
-    _cov_fn: CovarianceFunction,
-    _length_scale: F,
-    _sigma_sq: F,
+    values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_sigma_sq: F,
 ) -> InterpolateResult<EnhancedKriging<F>>
 where
     F: Float
@@ -1484,8 +1476,8 @@ where
 ///
 /// ```rust,no_run
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::enhanced_kriging::{make_universal_kriging, TrendFunction};
-/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+/// use scirs2__interpolate::advanced::enhanced_kriging::{make_universal_kriging, TrendFunction};
+/// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create data with a linear trend: z = x + y + noise
 /// let points = Array2::from_shape_vec((6, 2), vec![
@@ -1513,11 +1505,7 @@ where
 #[allow(dead_code)]
 pub fn make_universal_kriging<F>(
     points: &ArrayView2<F>,
-    values: &ArrayView1<F>,
-    _cov_fn: CovarianceFunction,
-    _length_scale: F,
-    _sigma_sq: F,
-    _trend_fn: TrendFunction,
+    values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_sigma_sq: F_trend, _fn: TrendFunction,
 ) -> InterpolateResult<EnhancedKriging<F>>
 where
     F: Float
@@ -1562,8 +1550,8 @@ where
 ///
 /// ```rust,no_run
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::enhanced_kriging::{make_bayesian_kriging, KrigingPriors, ParameterPrior};
-/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+/// use scirs2__interpolate::advanced::enhanced_kriging::{make_bayesian_kriging, KrigingPriors, ParameterPrior};
+/// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create noisy observational data
 /// let points = Array2::from_shape_vec((8, 1), vec![
@@ -1594,11 +1582,7 @@ where
 /// ```
 #[allow(dead_code)]
 pub fn make_bayesian_kriging<F>(
-    _points: &ArrayView2<F>,
-    _values: &ArrayView1<F>,
-    _cov_fn: CovarianceFunction,
-    _priors: KrigingPriors<F>,
-    _n_samples: usize,
+    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction, _priors: KrigingPriors<F>, _n_samples: usize,
 ) -> InterpolateResult<EnhancedKriging<F>>
 where
     F: Float

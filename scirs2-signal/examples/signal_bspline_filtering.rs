@@ -1,8 +1,9 @@
-use scirs2_signal::spline::{
+use scirs2__signal::spline::{
     bspline_basis, bspline_coefficients, bspline_derivative, bspline_evaluate, bspline_filter,
     bspline_smooth, SplineOrder,
 };
 use std::error::Error;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {

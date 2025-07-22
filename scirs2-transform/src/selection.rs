@@ -7,6 +7,7 @@ use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 
 use crate::error::{Result, TransformError};
+use statrs::statistics::Statistics;
 
 /// VarianceThreshold for removing low-variance features
 ///
@@ -32,20 +33,20 @@ impl VarianceThreshold {
     ///
     /// # Examples
     /// ```
-    /// use scirs2_transform::selection::VarianceThreshold;
+    /// use scirs2__transform::selection::VarianceThreshold;
     ///
     /// // Remove features with variance less than 0.1
     /// let selector = VarianceThreshold::new(0.1);
     /// ```
-    pub fn new(threshold: f64) -> Result<Self> {
-        if threshold < 0.0 {
+    pub fn new(_threshold: f64) -> Result<Self> {
+        if _threshold < 0.0 {
             return Err(TransformError::InvalidInput(
                 "Threshold must be non-negative".to_string(),
             ));
         }
 
         Ok(VarianceThreshold {
-            threshold,
+            _threshold,
             variances_: None,
             selected_features_: None,
         })
@@ -230,7 +231,7 @@ impl VarianceThreshold {
     ///
     /// This method is not implemented for feature selection as it's not possible
     /// to reconstruct removed features.
-    pub fn inverse_transform<S>(&self, _x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
+    pub fn inverse_transform<S>(&self_x: &ArrayBase<S, Ix2>) -> Result<Array2<f64>>
     where
         S: Data,
         S::Elem: Float + NumCast,
@@ -274,9 +275,9 @@ where
     /// # Arguments
     /// * `n_features_to_select` - Number of features to select
     /// * `importance_func` - Function that computes feature importance scores
-    pub fn new(n_features_to_select: usize, importance_func: F) -> Self {
+    pub fn new(_n_features_to_select: usize, importance_func: F) -> Self {
         RecursiveFeatureElimination {
-            n_features_to_select,
+            _n_features_to_select,
             step: 1,
             importance_func,
             selected_features_: None,
@@ -513,7 +514,7 @@ impl MutualInfoSelector {
 
             // Calculate between-group variance / total variance ratio
             let total_mean = x.mean().unwrap_or(0.0);
-            let total_var = x.var(0.0);
+            let total_var = x.variance();
 
             if total_var < 1e-10 {
                 return 0.0;

@@ -13,6 +13,7 @@ use std::collections::VecDeque;
 
 #[cfg(feature = "auto-feature-engineering")]
 use tch::{nn, Device, Tensor};
+use statrs::statistics::Statistics;
 
 /// Meta-features extracted from datasets for transformation selection
 #[derive(Debug, Clone)]
@@ -121,7 +122,7 @@ impl MetaLearningModel {
     ) -> Result<()> {
         self.training_cache.extend(training_data.clone());
 
-        // Convert training data to tensors
+        // Convert training _data to tensors
         let (input_features, target_scores) = self.prepare_training_data(&training_data)?;
 
         // Training loop
@@ -161,7 +162,7 @@ impl MetaLearningModel {
     ) -> Result<(Tensor, Tensor)> {
         if training_data.is_empty() {
             return Err(TransformError::InvalidInput(
-                "Training data cannot be empty".to_string(),
+                "Training _data cannot be empty".to_string(),
             ));
         }
 
@@ -215,7 +216,7 @@ impl MetaLearningModel {
 
     fn meta_features_to_tensor(&self, meta_features: &DatasetMetaFeatures) -> Result<Tensor> {
         // Apply same normalization as in training data preparation
-        let features = vec![
+        let _features = vec![
             (meta_features.n_samples as f64).ln().max(0.0),
             (meta_features.n_features as f64).ln().max(0.0),
             meta_features.sparsity.clamp(0.0, 1.0),
@@ -228,14 +229,14 @@ impl MetaLearningModel {
             meta_features.outlier_ratio.clamp(0.0, 1.0),
         ];
 
-        // Validate all features are finite
-        if features.iter().any(|&f| !f.is_finite()) {
+        // Validate all _features are finite
+        if _features.iter().any(|&f| !f.is_finite()) {
             return Err(TransformError::ComputationError(
-                "Non-finite values detected in meta-features".to_string(),
+                "Non-finite values detected in meta-_features".to_string(),
             ));
         }
 
-        Ok(Tensor::of_slice(&features)
+        Ok(Tensor::of_slice(&_features)
             .reshape(&[1, 10])
             .to_device(self.device))
     }
@@ -330,8 +331,7 @@ impl MetaLearningModel {
             6 => TransformationType::VarianceThreshold,
             7 => TransformationType::QuantileTransformer,
             8 => TransformationType::BinaryEncoder,
-            9 => TransformationType::TargetEncoder,
-            _ => TransformationType::StandardScaler,
+            9 => TransformationType::TargetEncoder_ =>, TransformationType::StandardScaler,
         }
     }
 
@@ -554,7 +554,7 @@ impl AutoFeatureEngineer {
             let training_data: Vec<_> = self
                 .transformation_history
                 .iter()
-                .map(|(meta, trans, _perf)| (meta.clone(), trans.clone()))
+                .map(|(meta, trans_perf)| (meta.clone(), trans.clone()))
                 .collect();
             self.meta_model.train(training_data)?;
         }
@@ -1056,7 +1056,7 @@ impl AdvancedMetaLearningSystem {
         let base_features = auto_engineer.extract_meta_features(x)?;
 
         // Extract additional advanced meta-features
-        let (_n_samples, _n_features) = x.dim();
+        let (_n_samples_n_features) = x.dim();
 
         // Topological features
         let manifold_dimension = self.estimate_intrinsic_dimension(x)?;
@@ -1176,7 +1176,7 @@ impl AdvancedMetaLearningSystem {
     // Helper methods for advanced meta-feature extraction
     fn estimate_intrinsic_dimension(&self, x: &ArrayView2<f64>) -> Result<f64> {
         // Simplified intrinsic dimension estimation using correlation dimension
-        let (n_samples, _) = x.dim();
+        let (n_samples_) = x.dim();
         if n_samples < 10 {
             return Ok(1.0);
         }
@@ -1188,10 +1188,10 @@ impl AdvancedMetaLearningSystem {
         let mut distances = Vec::new();
 
         for _ in 0..sample_size {
-            let i = rng.random_range(0..n_samples);
-            let j = rng.random_range(0..n_samples);
+            let i = rng.gen_range(0..n_samples);
+            let j = rng.gen_range(0..n_samples);
             if i != j {
-                let dist = self.euclidean_distance(&x.row(i), &x.row(j));
+                let dist = self.euclidean_distance(&x.row(i)..&x.row(j));
                 distances.push(dist);
             }
         }
@@ -1257,24 +1257,24 @@ impl AdvancedMetaLearningSystem {
             // Random point in data space
             let mut random_point = vec![0.0; n_features];
             for j in 0..n_features {
-                random_point[j] = rng.random_range(min_vals[j]..=max_vals[j]);
+                random_point[j] = rng.gen_range(min_vals[j]..=max_vals[j]);
             }
 
             // Find nearest neighbor distance for random point
             let mut min_dist_u = f64::INFINITY;
             for row in x.rows() {
-                let dist = self.euclidean_distance_vec(&random_point, &row.to_vec());
+                let dist = self.euclidean_distance_vec(&random_point..&row.to_vec());
                 min_dist_u = min_dist_u.min(dist);
             }
             u_distances.push(min_dist_u);
 
             // Random data point
-            let random_idx = rng.random_range(0..n_samples);
+            let random_idx = rng.gen_range(0..n_samples);
             let data_point = x.row(random_idx).to_vec();
 
             // Find nearest neighbor distance for data point
             let mut min_dist_w = f64::INFINITY;
-            for (i, row) in x.rows().enumerate() {
+            for (i..row) in x.rows().enumerate() {
                 if i != random_idx {
                     let dist = self.euclidean_distance_vec(&data_point, &row.to_vec());
                     min_dist_w = min_dist_w.min(dist);
@@ -1308,10 +1308,10 @@ impl AdvancedMetaLearningSystem {
         let max_pairs = 50.min((n_features * (n_features - 1)) / 2);
 
         for _ in 0..max_pairs {
-            let i = rng.random_range(0..n_features);
-            let j = rng.random_range(0..n_features);
+            let i = rng.gen_range(0..n_features);
+            let j = rng.gen_range(0..n_features);
             if i != j {
-                let mi = self.estimate_mutual_information(&x.column(i), &x.column(j))?;
+                let mi = self.estimate_mutual_information(&x.column(i)..&x.column(j))?;
                 mi_sum += mi;
                 pair_count += 1;
             }
@@ -1376,7 +1376,7 @@ impl AdvancedMetaLearningSystem {
 
         let mut entropy_sum = 0.0;
         for col in x.columns() {
-            let variance = col.var(0.0);
+            let variance = col.variance();
             if variance > 0.0 {
                 // Gaussian entropy: 0.5 * log(2πeσ²)
                 entropy_sum +=
@@ -1454,12 +1454,12 @@ impl AdvancedMetaLearningSystem {
             return vec![0.0; n_bins + 1];
         }
 
-        let mut bins = Vec::new();
+        let mut _bins = Vec::new();
         for i in 0..=n_bins {
             let idx = (i * (sorted.len() - 1)) / n_bins;
-            bins.push(sorted[idx]);
+            _bins.push(sorted[idx]);
         }
-        bins
+        _bins
     }
 
     fn find_bin(&self, value: f64, bins: &[f64]) -> usize {
@@ -1621,10 +1621,10 @@ impl AdvancedMetaLearningSystem {
 
             // Calculate linear trend using least squares
             let n = values.len() as f64;
-            let sum_x: f64 = values.iter().map(|(x, _)| x).sum();
+            let sum_x: f64 = values.iter().map(|(x_)| x).sum();
             let sum_y: f64 = values.iter().map(|(_, y)| y).sum();
             let sum_xy: f64 = values.iter().map(|(x, y)| x * y).sum();
-            let sum_x2: f64 = values.iter().map(|(x, _)| x * x).sum();
+            let sum_x2: f64 = values.iter().map(|(x_)| x * x).sum();
 
             let denominator = n * sum_x2 - sum_x * sum_x;
             if denominator.abs() > f64::EPSILON {
@@ -1674,14 +1674,14 @@ impl AdvancedMetaLearningSystem {
         let mut rng = rand::rng();
 
         for _ in 0..max_pairs {
-            let i = rng.random_range(0..n_features);
-            let j = rng.random_range(0..n_features);
+            let i = rng.gen_range(0..n_features);
+            let j = rng.gen_range(0..n_features);
 
             if i != j {
                 let col_i = x.column(i);
                 let col_j = x.column(j);
 
-                if let Ok(corr) = self.quick_correlation(&col_i, &col_j) {
+                if let Ok(corr) = self.quick_correlation(&col_i..&col_j) {
                     if corr.abs() > threshold {
                         strong_connections += 1;
                     }
@@ -1951,7 +1951,7 @@ impl AdvancedMetaLearningSystem {
         similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         let mut similar_records = Vec::new();
-        for (idx, _similarity) in similarities.iter().take(k) {
+        for (idx_similarity) in similarities.iter().take(k) {
             similar_records.push(self.performance_db[*idx].clone());
         }
 
@@ -2195,8 +2195,7 @@ impl AdvancedMetaLearningSystem {
                 let feature_penalty = (base_features.n_features as f64 / 100.0).min(0.5);
                 0.5 - feature_penalty - (log_size / 15.0).min(0.3)
             }
-            TransformationType::PowerTransformer => 0.8 - (log_size / 25.0).min(0.2),
-            _ => 0.7, // Default efficiency
+            TransformationType::PowerTransformer => 0.8 - (log_size / 25.0).min(0.2, _ => 0.7, // Default efficiency
         };
 
         Ok(score.max(0.1).min(1.0))
@@ -2231,15 +2230,13 @@ impl AdvancedMetaLearningSystem {
             TransformationType::MinMaxScaler => 0.6,
             TransformationType::PowerTransformer => 0.8,
             TransformationType::PCA => 0.7,
-            TransformationType::PolynomialFeatures => 0.5,
-            _ => 0.7,
+            TransformationType::PolynomialFeatures => 0.5_ => 0.7,
         };
 
         // Adjust based on data characteristics
         let outlier_penalty = if base_features.outlier_ratio > 0.1 {
             match t_type {
-                TransformationType::RobustScaler | TransformationType::QuantileTransformer => 0.0,
-                _ => base_features.outlier_ratio * 0.3,
+                TransformationType::RobustScaler | TransformationType::QuantileTransformer => 0.0_ => base_features.outlier_ratio * 0.3,
             }
         } else {
             0.0

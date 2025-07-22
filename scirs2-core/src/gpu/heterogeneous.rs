@@ -83,7 +83,6 @@ impl ComputeDevice {
             (ComputeDevice::Npu, WorkloadType::ConvolutionalNN) => 1.5,
             (ComputeDevice::Npu, WorkloadType::MatrixOperations) => 1.2,
             (ComputeDevice::Npu, _) => 0.8,
-
             _ => 0.5, // Default conservative estimate
         }
     }
@@ -144,12 +143,7 @@ impl WorkloadCharacteristics {
     }
 
     /// Create characteristics for a convolution workload
-    pub fn convolution(
-        batch_size: usize,
-        channels: usize,
-        height: usize,
-        width: usize,
-        kernel_size: usize,
+    pub fn size(batch_size: usize, channels: usize, height: usize, width: usize, kernel_size: usize,
     ) -> Self {
         let input_size = batch_size * channels * height * width;
         let output_size = batch_size * channels * height * width; // Simplified
@@ -166,7 +160,7 @@ impl WorkloadCharacteristics {
     }
 
     /// Create characteristics for an element-wise operation
-    pub fn element_wise(size: usize, ops_per_element: usize) -> Self {
+    pub fn element(size: usize, ops_per_element: usize) -> Self {
         Self {
             workload_type: WorkloadType::VectorizedMath,
             problem_size: size,
@@ -347,7 +341,9 @@ impl HeterogeneousScheduler {
         match best_device {
             ComputeDevice::Cpu => Ok(ExecutionStrategy::CpuOnly),
             ComputeDevice::Gpu(backend) => Ok(ExecutionStrategy::GpuOnly(backend)),
-            _ => Err(HeterogeneousError::NoSuitableDevice),
+            ComputeDevice::Npu => Ok(ExecutionStrategy::CpuOnly), // Fallback to CPU
+            ComputeDevice::Fpga => Ok(ExecutionStrategy::CpuOnly), // Fallback to CPU
+            ComputeDevice::Dsp => Ok(ExecutionStrategy::CpuOnly), // Fallback to CPU
         }
     }
 
@@ -413,10 +409,7 @@ impl HeterogeneousScheduler {
     }
 
     /// Optimize execution strategy based on historical performance
-    pub fn optimize_strategy(
-        &self,
-        workload: &WorkloadCharacteristics,
-        current_strategy: ExecutionStrategy,
+    pub fn optimize_strategy(&self, workload: &WorkloadCharacteristics, current_strategy: ExecutionStrategy
     ) -> ExecutionStrategy {
         let key = format!(
             "{workload_type:?}_{problem_size}",
@@ -425,10 +418,10 @@ impl HeterogeneousScheduler {
         );
         let history = self.performance_history.lock().unwrap();
 
-        // If we have historical data, use it to refine the strategy
+        // If we have historical data, use it to refine the _strategy
         if let Some(&_historical_time) = history.get(&key) {
             // Simple heuristic: if historical time is much better than estimated,
-            // stick with the historical strategy
+            // stick with the historical _strategy
             // This is a simplified version - real implementation would be more sophisticated
             return current_strategy;
         }
@@ -507,7 +500,7 @@ pub mod patterns {
         T: Clone + Send + Sync,
         F: Fn(&T) -> T + Send + Sync,
     {
-        let workload = WorkloadCharacteristics::element_wise(data.len(), 1);
+        let workload = WorkloadCharacteristics::element(data.len(), 1);
         let strategy = scheduler.select_strategy(&workload)?;
 
         scheduler.execute_workload(&workload, strategy, |_strategy| {
@@ -527,7 +520,7 @@ pub mod patterns {
         T: Clone + Send + Sync,
         F: Fn(T, &T) -> T + Send + Sync,
     {
-        let workload = WorkloadCharacteristics::element_wise(data.len(), 1);
+        let workload = WorkloadCharacteristics::element(data.len(), 1);
         let strategy = scheduler.select_strategy(&workload)?;
 
         scheduler.execute_workload(&workload, strategy, |_strategy| {

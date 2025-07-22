@@ -1,3 +1,10 @@
+use crate::error::SignalResult;
+use crate::{spectral, window};
+use crate::error::SignalResult;
+use ndarray::{Array1, Array2, s};
+use num__complex::Complex64;
+use std::f64::consts::PI;
+
 // Reassigned Spectrogram Implementation
 //
 // This module provides implementations of reassigned spectrograms, which improve the
@@ -12,14 +19,7 @@
 //   frequency (reassigned) spectrogram, with applications. The Journal of the Acoustical Society
 //   of America, 119(1), 360-371.
 
-use ndarray::{s, Array1, Array2};
-
-use crate::error::SignalResult;
-use crate::spectral;
-use crate::window;
-use num_complex::Complex64;
-use std::f64::consts::PI;
-
+#[allow(unused_imports)]
 /// Configuration parameters for reassigned spectrogram computation
 #[derive(Debug, Clone)]
 pub struct ReassignedConfig {
@@ -103,8 +103,8 @@ pub struct ReassignedResult {
 ///
 /// ```
 /// use ndarray::{Array1, Array2};
-/// use scirs2_signal::reassigned::{reassigned_spectrogram, ReassignedConfig};
-/// use scirs2_signal::window;
+/// use scirs2__signal::reassigned::{reassigned_spectrogram, ReassignedConfig};
+/// use scirs2__signal::window;
 ///
 /// // Create a chirp signal
 /// let fs = 1000.0;
@@ -228,7 +228,7 @@ fn compute_stft(
     )?;
 
     // Extract the result
-    let (_f, _t, zxx) = stft_result;
+    let (_f_t, zxx) = stft_result;
     let n_frames = zxx.len();
     let n_bins = n_fft / 2 + 1; // Only positive frequencies
 
@@ -376,8 +376,8 @@ pub fn smoothed_reassigned_spectrogram(
 
 /// Apply a simple 2D box smoothing filter to the spectrogram
 #[allow(dead_code)]
-fn smooth_spectrogram(spectrogram: &Array2<f64>, width: usize) -> Array2<f64> {
-    let (n_bins, n_frames) = (spectrogram.shape()[0], spectrogram.shape()[1]);
+fn smooth_spectrogram(_spectrogram: &Array2<f64>, width: usize) -> Array2<f64> {
+    let (n_bins, n_frames) = (_spectrogram.shape()[0], _spectrogram.shape()[1]);
     let mut smoothed = Array2::zeros((n_bins, n_frames));
 
     // Half width of the filter
@@ -407,7 +407,7 @@ fn smooth_spectrogram(spectrogram: &Array2<f64>, width: usize) -> Array2<f64> {
             // Apply the filter
             for fi in f_start..=f_end {
                 for tj in t_start..=t_end {
-                    sum += spectrogram[[fi, tj]];
+                    sum += _spectrogram[[fi, tj]];
                     count += 1;
                 }
             }
@@ -445,7 +445,7 @@ pub fn extract_ridges(
     let n_times = spectrogram.shape()[1];
 
     let max_ridges = max_ridges.max(1);
-    let mut ridges = Vec::with_capacity(max_ridges);
+    let mut _ridges = Vec::with_capacity(max_ridges);
 
     // For each time point, find the frequencies with the highest energy
     for t in 0..n_times {
@@ -483,24 +483,24 @@ pub fn extract_ridges(
 
         // Update ridge structures
         for (i, &freq_idx) in peak_indices.iter().enumerate() {
-            if i >= ridges.len() {
-                ridges.push(Vec::new());
+            if i >= _ridges.len() {
+                _ridges.push(Vec::new());
             }
 
-            ridges[i].push((t, frequencies[freq_idx]));
+            _ridges[i].push((t, frequencies[freq_idx]));
         }
     }
 
-    // Sort ridges by average energy
-    ridges.sort_by(|a, b| {
-        let avg_energy_a = a.iter().map(|(t, _)| *t).sum::<usize>() as f64 / a.len() as f64;
-        let avg_energy_b = b.iter().map(|(t, _)| *t).sum::<usize>() as f64 / b.len() as f64;
+    // Sort _ridges by average energy
+    _ridges.sort_by(|a, b| {
+        let avg_energy_a = a.iter().map(|(t_)| *t).sum::<usize>() as f64 / a.len() as f64;
+        let avg_energy_b = b.iter().map(|(t_)| *t).sum::<usize>() as f64 / b.len() as f64;
         avg_energy_b
             .partial_cmp(&avg_energy_a)
             .unwrap_or(std::cmp::Ordering::Equal)
     });
 
-    ridges
+    _ridges
 }
 
 mod tests {
@@ -518,6 +518,8 @@ mod tests {
 
     #[test]
     fn test_reassigned_spectrogram_chirp() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a chirp signal
         let n = 1024;
         let fs = 1024.0;
@@ -563,6 +565,8 @@ mod tests {
 
     #[test]
     fn test_smoothed_reassigned_spectrogram() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a test signal
         let n = 512;
         let fs = 512.0;

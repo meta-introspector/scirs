@@ -20,8 +20,8 @@ pub struct Variable {
 
 impl Variable {
     /// Create a new variable
-    pub fn new(id: usize, value: f64) -> Self {
-        Self { id, value }
+    pub fn new(_id: usize, value: f64) -> Self {
+        Self { _id, value }
     }
 }
 
@@ -208,14 +208,14 @@ impl ComputationTape {
 
     /// Forward pass to compute all variable values
     pub fn forward(&self, input_values: &[f64]) -> Result<Vec<f64>, OptimizeError> {
-        let mut values = vec![0.0; self.max_var_id + 1];
+        let mut _values = vec![0.0; self.max_var_id + 1];
 
-        // Set input values
+        // Set input _values
         for (i, var) in self.inputs.iter().enumerate() {
             if i < input_values.len() {
-                values[var.id] = input_values[i];
+                _values[var.id] = input_values[i];
             } else {
-                values[var.id] = var.value; // Use default value
+                _values[var.id] = var.value; // Use default value
             }
         }
 
@@ -227,7 +227,7 @@ impl ComputationTape {
                 }
                 TapeNode::Constant { value, result } => {
                     // Set constant value
-                    values[*result] = *value;
+                    _values[*result] = *value;
                 }
                 TapeNode::UnaryOp {
                     op_type,
@@ -236,8 +236,8 @@ impl ComputationTape {
                     ..
                 } => {
                     // Perform actual unary operation
-                    let input_val = values[*input];
-                    values[*result] = match op_type {
+                    let input_val = _values[*input];
+                    _values[*result] = match op_type {
                         UnaryOpType::Neg => -input_val,
                         UnaryOpType::Ln => input_val.ln(),
                         UnaryOpType::Exp => input_val.exp(),
@@ -257,9 +257,9 @@ impl ComputationTape {
                     ..
                 } => {
                     // Perform actual binary operation
-                    let left_val = values[*left];
-                    let right_val = values[*right];
-                    values[*result] = match op_type {
+                    let left_val = _values[*left];
+                    let right_val = _values[*right];
+                    _values[*result] = match op_type {
                         BinaryOpType::Add => left_val + right_val,
                         BinaryOpType::Sub => left_val - right_val,
                         BinaryOpType::Mul => left_val * right_val,
@@ -270,12 +270,12 @@ impl ComputationTape {
                 TapeNode::NAryOp { inputs, result, .. } => {
                     // N-ary operations are application-specific
                     // For now, implement as sum (could be extended for other operations)
-                    values[*result] = inputs.iter().map(|&id| values[id]).sum();
+                    _values[*result] = inputs.iter().map(|&id| _values[id]).sum();
                 }
             }
         }
 
-        Ok(values)
+        Ok(_values)
     }
 
     /// Add a constant to the tape
@@ -297,7 +297,7 @@ impl ComputationTape {
     ) -> usize {
         let result_id = self.max_var_id + 1;
 
-        // Compute partial derivative based on operation type and current input value
+        // Compute partial derivative based on operation _type and current input value
         let input_val = input_values[input];
         let partial = match op_type {
             UnaryOpType::Neg => -1.0,
@@ -331,7 +331,7 @@ impl ComputationTape {
     ) -> usize {
         let result_id = self.max_var_id + 1;
 
-        // Compute partial derivatives based on operation type and current input values
+        // Compute partial derivatives based on operation _type and current input _values
         let left_val = input_values[left];
         let right_val = input_values[right];
 
@@ -368,18 +368,18 @@ impl ComputationTape {
         input_values: &[f64],
         seed_derivatives: &[f64],
     ) -> Result<(Vec<f64>, Vec<f64>), OptimizeError> {
-        let mut values = vec![0.0; self.max_var_id + 1];
-        let mut derivatives = vec![0.0; self.max_var_id + 1];
+        let mut _values = vec![0.0; self.max_var_id + 1];
+        let mut _derivatives = vec![0.0; self.max_var_id + 1];
 
-        // Set input values and seed derivatives
+        // Set input _values and seed _derivatives
         for (i, var) in self.inputs.iter().enumerate() {
             if i < input_values.len() {
-                values[var.id] = input_values[i];
+                _values[var.id] = input_values[i];
                 if i < seed_derivatives.len() {
-                    derivatives[var.id] = seed_derivatives[i];
+                    _derivatives[var.id] = seed_derivatives[i];
                 }
             } else {
-                values[var.id] = var.value;
+                _values[var.id] = var.value;
             }
         }
 
@@ -391,8 +391,8 @@ impl ComputationTape {
                 }
                 TapeNode::Constant { value, result } => {
                     // Constants have zero derivative
-                    values[*result] = *value;
-                    derivatives[*result] = 0.0;
+                    _values[*result] = *value;
+                    _derivatives[*result] = 0.0;
                 }
                 TapeNode::UnaryOp {
                     op_type,
@@ -401,11 +401,11 @@ impl ComputationTape {
                     ..
                 } => {
                     // Forward-mode AD for unary operations
-                    let input_val = values[*input];
-                    let input_deriv = derivatives[*input];
+                    let input_val = _values[*input];
+                    let input_deriv = _derivatives[*input];
 
                     // Compute function value
-                    values[*result] = match op_type {
+                    _values[*result] = match op_type {
                         UnaryOpType::Neg => -input_val,
                         UnaryOpType::Ln => input_val.ln(),
                         UnaryOpType::Exp => input_val.exp(),
@@ -429,7 +429,7 @@ impl ComputationTape {
                         UnaryOpType::Square => 2.0 * input_val,
                         UnaryOpType::Reciprocal => -1.0 / (input_val * input_val),
                     };
-                    derivatives[*result] = f_prime * input_deriv;
+                    _derivatives[*result] = f_prime * input_deriv;
                 }
                 TapeNode::BinaryOp {
                     op_type,
@@ -439,13 +439,13 @@ impl ComputationTape {
                     ..
                 } => {
                     // Forward-mode AD for binary operations
-                    let left_val = values[*left];
-                    let right_val = values[*right];
-                    let left_deriv = derivatives[*left];
-                    let right_deriv = derivatives[*right];
+                    let left_val = _values[*left];
+                    let right_val = _values[*right];
+                    let left_deriv = _derivatives[*left];
+                    let right_deriv = _derivatives[*right];
 
                     // Compute function value
-                    values[*result] = match op_type {
+                    _values[*result] = match op_type {
                         BinaryOpType::Add => left_val + right_val,
                         BinaryOpType::Sub => left_val - right_val,
                         BinaryOpType::Mul => left_val * right_val,
@@ -454,7 +454,7 @@ impl ComputationTape {
                     };
 
                     // Compute derivative using product rule and chain rule
-                    derivatives[*result] = match op_type {
+                    _derivatives[*result] = match op_type {
                         BinaryOpType::Add => left_deriv + right_deriv,
                         BinaryOpType::Sub => left_deriv - right_deriv,
                         BinaryOpType::Mul => left_deriv * right_val + left_val * right_deriv,
@@ -476,17 +476,17 @@ impl ComputationTape {
                     partials,
                 } => {
                     // N-ary operations: sum for now
-                    values[*result] = inputs.iter().map(|&id| values[id]).sum();
-                    derivatives[*result] = inputs
+                    _values[*result] = inputs.iter().map(|&id| _values[id]).sum();
+                    _derivatives[*result] = inputs
                         .iter()
                         .enumerate()
-                        .map(|(i, &id)| partials.get(i).unwrap_or(&1.0) * derivatives[id])
+                        .map(|(i, &id)| partials.get(i).unwrap_or(&1.0) * _derivatives[id])
                         .sum();
                 }
             }
         }
 
-        Ok((values, derivatives))
+        Ok((_values, _derivatives))
     }
 
     /// Optimize the tape by removing unnecessary operations
@@ -693,10 +693,10 @@ pub struct StreamingTape {
 
 impl StreamingTape {
     /// Create a new streaming tape
-    pub fn new(batch_size: usize) -> Self {
+    pub fn new(_batch_size: usize) -> Self {
         Self {
-            current_batch: Vec::with_capacity(batch_size),
-            batch_size,
+            current_batch: Vec::with_capacity(_batch_size),
+            _batch_size,
             batch_processor: None,
         }
     }

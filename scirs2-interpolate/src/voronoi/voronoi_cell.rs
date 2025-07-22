@@ -35,9 +35,9 @@ pub struct VoronoiCell<F: Float + FromPrimitive + Debug> {
 
 impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand> VoronoiCell<F> {
     /// Creates a new Voronoi cell with the given site and value
-    pub fn new(site: Array1<F>, value: F) -> Self {
+    pub fn new(_site: Array1<F>, value: F) -> Self {
         VoronoiCell {
-            site,
+            _site,
             vertices: Array2::zeros((0, 0)),
             neighbors: Vec::new(),
             measure: F::zero(),
@@ -387,9 +387,9 @@ fn compute_intersection<F: Float + FromPrimitive + Debug>(
 ///
 /// Returns the minimum and maximum coordinates as Arrays
 #[allow(dead_code)]
-fn compute_bounding_box<F: Float + Debug>(points: ArrayView2<F>) -> (Array1<F>, Array1<F>) {
-    let dim = points.ncols();
-    let n_points = points.nrows();
+fn compute_bounding_box<F: Float + Debug>(_points: ArrayView2<F>) -> (Array1<F>, Array1<F>) {
+    let dim = _points.ncols();
+    let n_points = _points.nrows();
 
     if n_points == 0 {
         return (
@@ -403,7 +403,7 @@ fn compute_bounding_box<F: Float + Debug>(points: ArrayView2<F>) -> (Array1<F>, 
 
     for i in 0..n_points {
         for j in 0..dim {
-            let val = points[[i, j]];
+            let val = _points[[i, j]];
             if val < min_coords[j] {
                 min_coords[j] = val;
             }
@@ -589,10 +589,10 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
 
                 // Add intersections between half-plane boundaries
                 for k in 0..half_planes.len() {
-                    let (mp_k, n_k, _) = &half_planes[k];
+                    let (mp_k, n_k_) = &half_planes[k];
 
                     for half_plane_l in half_planes.iter().skip(k + 1) {
-                        let (mp_l, n_l, _) = half_plane_l;
+                        let (mp_l, n_l_) = half_plane_l;
 
                         // Compute intersection of two lines:
                         // Line 1: mp_k + t * perpendicular(n_k)
@@ -1022,7 +1022,7 @@ fn line_segment_intersection<F: Float + FromPrimitive + Debug>(
     let ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
 
     // Check if intersection is within both line segments
-    if ua < F::zero() || ua > F::one() || ub < F::zero() || ub > F::one() {
+    if ua < F::zero() || ua > F::one() || ub < F::zero() || ub >, F::one() {
         return Err(InterpolateError::NumericalError(
             "Intersection exists but not within line segments".to_string(),
         ));

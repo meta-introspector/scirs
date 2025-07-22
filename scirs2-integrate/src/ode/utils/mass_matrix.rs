@@ -54,15 +54,15 @@ where
 ///
 /// Helper function to solve linear systems with mass matrices
 #[allow(dead_code)]
-fn solve_matrix_system<F>(matrix: ArrayView2<F>, b: ArrayView1<F>) -> IntegrateResult<Array1<F>>
+fn solve_matrix_system<F>(_matrix: ArrayView2<F>, b: ArrayView1<F>) -> IntegrateResult<Array1<F>>
 where
     F: IntegrateFloat,
 {
-    use crate::ode::utils::linear_solvers::solve_linear_system;
+    use crate::ode::utils::linear__solvers::solve_linear_system;
 
     // Use our custom solver
-    solve_linear_system(&matrix, &b).map_err(|err| {
-        IntegrateError::ComputationError(format!("Failed to solve mass matrix system: {err}"))
+    solve_linear_system(&_matrix, &b).map_err(|err| {
+        IntegrateError::ComputationError(format!("Failed to solve mass _matrix system: {err}"))
     })
 }
 
@@ -123,15 +123,15 @@ struct LUDecomposition<F: IntegrateFloat> {
 #[allow(dead_code)]
 impl<F: IntegrateFloat> LUDecomposition<F> {
     /// Create a new LU decomposition from a matrix with partial pivoting
-    fn new(matrix: ArrayView2<F>) -> IntegrateResult<Self> {
-        let (n, m) = matrix.dim();
+    fn new(_matrix: ArrayView2<F>) -> IntegrateResult<Self> {
+        let (n, m) = _matrix.dim();
         if n != m {
             return Err(IntegrateError::ValueError(
                 "Matrix must be square for LU decomposition".to_string(),
             ));
         }
 
-        let mut lu = matrix.to_owned();
+        let mut lu = _matrix.to_owned();
         let mut pivots = (0..n).collect::<Vec<_>>();
 
         // Gaussian elimination with partial pivoting
@@ -181,8 +181,7 @@ impl<F: IntegrateFloat> LUDecomposition<F> {
     }
 
     /// Solve a linear system using the LU decomposition
-    fn solve(&self, b: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
-        use crate::ode::utils::linear_solvers::solve_linear_system;
+    fn solve(b: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
 
         // Use our custom solver with the matrix
         // Note: For a proper LU-based solver, we would need to implement one
@@ -272,14 +271,14 @@ where
 /// Uses condition number estimation to check if a matrix is
 /// close to singular, which would cause problems for ODE solvers
 #[allow(dead_code)]
-pub fn is_singular<F>(matrix: ArrayView2<F>, threshold: Option<F>) -> bool
+pub fn is_singular<F>(_matrix: ArrayView2<F>, threshold: Option<F>) -> bool
 where
     F: IntegrateFloat,
 {
     // Default condition number threshold
     let thresh = threshold.unwrap_or_else(|| F::from_f64(1e14).unwrap());
 
-    let (n, m) = matrix.dim();
+    let (n, m) = _matrix.dim();
     if n != m {
         return true; // Non-square matrices are considered singular
     }
@@ -290,30 +289,30 @@ where
     // For efficiency, we'll use a simpler approach for small matrices
     if n <= 3 {
         // For small matrices, compute determinant directly
-        let det = compute_determinant(&matrix);
+        let det = compute_determinant(&_matrix);
         return det.abs() < F::from_f64(1e-14).unwrap();
     }
 
     // For larger matrices, estimate condition number
-    let cond_number = estimate_condition_number(&matrix);
+    let cond_number = estimate_condition_number(&_matrix);
 
     cond_number > thresh
 }
 
 /// Compute determinant for small matrices (up to 3x3)
 #[allow(dead_code)]
-fn compute_determinant<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
-    let (n, _) = matrix.dim();
+fn compute_determinant<F: IntegrateFloat>(_matrix: &ArrayView2<F>) -> F {
+    let (n_) = _matrix.dim();
 
     match n {
-        1 => matrix[[0, 0]],
-        2 => matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]],
+        1 => _matrix[[0, 0]],
+        2 => _matrix[[0, 0]] * _matrix[[1, 1]] - _matrix[[0, 1]] * _matrix[[1, 0]],
         3 => {
-            matrix[[0, 0]] * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
-                - matrix[[0, 1]]
-                    * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
-                + matrix[[0, 2]]
-                    * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]])
+            _matrix[[0, 0]] * (_matrix[[1, 1]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 1]])
+                - _matrix[[0, 1]]
+                    * (_matrix[[1, 0]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 0]])
+                + _matrix[[0, 2]]
+                    * (_matrix[[1, 0]] * _matrix[[2, 1]] - _matrix[[1, 1]] * _matrix[[2, 0]])
         }
         _ => F::zero(), // Should not reach here
     }
@@ -321,15 +320,15 @@ fn compute_determinant<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
 
 /// Estimate condition number using iterative methods
 #[allow(dead_code)]
-fn estimate_condition_number<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
-    let _n = matrix.nrows();
+fn estimate_condition_number<F: IntegrateFloat>(_matrix: &ArrayView2<F>) -> F {
+    let _n = _matrix.nrows();
 
     // Estimate largest eigenvalue magnitude of A^T * A using power iteration
-    let max_singular_val_sq = estimate_largest_eigenvalue_ata(matrix);
+    let max_singular_val_sq = estimate_largest_eigenvalue_ata(_matrix);
     let max_singular_val = max_singular_val_sq.sqrt();
 
     // Estimate smallest eigenvalue magnitude of A^T * A using inverse power iteration
-    let min_singular_val_sq = estimate_smallest_eigenvalue_ata(matrix);
+    let min_singular_val_sq = estimate_smallest_eigenvalue_ata(_matrix);
     let min_singular_val = min_singular_val_sq.sqrt();
 
     if min_singular_val < F::from_f64(1e-14).unwrap() {
@@ -341,8 +340,8 @@ fn estimate_condition_number<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
 
 /// Estimate largest eigenvalue of A^T * A using power iteration
 #[allow(dead_code)]
-fn estimate_largest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
-    let n = matrix.nrows();
+fn estimate_largest_eigenvalue_ata<F: IntegrateFloat>(_matrix: &ArrayView2<F>) -> F {
+    let n = _matrix.nrows();
     let max_iterations = 10;
 
     // Initialize with ones vector
@@ -361,7 +360,7 @@ fn estimate_largest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) ->
         let mut av = Array1::<F>::zeros(n);
         for i in 0..n {
             for j in 0..n {
-                av[i] += matrix[[i, j]] * v[j];
+                av[i] += _matrix[[i, j]] * v[j];
             }
         }
 
@@ -369,7 +368,7 @@ fn estimate_largest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) ->
         let mut atav = Array1::<F>::zeros(n);
         for i in 0..n {
             for j in 0..n {
-                atav[i] += matrix[[j, i]] * av[j];
+                atav[i] += _matrix[[j, i]] * av[j];
             }
         }
 
@@ -390,8 +389,8 @@ fn estimate_largest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) ->
 
 /// Estimate smallest eigenvalue of A^T * A using simplified approach
 #[allow(dead_code)]
-fn estimate_smallest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
-    let n = matrix.nrows();
+fn estimate_smallest_eigenvalue_ata<F: IntegrateFloat>(_matrix: &ArrayView2<F>) -> F {
+    let n = _matrix.nrows();
 
     // For simplicity, we'll use the minimum diagonal element of A^T * A as a lower bound
     // This is not exact but gives a reasonable estimate for condition number purposes
@@ -400,7 +399,7 @@ fn estimate_smallest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) -
     for i in 0..n {
         let mut diag_elem = F::zero();
         for k in 0..n {
-            diag_elem += matrix[[k, i]] * matrix[[k, i]];
+            diag_elem += _matrix[[k, i]] * _matrix[[k, i]];
         }
         if diag_elem < min_diag {
             min_diag = diag_elem;

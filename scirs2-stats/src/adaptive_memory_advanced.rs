@@ -804,8 +804,7 @@ pub struct AdaptiveMemoryManager<F> {
     pressure_monitor: Arc<PressureMonitor>,
     out_of_core_manager: Arc<OutOfCoreManager>,
     gc_manager: Arc<GCManager>,
-    performance_monitor: Arc<MemoryPerformanceMonitor>,
-    _phantom: PhantomData<F>,
+    performance_monitor: Arc<MemoryPerformanceMonitor>, _phantom: PhantomData<F>,
 }
 
 /// Memory pool for efficient allocation
@@ -1759,18 +1758,18 @@ where
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: AdaptiveMemoryConfig) -> Self {
+    pub fn with_config(_config: AdaptiveMemoryConfig) -> Self {
         let memory_pools = Arc::new(RwLock::new(HashMap::new()));
-        let cache_manager = Arc::new(CacheManager::new(&config.cache_optimization));
-        let numa_manager = Arc::new(NumaManager::new(&config.numa_config));
-        let predictive_engine = Arc::new(PredictiveEngine::new(&config.predictive_config));
-        let pressure_monitor = Arc::new(PressureMonitor::new(&config.pressure_config));
-        let out_of_core_manager = Arc::new(OutOfCoreManager::new(&config.out_of_core_config));
-        let gc_manager = Arc::new(GCManager::new(&config.gc_config));
+        let cache_manager = Arc::new(CacheManager::new(&_config.cache_optimization));
+        let numa_manager = Arc::new(NumaManager::new(&_config.numa_config));
+        let predictive_engine = Arc::new(PredictiveEngine::new(&_config.predictive_config));
+        let pressure_monitor = Arc::new(PressureMonitor::new(&_config.pressure_config));
+        let out_of_core_manager = Arc::new(OutOfCoreManager::new(&_config.out_of_core_config));
+        let gc_manager = Arc::new(GCManager::new(&_config.gc_config));
         let performance_monitor = Arc::new(MemoryPerformanceMonitor::new());
 
         Self {
-            config,
+            _config,
             memory_pools,
             cache_manager,
             numa_manager,
@@ -1778,8 +1777,7 @@ where
             pressure_monitor,
             out_of_core_manager,
             gc_manager,
-            performance_monitor,
-            _phantom: PhantomData,
+            performance_monitor_phantom: PhantomData,
         }
     }
 
@@ -1838,7 +1836,7 @@ where
     }
 
     /// Calculate allocation urgency
-    fn calculate_urgency(&self, _size: usize, pressure: f64) -> AllocationUrgency {
+    fn calculate_urgency(&self_size: usize, pressure: f64) -> AllocationUrgency {
         if pressure > 0.95 {
             AllocationUrgency::Critical
         } else if pressure > 0.85 {
@@ -1994,7 +1992,7 @@ where
     }
 
     /// Infer deallocation strategy from pointer
-    fn infer_deallocation_strategy(&self, _ptr: *mut u8, _size: usize) -> AllocationStrategy {
+    fn infer_deallocation_strategy(&self_ptr: *mut u8, _size: usize) -> AllocationStrategy {
         // Simplified - would use metadata to track allocation strategy
         self.config.allocation_strategy
     }
@@ -2141,9 +2139,9 @@ pub struct GCResult {
 }
 
 impl MemoryPool {
-    fn new(chunk_size: usize, strategy: AllocationStrategy) -> Self {
+    fn new(_chunk_size: usize, strategy: AllocationStrategy) -> Self {
         Self {
-            chunk_size,
+            _chunk_size,
             available_chunks: Mutex::new(VecDeque::new()),
             allocated_chunks: AtomicUsize::new(0),
             total_chunks: AtomicUsize::new(0),
@@ -2202,16 +2200,16 @@ impl MemoryPool {
 
 // Implement stub methods for other managers to avoid compilation errors
 impl CacheManager {
-    fn new(config: &CacheOptimizationConfig) -> Self {
+    fn new(_config: &CacheOptimizationConfig) -> Self {
         Self {
-            cache_hierarchy: config.cache_hierarchy.clone(),
+            cache_hierarchy: _config.cache_hierarchy.clone(),
             layout_optimizer: LayoutOptimizer::new(),
-            prefetch_engine: PrefetchEngine::new(&config.prefetch_config),
+            prefetch_engine: PrefetchEngine::new(&_config.prefetch_config),
             access_tracker: AccessTracker::new(),
         }
     }
 
-    fn optimize_layout<T>(&self, _data: &mut ArrayView2<T>) -> StatsResult<()>
+    fn optimize_layout<T>(&self_data: &mut ArrayView2<T>) -> StatsResult<()>
     where
         T: Clone + Send + Sync,
     {
@@ -2235,9 +2233,9 @@ impl LayoutOptimizer {
 }
 
 impl PrefetchEngine {
-    fn new(config: &PrefetchConfig) -> Self {
+    fn new(_config: &PrefetchConfig) -> Self {
         Self {
-            prefetch_config: config.clone(),
+            prefetch_config: _config.clone(),
             pattern_predictor: PatternPredictor::new(),
             hardware_prefetcher: HardwarePrefetcher::new(),
         }
@@ -2284,21 +2282,21 @@ impl AccessTracker {
 }
 
 impl NumaManager {
-    fn new(config: &NumaConfig) -> Self {
+    fn new(_config: &NumaConfig) -> Self {
         Self {
             topology: NumaTopology::detect(),
-            binding_strategy: config.binding_strategy.clone(),
-            migration_engine: MigrationEngine::new(config.migration_policy),
+            binding_strategy: _config.binding_strategy.clone(),
+            migration_engine: MigrationEngine::new(_config.migration_policy),
             affinity_manager: AffinityManager::new(),
         }
     }
 
-    fn get_optimal_node(&self, _thread_id: usize) -> Option<usize> {
+    fn get_optimal_node(&self_thread_id: usize) -> Option<usize> {
         // Stub implementation
         Some(0)
     }
 
-    fn allocate_on_node(&self, size: usize, _node: usize) -> StatsResult<*mut u8> {
+    fn allocate_on_node(&self, size: usize_node: usize) -> StatsResult<*mut u8> {
         // Fallback to system allocation for now
         use std::alloc::{alloc, Layout};
 
@@ -2348,9 +2346,9 @@ impl NumaTopology {
 }
 
 impl MigrationEngine {
-    fn new(policy: NumaMigrationPolicy) -> Self {
+    fn new(_policy: NumaMigrationPolicy) -> Self {
         Self {
-            migration_policy: policy,
+            migration_policy: _policy,
             migration_queue: Mutex::new(VecDeque::new()),
             migration_stats: RwLock::new(MigrationStatistics {
                 total_migrations: 0,
@@ -2381,10 +2379,10 @@ impl LoadBalancer {
 }
 
 impl PredictiveEngine {
-    fn new(config: &PredictiveConfig) -> Self {
+    fn new(_config: &PredictiveConfig) -> Self {
         Self {
             models: RwLock::new(HashMap::new()),
-            feature_extractor: FeatureExtractor::new(&config.feature_config),
+            feature_extractor: FeatureExtractor::new(&_config.feature_config),
             training_data: RwLock::new(VecDeque::new()),
             model_performance: RwLock::new(HashMap::new()),
         }
@@ -2395,16 +2393,16 @@ impl PredictiveEngine {
         Ok(size as f64 * 1.2) // Assume 20% overhead
     }
 
-    fn predict_allocation_strategy(&self, _features: &[f64]) -> StatsResult<AllocationStrategy> {
+    fn predict_allocation_strategy(&self_features: &[f64]) -> StatsResult<AllocationStrategy> {
         // Stub implementation
         Ok(AllocationStrategy::Pool)
     }
 }
 
 impl FeatureExtractor {
-    fn new(config: &FeatureExtractionConfig) -> Self {
+    fn new(_config: &FeatureExtractionConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             feature_cache: RwLock::new(HashMap::new()),
             normalization_params: RwLock::new(HashMap::new()),
         }
@@ -2412,12 +2410,12 @@ impl FeatureExtractor {
 }
 
 impl PressureMonitor {
-    fn new(config: &MemoryPressureConfig) -> Self {
+    fn new(_config: &MemoryPressureConfig) -> Self {
         Self {
-            thresholds: config.pressure_thresholds.clone(),
+            thresholds: _config.pressure_thresholds.clone(),
             current_pressure: AtomicU64::new(0),
             pressure_history: RwLock::new(VecDeque::new()),
-            response_engine: ResponseEngine::new(&config.response_strategies),
+            response_engine: ResponseEngine::new(&_config.response_strategies),
         }
     }
 
@@ -2428,9 +2426,9 @@ impl PressureMonitor {
 }
 
 impl ResponseEngine {
-    fn new(strategies: &ResponseStrategies) -> Self {
+    fn new(_strategies: &ResponseStrategies) -> Self {
         Self {
-            strategies: strategies.clone(),
+            _strategies: _strategies.clone(),
             active_responses: RwLock::new(Vec::new()),
             response_queue: Mutex::new(VecDeque::new()),
         }
@@ -2438,12 +2436,12 @@ impl ResponseEngine {
 }
 
 impl OutOfCoreManager {
-    fn new(config: &OutOfCoreConfig) -> Self {
+    fn new(_config: &OutOfCoreConfig) -> Self {
         Self {
-            config: config.clone(),
-            chunk_scheduler: ChunkScheduler::new(config.scheduling_strategy),
-            storage_manager: StorageManager::new(&config.storage_config),
-            compression_engine: CompressionEngine::new(&config.compression_config),
+            _config: _config.clone(),
+            chunk_scheduler: ChunkScheduler::new(_config.scheduling_strategy),
+            storage_manager: StorageManager::new(&_config.storage_config),
+            compression_engine: CompressionEngine::new(&_config.compression_config),
         }
     }
 
@@ -2480,9 +2478,9 @@ impl OutOfCoreManager {
 }
 
 impl ChunkScheduler {
-    fn new(strategy: ChunkSchedulingStrategy) -> Self {
+    fn new(_strategy: ChunkSchedulingStrategy) -> Self {
         Self {
-            scheduling_strategy: strategy,
+            scheduling_strategy: _strategy,
             active_chunks: RwLock::new(HashMap::new()),
             chunk_queue: Mutex::new(VecDeque::new()),
             priority_queue: Mutex::new(BTreeMap::new()),
@@ -2491,40 +2489,40 @@ impl ChunkScheduler {
 }
 
 impl StorageManager {
-    fn new(config: &StorageConfig) -> Self {
+    fn new(_config: &StorageConfig) -> Self {
         Self {
-            storage_config: config.clone(),
-            file_manager: FileManager::new(config),
+            storage_config: _config.clone(),
+            file_manager: FileManager::new(_config),
             network_manager: None,
         }
     }
 }
 
 impl FileManager {
-    fn new(config: &StorageConfig) -> Self {
+    fn new(_config: &StorageConfig) -> Self {
         Self {
-            storage_path: config.storage_path.clone(),
-            naming_strategy: config.naming_strategy,
+            storage_path: _config.storage_path.clone(),
+            naming_strategy: _config.naming_strategy,
             file_handles: RwLock::new(HashMap::new()),
-            fs_optimizer: FileSystemOptimizer::new(&config.fs_optimization),
+            fs_optimizer: FileSystemOptimizer::new(&_config.fs_optimization),
         }
     }
 }
 
 impl FileSystemOptimizer {
-    fn new(config: &FileSystemConfig) -> Self {
+    fn new(_config: &FileSystemConfig) -> Self {
         Self {
-            fs_config: config.clone(),
-            io_scheduler: IOSchedulerManager::new(config.io_scheduler),
+            fs_config: _config.clone(),
+            io_scheduler: IOSchedulerManager::new(_config.io_scheduler),
             async_io_pool: None,
         }
     }
 }
 
 impl IOSchedulerManager {
-    fn new(scheduler_type: IOScheduler) -> Self {
+    fn new(_scheduler_type: IOScheduler) -> Self {
         Self {
-            scheduler_type,
+            _scheduler_type,
             queue_depth: 32,
             batch_size: 16,
         }
@@ -2532,9 +2530,9 @@ impl IOSchedulerManager {
 }
 
 impl CompressionEngine {
-    fn new(config: &CompressionConfig) -> Self {
+    fn new(_config: &CompressionConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             compressors: HashMap::new(),
             compression_stats: RwLock::new(CompressionStatistics {
                 total_compressions: 0,
@@ -2550,12 +2548,12 @@ impl CompressionEngine {
 }
 
 impl GCManager {
-    fn new(config: &GarbageCollectionConfig) -> Self {
+    fn new(_config: &GarbageCollectionConfig) -> Self {
         Self {
-            config: config.clone(),
-            gc_scheduler: GCScheduler::new(config),
+            _config: _config.clone(),
+            gc_scheduler: GCScheduler::new(_config),
             reference_tracker: ReferenceTracker::new(),
-            workload_analyzer: WorkloadAnalyzer::new(&config.workload_awareness),
+            workload_analyzer: WorkloadAnalyzer::new(&_config.workload_awareness),
         }
     }
 
@@ -2575,10 +2573,10 @@ impl GCManager {
 }
 
 impl GCScheduler {
-    fn new(config: &GarbageCollectionConfig) -> Self {
+    fn new(_config: &GarbageCollectionConfig) -> Self {
         Self {
-            gc_strategy: config.gc_strategy,
-            trigger_conditions: config.trigger_conditions.clone(),
+            gc_strategy: _config.gc_strategy,
+            trigger_conditions: _config.trigger_conditions.clone(),
             gc_queue: Mutex::new(VecDeque::new()),
             gc_statistics: RwLock::new(GCStatistics {
                 total_collections: 0,
@@ -2602,9 +2600,9 @@ impl ReferenceTracker {
 }
 
 impl WorkloadAnalyzer {
-    fn new(config: &GCWorkloadAwareness) -> Self {
+    fn new(_config: &GCWorkloadAwareness) -> Self {
         Self {
-            workload_config: config.clone(),
+            workload_config: _config.clone(),
             operation_tracker: OperationTracker::new(),
             lifecycle_analyzer: LifecycleAnalyzer::new(),
             phase_detector: PhaseDetector::new(),
@@ -2742,7 +2740,7 @@ where
 }
 
 #[allow(dead_code)]
-pub fn create_optimized_memory_manager<F>(config: AdaptiveMemoryConfig) -> AdaptiveMemoryManager<F>
+pub fn create_optimized_memory_manager<F>(_config: AdaptiveMemoryConfig) -> AdaptiveMemoryManager<F>
 where
     F: Float
         + NumCast
@@ -2756,7 +2754,7 @@ where
         + 'static
         + std::fmt::Display,
 {
-    AdaptiveMemoryManager::with_config(config)
+    AdaptiveMemoryManager::with_config(_config)
 }
 
 #[cfg(test)]

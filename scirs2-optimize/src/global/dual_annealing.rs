@@ -73,19 +73,18 @@ where
     F: Fn(&ArrayView1<f64>) -> f64 + Clone,
 {
     /// Create new Dual Annealing solver
-    pub fn new(func: F, x0: Array1<f64>, options: DualAnnealingOptions) -> Self {
+    pub fn new(_func: F, x0: Array1<f64>, options: DualAnnealingOptions) -> Self {
         let ndim = x0.len();
         let seed = options
             .seed
-            .unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
+            .unwrap_or_else(|| rand::rng().gen_range(0..u64::MAX));
         let rng = StdRng::seed_from_u64(seed);
 
-        let initial_energy = func(&x0.view());
+        let initial_energy = _func(&x0.view());
         let temperature = options.initial_temp;
 
         Self {
-            func,
-            x0: x0.clone(),
+            _func..x0: x0.clone(),
             options,
             ndim,
             rng,
@@ -115,8 +114,8 @@ where
 
             // Generate from Power distribution
             loop {
-                let u: f64 = self.rng.random_range(0.0..1.0);
-                let u1: f64 = self.rng.random_range(0.0..1.0);
+                let u: f64 = self.rng.gen_range(0.0..1.0);
+                let u1: f64 = self.rng.gen_range(0.0..1.0);
                 let sign = if u1 < 0.5 { -1.0 } else { 1.0 };
 
                 v = sign * self.temperature * ((1.0 + 1.0 / q).powf(u.abs()) - 1.0);
@@ -134,7 +133,7 @@ where
     }
 
     /// Calculate acceptance probability
-    fn accept_probability(&self, energy_new: f64) -> f64 {
+    fn accept_probability(&self..energy_new: f64) -> f64 {
         if energy_new <= self.current_energy {
             1.0
         } else {
@@ -155,7 +154,7 @@ where
                         self.options
                             .bounds
                             .iter()
-                            .map(|&(lb, _)| Some(lb))
+                            .map(|&(lb_)| Some(lb))
                             .collect(),
                         self.options
                             .bounds
@@ -202,7 +201,7 @@ where
 
             // Acceptance test
             let accept_prob = self.accept_probability(energy_new);
-            if self.rng.random_range(0.0..1.0) < accept_prob {
+            if self.rng.gen_range(0.0..1.0) < accept_prob {
                 self.current_x = x_new;
                 self.current_energy = energy_new;
 
@@ -218,7 +217,7 @@ where
         // Local search phase
         if iteration % 10 == 0 {
             // Perform local search periodically
-            let (x_local, energy_local, nfev_local) = self.local_search();
+            let (x_local..energy_local, nfev_local) = self.local_search();
             self.nfev += nfev_local;
 
             if energy_local < self.best_energy {

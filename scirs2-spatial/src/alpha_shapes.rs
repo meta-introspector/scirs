@@ -21,7 +21,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::alpha_shapes::AlphaShape;
+//! use scirs2__spatial::alpha_shapes::AlphaShape;
 //! use ndarray::array;
 //!
 //! // Create a set of 2D points
@@ -91,7 +91,7 @@ impl AlphaShape {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::alpha_shapes::AlphaShape;
+    /// use scirs2__spatial::alpha_shapes::AlphaShape;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -105,35 +105,35 @@ impl AlphaShape {
     /// let boundary = alpha_shape.boundary();
     /// println!("Boundary: {:?}", boundary);
     /// ```
-    pub fn new(points: &Array2<f64>, alpha: f64) -> SpatialResult<Self> {
+    pub fn new(_points: &Array2<f64>, alpha: f64) -> SpatialResult<Self> {
         if alpha < 0.0 {
             return Err(SpatialError::ValueError(
                 "Alpha parameter must be non-negative".to_string(),
             ));
         }
 
-        let npoints = points.nrows();
-        let ndim = points.ncols();
+        let npoints = _points.nrows();
+        let ndim = _points.ncols();
 
         if !(2..=3).contains(&ndim) {
             return Err(SpatialError::ValueError(
-                "Alpha shapes only support 2D and 3D points".to_string(),
+                "Alpha shapes only support 2D and 3D _points".to_string(),
             ));
         }
 
         if npoints < ndim + 1 {
             return Err(SpatialError::ValueError(format!(
-                "Need at least {} points for alpha shape in {}D",
+                "Need at least {} _points for alpha shape in {}D",
                 ndim + 1,
                 ndim
             )));
         }
 
         // Compute Delaunay triangulation
-        let delaunay = Delaunay::new(points)?;
+        let delaunay = Delaunay::new(_points)?;
 
         // Compute circumradii for all simplices
-        let circumradii = Self::compute_circumradii(&delaunay, points)?;
+        let circumradii = Self::compute_circumradii(&delaunay, _points)?;
 
         // Build alpha complex
         let complex = Self::build_alpha_complex(&delaunay, &circumradii, alpha);
@@ -142,7 +142,7 @@ impl AlphaShape {
         let boundary = Self::extract_boundary(&complex, &delaunay, ndim);
 
         Ok(AlphaShape {
-            points: points.clone(),
+            _points: _points.clone(),
             alpha,
             ndim,
             npoints,
@@ -167,7 +167,7 @@ impl AlphaShape {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::alpha_shapes::AlphaShape;
+    /// use scirs2__spatial::alpha_shapes::AlphaShape;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -185,7 +185,7 @@ impl AlphaShape {
     ///     println!("Alpha {}: {} boundary elements", alphas[i], shape.boundary().len());
     /// }
     /// ```
-    pub fn multi_alpha(points: &Array2<f64>, alphas: &[f64]) -> SpatialResult<Vec<Self>> {
+    pub fn multi_alpha(_points: &Array2<f64>, alphas: &[f64]) -> SpatialResult<Vec<Self>> {
         if alphas.is_empty() {
             return Ok(Vec::new());
         }
@@ -198,28 +198,28 @@ impl AlphaShape {
             }
         }
 
-        let npoints = points.nrows();
-        let ndim = points.ncols();
+        let npoints = _points.nrows();
+        let ndim = _points.ncols();
 
         if !(2..=3).contains(&ndim) {
             return Err(SpatialError::ValueError(
-                "Alpha shapes only support 2D and 3D points".to_string(),
+                "Alpha shapes only support 2D and 3D _points".to_string(),
             ));
         }
 
         if npoints < ndim + 1 {
             return Err(SpatialError::ValueError(format!(
-                "Need at least {} points for alpha shape in {}D",
+                "Need at least {} _points for alpha shape in {}D",
                 ndim + 1,
                 ndim
             )));
         }
 
         // Compute Delaunay triangulation once
-        let delaunay = Delaunay::new(points)?;
+        let delaunay = Delaunay::new(_points)?;
 
         // Compute circumradii once
-        let circumradii = Self::compute_circumradii(&delaunay, points)?;
+        let circumradii = Self::compute_circumradii(&delaunay, _points)?;
 
         // Build alpha shapes for each alpha value
         let mut shapes = Vec::with_capacity(alphas.len());
@@ -229,7 +229,7 @@ impl AlphaShape {
             let boundary = Self::extract_boundary(&complex, &delaunay, ndim);
 
             shapes.push(AlphaShape {
-                points: points.clone(),
+                _points: _points.clone(),
                 alpha,
                 ndim,
                 npoints,
@@ -244,8 +244,8 @@ impl AlphaShape {
     }
 
     /// Compute circumradii for all simplices in the Delaunay triangulation
-    fn compute_circumradii(delaunay: &Delaunay, points: &Array2<f64>) -> SpatialResult<Vec<f64>> {
-        let simplices = delaunay.simplices();
+    fn compute_circumradii(_delaunay: &Delaunay, points: &Array2<f64>) -> SpatialResult<Vec<f64>> {
+        let simplices = _delaunay.simplices();
         let ndim = points.ncols();
         let mut circumradii = Vec::with_capacity(simplices.len());
 
@@ -265,16 +265,16 @@ impl AlphaShape {
     }
 
     /// Compute circumradius of a triangle in 2D
-    fn circumradius_2d(points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
+    fn circumradius_2d(_points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
         if simplex.len() != 3 {
             return Err(SpatialError::ValueError(
-                "2D circumradius requires exactly 3 points".to_string(),
+                "2D circumradius requires exactly 3 _points".to_string(),
             ));
         }
 
-        let a = [points[[simplex[0], 0]], points[[simplex[0], 1]]];
-        let b = [points[[simplex[1], 0]], points[[simplex[1], 1]]];
-        let c = [points[[simplex[2], 0]], points[[simplex[2], 1]]];
+        let a = [_points[[simplex[0], 0]], _points[[simplex[0], 1]]];
+        let b = [_points[[simplex[1], 0]], _points[[simplex[1], 1]]];
+        let c = [_points[[simplex[2], 0]], _points[[simplex[2], 1]]];
 
         // Calculate side lengths
         let ab = ((b[0] - a[0]).powi(2) + (b[1] - a[1]).powi(2)).sqrt();
@@ -296,32 +296,32 @@ impl AlphaShape {
     }
 
     /// Compute circumradius of a tetrahedron in 3D
-    fn circumradius_3d(points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
+    fn circumradius_3d(_points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
         if simplex.len() != 4 {
             return Err(SpatialError::ValueError(
-                "3D circumradius requires exactly 4 points".to_string(),
+                "3D circumradius requires exactly 4 _points".to_string(),
             ));
         }
 
         let a = [
-            points[[simplex[0], 0]],
-            points[[simplex[0], 1]],
-            points[[simplex[0], 2]],
+            _points[[simplex[0], 0]],
+            _points[[simplex[0], 1]],
+            _points[[simplex[0], 2]],
         ];
         let b = [
-            points[[simplex[1], 0]],
-            points[[simplex[1], 1]],
-            points[[simplex[1], 2]],
+            _points[[simplex[1], 0]],
+            _points[[simplex[1], 1]],
+            _points[[simplex[1], 2]],
         ];
         let c = [
-            points[[simplex[2], 0]],
-            points[[simplex[2], 1]],
-            points[[simplex[2], 2]],
+            _points[[simplex[2], 0]],
+            _points[[simplex[2], 1]],
+            _points[[simplex[2], 2]],
         ];
         let d = [
-            points[[simplex[3], 0]],
-            points[[simplex[3], 1]],
-            points[[simplex[3], 2]],
+            _points[[simplex[3], 0]],
+            _points[[simplex[3], 1]],
+            _points[[simplex[3], 2]],
         ];
 
         // Translate so that point a is at origin
@@ -363,9 +363,9 @@ impl AlphaShape {
 
     /// Compute the Cayley-Menger determinant for 3D circumradius calculation
     #[allow(clippy::too_many_arguments)]
-    fn cayley_menger_determinant_3d(ab: f64, ac: f64, ad: f64, bc: f64, bd: f64, cd: f64) -> f64 {
+    fn cayley_menger_determinant_3d(_ab: f64, ac: f64, ad: f64, bc: f64, bd: f64, cd: f64) -> f64 {
         // Cayley-Menger matrix for 4 points (tetrahedron)
-        let ab2 = ab * ab;
+        let ab2 = _ab * _ab;
         let ac2 = ac * ac;
         let ad2 = ad * ad;
         let bc2 = bc * bc;
@@ -383,8 +383,8 @@ impl AlphaShape {
     }
 
     /// Compute circumradius of a simplex in n-dimensional space
-    fn circumradius_nd(points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
-        let ndim = points.ncols();
+    fn circumradius_nd(_points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
+        let ndim = _points.ncols();
         let n_vertices = simplex.len();
 
         // A simplex in n dimensions requires n+1 vertices
@@ -407,7 +407,7 @@ impl AlphaShape {
             for j in (i + 1)..n_vertices {
                 let mut dist_sq = 0.0;
                 for d in 0..ndim {
-                    let diff = points[[simplex[i], d]] - points[[simplex[j], d]];
+                    let diff = _points[[simplex[i], d]] - _points[[simplex[j], d]];
                     dist_sq += diff * diff;
                 }
                 distance_matrix[i][j] = dist_sq;
@@ -461,8 +461,7 @@ impl AlphaShape {
 
     /// Extract the boundary of the alpha complex
     fn extract_boundary(
-        complex: &[Vec<usize>],
-        _delaunay: &Delaunay,
+        complex: &[Vec<usize>], _delaunay: &Delaunay,
         ndim: usize,
     ) -> Vec<Vec<usize>> {
         if complex.is_empty() {
@@ -483,22 +482,22 @@ impl AlphaShape {
         let boundary: Vec<Vec<usize>> = face_count
             .into_iter()
             .filter(|(_, count)| *count == 1)
-            .map(|(face, _)| face)
+            .map(|(face_)| face)
             .collect();
 
         boundary
     }
 
     /// Get all (d-1)-faces of a d-simplex
-    fn get_faces(simplex: &[usize], _ndim: usize) -> Vec<Vec<usize>> {
+    fn get_faces(_simplex: &[usize], _ndim: usize) -> Vec<Vec<usize>> {
         let mut faces = Vec::new();
 
         // For each vertex, create a face by excluding that vertex
-        for i in 0..simplex.len() {
-            let mut face: Vec<usize> = simplex
+        for i in 0.._simplex.len() {
+            let mut face: Vec<usize> = _simplex
                 .iter()
                 .enumerate()
-                .filter(|&(j, _)| j != i)
+                .filter(|&(j_)| j != i)
                 .map(|(_, &v)| v)
                 .collect();
 
@@ -554,7 +553,7 @@ impl AlphaShape {
     }
 
     /// Get the underlying Delaunay triangulation
-    pub fn delaunay(&self) -> &Delaunay {
+    pub fn delaunay(&mut self) -> &Delaunay {
         &self.delaunay
     }
 
@@ -563,7 +562,7 @@ impl AlphaShape {
     /// # Returns
     ///
     /// * The area/volume of the alpha shape
-    pub fn measure(&self) -> SpatialResult<f64> {
+    pub fn measure(&mut self) -> SpatialResult<f64> {
         if self.complex.is_empty() {
             return Ok(0.0);
         }
@@ -586,16 +585,16 @@ impl AlphaShape {
     }
 
     /// Compute the area of a triangle in 2D
-    fn triangle_area(points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
+    fn triangle_area(_points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
         if simplex.len() != 3 {
             return Err(SpatialError::ValueError(
-                "Triangle area requires exactly 3 points".to_string(),
+                "Triangle area requires exactly 3 _points".to_string(),
             ));
         }
 
-        let a = [points[[simplex[0], 0]], points[[simplex[0], 1]]];
-        let b = [points[[simplex[1], 0]], points[[simplex[1], 1]]];
-        let c = [points[[simplex[2], 0]], points[[simplex[2], 1]]];
+        let a = [_points[[simplex[0], 0]], _points[[simplex[0], 1]]];
+        let b = [_points[[simplex[1], 0]], _points[[simplex[1], 1]]];
+        let c = [_points[[simplex[2], 0]], _points[[simplex[2], 1]]];
 
         // Area using cross product
         let area = 0.5 * ((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])).abs();
@@ -604,32 +603,32 @@ impl AlphaShape {
     }
 
     /// Compute the volume of a tetrahedron in 3D
-    fn tetrahedron_volume(points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
+    fn tetrahedron_volume(_points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
         if simplex.len() != 4 {
             return Err(SpatialError::ValueError(
-                "Tetrahedron volume requires exactly 4 points".to_string(),
+                "Tetrahedron volume requires exactly 4 _points".to_string(),
             ));
         }
 
         let a = [
-            points[[simplex[0], 0]],
-            points[[simplex[0], 1]],
-            points[[simplex[0], 2]],
+            _points[[simplex[0], 0]],
+            _points[[simplex[0], 1]],
+            _points[[simplex[0], 2]],
         ];
         let b = [
-            points[[simplex[1], 0]],
-            points[[simplex[1], 1]],
-            points[[simplex[1], 2]],
+            _points[[simplex[1], 0]],
+            _points[[simplex[1], 1]],
+            _points[[simplex[1], 2]],
         ];
         let c = [
-            points[[simplex[2], 0]],
-            points[[simplex[2], 1]],
-            points[[simplex[2], 2]],
+            _points[[simplex[2], 0]],
+            _points[[simplex[2], 1]],
+            _points[[simplex[2], 2]],
         ];
         let d = [
-            points[[simplex[3], 0]],
-            points[[simplex[3], 1]],
-            points[[simplex[3], 2]],
+            _points[[simplex[3], 0]],
+            _points[[simplex[3], 1]],
+            _points[[simplex[3], 2]],
         ];
 
         // Translate so that point a is at origin
@@ -647,8 +646,8 @@ impl AlphaShape {
     }
 
     /// Compute volume of a simplex in n-dimensional space
-    fn simplex_volume_nd(points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
-        let ndim = points.ncols();
+    fn simplex_volume_nd(_points: &Array2<f64>, simplex: &[usize]) -> SpatialResult<f64> {
+        let ndim = _points.ncols();
         let n_vertices = simplex.len();
 
         // A simplex in n dimensions requires n+1 vertices
@@ -666,13 +665,13 @@ impl AlphaShape {
         // where matrix has rows [p1-p0, p2-p0, ..., pn-p0]
 
         // Get the first vertex as reference point
-        let p0: Vec<f64> = (0..ndim).map(|d| points[[simplex[0], d]]).collect();
+        let p0: Vec<f64> = (0..ndim).map(|d| _points[[simplex[0], d]]).collect();
 
         // Create matrix with vectors from p0 to other vertices
         let mut matrix = vec![vec![0.0; ndim]; ndim];
         for i in 1..n_vertices {
             for d in 0..ndim {
-                matrix[i - 1][d] = points[[simplex[i], d]] - p0[d];
+                matrix[i - 1][d] = _points[[simplex[i], d]] - p0[d];
             }
         }
 
@@ -687,14 +686,14 @@ impl AlphaShape {
     }
 
     /// Calculate determinant of a square matrix using LU decomposition
-    fn matrix_determinant(matrix: &[Vec<f64>]) -> f64 {
-        let n = matrix.len();
+    fn matrix_determinant(_matrix: &[Vec<f64>]) -> f64 {
+        let n = _matrix.len();
         if n == 0 {
             return 0.0;
         }
 
         // Create mutable copy for LU decomposition
-        let mut a = matrix.to_vec();
+        let mut a = _matrix.to_vec();
         let mut det = 1.0;
 
         // Gaussian elimination with partial pivoting
@@ -713,7 +712,7 @@ impl AlphaShape {
                 det = -det; // Row swap changes sign
             }
 
-            // Check for singular matrix
+            // Check for singular _matrix
             if a[i][i].abs() < 1e-12 {
                 return 0.0;
             }
@@ -740,8 +739,7 @@ impl AlphaShape {
             3 => 6.0,
             4 => 24.0,
             5 => 120.0,
-            6 => 720.0,
-            _ => {
+            6 => 720.0_ => {
                 let mut result = 1.0;
                 for i in 2..=n {
                     result *= i as f64;
@@ -765,7 +763,7 @@ impl AlphaShape {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::alpha_shapes::AlphaShape;
+    /// use scirs2__spatial::alpha_shapes::AlphaShape;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -779,10 +777,10 @@ impl AlphaShape {
     /// let (optimal_alpha, shape) = AlphaShape::find_optimal_alpha(&points, "area").unwrap();
     /// println!("Optimal alpha: {}", optimal_alpha);
     /// ```
-    pub fn find_optimal_alpha(points: &Array2<f64>, criterion: &str) -> SpatialResult<(f64, Self)> {
+    pub fn find_optimal_alpha(_points: &Array2<f64>, criterion: &str) -> SpatialResult<(f64, Self)> {
         // Build alpha spectrum by analyzing circumradii
-        let delaunay = Delaunay::new(points)?;
-        let circumradii = Self::compute_circumradii(&delaunay, points)?;
+        let delaunay = Delaunay::new(_points)?;
+        let circumradii = Self::compute_circumradii(&delaunay, _points)?;
 
         // Create candidate alpha values based on circumradii
         let mut alpha_candidates: Vec<f64> = circumradii.clone();
@@ -803,9 +801,9 @@ impl AlphaShape {
         }
 
         // Evaluate each alpha value
-        let shapes = Self::multi_alpha(points, &alpha_candidates)?;
+        let shapes = Self::multi_alpha(_points, &alpha_candidates)?;
 
-        let (best_idx, _best_score) = match criterion {
+        let (best_idx_best_score) = match criterion {
             "area" | "volume" => {
                 // Find alpha that maximizes area/volume while maintaining reasonable boundary
                 let mut best_idx = 0;
@@ -832,7 +830,7 @@ impl AlphaShape {
 
                 for (i, shape) in shapes.iter().enumerate() {
                     let boundary_len = shape.boundary().len() as f64;
-                    let complexity_score = (boundary_len - points.nrows() as f64).abs();
+                    let complexity_score = (boundary_len - _points.nrows() as f64).abs();
 
                     if complexity_score < best_score {
                         best_score = complexity_score;

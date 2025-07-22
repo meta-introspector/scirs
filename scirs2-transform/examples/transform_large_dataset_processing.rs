@@ -6,7 +6,7 @@
 //! 3. Use windowed transformations
 
 use ndarray::{array, Array2};
-use scirs2_transform::{
+use scirs2__transform::{
     normalize::NormalizationMethod,
     out_of_core::{csv_chunks, OutOfCoreNormalizer, OutOfCoreTransformer},
     streaming::{

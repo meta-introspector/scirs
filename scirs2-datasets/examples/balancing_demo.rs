@@ -4,7 +4,7 @@
 //! imbalanced datasets in machine learning applications.
 
 use ndarray::{Array1, Array2};
-use scirs2_datasets::{
+use scirs2__datasets::{
     create_balanced_dataset, generate_synthetic_samples, load_iris, random_oversample,
     random_undersample, BalancingStrategy,
 };
@@ -191,9 +191,9 @@ fn main() {
 
 /// Print the class distribution of targets
 #[allow(dead_code)]
-fn print_class_distribution(targets: &Array1<f64>) {
+fn print_class_distribution(_targets: &Array1<f64>) {
     let mut class_counts = std::collections::HashMap::new();
-    for &target in targets.iter() {
+    for &target in _targets.iter() {
         let class = target.round() as i64;
         *class_counts.entry(class).or_insert(0) += 1;
     }

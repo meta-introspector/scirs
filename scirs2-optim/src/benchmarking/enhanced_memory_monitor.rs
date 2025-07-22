@@ -4,7 +4,7 @@
 //! machine learning-based anomaly detection, system profiling integration,
 //! and intelligent alert generation for production environments.
 
-use crate::benchmarking::memory_leak_detector::{MemoryLeakDetector, MemoryUsageSnapshot};
+use crate::benchmarking::memory_leak__detector::{MemoryLeakDetector, MemoryUsageSnapshot};
 use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, VecDeque};
@@ -341,9 +341,9 @@ pub struct LruCache<K, V> {
 }
 
 impl<K: Ord + Clone, V> LruCache<K, V> {
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(_capacity: usize) -> Self {
         Self {
-            capacity,
+            _capacity,
             data: BTreeMap::new(),
         }
     }
@@ -791,16 +791,16 @@ impl EnhancedMemoryMonitor {
     }
 
     /// Execute one monitoring cycle
-    fn monitoring_cycle(leak_detector: &Arc<Mutex<MemoryLeakDetector>>) -> Result<()> {
-        let mut detector = leak_detector
+    fn monitoring_cycle(_leak_detector: &Arc<Mutex<MemoryLeakDetector>>) -> Result<()> {
+        let mut _detector = _leak_detector
             .lock()
-            .map_err(|_| OptimError::LockError("Failed to acquire detector lock".to_string()))?;
+            .map_err(|_| OptimError::LockError("Failed to acquire _detector lock".to_string()))?;
 
         // Take memory snapshot
-        let _snapshot = detector.take_snapshot()?;
+        let _snapshot = _detector.take_snapshot()?;
 
         // Detect leaks
-        let leak_results = detector.detect_leaks()?;
+        let leak_results = _detector.detect_leaks()?;
 
         // Process results and generate alerts if needed
         for result in leak_results {
@@ -1201,7 +1201,7 @@ pub struct ImpactEstimate {
 impl SystemProfiler {
     fn new(_config: SystemProfilerConfig) -> Result<Self> {
         Ok(Self {
-            config: _config,
+            _config: _config,
             available_tools: Vec::new(),
             active_sessions: HashMap::new(),
         })
@@ -1255,7 +1255,7 @@ impl SystemProfiler {
 impl MachineLearningDetector {
     fn new(_config: MLConfig) -> Result<Self> {
         Ok(Self {
-            config: _config,
+            _config: _config,
             training_data: VecDeque::new(),
             models: HashMap::new(),
             feature_extractors: Vec::new(),
@@ -1285,7 +1285,7 @@ impl MachineLearningDetector {
 impl AdvancedAlertSystem {
     fn new(_config: AlertConfig) -> Result<Self> {
         Ok(Self {
-            config: _config.clone(),
+            _config: _config.clone(),
             alert_history: VecDeque::new(),
             rate_limiter: RateLimiter::new(_config),
             templates: HashMap::new(),
@@ -1312,7 +1312,7 @@ impl RateLimiter {
         Self {
             alert_counts: VecDeque::new(),
             last_alert_times: HashMap::new(),
-            config: _config,
+            _config: _config,
         }
     }
 }
@@ -1320,7 +1320,7 @@ impl RateLimiter {
 impl PerformanceMetricsCollector {
     fn new(_config: PerformanceConfig) -> Result<Self> {
         Ok(Self {
-            config: _config,
+            _config: _config,
             metrics: PerformanceMetrics::default(),
             metric_history: VecDeque::new(),
             start_time: Instant::now(),
@@ -1341,7 +1341,7 @@ impl PerformanceMetricsCollector {
 impl StatisticalAnalyzer {
     fn new(_config: StatisticalConfig) -> Result<Self> {
         Ok(Self {
-            config: _config,
+            _config: _config,
             historical_stats: VecDeque::new(),
             current_stats: StatisticalSnapshot::default(),
         })
@@ -1551,7 +1551,7 @@ impl Default for SystemMemoryInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::benchmarking::memory_leak_detector::MemoryDetectionConfig;
+    use crate::benchmarking::memory_leak__detector::MemoryDetectionConfig;
 
     #[test]
     fn test_enhanced_monitor_creation() {

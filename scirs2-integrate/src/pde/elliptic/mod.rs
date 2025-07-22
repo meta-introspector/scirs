@@ -11,7 +11,7 @@
 use ndarray::{Array1, Array2};
 use std::time::Instant;
 
-use crate::pde::finite_difference::FiniteDifferenceScheme;
+use crate::pde::finite__difference::FiniteDifferenceScheme;
 use crate::pde::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, PDEError, PDEResult,
     PDESolution, PDESolverInfo,
@@ -58,7 +58,7 @@ pub struct EllipticOptions {
 }
 
 impl Default for EllipticOptions {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         EllipticOptions {
             max_iterations: 1000,
             tolerance: 1e-6,
@@ -103,15 +103,15 @@ impl PoissonSolver2D {
             ));
         }
 
-        // Validate boundary conditions
+        // Validate boundary _conditions
         if boundary_conditions.len() != 4 {
             return Err(PDEError::BoundaryConditions(
-                "2D Poisson equation requires exactly 4 boundary conditions (one for each edge)"
+                "2D Poisson equation requires exactly 4 boundary _conditions (one for each edge)"
                     .to_string(),
             ));
         }
 
-        // Ensure we have boundary conditions for all dimensions/edges
+        // Ensure we have boundary _conditions for all dimensions/edges
         let has_x_lower = boundary_conditions
             .iter()
             .any(|bc| bc.location == BoundaryLocation::Lower && bc.dimension == 0);
@@ -127,7 +127,7 @@ impl PoissonSolver2D {
 
         if !has_x_lower || !has_x_upper || !has_y_lower || !has_y_upper {
             return Err(PDEError::BoundaryConditions(
-                "2D Poisson equation requires boundary conditions for all edges of the domain"
+                "2D Poisson equation requires boundary _conditions for all edges of the domain"
                     .to_string(),
             ));
         }
@@ -326,7 +326,7 @@ impl PoissonSolver2D {
 
     // Helper method to solve linear system Ax = b using Gaussian elimination
     // In a real implementation, this would use a specialized sparse solver
-    fn solve_linear_system(&self, a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f64>> {
+    fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> PDEResult<Array1<f64>> {
         let n = b.len();
 
         // Simple Gaussian elimination for demonstration purposes
@@ -571,9 +571,7 @@ impl PoissonSolver2D {
     fn apply_boundary_conditions_to_system(
         &self,
         a: &mut Array2<f64>,
-        b: &mut Array1<f64>,
-        _x_grid: &Array1<f64>,
-        _y_grid: &Array1<f64>,
+        b: &mut Array1<f64>, _x_grid: &Array1<f64>, _y_grid: &Array1<f64>,
         nx: usize,
         ny: usize,
         dx: f64,
@@ -879,7 +877,7 @@ impl LaplaceSolver2D {
     ) -> PDEResult<Self> {
         // Create a Poisson solver with zero source term
         let poisson_solver =
-            PoissonSolver2D::new(domain, |_x, _y| 0.0, boundary_conditions, options)?;
+            PoissonSolver2D::new(domain, |_x_y| 0.0, boundary_conditions, options)?;
 
         Ok(LaplaceSolver2D { poisson_solver })
     }
@@ -897,12 +895,12 @@ impl LaplaceSolver2D {
 
 /// Convert EllipticResult to PDESolution
 impl From<EllipticResult> for PDESolution<f64> {
-    fn from(result: EllipticResult) -> Self {
+    fn from(_result: EllipticResult) -> Self {
         let mut grids = Vec::new();
 
         // Extract grid dimensions from solution (assuming they're regular)
-        let ny = result.u.shape()[0];
-        let nx = result.u.shape()[1];
+        let ny = _result.u.shape()[0];
+        let nx = _result.u.shape()[1];
 
         // Create grids (since we don't have the actual grid values, use linspace)
         let x_grid = Array1::linspace(0.0, 1.0, nx);
@@ -912,14 +910,14 @@ impl From<EllipticResult> for PDESolution<f64> {
         grids.push(y_grid);
 
         // Create solution values
-        let values = vec![result.u];
+        let values = vec![_result.u];
 
         // Create solver info
         let info = PDESolverInfo {
-            num_iterations: result.num_iterations,
-            computation_time: result.computation_time,
-            residual_norm: Some(result.residual_norm),
-            convergence_history: result.convergence_history,
+            num_iterations: _result.num_iterations,
+            computation_time: _result.computation_time,
+            residual_norm: Some(_result.residual_norm),
+            convergence_history: _result.convergence_history,
             method: "Elliptic PDE Solver".to_string(),
         };
 

@@ -372,11 +372,11 @@ impl Default for ErrorRecoveryConfig {
 
 impl ErrorRecoverySystem {
     /// Create new error recovery system
-    pub fn new(config: ErrorRecoveryConfig) -> Self {
+    pub fn new(_config: ErrorRecoveryConfig) -> Self {
         Self {
             error_history: Vec::new(),
             recovery_success_rates: HashMap::new(),
-            config,
+            _config,
         }
     }
 
@@ -447,8 +447,8 @@ impl ErrorRecoverySystem {
     }
 
     /// Infer data characteristics from error
-    fn infer_data_characteristics(&self, _error: &StatsError) -> DataCharacteristics {
-        // This would analyze the error to infer data properties
+    fn infer_data_characteristics(&self_error: &StatsError) -> DataCharacteristics {
+        // This would analyze the _error to infer data properties
         DataCharacteristics {
             size_info: None,
             type_info: "unknown".to_string(),
@@ -462,7 +462,7 @@ impl ErrorRecoverySystem {
     fn gather_system_info(&self) -> SystemInfo {
         SystemInfo {
             available_memory_mb: self.get_available_memory(),
-            cpu_cores: Some(num_cpus::get()),
+            cpu_cores: Some(num, _cpus::get()),
             simd_capabilities: self.detect_simd_capabilities(),
             parallel_available: true,
         }
@@ -499,8 +499,7 @@ impl ErrorRecoverySystem {
 
     /// Infer computation state
     fn infer_computation_state(
-        &self,
-        _error: &StatsError,
+        &self_error: &StatsError,
         function_name: &str,
     ) -> ComputationState {
         ComputationState {
@@ -556,9 +555,7 @@ impl ErrorRecoverySystem {
 
     /// Generate suggestions for invalid argument errors
     fn generate_invalid_argument_suggestions(
-        &self,
-        _msg: &str,
-        _context: &ErrorContext,
+        &self_msg: &str, _context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         vec![RecoverySuggestion {
             suggestion_type: SuggestionType::InputValidation,
@@ -578,9 +575,7 @@ impl ErrorRecoverySystem {
 
     /// Generate suggestions for dimension mismatch errors
     fn generate_dimension_mismatch_suggestions(
-        &self,
-        _msg: &str,
-        _context: &ErrorContext,
+        &self_msg: &str, _context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         vec![RecoverySuggestion {
             suggestion_type: SuggestionType::DataPreprocessing,
@@ -602,8 +597,7 @@ impl ErrorRecoverySystem {
     /// Generate suggestions for computation errors
     fn generate_computation_error_suggestions(
         &self,
-        msg: &str,
-        _context: &ErrorContext,
+        msg: &str_context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         let mut suggestions = Vec::new();
 
@@ -643,9 +637,7 @@ impl ErrorRecoverySystem {
 
     /// Generate suggestions for convergence errors
     fn generate_convergence_error_suggestions(
-        &self,
-        _msg: &str,
-        _context: &ErrorContext,
+        &self_msg: &str, _context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         vec![RecoverySuggestion {
             suggestion_type: SuggestionType::ParameterAdjustment,
@@ -694,8 +686,7 @@ impl ErrorRecoverySystem {
 
     /// Generate example code snippets
     fn generate_example_snippets(
-        &self,
-        _error: &StatsError,
+        &self_error: &StatsError,
         suggestions: &[RecoverySuggestion],
     ) -> Vec<CodeSnippet> {
         let mut snippets = Vec::new();
@@ -737,21 +728,19 @@ impl ErrorRecoverySystem {
     }
 
     /// Assess error severity
-    fn assess_error_severity(&self, error: &StatsError, _context: &ErrorContext) -> ErrorSeverity {
+    fn assess_error_severity(&self, error: &StatsError_context: &ErrorContext) -> ErrorSeverity {
         match error {
-            StatsError::InvalidArgument(_) => ErrorSeverity::Medium,
-            StatsError::DimensionMismatch(_) => ErrorSeverity::Medium,
-            StatsError::ComputationError(_) => ErrorSeverity::High,
-            StatsError::ConvergenceError(_) => ErrorSeverity::Medium,
-            _ => ErrorSeverity::Low,
+            StatsError::InvalidArgument(_) =>, ErrorSeverity::Medium,
+            StatsError::DimensionMismatch(_) =>, ErrorSeverity::Medium,
+            StatsError::ComputationError(_) =>, ErrorSeverity::High,
+            StatsError::ConvergenceError(_) => ErrorSeverity::Medium_ =>, ErrorSeverity::Low,
         }
     }
 
     /// Assess performance impact
     fn assess_performance_impact(
         &self,
-        error: &StatsError,
-        _context: &ErrorContext,
+        error: &StatsError_context: &ErrorContext,
     ) -> PerformanceImpact {
         match error {
             StatsError::ComputationError(msg) if msg.contains("memory") => PerformanceImpact {
@@ -765,8 +754,7 @@ impl ErrorRecoverySystem {
                 time_impact: ImpactLevel::Major,
                 accuracy_impact: ImpactLevel::Moderate,
                 scalability_impact: ImpactLevel::Moderate,
-            },
-            _ => PerformanceImpact {
+            }_ => PerformanceImpact {
                 memory_impact: ImpactLevel::None,
                 time_impact: ImpactLevel::Minor,
                 accuracy_impact: ImpactLevel::Minor,
@@ -785,7 +773,7 @@ impl ErrorRecoverySystem {
         let mut report = String::new();
 
         report.push_str(&format!("# Error Report\n\n"));
-        report.push_str(&format!("**Error:** {}\n\n", enhanced_error.error));
+        report.push_str(&format!("**Error:** {}\n\n", enhanced_error._error));
         report.push_str(&format!("**Severity:** {:?}\n\n", enhanced_error.severity));
         report.push_str(&format!(
             "**Function:** {}\n",
@@ -850,10 +838,10 @@ static mut ERROR_RECOVERY_INITIALIZED: bool = false;
 
 /// Initialize global error recovery system
 #[allow(dead_code)]
-pub fn initialize_error_recovery(config: Option<ErrorRecoveryConfig>) {
+pub fn initialize_error_recovery(_config: Option<ErrorRecoveryConfig>) {
     unsafe {
         if !ERROR_RECOVERY_INITIALIZED {
-            GLOBAL_ERROR_RECOVERY = Some(ErrorRecoverySystem::new(config.unwrap_or_default()));
+            GLOBAL_ERROR_RECOVERY = Some(ErrorRecoverySystem::new(_config.unwrap_or_default()));
             ERROR_RECOVERY_INITIALIZED = true;
         }
     }
@@ -889,7 +877,7 @@ pub fn enhance_error_with_recovery(
                     },
                     system_info: SystemInfo {
                         available_memory_mb: None,
-                        cpu_cores: Some(num_cpus::get()),
+                        cpu_cores: Some(num, _cpus::get()),
                         simd_capabilities: vec![],
                         parallel_available: true,
                     },

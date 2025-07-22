@@ -33,8 +33,8 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_signal::sysid::{estimate_transfer_function, TfEstimationMethod, ModelValidation};
-//! use scirs2_signal::waveforms::chirp;
+//! use scirs2__signal::sysid::{estimate_transfer_function, TfEstimationMethod, ModelValidation};
+//! use scirs2__signal::waveforms::chirp;
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!
 //! // Generate test system and data
@@ -66,15 +66,17 @@
 //! ```
 
 use crate::error::{SignalError, SignalResult};
+use crate::lombscargle__enhanced::WindowType;
 use crate::lti::{LtiSystem, TransferFunction};
-use crate::parametric::{estimate_ar, estimate_arma, ARMethod, OrderSelection};
+use crate::parametric::{ARMethod, OrderSelection, estimate_ar, estimate_arma};
 use crate::spectral::welch;
 use crate::window::get_window;
-
-use ndarray::{s, Array1, Array2, Axis};
-use num_complex::Complex64;
+use ndarray::{Array1, Array2, Axis, s};
+use num__complex::Complex64;
+use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 
+#[allow(unused_imports)]
 /// Methods for transfer function estimation
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TfEstimationMethod {
@@ -126,7 +128,7 @@ impl Default for SysIdConfig {
     fn default() -> Self {
         Self {
             fs: 1.0,
-            window: "hann".to_string(),
+            window: WindowType::Hann.to_string(),
             overlap: 0.5,
             nfft: None,
             regularization: None,
@@ -220,7 +222,7 @@ pub struct ModelValidation {
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::sysid::{estimate_transfer_function, TfEstimationMethod};
+/// use scirs2__signal::sysid::{estimate_transfer_function, TfEstimationMethod};
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///
 /// // Create longer test signals to avoid singular matrix
@@ -279,8 +281,7 @@ pub fn estimate_transfer_function(
 #[allow(dead_code)]
 fn estimate_tf_least_squares(
     input: &Array1<f64>,
-    output: &Array1<f64>,
-    _fs: f64,
+    output: &Array1<f64>, _fs: f64,
     num_order: usize,
     den_order: usize,
 ) -> SignalResult<TfEstimationResult> {
@@ -394,8 +395,7 @@ fn estimate_tf_frequency_domain(
 #[allow(dead_code)]
 fn estimate_tf_instrumental_variable(
     input: &Array1<f64>,
-    output: &Array1<f64>,
-    _fs: f64,
+    output: &Array1<f64>, _fs: f64,
     num_order: usize,
     den_order: usize,
 ) -> SignalResult<TfEstimationResult> {
@@ -656,7 +656,7 @@ fn cross_spectral_density_welch(
     }
 
     // Average and normalize
-    let scale = fs * window_norm * window_norm * num_segments as f64;
+    let scale = fs * window_norm * window_norm * num_segments  as f64;
     pxy_acc.mapv_inplace(|x| x / scale);
 
     // Create frequency vector
@@ -670,8 +670,7 @@ fn cross_spectral_density_welch(
 fn estimate_freq_response_periodogram(
     input: &Array1<f64>,
     output: &Array1<f64>,
-    fs: f64,
-    _config: &SysIdConfig,
+    fs: f64_config: &SysIdConfig,
 ) -> SignalResult<FreqResponseResult> {
     let n = input.len();
     let nfft = next_power_of_2(n);
@@ -906,11 +905,11 @@ pub fn identify_ar_model(
     method: ARMethod,
     selection_criterion: OrderSelection,
 ) -> SignalResult<ParametricResult> {
-    // Select optimal order
+    // Select optimal _order
     let (optimal_order, criteria) =
         crate::parametric::select_ar_order(signal, max_order, selection_criterion, method)?;
 
-    // Estimate AR parameters with optimal order
+    // Estimate AR parameters with optimal _order
     let (ar_coeffs, reflection_coeffs, noise_var) = estimate_ar(signal, optimal_order, method)?;
 
     Ok(ParametricResult {
@@ -940,7 +939,7 @@ pub fn identify_arma_model(
     max_ma_order: usize,
     selection_criterion: OrderSelection,
 ) -> SignalResult<ParametricResult> {
-    let n = signal.len() as f64;
+    let n = signal.len()  as f64;
     let mut best_criterion = f64::INFINITY;
     let mut best_result = None;
 
@@ -953,7 +952,7 @@ pub fn identify_arma_model(
 
             if let Ok((ar_coeffs, ma_coeffs, noise_var)) = estimate_arma(signal, ar_order, ma_order)
             {
-                // Calculate information criterion
+                // Calculate information _criterion
                 let k = ar_order + ma_order;
                 let log_likelihood = -0.5 * n * (2.0 * PI * noise_var).ln() - 0.5 * n;
 
@@ -1009,7 +1008,7 @@ pub fn validate_model(
         ));
     }
 
-    let n = actual.len() as f64;
+    let n = actual.len()  as f64;
 
     // Calculate residuals
     let residuals = actual - predicted;
@@ -1032,17 +1031,17 @@ pub fn validate_model(
 
     // Information criteria
     let log_likelihood = -0.5 * n * (2.0 * PI * mse).ln() - 0.5 * n;
-    let aic = -2.0 * log_likelihood + 2.0 * model_order as f64;
+    let aic = -2.0 * log_likelihood + 2.0 * model_order  as f64;
     let bic = -2.0 * log_likelihood + model_order as f64 * n.ln();
 
     // Final prediction error
     let fpe = mse * (n + model_order as f64) / (n - model_order as f64);
 
-    // Whiteness test (Ljung-Box test approximation)
+    // Whiteness _test (Ljung-Box _test approximation)
     let whiteness_test = if perform_whiteness_test {
         ljung_box_test(&residuals, 10)
     } else {
-        1.0 // No test performed
+        1.0 // No _test performed
     };
 
     Ok(ModelValidation {
@@ -1071,8 +1070,7 @@ pub fn validate_model(
 #[allow(clippy::type_complexity)]
 #[allow(dead_code)]
 pub fn n4sid_identification(
-    input: &Array1<f64>,
-    _output: &Array1<f64>,
+    input: &Array1<f64>, _output: &Array1<f64>,
     state_order: usize,
     past_horizon: usize,
     future_horizon: usize,
@@ -1089,7 +1087,7 @@ pub fn n4sid_identification(
     // A full N4SID would involve:
     // 1. Construction of Hankel matrices
     // 2. QR decomposition and projection
-    // 3. SVD for order determination and state extraction
+    // 3. SVD for _order determination and state extraction
     // 4. Least squares for system matrices
 
     // For now, return identity matrices as placeholder
@@ -1124,15 +1122,15 @@ impl RecursiveLeastSquares {
     ///
     /// # Returns
     /// * New RLS estimator
-    pub fn new(dimension: usize, forgetting_factor: f64, initial_covariance: f64) -> Self {
-        let parameters = Array1::<f64>::zeros(dimension);
-        let covariance = Array2::<f64>::eye(dimension) * initial_covariance;
+    pub fn new(_dimension: usize, forgetting_factor: f64, initial_covariance: f64) -> Self {
+        let parameters = Array1::<f64>::zeros(_dimension);
+        let _covariance = Array2::<f64>::eye(_dimension) * initial_covariance;
 
         Self {
             parameters,
-            covariance,
+            _covariance,
             forgetting_factor,
-            dimension,
+            _dimension,
         }
     }
 
@@ -1147,7 +1145,7 @@ impl RecursiveLeastSquares {
     pub fn update(&mut self, regression_vector: &Array1<f64>, output: f64) -> SignalResult<f64> {
         if regression_vector.len() != self.dimension {
             return Err(SignalError::ValueError(
-                "Regression vector dimension mismatch".to_string(),
+                "Regression _vector dimension mismatch".to_string(),
             ));
         }
 
@@ -1155,7 +1153,7 @@ impl RecursiveLeastSquares {
         let prediction = self.parameters.dot(regression_vector);
         let error = output - prediction;
 
-        // Gain vector: K = P * phi / (lambda + phi^T * P * phi)
+        // Gain _vector: K = P * phi / (lambda + phi^T * P * phi)
         let p_phi = self.covariance.dot(regression_vector);
         let denominator = self.forgetting_factor + regression_vector.dot(&p_phi);
 
@@ -1196,15 +1194,15 @@ impl RecursiveLeastSquares {
 
 /// Helper function to calculate model fit percentage
 #[allow(dead_code)]
-fn calculate_fit_percentage(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
-    let mean_actual = actual.mean().unwrap_or(0.0);
-    let ss_tot = actual.mapv(|y| (y - mean_actual).powi(2)).sum();
+fn calculate_fit_percentage(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
+    let mean_actual = _actual.mean().unwrap_or(0.0);
+    let ss_tot = _actual.mapv(|y| (y - mean_actual).powi(2)).sum();
 
     if ss_tot < 1e-12 {
         return 0.0;
     }
 
-    let ss_res = (actual - predicted).mapv(|x| x * x).sum();
+    let ss_res = (_actual - predicted).mapv(|x| x * x).sum();
     let fit = 1.0 - ss_res / ss_tot;
 
     (100.0 * fit).clamp(0.0, 100.0)
@@ -1212,32 +1210,32 @@ fn calculate_fit_percentage(actual: &Array1<f64>, predicted: &Array1<f64>) -> f6
 
 /// Simple Ljung-Box test for residual whiteness
 #[allow(dead_code)]
-fn ljung_box_test(residuals: &Array1<f64>, max_lag: usize) -> f64 {
-    let n = residuals.len();
+fn ljung_box_test(_residuals: &Array1<f64>, max_lag: usize) -> f64 {
+    let n = _residuals.len();
     if n <= max_lag {
         return 1.0; // Cannot perform test
     }
 
     // Calculate autocorrelations
-    let mean_residual = residuals.mean().unwrap_or(0.0);
-    let var_residual = residuals
+    let mean_residual = _residuals.mean().unwrap_or(0.0);
+    let var_residual = _residuals
         .mapv(|x| (x - mean_residual).powi(2))
         .mean()
         .unwrap_or(1.0);
 
     let mut lb_stat = 0.0;
 
-    for lag in 1..=max_lag {
+    for _lag in 1..=max_lag {
         let mut autocorr = 0.0;
-        for t in lag..n {
-            autocorr += (residuals[t] - mean_residual) * (residuals[t - lag] - mean_residual);
+        for t in _lag..n {
+            autocorr += (_residuals[t] - mean_residual) * (_residuals[t - _lag] - mean_residual);
         }
-        autocorr /= (n - lag) as f64 * var_residual;
+        autocorr /= (n - _lag) as f64 * var_residual;
 
-        lb_stat += autocorr * autocorr / (n - lag) as f64;
+        lb_stat += autocorr * autocorr / (n - _lag)  as f64;
     }
 
-    lb_stat *= n as f64 * (n + 2) as f64;
+    lb_stat *= n as f64 * (n + 2)  as f64;
 
     // Return p-value approximation (simplified)
     // In practice, would use chi-square distribution
@@ -1296,8 +1294,8 @@ fn solve_complex_least_squares(
 
 /// Compute FFT (simplified implementation)
 #[allow(dead_code)]
-fn compute_fft(signal: &Array1<f64>) -> Array1<Complex64> {
-    let n = signal.len();
+fn compute_fft(_signal: &Array1<f64>) -> Array1<Complex64> {
+    let n = _signal.len();
 
     // This is a placeholder - in practice would use a proper FFT implementation
     // For now, use DFT
@@ -1306,8 +1304,8 @@ fn compute_fft(signal: &Array1<f64>) -> Array1<Complex64> {
     for k in 0..n {
         let mut sum = Complex64::new(0.0, 0.0);
         for t in 0..n {
-            let angle = -2.0 * PI * (k * t) as f64 / n as f64;
-            sum += signal[t] * Complex64::new(angle.cos(), angle.sin());
+            let angle = -2.0 * PI * (k * t) as f64 / n  as f64;
+            sum += _signal[t] * Complex64::new(angle.cos(), angle.sin());
         }
         result[k] = sum;
     }
@@ -1605,15 +1603,15 @@ pub fn adaptive_robust_identification(
 // Helper functions for robust estimation
 
 #[allow(dead_code)]
-fn solve_least_squares(regressor: &Array2<f64>, target: &Array1<f64>) -> SignalResult<Array1<f64>> {
+fn solve_least_squares(_regressor: &Array2<f64>, target: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Simple normal equations solution (A^T A)^-1 A^T b
-    let at = regressor.t();
-    let ata = at.dot(regressor);
+    let at = _regressor.t();
+    let ata = at.dot(_regressor);
     let atb = at.dot(target);
 
     // Solve using pseudo-inverse (simplified)
-    let mut result = Array1::zeros(regressor.ncols());
-    for i in 0..regressor.ncols() {
+    let mut result = Array1::zeros(_regressor.ncols());
+    for i in 0.._regressor.ncols() {
         if i < atb.len() {
             result[i] = atb[i] / (ata[[i, i]] + 1e-12);
         }
@@ -1670,7 +1668,7 @@ pub fn estimate_robust_scale(
     parameters: &Array1<f64>,
 ) -> SignalResult<f64> {
     let residuals = target - &regressor.dot(parameters);
-    let mut abs_residuals: Vec<f64> = residuals.iter().map(|&r| r.abs()).collect();
+    let mut abs_residuals: Vec<f64> = residuals.iter().map(|&r: &f64| r.abs()).collect();
     abs_residuals.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     // Median absolute deviation (MAD)
@@ -1685,8 +1683,8 @@ pub fn estimate_robust_scale(
 }
 
 #[allow(dead_code)]
-pub fn detect_outliers(residuals: &Array1<f64>, scale: f64, threshold: f64) -> Vec<usize> {
-    residuals
+pub fn detect_outliers(_residuals: &Array1<f64>, scale: f64, threshold: f64) -> Vec<usize> {
+    _residuals
         .iter()
         .enumerate()
         .filter_map(|(i, &r)| {
@@ -1711,7 +1709,7 @@ fn calculate_robust_fit(
     // Use robust R-squared based on median
     let target_median = calculate_median(target);
     let total_deviation: f64 = target.iter().map(|&y| (y - target_median).abs()).sum();
-    let residual_deviation: f64 = residuals.iter().map(|&r| r.abs()).sum();
+    let residual_deviation: f64 = residuals.iter().map(|&r: &f64| r.abs()).sum();
 
     if total_deviation > 1e-12 {
         100.0 * (1.0 - residual_deviation / total_deviation).max(0.0)
@@ -1721,8 +1719,8 @@ fn calculate_robust_fit(
 }
 
 #[allow(dead_code)]
-fn calculate_median(data: &Array1<f64>) -> f64 {
-    let mut sorted: Vec<f64> = data.to_vec();
+fn calculate_median(_data: &Array1<f64>) -> f64 {
+    let mut sorted: Vec<f64> = _data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let n = sorted.len();
@@ -1735,10 +1733,12 @@ fn calculate_median(data: &Array1<f64>) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
+use crate::lti::design::tf;
     #[test]
     fn test_transfer_function_estimation_simple() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test with a longer signal for better conditioning
         let n = 50;
         let mut input = Array1::zeros(n);

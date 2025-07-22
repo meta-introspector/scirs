@@ -4,7 +4,7 @@
 //! which is used to test if two samples come from the same distribution.
 
 use ndarray::array;
-use scirs2_stats::{distributions, ks_2samp};
+use scirs2__stats::{distributions, ks_2samp};
 
 #[allow(dead_code)]
 fn main() {

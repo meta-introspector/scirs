@@ -31,7 +31,7 @@ use crate::error::{MetricsError, Result};
 /// ```
 /// use ndarray::{array, Array2};
 /// // This function is not re-exported at the top level
-/// use scirs2_metrics::clustering::evaluation::dunn_index_enhanced;
+/// use scirs2__metrics::clustering::evaluation::dunn_index_enhanced;
 ///
 /// // Create a small dataset with 2 clusters
 /// let x = Array2::from_shape_vec((6, 2), vec![
@@ -80,7 +80,7 @@ where
     }
 
     // Calculate pairwise distances within the dataset
-    let distances = pairwise_distances::<F, _>(x, "euclidean")?;
+    let distances = pairwise_distances::<F>(x, "euclidean")?;
 
     // Find minimum inter-cluster distance
     let mut min_inter_distance = F::infinity();
@@ -137,7 +137,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::{Array1, Array2};
-/// use scirs2_metrics::clustering::elbow_method;
+/// use scirs2__metrics::clustering::elbow_method;
 ///
 /// // Create a dataset
 /// let x = Array2::<f64>::zeros((100, 2));
@@ -253,8 +253,7 @@ mod tests {
                 2 => base / 2.0,
                 3 => base / 3.0, // Elbow point
                 4 => base / 3.2, // Small decrease after elbow
-                5 => base / 3.4,
-                _ => base / (3.5 + (k as f64 - 5.0) * 0.1),
+                5 => base / 3.4_ => base / (3.5 + (k as f64 - 5.0) * 0.1),
             }
         };
 

@@ -5,12 +5,12 @@
 //! standardization, and recovery suggestions into a single cohesive system.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_diagnostics::{
+use crate::error__diagnostics::{
     generate_global_health_report, get_global_statistics, global_monitor, record_global_error,
     ErrorMonitor, HealthReport,
 };
-use crate::error_handling_v2::{EnhancedError, ErrorBuilder, ErrorCode};
-use crate::error_standardization::{ErrorMessages, StandardizedErrorReporter};
+use crate::error_handling__v2::{EnhancedError, ErrorBuilder, ErrorCode};
+use crate::error__standardization::{ErrorMessages, StandardizedErrorReporter};
 use scirs2_core::validation::{check_finite, check_positive};
 use std::sync::Once;
 use std::time::Instant;
@@ -314,14 +314,14 @@ pub fn create_standardized_error(
         "convergence_failure" => {
             ErrorMessages::convergence_failure(operation, value.parse().unwrap_or(100))
         }
-        _ => StatsError::invalid_argument(format!("Unknown error type: {}", error_type)),
+        _ => StatsError::invalid_argument(format!("Unknown error _type: {}", error_type)),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error_handling_v2::ErrorCode;
+    use crate::error_handling__v2::ErrorCode;
 
     #[test]
     fn test_unified_error_handler() {

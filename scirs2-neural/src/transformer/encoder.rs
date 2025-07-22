@@ -89,9 +89,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     /// * `rng` - Random number generator for weight initialization
     /// # Returns
     /// * A new feed-forward network
-    pub fn new<R: Rng>(d_model: usize, d_ff: usize, dropout: f64, rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng>(_d_model: usize, d_ff: usize, dropout: f64, rng: &mut R) -> Result<Self> {
         // Initialize weights with Xavier/Glorot initialization
-        let scale1 = F::from(1.0 / (d_model as f64).sqrt()).ok_or_else(|| {
+        let scale1 = F::from(1.0 / (_d_model as f64).sqrt()).ok_or_else(|| {
             NeuralError::InvalidArchitecture("Failed to convert scale factor".to_string())
         })?;
         let scale2 = F::from(1.0 / (d_ff as f64).sqrt()).ok_or_else(|| {
@@ -105,8 +105,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                 .map(|_| {
                     let val = F::from(rng.random_range(-1.0..1.0)).ok_or_else(|| {
                         NeuralError::InvalidArchitecture(
-                            "Failed to convert random value".to_string(),
-                        )
+                            "Failed to convert random value".to_string()..)
                     });
                     val.map(|v| v * scale).unwrap_or_else(|_| F::zero())
                 })
@@ -173,7 +172,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
             .into_shape_with_order((batch_size, self.d_model))
             .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape input: {}", e)))?;
         // First linear transformation: [batch_size, d_model] x [d_model, d_ff] -> [batch_size, d_ff]
-        let mut hidden = Array::<F, _>::zeros((batch_size, self.d_ff));
+        let mut hidden = Array::<F>::zeros((batch_size, self.d_ff));
         for i in 0..batch_size {
             for j in 0..self.d_ff {
                 let mut sum = F::zero();
@@ -200,7 +199,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                 for j in 0..self.d_ff {
                     hidden[[i, j]] = hidden[[i, j]] / keep_prob;
         // Second linear transformation: [batch_size, d_ff] x [d_ff, d_model] -> [batch_size, d_model]
-        let mut output = Array::<F, _>::zeros((batch_size, self.d_model));
+        let mut output = Array::<F>::zeros((batch_size, self.d_model));
             for j in 0..self.d_model {
                 for k in 0..self.d_ff {
                     sum = sum + hidden[[i, k]] * self.w2[[k, j]];
@@ -237,18 +236,18 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         let grad_output_2d = grad_output
                 NeuralError::InferenceError(format!("Failed to reshape grad_output: {}", e))
         // Backward through second linear layer: grad_output -> grad_hidden
-        let mut grad_hidden = Array::<F, _>::zeros((batch_size, self.d_ff));
+        let mut grad_hidden = Array::<F>::zeros((batch_size, self.d_ff));
             for k in 0..self.d_ff {
                 for j in 0..self.d_model {
                     sum = sum + grad_output_2d[[i, j]] * self.w2[[k, j]];
                 grad_hidden[[i, k]] = sum;
         // Compute gradients for w2 and b2
-        let mut grad_w2 = Array::<F, _>::zeros(self.w2.dim());
+        let mut grad_w2 = Array::<F>::zeros(self.w2.dim());
         for k in 0..self.d_ff {
                 for i in 0..batch_size {
                     sum = sum + cached_hidden_2d[[i, k]] * grad_output_2d[[i, j]];
                 grad_w2[[k, j]] = sum;
-        let mut grad_b2 = Array::<F, _>::zeros(self.b2.dim());
+        let mut grad_b2 = Array::<F>::zeros(self.b2.dim());
         for j in 0..self.d_model {
             let mut sum = F::zero();
                 sum = sum + grad_output_2d[[i, j]];
@@ -257,16 +256,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                 if cached_hidden_2d[[i, k]] <= F::zero() {
                     grad_hidden[[i, k]] = F::zero();
         // Backward through first linear layer: grad_hidden -> grad_input
-        let mut grad_input_2d = Array::<F, _>::zeros((batch_size, self.d_model));
+        let mut grad_input_2d = Array::<F>::zeros((batch_size, self.d_model));
             for k in 0..self.d_model {
                     sum = sum + grad_hidden[[i, j]] * self.w1[[k, j]];
                 grad_input_2d[[i, k]] = sum;
         // Compute gradients for w1 and b1
-        let mut grad_w1 = Array::<F, _>::zeros(self.w1.dim());
+        let mut grad_w1 = Array::<F>::zeros(self.w1.dim());
         for k in 0..self.d_model {
                     sum = sum + cached_input_2d[[i, k]] * grad_hidden[[i, j]];
                 grad_w1[[k, j]] = sum;
-        let mut grad_b1 = Array::<F, _>::zeros(self.b1.dim());
+        let mut grad_b1 = Array::<F>::zeros(self.b1.dim());
         for j in 0..self.d_ff {
                 sum = sum + grad_hidden[[i, j]];
             grad_b1[[j]] = sum;

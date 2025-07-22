@@ -18,9 +18,9 @@ pub struct SparseTrainer {
 }
 impl SparseTrainer {
     /// Create a new sparse trainer
-    pub fn new(target_sparsity: f32, schedule: SparsitySchedule) -> Self {
+    pub fn new(_target_sparsity: f32, schedule: SparsitySchedule) -> Self {
         Self {
-            target_sparsity,
+            _target_sparsity,
             schedule,
             pruning_method: PruningMethod::Magnitude,
             structured: false,
@@ -76,7 +76,7 @@ use rand::rng;
         let mut rng = rng();
         // Get all indices
         let mut indices: Vec<(usize, usize)> = weights
-            .map(|((i, j), _)| (i, j))
+            .map(|((i, j)_)| (i, j))
         indices.shuffle(&mut rng);
         // Prune random weights
         for i in 0..params_to_prune.min(indices.len()) {
@@ -181,8 +181,8 @@ pub struct DynamicSparseNetwork {
     connection_history: ConnectionHistory,
 impl DynamicSparseNetwork {
     /// Create a new dynamic sparse network
-    pub fn new(prune_grow_ratio: f32) -> Self {
-            prune_grow_ratio,
+    pub fn new(_prune_grow_ratio: f32) -> Self {
+            _prune_grow_ratio,
             growth_method: GrowthMethod::Gradient,
             connection_history: ConnectionHistory::new(),
     /// Update connections (prune and grow)
@@ -190,7 +190,7 @@ impl DynamicSparseNetwork {
         &mut self,
         gradients: &ArrayView2<f32>,
         let num_connections = weights.iter().filter(|&&w| w != 0.0).count();
-        let num_to_update = (num_connections as f32 * self.prune_grow_ratio) as usize;
+        let num_to_update = (num_connections as f32 * self._prune_grow_ratio) as usize;
         // Prune weakest connections
         self.prune_connections(weights, num_to_update)?;
         // Grow new connections
@@ -222,7 +222,7 @@ impl DynamicSparseNetwork {
     /// Gradient-based growth
     fn gradient_based_growth(
         let mut gradient_magnitudes: Vec<(f32, (usize, usize))> = weights
-            .map(|((i, j), _)| (gradients[[i, j]].abs(), (i, j)))
+            .map(|((i, j)_)| (gradients[[i, j]].abs(), (i, j)))
         gradient_magnitudes.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
         for i in 0..num_to_grow.min(gradient_magnitudes.len()) {
             let (_, (row, col)) = gradient_magnitudes[i];

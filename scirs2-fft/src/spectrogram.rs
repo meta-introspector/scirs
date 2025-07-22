@@ -11,7 +11,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::window::{get_window, Window};
 use ndarray::{Array2, Axis};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::f64::consts::PI;
 
@@ -46,8 +46,8 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::spectrogram_stft;
-/// use scirs2_fft::window::Window;
+/// use scirs2__fft::spectrogram_stft;
+/// use scirs2__fft::window::Window;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -132,7 +132,7 @@ where
                 FFTError::ValueError(format!("Could not convert value to f64: {val:?}"))
             })
         })
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>_>>()?;
 
     // Generate window function
     let win = get_window(window, nperseg, true)?;
@@ -283,8 +283,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::spectrogram;
-/// use scirs2_fft::window::Window;
+/// use scirs2__fft::spectrogram;
+/// use scirs2__fft::window::Window;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -350,8 +350,7 @@ where
     let scaling = scaling.unwrap_or("density");
     let scale_factor = match scaling {
         "density" => 1.0 / (fs * win_sum_sq),
-        "spectrum" => 1.0 / win_sum_sq,
-        _ => {
+        "spectrum" => 1.0 / win_sum_sq_ => {
             return Err(FFTError::ValueError(format!(
                 "Unknown scaling mode: {scaling}. Use 'density' or 'spectrum'."
             )));
@@ -433,7 +432,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::spectrogram_normalized;
+/// use scirs2__fft::spectrogram_normalized;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -509,7 +508,7 @@ where
         }
     }
 
-    // Normalize to [0, 1] range
+    // Normalize to [0, 1] _range
     let mut spec_norm = Array2::zeros(spec_db.dim());
     for (i, row) in spec_db.axis_iter(Axis(0)).enumerate() {
         for (j, &val) in row.iter().enumerate() {
@@ -526,9 +525,9 @@ mod tests {
     use std::f64::consts::PI;
 
     // Generate a test signal (sine wave)
-    fn generate_sine_wave(freq: f64, fs: f64, n_samples: usize) -> Vec<f64> {
+    fn generate_sine_wave(_freq: f64, fs: f64, n_samples: usize) -> Vec<f64> {
         (0..n_samples)
-            .map(|i| (2.0 * PI * freq * (i as f64 / fs)).sin())
+            .map(|i| (2.0 * PI * _freq * (i as f64 / fs)).sin())
             .collect()
     }
 
@@ -572,7 +571,7 @@ mod tests {
 
         // Compute STFT
         let nperseg = 256;
-        let (f, _t, zxx) = stft(
+        let (f_t, zxx) = stft(
             &signal,
             Window::Hann,
             nperseg,

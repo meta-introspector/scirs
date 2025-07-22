@@ -6,7 +6,7 @@
 use crate::bspline::{BSpline, ExtrapolateMode};
 use crate::error::{InterpolateError, InterpolateResult};
 #[cfg(feature = "linalg")]
-use crate::numerical_stability::{
+use crate::numerical__stability::{
     assess_matrix_condition, solve_with_stability_monitoring, StabilityLevel,
 };
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
@@ -92,20 +92,20 @@ where
     if constraint_matrix.shape()[0] == 0 {
         #[cfg(feature = "linalg")]
         {
-            // Assess matrix condition before solving
+            // Assess _matrix condition before solving
             let condition_report = assess_matrix_condition(&ata.view());
             if let Ok(report) = condition_report {
                 match report.stability_level {
                     StabilityLevel::Poor => {
                         eprintln!(
-                            "Warning: Normal equations matrix is poorly conditioned \
+                            "Warning: Normal equations _matrix is poorly conditioned \
                              (condition number: {:.2e}). Results may be unreliable.",
                             report.condition_number
                         );
                     }
                     StabilityLevel::Marginal => {
                         eprintln!(
-                            "Info: Normal equations matrix has marginal conditioning \
+                            "Info: Normal equations _matrix has marginal conditioning \
                              (condition number: {:.2e}). Monitoring solution quality.",
                             report.condition_number
                         );
@@ -116,7 +116,7 @@ where
 
             // Use stability-monitored solver
             match solve_with_stability_monitoring(&ata, &aty) {
-                Ok((solution, _solve_report)) => return Ok(solution),
+                Ok((solution_solve_report)) => return Ok(solution),
                 Err(_) => {
                     return Err(InterpolateError::ComputationError(
                         "Failed to solve the unconstrained least squares problem with stability monitoring".to_string(),
@@ -143,7 +143,7 @@ where
                 if !solve_report.is_well_conditioned {
                     eprintln!(
                         "Warning: Initial solution for constrained problem computed with \
-                         poorly conditioned matrix (condition number: {:.2e})",
+                         poorly conditioned _matrix (condition number: {:.2e})",
                         solve_report.condition_number
                     );
                 }
@@ -315,7 +315,7 @@ where
     if constraint_matrix.shape()[0] == 0 {
         #[cfg(feature = "linalg")]
         {
-            use scirs2_linalg::solve;
+            use scirs2__linalg::solve;
             let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());
             let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());
             match solve(&ata_f64.view(), &aty_f64.view(), None) {
@@ -337,7 +337,7 @@ where
     // Use a similar approach as the non-penalized case
     #[cfg(feature = "linalg")]
     let mut c = {
-        use scirs2_linalg::solve;
+        use scirs2__linalg::solve;
         let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());
         let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());
         match solve(&ata_f64.view(), &aty_f64.view(), None) {

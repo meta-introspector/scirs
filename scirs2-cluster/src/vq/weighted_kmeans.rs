@@ -3,7 +3,7 @@
 //! This module provides K-means clustering with support for weighted samples,
 //! where each data point can have a different importance weight.
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use rand::Rng;
 use std::fmt::Debug;
@@ -59,8 +59,8 @@ impl<F: Float + FromPrimitive> Default for WeightedKMeansOptions<F> {
 /// # Examples
 ///
 /// ```
-/// use ndarray::{Array1, Array2};
-/// use scirs2_cluster::vq::weighted_kmeans;
+/// use ndarray::{ArrayView1, Array1, Array2};
+/// use scirs2__cluster::vq::weighted_kmeans;
 ///
 /// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0,
@@ -160,16 +160,16 @@ where
     let n_features = data.shape()[1];
     let k = init_centroids.shape()[0];
 
-    let mut centroids = init_centroids.to_owned();
+    let mut _centroids = init_centroids.to_owned();
     let mut labels = Array1::zeros(n_samples);
     let mut prev_centroid_diff = F::infinity();
 
     for _iter in 0..opts.max_iter {
         // Assign samples to nearest centroid
-        let (new_labels, distances) = weighted_assign_labels(data, centroids.view())?;
+        let (new_labels, distances) = weighted_assign_labels(data, _centroids.view())?;
         labels = new_labels;
 
-        // Compute new centroids using weights
+        // Compute new _centroids using weights
         let mut new_centroids = Array2::zeros((k, n_features));
         let mut total_weights = Array1::zeros(k);
 
@@ -218,11 +218,11 @@ where
         let mut centroid_diff = F::zero();
         for i in 0..k {
             let dist =
-                euclidean_distance(centroids.slice(s![i, ..]), new_centroids.slice(s![i, ..]));
+                euclidean_distance(_centroids.slice(s![i, ..]), new_centroids.slice(s![i, ..]));
             centroid_diff = centroid_diff + dist;
         }
 
-        centroids = new_centroids;
+        _centroids = new_centroids;
 
         if centroid_diff <= opts.tol || centroid_diff >= prev_centroid_diff {
             break;
@@ -235,11 +235,11 @@ where
     let mut inertia = F::zero();
     for i in 0..n_samples {
         let cluster = labels[i];
-        let dist = euclidean_distance(data.slice(s![i, ..]), centroids.slice(s![cluster, ..]));
+        let dist = euclidean_distance(data.slice(s![i, ..]), _centroids.slice(s![cluster, ..]));
         inertia = inertia + weights[i] * dist * dist;
     }
 
-    Ok((centroids, labels, inertia))
+    Ok((_centroids, labels, inertia))
 }
 
 /// Assign samples to nearest centroids (same as regular assignment)
@@ -299,8 +299,7 @@ where
 pub fn weighted_kmeans_plus_plus<F>(
     data: ArrayView2<F>,
     weights: ArrayView1<F>,
-    k: usize,
-    _random_seed: Option<u64>,
+    k: usize, _random_seed: Option<u64>,
 ) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -414,7 +413,7 @@ where
 mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
-    use ndarray::{Array1, Array2};
+    use ndarray::{ArrayView1, Array1, Array2};
 
     #[test]
     fn test_weighted_kmeans_simple() {

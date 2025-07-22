@@ -4,7 +4,7 @@
 //! following SciPy's stats module.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::ErrorMessages;
+use crate::error__standardization::ErrorMessages;
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast, Signed};
 use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
@@ -23,7 +23,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::mean;
+/// use scirs2__stats::mean;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 /// let result = mean(&data.view()).unwrap();
@@ -70,7 +70,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::weighted_mean;
+/// use scirs2__stats::weighted_mean;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 /// let weights = array![5.0f64, 4.0, 3.0, 2.0, 1.0];
@@ -137,7 +137,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::median;
+/// use scirs2__stats::median;
 ///
 /// let data = array![1.0f64, 3.0, 5.0, 2.0, 4.0];
 /// let result = median(&data.view()).unwrap();
@@ -193,7 +193,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::var;
+/// use scirs2__stats::var;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///
@@ -293,7 +293,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::std;
+/// use scirs2__stats::std;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///
@@ -337,7 +337,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::skew;
+/// use scirs2__stats::skew;
 ///
 /// let data = array![2.0f64, 8.0, 0.0, 4.0, 1.0, 9.0, 9.0, 0.0];
 ///
@@ -455,7 +455,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::kurtosis;
+/// use scirs2__stats::kurtosis;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///
@@ -613,7 +613,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::moment;
+/// use scirs2__stats::moment;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///

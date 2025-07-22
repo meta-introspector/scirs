@@ -58,8 +58,8 @@ impl Language {
     }
 
     /// Get the language from ISO 639-1 code
-    pub fn from_iso_code(code: &str) -> Self {
-        match code.to_lowercase().as_str() {
+    pub fn from_iso_code(_code: &str) -> Self {
+        match _code.to_lowercase().as_str() {
             "en" => Language::English,
             "es" => Language::Spanish,
             "fr" => Language::French,
@@ -71,8 +71,7 @@ impl Language {
             "zh" => Language::Chinese,
             "ja" => Language::Japanese,
             "ko" => Language::Korean,
-            "ar" => Language::Arabic,
-            _ => Language::Unknown,
+            "ar" => Language::Arabic_ =>, Language::Unknown,
         }
     }
 
@@ -127,10 +126,10 @@ impl LanguageDetector {
     }
 
     /// Create a language detector with custom n-gram size
-    pub fn with_ngram_size(n_gram_size: usize) -> Result<Self> {
-        if !(1..=5).contains(&n_gram_size) {
+    pub fn with_ngram_size(_n_gram_size: usize) -> Result<Self> {
+        if !(1..=5).contains(&_n_gram_size) {
             return Err(TextError::InvalidInput(
-                "N-gram size must be between 1 and 5".to_string(),
+                "N-gram _size must be between 1 and 5".to_string(),
             ));
         }
         let mut detector = Self {

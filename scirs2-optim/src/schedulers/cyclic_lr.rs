@@ -27,7 +27,7 @@ pub enum CyclicMode {
 /// # Example
 ///
 /// ```
-/// use scirs2_optim::schedulers::{CyclicLR, CyclicMode, LearningRateScheduler};
+/// use scirs2__optim::schedulers::{CyclicLR, CyclicMode, LearningRateScheduler};
 ///
 /// let mut scheduler = CyclicLR::new(0.001, 0.01, 2000, CyclicMode::Triangular);
 ///
@@ -48,7 +48,7 @@ pub struct CyclicLR<A: Float> {
     scale_fn: Box<dyn Fn(usize, usize, A, A) -> A + Send + Sync>,
 }
 
-impl<A: Float + std::fmt::Debug> fmt::Debug for CyclicLR<A> {
+impl<A: Float + std::fmt::Debug>, fmt::Debug for CyclicLR<A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("CyclicLR")
             .field("base_lr", &self.base_lr)
@@ -71,21 +71,20 @@ impl<A: Float + ScalarOperand + std::fmt::Debug> CyclicLR<A> {
     /// * `max_lr` - Maximum learning rate
     /// * `step_size` - Number of training iterations per half cycle
     /// * `mode` - Cycling mode (Triangular, Triangular2, or ExpRange)
-    pub fn new(base_lr: A, max_lr: A, step_size: usize, mode: CyclicMode) -> Self {
+    pub fn new(_base_lr: A, max_lr: A, step_size: usize, mode: CyclicMode) -> Self {
         let gamma = match mode {
-            CyclicMode::ExpRange(g) => A::from(g).unwrap(),
-            _ => A::one(),
+            CyclicMode::ExpRange(g) => A::from(g).unwrap(, _ =>, A::one(),
         };
 
         let scale_fn: Box<dyn Fn(usize, usize, A, A) -> A + Send + Sync> = match mode {
-            CyclicMode::Triangular => Box::new(|_, _, _, _| A::one()),
-            CyclicMode::Triangular2 => Box::new(|current, cycle_half, _, _| {
+            CyclicMode::Triangular =>, Box::new(|____| A::one()),
+            CyclicMode::Triangular2 =>, Box::new(|current, cycle_half__| {
                 A::one()
                     / (A::from(2)
                         .unwrap()
                         .powi(current as i32 / (2 * cycle_half) as i32))
             }),
-            CyclicMode::ExpRange(_) => Box::new(|current, cycle_half, gamma, _| {
+            CyclicMode::ExpRange(_) =>, Box::new(|current, cycle_half, gamma_| {
                 gamma.powi((current % (2 * cycle_half)) as i32)
             }),
         };
@@ -102,18 +101,18 @@ impl<A: Float + ScalarOperand + std::fmt::Debug> CyclicLR<A> {
     }
 
     /// Create a new triangular cyclic scheduler
-    pub fn triangular(base_lr: A, max_lr: A, step_size: usize) -> Self {
-        Self::new(base_lr, max_lr, step_size, CyclicMode::Triangular)
+    pub fn triangular(_base_lr: A, max_lr: A, step_size: usize) -> Self {
+        Self::new(_base_lr, max_lr, step_size, CyclicMode::Triangular)
     }
 
     /// Create a new triangular2 cyclic scheduler
-    pub fn triangular2(base_lr: A, max_lr: A, step_size: usize) -> Self {
-        Self::new(base_lr, max_lr, step_size, CyclicMode::Triangular2)
+    pub fn triangular2(_base_lr: A, max_lr: A, step_size: usize) -> Self {
+        Self::new(_base_lr, max_lr, step_size, CyclicMode::Triangular2)
     }
 
     /// Create a new exponential range cyclic scheduler
-    pub fn exp_range(base_lr: A, max_lr: A, step_size: usize, gamma: f64) -> Self {
-        Self::new(base_lr, max_lr, step_size, CyclicMode::ExpRange(gamma))
+    pub fn exp_range(_base_lr: A, max_lr: A, step_size: usize, gamma: f64) -> Self {
+        Self::new(_base_lr, max_lr, step_size, CyclicMode::ExpRange(gamma))
     }
 
     /// Set custom scale function

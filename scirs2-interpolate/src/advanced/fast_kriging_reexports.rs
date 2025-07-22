@@ -29,7 +29,7 @@
 //
 // The modular refactoring is in progress in the fast_kriging/ subdirectory.
 
-use crate::advanced::enhanced_kriging::{AnisotropicCovariance, TrendFunction};
+use crate::advanced::enhanced__kriging::{AnisotropicCovariance, TrendFunction};
 use crate::advanced::kriging::CovarianceFunction;
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
@@ -79,10 +79,10 @@ pub enum FastKrigingMethod {
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::fast_kriging::{
+/// use scirs2__interpolate::advanced::fast_kriging::{
 ///     FastKriging, FastKrigingMethod, FastKrigingBuilder
 /// };
-/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+/// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample data
 /// let n_points = 100; // Reduced for testing
@@ -191,10 +191,10 @@ where
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::fast_kriging::{
+/// use scirs2__interpolate::advanced::fast_kriging::{
 ///     FastKrigingBuilder, FastKrigingMethod
 /// };
-/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+/// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample data
 /// let points = Array2::<f64>::zeros((100, 2));
@@ -330,8 +330,7 @@ where
             trend_fn: TrendFunction::Constant,
             approx_method: FastKrigingMethod::Local,
             max_neighbors: DEFAULT_MAX_NEIGHBORS,
-            radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).unwrap(),
-            _phantom: PhantomData,
+            radius_multiplier: F::from_f64(DEFAULT_RADIUS_MULTIPLIER).unwrap(), _phantom: PhantomData,
         }
     }
 
@@ -434,8 +433,7 @@ where
 
     /// Predict values at new points using fast approximation
     pub fn predict(
-        &self,
-        _query_points: &ArrayView2<F>,
+        &self, _query_points: &ArrayView2<F>,
     ) -> InterpolateResult<FastPredictionResult<F>> {
         // Implementation placeholder - will be completed in future update
         Err(InterpolateError::NotImplemented(
@@ -468,8 +466,8 @@ where
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::fast_kriging::make_local_kriging;
-/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+/// use scirs2__interpolate::advanced::fast_kriging::make_local_kriging;
+/// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample data
 /// let points = Array2::<f64>::zeros((100, 2));
@@ -506,11 +504,7 @@ pub fn make_local_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>,
-    _values: &ArrayView1<F>,
-    _cov_fn: CovarianceFunction,
-    _length_scale: F,
-    _max_neighbors: usize,
+    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_max_neighbors: usize,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(
@@ -541,8 +535,8 @@ pub fn make_local_kriging<
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::fast_kriging::make_fixed_rank_kriging;
-/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+/// use scirs2__interpolate::advanced::fast_kriging::make_fixed_rank_kriging;
+/// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample data
 /// let points = Array2::<f64>::zeros((100, 2));
@@ -579,11 +573,7 @@ pub fn make_fixed_rank_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>,
-    _values: &ArrayView1<F>,
-    _cov_fn: CovarianceFunction,
-    _length_scale: F,
-    _rank: usize,
+    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_rank: usize,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(
@@ -614,8 +604,8 @@ pub fn make_fixed_rank_kriging<
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::fast_kriging::make_tapered_kriging;
-/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+/// use scirs2__interpolate::advanced::fast_kriging::make_tapered_kriging;
+/// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample data
 /// let points = Array2::<f64>::zeros((100, 2));
@@ -652,11 +642,7 @@ pub fn make_tapered_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>,
-    _values: &ArrayView1<F>,
-    _cov_fn: CovarianceFunction,
-    _length_scale: F,
-    _taper_range: F,
+    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_taper_range: F,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(
@@ -687,8 +673,8 @@ pub fn make_tapered_kriging<
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::fast_kriging::make_hodlr_kriging;
-/// use scirs2_interpolate::advanced::kriging::CovarianceFunction;
+/// use scirs2__interpolate::advanced::fast_kriging::make_hodlr_kriging;
+/// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample data
 /// let points = Array2::<f64>::zeros((100, 2));
@@ -725,11 +711,7 @@ pub fn make_hodlr_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>,
-    _values: &ArrayView1<F>,
-    _cov_fn: CovarianceFunction,
-    _length_scale: F,
-    _leaf_size: usize,
+    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_leaf_size: usize,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(
@@ -749,14 +731,14 @@ pub fn make_hodlr_kriging<
 /// # Example
 ///
 /// ```
-/// use scirs2_interpolate::advanced::fast_kriging::select_approximation_method;
+/// use scirs2__interpolate::advanced::fast_kriging::select_approximation_method;
 ///
 /// // Get recommended method for a dataset with 10,000 points
 /// let method = select_approximation_method(10_000);
 /// ```
 #[allow(dead_code)]
-pub fn select_approximation_method(n_points: usize) -> FastKrigingMethod {
-    if n_points < 500 {
+pub fn select_approximation_method(_n_points: usize) -> FastKrigingMethod {
+    if _n_points < 500 {
         // For small datasets, local kriging is accurate and fast enough
         FastKrigingMethod::Local
     } else if n_points < 5_000 {

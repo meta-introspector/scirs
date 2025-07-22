@@ -9,6 +9,7 @@ use num_traits::Float;
 use std::collections::HashMap;
 
 use crate::error::{MetricsError, Result};
+use statrs::statistics::Statistics;
 
 /// Advanced statistical analysis results
 #[derive(Debug, Clone)]
@@ -81,8 +82,7 @@ pub struct AdvancedStatisticalAnalyzer<F: Float> {
     alpha: F,
     beta: F,
     confidence_level: F,
-    use_bayesian: bool,
-    _phantom: std::marker::PhantomData<F>,
+    use_bayesian: bool, _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> Default
@@ -100,8 +100,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
             alpha: F::from(0.05).unwrap(),
             beta: F::from(0.20).unwrap(),
             confidence_level: F::from(0.95).unwrap(),
-            use_bayesian: true,
-            _phantom: std::marker::PhantomData,
+            use_bayesian: true, _phantom: std::marker::PhantomData,
         }
     }
 
@@ -277,7 +276,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
         let differences: Vec<F> = group_a
             .iter()
             .zip(group_b.iter())
-            .map(|(&a, &b)| a - b)
+            .map(|(&_a, &_b)| _a - _b)
             .collect();
         let diff_array = Array1::from(differences);
 
@@ -326,7 +325,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
         }
 
         // Sort by value
-        combined.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        combined.sort_by(|_a, _b| _a.0.partial_cmp(&_b.0).unwrap_or(std::cmp::Ordering::Equal));
 
         // Calculate ranks (handling ties by averaging)
         let mut ranks = vec![F::zero(); combined.len()];
@@ -350,7 +349,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
         let rank_sum_a: F = combined
             .iter()
             .zip(ranks.iter())
-            .filter(|((_, group), _)| *group == 0)
+            .filter(|((_, group)_)| *group == 0)
             .map(|(_, &rank)| rank)
             .sum();
 

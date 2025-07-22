@@ -5,8 +5,8 @@
 
 use approx::assert_relative_eq;
 use ndarray::{array, Array2, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::{
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::{
     solve_ivp, solve_ivp_with_events, EventAction, EventDirection, EventSpec, MassMatrix,
     ODEMethod, ODEOptions, ODEOptionsWithEvents,
 };

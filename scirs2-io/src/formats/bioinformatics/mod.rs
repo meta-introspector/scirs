@@ -13,7 +13,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2_io::formats::bioinformatics::{FastaReader, FastqReader};
+//! use scirs2__io::formats::bioinformatics::{FastaReader, FastqReader};
 //!
 //! // Read FASTA file
 //! let mut reader = FastaReader::open("sequences.fasta")?;
@@ -56,18 +56,18 @@ pub struct FastaRecord {
 
 impl FastaRecord {
     /// Create a new FASTA record
-    pub fn new(id: String, sequence: String) -> Self {
+    pub fn new(_id: String, sequence: String) -> Self {
         Self {
-            id,
+            _id,
             description: None,
             sequence,
         }
     }
 
     /// Create a new FASTA record with description
-    pub fn with_description(id: String, description: String, sequence: String) -> Self {
+    pub fn with_description(_id: String, description: String, sequence: String) -> Self {
         Self {
-            id,
+            _id,
             description: Some(description),
             sequence,
         }
@@ -116,9 +116,9 @@ pub struct FastaReader {
 
 impl FastaReader {
     /// Open a FASTA file for reading
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path.as_ref())
-            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::open(_path.as_ref())
+            .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
         Ok(Self {
             reader: BufReader::new(file),
             line_buffer: String::new(),
@@ -224,8 +224,8 @@ pub struct FastaWriter {
 
 impl FastaWriter {
     /// Create a new FASTA file for writing
-    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::create(path.as_ref())
+    pub fn create<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         Ok(Self {
             writer: BufWriter::new(file),
@@ -292,7 +292,7 @@ pub struct FastqRecord {
 
 impl FastqRecord {
     /// Create a new FASTQ record
-    pub fn new(id: String, sequence: String, quality: String) -> Result<Self> {
+    pub fn new(_id: String, sequence: String, quality: String) -> Result<Self> {
         if sequence.len() != quality.len() {
             return Err(IoError::ParseError(format!(
                 "Sequence and quality lengths don't match: {} vs {}",
@@ -302,7 +302,7 @@ impl FastqRecord {
         }
 
         Ok(Self {
-            id,
+            _id,
             description: None,
             sequence,
             quality,
@@ -394,9 +394,9 @@ pub struct FastqReader {
 
 impl FastqReader {
     /// Open a FASTQ file for reading
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path.as_ref())
-            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::open(_path.as_ref())
+            .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
         Ok(Self {
             reader: BufReader::new(file),
             encoding: QualityEncoding::default(),
@@ -405,9 +405,9 @@ impl FastqReader {
     }
 
     /// Open a FASTQ file with specific quality encoding
-    pub fn open_with_encoding<P: AsRef<Path>>(path: P, encoding: QualityEncoding) -> Result<Self> {
-        let file = File::open(path.as_ref())
-            .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+    pub fn open_with_encoding<P: AsRef<Path>>(_path: P, encoding: QualityEncoding) -> Result<Self> {
+        let file = File::open(_path.as_ref())
+            .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
         Ok(Self {
             reader: BufReader::new(file),
             encoding,
@@ -513,8 +513,8 @@ pub struct FastqWriter {
 
 impl FastqWriter {
     /// Create a new FASTQ file for writing
-    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::create(path.as_ref())
+    pub fn create<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         Ok(Self {
             writer: BufWriter::new(file),
@@ -595,9 +595,9 @@ impl FastqWriter {
 
 /// Count sequences in a FASTA file
 #[allow(dead_code)]
-pub fn count_fasta_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
-    let file = File::open(path.as_ref())
-        .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+pub fn count_fasta_sequences<P: AsRef<Path>>(_path: P) -> Result<usize> {
+    let file = File::open(_path.as_ref())
+        .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
     let reader = BufReader::new(file);
 
     let count = reader
@@ -611,9 +611,9 @@ pub fn count_fasta_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
 
 /// Count sequences in a FASTQ file
 #[allow(dead_code)]
-pub fn count_fastq_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
-    let file = File::open(path.as_ref())
-        .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
+pub fn count_fastq_sequences<P: AsRef<Path>>(_path: P) -> Result<usize> {
+    let file = File::open(_path.as_ref())
+        .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
     let reader = BufReader::new(file);
 
     let line_count = reader.lines().count();
@@ -632,24 +632,24 @@ pub mod analysis {
     use std::collections::HashMap;
 
     /// Calculate GC content of a DNA sequence
-    pub fn gc_content(sequence: &str) -> f64 {
-        if sequence.is_empty() {
+    pub fn gc_content(_sequence: &str) -> f64 {
+        if _sequence.is_empty() {
             return 0.0;
         }
 
-        let gc_count = sequence
+        let gc_count = _sequence
             .chars()
             .filter(|&c| c == 'G' || c == 'C' || c == 'g' || c == 'c')
             .count();
 
-        gc_count as f64 / sequence.len() as f64
+        gc_count as f64 / _sequence.len() as f64
     }
 
     /// Calculate nucleotide composition
-    pub fn nucleotide_composition(sequence: &str) -> HashMap<char, usize> {
+    pub fn nucleotide_composition(_sequence: &str) -> HashMap<char, usize> {
         let mut composition = HashMap::new();
 
-        for nucleotide in sequence.chars() {
+        for nucleotide in _sequence.chars() {
             *composition
                 .entry(nucleotide.to_ascii_uppercase())
                 .or_insert(0) += 1;
@@ -659,8 +659,8 @@ pub mod analysis {
     }
 
     /// Reverse complement of a DNA sequence
-    pub fn reverse_complement(sequence: &str) -> String {
-        sequence
+    pub fn reverse_complement(_sequence: &str) -> String {
+        _sequence
             .chars()
             .rev()
             .map(|c| match c.to_ascii_uppercase() {
@@ -676,10 +676,10 @@ pub mod analysis {
     }
 
     /// Translate DNA sequence to protein (single frame)
-    pub fn translate_dna(sequence: &str) -> String {
+    pub fn translate_dna(_sequence: &str) -> String {
         let codon_table = get_standard_genetic_code();
 
-        sequence
+        _sequence
             .chars()
             .collect::<Vec<_>>()
             .chunks(3)
@@ -774,9 +774,9 @@ pub mod analysis {
     }
 
     /// Find open reading frames (ORFs) in a DNA sequence
-    pub fn find_orfs(sequence: &str, min_length: usize) -> Vec<Orf> {
+    pub fn find_orfs(_sequence: &str, min_length: usize) -> Vec<Orf> {
         let mut orfs = Vec::new();
-        let seq_upper = sequence.to_uppercase();
+        let seq_upper = _sequence.to_uppercase();
 
         // Check all three reading frames
         for frame in 0..3 {
@@ -798,14 +798,13 @@ pub mod analysis {
                 // Stop codon
                 if matches!(codon_str.as_str(), "TAA" | "TAG" | "TGA") {
                     if let Some(start) = start_pos {
-                        let length = frame + pos * 3 + 3 - start;
-                        if length >= min_length {
-                            let orf_seq = &sequence[start..start + length];
+                        let _length = frame + pos * 3 + 3 - start;
+                        if _length >= min_length {
+                            let orf_seq = &_sequence[start..start + _length];
                             orfs.push(Orf {
                                 start_pos: start,
-                                end_pos: start + length,
-                                frame: frame as i8,
-                                sequence: orf_seq.to_string(),
+                                end_pos: start + _length,
+                                frame: frame as i8_sequence: orf_seq.to_string(),
                                 protein: translate_dna(orf_seq),
                             });
                         }
@@ -835,16 +834,16 @@ pub mod analysis {
     }
 
     /// Calculate basic sequence statistics
-    pub fn sequence_stats(records: &[FastaRecord]) -> SequenceStats {
-        if records.is_empty() {
+    pub fn sequence_stats(_records: &[FastaRecord]) -> SequenceStats {
+        if _records.is_empty() {
             return SequenceStats::default();
         }
 
-        let lengths: Vec<usize> = records.iter().map(|r| r.len()).collect();
+        let lengths: Vec<usize> = _records.iter().map(|r| r.len()).collect();
         let total_length: usize = lengths.iter().sum();
         let min_length = *lengths.iter().min().unwrap();
         let max_length = *lengths.iter().max().unwrap();
-        let mean_length = total_length as f64 / records.len() as f64;
+        let mean_length = total_length as f64 / _records.len() as f64;
 
         // Calculate N50
         let mut sorted_lengths = lengths.clone();
@@ -862,7 +861,7 @@ pub mod analysis {
         }
 
         // Calculate overall GC content
-        let total_gc: usize = records
+        let total_gc: usize = _records
             .iter()
             .map(|r| {
                 r.sequence()
@@ -874,7 +873,7 @@ pub mod analysis {
         let gc_content = total_gc as f64 / total_length as f64;
 
         SequenceStats {
-            num_sequences: records.len(),
+            num_sequences: _records.len(),
             total_length,
             min_length,
             max_length,
@@ -911,15 +910,15 @@ pub mod analysis {
     }
 
     /// Quality analysis for FASTQ data
-    pub fn quality_stats(records: &[FastqRecord], encoding: QualityEncoding) -> QualityStats {
-        if records.is_empty() {
+    pub fn quality_stats(_records: &[FastqRecord], encoding: QualityEncoding) -> QualityStats {
+        if _records.is_empty() {
             return QualityStats::default();
         }
 
         let mut all_scores = Vec::new();
         let mut position_scores: HashMap<usize, Vec<u8>> = HashMap::new();
 
-        for record in records {
+        for record in _records {
             let scores = record.quality_scores(encoding);
             all_scores.extend_from_slice(&scores);
 

@@ -4,13 +4,14 @@
 //! reports for memory and performance stress testing validation.
 
 use clap::{Arg, Command};
-use scirs2_optim::error::{OptimError, Result};
+use scirs2__optim::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::path::PathBuf;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct StressTestAnalysisReport {
@@ -500,8 +501,7 @@ fn main() -> Result<()> {
     let output_content = match format.as_str() {
         "json" => generate_json_report(&analysis_report)?,
         "markdown" => generate_markdown_report(&analysis_report)?,
-        "github-actions" => generate_github_actions_report(&analysis_report)?,
-        _ => {
+        "github-actions" => generate_github_actions_report(&analysis_report)?_ => {
             return Err(OptimError::InvalidConfig(format!(
                 "Unknown format: {}",
                 format
@@ -570,15 +570,15 @@ struct ResourceEvent {
 }
 
 #[allow(dead_code)]
-fn load_stress_test_results(path: &Path, verbose: bool) -> Result<StressTestData> {
+fn load_stress_test_results(_path: &Path, verbose: bool) -> Result<StressTestData> {
     if verbose {
-        println!("  Loading stress test data from: {}", path.display());
+        println!("  Loading stress test data from: {}", _path.display());
     }
 
-    let content = fs::read_to_string(path)?;
+    let content = fs::read_to_string(_path)?;
 
     // Try to parse as JSON first
-    if let Ok(data) = serde_json::from_str::<StressTestData>(&content) {
+    if let Ok(data) = serde_json::from, _str::<StressTestData>(&content) {
         return Ok(data);
     }
 
@@ -752,8 +752,8 @@ fn analyze_stress_test_results(
 }
 
 #[allow(dead_code)]
-fn analyze_performance_stress(data: &StressTestData) -> PerformanceStressAnalysis {
-    let timeline = &data.performance_timeline;
+fn analyze_performance_stress(_data: &StressTestData) -> PerformanceStressAnalysis {
+    let timeline = &_data.performance_timeline;
 
     let initial_throughput = timeline.first().map(|(_, perf)| *perf).unwrap_or(0.0);
     let final_throughput = timeline.last().map(|(_, perf)| *perf).unwrap_or(0.0);
@@ -797,9 +797,9 @@ fn analyze_performance_stress(data: &StressTestData) -> PerformanceStressAnalysi
         }],
     };
 
-    let degradation_rate = if data.duration_seconds > 0.0 {
+    let degradation_rate = if _data.duration_seconds > 0.0 {
         ((initial_throughput - final_throughput) / initial_throughput) * 100.0
-            / (data.duration_seconds / 3600.0)
+            / (_data.duration_seconds / 3600.0)
     } else {
         0.0
     };
@@ -816,8 +816,8 @@ fn analyze_performance_stress(data: &StressTestData) -> PerformanceStressAnalysi
         recovery_patterns: vec![],
     };
 
-    let cpu_timeline = &data.cpu_timeline;
-    let memory_timeline = &data.memory_timeline;
+    let cpu_timeline = &_data.cpu_timeline;
+    let memory_timeline = &_data.memory_timeline;
 
     let cpu_util = create_utilization_timeline(cpu_timeline);
     let memory_util = create_utilization_timeline(memory_timeline);
@@ -845,11 +845,11 @@ fn analyze_performance_stress(data: &StressTestData) -> PerformanceStressAnalysi
 }
 
 #[allow(dead_code)]
-fn create_utilization_timeline(timeline: &[(u64, f64)]) -> UtilizationTimeline {
-    let initial = timeline.first().map(|(_, val)| *val).unwrap_or(0.0);
-    let peak = timeline.iter().map(|(_, val)| *val).fold(0.0, f64::max);
-    let average = if !timeline.is_empty() {
-        timeline.iter().map(|(_, val)| *val).sum::<f64>() / timeline.len() as f64
+fn create_utilization_timeline(_timeline: &[(u64, f64)]) -> UtilizationTimeline {
+    let initial = _timeline.first().map(|(_, val)| *val).unwrap_or(0.0);
+    let peak = _timeline.iter().map(|(_, val)| *val).fold(0.0, f64::max);
+    let average = if !_timeline.is_empty() {
+        _timeline.iter().map(|(_, val)| *val).sum::<f64>() / _timeline.len() as f64
     } else {
         0.0
     };
@@ -860,14 +860,14 @@ fn create_utilization_timeline(timeline: &[(u64, f64)]) -> UtilizationTimeline {
         initial_utilization: initial,
         peak_utilization: peak,
         average_utilization: average,
-        utilization_timeline: timeline.to_vec(),
+        utilization_timeline: _timeline.to_vec(),
         efficiency_score: efficiency,
     }
 }
 
 #[allow(dead_code)]
-fn analyze_memory_stress(data: &StressTestData) -> MemoryStressAnalysis {
-    let memory_timeline = &data.memory_timeline;
+fn analyze_memory_stress(_data: &StressTestData) -> MemoryStressAnalysis {
+    let memory_timeline = &_data.memory_timeline;
 
     let initial_memory = memory_timeline.first().map(|(_, mem)| *mem).unwrap_or(0.0);
     let peak_memory = memory_timeline
@@ -876,8 +876,8 @@ fn analyze_memory_stress(data: &StressTestData) -> MemoryStressAnalysis {
         .fold(0.0, f64::max);
     let final_memory = memory_timeline.last().map(|(_, mem)| *mem).unwrap_or(0.0);
 
-    let growth_rate = if data.duration_seconds > 0.0 {
-        (final_memory - initial_memory) / (data.duration_seconds / 3600.0)
+    let growth_rate = if _data.duration_seconds > 0.0 {
+        (final_memory - initial_memory) / (_data.duration_seconds / 3600.0)
     } else {
         0.0
     };
@@ -912,7 +912,7 @@ fn analyze_memory_stress(data: &StressTestData) -> MemoryStressAnalysis {
 
     let allocation_patterns = AllocationStressPatterns {
         total_allocations: 50000,
-        allocation_rate_per_second: 50000.0 / data.duration_seconds,
+        allocation_rate_per_second: 50000.0 / _data.duration_seconds,
         allocation_size_distribution: [
             ("small (< 1KB)".to_string(), 35000),
             ("medium (1KB-10KB)".to_string(), 12000),
@@ -950,8 +950,8 @@ fn analyze_memory_stress(data: &StressTestData) -> MemoryStressAnalysis {
 }
 
 #[allow(dead_code)]
-fn analyze_stability(data: &StressTestData) -> StabilityAnalysis {
-    let crash_incidents: Vec<CrashIncident> = data
+fn analyze_stability(_data: &StressTestData) -> StabilityAnalysis {
+    let crash_incidents: Vec<CrashIncident> = _data
         .crash_events
         .iter()
         .map(|crash| CrashIncident {
@@ -966,7 +966,7 @@ fn analyze_stability(data: &StressTestData) -> StabilityAnalysis {
         })
         .collect();
 
-    let error_timeline: Vec<(u64, f64)> = data
+    let error_timeline: Vec<(u64, f64)> = _data
         .error_events
         .iter()
         .fold(HashMap::new(), |mut acc, error| {
@@ -985,7 +985,7 @@ fn analyze_stability(data: &StressTestData) -> StabilityAnalysis {
     let final_error_rate = error_timeline.last().map(|(_, rate)| *rate).unwrap_or(0.0);
 
     let error_types: HashMap<String, usize> =
-        data.error_events
+        _data.error_events
             .iter()
             .fold(HashMap::new(), |mut acc, error| {
                 *acc.entry(error.error_type.clone()).or_insert(0) += 1;
@@ -1001,7 +1001,7 @@ fn analyze_stability(data: &StressTestData) -> StabilityAnalysis {
         error_clustering: vec![],
     };
 
-    let performance_timeline = &data.performance_timeline;
+    let performance_timeline = &_data.performance_timeline;
     let coefficient_of_variation =
         if !performance_timeline.is_empty() && performance_timeline.len() > 1 {
             let mean = performance_timeline
@@ -1033,7 +1033,7 @@ fn analyze_stability(data: &StressTestData) -> StabilityAnalysis {
         consistency_trends: vec![],
     };
 
-    let resource_exhaustion_incidents: Vec<ResourceExhaustionIncident> = data
+    let resource_exhaustion_incidents: Vec<ResourceExhaustionIncident> = _data
         .resource_events
         .iter()
         .filter(|event| event.utilization_percent > 90.0)
@@ -1069,7 +1069,7 @@ fn analyze_stability(data: &StressTestData) -> StabilityAnalysis {
 }
 
 #[allow(dead_code)]
-fn analyze_concurrency(data: &StressTestData) -> ConcurrencyAnalysis {
+fn analyze_concurrency(_data: &StressTestData) -> ConcurrencyAnalysis {
     let contention_analysis = ContentionAnalysis {
         contention_incidents: vec![ContentionIncident {
             timestamp: 120,
@@ -1085,7 +1085,7 @@ fn analyze_concurrency(data: &StressTestData) -> ConcurrencyAnalysis {
             average_wait_time_microseconds: 800.0,
             total_contention_time_seconds: 12.0,
             optimization_suggestions: vec![
-                "Consider lock-free data structures".to_string(),
+                "Consider lock-free _data structures".to_string(),
                 "Reduce critical section size".to_string(),
             ],
         }],
@@ -1136,7 +1136,7 @@ fn analyze_concurrency(data: &StressTestData) -> ConcurrencyAnalysis {
     };
 
     ConcurrencyAnalysis {
-        concurrent_optimizers_tested: data.concurrent_optimizers,
+        concurrent_optimizers_tested: _data.concurrent_optimizers,
         contention_analysis,
         scalability_analysis,
         deadlock_analysis,
@@ -1249,35 +1249,35 @@ fn generate_stress_test_recommendations(
 }
 
 #[allow(dead_code)]
-fn calculate_stability_score(stability: &StabilityAnalysis) -> f64 {
-    stability.performance_consistency.stability_score
+fn calculate_stability_score(_stability: &StabilityAnalysis) -> f64 {
+    _stability.performance_consistency.stability_score
 }
 
 #[allow(dead_code)]
-fn calculate_performance_degradation(performance: &PerformanceStressAnalysis) -> f64 {
-    performance
+fn calculate_performance_degradation(_performance: &PerformanceStressAnalysis) -> f64 {
+    _performance
         .performance_degradation_analysis
         .degradation_rate_percent_per_hour
 }
 
 #[allow(dead_code)]
-fn generate_json_report(report: &StressTestAnalysisReport) -> Result<String> {
-    serde_json::to_string_pretty(report).map_err(|e| OptimError::OptimizationError(e.to_string()))
+fn generate_json_report(_report: &StressTestAnalysisReport) -> Result<String> {
+    serde_json::to_string_pretty(_report).map_err(|e| OptimError::OptimizationError(e.to_string()))
 }
 
 #[allow(dead_code)]
-fn generate_markdown_report(report: &StressTestAnalysisReport) -> Result<String> {
+fn generate_markdown_report(_report: &StressTestAnalysisReport) -> Result<String> {
     let mut md = String::new();
 
     md.push_str("# Stress Test Analysis Report\n\n");
-    md.push_str(&format!("**Generated**: <t:{}:F>\n", report.timestamp));
+    md.push_str(&format!("**Generated**: <t:{}:F>\n", _report.timestamp));
     md.push_str(&format!(
         "**Test Duration**: {:.2} seconds\n",
-        report.summary.total_duration_seconds
+        _report.summary.total_duration_seconds
     ));
     md.push_str(&format!(
         "**Concurrent Optimizers**: {}\n\n",
-        report
+        _report
             .environment_info
             .get("concurrent_optimizers")
             .unwrap_or(&"unknown".to_string())
@@ -1287,37 +1287,37 @@ fn generate_markdown_report(report: &StressTestAnalysisReport) -> Result<String>
     md.push_str("## Summary\n\n");
     md.push_str(&format!(
         "- **Overall Status**: {}\n",
-        report.summary.overall_status
+        _report.summary.overall_status
     ));
     md.push_str(&format!(
         "- **Tests Completed**: {}\n",
-        report.summary.tests_completed
+        _report.summary.tests_completed
     ));
     md.push_str(&format!(
         "- **Tests Failed**: {}\n",
-        report.summary.tests_failed
+        _report.summary.tests_failed
     ));
     md.push_str(&format!(
         "- **Peak Memory Usage**: {} MB\n",
-        report.summary.peak_memory_usage / (1024 * 1024)
+        _report.summary.peak_memory_usage / (1024 * 1024)
     ));
     md.push_str(&format!(
         "- **Average CPU Utilization**: {:.2}%\n",
-        report.summary.average_cpu_utilization
+        _report.summary.average_cpu_utilization
     ));
     md.push_str(&format!(
         "- **Stability Score**: {:.2}\n",
-        report.summary.stability_score
+        _report.summary.stability_score
     ));
     md.push_str(&format!(
         "- **Performance Degradation**: {:.2}%/hour\n\n",
-        report.summary.performance_degradation
+        _report.summary.performance_degradation
     ));
 
     // Key findings
-    if !report.recommendations.is_empty() {
+    if !_report.recommendations.is_empty() {
         md.push_str("## Key Recommendations\n\n");
-        for (i, rec) in report.recommendations.iter().take(5).enumerate() {
+        for (i, rec) in _report.recommendations.iter().take(5).enumerate() {
             md.push_str(&format!(
                 "{}. **{}** (Priority: {})\n",
                 i + 1,
@@ -1330,7 +1330,7 @@ fn generate_markdown_report(report: &StressTestAnalysisReport) -> Result<String>
 
     // Performance analysis summary
     md.push_str("## Performance Analysis\n\n");
-    let perf = &report.performance_analysis;
+    let perf = &_report.performance_analysis;
     md.push_str(&format!(
         "- **Initial Throughput**: {:.2}\n",
         perf.throughput_metrics.initial_throughput
@@ -1350,7 +1350,7 @@ fn generate_markdown_report(report: &StressTestAnalysisReport) -> Result<String>
 
     // Memory analysis summary
     md.push_str("## Memory Analysis\n\n");
-    let mem = &report.memory_analysis;
+    let mem = &_report.memory_analysis;
     md.push_str(&format!(
         "- **Memory Growth Rate**: {:.2} MB/hour\n",
         mem.memory_growth_analysis.growth_rate_mb_per_hour
@@ -1372,12 +1372,12 @@ fn generate_markdown_report(report: &StressTestAnalysisReport) -> Result<String>
 }
 
 #[allow(dead_code)]
-fn generate_github_actions_report(report: &StressTestAnalysisReport) -> Result<String> {
-    let json_report = generate_json_report(report)?;
+fn generate_github_actions_report(_report: &StressTestAnalysisReport) -> Result<String> {
+    let json_report = generate_json_report(_report)?;
     let mut output = String::new();
 
     // Add GitHub Actions workflow commands
-    match report.summary.overall_status.as_str() {
+    match _report.summary.overall_status.as_str() {
         "failed" => {
             output.push_str("::error::Stress test failed! System stability issues detected.\n");
         }
@@ -1393,21 +1393,21 @@ fn generate_github_actions_report(report: &StressTestAnalysisReport) -> Result<S
     }
 
     // Add specific warnings for critical issues
-    if report.summary.stability_score < 0.8 {
+    if _report.summary.stability_score < 0.8 {
         output.push_str(&format!(
             "::warning::Low stability score: {:.2}\n",
-            report.summary.stability_score
+            _report.summary.stability_score
         ));
     }
 
-    if report.summary.performance_degradation > 10.0 {
+    if _report.summary.performance_degradation > 10.0 {
         output.push_str(&format!(
             "::warning::High performance degradation: {:.2}%/hour\n",
-            report.summary.performance_degradation
+            _report.summary.performance_degradation
         ));
     }
 
-    if !report
+    if !_report
         .memory_analysis
         .memory_growth_analysis
         .leak_indicators
@@ -1416,7 +1416,7 @@ fn generate_github_actions_report(report: &StressTestAnalysisReport) -> Result<S
         output.push_str("::warning::Memory leak indicators detected\n");
     }
 
-    // Add the JSON report
+    // Add the JSON _report
     output.push('\n');
     output.push_str(&json_report);
 

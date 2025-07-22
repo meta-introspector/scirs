@@ -127,7 +127,7 @@ pub use recovery::{
 #[cfg(feature = "async")]
 pub mod async_handling;
 #[cfg(feature = "async")]
-pub use async_handling::{
+pub use async__handling::{
     execute_with_error_aggregation, retry_with_exponential_backoff, with_timeout,
     AsyncCircuitBreaker, AsyncErrorAggregator, AsyncProgressTracker, AsyncRetryExecutor,
     TimeoutWrapper, TrackedAsyncOperation,
@@ -136,7 +136,7 @@ pub use async_handling::{
 // Advanced error diagnostics
 pub mod diagnostics;
 pub use diagnostics::{
-    diagnose_error, diagnose_error_with_context, EnvironmentInfo, ErrorDiagnosticReport,
+    error, error_with_context, EnvironmentInfo, ErrorDiagnosticReport,
     ErrorDiagnostics, ErrorOccurrence, ErrorPattern, PerformanceImpact,
 };
 
@@ -157,6 +157,17 @@ pub use error::{
 /// Alpha 6 Enhanced Diagnostic Functions
 ///
 /// Analyze an error with comprehensive diagnostics including Alpha 6 features
+///
+/// # Errors
+///
+/// This function does not return errors but analyzes the provided error.
+#[must_use]
+#[allow(dead_code)]
+pub fn diagnose_error(error: &CoreError) -> ErrorDiagnosticReport {
+    diagnose_error_advanced(error, None, None)
+}
+
+/// Advanced error diagnosis function.
 ///
 /// # Errors
 ///
@@ -186,7 +197,7 @@ pub fn diagnose_error_advanced(
 
 /// Record an error for pattern analysis
 #[allow(dead_code)]
-pub fn record_error_occurrence(error: &CoreError, context: String) {
+pub fn record_error(error: &CoreError, context: String) {
     let diagnostics = ErrorDiagnostics::global();
     diagnostics.record_error(error, context);
 }
@@ -194,7 +205,7 @@ pub fn record_error_occurrence(error: &CoreError, context: String) {
 /// Get predictive error analysis for a given context
 #[must_use]
 #[allow(dead_code)]
-pub fn predict_errors_for_context(context: &str) -> Vec<String> {
+pub fn context(context: &str) -> Vec<String> {
     let diagnostics = ErrorDiagnostics::global();
     diagnostics.predict_potential_errors(context)
 }
@@ -202,7 +213,7 @@ pub fn predict_errors_for_context(context: &str) -> Vec<String> {
 /// Get domain-specific recovery strategies for an error
 #[must_use]
 #[allow(dead_code)]
-pub fn get_domain_recovery_strategies(error: &CoreError, domain: &str) -> Vec<String> {
+pub fn get_recovery_strategies(error: &CoreError, domain: &str) -> Vec<String> {
     let diagnostics = ErrorDiagnostics::global();
     diagnostics.suggest_domain_recovery(error, domain)
 }
@@ -212,7 +223,7 @@ pub mod prelude {
     //! Commonly used error handling types and functions
 
     pub use super::{
-        diagnose_error, CircuitBreaker, CoreError, CoreResult, EnvironmentInfo, ErrorAggregator,
+        error, CircuitBreaker, CoreError, CoreResult, EnvironmentInfo, ErrorAggregator,
         ErrorContext, ErrorDiagnosticReport, ErrorLocation, ErrorSeverity, RecoverableError,
         RecoveryStrategy, RetryExecutor,
     };
@@ -236,7 +247,7 @@ mod tests {
     #[test]
     fn test_error_integration() {
         let error = CoreError::DomainError(error_context!("Test error"));
-        let recoverable = RecoverableError::new(error);
+        let recoverable = RecoverableError::error(error);
 
         assert!(!recoverable.retryable);
         assert_eq!(recoverable.severity, ErrorSeverity::Error);
@@ -250,7 +261,7 @@ mod tests {
             base_delay: Duration::from_millis(1),
             ..Default::default()
         };
-        let executor = RetryExecutor::new(policy);
+        let executor = RetryExecutor::policy(policy);
 
         let attempts = std::cell::RefCell::new(0);
         let result = executor.execute(|| {
@@ -296,7 +307,7 @@ mod tests {
         let breaker = CircuitBreaker::with_config("test_breaker".to_string(), config);
 
         // First failure should work and trigger circuit opening
-        let result: std::result::Result<(), _> =
+        let result: std::result::Result<(), CoreError> =
             breaker.execute(|| Err(CoreError::ComputationError(error_context!("Test failure"))));
         assert!(result.is_err());
 
@@ -326,7 +337,7 @@ mod tests {
     #[cfg(feature = "async")]
     #[tokio::test]
     async fn test_async_error_handling() {
-        use super::async_handling::*;
+        use super::async__handling::*;
 
         // Test timeout
         let result = with_timeout(

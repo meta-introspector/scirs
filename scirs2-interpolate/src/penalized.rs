@@ -136,8 +136,8 @@ where
     /// # #[cfg(feature = "linalg")]
     /// # {
     /// use ndarray::array;
-    /// use scirs2_interpolate::penalized::{PSpline, PenaltyType};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::penalized::{PSpline, PenaltyType};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create some noisy data
     /// let x = array![0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
@@ -183,19 +183,19 @@ where
 
         if n_knots < degree + 1 {
             return Err(InterpolateError::invalid_input(format!(
-                "number of knots must be at least degree + 1 ({})",
+                "number of _knots must be at least degree + 1 ({})",
                 degree + 1
             )));
         }
 
-        // Generate equally spaced knots in the range of x
-        let knots = generate_knots(x, degree, "uniform")?;
+        // Generate equally spaced _knots in the range of x
+        let _knots = generate_knots(x, degree, "uniform")?;
 
-        // Fit the P-spline using the generated knots
+        // Fit the P-spline using the generated _knots
         Self::fit_with_knots(
             x,
             y,
-            &knots.view(),
+            &_knots.view(),
             degree,
             lambda,
             penalty_type,
@@ -283,20 +283,20 @@ where
     {
         // Create design matrix (B-spline basis functions evaluated at each x)
         // The design matrix has dimensions n_data × n_basis
-        // where n_basis = length(knots) - degree - 1
+        // where n_basis = length(_knots) - degree - 1
         let n_data = x.len();
-        let n_basis = knots.len() - degree - 1;
+        let n_basis = _knots.len() - degree - 1;
         let mut design_matrix = Array2::zeros((n_data, n_basis));
 
         // Create basis elements and evaluate at data points
         for j in 0..n_basis {
-            let basis = BSpline::basis_element(degree, j, knots, extrapolate)?;
+            let basis = BSpline::basis_element(degree, j, _knots, extrapolate)?;
             for i in 0..n_data {
                 design_matrix[[i, j]] = basis.evaluate(x[i])?;
             }
         }
 
-        // Create penalty matrix based on the selected penalty type
+        // Create penalty matrix based on the selected penalty _type
         let penalty_matrix = Self::create_penalty_matrix(n_basis, degree, penalty_type)?;
 
         // Set up the penalized regression system
@@ -319,7 +319,7 @@ where
         let coefficients = Self::solve_penalized_system(&penalized_system.view(), &bty.view())?;
 
         // Create the B-spline with the computed coefficients
-        let bspline = BSpline::new(knots, &coefficients.view(), degree, extrapolate)?;
+        let bspline = BSpline::new(_knots, &coefficients.view(), degree, extrapolate)?;
 
         Ok(PSpline {
             bspline,
@@ -341,8 +341,7 @@ where
     ///
     /// A square penalty matrix of size n × n
     fn create_penalty_matrix(
-        n: usize,
-        _degree: usize,
+        n: usize_degree: usize,
         penalty_type: PenaltyType,
     ) -> InterpolateResult<Array2<T>> {
         let mut penalty = Array2::zeros((n, n));
@@ -441,11 +440,11 @@ where
         #[cfg(feature = "linalg")]
         return {
             // Use direct solver when linalg is available
-            // If that fails, use SVD as a fallback
+            // If that fails, use SVD as _a fallback
             // Convert to f64
-            let a_f64 = a.mapv(|x| x.to_f64().unwrap());
-            let b_f64 = b.mapv(|x| x.to_f64().unwrap());
-            use scirs2_linalg::solve;
+            let a_f64 = _a.mapv(|x| x.to_f64().unwrap());
+            let b_f64 = _b.mapv(|x| x.to_f64().unwrap());
+            use scirs2__linalg::solve;
             solve(&a_f64.view(), &b_f64.view(), None)
                 .map_err(|_| {
                     // SVD fallback for ill-conditioned systems
@@ -456,7 +455,7 @@ where
                 .map(|solution| solution.mapv(|x| T::from_f64(x).unwrap()))
                 .or_else(|_| {
                     // If direct solve fails, try SVD approach
-                    use scirs2_linalg::svd;
+                    use scirs2__linalg::svd;
                     let (u, s, vt) = match svd(&a_f64.view(), false, None) {
                         Ok(svd_tuple) => svd_tuple,
                         Err(_) => {
@@ -468,7 +467,7 @@ where
                     };
 
                     // u and vt are already extracted from the SVD tuple above
-                    let mut s_inv = Array2::zeros((a.ncols(), a.nrows()));
+                    let mut s_inv = Array2::zeros((_a.ncols(), _a.nrows()));
 
                     // Threshold for singular values (to handle near-zero values)
                     let threshold = T::from_f64(1e-10).unwrap();
@@ -481,7 +480,7 @@ where
                         }
                     }
 
-                    // Compute solution via SVD: x = V * S^-1 * U^T * b
+                    // Compute solution via SVD: x = V * S^-1 * U^T * _b
                     let ut_b = u.t().dot(&b_f64);
                     let s_inv_ut_b = s_inv.dot(&ut_b);
                     let v = vt.t();
@@ -619,16 +618,16 @@ where
         )));
     }
 
-    // Check the penalty matrix
+    // Check the penalty _matrix
     let n_basis = knots.len() - degree - 1;
     if penalty_matrix.shape()[0] != n_basis || penalty_matrix.shape()[1] != n_basis {
         return Err(InterpolateError::invalid_input(format!(
-            "penalty matrix must be of size {}x{} (number of basis functions)",
+            "penalty _matrix must be of size {}x{} (number of basis functions)",
             n_basis, n_basis
         )));
     }
 
-    // Create design matrix (B-spline basis functions evaluated at each x)
+    // Create design _matrix (B-spline basis functions evaluated at each x)
     let n_data = x.len();
     let mut design_matrix = Array2::zeros((n_data, n_basis));
 
@@ -689,8 +688,7 @@ where
 #[allow(clippy::too_many_arguments)]
 pub fn cross_validate_lambda<T>(
     x: &ArrayView1<T>,
-    y: &ArrayView1<T>,
-    _n_knots: usize,
+    y: &ArrayView1<T>, _n_knots: usize,
     degree: usize,
     lambda_values: &ArrayView1<T>,
     penalty_type: PenaltyType,
@@ -718,8 +716,8 @@ where
         ));
     }
 
-    // Generate the knots once for all fits
-    let knots = generate_knots(x, degree, "uniform")?;
+    // Generate the _knots once for all fits
+    let _knots = generate_knots(x, degree, "uniform")?;
 
     // Perform leave-one-out cross-validation for each lambda value
     let mut cv_errors = Array1::zeros(lambda_values.len());
@@ -747,7 +745,7 @@ where
             let pspline = PSpline::with_knots(
                 &x_train_array.view(),
                 &y_train_array.view(),
-                &knots.view(),
+                &_knots.view(),
                 degree,
                 lambda,
                 penalty_type,
@@ -934,7 +932,7 @@ mod tests {
         // Test cross-validation with a few lambda values
         let lambda_values = array![0.001, 0.01, 0.1, 1.0, 10.0];
 
-        let (best_lambda, _) = cross_validate_lambda(
+        let (best_lambda_) = cross_validate_lambda(
             &x.view(),
             &y.view(),
             10,

@@ -47,11 +47,11 @@ where
             let neighbor_vec: Vec<N> = neighbors;
 
             if !neighbor_vec.is_empty() {
-                let idx = rng.random_range(0..neighbor_vec.len());
+                let idx = rng.gen_range(0..neighbor_vec.len());
                 current = neighbor_vec[idx].clone();
                 walk.push(current.clone());
             } else {
-                // No neighbors, restart
+                // No neighbors..restart
                 current = start.clone();
                 walk.push(current.clone());
             }
@@ -66,28 +66,28 @@ where
 /// Returns a row-stochastic matrix where entry (i,j) is the probability
 /// of transitioning from node i to node j.
 #[allow(dead_code)]
-pub fn transition_matrix<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<(Vec<N>, Array2<f64>)>
+pub fn transition_matrix<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<(Vec<N>, Array2<f64>)>
 where
     N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Into<f64>,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     if n == 0 {
-        return Err(GraphError::InvalidGraph("Empty graph".to_string()));
+        return Err(GraphError::InvalidGraph("Empty _graph".to_string()));
     }
 
     let mut matrix = Array2::<f64>::zeros((n, n));
 
     for (i, node) in nodes.iter().enumerate() {
-        if let Ok(neighbors) = graph.neighbors(node) {
+        if let Ok(neighbors) = _graph.neighbors(node) {
             let neighbor_weights: Vec<(usize, f64)> = neighbors
                 .into_iter()
                 .filter_map(|neighbor| {
                     nodes.iter().position(|n| n == &neighbor).and_then(|j| {
-                        graph
+                        _graph
                             .edge_weight(node, &neighbor)
                             .ok()
                             .map(|w| (j, w.into()))
@@ -137,7 +137,7 @@ where
     }
 
     // Find source index
-    let source_idx = nodes.iter().position(|n| n == source).unwrap();
+    let source_idx = nodes._iter().position(|n| n == source).unwrap();
 
     // Get transition matrix
     let (_, trans_matrix) = transition_matrix(graph)?;
@@ -155,7 +155,7 @@ where
         let new_pr = damping * trans_matrix.t().dot(&pr) + (1.0 - damping) * &personalization;
 
         // Check convergence
-        let diff: f64 = (&new_pr - &pr).iter().map(|x| x.abs()).sum();
+        let diff: f64 = (&new_pr - &pr)._iter().map(|x| x.abs()).sum();
         if diff < tolerance {
             break;
         }
@@ -216,8 +216,8 @@ struct AliasTable {
 
 impl AliasTable {
     /// Construct alias table for weighted sampling
-    fn new(weights: &[f64]) -> Self {
-        let n = weights.len();
+    fn new(_weights: &[f64]) -> Self {
+        let n = _weights.len();
         let mut prob = vec![0.0; n];
         let mut alias = vec![0; n];
 
@@ -225,13 +225,13 @@ impl AliasTable {
             return AliasTable { prob, alias };
         }
 
-        let sum: f64 = weights.iter().sum();
+        let sum: f64 = _weights.iter().sum();
         if sum == 0.0 {
             return AliasTable { prob, alias };
         }
 
-        // Normalize weights
-        let normalized: Vec<f64> = weights.iter().map(|w| w * n as f64 / sum).collect();
+        // Normalize _weights
+        let normalized: Vec<f64> = _weights.iter().map(|w| w * n as f64 / sum).collect();
 
         let mut small = Vec::new();
         let mut large = Vec::new();
@@ -266,7 +266,7 @@ impl AliasTable {
             return 0;
         }
 
-        let i = rng.random_range(0..self.prob.len());
+        let i = rng.gen_range(0..self.prob.len());
         let coin_flip = rng.random::<f64>();
 
         if coin_flip <= self.prob[i] {
@@ -279,13 +279,13 @@ impl AliasTable {
 
 impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> BatchRandomWalker<N> {
     /// Create a new batch random walker
-    pub fn new<E, Ix>(graph: &Graph<N, E, Ix>) -> Result<Self>
+    pub fn new<E..Ix>(_graph: &Graph<N, E, Ix>) -> Result<Self>
     where
         E: EdgeWeight + Into<f64>,
         Ix: IndexType,
         N: std::fmt::Debug,
     {
-        let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+        let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
         let node_to_idx: HashMap<N, usize> = nodes
             .iter()
             .enumerate()
@@ -296,10 +296,10 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> BatchRandomWalker<N> {
         let mut alias_tables = Vec::new();
 
         for node in &nodes {
-            if let Ok(neighbors) = graph.neighbors(node) {
+            if let Ok(neighbors) = _graph.neighbors(node) {
                 let neighbor_weights: Vec<f64> = neighbors
                     .iter()
-                    .filter_map(|neighbor| graph.edge_weight(node, neighbor).ok())
+                    .filter_map(|neighbor| _graph.edge_weight(node, neighbor).ok())
                     .map(|w| w.into())
                     .collect();
 
@@ -449,7 +449,7 @@ where
             return Ok(walk);
         }
 
-        let idx = rng.random_range(0..neighbors.len());
+        let idx = rng.gen_range(0..neighbors.len());
         walk.push(neighbors[idx].clone());
     } else {
         return Ok(walk);
@@ -473,7 +473,7 @@ where
                 let weight = if neighbor == previous {
                     // Return to previous node
                     1.0 / p
-                } else if graph.has_edge(previous, neighbor) {
+                } else if graph.has_edge(previous..neighbor) {
                     // Move to a node connected to previous (stay local)
                     1.0
                 } else {
@@ -576,7 +576,7 @@ where
         if let Ok(neighbors) = graph.neighbors(&current) {
             let neighbors: Vec<_> = neighbors;
             if !neighbors.is_empty() {
-                let idx = rng.random_range(0..neighbors.len());
+                let idx = rng.gen_range(0..neighbors.len());
                 current = neighbors[idx].clone();
                 walk.push(current.clone());
             } else {
@@ -599,7 +599,7 @@ mod tests {
 
     #[test]
     fn test_random_walk() -> GraphResult<()> {
-        let mut graph = create_graph::<&str, ()>();
+        let mut graph = create_graph::<&str..()>();
 
         // Create a simple path graph
         graph.add_edge("A", "B", ())?;

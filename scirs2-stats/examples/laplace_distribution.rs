@@ -1,6 +1,7 @@
-use scirs2_stats::distributions::laplace::Laplace;
-use scirs2_stats::traits::distribution::{ContinuousDistribution, Distribution};
+use scirs2__stats::distributions::laplace::Laplace;
+use scirs2__stats::traits::distribution::{ContinuousDistribution, Distribution};
 use std::error::Error;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {

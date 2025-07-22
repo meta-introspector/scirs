@@ -1,18 +1,18 @@
 use ndarray::ArrayView1;
-use scirs2_integrate::romberg::{multi_romberg_with_details, RombergOptions};
+use scirs2__integrate::romberg::{multi_romberg_with_details, RombergOptions};
 use std::f64::consts::PI;
 use std::time::Instant;
 
 /// A helper function to time and report the result of an integration method
 #[allow(dead_code)]
-fn time_integration<F, R>(name: &str, f: F) -> R
+fn time_integration<F, R>(_name: &str, f: F) -> R
 where
     F: FnOnce() -> R,
 {
     let start = Instant::now();
     let result = f();
     let elapsed = start.elapsed();
-    println!("{name}: {elapsed:?}");
+    println!("{_name}: {elapsed:?}");
     result
 }
 

@@ -23,12 +23,12 @@ pub struct DistributedCoordinator {
 
 impl DistributedCoordinator {
     /// Create a new distributed coordinator
-    pub fn new(config: &super::DistributedConfig) -> LinalgResult<Self> {
-        let sync_state = Arc::new(Mutex::new(CoordinationState::new(config.num_nodes)));
+    pub fn new(_config: &super::DistributedConfig) -> LinalgResult<Self> {
+        let sync_state = Arc::new(Mutex::new(CoordinationState::new(_config.num_nodes)));
         
         Ok(Self {
-            node_rank: config.node_rank,
-            num_nodes: config.num_nodes,
+            node_rank: _config.node_rank,
+            num_nodes: _config.num_nodes,
             sync_state,
             communicator: None,
         })
@@ -111,7 +111,7 @@ impl DistributedCoordinator {
     pub fn handle_node_failure(&self, failed_node: usize) -> LinalgResult<RecoveryPlan> {
         let mut state = self.sync_state.lock().unwrap();
         
-        // Mark node as failed
+        // Mark _node as failed
         state.failed_nodes.insert(failed_node);
         
         // Create recovery plan
@@ -126,7 +126,7 @@ impl DistributedCoordinator {
             estimated_recovery_time: Duration::from_secs(30),
         };
         
-        // Update active node count
+        // Update active _node count
         state.active_nodes = remaining_nodes.len();
         
         Ok(recovery_plan)
@@ -195,10 +195,10 @@ struct CoordinationState {
 }
 
 impl CoordinationState {
-    fn new(total_nodes: usize) -> Self {
+    fn new(_total_nodes: usize) -> Self {
         Self {
-            total_nodes,
-            active_nodes: total_nodes,
+            _total_nodes,
+            active_nodes: _total_nodes,
             failed_nodes: std::collections::HashSet::new(),
             checkpoints: HashMap::new(),
             barrier_participants: std::collections::HashSet::new(),
@@ -225,9 +225,9 @@ pub struct DistributedLock {
 
 impl DistributedLock {
     /// Create a new distributed lock
-    pub fn new(name: String, node_rank: usize, num_nodes: usize) -> LinalgResult<Self> {
+    pub fn new(_name: String, node_rank: usize, num_nodes: usize) -> LinalgResult<Self> {
         Ok(Self {
-            name,
+            _name,
             owner: None,
             node_rank,
             num_nodes,
@@ -324,9 +324,9 @@ pub struct SynchronizationBarrier {
 
 impl SynchronizationBarrier {
     /// Create a new synchronization barrier
-    pub fn new(expected_nodes: usize, barrier_id: u64) -> Self {
+    pub fn new(_expected_nodes: usize, barrier_id: u64) -> Self {
         Self {
-            expected_nodes,
+            _expected_nodes,
             arrived_nodes: Arc::new(Mutex::new(std::collections::HashSet::new())),
             condition: Arc::new(Condvar::new()),
             barrier_id,
@@ -404,11 +404,11 @@ pub struct ReductionCoordination {
 
 impl ReductionCoordination {
     /// Create new reduction coordination
-    pub fn new(operation: ReductionOperation, node_rank: usize, num_nodes: usize) -> LinalgResult<Self> {
+    pub fn new(_operation: ReductionOperation, node_rank: usize, num_nodes: usize) -> LinalgResult<Self> {
         let tree = ReductionTree::new(num_nodes);
         
         Ok(Self {
-            operation,
+            _operation,
             node_rank,
             num_nodes,
             tree,
@@ -437,8 +437,8 @@ struct ReductionTree {
 }
 
 impl ReductionTree {
-    fn new(num_nodes: usize) -> Self {
-        Self { num_nodes }
+    fn new(_num_nodes: usize) -> Self {
+        Self { _num_nodes }
     }
     
     fn get_parent(&self, node: usize) -> Option<usize> {

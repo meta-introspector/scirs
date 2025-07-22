@@ -27,7 +27,7 @@ mod executors;
 mod stages;
 mod transforms;
 
-pub use advanced_optimization::*;
+pub use advanced__optimization::*;
 pub use builders::*;
 pub use executors::*;
 pub use stages::*;
@@ -46,18 +46,18 @@ pub struct PipelineData<T> {
 
 impl<T> PipelineData<T> {
     /// Create new pipeline data
-    pub fn new(data: T) -> Self {
+    pub fn new(_data: T) -> Self {
         Self {
-            data,
+            _data,
             metadata: Metadata::new(),
             context: PipelineContext::new(),
         }
     }
 
     /// Create with metadata
-    pub fn with_metadata(data: T, metadata: Metadata) -> Self {
+    pub fn with_metadata(_data: T, metadata: Metadata) -> Self {
         Self {
-            data,
+            _data,
             metadata,
             context: PipelineContext::new(),
         }
@@ -156,18 +156,18 @@ mod serde_duration {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use std::time::Duration;
 
-    pub fn serialize<S>(duration: &Duration, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(_duration: &Duration, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        duration.as_secs().serialize(serializer)
+        _duration.as_secs().serialize(serializer)
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
+    pub fn deserialize<'de, D>(_deserializer: D) -> Result<Duration, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let secs = u64::deserialize(deserializer)?;
+        let secs = u64::deserialize(_deserializer)?;
         Ok(Duration::from_secs(secs))
     }
 }
@@ -243,9 +243,7 @@ impl<I, O> Pipeline<I, O> {
     pub fn new() -> Self {
         Self {
             stages: Vec::new(),
-            config: PipelineConfig::default(),
-            _input: PhantomData,
-            _output: PhantomData,
+            config: PipelineConfig::default(), _input: PhantomData_output: PhantomData,
         }
     }
 
@@ -414,21 +412,21 @@ impl fmt::Display for PipelineError {
 impl std::error::Error for PipelineError {}
 
 impl From<IoError> for PipelineError {
-    fn from(error: IoError) -> Self {
-        PipelineError::IoError(error)
+    fn from(_error: IoError) -> Self {
+        PipelineError::IoError(_error)
     }
 }
 
 /// Create a simple function-based pipeline stage
 #[allow(dead_code)]
-pub fn function_stage<F, I, O>(name: &str, f: F) -> Box<dyn PipelineStage>
+pub fn function_stage<F, I, O>(_name: &str, f: F) -> Box<dyn PipelineStage>
 where
     F: Fn(I) -> Result<O> + Send + Sync + 'static,
     I: 'static + Send + Sync,
     O: 'static + Send + Sync,
 {
     Box::new(FunctionStage {
-        name: name.to_string(),
+        _name: _name.to_string(),
         function: Box::new(move |input: Box<dyn Any + Send + Sync>| {
             let typed_input = input
                 .downcast::<I>()
@@ -467,6 +465,7 @@ impl PipelineStage for FunctionStage {
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 /// Pipeline serialization for saving/loading pipeline configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -483,7 +482,7 @@ pub struct SerializedPipeline {
 pub struct SerializedStage {
     pub name: String,
     pub stage_type: String,
-    pub config: serde_json::Value,
+    pub config: serde_json: Value,
 }
 
 impl<I, O> Pipeline<I, O> {
@@ -499,7 +498,7 @@ impl<I, O> Pipeline<I, O> {
                 .map(|s| SerializedStage {
                     name: s.name(),
                     stage_type: s.stage_type(),
-                    config: serde_json::Value::Null, // Stages would need to implement serialization
+                    config: serde_json: Value::Null, // Stages would need to implement serialization
                 })
                 .collect(),
             config: self.config.clone(),
@@ -513,8 +512,8 @@ impl<I, O> Pipeline<I, O> {
     }
 
     /// Load pipeline configuration from a file
-    pub fn load_config(path: impl AsRef<Path>) -> Result<SerializedPipeline> {
-        let content = std::fs::read_to_string(path).map_err(IoError::Io)?;
+    pub fn load_config(_path: impl AsRef<Path>) -> Result<SerializedPipeline> {
+        let content = std::fs::read_to_string(_path).map_err(IoError::Io)?;
 
         serde_json::from_str(&content).map_err(|e| IoError::SerializationError(e.to_string()))
     }
@@ -532,8 +531,8 @@ where
     M: 'static + Send + Sync,
     O: 'static + Send + Sync,
 {
-    pub fn new(first: Pipeline<I, M>, second: Pipeline<M, O>) -> Self {
-        Self { first, second }
+    pub fn new(_first: Pipeline<I, M>, second: Pipeline<M, O>) -> Self {
+        Self { _first, second }
     }
 
     pub fn execute(&self, input: I) -> Result<O> {
@@ -562,11 +561,11 @@ pub struct TransformationRecord {
 }
 
 impl DataLineage {
-    pub fn new(source: impl Into<String>) -> Self {
+    pub fn new(_source: impl Into<String>) -> Self {
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
-            source: source.into(),
+            _source: _source.into(),
             transformations: Vec::new(),
             created_at: now,
             last_modified: now,
@@ -613,7 +612,7 @@ impl PipelineOptimizer {
             suggestions: vec![
                 OptimizationSuggestion {
                     category: "performance".to_string(),
-                    description: "Consider moving filter stages earlier in the pipeline"
+                    description: "Consider moving filter stages earlier in the _pipeline"
                         .to_string(),
                     impact: "high".to_string(),
                 },
@@ -628,15 +627,14 @@ impl PipelineOptimizer {
     }
 
     /// Optimize stage ordering for better performance
-    pub fn optimize_ordering(stages: Vec<Box<dyn PipelineStage>>) -> Vec<Box<dyn PipelineStage>> {
+    pub fn optimize_ordering(_stages: Vec<Box<dyn PipelineStage>>) -> Vec<Box<dyn PipelineStage>> {
         // Simple heuristic: move filters and validations earlier
         let mut filters = Vec::new();
         let mut others = Vec::new();
 
-        for stage in stages {
+        for stage in _stages {
             match stage.stage_type().as_str() {
-                "filter" | "validation" => filters.push(stage),
-                _ => others.push(stage),
+                "filter" | "validation" => filters.push(stage, _ => others.push(stage),
             }
         }
 
@@ -723,9 +721,9 @@ pub enum AlertSeverity {
 }
 
 impl PipelineMonitor {
-    pub fn new(thresholds: MonitoringThresholds) -> Self {
+    pub fn new(_thresholds: MonitoringThresholds) -> Self {
         Self {
-            thresholds,
+            _thresholds,
             alerts: Vec::new(),
         }
     }

@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example 3: Parallel iterative solvers
     println!("\n=== Parallel Iterative Solvers ===");
     let a = create_spd_matrix(50);
-    let b = Array2::from_shape_fn((50, 1), |(i, _)| (i as f64).sin())
+    let b = Array2::from_shape_fn((50, 1), |(i_)| (i_ as f64).sin())
         .column(0)
         .to_owned();
 
@@ -72,7 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Matrix multiplication result shape: {:?}", c.shape());
 
     // Matrix-vector multiplication
-    let vec = Array2::from_shape_fn((80, 1), |(i, _)| (i as f64).sin())
+    let vec = Array2::from_shape_fn((80, 1), |(i_)| (i_ as f64).sin())
         .column(0)
         .to_owned();
     let result = ParallelOperations::matvec(&mat_a.view(), &vec.view(), Some(4))?;

@@ -12,12 +12,13 @@
 //! - Real-time performance monitoring
 
 use crate::error::Result;
-use crossbeam_channel::{bounded, Receiver};
+use crossbeam__channel::{bounded, Receiver};
 use image::GenericImageView;
 use ndarray::{Array1, Array2};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
+use std::path::PathBuf;
 
 /// Frame type for streaming processing
 #[derive(Clone)]
@@ -89,7 +90,7 @@ impl StreamPipeline {
         Self {
             stages: Vec::new(),
             buffer_size: 10,
-            num_threads: num_cpus::get(),
+            num_threads: num, _cpus: get(),
             metrics: Arc::new(Mutex::new(PipelineMetrics::default())),
         }
     }
@@ -272,8 +273,8 @@ pub struct BlurStage {
 
 impl BlurStage {
     /// Create a new Gaussian blur processing stage
-    pub fn new(sigma: f32) -> Self {
-        Self { sigma }
+    pub fn new(_sigma: f32) -> Self {
+        Self { _sigma }
     }
 }
 
@@ -297,15 +298,15 @@ pub struct EdgeDetectionStage {
 
 impl EdgeDetectionStage {
     /// Create a new edge detection processing stage
-    pub fn new(threshold: f32) -> Self {
-        Self { threshold }
+    pub fn new(_threshold: f32) -> Self {
+        Self { _threshold }
     }
 }
 
 impl ProcessingStage for EdgeDetectionStage {
     fn process(&mut self, mut frame: Frame) -> Result<Frame> {
         // Apply SIMD-accelerated Sobel edge detection
-        let (_, _, magnitude) = crate::simd_ops::simd_sobel_gradients(&frame.data.view())?;
+        let (__, magnitude) = crate::simd_ops::simd_sobel_gradients(&frame.data.view())?;
         frame.data = magnitude;
         Ok(frame)
     }
@@ -323,10 +324,10 @@ pub struct MotionDetectionStage {
 
 impl MotionDetectionStage {
     /// Create a new motion detection processing stage
-    pub fn new(threshold: f32) -> Self {
+    pub fn new(_threshold: f32) -> Self {
         Self {
             previous_frame: None,
-            threshold,
+            _threshold,
         }
     }
 }
@@ -466,8 +467,8 @@ pub struct SimdHistogramEqualizationStage {
 
 impl SimdHistogramEqualizationStage {
     /// Create a new SIMD histogram equalization stage
-    pub fn new(num_bins: usize) -> Self {
-        Self { num_bins }
+    pub fn new(_num_bins: usize) -> Self {
+        Self { _num_bins }
     }
 }
 
@@ -510,9 +511,9 @@ pub enum FeatureDetectorType {
 
 impl FeatureDetectionStage {
     /// Create a new feature detection stage
-    pub fn new(detector_type: FeatureDetectorType, max_features: usize) -> Self {
+    pub fn new(_detector_type: FeatureDetectorType, max_features: usize) -> Self {
         Self {
-            detector_type,
+            _detector_type,
             max_features,
         }
     }
@@ -531,7 +532,7 @@ impl ProcessingStage for FeatureDetectionStage {
             }
             FeatureDetectorType::Sobel => {
                 // Apply SIMD-accelerated Sobel edge detection
-                let (_, _, magnitude) = crate::simd_ops::simd_sobel_gradients(&frame.data.view())?;
+                let (__, magnitude) = crate::simd_ops::simd_sobel_gradients(&frame.data.view())?;
                 frame.data = magnitude;
             }
         }
@@ -570,7 +571,7 @@ impl FeatureDetectionStage {
         use scirs2_core::simd_ops::SimdUnifiedOps;
 
         // Compute SIMD gradients using optimized Sobel operators
-        let (grad_x, grad_y, _) = crate::simd_ops::simd_sobel_gradients(image)?;
+        let (grad_x, grad_y_) = crate::simd_ops::simd_sobel_gradients(image)?;
 
         let (height, width) = grad_x.dim();
 
@@ -710,7 +711,7 @@ impl FeatureDetectionStage {
 
                 for &(dx, dy) in &circle_offsets {
                     let mut circle_pixels = Vec::with_capacity(center_array.len());
-                    for (i, _) in center_array.iter().enumerate() {
+                    for (i_) in center_array.iter().enumerate() {
                         let pixel_x = x + i;
                         let pixel_y = y;
                         let circle_x = pixel_x as i32 + dx;
@@ -892,10 +893,10 @@ pub enum BufferOperation {
 
 impl FrameBufferStage {
     /// Create a new frame buffer stage
-    pub fn new(buffer_size: usize, operation: BufferOperation) -> Self {
+    pub fn new(_buffer_size: usize, operation: BufferOperation) -> Self {
         Self {
-            buffer: std::collections::VecDeque::with_capacity(buffer_size),
-            buffer_size,
+            buffer: std::collections::VecDeque::with_capacity(_buffer_size),
+            _buffer_size,
             operation,
         }
     }
@@ -982,8 +983,8 @@ pub struct VideoStreamReader {
 
 impl VideoStreamReader {
     /// Create a video reader from a source
-    pub fn from_source(source: VideoSource) -> Result<Self> {
-        match source {
+    pub fn from_source(_source: VideoSource) -> Result<Self> {
+        match _source {
             VideoSource::ImageSequence(ref path) => {
                 // Read directory and get sorted list of image files
                 let mut files = Vec::new();
@@ -1016,7 +1017,7 @@ impl VideoStreamReader {
 
                 // Determine dimensions from first image (in real impl, would load and check)
                 Ok(Self {
-                    source,
+                    _source,
                     frame_count: 0,
                     fps: 30.0,  // Default FPS for image sequences
                     width: 640, // Default, would read from actual image
@@ -1038,7 +1039,7 @@ impl VideoStreamReader {
                 ))
             }
             VideoSource::Dummy { width, height, fps } => Ok(Self {
-                source,
+                _source,
                 frame_count: 0,
                 fps,
                 width,
@@ -1049,12 +1050,12 @@ impl VideoStreamReader {
     }
 
     /// Create a dummy video reader for testing
-    pub fn dummy(width: u32, height: u32, fps: f32) -> Self {
+    pub fn dummy(_width: u32, height: u32, fps: f32) -> Self {
         Self {
-            source: VideoSource::Dummy { width, height, fps },
+            source: VideoSource::Dummy { _width, height, fps },
             frame_count: 0,
             fps,
-            width,
+            _width,
             height,
             image_files: None,
         }
@@ -1144,8 +1145,8 @@ pub struct BatchProcessor {
 
 impl BatchProcessor {
     /// Create a new batch processor with specified batch size
-    pub fn new(batch_size: usize) -> Self {
-        Self { batch_size }
+    pub fn new(_batch_size: usize) -> Self {
+        Self { _batch_size }
     }
 
     /// Process frames in batches
@@ -1388,10 +1389,10 @@ impl AutoScalingThreadPoolManager {
     /// # Returns
     ///
     /// * New thread pool manager
-    pub fn new(min_threads: usize, max_threads: usize) -> Self {
+    pub fn new(_min_threads: usize, max_threads: usize) -> Self {
         Self {
             thread_pools: std::collections::HashMap::new(),
-            min_threads,
+            _min_threads,
             max_threads,
             scale_up_threshold: 75.0,   // Scale up if >75% utilization
             scale_down_threshold: 25.0, // Scale down if <25% utilization
@@ -1536,14 +1537,14 @@ impl AdaptivePerformanceMonitor {
     /// # Returns
     ///
     /// * New adaptive performance monitor
-    pub fn new(config: AdaptiveConfig) -> Self {
+    pub fn new(_config: AdaptiveConfig) -> Self {
         let thread_pool_manager = AutoScalingThreadPoolManager::new(1, 8);
 
         Self {
             stage_metrics: std::collections::HashMap::new(),
             resource_monitor: SystemResourceMonitor::default(),
             thread_pool_manager,
-            config,
+            _config,
             performance_history: std::collections::VecDeque::with_capacity(1000),
             last_adaptation: Instant::now(),
         }
@@ -1618,7 +1619,7 @@ impl AdaptivePerformanceMonitor {
                 metrics.peak_processing_time = processing_time;
             }
 
-            // Calculate average processing time
+            // Calculate average processing _time
             if !metrics.processing_times.is_empty() {
                 let total_time: Duration = metrics.processing_times.iter().sum();
                 metrics.avg_processing_time = total_time / metrics.processing_times.len() as u32;
@@ -1707,23 +1708,23 @@ impl AdaptivePerformanceMonitor {
     ) -> f32 {
         let mut score: f32 = 0.0;
 
-        // Factor 1: Thread utilization
+        // Factor 1: Thread _utilization
         if thread_utilization > 80.0 {
             score += 0.4;
         } else if thread_utilization > 60.0 {
             score += 0.2;
         }
 
-        // Factor 2: Queue depth
+        // Factor 2: Queue _depth
         if queue_depth > 10 {
             score += 0.3;
         } else if queue_depth > 5 {
             score += 0.15;
         }
 
-        // Factor 3: Processing time variance (simplified without full variance calculation)
+        // Factor 3: Processing _time variance (simplified without full variance calculation)
         if processing_times_len > 1 {
-            // Simplified heuristic: consider high processing time as indicator of variance
+            // Simplified heuristic: consider high processing _time as indicator of variance
             if avg_processing_time > Duration::from_millis(10) {
                 score += 0.2;
             } else if avg_processing_time > Duration::from_millis(5) {
@@ -2098,7 +2099,7 @@ impl AdvancedStreamPipeline {
         Self {
             stages: Vec::new(),
             buffer_size: 10,
-            num_threads: num_cpus::get(),
+            num_threads: num, _cpus: get(),
             metrics: Arc::new(Mutex::new(PipelineMetrics::default())),
             frame_pool: Arc::new(Mutex::new(FramePool::new())),
             memory_profiler: Arc::new(Mutex::new(MemoryProfiler::new())),
@@ -2346,9 +2347,9 @@ enum ProcessingMode {
 
 impl AdaptiveQualityStage {
     /// Create a new adaptive quality stage with the specified target FPS
-    pub fn new(target_fps: f32) -> Self {
+    pub fn new(_target_fps: f32) -> Self {
         Self {
-            target_fps,
+            _target_fps,
             current_quality: 1.0,
             processing_mode: ProcessingMode::Balanced,
             performance_history: Vec::new(),
@@ -2363,7 +2364,7 @@ impl AdaptiveQualityStage {
             self.performance_history.remove(0);
         }
 
-        // Calculate average processing time
+        // Calculate average processing _time
         let avg_time = self.performance_history.iter().sum::<Duration>()
             / self.performance_history.len() as u32;
 

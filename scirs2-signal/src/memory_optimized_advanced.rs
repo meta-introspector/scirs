@@ -12,14 +12,16 @@
 //! - Zero-copy operations where possible
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2};
+use ndarray::{Array1, Array2, arr2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
 use std::collections::VecDeque;
+use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 
+#[allow(unused_imports)]
 /// Memory optimization configuration
 #[derive(Debug, Clone)]
 pub struct MemoryOptimizationConfig {
@@ -68,10 +70,10 @@ pub struct MemoryPool {
 }
 
 impl MemoryPool {
-    pub fn new(max_size: usize) -> Self {
+    pub fn new(_max_size: usize) -> Self {
         Self {
             pool: Arc::new(Mutex::new(VecDeque::new())),
-            max_size,
+            _max_size,
             current_usage: Arc::new(Mutex::new(0)),
         }
     }
@@ -119,15 +121,15 @@ pub struct StreamingProcessor {
 }
 
 impl StreamingProcessor {
-    pub fn new(config: MemoryOptimizationConfig) -> Self {
-        let memory_pool = if config.use_memory_pool {
-            Some(MemoryPool::new(config.pool_size))
+    pub fn new(_config: MemoryOptimizationConfig) -> Self {
+        let memory_pool = if _config.use_memory_pool {
+            Some(MemoryPool::new(_config.pool_size))
         } else {
             None
         };
 
         Self {
-            config,
+            _config,
             memory_pool,
             current_memory_usage: 0,
         }
@@ -249,8 +251,8 @@ impl StreamingProcessor {
             let mut padded_chunk = vec![0.0; chunk_size];
             padded_chunk[..chunk.len()].copy_from_slice(chunk);
 
-            // Convert to complex and perform FFT
-            let complex_chunk: Vec<num_complex::Complex<f64>> = padded_chunk
+            // Convert to _complex and perform FFT
+            let _complex_chunk: Vec<num_complex::Complex<f64>> = padded_chunk
                 .iter()
                 .map(|&x| num_complex::Complex::new(x, 0.0))
                 .collect();
@@ -370,13 +372,13 @@ pub struct MemoryStats {
 
 /// Simple DFT implementation for demonstration
 #[allow(dead_code)]
-fn simple_dft(input: &[num_complex::Complex<f64>]) -> Vec<num_complex::Complex<f64>> {
-    let n = input.len();
+fn simple_dft(_input: &[num_complex::Complex<f64>]) -> Vec<num_complex::Complex<f64>> {
+    let n = _input.len();
     let mut output = vec![num_complex::Complex::zero(); n];
 
     for k in 0..n {
-        for (j, &x_j) in input.iter().enumerate() {
-            let angle = -2.0 * std::f64::consts::PI * (k * j) as f64 / n as f64;
+        for (j, &x_j) in _input.iter().enumerate() {
+            let angle = -2.0 * std::f64::consts::PI * (k * j) as f64 / n  as f64;
             let twiddle = num_complex::Complex::new(angle.cos(), angle.sin());
             output[k] += x_j * twiddle;
         }
@@ -403,7 +405,7 @@ impl CacheOptimizedOps {
         }
 
         let mut result = Array1::zeros(rows);
-        let block_size = cache_line_size / 8; // f64 size
+        let block_size = cache_line_size / 8; // f64 _size
 
         // Block-based computation for cache efficiency
         for row_block in (0..rows).step_by(block_size) {
@@ -426,10 +428,10 @@ impl CacheOptimizedOps {
     }
 
     /// Cache-efficient array transpose
-    pub fn cache_friendly_transpose(input: &Array2<f64>, cache_line_size: usize) -> Array2<f64> {
-        let (rows, cols) = input.dim();
+    pub fn cache_friendly_transpose(_input: &Array2<f64>, cache_line_size: usize) -> Array2<f64> {
+        let (rows, cols) = _input.dim();
         let mut output = Array2::zeros((cols, rows));
-        let block_size = cache_line_size / 8; // f64 size
+        let block_size = cache_line_size / 8; // f64 _size
 
         for row_block in (0..rows).step_by(block_size) {
             let row_end = (row_block + block_size).min(rows);
@@ -439,7 +441,7 @@ impl CacheOptimizedOps {
 
                 for row in row_block..row_end {
                     for col in col_block..col_end {
-                        output[[col, row]] = input[[row, col]];
+                        output[[col, row]] = _input[[row, col]];
                     }
                 }
             }
@@ -451,8 +453,6 @@ impl CacheOptimizedOps {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::PI;
-
     #[test]
     fn test_memory_pool() {
         let pool = MemoryPool::new(4);
@@ -520,22 +520,20 @@ mod tests {
         assert_eq!(result.len(), signal.len() + kernel.len() - 1);
 
         // Check some expected values
-        assert!((result[0] - 0.5).abs() < 1e-10); // 1.0 * 0.5
-        assert!((result[1] - 1.5).abs() < 1e-10); // 1.0 * 0.5 + 2.0 * 0.5
+        assert!(((result[0] - 0.5) as f64).abs() < 1e-10); // 1.0 * 0.5
+        assert!(((result[1] - 1.5) as f64).abs() < 1e-10); // 1.0 * 0.5 + 2.0 * 0.5
     }
 
     #[test]
     fn test_cache_friendly_operations() {
-        use ndarray::arr2;
-
         let matrix = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]);
         let vector = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
         let result = CacheOptimizedOps::cache_friendly_matvec(&matrix, &vector, 64).unwrap();
 
         // Expected: [1*1 + 2*2 + 3*3, 4*1 + 5*2 + 6*3] = [14, 32]
-        assert!((result[0] - 14.0).abs() < 1e-10);
-        assert!((result[1] - 32.0).abs() < 1e-10);
+        assert!(((result[0] - 14.0) as f64).abs() < 1e-10);
+        assert!(((result[1] - 32.0) as f64).abs() < 1e-10);
     }
 
     #[test]
@@ -547,4 +545,16 @@ mod tests {
         assert!(stats.max_allowed.is_some());
         assert_eq!(stats.chunk_size, 65536);
     }
+}
+
+#[allow(dead_code)]
+fn next_power_of_two(n: usize) -> usize {
+    if n == 0 {
+        return 1;
+    }
+    let mut power = 1;
+    while power < n {
+        power <<= 1;
+    }
+    power
 }

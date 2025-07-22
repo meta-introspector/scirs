@@ -360,7 +360,7 @@ where
 
         // Line search
         let f = fun(&x.view());
-        let (step_size, _) = backtracking_line_search(
+        let (step_size_) = backtracking_line_search(
             &mut |x_view| fun(x_view),
             &x.view(),
             f,
@@ -416,19 +416,19 @@ where
 
 /// Compute gradient using finite differences
 #[allow(dead_code)]
-fn finite_diff_gradient<F>(fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
+fn finite_diff_gradient<F>(_fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,
 {
     let n = x.len();
     let mut grad = Array1::zeros(n);
-    let f0 = fun(x);
+    let f0 = _fun(x);
 
     for i in 0..n {
         let h = eps * (1.0 + x[i].abs());
         let mut x_plus = x.to_owned();
         x_plus[i] += h;
-        let f_plus = fun(&x_plus.view());
+        let f_plus = _fun(&x_plus.view());
 
         grad[i] = (f_plus - f0) / h;
     }

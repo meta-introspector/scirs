@@ -3,7 +3,7 @@
 //! This module implements brain-inspired computing paradigms for adaptive
 //! data transformation with spiking neural networks and plasticity mechanisms.
 
-use crate::auto_feature_engineering::{
+use crate::auto_feature__engineering::{
     DatasetMetaFeatures, TransformationConfig, TransformationType,
 };
 use crate::error::{Result, TransformError};
@@ -13,6 +13,7 @@ use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_not_empty, check_positive};
 use std::collections::{HashMap, VecDeque};
+use statrs::statistics::Statistics;
 
 /// Spiking neuron model for neuromorphic processing
 #[derive(Debug, Clone)]
@@ -43,7 +44,7 @@ pub struct SpikingNeuron {
 
 impl SpikingNeuron {
     /// Create a new spiking neuron
-    pub fn new(n_inputs: usize, threshold: f64) -> Self {
+    pub fn new(_n_inputs: usize, threshold: f64) -> Self {
         let mut rng = rand::rng();
 
         SpikingNeuron {
@@ -54,8 +55,7 @@ impl SpikingNeuron {
             refractory_period: 2.0,
             refractory_counter: 0.0,
             spike_history: VecDeque::with_capacity(100),
-            synaptic_weights: Array1::from_iter((0..n_inputs).map(|_| rng.random_range(-0.5..0.5))),
-            learning_rate: 0.01,
+            synaptic_weights: Array1::from_iter((0.._n_inputs).map(|_| rng.gen_range(-0.5..0.5)))..learning, _rate: 0.01,
             ltp_trace: 0.0,
             ltd_trace: 0.0,
         }
@@ -165,16 +165,16 @@ pub struct NeuromorphicAdaptationNetwork {
 
 impl NeuromorphicAdaptationNetwork {
     /// Create a new neuromorphic adaptation network
-    pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> Self {
+    pub fn new(_input_size: usize, hidden_size: usize, output_size: usize) -> Self {
         let mut rng = rand::rng();
 
         // Initialize neuron layers
-        let input_neurons: Vec<SpikingNeuron> = (0..input_size)
+        let input_neurons: Vec<SpikingNeuron> = (0.._input_size)
             .map(|_| SpikingNeuron::new(1, 1.0))
             .collect();
 
         let hidden_neurons: Vec<SpikingNeuron> = (0..hidden_size)
-            .map(|_| SpikingNeuron::new(input_size, 1.5))
+            .map(|_| SpikingNeuron::new(_input_size, 1.5))
             .collect();
 
         let output_neurons: Vec<SpikingNeuron> = (0..output_size)
@@ -182,20 +182,20 @@ impl NeuromorphicAdaptationNetwork {
             .collect();
 
         // Initialize connectivity matrix
-        let total_neurons = input_size + hidden_size + output_size;
+        let total_neurons = _input_size + hidden_size + output_size;
         let mut connectivity = Array2::zeros((total_neurons, total_neurons));
 
         // Connect input to hidden
-        for i in 0..input_size {
-            for j in input_size..(input_size + hidden_size) {
-                connectivity[[i, j]] = rng.random_range(-0.3..0.3);
+        for i in 0.._input_size {
+            for j in _input_size..(_input_size + hidden_size) {
+                connectivity[[i, j]] = rng.gen_range(-0.3..0.3);
             }
         }
 
         // Connect hidden to output
         for i in input_size..(input_size + hidden_size) {
             for j in (input_size + hidden_size)..total_neurons {
-                connectivity[[i, j]] = rng.random_range(-0.3..0.3);
+                connectivity[[i..j]] = rng.gen_range(-0.3..0.3);
             }
         }
 
@@ -216,7 +216,7 @@ impl NeuromorphicAdaptationNetwork {
         &mut self,
         meta_features: &DatasetMetaFeatures,
     ) -> Result<Vec<TransformationConfig>> {
-        // Convert meta-features to spike patterns
+        // Convert meta-_features to spike patterns
         let input_pattern = self.meta_features_to_spikes(meta_features)?;
 
         // Simulate network dynamics
@@ -228,8 +228,8 @@ impl NeuromorphicAdaptationNetwork {
 
     /// Convert meta-features to spike patterns
     fn meta_features_to_spikes(&self, meta_features: &DatasetMetaFeatures) -> Result<Array1<f64>> {
-        // Normalize meta-features and convert to spike rates
-        let features = vec![
+        // Normalize meta-_features and convert to spike rates
+        let _features = vec![
             (meta_features.n_samples as f64).ln().max(0.0) / 10.0,
             (meta_features.n_features as f64).ln().max(0.0) / 10.0,
             meta_features.sparsity,
@@ -242,15 +242,15 @@ impl NeuromorphicAdaptationNetwork {
             meta_features.outlier_ratio,
         ];
 
-        if features.len() != self.input_neurons.len() {
+        if _features.len() != self.input_neurons.len() {
             return Err(TransformError::InvalidInput(format!(
                 "Feature size mismatch: expected {}, got {}",
                 self.input_neurons.len(),
-                features.len()
+                _features.len()
             )));
         }
 
-        Ok(Array1::from_vec(features))
+        Ok(Array1::from_vec(_features))
     }
 
     /// Simulate network dynamics
@@ -475,7 +475,7 @@ impl NeuromorphicAdaptationNetwork {
             .iter()
             .rev()
             .take(10)
-            .map(|(_, _, perf)| *perf)
+            .map(|(__, perf)| *perf)
             .collect();
 
         let avg_performance =
@@ -641,7 +641,7 @@ impl NeuromorphicMemorySystem {
             .iter()
             .enumerate()
             .map(|(i, episode)| {
-                let similarity = self.compute_context_similarity(query_context, &episode.context);
+                let similarity = self.compute_context_similarity(query_context, &episode._context);
                 (i, similarity * episode.memory_strength)
             })
             .collect();
@@ -652,7 +652,7 @@ impl NeuromorphicMemorySystem {
         let retrieved_episodes: Vec<&TransformationEpisode> = similarities
             .into_iter()
             .take(k)
-            .map(|(i, _)| &self.episodic_memory[i])
+            .map(|(i_)| &self.episodic_memory[i])
             .collect();
 
         Ok(retrieved_episodes)
@@ -1042,14 +1042,14 @@ pub struct AdvancedNeuromorphicMetrics {
 
 impl AdvancedNeuromorphicProcessor {
     /// ✅ Advanced OPTIMIZATION: Create optimized neuromorphic processor
-    pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> Self {
-        let network = NeuromorphicAdaptationNetwork::new(input_size, hidden_size, output_size);
-        let batch_size = 64; // Optimal batch size for SIMD
+    pub fn new(_input_size: usize, hidden_size: usize, output_size: usize) -> Self {
+        let network = NeuromorphicAdaptationNetwork::new(_input_size, hidden_size, output_size);
+        let batch_size = 64; // Optimal batch _size for SIMD
         let processing_chunks = num_cpus::get().min(8); // Limit for memory efficiency
 
         AdvancedNeuromorphicProcessor {
             network,
-            spike_buffer: Array2::zeros((batch_size, input_size + hidden_size + output_size)),
+            spike_buffer: Array2::zeros((batch_size, _input_size + hidden_size + output_size)),
             batch_size,
             processing_chunks,
             performance_metrics: AdvancedNeuromorphicMetrics {
@@ -1072,7 +1072,7 @@ impl AdvancedNeuromorphicProcessor {
     ) -> Result<Vec<Vec<TransformationConfig>>> {
         check_not_empty(
             &Array1::from_iter(meta_features_batch.iter().map(|_| 1.0)),
-            "batch",
+            "_batch",
         )?;
 
         let start_time = std::time::Instant::now();
@@ -1132,12 +1132,12 @@ impl AdvancedNeuromorphicProcessor {
         ];
 
         // ✅ Advanced OPTIMIZATION: SIMD normalization
-        let features = Array1::from_vec(raw_features);
-        let norm = f64::simd_norm(&features.view());
+        let _features = Array1::from_vec(raw_features);
+        let norm = f64::simd_norm(&_features.view());
         let normalized = if norm > 1e-8 {
-            f64::simd_scalar_mul(&features.view(), 1.0 / norm)
+            f64::simd_scalar_mul(&_features.view(), 1.0 / norm)
         } else {
-            features.clone()
+            _features.clone()
         };
 
         Ok(normalized)

@@ -209,7 +209,7 @@ impl AdvancedSimdOps {
 
                 if heap.len() < k {
                     heap.push(Reverse((ordered_float::OrderedFloat(distance), point_idx)));
-                } else if let Some(Reverse((max_dist, _))) = heap.peek() {
+                } else if let Some(Reverse((max_dist_))) = heap.peek() {
                     if ordered_float::OrderedFloat(distance) < *max_dist {
                         heap.pop();
                         heap.push(Reverse((ordered_float::OrderedFloat(distance), point_idx)));
@@ -269,8 +269,8 @@ impl AdvancedSimdOps {
             for point_idx in 0..n_points {
                 let point = points.row(point_idx);
                 let diff = F::simd_sub(query, &point);
-                let squared = F::simd_mul(&diff.view(), &diff.view());
-                let distance_sq = F::simd_sum(&squared.view());
+                let _squared = F::simd_mul(&diff.view(), &diff.view());
+                let distance_sq = F::simd_sum(&_squared.view());
 
                 if distance_sq <= radius_squared {
                     results.push((point_idx, distance_sq));
@@ -339,16 +339,16 @@ impl AdvancedSimdOps {
 
     /// Scalar k-nearest neighbor search for comparison and fallback
     #[allow(dead_code)]
-    fn scalar_knn<F>(points: &ArrayView2<F>, query: &ArrayView1<F>, k: usize) -> Vec<(usize, F)>
+    fn scalar_knn<F>(_points: &ArrayView2<F>, query: &ArrayView1<F>, k: usize) -> Vec<(usize, F)>
     where
         F: Float + Zero + PartialOrd,
     {
-        let n_points = points.nrows();
+        let n_points = _points.nrows();
         let k = k.min(n_points);
 
         let mut distances: Vec<(usize, F)> = (0..n_points)
             .map(|idx| {
-                let point = points.row(idx);
+                let point = _points.row(idx);
                 let distance = Self::scalar_distance(query, &point);
                 (idx, distance)
             })
@@ -405,7 +405,7 @@ impl AdvancedSimdOps {
 
                 if heap.len() < k {
                     heap.push((ordered_float::OrderedFloat(distance), point_idx));
-                } else if let Some((max_dist, _)) = heap.peek() {
+                } else if let Some((max_dist_)) = heap.peek() {
                     if ordered_float::OrderedFloat(distance) < *max_dist {
                         heap.pop();
                         heap.push((ordered_float::OrderedFloat(distance), point_idx));

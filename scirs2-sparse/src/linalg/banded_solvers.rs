@@ -3,7 +3,7 @@
 //! This module provides specialized high-performance solvers for banded matrices,
 //! including Cholesky decomposition, LDLT factorization, and block-based algorithms.
 
-use crate::banded_array::BandedArray;
+use crate::banded__array::BandedArray;
 use crate::error::{SparseError, SparseResult};
 use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, Zero, One};
@@ -51,9 +51,9 @@ where
     T: Float + Debug + Copy + Zero + One,
 {
     /// Create a new banded solver
-    pub fn new(matrix: BandedArray<T>) -> Self {
+    pub fn new(_matrix: BandedArray<T>) -> Self {
         Self {
-            matrix,
+            _matrix,
             factorized: false,
             cholesky_factor: None,
             ldlt_factors: None,
@@ -77,8 +77,8 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2_sparse::banded_array::BandedArray;
-    /// use scirs2_sparse::linalg::banded_solvers::BandedSolver;
+    /// use scirs2__sparse::banded_array::BandedArray;
+    /// use scirs2__sparse::linalg::banded_solvers::BandedSolver;
     ///
     /// // Create a symmetric positive definite tridiagonal matrix
     /// let diag = vec![4.0, 4.0, 4.0];
@@ -372,7 +372,7 @@ where
             }
             
             // Check convergence
-            let residual_norm = residual.iter().map(|&r| r * r).fold(T::zero(), |a, b| a + b).sqrt();
+            let residual_norm = residual._iter().map(|&r| r * r).fold(T::zero(), |a, b| a + b).sqrt();
             if residual_norm < tolerance {
                 break;
             }
@@ -513,7 +513,7 @@ pub mod specialized {
     where
         T: Float + Debug + Copy + Zero + One,
     {
-        let bs = block_size.unwrap_or(64); // Default block size
+        let bs = block_size.unwrap_or(64); // Default block _size
         let n = matrix.shape().0;
         
         // For now, fall back to regular solver

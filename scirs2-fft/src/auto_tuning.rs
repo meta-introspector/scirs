@@ -8,7 +8,7 @@
 //! - Persisting tuning results for future use
 //! - Detecting CPU features and adapting algorithms accordingly
 
-use num_complex::Complex64;
+use num__complex::Complex64;
 use rustfft::FftPlanner;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use crate::error::{FFTError, FFTResult};
-use crate::plan_serialization::PlanSerializationManager;
+use crate::plan__serialization::PlanSerializationManager;
 
 /// A range of FFT sizes to benchmark
 #[derive(Debug, Clone)]
@@ -154,9 +154,9 @@ impl AutoTuner {
     }
 
     /// Create a new auto-tuner with custom configuration
-    pub fn with_config(config: AutoTuneConfig) -> Self {
+    pub fn with_config(_config: AutoTuneConfig) -> Self {
         let database =
-            Self::load_database(&config.database_path).unwrap_or_else(|_| TuningDatabase {
+            Self::load_database(&_config.database_path).unwrap_or_else(|_| TuningDatabase {
                 results: Vec::new(),
                 last_updated: std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
@@ -166,22 +166,22 @@ impl AutoTuner {
             });
 
         Self {
-            config,
+            _config,
             database,
             enabled: true,
         }
     }
 
     /// Load the tuning database from disk
-    fn load_database(path: &Path) -> FFTResult<TuningDatabase> {
-        if !path.exists() {
+    fn load_database(_path: &Path) -> FFTResult<TuningDatabase> {
+        if !_path.exists() {
             return Err(FFTError::IOError(format!(
                 "Tuning database file not found: {}",
-                path.display()
+                _path.display()
             )));
         }
 
-        let file = File::open(path)
+        let file = File::open(_path)
             .map_err(|e| FFTError::IOError(format!("Failed to open tuning database: {e}")))?;
 
         let reader = BufReader::new(file);
@@ -442,7 +442,7 @@ impl AutoTuner {
         // detect actual CPU model, features, etc.
         SystemInfo {
             cpu_model: String::from("Unknown"),
-            num_cores: num_cpus::get(),
+            num_cores: num, _cpus: get(),
             architecture: std::env::consts::ARCH.to_string(),
             cpu_features: detect_cpu_features(),
         }
@@ -550,7 +550,7 @@ impl AutoTuner {
             FftVariant::Cached => {
                 // Use the plan cache via PlanSerializationManager
                 // Create a plan directly - manager is not needed here
-                let (plan, _) =
+                let (plan_) =
                     crate::plan_serialization::create_and_time_plan(actual_size, forward);
                 plan.process(&mut buffer);
             }

@@ -331,15 +331,15 @@ fn example_complex_nested_computation() -> CoreResult<()> {
 /// Helper function to print partition information
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-fn print_partition_info<T>(partitions: &[Vec<T>]) {
+fn print_partition_info<T>(_partitions: &[Vec<T>]) {
     println!("  Partition sizes:");
-    for (i, partition) in partitions.iter().enumerate() {
+    for (i, partition) in _partitions.iter().enumerate() {
         println!("    Partition {}: {} elements", i, partition.len());
     }
 
     // Calculate load balance
-    if !partitions.is_empty() {
-        let sizes: Vec<usize> = partitions.iter().map(|p| p.len()).collect();
+    if !_partitions.is_empty() {
+        let sizes: Vec<usize> = _partitions.iter().map(|p| p.len()).collect();
         let min_size = *sizes.iter().min().unwrap_or(&0);
         let max_size = *sizes.iter().max().unwrap_or(&0);
         let avg_size = sizes.iter().sum::<usize>() / sizes.len();

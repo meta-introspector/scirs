@@ -42,8 +42,7 @@ impl MemoryMapper {
         strategy: MemoryStrategy,
     ) -> Result<Self> {
         let pool_size = match strategy {
-            MemoryStrategy::PoolBased(size) => size,
-            _ => 0,
+            MemoryStrategy::PoolBased(size) => size_ => 0,
         };
         Ok(Self {
             device,
@@ -217,7 +216,7 @@ impl MemoryMapper {
             num_allocations: allocations.len(),
             fragmentation,
     /// Align size to alignment requirement
-    fn align_size(size: usize, alignment: usize) -> usize {
+    fn align_size(_size: usize, alignment: usize) -> usize {
         (size + alignment - 1) & !(alignment - 1)
 /// Memory layout specification
 pub struct MemoryLayout {
@@ -271,7 +270,7 @@ struct MemoryPool {
     current_size: usize,
 impl MemoryPool {
     /// Create a new memory pool
-    fn new(max_size: usize) -> Self {
+    fn new(_max_size: usize) -> Self {
         Self {
             free_buffers: HashMap::new(),
             max_size,

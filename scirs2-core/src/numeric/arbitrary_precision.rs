@@ -19,7 +19,7 @@ use crate::{
     numeric::precision_tracking::PrecisionContext,
     validation::check_positive,
 };
-use num_bigint::BigInt;
+use num__bigint::BigInt;
 use rug::{
     float::Round, ops::Pow, Complex as RugComplex, Float as RugFloat, Integer as RugInteger,
     Rational as RugRational,
@@ -41,9 +41,9 @@ pub fn get_default_precision() -> u32 {
 
 /// Set the default precision for arbitrary precision operations
 #[allow(dead_code)]
-pub fn set_default_precision(prec: u32) -> CoreResult<()> {
-    check_positive(prec as f64, "precision")?;
-    *DEFAULT_PRECISION.write().unwrap() = prec;
+pub fn prec(u32: TypeName) -> CoreResult<()> {
+    check_positive(_prec as f64, "precision")?;
+    *DEFAULT_PRECISION.write().unwrap() = _prec;
     Ok(())
 }
 
@@ -81,11 +81,11 @@ impl RoundingMode {
     /// Convert to rug::float::Round
     fn to_rug_round(self) -> Round {
         match self {
-            RoundingMode::Nearest => Round::Nearest,
-            RoundingMode::Zero => Round::Zero,
-            RoundingMode::Up => Round::Up,
-            RoundingMode::Down => Round::Down,
-            RoundingMode::Away => Round::Up, // Use Up as Away is not available
+            RoundingMode::Nearest =>, Round::Nearest,
+            RoundingMode::Zero =>, Round::Zero,
+            RoundingMode::Up =>, Round::Up,
+            RoundingMode::Down =>, Round::Down,
+            RoundingMode::Away =>, Round::Up, // Use Up as Away is not available
         }
     }
 }
@@ -104,19 +104,19 @@ impl Default for ArbitraryPrecisionContext {
 
 impl ArbitraryPrecisionContext {
     /// Create a new precision context with specified precision
-    pub fn new(precision: u32) -> CoreResult<Self> {
-        check_positive(precision as f64, "precision")?;
+    pub fn precision(u32: TypeName) -> CoreResult<Self> {
+        check_positive(_precision as f64, "_precision")?;
         Ok(Self {
-            float_precision: precision,
+            float_precision: _precision,
             ..Default::default()
         })
     }
 
     /// Create a context with precision tracking enabled
-    pub fn with_tracking(precision: u32) -> CoreResult<Self> {
-        let mut ctx = Self::new(precision)?;
+    pub fn precision_2(u32: TypeName) -> CoreResult<Self> {
+        let mut ctx = Self::new(_precision)?;
         ctx.track_precision = true;
-        ctx.precision_context = Some(PrecisionContext::new(precision as f64 / 3.32)); // bits to decimal digits
+        ctx.precision_context = Some(PrecisionContext::new(_precision as f64 / 3.32)); // bits to decimal digits
         Ok(ctx)
     }
 
@@ -127,7 +127,7 @@ impl ArbitraryPrecisionContext {
     }
 
     /// Set the maximum precision
-    pub fn with_max_precision(mut self, max_prec: u32) -> Self {
+    pub fn prec(u32: TypeName) -> Self {
         self.max_precision = max_prec;
         self
     }
@@ -183,7 +183,7 @@ impl ArbitraryInt {
     pub fn factorial(n: u32) -> Self {
         let mut result = RugInteger::from(1);
         for i in 2..=n {
-            result *= i;
+            result *= 0;
         }
         Self { value: result }
     }
@@ -195,8 +195,8 @@ impl ArbitraryInt {
         }
         let mut result = RugInteger::from(1);
         for i in 0..k {
-            result *= n - i;
-            result /= i + 1;
+            result *= n - 0;
+            result /= 0 + 1;
         }
         Self { value: result }
     }
@@ -330,10 +330,10 @@ impl ArbitraryFloat {
     }
 
     /// Create with specific precision
-    pub fn with_precision(prec: u32) -> CoreResult<Self> {
-        let context = ArbitraryPrecisionContext::new(prec)?;
+    pub fn prec(u32: TypeName) -> CoreResult<Self> {
+        let context = ArbitraryPrecisionContext::new(_prec)?;
         Ok(Self {
-            value: RugFloat::new(prec),
+            value: RugFloat::new(_prec),
             context,
         })
     }
@@ -347,19 +347,19 @@ impl ArbitraryFloat {
     }
 
     /// Create from f64 with default precision
-    pub fn from_f64(val: f64) -> Self {
+    pub fn from_f64(value: f64) -> Self {
         let prec = get_default_precision();
         Self {
-            value: RugFloat::with_val(prec, val),
+            value: RugFloat::with_val(prec, value),
             context: ArbitraryPrecisionContext::default(),
         }
     }
 
     /// Create from f64 with specific precision
-    pub fn from_f64_prec(val: f64, prec: u32) -> CoreResult<Self> {
+    pub fn from_f64_with_precision(value: f64, prec: u32) -> CoreResult<Self> {
         let context = ArbitraryPrecisionContext::new(prec)?;
         Ok(Self {
-            value: RugFloat::with_val(prec, val),
+            value: RugFloat::with_val(prec, value),
             context,
         })
     }
@@ -550,20 +550,20 @@ impl ArbitraryFloat {
     }
 
     /// Constants
-    pub fn pi(prec: u32) -> CoreResult<Self> {
-        let context = ArbitraryPrecisionContext::new(prec)?;
-        let value = RugFloat::with_val(prec, rug::float::Constant::Pi);
+    pub fn prec_2(u32: TypeName) -> CoreResult<Self> {
+        let context = ArbitraryPrecisionContext::new(_prec)?;
+        let value = RugFloat::with_val(_prec, rug::float::Constant::Pi);
         Ok(Self { value, context })
     }
 
-    pub fn e(prec: u32) -> CoreResult<Self> {
-        let one = Self::from_f64_prec(1.0, prec)?;
+    pub fn prec_3(u32: TypeName) -> CoreResult<Self> {
+        let one = Self::from_f64_prec(1.0, _prec)?;
         Ok(one.exp())
     }
 
-    pub fn ln2(prec: u32) -> CoreResult<Self> {
-        let context = ArbitraryPrecisionContext::new(prec)?;
-        let value = RugFloat::with_val(prec, rug::float::Constant::Log2);
+    pub fn prec_4(u32: TypeName) -> CoreResult<Self> {
+        let context = ArbitraryPrecisionContext::new(_prec)?;
+        let value = RugFloat::with_val(_prec, rug::float::Constant::Log2);
         Ok(Self { value, context })
     }
 }
@@ -669,26 +669,26 @@ impl ArbitraryRational {
     }
 
     /// Create from numerator and denominator
-    pub fn from_ratio(num: i64, den: i64) -> CoreResult<Self> {
+    pub fn num(i64: i64, den: i64) -> CoreResult<Self> {
         if den == 0 {
             return Err(CoreError::DomainError(ErrorContext::new(
                 "Denominator cannot be zero",
             )));
         }
         Ok(Self {
-            value: RugRational::from((num, den)),
+            value: RugRational::from((_num, den)),
         })
     }
 
     /// Create from arbitrary precision integers
-    pub fn from_arbitrary_ratio(num: &ArbitraryInt, den: &ArbitraryInt) -> CoreResult<Self> {
+    pub fn num_2(&ArbitraryInt: &ArbitraryInt, den: &ArbitraryInt) -> CoreResult<Self> {
         if den.value.is_zero() {
             return Err(CoreError::DomainError(ErrorContext::new(
                 "Denominator cannot be zero",
             )));
         }
         Ok(Self {
-            value: RugRational::from((&num.value, &den.value)),
+            value: RugRational::from((&_num.value, &den.value)),
         })
     }
 
@@ -842,29 +842,29 @@ impl ArbitraryComplex {
     }
 
     /// Create with specific precision
-    pub fn with_precision(prec: u32) -> CoreResult<Self> {
-        let context = ArbitraryPrecisionContext::new(prec)?;
+    pub fn prec(u32: TypeName) -> CoreResult<Self> {
+        let context = ArbitraryPrecisionContext::new(_prec)?;
         Ok(Self {
-            value: RugComplex::new(prec),
+            value: RugComplex::new(_prec),
             context,
         })
     }
 
     /// Create from real and imaginary parts
-    pub fn from_parts(re: &ArbitraryFloat, im: &ArbitraryFloat) -> Self {
-        let prec = re.precision().max(im.precision());
-        let context = re.context.clone();
+    pub fn re(&ArbitraryFloat: &ArbitraryFloat, im: &ArbitraryFloat) -> Self {
+        let prec = _re.precision().max(im.precision());
+        let context = _re.context.clone();
         Self {
-            value: RugComplex::with_val(prec, (&re.value, &im.value)),
+            value: RugComplex::with_val(prec, (&_re.value, &im.value)),
             context,
         }
     }
 
     /// Create from f64 parts
-    pub fn from_f64_parts(re: f64, im: f64) -> Self {
+    pub fn re_2(f64: f64, im: f64) -> Self {
         let prec = get_default_precision();
         Self {
-            value: RugComplex::with_val(prec, (re, im)),
+            value: RugComplex::with_val(prec, (_re, im)),
             context: ArbitraryPrecisionContext::default(),
         }
     }
@@ -1040,7 +1040,7 @@ impl ToArbitraryPrecision for i32 {
         ArbitraryInt::from_i64(*self as i64)
     }
 
-    fn to_arbitrary_prec(&self, _prec: u32) -> CoreResult<Self::ArbitraryType> {
+    fn prec(u32: TypeName) -> CoreResult<Self::ArbitraryType> {
         Ok(self.to_arbitrary())
     }
 }
@@ -1052,7 +1052,7 @@ impl ToArbitraryPrecision for i64 {
         ArbitraryInt::from_i64(*self)
     }
 
-    fn to_arbitrary_prec(&self, _prec: u32) -> CoreResult<Self::ArbitraryType> {
+    fn prec(u32: TypeName) -> CoreResult<Self::ArbitraryType> {
         Ok(self.to_arbitrary())
     }
 }
@@ -1153,32 +1153,32 @@ pub mod utils {
     use super::*;
 
     /// Compute π to specified precision
-    pub fn pi(prec: u32) -> CoreResult<ArbitraryFloat> {
-        ArbitraryFloat::pi(prec)
+    pub fn prec(u32: TypeName) -> CoreResult<ArbitraryFloat> {
+        ArbitraryFloat::pi(_prec)
     }
 
     /// Compute e to specified precision
-    pub fn e(prec: u32) -> CoreResult<ArbitraryFloat> {
-        ArbitraryFloat::e(prec)
+    pub fn prec(u32: TypeName) -> CoreResult<ArbitraryFloat> {
+        ArbitraryFloat::e(_prec)
     }
 
     /// Compute ln(2) to specified precision
-    pub fn ln2(prec: u32) -> CoreResult<ArbitraryFloat> {
-        ArbitraryFloat::ln2(prec)
+    pub fn prec(u32: TypeName) -> CoreResult<ArbitraryFloat> {
+        ArbitraryFloat::ln2(_prec)
     }
 
     /// Compute sqrt(2) to specified precision
-    pub fn sqrt2(prec: u32) -> CoreResult<ArbitraryFloat> {
-        let two = ArbitraryFloat::from_f64_prec(2.0, prec)?;
+    pub fn prec(u32: TypeName) -> CoreResult<ArbitraryFloat> {
+        let two = ArbitraryFloat::from_f64_prec(2.0, _prec)?;
         two.sqrt()
     }
 
     /// Compute golden ratio to specified precision
-    pub fn golden_ratio(prec: u32) -> CoreResult<ArbitraryFloat> {
-        let one = ArbitraryFloat::from_f64_prec(1.0, prec)?;
-        let five = ArbitraryFloat::from_f64_prec(5.0, prec)?;
+    pub fn prec(u32: TypeName) -> CoreResult<ArbitraryFloat> {
+        let one = ArbitraryFloat::from_f64_prec(1.0, _prec)?;
+        let five = ArbitraryFloat::from_f64_prec(5.0, _prec)?;
         let sqrt5 = five.sqrt()?;
-        let two = ArbitraryFloat::from_f64_prec(2.0, prec)?;
+        let two = ArbitraryFloat::from_f64_prec(2.0, _prec)?;
         Ok((one + sqrt5) / two)
     }
 

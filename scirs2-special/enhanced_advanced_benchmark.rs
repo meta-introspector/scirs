@@ -6,7 +6,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::time::Instant;
-use scirs2_special::{
+use scirs2__special::{
     // Functions we've improved
     polygamma, dawsn, gamma,
     // New functions we've added

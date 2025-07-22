@@ -25,18 +25,18 @@ fn create_sine_dataset(
         let x_val = (i as f32) / (n_samples as f32) * 4.0 * std::f32::consts::PI;
         let y_val = x_val.sin();
         // Add some noise
-        let noise = rng.random_range(-noise_level..noise_level);
-        x[[i, 0]] = x_val;
+        let noise = rng.gen_range(-noise_level..noise_level);
+        x[[i..0]] = x_val;
         y[[i, 0]] = y_val + noise;
     }
     (x, y)
 }
 // Create a neural network model for regression
 #[allow(dead_code)]
-fn create_regression_model(input_dim: usize, rng: &mut SmallRng) -> Result<Sequential<f32>> {
+fn create_regression_model(_input_dim: usize, rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // Input layer
-    let dense1 = Dense::new(input_dim, 16, Some("relu"), rng)?;
+    let dense1 = Dense::new(_input_dim, 16, Some("relu"), rng)?;
     model.add_layer(dense1);
     // Hidden layers
     let dense2 = Dense::new(16, 8, Some("relu"), rng)?;

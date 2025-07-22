@@ -6,6 +6,7 @@
 //! Spheroidal Sequences (DPSS) tapers, also known as Slepian sequences.
 
 // Import internal modules
+#[allow(unused_imports)]
 mod adaptive;
 pub mod dpss_enhanced; // Re-enabled with no external dependencies
 pub mod enhanced;
@@ -18,7 +19,7 @@ pub mod windows;
 
 // Re-export public components
 pub use adaptive::adaptive_psd;
-pub use dpss_enhanced::{dpss_enhanced, validate_dpss_implementation};
+pub use dpss__enhanced::{dpss_enhanced, validate_dpss_implementation};
 pub use enhanced::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};
 pub use ftest::{harmonic_ftest, multitaper_ftest, multitaper_ftest_complex};
 pub use jackknife::{cross_spectrum_jackknife, jackknife_confidence_intervals, weighted_jackknife};

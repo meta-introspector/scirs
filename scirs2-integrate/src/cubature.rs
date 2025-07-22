@@ -127,7 +127,7 @@ fn transform_for_infinite_bounds<F: IntegrateFloat>(x: F, a: &Bound<F>, b: &Boun
         }
 
         // Invalid or unsupported interval types
-        (Bound::Finite(_), Bound::NegInf) | (Bound::NegInf, Bound::NegInf) | (Bound::PosInf, _) => {
+        (Bound::Finite(_), Bound::NegInf) | (Bound::NegInf, Bound::NegInf) | (Bound:: PosInf) => {
             // These cases represent invalid integration ranges
             // Return zero values to ensure the integral is zero
             (F::zero(), F::zero())
@@ -150,7 +150,7 @@ fn transform_for_infinite_bounds<F: IntegrateFloat>(x: F, a: &Bound<F>, b: &Boun
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::cubature::{cubature, Bound};
+/// use scirs2__integrate::cubature::{cubature, Bound};
 /// use ndarray::Array1;
 ///
 /// // Define a 2D integrand: f(x,y) = x * y
@@ -188,7 +188,7 @@ where
     // Validate bounds: check for invalid integration ranges
     for (lower, upper) in bounds {
         match (lower, upper) {
-            (Bound::PosInf, _) => {
+            (Bound:: PosInf) => {
                 return Err(IntegrateError::ValueError(
                     "Lower bound cannot be positive infinity".to_string(),
                 ));
@@ -219,14 +219,12 @@ where
         // For infinite bounds, use [0,1] as our working range for the transformation
         let mapped_lower = match lower {
             Bound::Finite(v) => *v,
-            Bound::NegInf => F::zero(),
-            _ => unreachable!(), // We already validated bounds
+            Bound::NegInf =>, F::zero(, _ => unreachable!(), // We already validated bounds
         };
 
         let mapped_upper = match upper {
             Bound::Finite(v) => *v,
-            Bound::PosInf => F::one(),
-            _ => unreachable!(), // We already validated bounds
+            Bound::PosInf =>, F::one(, _ => unreachable!(), // We already validated bounds
         };
 
         mapped_bounds.push((mapped_lower, mapped_upper));
@@ -285,13 +283,13 @@ where
         return Ok((result, error, true));
     }
 
-    // Check if we're dealing with infinite bounds for this dimension
+    // Check if we're dealing with infinite _bounds for this dimension
     let (a_bound, b_bound) = &original_bounds[dim];
     let has_infinite_bound = a_bound.is_infinite() || b_bound.is_infinite();
 
-    // Choose appropriate quadrature rule based on infinite bounds
+    // Choose appropriate quadrature rule based on infinite _bounds
     if has_infinite_bound {
-        // For infinite bounds, use a transformation and higher number of points
+        // For infinite _bounds, use a transformation and higher number of points
         integrate_with_infinite_bounds(
             f,
             mapped_bounds,
@@ -302,7 +300,7 @@ where
             options,
         )
     } else {
-        // For finite bounds, use standard Gauss-Kronrod quadrature
+        // For finite _bounds, use standard Gauss-Kronrod quadrature
         integrate_with_finite_bounds(
             f,
             mapped_bounds,
@@ -330,7 +328,7 @@ where
     F: IntegrateFloat,
     Func: Fn(&Array1<F>) -> F,
 {
-    // Get the current dimension's bounds
+    // Get the current dimension's _bounds
     let (a, b) = mapped_bounds[dim];
 
     // Set up 7-point Gauss-Kronrod quadrature for better accuracy
@@ -429,7 +427,7 @@ where
     F: IntegrateFloat,
     Func: Fn(&Array1<F>) -> F,
 {
-    // For infinite bounds, use Gauss-Legendre quadrature on the transformed interval
+    // For infinite _bounds, use Gauss-Legendre quadrature on the transformed interval
     let (a_bound, b_bound) = &original_bounds[dim];
 
     // Use 20-point Gauss-Legendre quadrature for better accuracy
@@ -484,13 +482,12 @@ where
     let mut all_converged = true;
 
     // Map nodes from [-1,1] to [0,1] for our transformation
-    // But avoid exact 0 and 1 for infinite bounds
+    // But avoid exact 0 and 1 for infinite _bounds
     let scale_factor = match (a_bound, b_bound) {
         (Bound::Finite(_), Bound::PosInf) | (Bound::NegInf, Bound::Finite(_)) => {
             F::from_f64(0.4999).unwrap()
         }
-        (Bound::NegInf, Bound::PosInf) => F::from_f64(0.499).unwrap(),
-        _ => unreachable!(),
+        (Bound::NegInf, Bound::PosInf) =>, F::from_f64(0.499).unwrap(, _ => unreachable!(),
     };
 
     let offset = F::from_f64(0.5).unwrap();
@@ -552,7 +549,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::cubature::nquad;
+/// use scirs2__integrate::cubature::nquad;
 ///
 /// // Integrate x*y over [0,1]×[0,1]
 /// let f = |args: &[f64]| args[0] * args[1];

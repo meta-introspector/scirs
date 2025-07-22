@@ -5,7 +5,7 @@
 //! 2. Split and merge color channels
 //! 3. Apply weighted grayscale conversion
 
-use scirs2_vision::color::{
+use scirs2__vision::color::{
     hsv_to_rgb, lab_to_rgb, merge_channels, rgb_to_grayscale, rgb_to_hsv, rgb_to_lab,
     split_channels,
 };
@@ -57,19 +57,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn process_image(img: &image::DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
+fn process_image(_img: &image::DynamicImage) -> Result<(), Box<dyn std::error::Error>> {
     // 1. RGB to Grayscale conversion
     println!("Converting to grayscale...");
-    let grayscale = rgb_to_grayscale(img, None)?;
+    let grayscale = rgb_to_grayscale(_img, None)?;
     println!("Standard grayscale conversion complete");
 
     // Custom weights for grayscale (emphasize green channel)
-    let _custom_grayscale = rgb_to_grayscale(img, Some([0.1, 0.8, 0.1]))?;
+    let _custom_grayscale = rgb_to_grayscale(_img, Some([0.1, 0.8, 0.1]))?;
     println!("Custom-weighted grayscale conversion complete");
 
     // 2. RGB to HSV conversion
     println!("Converting RGB to HSV...");
-    let hsv = rgb_to_hsv(img)?;
+    let hsv = rgb_to_hsv(_img)?;
 
     // Convert back to RGB
     println!("Converting HSV back to RGB...");
@@ -78,7 +78,7 @@ fn process_image(img: &image::DynamicImage) -> Result<(), Box<dyn std::error::Er
 
     // 3. RGB to LAB conversion
     println!("Converting RGB to LAB...");
-    let lab = rgb_to_lab(img)?;
+    let lab = rgb_to_lab(_img)?;
 
     // Convert back to RGB
     println!("Converting LAB back to RGB...");
@@ -87,7 +87,7 @@ fn process_image(img: &image::DynamicImage) -> Result<(), Box<dyn std::error::Er
 
     // 4. Channel splitting and merging
     println!("Splitting color channels...");
-    let (r_channel, g_channel, b_channel) = split_channels(img)?;
+    let (r_channel, g_channel, b_channel) = split_channels(_img)?;
 
     println!("Merging color channels...");
     let merged = merge_channels(&r_channel, &g_channel, &b_channel)?;
@@ -97,8 +97,8 @@ fn process_image(img: &image::DynamicImage) -> Result<(), Box<dyn std::error::Er
     println!("Color transformation results:");
     println!(
         "- Original image dimensions: {}x{}",
-        img.width(),
-        img.height()
+        _img.width(),
+        _img.height()
     );
     println!(
         "- Grayscale image dimensions: {}x{}",

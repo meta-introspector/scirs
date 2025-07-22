@@ -4,9 +4,9 @@
 //! scirs2-fft results with known correct values and other implementations.
 
 use ndarray::Array2;
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::identities::Zero;
-use scirs2_fft::{dct, fft, fft2, frft, frft_complex, ifft, irfft, rfft};
+use scirs2__fft::{dct, fft, fft2, frft, frft_complex, ifft, irfft, rfft};
 use std::f64::consts::PI;
 
 /// Accuracy test result
@@ -23,15 +23,15 @@ pub struct AccuracyResult {
 
 /// Calculate error metrics between two complex vectors
 #[allow(dead_code)]
-fn calculate_complex_error(actual: &[Complex64], expected: &[Complex64]) -> (f64, f64, f64, f64) {
-    assert_eq!(actual.len(), expected.len());
+fn calculate_complex_error(_actual: &[Complex64], expected: &[Complex64]) -> (f64, f64, f64, f64) {
+    assert_eq!(_actual.len(), expected.len());
 
     let mut max_error: f64 = 0.0;
     let mut sum_error: f64 = 0.0;
     let mut sum_squared_error: f64 = 0.0;
     let mut sum_magnitude: f64 = 0.0;
 
-    for (a, e) in actual.iter().zip(expected.iter()) {
+    for (a, e) in _actual.iter().zip(expected.iter()) {
         let error = (a - e).norm();
         max_error = max_error.max(error);
         sum_error += error;
@@ -39,7 +39,7 @@ fn calculate_complex_error(actual: &[Complex64], expected: &[Complex64]) -> (f64
         sum_magnitude += e.norm();
     }
 
-    let n = actual.len() as f64;
+    let n = _actual.len() as f64;
     let mean_error = sum_error / n;
     let rms_error = (sum_squared_error / n).sqrt();
     let relative_error = if sum_magnitude > 0.0 {
@@ -53,15 +53,15 @@ fn calculate_complex_error(actual: &[Complex64], expected: &[Complex64]) -> (f64
 
 /// Calculate error metrics between two real vectors
 #[allow(dead_code)]
-fn calculate_real_error(actual: &[f64], expected: &[f64]) -> (f64, f64, f64, f64) {
-    assert_eq!(actual.len(), expected.len());
+fn calculate_real_error(_actual: &[f64], expected: &[f64]) -> (f64, f64, f64, f64) {
+    assert_eq!(_actual.len(), expected.len());
 
     let mut max_error: f64 = 0.0;
     let mut sum_error: f64 = 0.0;
     let mut sum_squared_error: f64 = 0.0;
     let mut sum_magnitude: f64 = 0.0;
 
-    for (a, e) in actual.iter().zip(expected.iter()) {
+    for (a, e) in _actual.iter().zip(expected.iter()) {
         let error = (a - e).abs();
         max_error = max_error.max(error);
         sum_error += error;
@@ -69,7 +69,7 @@ fn calculate_real_error(actual: &[f64], expected: &[f64]) -> (f64, f64, f64, f64
         sum_magnitude += e.abs();
     }
 
-    let n = actual.len() as f64;
+    let n = _actual.len() as f64;
     let mean_error = sum_error / n;
     let rms_error = (sum_squared_error / n).sqrt();
     let relative_error = if sum_magnitude > 0.0 {
@@ -361,12 +361,12 @@ pub fn test_frft_accuracy() -> Vec<AccuracyResult> {
 
 /// Generate accuracy report
 #[allow(dead_code)]
-pub fn generate_accuracy_report(results: &[AccuracyResult]) {
+pub fn generate_accuracy_report(_results: &[AccuracyResult]) {
     println!("=== Accuracy Comparison Report ===");
     println!("Operation | Size | Max Error | Mean Error | RMS Error | Rel Error | Notes");
     println!("{}", "-".repeat(100));
 
-    for result in results {
+    for result in _results {
         println!(
             "{:15} | {:4} | {:9.2e} | {:10.2e} | {:9.2e} | {:9.2e} | {}",
             result.operation,
@@ -435,8 +435,7 @@ mod tests {
                 "fft2_accuracy" => assert!(result.mean_error < 1e-8, "2D FFT accuracy"),
                 "dct_ii_frequency" => assert!(result.max_error < 1.0, "DCT frequency detection"),
                 // The FrFT additivity property has known numerical issues as documented in FRFT_NUMERICAL_ISSUES.md
-                "frft_additivity" => assert!(result.relative_error < 15.0, "FrFT additivity"),
-                _ => {}
+                "frft_additivity" => assert!(result.relative_error < 15.0, "FrFT additivity", _ => {}
             }
         }
     }

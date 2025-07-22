@@ -60,9 +60,9 @@ where
     F: ChunkableFunction<T> + Send + Sync,
 {
     /// Create a new chunked processor
-    pub fn new(config: ChunkedConfig, function: F) -> Self {
+    pub fn new(_config: ChunkedConfig, function: F) -> Self {
         Self {
-            config,
+            config: _config,
             function,
             _phantom: PhantomData,
         }
@@ -382,7 +382,7 @@ mod tests {
     #[test]
     fn test_chunk_size_calculation() {
         let config = ChunkedConfig::default();
-        let processor: ChunkedProcessor<f64, _> =
+        let processor: ChunkedProcessor<f64_> =
             ChunkedProcessor::new(config, ChunkedGamma::new());
 
         // Small array - no chunking

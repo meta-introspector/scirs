@@ -182,33 +182,31 @@ unsafe impl Sync for GpuMemoryHandle {}
 pub struct CudaTensor<T> {
     data: GpuMemoryHandle,
     shape: Vec<usize>,
-    strides: Vec<usize>,
-    _phantom: std::marker::PhantomData<T>,
+    strides: Vec<usize>, _phantom: std::marker::PhantomData<T>,
 impl<T> CudaTensor<T>
 where
     T: Copy + Default + Send + Sync,
 {
     /// Create new CUDA tensor
-    pub fn new(shape: Vec<usize>, device_id: u32, context: &GpuContext) -> Result<Self> {
-        let size = shape.iter().product::<usize>() * std::mem::size_of::<T>();
+    pub fn new(_shape: Vec<usize>, device_id: u32, context: &GpuContext) -> Result<Self> {
+        let size = _shape.iter().product::<usize>() * std::mem::size_of::<T>();
         let data = context.allocate_memory(size as u64, device_id)?;
-        let mut strides = vec![1; shape.len()];
-        for i in (0..shape.len().saturating_sub(1)).rev() {
-            strides[i] = strides[i + 1] * shape[i + 1];
+        let mut strides = vec![1; _shape.len()];
+        for i in (0.._shape.len().saturating_sub(1)).rev() {
+            strides[i] = strides[i + 1] * _shape[i + 1];
             data,
-            shape,
-            strides,
-            _phantom: std::marker::PhantomData,
-    /// Get tensor shape
-    pub fn shape(&self) -> &[usize] {
-        &self.shape
+            _shape,
+            strides_phantom: std::marker::PhantomData,
+    /// Get tensor _shape
+    pub fn _shape(&self) -> &[usize] {
+        &self._shape
     /// Get device ID
     pub fn device_id(&self) -> u32 {
         self.device_id
     /// Copy tensor to different device
     pub fn to_device(&self, target_device: u32, context: &GpuContext) -> Result<Self> {
-        let new_tensor = Self::new(self.shape.clone(), target_device, context)?;
-        // In real implementation, would perform device-to-device copy
+        let new_tensor = Self::new(self._shape.clone(), target_device, context)?;
+        // In real implementation, would perform _device-to-_device copy
         Ok(new_tensor)
     }
 }
@@ -229,9 +227,9 @@ pub enum ReductionStrategy {
     Hierarchical,
 impl MultiGpuTrainer {
     /// Create new multi-GPU trainer
-    pub fn new(device_ids: Vec<u32>) -> Result<Self> {
+    pub fn new(_device_ids: Vec<u32>) -> Result<Self> {
         let mut contexts = Vec::new();
-        for &device_id in &device_ids {
+        for &device_id in &_device_ids {
             let mut context = GpuContext::new()?;
             context.set_device(device_id)?;
             contexts.push(Arc::new(context));
@@ -263,7 +261,7 @@ impl MultiGpuTrainer {
         }
     }
 
-    fn all_reduce_impl<T>(&self, _tensors: &mut [CudaTensor<T>]) -> Result<()>
+    fn all_reduce_impl<T>(&self_tensors: &mut [CudaTensor<T>]) -> Result<()>
     where
         T: Copy + Default + Send + Sync,
     {
@@ -273,13 +271,13 @@ impl MultiGpuTrainer {
         Ok(())
     }
 
-    fn parameter_server_reduce<T>(&self, _tensors: &mut [CudaTensor<T>]) -> Result<()> {
+    fn parameter_server_reduce<T>(&self_tensors: &mut [CudaTensor<T>]) -> Result<()> {
         // Simulate parameter server reduction
         thread::sleep(Duration::from_millis(2));
         Ok(())
     }
 
-    fn hierarchical_reduce<T>(&self, _tensors: &mut [CudaTensor<T>]) -> Result<()> {
+    fn hierarchical_reduce<T>(&self_tensors: &mut [CudaTensor<T>]) -> Result<()> {
         // Simulate hierarchical reduction
         thread::sleep(Duration::from_millis(1));
         Ok(())
@@ -320,12 +318,11 @@ impl NeuralOps {
             gpu_context: gpu_context.map(Arc::new),
             backend_type: backend_type.to_string(),
     /// Create with specified backend preference
-    pub fn with_backend(backend: &str) -> Result<Self> {
-        match backend.to_uppercase().as_str() {
+    pub fn with_backend(_backend: &str) -> Result<Self> {
+        match _backend.to_uppercase().as_str() {
             "GPU" | "CUDA" => Self::with_gpu(),
-            "CPU" => Self::new(),
-            _ => {
-                println!("Unknown backend '{}', falling back to CPU", backend);
+            "CPU" => Self::new(, _ => {
+                println!("Unknown _backend '{}', falling back to CPU", backend);
                 Self::new()
     pub fn enable_mixed_precision(&mut self, config: MixedPrecisionConfig) -> Result<()> {
         if self.gpu_context.is_none() {
@@ -526,8 +523,7 @@ impl NeuralOps {
         thread::sleep(Duration::from_micros(100)); // Simulate GPU computation
         Ok(result)
     /// GPU-accelerated ReLU activation
-    pub fn gpu_relu<T>(&self, input: &CudaTensor<T>) -> Result<CudaTensor<T>>
-        T: Copy + Default + Send + Sync + PartialOrd + From<f32>,
+    pub fn gpu_relu<T>(&self, input: &CudaTensor<T>) -> Result<CudaTensor<T>>, T: Copy + Default + Send + Sync + PartialOrd + From<f32>,
             input.shape().to_vec(),
             input.device_id(),
         // Simulate GPU kernel launch
@@ -594,8 +590,8 @@ pub fn create_neural_ops() -> Result<NeuralOps> {
     NeuralOps::new()
 /// Helper function to create neural operations with preferred backend
 #[allow(dead_code)]
-pub fn create_neural_ops_with_backend(backend: &str) -> Result<NeuralOps> {
-    NeuralOps::with_backend(backend)
+pub fn create_neural_ops_with_backend(_backend: &str) -> Result<NeuralOps> {
+    NeuralOps::with_backend(_backend)
 #[cfg(test)]
 mod tests {
     use super::*;

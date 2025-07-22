@@ -175,9 +175,9 @@ pub struct OnlineSplineInterpolator<T: Float + Debug + FromPrimitive> {
 
 impl<T: Float + Debug + FromPrimitive + Zero> OnlineSplineInterpolator<T> {
     /// Create a new online spline interpolator
-    pub fn new(config: StreamingConfig) -> Self {
+    pub fn new(_config: StreamingConfig) -> Self {
         Self {
-            config,
+            _config,
             points: VecDeque::new(),
             spline_coeffs: None,
             x_sorted: Array1::zeros(0),
@@ -558,9 +558,9 @@ pub struct StreamingRBFInterpolator<T: Float + Debug + FromPrimitive> {
 
 impl<T: Float + Debug + FromPrimitive + Zero> StreamingRBFInterpolator<T> {
     /// Create a new streaming RBF interpolator
-    pub fn new(config: StreamingConfig, kernel_width: T) -> Self {
+    pub fn new(_config: StreamingConfig, kernel_width: T) -> Self {
         Self {
-            config,
+            _config,
             points: VecDeque::new(),
             centers: Array1::zeros(0),
             weights: Array1::zeros(0),
@@ -793,8 +793,8 @@ pub fn make_streaming_rbf_interpolator<T: Float + Debug + FromPrimitive + Zero>(
     config: Option<StreamingConfig>,
     kernel_width: Option<T>,
 ) -> StreamingRBFInterpolator<T> {
-    let width = kernel_width.unwrap_or_else(|| T::from_f64(1.0).unwrap());
-    StreamingRBFInterpolator::new(config.unwrap_or_default(), width)
+    let _width = kernel_width.unwrap_or_else(|| T::from_f64(1.0).unwrap());
+    StreamingRBFInterpolator::new(config.unwrap_or_default(), _width)
 }
 
 /// Ensemble streaming interpolator that combines multiple methods

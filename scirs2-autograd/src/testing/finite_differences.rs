@@ -50,24 +50,21 @@ pub enum FiniteDifferenceScheme {
 
 /// Finite difference gradient computer
 pub struct FiniteDifferenceComputer<F: Float> {
-    config: FiniteDifferenceConfig,
-    _phantom: std::marker::PhantomData<F>,
+    config: FiniteDifferenceConfig_phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> FiniteDifferenceComputer<F> {
     /// Create a new finite difference computer
     pub fn new() -> Self {
         Self {
-            config: FiniteDifferenceConfig::default(),
-            _phantom: std::marker::PhantomData,
+            config: FiniteDifferenceConfig::default(), _phantom: std::marker::PhantomData,
         }
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: FiniteDifferenceConfig) -> Self {
+    pub fn with_config(_config: FiniteDifferenceConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 
@@ -312,10 +309,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
     #[allow(dead_code)]
     fn estimate_truncation_error<Func>(
-        &self,
-        _function: &Func,
-        _input: &Tensor<F>,
-        _step: F,
+        &self_function: &Func, _input: &Tensor<F>, _step: F,
     ) -> Result<F, StabilityError>
     where
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
@@ -344,9 +338,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
     #[allow(dead_code)]
     fn compute_partial_derivative(
-        &self,
-        _f_perturbed: &Tensor<F>,
-        _f_original: &Tensor<F>,
+        &self, _f_perturbed: &Tensor<F>, _f_original: &Tensor<F>,
         step: F,
     ) -> F {
         // Simplified - would compute actual difference between tensor values
@@ -356,9 +348,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
     #[allow(dead_code)]
     fn compute_central_partial_derivative(
-        &self,
-        _f_plus: &Tensor<F>,
-        _f_minus: &Tensor<F>,
+        &self, _f_plus: &Tensor<F>, _f_minus: &Tensor<F>,
         step: F,
     ) -> F {
         // Simplified - would compute actual difference between tensor values
@@ -479,24 +469,18 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     #[allow(dead_code)]
     fn create_single_perturbation<'a>(
         &self,
-        input: &Tensor<'a, F>,
-        _index: usize,
-        _delta: F,
+        input: &Tensor<'a, F>, _index: usize_delta: F,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create a copy of input with a single component perturbed
         let perturbed = *input;
-        // Simplified - would actually perturb the specific index
+        // Simplified - would actually perturb the specific _index
         Ok(perturbed)
     }
 
     #[allow(dead_code)]
     fn create_double_perturbation<'a>(
         &self,
-        input: &Tensor<'a, F>,
-        _i: usize,
-        _j: usize,
-        _delta_i: F,
-        _delta_j: F,
+        input: &Tensor<'a, F>, _i: usize_j: usize_delta, _i: F_delta_j: F,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create a copy of input with two components perturbed
         let perturbed = *input;
@@ -505,8 +489,8 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     }
 
     #[allow(dead_code)]
-    fn extract_scalar(&self, _tensor: &Tensor<'_, F>) -> Result<F, StabilityError> {
-        // Extract a scalar value from the tensor (assumes output is scalar)
+    fn extract_scalar(&self_tensor: &Tensor<'_, F>) -> Result<F, StabilityError> {
+        // Extract a scalar value from the _tensor (assumes output is scalar)
         // Simplified implementation
         Ok(F::from(1.0).unwrap())
     }
@@ -528,10 +512,10 @@ pub struct PerturbedInputIterator<'a, F: Float> {
 }
 
 impl<'a, F: Float> PerturbedInputIterator<'a, F> {
-    fn new(input: &Tensor<'a, F>, step: F) -> Self {
-        let max_index = input.shape().iter().product();
+    fn new(_input: &Tensor<'a, F>, step: F) -> Self {
+        let max_index = _input.shape().iter().product();
         Self {
-            input: *input,
+            _input: *_input,
             step,
             current_index: 0,
             max_index,
@@ -566,10 +550,10 @@ pub struct CentralPerturbedInputIterator<'a, F: Float> {
 }
 
 impl<'a, F: Float> CentralPerturbedInputIterator<'a, F> {
-    fn new(input: &Tensor<'a, F>, step: F) -> Self {
-        let max_index = input.shape().iter().product();
+    fn new(_input: &Tensor<'a, F>, step: F) -> Self {
+        let max_index = _input.shape().iter().product();
         Self {
-            input: *input,
+            _input: *_input,
             step,
             current_index: 0,
             max_index,

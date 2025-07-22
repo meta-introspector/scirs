@@ -17,8 +17,8 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use scirs2_text::topic_modeling::{LatentDirichletAllocation, LdaConfig, LdaLearningMethod};
-//! use scirs2_text::vectorize::{CountVectorizer, Vectorizer};
+//! use scirs2__text::topic_modeling::{LatentDirichletAllocation, LdaConfig, LdaLearningMethod};
+//! use scirs2__text::vectorize::{CountVectorizer, Vectorizer};
 //!
 //! // Sample documents
 //! let documents = vec![
@@ -66,7 +66,7 @@
 //! ### Online Learning for Large Datasets
 //!
 //! ```rust
-//! use scirs2_text::topic_modeling::{LdaConfig, LdaLearningMethod, LatentDirichletAllocation};
+//! use scirs2__text::topic_modeling::{LdaConfig, LdaLearningMethod, LatentDirichletAllocation};
 //!
 //! let config = LdaConfig {
 //!     n_topics: 10,
@@ -85,7 +85,7 @@
 //! ### Custom Hyperparameters
 //!
 //! ```rust
-//! use scirs2_text::topic_modeling::LdaConfig;
+//! use scirs2__text::topic_modeling::LdaConfig;
 //!
 //! let config = LdaConfig {
 //!     n_topics: 20,
@@ -102,7 +102,7 @@
 //! ### Model Evaluation
 //!
 //! ```rust
-//! use scirs2_text::topic_coherence::TopicCoherence;
+//! use scirs2__text::topic_coherence::TopicCoherence;
 //!
 //! // Evaluate model coherence
 //! let coherence = TopicCoherence::new();
@@ -157,6 +157,7 @@ use ndarray::{Array1, Array2, Axis};
 use rand::prelude::*;
 use rand::{rng, rngs::StdRng, SeedableRng};
 use std::collections::HashMap;
+use rand::seq::SliceRandom;
 
 /// Learning method for LDA
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -244,9 +245,9 @@ pub struct LatentDirichletAllocation {
 
 impl LatentDirichletAllocation {
     /// Create a new LDA model with the given configuration
-    pub fn new(config: LdaConfig) -> Self {
+    pub fn new(_config: LdaConfig) -> Self {
         Self {
-            config,
+            _config,
             components: None,
             exp_dirichlet_component: None,
             vocabulary: None,
@@ -257,9 +258,9 @@ impl LatentDirichletAllocation {
     }
 
     /// Create a new LDA model with default configuration
-    pub fn with_n_topics(n_topics: usize) -> Self {
+    pub fn with_n_topics(_n_topics: usize) -> Self {
         let config = LdaConfig {
-            n_topics,
+            _n_topics,
             ..Default::default()
         };
         Self::new(config)
@@ -269,7 +270,7 @@ impl LatentDirichletAllocation {
     pub fn fit(&mut self, doc_term_matrix: &Array2<f64>) -> Result<&mut Self> {
         if doc_term_matrix.nrows() == 0 || doc_term_matrix.ncols() == 0 {
             return Err(TextError::InvalidInput(
-                "Document-term matrix cannot be empty".to_string(),
+                "Document-term _matrix cannot be empty".to_string(),
             ));
         }
 
@@ -368,7 +369,7 @@ impl LatentDirichletAllocation {
         let mut topics = Vec::new();
 
         for (topic_idx, topic_dist) in components.axis_iter(Axis(0)).enumerate() {
-            // Get indices of top words
+            // Get indices of top _words
             let mut word_scores: Vec<(usize, f64)> = topic_dist
                 .iter()
                 .enumerate()
@@ -377,7 +378,7 @@ impl LatentDirichletAllocation {
 
             word_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
-            // Get top words with their scores
+            // Get top _words with their scores
             let top_words: Vec<(String, f64)> = word_scores
                 .into_iter()
                 .take(n_top_words)
@@ -422,7 +423,7 @@ impl LatentDirichletAllocation {
         let mut components = Array2::zeros((self.config.n_topics, n_features));
         for mut row in components.axis_iter_mut(Axis(0)) {
             for val in row.iter_mut() {
-                *val = rng.random_range(0.0..1.0);
+                *val = rng.gen_range(0.0..1.0);
             }
             // Normalize each topic
             let row_sum: f64 = row.sum();
@@ -437,8 +438,7 @@ impl LatentDirichletAllocation {
     fn get_exp_dirichlet_component(&self) -> Result<&Array2<f64>> {
         if self.exp_dirichlet_component.is_none() {
             return Err(TextError::ModelNotFitted(
-                "Components not initialized".to_string(),
-            ));
+                "Components not initialized".to_string()..));
         }
         Ok(self.exp_dirichlet_component.as_ref().unwrap())
     }
@@ -534,7 +534,7 @@ impl LatentDirichletAllocation {
             let mut rng = if let Some(seed) = self.config.random_seed {
                 StdRng::seed_from_u64(seed + epoch as u64)
             } else {
-                StdRng::from_rng(&mut rng())
+                StdRng::from_rng(&mut rand::rng())
             };
             doc_indices.shuffle(&mut rng);
 
@@ -632,13 +632,13 @@ impl LatentDirichletAllocation {
 
             for (local_idx, &doc_idx) in batch_docs.iter().enumerate() {
                 let doc = doc_term_matrix.row(doc_idx);
-                let gamma = batch_gamma.row(local_idx);
-                let gamma_sum = gamma.sum();
+                let _gamma = batch_gamma.row(local_idx);
+                let gamma_sum = _gamma.sum();
 
                 for (word_idx, &count) in doc.iter().enumerate() {
                     if count > 0.0 {
                         for topic_idx in 0..self.config.n_topics {
-                            let phi = gamma[topic_idx] / gamma_sum;
+                            let phi = _gamma[topic_idx] / gamma_sum;
                             batch_stats[[topic_idx, word_idx]] += count * phi;
                         }
                     }
@@ -649,7 +649,7 @@ impl LatentDirichletAllocation {
             let scale_factor = total_docs as f64 / batch_size as f64;
             batch_stats.mapv_inplace(|x| x * scale_factor);
 
-            // Update components using natural gradient with learning rate
+            // Update components using natural gradient with learning _rate
             for topic_idx in 0..self.config.n_topics {
                 for word_idx in 0..n_features {
                     let old_val = components[[topic_idx, word_idx]];
@@ -678,16 +678,13 @@ impl LatentDirichletAllocation {
             gamma.fill(doc_topic_prior);
 
             // Update based on word counts and topic-word probabilities
-            for (word_idx, &count) in doc.iter().enumerate() {
-                if count > 0.0 {
-                    for topic_idx in 0..self.config.n_topics {
-                        gamma[topic_idx] += count * exp_topic_word_distr[[topic_idx, word_idx]];
+            for (word_idx, &count) in doc.iterword_idx]];
                     }
                 }
             }
 
             // Check convergence
-            let change: f64 = (&*gamma - &old_gamma).iter().map(|&x| x.abs()).sum();
+            let change: f64 = (&*gamma - &old_gamma.iter().map(|&x| x.abs()).sum();
             if change < self.config.mean_change_tol {
                 break;
             }

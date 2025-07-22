@@ -3,7 +3,7 @@
 //! This module tests the visualization components in the scirs2-metrics crate.
 
 use ndarray::{array, Array2};
-use scirs2_metrics::{
+use scirs2__metrics::{
     classification::confusion_matrix,
     classification::curves::{calibration_curve, precision_recall_curve, roc_curve},
     visualization::{
@@ -172,7 +172,7 @@ fn test_confusion_matrix_visualizer() {
     let y_true = array![0, 1, 2, 0, 1, 2];
     let y_pred = array![0, 2, 1, 0, 0, 2];
 
-    let (cm, _) = confusion_matrix(&y_true, &y_pred, None).unwrap();
+    let (cm_) = confusion_matrix(&y_true, &y_pred, None).unwrap();
     let cm_f64 = cm.mapv(|x| x as f64);
 
     // Test creating a visualizer
@@ -260,7 +260,7 @@ fn test_calibration_visualizer() {
     let y_score = array![0.1, 0.8, 0.7, 0.3, 0.9, 0.2];
 
     // Compute calibration curve
-    let (prob_true, prob_pred, _) = calibration_curve(&y_true, &y_score, Some(3)).unwrap();
+    let (prob_true, prob_pred_) = calibration_curve(&y_true, &y_score, Some(3)).unwrap();
 
     // Test creating a visualizer
     let visualizer =

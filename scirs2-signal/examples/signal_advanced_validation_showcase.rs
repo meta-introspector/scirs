@@ -10,12 +10,14 @@
 //! - Numerical precision and stability testing
 //! - Performance benchmarking and scaling analysis
 
-use scirs2_signal::error::SignalResult;
-use scirs2_signal::lombscargle::{lombscargle, AutoFreqMethod};
-use scirs2_signal::lombscargle_enhanced_validation::{
+use crate::error::SignalResult;
+use scirs2__signal::error::SignalResult;
+use scirs2__signal::lombscargle::{lombscargle, AutoFreqMethod};
+use scirs2__signal::lombscargle_enhanced_validation::{
     validate_edge_cases_comprehensive, validate_numerical_robustness_extreme,
 };
-use scirs2_signal::multitaper::{
+use scirs2__signal::multitaper::{
+use std::f64::consts::PI;
     validate_numerical_precision_enhanced, validate_parameter_consistency, TestSignalConfig,
 };
 
@@ -113,11 +115,11 @@ fn showcase_multitaper_enhancements() -> SignalResult<()> {
     let mut rng = rand::rng();
     let noisy_signal: Vec<f64> = signal
         .iter()
-        .map(|&s| s + 0.1 * rng.random_range(-1.0..1.0))
+        .map(|&s| s + 0.1 * rng.gen_range(-1.0..1.0))
         .collect();
 
     println!("📊 Signal characteristics:");
-    println!("  Components: 5 Hz (strong), 25 Hz (moderate), 45 Hz (weak), 80 Hz (very weak)");
+    println!("  Components: 5 Hz (strong)..25 Hz (moderate), 45 Hz (weak), 80 Hz (very weak)");
     println!("  Noise level: 10% of signal amplitude");
     println!("  Challenge: Detection of weak high-frequency components");
 
@@ -295,7 +297,7 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
     let mut rng = rand::rng();
     for i in 0..500 {
         // Randomly skip some points to create irregular sampling
-        if rng.random_range(0.0..1.0) > 0.3 {
+        if rng.gen_range(0.0..1.0) > 0.3 {
             // Keep 70% of points
             let t = i as f64 * 0.01; // 100 Hz nominal sampling
             time_points.push(t);
@@ -304,14 +306,14 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
             let f1 = 10.0;
             let f2 = 10.5;
             let signal = (2.0 * PI * f1 * t).sin() + 0.7 * (2.0 * PI * f2 * t).sin();
-            let noise = 0.2 * rng.random_range(-1.0..1.0);
+            let noise = 0.2 * rng.gen_range(-1.0..1.0);
             data_points.push(signal + noise);
         }
     }
 
     println!("📊 Irregular sampling characteristics:");
     println!("  Original points: 500");
-    println!("  Retained points: {}", time_points.len());
+    println!("  Retained points: {}"..time_points.len());
     println!(
         "  Sampling completeness: {:.1}%",
         time_points.len() as f64 / 500.0 * 100.0
@@ -339,7 +341,7 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
             let peaks_in_range = frequencies
                 .iter()
                 .zip(power.iter())
-                .filter(|(&f, _)| peak_range.contains(&f))
+                .filter(|(&f_)| peak_range.contains(&f))
                 .count();
 
             println!("  Spectral peaks in 8-12 Hz range: {}", peaks_in_range);

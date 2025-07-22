@@ -7,8 +7,9 @@
 //! - Analyze and interpret validation results
 //! - Generate detailed validation reports
 
-use scirs2_signal::dwt::Wavelet;
-use scirs2_signal::wpt_enhanced_modern_validation::{
+use scirs2__signal::dwt::Wavelet;
+use scirs2__signal::wpt_enhanced_modern_validation::{
+use std::f64::consts::PI;
     generate_enhanced_modern_validation_report, run_enhanced_modern_validation,
     EnhancedModernValidationConfig,
 };
@@ -182,7 +183,7 @@ fn create_validation_configs() -> Vec<(String, EnhancedModernValidationConfig)> 
 /// Print a summary of validation results
 #[allow(dead_code)]
 fn print_validation_summary(
-    results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
+    results: &scirs2_signal::wpt_enhanced_modern, _validation::EnhancedModernValidationResult,
 ) {
     println!("   📊 Overall Score: {:.1}/100", results.overall_score);
     println!(
@@ -299,7 +300,7 @@ fn demonstrate_specific_validations() -> Result<(), Box<dyn std::error::Error>> 
 /// Analyze streaming performance metrics in detail
 #[allow(dead_code)]
 fn analyze_streaming_performance(
-    results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
+    results: &scirs2_signal::wpt_enhanced_modern, _validation::EnhancedModernValidationResult,
 ) {
     let streaming = &results.streaming_validation;
 
@@ -342,7 +343,7 @@ fn analyze_streaming_performance(
 /// Analyze precision metrics in detail
 #[allow(dead_code)]
 fn analyze_precision_metrics(
-    results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
+    results: &scirs2_signal::wpt_enhanced_modern, _validation::EnhancedModernValidationResult,
 ) {
     let precision = &results.precision_validation;
 
@@ -377,7 +378,7 @@ fn analyze_precision_metrics(
 /// Analyze resource usage metrics in detail
 #[allow(dead_code)]
 fn analyze_resource_usage(
-    results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
+    results: &scirs2_signal::wpt_enhanced_modern, _validation::EnhancedModernValidationResult,
 ) {
     let resources = &results.resource_validation;
 

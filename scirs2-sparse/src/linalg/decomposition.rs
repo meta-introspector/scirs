@@ -3,7 +3,7 @@
 //! This module provides various matrix decomposition algorithms optimized
 //! for sparse matrices, including LU, QR, Cholesky, and incomplete variants.
 
-use crate::csr_array::CsrArray;
+use crate::csr__array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, Array2};
@@ -171,8 +171,8 @@ impl Default for ICOptions {
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::linalg::lu_decomposition;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::linalg::lu_decomposition;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a sparse matrix
 /// let rows = vec![0, 0, 1, 2];
@@ -183,19 +183,19 @@ impl Default for ICOptions {
 /// let lu_result = lu_decomposition(&matrix, 0.1).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn lu_decomposition<T, S>(matrix: &S, pivot_threshold: f64) -> SparseResult<LUResult<T>>
+pub fn lu_decomposition<T, S>(_matrix: &S, pivot_threshold: f64) -> SparseResult<LUResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
     S: SparseArray<T>,
 {
-    // Use threshold pivoting for backward compatibility
+    // Use _threshold pivoting for backward compatibility
     let options = LUOptions {
         pivoting: PivotingStrategy::Threshold(pivot_threshold),
         zero_threshold: 1e-14,
         check_singular: true,
     };
 
-    lu_decomposition_with_options(matrix, Some(options))
+    lu_decomposition_with_options(_matrix, Some(options))
 }
 
 /// Compute sparse LU decomposition with enhanced pivoting strategies
@@ -216,8 +216,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::linalg::{lu_decomposition_with_options, LUOptions, PivotingStrategy};
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::linalg::{lu_decomposition_with_options, LUOptions, PivotingStrategy};
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a sparse matrix
 /// let rows = vec![0, 0, 1, 2];
@@ -368,8 +368,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::linalg::qr_decomposition;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::linalg::qr_decomposition;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 0, 1];
@@ -379,15 +379,15 @@ where
 /// let qr_result = qr_decomposition(&matrix).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn qr_decomposition<T, S>(matrix: &S) -> SparseResult<QRResult<T>>
+pub fn qr_decomposition<T, S>(_matrix: &S) -> SparseResult<QRResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
     S: SparseArray<T>,
 {
-    let (m, n) = matrix.shape();
+    let (m, n) = _matrix.shape();
 
     // Convert to dense for QR (sparse QR is complex)
-    let dense_matrix = matrix.to_array();
+    let dense_matrix = _matrix.to_array();
 
     // Simple Gram-Schmidt QR decomposition
     let mut q = Array2::zeros((m, n));
@@ -454,8 +454,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::linalg::cholesky_decomposition;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::linalg::cholesky_decomposition;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a simple SPD matrix
 /// let rows = vec![0, 1, 1, 2, 2, 2];
@@ -466,12 +466,12 @@ where
 /// let chol_result = cholesky_decomposition(&matrix).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn cholesky_decomposition<T, S>(matrix: &S) -> SparseResult<CholeskyResult<T>>
+pub fn cholesky_decomposition<T, S>(_matrix: &S) -> SparseResult<CholeskyResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
     S: SparseArray<T>,
 {
-    let (n, m) = matrix.shape();
+    let (n, m) = _matrix.shape();
     if n != m {
         return Err(SparseError::ValueError(
             "Matrix must be square for Cholesky decomposition".to_string(),
@@ -479,7 +479,7 @@ where
     }
 
     // Convert to working format
-    let (row_indices, col_indices, values) = matrix.find();
+    let (row_indices, col_indices, values) = _matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
         row_indices.as_slice().unwrap(),
         col_indices.as_slice().unwrap(),
@@ -522,7 +522,7 @@ where
         }
     }
 
-    // Extract lower triangular matrix
+    // Extract lower triangular _matrix
     let (l_rows, l_cols, l_vals) = extract_lower_triangular(&working_matrix, n);
     let l = CsrArray::from_triplets(&l_rows, &l_cols, &l_vals, (n, n), false)?;
 
@@ -547,8 +547,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::linalg::pivoted_cholesky_decomposition;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::linalg::pivoted_cholesky_decomposition;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a symmetric indefinite matrix
 /// let rows = vec![0, 1, 1, 2, 2, 2];
@@ -698,8 +698,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::linalg::ldlt_decomposition;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::linalg::ldlt_decomposition;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a symmetric indefinite matrix
 /// let rows = vec![0, 1, 1, 2, 2, 2];
@@ -888,13 +888,13 @@ where
 ///
 /// Incomplete LU decomposition result
 #[allow(dead_code)]
-pub fn incomplete_lu<T, S>(matrix: &S, options: Option<ILUOptions>) -> SparseResult<LUResult<T>>
+pub fn incomplete_lu<T, S>(_matrix: &S, options: Option<ILUOptions>) -> SparseResult<LUResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
-    let (n, m) = matrix.shape();
+    let (n, m) = _matrix.shape();
 
     if n != m {
         return Err(SparseError::ValueError(
@@ -903,7 +903,7 @@ where
     }
 
     // Convert to working format
-    let (row_indices, col_indices, values) = matrix.find();
+    let (row_indices, col_indices, values) = _matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
         row_indices.as_slice().unwrap(),
         col_indices.as_slice().unwrap(),
@@ -1075,10 +1075,10 @@ impl<T> SparseWorkingMatrix<T>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
 {
-    fn from_triplets(rows: &[usize], cols: &[usize], values: &[T], n: usize) -> Self {
+    fn from_triplets(_rows: &[usize], cols: &[usize], values: &[T], n: usize) -> Self {
         let mut data = HashMap::new();
 
-        for (i, (&row, &col)) in rows.iter().zip(cols.iter()).enumerate() {
+        for (i, (&row, &col)) in _rows.iter().zip(cols.iter()).enumerate() {
             data.insert((row, col), values[i]);
         }
 
@@ -1164,7 +1164,7 @@ where
     let row_scales = vec![T::one(); matrix.n];
     let col_perm: Vec<usize> = (0..matrix.n).collect();
 
-    let (pivot_row, _) = find_enhanced_pivot(matrix, k, p, &col_perm, &row_scales, &opts)?;
+    let (pivot_row_) = find_enhanced_pivot(matrix, k, p, &col_perm, &row_scales, &opts)?;
     Ok(pivot_row)
 }
 
@@ -1334,7 +1334,7 @@ type LuFactors<T> = (
 );
 
 #[allow(dead_code)]
-fn extract_lu_factors<T>(matrix: &SparseWorkingMatrix<T>, p: &[usize], n: usize) -> LuFactors<T>
+fn extract_lu_factors<T>(_matrix: &SparseWorkingMatrix<T>, p: &[usize], n: usize) -> LuFactors<T>
 where
     T: Float + Debug + Copy,
 {
@@ -1355,7 +1355,7 @@ where
         l_vals.push(T::one());
 
         for j in 0..n {
-            let val = matrix.get(actual_row, j);
+            let val = _matrix.get(actual_row, j);
             if !val.is_zero() {
                 if j < i {
                     // Below diagonal - goes to L
@@ -1404,18 +1404,18 @@ where
 
 /// Convert dense matrix to sparse
 #[allow(dead_code)]
-fn dense_to_sparse<T>(matrix: &Array2<T>) -> SparseResult<CsrArray<T>>
+fn dense_to_sparse<T>(_matrix: &Array2<T>) -> SparseResult<CsrArray<T>>
 where
     T: Float + Debug + Copy,
 {
-    let (m, n) = matrix.dim();
+    let (m, n) = _matrix.dim();
     let mut rows = Vec::new();
     let mut cols = Vec::new();
     let mut vals = Vec::new();
 
     for i in 0..m {
         for j in 0..n {
-            let val = matrix[[i, j]];
+            let val = _matrix[[i, j]];
             if !val.is_zero() {
                 rows.push(i);
                 cols.push(j);
@@ -1430,7 +1430,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
 
     fn create_test_matrix() -> CsrArray<f64> {
         // Create a simple test matrix

@@ -93,12 +93,12 @@ pub fn sequential_model_summary<
 
     // Create nodes for each layer
     let mut nodes = Vec::new();
-    // Add input node if shape is provided
-    if let Some(shape) = input_shape.clone() {
+    // Add input node if _shape is provided
+    if let Some(_shape) = input_shape.clone() {
         nodes.push(ModelNode {
             name: "Input".to_string(),
             input_shape: None,
-            output_shape: Some(shape),
+            output_shape: Some(_shape),
             parameters: Some(0),
             layer_type: "Input".to_string(),
             properties: Vec::new(),
@@ -133,7 +133,7 @@ pub fn sequential_model_summary<
         nodes.push(node);
     }
 
-    // Try to propagate shapes if input shape is provided
+    // Try to propagate shapes if input _shape is provided
     if let Some(input_shape) = input_shape {
         // For now, simplified approach since we can't easily run the forward pass here
         // In a full implementation, this would use actual layer logic
@@ -142,10 +142,10 @@ pub fn sequential_model_summary<
             if i > 0 {
                 // Skip input node
                 node.input_shape = Some(current_shape.clone());
-                // Very simplified shape propagation (would need more detailed layer info)
+                // Very simplified _shape propagation (would need more detailed layer info)
                 if node.layer_type == "Dense" {
                     if let Some(output_size) = extract_output_size(node) {
-                        // For Dense layers, output shape is (batch_size, output_size)
+                        // For Dense layers, output _shape is (batch_size, output_size)
                         if !current_shape.is_empty() {
                             let mut output_shape = current_shape.clone();
                             if output_shape.len() > 1 {
@@ -159,7 +159,7 @@ pub fn sequential_model_summary<
                         }
                     }
                 } else {
-                    // For other layer types, assume shape is preserved
+                    // For other layer types, assume _shape is preserved
                     node.output_shape = Some(current_shape.clone());
                 }
             }
@@ -283,10 +283,10 @@ pub fn sequential_model_summary<
             type_width = type_width
         ));
 
-        // Output shape
+        // Output _shape
         if options.show_shapes {
-            let shape_str = if let Some(shape) = &node.output_shape {
-                format!("{shape:?}")
+            let shape_str = if let Some(_shape) = &node.output_shape {
+                format!("{_shape:?}")
             } else {
                 "?".to_string()
             };
@@ -388,7 +388,7 @@ pub fn sequential_model_dataflow<
         layer_type: "Input".to_string(),
         properties: Vec::new(),
     });
-    // Add layer nodes with simplified shape propagation
+    // Add layer nodes with simplified _shape propagation
     let mut current_shape = input_shape.clone();
 
     for (i, layer_info) in layer_infos.iter().enumerate() {
@@ -407,7 +407,7 @@ pub fn sequential_model_dataflow<
             ));
         }
         let input_shape = current_shape.clone();
-        // Very simplified shape inference
+        // Very simplified _shape inference
         let output_shape = match layer_type.as_str() {
             "Dense" => {
                 if let Some(output_size) = properties
@@ -499,9 +499,9 @@ pub fn sequential_model_dataflow<
         result.push('│');
         result.push('\n');
 
-        // Draw shape info
-        if let Some(shape) = &node.output_shape {
-            let shape_str = format!("{shape:?}");
+        // Draw _shape info
+        if let Some(_shape) = &node.output_shape {
+            let shape_str = format!("{_shape:?}");
             let padded_shape = format!("{shape_str:^width$}", width = box_width - 2);
             result.push_str(&" ".repeat((width - box_width) / 2));
             result.push('│');
@@ -546,9 +546,9 @@ pub fn sequential_model_dataflow<
 }
 // Helper function to extract output size from a layer's properties
 #[allow(dead_code)]
-fn extract_output_size(node: &ModelNode) -> Option<usize> {
-    if node.layer_type == "Dense" {
-        for (key, value) in &node.properties {
+fn extract_output_size(_node: &ModelNode) -> Option<usize> {
+    if _node.layer_type == "Dense" {
+        for (key, value) in &_node.properties {
             if key == "output_dim" {
                 return value.parse::<usize>().ok();
             }
@@ -580,17 +580,17 @@ fn extract_layer_properties<F: Float + Debug + ScalarOperand>(
 }
 // Helper function to format parameter counts
 #[allow(dead_code)]
-fn format_params(params: usize) -> String {
-    if params >= 1_000_000 {
+fn format_params(_params: usize) -> String {
+    if _params >= 1_000_000 {
         format!(
             "{:.2}M ({} parameters)",
-            params as f64 / 1_000_000.0,
-            params
+            _params as f64 / 1_000_000.0,
+            _params
         )
-    } else if params >= 1_000 {
-        let param_kb = params as f64 / 1_000.0;
-        format!("{param_kb:.2}K ({params} parameters)")
+    } else if _params >= 1_000 {
+        let param_kb = _params as f64 / 1_000.0;
+        format!("{param_kb:.2}K ({_params} parameters)")
     } else {
-        format!("{params} parameters")
+        format!("{_params} parameters")
     }
 }

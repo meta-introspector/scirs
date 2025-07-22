@@ -692,18 +692,18 @@ pub struct MultiModalTextCoordinator {
 
 impl AdvancedTextCoordinator {
     /// Create a new Advanced text coordinator
-    pub fn new(config: AdvancedTextConfig) -> Result<Self> {
-        let performance_optimizer = Arc::new(Mutex::new(PerformanceOptimizer::new(&config)?));
+    pub fn new(_config: AdvancedTextConfig) -> Result<Self> {
+        let performance_optimizer = Arc::new(Mutex::new(PerformanceOptimizer::new(&_config)?));
         #[allow(clippy::arc_with_non_send_sync)]
-        let neural_ensemble = Arc::new(RwLock::new(NeuralProcessingEnsemble::new(&config)?));
-        let memory_optimizer = Arc::new(Mutex::new(TextMemoryOptimizer::new(&config)?));
-        let adaptive_engine = Arc::new(Mutex::new(AdaptiveTextEngine::new(&config)?));
-        let analytics_engine = Arc::new(RwLock::new(TextAnalyticsEngine::new(&config)?));
-        let multimodal_coordinator = MultiModalTextCoordinator::new(&config)?;
+        let neural_ensemble = Arc::new(RwLock::new(NeuralProcessingEnsemble::new(&_config)?));
+        let memory_optimizer = Arc::new(Mutex::new(TextMemoryOptimizer::new(&_config)?));
+        let adaptive_engine = Arc::new(Mutex::new(AdaptiveTextEngine::new(&_config)?));
+        let analytics_engine = Arc::new(RwLock::new(TextAnalyticsEngine::new(&_config)?));
+        let multimodal_coordinator = MultiModalTextCoordinator::new(&_config)?;
         let performance_tracker = Arc::new(RwLock::new(TextPerformanceTracker::new()));
 
         Ok(AdvancedTextCoordinator {
-            config,
+            _config,
             performance_optimizer,
             neural_ensemble,
             memory_optimizer,
@@ -888,7 +888,7 @@ impl AdvancedTextCoordinator {
         let quality_metrics = self.calculate_topic_quality_metrics(&enhanced_topics)?;
 
         Ok(AdvancedTopicModelingResult {
-            topics: enhanced_topics,
+            _topics: enhanced_topics,
             topic_analytics,
             optimal_params,
             processing_time: start_time.elapsed(),
@@ -1086,9 +1086,7 @@ impl AdvancedTextCoordinator {
     }
 
     fn calculate_confidence_scores(
-        &self,
-        _result: &TextProcessingResult,
-        _analytics: &AdvancedTextAnalytics,
+        &self_result: &TextProcessingResult, _analytics: &AdvancedTextAnalytics,
     ) -> Result<HashMap<String, f64>> {
         let mut scores = HashMap::new();
         scores.insert("overall_confidence".to_string(), 0.93);
@@ -1119,16 +1117,14 @@ impl AdvancedTextCoordinator {
     }
 
     fn calculate_classification_confidence(
-        &self,
-        _classifications: &[ClassificationResult],
+        &self_classifications: &[ClassificationResult],
     ) -> Result<Vec<f64>> {
         // Calculate confidence for each classification
         Ok(vec![0.92, 0.87, 0.91]) // Placeholder
     }
 
     fn calculate_topic_quality_metrics(
-        &self,
-        _topics: &EnhancedTopicModelingResult,
+        &self_topics: &EnhancedTopicModelingResult,
     ) -> Result<TopicQualityMetrics> {
         Ok(TopicQualityMetrics {
             coherence_score: 0.78,
@@ -1310,7 +1306,7 @@ impl PerformanceOptimizer {
         })
     }
 
-    fn determine_optimal_strategy(&self, _texts: &[String]) -> Result<OptimizationStrategy> {
+    fn determine_optimal_strategy(&self_texts: &[String]) -> Result<OptimizationStrategy> {
         Ok(OptimizationStrategy::Performance)
     }
 }
@@ -1434,8 +1430,7 @@ impl NeuralProcessingEnsemble {
 
     fn classify_batch_ensemble(
         &self,
-        texts: &[String],
-        _categories: &[String],
+        texts: &[String], _categories: &[String],
     ) -> Result<Vec<ClassificationResult>> {
         // Enhanced classification using text features
         let mut results = Vec::new();
@@ -1463,8 +1458,7 @@ impl NeuralProcessingEnsemble {
 
     fn enhanced_topic_modeling(
         &self,
-        documents: &[String],
-        _params: &TopicModelingParams,
+        documents: &[String], _params: &TopicModelingParams,
     ) -> Result<EnhancedTopicModelingResult> {
         // Enhanced topic modeling using text analysis
         // This is a simplified implementation for demonstration
@@ -1510,14 +1504,12 @@ impl TextMemoryOptimizer {
         })
     }
 
-    fn optimize_for_batch(&self, _batch_size: usize) -> Result<()> {
+    fn optimize_for_batch(&self_batch_size: usize) -> Result<()> {
         Ok(()) // Placeholder
     }
 
     fn optimize_for_classification_batch(
-        &self,
-        _num_texts: usize,
-        _num_categories: usize,
+        &self_num_texts: usize, _num_categories: usize,
     ) -> Result<()> {
         Ok(()) // Placeholder
     }
@@ -1533,14 +1525,12 @@ impl AdaptiveTextEngine {
         })
     }
 
-    fn adapt_based_on_performance(&self, _elapsed: &Duration) -> Result<()> {
+    fn adapt_based_on_performance(&self_elapsed: &Duration) -> Result<()> {
         Ok(()) // Placeholder
     }
 
     fn optimize_topic_modeling_params(
-        &self,
-        _documents: &[String],
-        _num_topics: usize,
+        &self_documents: &[String], _num_topics: usize,
     ) -> Result<TopicModelingParams> {
         Ok(TopicModelingParams) // Placeholder
     }
@@ -1557,26 +1547,19 @@ impl TextAnalyticsEngine {
     }
 
     fn analyze_comprehensive(
-        &self,
-        _texts: &[String],
-        _result: &TextProcessingResult,
+        &self_texts: &[String], _result: &TextProcessingResult,
     ) -> Result<AdvancedTextAnalytics> {
         Ok(AdvancedTextAnalytics::empty()) // Placeholder
     }
 
     fn analyze_similarity_context(
-        &self,
-        _text1: &str,
-        _text2: &str,
-        _similarity: f64,
+        &self_text1: &str, _text2: &str_similarity: f64,
     ) -> Result<SimilarityAnalytics> {
         Ok(SimilarityAnalytics) // Placeholder
     }
 
     fn analyze_topic_quality(
-        &self,
-        _topics: &EnhancedTopicModelingResult,
-        _documents: &[String],
+        &self_topics: &EnhancedTopicModelingResult, _documents: &[String],
     ) -> Result<TopicAnalytics> {
         Ok(TopicAnalytics) // Placeholder
     }

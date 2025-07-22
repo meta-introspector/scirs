@@ -44,9 +44,9 @@ impl<A: Float> Default for OptimizerConfig<A> {
 
 impl<A: Float> OptimizerConfig<A> {
     /// Create a new optimizer configuration with the given learning rate
-    pub fn new(lr: A) -> Self {
+    pub fn new(_lr: A) -> Self {
         Self {
-            lr,
+            _lr,
             ..Default::default()
         }
     }
@@ -91,9 +91,9 @@ pub struct Parameter<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand, D: Dimension> Parameter<A, D> {
     /// Create a new parameter
-    pub fn new<S: Into<String>>(data: Array<A, D>, name: S) -> Self {
+    pub fn new<S: Into<String>>(_data: Array<A, D>, name: S) -> Self {
         Self {
-            data,
+            _data,
             grad: None,
             requires_grad: true,
             name: name.into(),
@@ -101,9 +101,9 @@ impl<A: Float + ScalarOperand, D: Dimension> Parameter<A, D> {
     }
 
     /// Create a parameter that doesn't require gradients
-    pub fn no_grad<S: Into<String>>(data: Array<A, D>, name: S) -> Self {
+    pub fn no_grad<S: Into<String>>(_data: Array<A, D>, name: S) -> Self {
         Self {
-            data,
+            _data,
             grad: None,
             requires_grad: false,
             name: name.into(),
@@ -130,13 +130,13 @@ impl<A: Float + ScalarOperand, D: Dimension> Parameter<A, D> {
     /// Apply gradient clipping if specified
     pub fn clip_grad(&mut self, max_norm: A) -> Result<()> {
         if let Some(ref mut grad) = self.grad {
-            let norm = grad
+            let _norm = grad
                 .iter()
                 .map(|x| (*x) * (*x))
                 .fold(A::zero(), |acc, x| acc + x)
                 .sqrt();
-            if norm > max_norm {
-                let scale = max_norm / norm;
+            if _norm > max_norm {
+                let scale = max_norm / _norm;
                 grad.mapv_inplace(|x| x * scale);
             }
         }
@@ -194,9 +194,9 @@ pub struct UnifiedSGD<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug> UnifiedSGD<A> {
     /// Create a new SGD optimizer
-    pub fn new(config: OptimizerConfig<A>) -> Self {
+    pub fn new(_config: OptimizerConfig<A>) -> Self {
         Self {
-            config,
+            _config,
             momentum_buffers: HashMap::new(),
         }
     }
@@ -312,8 +312,8 @@ pub struct UnifiedAdam<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug> UnifiedAdam<A> {
     /// Create a new Adam optimizer
-    pub fn new(config: OptimizerConfig<A>) -> Self {
-        let mut params = config.params.clone();
+    pub fn new(_config: OptimizerConfig<A>) -> Self {
+        let mut params = _config.params.clone();
         params
             .entry("beta1".to_string())
             .or_insert_with(|| A::from(0.9).unwrap());
@@ -325,7 +325,7 @@ impl<A: Float + ScalarOperand + Debug> UnifiedAdam<A> {
             .or_insert_with(|| A::from(1e-8).unwrap());
 
         Self {
-            config: OptimizerConfig { params, ..config },
+            _config: OptimizerConfig { params, .._config },
             step_count: 0,
             exp_avg: HashMap::new(),
             exp_avg_sq: HashMap::new(),
@@ -443,13 +443,13 @@ pub struct OptimizerFactory;
 
 impl OptimizerFactory {
     /// Create SGD optimizer
-    pub fn sgd<A: Float + ScalarOperand + Debug>(config: OptimizerConfig<A>) -> UnifiedSGD<A> {
-        UnifiedSGD::new(config)
+    pub fn sgd<A: Float + ScalarOperand + Debug>(_config: OptimizerConfig<A>) -> UnifiedSGD<A> {
+        UnifiedSGD::new(_config)
     }
 
     /// Create Adam optimizer
-    pub fn adam<A: Float + ScalarOperand + Debug>(config: OptimizerConfig<A>) -> UnifiedAdam<A> {
-        UnifiedAdam::new(config)
+    pub fn adam<A: Float + ScalarOperand + Debug>(_config: OptimizerConfig<A>) -> UnifiedAdam<A> {
+        UnifiedAdam::new(_config)
     }
 
     /// Create SGD with momentum
@@ -473,17 +473,15 @@ impl OptimizerFactory {
 /// Training loop helper with unified API
 pub struct TrainingLoop<A: Float, O: UnifiedOptimizer<A>> {
     optimizer: O,
-    scheduler: Option<Box<dyn LearningRateScheduler<A>>>,
-    _phantom: std::marker::PhantomData<A>,
+    scheduler: Option<Box<dyn LearningRateScheduler<A>>>, _phantom: std::marker::PhantomData<A>,
 }
 
 impl<A: Float + ScalarOperand + Debug, O: UnifiedOptimizer<A>> TrainingLoop<A, O> {
     /// Create a new training loop
-    pub fn new(optimizer: O) -> Self {
+    pub fn new(_optimizer: O) -> Self {
         Self {
-            optimizer,
-            scheduler: None,
-            _phantom: std::marker::PhantomData,
+            _optimizer,
+            scheduler: None_phantom: std::marker::PhantomData,
         }
     }
 

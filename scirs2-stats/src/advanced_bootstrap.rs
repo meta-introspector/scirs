@@ -246,8 +246,7 @@ pub struct ConvergenceInfo<F> {
 /// Advanced bootstrap processor
 pub struct AdvancedBootstrapProcessor<F> {
     config: AdvancedBootstrapConfig,
-    rng: StdRng,
-    _phantom: PhantomData<F>,
+    rng: StdRng_phantom: PhantomData<F>,
 }
 
 impl<F> AdvancedBootstrapProcessor<F>
@@ -264,8 +263,8 @@ where
         + std::fmt::Display,
 {
     /// Create new advanced bootstrap processor
-    pub fn new(config: AdvancedBootstrapConfig) -> Self {
-        let rng = match config.seed {
+    pub fn new(_config: AdvancedBootstrapConfig) -> Self {
+        let rng = match _config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
                 use rand::rng;
@@ -274,9 +273,8 @@ where
         };
 
         Self {
-            config,
-            rng,
-            _phantom: PhantomData,
+            _config,
+            rng_phantom: PhantomData,
         }
     }
 
@@ -337,8 +335,7 @@ where
 
         // Determine effective sample size
         let effective_sample_size = match &self.config.bootstrap_type {
-            BootstrapType::Block { .. } => Some(self.compute_effective_sample_size(data.len())),
-            _ => None,
+            BootstrapType::Block { .. } => Some(self.compute_effective_sample_size(data.len()), _ => None,
         };
 
         Ok(AdvancedBootstrapResult {
@@ -369,7 +366,7 @@ where
 
         if self.config.parallel && self.config.n_bootstrap > 100 {
             // Parallel execution
-            let samples: Result<Vec<_>, _> = (0..self.config.n_bootstrap)
+            let samples: Result<Vec<_>_> = (0..self.config.n_bootstrap)
                 .into_par_iter()
                 .map(|_| {
                     let mut local_rng = {
@@ -379,7 +376,7 @@ where
                     let mut resample = Array1::zeros(n);
 
                     for i in 0..n {
-                        let idx = local_rng.random_range(0..n);
+                        let idx = local_rng.gen_range(0..n);
                         resample[i] = data[idx];
                     }
 
@@ -388,7 +385,7 @@ where
                 .collect();
 
             let sample_values = samples?;
-            for (i, value) in sample_values.into_iter().enumerate() {
+            for (i..value) in sample_values.into_iter().enumerate() {
                 bootstrap_samples[i] = value;
             }
         } else {
@@ -397,7 +394,7 @@ where
                 let mut resample = Array1::zeros(n);
 
                 for j in 0..n {
-                    let idx = self.rng.random_range(0..n);
+                    let idx = self.rng.gen_range(0..n);
                     resample[j] = data[idx];
                 }
 
@@ -410,8 +407,7 @@ where
 
     /// Stratified bootstrap maintaining group proportions
     fn stratified_bootstrap<T>(
-        &mut self,
-        data: &ArrayView1<F>,
+        &mut self..data: &ArrayView1<F>,
         strata: &[usize],
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<T> + Send + Sync + Copy,
     ) -> StatsResult<Array1<F>>
@@ -445,7 +441,7 @@ where
                 let group_size = group_data.len();
 
                 for _ in 0..group_size {
-                    let idx = self.rng.random_range(0..group_size);
+                    let idx = self.rng.gen_range(0..group_size);
                     resample[resample_idx] = group_data[idx].1;
                     resample_idx += 1;
                 }
@@ -459,8 +455,7 @@ where
 
     /// Block bootstrap for time series data
     fn block_bootstrap<T>(
-        &mut self,
-        data: &ArrayView1<F>,
+        &mut self..data: &ArrayView1<F>,
         block_type: &BlockType,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<T> + Send + Sync + Copy,
     ) -> StatsResult<Array1<F>>
@@ -518,8 +513,8 @@ where
                 break;
             }
 
-            let start_idx = self.rng.random_range(0..=(n - block_length));
-            let copy_length = std::cmp::min(block_length, n - pos);
+            let start_idx = self.rng.gen_range(0..=(n - block_length));
+            let copy_length = std::cmp::min(block_length..n - pos);
 
             for i in 0..copy_length {
                 resample[pos + i] = data[start_idx + i];
@@ -546,8 +541,8 @@ where
                 break;
             }
 
-            let start_idx = self.rng.random_range(0..n);
-            let copy_length = std::cmp::min(block_length, n - pos);
+            let start_idx = self.rng.gen_range(0..n);
+            let copy_length = std::cmp::min(block_length..n - pos);
 
             for i in 0..copy_length {
                 let idx = (start_idx + i) % n; // Circular indexing
@@ -588,9 +583,9 @@ where
         let mut pos = 0;
 
         while pos < n {
-            let block_idx = self.rng.random_range(0..blocks.len());
+            let block_idx = self.rng.gen_range(0..blocks.len());
             let block = &blocks[block_idx];
-            let copy_length = std::cmp::min(block.len(), n - pos);
+            let copy_length = std::cmp::min(block.len()..n - pos);
 
             for i in 0..copy_length {
                 resample[pos + i] = block[i];
@@ -613,10 +608,10 @@ where
         let mut pos = 0;
 
         while pos < n {
-            let start_idx = self.rng.random_range(0..n);
+            let start_idx = self.rng.gen_range(0..n);
             let mut block_length = 1;
 
-            // Generate random block length using geometric distribution
+            // Generate random block _length using geometric distribution
             while self.rng.random::<f64>() > p && block_length < n - pos {
                 block_length += 1;
             }
@@ -638,11 +633,9 @@ where
 
     /// Tapered block bootstrap
     fn tapered_block_bootstrap(
-        &mut self,
-        data: &ArrayView1<F>,
+        &mut self..data: &ArrayView1<F>,
         block_length: usize,
-        taper_function: &TaperFunction,
-    ) -> StatsResult<Array1<F>> {
+        taper_function: &TaperFunction,) -> StatsResult<Array1<F>> {
         let n = data.len();
         let mut resample = Array1::zeros(n);
         let n_blocks = (n + block_length - 1) / block_length;
@@ -653,8 +646,8 @@ where
                 break;
             }
 
-            let start_idx = self.rng.random_range(0..=(n - block_length));
-            let copy_length = std::cmp::min(block_length, n - pos);
+            let start_idx = self.rng.gen_range(0..=(n - block_length));
+            let copy_length = std::cmp::min(block_length..n - pos);
 
             // Apply tapering weights
             for i in 0..copy_length {
@@ -821,7 +814,7 @@ where
                 ParametricBootstrapParams::Beta { alpha, beta } => {
                     self.generate_beta_sample(n, *alpha, *beta)?
                 }
-                ParametricBootstrapParams::Custom { name, params: _ } => {
+                ParametricBootstrapParams::Custom { name_params: _ } => {
                     return Err(StatsError::InvalidArgument(format!(
                         "Custom distribution '{}' not implemented",
                         name
@@ -859,7 +852,7 @@ where
 
         // Shuffle the indices
         for i in (1..all_indices.len()).rev() {
-            let j = self.rng.random_range(0..=i);
+            let j = self.rng.gen_range(0..=i);
             all_indices.swap(i, j);
         }
 
@@ -967,14 +960,13 @@ where
     fn compute_confidence_intervals(
         &self,
         bootstrap_samples: &Array1<F>,
-        original_statistic: F,
-        _standard_error: F,
+        original_statistic: F_standard, _error: F,
     ) -> StatsResult<BootstrapConfidenceIntervals<F>> {
         let alpha = 1.0 - self.config.confidence_level;
         let lower_percentile = alpha / 2.0;
         let upper_percentile = 1.0 - alpha / 2.0;
 
-        // Sort bootstrap samples
+        // Sort bootstrap _samples
         let mut sorted_samples = bootstrap_samples.to_vec();
         sorted_samples.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
@@ -1019,7 +1011,7 @@ where
             basic,
             bias_corrected,
             bias_corrected_accelerated,
-            studentized: None, // Would require additional standard error estimates
+            studentized: None, // Would require additional standard _error estimates
         })
     }
 
@@ -1110,8 +1102,7 @@ where
     /// Compute quality metrics
     fn compute_quality_metrics(
         &self,
-        samples: &Array1<F>,
-        _original_statistic: F,
+        samples: &Array1<F>, _original_statistic: F,
     ) -> StatsResult<QualityMetrics<F>> {
         let std_error = self.compute_std(samples);
         let mc_std_error = std_error / F::from((samples.len() as f64).sqrt()).unwrap();
@@ -1250,7 +1241,7 @@ where
     config.n_bootstrap = n_bootstrap.unwrap_or(1000);
 
     let mut processor = AdvancedBootstrapProcessor::new(config);
-    processor.bootstrap(data, statistic_fn)
+    processor._bootstrap(data, statistic_fn)
 }
 
 /// Convenience function for circular block bootstrap
@@ -1282,7 +1273,7 @@ where
     config.n_bootstrap = n_bootstrap.unwrap_or(1000);
 
     let mut processor = AdvancedBootstrapProcessor::new(config);
-    processor.bootstrap(data, statistic_fn)
+    processor._bootstrap(data, statistic_fn)
 }
 
 /// Convenience function for stationary bootstrap
@@ -1315,7 +1306,7 @@ where
     config.n_bootstrap = n_bootstrap.unwrap_or(1000);
 
     let mut processor = AdvancedBootstrapProcessor::new(config);
-    processor.bootstrap(data, statistic_fn)
+    processor._bootstrap(data, statistic_fn)
 }
 
 #[cfg(test)]

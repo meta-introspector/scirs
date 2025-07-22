@@ -219,20 +219,20 @@ impl Default for Options {
 // Implement Bounds methods
 impl Bounds {
     /// Create new bounds from arrays
-    pub fn new(bounds: &[(Option<f64>, Option<f64>)]) -> Self {
-        let (lower, upper): (Vec<_>, Vec<_>) = bounds.iter().cloned().unzip();
+    pub fn new(_bounds: &[(Option<f64>, Option<f64>)]) -> Self {
+        let (lower, upper): (Vec<_>, Vec<_>) = _bounds.iter().cloned().unzip();
         Self { lower, upper }
     }
 
     /// Create bounds from vectors
-    pub fn from_vecs(lb: Vec<Option<f64>>, ub: Vec<Option<f64>>) -> Result<Self, OptimizeError> {
-        if lb.len() != ub.len() {
+    pub fn from_vecs(_lb: Vec<Option<f64>>, ub: Vec<Option<f64>>) -> Result<Self, OptimizeError> {
+        if _lb.len() != ub.len() {
             return Err(OptimizeError::ValueError(
                 "Lower and upper bounds must have the same length".to_string(),
             ));
         }
 
-        for (l, u) in lb.iter().zip(ub.iter()) {
+        for (l, u) in _lb.iter().zip(ub.iter()) {
             if let (Some(l_val), Some(u_val)) = (l, u) {
                 if l_val > u_val {
                     return Err(OptimizeError::ValueError(
@@ -243,7 +243,7 @@ impl Bounds {
         }
 
         Ok(Self {
-            lower: lb,
+            lower: _lb,
             upper: ub,
         })
     }
@@ -316,18 +316,18 @@ where
     }
 
     match method {
-        Method::NelderMead => nelder_mead::minimize_nelder_mead(fun, x0, options),
-        Method::Powell => powell::minimize_powell(fun, x0, options),
-        Method::CG => conjugate_gradient::minimize_conjugate_gradient(fun, x0, options),
-        Method::BFGS => bfgs::minimize_bfgs(fun, x0, options),
-        Method::SR1 => quasi_newton::minimize_sr1(fun, x0, options),
-        Method::DFP => quasi_newton::minimize_dfp(fun, x0, options),
-        Method::LBFGS => lbfgs::minimize_lbfgs(fun, x0, options),
-        Method::LBFGSB => lbfgs::minimize_lbfgsb(fun, x0, options),
-        Method::NewtonCG => newton::minimize_newton_cg(fun, x0, options),
-        Method::TrustNCG => trust_region::minimize_trust_ncg(fun, x0, options),
-        Method::TrustKrylov => trust_region::minimize_trust_krylov(fun, x0, options),
-        Method::TrustExact => trust_region::minimize_trust_exact(fun, x0, options),
+        Method::NelderMead =>, nelder_mead::minimize_nelder_mead(fun, x0, options),
+        Method::Powell =>, powell::minimize_powell(fun, x0, options),
+        Method::CG =>, conjugate_gradient::minimize_conjugate_gradient(fun, x0, options),
+        Method::BFGS =>, bfgs::minimize_bfgs(fun, x0, options),
+        Method::SR1 =>, quasi_newton::minimize_sr1(fun, x0, options),
+        Method::DFP =>, quasi_newton::minimize_dfp(fun, x0, options),
+        Method::LBFGS =>, lbfgs::minimize_lbfgs(fun, x0, options),
+        Method::LBFGSB =>, lbfgs::minimize_lbfgsb(fun, x0, options),
+        Method::NewtonCG =>, newton::minimize_newton_cg(fun, x0, options),
+        Method::TrustNCG =>, trust_region::minimize_trust_ncg(fun, x0, options),
+        Method::TrustKrylov =>, trust_region::minimize_trust_krylov(fun, x0, options),
+        Method::TrustExact =>, trust_region::minimize_trust_exact(fun, x0, options),
         Method::TruncatedNewton => truncated_newton_wrapper(fun, x0, options),
         Method::TrustRegionNewton => trust_region_newton_wrapper(fun, x0, options),
     }

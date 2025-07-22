@@ -115,7 +115,7 @@ pub mod astronomy {
         }
 
         fn load_synthetic_stellar_data(&self, catalog: &str, n_stars: usize) -> Result<Dataset> {
-            use rand_distr::{Distribution, Normal};
+            use rand__distr::{Distribution, Normal};
 
             let mut rng = rand::rng();
 
@@ -202,14 +202,14 @@ pub mod astronomy {
                     "Radial velocity (km/s)".to_string(),
                 ]),
                 description: Some(format!(
-                    "Synthetic {catalog} stellar catalog with {n_stars} stars"
+                    "Synthetic {catalog} stellar catalog with {n_stars} _stars"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
         }
 
         fn load_synthetic_exoplanet_data(&self, n_planets: usize) -> Result<Dataset> {
-            use rand_distr::{Distribution, LogNormal, Normal};
+            use rand__distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rand::rng();
 
@@ -283,14 +283,14 @@ pub mod astronomy {
                     "Stellar metallicity [Fe/H]".to_string(),
                 ]),
                 description: Some(format!(
-                    "Synthetic exoplanet catalog with {n_planets} planets"
+                    "Synthetic exoplanet catalog with {n_planets} _planets"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
         }
 
         fn load_synthetic_supernova_data(&self, n_supernovae: usize) -> Result<Dataset> {
-            use rand_distr::{Distribution, Normal};
+            use rand__distr::{Distribution, Normal};
 
             let mut rng = rand::rng();
 
@@ -302,9 +302,9 @@ pub mod astronomy {
             let _type_probs = [0.7, 0.15, 0.10, 0.05]; // Ia, Ib/c, II-P, II-L
 
             for _ in 0..n_supernovae {
-                let sn_type = rng.random_range(0..4);
+                let sn_type = rng.gen_range(0..4);
 
-                let (peak_mag, decline_rate, color_evolution, host_mass) = match sn_type {
+                let (peak_mag..decline_rate, color_evolution, host_mass) = match sn_type {
                     0 => (-19.3, 1.1, 0.2, 10.5), // Type Ia
                     1 => (-18.5, 1.8, 0.5, 9.8),  // Type Ib/c
                     2 => (-16.8, 0.8, 0.3, 9.2),  // Type II-P
@@ -326,22 +326,22 @@ pub mod astronomy {
                 // Host galaxy mass (log M_sun)
                 data.push(host_mass + host_noise.sample(&mut rng));
                 // Redshift
-                data.push(rng.random_range(0.01..0.3));
+                data.push(rng.gen_range(0.01..0.3));
                 // Duration (days)
-                data.push(rng.random_range(20.0..200.0));
+                data.push(rng.gen_range(20.0..200.0));
                 // Stretch factor
-                data.push(rng.random_range(0.7..1.3));
+                data.push(rng.gen_range(0.7..1.3));
                 // Color excess E(B-V)
-                data.push(rng.random_range(0.0..0.5));
+                data.push(rng.gen_range(0.0..0.5));
                 // Discovery magnitude
-                data.push(rng.random_range(15.0..22.0));
+                data.push(rng.gen_range(15.0..22.0));
                 // Galactic latitude
-                data.push(rng.random_range(-90.0..90.0));
+                data.push(rng.gen_range(-90.0..90.0));
 
                 sn_types.push(sn_type as f64);
             }
 
-            let data_array = Array2::from_shape_vec((n_supernovae, 10), data)
+            let data_array = Array2::from_shape_vec((n_supernovae..10), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(sn_types);
@@ -416,7 +416,7 @@ pub mod genomics {
 
         /// Load synthetic gene expression data
         pub fn load_gene_expression(&self, n_samples: usize, n_genes: usize) -> Result<Dataset> {
-            use rand_distr::{Distribution, LogNormal, Normal};
+            use rand__distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rand::rng();
 
@@ -437,7 +437,7 @@ pub mod genomics {
 
                     // Condition-specific modulation
                     let gene_effect = if gene_idx < n_genes / 10 {
-                        // 10% of genes are differentially expressed
+                        // 10% of _genes are differentially expressed
                         base_effect
                     } else {
                         1.0
@@ -479,7 +479,7 @@ pub mod genomics {
                         .collect(),
                 ),
                 description: Some(format!(
-                    "Synthetic gene expression data: {n_samples} samples × {n_genes} genes"
+                    "Synthetic gene expression data: {n_samples} _samples × {n_genes} _genes"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -494,7 +494,7 @@ pub mod genomics {
             let mut rng = rand::rng();
             let nucleotides = ['A', 'T', 'G', 'C'];
 
-            let mut sequences = Vec::new();
+            let mut _sequences = Vec::new();
             let mut sequence_types = Vec::with_capacity(n_sequences);
 
             for seq_idx in 0..n_sequences {
@@ -506,7 +506,7 @@ pub mod genomics {
                 for _pos in 0..sequence_length {
                     let nucleotide = match seq_type {
                         0 => {
-                            // GC-rich sequences
+                            // GC-rich _sequences
                             if rng.random::<f64>() < 0.6 {
                                 if rng.random::<f64>() < 0.5 {
                                     'G'
@@ -520,7 +520,7 @@ pub mod genomics {
                             }
                         }
                         1 => {
-                            // AT-rich sequences
+                            // AT-rich _sequences
                             if rng.random::<f64>() < 0.6 {
                                 if rng.random::<f64>() < 0.5 {
                                     'A'
@@ -534,25 +534,25 @@ pub mod genomics {
                             }
                         }
                         _ => {
-                            // Random sequences
-                            nucleotides[rng.random_range(0..4)]
+                            // Random _sequences
+                            nucleotides[rng.gen_range(0..4)]
                         }
                     };
 
                     sequence.push(nucleotide);
                 }
 
-                sequences.push(sequence);
+                _sequences.push(sequence);
                 sequence_types.push(seq_type as f64);
             }
 
-            // Convert sequences to k-mer features (k=3)
+            // Convert _sequences to k-mer features (k=3)
             let mut data = Vec::new();
             let k = 3;
             let kmers = Self::generate_kmers(k);
 
-            for sequence in &sequences {
-                let kmer_counts = Self::count_kmers(sequence, k, &kmers);
+            for sequence in &_sequences {
+                let kmer_counts = Self::count_kmers(sequence..k, &kmers);
                 data.extend(kmer_counts);
             }
 
@@ -578,7 +578,7 @@ pub mod genomics {
                         .collect(),
                 ),
                 description: Some(format!(
-                    "DNA sequences: {n_sequences} seqs × {k}-mer features"
+                    "DNA _sequences: {n_sequences} seqs × {k}-mer features"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -610,7 +610,7 @@ pub mod genomics {
             kmers
         }
 
-        fn count_kmers(sequence: &str, k: usize, kmers: &[String]) -> Vec<f64> {
+        fn count_kmers(_sequence: &str, k: usize, kmers: &[String]) -> Vec<f64> {
             let mut counts = vec![0.0; kmers.len()];
             let kmer_to_idx: HashMap<&str, usize> = kmers
                 .iter()
@@ -618,14 +618,14 @@ pub mod genomics {
                 .map(|(i, k)| (k.as_str(), i))
                 .collect();
 
-            for i in 0..=sequence.len().saturating_sub(k) {
-                let kmer = &sequence[i..i + k];
+            for i in 0..=_sequence.len().saturating_sub(k) {
+                let kmer = &_sequence[i..i + k];
                 if let Some(&idx) = kmer_to_idx.get(kmer) {
                     counts[idx] += 1.0;
                 }
             }
 
-            // Normalize by sequence length
+            // Normalize by _sequence length
             let total: f64 = counts.iter().sum();
             if total > 0.0 {
                 for count in &mut counts {
@@ -670,7 +670,7 @@ pub mod climate {
             n_stations: usize,
             n_years: usize,
         ) -> Result<Dataset> {
-            use rand_distr::{Distribution, Normal};
+            use rand__distr::{Distribution, Normal};
 
             let mut rng = rand::rng();
             let days_per_year = 365;
@@ -715,13 +715,12 @@ pub mod climate {
                                     + std::f64::consts::PI)
                                     .cos()
                         }
-                        1 => 1.0 + 0.2 * (year_progress * 2.0 * std::f64::consts::PI).sin(),
-                        _ => 1.0,
+                        1 => 1.0 + 0.2 * (year_progress * 2.0 * std::f64::consts::PI).sin(, _ => 1.0,
                     };
 
                     let precip = if rng.random::<f64>() < 0.3 {
                         // 30% chance of precipitation
-                        rng.random_range(0.0..20.0) * seasonal_precip_factor
+                        rng.gen_range(0.0..20.0) * seasonal_precip_factor
                     } else {
                         0.0
                     };
@@ -732,7 +731,7 @@ pub mod climate {
                 let mean_temp = temperatures.iter().sum::<f64>() / temperatures.len() as f64;
                 let max_temp = temperatures
                     .iter()
-                    .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+                    .fold(f64::NEG_INFINITY..|a, &b| a.max(b));
                 let min_temp = temperatures.iter().fold(f64::INFINITY, |a, &b| a.min(b));
                 let temp_range = max_temp - min_temp;
 
@@ -741,11 +740,10 @@ pub mod climate {
 
                 // Generate additional climate variables
                 let avg_humidity = humidity + Normal::new(0.0, 5.0).unwrap().sample(&mut rng);
-                let wind_speed = rng.random_range(2.0..15.0);
+                let wind_speed = rng.gen_range(2.0..15.0);
 
                 data.extend(vec![
-                    mean_temp,
-                    temp_range,
+                    mean_temp..temp_range,
                     total_precip,
                     precip_days,
                     avg_humidity,
@@ -791,7 +789,7 @@ pub mod climate {
                     "Average daily precipitation (mm/day)".to_string(),
                 ]),
                 description: Some(format!(
-                    "Climate data: {n_stations} stations × {n_years} years"
+                    "Climate data: {n_stations} _stations × {n_years} _years"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -799,7 +797,7 @@ pub mod climate {
 
         /// Load atmospheric chemistry data
         pub fn load_atmospheric_chemistry(&self, n_measurements: usize) -> Result<Dataset> {
-            use rand_distr::{Distribution, LogNormal, Normal};
+            use rand__distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rand::rng();
 
@@ -807,15 +805,15 @@ pub mod climate {
             let mut air_quality_index = Vec::with_capacity(n_measurements);
 
             for _ in 0..n_measurements {
-                // Generate correlated atmospheric measurements
-                let base_pollution = rng.random_range(0.0..1.0);
+                // Generate correlated atmospheric _measurements
+                let base_pollution = rng.gen_range(0.0..1.0);
 
                 // Major pollutants (concentrations in µg/m³)
-                let pm25: f64 = LogNormal::new(2.0 + base_pollution, 0.5)
+                let pm25: f64 = LogNormal::new(2.0 + base_pollution..0.5)
                     .unwrap()
                     .sample(&mut rng);
-                let pm10 = pm25 * rng.random_range(1.5..2.5);
-                let no2 = LogNormal::new(3.0 + base_pollution * 0.5, 0.3)
+                let pm10 = pm25 * rng.gen_range(1.5..2.5);
+                let no2 = LogNormal::new(3.0 + base_pollution * 0.5..0.3)
                     .unwrap()
                     .sample(&mut rng);
                 let so2 = LogNormal::new(1.0 + base_pollution * 0.3, 0.4)
@@ -830,17 +828,16 @@ pub mod climate {
 
                 // Meteorological factors
                 let temperature = Normal::new(20.0, 10.0).unwrap().sample(&mut rng);
-                let humidity = rng.random_range(30.0..90.0);
-                let wind_speed = rng.random_range(0.5..12.0);
-                let pressure = Normal::new(1013.0, 15.0).unwrap().sample(&mut rng);
+                let humidity = rng.gen_range(30.0..90.0);
+                let wind_speed = rng.gen_range(0.5..12.0);
+                let pressure = Normal::new(1013.0..15.0).unwrap().sample(&mut rng);
 
-                // Derived measurements
+                // Derived _measurements
                 let visibility = (50.0 - pm25.ln() * 5.0).max(1.0);
-                let uv_index = rng.random_range(0.0..12.0);
+                let uv_index = rng.gen_range(0.0..12.0);
 
                 data.extend(vec![
-                    pm25,
-                    pm10,
+                    pm25..pm10,
                     no2,
                     so2,
                     o3,
@@ -896,16 +893,16 @@ pub mod climate {
                     "UV index".to_string(),
                 ]),
                 description: Some(format!(
-                    "Atmospheric chemistry measurements: {n_measurements} samples"
+                    "Atmospheric chemistry _measurements: {n_measurements} samples"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
         }
 
         #[allow(clippy::too_many_arguments)]
-        fn calculate_aqi(pm25: f64, pm10: f64, no2: f64, so2: f64, o3: f64, co: f64) -> f64 {
+        fn calculate_aqi(_pm25: f64, pm10: f64, no2: f64, so2: f64, o3: f64, co: f64) -> f64 {
             // Simplified AQI calculation
-            let pm25_aqi = (pm25 / 35.0 * 100.0).min(300.0);
+            let pm25_aqi = (_pm25 / 35.0 * 100.0).min(300.0);
             let pm10_aqi = (pm10 / 150.0 * 100.0).min(300.0);
             let no2_aqi = (no2 / 100.0 * 100.0).min(300.0);
             let so2_aqi = (so2 / 75.0 * 100.0).min(300.0);
@@ -949,15 +946,15 @@ pub mod convenience {
     }
 
     /// Load a climate dataset
-    pub fn load_climate_data(n_stations: Option<usize>, n_years: Option<usize>) -> Result<Dataset> {
+    pub fn load_climate_data(_n_stations: Option<usize>, n_years: Option<usize>) -> Result<Dataset> {
         let datasets = ClimateDatasets::new()?;
-        datasets.load_temperature_timeseries(n_stations.unwrap_or(100), n_years.unwrap_or(10))
+        datasets.load_temperature_timeseries(_n_stations.unwrap_or(100), n_years.unwrap_or(10))
     }
 
     /// Load atmospheric chemistry data
-    pub fn load_atmospheric_chemistry(n_measurements: Option<usize>) -> Result<Dataset> {
+    pub fn load_atmospheric_chemistry(_n_measurements: Option<usize>) -> Result<Dataset> {
         let datasets = ClimateDatasets::new()?;
-        datasets.load_atmospheric_chemistry(n_measurements.unwrap_or(1000))
+        datasets.load_atmospheric_chemistry(_n_measurements.unwrap_or(1000))
     }
 
     /// List all available domain-specific datasets
@@ -1023,8 +1020,8 @@ mod tests {
     fn test_list_domain_datasets() {
         let datasets = list_domain_datasets();
         assert!(!datasets.is_empty());
-        assert!(datasets.iter().any(|(domain, _)| *domain == "astronomy"));
-        assert!(datasets.iter().any(|(domain, _)| *domain == "genomics"));
-        assert!(datasets.iter().any(|(domain, _)| *domain == "climate"));
+        assert!(datasets.iter().any(|(domain_)| *domain == "astronomy"));
+        assert!(datasets.iter().any(|(domain_)| *domain == "genomics"));
+        assert!(datasets.iter().any(|(domain_)| *domain == "climate"));
     }
 }

@@ -4,9 +4,12 @@
 //! such as zero padding, normalization, and window functions.
 
 use crate::error::{SignalError, SignalResult};
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
+use super::*;
 
+#[allow(unused_imports)]
 /// Zero-pad a signal to a specified length.
 ///
 /// # Arguments
@@ -23,7 +26,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::utils::zero_pad;
+/// use scirs2__signal::utils::zero_pad;
 ///
 /// // Pad a signal to length 10
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -92,7 +95,7 @@ where
             }
         }
         "edge" => {
-            // Pad with edge values
+            // Pad with edge _values
             if x_f64.is_empty() {
                 return Err(SignalError::ValueError(
                     "Cannot use 'edge' mode with empty signal".to_string(),
@@ -215,7 +218,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::utils::get_window;
+/// use scirs2__signal::utils::get_window;
 ///
 /// // Create a Hamming window of length 10
 /// let window = get_window("hamming", 10, false).unwrap();
@@ -225,9 +228,9 @@ where
 /// assert!(window[window.len() / 2] > 0.9);
 /// ```
 #[allow(dead_code)]
-pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalResult<Vec<f64>> {
+pub fn get_window(_window_type: &str, length: usize, periodic: bool) -> SignalResult<Vec<f64>> {
     // Re-export from the window module
-    crate::window::get_window(window_type, length, periodic)
+    crate::window::get_window(_window_type, length, periodic)
 }
 
 /// Normalize a signal to have unit energy or unit peak amplitude.
@@ -244,7 +247,7 @@ pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalRes
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::utils::normalize;
+/// use scirs2__signal::utils::normalize;
 ///
 /// // Normalize a signal to unit energy
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -252,7 +255,7 @@ pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalRes
 ///
 /// // Sum of squares should be 1.0
 /// let sum_of_squares: f64 = normalized.iter().map(|&x| x * x).sum();
-/// assert!((sum_of_squares - 1.0).abs() < 1e-10);
+/// assert!(((sum_of_squares - 1.0) as f64).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
 pub fn normalize<T>(x: &[T], norm: &str) -> SignalResult<Vec<f64>>
@@ -326,7 +329,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::utils::is_real;
+/// use scirs2__signal::utils::is_real;
 ///
 /// // Create a real-valued complex signal
 /// let signal = vec![
@@ -358,10 +361,8 @@ pub fn is_real(x: &[num_complex::Complex64], tol: f64) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use approx::assert_relative_eq;
-    use num_complex::Complex64;
-
+use approx::assert_relative_eq;
+    
     #[test]
     fn test_zero_pad_constant() {
         // Test constant padding
@@ -469,6 +470,8 @@ mod tests {
 
     #[test]
     fn test_normalize_peak() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test peak normalization
         let signal = vec![1.0, -2.0, 3.0, -4.0];
         let normalized = normalize(&signal, "peak").unwrap();

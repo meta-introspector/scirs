@@ -41,9 +41,9 @@ pub struct LAMBGpu<A: Float + ScalarOperand + Debug> {
 
 impl<A: Float + ScalarOperand + Debug> LAMBGpu<A> {
     /// Create a new GPU-accelerated LAMB optimizer
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(_learning_rate: A) -> Self {
         Self {
-            cpu_optimizer: LAMB::new(learning_rate),
+            cpu_optimizer: LAMB::new(_learning_rate),
             gpu_memory: None,
             kernel_handle: None,
             norm_kernel_handle: None,
@@ -329,9 +329,9 @@ pub struct BatchLAMBGpu<A: Float + ScalarOperand + Debug> {
 
 impl<A: Float + ScalarOperand + Debug> BatchLAMBGpu<A> {
     /// Create a new batch LAMB optimizer
-    pub fn new(learning_rate: A, num_groups: usize) -> Self {
+    pub fn new(_learning_rate: A, num_groups: usize) -> Self {
         let optimizers = (0..num_groups)
-            .map(|_| LAMBGpu::new(learning_rate))
+            .map(|_| LAMBGpu::new(_learning_rate))
             .collect();
 
         Self {

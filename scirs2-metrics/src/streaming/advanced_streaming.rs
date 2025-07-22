@@ -258,12 +258,12 @@ struct Bucket<F: Float + std::fmt::Debug> {
 }
 
 impl<F: Float + std::fmt::Debug + Send + Sync> Bucket<F> {
-    fn new(max_buckets: usize) -> Self {
+    fn new(_max_buckets: usize) -> Self {
         Self {
-            max_buckets,
-            sum: vec![F::zero(); max_buckets],
-            variance: vec![F::zero(); max_buckets],
-            width: vec![0; max_buckets],
+            _max_buckets,
+            sum: vec![F::zero(); _max_buckets],
+            variance: vec![F::zero(); _max_buckets],
+            width: vec![0; _max_buckets],
             used_buckets: 0,
         }
     }
@@ -486,7 +486,7 @@ pub struct MetricEnsemble<F: Float + std::fmt::Debug> {
     consensus_threshold: F,
 }
 
-impl<F: Float + std::fmt::Debug> std::fmt::Debug for MetricEnsemble<F> {
+impl<F: Float + std::fmt::Debug> + std::fmt::Debug for MetricEnsemble<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MetricEnsemble")
             .field(
@@ -626,11 +626,11 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + 'static>
     AdaptiveStreamingMetrics<F>
 {
     /// Create new adaptive streaming metrics
-    pub fn new(config: StreamingConfig) -> Result<Self> {
+    pub fn new(_config: StreamingConfig) -> Result<Self> {
         let mut drift_detectors: Vec<Box<dyn ConceptDriftDetector<F> + Send + Sync>> = Vec::new();
 
         // Initialize drift detectors based on configuration
-        for method in &config.drift_detection_methods {
+        for method in &_config.drift_detection_methods {
             match method {
                 DriftDetectionMethod::Adwin { confidence } => {
                     drift_detectors.push(Box::new(AdwinDetector::new(*confidence)?));
@@ -651,20 +651,20 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum + 'static>
         }
 
         Ok(Self {
-            config: config.clone(),
+            _config: _config.clone(),
             drift_detectors,
             window_manager: AdaptiveWindowManager::new(
-                config.base_window_size,
-                config.min_window_size,
-                config.max_window_size,
-                config.adaptation_strategy.clone(),
+                _config.base_window_size,
+                _config.min_window_size,
+                _config.max_window_size,
+                _config.adaptation_strategy.clone(),
             ),
-            performance_monitor: PerformanceMonitor::new(config.monitoring_interval),
-            anomaly_detector: AnomalyDetector::new(config.anomaly_algorithm.clone())?,
+            performance_monitor: PerformanceMonitor::new(_config.monitoring_interval),
+            anomaly_detector: AnomalyDetector::new(_config.anomaly_algorithm.clone())?,
             metric_ensemble: MetricEnsemble::new(),
-            history_buffer: HistoryBuffer::new(config.max_window_size * 2),
+            history_buffer: HistoryBuffer::new(_config.max_window_size * 2),
             current_stats: StreamingStatistics::new(),
-            alerts_manager: AlertsManager::new(config.alert_config.clone()),
+            alerts_manager: AlertsManager::new(_config.alert_config.clone()),
         })
     }
 
@@ -856,15 +856,15 @@ pub struct AnomalySummary<F: Float + std::fmt::Debug> {
 
 // Real implementation of ADWIN detector for efficient streaming
 impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F> {
-    fn new(confidence: f64) -> Result<Self> {
-        if !(0.0..=1.0).contains(&confidence) {
+    fn new(_confidence: f64) -> Result<Self> {
+        if !(0.0..=1.0).contains(&_confidence) {
             return Err(MetricsError::InvalidInput(
                 "Confidence must be between 0 and 1".to_string(),
             ));
         }
 
         Ok(Self {
-            confidence,
+            _confidence,
             window: VecDeque::with_capacity(1000),
             total_sum: F::zero(),
             width: 0,
@@ -991,7 +991,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AdwinDetector<F>
 impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> ConceptDriftDetector<F>
     for AdwinDetector<F>
 {
-    fn update(&mut self, _prediction_correct: bool, error: F) -> Result<DriftDetectionResult> {
+    fn update(&mut self_prediction_correct: bool, error: F) -> Result<DriftDetectionResult> {
         self.samples_count += 1;
 
         // Add error value to window
@@ -1097,9 +1097,9 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> ConceptDriftDete
 }
 
 impl<F: Float + std::fmt::Debug + Send + Sync> DdmDetector<F> {
-    fn new(warning_level: f64, drift_level: f64) -> Self {
+    fn new(_warning_level: f64, drift_level: f64) -> Self {
         Self {
-            warning_level,
+            _warning_level,
             drift_level,
             min_instances: 30,
             num_errors: 0,
@@ -1201,9 +1201,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDete
 }
 
 impl<F: Float + std::fmt::Debug + Send + Sync> PageHinkleyDetector<F> {
-    fn new(threshold: f64, alpha: f64) -> Self {
+    fn new(_threshold: f64, alpha: f64) -> Self {
         Self {
-            threshold,
+            _threshold,
             alpha,
             cumulative_sum: F::zero(),
             min_cumulative_sum: F::zero(),
@@ -1426,8 +1426,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> AdaptiveWindowManager<F> {
         &self,
         strategy: &WindowAdaptationStrategy,
         stats: &StreamingStatistics<F>,
-        drift_detected: bool,
-        _anomaly: Option<&Anomaly<F>>,
+        drift_detected: bool, _anomaly: Option<&Anomaly<F>>,
     ) -> Result<f64> {
         let score = match strategy {
             WindowAdaptationStrategy::DriftBased => {
@@ -1586,7 +1585,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> AdaptiveWindowManager<F> {
 }
 
 impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
-    fn new(interval: Duration) -> Self {
+    fn new(_interval: Duration) -> Self {
         let mut thresholds = HashMap::new();
         thresholds.insert("accuracy".to_string(), F::from(0.8).unwrap()); // 80% accuracy threshold
         thresholds.insert("precision".to_string(), F::from(0.75).unwrap());
@@ -1594,7 +1593,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
         thresholds.insert("f1_score".to_string(), F::from(0.75).unwrap());
 
         Self {
-            monitoring_interval: interval,
+            monitoring_interval: _interval,
             last_monitoring: Instant::now(),
             performance_history: VecDeque::with_capacity(1000), // Bounded capacity for memory efficiency
             current_metrics: HashMap::new(),
@@ -1624,7 +1623,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
                     .map(|p| p.timestamp)
                     .unwrap_or_else(|| now - Duration::from_millis(1)),
             ),
-            memory_usage: std::mem::size_of::<StreamingStatistics<F>>(),
+            memory_usage: std::mem::size, _of::<StreamingStatistics<F>>(),
             window_size: 1000, // Would come from actual window manager
             samples_processed: stats.total_samples,
         };
@@ -1725,8 +1724,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
                 "accuracy" => snapshot.accuracy.to_f64().unwrap_or(0.0),
                 "precision" => snapshot.precision.to_f64().unwrap_or(0.0),
                 "recall" => snapshot.recall.to_f64().unwrap_or(0.0),
-                "f1_score" => snapshot.f1_score.to_f64().unwrap_or(0.0),
-                _ => 0.0,
+                "f1_score" => snapshot.f1_score.to_f64().unwrap_or(0.0, _ => 0.0,
             })
             .collect();
 
@@ -1760,9 +1758,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
 }
 
 impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<F> {
-    fn new(algorithm: AnomalyDetectionAlgorithm) -> Result<Self> {
-        let threshold = match &algorithm {
-            AnomalyDetectionAlgorithm::ZScore { threshold } => F::from(*threshold).unwrap(),
+    fn new(_algorithm: AnomalyDetectionAlgorithm) -> Result<Self> {
+        let threshold = match &_algorithm {
+            AnomalyDetectionAlgorithm::ZScore { threshold } =>, F::from(*threshold).unwrap(),
             AnomalyDetectionAlgorithm::IsolationForest { contamination: _ } => {
                 F::from(0.5).unwrap()
             }
@@ -1770,7 +1768,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
         };
 
         Ok(Self {
-            algorithm,
+            _algorithm,
             history_buffer: VecDeque::with_capacity(1000), // Bounded for memory efficiency
             anomaly_scores: VecDeque::with_capacity(1000), // Bounded for memory efficiency
             threshold,
@@ -1935,7 +1933,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
             return Ok((false, F::zero(), AnomalyType::Unknown));
         }
 
-        // Calculate local outlier factor based on k-nearest neighbors
+        // Calculate local outlier factor based on k-nearest _neighbors
         let mut distances: Vec<(F, usize)> = self
             .history_buffer
             .iter()
@@ -1945,7 +1943,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
 
         distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Get k nearest neighbors
+        // Get k nearest _neighbors
         let k_distance = if distances.len() > n_neighbors {
             distances[n_neighbors].0
         } else {
@@ -2059,7 +2057,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> MetricEnsemble<F> {
         }
     }
 
-    fn update(&mut self, _true_value: F, _predicted_value: F) -> Result<()> {
+    fn update(&mut self_true_value: F_predicted, _value: F) -> Result<()> {
         // Implementation would update ensemble metrics
         Ok(())
     }
@@ -2070,9 +2068,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync> MetricEnsemble<F> {
 }
 
 impl<F: Float + std::fmt::Debug + Send + Sync> HistoryBuffer<F> {
-    fn new(max_size: usize) -> Self {
+    fn new(_max_size: usize) -> Self {
         Self {
-            max_size,
+            _max_size,
             data: VecDeque::new(),
             timestamps: VecDeque::new(),
             metadata: VecDeque::new(),
@@ -2152,9 +2150,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync> StreamingStatistics<F> {
 }
 
 impl AlertsManager {
-    fn new(config: AlertConfig) -> Self {
+    fn new(_config: AlertConfig) -> Self {
         Self {
-            config,
+            _config,
             pending_alerts: VecDeque::new(),
             sent_alerts: VecDeque::new(),
             rate_limiter: HashMap::new(),
@@ -2545,9 +2543,9 @@ pub struct AdamOptimizer<F: Float + std::fmt::Debug> {
 
 impl<F: Float + std::fmt::Debug> AdamOptimizer<F> {
     /// Create a new Adam optimizer
-    pub fn new(learning_rate: F) -> Result<Self> {
+    pub fn new(_learning_rate: F) -> Result<Self> {
         Ok(Self {
-            learning_rate,
+            _learning_rate,
             beta1: F::from(0.9).unwrap(),
             beta2: F::from(0.999).unwrap(),
             epsilon: F::from(1e-8).unwrap(),
@@ -2682,16 +2680,12 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> Adaptive
 
         impl<F: Float> RewardFunction<F> for SimpleRewardFunction<F> {
             fn compute_reward(
-                &self,
-                _state: &Array1<F>,
-                _action: &Array1<F>,
-                _next_state: &Array1<F>,
-                _performance_metrics: &HashMap<String, F>,
+                &self_state: &Array1<F>, _action: &Array1<F>, _next_state: &Array1<F>, _performance_metrics: &HashMap<String, F>,
             ) -> F {
                 F::zero()
             }
 
-            fn update_parameters(&mut self, _feedback: F) -> Result<()> {
+            fn update_parameters(&mut self_feedback: F) -> Result<()> {
                 Ok(())
             }
         }
@@ -2750,21 +2744,18 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> Adaptive
     }
 
     /// Adapt to drift (placeholder implementation)
-    pub fn adapt_to_drift(&mut self, _drift_magnitude: F) -> Result<()> {
+    pub fn adapt_to_drift(&mut self_drift_magnitude: F) -> Result<()> {
         // Placeholder implementation
         Ok(())
     }
 
     /// Update experience in the RL agent
     pub fn update_experience(
-        &mut self,
-        _state: &Array1<F>,
-        _action: &Array1<F>,
-        reward: F,
-        _performance_metrics: &HashMap<String, F>,
+        &mut self_state: &Array1<F>, _action: &Array1<F>,
+        reward: F_performance_metrics: &HashMap<String, F>,
     ) -> Result<()> {
-        // Update training metrics
-        let metrics = RLTrainingMetrics {
+        // Update training _metrics
+        let _metrics = RLTrainingMetrics {
             episode: 0,
             total_reward: reward,
             average_reward: reward,
@@ -2773,7 +2764,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> Adaptive
             timestamp: Instant::now(),
         };
 
-        self.training_metrics.push(metrics);
+        self.training_metrics.push(_metrics);
 
         // Keep history manageable
         if self.training_metrics.len() > 1000 {
@@ -2786,8 +2777,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> Adaptive
     /// Select action based on features
     pub fn select_action(
         &mut self,
-        features: &Array1<F>,
-        _performance_metrics: &HashMap<String, F>,
+        features: &Array1<F>, _performance_metrics: &HashMap<String, F>,
     ) -> Result<Array1<F>> {
         // Simple action selection - return a placeholder action
         let action_size = std::cmp::min(features.len(), 5);
@@ -2804,7 +2794,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> Adaptive
     }
 }
 
-impl<F: Float + std::fmt::Debug> std::fmt::Debug for AdaptiveControlAgent<F> {
+impl<F: Float + std::fmt::Debug> + std::fmt::Debug for AdaptiveControlAgent<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AdaptiveControlAgent")
             .field("current_state", &self.current_state)
@@ -2860,9 +2850,9 @@ pub struct ExperienceReplayBuffer<F: Float + std::fmt::Debug> {
 
 impl<F: Float + std::fmt::Debug> ExperienceReplayBuffer<F> {
     /// Create a new experience replay buffer
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(_capacity: usize) -> Self {
         Self {
-            capacity,
+            _capacity,
             experiences: VecDeque::new(),
             position: 0,
         }
@@ -2988,7 +2978,7 @@ pub struct OnlineLearningSystem<F: Float + std::fmt::Debug + Send + Sync + 'stat
 
 impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> OnlineLearningSystem<F> {
     /// Create a new online learning system
-    pub fn new(config: OnlineLearningConfig) -> Result<Self> {
+    pub fn new(_config: OnlineLearningConfig) -> Result<Self> {
         // Create placeholder implementations for required traits
         struct PlaceholderOptimizer<F: Float> {
             learning_rate: F,
@@ -2996,11 +2986,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
 
         impl<F: Float + std::iter::Sum> OnlineOptimizer<F> for PlaceholderOptimizer<F> {
             fn update(
-                &mut self,
-                _parameters: &mut Array1<F>,
-                _features: &Array1<F>,
-                _target: F,
-                _learning_rate: F,
+                &mut self_parameters: &mut Array1<F>, _features: &Array1<F>, _target: F_learning_rate: F,
             ) -> Result<()> {
                 Ok(())
             }
@@ -3009,7 +2995,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
                 self.learning_rate
             }
 
-            fn adapt_to_drift(&mut self, _drift_magnitude: F) -> Result<()> {
+            fn adapt_to_drift(&mut self_drift_magnitude: F) -> Result<()> {
                 Ok(())
             }
         }
@@ -3023,9 +3009,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
             for PlaceholderDriftDetector<F>
         {
             fn update(
-                &mut self,
-                _prediction_correct: bool,
-                _error: F,
+                &mut self_prediction_correct: bool, _error: F,
             ) -> Result<DriftDetectionResult> {
                 Ok(DriftDetectionResult {
                     status: DriftStatus::Stable,
@@ -3044,9 +3028,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
             }
 
             fn get_config(&self) -> HashMap<String, f64> {
-                let mut config = HashMap::new();
-                config.insert("threshold".to_string(), 0.5);
-                config
+                let mut _config = HashMap::new();
+                _config.insert("threshold".to_string(), 0.5);
+                _config
             }
 
             fn get_statistics(&self) -> DriftStatistics<F> {
@@ -3067,10 +3051,10 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
             feature_buffer: VecDeque::new(),
             target_buffer: VecDeque::new(),
             optimizer: Box::new(PlaceholderOptimizer {
-                learning_rate: F::from(config.adaptation_rate).unwrap(),
+                learning_rate: F::from(_config.adaptation_rate).unwrap(),
             }),
             drift_detector: Box::new(PlaceholderDriftDetector {
-                threshold: F::from(config.drift_adaptation_threshold).unwrap(),
+                threshold: F::from(_config.drift_adaptation_threshold).unwrap(),
             }),
             model_ensemble: Vec::new(),
             adaptation_history: Vec::new(),
@@ -3098,7 +3082,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
     }
 
     /// Adapt to drift (placeholder implementation)
-    pub fn adapt_to_drift(&mut self, _drift_magnitude: F) -> Result<()> {
+    pub fn adapt_to_drift(&mut self_drift_magnitude: F) -> Result<()> {
         // Placeholder implementation
         Ok(())
     }
@@ -3106,8 +3090,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
     /// Update the online learning system with new data
     pub fn update(
         &mut self,
-        features: &Array1<F>,
-        _performance_metrics: &HashMap<String, F>,
+        features: &Array1<F>, _performance_metrics: &HashMap<String, F>,
     ) -> Result<()> {
         // Add features to buffer
         self.feature_buffer.push_back(features.clone());
@@ -3122,7 +3105,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
     }
 }
 
-impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> std::fmt::Debug
+impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> + std::fmt::Debug
     for OnlineLearningSystem<F>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -3340,7 +3323,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> Performa
     }
 
     /// Adapt to drift (placeholder implementation)
-    pub fn adapt_to_drift(&mut self, _drift_magnitude: F) -> Result<()> {
+    pub fn adapt_to_drift(&mut self_drift_magnitude: F) -> Result<()> {
         // Placeholder implementation
         Ok(())
     }
@@ -3367,7 +3350,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> Performa
     }
 
     /// Predict performance based on features
-    pub fn predict(&self, _features: &Array1<F>, _parameters: &Array1<F>) -> Result<F> {
+    pub fn predict(&self_features: &Array1<F>, _parameters: &Array1<F>) -> Result<F> {
         // Simple prediction based on history
         if self.prediction_history.is_empty() {
             return Ok(F::zero());
@@ -3688,7 +3671,7 @@ impl<F: Float + std::fmt::Debug + std::ops::AddAssign> MultiArmedBandit<F> {
     }
 
     /// Increase exploration (placeholder implementation)
-    pub fn increase_exploration(&mut self, _drift_magnitude: F) -> Result<()> {
+    pub fn increase_exploration(&mut self_drift_magnitude: F) -> Result<()> {
         // Placeholder implementation
         Ok(())
     }
@@ -3720,7 +3703,7 @@ impl<F: Float + std::fmt::Debug + std::ops::AddAssign> MultiArmedBandit<F> {
     }
 
     /// Select arm based on features
-    pub fn select_arm(&mut self, _features: &Array1<F>) -> Result<Array1<F>> {
+    pub fn select_arm(&mut self_features: &Array1<F>) -> Result<Array1<F>> {
         // Simple arm selection - return parameters from the best arm
         if let Some(best_idx) = self.best_arm {
             if best_idx < self.arms.len() {
@@ -3843,15 +3826,15 @@ pub struct AdaptiveLearningScheduler<F: Float + std::fmt::Debug> {
 
 impl<F: Float + std::fmt::Debug> AdaptiveLearningScheduler<F> {
     /// Create a new adaptive learning scheduler
-    pub fn new(initial_lr: F, _config: OptimizationConfig) -> Result<Self> {
+    pub fn new(_initial_lr: F, _config: OptimizationConfig) -> Result<Self> {
         Ok(Self {
-            current_lr: initial_lr,
-            initial_lr,
+            current_lr: _initial_lr,
+            _initial_lr,
             scheduler_type: SchedulerType::ExponentialDecay {
                 decay_rate: F::from(0.9).unwrap(),
             },
             performance_history: VecDeque::new(),
-            lr_history: VecDeque::new(),
+            _lr_history: VecDeque::new(),
             adaptation_params: SchedulerAdaptationParams {
                 min_lr: F::from(1e-6).unwrap(),
                 max_lr: F::from(1.0).unwrap(),
@@ -4034,25 +4017,25 @@ impl<
     > NeuralAdaptiveStreaming<F>
 {
     /// Create a new neural-adaptive streaming system
-    pub fn new(config: NeuralAdaptiveConfig) -> Result<Self> {
+    pub fn new(_config: NeuralAdaptiveConfig) -> Result<Self> {
         let parameter_optimizer = NeuralParameterOptimizer::new(
-            config.network_config.clone(),
-            config.optimization_config.clone(),
+            _config.network_config.clone(),
+            _config.optimization_config.clone(),
         )?;
 
-        let rl_agent = AdaptiveControlAgent::new(config.rl_config.clone())?;
+        let rl_agent = AdaptiveControlAgent::new(_config.rl_config.clone())?;
 
-        let online_learner = OnlineLearningSystem::new(config.online_learning_config.clone())?;
+        let online_learner = OnlineLearningSystem::new(_config.online_learning_config.clone())?;
 
-        let performance_predictor = PerformancePredictor::new(config.network_config.clone())?;
+        let performance_predictor = PerformancePredictor::new(_config.network_config.clone())?;
 
         let parameter_bandit = MultiArmedBandit::new()?;
 
-        let feature_extractor = NeuralFeatureExtractor::new(config.feature_config.clone())?;
+        let feature_extractor = NeuralFeatureExtractor::new(_config.feature_config.clone())?;
 
         let learning_scheduler = AdaptiveLearningScheduler::new(
-            F::from(config.network_config.learning_rate).unwrap(),
-            config.optimization_config.clone(),
+            F::from(_config.network_config.learning_rate).unwrap(),
+            _config.optimization_config.clone(),
         )?;
 
         Ok(Self {
@@ -4063,7 +4046,7 @@ impl<
             parameter_bandit,
             feature_extractor,
             learning_scheduler,
-            config,
+            _config,
         })
     }
 
@@ -4073,7 +4056,7 @@ impl<
         current_state: &Array1<F>,
         performance_metrics: &HashMap<String, F>,
     ) -> Result<HashMap<String, F>> {
-        // Extract features from current state
+        // Extract features from current _state
         let features = self.feature_extractor.extract_features(current_state)?;
 
         // Predict optimal parameters using neural network
@@ -4354,8 +4337,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand>
 {
     /// Create a new neural parameter optimizer
     pub fn new(
-        network_config: NetworkConfig,
-        _optimization_config: OptimizationConfig,
+        network_config: NetworkConfig_optimization, _config: OptimizationConfig,
     ) -> Result<Self> {
         let input_size = network_config
             .optimizer_hidden_layers
@@ -4442,7 +4424,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand>
 
     /// Adapt to concept drift
     pub fn adapt_to_drift(&mut self, drift_magnitude: F) -> Result<()> {
-        // Increase learning rate based on drift magnitude
+        // Increase learning rate based on drift _magnitude
         // This is a simple adaptation strategy
         let adaptation_factor = F::one() + drift_magnitude * F::from(0.1).unwrap();
 

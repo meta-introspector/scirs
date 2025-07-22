@@ -1,10 +1,10 @@
-use ag::tensor_ops::*;
+use ag::tensor__ops::*;
 use ndarray::array;
 use scirs2_autograd as ag;
 
 #[allow(dead_code)]
 fn main() {
-    ag::run::<f64, _, _>(|g| {
+    ag::run::<f64_>(|g| {
         // Test 2x2 matrix
         let matrix = array![[4.0, 3.0], [0.0, -1.0]];
         let matrix_tensor = convert_to_tensor(matrix, g);

@@ -1,4 +1,5 @@
 use scirs2_neural::autograd;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() {

@@ -5,13 +5,16 @@
 //! EMD decomposes a signal into a set of Intrinsic Mode Functions (IMFs),
 //! which represent different oscillatory modes embedded in the signal.
 
+use crate::hilbert;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2};
+use ndarray::{Array1, Array2, s};
 use num_traits::{Float, NumCast};
-use rand::{rng, Rng};
+use rand::Rng;
 use std::cmp::max;
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Configuration parameters for Empirical Mode Decomposition
 #[derive(Debug, Clone)]
 pub struct EmdConfig {
@@ -75,7 +78,7 @@ pub struct EmdResult {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::emd::{emd, EmdConfig};
+/// use scirs2__signal::emd::{emd, EmdConfig};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sum of two sinusoids)
@@ -96,17 +99,17 @@ pub struct EmdResult {
 /// assert_eq!(result.imfs.shape()[1], signal.len());
 /// ```
 #[allow(dead_code)]
-pub fn emd<T>(signal: &[T], config: &EmdConfig) -> SignalResult<EmdResult>
+pub fn emd<T>(_signal: &[T], config: &EmdConfig) -> SignalResult<EmdResult>
 where
     T: Float + NumCast + Debug,
 {
     // Validate input
-    if signal.is_empty() {
-        return Err(SignalError::ValueError("Input signal is empty".to_string()));
+    if _signal.is_empty() {
+        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
     }
 
     // Convert input to f64
-    let signal_f64: Vec<f64> = signal
+    let _signal_f64: Vec<f64> = _signal
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -192,9 +195,9 @@ where
 ///
 /// * Tuple of (IMF, number of iterations)
 #[allow(dead_code)]
-fn extract_imf(signal: &Array1<f64>, config: &EmdConfig) -> SignalResult<(Array1<f64>, usize)> {
-    let n = signal.len();
-    let mut h = signal.clone();
+fn extract_imf(_signal: &Array1<f64>, config: &EmdConfig) -> SignalResult<(Array1<f64>, usize)> {
+    let n = _signal.len();
+    let mut h = _signal.clone();
     let mut iteration = 0;
 
     // Sifting process
@@ -208,7 +211,7 @@ fn extract_imf(signal: &Array1<f64>, config: &EmdConfig) -> SignalResult<(Array1
 
         // Check if we have enough extrema to continue
         if maxima_idx.len() < 2 || minima_idx.len() < 2 {
-            // If too few extrema in the first iteration, return the original signal
+            // If too few extrema in the first iteration, return the original _signal
             if iteration == 0 {
                 return Ok((h.clone(), 0));
             }
@@ -236,7 +239,7 @@ fn extract_imf(signal: &Array1<f64>, config: &EmdConfig) -> SignalResult<(Array1
             mean_env[i] = (upper_env[i] + lower_env[i]) / 2.0;
         }
 
-        // Update signal by subtracting the mean envelope
+        // Update _signal by subtracting the mean envelope
         h = &h - &mean_env;
 
         // Increment iteration counter
@@ -268,13 +271,13 @@ fn extract_imf(signal: &Array1<f64>, config: &EmdConfig) -> SignalResult<(Array1
 ///
 /// * Sifting criterion value
 #[allow(dead_code)]
-fn compute_sifting_criterion(current: &Array1<f64>, previous: &Array1<f64>) -> f64 {
-    let n = current.len();
+fn compute_sifting_criterion(_current: &Array1<f64>, previous: &Array1<f64>) -> f64 {
+    let n = _current.len();
     let mut sum_squared_diff = 0.0;
     let mut sum_squared_prev = 0.0;
 
     for i in 0..n {
-        let diff = current[i] - previous[i];
+        let diff = _current[i] - previous[i];
         sum_squared_diff += diff * diff;
         sum_squared_prev += previous[i] * previous[i];
     }
@@ -296,43 +299,43 @@ fn compute_sifting_criterion(current: &Array1<f64>, previous: &Array1<f64>) -> f
 ///
 /// * Tuple of (indices, values) of local maxima
 #[allow(dead_code)]
-fn find_local_maxima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
-    let n = signal.len();
+fn find_local_maxima(_signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
+    let n = _signal.len();
     let mut indices = Vec::new();
     let mut values = Vec::new();
 
     // Handle short signals
     if n <= 2 {
-        let max_idx = signal
+        let max_idx = _signal
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap_or(0);
 
         indices.push(max_idx);
-        values.push(signal[max_idx]);
+        values.push(_signal[max_idx]);
         return (indices, values);
     }
 
     // First point
-    if signal[0] > signal[1] {
+    if _signal[0] > _signal[1] {
         indices.push(0);
-        values.push(signal[0]);
+        values.push(_signal[0]);
     }
 
     // Internal points
     for i in 1..n - 1 {
-        if signal[i] > signal[i - 1] && signal[i] > signal[i + 1] {
+        if _signal[i] > _signal[i - 1] && _signal[i] > _signal[i + 1] {
             indices.push(i);
-            values.push(signal[i]);
+            values.push(_signal[i]);
         }
     }
 
     // Last point
-    if signal[n - 1] > signal[n - 2] {
+    if _signal[n - 1] > _signal[n - 2] {
         indices.push(n - 1);
-        values.push(signal[n - 1]);
+        values.push(_signal[n - 1]);
     }
 
     (indices, values)
@@ -348,43 +351,43 @@ fn find_local_maxima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
 ///
 /// * Tuple of (indices, values) of local minima
 #[allow(dead_code)]
-fn find_local_minima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
-    let n = signal.len();
+fn find_local_minima(_signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
+    let n = _signal.len();
     let mut indices = Vec::new();
     let mut values = Vec::new();
 
     // Handle short signals
     if n <= 2 {
-        let min_idx = signal
+        let min_idx = _signal
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap_or(0);
 
         indices.push(min_idx);
-        values.push(signal[min_idx]);
+        values.push(_signal[min_idx]);
         return (indices, values);
     }
 
     // First point
-    if signal[0] < signal[1] {
+    if _signal[0] < _signal[1] {
         indices.push(0);
-        values.push(signal[0]);
+        values.push(_signal[0]);
     }
 
     // Internal points
     for i in 1..n - 1 {
-        if signal[i] < signal[i - 1] && signal[i] < signal[i + 1] {
+        if _signal[i] < _signal[i - 1] && _signal[i] < _signal[i + 1] {
             indices.push(i);
-            values.push(signal[i]);
+            values.push(_signal[i]);
         }
     }
 
     // Last point
-    if signal[n - 1] < signal[n - 2] {
+    if _signal[n - 1] < _signal[n - 2] {
         indices.push(n - 1);
-        values.push(signal[n - 1]);
+        values.push(_signal[n - 1]);
     }
 
     (indices, values)
@@ -400,9 +403,9 @@ fn find_local_minima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
 ///
 /// * Tuple of (number of maxima, number of minima)
 #[allow(dead_code)]
-fn count_extrema(signal: &Array1<f64>) -> (usize, usize) {
-    let (maxima_idx, _) = find_local_maxima(signal);
-    let (minima_idx, _) = find_local_minima(signal);
+fn count_extrema(_signal: &Array1<f64>) -> (usize, usize) {
+    let (maxima_idx_) = find_local_maxima(_signal);
+    let (minima_idx_) = find_local_minima(_signal);
 
     (maxima_idx.len(), minima_idx.len())
 }
@@ -500,7 +503,7 @@ fn extend_extrema(
         }
         _ => {
             return Err(SignalError::ValueError(format!(
-                "Unknown boundary condition: {}",
+                "Unknown boundary _condition: {}",
                 boundary_condition
             )));
         }
@@ -689,7 +692,7 @@ fn interpolate_envelope(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::emd::{eemd, EmdConfig};
+/// use scirs2__signal::emd::{eemd, EmdConfig};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sum of two sinusoids)
@@ -729,7 +732,7 @@ where
 
     if ensemble_size < 1 {
         return Err(SignalError::ValueError(
-            "Ensemble size must be at least 1".to_string(),
+            "Ensemble _size must be at least 1".to_string(),
         ));
     }
 
@@ -754,7 +757,7 @@ where
     let mut max_imf_count = 0;
 
     // Run EMD on ensemble of signals with added noise
-    let mut rng = rng();
+    let mut rng = rand::rng();
     for _ in 0..ensemble_size {
         // Add white noise
         let noisy_signal: Vec<f64> = if noise_std > 0.0 {
@@ -850,16 +853,14 @@ pub fn hilbert_huang_spectrum(
     sample_rate: f64,
     num_freqs: usize,
 ) -> SignalResult<(Vec<f64>, Vec<f64>, Array2<f64>)> {
-    use crate::hilbert;
-
     // Validate input
     if emd_result.imfs.shape()[0] == 0 {
-        return Err(SignalError::ValueError("No IMFs in EMD result".to_string()));
+        return Err(SignalError::ValueError("No IMFs in EMD _result".to_string()));
     }
 
     if sample_rate <= 0.0 {
         return Err(SignalError::ValueError(
-            "Sample rate must be positive".to_string(),
+            "Sample _rate must be positive".to_string(),
         ));
     }
 
@@ -955,11 +956,11 @@ pub fn hilbert_huang_spectrum(
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-    use std::f64::consts::PI;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_find_local_extrema() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a sine wave with explicit maxima and minima
         // Using exact periods to ensure we hit exact maxima/minima values
         let n = 100;
@@ -995,7 +996,7 @@ mod tests {
         let filtered_maxima_val: Vec<_> = maxima_idx
             .iter()
             .zip(maxima_val.iter())
-            .filter(|&(&idx, _)| idx > 0 && idx < n - 1)
+            .filter(|&(&idx_)| idx > 0 && idx < n - 1)
             .map(|(_, &val)| val)
             .collect();
 
@@ -1008,7 +1009,7 @@ mod tests {
         let filtered_minima_val: Vec<_> = minima_idx
             .iter()
             .zip(minima_val.iter())
-            .filter(|&(&idx, _)| idx > 0 && idx < n - 1)
+            .filter(|&(&idx_)| idx > 0 && idx < n - 1)
             .map(|(_, &val)| val)
             .collect();
 
@@ -1081,6 +1082,8 @@ mod tests {
 
     #[test]
     fn test_emd_basic() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple test signal (sum of two sinusoids)
         let n = 200;
         let signal: Vec<f64> = (0..n)
@@ -1102,6 +1105,8 @@ mod tests {
 
     #[test]
     fn test_eemd_basic() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple test signal (sum of two sinusoids)
         let n = 200;
         let signal: Vec<f64> = (0..n)

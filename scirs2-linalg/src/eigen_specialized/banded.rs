@@ -186,6 +186,6 @@ where
     }
 
     // Otherwise, use the full solution and discard eigenvectors
-    let (eigenvalues, _) = banded_eigh(a, bandwidth)?;
+    let (eigenvalues_) = banded_eigh(a, bandwidth)?;
     Ok(eigenvalues)
 }

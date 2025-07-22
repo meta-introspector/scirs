@@ -106,12 +106,12 @@ fn main() {
         println!("{{");
         println!(
             "  \"total_current_usage\": {},",
-            json["total_current_usage"]
+            json[total_current_usage]
         );
-        println!("  \"total_peak_usage\": {},", json["total_peak_usage"]);
+        println!("  \"total_peak_usage\": {},", json[total_peak_usage]);
         println!(
             "  \"total_allocation_count\": {}",
-            json["total_allocation_count"]
+            json[total_allocation_count]
         );
         println!("  ...");
         println!("}}");
@@ -129,17 +129,17 @@ fn main() {
 // Simulate matrix operations with memory tracking
 #[cfg(feature = "memory_management")]
 #[allow(dead_code)]
-fn simulate_matrix_operations(collector: &MemoryMetricsCollector) {
+fn collector( &MemoryMetricsCollector) {
     // Track memory for matrix A
     let matrix_a_size = 8 * 1024 * 1024; // 8MB
-    collector.record_event(
+    _collector.record_event(
         MemoryEvent::new(
             MemoryEventType::Allocation,
             "MatrixOperations",
             matrix_a_size,
             0xa000,
         )
-        .with_context("matrix_multiply")
+        .with_context(matrix_multiply)
         .with_metadata("matrix", "A"),
     );
 
@@ -147,14 +147,14 @@ fn simulate_matrix_operations(collector: &MemoryMetricsCollector) {
 
     // Track memory for matrix B
     let matrix_b_size = 4 * 1024 * 1024; // 4MB
-    collector.record_event(
+    _collector.record_event(
         MemoryEvent::new(
             MemoryEventType::Allocation,
             "MatrixOperations",
             matrix_b_size,
             0xb000,
         )
-        .with_context("matrix_multiply")
+        .with_context(matrix_multiply)
         .with_metadata("matrix", "B"),
     );
 
@@ -165,14 +165,14 @@ fn simulate_matrix_operations(collector: &MemoryMetricsCollector) {
 
     // Track memory for result matrix C
     let matrix_c_size = 12 * 1024 * 1024; // 12MB
-    collector.record_event(
+    _collector.record_event(
         MemoryEvent::new(
             MemoryEventType::Allocation,
             "MatrixOperations",
             matrix_c_size,
             0xc000,
         )
-        .with_context("matrix_multiply")
+        .with_context(matrix_multiply)
         .with_metadata("matrix", "C"),
     );
 
@@ -185,25 +185,25 @@ fn simulate_matrix_operations(collector: &MemoryMetricsCollector) {
     thread::sleep(Duration::from_millis(200));
 
     // Deallocate temporary matrices
-    collector.record_event(
+    _collector.record_event(
         MemoryEvent::new(
             MemoryEventType::Deallocation,
             "MatrixOperations",
             matrix_a_size,
             0xa000,
         )
-        .with_context("matrix_multiply")
+        .with_context(matrix_multiply)
         .with_metadata("matrix", "A"),
     );
 
-    collector.record_event(
+    _collector.record_event(
         MemoryEvent::new(
             MemoryEventType::Deallocation,
             "MatrixOperations",
             matrix_b_size,
             0xb000,
         )
-        .with_context("matrix_multiply")
+        .with_context(matrix_multiply)
         .with_metadata("matrix", "B"),
     );
 
@@ -218,14 +218,14 @@ fn create_arrays() {
     let dims = (1000, 1000);
     let size_2d = 8 * dims.0 * dims.1;
     track_allocation("ndarray", size_2d, 0xd000);
-    let _array_2d = Array2::<f64>::zeros(dims);
+    let array_2d = Array2::<f64>::zeros(dims);
     println!("Created 2D array: {}", format_bytes(size_2d));
 
     // Create a 3D array (100 x 100 x 100 f64 values = ~8MB)
     let dims_3d = (100, 100, 100);
     let size_3d = 8 * dims_3d.0 * dims_3d.1 * dims_3d.2;
     track_allocation("ndarray", size_3d, 0xe000);
-    let _array_3d = Array3::<f64>::zeros(dims_3d);
+    let array_3d = Array3::<f64>::zeros(dims_3d);
     println!("Created 3D array: {}", format_bytes(size_3d));
 
     // Simulate some computation

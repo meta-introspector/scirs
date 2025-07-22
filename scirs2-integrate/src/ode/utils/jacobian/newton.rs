@@ -7,7 +7,7 @@
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
 use crate::ode::utils::jacobian::JacobianManager;
-use crate::ode::utils::linear_solvers::{auto_solve_linear_system, LinearSolverType};
+use crate::ode::utils::linear__solvers::{auto_solve_linear_system, LinearSolverType};
 use ndarray::Array1;
 
 /// Newton solver parameters
@@ -216,10 +216,10 @@ where
 
 /// Calculate error norm of residual vector
 #[allow(dead_code)]
-fn calculate_error<F: IntegrateFloat>(residual: &Array1<F>, _params: &NewtonParameters<F>) -> F {
+fn calculate_error<F: IntegrateFloat>(_residual: &Array1<F>, _params: &NewtonParameters<F>) -> F {
     // Use L-infinity norm (max absolute value)
     let mut max_abs = F::zero();
-    for &r in residual.iter() {
+    for &r in _residual.iter() {
         max_abs = max_abs.max(r.abs());
     }
     max_abs

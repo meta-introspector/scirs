@@ -12,7 +12,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2_text::spelling::{DictionaryCorrector, SpellingCorrector};
+//! use scirs2__text::spelling::{DictionaryCorrector, SpellingCorrector};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a dictionary-based spelling corrector with default settings
@@ -30,7 +30,7 @@
 //! ```
 
 use crate::error::{Result, TextError};
-use crate::string_metrics::{DamerauLevenshteinMetric, StringMetric};
+use crate::string__metrics::{DamerauLevenshteinMetric, StringMetric};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -306,28 +306,28 @@ impl Default for DictionaryCorrector {
 
 impl DictionaryCorrector {
     /// Create a new dictionary-based spelling corrector with the given configuration
-    pub fn new(config: DictionaryCorrectorConfig) -> Self {
+    pub fn new(_config: DictionaryCorrectorConfig) -> Self {
         Self {
-            config,
+            _config,
             ..Default::default()
         }
     }
 
     /// Create a new dictionary-based spelling corrector with a custom dictionary
-    pub fn with_dictionary(dictionary: HashMap<String, usize>) -> Self {
+    pub fn with_dictionary(_dictionary: HashMap<String, usize>) -> Self {
         Self {
-            dictionary,
+            _dictionary,
             config: DictionaryCorrectorConfig::default(),
             metric: Arc::new(DamerauLevenshteinMetric::new()),
         }
     }
 
     /// Create a new dictionary-based spelling corrector with a custom metric
-    pub fn with_metric<M: StringMetric + Send + Sync + 'static>(metric: M) -> Self {
+    pub fn with_metric<M: StringMetric + Send + Sync + 'static>(_metric: M) -> Self {
         Self {
             dictionary: HashMap::new(),
             config: DictionaryCorrectorConfig::default(),
-            metric: Arc::new(metric),
+            _metric: Arc::new(_metric),
         }
     }
 
@@ -335,8 +335,8 @@ impl DictionaryCorrector {
     ///
     /// The file should contain one word per line, optionally followed by a frequency count.
     /// If no frequency is provided, a default value of 1 is used.
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path)
+    pub fn from_file<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::open(_path)
             .map_err(|e| TextError::IoError(format!("Failed to open dictionary file: {e}")))?;
 
         let reader = BufReader::new(file);
@@ -477,8 +477,8 @@ impl SpellingCorrector for DictionaryCorrector {
             });
         } else {
             candidates.sort_by(|a, b| {
-                let (_, dist_a, _) = a;
-                let (_, dist_b, _) = b;
+                let (_, dist_a_) = a;
+                let (_, dist_b_) = b;
 
                 // Sort only by distance
                 dist_a.cmp(dist_b)
@@ -489,7 +489,7 @@ impl SpellingCorrector for DictionaryCorrector {
         let actual_limit = std::cmp::min(limit, candidates.len());
         let suggestions = candidates[0..actual_limit]
             .iter()
-            .map(|(word, _, _)| word.clone())
+            .map(|(word__)| word.clone())
             .collect();
 
         Ok(suggestions)

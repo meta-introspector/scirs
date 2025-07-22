@@ -18,7 +18,7 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_signal::streaming::{StreamingProcessor, StreamingConfig};
+//! use scirs2__signal::streaming::{StreamingProcessor, StreamingConfig};
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!
 //! // Configure streaming processor
@@ -43,16 +43,22 @@
 //! ```
 
 use crate::error::{SignalError, SignalResult};
-// TODO: sosfilt_zi function not implemented yet
-// use crate::filter::sosfilt_zi;
-use crate::streaming_stft::{StreamingStft, StreamingStftConfig};
+use crate::lombscargle__enhanced::WindowType;
+use crate::streaming__stft::{StreamingStft, StreamingStftConfig};
 use ndarray::{Array1, Array2};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
+use statrs::statistics::Statistics;
 use std::collections::VecDeque;
 use std::f64::consts::PI;
+use crate::utilities::spectral::spectral_flux;
+use crate::utilities::spectral::spectral_centroid;
+use crate::utilities::spectral::spectral_rolloff;
 
+#[allow(unused_imports)]
+// TODO: sosfilt_zi function not implemented yet
+// use crate::filter::sosfilt_zi;
 /// Configuration for streaming signal processor
 #[derive(Debug, Clone)]
 pub struct StreamingConfig {
@@ -117,7 +123,7 @@ impl Default for SpectralAnalysisConfig {
         Self {
             stft_frame_length: 512,
             stft_hop_length: 256,
-            window: "hann".to_string(),
+            window: WindowType::Hann.to_string(),
             compute_psd: true,
             psd_smoothing: 0.8,
             frequency_bands: vec![
@@ -294,50 +300,50 @@ struct NoiseGateState {
 
 impl StreamingProcessor {
     /// Create a new streaming processor
-    pub fn new(config: StreamingConfig) -> SignalResult<Self> {
+    pub fn new(_config: StreamingConfig) -> SignalResult<Self> {
         // Validate configuration
-        check_positive(config.sample_rate, "sample_rate")?;
-        check_positive(config.buffer_size as f64, "buffer_size")?;
+        check_positive(_config.sample_rate, "sample_rate")?;
+        check_positive(_config.buffer_size as f64, "buffer_size")?;
 
-        if config.num_channels == 0 {
+        if _config.num_channels == 0 {
             return Err(SignalError::ValueError(
                 "Number of channels must be greater than 0".to_string(),
             ));
         }
 
         // Initialize input buffers
-        let input_buffers = (0..config.num_channels)
-            .map(|_| VecDeque::with_capacity(config.max_latency_samples))
+        let input_buffers = (0.._config.num_channels)
+            .map(|_| VecDeque::with_capacity(_config.max_latency_samples))
             .collect();
 
         // Initialize STFT processors
         let stft_config = StreamingStftConfig {
-            frame_length: config.spectral_config.stft_frame_length,
-            hop_length: config.spectral_config.stft_hop_length,
-            window: config.spectral_config.window.clone(),
+            frame_length: _config.spectral_config.stft_frame_length,
+            hop_length: _config.spectral_config.stft_hop_length,
+            window: _config.spectral_config.window.clone(),
             center: true,
             magnitude_only: false,
             ..Default::default()
         };
 
-        let stft_processors = if config.enable_spectral_analysis {
-            (0..config.num_channels)
+        let stft_processors = if _config.enable_spectral_analysis {
+            (0.._config.num_channels)
                 .map(|_| StreamingStft::new(stft_config.clone()))
-                .collect::<Result<Vec<_>, _>>()?
+                .collect::<Result<Vec<_>_>>()?
         } else {
             Vec::new()
         };
 
         // Initialize feature extraction buffers
-        let feature_buffers = (0..config.num_channels)
-            .map(|_| VecDeque::with_capacity(config.feature_config.time_window_length))
+        let feature_buffers = (0.._config.num_channels)
+            .map(|_| VecDeque::with_capacity(_config.feature_config.time_window_length))
             .collect();
 
         // Initialize AGC state
         let attack_coeff =
-            (-1.0 / (config.adaptive_config.agc_attack_time * config.sample_rate)).exp();
+            (-1.0 / (_config.adaptive_config.agc_attack_time * _config.sample_rate)).exp();
         let release_coeff =
-            (-1.0 / (config.adaptive_config.agc_release_time * config.sample_rate)).exp();
+            (-1.0 / (_config.adaptive_config.agc_release_time * _config.sample_rate)).exp();
 
         let agc_state = AgcState {
             gain: 1.0,
@@ -347,7 +353,7 @@ impl StreamingProcessor {
         };
 
         // Initialize noise gate state
-        let threshold_linear = 10.0_f64.powf(config.adaptive_config.noise_gate_threshold / 20.0);
+        let threshold_linear = 10.0_f64.powf(_config.adaptive_config.noise_gate_threshold / 20.0);
         let noise_gate_state = NoiseGateState {
             is_open: true,
             envelope: 0.0,
@@ -355,10 +361,10 @@ impl StreamingProcessor {
         };
 
         // Initialize MEL filter bank if needed
-        let mel_filter_bank = if config.feature_config.compute_spectral_features {
+        let mel_filter_bank = if _config.feature_config.compute_spectral_features {
             Some(create_mel_filter_bank(
-                config.spectral_config.stft_frame_length / 2 + 1,
-                config.sample_rate,
+                _config.spectral_config.stft_frame_length / 2 + 1,
+                _config.sample_rate,
                 13, // Number of MEL coefficients
             )?)
         } else {
@@ -374,7 +380,7 @@ impl StreamingProcessor {
         };
 
         Ok(Self {
-            config,
+            _config,
             input_buffers,
             stft_processors,
             previous_psd: None,
@@ -629,7 +635,7 @@ impl StreamingProcessor {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap_or(0);
 
         frequencies[max_idx]
@@ -951,9 +957,9 @@ fn create_mel_filter_bank(
         for k in left..=right {
             if k < n_fft {
                 if k < center {
-                    filter_bank[[m, k]] = (k - left) as f64 / (center - left) as f64;
+                    filter_bank[[m, k]] = (k - left) as f64 / (center - left)  as f64;
                 } else {
-                    filter_bank[[m, k]] = (right - k) as f64 / (right - center) as f64;
+                    filter_bank[[m, k]] = (right - k) as f64 / (right - center)  as f64;
                 }
             }
         }
@@ -964,14 +970,14 @@ fn create_mel_filter_bank(
 
 /// Convert Hz to Mel scale
 #[allow(dead_code)]
-fn hz_to_mel(hz: f64) -> f64 {
-    2595.0 * (1.0 + hz / 700.0).log10()
+fn hz_to_mel(_hz: f64) -> f64 {
+    2595.0 * (1.0 + _hz / 700.0).log10()
 }
 
 /// Convert Mel to Hz scale
 #[allow(dead_code)]
-fn mel_to_hz(mel: f64) -> f64 {
-    700.0 * (10.0_f64.powf(mel / 2595.0) - 1.0)
+fn mel_to_hz(_mel: f64) -> f64 {
+    700.0 * (10.0_f64.powf(_mel / 2595.0) - 1.0)
 }
 
 mod tests {
@@ -1036,13 +1042,13 @@ mod tests {
         let result2 = processor.process_frame(&quiet_input).unwrap();
 
         // AGC should adjust levels
-        assert!(result1.output.iter().all(|&x| x.abs() <= 1.0));
-        assert!(result2.output.iter().all(|&x| x.abs() <= 1.0));
+        assert!(result1.output.iter().all(|&x: &f64| x.abs() <= 1.0));
+        assert!(result2.output.iter().all(|&x: &f64| x.abs() <= 1.0));
     }
 
     #[test]
     fn test_feature_extraction() {
-        let config = StreamingConfig {
+        let _config = StreamingConfig {
             buffer_size: 512,
             enable_spectral_analysis: true,
             enable_feature_extraction: true,

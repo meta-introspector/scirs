@@ -5,11 +5,16 @@
 //! entirely in memory, or where memory usage needs to be carefully controlled.
 
 use crate::error::{SignalError, SignalResult};
+use num__complex::Complex;
+use rustfft::{FftPlanner, num_complex::Complex};
 use scirs2_core::parallel_ops::*;
+use std::fs;
 use std::f64::consts::PI;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
+use std::time::Instant;
 
+#[allow(unused_imports)]
 /// Configuration for memory-optimized operations
 #[derive(Debug, Clone)]
 pub struct MemoryConfig {
@@ -113,8 +118,6 @@ pub fn memory_optimized_fir_filter(
     coefficients: &[f64],
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<f64>> {
-    use std::time::Instant;
-
     let start_time = Instant::now();
     let mut memory_stats = MemoryStats {
         peak_memory: 0,
@@ -124,21 +127,21 @@ pub fn memory_optimized_fir_filter(
         disk_operations: 0,
     };
 
-    // Open input file and determine size
+    // Open input _file and determine size
     let input_file_handle = File::open(input_file)
-        .map_err(|e| SignalError::ComputationError(format!("Cannot open input file: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Cannot open input _file: {}", e)))?;
 
     let file_size = input_file_handle
         .metadata()
-        .map_err(|e| SignalError::ComputationError(format!("Cannot get file size: {}", e)))?
+        .map_err(|e| SignalError::ComputationError(format!("Cannot get _file size: {}", e)))?
         .len() as usize;
 
     let samples_count = file_size / std::mem::size_of::<f64>();
     let filter_length = coefficients.len();
 
-    // Create output file
+    // Create output _file
     let output_file_handle = File::create(output_file)
-        .map_err(|e| SignalError::ComputationError(format!("Cannot create output file: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Cannot create output _file: {}", e)))?;
 
     let mut input_reader = BufReader::new(input_file_handle);
     let mut output_writer = BufWriter::new(output_file_handle);
@@ -275,7 +278,7 @@ pub fn memory_optimized_fir_filter(
 
     Ok(MemoryOptimizedResult {
         data: MemoryOptimizedData::OnDisk {
-            file_path: output_file.to_string(),
+            _file_path: output_file.to_string(),
             length: samples_count,
             chunk_size,
         },
@@ -294,18 +297,15 @@ pub fn memory_optimized_fft(
     output_file: &str,
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
-    use num_complex::Complex;
-    use std::time::Instant;
-
     let _start_time = Instant::now();
 
-    // Open input file and validate size
+    // Open input _file and validate size
     let input_file_handle = File::open(input_file)
-        .map_err(|e| SignalError::ComputationError(format!("Cannot open input file: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Cannot open input _file: {}", e)))?;
 
     let file_size = input_file_handle
         .metadata()
-        .map_err(|e| SignalError::ComputationError(format!("Cannot get file size: {}", e)))?
+        .map_err(|e| SignalError::ComputationError(format!("Cannot get _file size: {}", e)))?
         .len() as usize;
 
     let complex_size = std::mem::size_of::<Complex<f64>>();
@@ -338,23 +338,19 @@ pub fn memory_optimized_fft(
 fn memory_fft_in_core(
     input_file: &str,
     output_file: &str,
-    n: usize,
-    _config: &MemoryConfig,
+    n: usize_config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
-    use rustfft::{num_complex::Complex, FftPlanner};
-    use std::time::Instant;
-
     let start_time = Instant::now();
     let io_start = Instant::now();
 
     // Read entire signal into memory
     let input_file_handle = File::open(input_file)
-        .map_err(|e| SignalError::ComputationError(format!("Cannot open input file: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Cannot open input _file: {}", e)))?;
 
     let mut input_reader = BufReader::new(input_file_handle);
     let mut data = vec![Complex::new(0.0, 0.0); n];
 
-    // Read complex data
+    // Read _complex data
     for i in 0..n {
         let mut real_bytes = [0u8; 8];
         let mut imag_bytes = [0u8; 8];
@@ -384,7 +380,7 @@ fn memory_fft_in_core(
 
     // Write result
     let output_file_handle = File::create(output_file)
-        .map_err(|e| SignalError::ComputationError(format!("Cannot create output file: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Cannot create output _file: {}", e)))?;
 
     let mut output_writer = BufWriter::new(output_file_handle);
 
@@ -405,8 +401,8 @@ fn memory_fft_in_core(
     let total_time = start_time.elapsed().as_millis();
 
     let memory_stats = MemoryStats {
-        peak_memory: n * std::mem::size_of::<Complex<f64>>(),
-        avg_memory: n * std::mem::size_of::<Complex<f64>>() / 2,
+        peak_memory: n * std::mem::size, _of::<Complex<f64>>(),
+        avg_memory: n * std::mem::size, _of::<Complex<f64>>() / 2,
         cache_hits: 0,
         cache_misses: 0,
         disk_operations: 2, // Read and write
@@ -421,7 +417,7 @@ fn memory_fft_in_core(
 
     Ok(MemoryOptimizedResult {
         data: MemoryOptimizedData::OnDisk {
-            file_path: output_file.to_string(),
+            _file_path: output_file.to_string(),
             length: n,
             chunk_size: n,
         },
@@ -439,8 +435,6 @@ fn memory_fft_out_of_core(
     log2_n: usize,
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
-    use num_complex::Complex;
-    use std::time::Instant;
 
     let start_time = Instant::now();
     let mut memory_stats = MemoryStats {
@@ -480,7 +474,7 @@ fn memory_fft_out_of_core(
 
         // Process this stage with disk I/O
         let stage_result =
-            process_fft_stage_disk(&current_input, &current_output, n, stage, config)?;
+            process_fft_stage_disk(&current_input, &current_output, _n, stage, config)?;
 
         memory_stats.disk_operations += stage_result.memory_stats.disk_operations;
         total_io_time += stage_result.timing_stats.io_time_ms;
@@ -503,7 +497,7 @@ fn memory_fft_out_of_core(
         let stage_result = process_fft_stages_memory(
             final_input,
             output_file,
-            n,
+            _n,
             disk_stages,
             in_memory_stages,
             config,
@@ -531,8 +525,8 @@ fn memory_fft_out_of_core(
 
     Ok(MemoryOptimizedResult {
         data: MemoryOptimizedData::OnDisk {
-            file_path: output_file.to_string(),
-            length: n,
+            _file_path: output_file.to_string(),
+            length: _n,
             chunk_size: config.chunk_size,
         },
         memory_stats,
@@ -549,7 +543,6 @@ fn process_fft_stage_disk(
     stage: usize,
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
-    use num_complex::Complex;
 
     let start_time = std::time::Instant::now();
     let mut disk_ops = 0;
@@ -678,7 +671,7 @@ fn process_fft_stage_disk(
 
     Ok(MemoryOptimizedResult {
         data: MemoryOptimizedData::OnDisk {
-            file_path: output_file.to_string(),
+            _file_path: output_file.to_string(),
             length: n,
             chunk_size: config.chunk_size,
         },
@@ -692,13 +685,11 @@ fn process_fft_stage_disk(
 fn process_fft_stages_memory(
     input_file: &str,
     output_file: &str,
-    n: usize,
-    _start_stage: usize,
-    _num_stages: usize,
+    n: usize, _start_stage: usize_num, _stages: usize,
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
     // For simplicity, delegate to in-core implementation
-    // In a full implementation, this would do the remaining radix-2 stages
+    // In a full implementation, this would do the remaining radix-2 _stages
     memory_fft_in_core(input_file, output_file, n, config)
 }
 
@@ -711,24 +702,21 @@ pub fn memory_optimized_spectrogram(
     input_file: &str,
     output_file: &str,
     window_size: usize,
-    hop_size: usize,
-    _config: &MemoryConfig,
+    hop_size: usize, _config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<f64>> {
-    use rustfft::{num_complex::Complex, FftPlanner};
-    use std::time::Instant;
 
     let start_time = Instant::now();
 
     // Validate parameters
     if window_size == 0 || hop_size == 0 {
         return Err(SignalError::ValueError(
-            "Window size and hop size must be positive".to_string(),
+            "Window _size and hop _size must be positive".to_string(),
         ));
     }
 
     if hop_size > window_size {
         return Err(SignalError::ValueError(
-            "Hop size should not exceed window size".to_string(),
+            "Hop _size should not exceed window _size".to_string(),
         ));
     }
 
@@ -740,10 +728,10 @@ pub fn memory_optimized_spectrogram(
 
     let file_size = input_handle
         .metadata()
-        .map_err(|e| SignalError::ComputationError(format!("Cannot get file size: {}", e)))?
+        .map_err(|e| SignalError::ComputationError(format!("Cannot get _file _size: {}", e)))?
         .len() as usize;
 
-    let n_samples = file_size / std::mem::size_of::<f64>();
+    let n_samples = file_size / std::mem::_size_of::<f64>();
     let n_frames = (n_samples - window_size) / hop_size + 1;
     let n_freqs = window_size / 2 + 1;
 
@@ -775,7 +763,7 @@ pub fn memory_optimized_spectrogram(
         let io_start = Instant::now();
 
         // Seek to frame position
-        let byte_offset = frame * hop_size * std::mem::size_of::<f64>();
+        let byte_offset = frame * hop_size * std::mem::_size_of::<f64>();
         input_reader
             .seek(SeekFrom::Start(byte_offset as u64))
             .map_err(|e| SignalError::ComputationError(format!("Seek error: {}", e)))?;
@@ -786,7 +774,7 @@ pub fn memory_optimized_spectrogram(
             if input_reader.read_exact(&mut bytes).is_ok() {
                 buffer[i] = f64::from_le_bytes(bytes);
             } else {
-                buffer[i] = 0.0; // Zero-pad if we reach end of file
+                buffer[i] = 0.0; // Zero-pad if we reach end of _file
             }
         }
 
@@ -833,8 +821,8 @@ pub fn memory_optimized_spectrogram(
     let total_time = start_time.elapsed().as_millis();
 
     let memory_stats = MemoryStats {
-        peak_memory: (window_size * 2 + n_freqs) * std::mem::size_of::<f64>(),
-        avg_memory: (window_size * 2 + n_freqs) * std::mem::size_of::<f64>() / 2,
+        peak_memory: (window_size * 2 + n_freqs) * std::mem::_size, _of::<f64>(),
+        avg_memory: (window_size * 2 + n_freqs) * std::mem::_size, _of::<f64>() / 2,
         cache_hits: 0,
         cache_misses: 0,
         disk_operations: disk_ops,
@@ -849,7 +837,7 @@ pub fn memory_optimized_spectrogram(
 
     Ok(MemoryOptimizedResult {
         data: MemoryOptimizedData::OnDisk {
-            file_path: output_file.to_string(),
+            _file_path: output_file.to_string(),
             length: n_frames * n_freqs,
             chunk_size: n_freqs,
         },
@@ -860,9 +848,6 @@ pub fn memory_optimized_spectrogram(
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-    use std::io::Write;
-
     #[test]
     fn test_memory_config_defaults() {
         let config = MemoryConfig::default();

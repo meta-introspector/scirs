@@ -8,14 +8,14 @@
 //! use ndarray;
 //! use scirs2_autograd as ag;
 //! use ag::error::OpError;
-//! use ag::tensor_ops::*;
+//! use ag::tensor__ops::*;
 //!
 //! type NdArray<T: ag::Float> = ndarray::Array<T, ndarray::IxDyn>;
 //!
 //! // Implements `Op` trait for `Sigmoid`.
 //! struct Sigmoid;
 //!
-//! impl<T: ag::Float> ag::op::Op<T> for Sigmoid {
+//! impl<T: ag::Float>, ag::op::Op<T> for Sigmoid {
 //!     fn compute(
 //!         &self,
 //!         ctx: &mut ag::op::ComputeContext<T>,
@@ -51,7 +51,7 @@ use std::any::type_name;
 use std::marker::PhantomData;
 
 pub use crate::error::OpError;
-use crate::ndarray_ext::{NdArrayView, NdArrayViewMut};
+use crate::ndarray__ext::{NdArrayView, NdArrayViewMut};
 use crate::smallvec::SmallVec as RawSmallVec;
 use crate::tensor::Tensor;
 use crate::{Float, NdArray};
@@ -83,16 +83,14 @@ pub(crate) enum OpInput<'graph, F: Float> {
 /// Variable or non-variable tensor input.
 #[allow(dead_code)]
 pub(crate) struct OpInputGetter<'a, F: Float> {
-    f: F,
-    _marker: PhantomData<&'a ()>,
+    f: F_marker: PhantomData<&'a ()>,
 }
 
 impl<F: Float> OpInputGetter<'_, F> {
     #[allow(dead_code)]
     pub fn new(_: F) -> Self {
         Self {
-            f: F::zero(),
-            _marker: PhantomData,
+            f: F::zero(), _marker: PhantomData,
         }
     }
 }
@@ -101,8 +99,7 @@ impl<'a, 'graph, F: Float> From<&'a OpInput<'graph, F>> for OpInputGetter<'a, F>
     fn from(x: &'a OpInput<'graph, F>) -> Self {
         let _ = x;
         Self {
-            f: F::zero(),
-            _marker: PhantomData,
+            f: F::zero(), _marker: PhantomData,
         }
     }
 }
@@ -115,19 +112,18 @@ pub struct ComputeContext<F: Float> {
 
 impl<F: Float> ComputeContext<F> {
     /// Creates new ComputeContext.
-    pub fn new(inputs: &[NdArray<F>], _outputs: &mut [NdArray<F>]) -> Self {
-        // Clone all inputs to own the data
-        let input_arrays = inputs.to_vec();
+    pub fn new(_inputs: &[NdArray<F>], _outputs: &mut [NdArray<F>]) -> Self {
+        // Clone all _inputs to own the data
+        let input_arrays = _inputs.to_vec();
         Self {
-            inputs: input_arrays,
-            outputs: Vec::new(),
+            _inputs: input_arrays_outputs: Vec::new(),
         }
     }
 
     /// Creates a new ComputeContext with prepared inputs.
-    pub fn with_inputs(input_arrays: Vec<NdArray<F>>) -> Self {
+    pub fn with_inputs(_input_arrays: Vec<NdArray<F>>) -> Self {
         Self {
-            inputs: input_arrays,
+            inputs: _input_arrays,
             outputs: Vec::new(),
         }
     }
@@ -137,7 +133,7 @@ impl<F: Float> ComputeContext<F> {
     pub fn input(&self, i: usize) -> NdArrayView<F> {
         if self.inputs.is_empty() {
             // Create a dummy array for use when no inputs are available
-            static DUMMY_ARRAY: once_cell::sync::Lazy<NdArray<f32>> =
+            static DUMMY_ARRAY: once, _cell: sync::Lazy<NdArray<f32>> =
                 once_cell::sync::Lazy::new(|| crate::ndarray_ext::zeros(&[1, 1]));
 
             // Safety: This is a read-only view, and we're converting types.
@@ -157,7 +153,7 @@ impl<F: Float> ComputeContext<F> {
                      self.inputs.len(), i);
 
             // Return the same dummy array as above
-            static DUMMY_ARRAY: once_cell::sync::Lazy<NdArray<f32>> =
+            static DUMMY_ARRAY: once, _cell: sync::Lazy<NdArray<f32>> =
                 once_cell::sync::Lazy::new(|| crate::ndarray_ext::zeros(&[1, 1]));
 
             #[allow(clippy::transmute_ptr_to_ref)]
@@ -172,7 +168,7 @@ impl<F: Float> ComputeContext<F> {
 
     /// Note: This method is deprecated and will panic.
     /// With the new architecture, inputs are immutable.
-    pub fn input_mut(&mut self, _i: usize) -> NdArrayViewMut<F> {
+    pub fn input_mut(&mut self_i: usize) -> NdArrayViewMut<F> {
         panic!("input_mut is not supported in the new ComputeContext implementation");
     }
 
@@ -297,7 +293,7 @@ pub struct OpOutput<F: Float> {
 
 impl<F: Float> OpOutput<F> {
     #[allow(dead_code)]
-    pub(crate) fn new(output: NdArray<F>) -> Self {
-        Self { output }
+    pub(crate) fn new(_output: NdArray<F>) -> Self {
+        Self { _output }
     }
 }

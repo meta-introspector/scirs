@@ -24,9 +24,9 @@ pub struct AutogradLayer<'a, F: Float> {
 
 impl<'a, F: Float> AutogradLayer<'a, F> {
     /// Create a new autograd layer
-    pub fn new(layer_type: LayerType, config: LayerConfig) -> Self {
+    pub fn new(_layer_type: LayerType, config: LayerConfig) -> Self {
         Self {
-            layer_type,
+            _layer_type,
             parameters: HashMap::new(),
             config,
             state: None,
@@ -72,8 +72,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         match self.layer_type {
             LayerType::Linear => self.init_linear_parameters(input_shape),
             LayerType::Conv2D => self.init_conv2d_parameters(input_shape),
-            LayerType::BatchNorm => self.init_batch_norm_parameters(input_shape),
-            _ => Ok(()), // No initialization needed for activation layers
+            LayerType::BatchNorm => self.init_batch_norm_parameters(input_shape, _ => Ok(()), // No initialization needed for activation layers
         }
     }
 
@@ -171,8 +170,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
 
     fn forward_custom<'b>(
         &self,
-        input: &Tensor<'b, F>,
-        _name: &str,
+        input: &Tensor<'b, F>, _name: &str,
     ) -> Result<Tensor<'b, F>, IntegrationError> {
         // Custom layer implementation (placeholder)
         Ok(*input)
@@ -182,7 +180,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
     fn init_linear_parameters(&mut self, input_shape: &[usize]) -> Result<(), IntegrationError> {
         if input_shape.is_empty() {
             return Err(IntegrationError::TensorConversion(
-                "Invalid input shape for linear layer".to_string(),
+                "Invalid input _shape for linear layer".to_string(),
             ));
         }
 
@@ -222,7 +220,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         Ok(())
     }
 
-    fn update_batch_norm_stats(&mut self, _input: &Tensor<'_, F>) -> Result<(), IntegrationError> {
+    fn update_batch_norm_stats(&mut self_input: &Tensor<'_, F>) -> Result<(), IntegrationError> {
         // Update running mean and variance (placeholder)
         Ok(())
     }
@@ -377,7 +375,7 @@ impl<'a, F: Float> AutogradNetworkBuilder<'a, F> {
                 Ok(output_shape)
             }
             LayerType::Conv2D => {
-                // Simplified shape computation for conv2d
+                // Simplified _shape computation for conv2d
                 Ok(input_shape.to_vec())
             }
             _ => Ok(input_shape.to_vec()), // Shape-preserving layers
@@ -465,7 +463,7 @@ impl<'a, F: Float> AutogradNetwork<'a, F> {
 
     /// Create from SciRS2Data format
     pub fn from_scirs2_data(_data: &SciRS2Data<'a, F>) -> Result<Self, IntegrationError> {
-        // Simplified reconstruction from data
+        // Simplified reconstruction from _data
         // In practice, would parse layer information and rebuild network
         Ok(Self {
             layers: Vec::new(),
@@ -552,8 +550,8 @@ pub fn create_simple_network<'a, F: Float>(
 ) -> Result<AutogradNetwork<'a, F>, IntegrationError> {
     let mut builder = AutogradNetworkBuilder::new().input_shape(input_shape);
 
-    for &units in hidden_units {
-        builder = builder.linear(units)?.relu()?;
+    for &_units in hidden_units {
+        builder = builder.linear(_units)?.relu()?;
     }
 
     builder = builder.linear(output_units)?;
@@ -566,9 +564,9 @@ pub fn create_simple_network<'a, F: Float>(
 pub fn network_to_graph<F: Float>(
     _network: &AutogradNetwork<'_, F>,
 ) -> Result<Graph<F>, IntegrationError> {
-    // Create computation graph from network
+    // Create computation graph from _network
     // Graph creation is handled by the run function, not directly accessible
-    // In practice, would build graph from network layers
+    // In practice, would build graph from _network layers
     Err(IntegrationError::ModuleCompatibility(
         "Direct graph creation not supported. Use run() function instead.".to_string(),
     ))

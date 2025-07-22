@@ -48,9 +48,9 @@ impl LearningCurveVisualizer {
     /// # Returns
     ///
     /// * A new LearningCurveVisualizer
-    pub fn new(data: LearningCurveData) -> Self {
+    pub fn new(_data: LearningCurveData) -> Self {
         LearningCurveVisualizer {
-            data,
+            _data,
             title: "Learning Curve".to_string(),
             show_std: true,
             scoring: "Score".to_string(),
@@ -254,7 +254,7 @@ pub fn learning_curve_visualization(
 
     if train_scores.len() != train_sizes.len() || validation_scores.len() != train_sizes.len() {
         return Err(MetricsError::InvalidInput(
-            "Number of train/validation scores must match number of training sizes".to_string(),
+            "Number of train/validation _scores must match number of training _sizes".to_string(),
         ));
     }
 
@@ -330,8 +330,7 @@ impl Default for LearningCurveConfig {
 /// * A LearningCurveVisualizer with realistic learning curves
 #[allow(dead_code)]
 pub fn learning_curve_realistic<T, S1, S2>(
-    _x: &ArrayBase<S1, Ix2>,
-    _y: &ArrayBase<S2, Ix1>,
+    _x: &ArrayBase<S1, Ix2>, _y: &ArrayBase<S2, Ix1>,
     train_sizes: &[usize],
     config: LearningCurveConfig,
     scoring: impl Into<String>,
@@ -397,15 +396,15 @@ where
 
         let train_fold_scores: Vec<f64> = (0..config.cv_folds)
             .map(|_| {
-                let noise = rng.random_range(-fold_variance..fold_variance);
-                (base_train_score + noise).clamp(0.0, 1.0)
+                let noise = rng.gen_range(-fold_variance..fold_variance);
+                (base_train_score + noise).clamp(0.0..1.0)
             })
             .collect();
 
         let val_fold_scores: Vec<f64> = (0..config.cv_folds)
             .map(|_| {
-                let noise = rng.random_range(-fold_variance * 1.5..fold_variance * 1.5);
-                (base_val_score + noise).clamp(0.0, 1.0)
+                let noise = rng.gen_range(-fold_variance * 1.5..fold_variance * 1.5);
+                (base_val_score + noise).clamp(0.0..1.0)
             })
             .collect();
 
@@ -470,7 +469,7 @@ where
 
     if train_sizes.is_empty() {
         return Err(MetricsError::InvalidInput(
-            "Training sizes cannot be empty".to_string(),
+            "Training _sizes cannot be empty".to_string(),
         ));
     }
 
@@ -502,7 +501,7 @@ where
         for fold in 0..cv {
             // Shuffle indices for this fold
             for i in 0..indices.len() {
-                let j = rng.random_range(0..indices.len());
+                let j = rng.gen_range(0..indices.len());
                 indices.swap(i, j);
             }
 
@@ -567,35 +566,35 @@ pub trait ModelPredictor<T> {
 
 /// Extract specific rows from a 2D array
 #[allow(dead_code)]
-fn extract_rows<T, S>(arr: &ArrayBase<S, Ix2>, indices: &[usize]) -> Array2<T>
+fn extract_rows<T, S>(_arr: &ArrayBase<S, Ix2>, indices: &[usize]) -> Array2<T>
 where
     T: Clone + num_traits::Zero,
     S: Data<Elem = T>,
 {
-    let mut result = Array2::zeros((indices.len(), arr.ncols()));
+    let mut result = Array2::zeros((indices.len(), _arr.ncols()));
     for (i, &idx) in indices.iter().enumerate() {
-        result.row_mut(i).assign(&arr.row(idx));
+        result.row_mut(i).assign(&_arr.row(idx));
     }
     result
 }
 
 /// Extract specific elements from a 1D array
 #[allow(dead_code)]
-fn extract_elements<T, S>(arr: &ArrayBase<S, Ix1>, indices: &[usize]) -> Array1<T>
+fn extract_elements<T, S>(_arr: &ArrayBase<S, Ix1>, indices: &[usize]) -> Array1<T>
 where
     T: Clone + num_traits::Zero,
     S: Data<Elem = T>,
 {
     let mut result = Array1::zeros(indices.len());
     for (i, &idx) in indices.iter().enumerate() {
-        result[i] = arr[idx].clone();
+        result[i] = _arr[idx].clone();
     }
     result
 }
 
 /// Evaluate predictions using the specified scoring metric
 #[allow(dead_code)]
-fn evaluate_predictions<T>(y_true: &Array1<T>, y_pred: &Array1<T>, scoring: &str) -> Result<f64>
+fn evaluate_predictions<T>(_y_true: &Array1<T>, y_pred: &Array1<T>, scoring: &str) -> Result<f64>
 where
     T: Clone + num_traits::Float + Send + Sync + std::fmt::Debug + std::ops::Sub<Output = T>,
     for<'a> &'a T: std::ops::Sub<&'a T, Output = T>,
@@ -603,12 +602,12 @@ where
     match scoring.to_lowercase().as_str() {
         "accuracy" => {
             // For classification: count exact matches
-            let correct = y_true
+            let correct = _y_true
                 .iter()
                 .zip(y_pred.iter())
                 .filter(|(t, p)| (*t - *p).abs() < T::from(0.5).unwrap())
                 .count();
-            Ok(correct as f64 / y_true.len() as f64)
+            Ok(correct as f64 / _y_true.len() as f64)
         }
         "mse" | "mean_squared_error" => {
             // Mean squared error

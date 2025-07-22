@@ -27,7 +27,7 @@ use std::ops::{AddAssign, MulAssign, SubAssign};
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::distributions::ndtr;
+/// use scirs2__special::distributions::ndtr;
 ///
 /// let p = ndtr(0.0);
 /// assert!((p - 0.5).abs() < 1e-10);
@@ -210,7 +210,7 @@ pub fn pdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign>(
     k: usize,
     lambda: T,
 ) -> SpecialResult<T> {
-    check_finite(lambda, "lambda")?;
+    check_finite(lambda, "lambda value")?;
     if lambda <= T::zero() {
         return Err(SpecialError::DomainError(
             "pdtr: lambda must be positive".to_string(),
@@ -234,7 +234,7 @@ pub fn pdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign>
     k: usize,
     lambda: T,
 ) -> SpecialResult<T> {
-    check_finite(lambda, "lambda")?;
+    check_finite(lambda, "lambda value")?;
     if lambda <= T::zero() {
         return Err(SpecialError::DomainError(
             "pdtrc: lambda must be positive".to_string(),
@@ -263,8 +263,8 @@ pub fn chdtr<T: Float + FromPrimitive + Display + Debug + AddAssign>(
     df: T,
     x: T,
 ) -> SpecialResult<T> {
-    check_finite(df, "df")?;
-    check_finite(x, "x")?;
+    check_finite(df, "df value")?;
+    check_finite(x, "x value")?;
 
     if df <= T::zero() {
         return Err(SpecialError::DomainError(
@@ -311,8 +311,8 @@ pub fn stdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign 
     df: T,
     t: T,
 ) -> SpecialResult<T> {
-    check_finite(df, "df")?;
-    check_finite(t, "t")?;
+    check_finite(df, "df value")?;
+    check_finite(t, "t value")?;
 
     if df <= T::zero() {
         return Err(SpecialError::DomainError(
@@ -348,9 +348,9 @@ pub fn fdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign +
     dfd: T,
     x: T,
 ) -> SpecialResult<T> {
-    check_finite(dfn, "dfn")?;
-    check_finite(dfd, "dfd")?;
-    check_finite(x, "x")?;
+    check_finite(dfn, "dfn value")?;
+    check_finite(dfd, "dfd value")?;
+    check_finite(x, "x value")?;
 
     if dfn <= T::zero() || dfd <= T::zero() {
         return Err(SpecialError::DomainError(
@@ -396,8 +396,8 @@ pub fn gdtr<T: Float + FromPrimitive + Display + Debug + AddAssign>(
     a: T,
     x: T,
 ) -> SpecialResult<T> {
-    check_finite(a, "a")?;
-    check_finite(x, "x")?;
+    check_finite(a, "a value")?;
+    check_finite(x, "x value")?;
 
     if a <= T::zero() {
         return Err(SpecialError::DomainError(
@@ -570,22 +570,22 @@ fn kolmogorov_inverse_halley<T: Float + FromPrimitive + Display>(
     initial_x: T,
     tolerance: T,
 ) -> SpecialResult<T> {
-    let mut x = initial_x;
+    let mut _x = initial_x;
     let max_iterations = 50;
 
     for _iteration in 0..max_iterations {
-        // Compute f(x) = K(x) - p
-        let fx = kolmogorov(x) - target_p;
+        // Compute f(_x) = K(_x) - _p
+        let fx = kolmogorov(_x) - target_p;
 
         // Check for convergence
         if fx.abs() < tolerance {
-            return Ok(x);
+            return Ok(_x);
         }
 
-        // Compute f'(x) and f''(x) using finite differences for accuracy
+        // Compute f'(_x) and f''(_x) using finite differences for accuracy
         let h = T::from_f64(1e-8).unwrap();
-        let f_plus = kolmogorov(x + h) - target_p;
-        let f_minus = kolmogorov(x - h) - target_p;
+        let f_plus = kolmogorov(_x + h) - target_p;
+        let f_minus = kolmogorov(_x - h) - target_p;
 
         let fprime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * h);
         let f2prime = (f_plus - T::from_f64(2.0).unwrap() * fx + f_minus) / (h * h);
@@ -608,16 +608,16 @@ fn kolmogorov_inverse_halley<T: Float + FromPrimitive + Display>(
         }
 
         let step = numerator / denominator;
-        x = x - step;
+        _x = _x - step;
 
-        // Check bounds (Kolmogorov CDF is defined for x >= 0)
-        if x < T::zero() {
-            x = T::from_f64(0.01).unwrap();
+        // Check bounds (Kolmogorov CDF is defined for _x >= 0)
+        if _x < T::zero() {
+            _x = T::from_f64(0.01).unwrap();
         }
 
-        // Check for convergence in x
+        // Check for convergence in _x
         if step.abs() < tolerance {
-            return Ok(x);
+            return Ok(_x);
         }
     }
 
@@ -633,22 +633,22 @@ fn kolmogorov_inverse_newton_improved<T: Float + FromPrimitive + Display>(
     initial_x: T,
     tolerance: T,
 ) -> SpecialResult<T> {
-    let mut x = initial_x;
+    let mut _x = initial_x;
     let max_iterations = 100;
 
     for _iteration in 0..max_iterations {
-        // Compute f(x) = K(x) - p
-        let fx = kolmogorov(x) - target_p;
+        // Compute f(_x) = K(_x) - _p
+        let fx = kolmogorov(_x) - target_p;
 
         // Check for convergence
         if fx.abs() < tolerance {
-            return Ok(x);
+            return Ok(_x);
         }
 
         // Compute derivative using central difference with adaptive step size
-        let h = T::from_f64(1e-8).unwrap() * (T::one() + x.abs());
-        let f_plus = kolmogorov(x + h);
-        let f_minus = kolmogorov(x - h);
+        let h = T::from_f64(1e-8).unwrap() * (T::one() + _x.abs());
+        let f_plus = kolmogorov(_x + h);
+        let f_minus = kolmogorov(_x - h);
         let fprime = (f_plus - f_minus) / (T::from_f64(2.0).unwrap() * h);
 
         // Check for zero derivative
@@ -667,16 +667,16 @@ fn kolmogorov_inverse_newton_improved<T: Float + FromPrimitive + Display>(
         };
 
         let step = raw_step * damping;
-        x = x - step;
+        _x = _x - step;
 
-        // Ensure x stays positive
-        if x < T::zero() {
-            x = T::from_f64(0.01).unwrap();
+        // Ensure _x stays positive
+        if _x < T::zero() {
+            _x = T::from_f64(0.01).unwrap();
         }
 
-        // Check for convergence in x
+        // Check for convergence in _x
         if step.abs() < tolerance {
-            return Ok(x);
+            return Ok(_x);
         }
     }
 
@@ -1297,7 +1297,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::chdtri;
+/// use scirs2__special::chdtri;
 /// use approx::assert_relative_eq;
 ///
 /// let x = chdtri(0.95, 2.0).unwrap();
@@ -1309,7 +1309,7 @@ where
     T: Float + FromPrimitive + Display + Debug + AddAssign,
 {
     check_probability(p, "p")?;
-    check_finite(v, "v")?;
+    check_finite(v, "v value")?;
 
     if v <= T::zero() {
         return Err(SpecialError::DomainError(
@@ -1353,7 +1353,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::pdtri;
+/// use scirs2__special::pdtri;
 /// use approx::assert_relative_eq;
 ///
 /// let m = pdtri(0.5, 2.0).unwrap();
@@ -1365,7 +1365,7 @@ where
     T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign,
 {
     check_probability(p, "p")?;
-    check_finite(k, "k")?;
+    check_finite(k, "k value")?;
 
     if k < T::zero() {
         return Err(SpecialError::DomainError(
@@ -1411,7 +1411,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::pdtrik;
+/// use scirs2__special::pdtrik;
 /// use approx::assert_relative_eq;
 ///
 /// let k = pdtrik(0.5, 2.0).unwrap();
@@ -1423,7 +1423,7 @@ where
     T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign,
 {
     check_probability(p, "p")?;
-    check_finite(m, "m")?;
+    check_finite(m, "m value")?;
 
     if m <= T::zero() {
         return Err(SpecialError::DomainError(
@@ -1466,7 +1466,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::nbdtr;
+/// use scirs2__special::nbdtr;
 /// use approx::assert_relative_eq;
 ///
 /// let cdf = nbdtr(2.0, 3.0, 0.5).unwrap();
@@ -1477,8 +1477,8 @@ pub fn nbdtr<T>(k: T, r: T, p: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign,
 {
-    check_finite(k, "k")?;
-    check_finite(r, "r")?;
+    check_finite(k, "k value")?;
+    check_finite(r, "r value")?;
     check_probability(p, "p")?;
 
     if k < T::zero() || r <= T::zero() {
@@ -1529,8 +1529,8 @@ where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign,
 {
     check_probability(y, "y")?;
-    check_finite(k, "k")?;
-    check_finite(r, "r")?;
+    check_finite(k, "k value")?;
+    check_finite(r, "r value")?;
 
     if k < T::zero() || r <= T::zero() {
         return Err(SpecialError::DomainError(

@@ -13,7 +13,7 @@ use super::config::{SparseFFTConfig, SparsityEstimationMethod};
 
 /// Estimate sparsity of a signal using various methods
 #[allow(dead_code)]
-pub fn estimate_sparsity<T>(signal: &[T], config: &SparseFFTConfig) -> FFTResult<usize>
+pub fn estimate_sparsity<T>(_signal: &[T], config: &SparseFFTConfig) -> FFTResult<usize>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -21,19 +21,19 @@ where
         SparsityEstimationMethod::Manual => Ok(config.sparsity),
 
         SparsityEstimationMethod::Threshold => {
-            estimate_sparsity_threshold(signal, config.threshold)
+            estimate_sparsity_threshold(_signal, config.threshold)
         }
 
         SparsityEstimationMethod::Adaptive => {
-            estimate_sparsity_adaptive(signal, config.adaptivity_factor, config.sparsity)
+            estimate_sparsity_adaptive(_signal, config.adaptivity_factor, config.sparsity)
         }
 
         SparsityEstimationMethod::FrequencyPruning => {
-            estimate_sparsity_frequency_pruning(signal, config.pruning_sensitivity)
+            estimate_sparsity_frequency_pruning(_signal, config.pruning_sensitivity)
         }
 
         SparsityEstimationMethod::SpectralFlatness => estimate_sparsity_spectral_flatness(
-            signal,
+            _signal,
             config.flatness_threshold,
             config.window_size,
         ),
@@ -42,12 +42,12 @@ where
 
 /// Estimate sparsity using magnitude thresholding
 #[allow(dead_code)]
-pub fn estimate_sparsity_threshold<T>(signal: &[T], threshold: f64) -> FFTResult<usize>
+pub fn estimate_sparsity_threshold<T>(_signal: &[T], threshold: f64) -> FFTResult<usize>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // Compute regular FFT
-    let spectrum = fft(signal, None)?;
+    let spectrum = fft(_signal, None)?;
 
     // Find magnitudes
     let magnitudes: Vec<f64> = spectrum.iter().map(|c| c.norm()).collect();
@@ -84,7 +84,7 @@ where
 
     magnitudes.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-    // Find "elbow" in the magnitude curve using adaptivity factor
+    // Find "elbow" in the magnitude curve using adaptivity _factor
     let signal_energy: f64 = magnitudes.iter().map(|(_, m)| m * m).sum();
     let mut cumulative_energy = 0.0;
     let energy_threshold = signal_energy * (1.0 - adaptivity_factor);
@@ -96,7 +96,7 @@ where
         }
     }
 
-    // Fallback: return a default small value if we couldn't determine sparsity
+    // Fallback: return a default small value if we couldn't determine _sparsity
     Ok(fallback_sparsity)
 }
 
@@ -200,7 +200,7 @@ where
             0.0
         };
 
-        // Count as significant if flatness is below threshold (indicating peaks)
+        // Count as significant if flatness is below _threshold (indicating peaks)
         if spectral_flatness < flatness_threshold {
             significant_components += window_power
                 .iter()

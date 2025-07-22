@@ -4,7 +4,7 @@
 //! reference counting analysis, cycle detection, real-time monitoring, and
 //! pattern-based leak identification.
 
-use super::memory_leak_detector::{
+use super::memory_leak__detector::{
     AllocationEvent, AllocationType, GrowthPattern, GrowthTrend, LeakDetector, LeakSource,
     MemoryGrowthAnalysis, MemoryLeakResult, MemoryUsageSnapshot,
 };
@@ -169,9 +169,9 @@ pub enum LeakType {
 
 impl ReferenceCountingDetector {
     /// Create a new reference counting detector
-    pub fn new(config: ReferenceCountingConfig) -> Self {
+    pub fn new(_config: ReferenceCountingConfig) -> Self {
         Self {
-            config,
+            _config,
             reference_tracker: Arc::new(RwLock::new(ReferenceTracker::new())),
             cycle_detector: CycleDetector::new(),
         }
@@ -362,7 +362,7 @@ impl LeakDetector for ReferenceCountingDetector {
         // Analyze suspected leaks
         for suspected_leak in &tracker.suspected_leaks {
             if let Some(ref_info) = tracker.active_references.get(&suspected_leak.allocation_id) {
-                // Estimate leak size from allocation history
+                // Estimate leak size from allocation _history
                 let leak_size = allocation_history
                     .iter()
                     .find(|event| event.allocation_id == suspected_leak.allocation_id)
@@ -573,7 +573,7 @@ impl ReferenceCountingDetector {
 
         if suspected_leaks.len() > 10 {
             recommendations.push(
-                "High number of suspected leaks detected. Consider implementing reference pooling."
+                "High number of suspected _leaks detected. Consider implementing reference pooling."
                     .to_string(),
             );
         }
@@ -652,7 +652,7 @@ impl CycleDetector {
         indices.insert(v, *index);
         lowlinks.insert(v, *index);
         *index += 1;
-        stack.push(v);
+        _stack.push(v);
         on_stack.insert(v);
 
         if let Some(neighbors) = graph.get(&v) {
@@ -661,7 +661,7 @@ impl CycleDetector {
                     self.strongconnect(
                         w,
                         index,
-                        stack,
+                        _stack,
                         indices,
                         lowlinks,
                         on_stack,
@@ -682,7 +682,7 @@ impl CycleDetector {
         if lowlinks.get(&v) == indices.get(&v) {
             let mut component = Vec::new();
             loop {
-                let w = stack.pop().unwrap();
+                let w = _stack.pop().unwrap();
                 on_stack.remove(&w);
                 component.push(w);
                 if w == v {
@@ -828,9 +828,9 @@ pub struct AlertSystem {
 
 impl RealTimeMemoryMonitor {
     /// Create a new real-time memory monitor
-    pub fn new(config: RealTimeMonitorConfig) -> Self {
+    pub fn new(_config: RealTimeMonitorConfig) -> Self {
         Self {
-            config,
+            _config,
             state: Arc::new(Mutex::new(MonitorState::new())),
             alert_system: AlertSystem::new(),
             is_active: Arc::new(Mutex::new(false)),
@@ -899,11 +899,11 @@ impl RealTimeMemoryMonitor {
     }
 
     /// Take a memory sample
-    fn take_memory_sample(timestamp: Instant) -> MemorySample {
+    fn take_memory_sample(_timestamp: Instant) -> MemorySample {
         // In a real implementation, this would use system APIs to get actual memory usage
         // For now, we'll simulate memory sampling
         MemorySample {
-            timestamp,
+            _timestamp,
             memory_usage: Self::get_current_memory_usage(),
             allocation_rate: 0.0,   // Would be calculated from real data
             deallocation_rate: 0.0, // Would be calculated from real data

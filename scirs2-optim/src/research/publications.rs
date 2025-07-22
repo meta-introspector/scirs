@@ -567,11 +567,11 @@ pub struct VenueConstraints {
 
 impl Publication {
     /// Create a new publication
-    pub fn new(title: &str) -> Self {
+    pub fn new(_title: &str) -> Self {
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
-            title: title.to_string(),
+            _title: _title.to_string(),
             abstract_text: String::new(),
             authors: Vec::new(),
             publication_type: PublicationType::ConferencePaper,
@@ -969,11 +969,11 @@ impl Default for PublicationMetadata {
 
 impl PublicationGenerator {
     /// Create a new publication generator
-    pub fn new(output_dir: PathBuf) -> Self {
+    pub fn new(_output_dir: PathBuf) -> Self {
         Self {
             templates: HashMap::new(),
             default_citation_style: CitationStyle::IEEE,
-            output_dir}
+            _output_dir}
     }
     
     /// Generate publication from experiments
@@ -1021,8 +1021,7 @@ impl PublicationGenerator {
             SectionType::Methodology => self.generate_methodology(experiments)?,
             SectionType::Experiments => self.generate_experiments_section(experiments)?,
             SectionType::Results => self.generate_results(experiments)?,
-            SectionType::Conclusion => self.generate_conclusion(experiments)?,
-            _ => template.template.clone()};
+            SectionType::Conclusion => self.generate_conclusion(experiments)?_ => template.template.clone()};
         
         Ok(ManuscriptSection {
             title: match template.section_type {
@@ -1031,8 +1030,7 @@ impl PublicationGenerator {
                 SectionType::Experiments => "Experiments".to_string(),
                 SectionType::Results => "Results".to_string(),
                 SectionType::Conclusion => "Conclusion".to_string(),
-                SectionType::Custom(ref name) => name.clone(),
-                _ => format!("{:?}", template.section_type)},
+                SectionType::Custom(ref name) => name.clone(, _ => format!("{:?}", template.section_type)},
             content,
             order: 0, // Will be set based on section type
             section_type: template.section_type.clone(),
@@ -1042,7 +1040,7 @@ impl PublicationGenerator {
             references: Vec::new()})
     }
     
-    fn generate_introduction(&self, _experiments: &[Experiment]) -> Result<String> {
+    fn generate_introduction(&self_experiments: &[Experiment]) -> Result<String> {
         Ok("This section introduces the research problem and motivation for comparing optimization algorithms.".to_string())
     }
     
@@ -1084,7 +1082,7 @@ impl PublicationGenerator {
         Ok(content)
     }
     
-    fn generate_conclusion(&self, _experiments: &[Experiment]) -> Result<String> {
+    fn generate_conclusion(&self_experiments: &[Experiment]) -> Result<String> {
         Ok("This section summarizes the key findings and implications of the experimental results.".to_string())
     }
 }

@@ -6,7 +6,8 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Distribution, Uniform as RandUniform};
+use rand__distr::{Distribution, Uniform as RandUniform};
+use statrs::statistics::Statistics;
 
 /// Pareto distribution structure
 ///
@@ -40,13 +41,13 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::pareto::Pareto;
+    /// use scirs2__stats::distributions::pareto::Pareto;
     ///
     /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
     /// ```
-    pub fn new(shape: F, scale: F, loc: F) -> StatsResult<Self> {
+    pub fn new(_shape: F, scale: F, loc: F) -> StatsResult<Self> {
         // Validate parameters
-        if shape <= F::zero() {
+        if _shape <= F::zero() {
             return Err(StatsError::DomainError(
                 "Shape parameter must be positive".to_string(),
             ));
@@ -69,7 +70,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
         };
 
         Ok(Pareto {
-            shape,
+            _shape,
             scale,
             loc,
             rand_distr,
@@ -89,7 +90,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::pareto::Pareto;
+    /// use scirs2__stats::distributions::pareto::Pareto;
     ///
     /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
     /// let pdf_at_two = pareto.pdf(2.0);
@@ -123,7 +124,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::pareto::Pareto;
+    /// use scirs2__stats::distributions::pareto::Pareto;
     ///
     /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
     /// let cdf_at_two = pareto.cdf(2.0);
@@ -156,14 +157,14 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::pareto::Pareto;
+    /// use scirs2__stats::distributions::pareto::Pareto;
     ///
     /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
     /// let x = pareto.ppf(0.5).unwrap();
     /// assert!((x - 1.2599210).abs() < 1e-6);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p > F::one() {
+        if p < F::zero() || p >, F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));
@@ -200,7 +201,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::pareto::Pareto;
+    /// use scirs2__stats::distributions::pareto::Pareto;
     ///
     /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
     /// let samples = pareto.rvs(10).unwrap();
@@ -233,7 +234,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::pareto::Pareto;
+    /// use scirs2__stats::distributions::pareto::Pareto;
     ///
     /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
     /// let mean = pareto.mean();
@@ -259,7 +260,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::pareto::Pareto;
+    /// use scirs2__stats::distributions::pareto::Pareto;
     ///
     /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
     /// let var = pareto.var();
@@ -290,7 +291,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::pareto::Pareto;
+    /// use scirs2__stats::distributions::pareto::Pareto;
     ///
     /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
     /// let median = pareto.median();
@@ -312,7 +313,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::pareto::Pareto;
+    /// use scirs2__stats::distributions::pareto::Pareto;
     ///
     /// let pareto = Pareto::new(3.0f64, 1.0, 0.0).unwrap();
     /// let mode = pareto.mode();
@@ -342,18 +343,18 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::distributions::pareto;
+/// use scirs2__stats::distributions::pareto;
 ///
 /// let p = pareto::pareto(3.0f64, 1.0, 0.0).unwrap();
 /// let pdf_at_two = p.pdf(2.0);
 /// assert!((pdf_at_two - 0.1875).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn pareto<F>(shape: F, scale: F, loc: F) -> StatsResult<Pareto<F>>
+pub fn pareto<F>(_shape: F, scale: F, loc: F) -> StatsResult<Pareto<F>>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    Pareto::new(shape, scale, loc)
+    Pareto::new(_shape, scale, loc)
 }
 
 /// Implementation of SampleableDistribution for Pareto

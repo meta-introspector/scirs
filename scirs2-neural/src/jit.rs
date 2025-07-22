@@ -408,7 +408,7 @@ pub struct FusionRule {
     pub strategy: FusionStrategy,
 impl JITCompiler {
     /// Create a new JIT compiler for the target architecture
-    pub fn new(target_arch: TargetArchitecture) -> Self {
+    pub fn new(_target_arch: TargetArchitecture) -> Self {
         let codegen_settings = CodeGenSettings {
             vectorize: true,
             unroll_loops: true,
@@ -554,8 +554,7 @@ impl JITCompiler {
             JITOperation::FusedOp {
                 operations,
                 fusion_strategy,
-            } => self.generate_fused_code(operations, fusion_strategy),
-            _ => {
+            } => self.generate_fused_code(operations, fusion_strategy, _ => {
                 // For other operations, generate generic code
                 Ok(self.generate_generic_code(operation))
     /// Generate matrix multiplication code
@@ -594,8 +593,7 @@ impl JITCompiler {
         input_shape: &[usize],
         weight_shape: &[usize],
         stride: &[usize],
-        padding: &[usize],
-        _dilation: &[usize],
+        padding: &[usize], _dilation: &[usize],
         code.push_str("// Optimized Convolution\n");
         code.push_str(
             "void kernel_conv2d(const float* input, const float* weight, float* output) {\n",
@@ -653,8 +651,7 @@ impl JITCompiler {
         match &self.target_arch {
             TargetArchitecture::X86_64 { avx_level, .. } => *avx_level > 0,
             TargetArchitecture::ARM64 { neon, .. } => *neon,
-            TargetArchitecture::WASM { simd, .. } => *simd,
-            _ => false,
+            TargetArchitecture::WASM { simd, .. } => *simd_ => false,
     /// Generate vectorized matrix multiplication code
     fn generate_vectorized_matmul(&self, m: usize, k: usize, n: usize) -> Result<String> {
             TargetArchitecture::X86_64 { avx_level, .. } => {
@@ -706,10 +703,10 @@ impl JITCompiler {
         code.push_str("  }\n");
         code
     /// Generate SSE matrix multiplication code
-    fn generate_sse_matmul(&self, _m: usize, _k: usize, _n: usize) -> String {
+    fn generate_sse_matmul(&self_m: usize, _k: usize_n: usize) -> String {
         String::from("  // SSE implementation placeholder\n")
     /// Generate NEON matrix multiplication code
-    fn generate_neon_matmul(&self, _m: usize, _k: usize, _n: usize) -> String {
+    fn generate_neon_matmul(&self_m: usize, _k: usize_n: usize) -> String {
         String::from("  // NEON implementation placeholder\n")
     /// Generate vectorized element-wise code
     fn generate_vectorized_elementwise(
@@ -815,11 +812,11 @@ impl JITCompiler {
                     "    __m256 neg_input = _mm256_sub_ps(_mm256_setzero_ps(), input_vec);\n",
                     "    // Approximate exp using polynomial (AVX doesn't have native exp)\n",
                     "    __m256 exp_neg = _mm256_add_ps(_mm256_set1_ps(1.0f), neg_input);\n",
-                    "    __m256 result = _mm256_div_ps(one, _mm256_add_ps(one, exp_neg));\n",
+                    "    __m256 result = _mm256_div_ps(one_mm256_add_ps(one, exp_neg));\n",
             ActivationType::Tanh => {
                 // Tanh approximation: x / (1 + |x|) for simplicity
                     "    __m256 abs_input = _mm256_andnot_ps(_mm256_set1_ps(-0.0f), input_vec);\n",
-                code.push_str("    __m256 result = _mm256_div_ps(input_vec, _mm256_add_ps(one, abs_input));\n");
+                code.push_str("    __m256 result = _mm256_div_ps(input_vec_mm256_add_ps(one, abs_input));\n");
                 code.push_str("    __m256 result = input_vec; // fallback\n");
         code.push_str("    _mm256_storeu_ps(&output[i], result);\n");
     /// Generate scalar activation code
@@ -846,8 +843,7 @@ impl JITCompiler {
                 let c_size = a_shape[0] * b_shape[1] * std::mem::size_of::<f32>();
                 let min_mem = a_size + b_size + c_size;
                 let optimal_mem = min_mem * 2; // For blocking optimizations
-                (min_mem, optimal_mem, MemoryAccessPattern::Blocked)
-            JITOperation::ElementWise { shapes, .. } => {
+                (min_mem, optimal_mem, MemoryAccessPattern::Blocked), JITOperation::ElementWise { shapes, .. } => {
                 let total_size = shapes
                     .iter()
                     .map(|shape| shape.iter().product::<usize>() * std::mem::size_of::<f32>())
@@ -1057,8 +1053,7 @@ impl JITCompiler {
                     stride: stride.clone(),
                     padding: padding.clone(),
                     use_im2col: self.should_use_im2col(input_shape, weight_shape),
-                Ok(CompiledFunction::Convolution(kernel))
-            JITOperation::Activation { activation, .. } => {
+                Ok(CompiledFunction::Convolution(kernel)), JITOperation::Activation { activation, .. } => {
                 let kernel = ActivationKernel {
                     activation: activation.clone(),
                     use_lookup_table: self.should_use_lookup_table(activation),
@@ -1081,16 +1076,13 @@ impl JITCompiler {
             TargetArchitecture::X86_64 { avx_level, .. } => match *avx_level {
                 512 => SimdLevel::AVX512,
                 2 => SimdLevel::AVX2,
-                1 => SimdLevel::AVX,
-                _ => SimdLevel::SSE,
+                1 => SimdLevel::AVX_ =>, SimdLevel::SSE,
             },
-            TargetArchitecture::ARM64 { neon: true, .. } => SimdLevel::NEON,
-            _ => SimdLevel::None,
+            TargetArchitecture::ARM64 { neon: true, .. } => SimdLevel::NEON_ =>, SimdLevel::None,
         let memory_optimization = match operation {
-            JITOperation::MatMul { .. } => MemoryOptimization::Blocking,
-            JITOperation::Convolution { .. } => MemoryOptimization::TileOptimized,
-            JITOperation::ElementWise { .. } => MemoryOptimization::Streaming,
-            _ => MemoryOptimization::None,
+            JITOperation::MatMul { .. } =>, MemoryOptimization::Blocking,
+            JITOperation::Convolution { .. } =>, MemoryOptimization::TileOptimized,
+            JITOperation::ElementWise { .. } => MemoryOptimization::Streaming_ =>, MemoryOptimization::None,
         let parallel_strategy = if self.codegen_settings.use_intrinsics {
             ParallelStrategy::Hybrid
             ParallelStrategy::Rayon
@@ -1207,8 +1199,7 @@ impl FusionOptimizer {
                 Ok(JITOperation::Convolution {
                     input_shape: self.optimize_conv_input_layout(input_shape),
                     weight_shape: self.optimize_conv_weight_layout(weight_shape),
-                    dilation: dilation.clone(),
-            _ => Ok(operation.clone()),
+                    dilation: dilation.clone(, _ => Ok(operation.clone()),
     /// Reorder operations for better cache efficiency
     fn reorder_for_cache_efficiency(
     ) -> Result<Vec<Box<JITOperation>>> {
@@ -1227,8 +1218,7 @@ impl FusionOptimizer {
             JITOperation::ElementWise { .. } => 1.0, // Best locality
             JITOperation::Activation { .. } => 0.9,
             JITOperation::MatMul { .. } => 0.7,
-            JITOperation::Convolution { .. } => 0.5,
-            _ => 0.0,
+            JITOperation::Convolution { .. } => 0.5_ => 0.0,
     /// Select optimal fusion strategy
     fn select_optimal_fusion_strategy(
         current_strategy: &FusionStrategy,
@@ -1337,11 +1327,10 @@ impl FusionOptimizer {
         ratio < 10.0 // Allow up to 10x difference
     /// Get memory access pattern for operation
     fn get_memory_access_pattern(&self, operation: &JITOperation) -> MemoryAccessPattern {
-            JITOperation::ElementWise { .. } => MemoryAccessPattern::Sequential,
-            JITOperation::MatMul { .. } => MemoryAccessPattern::Blocked,
-            JITOperation::Convolution { .. } => MemoryAccessPattern::Strided,
-            JITOperation::Activation { .. } => MemoryAccessPattern::Sequential,
-            _ => MemoryAccessPattern::Random,
+            JITOperation::ElementWise { .. } =>, MemoryAccessPattern::Sequential,
+            JITOperation::MatMul { .. } =>, MemoryAccessPattern::Blocked,
+            JITOperation::Convolution { .. } =>, MemoryAccessPattern::Strided,
+            JITOperation::Activation { .. } => MemoryAccessPattern::Sequential_ =>, MemoryAccessPattern::Random,
     /// Get shapes involved in operation
     fn get_operation_shapes(&self, operation: &JITOperation) -> Vec<Vec<usize>> {
             JITOperation::ElementWise { shapes, .. } => shapes.clone(),
@@ -1494,7 +1483,7 @@ impl FusionOptimizer {
         c: &mut ArrayViewMut<f32, ndarray::Ix2>,
         block_size: usize,
         // Blocked algorithm for better cache performance
-        par_azip!((index (bi, bj), _c in c.blocks(block_size, block_size)) {
+        par_azip!((index (bi, bj)_c in c.blocks(block_size, block_size)) {
             for bk in (0..k).step_by(block_size) {
                 let m_end = (bi + block_size).min(m);
                 let n_end = (bj + block_size).min(n);
@@ -1534,7 +1523,7 @@ impl FusionOptimizer {
         let h_out = (h_in + 2 * kernel.padding[0] - kh) / kernel.stride[0] + 1;
         let w_out = (w_in + 2 * kernel.padding[1] - kw) / kernel.stride[1] + 1;
         // Parallel over batch and output spatial dimensions
-        par_azip!((index (batch, out_h, out_w), _out in output.slice_mut(s![.., .., ..h_out, ..w_out])) {
+        par_azip!((index (batch, out_h, out_w)_out in output.slice_mut(s![.., .., ..h_out, ..w_out])) {
             for c_o in 0..c_out {
                 let mut sum = F::zero();
                 for c_i in 0..c_in {

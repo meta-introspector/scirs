@@ -259,9 +259,9 @@ pub struct GpuArray<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone> GpuArray<F> {
     /// Create a new GPU array from CPU data
-    pub fn from_cpu(data: Array1<F>, config: GpuConfig) -> Self {
+    pub fn from_cpu(_data: Array1<F>, config: GpuConfig) -> Self {
         Self {
-            cpu_data: Some(data),
+            cpu_data: Some(_data),
             gpu_handle: None,
             config,
             on_gpu: false,
@@ -269,8 +269,8 @@ impl<F: Float + Debug + Clone> GpuArray<F> {
     }
 
     /// Create a new empty GPU array
-    pub fn zeros(len: usize, config: GpuConfig) -> Self {
-        let data = Array1::zeros(len);
+    pub fn zeros(_len: usize, config: GpuConfig) -> Self {
+        let data = Array1::zeros(_len);
         Self::from_cpu(data, config)
     }
 
@@ -710,31 +710,31 @@ pub mod utils {
     }
 
     /// Get recommended batch size for GPU operations
-    pub fn get_recommended_batch_size(data_size: usize, memory_limit: usize) -> usize {
-        let element_size = std::mem::size_of::<f64>(); // Assume f64 for estimation
+    pub fn get_recommended_batch_size(_data_size: usize, memory_limit: usize) -> usize {
+        let element_size = std::mem::_size_of::<f64>(); // Assume f64 for estimation
         let max_batch = memory_limit / element_size;
-        std::cmp::min(data_size, max_batch)
+        std::cmp::min(_data_size, max_batch)
     }
 
     /// Estimate GPU memory requirements for operation
-    pub fn estimate_memory_usage(data_size: usize, operation_overhead: f64) -> usize {
-        let base_memory = data_size * std::mem::size_of::<f64>();
+    pub fn estimate_memory_usage(_data_size: usize, operation_overhead: f64) -> usize {
+        let base_memory = _data_size * std::mem::_size_of::<f64>();
         (base_memory as f64 * (1.0 + operation_overhead)) as usize
     }
 
     /// Choose optimal GPU configuration based on data characteristics
-    pub fn optimize_gpu_config(data_size: usize, available_memory: usize) -> GpuConfig {
-        let batch_size = get_recommended_batch_size(data_size, available_memory / 4);
+    pub fn optimize_gpu_config(_data_size: usize, available_memory: usize) -> GpuConfig {
+        let batch_size = get_recommended_batch_size(_data_size, available_memory / 4);
 
         GpuConfig {
             device_id: 0,
             memory_pool_size: Some(available_memory / 2),
             enable_memory_optimization: true,
             batch_size,
-            use_half_precision: data_size > 100_000,
+            use_half_precision: _data_size > 100_000,
             enable_async: true,
             tensor_cores: TensorCoresConfig::default(),
-            memory_strategy: MemoryStrategy::PreAllocated {
+            _memory_strategy: MemoryStrategy::PreAllocated {
                 pool_size: available_memory / 2,
             },
             dynamic_batching: true,
@@ -888,9 +888,9 @@ pub mod fft {
 
     impl<F: Float + Debug + Clone> GpuFFT<F> {
         /// Create new GPU FFT processor
-        pub fn new(config: GpuConfig) -> Self {
+        pub fn new(_config: GpuConfig) -> Self {
             Self {
-                config,
+                _config,
                 fft_cache: Vec::new(),
             }
         }
@@ -1014,7 +1014,7 @@ pub mod fft {
         ) -> Result<Array1<F>> {
             if data.len() < window_size {
                 return Err(TimeSeriesError::InsufficientData {
-                    message: "Data length less than window size".to_string(),
+                    message: "Data length less than window _size".to_string(),
                     required: window_size,
                     actual: data.len(),
                 });
@@ -1074,7 +1074,7 @@ pub mod fft {
         ) -> Result<Array2<F>> {
             if window_size <= overlap {
                 return Err(TimeSeriesError::InvalidInput(
-                    "Window size must be greater than overlap".to_string(),
+                    "Window _size must be greater than overlap".to_string(),
                 ));
             }
 
@@ -1117,16 +1117,14 @@ pub mod convolution {
     #[derive(Debug)]
     pub struct GpuConvolution<F: Float + Debug> {
         #[allow(dead_code)]
-        config: GpuConfig,
-        _phantom: std::marker::PhantomData<F>,
+        config: GpuConfig_phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + Debug + Clone> GpuConvolution<F> {
         /// Create new GPU convolution processor
-        pub fn new(config: GpuConfig) -> Self {
+        pub fn new(_config: GpuConfig) -> Self {
             Self {
-                config,
-                _phantom: std::marker::PhantomData,
+                _config_phantom: std::marker::PhantomData,
             }
         }
 
@@ -1256,7 +1254,7 @@ pub mod convolution {
 
             if x.len() < window_size {
                 return Err(TimeSeriesError::InsufficientData {
-                    message: "Data length less than window size".to_string(),
+                    message: "Data length less than window _size".to_string(),
                     required: window_size,
                     actual: x.len(),
                 });
@@ -1310,16 +1308,14 @@ pub mod blas {
     #[derive(Debug)]
     pub struct GpuBLAS<F: Float + Debug> {
         #[allow(dead_code)]
-        config: GpuConfig,
-        _phantom: std::marker::PhantomData<F>,
+        config: GpuConfig_phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + Debug + Clone> GpuBLAS<F> {
         /// Create new GPU BLAS processor
-        pub fn new(config: GpuConfig) -> Self {
+        pub fn new(_config: GpuConfig) -> Self {
             Self {
-                config,
-                _phantom: std::marker::PhantomData,
+                _config_phantom: std::marker::PhantomData,
             }
         }
 
@@ -1546,10 +1542,10 @@ pub mod blas {
         device_capabilities: GpuCapabilities,
     }
 
-    impl<F: Float + Debug + Clone + num_traits::Zero + num_traits::One> TensorCoresBLAS<F> {
+    impl<F: Float + Debug + Clone + num_traits::Zero + num, _traits::One> TensorCoresBLAS<F> {
         /// Create new tensor cores BLAS processor
-        pub fn new(config: GpuConfig, device_capabilities: GpuCapabilities) -> Result<Self> {
-            let base_blas = GpuBLAS::new(config.clone());
+        pub fn new(_config: GpuConfig, device_capabilities: GpuCapabilities) -> Result<Self> {
+            let base_blas = GpuBLAS::new(_config.clone());
 
             if !device_capabilities.supports_tensor_cores {
                 return Err(TimeSeriesError::NotImplemented(
@@ -1559,7 +1555,7 @@ pub mod blas {
 
             Ok(Self {
                 base_blas,
-                tensor_config: config.tensor_cores,
+                tensor_config: _config.tensor_cores,
                 device_capabilities,
             })
         }
@@ -1756,7 +1752,7 @@ pub mod blas {
                 ));
             }
 
-            // Parallel batch processing optimized for tensor cores
+            // Parallel _batch processing optimized for tensor cores
             for ((a, b), c) in a_batch.iter().zip(b_batch.iter()).zip(c_batch.iter_mut()) {
                 self.tensor_gemm(alpha, a, b, beta, c)?;
             }
@@ -1942,13 +1938,12 @@ pub mod algorithms {
         > GpuTimeSeriesProcessor<F>
     {
         /// Create new GPU processor
-        pub fn new(config: GpuConfig) -> Result<Self> {
+        pub fn new(_config: GpuConfig) -> Result<Self> {
             let device_manager = GpuDeviceManager::new()?;
             Ok(Self {
-                config,
+                _config,
                 device_manager,
-                stream_handles: Vec::new(),
-                _phantom: std::marker::PhantomData,
+                stream_handles: Vec::new(), _phantom: std::marker::PhantomData,
             })
         }
 
@@ -1963,7 +1958,7 @@ pub mod algorithms {
                 return self.cpu_fallback_batch_forecast(series_batch, forecast_steps, method);
             }
 
-            // Advanced GPU-optimized batch processing with memory optimization
+            // Advanced GPU-optimized _batch processing with memory optimization
             self.gpu_optimized_batch_forecast(series_batch, forecast_steps, method)
         }
 
@@ -1989,7 +1984,7 @@ pub mod algorithms {
             forecast_steps: usize,
             method: ForecastMethod,
         ) -> Result<Vec<Array1<F>>> {
-            // Calculate optimal batch sizes for GPU memory
+            // Calculate optimal _batch sizes for GPU memory
             let gpu_memory_limit = 256 * 1024 * 1024; // 256MB GPU memory limit
             let optimal_batch_size =
                 super::utils::get_recommended_batch_size(series_batch.len(), gpu_memory_limit);
@@ -1997,13 +1992,13 @@ pub mod algorithms {
             let mut all_forecasts = Vec::with_capacity(series_batch.len());
 
             // Advanced batching with memory pooling and async execution
-            for (batch_idx, batch) in series_batch.chunks(optimal_batch_size).enumerate() {
+            for (batch_idx_batch) in series_batch.chunks(optimal_batch_size).enumerate() {
                 // Simulate GPU stream allocation
                 let stream_id = batch_idx % 4; // Use 4 concurrent streams
 
                 // GPU-optimized parallel processing
                 let batch_forecasts =
-                    self.gpu_parallel_forecast(batch, forecast_steps, &method, stream_id)?;
+                    self.gpu_parallel_forecast(_batch, forecast_steps, &method, stream_id)?;
                 all_forecasts.extend(batch_forecasts);
             }
 
@@ -2015,8 +2010,7 @@ pub mod algorithms {
             &self,
             batch: &[Array1<F>],
             forecast_steps: usize,
-            method: &ForecastMethod,
-            _stream_id: usize,
+            method: &ForecastMethod_stream_id: usize,
         ) -> Result<Vec<Array1<F>>> {
             // Advanced parallel processing using GPU-optimized algorithms
             match method {
@@ -2329,8 +2323,8 @@ pub mod algorithms {
             let mut all_forecasts = Vec::with_capacity(series_batch.len());
 
             // Process in batches to optimize memory usage
-            for batch in series_batch.chunks(optimal_batch_size) {
-                let batch_forecasts: Result<Vec<_>> = batch
+            for _batch in series_batch.chunks(optimal_batch_size) {
+                let _batch_forecasts: Result<Vec<_>> = _batch
                     .iter()
                     .map(|series| self.single_series_forecast(series, forecast_steps, &method))
                     .collect();
@@ -2723,8 +2717,8 @@ pub mod algorithms {
 
     impl<F: Float + Debug + Clone + std::iter::Sum> GpuFeatureExtractor<F> {
         /// Create new GPU acceleration instance
-        pub fn new(config: GpuConfig, feature_config: FeatureConfig) -> Result<Self> {
-            let processor = GpuTimeSeriesProcessor::new(config)?;
+        pub fn new(_config: GpuConfig, feature_config: FeatureConfig) -> Result<Self> {
+            let processor = GpuTimeSeriesProcessor::new(_config)?;
             Ok(Self {
                 processor,
                 feature_config,

@@ -77,9 +77,9 @@ pub struct KFold {
     random_state: Option<u64>,
 impl KFold {
     /// Create a new K-fold cross-validation generator
-    pub fn new(n_splits: usize, shuffle: bool, random_state: Option<u64>) -> Self {
+    pub fn new(_n_splits: usize, shuffle: bool, random_state: Option<u64>) -> Self {
         Self {
-            n_splits,
+            _n_splits,
             shuffle,
             random_state,
         }

@@ -330,7 +330,7 @@ impl MomentsAccountant {
         }
 
         // Find optimal epsilon
-        let (composed_epsilon, _) = self.compute_optimal_epsilon(&total_log_moments)?;
+        let (composed_epsilon_) = self.compute_optimal_epsilon(&total_log_moments)?;
 
         Ok(CompositionAnalysis {
             mechanisms: mechanisms.to_vec(),
@@ -470,7 +470,7 @@ impl MomentsAccountant {
 
         while low <= high {
             let mid = (low + high) / 2;
-            let (epsilon, _) = self.get_privacy_spent(mid)?;
+            let (epsilon_) = self.get_privacy_spent(mid)?;
 
             if epsilon <= target_epsilon {
                 result = mid;
@@ -503,8 +503,7 @@ impl MomentsAccountant {
             let mgf_term = match k {
                 0 => 0.0, // No change, moment is 1, log moment is 0
                 1 => self.compute_single_change_moment(alpha, sigma)?,
-                2 => self.compute_double_change_moment(alpha, sigma)?,
-                _ => 0.0,
+                2 => self.compute_double_change_moment(alpha, sigma)?_ => 0.0,
             };
 
             let term = log_binomial + log_prob_k + mgf_term;
@@ -613,7 +612,7 @@ impl MomentsAccountant {
         }
 
         // Find optimal epsilon
-        let (composed_epsilon, _) =
+        let (composed_epsilon_) =
             self.compute_optimal_epsilon_with_delta(&total_log_moments, target_delta)?;
 
         Ok(CompositionAnalysis {
@@ -725,14 +724,14 @@ impl MomentsAccountant {
 }
 
 impl MomentCoefficients {
-    fn new(max_order: usize) -> Self {
+    fn new(_max_order: usize) -> Self {
         let mut binomial_coeffs = HashMap::new();
         let power_cache = HashMap::new();
         let mut log_factorials = Vec::new();
 
         // Precompute log factorials
         log_factorials.push(0.0); // log(0!) = log(1) = 0
-        for i in 1..=max_order * 2 {
+        for i in 1..=_max_order * 2 {
             log_factorials.push(log_factorials[i - 1] + (i as f64).ln());
         }
 
@@ -854,7 +853,7 @@ mod tests {
         assert_eq!(delta, 1e-5);
 
         // More steps should consume more privacy
-        let (epsilon2, _) = accountant.get_privacy_spent(100).unwrap();
+        let (epsilon2_) = accountant.get_privacy_spent(100).unwrap();
         assert!(epsilon2 > epsilon);
     }
 

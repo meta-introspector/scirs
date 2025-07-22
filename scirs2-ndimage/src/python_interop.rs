@@ -36,25 +36,25 @@ pub struct PyError {
 }
 
 impl From<NdimageError> for PyError {
-    fn from(error: NdimageError) -> Self {
-        match error {
+    fn from(_error: NdimageError) -> Self {
+        match _error {
             NdimageError::InvalidInput(msg) => PyError {
-                error_type: "ValueError".to_string(),
+                _error_type: "ValueError".to_string(),
                 message: msg,
                 context: None,
             },
             NdimageError::DimensionError(msg) => PyError {
-                error_type: "ValueError".to_string(),
-                message: format!("Dimension error: {}", msg),
+                _error_type: "ValueError".to_string(),
+                message: format!("Dimension _error: {}", msg),
                 context: None,
             },
             NdimageError::ComputationError(msg) => PyError {
-                error_type: "RuntimeError".to_string(),
+                _error_type: "RuntimeError".to_string(),
                 message: msg,
                 context: None,
             },
             NdimageError::OutOfMemory(msg) => PyError {
-                error_type: "MemoryError".to_string(),
+                _error_type: "MemoryError".to_string(),
                 message: msg,
                 context: None,
             },
@@ -128,7 +128,7 @@ pub mod array_conversion {
     }
 
     /// Validate array compatibility for Python interop
-    pub fn validate_array_compatibility<T>(info: &PyArrayInfo) -> Result<(), PyError>
+    pub fn validate_array_compatibility<T>(_info: &PyArrayInfo) -> Result<(), PyError>
     where
         T: 'static,
     {
@@ -149,16 +149,16 @@ pub mod array_conversion {
             });
         };
 
-        if info.dtype != expected_dtype {
+        if _info.dtype != expected_dtype {
             return Err(PyError {
                 error_type: "TypeError".to_string(),
-                message: format!("Expected dtype '{}', got '{}'", expected_dtype, info.dtype),
+                message: format!("Expected dtype '{}', got '{}'", expected_dtype, _info.dtype),
                 context: None,
             });
         }
 
         // Check for reasonable array sizes
-        let total_elements: usize = info.shape.iter().product();
+        let total_elements: usize = _info.shape.iter().product();
         if total_elements > 1_000_000_000 {
             return Err(PyError {
                 error_type: "MemoryError".to_string(),
@@ -341,8 +341,7 @@ fn gaussian_filter(
         "constant" => BoundaryMode::Constant(0.0),
         "nearest" => BoundaryMode::Nearest,
         "mirror" => BoundaryMode::Mirror,
-        "wrap" => BoundaryMode::Wrap,
-        _ => return Err(PyValueError::new_err("Invalid boundary mode")),
+        "wrap" => BoundaryMode::Wrap_ => return Err(PyValueError::new_err("Invalid boundary mode")),
     };
     
     let result = crate::filters::gaussian_filter(&input_view, sigma, Some(boundary_mode))
@@ -609,7 +608,7 @@ mod tests {
             contiguous: true,
         };
 
-        let result = array_conversion::validate_array_compatibility::<f64>(&info);
+        let result = array_conversion::validate_array, _compatibility::<f64>(&info);
         assert!(result.is_ok());
     }
 
@@ -622,7 +621,7 @@ mod tests {
             contiguous: true,
         };
 
-        let result = array_conversion::validate_array_compatibility::<f64>(&info);
+        let result = array_conversion::validate_array, _compatibility::<f64>(&info);
         assert!(result.is_err());
     }
 

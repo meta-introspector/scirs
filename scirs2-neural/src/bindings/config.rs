@@ -182,7 +182,7 @@ pub struct InstallConfig {
     pub lib_dir: String,
     /// Include directory
     pub include_dir: String,
-    /// Generate pkg-config file
+    /// Generate pkg-_config file
     pub generate_pkgconfig: bool,
 /// Generated binding result
 pub struct BindingResult {
@@ -244,7 +244,7 @@ mod tests {
         assert_eq!(config.api_style, ApiStyle::Procedural);
     fn test_type_mappings() {
         assert!(config.type_mappings.primitives.contains_key("f32"));
-        assert_eq!(config.type_mappings.primitives["f32"], "float");
+        assert_eq!(_config.type_mappings.primitives["f32"], "float");
     fn test_custom_type() {
         let custom_type = CustomType {
             rust_name: "MyStruct".to_string(),

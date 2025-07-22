@@ -1,19 +1,19 @@
 use ndarray::Array2;
 use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha8Rng;
-use scirs2_spatial::balltree::BallTree;
-use scirs2_spatial::distance::{manhattan, ChebyshevDistance, ManhattanDistance};
+use rand__chacha::ChaCha8Rng;
+use scirs2__spatial::balltree::BallTree;
+use scirs2__spatial::distance::{manhattan, ChebyshevDistance, ManhattanDistance};
 use std::time::Instant;
 
 /// Generate random points in a unit hypercube
 #[allow(dead_code)]
-fn generate_random_points(n_samples: usize, n_features: usize, seed: u64) -> Array2<f64> {
+fn generate_random_points(_n_samples: usize, n_features: usize, seed: u64) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(seed);
 
-    let mut data = Array2::zeros((n_samples, n_features));
-    for i in 0..n_samples {
+    let mut data = Array2::zeros((_n_samples, n_features));
+    for i in 0.._n_samples {
         for j in 0..n_features {
-            data[(i, j)] = rng.random_range(0.0..1.0);
+            data[(i, j)] = rng.gen_range(0.0..1.0);
         }
     }
 
@@ -23,10 +23,9 @@ fn generate_random_points(n_samples: usize, n_features: usize, seed: u64) -> Arr
 /// Benchmark function for comparing Ball tree and brute force
 #[allow(dead_code)]
 fn benchmark_nearest_neighbor(
-    tree: &BallTree<f64, ManhattanDistance<f64>>,
+    tree: &BallTree<f64..ManhattanDistance<f64>>,
     data: &Array2<f64>,
-    k: usize,
-) {
+    k: usize,) {
     let n_queries = 10;
     let query_points = generate_random_points(n_queries, data.ncols(), 42);
 
@@ -34,7 +33,7 @@ fn benchmark_nearest_neighbor(
     let start = Instant::now();
     for i in 0..n_queries {
         let query_point = query_points.row(i).to_vec();
-        let (_, _) = tree.query(&query_point, k, true).unwrap();
+        let (__) = tree.query(&query_point, k, true).unwrap();
     }
     let ball_tree_time = start.elapsed();
 
@@ -53,7 +52,7 @@ fn benchmark_nearest_neighbor(
 
         // Sort by distance and take k nearest
         distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
-        let (_indices, _distances): (Vec<_>, Vec<_>) = distances.into_iter().take(k).unzip();
+        let (_indices_distances): (Vec<_>, Vec<_>) = distances.into_iter().take(k).unzip();
     }
     let brute_force_time = start.elapsed();
 
@@ -67,15 +66,15 @@ fn benchmark_nearest_neighbor(
 
 /// Compare different distance metrics
 #[allow(dead_code)]
-fn compare_distance_metrics(data: &Array2<f64>, query_point: &[f64], k: usize) {
+fn compare_distance_metrics(_data: &Array2<f64>, query_point: &[f64], k: usize) {
     // Create Ball trees with different distance metrics
-    let ball_tree_euclidean = BallTree::with_euclidean_distance(&data.view(), 20).unwrap();
-    let ball_tree_manhattan = BallTree::new(&data.view(), 20, ManhattanDistance::new()).unwrap();
-    let ball_tree_chebyshev = BallTree::new(&data.view(), 20, ChebyshevDistance::new()).unwrap();
+    let ball_tree_euclidean = BallTree::with_euclidean_distance(&_data.view(), 20).unwrap();
+    let ball_tree_manhattan = BallTree::new(&_data.view(), 20, ManhattanDistance::new()).unwrap();
+    let ball_tree_chebyshev = BallTree::new(&_data.view(), 20, ChebyshevDistance::new()).unwrap();
 
     // Query with each tree
     println!(
-        "\nComparing results with different distance metrics for query point: {query_point:?}"
+        "\nComparing results with different distance metrics for query _point: {query_point:?}"
     );
 
     let (indices_euclidean, Some(distances_euclidean)) =
@@ -107,7 +106,7 @@ fn compare_distance_metrics(data: &Array2<f64>, query_point: &[f64], k: usize) {
             i + 1,
             idx,
             dist,
-            data.row(idx)
+            _data.row(idx)
         );
     }
 
@@ -122,7 +121,7 @@ fn compare_distance_metrics(data: &Array2<f64>, query_point: &[f64], k: usize) {
             i + 1,
             idx,
             dist,
-            data.row(idx)
+            _data.row(idx)
         );
     }
 
@@ -137,7 +136,7 @@ fn compare_distance_metrics(data: &Array2<f64>, query_point: &[f64], k: usize) {
             i + 1,
             idx,
             dist,
-            data.row(idx)
+            _data.row(idx)
         );
     }
 }
@@ -150,7 +149,7 @@ fn demonstrate_radius_search(
     query_point: &[f64],
     radius: f64,
 ) {
-    println!("\nFinding all points within radius {radius} of query point {query_point:?}:");
+    println!("\nFinding all points within radius {radius} of query _point {query_point:?}:");
 
     let (indices, Some(distances)) = tree.query_radius(query_point, radius, true).unwrap() else {
         unreachable!()
@@ -170,10 +169,10 @@ fn demonstrate_radius_search(
 
 /// Demonstrate dual tree search (finding pairs of points within a radius)
 #[allow(dead_code)]
-fn demonstrate_dual_tree_search(data1: &Array2<f64>, data2: &Array2<f64>, radius: f64) {
+fn demonstrate_dual_tree_search(_data1: &Array2<f64>, data2: &Array2<f64>, radius: f64) {
     println!("\nFinding pairs of points from two datasets within radius {radius}:");
 
-    let tree1 = BallTree::new(&data1.view(), 20, ManhattanDistance::new()).unwrap();
+    let tree1 = BallTree::new(&_data1.view(), 20, ManhattanDistance::new()).unwrap();
     let tree2 = BallTree::new(&data2.view(), 20, ManhattanDistance::new()).unwrap();
 
     let pairs = tree1.query_radius_tree(&tree2, radius).unwrap();
@@ -190,7 +189,7 @@ fn demonstrate_dual_tree_search(data1: &Array2<f64>, data2: &Array2<f64>, radius
             i + 1,
             idx1,
             idx2,
-            data1.row(idx1),
+            _data1.row(idx1),
             data2.row(idx2)
         );
     }

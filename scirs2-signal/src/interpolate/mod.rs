@@ -19,7 +19,7 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_signal::interpolate::{interpolate, InterpolationMethod, InterpolationConfig};
+//! use scirs2__signal::interpolate::{interpolate, InterpolationMethod, InterpolationConfig};
 //!
 //! let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 //! let config = InterpolationConfig::default();
@@ -30,7 +30,7 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_signal::interpolate::{auto_interpolate, InterpolationConfig};
+//! use scirs2__signal::interpolate::{auto_interpolate, InterpolationConfig};
 //!
 //! let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 //! let config = InterpolationConfig::default();
@@ -50,7 +50,13 @@
 //! | Sinc | Bandlimited signals | Optimal for bandlimited | Requires knowledge of bandwidth |
 //! | Spectral | Periodic signals | Good for frequency content | Iterative process |
 
+use crate::error::SignalResult;
+use crate::error::SignalResult;
+use ndarray::{Array1, Array2};
+use std::f64::consts::PI;
+
 // Re-export all submodules
+#[allow(unused_imports)]
 pub mod advanced;
 pub mod basic;
 pub mod core;
@@ -77,12 +83,12 @@ pub use spectral::{
 };
 
 // Re-export the comprehensive variogram and RBF function collections
-pub use advanced::variogram_models::{
+pub use advanced::variogram__models::{
     exponential as exponential_variogram, gaussian as gaussian_variogram,
     linear as linear_variogram, spherical as spherical_variogram,
 };
 
-pub use advanced::rbf_functions::{
+pub use advanced::rbf__functions::{
     gaussian as gaussian_rbf, inverse_multiquadric as inverse_multiquadric_rbf,
     multiquadric as multiquadric_rbf, thin_plate_spline as thin_plate_spline_rbf,
 };
@@ -111,15 +117,15 @@ pub use spectral::polynomial::{
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_signal::interpolate::linear;
+/// use scirs2__signal::interpolate::linear;
 ///
 /// let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
 /// let result = linear(&signal).unwrap();
 /// assert_eq!(result[1], 2.0); // Linear interpolation between 1.0 and 3.0
 /// ```
 #[allow(dead_code)]
-pub fn linear(signal: &ndarray::Array1<f64>) -> crate::error::SignalResult<ndarray::Array1<f64>> {
-    linear_interpolate(signal)
+pub fn linear(_signal: &ndarray::Array1<f64>) -> crate::error::SignalResult<ndarray::Array1<f64>> {
+    linear_interpolate(_signal)
 }
 
 /// Convenience function for cubic spline interpolation
@@ -138,7 +144,7 @@ pub fn linear(signal: &ndarray::Array1<f64>) -> crate::error::SignalResult<ndarr
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_signal::interpolate::cubic_spline;
+/// use scirs2__signal::interpolate::cubic_spline;
 ///
 /// let signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, 4.0]);
 /// let result = cubic_spline(&signal).unwrap();
@@ -168,7 +174,7 @@ pub fn cubic_spline(
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_signal::interpolate::auto;
+/// use scirs2__signal::interpolate::auto;
 ///
 /// let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 /// let (result, method) = auto(&signal).unwrap();
@@ -190,7 +196,7 @@ pub fn auto(
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_signal::interpolate::{InterpolationBuilder, InterpolationMethod};
+/// use scirs2__signal::interpolate::{InterpolationBuilder, InterpolationMethod};
 ///
 /// let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
 /// let result = InterpolationBuilder::new()
@@ -359,8 +365,6 @@ impl InterpolationMethods {
 /// Unit tests for the unified interpolation API
 #[cfg(test)]
 mod tests {
-    use ndarray::Array1;
-
     #[test]
     fn test_convenience_functions() {
         let signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
@@ -371,7 +375,7 @@ mod tests {
         let result2 = cubic_spline(&signal).unwrap();
         assert!(!result2[1].is_nan());
 
-        let (result3, _method) = auto(&signal).unwrap();
+        let (result3_method) = auto(&signal).unwrap();
         assert!(!result3[1].is_nan());
     }
 
@@ -429,7 +433,7 @@ mod tests {
         let result2 = linear_interpolate(&signal).unwrap();
         let result3 = cubic_spline_interpolate(&signal, &config).unwrap();
         let result4 = sinc_interpolate(&signal, 0.4).unwrap();
-        let (result5, _) = auto_interpolate(&signal, &config, false).unwrap();
+        let (result5_) = auto_interpolate(&signal, &config, false).unwrap();
 
         // All results should have no NaN values
         assert!(result1.iter().all(|&x| !x.is_nan()));

@@ -191,11 +191,11 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     HigherOrderEngine<T>
 {
     /// Create a new higher-order differentiation engine
-    pub fn new(max_order: usize) -> Self {
+    pub fn new(_max_order: usize) -> Self {
         Self {
             forward_engine: ForwardModeEngine::new(),
             reverse_engine: ReverseModeEngine::new(),
-            max_order,
+            _max_order,
             mixed_mode: true,
             derivative_cache: HashMap::new(),
             finite_diff_eps: T::from(1e-5).unwrap(),
@@ -208,18 +208,18 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     }
 
     /// Create a new engine with advanced configuration
-    pub fn with_config(config: HigherOrderConfig<T>) -> Self {
+    pub fn with_config(_config: HigherOrderConfig<T>) -> Self {
         Self {
             forward_engine: ForwardModeEngine::new(),
             reverse_engine: ReverseModeEngine::new(),
-            max_order: config.max_order,
-            mixed_mode: config.mixed_mode,
+            max_order: _config.max_order,
+            mixed_mode: _config.mixed_mode,
             derivative_cache: HashMap::new(),
-            finite_diff_eps: config.finite_diff_eps,
-            parallel_computation: config.parallel_computation,
-            thread_pool_size: config.thread_pool_size,
-            adaptive_sparsity: config.adaptive_sparsity,
-            auto_mode_selection: config.auto_mode_selection,
+            finite_diff_eps: _config.finite_diff_eps,
+            parallel_computation: _config.parallel_computation,
+            thread_pool_size: _config.thread_pool_size,
+            adaptive_sparsity: _config.adaptive_sparsity,
+            auto_mode_selection: _config.auto_mode_selection,
             profiler: ComputationProfiler::new(),
         }
     }
@@ -292,8 +292,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     pub fn hessian_reverse_over_forward(
         &mut self,
         function: impl Fn(&Array1<T>) -> T,
-        point: &Array1<T>,
-        _config: &HessianConfig,
+        point: &Array1<T>, _config: &HessianConfig,
     ) -> Result<Array2<T>> {
         let n = point.len();
         let mut hessian = Array2::zeros((n, n));
@@ -587,7 +586,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     ) -> Result<Array2<T>> {
         let mut kfac_blocks = Vec::new();
 
-        for (i, _layer) in layers.iter().enumerate() {
+        for (i_layer) in layers.iter().enumerate() {
             let activation = &activations[i];
             let gradient = &gradients[i];
 
@@ -662,7 +661,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     }
 
     /// Helper method for finite difference gradient computation
-    fn finite_diff_gradient<F>(function: &F, point: &Array1<T>) -> Result<Array1<T>>
+    fn finite_diff_gradient<F>(_function: &F, point: &Array1<T>) -> Result<Array1<T>>
     where
         F: Fn(&Array1<T>) -> T,
     {
@@ -676,8 +675,8 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
             point_plus[i] = point_plus[i] + eps;
             point_minus[i] = point_minus[i] - eps;
 
-            let loss_plus = function(&point_plus);
-            let loss_minus = function(&point_minus);
+            let loss_plus = _function(&point_plus);
+            let loss_minus = _function(&point_minus);
 
             gradient[i] = (loss_plus - loss_minus) / (T::from(2.0).unwrap() * eps);
         }
@@ -968,8 +967,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
 
         match problem_size {
             0..=10 => HvpMode::FiniteDifference,
-            11..=100 => HvpMode::ForwardOverReverse,
-            _ => HvpMode::ReverseOverForward,
+            11..=100 => HvpMode::ForwardOverReverse_ =>, HvpMode::ReverseOverForward,
         }
     }
 
@@ -1349,8 +1347,7 @@ pub struct ComputationProfiler<T: Float> {
     hessian_timings: Vec<ComputationTiming>,
     hvp_timings: Vec<ComputationTiming>,
     jacobian_timings: Vec<ComputationTiming>,
-    total_computations: usize,
-    _phantom: std::marker::PhantomData<T>,
+    total_computations: usize, _phantom: std::marker::PhantomData<T>,
 }
 
 #[derive(Debug, Clone)]
@@ -1379,8 +1376,7 @@ impl<T: Float + Default + Clone> ComputationProfiler<T> {
             hessian_timings: Vec::new(),
             hvp_timings: Vec::new(),
             jacobian_timings: Vec::new(),
-            total_computations: 0,
-            _phantom: std::marker::PhantomData,
+            total_computations: 0, _phantom: std::marker::PhantomData,
         }
     }
 

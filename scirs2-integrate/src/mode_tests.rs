@@ -6,11 +6,11 @@
 
 #![allow(dead_code)]
 
-use crate::advanced_memory_optimization::AdvancedMemoryOptimizer;
-use crate::advanced_simd_acceleration::AdvancedSimdAccelerator;
+use crate::advanced_memory__optimization::AdvancedMemoryOptimizer;
+use crate::advanced_simd__acceleration::AdvancedSimdAccelerator;
 use crate::error::IntegrateResult;
-use crate::gpu_advanced_acceleration::AdvancedGPUAccelerator;
-use crate::realtime_performance_adaptation::{
+use crate::gpu_advanced__acceleration::AdvancedGPUAccelerator;
+use crate::realtime_performance__adaptation::{
     AdaptationStrategy, AdaptationTriggers, OptimizationObjectives, PerformanceConstraints,
     RealTimeAdaptiveOptimizer, TargetMetrics,
 };
@@ -143,7 +143,6 @@ mod gpu_acceleration_tests {
 
 /// Test suite for advanced memory optimization functionality
 mod memory_optimization_tests {
-    use super::*;
 
     #[test]
     pub fn test_advanced_memory_optimizer_creation() {
@@ -222,7 +221,6 @@ mod memory_optimization_tests {
 
 /// Test suite for advanced SIMD acceleration functionality
 mod simd_acceleration_tests {
-    use super::*;
 
     #[test]
     pub fn test_advanced_simd_accelerator_creation() {
@@ -402,7 +400,6 @@ mod simd_acceleration_tests {
 
 /// Test suite for real-time performance adaptation functionality
 mod performance_adaptation_tests {
-    use super::*;
 
     #[test]
     pub fn test_real_time_adaptive_optimizer_creation() {
@@ -489,7 +486,6 @@ mod performance_adaptation_tests {
 
 /// Integration tests combining multiple Advanced mode components
 mod integration_tests {
-    use super::*;
 
     #[test]
     pub fn test_full_advanced_mode_integration() {

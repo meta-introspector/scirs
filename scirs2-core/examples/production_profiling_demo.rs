@@ -395,7 +395,7 @@ fn demo_resource_monitoring() -> CoreResult<()> {
     );
 
     println!("\n📤 Data Export Capabilities:");
-    let export_data = profiler.export_data("resource_demo")?;
+    let export_data = profiler.export_data(resource_demo)?;
     println!("  - Export Format: JSON");
     println!("  - Data Size: {} bytes", export_data.len());
     println!("  - Contains: Configuration, resource metrics, timestamps");
@@ -409,7 +409,7 @@ fn demo_resource_monitoring() -> CoreResult<()> {
 fn simulate_matrix_operations() {
     // Simulate CPU-intensive matrix operations
     for _ in 0..1000 {
-        let _result: f64 = (0..100).map(|i| (i as f64).sin().cos()).sum();
+        let result: f64 = (0..100).map(|i| (i as f64).sin().cos()).sum();
     }
     thread::sleep(Duration::from_millis(10));
 }
@@ -418,7 +418,7 @@ fn simulate_matrix_operations() {
 fn simulate_compute_work() {
     // Simulate compute-intensive work
     for _ in 0..500 {
-        let _result: f64 = (0..50).map(|i| (i as f64).sqrt()).sum();
+        let result: f64 = (0..50).map(|i| (i as f64).sqrt()).sum();
     }
     thread::sleep(Duration::from_millis(5));
 }
@@ -426,7 +426,7 @@ fn simulate_compute_work() {
 #[allow(dead_code)]
 fn simulate_memory_work() {
     // Simulate memory-intensive work
-    let _large_vec: Vec<u64> = (0..10000).collect();
+    let large_vec: Vec<u64> = (0..10000).collect();
     thread::sleep(Duration::from_millis(8));
 }
 
@@ -456,7 +456,7 @@ fn simulate_bottleneck_workload() {
 
     // Fast operation
     for _ in 0..100 {
-        let _result = 2 + 2;
+        let result = 2 + 2;
     }
 
     // Bottleneck operation (simulated slow function)
@@ -464,7 +464,7 @@ fn simulate_bottleneck_workload() {
 
     // Another fast operation
     for _ in 0..50 {
-        let _result = 3 * 3;
+        let result = 3 * 3;
     }
 
     // Medium bottleneck

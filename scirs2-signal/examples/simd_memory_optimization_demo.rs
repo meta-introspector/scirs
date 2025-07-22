@@ -3,7 +3,8 @@
 //! This example shows how to use the new SIMD-optimized signal processing
 //! functions and memory-optimized algorithms for processing large signals.
 
-use scirs2_signal::{
+use crate::error::SignalResult;
+use scirs2__signal::{
     error::SignalResult,
     memory_optimized::{memory_optimized_fir_filter, memory_optimized_spectrogram, MemoryConfig},
     simd_advanced::{
@@ -17,6 +18,7 @@ use scirs2_signal::{
 };
 use std::fs::File;
 use std::io::Write;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> SignalResult<()> {
@@ -149,7 +151,7 @@ fn demo_simd_autocorrelation() -> SignalResult<()> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i, _)| i + 1)
+        .map(|(i_)| i + 1)
         .unwrap_or(0);
 
     println!("  Signal length: {}", n);
@@ -208,7 +210,7 @@ fn demo_simd_cross_correlation() -> SignalResult<()> {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .unwrap_or(0);
 
     // In full mode, zero delay is at index (n2-1)
@@ -665,7 +667,7 @@ fn demo_advanced_simd_memory() -> SignalResult<()> {
 
 /// Calculate RMS (Root Mean Square) of a signal
 #[allow(dead_code)]
-fn rms(signal: &[f64]) -> f64 {
-    let sum_squares: f64 = signal.iter().map(|&x| x * x).sum();
-    (sum_squares / signal.len() as f64).sqrt()
+fn rms(_signal: &[f64]) -> f64 {
+    let sum_squares: f64 = _signal.iter().map(|&x| x * x).sum();
+    (sum_squares / _signal.len() as f64).sqrt()
 }

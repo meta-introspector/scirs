@@ -57,7 +57,7 @@ impl Default for ParallelCorrelationConfig {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::correlation_parallel_enhanced::{corrcoef_parallel_enhanced, ParallelCorrelationConfig};
+/// use scirs2__stats::correlation_parallel_enhanced::{corrcoef_parallel_enhanced, ParallelCorrelationConfig};
 ///
 /// let data = array![
 ///     [1.0, 5.0, 10.0],
@@ -166,8 +166,7 @@ where
                     "kendall" => match kendall_tau(&var_i, &var_j, "b") {
                         Ok(val) => val,
                         Err(_) => continue,
-                    },
-                    _ => unreachable!(),
+                    }_ => unreachable!(),
                 };
 
                 local_results.push((i, j, corr));
@@ -199,8 +198,7 @@ where
                     }
                 }
                 "spearman" => spearman_r(&var_i, &var_j)?,
-                "kendall" => kendall_tau(&var_i, &var_j, "b")?,
-                _ => unreachable!(),
+                "kendall" => kendall_tau(&var_i, &var_j, "b")?_ => unreachable!(),
             };
 
             corr_mat[[i, j]] = corr;
@@ -382,8 +380,7 @@ where
                         }
                     }
                     "spearman" => spearman_r(x, y),
-                    "kendall" => kendall_tau(x, y, "b"),
-                    _ => unreachable!(),
+                    "kendall" => kendall_tau(x, y, "b", _ => unreachable!(),
                 };
 
                 match corr {
@@ -424,8 +421,7 @@ where
                     }
                 }
                 "spearman" => spearman_r(x, y)?,
-                "kendall" => kendall_tau(x, y, "b")?,
-                _ => unreachable!(),
+                "kendall" => kendall_tau(x, y, "b")?_ => unreachable!(),
             };
             results.push(corr);
         }
@@ -470,7 +466,7 @@ where
 
     if window_size > x.len() {
         return Err(StatsError::InvalidArgument(
-            "Window size cannot be larger than data length".to_string(),
+            "Window _size cannot be larger than data length".to_string(),
         ));
     }
 
@@ -499,12 +495,12 @@ where
 
 // Helper function for 2D array validation
 #[allow(dead_code)]
-fn check_array_finite_2d<F, D>(arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
+fn check_array_finite_2d<F, D>(_arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,
     D: Data<Elem = F>,
 {
-    for &val in arr.iter() {
+    for &val in _arr.iter() {
         if !val.is_finite() {
             return Err(StatsError::InvalidArgument(format!(
                 "{} contains non-finite values",

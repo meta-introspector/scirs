@@ -13,17 +13,17 @@ use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult<T> {
+    T::from_usize(_value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
     })
 }
 
 /// Helper function for safe array to slice conversion
 #[allow(dead_code)]
-fn safe_as_slice<'a, T, D: Dimension>(array: &'a ArrayView<T, D>) -> NdimageResult<&'a [T]> {
-    array.as_slice().ok_or_else(|| {
-        NdimageError::ComputationError("Failed to convert array to contiguous slice".to_string())
+fn safe_as_slice<'a, T, D: Dimension>(_array: &'a ArrayView<T, D>) -> NdimageResult<&'a [T]> {
+    _array.as_slice().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert _array to contiguous slice".to_string())
     })
 }
 
@@ -42,9 +42,7 @@ const ADVANCED_SEGMENTATION_KERNEL: &str = include_str!("kernels/advanced_segmen
 // Advanced GPU kernels - inline definitions for enhanced operations
 const SEPARABLE_GAUSSIAN_KERNEL: &str = r#"
 __kernel void separable_gaussian_1d(
-    __global const float* input,
-    __global float* output,
-    __global const float* weights,
+    __global const float* input__global float* output__global const float* weights,
     const int size,
     const int radius,
     const int direction, // 0 for horizontal, 1 for vertical
@@ -78,8 +76,7 @@ __kernel void separable_gaussian_1d(
 
 const BILATERAL_FILTER_KERNEL: &str = r#"
 __kernel void bilateral_filter_2d(
-    __global const float* input,
-    __global float* output,
+    __global const float* input__global float* output,
     const float sigma_spatial,
     const float sigma_intensity,
     const int radius,
@@ -126,10 +123,7 @@ __kernel void bilateral_filter_2d(
 
 const SOBEL_FILTER_KERNEL: &str = r#"
 __kernel void sobel_filter_2d(
-    __global const float* input,
-    __global float* output_x,
-    __global float* output_y,
-    __global float* magnitude,
+    __global const float* input__global float* output_x__global float* output_y__global float* magnitude,
     const int width,
     const int height
 ) {
@@ -164,8 +158,7 @@ __kernel void sobel_filter_2d(
 
 const HISTOGRAM_KERNEL: &str = r#"
 __kernel void compute_histogram(
-    __global const float* input,
-    __global int* histogram,
+    __global const float* input__global int* histogram,
     const float min_val,
     const float max_val,
     const int num_bins,
@@ -187,9 +180,7 @@ __kernel void compute_histogram(
 
 const MORPHOLOGY_EROSION_KERNEL: &str = r#"
 __kernel void morphology_erosion_2d(
-    __global const float* input,
-    __global float* output,
-    __global const int* structure,
+    __global const float* input__global float* output__global const int* structure,
     const int struct_width,
     const int struct_height,
     const int width,
@@ -224,13 +215,7 @@ __kernel void morphology_erosion_2d(
 
 const WAVELET_TRANSFORM_KERNEL: &str = r#"
 __kernel void wavelet_transform_2d(
-    __global const float* input,
-    __global float* ll_output,
-    __global float* lh_output,
-    __global float* hl_output,
-    __global float* hh_output,
-    __global const float* low_filter,
-    __global const float* high_filter,
+    __global const float* input__global float* ll_output__global float* lh_output__global float* hl_output__global float* hh_output__global const float* low_filter__global const float* high_filter,
     const int filter_length,
     const int width,
     const int height
@@ -270,9 +255,7 @@ __kernel void wavelet_transform_2d(
 
 const TEMPLATE_MATCHING_KERNEL: &str = r#"
 __kernel void template_matching_ncc(
-    __global const float* image,
-    __global const float* template,
-    __global float* output,
+    __global const float* image__global const float* template__global float* output,
     const int image_width,
     const int image_height,
     const int template_width,
@@ -323,8 +306,7 @@ __kernel void template_matching_ncc(
 
 const DISTANCE_TRANSFORM_KERNEL: &str = r#"
 __kernel void distance_transform_edt(
-    __global const int* binary_image,
-    __global float* distance,
+    __global const int* binary_image__global float* distance,
     const int width,
     const int height
 ) {
@@ -360,8 +342,7 @@ __kernel void distance_transform_edt(
 
 const GABOR_FILTER_KERNEL: &str = r#"
 __kernel void gabor_filter_2d(
-    __global const float* input,
-    __global float* output,
+    __global const float* input__global float* output,
     const float sigma_x,
     const float sigma_y,
     const float theta,
@@ -408,8 +389,7 @@ __kernel void gabor_filter_2d(
 
 const LAPLACIAN_KERNEL: &str = r#"
 __kernel void laplacian_filter_2d(
-    __global const float* input,
-    __global float* output,
+    __global const float* input__global float* output,
     const int width,
     const int height,
     const int connectivity // 4 or 8
@@ -736,16 +716,16 @@ where
     T: Clone + Default,
 {
     /// Create a buffer from existing data
-    pub fn from_slice(data: &[T]) -> NdimageResult<Self> {
+    pub fn from_slice(_data: &[T]) -> NdimageResult<Self> {
         Ok(Self {
-            data: data.to_vec(),
+            _data: _data.to_vec(),
         })
     }
 
     /// Create an empty buffer of given size
-    pub fn empty(size: usize) -> NdimageResult<Self> {
+    pub fn empty(_size: usize) -> NdimageResult<Self> {
         Ok(Self {
-            data: vec![T::default(); size],
+            data: vec![T::default(); _size],
         })
     }
 }
@@ -810,8 +790,7 @@ where
         kernel: &KernelInfo,
         inputs: &[&dyn GpuBuffer<T>],
         outputs: &[&mut dyn GpuBuffer<T>],
-        work_size: &[usize],
-        _params: &[T],
+        work_size: &[usize], _params: &[T],
     ) -> NdimageResult<()> {
         // This is a basic CPU fallback that returns an error indicating
         // that GPU kernel execution on CPU is not fully implemented.
@@ -819,7 +798,7 @@ where
         // with equivalent CPU operations.
 
         Err(NdimageError::NotImplementedError(format!(
-            "CPU fallback execution for GPU kernel '{}' is not fully implemented. Work size: {:?}, {} inputs, {} outputs",
+            "CPU fallback execution for GPU kernel '{}' is not fully implemented. Work _size: {:?}, {} inputs, {} outputs",
             kernel.name,
             work_size,
             inputs.len(),
@@ -849,8 +828,8 @@ where
     let params = vec![
         sigma[0],
         sigma[1],
-        safe_usize_to_float::<T>(h)?,
-        safe_usize_to_float::<T>(w)?,
+        safe_usize, _to_float: :<T>(h)?,
+        safe_usize, _to_float: :<T>(w)?,
     ];
 
     // Get kernel from registry
@@ -895,10 +874,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize_to_float::<T>(ih)?,
-        safe_usize_to_float::<T>(iw)?,
-        safe_usize_to_float::<T>(kh)?,
-        safe_usize_to_float::<T>(kw)?,
+        safe_usize, _to_float: :<T>(ih)?,
+        safe_usize, _to_float: :<T>(iw)?,
+        safe_usize, _to_float: :<T>(kh)?,
+        safe_usize, _to_float: :<T>(kw)?,
     ];
 
     // Get kernel from registry
@@ -941,10 +920,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize_to_float::<T>(h)?,
-        safe_usize_to_float::<T>(w)?,
-        safe_usize_to_float::<T>(size[0])?,
-        safe_usize_to_float::<T>(size[1])?,
+        safe_usize, _to_float: :<T>(h)?,
+        safe_usize, _to_float: :<T>(w)?,
+        safe_usize, _to_float: :<T>(size[0])?,
+        safe_usize, _to_float: :<T>(size[1])?,
     ];
 
     // Get kernel from registry
@@ -995,10 +974,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize_to_float::<T>(h)?,
-        safe_usize_to_float::<T>(w)?,
-        safe_usize_to_float::<T>(sh)?,
-        safe_usize_to_float::<T>(sw)?,
+        safe_usize, _to_float: :<T>(h)?,
+        safe_usize, _to_float: :<T>(w)?,
+        safe_usize, _to_float: :<T>(sh)?,
+        safe_usize, _to_float: :<T>(sw)?,
     ];
 
     // Get kernel from registry
@@ -1036,12 +1015,12 @@ where
     let (h, w) = input.dim();
 
     // Calculate Gaussian weights for separable filter
-    let radius_x = (safe_f64_to_float::<T>(3.0)? * sigma[0])
+    let radius_x = (safe_f64, _to_float: :<T>(3.0)? * sigma[0])
         .to_usize()
         .ok_or_else(|| {
             NdimageError::ComputationError("Failed to convert radius_x to usize".to_string())
         })?;
-    let radius_y = (safe_f64_to_float::<T>(3.0)? * sigma[1])
+    let radius_y = (safe_f64, _to_float: :<T>(3.0)? * sigma[1])
         .to_usize()
         .ok_or_else(|| {
             NdimageError::ComputationError("Failed to convert radius_y to usize".to_string())
@@ -1053,8 +1032,8 @@ where
     // Gaussian weights for horizontal pass
     let weights_x: Result<Vec<T>, NdimageError> = (0..weights_size)
         .map(|i| -> NdimageResult<T> {
-            let offset = safe_usize_to_float::<T>(i)? - safe_usize_to_float::<T>(max_radius)?;
-            let exp_arg = -safe_f64_to_float::<T>(0.5)? * offset * offset / (sigma[0] * sigma[0]);
+            let offset = safe_usize, _to_float: :<T>(i)? - safe_usize, _to_float: :<T>(max_radius)?;
+            let exp_arg = -safe_f64, _to_float: :<T>(0.5)? * offset * offset / (sigma[0] * sigma[0]);
             Ok(exp_arg.exp())
         })
         .collect();
@@ -1063,8 +1042,8 @@ where
     // Gaussian weights for vertical pass
     let weights_y: Result<Vec<T>, NdimageError> = (0..weights_size)
         .map(|i| -> NdimageResult<T> {
-            let offset = safe_usize_to_float::<T>(i)? - safe_usize_to_float::<T>(max_radius)?;
-            let exp_arg = -safe_f64_to_float::<T>(0.5)? * offset * offset / (sigma[1] * sigma[1]);
+            let offset = safe_usize, _to_float: :<T>(i)? - safe_usize, _to_float: :<T>(max_radius)?;
+            let exp_arg = -safe_f64, _to_float: :<T>(0.5)? * offset * offset / (sigma[1] * sigma[1]);
             Ok(exp_arg.exp())
         })
         .collect();
@@ -1084,11 +1063,11 @@ where
 
     // Horizontal pass (direction = 0)
     let params_h = vec![
-        safe_usize_to_float::<T>(h * w)?,
-        safe_usize_to_float::<T>(radius_x)?,
+        safe_usize, _to_float: :<T>(h * w)?,
+        safe_usize, _to_float: :<T>(radius_x)?,
         T::zero(), // direction = 0 for horizontal
-        safe_usize_to_float::<T>(w)?,
-        safe_usize_to_float::<T>(h)?,
+        safe_usize, _to_float: :<T>(w)?,
+        safe_usize, _to_float: :<T>(h)?,
     ];
 
     executor.execute_kernel(
@@ -1101,11 +1080,11 @@ where
 
     // Vertical pass (direction = 1)
     let params_v = vec![
-        safe_usize_to_float::<T>(h * w)?,
-        safe_usize_to_float::<T>(radius_y)?,
+        safe_usize, _to_float: :<T>(h * w)?,
+        safe_usize, _to_float: :<T>(radius_y)?,
         T::one(), // direction = 1 for vertical
-        safe_usize_to_float::<T>(w)?,
-        safe_usize_to_float::<T>(h)?,
+        safe_usize, _to_float: :<T>(w)?,
+        safe_usize, _to_float: :<T>(h)?,
     ];
 
     executor.execute_kernel(
@@ -1145,9 +1124,9 @@ where
     let params = vec![
         sigma_spatial,
         sigma_intensity,
-        safe_usize_to_float::<T>(radius)?,
-        safe_usize_to_float::<T>(w)?,
-        safe_usize_to_float::<T>(h)?,
+        safe_usize, _to_float: :<T>(radius)?,
+        safe_usize, _to_float: :<T>(w)?,
+        safe_usize, _to_float: :<T>(h)?,
     ];
 
     // Get kernel from registry
@@ -1194,7 +1173,7 @@ where
     let mut magnitude_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
 
     // Prepare kernel parameters
-    let params = vec![safe_usize_to_float::<T>(w)?, safe_usize_to_float::<T>(h)?];
+    let params = vec![safe_usize, _to_float: :<T>(w)?, safe_usize, _to_float: :<T>(h)?];
 
     // Get kernel from registry
     let registry = KernelRegistry::new();
@@ -1249,9 +1228,9 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize_to_float::<T>(w)?,
-        safe_usize_to_float::<T>(h)?,
-        safe_usize_to_float::<T>(connectivity)?,
+        safe_usize, _to_float: :<T>(w)?,
+        safe_usize, _to_float: :<T>(h)?,
+        safe_usize, _to_float: :<T>(connectivity)?,
     ];
 
     // Get kernel from registry
@@ -1279,36 +1258,36 @@ where
 // GPU buffer allocation functions that delegate to backend-specific implementations
 
 #[allow(dead_code)]
-fn allocate_gpu_buffer<T>(data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>>
+fn allocate_gpu_buffer<T>(_data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
     T: Clone + Default + Send + Sync + Copy + 'static,
 {
     #[cfg(feature = "cuda")]
     {
-        return crate::backend::cuda::allocate_gpu_buffer(data);
+        return crate::backend::cuda::allocate_gpu_buffer(_data);
     }
 
     #[cfg(not(feature = "cuda"))]
     {
         // CPU fallback: create a CPU buffer that implements the GpuBuffer trait
-        Ok(Box::new(CpuFallbackBuffer::from_slice(data)?))
+        Ok(Box::new(CpuFallbackBuffer::from_slice(_data)?))
     }
 }
 
 #[allow(dead_code)]
-fn allocate_gpu_buffer_empty<T>(size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>>
+fn allocate_gpu_buffer_empty<T>(_size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
     T: Clone + Default + Send + Sync + Copy + 'static,
 {
     #[cfg(feature = "cuda")]
     {
-        return crate::backend::cuda::allocate_gpu_buffer_empty(size);
+        return crate::backend::cuda::allocate_gpu_buffer_empty(_size);
     }
 
     #[cfg(not(feature = "cuda"))]
     {
         // CPU fallback: create an empty CPU buffer that implements the GpuBuffer trait
-        Ok(Box::new(CpuFallbackBuffer::empty(size)?))
+        Ok(Box::new(CpuFallbackBuffer::empty(_size)?))
     }
 }
 

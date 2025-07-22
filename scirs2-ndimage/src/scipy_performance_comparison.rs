@@ -121,9 +121,9 @@ impl SciPyBenchmarkSuite {
     }
 
     /// Create a new benchmark suite with custom configuration
-    pub fn with_config(config: BenchmarkConfig) -> Self {
+    pub fn with_config(_config: BenchmarkConfig) -> Self {
         Self {
-            config,
+            _config,
             results: Vec::new(),
             accuracy_results: Vec::new(),
             compatibility_results: Vec::new(),
@@ -141,8 +141,7 @@ impl SciPyBenchmarkSuite {
             for dtype in &self.config.dtypes.clone() {
                 match dtype.as_str() {
                     "f32" => self.benchmark_filters_f32(shape)?,
-                    "f64" => self.benchmark_filters_f64(shape)?,
-                    _ => continue,
+                    "f64" => self.benchmark_filters_f64(shape)?_ => continue,
                 }
             }
         }
@@ -529,7 +528,7 @@ impl SciPyBenchmarkSuite {
             report.push_str("## Numerical Accuracy Validation\n\n");
             for result in &self.accuracy_results {
                 report.push_str(&format!(
-                    "- {}: Max diff: {:.2e}, Mean diff: {:.2e}, RMSE: {:.2e}, Compatible: {}\n",
+                    "- {}: Max, diff: {:.2e}, Mean diff: {:.2e}, RMSE: {:.2e}, Compatible: {}\n",
                     result.operation,
                     result.max_abs_diff,
                     result.mean_abs_diff,
@@ -584,8 +583,8 @@ impl SciPyBenchmarkSuite {
 
 /// Estimate memory usage for given shape and data type size
 #[allow(dead_code)]
-fn estimate_memory_usage(shape: &[usize], dtype_size: usize) -> usize {
-    shape.iter().product::<usize>() * dtype_size
+fn estimate_memory_usage(_shape: &[usize], dtype_size: usize) -> usize {
+    _shape.iter().product::<usize>() * dtype_size
 }
 
 /// Calculate numerical accuracy metrics between two arrays

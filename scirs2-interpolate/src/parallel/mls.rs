@@ -27,8 +27,8 @@ use crate::spatial::kdtree::KdTree;
 ///
 /// ```
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::parallel::{ParallelMovingLeastSquares, ParallelConfig, ParallelEvaluate};
-/// use scirs2_interpolate::local::mls::{WeightFunction, PolynomialBasis};
+/// use scirs2__interpolate::parallel::{ParallelMovingLeastSquares, ParallelConfig, ParallelEvaluate};
+/// use scirs2__interpolate::local::mls::{WeightFunction, PolynomialBasis};
 ///
 /// // Create some 2D scattered data
 /// let points = Array2::from_shape_vec((5, 2), vec![
@@ -107,8 +107,7 @@ where
 
         Ok(Self {
             mls,
-            kdtree,
-            _phantom: PhantomData,
+            kdtree_phantom: PhantomData,
         })
     }
 
@@ -314,7 +313,7 @@ fn apply_weight<F: Float + FromPrimitive>(r: F, weight_fn: WeightFunction) -> F 
                 F::zero()
             }
         }
-        WeightFunction::InverseDistance => F::one() / (F::from_f64(1e-10).unwrap() + r * r),
+        WeightFunction::InverseDistance =>, F::one() / (F::from_f64(1e-10).unwrap() + r * r),
         WeightFunction::CubicSpline => {
             if r < F::from_f64(1.0 / 3.0).unwrap() {
                 let r2 = r * r;

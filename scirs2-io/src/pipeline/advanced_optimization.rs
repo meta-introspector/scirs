@@ -252,7 +252,7 @@ impl PerformanceHistory {
         pipeline_id: &str,
         data_size: usize,
     ) -> Vec<&ExecutionRecord> {
-        let size_threshold = 0.2; // 20% size difference tolerance
+        let size_threshold = 0.2; // 20% _size difference tolerance
 
         self.executions
             .iter()
@@ -302,9 +302,9 @@ pub struct PipelineProfile {
 }
 
 impl PipelineProfile {
-    pub fn new(pipeline_id: &str) -> Self {
+    pub fn new(_pipeline_id: &str) -> Self {
         Self {
-            pipeline_id: pipeline_id.to_string(),
+            pipeline_id: _pipeline_id.to_string(),
             execution_count: 0,
             avg_throughput: 0.0,
             avg_memory_usage: 0.0,
@@ -343,8 +343,7 @@ impl PipelineProfile {
     }
 
     fn is_better_configuration(
-        &self,
-        _config: &OptimizedPipelineConfig,
+        &self_config: &OptimizedPipelineConfig,
         metrics: &PipelinePerformanceMetrics,
     ) -> bool {
         // Score based on throughput, memory efficiency, and CPU utilization
@@ -728,7 +727,7 @@ impl CacheOptimizer {
         historical_data: &[&ExecutionRecord],
         system_metrics: &SystemMetrics,
     ) -> Result<CacheConfiguration> {
-        // Analyze cache usage patterns from historical data
+        // Analyze cache usage patterns from historical _data
         let cache_patterns = self.cache_analysis.analyze_patterns(historical_data)?;
 
         // Determine optimal cache configuration based on system capabilities
@@ -738,8 +737,7 @@ impl CacheOptimizer {
     }
 
     fn determine_optimal_config(
-        &self,
-        _cache_patterns: &CacheUsagePatterns,
+        &self, _cache_patterns: &CacheUsagePatterns,
         system_metrics: &SystemMetrics,
     ) -> Result<CacheConfiguration> {
         // Calculate optimal cache sizes based on system cache hierarchy
@@ -799,8 +797,7 @@ impl CacheAnalysis {
     }
 
     pub fn analyze_patterns(
-        &mut self,
-        _historical_data: &[&ExecutionRecord],
+        &mut self, _historical_data: &[&ExecutionRecord],
     ) -> Result<CacheUsagePatterns> {
         // Analyze cache usage patterns from execution history
         Ok(CacheUsagePatterns {
@@ -862,7 +859,7 @@ impl MemoryPoolManager {
         let available_memory = system_metrics.memory_usage.available as usize;
         let memory_pressure = system_metrics.memory_usage.utilization;
 
-        // Choose strategy based on data size and system state
+        // Choose strategy based on data _size and system state
         if data_size > available_memory / 2 {
             // Large dataset - use streaming or memory mapping
             if memory_pressure > 0.8 {
@@ -962,7 +959,7 @@ impl AutoTuner {
         historical_data: &[&ExecutionRecord],
         data_size: usize,
     ) -> Result<OptimalParameters> {
-        // Extract features from system state and historical data
+        // Extract features from system state and historical _data
         let features = self.extract_features(system_metrics, historical_data, data_size)?;
 
         // Use model to predict optimal parameters
@@ -1012,14 +1009,14 @@ impl AutoTuner {
         if !historical_data.is_empty() {
             let avg_throughput: f64 = historical_data
                 .iter()
-                .map(|r| r.metrics.throughput)
+                .map(|r| r._metrics.throughput)
                 .sum::<f64>()
                 / historical_data.len() as f64;
             features.push(avg_throughput);
 
             let avg_memory: f64 = historical_data
                 .iter()
-                .map(|r| r.metrics.peak_memory_usage as f64)
+                .map(|r| r._metrics.peak_memory_usage as f64)
                 .sum::<f64>()
                 / historical_data.len() as f64;
             features.push(avg_memory.log10());
@@ -1032,7 +1029,7 @@ impl AutoTuner {
     }
 
     fn apply_exploration(&self, mut params: OptimalParameters) -> Result<OptimalParameters> {
-        let mut rng = rng();
+        let mut rng = rand::rng();
         if rng.random::<f64>() < self.exploration_rate {
             // Apply random perturbation for exploration
             params.thread_count =
@@ -1218,12 +1215,12 @@ impl<T> SimdAcceleratedStage<T>
 where
     T: Send + Sync + 'static + Clone,
 {
-    pub fn new<F>(name: &str, operation: F) -> Self
+    pub fn new<F>(_name: &str, operation: F) -> Self
     where
         F: Fn(&[T]) -> Result<Vec<T>> + Send + Sync + 'static,
     {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             operation: Box::new(operation),
             simd_capabilities: PlatformCapabilities::detect(),
         }
@@ -1308,9 +1305,9 @@ pub enum GpuDevicePreference {
 }
 
 impl GpuAcceleratedStage {
-    pub fn new(name: &str, kernel_code: &str) -> Self {
+    pub fn new(_name: &str, kernel_code: &str) -> Self {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             kernel_code: kernel_code.to_string(),
             device_preference: GpuDevicePreference::Any,
         }
@@ -1343,18 +1340,18 @@ impl PipelineStage for GpuAcceleratedStage {
 
 /// Create SIMD-accelerated pipeline stage for numeric data
 #[allow(dead_code)]
-pub fn create_simd_numeric_stage<T, F>(name: &str, operation: F) -> Box<dyn PipelineStage>
+pub fn create_simd_numeric_stage<T, F>(_name: &str, operation: F) -> Box<dyn PipelineStage>
 where
     T: Send + Sync + 'static + Clone + Copy,
     F: Fn(&[T]) -> Result<Vec<T>> + Send + Sync + 'static,
 {
-    Box::new(SimdAcceleratedStage::new(name, operation))
+    Box::new(SimdAcceleratedStage::new(_name, operation))
 }
 
 /// Create GPU-accelerated pipeline stage
 #[allow(dead_code)]
-pub fn create_gpu_stage(name: &str, kernel_code: &str) -> Box<dyn PipelineStage> {
-    Box::new(GpuAcceleratedStage::new(name, kernel_code))
+pub fn create_gpu_stage(_name: &str, kernel_code: &str) -> Box<dyn PipelineStage> {
+    Box::new(GpuAcceleratedStage::new(_name, kernel_code))
 }
 
 /// Advanced pipeline builder with optimization integration
@@ -1362,18 +1359,16 @@ pub struct OptimizedPipelineBuilder<I, O> {
     optimizer: AdvancedPipelineOptimizer,
     pipeline_id: String,
     estimated_data_size: usize,
-    stages: Vec<Box<dyn PipelineStage>>,
-    _phantom: std::marker::PhantomData<(I, O)>,
+    stages: Vec<Box<dyn PipelineStage>>, _phantom: std::marker::PhantomData<(I, O)>,
 }
 
 impl<I, O> OptimizedPipelineBuilder<I, O> {
-    pub fn new(pipeline_id: &str) -> Self {
+    pub fn new(_pipeline_id: &str) -> Self {
         Self {
             optimizer: AdvancedPipelineOptimizer::new(),
-            pipeline_id: pipeline_id.to_string(),
+            pipeline_id: _pipeline_id.to_string(),
             estimated_data_size: 0,
-            stages: Vec::new(),
-            _phantom: std::marker::PhantomData,
+            stages: Vec::new(), _phantom: std::marker::PhantomData,
         }
     }
 
@@ -1496,17 +1491,17 @@ pub struct QuantumState {
 }
 
 impl QuantumState {
-    pub fn new(num_qubits: usize) -> Self {
+    pub fn new(_num_qubits: usize) -> Self {
         Self {
-            qubits: (0..num_qubits).map(|_| Qubit::new()).collect(),
-            entanglement_matrix: vec![vec![0.0; num_qubits]; num_qubits],
-            superposition_weights: vec![1.0 / (num_qubits as f64).sqrt(); num_qubits],
+            _qubits: (0.._num_qubits).map(|_| Qubit::new()).collect(),
+            entanglement_matrix: vec![vec![0.0; _num_qubits]; _num_qubits],
+            superposition_weights: vec![1.0 / (_num_qubits as f64).sqrt(); _num_qubits],
         }
     }
 
     pub fn initialize_superposition(&mut self, dimensions: usize) -> Result<()> {
         // Initialize quantum superposition state
-        let mut rng = rng();
+        let mut rng = rand::rng();
         for (i, qubit) in self.qubits.iter_mut().enumerate().take(dimensions) {
             qubit.set_superposition_state(
                 self.superposition_weights[i],
@@ -1521,7 +1516,7 @@ impl QuantumState {
     }
 
     fn create_entanglement_network(&mut self, dimensions: usize) -> Result<()> {
-        let mut rng = rng();
+        let mut rng = rand::rng();
         for i in 0..dimensions {
             for j in (i + 1)..dimensions {
                 let entanglement_strength = (rng.random::<f64>() * 0.5).exp();
@@ -1556,7 +1551,7 @@ impl Qubit {
     }
 
     pub fn measure(&self) -> f64 {
-        let mut rng = rng();
+        let mut rng = rand::rng();
         if rng.random::<f64>() < self.amplitude_alpha.powi(2) {
             0.0
         } else {
@@ -1600,7 +1595,7 @@ impl QuantumAnnealer {
         let mut best_energy = current_energy;
 
         for &temperature in self.temperature_schedule.iter() {
-            // Generate candidate state with quantum tunneling
+            // Generate candidate _state with quantum tunneling
             let candidate_state = self.quantum_tunnel(&current_state, temperature)?;
 
             // Check constraints
@@ -1628,10 +1623,10 @@ impl QuantumAnnealer {
         })
     }
 
-    fn generate_temperature_schedule(steps: usize) -> Vec<f64> {
-        (0..steps)
+    fn generate_temperature_schedule(_steps: usize) -> Vec<f64> {
+        (0.._steps)
             .map(|i| {
-                let t = i as f64 / steps as f64;
+                let t = i as f64 / _steps as f64;
                 10.0 * (-5.0 * t).exp()
             })
             .collect()
@@ -1646,7 +1641,7 @@ impl QuantumAnnealer {
     }
 
     fn quantum_tunnel(&self, state: &[f64], temperature: f64) -> Result<Vec<f64>> {
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let mut new_state = state.to_vec();
         for value in &mut new_state {
             if rng.random::<f64>() < self.tunneling_probability {
@@ -1662,7 +1657,7 @@ impl QuantumAnnealer {
         if temperature <= 0.0 {
             false
         } else {
-            let mut rng = rng();
+            let mut rng = rand::rng();
             rng.random::<f64>() < (-energy_delta / temperature).exp()
         }
     }
@@ -1711,7 +1706,7 @@ impl NeuromorphicOptimizer {
         let mut best_fitness = f64::NEG_INFINITY;
 
         for iteration in 0..learning_iterations {
-            // Encode optimization problem as spike patterns
+            // Encode optimization _problem as spike patterns
             let spike_pattern = self.encode_problem_as_spikes(optimization_problem)?;
 
             // Process through spiking neural network
@@ -1786,7 +1781,7 @@ impl NeuromorphicOptimizer {
     fn variable_to_spike_train(&self, variable: &OptimizationVariable) -> Result<SpikeTrain> {
         let spike_rate = variable.value * 100.0; // Convert to Hz
         let mut spike_times = Vec::new();
-        let mut rng = rng();
+        let mut rng = rand::rng();
 
         let mut t = 0.0;
         while t < 100.0 {
@@ -1916,10 +1911,9 @@ impl ConsciousnessInspiredOptimizer {
     /// Advanced-advanced consciousness-inspired optimization with self-awareness
     pub fn conscious_optimize(
         &mut self,
-        optimization_goal: &ConsciousnessOptimizationGoal,
-        _consciousness_parameters: &ConsciousnessParameters,
+        optimization_goal: &ConsciousnessOptimizationGoal_consciousness, _parameters: &ConsciousnessParameters,
     ) -> Result<ConsciousnessOptimizationResult> {
-        // Set intentional goal in consciousness system
+        // Set intentional _goal in consciousness system
         self.intentionality_engine
             .set_goal(optimization_goal.clone())?;
 
@@ -1992,7 +1986,7 @@ impl ConsciousnessInspiredOptimizer {
         }
 
         // Intuitive leaps (non-deterministic conscious insights)
-        let mut rng = rng();
+        let mut rng = rand::rng();
         if rng.random::<f64>() < 0.1 {
             // 10% chance of intuitive leap
             let intuitive_solution = self.generate_intuitive_solution(goal)?;
@@ -2052,7 +2046,7 @@ impl ConsciousnessInspiredOptimizer {
         goal: &ConsciousnessOptimizationGoal,
     ) -> Result<ConsciousSolution> {
         // Generate solution through intuitive/unconscious processing
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let parameters: Vec<f64> = (0..goal.dimensions)
             .map(|_| {
                 // Intuitive parameter generation (non-linear, creative)
@@ -2115,8 +2109,7 @@ impl ConsciousnessInspiredOptimizer {
     }
 
     fn measure_satisfaction(
-        &self,
-        _state: &ConsciousnessState,
+        &self_state: &ConsciousnessState,
         solution: &EvaluatedSolution,
     ) -> f64 {
         // Measure consciousness-level satisfaction with solution
@@ -2124,8 +2117,7 @@ impl ConsciousnessInspiredOptimizer {
     }
 
     fn measure_awareness_level(
-        &self,
-        _state: &ConsciousnessState,
+        &self_state: &ConsciousnessState,
         solutions: &[EvaluatedSolution],
     ) -> f64 {
         // Measure level of conscious awareness in optimization process
@@ -2305,7 +2297,7 @@ impl QuantumGeneticAlgorithm {
             let individual = template
                 .iter()
                 .map(|&x| {
-                    let mut rng = rng();
+                    let mut rng = rand::rng();
                     if rng.random::<f64>() < self.mutation_rate {
                         // Quantum mutation with superposition
                         let quantum_state = rng.random::<f64>();
@@ -2420,10 +2412,10 @@ pub struct QuantumLayer {
 }
 
 impl QuantumLayer {
-    pub fn new(input_size: usize, output_size: usize) -> Self {
+    pub fn new(_input_size: usize, output_size: usize) -> Self {
         Self {
-            weights: vec![vec![0.0; input_size]; output_size],
-            quantum_phases: vec![vec![0.0; input_size]; output_size],
+            weights: vec![vec![0.0; _input_size]; output_size],
+            quantum_phases: vec![vec![0.0; _input_size]; output_size],
         }
     }
 }
@@ -2462,10 +2454,10 @@ pub struct SpikingNeuralNetwork {
 }
 
 impl SpikingNeuralNetwork {
-    pub fn new(num_neurons: usize, num_outputs: usize) -> Self {
+    pub fn new(_num_neurons: usize, num_outputs: usize) -> Self {
         Self {
-            neurons: (0..num_neurons).map(|_| SpikingNeuron::new()).collect(),
-            synapses: vec![vec![]; num_neurons],
+            _neurons: (0.._num_neurons).map(|_| SpikingNeuron::new()).collect(),
+            synapses: vec![vec![]; _num_neurons],
             num_outputs,
         }
     }
@@ -2558,20 +2550,14 @@ impl SynapticPlasticityManager {
     }
 
     pub fn strengthen_synapses(
-        &mut self,
-        _spike_pattern: &SpikePattern,
-        _response: &NetworkResponse,
-        _fitness: f64,
+        &mut self, _spike_pattern: &SpikePattern, _response: &NetworkResponse_fitness: f64,
     ) -> Result<()> {
         // Implement synaptic strengthening
         Ok(())
     }
 
     pub fn weaken_synapses(
-        &mut self,
-        _spike_pattern: &SpikePattern,
-        _response: &NetworkResponse,
-        _fitness: f64,
+        &mut self, _spike_pattern: &SpikePattern, _response: &NetworkResponse_fitness: f64,
     ) -> Result<()> {
         // Implement synaptic weakening
         Ok(())
@@ -2607,10 +2593,10 @@ pub struct NeuromorphicMemory {
 }
 
 impl NeuromorphicMemory {
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(_capacity: usize) -> Self {
         Self {
             memory_traces: Vec::new(),
-            capacity,
+            _capacity,
             consolidation_threshold: 0.8,
         }
     }
@@ -2669,11 +2655,9 @@ impl BioinspiredAdaptationEngine {
     }
 
     pub fn adapt_network(
-        &mut self,
-        _network: &mut SpikingNeuralNetwork,
-        _memory: &NeuromorphicMemory,
+        &mut self_network: &mut SpikingNeuralNetwork, _memory: &NeuromorphicMemory,
     ) -> Result<()> {
-        // Implement bio-inspired network adaptation
+        // Implement bio-inspired _network adaptation
         Ok(())
     }
 
@@ -2740,9 +2724,7 @@ impl GlobalWorkspace {
     }
 
     pub fn broadcast(
-        &mut self,
-        _attention_focus: &AttentionFocus,
-        _working_memory_contents: &[WorkingMemoryItem],
+        &mut self, _attention_focus: &AttentionFocus_working_memory, _contents: &[WorkingMemoryItem],
     ) -> Result<WorkspaceContents> {
         // Implement global workspace broadcasting
         let mut active_ideas = Vec::new();
@@ -2806,8 +2788,8 @@ impl AttentionMechanism {
         Ok(AttentionFocus { items: focus_items })
     }
 
-    pub fn adjust_allocation(&mut self, _insights: &[ReflectionInsight]) -> Result<()> {
-        // Adjust attention allocation based on reflection insights
+    pub fn adjust_allocation(&mut self_insights: &[ReflectionInsight]) -> Result<()> {
+        // Adjust attention allocation based on reflection _insights
         Ok(())
     }
 }
@@ -2826,10 +2808,10 @@ pub struct WorkingMemory {
 }
 
 impl WorkingMemory {
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(_capacity: usize) -> Self {
         Self {
             items: Vec::new(),
-            capacity,
+            _capacity,
             decay_rate: 0.1,
         }
     }
@@ -2974,8 +2956,7 @@ impl MetacognitiveMonitor {
 
     fn evaluate_solution_quality(
         &self,
-        solution: &ConsciousSolution,
-        _consciousness_state: &ConsciousnessState,
+        solution: &ConsciousSolution_consciousness_state: &ConsciousnessState,
     ) -> Result<f64> {
         // Evaluate solution quality using metacognitive assessment
         let parameter_balance = self.assess_parameter_balance(&solution.parameters);
@@ -3032,16 +3013,14 @@ impl IntentionalityEngine {
     }
 
     pub fn adapt_strategy(
-        &mut self,
-        _consciousness_state: &ConsciousnessState,
-        _solutions: &[EvaluatedSolution],
+        &mut self, _consciousness_state: &ConsciousnessState, _solutions: &[EvaluatedSolution],
     ) -> Result<()> {
         // Adapt optimization strategy based on intentionality
         Ok(())
     }
 
-    pub fn integrate_insights(&mut self, _insights: &[ReflectionInsight]) -> Result<()> {
-        // Integrate reflection insights into intentional framework
+    pub fn integrate_insights(&mut self_insights: &[ReflectionInsight]) -> Result<()> {
+        // Integrate reflection _insights into intentional framework
         Ok(())
     }
 
@@ -3150,9 +3129,9 @@ pub struct NeuromorphicSolution {
 }
 
 impl NeuromorphicSolution {
-    pub fn random(dimensions: usize) -> Self {
-        let mut rng = rng();
-        let variables = (0..dimensions)
+    pub fn random(_dimensions: usize) -> Self {
+        let mut rng = rand::rng();
+        let variables = (0.._dimensions)
             .map(|id| OptimizationVariable {
                 id,
                 value: rng.random(),
@@ -3488,11 +3467,10 @@ impl ReinforcementLearningOptimizer {
                         .dqn_agent
                         .select_action(&state, episode as f64 / max_episodes as f64)?,
                     1 => self.policy_gradient.select_action(&state)?,
-                    2 => self.actor_critic.select_action(&state)?,
-                    _ => self.generate_curiosity_driven_action(&state)?,
+                    2 => self.actor_critic.select_action(&state)?_ => self.generate_curiosity_driven_action(&state)?,
                 };
 
-                // Execute action in environment
+                // Execute action in _environment
                 let step_result = optimization_environment.step(&action)?;
                 let next_state = step_result.next_state.clone();
                 let reward = step_result.reward;
@@ -3538,12 +3516,12 @@ impl ReinforcementLearningOptimizer {
                 best_solution = current_solution;
             }
 
-            // Meta-learning adaptation
+            // Meta-_learning adaptation
             if meta_learning && episode % 100 == 0 {
                 self.meta_learn_from_experience()?;
             }
 
-            // Experience replay learning
+            // Experience replay _learning
             if self.experience_buffer.size() > 1000 {
                 self.replay_learning(32)?; // batch_size = 32
             }
@@ -3554,7 +3532,7 @@ impl ReinforcementLearningOptimizer {
             best_reward,
             episode_rewards,
             algorithm_performance: self.algorithm_selector.get_performance_stats(),
-            learning_curves: self.get_learning_curves(),
+            _learning_curves: self.get_learning_curves(),
         })
     }
 
@@ -3562,8 +3540,7 @@ impl ReinforcementLearningOptimizer {
         match selected_algorithm {
             0 => self.dqn_agent.update_q_network(reward)?,
             1 => self.policy_gradient.update_policy(reward)?,
-            2 => self.actor_critic.update_networks(reward)?,
-            _ => self.curiosity_module.update_networks(reward)?,
+            2 => self.actor_critic.update_networks(reward)?_ => self.curiosity_module.update_networks(reward)?,
         }
         Ok(())
     }
@@ -3600,7 +3577,7 @@ impl ReinforcementLearningOptimizer {
     }
 
     fn analyze_task_patterns(&self, meta_batch: &[Experience]) -> Result<TaskPatterns> {
-        // Analyze patterns in the meta-learning batch
+        // Analyze patterns in the meta-learning _batch
         let mut state_diversity = 0.0;
         let mut action_effectiveness = 0.0;
         let mut reward_distribution = Vec::new();
@@ -3622,9 +3599,9 @@ impl ReinforcementLearningOptimizer {
         })
     }
 
-    fn compute_state_diversity(&self, _state: &OptimizationState) -> f64 {
-        // Compute diversity measure for state space
-        let mut rng = rng();
+    fn compute_state_diversity(&self_state: &OptimizationState) -> f64 {
+        // Compute diversity measure for _state space
+        let mut rng = rand::rng();
         rng.random::<f64>() // Placeholder implementation
     }
 
@@ -3684,10 +3661,10 @@ pub struct DQNAgent {
 }
 
 impl DQNAgent {
-    pub fn new(state_dim: usize, hidden_dim: usize, action_dim: usize) -> Self {
+    pub fn new(_state_dim: usize, hidden_dim: usize, action_dim: usize) -> Self {
         Self {
-            q_network: NeuralNetwork::new(vec![state_dim, hidden_dim, hidden_dim, action_dim]),
-            target_network: NeuralNetwork::new(vec![state_dim, hidden_dim, hidden_dim, action_dim]),
+            q_network: NeuralNetwork::new(vec![_state_dim, hidden_dim, hidden_dim, action_dim]),
+            target_network: NeuralNetwork::new(vec![_state_dim, hidden_dim, hidden_dim, action_dim]),
             experience_buffer: Vec::new(),
             epsilon: 0.9, // High initial exploration
             learning_rate: 0.001,
@@ -3704,7 +3681,7 @@ impl DQNAgent {
         // Epsilon-greedy action selection with decay
         self.epsilon = 0.1 + 0.8 * (-progress * 3.0).exp();
 
-        let mut rng = rng();
+        let mut rng = rand::rng();
         if rng.random::<f64>() < self.epsilon {
             // Random exploration
             Ok(OptimizationAction::random())
@@ -3715,7 +3692,7 @@ impl DQNAgent {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap_or(0);
 
             Ok(OptimizationAction::from_index(best_action_idx))
@@ -3768,10 +3745,10 @@ pub struct PolicyGradientAgent {
 }
 
 impl PolicyGradientAgent {
-    pub fn new(state_dim: usize, hidden_dim: usize, action_dim: usize) -> Self {
+    pub fn new(_state_dim: usize, hidden_dim: usize, action_dim: usize) -> Self {
         Self {
-            policy_network: NeuralNetwork::new(vec![state_dim, hidden_dim, action_dim]),
-            baseline_network: NeuralNetwork::new(vec![state_dim, hidden_dim, 1]),
+            policy_network: NeuralNetwork::new(vec![_state_dim, hidden_dim, action_dim]),
+            baseline_network: NeuralNetwork::new(vec![_state_dim, hidden_dim, 1]),
             learning_rate: 0.001,
             performance_history: Vec::new(),
         }
@@ -3838,10 +3815,10 @@ pub struct ActorCriticAgent {
 }
 
 impl ActorCriticAgent {
-    pub fn new(state_dim: usize, hidden_dim: usize, action_dim: usize) -> Self {
+    pub fn new(_state_dim: usize, hidden_dim: usize, action_dim: usize) -> Self {
         Self {
-            actor_network: NeuralNetwork::new(vec![state_dim, hidden_dim, action_dim]),
-            critic_network: NeuralNetwork::new(vec![state_dim, hidden_dim, 1]),
+            actor_network: NeuralNetwork::new(vec![_state_dim, hidden_dim, action_dim]),
+            critic_network: NeuralNetwork::new(vec![_state_dim, hidden_dim, 1]),
             learning_rate: 0.001,
             stability_regularization: 0.01,
             performance_history: Vec::new(),
@@ -3909,10 +3886,10 @@ pub struct MultiArmedBandit {
 }
 
 impl MultiArmedBandit {
-    pub fn new(num_arms: usize) -> Self {
+    pub fn new(_num_arms: usize) -> Self {
         Self {
-            arm_counts: vec![0; num_arms],
-            arm_rewards: vec![0.0; num_arms],
+            arm_counts: vec![0; _num_arms],
+            arm_rewards: vec![0.0; _num_arms],
             exploration_factor: 2.0,
         }
     }
@@ -3944,7 +3921,7 @@ impl MultiArmedBandit {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap_or(0);
 
             Ok(best_arm)
@@ -3983,10 +3960,10 @@ pub struct ExperienceReplayBuffer {
 }
 
 impl ExperienceReplayBuffer {
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(_capacity: usize) -> Self {
         Self {
-            buffer: Vec::with_capacity(capacity),
-            capacity,
+            buffer: Vec::with_capacity(_capacity),
+            _capacity,
             position: 0,
         }
     }
@@ -4009,7 +3986,7 @@ impl ExperienceReplayBuffer {
         }
 
         let mut batch = Vec::with_capacity(batch_size);
-        let mut rng = rng();
+        let mut rng = rand::rng();
         for _ in 0..batch_size {
             let idx = (rng.random::<f64>() * self.buffer.len() as f64) as usize;
             batch.push(self.buffer[idx].clone());
@@ -4053,7 +4030,7 @@ impl CuriosityDrivenExploration {
         next_state: &OptimizationState,
     ) -> Result<f64> {
         // Compute prediction error as intrinsic reward
-        let mut input = state.to_vector();
+        let mut input = _state.to_vector();
         input.extend(action.to_vector());
 
         let predicted_next_state = self.forward_model.forward(&input)?;
@@ -4151,7 +4128,7 @@ pub struct OptimizationAction {
 
 impl OptimizationAction {
     pub fn random() -> Self {
-        let mut rng = rng();
+        let mut rng = rand::rng();
         Self {
             parameter_adjustments: (0..10).map(|_| rng.random::<f64>() * 2.0 - 1.0).collect(),
             learning_rate_adjustment: rng.random::<f64>() * 0.1,
@@ -4159,26 +4136,26 @@ impl OptimizationAction {
         }
     }
 
-    pub fn from_index(index: usize) -> Self {
-        // Convert discrete action index to continuous action
-        let adjustment = (index as f64 / 10.0) * 2.0 - 1.0;
+    pub fn from_index(_index: usize) -> Self {
+        // Convert discrete action _index to continuous action
+        let adjustment = (_index as f64 / 10.0) * 2.0 - 1.0;
         Self {
             parameter_adjustments: vec![adjustment; 10],
             learning_rate_adjustment: adjustment * 0.01,
-            exploration_factor: (index as f64 / 32.0).clamp(0.0, 1.0),
+            exploration_factor: (_index as f64 / 32.0).clamp(0.0, 1.0),
         }
     }
 
-    pub fn from_distribution(distribution: &[f64]) -> Result<Self> {
-        // Sample action from probability distribution
-        if distribution.len() < 3 {
-            return Err(IoError::Other("Invalid distribution size".to_string()));
+    pub fn from_distribution(_distribution: &[f64]) -> Result<Self> {
+        // Sample action from probability _distribution
+        if _distribution.len() < 3 {
+            return Err(IoError::Other("Invalid _distribution size".to_string()));
         }
 
         Ok(Self {
-            parameter_adjustments: distribution[..10.min(distribution.len())].to_vec(),
-            learning_rate_adjustment: distribution.get(10).unwrap_or(&0.01).clamp(-0.1, 0.1),
-            exploration_factor: distribution.get(11).unwrap_or(&0.5).clamp(0.0, 1.0),
+            parameter_adjustments: _distribution[..10.min(_distribution.len())].to_vec(),
+            learning_rate_adjustment: _distribution.get(10).unwrap_or(&0.01).clamp(-0.1, 0.1),
+            exploration_factor: _distribution.get(11).unwrap_or(&0.5).clamp(0.0, 1.0),
         })
     }
 
@@ -4211,11 +4188,11 @@ impl std::fmt::Debug for OptimizationEnvironment {
 }
 
 impl OptimizationEnvironment {
-    pub fn new(initial_parameters: Vec<f64>, target_objective: f64) -> Self {
+    pub fn new(_initial_parameters: Vec<f64>, target_objective: f64) -> Self {
         Self {
             current_state: OptimizationState {
-                parameters: initial_parameters,
-                objective_value: 0.0,
+                _parameters: _initial_parameters,
+                _objective_value: 0.0,
                 constraints_satisfied: true,
                 iteration: 0,
             },
@@ -4335,10 +4312,10 @@ pub struct NeuralNetwork {
 }
 
 impl NeuralNetwork {
-    pub fn new(layer_sizes: Vec<usize>) -> Self {
+    pub fn new(_layer_sizes: Vec<usize>) -> Self {
         let mut layers = Vec::new();
-        for i in 0..layer_sizes.len() - 1 {
-            layers.push(Layer::new(layer_sizes[i], layer_sizes[i + 1]));
+        for i in 0.._layer_sizes.len() - 1 {
+            layers.push(Layer::new(_layer_sizes[i], _layer_sizes[i + 1]));
         }
 
         Self {
@@ -4380,10 +4357,7 @@ impl NeuralNetwork {
     }
 
     pub fn update_policy_gradient(
-        &mut self,
-        _input: &[f64],
-        _advantage: f64,
-        _learning_rate: f64,
+        &mut self_input: &[f64], _advantage: f64, _learning_rate: f64,
     ) -> Result<()> {
         // Simplified policy gradient update
         Ok(())
@@ -4425,12 +4399,12 @@ pub struct Layer {
 }
 
 impl Layer {
-    pub fn new(input_size: usize, output_size: usize) -> Self {
-        let mut rng = rng();
+    pub fn new(_input_size: usize, output_size: usize) -> Self {
+        let mut rng = rand::rng();
         let mut weights = Vec::new();
         for _ in 0..output_size {
             let mut row = Vec::new();
-            for _ in 0..input_size {
+            for _ in 0.._input_size {
                 row.push(rng.random::<f64>() * 2.0 - 1.0); // Random initialization
             }
             weights.push(row);
@@ -4499,7 +4473,7 @@ impl RealTimePerformancePredictor {
         current_metrics: &PipelinePerformanceMetrics,
         prediction_horizon: usize,
     ) -> Result<PerformancePrediction> {
-        // Process current metrics through streaming pipeline
+        // Process current _metrics through streaming pipeline
         let processed_metrics = self.streaming_processor.process_metrics(current_metrics)?;
 
         // Update time series model with latest data
@@ -4830,8 +4804,7 @@ impl RealTimePerformancePredictor {
     }
 
     fn calculate_failure_probability(
-        &self,
-        _system_metrics: &SystemMetrics,
+        &self, _system_metrics: &SystemMetrics,
         degradation: &DegradationAnalysis,
     ) -> Result<f64> {
         // Calculate failure probability based on degradation analysis
@@ -4843,8 +4816,7 @@ impl RealTimePerformancePredictor {
     }
 
     fn estimate_remaining_useful_life(
-        &self,
-        _system_metrics: &SystemMetrics,
+        &self, _system_metrics: &SystemMetrics,
         degradation: &DegradationAnalysis,
     ) -> Result<Duration> {
         // Estimate remaining useful life based on degradation patterns
@@ -4874,8 +4846,7 @@ impl RealTimePerformancePredictor {
     }
 
     fn generate_maintenance_actions(
-        &self,
-        _degradation: &DegradationAnalysis,
+        &self_degradation: &DegradationAnalysis,
         priority: MaintenancePriority,
     ) -> Result<Vec<MaintenanceAction>> {
         let mut actions = Vec::new();
@@ -4912,8 +4883,7 @@ impl RealTimePerformancePredictor {
 
     fn calculate_optimal_maintenance_window(
         &self,
-        remaining_useful_life: Duration,
-        _system_metrics: &SystemMetrics,
+        remaining_useful_life: Duration_system, _metrics: &SystemMetrics,
     ) -> Result<MaintenanceWindow> {
         let days_remaining = remaining_useful_life.as_secs() / (24 * 3600);
 
@@ -4934,7 +4904,7 @@ impl RealTimePerformancePredictor {
         })
     }
 
-    fn build_causal_graph(&self, _metrics: &ProcessedMetrics) -> Result<CausalGraph> {
+    fn build_causal_graph(&self_metrics: &ProcessedMetrics) -> Result<CausalGraph> {
         // Build causal graph for root cause analysis
         Ok(CausalGraph {
             nodes: vec![
@@ -4964,10 +4934,9 @@ impl RealTimePerformancePredictor {
     }
 
     fn calculate_correlation_matrix(
-        &self,
-        _metrics: &ProcessedMetrics,
+        &self_metrics: &ProcessedMetrics,
     ) -> Result<CorrelationMatrix> {
-        // Calculate correlation matrix between performance metrics
+        // Calculate correlation matrix between performance _metrics
         Ok(CorrelationMatrix {
             variables: ["CPU", "Memory", "Throughput", "Cache"]
                 .iter()
@@ -4983,8 +4952,7 @@ impl RealTimePerformancePredictor {
     }
 
     fn identify_critical_components(
-        &self,
-        _historical_data: &[PipelinePerformanceMetrics],
+        &self, _historical_data: &[PipelinePerformanceMetrics],
     ) -> Result<Vec<CriticalComponent>> {
         Ok(vec![
             CriticalComponent {
@@ -5526,22 +5494,19 @@ impl StreamingProcessor {
 }
 
 impl PerformanceBaselineTracker {
-    pub fn update(&mut self, _metrics: &ProcessedMetrics) -> Result<()> {
+    pub fn update(&mut self_metrics: &ProcessedMetrics) -> Result<()> {
         Ok(())
     }
 
-    pub fn calculate_deviation(&self, _metrics: &ProcessedMetrics) -> Result<f64> {
+    pub fn calculate_deviation(&self_metrics: &ProcessedMetrics) -> Result<f64> {
         Ok(0.1) // Placeholder deviation
     }
 }
 
 impl AdaptiveAlertSystem {
     pub fn generate_alerts(
-        &self,
-        _metrics: &ProcessedMetrics,
-        _predictions: &[MetricsPrediction],
-        anomaly_score: f64,
-        _trend_analysis: &TrendAnalysis,
+        &self_metrics: &ProcessedMetrics, _predictions: &[MetricsPrediction],
+        anomaly_score: f64, _trend_analysis: &TrendAnalysis,
     ) -> Result<Vec<PerformanceAlert>> {
         let mut alerts = Vec::new();
 
@@ -5549,7 +5514,7 @@ impl AdaptiveAlertSystem {
             alerts.push(PerformanceAlert {
                 alert_type: AlertType::AnomalyDetected,
                 severity: AlertSeverity::Critical,
-                message: "High anomaly score detected in performance metrics".to_string(),
+                message: "High anomaly _score detected in performance _metrics".to_string(),
                 timestamp: chrono::Utc::now(),
                 recommended_actions: vec!["Investigate system resources".to_string()],
             });
@@ -5560,7 +5525,7 @@ impl AdaptiveAlertSystem {
 }
 
 impl PerformanceTrendAnalyzer {
-    pub fn analyze_trends(&self, _metrics: &ProcessedMetrics) -> Result<TrendAnalysis> {
+    pub fn analyze_trends(&self_metrics: &ProcessedMetrics) -> Result<TrendAnalysis> {
         Ok(TrendAnalysis {
             trend_direction: TrendDirection::Stable,
             trend_strength: 0.5,
@@ -5602,18 +5567,18 @@ pub struct CriticalComponent {
 
 // Simplified implementations for ML models
 impl LSTMModel {
-    pub fn new(_input_size: usize, _hidden_size: usize, _output_size: usize) -> Self {
+    pub fn new(_input_size: usize, _hidden_size: usize_output, _size: usize) -> Self {
         Self
     }
 
-    pub fn update(&mut self, _metrics: &ProcessedMetrics) -> Result<()> {
+    pub fn update(&mut self_metrics: &ProcessedMetrics) -> Result<()> {
         Ok(())
     }
 
     pub fn predict(&self, horizon: usize) -> Result<Vec<MetricsPrediction>> {
         // Simple prediction based on random walk
         let mut predictions = Vec::new();
-        let mut rng = rng();
+        let mut rng = rand::rng();
         for _ in 0..horizon {
             predictions.push(MetricsPrediction {
                 throughput: 1.0 + (rng.random::<f64>() - 0.5) * 0.2,
@@ -5627,18 +5592,18 @@ impl LSTMModel {
 }
 
 impl ARIMAModel {
-    pub fn new(_p: usize, _d: usize, _q: usize) -> Self {
+    pub fn new(_p: usize_d: usize, _q: usize) -> Self {
         Self
     }
 
-    pub fn update(&mut self, _metrics: &ProcessedMetrics) -> Result<()> {
+    pub fn update(&mut self_metrics: &ProcessedMetrics) -> Result<()> {
         Ok(())
     }
 
     pub fn predict(&self, horizon: usize) -> Result<Vec<MetricsPrediction>> {
         // Simple ARIMA-like prediction
         let mut predictions = Vec::new();
-        let mut rng = rng();
+        let mut rng = rand::rng();
         for _ in 0..horizon {
             predictions.push(MetricsPrediction {
                 throughput: 1.0 + (rng.random::<f64>() - 0.5) * 0.1,
@@ -5656,8 +5621,8 @@ impl IsolationForest {
         Self
     }
 
-    pub fn detect(&self, _metrics: &ProcessedMetrics) -> Result<f64> {
-        let mut rng = rng();
+    pub fn detect(&self_metrics: &ProcessedMetrics) -> Result<f64> {
+        let mut rng = rand::rng();
         Ok(rng.random::<f64>() * 0.5) // Random anomaly score
     }
 }
@@ -5667,8 +5632,8 @@ impl LSTMAutoencoder {
         Self
     }
 
-    pub fn detect(&self, _metrics: &ProcessedMetrics) -> Result<f64> {
-        let mut rng = rng();
+    pub fn detect(&self_metrics: &ProcessedMetrics) -> Result<f64> {
+        let mut rng = rand::rng();
         Ok(rng.random::<f64>() * 0.4) // Random reconstruction error
     }
 }
@@ -5682,8 +5647,8 @@ impl StatisticalAnomalyDetector {
 }
 
 impl EnsembleAnomalyDetector {
-    pub fn detect(&self, _metrics: &ProcessedMetrics) -> Result<f64> {
-        let mut rng = rng();
+    pub fn detect(&self_metrics: &ProcessedMetrics) -> Result<f64> {
+        let mut rng = rand::rng();
         Ok(rng.random::<f64>() * 0.6) // Random ensemble score
     }
 }

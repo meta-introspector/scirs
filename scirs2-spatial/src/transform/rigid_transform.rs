@@ -29,7 +29,7 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 /// # Examples
 ///
 /// ```
-/// use scirs2_spatial::transform::{Rotation, RigidTransform};
+/// use scirs2__spatial::transform::{Rotation, RigidTransform};
 /// use ndarray::array;
 /// use std::f64::consts::PI;
 ///
@@ -73,7 +73,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RigidTransform};
+    /// use scirs2__spatial::transform::{Rotation, RigidTransform};
     /// use ndarray::array;
     ///
     /// let rotation = Rotation::identity();
@@ -110,7 +110,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::RigidTransform;
+    /// use scirs2__spatial::transform::RigidTransform;
     /// use ndarray::array;
     ///
     /// // Create a transformation matrix for translation by [1, 2, 3]
@@ -122,25 +122,25 @@ impl RigidTransform {
     /// ];
     /// let transform = RigidTransform::from_matrix(&matrix.view()).unwrap();
     /// ```
-    pub fn from_matrix(matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        if matrix.shape() != [4, 4] {
+    pub fn from_matrix(_matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        if _matrix.shape() != [4, 4] {
             return Err(SpatialError::DimensionError(format!(
                 "Matrix must be 4x4, got {:?}",
-                matrix.shape()
+                _matrix.shape()
             )));
         }
 
         // Check the last row is [0, 0, 0, 1]
         for i in 0..3 {
-            if (matrix[[3, i]] - 0.0).abs() > 1e-10 {
+            if (_matrix[[3, i]] - 0.0).abs() > 1e-10 {
                 return Err(SpatialError::ValueError(
-                    "Last row of matrix must be [0, 0, 0, 1]".into(),
+                    "Last row of _matrix must be [0, 0, 0, 1]".into(),
                 ));
             }
         }
-        if (matrix[[3, 3]] - 1.0).abs() > 1e-10 {
+        if (_matrix[[3, 3]] - 1.0).abs() > 1e-10 {
             return Err(SpatialError::ValueError(
-                "Last row of matrix must be [0, 0, 0, 1]".into(),
+                "Last row of _matrix must be [0, 0, 0, 1]".into(),
             ));
         }
 
@@ -148,17 +148,17 @@ impl RigidTransform {
         let mut rotation_matrix = Array2::<f64>::zeros((3, 3));
         for i in 0..3 {
             for j in 0..3 {
-                rotation_matrix[[i, j]] = matrix[[i, j]];
+                rotation_matrix[[i, j]] = _matrix[[i, j]];
             }
         }
 
         // Extract the translation part (right column, first 3 elements)
         let mut translation = Array1::<f64>::zeros(3);
         for i in 0..3 {
-            translation[i] = matrix[[i, 3]];
+            translation[i] = _matrix[[i, 3]];
         }
 
-        // Create rotation from the extracted matrix
+        // Create rotation from the extracted _matrix
         let rotation = Rotation::from_matrix(&rotation_matrix.view())?;
 
         Ok(RigidTransform {
@@ -176,7 +176,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RigidTransform};
+    /// use scirs2__spatial::transform::{Rotation, RigidTransform};
     /// use ndarray::array;
     ///
     /// let rotation = Rotation::identity();
@@ -216,7 +216,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RigidTransform};
+    /// use scirs2__spatial::transform::{Rotation, RigidTransform};
     /// use ndarray::array;
     ///
     /// let rotation = Rotation::identity();
@@ -237,7 +237,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RigidTransform};
+    /// use scirs2__spatial::transform::{Rotation, RigidTransform};
     /// use ndarray::array;
     ///
     /// let rotation = Rotation::identity();
@@ -262,7 +262,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RigidTransform};
+    /// use scirs2__spatial::transform::{Rotation, RigidTransform};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -273,15 +273,15 @@ impl RigidTransform {
     /// let transformed = transform.apply(&point.view());
     /// // Should be [1.0, 3.0, 3.0] (rotated then translated)
     /// ```
-    pub fn apply(&self, point: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
-        if point.len() != 3 {
+    pub fn apply(_point: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
+        if _point.len() != 3 {
             return Err(SpatialError::DimensionError(
                 "Point must have 3 elements".to_string(),
             ));
         }
 
         // Apply rotation then translation
-        let rotated = self.rotation.apply(point)?;
+        let rotated = self.rotation.apply(_point)?;
         Ok(rotated + &self.translation)
     }
 
@@ -298,7 +298,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RigidTransform};
+    /// use scirs2__spatial::transform::{Rotation, RigidTransform};
     /// use ndarray::array;
     ///
     /// let rotation = Rotation::identity();
@@ -307,18 +307,18 @@ impl RigidTransform {
     /// let points = array![[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]];
     /// let transformed = transform.apply_multiple(&points.view());
     /// ```
-    pub fn apply_multiple(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-        if points.ncols() != 3 {
+    pub fn apply_multiple(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+        if _points.ncols() != 3 {
             return Err(SpatialError::DimensionError(
                 "Each point must have 3 elements".to_string(),
             ));
         }
 
-        let npoints = points.nrows();
+        let npoints = _points.nrows();
         let mut result = Array2::<f64>::zeros((npoints, 3));
 
         for i in 0..npoints {
-            let point = points.row(i);
+            let point = _points.row(i);
             let transformed = self.apply(&point)?;
             for j in 0..3 {
                 result[[i, j]] = transformed[j];
@@ -337,7 +337,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RigidTransform};
+    /// use scirs2__spatial::transform::{Rotation, RigidTransform};
     /// use ndarray::array;
     ///
     /// let rotation = Rotation::identity();
@@ -369,7 +369,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RigidTransform};
+    /// use scirs2__spatial::transform::{Rotation, RigidTransform};
     /// use ndarray::array;
     ///
     /// let t1 = RigidTransform::from_rotation_and_translation(
@@ -383,12 +383,12 @@ impl RigidTransform {
     /// let combined = t1.compose(&t2);
     /// // Should have a translation of [1.0, 1.0, 0.0]
     /// ```
-    pub fn compose(&self, other: &RigidTransform) -> SpatialResult<RigidTransform> {
+    pub fn compose(_other: &RigidTransform) -> SpatialResult<RigidTransform> {
         // Compose rotations
-        let rotation = self.rotation.compose(&other.rotation);
+        let rotation = self.rotation.compose(&_other.rotation);
 
-        // Compose translations: self.translation + self.rotation * other.translation
-        let rotated_trans = self.rotation.apply(&other.translation.view())?;
+        // Compose translations: self.translation + self.rotation * _other.translation
+        let rotated_trans = self.rotation.apply(&_other.translation.view())?;
         let translation = &self.translation + &rotated_trans;
 
         Ok(RigidTransform {
@@ -406,7 +406,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::RigidTransform;
+    /// use scirs2__spatial::transform::RigidTransform;
     /// use ndarray::array;
     ///
     /// let identity = RigidTransform::identity();
@@ -414,7 +414,7 @@ impl RigidTransform {
     /// let transformed = identity.apply(&point.view());
     /// // Should still be [1.0, 2.0, 3.0]
     /// ```
-    pub fn identity() -> RigidTransform {
+    pub fn identity(&self) -> RigidTransform {
         RigidTransform {
             rotation: Rotation::identity(),
             translation: Array1::<f64>::zeros(3),
@@ -434,7 +434,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::RigidTransform;
+    /// use scirs2__spatial::transform::RigidTransform;
     /// use ndarray::array;
     ///
     /// let transform = RigidTransform::from_translation(&array![1.0, 2.0, 3.0].view()).unwrap();
@@ -442,17 +442,17 @@ impl RigidTransform {
     /// let transformed = transform.apply(&point.view());
     /// // Should be [1.0, 2.0, 3.0]
     /// ```
-    pub fn from_translation(translation: &ArrayView1<f64>) -> SpatialResult<RigidTransform> {
-        if translation.len() != 3 {
+    pub fn from_translation(_translation: &ArrayView1<f64>) -> SpatialResult<RigidTransform> {
+        if _translation.len() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Translation must have 3 elements, got {}",
-                translation.len()
+                _translation.len()
             )));
         }
 
         Ok(RigidTransform {
             rotation: Rotation::identity(),
-            translation: translation.to_owned(),
+            _translation: _translation.to_owned(),
         })
     }
 
@@ -469,7 +469,7 @@ impl RigidTransform {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RigidTransform};
+    /// use scirs2__spatial::transform::{Rotation, RigidTransform};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -479,9 +479,9 @@ impl RigidTransform {
     /// let transformed = transform.apply(&point.view());
     /// // Should be [0.0, 1.0, 0.0]
     /// ```
-    pub fn from_rotation(rotation: Rotation) -> RigidTransform {
+    pub fn from_rotation(_rotation: Rotation) -> RigidTransform {
         RigidTransform {
-            rotation,
+            _rotation,
             translation: Array1::<f64>::zeros(3),
         }
     }
@@ -491,7 +491,6 @@ impl RigidTransform {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
     use std::f64::consts::PI;
 
     #[test]

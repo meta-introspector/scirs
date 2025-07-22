@@ -102,7 +102,7 @@ pub fn latin_hypercube(n: usize, d: usize, seed: Option<u64>) -> StatsResult<Arr
 
         // Shuffle intervals
         for i in (1..n).rev() {
-            let j = rng.random_range(0..=i);
+            let j = rng.gen_range(0..=i);
             intervals.swap(i, j);
         }
 
@@ -128,23 +128,23 @@ pub struct SobolSequence {
 
 impl SobolSequence {
     /// Create a new Sobol sequence generator
-    pub fn new(dimension: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Self> {
-        if dimension == 0 || dimension > 32 {
+    pub fn new(_dimension: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Self> {
+        if _dimension == 0 || _dimension > 32 {
             return Err(StatsError::InvalidArgument(
                 "Dimension must be between 1 and 32".to_string(),
             ));
         }
 
-        let direction_numbers = Self::initialize_direction_numbers(dimension)?;
+        let direction_numbers = Self::initialize_direction_numbers(_dimension)?;
 
         let scramble_matrices = if scramble {
-            Some(Self::generate_scramble_matrices(dimension, seed)?)
+            Some(Self::generate_scramble_matrices(_dimension, seed)?)
         } else {
             None
         };
 
         Ok(Self {
-            dimension,
+            _dimension,
             direction_numbers,
             current_index: 0,
             scramble,
@@ -193,10 +193,10 @@ impl SobolSequence {
     }
 
     /// Initialize direction numbers for Sobol sequence
-    fn initialize_direction_numbers(dimension: usize) -> StatsResult<Vec<Vec<u32>>> {
-        let mut direction_numbers = vec![vec![0u32; 32]; dimension];
+    fn initialize_direction_numbers(_dimension: usize) -> StatsResult<Vec<Vec<u32>>> {
+        let mut direction_numbers = vec![vec![0u32; 32]; _dimension];
 
-        // First dimension uses powers of 2
+        // First _dimension uses powers of 2
         for i in 0..32 {
             direction_numbers[0][i] = 1u32 << (31 - i);
         }
@@ -204,7 +204,7 @@ impl SobolSequence {
         // Additional dimensions use primitive polynomials
         // Simplified version - in practice, you'd use tabulated values
         let primitive_polynomials = [
-            (1, vec![]),        // x (dimension 1, already handled)
+            (1, vec![]),        // x (_dimension 1, already handled)
             (2, vec![1]),       // x^2 + x + 1
             (3, vec![1, 3]),    // x^3 + x + 1
             (3, vec![2, 3]),    // x^3 + x^2 + 1
@@ -214,7 +214,7 @@ impl SobolSequence {
             (4, vec![1, 3, 4]), // x^4 + x^3 + x + 1
         ];
 
-        for dim in 1..dimension {
+        for dim in 1.._dimension {
             let poly_idx = (dim - 1) % primitive_polynomials.len();
             let (degree, ref coeffs) = primitive_polynomials[poly_idx];
 
@@ -265,8 +265,8 @@ impl SobolSequence {
 
             // Generate random permutation matrix for each bit level
             for i in 0..32 {
-                let j = rng.random_range(0..32);
-                matrix[[i, j]] = 1;
+                let j = rng.gen_range(0..32);
+                matrix[[i..j]] = 1;
             }
 
             matrices.push(matrix);
@@ -276,11 +276,11 @@ impl SobolSequence {
     }
 
     /// Apply Owen scrambling to a value
-    fn apply_scrambling(value: u32, matrix: &Array2<u32>) -> u32 {
+    fn apply_scrambling(_value: u32, matrix: &Array2<u32>) -> u32 {
         let mut result = 0u32;
 
         for i in 0..32 {
-            let bit = (value >> (31 - i)) & 1;
+            let bit = (_value >> (31 - i)) & 1;
             for j in 0..32 {
                 if matrix[[i, j]] == 1 && bit == 1 {
                     result |= 1u32 << (31 - j);
@@ -304,14 +304,14 @@ pub struct HaltonSequence {
 
 impl HaltonSequence {
     /// Create a new Halton sequence generator
-    pub fn new(dimension: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Self> {
-        if dimension == 0 {
+    pub fn new(_dimension: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Self> {
+        if _dimension == 0 {
             return Err(StatsError::InvalidArgument(
                 "Dimension must be at least 1".to_string(),
             ));
         }
 
-        let bases = Self::first_primes(dimension)?;
+        let bases = Self::first_primes(_dimension)?;
 
         let permutations = if scramble {
             Some(Self::generate_permutations(&bases, seed)?)
@@ -320,7 +320,7 @@ impl HaltonSequence {
         };
 
         Ok(Self {
-            dimension,
+            _dimension,
             bases,
             current_index: 0,
             scramble,
@@ -366,10 +366,10 @@ impl HaltonSequence {
     }
 
     /// Compute radical inverse in given base
-    fn radical_inverse(index: usize, base: u32) -> StatsResult<f64> {
+    fn radical_inverse(_index: usize, base: u32) -> StatsResult<f64> {
         let mut result = 0.0;
         let mut fraction = 1.0 / base as f64;
-        let mut i = index;
+        let mut i = _index;
 
         while i > 0 {
             result += (i % base as usize) as f64 * fraction;
@@ -381,10 +381,10 @@ impl HaltonSequence {
     }
 
     /// Compute scrambled radical inverse
-    fn scrambled_radical_inverse(index: usize, base: u32, permutation: &[u32]) -> StatsResult<f64> {
+    fn scrambled_radical_inverse(_index: usize, base: u32, permutation: &[u32]) -> StatsResult<f64> {
         let mut result = 0.0;
         let mut fraction = 1.0 / base as f64;
-        let mut i = index;
+        let mut i = _index;
 
         while i > 0 {
             let digit = i % base as usize;
@@ -439,7 +439,7 @@ impl HaltonSequence {
     }
 
     /// Generate random permutations for scrambling
-    fn generate_permutations(bases: &[u32], seed: Option<u64>) -> StatsResult<Vec<Vec<u32>>> {
+    fn generate_permutations(_bases: &[u32], seed: Option<u64>) -> StatsResult<Vec<Vec<u32>>> {
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
             None => {
@@ -452,14 +452,14 @@ impl HaltonSequence {
             }
         };
 
-        let mut permutations = Vec::with_capacity(bases.len());
+        let mut permutations = Vec::with_capacity(_bases.len());
 
-        for &base in bases {
+        for &base in _bases {
             let mut perm: Vec<u32> = (0..base).collect();
 
             // Fisher-Yates shuffle
             for i in (1..base).rev() {
-                let j = rng.random_range(0..=i);
+                let j = rng.gen_range(0..=i);
                 perm.swap(i as usize, j as usize);
             }
 
@@ -472,22 +472,22 @@ impl HaltonSequence {
 
 /// Discrepancy measures for QMC sequences
 #[allow(dead_code)]
-pub fn star_discrepancy(samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> {
-    if samples.is_empty() {
+pub fn star_discrepancy(_samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> {
+    if _samples.is_empty() {
         return Err(StatsError::InvalidArgument(
-            "samples array cannot be empty".to_string(),
+            "_samples array cannot be empty".to_string(),
         ));
     }
 
-    let n = samples.len();
-    let d = samples[0].len();
+    let n = _samples.len();
+    let d = _samples[0].len();
 
     // Simplified star discrepancy calculation
     // In practice, this would use more sophisticated algorithms
     let mut max_discrepancy: f64 = 0.0;
     let num_test_points = 100; // Reduced for efficiency
 
-    let mut rng = rng();
+    let mut rng = rand::rng();
     for _ in 0..num_test_points {
         let mut test_point = Array1::zeros(d);
         for j in 0..d {
@@ -496,7 +496,7 @@ pub fn star_discrepancy(samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> {
 
         // Count points in box [0, test_point]
         let mut count = 0;
-        for sample in samples.iter() {
+        for sample in _samples.iter() {
             let mut in_box = true;
             for j in 0..d {
                 if sample[j] > test_point[j] {
@@ -524,4 +524,4 @@ pub fn star_discrepancy(samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> {
 pub mod advanced;
 pub mod enhanced_sequences;
 pub use advanced::*;
-pub use enhanced_sequences::*;
+pub use enhanced__sequences::*;

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod dwt_tests {
-    use scirs2_signal::dwt::{dwt_decompose, dwt_reconstruct, wavedec, waverec, Wavelet};
+    use scirs2__signal::dwt::{dwt_decompose, dwt_reconstruct, wavedec, waverec, Wavelet};
 
     #[test]
     fn test_dwt_haar_single_level() {

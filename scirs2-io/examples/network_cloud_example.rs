@@ -8,16 +8,16 @@
 //! - Local caching for offline access and performance optimization
 //! - Retry logic and error recovery for network operations
 
-use scirs2_io::network::cloud::{
+use scirs2__io::network::cloud::{
     create_mock_metadata, validate_config, AzureConfig, CloudProvider, GcsConfig, S3Config,
 };
-use scirs2_io::network::http::{calculate_speed, format_file_size, format_speed, HttpClient};
-use scirs2_io::network::streaming::{
+use scirs2__io::network::http::{calculate_speed, format_file_size, format_speed, HttpClient};
+use scirs2__io::network::streaming::{
     copy_with_progress, ChunkedReader, ChunkedWriter, StreamConfig, StreamProgress,
 };
 #[cfg(feature = "reqwest")]
-use scirs2_io::network::{batch_download, download_file, upload_file};
-use scirs2_io::network::{
+use scirs2__io::network::{batch_download, download_file, upload_file};
+use scirs2__io::network::{
     batch_upload_to_cloud, create_cloud_client, NetworkClient, NetworkConfig,
 };
 use std::collections::HashMap;
@@ -493,7 +493,7 @@ async fn demonstrate_batch_operations() -> Result<(), Box<dyn std::error::Error>
 
     let upload_tasks: Vec<(String, String)> = upload_files
         .iter()
-        .map(|(filename, _)| {
+        .map(|(filename_)| {
             let local_path = temp_dir.path().join(filename).to_string_lossy().to_string();
             (local_path, format!("uploads/{filename}"))
         })

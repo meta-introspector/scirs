@@ -77,7 +77,7 @@ impl MemoryAccessPatternAnalyzer {
                 if let Some(pattern) = self
                     .stride_access_patterns
                     .iter_mut()
-                    .find(|(s, _)| *s == stride)
+                    .find(|(s_, _)| *s_ == stride)
                 {
                     pattern.1 += 1;
                 } else {
@@ -274,7 +274,7 @@ impl CacheAwareMatrixOperations {
                     let j_block_end = (j + block_sizes.l1_block_n).min(j_end);
                     let k_block_end = (k_iter + block_sizes.l1_block_k).min(k_end);
 
-                    // Perform prefetching based on strategy
+                    // Perform prefetching based on _strategy
                     self.intelligent_prefetch(a, b, c, i, j, k_iter, prefetch_strategy);
 
                     // Inner computation kernel
@@ -547,10 +547,10 @@ impl BranchOptimizer {
     /// Optimize conditional execution in matrix operations
     #[allow(dead_code)]
     #[inline(always)]
-    pub fn likely_branch<T>(condition: bool, if_true: T, if_false: T) -> T {
+    pub fn likely_branch<T>(_condition: bool, if_true: T, if_false: T) -> T {
         // Note: std::intrinsics::likely requires unstable features
         // Using standard conditional logic for stable compatibility
-        if condition {
+        if _condition {
             if_true
         } else {
             if_false
@@ -560,10 +560,10 @@ impl BranchOptimizer {
     /// Optimize unlikely branches (e.g., error conditions)
     #[allow(dead_code)]
     #[inline(always)]
-    pub fn unlikely_branch<T>(condition: bool, if_true: T, if_false: T) -> T {
+    pub fn unlikely_branch<T>(_condition: bool, if_true: T, if_false: T) -> T {
         // Note: std::intrinsics::unlikely requires unstable features
         // Using standard conditional logic for stable compatibility
-        if condition {
+        if _condition {
             if_true
         } else {
             if_false

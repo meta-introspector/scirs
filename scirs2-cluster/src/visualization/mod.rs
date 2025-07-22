@@ -18,7 +18,7 @@
 //! ## Basic 2D Visualization
 //! ```
 //! use ndarray::Array2;
-//! use scirs2_cluster::visualization::{create_scatter_plot_2d, VisualizationConfig};
+//! use scirs2__cluster::visualization::{create_scatter_plot_2d, VisualizationConfig};
 //!
 //! let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
 //! let labels = ndarray::Array1::from_vec(vec![0, 0, 1, 1]);
@@ -29,7 +29,7 @@
 //!
 //! ## 3D Interactive Visualization
 //! ```
-//! use scirs2_cluster::visualization::interactive::{InteractiveVisualizer, InteractiveConfig};
+//! use scirs2__cluster::visualization::interactive::{InteractiveVisualizer, InteractiveConfig};
 //!
 //! let config = InteractiveConfig::default();
 //! let mut visualizer = InteractiveVisualizer::new(config);
@@ -38,7 +38,7 @@
 //!
 //! ## Animation Recording
 //! ```
-//! use scirs2_cluster::visualization::animation::{IterativeAnimationRecorder, IterativeAnimationConfig};
+//! use scirs2__cluster::visualization::animation::{IterativeAnimationRecorder, IterativeAnimationConfig};
 //!
 //! let config = IterativeAnimationConfig::default();
 //! let mut recorder = IterativeAnimationRecorder::new(config);
@@ -510,9 +510,9 @@ fn apply_dimensionality_reduction_3d<F: Float + FromPrimitive + Debug>(
 
 /// Apply PCA for 2D visualization
 #[allow(dead_code)]
-fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
-    let n_samples = data.nrows();
-    let n_features = data.ncols();
+fn apply_pca_2d(_data: &Array2<f64>) -> Result<Array2<f64>> {
+    let n_samples = _data.nrows();
+    let n_features = _data.ncols();
 
     if n_features < 2 {
         return Err(ClusteringError::InvalidInput(
@@ -520,17 +520,17 @@ fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
         ));
     }
 
-    // Center the data
-    let mean = data.mean_axis(Axis(0)).unwrap();
-    let centered = data - &mean;
+    // Center the _data
+    let mean = _data.mean_axis(Axis(0)).unwrap();
+    let centered = _data - &mean;
 
     // Compute covariance matrix
     let cov = centered.t().dot(&centered) / (n_samples - 1) as f64;
 
     // Simplified eigenvalue/eigenvector computation (using power iteration for largest eigenvalues)
-    let (eigenvectors, _) = compute_top_eigenvectors(&cov, 2)?;
+    let (eigenvectors_) = compute_top_eigenvectors(&cov, 2)?;
 
-    // Project data onto first 2 principal components
+    // Project _data onto first 2 principal components
     let projected = centered.dot(&eigenvectors);
 
     Ok(projected)
@@ -538,9 +538,9 @@ fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
 
 /// Apply PCA for 3D visualization
 #[allow(dead_code)]
-fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
-    let n_samples = data.nrows();
-    let n_features = data.ncols();
+fn apply_pca_3d(_data: &Array2<f64>) -> Result<Array2<f64>> {
+    let n_samples = _data.nrows();
+    let n_features = _data.ncols();
 
     if n_features < 3 {
         return Err(ClusteringError::InvalidInput(
@@ -548,17 +548,17 @@ fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
         ));
     }
 
-    // Center the data
-    let mean = data.mean_axis(Axis(0)).unwrap();
-    let centered = data - &mean;
+    // Center the _data
+    let mean = _data.mean_axis(Axis(0)).unwrap();
+    let centered = _data - &mean;
 
     // Compute covariance matrix
     let cov = centered.t().dot(&centered) / (n_samples - 1) as f64;
 
     // Compute top 3 eigenvectors
-    let (eigenvectors, _) = compute_top_eigenvectors(&cov, 3)?;
+    let (eigenvectors_) = compute_top_eigenvectors(&cov, 3)?;
 
-    // Project data onto first 3 principal components
+    // Project _data onto first 3 principal components
     let projected = centered.dot(&eigenvectors);
 
     Ok(projected)
@@ -567,21 +567,21 @@ fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
 /// Simplified implementation of other dimensionality reduction methods
 /// These would ideally use proper implementations from specialized libraries
 #[allow(dead_code)]
-fn apply_tsne_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
+fn apply_tsne_2d(_data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
-    apply_pca_2d(data)
+    apply_pca_2d(_data)
 }
 
 #[allow(dead_code)]
-fn apply_umap_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
+fn apply_umap_2d(_data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
-    apply_pca_2d(data)
+    apply_pca_2d(_data)
 }
 
 #[allow(dead_code)]
-fn apply_mds_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
+fn apply_mds_2d(_data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
-    apply_pca_2d(data)
+    apply_pca_2d(_data)
 }
 
 /// Compute top eigenvectors using power iteration
@@ -627,7 +627,7 @@ fn compute_top_eigenvectors(
 
 /// Generate cluster colors based on color scheme
 #[allow(dead_code)]
-fn generate_cluster_colors(labels: &[i32], scheme: ColorScheme) -> HashMap<i32, String> {
+fn generate_cluster_colors(_labels: &[i32], scheme: ColorScheme) -> HashMap<i32, String> {
     let mut colors = HashMap::new();
 
     let color_palette = match scheme {
@@ -655,7 +655,7 @@ fn generate_cluster_colors(labels: &[i32], scheme: ColorScheme) -> HashMap<i32, 
         ColorScheme::Custom => vec!["#333333"], // Placeholder
     };
 
-    for (i, &label) in labels.iter().enumerate() {
+    for (i, &label) in _labels.iter().enumerate() {
         if !colors.contains_key(&label) {
             let color_index = i % color_palette.len();
             colors.insert(label, color_palette[color_index].to_string());
@@ -667,18 +667,18 @@ fn generate_cluster_colors(labels: &[i32], scheme: ColorScheme) -> HashMap<i32, 
 
 /// Calculate 2D plot bounds
 #[allow(dead_code)]
-fn calculate_2d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64) {
-    if data.is_empty() {
+fn calculate_2d_bounds(_data: &Array2<f64>) -> (f64, f64, f64, f64) {
+    if _data.is_empty() {
         return (0.0, 1.0, 0.0, 1.0);
     }
 
-    let x_min = data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let x_max = data
+    let x_min = _data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let x_max = _data
         .column(0)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let y_min = data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let y_max = data
+    let y_min = _data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let y_max = _data
         .column(1)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -698,23 +698,23 @@ fn calculate_2d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64) {
 
 /// Calculate 3D plot bounds
 #[allow(dead_code)]
-fn calculate_3d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64, f64, f64) {
-    if data.is_empty() {
+fn calculate_3d_bounds(_data: &Array2<f64>) -> (f64, f64, f64, f64, f64, f64) {
+    if _data.is_empty() {
         return (0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
     }
 
-    let x_min = data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let x_max = data
+    let x_min = _data.column(0).iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let x_max = _data
         .column(0)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let y_min = data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let y_max = data
+    let y_min = _data.column(1).iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let y_max = _data
         .column(1)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-    let z_min = data.column(2).iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let z_max = data
+    let z_min = _data.column(2).iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let z_max = _data
         .column(2)
         .iter()
         .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
@@ -744,7 +744,7 @@ fn create_legend(
 ) -> Vec<LegendEntry> {
     let mut legend = Vec::new();
 
-    for &label in labels {
+    for &label in _labels {
         let count = data_labels.iter().filter(|&&l| l == label).count();
         let color = colors
             .get(&label)

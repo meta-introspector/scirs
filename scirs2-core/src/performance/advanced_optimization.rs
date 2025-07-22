@@ -182,7 +182,7 @@ impl CacheInfo {
                 }
 
                 // Try to get L3 cache info
-                let _extended_info = __cpuid(0x80000008);
+                let extended_info = __cpuid(0x80000008);
                 if cache_info.edx != 0 {
                     l3_cache_size = (((cache_info.edx >> 18) & 0x3FFF) * 512 * 1024) as usize;
                 }
@@ -240,7 +240,7 @@ impl CacheInfo {
     /// Calculate optimal blocking size for matrix operations
     pub fn optimal_block_size(&self, element_size: usize) -> usize {
         // Target square blocks that fit in L1 cache
-        let _elements_per_line = self.cache_line_size / element_size;
+        let elements_per_line = self.cache_line_size / element_size;
         let target_elements = self.l1_cache_size / (3 * element_size); // A, B, C matrices
         (target_elements as f64).sqrt() as usize
     }
@@ -421,7 +421,7 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Determine optimal settings for a given algorithm and input size
-    pub fn optimize_for(&mut self, algorithm: &str, input_size: usize) -> OptimizationSettings {
+    pub fn get_optimal_settings(&mut self, algorithm: &str, input_size: usize) -> OptimizationSettings {
         // Check if we have historical data for similar operations
         if let Some(result) = self.find_similar_optimization(algorithm, input_size) {
             return result.optimal_settings.clone();
@@ -438,10 +438,7 @@ impl AdvancedPerformanceOptimizer {
         initial_settings
     }
 
-    fn find_similar_optimization(
-        &self,
-        algorithm: &str,
-        input_size: usize,
+    fn find_similar_optimization(&self, algorithm: &str, input_size: usize,
     ) -> Option<&OptimizationResult> {
         self.optimization_history
             .values()
@@ -449,10 +446,7 @@ impl AdvancedPerformanceOptimizer {
             .min_by_key(|result| (result.input_size as i64 - input_size as i64).abs())
     }
 
-    fn generate_initial_settings(
-        &self,
-        _algorithm: &str,
-        input_size: usize,
+    fn generate_initial_settings(&self, algorithm: &str, input_size: usize,
     ) -> OptimizationSettings {
         let simd_instruction_set = self.profile.simd_capabilities.highest_available();
         let use_simd = input_size >= self.adaptive_thresholds.simd_threshold;
@@ -484,10 +478,7 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Run micro-benchmarks to optimize settings for a specific algorithm and input size
-    fn run_micro_benchmarks(
-        &mut self,
-        algorithm: &str,
-        input_size: usize,
+    fn run_micro_benchmarks(&mut self, algorithm: &str, input_size: usize,
         mut settings: OptimizationSettings,
     ) -> OptimizationSettings {
         let mut best_settings = settings.clone();
@@ -583,7 +574,7 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Check if a SIMD instruction set is supported by the current CPU
-    fn is_simd_supported(&self, instruction_set: SimdInstructionSet) -> bool {
+    fn supports_instruction_set(&self, instruction_set: SimdInstructionSet) -> bool {
         match instruction_set {
             SimdInstructionSet::Scalar => true,
             SimdInstructionSet::SSE2 => self.profile.simd_capabilities.sse2,
@@ -599,23 +590,20 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Benchmark a specific algorithm with given settings
-    fn benchmark_algorithm(
-        &self,
-        algorithm: &str,
-        input_size: usize,
+    fn benchmark_algorithm(&mut self, algorithm: &str, data_size: usize,
         settings: &OptimizationSettings,
     ) -> Option<f64> {
         match algorithm {
             "vector_add" | "vector_addition" => {
-                self.benchmark_vector_addition(input_size, settings)
+                self.benchmark_vector_addition(data_size, settings)
             }
-            "dot_product" | "vector_dot" => self.benchmark_dot_product(input_size, settings),
+            "dot_product" | "vector_dot" => self.benchmark_dot_product(data_size, settings),
             "matrix_multiply" | "matrix_multiplication" => {
-                self.benchmark_matrix_multiplication(input_size, settings)
+                self.benchmark_matrix_multiplication(data_size, settings)
             }
             _ => {
                 // Generic benchmark for unknown algorithms
-                self.benchmark_generic_operation(input_size, settings)
+                self.benchmark_generic_operation(data_size, settings)
             }
         }
     }
@@ -633,7 +621,7 @@ impl AdvancedPerformanceOptimizer {
         let b = Array1::from_elem(size, 2.0f64);
 
         // Run benchmark
-        let (_, duration, _throughput) = measure_performance(|| {
+        let (_, duration_throughput, _) = measure_performance(|| {
             if settings.use_simd {
                 // Use SIMD implementation
                 simd_ops::simd_vector_add(a.view(), b.view(), settings.simd_instruction_set)
@@ -644,7 +632,7 @@ impl AdvancedPerformanceOptimizer {
         });
 
         // Calculate operations per second
-        let ops_per_sec = (size as f64) / duration.as_secs_f64();
+        let ops_per_sec = (size as f64) / std::time::Duration::from_secs(1).as_secs_f64();
         Some(ops_per_sec)
     }
 
@@ -657,7 +645,7 @@ impl AdvancedPerformanceOptimizer {
         let b = Array1::from_elem(size, 2.0f64);
 
         // Run benchmark
-        let (_, duration, _) = measure_performance(|| {
+        let (_, _duration_, _) = measure_performance(|| {
             if settings.use_simd {
                 simd_ops::simd_dot_product(a.view(), b.view(), settings.simd_instruction_set)
             } else {
@@ -671,7 +659,7 @@ impl AdvancedPerformanceOptimizer {
         });
 
         // Calculate operations per second (multiply-accumulate operations)
-        let ops_per_sec = (size as f64) / duration.as_secs_f64();
+        let ops_per_sec = (size as f64) / std::time::Duration::from_secs(1).as_secs_f64();
         Some(ops_per_sec)
     }
 
@@ -694,13 +682,13 @@ impl AdvancedPerformanceOptimizer {
         let b = Array2::from_elem((dim, dim), 2.0f64);
 
         // Run benchmark
-        let (result, duration, _) =
+        let (result, _duration_, _) =
             measure_performance(|| cache_aware_matrix_multiply(&a, &b, settings));
 
         if result.is_ok() {
             // Calculate FLOPS (floating point operations per second)
             let total_ops = 2 * dim * dim * dim; // 2 * n^3 for matrix multiplication
-            let flops = (total_ops as f64) / duration.as_secs_f64();
+            let flops = (total_ops as f64) / std::time::Duration::from_secs(1).as_secs_f64();
             Some(flops)
         } else {
             None
@@ -708,17 +696,14 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Generic benchmark for unknown algorithms
-    fn benchmark_generic_operation(
-        &self,
-        size: usize,
-        _settings: &OptimizationSettings,
+    fn benchmark_generic_operation(&mut self, size: usize, settings: &OptimizationSettings,
     ) -> Option<f64> {
         use crate::performance::advanced_optimization::profiling::measure_performance;
 
         // Simple memory access benchmark
         let data = Array1::from_elem(size, 1.0f64);
 
-        let (_, duration, _) = measure_performance(|| {
+        let (_, _duration_, _) = measure_performance(|| {
             let mut sum = 0.0f64;
             for value in data.iter() {
                 sum += value;
@@ -727,7 +712,7 @@ impl AdvancedPerformanceOptimizer {
         });
 
         // Calculate memory accesses per second
-        let ops_per_sec = (size as f64) / duration.as_secs_f64();
+        let ops_per_sec = (size as f64) / std::time::Duration::from_secs(1).as_secs_f64();
         Some(ops_per_sec)
     }
 
@@ -738,10 +723,7 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Get performance recommendations for a specific workload
-    pub fn get_recommendations(
-        &self,
-        workload_type: WorkloadType,
-        data_size: usize,
+    pub fn get_recommendations(&self, workload_type: WorkloadType, data_size: usize,
     ) -> Vec<PerformanceRecommendation> {
         let mut recommendations = Vec::new();
 
@@ -774,6 +756,12 @@ impl AdvancedPerformanceOptimizer {
         }
 
         recommendations
+    }
+    
+    fn is_simd_supported(&self, _simd_set: SimdInstructionSet) -> bool {
+        // Placeholder implementation
+        // In a real implementation, this would check CPU capabilities
+        true
     }
 }
 
@@ -905,9 +893,9 @@ where
             for j in j_block..j_end {
                 let mut sum = T::default();
                 for k in 0..a.dim().1 {
-                    sum = sum + a[[i, k]] * b[[k, j]];
+                    sum = sum + a[[0, k]] * b[[k, j]];
                 }
-                c[[i, j]] = sum;
+                c[[0, j]] = sum;
             }
         }
     }
@@ -1030,21 +1018,20 @@ pub mod prefetch {
     /// dereferenced. The pointer does not need to be aligned, but should point to
     /// allocated memory that will be accessed in the near future.
     #[inline]
-    pub unsafe fn prefetch_read<T>(addr: *const T, locality: i32) {
+    pub unsafe fn prefetch_read<T>(_addr: *const T, locality: i32) {
         #[cfg(target_arch = "x86_64")]
         {
             match locality {
-                0 => _mm_prefetch(addr as *const i8, _MM_HINT_NTA),
-                1 => _mm_prefetch(addr as *const i8, _MM_HINT_T2),
-                2 => _mm_prefetch(addr as *const i8, _MM_HINT_T1),
-                3 => _mm_prefetch(addr as *const i8, _MM_HINT_T0),
-                _ => _mm_prefetch(addr as *const i8, _MM_HINT_T0), // Default to highest locality
+                0 => _mm_prefetch(_addr as *const i8, _MM_HINT_NTA),
+                1 => _mm_prefetch(_addr as *const i8, _MM_HINT_T2),
+                2 => _mm_prefetch(_addr as *const i8, _MM_HINT_T1),
+                3 | _ => _mm_prefetch(_addr as *const i8, _MM_HINT_T0), // Default to highest locality
             }
         }
         #[cfg(not(target_arch = "x86_64"))]
         {
             // No-op on non-x86 architectures
-            let _ = (addr, locality);
+            let _ = (_addr, locality);
         }
     }
 
@@ -1056,15 +1043,15 @@ pub mod prefetch {
     /// dereferenced. The pointer does not need to be aligned, but should point to
     /// allocated memory that will be written to in the near future.
     #[inline]
-    pub unsafe fn prefetch_write<T>(addr: *const T) {
+    pub unsafe fn prefetch_write<T>(_addr: *const T) {
         #[cfg(target_arch = "x86_64")]
         {
-            _mm_prefetch(addr as *const i8, _MM_HINT_T0);
+            _mm_prefetch(_addr as *const i8, _MM_HINT_T0);
         }
         #[cfg(not(target_arch = "x86_64"))]
         {
             // No-op on non-x86 architectures
-            let _ = addr;
+            let _ = _addr;
         }
     }
 }
@@ -1074,12 +1061,12 @@ pub mod profiling {
     use super::*;
 
     /// Measure execution time and throughput of an operation
-    pub fn measure_performance<F, R>(operation: F) -> (R, Duration, f64)
+    pub fn measure_performance<F, R>(_operation: F) -> (R, Duration, f64)
     where
         F: FnOnce() -> R,
     {
         let start = Instant::now();
-        let result = operation();
+        let result = _operation();
         let duration = start.elapsed();
         let throughput = 1.0 / duration.as_secs_f64();
 
@@ -1106,7 +1093,7 @@ pub mod profiling {
             }
         }
 
-        pub fn record_access(&mut self, is_cache_miss: bool) {
+        pub fn record_cache_miss(&mut self, is_cache_miss: bool) {
             self.memory_accesses += 1;
             if is_cache_miss {
                 self.cache_misses += 1;
@@ -1146,7 +1133,7 @@ mod tests {
     #[test]
     fn test_performance_optimizer() {
         let mut optimizer = AdvancedPerformanceOptimizer::new();
-        let settings = optimizer.optimize_for("matrix_multiply", 1000);
+        let settings = optimizer.get_optimal_settings("matrix_multiply", 1000);
 
         assert!(settings.chunk_size > 0);
         assert!(settings.block_size > 0);

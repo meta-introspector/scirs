@@ -4,12 +4,14 @@
 //! computation following SciPy's approach and Percival & Walden (1993).
 //! Updated to remove ndarray-linalg dependency.
 
+use approx::assert_abs_diff_eq;
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
-use rustfft::{num_complex::Complex, FftPlanner};
+use rustfft::{FftPlanner, num_complex::Complex};
 use scirs2_core::validation::check_positive;
 use std::f64::consts::PI;
 
+#[allow(unused_imports)]
 /// Enhanced DPSS computation with proper SciPy-compatible implementation
 ///
 /// Computes the Discrete Prolate Spheroidal Sequences (Slepian sequences)
@@ -90,14 +92,14 @@ pub fn dpss_enhanced(
         tapers.row_mut(i).assign(&eigvec);
     }
 
-    // Compute concentration ratios if requested
-    let ratios = if return_ratios {
+    // Compute concentration _ratios if requested
+    let _ratios = if return_ratios {
         Some(compute_concentration_ratios(&tapers, w, n)?)
     } else {
         None
     };
 
-    Ok((tapers, ratios))
+    Ok((tapers, _ratios))
 }
 
 /// Build the tridiagonal matrix for the eigenvalue problem
@@ -125,10 +127,10 @@ fn solve_tridiagonal_symmetric(
     diagonal: &[f64],
     off_diagonal: &[f64],
 ) -> SignalResult<(Vec<f64>, Array2<f64>)> {
-    let n = diagonal.len();
+    let n = _diagonal.len();
 
     // Copy arrays for modification
-    let mut diag = diagonal.to_vec();
+    let mut diag = _diagonal.to_vec();
     let mut off_diag = off_diagonal.to_vec();
 
     // Initialize eigenvector matrix as identity
@@ -139,7 +141,7 @@ fn solve_tridiagonal_symmetric(
     let tolerance = 1e-12;
 
     for _iter in 0..max_iterations {
-        // Check for convergence - find off-diagonal elements that are small enough
+        // Check for convergence - find off-_diagonal elements that are small enough
         let mut converged = true;
         for i in 0..n - 1 {
             if off_diag[i].abs() > tolerance * (diag[i].abs() + diag[i + 1].abs()) {
@@ -178,14 +180,14 @@ fn solve_tridiagonal_symmetric(
 
 /// Compute Wilkinson shift for better convergence
 #[allow(dead_code)]
-fn wilkinson_shift(diag: &[f64], off_diag: &[f64]) -> f64 {
-    if diag.len() < 2 || off_diag.is_empty() {
+fn wilkinson_shift(_diag: &[f64], off_diag: &[f64]) -> f64 {
+    if _diag.len() < 2 || off_diag.is_empty() {
         return 0.0;
     }
 
-    let a = diag[0];
+    let a = _diag[0];
     let b = off_diag[0];
-    let c = diag[1];
+    let c = _diag[1];
 
     let d = (a - c) / 2.0;
     let sign = if d >= 0.0 { 1.0 } else { -1.0 };
@@ -195,8 +197,8 @@ fn wilkinson_shift(diag: &[f64], off_diag: &[f64]) -> f64 {
 
 /// Perform one QR step on tridiagonal matrix
 #[allow(dead_code)]
-fn qr_step(diag: &mut [f64], off_diag: &mut [f64], q: &mut Array2<f64>) -> SignalResult<()> {
-    let n = diag.len();
+fn qr_step(_diag: &mut [f64], off_diag: &mut [f64], q: &mut Array2<f64>) -> SignalResult<()> {
+    let n = _diag.len();
     if n <= 1 {
         return Ok(());
     }
@@ -208,18 +210,18 @@ fn qr_step(diag: &mut [f64], off_diag: &mut [f64], q: &mut Array2<f64>) -> Signa
     for i in 0..n - 1 {
         // Compute Givens rotation to eliminate off_diag[i]
         let (c, s) = givens_rotation(
-            diag[i] * c_prev + off_diag[i] * s_prev,
-            off_diag[i] * c_prev - diag[i] * s_prev + if i < n - 2 { off_diag[i + 1] } else { 0.0 },
+            _diag[i] * c_prev + off_diag[i] * s_prev,
+            off_diag[i] * c_prev - _diag[i] * s_prev + if i < n - 2 { off_diag[i + 1] } else { 0.0 },
         );
 
         // Apply rotation to tridiagonal matrix
         if i > 0 {
-            off_diag[i - 1] = c_prev * off_diag[i - 1] + s_prev * diag[i];
+            off_diag[i - 1] = c_prev * off_diag[i - 1] + s_prev * _diag[i];
         }
 
-        let temp = c * diag[i] + s * off_diag[i];
-        diag[i + 1] = -s * diag[i] + c * diag[i + 1];
-        diag[i] = temp;
+        let temp = c * _diag[i] + s * off_diag[i];
+        _diag[i + 1] = -s * _diag[i] + c * _diag[i + 1];
+        _diag[i] = temp;
 
         if i < n - 2 {
             let temp = c * off_diag[i + 1];
@@ -260,29 +262,29 @@ fn givens_rotation(a: f64, b: f64) -> (f64, f64) {
 
 /// Normalize eigenvector to unit norm
 #[allow(dead_code)]
-fn normalize_eigenvector(eigvec: &mut Array1<f64>) {
-    let norm = eigvec.dot(eigvec).sqrt();
+fn normalize_eigenvector(_eigvec: &mut Array1<f64>) {
+    let norm = _eigvec.dot(_eigvec).sqrt();
     if norm > 1e-10 {
-        *eigvec /= norm;
+        *_eigvec /= norm;
     }
 }
 
 /// Apply sign convention to ensure consistency
 #[allow(dead_code)]
-fn apply_sign_convention(eigvec: &mut Array1<f64>, order: usize) {
-    let n = eigvec.len();
+fn apply_sign_convention(_eigvec: &mut Array1<f64>, order: usize) {
+    let n = _eigvec.len();
 
     if order % 2 == 0 {
         // Even order: ensure symmetric taper has positive average
-        let sum: f64 = eigvec.sum();
+        let sum: f64 = _eigvec.sum();
         if sum < 0.0 {
-            *eigvec *= -1.0;
+            *_eigvec *= -1.0;
         }
     } else {
         // Odd order: ensure antisymmetric taper starts positive
         let mid = n / 2;
-        if eigvec[0] < 0.0 || (n % 2 == 1 && eigvec[mid] < 0.0) {
-            *eigvec *= -1.0;
+        if _eigvec[0] < 0.0 || (n % 2 == 1 && _eigvec[mid] < 0.0) {
+            *_eigvec *= -1.0;
         }
     }
 }
@@ -404,7 +406,7 @@ pub fn validate_dpss_implementation() -> SignalResult<bool> {
     // Check normalization
     for i in 0..k {
         let norm = tapers.row(i).dot(&tapers.row(i)).sqrt();
-        if (norm - 1.0).abs() > 1e-10 {
+        if ((norm - 1.0) as f64).abs() > 1e-10 {
             eprintln!("Taper {} not normalized: norm = {:.10}", i, norm);
             return Ok(false);
         }
@@ -451,8 +453,7 @@ pub fn generate_reference_values() -> SignalResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_abs_diff_eq;
-
+use approx::{assert_relative_eq};
     #[test]
     fn test_dpss_basic() {
         let (tapers, ratios) = dpss_enhanced(64, 4.0, 7, true).unwrap();
@@ -464,7 +465,7 @@ mod tests {
 
     #[test]
     fn test_dpss_orthogonality() {
-        let (tapers, _) = dpss_enhanced(128, 4.0, 7, false).unwrap();
+        let (tapers_) = dpss_enhanced(128, 4.0, 7, false).unwrap();
 
         // Check orthogonality
         for i in 0..7 {
@@ -477,7 +478,7 @@ mod tests {
 
     #[test]
     fn test_dpss_normalization() {
-        let (tapers, _) = dpss_enhanced(128, 4.0, 7, false).unwrap();
+        let (tapers_) = dpss_enhanced(128, 4.0, 7, false).unwrap();
 
         // Check unit norm
         for i in 0..7 {

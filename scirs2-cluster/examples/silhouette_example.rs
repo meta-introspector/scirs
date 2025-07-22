@@ -1,6 +1,6 @@
 use ndarray::Array2;
-use scirs2_cluster::metrics::{silhouette_samples, silhouette_score};
-use scirs2_cluster::vq::{kmeans2, MinitMethod, MissingMethod};
+use scirs2__cluster::metrics::{silhouette_samples, silhouette_score};
+use scirs2__cluster::vq::{kmeans2, MinitMethod, MissingMethod};
 
 #[allow(dead_code)]
 fn main() {
@@ -47,7 +47,7 @@ fn main() {
             }
 
             // Print statistics per cluster
-            for (cluster_id, _) in cluster_sizes.iter().enumerate().take(k) {
+            for (cluster_id_) in cluster_sizes.iter().enumerate().take(k) {
                 let mut cluster_scores = Vec::new();
 
                 for (idx, &label) in labels_i32.iter().enumerate() {

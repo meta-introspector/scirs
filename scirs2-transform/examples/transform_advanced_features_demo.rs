@@ -7,18 +7,18 @@
 //! - Production monitoring
 
 use ndarray::Array2;
-use scirs2_transform::{auto_feature_engineering::AutoFeatureEngineer, Result};
+use scirs2__transform::{auto_feature_engineering::AutoFeatureEngineer, Result};
 
 #[cfg(feature = "gpu")]
-use scirs2_transform::gpu::GpuPCA;
+use scirs2__transform::gpu::GpuPCA;
 
 #[cfg(feature = "distributed")]
-use scirs2_transform::distributed::{
+use scirs2__transform::distributed::{
     DistributedConfig, DistributedPCA, NodeInfo, PartitioningStrategy,
 };
 
 #[cfg(feature = "monitoring")]
-use scirs2_transform::monitoring::{
+use scirs2__transform::monitoring::{
     AlertConfig, DriftMethod, PerformanceMetrics, TransformationMonitor,
 };
 
@@ -57,14 +57,14 @@ fn main() -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn demo_automated_feature_engineering(data: &Array2<f64>) -> Result<()> {
+fn demo_automated_feature_engineering(_data: &Array2<f64>) -> Result<()> {
     println!("\n📊 Automated Feature Engineering Demo");
     println!("=====================================");
 
     let auto_engineer = AutoFeatureEngineer::new()?;
 
     // Extract meta-features from the dataset
-    let meta_features = auto_engineer.extract_meta_features(&data.view())?;
+    let meta_features = auto_engineer.extract_meta_features(&_data.view())?;
     println!("📈 Dataset meta-features:");
     println!("   - Samples: {}", meta_features.n_samples);
     println!("   - Features: {}", meta_features.n_features);
@@ -76,7 +76,7 @@ fn demo_automated_feature_engineering(data: &Array2<f64>) -> Result<()> {
     println!("   - Outlier ratio: {:.3}", meta_features.outlier_ratio);
 
     // Get transformation recommendations
-    let recommendations = auto_engineer.recommend_transformations(&data.view())?;
+    let recommendations = auto_engineer.recommend_transformations(&_data.view())?;
     println!("\n🎯 Recommended transformations:");
     for (i, config) in recommendations.iter().enumerate() {
         println!(
@@ -92,7 +92,7 @@ fn demo_automated_feature_engineering(data: &Array2<f64>) -> Result<()> {
 
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn demo_gpu_acceleration(data: &Array2<f64>) -> Result<()> {
+fn demo_gpu_acceleration(_data: &Array2<f64>) -> Result<()> {
     println!("\n🎮 GPU Acceleration Demo");
     println!("========================");
 
@@ -116,7 +116,7 @@ fn demo_gpu_acceleration(data: &Array2<f64>) -> Result<()> {
 }
 
 #[cfg(feature = "distributed")]
-async fn demo_distributed_processing(data: &Array2<f64>) -> Result<()> {
+async fn demo_distributed_processing(_data: &Array2<f64>) -> Result<()> {
     println!("\n🌐 Distributed Processing Demo");
     println!("==============================");
 
@@ -164,24 +164,24 @@ async fn demo_distributed_processing(data: &Array2<f64>) -> Result<()> {
 
 #[cfg(feature = "monitoring")]
 #[allow(dead_code)]
-fn demo_production_monitoring(data: &Array2<f64>) -> Result<()> {
+fn demo_production_monitoring(_data: &Array2<f64>) -> Result<()> {
     println!("\n📊 Production Monitoring Demo");
     println!("=============================");
 
     let mut monitor = TransformationMonitor::new()?;
 
-    // Set reference data for drift detection
-    let reference_data = data.slice(ndarray::s![..500, ..]).to_owned();
+    // Set reference _data for drift detection
+    let reference_data = _data.slice(ndarray::s![..500, ..]).to_owned();
     monitor.set_reference_data(reference_data, None)?;
-    println!("✅ Reference data set for drift detection");
+    println!("✅ Reference _data set for drift detection");
 
     // Configure drift detection methods
     monitor.set_drift_method("feature_0", DriftMethod::KolmogorovSmirnov)?;
     monitor.set_drift_method("feature_1", DriftMethod::PopulationStabilityIndex)?;
     println!("⚙️  Drift detection methods configured");
 
-    // Simulate new data for drift detection
-    let new_data = data.slice(ndarray::s![500.., ..]);
+    // Simulate new _data for drift detection
+    let new_data = _data.slice(ndarray::s![500.., ..]);
     let drift_results = monitor.detect_drift(&new_data)?;
 
     println!("📈 Drift detection results:");
@@ -218,11 +218,11 @@ fn demo_production_monitoring(data: &Array2<f64>) -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn generate_sample_data(n_samples: usize, n_features: usize) -> Result<Array2<f64>> {
+fn generate_sample_data(_n_samples: usize, n_features: usize) -> Result<Array2<f64>> {
     use ndarray_rand::rand_distr::Normal;
     use ndarray_rand::RandomExt;
 
-    let data = Array2::random((n_samples, n_features), Normal::new(0.0, 1.0).unwrap());
+    let data = Array2::random((_n_samples, n_features), Normal::new(0.0, 1.0).unwrap());
     Ok(data)
 }
 

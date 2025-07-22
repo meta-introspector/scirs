@@ -3,7 +3,7 @@
 //! This example shows how to use the Advanced mode coordinator for comprehensive
 //! validation and performance testing of signal processing implementations.
 
-use scirs2_signal::advanced_validation_suite::{
+use scirs2__signal::advanced_validation_suite::{
     run_comprehensive_validation, run_quick_comprehensive_validation, ComprehensiveValidationConfig,
 };
 

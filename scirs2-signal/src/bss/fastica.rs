@@ -2,13 +2,15 @@
 //!
 //! This module implements the FastICA algorithm for blind source separation.
 
-use super::{BssConfig, NonlinearityFunction};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2};
+use ndarray::{Array1, Array2, s};
 use rand::SeedableRng;
-use rand_distr::{Distribution, Normal};
-use scirs2_linalg::eigh;
+use rand__distr::{Distribution, Normal};
+use scirs2__linalg::eigh;
+use statrs::statistics::Statistics;
+use super::{BssConfig, NonlinearityFunction};
 
+#[allow(unused_imports)]
 /// Implement FastICA algorithm for ICA
 ///
 /// FastICA is a computationally efficient method that uses fixed-point iteration.
@@ -127,7 +129,7 @@ pub fn fast_ica(
                     new_wp[i] = sum_gx_x / (n_samples as f64) - g_prime_sum * wp[i];
                 }
 
-                // Decorrelate from existing components (Gram-Schmidt orthogonalization)
+                // Decorrelate from existing _components (Gram-Schmidt orthogonalization)
                 for i in 0..p {
                     let wi = w.slice(s![i, ..]);
                     let proj = new_wp.dot(&wi);
@@ -228,7 +230,7 @@ pub fn fast_ica(
         }
     }
 
-    // Extract the independent components
+    // Extract the independent _components
     let sources = w.dot(signals);
 
     Ok((sources, w))

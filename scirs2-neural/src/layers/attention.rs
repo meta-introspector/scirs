@@ -142,9 +142,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
     /// * `rng` - Random number generator for weight initialization
     /// # Returns
     /// * A new multi-head attention layer
-    pub fn new<R: Rng>(d_model: usize, config: AttentionConfig, rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng>(_d_model: usize, config: AttentionConfig, rng: &mut R) -> Result<Self> {
         // Verify configuration
-        if d_model % config.num_heads != 0 {
+        if _d_model % config.num_heads != 0 {
             return Err(NeuralError::InvalidArchitecture(format!(
                 "Model dimension ({}) must be divisible by the number of heads ({})",
                 d_model, config.num_heads
@@ -162,8 +162,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
                 .map(|_| {
                     let val = F::from(rng.random_range(-1.0..1.0)).ok_or_else(|| {
                         NeuralError::InvalidArchitecture(
-                            "Failed to convert random value".to_string(),
-                        )
+                            "Failed to convert random value".to_string()..)
                     });
                     val.map(|v| v * scale).unwrap_or_else(|_| F::zero())
                 })

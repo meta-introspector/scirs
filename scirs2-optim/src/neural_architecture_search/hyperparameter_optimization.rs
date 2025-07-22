@@ -1541,24 +1541,24 @@ impl<T: Float> Default for EvaluationBudget {
 
 impl<T: Float + Send + Sync> HyperparameterOptimizationPipeline<T> {
     /// Create new hyperparameter optimization pipeline
-    pub fn new(config: HPOConfig<T>) -> Result<Self> {
-        let strategies = Self::create_strategies(&config)?;
-        let parameter_space = ParameterSpaceManager::new(config.parameter_space.clone())?;
+    pub fn new(_config: HPOConfig<T>) -> Result<Self> {
+        let strategies = Self::create_strategies(&_config)?;
+        let parameter_space = ParameterSpaceManager::new(_config.parameter_space.clone())?;
         let evaluation_scheduler = EvaluationScheduler::new(
             SchedulerConfig::default(),
-            config.resource_constraints.clone(),
+            _config.resource_constraints.clone(),
         )?;
         let result_database = HPOResultDatabase::new();
-        let multi_fidelity_manager = if let Some(mf_config) = config.multi_fidelity.clone() {
+        let multi_fidelity_manager = if let Some(mf_config) = _config.multi_fidelity.clone() {
             Some(MultiFidelityManager::new(mf_config)?)
         } else {
             None
         };
-        let early_stopping = EarlyStoppingController::new(config.early_stopping.clone());
-        let ensemble_optimizer = EnsembleOptimizer::new(config.ensemble_settings.clone())?;
+        let early_stopping = EarlyStoppingController::new(_config.early_stopping.clone());
+        let ensemble_optimizer = EnsembleOptimizer::new(_config.ensemble_settings.clone())?;
         
         Ok(Self {
-            config,
+            _config,
             strategies,
             parameter_space,
             evaluation_scheduler,
@@ -1760,11 +1760,11 @@ impl<T: Float + Send + Sync> HyperparameterOptimizationPipeline<T> {
     
     // Helper methods would be implemented here...
     fn create_strategies(_config: &HPOConfig<T>) -> Result<Vec<Box<dyn HPOStrategy<T>>>> {
-        // Implementation would create strategy instances based on config
+        // Implementation would create strategy instances based on _config
         Ok(vec![])
     }
     
-    fn estimate_resource_requirements(&self, _config: &ParameterConfiguration<T>) -> Result<ResourceRequirements<T>> {
+    fn estimate_resource_requirements(&self_config: &ParameterConfiguration<T>) -> Result<ResourceRequirements<T>> {
         // Placeholder implementation
         Ok(ResourceRequirements {
             cpu_cores: 1,
@@ -1871,7 +1871,7 @@ pub struct OptimizationTracePoint<T: Float> {
 impl<T: Float + Send + Sync> ParameterSpaceManager<T> {
     fn new(_space: ParameterSearchSpace) -> Result<Self> {
         Ok(Self {
-            space: _space,
+            _space: _space,
             transformations: HashMap::new(),
             validation_rules: Vec::new(),
             sampling_strategies: HashMap::new()})
@@ -1884,12 +1884,12 @@ impl<T: Float + Send + Sync> ParameterSpaceManager<T> {
 }
 
 impl<T: Float + Send + Sync> EvaluationScheduler<T> {
-    fn new(_config: SchedulerConfig, _constraints: ResourceConstraints<T>) -> Result<Self> {
+    fn new(_config: SchedulerConfig_constraints: ResourceConstraints<T>) -> Result<Self> {
         Ok(Self {
             pending_queue: VecDeque::new(),
             running_evaluations: HashMap::new(),
             completed_evaluations: VecDeque::new(),
-            config: _config,
+            _config: _config,
             resource_monitor: ResourceMonitor::new(_constraints)})
     }
     
@@ -1897,7 +1897,7 @@ impl<T: Float + Send + Sync> EvaluationScheduler<T> {
         Ok(())
     }
     
-    fn schedule_task(&mut self, _task: EvaluationTask<T>) -> Result<()> {
+    fn schedule_task(&mut self_task: EvaluationTask<T>) -> Result<()> {
         Ok(())
     }
     
@@ -1920,7 +1920,7 @@ impl<T: Float + Send + Sync> HPOResultDatabase<T> {
             statistics: DatabaseStatistics::default()}
     }
     
-    fn add_result(&mut self, _result: HPOResult<T>) -> Result<()> {
+    fn add_result(&mut self_result: HPOResult<T>) -> Result<()> {
         Ok(())
     }
     
@@ -1928,7 +1928,7 @@ impl<T: Float + Send + Sync> HPOResultDatabase<T> {
         self.results.clone()
     }
     
-    fn get_best_result(&self, _objective: &str) -> Option<&HPOResult<T>> {
+    fn get_best_result(&self_objective: &str) -> Option<&HPOResult<T>> {
         None
     }
     
@@ -1948,7 +1948,7 @@ impl<T: Float + Send + Sync> HPOResultDatabase<T> {
 impl<T: Float + Send + Sync> MultiFidelityManager<T> {
     fn new(_settings: MultiFidelitySettings<T>) -> Result<Self> {
         Ok(Self {
-            settings: _settings,
+            _settings: _settings,
             fidelity_assignments: HashMap::new(),
             promotion_queue: VecDeque::new(),
             resource_tracker: FidelityResourceTracker::new()})
@@ -1958,7 +1958,7 @@ impl<T: Float + Send + Sync> MultiFidelityManager<T> {
         Ok(configs)
     }
     
-    fn update_with_result(&mut self, _result: &HPOResult<T>) -> Result<()> {
+    fn update_with_result(&mut self_result: &HPOResult<T>) -> Result<()> {
         Ok(())
     }
 }
@@ -1966,14 +1966,14 @@ impl<T: Float + Send + Sync> MultiFidelityManager<T> {
 impl<T: Float + Send + Sync> EarlyStoppingController<T> {
     fn new(_criteria: EarlyStoppingCriteria<T>) -> Self {
         Self {
-            criteria: _criteria,
+            _criteria: _criteria,
             performance_history: VecDeque::new(),
             best_performance: None,
             iterations_without_improvement: 0,
             state: EarlyStoppingState::Active}
     }
     
-    fn update(&mut self, _performance: T) {
+    fn update(&mut self_performance: T) {
         // Would implement early stopping logic
     }
     
@@ -1985,14 +1985,14 @@ impl<T: Float + Send + Sync> EarlyStoppingController<T> {
 impl<T: Float + Send + Sync> EnsembleOptimizer<T> {
     fn new(_settings: EnsembleSettings<T>) -> Result<Self> {
         Ok(Self {
-            settings: _settings,
+            _settings: _settings,
             strategies: Vec::new(),
             performance_tracker: StrategyPerformanceTracker::new(),
             weight_controller: WeightAdaptationController::new(),
             combination_engine: CombinationEngine::new()})
     }
     
-    fn initialize(&mut self, _config: &HPOConfig<T>) -> Result<()> {
+    fn initialize(&mut self_config: &HPOConfig<T>) -> Result<()> {
         Ok(())
     }
     
@@ -2000,7 +2000,7 @@ impl<T: Float + Send + Sync> EnsembleOptimizer<T> {
         Ok(vec![])
     }
     
-    fn update(&mut self, _result: &HPOResult<T>) -> Result<()> {
+    fn update(&mut self_result: &HPOResult<T>) -> Result<()> {
         Ok(())
     }
 }

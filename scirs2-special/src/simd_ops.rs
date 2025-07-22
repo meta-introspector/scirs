@@ -15,8 +15,8 @@ use scirs2_core::parallel_ops::*;
 /// SIMD-optimized gamma function for f32 arrays
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn gamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
-    let len = input.len();
+pub fn gamma_f32_simd(_input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     // Process in SIMD chunks
@@ -28,7 +28,7 @@ pub fn gamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let end = start + chunk_size;
 
         // Load SIMD vectors
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &_input.as_slice().unwrap()[start..end];
 
         // Compute gamma using Stirling's approximation for SIMD
         // This is a simplified version - in practice you'd want more precision
@@ -40,7 +40,7 @@ pub fn gamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
     // Handle remaining elements with scalar gamma
     for i in (chunks * chunk_size)..len {
-        output[i] = crate::gamma::gamma(input[i] as f64) as f32;
+        output[i] = crate::gamma::gamma(_input[i] as f64) as f32;
     }
 
     Ok(output)
@@ -49,8 +49,8 @@ pub fn gamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 /// SIMD-optimized gamma function for f64 arrays
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn gamma_f64_simd(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
-    let len = input.len();
+pub fn gamma_f64_simd(_input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     // Process in SIMD chunks
@@ -62,7 +62,7 @@ pub fn gamma_f64_simd(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
         let end = start + chunk_size;
 
         // Load SIMD vectors
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &_input.as_slice().unwrap()[start..end];
 
         // Compute gamma using SIMD operations
         let results = simd_gamma_approx_f64(x_slice);
@@ -73,7 +73,7 @@ pub fn gamma_f64_simd(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 
     // Handle remaining elements with scalar gamma
     for i in (chunks * chunk_size)..len {
-        output[i] = crate::gamma::gamma(input[i]);
+        output[i] = crate::gamma::gamma(_input[i]);
     }
 
     Ok(output)
@@ -260,12 +260,12 @@ fn lanczos_gamma_f64(z: f64) -> f64 {
 /// SIMD-optimized exponential function
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn exp_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
-    let len = input.len();
+pub fn exp_f32_simd(_input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     // Use SIMD exp if available
-    if let Some(input_slice) = input.as_slice() {
+    if let Some(input_slice) = _input.as_slice() {
         if let Some(output_slice) = output.as_slice_mut() {
             simd_exp_f32_slice(input_slice, output_slice);
             return Ok(output);
@@ -274,7 +274,7 @@ pub fn exp_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
     // Fallback to element-wise computation
     for i in 0..len {
-        output[i] = input[i].exp();
+        output[i] = _input[i].exp();
     }
 
     Ok(output)
@@ -283,9 +283,9 @@ pub fn exp_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 /// SIMD exponential for f32 slices
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn simd_exp_f32_slice(input: &[f32], output: &mut [f32]) {
+fn simd_exp_f32_slice(_input: &[f32], output: &mut [f32]) {
     let chunk_size = 8;
-    let chunks = input.len() / chunk_size;
+    let chunks = _input.len() / chunk_size;
 
     // Process SIMD chunks
     for i in 0..chunks {
@@ -294,21 +294,21 @@ fn simd_exp_f32_slice(input: &[f32], output: &mut [f32]) {
 
         // For now, use scalar exp - in practice you'd use SIMD exp approximation
         for j in start..end {
-            output[j] = input[j].exp();
+            output[j] = _input[j].exp();
         }
     }
 
     // Handle remaining elements
-    for i in (chunks * chunk_size)..input.len() {
-        output[i] = input[i].exp();
+    for i in (chunks * chunk_size).._input.len() {
+        output[i] = _input[i].exp();
     }
 }
 
 /// SIMD-optimized error function for f32 arrays
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn erf_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
-    let len = input.len();
+pub fn erf_f32_simd(_input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     // Process in chunks for better cache efficiency
@@ -321,13 +321,13 @@ pub fn erf_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
         // Use vectorized erf computation
         for j in start..end {
-            output[j] = crate::erf::erf(input[j] as f64) as f32;
+            output[j] = crate::erf::erf(_input[j] as f64) as f32;
         }
     }
 
     // Handle remaining elements
     for i in (chunks * chunk_size)..len {
-        output[i] = crate::erf::erf(input[i] as f64) as f32;
+        output[i] = crate::erf::erf(_input[i] as f64) as f32;
     }
 
     Ok(output)
@@ -336,8 +336,8 @@ pub fn erf_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 /// SIMD-optimized Bessel J0 function for f32 arrays
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn j0_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
-    let len = input.len();
+pub fn j0_f32_simd(_input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     let chunk_size = 8;
@@ -349,13 +349,13 @@ pub fn j0_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
         // Vectorized J0 computation
         for j in start..end {
-            output[j] = crate::bessel::j0(input[j] as f64) as f32;
+            output[j] = crate::bessel::j0(_input[j] as f64) as f32;
         }
     }
 
     // Handle remaining elements
     for i in (chunks * chunk_size)..len {
-        output[i] = crate::bessel::j0(input[i] as f64) as f32;
+        output[i] = crate::bessel::j0(_input[i] as f64) as f32;
     }
 
     Ok(output)
@@ -387,13 +387,13 @@ pub fn vectorized_special_ops() -> SpecialResult<()> {
 /// Parallel-optimized gamma function for f64 arrays
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn gamma_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
-    let len = input.len();
+pub fn gamma_f64_parallel(_input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     // Use parallel processing for large arrays
     if len > 1000 {
-        if let (Some(input_slice), Some(output_slice)) = (input.as_slice(), output.as_slice_mut()) {
+        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut()) {
             output_slice
                 .par_iter_mut()
                 .zip(input_slice.par_iter())
@@ -403,14 +403,14 @@ pub fn gamma_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>>
         } else {
             // Fallback for non-contiguous arrays
             use ndarray::Zip;
-            Zip::from(&mut output).and(input).par_for_each(|out, &inp| {
+            Zip::from(&mut output).and(_input).par_for_each(|out, &inp| {
                 *out = crate::gamma::gamma(inp);
             });
         }
     } else {
         // Use sequential processing for small arrays
         for i in 0..len {
-            output[i] = crate::gamma::gamma(input[i]);
+            output[i] = crate::gamma::gamma(_input[i]);
         }
     }
 
@@ -420,13 +420,13 @@ pub fn gamma_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>>
 /// Parallel-optimized Bessel J0 function for f64 arrays
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn j0_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
-    let len = input.len();
+pub fn j0_f64_parallel(_input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     // Use parallel processing for large arrays
     if len > 1000 {
-        if let (Some(input_slice), Some(output_slice)) = (input.as_slice(), output.as_slice_mut()) {
+        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut()) {
             output_slice
                 .par_iter_mut()
                 .zip(input_slice.par_iter())
@@ -436,14 +436,14 @@ pub fn j0_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
         } else {
             // Fallback for non-contiguous arrays
             use ndarray::Zip;
-            Zip::from(&mut output).and(input).par_for_each(|out, &inp| {
+            Zip::from(&mut output).and(_input).par_for_each(|out, &inp| {
                 *out = crate::bessel::j0(inp);
             });
         }
     } else {
         // Use sequential processing for small arrays
         for i in 0..len {
-            output[i] = crate::bessel::j0(input[i]);
+            output[i] = crate::bessel::j0(_input[i]);
         }
     }
 
@@ -453,8 +453,8 @@ pub fn j0_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 /// Combined SIMD and parallel optimized gamma function
 #[cfg(all(feature = "simd", feature = "parallel"))]
 #[allow(dead_code)]
-pub fn gamma_f32_simd_parallel(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
-    let len = input.len();
+pub fn gamma_f32_simd_parallel(_input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     const PARALLEL_THRESHOLD: usize = 10000;
@@ -466,7 +466,7 @@ pub fn gamma_f32_simd_parallel(input: &ArrayView1<f32>) -> SpecialResult<Array1<
         let _remainder = len % SIMD_CHUNK_SIZE;
 
         // For very large arrays, use a simpler parallel approach without complex SIMD chunking
-        if let (Some(input_slice), Some(output_slice)) = (input.as_slice(), output.as_slice_mut()) {
+        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut()) {
             output_slice
                 .par_iter_mut()
                 .zip(input_slice.par_iter())
@@ -476,17 +476,17 @@ pub fn gamma_f32_simd_parallel(input: &ArrayView1<f32>) -> SpecialResult<Array1<
         } else {
             // Fallback for non-contiguous arrays
             use ndarray::Zip;
-            Zip::from(&mut output).and(input).par_for_each(|out, &inp| {
+            Zip::from(&mut output).and(_input).par_for_each(|out, &inp| {
                 *out = crate::gamma::gamma(inp as f64) as f32;
             });
         }
     } else if len > 1000 {
         // Use SIMD for medium arrays
-        return gamma_f32_simd(input);
+        return gamma_f32_simd(_input);
     } else {
         // Use sequential for small arrays
         for i in 0..len {
-            output[i] = crate::gamma::gamma(input[i] as f64) as f32;
+            output[i] = crate::gamma::gamma(_input[i] as f64) as f32;
         }
     }
 
@@ -496,14 +496,14 @@ pub fn gamma_f32_simd_parallel(input: &ArrayView1<f32>) -> SpecialResult<Array1<
 /// Benchmark parallel vs sequential performance
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn benchmark_parallel_performance(size: usize) -> SpecialResult<()> {
+pub fn benchmark_parallel_performance(_size: usize) -> SpecialResult<()> {
     use std::time::Instant;
 
     // Create test data
     let data_f64: Array1<f64> =
-        Array1::from_vec((0..size).map(|i| (i as f64) * 0.001 + 1.0).collect());
+        Array1::from_vec((0.._size).map(|i| (i as f64) * 0.001 + 1.0).collect());
 
-    println!("Benchmarking parallel performance with {} elements:", size);
+    println!("Benchmarking parallel performance with {} elements:", _size);
 
     // Sequential gamma
     let start = Instant::now();
@@ -522,7 +522,7 @@ pub fn benchmark_parallel_performance(size: usize) -> SpecialResult<()> {
     println!("  Speedup:    {:.2}x", speedup);
 
     // Test Bessel J0 as well
-    let bessel_data: Array1<f64> = Array1::from_vec((0..size).map(|i| (i as f64) * 0.01).collect());
+    let bessel_data: Array1<f64> = Array1::from_vec((0.._size).map(|i| (i as f64) * 0.01).collect());
 
     let start = Instant::now();
     let _sequential: Array1<f64> = bessel_data.mapv(crate::bessel::j0);
@@ -544,14 +544,14 @@ pub fn benchmark_parallel_performance(size: usize) -> SpecialResult<()> {
 
 /// Adaptive processing strategy based on array size and available features
 #[allow(dead_code)]
-pub fn adaptive_gamma_processing(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
-    let len = input.len();
+pub fn adaptive_gamma_processing(_input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
+    let len = _input.len();
 
     #[cfg(all(feature = "simd", feature = "parallel"))]
     {
         if len > 50000 {
             // Convert to f32 for SIMD+parallel processing if precision allows
-            let input_f32: Array1<f32> = input.mapv(|x| x as f32);
+            let _input_f32: Array1<f32> = _input.mapv(|x| x as f32);
             let result_f32 = gamma_f32_simd_parallel(&input_f32.view())?;
             return Ok(result_f32.mapv(|x| x as f64));
         }
@@ -560,21 +560,21 @@ pub fn adaptive_gamma_processing(input: &ArrayView1<f64>) -> SpecialResult<Array
     #[cfg(feature = "parallel")]
     {
         if len > 10000 {
-            return gamma_f64_parallel(input);
+            return gamma_f64_parallel(_input);
         }
     }
 
     #[cfg(feature = "simd")]
     {
         if len > 1000 {
-            return gamma_f64_simd(input);
+            return gamma_f64_simd(_input);
         }
     }
 
     // Fallback to sequential processing
     let mut output = Array1::zeros(len);
     for i in 0..len {
-        output[i] = crate::gamma::gamma(input[i]);
+        output[i] = crate::gamma::gamma(_input[i]);
     }
     Ok(output)
 }
@@ -582,14 +582,14 @@ pub fn adaptive_gamma_processing(input: &ArrayView1<f64>) -> SpecialResult<Array
 /// Benchmark SIMD vs scalar performance
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn benchmark_simd_performance(size: usize) -> SpecialResult<()> {
+pub fn benchmark_simd_performance(_size: usize) -> SpecialResult<()> {
     use std::time::Instant;
 
     // Create test data
     let data_f32: Array1<f32> =
-        Array1::from_vec((0..size).map(|i| (i as f32) * 0.01 + 1.0).collect());
+        Array1::from_vec((0.._size).map(|i| (i as f32) * 0.01 + 1.0).collect());
 
-    println!("Benchmarking SIMD performance with {} elements:", size);
+    println!("Benchmarking SIMD performance with {} elements:", _size);
 
     // Benchmark gamma function
     let start = Instant::now();
@@ -631,8 +631,8 @@ pub fn benchmark_simd_performance(size: usize) -> SpecialResult<()> {
 /// SIMD-optimized logarithm function for f32 arrays
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn log_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
-    let len = input.len();
+pub fn log_f32_simd(_input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     let chunk_size = 8; // f32x8 for AVX2
@@ -643,7 +643,7 @@ pub fn log_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let end = start + chunk_size;
 
         // Load SIMD vectors
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &_input.as_slice().unwrap()[start..end];
 
         // Compute log using SIMD approximation
         let results = simd_log_approx_f32(x_slice);
@@ -654,7 +654,7 @@ pub fn log_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
     // Handle remaining elements
     for i in (chunks * chunk_size)..len {
-        output[i] = input[i].ln();
+        output[i] = _input[i].ln();
     }
 
     Ok(output)
@@ -663,8 +663,8 @@ pub fn log_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 /// SIMD-optimized sine function for f32 arrays
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn sin_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
-    let len = input.len();
+pub fn sin_f32_simd(_input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     let chunk_size = 8;
@@ -674,14 +674,14 @@ pub fn sin_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let start = i * chunk_size;
         let end = start + chunk_size;
 
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &_input.as_slice().unwrap()[start..end];
         let results = simd_sin_approx_f32(x_slice);
 
         output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
     }
 
     for i in (chunks * chunk_size)..len {
-        output[i] = input[i].sin();
+        output[i] = _input[i].sin();
     }
 
     Ok(output)
@@ -690,8 +690,8 @@ pub fn sin_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 /// SIMD-optimized cosine function for f32 arrays
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn cos_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
-    let len = input.len();
+pub fn cos_f32_simd(_input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     let chunk_size = 8;
@@ -701,14 +701,14 @@ pub fn cos_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let start = i * chunk_size;
         let end = start + chunk_size;
 
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &_input.as_slice().unwrap()[start..end];
         let results = simd_cos_approx_f32(x_slice);
 
         output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
     }
 
     for i in (chunks * chunk_size)..len {
-        output[i] = input[i].cos();
+        output[i] = _input[i].cos();
     }
 
     Ok(output)
@@ -717,8 +717,8 @@ pub fn cos_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 /// SIMD-optimized Bessel J1 function for f32 arrays
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn j1_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
-    let len = input.len();
+pub fn j1_f32_simd(_input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     let chunk_size = 8;
@@ -728,7 +728,7 @@ pub fn j1_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let start = i * chunk_size;
         let end = start + chunk_size;
 
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &_input.as_slice().unwrap()[start..end];
         let results = simd_j1_approx_f32(x_slice);
 
         output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
@@ -736,7 +736,7 @@ pub fn j1_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
     // Handle remaining elements with scalar j1
     for i in (chunks * chunk_size)..len {
-        output[i] = crate::bessel::j1(input[i] as f64) as f32;
+        output[i] = crate::bessel::j1(_input[i] as f64) as f32;
     }
 
     Ok(output)
@@ -745,8 +745,8 @@ pub fn j1_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 /// SIMD-optimized error function complement (erfc) for f32 arrays
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn erfc_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
-    let len = input.len();
+pub fn erfc_f32_simd(_input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     let chunk_size = 8;
@@ -756,7 +756,7 @@ pub fn erfc_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let start = i * chunk_size;
         let end = start + chunk_size;
 
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &_input.as_slice().unwrap()[start..end];
         let results = simd_erfc_approx_f32(x_slice);
 
         output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
@@ -764,7 +764,7 @@ pub fn erfc_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
     // Handle remaining elements
     for i in (chunks * chunk_size)..len {
-        output[i] = crate::erf::erfc(input[i] as f64) as f32;
+        output[i] = crate::erf::erfc(_input[i] as f64) as f32;
     }
 
     Ok(output)
@@ -773,8 +773,8 @@ pub fn erfc_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 /// SIMD-optimized digamma function for f32 arrays
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn digamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
-    let len = input.len();
+pub fn digamma_f32_simd(_input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
 
     let chunk_size = 8;
@@ -784,7 +784,7 @@ pub fn digamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
         let start = i * chunk_size;
         let end = start + chunk_size;
 
-        let x_slice = &input.as_slice().unwrap()[start..end];
+        let x_slice = &_input.as_slice().unwrap()[start..end];
         let results = simd_digamma_approx_f32(x_slice);
 
         output.as_slice_mut().unwrap()[start..end].copy_from_slice(&results);
@@ -792,7 +792,7 @@ pub fn digamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
     // Handle remaining elements
     for i in (chunks * chunk_size)..len {
-        output[i] = crate::gamma::digamma(input[i] as f64) as f32;
+        output[i] = crate::gamma::digamma(_input[i] as f64) as f32;
     }
 
     Ok(output)

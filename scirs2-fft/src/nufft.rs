@@ -15,7 +15,7 @@
 //! * Type 2 (Uniform to Non-Uniform): Data at uniform locations, transform to non-uniform frequency grid
 
 use crate::error::{FFTError, FFTResult};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::Zero;
 use std::f64::consts::PI;
 
@@ -54,9 +54,9 @@ pub enum InterpolationType {
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::nufft::{nufft_type1, InterpolationType};
+/// use scirs2__fft::nufft::{nufft_type1, InterpolationType};
 /// use std::f64::consts::PI;
-/// use num_complex::Complex64;
+/// use num__complex::Complex64;
 ///
 /// // Create non-uniform sample points in [-π, π]
 /// let n = 100;
@@ -116,7 +116,7 @@ pub fn nufft_type1(
     let tau = 2.0; // Oversampling factor, usually in range [1.5, 2.5]
     let n_grid = tau as usize * m; // Size of the oversampled grid
 
-    // Determine the width parameter based on the chosen interpolation type
+    // Determine the width parameter based on the chosen interpolation _type
     let sigma = match interp_type {
         InterpolationType::Linear => 2.0,
         InterpolationType::Gaussian => 2.0 * (-epsilon.ln()).sqrt(),
@@ -203,9 +203,9 @@ pub fn nufft_type1(
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::nufft::{nufft_type2, InterpolationType};
+/// use scirs2__fft::nufft::{nufft_type2, InterpolationType};
 /// use std::f64::consts::PI;
-/// use num_complex::Complex64;
+/// use num__complex::Complex64;
 ///
 /// // Create a spectrum on a uniform grid
 /// let m = 128;
@@ -327,15 +327,15 @@ pub fn nufft_type2(
 
 /// Helper function for FFT computation used in NUFFT implementations
 #[allow(dead_code)]
-fn fft_backend(data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
+fn fft_backend(_data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
     use rustfft::{num_complex::Complex, FftPlanner};
 
-    let n = data.len();
+    let n = _data.len();
     let mut planner = FftPlanner::new();
     let fft = planner.plan_fft_forward(n);
 
     // Convert to rustfft's Complex type
-    let mut buffer: Vec<Complex<f64>> = data.iter().map(|&c| Complex::new(c.re, c.im)).collect();
+    let mut buffer: Vec<Complex<f64>> = _data.iter().map(|&c| Complex::new(c.re, c.im)).collect();
 
     // Perform the FFT
     fft.process(&mut buffer);
@@ -349,15 +349,15 @@ fn fft_backend(data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
 
 /// Helper function for IFFT computation used in NUFFT implementations
 #[allow(dead_code)]
-fn ifft_backend(data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
+fn ifft_backend(_data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
     use rustfft::{num_complex::Complex, FftPlanner};
 
-    let n = data.len();
+    let n = _data.len();
     let mut planner = FftPlanner::new();
     let ifft = planner.plan_fft_inverse(n);
 
     // Convert to rustfft's Complex type
-    let mut buffer: Vec<Complex<f64>> = data.iter().map(|&c| Complex::new(c.re, c.im)).collect();
+    let mut buffer: Vec<Complex<f64>> = _data.iter().map(|&c| Complex::new(c.re, c.im)).collect();
 
     // Perform the IFFT
     ifft.process(&mut buffer);

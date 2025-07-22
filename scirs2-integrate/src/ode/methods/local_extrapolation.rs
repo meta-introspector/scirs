@@ -103,19 +103,19 @@ where
     let ext_options = ext_opts.unwrap_or_default();
 
     // Initialize step size
-    let mut h = opts.h0.unwrap_or_else(|| {
-        let span = t_end - t_start;
-        span / F::from_usize(100).unwrap()
+    let mut h = _opts.h0.unwrap_or_else(|| {
+        let _span = t_end - t_start;
+        _span / F::from_usize(100).unwrap()
     });
 
-    let min_step = opts.min_step.unwrap_or_else(|| {
-        let span = t_end - t_start;
-        span / F::from_usize(1_000_000).unwrap()
+    let min_step = _opts.min_step.unwrap_or_else(|| {
+        let _span = t_end - t_start;
+        _span / F::from_usize(1_000_000).unwrap()
     });
 
-    let max_step = opts.max_step.unwrap_or_else(|| {
-        let span = t_end - t_start;
-        span / F::from_usize(10).unwrap()
+    let max_step = _opts.max_step.unwrap_or_else(|| {
+        let _span = t_end - t_start;
+        _span / F::from_usize(10).unwrap()
     });
 
     // Storage for solution
@@ -141,7 +141,7 @@ where
         // Check if step is accepted
         let error_estimate = result.error_estimate;
         let tolerance =
-            opts.atol + opts.rtol * y.iter().map(|&x| x.abs()).fold(F::zero(), |a, b| a.max(b));
+            _opts.atol + _opts.rtol * y.iter().map(|&x| x.abs()).fold(F::zero(), |a, b| a.max(b));
 
         if error_estimate <= tolerance {
             // Accept step
@@ -347,7 +347,7 @@ where
         t += h_sub;
     }
 
-    // Subsequent steps: y_{k+1} = y_{k-1} + 2h * f(t_k, y_k)
+    // Subsequent _steps: y_{k+1} = y_{k-1} + 2h * f(t_k, y_k)
     for _ in 1..n_steps {
         let dy = f(t, y.view());
         let y_next = &y_prev + &dy * (F::from_f64(2.0).unwrap() * h_sub);

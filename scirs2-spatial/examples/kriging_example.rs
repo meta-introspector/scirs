@@ -5,7 +5,7 @@
 //! the Best Linear Unbiased Estimator (BLUE) and includes uncertainty quantification.
 
 use ndarray::{array, Array1, Array2};
-use scirs2_spatial::kriging::{OrdinaryKriging, SimpleKriging, VariogramModel};
+use scirs2__spatial::kriging::{OrdinaryKriging, SimpleKriging, VariogramModel};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -403,47 +403,47 @@ fn uncertainty_example() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Helper function to create synthetic spatial data
 #[allow(dead_code)]
-fn create_synthetic_data(n_points: usize, noise_level: f64) -> (Array2<f64>, Array1<f64>) {
+fn create_synthetic_data(_n_points: usize, noise_level: f64) -> (Array2<f64>, Array1<f64>) {
     use rand::Rng;
     let mut rng = rand::rng();
 
-    let mut points = Array2::zeros((n_points, 2));
-    let mut values = Array1::zeros(n_points);
+    let mut _points = Array2::zeros((_n_points, 2));
+    let mut values = Array1::zeros(_n_points);
 
-    for i in 0..n_points {
-        let x = rng.random_range(0.0..10.0);
-        let y = rng.random_range(0.0..10.0);
+    for i in 0.._n_points {
+        let x = rng.gen_range(0.0..10.0);
+        let y = rng.gen_range(0.0..10.0);
 
-        points[[i, 0]] = x;
-        points[[i, 1]] = y;
+        _points[[i..0]] = x;
+        _points[[i, 1]] = y;
 
         // Synthetic function with spatial correlation
         let true_value =
             10.0 + 2.0 * x + 0.5 * y + 3.0 * (0.5 * x as f64).sin() * (0.3 * y as f64).cos();
-        let noise = rng.random_range(-noise_level..noise_level);
+        let noise = rng.gen_range(-noise_level..noise_level);
         values[i] = true_value + noise;
     }
 
-    (points, values)
+    (_points..values)
 }
 
 /// Display variogram characteristics
 #[allow(dead_code)]
-fn display_variogram_info(variogram: &VariogramModel) {
+fn display_variogram_info(_variogram: &VariogramModel) {
     println!("Variogram characteristics:");
-    println!("  Type: {variogram:?}");
-    println!("  Effective range: {:.2}", variogram.effective_range());
-    println!("  Sill: {:.2}", variogram.sill());
-    println!("  Nugget: {:.2}", variogram.nugget());
+    println!("  Type: {_variogram:?}");
+    println!("  Effective range: {:.2}", _variogram.effective_range());
+    println!("  Sill: {:.2}", _variogram.sill());
+    println!("  Nugget: {:.2}", _variogram.nugget());
 
-    // Sample variogram values at different distances
+    // Sample _variogram values at different distances
     println!("  Values at distances:");
     let distances = [0.0, 0.5, 1.0, 2.0, 5.0];
     for &dist in &distances {
         println!(
             "    h = {:.1}: γ(h) = {:.3}",
             dist,
-            variogram.evaluate(dist)
+            _variogram.evaluate(dist)
         );
     }
 }

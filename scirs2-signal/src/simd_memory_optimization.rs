@@ -5,12 +5,13 @@
 //! vectorized operations, and memory-efficient data structures.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2, s};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::time::Instant;
 
+#[allow(unused_imports)]
 /// SIMD memory optimization configuration
 #[derive(Debug, Clone)]
 pub struct SimdMemoryConfig {
@@ -214,8 +215,8 @@ where
         ));
     }
 
-    // Convert to complex
-    let mut complex_signal: Array1<num_complex::Complex<T>> = signal
+    // Convert to _complex
+    let mut _complex_signal: Array1<num_complex::Complex<T>> = signal
         .iter()
         .map(|&x| num_complex::Complex::new(x, T::zero()))
         .collect();
@@ -548,8 +549,7 @@ where
 /// SIMD-accelerated in-place FFT
 #[allow(dead_code)]
 fn simd_fft_inplace<T>(
-    _data: ArrayViewMut1<num_complex::Complex<T>>,
-    _config: &SimdMemoryConfig,
+    _data: ArrayViewMut1<num_complex::Complex<T>>, _config: &SimdMemoryConfig,
 ) -> SignalResult<()>
 where
     T: Float + NumCast + Send + Sync + std::fmt::Debug,
@@ -561,7 +561,7 @@ where
 
 /// Standard FFT fallback
 #[allow(dead_code)]
-fn standard_fft_inplace<T>(_data: ArrayViewMut1<num_complex::Complex<T>>) -> SignalResult<()>
+fn standard_fft_inplace<T>(_data: ArrayViewMut1<num__complex::Complex<T>>) -> SignalResult<()>
 where
     T: Float + NumCast + Send + Sync + std::fmt::Debug,
 {
@@ -641,7 +641,6 @@ pub fn benchmark_simd_memory_operations(
 
 #[cfg(test)]
 mod tests {
-    use ndarray::Array1;
 
     #[test]
     fn test_simd_convolution() {

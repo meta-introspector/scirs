@@ -197,10 +197,10 @@ pub unsafe extern "C" fn scirs_create_timeseries(
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_timeseries(ts: *mut RTimeSeries) {
-    if !ts.is_null() {
+pub unsafe extern "C" fn scirs_free_timeseries(_ts: *mut RTimeSeries) {
+    if !_ts.is_null() {
         unsafe {
-            let ts_box = Box::from_raw(ts);
+            let ts_box = Box::from_raw(_ts);
             if !ts_box.values.is_null() {
                 Vec::from_raw_parts(
                     ts_box.values,
@@ -236,7 +236,7 @@ pub unsafe extern "C" fn scirs_get_timeseries_values(
             return R_ERROR_INVALID_PARAMS;
         }
 
-        let copy_length = std::cmp::min(ts_ref.length, max_length) as usize;
+        let copy_length = std::cmp::min(ts_ref._length, max_length) as usize;
         let values_slice = slice::from_raw_parts(ts_ref.values, copy_length);
         let output_slice = slice::from_raw_parts_mut(output, copy_length);
 
@@ -299,13 +299,13 @@ pub unsafe extern "C" fn scirs_calculate_statistics(
 /// - The structure remains valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_is_stationary(ts: *const RTimeSeries) -> c_int {
-    if ts.is_null() {
+pub unsafe extern "C" fn scirs_is_stationary(_ts: *const RTimeSeries) -> c_int {
+    if _ts.is_null() {
         return R_ERROR_INVALID_PARAMS;
     }
 
     unsafe {
-        let ts_ref = &*ts;
+        let ts_ref = &*_ts;
         if ts_ref.values.is_null() || ts_ref.length <= 0 {
             return R_ERROR_INVALID_PARAMS;
         }
@@ -348,11 +348,11 @@ pub unsafe extern "C" fn scirs_difference_series(
 
     unsafe {
         let ts_ref = &*ts;
-        if ts_ref.values.is_null() || ts_ref.length <= 0 {
+        if ts_ref.values.is_null() || ts_ref._length <= 0 {
             return R_ERROR_INVALID_PARAMS;
         }
 
-        let values_slice = slice::from_raw_parts(ts_ref.values, ts_ref.length as usize);
+        let values_slice = slice::from_raw_parts(ts_ref.values, ts_ref._length as usize);
         let values_array = Array1::from_vec(values_slice.to_vec());
 
         match difference_series(&values_array, periods as usize) {
@@ -388,22 +388,21 @@ pub extern "C" fn scirs_create_arima(
     seasonal_period: c_int,
 ) -> *mut RARIMAModel {
     let config = ArimaConfig {
-        p: p as usize,
-        d: d as usize,
-        q: q as usize,
+        _p: _p as usize_d: _d as usize,
+        _q: _q as usize,
         seasonal_p: seasonal_p as usize,
         seasonal_d: seasonal_d as usize,
         seasonal_q: seasonal_q as usize,
         seasonal_period: seasonal_period as usize,
     };
 
-    match ArimaModel::<f64>::new(config.p, config.d, config.q) {
+    match ArimaModel::<f64>::new(config._p, config._d, config._q) {
         Ok(model) => {
             let r_model = Box::new(RARIMAModel {
                 handle: Box::into_raw(Box::new(model)) as *mut c_void,
-                p,
-                d,
-                q,
+                _p,
+                _d,
+                _q,
                 seasonal_p,
                 seasonal_d,
                 seasonal_q,
@@ -424,13 +423,13 @@ pub extern "C" fn scirs_create_arima(
 /// - Both structures remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_fit_arima(model: *mut RARIMAModel, ts: *const RTimeSeries) -> c_int {
-    if model.is_null() || ts.is_null() {
+pub unsafe extern "C" fn scirs_fit_arima(_model: *mut RARIMAModel, ts: *const RTimeSeries) -> c_int {
+    if _model.is_null() || ts.is_null() {
         return R_ERROR_INVALID_PARAMS;
     }
 
     unsafe {
-        let model_ref = &mut *model;
+        let model_ref = &mut *_model;
         let ts_ref = &*ts;
 
         if model_ref.handle.is_null() || ts_ref.values.is_null() || ts_ref.length <= 0 {
@@ -556,10 +555,10 @@ pub unsafe extern "C" fn scirs_get_arima_params(
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_arima(model: *mut RARIMAModel) {
-    if !model.is_null() {
+pub unsafe extern "C" fn scirs_free_arima(_model: *mut RARIMAModel) {
+    if !_model.is_null() {
         unsafe {
-            let model_box = Box::from_raw(model);
+            let model_box = Box::from_raw(_model);
             if !model_box.handle.is_null() {
                 let _ = Box::from_raw(model_box.handle as *mut ArimaModel<f64>);
             }
@@ -623,16 +622,16 @@ pub unsafe extern "C" fn scirs_detect_anomalies_iqr(
 
         match detect_anomalies(&values_array, &options) {
             Ok(result) => {
-                let anomalies: Vec<usize> = result
+                let _anomalies: Vec<usize> = result
                     .is_anomaly
                     .iter()
                     .enumerate()
                     .filter_map(|(i, &is_anom)| if is_anom { Some(i) } else { None })
                     .collect();
-                let anomaly_count = std::cmp::min(anomalies.len(), max_anomalies as usize);
+                let anomaly_count = std::cmp::min(_anomalies.len(), max_anomalies as usize);
                 let indices_slice = slice::from_raw_parts_mut(anomaly_indices, anomaly_count);
 
-                for (i, &idx) in anomalies.iter().take(anomaly_count).enumerate() {
+                for (i, &idx) in _anomalies.iter().take(anomaly_count).enumerate() {
                     indices_slice[i] = idx as c_int;
                 }
 
@@ -684,16 +683,16 @@ pub unsafe extern "C" fn scirs_detect_anomalies_zscore(
 
         match detect_anomalies(&values_array, &options) {
             Ok(result) => {
-                let anomalies: Vec<usize> = result
+                let _anomalies: Vec<usize> = result
                     .is_anomaly
                     .iter()
                     .enumerate()
                     .filter_map(|(i, &is_anom)| if is_anom { Some(i) } else { None })
                     .collect();
-                let anomaly_count = std::cmp::min(anomalies.len(), max_anomalies as usize);
+                let anomaly_count = std::cmp::min(_anomalies.len(), max_anomalies as usize);
                 let indices_slice = slice::from_raw_parts_mut(anomaly_indices, anomaly_count);
 
-                for (i, &idx) in anomalies.iter().take(anomaly_count).enumerate() {
+                for (i, &idx) in _anomalies.iter().take(anomaly_count).enumerate() {
                     indices_slice[i] = idx as c_int;
                 }
 
@@ -713,12 +712,12 @@ pub unsafe extern "C" fn scirs_detect_anomalies_zscore(
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_anomaly_detector(detector: *mut RAnomalyDetector) {
-    if !detector.is_null() {
+pub unsafe extern "C" fn scirs_free_anomaly_detector(_detector: *mut RAnomalyDetector) {
+    if !_detector.is_null() {
         unsafe {
-            let _detector_box = Box::from_raw(detector);
+            let _detector_box = Box::from_raw(_detector);
             // Since we're using functional API, no need to free the handle
-            // The handle is not storing an actual detector object
+            // The handle is not storing an actual _detector object
         }
     }
 }
@@ -730,8 +729,8 @@ pub unsafe extern "C" fn scirs_free_anomaly_detector(detector: *mut RAnomalyDete
 /// Create STL decomposition
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_create_stl_decomposition(period: c_int) -> *mut RSTLDecomposition {
-    if period <= 0 {
+pub extern "C" fn scirs_create_stl_decomposition(_period: c_int) -> *mut RSTLDecomposition {
+    if _period <= 0 {
         return std::ptr::null_mut();
     }
 
@@ -740,7 +739,7 @@ pub extern "C" fn scirs_create_stl_decomposition(period: c_int) -> *mut RSTLDeco
     let stl_options = STLOptions::default();
     let r_decomposition = Box::new(RSTLDecomposition {
         handle: Box::into_raw(Box::new(stl_options)) as *mut c_void,
-        period,
+        _period,
     });
     Box::into_raw(r_decomposition)
 }
@@ -816,13 +815,13 @@ pub unsafe extern "C" fn scirs_decompose_stl(
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_stl_decomposition(decomposition: *mut RSTLDecomposition) {
-    if !decomposition.is_null() {
+pub unsafe extern "C" fn scirs_free_stl_decomposition(_decomposition: *mut RSTLDecomposition) {
+    if !_decomposition.is_null() {
         unsafe {
-            let decomp_box = Box::from_raw(decomposition);
+            let decomp_box = Box::from_raw(_decomposition);
             if !decomp_box.handle.is_null() {
                 let _ =
-                    Box::from_raw(decomp_box.handle as *mut crate::decomposition::stl::STLOptions);
+                    Box::from_raw(decomp_box.handle as *mut crate::_decomposition::stl::STLOptions);
             }
         }
     }
@@ -837,10 +836,10 @@ pub unsafe extern "C" fn scirs_free_stl_decomposition(decomposition: *mut RSTLDe
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_decomposition_result(result: *mut RDecompositionResult) {
-    if !result.is_null() {
+pub unsafe extern "C" fn scirs_free_decomposition_result(_result: *mut RDecompositionResult) {
+    if !_result.is_null() {
         unsafe {
-            let result_ref = &*result;
+            let result_ref = &*_result;
             if !result_ref.trend.is_null() {
                 Vec::from_raw_parts(
                     result_ref.trend,
@@ -919,21 +918,18 @@ pub unsafe extern "C" fn scirs_auto_arima(
         match crate::arima_models::auto_arima(&values_array, &options) {
             Ok((_arima_model, sarima_params)) => {
                 let config = ArimaConfig {
-                    p: sarima_params.pdq.0,
-                    d: sarima_params.pdq.1,
-                    q: sarima_params.pdq.2,
+                    _p: sarima_params.pdq.0_d: sarima_params.pdq.1,
+                    _q: sarima_params.pdq.2,
                     seasonal_p: sarima_params.seasonal_pdq.0,
                     seasonal_d: sarima_params.seasonal_pdq.1,
                     seasonal_q: sarima_params.seasonal_pdq.2,
                     seasonal_period: sarima_params.seasonal_period,
                 };
-                match ArimaModel::<f64>::new(config.p, config.d, config.q) {
+                match ArimaModel::<f64>::new(config._p, config._d, config._q) {
                     Ok(model) => {
                         let r_model = Box::new(RARIMAModel {
-                            handle: Box::into_raw(Box::new(model)) as *mut c_void,
-                            p: config.p as c_int,
-                            d: config.d as c_int,
-                            q: config.q as c_int,
+                            handle: Box::into_raw(Box::new(model)) as *mut c_void_p: config._p as c_int,
+                            _d: config._d as c_int_q: config._q as c_int,
                             seasonal_p: config.seasonal_p as c_int,
                             seasonal_d: config.seasonal_d as c_int,
                             seasonal_q: config.seasonal_q as c_int,
@@ -1004,8 +1000,7 @@ pub extern "C" fn scirs_create_neural_forecaster(
 pub unsafe extern "C" fn scirs_train_neural_forecaster(
     forecaster: *mut RNeuralForecaster,
     ts: *const RTimeSeries,
-    epochs: c_int,
-    _learning_rate: c_double,
+    epochs: c_int_learning_rate: c_double,
 ) -> c_int {
     if forecaster.is_null() || ts.is_null() || epochs <= 0 {
         return R_ERROR_INVALID_PARAMS;
@@ -1089,10 +1084,10 @@ pub unsafe extern "C" fn scirs_forecast_neural(
 /// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub unsafe extern "C" fn scirs_free_neural_forecaster(forecaster: *mut RNeuralForecaster) {
-    if !forecaster.is_null() {
+pub unsafe extern "C" fn scirs_free_neural_forecaster(_forecaster: *mut RNeuralForecaster) {
+    if !_forecaster.is_null() {
         unsafe {
-            let forecaster_box = Box::from_raw(forecaster);
+            let forecaster_box = Box::from_raw(_forecaster);
             if !forecaster_box.handle.is_null() {
                 let _ = Box::from_raw(forecaster_box.handle as *mut LSTMForecaster<f64>);
             }

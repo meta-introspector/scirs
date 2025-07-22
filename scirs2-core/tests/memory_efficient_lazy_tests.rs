@@ -83,7 +83,7 @@ mod tests {
             data: None,
         };
         let display = format!("{}", op);
-        assert!(display.contains("Unary"));
+        assert!(display.contains(Unary));
 
         // Check that LazyOp with Reshape kind can be displayed
         let shape = vec![2, 3];
@@ -93,7 +93,7 @@ mod tests {
             data: Some(std::rc::Rc::new(shape.clone())),
         };
         let display = format!("{}", op);
-        assert!(display.contains("Reshape"));
+        assert!(display.contains(Reshape));
     }
 
     #[test]
@@ -105,8 +105,8 @@ mod tests {
 
         // Check that debug formatting works
         let debug = format!("{:?}", lazy);
-        assert!(debug.contains("LazyArray"));
-        assert!(debug.contains("shape"));
+        assert!(debug.contains(LazyArray));
+        assert!(debug.contains(shape));
         assert!(debug.contains("has_data: true"));
     }
 }

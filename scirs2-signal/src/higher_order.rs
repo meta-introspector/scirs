@@ -12,7 +12,7 @@
 //! # Example
 //! ```
 //! use ndarray::Array1;
-//! use scirs2_signal::higher_order::{bispectrum, bicoherence};
+//! use scirs2__signal::higher_order::{bispectrum, bicoherence};
 //! use std::f64::consts::PI;
 //!
 //! // Create a signal with quadratic phase coupling
@@ -36,19 +36,19 @@
 //! let (bispec, f1_axis, f2_axis) = bispectrum(&signal, nfft, Some("hann"), None, fs).unwrap();
 //!
 //! // Compute bicoherence (normalized bispectrum)
-//! let (bicoh, _) = bicoherence(&signal, nfft, Some("hann"), None, fs).unwrap();
+//! let (bicoh_) = bicoherence(&signal, nfft, Some("hann"), None, fs).unwrap();
 //!
 //! // Look for peaks in bicoherence to detect phase coupling
 //! // Strong peaks at (f1, f2) indicate quadratic phase coupling between f1, f2, and f1+f2
 //! ```
 
-use ndarray::{s, Array1, Array2};
-use num_complex::{Complex64, ComplexFloat};
-
-use crate::error::{SignalError, SignalResult};
 use crate::window;
+use crate::error::{SignalError, SignalResult};
+use ndarray::{Array1, Array2, s};
+use num__complex::{Complex64, ComplexFloat};
 use scirs2_fft;
 
+#[allow(unused_imports)]
 // Type aliases for complex return types
 /// Result type for bicoherence and biamplitude functions containing 2D array and frequency axes
 pub type BicoherenceResult = (Array2<f64>, (Array1<f64>, Array1<f64>));
@@ -134,7 +134,7 @@ impl Default for HigherOrderConfig {
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::higher_order::bispectrum;
+/// use scirs2__signal::higher_order::bispectrum;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 2.0, 1.0, 0.0, -1.0, -2.0, -1.0, 0.0]);
 /// let (bis, f1, f2) = bispectrum(&signal, 16, Some("hann"), None, 1.0).unwrap();
@@ -185,7 +185,7 @@ pub fn bispectrum(
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::higher_order::bicoherence;
+/// use scirs2__signal::higher_order::bicoherence;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 2.0, 1.0, 0.0, -1.0, -2.0, -1.0, 0.0]);
 /// let (bic, (f1, f2)) = bicoherence(&signal, 16, Some("hann"), None, 1.0).unwrap();
@@ -209,7 +209,7 @@ pub fn bicoherence(
 
     // Compute bispectrum and power spectrum for normalization
     let (bis_complex, f1_axis, f2_axis) = compute_bispectrum(signal, &config)?;
-    let (power_spectrum, _f_axis) = compute_power_spectrum(signal, &config)?;
+    let (power_spectrum_f_axis) = compute_power_spectrum(signal, &config)?;
 
     // Create the bicoherence
     let mut bicoherence = Array2::zeros(bis_complex.raw_dim());
@@ -437,23 +437,23 @@ fn compute_welch_bispectrum(
 
 /// Apply a window function to a signal
 #[allow(dead_code)]
-fn apply_window(signal: &Array1<f64>, window_name: &str) -> SignalResult<Array1<f64>> {
-    let n = signal.len();
+fn apply_window(_signal: &Array1<f64>, window_name: &str) -> SignalResult<Array1<f64>> {
+    let n = _signal.len();
 
     // Get the window function
     let win = window::get_window(window_name, n, true)?;
 
     // Apply the window
     let win_arr = Array1::from(win);
-    let windowed = signal * &win_arr;
+    let windowed = _signal * &win_arr;
 
     Ok(windowed)
 }
 
 /// Compute the Fast Fourier Transform of a signal
 #[allow(dead_code)]
-fn compute_fft(signal: &Array1<f64>, nfft: usize) -> SignalResult<Vec<Complex64>> {
-    let signal_vec = signal.to_vec();
+fn compute_fft(_signal: &Array1<f64>, nfft: usize) -> SignalResult<Vec<Complex64>> {
+    let signal_vec = _signal.to_vec();
 
     // Perform FFT
     let fft_result = match scirs2_fft::fft(&signal_vec, Some(nfft)) {
@@ -518,12 +518,12 @@ fn compute_power_spectrum(
 
 /// Compute the triple correlation (third-order cumulant) of a signal
 #[allow(dead_code)]
-fn compute_triple_correlation(signal: &Array1<f64>, size: usize) -> SignalResult<Array2<f64>> {
-    let n = signal.len();
+fn compute_triple_correlation(_signal: &Array1<f64>, size: usize) -> SignalResult<Array2<f64>> {
+    let n = _signal.len();
 
-    // Center the signal
-    let mean = signal.sum() / n as f64;
-    let centered = signal.mapv(|x| x - mean);
+    // Center the _signal
+    let mean = _signal.sum() / n as f64;
+    let centered = _signal.mapv(|x| x - mean);
 
     // Define the maximum lag
     let max_lag = size.min(n / 3);
@@ -567,14 +567,14 @@ fn compute_triple_correlation(signal: &Array1<f64>, size: usize) -> SignalResult
 
 /// Compute 2D FFT of a matrix
 #[allow(dead_code)]
-fn compute_2d_fft(matrix: &Array2<f64>, nfft: usize) -> SignalResult<Array2<Complex64>> {
-    let (rows, cols) = matrix.dim();
+fn compute_2d_fft(_matrix: &Array2<f64>, nfft: usize) -> SignalResult<Array2<Complex64>> {
+    let (rows, cols) = _matrix.dim();
 
     // Convert to complex for FFT
     let mut complex_matrix = Array2::zeros((rows, cols));
     for i in 0..rows {
         for j in 0..cols {
-            complex_matrix[[i, j]] = Complex64::new(matrix[[i, j]], 0.0);
+            complex_matrix[[i, j]] = Complex64::new(_matrix[[i, j]], 0.0);
         }
     }
 
@@ -780,7 +780,7 @@ pub fn cumulative_bispectrum(
     fs: f64,
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     // Compute bispectrum
-    let (bis_mag, _, _) = bispectrum(signal, nfft, window, None, fs)?;
+    let (bis_mag__) = bispectrum(signal, nfft, window, None, fs)?;
 
     // Number of frequency bins
     let n_bins = bis_mag.dim().0;
@@ -845,10 +845,10 @@ pub fn skewness_spectrum(
     };
 
     // Compute bispectrum for diagonal slice (f1 = f2)
-    let (bis_complex, f1_axis, _) = compute_bispectrum(signal, &config)?;
+    let (bis_complex, f1_axis_) = compute_bispectrum(signal, &config)?;
 
     // Compute power spectrum for normalization
-    let (power_spectrum, _) = compute_power_spectrum(signal, &config)?;
+    let (power_spectrum_) = compute_power_spectrum(signal, &config)?;
 
     // Number of frequency bins
     let n_bins = (nfft / 2) + 1;

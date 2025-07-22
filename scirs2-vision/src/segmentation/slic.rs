@@ -52,7 +52,7 @@ struct SuperpixelCenter {
 /// # Example
 ///
 /// ```rust
-/// use scirs2_vision::segmentation::slic;
+/// use scirs2__vision::segmentation::slic;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -71,7 +71,7 @@ pub fn slic(
 ) -> Result<Array2<u32>> {
     if n_segments == 0 {
         return Err(VisionError::InvalidParameter(
-            "Number of segments must be positive".to_string(),
+            "Number of _segments must be positive".to_string(),
         ));
     }
 
@@ -135,8 +135,8 @@ pub fn slic(
 
 /// Initialize superpixel centers on a regular grid
 #[allow(dead_code)]
-fn initialize_centers(lab: &Array3<f32>, grid_step: usize) -> Vec<SuperpixelCenter> {
-    let (height, width, _) = lab.dim();
+fn initialize_centers(_lab: &Array3<f32>, grid_step: usize) -> Vec<SuperpixelCenter> {
+    let (height, width_) = _lab.dim();
     let mut centers = Vec::new();
 
     let half_step = grid_step / 2;
@@ -146,9 +146,9 @@ fn initialize_centers(lab: &Array3<f32>, grid_step: usize) -> Vec<SuperpixelCent
             centers.push(SuperpixelCenter {
                 y: y as f32,
                 x: x as f32,
-                l: lab[[y, x, 0]],
-                a: lab[[y, x, 1]],
-                b: lab[[y, x, 2]],
+                l: _lab[[y, x, 0]],
+                a: _lab[[y, x, 1]],
+                b: _lab[[y, x, 2]],
                 pixel_count: 0,
             });
         }
@@ -159,10 +159,10 @@ fn initialize_centers(lab: &Array3<f32>, grid_step: usize) -> Vec<SuperpixelCent
 
 /// Move centers to positions with lowest gradient
 #[allow(dead_code)]
-fn perturb_centers(centers: &mut [SuperpixelCenter], lab: &Array3<f32>) {
-    let (height, width, _) = lab.dim();
+fn perturb_centers(_centers: &mut [SuperpixelCenter], lab: &Array3<f32>) {
+    let (height, width_) = lab.dim();
 
-    for center in centers.iter_mut() {
+    for center in _centers.iter_mut() {
         let y = center.y as usize;
         let x = center.x as usize;
 
@@ -197,12 +197,12 @@ fn perturb_centers(centers: &mut [SuperpixelCenter], lab: &Array3<f32>) {
 
 /// Compute gradient magnitude at a pixel
 #[allow(dead_code)]
-fn compute_gradient(lab: &Array3<f32>, y: usize, x: usize) -> f32 {
+fn compute_gradient(_lab: &Array3<f32>, y: usize, x: usize) -> f32 {
     let mut gradient = 0.0;
 
     for c in 0..3 {
-        let dx = lab[[y, x + 1, c]] - lab[[y, x - 1, c]];
-        let dy = lab[[y + 1, x, c]] - lab[[y - 1, x, c]];
+        let dx = _lab[[y, x + 1, c]] - _lab[[y, x - 1, c]];
+        let dy = _lab[[y + 1, x, c]] - _lab[[y - 1, x, c]];
         gradient += dx * dx + dy * dy;
     }
 
@@ -236,11 +236,11 @@ fn compute_distance(
 
 /// Update superpixel centers based on assigned pixels
 #[allow(dead_code)]
-fn update_centers(centers: &mut [SuperpixelCenter], lab: &Array3<f32>, labels: &Array2<u32>) {
-    let (height, width, _) = lab.dim();
+fn update_centers(_centers: &mut [SuperpixelCenter], lab: &Array3<f32>, labels: &Array2<u32>) {
+    let (height, width_) = lab.dim();
 
-    // Reset centers
-    for center in centers.iter_mut() {
+    // Reset _centers
+    for center in _centers.iter_mut() {
         center.y = 0.0;
         center.x = 0.0;
         center.l = 0.0;
@@ -253,19 +253,19 @@ fn update_centers(centers: &mut [SuperpixelCenter], lab: &Array3<f32>, labels: &
     for y in 0..height {
         for x in 0..width {
             let label = labels[[y, x]] as usize;
-            if label < centers.len() {
-                centers[label].y += y as f32;
-                centers[label].x += x as f32;
-                centers[label].l += lab[[y, x, 0]];
-                centers[label].a += lab[[y, x, 1]];
-                centers[label].b += lab[[y, x, 2]];
-                centers[label].pixel_count += 1;
+            if label < _centers.len() {
+                _centers[label].y += y as f32;
+                _centers[label].x += x as f32;
+                _centers[label].l += lab[[y, x, 0]];
+                _centers[label].a += lab[[y, x, 1]];
+                _centers[label].b += lab[[y, x, 2]];
+                _centers[label].pixel_count += 1;
             }
         }
     }
 
     // Compute means
-    for center in centers.iter_mut() {
+    for center in _centers.iter_mut() {
         if center.pixel_count > 0 {
             let count = center.pixel_count as f32;
             center.y /= count;
@@ -279,25 +279,25 @@ fn update_centers(centers: &mut [SuperpixelCenter], lab: &Array3<f32>, labels: &
 
 /// Enforce connectivity of superpixels
 #[allow(dead_code)]
-fn enforce_connectivity(labels: &mut Array2<u32>, n_segments: usize) {
-    let (height, width) = labels.dim();
+fn enforce_connectivity(_labels: &mut Array2<u32>, n_segments: usize) {
+    let (height, width) = _labels.dim();
     let min_size = (height * width) / (n_segments * 4);
 
-    // Find and merge small segments
+    // Find and merge small _segments
     let mut new_label = 0;
     let mut visited = Array2::from_elem((height, width), false);
 
     for y in 0..height {
         for x in 0..width {
             if !visited[[y, x]] {
-                let old_label = labels[[y, x]];
-                let size = flood_fill(labels, &mut visited, y, x, old_label, new_label);
+                let old_label = _labels[[y, x]];
+                let size = flood_fill(_labels, &mut visited, y, x, old_label, new_label);
 
                 if size >= min_size {
                     new_label += 1;
                 } else {
                     // Merge with nearest neighbor
-                    merge_small_segment(labels, y, x, new_label);
+                    merge_small_segment(_labels, y, x, new_label);
                 }
             }
         }
@@ -318,27 +318,27 @@ fn flood_fill(
     let mut stack = vec![(start_y, start_x)];
     let mut size = 0;
 
-    while let Some((y, x)) = stack.pop() {
-        if visited[[y, x]] || labels[[y, x]] != old_label {
+    while let Some((_y, _x)) = stack.pop() {
+        if visited[[_y_x]] || labels[[_y_x]] != old_label {
             continue;
         }
 
-        visited[[y, x]] = true;
-        labels[[y, x]] = new_label;
+        visited[[_y_x]] = true;
+        labels[[_y_x]] = new_label;
         size += 1;
 
         // Check 4-neighbors
-        if y > 0 {
-            stack.push((y - 1, x));
+        if _y > 0 {
+            stack.push((_y - 1, _x));
         }
-        if y < height - 1 {
-            stack.push((y + 1, x));
+        if _y < height - 1 {
+            stack.push((_y + 1, _x));
         }
-        if x > 0 {
-            stack.push((y, x - 1));
+        if _x > 0 {
+            stack.push((_y, _x - 1));
         }
-        if x < width - 1 {
-            stack.push((y, x + 1));
+        if _x < width - 1 {
+            stack.push((_y, _x + 1));
         }
     }
 
@@ -347,8 +347,8 @@ fn flood_fill(
 
 /// Merge small segment with neighbor
 #[allow(dead_code)]
-fn merge_small_segment(labels: &mut Array2<u32>, y: usize, x: usize, current_label: u32) {
-    let (height, width) = labels.dim();
+fn merge_small_segment(_labels: &mut Array2<u32>, y: usize, x: usize, current_label: u32) {
+    let (height, width) = _labels.dim();
     let neighbors = [
         (y.wrapping_sub(1), x),
         (y + 1, x),
@@ -357,10 +357,10 @@ fn merge_small_segment(labels: &mut Array2<u32>, y: usize, x: usize, current_lab
     ];
 
     for &(ny, nx) in neighbors.iter() {
-        if ny < height && nx < width && labels[[ny, nx]] != current_label {
-            // Replace current segment with neighbor's label
-            let neighbor_label = labels[[ny, nx]];
-            flood_fill_replace(labels, y, x, current_label, neighbor_label);
+        if ny < height && nx < width && _labels[[ny, nx]] != current_label {
+            // Replace current segment with neighbor's _label
+            let neighbor_label = _labels[[ny, nx]];
+            flood_fill_replace(_labels, y, x, current_label, neighbor_label);
             break;
         }
     }
@@ -378,37 +378,37 @@ fn flood_fill_replace(
     let (height, width) = labels.dim();
     let mut stack = vec![(start_y, start_x)];
 
-    while let Some((y, x)) = stack.pop() {
-        if labels[[y, x]] != old_label {
+    while let Some((_y, _x)) = stack.pop() {
+        if labels[[_y_x]] != old_label {
             continue;
         }
 
-        labels[[y, x]] = new_label;
+        labels[[_y_x]] = new_label;
 
-        if y > 0 {
-            stack.push((y - 1, x));
+        if _y > 0 {
+            stack.push((_y - 1, _x));
         }
-        if y < height - 1 {
-            stack.push((y + 1, x));
+        if _y < height - 1 {
+            stack.push((_y + 1, _x));
         }
-        if x > 0 {
-            stack.push((y, x - 1));
+        if _x > 0 {
+            stack.push((_y, _x - 1));
         }
-        if x < width - 1 {
-            stack.push((y, x + 1));
+        if _x < width - 1 {
+            stack.push((_y, _x + 1));
         }
     }
 }
 
 /// Convert RGB image to Lab color space array
 #[allow(dead_code)]
-fn rgb_to_lab_array(img: &RgbImage) -> Array3<f32> {
-    let (width, height) = img.dimensions();
+fn rgb_to_lab_array(_img: &RgbImage) -> Array3<f32> {
+    let (width, height) = _img.dimensions();
     let mut lab = Array3::zeros((height as usize, width as usize, 3));
 
     for y in 0..height {
         for x in 0..width {
-            let rgb = img.get_pixel(x, y);
+            let rgb = _img.get_pixel(x, y);
             let (l, a, b) = rgb_to_lab(rgb[0], rgb[1], rgb[2]);
             lab[[y as usize, x as usize, 0]] = l;
             lab[[y as usize, x as usize, 1]] = a;
@@ -463,20 +463,20 @@ fn rgb_to_lab(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
 
 /// Convert sRGB to linear RGB
 #[allow(dead_code)]
-fn srgb_to_linear(val: f32) -> f32 {
-    if val <= 0.04045 {
-        val / 12.92
+fn srgb_to_linear(_val: f32) -> f32 {
+    if _val <= 0.04045 {
+        _val / 12.92
     } else {
-        ((val + 0.055) / 1.055).powf(2.4)
+        ((_val + 0.055) / 1.055).powf(2.4)
     }
 }
 
 /// Apply Gaussian smoothing to RGB image
 #[allow(dead_code)]
-fn gaussian_smooth_rgb(img: &RgbImage, sigma: f32) -> Result<RgbImage> {
+fn gaussian_smooth_rgb(_img: &RgbImage, sigma: f32) -> Result<RgbImage> {
     // For simplicity, we'll use a box blur approximation
     // In production, you'd want to use a proper Gaussian kernel
-    let (width, height) = img.dimensions();
+    let (width, height) = _img.dimensions();
     let mut smoothed = RgbImage::new(width, height);
     let radius = (sigma * 2.0) as i32;
 
@@ -492,7 +492,7 @@ fn gaussian_smooth_rgb(img: &RgbImage, sigma: f32) -> Result<RgbImage> {
                     let ny = (y as i32 + dy).max(0).min(height as i32 - 1) as u32;
                     let nx = (x as i32 + dx).max(0).min(width as i32 - 1) as u32;
 
-                    let pixel = img.get_pixel(nx, ny);
+                    let pixel = _img.get_pixel(nx, ny);
                     r_sum += pixel[0] as f32;
                     g_sum += pixel[1] as f32;
                     b_sum += pixel[2] as f32;
@@ -583,7 +583,7 @@ mod tests {
         assert!(b.abs() < 1.0);
 
         // Test black
-        let (l, _a, _b) = rgb_to_lab(0, 0, 0);
+        let (l_a_b) = rgb_to_lab(0, 0, 0);
         assert!(l < 1.0); // L should be ~0 for black
     }
 

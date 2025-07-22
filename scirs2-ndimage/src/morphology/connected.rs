@@ -13,10 +13,10 @@ struct UnionFind {
 }
 
 impl UnionFind {
-    fn new(size: usize) -> Self {
+    fn new(_size: usize) -> Self {
         UnionFind {
-            parent: (0..size).collect(),
-            rank: vec![0; size],
+            parent: (0.._size).collect(),
+            rank: vec![0; _size],
         }
     }
 
@@ -116,15 +116,15 @@ fn get_neighbors(
 
 /// Generate all possible offsets for corner connectivity
 #[allow(dead_code)]
-fn generate_all_offsets(ndim: usize) -> Vec<Vec<isize>> {
+fn generate_all_offsets(_ndim: usize) -> Vec<Vec<isize>> {
     let mut offsets = Vec::new();
-    let total_combinations = 3_usize.pow(ndim as u32);
+    let total_combinations = 3_usize.pow(_ndim as u32);
 
     for i in 0..total_combinations {
-        let mut offset = Vec::with_capacity(ndim);
+        let mut offset = Vec::with_capacity(_ndim);
         let mut temp = i;
 
-        for _ in 0..ndim {
+        for _ in 0.._ndim {
             let val = (temp % 3) as isize - 1; // -1, 0, or 1
             offset.push(val);
             temp /= 3;
@@ -141,12 +141,12 @@ fn generate_all_offsets(ndim: usize) -> Vec<Vec<isize>> {
 
 /// Convert multi-dimensional index to flat index
 #[allow(dead_code)]
-fn ravel_index(indices: &[usize], shape: &[usize]) -> usize {
+fn ravel_index(_indices: &[usize], shape: &[usize]) -> usize {
     let mut flat_index = 0;
     let mut stride = 1;
 
-    for i in (0..indices.len()).rev() {
-        flat_index += indices[i] * stride;
+    for i in (0.._indices.len()).rev() {
+        flat_index += _indices[i] * stride;
         stride *= shape[i];
     }
 
@@ -155,9 +155,9 @@ fn ravel_index(indices: &[usize], shape: &[usize]) -> usize {
 
 /// Convert flat index to multi-dimensional index
 #[allow(dead_code)]
-fn unravel_index(flat_index: usize, shape: &[usize]) -> Vec<usize> {
+fn unravel_index(_flat_index: usize, shape: &[usize]) -> Vec<usize> {
     let mut indices = vec![0; shape.len()];
-    let mut remaining = flat_index;
+    let mut remaining = _flat_index;
 
     for i in (0..shape.len()).rev() {
         let stride: usize = shape[(i + 1)..].iter().product();
@@ -215,7 +215,7 @@ where
     let total_elements: usize = shape.iter().product();
 
     if total_elements == 0 {
-        let output = Array::<usize, _>::zeros(input.raw_dim());
+        let output = Array::<usize>::zeros(input.raw_dim());
         return Ok((output, 0));
     }
 
@@ -248,7 +248,7 @@ where
     let component_mapping = uf.get_component_mapping();
 
     // Create output array
-    let mut output = Array::<usize, _>::zeros(input.raw_dim());
+    let mut output = Array::<usize>::zeros(input.raw_dim());
     let mut num_labels = 0;
 
     // Second pass: assign labels
@@ -308,7 +308,7 @@ where
 
     let shape = input.shape();
     let total_elements: usize = shape.iter().product();
-    let mut output = Array::<bool, _>::from_elem(input.raw_dim(), false);
+    let mut output = Array::<bool>::from_elem(input.raw_dim(), false);
 
     if total_elements == 0 {
         return Ok(output);
@@ -406,10 +406,10 @@ where
     let (labeled, num_labels) = label(input, None, Some(conn), None)?;
 
     if num_labels == 0 {
-        return Ok(Array::<bool, _>::from_elem(input.raw_dim(), false));
+        return Ok(Array::<bool>::from_elem(input.raw_dim(), false));
     }
 
-    // Count the size of each component
+    // Count the _size of each component
     let mut component_sizes = vec![0; num_labels + 1];
     for &label_val in labeled.iter() {
         if label_val > 0 {
@@ -418,7 +418,7 @@ where
     }
 
     // Create output array, keeping only large enough components
-    let mut output = Array::<bool, _>::from_elem(input.raw_dim(), false);
+    let mut output = Array::<bool>::from_elem(input.raw_dim(), false);
     let shape = input.shape();
     let total_elements: usize = shape.iter().product();
 
@@ -500,7 +500,7 @@ mod tests {
     #[test]
     fn test_label() {
         let input = Array2::from_elem((3, 3), true);
-        let (result, _num_labels) = label(&input, None, None, None).unwrap();
+        let (result_num_labels) = label(&input, None, None, None).unwrap();
         assert_eq!(result.shape(), input.shape());
     }
 

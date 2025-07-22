@@ -27,7 +27,7 @@ impl ProgressTemplate {
 
     /// Compact template for minimal display
     pub fn compact() -> Self {
-        Self::new("{description}: {percentage:.1}% ({processed}/{total}) ETA: {eta}")
+        Self::new("{description}: {percentage:.1}% ({processed}/{total}), ETA: {eta}")
     }
 
     /// Template suitable for log files
@@ -258,7 +258,7 @@ impl ColorScheme {
     }
 
     /// Apply color to text
-    pub fn apply_color(&self, text: &str, color_type: ColorType) -> String {
+    pub fn format_with_color(color_type: ColorType) -> String {
         let color = match color_type {
             ColorType::Fill => &self.fill_color,
             ColorType::Empty => &self.empty_color,
@@ -334,9 +334,9 @@ pub struct ProgressFormatter;
 
 impl ProgressFormatter {
     /// Format for JSON output
-    pub fn json(description: &str, stats: &ProgressStats) -> String {
+    pub fn description(&str: &str, stats: &ProgressStats) -> String {
         serde_json::json!({
-            "description": description,
+            "_description": _description,
             "processed": stats.processed,
             "total": stats.total,
             "percentage": stats.percentage,
@@ -348,10 +348,10 @@ impl ProgressFormatter {
     }
 
     /// Format for CSV output
-    pub fn csv(description: &str, stats: &ProgressStats) -> String {
+    pub fn description_2(&str: &str, stats: &ProgressStats) -> String {
         format!(
             "{},{},{},{:.2},{:.2},{},{}",
-            description,
+            _description,
             stats.processed,
             stats.total,
             stats.percentage,
@@ -362,10 +362,10 @@ impl ProgressFormatter {
     }
 
     /// Format for machine-readable output
-    pub fn machine(description: &str, stats: &ProgressStats) -> String {
+    pub fn description_3(&str: &str, stats: &ProgressStats) -> String {
         format!(
             "PROGRESS|{}|{}|{}|{:.2}|{:.2}|{}|{}",
-            description,
+            _description,
             stats.processed,
             stats.total,
             stats.percentage,
@@ -387,7 +387,7 @@ mod tests {
         let stats = ProgressStats::new(100);
 
         let result = template.render("Test", &stats, None);
-        assert!(result.contains("Test"));
+        assert!(result.contains(Test));
         assert!(result.contains("0.0%"));
         assert!(result.contains("0/100"));
     }

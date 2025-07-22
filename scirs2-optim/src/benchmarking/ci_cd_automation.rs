@@ -4,7 +4,7 @@
 //! including GitHub Actions, GitLab CI, Jenkins, and other systems. It handles
 //! automated benchmarking, regression detection, and report generation.
 
-use crate::benchmarking::performance_regression_detector::{
+use crate::benchmarking::performance_regression__detector::{
     BaselineMetrics, ConfidenceInterval, EnvironmentInfo, MetricType, MetricValue,
     PerformanceMeasurement, PerformanceRegressionDetector, RegressionConfig, RegressionResult,
     TestConfiguration,
@@ -16,6 +16,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, SystemTime};
+// use std::path::PathBuf; // Duplicate import
 
 /// Main CI/CD automation engine
 #[derive(Debug)]
@@ -534,17 +535,17 @@ pub enum TriggerEvent {
 
 impl CiCdAutomation {
     /// Create a new CI/CD automation engine
-    pub fn new(config: CiCdAutomationConfig) -> Result<Self> {
+    pub fn new(_config: CiCdAutomationConfig) -> Result<Self> {
         let regression_detector = PerformanceRegressionDetector::new(RegressionConfig::default())?;
 
         let environment = Self::detect_environment()?;
         let test_suite = PerformanceTestSuite::new(TestSuiteConfig::default())?;
-        let report_generator = ReportGenerator::new(config.reporting.clone())?;
-        let artifact_manager = ArtifactManager::new(config.artifact_storage.clone())?;
+        let report_generator = ReportGenerator::new(_config.reporting.clone())?;
+        let artifact_manager = ArtifactManager::new(_config.artifact_storage.clone())?;
 
         Ok(Self {
             regression_detector,
-            config,
+            _config,
             environment,
             test_suite,
             report_generator,
@@ -991,7 +992,7 @@ impl CiCdAutomation {
     }
 
     /// Determine if tests should run based on configuration and context
-    fn should_run_tests(&self, ci_context: &CiCdContext, _git_info: &GitInfo) -> Result<bool> {
+    fn should_run_tests(&self, ci_context: &CiCdContext_git, _info: &GitInfo) -> Result<bool> {
         if !self.config.enable_automation {
             return Ok(false);
         }
@@ -1001,8 +1002,7 @@ impl CiCdAutomation {
             TriggerEvent::PullRequest => Ok(self.config.test_execution.run_on_pr),
             TriggerEvent::Release => Ok(self.config.test_execution.run_on_release),
             TriggerEvent::Schedule => Ok(self.config.test_execution.run_on_schedule.is_some()),
-            TriggerEvent::Manual => Ok(true),
-            _ => Ok(false),
+            TriggerEvent::Manual => Ok(true, _ => Ok(false),
         }
     }
 
@@ -1093,9 +1093,9 @@ impl CiCdAutomation {
         let mut cmd = Command::new("cargo");
         cmd.args(&["bench", "--bench", &test_case.name]);
 
-        // Add any additional arguments from test case parameters
+        // Add any additional arguments from test _case parameters
         if let Some(args) = test_case.parameters.get("args") {
-            if let Ok(arg_list) = serde_json::from_str::<Vec<String>>(args) {
+            if let Ok(arg_list) = serde_json::from, _str::<Vec<String>>(args) {
                 cmd.args(&arg_list);
             }
         }
@@ -1171,9 +1171,9 @@ impl CiCdAutomation {
             "json",
         ]);
 
-        // Add any additional arguments from test case parameters
+        // Add any additional arguments from test _case parameters
         if let Some(args) = test_case.parameters.get("args") {
-            if let Ok(arg_list) = serde_json::from_str::<Vec<String>>(args) {
+            if let Ok(arg_list) = serde_json::from, _str::<Vec<String>>(args) {
                 cmd.args(&arg_list);
             }
         }
@@ -1240,7 +1240,7 @@ impl CiCdAutomation {
             cmd.args(&parts[1..]);
         }
 
-        // Add test case parameters as environment variables
+        // Add test _case parameters as environment variables
         for (key, value) in &test_case.parameters {
             cmd.env(format!("TEST_{}", key.to_uppercase()), value);
         }
@@ -1559,10 +1559,7 @@ impl CiCdAutomation {
 
     /// Send GitHub notifications
     async fn send_github_notifications(
-        &self,
-        _config: &GitHubIntegration,
-        _regression_results: &[RegressionResult],
-        _gate_results: &[GateResult],
+        &self_config: &GitHubIntegration_regression, _results: &[RegressionResult], _gate_results: &[GateResult],
     ) -> Result<()> {
         // TODO: Implement GitHub API integration
         Ok(())
@@ -1570,10 +1567,7 @@ impl CiCdAutomation {
 
     /// Send Slack notifications
     async fn send_slack_notifications(
-        &self,
-        _config: &SlackIntegration,
-        _regression_results: &[RegressionResult],
-        _gate_results: &[GateResult],
+        &self_config: &SlackIntegration_regression, _results: &[RegressionResult], _gate_results: &[GateResult],
     ) -> Result<()> {
         // TODO: Implement Slack webhook integration
         Ok(())
@@ -1581,12 +1575,9 @@ impl CiCdAutomation {
 
     /// Send webhook notification
     async fn send_webhook_notification(
-        &self,
-        _webhook: &WebhookIntegration,
-        _regression_results: &[RegressionResult],
-        _gate_results: &[GateResult],
+        &self_webhook: &WebhookIntegration_regression, _results: &[RegressionResult], _gate_results: &[GateResult],
     ) -> Result<()> {
-        // TODO: Implement webhook integration
+        // TODO: Implement _webhook integration
         Ok(())
     }
 
@@ -1657,8 +1648,7 @@ impl CiCdAutomation {
                         "ns" => 1e-9,
                         "µs" => 1e-6,
                         "ms" => 1e-3,
-                        "s" => 1.0,
-                        _ => 1.0,
+                        "s" => 1.0_ => 1.0,
                     };
                     return Some(time * multiplier);
                 }
@@ -1700,8 +1690,7 @@ impl CiCdAutomation {
                         "bytes" | "byte" => 1.0,
                         "kb" => 1024.0,
                         "mb" => 1024.0 * 1024.0,
-                        "gb" => 1024.0 * 1024.0 * 1024.0,
-                        _ => 1.0,
+                        "gb" => 1024.0 * 1024.0 * 1024.0_ => 1.0,
                     };
                     return Some(memory * multiplier);
                 }
@@ -1716,7 +1705,7 @@ impl CiCdAutomation {
 
         for line in output.lines() {
             // Try to parse as JSON first
-            if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(line) {
+            if let Ok(json_value) = serde_json::from, _str::<serde_json::Value>(line) {
                 if let Some(timing) = json_value.get("time") {
                     if let Some(mean) = timing.get("mean").and_then(|v| v.as_f64()) {
                         let std_dev = timing.get("std_dev").and_then(|v| v.as_f64());
@@ -2005,23 +1994,21 @@ impl PerformanceTestSuite {
     fn new(_config: TestSuiteConfig) -> Result<Self> {
         Ok(Self {
             test_cases: Vec::new(),
-            config: _config,
+            _config: _config,
         })
     }
 }
 
 impl ReportGenerator {
-    fn new(config: ReportingConfig) -> Result<Self> {
+    fn new(_config: ReportingConfig) -> Result<Self> {
         Ok(Self {
             template_engine: TemplateEngine::new()?,
-            config,
+            _config,
         })
     }
 
     async fn generate_html_report(
-        &self,
-        _measurements: &[PerformanceMeasurement],
-        _regression_results: &[RegressionResult],
+        &self_measurements: &[PerformanceMeasurement], _regression_results: &[RegressionResult],
     ) -> Result<GeneratedReport> {
         // TODO: Implement HTML report generation
         Ok(GeneratedReport {
@@ -2033,9 +2020,7 @@ impl ReportGenerator {
     }
 
     async fn generate_json_report(
-        &self,
-        _measurements: &[PerformanceMeasurement],
-        _regression_results: &[RegressionResult],
+        &self_measurements: &[PerformanceMeasurement], _regression_results: &[RegressionResult],
     ) -> Result<GeneratedReport> {
         // TODO: Implement JSON report generation
         Ok(GeneratedReport {
@@ -2047,9 +2032,7 @@ impl ReportGenerator {
     }
 
     async fn generate_junit_report(
-        &self,
-        _measurements: &[PerformanceMeasurement],
-        _regression_results: &[RegressionResult],
+        &self_measurements: &[PerformanceMeasurement], _regression_results: &[RegressionResult],
     ) -> Result<GeneratedReport> {
         // TODO: Implement JUnit XML report generation
         Ok(GeneratedReport {
@@ -2070,8 +2053,8 @@ impl TemplateEngine {
 }
 
 impl ArtifactManager {
-    fn new(config: ArtifactStorageConfig) -> Result<Self> {
-        let storage_provider: Box<dyn ArtifactStorage> = match &config.provider {
+    fn new(_config: ArtifactStorageConfig) -> Result<Self> {
+        let storage_provider: Box<dyn ArtifactStorage> = match &_config.provider {
             ArtifactStorageProvider::Local(path) => {
                 Box::new(LocalArtifactStorage::new(path.clone()))
             }
@@ -2080,7 +2063,7 @@ impl ArtifactManager {
 
         Ok(Self {
             storage_provider,
-            config,
+            _config,
         })
     }
 }
@@ -2092,8 +2075,8 @@ pub struct LocalArtifactStorage {
 }
 
 impl LocalArtifactStorage {
-    pub fn new(base_path: PathBuf) -> Self {
-        Self { base_path }
+    pub fn new(_base_path: PathBuf) -> Self {
+        Self { _base_path }
     }
 }
 

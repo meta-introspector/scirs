@@ -7,14 +7,15 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Display;
 
 use crate::error::{Result, TimeSeriesError};
+use statrs::statistics::Statistics;
 
 /// Validate that a value is positive
 #[allow(dead_code)]
-pub fn check_positive<F: Float + Display>(value: F, name: &str) -> Result<()> {
-    if value <= F::zero() {
+pub fn check_positive<F: Float + Display>(_value: F, name: &str) -> Result<()> {
+    if _value <= F::zero() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be positive, got {value}"),
+            message: format!("Must be positive, got {_value}"),
         });
     }
     Ok(())
@@ -22,11 +23,11 @@ pub fn check_positive<F: Float + Display>(value: F, name: &str) -> Result<()> {
 
 /// Validate that a value is non-negative
 #[allow(dead_code)]
-pub fn check_non_negative<F: Float + Display>(value: F, name: &str) -> Result<()> {
-    if value < F::zero() {
+pub fn check_non_negative<F: Float + Display>(_value: F, name: &str) -> Result<()> {
+    if _value < F::zero() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be non-negative, got {value}"),
+            message: format!("Must be non-negative, got {_value}"),
         });
     }
     Ok(())
@@ -34,11 +35,11 @@ pub fn check_non_negative<F: Float + Display>(value: F, name: &str) -> Result<()
 
 /// Validate that a value is in range [0, 1]
 #[allow(dead_code)]
-pub fn check_probability<F: Float + Display>(value: F, name: &str) -> Result<()> {
-    if value < F::zero() || value > F::one() {
+pub fn check_probability<F: Float + Display>(_value: F, name: &str) -> Result<()> {
+    if _value < F::zero() || _value >, F::one() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be in [0, 1], got {value}"),
+            message: format!("Must be in [0, 1], got {_value}"),
         });
     }
     Ok(())
@@ -46,11 +47,11 @@ pub fn check_probability<F: Float + Display>(value: F, name: &str) -> Result<()>
 
 /// Validate that a value is in a given range
 #[allow(dead_code)]
-pub fn check_in_range<F: Float + Display>(value: F, min: F, max: F, name: &str) -> Result<()> {
-    if value < min || value > max {
+pub fn check_in_range<F: Float + Display>(_value: F, min: F, max: F, name: &str) -> Result<()> {
+    if _value < min || _value > max {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be in [{min}, {max}], got {value}"),
+            message: format!("Must be in [{min}, {max}], got {_value}"),
         });
     }
     Ok(())
@@ -81,9 +82,7 @@ where
 #[allow(dead_code)]
 pub fn check_same_length<S1, S2, F>(
     arr1: &ArrayBase<S1, Ix1>,
-    arr2: &ArrayBase<S2, Ix1>,
-    _name1: &str,
-    _name2: &str,
+    arr2: &ArrayBase<S2, Ix1>, _name1: &str_name2: &str,
 ) -> Result<()>
 where
     S1: Data<Elem = F>,
@@ -172,19 +171,19 @@ pub fn validate_seasonal_arima_orders(
 
 /// Validate forecast horizon
 #[allow(dead_code)]
-pub fn validate_forecast_horizon(steps: usize, max_reasonable: Option<usize>) -> Result<()> {
-    if steps == 0 {
+pub fn validate_forecast_horizon(_steps: usize, max_reasonable: Option<usize>) -> Result<()> {
+    if _steps == 0 {
         return Err(TimeSeriesError::InvalidParameter {
-            name: "steps".to_string(),
+            name: "_steps".to_string(),
             message: "Forecast horizon must be positive".to_string(),
         });
     }
 
     let max = max_reasonable.unwrap_or(10000);
-    if steps > max {
+    if _steps > max {
         return Err(TimeSeriesError::InvalidParameter {
-            name: "steps".to_string(),
-            message: format!("Forecast horizon too large: {steps}"),
+            name: "_steps".to_string(),
+            message: format!("Forecast horizon too large: {_steps}"),
         });
     }
 
@@ -193,18 +192,18 @@ pub fn validate_forecast_horizon(steps: usize, max_reasonable: Option<usize>) ->
 
 /// Validate window size for rolling operations
 #[allow(dead_code)]
-pub fn validate_window_size(window: usize, data_length: usize) -> Result<()> {
-    if window == 0 {
+pub fn validate_window_size(_window: usize, data_length: usize) -> Result<()> {
+    if _window == 0 {
         return Err(TimeSeriesError::InvalidParameter {
-            name: "window".to_string(),
+            name: "_window".to_string(),
             message: "Window size must be positive".to_string(),
         });
     }
 
-    if window > data_length {
+    if _window > data_length {
         return Err(TimeSeriesError::InvalidParameter {
-            name: "window".to_string(),
-            message: format!("Window size {window} exceeds data length {data_length}"),
+            name: "_window".to_string(),
+            message: format!("Window size {_window} exceeds data _length {data_length}"),
         });
     }
 
@@ -213,11 +212,11 @@ pub fn validate_window_size(window: usize, data_length: usize) -> Result<()> {
 
 /// Validate lag for time series operations
 #[allow(dead_code)]
-pub fn validate_lag(lag: usize, data_length: usize) -> Result<()> {
-    if lag >= data_length {
+pub fn validate_lag(_lag: usize, data_length: usize) -> Result<()> {
+    if _lag >= data_length {
         return Err(TimeSeriesError::InvalidParameter {
-            name: "lag".to_string(),
-            message: format!("Lag {lag} must be less than data length {data_length}"),
+            name: "_lag".to_string(),
+            message: format!("Lag {_lag} must be less than data _length {data_length}"),
         });
     }
     Ok(())
@@ -225,12 +224,12 @@ pub fn validate_lag(lag: usize, data_length: usize) -> Result<()> {
 
 /// Check if array has no missing values
 #[allow(dead_code)]
-pub fn check_no_missing<S, F>(data: &ArrayBase<S, Ix1>) -> Result<()>
+pub fn check_no_missing<S, F>(_data: &ArrayBase<S, Ix1>) -> Result<()>
 where
     S: Data<Elem = F>,
     F: Float,
 {
-    for (i, &x) in data.iter().enumerate() {
+    for (i, &x) in _data.iter().enumerate() {
         if x.is_nan() || x.is_infinite() {
             return Err(TimeSeriesError::InvalidInput(format!(
                 "Non-finite value at index {i}"
@@ -242,17 +241,17 @@ where
 
 /// Check if array is stationary (basic check)
 #[allow(dead_code)]
-pub fn check_stationarity_basic<S, F>(data: &ArrayBase<S, Ix1>) -> Result<bool>
+pub fn check_stationarity_basic<S, F>(_data: &ArrayBase<S, Ix1>) -> Result<bool>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive,
 {
-    check_array_length(data, 10, "stationarity check")?;
+    check_array_length(_data, 10, "stationarity check")?;
 
-    // Split data into two halves
-    let mid = data.len() / 2;
-    let first_half = data.slice(ndarray::s![..mid]);
-    let second_half = data.slice(ndarray::s![mid..]);
+    // Split _data into two halves
+    let mid = _data.len() / 2;
+    let first_half = _data.slice(ndarray::s![..mid]);
+    let second_half = _data.slice(ndarray::s![mid..]);
 
     // Compare means and variances
     let mean1 = first_half.mean().unwrap_or(F::zero());
@@ -269,7 +268,7 @@ where
 
     // Check if means and variances are similar
     let mean_diff = (mean1 - mean2).abs();
-    let var_ratio = if var1 > F::zero() && var2 > F::zero() {
+    let var_ratio = if var1 > F::zero() && var2 >, F::zero() {
         (var1 / var2).max(var2 / var1)
     } else {
         F::one()

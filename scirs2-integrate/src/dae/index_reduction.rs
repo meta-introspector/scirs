@@ -114,11 +114,11 @@ impl<
     > DAEStructure<F>
 {
     /// Create a new DAE structure for a semi-explicit system
-    pub fn new_semi_explicit(n_differential: usize, n_algebraic: usize) -> Self {
+    pub fn new_semi_explicit(_n_differential: usize, n_algebraic: usize) -> Self {
         DAEStructure {
-            n_differential,
+            _n_differential,
             n_algebraic,
-            n_diff_eqs: n_differential,
+            n_diff_eqs: _n_differential,
             n_alg_eqs: n_algebraic,
             index: DAEIndex::Index1, // Initial assumption
             diff_index: 1,           // Initial assumption
@@ -131,11 +131,11 @@ impl<
     }
 
     /// Create a new DAE structure for a fully implicit system
-    pub fn new_fully_implicit(n_equations: usize, n_variables: usize) -> Self {
+    pub fn new_fully_implicit(_n_equations: usize, n_variables: usize) -> Self {
         DAEStructure {
-            n_differential: n_variables, // Initially assume all variables are differential
+            n_differential: n_variables, // Initially assume all _variables are differential
             n_algebraic: 0,
-            n_diff_eqs: n_equations,
+            n_diff_eqs: _n_equations,
             n_alg_eqs: 0,
             index: DAEIndex::Index1, // Initial assumption
             diff_index: 1,           // Initial assumption
@@ -271,9 +271,9 @@ impl<
     > PantelidesReducer<F>
 {
     /// Create a new Pantelides reducer for index reduction
-    pub fn new(structure: DAEStructure<F>) -> Self {
+    pub fn new(_structure: DAEStructure<F>) -> Self {
         PantelidesReducer {
-            structure,
+            _structure,
             max_diff_steps: 5, // Default limit on differentiation
             tol: F::from_f64(1e-10).unwrap(),
         }
@@ -450,8 +450,7 @@ impl<
             self.structure.index = match self.structure.diff_index {
                 0 | 1 => DAEIndex::Index1,
                 2 => DAEIndex::Index2,
-                3 => DAEIndex::Index3,
-                _ => DAEIndex::HigherIndex,
+                3 => DAEIndex::Index3_ =>, DAEIndex::HigherIndex,
             };
         }
 
@@ -531,7 +530,7 @@ impl<
             return Ok(());
         }
 
-        // Step 1: Add new differential variables for derivatives of differentiated equations
+        // Step 1: Add new differential variables for derivatives of differentiated _equations
         let num_new_variables = differentiated_equations.len();
         let old_n_diff = self.structure.n_differential;
         let old_n_alg = self.structure.n_algebraic;
@@ -556,7 +555,7 @@ impl<
                 }
             }
 
-            // Add new differential equations for the differentiated constraints
+            // Add new differential _equations for the differentiated constraints
             for (new_eq_idx, &orig_eq_idx) in differentiated_equations.iter().enumerate() {
                 let new_eq_row = old_n_eqs + new_eq_idx;
 
@@ -600,7 +599,7 @@ impl<
     }
 
     /// Update variable and equation dependencies after structural changes
-    fn update_dependencies_after_structure_change(&mut self) -> IntegrateResult<()> {
+    fn update_dependencies_after_structure_change(&self) -> IntegrateResult<()> {
         if let Some(ref incidence) = self.structure.incidence_matrix {
             let n_eqs = incidence.nrows();
             let n_vars = incidence.ncols();
@@ -707,9 +706,9 @@ impl<
     > DummyDerivativeReducer<F>
 {
     /// Create a new dummy derivative reducer
-    pub fn new(structure: DAEStructure<F>) -> Self {
+    pub fn new(_structure: DAEStructure<F>) -> Self {
         DummyDerivativeReducer {
-            structure,
+            _structure,
             dummy_variables: Vec::new(),
             dummy_equations: Vec::new(),
         }
@@ -992,7 +991,7 @@ impl<
     }
 
     /// Compute the numerical rank of an upper triangular matrix
-    fn compute_matrix_rank(&self, r: &Array2<F>) -> IntegrateResult<usize> {
+    fn compute_matrix_rank(r: &Array2<F>) -> IntegrateResult<usize> {
         let tolerance = F::from_f64(1e-10).unwrap();
         let min_dim = std::cmp::min(r.nrows(), r.ncols());
 
@@ -1007,7 +1006,7 @@ impl<
     }
 
     /// Update the DAE structure after adding dummy variables
-    fn update_structure_with_dummies(&mut self) -> IntegrateResult<()> {
+    fn update_structure_with_dummies() -> IntegrateResult<()> {
         let n_dummy = self.dummy_variables.len();
 
         // Increase the number of variables and equations
@@ -1027,8 +1026,7 @@ impl<
         &self,
         t: F,
         x: ArrayView1<F>,
-        y: ArrayView1<F>,
-        _f: &FFunc,
+        y: ArrayView1<F>, _f: &FFunc,
         g: &GFunc,
     ) -> IntegrateResult<DAEIndex>
     where
@@ -1104,9 +1102,9 @@ impl<
     > ProjectionMethod<F>
 {
     /// Create a new projection method for constraint satisfaction
-    pub fn new(structure: DAEStructure<F>) -> Self {
+    pub fn new(_structure: DAEStructure<F>) -> Self {
         ProjectionMethod {
-            structure,
+            _structure,
             project_after_step: true,
             consistent_initialization: true,
             constraint_tol: F::from_f64(1e-8).unwrap(),
@@ -1271,12 +1269,12 @@ where
         let mut x_perturbed = x.to_owned();
 
         for j in 0..n_x_vars {
-            let idx = start_idx + j;
-            let h = epsilon.max(x[idx].abs() * epsilon);
+            let _idx = start_idx + j;
+            let h = epsilon.max(x[_idx].abs() * epsilon);
 
-            x_perturbed[idx] = x[idx] + h;
+            x_perturbed[_idx] = x[_idx] + h;
             let f_plus = f(t, x_perturbed.view(), y);
-            x_perturbed[idx] = x[idx];
+            x_perturbed[_idx] = x[_idx];
 
             let df = (f_plus - f_val.view()) / h;
 
@@ -1296,12 +1294,12 @@ where
         let mut y_perturbed = y.to_owned();
 
         for j in 0..y_end.saturating_sub(y_start) {
-            let idx = y_start + j;
-            let h = epsilon.max(y[idx].abs() * epsilon);
+            let _idx = y_start + j;
+            let h = epsilon.max(y[_idx].abs() * epsilon);
 
-            y_perturbed[idx] = y[idx] + h;
+            y_perturbed[_idx] = y[_idx] + h;
             let f_plus = f(t, x, y_perturbed.view());
-            y_perturbed[idx] = y[idx];
+            y_perturbed[_idx] = y[_idx];
 
             let df = (f_plus - f_val.view()) / h;
 
@@ -1336,7 +1334,7 @@ where
         + std::iter::Sum
         + crate::common::IntegrateFloat,
 {
-    use crate::dae::utils::linear_solvers::solve_linear_system;
+    use crate::dae::utils::linear__solvers::solve_linear_system;
 
     // For underconstrained systems, we use the pseudoinverse (minimum norm solution)
     // J·J^T·λ = b

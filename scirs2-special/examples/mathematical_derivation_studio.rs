@@ -10,8 +10,8 @@
 //! Run with: cargo run --example mathematical_derivation_studio
 
 use ndarray::Array1;
-use num_complex::Complex64;
-use scirs2_special::*;
+use num__complex::Complex64;
+use scirs2__special::*;
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};
 
@@ -38,8 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(5) => elliptic_integral_connections()?,
             Ok(6) => wright_function_asymptotic_analysis()?,
             Ok(7) => information_theory_inequalities()?,
-            Ok(8) => quantum_mechanics_applications()?,
-            _ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(8) => quantum_mechanics_applications()?_ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 
@@ -62,8 +61,8 @@ fn display_main_menu() {
 }
 
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> io::Result<String> {
-    print!("{}", prompt);
+fn get_user_input(_prompt: &str) -> io::Result<String> {
+    print!("{}", _prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
@@ -908,7 +907,7 @@ fn elliptic_e(k: f64) -> Result<f64, Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn wright_phi(alpha: f64, beta: f64, z: f64) -> Result<f64, Box<dyn std::error::Error>> {
+fn wright_phi(_alpha: f64, beta: f64, z: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Wright function - would use actual implementation
     // Placeholder: sum first few terms
     let mut sum = 0.0;
@@ -916,7 +915,7 @@ fn wright_phi(alpha: f64, beta: f64, z: f64) -> Result<f64, Box<dyn std::error::
     sum += term;
 
     for n in 1..20 {
-        term *= z / (n as f64 * gamma(alpha * n as f64 + beta));
+        term *= z / (n as f64 * gamma(_alpha * n as f64 + beta));
         sum += term;
         if term.abs() < 1e-12 {
             break;

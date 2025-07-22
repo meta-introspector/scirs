@@ -2,11 +2,12 @@
 //!
 //! This module implements NMF techniques for signal processing.
 
-use super::BssConfig;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array2};
+use ndarray::{Array2, s};
 use rand::{Rng, SeedableRng};
+use super::BssConfig;
 
+#[allow(unused_imports)]
 /// Apply Non-negative Matrix Factorization (NMF) to separate mixed signals
 ///
 /// NMF decomposes non-negative data into non-negative factors.

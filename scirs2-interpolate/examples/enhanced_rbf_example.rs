@@ -1,9 +1,9 @@
 use ndarray::{Array1, Array2};
-use scirs2_interpolate::advanced::enhanced_rbf::{
+use scirs2__interpolate::advanced::enhanced_rbf::{
     make_accurate_rbf, make_auto_rbf, make_fast_rbf, EnhancedRBFInterpolator, EnhancedRBFKernel,
     KernelType,
 };
-use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
 
 #[allow(dead_code)]
 fn main() {
@@ -208,8 +208,8 @@ fn main() {
     use rand::Rng;
 
     for _ in 0..n_noisy {
-        let x = rng.random_range(-2.0..2.0);
-        let y = rng.random_range(-2.0..2.0);
+        let x = rng.gen_range(-2.0..2.0);
+        let y = rng.gen_range(-2.0..2.0);
 
         noisy_points.push(x);
         noisy_points.push(y);
@@ -217,11 +217,11 @@ fn main() {
         // Function with noise
         let f = f64::exp(-x * x - y * y)
             + 0.5 * f64::exp(-(x - 1.0) * (x - 1.0) - (y - 1.0) * (y - 1.0));
-        let noise = rng.random_range(-0.05..0.05);
+        let noise = rng.gen_range(-0.05..0.05);
         noisy_values.push(f + noise);
     }
 
-    let noisy_points_array = Array2::from_shape_vec((n_noisy, 2), noisy_points).unwrap();
+    let noisy_points_array = Array2::from_shape_vec((n_noisy..2), noisy_points).unwrap();
     let noisy_values_array = Array1::from_vec(noisy_values);
 
     // Create interpolators with different strategies
@@ -276,8 +276,8 @@ fn main() {
     let mut complex_values = Vec::with_capacity(n_complex);
 
     for _ in 0..n_complex {
-        let x = rng.random_range(-3.0..3.0);
-        let y = rng.random_range(-3.0..3.0);
+        let x = rng.gen_range(-3.0..3.0);
+        let y = rng.gen_range(-3.0..3.0);
 
         complex_points.push(x);
         complex_points.push(y);
@@ -291,7 +291,7 @@ fn main() {
         complex_values.push(global + medium + local + spike);
     }
 
-    let complex_points_array = Array2::from_shape_vec((n_complex, 2), complex_points).unwrap();
+    let complex_points_array = Array2::from_shape_vec((n_complex..2), complex_points).unwrap();
     let complex_values_array = Array1::from_vec(complex_values);
 
     // Create single-scale and multi-scale interpolators
@@ -323,8 +323,8 @@ fn main() {
     );
 
     // Calculate interpolation error at sample points
-    let (single_mse, _, single_max) = single_scale.calculate_error().unwrap();
-    let (multi_mse, _, multi_max) = multi_scale.calculate_error().unwrap();
+    let (single_mse_, single_max) = single_scale.calculate_error().unwrap();
+    let (multi_mse_, multi_max) = multi_scale.calculate_error().unwrap();
 
     println!("\nInterpolation error at sample points:");
     println!(

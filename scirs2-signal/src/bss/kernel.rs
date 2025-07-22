@@ -2,13 +2,15 @@
 //!
 //! This module implements kernel-based ICA methods.
 
-use super::{pca, BssConfig};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, Axis};
+use ndarray::{Array1, Array2, Axis, s};
 use rand::SeedableRng;
-use rand_distr::{Distribution, Normal};
-use scirs2_linalg::{eigh, svd};
+use rand__distr::{Distribution, Normal};
+use scirs2__linalg::{eigh, svd};
+use statrs::statistics::Statistics;
+use super::{BssConfig, pca};
 
+#[allow(unused_imports)]
 /// Apply Kernel ICA for nonlinear blind source separation
 ///
 /// Kernel ICA uses kernel methods to handle nonlinearities in the data.

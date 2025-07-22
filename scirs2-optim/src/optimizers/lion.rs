@@ -25,7 +25,7 @@ use crate::optimizers::Optimizer;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::optimizers::{Lion, Optimizer};
+/// use scirs2__optim::optimizers::{Lion, Optimizer};
 ///
 /// // Initialize parameters and gradients
 /// let params = Array1::zeros(5);
@@ -57,9 +57,9 @@ impl<A: Float + ScalarOperand + Debug> Lion<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(_learning_rate: A) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             beta1: A::from(0.9).unwrap(),
             beta2: A::from(0.99).unwrap(),
             weight_decay: A::zero(),
@@ -75,9 +75,9 @@ impl<A: Float + ScalarOperand + Debug> Lion<A> {
     /// * `beta1` - Exponential decay rate for computing the interpolated update (default: 0.9)
     /// * `beta2` - Exponential decay rate for updating the momentum (default: 0.99)
     /// * `weight_decay` - Weight decay factor for L2 regularization (default: 0.0)
-    pub fn new_with_config(learning_rate: A, beta1: A, beta2: A, weight_decay: A) -> Self {
+    pub fn new_with_config(_learning_rate: A, beta1: A, beta2: A, weight_decay: A) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             beta1,
             beta2,
             weight_decay,

@@ -16,7 +16,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use scirs2_text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
+//! use scirs2__text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
 //!
 //! // Basic Word2Vec training
 //! let documents = vec![
@@ -56,7 +56,7 @@
 //! ### Custom Configuration
 //!
 //! ```rust
-//! use scirs2_text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
+//! use scirs2__text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
 //!
 //! let config = Word2VecConfig {
 //!     algorithm: Word2VecAlgorithm::CBOW,
@@ -74,7 +74,7 @@
 //! ### Incremental Training
 //!
 //! ```rust
-//! # use scirs2_text::embeddings::{Word2Vec, Word2VecConfig};
+//! # use scirs2__text::embeddings::{Word2Vec, Word2VecConfig};
 //! # let mut model = Word2Vec::new(Word2VecConfig::default());
 //! // Initial training
 //! let batch1 = vec!["first batch of documents"];
@@ -88,7 +88,7 @@
 //! ### Saving and Loading Models
 //!
 //! ```rust
-//! # use scirs2_text::embeddings::{Word2Vec, Word2VecConfig};
+//! # use scirs2__text::embeddings::{Word2Vec, Word2VecConfig};
 //! # let mut model = Word2Vec::new(Word2VecConfig::default());
 //! // Save trained model
 //! model.save_to_file("my_model.w2v").expect("Failed to save model");
@@ -147,35 +147,34 @@ struct SamplingTable {
 
 impl SamplingTable {
     /// Create a new sampling table from weights
-    fn new(weights: &[f64]) -> Result<Self> {
-        if weights.is_empty() {
+    fn new(_weights: &[f64]) -> Result<Self> {
+        if _weights.is_empty() {
             return Err(TextError::EmbeddingError("Weights cannot be empty".into()));
         }
 
-        // Ensure all weights are positive
-        if weights.iter().any(|&w| w < 0.0) {
+        // Ensure all _weights are positive
+        if _weights.iter().any(|&w| w < 0.0) {
             return Err(TextError::EmbeddingError("Weights must be positive".into()));
         }
 
         // Compute the CDF
-        let sum: f64 = weights.iter().sum();
+        let sum: f64 = _weights.iter().sum();
         if sum <= 0.0 {
             return Err(TextError::EmbeddingError(
-                "Sum of weights must be positive".into(),
+                "Sum of _weights must be positive".into(),
             ));
         }
 
-        let mut cdf = Vec::with_capacity(weights.len());
+        let mut cdf = Vec::with_capacity(_weights.len());
         let mut total = 0.0;
 
-        for &w in weights {
+        for &w in _weights {
             total += w;
             cdf.push(total / sum);
         }
 
         Ok(Self {
-            cdf,
-            weights: weights.to_vec(),
+            cdf_weights: _weights.to_vec(),
         })
     }
 
@@ -329,10 +328,10 @@ impl Word2Vec {
     }
 
     /// Create a new Word2Vec model with the specified configuration
-    pub fn with_config(config: Word2VecConfig) -> Self {
-        let learning_rate = config.learning_rate;
+    pub fn with_config(_config: Word2VecConfig) -> Self {
+        let learning_rate = _config.learning_rate;
         Self {
-            config,
+            _config,
             vocabulary: Vocabulary::new(),
             input_embeddings: None,
             output_embeddings: None,
@@ -603,7 +602,7 @@ impl Word2Vec {
         for pos in 0..sentence.len() {
             // Determine context window (with random size)
             let mut rng = rand::rng();
-            let window = 1 + rng.random_range(0..window_size);
+            let window = 1 + rng.gen_range(0..window_size);
             let target_word = sentence[pos];
 
             // Collect context words and average their vectors
@@ -634,7 +633,7 @@ impl Word2Vec {
 
             // Create a copy for update
             let mut target_update = target_output.to_owned();
-            target_update.scaled_add(error, &context_avg);
+            target_update.scaled_add(error..&context_avg);
             target_output.assign(&target_update);
 
             // Negative sampling
@@ -712,7 +711,7 @@ impl Word2Vec {
         for pos in 0..sentence.len() {
             // Determine context window (with random size)
             let mut rng = rand::rng();
-            let window = 1 + rng.random_range(0..window_size);
+            let window = 1 + rng.gen_range(0..window_size);
             let target_word = sentence[pos];
 
             // For each context position
@@ -733,7 +732,7 @@ impl Word2Vec {
 
                 // Create a copy for update
                 let mut context_update = context_output.to_owned();
-                context_update.scaled_add(error, &target_input);
+                context_update.scaled_add(error..&target_input);
                 context_output.assign(&context_update);
 
                 // Gradient for input word vector
@@ -821,7 +820,7 @@ impl Word2Vec {
             .filter_map(|&word| self.vocabulary.get_index(word))
             .collect();
 
-        // Calculate cosine similarity for all words
+        // Calculate cosine similarity for all _words
         let mut similarities = Vec::with_capacity(vocab_size);
 
         for i in 0..vocab_size {
@@ -913,8 +912,8 @@ impl Word2Vec {
     }
 
     /// Load a Word2Vec model from a file
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path).map_err(|e| TextError::IoError(e.to_string()))?;
+    pub fn load<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::open(_path).map_err(|e| TextError::IoError(e.to_string()))?;
         let mut reader = BufReader::new(file);
 
         // Read header

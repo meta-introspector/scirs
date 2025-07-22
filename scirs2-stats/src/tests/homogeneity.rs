@@ -30,7 +30,7 @@ use std::cmp::Ordering;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::levene;
+/// use scirs2__stats::levene;
 ///
 /// // Create three samples with different variances
 /// let a = array![8.88, 9.12, 9.04, 8.98, 9.00, 9.08, 9.01, 8.85, 9.06, 8.99];
@@ -170,21 +170,21 @@ where
 
 // Helper function to calculate the mean
 #[allow(dead_code)]
-fn calculate_mean<F>(data: &[F]) -> F
+fn calculate_mean<F>(_data: &[F]) -> F
 where
     F: Float + std::iter::Sum<F> + std::fmt::Display,
 {
-    let sum = data.iter().cloned().sum::<F>();
-    sum / F::from(data.len()).unwrap()
+    let sum = _data.iter().cloned().sum::<F>();
+    sum / F::from(_data.len()).unwrap()
 }
 
 // Helper function to calculate the median
 #[allow(dead_code)]
-fn calculate_median<F>(data: &[F]) -> F
+fn calculate_median<F>(_data: &[F]) -> F
 where
     F: Float + Copy + std::fmt::Display,
 {
-    let mut sorted = data.to_vec();
+    let mut sorted = _data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     let n = sorted.len();
@@ -199,12 +199,12 @@ where
 
 // Helper function to trim from both ends of a sorted array
 #[allow(dead_code)]
-fn trim_both<F>(sorted_data: &[F], proportion: F) -> Vec<F>
+fn trim_both<F>(_sorted_data: &[F], proportion: F) -> Vec<F>
 where
     F: Float + Copy + std::fmt::Display,
 {
     if proportion <= F::zero() || proportion >= F::from(0.5).unwrap() {
-        return sorted_data.to_vec();
+        return _sorted_data.to_vec();
     }
 
     let n = sorted_data.len();
@@ -377,7 +377,7 @@ fn gamma_function(x: f64) -> f64 {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::bartlett;
+/// use scirs2__stats::bartlett;
 ///
 /// // Create three samples with different variances
 /// let a = array![8.88, 9.12, 9.04, 8.98, 9.00, 9.08, 9.01, 8.85, 9.06, 8.99];
@@ -393,7 +393,7 @@ fn gamma_function(x: f64) -> f64 {
 /// let equal_variances = p_value >= 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn bartlett<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
+pub fn bartlett<F>(_samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
     F: Float
         + std::iter::Sum<F>
@@ -403,15 +403,15 @@ where
         + std::fmt::Display,
 {
     // Check if there are at least two groups
-    let k = samples.len();
+    let k = _samples.len();
     if k < 2 {
         return Err(StatsError::InvalidArgument(
-            "At least two samples are required for Bartlett's test".to_string(),
+            "At least two _samples are required for Bartlett's test".to_string(),
         ));
     }
 
     // Check if any group is empty
-    for (i, sample) in samples.iter().enumerate() {
+    for (i, sample) in _samples.iter().enumerate() {
         if sample.is_empty() {
             return Err(StatsError::InvalidArgument(format!(
                 "Sample {} is empty",
@@ -425,7 +425,7 @@ where
     let mut v_i = Vec::with_capacity(k); // Sample variances
     let mut df_i = Vec::with_capacity(k); // Degrees of freedom (n_i - 1)
 
-    for sample in samples {
+    for sample in _samples {
         let n = sample.len();
         if n < 2 {
             return Err(StatsError::InvalidArgument(
@@ -621,7 +621,7 @@ fn gamma_continued_fraction(a: f64, x: f64) -> f64 {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::brown_forsythe;
+/// use scirs2__stats::brown_forsythe;
 ///
 /// // Create three samples with different variances
 /// let a = array![8.88, 9.12, 9.04, 8.98, 9.00, 9.08, 9.01, 8.85, 9.06, 8.99];
@@ -637,7 +637,7 @@ fn gamma_continued_fraction(a: f64, x: f64) -> f64 {
 /// let equal_variances = p_value >= 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn brown_forsythe<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
+pub fn brown_forsythe<F>(_samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
     F: Float
         + std::iter::Sum<F>
@@ -647,5 +647,5 @@ where
         + std::fmt::Display,
 {
     // The Brown-Forsythe test is just Levene's test with center="median"
-    levene(samples, "median", F::from(0.05).unwrap())
+    levene(_samples, "median", F::from(0.05).unwrap())
 }

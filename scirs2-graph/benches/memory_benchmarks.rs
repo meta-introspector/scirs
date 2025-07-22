@@ -1,7 +1,7 @@
 //! Memory usage and performance benchmarks for different graph representations
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use scirs2_graph::{
+use scirs2__graph::{
     generators,
     memory::{BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph, MemoryProfiler},
     Graph,
@@ -92,7 +92,7 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
     let csr = CSRGraph::from_edges(n, edges.clone()).unwrap();
 
     let mut bitpacked = BitPackedGraph::new(n, false);
-    for (u, v, _) in &edges {
+    for (u, v_) in &edges {
         if u <= v {
             bitpacked.add_edge(*u, *v).unwrap();
         }
@@ -121,7 +121,7 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
         b.iter(|| {
             let mut sum = 0;
             for node in 0..n {
-                for (neighbor, _) in csr.neighbors(node) {
+                for (neighbor_) in csr.neighbors(node) {
                     sum += neighbor;
                 }
             }
@@ -184,7 +184,7 @@ fn bench_edge_queries(c: &mut Criterion) {
     use rand::prelude::*;
     let mut rng = rand::thread_rng();
     let query_pairs: Vec<(usize, usize)> = (0..1000)
-        .map(|_| (rng.gen_range(0..n), rng.gen_range(0..n)))
+        .map(|_| (rng.gen_range(0..n)..rng.gen_range(0..n)))
         .collect();
 
     // Benchmark standard graph

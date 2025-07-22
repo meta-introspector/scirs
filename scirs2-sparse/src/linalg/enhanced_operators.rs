@@ -5,7 +5,7 @@
 
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::interface::{AdjointOperator, LinearOperator};
-use crate::parallel_vector_ops::*;
+use crate::parallel_vector__ops::*;
 use num_traits::{Float, NumAssign};
 use std::fmt::Debug;
 use std::iter::Sum;
@@ -51,17 +51,17 @@ pub struct EnhancedDiagonalOperator<F> {
 impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedDiagonalOperator<F> {
     /// Create a new enhanced diagonal operator
     #[allow(dead_code)]
-    pub fn new(diagonal: Vec<F>) -> Self {
+    pub fn new(_diagonal: Vec<F>) -> Self {
         Self {
-            diagonal,
+            _diagonal,
             options: EnhancedOperatorOptions::default(),
         }
     }
 
     /// Create with custom options
     #[allow(dead_code)]
-    pub fn with_options(diagonal: Vec<F>, options: EnhancedOperatorOptions) -> Self {
-        Self { diagonal, options }
+    pub fn with_options(_diagonal: Vec<F>, options: EnhancedOperatorOptions) -> Self {
+        Self { _diagonal, options }
     }
 
     /// Get the diagonal values
@@ -319,9 +319,9 @@ pub struct EnhancedScaledOperator<F> {
 impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedScaledOperator<F> {
     /// Create a new enhanced scaled operator
     #[allow(dead_code)]
-    pub fn new(alpha: F, operator: Box<dyn LinearOperator<F>>) -> Self {
+    pub fn new(_alpha: F, operator: Box<dyn LinearOperator<F>>) -> Self {
         Self {
-            alpha,
+            _alpha,
             operator,
             options: EnhancedOperatorOptions::default(),
         }
@@ -415,13 +415,13 @@ pub enum ConvolutionMode {
 impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> ConvolutionOperator<F> {
     /// Create a new convolution operator
     #[allow(dead_code)]
-    pub fn new(kernel: Vec<F>, input_size: usize, mode: ConvolutionMode) -> Self {
+    pub fn new(_kernel: Vec<F>, input_size: usize, mode: ConvolutionMode) -> Self {
         let output_size = match mode {
-            ConvolutionMode::Full => input_size + kernel.len() - 1,
+            ConvolutionMode::Full => input_size + _kernel.len() - 1,
             ConvolutionMode::Same => input_size,
             ConvolutionMode::Valid => {
-                if input_size >= kernel.len() {
-                    input_size - kernel.len() + 1
+                if input_size >= _kernel.len() {
+                    input_size - _kernel.len() + 1
                 } else {
                     0
                 }
@@ -429,7 +429,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
         };
 
         Self {
-            kernel,
+            _kernel,
             input_size,
             output_size,
             mode,
@@ -755,9 +755,9 @@ pub enum BoundaryCondition {
 impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> FiniteDifferenceOperator<F> {
     /// Create a new finite difference operator
     #[allow(dead_code)]
-    pub fn new(size: usize, order: usize, spacing: F, boundary: BoundaryCondition) -> Self {
+    pub fn new(_size: usize, order: usize, spacing: F, boundary: BoundaryCondition) -> Self {
         Self {
-            size,
+            _size,
             order,
             spacing,
             boundary,
@@ -969,7 +969,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
         right: Box<dyn LinearOperator<F>>,
     ) -> SparseResult<Self> {
         let (left_rows, left_cols) = left.shape();
-        let (right_rows, _right_cols) = right.shape();
+        let (right_rows_right_cols) = right.shape();
 
         if left_cols != right_rows {
             return Err(SparseError::ShapeMismatch {
@@ -993,7 +993,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
         options: EnhancedOperatorOptions,
     ) -> SparseResult<Self> {
         let (left_rows, left_cols) = left.shape();
-        let (right_rows, _right_cols) = right.shape();
+        let (right_rows_right_cols) = right.shape();
 
         if left_cols != right_rows {
             return Err(SparseError::ShapeMismatch {
@@ -1014,7 +1014,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
     for EnhancedCompositionOperator<F>
 {
     fn shape(&self) -> (usize, usize) {
-        let (left_rows, _) = self.left.shape();
+        let (left_rows_) = self.left.shape();
         let (_, right_cols) = self.right.shape();
         (left_rows, right_cols)
     }
@@ -1054,12 +1054,12 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
     ElementwiseFunctionOperator<F>
 {
     /// Create a new element-wise function operator
-    pub fn new<Func>(function: Func, size: usize) -> Self
+    pub fn new<Func>(_function: Func, size: usize) -> Self
     where
         Func: Fn(F) -> F + Send + Sync + 'static,
     {
         Self {
-            function: Box::new(function),
+            _function: Box::new(_function),
             size,
             options: EnhancedOperatorOptions::default(),
         }
@@ -1067,12 +1067,12 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
 
     /// Create with custom options
     #[allow(dead_code)]
-    pub fn with_options<Func>(function: Func, size: usize, options: EnhancedOperatorOptions) -> Self
+    pub fn with_options<Func>(_function: Func, size: usize, options: EnhancedOperatorOptions) -> Self
     where
         Func: Fn(F) -> F + Send + Sync + 'static,
     {
         Self {
-            function: Box::new(function),
+            _function: Box::new(_function),
             size,
             options,
         }
@@ -1110,7 +1110,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
         false // General functions don't have well-defined adjoints
     }
 
-    fn rmatvec(&self, _x: &[F]) -> SparseResult<Vec<F>> {
+    fn rmatvec(&self_x: &[F]) -> SparseResult<Vec<F>> {
         Err(SparseError::OperationNotSupported(
             "adjoint not supported for general element-wise functions".to_string(),
         ))
@@ -1128,9 +1128,9 @@ pub struct KroneckerProductOperator<F> {
 impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> KroneckerProductOperator<F> {
     /// Create a new Kronecker product operator (left ⊗ right)
     #[allow(dead_code)]
-    pub fn new(left: Box<dyn LinearOperator<F>>, right: Box<dyn LinearOperator<F>>) -> Self {
+    pub fn new(_left: Box<dyn LinearOperator<F>>, right: Box<dyn LinearOperator<F>>) -> Self {
         Self {
-            left,
+            _left,
             right,
             options: EnhancedOperatorOptions::default(),
         }
@@ -1216,7 +1216,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
         self.left.has_adjoint() && self.right.has_adjoint()
     }
 
-    fn rmatvec(&self, _x: &[F]) -> SparseResult<Vec<F>> {
+    fn rmatvec(&self_x: &[F]) -> SparseResult<Vec<F>> {
         if !self.has_adjoint() {
             return Err(SparseError::OperationNotSupported(
                 "adjoint not supported for one or both operators".to_string(),

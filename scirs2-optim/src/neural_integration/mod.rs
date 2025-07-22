@@ -8,6 +8,7 @@ use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
+// use statrs::statistics::Statistics; // statrs not available
 
 /// Type alias for layer identifiers
 pub type LayerId = String;
@@ -165,14 +166,14 @@ pub struct OptimizationConfig<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
     /// Create a new parameter manager
-    pub fn new(config: OptimizationConfig<A>) -> Self {
+    pub fn new(_config: OptimizationConfig<A>) -> Self {
         Self {
             parameters: HashMap::new(),
             optimizer_states: HashMap::new(),
             layer_architectures: HashMap::new(),
             sharing_groups: HashMap::new(),
             layer_rules: HashMap::new(),
-            global_config: config,
+            global_config: _config,
             lazy_mode: false,
             pending_registrations: Vec::new(),
         }
@@ -348,7 +349,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
         self.parameters
             .iter()
             .filter(|(_, metadata)| &metadata.layer_name == layer_id)
-            .map(|(param_id, _)| param_id)
+            .map(|(param_id_)| param_id)
             .collect()
     }
 
@@ -357,7 +358,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
         self.parameters
             .iter()
             .filter(|(_, metadata)| metadata.param_type == param_type)
-            .map(|(param_id, _)| param_id)
+            .map(|(param_id_)| param_id)
             .collect()
     }
 
@@ -368,7 +369,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
             .filter(|(param_id, metadata)| {
                 metadata.requires_grad && !self.is_parameter_frozen(param_id)
             })
-            .map(|(param_id, _)| param_id)
+            .map(|(param_id_)| param_id)
             .collect()
     }
 }
@@ -440,9 +441,9 @@ pub mod forward_backward {
         > NeuralIntegration<A, D>
     {
         /// Create a new neural integration manager
-        pub fn new(config: OptimizationConfig<A>) -> Self {
+        pub fn new(_config: OptimizationConfig<A>) -> Self {
             Self {
-                param_manager: ParameterManager::new(config),
+                param_manager: ParameterManager::new(_config),
                 forward_hooks: HashMap::new(),
                 backward_hooks: HashMap::new(),
                 gradient_accumulation: false,
@@ -572,8 +573,7 @@ pub mod forward_backward {
 
         /// Compute convolutional layer forward pass
         fn compute_conv_forward(
-            &self,
-            _layer_id: &LayerId,
+            &self, _layer_id: &LayerId,
             inputs: &[Array<A, D>],
         ) -> Result<Vec<Array<A, D>>> {
             // Simplified convolution: just pass through
@@ -583,8 +583,7 @@ pub mod forward_backward {
 
         /// Compute activation forward pass
         fn compute_activation_forward(
-            &self,
-            _layer_id: &LayerId,
+            &self, _layer_id: &LayerId,
             inputs: &[Array<A, D>],
             layer_arch: &LayerArchitecture,
         ) -> Result<Vec<Array<A, D>>> {
@@ -592,8 +591,7 @@ pub mod forward_backward {
                 .config
                 .get("activation")
                 .and_then(|v| match v {
-                    LayerConfig::String(s) => Some(s.as_str()),
-                    _ => None,
+                    LayerConfig::String(s) => Some(s.as_str(), _ => None,
                 })
                 .unwrap_or("relu");
 
@@ -618,15 +616,14 @@ pub mod forward_backward {
 
         /// Compute normalization forward pass
         fn compute_normalization_forward(
-            &self,
-            _layer_id: &LayerId,
+            &self, _layer_id: &LayerId,
             inputs: &[Array<A, D>],
         ) -> Result<Vec<Array<A, D>>> {
             // Simplified normalization: normalize to zero mean and unit variance
             let outputs: Vec<Array<A, D>> = inputs
                 .iter()
                 .map(|input| {
-                    let mean = input.mean().unwrap_or(A::zero());
+                    let mean = input.iter().copied().sum::<A>() / A::from(input.len()).unwrap_or(A::zero());
                     let variance = input
                         .mapv(|x| (x - mean).powi(2))
                         .mean()
@@ -643,8 +640,7 @@ pub mod forward_backward {
 
         /// Compute dropout forward pass
         fn compute_dropout_forward(
-            &self,
-            _layer_id: &LayerId,
+            &self, _layer_id: &LayerId,
             inputs: &[Array<A, D>],
             layer_arch: &LayerArchitecture,
         ) -> Result<Vec<Array<A, D>>> {
@@ -652,8 +648,7 @@ pub mod forward_backward {
                 .config
                 .get("dropout_rate")
                 .and_then(|v| match v {
-                    LayerConfig::Float(f) => Some(A::from(*f).unwrap()),
-                    _ => None,
+                    LayerConfig::Float(f) => Some(A::from(*f).unwrap(), _ => None,
                 })
                 .unwrap_or(A::from(0.5).unwrap());
 
@@ -670,10 +665,8 @@ pub mod forward_backward {
 
         /// Compute pooling forward pass
         fn compute_pooling_forward(
-            &self,
-            _layer_id: &LayerId,
-            inputs: &[Array<A, D>],
-            _layer_arch: &LayerArchitecture,
+            &self, _layer_id: &LayerId,
+            inputs: &[Array<A, D>], _layer_arch: &LayerArchitecture,
         ) -> Result<Vec<Array<A, D>>> {
             // Simplified pooling: just pass through
             // Real implementation would downsample the input
@@ -786,8 +779,7 @@ pub mod forward_backward {
 
         /// Compute convolutional layer backward pass
         fn compute_conv_backward(
-            &self,
-            _layer_id: &LayerId,
+            &self, _layer_id: &LayerId,
             grad_outputs: &[Array<A, D>],
         ) -> Result<Vec<Array<A, D>>> {
             // Simplified convolution backward: pass through gradients
@@ -797,8 +789,7 @@ pub mod forward_backward {
 
         /// Compute activation backward pass
         fn compute_activation_backward(
-            &self,
-            _layer_id: &LayerId,
+            &self, _layer_id: &LayerId,
             grad_outputs: &[Array<A, D>],
             layer_arch: &LayerArchitecture,
         ) -> Result<Vec<Array<A, D>>> {
@@ -806,8 +797,7 @@ pub mod forward_backward {
                 .config
                 .get("activation")
                 .and_then(|v| match v {
-                    LayerConfig::String(s) => Some(s.as_str()),
-                    _ => None,
+                    LayerConfig::String(s) => Some(s.as_str(), _ => None,
                 })
                 .unwrap_or("relu");
 
@@ -847,8 +837,7 @@ pub mod forward_backward {
 
         /// Compute normalization backward pass
         fn compute_normalization_backward(
-            &self,
-            _layer_id: &LayerId,
+            &self, _layer_id: &LayerId,
             grad_outputs: &[Array<A, D>],
         ) -> Result<Vec<Array<A, D>>> {
             // Simplified normalization backward
@@ -864,8 +853,7 @@ pub mod forward_backward {
 
         /// Compute dropout backward pass
         fn compute_dropout_backward(
-            &self,
-            _layer_id: &LayerId,
+            &self, _layer_id: &LayerId,
             grad_outputs: &[Array<A, D>],
             layer_arch: &LayerArchitecture,
         ) -> Result<Vec<Array<A, D>>> {
@@ -873,8 +861,7 @@ pub mod forward_backward {
                 .config
                 .get("dropout_rate")
                 .and_then(|v| match v {
-                    LayerConfig::Float(f) => Some(A::from(*f).unwrap()),
-                    _ => None,
+                    LayerConfig::Float(f) => Some(A::from(*f).unwrap(), _ => None,
                 })
                 .unwrap_or(A::from(0.5).unwrap());
 
@@ -890,10 +877,8 @@ pub mod forward_backward {
 
         /// Compute pooling backward pass
         fn compute_pooling_backward(
-            &self,
-            _layer_id: &LayerId,
-            grad_outputs: &[Array<A, D>],
-            _layer_arch: &LayerArchitecture,
+            &self, _layer_id: &LayerId,
+            grad_outputs: &[Array<A, D>], _layer_arch: &LayerArchitecture,
         ) -> Result<Vec<Array<A, D>>> {
             // Simplified pooling backward: pass through gradients
             // Real implementation would upsample gradients to match input size
@@ -1020,9 +1005,9 @@ pub mod architecture_aware {
 
     impl<A: Float + ScalarOperand + Debug, D: Dimension> ArchitectureAwareOptimizer<A, D> {
         /// Create a new architecture-aware optimizer
-        pub fn new(config: OptimizationConfig<A>, strategy: ArchitectureStrategy) -> Self {
+        pub fn new(_config: OptimizationConfig<A>, strategy: ArchitectureStrategy) -> Self {
             Self {
-                param_manager: ParameterManager::new(config),
+                param_manager: ParameterManager::new(_config),
                 strategy,
                 step_count: 0,
             }
@@ -1081,12 +1066,12 @@ pub mod architecture_aware {
             }
 
             if layer_wise_decay {
-                // Apply layer-wise learning rate decay
+                // Apply layer-wise learning rate _decay
                 self.apply_layer_wise_decay()?;
             }
 
             if attention_warmup > 0 && self.step_count < attention_warmup {
-                // Apply warmup to attention parameters
+                // Apply _warmup to attention parameters
                 self.apply_attention_warmup(attention_warmup)?;
             }
 
@@ -1111,7 +1096,7 @@ pub mod architecture_aware {
             }
 
             if bn_special_handling {
-                // Special handling for batch normalization parameters
+                // Special _handling for batch normalization parameters
                 self.apply_bn_optimizations()?;
             }
 
@@ -1187,7 +1172,7 @@ pub mod architecture_aware {
         /// Apply layer-wise learning rate decay
         fn apply_layer_wise_decay(&mut self) -> Result<()> {
             // Extract layer numbers from layer names and apply decay
-            for (layer_id, _) in self.param_manager.layer_architectures.clone() {
+            for (layer_id_) in self.param_manager.layer_architectures.clone() {
                 if let Some(layer_num) = self.extract_layer_number(&layer_id) {
                     let decay_factor = A::from(0.95_f64.powi(layer_num as i32)).unwrap();
                     let mut rule = self
@@ -1262,7 +1247,7 @@ pub mod architecture_aware {
             // Count total layers
             let total_layers = self.param_manager.layer_architectures.len();
 
-            for (i, (layer_id, _)) in self
+            for (i, (layer_id_)) in self
                 .param_manager
                 .layer_architectures
                 .clone()
@@ -1317,7 +1302,7 @@ pub mod architecture_aware {
         /// Apply RNN-specific gradient clipping
         fn apply_rnn_gradient_clipping(&mut self, clip_value: A) -> Result<()> {
             // This would be implemented in coordination with the gradient processing system
-            // For now, we'll store the clip value in the global config
+            // For now, we'll store the clip _value in the global config
             self.param_manager.global_config.gradient_clip = Some(clip_value);
             Ok(())
         }
@@ -1574,7 +1559,7 @@ mod tests {
 
     #[test]
     fn test_architecture_aware_transformer() {
-        use crate::neural_integration::architecture_aware::*;
+        use crate::neural__integration::architecture_aware::*;
 
         let config = OptimizationConfig::default();
         let strategy = ArchitectureStrategy::Transformer {

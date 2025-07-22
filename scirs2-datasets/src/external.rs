@@ -67,16 +67,16 @@ impl ExternalClient {
     }
 
     /// Create a new external client with custom configuration
-    pub fn with_config(config: ExternalConfig) -> Result<Self> {
+    pub fn with_config(_config: ExternalConfig) -> Result<Self> {
         let cache = DatasetCache::new(crate::cache::get_cache_dir()?);
 
         #[cfg(feature = "download")]
         let client = {
             let mut builder = reqwest::Client::builder()
-                .timeout(Duration::from_secs(config.timeout_seconds))
-                .user_agent(&config.user_agent);
+                .timeout(Duration::from_secs(_config.timeout_seconds))
+                .user_agent(&_config.user_agent);
 
-            if !config.verify_ssl {
+            if !_config.verify_ssl {
                 builder = builder.danger_accept_invalid_certs(true);
             }
 
@@ -86,7 +86,7 @@ impl ExternalClient {
         };
 
         Ok(Self {
-            config,
+            _config,
             cache,
             #[cfg(feature = "download")]
             client,
@@ -116,7 +116,7 @@ impl ExternalClient {
         let mut buffer = Vec::new();
         let mut stream = response.bytes_stream();
 
-        use futures_util::StreamExt;
+        use futures__util::StreamExt;
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.map_err(|e| DatasetsError::IoError(std::io::Error::other(e)))?;
             downloaded += chunk.len() as u64;
@@ -275,7 +275,7 @@ impl ExternalClient {
 
     fn parse_cached_data(&self, data: &[u8]) -> Result<Dataset> {
         // Try to deserialize as JSON first (cached parsed data)
-        if let Ok(dataset) = serde_json::from_slice::<Dataset>(data) {
+        if let Ok(dataset) = serde_json::from, _slice::<Dataset>(data) {
             return Ok(dataset);
         }
 
@@ -428,7 +428,7 @@ impl ExternalClient {
 
         // Try JSON first
         if content.trim().starts_with('{') || content.trim().starts_with('[') {
-            if let Ok(dataset) = serde_json::from_str::<Dataset>(&content) {
+            if let Ok(dataset) = serde_json::from, _str::<Dataset>(&content) {
                 return Ok(dataset);
             }
         }
@@ -532,13 +532,13 @@ pub mod repositories {
 
     impl KaggleRepository {
         /// Create a new Kaggle repository client
-        pub fn new(api_key: Option<String>) -> Result<Self> {
+        pub fn new(_api_key: Option<String>) -> Result<Self> {
             let mut config = ExternalConfig::default();
 
-            if let Some(ref key) = api_key {
+            if let Some(ref _key) = _api_key {
                 config
                     .headers
-                    .insert("Authorization".to_string(), format!("Bearer {key}"));
+                    .insert("Authorization".to_string(), format!("Bearer {_key}"));
             }
 
             Ok(Self {
@@ -614,7 +614,7 @@ pub mod convenience {
 
     /// Load a dataset from a URL with progress tracking
     #[cfg(feature = "download")]
-    pub async fn load_from_url(url: &str, config: Option<ExternalConfig>) -> Result<Dataset> {
+    pub async fn load_from_url(_url: &str, config: Option<ExternalConfig>) -> Result<Dataset> {
         let client = match config {
             Some(cfg) => ExternalClient::with_config(cfg)?,
             None => ExternalClient::new()?,
@@ -622,7 +622,7 @@ pub mod convenience {
 
         client
             .download_dataset(
-                url,
+                _url,
                 Some(Box::new(|downloaded, total| {
                     if total > 0 {
                         let percent = (downloaded * 100) / total;
@@ -636,14 +636,14 @@ pub mod convenience {
     }
 
     /// Load a dataset from a URL synchronously
-    pub fn load_from_url_sync(url: &str, config: Option<ExternalConfig>) -> Result<Dataset> {
+    pub fn load_from_url_sync(_url: &str, config: Option<ExternalConfig>) -> Result<Dataset> {
         let client = match config {
             Some(cfg) => ExternalClient::with_config(cfg)?,
             None => ExternalClient::new()?,
         };
 
         client.download_dataset_sync(
-            url,
+            _url,
             Some(Box::new(|downloaded, total| {
                 if total > 0 {
                     let percent = (downloaded * 100) / total;
@@ -657,30 +657,30 @@ pub mod convenience {
 
     /// Load a UCI dataset by name
     #[cfg(feature = "download")]
-    pub async fn load_uci_dataset(name: &str) -> Result<Dataset> {
+    pub async fn load_uci_dataset(_name: &str) -> Result<Dataset> {
         let repo = UCIRepository::new()?;
-        repo.load_dataset(name).await
+        repo.load_dataset(_name).await
     }
 
     /// Load a UCI dataset by name synchronously
     #[cfg(not(feature = "download"))]
-    pub fn load_uci_dataset_sync(name: &str) -> Result<Dataset> {
+    pub fn load_uci_dataset_sync(_name: &str) -> Result<Dataset> {
         let repo = UCIRepository::new()?;
-        repo.load_dataset_sync(name)
+        repo.load_dataset_sync(_name)
     }
 
     /// Load a dataset from GitHub repository
     #[cfg(feature = "download")]
-    pub async fn load_github_dataset(user: &str, repo: &str, path: &str) -> Result<Dataset> {
+    pub async fn load_github_dataset(_user: &str, repo: &str, path: &str) -> Result<Dataset> {
         let github = GitHubRepository::new()?;
-        github.load_from_repo(user, repo, path).await
+        github.load_from_repo(_user, repo, path).await
     }
 
     /// Load a dataset from GitHub repository synchronously
     #[cfg(not(feature = "download"))]
-    pub fn load_github_dataset_sync(user: &str, repo: &str, path: &str) -> Result<Dataset> {
+    pub fn load_github_dataset_sync(_user: &str, repo: &str, path: &str) -> Result<Dataset> {
         let github = GitHubRepository::new()?;
-        github.load_from_repo_sync(user, repo, path)
+        github.load_from_repo_sync(_user, repo, path)
     }
 
     /// List available UCI datasets

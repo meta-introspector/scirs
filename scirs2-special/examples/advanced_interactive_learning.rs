@@ -12,8 +12,8 @@
 //! Run with: cargo run --example advanced_interactive_learning
 
 use ndarray::Array1;
-use num_complex::Complex64;
-use scirs2_special::*;
+use num__complex::Complex64;
+use scirs2__special::*;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 use std::io::{self, Write};
@@ -147,14 +147,14 @@ struct AdaptiveLearningSession {
 }
 
 impl AdaptiveLearningSession {
-    fn new(profile: LearningProfile) -> Self {
+    fn new(_profile: LearningProfile) -> Self {
         let mut knowledge_graph = HashMap::new();
 
         // Build the knowledge graph
         Self::initialize_knowledge_graph(&mut knowledge_graph);
 
         Self {
-            profile,
+            _profile,
             current_topic: String::new(),
             knowledge_graph,
             session_start: Instant::now(),
@@ -164,9 +164,9 @@ impl AdaptiveLearningSession {
         }
     }
 
-    fn initialize_knowledge_graph(graph: &mut HashMap<String, ConceptNode>) {
+    fn initialize_knowledge_graph(_graph: &mut HashMap<String, ConceptNode>) {
         // Gamma Functions
-        graph.insert(
+        _graph.insert(
             "gamma_basics".to_string(),
             ConceptNode {
                 name: "Gamma Function Fundamentals".to_string(),
@@ -200,7 +200,7 @@ impl AdaptiveLearningSession {
         );
 
         // Advanced Gamma Theory
-        graph.insert(
+        _graph.insert(
             "gamma_advanced".to_string(),
             ConceptNode {
                 name: "Advanced Gamma Function Theory".to_string(),
@@ -231,7 +231,7 @@ impl AdaptiveLearningSession {
         );
 
         // Bessel Functions
-        graph.insert(
+        _graph.insert(
             "bessel_basics".to_string(),
             ConceptNode {
                 name: "Bessel Functions Introduction".to_string(),
@@ -273,12 +273,12 @@ impl AdaptiveLearningSession {
         );
 
         // Add more concepts...
-        Self::add_advanced_concepts(graph);
+        Self::add_advanced_concepts(_graph);
     }
 
-    fn add_advanced_concepts(graph: &mut HashMap<String, ConceptNode>) {
+    fn add_advanced_concepts(_graph: &mut HashMap<String, ConceptNode>) {
         // Hypergeometric Functions
-        graph.insert(
+        _graph.insert(
             "hypergeometric".to_string(),
             ConceptNode {
                 name: "Hypergeometric Functions".to_string(),
@@ -311,7 +311,7 @@ impl AdaptiveLearningSession {
         );
 
         // Wright Functions
-        graph.insert(
+        _graph.insert(
             "wright_functions".to_string(),
             ConceptNode {
                 name: "Wright Functions and Fractional Calculus".to_string(),
@@ -373,12 +373,11 @@ impl AdaptiveLearningSession {
 
         // Sort by score and return the best candidate
         candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        candidates.first().map(|(topic, _)| topic.clone())
+        candidates.first().map(|(topic_)| topic.clone())
     }
 
     fn calculate_topic_score(
-        &self,
-        _topic: &str,
+        &self_topic: &str,
         node: &ConceptNode,
         skill: f64,
         difficulty: f64,
@@ -428,7 +427,7 @@ impl AdaptiveLearningSession {
                 .iter()
                 .rev()
                 .take(3)
-                .map(|(_, score, _)| *score)
+                .map(|(_, score_)| *score)
                 .sum::<f64>()
                 / 3.0;
 
@@ -453,7 +452,7 @@ impl AdaptiveLearningSession {
                 .iter()
                 .rev()
                 .take(3)
-                .map(|(_, score, _)| *score)
+                .map(|(_, score_)| *score)
                 .collect();
 
             let avg_score = recent_scores.iter().sum::<f64>() / recent_scores.len() as f64;
@@ -524,9 +523,9 @@ impl AdaptiveLearningSession {
     fn get_advanced_recommendations(&self, current_topic: &str) -> Vec<String> {
         let mut recommendations = Vec::new();
 
-        for (topic, node) in &self.knowledge_graph {
+        for (_topic, node) in &self.knowledge_graph {
             if node.prerequisites.contains(&current_topic.to_string())
-                && !self.profile.completed_modules.contains(topic)
+                && !self.profile.completed_modules.contains(_topic)
             {
                 recommendations.push(node.name.clone());
             }
@@ -656,17 +655,17 @@ fn create_or_load_profile() -> Result<LearningProfile, Box<dyn std::error::Error
 }
 
 #[allow(dead_code)]
-fn display_learning_dashboard(profile: &LearningProfile) {
+fn display_learning_dashboard(_profile: &LearningProfile) {
     println!("\n📊 Your Learning Dashboard");
     println!("==========================");
 
-    let total_modules = profile.skill_levels.len();
-    let mastered_modules = profile
+    let total_modules = _profile.skill_levels.len();
+    let mastered_modules = _profile
         .skill_levels
         .values()
         .filter(|&&level| level >= 0.8)
         .count();
-    let in_progress = profile
+    let in_progress = _profile
         .skill_levels
         .values()
         .filter(|&&level| level >= 0.3 && level < 0.8)
@@ -677,15 +676,15 @@ fn display_learning_dashboard(profile: &LearningProfile) {
         mastered_modules, total_modules
     );
     println!("📖 Modules in progress: {}", in_progress);
-    println!("🎯 Learning style: {:?}", profile.preferred_learning_style);
+    println!("🎯 Learning style: {:?}", _profile.preferred_learning_style);
 
-    if !profile.mastery_goals.is_empty() {
-        println!("🎯 Current goals: {}", profile.mastery_goals.join(", "));
+    if !_profile.mastery_goals.is_empty() {
+        println!("🎯 Current goals: {}", _profile.mastery_goals.join(", "));
     }
 
     // Display skill progression
     println!("\n📈 Skill Levels:");
-    let mut skills: Vec<_> = profile.skill_levels.iter().collect();
+    let mut skills: Vec<_> = _profile.skill_levels.iter().collect();
     skills.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
 
     for (skill, level) in skills.iter().take(5) {
@@ -1293,14 +1292,14 @@ fn run_assessment_question(
 }
 
 #[allow(dead_code)]
-fn offer_hints_and_retry(question: &AssessmentQuestion) -> Result<f64, Box<dyn std::error::Error>> {
-    if !question.hints.is_empty() {
+fn offer_hints_and_retry(_question: &AssessmentQuestion) -> Result<f64, Box<dyn std::error::Error>> {
+    if !_question.hints.is_empty() {
         let want_hint = get_user_input("Would you like a hint? (y/n): ")?;
         if want_hint.to_lowercase() == "y" {
-            println!("\n💡 Hint: {}", question.hints[0]);
+            println!("\n💡 Hint: {}", _question.hints[0]);
             let retry = get_user_input("Try again? (y/n): ")?;
             if retry.to_lowercase() == "y" {
-                return run_assessment_question(question);
+                return run_assessment_question(_question);
             }
         }
     }
@@ -1308,17 +1307,17 @@ fn offer_hints_and_retry(question: &AssessmentQuestion) -> Result<f64, Box<dyn s
 }
 
 #[allow(dead_code)]
-fn explore_topics(session: &mut AdaptiveLearningSession) -> Result<(), Box<dyn std::error::Error>> {
+fn explore_topics(_session: &mut AdaptiveLearningSession) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Topic Explorer");
     println!("=================\n");
 
     println!("📚 Available topics:");
-    let mut topics: Vec<_> = session.knowledge_graph.keys().collect();
+    let mut topics: Vec<_> = _session.knowledge_graph.keys().collect();
     topics.sort();
 
     for (i, topic) in topics.iter().enumerate() {
-        if let Some(node) = session.knowledge_graph.get(*topic) {
-            let skill_level = session.profile.skill_levels.get(*topic).unwrap_or(&0.0);
+        if let Some(node) = _session.knowledge_graph.get(*topic) {
+            let skill_level = _session.profile.skill_levels.get(*topic).unwrap_or(&0.0);
             let status = if *skill_level >= 0.8 {
                 "✅"
             } else if *skill_level >= 0.3 {
@@ -1341,7 +1340,7 @@ fn explore_topics(session: &mut AdaptiveLearningSession) -> Result<(), Box<dyn s
     if let Ok(index) = choice.parse::<usize>() {
         if index > 0 && index <= topics.len() {
             let topic = topics[index - 1];
-            if let Some(node) = session.knowledge_graph.get(topic).cloned() {
+            if let Some(node) = _session.knowledge_graph.get(topic).cloned() {
                 println!("\n📖 Topic: {}", node.name);
                 println!("Description: {}", node.description);
                 println!("Difficulty: {}/5", node.difficulty);
@@ -1351,15 +1350,15 @@ fn explore_topics(session: &mut AdaptiveLearningSession) -> Result<(), Box<dyn s
                 let explore = get_user_input("\nStart learning this topic? (y/n): ")?;
                 if explore.to_lowercase() == "y" {
                     let start_time = Instant::now();
-                    let score = run_learning_module(topic, &node, &session.profile)?;
+                    let score = run_learning_module(topic, &node, &_session.profile)?;
                     let time_taken = start_time.elapsed();
 
                     // Update profile
-                    session
+                    _session
                         .profile
                         .skill_levels
                         .insert(topic.to_string(), score);
-                    session
+                    _session
                         .profile
                         .time_spent
                         .insert(topic.to_string(), time_taken);
@@ -1475,18 +1474,18 @@ fn run_comprehensive_assessment(
 }
 
 #[allow(dead_code)]
-fn display_learning_analytics(profile: &LearningProfile) -> Result<(), Box<dyn std::error::Error>> {
+fn display_learning_analytics(_profile: &LearningProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Learning Analytics Dashboard");
     println!("===============================\n");
 
     // Progress overview
-    let total_skills = profile.skill_levels.len();
-    let mastered = profile
+    let total_skills = _profile.skill_levels.len();
+    let mastered = _profile
         .skill_levels
         .values()
         .filter(|&&level| level >= 0.8)
         .count();
-    let learning = profile
+    let learning = _profile
         .skill_levels
         .values()
         .filter(|&&level| level >= 0.3 && level < 0.8)
@@ -1511,21 +1510,21 @@ fn display_learning_analytics(profile: &LearningProfile) -> Result<(), Box<dyn s
     );
 
     // Time analysis
-    let total_time: Duration = profile.time_spent.values().sum();
+    let total_time: Duration = _profile.time_spent.values().sum();
     println!("\n⏱️ Time Investment:");
     println!(
         "  Total study time: {:.1} hours",
         total_time.as_secs_f64() / 3600.0
     );
-    if !profile.time_spent.is_empty() {
-        let avg_time = total_time.as_secs_f64() / profile.time_spent.len() as f64;
+    if !_profile.time_spent.is_empty() {
+        let avg_time = total_time.as_secs_f64() / _profile.time_spent.len() as f64;
         println!("  Average per topic: {:.1} minutes", avg_time / 60.0);
     }
 
     // Assessment history
-    if !profile.assessment_scores.is_empty() {
+    if !_profile.assessment_scores.is_empty() {
         println!("\n📝 Assessment History:");
-        let recent_scores: Vec<_> = profile.assessment_scores.iter().rev().take(5).collect();
+        let recent_scores: Vec<_> = _profile.assessment_scores.iter().rev().take(5).collect();
 
         for assessment in recent_scores {
             println!(
@@ -1539,12 +1538,12 @@ fn display_learning_analytics(profile: &LearningProfile) -> Result<(), Box<dyn s
 
     // Learning pattern analysis
     println!("\n🧠 Learning Patterns:");
-    println!("  Preferred style: {:?}", profile.preferred_learning_style);
-    println!("  Reading speed: {:.0} WPM", profile.learning_speed);
+    println!("  Preferred style: {:?}", _profile.preferred_learning_style);
+    println!("  Reading speed: {:.0} WPM", _profile.learning_speed);
 
-    if !profile.mistake_patterns.is_empty() {
+    if !_profile.mistake_patterns.is_empty() {
         println!("\n❌ Common Mistake Patterns:");
-        let mut mistakes: Vec<_> = profile.mistake_patterns.iter().collect();
+        let mut mistakes: Vec<_> = _profile.mistake_patterns.iter().collect();
         mistakes.sort_by(|a, b| b.1.cmp(a.1));
 
         for (mistake_type, &count) in mistakes.iter().take(3) {
@@ -1585,15 +1584,13 @@ fn run_interactive_visualizations() -> Result<(), Box<dyn std::error::Error>> {
             match func_choice.to_lowercase().as_str() {
                 "a" => visualize_gamma_function()?,
                 "b" => visualize_bessel_functions()?,
-                "c" => visualize_error_function()?,
-                _ => println!("Invalid choice"),
+                "c" => visualize_error_function()?_ => println!("Invalid choice"),
             }
         }
         "2" => visualize_complex_plane()?,
         "3" => animate_bessel_functions()?,
         "4" => visualize_3d_surfaces()?,
-        "5" => show_geometric_interpretations()?,
-        _ => println!("Invalid choice"),
+        "5" => show_geometric_interpretations()?_ => println!("Invalid choice"),
     }
 
     Ok(())
@@ -1663,8 +1660,7 @@ fn visualize_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
         let j_val = match order {
             0 => j0(x),
             1 => j1(x),
-            2 => jn(2, x),
-            _ => jn(order, x),
+            2 => jn(2, x, _ => jn(order, x),
         };
 
         // ASCII oscillation display
@@ -1890,8 +1886,7 @@ fn run_proof_exploration() -> Result<(), Box<dyn std::error::Error>> {
         "1" => explore_gamma_half_proof()?,
         "2" => explore_reflection_formula_proof()?,
         "3" => explore_bessel_generating_function_proof()?,
-        "4" => explore_error_function_series_proof()?,
-        _ => println!("Invalid choice"),
+        "4" => explore_error_function_series_proof()?_ => println!("Invalid choice"),
     }
 
     Ok(())
@@ -2080,8 +2075,7 @@ fn adjust_learning_preferences(
         Ok(2) => profile.preferred_learning_style = LearningStyle::Analytical,
         Ok(3) => profile.preferred_learning_style = LearningStyle::Intuitive,
         Ok(4) => profile.preferred_learning_style = LearningStyle::Practical,
-        Ok(5) => profile.preferred_learning_style = LearningStyle::Historical,
-        _ => println!("Invalid choice, keeping current setting"),
+        Ok(5) => profile.preferred_learning_style = LearningStyle::Historical_ => println!("Invalid choice, keeping current setting"),
     }
 
     let speed_input = get_user_input("Reading speed (WPM, current: {:.0}): ")?;
@@ -2262,8 +2256,8 @@ fn wait_for_user_input() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
-    print!("{}", prompt);
+fn get_user_input(_prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    print!("{}", _prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

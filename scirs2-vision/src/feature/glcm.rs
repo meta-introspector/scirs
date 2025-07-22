@@ -70,8 +70,8 @@ impl Default for GLCMParams {
 ///
 /// * Result containing the GLCM as a 2D array
 #[allow(dead_code)]
-pub fn compute_glcm(img: &DynamicImage, params: &GLCMParams) -> Result<Array2<f64>> {
-    let gray = img.to_luma8();
+pub fn compute_glcm(_img: &DynamicImage, params: &GLCMParams) -> Result<Array2<f64>> {
+    let gray = _img.to_luma8();
     let (width, height) = gray.dimensions();
 
     // Quantize the image to specified levels
@@ -117,15 +117,15 @@ pub fn compute_glcm(img: &DynamicImage, params: &GLCMParams) -> Result<Array2<f6
 
 /// Quantize image to specified number of levels
 #[allow(dead_code)]
-fn quantize_image(img: &GrayImage, levels: usize) -> Array2<usize> {
-    let (width, height) = img.dimensions();
+fn quantize_image(_img: &GrayImage, levels: usize) -> Array2<usize> {
+    let (width, height) = _img.dimensions();
     let mut quantized = Array2::zeros((height as usize, width as usize));
 
     let scale = 256.0 / levels as f32;
 
     for y in 0..height {
         for x in 0..width {
-            let value = img.get_pixel(x, y)[0] as f32;
+            let value = _img.get_pixel(x, y)[0] as f32;
             let level = (value / scale).floor() as usize;
             quantized[[y as usize, x as usize]] = level.min(levels - 1);
         }
@@ -163,12 +163,12 @@ pub struct HaralickFeatures {
 ///
 /// * Haralick features
 #[allow(dead_code)]
-pub fn compute_haralick_features(glcm: &Array2<f64>) -> HaralickFeatures {
-    let (rows, cols) = glcm.dim();
+pub fn compute_haralick_features(_glcm: &Array2<f64>) -> HaralickFeatures {
+    let (rows, cols) = _glcm.dim();
 
     // Compute marginal probabilities
-    let px = glcm.sum_axis(Axis(1));
-    let py = glcm.sum_axis(Axis(0));
+    let px = _glcm.sum_axis(Axis(1));
+    let py = _glcm.sum_axis(Axis(0));
 
     // Compute means
     let mut mean_x = 0.0;
@@ -202,7 +202,7 @@ pub fn compute_haralick_features(glcm: &Array2<f64>) -> HaralickFeatures {
 
     for i in 0..rows {
         for j in 0..cols {
-            let p = glcm[[i, j]];
+            let p = _glcm[[i, j]];
 
             if p > 0.0 {
                 energy += p * p;
@@ -307,9 +307,9 @@ pub struct ExtendedGLCMFeatures {
 
 /// Compute extended GLCM features
 #[allow(dead_code)]
-pub fn compute_extended_glcm_features(glcm: &Array2<f64>) -> ExtendedGLCMFeatures {
-    let haralick = compute_haralick_features(glcm);
-    let (n, _) = glcm.dim();
+pub fn compute_extended_glcm_features(_glcm: &Array2<f64>) -> ExtendedGLCMFeatures {
+    let haralick = compute_haralick_features(_glcm);
+    let (n_) = _glcm.dim();
 
     // Compute p_x+y and p_x-y
     let mut p_sum = vec![0.0; 2 * n - 1];
@@ -317,7 +317,7 @@ pub fn compute_extended_glcm_features(glcm: &Array2<f64>) -> ExtendedGLCMFeature
 
     for i in 0..n {
         for j in 0..n {
-            let p = glcm[[i, j]];
+            let p = _glcm[[i, j]];
             p_sum[i + j] += p;
             p_diff[(i as i32 - j as i32).unsigned_abs() as usize] += p;
         }
@@ -359,7 +359,7 @@ pub fn compute_extended_glcm_features(glcm: &Array2<f64>) -> ExtendedGLCMFeature
     }
 
     // Compute cluster shade and prominence
-    let (_px, _py, mean_x, mean_y) = compute_marginals(glcm);
+    let (_px_py, mean_x, mean_y) = compute_marginals(_glcm);
 
     let mut cluster_shade = 0.0;
     let mut cluster_prominence = 0.0;
@@ -367,8 +367,8 @@ pub fn compute_extended_glcm_features(glcm: &Array2<f64>) -> ExtendedGLCMFeature
     for i in 0..n {
         for j in 0..n {
             let term = i as f64 - mean_x + j as f64 - mean_y;
-            cluster_shade += term.powi(3) * glcm[[i, j]];
-            cluster_prominence += term.powi(4) * glcm[[i, j]];
+            cluster_shade += term.powi(3) * _glcm[[i, j]];
+            cluster_prominence += term.powi(4) * _glcm[[i, j]];
         }
     }
 
@@ -386,11 +386,11 @@ pub fn compute_extended_glcm_features(glcm: &Array2<f64>) -> ExtendedGLCMFeature
 
 /// Compute marginal probabilities and means
 #[allow(dead_code)]
-fn compute_marginals(glcm: &Array2<f64>) -> (Vec<f64>, Vec<f64>, f64, f64) {
-    let (n, _) = glcm.dim();
+fn compute_marginals(_glcm: &Array2<f64>) -> (Vec<f64>, Vec<f64>, f64, f64) {
+    let (n_) = _glcm.dim();
 
-    let px = glcm.sum_axis(Axis(1)).to_vec();
-    let py = glcm.sum_axis(Axis(0)).to_vec();
+    let px = _glcm.sum_axis(Axis(1)).to_vec();
+    let py = _glcm.sum_axis(Axis(0)).to_vec();
 
     let mut mean_x = 0.0;
     let mut mean_y = 0.0;

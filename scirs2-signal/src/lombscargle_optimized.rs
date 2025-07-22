@@ -5,15 +5,20 @@
 //! memory profiling, and statistical validation.
 
 use crate::error::SignalResult;
+use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
-use crate::lombscargle_simd::simd_lombscargle;
+use crate::lombscargle__simd::simd_lombscargle;
 use ndarray::Array1;
 use num_traits::Float;
+use rand::Rng;
 use scirs2_core::simd_ops::PlatformCapabilities;
+use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
+use ndarray::{s};
 
+#[allow(unused_imports)]
 /// Complete Advanced validation result with all implementations
 #[derive(Debug, Clone)]
 pub struct AdvancedLombScargleResult {
@@ -32,7 +37,7 @@ pub struct AdvancedLombScargleResult {
     /// Overall quality score (0-100)
     pub quality_score: f64,
     /// Critical issues requiring immediate attention
-    pub critical_issues: Vec<String>,
+    pub issues: Vec<String>,
     /// Optimization recommendations
     pub recommendations: Vec<String>,
 }
@@ -270,6 +275,8 @@ pub struct PerformanceTrendAnalysis {
 pub fn run_advanced_lombscargle_validation() -> SignalResult<AdvancedLombScargleResult> {
     println!("🚀 Starting Advanced Enhanced Lomb-Scargle Validation...");
 
+    let mut issues: Vec<String> = Vec::new();
+
     // 1. Comprehensive accuracy validation
     println!("📊 Running comprehensive accuracy validation...");
     let accuracy_validation = validate_comprehensive_accuracy()?;
@@ -303,12 +310,12 @@ pub fn run_advanced_lombscargle_validation() -> SignalResult<AdvancedLombScargle
     );
 
     // Identify critical issues
-    let mut critical_issues = Vec::new();
+    let mut critical_issues: Vec<String> = Vec::new();
     identify_critical_issues(
         &accuracy_validation,
         &scipy_comparison,
         &simd_validation,
-        &mut critical_issues,
+        &mut issues,
     );
 
     // Generate recommendations
@@ -330,7 +337,7 @@ pub fn run_advanced_lombscargle_validation() -> SignalResult<AdvancedLombScargle
         statistical_validation,
         performance_regression,
         quality_score,
-        critical_issues,
+        issues,
         recommendations,
     })
 }
@@ -347,7 +354,7 @@ fn validate_comprehensive_accuracy() -> SignalResult<ComprehensiveAccuracyResult
 
     for (signal_name, (t, y, true_freqs, true_powers)) in test_signals {
         // Compute Lomb-Scargle periodogram
-        let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
+        let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
 
         // Validate frequency accuracy
         let freq_accuracy = validate_frequency_detection(&freqs, &power, &true_freqs)?;
@@ -411,8 +418,7 @@ fn generate_comprehensive_test_signals(
     let y1: Array1<f64> =
         t.mapv(|ti| (2.0 * PI * f0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
     signals.insert(
-        "single_tone".to_string(),
-        (t.clone(), y1, vec![f0], vec![1.0]),
+        "single_tone".to_string()..(t.clone(), y1, vec![f0], vec![1.0]),
     );
 
     // 2. Multi-tone signal
@@ -426,8 +432,7 @@ fn generate_comprehensive_test_signals(
             + 0.1 * rng.random_range(-1.0..1.0)
     });
     signals.insert(
-        "multi_tone".to_string(),
-        (t.clone(), y2, vec![f1, f2, f3], vec![1.0, 0.7, 0.5]),
+        "multi_tone".to_string()..(t.clone(), y2, vec![f1, f2, f3], vec![1.0, 0.7, 0.5]),
     );
 
     // 3. Close frequencies
@@ -439,8 +444,7 @@ fn generate_comprehensive_test_signals(
             + 0.1 * rng.random_range(-1.0..1.0)
     });
     signals.insert(
-        "close_frequencies".to_string(),
-        (t, y3, vec![fc1, fc2], vec![1.0, 0.8]),
+        "close_frequencies".to_string()..(t, y3, vec![fc1, fc2], vec![1.0, 0.8]),
     );
 
     Ok(signals)
@@ -461,7 +465,7 @@ fn validate_frequency_detection(
         let mut best_idx = 0;
         let mut best_diff = f64::INFINITY;
 
-        for (i, &freq) in freqs.iter().enumerate() {
+        for (i, &freq) in _freqs.iter().enumerate() {
             let diff = (freq - true_freq).abs();
             if diff < best_diff {
                 best_diff = diff;
@@ -474,7 +478,7 @@ fn validate_frequency_detection(
             && (best_idx == power.len() - 1 || power[best_idx] > power[best_idx + 1]);
 
         if is_peak {
-            let detected_freq = freqs[best_idx];
+            let detected_freq = _freqs[best_idx];
             let relative_error = (detected_freq - true_freq).abs() / true_freq;
             total_error += relative_error;
             detected_count += 1;
@@ -504,7 +508,7 @@ fn validate_power_estimation(
             let mut best_idx = 0;
             let mut best_diff = f64::INFINITY;
 
-            for (j, &freq) in freqs.iter().enumerate() {
+            for (j, &freq) in _freqs.iter().enumerate() {
                 let diff = (freq - true_freq).abs();
                 if diff < best_diff {
                     best_diff = diff;
@@ -569,14 +573,14 @@ fn analyze_spectral_leakage() -> SignalResult<SpectralLeakageMetrics> {
     let f0 = 12.345; // Non-bin-centered frequency to test leakage
     let y: Array1<f64> = t.mapv(|ti| (2.0 * PI * f0 * ti).sin());
 
-    let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
+    let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
 
     // Find main lobe
     let peak_idx = power
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .unwrap();
 
     // Analyze main lobe width (3dB bandwidth)
@@ -629,7 +633,7 @@ fn test_dynamic_range_handling() -> SignalResult<DynamicRangeMetrics> {
         strong_amp * (2.0 * PI * f_strong * ti).sin() + weak_amp * (2.0 * PI * f_weak * ti).sin()
     });
 
-    let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
+    let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
 
     // Find peaks
     let strong_peak_idx = find_peak_near_frequency(&freqs, &power, f_strong)?;
@@ -661,10 +665,10 @@ fn perform_scipy_comparison() -> SignalResult<ScipyComparisonResult> {
     for (t, y) in test_signals {
         // Compute our implementation
         let (freqs_ours, power_ours) =
-            lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
+            lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
 
         // Simulate SciPy reference (in practice, this would call Python)
-        let (freqs_scipy, power_scipy) = simulate_scipy_lombscargle(&t, &y)?;
+        let (freqs_scipy, power_scipy) = simulate_scipy_lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
 
         // Compare results
         let correlation = compute_correlation(&power_ours, &power_scipy);
@@ -679,9 +683,9 @@ fn perform_scipy_comparison() -> SignalResult<ScipyComparisonResult> {
         }
     }
 
-    let correlation = correlations.iter().sum::<f64>() / correlations.len() as f64;
+    let correlation = correlations.iter().sum::<f64>() / correlations.len()  as f64;
     let max_relative_error = relative_errors.iter().cloned().fold(0.0, f64::max);
-    let mean_relative_error = relative_errors.iter().sum::<f64>() / relative_errors.len() as f64;
+    let mean_relative_error = relative_errors.iter().sum::<f64>() / relative_errors.len()  as f64;
 
     // Statistical tests
     let statistical_tests = perform_statistical_tests(&relative_errors)?;
@@ -710,10 +714,10 @@ fn generate_scipy_test_signals() -> SignalResult<Vec<(Array1<f64>, Array1<f64>)>
     }
     t1.as_slice_mut()
         .unwrap()
-        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+        .sort_by(|a..b| a.partial_cmp(b).unwrap());
     let y1: Array1<f64> =
         t1.mapv(|ti| (2.0 * PI * 1.0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
-    signals.push((t1, y1));
+    signals.push((t1..y1));
 
     // Signal 2: Multi-component signal
     let n = 150;
@@ -723,13 +727,13 @@ fn generate_scipy_test_signals() -> SignalResult<Vec<(Array1<f64>, Array1<f64>)>
     }
     t2.as_slice_mut()
         .unwrap()
-        .sort_by(|a, b| a.partial_cmp(b).unwrap());
+        .sort_by(|a..b| a.partial_cmp(b).unwrap());
     let y2: Array1<f64> = t2.mapv(|ti| {
         (2.0 * PI * 0.5 * ti).sin()
             + 0.7 * (2.0 * PI * 1.5 * ti).sin()
             + 0.2 * rng.random_range(-1.0..1.0)
     });
-    signals.push((t2, y2));
+    signals.push((t2..y2));
 
     Ok(signals)
 }
@@ -742,7 +746,7 @@ fn simulate_scipy_lombscargle(
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     // In a real implementation, this would call SciPy via Python bindings
     // For now, add small perturbations to our results to simulate differences
-    let (freqs, mut power) = lombscargle(t, y, None, Some("standard"), Some(true), Some(false))?;
+    let (freqs, mut power) = lombscargle(t, y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
 
     // Add small random perturbations to simulate SciPy differences
     let mut rng = rand::rng();
@@ -750,7 +754,7 @@ fn simulate_scipy_lombscargle(
         *p *= 1.0 + 0.001 * rng.random_range(-1.0..1.0); // 0.1% random variation
     }
 
-    Ok((freqs, power))
+    Ok((freqs..power))
 }
 
 /// Validate SIMD implementation completely
@@ -769,7 +773,7 @@ fn validate_simd_implementation_complete() -> SignalResult<CompleteSimdValidatio
     // Compute with scalar implementation
     let start_scalar = Instant::now();
     let (freqs_scalar, power_scalar) =
-        lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
+        lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
     let scalar_time = start_scalar.elapsed();
 
     // Compute with SIMD implementation
@@ -887,14 +891,14 @@ fn validate_false_alarm_probability() -> SignalResult<FalseAlarmValidation> {
         let t = Array1::linspace(0.0, 10.0, n_samples);
         let y: Array1<f64> = Array1::from_shape_fn(n_samples, |_| rng.random_range(-1.0..1.0));
 
-        let (_, power) = lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
+        let (_, power) = lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
 
         if power.iter().any(|&p| p > threshold) {
             false_alarms += 1;
         }
     }
 
-    let empirical_fap = false_alarms as f64 / n_trials as f64;
+    let empirical_fap = false_alarms as f64 / n_trials  as f64;
     let theoretical_fap = 0.05; // Expected 5% false alarm rate
     let fap_accuracy = 1.0 - (empirical_fap - theoretical_fap).abs() / theoretical_fap;
 
@@ -915,11 +919,11 @@ fn compare_with_theoretical_psd() -> SignalResult<PsdTheoreticalComparison> {
     let t = Array1::linspace(0.0, 10.0, n);
     let white_noise: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(-1.0..1.0));
 
-    let (freqs, power) = lombscargle(&t, &white_noise, None, Some("psd"), Some(true), Some(false))?;
+    let (freqs, power) = lombscargle(&t, &white_noise, None, Some("psd"), Some(true, Some(false)), Some(false))?;
 
     // For white noise, PSD should be approximately flat
     let mean_power = power.mean().unwrap();
-    let power_variance = power.var(0.0);
+    let power_variance = power.variance();
     let flatness = 1.0 - (power_variance / (mean_power * mean_power)).sqrt();
 
     Ok(PsdTheoreticalComparison {
@@ -1100,8 +1104,8 @@ fn find_peak_near_frequency(
     let mut best_idx = 0;
     let mut best_diff = f64::INFINITY;
 
-    for (i, &freq) in freqs.iter().enumerate() {
-        let diff = (freq - target_freq).abs();
+    for (i, &_freq) in freqs.iter().enumerate() {
+        let diff = (_freq - target_freq).abs();
         if diff < best_diff {
             best_diff = diff;
             best_idx = i;
@@ -1113,16 +1117,16 @@ fn find_peak_near_frequency(
 
 /// Estimate noise floor from power spectrum
 #[allow(dead_code)]
-fn estimate_noise_floor(power: &Array1<f64>) -> f64 {
+fn estimate_noise_floor(_power: &Array1<f64>) -> f64 {
     // Use median as robust noise floor estimate
-    let mut sorted_power = power.to_vec();
+    let mut sorted_power = _power.to_vec();
     sorted_power.sort_by(|a, b| a.partial_cmp(b).unwrap());
     sorted_power[sorted_power.len() / 2]
 }
 
 /// Perform statistical tests on error distribution
 #[allow(dead_code)]
-fn perform_statistical_tests(errors: &[f64]) -> SignalResult<StatisticalTestResults> {
+fn perform_statistical_tests(_errors: &[f64]) -> SignalResult<StatisticalTestResults> {
     // Placeholder implementation of statistical tests
     Ok(StatisticalTestResults {
         kolmogorov_smirnov_pvalue: 0.15,
@@ -1134,103 +1138,103 @@ fn perform_statistical_tests(errors: &[f64]) -> SignalResult<StatisticalTestResu
 
 /// Generate comprehensive validation report
 #[allow(dead_code)]
-pub fn generate_advanced_lombscargle_report(result: &AdvancedLombScargleResult) -> String {
+pub fn generate_advanced_lombscargle_report(_result: &AdvancedLombScargleResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Advanced Enhanced Lomb-Scargle Validation Report\n\n");
     report.push_str(&format!(
-        "🎯 **Overall Quality Score: {:.1}/100**\n\n",
-        result.quality_score
+        "🎯 *Overall Quality Score: {:.1}/100**\n\n",
+        _result.quality_score
     ));
 
     // Executive Summary
-    if result.quality_score >= 95.0 {
-        report.push_str("✅ **EXCELLENT** - Implementation exceeds industry standards\n\n");
-    } else if result.quality_score >= 85.0 {
-        report.push_str("⚡ **VERY GOOD** - Implementation meets high performance standards\n\n");
-    } else if result.quality_score >= 75.0 {
-        report.push_str("⚠️ **GOOD** - Implementation is functional with room for improvement\n\n");
+    if _result.quality_score >= 95.0 {
+        report.push_str("✅ *EXCELLENT** - Implementation exceeds industry standards\n\n");
+    } else if _result.quality_score >= 85.0 {
+        report.push_str("⚡ *VERY GOOD** - Implementation meets high performance standards\n\n");
+    } else if _result.quality_score >= 75.0 {
+        report.push_str("⚠️ *GOOD** - Implementation is functional with room for improvement\n\n");
     } else {
-        report.push_str("❌ **NEEDS IMPROVEMENT** - Significant issues require attention\n\n");
+        report.push_str("❌ *NEEDS IMPROVEMENT** - Significant issues require attention\n\n");
     }
 
     // Accuracy Validation Summary
     report.push_str("## 📊 Accuracy Validation Summary\n\n");
     report.push_str(&format!(
-        "- **Single Tone Accuracy**: {:.4} (lower is better)\n",
-        result
+        "- *Single Tone Accuracy**: {:.4} (lower is better)\n",
+        _result
             .accuracy_validation
             .frequency_accuracy
             .single_tone_accuracy
     ));
     report.push_str(&format!(
-        "- **Multi Tone Accuracy**: {:.4}\n",
-        result
+        "- *Multi Tone Accuracy**: {:.4}\n",
+        _result
             .accuracy_validation
             .frequency_accuracy
             .multi_tone_accuracy
     ));
     report.push_str(&format!(
-        "- **Power Estimation Linearity**: {:.3}\n",
-        result
+        "- *Power Estimation Linearity**: {:.3}\n",
+        _result
             .accuracy_validation
             .power_accuracy
             .amplitude_linearity
     ));
     report.push_str(&format!(
-        "- **Phase Coherence Preservation**: {:.3}\n",
-        result
+        "- *Phase Coherence Preservation**: {:.3}\n",
+        _result
             .accuracy_validation
             .phase_coherence
             .phase_preservation
     ));
     report.push_str(&format!(
-        "- **Spectral Leakage Control**: {:.3}\n",
-        1.0 - result.accuracy_validation.spectral_leakage.side_lobe_level
+        "- *Spectral Leakage Control**: {:.3}\n",
+        1.0 - _result.accuracy_validation.spectral_leakage.side_lobe_level
     ));
 
     // SciPy Comparison
     report.push_str("\n## 🐍 SciPy Reference Comparison\n\n");
     report.push_str(&format!(
-        "- **Correlation with SciPy**: {:.4}\n",
-        result.scipy_comparison.correlation
+        "- *Correlation with SciPy**: {:.4}\n",
+        _result.scipy_comparison.correlation
     ));
     report.push_str(&format!(
-        "- **Maximum Relative Error**: {:.2e}\n",
-        result.scipy_comparison.max_relative_error
+        "- *Maximum Relative Error**: {:.2e}\n",
+        _result.scipy_comparison.max_relative_error
     ));
     report.push_str(&format!(
-        "- **Mean Relative Error**: {:.2e}\n",
-        result.scipy_comparison.mean_relative_error
+        "- *Mean Relative Error**: {:.2e}\n",
+        _result.scipy_comparison.mean_relative_error
     ));
     report.push_str(&format!(
-        "- **Peak Detection Agreement**: {:.1}%\n",
-        result.scipy_comparison.peak_detection_agreement * 100.0
+        "- *Peak Detection Agreement**: {:.1}%\n",
+        _result.scipy_comparison.peak_detection_agreement * 100.0
     ));
 
     // SIMD Validation
     report.push_str("\n## ⚡ SIMD Performance & Accuracy\n\n");
     report.push_str(&format!(
-        "- **Performance Improvement**: {:.1}x faster\n",
-        result.simd_validation.performance_improvement
+        "- *Performance Improvement**: {:.1}x faster\n",
+        _result.simd_validation.performance_improvement
     ));
     report.push_str(&format!(
-        "- **Accuracy Correlation**: {:.6}\n",
-        result
+        "- *Accuracy Correlation**: {:.6}\n",
+        _result
             .simd_validation
             .accuracy_comparison
             .correlation_coefficient
     ));
     report.push_str(&format!(
-        "- **Maximum Difference**: {:.2e}\n",
-        result
+        "- *Maximum Difference**: {:.2e}\n",
+        _result
             .simd_validation
             .accuracy_comparison
             .max_absolute_difference
     ));
     report.push_str(&format!(
-        "- **Platform Utilization**: {:.1}%\n",
-        result
+        "- *Platform Utilization**: {:.1}%\n",
+        _result
             .simd_validation
             .platform_utilization
             .vector_width_utilization
@@ -1240,20 +1244,20 @@ pub fn generate_advanced_lombscargle_report(result: &AdvancedLombScargleResult) 
     // Memory Profiling
     report.push_str("\n## 💾 Memory Profiling Results\n\n");
     report.push_str(&format!(
-        "- **Peak Memory Usage**: {:.1} MB\n",
-        result.memory_profiling.peak_memory_mb
+        "- *Peak Memory Usage**: {:.1} MB\n",
+        _result.memory_profiling.peak_memory_mb
     ));
     report.push_str(&format!(
-        "- **Memory per Sample**: {:.3} KB\n",
-        result.memory_profiling.efficiency_metrics.memory_per_sample * 1024.0
+        "- *Memory per Sample**: {:.3} KB\n",
+        _result.memory_profiling.efficiency_metrics.memory_per_sample * 1024.0
     ));
     report.push_str(&format!(
-        "- **Cache Hit Ratio**: {:.1}%\n",
-        result.memory_profiling.efficiency_metrics.cache_hit_ratio * 100.0
+        "- *Cache Hit Ratio**: {:.1}%\n",
+        _result.memory_profiling.efficiency_metrics.cache_hit_ratio * 100.0
     ));
     report.push_str(&format!(
-        "- **Allocation Efficiency**: {:.1}%\n",
-        (1.0 - result
+        "- *Allocation Efficiency**: {:.1}%\n",
+        (1.0 - _result
             .memory_profiling
             .allocation_patterns
             .allocation_fragmentation)
@@ -1263,27 +1267,27 @@ pub fn generate_advanced_lombscargle_report(result: &AdvancedLombScargleResult) 
     // Statistical Validation
     report.push_str("\n## 📈 Statistical Validation\n\n");
     report.push_str(&format!(
-        "- **False Alarm Probability**: {:.3} (target: {:.3})\n",
-        result
+        "- *False Alarm Probability**: {:.3} (target: {:.3})\n",
+        _result
             .statistical_validation
             .false_alarm_validation
             .empirical_fap,
-        result
+        _result
             .statistical_validation
             .false_alarm_validation
             .theoretical_fap
     ));
     report.push_str(&format!(
-        "- **FAP Accuracy**: {:.1}%\n",
-        result
+        "- *FAP Accuracy**: {:.1}%\n",
+        _result
             .statistical_validation
             .false_alarm_validation
             .fap_accuracy
             * 100.0
     ));
     report.push_str(&format!(
-        "- **White Noise PSD Flatness**: {:.3}\n",
-        result
+        "- *White Noise PSD Flatness**: {:.3}\n",
+        _result
             .statistical_validation
             .psd_theoretical_comparison
             .white_noise_comparison
@@ -1291,64 +1295,64 @@ pub fn generate_advanced_lombscargle_report(result: &AdvancedLombScargleResult) 
 
     // Performance Regression
     report.push_str("\n## ⏱️ Performance Analysis\n\n");
-    if result.performance_regression.regression_detected {
-        report.push_str("❌ **Performance regression detected!**\n");
+    if _result.performance_regression.regression_detected {
+        report.push_str("❌ *Performance regression detected!**\n");
     } else {
-        report.push_str("✅ **No performance regression detected**\n");
+        report.push_str("✅ *No performance regression detected**\n");
     }
     report.push_str(&format!(
-        "- **Computation Time**: {:.1} ms (baseline: {:.1} ms)\n",
-        result
+        "- *Computation Time**: {:.1} ms (baseline: {:.1} ms)\n",
+        _result
             .performance_regression
             .current_metrics
             .computation_time_ms,
-        result
+        _result
             .performance_regression
             .baseline_metrics
             .computation_time_ms
     ));
     report.push_str(&format!(
-        "- **Memory Usage**: {:.1} MB (baseline: {:.1} MB)\n",
-        result
+        "- *Memory Usage**: {:.1} MB (baseline: {:.1} MB)\n",
+        _result
             .performance_regression
             .current_metrics
             .memory_usage_mb,
-        result
+        _result
             .performance_regression
             .baseline_metrics
             .memory_usage_mb
     ));
     report.push_str(&format!(
-        "- **Throughput**: {:.0} samples/sec (baseline: {:.0})\n",
-        result
+        "- *Throughput**: {:.0} samples/sec (baseline: {:.0})\n",
+        _result
             .performance_regression
             .current_metrics
             .throughput_samples_per_second,
-        result
+        _result
             .performance_regression
             .baseline_metrics
             .throughput_samples_per_second
     ));
 
     // Critical Issues
-    if !result.critical_issues.is_empty() {
+    if !_result.critical_issues.is_empty() {
         report.push_str("\n## ⚠️ Critical Issues\n\n");
-        for issue in &result.critical_issues {
+        for issue in &_result.critical_issues {
             report.push_str(&format!("- ❌ {}\n", issue));
         }
     }
 
     // Recommendations
-    if !result.recommendations.is_empty() {
+    if !_result.recommendations.is_empty() {
         report.push_str("\n## 💡 Optimization Recommendations\n\n");
-        for (i, recommendation) in result.recommendations.iter().enumerate() {
+        for (i, recommendation) in _result.recommendations.iter().enumerate() {
             report.push_str(&format!("{}. {}\n", i + 1, recommendation));
         }
     }
 
     // Footer
     report.push_str("\n---\n");
-    report.push_str("**Advanced Enhanced Validation Suite**\n");
+    report.push_str("*Advanced Enhanced Validation Suite**\n");
     report.push_str(&format!(
         "Generated at: {:?}\n",
         std::time::SystemTime::now()

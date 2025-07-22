@@ -5,7 +5,7 @@ use scirs2_autograd as ag;
 #[test]
 #[allow(dead_code)]
 fn test_minimal_matmul() {
-    ag::run::<f32, _, _>(|ctx| {
+    ag::run::<f32_>(|ctx| {
         // Create two simple test matrices
         let a_data = array![[1.0, 2.0], [3.0, 4.0]];
         let b_data = array![[5.0, 6.0], [7.0, 8.0]];

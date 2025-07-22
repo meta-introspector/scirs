@@ -565,7 +565,7 @@ impl AdvancedJitDemo {
 
         // First compilation (cache miss)
         let start1 = Instant::now();
-        let _kernel1 =
+        let kernel1 =
             self.compiler
                 .compile_kernel("cache_test", test_kernel, &["cache_test".to_string()])?;
         let time1 = start1.elapsed();
@@ -577,7 +577,7 @@ impl AdvancedJitDemo {
 
         // Second compilation (cache hit)
         let start2 = Instant::now();
-        let _kernel2 =
+        let kernel2 =
             self.compiler
                 .compile_kernel("cache_test", test_kernel, &["cache_test".to_string()])?;
         let time2 = start2.elapsed();
@@ -716,9 +716,9 @@ impl AdvancedJitDemo {
     }
 
     /// Generate a signal processing kernel
-    fn generate_signal_kernel(&self, kernel_type: &str) -> String {
+    fn type( &str) -> String {
         match kernel_type {
-            "convolution_1d" => r#"
+            convolution_1d => r#"
             define void @convolution_1d(double* %input, double* %kernel, double* %output, i32 %n, i32 %k) {
             entry:
                 br label %loop
@@ -769,7 +769,7 @@ impl AdvancedJitDemo {
             }
             "#.to_string(),
 
-            "fir_filter" => r#"
+            fir_filter => r#"
             define double @fir_filter(double* %input, double* %coeffs, i32 %taps, i32 %delay) {
             entry:
                 %sum = alloca double
@@ -801,9 +801,7 @@ impl AdvancedJitDemo {
                 %result = load double, double* %sum
                 ret double %result
             }
-            "#.to_string(),
-
-            _ => r#"
+            "#.to_string(, _ => r#"
             define double @default_signal_kernel(double %input) {
                 ret double %input
             }
@@ -847,15 +845,15 @@ mod tests {
     fn test_matrix_kernel_generation() {
         let demo = advancedJitDemo::new().unwrap();
         let kernel = demo.generate_matrix_kernel(64);
-        assert!(kernel.contains("matmul_64x64"));
+        assert!(kernel.contains(matmul_64x64));
         assert!(kernel.contains("define void"));
     }
 
     #[test]
     fn test_signal_kernel_generation() {
         let demo = advancedJitDemo::new().unwrap();
-        let kernel = demo.generate_signal_kernel("convolution_1d");
-        assert!(kernel.contains("convolution_1d"));
+        let kernel = demo.generate_signal_kernel(convolution_1d);
+        assert!(kernel.contains(convolution_1d));
         assert!(kernel.contains("define void"));
     }
 

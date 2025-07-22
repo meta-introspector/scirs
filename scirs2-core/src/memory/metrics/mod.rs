@@ -53,7 +53,7 @@ pub use profiler::{
 };
 pub use reporter::{format_bytes, format_duration};
 pub use snapshot::{
-    clear_snapshots, compare_snapshots, global_snapshot_manager, load_snapshots, save_snapshots,
+    clear_snapshots, compare_snapshots, global_snapshot_manager, load_all_snapshots, save_all_snapshots,
     take_snapshot, ComponentStatsDiff, MemorySnapshot, SnapshotComponentStats, SnapshotDiff,
     SnapshotManager, SnapshotReport,
 };
@@ -101,8 +101,8 @@ pub fn track_deallocation(component: impl Into<String>, size: usize, address: us
 #[allow(dead_code)]
 pub fn track_resize(
     component: impl Into<String>,
-    new_size: usize,
     old_size: usize,
+    new_size: usize,
     address: usize,
 ) {
     let event = MemoryEvent::new(MemoryEventType::Resize, component, new_size, address)
@@ -132,7 +132,7 @@ pub fn reset_memory_metrics() {
 pub struct TrackedBufferPool<T: Clone + Default> {
     inner: BufferPool<T>,
     component_name: String,
-    _phantom: PhantomData<T>,
+    phantom: PhantomData<T>,
 }
 
 impl<T: Clone + Default> TrackedBufferPool<T> {
@@ -141,7 +141,7 @@ impl<T: Clone + Default> TrackedBufferPool<T> {
         Self {
             inner: BufferPool::new(),
             component_name: component_name.into(),
-            _phantom: PhantomData,
+            phantom: PhantomData,
         }
     }
 
@@ -210,9 +210,9 @@ where
 {
     /// Create a new tracked chunk processor
     pub fn new(
-        array: &'a ArrayBase<S, D>,
-        chunk_shape: D,
         component_name: impl Into<String>,
+        array: &'a ArrayBase<S, D>,
+        chunk_shape: &[usize],
     ) -> Self {
         Self {
             inner: ChunkProcessor::new(array, chunk_shape),
@@ -266,9 +266,7 @@ where
     S: Data<Elem = A>,
 {
     /// Create a new tracked 2D chunk processor
-    pub fn new(
-        array: &'a ArrayBase<S, ndarray::Ix2>,
-        chunk_shape: (usize, usize),
+    pub fn new(array: &'a ArrayBase<S, ndarray::Ix2>, chunk_shape: (usize, usize),
         component_name: impl Into<String>,
     ) -> Self {
         Self {
@@ -313,7 +311,7 @@ mod tests {
     #[test]
     fn test_global_memory_metrics() {
         // Lock the mutex to ensure test isolation
-        let _lock = MEMORY_METRICS_TEST_MUTEX
+        let lock = MEMORY_METRICS_TEST_MUTEX
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
 
@@ -336,7 +334,7 @@ mod tests {
         assert_eq!(report.total_allocation_count, 3);
 
         // Check component stats
-        let test_comp = report.component_stats.get("TestComponent").unwrap();
+        let test_comp = report.component_stats.get(TestComponent).unwrap();
         assert_eq!(test_comp.current_usage, 2048);
         assert_eq!(test_comp.allocation_count, 2);
 

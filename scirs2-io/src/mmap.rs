@@ -21,7 +21,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2_io::mmap::{MmapArray, create_mmap_array};
+//! use scirs2__io::mmap::{MmapArray, create_mmap_array};
 //! use ndarray::Array2;
 //! use std::path::Path;
 //!
@@ -102,9 +102,9 @@ pub struct MmapConfig {
 
 impl<'a> MmapArrayBuilder<'a> {
     /// Create a new builder for the specified file path
-    pub fn new<P: AsRef<Path>>(path: &'a P) -> Self {
+    pub fn new<P: AsRef<Path>>(_path: &'a P) -> Self {
         Self {
-            path: path.as_ref(),
+            _path: _path.as_ref(),
             create: true,
             truncate: false,
             buffer_size: 64 * 1024, // 64KB default buffer
@@ -245,8 +245,8 @@ where
     T: bytemuck::Pod,
 {
     /// Open an existing memory-mapped array file for reading
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path.as_ref())
+    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::open(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
 
         let file_size = file
@@ -266,19 +266,17 @@ where
         };
 
         // Read metadata to determine array size
-        let (len, _metadata_size) = Self::read_metadata(&mmap[..])?;
+        let (len_metadata_size) = Self::read_metadata(&mmap[..])?;
 
         Ok(Self {
-            mmap,
-            _file: file,
-            len,
-            _phantom: PhantomData,
+            mmap_file: file,
+            len_phantom: PhantomData,
         })
     }
 
     /// Read metadata from the memory-mapped file
-    fn read_metadata(mmap: &[u8]) -> Result<(usize, usize)> {
-        if mmap.len() < 8 {
+    fn read_metadata(_mmap: &[u8]) -> Result<(usize, usize)> {
+        if _mmap.len() < 8 {
             return Err(IoError::FormatError("Invalid file format".to_string()));
         }
 
@@ -286,7 +284,7 @@ where
 
         // Read number of dimensions
         let ndim = u64::from_le_bytes(
-            mmap[offset..offset + 8]
+            _mmap[offset..offset + 8]
                 .try_into()
                 .map_err(|_| IoError::FormatError("Failed to read ndim".to_string()))?,
         ) as usize;
@@ -301,11 +299,11 @@ where
         // Read shape
         let mut total_elements = 1;
         for _ in 0..ndim {
-            if offset + 8 > mmap.len() {
+            if offset + 8 > _mmap.len() {
                 return Err(IoError::FormatError("Truncated shape data".to_string()));
             }
             let dim = u64::from_le_bytes(
-                mmap[offset..offset + 8]
+                _mmap[offset..offset + 8]
                     .try_into()
                     .map_err(|_| IoError::FormatError("Failed to read dimension".to_string()))?,
             ) as usize;
@@ -314,13 +312,13 @@ where
         }
 
         // Read element size
-        if offset + 8 > mmap.len() {
+        if offset + 8 > _mmap.len() {
             return Err(IoError::FormatError(
                 "Truncated element size data".to_string(),
             ));
         }
         let element_size = u64::from_le_bytes(
-            mmap[offset..offset + 8]
+            _mmap[offset..offset + 8]
                 .try_into()
                 .map_err(|_| IoError::FormatError("Failed to read element size".to_string()))?,
         ) as usize;
@@ -420,11 +418,11 @@ where
     T: bytemuck::Pod,
 {
     /// Open an existing memory-mapped array file for read-write access
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
         let file = OpenOptions::new()
             .read(true)
             .write(true)
-            .open(path.as_ref())
+            .open(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
 
         let file_size = file
@@ -444,20 +442,18 @@ where
         };
 
         // Read metadata to determine array size
-        let (len, _metadata_size) = Self::read_metadata(&mmap)?;
+        let (len_metadata_size) = Self::read_metadata(&mmap)?;
 
         Ok(Self {
-            mmap,
-            _file: file,
-            len,
-            _phantom: PhantomData,
+            mmap_file: file,
+            len_phantom: PhantomData,
         })
     }
 
     /// Read metadata from the memory-mapped file
-    fn read_metadata(mmap: &memmap2::MmapMut) -> Result<(usize, usize)> {
+    fn read_metadata(_mmap: &memmap2::MmapMut) -> Result<(usize, usize)> {
         // Similar to read-only version
-        MmapArray::<T>::read_metadata(&mmap[..])
+        MmapArray::<T>::read_metadata(&_mmap[..])
     }
 
     /// Get the shape of the array from the file metadata
@@ -550,24 +546,24 @@ where
 
 /// Convenience function to create a memory-mapped array from an ndarray
 #[allow(dead_code)]
-pub fn create_mmap_array<P, S, D, T>(path: P, array: &ArrayBase<S, D>) -> Result<()>
+pub fn create_mmap_array<P, S, D, T>(_path: P, array: &ArrayBase<S, D>) -> Result<()>
 where
     P: AsRef<Path>,
     S: ndarray::Data<Elem = T>,
     D: Dimension,
     T: Clone + bytemuck::Pod,
 {
-    MmapArrayBuilder::new(&path).create_from_array(array)
+    MmapArrayBuilder::new(&_path).create_from_array(array)
 }
 
 /// Convenience function to read a memory-mapped array as an ndarray
 #[allow(dead_code)]
-pub fn read_mmap_array<P, T>(path: P) -> Result<ArrayD<T>>
+pub fn read_mmap_array<P, T>(_path: P) -> Result<ArrayD<T>>
 where
     P: AsRef<Path>,
     T: bytemuck::Pod + Clone,
 {
-    let mmap_array = MmapArray::open(path)?;
+    let mmap_array = MmapArray::open(_path)?;
     let shape = mmap_array.shape()?;
     let array_view = mmap_array.as_array_view(&shape)?;
     Ok(array_view.to_owned())

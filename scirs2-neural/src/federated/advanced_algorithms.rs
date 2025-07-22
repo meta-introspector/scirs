@@ -20,11 +20,11 @@ pub struct SCAFFOLD {
 }
 impl SCAFFOLD {
     /// Create new SCAFFOLD aggregator
-    pub fn new(server_lr: f32, global_lr: f32) -> Self {
+    pub fn new(_server_lr: f32, global_lr: f32) -> Self {
         Self {
             server_control: None,
             client_controls: HashMap::new(),
-            server_lr,
+            _server_lr,
             global_lr,
         }
     }
@@ -115,7 +115,7 @@ pub struct FedAvgM {
     momentum_buffers: Option<Vec<Array2<f32>>>,
 impl FedAvgM {
     /// Create new FedAvgM aggregator
-    pub fn new(server_lr: f32, momentum: f32) -> Self {
+    pub fn new(_server_lr: f32, momentum: f32) -> Self {
             momentum,
             momentum_buffers: None,
 impl AggregationStrategy for FedAvgM {
@@ -154,8 +154,8 @@ pub struct FedAdam {
     step: usize,
 impl FedAdam {
     /// Create new FedAdam aggregator
-    pub fn new(lr: f32, beta1: f32, beta2: f32, epsilon: f32) -> Self {
-            lr,
+    pub fn new(_lr: f32, beta1: f32, beta2: f32, epsilon: f32) -> Self {
+            _lr,
             beta1,
             beta2,
             epsilon,
@@ -184,7 +184,7 @@ impl AggregationStrategy for FedAdam {
             let m_hat = &m[i] / (1.0 - self.beta1.powi(self.step as i32));
             let v_hat = &v[i] / (1.0 - self.beta2.powi(self.step as i32));
             // Compute update
-            let update = &m_hat * self.lr / (v_hat.mapv(f32::sqrt) + self.epsilon);
+            let update = &m_hat * self._lr / (v_hat.mapv(f32::sqrt) + self.epsilon);
             aggregated.push(update);
         "FedAdam"
 /// FedAdagrad - Adaptive gradient algorithm for federated learning
@@ -193,7 +193,7 @@ pub struct FedAdagrad {
     acc_grad: Option<Vec<Array2<f32>>>,
 impl FedAdagrad {
     /// Create new FedAdagrad aggregator
-    pub fn new(lr: f32, epsilon: f32) -> Self {
+    pub fn new(_lr: f32, epsilon: f32) -> Self {
             acc_grad: None,
 impl AggregationStrategy for FedAdagrad {
         // Initialize accumulated gradients if needed
@@ -205,7 +205,7 @@ impl AggregationStrategy for FedAdagrad {
             acc_grad[i] = &acc_grad[i] + &grad * &grad;
             // Compute adaptive learning rate
             let adaptive_lr = &acc_grad[i].mapv(f32::sqrt) + self.epsilon;
-            let update = &grad * self.lr / adaptive_lr;
+            let update = &grad * self._lr / adaptive_lr;
         "FedAdagrad"
 /// FedLAG - Federated learning with Lookahead and Gradient tracking
 pub struct FedLAG {
@@ -257,7 +257,7 @@ pub struct FedProx {
     global_weights: Option<Vec<Array2<f32>>>,
 impl FedProx {
     /// Create new FedProx aggregator
-    pub fn new(mu: f32) -> Self {
+    pub fn new(_mu: f32) -> Self {
             mu,
             global_weights: None,
     /// Update global weights
@@ -280,7 +280,7 @@ pub struct FedNova {
     effective_steps: HashMap<usize, f32>,
 impl FedNova {
     /// Create new FedNova aggregator
-    pub fn new(momentum: f32) -> Self {
+    pub fn new(_momentum: f32) -> Self {
             server_momentum: None,
             effective_steps: HashMap::new(),
     /// Update effective steps for a client
@@ -314,7 +314,7 @@ pub struct FedOpt {
     /// Beta2 for Adam-like optimizers
 impl FedOpt {
     /// Create new FedOpt aggregator
-    pub fn new(optimizer_type: String, lr: f32, beta1: f32, beta2: f32, epsilon: f32) -> Self {
+    pub fn new(_optimizer_type: String, lr: f32, beta1: f32, beta2: f32, epsilon: f32) -> Self {
             optimizer_type,
 impl AggregationStrategy for FedOpt {
         // First compute weighted average (pseudo-gradient)
@@ -324,7 +324,7 @@ impl AggregationStrategy for FedOpt {
             "sgd" => {
                 // Simple SGD
                 for grad in pseudo_gradients {
-                    aggregated.push(grad * self.lr);
+                    aggregated.push(grad * self._lr);
             "adam" => {
                 // Adam optimizer
                 if self.m.is_none() {
@@ -341,7 +341,7 @@ impl AggregationStrategy for FedOpt {
                     let m_hat = &m[i] / (1.0 - self.beta1.powi(self.step as i32));
                     let v_hat = &v[i] / (1.0 - self.beta2.powi(self.step as i32));
                     // Compute update
-                    let update = &m_hat * self.lr / (v_hat.mapv(f32::sqrt) + self.epsilon);
+                    let update = &m_hat * self._lr / (v_hat.mapv(f32::sqrt) + self.epsilon);
                     aggregated.push(update);
             "yogi" => {
                 // Yogi optimizer (variant of Adam)
@@ -368,7 +368,7 @@ pub struct MIME {
     lambda: f32,
 impl MIME {
     /// Create new MIME aggregator
-    pub fn new(server_lr: f32, lambda: f32) -> Self {
+    pub fn new(_server_lr: f32, lambda: f32) -> Self {
             prev_weights: None,
             control_variate: None,
             lambda,
@@ -388,7 +388,7 @@ impl AggregationStrategy for MIME {
                 // Update control variate
                 control_variate[i] = current_grad.clone();
                 // Apply server learning rate
-                aggregated.push(mime_update * self.server_lr);
+                aggregated.push(mime_update * self._server_lr);
         // Update previous weights
         self.prev_weights = Some(aggregated.clone());
         "MIME"
@@ -409,12 +409,12 @@ impl AggregatorFactory {
     ) -> Result<Box<dyn AggregationStrategy>> {
         match name.to_lowercase().as_str() {
             "scaffold" => {
-                let server_lr = config.get("server_lr").copied().unwrap_or(1.0);
+                let _server_lr = config.get("_server_lr").copied().unwrap_or(1.0);
                 let global_lr = config.get("global_lr").copied().unwrap_or(1.0);
-                Ok(Box::new(SCAFFOLD::new(server_lr, global_lr)))
+                Ok(Box::new(SCAFFOLD::new(_server_lr, global_lr)))
             "fedavgm" => {
                 let momentum = config.get("momentum").copied().unwrap_or(0.9);
-                Ok(Box::new(FedAvgM::new(server_lr, momentum)))
+                Ok(Box::new(FedAvgM::new(_server_lr, momentum)))
             "fedadam" => {
                 let lr = config.get("lr").copied().unwrap_or(0.001);
                 let beta1 = config.get("beta1").copied().unwrap_or(0.9);
@@ -440,8 +440,7 @@ impl AggregatorFactory {
                 let opt_type = match optimizer_type.as_str() {
                     "0" | "sgd" => "sgd".to_string(),
                     "1" | "adam" => "adam".to_string(),
-                    "2" | "yogi" => "yogi".to_string(),
-                    _ => "adam".to_string(),
+                    "2" | "yogi" => "yogi".to_string(, _ => "adam".to_string(),
                 };
                 Ok(Box::new(FedOpt::new(opt_type, lr, beta1, beta2, epsilon)))
             "mime" => {
@@ -456,7 +455,7 @@ impl AggregatorFactory {
         vec!["scaffold", "fedavgm", "fedadam", "fedadagrad", "fedlag", "fedprox", "fednova", "fedopt", "mime"]
     /// Get detailed aggregator information
     #[allow(dead_code)]
-    pub fn get_aggregator_info(name: &str) -> Option<AggregatorInfo> {
+    pub fn get_aggregator_info(_name: &str) -> Option<AggregatorInfo> {
             "scaffold" => Some(AggregatorInfo {
                 name: "SCAFFOLD".to_string(),
                 description: "Stochastic Controlled Averaging for federated learning".to_string(),
@@ -472,10 +471,9 @@ impl AggregatorFactory {
                 name: "FedAdam".to_string(),
                 description: "Adaptive federated optimization with Adam".to_string(),
                 key_features: vec!["Adaptive learning rates".to_string(), "Second-order moments".to_string()],
-                recommended_use: "Tasks requiring adaptive optimization".to_string(),
-            _ => None,
+                recommended_use: "Tasks requiring adaptive optimization".to_string(, _ => None,
     /// Get default configuration for an aggregator
-    pub fn default_config(name: &str) -> HashMap<String, f32> {
+    pub fn default_config(_name: &str) -> HashMap<String, f32> {
         let mut config = HashMap::new();
                 config.insert("server_lr".to_string(), 1.0);
                 config.insert("global_lr".to_string(), 1.0);

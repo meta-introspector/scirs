@@ -57,16 +57,16 @@ pub struct Embedding<F: Float + Debug + ScalarOperand + Send + Sync> {
     freq_counter: Option<Vec<usize>>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Embedding<F> {
     /// Create a new Embedding layer with the given configuration
-    pub fn new(config: EmbeddingConfig) -> Result<Self> {
-        if config.num_embeddings == 0 {
+    pub fn new(_config: EmbeddingConfig) -> Result<Self> {
+        if _config.num_embeddings == 0 {
             return Err(Error::InvalidArchitecture(
                 "num_embeddings must be greater than 0".to_string(),
             ));
-        if config.embedding_dim == 0 {
+        if _config.embedding_dim == 0 {
                 "embedding_dim must be greater than 0".to_string(),
         // Validate padding_idx
-        if let Some(idx) = config.padding_idx {
-            if idx >= config.num_embeddings {
+        if let Some(idx) = _config.padding_idx {
+            if idx >= _config.num_embeddings {
                 return Err(Error::InvalidArchitecture(format!(
                     "padding_idx ({}) must be less than num_embeddings ({})",
                     idx, config.num_embeddings
@@ -243,8 +243,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Embedding<F> {
         embedding_mut.forward_impl(&indices)
     fn backward(
         &self,
-        input: &Array<F, IxDyn>,
-        _grad_output: &Array<F, IxDyn>,
+        input: &Array<F, IxDyn>, _grad_output: &Array<F, IxDyn>,
         // Embedding has no meaningful upstream gradient since indices are discrete
         // Return zeros of the same shape as the input (indices)
         let input_shape = &input.shape();
@@ -260,8 +259,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Embedding<F> {
                     if i == padding_idx {
                         continue;
                 let scale = if count > 0 {
-                    F::from(1.0 / count as f64).unwrap()
-                    F::one()
+                    F::from(1.0 / count as f64).unwrap(), F::one()
                 };
                     self.weight[[i, j]] =
                         self.weight[[i, j]] - lr * scale * self.weight_grad[[i, j]];
@@ -283,17 +281,17 @@ pub struct PositionalEmbedding<F: Float + Debug + ScalarOperand + Send + Sync> {
     weight_grad: Option<Array<F, IxDyn>>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> PositionalEmbedding<F> {
     /// Create a new PositionalEmbedding layer
-    pub fn new(max_seq_length: usize, embedding_dim: usize, learned: bool) -> Result<Self> {
-        if max_seq_length == 0 {
-                "max_seq_length must be greater than 0".to_string(),
+    pub fn new(_max_seq_length: usize, embedding_dim: usize, learned: bool) -> Result<Self> {
+        if _max_seq_length == 0 {
+                "_max_seq_length must be greater than 0".to_string(),
         if embedding_dim == 0 {
         if learned {
             // Initialize learned positional embeddings
-            let weight_shape = IxDyn(&[max_seq_length, embedding_dim]);
+            let weight_shape = IxDyn(&[_max_seq_length, embedding_dim]);
             let weight = Some(initializers::xavier_uniform::<F>(weight_shape.clone())?);
             let weight_grad = Some(Array::zeros(weight_shape));
             Ok(Self {
-                max_seq_length,
+                _max_seq_length,
                 embedding_dim,
                 learned,
                 weight,

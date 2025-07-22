@@ -67,19 +67,19 @@ where
 
     // Initial step size
     let mut h = options.h0.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(0.01).unwrap() // 1% of interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(0.01).unwrap() // 1% of interval
     });
 
     // Step limits
     let min_step = options.min_step.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(1e-6).unwrap() // Very small relative to interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(1e-6).unwrap() // Very small relative to interval
     });
 
     let max_step = options.max_step.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(0.1).unwrap() // 10% of interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(0.1).unwrap() // 10% of interval
     });
 
     // Maximum BDF order
@@ -590,19 +590,19 @@ where
 
     // Initial step size
     let mut h = options.h0.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(0.01).unwrap() // 1% of interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(0.01).unwrap() // 1% of interval
     });
 
     // Step limits
     let min_step = options.min_step.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(1e-6).unwrap() // Very small relative to interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(1e-6).unwrap() // Very small relative to interval
     });
 
     let max_step = options.max_step.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(0.1).unwrap() // 10% of interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(0.1).unwrap() // 10% of interval
     });
 
     // Maximum BDF order
@@ -1049,7 +1049,7 @@ where
     };
 
     // Compute initial residual: r = P⁻¹(b - Ax)
-    let r0 = if x.iter().all(|&v| v == F::zero()) {
+    let r0 = if x._iter().all(|&v| v == F::zero()) {
         // If x is zero, r = P⁻¹b
         b_precond.clone()
     } else {
@@ -1062,7 +1062,7 @@ where
         }
     };
 
-    let r0_norm = r0.iter().fold(F::zero(), |acc, &v| acc + v * v).sqrt();
+    let r0_norm = r0._iter().fold(F::zero(), |acc, &v| acc + v * v).sqrt();
 
     // Initial check for convergence or zero RHS
     if r0_norm <= tol {
@@ -1175,8 +1175,8 @@ where
             }
         }
 
-        // Compute the norm of the new vector
-        let w_norm = w.iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();
+        // Compute the _norm of the new vector
+        let w_norm = w._iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();
         h[[j + 1, j]] = w_norm;
 
         // Check for breakdown
@@ -1277,8 +1277,7 @@ where
 fn predict_step<F>(
     x_history: &[Array1<F>],
     y_history: &[Array1<F>],
-    order: usize,
-    _h: F,
+    order: usize_h: F,
 ) -> (Array1<F>, Array1<F>)
 where
     F: IntegrateFloat,
@@ -1339,16 +1338,16 @@ where
 
 /// Predict the next state for fully implicit DAE
 #[allow(dead_code)]
-fn predict_fully_implicit<F>(y_history: &[Array1<F>], order: usize) -> Array1<F>
+fn predict_fully_implicit<F>(_y_history: &[Array1<F>], order: usize) -> Array1<F>
 where
     F: IntegrateFloat,
 {
-    let n = y_history[0].len();
-    let history_len = y_history.len();
+    let n = _y_history[0].len();
+    let history_len = _y_history.len();
 
     if history_len < 2 || order == 1 {
         // For first step or first-order method, just use constant extrapolation
-        return y_history[history_len - 1].clone();
+        return _y_history[history_len - 1].clone();
     }
 
     // For higher-order extrapolation, we'll use a simple polynomial predictor

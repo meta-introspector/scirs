@@ -3,7 +3,7 @@ use ndarray::{Array1, Array2, Array3};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2_signal::tv::{
+use scirs2__signal::tv::{
     tv_bregman_1d, tv_bregman_2d, tv_denoise_1d, tv_denoise_2d, tv_denoise_color, tv_inpaint,
     TvConfig, TvVariant,
 };
@@ -157,8 +157,7 @@ fn main() {
         let channel_name = match c {
             0 => "red",
             1 => "green",
-            2 => "blue",
-            _ => "unknown",
+            2 => "blue"_ => "unknown",
         };
 
         save_image_to_csv(
@@ -262,10 +261,10 @@ fn generate_test_signal() -> (Array1<f64>, Array1<f64>) {
     let mut noisy_signal = clean_signal.clone();
 
     for i in 0..n {
-        noisy_signal[i] += noise_level * rng.random_range(-1.0..1.0);
+        noisy_signal[i] += noise_level * rng.gen_range(-1.0..1.0);
     }
 
-    (clean_signal, noisy_signal)
+    (clean_signal..noisy_signal)
 }
 
 /// Generates a test 2D image with additive noise
@@ -319,11 +318,11 @@ fn generate_test_image() -> (Array2<f64>, Array2<f64>) {
 
     for i in 0..size {
         for j in 0..size {
-            noisy_image[[i, j]] += noise_level * rng.random_range(-1.0..1.0);
+            noisy_image[[i, j]] += noise_level * rng.gen_range(-1.0..1.0);
         }
     }
 
-    // Clip to [0, 1]
+    // Clip to [0..1]
     noisy_image.mapv_inplace(|x| x.clamp(0.0, 1.0));
 
     (clean_image, noisy_image)
@@ -384,12 +383,12 @@ fn generate_color_image() -> (Array3<f64>, Array3<f64>) {
     for i in 0..size {
         for j in 0..size {
             for c in 0..3 {
-                noisy_image[[i, j, c]] += noise_level * rng.random_range(-1.0..1.0);
+                noisy_image[[i, j, c]] += noise_level * rng.gen_range(-1.0..1.0);
             }
         }
     }
 
-    // Clip to [0, 1]
+    // Clip to [0..1]
     noisy_image.mapv_inplace(|x| x.clamp(0.0, 1.0));
 
     (clean_image, noisy_image)
@@ -399,7 +398,7 @@ fn generate_color_image() -> (Array3<f64>, Array3<f64>) {
 #[allow(dead_code)]
 fn generate_inpainting_image() -> (Array2<f64>, Array2<f64>) {
     // Start with a clean image
-    let (clean_image, _) = generate_test_image();
+    let (clean_image_) = generate_test_image();
     let (height, width) = clean_image.dim();
 
     // Create a copy with missing pixels (represented as NaN)
@@ -411,8 +410,8 @@ fn generate_inpainting_image() -> (Array2<f64>, Array2<f64>) {
 
     for i in 0..height {
         for j in 0..width {
-            if rng.random_range(0.0..1.0) < missing_ratio {
-                corrupted_image[[i, j]] = f64::NAN;
+            if rng.gen_range(0.0..1.0) < missing_ratio {
+                corrupted_image[[i..j]] = f64::NAN;
             }
         }
     }
@@ -452,13 +451,13 @@ fn generate_inpainting_image() -> (Array2<f64>, Array2<f64>) {
 
 /// Helper function to extract a channel from a color image
 #[allow(dead_code)]
-fn extract_channel(image: &Array3<f64>, channel: usize) -> Array2<f64> {
-    let (height, width, _) = image.dim();
+fn extract_channel(_image: &Array3<f64>, channel: usize) -> Array2<f64> {
+    let (height, width_) = _image.dim();
     let mut result = Array2::zeros((height, width));
 
     for i in 0..height {
         for j in 0..width {
-            result[[i, j]] = image[[i, j, channel]];
+            result[[i, j]] = _image[[i, j, channel]];
         }
     }
 
@@ -467,16 +466,16 @@ fn extract_channel(image: &Array3<f64>, channel: usize) -> Array2<f64> {
 
 /// Helper function to convert NaN values to a fixed value for CSV export
 #[allow(dead_code)]
-fn corrupted_image_for_csv(image: &Array2<f64>) -> Array2<f64> {
-    let (height, width) = image.dim();
+fn corrupted_image_for_csv(_image: &Array2<f64>) -> Array2<f64> {
+    let (height, width) = _image.dim();
     let mut result = Array2::zeros((height, width));
 
     for i in 0..height {
         for j in 0..width {
-            if image[[i, j]].is_nan() {
+            if _image[[i, j]].is_nan() {
                 result[[i, j]] = -0.1; // Use -0.1 to represent missing values in CSV
             } else {
-                result[[i, j]] = image[[i, j]];
+                result[[i, j]] = _image[[i, j]];
             }
         }
     }
@@ -486,13 +485,13 @@ fn corrupted_image_for_csv(image: &Array2<f64>) -> Array2<f64> {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for 1D signals
 #[allow(dead_code)]
-fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
+fn calculate_snr(_clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
-    for i in 0..clean.len() {
-        signal_power += clean[i] * clean[i];
-        noise_power += (clean[i] - noisy[i]).powi(2);
+    for i in 0.._clean.len() {
+        signal_power += _clean[i] * _clean[i];
+        noise_power += (_clean[i] - noisy[i]).powi(2);
     }
 
     if noise_power < 1e-10 {
@@ -504,15 +503,15 @@ fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for 2D images
 #[allow(dead_code)]
-fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
-    let (height, width) = clean.dim();
+fn calculate_image_snr(_clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
+    let (height, width) = _clean.dim();
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
     for i in 0..height {
         for j in 0..width {
-            signal_power += clean[[i, j]] * clean[[i, j]];
-            noise_power += (clean[[i, j]] - noisy[[i, j]]).powi(2);
+            signal_power += _clean[[i, j]] * _clean[[i, j]];
+            noise_power += (_clean[[i, j]] - noisy[[i, j]]).powi(2);
         }
     }
 
@@ -525,16 +524,16 @@ fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for color images
 #[allow(dead_code)]
-fn calculate_color_snr(clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
-    let (height, width, channels) = clean.dim();
+fn calculate_color_snr(_clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
+    let (height, width, channels) = _clean.dim();
     let mut signal_power = 0.0;
     let mut noise_power = 0.0;
 
     for i in 0..height {
         for j in 0..width {
             for c in 0..channels {
-                signal_power += clean[[i, j, c]] * clean[[i, j, c]];
-                noise_power += (clean[[i, j, c]] - noisy[[i, j, c]]).powi(2);
+                signal_power += _clean[[i, j, c]] * _clean[[i, j, c]];
+                noise_power += (_clean[[i, j, c]] - noisy[[i, j, c]]).powi(2);
             }
         }
     }
@@ -548,15 +547,15 @@ fn calculate_color_snr(clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
 
 /// Calculates the Peak Signal-to-Noise Ratio (PSNR) in dB for images with missing data
 #[allow(dead_code)]
-fn calculate_inpaint_psnr(original: &Array2<f64>, inpainted: &Array2<f64>) -> f64 {
-    let (height, width) = original.dim();
+fn calculate_inpaint_psnr(_original: &Array2<f64>, inpainted: &Array2<f64>) -> f64 {
+    let (height, width) = _original.dim();
     let mut mse = 0.0;
     let mut count = 0;
 
     for i in 0..height {
         for j in 0..width {
             if !inpainted[[i, j]].is_nan() {
-                mse += (original[[i, j]] - inpainted[[i, j]]).powi(2);
+                mse += (_original[[i, j]] - inpainted[[i, j]]).powi(2);
                 count += 1;
             }
         }
@@ -605,9 +604,9 @@ fn save_signal_to_csv(
 
 /// Appends a signal column to an existing CSV file
 #[allow(dead_code)]
-fn append_signal_to_csv(filename: &str, column_name: &str, signal: &Array1<f64>) {
+fn append_signal_to_csv(_filename: &str, column_name: &str, signal: &Array1<f64>) {
     // Read existing file
-    let contents = std::fs::read_to_string(filename).expect("Failed to read file");
+    let contents = std::fs::read_to_string(_filename).expect("Failed to read file");
     let mut lines: Vec<String> = contents.lines().map(|s| s.to_string()).collect();
 
     // Update header
@@ -622,7 +621,7 @@ fn append_signal_to_csv(filename: &str, column_name: &str, signal: &Array1<f64>)
     }
 
     // Write back to file
-    let mut file = File::create(filename).expect("Failed to create file");
+    let mut file = File::create(_filename).expect("Failed to create file");
     for line in lines {
         writeln!(file, "{}", line).expect("Failed to write data");
     }
@@ -630,8 +629,8 @@ fn append_signal_to_csv(filename: &str, column_name: &str, signal: &Array1<f64>)
 
 /// Saves a 2D image to a CSV file for visualization
 #[allow(dead_code)]
-fn save_image_to_csv(filename: &str, image: &Array2<f64>) {
-    let mut file = File::create(filename).expect("Failed to create file");
+fn save_image_to_csv(_filename: &str, image: &Array2<f64>) {
+    let mut file = File::create(_filename).expect("Failed to create file");
 
     let (height, width) = image.dim();
 

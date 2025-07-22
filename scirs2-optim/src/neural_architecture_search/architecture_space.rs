@@ -619,8 +619,8 @@ pub struct ArchitectureValidator {
 
 impl ArchitectureValidator {
     /// Create new validator with search space
-    pub fn new(search_space: SearchSpace) -> Self {
-        Self { search_space }
+    pub fn new(_search_space: SearchSpace) -> Self {
+        Self { _search_space }
     }
 
     /// Validate an architecture
@@ -730,8 +730,7 @@ impl ArchitectureValidator {
         component: &OptimizerComponent<T>,
         param_spec: &ComponentHyperparameters,
         component_index: usize,
-        errors: &mut Vec<ValidationError>,
-        _warnings: &mut Vec<ValidationWarning>,
+        errors: &mut Vec<ValidationError>, _warnings: &mut Vec<ValidationWarning>,
     ) {
         for (param_name, param_value) in &component.hyperparameters {
             let value = param_value.to_f64().unwrap_or(0.0);
@@ -787,8 +786,7 @@ impl ArchitectureValidator {
     fn validate_connections<T: Float>(
         &self,
         architecture: &OptimizerArchitecture<T>,
-        errors: &mut Vec<ValidationError>,
-        _warnings: &mut Vec<ValidationWarning>,
+        errors: &mut Vec<ValidationError>, _warnings: &mut Vec<ValidationWarning>,
     ) {
         for connection in &architecture.connections {
             if connection.from >= architecture.components.len() {

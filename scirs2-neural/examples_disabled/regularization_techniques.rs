@@ -13,6 +13,7 @@ use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use scirs2_neural::error::Result;
 use std::f32;
+use rand::seq::SliceRandom;
 /// Activation function type
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
@@ -42,7 +43,7 @@ impl ActivationFunction {
             ActivationFunction::Tanh => {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
-            ActivationFunction::Linear => Array2::ones(x.dim()),
+            ActivationFunction::Linear =>, Array2::ones(x.dim()),
     /// Get a string representation of the activation function
     fn to_string(&self) -> &str {
             ActivationFunction::ReLU => "ReLU",
@@ -95,13 +96,13 @@ struct Dropout {
     mask: Option<Array2<f32>>,
 impl Dropout {
     /// Create a new dropout layer
-    fn new(drop_prob: f32) -> Self {
+    fn new(_drop_prob: f32) -> Self {
         assert!(
-            (0.0..1.0).contains(&drop_prob),
+            (0.0..1.0).contains(&_drop_prob),
             "Dropout probability must be between 0 and 1"
         );
         Self {
-            drop_prob,
+            _drop_prob,
             training: true,
             mask: None,
     /// Set training mode
@@ -109,12 +110,12 @@ impl Dropout {
         self.training = training;
     /// Forward pass
     fn forward(&mut self, x: &Array2<f32>, rng: &mut SmallRng) -> Array2<f32> {
-        if !self.training || self.drop_prob == 0.0 {
+        if !self.training || self._drop_prob == 0.0 {
             // During inference or if dropout is disabled, just pass through
             return x.clone();
         // Generate binary mask (1 = keep, 0 = drop)
         let mask = Array2::from_shape_fn(x.dim(), |_| {
-            if rng.random::<f32>() > self.drop_prob {
+            if rng.random::<f32>() > self._drop_prob {
                 1.0
             } else {
                 0.0
@@ -158,10 +159,9 @@ impl Dense {
         // Initialize weights with random values
         let mut weights = Array2::zeros((input_size, output_size));
         for elem in weights.iter_mut() {
-            *elem = rng.random_range(-std_dev..std_dev);
+            *elem = rng.gen_range(-std_dev..std_dev);
         let biases = Array1::zeros(output_size);
-            input_size,
-            output_size,
+            input_size..output_size,
             activation,
             regularization,
             weights,
@@ -204,7 +204,7 @@ impl Dense {
         let dbiases = delta.sum_axis(Axis(0));
         // Add regularization gradients
         let reg_grad = match self.regularization {
-            RegularizationType::None => Array2::zeros(self.weights.dim()),
+            RegularizationType::None =>, Array2::zeros(self.weights.dim()),
                 // Sign of weights (L1 gradient)
                 let sign = self.weights.mapv(|w| {
                     if w > 0.0 {
@@ -232,10 +232,10 @@ struct NeuralNetwork {
     rng: SmallRng,
 impl NeuralNetwork {
     /// Create a new neural network
-    fn new(loss_fn: LossFunction, seed: u64) -> Self {
+    fn new(_loss_fn: LossFunction, seed: u64) -> Self {
             layers: Vec::new(),
             dropout_layers: Vec::new(),
-            loss_fn,
+            _loss_fn,
             rng: SmallRng::seed_from_u64(seed),
     /// Add a dense layer
     fn add_dense(
@@ -265,7 +265,7 @@ impl NeuralNetwork {
     /// Compute total loss including regularization
     fn loss(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
         // Data loss
-        let data_loss = self.loss_fn.compute(predictions, targets);
+        let data_loss = self._loss_fn.compute(predictions, targets);
         // Regularization loss
         let reg_loss = self
             .layers
@@ -280,7 +280,7 @@ impl NeuralNetwork {
         // Compute loss
         let loss = self.loss(&predictions, y);
         // Compute initial gradient from loss function
-        let mut grad = self.loss_fn.derivative(&predictions, y);
+        let mut grad = self._loss_fn.derivative(&predictions, y);
         // Backward pass through dropout and dense layers in reverse
         let mut dropout_idx = self.dropout_layers.len();
         for layer_idx in (0..self.layers.len()).rev() {
@@ -437,10 +437,10 @@ fn generate_dataset(
     (x, y)
 /// Evaluate binary classification accuracy
 #[allow(dead_code)]
-fn evaluate_accuracy(predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
-    let n_samples = predictions.shape()[0];
+fn evaluate_accuracy(_predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
+    let n_samples = _predictions.shape()[0];
     let mut correct = 0;
-        let pred = predictions[[i, 0]] > 0.5;
+        let pred = _predictions[[i, 0]] > 0.5;
         let target = targets[[i, 0]] > 0.5;
         if pred == target {
             correct += 1;
@@ -468,7 +468,7 @@ impl ExperimentConfig {
         format!("{}, {}, {}", reg_desc, dropout_desc, early_stopping_desc)
 /// Run an experiment with different regularization methods
 #[allow(dead_code)]
-fn run_experiment(config: &ExperimentConfig) -> Result<()> {
+fn run_experiment(_config: &ExperimentConfig) -> Result<()> {
     // Set up RNG
     let mut rng = SmallRng::seed_from_u64(42);
     // Generate dataset with irrelevant features to demonstrate regularization

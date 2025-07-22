@@ -61,8 +61,8 @@
 //! use std::fs::File;
 //! use std::io::Write;
 //! use tempfile::NamedTempFile;
-//! use scirs2_graph::base::Graph;
-//! use scirs2_graph::io::json::{read_json_format, write_json_format};
+//! use scirs2__graph::base::Graph;
+//! use scirs2__graph::io::json::{read_json_format, write_json_format};
 //!
 //! // Create a temporary file with JSON data
 //! let mut temp_file = NamedTempFile::new().unwrap();
@@ -158,15 +158,15 @@ fn default_directed() -> bool {
 /// - Graph metadata and directedness specification
 /// - Flexible attribute storage for future extensions
 #[allow(dead_code)]
-pub fn read_json_format<N, E, P>(path: P, weighted: bool) -> Result<Graph<N, E>>
+pub fn read_json_format<N, E, P>(_path: P, weighted: bool) -> Result<Graph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(path)?;
+    let file = File::open(_path)?;
     let reader = BufReader::new(file);
-    let json_graph: JsonGraph = serde_json::from_reader(reader)
+    let json_graph: JsonGraph = serde, _json::from_reader(reader)
         .map_err(|e| GraphError::Other(format!("Failed to parse JSON: {e}")))?;
 
     // Verify this is an undirected graph
@@ -233,15 +233,15 @@ where
 /// * `Ok(DiGraph)` - The directed graph read from the file
 /// * `Err(GraphError)` - If there was an error reading or parsing the file
 #[allow(dead_code)]
-pub fn read_json_format_digraph<N, E, P>(path: P, weighted: bool) -> Result<DiGraph<N, E>>
+pub fn read_json_format_digraph<N, E, P>(_path: P, weighted: bool) -> Result<DiGraph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
-    let file = File::open(path)?;
+    let file = File::open(_path)?;
     let reader = BufReader::new(file);
-    let json_graph: JsonGraph = serde_json::from_reader(reader)
+    let json_graph: JsonGraph = serde, _json::from_reader(reader)
         .map_err(|e| GraphError::Other(format!("Failed to parse JSON: {e}")))?;
 
     let mut graph = DiGraph::new();

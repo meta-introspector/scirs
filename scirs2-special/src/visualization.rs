@@ -87,12 +87,12 @@ pub struct MultiPlot {
 }
 
 impl MultiPlot {
-    pub fn new(config: PlotConfig) -> Self {
+    pub fn new(_config: PlotConfig) -> Self {
         Self {
             functions: Vec::new(),
             labels: Vec::new(),
             x_range: (-10.0, 10.0),
-            config,
+            _config,
         }
     }
 
@@ -163,7 +163,7 @@ pub mod gamma_plots {
     use crate::{digamma, gamma, gammaln};
 
     /// Plot gamma function and its logarithm
-    pub fn plot_gamma_family<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
+    pub fn plot_gamma_family<P: AsRef<Path>>(_path: P) -> Result<(), Box<dyn Error>> {
         let config = PlotConfig {
             title: "Gamma Function Family".to_string(),
             x_label: "x".to_string(),
@@ -176,15 +176,15 @@ pub mod gamma_plots {
             .add_function(Box::new(|x| gammaln(x)), "ln Γ(x)")
             .add_function(Box::new(|x| digamma(x)), "ψ(x)")
             .set_x_range(0.1, 5.0)
-            .plot(path)
+            .plot(_path)
     }
 
     /// Create a heatmap of gamma function in complex plane
     #[cfg(feature = "plotting")]
-    pub fn plot_gamma_complex<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
+    pub fn plot_gamma_complex<P: AsRef<Path>>(_path: P) -> Result<(), Box<dyn Error>> {
         use crate::gamma::complex::gamma_complex;
 
-        let root = BitMapBackend::new(path.as_ref(), (800, 600)).into_drawing_area();
+        let root = BitMapBackend::new(_path.as_ref(), (800, 600)).into_drawing_area();
         root.fill(&WHITE)?;
 
         let mut chart = ChartBuilder::on(&root)
@@ -232,7 +232,7 @@ pub mod bessel_plots {
     use crate::bessel::{j0, j1, jn};
 
     /// Plot Bessel functions of the first kind
-    pub fn plot_bessel_j<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
+    pub fn plot_bessel_j<P: AsRef<Path>>(_path: P) -> Result<(), Box<dyn Error>> {
         let config = PlotConfig {
             title: "Bessel Functions of the First Kind".to_string(),
             ..Default::default()
@@ -244,16 +244,16 @@ pub mod bessel_plots {
             .add_function(Box::new(|x| jn(2, x)), "J₂(x)")
             .add_function(Box::new(|x| jn(3, x)), "J₃(x)")
             .set_x_range(0.0, 20.0)
-            .plot(path)
+            .plot(_path)
     }
 
     /// Plot zeros of Bessel functions
-    pub fn plot_bessel_zeros<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
-        use crate::bessel_zeros::j0_zeros;
+    pub fn plot_bessel_zeros<P: AsRef<Path>>(_path: P) -> Result<(), Box<dyn Error>> {
+        use crate::bessel__zeros::j0_zeros;
 
         #[cfg(feature = "plotting")]
         {
-            let root = BitMapBackend::new(path.as_ref(), (800, 600)).into_drawing_area();
+            let root = BitMapBackend::new(_path.as_ref(), (800, 600)).into_drawing_area();
             root.fill(&WHITE)?;
 
             let mut chart = ChartBuilder::on(&root)
@@ -309,7 +309,7 @@ pub mod error_function_plots {
     use crate::{erf, erfc, erfinv};
 
     /// Plot error functions and their inverses
-    pub fn plot_error_functions<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
+    pub fn plot_error_functions<P: AsRef<Path>>(_path: P) -> Result<(), Box<dyn Error>> {
         let config = PlotConfig {
             title: "Error Functions".to_string(),
             ..Default::default()
@@ -323,7 +323,7 @@ pub mod error_function_plots {
                 "erfinv(x)",
             )
             .set_x_range(-3.0, 3.0)
-            .plot(path)
+            .plot(_path)
     }
 }
 
@@ -333,19 +333,19 @@ pub mod polynomial_plots {
     use crate::legendre;
 
     /// Plot Legendre polynomials
-    pub fn plot_legendre<P: AsRef<Path>>(path: P, max_n: usize) -> Result<(), Box<dyn Error>> {
+    pub fn plot_legendre<P: AsRef<Path>>(_path: P, max_n: usize) -> Result<(), Box<dyn Error>> {
         let config = PlotConfig {
-            title: format!("Legendre Polynomials P_n(x) for n = 0..{}", max_n),
+            title: format!("Legendre Polynomials P_n(x) for _n = 0..{}", max_n),
             ..Default::default()
         };
 
         let mut plot = MultiPlot::new(config).set_x_range(-1.0, 1.0);
 
-        for n in 0..=max_n {
-            plot = plot.add_function(Box::new(move |x| legendre(n, x)), &format!("P_{}", n));
+        for _n in 0..=max_n {
+            plot = plot.add_function(Box::new(move |x| legendre(_n, x)), &format!("P_{}", _n));
         }
 
-        plot.plot(path)
+        plot.plot(_path)
     }
 
     /// Create an animated visualization of orthogonal polynomials
@@ -362,12 +362,12 @@ pub mod surface_plots {
 
     /// Plot a 3D surface for functions of two variables
     #[cfg(feature = "plotting")]
-    pub fn plot_3d_surface<P, F>(path: P, f: F, title: &str) -> Result<(), Box<dyn Error>>
+    pub fn plot_3d_surface<P, F>(_path: P, f: F, title: &str) -> Result<(), Box<dyn Error>>
     where
         P: AsRef<Path>,
         F: Fn(f64, f64) -> f64,
     {
-        let root = BitMapBackend::new(path.as_ref(), (800, 600)).into_drawing_area();
+        let root = BitMapBackend::new(_path.as_ref(), (800, 600)).into_drawing_area();
         root.fill(&WHITE)?;
 
         let mut chart = ChartBuilder::on(&root)
@@ -664,11 +664,11 @@ pub mod interactive {
         }}
         
         function getSpecialFunction(functionName) {{
-            const name = functionName.toLowerCase();
-            if (name.includes('gamma')) return gamma;
-            if (name.includes('bessel') && name.includes('j0')) return besselJ0;
-            if (name.includes('error') || name.includes('erf')) return erf;
-            if (name.includes('airy')) return airyAi;
+            const _name = functionName.toLowerCase();
+            if (_name.includes('gamma')) return gamma;
+            if (_name.includes('bessel') && _name.includes('j0')) return besselJ0;
+            if (_name.includes('error') || _name.includes('erf')) return erf;
+            if (_name.includes('airy')) return airyAi;
             // Default fallback - could add more functions as needed
             return Math.sin;
         }}
@@ -679,7 +679,7 @@ pub mod interactive {
                 y: {},
                 type: 'scatter',
                 mode: 'lines',
-                name: '{}',
+                _name: '{}',
                 line: {{
                     color: '#1f77b4',
                     width: 2
@@ -761,7 +761,7 @@ pub mod interactive {
             for (let i = 0; i <= nPoints; i++) {{
                 const xVal = xMin + i * step;
                 x.push(xVal);
-                // Use appropriate special function based on function name
+                // Use appropriate special function based on function _name
                 const func = getSpecialFunction('{}');
                 const yVal = func(xVal);
                 y.push(isFinite(yVal) ? yVal : NaN);
@@ -1097,7 +1097,7 @@ pub mod export {
                         .draw()
                         .map_err(|e| format!("Failed to draw mesh: {}", e))?;
 
-                    // Generate data points
+                    // Generate data _points
                     let data: Vec<(f64, f64)> = (0..=n_points)
                         .map(|i| {
                             let x =
@@ -1148,7 +1148,7 @@ pub mod export {
                         .draw()
                         .map_err(|e| format!("Failed to draw mesh: {}", e))?;
 
-                    // Generate data points
+                    // Generate data _points
                     let data: Vec<(f64, f64)> = (0..=n_points)
                         .map(|i| {
                             let x =

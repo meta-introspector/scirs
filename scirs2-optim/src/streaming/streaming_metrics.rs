@@ -855,23 +855,23 @@ impl<A: Float + Default + Clone + std::fmt::Debug> StreamingMetricsCollector<A> 
         Ok(())
     }
 
-    fn update_performance_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<()> {
-        // Update performance metrics based on sample
+    fn update_performance_metrics(&mut self_sample: &MetricsSample<A>) -> Result<()> {
+        // Update performance metrics based on _sample
         Ok(())
     }
 
-    fn update_resource_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<()> {
-        // Update resource metrics based on sample
+    fn update_resource_metrics(&mut self_sample: &MetricsSample<A>) -> Result<()> {
+        // Update resource metrics based on _sample
         Ok(())
     }
 
-    fn update_quality_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<()> {
-        // Update quality metrics based on sample
+    fn update_quality_metrics(&mut self_sample: &MetricsSample<A>) -> Result<()> {
+        // Update quality metrics based on _sample
         Ok(())
     }
 
-    fn update_business_metrics(&mut self, _sample: &MetricsSample<A>) -> Result<()> {
-        // Update business metrics based on sample
+    fn update_business_metrics(&mut self_sample: &MetricsSample<A>) -> Result<()> {
+        // Update business metrics based on _sample
         Ok(())
     }
 }
@@ -1155,12 +1155,9 @@ impl<A: Float> HistoricalMetrics<A> {
     }
 
     fn get_aggregated(
-        &self,
-        _period: AggregationPeriod,
-        _start_time: SystemTime,
-        _end_time: SystemTime,
+        &self_period: AggregationPeriod_start, _time: SystemTime_end_time: SystemTime,
     ) -> Result<Vec<AggregatedMetrics<A>>> {
-        // Implementation would aggregate data for the specified period
+        // Implementation would aggregate data for the specified _period
         Ok(Vec::new())
     }
 }
@@ -1175,7 +1172,7 @@ impl<A: Float> AlertSystem<A> {
         }
     }
 
-    fn evaluate_rules(&mut self, _sample: &MetricsSample<A>) -> Result<()> {
+    fn evaluate_rules(&mut self_sample: &MetricsSample<A>) -> Result<()> {
         // Implementation would evaluate all alert rules
         Ok(())
     }

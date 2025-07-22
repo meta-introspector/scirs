@@ -197,8 +197,8 @@ pub fn j0_advancedfast(x: f64) -> SpecialResult<f64> {
 
 /// Optimized array processing with adaptive optimization
 #[allow(dead_code)]
-pub fn gamma_array_advancedfast(input: &ArrayView1<f64>, config: &PerformanceConfig) -> SpecialResult<Array1<f64>> {
-    let len = input.len();
+pub fn gamma_array_advancedfast(_input: &ArrayView1<f64>, config: &PerformanceConfig) -> SpecialResult<Array1<f64>> {
+    let len = _input.len();
     let mut output = Array1::zeros(len);
     
     // Adaptive processing based on array size
@@ -208,7 +208,7 @@ pub fn gamma_array_advancedfast(input: &ArrayView1<f64>, config: &PerformanceCon
         {
             use rayon::prelude::*;
             
-            input.as_slice().unwrap()
+            _input.as_slice().unwrap()
                 .par_chunks(config.chunk_size)
                 .zip(output.as_slice_mut().unwrap().par_chunks_mut(config.chunk_size))
                 .try_for_each(|(input_chunk, output_chunk)| -> SpecialResult<()> {
@@ -231,13 +231,13 @@ pub fn gamma_array_advancedfast(input: &ArrayView1<f64>, config: &PerformanceCon
             for i in 0..simd_chunks {
                 let start = i * 4;
                 for j in 0..4 {
-                    output[start + j] = gamma_advancedfast(input[start + j])?;
+                    output[start + j] = gamma_advancedfast(_input[start + j])?;
                 }
             }
             
             // Handle remaining elements
             for i in (simd_chunks * 4)..len {
-                output[i] = gamma_advancedfast(input[i])?;
+                output[i] = gamma_advancedfast(_input[i])?;
             }
             
             return Ok(output);
@@ -245,7 +245,7 @@ pub fn gamma_array_advancedfast(input: &ArrayView1<f64>, config: &PerformanceCon
     }
     
     // Fallback to scalar processing
-    for (i, &x) in input.iter().enumerate() {
+    for (i, &x) in _input.iter().enumerate() {
         output[i] = gamma_advancedfast(x)?;
     }
     
@@ -291,7 +291,7 @@ where
     let memory_bandwidth = (input_size * 16) as f64 * 1e9 / (1024.0 * 1024.0 * 1024.0) / (time_ns as f64 / 1e9);
     
     PerformanceMetrics {
-        function_name: function_name.to_string(),
+        _function_name: function_name.to_string(),
         array_size: input_size,
         time_ns,
         throughput_ops_per_sec: ops_per_sec,

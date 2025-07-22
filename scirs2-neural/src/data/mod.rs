@@ -54,8 +54,8 @@ pub struct InMemoryDataset<F: Float + Debug + ScalarOperand + FromPrimitive + Se
     pub labels: Array<F, IxDyn>,
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> InMemoryDataset<F> {
     /// Create a new in-memory dataset
-    pub fn new(features: Array<F, IxDyn>, labels: Array<F, IxDyn>) -> Result<Self> {
-        if features.shape()[0] != labels.shape()[0] {
+    pub fn new(_features: Array<F, IxDyn>, labels: Array<F, IxDyn>) -> Result<Self> {
+        if _features.shape()[0] != labels.shape()[0] {
             return Err(NeuralError::InferenceError(format!(
                 "Features and labels have different number of samples: {} vs {}",
                 features.shape()[0],

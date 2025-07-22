@@ -78,9 +78,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
         activation_name: Option<&str>,
         rng: &mut R,
     ) -> Result<Self> {
-        // Create activation function from name
-        let activation = if let Some(name) = activation_name {
-            match name.to_lowercase().as_str() {
+        // Create activation function from _name
+        let activation = if let Some(_name) = activation_name {
+            match _name.to_lowercase().as_str() {
                 "relu" => Some(Box::new(crate::activations_minimal::ReLU::new())
                     as Box<dyn Activation<F> + Send + Sync>),
                 "sigmoid" => Some(Box::new(crate::activations_minimal::Sigmoid::new())
@@ -222,7 +222,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
         let cached_input = {
             let cache = self.input.read().unwrap();
             cache.clone().ok_or_else(|| {
-                NeuralError::InferenceError("No cached input for backward pass".to_string())
+                NeuralError::InferenceError("No cached _input for backward pass".to_string())
             })?
         };
 
@@ -230,7 +230,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             let cache = self.output_pre_activation.read().unwrap();
             cache.clone().ok_or_else(|| {
                 NeuralError::InferenceError(
-                    "No cached pre-activation output for backward pass".to_string(),
+                    "No cached pre-activation _output for backward pass".to_string(),
                 )
             })?
         };
@@ -257,7 +257,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             cached_input
                 .into_shape_with_order(IxDyn(&[1, self.input_dim]))
                 .map_err(|e| {
-                    NeuralError::InferenceError(format!("Failed to reshape cached input: {e}"))
+                    NeuralError::InferenceError(format!("Failed to reshape cached _input: {e}"))
                 })?
         } else {
             cached_input
@@ -265,7 +265,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 
         let batch_size = grad_2d.shape()[0];
 
-        // Compute weight gradients: dW = input.T @ grad_output
+        // Compute weight gradients: dW = _input.T @ grad_output
         let mut dweights = Array::zeros(IxDyn(&[self.input_dim, self.output_dim]));
         for i in 0..self.input_dim {
             for j in 0..self.output_dim {
@@ -297,7 +297,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             *dbiases_guard = dbiases;
         }
 
-        // Compute gradient w.r.t. input: grad_input = grad_output @ weights.T
+        // Compute gradient w.r.t. _input: grad_input = grad_output @ weights.T
         let mut grad_input = Array::zeros(IxDyn(&[batch_size, self.input_dim]));
         for b in 0..batch_size {
             for i in 0..self.input_dim {
@@ -354,7 +354,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 
     fn layer_description(&self) -> String {
         format!(
-            "type:Dense, input_dim:{}, output_dim:{}, params:{}",
+            "type:Dense, input, _dim:{}, output, _dim:{}, params:{}",
             self.input_dim,
             self.output_dim,
             self.parameter_count()

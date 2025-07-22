@@ -4,7 +4,7 @@
 //! that are more reliable and easier to use than the general n-dimensional versions.
 
 use ndarray::{s, Array2};
-use scirs2_ndimage::morphology::simple_morph::{
+use scirs2__ndimage::morphology::simple_morph::{
     binary_closing_2d, binary_dilation_2d, binary_erosion_2d, binary_opening_2d, black_tophat_2d,
     grey_dilation_2d, grey_erosion_2d, morphological_gradient_2d, white_tophat_2d,
 };
@@ -107,10 +107,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to print a 2D binary array
 #[allow(dead_code)]
-fn print_binary_2d(arr: &Array2<bool>) {
-    for i in 0..arr.shape()[0] {
-        for j in 0..arr.shape()[1] {
-            if arr[[i, j]] {
+fn print_binary_2d(_arr: &Array2<bool>) {
+    for i in 0.._arr.shape()[0] {
+        for j in 0.._arr.shape()[1] {
+            if _arr[[i, j]] {
                 print!("█ ");
             } else {
                 print!("· ");
@@ -122,10 +122,10 @@ fn print_binary_2d(arr: &Array2<bool>) {
 
 // Helper function to print a 2D grayscale array
 #[allow(dead_code)]
-fn print_grayscale_2d(arr: &Array2<f64>) {
-    for i in 0..arr.shape()[0] {
-        for j in 0..arr.shape()[1] {
-            let val = arr[[i, j]];
+fn print_grayscale_2d(_arr: &Array2<f64>) {
+    for i in 0.._arr.shape()[0] {
+        for j in 0.._arr.shape()[1] {
+            let val = _arr[[i, j]];
             if val <= 0.0 {
                 print!("· ");
             } else if val < 0.5 {

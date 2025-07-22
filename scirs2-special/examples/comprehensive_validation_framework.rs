@@ -14,8 +14,8 @@
 //! Run with: cargo run --example comprehensive_validation_framework
 
 use ndarray::Array1;
-use num_complex::Complex64;
-use scirs2_special::*;
+use num__complex::Complex64;
+use scirs2__special::*;
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -1061,7 +1061,7 @@ fn stirling_approximation(z: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn compute_bessel_orthogonality_integral(nu: i32, alpha1: f64, alpha2: f64) -> f64 {
+fn compute_bessel_orthogonality_integral(_nu: i32, alpha1: f64, alpha2: f64) -> f64 {
     // Simplified numerical integration
     let n_points = 1000;
     let dx = 1.0 / n_points as f64;
@@ -1069,15 +1069,13 @@ fn compute_bessel_orthogonality_integral(nu: i32, alpha1: f64, alpha2: f64) -> f
 
     for i in 1..n_points {
         let x = i as f64 * dx;
-        let j1_val = match nu {
+        let j1_val = match _nu {
             0 => j0(alpha1 * x),
-            1 => j1(alpha1 * x),
-            _ => jv(nu as f64, alpha1 * x),
+            1 => j1(alpha1 * x, _ => jv(_nu as f64, alpha1 * x),
         };
-        let j2_val = match nu {
+        let j2_val = match _nu {
             0 => j0(alpha2 * x),
-            1 => j1(alpha2 * x),
-            _ => jv(nu as f64, alpha2 * x),
+            1 => j1(alpha2 * x, _ => jv(_nu as f64, alpha2 * x),
         };
         sum += x * j1_val * j2_val * dx;
     }
@@ -1146,16 +1144,16 @@ fn factorial(n: usize) -> usize {
 // Placeholder implementations for missing functions
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn gamma_f32_simd(data: &[f32]) -> Vec<f32> {
+fn gamma_f32_simd(_data: &[f32]) -> Vec<f32> {
     // This would use actual SIMD implementation
-    data.iter().map(|&x| gamma(x as f64) as f32).collect()
+    _data.iter().map(|&x| gamma(x as f64) as f32).collect()
 }
 
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-fn gamma_f64_parallel(data: &[f64]) -> Vec<f64> {
+fn gamma_f64_parallel(_data: &[f64]) -> Vec<f64> {
     // This would use actual parallel implementation
-    data.iter().map(|&x| gamma(x)).collect()
+    _data.iter().map(|&x| gamma(x)).collect()
 }
 
 #[allow(dead_code)]

@@ -4,7 +4,7 @@
 //! maintaining running statistics and transforming data incrementally.
 
 use ndarray::{Array1, Array2};
-use scirs2_linalg::eigh;
+use scirs2__linalg::eigh;
 use std::collections::VecDeque;
 
 use crate::error::{Result, TransformError};
@@ -42,10 +42,10 @@ pub struct StreamingStandardScaler {
 
 impl StreamingStandardScaler {
     /// Create a new streaming standard scaler
-    pub fn new(n_features: usize, with_mean: bool, with_std: bool) -> Self {
+    pub fn new(_n_features: usize, with_mean: bool, with_std: bool) -> Self {
         StreamingStandardScaler {
-            mean: Array1::zeros(n_features),
-            variance: Array1::zeros(n_features),
+            _mean: Array1::zeros(_n_features),
+            variance: Array1::zeros(_n_features),
             n_samples: 0,
             with_mean,
             with_std,
@@ -156,10 +156,10 @@ pub struct StreamingMinMaxScaler {
 
 impl StreamingMinMaxScaler {
     /// Create a new streaming min-max scaler
-    pub fn new(n_features: usize, feature_range: (f64, f64)) -> Self {
+    pub fn new(_n_features: usize, feature_range: (f64, f64)) -> Self {
         StreamingMinMaxScaler {
-            min: Array1::from_elem(n_features, f64::INFINITY),
-            max: Array1::from_elem(n_features, f64::NEG_INFINITY),
+            min: Array1::from_elem(_n_features, f64::INFINITY),
+            max: Array1::from_elem(_n_features, f64::NEG_INFINITY),
             feature_range,
             n_samples: 0,
         }
@@ -301,8 +301,7 @@ impl P2State {
                 1 => self.p / 2.0,
                 2 => self.p,
                 3 => (1.0 + self.p) / 2.0,
-                4 => 1.0,
-                _ => unreachable!(),
+                4 => 1.0_ => unreachable!(),
             };
         }
 
@@ -362,7 +361,7 @@ impl P2State {
 
 impl StreamingQuantileTracker {
     /// Create a new streaming quantile tracker
-    pub fn new(n_features: usize, quantiles: Vec<f64>) -> Result<Self> {
+    pub fn new(_n_features: usize, quantiles: Vec<f64>) -> Result<Self> {
         // Validate quantiles
         for &q in &quantiles {
             if !(0.0..=1.0).contains(&q) {
@@ -435,9 +434,9 @@ pub struct WindowedStreamingTransformer<T: StreamingTransformer> {
 
 impl<T: StreamingTransformer> WindowedStreamingTransformer<T> {
     /// Create a new windowed streaming transformer
-    pub fn new(transformer: T, window_size: usize) -> Self {
+    pub fn new(_transformer: T, window_size: usize) -> Self {
         WindowedStreamingTransformer {
-            transformer,
+            _transformer,
             window: VecDeque::with_capacity(window_size),
             window_size,
             current_size: 0,
@@ -515,7 +514,7 @@ impl StreamingPCA {
 
         Ok(StreamingPCA {
             mean: Array1::zeros(n_features),
-            components: None,
+            _components: None,
             explained_variance: None,
             n_components,
             n_features,
@@ -674,12 +673,12 @@ pub enum OutlierMethod {
 
 impl StreamingOutlierDetector {
     /// Create a new streaming outlier detector
-    pub fn new(n_features: usize, threshold: f64, method: OutlierMethod) -> Self {
+    pub fn new(_n_features: usize, threshold: f64, method: OutlierMethod) -> Self {
         StreamingOutlierDetector {
-            means: Array1::zeros(n_features),
-            variances: Array1::zeros(n_features),
+            means: Array1::zeros(_n_features),
+            variances: Array1::zeros(_n_features),
             n_samples: 0,
-            n_features,
+            _n_features,
             threshold,
             method,
         }
@@ -898,13 +897,13 @@ pub struct StreamingFeatureSelector {
 
 impl StreamingFeatureSelector {
     /// Create a new streaming feature selector
-    pub fn new(n_features: usize, variance_threshold: f64, correlation_threshold: f64) -> Self {
+    pub fn new(_n_features: usize, variance_threshold: f64, correlation_threshold: f64) -> Self {
         StreamingFeatureSelector {
-            variances: Array1::zeros(n_features),
-            means: Array1::zeros(n_features),
-            correlations: Array2::zeros((n_features, n_features)),
+            variances: Array1::zeros(_n_features),
+            means: Array1::zeros(_n_features),
+            correlations: Array2::zeros((_n_features, _n_features)),
             n_samples: 0,
-            n_features,
+            _n_features,
             variance_threshold,
             correlation_threshold,
             selected_features: None,

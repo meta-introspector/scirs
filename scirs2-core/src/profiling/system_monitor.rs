@@ -237,12 +237,12 @@ impl SystemMonitor {
     ) {
         while *running.lock().unwrap() {
             if let Ok(metrics) = Self::collect_system_metrics(&config) {
-                let mut history = metrics_history.lock().unwrap();
-                history.push_back(metrics);
+                let mut _history = metrics_history.lock().unwrap();
+                _history.push_back(metrics);
 
                 // Keep only the last max_samples
-                while history.len() > config.max_samples {
-                    history.pop_front();
+                while _history.len() > config.max_samples {
+                    _history.pop_front();
                 }
             }
 

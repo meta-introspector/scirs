@@ -76,9 +76,9 @@ pub struct FunctionalDataInterpolator<T: Float + ScalarOperand> {
 
 impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpolator<T> {
     /// Create a new functional data interpolator
-    pub fn new(config: FDAConfig) -> Self {
+    pub fn new(_config: FDAConfig) -> Self {
         Self {
-            config,
+            _config,
             basis_coefficients: None,
             domain: (T::zero(), T::one()),
             basis_functions: Vec::new(),
@@ -175,8 +175,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
         match self.config.basis_type {
             BasisType::BSpline => self.generate_bspline_basis()?,
             BasisType::Fourier => self.generate_fourier_basis()?,
-            BasisType::Polynomial => self.generate_polynomial_basis()?,
-            _ => {
+            BasisType::Polynomial => self.generate_polynomial_basis()?_ => {
                 return Err(InterpolateError::ComputationError(
                     "Basis type not implemented".to_string(),
                 ))
@@ -386,12 +385,12 @@ pub struct MultiOutputInterpolator<T: Float + ScalarOperand> {
 
 impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutputInterpolator<T> {
     /// Create a new multi-output interpolator
-    pub fn new(input_dim: usize, output_dim: usize, _n_basis_per_dim: usize) -> Self {
+    pub fn new(_input_dim: usize, output_dim: usize, _n_basis_per_dim: usize) -> Self {
         Self {
-            input_dim,
+            _input_dim,
             output_dim,
             parameters: None,
-            basis_functions: (0..input_dim).map(|_| Vec::new()).collect(),
+            basis_functions: (0.._input_dim).map(|_| Vec::new()).collect(),
             correlation_matrix: None,
             fitted: false,
         }
@@ -491,7 +490,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
 
         // Generate polynomial basis functions
         for degree in 0..5 {
-            self.basis_functions[dim].push(Box::new(move |x: T| -> T {
+            self.basis_functions[_dim].push(Box::new(move |x: T| -> T {
                 let normalized = (x - min_val) / range;
                 normalized.powi(degree)
             }));
@@ -502,7 +501,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
             let center = min_val + range * T::from_f64(i as f64 / 2.0).unwrap();
             let width = range / T::from_f64(3.0).unwrap();
 
-            self.basis_functions[dim].push(Box::new(move |x: T| -> T {
+            self.basis_functions[_dim].push(Box::new(move |x: T| -> T {
                 let diff = (x - center) / width;
                 (-diff * diff).exp()
             }));
@@ -716,13 +715,13 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
     PiecewisePolynomialInterpolator<T>
 {
     /// Create a new piecewise polynomial interpolator
-    pub fn new(max_degree: usize, min_points_per_segment: usize, breakpoint_penalty: T) -> Self {
+    pub fn new(_max_degree: usize, min_points_per_segment: usize, breakpoint_penalty: T) -> Self {
         Self {
-            max_degree,
+            _max_degree,
             min_points_per_segment,
             breakpoint_penalty,
             breakpoints: None,
-            segment_coefficients: None,
+            _segment_coefficients: None,
             fitted: false,
         }
     }

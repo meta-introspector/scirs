@@ -4,7 +4,7 @@
 //! using ODE methods. It includes classic ecological and epidemiological models.
 
 use ndarray::{array, Array1, ArrayView1};
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 
 /// Exponential growth model: dN/dt = rN
 /// State vector: [N] (population size)

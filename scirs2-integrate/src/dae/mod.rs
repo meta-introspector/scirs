@@ -50,18 +50,18 @@ pub use self::solvers::{
 };
 
 // Re-export specialized method functions
-pub use self::methods::bdf_dae::{bdf_implicit_dae, bdf_semi_explicit_dae};
-pub use self::methods::index_reduction_bdf::{
+pub use self::methods::bdf__dae::{bdf_implicit_dae, bdf_semi_explicit_dae};
+pub use self::methods::index_reduction__bdf::{
     bdf_implicit_with_index_reduction, bdf_with_index_reduction,
 };
-pub use self::methods::krylov_dae::{krylov_bdf_implicit_dae, krylov_bdf_semi_explicit_dae};
+pub use self::methods::krylov__dae::{krylov_bdf_implicit_dae, krylov_bdf_semi_explicit_dae};
 
 // Re-export preconditioner functions
-pub use self::methods::block_precond::{
+pub use self::methods::block__precond::{
     create_block_ilu_preconditioner, create_block_jacobi_preconditioner,
 };
 
 // Re-export index reduction types
-pub use self::index_reduction::{
+pub use self::index__reduction::{
     DAEStructure, DummyDerivativeReducer, PantelidesReducer, ProjectionMethod,
 };

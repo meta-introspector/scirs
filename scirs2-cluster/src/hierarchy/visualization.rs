@@ -440,7 +440,7 @@ fn build_dendrogram_tree<F: Float + FromPrimitive + Debug>(
         );
     }
 
-    // Build internal nodes from linkage matrix
+    // Build internal nodes from linkage _matrix
     for (step, row) in linkage_matrix.outer_iter().enumerate() {
         let left_id = row[0].to_usize().unwrap();
         let right_id = row[1].to_usize().unwrap();
@@ -502,8 +502,7 @@ fn calculate_node_positions<F: Float + FromPrimitive>(
 fn calculate_positions_recursive<F: Float + FromPrimitive>(
     node: &TreeNode<F>,
     positions: &mut HashMap<usize, (F, F)>,
-    leaf_counter: &mut usize,
-    _n_samples: usize,
+    leaf_counter: &mut usize, _n_samples: usize,
     orientation: DendrogramOrientation,
 ) -> F {
     if node.is_leaf {
@@ -520,13 +519,13 @@ fn calculate_positions_recursive<F: Float + FromPrimitive>(
         x
     } else {
         let left_x = if let Some(ref left) = node.left {
-            calculate_positions_recursive(left, positions, leaf_counter, _n_samples, orientation)
+            calculate_positions_recursive(left, positions, leaf_counter_n_samples, orientation)
         } else {
             F::zero()
         };
 
         let right_x = if let Some(ref right) = node.right {
-            calculate_positions_recursive(right, positions, leaf_counter, _n_samples, orientation)
+            calculate_positions_recursive(right, positions, leaf_counter_n_samples, orientation)
         } else {
             F::zero()
         };
@@ -565,8 +564,7 @@ fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd>(
     node: &TreeNode<F>,
     positions: &HashMap<usize, (F, F)>,
     branches: &mut Vec<Branch<F>>,
-    threshold: F,
-    _config: &DendrogramConfig<F>,
+    threshold: F_config: &DendrogramConfig<F>,
 ) {
     if node.is_leaf {
         return;
@@ -597,7 +595,7 @@ fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd>(
             above_threshold,
         });
 
-        create_branches_recursive(left, positions, branches, threshold, _config);
+        create_branches_recursive(left, positions, branches, threshold_config);
     }
 
     if let Some(ref right) = node.right {
@@ -621,7 +619,7 @@ fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd>(
             above_threshold,
         });
 
-        create_branches_recursive(right, positions, branches, threshold, _config);
+        create_branches_recursive(right, positions, branches, threshold_config);
     }
 }
 
@@ -630,8 +628,7 @@ fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd>(
 fn create_leaves<F: Float>(
     positions: &HashMap<usize, (F, F)>,
     labels: Option<&[String]>,
-    n_samples: usize,
-    _orientation: DendrogramOrientation,
+    n_samples: usize, _orientation: DendrogramOrientation,
 ) -> Vec<Leaf> {
     let mut leaves = Vec::new();
 
@@ -674,14 +671,14 @@ fn assign_branch_colors<F: Float>(
 
 /// Create legend for the dendrogram
 #[allow(dead_code)]
-fn create_legend<F: Float>(config: &DendrogramConfig<F>, threshold: F) -> Vec<LegendEntry> {
+fn create_legend<F: Float>(_config: &DendrogramConfig<F>, threshold: F) -> Vec<LegendEntry> {
     vec![
         LegendEntry {
-            color: config.color_threshold.above_color.clone(),
+            color: _config.color_threshold.above_color.clone(),
             description: format!("Distance > {:.3}", threshold.to_f64().unwrap_or(0.0)),
         },
         LegendEntry {
-            color: config.color_threshold.below_color.clone(),
+            color: _config.color_threshold.below_color.clone(),
             description: format!("Distance ≤ {:.3}", threshold.to_f64().unwrap_or(0.0)),
         },
     ]
@@ -694,15 +691,15 @@ fn calculate_auto_threshold<F: Float + FromPrimitive + PartialOrd>(
     target_clusters: Option<usize>,
 ) -> Result<F> {
     let n_samples = linkage_matrix.shape()[0] + 1;
-    let clusters = target_clusters.unwrap_or(4).min(n_samples);
+    let _clusters = target_clusters.unwrap_or(4).min(n_samples);
 
-    if clusters <= 1 || clusters > n_samples {
+    if _clusters <= 1 || _clusters > n_samples {
         return Ok(F::zero());
     }
 
-    // Find the threshold that gives us the desired number of clusters
-    // This is the distance at the (n_samples - clusters)th merge
-    let merge_index = n_samples - clusters;
+    // Find the threshold that gives us the desired number of _clusters
+    // This is the distance at the (n_samples - _clusters)th merge
+    let merge_index = n_samples - _clusters;
 
     if merge_index < linkage_matrix.shape()[0] {
         Ok(linkage_matrix[[merge_index, 2]])
@@ -713,14 +710,14 @@ fn calculate_auto_threshold<F: Float + FromPrimitive + PartialOrd>(
 
 /// Calculate plot bounds
 #[allow(dead_code)]
-fn calculate_plot_bounds<F: Float>(branches: &[Branch<F>], leaves: &[Leaf]) -> (F, F, F, F) {
+fn calculate_plot_bounds<F: Float>(_branches: &[Branch<F>], leaves: &[Leaf]) -> (F, F, F, F) {
     let mut min_x = F::infinity();
     let mut max_x = F::neg_infinity();
     let mut min_y = F::infinity();
     let mut max_y = F::neg_infinity();
 
     // Check branch bounds
-    for branch in branches {
+    for branch in _branches {
         let points = [branch.start, branch.end];
         for (x, y) in points.iter() {
             if *x < min_x {
@@ -762,8 +759,8 @@ fn calculate_plot_bounds<F: Float>(branches: &[Branch<F>], leaves: &[Leaf]) -> (
 
 /// Get color palette for a given color scheme
 #[allow(dead_code)]
-pub fn get_color_palette(scheme: ColorScheme, n_colors: usize) -> Vec<String> {
-    match scheme {
+pub fn get_color_palette(_scheme: ColorScheme, n_colors: usize) -> Vec<String> {
+    match _scheme {
         ColorScheme::Default => get_default_colors(n_colors),
         ColorScheme::HighContrast => get_high_contrast_colors(n_colors),
         ColorScheme::Viridis => get_viridis_colors(n_colors),
@@ -774,7 +771,7 @@ pub fn get_color_palette(scheme: ColorScheme, n_colors: usize) -> Vec<String> {
 
 /// Default color palette
 #[allow(dead_code)]
-fn get_default_colors(n_colors: usize) -> Vec<String> {
+fn get_default_colors(_n_colors: usize) -> Vec<String> {
     let base_colors = vec![
         "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f",
         "#bcbd22", "#17becf",
@@ -783,14 +780,14 @@ fn get_default_colors(n_colors: usize) -> Vec<String> {
     base_colors
         .into_iter()
         .cycle()
-        .take(n_colors)
+        .take(_n_colors)
         .map(|s| s.to_string())
         .collect()
 }
 
 /// High contrast color palette
 #[allow(dead_code)]
-fn get_high_contrast_colors(n_colors: usize) -> Vec<String> {
+fn get_high_contrast_colors(_n_colors: usize) -> Vec<String> {
     let base_colors = vec![
         "#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
         "#800000", "#008000",
@@ -799,14 +796,14 @@ fn get_high_contrast_colors(n_colors: usize) -> Vec<String> {
     base_colors
         .into_iter()
         .cycle()
-        .take(n_colors)
+        .take(_n_colors)
         .map(|s| s.to_string())
         .collect()
 }
 
 /// Viridis color palette (approximation)
 #[allow(dead_code)]
-fn get_viridis_colors(n_colors: usize) -> Vec<String> {
+fn get_viridis_colors(_n_colors: usize) -> Vec<String> {
     let base_colors = vec![
         "#440154", "#482777", "#3f4a8a", "#31678e", "#26838f", "#1f9d8a", "#6cce5a", "#b6de2b",
         "#fee825", "#fff200",
@@ -815,14 +812,14 @@ fn get_viridis_colors(n_colors: usize) -> Vec<String> {
     base_colors
         .into_iter()
         .cycle()
-        .take(n_colors)
+        .take(_n_colors)
         .map(|s| s.to_string())
         .collect()
 }
 
 /// Plasma color palette (approximation)
 #[allow(dead_code)]
-fn get_plasma_colors(n_colors: usize) -> Vec<String> {
+fn get_plasma_colors(_n_colors: usize) -> Vec<String> {
     let base_colors = vec![
         "#0c0887", "#5c01a6", "#900da4", "#bf3984", "#e16462", "#f89441", "#fdc328", "#f0f921",
         "#fcffa4", "#ffffff",
@@ -831,17 +828,17 @@ fn get_plasma_colors(n_colors: usize) -> Vec<String> {
     base_colors
         .into_iter()
         .cycle()
-        .take(n_colors)
+        .take(_n_colors)
         .map(|s| s.to_string())
         .collect()
 }
 
 /// Grayscale color palette
 #[allow(dead_code)]
-fn get_grayscale_colors(n_colors: usize) -> Vec<String> {
-    (0..n_colors)
+fn get_grayscale_colors(_n_colors: usize) -> Vec<String> {
+    (0.._n_colors)
         .map(|i| {
-            let intensity = 255 * i / n_colors.max(1);
+            let intensity = 255 * i / _n_colors.max(1);
             format!("#{:02x}{:02x}{:02x}", intensity, intensity, intensity)
         })
         .collect()
@@ -1124,8 +1121,7 @@ pub mod interactive {
 
         /// Generate tooltip information for each node
         fn generate_tooltips(
-            linkage_matrix: &ArrayView2<F>,
-            _plot: &DendrogramPlot<F>,
+            linkage_matrix: &ArrayView2<F>, _plot: &DendrogramPlot<F>,
         ) -> Result<Vec<TooltipInfo>> {
             let mut tooltips = Vec::new();
             let n_samples = linkage_matrix.shape()[0] + 1;
@@ -1176,7 +1172,7 @@ pub mod interactive {
         }
 
         /// Get clusters at a specific cut height
-        pub fn get_clusters_at_height(&self, _height: F) -> Result<Vec<Vec<usize>>> {
+        pub fn get_clusters_at_height(&self_height: F) -> Result<Vec<Vec<usize>>> {
             // Simplified cluster extraction - in a full implementation,
             // this would traverse the dendrogram tree
             Ok(vec![vec![0, 1], vec![2, 3]]) // Placeholder
@@ -1276,10 +1272,10 @@ pub mod animation {
 
     impl<F: Float + FromPrimitive> AnimatedDendrogram<F> {
         /// Create a new animated dendrogram
-        pub fn new(duration: Duration) -> Self {
+        pub fn new(_duration: Duration) -> Self {
             Self {
                 keyframes: Vec::new(),
-                duration,
+                _duration,
                 loop_animation: false,
             }
         }
@@ -1533,9 +1529,9 @@ pub mod performance {
 
     impl<F: Float + FromPrimitive + PartialOrd> OptimizedDendrogram<F> {
         /// Create optimized dendrogram from original
-        pub fn new(plot: DendrogramPlot<F>, config: PerformanceConfig) -> Self {
-            let mut optimized = plot.clone();
-            let original_count = plot.branches.len();
+        pub fn new(_plot: DendrogramPlot<F>, config: PerformanceConfig) -> Self {
+            let mut optimized = _plot.clone();
+            let original_count = _plot.branches.len();
 
             // Apply level-of-detail optimization
             if config.enable_lod {
@@ -1562,7 +1558,7 @@ pub mod performance {
             };
 
             Self {
-                original: plot,
+                original: _plot,
                 optimized,
                 config,
                 stats,
@@ -1570,8 +1566,8 @@ pub mod performance {
         }
 
         /// Apply level-of-detail optimization
-        fn apply_lod(plot: &DendrogramPlot<F>, config: &PerformanceConfig) -> DendrogramPlot<F> {
-            let mut optimized = plot.clone();
+        fn apply_lod(_plot: &DendrogramPlot<F>, config: &PerformanceConfig) -> DendrogramPlot<F> {
+            let mut optimized = _plot.clone();
 
             // Remove branches shorter than minimum length
             optimized.branches.retain(|branch| {
@@ -1698,10 +1694,10 @@ pub mod export {
     }
 
     /// Export to SVG format
-    fn export_to_svg<F: Float + FromPrimitive + Debug>(plot: &DendrogramPlot<F>) -> Result<String> {
-        let config = &plot.config;
+    fn export_to_svg<F: Float + FromPrimitive + Debug>(_plot: &DendrogramPlot<F>) -> Result<String> {
+        let config = &_plot.config;
         let mut svg = String::new();
-        let (min_x, max_x, min_y, max_y) = plot.bounds;
+        let (min_x, max_x, min_y, max_y) = _plot.bounds;
 
         // Calculate viewport dimensions with padding
         let padding = 50.0;
@@ -1807,9 +1803,9 @@ pub mod export {
             BranchStyle::DashDot => "10,5,3,5",
         };
 
-        for (i, branch) in plot.branches.iter().enumerate() {
-            let color = if i < plot.colors.len() {
-                &plot.colors[i]
+        for (i, branch) in _plot.branches.iter().enumerate() {
+            let color = if i < _plot.colors.len() {
+                &_plot.colors[i]
             } else {
                 "#000000"
             };
@@ -1835,7 +1831,7 @@ pub mod export {
 
         // Add node markers
         if config.styling.node_markers.show_leaf_nodes {
-            for leaf in &plot.leaves {
+            for leaf in &_plot.leaves {
                 let marker_svg = match config.styling.node_markers.marker_shape {
                     MarkerShape::Circle => format!(
                         "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" fill=\"{}\"/>\n",
@@ -1851,8 +1847,7 @@ pub mod export {
                         config.styling.node_markers.marker_size,
                         config.styling.node_markers.marker_size,
                         config.styling.node_markers.marker_color
-                    ),
-                    _ => format!(
+                    , _ => format!(
                         "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" fill=\"{}\"/>\n",
                         leaf.position.0,
                         leaf.position.1,
@@ -1865,7 +1860,7 @@ pub mod export {
         }
 
         // Add leaves with enhanced label styling
-        for leaf in &plot.leaves {
+        for leaf in &_plot.leaves {
             let font_weight = match config.styling.label_style.font_weight {
                 FontWeight::Normal => "normal",
                 FontWeight::Bold => "bold",
@@ -1925,7 +1920,7 @@ pub mod export {
     ) -> Result<String> {
         let n_samples = linkage_matrix.shape()[0] + 1;
 
-        // Build tree structure from linkage matrix
+        // Build tree structure from linkage _matrix
         let mut tree_nodes = Vec::new();
 
         // Create leaf nodes
@@ -1941,7 +1936,7 @@ pub mod export {
             tree_nodes.push(TreeNode::Leaf { id: i, label });
         }
 
-        // Create internal nodes from linkage matrix
+        // Create internal nodes from linkage _matrix
         for (merge_idx, row) in linkage_matrix.outer_iter().enumerate() {
             let left_id = row[0].to_usize().unwrap();
             let right_id = row[1].to_usize().unwrap();
@@ -2015,18 +2010,18 @@ pub mod export {
     }
 
     /// Export to DOT format for Graphviz
-    fn export_to_dot<F: Float + FromPrimitive + Debug>(plot: &DendrogramPlot<F>) -> Result<String> {
+    fn export_to_dot<F: Float + FromPrimitive + Debug>(_plot: &DendrogramPlot<F>) -> Result<String> {
         let mut dot = String::new();
         dot.push_str("digraph dendrogram {\n");
         dot.push_str("  rankdir=TB;\n");
 
         // Add nodes
-        for (i, leaf) in plot.leaves.iter().enumerate() {
+        for (i, leaf) in _plot.leaves.iter().enumerate() {
             dot.push_str(&format!("  leaf_{} [label=\"{}\"];\n", i, leaf.label));
         }
 
         // Add internal nodes and edges (simplified)
-        for (i, branch) in plot.branches.iter().enumerate() {
+        for (i, branch) in _plot.branches.iter().enumerate() {
             dot.push_str(&format!(
                 "  internal_{} [label=\"{:.2}\"];\n",
                 i,
@@ -2039,12 +2034,12 @@ pub mod export {
     }
 
     /// Export to CSV format
-    fn export_to_csv<F: Float + FromPrimitive + Debug>(plot: &DendrogramPlot<F>) -> Result<String> {
+    fn export_to_csv<F: Float + FromPrimitive + Debug>(_plot: &DendrogramPlot<F>) -> Result<String> {
         let mut csv = String::new();
         csv.push_str("type,start_x,start_y,end_x,end_y,height,cluster_id,label\n");
 
         // Add branches
-        for branch in &plot.branches {
+        for branch in &_plot.branches {
             csv.push_str(&format!(
                 "branch,{},{},{},{},{},{},\n",
                 branch.start.0.to_f64().unwrap(),
@@ -2057,7 +2052,7 @@ pub mod export {
         }
 
         // Add leaves
-        for leaf in &plot.leaves {
+        for leaf in &_plot.leaves {
             csv.push_str(&format!(
                 "leaf,{},{},,,,,{}\n",
                 leaf.position.0, leaf.position.1, leaf.label
@@ -2131,10 +2126,10 @@ pub mod realtime {
 
     impl<F: Float + FromPrimitive + PartialOrd + Debug + Send + Sync + 'static> RealtimeDendrogram<F> {
         /// Create a new real-time dendrogram
-        pub fn new(config: RealtimeConfig) -> Self {
+        pub fn new(_config: RealtimeConfig) -> Self {
             Self {
                 current_plot: Arc::new(Mutex::new(None)),
-                config,
+                _config,
                 update_callback: None,
                 is_active: Arc::new(Mutex::new(false)),
             }
@@ -2266,10 +2261,10 @@ pub mod realtime {
 
     impl LiveClusteringMonitor {
         /// Create a new live monitoring instance
-        pub fn new(config: MonitorConfig) -> Self {
+        pub fn new(_config: MonitorConfig) -> Self {
             Self {
                 metrics_buffer: Arc::new(Mutex::new(Vec::new())),
-                config,
+                _config,
                 start_time: Instant::now(),
             }
         }

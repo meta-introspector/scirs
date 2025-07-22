@@ -1,4 +1,4 @@
-use crate::ndarray_ext::NdArray;
+use crate::ndarray__ext::NdArray;
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
 use crate::{Context, Float};
@@ -19,7 +19,7 @@ impl<F: Float> Op<F> for EyeOp {
         Ok(())
     }
 
-    fn grad(&self, _ctx: &mut GradientContext<F>) {
+    fn grad(&self_ctx: &mut GradientContext<F>) {
         // Identity matrix is constant, no gradient
     }
 }
@@ -155,10 +155,10 @@ pub fn eye<'g, F: Float>(n: usize, ctx: &'g Context<F>) -> Tensor<'g, F> {
 
 /// Compute the trace of a matrix
 #[allow(dead_code)]
-pub fn trace<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn trace<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _matrix.graph();
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(TraceOp)
 }
 
@@ -173,9 +173,9 @@ pub fn diag<'g, F: Float>(v: &Tensor<'g, F>) -> Tensor<'g, F> {
 
 /// Extract diagonal elements from a matrix
 #[allow(dead_code)]
-pub fn extract_diag<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn extract_diag<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _matrix.graph();
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(ExtractDiagOp)
 }

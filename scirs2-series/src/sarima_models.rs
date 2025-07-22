@@ -6,10 +6,11 @@ use ndarray::{Array1, ArrayBase, Data, Ix1, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
 
-use crate::arima_models::SelectionCriterion;
+use crate::arima__models::SelectionCriterion;
 use crate::error::{Result, TimeSeriesError};
 use crate::optimization::{LBFGSOptimizer, OptimizationOptions};
 use crate::utils::partial_autocorrelation;
+use statrs::statistics::Statistics;
 
 /// SARIMA model parameters
 #[derive(Debug, Clone)]
@@ -508,22 +509,22 @@ where
     let mut best_model = None;
 
     // Grid search over all combinations
-    for d in 0..=max_d {
+    for _d in 0..=max_d {
         for d_seasonal in 0..=max_d_seasonal {
-            for p in 0..=max_p {
-                for q in 0..=max_q {
+            for _p in 0..=max_p {
+                for _q in 0..=max_q {
                     for p_seasonal in 0..=max_p_seasonal {
                         for q_seasonal in 0..=max_q_seasonal {
                             // Skip invalid combinations
-                            if p == 0 && q == 0 && p_seasonal == 0 && q_seasonal == 0 {
+                            if _p == 0 && _q == 0 && p_seasonal == 0 && q_seasonal == 0 {
                                 continue;
                             }
 
                             if let Ok(mut model) = SarimaModel::new(
-                                p, d, q, p_seasonal, d_seasonal, q_seasonal, period,
+                                _p, _d, _q, p_seasonal, d_seasonal, q_seasonal, period,
                             ) {
                                 if model.fit(data).is_ok() {
-                                    let n_params = p + q + p_seasonal + q_seasonal + 1;
+                                    let n_params = _p + _q + p_seasonal + q_seasonal + 1;
                                     let metric = match criterion {
                                         SelectionCriterion::AIC => model.aic,
                                         SelectionCriterion::BIC => model.bic,
@@ -560,15 +561,15 @@ where
     match best_model {
         Some(model) => {
             let params = {
-                let mut p = Array1::zeros(7);
-                p[0] = F::from(model.p).unwrap();
-                p[1] = F::from(model.d).unwrap();
-                p[2] = F::from(model.q).unwrap();
-                p[3] = F::from(model.p_seasonal).unwrap();
-                p[4] = F::from(model.d_seasonal).unwrap();
-                p[5] = F::from(model.q_seasonal).unwrap();
-                p[6] = F::from(model.period).unwrap();
-                p
+                let mut _p = Array1::zeros(7);
+                _p[0] = F::from(model._p).unwrap();
+                _p[1] = F::from(model._d).unwrap();
+                _p[2] = F::from(model._q).unwrap();
+                _p[3] = F::from(model.p_seasonal).unwrap();
+                _p[4] = F::from(model.d_seasonal).unwrap();
+                _p[5] = F::from(model.q_seasonal).unwrap();
+                _p[6] = F::from(model.period).unwrap();
+                _p
             };
             Ok((model, params))
         }

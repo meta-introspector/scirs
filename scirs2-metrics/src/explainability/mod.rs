@@ -8,16 +8,17 @@ use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::Float;
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 
 pub mod feature_importance;
 pub mod global_explanations;
 pub mod local_explanations;
 pub mod uncertainty_quantification;
 
-pub use feature_importance::*;
-pub use global_explanations::*;
-pub use local_explanations::*;
-pub use uncertainty_quantification::*;
+pub use feature__importance::*;
+pub use global__explanations::*;
+pub use local__explanations::*;
+pub use uncertainty__quantification::*;
 
 /// Explainability metrics suite
 #[derive(Debug, Clone)]
@@ -388,7 +389,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn permute_feature(&self, data: &mut Array2<F>, feature_index: usize) -> Result<()> {
         if feature_index >= data.ncols() {
             return Err(MetricsError::InvalidInput(
-                "Feature index out of bounds".to_string(),
+                "Feature _index out of bounds".to_string(),
             ));
         }
 
@@ -419,8 +420,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn generate_local_explanation<M>(
         &self,
         model: &M,
-        sample: &ArrayView1<F>,
-        _method: &ExplanationMethod,
+        sample: &ArrayView1<F>, _method: &ExplanationMethod,
     ) -> Result<Array1<F>>
     where
         M: Fn(&ArrayView2<F>) -> Array1<F>,
@@ -563,7 +563,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         Ok(average_variance.sqrt())
     }
 
-    fn compute_aleatoric_uncertainty(&self, _predictions: &[Array1<F>]) -> Result<F> {
+    fn compute_aleatoric_uncertainty(&self_predictions: &[Array1<F>]) -> Result<F> {
         // Simplified aleatoric uncertainty computation
         // In practice, this would require model-specific uncertainty estimates
         Ok(F::from(0.1).unwrap())
@@ -633,13 +633,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     {
         if x_test.is_empty() || feature_names.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty input data or feature names".to_string(),
+                "Empty input data or feature _names".to_string(),
             ));
         }
 
         if x_test.ncols() != feature_names.len() {
             return Err(MetricsError::InvalidInput(
-                "Number of features doesn't match feature names length".to_string(),
+                "Number of features doesn't match feature _names length".to_string(),
             ));
         }
 
@@ -680,10 +680,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     {
         let _n_features = instance.len();
 
-        // Generate perturbed samples around the instance
+        // Generate perturbed _samples around the instance
         let (perturbed_samples, weights) = self.generate_lime_samples(instance, n_samples)?;
 
-        // Get model predictions for perturbed samples
+        // Get model predictions for perturbed _samples
         let predictions = model(&perturbed_samples.view());
 
         // Train interpretable model (linear regression) on perturbed data
@@ -743,7 +743,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
                 perturbed_samples[[i, j]] = perturbed_instance[j];
             }
 
-            // Calculate weight based on distance (closer samples get higher weight)
+            // Calculate weight based on distance (closer _samples get higher weight)
             let distance = distance_sum / F::from(n_features).unwrap();
             weights[i] = (-distance * F::from(2.0).unwrap()).exp(); // Gaussian-like kernel
         }
@@ -878,13 +878,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     {
         if x_test.is_empty() || feature_names.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty input data or feature names".to_string(),
+                "Empty input data or feature _names".to_string(),
             ));
         }
 
         if x_test.ncols() != feature_names.len() {
             return Err(MetricsError::InvalidInput(
-                "Number of features doesn't match feature names length".to_string(),
+                "Number of features doesn't match feature _names length".to_string(),
             ));
         }
 
@@ -956,7 +956,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn compute_background_mean(&self, x_data: &Array2<F>) -> Result<Array1<F>> {
         if x_data.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty data for background computation".to_string(),
+                "Empty _data for background computation".to_string(),
             ));
         }
 
@@ -1003,7 +1003,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         for i in 0..n_features {
             let mut marginal_contributions = Vec::new();
 
-            // Sample different coalitions and compute marginal contribution of feature i
+            // Sample different _coalitions and compute marginal contribution of feature i
             for sample_idx in 0..n_samples {
                 let coalition = self.generate_random_coalition(n_features, i, sample_idx);
 
@@ -1084,7 +1084,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             }
         }
 
-        // Include or exclude target feature
+        // Include or exclude _target feature
         if let Some(target_idx) = include_target {
             if target_idx < n_features {
                 coalition_input[target_idx] = instance[target_idx];
@@ -1109,13 +1109,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     {
         if x_test.is_empty() || feature_names.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty input data or feature names".to_string(),
+                "Empty input data or feature _names".to_string(),
             ));
         }
 
         if x_test.ncols() != feature_names.len() {
             return Err(MetricsError::InvalidInput(
-                "Number of features doesn't match feature names length".to_string(),
+                "Number of features doesn't match feature _names length".to_string(),
             ));
         }
 

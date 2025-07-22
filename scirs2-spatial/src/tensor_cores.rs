@@ -26,7 +26,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::tensor_cores::{TensorCoreDistanceMatrix, TensorCoreClustering};
+//! use scirs2__spatial::tensor_cores::{TensorCoreDistanceMatrix, TensorCoreClustering};
 //! use ndarray::array;
 //!
 //! // Tensor core distance matrix computation
@@ -52,10 +52,12 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{s, Array1, Array2, ArrayView2};
-use rand::{rng, Rng};
+use rand::{Rng};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+use statrs::statistics::Statistics;
+use std::f64::consts::PI;
 
 /// Precision modes for tensor core operations
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -404,31 +406,31 @@ impl TensorCoreDistanceMatrix {
     }
 
     /// Configure precision mode
-    pub fn with_precision_mode(mut self, mode: PrecisionMode) -> Self {
+    pub fn with_precision_mode(mut mode: PrecisionMode) -> Self {
         self.precision_mode = mode;
         self
     }
 
     /// Enable tensor layout optimization
-    pub fn with_tensor_layout_optimization(mut self, enabled: bool) -> Self {
+    pub fn with_tensor_layout_optimization(mut enabled: bool) -> Self {
         self.layout_optimization = enabled;
         self
     }
 
     /// Enable hierarchical tiling
-    pub fn with_hierarchical_tiling(mut self, enabled: bool) -> Self {
+    pub fn with_hierarchical_tiling(mut enabled: bool) -> Self {
         self.hierarchical_tiling = enabled;
         self
     }
 
     /// Configure tile size
-    pub fn with_tile_size(mut self, rows: usize, cols: usize) -> Self {
+    pub fn with_tile_size(mut rows: usize, cols: usize) -> Self {
         self.tile_size = (rows, cols);
         self
     }
 
     /// Configure execution streams
-    pub fn with_execution_streams(mut self, streams: usize) -> Self {
+    pub fn with_execution_streams(mut streams: usize) -> Self {
         self.execution_streams = streams;
         self
     }
@@ -462,27 +464,27 @@ impl TensorCoreDistanceMatrix {
     }
 
     /// Optimize tensor layout for hardware
-    fn optimize_tensor_layout(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-        let (n_points, n_dims) = points.dim();
+    fn optimize_tensor_layout(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+        let (n_points, n_dims) = _points.dim();
 
         match self.tensor_layout {
-            TensorLayout::RowMajor => Ok(points.to_owned()),
+            TensorLayout::RowMajor => Ok(_points.to_owned()),
             TensorLayout::ColMajor => {
                 let mut transposed = Array2::zeros((n_dims, n_points));
-                for (i, point) in points.outer_iter().enumerate() {
+                for (i, point) in _points.outer_iter().enumerate() {
                     transposed.column_mut(i).assign(&point);
                 }
                 Ok(transposed.t().to_owned())
             }
-            TensorLayout::Blocked => self.create_blocked_layout(points),
-            TensorLayout::ZOrder => self.create_zorder_layout(points),
-            TensorLayout::HardwareOptimized => self.create_hardware_optimized_layout(points),
+            TensorLayout::Blocked => self.create_blocked_layout(_points),
+            TensorLayout::ZOrder => self.create_zorder_layout(_points),
+            TensorLayout::HardwareOptimized => self.create_hardware_optimized_layout(_points),
         }
     }
 
     /// Create blocked tensor layout
-    fn create_blocked_layout(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-        let (n_points, n_dims) = points.dim();
+    fn create_blocked_layout(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+        let (n_points, n_dims) = _points.dim();
         let block_size = 64; // Optimize for cache lines
 
         let blocked_rows = n_points.div_ceil(block_size) * block_size;
@@ -499,18 +501,18 @@ impl TensorCoreDistanceMatrix {
 
                 for i in start_i..end_i {
                     for j in start_j..end_j {
-                        blocked_data[[i, j]] = points[[i, j]];
+                        blocked_data[[i, j]] = _points[[i, j]];
                     }
                 }
             }
         }
 
-        Ok(blocked_data.slice(s![..n_points, ..n_dims]).to_owned())
+        Ok(blocked_data.slice(s![..n_points, n_dims]).to_owned())
     }
 
     /// Create Z-order (Morton order) layout
-    fn create_zorder_layout(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-        let (n_points, n_dims) = points.dim();
+    fn create_zorder_layout(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+        let (n_points, n_dims) = _points.dim();
 
         // Create Z-order mapping
         let mut z_indices: Vec<(usize, usize)> = (0..n_points)
@@ -520,20 +522,20 @@ impl TensorCoreDistanceMatrix {
         z_indices.sort_by_key(|(_, z_idx)| *z_idx);
 
         let mut reordered_data = Array2::zeros((n_points, n_dims));
-        for (new_idx, (old_idx, _)) in z_indices.iter().enumerate() {
+        for (new_idx, (old_idx_)) in z_indices.iter().enumerate() {
             reordered_data
                 .row_mut(new_idx)
-                .assign(&points.row(*old_idx));
+                .assign(&_points.row(*old_idx));
         }
 
         Ok(reordered_data)
     }
 
     /// Calculate Z-order (Morton) index
-    fn calculate_z_order_index(&self, point_idx: usize, n_dims: usize) -> usize {
+    fn calculate_z_order_index(_point_idx: usize, n_dims: usize) -> usize {
         // Simplified Z-order calculation
         let mut z_index = 0;
-        let temp_idx = point_idx;
+        let temp_idx = _point_idx;
 
         for bit in 0..16 {
             // Limit to 16 bits for practical purposes
@@ -598,7 +600,7 @@ impl TensorCoreDistanceMatrix {
         }
 
         // Return view of original size
-        Ok(padded_data.slice(s![..n_points, ..n_dims]).to_owned())
+        Ok(padded_data.slice(s![..n_points, n_dims]).to_owned())
     }
 
     /// Create AMD-optimized tensor layout
@@ -620,7 +622,7 @@ impl TensorCoreDistanceMatrix {
             }
         }
 
-        Ok(padded_data.slice(s![..n_points, ..n_dims]).to_owned())
+        Ok(padded_data.slice(s![..n_points, n_dims]).to_owned())
     }
 
     /// Create Intel-optimized tensor layout  
@@ -642,7 +644,7 @@ impl TensorCoreDistanceMatrix {
             }
         }
 
-        Ok(padded_data.slice(s![..n_points, ..n_dims]).to_owned())
+        Ok(padded_data.slice(s![..n_points, n_dims]).to_owned())
     }
 
     /// Compute using hierarchical tiling strategy
@@ -650,7 +652,7 @@ impl TensorCoreDistanceMatrix {
         &self,
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, _) = points.dim();
+        let (n_points_) = points.dim();
         let mut distance_matrix = Array2::zeros((n_points, n_points));
 
         let (tile_rows, tile_cols) = self.tile_size;
@@ -663,8 +665,8 @@ impl TensorCoreDistanceMatrix {
                 let end_i = (i + tile_rows).min(n_points);
                 let end_j = (j + tile_cols).min(n_points);
 
-                let tile_points_i = points.slice(s![i..end_i, ..]).to_owned();
-                let tile_points_j = points.slice(s![j..end_j, ..]).to_owned();
+                let tile_points_i = points.slice(s![i..end_i,  ]).to_owned();
+                let tile_points_j = points.slice(s![j..end_j,  ]).to_owned();
 
                 let precision_mode = self.precision_mode;
                 let future =
@@ -698,8 +700,8 @@ impl TensorCoreDistanceMatrix {
         points_j: Array2<f64>,
         precision_mode: PrecisionMode,
     ) -> SpatialResult<Array2<f64>> {
-        let (_n_i, _n_dims) = points_i.dim();
-        let (_n_j, _) = points_j.dim();
+        let (_n_i_n_dims) = points_i.dim();
+        let (_n_j_) = points_j.dim();
 
         match precision_mode {
             PrecisionMode::Full32 => {
@@ -748,12 +750,12 @@ impl TensorCoreDistanceMatrix {
         points_i: &ArrayView2<'_, f64>,
         points_j: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_i, _n_dims) = points_i.dim();
-        let (n_j, _) = points_j.dim();
+        let (n_i_n_dims) = points_i.dim();
+        let (n_j_) = points_j.dim();
         let mut distances = Array2::zeros((n_i, n_j));
 
         // Simulate tensor core operation using GEMM
-        // D[i,j] = ||points_i[i] - points_j[j]||²
+        // D[_i_j] = ||points_i[_i] - points_j[_j]||²
 
         // Compute ||points_i||² for each point
         let norms_i: Array1<f64> = points_i
@@ -773,9 +775,9 @@ impl TensorCoreDistanceMatrix {
             .await?;
 
         // Combine terms: ||a-b||² = ||a||² + ||b||² - 2⟨a,b⟩
-        for i in 0..n_i {
-            for j in 0..n_j {
-                distances[[i, j]] = (norms_i[i] + norms_j[j] - 2.0 * cross_terms[[i, j]])
+        for _i in 0..n_i {
+            for _j in 0..n_j {
+                distances[[_i_j]] = (norms_i[_i] + norms_j[_j] - 2.0 * cross_terms[[_i_j]])
                     .max(0.0)
                     .sqrt();
             }
@@ -794,8 +796,8 @@ impl TensorCoreDistanceMatrix {
         let points_i_f16 = self.convert_to_fp16(points_i)?;
         let points_j_f16 = self.convert_to_fp16(points_j)?;
 
-        let (n_i, _) = points_i.dim();
-        let (n_j, _) = points_j.dim();
+        let (n_i_) = points_i.dim();
+        let (n_j_) = points_j.dim();
         let mut distances = Array2::zeros((n_i, n_j));
 
         // Simulate mixed precision computation
@@ -807,11 +809,11 @@ impl TensorCoreDistanceMatrix {
             .tensor_core_gemm_mixed16(&points_i_f16, &points_j_f16.t().to_owned())
             .await?;
 
-        for i in 0..n_i {
-            for j in 0..n_j {
-                let distance_sq = norms_i_f16[i] as f64 + norms_j_f16[j] as f64
-                    - 2.0 * cross_terms[[i, j]] as f64;
-                distances[[i, j]] = distance_sq.max(0.0).sqrt();
+        for _i in 0..n_i {
+            for _j in 0..n_j {
+                let distance_sq = norms_i_f16[_i] as f64 + norms_j_f16[_j] as f64
+                    - 2.0 * cross_terms[[_i_j]] as f64;
+                distances[[_i_j]] = distance_sq.max(0.0).sqrt();
             }
         }
 
@@ -829,8 +831,8 @@ impl TensorCoreDistanceMatrix {
         let points_i_bf16 = self.convert_to_bf16(points_i)?;
         let points_j_bf16 = self.convert_to_bf16(points_j)?;
 
-        let (n_i, _) = points_i.dim();
-        let (n_j, _) = points_j.dim();
+        let (n_i_) = points_i.dim();
+        let (n_j_) = points_j.dim();
         let mut distances = Array2::zeros((n_i, n_j));
 
         let norms_i_bf16 = self.compute_norms_bf16(&points_i_bf16)?;
@@ -840,11 +842,11 @@ impl TensorCoreDistanceMatrix {
             .tensor_core_gemm_bf16(&points_i_bf16, &points_j_bf16.t().to_owned())
             .await?;
 
-        for i in 0..n_i {
-            for j in 0..n_j {
-                let distance_sq = norms_i_bf16[i] as f64 + norms_j_bf16[j] as f64
-                    - 2.0 * cross_terms[[i, j]] as f64;
-                distances[[i, j]] = distance_sq.max(0.0).sqrt();
+        for _i in 0..n_i {
+            for _j in 0..n_j {
+                let distance_sq = norms_i_bf16[_i] as f64 + norms_j_bf16[_j] as f64
+                    - 2.0 * cross_terms[[_i_j]] as f64;
+                distances[[_i_j]] = distance_sq.max(0.0).sqrt();
             }
         }
 
@@ -861,29 +863,29 @@ impl TensorCoreDistanceMatrix {
         let (scale_i, points_i_int8) = self.quantize_to_int8_dynamic(points_i)?;
         let (scale_j, points_j_int8) = self.quantize_to_int8_dynamic(points_j)?;
 
-        let (n_i, _) = points_i.dim();
-        let (n_j, _) = points_j.dim();
+        let (n_i_) = points_i.dim();
+        let (n_j_) = points_j.dim();
         let mut distances = Array2::zeros((n_i, n_j));
 
         // Compute using INT8 tensor cores
-        let cross_terms_int32 = self
-            .tensor_core_gemm_int8(&points_i_int8, &points_j_int8.t().to_owned())
-            .await?;
-
-        // Dequantize and compute distances
         let combined_scale = scale_i * scale_j;
-
-        for i in 0..n_i {
-            for j in 0..n_j {
-                // Convert back to floating point
-                let cross_term_f64 = cross_terms_int32[[i, j]] as f64 * combined_scale;
-
+        
+        for _i in 0..n_i {
+            for _j in 0..n_j {
+                // Compute cross term using INT8
+                let cross_term_int32 = points_i_int8.row(_i)
+                    .iter()
+                    .zip(points_j_int8.row(_j).iter())
+                    .map(|(&a, &b)| (a as i32) * (b as i32))
+                    .sum::<i32>();
+                let cross_term_f64 = cross_term_int32 as f64 * combined_scale;
+                
                 // Compute norms in original space
-                let norm_i_sq: f64 = points_i.row(i).iter().map(|&x| x * x).sum();
-                let norm_j_sq: f64 = points_j.row(j).iter().map(|&x| x * x).sum();
+                let norm_i_sq: f64 = points_i.row(_i).iter().map(|&x| x * x).sum();
+                let norm_j_sq: f64 = points_j.row(_j).iter().map(|&x| x * x).sum();
 
                 let distance_sq = norm_i_sq + norm_j_sq - 2.0 * cross_term_f64;
-                distances[[i, j]] = distance_sq.max(0.0).sqrt();
+                distances[[_i_j]] = distance_sq.max(0.0).sqrt();
             }
         }
 
@@ -904,25 +906,24 @@ impl TensorCoreDistanceMatrix {
         let points_i_int8 = self.int4_to_int8(&points_i_int4);
         let points_j_int8 = self.int4_to_int8(&points_j_int4);
 
-        let (n_i, _) = points_i.dim();
-        let (n_j, _) = points_j.dim();
+        let (n_i_) = points_i.dim();
+        let (n_j_) = points_j.dim();
         let mut distances = Array2::zeros((n_i, n_j));
 
-        let cross_terms_int32 = self
-            .tensor_core_gemm_int8(&points_i_int8, &points_j_int8.t().to_owned())
-            .await?;
+        // TODO: Implement cross terms calculation with scale
+        // let cross_terms_int32 = self
+        //     .tensor_core_gemm_int8(&points_i_int8, &points_j_int8.t()) as f64 * combined_scale;
 
-        let combined_scale = scale_i * scale_j;
+        // Calculate distances
+        for _i in 0..n_i {
+            for _j in 0..n_j {
+                let norm_i_sq: f64 = points_i.row(_i).iter().map(|&x| x * x).sum();
+                let norm_j_sq: f64 = points_j.row(_j).iter().map(|&x| x * x).sum();
 
-        for i in 0..n_i {
-            for j in 0..n_j {
-                let cross_term_f64 = cross_terms_int32[[i, j]] as f64 * combined_scale;
-
-                let norm_i_sq: f64 = points_i.row(i).iter().map(|&x| x * x).sum();
-                let norm_j_sq: f64 = points_j.row(j).iter().map(|&x| x * x).sum();
-
+                // TODO: Use cross_term from tensor core computation
+                let cross_term_f64 = 0.0; // Placeholder
                 let distance_sq = norm_i_sq + norm_j_sq - 2.0 * cross_term_f64;
-                distances[[i, j]] = distance_sq.max(0.0).sqrt();
+                distances[[_i_j]] = distance_sq.max(0.0).sqrt();
             }
         }
 
@@ -953,8 +954,7 @@ impl TensorCoreDistanceMatrix {
             PrecisionMode::Full32 => self.compute_distances_fp32(points_i, points_j).await,
             PrecisionMode::Mixed16 => self.compute_distances_mixed16(points_i, points_j).await,
             PrecisionMode::BrainFloat16 => self.compute_distances_bf16(points_i, points_j).await,
-            PrecisionMode::Int8Dynamic => self.compute_distances_int8(points_i, points_j).await,
-            _ => self.compute_distances_fp32(points_i, points_j).await,
+            PrecisionMode::Int8Dynamic => self.compute_distances_int8(points_i, points_j).await_ => self.compute_distances_fp32(points_i, points_j).await,
         }
     }
 
@@ -1093,14 +1093,14 @@ impl TensorCoreDistanceMatrix {
     }
 
     /// Convert FP64 to FP16 format
-    fn convert_to_fp16(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f32>> {
-        let (rows, cols) = data.dim();
+    fn convert_to_fp16(_data: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f32>> {
+        let (rows, cols) = _data.dim();
         let mut fp16_data = Array2::zeros((rows, cols));
 
         for i in 0..rows {
             for j in 0..cols {
                 // Simple conversion to FP32 (FP16 would need special library)
-                fp16_data[[i, j]] = data[[i, j]] as f32;
+                fp16_data[[i, j]] = _data[[i, j]] as f32;
             }
         }
 
@@ -1108,9 +1108,9 @@ impl TensorCoreDistanceMatrix {
     }
 
     /// Convert FP64 to BFloat16 format
-    fn convert_to_bf16(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f32>> {
+    fn convert_to_bf16(_data: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f32>> {
         // Similar to FP16 but with BF16 characteristics
-        self.convert_to_fp16(data)
+        self.convert_to_fp16(_data)
     }
 
     /// Quantize to INT8 with dynamic scaling
@@ -1156,14 +1156,14 @@ impl TensorCoreDistanceMatrix {
     }
 
     /// Convert INT4 to INT8 for computation
-    fn int4_to_int8(&self, data: &Array2<i8>) -> Array2<i8> {
+    fn int4_to_int8(_data: &Array2<i8>) -> Array2<i8> {
         // INT4 values are already in INT8 format, just clamp to ensure 4-bit range
-        data.mapv(|x| x.clamp(-7, 7))
+        _data.mapv(|x| x.clamp(-7, 7))
     }
 
     /// Compute norms for FP16 data
-    fn compute_norms_fp16(&self, data: &Array2<f32>) -> SpatialResult<Array1<f32>> {
-        let norms = data
+    fn compute_norms_fp16(_data: &Array2<f32>) -> SpatialResult<Array1<f32>> {
+        let norms = _data
             .outer_iter()
             .map(|row| row.iter().map(|&x| x * x).sum())
             .collect();
@@ -1171,8 +1171,8 @@ impl TensorCoreDistanceMatrix {
     }
 
     /// Compute norms for BF16 data
-    fn compute_norms_bf16(&self, data: &Array2<f32>) -> SpatialResult<Array1<f32>> {
-        self.compute_norms_fp16(data)
+    fn compute_norms_bf16(_data: &Array2<f32>) -> SpatialResult<Array1<f32>> {
+        self.compute_norms_fp16(_data)
     }
 
     /// Analyze data range for adaptive precision
@@ -1232,11 +1232,11 @@ pub struct TensorCoreClustering {
 
 impl TensorCoreClustering {
     /// Create new tensor core clustering
-    pub fn new(num_clusters: usize) -> SpatialResult<Self> {
+    pub fn new(_num_clusters: usize) -> SpatialResult<Self> {
         let capabilities = detect_tensor_core_capabilities().ok();
 
         Ok(Self {
-            num_clusters,
+            _num_clusters,
             precision_mode: PrecisionMode::Mixed16,
             tensor_cores: true,
             mixed_precision: true,
@@ -1246,19 +1246,19 @@ impl TensorCoreClustering {
     }
 
     /// Enable tensor cores
-    pub fn with_tensor_cores(mut self, enabled: bool) -> Self {
+    pub fn with_tensor_cores(mut enabled: bool) -> Self {
         self.tensor_cores = enabled;
         self
     }
 
     /// Enable mixed precision
-    pub fn with_mixed_precision(mut self, enabled: bool) -> Self {
+    pub fn with_mixed_precision(mut enabled: bool) -> Self {
         self.mixed_precision = enabled;
         self
     }
 
     /// Enable dynamic precision scaling
-    pub fn with_dynamic_precision_scaling(mut self, enabled: bool) -> Self {
+    pub fn with_dynamic_precision_scaling(mut enabled: bool) -> Self {
         self.dynamic_precision = enabled;
         self
     }
@@ -1268,7 +1268,7 @@ impl TensorCoreClustering {
         &self,
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
-        let (n_points, _n_dims) = points.dim();
+        let (n_points_n_dims) = points.dim();
 
         if n_points < self.num_clusters {
             return Err(SpatialError::InvalidInput(
@@ -1318,23 +1318,23 @@ impl TensorCoreClustering {
     }
 
     /// Initialize centroids using k-means++
-    fn initialize_centroids(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-        let (n_points, n_dims) = points.dim();
+    fn initialize_centroids(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+        let (n_points, n_dims) = _points.dim();
         let mut centroids = Array2::zeros((self.num_clusters, n_dims));
 
         // k-means++ initialization
-        let mut rng = rng();
+        let mut rng = rand::rng();
 
         // Choose first centroid randomly
-        let first_idx = rng.random_range(0..n_points);
-        centroids.row_mut(0).assign(&points.row(first_idx));
+        let first_idx = rng.gen_range(0..n_points);
+        centroids.row_mut(0).assign(&_points.row(first_idx));
 
         // Choose remaining centroids with probability proportional to distance
         for k in 1..self.num_clusters {
             let mut distances = Array1::zeros(n_points);
 
             for i in 0..n_points {
-                let point = points.row(i);
+                let point = _points.row(i);
                 let mut min_dist = f64::INFINITY;
 
                 for j in 0..k {
@@ -1358,7 +1358,7 @@ impl TensorCoreClustering {
             for i in 0..n_points {
                 cumulative += distances[i];
                 if cumulative >= random_val {
-                    centroids.row_mut(k).assign(&points.row(i));
+                    centroids.row_mut(k).assign(&_points.row(i));
                     break;
                 }
             }
@@ -1368,8 +1368,8 @@ impl TensorCoreClustering {
     }
 
     /// Update assignments based on distance matrix
-    fn update_assignments(&self, distance_matrix: &Array2<f64>) -> SpatialResult<Array1<usize>> {
-        let n_points = distance_matrix.nrows();
+    fn update_assignments(_distance_matrix: &Array2<f64>) -> SpatialResult<Array1<usize>> {
+        let n_points = _distance_matrix.nrows();
         let mut assignments = Array1::zeros(n_points);
 
         for i in 0..n_points {
@@ -1377,8 +1377,8 @@ impl TensorCoreClustering {
             let mut best_cluster = 0;
 
             for j in 0..self.num_clusters {
-                if distance_matrix[[i, j]] < min_dist {
-                    min_dist = distance_matrix[[i, j]];
+                if _distance_matrix[[i, j]] < min_dist {
+                    min_dist = _distance_matrix[[i, j]];
                     best_cluster = j;
                 }
             }
@@ -1415,7 +1415,7 @@ impl TensorCoreClustering {
                 .iter()
                 .enumerate()
                 .filter(|(_, &c)| c == cluster)
-                .map(|(i, _)| i)
+                .map(|(i_)| i)
                 .collect();
 
             // Extract cluster points
@@ -1436,13 +1436,13 @@ impl TensorCoreClustering {
     }
 
     /// Tensor sum reduction operation
-    async fn tensor_sum_reduction(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
-        let (_n_points, n_dims) = data.dim();
+    async fn tensor_sum_reduction(_data: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
+        let (_n_points, n_dims) = _data.dim();
         let mut sum_vector = Array1::zeros(n_dims);
 
         // Simulate tensor reduction operation
         for j in 0..n_dims {
-            let column_sum: f64 = data.column(j).sum();
+            let column_sum: f64 = _data.column(j).sum();
             sum_vector[j] = column_sum;
         }
 
@@ -1455,8 +1455,8 @@ impl TensorCoreClustering {
         points: &ArrayView2<'_, f64>,
         centroids: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, _) = points.dim();
-        let (n_clusters, _) = centroids.dim();
+        let (n_points_) = points.dim();
+        let (n_clusters_) = centroids.dim();
         let mut distances = Array2::zeros((n_points, n_clusters));
 
         for i in 0..n_points {
@@ -1532,7 +1532,7 @@ impl TensorCoreClustering {
 }
 
 impl Default for StabilityMetrics {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -1553,7 +1553,7 @@ impl StabilityMetrics {
     }
 
     /// Update stability level based on metrics
-    pub fn update_stability_level(&mut self) {
+    pub fn update_stability_level() {
         self.stability_level = if self.condition_number > 1e12 || self.relative_error > 1e-3 {
             StabilityLevel::Critical
         } else if self.condition_number > 1e8 || self.relative_error > 1e-6 {
@@ -1568,11 +1568,11 @@ impl StabilityMetrics {
     }
 
     /// Check for numerical errors
-    pub fn detect_errors(&mut self, data: &Array2<f64>) {
+    pub fn detect_errors(_data: &Array2<f64>) {
         self.error_types.clear();
 
         // Check for NaN or Inf values
-        for &value in data.iter() {
+        for &value in _data.iter() {
             if !value.is_finite() {
                 self.error_types.push(NumericalErrorType::InvalidValues);
                 break;
@@ -1580,7 +1580,7 @@ impl StabilityMetrics {
         }
 
         // Check for overflow/underflow
-        let max_val = data.fold(0.0f64, |acc, &x| acc.max(x.abs()));
+        let max_val = _data.fold(0.0f64, |acc, &x| acc.max(x.abs()));
         if max_val > 1e100 {
             self.error_types.push(NumericalErrorType::Overflow);
         } else if max_val < 1e-100 && max_val > 0.0 {
@@ -1600,7 +1600,7 @@ impl StabilityMetrics {
 }
 
 impl Default for DynamicPrecisionConfig {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             strategy: ScalingStrategy::Balanced,
             min_precision: PrecisionMode::Int8Dynamic,
@@ -1617,11 +1617,11 @@ impl Default for DynamicPrecisionConfig {
 
 impl NumericalStabilityMonitor {
     /// Create new stability monitor
-    pub fn new(config: DynamicPrecisionConfig) -> Self {
+    pub fn new(_config: DynamicPrecisionConfig) -> Self {
         Self {
             current_metrics: StabilityMetrics::new(),
             stability_history: VecDeque::new(),
-            precision_config: config,
+            precision_config: _config,
             current_precision: PrecisionMode::Mixed16,
             precision_history: VecDeque::new(),
             recovery_attempts: 0,
@@ -1671,7 +1671,7 @@ impl NumericalStabilityMonitor {
     }
 
     /// Dynamically adjust precision based on stability
-    pub fn adjust_precision(&mut self) -> SpatialResult<PrecisionMode> {
+    pub fn adjust_precision(&self) -> SpatialResult<PrecisionMode> {
         // Check cooldown period
         if let Some(last_change) = self.last_precision_change {
             if last_change.elapsed() < self.precision_config.change_cooldown {
@@ -1733,34 +1733,34 @@ impl NumericalStabilityMonitor {
     }
 
     /// Increase precision mode
-    fn increase_precision(&self, current: PrecisionMode) -> PrecisionMode {
-        match current {
-            PrecisionMode::Int4Advanced => PrecisionMode::Int8Dynamic,
-            PrecisionMode::Int8Dynamic => PrecisionMode::Mixed16,
-            PrecisionMode::Mixed16 => PrecisionMode::BrainFloat16,
-            PrecisionMode::BrainFloat16 => PrecisionMode::Full32,
-            PrecisionMode::Full32 => PrecisionMode::Full32, // Already at max
+    fn increase_precision(_current: PrecisionMode) -> PrecisionMode {
+        match _current {
+            PrecisionMode::Int4Advanced =>, PrecisionMode::Int8Dynamic,
+            PrecisionMode::Int8Dynamic =>, PrecisionMode::Mixed16,
+            PrecisionMode::Mixed16 =>, PrecisionMode::BrainFloat16,
+            PrecisionMode::BrainFloat16 =>, PrecisionMode::Full32,
+            PrecisionMode::Full32 =>, PrecisionMode::Full32, // Already at max
             _ => PrecisionMode::Mixed16,
         }
     }
 
     /// Decrease precision mode
-    fn decrease_precision(&self, current: PrecisionMode) -> PrecisionMode {
-        match current {
-            PrecisionMode::Full32 => PrecisionMode::BrainFloat16,
-            PrecisionMode::BrainFloat16 => PrecisionMode::Mixed16,
-            PrecisionMode::Mixed16 => PrecisionMode::Int8Dynamic,
-            PrecisionMode::Int8Dynamic => PrecisionMode::Int4Advanced,
-            PrecisionMode::Int4Advanced => PrecisionMode::Int4Advanced, // Already at min
+    fn decrease_precision(_current: PrecisionMode) -> PrecisionMode {
+        match _current {
+            PrecisionMode::Full32 =>, PrecisionMode::BrainFloat16,
+            PrecisionMode::BrainFloat16 =>, PrecisionMode::Mixed16,
+            PrecisionMode::Mixed16 =>, PrecisionMode::Int8Dynamic,
+            PrecisionMode::Int8Dynamic =>, PrecisionMode::Int4Advanced,
+            PrecisionMode::Int4Advanced =>, PrecisionMode::Int4Advanced, // Already at min
             _ => PrecisionMode::Mixed16,
         }
     }
 
     /// Estimate condition number
-    fn estimate_condition_number(&self, data: &Array2<f64>) -> f64 {
+    fn estimate_condition_number(_data: &Array2<f64>) -> f64 {
         // Simplified condition number estimation
-        let max_val = data.fold(0.0f64, |acc, &x| acc.max(x.abs()));
-        let min_val = data.fold(f64::INFINITY, |acc, &x| {
+        let max_val = _data.fold(0.0f64, |acc, &x| acc.max(x.abs()));
+        let min_val = _data.fold(f64::INFINITY, |acc, &x| {
             if x.abs() > 1e-15 {
                 acc.min(x.abs())
             } else {
@@ -1776,7 +1776,7 @@ impl NumericalStabilityMonitor {
     }
 
     /// Estimate relative error
-    fn estimate_relative_error(&self, _input: &Array2<f64>, output: &Array2<f64>) -> f64 {
+    fn estimate_relative_error(_input: &Array2<f64>, output: &Array2<f64>) -> f64 {
         // Simplified relative error estimation
         let mean_val = output.mean().unwrap_or(0.0);
         if mean_val.abs() > 1e-15 {
@@ -1785,8 +1785,7 @@ impl NumericalStabilityMonitor {
                 PrecisionMode::Full32 => 2.22e-16,
                 PrecisionMode::Mixed16 | PrecisionMode::BrainFloat16 => 9.77e-4,
                 PrecisionMode::Int8Dynamic => 1.0 / 256.0,
-                PrecisionMode::Int4Advanced => 1.0 / 16.0,
-                _ => 1e-6,
+                PrecisionMode::Int4Advanced => 1.0 / 16.0_ => 1e-6,
             };
             machine_eps * self.current_metrics.condition_number
         } else {
@@ -1795,13 +1794,13 @@ impl NumericalStabilityMonitor {
     }
 
     /// Estimate forward error
-    fn estimate_forward_error(&self, _input: &Array2<f64>, _output: &Array2<f64>) -> f64 {
+    fn estimate_forward_error(_input: &Array2<f64>, _output: &Array2<f64>) -> f64 {
         // Forward error bound estimate
         self.current_metrics.relative_error * self.current_metrics.condition_number
     }
 
     /// Estimate backward error
-    fn estimate_backward_error(&self, _input: &Array2<f64>, _output: &Array2<f64>) -> f64 {
+    fn estimate_backward_error(_input: &Array2<f64>, _output: &Array2<f64>) -> f64 {
         // Backward error bound estimate
         self.current_metrics.relative_error
     }
@@ -1817,7 +1816,7 @@ impl NumericalStabilityMonitor {
 }
 
 impl Default for ErrorRecoverySystem {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -1881,11 +1880,11 @@ impl ErrorRecoverySystem {
     ) -> SpatialResult<RecoveryAction> {
         let start_time = Instant::now();
 
-        // Get recovery strategies for this error type
+        // Get recovery strategies for this error _type
         let strategies = self
             .recovery_strategies
             .get(&error_type)
-            .ok_or_else(|| SpatialError::InvalidInput("Unknown error type".to_string()))?;
+            .ok_or_else(|| SpatialError::InvalidInput("Unknown error _type".to_string()))?;
 
         // Choose best strategy based on success rates
         let best_action = self.choose_best_recovery_action(strategies);
@@ -1906,8 +1905,8 @@ impl ErrorRecoverySystem {
     }
 
     /// Choose best recovery action based on success rates
-    fn choose_best_recovery_action(&self, strategies: &[RecoveryAction]) -> RecoveryAction {
-        strategies
+    fn choose_best_recovery_action(_strategies: &[RecoveryAction]) -> RecoveryAction {
+        _strategies
             .iter()
             .max_by(|&a, &b| {
                 let rate_a = self.success_rates.get(a).unwrap_or(&0.5);
@@ -1921,37 +1920,37 @@ impl ErrorRecoverySystem {
     }
 
     /// Update success rate for recovery action
-    pub fn update_success_rate(&mut self, action: RecoveryAction, success: bool) {
-        let current_rate = self.success_rates.get(&action).unwrap_or(&0.5);
+    pub fn update_success_rate(_action: RecoveryAction, success: bool) {
+        let current_rate = self.success_rates.get(&_action).unwrap_or(&0.5);
         let new_rate = if success {
             current_rate * 0.9 + 0.1 // Exponential moving average
         } else {
             current_rate * 0.9
         };
-        self.success_rates.insert(action, new_rate);
+        self.success_rates.insert(_action, new_rate);
     }
 }
 
 impl PerformanceAccuracyAnalyzer {
     /// Create new performance-accuracy analyzer
-    pub fn new(params: TradeOffParams) -> Self {
+    pub fn new(_params: TradeOffParams) -> Self {
         Self {
             performance_data: HashMap::new(),
             accuracy_data: HashMap::new(),
-            optimization_params: params,
+            optimization_params: _params,
             pareto_frontier: Vec::new(),
         }
     }
 
     /// Record performance measurement
-    pub fn record_performance(&mut self, precision: PrecisionMode, duration: Duration) {
+    pub fn record_performance(_precision: PrecisionMode, duration: Duration) {
         self.performance_data
-            .entry(precision)
+            .entry(_precision)
             .or_default()
             .push_back(duration);
 
         // Maintain reasonable history size
-        if let Some(history) = self.performance_data.get_mut(&precision) {
+        if let Some(history) = self.performance_data.get_mut(&_precision) {
             if history.len() > 100 {
                 history.pop_front();
             }
@@ -1959,14 +1958,14 @@ impl PerformanceAccuracyAnalyzer {
     }
 
     /// Record accuracy measurement
-    pub fn record_accuracy(&mut self, precision: PrecisionMode, accuracy: f64) {
+    pub fn record_accuracy(_precision: PrecisionMode, accuracy: f64) {
         self.accuracy_data
-            .entry(precision)
+            .entry(_precision)
             .or_default()
             .push_back(accuracy);
 
         // Maintain reasonable history size
-        if let Some(history) = self.accuracy_data.get_mut(&precision) {
+        if let Some(history) = self.accuracy_data.get_mut(&_precision) {
             if history.len() > 100 {
                 history.pop_front();
             }
@@ -1974,7 +1973,7 @@ impl PerformanceAccuracyAnalyzer {
     }
 
     /// Optimize precision mode based on trade-offs
-    pub fn optimize_precision(&mut self) -> PrecisionMode {
+    pub fn optimize_precision(&self) -> PrecisionMode {
         self.update_pareto_frontier();
 
         match self.optimization_params.objective {
@@ -1982,13 +1981,13 @@ impl PerformanceAccuracyAnalyzer {
                 .pareto_frontier
                 .iter()
                 .min_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(_, _, mode)| *mode)
+                .map(|(__, mode)| *mode)
                 .unwrap_or(PrecisionMode::Mixed16),
             OptimizationObjective::MaxAccuracy => self
                 .pareto_frontier
                 .iter()
                 .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(_, _, mode)| *mode)
+                .map(|(__, mode)| *mode)
                 .unwrap_or(PrecisionMode::Full32),
             OptimizationObjective::Balanced => {
                 // Weighted combination
@@ -2001,7 +2000,7 @@ impl PerformanceAccuracyAnalyzer {
                             .partial_cmp(&score_b)
                             .unwrap_or(std::cmp::Ordering::Equal)
                     })
-                    .map(|(_, _, mode)| *mode)
+                    .map(|(__, mode)| *mode)
                     .unwrap_or(PrecisionMode::Mixed16)
             }
             _ => PrecisionMode::Mixed16,
@@ -2009,7 +2008,7 @@ impl PerformanceAccuracyAnalyzer {
     }
 
     /// Update Pareto frontier
-    fn update_pareto_frontier(&mut self) {
+    fn update_pareto_frontier() {
         self.pareto_frontier.clear();
 
         for precision in [
@@ -2035,9 +2034,9 @@ impl PerformanceAccuracyAnalyzer {
     }
 
     /// Compute weighted score for balanced optimization
-    fn compute_weighted_score(&self, performance: f64, accuracy: f64) -> f64 {
+    fn compute_weighted_score(_performance: f64, accuracy: f64) -> f64 {
         // Performance score (inverse of time - higher is better)
-        let perf_score = 1.0 / (performance + 1e-9);
+        let perf_score = 1.0 / (_performance + 1e-9);
 
         // Weighted combination
         self.optimization_params.performance_weight * perf_score
@@ -2074,13 +2073,13 @@ impl AdvancedTensorCoreDistanceMatrix {
     }
 
     /// Configure dynamic precision scaling
-    pub fn with_dynamic_precision(mut self, enabled: bool) -> Self {
+    pub fn with_dynamic_precision(mut enabled: bool) -> Self {
         self.dynamic_precision_enabled = enabled;
         self
     }
 
     /// Configure automatic error recovery
-    pub fn with_auto_recovery(mut self, enabled: bool) -> Self {
+    pub fn with_auto_recovery(mut enabled: bool) -> Self {
         self.auto_recovery_enabled = enabled;
         self
     }
@@ -2174,15 +2173,14 @@ impl AdvancedTensorCoreDistanceMatrix {
     }
 
     /// Apply recovery action
-    async fn apply_recovery_action(&mut self, action: RecoveryAction) -> SpatialResult<()> {
-        match action {
+    async fn apply_recovery_action(_action: RecoveryAction) -> SpatialResult<()> {
+        match _action {
             RecoveryAction::IncreasePrecision => {
                 self.base_computer.precision_mode = match self.base_computer.precision_mode {
-                    PrecisionMode::Int4Advanced => PrecisionMode::Int8Dynamic,
-                    PrecisionMode::Int8Dynamic => PrecisionMode::Mixed16,
-                    PrecisionMode::Mixed16 => PrecisionMode::BrainFloat16,
-                    PrecisionMode::BrainFloat16 => PrecisionMode::Full32,
-                    _ => PrecisionMode::Full32,
+                    PrecisionMode::Int4Advanced =>, PrecisionMode::Int8Dynamic,
+                    PrecisionMode::Int8Dynamic =>, PrecisionMode::Mixed16,
+                    PrecisionMode::Mixed16 =>, PrecisionMode::BrainFloat16,
+                    PrecisionMode::BrainFloat16 => PrecisionMode::Full32_ =>, PrecisionMode::Full32,
                 };
             }
             RecoveryAction::ReduceTileSize => {
@@ -2212,15 +2210,15 @@ impl AdvancedTensorCoreDistanceMatrix {
     }
 
     /// Estimate result accuracy (simplified)
-    fn estimate_result_accuracy(&self, result: &Array2<f64>) -> f64 {
+    fn estimate_result_accuracy(_result: &Array2<f64>) -> f64 {
         // Simplified accuracy estimation based on numerical properties
-        let has_invalid = result.iter().any(|&x| !x.is_finite());
+        let has_invalid = _result.iter().any(|&x| !x.is_finite());
         if has_invalid {
             return 0.0;
         }
 
-        let max_val = result.fold(0.0f64, |acc, &x| acc.max(x.abs()));
-        let min_val = result.fold(f64::INFINITY, |acc, &x| {
+        let max_val = _result.fold(0.0f64, |acc, &x| acc.max(x.abs()));
+        let min_val = _result.fold(f64::INFINITY, |acc, &x| {
             if x.abs() > 1e-15 {
                 acc.min(x.abs())
             } else {
@@ -2271,8 +2269,8 @@ impl TensorCoreDistanceMatrix {
         points: &ArrayView2<'_, f64>,
         centroids: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
-        let (n_points, _) = points.dim();
-        let (n_clusters, _) = centroids.dim();
+        let (n_points_) = points.dim();
+        let (n_clusters_) = centroids.dim();
         let mut distances = Array2::zeros((n_points, n_clusters));
 
         // Compute distances using optimized tensor operations

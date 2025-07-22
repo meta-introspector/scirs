@@ -97,30 +97,28 @@ pub mod test_functions {
     }
 
     /// Get bounds for a test function
-    pub fn get_bounds(function_name: &str, dimensions: usize) -> Vec<(f64, f64)> {
-        match function_name {
+    pub fn get_bounds(_function_name: &str, dimensions: usize) -> Vec<(f64, f64)> {
+        match _function_name {
             "rosenbrock" => vec![(-5.0, 5.0); dimensions],
             "sphere" => vec![(-5.12, 5.12); dimensions],
             "rastrigin" => vec![(-5.12, 5.12); dimensions],
             "ackley" => vec![(-32.768, 32.768); dimensions],
             "griewank" => vec![(-600.0, 600.0); dimensions],
             "levy" => vec![(-10.0, 10.0); dimensions],
-            "schwefel" => vec![(-500.0, 500.0); dimensions],
-            _ => vec![(-10.0, 10.0); dimensions],
+            "schwefel" => vec![(-500.0, 500.0); dimensions]_ => vec![(-10.0, 10.0); dimensions],
         }
     }
 
     /// Get global optimum for a test function
-    pub fn get_global_optimum(function_name: &str, dimensions: usize) -> (Array1<f64>, f64) {
-        match function_name {
+    pub fn get_global_optimum(_function_name: &str, dimensions: usize) -> (Array1<f64>, f64) {
+        match _function_name {
             "rosenbrock" => (Array1::ones(dimensions), 0.0),
             "sphere" => (Array1::zeros(dimensions), 0.0),
             "rastrigin" => (Array1::zeros(dimensions), 0.0),
             "ackley" => (Array1::zeros(dimensions), 0.0),
             "griewank" => (Array1::zeros(dimensions), 0.0),
             "levy" => (Array1::ones(dimensions), 0.0),
-            "schwefel" => (Array1::from_elem(dimensions, 420.9687), 0.0),
-            _ => (Array1::zeros(dimensions), 0.0),
+            "schwefel" => (Array1::from_elem(dimensions, 420.9687), 0.0, _ => (Array1::zeros(dimensions), 0.0),
         }
     }
 }
@@ -146,24 +144,23 @@ pub struct TestProblem {
 
 impl TestProblem {
     /// Create a new test problem
-    pub fn new(name: &str, dimensions: usize) -> Self {
-        let function = match name {
+    pub fn new(_name: &str, dimensions: usize) -> Self {
+        let function = match _name {
             "rosenbrock" => test_functions::rosenbrock,
             "sphere" => test_functions::sphere,
             "rastrigin" => test_functions::rastrigin,
             "ackley" => test_functions::ackley,
             "griewank" => test_functions::griewank,
             "levy" => test_functions::levy,
-            "schwefel" => test_functions::schwefel,
-            _ => test_functions::sphere,
+            "schwefel" => test_functions::schwefel_ =>, test_functions::sphere,
         };
 
-        let bounds = test_functions::get_bounds(name, dimensions);
-        let (global_optimum, global_minimum) = test_functions::get_global_optimum(name, dimensions);
-        let characteristics = ProblemCharacteristics::from_function_name(name);
+        let bounds = test_functions::get_bounds(_name, dimensions);
+        let (global_optimum, global_minimum) = test_functions::get_global_optimum(_name, dimensions);
+        let characteristics = ProblemCharacteristics::from_function_name(_name);
 
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             function,
             dimensions,
             bounds,
@@ -181,13 +178,13 @@ impl TestProblem {
     /// Generate random starting points for the problem
     pub fn generate_starting_points(&self, count: usize) -> ScirsResult<Vec<Array1<f64>>> {
         use rand::{rng, Rng};
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let mut points = Vec::with_capacity(count);
 
         for _ in 0..count {
             let mut point = Array1::zeros(self.dimensions);
             for (i, &(low, high)) in self.bounds.iter().enumerate() {
-                point[i] = rng.random_range(low..=high);
+                point[i] = rng.gen_range(low..=high);
             }
             points.push(point);
         }
@@ -210,8 +207,8 @@ pub struct ProblemCharacteristics {
 }
 
 impl ProblemCharacteristics {
-    fn from_function_name(name: &str) -> Self {
-        match name {
+    fn from_function_name(_name: &str) -> Self {
+        match _name {
             "sphere" => Self {
                 multimodal: false,
                 separable: true,
@@ -253,8 +250,7 @@ impl ProblemCharacteristics {
                 separable: true,
                 convex: false,
                 difficulty: 5,
-            },
-            _ => Self {
+            }_ => Self {
                 multimodal: false,
                 separable: true,
                 convex: true,
@@ -567,17 +563,17 @@ pub struct BenchmarkSystem {
 
 impl BenchmarkSystem {
     /// Create a new benchmark system
-    pub fn new(config: BenchmarkConfig) -> Self {
+    pub fn new(_config: BenchmarkConfig) -> Self {
         let mut test_problems = Vec::new();
 
-        for problem_name in &config.test_problems {
-            for &dim in &config.dimensions {
+        for problem_name in &_config.test_problems {
+            for &dim in &_config.dimensions {
                 test_problems.push(TestProblem::new(problem_name, dim));
             }
         }
 
         Self {
-            config,
+            _config,
             test_problems,
         }
     }
@@ -596,7 +592,7 @@ impl BenchmarkSystem {
         for problem in &self.test_problems {
             println!(
                 "Benchmarking {} on {} ({}D)",
-                algorithm_name, problem.name, problem.dimensions
+                algorithm_name, problem._name, problem.dimensions
             );
 
             let starting_points = problem.generate_starting_points(self.config.runs_per_problem)?;
@@ -629,7 +625,7 @@ impl BenchmarkSystem {
                         };
 
                         runs.push(BenchmarkRun {
-                            problem_name: problem.name.clone(),
+                            problem_name: problem._name.clone(),
                             dimensions: problem.dimensions,
                             run_id,
                             algorithm: algorithm_name.to_string(),
@@ -650,7 +646,7 @@ impl BenchmarkSystem {
                         };
 
                         runs.push(BenchmarkRun {
-                            problem_name: problem.name.clone(),
+                            problem_name: problem._name.clone(),
                             dimensions: problem.dimensions,
                             run_id,
                             algorithm: algorithm_name.to_string(),

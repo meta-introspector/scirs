@@ -142,7 +142,7 @@ pub struct GpuOptimizerMemory<A: Float> {
 
 impl<A: Float> GpuOptimizerMemory<A> {
     /// Create new GPU memory manager
-    pub fn new(size: usize, config: GpuOptimizerConfig) -> Result<Self, GpuOptimError> {
+    pub fn new(_size: usize, config: GpuOptimizerConfig) -> Result<Self, GpuOptimError> {
         let context = Arc::new(GpuContext::new(config.backend)?);
 
         Ok(Self {
@@ -151,7 +151,7 @@ impl<A: Float> GpuOptimizerMemory<A> {
             grads_gpu: None,
             m_gpu: None,
             v_gpu: None,
-            size,
+            _size,
             config,
         })
     }
@@ -407,8 +407,8 @@ pub struct AdvancedGpuOptimizer<A: Float, D: Dimension> {
 
 impl<A: Float, D: Dimension> AdvancedGpuOptimizer<A, D> {
     /// Create new advanced GPU optimizer
-    pub fn new(config: GpuOptimizerConfig) -> Result<Self, GpuOptimError> {
-        let memory = GpuOptimizerMemory::new(0, config)?;
+    pub fn new(_config: GpuOptimizerConfig) -> Result<Self, GpuOptimError> {
+        let memory = GpuOptimizerMemory::new(0_config)?;
 
         Ok(Self {
             memory,
@@ -578,8 +578,8 @@ pub mod utils {
 
     /// Check if GPU acceleration is available for the given backend
     #[allow(dead_code)]
-    pub fn is_gpu_available(backend: GpuBackend) -> bool {
-        match GpuContext::new(backend) {
+    pub fn is_gpu_available(_backend: GpuBackend) -> bool {
+        match GpuContext::new(_backend) {
             Ok(_) => true,
             Err(_) => false,
         }
@@ -700,17 +700,17 @@ pub mod utils {
     ) -> String {
         if prefer_accuracy {
             if supports_tf32 {
-                "tf32".to_string()
+                "_tf32".to_string()
             } else {
                 "fp32".to_string()
             }
         } else {
             if supports_bf16 {
-                "bf16".to_string()
+                "_bf16".to_string()
             } else if supports_fp16 {
-                "fp16".to_string()
+                "_fp16".to_string()
             } else if supports_tf32 {
-                "tf32".to_string()
+                "_tf32".to_string()
             } else {
                 "fp32".to_string()
             }
@@ -718,14 +718,14 @@ pub mod utils {
     }
 
     /// Benchmark GPU operation
-    pub fn benchmark_operation<F>(operation: F, iterations: usize) -> Result<f64, GpuOptimError>
+    pub fn benchmark_operation<F>(_operation: F, iterations: usize) -> Result<f64, GpuOptimError>
     where
         F: Fn() -> Result<(), GpuOptimError>,
     {
         let start = std::time::Instant::now();
 
         for _ in 0..iterations {
-            operation()?;
+            _operation()?;
         }
 
         // Synchronize to ensure all operations complete

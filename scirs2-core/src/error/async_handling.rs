@@ -43,7 +43,7 @@ impl AsyncRetryExecutor {
                 max_delay,
                 multiplier,
             } => {
-                let mut delay = *initial_delay;
+                let mut _delay = *initial_delay;
                 let mut last_error = None;
 
                 for attempt in 0..*max_attempts {
@@ -53,8 +53,8 @@ impl AsyncRetryExecutor {
                             last_error = Some(err);
 
                             if attempt < max_attempts - 1 {
-                                tokio::time::sleep(delay).await;
-                                delay = std::cmp::min(
+                                tokio::time::sleep(_delay).await;
+                                _delay = std::cmp::min(
                                     Duration::from_nanos(
                                         (delay.as_nanos() as f64 * multiplier) as u64,
                                     ),
@@ -70,7 +70,7 @@ impl AsyncRetryExecutor {
 
             RecoveryStrategy::LinearBackoff {
                 max_attempts,
-                delay,
+                _delay,
             } => {
                 let mut last_error = None;
 
@@ -104,7 +104,7 @@ impl AsyncRetryExecutor {
 
                             if attempt < max_attempts - 1 {
                                 if let Some(&delay) = delays.get(attempt) {
-                                    tokio::time::sleep(delay).await;
+                                    tokio::time::sleep(_delay).await;
                                 }
                             }
                         }
@@ -360,13 +360,13 @@ impl AsyncErrorAggregator {
     }
 
     /// Get all errors
-    pub fn errors(&self) -> Vec<RecoverableError> {
+    pub fn get_errors(&self) -> Vec<RecoverableError> {
         self.errors.lock().unwrap().clone()
     }
 
     /// Get the most severe error
     pub fn most_severe_error(&self) -> Option<RecoverableError> {
-        self.errors().into_iter().max_by_key(|err| err.severity)
+        self.get_errors().into_iter().max_by_key(|err| err.severity)
     }
 
     /// Convert to a single error if there are any errors
@@ -575,7 +575,7 @@ mod tests {
 
         assert_eq!(tracker.progress(), 0.0);
 
-        // Add a small delay to ensure measurable elapsed time
+        // Add a small _delay to ensure measurable elapsed time
         tokio::time::sleep(Duration::from_millis(1)).await;
 
         tracker.complete_step();

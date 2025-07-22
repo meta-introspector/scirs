@@ -14,7 +14,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2_spatial::spatial_stats::{morans_i, gearys_c};
+//! use scirs2__spatial::spatial_stats::{morans_i, gearys_c};
 //!
 //! // Create spatial data (values at different locations)
 //! let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
@@ -60,7 +60,7 @@ use crate::error::{SpatialError, SpatialResult};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::spatial_stats::morans_i;
+/// use scirs2__spatial::spatial_stats::morans_i;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
 /// let weights = array![
@@ -75,20 +75,20 @@ use crate::error::{SpatialError, SpatialResult};
 /// println!("Moran's I: {:.3}", moran);
 /// ```
 #[allow(dead_code)]
-pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
-    let n = values.len();
+pub fn morans_i<T: Float>(_values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
+    let n = _values.len();
 
     if weights.shape()[0] != n || weights.shape()[1] != n {
         return Err(SpatialError::DimensionError(
-            "Weights matrix dimensions must match number of values".to_string(),
+            "Weights matrix dimensions must match number of _values".to_string(),
         ));
     }
 
     // Calculate mean
-    let mean = values.sum() / T::from(n).unwrap();
+    let mean = _values.sum() / T::from(n).unwrap();
 
     // Calculate deviations from mean
-    let deviations: Array1<T> = values.map(|&x| x - mean);
+    let deviations: Array1<T> = _values.map(|&x| x - mean);
 
     // Calculate sum of weights
     let w_sum = weights.sum();
@@ -143,7 +143,7 @@ pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::spatial_stats::gearys_c;
+/// use scirs2__spatial::spatial_stats::gearys_c;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
 /// let weights = array![
@@ -158,17 +158,17 @@ pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
 /// println!("Geary's C: {:.3}", geary);
 /// ```
 #[allow(dead_code)]
-pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
-    let n = values.len();
+pub fn gearys_c<T: Float>(_values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
+    let n = _values.len();
 
     if weights.shape()[0] != n || weights.shape()[1] != n {
         return Err(SpatialError::DimensionError(
-            "Weights matrix dimensions must match number of values".to_string(),
+            "Weights matrix dimensions must match number of _values".to_string(),
         ));
     }
 
     // Calculate mean
-    let mean = values.sum() / T::from(n).unwrap();
+    let mean = _values.sum() / T::from(n).unwrap();
 
     // Calculate sum of weights
     let w_sum = weights.sum();
@@ -184,14 +184,14 @@ pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
     for i in 0..n {
         for j in 0..n {
             if i != j {
-                let diff = values[i] - values[j];
+                let diff = _values[i] - _values[j];
                 numerator = numerator + weights[[i, j]] * diff * diff;
             }
         }
     }
 
     // Calculate denominator: 2 * W * sum of (x_i - mean)^2
-    let variance_sum: T = values
+    let variance_sum: T = _values
         .map(|&x| {
             let diff = x - mean;
             diff * diff
@@ -231,7 +231,7 @@ pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::spatial_stats::local_morans_i;
+/// use scirs2__spatial::spatial_stats::local_morans_i;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
 /// let weights = array![
@@ -315,7 +315,7 @@ pub fn local_morans_i<T: Float>(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::spatial_stats::getis_ord_gi;
+/// use scirs2__spatial::spatial_stats::getis_ord_gi;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
 /// let weights = array![
@@ -420,7 +420,7 @@ pub fn getis_ord_gi<T: Float>(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::spatial_stats::distance_weights_matrix;
+/// use scirs2__spatial::spatial_stats::distance_weights_matrix;
 ///
 /// let coords = array![
 ///     [0.0, 0.0],
@@ -458,28 +458,28 @@ pub fn distance_weights_matrix<T: Float>(
     for i in 0..n {
         for j in 0..n {
             if i != j {
-                // Calculate Euclidean distance
+                // Calculate Euclidean _distance
                 let dx = coordinates[[i, 0]] - coordinates[[j, 0]];
                 let dy = coordinates[[i, 1]] - coordinates[[j, 1]];
-                let distance = (dx * dx + dy * dy).sqrt();
+                let _distance = (dx * dx + dy * dy).sqrt();
 
-                if distance <= max_distance {
+                if _distance <= max_distance {
                     let weight = match decay_function {
                         "inverse" => {
-                            if distance > T::zero() {
-                                T::one() / (T::one() + distance / bandwidth)
+                            if _distance > T::zero() {
+                                T::one() / (T::one() + _distance / bandwidth)
                             } else {
                                 T::zero()
                             }
                         }
-                        "exponential" => (-distance / bandwidth).exp(),
+                        "exponential" => (-_distance / bandwidth).exp(),
                         "gaussian" => {
-                            let exponent = -(distance * distance) / (bandwidth * bandwidth);
+                            let exponent = -(_distance * _distance) / (bandwidth * bandwidth);
                             exponent.exp()
                         }
                         _ => {
                             return Err(SpatialError::ValueError(
-                                "Unknown decay function. Use 'inverse', 'exponential', or 'gaussian'".to_string(),
+                                "Unknown decay _function. Use 'inverse', 'exponential', or 'gaussian'".to_string(),
                             ));
                         }
                     };
@@ -512,7 +512,7 @@ pub fn distance_weights_matrix<T: Float>(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::spatial_stats::clark_evans_index;
+/// use scirs2__spatial::spatial_stats::clark_evans_index;
 ///
 /// let coords = array![
 ///     [0.0, 0.0],
@@ -525,10 +525,10 @@ pub fn distance_weights_matrix<T: Float>(
 /// println!("Clark-Evans index: {:.3}", ce_index);
 /// ```
 #[allow(dead_code)]
-pub fn clark_evans_index<T: Float>(coordinates: &ArrayView2<T>, study_area: T) -> SpatialResult<T> {
-    let n = coordinates.shape()[0];
+pub fn clark_evans_index<T: Float>(_coordinates: &ArrayView2<T>, study_area: T) -> SpatialResult<T> {
+    let n = _coordinates.shape()[0];
 
-    if coordinates.shape()[1] != 2 {
+    if _coordinates.shape()[1] != 2 {
         return Err(SpatialError::DimensionError(
             "Coordinates must be 2D (x, y)".to_string(),
         ));
@@ -548,8 +548,8 @@ pub fn clark_evans_index<T: Float>(coordinates: &ArrayView2<T>, study_area: T) -
 
         for j in 0..n {
             if i != j {
-                let dx = coordinates[[i, 0]] - coordinates[[j, 0]];
-                let dy = coordinates[[i, 1]] - coordinates[[j, 1]];
+                let dx = _coordinates[[i, 0]] - _coordinates[[j, 0]];
+                let dy = _coordinates[[i, 1]] - _coordinates[[j, 1]];
                 let distance = (dx * dx + dy * dy).sqrt();
 
                 if distance < min_distance {

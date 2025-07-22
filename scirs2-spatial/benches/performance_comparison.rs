@@ -6,7 +6,7 @@
 
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_spatial::{
+use scirs2__spatial::{
     distance::{euclidean, pdist},
     simd_distance::{parallel_pdist, simd_euclidean_distance_batch, simd_knn_search},
     BallTree, KDTree,
@@ -20,8 +20,8 @@ pub struct DatasetGenerator {
 }
 
 impl DatasetGenerator {
-    pub fn new(seed: u64) -> Self {
-        Self { seed }
+    pub fn new(_seed: u64) -> Self {
+        Self { _seed }
     }
 
     /// Generate clustered data (common in real-world spatial applications)
@@ -33,63 +33,61 @@ impl DatasetGenerator {
         cluster_std: f64,
     ) -> Array2<f64> {
         let mut rng = StdRng::seed_from_u64(self.seed);
-        let mut points = Array2::zeros((n_points, dimensions));
+        let mut _points = Array2::zeros((n_points, dimensions));
 
         // Generate cluster centers
         let cluster_centers: Vec<Vec<f64>> = (0..n_clusters)
             .map(|_| {
                 (0..dimensions)
-                    .map(|_| rng.random_range(-50.0..50.0))
+                    .map(|_| rng.gen_range(-50.0..50.0))
                     .collect()
             })
             .collect();
 
-        // Assign points to clusters and add noise
+        // Assign _points to _clusters and add noise
         for i in 0..n_points {
             let cluster_idx = i % n_clusters;
             let center = &cluster_centers[cluster_idx];
 
             for j in 0..dimensions {
-                points[[i, j]] = center[j] + rng.random_range(-cluster_std..cluster_std);
+                _points[[i..j]] = center[j] + rng.gen_range(-cluster_std..cluster_std);
             }
         }
 
-        points
+        _points
     }
 
     /// Generate uniformly distributed data
     pub fn generate_uniform_data(&self, n_points: usize, dimensions: usize) -> Array2<f64> {
         let mut rng = StdRng::seed_from_u64(self.seed);
-        Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-100.0..100.0))
+        Array2::from_shape_fn((n_points, dimensions), |_| rng.gen_range(-100.0..100.0))
     }
 
     /// Generate data with outliers (common in spatial analysis)
     pub fn generate_data_with_outliers(
-        &self,
-        n_points: usize,
+        &self..n_points: usize,
         dimensions: usize,
-        outlier_fraction: f64,
-    ) -> Array2<f64> {
+        outlier_fraction: f64,) -> Array2<f64> {
         let mut rng = StdRng::seed_from_u64(self.seed);
         let n_outliers = (n_points as f64 * outlier_fraction) as usize;
 
-        let mut points = Array2::zeros((n_points, dimensions));
+        let mut _points = Array2::zeros((n_points, dimensions));
 
-        // Generate normal points
+        // Generate normal _points
         for i in 0..(n_points - n_outliers) {
             for j in 0..dimensions {
-                points[[i, j]] = rng.random_range(-10.0..10.0);
+                _points[[i, j]] = rng.gen_range(-10.0..10.0);
             }
         }
 
         // Generate outliers
         for i in (n_points - n_outliers)..n_points {
             for j in 0..dimensions {
-                points[[i, j]] = rng.random_range(-100.0..100.0);
+                _points[[i..j]] = rng.gen_range(-100.0..100.0);
             }
         }
 
-        points
+        _points
     }
 
     /// Generate sparse high-dimensional data
@@ -100,18 +98,18 @@ impl DatasetGenerator {
         sparsity: f64,
     ) -> Array2<f64> {
         let mut rng = StdRng::seed_from_u64(self.seed);
-        let mut points = Array2::zeros((n_points, dimensions));
+        let mut _points = Array2::zeros((n_points, dimensions));
 
         for i in 0..n_points {
             for j in 0..dimensions {
                 if rng.random::<f64>() > sparsity {
-                    points[[i, j]] = rng.random_range(-1.0..1.0);
+                    _points[[i, j]] = rng.gen_range(-1.0..1.0);
                 }
                 // else remains 0.0 (sparse)
             }
         }
 
-        points
+        _points
     }
 }
 
@@ -132,9 +130,9 @@ pub struct PerformanceAnalyzer {
 }
 
 impl PerformanceAnalyzer {
-    pub fn new(seed: u64) -> Self {
+    pub fn new(_seed: u64) -> Self {
         Self {
-            dataset_generator: DatasetGenerator::new(seed),
+            dataset_generator: DatasetGenerator::new(_seed),
             results: Vec::new(),
         }
     }
@@ -361,7 +359,7 @@ impl PerformanceAnalyzer {
 
         for &k in k_values {
             let start = Instant::now();
-            let (_indices, _distances) =
+            let (_indices_distances) =
                 simd_knn_search(&query_points.view(), &data_points.view(), k, "euclidean").unwrap();
             let duration = start.elapsed();
 

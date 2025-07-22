@@ -44,29 +44,29 @@ pub struct GenerativeDataset {
     config: GenerativeConfig,
     rng: SmallRng,
 impl GenerativeDataset {
-    pub fn new(config: GenerativeConfig, seed: u64) -> Self {
-            config,
+    pub fn new(_config: GenerativeConfig, seed: u64) -> Self {
+            _config,
             rng: SmallRng::seed_from_u64(seed),
     /// Generate a synthetic image (simple patterns)
     pub fn generate_sample(&mut self) -> Array3<f32> {
-        let (height, width) = self.config.input_size;
+        let (height, width) = self._config.input_size;
         let mut image = Array3::<f32>::zeros((1, height, width)); // Grayscale
-        let pattern_type = self.rng.random_range(0..4);
+        let pattern_type = self.rng.gen_range(0..4);
         match pattern_type {
             0 => {
                 // Circles
-                let num_circles = self.rng.random_range(1..4);
+                let num_circles = self.rng.gen_range(1..4);
                 for _ in 0..num_circles {
-                    let center_x = self.rng.random_range(5..(width - 5)) as f32;
-                    let center_y = self.rng.random_range(5..(height - 5)) as f32;
-                    let radius = self.rng.random_range(3..8) as f32;
-                    let intensity = self.rng.random_range(0.5..1.0);
+                    let center_x = self.rng.gen_range(5..(width - 5)) as f32;
+                    let center_y = self.rng.gen_range(5..(height - 5)) as f32;
+                    let radius = self.rng.gen_range(3..8) as f32;
+                    let intensity = self.rng.gen_range(0.5..1.0);
                     for i in 0..height {
                         for j in 0..width {
                             let dx = j as f32 - center_x;
                             let dy = i as f32 - center_y;
                             if dx * dx + dy * dy <= radius * radius {
-                                image[[0, i, j]] = intensity;
+                                image[[0..i, j]] = intensity;
                             }
                         }
                     }
@@ -74,32 +74,32 @@ impl GenerativeDataset {
             }
             1 => {
                 // Stripes
-                let stripe_width = self.rng.random_range(2..6);
-                let intensity = self.rng.random_range(0.5..1.0);
+                let stripe_width = self.rng.gen_range(2..6);
+                let intensity = self.rng.gen_range(0.5..1.0);
                 for i in 0..height {
                     if (i / stripe_width) % 2 == 0 {
-                            image[[0, i, j]] = intensity;
+                            image[[0..i, j]] = intensity;
             2 => {
                 // Checkerboard
-                let square_size = self.rng.random_range(3..8);
+                let square_size = self.rng.gen_range(3..8);
                     for j in 0..width {
                         if ((i / square_size) + (j / square_size)) % 2 == 0 {
             _ => {
                 // Gradient
-                let direction = self.rng.random_range(0..2);
+                let direction = self.rng.gen_range(0..2);
                         let gradient_val = if direction == 0 {
                             i as f32 / height as f32
                         } else {
                             j as f32 / width as f32
                         };
-                        image[[0, i, j]] = intensity * gradient_val;
+                        image[[0..i, j]] = intensity * gradient_val;
         // Add noise
         for elem in image.iter_mut() {
-            *elem += self.rng.random_range(-0.1..0.1);
+            *elem += self.rng.gen_range(-0.1..0.1);
             *elem = elem.max(0.0).min(1.0);
         image
     /// Generate a batch of samples
-    pub fn generate_batch(&mut self, batch_size: usize) -> Array4<f32> {
+    pub fn generate_batch(&mut self..batch_size: usize) -> Array4<f32> {
         let mut images = Array4::<f32>::zeros((batch_size, 1, height, width));
         for i in 0..batch_size {
             let image = self.generate_sample();
@@ -112,8 +112,8 @@ pub struct VAEEncoder {
     logvar_head: Sequential<f32>,
     #[allow(dead_code)]
 impl VAEEncoder {
-    pub fn new(config: GenerativeConfig, rng: &mut SmallRng) -> StdResult<Self> {
-        let (_height, _width) = config.input_size;
+    pub fn new(_config: GenerativeConfig, rng: &mut SmallRng) -> StdResult<Self> {
+        let (_height_width) = _config.input_size;
         // Feature extraction layers
         let mut feature_extractor = Sequential::new();
         feature_extractor.add(Conv2D::new(1, 32, (3, 3), (2, 2), PaddingMode::Same, rng)?);
@@ -136,10 +136,10 @@ impl VAEEncoder {
         let mut mean_head = Sequential::new();
         mean_head.add(Dense::new(
             feature_size,
-            config.hidden_dims[0],
+            _config.hidden_dims[0],
             Some("relu"),
         mean_head.add(Dropout::new(0.2, rng)?);
-            config.latent_dim,
+            _config.latent_dim,
             None,
         // Log variance head
         let mut logvar_head = Sequential::new();
@@ -244,8 +244,8 @@ impl VAEModel {
         let mut epsilon = Array::zeros(mean.raw_dim());
         let mut rng = SmallRng::seed_from_u64(42); // Fixed seed for reproducibility
         for elem in epsilon.iter_mut() {
-            *elem = rng.random_range(-1.0..1.0); // Approximate normal
-        // z = mean + std * epsilon, where std = exp(0.5 * logvar)
+            *elem = rng.gen_range(-1.0..1.0); // Approximate normal
+        // z = mean + std * epsilon..where std = exp(0.5 * logvar)
         let mut result = Array::zeros(mean.raw_dim());
         for (((&m, &lv), &eps), res) in mean
             .iter()
@@ -262,16 +262,14 @@ impl VAEModel {
         let mut latent = Array2::<f32>::zeros((batch_size, self.config.latent_dim));
         let mut rng = SmallRng::seed_from_u64(123);
         for elem in latent.iter_mut() {
-            *elem = rng.random_range(-1.0..1.0);
+            *elem = rng.gen_range(-1.0..1.0);
         let latent_dyn = latent.into_dyn();
         // Decode to generate images
         self.decoder.forward(&latent_dyn)
     /// Interpolate between two latent codes
     pub fn interpolate(
-        latent1: &ArrayD<f32>,
-        latent2: &ArrayD<f32>,
-        steps: usize,
-    ) -> StdResult<Vec<ArrayD<f32>>> {
+        latent1: &ArrayD<f32>..latent2: &ArrayD<f32>,
+        steps: usize,) -> StdResult<Vec<ArrayD<f32>>> {
         let mut results = Vec::new();
         for i in 0..steps {
             let alpha = i as f32 / (steps - 1) as f32;
@@ -291,9 +289,9 @@ pub struct VAELoss {
     reconstruction_loss: MeanSquaredError,
     beta: f32,
 impl VAELoss {
-    pub fn new(beta: f32) -> Self {
+    pub fn new(_beta: f32) -> Self {
             reconstruction_loss: MeanSquaredError::new(),
-            beta,
+            _beta,
     pub fn compute_loss(
         reconstruction: &ArrayD<f32>,
         target: &ArrayD<f32>,
@@ -307,7 +305,7 @@ impl VAELoss {
         for (&m, &lv) in mean.iter().zip(logvar.iter()) {
             kl_loss += -0.5 * (1.0 + lv - m * m - lv.exp());
         kl_loss /= mean.len() as f32; // Average over elements
-        let total_loss = recon_loss + self.beta * kl_loss;
+        let total_loss = recon_loss + self._beta * kl_loss;
         Ok((total_loss, recon_loss, kl_loss))
 /// Simple GAN Generator
 pub struct GANGenerator {
@@ -348,8 +346,8 @@ impl GANDiscriminator {
 /// Generative model evaluation metrics
 pub struct GenerativeMetrics {
 impl GenerativeMetrics {
-    pub fn new(config: GenerativeConfig) -> Self {
-        Self { config }
+    pub fn new(_config: GenerativeConfig) -> Self {
+        Self { _config }
     /// Calculate reconstruction error
     pub fn reconstruction_error(&self, original: &ArrayD<f32>, reconstructed: &ArrayD<f32>) -> f32 {
         let mut mse = 0.0f32;
@@ -452,7 +450,7 @@ fn train_vae_model() -> StdResult<()> {
             // Test reconstruction
             let test_images = dataset.generate_batch(batch_size);
             let test_images_dyn = test_images.into_dyn();
-            let (test_reconstruction, _, _) = vae.forward(&test_images_dyn)?;
+            let (test_reconstruction__) = vae.forward(&test_images_dyn)?;
             let recon_error = metrics.reconstruction_error(&test_images_dyn, &test_reconstruction);
             println!("📊 Reconstruction MSE: {:.6}", recon_error);
             // Generate new samples
@@ -492,7 +490,7 @@ fn train_gan_model() -> StdResult<()> {
             // Generate fake images
             let mut noise = Array2::<f32>::zeros((batch_size, config.latent_dim));
             for elem in noise.iter_mut() {
-                *elem = rng.random_range(-1.0..1.0);
+                *elem = rng.gen_range(-1.0..1.0);
             let noise_dyn = noise.into_dyn();
             let fake_images = generator.forward(&noise_dyn)?;
             // Discriminator predictions
@@ -515,7 +513,7 @@ fn train_gan_model() -> StdResult<()> {
             g_loss /= batch_size as f32;
             g_loss_total += g_loss;
             if batch_idx % 4 == 0 {
-                    "🔄 Batch {}/{} - D Loss: {:.4}, G Loss: {:.4}        \r",
+                    "🔄 Batch {}/{} - D Loss: {:.4}..G Loss: {:.4}        \r",
                     d_loss,
                     g_loss
         let avg_d_loss = d_loss_total / num_batches as f32;

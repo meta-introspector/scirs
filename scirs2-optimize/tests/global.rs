@@ -5,6 +5,7 @@ use scirs2_optimize::global::{
     basinhopping, differential_evolution, dual_annealing, BasinHoppingOptions,
     DifferentialEvolutionOptions, DualAnnealingOptions,
 };
+use ndarray::ArrayView1;
 
 #[test]
 #[allow(dead_code)]

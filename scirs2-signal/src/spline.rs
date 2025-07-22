@@ -9,6 +9,7 @@ use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// B-spline filter order values
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SplineOrder {
@@ -29,17 +30,16 @@ pub enum SplineOrder {
 
 impl SplineOrder {
     /// Convert from integer to SplineOrder
-    pub fn from_int(order: usize) -> SignalResult<Self> {
-        match order {
+    pub fn from_int(_order: usize) -> SignalResult<Self> {
+        match _order {
             0 => Ok(SplineOrder::Constant),
             1 => Ok(SplineOrder::Linear),
             2 => Ok(SplineOrder::Quadratic),
             3 => Ok(SplineOrder::Cubic),
             4 => Ok(SplineOrder::Quartic),
-            5 => Ok(SplineOrder::Quintic),
-            _ => Err(SignalError::ValueError(format!(
-                "Unsupported spline order: {}. Valid values are 0 through 5.",
-                order
+            5 => Ok(SplineOrder::Quintic, _ => Err(SignalError::ValueError(format!(
+                "Unsupported spline _order: {}. Valid values are 0 through 5.",
+                _order
             ))),
         }
     }
@@ -60,8 +60,7 @@ impl std::str::FromStr for SplineOrder {
             "2" | "quadratic" => Ok(SplineOrder::Quadratic),
             "3" | "cubic" => Ok(SplineOrder::Cubic),
             "4" | "quartic" => Ok(SplineOrder::Quartic),
-            "5" | "quintic" => Ok(SplineOrder::Quintic),
-            _ => Err(SignalError::ValueError(format!(
+            "5" | "quintic" => Ok(SplineOrder::Quintic, _ => Err(SignalError::ValueError(format!(
                 "Invalid spline order: '{}'. Valid options are 0-5 or corresponding names (e.g., 'cubic').",
                 s
             ))),
@@ -83,8 +82,8 @@ impl std::str::FromStr for SplineOrder {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spline::bspline_basis;
-/// use scirs2_signal::spline::SplineOrder;
+/// use scirs2__signal::spline::bspline_basis;
+/// use scirs2__signal::spline::SplineOrder;
 ///
 /// // Compute cubic B-spline basis at several points
 /// let x: Vec<f64> = (0..10).map(|i| i as f64 / 9.0).collect();
@@ -475,7 +474,7 @@ fn apply_anticausal_filter(c: &mut [f64], n: SplineOrder) {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spline::{bspline_filter, SplineOrder};
+/// use scirs2__signal::spline::{bspline_filter, SplineOrder};
 ///
 /// // Generate a noisy signal
 /// let signal = vec![1.0, 1.2, 0.9, 1.1, 0.95, 1.05, 0.9, 1.1];
@@ -487,12 +486,12 @@ fn apply_anticausal_filter(c: &mut [f64], n: SplineOrder) {
 /// assert_eq!(filtered.len(), signal.len());
 /// ```
 #[allow(dead_code)]
-pub fn bspline_filter<T>(signal: &[T], order: SplineOrder) -> SignalResult<Vec<f64>>
+pub fn bspline_filter<T>(_signal: &[T], order: SplineOrder) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
     // Convert to f64
-    let mut signal_f64: Vec<f64> = signal
+    let mut _signal_f64: Vec<f64> = _signal
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -502,7 +501,7 @@ where
         .collect::<SignalResult<Vec<f64>>>()?;
 
     if signal_f64.is_empty() {
-        return Err(SignalError::ValueError("Input signal is empty".to_string()));
+        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
     }
 
     // Apply causal and anti-causal filters
@@ -526,7 +525,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spline::{bspline_coefficients, SplineOrder};
+/// use scirs2__signal::spline::{bspline_coefficients, SplineOrder};
 ///
 /// // Generate a signal
 /// let signal = vec![1.0, 2.0, 1.5, 0.5, 1.0, 2.0, 1.5];
@@ -538,13 +537,13 @@ where
 /// assert_eq!(coeffs.len(), signal.len());
 /// ```
 #[allow(dead_code)]
-pub fn bspline_coefficients<T>(signal: &[T], order: SplineOrder) -> SignalResult<Vec<f64>>
+pub fn bspline_coefficients<T>(_signal: &[T], order: SplineOrder) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
-    // For constant or linear splines, coefficients are the same as the signal
+    // For constant or linear splines, coefficients are the same as the _signal
     if order == SplineOrder::Constant || order == SplineOrder::Linear {
-        return signal
+        return _signal
             .iter()
             .map(|&val| {
                 NumCast::from(val).ok_or_else(|| {
@@ -555,7 +554,7 @@ where
     }
 
     // Convert to f64
-    let signal_f64: Vec<f64> = signal
+    let _signal_f64: Vec<f64> = _signal
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -565,7 +564,7 @@ where
         .collect::<SignalResult<Vec<f64>>>()?;
 
     if signal_f64.is_empty() {
-        return Err(SignalError::ValueError("Input signal is empty".to_string()));
+        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
     }
 
     // Gain factor for the b-spline filter
@@ -573,8 +572,7 @@ where
         SplineOrder::Quadratic => 3.0,
         SplineOrder::Cubic => 6.0,
         SplineOrder::Quartic => 120.0,
-        SplineOrder::Quintic => 720.0,
-        _ => 1.0,
+        SplineOrder::Quintic => 720.0_ => 1.0,
     };
 
     // Apply b-spline filter
@@ -605,7 +603,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spline::{bspline_coefficients, bspline_evaluate, SplineOrder};
+/// use scirs2__signal::spline::{bspline_coefficients, bspline_evaluate, SplineOrder};
 /// use ndarray::Array1;
 ///
 /// // Generate a signal
@@ -622,13 +620,13 @@ where
 /// assert_eq!(values.len(), x.len());
 /// ```
 #[allow(dead_code)]
-pub fn bspline_evaluate<T, U>(coeffs: &[T], x: &[U], order: SplineOrder) -> SignalResult<Vec<f64>>
+pub fn bspline_evaluate<T, U>(_coeffs: &[T], x: &[U], order: SplineOrder) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
     U: Float + NumCast + Debug,
 {
     // Convert coefficients to f64
-    let coeffs_f64: Vec<f64> = coeffs
+    let _coeffs_f64: Vec<f64> = _coeffs
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -795,7 +793,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spline::{bspline_smooth, SplineOrder};
+/// use scirs2__signal::spline::{bspline_smooth, SplineOrder};
 ///
 /// // Generate a noisy signal
 /// let signal = vec![1.0, 1.2, 0.9, 1.1, 0.95, 1.05, 0.9, 1.1];
@@ -807,7 +805,7 @@ where
 /// assert_eq!(smoothed.len(), signal.len());
 /// ```
 #[allow(dead_code)]
-pub fn bspline_smooth<T>(signal: &[T], order: SplineOrder, lam: f64) -> SignalResult<Vec<f64>>
+pub fn bspline_smooth<T>(_signal: &[T], order: SplineOrder, lam: f64) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
@@ -818,7 +816,7 @@ where
     }
 
     // Convert to f64
-    let signal_f64: Vec<f64> = signal
+    let _signal_f64: Vec<f64> = _signal
         .iter()
         .map(|&val| {
             NumCast::from(val).ok_or_else(|| {
@@ -828,13 +826,13 @@ where
         .collect::<SignalResult<Vec<f64>>>()?;
 
     if signal_f64.is_empty() {
-        return Err(SignalError::ValueError("Input signal is empty".to_string()));
+        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
     }
 
     let n = signal_f64.len();
 
     if lam == 0.0 {
-        // No smoothing, return the original signal
+        // No smoothing, return the original _signal
         return Ok(signal_f64);
     }
 
@@ -881,7 +879,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::spline::{bspline_coefficients, bspline_derivative, SplineOrder};
+/// use scirs2__signal::spline::{bspline_coefficients, bspline_derivative, SplineOrder};
 ///
 /// // Generate a signal
 /// let signal = vec![1.0, 2.0, 1.5, 0.5, 1.0, 2.0, 1.5];
@@ -985,8 +983,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_bspline_basis_cubic() {
         // Test cubic B-spline basis function
@@ -1001,6 +998,8 @@ mod tests {
 
     #[test]
     fn test_bspline_filter() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test B-spline filter on a constant signal
         let signal = vec![1.0; 10];
         let filtered = bspline_filter(&signal, SplineOrder::Cubic).unwrap();
@@ -1026,6 +1025,8 @@ mod tests {
 
     #[test]
     fn test_bspline_coefficients() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test B-spline coefficients on a constant signal
         let signal = vec![1.0; 10];
         let coeffs = bspline_coefficients(&signal, SplineOrder::Cubic).unwrap();
@@ -1041,6 +1042,8 @@ mod tests {
 
     #[test]
     fn test_bspline_evaluate() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple signal
         let signal: Vec<f64> = vec![1.0, 2.0, 3.0, 2.0, 1.0];
 
@@ -1076,6 +1079,8 @@ mod tests {
 
     #[test]
     fn test_bspline_smooth() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple signal with some variation
         let signal = vec![1.0, 2.0, 1.5, 3.0, 2.5, 4.0, 3.5, 2.0, 1.0];
 
@@ -1104,6 +1109,8 @@ mod tests {
 
     #[test]
     fn test_bspline_derivative() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple test signal
         let signal: Vec<f64> = vec![1.0, 2.0, 4.0, 2.0, 1.0];
 

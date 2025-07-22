@@ -4,7 +4,7 @@
 //! workloads across major cloud platforms with automatic scaling and monitoring.
 
 #[cfg(feature = "wasm")]
-use scirs2_series::cloud_deployment::{
+use scirs2__series::cloud_deployment::{
     CloudDeploymentOrchestrator, CloudPlatform, CloudResourceConfig, CloudTimeSeriesJob,
     DeploymentConfig, JobPriority, ResourceRequirements, TimeSeriesJobType,
 };
@@ -229,18 +229,17 @@ fn submit_sample_jobs(
         let priority = match i % 4 {
             0 => JobPriority::Critical,
             1 => JobPriority::High,
-            2 => JobPriority::Normal,
-            _ => JobPriority::Low,
+            2 => JobPriority::Normal_ =>, JobPriority::Low,
         };
 
         let mut parameters = HashMap::new();
         parameters.insert(
             "window_size".to_string(),
-            serde_json::Value::Number(serde_json::Number::from(10)),
+            serde_json::Value::Number(serde, _json::Number::from(10)),
         );
         parameters.insert(
             "threshold".to_string(),
-            serde_json::Value::Number(serde_json::Number::from_f64(2.5).unwrap()),
+            serde_json::Value::Number(serde, _json::Number::from_f64(2.5).unwrap()),
         );
 
         let job = CloudTimeSeriesJob {
@@ -276,11 +275,11 @@ fn submit_sample_jobs(
 
 /// Print deployment metrics and status
 #[allow(dead_code)]
-fn print_deployment_metrics(orchestrator: &CloudDeploymentOrchestrator) {
+fn print_deployment_metrics(_orchestrator: &CloudDeploymentOrchestrator) {
     println!("\n📊 Deployment Metrics:");
-    println!("   Status: {:?}", orchestrator.get_status());
+    println!("   Status: {:?}", _orchestrator.get_status());
 
-    let metrics = orchestrator.get_metrics();
+    let metrics = _orchestrator.get_metrics();
     for (key, value) in metrics {
         match key.as_str() {
             "active_instances" | "total_jobs_processed" | "error_count" => {

@@ -24,10 +24,10 @@ pub struct MetaLearningOptimizer {
 
 impl MetaLearningOptimizer {
     /// Create new meta-learning optimizer
-    pub fn new(param_size: usize, meta_learning_rate: f64) -> Self {
+    pub fn new(_param_size: usize, meta_learning_rate: f64) -> Self {
         Self {
             task_parameters: HashMap::new(),
-            meta_parameters: Array1::zeros(param_size),
+            meta_parameters: Array1::zeros(_param_size),
             meta_learning_rate,
             task_count: 0,
         }
@@ -143,7 +143,7 @@ where
 {
     let mut meta_optimizer = MetaLearningOptimizer::new(initial_params.len(), 0.1);
 
-    // Train on multiple similar tasks (variations of the objective)
+    // Train on multiple similar _tasks (variations of the objective)
     for task_idx in 0..num_tasks {
         let task_id = format!("training_task_{}", task_idx);
 

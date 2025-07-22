@@ -4,7 +4,7 @@
 //! semantic similarity measures rather than traditional distance metrics. It includes
 //! algorithms optimized for document clustering, sentence clustering, and topic modeling.
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, Zero};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -15,6 +15,7 @@ use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 
 use crate::error::{ClusteringError, Result};
 use crate::vq::euclidean_distance;
+use statrs::statistics::Statistics;
 
 /// Text representation types for clustering
 #[derive(Debug, Clone)]
@@ -151,9 +152,9 @@ pub struct SemanticKMeans {
 
 impl SemanticKMeans {
     /// Create a new semantic K-means clusterer
-    pub fn new(config: SemanticClusteringConfig) -> Self {
+    pub fn new(_config: SemanticClusteringConfig) -> Self {
         Self {
-            config,
+            _config,
             centroids: None,
             labels: None,
             inertia: None,
@@ -287,7 +288,7 @@ impl SemanticKMeans {
 
     /// Reduce dimensionality using PCA (simplified)
     fn reduce_dimensions(&self, matrix: Array2<f64>, target_dim: usize) -> Result<Array2<f64>> {
-        let (_n_samples, n_features) = matrix.dim();
+        let (_n_samples, n_features) = matrix._dim();
 
         if target_dim >= n_features {
             return Ok(matrix);
@@ -645,7 +646,7 @@ impl SemanticKMeans {
             let mut labels = Array1::zeros(preprocessed.nrows());
 
             for (i, sample) in preprocessed.rows().into_iter().enumerate() {
-                let (best_cluster, _) = self.find_closest_centroid(sample, centroids.view())?;
+                let (best_cluster_) = self.find_closest_centroid(sample, centroids.view())?;
                 labels[i] = best_cluster;
             }
 
@@ -682,9 +683,9 @@ pub struct SemanticHierarchical {
 
 impl SemanticHierarchical {
     /// Create a new semantic hierarchical clusterer
-    pub fn new(config: SemanticClusteringConfig) -> Self {
+    pub fn new(_config: SemanticClusteringConfig) -> Self {
         Self {
-            config,
+            _config,
             linkage_matrix: None,
             n_clusters: None,
         }
@@ -835,8 +836,7 @@ impl SemanticHierarchical {
                     Ok(1.0 - similarity)
                 }
             }
-            SemanticSimilarity::Euclidean => Ok(euclidean_distance(a, b).to_f64().unwrap_or(0.0)),
-            _ => {
+            SemanticSimilarity::Euclidean => Ok(euclidean_distance(a, b).to_f64().unwrap_or(0.0), _ => {
                 // For other metrics, use Euclidean as fallback
                 Ok(euclidean_distance(a, b).to_f64().unwrap_or(0.0))
             }
@@ -859,10 +859,9 @@ pub struct TopicBasedClustering {
 
 impl TopicBasedClustering {
     /// Create a new topic-based clusterer
-    pub fn new(config: SemanticClusteringConfig, n_topics: usize) -> Self {
+    pub fn new(_config: SemanticClusteringConfig, n_topics: usize) -> Self {
         Self {
-            config,
-            topics: None,
+            _config_topics: None,
             document_topic_distributions: None,
             n_topics,
         }
@@ -881,8 +880,7 @@ impl TopicBasedClustering {
     fn extract_vectors(&self, text_repr: &TextRepresentation) -> Result<Array2<f64>> {
         match text_repr {
             TextRepresentation::TfIdf { vectors, .. } => Ok(vectors.clone()),
-            TextRepresentation::DocumentTerm { matrix, .. } => Ok(matrix.clone()),
-            _ => Err(ClusteringError::InvalidInput(
+            TextRepresentation::DocumentTerm { matrix, .. } => Ok(matrix.clone(), _ => Err(ClusteringError::InvalidInput(
                 "Topic modeling requires TF-IDF or document-term matrix".to_string(),
             )),
         }
@@ -1079,9 +1077,9 @@ pub fn topic_clustering(
 
     clusterer.fit(text_repr)?;
 
-    let topics = clusterer
-        .topics()
-        .ok_or_else(|| ClusteringError::ComputationError("Failed to get topics".to_string()))?
+    let _topics = clusterer
+        ._topics()
+        .ok_or_else(|| ClusteringError::ComputationError("Failed to get _topics".to_string()))?
         .clone();
 
     let doc_topics = clusterer
@@ -1095,7 +1093,7 @@ pub fn topic_clustering(
 
     let labels = clusterer.predict(text_repr)?;
 
-    Ok((topics, doc_topics, labels))
+    Ok((_topics, doc_topics, labels))
 }
 
 #[cfg(test)]

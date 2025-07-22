@@ -342,7 +342,7 @@ where
 
     println!("Starting Adaptive Momentum optimization:");
     println!("  Parameters: {}", x.len());
-    println!("  Correlation window: {}", correlation_window);
+    println!("  Correlation _window: {}", correlation_window);
 
     #[allow(clippy::explicit_counter_loop)]
     for iteration in 0..options.max_iter {

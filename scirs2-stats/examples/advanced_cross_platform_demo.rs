@@ -4,7 +4,7 @@
 //! capabilities that ensure Advanced optimizations work consistently
 //! across different platforms, architectures, and system configurations.
 
-use scirs2_stats::{create_cross_platform_validator, CompatibilityRating, CrossPlatformValidator};
+use scirs2__stats::{create_cross_platform_validator, CompatibilityRating, CrossPlatformValidator};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -61,7 +61,7 @@ impl<F: Float> TestResult<F> {
 ///
 /// * Test result with chi-square statistic and p-value
 #[allow(dead_code)]
-pub fn box_m_test<F>(groups: &[ArrayView2<F>], significance_level: F) -> LinalgResult<TestResult<F>>
+pub fn box_m_test<F>(_groups: &[ArrayView2<F>], significance_level: F) -> LinalgResult<TestResult<F>>
 where
     F: Float
         + Zero
@@ -76,20 +76,20 @@ where
         + Sync
         + 'static,
 {
-    if groups.len() < 2 {
+    if _groups.len() < 2 {
         return Err(LinalgError::InvalidInputError(
-            "Need at least 2 groups for Box's M test".to_string(),
+            "Need at least 2 _groups for Box's M test".to_string(),
         ));
     }
 
-    let k = groups.len();
-    let p = groups[0].ncols();
+    let k = _groups.len();
+    let p = _groups[0].ncols();
 
-    // Check that all groups have the same number of variables
-    for (i, group) in groups.iter().enumerate() {
+    // Check that all _groups have the same number of variables
+    for (i, group) in _groups.iter().enumerate() {
         if group.ncols() != p {
             return Err(LinalgError::ShapeError(format!(
-                "All groups must have the same number of variables. Group 0 has {}, group {} has {}",
+                "All _groups must have the same number of variables. Group 0 has {}, group {} has {}",
                 p, i, group.ncols()
             )));
         }
@@ -100,7 +100,7 @@ where
     let mut group_covs = Vec::with_capacity(k);
     let mut log_dets = Vec::with_capacity(k);
 
-    for group in groups {
+    for group in _groups {
         let n_i = group.nrows();
         if n_i <= p {
             return Err(LinalgError::InvalidInputError(format!(
@@ -123,7 +123,7 @@ where
         if det_i <= F::zero() {
             return Err(LinalgError::InvalidInputError(format!(
                 "Covariance matrix for group {} has non-positive determinant: {:?}. Consider increasing sample size or regularization.",
-                groups.iter().position(|g| std::ptr::eq(g.as_ptr(), group.as_ptr())).unwrap_or(0),
+                _groups.iter().position(|g| std::ptr::eq(g.as_ptr(), group.as_ptr())).unwrap_or(0),
                 det_i
             )));
         }
@@ -477,18 +477,18 @@ where
 // Helper functions for computing distribution functions (simplified implementations)
 
 #[allow(dead_code)]
-fn compute_box_correction_c1<F>(sample_sizes: &[usize], p: usize) -> LinalgResult<F>
+fn compute_box_correction_c1<F>(_sample_sizes: &[usize], p: usize) -> LinalgResult<F>
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive,
 {
-    let k = sample_sizes.len();
+    let k = _sample_sizes.len();
     let mut sum_inv = F::zero();
 
-    for &n_i in sample_sizes {
+    for &n_i in _sample_sizes {
         sum_inv = sum_inv + F::one() / F::from(n_i - 1).unwrap();
     }
 
-    let total_dof: usize = sample_sizes.iter().map(|&n| n - 1).sum();
+    let total_dof: usize = _sample_sizes.iter().map(|&n| n - 1).sum();
     let inv_total = F::one() / F::from(total_dof).unwrap();
 
     let c1 = (F::from(2 * p * p + 3 * p - 1).unwrap() / F::from(6 * (p + 1) * (k - 1)).unwrap())

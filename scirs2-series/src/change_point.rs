@@ -9,6 +9,7 @@ use num_traits::{Float, FromPrimitive, NumCast};
 use std::fmt::Debug;
 
 use crate::error::{Result, TimeSeriesError};
+use statrs::statistics::Statistics;
 
 /// Method for change point detection
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -109,7 +110,7 @@ pub struct ChangePointResult {
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_series::change_point::{detect_change_points, ChangePointOptions, ChangePointMethod};
+/// use scirs2__series::change_point::{detect_change_points, ChangePointOptions, ChangePointMethod};
 ///
 /// // Create a time series with a change point at index 50
 /// let mut ts = Array1::zeros(100);
@@ -612,16 +613,16 @@ where
 
 /// Calculate variance of a segment
 #[allow(dead_code)]
-fn calculate_variance<F>(segment: &Array1<F>, mean: F) -> F
+fn calculate_variance<F>(_segment: &Array1<F>, mean: F) -> F
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
 {
-    if segment.len() <= 1 {
+    if _segment.len() <= 1 {
         return F::zero();
     }
 
-    let n = F::from_usize(segment.len()).unwrap();
-    let sum_sq_deviations: F = segment.iter().map(|&x| (x - mean) * (x - mean)).sum();
+    let n = F::from_usize(_segment.len()).unwrap();
+    let sum_sq_deviations: F = _segment.iter().map(|&x| (x - mean) * (x - mean)).sum();
 
     sum_sq_deviations / (n - F::one())
 }

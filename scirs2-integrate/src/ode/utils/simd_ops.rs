@@ -15,6 +15,7 @@ use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
 use ndarray::{Array1, ArrayView1, ArrayViewMut1, Zip};
 use scirs2_core::simd_ops::SimdUnifiedOps;
+use std::f64::consts::PI;
 
 /// SIMD-optimized ODE operations
 pub struct SimdOdeOps;

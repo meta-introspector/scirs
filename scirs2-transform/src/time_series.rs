@@ -4,9 +4,9 @@
 //! including Fourier features, wavelet features, and lag features.
 
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
-use num_complex::Complex;
+use num__complex::Complex;
 use num_traits::{Float, NumCast};
-use scirs2_fft::fft;
+use scirs2__fft::fft;
 
 use crate::error::{Result, TransformError};
 
@@ -31,9 +31,9 @@ impl FourierFeatures {
     ///
     /// # Arguments
     /// * `n_components` - Number of frequency components to extract
-    pub fn new(n_components: usize) -> Self {
+    pub fn new(_n_components: usize) -> Self {
         FourierFeatures {
-            n_components,
+            _n_components,
             include_phase: false,
             normalize: true,
             sampling_freq: None,
@@ -151,16 +151,16 @@ impl LagFeatures {
     ///
     /// # Arguments
     /// * `lags` - List of lag values (e.g., vec![1, 2, 3] for lags 1, 2, and 3)
-    pub fn new(lags: Vec<usize>) -> Self {
+    pub fn new(_lags: Vec<usize>) -> Self {
         LagFeatures {
-            lags,
+            _lags,
             drop_na: true,
         }
     }
 
     /// Create with a range of lags
-    pub fn with_range(start: usize, end: usize) -> Self {
-        let lags = (start..=end).collect();
+    pub fn with_range(_start: usize, end: usize) -> Self {
+        let lags = (_start..=end).collect();
         LagFeatures {
             lags,
             drop_na: true,
@@ -260,9 +260,9 @@ impl WaveletFeatures {
     /// # Arguments
     /// * `wavelet` - Wavelet type (e.g., "db1" for Haar wavelet)
     /// * `level` - Decomposition level
-    pub fn new(wavelet: &str, level: usize) -> Self {
+    pub fn new(_wavelet: &str, level: usize) -> Self {
         WaveletFeatures {
-            wavelet: wavelet.to_string(),
+            _wavelet: _wavelet.to_string(),
             level,
             include_approx: true,
         }

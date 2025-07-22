@@ -113,8 +113,8 @@ pub struct ProductionValidator {
 
 impl ProductionValidator {
     /// Create a new production validator
-    pub fn new(config: ProductionValidationConfig) -> Self {
-        Self { config }
+    pub fn new(_config: ProductionValidationConfig) -> Self {
+        Self { _config }
     }
 
     /// Run comprehensive production validation

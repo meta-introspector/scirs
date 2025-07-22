@@ -14,6 +14,7 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::{rng, simd_ops::SimdUnifiedOps};
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
+use statrs::statistics::Statistics;
 
 /// Advanced parallel Monte Carlo integrator
 pub struct AdvancedParallelMonteCarlo<F> {
@@ -24,8 +25,7 @@ pub struct AdvancedParallelMonteCarlo<F> {
     /// Variance reduction techniques
     pub variance_reduction: VarianceReductionConfig,
     /// Performance metrics
-    pub metrics: Arc<Mutex<IntegrationMetrics>>,
-    _phantom: PhantomData<F>,
+    pub metrics: Arc<Mutex<IntegrationMetrics>>, _phantom: PhantomData<F>,
 }
 
 /// Monte Carlo integration configuration
@@ -61,7 +61,7 @@ impl Default for MonteCarloConfig {
             target_relative_error: 0.01,
             confidence_level: 0.95,
             parallel: true,
-            num_workers: num_cpus::get(),
+            num_workers: num, _cpus: get(),
             chunk_size: 1000,
             adaptive_sampling: true,
             seed: None,
@@ -187,12 +187,12 @@ where
     fn bounds(&self) -> (Array1<F>, Array1<F>);
 
     /// Provide importance sampling density (optional)
-    fn importance_density(&self, _x: &ArrayView1<F>) -> Option<F> {
+    fn importance_density(&self_x: &ArrayView1<F>) -> Option<F> {
         None
     }
 
     /// Provide control variate function (optional)
-    fn control_variate(&self, _x: &ArrayView1<F>) -> Option<F> {
+    fn control_variate(&self_x: &ArrayView1<F>) -> Option<F> {
         None
     }
 }
@@ -212,7 +212,7 @@ where
         + std::fmt::Display,
 {
     /// Create new advanced parallel Monte Carlo integrator
-    pub fn new(config: MonteCarloConfig, variance_reduction: VarianceReductionConfig) -> Self {
+    pub fn new(_config: MonteCarloConfig, variance_reduction: VarianceReductionConfig) -> Self {
         let adaptive_state = Arc::new(Mutex::new(AdaptiveState {
             n_samples: 0,
             running_mean: F::zero(),
@@ -225,11 +225,10 @@ where
         let metrics = Arc::new(Mutex::new(IntegrationMetrics::default()));
 
         Self {
-            config,
+            _config,
             adaptive_state,
             variance_reduction,
-            metrics,
-            _phantom: PhantomData,
+            metrics_phantom: PhantomData,
         }
     }
 
@@ -258,7 +257,7 @@ where
         // Initialize random number generator
         let mut main_rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rng()),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut total_samples = 0;
@@ -322,7 +321,7 @@ where
             value: current_estimate,
             standard_error: current_error,
             confidence_interval,
-            relative_error: F::from(if current_estimate.abs() > F::zero() {
+            relative_error: F::from(if current_estimate.abs() >, F::zero() {
                 (current_error / current_estimate.abs()).to_f64().unwrap()
             } else {
                 current_error.to_f64().unwrap()
@@ -531,7 +530,7 @@ where
     }
 
     /// Adaptive refinement of integration regions
-    fn adaptive_refinement<T>(&self, _function: &T) -> StatsResult<()>
+    fn adaptive_refinement<T>(&self_function: &T) -> StatsResult<()>
     where
         T: IntegrableFunction<F>,
     {
@@ -551,7 +550,7 @@ where
                     .partial_cmp(&ratio_b)
                     .unwrap_or(std::cmp::Ordering::Equal)
             })
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
         {
             // Simple subdivision along the first dimension
             let region = state.regions[worst_region_idx].clone();
@@ -596,8 +595,7 @@ where
         match confidence_level {
             x if x >= 0.99 => 2.576,
             x if x >= 0.95 => 1.96,
-            x if x >= 0.90 => 1.645,
-            _ => 1.96,
+            x if x >= 0.90 => 1.645_ => 1.96,
         }
     }
 
@@ -660,11 +658,11 @@ pub struct TestFunction {
 }
 
 impl TestFunction {
-    pub fn new(dimension: usize) -> Self {
+    pub fn new(_dimension: usize) -> Self {
         Self {
-            dimension,
-            lower_bounds: Array1::zeros(dimension),
-            upper_bounds: Array1::ones(dimension),
+            _dimension,
+            lower_bounds: Array1::zeros(_dimension),
+            upper_bounds: Array1::ones(_dimension),
         }
     }
 }
@@ -693,13 +691,13 @@ pub struct GaussianFunction {
 }
 
 impl GaussianFunction {
-    pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> Self {
-        let dimension = mean.len();
+    pub fn new(_mean: Array1<f64>, covariance: Array2<f64>) -> Self {
+        let dimension = _mean.len();
         let lower_bounds = Array1::from_elem(dimension, -5.0);
         let upper_bounds = Array1::from_elem(dimension, 5.0);
 
         Self {
-            mean,
+            _mean,
             covariance,
             lower_bounds,
             upper_bounds,

@@ -52,7 +52,7 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
     /// * `beta2` - Exponential decay rate for the second moment estimates (default: 0.999)
     /// * `epsilon` - Small constant for numerical stability (default: 1e-8)
     /// * `weight_decay` - Weight decay factor (default: 0.0)
-    pub fn new(learning_rate: F, beta1: F, beta2: F, epsilon: F, weight_decay: F) -> Result<Self> {
+    pub fn new(_learning_rate: F, beta1: F, beta2: F, epsilon: F, weight_decay: F) -> Result<Self> {
         // Calculate rho_inf (used in the rectification term)
         let two = F::from(2.0).ok_or_else(|| {
             NeuralError::InvalidArgument(
@@ -73,7 +73,7 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
         })
     }
     /// Creates a new RAdam optimizer with default hyperparameters
-    pub fn default_with_lr(learning_rate: F) -> Result<Self> {
+    pub fn default_with_lr(_learning_rate: F) -> Result<Self> {
         let beta1 = F::from(0.9).ok_or_else(|| {
                 "Failed to convert 0.9 to the appropriate floating point type".to_string(),
         let beta2 = F::from(0.999).ok_or_else(|| {
@@ -82,7 +82,7 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
                 "Failed to convert 1e-8 to the appropriate floating point type".to_string(),
         let weight_decay = F::from(0.0).ok_or_else(|| {
                 "Failed to convert 0.0 to the appropriate floating point type".to_string(),
-        Self::new(learning_rate, beta1, beta2, epsilon, weight_decay)
+        Self::new(_learning_rate, beta1, beta2, epsilon, weight_decay)
     /// Gets the beta1 parameter
     pub fn get_beta1(&self) -> F {
         self.beta1
@@ -227,4 +227,4 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for RAdam<F> {
         self.learning_rate = lr;
 // Enable direct usage of scirs2-optim's RAdam when the optim feature is enabled
 #[cfg(feature = "optim")]
-pub use scirs2_optim::RAdam as OptimRAdam;
+pub use scirs2__optim::RAdam as OptimRAdam;

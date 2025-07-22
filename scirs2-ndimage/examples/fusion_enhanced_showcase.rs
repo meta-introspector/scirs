@@ -28,7 +28,7 @@
 //! - Quantum anomaly detection and optimization feedback
 
 use ndarray::{Array1, Array2, Array3, ArrayView2};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     enhanced_meta_learning_with_temporal_fusion,
     // Latest Advanced enhancements
     enhanced_quantum_consciousness_evolution,
@@ -50,6 +50,7 @@ use scirs2_ndimage::{
 };
 use std::collections::HashMap;
 use std::time::Instant;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -136,7 +137,7 @@ fn demonstrate_consciousness_evolution(
     // Initialize Advanced state
     let mut advanced_state = create_mock_advanced_state(image.dim(), config);
 
-    // Process through quantum consciousness evolution
+    // Process through quantum consciousness _evolution
     let consciousness_output = enhanced_quantum_consciousness_evolution(
         image.view(),
         &advanced_features,
@@ -147,9 +148,9 @@ fn demonstrate_consciousness_evolution(
 
     let duration = start_time.elapsed();
 
-    // Analyze consciousness evolution results
+    // Analyze consciousness _evolution results
     let avg_consciousness = consciousness_output.mean().unwrap_or(0.0);
-    let consciousness_variance = consciousness_output.var(0.0).mean().unwrap_or(0.0);
+    let consciousness_variance = consciousness_output.variance().mean().unwrap_or(0.0);
     let emergence_strength = consciousness_evolution
         .complexity_metrics
         .emergence_strength;
@@ -254,7 +255,7 @@ fn demonstrate_enhanced_meta_learning(
 
     // Analyze meta-learning results
     let avg_output = meta_learning_output.mean().unwrap_or(0.0);
-    let output_variance = meta_learning_output.var(0.0).mean().unwrap_or(0.0);
+    let output_variance = meta_learning_output.variance().mean().unwrap_or(0.0);
 
     // Analyze temporal memory fusion
     let short_term_memories = meta_learning_system
@@ -358,7 +359,7 @@ fn demonstrate_quantum_resource_scheduling(
     println!("   🔧 Active scheduling algorithms:");
     for (i, algorithm) in resource_scheduler.scheduling_algorithms.iter().enumerate() {
         match algorithm {
-            scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::QuantumAnnealing {
+            scirs2_ndimage::fusion, _core::QuantumSchedulingAlgorithm::QuantumAnnealing {
                 annealing_schedule,
                 optimization_target,
             } => {
@@ -368,10 +369,10 @@ fn demonstrate_quantum_resource_scheduling(
                     annealing_schedule.steps
                 );
             }
-            scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::QAOA { layers, .. } => {
+            scirs2_ndimage::fusion, _core::QuantumSchedulingAlgorithm::QAOA { layers, .. } => {
                 println!("      Algorithm {}: QAOA ({} layers)", i + 1, layers);
             }
-            scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::VQEScheduling {
+            scirs2_ndimage::fusion, _core::QuantumSchedulingAlgorithm::VQEScheduling {
                 ansatz,
                 ..
             } => {
@@ -396,7 +397,7 @@ fn demonstrate_quantum_resource_scheduling(
         .enumerate()
     {
         match strategy {
-            scirs2_ndimage::fusion_core::QuantumLoadBalancingStrategy::QuantumSuperposition {
+            scirs2_ndimage::fusion, _core::QuantumLoadBalancingStrategy::QuantumSuperposition {
                 measurement_basis,
                 ..
             } => {
@@ -406,7 +407,7 @@ fn demonstrate_quantum_resource_scheduling(
                     measurement_basis
                 );
             }
-            scirs2_ndimage::fusion_core::QuantumLoadBalancingStrategy::EntanglementSharing {
+            scirs2_ndimage::fusion, _core::QuantumLoadBalancingStrategy::EntanglementSharing {
                 entanglement_strength,
                 ..
             } => {
@@ -468,7 +469,7 @@ fn demonstrate_integrated_advanced_processing(
     println!("      Operations per second: {:.0}", final_efficiency);
     println!("      Total processing time: {:.2}ms", duration.as_millis());
 
-    // Display Advanced system convergence
+    // Display Advanced _system convergence
     println!("   🎯 System Convergence Metrics:");
     println!(
         "      Consciousness emergence: {:.4}",
@@ -500,7 +501,7 @@ fn analyze_advanced_performance(
     println!("📈 Phase 5: Performance Analysis and Insights");
     println!("============================================");
 
-    // Consciousness evolution analysis
+    // Consciousness _evolution analysis
     let consciousness_insights = analyze_consciousness_insights(consciousness_evolution);
 
     // Meta-learning analysis
@@ -524,9 +525,9 @@ fn analyze_advanced_performance(
         println!("      • {}", insight);
     }
 
-    // Overall system recommendations
+    // Overall _system recommendations
     println!("   🔮 System Optimization Recommendations:");
-    println!("      • Continue evolution of consciousness parameters for improved emergence");
+    println!("      • Continue _evolution of consciousness parameters for improved emergence");
     println!("      • Expand temporal memory fusion window for better long-term learning");
     println!("      • Increase quantum resource pool for enhanced parallel processing");
     println!("      • Implement adaptive threshold tuning for real-time optimization");
@@ -597,23 +598,23 @@ fn create_advanced_advanced_config() -> AdvancedConfig {
 }
 
 #[allow(dead_code)]
-fn create_mock_advanced_features(image: &Array2<f64>, config: &AdvancedConfig) -> Array3<f64> {
+fn create_mock_advanced_features(_image: &Array2<f64>, config: &AdvancedConfig) -> Array3<f64> {
     // Simplified mock advanced-features for demonstration
-    let (height, width) = image.dim();
+    let (height, width) = _image.dim();
     Array3::zeros((height, width, config.advanced_dimensions))
 }
 
 #[allow(dead_code)]
-fn create_mock_advanced_state(shape: (usize, usize), config: &AdvancedConfig) -> AdvancedState {
+fn create_mock_advanced_state(_shape: (usize, usize), config: &AdvancedConfig) -> AdvancedState {
     // Create a simplified mock state for demonstration
     let mut state = AdvancedState {
-        consciousness_amplitudes: Array3::zeros((shape.0, shape.1, config.consciousness_depth)),
+        consciousness_amplitudes: Array3::zeros((_shape.0, _shape.1, config.consciousness_depth)),
         meta_parameters: Array2::zeros((config.advanced_dimensions, config.temporal_window)),
         network_topology: std::sync::Arc::new(std::sync::RwLock::new(
-            scirs2_ndimage::fusion_core::NetworkTopology {
+            scirs2_ndimage::fusion, _core::NetworkTopology {
                 connections: HashMap::new(),
                 nodes: Vec::new(),
-                global_properties: scirs2_ndimage::fusion_core::NetworkProperties {
+                global_properties: scirs2, _ndimage: fusion_core: :NetworkProperties {
                     coherence: 0.8,
                     self_organization_index: 0.7,
                     consciousness_emergence: 0.6,
@@ -623,15 +624,15 @@ fn create_mock_advanced_state(shape: (usize, usize), config: &AdvancedConfig) ->
         )),
         temporal_memory: std::collections::VecDeque::new(),
         causal_graph: std::collections::BTreeMap::new(),
-        advanced_features: Array3::zeros((shape.0, shape.1, config.advanced_dimensions)),
-        resource_allocation: scirs2_ndimage::fusion_core::ResourceState {
-            cpu_allocation: vec![0.7; num_cpus::get()],
+        advanced_features: Array3::zeros((_shape.0, _shape.1, config.advanced_dimensions)),
+        resource_allocation: scirs2, _ndimage: fusion_core: :ResourceState {
+            cpu_allocation: vec![0.7; num, _cpus::get()],
             memory_allocation: 0.6,
             gpu_allocation: Some(0.8),
             quantum_allocation: Some(0.5),
             allocation_history: std::collections::VecDeque::new(),
         },
-        efficiency_metrics: scirs2_ndimage::fusion_core::EfficiencyMetrics {
+        efficiency_metrics: scirs2, _ndimage: fusion_core: :EfficiencyMetrics {
             ops_per_second: 10000.0,
             memory_efficiency: 0.85,
             energy_efficiency: 0.75,
@@ -647,13 +648,13 @@ fn create_mock_advanced_state(shape: (usize, usize), config: &AdvancedConfig) ->
 }
 
 #[allow(dead_code)]
-fn create_mock_response(shape: (usize, usize)) -> Array2<f64> {
-    let mut response = Array2::zeros(shape);
+fn create_mock_response(_shape: (usize, usize)) -> Array2<f64> {
+    let mut response = Array2::zeros(_shape);
 
-    for y in 0..shape.0 {
-        for x in 0..shape.1 {
-            let fx = x as f64 / shape.1 as f64;
-            let fy = y as f64 / shape.0 as f64;
+    for y in 0.._shape.0 {
+        for x in 0.._shape.1 {
+            let fx = x as f64 / _shape.1 as f64;
+            let fy = y as f64 / _shape.0 as f64;
             response[(y, x)] = (fx + fy) / 2.0;
         }
     }
@@ -666,7 +667,7 @@ fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
     let mut task_types = HashMap::new();
     task_types.insert(
         "image_processing".to_string(),
-        scirs2_ndimage::fusion_core::QuantumTaskRequirements {
+        scirs2_ndimage::fusion, _core::QuantumTaskRequirements {
             qubit_requirement: 16,
             coherence_requirement: 50.0,
             gate_operations: vec![
@@ -682,7 +683,7 @@ fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
         task_types,
         intensity_pattern: vec![0.5, 0.7, 0.9, 0.8, 0.6, 0.4, 0.3, 0.5, 0.8, 0.9],
         dependencies: vec![("task1".to_string(), "task2".to_string())],
-        performance_requirements: scirs2_ndimage::fusion_core::PerformanceRequirements {
+        performance_requirements: scirs2, _ndimage: fusion_core: :PerformanceRequirements {
             max_latency: 100.0,
             min_throughput: 1000.0,
             accuracy_requirement: 0.95,
@@ -694,22 +695,22 @@ fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
 // Analysis helper functions
 
 #[allow(dead_code)]
-fn analyze_consciousness_insights(evolution: &QuantumConsciousnessEvolution) -> Vec<String> {
+fn analyze_consciousness_insights(_evolution: &QuantumConsciousnessEvolution) -> Vec<String> {
     let mut insights = Vec::new();
 
-    if evolution.complexity_metrics.emergence_strength > 0.7 {
+    if _evolution.complexity_metrics.emergence_strength > 0.7 {
         insights.push(
             "High consciousness emergence detected - system showing advanced awareness".to_string(),
         );
     }
 
-    if evolution.evolution_rate > 0.05 {
+    if _evolution.evolution_rate > 0.05 {
         insights.push(
-            "Rapid consciousness evolution - adaptive parameters responding well".to_string(),
+            "Rapid consciousness _evolution - adaptive parameters responding well".to_string(),
         );
     }
 
-    if evolution.coherence_optimizer.performance_history.len() > 10 {
+    if _evolution.coherence_optimizer.performance_history.len() > 10 {
         insights.push(
             "Extensive coherence optimization history - system learning effectively".to_string(),
         );
@@ -717,30 +718,30 @@ fn analyze_consciousness_insights(evolution: &QuantumConsciousnessEvolution) -> 
 
     insights.push(format!(
         "Consciousness complexity: {:.3} (integrated information)",
-        evolution.complexity_metrics.integrated_information
+        _evolution.complexity_metrics.integrated_information
     ));
 
     insights
 }
 
 #[allow(dead_code)]
-fn analyze_meta_learning_insights(system: &EnhancedMetaLearningSystem) -> Vec<String> {
+fn analyze_meta_learning_insights(_system: &EnhancedMetaLearningSystem) -> Vec<String> {
     let mut insights = Vec::new();
 
-    let memory_count = system.temporal_memory_fusion.short_term_memory.len()
-        + system.temporal_memory_fusion.long_term_memory.len();
+    let memory_count = _system.temporal_memory_fusion.short_term_memory.len()
+        + _system.temporal_memory_fusion.long_term_memory.len();
 
     if memory_count > 15 {
-        insights.push("Rich memory system - excellent temporal pattern retention".to_string());
+        insights.push("Rich memory _system - excellent temporal pattern retention".to_string());
     }
 
-    if system.hierarchical_learner.hierarchy_levels.len() >= 3 {
+    if _system.hierarchical_learner.hierarchy_levels.len() >= 3 {
         insights.push(
             "Multi-level hierarchical learning active - good abstraction capability".to_string(),
         );
     }
 
-    if system.strategy_evolution.strategy_population.len() > 50 {
+    if _system.strategy_evolution.strategy_population.len() > 50 {
         insights.push(
             "Large strategy population - diverse optimization approaches available".to_string(),
         );
@@ -748,29 +749,29 @@ fn analyze_meta_learning_insights(system: &EnhancedMetaLearningSystem) -> Vec<St
 
     insights.push(format!(
         "Hierarchical learning levels: {}",
-        system.hierarchical_learner.hierarchy_levels.len()
+        _system.hierarchical_learner.hierarchy_levels.len()
     ));
 
     insights
 }
 
 #[allow(dead_code)]
-fn analyze_scheduling_insights(scheduler: &QuantumAwareResourceScheduler) -> Vec<String> {
+fn analyze_scheduling_insights(_scheduler: &QuantumAwareResourceScheduler) -> Vec<String> {
     let mut insights = Vec::new();
 
-    if scheduler.performance_monitor.metrics.quantum_speedup > 1.5 {
+    if _scheduler.performance_monitor.metrics.quantum_speedup > 1.5 {
         insights.push(
             "Significant quantum speedup achieved - quantum advantage demonstrated".to_string(),
         );
     }
 
-    if scheduler.performance_monitor.metrics.resource_efficiency > 0.8 {
+    if _scheduler.performance_monitor.metrics.resource_efficiency > 0.8 {
         insights.push(
             "High resource efficiency - optimal utilization of available resources".to_string(),
         );
     }
 
-    if scheduler.scheduling_algorithms.len() >= 2 {
+    if _scheduler.scheduling_algorithms.len() >= 2 {
         insights.push(
             "Multiple scheduling algorithms active - adaptive optimization strategies".to_string(),
         );
@@ -778,7 +779,7 @@ fn analyze_scheduling_insights(scheduler: &QuantumAwareResourceScheduler) -> Vec
 
     insights.push(format!(
         "Quantum coherence efficiency: {:.1}%",
-        scheduler.performance_monitor.metrics.coherence_efficiency * 100.0
+        _scheduler.performance_monitor.metrics.coherence_efficiency * 100.0
     ));
 
     insights

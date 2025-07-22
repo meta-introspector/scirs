@@ -12,6 +12,7 @@ use ndarray::{Array1, Array2};
 use rand::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
+use statrs::statistics::Statistics;
 
 /// Advanced pattern recognition system with deep learning capabilities
 #[derive(Debug)]
@@ -355,10 +356,10 @@ impl AdvancedPatternRecognizer {
 
         // Calculate slope (fractal dimension)
         let n = dimensions.len() as f32;
-        let sum_x: f32 = dimensions.iter().map(|(x, _)| x).sum();
+        let sum_x: f32 = dimensions.iter().map(|(x_)| x).sum();
         let sum_y: f32 = dimensions.iter().map(|(_, y)| y).sum();
         let sum_xy: f32 = dimensions.iter().map(|(x, y)| x * y).sum();
-        let sum_x2: f32 = dimensions.iter().map(|(x, _)| x * x).sum();
+        let sum_x2: f32 = dimensions.iter().map(|(x_)| x * x).sum();
 
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
         slope.abs().min(2.0) // Clamp to reasonable range
@@ -393,7 +394,7 @@ impl AdvancedPatternRecognizer {
         if let Some(metadata) = self.pattern_database.get(pattern_type) {
             score > metadata.max_score * 1.1 // 10% improvement threshold
         } else {
-            true // New pattern type
+            true // New pattern _type
         }
     }
 
@@ -504,8 +505,7 @@ impl AdvancedPatternRecognizer {
         match (type1, type2) {
             ("repetition", "compression") => SynergyType::ReinforcingCompression,
             ("sequential", "entropy") => SynergyType::ContrastedRandomness,
-            ("fractal", "periodicity") => SynergyType::HierarchicalStructure,
-            _ => SynergyType::Unknown,
+            ("fractal", "periodicity") => SynergyType::HierarchicalStructure_ =>, SynergyType::Unknown,
         }
     }
 
@@ -555,7 +555,7 @@ impl AdvancedPatternRecognizer {
             .iter()
             .enumerate()
             .max_by_key(|(_, &count)| count)
-            .map(|(byte, _)| byte as u8)
+            .map(|(byte_)| byte as u8)
             .unwrap_or(0)
     }
 
@@ -623,10 +623,10 @@ struct PatternNetwork {
 }
 
 impl PatternNetwork {
-    fn new(pattern_type: &str, input_size: usize, hidden_size: usize, _output_size: usize) -> Self {
+    fn new(_pattern_type: &str, input_size: usize, hidden_size: usize, _output_size: usize) -> Self {
         // Xavier initialization for weights
         let scale = (2.0 / (input_size + hidden_size) as f32).sqrt();
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let weights = Array2::from_shape_fn((hidden_size, input_size), |_| {
             (rng.random::<f32>() - 0.5) * 2.0 * scale
         });
@@ -663,8 +663,7 @@ impl PatternNetwork {
             "sequential" => self.score_sequential_pattern(&activated),
             "fractal" => self.score_fractal_pattern(&activated),
             "entropy" => self.score_entropy_pattern(&activated),
-            "compression" => self.score_compression_pattern(&activated),
-            _ => activated.mean().unwrap_or(0.0),
+            "compression" => self.score_compression_pattern(&activated, _ => activated.mean().unwrap_or(0.0),
         };
 
         self.activation_history.push_back(score);
@@ -971,7 +970,7 @@ mod tests {
     #[test]
     fn test_pattern_network() {
         let mut network = PatternNetwork::new("test", 10, 5, 3);
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let features = Array2::from_shape_fn((2, 5), |_| rng.random::<f32>());
 
         let score = network.analyze(&features).unwrap();

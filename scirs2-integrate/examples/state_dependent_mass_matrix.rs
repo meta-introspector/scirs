@@ -8,8 +8,8 @@
 //! where M is a matrix that depends on both time t and state y.
 
 use ndarray::{array, Array2, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::{solve_ivp, MassMatrix, ODEMethod, ODEOptions};
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::{solve_ivp, MassMatrix, ODEMethod, ODEOptions};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -130,7 +130,7 @@ fn main() -> IntegrateResult<()> {
                     .partial_cmp(&(t_cmp - **b).abs())
                     .unwrap()
             })
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap();
 
         // Find closest time point in RK45 solution
@@ -144,7 +144,7 @@ fn main() -> IntegrateResult<()> {
                     .partial_cmp(&(t_cmp - **b).abs())
                     .unwrap()
             })
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap();
 
         let _t_radau = result_radau.t[idx_radau];

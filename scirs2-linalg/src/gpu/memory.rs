@@ -25,10 +25,10 @@ pub struct MemoryPool<T> {
 
 impl<T: Clone + Send + Sync + Copy + 'static + std::fmt::Debug> MemoryPool<T> {
     /// Create a new memory pool
-    pub fn new(max_pool_size: usize) -> Self {
+    pub fn new(_max_pool_size: usize) -> Self {
         Self {
             buffers: Vec::new(),
-            max_pool_size,
+            _max_pool_size,
             total_allocated: 0,
         }
     }
@@ -208,7 +208,7 @@ impl MemoryOptimizer {
 
         if self.peak_usage > device_memory / 2 {
             suggestions
-                .push("Consider using memory pooling to reduce allocation overhead".to_string());
+                .push("Consider using _memory pooling to reduce allocation overhead".to_string());
         }
 
         if self.usage_history.len() > 10 {
@@ -224,7 +224,7 @@ impl MemoryOptimizer {
 
         if self.peak_usage > device_memory * 3 / 4 {
             suggestions
-                .push("High memory usage detected - consider out-of-core algorithms".to_string());
+                .push("High _memory usage detected - consider out-of-core algorithms".to_string());
         }
 
         suggestions
@@ -276,7 +276,7 @@ pub fn suggest_memory_strategy(
     let memory_ratio = problem_size as f64 / available_memory as f64;
 
     if memory_ratio > 0.8 {
-        // Large problem relative to memory
+        // Large problem relative to _memory
         if unified_memory_available {
             MemoryStrategy::Unified
         } else {

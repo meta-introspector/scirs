@@ -198,8 +198,7 @@ where
             params,
             file_path: file_path.to_string(),
             symmetric,
-            positive_definite: false,
-            _phantom: std::marker::PhantomData,
+            positive_definite: false, _phantom: std::marker::PhantomData,
         })
     }
 
@@ -488,7 +487,7 @@ where
             return Ok(x);
         }
 
-        // Tracking variables for adaptive precision
+        // Tracking variables for adaptive _precision
         let mut successive_slow_progress = 0;
         let mut previous_residual = rsold;
 
@@ -520,7 +519,7 @@ where
                 break;
             }
 
-            // Adaptive precision strategy
+            // Adaptive _precision strategy
             if adaptive_precision {
                 // Check if we're making good progress
                 let ratio = rsnew / previous_residual;
@@ -643,8 +642,7 @@ where
             params,
             file_path: file_path.to_string(),
             symmetric: false,
-            positive_definite: false,
-            _phantom: std::marker::PhantomData,
+            positive_definite: false, _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -689,18 +687,18 @@ where
 
 /// Check if a matrix is symmetric
 #[allow(dead_code)]
-fn is_matrix_symmetric<F>(matrix: &ArrayView2<F>) -> bool
+fn is_matrix_symmetric<F>(_matrix: &ArrayView2<F>) -> bool
 where
     F: Float + PartialEq,
 {
-    let (rows, cols) = matrix.dim();
+    let (rows, cols) = _matrix.dim();
     if rows != cols {
         return false;
     }
 
     for i in 0..rows {
         for j in i + 1..cols {
-            if matrix[[i, j]] != matrix[[j, i]] {
+            if _matrix[[i, j]] != _matrix[[j, i]] {
                 return false;
             }
         }
@@ -711,17 +709,17 @@ where
 
 /// Quantize a chunk of a matrix
 #[allow(dead_code)]
-fn quantize_chunk<F>(chunk: &ArrayView2<F>, params: &QuantizationParams) -> LinalgResult<Vec<i8>>
+fn quantize_chunk<F>(_chunk: &ArrayView2<F>, params: &QuantizationParams) -> LinalgResult<Vec<i8>>
 where
     F: Float + AsPrimitive<f32>,
 {
-    let rows = chunk.dim().0;
-    let cols = chunk.dim().1;
+    let rows = _chunk.dim().0;
+    let cols = _chunk.dim().1;
     let mut quantized = vec![0i8; rows * cols];
 
     for i in 0..rows {
         for j in 0..cols {
-            let val = chunk[[i, j]].as_();
+            let val = _chunk[[i, j]].as_();
             let q_val = if params.method == QuantizationMethod::Symmetric {
                 // For symmetric quantization, clamp to [-127, 127] for 8-bit
                 // or appropriate range for other bit widths
@@ -750,9 +748,9 @@ mod tests {
     use std::path::PathBuf;
 
     // Helper to get a temporary file path
-    fn get_temp_file_path(name: &str) -> PathBuf {
+    fn get_temp_file_path(_name: &str) -> PathBuf {
         let mut path = temp_dir();
-        path.push(format!("quantized_matrix_{}.bin", name));
+        path.push(format!("quantized_matrix_{}.bin", _name));
         path
     }
 

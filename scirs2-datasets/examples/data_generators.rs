@@ -1,4 +1,4 @@
-use scirs2_datasets::{
+use scirs2__datasets::{
     make_blobs, make_classification, make_regression, make_time_series, utils::normalize,
     utils::train_test_split,
 };

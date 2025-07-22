@@ -29,8 +29,8 @@ mod symmetric;
 mod utility;
 
 // Re-exports
-pub use complex_to_real::{hfft, hfft2, hfftn};
-pub use real_to_complex::{ihfft, ihfft2, ihfftn};
+pub use complex_to__real::{hfft, hfft2, hfftn};
+pub use real_to__complex::{ihfft, ihfft2, ihfftn};
 pub use symmetric::{
     create_hermitian_symmetric_signal, enforce_hermitian_symmetry, enforce_hermitian_symmetry_nd,
     is_hermitian_symmetric,

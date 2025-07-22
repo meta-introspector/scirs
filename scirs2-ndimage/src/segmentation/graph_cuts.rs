@@ -27,17 +27,17 @@ struct Node {
 
 impl Graph {
     /// Create a new graph with specified number of nodes
-    fn new(num_nodes: usize) -> Self {
-        let mut nodes = Vec::with_capacity(num_nodes + 2);
-        for i in 0..num_nodes + 2 {
-            nodes.push(Node {
+    fn new(_num_nodes: usize) -> Self {
+        let mut _nodes = Vec::with_capacity(_num_nodes + 2);
+        for i in 0.._num_nodes + 2 {
+            _nodes.push(Node {
                 id: i,
                 neighbors: Vec::new(),
             });
         }
 
         Self {
-            nodes,
+            _nodes,
             edges: HashMap::new(),
             source: num_nodes,
             sink: num_nodes + 1,
@@ -193,12 +193,12 @@ where
         ));
     }
 
-    // Check for overlapping seeds
+    // Check for overlapping _seeds
     for i in 0..height {
         for j in 0..width {
             if foreground_seeds[[i, j]] && background_seeds[[i, j]] {
                 return Err(NdimageError::InvalidInput(
-                    "Foreground and background seeds cannot overlap".into(),
+                    "Foreground and background _seeds cannot overlap".into(),
                 ));
             }
         }
@@ -281,9 +281,9 @@ where
 
 /// Compute K constant for terminal edges
 #[allow(dead_code)]
-fn compute_k_constant<T: Float>(image: &ArrayView2<T>) -> f64 {
+fn compute_k_constant<T: Float>(_image: &ArrayView2<T>) -> f64 {
     // K should be larger than any possible sum of edge weights
-    let max_val = image
+    let max_val = _image
         .iter()
         .map(|&v| v.to_f64().unwrap_or(0.0))
         .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
@@ -349,16 +349,16 @@ fn compute_data_weights<T: Float>(
 
 /// Compute smoothness weight between neighboring pixels
 #[allow(dead_code)]
-fn compute_smoothness_weight<T: Float>(val1: T, val2: T, lambda: f64, sigma: f64) -> f64 {
-    let diff = (val1 - val2).to_f64().unwrap_or(0.0);
+fn compute_smoothness_weight<T: Float>(_val1: T, val2: T, lambda: f64, sigma: f64) -> f64 {
+    let diff = (_val1 - val2).to_f64().unwrap_or(0.0);
     let weight = lambda * (-diff * diff / (2.0 * sigma * sigma)).exp();
     weight
 }
 
 /// Get neighbor offsets based on connectivity
 #[allow(dead_code)]
-fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
-    match connectivity {
+fn get_neighbors(_connectivity: u8) -> Vec<(i32, i32)> {
+    match _connectivity {
         4 => vec![(0, 1), (1, 0), (0, -1), (-1, 0)],
         8 => vec![
             (0, 1),
@@ -369,8 +369,7 @@ fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
             (1, -1),
             (-1, 1),
             (-1, -1),
-        ],
-        _ => vec![(0, 1), (1, 0), (0, -1), (-1, 0)], // Default to 4-connectivity
+        ]_ => vec![(0, 1), (1, 0), (0, -1), (-1, 0)], // Default to 4-_connectivity
     }
 }
 
@@ -385,10 +384,10 @@ pub struct InteractiveGraphCuts<T> {
 
 impl<T: Float + FromPrimitive + Debug> InteractiveGraphCuts<T> {
     /// Create new interactive segmentation session
-    pub fn new(image: Array2<T>, params: Option<GraphCutsParams>) -> Self {
-        let shape = image.dim();
+    pub fn new(_image: Array2<T>, params: Option<GraphCutsParams>) -> Self {
+        let shape = _image.dim();
         Self {
-            image,
+            _image,
             foreground_seeds: Array2::default(shape),
             background_seeds: Array2::default(shape),
             current_segmentation: None,

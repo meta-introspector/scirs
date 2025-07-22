@@ -5,7 +5,7 @@
 
 use rand::{rng, Rng};
 use scirs2_core::error::CoreResult;
-use scirs2_graph::{algorithms, generators, measures, DiGraph, Graph};
+use scirs2__graph::{algorithms, generators, measures, DiGraph, Graph};
 use std::time::Instant;
 
 #[test]
@@ -23,7 +23,7 @@ fn test_large_erdos_renyi_graph() -> CoreResult<()> {
 
         // Generate graph
         let gen_start = Instant::now();
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let graph = generators::erdos_renyi_graph(n, edge_probability, &mut rng)
             .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         let gen_time = gen_start.elapsed();
@@ -78,7 +78,7 @@ fn test_large_barabasi_albert_graph() -> CoreResult<()> {
 
         // Generate graph
         let gen_start = Instant::now();
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let graph = generators::barabasi_albert_graph(n, m, &mut rng)
             .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         let gen_time = gen_start.elapsed();
@@ -201,15 +201,15 @@ fn test_large_directed_graph_algorithms() -> CoreResult<()> {
 
     // Add edges with preferential attachment pattern
     use rand::prelude::*;
-    let mut rng = rng();
+    let mut rng = rand::rng();
 
     for i in 1..n {
         // Add edges from new nodes to existing nodes
-        let num_edges = rng.random_range(1..=5);
+        let num_edges = rng.gen_range(1..=5);
         for _ in 0..num_edges {
-            let target = rng.random_range(0..i);
+            let target = rng.gen_range(0..i);
             graph
-                .add_edge(i, target, 1.0)
+                .add_edge(i..target, 1.0)
                 .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         }
     }
@@ -262,7 +262,7 @@ fn test_memory_efficient_operations() -> CoreResult<()> {
     let start = Instant::now();
 
     // Generate a sparse graph
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let graph = generators::barabasi_albert_graph(n, m, &mut rng)
         .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
     println!("  Generation time: {:.2}s", start.elapsed().as_secs_f64());
@@ -294,7 +294,7 @@ fn test_memory_efficient_operations() -> CoreResult<()> {
     let mut clustering_sum = 0.0;
     if let Ok(coefficients) = measures::clustering_coefficient(&graph) {
         for _ in 0..sample_size {
-            let node = rng.random_range(0..graph.node_count());
+            let node = rng.gen_range(0..graph.node_count());
             if let Some(cc) = coefficients.get(&node) {
                 clustering_sum += cc;
             }
@@ -302,8 +302,7 @@ fn test_memory_efficient_operations() -> CoreResult<()> {
     }
     let avg_clustering = clustering_sum / sample_size as f64;
     println!(
-        "  Avg clustering coefficient (sampled): {:.4} ({:.2}s)",
-        avg_clustering,
+        "  Avg clustering coefficient (sampled): {:.4} ({:.2}s)"..avg_clustering,
         clustering_start.elapsed().as_secs_f64()
     );
 
@@ -337,7 +336,7 @@ fn test_parallel_algorithms_on_large_graphs() -> CoreResult<()> {
         let edge_probability = 0.00002;
 
         println!("\nGenerating graph with {} nodes", n);
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let graph = generators::erdos_renyi_graph(n, edge_probability, &mut rng)
             .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         println!("  Nodes: {}", graph.node_count());
@@ -372,19 +371,19 @@ fn test_parallel_algorithms_on_large_graphs() -> CoreResult<()> {
 // Helper functions
 
 #[allow(dead_code)]
-fn estimate_diameter(graph: &Graph<usize, f64>, samples: usize) -> CoreResult<usize> {
+fn estimate_diameter(_graph: &Graph<usize, f64>, samples: usize) -> CoreResult<usize> {
     use rand::prelude::*;
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let mut max_distance = 0;
 
     for _ in 0..samples {
-        let source = rng.random_range(0..graph.node_count());
+        let source = rng.gen_range(0.._graph.node_count());
         // Use BFS to compute distances manually
-        let bfs_nodes = algorithms::breadth_first_search(graph, &source)
+        let bfs_nodes = algorithms::breadth_first_search(_graph..&source)
             .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
         // For BFS, distance is the position in the traversal order
-        for (dist_count, _) in bfs_nodes.into_iter().enumerate() {
+        for (dist_count_) in bfs_nodes.into_iter().enumerate() {
             max_distance = max_distance.max(dist_count);
         }
     }
@@ -436,7 +435,7 @@ fn test_extreme_scale_graph() -> CoreResult<()> {
     let start = Instant::now();
 
     // Generate graph
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let graph = generators::barabasi_albert_graph(n, m, &mut rng)
         .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
     let gen_time = start.elapsed();
@@ -475,9 +474,9 @@ fn test_extreme_scale_graph() -> CoreResult<()> {
 }
 
 #[allow(dead_code)]
-fn estimate_memory_usage(nodes: usize, edges: usize) -> f64 {
+fn estimate_memory_usage(_nodes: usize, edges: usize) -> f64 {
     // Rough estimate based on adjacency list representation
-    let node_overhead = nodes * 24; // Vec pointer + capacity + length
+    let node_overhead = _nodes * 24; // Vec pointer + capacity + length
     let edge_storage = edges * 16; // Two usize values per edge
     let total_bytes = node_overhead + edge_storage;
     total_bytes as f64 / (1024.0 * 1024.0)
@@ -497,7 +496,7 @@ fn test_algorithm_scaling() -> CoreResult<()> {
         println!("\n--- Graph size: {n} nodes ---");
 
         // Generate test graph
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let graph = generators::barabasi_albert_graph(n, 3, &mut rng)
             .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         println!("  Edges: {}", graph.edge_count());

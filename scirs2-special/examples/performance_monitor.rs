@@ -103,7 +103,7 @@ impl PerformanceMonitor {
         F: FnMut(&Array1<f64>) -> Array1<f64>,
     {
         println!(
-            "Benchmarking {} with array size {}: {} iterations...",
+            "Benchmarking {} with array _size {}: {} iterations...",
             name, array_size, self.measurement_iterations
         );
 
@@ -225,7 +225,7 @@ impl PerformanceMonitor {
         println!("{}", "-".repeat(80));
 
         let mut sorted_results: Vec<_> = self.results.iter().collect();
-        sorted_results.sort_by_key(|(name, _)| name.as_str());
+        sorted_results.sort_by_key(|(name_)| name.as_str());
 
         for (name, result) in sorted_results {
             println!(
@@ -377,7 +377,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn create_ci_analysis(monitor: &PerformanceMonitor) -> Result<(), Box<dyn std::error::Error>> {
+fn create_ci_analysis(_monitor: &PerformanceMonitor) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📋 Creating CI/CD analysis...");
 
     // Create a structured output for CI consumption
@@ -389,7 +389,7 @@ fn create_ci_analysis(monitor: &PerformanceMonitor) -> Result<(), Box<dyn std::e
     let mut erf_times = Vec::new();
     let mut array_times = HashMap::new();
 
-    for (name, result) in &monitor.results {
+    for (name, result) in &_monitor.results {
         if name.contains("gamma") {
             gamma_times.push(result.mean_time_ns);
         } else if name.contains("bessel") || name.contains("j0") || name.contains("i0") {
@@ -433,13 +433,13 @@ fn create_ci_analysis(monitor: &PerformanceMonitor) -> Result<(), Box<dyn std::e
     }
 
     // Performance quality metrics
-    let total_functions = monitor.results.len();
-    let slow_functions = monitor
+    let total_functions = _monitor.results.len();
+    let slow_functions = _monitor
         .results
         .iter()
         .filter(|(_, r)| r.mean_time_ns > 1000.0)
         .count();
-    let variable_functions = monitor
+    let variable_functions = _monitor
         .results
         .iter()
         .filter(|(_, r)| r.std_dev_ns / r.mean_time_ns > 0.3)

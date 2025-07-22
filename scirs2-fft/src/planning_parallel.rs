@@ -7,9 +7,9 @@ use crate::error::{FFTError, FFTResult};
 use crate::planning::{
     AdvancedFftPlanner, FftPlan, FftPlanExecutor, PlannerBackend, PlanningConfig,
 };
-use crate::worker_pool::WorkerPool;
+use crate::worker__pool::WorkerPool;
 
-use num_complex::Complex64;
+use num__complex::Complex64;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -85,13 +85,13 @@ pub struct ParallelPlanner {
 
 impl ParallelPlanner {
     /// Create a new parallel planner
-    pub fn new(config: Option<ParallelPlanningConfig>) -> Self {
-        let config = config.unwrap_or_default();
+    pub fn new(_config: Option<ParallelPlanningConfig>) -> Self {
+        let _config = _config.unwrap_or_default();
         let base_planner = Arc::new(Mutex::new(AdvancedFftPlanner::with_config(
-            config.base_config.clone(),
+            _config.base_config.clone(),
         )));
 
-        let worker_pool = match config.max_threads {
+        let worker_pool = match _config.max_threads {
             Some(threads) => {
                 let worker_config = crate::worker_pool::WorkerConfig {
                     num_workers: threads,
@@ -106,7 +106,7 @@ impl ParallelPlanner {
 
         Self {
             base_planner,
-            config,
+            _config,
             worker_pool,
         }
     }
@@ -150,7 +150,7 @@ impl ParallelPlanner {
     ) -> FFTResult<Vec<ParallelPlanResult>> {
         // Filter out small FFTs that would be processed serially
         let (small_specs, large_specs): (Vec<_>, Vec<_>) =
-            specs.iter().enumerate().partition(|(_, (shape, _, _))| {
+            specs.iter().enumerate().partition(|(_, (shape__))| {
                 shape.iter().product::<usize>() < self.config.parallel_threshold
             });
 
@@ -220,7 +220,7 @@ impl ParallelPlanner {
         }
 
         // Sort results by original index
-        results.sort_by_key(|(idx, _)| *idx);
+        results.sort_by_key(|(idx_)| *idx);
         Ok(results.into_iter().map(|(_, result)| result).collect())
     }
 
@@ -251,7 +251,7 @@ pub struct ParallelExecutor {
 
 impl ParallelExecutor {
     /// Create a new parallel executor
-    pub fn new(plan: Arc<FftPlan>, config: Option<ParallelPlanningConfig>) -> Self {
+    pub fn new(_plan: Arc<FftPlan>, config: Option<ParallelPlanningConfig>) -> Self {
         let config = config.unwrap_or_default();
 
         let worker_pool = match config.max_threads {
@@ -268,7 +268,7 @@ impl ParallelExecutor {
         };
 
         Self {
-            plan,
+            _plan,
             config,
             worker_pool,
         }
@@ -276,7 +276,7 @@ impl ParallelExecutor {
 
     /// Execute the plan in parallel
     pub fn execute(&self, input: &[Complex64], output: &mut [Complex64]) -> FFTResult<()> {
-        // For small FFTs or if parallel execution is disabled, use the standard executor
+        // Use the standard executor
         let size = self.plan.shape().iter().product::<usize>();
         if size < self.config.parallel_threshold || !self.config.parallel_execution {
             let executor = FftPlanExecutor::new(self.plan.clone());

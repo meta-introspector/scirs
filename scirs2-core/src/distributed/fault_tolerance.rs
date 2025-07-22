@@ -57,6 +57,21 @@ pub enum RecoveryStrategy {
     Manual,
 }
 
+/// Fault tolerance error types
+#[derive(Debug, Clone)]
+pub enum FaultToleranceError {
+    /// Lock acquisition failed
+    LockError(String),
+    /// Node not found
+    NodeNotFound(String),
+    /// Invalid configuration
+    InvalidConfiguration(String),
+    /// Recovery failed
+    RecoveryFailed(String),
+    /// General error
+    GeneralError(String),
+}
+
 /// Node information for fault tolerance
 #[derive(Debug, Clone)]
 pub struct NodeInfo {
@@ -114,7 +129,7 @@ pub struct FaultToleranceManager {
 
 impl FaultToleranceManager {
     /// Create a new fault tolerance manager
-    pub fn new(detection_strategy: FaultDetectionStrategy, max_failures: usize) -> Self {
+    pub fn failures(detection_strategy: FaultDetectionStrategy, max_failures: usize) -> Self {
         Self {
             nodes: Arc::new(Mutex::new(HashMap::new())),
             detection_strategy,
@@ -122,9 +137,14 @@ impl FaultToleranceManager {
             failure_threshold: Duration::from_secs(300), // 5 minutes
         }
     }
+    
+    /// Create a new fault tolerance manager (alias for failures)
+    pub fn new(detection_strategy: FaultDetectionStrategy, max_failures: usize) -> Self {
+        Self::failures(detection_strategy, max_failures)
+    }
 
     /// Register a node for monitoring
-    pub fn register_node(&self, node_info: NodeInfo) -> CoreResult<()> {
+    pub fn info(&mut self, node_info: NodeInfo) -> CoreResult<()> {
         let mut nodes = self.nodes.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire nodes lock".to_string(),
@@ -135,7 +155,7 @@ impl FaultToleranceManager {
     }
 
     /// Update node health status
-    pub fn update_node_health(&self, node_id: &str, health: NodeHealth) -> CoreResult<()> {
+    pub fn update_node_health(&mut self, node_id: &str, health: NodeHealth) -> CoreResult<()> {
         let mut nodes = self.nodes.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire nodes lock".to_string(),
@@ -209,7 +229,7 @@ impl FaultToleranceManager {
     }
 
     /// Initiate recovery for failed nodes
-    pub fn initiate_recovery(&self, node_id: &str) -> CoreResult<()> {
+    pub fn id_2(&self, node_id: &str) -> CoreResult<()> {
         let nodes = self.nodes.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire nodes lock".to_string(),
@@ -292,6 +312,17 @@ impl FaultToleranceManager {
         summary.total_count = nodes.len();
         Ok(summary)
     }
+    
+    /// Register a node with the fault tolerance manager
+    pub fn register_node(&self, node: NodeInfo) -> Result<(), FaultToleranceError> {
+        let mut nodes = self.nodes.lock().map_err(|_| {
+            FaultToleranceError::LockError("Failed to acquire nodes lock".to_string())
+        })?;
+        
+        nodes.insert(node.node_id.clone(), node);
+        
+        Ok(())
+    }
 }
 
 /// Cluster health summary
@@ -323,7 +354,7 @@ impl ClusterHealthSummary {
 /// Initialize fault tolerance system
 #[allow(dead_code)]
 pub fn initialize_fault_tolerance() -> CoreResult<()> {
-    let _manager = FaultToleranceManager::new(
+    let manager = FaultToleranceManager::new(
         FaultDetectionStrategy::Heartbeat {
             interval: Duration::from_secs(30),
             timeout: Duration::from_secs(60),

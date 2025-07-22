@@ -1,7 +1,7 @@
-use crate::ndarray_ext::{NdArray, NdArrayView};
+use crate::ndarray__ext::{NdArray, NdArrayView};
 use crate::op;
 use crate::tensor::Tensor;
-use crate::tensor_ops::*;
+use crate::tensor__ops::*;
 use crate::Float;
 use crate::Graph;
 use ndarray;
@@ -10,6 +10,8 @@ use ndarray::Axis;
 // Import SIMD operations from scirs2-core
 #[cfg(feature = "simd")]
 use scirs2_core::simd::{simd_add_f32, simd_add_f64, simd_mul_f32, simd_mul_f64};
+#[allow(unused_imports)]
+use ndarray::ArrayView1;
 
 pub struct AddOp;
 pub struct SubOp;
@@ -39,7 +41,7 @@ macro_rules! bin_op_same_shape {
     };
 }
 
-impl<T: Float> op::Op<T> for MaybeReduceSum {
+impl<T: Float>, op::Op<T> for MaybeReduceSum {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let gy = ctx.input(0);
         let orig_shape__ = crate::ndarray_ext::as_shape(&ctx.input(1));
@@ -112,7 +114,7 @@ impl<T: Float> op::Op<T> for MaybeReduceSum {
 }
 
 // Do broadcast if necessary.
-impl<T: Float> op::Op<T> for MaybeBroadcast {
+impl<T: Float>, op::Op<T> for MaybeBroadcast {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let target_shape_ = ctx.input(1);
         let target_shape_ = crate::ndarray_ext::as_shape(&target_shape_);
@@ -153,7 +155,7 @@ impl<T: Float> op::Op<T> for MaybeBroadcast {
     }
 }
 
-impl<T: Float> op::Op<T> for AddOp {
+impl<T: Float>, op::Op<T> for AddOp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         // Check if we have enough inputs
         let inputs = ctx.inputs();
@@ -183,7 +185,7 @@ impl<T: Float> op::Op<T> for AddOp {
     }
 }
 
-impl<T: Float> op::Op<T> for SubOp {
+impl<T: Float>, op::Op<T> for SubOp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x0 = &ctx.input(0);
         let x1 = &ctx.input(1);
@@ -213,7 +215,7 @@ impl<T: Float> op::Op<T> for SubOp {
     }
 }
 
-impl<T: Float> op::Op<T> for MulOp {
+impl<T: Float>, op::Op<T> for MulOp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let a = ctx.input(0);
         let b = ctx.input(1);
@@ -243,7 +245,7 @@ impl<T: Float> op::Op<T> for MulOp {
     }
 }
 
-impl<T: Float> op::Op<T> for DivOp {
+impl<T: Float>, op::Op<T> for DivOp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x0 = &ctx.input(0);
         let x1 = &ctx.input(1);
@@ -360,7 +362,7 @@ macro_rules! impl_bin_op_forward {
                     // Fallback to MKL if available
                     #[cfg(feature = "blas")]
                     {
-                        use crate::{tensor_ops::blas_ffi::*, same_type};
+                        use crate::{tensor_ops::blas, _ffi::*, same_type};
                         bin_op_same_shape!($vms_op, $vmd_op, $bin_op, x0, x1)
                     }
                     #[cfg(not(feature = "blas"))] {

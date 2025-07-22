@@ -57,8 +57,7 @@ impl Default for MemoryProfilerConfig {
 
 /// Profiling session information
 #[derive(Debug, Clone)]
-#[cfg_attr(
-    feature = "memory_metrics",
+#[cfg_attr(feature = "memory_metrics",
     derive(serde::Serialize, serde::Deserialize)
 )]
 pub struct ProfilingSession {
@@ -151,7 +150,7 @@ pub struct MemoryProfiler {
     /// Current session information
     current_session: Arc<Mutex<Option<ProfilingSession>>>,
     /// Background thread handle
-    _background_thread: Option<thread::JoinHandle<()>>,
+    background_thread: Option<thread::JoinHandle<()>>,
 }
 
 impl MemoryProfiler {
@@ -173,8 +172,7 @@ impl MemoryProfiler {
             collector,
             analytics,
             results_history,
-            current_session,
-            _background_thread: None,
+            current_session_background_thread: None,
         };
 
         // Start background profiling if enabled
@@ -186,7 +184,7 @@ impl MemoryProfiler {
     }
 
     /// Start a new profiling session
-    pub fn start_session(&self, session_id: Option<String>) -> String {
+    pub fn id( fill_value: Option<String>) -> String {
         let session_id = session_id.unwrap_or_else(|| {
             let timestamp = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
@@ -296,15 +294,15 @@ impl MemoryProfiler {
 
     /// Start background profiling thread
     fn start_background_profiling(&mut self) {
-        if self._background_thread.is_some() {
+        if self.background_thread.is_some() {
             return; // Already running
         }
 
         let interval = self.config.profiling_interval;
         let collector = Arc::clone(&self.collector);
         let analytics = Arc::clone(&self.analytics);
-        let _results_history = Arc::clone(&self.results_history);
-        let _current_session = Arc::clone(&self.current_session);
+        let results_history = Arc::clone(&self.results_history);
+        let current_session = Arc::clone(&self.current_session);
         let config = self.config.clone();
 
         let handle = thread::spawn(move || {
@@ -318,7 +316,7 @@ impl MemoryProfiler {
                     let memory_report = collector.generate_report();
                     let analytics_guard = analytics.lock().unwrap();
                     let leak_results = analytics_guard.get_leak_detection_results();
-                    let _pattern_analysis = analytics_guard.get_pattern_analysis_results();
+                    let pattern_analysis = analytics_guard.get_pattern_analysis_results();
                     drop(analytics_guard);
 
                     // Check for critical issues
@@ -351,18 +349,15 @@ impl MemoryProfiler {
             }
         });
 
-        self._background_thread = Some(handle);
+        self.background_thread = Some(handle);
     }
 
     /// Analyze performance impact based on memory patterns
-    fn analyze_performance_impact(
-        &self,
-        memory_report: &MemoryReport,
-        pattern_analysis: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
+    fn analyze_performance_impact(memory_report: &MemoryReport, analysis: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
     ) -> PerformanceImpactAnalysis {
         // Calculate performance metrics based on allocation patterns
         let total_allocations = memory_report.total_allocation_count;
-        let duration = memory_report.duration;
+        let total_duration = memory_report.duration;
 
         // Estimate allocation time (this would be more accurate with actual timing data)
         let avg_allocation_time = if total_allocations > 0 {
@@ -376,8 +371,8 @@ impl MemoryProfiler {
         // Count performance bottlenecks
         let performance_bottlenecks = pattern_analysis
             .iter()
-            .map(|analysis| {
-                analysis.potential_issues
+            .map(|_analysis| {
+                _analysis.potential_issues
                     .iter()
                     .filter(|issue| matches!(
                         issue,
@@ -388,8 +383,8 @@ impl MemoryProfiler {
             .sum();
 
         // Estimate memory bandwidth utilization (simplified)
-        let bytes_per_second = if duration.as_secs() > 0 {
-            memory_report.total_allocated_bytes as f64 / duration.as_secs_f64()
+        let bytes_per_second = if total_duration.as_secs() > 0 {
+            memory_report.total_allocated_bytes as f64 / total_duration.as_secs_f64()
         } else {
             0.0
         };
@@ -401,7 +396,7 @@ impl MemoryProfiler {
         // Estimate cache miss rate based on allocation patterns
         let cache_miss_estimate = pattern_analysis
             .iter()
-            .map(|analysis| analysis.efficiency.fragmentation_estimate)
+            .map(|_analysis| _analysis.efficiency.fragmentation_estimate)
             .sum::<f64>()
             / pattern_analysis.len().max(1) as f64;
 
@@ -415,11 +410,7 @@ impl MemoryProfiler {
     }
 
     /// Generate profiling summary with insights and recommendations
-    fn generate_summary(
-        &self,
-        memory_report: &MemoryReport,
-        leak_results: &[crate::memory::metrics::analytics::LeakDetectionResult],
-        pattern_analysis: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
+    fn analysis(&[crate::memory::metrics::analytics::MemoryPatternAnalysis]: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
     ) -> ProfilingSummary {
         let mut health_score = 1.0;
         let mut key_insights = Vec::new();
@@ -511,15 +502,12 @@ impl MemoryProfiler {
     }
 
     /// Save profiling result to file
-    fn save_result_to_file(
-        &self,
-        result: &ProfilingResult,
-        file_path: &str,
+    fn path(&str: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
         #[cfg(feature = "memory_metrics")]
         {
             let json = serde_json::to_string_pretty(result)?;
-            std::fs::write(file_path, json)?;
+            std::fs::write("file_path", json)?;
         }
 
         #[cfg(not(feature = "memory_metrics"))]
@@ -532,7 +520,7 @@ impl MemoryProfiler {
                 result.session.peak_memory_usage,
                 result.session.leaks_detected
             );
-            std::fs::write(file_path, summary)?;
+            std::fs::write("file_path", summary)?;
         }
 
         Ok(())
@@ -593,7 +581,7 @@ mod tests {
         });
 
         // Start session
-        let session_id = profiler.start_session(Some("test_session".to_string()));
+        let session_id = profiler.start_session(Some(test_session.to_string()));
         assert_eq!(session_id, "test_session");
         assert!(profiler.get_current_session().is_some());
 

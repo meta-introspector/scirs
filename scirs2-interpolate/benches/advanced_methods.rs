@@ -1,13 +1,13 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2};
-use scirs2_interpolate::advanced::enhanced_kriging::EnhancedKrigingBuilder;
-use scirs2_interpolate::advanced::enhanced_rbf::{EnhancedRBFInterpolator, KernelWidthStrategy};
-use scirs2_interpolate::advanced::fast_kriging::{FastKrigingBuilder, FastKrigingMethod};
-use scirs2_interpolate::advanced::kriging::{CovarianceFunction, KrigingInterpolator};
-use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
-use scirs2_interpolate::advanced::thinplate::ThinPlateSpline;
-use scirs2_interpolate::local::mls::{MovingLeastSquares, PolynomialBasis, WeightFunction};
-use scirs2_interpolate::sparse_grid::make_sparse_grid_interpolator;
+use scirs2__interpolate::advanced::enhanced_kriging::EnhancedKrigingBuilder;
+use scirs2__interpolate::advanced::enhanced_rbf::{EnhancedRBFInterpolator, KernelWidthStrategy};
+use scirs2__interpolate::advanced::fast_kriging::{FastKrigingBuilder, FastKrigingMethod};
+use scirs2__interpolate::advanced::kriging::{CovarianceFunction, KrigingInterpolator};
+use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+use scirs2__interpolate::advanced::thinplate::ThinPlateSpline;
+use scirs2__interpolate::local::mls::{MovingLeastSquares, PolynomialBasis, WeightFunction};
+use scirs2__interpolate::sparse_grid::make_sparse_grid_interpolator;
 
 #[allow(dead_code)]
 fn generate_2d_test_data(n: usize) -> (Array2<f64>, Array1<f64>) {
@@ -83,7 +83,7 @@ fn bench_rbf_interpolation(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(format!("{}_data", kernel_name), data_size),
                 data_size,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         let _ = black_box(interpolator.interpolate(black_box(&queries.view())));
                     });
@@ -111,7 +111,7 @@ fn bench_enhanced_rbf(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("construction", strategy_name),
             strategy_name,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     let _ = black_box(
                         EnhancedRBFInterpolator::builder()
@@ -162,7 +162,7 @@ fn bench_kriging_interpolation(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(format!("{}_data", cov_name), data_size),
                 data_size,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         for i in 0..queries.nrows() {
                             let query = queries.slice(ndarray::s![i..i + 1, ..]);
@@ -187,7 +187,7 @@ fn bench_enhanced_kriging(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("construction", data_size),
             data_size,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     let _ = black_box(
                         EnhancedKrigingBuilder::new()
@@ -220,7 +220,7 @@ fn bench_fast_kriging(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("construction", method_name),
             method_name,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     let _ = black_box(
                         FastKrigingBuilder::new()
@@ -251,7 +251,7 @@ fn bench_thin_plate_splines(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("data_size", data_size),
             data_size,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     let _ = black_box(interpolator.evaluate(black_box(&queries.view())));
                 });
@@ -276,7 +276,7 @@ fn bench_sparse_grid_interpolation(c: &mut Criterion) {
                     format!("{}_{}", dim, max_level),
                 ),
                 &(dim, max_level),
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         let _ = black_box(make_sparse_grid_interpolator(
                             black_box(bounds.clone()),
@@ -326,7 +326,7 @@ fn bench_moving_least_squares(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(format!("{}_{}", weight_name, basis_name), basis_name),
                 basis_name,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         for i in 0..queries.nrows() {
                             let query = queries.slice(ndarray::s![i, ..]);
@@ -364,7 +364,7 @@ fn bench_dimensionality_scaling(c: &mut Criterion) {
         }
 
         // Test RBF scaling
-        group.bench_with_input(BenchmarkId::new("rbf_gaussian", dim), dim, |b, _| {
+        group.bench_with_input(BenchmarkId::new("rbf_gaussian", dim), dim, |b_| {
             b.iter(|| {
                 let _ = black_box(RBFInterpolator::new(
                     black_box(&points.view()),
@@ -377,7 +377,7 @@ fn bench_dimensionality_scaling(c: &mut Criterion) {
 
         // Test MLS scaling (if dimension is reasonable)
         if *dim <= 4 {
-            group.bench_with_input(BenchmarkId::new("mls_linear", dim), dim, |b, _| {
+            group.bench_with_input(BenchmarkId::new("mls_linear", dim), dim, |b_| {
                 b.iter(|| {
                     let _ = black_box(MovingLeastSquares::new(
                         black_box(points.clone()),

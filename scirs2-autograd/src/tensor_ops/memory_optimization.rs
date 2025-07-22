@@ -227,8 +227,7 @@ pub struct MemoryTrackerStats {
 
 /// Memory-efficient in-place operation that reuses tensor storage when possible
 pub struct InPlaceOp<F: Float> {
-    operation: InPlaceOperation,
-    _phantom: std::marker::PhantomData<F>,
+    operation: InPlaceOperation_phantom: std::marker::PhantomData<F>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -254,10 +253,9 @@ pub enum InPlaceOperation {
 }
 
 impl<F: Float> InPlaceOp<F> {
-    pub fn new(operation: InPlaceOperation) -> Self {
+    pub fn new(_operation: InPlaceOperation) -> Self {
         Self {
-            operation,
-            _phantom: std::marker::PhantomData,
+            _operation_phantom: std::marker::PhantomData,
         }
     }
 }
@@ -449,29 +447,29 @@ impl<F: Float> Op<F> for ViewOp {
 ///
 /// Get a buffer from the memory pool
 #[allow(dead_code)]
-pub fn get_pooled_buffer(size: usize) -> Vec<u8> {
-    MEMORY_POOL.lock().unwrap().get_buffer(size)
+pub fn get_pooled_buffer(_size: usize) -> Vec<u8> {
+    MEMORY_POOL.lock().unwrap().get_buffer(_size)
 }
 
 /// Return a buffer to the memory pool  
 #[allow(dead_code)]
-pub fn return_pooled_buffer(buffer: Vec<u8>) {
-    MEMORY_POOL.lock().unwrap().return_buffer(buffer);
+pub fn return_pooled_buffer(_buffer: Vec<u8>) {
+    MEMORY_POOL.lock().unwrap().return_buffer(_buffer);
 }
 
 /// Configure the memory pool
 #[allow(dead_code)]
-pub fn configure_memory_pool(max_buffers_per_size: usize, max_pool_memory: usize) {
+pub fn configure_memory_pool(_max_buffers_per_size: usize, max_pool_memory: usize) {
     MEMORY_POOL
         .lock()
         .unwrap()
-        .configure(max_buffers_per_size, max_pool_memory);
+        .configure(_max_buffers_per_size, max_pool_memory);
 }
 
 /// Enable or disable the memory pool
 #[allow(dead_code)]
-pub fn set_memory_pool_enabled(enabled: bool) {
-    MEMORY_POOL.lock().unwrap().set_enabled(enabled);
+pub fn set_memory_pool_enabled(_enabled: bool) {
+    MEMORY_POOL.lock().unwrap().set_enabled(_enabled);
 }
 
 /// Clear all buffers from the memory pool
@@ -512,10 +510,10 @@ pub fn get_memory_tracking_stats() -> MemoryTrackerStats {
 
 /// Create a memory-efficient view of a tensor with a new shape
 #[allow(dead_code)]
-pub fn efficient_view<'g, F: Float>(tensor: &Tensor<'g, F>, new_shape: &[usize]) -> Tensor<'g, F> {
-    let g = tensor.graph();
+pub fn efficient_view<'g, F: Float>(_tensor: &Tensor<'g, F>, new_shape: &[usize]) -> Tensor<'g, F> {
+    let g = _tensor.graph();
     Tensor::builder(g)
-        .append_input(tensor, false)
+        .append_input(_tensor, false)
         .build(ViewOp {
             new_shape: new_shape.to_vec(),
         })
@@ -523,59 +521,59 @@ pub fn efficient_view<'g, F: Float>(tensor: &Tensor<'g, F>, new_shape: &[usize])
 
 /// Perform in-place addition to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_add<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = lhs.graph();
+pub fn inplace_add<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _lhs.graph();
     Tensor::builder(g)
-        .append_input(lhs, false)
+        .append_input(_lhs, false)
         .append_input(rhs, false)
         .build(InPlaceOp::new(InPlaceOperation::AddAssign))
 }
 
 /// Perform in-place subtraction to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_sub<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = lhs.graph();
+pub fn inplace_sub<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _lhs.graph();
     Tensor::builder(g)
-        .append_input(lhs, false)
+        .append_input(_lhs, false)
         .append_input(rhs, false)
         .build(InPlaceOp::new(InPlaceOperation::SubAssign))
 }
 
 /// Perform in-place multiplication to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_mul<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = lhs.graph();
+pub fn inplace_mul<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _lhs.graph();
     Tensor::builder(g)
-        .append_input(lhs, false)
+        .append_input(_lhs, false)
         .append_input(rhs, false)
         .build(InPlaceOp::new(InPlaceOperation::MulAssign))
 }
 
 /// Perform in-place division to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_div<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = lhs.graph();
+pub fn inplace_div<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _lhs.graph();
     Tensor::builder(g)
-        .append_input(lhs, false)
+        .append_input(_lhs, false)
         .append_input(rhs, false)
         .build(InPlaceOp::new(InPlaceOperation::DivAssign))
 }
 
 /// Perform in-place negation to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_neg<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = tensor.graph();
+pub fn inplace_neg<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _tensor.graph();
     Tensor::builder(g)
-        .append_input(tensor, false)
+        .append_input(_tensor, false)
         .build(InPlaceOp::new(InPlaceOperation::NegAssign))
 }
 
 /// Perform in-place absolute value to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_abs<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = tensor.graph();
+pub fn inplace_abs<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _tensor.graph();
     Tensor::builder(g)
-        .append_input(tensor, false)
+        .append_input(_tensor, false)
         .build(InPlaceOp::new(InPlaceOperation::AbsAssign))
 }
 
@@ -594,14 +592,14 @@ pub fn inplace_scalar_mul<'g, F: Float>(
 
 /// Memory-efficient tensor creation using the memory pool
 #[allow(dead_code)]
-pub fn efficient_zeros<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
+pub fn efficient_zeros<'g, F: Float>(_shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
     // For now, use the standard zeros implementation
     // In a full implementation, this would use the memory pool
-    crate::tensor_ops::zeros(
+    crate::tensor__ops::zeros(
         &crate::tensor_ops::convert_to_tensor(
             ndarray::Array::from_shape_vec(
-                ndarray::IxDyn(&[shape.len()]),
-                shape
+                ndarray::IxDyn(&[_shape.len()]),
+                _shape
                     .iter()
                     .map(|&x| F::from(x).unwrap())
                     .collect::<Vec<_>>(),
@@ -615,14 +613,14 @@ pub fn efficient_zeros<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>
 
 /// Memory-efficient tensor creation using the memory pool
 #[allow(dead_code)]
-pub fn efficient_ones<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
+pub fn efficient_ones<'g, F: Float>(_shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
     // For now, use the standard ones implementation
     // In a full implementation, this would use the memory pool
-    crate::tensor_ops::ones(
+    crate::tensor__ops::ones(
         &crate::tensor_ops::convert_to_tensor(
             ndarray::Array::from_shape_vec(
-                ndarray::IxDyn(&[shape.len()]),
-                shape
+                ndarray::IxDyn(&[_shape.len()]),
+                _shape
                     .iter()
                     .map(|&x| F::from(x).unwrap())
                     .collect::<Vec<_>>(),

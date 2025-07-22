@@ -2,8 +2,8 @@
 //!
 //! This example shows how to use and switch between different FFT backends.
 
-// use num_complex::Complex64;  // Unused import
-use scirs2_fft::{fft, get_backend_info, get_backend_name, ifft, list_backends, BackendContext};
+// use num__complex::Complex64;  // Unused import
+use scirs2__fft::{fft, get_backend_info, get_backend_name, ifft, list_backends, BackendContext};
 
 #[allow(dead_code)]
 fn main() {

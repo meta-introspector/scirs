@@ -30,10 +30,10 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     /// Create a new VAR model
-    pub fn new(order: usize, n_vars: usize) -> Result<Self> {
-        if order == 0 {
+    pub fn new(_order: usize, n_vars: usize) -> Result<Self> {
+        if _order == 0 {
             return Err(TimeSeriesError::InvalidInput(
-                "VAR order must be at least 1".to_string(),
+                "VAR _order must be at least 1".to_string(),
             ));
         }
         if n_vars == 0 {
@@ -42,12 +42,12 @@ where
             ));
         }
 
-        let coefficients = vec![Array2::zeros((n_vars, n_vars)); order];
+        let coefficients = vec![Array2::zeros((n_vars, n_vars)); _order];
         let intercept = Array1::zeros(n_vars);
         let covariance = Array2::eye(n_vars);
 
         Ok(Self {
-            order,
+            _order,
             n_vars,
             coefficients,
             intercept,
@@ -341,8 +341,8 @@ where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
     /// Create a new VECM model
-    pub fn new(n_vars: usize, rank: usize, lag_order: usize) -> Result<Self> {
-        if rank >= n_vars {
+    pub fn new(_n_vars: usize, rank: usize, lag_order: usize) -> Result<Self> {
+        if rank >= _n_vars {
             return Err(TimeSeriesError::InvalidInput(
                 "Cointegration rank must be less than number of variables".to_string(),
             ));
@@ -394,14 +394,14 @@ where
 
 /// Helper function to solve normal equations (X'X)β = X'Y
 #[allow(dead_code)]
-fn solve_normal_equations<F>(xtx: &Array2<F>, xty: &Array2<F>) -> Result<Array2<F>>
+fn solve_normal_equations<F>(_xtx: &Array2<F>, xty: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let n = xtx.nrows();
+    let n = _xtx.nrows();
     let _k = xty.ncols();
 
-    if n != xtx.ncols() {
+    if n != _xtx.ncols() {
         return Err(TimeSeriesError::InvalidInput(
             "X'X matrix must be square".to_string(),
         ));
@@ -414,12 +414,12 @@ where
     }
 
     // Try Cholesky decomposition first (for positive definite matrices)
-    if let Ok(beta) = solve_cholesky(xtx, xty) {
+    if let Ok(beta) = solve_cholesky(_xtx, xty) {
         return Ok(beta);
     }
 
     // Fall back to LU decomposition with partial pivoting
-    solve_lu_decomposition(xtx, xty)
+    solve_lu_decomposition(_xtx, xty)
 }
 
 /// Solve using Cholesky decomposition
@@ -608,16 +608,16 @@ where
     let mut best_order = 1;
     let mut best_criterion = F::infinity();
 
-    for order in 1..=max_order {
-        if t <= order + 1 {
+    for _order in 1..=max_order {
+        if t <= _order + 1 {
             break;
         }
 
-        let mut model = VARModel::new(order, k)?;
+        let mut model = VARModel::new(_order, k)?;
         model.fit(data)?;
 
         let log_det = matrix_log_determinant(&model.covariance);
-        let n_params = order * k * k + k;
+        let n_params = _order * k * k + k;
 
         let criterion_value = match criterion {
             SelectionCriterion::AIC => {
@@ -643,7 +643,7 @@ where
 
         if criterion_value < best_criterion {
             best_criterion = criterion_value;
-            best_order = order;
+            best_order = _order;
         }
     }
 
@@ -652,13 +652,13 @@ where
 
 /// Calculate log determinant of a matrix using LU decomposition
 #[allow(dead_code)]
-fn matrix_log_determinant<F>(matrix: &Array2<F>) -> F
+fn matrix_log_determinant<F>(_matrix: &Array2<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    let n = matrix.nrows();
-    if n != matrix.ncols() {
-        return F::neg_infinity(); // Invalid matrix
+    let n = _matrix.nrows();
+    if n != _matrix.ncols() {
+        return F::neg_infinity(); // Invalid _matrix
     }
 
     if n == 0 {
@@ -666,7 +666,7 @@ where
     }
 
     // Create working copy for LU decomposition
-    let mut lu = matrix.clone();
+    let mut lu = _matrix.clone();
     let mut sign = F::one();
 
     // LU decomposition with partial pivoting
@@ -693,7 +693,7 @@ where
             sign = -sign; // Row swap changes determinant sign
         }
 
-        // Check for zero pivot (singular matrix)
+        // Check for zero pivot (singular _matrix)
         if lu[[col, col]].abs() < F::from(1e-12).unwrap() {
             return F::neg_infinity(); // log(0) = -infinity
         }
@@ -713,7 +713,7 @@ where
     for i in 0..n {
         let diag_element = lu[[i, i]];
         if diag_element.abs() < F::from(1e-12).unwrap() {
-            return F::neg_infinity(); // Singular matrix
+            return F::neg_infinity(); // Singular _matrix
         }
         log_det = log_det + diag_element.abs().ln();
     }

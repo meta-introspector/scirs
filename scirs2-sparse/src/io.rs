@@ -11,10 +11,10 @@ use std::io::{BufReader, BufWriter, Read, Write};
 use std::ops::{Add, Div, Mul, Sub};
 use std::path::Path;
 
-use crate::coo_array::CooArray;
-use crate::csc_array::CscArray;
-use crate::csr_array::CsrArray;
-use crate::dok_array::DokArray;
+use crate::coo__array::CooArray;
+use crate::csc__array::CscArray;
+use crate::csr__array::CsrArray;
+use crate::dok__array::DokArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 
@@ -40,14 +40,14 @@ const DOK_FORMAT: &str = "dok_array";
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2_sparse::construct::eye_array;
-/// use scirs2_sparse::io::save_npz;
+/// use scirs2__sparse::construct::eye_array;
+/// use scirs2__sparse::io::save_npz;
 ///
 /// let array = eye_array::<f64>(10, "csr").unwrap();
 /// save_npz(&*array, "identity.npz").unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn save_npz<T, P>(array: &dyn SparseArray<T>, path: P) -> SparseResult<()>
+pub fn save_npz<T, P>(_array: &dyn SparseArray<T>, path: P) -> SparseResult<()>
 where
     T: Float
         + Add<Output = T>
@@ -60,7 +60,7 @@ where
     P: AsRef<Path>,
 {
     // First determine the format and get needed components
-    let (format, data, indices, indptr, shape) = match array.to_csr() {
+    let (format, data, indices, indptr, shape) = match _array.to_csr() {
         Ok(csr) => {
             if let Some(csr_array) = csr.as_any().downcast_ref::<CsrArray<T>>() {
                 (
@@ -78,7 +78,7 @@ where
         }
         Err(_) => {
             // If we couldn't convert to CSR, try converting to COO
-            match array.to_coo() {
+            match _array.to_coo() {
                 Ok(coo) => {
                     if let Some(coo_array) = coo.as_any().downcast_ref::<CooArray<T>>() {
                         // For COO format, we store row indices, column indices, and data
@@ -106,11 +106,11 @@ where
                 }
                 Err(_) => {
                     // Try DOK format
-                    match array.to_dok() {
+                    match _array.to_dok() {
                         Ok(dok) => {
                             if let Some(dok_array) = dok.as_any().downcast_ref::<DokArray<T>>() {
                                 // For DOK format, we convert to COO triplets first
-                                let (rows, _cols, values) = dok_array.to_triplets();
+                                let (rows_cols, values) = dok_array.to_triplets();
                                 let shape = dok_array.shape();
 
                                 // Use zeros for indptr (not used in DOK)
@@ -154,7 +154,7 @@ where
 
     // For COO format, we also need column indices
     if format == COO_FORMAT {
-        if let Ok(coo) = array.to_coo() {
+        if let Ok(coo) = _array.to_coo() {
             if let Some(coo_array) = coo.as_any().downcast_ref::<CooArray<T>>() {
                 write_array(&mut writer, coo_array.get_cols())?;
             }
@@ -181,13 +181,13 @@ where
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2_sparse::io::load_npz;
+/// use scirs2__sparse::io::load_npz;
 ///
-/// let array = load_npz::<f64, _>("identity.npz").unwrap();
+/// let array = load_npz::<f64>("identity.npz").unwrap();
 /// assert_eq!(array.shape(), (10, 10));
 /// ```
 #[allow(dead_code)]
-pub fn load_npz<T, P>(path: P) -> SparseResult<Box<dyn SparseArray<T>>>
+pub fn load_npz<T, P>(_path: P) -> SparseResult<Box<dyn SparseArray<T>>>
 where
     T: Float
         + Add<Output = T>
@@ -199,7 +199,7 @@ where
         + 'static,
     P: AsRef<Path>,
 {
-    let file = File::open(path)?;
+    let file = File::open(_path)?;
     let mut reader = BufReader::new(file);
 
     // Read format marker
@@ -257,55 +257,55 @@ where
 // Utility functions for reading/writing primitive types
 
 #[allow(dead_code)]
-fn write_string<W: Write>(writer: &mut W, s: &str) -> std::io::Result<()> {
+fn write_string<W: Write>(_writer: &mut W, s: &str) -> std::io::Result<()> {
     let bytes = s.as_bytes();
     let len = bytes.len() as u64;
-    writer.write_all(&len.to_le_bytes())?;
-    writer.write_all(bytes)?;
+    _writer.write_all(&len.to_le_bytes())?;
+    _writer.write_all(bytes)?;
     Ok(())
 }
 
 #[allow(dead_code)]
-fn read_string<R: Read>(reader: &mut R) -> std::io::Result<String> {
+fn read_string<R: Read>(_reader: &mut R) -> std::io::Result<String> {
     let mut len_bytes = [0u8; 8];
-    reader.read_exact(&mut len_bytes)?;
+    _reader.read_exact(&mut len_bytes)?;
     let len = u64::from_le_bytes(len_bytes) as usize;
 
     let mut bytes = vec![0u8; len];
-    reader.read_exact(&mut bytes)?;
+    _reader.read_exact(&mut bytes)?;
 
     String::from_utf8(bytes).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
 }
 
 #[allow(dead_code)]
-fn write_usize<W: Write>(writer: &mut W, n: usize) -> std::io::Result<()> {
-    writer.write_all(&(n as u64).to_le_bytes())
+fn write_usize<W: Write>(_writer: &mut W, n: usize) -> std::io::Result<()> {
+    _writer.write_all(&(n as u64).to_le_bytes())
 }
 
 #[allow(dead_code)]
-fn read_usize<R: Read>(reader: &mut R) -> std::io::Result<usize> {
+fn read_usize<R: Read>(_reader: &mut R) -> std::io::Result<usize> {
     let mut bytes = [0u8; 8];
-    reader.read_exact(&mut bytes)?;
+    _reader.read_exact(&mut bytes)?;
     Ok(u64::from_le_bytes(bytes) as usize)
 }
 
 #[allow(dead_code)]
-fn write_array<W: Write, T: Copy>(writer: &mut W, array: &Array1<T>) -> std::io::Result<()> {
+fn write_array<W: Write, T: Copy>(_writer: &mut W, array: &Array1<T>) -> std::io::Result<()> {
     let len = array.len() as u64;
-    writer.write_all(&len.to_le_bytes())?;
+    _writer.write_all(&len.to_le_bytes())?;
 
     let data_size = std::mem::size_of::<T>() * array.len();
     let data_ptr = array.as_ptr() as *const u8;
     let data_slice = unsafe { std::slice::from_raw_parts(data_ptr, data_size) };
 
-    writer.write_all(data_slice)?;
+    _writer.write_all(data_slice)?;
     Ok(())
 }
 
 #[allow(dead_code)]
-fn read_array<R: Read, T: Copy>(reader: &mut R) -> std::io::Result<Array1<T>> {
+fn read_array<R: Read, T: Copy>(_reader: &mut R) -> std::io::Result<Array1<T>> {
     let mut len_bytes = [0u8; 8];
-    reader.read_exact(&mut len_bytes)?;
+    _reader.read_exact(&mut len_bytes)?;
     let len = u64::from_le_bytes(len_bytes) as usize;
 
     let mut data = Vec::with_capacity(len);
@@ -316,7 +316,7 @@ fn read_array<R: Read, T: Copy>(reader: &mut R) -> std::io::Result<Array1<T>> {
     let data_ptr = data.as_mut_ptr() as *mut u8;
     let data_slice = unsafe { std::slice::from_raw_parts_mut(data_ptr, data_size) };
 
-    reader.read_exact(data_slice)?;
+    _reader.read_exact(data_slice)?;
 
     Ok(Array1::from_vec(data))
 }
@@ -344,8 +344,8 @@ where
 
 // Implement From<std::io::Error> for SparseError
 impl From<std::io::Error> for SparseError {
-    fn from(error: std::io::Error) -> Self {
-        SparseError::ComputationError(format!("IO error: {error}"))
+    fn from(_error: std::io::Error) -> Self {
+        SparseError::ComputationError(format!("IO _error: {_error}"))
     }
 }
 
@@ -368,7 +368,7 @@ mod tests {
         save_npz(&*array, &file_path).unwrap();
 
         // Load the array
-        let loaded = load_npz::<f64, _>(&file_path).unwrap();
+        let loaded = load_npz::<f64>(&file_path).unwrap();
 
         // Check that it loaded correctly
         assert_eq!(loaded.shape(), (5, 5));
@@ -394,7 +394,7 @@ mod tests {
         save_npz(&*array, &file_path).unwrap();
 
         // Load the array
-        let loaded = load_npz::<f64, _>(&file_path).unwrap();
+        let loaded = load_npz::<f64>(&file_path).unwrap();
 
         // Check that it loaded correctly
         assert_eq!(loaded.shape(), (5, 5));
@@ -422,7 +422,7 @@ mod tests {
         save_npz(&*array, &file_path).unwrap();
 
         // Load the array
-        let loaded = load_npz::<f64, _>(&file_path).unwrap();
+        let loaded = load_npz::<f64>(&file_path).unwrap();
 
         // Check that it loaded correctly
         assert_eq!(loaded.shape(), (10, 10));

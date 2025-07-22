@@ -22,6 +22,7 @@ use rand::rng;
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
+use statrs::statistics::Statistics;
 
 /// Spiking neuron model for neuromorphic processing
 #[derive(Debug, Clone)]
@@ -186,10 +187,10 @@ impl Default for STDPParameters {
 
 impl PlasticSynapse {
     /// Create a new plastic synapse
-    pub fn new(pre_id: usize, post_id: usize, initial_weight: f64) -> Self {
+    pub fn new(_pre_id: usize, post_id: usize, initial_weight: f64) -> Self {
         Self {
-            weight: initial_weight,
-            pre_neuron_id: pre_id,
+            _weight: initial_weight,
+            pre_neuron_id: _pre_id,
             post_neuron_id: post_id,
             last_pre_spike: None,
             last_post_spike: None,
@@ -267,15 +268,15 @@ pub struct SpikeEvent {
 
 impl SpikingNeuralNetwork {
     /// Create a new spiking neural network
-    pub fn new(num_neurons: usize, connectivity_probability: f64) -> Self {
-        let mut neurons = Vec::with_capacity(num_neurons);
+    pub fn new(_num_neurons: usize, connectivity_probability: f64) -> Self {
+        let mut _neurons = Vec::with_capacity(_num_neurons);
         let mut synapses = Vec::new();
         let mut connectivity = HashMap::new();
         let mut rng = rng();
 
-        // Initialize neurons
-        for _ in 0..num_neurons {
-            neurons.push(SpikingNeuron::new());
+        // Initialize _neurons
+        for _ in 0.._num_neurons {
+            _neurons.push(SpikingNeuron::new());
         }
 
         // Create random connectivity
@@ -286,15 +287,15 @@ impl SpikingNeuralNetwork {
                     connections.push(j);
 
                     // Create synapse
-                    let weight = rng.random_range(0.1..0.8);
-                    synapses.push(PlasticSynapse::new(i, j, weight));
+                    let weight = rng.gen_range(0.1..0.8);
+                    synapses.push(PlasticSynapse::new(i..j, weight));
                 }
             }
             connectivity.insert(i, connections);
         }
 
         Self {
-            neurons,
+            _neurons,
             synapses,
             connectivity,
             dt: 0.1, // ms
@@ -473,8 +474,8 @@ impl Default for EdgePreprocessingParams {
 
 impl NeuromorphicEdgeDetector {
     /// Create a new neuromorphic edge detector
-    pub fn new(input_size: usize) -> Self {
-        let network_size = input_size * 2; // Hidden layer for processing
+    pub fn new(_input_size: usize) -> Self {
+        let network_size = _input_size * 2; // Hidden layer for processing
         let snn = SpikingNeuralNetwork::new(network_size, 0.3);
 
         Self {
@@ -678,10 +679,10 @@ pub struct EfficiencyMetrics {
 
 impl EventDrivenProcessor {
     /// Create a new event-driven processor
-    pub fn new(event_threshold: f32) -> Self {
+    pub fn new(_event_threshold: f32) -> Self {
         Self {
             event_buffer: VecDeque::with_capacity(10000),
-            event_threshold,
+            _event_threshold,
             previous_frame: None,
             spatial_clusters: HashMap::new(),
             temporal_window: Duration::from_millis(50),
@@ -988,8 +989,8 @@ pub struct PerformanceSnapshot {
 
 impl AdaptiveNeuromorphicPipeline {
     /// Create a new adaptive neuromorphic pipeline
-    pub fn new(input_size: usize) -> Self {
-        let edge_detector = NeuromorphicEdgeDetector::new(input_size);
+    pub fn new(_input_size: usize) -> Self {
+        let edge_detector = NeuromorphicEdgeDetector::new(_input_size);
         let event_processor = EventDrivenProcessor::new(0.05);
 
         Self {
@@ -1062,7 +1063,7 @@ impl AdaptiveNeuromorphicPipeline {
     /// Estimate processing accuracy (simplified)
     fn estimate_accuracy(&self, frame: &Frame) -> f32 {
         // Simple heuristic based on information content
-        let variance = frame.data.var(0.0);
+        let variance = frame.data.variance();
         let edge_density =
             frame.data.iter().filter(|&&x| x > 0.1).count() as f32 / frame.data.len() as f32;
 
@@ -1276,7 +1277,7 @@ mod tests {
         };
 
         let frame2 = Frame {
-            data: Array2::from_shape_fn((10, 10), |(y, _x)| if y == 5 { 1.0 } else { 0.0 }),
+            data: Array2::from_shape_fn((10, 10), |(y_x)| if y == 5 { 1.0 } else { 0.0 }),
             timestamp: Instant::now(),
             index: 1,
             metadata: None,

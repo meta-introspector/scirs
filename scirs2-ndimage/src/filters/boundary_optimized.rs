@@ -40,10 +40,10 @@ pub struct Boundary1D<'a, T> {
 }
 
 impl<'a, T: Float + FromPrimitive + Debug + Clone> Boundary1D<'a, T> {
-    pub fn new(data: &'a ArrayView1<'a, T>) -> Self {
+    pub fn new(_data: &'a ArrayView1<'a, T>) -> Self {
         Self {
-            data,
-            len: data.len() as isize,
+            _data,
+            len: _data.len() as isize,
         }
     }
 
@@ -119,10 +119,10 @@ pub struct Boundary2D<'a, T> {
 }
 
 impl<'a, T: Float + FromPrimitive + Debug + Clone> Boundary2D<'a, T> {
-    pub fn new(data: &'a ArrayView2<'a, T>) -> Self {
-        let (h, w) = data.dim();
+    pub fn new(_data: &'a ArrayView2<'a, T>) -> Self {
+        let (h, w) = _data.dim();
         Self {
-            data,
+            _data,
             shape: [h as isize, w as isize],
         }
     }

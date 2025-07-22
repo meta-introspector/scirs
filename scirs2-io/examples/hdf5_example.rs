@@ -4,7 +4,7 @@
 //! HDF5 files with groups, datasets, and attributes.
 
 use ndarray::{array, Array2};
-use scirs2_io::hdf5::{
+use scirs2__io::hdf5::{
     create_hdf5_with_structure, read_hdf5, write_hdf5, AttributeValue, CompressionOptions,
     DatasetOptions, FileMode, HDF5File,
 };
@@ -286,7 +286,7 @@ fn scientific_data_example() -> Result<(), Box<dyn std::error::Error>> {
         let qc_flags: Array2<i64> =
             Array2::from_shape_fn(
                 (12, 10),
-                |(_, _)| if rand::random::<f64>() > 0.95 { 1 } else { 0 },
+                |(__)| if rand::random::<f64>() > 0.95 { 1 } else { 0 },
             );
 
         // Convert to ArrayD<f64> for our API
@@ -320,3 +320,4 @@ fn scientific_data_example() -> Result<(), Box<dyn std::error::Error>> {
 
 // Add dependency on rand for example data generation
 use rand;
+use statrs::statistics::Statistics;

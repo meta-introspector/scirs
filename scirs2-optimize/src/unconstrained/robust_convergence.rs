@@ -133,35 +133,35 @@ struct PlateauState {
 
 impl RobustConvergenceState {
     /// Create new robust convergence state
-    pub fn new(options: RobustConvergenceOptions, problem_dim: usize) -> Self {
+    pub fn new(_options: RobustConvergenceOptions, problem_dim: usize) -> Self {
         let adaptive_state =
-            AdaptiveToleranceState::new(options.adaptive_tolerance.clone(), problem_dim);
+            AdaptiveToleranceState::new(_options.adaptive_tolerance.clone(), problem_dim);
 
         Self {
             adaptive_state,
             early_stop_state: EarlyStoppingState {
                 best_value: f64::INFINITY,
                 iterations_without_improvement: 0,
-                improvement_history: VecDeque::with_capacity(options.early_stopping_patience),
+                improvement_history: VecDeque::with_capacity(_options.early_stopping_patience),
             },
             progress_state: ProgressState {
-                recent_values: VecDeque::with_capacity(options.progress_window),
-                recent_gradients: VecDeque::with_capacity(options.progress_window),
+                recent_values: VecDeque::with_capacity(_options.progress_window),
+                recent_gradients: VecDeque::with_capacity(_options.progress_window),
                 progress_rate: 0.0,
             },
             start_time: Some(std::time::Instant::now()),
             noise_state: NoiseRobustState {
-                function_window: VecDeque::with_capacity(options.noise_window),
-                gradient_window: VecDeque::with_capacity(options.noise_window),
-                step_window: VecDeque::with_capacity(options.noise_window),
+                function_window: VecDeque::with_capacity(_options.noise_window),
+                gradient_window: VecDeque::with_capacity(_options.noise_window),
+                step_window: VecDeque::with_capacity(_options.noise_window),
                 stable_convergence_count: 0,
             },
             plateau_state: PlateauState {
-                plateau_window: VecDeque::with_capacity(options.plateau_window),
+                plateau_window: VecDeque::with_capacity(_options.plateau_window),
                 plateau_detected: false,
                 plateau_start_iteration: None,
             },
-            options,
+            _options,
         }
     }
 
@@ -178,8 +178,7 @@ impl RobustConvergenceState {
         function_value: f64,
         gradient_norm: f64,
         step_norm: f64,
-        iteration: usize,
-        _x: Option<&ArrayView1<f64>>,
+        iteration: usize_x: Option<&ArrayView1<f64>>,
     ) -> Result<RobustConvergenceResult, OptimizeError> {
         // Update adaptive tolerance state
         self.adaptive_state
@@ -312,11 +311,9 @@ impl RobustConvergenceState {
 
     /// Check all convergence criteria
     fn check_all_convergence_criteria(
-        &self,
-        _function_value: f64,
+        &self_function_value: f64,
         gradient_norm: f64,
-        step_norm: f64,
-        _iteration: usize,
+        step_norm: f64, _iteration: usize,
     ) -> Result<RobustConvergenceResult, OptimizeError> {
         let mut convergence_reasons = Vec::new();
         let mut warning_flags = Vec::new();
@@ -409,7 +406,7 @@ impl RobustConvergenceState {
         }
 
         if gradient_norm > 1e3 {
-            warning_flags.push("Large gradient norm".to_string());
+            warning_flags.push("Large gradient _norm".to_string());
         }
 
         if self.plateau_state.plateau_detected {
@@ -641,8 +638,7 @@ pub fn create_robust_options_for_problem(
             noise_window: 10,
             noise_confidence: 0.99,
             ..Default::default()
-        },
-        _ => RobustConvergenceOptions {
+        }_ => RobustConvergenceOptions {
             adaptive_tolerance,
             ..Default::default()
         },

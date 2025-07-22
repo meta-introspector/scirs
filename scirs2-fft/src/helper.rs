@@ -23,7 +23,7 @@ use std::sync::LazyLock;
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::fftfreq;
+/// use scirs2__fft::fftfreq;
 ///
 /// let freq = fftfreq(8, 0.1).unwrap();
 /// // frequencies for n=8, sample spacing of 0.1
@@ -92,7 +92,7 @@ pub fn fftfreq(n: usize, d: f64) -> FFTResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::rfftfreq;
+/// use scirs2__fft::rfftfreq;
 ///
 /// let freq = rfftfreq(8, 0.1).unwrap();
 /// // frequencies for n=8, sample spacing of 0.1
@@ -125,7 +125,7 @@ pub fn rfftfreq(n: usize, d: f64) -> FFTResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::fftshift;
+/// use scirs2__fft::fftshift;
 /// use ndarray::Array1;
 ///
 /// let x = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0]);
@@ -175,7 +175,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::{fftshift, ifftshift};
+/// use scirs2__fft::{fftshift, ifftshift};
 /// use ndarray::Array1;
 ///
 /// let x = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0]);
@@ -227,7 +227,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::helper::freq_bins;
+/// use scirs2__fft::helper::freq_bins;
 ///
 /// let bins = freq_bins(1024, 44100.0).unwrap();
 /// assert_eq!(bins.len(), 1024);
@@ -264,21 +264,21 @@ static EFFICIENT_FACTORS: LazyLock<HashSet<usize>> = LazyLock::new(|| {
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::next_fast_len;
+/// use scirs2__fft::next_fast_len;
 ///
 /// let n = next_fast_len(1000, false);
 /// assert!(n >= 1000);
 /// ```
 #[allow(dead_code)]
-pub fn next_fast_len(target: usize, real: bool) -> usize {
-    if target <= 1 {
+pub fn next_fast_len(_target: usize, real: bool) -> usize {
+    if _target <= 1 {
         return 1;
     }
 
     // Get the maximum prime factor to consider
     let max_factor = if real { 5 } else { 11 };
 
-    let mut n = target;
+    let mut n = _target;
     loop {
         // Try to factor n using only efficient prime factors
         let mut is_smooth = true;
@@ -326,21 +326,21 @@ pub fn next_fast_len(target: usize, real: bool) -> usize {
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::prev_fast_len;
+/// use scirs2__fft::prev_fast_len;
 ///
 /// let n = prev_fast_len(1000, false);
 /// assert!(n <= 1000);
 /// ```
 #[allow(dead_code)]
-pub fn prev_fast_len(target: usize, real: bool) -> usize {
-    if target <= 1 {
+pub fn prev_fast_len(_target: usize, real: bool) -> usize {
+    if _target <= 1 {
         return 1;
     }
 
     // Get the maximum prime factor to consider
     let max_factor = if real { 5 } else { 11 };
 
-    let mut n = target;
+    let mut n = _target;
     while n > 1 {
         // Try to factor n using only efficient prime factors
         let mut is_smooth = true;

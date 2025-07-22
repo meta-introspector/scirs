@@ -70,13 +70,13 @@ fn main() {
 
 /// Generate a matrix with uniform distribution
 #[allow(dead_code)]
-fn generate_uniform_data(size: usize) -> Array2<f32> {
-    let mut rng = rng();
+fn generate_uniform_data(_size: usize) -> Array2<f32> {
+    let mut rng = rand::rng();
     let uniform = Uniform::new(-1.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((size, size));
-    for i in 0..size {
-        for j in 0..size {
+    let mut data = Array2::zeros((_size, _size));
+    for i in 0.._size {
+        for j in 0.._size {
             data[[i, j]] = uniform.sample(&mut rng);
         }
     }
@@ -86,13 +86,13 @@ fn generate_uniform_data(size: usize) -> Array2<f32> {
 
 /// Generate a matrix with normal distribution
 #[allow(dead_code)]
-fn generate_normal_data(size: usize) -> Array2<f32> {
-    let mut rng = rng();
+fn generate_normal_data(_size: usize) -> Array2<f32> {
+    let mut rng = rand::rng();
     let normal = Normal::new(0.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((size, size));
-    for i in 0..size {
-        for j in 0..size {
+    let mut data = Array2::zeros((_size, _size));
+    for i in 0.._size {
+        for j in 0.._size {
             data[[i, j]] = normal.sample(&mut rng);
         }
     }
@@ -102,13 +102,13 @@ fn generate_normal_data(size: usize) -> Array2<f32> {
 
 /// Generate a matrix with log-normal distribution
 #[allow(dead_code)]
-fn generate_lognormal_data(size: usize) -> Array2<f32> {
-    let mut rng = rng();
+fn generate_lognormal_data(_size: usize) -> Array2<f32> {
+    let mut rng = rand::rng();
     let lognormal = LogNormal::new(0.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((size, size));
-    for i in 0..size {
-        for j in 0..size {
+    let mut data = Array2::zeros((_size, _size));
+    for i in 0.._size {
+        for j in 0.._size {
             data[[i, j]] = lognormal.sample(&mut rng);
         }
     }
@@ -118,14 +118,14 @@ fn generate_lognormal_data(size: usize) -> Array2<f32> {
 
 /// Generate a matrix with bimodal distribution
 #[allow(dead_code)]
-fn generate_bimodal_data(size: usize) -> Array2<f32> {
-    let mut rng = rng();
+fn generate_bimodal_data(_size: usize) -> Array2<f32> {
+    let mut rng = rand::rng();
     let normal1 = Normal::new(-2.0, 0.5).unwrap();
     let normal2 = Normal::new(2.0, 0.5).unwrap();
 
-    let mut data = Array2::zeros((size, size));
-    for i in 0..size {
-        for j in 0..size {
+    let mut data = Array2::zeros((_size, _size));
+    for i in 0.._size {
+        for j in 0.._size {
             // 50% chance of coming from each distribution
             if rng.random::<bool>() {
                 data[[i, j]] = normal1.sample(&mut rng);
@@ -140,38 +140,38 @@ fn generate_bimodal_data(size: usize) -> Array2<f32> {
 
 /// Generate a matrix with mixed scales in different columns
 #[allow(dead_code)]
-fn generate_mixed_scale_data(size: usize) -> Array2<f32> {
-    let mut rng = rng();
+fn generate_mixed_scale_data(_size: usize) -> Array2<f32> {
+    let mut rng = rand::rng();
 
-    let mut data = Array2::zeros((size, size));
+    let mut data = Array2::zeros((_size, _size));
 
     // Divide the matrix into regions with different scales
-    let region_size = size / 4;
+    let region_size = _size / 4;
 
     // Region 1: small values around 0.1
     for i in 0..region_size {
-        for j in 0..size {
+        for j in 0.._size {
             data[[i, j]] = 0.1 + 0.05 * rng.random::<f32>();
         }
     }
 
     // Region 2: medium values around 1.0
     for i in region_size..(2 * region_size) {
-        for j in 0..size {
+        for j in 0.._size {
             data[[i, j]] = 1.0 + 0.5 * rng.random::<f32>();
         }
     }
 
     // Region 3: large values around 10.0
     for i in (2 * region_size)..(3 * region_size) {
-        for j in 0..size {
+        for j in 0.._size {
             data[[i, j]] = 10.0 + 5.0 * rng.random::<f32>();
         }
     }
 
     // Region 4: very large values around 100.0
-    for i in (3 * region_size)..size {
-        for j in 0..size {
+    for i in (3 * region_size).._size {
+        for j in 0.._size {
             data[[i, j]] = 100.0 + 50.0 * rng.random::<f32>();
         }
     }
@@ -181,13 +181,13 @@ fn generate_mixed_scale_data(size: usize) -> Array2<f32> {
 
 /// Generate a matrix with heavy-tailed distribution (Cauchy)
 #[allow(dead_code)]
-fn generate_heavy_tailed_data(size: usize) -> Array2<f32> {
-    let mut rng = rng();
+fn generate_heavy_tailed_data(_size: usize) -> Array2<f32> {
+    let mut rng = rand::rng();
     let cauchy = Cauchy::new(0.0, 1.0).unwrap();
 
-    let mut data = Array2::zeros((size, size));
-    for i in 0..size {
-        for j in 0..size {
+    let mut data = Array2::zeros((_size, _size));
+    for i in 0.._size {
+        for j in 0.._size {
             // The Cauchy distribution can generate extreme outliers
             // We'll clamp the values to avoid numerical issues
             let val: f32 = cauchy.sample(&mut rng);
@@ -233,7 +233,7 @@ fn benchmark_methods(
                 _q_params = Some(params.clone());
 
                 // Quantize and dequantize
-                let (quantized, _) = quantize_matrix(&data.view(), BITS, params.method);
+                let quantized = quantize_matrix(&data.view(), BITS, params.method);
                 let dequantized = dequantize_matrix(&quantized, &params);
 
                 // Calculate MSE
@@ -266,7 +266,7 @@ fn benchmark_methods(
 
 /// Benchmark different bit widths using entropy calibration
 #[allow(dead_code)]
-fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
+fn benchmark_bit_widths(_distributions: &[(&str, &Array2<f32>)]) {
     let bit_widths = [4, 8, 16];
 
     println!(
@@ -278,7 +278,7 @@ fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
         "", "", "", "", ""
     );
 
-    for &(dist_name, data) in distributions {
+    for &(dist_name, data) in _distributions {
         for &bits in &bit_widths {
             // Configure calibration using entropy method (generally robust)
             let config = CalibrationConfig {
@@ -291,7 +291,7 @@ fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
             let params = calibrate_matrix(&data.view(), bits, &config).unwrap();
 
             // Quantize and dequantize
-            let (quantized, _) = quantize_matrix(&data.view(), bits, params.method);
+            let quantized = quantize_matrix(&data.view(), bits, params.method);
             let dequantized = dequantize_matrix(&quantized, &params);
 
             // Calculate MSE
@@ -312,7 +312,7 @@ fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
             );
         }
 
-        // Add separator between distributions
+        // Add separator between _distributions
         println!(
             "{:-^15} | {:-^10} | {:-^15} | {:-^15} | {:-^15}",
             "", "", "", "", ""
@@ -322,7 +322,7 @@ fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
 
 /// Benchmark hardware-friendly quantization formats
 #[allow(dead_code)]
-fn benchmark_hardware_friendly(distributions: &[(&str, &Array2<f32>)]) {
+fn benchmark_hardware_friendly(_distributions: &[(&str, &Array2<f32>)]) {
     // Define hardware-friendly formats to test
     let formats = [
         (8, QuantizationMethod::Symmetric, "Int8 Symmetric"),
@@ -342,7 +342,7 @@ fn benchmark_hardware_friendly(distributions: &[(&str, &Array2<f32>)]) {
         "", "", "", "", ""
     );
 
-    for &(dist_name, data) in distributions {
+    for &(dist_name, data) in _distributions {
         for &(bits, method, format_name) in &formats {
             // Measure calibration time
             let start = Instant::now();
@@ -372,7 +372,7 @@ fn benchmark_hardware_friendly(distributions: &[(&str, &Array2<f32>)]) {
             );
         }
 
-        // Add separator between distributions
+        // Add separator between _distributions
         println!(
             "{:-^15} | {:-^20} | {:-^15} | {:-^15} | {:-^15}",
             "", "", "", "", ""

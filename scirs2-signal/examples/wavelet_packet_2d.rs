@@ -1,6 +1,7 @@
 use ndarray::Array2;
-use scirs2_signal::dwt::Wavelet;
-use scirs2_signal::wpt2d::{wpt2d_full, wpt2d_selective, WaveletPacket2D};
+use scirs2__signal::dwt::Wavelet;
+use scirs2__signal::wpt2d::{wpt2d_full, wpt2d_selective, WaveletPacket2D};
+use crate::wpt2d::WaveletPacket2D;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

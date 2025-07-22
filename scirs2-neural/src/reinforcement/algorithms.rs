@@ -2,10 +2,11 @@
 
 use crate::error::Result;
 use crate::reinforcement::environments::Environment;
-use crate::reinforcement::replay_buffer::{PrioritizedReplayBuffer, ReplayBuffer, ReplayBufferTrait};
+use crate::reinforcement::replay__buffer::{PrioritizedReplayBuffer, ReplayBuffer, ReplayBufferTrait};
 use crate::reinforcement::{ExperienceBatch, LossInfo, RLAgent};
 use ndarray::prelude::*;
 use rand::Rng;
+use ndarray::ArrayView1;
 /// Training configuration for RL algorithms
 #[derive(Debug, Clone)]
 pub struct TrainingConfig {
@@ -128,7 +129,7 @@ pub struct OffPolicyAlgorithm<A: RLAgent> {
     prioritized_buffer: Option<PrioritizedReplayBuffer>,
 impl<A: RLAgent + 'static> OffPolicyAlgorithm<A> {
     /// Create a new off-policy algorithm
-    pub fn new(agent: A, config: &TrainingConfig) -> Self {
+    pub fn new(_agent: A, config: &TrainingConfig) -> Self {
         let replay_buffer = if !config.use_prioritized_replay {
             Some(ReplayBuffer::new(config.buffer_size))
         } else {
@@ -200,7 +201,7 @@ impl<A: RLAgent + 'static> RLAlgorithm for OffPolicyAlgorithm<A> {
             let training = total_steps >= config.learning_starts;
             let action = self.agent.act(&state.view(), training)?;
             // Take action in environment
-            let (next_state, reward, done, _info) = env.step(&action)?;
+            let (next_state, reward, done_info) = env.step(&action)?;
             // Add to replay buffer
             self.add_to_buffer(
                 state.clone(),
@@ -288,7 +289,7 @@ impl<A: RLAgent + 'static> RLAlgorithm for OffPolicyAlgorithm<A> {
             let mut episode_length = 0;
             loop {
                 let action = self.agent.act(&state.view(), false)?;
-                let (next_state, reward, done, _info) = env.step(&action)?;
+                let (next_state, reward, done_info) = env.step(&action)?;
                 episode_reward += reward;
                 episode_length += 1;
                 if done || episode_length >= 1000 {
@@ -494,9 +495,9 @@ impl RLAlgorithm for RLAlgorithmImpl {
                 variance.sqrt()
             },
             mean_length: episode_lengths.iter().sum::<usize>() as f32 / episode_lengths.len() as f32,
-    fn save(&self, _path: &str) -> Result<()> {
+    fn save(&self_path: &str) -> Result<()> {
         // Simplified - no saving implementation
-    fn load(&mut self, _path: &str) -> Result<()> {
+    fn load(&mut self_path: &str) -> Result<()> {
         // Simplified - no loading implementation
 /// Helper function to create common RL algorithms
 #[allow(dead_code)]

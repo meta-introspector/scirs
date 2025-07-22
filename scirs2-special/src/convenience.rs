@@ -151,11 +151,11 @@ pub mod physics {
     ///
     /// # Arguments
     /// * `energy` - Energy array in eV
-    /// * `fermi_energy` - Fermi energy in eV
+    /// * `fermienergy` - Fermi energy in eV
     /// * `temperature` - Temperature in Kelvin
     pub fn fermi_dirac_distribution(
         energy: &ArrayView1<f64>,
-        fermi_energy: f64,
+        fermienergy: f64,
         temperature: f64,
     ) -> SpecialResult<Array1<f64>> {
         if temperature < 0.0 {
@@ -170,11 +170,11 @@ pub mod physics {
         if temperature == 0.0 {
             // Zero temperature limit
             for (i, &e) in energy.iter().enumerate() {
-                distribution[i] = if e < fermi_energy { 1.0 } else { 0.0 };
+                distribution[i] = if e < fermienergy { 1.0 } else { 0.0 };
             }
         } else {
             for (i, &e) in energy.iter().enumerate() {
-                let x = (e - fermi_energy) / (k_b_ev * temperature);
+                let x = (e - fermienergy) / (k_b_ev * temperature);
                 distribution[i] = statistical::logistic(-x);
             }
         }
@@ -285,21 +285,21 @@ pub mod data_science {
     /// Calculate the Gini coefficient from a probability distribution
     ///
     /// Measures inequality in a distribution (0 = perfect equality, 1 = perfect inequality)
-    pub fn gini_coefficient(probabilities: &ArrayView1<f64>) -> SpecialResult<f64> {
-        if probabilities.iter().any(|&p| p < 0.0) {
+    pub fn gini_coefficient(_probabilities: &ArrayView1<f64>) -> SpecialResult<f64> {
+        if _probabilities.iter().any(|&p| p < 0.0) {
             return Err(crate::SpecialError::ValueError(
                 "Probabilities must be non-negative".to_string(),
             ));
         }
 
-        let sum: f64 = probabilities.sum();
+        let sum: f64 = _probabilities.sum();
         if sum == 0.0 {
             return Ok(0.0);
         }
 
-        // Normalize probabilities
-        let n = probabilities.len();
-        let mut sorted_probs: Vec<f64> = probabilities.to_vec();
+        // Normalize _probabilities
+        let n = _probabilities.len();
+        let mut sorted_probs: Vec<f64> = _probabilities.to_vec();
         sorted_probs.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let mut gini = 0.0;
@@ -315,7 +315,7 @@ pub mod data_science {
     /// # Arguments
     /// * `probabilities` - Probability distribution
     /// * `base` - Logarithm base (2 for bits, e for nats)
-    pub fn shannon_entropy(probabilities: &ArrayView1<f64>, base: f64) -> SpecialResult<f64> {
+    pub fn shannon_entropy(_probabilities: &ArrayView1<f64>, base: f64) -> SpecialResult<f64> {
         if base <= 0.0 || base == 1.0 {
             return Err(crate::SpecialError::ValueError(
                 "Base must be positive and not equal to 1".to_string(),
@@ -325,7 +325,7 @@ pub mod data_science {
         let mut entropy = 0.0;
         let log_base = base.ln();
 
-        for &p in probabilities.iter() {
+        for &p in _probabilities.iter() {
             if p > 0.0 {
                 entropy -= p * p.ln() / log_base;
             }
@@ -468,7 +468,7 @@ pub mod signal_processing {
             "kaiser" => kaiser_window(n, 8.6),
             _ => {
                 return Err(crate::SpecialError::ValueError(
-                    "Unknown window type".to_string(),
+                    "Unknown window _type".to_string(),
                 ))
             }
         };
@@ -555,14 +555,14 @@ pub mod finance {
         let mut vol = (2.0 * PI / time).sqrt() * option_price / spot;
 
         for _ in 0..max_iter {
-            let price = black_scholes_call(spot, strike, rate, vol, time)?;
+            let _price = black_scholes_call(spot, strike, rate, vol, time)?;
             let vega = black_scholes_vega(spot, strike, rate, vol, time)?;
 
             if vega.abs() < 1e-10 {
                 break;
             }
 
-            let diff = option_price - price;
+            let diff = option_price - _price;
             if diff.abs() < 1e-8 {
                 return Ok(vol);
             }
@@ -733,16 +733,16 @@ pub mod bioinformatics {
     /// * `ligand` - Ligand concentration array
     /// * `kd` - Dissociation constant
     /// * `n` - Hill coefficient
-    pub fn hill_equation(ligand: &ArrayView1<f64>, kd: f64, n: f64) -> SpecialResult<Array1<f64>> {
+    pub fn hill_equation(_ligand: &ArrayView1<f64>, kd: f64, n: f64) -> SpecialResult<Array1<f64>> {
         if kd <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Kd must be positive".to_string(),
             ));
         }
 
-        let mut fraction = Array1::zeros(ligand.len());
+        let mut fraction = Array1::zeros(_ligand.len());
 
-        for (i, &l) in ligand.iter().enumerate() {
+        for (i, &l) in _ligand.iter().enumerate() {
             if l < 0.0 {
                 return Err(crate::SpecialError::ValueError(
                     "Ligand concentration must be non-negative".to_string(),
@@ -795,14 +795,14 @@ pub mod geophysics {
     /// * `vp` - P-wave velocity
     /// * `vs` - S-wave velocity
     /// * `density` - Rock density
-    pub fn acoustic_impedance(vp: f64, density: f64) -> SpecialResult<f64> {
-        if vp <= 0.0 || density <= 0.0 {
+    pub fn acoustic_impedance(_vp: f64, density: f64) -> SpecialResult<f64> {
+        if _vp <= 0.0 || density <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Velocity and density must be positive".to_string(),
             ));
         }
 
-        Ok(vp * density)
+        Ok(_vp * density)
     }
 
     /// Calculate the Richter magnitude from amplitude
@@ -810,8 +810,8 @@ pub mod geophysics {
     /// # Arguments
     /// * `amplitude` - Maximum amplitude in micrometers
     /// * `distance` - Distance from epicenter in km
-    pub fn richter_magnitude(amplitude: f64, distance: f64) -> SpecialResult<f64> {
-        if amplitude <= 0.0 || distance <= 0.0 {
+    pub fn richter_magnitude(_amplitude: f64, distance: f64) -> SpecialResult<f64> {
+        if _amplitude <= 0.0 || distance <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Amplitude and distance must be positive".to_string(),
             ));
@@ -819,7 +819,7 @@ pub mod geophysics {
 
         // Empirical attenuation function
         let attenuation = -1.6 * distance.log10() + 3.0;
-        Ok(amplitude.log10() + attenuation)
+        Ok(_amplitude.log10() + attenuation)
     }
 
     /// Calculate atmospheric pressure with altitude (barometric formula)
@@ -833,7 +833,7 @@ pub mod geophysics {
     ) -> SpecialResult<Array1<f64>> {
         if sea_level_pressure <= 0.0 {
             return Err(crate::SpecialError::ValueError(
-                "Sea level pressure must be positive".to_string(),
+                "Sea level _pressure must be positive".to_string(),
             ));
         }
 
@@ -843,7 +843,7 @@ pub mod geophysics {
         let t0 = 288.15; // K
         let l = 0.0065; // K/m
 
-        let mut pressure = Array1::zeros(altitude.len());
+        let mut _pressure = Array1::zeros(altitude.len());
 
         for (i, &h) in altitude.iter().enumerate() {
             if !(-500.0..=11000.0).contains(&h) {
@@ -853,10 +853,10 @@ pub mod geophysics {
             }
 
             let temp_ratio = 1.0 - l * h / t0;
-            pressure[i] = sea_level_pressure * temp_ratio.powf(g * m / (r * l));
+            _pressure[i] = sea_level_pressure * temp_ratio.powf(g * m / (r * l));
         }
 
-        Ok(pressure)
+        Ok(_pressure)
     }
 
     /// Calculate geostrophic wind speed
@@ -961,16 +961,16 @@ pub mod chemistry {
     /// # Arguments
     /// * `pressure` - Pressure array in Pa
     /// * `k` - Adsorption constant
-    pub fn langmuir_isotherm(pressure: &ArrayView1<f64>, k: f64) -> SpecialResult<Array1<f64>> {
+    pub fn langmuir_isotherm(_pressure: &ArrayView1<f64>, k: f64) -> SpecialResult<Array1<f64>> {
         if k <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Adsorption constant must be positive".to_string(),
             ));
         }
 
-        let mut coverage = Array1::zeros(pressure.len());
+        let mut coverage = Array1::zeros(_pressure.len());
 
-        for (i, &p) in pressure.iter().enumerate() {
+        for (i, &p) in _pressure.iter().enumerate() {
             if p < 0.0 {
                 return Err(crate::SpecialError::ValueError(
                     "Pressure must be non-negative".to_string(),
@@ -1028,13 +1028,13 @@ pub mod astronomy {
     /// # Arguments
     /// * `temperature` - Temperature in Kelvin
     /// * `electron_density` - Electron density in m⁻³
-    /// * `ionization_energy` - Ionization energy in eV
+    /// * `ionizationenergy` - Ionization energy in eV
     pub fn saha_equation(
         temperature: f64,
         electron_density: f64,
-        ionization_energy: f64,
+        ionizationenergy: f64,
     ) -> SpecialResult<f64> {
-        if temperature <= 0.0 || electron_density <= 0.0 || ionization_energy <= 0.0 {
+        if temperature <= 0.0 || electron_density <= 0.0 || ionizationenergy <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "All parameters must be positive".to_string(),
             ));
@@ -1049,7 +1049,7 @@ pub mod astronomy {
 
         // Saha equation
         let g_ratio = 2.0; // Statistical weight ratio (simplified)
-        let exponent = -ionization_energy / (k_ev * temperature);
+        let exponent = -ionizationenergy / (k_ev * temperature);
 
         Ok(g_ratio * electron_density * lambda_th.powi(3) * exponent.exp())
     }
@@ -1059,18 +1059,18 @@ pub mod astronomy {
     /// # Arguments
     /// * `radius` - Stellar radius in solar radii
     /// * `temperature` - Effective temperature in Kelvin
-    pub fn stellar_luminosity(radius: f64, temperature: f64) -> SpecialResult<f64> {
-        if radius <= 0.0 || temperature <= 0.0 {
+    pub fn stellar_luminosity(_radius: f64, temperature: f64) -> SpecialResult<f64> {
+        if _radius <= 0.0 || temperature <= 0.0 {
             return Err(crate::SpecialError::ValueError(
                 "Radius and temperature must be positive".to_string(),
             ));
         }
 
         let sigma = 5.670374419e-8; // Stefan-Boltzmann constant
-        let r_sun = 6.96e8; // Solar radius in meters
+        let r_sun = 6.96e8; // Solar _radius in meters
         let l_sun = 3.828e26; // Solar luminosity in watts
 
-        let area = 4.0 * PI * (radius * r_sun).powi(2);
+        let area = 4.0 * PI * (_radius * r_sun).powi(2);
         let luminosity = area * sigma * temperature.powi(4);
 
         Ok(luminosity / l_sun) // Return in solar luminosities
@@ -1109,20 +1109,20 @@ pub mod astronomy {
     /// # Arguments
     /// * `velocity` - Recession velocity in m/s
     /// * `relativistic` - Use relativistic formula if true
-    pub fn velocity_to_redshift(velocity: f64, relativistic: bool) -> SpecialResult<f64> {
+    pub fn velocity_to_redshift(_velocity: f64, relativistic: bool) -> SpecialResult<f64> {
         let c = 299792458.0; // Speed of light
 
-        if velocity >= c {
+        if _velocity >= c {
             return Err(crate::SpecialError::ValueError(
                 "Velocity cannot exceed speed of light".to_string(),
             ));
         }
 
         if relativistic {
-            let beta = velocity / c;
+            let beta = _velocity / c;
             Ok(((1.0 + beta) / (1.0 - beta)).sqrt() - 1.0)
         } else {
-            Ok(velocity / c)
+            Ok(_velocity / c)
         }
     }
 }

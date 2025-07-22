@@ -10,6 +10,7 @@ use ndarray::Array1;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use std::collections::HashMap;
+use rand::seq::SliceRandom;
 
 /// Cross-validation fold indices
 ///
@@ -36,7 +37,7 @@ pub type CrossValidationFolds = Vec<(Vec<usize>, Vec<usize>)>;
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_datasets::utils::{Dataset, train_test_split};
+/// use scirs2__datasets::utils::{Dataset, train_test_split};
 ///
 /// let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
 /// let dataset = Dataset::new(data, None);
@@ -69,7 +70,7 @@ pub fn train_test_split(
     // Create shuffled indices
     let mut indices: Vec<usize> = (0..n_samples).collect();
     let mut rng = match random_seed {
-        Some(seed) => StdRng::seed_from_u64(seed),
+        Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
             let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
@@ -132,7 +133,7 @@ pub fn train_test_split(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_datasets::utils::k_fold_split;
+/// use scirs2__datasets::utils::k_fold_split;
 ///
 /// let folds = k_fold_split(10, 3, true, Some(42)).unwrap();
 /// assert_eq!(folds.len(), 3);
@@ -152,13 +153,13 @@ pub fn k_fold_split(
 ) -> Result<CrossValidationFolds> {
     if n_folds < 2 {
         return Err(DatasetsError::InvalidFormat(
-            "Number of folds must be at least 2".to_string(),
+            "Number of _folds must be at least 2".to_string(),
         ));
     }
 
     if n_folds > n_samples {
         return Err(DatasetsError::InvalidFormat(
-            "Number of folds cannot exceed number of samples".to_string(),
+            "Number of _folds cannot exceed number of _samples".to_string(),
         ));
     }
 
@@ -166,7 +167,7 @@ pub fn k_fold_split(
 
     if shuffle {
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => {
                 let mut r = rand::rng();
                 StdRng::seed_from_u64(r.next_u64())
@@ -175,7 +176,7 @@ pub fn k_fold_split(
         indices.shuffle(&mut rng);
     }
 
-    let mut folds = Vec::new();
+    let mut _folds = Vec::new();
     let fold_size = n_samples / n_folds;
     let remainder = n_samples % n_folds;
 
@@ -188,10 +189,10 @@ pub fn k_fold_split(
         train_indices.extend(&indices[0..start]);
         train_indices.extend(&indices[end..]);
 
-        folds.push((train_indices, validation_indices));
+        _folds.push((train_indices, validation_indices));
     }
 
-    Ok(folds)
+    Ok(_folds)
 }
 
 /// Performs stratified K-fold cross-validation splitting
@@ -215,7 +216,7 @@ pub fn k_fold_split(
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2_datasets::utils::stratified_k_fold_split;
+/// use scirs2__datasets::utils::stratified_k_fold_split;
 ///
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 0.0, 1.0]);
 /// let folds = stratified_k_fold_split(&targets, 2, true, Some(42)).unwrap();
@@ -235,14 +236,14 @@ pub fn stratified_k_fold_split(
 ) -> Result<CrossValidationFolds> {
     if n_folds < 2 {
         return Err(DatasetsError::InvalidFormat(
-            "Number of folds must be at least 2".to_string(),
+            "Number of _folds must be at least 2".to_string(),
         ));
     }
 
     let n_samples = targets.len();
     if n_folds > n_samples {
         return Err(DatasetsError::InvalidFormat(
-            "Number of folds cannot exceed number of samples".to_string(),
+            "Number of _folds cannot exceed number of samples".to_string(),
         ));
     }
 
@@ -257,7 +258,7 @@ pub fn stratified_k_fold_split(
     // Shuffle indices within each class if requested
     if shuffle {
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => {
                 let mut r = rand::rng();
                 StdRng::seed_from_u64(r.next_u64())
@@ -269,15 +270,15 @@ pub fn stratified_k_fold_split(
         }
     }
 
-    // Create folds while maintaining class proportions
-    let mut folds = vec![Vec::new(); n_folds];
+    // Create _folds while maintaining class proportions
+    let mut _folds = vec![Vec::new(); n_folds];
 
     for (_, indices) in class_indices {
         let class_size = indices.len();
         let fold_size = class_size / n_folds;
         let remainder = class_size % n_folds;
 
-        for (i, fold) in folds.iter_mut().enumerate() {
+        for (i, fold) in _folds.iter_mut().enumerate() {
             let start = i * fold_size + i.min(remainder);
             let end = start + fold_size + if i < remainder { 1 } else { 0 };
             fold.extend(&indices[start..end]);
@@ -287,9 +288,9 @@ pub fn stratified_k_fold_split(
     // Convert to (train, validation) pairs
     let cv_folds = (0..n_folds)
         .map(|i| {
-            let validation_indices = folds[i].clone();
+            let validation_indices = _folds[i].clone();
             let mut train_indices = Vec::new();
-            for (j, fold) in folds.iter().enumerate() {
+            for (j, fold) in _folds.iter().enumerate() {
                 if i != j {
                     train_indices.extend(fold);
                 }
@@ -322,7 +323,7 @@ pub fn stratified_k_fold_split(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_datasets::utils::time_series_split;
+/// use scirs2__datasets::utils::time_series_split;
 ///
 /// let folds = time_series_split(100, 5, 10, 0).unwrap();
 /// assert_eq!(folds.len(), 5);
@@ -341,21 +342,21 @@ pub fn time_series_split(
 ) -> Result<CrossValidationFolds> {
     if n_splits < 1 {
         return Err(DatasetsError::InvalidFormat(
-            "Number of splits must be at least 1".to_string(),
+            "Number of _splits must be at least 1".to_string(),
         ));
     }
 
     if n_test_samples < 1 {
         return Err(DatasetsError::InvalidFormat(
-            "Number of test samples must be at least 1".to_string(),
+            "Number of test _samples must be at least 1".to_string(),
         ));
     }
 
-    // Calculate minimum samples needed
+    // Calculate minimum _samples needed
     let min_samples_needed = n_test_samples + gap + n_splits;
     if n_samples < min_samples_needed {
         return Err(DatasetsError::InvalidFormat(format!(
-            "Not enough samples for time series split. Need at least {min_samples_needed}, got {n_samples}"
+            "Not enough _samples for time series split. Need at least {min_samples_needed}, got {n_samples}"
         )));
     }
 
@@ -383,7 +384,7 @@ pub fn time_series_split(
 
     if folds.is_empty() {
         return Err(DatasetsError::InvalidFormat(
-            "Could not create any valid time series splits".to_string(),
+            "Could not create any valid time series _splits".to_string(),
         ));
     }
 

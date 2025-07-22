@@ -33,8 +33,7 @@ pub mod cuda {
     }
 
     fn cuda_get_device_properties(
-        _props: &mut CudaDeviceProperties,
-        _device: CudaDevice,
+        _props: &mut CudaDeviceProperties_device: CudaDevice,
     ) -> CudaResult {
         CUDA_SUCCESS
     }
@@ -47,7 +46,7 @@ pub mod cuda {
         CUDA_SUCCESS
     }
 
-    fn cuda_malloc(_ptr: *mut *mut std::ffi::c_void, _size: usize) -> CudaResult {
+    fn cuda_malloc(_ptr: *mut *mut std::ffi::c_void_size: usize) -> CudaResult {
         CUDA_SUCCESS
     }
 
@@ -56,10 +55,7 @@ pub mod cuda {
     }
 
     fn cuda_memcpy(
-        _dst: *mut std::ffi::c_void,
-        _src: *const std::ffi::c_void,
-        _count: usize,
-        _kind: i32,
+        _dst: *mut std::ffi::c_void_src: *const std::ffi::c_void, _count: usize_kind: i32,
     ) -> CudaResult {
         CUDA_SUCCESS
     }
@@ -330,8 +326,8 @@ pub mod cuda {
     unsafe impl Sync for CudaContext {}
 
     impl CudaContext {
-        fn new(device_info: CudaDeviceInfo) -> LinalgResult<Self> {
-            let device_id = device_info.device_id;
+        fn new(_device_info: CudaDeviceInfo) -> LinalgResult<Self> {
+            let device_id = _device_info.device_id;
 
             // Initialize cuBLAS (mock)
             let cublas_handle = None; // Would create cuBLAS handle
@@ -352,7 +348,7 @@ pub mod cuda {
             let performance_stats = CudaPerformanceStats::new();
 
             Ok(Self {
-                device_info,
+                _device_info,
                 device_id,
                 cublas_handle,
                 cusolver_handle,
@@ -445,7 +441,7 @@ pub mod cuda {
         }
 
         fn available_memory(&self) -> LinalgResult<usize> {
-            let (result, free_mem, _total_mem) = cuda_mem_get_info();
+            let (result, free_mem_total_mem) = cuda_mem_get_info();
             if result != CUDA_SUCCESS {
                 return Err(LinalgError::ComputationError(format!(
                     "Failed to get memory info: error code {}",
@@ -477,9 +473,9 @@ pub mod cuda {
     }
 
     impl CudaMemoryPool {
-        fn new(device_id: i32) -> LinalgResult<Self> {
+        fn new(_device_id: i32) -> LinalgResult<Self> {
             Ok(Self {
-                device_id,
+                _device_id,
                 total_allocated: 0,
                 peak_usage: 0,
                 allocation_count: 0,
@@ -526,8 +522,7 @@ pub mod cuda {
         device_ptr: *mut std::ffi::c_void,
         size: usize,
         device_id: i32,
-        is_pinned: bool,
-        _phantom: std::marker::PhantomData<T>,
+        is_pinned: bool, _phantom: std::marker::PhantomData<T>,
     }
 
     // SAFETY: CUDA device pointers are thread-safe and can be shared across threads
@@ -536,8 +531,8 @@ pub mod cuda {
     unsafe impl<T> Sync for CudaBuffer<T> {}
 
     impl<T: Clone + Send + Sync + Copy> CudaBuffer<T> {
-        fn new(size: usize, device_id: i32) -> LinalgResult<Self> {
-            let byte_size = size * std::mem::size_of::<T>();
+        fn new(_size: usize, device_id: i32) -> LinalgResult<Self> {
+            let byte_size = _size * std::mem::size_of::<T>();
             let mut device_ptr = ptr::null_mut();
 
             let result = cuda_malloc(&mut device_ptr, byte_size);
@@ -550,10 +545,9 @@ pub mod cuda {
 
             Ok(Self {
                 device_ptr,
-                size,
+                _size,
                 device_id,
-                is_pinned: false,
-                _phantom: std::marker::PhantomData,
+                is_pinned: false, _phantom: std::marker::PhantomData,
             })
         }
 
@@ -698,8 +692,8 @@ pub mod opencl {
     unsafe impl Sync for SafeClPtr {}
 
     impl SafeClPtr {
-        fn new(ptr: *mut std::ffi::c_void) -> Self {
-            Self(ptr)
+        fn new(_ptr: *mut std::ffi::c_void) -> Self {
+            Self(_ptr)
         }
 
         fn as_ptr(self) -> *mut std::ffi::c_void {
@@ -730,17 +724,16 @@ pub mod opencl {
     }
 
     fn cl_get_device_ids(
-        _platform: ClPlatformId,
-        _device_type: ClULong,
+        _platform: ClPlatformId_device_type: ClULong,
     ) -> (ClInt, Vec<ClDeviceId>) {
         (CL_SUCCESS, vec![])
     }
 
-    fn cl_get_device_info(_device: ClDeviceId, _param_name: ClUInt) -> (ClInt, Vec<u8>) {
+    fn cl_get_device_info(_device: ClDeviceId_param_name: ClUInt) -> (ClInt, Vec<u8>) {
         (CL_SUCCESS, vec![0; 256])
     }
 
-    fn cl_get_platform_info(_platform: ClPlatformId, _param_name: ClUInt) -> (ClInt, String) {
+    fn cl_get_platform_info(_platform: ClPlatformId_param_name: ClUInt) -> (ClInt, String) {
         (CL_SUCCESS, "Mock Platform".to_string())
     }
 
@@ -749,34 +742,23 @@ pub mod opencl {
     }
 
     fn cl_create_command_queue(
-        _context: ClContext,
-        _device: ClDeviceId,
+        _context: ClContext_device: ClDeviceId,
     ) -> (ClInt, ClCommandQueue) {
         (CL_SUCCESS, SafeClPtr::new(ptr::null_mut()))
     }
 
-    fn cl_create_buffer(_context: ClContext, _flags: ClULong, _size: usize) -> (ClInt, ClMem) {
+    fn cl_create_buffer(_context: ClContext_flags: ClULong, _size: usize) -> (ClInt, ClMem) {
         (CL_SUCCESS, SafeClPtr::new(ptr::null_mut()))
     }
 
     fn cl_enqueue_write_buffer(
-        _queue: ClCommandQueue,
-        _buffer: ClMem,
-        _blocking: ClBool,
-        _offset: usize,
-        _size: usize,
-        _ptr: *const std::ffi::c_void,
+        _queue: ClCommandQueue_buffer: ClMem, _blocking: ClBool_offset: usize, _size: usize_ptr: *const std::ffi::c_void,
     ) -> ClInt {
         CL_SUCCESS
     }
 
     fn cl_enqueue_read_buffer(
-        _queue: ClCommandQueue,
-        _buffer: ClMem,
-        _blocking: ClBool,
-        _offset: usize,
-        _size: usize,
-        _ptr: *mut std::ffi::c_void,
+        _queue: ClCommandQueue_buffer: ClMem, _blocking: ClBool_offset: usize, _size: usize_ptr: *mut std::ffi::c_void,
     ) -> ClInt {
         CL_SUCCESS
     }
@@ -1055,8 +1037,7 @@ pub mod opencl {
 
                     let device_type = match opencl_device.device_type {
                         CL_DEVICE_TYPE_GPU => GpuDeviceType::OpenCl,
-                        CL_DEVICE_TYPE_CPU => GpuDeviceType::OpenCl,
-                        _ => GpuDeviceType::OpenCl,
+                        CL_DEVICE_TYPE_CPU => GpuDeviceType::OpenCl_ =>, GpuDeviceType::OpenCl,
                     };
 
                     GpuDeviceInfo {
@@ -1138,12 +1119,12 @@ pub mod opencl {
     }
 
     impl OpenClContext {
-        fn new(context_data: Arc<OpenClContextData>, device_index: usize) -> Self {
-            let memory_pool = OpenClMemoryPool::new(context_data.context);
+        fn new(_context_data: Arc<OpenClContextData>, device_index: usize) -> Self {
+            let memory_pool = OpenClMemoryPool::new(_context_data.context);
             let performance_stats = OpenClPerformanceStats::new();
 
             Self {
-                context_data,
+                _context_data,
                 device_index,
                 memory_pool,
                 performance_stats,
@@ -1163,11 +1144,9 @@ pub mod opencl {
 
         /// Compile and cache a kernel
         pub fn compile_kernel(
-            &mut self,
-            _kernel_name: &str,
-            _source: &str,
+            &mut self, _kernel_name: &str, _source: &str,
         ) -> LinalgResult<ClKernel> {
-            // In a real implementation, this would compile OpenCL kernel source
+            // In a real implementation, this would compile OpenCL kernel _source
             // For now, return a null pointer as mock
             Ok(SafeClPtr(ptr::null_mut()))
         }
@@ -1256,9 +1235,9 @@ pub mod opencl {
     }
 
     impl OpenClMemoryPool {
-        fn new(context: ClContext) -> Self {
+        fn new(_context: ClContext) -> Self {
             Self {
-                context,
+                _context,
                 total_allocated: 0,
                 peak_usage: 0,
                 free_buffers: HashMap::new(),
@@ -1302,8 +1281,7 @@ pub mod opencl {
         buffer: ClMem,
         size: usize,
         context: ClContext,
-        command_queue: ClCommandQueue,
-        _phantom: std::marker::PhantomData<T>,
+        command_queue: ClCommandQueue, _phantom: std::marker::PhantomData<T>,
     }
 
     impl<T: Clone + Send + Sync + Copy> OpenClBuffer<T> {
@@ -1326,8 +1304,7 @@ pub mod opencl {
                 buffer,
                 size,
                 context,
-                command_queue,
-                _phantom: std::marker::PhantomData,
+                command_queue_phantom: std::marker::PhantomData,
             })
         }
 
@@ -1489,7 +1466,7 @@ pub mod rocm {
             Ok(vec![])
         }
 
-        fn create_context(&self, _device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
+        fn create_context(&self_device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
             Err(LinalgError::ComputationError(
                 "ROCm backend not fully implemented".to_string(),
             ))
@@ -1531,7 +1508,7 @@ pub mod metal {
             Ok(vec![])
         }
 
-        fn create_context(&self, _device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
+        fn create_context(&self_device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
             Err(LinalgError::ComputationError(
                 "Metal backend not fully implemented".to_string(),
             ))
@@ -1557,7 +1534,7 @@ impl CpuFallbackBackend {
                 device_type: GpuDeviceType::OpenCl, // Use OpenCL as generic type
                 name: "CPU Fallback".to_string(),
                 total_memory: 8 * 1024 * 1024 * 1024, // 8GB estimate
-                compute_units: num_cpus::get() as u32,
+                compute_units: num, _cpus: get() as u32,
                 clock_frequency: 3000, // 3GHz estimate
                 supports_fp64: true,
                 supports_fp16: false,
@@ -1568,7 +1545,7 @@ impl CpuFallbackBackend {
                 registers_per_block: 0,
                 warp_size: 1, // No SIMD grouping for CPU
                 max_threads_per_mp: 1,
-                multiprocessor_count: num_cpus::get() as u32,
+                multiprocessor_count: num, _cpus: get() as u32,
                 supports_tensor_cores: false,
                 supports_mixed_precision: false,
                 vendor: "CPU".to_string(),
@@ -1641,9 +1618,9 @@ struct CpuBuffer<T> {
 }
 
 impl<T: Clone + Send + Sync> CpuBuffer<T> {
-    fn new(size: usize) -> Self {
+    fn new(_size: usize) -> Self {
         Self {
-            data: Vec::with_capacity(size),
+            data: Vec::with_capacity(_size),
         }
     }
 }

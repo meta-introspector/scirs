@@ -84,19 +84,19 @@ pub struct OPTICSResult {
 ///
 /// * `Array1<i32>` - Cluster labels starting from 0, with -1 for noise points
 #[allow(dead_code)]
-pub fn extract_dbscan_clustering(optics_result: &OPTICSResult, eps: f64) -> Array1<i32> {
-    let n_samples = optics_result.ordering.len();
+pub fn extract_dbscan_clustering(_optics_result: &OPTICSResult, eps: f64) -> Array1<i32> {
+    let n_samples = _optics_result.ordering.len();
     let mut labels = vec![-1; n_samples];
     let mut cluster_label = 0;
 
     for i in 0..n_samples {
-        let point_idx = optics_result.ordering[i];
-        let reachability = optics_result.reachability[i];
+        let point_idx = _optics_result.ordering[i];
+        let reachability = _optics_result.reachability[i];
 
         // Points with reachability distance > eps are noise
         if reachability.is_none() || reachability.unwrap() > eps {
             // Could be the start of a new cluster if it's a core point
-            if let Some(core_dist) = optics_result.core_distances[point_idx] {
+            if let Some(core_dist) = _optics_result.core_distances[point_idx] {
                 if core_dist <= eps {
                     // Start a new cluster
                     labels[point_idx] = cluster_label;
@@ -138,7 +138,7 @@ pub fn extract_dbscan_clustering(optics_result: &OPTICSResult, eps: f64) -> Arra
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2_cluster::density::{optics, DistanceMetric};
+/// use scirs2__cluster::density::{optics, DistanceMetric};
 ///
 /// // Example data with two clusters of different densities
 /// let data = Array2::from_shape_vec((10, 2), vec![
@@ -182,13 +182,13 @@ pub fn optics<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     // Convert max_eps to f64 for internal calculations
     let max_eps_f64 = match max_eps {
-        Some(eps) => {
-            if eps <= F::zero() {
+        Some(_eps) => {
+            if _eps <= F::zero() {
                 return Err(ClusteringError::InvalidInput(
                     "max_eps must be positive".into(),
                 ));
             }
-            eps.to_f64().unwrap()
+            _eps.to_f64().unwrap()
         }
         None => f64::INFINITY,
     };
@@ -348,12 +348,12 @@ pub fn optics<F: Float + FromPrimitive + Debug + PartialOrd>(
 
 /// Get neighbors of a point within the specified epsilon radius
 #[allow(dead_code)]
-fn get_neighbors(point_idx: usize, distance_matrix: &Array2<f64>, max_eps: f64) -> Vec<usize> {
+fn get_neighbors(_point_idx: usize, distance_matrix: &Array2<f64>, max_eps: f64) -> Vec<usize> {
     let n_samples = distance_matrix.shape()[0];
     let mut neighbors = Vec::new();
 
     for j in 0..n_samples {
-        if point_idx != j && distance_matrix[[point_idx, j]] <= max_eps {
+        if _point_idx != j && distance_matrix[[_point_idx, j]] <= max_eps {
             neighbors.push(j);
         }
     }
@@ -377,11 +377,11 @@ fn update_seeds(
             continue;
         }
 
-        // Calculate new reachability distance
+        // Calculate new reachability _distance
         let new_reachability_distance =
             core_distance.max(distance_matrix[[point_idx, neighbor_idx]]);
 
-        // Update reachability distance if needed
+        // Update reachability _distance if needed
         match optics_points[neighbor_idx].reachability_distance {
             None => {
                 // Point has not been seen before
@@ -394,7 +394,7 @@ fn update_seeds(
                 });
             }
             Some(old_distance) => {
-                // Point has been seen before, update if new distance is smaller
+                // Point has been seen before, update if new _distance is smaller
                 if new_reachability_distance < old_distance {
                     optics_points[neighbor_idx].reachability_distance =
                         Some(new_reachability_distance);
@@ -470,7 +470,7 @@ pub fn extract_xi_clusters(
                     let start_idx = steep_areas[i].1;
                     let end_idx = steep_areas[j].1;
 
-                    // Check cluster size
+                    // Check cluster _size
                     if end_idx - start_idx + 1 >= min_cluster_size {
                         // Valid cluster, assign points to it
                         for k in start_idx..=end_idx {
@@ -497,14 +497,14 @@ pub fn extract_xi_clusters(
 
 /// Find steep up and down areas in reachability plot
 #[allow(dead_code)]
-fn find_steep_areas(reachability: &[f64], xi: f64) -> Vec<(String, usize)> {
+fn find_steep_areas(_reachability: &[f64], xi: f64) -> Vec<(String, usize)> {
     let mut steep_areas = Vec::new();
-    let n = reachability.len();
+    let n = _reachability.len();
 
     // Skip first point since it doesn't have a predecessor
     for i in 1..n {
-        let prev = reachability[i - 1];
-        let curr = reachability[i];
+        let prev = _reachability[i - 1];
+        let curr = _reachability[i];
 
         // Skip infinity values
         if prev.is_infinite() || curr.is_infinite() {
@@ -515,10 +515,10 @@ fn find_steep_areas(reachability: &[f64], xi: f64) -> Vec<(String, usize)> {
         let steepness = (prev - curr) / prev.max(curr);
 
         if steepness > xi {
-            // Steep down area (decreasing reachability)
+            // Steep down area (decreasing _reachability)
             steep_areas.push(("steep_down".to_string(), i));
         } else if steepness < -xi {
-            // Steep up area (increasing reachability)
+            // Steep up area (increasing _reachability)
             steep_areas.push(("steep_up".to_string(), i));
         }
     }

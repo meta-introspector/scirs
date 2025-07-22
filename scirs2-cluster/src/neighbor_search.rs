@@ -4,7 +4,7 @@
 //! which are crucial for density-based clustering and other algorithms that
 //! require neighborhood computations.
 
-use ndarray::{Array2, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::BinaryHeap;
 use std::fmt::Debug;
@@ -112,11 +112,11 @@ struct KDNode {
 
 impl<F: Float + FromPrimitive + Debug> KDTree<F> {
     /// Create a new KD-Tree
-    pub fn new(leaf_size: usize) -> Self {
+    pub fn new(_leaf_size: usize) -> Self {
         Self {
             data: None,
             tree: None,
-            leaf_size,
+            _leaf_size,
         }
     }
 }
@@ -523,11 +523,11 @@ struct BallNode {
 
 impl<F: Float + FromPrimitive + Debug> BallTree<F> {
     /// Create a new Ball Tree
-    pub fn new(leaf_size: usize) -> Self {
+    pub fn new(_leaf_size: usize) -> Self {
         Self {
             data: None,
             tree: None,
-            leaf_size,
+            _leaf_size,
         }
     }
 }
@@ -825,9 +825,9 @@ pub fn create_neighbor_searcher<F: Float + FromPrimitive + Debug + 'static>(
     config: NeighborSearchConfig,
 ) -> Box<dyn NeighborSearcher<F>> {
     match config.algorithm {
-        NeighborSearchAlgorithm::BruteForce => Box::new(BruteForceSearch::new()),
-        NeighborSearchAlgorithm::KDTree => Box::new(KDTree::new(config.leaf_size)),
-        NeighborSearchAlgorithm::BallTree => Box::new(BallTree::new(config.leaf_size)),
+        NeighborSearchAlgorithm::BruteForce =>, Box::new(BruteForceSearch::new()),
+        NeighborSearchAlgorithm::KDTree =>, Box::new(KDTree::new(config.leaf_size)),
+        NeighborSearchAlgorithm::BallTree =>, Box::new(BallTree::new(config.leaf_size)),
         NeighborSearchAlgorithm::Auto => {
             // Use KD-Tree by default (could be made smarter based on data characteristics)
             Box::new(KDTree::new(config.leaf_size))
@@ -864,7 +864,7 @@ fn euclidean_distance_vec(a: &[f64], b: &[f64]) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{Array1, Array2};
+    use ndarray::{ArrayView1, Array1, Array2};
 
     fn create_test_data() -> Array2<f64> {
         Array2::from_shape_vec(

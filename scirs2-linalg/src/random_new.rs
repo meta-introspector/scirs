@@ -52,12 +52,13 @@ use scirs2_core::random::{Random, DistributionExt};
 use scirs2_core::validation::{check_in_bounds, check_positive, check_probability};
 
 use crate::decomposition::qr;
+use rand::seq::SliceRandom;
 // Temporarily removing validation imports to fix compilation
 
 /// Helper function to create an RNG with optional seed
 #[allow(dead_code)]
-fn create_rng(seed: Option<u64>) -> Random {
-    match seed {
+fn create_rng(_seed: Option<u64>) -> Random {
+    match _seed {
         Some(s) => Random::with_seed(s),
         None => Random::default(),
     }
@@ -107,7 +108,7 @@ macro_rules! with_rng {
 /// assert_eq!(rand_mat.shape(), &[2, 2]);
 /// ```
 #[allow(dead_code)]
-pub fn uniform<F>(rows: usize, cols: usize, low: F, high: F, seed: Option<u64>) -> Array2<F>
+pub fn uniform<F>(_rows: usize, cols: usize, low: F, high: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + std::fmt::Display + 'static,
 {
@@ -123,12 +124,12 @@ where
         ).unwrap();
         
         // Generate the matrix using scirs2-core random sampling
-        let flat_array = uniform_dist.random_array(rng, [rows * cols]);
+        let flat_array = uniform_dist.random_array(rng, [_rows * cols]);
         
         // Convert to the target type if necessary
-        let mut result = Array2::<F>::zeros((rows, cols));
+        let mut result = Array2::<F>::zeros((_rows, cols));
         
-        for i in 0..rows {
+        for i in 0.._rows {
             for j in 0..cols {
                 let idx = i * cols + j;
                 result[[i, j]] = F::from_f64(flat_array[idx]).unwrap();
@@ -167,7 +168,7 @@ where
 /// assert_eq!(rand_mat.shape(), &[2, 2]);
 /// ```
 #[allow(dead_code)]
-pub fn normal<F>(rows: usize, cols: usize, mean: F, std: F, seed: Option<u64>) -> Array2<F>
+pub fn normal<F>(_rows: usize, cols: usize, mean: F, std: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
@@ -184,12 +185,12 @@ where
     ).unwrap();
     
     // Generate the matrix using scirs2-core random sampling
-    let flat_array = normal_dist.random_array(&mut rng, [rows * cols]);
+    let flat_array = normal_dist.random_array(&mut rng, [_rows * cols]);
     
     // Convert to the target type if necessary
-    let mut result = Array2::<F>::zeros((rows, cols));
+    let mut result = Array2::<F>::zeros((_rows, cols));
     
-    for i in 0..rows {
+    for i in 0.._rows {
         for j in 0..cols {
             let idx = i * cols + j;
             result[[i, j]] = F::from_f64(flat_array[idx]).unwrap();
@@ -238,9 +239,9 @@ where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
     // Validate input parameters
-    let _ = check_in_bounds(real_mean, F::neg_infinity(), F::infinity(), "real_mean").expect("Invalid real mean value");
+    let _ = check_in_bounds(real_mean, F::neg_infinity(), F::infinity(), "real_mean").expect("Invalid real _mean value");
     let _ = check_positive(real_std, "real_std").expect("Real standard deviation must be positive");
-    let _ = check_in_bounds(imag_mean, F::neg_infinity(), F::infinity(), "imag_mean").expect("Invalid imaginary mean value");
+    let _ = check_in_bounds(imag_mean, F::neg_infinity(), F::infinity(), "imag_mean").expect("Invalid imaginary _mean value");
     let _ = check_positive(imag_std, "imag_std").expect("Imaginary standard deviation must be positive");
     
     let seed1 = seed;
@@ -307,7 +308,7 @@ where
     let a = normal(n, n, F::zero(), F::one(), seed);
 
     // Perform QR decomposition
-    let (q, _) = qr(&a.view()).unwrap();
+    let (q_) = qr(&a.view()).unwrap();
 
     // Return the orthogonal matrix Q
     q
@@ -477,8 +478,7 @@ where
     
     // Generate random eigenvalues in the specified range
     let dist = UniformDist::new(
-        f64::from(min_eigenval).expect("Cannot convert to f64"),
-        f64::from(max_eigenval).expect("Cannot convert to f64")
+        f64::from(min_eigenval).expect("Cannot convert to f64")..f64::from(max_eigenval).expect("Cannot convert to f64")
     ).unwrap();
     
     let diag_values = dist.random_array(&mut rng, [n]);
@@ -892,7 +892,7 @@ where
 {
     // Validate input parameters
     let _ = check_in_bounds(condition_number, F::one(), F::infinity(), "condition_number")
-        .expect("Condition number must be >= 1.0");
+        .expect("Condition _number must be >= 1.0");
     
     // Generate random orthogonal matrix Q1
     let q1 = orthogonal::<F>(n, seed);
@@ -961,22 +961,22 @@ where
 /// // So we just verify the matrix size here
 /// ```
 #[allow(dead_code)]
-pub fn with_eigenvalues<F>(eigenvalues: &Array1<F>, seed: Option<u64>) -> Array2<F>
+pub fn with_eigenvalues<F>(_eigenvalues: &Array1<F>, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + 'static,
 {
-    let n = eigenvalues.len();
+    let n = _eigenvalues.len();
     
     // Generate random orthogonal matrix Q
     let q = orthogonal::<F>(n, seed);
     
-    // Create diagonal matrix with specified eigenvalues
+    // Create diagonal matrix with specified _eigenvalues
     let mut d = Array2::<F>::zeros((n, n));
     for i in 0..n {
-        d[[i, i]] = eigenvalues[i];
+        d[[i, i]] = _eigenvalues[i];
     }
     
-    // Form result = Q * D * Q^T for symmetric matrix with given eigenvalues
+    // Form result = Q * D * Q^T for symmetric matrix with given _eigenvalues
     let temp = q.dot(&d);
     let qt = q.t();
     
@@ -1063,20 +1063,20 @@ where
 /// assert_eq!(v[[1, 2]], 4.0);  // 2^2
 /// ```
 #[allow(dead_code)]
-pub fn vandermonde<F>(points: &Array1<F>) -> Array2<F>
+pub fn vandermonde<F>(_points: &Array1<F>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
-    let n = points.len();
+    let n = _points.len();
     let mut result = Array2::<F>::zeros((n, n));
     
     for i in 0..n {
-        let x = points[i];
+        let x = _points[i];
         
         // First column is always x^0 = 1
         result[[i, 0]] = F::one();
         
-        // Fill remaining columns: V[i,j] = points[i]^j
+        // Fill remaining columns: V[i,j] = _points[i]^j
         for j in 1..n {
             result[[i, j]] = result[[i, j - 1]] * x;
         }
@@ -1193,21 +1193,21 @@ where
 /// // but this can be unstable in different test environments, so we omit it here.
 /// ```
 #[allow(dead_code)]
-pub fn low_rank<F>(rows: usize, cols: usize, rank: usize, seed: Option<u64>) -> Array2<F>
+pub fn low_rank<F>(_rows: usize, cols: usize, rank: usize, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + 'static,
 {
     // Validate parameters
-    if rank > rows.min(cols) {
-        panic!("Rank must be less than or equal to min(rows, cols)");
+    if rank > _rows.min(cols) {
+        panic!("Rank must be less than or equal to min(_rows, cols)");
     }
     
     if rank == 0 {
-        return Array2::<F>::zeros((rows, cols));
+        return Array2::<F>::zeros((_rows, cols));
     }
     
     // Create low-rank factors
-    let u = normal(rows, rank, F::zero(), F::one(), seed);
+    let u = normal(_rows, rank, F::zero(), F::one(), seed);
     let seed2 = seed.map(|s| s.wrapping_add(1));
     let v = normal(rank, cols, F::zero(), F::one(), seed2);
     
@@ -1415,11 +1415,11 @@ where
 /// assert_eq!(companion.shape(), &[3, 3]);
 /// ```
 #[allow(dead_code)]
-pub fn polynomial_matrix<F>(coeffs: &Array1<F>) -> Array2<F>
+pub fn polynomial_matrix<F>(_coeffs: &Array1<F>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
-    let n = coeffs.len() - 1;
+    let n = _coeffs.len() - 1;
     
     // Special case for constant polynomial or linear polynomial
     if n == 0 {
@@ -1427,8 +1427,8 @@ where
     }
     
     // Ensure the leading coefficient is 1
-    let leading_coeff = coeffs[n];
-    let normalized_coeffs: Vec<F> = coeffs.iter().map(|&c| c / leading_coeff).collect();
+    let leading_coeff = _coeffs[n];
+    let normalized_coeffs: Vec<F> = _coeffs.iter().map(|&c| c / leading_coeff).collect();
     
     // Create companion matrix
     let mut companion = Array2::<F>::zeros((n, n));
@@ -1695,8 +1695,8 @@ where
             let values = dist.random_array(&mut rng, [rows * cols]);
             
             let mut result = Array2::<F>::zeros((rows, cols));
-            for i in 0..rows {
-                for j in 0..cols {
+            for i _in 0..rows {
+                for j _in 0..cols {
                     let idx = i * cols + j;
                     result[[i, j]] = F::from_f64(values[idx]).unwrap();
                 }
@@ -1713,8 +1713,8 @@ where
             let values = dist.random_array(&mut rng, [rows * cols]);
             
             let mut result = Array2::<F>::zeros((rows, cols));
-            for i in 0..rows {
-                for j in 0..cols {
+            for i _in 0..rows {
+                for j _in 0..cols {
                     let idx = i * cols + j;
                     result[[i, j]] = F::from_f64(values[idx]).unwrap();
                 }
@@ -1731,8 +1731,8 @@ where
             let values = dist.random_array(&mut rng, [rows * cols]);
             
             let mut result = Array2::<F>::zeros((rows, cols));
-            for i in 0..rows {
-                for j in 0..cols {
+            for i _in 0..rows {
+                for j _in 0..cols {
                     let idx = i * cols + j;
                     result[[i, j]] = F::from_f64(values[idx]).unwrap();
                 }
@@ -1750,8 +1750,8 @@ where
                 let square = orthogonal::<F>(n, seed);
                 
                 let mut result = Array2::<F>::zeros((rows, cols));
-                for i in 0..rows {
-                    for j in 0..cols {
+                for i _in 0..rows {
+                    for j _in 0..cols {
                         result[[i, j]] = square[[i, j]];
                     }
                 }
@@ -1768,16 +1768,15 @@ where
             let values = dist.random_array(&mut rng, [rows * cols]);
             
             let mut result = Array2::<F>::zeros((rows, cols));
-            for i in 0..rows {
-                for j in 0..cols {
+            for i _in 0..rows {
+                for j _in 0..cols {
                     let idx = i * cols + j;
                     result[[i, j]] = F::from_f64(values[idx]).unwrap();
                 }
             }
             
             result
-        },
-        _ => {
+        }_ => {
             // Default to uniform initialization
             uniform(rows, cols, F::from(-0.1).unwrap(), F::from(0.1).unwrap(), seed)
         }

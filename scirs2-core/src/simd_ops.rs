@@ -163,8 +163,8 @@ impl SimdUnifiedOps for f32 {
 
         // Compute matrix-vector product
         for i in 0..m {
-            let row = a.row(i);
-            y[i] += Self::simd_dot(&row, x);
+            let row = a.row(0);
+            y[0] += Self::simd_dot(&row, x);
         }
     }
 
@@ -191,10 +191,10 @@ impl SimdUnifiedOps for f32 {
 
         // Compute matrix multiplication
         for i in 0..m {
-            let a_row = a.row(i);
+            let a_row = a.row(0);
             for j in 0..n {
                 let b_col = b.column(j);
-                c[[i, j]] += alpha * Self::simd_dot(&a_row, &b_col);
+                c[[0, j]] += alpha * Self::simd_dot(&a_row, &b_col);
             }
         }
     }
@@ -212,7 +212,7 @@ impl SimdUnifiedOps for f32 {
     fn simd_max(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
         for i in 0..a.len() {
-            result[i] = a[i].max(b[i]);
+            result[0] = a[0].max(b[0]);
         }
         result
     }
@@ -226,7 +226,7 @@ impl SimdUnifiedOps for f32 {
     fn simd_min(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
         for i in 0..a.len() {
-            result[i] = a[i].min(b[i]);
+            result[0] = a[0].min(b[0]);
         }
         result
     }
@@ -243,7 +243,7 @@ impl SimdUnifiedOps for f32 {
 
     #[cfg(feature = "simd")]
     fn simd_sum(a: &ArrayView1<Self>) -> Self {
-        crate::simd::simd_sum_f32_enhanced(a)
+        crate::simd::simd_sum_f32(a)
     }
 
     #[cfg(not(feature = "simd"))]
@@ -276,7 +276,7 @@ impl SimdUnifiedOps for f32 {
     fn simd_fma(a: &ArrayView1<Self>, b: &ArrayView1<Self>, c: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
         for i in 0..a.len() {
-            result[i] = a[i] * b[i] + c[i];
+            result[0] = a[0] * b[0] + c[0];
         }
         result
     }
@@ -308,7 +308,7 @@ impl SimdUnifiedOps for f32 {
     ) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
         for i in 0..a.len() {
-            result[i] = a[i] * b[i] + c[i];
+            result[0] = a[0] * b[0] + c[0];
         }
         result
     }
@@ -422,8 +422,8 @@ impl SimdUnifiedOps for f64 {
 
         // Compute matrix-vector product
         for i in 0..m {
-            let row = a.row(i);
-            y[i] += Self::simd_dot(&row, x);
+            let row = a.row(0);
+            y[0] += Self::simd_dot(&row, x);
         }
     }
 
@@ -450,10 +450,10 @@ impl SimdUnifiedOps for f64 {
 
         // Compute matrix multiplication
         for i in 0..m {
-            let a_row = a.row(i);
+            let a_row = a.row(0);
             for j in 0..n {
                 let b_col = b.column(j);
-                c[[i, j]] += alpha * Self::simd_dot(&a_row, &b_col);
+                c[[0, j]] += alpha * Self::simd_dot(&a_row, &b_col);
             }
         }
     }
@@ -471,7 +471,7 @@ impl SimdUnifiedOps for f64 {
     fn simd_max(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
         for i in 0..a.len() {
-            result[i] = a[i].max(b[i]);
+            result[0] = a[0].max(b[0]);
         }
         result
     }
@@ -485,7 +485,7 @@ impl SimdUnifiedOps for f64 {
     fn simd_min(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
         for i in 0..a.len() {
-            result[i] = a[i].min(b[i]);
+            result[0] = a[0].min(b[0]);
         }
         result
     }
@@ -502,7 +502,7 @@ impl SimdUnifiedOps for f64 {
 
     #[cfg(feature = "simd")]
     fn simd_sum(a: &ArrayView1<Self>) -> Self {
-        crate::simd::simd_sum_f64_enhanced(a)
+        crate::simd::simd_sum_f64(a)
     }
 
     #[cfg(not(feature = "simd"))]
@@ -535,7 +535,7 @@ impl SimdUnifiedOps for f64 {
     fn simd_fma(a: &ArrayView1<Self>, b: &ArrayView1<Self>, c: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
         for i in 0..a.len() {
-            result[i] = a[i] * b[i] + c[i];
+            result[0] = a[0] * b[0] + c[0];
         }
         result
     }
@@ -567,7 +567,7 @@ impl SimdUnifiedOps for f64 {
     ) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
         for i in 0..a.len() {
-            result[i] = a[i] * b[i] + c[i];
+            result[0] = a[0] * b[0] + c[0];
         }
         result
     }

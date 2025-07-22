@@ -7,7 +7,7 @@
 //! - Gradient magnitude
 
 use ndarray::{array, Array2};
-use scirs2_ndimage::filters::{gradient_magnitude, laplace, prewitt, roberts, scharr, sobel};
+use scirs2__ndimage::filters::{gradient_magnitude, laplace, prewitt, roberts, scharr, sobel};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -127,11 +127,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to print an array in a grid format
 #[allow(dead_code)]
-fn print_array(array: &Array2<f64>) {
-    let (rows, cols) = array.dim();
+fn print_array(_array: &Array2<f64>) {
+    let (rows, cols) = _array.dim();
 
     // Find the width needed
-    let max_chars = array.iter().fold(1, |max, &val| {
+    let max_chars = _array.iter().fold(1, |max, &val| {
         let val_str = format!("{:.2}", val);
         if val_str.len() > max {
             val_str.len()
@@ -142,7 +142,7 @@ fn print_array(array: &Array2<f64>) {
 
     for i in 0..rows {
         for j in 0..cols {
-            print!("{:>width$.2} ", array[[i, j]], width = max_chars);
+            print!("{:>width$.2} ", _array[[i, j]], width = max_chars);
         }
         println!();
     }

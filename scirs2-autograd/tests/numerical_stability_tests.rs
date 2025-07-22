@@ -6,10 +6,10 @@
 
 use ndarray::{Array, IxDyn};
 use scirs2_autograd as ag;
-use scirs2_autograd::optimization::{GraphOptimizer, OptimizationLevel};
-use scirs2_autograd::parallel::{init_thread_pool_with_config, ThreadPoolConfig};
-use scirs2_autograd::tensor_ops as T;
-use scirs2_autograd::tracing::{
+use scirs2__autograd::optimization::{GraphOptimizer, OptimizationLevel};
+use scirs2__autograd::parallel::{init_thread_pool_with_config, ThreadPoolConfig};
+use scirs2__autograd::tensor_ops as T;
+use scirs2__autograd::tracing::{
     configure_tracing, end_trace_session, start_trace_session, TracingConfig,
 };
 use std::f32;
@@ -31,7 +31,7 @@ fn test_arithmetic_stability() {
         let small_val = 1e-10;
 
         let a = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(
+            Array::<f32>::from_shape_vec(
                 IxDyn(&[4]),
                 vec![large_val, -large_val, small_val, -small_val],
             )
@@ -39,7 +39,7 @@ fn test_arithmetic_stability() {
             ctx,
         );
         let b = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(
+            Array::<f32>::from_shape_vec(
                 IxDyn(&[4]),
                 vec![large_val, large_val, small_val, small_val],
             )
@@ -66,11 +66,11 @@ fn test_arithmetic_stability() {
 
         // Division with small denominators
         let small_denom = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(IxDyn(&[3]), vec![1e-20, 1.0, 1e20]).unwrap(),
+            Array::<f32>::from_shape_vec(IxDyn(&[3]), vec![1e-20, 1.0, 1e20]).unwrap(),
             ctx,
         );
         let numerator = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(IxDyn(&[3]), vec![1.0, 1.0, 1.0]).unwrap(),
+            Array::<f32>::from_shape_vec(IxDyn(&[3]), vec![1.0, 1.0, 1.0]).unwrap(),
             ctx,
         );
 
@@ -156,7 +156,7 @@ fn test_activation_function_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test with extreme input values
         let extreme_inputs = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(
+            Array::<f32>::from_shape_vec(
                 IxDyn(&[8]),
                 vec![-100.0, -10.0, -1.0, -0.1, 0.1, 1.0, 10.0, 100.0],
             )
@@ -318,7 +318,7 @@ fn test_gradient_numerical_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test gradients with extreme input values
         let x = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(IxDyn(&[3]), vec![1e-10, 1.0, 1e10]).unwrap(),
+            Array::<f32>::from_shape_vec(IxDyn(&[3]), vec![1e-10, 1.0, 1e10]).unwrap(),
             ctx,
         );
 
@@ -407,7 +407,7 @@ fn test_optimization_numerical_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Create a computation with optimization opportunities
         let x = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(
+            Array::<f32>::from_shape_vec(
                 IxDyn(&[10]),
                 (0..10).map(|i| i as f32 * 0.1).collect(),
             )
@@ -417,17 +417,17 @@ fn test_optimization_numerical_stability() {
 
         // Create expression with constant folding opportunities
         let const1 = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(IxDyn(&[1]), vec![0.0]).unwrap(),
+            Array::<f32>::from_shape_vec(IxDyn(&[1]), vec![0.0]).unwrap(),
             ctx,
         );
         let const2 = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(),
+            Array::<f32>::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(),
             ctx,
         );
 
         // Expression: x + 0 * (large_constant) + 1 * x
         let large_constant = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(IxDyn(&[10]), vec![1e10; 10]).unwrap(),
+            Array::<f32>::from_shape_vec(IxDyn(&[10]), vec![1e10; 10]).unwrap(),
             ctx,
         );
 
@@ -446,7 +446,7 @@ fn test_optimization_numerical_stability() {
             GraphOptimizer::<f32>::with_level(OptimizationLevel::Aggressive),
         ];
 
-        for (level_idx, _optimizer) in optimizers.iter().enumerate() {
+        for (level_idx_optimizer) in optimizers.iter().enumerate() {
             // In a real implementation, would apply optimizer to graph
             // For now, verify the unoptimized result is stable
 
@@ -695,7 +695,7 @@ fn test_memory_optimization_stability() {
         // Test in-place operations
         let base_tensor = T::efficient_ones(&[1000], ctx);
         let addend = T::convert_to_tensor(
-            Array::<f32, _>::from_shape_vec(IxDyn(&[1000]), vec![0.5; 1000]).unwrap(),
+            Array::<f32>::from_shape_vec(IxDyn(&[1000]), vec![0.5; 1000]).unwrap(),
             ctx,
         );
 

@@ -8,6 +8,7 @@ use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::parallel_ops::*;
+use statrs::statistics::Statistics;
 
 /// Advanced dataset quality metrics
 #[derive(Debug, Clone)]
@@ -288,7 +289,7 @@ impl AdvancedDatasetAnalyzer {
         let mut mi = 0.0;
 
         for i in 0..n_bins {
-            for (j, _) in y_hist.iter().enumerate().take(n_bins) {
+            for (j_) in y_hist.iter().enumerate().take(n_bins) {
                 if joint_hist[i][j] > 0 && x_hist[i] > 0 && y_hist[j] > 0 {
                     let p_xy = joint_hist[i][j] as f64 / n_total;
                     let p_x = x_hist[i] as f64 / n_total;
@@ -380,7 +381,7 @@ impl AdvancedDatasetAnalyzer {
     ) -> Result<f64> {
         let diff = &(sample.to_owned() - mean);
 
-        // For simplicity, use diagonal approximation if matrix inversion is complex
+        // For simplicity, use diagonal approximation if _matrix inversion is complex
         let mut distance_squared = 0.0;
         for i in 0..diff.len() {
             let variance = cov_matrix[[i, i]];
@@ -730,16 +731,16 @@ impl AdvancedDatasetAnalyzer {
 
 /// Convenience function for advanced dataset analysis
 #[allow(dead_code)]
-pub fn analyze_dataset_advanced(dataset: &Dataset) -> Result<AdvancedQualityMetrics> {
+pub fn analyze_dataset_advanced(_dataset: &Dataset) -> Result<AdvancedQualityMetrics> {
     let analyzer = AdvancedDatasetAnalyzer::new();
-    analyzer.analyze_dataset_quality(dataset)
+    analyzer.analyze_dataset_quality(_dataset)
 }
 
 /// Convenience function for quick quality assessment
 #[allow(dead_code)]
-pub fn quick_quality_assessment(dataset: &Dataset) -> Result<f64> {
+pub fn quick_quality_assessment(_dataset: &Dataset) -> Result<f64> {
     let analyzer = AdvancedDatasetAnalyzer::new().with_advanced_precision(false);
-    let metrics = analyzer.analyze_dataset_quality(dataset)?;
+    let metrics = analyzer.analyze_dataset_quality(_dataset)?;
     Ok(metrics.ml_quality_score)
 }
 

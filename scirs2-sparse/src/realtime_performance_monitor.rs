@@ -4,11 +4,11 @@
 //! for all Advanced mode processors, including quantum-inspired, neural-adaptive,
 //! and hybrid processors.
 
-use crate::adaptive_memory_compression::MemoryStats;
+use crate::adaptive_memory__compression::MemoryStats;
 use crate::error::SparseResult;
-use crate::neural_adaptive_sparse::NeuralProcessorStats;
-use crate::quantum_inspired_sparse::QuantumProcessorStats;
-use crate::quantum_neural_hybrid::QuantumNeuralHybridStats;
+use crate::neural_adaptive__sparse::NeuralProcessorStats;
+use crate::quantum_inspired__sparse::QuantumProcessorStats;
+use crate::quantum_neural__hybrid::QuantumNeuralHybridStats;
 use std::collections::{HashMap, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
@@ -423,9 +423,9 @@ pub trait MemoryCompressorMonitor: Send + Sync {
 
 impl RealTimePerformanceMonitor {
     /// Create a new real-time performance monitor
-    pub fn new(config: PerformanceMonitorConfig) -> Self {
+    pub fn new(_config: PerformanceMonitorConfig) -> Self {
         let performance_history = PerformanceHistory {
-            samples: VecDeque::with_capacity(config.max_samples),
+            samples: VecDeque::with_capacity(_config.max_samples),
             aggregated_metrics: AggregatedMetrics::default(),
             trend_analysis: TrendAnalysis::new(),
             performance_baselines: HashMap::new(),
@@ -470,7 +470,7 @@ impl RealTimePerformanceMonitor {
         };
 
         Self {
-            config,
+            _config,
             monitoring_active: Arc::new(AtomicBool::new(false)),
             sample_counter: AtomicUsize::new(0),
             performance_history: Arc::new(Mutex::new(performance_history)),
@@ -656,7 +656,7 @@ impl RealTimePerformanceMonitor {
             .as_secs();
         let mut samples = Vec::new();
 
-        // Get current system metrics once for all samples
+        // Get current system _metrics once for all samples
         let current_cpu = Self::get_cpu_usage();
         let current_gpu = Self::get_gpu_usage();
         let current_memory = Self::get_memory_usage();
@@ -671,7 +671,7 @@ impl RealTimePerformanceMonitor {
                 let coherence_factor = stats.average_logical_fidelity;
                 let estimated_exec_time = base_time * (2.0 - coherence_factor) * 1000.0;
 
-                // Estimate cache efficiency from quantum metrics
+                // Estimate cache efficiency from quantum _metrics
                 let cache_efficiency = (stats.average_logical_fidelity * 0.8 + 0.2).min(1.0);
 
                 samples.push(PerformanceSample {
@@ -824,7 +824,7 @@ impl RealTimePerformanceMonitor {
             }
         }
 
-        // Update system metrics (simplified)
+        // Update system _metrics (simplified)
         if let Ok(mut system) = system_metrics.lock() {
             system.cpu_usage = Self::get_cpu_usage();
             system.memory_usage = Self::get_memory_usage();
@@ -833,51 +833,51 @@ impl RealTimePerformanceMonitor {
         }
     }
 
-    fn update_aggregated_metrics(history: &Arc<Mutex<PerformanceHistory>>) {
-        if let Ok(mut history) = history.lock() {
-            if history.samples.is_empty() {
+    fn update_aggregated_metrics(_history: &Arc<Mutex<PerformanceHistory>>) {
+        if let Ok(mut _history) = _history.lock() {
+            if _history.samples.is_empty() {
                 return;
             }
 
-            let count = history.samples.len() as f64;
+            let count = _history.samples.len() as f64;
 
             // Calculate all metrics first before updating the struct
-            let avg_execution_time = history
+            let avg_execution_time = _history
                 .samples
                 .iter()
                 .map(|s| s.execution_time_ms)
                 .sum::<f64>()
                 / count;
-            let avg_throughput = history
+            let avg_throughput = _history
                 .samples
                 .iter()
                 .map(|s| s.throughput_ops_per_sec)
                 .sum::<f64>()
                 / count;
-            let avg_memory_usage = history
+            let avg_memory_usage = _history
                 .samples
                 .iter()
                 .map(|s| s.memory_usage_mb)
                 .sum::<f64>()
                 / count;
-            let avg_cache_hit_ratio = history
+            let avg_cache_hit_ratio = _history
                 .samples
                 .iter()
                 .map(|s| s.cache_hit_ratio)
                 .sum::<f64>()
                 / count;
-            let avg_error_rate = history.samples.iter().map(|s| s.error_rate).sum::<f64>() / count;
-            let peak_throughput = history
+            let avg_error_rate = _history.samples.iter().map(|s| s.error_rate).sum::<f64>() / count;
+            let peak_throughput = _history
                 .samples
                 .iter()
                 .map(|s| s.throughput_ops_per_sec)
                 .fold(0.0, f64::max);
-            let min_execution_time = history
+            let min_execution_time = _history
                 .samples
                 .iter()
                 .map(|s| s.execution_time_ms)
                 .fold(f64::INFINITY, f64::min);
-            let total_operations = history.samples.len();
+            let total_operations = _history.samples.len();
 
             // Calculate efficiency score
             let efficiency_score = (avg_throughput * avg_cache_hit_ratio)
@@ -885,26 +885,26 @@ impl RealTimePerformanceMonitor {
                 * (1.0 - avg_error_rate);
 
             // Now update all the metrics
-            history.aggregated_metrics.avg_execution_time = avg_execution_time;
-            history.aggregated_metrics.avg_throughput = avg_throughput;
-            history.aggregated_metrics.avg_memory_usage = avg_memory_usage;
-            history.aggregated_metrics.avg_cache_hit_ratio = avg_cache_hit_ratio;
-            history.aggregated_metrics.avg_error_rate = avg_error_rate;
-            history.aggregated_metrics.peak_throughput = peak_throughput;
-            history.aggregated_metrics.min_execution_time = min_execution_time;
-            history.aggregated_metrics.total_operations = total_operations;
-            history.aggregated_metrics.efficiency_score = efficiency_score;
+            _history.aggregated_metrics.avg_execution_time = avg_execution_time;
+            _history.aggregated_metrics.avg_throughput = avg_throughput;
+            _history.aggregated_metrics.avg_memory_usage = avg_memory_usage;
+            _history.aggregated_metrics.avg_cache_hit_ratio = avg_cache_hit_ratio;
+            _history.aggregated_metrics.avg_error_rate = avg_error_rate;
+            _history.aggregated_metrics.peak_throughput = peak_throughput;
+            _history.aggregated_metrics.min_execution_time = min_execution_time;
+            _history.aggregated_metrics.total_operations = total_operations;
+            _history.aggregated_metrics.efficiency_score = efficiency_score;
         }
     }
 
-    fn update_trend_analysis(history: &Arc<Mutex<PerformanceHistory>>) {
-        if let Ok(mut history) = history.lock() {
-            if history.samples.len() < 10 {
+    fn update_trend_analysis(_history: &Arc<Mutex<PerformanceHistory>>) {
+        if let Ok(mut _history) = _history.lock() {
+            if _history.samples.len() < 10 {
                 return;
             }
 
             // Clone recent samples to avoid borrow checker issues
-            let recent_samples: Vec<_> = history.samples.iter().rev().take(100).cloned().collect();
+            let recent_samples: Vec<_> = _history.samples.iter().rev().take(100).cloned().collect();
 
             // Calculate all trends first
             let execution_times: Vec<f64> =
@@ -930,30 +930,30 @@ impl RealTimePerformanceMonitor {
             let efficiency_trend = Self::calculate_linear_trend(&efficiency);
 
             // Now update the trends
-            history.trend_analysis.execution_time_trend = execution_time_trend;
-            history.trend_analysis.throughput_trend = throughput_trend;
-            history.trend_analysis.memory_trend = memory_trend;
-            history.trend_analysis.efficiency_trend = efficiency_trend;
+            _history.trend_analysis.execution_time_trend = execution_time_trend;
+            _history.trend_analysis.throughput_trend = throughput_trend;
+            _history.trend_analysis.memory_trend = memory_trend;
+            _history.trend_analysis.efficiency_trend = efficiency_trend;
 
             // Update anomaly detection
-            history.trend_analysis.anomaly_detection.update(&efficiency);
+            _history.trend_analysis.anomaly_detection.update(&efficiency);
         }
     }
 
-    fn calculate_linear_trend(data: &[f64]) -> LinearTrend {
-        if data.len() < 2 {
+    fn calculate_linear_trend(_data: &[f64]) -> LinearTrend {
+        if _data.len() < 2 {
             return LinearTrend::default();
         }
 
-        let n = data.len() as f64;
-        let x_values: Vec<f64> = (0..data.len()).map(|i| i as f64).collect();
+        let n = _data.len() as f64;
+        let x_values: Vec<f64> = (0.._data.len()).map(|i| i as f64).collect();
 
         let x_mean = x_values.iter().sum::<f64>() / n;
-        let y_mean = data.iter().sum::<f64>() / n;
+        let y_mean = _data.iter().sum::<f64>() / n;
 
         let numerator: f64 = x_values
             .iter()
-            .zip(data)
+            .zip(_data)
             .map(|(x, y)| (x - x_mean) * (y - y_mean))
             .sum();
         let denominator: f64 = x_values.iter().map(|x| (x - x_mean).powi(2)).sum();
@@ -966,10 +966,10 @@ impl RealTimePerformanceMonitor {
         let intercept = y_mean - slope * x_mean;
 
         // Calculate correlation coefficient
-        let ss_tot: f64 = data.iter().map(|y| (y - y_mean).powi(2)).sum();
+        let ss_tot: f64 = _data.iter().map(|y| (y - y_mean).powi(2)).sum();
         let ss_res: f64 = x_values
             .iter()
-            .zip(data)
+            .zip(_data)
             .map(|(x, y)| {
                 let predicted = slope * x + intercept;
                 (y - predicted).powi(2)
@@ -1083,7 +1083,7 @@ impl RealTimePerformanceMonitor {
                 .active_alerts
                 .iter()
                 .filter(|(_, alert)| alert.timestamp < cutoff_time)
-                .map(|(id, _)| id.clone())
+                .map(|(id_)| id.clone())
                 .collect();
 
             for alert_id in old_alerts {
@@ -1174,13 +1174,12 @@ impl RealTimePerformanceMonitor {
             "memory_usage" => system_metrics.memory_usage,
             "gpu_usage" => system_metrics.gpu_usage,
             "system_load" => system_metrics.system_load,
-            "efficiency_score" => metrics.efficiency_score,
-            "processing_latency" => metrics.avg_execution_time,
-            "error_rate" => metrics.avg_error_rate,
-            "operations_per_second" => metrics.avg_throughput,
-            "memory_efficiency" => metrics.avg_memory_usage,
-            "cache_hit_rate" => metrics.avg_cache_hit_ratio,
-            _ => 0.0,
+            "efficiency_score" => _metrics.efficiency_score,
+            "processing_latency" => _metrics.avg_execution_time,
+            "error_rate" => _metrics.avg_error_rate,
+            "operations_per_second" => _metrics.avg_throughput,
+            "memory_efficiency" => _metrics.avg_memory_usage,
+            "cache_hit_rate" => _metrics.avg_cache_hit_ratio_ => 0.0,
         }
     }
 
@@ -1194,7 +1193,7 @@ impl RealTimePerformanceMonitor {
             AlertCondition::GreaterThan => value > threshold,
             AlertCondition::LessThan => value < threshold,
             AlertCondition::Equals => (value - threshold).abs() < f64::EPSILON,
-            AlertCondition::NotEquals => (value - threshold).abs() > f64::EPSILON,
+            AlertCondition::NotEquals => (value - threshold).abs() >, f64::EPSILON,
             AlertCondition::PercentageIncrease => {
                 if let Some(previous) = history.samples.back() {
                     // Calculate efficiency score from PerformanceSample fields
@@ -1224,63 +1223,62 @@ impl RealTimePerformanceMonitor {
         }
     }
 
-    fn generate_alert_message(rule: &AlertRule, actual_value: f64) -> String {
-        match rule.condition {
+    fn generate_alert_message(_rule: &AlertRule, actual_value: f64) -> String {
+        match _rule.condition {
             AlertCondition::GreaterThan => {
                 format!(
                     "{} is above threshold: {:.3} > {:.3}",
-                    rule.metric_name, actual_value, rule.threshold
+                    _rule.metric_name, actual_value, _rule.threshold
                 )
             }
             AlertCondition::LessThan => {
                 format!(
                     "{} is below threshold: {:.3} < {:.3}",
-                    rule.metric_name, actual_value, rule.threshold
+                    _rule.metric_name, actual_value, _rule.threshold
                 )
             }
             AlertCondition::Equals => {
                 format!(
                     "{} equals threshold: {:.3} = {:.3}",
-                    rule.metric_name, actual_value, rule.threshold
+                    _rule.metric_name, actual_value, _rule.threshold
                 )
             }
             AlertCondition::NotEquals => {
                 format!(
                     "{} does not equal threshold: {:.3} != {:.3}",
-                    rule.metric_name, actual_value, rule.threshold
+                    _rule.metric_name, actual_value, _rule.threshold
                 )
             }
             AlertCondition::PercentageIncrease => {
                 format!(
                     "{} increased by {:.1}% (threshold: {:.1}%)",
-                    rule.metric_name,
+                    _rule.metric_name,
                     actual_value * 100.0,
-                    rule.threshold
+                    _rule.threshold
                 )
             }
             AlertCondition::PercentageDecrease => {
                 format!(
                     "{} decreased by {:.1}% (threshold: {:.1}%)",
-                    rule.metric_name,
+                    _rule.metric_name,
                     actual_value * 100.0,
-                    rule.threshold
+                    _rule.threshold
                 )
             }
         }
     }
 
-    fn determine_processor_type(metric_name: &str) -> ProcessorType {
-        match metric_name {
+    fn determine_processor_type(_metric_name: &str) -> ProcessorType {
+        match _metric_name {
             "quantum_coherence" | "entanglement_strength" => ProcessorType::QuantumInspired,
             "neural_confidence" | "learning_rate" => ProcessorType::NeuralAdaptive,
-            "hybrid_synchronization" => ProcessorType::QuantumNeuralHybrid,
-            _ => ProcessorType::QuantumInspired, // Default
+            "hybrid_synchronization" => ProcessorType::QuantumNeuralHybrid_ =>, ProcessorType::QuantumInspired, // Default
         }
     }
 
-    fn send_alert_notifications(alert: &Alert, _channels: &[NotificationChannel]) {
+    fn send_alert_notifications(_alert: &Alert_channels: &[NotificationChannel]) {
         // For now, just log to console - could be extended to support email, webhooks, etc.
-        let severity_str = match alert.severity {
+        let severity_str = match _alert.severity {
             AlertSeverity::Info => "INFO",
             AlertSeverity::Warning => "WARN",
             AlertSeverity::Error => "ERROR",
@@ -1289,7 +1287,7 @@ impl RealTimePerformanceMonitor {
 
         eprintln!(
             "[{}] Advanced Alert: {} - {}",
-            severity_str, alert.id, alert.message
+            severity_str, _alert.id, _alert.message
         );
     }
 
@@ -1437,10 +1435,10 @@ impl RealTimePerformanceMonitor {
         models
     }
 
-    fn extract_metric_values(metric_name: &str, samples: &VecDeque<PerformanceSample>) -> Vec<f64> {
+    fn extract_metric_values(_metric_name: &str, samples: &VecDeque<PerformanceSample>) -> Vec<f64> {
         samples
             .iter()
-            .map(|s| match metric_name {
+            .map(|s| match _metric_name {
                 "efficiency_score" => {
                     (s.throughput_ops_per_sec * s.cache_hit_ratio) / (s.execution_time_ms + 1.0)
                         * (1.0 - s.error_rate)
@@ -1448,24 +1446,23 @@ impl RealTimePerformanceMonitor {
                 "processing_latency" => s.execution_time_ms,
                 "error_rate" => s.error_rate,
                 "cache_hit_rate" => s.cache_hit_ratio,
-                "throughput" => s.throughput_ops_per_sec,
-                _ => s.execution_time_ms,
+                "throughput" => s.throughput_ops_per_sec_ => s.execution_time_ms,
             })
             .collect()
     }
 
-    fn generate_model_predictions(model: &PredictionModel, values: &[f64]) -> Option<Vec<f64>> {
-        match model.model_type {
-            ModelType::MovingAverage => Self::moving_average_prediction(model, values),
-            ModelType::LinearRegression => Self::linear_regression_prediction(model, values),
-            ModelType::Arima => Self::arima_prediction(model, values),
-            ModelType::NeuralNetwork => Self::neural_network_prediction(model, values),
-            ModelType::ExponentialSmoothing => Self::moving_average_prediction(model, values), // Use moving average as fallback
+    fn generate_model_predictions(_model: &PredictionModel, values: &[f64]) -> Option<Vec<f64>> {
+        match _model.model_type {
+            ModelType::MovingAverage =>, Self::moving_average_prediction(_model, values),
+            ModelType::LinearRegression =>, Self::linear_regression_prediction(_model, values),
+            ModelType::Arima =>, Self::arima_prediction(_model, values),
+            ModelType::NeuralNetwork =>, Self::neural_network_prediction(_model, values),
+            ModelType::ExponentialSmoothing =>, Self::moving_average_prediction(_model, values), // Use moving average as fallback
         }
     }
 
-    fn moving_average_prediction(model: &PredictionModel, values: &[f64]) -> Option<Vec<f64>> {
-        let window_size = model.parameters.first().copied().unwrap_or(10.0) as usize;
+    fn moving_average_prediction(_model: &PredictionModel, values: &[f64]) -> Option<Vec<f64>> {
+        let window_size = _model.parameters.first().copied().unwrap_or(10.0) as usize;
         let window_size = window_size.min(values.len());
 
         if window_size == 0 {
@@ -1517,14 +1514,14 @@ impl RealTimePerformanceMonitor {
         Some(predictions)
     }
 
-    fn arima_prediction(model: &PredictionModel, values: &[f64]) -> Option<Vec<f64>> {
+    fn arima_prediction(_model: &PredictionModel, values: &[f64]) -> Option<Vec<f64>> {
         if values.len() < 5 {
             return None;
         }
 
         // Simplified ARIMA implementation
-        let p = model.parameters.first().copied().unwrap_or(1.0) as usize;
-        let d = model.parameters.get(1).copied().unwrap_or(1.0) as usize;
+        let p = _model.parameters.first().copied().unwrap_or(1.0) as usize;
+        let d = _model.parameters.get(1).copied().unwrap_or(1.0) as usize;
 
         // Apply differencing
         let mut diff_values = values.to_vec();
@@ -1567,14 +1564,14 @@ impl RealTimePerformanceMonitor {
         }
     }
 
-    fn neural_network_prediction(model: &PredictionModel, values: &[f64]) -> Option<Vec<f64>> {
+    fn neural_network_prediction(_model: &PredictionModel, values: &[f64]) -> Option<Vec<f64>> {
         if values.len() < 3 {
             return None;
         }
 
         // Simplified neural network prediction using a basic feed-forward approach
         let input_size = 3.min(values.len());
-        let _hidden_size = model.parameters.get(1).copied().unwrap_or(32.0) as usize;
+        let _hidden_size = _model.parameters.get(1).copied().unwrap_or(32.0) as usize;
 
         // Use recent values as input
         let inputs = &values[values.len() - input_size..];
@@ -1597,17 +1594,17 @@ impl RealTimePerformanceMonitor {
         Some(predictions)
     }
 
-    fn ensemble_predictions(predictions: &[(Vec<f64>, f64)]) -> Vec<f64> {
-        if predictions.is_empty() {
+    fn ensemble_predictions(_predictions: &[(Vec<f64>, f64)]) -> Vec<f64> {
+        if _predictions.is_empty() {
             return Vec::new();
         }
 
-        let horizon = predictions[0].0.len();
-        let total_weight: f64 = predictions.iter().map(|(_, weight)| weight).sum();
+        let horizon = _predictions[0].0.len();
+        let total_weight: f64 = _predictions.iter().map(|(_, weight)| weight).sum();
 
         let mut ensemble = vec![0.0; horizon];
 
-        for (pred_vec, weight) in predictions {
+        for (pred_vec, weight) in _predictions {
             for (i, &value) in pred_vec.iter().enumerate() {
                 if i < ensemble.len() {
                     ensemble[i] += value * weight / total_weight;
@@ -1618,7 +1615,7 @@ impl RealTimePerformanceMonitor {
         ensemble
     }
 
-    fn create_forecast(metric_name: &str, predictions: Vec<f64>, accuracy: f64) -> Forecast {
+    fn create_forecast(_metric_name: &str, predictions: Vec<f64>, accuracy: f64) -> Forecast {
         let avg = predictions.iter().sum::<f64>() / predictions.len() as f64;
         let variance =
             predictions.iter().map(|x| (x - avg).powi(2)).sum::<f64>() / predictions.len() as f64;
@@ -1649,23 +1646,21 @@ impl RealTimePerformanceMonitor {
         }
     }
 
-    fn update_model_accuracies(model_accuracy: &mut HashMap<String, f64>, _values: &[f64]) {
-        // Simplified accuracy update - in practice, this would compare predictions with actual values
-        for (model_name, accuracy) in model_accuracy.iter_mut() {
+    fn update_model_accuracies(_model_accuracy: &mut HashMap<String, f64>, _values: &[f64]) {
+        // Simplified _accuracy update - in practice, this would compare predictions with actual _values
+        for (model_name_accuracy) in _model_accuracy.iter_mut() {
             match model_name.as_str() {
-                "moving_average" => *accuracy = (*accuracy * 0.9 + 0.75 * 0.1).max(0.1),
-                "linear_regression" => *accuracy = (*accuracy * 0.9 + 0.8 * 0.1).max(0.1),
-                "arima" => *accuracy = (*accuracy * 0.9 + 0.85 * 0.1).max(0.1),
-                "neural_network" => *accuracy = (*accuracy * 0.9 + 0.9 * 0.1).max(0.1),
-                _ => {}
+                "moving_average" => *_accuracy = (*_accuracy * 0.9 + 0.75 * 0.1).max(0.1),
+                "linear_regression" => *_accuracy = (*_accuracy * 0.9 + 0.8 * 0.1).max(0.1),
+                "arima" => *_accuracy = (*_accuracy * 0.9 + 0.85 * 0.1).max(0.1),
+                "neural_network" => *_accuracy = (*_accuracy * 0.9 + 0.9 * 0.1).max(0.1, _ => {}
             }
         }
     }
 
     fn run_adaptive_optimization(
         history: &Arc<Mutex<PerformanceHistory>>,
-        adaptation_engine: &Arc<Mutex<AdaptationEngine>>,
-        _processor_registry: &Arc<Mutex<ProcessorRegistry>>,
+        adaptation_engine: &Arc<Mutex<AdaptationEngine>>, _processor_registry: &Arc<Mutex<ProcessorRegistry>>,
     ) {
         // Simplified adaptive optimization
         if let (Ok(history), Ok(mut adaptation_engine)) = (history.lock(), adaptation_engine.lock())

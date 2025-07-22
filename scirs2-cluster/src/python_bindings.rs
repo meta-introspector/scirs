@@ -74,8 +74,7 @@ impl PyKMeans {
             max_iter,
             tol,
             random_state,
-            n_init,
-            init: init.to_string(),
+            n_init_init: _init.to_string(),
             cluster_centers_: None,
             labels_: None,
             inertia_: None,
@@ -186,8 +185,7 @@ impl PyKMeans {
                 "tol" => self.tol = value.extract()?,
                 "random_state" => self.random_state = value.extract()?,
                 "n_init" => self.n_init = value.extract()?,
-                "init" => self.init = value.extract()?,
-                _ => {
+                "init" => self.init = value.extract()?_ => {
                     return Err(PyValueError::new_err(format!(
                         "Unknown parameter: {}",
                         key_str
@@ -259,8 +257,7 @@ impl PyKMeans {
         }
 
         match (best_centers, best_labels) {
-            (Some(centers), Some(labels)) => Ok((centers, labels, best_inertia, best_n_iter)),
-            _ => Err(ClusteringError::ComputationError(
+            (Some(centers), Some(labels)) => Ok((centers, labels, best_inertia, best_n_iter), _ => Err(ClusteringError::ComputationError(
                 "K-means failed to converge in any initialization".to_string(),
             )),
         }
@@ -289,9 +286,9 @@ impl PyDBSCAN {
     /// Create new DBSCAN clustering instance
     #[new]
     #[pyo3(signature = (eps=0.5, min_samples=5, metric="euclidean"))]
-    fn new(eps: f64, min_samples: usize, metric: &str) -> Self {
+    fn new(_eps: f64, min_samples: usize, metric: &str) -> Self {
         Self {
-            eps,
+            _eps,
             min_samples,
             metric: metric.to_string(),
             labels_: None,
@@ -369,9 +366,9 @@ impl PyAgglomerativeClustering {
     /// Create new agglomerative clustering instance
     #[new]
     #[pyo3(signature = (n_clusters=2, *, linkage="ward", metric="euclidean"))]
-    fn new(n_clusters: usize, linkage: &str, metric: &str) -> Self {
+    fn new(_n_clusters: usize, linkage: &str, metric: &str) -> Self {
         Self {
-            n_clusters,
+            _n_clusters,
             linkage: linkage.to_string(),
             metric: metric.to_string(),
             labels_: None,
@@ -388,8 +385,7 @@ impl PyAgglomerativeClustering {
             "ward" => LinkageMethod::Ward,
             "complete" => LinkageMethod::Complete,
             "average" => LinkageMethod::Average,
-            "single" => LinkageMethod::Single,
-            _ => {
+            "single" => LinkageMethod::Single_ => {
                 return Err(PyValueError::new_err(format!(
                     "Unknown linkage: {}",
                     self.linkage
@@ -400,8 +396,7 @@ impl PyAgglomerativeClustering {
         let distance_metric = match self.metric.as_str() {
             "euclidean" => Metric::Euclidean,
             "manhattan" => Metric::Manhattan,
-            "cosine" => Metric::Cosine,
-            _ => {
+            "cosine" => Metric::Cosine_ => {
                 return Err(PyValueError::new_err(format!(
                     "Unknown metric: {}",
                     self.metric
@@ -485,9 +480,9 @@ impl PyBirch {
     /// Create new BIRCH clustering instance
     #[new]
     #[pyo3(signature = (n_clusters=None, *, threshold=0.5, branching_factor=50))]
-    fn new(n_clusters: Option<usize>, threshold: f64, branching_factor: usize) -> Self {
+    fn new(_n_clusters: Option<usize>, threshold: f64, branching_factor: usize) -> Self {
         Self {
-            n_clusters,
+            _n_clusters,
             threshold,
             branching_factor,
             labels_: None,
@@ -597,8 +592,7 @@ impl PySpectralClustering {
         let affinity_mode = match self.affinity.as_str() {
             "rbf" => AffinityMode::Rbf(self.gamma.unwrap_or(1.0)),
             "nearest_neighbors" => AffinityMode::NearestNeighbors(10),
-            "precomputed" => AffinityMode::Precomputed,
-            _ => {
+            "precomputed" => AffinityMode::Precomputed_ => {
                 return Err(PyValueError::new_err(format!(
                     "Unknown affinity: {}",
                     self.affinity
@@ -676,10 +670,10 @@ impl PyMeanShift {
     /// Create new Mean Shift clustering instance
     #[new]
     #[pyo3(signature = (bandwidth=None, *, seeds=None, cluster_all=true))]
-    fn new(bandwidth: Option<f64>, seeds: Option<&PyArray2<f64>>, cluster_all: bool) -> Self {
+    fn new(_bandwidth: Option<f64>, seeds: Option<&PyArray2<f64>>, cluster_all: bool) -> Self {
         let seeds_array = seeds.map(|s| unsafe { s.as_array().to_owned() });
         Self {
-            bandwidth,
+            _bandwidth,
             seeds: seeds_array,
             cluster_all,
             labels_: None,
@@ -823,8 +817,7 @@ impl PyGaussianMixture {
             "full" => CovarianceType::Full,
             "tied" => CovarianceType::Tied,
             "diag" => CovarianceType::Diagonal,
-            "spherical" => CovarianceType::Spherical,
-            _ => {
+            "spherical" => CovarianceType::Spherical_ => {
                 return Err(PyValueError::new_err(format!(
                     "Unknown covariance_type: {}",
                     self.covariance_type
@@ -923,11 +916,11 @@ impl PyGaussianMixture {
 #[cfg(feature = "pyo3")]
 #[pymodule]
 #[allow(dead_code)]
-fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
+fn metrics(_py: Python, m: &PyModule) -> PyResult<()> {
     /// Calculate silhouette score
     #[pyfn(m)]
     fn silhouette_score_py(
-        py: Python,
+        _py: Python,
         x: &PyArray2<f64>,
         labels: &PyArray1<i32>,
         metric: Option<&str>,
@@ -950,7 +943,7 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     /// Calculate Calinski-Harabasz score
     #[pyfn(m)]
     fn calinski_harabasz_score_py(
-        py: Python,
+        _py: Python,
         x: &PyArray2<f64>,
         labels: &PyArray1<i32>,
     ) -> PyResult<f64> {
@@ -971,7 +964,7 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     /// Calculate Davies-Bouldin score
     #[pyfn(m)]
     fn davies_bouldin_score_py(
-        py: Python,
+        _py: Python,
         x: &PyArray2<f64>,
         labels: &PyArray1<i32>,
     ) -> PyResult<f64> {
@@ -992,15 +985,15 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     /// Calculate Adjusted Rand Index
     #[pyfn(m)]
     fn adjusted_rand_score_py(
-        py: Python,
+        _py: Python,
         labels_true: &PyArray1<i32>,
         labels_pred: &PyArray1<i32>,
     ) -> PyResult<f64> {
         let true_labels = unsafe { labels_true.as_array() };
         let pred_labels = unsafe { labels_pred.as_array() };
 
-        let true_usize: Array1<usize> = true_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
-        let pred_usize: Array1<usize> = pred_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+        let _true_usize: Array1<usize> = true_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+        let _pred_usize: Array1<usize> = pred_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
 
         match adjusted_rand_index(true_usize.view(), pred_usize.view()) {
             Ok(score) => Ok(score),
@@ -1014,7 +1007,7 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     /// Calculate Normalized Mutual Information
     #[pyfn(m)]
     fn normalized_mutual_info_score_py(
-        py: Python,
+        _py: Python,
         labels_true: &PyArray1<i32>,
         labels_pred: &PyArray1<i32>,
         average_method: Option<&str>,
@@ -1022,8 +1015,8 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
         let true_labels = unsafe { labels_true.as_array() };
         let pred_labels = unsafe { labels_pred.as_array() };
 
-        let true_usize: Array1<usize> = true_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
-        let pred_usize: Array1<usize> = pred_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+        let _true_usize: Array1<usize> = true_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+        let _pred_usize: Array1<usize> = pred_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
 
         match normalized_mutual_info(true_usize.view(), pred_usize.view()) {
             Ok(score) => Ok(score),
@@ -1037,7 +1030,7 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     /// Calculate Homogeneity, Completeness, and V-measure
     #[pyfn(m)]
     fn homogeneity_completeness_v_measure_py(
-        py: Python,
+        _py: Python,
         labels_true: &PyArray1<i32>,
         labels_pred: &PyArray1<i32>,
         beta: Option<f64>,
@@ -1045,8 +1038,8 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
         let true_labels = unsafe { labels_true.as_array() };
         let pred_labels = unsafe { labels_pred.as_array() };
 
-        let true_usize: Array1<usize> = true_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
-        let pred_usize: Array1<usize> = pred_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+        let _true_usize: Array1<usize> = true_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
+        let _pred_usize: Array1<usize> = pred_labels.mapv(|x| if x < 0 { 0 } else { x as usize });
 
         match homogeneity_completeness_v_measure(true_usize.view(), pred_usize.view()) {
             Ok((h, c, v)) => Ok((h, c, v)),
@@ -1064,7 +1057,7 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
 #[cfg(feature = "pyo3")]
 #[pymodule]
 #[allow(dead_code)]
-fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
+fn scirs2_cluster(_py: Python, m: &PyModule) -> PyResult<()> {
     // Core clustering algorithms
     m.add_class::<PyKMeans>()?;
     m.add_class::<PyDBSCAN>()?;
@@ -1080,7 +1073,7 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
     // Convenience functions for common workflows
     #[pyfn(m)]
     fn estimate_bandwidth_py(
-        py: Python,
+        _py: Python,
         x: &PyArray2<f64>,
         quantile: Option<f64>,
         n_samples: Option<usize>,
@@ -1098,7 +1091,7 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
     /// Automatically select the best clustering algorithm for given data
     #[pyfn(m)]
     fn auto_select_algorithm_py(
-        py: Python,
+        _py: Python,
         x: &PyArray2<f64>,
         n_clusters_hint: Option<usize>,
         sample_size_threshold: Option<usize>,
@@ -1109,7 +1102,7 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
 
         // Simple heuristics for algorithm selection
         let recommended_algorithm = if let Some(_k) = n_clusters_hint {
-            // User provided number of clusters hint
+            // User provided number of clusters _hint
             if n_samples < 1000 {
                 "KMeans"
             } else if n_samples < 10000 {
@@ -1122,7 +1115,7 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
                 "MiniBatchKMeans"
             }
         } else {
-            // No cluster hint - use density-based or hierarchical
+            // No cluster _hint - use density-based or hierarchical
             if n_samples < 500 {
                 "AgglomerativeClustering"
             } else if n_samples < 5000 {
@@ -1138,7 +1131,7 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
     /// Get algorithm-specific parameter recommendations
     #[pyfn(m)]
     fn get_algorithm_defaults_py(
-        py: Python,
+        _py: Python,
         algorithm: &str,
         x: &PyArray2<f64>,
     ) -> PyResult<PyObject> {
@@ -1146,7 +1139,7 @@ fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
         let n_samples = data.nrows();
         let n_features = data.ncols();
 
-        let dict = PyDict::new(py);
+        let dict = PyDict::new(_py);
 
         match algorithm.to_lowercase().as_str() {
             "kmeans" => {

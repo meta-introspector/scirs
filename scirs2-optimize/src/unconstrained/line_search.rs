@@ -89,11 +89,11 @@ where
 
     for _ in 0..20 {
         let x_new = x + alpha * direction;
-        let phi = fun(&x_new.view()).into();
+        let phi = _fun(&x_new.view()).into();
 
         if phi > phi0 + c1 * alpha * dphi0 || (phi >= phi_lo && alpha_lo > 0.0) {
             return zoom(
-                fun, grad_fun, x, direction, alpha_lo, alpha, phi_lo, phi, dphi_lo, phi0, dphi0,
+                _fun, grad_fun, x, direction, alpha_lo, alpha, phi_lo, phi, dphi_lo, phi0, dphi0,
                 c1, c2,
             );
         }
@@ -107,7 +107,7 @@ where
 
         if dphi >= 0.0 {
             return zoom(
-                fun, grad_fun, x, direction, alpha, alpha_lo, phi, phi_lo, dphi, phi0, dphi0, c1,
+                _fun, grad_fun, x, direction, alpha, alpha_lo, phi, phi_lo, dphi, phi0, dphi0, c1,
                 c2,
             );
         }
@@ -147,7 +147,7 @@ where
     for _ in 0..10 {
         let alpha = 0.5 * (alpha_lo + alpha_hi);
         let x_new = x + alpha * direction;
-        let phi = fun(&x_new.view()).into();
+        let phi = _fun(&x_new.view()).into();
 
         if phi > phi0 + c1 * alpha * dphi0 || phi >= phi_lo {
             alpha_hi = alpha;
@@ -262,7 +262,7 @@ mod tests {
         let direction = Array1::from_vec(vec![-1.0, -1.0]);
         let grad = Array1::from_vec(vec![2.0, 2.0]);
 
-        let (alpha, _f_new) = backtracking_line_search(
+        let (alpha_f_new) = backtracking_line_search(
             &mut quadratic,
             &x.view(),
             f0,

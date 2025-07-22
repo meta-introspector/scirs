@@ -216,7 +216,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
         num_neurons: usize,
     ) -> Self {
         Self {
-            config,
+            _config,
             stdp_config,
             membrane_config,
             current_time: T::zero(),
@@ -387,7 +387,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingO
         let mut output_spikes = Vec::new();
         let dt = self.config.time_step;
         
-        // Process input spikes
+        // Process input _spikes
         for spike in input_spikes {
             self.process_input_spike(spike)?;
         }
@@ -676,9 +676,9 @@ pub enum TemporalKernelType {
 
 impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikeTrainOptimizer<T> {
     /// Create a new spike train optimizer
-    pub fn new(config: SpikingConfig<T>) -> Self {
+    pub fn new(_config: SpikingConfig<T>) -> Self {
         Self {
-            config,
+            _config,
             pattern_templates: Vec::new(),
             matching_threshold: T::from(0.8).unwrap(),
             pattern_learning_rate: T::from(0.1).unwrap(),
@@ -813,7 +813,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikeTra
     /// Update existing pattern with new observation
     fn update_pattern(&mut self, pattern_id: usize, new_pattern: &SpikePattern<T>) -> Result<()> {
         if let Some(existing_pattern) = self.pattern_templates.get_mut(pattern_id) {
-            // Update pattern using exponential moving average
+            // Update _pattern using exponential moving average
             let alpha = self.pattern_learning_rate;
             
             // Update spike times (simplified)

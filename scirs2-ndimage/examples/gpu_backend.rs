@@ -1,7 +1,7 @@
 //! Example demonstrating GPU backend support for accelerated processing
 
 use ndarray::Array2;
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     auto_backend, gaussian_filter, Backend, BackendBuilder, BackendConfig, BackendExecutor,
     BackendOp, GaussianFilterOp, NdimageResult,
 };
@@ -144,8 +144,7 @@ impl BackendOp<f32, ndarray::Ix2> for CustomBlurOp {
     #[cfg(feature = "gpu")]
     fn execute_gpu(
         &self,
-        input: &ndarray::ArrayView2<f32>,
-        _backend: Backend,
+        input: &ndarray::ArrayView2<f32>, _backend: Backend,
     ) -> NdimageResult<Array2<f32>> {
         // In a real implementation, this would use GPU kernels
         println!(

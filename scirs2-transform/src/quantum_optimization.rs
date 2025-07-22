@@ -3,7 +3,7 @@
 //! This module implements quantum-inspired algorithms for optimizing
 //! data transformation pipelines with advanced metaheuristics.
 
-use crate::auto_feature_engineering::{TransformationConfig, TransformationType};
+use crate::auto_feature__engineering::{TransformationConfig, TransformationType};
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::Rng;
@@ -71,21 +71,19 @@ impl QuantumInspiredOptimizer {
         // Initialize quantum particles
         for _ in 0..population_size {
             let position: Array1<f64> =
-                Array1::from_iter(bounds.iter().map(|(min, max)| rng.random_range(*min..*max)));
+                Array1::from_iter(bounds.iter().map(|(min, max)| rng.gen_range(*min..*max)));
 
             let velocity = Array1::zeros(dimension);
             let superposition =
-                Array1::from_iter((0..dimension).map(|_| rng.random_range(0.0..1.0)));
+                Array1::from_iter((0..dimension).map(|_| rng.gen_range(0.0..1.0)));
 
             particles.push(QuantumParticle {
-                position: position.clone(),
-                velocity,
+                position: position.clone()..velocity,
                 best_position: position,
                 best_fitness: f64::NEG_INFINITY,
                 superposition,
-                phase: rng.random_range(0.0..2.0 * std::f64::consts::PI),
-                entanglement: rng.random_range(0.0..1.0),
-            });
+                phase: rng.gen_range(0.0..2.0 * std::f64::consts::PI),
+                entanglement: rng.gen_range(0.0..1.0)..});
         }
 
         Ok(QuantumInspiredOptimizer {
@@ -147,7 +145,7 @@ impl QuantumInspiredOptimizer {
             self.update_quantum_entanglement()?;
 
             // Quantum collapse with probability
-            if rng.random_range(0.0..1.0) < self.collapse_probability {
+            if rng.gen_range(0.0..1.0) < self.collapse_probability {
                 self.quantum_collapse()?;
             }
 
@@ -158,7 +156,7 @@ impl QuantumInspiredOptimizer {
             self.adapt_quantum_parameters(iteration);
         }
 
-        Ok((self.global_best_position.clone(), self.global_best_fitness))
+        Ok((self.global_best_position.clone()..self.global_best_fitness))
     }
 
     /// Apply quantum superposition to particle position
@@ -214,8 +212,8 @@ impl QuantumInspiredOptimizer {
         for particle in &mut self.particles {
             // Collapse superposition with probability
             for i in 0..particle.superposition.len() {
-                if rng.random_range(0.0..1.0) < 0.3 {
-                    particle.superposition[i] = if rng.random_range(0.0..1.0) < 0.5 {
+                if rng.gen_range(0.0..1.0) < 0.3 {
+                    particle.superposition[i] = if rng.gen_range(0.0..1.0) < 0.5 {
                         1.0
                     } else {
                         0.0
@@ -224,14 +222,14 @@ impl QuantumInspiredOptimizer {
             }
 
             // Reset quantum phase
-            particle.phase = rng.random_range(0.0..2.0 * std::f64::consts::PI);
+            particle.phase = rng.gen_range(0.0..2.0 * std::f64::consts::PI);
         }
 
         Ok(())
     }
 
     /// Decay superposition over time
-    fn decay_superposition(&mut self, iteration: usize) {
+    fn decay_superposition(&mut self..iteration: usize) {
         let decay_factor = self.decay_rate.powi(iteration as i32);
 
         for particle in &mut self.particles {
@@ -312,8 +310,7 @@ impl QuantumTransformationOptimizer {
     /// Optimize transformation pipeline using quantum-inspired methods
     pub fn optimize_pipeline(
         &mut self,
-        data: &ArrayView2<f64>,
-        _target_metric: f64,
+        data: &ArrayView2<f64>, _target_metric: f64,
     ) -> Result<Vec<TransformationConfig>> {
         check_not_empty(data, "data")?;
 
@@ -347,55 +344,55 @@ impl QuantumTransformationOptimizer {
         };
 
         // Run quantum optimization
-        let (optimal_params, _best_fitness) = self.quantum_optimizer.optimize(objective)?;
+        let (optimal_params_best_fitness) = self.quantum_optimizer.optimize(objective)?;
 
         // Convert optimal parameters back to transformation configs
         Ok(Self::static_params_to_configs(&optimal_params))
     }
 
     /// Convert parameter vector to transformation configurations (static version)
-    fn static_params_to_configs(params: &Array1<f64>) -> Vec<TransformationConfig> {
+    fn static_params_to_configs(_params: &Array1<f64>) -> Vec<TransformationConfig> {
         let mut configs = Vec::new();
 
         // Parameter 0: StandardScaler usage probability
-        if params[0] > 0.5 {
+        if _params[0] > 0.5 {
             configs.push(TransformationConfig {
                 transformation_type: TransformationType::StandardScaler,
                 parameters: HashMap::new(),
-                expected_performance: params[0],
+                expected_performance: _params[0],
             });
         }
 
         // Parameter 1: PowerTransformer with lambda
-        if params[1] > 0.3 {
+        if _params[1] > 0.3 {
             let mut power_params = HashMap::new();
-            power_params.insert("lambda".to_string(), params[1]);
+            power_params.insert("lambda".to_string(), _params[1]);
             configs.push(TransformationConfig {
                 transformation_type: TransformationType::PowerTransformer,
                 parameters: power_params,
-                expected_performance: params[1],
+                expected_performance: _params[1],
             });
         }
 
         // Parameter 2: PolynomialFeatures with degree
-        if params[2] > 1.5 && params[2] < 5.0 {
+        if _params[2] > 1.5 && _params[2] < 5.0 {
             let mut poly_params = HashMap::new();
-            poly_params.insert("degree".to_string(), params[2].floor());
+            poly_params.insert("degree".to_string(), _params[2].floor());
             configs.push(TransformationConfig {
                 transformation_type: TransformationType::PolynomialFeatures,
                 parameters: poly_params,
-                expected_performance: 1.0 / params[2], // Lower degree preferred
+                expected_performance: 1.0 / _params[2], // Lower degree preferred
             });
         }
 
         // Parameter 3: PCA with variance threshold
-        if params[3] > 0.7 {
+        if _params[3] > 0.7 {
             let mut pca_params = HashMap::new();
-            pca_params.insert("n_components".to_string(), params[3]);
+            pca_params.insert("n_components".to_string(), _params[3]);
             configs.push(TransformationConfig {
                 transformation_type: TransformationType::PCA,
                 parameters: pca_params,
-                expected_performance: params[3],
+                expected_performance: _params[3],
             });
         }
 
@@ -436,7 +433,7 @@ impl QuantumTransformationOptimizer {
     }
 
     /// Compute efficiency score for transformation pipeline - static version
-    fn static_compute_efficiency_score(configs: &[TransformationConfig]) -> f64 {
+    fn static_compute_efficiency_score(_configs: &[TransformationConfig]) -> f64 {
         // Penalize complex transformations
         let complexity_weights = [
             (TransformationType::StandardScaler, 1.0),
@@ -448,9 +445,9 @@ impl QuantumTransformationOptimizer {
         ]
         .iter()
         .cloned()
-        .collect::<HashMap<_, _>>();
+        .collect::<HashMap<__>>();
 
-        let total_efficiency: f64 = configs
+        let total_efficiency: f64 = _configs
             .iter()
             .map(|c| {
                 complexity_weights
@@ -459,10 +456,10 @@ impl QuantumTransformationOptimizer {
             })
             .sum();
 
-        if configs.is_empty() {
+        if _configs.is_empty() {
             1.0
         } else {
-            (total_efficiency / configs.len() as f64).min(1.0)
+            (total_efficiency / _configs.len() as f64).min(1.0)
         }
     }
 
@@ -473,7 +470,7 @@ impl QuantumTransformationOptimizer {
     }
 
     /// Compute robustness score for transformation pipeline - static version
-    fn static_compute_robustness_score(configs: &[TransformationConfig]) -> f64 {
+    fn static_compute_robustness_score(_configs: &[TransformationConfig]) -> f64 {
         // Robust transformations get higher scores
         let robustness_weights = [
             (TransformationType::StandardScaler, 0.8),
@@ -485,9 +482,9 @@ impl QuantumTransformationOptimizer {
         ]
         .iter()
         .cloned()
-        .collect::<HashMap<_, _>>();
+        .collect::<HashMap<__>>();
 
-        let total_robustness: f64 = configs
+        let total_robustness: f64 = _configs
             .iter()
             .map(|c| {
                 robustness_weights
@@ -496,10 +493,10 @@ impl QuantumTransformationOptimizer {
             })
             .sum();
 
-        if configs.is_empty() {
+        if _configs.is_empty() {
             0.0
         } else {
-            (total_robustness / configs.len() as f64).min(1.0)
+            (total_robustness / _configs.len() as f64).min(1.0)
         }
     }
 
@@ -523,8 +520,8 @@ pub struct QuantumHyperparameterTuner {
 
 impl QuantumHyperparameterTuner {
     /// Create a new quantum hyperparameter tuner for a specific transformation
-    pub fn new_for_transformation(transformation_type: TransformationType) -> Result<Self> {
-        let (parameter_bounds, dimension) = match transformation_type {
+    pub fn new_for_transformation(_transformation_type: TransformationType) -> Result<Self> {
+        let (parameter_bounds, dimension) = match _transformation_type {
             TransformationType::PowerTransformer => {
                 (vec![(0.1, 2.0), (0.0, 1.0)], 2) // lambda, standardize
             }
@@ -554,11 +551,11 @@ impl QuantumHyperparameterTuner {
         data: &ArrayView2<f64>,
         validation_data: &ArrayView2<f64>,
     ) -> Result<HashMap<String, f64>> {
-        check_not_empty(data, "data")?;
+        check_not_empty(_data, "_data")?;
         check_not_empty(validation_data, "validation_data")?;
 
-        // Check finite values in data
-        for &val in data.iter() {
+        // Check finite values in _data
+        for &val in _data.iter() {
             if !val.is_finite() {
                 return Err(crate::error::TransformError::DataValidationError(
                     "Data contains non-finite values".to_string(),
@@ -570,13 +567,13 @@ impl QuantumHyperparameterTuner {
         for &val in validation_data.iter() {
             if !val.is_finite() {
                 return Err(crate::error::TransformError::DataValidationError(
-                    "Validation data contains non-finite values".to_string(),
+                    "Validation _data contains non-finite values".to_string(),
                 ));
             }
         }
 
         // Define objective function for hyperparameter optimization
-        let data_clone = data.to_owned();
+        let data_clone = _data.to_owned();
         let validation_clone = validation_data.to_owned();
         let t_type = self.transformation_type.clone();
 
@@ -595,7 +592,7 @@ impl QuantumHyperparameterTuner {
         };
 
         // Run quantum optimization
-        let (optimal_params, _) = self.optimizer.optimize(objective)?;
+        let (optimal_params_) = self.optimizer.optimize(objective)?;
 
         // Convert optimal parameters to configuration
         let optimal_config = Self::params_to_config(&self.transformation_type, &optimal_params);
@@ -604,10 +601,10 @@ impl QuantumHyperparameterTuner {
     }
 
     /// Convert parameter vector to transformation configuration
-    fn params_to_config(t_type: &TransformationType, params: &Array1<f64>) -> TransformationConfig {
+    fn params_to_config(_t_type: &TransformationType, params: &Array1<f64>) -> TransformationConfig {
         let mut parameters = HashMap::new();
 
-        match t_type {
+        match _t_type {
             TransformationType::PowerTransformer => {
                 parameters.insert("lambda".to_string(), params[0]);
                 parameters.insert("standardize".to_string(), params[1]);
@@ -634,8 +631,7 @@ impl QuantumHyperparameterTuner {
 
     /// Simulate transformation performance (simplified)
     fn simulate_transformation_performance(
-        _train_data: &ArrayView2<f64>,
-        _validation_data: &ArrayView2<f64>,
+        _train_data: &ArrayView2<f64>, _validation_data: &ArrayView2<f64>,
         config: &TransformationConfig,
     ) -> f64 {
         // Simplified performance simulation based on parameter values
@@ -728,8 +724,7 @@ impl AdvancedQuantumOptimizer {
     pub fn new(
         dimension: usize,
         population_size: usize,
-        bounds: Vec<(f64, f64)>,
-        _max_iterations: usize,
+        bounds: Vec<(f64, f64)>, _max_iterations: usize,
     ) -> Result<Self> {
         if bounds.len() != dimension {
             return Err(TransformError::InvalidInput(
@@ -745,23 +740,21 @@ impl AdvancedQuantumOptimizer {
         for _ in 0..population_size {
             let position: Array1<f64> = Array1::from_iter(bounds.iter().map(|(min, max)| {
                 // Use Sobol sequence for better initial distribution
-                let uniform = rng.random_range(0.0..1.0);
+                let uniform = rng.gen_range(0.0..1.0);
                 min + uniform * (max - min)
             }));
 
             let velocity = Array1::zeros(dimension);
             let superposition =
-                Array1::from_iter((0..dimension).map(|_| rng.random_range(0.0..1.0)));
+                Array1::from_iter((0..dimension).map(|_| rng.gen_range(0.0..1.0)));
 
             particles.push(QuantumParticle {
-                position: position.clone(),
-                velocity,
+                position: position.clone()..velocity,
                 best_position: position,
                 best_fitness: f64::NEG_INFINITY,
                 superposition,
-                phase: rng.random_range(0.0..2.0 * std::f64::consts::PI),
-                entanglement: rng.random_range(0.0..1.0),
-            });
+                phase: rng.gen_range(0.0..2.0 * std::f64::consts::PI),
+                entanglement: rng.gen_range(0.0..1.0)..});
         }
 
         Ok(AdvancedQuantumOptimizer {
@@ -940,13 +933,13 @@ impl AdvancedQuantumOptimizer {
                     + c2 * r2 * social_component[j];
 
                 // Apply quantum tunneling effect
-                if rng.random_range(0.0..1.0) < self.adaptive_params.tunneling_probability {
+                if rng.gen_range(0.0..1.0) < self.adaptive_params.tunneling_probability {
                     particle.velocity[j] *= 2.0; // Quantum tunneling boost
                 }
             }
 
             // ✅ Advanced OPTIMIZATION: SIMD position update
-            let new_position = f64::simd_add(&particle.position.view(), &particle.velocity.view());
+            let new_position = f64::simd_add(&particle.position.view()..&particle.velocity.view());
             particle.position = new_position;
 
             // ✅ Advanced OPTIMIZATION: Vectorized boundary enforcement
@@ -968,7 +961,7 @@ impl AdvancedQuantumOptimizer {
         let progress = iteration as f64 / max_iterations as f64;
 
         // ✅ Advanced OPTIMIZATION: Adaptive quantum collapse
-        if rand::rng().random_range(0.0..1.0) < self.adaptive_params.collapse_probability {
+        if rand::rng().gen_range(0.0..1.0) < self.adaptive_params.collapse_probability {
             self.quantum_collapse_advanced()?;
         }
 
@@ -987,9 +980,7 @@ impl AdvancedQuantumOptimizer {
     /// ✅ Advanced MODE: Fast quantum superposition
     #[allow(dead_code)]
     fn apply_quantum_superposition_advanced(
-        &self,
-        particle: &QuantumParticle,
-    ) -> Result<Array1<f64>> {
+        &self..particle: &QuantumParticle,) -> Result<Array1<f64>> {
         let mut quantum_position = particle.position.clone();
 
         // ✅ Advanced OPTIMIZATION: SIMD quantum wave function
@@ -1025,8 +1016,8 @@ impl AdvancedQuantumOptimizer {
             };
 
             for i in 0..particle.superposition.len() {
-                if rng.random_range(0.0..1.0) < collapse_strength {
-                    particle.superposition[i] = if rng.random_range(0.0..1.0) < 0.5 {
+                if rng.gen_range(0.0..1.0) < collapse_strength {
+                    particle.superposition[i] = if rng.gen_range(0.0..1.0) < 0.5 {
                         1.0
                     } else {
                         0.0
@@ -1036,8 +1027,8 @@ impl AdvancedQuantumOptimizer {
 
             // ✅ Advanced OPTIMIZATION: Quantum phase reset with memory
             let phase_reset_prob = collapse_strength * 0.5;
-            if rng.random_range(0.0..1.0) < phase_reset_prob {
-                particle.phase = rng.random_range(0.0..2.0 * std::f64::consts::PI);
+            if rng.gen_range(0.0..1.0) < phase_reset_prob {
+                particle.phase = rng.gen_range(0.0..2.0 * std::f64::consts::PI);
             }
         }
 
@@ -1074,7 +1065,7 @@ impl AdvancedQuantumOptimizer {
             // ✅ Advanced OPTIMIZATION: Update particle entanglement
             if entanglement_count > 0 {
                 self.particles[i].entanglement =
-                    (total_entanglement / entanglement_count as f64).clamp(0.0, 1.0);
+                    (total_entanglement / entanglement_count as f64).clamp(0.0..1.0);
             }
         }
 

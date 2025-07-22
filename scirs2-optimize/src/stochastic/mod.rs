@@ -114,8 +114,8 @@ pub struct InMemoryDataProvider {
 }
 
 impl InMemoryDataProvider {
-    pub fn new(data: Vec<f64>) -> Self {
-        Self { data }
+    pub fn new(_data: Vec<f64>) -> Self {
+        Self { _data }
     }
 }
 
@@ -153,8 +153,8 @@ where
     F: FnMut(&ArrayView1<f64>) -> f64,
     G: FnMut(&ArrayView1<f64>) -> Array1<f64>,
 {
-    pub fn new(func: F, grad: G) -> Self {
-        Self { func, grad }
+    pub fn new(_func: F, grad: G) -> Self {
+        Self { _func, grad }
     }
 }
 
@@ -205,18 +205,18 @@ pub fn update_learning_rate(
 
 /// Clip gradients to prevent exploding gradients
 #[allow(dead_code)]
-pub fn clip_gradients(gradient: &mut Array1<f64>, max_norm: f64) {
-    let grad_norm = gradient.mapv(|x| x * x).sum().sqrt();
+pub fn clip_gradients(_gradient: &mut Array1<f64>, max_norm: f64) {
+    let grad_norm = _gradient.mapv(|x| x * x).sum().sqrt();
     if grad_norm > max_norm {
         let scale = max_norm / grad_norm;
-        gradient.mapv_inplace(|x| x * scale);
+        _gradient.mapv_inplace(|x| x * scale);
     }
 }
 
 /// Generate random batch indices
 #[allow(dead_code)]
-pub fn generate_batch_indices(num_samples: usize, batch_size: usize, shuffle: bool) -> Vec<usize> {
-    let mut indices: Vec<usize> = (0..num_samples).collect();
+pub fn generate_batch_indices(_num_samples: usize, batch_size: usize, shuffle: bool) -> Vec<usize> {
+    let mut indices: Vec<usize> = (0.._num_samples).collect();
 
     if shuffle {
         use rand::rng;
@@ -364,8 +364,7 @@ pub fn create_stochastic_options_for_problem(
             gradient_clip: Some(2.0),
             early_stopping_patience: Some(100),
             ..Default::default()
-        },
-        _ => StochasticOptions::default(),
+        }_ => StochasticOptions::default(),
     }
 }
 

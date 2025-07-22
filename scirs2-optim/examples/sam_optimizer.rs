@@ -7,7 +7,7 @@
 use ndarray::{Array1, Array2};
 use ndarray_rand::rand_distr::Normal;
 use ndarray_rand::RandomExt;
-use scirs2_optim::optimizers::{Adam, Optimizer, SAM, SGD};
+use scirs2__optim::optimizers::{Adam, Optimizer, SAM, SGD};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -241,7 +241,7 @@ where
         // Print progress at intervals
         if i == 0 || i == n_iterations - 1 || (i + 1) % 50 == 0 {
             println!(
-                "  {} - Iteration {}/{}: train loss = {:.6}",
+                "  {} - Iteration {}/{}: _train loss = {:.6}",
                 name,
                 i + 1,
                 n_iterations,
@@ -289,8 +289,8 @@ where
     // Initialize weights to zeros
     let mut weights = Array1::<f64>::zeros(x_train.dim().1);
 
-    // Create SAM optimizer
-    let mut optimizer: SAM<f64, _, ndarray::Ix1> = SAM::with_config(inner_optimizer, rho, adaptive);
+    // Create SAM _optimizer
+    let mut _optimizer: SAM<f64_, ndarray::Ix1> = SAM::with_config(inner_optimizer, rho, adaptive);
 
     // Training loop
     for i in 0..n_iterations {
@@ -305,7 +305,7 @@ where
         let gradients = x_train.t().dot(&diff) * (2.0 / (y_train.len() as f64));
 
         // Step 2: SAM first step - get perturbed parameters
-        let (perturbed_weights, _) = optimizer.first_step(&weights, &gradients).unwrap();
+        let (perturbed_weights_) = _optimizer.first_step(&weights, &gradients).unwrap();
 
         // Step 3: Forward pass with perturbed weights
         let y_pred_perturbed = x_train.dot(&perturbed_weights);
@@ -318,14 +318,14 @@ where
         let gradients_perturbed = x_train.t().dot(&diff_perturbed) * (2.0 / (y_train.len() as f64));
 
         // Step 4: SAM second step - update original weights using gradients at perturbed point
-        weights = optimizer
+        weights = _optimizer
             .second_step(&weights, &gradients_perturbed)
             .unwrap();
 
         // Print progress at intervals
         if i == 0 || i == n_iterations - 1 || (i + 1) % 50 == 0 {
             println!(
-                "  {} - Iteration {}/{}: train loss = {:.6}, perturbed loss = {:.6}",
+                "  {} - Iteration {}/{}: _train loss = {:.6}, perturbed loss = {:.6}",
                 name,
                 i + 1,
                 n_iterations,

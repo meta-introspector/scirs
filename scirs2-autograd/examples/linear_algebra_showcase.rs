@@ -1,4 +1,4 @@
-use ag::tensor_ops::*;
+use ag::tensor__ops::*;
 use ndarray::array;
 use scirs2_autograd as ag;
 
@@ -6,7 +6,7 @@ use scirs2_autograd as ag;
 fn main() {
     println!("=== scirs2-autograd Linear Algebra Showcase ===\n");
 
-    ag::run::<f64, _, _>(|g| {
+    ag::run::<f64_>(|g| {
         // 1. Basic Linear Algebra Operations
         println!("1. Basic Linear Algebra Operations");
 

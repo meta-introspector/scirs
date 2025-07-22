@@ -5,7 +5,7 @@
 //! error patterns and data characteristics.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_recovery_system::{
+use crate::error_recovery__system::{
     EnhancedStatsError, RecoveryAction, RecoverySuggestion, SuggestionType,
 };
 use rand::{rng, Rng};
@@ -106,11 +106,11 @@ pub enum RiskLevel {
 
 impl IntelligentErrorRecovery {
     /// Create new intelligent error recovery system
-    pub fn new(config: RecoveryConfig) -> Self {
+    pub fn new(_config: RecoveryConfig) -> Self {
         Self {
             error_patterns: HashMap::new(),
             recovery_success_rates: HashMap::new(),
-            config,
+            _config,
         }
     }
 
@@ -214,8 +214,7 @@ impl IntelligentErrorRecovery {
             StatsError::InvalidArgument(_) => 2.0,
             StatsError::ComputationError(_) => 3.0,
             StatsError::ConvergenceError(_) => 4.0,
-            StatsError::InsufficientData(_) => 5.0,
-            _ => 0.0,
+            StatsError::InsufficientData(_) => 5.0_ => 0.0,
         }
     }
 
@@ -226,8 +225,7 @@ impl IntelligentErrorRecovery {
             algo if algo.contains("nonlinear") => 2.0,
             algo if algo.contains("iterative") => 3.0,
             algo if algo.contains("mcmc") => 4.0,
-            algo if algo.contains("optimization") => 5.0,
-            _ => 0.0,
+            algo if algo.contains("optimization") => 5.0_ => 0.0,
         }
     }
 
@@ -236,7 +234,7 @@ impl IntelligentErrorRecovery {
         &self,
         status: &crate::error_recovery_system::ConvergenceStatus,
     ) -> f64 {
-        use crate::error_recovery_system::ConvergenceStatus;
+        use crate::error_recovery__system::ConvergenceStatus;
         match status {
             ConvergenceStatus::NotStarted => 0.0,
             ConvergenceStatus::InProgress => 1.0,
@@ -261,7 +259,7 @@ impl IntelligentErrorRecovery {
         similarities.into_iter()
             .take(5) // Top 5 similar patterns
             .filter(|(_, sim)| *sim > 0.7) // Similarity threshold
-            .map(|(pattern, _)| pattern)
+            .map(|(pattern_)| pattern)
             .collect()
     }
 
@@ -356,8 +354,7 @@ impl IntelligentErrorRecovery {
 
     /// Generate ML-powered suggestions
     fn generate_ml_suggestions(
-        &self,
-        _features: &[f64],
+        &self_features: &[f64],
         error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         // Placeholder for actual ML model
@@ -380,8 +377,7 @@ impl IntelligentErrorRecovery {
 
     /// Create dimension mismatch fix strategy
     fn create_dimension_fix_strategy(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         let suggestion = RecoverySuggestion {
             suggestion_type: SuggestionType::InputValidation,
@@ -410,8 +406,7 @@ impl IntelligentErrorRecovery {
 
     /// Create computation error fix strategies
     fn create_computation_fix_strategies(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
 
@@ -447,7 +442,7 @@ impl IntelligentErrorRecovery {
                 action: RecoveryAction::SwitchAlgorithm {
                     new_algorithm: "robust_svd".to_string(),
                 },
-                expected_outcome: "More stable computation with better error handling".to_string(),
+                expected_outcome: "More stable computation with better _error handling".to_string(),
                 confidence: 0.8,
                 prerequisites: vec!["Alternative algorithm available".to_string()],
             },
@@ -468,8 +463,7 @@ impl IntelligentErrorRecovery {
 
     /// Create convergence fix strategies
     fn create_convergence_fix_strategies(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
 
@@ -500,8 +494,7 @@ impl IntelligentErrorRecovery {
 
     /// Create data augmentation strategy
     fn create_data_augmentation_strategy(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
             suggestion: RecoverySuggestion {
@@ -528,8 +521,7 @@ impl IntelligentErrorRecovery {
 
     /// Create memory optimization strategy
     fn create_memory_optimization_strategy(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
             suggestion: RecoverySuggestion {
@@ -582,8 +574,7 @@ impl IntelligentErrorRecovery {
 
     /// Create generic recovery strategy
     fn create_generic_strategy(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
             suggestion: RecoverySuggestion {
@@ -609,24 +600,22 @@ impl IntelligentErrorRecovery {
     /// Convert recovery action to suggestion type
     fn action_to_suggestion_type(&self, action: &RecoveryAction) -> SuggestionType {
         match action {
-            RecoveryAction::AdjustTolerance { .. } => SuggestionType::ParameterAdjustment,
-            RecoveryAction::IncreaseIterations { .. } => SuggestionType::ParameterAdjustment,
-            RecoveryAction::SwitchAlgorithm { .. } => SuggestionType::AlgorithmChange,
-            RecoveryAction::SimplePreprocessData => SuggestionType::DataPreprocessing,
-            RecoveryAction::SimpleValidateInputs => SuggestionType::InputValidation,
-            RecoveryAction::UseChunkedProcessing { .. } => SuggestionType::ResourceIncrease,
-            RecoveryAction::EnableParallelProcessing { .. } => SuggestionType::ResourceIncrease,
-            RecoveryAction::ApplyRegularization { .. } => SuggestionType::ParameterAdjustment,
-            RecoveryAction::UseApproximation { .. } => SuggestionType::Approximation,
-            _ => SuggestionType::InputValidation,
+            RecoveryAction::AdjustTolerance { .. } =>, SuggestionType::ParameterAdjustment,
+            RecoveryAction::IncreaseIterations { .. } =>, SuggestionType::ParameterAdjustment,
+            RecoveryAction::SwitchAlgorithm { .. } =>, SuggestionType::AlgorithmChange,
+            RecoveryAction::SimplePreprocessData =>, SuggestionType::DataPreprocessing,
+            RecoveryAction::SimpleValidateInputs =>, SuggestionType::InputValidation,
+            RecoveryAction::UseChunkedProcessing { .. } =>, SuggestionType::ResourceIncrease,
+            RecoveryAction::EnableParallelProcessing { .. } =>, SuggestionType::ResourceIncrease,
+            RecoveryAction::ApplyRegularization { .. } =>, SuggestionType::ParameterAdjustment,
+            RecoveryAction::UseApproximation { .. } => SuggestionType::Approximation_ =>, SuggestionType::InputValidation,
         }
     }
 
     /// Generate action description
     fn generate_action_description(
         &self,
-        action: &RecoveryAction,
-        _error: &EnhancedStatsError,
+        action: &RecoveryAction_error: &EnhancedStatsError,
     ) -> String {
         match action {
             RecoveryAction::AdjustTolerance { new_tolerance } => {
@@ -647,8 +636,7 @@ impl IntelligentErrorRecovery {
         match action {
             RecoveryAction::AdjustTolerance { .. } => "Improved numerical stability".to_string(),
             RecoveryAction::IncreaseIterations { .. } => "Better convergence".to_string(),
-            RecoveryAction::SwitchAlgorithm { .. } => "More robust computation".to_string(),
-            _ => "Resolved error condition".to_string(),
+            RecoveryAction::SwitchAlgorithm { .. } => "More robust computation".to_string(, _ => "Resolved error condition".to_string(),
         }
     }
 
@@ -679,8 +667,7 @@ impl IntelligentErrorRecovery {
                 cpu_cores: *num_threads,
                 wall_time_seconds: 2.0,
                 requires_gpu: false,
-            },
-            _ => ResourceRequirements {
+            }_ => ResourceRequirements {
                 memory_mb: 5.0,
                 cpu_cores: 1,
                 wall_time_seconds: 1.0,
@@ -692,9 +679,8 @@ impl IntelligentErrorRecovery {
     /// Assess risk level
     fn assess_risk_level(&self, action: &RecoveryAction) -> RiskLevel {
         match action {
-            RecoveryAction::SwitchAlgorithm { .. } => RiskLevel::Medium,
-            RecoveryAction::IncreaseIterations { .. } => RiskLevel::Low,
-            _ => RiskLevel::Low,
+            RecoveryAction::SwitchAlgorithm { .. } =>, RiskLevel::Medium,
+            RecoveryAction::IncreaseIterations { .. } => RiskLevel::Low_ =>, RiskLevel::Low,
         }
     }
 
@@ -756,7 +742,7 @@ impl NeuralErrorClassifier {
     /// Create new neural classifier
     pub fn new() -> Self {
         // Initialize with small random weights
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let mut weights = Vec::new();
         let input_size = 12; // Number of features
         let hidden_size = 8;
@@ -956,8 +942,7 @@ pub struct SimilarityBasedGenerator {
 
 impl StrategyGenerator for SimilarityBasedGenerator {
     fn generate_strategies(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
         features: &[f64],
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
@@ -1042,8 +1027,7 @@ pub struct ErrorCluster {
 
 impl StrategyGenerator for ClusteringBasedGenerator {
     fn generate_strategies(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
         features: &[f64],
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
@@ -1192,7 +1176,7 @@ impl RecoveryStrategyEnsemble {
 
         // Update weights based on recent performance
         for (i, generator) in self.strategy_generators.iter().enumerate() {
-            if generator.name() == generator_name {
+            if generator._name() == generator_name {
                 if let Some(history) = self.performance_history.get(generator_name) {
                     let recent_success_rate = history.iter()
                         .rev()
@@ -1211,12 +1195,12 @@ impl RecoveryStrategyEnsemble {
 
 impl MLEnhancedErrorRecovery {
     /// Create new ML-enhanced error recovery system
-    pub fn new(config: MLRecoveryConfig) -> Self {
+    pub fn new(_config: MLRecoveryConfig) -> Self {
         Self {
             base_recovery: IntelligentErrorRecovery::new(RecoveryConfig::default()),
             neural_classifier: NeuralErrorClassifier::new(),
             strategy_ensemble: RecoveryStrategyEnsemble::new(),
-            ml_config: config,
+            ml_config: _config,
         }
     }
 
@@ -1301,8 +1285,7 @@ impl MLEnhancedErrorRecovery {
             1 => self.create_algorithm_optimization_strategy(error, confidence)?,
             2 => self.create_numerical_stability_strategy(error, confidence)?,
             3 => self.create_resource_scaling_strategy(error, confidence)?,
-            4 => self.create_approximation_strategy(error, confidence)?,
-            _ => self.create_adaptive_strategy(error, confidence)?,
+            4 => self.create_approximation_strategy(error, confidence)?_ => self.create_adaptive_strategy(error, confidence)?,
         };
 
         strategies.push(strategy);
@@ -1311,8 +1294,7 @@ impl MLEnhancedErrorRecovery {
 
     /// Create data preprocessing strategy
     fn create_data_preprocessing_strategy(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
@@ -1338,8 +1320,7 @@ impl MLEnhancedErrorRecovery {
 
     /// Create algorithm optimization strategy
     fn create_algorithm_optimization_strategy(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
@@ -1367,8 +1348,7 @@ impl MLEnhancedErrorRecovery {
 
     /// Create numerical stability strategy
     fn create_numerical_stability_strategy(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
@@ -1425,8 +1405,7 @@ impl MLEnhancedErrorRecovery {
 
     /// Create approximation strategy
     fn create_approximation_strategy(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
@@ -1436,7 +1415,7 @@ impl MLEnhancedErrorRecovery {
                 action: RecoveryAction::UseApproximation {
                     approximation_method: "neural_approximation".to_string(),
                 },
-                expected_outcome: "Fast approximate solution with controlled error".to_string(),
+                expected_outcome: "Fast approximate solution with controlled _error".to_string(),
                 confidence,
                 prerequisites: vec!["Approximation tolerance defined".to_string()],
             },
@@ -1454,8 +1433,7 @@ impl MLEnhancedErrorRecovery {
 
     /// Create adaptive strategy
     fn create_adaptive_strategy(
-        &self,
-        _error: &EnhancedStatsError,
+        &self_error: &EnhancedStatsError,
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
@@ -1463,7 +1441,7 @@ impl MLEnhancedErrorRecovery {
                 suggestion_type: SuggestionType::InputValidation,
                 description: "Apply adaptive ML-learned recovery approach".to_string(),
                 action: RecoveryAction::SimpleValidateInputs,
-                expected_outcome: "Context-aware error resolution".to_string(),
+                expected_outcome: "Context-aware _error resolution".to_string(),
                 confidence,
                 prerequisites: vec!["Input data available".to_string()],
             },
@@ -1487,13 +1465,13 @@ impl MLEnhancedErrorRecovery {
     ) -> Vec<IntelligentRecoveryStrategy> {
         let mut combined = Vec::new();
 
-        // Weight base strategies
+        // Weight base _strategies
         for mut strategy in base_strategies {
             strategy.success_probability *= 1.0 - self.ml_config.ml_weight;
             combined.push(strategy);
         }
 
-        // Weight ML strategies
+        // Weight ML _strategies
         for mut strategy in ml_strategies {
             strategy.success_probability *= self.ml_config.ml_weight;
             combined.push(strategy);
@@ -1550,8 +1528,7 @@ impl MLEnhancedErrorRecovery {
             SuggestionType::AlgorithmChange => 1,
             SuggestionType::ParameterAdjustment => 2,
             SuggestionType::ResourceIncrease => 3,
-            SuggestionType::Approximation => 4,
-            _ => 5,
+            SuggestionType::Approximation => 4_ => 5,
         }
     }
 }

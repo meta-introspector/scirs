@@ -4,9 +4,10 @@
 //! It's useful for understanding relationships between two multivariate datasets.
 
 use crate::error::{StatsError, StatsResult as Result};
-use crate::error_handling_v2::ErrorCode;
+use crate::error_handling__v2::ErrorCode;
 use crate::{unified_error_handling::global_error_handler, validate_or_error};
 use ndarray::{Array1, Array2, ArrayView2, Axis};
+use statrs::statistics::Statistics;
 
 /// Canonical Correlation Analysis
 ///
@@ -277,7 +278,7 @@ impl CanonicalCorrelationAnalysis {
         cxy: &Array2<f64>,
         n_components: usize,
     ) -> Result<(Array2<f64>, Array2<f64>, Array1<f64>)> {
-        use ndarray_linalg::SVD;
+        use ndarray__linalg::SVD;
 
         // Regularized versions of covariance matrices
         let cxx_reg = self.regularize_covariance(cxx)?;
@@ -298,7 +299,7 @@ impl CanonicalCorrelationAnalysis {
         let u = u.unwrap();
         let vt = vt.unwrap();
 
-        // Extract the desired number of components
+        // Extract the desired number of _components
         let n_comp = n_components.min(s.len());
         let correlations = s.slice(ndarray::s![..n_comp]).to_owned();
         let u_comp = u.slice(ndarray::s![.., ..n_comp]).to_owned();
@@ -326,7 +327,7 @@ impl CanonicalCorrelationAnalysis {
 
     /// Compute inverse square root of a symmetric positive definite matrix
     fn compute_inverse_sqrt(&self, matrix: &Array2<f64>) -> Result<Array2<f64>> {
-        use ndarray_linalg::Eigh;
+        use ndarray__linalg::Eigh;
 
         let (eigenvalues, eigenvectors) =
             matrix.eigh(ndarray_linalg::UPLO::Upper).map_err(|e| {
@@ -577,9 +578,9 @@ impl Default for PLSCanonical {
 
 impl PLSCanonical {
     /// Create new PLS instance
-    pub fn new(n_components: usize) -> Self {
+    pub fn new(_n_components: usize) -> Self {
         Self {
-            n_components,
+            _n_components,
             ..Default::default()
         }
     }

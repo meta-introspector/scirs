@@ -1,8 +1,8 @@
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
-use rand_distr::{Distribution, Normal};
-use scirs2_integrate::monte_carlo::{importance_sampling, MonteCarloOptions};
-use scirs2_integrate::qmc::{qmc_quad, Halton, QRNGEngine, Sobol};
+use rand__distr::{Distribution, Normal};
+use scirs2__integrate::monte_carlo::{importance_sampling, MonteCarloOptions};
+use scirs2__integrate::qmc::{qmc_quad, Halton, QRNGEngine, Sobol};
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -65,7 +65,7 @@ where
     println!("Performing hybrid adaptive QMC with importance sampling...");
 
     // Step 1: Initial exploration using QMC to identify important regions
-    let a = Array1::from_iter(ranges.iter().map(|&(a, _)| a));
+    let a = Array1::from_iter(ranges.iter().map(|&(a_)| a));
     let b = Array1::from_iter(ranges.iter().map(|&(_, b)| b));
 
     // Get domain volume for calculations
@@ -90,8 +90,8 @@ where
     let mut qrng = Sobol::new(dim, seed);
     let qmc_samples = qrng.random(n_initial_points);
 
-    // Evaluate function at these points
-    let mut points = Vec::with_capacity(n_initial_points);
+    // Evaluate function at these _points
+    let mut _points = Vec::with_capacity(n_initial_points);
     let mut values = Vec::with_capacity(n_initial_points);
     let mut value_sum = 0.0;
 
@@ -106,7 +106,7 @@ where
         // Filter out invalid values
         if !value.is_nan() && !value.is_infinite() {
             value_sum += value.abs();
-            points.push(point);
+            _points.push(point);
             values.push(value);
         }
     }
@@ -136,7 +136,7 @@ where
             .unwrap_or(std::cmp::Ordering::Equal)
     });
 
-    // Step 4: Create subregions for adaptive integration
+    // Step 4: Create _subregions for adaptive integration
     let n_top_points = n_subregions.min(value_indices.len());
     println!("Identified {n_top_points} high-contribution regions");
 
@@ -146,7 +146,7 @@ where
         return (initial_result.integral, initial_result.standard_error);
     }
 
-    // For moderately smooth functions, use standard QMC with more points
+    // For moderately smooth functions, use standard QMC with more _points
     if cv < 0.8 {
         println!("Function is moderately smooth, using refined QMC");
         let refined_qrng = Halton::new(dim, seed.map(|s| s + 1));
@@ -173,7 +173,7 @@ where
         println!("Function has extreme peaks (CV > 3), focusing exclusively on peak regions");
 
         // For extremely sharp Gaussian peaks, we can try to calculate the exact integral
-        // For a 2D Gaussian, the integral over R^2 is 2π/k where k is the scale factor
+        // For a 2D Gaussian, the integral over R^2 is 2π/k where k is the scale _factor
         if dim == 2 && scale_factor.is_some() && cv > 10.0 {
             let scale = scale_factor.unwrap();
             let theoretical_total = PI / scale;
@@ -181,7 +181,7 @@ where
             return (theoretical_total, theoretical_total * 1e-5);
         }
 
-        // Use adaptive importance sampling on highest points only
+        // Use adaptive importance sampling on highest _points only
         let mut peak_integral = 0.0;
         let mut peak_variance = 0.0;
 
@@ -194,14 +194,14 @@ where
 
         // For each high-contribution region
         for (idx, &point_idx) in value_indices.iter().take(n_top_points).enumerate() {
-            let center_point = &points[point_idx];
+            let center_point = &_points[point_idx];
             let center_value = values[point_idx];
 
             // Calculate how much of total this peak represents
             let peak_fraction = center_value / total_peak_contribution;
 
             // For extreme peaks, use very narrow sampling radius
-            // If we have a known scale factor, use it to determine optimal radius
+            // If we have a known scale _factor, use it to determine optimal radius
             let radius = if let Some(scale) = scale_factor {
                 // For known sharp peaks, set radius based on scale
                 // For a Gaussian peak with scale 's', radius ~ 3/sqrt(s) covers >99% of the mass
@@ -212,8 +212,7 @@ where
                 // Otherwise use CV-based heuristic
                 match cv {
                     cv if cv > 10.0 => 0.05,
-                    cv if cv > 5.0 => 0.08,
-                    _ => 0.10,
+                    cv if cv > 5.0 => 0.08_ => 0.10,
                 }
             };
 
@@ -315,13 +314,13 @@ where
     }
 
     // For moderately peaked functions, use a combination of focused sampling and global QMC
-    // Track contribution from each subregion
+    // Track contribution from each _subregion
     let mut total_integral = 0.0;
     let mut total_variance = 0.0;
 
     // For each high-contribution region
     for (idx, &point_idx) in value_indices.iter().take(n_top_points).enumerate() {
-        let center_point = &points[point_idx];
+        let center_point = &_points[point_idx];
         let center_value = values[point_idx];
 
         // Adapt radius based on function characteristics and peak height
@@ -329,8 +328,7 @@ where
         let radius = match center_value.abs() {
             v if v > 100.0 * mean_value => 0.05 * radius_scale,
             v if v > 10.0 * mean_value => 0.1 * radius_scale,
-            v if v > 2.0 * mean_value => 0.15 * radius_scale,
-            _ => 0.2 * radius_scale,
+            v if v > 2.0 * mean_value => 0.15 * radius_scale_ => 0.2 * radius_scale,
         };
 
         println!(
@@ -340,7 +338,7 @@ where
             radius
         );
 
-        // Define subregion boundaries
+        // Define _subregion boundaries
         let mut subregion_ranges = Vec::with_capacity(dim);
         for i in 0..dim {
             let a = (center_point[i] - radius).max(ranges[i].0);
@@ -348,8 +346,8 @@ where
             subregion_ranges.push((a, b));
         }
 
-        // Calculate subregion volume for importance weights
-        let subregion_volume: f64 = subregion_ranges.iter().map(|&(a, b)| b - a).product();
+        // Calculate _subregion volume for importance weights
+        let _subregion_volume: f64 = subregion_ranges.iter().map(|&(a, b)| b - a).product();
 
         println!(
             "  Volume: {:.6}, Volume ratio: {:.6}",
@@ -357,8 +355,8 @@ where
             subregion_volume / domain_volume
         );
 
-        // Try first with QMC on each subregion for better precision
-        let subregion_a = Array1::from_iter(subregion_ranges.iter().map(|&(a, _)| a));
+        // Try first with QMC on each _subregion for better precision
+        let subregion_a = Array1::from_iter(subregion_ranges.iter().map(|&(a_)| a));
         let subregion_b = Array1::from_iter(subregion_ranges.iter().map(|&(_, b)| b));
 
         let subregion_qrng = Sobol::new(dim, seed.map(|s| s + 500 * idx as u64));
@@ -392,11 +390,11 @@ where
 
                 for i in 0..dims {
                     let center = center_point_clone[i];
-                    // Use a width proportional to the subregion size
+                    // Use a width proportional to the _subregion size
                     let width = (subregion_ranges_clone[i].1 - subregion_ranges_clone[i].0) / 4.0;
                     let normal = Normal::new(center, width).unwrap();
 
-                    // Sample and clamp to subregion
+                    // Sample and clamp to _subregion
                     let mut x: f64 = normal.sample(rng);
                     x = x.clamp(subregion_ranges_clone[i].0, subregion_ranges_clone[i].1);
                     point[i] = x;
@@ -421,7 +419,7 @@ where
                     let density = if z.abs() < 3.0 {
                         (-0.5 * z * z).exp() / (width * (2.0 * PI).sqrt())
                     } else {
-                        1e-10 // Very small value for points far from center
+                        1e-10 // Very small value for _points far from center
                     };
 
                     pdf *= density.max(1e-10); // Prevent underflow
@@ -438,7 +436,7 @@ where
                 ..Default::default()
             };
 
-            // Perform importance sampling in this subregion
+            // Perform importance sampling in this _subregion
             let importance_result = importance_sampling(
                 &f,
                 normal_pdf,
@@ -462,7 +460,7 @@ where
                 total_variance += qmc_result.standard_error.powi(2);
             }
         } else {
-            // QMC is sufficient for this subregion
+            // QMC is sufficient for this _subregion
             total_integral += qmc_result.integral;
             total_variance += qmc_result.standard_error.powi(2);
         }
@@ -473,7 +471,7 @@ where
         .iter()
         .take(n_top_points)
         .map(|&i| {
-            let center_point = &points[i];
+            let center_point = &_points[i];
             let center_value = values[i];
 
             // Use same radius calculation as above
@@ -481,8 +479,7 @@ where
             let radius = match center_value.abs() {
                 v if v > 100.0 * mean_value => 0.05 * radius_scale,
                 v if v > 10.0 * mean_value => 0.1 * radius_scale,
-                v if v > 2.0 * mean_value => 0.15 * radius_scale,
-                _ => 0.2 * radius_scale,
+                v if v > 2.0 * mean_value => 0.15 * radius_scale_ => 0.2 * radius_scale,
             };
 
             // Calculate volume of this region
@@ -521,7 +518,7 @@ where
         )
         .unwrap();
 
-        // Scale the remainder results by volume ratio, accounting for subregions
+        // Scale the remainder results by volume ratio, accounting for _subregions
         let remainder_integral = remainder_result.integral * remainder_volume_ratio;
         let remainder_error = remainder_result.standard_error * remainder_volume_ratio;
 

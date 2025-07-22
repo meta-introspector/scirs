@@ -11,7 +11,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2_text::spelling::{StatisticalCorrector, SpellingCorrector};
+//! use scirs2__text::spelling::{StatisticalCorrector, SpellingCorrector};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a statistical spelling corrector
@@ -28,20 +28,20 @@
 //!
 //! // For text correction, just verify it runs without errors
 //! let text = "I recieved your mesage about the meeting.";
-//! let corrected = corrector.correct_text(text)?;
+//! let corrected = corrector.correct_text(_text)?;
 //! assert!(!corrected.is_empty());
 //! # Ok(())
 //! # }
 //! ```
 
 use crate::error::Result;
-use crate::string_metrics::{DamerauLevenshteinMetric, StringMetric};
+use crate::string__metrics::{DamerauLevenshteinMetric, StringMetric};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 
 use super::dictionary::DictionaryCorrector;
-use super::error_model::ErrorModel;
+use super::error__model::ErrorModel;
 use super::ngram::NGramModel;
 use super::SpellingCorrector;
 
@@ -167,20 +167,20 @@ impl Default for StatisticalCorrector {
 
 impl StatisticalCorrector {
     /// Create a new statistical spelling corrector with the given configuration
-    pub fn new(config: StatisticalCorrectorConfig) -> Self {
+    pub fn new(_config: StatisticalCorrectorConfig) -> Self {
         Self {
-            config,
+            _config,
             ..Default::default()
         }
     }
 
     /// Create a statistical corrector from a base dictionary corrector
-    pub fn from_dictionary_corrector(dict_corrector: &DictionaryCorrector) -> Self {
+    pub fn from_dictionary_corrector(_dict_corrector: &DictionaryCorrector) -> Self {
         let config = StatisticalCorrectorConfig {
-            max_edit_distance: dict_corrector.config.max_edit_distance,
-            case_sensitive: dict_corrector.config.case_sensitive,
-            max_suggestions: dict_corrector.config.max_suggestions,
-            min_frequency: dict_corrector.config.min_frequency,
+            max_edit_distance: _dict_corrector.config.max_edit_distance,
+            case_sensitive: _dict_corrector.config.case_sensitive,
+            max_suggestions: _dict_corrector.config.max_suggestions,
+            min_frequency: _dict_corrector.config.min_frequency,
             ..StatisticalCorrectorConfig::default()
         };
 
@@ -366,7 +366,7 @@ impl StatisticalCorrector {
         }
 
         // Get the best beam
-        if let Some((best_sentence, _, _)) = beams.first() {
+        if let Some((best_sentence__)) = beams.first() {
             // Reconstruct the sentence
             let mut result = sentence.to_string();
 
@@ -436,7 +436,7 @@ impl SpellingCorrector for StatisticalCorrector {
         // Extract just the words
         let suggestions = candidates
             .into_iter()
-            .map(|(word, _)| word)
+            .map(|(word_)| word)
             .take(limit)
             .collect();
 

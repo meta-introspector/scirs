@@ -65,7 +65,7 @@ where
         )));
     }
 
-    // Use the provided block size or default to 64
+    // Use the provided block _size or default to 64
     let block_size = block_size.unwrap_or(64);
 
     // Initialize result matrix
@@ -200,12 +200,12 @@ fn pad_matrix<F>(a: &ArrayView2<F>, new_rows: usize, new_cols: usize) -> Array2<
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    let (rows, cols) = a.dim();
+    let (_rows, _cols) = a.dim();
     let mut result = Array2::zeros((new_rows, new_cols));
 
     // Copy the original matrix
-    for i in 0..rows {
-        for j in 0..cols {
+    for i in 0.._rows {
+        for j in 0.._cols {
             result[[i, j]] = a[[i, j]];
         }
     }
@@ -353,7 +353,7 @@ where
         )));
     }
 
-    // Use the provided tile size or default to 32
+    // Use the provided tile _size or default to 32
     let tile_size = tile_size.unwrap_or(32);
 
     // Initialize result matrix

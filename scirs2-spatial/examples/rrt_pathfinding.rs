@@ -1,7 +1,7 @@
 //! Example demonstrating the RRT and RRT* path planning algorithms
 
-use scirs2_spatial::error::SpatialResult;
-use scirs2_spatial::pathplanning::{RRT2DPlanner, RRTConfig};
+use scirs2__spatial::error::SpatialResult;
+use scirs2__spatial::pathplanning::{RRT2DPlanner, RRTConfig};
 
 #[allow(dead_code)]
 fn main() -> SpatialResult<()> {
@@ -270,7 +270,7 @@ fn visualize_path(
         let grid_x = ((point[0] - min_bounds[0]) * scale_x) as usize;
         let grid_y = ((point[1] - min_bounds[1]) * scale_y) as usize;
 
-        // Ensure coordinates are within grid bounds
+        // Ensure coordinates are within grid _bounds
         if grid_x < grid_size && grid_y < grid_size {
             let y = grid_size - 1 - grid_y;
             if i == 0 {
@@ -295,7 +295,7 @@ fn visualize_path(
 
 // Helper function for point-in-polygon test
 #[allow(dead_code)]
-fn is_point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
+fn is_point_in_polygon(_point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
     if polygon.len() < 3 {
         return false;
     }
@@ -309,8 +309,8 @@ fn is_point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
         let xj = polygon[j][0];
         let yj = polygon[j][1];
 
-        let intersect = ((yi > point[1]) != (yj > point[1]))
-            && (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi) + xi);
+        let intersect = ((yi > _point[1]) != (yj > _point[1]))
+            && (_point[0] < (xj - xi) * (_point[1] - yi) / (yj - yi) + xi);
 
         if intersect {
             inside = !inside;

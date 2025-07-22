@@ -10,15 +10,15 @@
 #[cfg(feature = "neural_common")]
 use ndarray::{Array1, Array2};
 #[cfg(feature = "neural_common")]
-use scirs2_metrics::classification::{
+use scirs2__metrics::classification::{
     accuracy_score, f1_score, precision_score, recall_score, roc_auc_score,
 };
 #[cfg(feature = "neural_common")]
-use scirs2_metrics::integration::neural::NeuralMetricAdapter;
+use scirs2__metrics::integration::neural::NeuralMetricAdapter;
 #[cfg(feature = "neural_common")]
-use scirs2_metrics::integration::traits::MetricComputation;
+use scirs2__metrics::integration::traits::MetricComputation;
 #[cfg(feature = "neural_common")]
-use scirs2_metrics::regression::{mean_absolute_error, mean_squared_error, r2_score};
+use scirs2__metrics::regression::{mean_absolute_error, mean_squared_error, r2_score};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -168,7 +168,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // For now, using individual class metrics as a placeholder
                 let targets_1d = targets
                     .clone()
-                    .into_dimensionality::<ndarray::Ix1>()
+                    .into__dimensionality::<ndarray::Ix1>()
                     .map_err(|e| {
                         scirs2_metrics::error::MetricsError::InvalidInput(format!(
                             "Shape error: {e}"
@@ -208,7 +208,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // directly with scirs2-neural's training loops
         #[cfg(feature = "neural_common")]
         {
-            use scirs2_metrics::integration::neural::MetricsCallback;
+            use scirs2__metrics::integration::neural::MetricsCallback;
 
             println!("\nWith neural_common feature enabled:");
             let metrics = vec![

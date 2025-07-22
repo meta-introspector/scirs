@@ -1,4 +1,4 @@
-use scirs2_special::{wright_bessel, wright_bessel_zeros};
+use scirs2__special::{wright_bessel, wright_bessel_zeros};
 use std::error::Error;
 
 #[allow(dead_code)]

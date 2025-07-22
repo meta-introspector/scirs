@@ -5,15 +5,17 @@
 //! optimization and numerical stability.
 
 use crate::error::SignalResult;
+use crate::dwt::Wavelet;
+use crate::error::SignalResult;
 use ndarray::Array2;
-use rand::SeedableRng;
-use scirs2_core::Rng;
-// use scirs2_core::simd_ops::SimdUnifiedOps;
-// use scirs2_core::validation::{check_finite, check_positive};
+use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(unused_imports)]
+// use scirs2_core::simd_ops::SimdUnifiedOps;
+// use scirs2_core::validation::{check_finite, check_positive};
 /// Advanced-comprehensive 2D wavelet validation configuration
 #[derive(Debug, Clone)]
 pub struct Dwt2dadvancedConfig {
@@ -321,7 +323,7 @@ pub fn run_dwt2d_comprehensive_validation(
     config: &Dwt2dadvancedConfig,
 ) -> SignalResult<Dwt2dadvancedResult> {
     let start_time = Instant::now();
-    let mut issues = Vec::new();
+    let mut issues: Vec<String> = Vec::new();
     let mut recommendations = Vec::new();
     let mut total_score = 0.0;
     let mut score_count = 0;
@@ -552,7 +554,7 @@ fn validate_perfect_reconstruction(
         }
     }
 
-    let mean_error = errors.iter().sum::<f64>() / errors.len() as f64;
+    let mean_error = errors.iter().sum::<f64>() / errors.len()  as f64;
     let snr_improvement = -20.0 * (mean_error + 1e-15).log10();
     let perfect_reconstruction = max_error < config.tolerance;
 
@@ -569,8 +571,7 @@ fn validate_perfect_reconstruction(
 
 #[allow(dead_code)]
 fn validate_orthogonality(
-    config: &Dwt2dadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<OrthogonalityValidationResult> {
     // Placeholder implementation
     Ok(OrthogonalityValidationResult {
@@ -584,8 +585,7 @@ fn validate_orthogonality(
 
 #[allow(dead_code)]
 fn validate_energy_conservation(
-    config: &Dwt2dadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<EnergyConservationResult> {
     // Placeholder implementation
     Ok(EnergyConservationResult {
@@ -598,8 +598,7 @@ fn validate_energy_conservation(
 
 #[allow(dead_code)]
 fn validate_boundary_conditions(
-    config: &Dwt2dadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<BoundaryValidationResult> {
     // Placeholder implementation
     Ok(BoundaryValidationResult {
@@ -613,8 +612,7 @@ fn validate_boundary_conditions(
 
 #[allow(dead_code)]
 fn validate_multilevel_decomposition(
-    config: &Dwt2dadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<MultilevelValidationResult> {
     // Placeholder implementation
     Ok(MultilevelValidationResult {
@@ -627,8 +625,7 @@ fn validate_multilevel_decomposition(
 
 #[allow(dead_code)]
 fn validate_denoising_performance(
-    config: &Dwt2dadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<DenoisingValidationResult> {
     // Placeholder implementation
     Ok(DenoisingValidationResult {
@@ -644,8 +641,7 @@ fn validate_denoising_performance(
 
 #[allow(dead_code)]
 fn validate_compression_performance(
-    config: &Dwt2dadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<CompressionValidationResult> {
     // Placeholder implementation
     Ok(CompressionValidationResult {
@@ -659,8 +655,7 @@ fn validate_compression_performance(
 
 #[allow(dead_code)]
 fn validate_numerical_stability(
-    config: &Dwt2dadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<StabilityValidationResult> {
     // Placeholder implementation
     Ok(StabilityValidationResult {
@@ -679,8 +674,7 @@ fn validate_numerical_stability(
 
 #[allow(dead_code)]
 fn analyze_performance(
-    config: &Dwt2dadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<PerformanceAnalysisResult> {
     // Placeholder implementation
     Ok(PerformanceAnalysisResult {
@@ -699,8 +693,7 @@ fn analyze_performance(
 
 #[allow(dead_code)]
 fn validate_simd_optimizations(
-    config: &Dwt2dadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<SimdOptimizationResult> {
     // Placeholder implementation
     Ok(SimdOptimizationResult {
@@ -713,8 +706,7 @@ fn validate_simd_optimizations(
 
 #[allow(dead_code)]
 fn analyze_memory_usage(
-    config: &Dwt2dadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<MemoryAnalysisResult> {
     // Placeholder implementation
     Ok(MemoryAnalysisResult {
@@ -727,8 +719,7 @@ fn analyze_memory_usage(
 
 #[allow(dead_code)]
 fn validate_consistency(
-    config: &Dwt2dadvancedConfig,
-    _rng: &mut rand_chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig_rng: &mut rand, _chacha::ChaCha8Rng,
 ) -> SignalResult<ConsistencyAnalysisResult> {
     // Placeholder implementation
     Ok(ConsistencyAnalysisResult {
@@ -770,10 +761,7 @@ fn generate_test_image(
 
 #[allow(dead_code)]
 fn simulate_reconstruction_test(
-    image: &Array2<f64>,
-    _wavelet: &str,
-    _level: usize,
-    _boundary: &str,
+    image: &Array2<f64>, _wavelet: &str_level: usize, _boundary: &str,
 ) -> SignalResult<f64> {
     // Simulate perfect reconstruction test
     // In real implementation, this would perform actual DWT and IDWT
@@ -784,11 +772,11 @@ fn simulate_reconstruction_test(
 // Scoring functions
 
 #[allow(dead_code)]
-fn calculate_reconstruction_score(result: &ReconstructionValidationResult) -> f64 {
-    let error_score = (-20.0 * (result.max_reconstruction_error + 1e-15).log10())
+fn calculate_reconstruction_score(_result: &ReconstructionValidationResult) -> f64 {
+    let error_score = (-20.0 * (_result.max_reconstruction_error + 1e-15).log10())
         .min(100.0)
         .max(0.0);
-    let perfect_score = if result.perfect_reconstruction {
+    let perfect_score = if _result.perfect_reconstruction {
         100.0
     } else {
         80.0
@@ -797,168 +785,166 @@ fn calculate_reconstruction_score(result: &ReconstructionValidationResult) -> f6
 }
 
 #[allow(dead_code)]
-fn calculate_orthogonality_score(result: &OrthogonalityValidationResult) -> f64 {
-    let error_score = (-20.0 * (result.max_orthogonality_error + 1e-15).log10())
+fn calculate_orthogonality_score(_result: &OrthogonalityValidationResult) -> f64 {
+    let error_score = (-20.0 * (_result.max_orthogonality_error + 1e-15).log10())
         .min(100.0)
         .max(0.0);
-    (error_score + result.filter_orthogonality) / 2.0
+    (error_score + _result.filter_orthogonality) / 2.0
 }
 
 #[allow(dead_code)]
-fn calculate_energy_score(result: &EnergyConservationResult) -> f64 {
-    result.parseval_validation
+fn calculate_energy_score(_result: &EnergyConservationResult) -> f64 {
+    _result.parseval_validation
 }
 
 #[allow(dead_code)]
-fn calculate_boundary_score(result: &BoundaryValidationResult) -> f64 {
-    (result.artifact_score + result.edge_preservation) / 2.0
+fn calculate_boundary_score(_result: &BoundaryValidationResult) -> f64 {
+    (_result.artifact_score + _result.edge_preservation) / 2.0
 }
 
 #[allow(dead_code)]
-fn calculate_multilevel_score(result: &MultilevelValidationResult) -> f64 {
-    (result.coefficient_consistency + result.scaling_consistency + result.frequency_localization)
+fn calculate_multilevel_score(_result: &MultilevelValidationResult) -> f64 {
+    (_result.coefficient_consistency + _result.scaling_consistency + _result.frequency_localization)
         / 3.0
 }
 
 #[allow(dead_code)]
-fn calculate_denoising_score(result: &DenoisingValidationResult) -> f64 {
-    (result.edge_preservation_score
-        + result.texture_preservation_score
-        + result.artifact_suppression)
+fn calculate_denoising_score(_result: &DenoisingValidationResult) -> f64 {
+    (_result.edge_preservation_score
+        + _result.texture_preservation_score
+        + _result.artifact_suppression)
         / 3.0
 }
 
 #[allow(dead_code)]
-fn calculate_compression_score(result: &CompressionValidationResult) -> f64 {
-    result.rate_distortion_performance
+fn calculate_compression_score(_result: &CompressionValidationResult) -> f64 {
+    _result.rate_distortion_performance
 }
 
 #[allow(dead_code)]
-fn calculate_stability_score(result: &StabilityValidationResult) -> f64 {
-    (result.condition_number_analysis.stability_score
-        + result.error_propagation
-        + result.extreme_input_robustness
-        + result.precision_maintenance
-        + result.overflow_handling)
+fn calculate_stability_score(_result: &StabilityValidationResult) -> f64 {
+    (_result.condition_number_analysis.stability_score
+        + _result.error_propagation
+        + _result.extreme_input_robustness
+        + _result.precision_maintenance
+        + _result.overflow_handling)
         / 5.0
 }
 
 #[allow(dead_code)]
-fn calculate_performance_score(result: &PerformanceAnalysisResult) -> f64 {
-    (result.cache_efficiency + result.computational_intensity) / 2.0
+fn calculate_performance_score(_result: &PerformanceAnalysisResult) -> f64 {
+    (_result.cache_efficiency + _result.computational_intensity) / 2.0
 }
 
 #[allow(dead_code)]
-fn calculate_simd_score(result: &SimdOptimizationResult) -> f64 {
-    (result.simd_accuracy + result.vector_utilization + result.alignment_efficiency) / 3.0
+fn calculate_simd_score(_result: &SimdOptimizationResult) -> f64 {
+    (_result.simd_accuracy + _result.vector_utilization + _result.alignment_efficiency) / 3.0
 }
 
 #[allow(dead_code)]
-fn calculate_memory_score(result: &MemoryAnalysisResult) -> f64 {
-    (result.memory_efficiency
-        + result.access_pattern_efficiency
-        + (1.0 - result.cache_miss_rate) * 100.0)
+fn calculate_memory_score(_result: &MemoryAnalysisResult) -> f64 {
+    (_result.memory_efficiency
+        + _result.access_pattern_efficiency
+        + (1.0 - _result.cache_miss_rate) * 100.0)
         / 3.0
 }
 
 #[allow(dead_code)]
-fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
-    (result.cross_wavelet_consistency
-        + result.implementation_consistency
-        + result.platform_consistency
-        + result.parameter_consistency)
+fn calculate_consistency_score(_result: &ConsistencyAnalysisResult) -> f64 {
+    (_result.cross_wavelet_consistency
+        + _result.implementation_consistency
+        + _result.platform_consistency
+        + _result.parameter_consistency)
         / 4.0
 }
 
 /// Generate a comprehensive report of 2D wavelet validation results
 #[allow(dead_code)]
-pub fn generate_dwt2d_comprehensive_report(result: &Dwt2dadvancedResult) -> String {
+pub fn generate_dwt2d_comprehensive_report(_result: &Dwt2dadvancedResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Advanced-comprehensive 2D Wavelet Transform Validation Report\n\n");
 
     report.push_str(&format!(
-        "## Overall Score: {:.1}%\n\n",
-        result.overall_score
-    ));
+        "## Overall Score: {:.1}%\n\n", _result.overall_score));
 
     report.push_str("## Validation Results Summary\n\n");
 
     report.push_str(&format!("### Perfect Reconstruction\n"));
     report.push_str(&format!(
         "- Maximum Error: {:.2e}\n",
-        result.reconstruction_validation.max_reconstruction_error
+        _result.reconstruction_validation.max_reconstruction_error
     ));
     report.push_str(&format!(
         "- Mean Error: {:.2e}\n",
-        result.reconstruction_validation.mean_reconstruction_error
+        _result.reconstruction_validation.mean_reconstruction_error
     ));
     report.push_str(&format!(
         "- Perfect Reconstruction: {}\n",
-        result.reconstruction_validation.perfect_reconstruction
+        _result.reconstruction_validation.perfect_reconstruction
     ));
     report.push_str(&format!(
         "- SNR Improvement: {:.1} dB\n\n",
-        result.reconstruction_validation.snr_improvement
+        _result.reconstruction_validation.snr_improvement
     ));
 
     report.push_str(&format!("### Orthogonality\n"));
     report.push_str(&format!(
         "- Maximum Orthogonality Error: {:.2e}\n",
-        result.orthogonality_validation.max_orthogonality_error
+        _result.orthogonality_validation.max_orthogonality_error
     ));
     report.push_str(&format!(
         "- Filter Orthogonality: {:.1}%\n",
-        result.orthogonality_validation.filter_orthogonality
+        _result.orthogonality_validation.filter_orthogonality
     ));
     report.push_str(&format!(
         "- Bi-orthogonality Score: {:.1}%\n\n",
-        result.orthogonality_validation.biorthogonality_score
+        _result.orthogonality_validation.biorthogonality_score
     ));
 
     report.push_str(&format!("### Performance Analysis\n"));
     report.push_str(&format!(
         "- Time Complexity: O(N^{:.1})\n",
-        result.performance_analysis.time_complexity
+        _result.performance_analysis.time_complexity
     ));
     report.push_str(&format!(
         "- Memory Complexity: O(N^{:.1})\n",
-        result.performance_analysis.memory_complexity
+        _result.performance_analysis.memory_complexity
     ));
     report.push_str(&format!(
         "- Cache Efficiency: {:.1}%\n",
-        result.performance_analysis.cache_efficiency
+        _result.performance_analysis.cache_efficiency
     ));
     report.push_str(&format!(
         "- Computational Intensity: {:.1}%\n\n",
-        result.performance_analysis.computational_intensity
+        _result.performance_analysis.computational_intensity
     ));
 
     report.push_str(&format!("### SIMD Optimization\n"));
     report.push_str(&format!(
         "- Speedup Factor: {:.1}x\n",
-        result.simd_validation.speedup_factor
+        _result.simd_validation.speedup_factor
     ));
     report.push_str(&format!(
         "- SIMD Accuracy: {:.2}%\n",
-        result.simd_validation.simd_accuracy
+        _result.simd_validation.simd_accuracy
     ));
     report.push_str(&format!(
         "- Vector Utilization: {:.1}%\n\n",
-        result.simd_validation.vector_utilization
+        _result.simd_validation.vector_utilization
     ));
 
-    if !result.issues.is_empty() {
+    if !_result.issues.is_empty() {
         report.push_str("## Issues Found\n\n");
-        for issue in &result.issues {
+        for issue in &_result.issues {
             report.push_str(&format!("- ⚠️ {}\n", issue));
         }
         report.push_str("\n");
     }
 
-    if !result.recommendations.is_empty() {
+    if !_result.recommendations.is_empty() {
         report.push_str("## Recommendations\n\n");
-        for rec in &result.recommendations {
+        for rec in &_result.recommendations {
             report.push_str(&format!("- 💡 {}\n", rec));
         }
     }

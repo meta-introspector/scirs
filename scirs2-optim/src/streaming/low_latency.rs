@@ -285,8 +285,8 @@ where
     O: Optimizer<A, ndarray::Ix1> + Send + Sync + 'static,
 {
     /// Create a new low-latency optimizer
-    pub fn new(base_optimizer: O, config: LowLatencyConfig) -> Result<Self> {
-        let base_optimizer = Arc::new(Mutex::new(base_optimizer));
+    pub fn new(_base_optimizer: O, config: LowLatencyConfig) -> Result<Self> {
+        let _base_optimizer = Arc::new(Mutex::new(_base_optimizer));
 
         let precomputation_engine = if config.enable_precomputation {
             Some(PrecomputationEngine::new(config.precomputation_buffer_size))
@@ -421,7 +421,7 @@ where
         indexed_grads.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Zero out smaller gradients
-        for (i, _) in indexed_grads.iter().skip(keep_count) {
+        for (i_) in indexed_grads.iter().skip(keep_count) {
             simplified[*i] = A::zero();
         }
 
@@ -497,12 +497,12 @@ where
 
 // Implementation of helper structs
 impl<A: Float> PrecomputationEngine<A> {
-    fn new(buffer_size: usize) -> Self {
+    fn new(_buffer_size: usize) -> Self {
         Self {
-            precomputed_updates: VecDeque::with_capacity(buffer_size),
+            precomputed_updates: VecDeque::with_capacity(_buffer_size),
             computation_thread: None,
             gradient_predictor: GradientPredictor::new(10), // 10-step history
-            max_buffer_size: buffer_size,
+            max_buffer_size: _buffer_size,
         }
     }
 
@@ -520,7 +520,7 @@ impl<A: Float> PrecomputationEngine<A> {
         self.precomputed_updates.pop_front()
     }
 
-    fn start_precomputation(&mut self, _gradient: &Array1<A>) {
+    fn start_precomputation(&mut self_gradient: &Array1<A>) {
         // In a real implementation, would start background computation
         // For now, just placeholder
     }
@@ -532,19 +532,19 @@ impl<A: Float> PrecomputationEngine<A> {
 }
 
 impl<A: Float> LockFreeBuffer<A> {
-    fn new(capacity: usize) -> Self {
+    fn new(_capacity: usize) -> Self {
         Self {
-            buffer: vec![None; capacity],
+            buffer: vec![None; _capacity],
             write_index: AtomicUsize::new(0),
             read_index: AtomicUsize::new(0),
-            capacity,
+            _capacity,
         }
     }
 }
 
 impl FastMemoryPool {
-    fn new(total_size: usize, block_size: usize) -> Result<Self> {
-        let total_blocks = total_size / block_size;
+    fn new(_total_size: usize, block_size: usize) -> Result<Self> {
+        let total_blocks = _total_size / block_size;
         let mut blocks = Vec::with_capacity(total_blocks);
 
         // Pre-allocate all blocks
@@ -578,9 +578,9 @@ impl FastMemoryPool {
 }
 
 impl<A: Float> SIMDProcessor<A> {
-    fn new(enabled: bool) -> Self {
+    fn new(_enabled: bool) -> Self {
         Self {
-            enabled,
+            _enabled,
             vector_width: 8, // AVX2 width for f32
             temp_buffers: Vec::new(),
         }
@@ -593,9 +593,9 @@ impl<A: Float> SIMDProcessor<A> {
 }
 
 impl<A: Float> GradientQuantizer<A> {
-    fn new(bits: u8) -> Self {
+    fn new(_bits: u8) -> Self {
         Self {
-            bits,
+            _bits,
             scale: A::one(),
             zero_point: A::zero(),
             error_accumulator: None,
@@ -621,10 +621,10 @@ impl<A: Float> GradientQuantizer<A> {
 }
 
 impl LatencyMonitor {
-    fn new(max_samples: usize) -> Self {
+    fn new(_max_samples: usize) -> Self {
         Self {
-            latency_samples: VecDeque::with_capacity(max_samples),
-            max_samples,
+            latency_samples: VecDeque::with_capacity(_max_samples),
+            _max_samples,
             p50_latency: Duration::from_micros(0),
             p95_latency: Duration::from_micros(0),
             p99_latency: Duration::from_micros(0),
@@ -668,12 +668,12 @@ impl LatencyMonitor {
 }
 
 impl<A: Float> ApproximationController<A> {
-    fn new(target_latency: Duration) -> Self {
+    fn new(_target_latency: Duration) -> Self {
         Self {
             approximation_level: A::zero(),
             performance_history: VecDeque::with_capacity(100),
             adaptation_rate: A::from(0.1).unwrap(),
-            target_latency,
+            _target_latency,
         }
     }
 
@@ -718,11 +718,11 @@ impl<A: Float> ApproximationController<A> {
 }
 
 impl<A: Float> GradientPredictor<A> {
-    fn new(window_size: usize) -> Self {
+    fn new(_window_size: usize) -> Self {
         Self {
-            gradient_history: VecDeque::with_capacity(window_size),
+            gradient_history: VecDeque::with_capacity(_window_size),
             trend_weights: None,
-            window_size,
+            _window_size,
             confidence: A::from(0.5).unwrap(),
         }
     }

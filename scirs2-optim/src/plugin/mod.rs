@@ -17,9 +17,9 @@
 //! ## Creating a Custom Optimizer Plugin
 //!
 //! ```no_run
-//! use scirs2_optim::plugin::{OptimizerPlugin, PluginCapabilities};
-//! use scirs2_optim::plugin::core::{PluginInfo, OptimizerConfig, OptimizerState};
-//! use scirs2_optim::error::{OptimError, Result};
+//! use scirs2__optim::plugin::{OptimizerPlugin, PluginCapabilities};
+//! use scirs2__optim::plugin::core::{PluginInfo, OptimizerConfig, OptimizerState};
+//! use scirs2__optim::error::{OptimError, Result};
 //! use ndarray::Array1;
 //!
 //! #[derive(Debug, Clone)]
@@ -53,9 +53,9 @@
 //!     fn initialize(&mut self, _param_shapes: &[usize]) -> Result<()> { Ok(()) }
 //!     fn reset(&mut self) -> Result<()> { Ok(()) }
 //!     fn get_config(&self) -> OptimizerConfig { OptimizerConfig::default() }
-//!     fn set_config(&mut self, _config: OptimizerConfig) -> Result<()> { Ok(()) }
+//!     fn set_config(&mut self_config: OptimizerConfig) -> Result<()> { Ok(()) }
 //!     fn get_state(&self) -> Result<OptimizerState> { Ok(OptimizerState::default()) }
-//!     fn set_state(&mut self, _state: OptimizerState) -> Result<()> { Ok(()) }
+//!     fn set_state(&mut self_state: OptimizerState) -> Result<()> { Ok(()) }
 //!     fn clone_plugin(&self) -> Box<dyn OptimizerPlugin<f64>> {
 //!         Box::new(self.clone())
 //!     }

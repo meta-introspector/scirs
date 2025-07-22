@@ -74,29 +74,29 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     /// * `rng` - Random number generator for weight initialization
     /// # Returns
     /// * A new transformer model
-    pub fn new<R: Rng>(config: TransformerConfig, rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng>(_config: TransformerConfig, rng: &mut R) -> Result<Self> {
         // Create encoder
         let encoder = TransformerEncoder::new(
-            config.d_model,
-            config.n_encoder_layers,
-            config.n_heads,
-            config.d_ff,
-            config.dropout,
-            config.epsilon,
+            _config.d_model,
+            _config.n_encoder_layers,
+            _config.n_heads,
+            _config.d_ff,
+            _config.dropout,
+            _config.epsilon,
             rng,
         )?;
         // Create decoder
         let decoder = TransformerDecoder::new(
-            config.n_decoder_layers,
+            _config.n_decoder_layers,
         // Create positional encoding
         let pos_encoding = PositionalEncodingFactory::create(
-            config.pos_encoding_type,
-            config.max_seq_len,
+            _config.pos_encoding_type,
+            _config.max_seq_len,
         Ok(Self {
             encoder,
             decoder,
             pos_encoding,
-            config,
+            _config,
             encoder_output_cache: Arc::new(RwLock::new(None)),
         })
     /// Forward pass with encoder and decoder
@@ -166,8 +166,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         let encoder_output = self.encoder.forward(&input_pos)?;
         Ok(encoder_output)
     fn backward(
-        input: &Array<F, IxDyn>,
-        _grad_output: &Array<F, IxDyn>,
+        input: &Array<F, IxDyn>, _grad_output: &Array<F, IxDyn>,
         // In a complete implementation, this would compute gradients through all components
         // For simplicity, this is just a placeholder that returns a gradient of the same shape
         // Create a placeholder gradient for the input

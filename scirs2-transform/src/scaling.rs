@@ -38,10 +38,10 @@ impl QuantileTransformer {
     ///
     /// # Returns
     /// * A new QuantileTransformer instance
-    pub fn new(n_quantiles: usize, output_distribution: &str, clip: bool) -> Result<Self> {
-        if n_quantiles < 2 {
+    pub fn new(_n_quantiles: usize, output_distribution: &str, clip: bool) -> Result<Self> {
+        if _n_quantiles < 2 {
             return Err(TransformError::InvalidInput(
-                "n_quantiles must be at least 2".to_string(),
+                "_n_quantiles must be at least 2".to_string(),
             ));
         }
 
@@ -54,8 +54,7 @@ impl QuantileTransformer {
         Ok(QuantileTransformer {
             n_quantiles,
             output_distribution: output_distribution.to_string(),
-            clip,
-            quantiles: None,
+            clip_quantiles: None,
             references: None,
         })
     }
@@ -311,7 +310,7 @@ impl MaxAbsScaler {
     ///
     /// # Examples
     /// ```
-    /// use scirs2_transform::scaling::MaxAbsScaler;
+    /// use scirs2__transform::scaling::MaxAbsScaler;
     ///
     /// let scaler = MaxAbsScaler::new();
     /// ```
@@ -690,7 +689,7 @@ mod tests {
     #[test]
     fn test_max_abs_scaler_errors() {
         // Test with empty data
-        let empty_data = Array::<f64, _>::zeros((0, 2));
+        let empty_data = Array::<f64>::zeros((0, 2));
         let mut scaler = MaxAbsScaler::new();
         assert!(scaler.fit(&empty_data).is_err());
 

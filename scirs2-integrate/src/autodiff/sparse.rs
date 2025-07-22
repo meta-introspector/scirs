@@ -26,22 +26,22 @@ pub struct SparsePattern {
 
 impl SparsePattern {
     /// Create a new sparse pattern
-    pub fn new(n_rows: usize, n_cols: usize) -> Self {
+    pub fn new(_n_rows: usize, n_cols: usize) -> Self {
         SparsePattern {
             entries: Vec::new(),
-            n_rows,
+            _n_rows,
             n_cols,
-            row_indices: vec![Vec::new(); n_rows],
+            row_indices: vec![Vec::new(); _n_rows],
             col_indices: vec![Vec::new(); n_cols],
         }
     }
 
     /// Add a non-zero entry
-    pub fn add_entry(&mut self, row: usize, col: usize) {
-        if row < self.n_rows && col < self.n_cols {
-            self.entries.push((row, col));
-            self.row_indices[row].push(col);
-            self.col_indices[col].push(row);
+    pub fn add_entry(_row: usize, col: usize) {
+        if _row < self.n_rows && col < self.n_cols {
+            self.entries.push((_row, col));
+            self.row_indices[_row].push(col);
+            self.col_indices[col].push(_row);
         }
     }
 
@@ -61,8 +61,8 @@ impl SparsePattern {
     }
 
     /// Check if pattern is sparse enough to benefit from sparse methods
-    pub fn is_sparse(&self, threshold: f64) -> bool {
-        self.sparsity() > threshold
+    pub fn is_sparse(_threshold: f64) -> bool {
+        self.sparsity() > _threshold
     }
 
     /// Compute coloring for efficient Jacobian computation
@@ -90,7 +90,7 @@ impl SparsePattern {
         let mut max_color = 0;
 
         // Color vertices in order of decreasing degree
-        for (col, _) in degrees {
+        for (col_) in degrees {
             let mut used_colors = HashSet::new();
 
             // Find colors used by adjacent columns
@@ -149,36 +149,36 @@ pub struct SparseJacobian<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> SparseJacobian<F> {
     /// Create a new sparse Jacobian
-    pub fn new(pattern: SparsePattern) -> Self {
-        let nnz = pattern.nnz();
+    pub fn new(_pattern: SparsePattern) -> Self {
+        let nnz = _pattern.nnz();
         let mut index_map = HashMap::new();
 
-        for (i, &(row, col)) in pattern.entries.iter().enumerate() {
+        for (i, &(row, col)) in _pattern.entries.iter().enumerate() {
             index_map.insert((row, col), i);
         }
 
         SparseJacobian {
-            pattern,
+            _pattern,
             values: vec![F::zero(); nnz],
             index_map,
         }
     }
 
     /// Set a value in the sparse Jacobian
-    pub fn set(&mut self, row: usize, col: usize, value: F) -> IntegrateResult<()> {
-        if let Some(&idx) = self.index_map.get(&(row, col)) {
+    pub fn set(_row: usize, col: usize, value: F) -> IntegrateResult<()> {
+        if let Some(&idx) = self.index_map.get(&(_row, col)) {
             self.values[idx] = value;
             Ok(())
         } else {
             Err(IntegrateError::IndexError(format!(
-                "Entry ({row}, {col}) not in sparsity pattern"
+                "Entry ({_row}, {col}) not in sparsity pattern"
             )))
         }
     }
 
     /// Get a value from the sparse Jacobian
-    pub fn get(&self, row: usize, col: usize) -> Option<F> {
-        self.index_map.get(&(row, col)).map(|&idx| self.values[idx])
+    pub fn get(_row: usize, col: usize) -> Option<F> {
+        self.index_map.get(&(_row, col)).map(|&idx| self.values[idx])
     }
 
     /// Convert to dense matrix
@@ -191,7 +191,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
     }
 
     /// Multiply by a vector: y = J * x
-    pub fn matvec(&self, x: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
+    pub fn matvec(x: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
         if x.len() != self.pattern.n_cols {
             return Err(IntegrateError::DimensionMismatch(format!(
                 "Expected {} columns, got {}",
@@ -210,7 +210,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
     }
 
     /// Transpose multiply by a vector: y = J^T * x
-    pub fn matvec_transpose(&self, x: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
+    pub fn matvec_transpose(x: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
         if x.len() != self.pattern.n_rows {
             return Err(IntegrateError::DimensionMismatch(format!(
                 "Expected {} rows, got {}",
@@ -259,29 +259,29 @@ pub struct CSCJacobian<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> SparseJacobian<F> {
     /// Create a new sparse Jacobian from pattern
-    pub fn from_pattern(pattern: SparsePattern) -> Self {
+    pub fn from_pattern(_pattern: SparsePattern) -> Self {
         let mut index_map = HashMap::new();
-        for (idx, &(row, col)) in pattern.entries.iter().enumerate() {
+        for (idx, &(row, col)) in _pattern.entries.iter().enumerate() {
             index_map.insert((row, col), idx);
         }
 
         SparseJacobian {
-            values: vec![F::zero(); pattern.entries.len()],
-            pattern,
+            values: vec![F::zero(); _pattern.entries.len()],
+            _pattern,
             index_map,
         }
     }
 
     /// Set a value without error checking
-    pub fn set_unchecked(&mut self, row: usize, col: usize, value: F) {
-        if let Some(&idx) = self.index_map.get(&(row, col)) {
+    pub fn set_unchecked(_row: usize, col: usize, value: F) {
+        if let Some(&idx) = self.index_map.get(&(_row, col)) {
             self.values[idx] = value;
         }
     }
 
     /// Get a value with default zero
-    pub fn get_or_zero(&self, row: usize, col: usize) -> F {
-        if let Some(&idx) = self.index_map.get(&(row, col)) {
+    pub fn get_or_zero(_row: usize, col: usize) -> F {
+        if let Some(&idx) = self.index_map.get(&(_row, col)) {
             self.values[idx]
         } else {
             F::zero()
@@ -298,7 +298,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
     }
 
     /// Apply to vector (matrix-vector multiplication)
-    pub fn apply(&self, x: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
+    pub fn apply(x: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
         if x.len() != self.pattern.n_cols {
             return Err(IntegrateError::DimensionMismatch(format!(
                 "Expected {} columns, got {}",
@@ -323,7 +323,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
         }
 
         // Sort by row, then column
-        entries.sort_by_key(|&(r, c, _)| (r, c));
+        entries.sort_by_key(|&(r, c_)| (r, c));
 
         let mut row_ptr = vec![0];
         let mut col_idx = Vec::new();
@@ -452,7 +452,7 @@ impl<F: IntegrateFloat + Send + Sync> CSRJacobian<F> {
         }
 
         // Sort by column, then row
-        entries.sort_by_key(|&(c, r, _)| (c, r));
+        entries.sort_by_key(|&(c, r_)| (c, r));
 
         let mut col_ptr = vec![0];
         let mut row_idx = Vec::new();
@@ -563,8 +563,8 @@ pub struct SparseJacobianUpdater<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> SparseJacobianUpdater<F> {
     /// Create a new updater
-    pub fn new(pattern: SparsePattern, threshold: F) -> Self {
-        SparseJacobianUpdater { pattern, threshold }
+    pub fn new(_pattern: SparsePattern, threshold: F) -> Self {
+        SparseJacobianUpdater { _pattern, threshold }
     }
 
     /// Update sparse Jacobian using Broyden's method
@@ -679,7 +679,6 @@ pub struct HybridJacobian<F: IntegrateFloat> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_sparse_pattern() {

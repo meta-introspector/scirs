@@ -1,8 +1,8 @@
 use ndarray::{s, Array1};
-use scirs2_integrate::pde::implicit::{
+use scirs2__integrate::pde::implicit::{
     BackwardEuler1D, CrankNicolson1D, ImplicitMethod, ImplicitOptions, ImplicitResult,
 };
-use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
+use scirs2__integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     // Define the diffusion coefficient function: constant diffusion
-    let diffusion_coeff = |_x: f64, _t: f64, _u: f64| 1.0;
+    let diffusion_coeff = |_x: f64_t: f64, _u: f64| 1.0;
 
     // Define the initial condition: u(x, 0) = sin(π*x)
     let initial_condition = |x: f64| (PI * x).sin();
@@ -100,7 +100,7 @@ fn compare_solutions(
     be_result: &ImplicitResult,
     final_time: f64,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // Extract solution at final time
+    // Extract solution at final _time
     let cn_final = &cn_result.u.last().unwrap();
     let be_final = &be_result.u.last().unwrap();
 
@@ -108,7 +108,7 @@ fn compare_solutions(
     let nx = cn_final.shape()[0];
     let x_grid = Array1::linspace(0.0, 1.0, nx);
 
-    // Calculate analytical solution at final time
+    // Calculate analytical solution at final _time
     let mut exact = Array1::zeros(nx);
     for i in 0..nx {
         exact[i] = analytical_solution(x_grid[i], final_time);

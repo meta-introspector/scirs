@@ -178,7 +178,7 @@ where
 
             chunks.push(ArrayChunk {
                 data: chunk_data,
-                global_index: vec![i],
+                global_index: vec![0],
                 node_id: i % 3, // Simulate distribution across 3 nodes
             });
         }

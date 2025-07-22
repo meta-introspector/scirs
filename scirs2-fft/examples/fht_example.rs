@@ -2,7 +2,7 @@
 //!
 //! This example shows how to use the Fast Hankel Transform for various applications.
 
-use scirs2_fft::{fht, fht_sample_points, fhtoffset, ifht};
+use scirs2__fft::{fht, fht_sample_points, fhtoffset, ifht};
 // use std::f64::consts::PI;  // Unused import
 
 /// J0 Bessel function approximation for testing
@@ -220,7 +220,7 @@ fn example_radial_transform() {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(idx, _)| idx)
+        .map(|(idx_)| idx)
         .unwrap();
 
     println!("Peak frequency at k ≈ {:.3}", k[max_idx]);

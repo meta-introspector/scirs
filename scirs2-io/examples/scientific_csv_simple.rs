@@ -1,5 +1,5 @@
 use ndarray::Array2;
-use scirs2_io::csv::{read_csv, write_csv, CsvReaderConfig, CsvWriterConfig};
+use scirs2__io::csv::{read_csv, write_csv, CsvReaderConfig, CsvWriterConfig};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
@@ -76,8 +76,8 @@ fn create_sample_scientific_data() -> Result<(), Box<dyn Error>> {
 
 /// Extract metadata from comment lines
 #[allow(dead_code)]
-fn extract_metadata_from_file(file_path: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
-    let file = File::open(file_path)?;
+fn extract_metadata_from_file(_file_path: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
+    let file = File::open(_file_path)?;
     let reader = BufReader::new(file);
     let mut metadata = HashMap::new();
 
@@ -184,7 +184,7 @@ fn read_and_process_scientific_data() -> Result<(), Box<dyn Error>> {
     println!("\nStatistics by material:");
 
     for (material, values) in &materials {
-        let material_temps: Vec<f64> = values.iter().map(|(_, t, _)| *t).collect();
+        let material_temps: Vec<f64> = values.iter().map(|(_, t_)| *t).collect();
         let temp_sum: f64 = material_temps.iter().sum();
         let temp_mean = temp_sum / material_temps.len() as f64;
 

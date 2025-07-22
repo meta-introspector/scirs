@@ -18,7 +18,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use scirs2_series::visualization::{TimeSeriesPlot, PlotStyle, ExportFormat};
+//! use scirs2__series::visualization::{TimeSeriesPlot, PlotStyle, ExportFormat};
 //! use ndarray::Array1;
 //!
 //! let data = Array1::linspace(0.0, 10.0, 100);
@@ -290,9 +290,9 @@ impl Default for AnnotationStyle {
 
 impl TimeSeriesPlot {
     /// Create a new time series plot
-    pub fn new(title: &str) -> Self {
+    pub fn new(_title: &str) -> Self {
         Self {
-            title: title.to_string(),
+            _title: _title.to_string(),
             x_label: "Time".to_string(),
             y_label: "Value".to_string(),
             series: Vec::new(),
@@ -512,14 +512,12 @@ impl TimeSeriesPlot {
                     SeriesType::Line => "scatter",
                     SeriesType::Scatter => "scatter",
                     SeriesType::Bar => "bar",
-                    SeriesType::Area => "scatter",
-                    _ => "scatter",
+                    SeriesType::Area => "scatter"_ => "scatter",
                 },
                 match series.series_type {
                     SeriesType::Line => "lines",
                     SeriesType::Scatter => "markers",
-                    SeriesType::Area => "lines",
-                    _ => "lines+markers",
+                    SeriesType::Area => "lines"_ => "lines+markers",
                 },
                 series.name,
                 series.style.color,
@@ -795,7 +793,7 @@ impl SpecializedPlots {
         let mut plot = TimeSeriesPlot::new(title);
         plot.set_labels("Time", "Value");
 
-        // Historical data
+        // Historical _data
         let hist_style = PlotStyle {
             color: "#1f77b4".to_string(), // Blue
             line_width: 2.0,
@@ -845,7 +843,7 @@ impl SpecializedPlots {
             }
         }
 
-        // Create time axis for one period
+        // Create _time axis for one period
         let period_time = Array1::linspace(0.0, period as f64 - 1.0, period);
 
         // Plot each period as a separate series
@@ -914,9 +912,9 @@ impl Default for DashboardLayout {
 
 impl Dashboard {
     /// Create a new dashboard
-    pub fn new(title: &str) -> Self {
+    pub fn new(_title: &str) -> Self {
         Self {
-            title: title.to_string(),
+            _title: _title.to_string(),
             plots: Vec::new(),
             layout: DashboardLayout::default(),
         }
@@ -989,7 +987,7 @@ impl Dashboard {
         ));
 
         // Add each plot section
-        for (i, (section_title, _plot)) in self.plots.iter().enumerate() {
+        for (i, (section_title_plot)) in self.plots.iter().enumerate() {
             html.push_str(&format!(
                 r#"
         <div class="plot-section">

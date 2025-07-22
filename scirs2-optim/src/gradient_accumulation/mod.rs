@@ -37,11 +37,11 @@ pub struct GradientAccumulator<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientAccumulator<A, D> {
     /// Create a new gradient accumulator
-    pub fn new(target_accumulations: usize, mode: AccumulationMode) -> Self {
+    pub fn new(_target_accumulations: usize, mode: AccumulationMode) -> Self {
         Self {
             accumulated_gradients: Vec::new(),
             accumulation_count: 0,
-            target_accumulations,
+            _target_accumulations,
             mode,
             initialized: false,
         }
@@ -190,9 +190,9 @@ pub struct VariableAccumulator<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> VariableAccumulator<A, D> {
     /// Create a new variable accumulator
-    pub fn new(initial_target: usize, mode: AccumulationMode) -> Self {
+    pub fn new(_initial_target: usize, mode: AccumulationMode) -> Self {
         Self {
-            accumulator: GradientAccumulator::new(initial_target, mode),
+            accumulator: GradientAccumulator::new(_initial_target, mode),
             adaptive_steps: Vec::new(),
             step_count: 0,
         }
@@ -271,7 +271,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> MicroBatchTrainer<A, D> {
     ) -> Result<Self> {
         if effective_batch_size < micro_batch_size {
             return Err(OptimError::InvalidConfig(
-                "Effective batch size must be >= micro batch size".to_string(),
+                "Effective batch _size must be >= micro batch _size".to_string(),
             ));
         }
 
@@ -319,7 +319,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> MicroBatchTrainer<A, D> {
     pub fn set_effective_batch_size(&mut self, effective_batch_size: usize) -> Result<()> {
         if effective_batch_size < self.micro_batch_size {
             return Err(OptimError::InvalidConfig(
-                "Effective batch size must be >= micro batch size".to_string(),
+                "Effective batch _size must be >= micro batch _size".to_string(),
             ));
         }
 
@@ -346,7 +346,7 @@ pub mod utils {
         let memory_per_sample = param_count * bytes_per_param * 3; // params + grads + activations
         let max_samples = (max_memory_mb * 1_000_000) / memory_per_sample;
 
-        // Choose micro-batch size that divides total batch size evenly
+        // Choose micro-batch _size that divides total batch _size evenly
         let mut micro_batch_size = max_samples.min(total_batch_size);
         while total_batch_size % micro_batch_size != 0 && micro_batch_size > 1 {
             micro_batch_size -= 1;
@@ -356,8 +356,8 @@ pub mod utils {
     }
 
     /// Calculate accumulation steps needed
-    pub fn calculate_accumulation_steps(total_batch_size: usize, micro_batch_size: usize) -> usize {
-        total_batch_size.div_ceil(micro_batch_size) // Ceiling division
+    pub fn calculate_accumulation_steps(_total_batch_size: usize, micro_batch_size: usize) -> usize {
+        _total_batch_size.div_ceil(micro_batch_size) // Ceiling division
     }
 
     /// Validate gradient accumulation configuration
@@ -368,25 +368,25 @@ pub mod utils {
     ) -> Result<()> {
         if micro_batch_size == 0 {
             return Err(OptimError::InvalidConfig(
-                "Micro batch size must be > 0".to_string(),
+                "Micro batch _size must be > 0".to_string(),
             ));
         }
 
         if effective_batch_size == 0 {
             return Err(OptimError::InvalidConfig(
-                "Effective batch size must be > 0".to_string(),
+                "Effective batch _size must be > 0".to_string(),
             ));
         }
 
         if accumulation_steps == 0 {
             return Err(OptimError::InvalidConfig(
-                "Accumulation steps must be > 0".to_string(),
+                "Accumulation _steps must be > 0".to_string(),
             ));
         }
 
         if effective_batch_size != micro_batch_size * accumulation_steps {
             return Err(OptimError::InvalidConfig(format!(
-                "Effective batch size ({}) != micro batch size ({}) * accumulation steps ({})",
+                "Effective batch _size ({}) != micro batch _size ({}) * accumulation _steps ({})",
                 effective_batch_size, micro_batch_size, accumulation_steps
             )));
         }

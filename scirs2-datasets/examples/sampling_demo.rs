@@ -4,7 +4,7 @@
 //! utilities provided by scirs2-datasets.
 
 use ndarray::Array1;
-use scirs2_datasets::{load_iris, random_sample, stratified_sample, Dataset};
+use scirs2__datasets::{load_iris, random_sample, stratified_sample, Dataset};
 
 #[allow(dead_code)]
 fn main() {
@@ -135,9 +135,9 @@ fn main() {
 
 /// Count the number of samples in each class
 #[allow(dead_code)]
-fn count_classes(targets: &Array1<f64>) -> std::collections::HashMap<i64, usize> {
+fn count_classes(_targets: &Array1<f64>) -> std::collections::HashMap<i64, usize> {
     let mut counts = std::collections::HashMap::new();
-    for &target in targets.iter() {
+    for &target in _targets.iter() {
         let class = target.round() as i64;
         *counts.entry(class).or_insert(0) += 1;
     }

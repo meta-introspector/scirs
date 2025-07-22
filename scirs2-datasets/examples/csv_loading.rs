@@ -1,4 +1,4 @@
-use scirs2_datasets::loaders::load_csv_legacy;
+use scirs2__datasets::loaders::load_csv_legacy;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

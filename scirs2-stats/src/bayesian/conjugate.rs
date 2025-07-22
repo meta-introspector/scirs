@@ -5,6 +5,7 @@
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, ArrayView1};
 use scirs2_core::validation::*;
+use statrs::statistics::Statistics;
 
 /// Beta-Binomial conjugate pair
 ///
@@ -21,10 +22,10 @@ pub struct BetaBinomial {
 
 impl BetaBinomial {
     /// Create a new Beta-Binomial conjugate prior
-    pub fn new(alpha: f64, beta: f64) -> Result<Self> {
-        check_positive(alpha, "alpha")?;
+    pub fn new(_alpha: f64, beta: f64) -> Result<Self> {
+        check_positive(_alpha, "_alpha")?;
         check_positive(beta, "beta")?;
-        Ok(Self { alpha, beta })
+        Ok(Self { _alpha, beta })
     }
 
     /// Update the prior with observed data
@@ -113,10 +114,10 @@ pub struct GammaPoisson {
 
 impl GammaPoisson {
     /// Create a new Gamma-Poisson conjugate prior
-    pub fn new(alpha: f64, beta: f64) -> Result<Self> {
-        check_positive(alpha, "alpha")?;
+    pub fn new(_alpha: f64, beta: f64) -> Result<Self> {
+        check_positive(_alpha, "_alpha")?;
         check_positive(beta, "beta")?;
-        Ok(Self { alpha, beta })
+        Ok(Self { _alpha, beta })
     }
 
     /// Update the prior with observed count data
@@ -201,11 +202,11 @@ pub struct NormalKnownVariance {
 
 impl NormalKnownVariance {
     /// Create a new Normal conjugate prior with known data variance
-    pub fn new(prior_mean: f64, prior_variance: f64, data_variance: f64) -> Result<Self> {
+    pub fn new(_prior_mean: f64, prior_variance: f64, data_variance: f64) -> Result<Self> {
         check_positive(prior_variance, "prior_variance")?;
         check_positive(data_variance, "data_variance")?;
         Ok(Self {
-            prior_mean,
+            _prior_mean,
             prior_variance,
             data_variance,
         })
@@ -301,12 +302,12 @@ pub struct DirichletMultinomial {
 
 impl DirichletMultinomial {
     /// Create a new Dirichlet-Multinomial conjugate prior
-    pub fn new(alpha: Array1<f64>) -> Result<Self> {
-        check_array_finite(&alpha, "alpha")?;
-        for &a in alpha.iter() {
-            check_positive(a, "alpha element")?;
+    pub fn new(_alpha: Array1<f64>) -> Result<Self> {
+        check_array_finite(&_alpha, "_alpha")?;
+        for &a in _alpha.iter() {
+            check_positive(a, "_alpha element")?;
         }
-        Ok(Self { alpha })
+        Ok(Self { _alpha })
     }
 
     /// Create uniform prior with given dimension
@@ -400,12 +401,12 @@ pub struct NormalInverseGamma {
 
 impl NormalInverseGamma {
     /// Create a new Normal-Inverse-Gamma conjugate prior
-    pub fn new(mu0: f64, lambda: f64, alpha: f64, beta: f64) -> Result<Self> {
+    pub fn new(_mu0: f64, lambda: f64, alpha: f64, beta: f64) -> Result<Self> {
         check_positive(lambda, "lambda")?;
         check_positive(alpha, "alpha")?;
         check_positive(beta, "beta")?;
         Ok(Self {
-            mu0,
+            _mu0,
             lambda,
             alpha,
             beta,

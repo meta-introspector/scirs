@@ -5,11 +5,11 @@
 
 use clap::{Arg, ArgMatches, Command};
 use ndarray::Array1;
-use scirs2_optim::benchmarking::regression_tester::{
+use scirs2__optim::benchmarking::regression_tester::{
     CiReportFormat, RegressionConfig, RegressionTester,
 };
-use scirs2_optim::benchmarking::{BenchmarkResult, OptimizerBenchmark};
-use scirs2_optim::error::{OptimError, Result};
+use scirs2__optim::benchmarking::{BenchmarkResult, OptimizerBenchmark};
+use scirs2__optim::error::{OptimError, Result};
 use std::fs;
 use std::path::PathBuf;
 
@@ -168,22 +168,22 @@ fn main() -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn parse_config(matches: &ArgMatches) -> Result<RegressionConfig> {
-    let baseline_dir = PathBuf::from(matches.get_one::<String>("baseline-dir").unwrap());
+fn parse_config(_matches: &ArgMatches) -> Result<RegressionConfig> {
+    let baseline_dir = PathBuf::from(_matches.get_one::<String>("baseline-dir").unwrap());
 
-    let degradation_threshold: f64 = matches
+    let degradation_threshold: f64 = _matches
         .get_one::<String>("degradation-threshold")
         .unwrap()
         .parse()
         .map_err(|_| OptimError::InvalidConfig("Invalid degradation threshold".to_string()))?;
 
-    let memory_threshold: f64 = matches
+    let memory_threshold: f64 = _matches
         .get_one::<String>("memory-threshold")
         .unwrap()
         .parse()
         .map_err(|_| OptimError::InvalidConfig("Invalid memory threshold".to_string()))?;
 
-    let significance_threshold: f64 = matches
+    let significance_threshold: f64 = _matches
         .get_one::<String>("significance-threshold")
         .unwrap()
         .parse()
@@ -204,19 +204,18 @@ fn parse_config(matches: &ArgMatches) -> Result<RegressionConfig> {
             "sliding_window".to_string(),
             "change_point".to_string(),
         ],
-        ci_report_format: parse_report_format(matches.get_one::<String>("format").unwrap())
+        ci_report_format: parse_report_format(_matches.get, _one::<String>("format").unwrap())
             .unwrap_or(CiReportFormat::Json),
     })
 }
 
 #[allow(dead_code)]
-fn parse_report_format(format_str: &str) -> Result<CiReportFormat> {
-    match format_str.to_lowercase().as_str() {
+fn parse_report_format(_format_str: &str) -> Result<CiReportFormat> {
+    match _format_str.to_lowercase().as_str() {
         "json" => Ok(CiReportFormat::Json),
         "junit-xml" => Ok(CiReportFormat::JunitXml),
         "markdown" => Ok(CiReportFormat::Markdown),
-        "github-actions" => Ok(CiReportFormat::GitHubActions),
-        _ => Err(OptimError::InvalidConfig(format!(
+        "github-actions" => Ok(CiReportFormat::GitHubActions, _ => Err(OptimError::InvalidConfig(format!(
             "Unknown format: {}",
             format_str
         ))),

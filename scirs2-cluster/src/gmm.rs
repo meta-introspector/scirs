@@ -3,7 +3,7 @@
 //! This module implements Gaussian Mixture Models, a probabilistic model that assumes
 //! data is generated from a mixture of a finite number of Gaussian distributions.
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis, ScalarOperand};
+use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use rand::{Rng, SeedableRng};
 use std::f64::consts::PI;
@@ -12,6 +12,7 @@ use std::iter::Sum;
 
 use crate::error::{ClusteringError, Result};
 use crate::vq::kmeans_plus_plus;
+use statrs::statistics::Statistics;
 
 /// Type alias for GMM parameters
 type GMMParams<F> = (Array1<F>, Array2<F>, Vec<Array2<F>>);
@@ -97,9 +98,9 @@ pub struct GaussianMixture<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> {
     /// Create a new GMM instance
-    pub fn new(options: GMMOptions<F>) -> Self {
+    pub fn new(_options: GMMOptions<F>) -> Self {
         Self {
-            options,
+            _options,
             weights: None,
             means: None,
             covariances: None,
@@ -215,8 +216,8 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> 
 
                 let mut means = Array2::zeros((n_components, n_features));
                 for i in 0..n_components {
-                    let idx = rng.random_range(0..n_samples);
-                    means.slice_mut(s![i, ..]).assign(&data.slice(s![idx, ..]));
+                    let idx = rng.gen_range(0..n_samples);
+                    means.slice_mut(s![i....]).assign(&data.slice(s![idx, ..]));
                 }
                 means
             }
@@ -472,7 +473,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> 
         let means = self.means.as_ref().unwrap();
         let covariances = self.covariances.as_ref().unwrap();
 
-        let (resp, _) = self.e_step(data, weights, means, covariances)?;
+        let (resp_) = self.e_step(data, weights, means, covariances)?;
 
         // Assign to component with highest responsibility
         let mut labels = Array1::zeros(data.shape()[0]);
@@ -509,7 +510,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> 
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::gmm::{gaussian_mixture, GMMOptions};
+/// use scirs2__cluster::gmm::{gaussian_mixture, GMMOptions};
 ///
 /// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0,
@@ -528,13 +529,13 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> 
 /// let labels = gaussian_mixture(data.view(), options).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn gaussian_mixture<F>(data: ArrayView2<F>, options: GMMOptions<F>) -> Result<Array1<i32>>
+pub fn gaussian_mixture<F>(_data: ArrayView2<F>, options: GMMOptions<F>) -> Result<Array1<i32>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand + Sum,
 {
     let mut gmm = GaussianMixture::new(options);
-    gmm.fit(data)?;
-    gmm.predict(data)
+    gmm.fit(_data)?;
+    gmm.predict(_data)
 }
 
 #[cfg(test)]

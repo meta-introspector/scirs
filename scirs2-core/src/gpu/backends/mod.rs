@@ -462,7 +462,7 @@ pub fn check_backend_installation(backend: GpuBackend) -> Result<bool, GpuError>
                     // Also try rocm-smi as an alternative check
                     match Command::new("rocm-smi").arg("--version").output() {
                         Ok(output) if output.status.success() => Ok(true),
-                        _ => Ok(false),
+                _ => Ok(false),
                     }
                 }
             }
@@ -505,7 +505,7 @@ pub fn get_device_info(backend: GpuBackend, device_id: usize) -> Result<GpuInfo,
         .nth(device_id)
         .ok_or_else(|| {
             GpuError::InvalidParameter(format!(
-                "Device {device_id} not found for backend {backend}"
+                "Device {device_id} not found for backend {:?}", backend
             ))
         })
 }

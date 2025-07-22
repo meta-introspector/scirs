@@ -50,7 +50,7 @@ pub fn matmul_forward<F: Float + Debug + Send + Sync + 'static>(
         let b_cols = b.shape()[1];
 
         // Create result matrix
-        let mut result = Array::<F, _>::zeros((a_rows, b_cols));
+        let mut result = Array::<F>::zeros((a_rows, b_cols));
 
         // Manually compute matrix multiplication
         for i in 0..a_rows {
@@ -118,7 +118,7 @@ pub fn matmul_backward<F: Float + Debug + Send + Sync + 'static>(
     let b_cols = b.shape()[1];
 
     // Create transpose of b
-    let mut b_t = Array::<F, _>::zeros((b_cols, b_rows));
+    let mut b_t = Array::<F>::zeros((b_cols, b_rows));
     for i in 0..b_rows {
         for j in 0..b_cols {
             b_t[[j, i]] = b[[i, j]];
@@ -126,7 +126,7 @@ pub fn matmul_backward<F: Float + Debug + Send + Sync + 'static>(
     }
 
     // Create grad_a result matrix: grad * b^T
-    let mut grad_a = Array::<F, _>::zeros((grad_rows, b_rows));
+    let mut grad_a = Array::<F>::zeros((grad_rows, b_rows));
     for i in 0..grad_rows {
         for j in 0..b_rows {
             let mut sum = F::zero();
@@ -143,7 +143,7 @@ pub fn matmul_backward<F: Float + Debug + Send + Sync + 'static>(
     // Create transpose of a
     let a_rows = a.shape()[0];
     let a_cols = a.shape()[1];
-    let mut a_t = Array::<F, _>::zeros((a_cols, a_rows));
+    let mut a_t = Array::<F>::zeros((a_cols, a_rows));
     for i in 0..a_rows {
         for j in 0..a_cols {
             a_t[[j, i]] = a[[i, j]];
@@ -151,7 +151,7 @@ pub fn matmul_backward<F: Float + Debug + Send + Sync + 'static>(
     }
 
     // Create grad_b result matrix: a^T * grad
-    let mut grad_b = Array::<F, _>::zeros((a_cols, grad_cols));
+    let mut grad_b = Array::<F>::zeros((a_cols, grad_cols));
     for i in 0..a_cols {
         for j in 0..grad_cols {
             let mut sum = F::zero();

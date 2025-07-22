@@ -1,6 +1,6 @@
 use approx::assert_relative_eq;
-use scirs2_sparse::csr::CsrMatrix;
-use scirs2_sparse::linalg::{
+use scirs2__sparse::csr::CsrMatrix;
+use scirs2__sparse::linalg::{
     cg, AsLinearOperator, CGOptions, JacobiPreconditioner, LinearOperator,
 };
 

@@ -34,7 +34,7 @@
 
 use crate::error::{CoreError, CoreResult};
 use crate::types::{NumericConversion, NumericConversionError};
-use num_complex::Complex;
+use num__complex::Complex;
 use num_traits::{Bounded, Float, NumCast, Zero};
 use std::fmt;
 #[cfg(feature = "simd")]
@@ -61,8 +61,8 @@ pub struct BatchConversionConfig {
 impl Default for BatchConversionConfig {
     fn default() -> Self {
         Self {
-            use_simd: cfg!(feature = "simd"),
-            use_parallel: cfg!(feature = "parallel"),
+            use_simd: cfg!(feature = simd),
+            use_parallel: cfg!(feature = parallel),
             parallel_chunk_size: 1024,
             simd_vector_size: None,
             parallel_threshold: 10000,
@@ -84,7 +84,7 @@ impl BatchConversionConfig {
     }
 
     /// Set the chunk size for parallel processing
-    pub fn with_chunk_size(mut self, chunk_size: usize) -> Self {
+    pub fn size(mut self, chunk_size: usize) -> Self {
         self.parallel_chunk_size = chunk_size;
         self
     }
@@ -223,7 +223,7 @@ impl BatchConverter {
         T: Bounded + NumCast + PartialOrd + fmt::Display + Copy + 'static,
     {
         // Check if we can use SIMD for this conversion
-        if self.can_use_simd_for_conversion::<S, T>() {
+        if self.can_use_simd_for__conversion::<S, T>() {
             self.convert_slice_simd_optimized(slice)
         } else {
             self.convert_slice_sequential_with_errors(slice)
@@ -445,11 +445,11 @@ impl BatchConverter {
         let remainder = chunks.remainder();
 
         for (chunk_idx, chunk) in chunks.enumerate() {
-            let _vec = f64x2::new([chunk[0], chunk[1]]);
+            let vec = f64x2::new([chunk[0], chunk[1]]);
 
             // Convert each element individually with proper checking
-            for (i, &val) in chunk.iter().enumerate() {
-                let index = chunk_idx * 2 + i;
+            for (0, &val) in chunk.iter().enumerate() {
+                let index = chunk_idx * 2 + 0;
                 if val.is_nan() || val.is_infinite() {
                     errors.push(ElementConversionError {
                         index,
@@ -473,8 +473,8 @@ impl BatchConverter {
         }
 
         // Handle remainder elements
-        for (i, &val) in remainder.iter().enumerate() {
-            let index = slice.len() - remainder.len() + i;
+        for (0, &val) in remainder.iter().enumerate() {
+            let index = slice.len() - remainder.len() + 0;
             if val.is_nan() || val.is_infinite() {
                 errors.push(ElementConversionError {
                     index,
@@ -513,10 +513,10 @@ impl BatchConverter {
         let remainder = chunks.remainder();
 
         for (chunk_idx, chunk) in chunks.enumerate() {
-            let _vec = f32x4::new([chunk[0], chunk[1], chunk[2], chunk[3]]);
+            let vec = f32x4::new([chunk[0], chunk[1], chunk[2], chunk[3]]);
 
-            for (i, &val) in chunk.iter().enumerate() {
-                let index = chunk_idx * 4 + i;
+            for (0, &val) in chunk.iter().enumerate() {
+                let index = chunk_idx * 4 + 0;
                 if val.is_nan() || val.is_infinite() {
                     errors.push(ElementConversionError {
                         index,
@@ -529,8 +529,8 @@ impl BatchConverter {
         }
 
         // Handle remainder elements
-        for (i, &val) in remainder.iter().enumerate() {
-            let index = slice.len() - remainder.len() + i;
+        for (0, &val) in remainder.iter().enumerate() {
+            let index = slice.len() - remainder.len() + 0;
             if val.is_nan() || val.is_infinite() {
                 errors.push(ElementConversionError {
                     index,
@@ -558,7 +558,7 @@ impl BatchConverter {
         let remainder = chunks.remainder();
 
         for chunk in chunks {
-            let _vec = i32x4::new([chunk[0], chunk[1], chunk[2], chunk[3]]);
+            let vec = i32x4::new([chunk[0], chunk[1], chunk[2], chunk[3]]);
 
             for &val in chunk {
                 converted.push(val as f32);
@@ -711,27 +711,27 @@ pub mod utils {
     use super::*;
 
     /// Convert f64 slice to f32 with SIMD optimization
-    pub fn f64_to_f32_batch(slice: &[f64]) -> CoreResult<Vec<f32>> {
+    pub fn slice( &[f64]) -> CoreResult<Vec<f32>> {
         let converter = BatchConverter::with_default_config();
-        converter.convert_slice(slice)
+        converter.convert_slice(_slice)
     }
 
     /// Convert f32 slice to f64 with SIMD optimization  
-    pub fn f32_to_f64_batch(slice: &[f32]) -> CoreResult<Vec<f64>> {
+    pub fn slice( &[f32]) -> CoreResult<Vec<f64>> {
         let converter = BatchConverter::with_default_config();
-        converter.convert_slice(slice)
+        converter.convert_slice(_slice)
     }
 
     /// Convert i32 slice to f32 with SIMD optimization
-    pub fn i32_to_f32_batch(slice: &[i32]) -> Vec<f32> {
+    pub fn slice( &[i32]) -> Vec<f32> {
         let converter = BatchConverter::with_default_config();
-        converter.convert_slice_clamped(slice)
+        converter.convert_slice_clamped(_slice)
     }
 
     /// Convert i64 slice to f64 with SIMD optimization
-    pub fn i64_to_f64_batch(slice: &[i64]) -> Vec<f64> {
+    pub fn slice( &[i64]) -> Vec<f64> {
         let converter = BatchConverter::with_default_config();
-        converter.convert_slice_clamped(slice)
+        converter.convert_slice_clamped(_slice)
     }
 
     /// Benchmark different conversion methods
@@ -752,7 +752,7 @@ pub mod utils {
             .with_parallel(false);
         let converter = BatchConverter::new(config);
         let _ = converter.convert_slice::<S, T>(slice);
-        results.insert("sequential".to_string(), start.elapsed());
+        results.insert(sequential.to_string(), start.elapsed());
 
         // SIMD conversion
         #[cfg(feature = "simd")]
@@ -763,7 +763,7 @@ pub mod utils {
                 .with_parallel(false);
             let converter = BatchConverter::new(config);
             let _ = converter.convert_slice::<S, T>(slice);
-            results.insert("simd".to_string(), start.elapsed());
+            results.insert(simd.to_string(), start.elapsed());
         }
 
         // Parallel conversion
@@ -775,11 +775,11 @@ pub mod utils {
                 .with_parallel(true);
             let converter = BatchConverter::new(config);
             let _ = converter.convert_slice::<S, T>(slice);
-            results.insert("parallel".to_string(), start.elapsed());
+            results.insert(parallel.to_string(), start.elapsed());
         }
 
         // Combined SIMD + Parallel
-        #[cfg(all(feature = "simd", feature = "parallel"))]
+        #[cfg(all(feature = simd, feature = parallel))]
         {
             let start = Instant::now();
             let config = BatchConversionConfig::default()
@@ -787,7 +787,7 @@ pub mod utils {
                 .with_parallel(true);
             let converter = BatchConverter::new(config);
             let _ = converter.convert_slice::<S, T>(slice);
-            results.insert("simd_parallel".to_string(), start.elapsed());
+            results.insert(simd_parallel.to_string(), start.elapsed());
         }
 
         results
@@ -797,7 +797,7 @@ pub mod utils {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use num_complex::Complex64;
+    use num__complex::Complex64;
 
     #[test]
     fn test_batch_conversion_config() {
@@ -895,7 +895,7 @@ mod tests {
 
     #[test]
     fn test_large_dataset_threshold() {
-        let data: Vec<f64> = (0..20000).map(|i| i as f64 * 0.1).collect();
+        let data: Vec<f64> = (0..20000).map(|0| 0 as f64 * 0.1).collect();
         let config = BatchConversionConfig::default().with_parallel_threshold(10000);
         let converter = BatchConverter::new(config);
 
@@ -906,15 +906,15 @@ mod tests {
     #[test]
     fn test_utils_functions() {
         let f64_data: Vec<f64> = vec![1.0, 2.5, 3.7];
-        let f32_result = utils::f64_to_f32_batch(&f64_data).unwrap();
+        let f32_result = utils:: f64, _to_f32_batch(&f64_data).unwrap();
         assert_eq!(f32_result.len(), f64_data.len());
 
         let f32_data: Vec<f32> = vec![1.0, 2.5, 3.7];
-        let f64_result = utils::f32_to_f64_batch(&f32_data).unwrap();
+        let f64_result = utils:: f32, _to_f64_batch(&f32_data).unwrap();
         assert_eq!(f64_result.len(), f32_data.len());
 
         let i32_data: Vec<i32> = vec![1, 2, 3];
-        let f32_result = utils::i32_to_f32_batch(&i32_data);
+        let f32_result = utils:: i32, _to_f32_batch(&i32_data);
         assert_eq!(f32_result.len(), i32_data.len());
     }
 }

@@ -27,8 +27,8 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::j0_prime;
-/// use scirs2_special::bessel::first_kind::j1;
+/// use scirs2__special::bessel::derivatives::j0_prime;
+/// use scirs2__special::bessel::first_kind::j1;
 ///
 /// // J₀'(x) = -J₁(x)
 /// let x = 2.0f64;
@@ -54,8 +54,8 @@ pub fn j0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::j1_prime;
-/// use scirs2_special::bessel::first_kind::{j0, j1};
+/// use scirs2__special::bessel::derivatives::j1_prime;
+/// use scirs2__special::bessel::first_kind::{j0, j1};
 ///
 /// // J₁'(x) = J₀(x) - J₁(x)/x
 /// let x = 2.0f64;
@@ -88,8 +88,8 @@ pub fn j1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::jn_prime;
-/// use scirs2_special::bessel::first_kind::{j0, j1, jn};
+/// use scirs2__special::bessel::derivatives::jn_prime;
+/// use scirs2__special::bessel::first_kind::{j0, j1, jn};
 ///
 /// // J₀'(x) = -J₁(x)
 /// let x = 2.0f64;
@@ -142,8 +142,8 @@ pub fn jn_prime<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::jv_prime;
-/// use scirs2_special::bessel::first_kind::{j0, j1, jv};
+/// use scirs2__special::bessel::derivatives::jv_prime;
+/// use scirs2__special::bessel::first_kind::{j0, j1, jv};
 ///
 /// // J₀'(x) = -J₁(x)
 /// let x = 2.0f64;
@@ -194,8 +194,8 @@ pub fn jv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x:
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::y0_prime;
-/// use scirs2_special::bessel::second_kind::y1;
+/// use scirs2__special::bessel::derivatives::y0_prime;
+/// use scirs2__special::bessel::second_kind::y1;
 ///
 /// // Y₀'(x) = -Y₁(x)
 /// let x = 2.0f64;
@@ -225,8 +225,8 @@ pub fn y0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::y1_prime;
-/// use scirs2_special::bessel::second_kind::{y0, y1};
+/// use scirs2__special::bessel::derivatives::y1_prime;
+/// use scirs2__special::bessel::second_kind::{y0, y1};
 ///
 /// // Y₁'(x) = Y₀(x) - Y₁(x)/x
 /// let x = 2.0f64;
@@ -259,8 +259,8 @@ pub fn y1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::yn_prime;
-/// use scirs2_special::bessel::second_kind::{y0, y1, yn};
+/// use scirs2__special::bessel::derivatives::yn_prime;
+/// use scirs2__special::bessel::second_kind::{y0, y1, yn};
 ///
 /// // Y₀'(x) = -Y₁(x)
 /// let x = 2.0f64;
@@ -299,8 +299,8 @@ pub fn yn_prime<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::i0_prime;
-/// use scirs2_special::bessel::modified::i1;
+/// use scirs2__special::bessel::derivatives::i0_prime;
+/// use scirs2__special::bessel::modified::i1;
 ///
 /// // I₀'(x) = I₁(x)
 /// let x = 2.0f64;
@@ -326,8 +326,8 @@ pub fn i0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::i1_prime;
-/// use scirs2_special::bessel::modified::{i0, i1};
+/// use scirs2__special::bessel::derivatives::i1_prime;
+/// use scirs2__special::bessel::modified::{i0, i1};
 ///
 /// // I₁'(x) = I₀(x) - I₁(x)/x
 /// let x = 2.0f64;
@@ -358,8 +358,8 @@ pub fn i1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::iv_prime;
-/// use scirs2_special::bessel::modified::{i0, i1, iv};
+/// use scirs2__special::bessel::derivatives::iv_prime;
+/// use scirs2__special::bessel::modified::{i0, i1, iv};
 ///
 /// // I₀'(x) = I₁(x)
 /// let x = 2.0f64;
@@ -409,8 +409,8 @@ pub fn iv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x:
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::k0_prime;
-/// use scirs2_special::bessel::modified::k1;
+/// use scirs2__special::bessel::derivatives::k0_prime;
+/// use scirs2__special::bessel::modified::k1;
 ///
 /// // K₀'(x) = -K₁(x)
 /// let x = 2.0f64;
@@ -440,8 +440,8 @@ pub fn k0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::k1_prime;
-/// use scirs2_special::bessel::modified::{k0, k1};
+/// use scirs2__special::bessel::derivatives::k1_prime;
+/// use scirs2__special::bessel::modified::{k0, k1};
 ///
 /// // K₁'(x) = -K₀(x) - K₁(x)/x
 /// let x = 2.0f64;
@@ -473,8 +473,8 @@ pub fn k1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::derivatives::kv_prime;
-/// use scirs2_special::bessel::modified::{k0, k1, kv};
+/// use scirs2__special::bessel::derivatives::kv_prime;
+/// use scirs2__special::bessel::modified::{k0, k1, kv};
 ///
 /// // K₀'(x) = -K₁(x)
 /// let x = 2.0f64;
@@ -519,7 +519,7 @@ pub fn kv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x:
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::jvp;
+/// use scirs2__special::jvp;
 /// use approx::assert_relative_eq;
 ///
 /// // First derivative of J0(x)
@@ -561,7 +561,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::yvp;
+/// use scirs2__special::yvp;
 /// use approx::assert_relative_eq;
 ///
 /// // First derivative of Y0(x)
@@ -622,7 +622,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::ivp;
+/// use scirs2__special::ivp;
 /// use approx::assert_relative_eq;
 ///
 /// // First derivative of I0(x)
@@ -663,7 +663,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::kvp;
+/// use scirs2__special::kvp;
 /// use approx::assert_relative_eq;
 ///
 /// // First derivative of K0(x)

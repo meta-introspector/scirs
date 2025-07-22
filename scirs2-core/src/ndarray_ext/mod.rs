@@ -99,19 +99,19 @@ where
 /// assert_eq!(c.shape(), &[4, 2]);
 /// ```
 #[allow(dead_code)]
-pub fn stack_2d<T>(arrays: &[ArrayView<T, Ix2>], axis: usize) -> Result<Array<T, Ix2>, &'static str>
+pub fn stack_2d<T>(_arrays: &[ArrayView<T, Ix2>], axis: usize) -> Result<Array<T, Ix2>, &'static str>
 where
     T: Clone + Default,
 {
-    if arrays.is_empty() {
-        return Err("No arrays provided for stacking");
+    if _arrays.is_empty() {
+        return Err("No _arrays provided for stacking");
     }
 
-    // Validate that all arrays have the same shape
-    let first_shape = arrays[0].shape();
-    for array in arrays.iter().skip(1) {
+    // Validate that all _arrays have the same shape
+    let first_shape = _arrays[0].shape();
+    for array in _arrays.iter().skip(1) {
         if array.shape() != first_shape {
-            return Err("All arrays must have the same shape for stacking");
+            return Err("All _arrays must have the same shape for stacking");
         }
     }
 
@@ -119,19 +119,19 @@ where
 
     // Calculate the new shape
     let (new_rows, new_cols) = match axis {
-        0 => (rows * arrays.len(), cols), // Stack vertically
-        1 => (rows, cols * arrays.len()), // Stack horizontally
-        _ => return Err("Axis must be 0 or 1 for 2D arrays"),
+        0 => (rows * _arrays.len(), cols), // Stack vertically
+        1 => (rows, cols * _arrays.len()), // Stack horizontally
+        _ => return Err("Axis must be 0 or 1 for 2D _arrays"),
     };
 
     // Create a new array to hold the stacked result
     let mut result = Array::<T, Ix2>::default((new_rows, new_cols));
 
-    // Copy data from the input arrays to the result
+    // Copy data from the input _arrays to the result
     match axis {
         0 => {
             // Stack vertically (along rows)
-            for (array_idx, array) in arrays.iter().enumerate() {
+            for (array_idx, array) in _arrays.iter().enumerate() {
                 let start_row = array_idx * rows;
                 for r in 0..rows {
                     for c in 0..cols {
@@ -142,7 +142,7 @@ where
         }
         1 => {
             // Stack horizontally (along columns)
-            for (array_idx, array) in arrays.iter().enumerate() {
+            for (array_idx, array) in _arrays.iter().enumerate() {
                 let start_col = array_idx * cols;
                 for r in 0..rows {
                     for c in 0..cols {
@@ -461,7 +461,7 @@ where
 
     let (rows, cols) = (array.shape()[0], array.shape()[1]);
 
-    // Check that indices are within bounds
+    // Check that _indices are within bounds
     for &idx in row_indices.iter() {
         if idx >= rows {
             return Err("Row index out of bounds");

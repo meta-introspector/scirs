@@ -5,10 +5,11 @@
 //! characterization for design validation and performance evaluation.
 
 use crate::error::{SignalError, SignalResult};
-
+use num__complex::Complex64;
+use std::f64::consts::PI;
 use super::application::{evaluate_transfer_function, find_polynomial_roots, group_delay};
-use num_complex::Complex64;
 
+#[allow(unused_imports)]
 /// Comprehensive filter analysis results
 ///
 /// Contains frequency response characteristics, stability information,
@@ -100,8 +101,8 @@ impl Default for FilterStability {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::analysis::analyze_filter;
-/// use scirs2_signal::filter::iir::butter;
+/// use scirs2__signal::filter::analysis::analyze_filter;
+/// use scirs2__signal::filter::iir::butter;
 ///
 /// // Analyze a Butterworth filter
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -118,7 +119,7 @@ pub fn analyze_filter(
 ) -> SignalResult<FilterAnalysis> {
     let n_points = num_points.unwrap_or(512);
 
-    // Generate frequency points from 0 to π (normalized 0 to 1)
+    // Generate frequency _points from 0 to π (normalized 0 to 1)
     let frequencies: Vec<f64> = (0..n_points)
         .map(|i| i as f64 / (n_points - 1) as f64)
         .collect();
@@ -164,14 +165,14 @@ pub fn analyze_filter(
         .iter()
         .enumerate()
         .filter(|(_, &f)| f <= passband_end)
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .collect();
 
     let stopband_indices: Vec<usize> = frequencies
         .iter()
         .enumerate()
         .filter(|(_, &f)| f >= stopband_start)
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .collect();
 
     let passband_ripple = if !passband_indices.is_empty() {
@@ -230,8 +231,8 @@ pub fn analyze_filter(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::analysis::check_filter_stability;
-/// use scirs2_signal::filter::iir::butter;
+/// use scirs2__signal::filter::analysis::check_filter_stability;
+/// use scirs2__signal::filter::iir::butter;
 ///
 /// // Check stability of a Butterworth filter
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -294,8 +295,8 @@ pub fn check_filter_stability(a: &[f64]) -> SignalResult<FilterStability> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::analysis::frequency_response;
-/// use scirs2_signal::filter::iir::butter;
+/// use scirs2__signal::filter::analysis::frequency_response;
+/// use scirs2__signal::filter::iir::butter;
 ///
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
 /// let freqs = vec![0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
@@ -349,8 +350,8 @@ pub fn frequency_response(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::analysis::find_poles_zeros;
-/// use scirs2_signal::filter::iir::butter;
+/// use scirs2__signal::filter::analysis::find_poles_zeros;
+/// use scirs2__signal::filter::iir::butter;
 ///
 /// let (b, a) = butter(2, 0.3, "lowpass").unwrap();
 /// let (zeros, poles) = find_poles_zeros(&b, &a).unwrap();
@@ -395,8 +396,8 @@ pub fn find_poles_zeros(b: &[f64], a: &[f64]) -> SignalResult<(Vec<Complex64>, V
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::analysis::compute_q_factor;
-/// use scirs2_signal::filter::iir::butter;
+/// use scirs2__signal::filter::analysis::compute_q_factor;
+/// use scirs2__signal::filter::iir::butter;
 ///
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
 /// let q = compute_q_factor(&b, &a, 512).unwrap();
@@ -416,7 +417,7 @@ pub fn compute_q_factor(b: &[f64], a: &[f64], num_points: usize) -> SignalResult
 
     let peak_freq = analysis.frequencies[peak_idx];
 
-    // Find -3dB points around the peak
+    // Find -3dB _points around the peak
     let target_mag = max_mag / std::f64::consts::SQRT_2; // -3dB point
 
     let mut lower_freq = 0.0;
@@ -451,16 +452,16 @@ pub fn compute_q_factor(b: &[f64], a: &[f64], num_points: usize) -> SignalResult
 
 /// Find the frequency where magnitude drops to a specific dB level
 #[allow(dead_code)]
-fn find_cutoff_frequency(frequencies: &[f64], magnitude_db: &[f64], target_db: f64) -> f64 {
+fn find_cutoff_frequency(_frequencies: &[f64], magnitude_db: &[f64], target_db: f64) -> f64 {
     // Find the index where magnitude first drops below target
     for (i, &mag_db) in magnitude_db.iter().enumerate() {
         if mag_db <= target_db {
             if i == 0 {
-                return frequencies[0];
+                return _frequencies[0];
             }
             // Linear interpolation between points
-            let f1 = frequencies[i - 1];
-            let f2 = frequencies[i];
+            let f1 = _frequencies[i - 1];
+            let f2 = _frequencies[i];
             let m1 = magnitude_db[i - 1];
             let m2 = magnitude_db[i];
 
@@ -472,5 +473,5 @@ fn find_cutoff_frequency(frequencies: &[f64], magnitude_db: &[f64], target_db: f
             return f1 + t * (f2 - f1);
         }
     }
-    frequencies[frequencies.len() - 1]
+    _frequencies[_frequencies.len() - 1]
 }

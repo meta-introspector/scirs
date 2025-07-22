@@ -43,19 +43,17 @@ pub struct ResNetConfig {
     pub dropout_rate: f64,
 impl ResNetConfig {
     /// Create a ResNet-18 configuration
-    pub fn resnet18(input_channels: usize, num_classes: usize) -> Self {
+    pub fn resnet18(_input_channels: usize, num_classes: usize) -> Self {
         Self {
             block: ResNetBlock::Basic,
             layers: vec![
                 ResNetLayer {
-                    blocks: 2,
-                    channels: 64,
+                    blocks: 2_channels: 64,
                     stride: 1,
                 },
-                    channels: 128,
-                    stride: 2,
-                    channels: 256,
-                    channels: 512,
+                    _channels: 128,
+                    stride: 2_channels: 256,
+                    _channels: 512,
             ],
             input_channels,
             num_classes,
@@ -63,18 +61,18 @@ impl ResNetConfig {
         }
     }
     /// Create a ResNet-34 configuration
-    pub fn resnet34(input_channels: usize, num_classes: usize) -> Self {
+    pub fn resnet34(_input_channels: usize, num_classes: usize) -> Self {
                     blocks: 3,
                     blocks: 4,
                     blocks: 6,
     /// Create a ResNet-50 configuration
-    pub fn resnet50(input_channels: usize, num_classes: usize) -> Self {
+    pub fn resnet50(_input_channels: usize, num_classes: usize) -> Self {
             block: ResNetBlock::Bottleneck,
     /// Create a ResNet-101 configuration
-    pub fn resnet101(input_channels: usize, num_classes: usize) -> Self {
+    pub fn resnet101(_input_channels: usize, num_classes: usize) -> Self {
                     blocks: 23,
     /// Create a ResNet-152 configuration
-    pub fn resnet152(input_channels: usize, num_classes: usize) -> Self {
+    pub fn resnet152(_input_channels: usize, num_classes: usize) -> Self {
                     blocks: 8,
                     blocks: 36,
     /// Set dropout rate
@@ -179,7 +177,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BasicBlock<F> 
         // Final activation
         Ok(x)
     fn backward(
-        &self,
+        &mut self,
         _input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
@@ -249,9 +247,9 @@ pub struct ResNet<F: Float + Debug + ScalarOperand + Send + Sync> {
     config: ResNetConfig,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> ResNet<F> {
     /// Create a new ResNet model
-    pub fn new(config: ResNetConfig) -> Result<Self> {
+    pub fn new(_config: ResNetConfig) -> Result<Self> {
         // Initial convolutional layer
-            config.input_channels,
+            _config.input_channels,
             64,
             (7, 7),
             (2, 2),
@@ -261,9 +259,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ResNet<F> {
         let mut layers: Vec<Box<dyn Layer<F> + Send + Sync>> = Vec::new();
         let mut in_channels = 64;
         // Create each layer group
-        for layer_config in &config.layers {
+        for layer_config in &_config.layers {
             let mut layer_blocks: Vec<Box<dyn Layer<F> + Send + Sync>> = Vec::new();
-            let out_channels = match config.block {
+            let out_channels = match _config.block {
                 ResNetBlock::Basic => layer_config.channels,
                 ResNetBlock::Bottleneck => layer_config.channels * 4,
             };
@@ -336,20 +334,20 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ResNet<F> {
             dropout,
             config,
     /// Create a ResNet-18 model
-    pub fn resnet18(input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn resnet18(_input_channels: usize, num_classes: usize) -> Result<Self> {
         let config = ResNetConfig::resnet18(input_channels, num_classes);
         Self::new(config)
     /// Create a ResNet-34 model
-    pub fn resnet34(input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn resnet34(_input_channels: usize, num_classes: usize) -> Result<Self> {
         let config = ResNetConfig::resnet34(input_channels, num_classes);
     /// Create a ResNet-50 model
-    pub fn resnet50(input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn resnet50(_input_channels: usize, num_classes: usize) -> Result<Self> {
         let config = ResNetConfig::resnet50(input_channels, num_classes);
     /// Create a ResNet-101 model
-    pub fn resnet101(input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn resnet101(_input_channels: usize, num_classes: usize) -> Result<Self> {
         let config = ResNetConfig::resnet101(input_channels, num_classes);
     /// Create a ResNet-152 model
-    pub fn resnet152(input_channels: usize, num_classes: usize) -> Result<Self> {
+    pub fn resnet152(_input_channels: usize, num_classes: usize) -> Result<Self> {
         let config = ResNetConfig::resnet152(input_channels, num_classes);
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for ResNet<F> {
         // MaxPool 3x3 with stride 2 (typically used in ResNet)

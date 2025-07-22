@@ -1,10 +1,10 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::Array1;
-use scirs2_interpolate::bspline::{
+use scirs2__interpolate::bspline::{
     generate_knots, make_interp_bspline, make_lsq_bspline, BSpline, ExtrapolateMode,
 };
-use scirs2_interpolate::cache::{BSplineCache, CacheConfig, CachedBSpline};
-use scirs2_interpolate::fast_bspline::make_fast_bspline_evaluator;
+use scirs2__interpolate::cache::{BSplineCache, CacheConfig, CachedBSpline};
+use scirs2__interpolate::fast_bspline::make_fast_bspline_evaluator;
 
 #[allow(dead_code)]
 fn generate_test_data(n: usize) -> (Array1<f64>, Array1<f64>) {
@@ -14,13 +14,13 @@ fn generate_test_data(n: usize) -> (Array1<f64>, Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn generate_bspline(degree: usize, n_coeffs: usize) -> BSpline<f64> {
-    let knots = Array1::linspace(0.0, 10.0, n_coeffs + degree + 1);
-    let coeffs = Array1::linspace(-1.0, 1.0, n_coeffs);
+fn generate_bspline(_degree: usize, n_coeffs: usize) -> BSpline<f64> {
+    let knots = Array1::linspace(0.0, 10.0, n_coeffs + _degree + 1);
+    let _coeffs = Array1::linspace(-1.0, 1.0, n_coeffs);
     BSpline::new(
         &knots.view(),
-        &coeffs.view(),
-        degree,
+        &_coeffs.view(),
+        _degree,
         ExtrapolateMode::Extrapolate,
     )
     .unwrap()
@@ -39,7 +39,7 @@ fn bench_bspline_evaluation(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(format!("degree_{}_coeffs_{}", degree, n_coeffs), n_coeffs),
                 n_coeffs,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         for &query in queries.iter() {
                             let _ = black_box(spline.evaluate(black_box(query)));
@@ -141,7 +141,7 @@ fn bench_cached_bspline(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("config", config_name),
             config_name,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     for &query in queries.iter() {
                         let _ = black_box(cached_spline.evaluate_cached(black_box(query)));
@@ -163,7 +163,7 @@ fn bench_bspline_derivatives(c: &mut Criterion) {
 
     for order in [1, 2, 3].iter() {
         group.throughput(Throughput::Elements(queries.len() as u64));
-        group.bench_with_input(BenchmarkId::new("order", order), order, |b, _| {
+        group.bench_with_input(BenchmarkId::new("order", order), order, |b_| {
             b.iter(|| {
                 for &query in queries.iter() {
                     let _ = black_box(spline.derivative(black_box(query), black_box(*order)));
@@ -186,7 +186,7 @@ fn bench_bspline_construction(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("interpolating", data_size),
             data_size,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     let _ = black_box(make_interp_bspline(
                         black_box(&x.view()),
@@ -207,7 +207,7 @@ fn bench_bspline_construction(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("least_squares", data_size),
             data_size,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     let _ = black_box(make_lsq_bspline(
                         black_box(&x.view()),
@@ -233,12 +233,12 @@ fn bench_knot_generation(c: &mut Criterion) {
 
     for style in styles.iter() {
         for data_size in [100, 500, 1000, 5000].iter() {
-            let (x, _) = generate_test_data(*data_size);
+            let (x_) = generate_test_data(*data_size);
 
             group.bench_with_input(
                 BenchmarkId::new(format!("{}_style", style), data_size),
                 data_size,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         let _ = black_box(generate_knots(
                             black_box(&x.view()),
@@ -261,7 +261,7 @@ fn bench_bspline_integration(c: &mut Criterion) {
     for n_coeffs in [50, 100, 500, 1000].iter() {
         let spline = generate_bspline(3, *n_coeffs);
 
-        group.bench_with_input(BenchmarkId::new("coeffs", n_coeffs), n_coeffs, |b, _| {
+        group.bench_with_input(BenchmarkId::new("coeffs", n_coeffs), n_coeffs, |b_| {
             b.iter(|| {
                 let _ = black_box(spline.integrate(black_box(1.0), black_box(9.0)));
             });
@@ -285,7 +285,7 @@ fn bench_basis_element_evaluation(c: &mut Criterion) {
                 .unwrap();
 
         group.throughput(Throughput::Elements(queries.len() as u64));
-        group.bench_with_input(BenchmarkId::new("degree", degree), degree, |b, _| {
+        group.bench_with_input(BenchmarkId::new("degree", degree), degree, |b_| {
             b.iter(|| {
                 for &query in queries.iter() {
                     let _ = black_box(basis.evaluate(black_box(query)));

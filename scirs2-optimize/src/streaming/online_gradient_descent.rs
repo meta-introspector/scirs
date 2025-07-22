@@ -66,12 +66,12 @@ pub struct ByzantineFaultDetector {
 }
 
 impl ByzantineFaultDetector {
-    pub fn new(fault_threshold: f64) -> Self {
+    pub fn new(_fault_threshold: f64) -> Self {
         Self {
             reputation_scores: HashMap::new(),
             suspicion_counters: HashMap::new(),
             deviation_history: HashMap::new(),
-            fault_threshold,
+            _fault_threshold,
             recovery_period: Duration::from_secs(300), // 5 minutes recovery
             last_detection_times: HashMap::new(),
         }
@@ -163,13 +163,13 @@ pub struct ConsensusVotingState {
 }
 
 impl ConsensusVotingState {
-    pub fn new(consensus_threshold: f64) -> Self {
+    pub fn new(_consensus_threshold: f64) -> Self {
         Self {
             round: 0,
             proposals: HashMap::new(),
             votes: HashMap::new(),
             voting_weights: HashMap::new(),
-            consensus_threshold,
+            _consensus_threshold,
             round_timeout: Duration::from_millis(100),
             round_start: None,
         }
@@ -242,11 +242,11 @@ pub struct NetworkTopology {
 }
 
 impl NetworkTopology {
-    pub fn new(num_nodes: usize) -> Self {
+    pub fn new(_num_nodes: usize) -> Self {
         Self {
-            adjacency_matrix: Array2::zeros((num_nodes, num_nodes)),
-            delay_matrix: Array2::zeros((num_nodes, num_nodes)),
-            bandwidth_matrix: Array2::from_elem((num_nodes, num_nodes), 1.0),
+            adjacency_matrix: Array2::zeros((_num_nodes, _num_nodes)),
+            delay_matrix: Array2::zeros((_num_nodes, _num_nodes)),
+            bandwidth_matrix: Array2::from_elem((_num_nodes, _num_nodes), 1.0),
             active_connections: HashMap::new(),
             reliability_scores: HashMap::new(),
         }
@@ -447,7 +447,7 @@ impl FederatedAveragingState {
         self.peer_data_counts.insert(peer_id, data_count);
         self.last_updates.insert(peer_id, Instant::now());
 
-        // Compute weight based on data count (more data = higher weight)
+        // Compute weight based on data _count (more data = higher weight)
         let total_data: usize = self.peer_data_counts.values().sum();
         if total_data > 0 {
             let weight = data_count as f64 / total_data as f64;
@@ -715,7 +715,7 @@ impl<T: StreamingObjective + Clone> AdvancedAdvancedDistributedOnlineGD<T> {
     }
 
     fn handle_byzantine_alert(&mut self, suspected_node: usize, evidence: ByzantineEvidence) {
-        // Reduce trust in suspected node
+        // Reduce trust in suspected _node
         let current_trust = self
             .consensus_node
             .trust_scores
@@ -1016,7 +1016,7 @@ mod tests {
         let consensus = voting_state.check_consensus();
         assert!(consensus.is_some());
 
-        let (winner_id, _) = consensus.unwrap();
+        let (winner_id_) = consensus.unwrap();
         assert_eq!(winner_id, 1);
     }
 

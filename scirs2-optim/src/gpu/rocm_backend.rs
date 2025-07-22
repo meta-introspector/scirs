@@ -82,11 +82,11 @@ pub struct RocmBackend<A: Float> {
 
 impl<A: Float> RocmBackend<A> {
     /// Create a new ROCm backend
-    pub fn new(config: RocmConfig) -> Result<Self, GpuOptimError> {
+    pub fn new(_config: RocmConfig) -> Result<Self, GpuOptimError> {
         // Create GPU context with ROCm backend
         let gpu_config = GpuOptimizerConfig {
             backend: GpuBackend::Rocm,
-            memory_pool_size: config.memory_pool_size,
+            memory_pool_size: _config.memory_pool_size,
             ..Default::default()
         };
 
@@ -94,8 +94,7 @@ impl<A: Float> RocmBackend<A> {
 
         Ok(Self {
             context,
-            config,
-            _phantom: PhantomData,
+            _config_phantom: PhantomData,
         })
     }
 
@@ -146,10 +145,10 @@ impl<A: Float> RocmBackend<A> {
     }
 
     /// Convert CUDA kernel to HIP kernel name
-    pub fn get_hip_kernel_name(cuda_kernel_name: &str) -> String {
+    pub fn get_hip_kernel_name(_cuda_kernel_name: &str) -> String {
         // ROCm uses HIP which has similar naming to CUDA
         // In practice, kernels would be compiled for HIP
-        cuda_kernel_name.replace("cuda", "hip")
+        _cuda_kernel_name.replace("cuda", "hip")
     }
 
     /// Detect AMD GPU architecture for optimizations
@@ -417,11 +416,11 @@ struct RocmBuffer {
 
 impl RocmMemoryPool {
     /// Create a new memory pool
-    pub fn new(max_size: usize) -> Self {
+    pub fn new(_max_size: usize) -> Self {
         Self {
             buffers: Vec::new(),
             current_size: 0,
-            max_size,
+            _max_size,
         }
     }
 
@@ -484,8 +483,8 @@ pub mod rocm_utils {
     }
 
     /// Get memory access pattern optimization hints
-    pub fn get_memory_access_hints(data_size: usize) -> MemoryAccessHint {
-        if data_size < 1024 * 1024 {
+    pub fn get_memory_access_hints(_data_size: usize) -> MemoryAccessHint {
+        if _data_size < 1024 * 1024 {
             // Small data: prioritize L1 cache
             MemoryAccessHint::L1Preferred
         } else if data_size < 32 * 1024 * 1024 {

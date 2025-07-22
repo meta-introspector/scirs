@@ -17,7 +17,7 @@ fn main() {
         println!("Preferred backend: {:?}", preferred);
 
         // Test 2: Check if CUDA is available (compile-time)
-        println!("\nCUDA feature enabled: {}", cfg!(feature = "cuda"));
+        println!("\nCUDA feature enabled: {}", cfg!(feature = cuda));
         println!("CUDA is_available(): {}", GpuBackend::Cuda.is_available());
 
         // Test 3: Try to create context with default backend

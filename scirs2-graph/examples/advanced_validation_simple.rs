@@ -3,7 +3,7 @@
 //! This example demonstrates and validates basic Advanced mode functionality.
 
 use rand::rng;
-use scirs2_graph::{
+use scirs2__graph::{
     algorithms::{connected_components, dijkstra_path},
     generators::erdos_renyi_graph,
     measures::pagerank_centrality,

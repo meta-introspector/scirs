@@ -51,7 +51,7 @@ pub enum LBPType {
 /// # Example
 ///
 /// ```rust
-/// use scirs2_vision::feature::{lbp, LBPType};
+/// use scirs2__vision::feature::{lbp, LBPType};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -61,9 +61,9 @@ pub enum LBPType {
 /// # }
 /// ```
 #[allow(dead_code)]
-pub fn lbp(img: &DynamicImage, lbp_type: LBPType) -> Result<GrayImage> {
-    let gray = img.to_luma8();
-    let (_width, _height) = gray.dimensions();
+pub fn lbp(_img: &DynamicImage, lbp_type: LBPType) -> Result<GrayImage> {
+    let gray = _img.to_luma8();
+    let (_width_height) = gray.dimensions();
 
     match lbp_type {
         LBPType::Original => compute_lbp_original(&gray),
@@ -77,8 +77,8 @@ pub fn lbp(img: &DynamicImage, lbp_type: LBPType) -> Result<GrayImage> {
 
 /// Compute original 3x3 LBP
 #[allow(dead_code)]
-fn compute_lbp_original(gray: &GrayImage) -> Result<GrayImage> {
-    let (width, height) = gray.dimensions();
+fn compute_lbp_original(_gray: &GrayImage) -> Result<GrayImage> {
+    let (width, height) = _gray.dimensions();
     let mut lbp_img = ImageBuffer::new(width, height);
 
     // Define 3x3 neighborhood offsets
@@ -95,14 +95,14 @@ fn compute_lbp_original(gray: &GrayImage) -> Result<GrayImage> {
 
     for y in 1..height - 1 {
         for x in 1..width - 1 {
-            let center = gray.get_pixel(x, y)[0];
+            let center = _gray.get_pixel(x, y)[0];
             let mut pattern = 0u8;
 
             // Compare with neighbors
             for (i, &(dy, dx)) in offsets.iter().enumerate() {
                 let ny = (y as i32 + dy) as u32;
                 let nx = (x as i32 + dx) as u32;
-                let neighbor = gray.get_pixel(nx, ny)[0];
+                let neighbor = _gray.get_pixel(nx, ny)[0];
 
                 if neighbor >= center {
                     pattern |= 1 << i;
@@ -128,8 +128,8 @@ fn compute_lbp_original(gray: &GrayImage) -> Result<GrayImage> {
 
 /// Compute extended LBP with circular neighborhood
 #[allow(dead_code)]
-fn compute_lbp_extended(gray: &GrayImage, radius: f32, points: usize) -> Result<GrayImage> {
-    let (width, height) = gray.dimensions();
+fn compute_lbp_extended(_gray: &GrayImage, radius: f32, points: usize) -> Result<GrayImage> {
+    let (width, height) = _gray.dimensions();
     let mut lbp_img = ImageBuffer::new(width, height);
 
     // Compute neighbor positions
@@ -139,14 +139,14 @@ fn compute_lbp_extended(gray: &GrayImage, radius: f32, points: usize) -> Result<
 
     for y in border..height - border {
         for x in border..width - border {
-            let center = gray.get_pixel(x, y)[0];
+            let center = _gray.get_pixel(x, y)[0];
             let mut pattern = 0u32;
 
             // Sample neighbors using bilinear interpolation
             for (i, &(dy, dx)) in neighbors.iter().enumerate() {
                 let ny = y as f32 + dy;
                 let nx = x as f32 + dx;
-                let neighbor = bilinear_interpolate(gray, nx, ny);
+                let neighbor = bilinear_interpolate(_gray, nx, ny);
 
                 if neighbor >= center as f32 {
                     pattern |= 1 << i;
@@ -170,8 +170,8 @@ fn compute_lbp_extended(gray: &GrayImage, radius: f32, points: usize) -> Result<
 
 /// Compute uniform LBP (patterns with at most 2 transitions)
 #[allow(dead_code)]
-fn compute_lbp_uniform(gray: &GrayImage, radius: f32, points: usize) -> Result<GrayImage> {
-    let (width, height) = gray.dimensions();
+fn compute_lbp_uniform(_gray: &GrayImage, radius: f32, points: usize) -> Result<GrayImage> {
+    let (width, height) = _gray.dimensions();
     let mut lbp_img = ImageBuffer::new(width, height);
 
     // Compute neighbor positions
@@ -184,14 +184,14 @@ fn compute_lbp_uniform(gray: &GrayImage, radius: f32, points: usize) -> Result<G
 
     for y in border..height - border {
         for x in border..width - border {
-            let center = gray.get_pixel(x, y)[0];
+            let center = _gray.get_pixel(x, y)[0];
             let mut pattern = 0u32;
 
             // Sample neighbors
             for (i, &(dy, dx)) in neighbors.iter().enumerate() {
                 let ny = y as f32 + dy;
                 let nx = x as f32 + dx;
-                let neighbor = bilinear_interpolate(gray, nx, ny);
+                let neighbor = bilinear_interpolate(_gray, nx, ny);
 
                 if neighbor >= center as f32 {
                     pattern |= 1 << i;
@@ -261,13 +261,13 @@ fn compute_lbp_rotation_invariant(
 
 /// Compute circular neighbor positions
 #[allow(dead_code)]
-fn compute_circular_neighbors(radius: f32, points: usize) -> Vec<(f32, f32)> {
+fn compute_circular_neighbors(_radius: f32, points: usize) -> Vec<(f32, f32)> {
     let mut neighbors = Vec::with_capacity(points);
 
     for i in 0..points {
         let angle = 2.0 * std::f32::consts::PI * i as f32 / points as f32;
-        let dy = -radius * angle.cos();
-        let dx = radius * angle.sin();
+        let dy = -_radius * angle.cos();
+        let dx = _radius * angle.sin();
         neighbors.push((dy, dx));
     }
 
@@ -276,7 +276,7 @@ fn compute_circular_neighbors(radius: f32, points: usize) -> Vec<(f32, f32)> {
 
 /// Bilinear interpolation for sub-pixel sampling
 #[allow(dead_code)]
-fn bilinear_interpolate(img: &GrayImage, x: f32, y: f32) -> f32 {
+fn bilinear_interpolate(_img: &GrayImage, x: f32, y: f32) -> f32 {
     let x0 = x.floor() as u32;
     let y0 = y.floor() as u32;
     let x1 = x0 + 1;
@@ -285,14 +285,14 @@ fn bilinear_interpolate(img: &GrayImage, x: f32, y: f32) -> f32 {
     let fx = x - x0 as f32;
     let fy = y - y0 as f32;
 
-    let (width, height) = img.dimensions();
+    let (width, height) = _img.dimensions();
     let x1 = x1.min(width - 1);
     let y1 = y1.min(height - 1);
 
-    let v00 = img.get_pixel(x0, y0)[0] as f32;
-    let v10 = img.get_pixel(x1, y0)[0] as f32;
-    let v01 = img.get_pixel(x0, y1)[0] as f32;
-    let v11 = img.get_pixel(x1, y1)[0] as f32;
+    let v00 = _img.get_pixel(x0, y0)[0] as f32;
+    let v10 = _img.get_pixel(x1, y0)[0] as f32;
+    let v01 = _img.get_pixel(x0, y1)[0] as f32;
+    let v11 = _img.get_pixel(x1, y1)[0] as f32;
 
     let v0 = v00 * (1.0 - fx) + v10 * fx;
     let v1 = v01 * (1.0 - fx) + v11 * fx;
@@ -302,12 +302,12 @@ fn bilinear_interpolate(img: &GrayImage, x: f32, y: f32) -> f32 {
 
 /// Build uniform pattern lookup table
 #[allow(dead_code)]
-fn build_uniform_pattern_map(points: usize) -> HashMap<u32, u8> {
+fn build_uniform_pattern_map(_points: usize) -> HashMap<u32, u8> {
     let mut map = HashMap::new();
     let mut label = 0u8;
 
-    for pattern in 0..(1 << points) {
-        if is_uniform_pattern(pattern, points) {
+    for pattern in 0..(1 << _points) {
+        if is_uniform_pattern(pattern_points) {
             map.insert(pattern, label);
             label += 1;
         }
@@ -318,12 +318,12 @@ fn build_uniform_pattern_map(points: usize) -> HashMap<u32, u8> {
 
 /// Check if a pattern is uniform (at most 2 transitions)
 #[allow(dead_code)]
-fn is_uniform_pattern(pattern: u32, points: usize) -> bool {
+fn is_uniform_pattern(_pattern: u32, points: usize) -> bool {
     let mut transitions = 0;
 
     for i in 0..points {
-        let bit1 = (pattern >> i) & 1;
-        let bit2 = (pattern >> ((i + 1) % points)) & 1;
+        let bit1 = (_pattern >> i) & 1;
+        let bit2 = (_pattern >> ((i + 1) % points)) & 1;
 
         if bit1 != bit2 {
             transitions += 1;
@@ -335,11 +335,11 @@ fn is_uniform_pattern(pattern: u32, points: usize) -> bool {
 
 /// Find minimum rotation of a pattern
 #[allow(dead_code)]
-fn find_min_rotation(pattern: u32, points: usize) -> u32 {
-    let mut min_pattern = pattern;
+fn find_min_rotation(_pattern: u32, points: usize) -> u32 {
+    let mut min_pattern = _pattern;
 
     for i in 1..points {
-        let rotated = rotate_pattern(pattern, i, points);
+        let rotated = rotate_pattern(_pattern, i, points);
         if rotated < min_pattern {
             min_pattern = rotated;
         }
@@ -350,9 +350,9 @@ fn find_min_rotation(pattern: u32, points: usize) -> u32 {
 
 /// Rotate a pattern by n positions
 #[allow(dead_code)]
-fn rotate_pattern(pattern: u32, n: usize, points: usize) -> u32 {
+fn rotate_pattern(_pattern: u32, n: usize, points: usize) -> u32 {
     let mask = (1 << points) - 1;
-    ((pattern >> n) | (pattern << (points - n))) & mask
+    ((_pattern >> n) | (_pattern << (points - n))) & mask
 }
 
 /// Compute LBP histogram for texture analysis
@@ -367,12 +367,12 @@ fn rotate_pattern(pattern: u32, n: usize, points: usize) -> u32 {
 ///
 /// * Result containing histogram
 #[allow(dead_code)]
-pub fn lbp_histogram(lbp_img: &GrayImage, n_bins: usize, normalize: bool) -> Result<Array1<f32>> {
+pub fn lbp_histogram(_lbp_img: &GrayImage, n_bins: usize, normalize: bool) -> Result<Array1<f32>> {
     let mut histogram = Array1::zeros(n_bins);
     let scale = 256.0 / n_bins as f32;
 
     // Count occurrences
-    for pixel in lbp_img.pixels() {
+    for pixel in _lbp_img.pixels() {
         let bin = (pixel[0] as f32 / scale).floor() as usize;
         let bin = bin.min(n_bins - 1);
         histogram[bin] += 1.0;
@@ -400,11 +400,11 @@ pub fn lbp_histogram(lbp_img: &GrayImage, n_bins: usize, normalize: bool) -> Res
 ///
 /// * Result containing concatenated histogram features
 #[allow(dead_code)]
-pub fn multi_scale_lbp(img: &DynamicImage, scales: &[(f32, usize)]) -> Result<Array1<f32>> {
+pub fn multi_scale_lbp(_img: &DynamicImage, scales: &[(f32, usize)]) -> Result<Array1<f32>> {
     let mut features = Vec::new();
 
     for &(radius, points) in scales {
-        let lbp_img = lbp(img, LBPType::Uniform { radius, points })?;
+        let lbp_img = lbp(_img, LBPType::Uniform { radius, points })?;
 
         // Uniform patterns + 1 non-uniform bin
         let n_bins = points * (points - 1) + 3;

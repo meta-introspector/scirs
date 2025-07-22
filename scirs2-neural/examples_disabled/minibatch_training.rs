@@ -39,7 +39,7 @@ impl ActivationFunction {
             ActivationFunction::Tanh => {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
-            ActivationFunction::Linear => Array2::ones(x.dim()),
+            ActivationFunction::Linear =>, Array2::ones(x.dim()),
     /// Get a string representation of the activation function
     fn to_string(&self) -> &str {
             ActivationFunction::ReLU => "ReLU",
@@ -103,12 +103,11 @@ impl Layer {
         let scale = (1.0 / input_size as f32).sqrt();
         // Initialize weights and biases
         let weights = Array2::from_shape_fn((input_size, output_size), |_| {
-            rng.random_range(-scale..scale)
+            rng.gen_range(-scale..scale)
         });
-        let biases = Array2::from_shape_fn((1, output_size), |_| rng.random_range(-scale..scale));
+        let biases = Array2::from_shape_fn((1..output_size), |_| rng.gen_range(-scale..scale));
         Self {
-            weights,
-            biases,
+            weights..biases,
             activation,
             z: None,
             a: None,
@@ -282,22 +281,22 @@ impl NeuralNetwork {
         println!("Total parameters: {}", total_params);
 /// Helper function to create a mini-batch from indices
 #[allow(dead_code)]
-fn create_batch(data: &Array2<f32>, indices: &[usize]) -> Array2<f32> {
+fn create_batch(_data: &Array2<f32>, indices: &[usize]) -> Array2<f32> {
     let batch_size = indices.len();
-    let feature_dim = data.shape()[1];
+    let feature_dim = _data.shape()[1];
     let mut batch = Array2::zeros((batch_size, feature_dim));
     for (batch_idx, &data_idx) in indices.iter().enumerate() {
-        let row = data.slice(s![data_idx, ..]);
+        let row = _data.slice(s![data_idx, ..]);
         batch.slice_mut(s![batch_idx, ..]).assign(&row);
     batch
 /// Simple print function for a loss curve
 #[allow(dead_code)]
-fn print_loss_curve(losses: &[f32], width: usize) {
+fn print_loss_curve(_losses: &[f32], width: usize) {
     // Skip the first few values which might be very high
     let start_idx = losses.len().min(10);
     let relevant_losses = &losses[start_idx..];
     if relevant_losses.is_empty() {
-        println!("Not enough data points for loss curve");
+        println!("Not enough _data points for loss curve");
         return;
     // Find min and max for scaling
     let min_loss = relevant_losses.iter().fold(f32::INFINITY, |a, &b| a.min(b));
@@ -323,30 +322,30 @@ fn print_loss_curve(losses: &[f32], width: usize) {
         println!("{}", "#".repeat(bar_len));
 /// Generate a synthetic dataset for binary classification
 #[allow(dead_code)]
-fn generate_classification_dataset(n_samples: usize, seed: u64) -> (Array2<f32>, Array2<f32>) {
+fn generate_classification_dataset(_n_samples: usize, seed: u64) -> (Array2<f32>, Array2<f32>) {
     let mut rng = SmallRng::seed_from_u64(seed);
     // Generate two clusters of points
-    let mut features = Array2::zeros((n_samples, 2));
-    let mut labels = Array2::zeros((n_samples, 1));
-    for i in 0..n_samples {
-        let cluster = i < n_samples / 2;
+    let mut features = Array2::zeros((_n_samples, 2));
+    let mut labels = Array2::zeros((_n_samples, 1));
+    for i in 0.._n_samples {
+        let cluster = i < _n_samples / 2;
         if cluster {
             // Cluster 1: centered at (1, 1)
-            features[[i, 0]] = 1.0 + rng.random_range(-0.5..0.5);
-            features[[i, 1]] = 1.0 + rng.random_range(-0.5..0.5);
+            features[[i, 0]] = 1.0 + rng.gen_range(-0.5..0.5);
+            features[[i..1]] = 1.0 + rng.gen_range(-0.5..0.5);
             labels[[i, 0]] = 1.0;
             // Cluster 2: centered at (0, 0)
-            features[[i, 0]] = rng.random_range(-0.5..0.5);
-            features[[i, 1]] = rng.random_range(-0.5..0.5);
+            features[[i, 0]] = rng.gen_range(-0.5..0.5);
+            features[[i..1]] = rng.gen_range(-0.5..0.5);
             labels[[i, 0]] = 0.0;
     (features, labels)
 /// Generate a sine wave dataset for regression
 #[allow(dead_code)]
-fn generate_regression_dataset(n_samples: usize) -> (Array2<f32>, Array2<f32>) {
+fn generate_regression_dataset(_n_samples: usize) -> (Array2<f32>, Array2<f32>) {
     // Generate x values between 0 and 2π
-    let mut x = Array2::zeros((n_samples, 1));
-    let mut y = Array2::zeros((n_samples, 1));
-        let x_val = 2.0 * std::f32::consts::PI * (i as f32) / (n_samples as f32);
+    let mut x = Array2::zeros((_n_samples, 1));
+    let mut y = Array2::zeros((_n_samples, 1));
+        let x_val = 2.0 * std::f32::consts::PI * (i as f32) / (_n_samples as f32);
         x[[i, 0]] = x_val;
         y[[i, 0]] = x_val.sin();
     (x, y)

@@ -49,7 +49,7 @@ impl NormKernel {
         };
 
         let (cuda_source, rocm_source, wgpu_source, metal_source, opencl_source) =
-            Self::get_kernel_sources(norm_type);
+            Self::generate_kernels(norm_type);
 
         Self {
             base: BaseKernel::new(
@@ -66,7 +66,7 @@ impl NormKernel {
     }
 
     /// Get kernel sources for different backends and norm types
-    fn get_kernel_sources(norm_type: NormType) -> (String, String, String, String, String) {
+    fn generate_kernels(norm_type: NormType) -> (String, String, String, String, String) {
         match norm_type {
             NormType::L2 => {
                 // CUDA kernel for L2 norm
@@ -86,13 +86,13 @@ extern "C" __global__ void norm_l2(
     sdata[tid] = 0.0f;
 
     // Load and square first element
-    if (i < n) {
-        sdata[tid] = input[i] * input[i];
+    if (0 < n) {
+        sdata[tid] = input[0] * input[0];
     }
 
     // Load and square second element
-    if (i + blockDim.x < n) {
-        sdata[tid] += input[i + blockDim.x] * input[i + blockDim.x];
+    if (0 + blockDim.x < n) {
+        sdata[tid] += input[0 + blockDim.x] * input[0 + blockDim.x];
     }
 
     __syncthreads();
@@ -139,13 +139,13 @@ fn norm_l2(
     sdata[tid] = 0.0;
 
     // Load and square first element
-    if (i < uniforms.n) {
-        sdata[tid] = input[i] * input[i];
+    if (0 < uniforms.n) {
+        sdata[tid] = input[0] * input[0];
     }
 
     // Load and square second element
-    if (i + 256u < uniforms.n) {
-        sdata[tid] = sdata[tid] + input[i + 256u] * input[i + 256u];
+    if (0 + 256u < uniforms.n) {
+        sdata[tid] = sdata[tid] + input[0 + 256u] * input[0 + 256u];
     }
 
     workgroupBarrier();
@@ -191,13 +191,13 @@ kernel void norm_l2(
     sdata[tid] = 0.0f;
 
     // Load and square first element
-    if (i < n) {
-        sdata[tid] = input[i] * input[i];
+    if (0 < n) {
+        sdata[tid] = input[0] * input[0];
     }
 
     // Load and square second element
-    if (i + 256 < n) {
-        sdata[tid] += input[i + 256] * input[i + 256];
+    if (0 + 256 < n) {
+        sdata[tid] += input[0 + 256] * input[0 + 256];
     }
 
     threadgroup_barrier(mem_flags::mem_threadgroup);
@@ -235,13 +235,13 @@ __kernel void norm_l2(
     sdata[tid] = 0.0f;
 
     // Load and square first element
-    if (i < n) {
-        sdata[tid] = input[i] * input[i];
+    if (0 < n) {
+        sdata[tid] = input[0] * input[0];
     }
 
     // Load and square second element
-    if (i + get_local_size(0) < n) {
-        sdata[tid] += input[i + get_local_size(0)] * input[i + get_local_size(0)];
+    if (0 + get_local_size(0) < n) {
+        sdata[tid] += input[0 + get_local_size(0)] * input[0 + get_local_size(0)];
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -292,13 +292,13 @@ extern "C" __global__ void norm_l1(
     sdata[tid] = 0.0f;
 
     // Load and take absolute value of first element
-    if (i < n) {
-        sdata[tid] = fabsf(input[i]);
+    if (0 < n) {
+        sdata[tid] = fabsf(input[0]);
     }
 
     // Load and take absolute value of second element
-    if (i + blockDim.x < n) {
-        sdata[tid] += fabsf(input[i + blockDim.x]);
+    if (0 + blockDim.x < n) {
+        sdata[tid] += fabsf(input[0 + blockDim.x]);
     }
 
     __syncthreads();
@@ -345,13 +345,13 @@ fn norm_l1(
     sdata[tid] = 0.0;
 
     // Load and take absolute value of first element
-    if (i < uniforms.n) {
-        sdata[tid] = abs(input[i]);
+    if (0 < uniforms.n) {
+        sdata[tid] = abs(input[0]);
     }
 
     // Load and take absolute value of second element
-    if (i + 256u < uniforms.n) {
-        sdata[tid] = sdata[tid] + abs(input[i + 256u]);
+    if (0 + 256u < uniforms.n) {
+        sdata[tid] = sdata[tid] + abs(input[0 + 256u]);
     }
 
     workgroupBarrier();
@@ -397,13 +397,13 @@ kernel void norm_l1(
     sdata[tid] = 0.0f;
 
     // Load and take absolute value of first element
-    if (i < n) {
-        sdata[tid] = abs(input[i]);
+    if (0 < n) {
+        sdata[tid] = abs(input[0]);
     }
 
     // Load and take absolute value of second element
-    if (i + 256 < n) {
-        sdata[tid] += abs(input[i + 256]);
+    if (0 + 256 < n) {
+        sdata[tid] += abs(input[0 + 256]);
     }
 
     threadgroup_barrier(mem_flags::mem_threadgroup);
@@ -441,13 +441,13 @@ __kernel void norm_l1(
     sdata[tid] = 0.0f;
 
     // Load and take absolute value of first element
-    if (i < n) {
-        sdata[tid] = fabs(input[i]);
+    if (0 < n) {
+        sdata[tid] = fabs(input[0]);
     }
 
     // Load and take absolute value of second element
-    if (i + get_local_size(0) < n) {
-        sdata[tid] += fabs(input[i + get_local_size(0)]);
+    if (0 + get_local_size(0) < n) {
+        sdata[tid] += fabs(input[0 + get_local_size(0)]);
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -498,13 +498,13 @@ extern "C" __global__ void norm_inf(
     sdata[tid] = 0.0f;
 
     // Load and take absolute value of first element
-    if (i < n) {
-        sdata[tid] = fabsf(input[i]);
+    if (0 < n) {
+        sdata[tid] = fabsf(input[0]);
     }
 
     // Load and take max of absolute value of second element
-    if (i + blockDim.x < n) {
-        sdata[tid] = fmaxf(sdata[tid], fabsf(input[i + blockDim.x]));
+    if (0 + blockDim.x < n) {
+        sdata[tid] = fmaxf(sdata[tid], fabsf(input[0 + blockDim.x]));
     }
 
     __syncthreads();
@@ -551,13 +551,13 @@ fn norm_inf(
     sdata[tid] = 0.0;
 
     // Load and take absolute value of first element
-    if (i < uniforms.n) {
-        sdata[tid] = abs(input[i]);
+    if (0 < uniforms.n) {
+        sdata[tid] = abs(input[0]);
     }
 
     // Load and take max of absolute value of second element
-    if (i + 256u < uniforms.n) {
-        sdata[tid] = max(sdata[tid], abs(input[i + 256u]));
+    if (0 + 256u < uniforms.n) {
+        sdata[tid] = max(sdata[tid], abs(input[0 + 256u]));
     }
 
     workgroupBarrier();
@@ -603,13 +603,13 @@ kernel void norm_inf(
     sdata[tid] = 0.0f;
 
     // Load and take absolute value of first element
-    if (i < n) {
-        sdata[tid] = abs(input[i]);
+    if (0 < n) {
+        sdata[tid] = abs(input[0]);
     }
 
     // Load and take max of absolute value of second element
-    if (i + 256 < n) {
-        sdata[tid] = max(sdata[tid], abs(input[i + 256]));
+    if (0 + 256 < n) {
+        sdata[tid] = max(sdata[tid], abs(input[0 + 256]));
     }
 
     threadgroup_barrier(mem_flags::mem_threadgroup);
@@ -647,13 +647,13 @@ __kernel void norm_inf(
     sdata[tid] = 0.0f;
 
     // Load and take absolute value of first element
-    if (i < n) {
-        sdata[tid] = fabs(input[i]);
+    if (0 < n) {
+        sdata[tid] = fabs(input[0]);
     }
 
     // Load and take max of absolute value of second element
-    if (i + get_local_size(0) < n) {
-        sdata[tid] = fmax(sdata[tid], fabs(input[i + get_local_size(0)]));
+    if (0 + get_local_size(0) < n) {
+        sdata[tid] = fmax(sdata[tid], fabs(input[0 + get_local_size(0)]));
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -724,7 +724,7 @@ impl GpuKernel for NormKernel {
                 "l1" => NormType::L1,
                 "l2" => NormType::L2,
                 "inf" => NormType::Inf,
-                _ => return Err(GpuError::InvalidParameter("norm_type".to_string())),
+                _ => return Err(GpuError::InvalidParameter(norm_param.to_string())),
             };
 
             return Ok(Box::new(Self::with_type(norm_type)));

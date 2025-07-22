@@ -126,8 +126,7 @@ pub struct AdaptiveParallelProcessor<F> {
     /// Runtime adaptation controller
     adaptation_controller: Arc<RwLock<AdaptationController>>,
     /// NUMA topology information
-    numa_topology: NumaTopology,
-    _phantom: std::marker::PhantomData<F>,
+    numa_topology: NumaTopology, _phantom: std::marker::PhantomData<F>,
 }
 
 /// Performance monitoring system
@@ -286,22 +285,21 @@ where
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: AdaptiveParallelConfig) -> Self {
+    pub fn with_config(_config: AdaptiveParallelConfig) -> Self {
         let numa_topology = NumaTopology::detect();
         let performance_monitor = Arc::new(RwLock::new(PerformanceMonitor::new()));
-        let thread_pool = Arc::new(RwLock::new(DynamicThreadPool::new(&config, &numa_topology)));
+        let thread_pool = Arc::new(RwLock::new(DynamicThreadPool::new(&_config, &numa_topology)));
         let work_queue = Arc::new(Mutex::new(PriorityWorkQueue::new()));
         let adaptation_controller = Arc::new(RwLock::new(AdaptationController::new()));
 
         let mut processor = Self {
             strategy: WorkDistributionStrategy::AdaptiveChunks,
-            config,
+            _config,
             performance_monitor,
             thread_pool,
             work_queue,
             adaptation_controller,
-            numa_topology,
-            _phantom: std::marker::PhantomData,
+            numa_topology_phantom: std::marker::PhantomData,
         };
 
         processor.start_adaptation_loop();
@@ -678,7 +676,7 @@ where
 
     /// Calculate optimal work unit size for work stealing
     fn calculate_optimal_work_unit_size(&self, total_size: usize, complexity: f64) -> usize {
-        let base_size = 1000; // Base work unit size
+        let base_size = 1000; // Base work unit _size
         let complexity_factor = complexity.sqrt();
         let adjusted_size = (base_size as f64 * complexity_factor) as usize;
         
@@ -729,11 +727,11 @@ impl PerformanceMonitor {
 }
 
 impl DynamicThreadPool {
-    fn new(config: &AdaptiveParallelConfig, numa_topology: &NumaTopology) -> Self {
-        let initial_threads = config.initial_threads.unwrap_or(num_cpus::get());
+    fn new(_config: &AdaptiveParallelConfig, numa_topology: &NumaTopology) -> Self {
+        let initial_threads = _config.initial_threads.unwrap_or(num_cpus::get());
         
         Self {
-            workers: Vec::with_capacity(config.max_threads),
+            workers: Vec::with_capacity(_config.max_threads),
             active_count: AtomicUsize::new(initial_threads),
             thread_counter: AtomicUsize::new(0),
             shutdown: AtomicBool::new(false),
@@ -811,15 +809,15 @@ impl NumaTopology {
 
 /// Convenience functions
 #[allow(dead_code)]
-pub fn adaptive_mean_f64(data: &ArrayView1<f64>) -> StatsResult<f64> {
+pub fn adaptive_mean_f64(_data: &ArrayView1<f64>) -> StatsResult<f64> {
     let mut processor = AdaptiveParallelProcessor::<f64>::new();
-    processor.adaptive_mean(data)
+    processor.adaptive_mean(_data)
 }
 
 #[allow(dead_code)]
-pub fn adaptive_variance_f64(data: &ArrayView1<f64>, ddof: usize) -> StatsResult<f64> {
+pub fn adaptive_variance_f64(_data: &ArrayView1<f64>, ddof: usize) -> StatsResult<f64> {
     let mut processor = AdaptiveParallelProcessor::<f64>::new();
-    processor.adaptive_variance(data, ddof)
+    processor.adaptive_variance(_data, ddof)
 }
 
 #[cfg(test)]

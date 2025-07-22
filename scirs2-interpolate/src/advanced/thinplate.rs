@@ -68,7 +68,7 @@ where
     /// # #[cfg(feature = "linalg")]
     /// # {
     /// use ndarray::{array, Array2};
-    /// use scirs2_interpolate::advanced::thinplate::ThinPlateSpline;
+    /// use scirs2__interpolate::advanced::thinplate::ThinPlateSpline;
     ///
     /// // Create 2D scattered data
     /// let points = Array2::from_shape_vec((4, 2), vec![
@@ -197,14 +197,14 @@ where
 
         // Solve the system using scirs2-linalg
         let coeffs_full = {
-            use scirs2_linalg::solve;
+            use scirs2__linalg::solve;
             let a_f64 = a.mapv(|x| x.to_f64().unwrap());
             let b_f64 = b.mapv(|x| x.to_f64().unwrap());
             match solve(&a_f64.view(), &b_f64.view(), None) {
                 Ok(solution) => solution.mapv(|x| T::from_f64(x).unwrap()),
                 Err(_) => {
                     // If the system is singular or near-singular, try SVD-based solution
-                    use scirs2_linalg::lstsq;
+                    use scirs2__linalg::lstsq;
                     match lstsq(&a_f64.view(), &b_f64.view(), None) {
                         Ok(result) => result.x.mapv(|x| T::from_f64(x).unwrap()),
                         Err(_) => {

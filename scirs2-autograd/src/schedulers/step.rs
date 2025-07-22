@@ -13,7 +13,7 @@ use crate::Float;
 ///
 /// # Example
 /// ```
-/// use scirs2_autograd::schedulers::{StepLR, LRScheduler};
+/// use scirs2__autograd::schedulers::{StepLR, LRScheduler};
 ///
 /// let scheduler = StepLR::new(0.1f32, 30, 0.1f32);
 ///
@@ -45,11 +45,11 @@ impl<F: Float> StepLR<F> {
     ///
     /// # Panics
     /// Panics if `step_size` is 0
-    pub fn new(initial_lr: F, step_size: usize, gamma: F) -> Self {
+    pub fn new(_initial_lr: F, step_size: usize, gamma: F) -> Self {
         assert!(step_size > 0, "step_size must be greater than 0");
 
         Self {
-            initial_lr,
+            _initial_lr,
             step_size,
             gamma,
         }
@@ -61,9 +61,9 @@ impl<F: Float> StepLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn default_decay(initial_lr: F) -> Self {
+    pub fn default_decay(_initial_lr: F) -> Self {
         Self::new(
-            initial_lr,
+            _initial_lr,
             30,                    // step_size = 30 epochs
             F::from(0.1).unwrap(), // gamma = 0.1 (reduce by 10x)
         )
@@ -76,9 +76,9 @@ impl<F: Float> StepLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn for_fine_tuning(initial_lr: F) -> Self {
+    pub fn for_fine_tuning(_initial_lr: F) -> Self {
         Self::new(
-            initial_lr,
+            _initial_lr,
             10,                    // step_size = 10 epochs (more frequent)
             F::from(0.5).unwrap(), // gamma = 0.5 (reduce by 2x, more conservative)
         )
@@ -91,9 +91,9 @@ impl<F: Float> StepLR<F> {
     ///
     /// # Arguments
     /// * `initial_lr` - The initial learning rate
-    pub fn aggressive_decay(initial_lr: F) -> Self {
+    pub fn aggressive_decay(_initial_lr: F) -> Self {
         Self::new(
-            initial_lr,
+            _initial_lr,
             20,                     // step_size = 20 epochs
             F::from(0.01).unwrap(), // gamma = 0.01 (reduce by 100x)
         )

@@ -5,8 +5,9 @@ use rand::rng;
 use crate::error::Result;
 use crate::layers::{Dense, Layer};
 use ndarray::prelude::*;
-use rand_distr::{Distribution, Normal};
+use rand__distr::{Distribution, Normal};
 use std::sync::Arc;
+use ndarray::ArrayView1;
 /// Base trait for policies
 pub trait Policy: Send + Sync {
     /// Sample an action from the policy
@@ -205,7 +206,7 @@ pub struct PolicyGradient {
     baseline: Option<Box<dyn Fn(&ArrayView1<f32>) -> f32>>,
 impl PolicyGradient {
     /// Create a new Policy Gradient algorithm
-    pub fn new(policy: Arc<dyn Policy>, learning_rate: f32, discount_factor: f32) -> Self {
+    pub fn new(_policy: Arc<dyn Policy>, learning_rate: f32, discount_factor: f32) -> Self {
         Self {
             policy,
             learning_rate,

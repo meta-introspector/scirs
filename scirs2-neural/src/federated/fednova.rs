@@ -7,6 +7,7 @@
 use crate::error::{NeuralError, Result};
 use crate::federated::{AggregationStrategy, ClientUpdate};
 use ndarray::prelude::*;
+use ndarray::ArrayView1;
 /// FedNova aggregation strategy
 pub struct FedNova {
     /// Momentum parameter for server optimizer
@@ -20,11 +21,11 @@ pub struct FedNova {
 }
 impl FedNova {
     /// Create a new FedNova aggregator
-    pub fn new(server_lr: f32, momentum: f32, use_momentum: bool) -> Self {
+    pub fn new(_server_lr: f32, momentum: f32, use_momentum: bool) -> Self {
         Self {
-            momentum,
-            server_lr,
-            momentum_buffers: None,
+            _momentum,
+            _server_lr,
+            _momentum_buffers: None,
             use_momentum,
         }
     }
@@ -124,8 +125,8 @@ pub struct FedNovaClient {
     grad_accumulator: Option<Vec<Array2<f32>>>,
 impl FedNovaClient {
     /// Create a new FedNova client
-    pub fn new(client_id: usize, batch_size: usize, local_lr: f32) -> Self {
-            client_id,
+    pub fn new(_client_id: usize, batch_size: usize, local_lr: f32) -> Self {
+            _client_id,
             local_steps: 0,
             batch_size,
             local_lr,
@@ -204,7 +205,7 @@ pub struct FedNovaUpdate {
     pub loss: f32,
     pub accuracy: f32,
 impl From<FedNovaUpdate> for ClientUpdate {
-    fn from(update: FedNovaUpdate) -> Self {
+    fn from(_update: FedNovaUpdate) -> Self {
         ClientUpdate {
             client_id: update.client_id,
             weight_updates: update.weight_updates,
@@ -285,7 +286,7 @@ pub struct TauStatistics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn create_test_update(client_id: usize, num_samples: usize) -> FedNovaUpdate {
+    fn create_test_update(_client_id: usize, num_samples: usize) -> FedNovaUpdate {
         let weight_updates = vec![
             Array2::from_elem((10, 10), 0.1),
             Array2::from_elem((10, 5), 0.2),

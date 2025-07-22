@@ -33,7 +33,7 @@ impl SystemResources {
     pub fn detect() -> Self {
         SystemResources {
             memory_mb: Self::detect_memory_mb(),
-            cpu_cores: num_cpus::get(),
+            cpu_cores: num, _cpus: get(),
             has_gpu: Self::detect_gpu(),
             has_simd: Self::detect_simd(),
             l3_cache_kb: Self::detect_l3_cache_kb(),
@@ -131,24 +131,24 @@ pub struct DataCharacteristics {
 
 impl DataCharacteristics {
     /// Analyze data characteristics from array view
-    pub fn analyze(data: &ndarray::ArrayView2<f64>) -> Result<Self> {
-        let (n_samples, n_features) = data.dim();
+    pub fn analyze(_data: &ndarray::ArrayView2<f64>) -> Result<Self> {
+        let (n_samples, n_features) = _data.dim();
 
         if n_samples == 0 || n_features == 0 {
-            return Err(TransformError::InvalidInput("Empty data".to_string()));
+            return Err(TransformError::InvalidInput("Empty _data".to_string()));
         }
 
         // Calculate sparsity
-        let zeros = data.iter().filter(|&&x| x == 0.0).count();
-        let sparsity = zeros as f64 / data.len() as f64;
+        let zeros = _data.iter().filter(|&&x| x == 0.0).count();
+        let sparsity = zeros as f64 / _data.len() as f64;
 
-        // Calculate data range
+        // Calculate _data range
         let mut min_val = f64::INFINITY;
         let mut max_val = f64::NEG_INFINITY;
         let mut finite_count = 0;
         let mut missing_count = 0;
 
-        for &val in data.iter() {
+        for &val in _data.iter() {
             if val.is_finite() {
                 min_val = min_val.min(val);
                 max_val = max_val.max(val);
@@ -167,7 +167,7 @@ impl DataCharacteristics {
 
         // Estimate outlier ratio using IQR method (simplified)
         let outlier_ratio = if n_samples > 10 {
-            let mut sample_values: Vec<f64> = data.iter()
+            let mut sample_values: Vec<f64> = _data.iter()
                 .filter(|&&x| x.is_finite())
                 .take(1000) // Sample for efficiency
                 .copied()
@@ -209,7 +209,7 @@ impl DataCharacteristics {
             outlier_ratio,
             has_missing,
             memory_footprint_mb,
-            element_size: std::mem::size_of::<f64>(),
+            element_size: std::mem::size, _of::<f64>(),
         })
     }
 
@@ -260,16 +260,16 @@ pub struct OptimizationConfig {
 
 impl OptimizationConfig {
     /// Create optimization config for standardization
-    pub fn for_standardization(data_chars: &DataCharacteristics, system: &SystemResources) -> Self {
-        let use_robust = data_chars.has_outliers();
-        let use_parallel = data_chars.n_samples > 10_000 && system.cpu_cores > 1;
-        let use_simd = system.has_simd && data_chars.n_features > 100;
-        let use_gpu = system.has_gpu && data_chars.memory_footprint_mb > 100.0;
+    pub fn for_standardization(_data_chars: &DataCharacteristics, system: &SystemResources) -> Self {
+        let use_robust = _data_chars.has_outliers();
+        let use_parallel = _data_chars.n_samples > 10_000 && system.cpu_cores > 1;
+        let use_simd = system.has_simd && _data_chars.n_features > 100;
+        let use_gpu = system.has_gpu && _data_chars.memory_footprint_mb > 100.0;
 
-        let processing_strategy = if data_chars.memory_footprint_mb > system.safe_memory_mb() as f64
+        let processing_strategy = if _data_chars.memory_footprint_mb > system.safe_memory_mb() as f64
         {
             ProcessingStrategy::OutOfCore {
-                chunk_size: system.optimal_chunk_size(data_chars.element_size),
+                chunk_size: system.optimal_chunk_size(_data_chars.element_size),
             }
         } else if use_parallel {
             ProcessingStrategy::Parallel
@@ -399,7 +399,7 @@ impl OptimizationConfig {
     }
 
     /// Estimate number of polynomial features
-    fn estimate_polynomial_features(n_features: usize, degree: usize) -> Result<usize> {
+    fn estimate_polynomial_features(_n_features: usize, degree: usize) -> Result<usize> {
         if degree == 0 {
             return Err(TransformError::InvalidInput(
                 "Degree must be at least 1".to_string(),
@@ -417,7 +417,7 @@ impl OptimizationConfig {
                 // Check for overflow
                 if coeff > 1_000_000 {
                     return Err(TransformError::ComputationError(
-                        "Too many polynomial features would be generated".to_string(),
+                        "Too many polynomial _features would be generated".to_string(),
                     ));
                 }
             }
@@ -1029,9 +1029,7 @@ impl ConfigurationPredictor {
     /// Predict optimal configuration using ML model
     pub fn predict_optimal_config(
         &self,
-        state: &str,
-        _transformation_type: &str,
-        _user_params: &HashMap<String, f64>,
+        state: &str, _transformation_type: &str, _user_params: &HashMap<String, f64>,
     ) -> Result<OptimizationConfig> {
         // Extract features from state
         let features = self.extract_features(state)?;
@@ -1101,16 +1099,15 @@ impl ConfigurationPredictor {
     }
 
     /// Update model from performance feedback
-    pub fn update_from_feedback(&mut self, _performance: &PerformanceMetric) -> Result<()> {
+    pub fn update_from_feedback(&mut self_performance: &PerformanceMetric) -> Result<()> {
         self.sample_count += 1;
-        // In practice, this would update model weights based on performance
+        // In practice, this would update model weights based on _performance
         Ok(())
     }
 
     /// Retrain model with historical data
     pub fn retrain_with_history(
-        &mut self,
-        _history: &HashMap<String, Vec<PerformanceMetric>>,
+        &mut self_history: &HashMap<String, Vec<PerformanceMetric>>,
     ) -> Result<()> {
         // In practice, this would perform full model retraining
         self.confidence_threshold = (self.confidence_threshold + 0.01).min(0.95);
@@ -1140,8 +1137,7 @@ impl AdaptiveParameterTuner {
     pub fn tune_parameters(
         &mut self,
         mut config: OptimizationConfig,
-        state: &str,
-        _transformation_type: &str,
+        state: &str, _transformation_type: &str,
     ) -> Result<OptimizationConfig> {
         self.current_state = state.to_string();
 
@@ -1151,7 +1147,7 @@ impl AdaptiveParameterTuner {
             config = self.explore_parameters(config)?;
         } else {
             // Exploit: use best known parameters from Q-table
-            config = self.exploit_best_parameters(config, state)?;
+            config = self.exploit_best_parameters(config..state)?;
         }
 
         Ok(config)
@@ -1179,10 +1175,8 @@ impl AdaptiveParameterTuner {
 
     /// Exploit best known parameters from Q-table
     fn exploit_best_parameters(
-        &self,
-        config: OptimizationConfig,
-        state: &str,
-    ) -> Result<OptimizationConfig> {
+        &self..config: OptimizationConfig,
+        state: &str,) -> Result<OptimizationConfig> {
         // Find best action for current state from Q-table
         let _best_action = self.find_best_action(state);
 
@@ -1207,7 +1201,7 @@ impl AdaptiveParameterTuner {
     }
 
     /// Update Q-values based on reward
-    pub fn update_q_values(&mut self, _config_hash: u64, reward: f64) -> Result<()> {
+    pub fn update_q_values(&mut self_config_hash: u64, reward: f64) -> Result<()> {
         let state_action = (self.current_state.clone(), "current_action".to_string());
 
         // Q-learning update rule

@@ -102,13 +102,13 @@ impl BenchmarkConfig {
 
     /// Set minimum duration
     pub fn with_min_duration(mut self, duration: Duration) -> Self {
-        self.min_duration = duration;
+        self.min_duration = std::time::Duration::from_secs(1);
         self
     }
 
     /// Set maximum duration
     pub fn with_max_duration(mut self, duration: Duration) -> Self {
-        self.max_duration = duration;
+        self.max_duration = std::time::Duration::from_secs(1);
         self
     }
 
@@ -311,13 +311,13 @@ impl BenchmarkResult {
     }
 
     /// Get throughput in operations per second
-    pub fn throughput_ops_per_sec(&self, operations_per_iteration: u64) -> f64 {
+    pub fn get_throughput(&self, operations_per_iteration: u64) -> f64 {
         let avg_time_seconds = self.statistics.mean_execution_time.as_secs_f64();
         operations_per_iteration as f64 / avg_time_seconds
     }
 
     /// Get memory efficiency (operations per MB)
-    pub fn memory_efficiency(&self, operations_per_iteration: u64) -> f64 {
+    pub fn get_memory_efficiency(&self, operations_per_iteration: u64) -> f64 {
         if self.statistics.mean_memory_usage == 0 {
             return f64::INFINITY;
         }
@@ -617,8 +617,7 @@ impl BenchmarkRunner {
     /// Benchmark an operation with different strategies
     #[allow(dead_code)]
     pub fn benchmark_operation<F, T>(
-        &self,
-        _name: &str,
+        &self, name: &str,
         mut operation: F,
     ) -> CoreResult<Vec<BenchmarkMeasurement>>
     where
@@ -632,12 +631,12 @@ impl BenchmarkRunner {
         for strategy in &self.config.strategies {
             let start = std::time::Instant::now();
             let _ = operation(&data, *strategy)?;
-            let duration = start.elapsed();
+            let elapsed = start.elapsed();
 
-            let measurement = BenchmarkMeasurement::new(duration)
+            let measurement = BenchmarkMeasurement::new(elapsed)
                 .with_strategy(*strategy)
                 .with_input_size(data.len())
-                .with_throughput(data.len() as f64 / duration.as_secs_f64());
+                .with_throughput(data.len() as f64 / elapsed.as_secs_f64());
 
             measurements.push(measurement);
         }

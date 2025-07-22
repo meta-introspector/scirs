@@ -10,6 +10,7 @@ use std::fmt::Debug;
 // Import helper functions from the multivariate module
 use super::normal::{compute_cholesky, compute_inverse_from_cholesky};
 use super::wishart::Wishart;
+use statrs::statistics::Statistics;
 
 /// Inverse Wishart distribution structure
 #[derive(Debug, Clone)]
@@ -43,18 +44,18 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// // Create a 2D Inverse Wishart distribution with 5 degrees of freedom
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
     /// let inv_wishart = InverseWishart::new(scale, df).unwrap();
     /// ```
-    pub fn new<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Self>
+    pub fn new<D>(_scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Self>
     where
         D: Data<Elem = f64>,
     {
-        let scale_owned = scale.to_owned();
+        let scale_owned = _scale.to_owned();
         let dim = scale_owned.shape()[0];
 
         // Check if the matrix is square
@@ -78,7 +79,7 @@ impl InverseWishart {
             StatsError::DomainError("Scale matrix must be positive definite".to_string())
         })?;
 
-        // Compute determinant of the scale matrix
+        // Compute determinant of the _scale matrix
         let scale_det = {
             let mut det = 1.0;
             for i in 0..dim {
@@ -88,7 +89,7 @@ impl InverseWishart {
         };
 
         Ok(InverseWishart {
-            scale: scale_owned,
+            _scale: scale_owned,
             df,
             dim,
             scale_chol,
@@ -110,7 +111,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
@@ -140,11 +141,11 @@ impl InverseWishart {
     }
 
     /// Calculate the log PDF with precomputed Cholesky decomposition of x
-    fn logpdf_with_cholesky<D>(&self, _x: &ArrayBase<D, Ix2>, x_chol: &Array2<f64>) -> f64
+    fn logpdf_with_cholesky<D>(&self_x: &ArrayBase<D, Ix2>, x_chol: &Array2<f64>) -> f64
     where
         D: Data<Elem = f64>,
     {
-        // Calculate determinant of x
+        // Calculate determinant of _x
         let mut x_det = 1.0;
         for i in 0..self.dim {
             x_det *= x_chol[[i, i]];
@@ -193,7 +194,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
@@ -236,7 +237,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -281,7 +282,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -305,7 +306,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -342,7 +343,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -379,18 +380,18 @@ impl InverseWishart {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distributions::multivariate;
+/// use scirs2__stats::distributions::multivariate;
 ///
 /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
 /// let df = 5.0;
 /// let inv_wishart = multivariate::inverse_wishart(scale, df).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn inverse_wishart<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<InverseWishart>
+pub fn inverse_wishart<D>(_scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<InverseWishart>
 where
     D: Data<Elem = f64>,
 {
-    InverseWishart::new(scale, df)
+    InverseWishart::new(_scale, df)
 }
 
 /// Implementation of SampleableDistribution for InverseWishart

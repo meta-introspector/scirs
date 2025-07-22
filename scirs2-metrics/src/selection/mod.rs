@@ -16,7 +16,7 @@
 //! ## Basic Model Selection
 //!
 //! ```
-//! use scirs2_metrics::selection::{ModelSelector, SelectionCriteria};
+//! use scirs2__metrics::selection::{ModelSelector, SelectionCriteria};
 //! use std::collections::HashMap;
 //!
 //! // Define models and their metric scores
@@ -38,7 +38,7 @@
 //! ## Pareto Optimal Selection
 //!
 //! ```
-//! use scirs2_metrics::selection::ModelSelector;
+//! use scirs2__metrics::selection::ModelSelector;
 //! use std::collections::HashMap;
 //!
 //! let mut model_scores = HashMap::new();
@@ -160,7 +160,7 @@ impl ModelSelector {
         rankings
             .into_iter()
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(model_name, _)| model_name)
+            .map(|(model_name_)| model_name)
             .ok_or_else(|| MetricsError::ComputationError("No valid models found".to_string()))
     }
 
@@ -171,9 +171,9 @@ impl ModelSelector {
     ) -> Result<Vec<(String, f64)>> {
         let mut rankings = Vec::new();
 
-        for (model_name, scores) in model_scores {
-            if let Ok(aggregated_score) = self.compute_aggregated_score(scores) {
-                if self.meets_thresholds(scores) {
+        for (model_name_scores) in model_scores {
+            if let Ok(aggregated_score) = self.compute_aggregated_score(_scores) {
+                if self.meets_thresholds(_scores) {
                     rankings.push((model_name.clone(), aggregated_score));
                 }
             }
@@ -190,7 +190,7 @@ impl ModelSelector {
     ) -> Vec<String> {
         let mut pareto_optimal = Vec::new();
 
-        for (model_name, scores) in model_scores {
+        for (model_name_scores) in model_scores {
             let mut is_dominated = false;
 
             for (other_name, other_scores) in model_scores {
@@ -198,7 +198,7 @@ impl ModelSelector {
                     continue;
                 }
 
-                if self.dominates(other_scores, scores) {
+                if self.dominates(other_scores_scores) {
                     is_dominated = true;
                     break;
                 }
@@ -266,11 +266,11 @@ impl ModelSelector {
             }
             AggregationStrategy::MinScore => normalized_scores
                 .iter()
-                .map(|(score, _)| *score)
+                .map(|(score_)| *score)
                 .fold(f64::INFINITY, f64::min),
             AggregationStrategy::MaxScore => normalized_scores
                 .iter()
-                .map(|(score, _)| *score)
+                .map(|(score_)| *score)
                 .fold(f64::NEG_INFINITY, f64::max),
         };
 
@@ -427,7 +427,7 @@ impl ModelSelectionBuilder {
 
         let score = rankings
             .iter()
-            .find(|(name, _)| name == &selected_model)
+            .find(|(name_)| name == &selected_model)
             .map(|(_, score)| *score)
             .unwrap_or(0.0);
 

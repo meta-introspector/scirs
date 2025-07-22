@@ -4,8 +4,8 @@
 //! measuring their performance across various scenarios.
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use num_complex::Complex64;
-use scirs2_fft::planning::{
+use num__complex::Complex64;
+use scirs2__fft::planning::{
     AdvancedFftPlanner, FftPlanExecutor, PlanBuilder, PlanningConfig, PlanningStrategy,
 };
 use std::time::Duration;
@@ -13,10 +13,10 @@ use tempfile::tempdir;
 
 /// Generate a test signal of the given size
 #[allow(dead_code)]
-fn generate_test_signal(size: usize) -> Vec<Complex64> {
-    let mut signal = Vec::with_capacity(size);
-    for i in 0..size {
-        let phase = 2.0 * std::f64::consts::PI * (i as f64) / (size as f64);
+fn generate_test_signal(_size: usize) -> Vec<Complex64> {
+    let mut signal = Vec::with_capacity(_size);
+    for i in 0.._size {
+        let phase = 2.0 * std::f64::consts::PI * (i as f64) / (_size as f64);
         signal.push(Complex64::new(phase.cos(), phase.sin()));
     }
     signal

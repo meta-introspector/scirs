@@ -3,7 +3,7 @@
 use crate::error::StatsResult;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
-use scirs2_linalg::inv;
+use scirs2__linalg::inv;
 
 /// Helper functions for working with Float trait to avoid method ambiguity
 /// Returns the absolute value of a Float
@@ -105,12 +105,12 @@ where
 }
 
 /// Calculate t-values for regression coefficients
-pub(crate) fn calculate_t_values<F>(coefficients: &Array1<F>, std_errors: &Array1<F>) -> Array1<F>
+pub(crate) fn calculate_t_values<F>(_coefficients: &Array1<F>, std_errors: &Array1<F>) -> Array1<F>
 where
     F: Float + 'static + std::fmt::Display,
 {
     // Calculate t-values for each coefficient
-    coefficients
+    _coefficients
         .iter()
         .zip(std_errors.iter())
         .map(|(&coef, &se)| {
@@ -225,7 +225,7 @@ where
     } else {
         F::one() - p
     };
-    let t = num_traits::Float::sqrt(-F::from(2.0).unwrap() * num_traits::Float::ln(p_adj));
+    let t = num_traits::Float::sqrt(-F::from(2.0).unwrap() * num, _traits::Float::ln(p_adj));
 
     // Apply Abramowitz and Stegun approximation
     let v = t

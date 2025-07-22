@@ -5,7 +5,7 @@
 //! ill-conditioned matrices during interpolation.
 
 use ndarray::{Array1, Array2};
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     advanced::rbf::{RBFInterpolator, RBFKernel},
     numerical_stability::{assess_matrix_condition, machine_epsilon, StabilityLevel},
 };

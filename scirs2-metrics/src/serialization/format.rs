@@ -35,7 +35,7 @@ where
         return serialize(data, to_format);
     }
 
-    // Serialize the data to a JSON representation regardless of source format
+    // Serialize the data to a JSON representation regardless of source _format
     let json_value = match from_format {
         SerializationFormat::Json => {
             // If source is JSON, just serialize to a JSON value
@@ -48,7 +48,7 @@ where
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
 
             // First convert to YAML value
-            let yaml_value = serde_yaml::from_str::<serde_yaml::Value>(&yaml_str)
+            let yaml_value = serde_yaml::from, _str::<serde_yaml::Value>(&yaml_str)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
 
             // Then convert to a generic serializable form
@@ -78,15 +78,14 @@ where
             let value: ciborium::Value = ciborium::de::from_reader(&serialized[..])
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
 
-            // Convert ciborium::Value to serde_json::Value (intermediate step)
-            serde_json::to_value(value)
+            // Convert ciborium::Value to serde_json::Value (intermediate step), serde_json::to_value(value)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?
         }
     };
 
-    // Serialize to the target format
+    // Serialize to the target _format
     match to_format {
-        SerializationFormat::Json => serde_json::to_vec_pretty(&json_value)
+        SerializationFormat::Json =>, serde_json::to_vec_pretty(&json_value)
             .map_err(|e| MetricsError::SerializationError(e.to_string())),
         SerializationFormat::Yaml => {
             let yaml = serde_yaml::to_string(&json_value)
@@ -97,7 +96,7 @@ where
             // Convert through JSON for TOML
             let json = serde_json::to_string(&json_value)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
-            let toml_value: toml::Value = serde_json::from_str(&json)
+            let toml_value: toml::Value = serde, _json::from_str(&json)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             let toml_str = toml::to_string_pretty(&toml_value)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
@@ -137,7 +136,7 @@ where
     P2: AsRef<Path>,
 {
     // Read the input file
-    let data = deserialize_from_file::<T, _>(input_path, from_format)?;
+    let data = deserialize_from_file::<T>(input_path, from_format)?;
 
     // Convert and write to the output file
     serialize_to_file(&data, output_path, to_format)
@@ -154,26 +153,26 @@ where
 ///
 /// * Result containing the serialized data
 #[allow(dead_code)]
-pub fn serialize<T>(data: &T, format: SerializationFormat) -> Result<Vec<u8>>
+pub fn serialize<T>(_data: &T, format: SerializationFormat) -> Result<Vec<u8>>
 where
     T: Serialize,
 {
     match format {
-        SerializationFormat::Json => serde_json::to_vec_pretty(data)
+        SerializationFormat::Json =>, serde_json::to_vec_pretty(_data)
             .map_err(|e| MetricsError::SerializationError(e.to_string())),
         SerializationFormat::Yaml => {
-            let yaml = serde_yaml::to_string(data)
+            let yaml = serde_yaml::to_string(_data)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             Ok(yaml.into_bytes())
         }
         SerializationFormat::Toml => {
-            let toml = toml::to_string_pretty(data)
+            let toml = toml::to_string_pretty(_data)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             Ok(toml.into_bytes())
         }
         SerializationFormat::Cbor => {
             let mut bytes = Vec::new();
-            ciborium::ser::into_writer(data, &mut bytes)
+            ciborium::ser::into_writer(_data, &mut bytes)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             Ok(bytes)
         }
@@ -191,25 +190,25 @@ where
 ///
 /// * Result containing the deserialized data
 #[allow(dead_code)]
-pub fn deserialize<T>(data: &[u8], format: SerializationFormat) -> Result<T>
+pub fn deserialize<T>(_data: &[u8], format: SerializationFormat) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
 {
     match format {
-        SerializationFormat::Json => serde_json::from_slice(data)
+        SerializationFormat::Json =>, serde_json::from_slice(_data)
             .map_err(|e| MetricsError::SerializationError(e.to_string())),
         SerializationFormat::Yaml => {
-            let yaml_str = std::str::from_utf8(data)
+            let yaml_str = std::str::from_utf8(_data)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             serde_yaml::from_str(yaml_str)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))
         }
         SerializationFormat::Toml => {
-            let toml_str = std::str::from_utf8(data)
+            let toml_str = std::str::from_utf8(_data)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             toml::from_str(toml_str).map_err(|e| MetricsError::SerializationError(e.to_string()))
         }
-        SerializationFormat::Cbor => ciborium::de::from_reader(data)
+        SerializationFormat::Cbor =>, ciborium::de::from_reader(_data)
             .map_err(|e| MetricsError::SerializationError(e.to_string())),
     }
 }
@@ -226,12 +225,12 @@ where
 ///
 /// * Result indicating success or error
 #[allow(dead_code)]
-pub fn serialize_to_file<T, P>(data: &T, path: P, format: SerializationFormat) -> Result<()>
+pub fn serialize_to_file<T, P>(_data: &T, path: P, format: SerializationFormat) -> Result<()>
 where
     T: Serialize,
     P: AsRef<Path>,
 {
-    let serialized = serialize(data, format)?;
+    let serialized = serialize(_data, format)?;
 
     let mut file = File::create(path).map_err(|e| MetricsError::IOError(e.to_string()))?;
 
@@ -252,12 +251,12 @@ where
 ///
 /// * Result containing the deserialized data
 #[allow(dead_code)]
-pub fn deserialize_from_file<T, P>(path: P, format: SerializationFormat) -> Result<T>
+pub fn deserialize_from_file<T, P>(_path: P, format: SerializationFormat) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
     P: AsRef<Path>,
 {
-    let mut file = File::open(path).map_err(|e| MetricsError::IOError(e.to_string()))?;
+    let mut file = File::open(_path).map_err(|e| MetricsError::IOError(e.to_string()))?;
 
     let mut data = Vec::new();
     file.read_to_end(&mut data)

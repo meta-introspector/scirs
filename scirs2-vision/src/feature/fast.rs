@@ -33,7 +33,7 @@ use ndarray::Array2;
 /// # Example
 ///
 /// ```rust
-/// use scirs2_vision::feature::fast_corners;
+/// use scirs2__vision::feature::fast_corners;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -145,19 +145,19 @@ pub fn fast_corners(
                 pixels[i] = array[[ny, nx]];
             }
 
-            // Check for consecutive brighter or darker pixels
+            // Check for _consecutive brighter or darker pixels
             let is_corner =
                 check_consecutive_pixels(&pixels, center, normalized_threshold, n_consecutive);
 
             if is_corner {
-                // Compute corner score for non-maximum suppression
+                // Compute corner score for non-maximum _suppression
                 let score = compute_corner_score(&pixels, center, normalized_threshold);
                 corners[[y, x]] = score;
             }
         }
     }
 
-    // Apply non-maximum suppression if requested
+    // Apply non-maximum _suppression if requested
     if non_max_suppression {
         corners = apply_non_max_suppression(&corners, 3);
     }
@@ -175,7 +175,7 @@ fn check_consecutive_pixels(
     n_consecutive: usize,
 ) -> bool {
     // We need to check circular sequences, so we extend the check
-    // Check for consecutive brighter pixels
+    // Check for _consecutive brighter pixels
     let mut brighter_count = 0;
     let mut max_brighter = 0;
 
@@ -196,7 +196,7 @@ fn check_consecutive_pixels(
         }
     }
 
-    // Check for consecutive darker pixels
+    // Check for _consecutive darker pixels
     let mut darker_count = 0;
     let mut max_darker = 0;
 
@@ -221,10 +221,10 @@ fn check_consecutive_pixels(
 
 /// Compute corner score based on the sum of absolute differences
 #[allow(dead_code)]
-fn compute_corner_score(pixels: &[f32; 16], center: f32, threshold: f32) -> f32 {
+fn compute_corner_score(_pixels: &[f32; 16], center: f32, threshold: f32) -> f32 {
     let mut score = 0.0;
 
-    for &pixel in pixels.iter() {
+    for &pixel in _pixels.iter() {
         let diff = (pixel - center).abs();
         if diff > threshold {
             score += diff - threshold;
@@ -236,14 +236,14 @@ fn compute_corner_score(pixels: &[f32; 16], center: f32, threshold: f32) -> f32 
 
 /// Apply non-maximum suppression to corner scores
 #[allow(dead_code)]
-fn apply_non_max_suppression(corners: &Array2<f32>, window_size: usize) -> Array2<f32> {
-    let (height, width) = corners.dim();
+fn apply_non_max_suppression(_corners: &Array2<f32>, window_size: usize) -> Array2<f32> {
+    let (height, width) = _corners.dim();
     let mut result = Array2::zeros((height, width));
     let radius = window_size / 2;
 
     for y in radius..(height - radius) {
         for x in radius..(width - radius) {
-            let center_score = corners[[y, x]];
+            let center_score = _corners[[y, x]];
             if center_score == 0.0 {
                 continue;
             }
@@ -259,7 +259,7 @@ fn apply_non_max_suppression(corners: &Array2<f32>, window_size: usize) -> Array
                     let ny = (y as i32 + dy) as usize;
                     let nx = (x as i32 + dx) as usize;
 
-                    if corners[[ny, nx]] > center_score {
+                    if _corners[[ny, nx]] > center_score {
                         is_maximum = false;
                         break 'window;
                     }
@@ -288,8 +288,8 @@ fn apply_non_max_suppression(corners: &Array2<f32>, window_size: usize) -> Array
 ///
 /// * Result containing corner points
 #[allow(dead_code)]
-pub fn fast_corners_simple(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
-    fast_corners(img, threshold, 9, true)
+pub fn fast_corners_simple(_img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
+    fast_corners(_img, threshold, 9, true)
 }
 
 #[cfg(test)]

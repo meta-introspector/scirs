@@ -65,6 +65,7 @@
 
 use crate::error::{SpecialError, SpecialResult};
 use crate::validation;
+use scirs2_core::validation::check_finite;
 use num_traits::{Float, FromPrimitive};
 use std::f64;
 use std::fmt::{Debug, Display};
@@ -137,7 +138,7 @@ mod constants {
 ///
 /// ### For Positive Integers and Half-Integers  
 /// - **Integers**: Direct factorial computation: Γ(n) = (n-1)!
-/// - **Half-integers**: Exact formula: Γ(n+1/2) = (2n-1)!!√π/2ⁿ
+/// - **Half-integers**: Exact, formula: Γ(n+1/2) = (2n-1)!!√π/2ⁿ
 ///
 /// ### For Large Values (x > 171)
 /// Uses **Stirling's asymptotic expansion** to prevent overflow:
@@ -452,7 +453,7 @@ where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign,
 {
     // Validate input
-    validation::check_finite(x, "x")?;
+    check_finite(x, "x value")?;
 
     // Special cases
     if x.is_nan() {
@@ -918,7 +919,7 @@ where
         + std::ops::DivAssign,
 {
     // Validate input
-    validation::check_finite(x, "x")?;
+    check_finite(x, "x value")?;
 
     // Check for poles (negative integers and zero)
     if x <= F::zero() {
@@ -2076,15 +2077,15 @@ fn enhanced_log_sin_pi_x<F: Float + FromPrimitive>(x: F) -> F {
 
 /// Enhanced sign computation for reflection formula with extreme values
 #[allow(dead_code)]
-fn enhanced_reflection_sign<F: Float + FromPrimitive>(x_f64: f64) -> F {
+fn enhanced_reflection_sign<F: Float + FromPrimitive>(_x_f64: f64) -> F {
     // For the reflection formula Γ(x) = π / (sin(πx) * Γ(1-x))
     // The sign depends on both sin(πx) and the parity
 
-    let x_floor = x_f64.floor();
+    let x_floor = _x_f64.floor();
     let _n = x_floor as i32;
 
     // sin(πx) has the same sign as sin(π(x - floor(x)))
-    let fractional_part = x_f64 - x_floor;
+    let fractional_part = _x_f64 - x_floor;
 
     if fractional_part == 0.0 {
         // x is an integer, sin(πx) = 0, return NaN indicator

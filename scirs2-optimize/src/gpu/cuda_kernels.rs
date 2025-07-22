@@ -19,7 +19,7 @@ pub struct FunctionEvaluationKernel {
 
 impl FunctionEvaluationKernel {
     /// Create a new function evaluation kernel
-    pub fn new(context: Arc<GpuContext>) -> ScirsResult<Self> {
+    pub fn new(_context: Arc<GpuContext>) -> ScirsResult<Self> {
         let kernel_source = r#"
             __global__ void evaluate_batch(
                 const double* points,
@@ -41,18 +41,16 @@ impl FunctionEvaluationKernel {
             }
         "#;
 
-        let kernel = context.compile(kernel_source)?;
+        let kernel = _context.compile(kernel_source)?;
 
-        Ok(Self { context, kernel })
+        Ok(Self { _context, kernel })
     }
 
     /// Evaluate a batch of points using the specified function type
     /// Note: This is a placeholder implementation that compiles correctly
     pub fn evaluate_batch(
         &self,
-        points: &GpuBuffer<f64>,
-        _function_type: i32,
-        _stream: Option<&GpuStream>,
+        points: &GpuBuffer<f64>, _function_type: i32, _stream: Option<&GpuStream>,
     ) -> ScirsResult<GpuBuffer<f64>> {
         // Placeholder implementation
         let n_points = points.len();
@@ -72,7 +70,7 @@ pub struct GradientKernel {
 
 impl GradientKernel {
     /// Create a new gradient computation kernel
-    pub fn new(context: Arc<GpuContext>) -> ScirsResult<Self> {
+    pub fn new(_context: Arc<GpuContext>) -> ScirsResult<Self> {
         let kernel_source = r#"
             __global__ void compute_gradient_finite_diff(
                 const double* points,
@@ -93,20 +91,16 @@ impl GradientKernel {
             }
         "#;
 
-        let kernel = context.compile(kernel_source)?;
+        let kernel = _context.compile(kernel_source)?;
 
-        Ok(Self { context, kernel })
+        Ok(Self { _context, kernel })
     }
 
     /// Compute gradients for a batch of points using finite differences
     /// Note: This is a placeholder implementation that compiles correctly
     pub fn compute_gradients(
         &self,
-        points: &GpuBuffer<f64>,
-        _function_values: &GpuBuffer<f64>,
-        _function_type: i32,
-        _h: f64,
-        _stream: Option<&GpuStream>,
+        points: &GpuBuffer<f64>, _function_values: &GpuBuffer<f64>, _function_type: i32, _h: f64_stream: Option<&GpuStream>,
     ) -> ScirsResult<GpuBuffer<f64>> {
         // Placeholder implementation
         let n_points = points.len();
@@ -126,7 +120,7 @@ pub struct ParticleSwarmKernel {
 
 impl ParticleSwarmKernel {
     /// Create a new particle swarm kernel
-    pub fn new(context: Arc<GpuContext>) -> ScirsResult<Self> {
+    pub fn new(_context: Arc<GpuContext>) -> ScirsResult<Self> {
         let kernel_source = r#"
             __global__ void update_particles(
                 double* positions,
@@ -150,9 +144,9 @@ impl ParticleSwarmKernel {
             }
         "#;
 
-        let kernel = context.compile(kernel_source)?;
+        let kernel = _context.compile(kernel_source)?;
 
-        Ok(Self { context, kernel })
+        Ok(Self { _context, kernel })
     }
 
     /// Update particle positions and velocities
@@ -160,13 +154,7 @@ impl ParticleSwarmKernel {
     pub fn update_particles(
         &self,
         positions: &mut GpuBuffer<f64>,
-        velocities: &mut GpuBuffer<f64>,
-        _personal_best: &GpuBuffer<f64>,
-        _global_best: &GpuBuffer<f64>,
-        _w: f64,
-        _c1: f64,
-        _c2: f64,
-        _stream: Option<&GpuStream>,
+        velocities: &mut GpuBuffer<f64>, _personal_best: &GpuBuffer<f64>, _global_best: &GpuBuffer<f64>, _w: f64_c1: f64, _c2: f64_stream: Option<&GpuStream>,
     ) -> ScirsResult<()> {
         // Placeholder implementation
         let _ = (positions, velocities);
@@ -182,7 +170,7 @@ pub struct DifferentialEvolutionKernel {
 
 impl DifferentialEvolutionKernel {
     /// Create a new differential evolution kernel
-    pub fn new(context: Arc<GpuContext>) -> ScirsResult<Self> {
+    pub fn new(_context: Arc<GpuContext>) -> ScirsResult<Self> {
         let kernel_source = r#"
             __global__ void mutate_population(
                 const double* population,
@@ -202,19 +190,16 @@ impl DifferentialEvolutionKernel {
             }
         "#;
 
-        let kernel = context.compile(kernel_source)?;
+        let kernel = _context.compile(kernel_source)?;
 
-        Ok(Self { context, kernel })
+        Ok(Self { _context, kernel })
     }
 
     /// Generate mutant vectors for differential evolution
     /// Note: This is a placeholder implementation that compiles correctly
     pub fn generate_mutants(
         &self,
-        population: &GpuBuffer<f64>,
-        _indices: &GpuBuffer<i32>,
-        _f: f64,
-        _stream: Option<&GpuStream>,
+        population: &GpuBuffer<f64>, _indices: &GpuBuffer<i32>, _f: f64_stream: Option<&GpuStream>,
     ) -> ScirsResult<GpuBuffer<f64>> {
         // Placeholder implementation
         let n_points = population.len();

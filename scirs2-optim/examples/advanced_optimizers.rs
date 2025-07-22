@@ -2,7 +2,7 @@
 
 use ndarray::Array1;
 use plotters::prelude::*;
-use scirs2_optim::optimizers::{Adam, AdamW, Optimizer, RAdam, RMSprop, SGD};
+use scirs2__optim::optimizers::{Adam, AdamW, Optimizer, RAdam, RMSprop, SGD};
 
 // Type aliases to simplify complex types
 type OptimizerList = Vec<(String, Box<dyn Optimizer<f64, ndarray::Ix1>>)>;
@@ -80,14 +80,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Define the function: f(x, y) = x^2 + 2y^2
 #[allow(dead_code)]
-fn function_value(params: &Array1<f64>) -> f64 {
-    params[0].powi(2) + 2.0 * params[1].powi(2)
+fn function_value(_params: &Array1<f64>) -> f64 {
+    _params[0].powi(2) + 2.0 * _params[1].powi(2)
 }
 
 // Define the gradients: ∇f = [2x, 4y]
 #[allow(dead_code)]
-fn compute_gradients(params: &Array1<f64>) -> Array1<f64> {
-    Array1::from_vec(vec![2.0 * params[0], 4.0 * params[1]])
+fn compute_gradients(_params: &Array1<f64>) -> Array1<f64> {
+    Array1::from_vec(vec![2.0 * _params[0], 4.0 * _params[1]])
 }
 
 // Plot optimization paths
@@ -152,7 +152,7 @@ fn plot_paths(
     // Plot optimizer paths
     let colors = [&RED, &BLUE, &GREEN, &MAGENTA, &CYAN, &YELLOW, &BLACK];
 
-    for (i, (path, (name, _))) in paths.iter().zip(optimizers).enumerate() {
+    for (i, (path, (name_))) in paths.iter().zip(optimizers).enumerate() {
         let color = colors[i % colors.len()];
 
         // Draw path
@@ -228,7 +228,7 @@ fn plot_loss_history(
 
     let colors = [&RED, &BLUE, &GREEN, &MAGENTA, &CYAN, &YELLOW, &BLACK];
 
-    for (i, (losses, (name, _))) in loss_histories.iter().zip(optimizers).enumerate() {
+    for (i, (losses, (name_))) in loss_histories.iter().zip(optimizers).enumerate() {
         let color = colors[i % colors.len()];
 
         let losses_with_idx: Vec<(f64, f64)> = losses

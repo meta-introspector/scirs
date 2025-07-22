@@ -3,8 +3,8 @@
 //! This example shows various physics and engineering functions available
 //! in the scirs2-special module.
 
-use num_complex::Complex64;
-use scirs2_special::physics_engineering::*;
+use num__complex::Complex64;
+use scirs2__special::physics_engineering::*;
 
 #[allow(dead_code)]
 fn main() {
@@ -80,7 +80,7 @@ fn main() {
         beam_radius * 1000.0
     );
 
-    let (r_s, _t_s) = optics::fresnel_coefficients(1.0, 1.5, 0.5, 's').unwrap();
+    let (r_s_t_s) = optics::fresnel_coefficients(1.0, 1.5, 0.5, 's').unwrap();
     println!("Fresnel reflection (s-pol, 30°): {:.3}", r_s.norm());
 
     // Thermal examples

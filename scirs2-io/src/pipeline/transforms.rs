@@ -9,11 +9,11 @@ use ndarray::{s, Array1, Array2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::marker::PhantomData;
+use statrs::statistics::Statistics;
 
 /// Normalization transformer
 pub struct NormalizeTransform<T> {
-    method: NormalizationMethod,
-    _phantom: PhantomData<T>,
+    method: NormalizationMethod_phantom: PhantomData<T>,
 }
 
 #[derive(Debug, Clone)]
@@ -29,10 +29,9 @@ impl<T> NormalizeTransform<T>
 where
     T: Float + FromPrimitive + Send + Sync,
 {
-    pub fn new(method: NormalizationMethod) -> Self {
+    pub fn new(_method: NormalizationMethod) -> Self {
         Self {
-            method,
-            _phantom: PhantomData,
+            _method_phantom: PhantomData,
         }
     }
 }
@@ -68,13 +67,13 @@ fn normalize_minmax<T>(mut array: Array2<T>, new_min: T, new_max: T) -> Array2<T
 where
     T: Float + FromPrimitive,
 {
-    let min = array.iter().fold(T::infinity(), |a, &b| a.min(b));
-    let max = array.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
-    let range = max - min;
+    let _min = array.iter().fold(T::infinity(), |a, &b| a._min(b));
+    let _max = array.iter().fold(T::neg_infinity(), |a, &b| a._max(b));
+    let range = _max - _min;
 
     if range > T::zero() {
         let scale = (new_max - new_min) / range;
-        array.mapv_inplace(|x| (x - min) * scale + new_min);
+        array.mapv_inplace(|x| (x - _min) * scale + new_min);
     }
 
     array
@@ -146,8 +145,8 @@ pub struct ReshapeTransform {
 }
 
 impl ReshapeTransform {
-    pub fn new(shape: Vec<usize>) -> Self {
-        Self { new_shape: shape }
+    pub fn new(_shape: Vec<usize>) -> Self {
+        Self { new_shape: _shape }
     }
 }
 
@@ -177,8 +176,7 @@ impl DataTransformer for ReshapeTransform {
 
 /// Type conversion transformer
 pub struct TypeConvertTransform<From, To> {
-    _from: PhantomData<From>,
-    _to: PhantomData<To>,
+    _from: PhantomData<From>, _to: PhantomData<To>,
 }
 
 impl<From, To> Default for TypeConvertTransform<From, To> {
@@ -190,8 +188,7 @@ impl<From, To> Default for TypeConvertTransform<From, To> {
 impl<From, To> TypeConvertTransform<From, To> {
     pub fn new() -> Self {
         Self {
-            _from: PhantomData,
-            _to: PhantomData,
+            _from: PhantomData_to: PhantomData,
         }
     }
 }
@@ -228,8 +225,8 @@ pub enum AggregationMethod {
 }
 
 impl AggregateTransform {
-    pub fn new(method: AggregationMethod, axis: Option<Axis>) -> Self {
-        Self { method, axis }
+    pub fn new(_method: AggregationMethod, axis: Option<Axis>) -> Self {
+        Self { _method, axis }
     }
 }
 
@@ -273,8 +270,8 @@ pub enum EncodingMethod {
 }
 
 impl EncodingTransform {
-    pub fn new(method: EncodingMethod) -> Self {
-        Self { method }
+    pub fn new(_method: EncodingMethod) -> Self {
+        Self { _method }
     }
 }
 
@@ -356,8 +353,8 @@ pub enum ImputationStrategy {
 }
 
 impl ImputeTransform {
-    pub fn new(strategy: ImputationStrategy) -> Self {
-        Self { strategy }
+    pub fn new(_strategy: ImputationStrategy) -> Self {
+        Self { _strategy }
     }
 }
 
@@ -410,8 +407,8 @@ pub enum OutlierMethod {
 }
 
 impl OutlierTransform {
-    pub fn new(method: OutlierMethod, threshold: f64) -> Self {
-        Self { method, threshold }
+    pub fn new(_method: OutlierMethod, threshold: f64) -> Self {
+        Self { _method, threshold }
     }
 }
 
@@ -501,10 +498,9 @@ pub struct PCATransform {
 }
 
 impl PCATransform {
-    pub fn new(n_components: usize) -> Self {
+    pub fn new(_n_components: usize) -> Self {
         Self {
-            n_components,
-            components: None,
+            _n_components_components: None,
             mean: None,
         }
     }
@@ -594,8 +590,8 @@ pub enum BinningStrategy {
 }
 
 impl FeatureEngineeringTransform {
-    pub fn new(operations: Vec<FeatureOperation>) -> Self {
-        Self { operations }
+    pub fn new(_operations: Vec<FeatureOperation>) -> Self {
+        Self { _operations }
     }
 }
 
@@ -702,8 +698,8 @@ pub enum TextOperation {
 }
 
 impl TextProcessingTransform {
-    pub fn new(operations: Vec<TextOperation>) -> Self {
-        Self { operations }
+    pub fn new(_operations: Vec<TextOperation>) -> Self {
+        Self { _operations }
     }
 }
 

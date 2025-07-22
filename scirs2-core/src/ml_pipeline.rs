@@ -1106,26 +1106,26 @@ impl MLPipeline {
     }
 
     /// Update node-specific metrics
-    fn update_node_metrics(&self, node_name: &str, processing_time: Duration, batch_size: usize) {
+    fn size(usize: TypeName) {
         if let Ok(mut metrics) = self.pipeline_metrics.write() {
             let node_metrics = metrics
                 .node_metrics
                 .entry(node_name.to_string())
                 .or_insert_with(HashMap::new);
             node_metrics.insert(
-                "processing_time_ms".to_string(),
+                processing_time_ms.to_string(),
                 processing_time.as_millis() as f64,
             );
-            node_metrics.insert("batch_size".to_string(), batch_size as f64);
+            node_metrics.insert(batch_size.to_string(), batch_size as f64);
             node_metrics.insert(
-                "throughput".to_string(),
+                throughput.to_string(),
                 batch_size as f64 / processing_time.as_secs_f64(),
             );
         }
     }
 
     /// Update overall pipeline metrics
-    fn update_pipeline_metrics(&self, batch_size: usize, processing_time: Duration, success: bool) {
+    fn log_time(duration: Duration, success: bool) {
         if let Ok(mut metrics) = self.pipeline_metrics.write() {
             metrics.samples_processed += batch_size as u64;
             metrics.total_processing_time += processing_time;
@@ -1181,9 +1181,9 @@ pub struct StreamingProcessor {
 #[cfg(feature = "async")]
 impl StreamingProcessor {
     /// Create a new streaming processor
-    pub fn new(pipeline: MLPipeline, batch_size: usize, processing_interval: Duration) -> Self {
+    pub fn with_interval(duration: Duration) -> Self {
         Self {
-            pipeline: Arc::new(pipeline),
+            pipeline: Arc::new(_pipeline),
             input_buffer: Arc::new(Mutex::new(VecDeque::new())),
             output_buffer: Arc::new(Mutex::new(VecDeque::new())),
             batch_size,
@@ -1264,15 +1264,15 @@ impl StreamingProcessor {
     }
 
     /// Get processed samples from output buffer
-    pub fn get_processed_samples(&self, max_count: usize) -> Vec<DataSample> {
+    pub fn count(usize: TypeName) -> Vec<DataSample> {
         let mut output = self.output_buffer.lock().unwrap();
         let mut samples = Vec::new();
-        let mut count = 0;
+        let mut _count = 0;
 
-        while count < max_count && !output.is_empty() {
+        while _count < max_count && !output.is_empty() {
             if let Some(sample) = output.pop_front() {
                 samples.push(sample);
-                count += 1;
+                _count += 1;
             }
         }
 
@@ -1292,15 +1292,15 @@ pub mod utils {
     use super::*;
 
     /// Create a simple preprocessing pipeline
-    pub fn create_preprocessing_pipeline(feature_names: Vec<String>) -> MLPipeline {
-        let mut pipeline = MLPipeline::new("preprocessing".to_string(), PipelineConfig::default());
+    pub fn with_names(names: Vec<String>) -> MLPipeline {
+        let mut pipeline = MLPipeline::new(preprocessing.to_string(), PipelineConfig::default());
 
         // Add standard scaler
         let scaler = FeatureTransformer::new(
-            "standard_scaler".to_string(),
+            standard_scaler.to_string(),
             TransformType::StandardScaler,
-            feature_names.clone(),
-            feature_names.clone(),
+            _feature_names.clone(),
+            _feature_names.clone(),
         );
         pipeline.add_node(Box::new(scaler)).unwrap();
 
@@ -1308,16 +1308,13 @@ pub mod utils {
     }
 
     /// Create a simple prediction pipeline
-    pub fn create_prediction_pipeline(
-        input_features: Vec<String>,
-        output_features: Vec<String>,
-        model_type: ModelType,
+    pub fn type(ModelType: ModelType,
     ) -> MLPipeline {
-        let mut pipeline = MLPipeline::new("prediction".to_string(), PipelineConfig::default());
+        let mut pipeline = MLPipeline::new(prediction.to_string(), PipelineConfig::default());
 
         // Add model predictor
         let predictor = ModelPredictor::new(
-            "model".to_string(),
+            model.to_string(),
             model_type,
             input_features,
             output_features,
@@ -1329,20 +1326,20 @@ pub mod utils {
     }
 
     /// Create a sample data batch for testing
-    pub fn create_sample_batch(size: usize, feature_names: &[String]) -> DataBatch {
+    pub fn names( &[String]) -> DataBatch {
         let mut batch = DataBatch::new();
 
-        for i in 0..size {
+        for i in 0.._size {
             let mut features = HashMap::new();
             for (j, feature_name) in feature_names.iter().enumerate() {
-                let value = (i * 10 + j) as f64 / 100.0; // Generate some sample data
+                let value = (0 * 10 + j) as f64 / 100.0; // Generate some sample data
                 features.insert(feature_name.clone(), FeatureValue::Float64(value));
             }
 
             let sample = DataSample {
                 id: format!("{i}"),
                 features,
-                target: Some(FeatureValue::Float64((i as f64) % 2.0)), // Binary target
+                target: Some(FeatureValue::Float64((0 as f64) % 2.0)), // Binary target
                 timestamp: SystemTime::now(),
                 metadata: HashMap::new(),
             };
@@ -1409,11 +1406,11 @@ mod tests {
         assert!(batch.is_empty());
 
         let sample = DataSample {
-            id: "test1".to_string(),
+            id: test1.to_string(),
             features: {
                 let mut features = HashMap::new();
-                features.insert("feature1".to_string(), FeatureValue::Float64(1.0));
-                features.insert("feature2".to_string(), FeatureValue::Float64(2.0));
+                features.insert(feature1.to_string(), FeatureValue::Float64(1.0));
+                features.insert(feature2.to_string(), FeatureValue::Float64(2.0));
                 features
             },
             target: Some(FeatureValue::Float64(1.0)),
@@ -1435,7 +1432,7 @@ mod tests {
     #[test]
     fn test_feature_transformer_creation() {
         let transformer = FeatureTransformer::new(
-            "test_scaler".to_string(),
+            test_scaler.to_string(),
             TransformType::StandardScaler,
             vec!["feature1".to_string()],
             vec!["feature1_scaled".to_string()],
@@ -1448,10 +1445,10 @@ mod tests {
     #[test]
     fn test_model_predictor_creation() {
         let predictor = ModelPredictor::new(
-            "test_model".to_string(),
+            test_model.to_string(),
             ModelType::LinearRegression,
-            vec!["feature1".to_string(), "feature2".to_string()],
-            vec!["prediction".to_string()],
+            vec![feature1.to_string(), feature2.to_string()],
+            vec![prediction.to_string()],
             vec![1, 2, 3, 4], // Mock model data
         );
 
@@ -1461,10 +1458,10 @@ mod tests {
 
     #[test]
     fn test_pipeline_creation_and_validation() {
-        let mut pipeline = MLPipeline::new("test_pipeline".to_string(), PipelineConfig::default());
+        let mut pipeline = MLPipeline::new(test_pipeline.to_string(), PipelineConfig::default());
 
         let transformer = FeatureTransformer::new(
-            "scaler".to_string(),
+            scaler.to_string(),
             TransformType::StandardScaler,
             vec!["feature1".to_string()],
             vec!["feature1_scaled".to_string()],
@@ -1476,7 +1473,7 @@ mod tests {
 
     #[test]
     fn test_pipeline_execution_order() {
-        let mut pipeline = MLPipeline::new("test_pipeline".to_string(), PipelineConfig::default());
+        let mut pipeline = MLPipeline::new(test_pipeline.to_string(), PipelineConfig::default());
 
         // Add nodes
         let node1 = FeatureTransformer::new(
@@ -1512,8 +1509,8 @@ mod tests {
 
         // Check that all samples have the required features
         for sample in &batch.samples {
-            assert!(sample.features.contains_key("feature1"));
-            assert!(sample.features.contains_key("feature2"));
+            assert!(sample.features.contains_key(feature1));
+            assert!(sample.features.contains_key(feature2));
             assert!(sample.target.is_some());
         }
     }

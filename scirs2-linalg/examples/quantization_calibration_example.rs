@@ -45,7 +45,7 @@ fn main() {
 /// Create a matrix with uniform distribution
 #[allow(dead_code)]
 fn create_uniform_data() -> Array2<f32> {
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let uniform = Uniform::new(-1.0, 1.0).unwrap();
 
     let mut data = Array2::zeros((10, 10));
@@ -61,7 +61,7 @@ fn create_uniform_data() -> Array2<f32> {
 /// Create a matrix with normal distribution
 #[allow(dead_code)]
 fn create_normal_data() -> Array2<f32> {
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let normal = Normal::new(0.0, 1.0).unwrap();
 
     let mut data = Array2::zeros((10, 10));
@@ -77,7 +77,7 @@ fn create_normal_data() -> Array2<f32> {
 /// Create a matrix with bimodal distribution
 #[allow(dead_code)]
 fn create_bimodal_data() -> Array2<f32> {
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let normal1 = Normal::new(-2.0, 0.5).unwrap();
     let normal2 = Normal::new(2.0, 0.5).unwrap();
 
@@ -99,7 +99,7 @@ fn create_bimodal_data() -> Array2<f32> {
 /// Create a matrix with mixed scales in different columns
 #[allow(dead_code)]
 fn create_mixed_scale_data() -> Array2<f32> {
-    let mut rng = rng();
+    let mut rng = rand::rng();
 
     let mut data = Array2::zeros((10, 3));
 
@@ -123,7 +123,7 @@ fn create_mixed_scale_data() -> Array2<f32> {
 
 /// Compare different calibration methods on the same data
 #[allow(dead_code)]
-fn compare_calibration_methods(data: &Array2<f32>, bits: u8) {
+fn compare_calibration_methods(_data: &Array2<f32>, bits: u8) {
     let methods = [
         CalibrationMethod::MinMax,
         CalibrationMethod::MovingAverageMinMax,
@@ -156,14 +156,14 @@ fn compare_calibration_methods(data: &Array2<f32>, bits: u8) {
         };
 
         // Calibrate parameters
-        let params = calibrate_matrix(&data.view(), bits, &config).unwrap();
+        let params = calibrate_matrix(&_data.view(), bits, &config).unwrap();
 
         // Quantize and dequantize
-        let (quantized, _) = quantize_matrix(&data.view(), bits, params.method);
+        let quantized = quantize_matrix(&_data.view(), bits, params.method);
         let dequantized = dequantize_matrix(&quantized, &params);
 
         // Calculate MSE
-        let mse = (data - &dequantized).mapv(|x| x * x).sum() / data.len() as f32;
+        let mse = (_data - &dequantized).mapv(|x| x * x).sum() / _data.len() as f32;
 
         // Print results
         println!(
@@ -179,7 +179,7 @@ fn compare_calibration_methods(data: &Array2<f32>, bits: u8) {
 
 /// Compare per-channel vs standard quantization
 #[allow(dead_code)]
-fn compare_per_channel_quantization(data: &Array2<f32>, bits: u8) {
+fn compare_per_channel_quantization(_data: &Array2<f32>, bits: u8) {
     println!("Standard Symmetric Quantization:");
     let config_std = CalibrationConfig {
         method: CalibrationMethod::MinMax,
@@ -188,11 +188,11 @@ fn compare_per_channel_quantization(data: &Array2<f32>, bits: u8) {
         ..Default::default()
     };
 
-    let params_std = calibrate_matrix(&data.view(), bits, &config_std).unwrap();
-    let (quantized_std, _) = quantize_matrix(&data.view(), bits, params_std.method);
+    let params_std = calibrate_matrix(&_data.view(), bits, &config_std).unwrap();
+    let (quantized_std_) = quantize_matrix(&_data.view(), bits, params_std.method);
     let dequantized_std = dequantize_matrix(&quantized_std, &params_std);
 
-    let mse_std = (data - &dequantized_std).mapv(|x| x * x).sum() / data.len() as f32;
+    let mse_std = (_data - &dequantized_std).mapv(|x| x * x).sum() / _data.len() as f32;
 
     println!("  Global scale: {}", params_std.scale);
     println!("  MSE: {}\n", mse_std);
@@ -205,7 +205,7 @@ fn compare_per_channel_quantization(data: &Array2<f32>, bits: u8) {
         ..Default::default()
     };
 
-    let params_pc = calibrate_matrix(&data.view(), bits, &config_pc).unwrap();
+    let params_pc = calibrate_matrix(&_data.view(), bits, &config_pc).unwrap();
 
     // Print per-channel scales
     if let Some(scales) = &params_pc.channel_scales {
@@ -214,16 +214,16 @@ fn compare_per_channel_quantization(data: &Array2<f32>, bits: u8) {
         }
     }
 
-    let (quantized_pc, _) = quantize_matrix(&data.view(), bits, params_pc.method);
+    let (quantized_pc_) = quantize_matrix(&_data.view(), bits, params_pc.method);
     let dequantized_pc = dequantize_matrix(&quantized_pc, &params_pc);
 
-    let mse_pc = (data - &dequantized_pc).mapv(|x| x * x).sum() / data.len() as f32;
+    let mse_pc = (_data - &dequantized_pc).mapv(|x| x * x).sum() / _data.len() as f32;
 
     println!("  MSE: {}", mse_pc);
     println!("  Improvement: {:.2}x", mse_std / mse_pc);
 
     // Compare error by column
-    let (_, cols) = data.dim();
+    let (_, cols) = _data.dim();
     println!("\nError comparison by column (MSE):");
     println!(
         "{:^10} | {:^15} | {:^15}",
@@ -232,7 +232,7 @@ fn compare_per_channel_quantization(data: &Array2<f32>, bits: u8) {
     println!("{:-^10} | {:-^15} | {:-^15}", "", "", "");
 
     for j in 0..cols {
-        let col_data = data.column(j);
+        let col_data = _data.column(j);
         let col_std = dequantized_std.column(j);
         let col_pc = dequantized_pc.column(j);
 
@@ -246,7 +246,7 @@ fn compare_per_channel_quantization(data: &Array2<f32>, bits: u8) {
 
 /// Compare different bit-widths using entropy calibration
 #[allow(dead_code)]
-fn compare_bit_widths(data: &Array2<f32>) {
+fn compare_bit_widths(_data: &Array2<f32>) {
     let bits = [4, 8, 16];
 
     println!(
@@ -265,18 +265,18 @@ fn compare_bit_widths(data: &Array2<f32>) {
         };
 
         // Calibrate parameters
-        let params = calibrate_matrix(&data.view(), bit, &config).unwrap();
+        let params = calibrate_matrix(&_data.view(), bit, &config).unwrap();
 
         // Quantize and dequantize
-        let (quantized, _) = quantize_matrix(&data.view(), bit, params.method);
+        let quantized = quantize_matrix(&_data.view(), bit, params.method);
         let dequantized = dequantize_matrix(&quantized, &params);
 
         // Calculate MSE
-        let mse = (data - &dequantized).mapv(|x| x * x).sum() / data.len() as f32;
+        let mse = (_data - &dequantized).mapv(|x| x * x).sum() / _data.len() as f32;
 
         // Calculate relative error
         let rel_error =
-            (data - &dequantized).mapv(|x| x.abs()).sum() / data.mapv(|x| x.abs()).sum();
+            (_data - &dequantized).mapv(|x| x.abs()).sum() / _data.mapv(|x| x.abs()).sum();
 
         // Print results
         println!(

@@ -78,10 +78,10 @@ fn find_matches_recursive<N1, N2, E, Ix>(
     // Try to map pattern_node to target_node
     current_mapping.insert(pattern_node.clone(), target_node.clone());
 
-    // Check if this mapping is consistent with edges
+    // Check if this _mapping is consistent with edges
     if is_mapping_consistent(pattern, target, current_mapping) {
         if pattern_idx + 1 < pattern_nodes.len() {
-            // Continue mapping with remaining nodes
+            // Continue _mapping with remaining _nodes
             if let Ok(target_neighbors) = target.neighbors(target_node) {
                 for next_target in target_neighbors {
                     find_matches_recursive(
@@ -97,7 +97,7 @@ fn find_matches_recursive<N1, N2, E, Ix>(
             }
 
             // Also try non-neighbors
-            for next_target in &target.nodes().into_iter().cloned().collect::<Vec<_>>() {
+            for next_target in &target._nodes().into_iter().cloned().collect::<Vec<_>>() {
                 if !current_mapping.values().any(|n| n == next_target) {
                     find_matches_recursive(
                         pattern_nodes,
@@ -111,7 +111,7 @@ fn find_matches_recursive<N1, N2, E, Ix>(
                 }
             }
         } else {
-            // Last node - check if complete mapping is valid
+            // Last _node - check if complete _mapping is valid
             find_matches_recursive(
                 pattern_nodes,
                 pattern,
@@ -333,8 +333,7 @@ where
 fn is_partial_mapping_valid<N1, N2, E, Ix>(
     graph1: &Graph<N1, E, Ix>,
     graph2: &Graph<N2, E, Ix>,
-    mapping: &HashMap<N1, N2>,
-    _mapped_count: usize,
+    mapping: &HashMap<N1, N2>, _mapped_count: usize,
 ) -> bool
 where
     N1: Node + Hash + Eq + std::fmt::Debug,
@@ -492,9 +491,7 @@ where
 
     /// Update terminal sets after removing a mapping
     fn update_terminal_sets_after_removal<E, Ix>(
-        &mut self,
-        _n1: &N1,
-        _n2: &N2,
+        &mut self_n1: &N1, _n2: &N2,
         graph1: &Graph<N1, E, Ix>,
         graph2: &Graph<N2, E, Ix>,
     ) where

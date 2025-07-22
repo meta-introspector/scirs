@@ -14,7 +14,7 @@
 //! - Pattern formation in biology
 
 use ndarray::{s, Array1, Array2, ArrayView1};
-use scirs2_integrate::{
+use scirs2__integrate::{
     // Advanced modules
     amr_advanced::{
         AdaptiveCell, AdaptiveMeshLevel, AdvancedAMRManager, CellId, FeatureDetectionCriterion,
@@ -78,12 +78,12 @@ pub struct AdaptivePDESolver {
 
 impl AdaptivePDESolver {
     /// Create new adaptive PDE solver
-    pub fn new(initial_resolution: usize, domain_size: f64) -> IntegrateResult<Self> {
+    pub fn new(_initial_resolution: usize, domain_size: f64) -> IntegrateResult<Self> {
         let mut profiler = PerformanceProfiler::new();
         profiler.start_phase("solver_initialization");
 
         // Create initial uniform mesh
-        let initial_mesh = Self::create_initial_mesh(initial_resolution, domain_size);
+        let initial_mesh = Self::create_initial_mesh(_initial_resolution, domain_size);
         let mut amr_manager = AdvancedAMRManager::new(initial_mesh, 4, domain_size / 512.0);
 
         // Add sophisticated refinement criteria
@@ -126,30 +126,30 @@ impl AdaptivePDESolver {
     }
 
     /// Create initial uniform mesh
-    fn create_initial_mesh(resolution: usize, domain_size: f64) -> AdaptiveMeshLevel<f64> {
+    fn create_initial_mesh(_resolution: usize, domain_size: f64) -> AdaptiveMeshLevel<f64> {
         let mut cells = HashMap::new();
-        let cell_size = domain_size / resolution as f64;
+        let cell_size = domain_size / _resolution as f64;
         let mut boundary_cells = HashSet::new();
 
-        for i in 0..resolution {
-            for j in 0..resolution {
+        for i in 0.._resolution {
+            for j in 0.._resolution {
                 let cell_id = CellId {
                     level: 0,
-                    index: i * resolution + j,
+                    index: i * _resolution + j,
                 };
 
                 let x = (i as f64 + 0.5) * cell_size;
                 let y = (j as f64 + 0.5) * cell_size;
 
                 // Check if boundary cell
-                if i == 0 || i == resolution - 1 || j == 0 || j == resolution - 1 {
+                if i == 0 || i == _resolution - 1 || j == 0 || j == _resolution - 1 {
                     boundary_cells.insert(cell_id);
                 }
 
                 let cell = AdaptiveCell {
                     id: cell_id,
                     center: Array1::from_vec(vec![x, y]),
-                    size: cell_size,
+                    _size: cell_size,
                     solution: Array1::from_vec(vec![
                         initial_concentration_u(x, y, domain_size),
                         initial_concentration_v(x, y, domain_size),
@@ -350,8 +350,8 @@ impl AdaptivePDESolver {
 pub struct SolverStepResult {
     pub time: f64,
     pub solution: Array2<f64>,
-    pub error_analysis: scirs2_integrate::error_estimation::ErrorAnalysisResult<f64>,
-    pub adaptation_result: scirs2_integrate::amr_advanced::AMRAdaptationResult<f64>,
+    pub error_analysis: scirs2, _integrate: error_estimation: :ErrorAnalysisResult<f64>,
+    pub adaptation_result: scirs2, _integrate: amr_advanced: :AMRAdaptationResult<f64>,
     pub active_cells: usize,
 }
 

@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     make_adaptive_bspline, make_lsq_bspline, BSplineExtrapolateMode, ExtrapolateMode,
     MultiscaleBSpline, RefinementCriterion,
 };
@@ -26,8 +26,8 @@ where
 
 // Helper function to extract scalar value from array
 #[allow(dead_code)]
-fn extract_scalar(arr: &Array1<f64>) -> f64 {
-    arr[0]
+fn extract_scalar(_arr: &Array1<f64>) -> f64 {
+    _arr[0]
 }
 
 #[allow(dead_code)]

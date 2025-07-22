@@ -346,7 +346,7 @@ pub fn simd_matrix_min_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgRe
 /// * Modified target vector
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_axpy_f32(alpha: f32, x: &ArrayView1<f32>, y: &mut Array1<f32>) -> LinalgResult<()> {
+pub fn simd_axpy_f32(_alpha: f32, x: &ArrayView1<f32>, y: &mut Array1<f32>) -> LinalgResult<()> {
     if x.len() != y.len() {
         return Err(LinalgError::ShapeError(format!(
             "Vector dimensions must match: {} vs {}",
@@ -355,8 +355,8 @@ pub fn simd_axpy_f32(alpha: f32, x: &ArrayView1<f32>, y: &mut Array1<f32>) -> Li
         )));
     }
 
-    // Compute alpha * x
-    let scaled_x = f32::simd_scalar_mul(x, alpha);
+    // Compute _alpha * x
+    let scaled_x = f32::simd_scalar_mul(x, _alpha);
 
     // Add to y in-place
     let y_view = y.view();
@@ -379,7 +379,7 @@ pub fn simd_axpy_f32(alpha: f32, x: &ArrayView1<f32>, y: &mut Array1<f32>) -> Li
 /// * Modified target vector
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-pub fn simd_axpy_f64(alpha: f64, x: &ArrayView1<f64>, y: &mut Array1<f64>) -> LinalgResult<()> {
+pub fn simd_axpy_f64(_alpha: f64, x: &ArrayView1<f64>, y: &mut Array1<f64>) -> LinalgResult<()> {
     if x.len() != y.len() {
         return Err(LinalgError::ShapeError(format!(
             "Vector dimensions must match: {} vs {}",
@@ -388,8 +388,8 @@ pub fn simd_axpy_f64(alpha: f64, x: &ArrayView1<f64>, y: &mut Array1<f64>) -> Li
         )));
     }
 
-    // Compute alpha * x
-    let scaled_x = f64::simd_scalar_mul(x, alpha);
+    // Compute _alpha * x
+    let scaled_x = f64::simd_scalar_mul(x, _alpha);
 
     // Add to y in-place
     let y_view = y.view();

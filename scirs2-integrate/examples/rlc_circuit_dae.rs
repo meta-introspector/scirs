@@ -1,6 +1,6 @@
 use ndarray::{array, Array1, ArrayView1};
-use scirs2_integrate::dae::{solve_semi_explicit_dae, DAEOptions};
-use scirs2_integrate::ode::ODEMethod;
+use scirs2__integrate::dae::{solve_semi_explicit_dae, DAEOptions};
+use scirs2__integrate::ode::ODEMethod;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -189,7 +189,7 @@ fn analyze_energy(
     for i in 0..num_print {
         let time = t[i];
         let i_l = x[i][0]; // Inductor current
-        let v_c = x[i][1]; // Capacitor voltage
+        let v_c = x[i][1]; // Capacitor _voltage
         let i_r = y[i][0]; // Resistor current
 
         let v_source = input_voltage(time);

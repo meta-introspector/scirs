@@ -5,7 +5,7 @@
 //! for all indices i. This property is important for algorithms like HFFT and IHFFT.
 
 use ndarray::{Array, Array2, Dimension, IxDyn};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use std::ops::Not;
 
 /// Enforce Hermitian symmetry on a 2D complex array.
@@ -18,39 +18,39 @@ use std::ops::Not;
 ///
 /// * `array` - Mutable reference to a 2D complex array
 #[allow(dead_code)]
-pub fn enforce_hermitian_symmetry(array: &mut Array2<Complex64>) {
-    let (rows, cols) = array.dim();
+pub fn enforce_hermitian_symmetry(_array: &mut Array2<Complex64>) {
+    let (rows, cols) = _array.dim();
 
     // Make DC component real
     if rows > 0 && cols > 0 {
-        array[[0, 0]] = Complex64::new(array[[0, 0]].re, 0.0);
+        _array[[0, 0]] = Complex64::new(_array[[0, 0]].re, 0.0);
     }
 
     // For a truly Hermitian-symmetric result, we need to:
-    // 1. Ensure that array[i, j] = conj(array[rows-i, cols-j]) for all i, j
-    // 2. Ensure that array[i, 0] and array[0, j] have special properties
+    // 1. Ensure that _array[i, j] = conj(_array[rows-i, cols-j]) for all i, j
+    // 2. Ensure that _array[i, 0] and _array[0, j] have special properties
 
     // Ensure first row and column elements satisfy Hermitian constraints
     if rows > 1 && cols > 1 {
         // First row, special case
         for j in 1..cols / 2 + (cols % 2).not() {
-            let conj_val = array[[0, cols - j]].conj();
-            array[[0, j]] = conj_val;
+            let conj_val = _array[[0, cols - j]].conj();
+            _array[[0, j]] = conj_val;
         }
 
         // First column, special case
         for i in 1..rows / 2 + (rows % 2).not() {
-            let conj_val = array[[rows - i, 0]].conj();
-            array[[i, 0]] = conj_val;
+            let conj_val = _array[[rows - i, 0]].conj();
+            _array[[i, 0]] = conj_val;
         }
 
         // Handle the corners and mid-points for even-sized dimensions
         if rows % 2 == 0 && rows > 0 {
-            array[[rows / 2, 0]] = Complex64::new(array[[rows / 2, 0]].re, 0.0);
+            _array[[rows / 2, 0]] = Complex64::new(_array[[rows / 2, 0]].re, 0.0);
         }
 
         if cols % 2 == 0 && cols > 0 {
-            array[[0, cols / 2]] = Complex64::new(array[[0, cols / 2]].re, 0.0);
+            _array[[0, cols / 2]] = Complex64::new(_array[[0, cols / 2]].re, 0.0);
         }
     }
 }
@@ -64,17 +64,17 @@ pub fn enforce_hermitian_symmetry(array: &mut Array2<Complex64>) {
 ///
 /// * `array` - Mutable reference to an N-dimensional complex array
 #[allow(dead_code)]
-pub fn enforce_hermitian_symmetry_nd(array: &mut Array<Complex64, IxDyn>) {
-    let shape = array.shape().to_vec();
+pub fn enforce_hermitian_symmetry_nd(_array: &mut Array<Complex64, IxDyn>) {
+    let shape = _array.shape().to_vec();
     let ndim = shape.len();
 
-    if ndim == 0 || array.is_empty() {
+    if ndim == 0 || _array.is_empty() {
         return;
     }
 
     // Make DC component real
-    // Use direct array access instead of indices
-    if let Some(slice) = array.as_slice_mut() {
+    // Use direct _array access instead of indices
+    if let Some(slice) = _array.as_slice_mut() {
         if !slice.is_empty() {
             slice[0] = Complex64::new(slice[0].re, 0.0);
         }
@@ -84,7 +84,7 @@ pub fn enforce_hermitian_symmetry_nd(array: &mut Array<Complex64, IxDyn>) {
     match ndim {
         1 => {
             // 1D case - simpler to handle directly
-            if let Some(slice) = array.as_slice_mut() {
+            if let Some(slice) = _array.as_slice_mut() {
                 let n = slice.len();
 
                 // Make elements Hermitian-symmetric
@@ -104,14 +104,14 @@ pub fn enforce_hermitian_symmetry_nd(array: &mut Array<Complex64, IxDyn>) {
         }
         2 => {
             // Convert to 2D view for easier access
-            if let Ok(mut array2) = array.clone().into_dimensionality::<ndarray::Ix2>() {
+            if let Ok(mut array2) = _array.clone().into_dimensionality::<ndarray::Ix2>() {
                 // Apply 2D symmetry (same as in enforce_hermitian_symmetry)
                 enforce_hermitian_symmetry(&mut array2);
 
-                // Copy back to the original array
+                // Copy back to the original _array
                 let view2 = array2.view();
                 let flat = view2.as_slice().unwrap();
-                if let Some(target) = array.as_slice_mut() {
+                if let Some(target) = _array.as_slice_mut() {
                     target.copy_from_slice(flat);
                 }
             }
@@ -122,14 +122,14 @@ pub fn enforce_hermitian_symmetry_nd(array: &mut Array<Complex64, IxDyn>) {
             // but covers the most important ones
 
             // For each 2D plane along the first two dimensions, apply 2D symmetry
-            if let Ok(mut view) = array.view_mut().into_dimensionality::<ndarray::Ix3>() {
-                let (dim1, dim2, _) = view.dim();
+            if let Ok(mut view) = _array.view_mut().into_dimensionality::<ndarray::Ix3>() {
+                let (dim1, dim2_) = view.dim();
 
                 for k in 0..view.dim().2 {
                     let mut slice = view.slice_mut(ndarray::s![.., .., k]);
                     let mut array2 = Array2::zeros((dim1, dim2));
 
-                    // Copy data to a temporary 2D array
+                    // Copy data to a temporary 2D _array
                     for i in 0..dim1 {
                         for j in 0..dim2 {
                             array2[[i, j]] = slice[[i, j]];
@@ -165,19 +165,19 @@ pub fn enforce_hermitian_symmetry_nd(array: &mut Array<Complex64, IxDyn>) {
 ///
 /// * `true` if the array is approximately Hermitian-symmetric, `false` otherwise
 #[allow(dead_code)]
-pub fn is_hermitian_symmetric<D>(array: &Array<Complex64, D>, tolerance: Option<f64>) -> bool
+pub fn is_hermitian_symmetric<D>(_array: &Array<Complex64, D>, tolerance: Option<f64>) -> bool
 where
     D: Dimension,
 {
     let tol = tolerance.unwrap_or(1e-10);
-    let shape = array.shape();
+    let shape = _array.shape();
 
     // For multi-dimensional arrays, check symmetry across all dimensions
     // This is a simplified version that focuses on key symmetry points
 
     // Check DC component is real (or close to it)
-    if !shape.is_empty() && !array.is_empty() {
-        let dc_val = &array.as_slice().unwrap()[0];
+    if !shape.is_empty() && !_array.is_empty() {
+        let dc_val = &_array.as_slice().unwrap()[0];
         if dc_val.im.abs() > tol {
             return false;
         }
@@ -190,7 +190,7 @@ where
     // Simple implementation for 1D arrays
     if shape.len() == 1 && shape[0] > 1 {
         let n = shape[0];
-        let data = array.as_slice().unwrap();
+        let data = _array.as_slice().unwrap();
         for i in 1..n / 2 + 1 {
             if i < n && (n - i) < n {
                 let a = &data[i];
@@ -208,8 +208,8 @@ where
     if shape.len() == 2 {
         let (rows, cols) = (shape[0], shape[1]);
 
-        // Check the array using direct indexing for 2D
-        let array2 = array
+        // Check the _array using direct indexing for 2D
+        let array2 = _array
             .to_owned()
             .into_dimensionality::<ndarray::Ix2>()
             .unwrap();

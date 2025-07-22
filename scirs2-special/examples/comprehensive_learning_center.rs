@@ -806,8 +806,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             "progress" | "p" => display_detailed_progress(&learning_center)?,
             "resources" | "r" => explore_resources(&learning_center)?,
-            "help" | "h" => display_help()?,
-            _ => {
+            "help" | "h" => display_help()?_ => {
                 if let Ok(track_num) = choice.parse::<usize>() {
                     if track_num > 0 && track_num <= learning_center.learning_tracks.len() {
                         enter_learning_track(&mut learning_center, track_num - 1)?;
@@ -825,7 +824,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn create_new_user(learning_center: &mut LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
+fn create_new_user(_learning_center: &mut LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🆕 Creating new user profile...");
 
     let username = get_user_input("Choose a username: ")?;
@@ -841,8 +840,7 @@ fn create_new_user(learning_center: &mut LearningCenter) -> Result<(), Box<dyn s
         "1" => DifficultyLevel::Beginner,
         "2" => DifficultyLevel::Intermediate,
         "3" => DifficultyLevel::Advanced,
-        "4" => DifficultyLevel::Expert,
-        _ => DifficultyLevel::Intermediate,
+        "4" => DifficultyLevel::Expert_ =>, DifficultyLevel::Intermediate,
     };
 
     println!("\n🎯 What's your preferred learning style?");
@@ -858,8 +856,7 @@ fn create_new_user(learning_center: &mut LearningCenter) -> Result<(), Box<dyn s
         "2" => LearningStyle::Analytical,
         "3" => LearningStyle::Practical,
         "4" => LearningStyle::Theoretical,
-        "5" => LearningStyle::Applied,
-        _ => LearningStyle::Practical,
+        "5" => LearningStyle::Applied_ =>, LearningStyle::Practical,
     };
 
     let profile = UserProfile {
@@ -923,7 +920,7 @@ fn recommend_starting_track(
             println!("\n🎯 Based on your profile, we recommend starting with:");
 
             match (&profile.skill_level, &profile.preferred_learning_style) {
-                (DifficultyLevel::Beginner, _) => {
+                (DifficultyLevel:: Beginner) => {
                     println!("   📚 Mathematical Foundations Track - Start with the basics");
                 }
                 (DifficultyLevel::Intermediate, LearningStyle::Applied) => {
@@ -932,10 +929,10 @@ fn recommend_starting_track(
                 (DifficultyLevel::Intermediate, LearningStyle::Practical) => {
                     println!("   💻 Software Development Track - Learn by coding");
                 }
-                (DifficultyLevel::Advanced, _) => {
+                (DifficultyLevel:: Advanced) => {
                     println!("   🔬 Computational Methods Track - Advanced numerical techniques");
                 }
-                (DifficultyLevel::Expert, _) => {
+                (DifficultyLevel:: Expert) => {
                     println!("   🚀 Research Applications Track - Cutting-edge topics");
                 }
                 _ => {
@@ -950,7 +947,7 @@ fn recommend_starting_track(
 }
 
 #[allow(dead_code)]
-fn display_dashboard(learning_center: &LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
+fn display_dashboard(_learning_center: &LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n{}", "=".repeat(60));
     println!("🎓 LEARNING DASHBOARD");
     println!("{}", "=".repeat(60));
@@ -1022,18 +1019,18 @@ fn display_dashboard(learning_center: &LearningCenter) -> Result<(), Box<dyn std
 }
 
 #[allow(dead_code)]
-fn calculate_track_progress(learning_center: &LearningCenter, track_id: &str) -> f64 {
-    if let Some(username) = &learning_center.current_user {
-        if let Some(profile) = learning_center.user_profiles.get(username) {
-            if let Some(track) = learning_center
+fn calculate_track_progress(_learning_center: &LearningCenter, track_id: &str) -> f64 {
+    if let Some(username) = &_learning_center.current_user {
+        if let Some(profile) = _learning_center.user_profiles.get(username) {
+            if let Some(track) = _learning_center
                 .learning_tracks
                 .iter()
-                .find(|t| t.id == track_id)
+                .find(|t| t._id == track_id)
             {
                 let completed_modules = track
                     .learning_modules
                     .iter()
-                    .filter(|module| profile.completed_modules.contains(&module.id))
+                    .filter(|module| profile.completed_modules.contains(&module._id))
                     .count();
                 return completed_modules as f64 / track.learning_modules.len() as f64;
             }
@@ -1096,7 +1093,7 @@ fn display_detailed_progress(
 }
 
 #[allow(dead_code)]
-fn explore_resources(learning_center: &LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
+fn explore_resources(_learning_center: &LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📚 RESOURCE CATALOG");
     println!("{}", "=".repeat(30));
 
@@ -1260,9 +1257,9 @@ fn enter_learning_track(
 }
 
 #[allow(dead_code)]
-fn get_module_status(learning_center: &LearningCenter, module_id: &str) -> &'static str {
-    if let Some(username) = &learning_center.current_user {
-        if let Some(profile) = learning_center.user_profiles.get(username) {
+fn get_module_status(_learning_center: &LearningCenter, module_id: &str) -> &'static str {
+    if let Some(username) = &_learning_center.current_user {
+        if let Some(profile) = _learning_center.user_profiles.get(username) {
             if profile.completed_modules.contains(module_id) {
                 return "✅";
             } else if profile.learning_progress.contains_key(module_id) {
@@ -1385,35 +1382,35 @@ fn simulate_module_completion(
 }
 
 #[allow(dead_code)]
-fn simulate_assessment(assessment: &Assessment) -> Result<f64, Box<dyn std::error::Error>> {
-    println!("\n📝 Assessment: {}", assessment.title);
+fn simulate_assessment(_assessment: &Assessment) -> Result<f64, Box<dyn std::error::Error>> {
+    println!("\n📝 Assessment: {}", _assessment.title);
     println!(
         "Questions: {} | Passing Score: {:.0}%",
-        assessment.questions.len(),
-        assessment.passing_score * 100.0
+        _assessment.questions.len(),
+        _assessment.passing_score * 100.0
     );
 
-    if let Some(time_limit) = assessment.time_limit {
+    if let Some(time_limit) = _assessment.time_limit {
         println!(
             "⏰ Time Limit: {:.0} minutes",
             time_limit.as_secs() as f64 / 60.0
         );
     }
 
-    println!("\n🎯 (Simulated assessment - randomly generated score)");
+    println!("\n🎯 (Simulated _assessment - randomly generated score)");
     std::thread::sleep(Duration::from_secs(1));
 
-    // Simulate a score (in real implementation, this would be actual assessment)
+    // Simulate a score (in real implementation, this would be actual _assessment)
     let score = 0.7 + (0.3 * rand::random::<f64>()); // Random score between 70-100%
 
     println!("📊 Your score: {:.1}%", score * 100.0);
 
-    if score >= assessment.passing_score {
+    if score >= _assessment.passing_score {
         println!("🎉 Passed!");
     } else {
         println!(
             "📚 Needs improvement. Passing score is {:.0}%",
-            assessment.passing_score * 100.0
+            _assessment.passing_score * 100.0
         );
     }
 
@@ -1598,8 +1595,8 @@ fn save_user_progress(_learning_center: &LearningCenter) -> Result<(), Box<dyn s
 }
 
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> io::Result<String> {
-    print!("{}", prompt);
+fn get_user_input(_prompt: &str) -> io::Result<String> {
+    print!("{}", _prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

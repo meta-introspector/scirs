@@ -6,7 +6,7 @@
 
 use crate::{next_fast_len, FFTResult};
 use ndarray::{s, Array1, ArrayBase, ArrayD, Data, Dimension};
-use num_complex::Complex;
+use num__complex::Complex;
 use num_traits::Zero;
 
 /// Padding mode for FFT operations
@@ -59,9 +59,9 @@ impl Default for AutoPadConfig {
 
 impl AutoPadConfig {
     /// Create a new auto-padding configuration
-    pub fn new(mode: PaddingMode) -> Self {
+    pub fn new(_mode: PaddingMode) -> Self {
         Self {
-            mode,
+            _mode,
             ..Default::default()
         }
     }

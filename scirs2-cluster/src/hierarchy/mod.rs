@@ -7,7 +7,7 @@
 //!
 //! ```
 //! use ndarray::{Array2, ArrayView2};
-//! use scirs2_cluster::hierarchy::{linkage, fcluster, LinkageMethod, Metric};
+//! use scirs2__cluster::hierarchy::{linkage, fcluster, LinkageMethod, Metric};
 //!
 //! // Example data
 //! let data = Array2::from_shape_vec((6, 2), vec![
@@ -51,19 +51,19 @@ pub mod visualization;
 
 // Re-exports
 pub use self::agglomerative::{cut_tree_by_distance, cut_tree_by_inconsistency};
-pub use self::cluster_extraction::{
+pub use self::cluster__extraction::{
     estimate_optimal_clusters, extract_clusters_multi_criteria, prune_clusters,
 };
-pub use self::condensed_matrix::{
+pub use self::condensed__matrix::{
     condensed_size, condensed_to_square, get_distance, points_from_condensed_size,
     square_to_condensed, validate_condensed_matrix,
 };
 pub use self::dendrogram::{cophenet, dendrogram, inconsistent, optimal_leaf_ordering};
-pub use self::disjoint_set::DisjointSet;
-pub use self::leaf_ordering::{
+pub use self::disjoint__set::DisjointSet;
+pub use self::leaf__ordering::{
     apply_leaf_ordering, optimal_leaf_ordering_exact, optimal_leaf_ordering_heuristic,
 };
-pub use self::optimized_ward::{
+pub use self::optimized__ward::{
     lance_williams_ward_update, memory_efficient_ward_linkage, optimized_ward_linkage,
 };
 pub use self::validation::{
@@ -131,9 +131,9 @@ pub enum ClusterCriterion {
 
 /// Computes distances between observations
 #[allow(dead_code)]
-fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metric) -> Array1<F> {
-    let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
+fn compute_distances<F: Float + FromPrimitive>(_data: ArrayView2<F>, metric: Metric) -> Array1<F> {
+    let n_samples = _data.shape()[0];
+    let n_features = _data.shape()[1];
 
     // For n samples, we need n*(n-1)/2 distances (condensed distance matrix)
     let num_distances = n_samples * (n_samples - 1) / 2;
@@ -147,7 +147,7 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     // Euclidean distance
                     let mut sum = F::zero();
                     for k in 0..n_features {
-                        let diff = data[[i, k]] - data[[j, k]];
+                        let diff = _data[[i, k]] - _data[[j, k]];
                         sum = sum + diff * diff;
                     }
                     sum.sqrt()
@@ -156,7 +156,7 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     // Manhattan distance
                     let mut sum = F::zero();
                     for k in 0..n_features {
-                        let diff = (data[[i, k]] - data[[j, k]]).abs();
+                        let diff = (_data[[i, k]] - _data[[j, k]]).abs();
                         sum = sum + diff;
                     }
                     sum
@@ -165,7 +165,7 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     // Chebyshev distance
                     let mut max_diff = F::zero();
                     for k in 0..n_features {
-                        let diff = (data[[i, k]] - data[[j, k]]).abs();
+                        let diff = (_data[[i, k]] - _data[[j, k]]).abs();
                         if diff > max_diff {
                             max_diff = diff;
                         }
@@ -181,8 +181,8 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     let mut mean_j = F::zero();
 
                     for k in 0..n_features {
-                        mean_i = mean_i + data[[i, k]];
-                        mean_j = mean_j + data[[j, k]];
+                        mean_i = mean_i + _data[[i, k]];
+                        mean_j = mean_j + _data[[j, k]];
                     }
 
                     mean_i = mean_i / F::from_usize(n_features).unwrap();
@@ -194,8 +194,8 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
                     let mut denom_j = F::zero();
 
                     for k in 0..n_features {
-                        let diff_i = data[[i, k]] - mean_i;
-                        let diff_j = data[[j, k]] - mean_j;
+                        let diff_i = _data[[i, k]] - mean_i;
+                        let diff_j = _data[[j, k]] - mean_j;
 
                         numerator = numerator + diff_i * diff_j;
                         denom_i = denom_i + diff_i * diff_i;
@@ -331,7 +331,7 @@ pub fn linkage<
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2_cluster::hierarchy::{parallel_linkage, LinkageMethod, Metric};
+/// use scirs2__cluster::hierarchy::{parallel_linkage, LinkageMethod, Metric};
 ///
 /// // Example data
 /// let data = Array2::from_shape_vec((6, 2), vec![
@@ -464,7 +464,7 @@ pub fn fcluster<F: Float + FromPrimitive + PartialOrd + Debug>(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::hierarchy::{linkage, fcluster_generic, LinkageMethod, Metric, ClusterCriterion};
+/// use scirs2__cluster::hierarchy::{linkage, fcluster_generic, LinkageMethod, Metric, ClusterCriterion};
 ///
 /// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.2, 1.8, 0.8, 1.9,

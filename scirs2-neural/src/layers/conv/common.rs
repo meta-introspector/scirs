@@ -61,13 +61,13 @@ pub fn validate_conv_params(
     stride: (usize, usize),
 ) -> Result<(), String> {
     if in_channels == 0 {
-        return Err("Input channels must be greater than 0".to_string());
+        return Err("Input _channels must be greater than 0".to_string());
     }
     if out_channels == 0 {
-        return Err("Output channels must be greater than 0".to_string());
+        return Err("Output _channels must be greater than 0".to_string());
     }
     if kernel_size.0 == 0 || kernel_size.1 == 0 {
-        return Err("Kernel size must be greater than 0".to_string());
+        return Err("Kernel _size must be greater than 0".to_string());
     }
     if stride.0 == 0 || stride.1 == 0 {
         return Err("Stride must be greater than 0".to_string());
@@ -102,7 +102,7 @@ pub fn calculate_adaptive_pooling_params(
 ) -> (usize, usize, usize) {
     // Calculate stride as floor division
     let stride = input_size / output_size;
-    // Calculate kernel size to ensure complete coverage
+    // Calculate kernel _size to ensure complete coverage
     let kernel_size = input_size - (output_size - 1) * stride;
     // Calculate padding to center the pooling
     let padding = 0; // No padding for adaptive pooling

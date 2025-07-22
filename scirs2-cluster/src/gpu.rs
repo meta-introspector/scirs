@@ -5,7 +5,7 @@
 //! GPU implementations using CUDA, OpenCL, or other GPU computing frameworks.
 
 use crate::error::{ClusteringError, Result};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 
@@ -98,12 +98,12 @@ pub struct GpuMemoryBlock {
 
 impl GpuMemoryManager {
     /// Create new memory manager
-    pub fn new(alignment: usize, max_pool_size: usize) -> Self {
+    pub fn new(_alignment: usize, max_pool_size: usize) -> Self {
         Self {
             pools: HashMap::new(),
             total_allocated: 0,
             peak_usage: 0,
-            alignment,
+            _alignment,
             max_pool_size,
         }
     }
@@ -176,7 +176,7 @@ impl GpuMemoryManager {
     }
 
     /// Free device memory (platform-specific)
-    fn free_device_memory(&self, _ptr: usize, _size: usize) -> Result<()> {
+    fn free_device_memory(&self_ptr: usize, _size: usize) -> Result<()> {
         // Simulate device memory deallocation
         Ok(())
     }
@@ -307,9 +307,9 @@ impl<F: Float + FromPrimitive + Send + Sync> GpuDistanceMatrix<F> {
     ) -> Result<Self> {
         let context = GpuContext::new(gpu_config)?;
         let optimal_tile_size = tile_size.unwrap_or_else(|| {
-            // Auto-detect optimal tile size based on GPU capabilities
+            // Auto-detect optimal tile _size based on GPU capabilities
             if let Some(device) = context.select_best_device() {
-                // Calculate optimal tile size based on shared memory
+                // Calculate optimal tile _size based on shared memory
                 (device.compute_units as usize * 32).min(512)
             } else {
                 256
@@ -421,11 +421,11 @@ impl<F: Float + FromPrimitive + Send + Sync> GpuDistanceMatrix<F> {
         let mut tile_distances = Array2::zeros((tile_height, tile_width));
 
         // Enhanced GPU-style kernel with SIMD acceleration
-        for i in 0..tile_height {
-            let row_i = data.row(start_i + i);
+        for _i in 0..tile_height {
+            let row_i = data.row(start_i + _i);
 
-            for j in 0..tile_width {
-                let row_j = data.row(start_j + j);
+            for _j in 0..tile_width {
+                let row_j = data.row(start_j + _j);
 
                 let distance = match self.metric {
                     DistanceMetric::Euclidean => {
@@ -454,7 +454,7 @@ impl<F: Float + FromPrimitive + Send + Sync> GpuDistanceMatrix<F> {
                     }
                 };
 
-                tile_distances[[i, j]] = distance;
+                tile_distances[[_i_j]] = distance;
             }
         }
 
@@ -650,18 +650,18 @@ pub struct GpuStats {
 
 impl GpuContext {
     /// Initialize GPU context with configuration
-    pub fn new(config: GpuConfig) -> Result<Self> {
-        let mut final_config = config.clone();
+    pub fn new(_config: GpuConfig) -> Result<Self> {
+        let mut final_config = _config.clone();
 
         // If backend is automatic, try to detect the best available backend
-        if matches!(config.backend, GpuBackend::CpuFallback) && config.cpu_fallback {
+        if matches!(_config.backend, GpuBackend::CpuFallback) && _config.cpu_fallback {
             final_config.backend = Self::detect_best_backend()?;
         }
 
         let devices = Self::detect_devices(&final_config.backend)?;
 
         if devices.is_empty() {
-            if !config.cpu_fallback {
+            if !_config.cpu_fallback {
                 return Err(ClusteringError::ComputationError(
                     "No GPU devices found and CPU fallback disabled".to_string(),
                 ));
@@ -680,8 +680,7 @@ impl GpuContext {
         );
 
         Ok(Self {
-            devices,
-            config: final_config,
+            devices_config: final_config,
             backend_context,
             stats: GpuStats::default(),
             memory_manager,
@@ -782,57 +781,57 @@ impl GpuContext {
     }
 
     /// Detect available GPU devices
-    fn detect_devices(backend: &GpuBackend) -> Result<Vec<GpuDevice>> {
-        match backend {
-            GpuBackend::Cuda => Self::detect_cuda_devices(),
-            GpuBackend::OpenCl => Self::detect_opencl_devices(),
-            GpuBackend::Rocm => Self::detect_rocm_devices(),
-            GpuBackend::OneApi => Self::detect_oneapi_devices(),
-            GpuBackend::Metal => Self::detect_metal_devices(),
+    fn detect_devices(_backend: &GpuBackend) -> Result<Vec<GpuDevice>> {
+        match _backend {
+            GpuBackend::Cuda =>, Self::detect_cuda_devices(),
+            GpuBackend::OpenCl =>, Self::detect_opencl_devices(),
+            GpuBackend::Rocm =>, Self::detect_rocm_devices(),
+            GpuBackend::OneApi =>, Self::detect_oneapi_devices(),
+            GpuBackend::Metal =>, Self::detect_metal_devices(),
             GpuBackend::CpuFallback => Ok(vec![]),
         }
     }
 
     /// Estimate compute units for CUDA GPUs based on name and compute capability  
-    fn estimate_cuda_compute_units(name: &str, compute_capability: &str) -> u32 {
+    fn estimate_cuda_compute_units(_name: &str, compute_capability: &str) -> u32 {
         // Enhanced compute unit estimation based on GPU architecture
-        if let Ok(capability) = compute_capability.parse::<f32>() {
-            if capability >= 8.0 {
+        if let Ok(_capability) = compute_capability.parse::<f32>() {
+            if _capability >= 8.0 {
                 // Ampere architecture and newer
-                if name.to_lowercase().contains("a100") {
+                if _name.to_lowercase().contains("a100") {
                     108
-                } else if name.to_lowercase().contains("a6000")
-                    || name.to_lowercase().contains("rtx 40")
+                } else if _name.to_lowercase().contains("a6000")
+                    || _name.to_lowercase().contains("rtx 40")
                 {
                     84
-                } else if name.to_lowercase().contains("rtx 30") {
+                } else if _name.to_lowercase().contains("rtx 30") {
                     68
                 } else {
                     80
                 }
-            } else if capability >= 7.5 {
+            } else if _capability >= 7.5 {
                 // Turing architecture
-                if name.to_lowercase().contains("titan") {
+                if _name.to_lowercase().contains("titan") {
                     72
-                } else if name.to_lowercase().contains("rtx 20") {
+                } else if _name.to_lowercase().contains("rtx 20") {
                     68
                 } else {
                     64
                 }
-            } else if capability >= 7.0 {
+            } else if _capability >= 7.0 {
                 // Volta architecture
-                if name.to_lowercase().contains("v100") {
+                if _name.to_lowercase().contains("v100") {
                     80
-                } else if name.to_lowercase().contains("titan") {
+                } else if _name.to_lowercase().contains("titan") {
                     80
                 } else {
                     64
                 }
-            } else if capability >= 6.0 {
+            } else if _capability >= 6.0 {
                 // Pascal architecture
-                if name.to_lowercase().contains("titan") {
+                if _name.to_lowercase().contains("titan") {
                     56
-                } else if name.to_lowercase().contains("gtx 10") {
+                } else if _name.to_lowercase().contains("gtx 10") {
                     32
                 } else {
                     28
@@ -848,10 +847,10 @@ impl GpuContext {
     }
 
     /// Check if CUDA GPU supports double precision
-    fn supports_cuda_double_precision(compute_capability: &str) -> bool {
-        if let Ok(capability) = compute_capability.parse::<f32>() {
-            // All CUDA GPUs with compute capability 1.3+ support double precision
-            capability >= 1.3
+    fn supports_cuda_double_precision(_compute_capability: &str) -> bool {
+        if let Ok(_capability) = _compute_capability.parse::<f32>() {
+            // All CUDA GPUs with compute _capability 1.3+ support double precision
+            _capability >= 1.3
         } else {
             // Conservative fallback
             true
@@ -1053,8 +1052,8 @@ impl GpuContext {
     }
 
     /// Estimate CUDA compute units based on GPU architecture
-    fn estimate_cuda_compute_units(gpu_name: &str, compute_capability: &str) -> u32 {
-        let name_lower = gpu_name.to_lowercase();
+    fn estimate_cuda_compute_units(_gpu_name: &str, compute_capability: &str) -> u32 {
+        let name_lower = _gpu_name.to_lowercase();
 
         // High-end datacenter GPUs
         if name_lower.contains("a100") {
@@ -1141,7 +1140,7 @@ impl GpuContext {
             return 80;
         }
 
-        // Parse compute capability for architecture-based estimates
+        // Parse compute _capability for architecture-based estimates
         if let Ok(major) = compute_capability
             .split('.')
             .next()
@@ -1162,15 +1161,15 @@ impl GpuContext {
     }
 
     /// Check if CUDA device supports double precision
-    fn supports_cuda_double_precision(compute_capability: &str) -> bool {
-        if let Ok(major) = compute_capability
+    fn supports_cuda_double_precision(_compute_capability: &str) -> bool {
+        if let Ok(major) = _compute_capability
             .split('.')
             .next()
             .unwrap_or("0")
             .parse::<u32>()
         {
-            // Compute capability 1.3 and higher support double precision
-            major >= 2 || (major == 1 && compute_capability.starts_with("1.3"))
+            // Compute _capability 1.3 and higher support double precision
+            major >= 2 || (major == 1 && _compute_capability.starts_with("1.3"))
         } else {
             true // Assume support if unknown
         }
@@ -1604,11 +1603,10 @@ impl GpuContext {
     }
 
     /// Initialize backend context
-    fn initialize_backend(backend: &GpuBackend) -> Result<BackendContext> {
-        match backend {
+    fn initialize_backend(_backend: &GpuBackend) -> Result<BackendContext> {
+        match _backend {
             GpuBackend::Cuda => Ok(BackendContext::Cuda { context_handle: 0 }),
-            GpuBackend::OpenCl => Ok(BackendContext::OpenCl { context_handle: 0 }),
-            _ => Ok(BackendContext::CpuFallback),
+            GpuBackend::OpenCl => Ok(BackendContext::OpenCl { context_handle: 0 }, _ => Ok(BackendContext::CpuFallback),
         }
     }
 
@@ -1698,15 +1696,14 @@ pub struct GpuArray<F: Float> {
 
 impl<F: Float + FromPrimitive> GpuArray<F> {
     /// Allocate GPU memory for array
-    pub fn allocate(shape: &[usize]) -> Result<Self> {
-        let size = shape.iter().product();
+    pub fn allocate(_shape: &[usize]) -> Result<Self> {
+        let size = _shape.iter().product();
 
         // Stub implementation - would allocate actual GPU memory
         Ok(Self {
             device_ptr: 0,
-            shape: shape.to_vec(),
-            size,
-            _phantom: std::marker::PhantomData,
+            _shape: _shape.to_vec(),
+            size_phantom: std::marker::PhantomData,
         })
     }
 
@@ -1772,13 +1769,13 @@ impl<F: Float + FromPrimitive> Drop for GpuArray<F> {
 
 impl<F: Float + FromPrimitive> GpuKMeans<F> {
     /// Create new GPU K-means instance
-    pub fn new(gpu_config: GpuConfig, kmeans_config: GpuKMeansConfig) -> Result<Self> {
-        let context = GpuContext::new(gpu_config)?;
+    pub fn new(_gpu_config: GpuConfig, kmeans_config: GpuKMeansConfig) -> Result<Self> {
+        let context = GpuContext::new(_gpu_config)?;
 
         Ok(Self {
             context,
             gpu_centers: None,
-            config: kmeans_config,
+            _config: kmeans_config,
         })
     }
 
@@ -1891,7 +1888,7 @@ impl<F: Float + FromPrimitive> GpuKMeans<F> {
         // Get cluster centers for distance computation
         let centers = self.get_centers()?;
 
-        // Process data in batches for memory efficiency with parallel processing
+        // Process _data in batches for memory efficiency with parallel processing
         (0..n_samples)
             .into_par_iter()
             .step_by(batch_size)
@@ -1966,7 +1963,7 @@ impl<F: Float + FromPrimitive> GpuKMeans<F> {
                 // Vectorized distance computation (simulating GPU SIMD)
                 for k in 0..n_features {
                     // In actual GPU implementation, this would be a single SIMD instruction
-                    let data_point = F::from(batch_start + i).unwrap(); // Simulate data access
+                    let data_point = F::from(batch_start + i).unwrap(); // Simulate _data access
                     let center_val = centers[[j, k]];
                     let diff = data_point - center_val;
                     distance_sq = distance_sq + diff * diff;
@@ -2057,7 +2054,7 @@ impl<F: Float + FromPrimitive> GpuKMeans<F> {
                         .par_iter()
                         .map(|&i| {
                             // Simulate GPU memory access
-                            F::from(i).unwrap() // Placeholder - would access actual GPU data
+                            F::from(i).unwrap() // Placeholder - would access actual GPU _data
                         })
                         .reduce(|| F::zero(), |a, b| a + b);
 
@@ -2091,7 +2088,7 @@ impl<F: Float + FromPrimitive> GpuKMeans<F> {
 
                 // Compute squared distance to cluster center
                 for j in 0..n_features {
-                    // Simulate GPU data access
+                    // Simulate GPU _data access
                     let data_val = F::from(i * n_features + j).unwrap(); // Placeholder
                     let center_val = centers[[cluster_id, j]];
                     let diff = data_val - center_val;
@@ -2128,8 +2125,7 @@ impl<F: Float + FromPrimitive> GpuKMeans<F> {
     fn adapt_batch_size(
         &mut self,
         assignment_time: std::time::Duration,
-        update_time: std::time::Duration,
-        _convergence_time: std::time::Duration,
+        update_time: std::time::Duration_convergence, _time: std::time::Duration,
     ) {
         let total_time = assignment_time + update_time;
 
@@ -2174,8 +2170,8 @@ pub fn gpu_dbscan<F: Float + FromPrimitive + Send + Sync>(
     min_samples: usize,
     gpu_config: Option<GpuConfig>,
 ) -> Result<(Array1<i32>, Vec<usize>)> {
-    let config = gpu_config.unwrap_or_default();
-    let context = GpuContext::new(config)?;
+    let _config = gpu_config.unwrap_or_default();
+    let context = GpuContext::new(_config)?;
 
     if !context.is_gpu_available() {
         println!("GPU not available for DBSCAN, falling back to CPU");
@@ -2254,8 +2250,7 @@ fn gpu_dbscan_impl<F: Float + FromPrimitive + Send + Sync>(
 #[allow(dead_code)]
 fn gpu_find_neighbors<F: Float + FromPrimitive + Send + Sync>(
     gpu_data: &GpuArray<F>,
-    eps: F,
-    _context: &GpuContext,
+    eps: F_context: &GpuContext,
 ) -> Result<Vec<Vec<usize>>> {
     use scirs2_core::parallel_ops::*;
 
@@ -2346,8 +2341,8 @@ pub mod benchmark {
 
     impl GpuBenchmark {
         /// Create new GPU benchmark
-        pub fn new(gpu_config: GpuConfig) -> Result<Self> {
-            let context = GpuContext::new(gpu_config)?;
+        pub fn new(_gpu_config: GpuConfig) -> Result<Self> {
+            let context = GpuContext::new(_gpu_config)?;
             Ok(Self {
                 context,
                 results: Vec::new(),
@@ -2536,8 +2531,8 @@ pub mod benchmark {
             execution_time: Duration,
         ) -> f64 {
             let (n_samples, n_features) = data_size;
-            let input_size = n_samples * n_features * std::mem::size_of::<f64>();
-            let output_size = n_samples * n_samples * std::mem::size_of::<f64>();
+            let input_size = n_samples * n_features * std::mem::_size_of::<f64>();
+            let output_size = n_samples * n_samples * std::mem::_size_of::<f64>();
             let total_memory = (input_size * 2 + output_size) as f64; // Read input twice, write output
 
             total_memory / execution_time.as_secs_f64() / (1024.0 * 1024.0 * 1024.0)
@@ -2593,9 +2588,9 @@ pub mod accelerated {
 
     impl GpuClusteringCoordinator {
         /// Create new GPU clustering coordinator
-        pub fn new(gpu_config: Option<GpuConfig>) -> Result<Self> {
-            let config = gpu_config.unwrap_or_default();
-            let context = GpuContext::new(config)?;
+        pub fn new(_gpu_config: Option<GpuConfig>) -> Result<Self> {
+            let _config = _gpu_config.unwrap_or_default();
+            let context = GpuContext::new(_config)?;
 
             Ok(Self {
                 context,
@@ -2656,7 +2651,7 @@ pub mod accelerated {
                 "GpuDBSCAN" => {
                     let eps = self.estimate_optimal_eps(data)?;
                     let min_samples = (n_features * 2).max(5);
-                    let (labels, _) = gpu_dbscan(
+                    let (labels_) = gpu_dbscan(
                         data,
                         eps,
                         min_samples,
@@ -2711,13 +2706,13 @@ pub mod accelerated {
         fn smart_initialization(&self, data: ArrayView2<f64>, k: usize) -> Result<Array2<f64>> {
             use rand::prelude::*;
 
-            let mut rng = rng();
+            let mut rng = rand::rng();
             let n_samples = data.nrows();
             let n_features = data.ncols();
             let mut centers = Array2::zeros((k, n_features));
 
             // Choose first center randomly
-            let first_idx = rng.random_range(0..n_samples);
+            let first_idx = rng.gen_range(0..n_samples);
             centers.row_mut(0).assign(&data.row(first_idx));
 
             // Choose remaining centers using K-means++ algorithm
@@ -2732,7 +2727,7 @@ pub mod accelerated {
                             .row(i)
                             .iter()
                             .zip(centers.row(j).iter())
-                            .map(|(a, b)| (a - b).powi(2))
+                            .map(|(a..b)| (a - b).powi(2))
                             .sum::<f64>()
                             .sqrt();
                         min_dist = min_dist.min(dist);
@@ -2764,19 +2759,19 @@ pub mod accelerated {
             let n_samples = data.nrows();
             let sample_size = (n_samples / 10).min(1000).max(100);
 
-            let mut rng = rng();
+            let mut rng = rand::rng();
             let mut distances = Vec::new();
 
             // Sample random pairs and calculate distances
             for _ in 0..sample_size {
-                let i = rng.random_range(0..n_samples);
-                let j = rng.random_range(0..n_samples);
+                let i = rng.gen_range(0..n_samples);
+                let j = rng.gen_range(0..n_samples);
                 if i != j {
                     let dist = data
                         .row(i)
                         .iter()
                         .zip(data.row(j).iter())
-                        .map(|(a, b)| (a - b).powi(2))
+                        .map(|(a..b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
                     distances.push(dist);
@@ -2926,7 +2921,7 @@ pub mod accelerated {
 
     impl AutomaticAlgorithmSelector {
         /// Create new automatic algorithm selector
-        pub fn new(strategy: SelectionStrategy) -> Result<Self> {
+        pub fn new(_strategy: SelectionStrategy) -> Result<Self> {
             let gpu_context = GpuContext::new_auto().ok();
             let system_capabilities = SystemCapabilities::detect()?;
 
@@ -2934,7 +2929,7 @@ pub mod accelerated {
                 gpu_context,
                 performance_cache: HashMap::new(),
                 system_capabilities,
-                strategy,
+                _strategy,
             })
         }
 
@@ -2992,7 +2987,7 @@ pub mod accelerated {
                 n_samples,
                 n_features,
                 sparsity,
-                element_size: std::mem::size_of::<F>(),
+                element_size: std::mem::size, _of::<F>(),
                 spatial_locality,
                 complexity_score,
             }
@@ -3226,7 +3221,7 @@ pub mod accelerated {
                             accuracy_impact: 0.0,
                         },
                         reasoning: format!(
-                            "Large dataset ({} samples) with spatial locality benefits from GPU neighbor search",
+                            "Large dataset ({} _samples) with spatial locality benefits from GPU neighbor search",
                             data_chars.n_samples
                         ),
                         fallback_options: vec![
@@ -3254,7 +3249,7 @@ pub mod accelerated {
                     accuracy_impact: 0.0,
                 },
                 reasoning: format!(
-                    "DBSCAN on {} samples with eps={:.3} using optimized neighbor search",
+                    "DBSCAN on {} _samples with eps={:.3} using optimized neighbor search",
                     data_chars.n_samples, eps
                 ),
                 fallback_options: vec![ExecutionTarget::Cpu { num_threads: 1 }],
@@ -3267,7 +3262,7 @@ pub mod accelerated {
             profile: &PerformanceProfile,
             current_data: &DataCharacteristics,
         ) -> AlgorithmRecommendation {
-            // Scale performance based on data size differences
+            // Scale performance based on _data size differences
             let size_factor = (current_data.n_samples * current_data.n_features) as f64
                 / (profile.data_characteristics.n_samples * profile.data_characteristics.n_features)
                     as f64;
@@ -3276,7 +3271,7 @@ pub mod accelerated {
             let gpu_time_scaled = profile.gpu_time.map(|t| t * size_factor);
 
             match (&gpu_time_scaled, &self.strategy) {
-                (Some(gpu_time), _) if gpu_time < &cpu_time_scaled => {
+                (Some(gpu_time)_) if gpu_time < &cpu_time_scaled => {
                     // GPU is faster
                     if let Some(ref gpu_ctx) = self.gpu_context {
                         if let Some(device) = gpu_ctx.select_best_device() {
@@ -3342,7 +3337,7 @@ pub mod accelerated {
                 cpu_memory,
                 gpu_memory,
                 data_characteristics,
-                measured_at: std::time::SystemTime::now(),
+                measured_at: std::_time::SystemTime::now(),
             };
 
             self.performance_cache.insert(cache_key, profile);

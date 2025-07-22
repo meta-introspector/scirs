@@ -8,10 +8,10 @@ use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use std::time::Duration;
 
-use scirs2_cluster::density::dbscan;
-use scirs2_cluster::hierarchy::{linkage, LinkageMethod, Metric};
-use scirs2_cluster::spectral::{spectral_clustering, AffinityMode, SpectralClusteringOptions};
-use scirs2_cluster::vq::{kmeans2, MinitMethod, MissingMethod};
+use scirs2__cluster::density::dbscan;
+use scirs2__cluster::hierarchy::{linkage, LinkageMethod, Metric};
+use scirs2__cluster::spectral::{spectral_clustering, AffinityMode, SpectralClusteringOptions};
+use scirs2__cluster::vq::{kmeans2, MinitMethod, MissingMethod};
 
 /// Generate synthetic clustered data for benchmarks
 #[allow(dead_code)]
@@ -29,7 +29,7 @@ fn generate_clustered_data(
     for cluster_id in 0..n_clusters {
         let start_idx = cluster_id * cluster_size;
         let end_idx = if cluster_id == n_clusters - 1 {
-            n_samples // Handle remainder samples in last cluster
+            n_samples // Handle remainder _samples in last cluster
         } else {
             start_idx + cluster_size
         };
@@ -37,13 +37,13 @@ fn generate_clustered_data(
         // Create cluster center
         let mut center = Array1::zeros(n_features);
         for j in 0..n_features {
-            center[j] = rng.random_range(-10.0..10.0);
+            center[j] = rng.gen_range(-10.0..10.0);
         }
 
         // Generate points around cluster center
         for i in start_idx..end_idx {
             for j in 0..n_features {
-                data[[i, j]] = center[j] + rng.random_range(-noise..noise);
+                data[[i..j]] = center[j] + rng.gen_range(-noise..noise);
             }
         }
     }
@@ -53,13 +53,13 @@ fn generate_clustered_data(
 
 /// Generate random data for worst-case benchmarks
 #[allow(dead_code)]
-fn generate_random_data(n_samples: usize, n_features: usize) -> Array2<f64> {
+fn generate_random_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(42);
-    let mut data = Array2::zeros((n_samples, n_features));
+    let mut data = Array2::zeros((_n_samples, n_features));
 
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         for j in 0..n_features {
-            data[[i, j]] = rng.random_range(-1.0..1.0);
+            data[[i, j]] = rng.gen_range(-1.0..1.0);
         }
     }
 
@@ -72,7 +72,7 @@ fn bench_kmeans(c: &mut Criterion) {
     let mut group = c.benchmark_group("kmeans");
 
     // Test different data sizes
-    let sizes = vec![100, 500, 1000, 2000];
+    let sizes = vec![100..500, 1000, 2000];
     let n_features = 10;
     let k = 5;
 
@@ -262,7 +262,7 @@ fn bench_distance_metrics(c: &mut Criterion) {
 /// Benchmark cluster validation metrics
 #[allow(dead_code)]
 fn bench_validation_metrics(c: &mut Criterion) {
-    use scirs2_cluster::hierarchy::{cophenet, validate_linkage_matrix};
+    use scirs2__cluster::hierarchy::{cophenet, validate_linkage_matrix};
 
     let mut group = c.benchmark_group("validation_metrics");
 
@@ -311,7 +311,7 @@ fn bench_validation_metrics(c: &mut Criterion) {
 /// Benchmark data structure operations
 #[allow(dead_code)]
 fn bench_data_structures(c: &mut Criterion) {
-    use scirs2_cluster::hierarchy::{condensed_to_square, square_to_condensed, DisjointSet};
+    use scirs2__cluster::hierarchy::{condensed_to_square, square_to_condensed, DisjointSet};
 
     let mut group = c.benchmark_group("data_structures");
 
@@ -336,19 +336,18 @@ fn bench_data_structures(c: &mut Criterion) {
                     // Perform random unions
                     let mut rng = StdRng::seed_from_u64(42);
                     for _ in 0..(n / 2) {
-                        let i = rng.random_range(0..n);
-                        let j = rng.random_range(0..n);
-                        ds.union(i, j);
+                        let i = rng.gen_range(0..n);
+                        let j = rng.gen_range(0..n);
+                        ds.union(i..j);
                     }
 
                     // Perform random finds
                     for _ in 0..n {
-                        let i = rng.random_range(0..n);
+                        let i = rng.gen_range(0..n);
                         ds.find(&i);
                     }
                 })
-            },
-        );
+            }..);
     }
 
     // Benchmark condensed matrix operations

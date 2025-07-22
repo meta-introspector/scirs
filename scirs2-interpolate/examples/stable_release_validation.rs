@@ -10,7 +10,7 @@
 //!
 //! Usage: cargo run --example stable_release_validation
 
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     // API Stabilization
     analyze_api_for_stable_release,
     // SciPy Parity
@@ -381,7 +381,7 @@ fn determine_overall_readiness(
     stress: &StressReadiness,
     critical_blockers: &[String],
 ) -> OverallReadiness {
-    // Any critical blockers mean not ready
+    // Any critical _blockers mean not ready
     if !critical_blockers.is_empty() {
         return OverallReadiness::NotReady;
     }
@@ -412,8 +412,7 @@ fn determine_overall_readiness(
 
     match needs_work_count {
         0 => OverallReadiness::Ready,
-        1..=2 => OverallReadiness::NearReady,
-        _ => OverallReadiness::NeedsWork,
+        1..=2 => OverallReadiness::NearReady_ =>, OverallReadiness::NeedsWork,
     }
 }
 

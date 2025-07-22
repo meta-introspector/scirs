@@ -289,8 +289,7 @@ impl UnifiedPerformanceManager {
             AutoOptimizationStrategy::Custom(selector) => Ok(selector(context)),
     /// Execute operation with specific strategy
     fn execute_with_strategy<F: Float + Debug>(
-        strategy: &OptimizationChoice,
-        _context: &OperationContext,
+        strategy: &OptimizationChoice_context: &OperationContext,
         match strategy {
             OptimizationChoice::CPUSimd => {
                 #[cfg(feature = "simd")]
@@ -329,8 +328,7 @@ impl UnifiedPerformanceManager {
                                     (1, 1),
                                     (0, 0),
                                 )?;
-                                    "Conv2D requires 2 inputs".to_string(),
-                        _ => Err(NeuralError::NotImplemented(format!(
+                                    "Conv2D requires 2 inputs".to_string(, _ => Err(NeuralError::NotImplemented(format!(
                             "Operation {} not implemented for CPU SIMD",
                             operation_type
                         ))),
@@ -365,8 +363,7 @@ impl UnifiedPerformanceManager {
                                 (1, 1),
                                 (0, 0),
                             )?;
-                                "Conv2D requires 2 inputs".to_string(),
-                    _ => Err(NeuralError::NotImplemented(format!(
+                                "Conv2D requires 2 inputs".to_string(, _ => Err(NeuralError::NotImplemented(format!(
                         "Operation {} not implemented for CPU parallel",
                         operation_type
                     ))),
@@ -407,7 +404,7 @@ impl UnifiedPerformanceManager {
                 // Try strategies in order until one succeeds
                 let mut last_error = None;
                 for strategy in strategies {
-                    match self.execute_with_strategy(strategy, operation_type, inputs, _context) {
+                    match self.execute_with_strategy(strategy, operation_type, inputs_context) {
                         Ok(result) => return Ok(result),
                         Err(err) => last_error = Some(err),
                 Err(last_error.unwrap_or_else(|| {
@@ -510,8 +507,7 @@ impl UnifiedPerformanceManager {
             "softmax" => {
                     Ok(JITOperation::Softmax {
                         axis: -1,
-                        "Softmax requires 1 input".to_string(),
-            _ => Err(NeuralError::NotImplemented(format!(
+                        "Softmax requires 1 input".to_string(, _ => Err(NeuralError::NotImplemented(format!(
                 "JIT operation {} not supported",
                 operation_type
             ))),
@@ -546,8 +542,7 @@ impl UnifiedPerformanceManager {
         match operation {
             JITOperation::MatMul {
                 a_shape, b_shape, ..
-            } => Ok(vec![vec![a_shape[0], b_shape[1]]]),
-            _ => {
+            } => Ok(vec![vec![a_shape[0], b_shape[1]]], _ => {
                     Ok(vec![inputs[0].shape().to_vec()])
                         "Cannot infer output shapes without inputs".to_string(),
     /// Execute operation using CPU serial implementation
@@ -615,7 +610,7 @@ impl UnifiedPerformanceManager {
             .map(|input| format!("{:?}", input.shape()))
             .collect::<Vec<_>>()
             .join(";");
-        let param_signature = format!("batch_size:{}", context.batch_size);
+        let param_signature = format!("batch, _size:{}", context.batch_size);
         OperationKey {
             operation_type: operation_type.to_string(),
             shape_signature,
@@ -783,7 +778,7 @@ impl PerformanceMonitor {
             .min_by_key(|(_, times)| {
                 let avg = times.iter().sum::<Duration>() / times.len() as u32;
                 avg
-            .map(|(strategy, _)| strategy)
+            .map(|(strategy_)| strategy)
     /// Get recent performance for adaptive strategy
     pub fn get_recent_performance(
     ) -> Option<OptimizationChoice> {
@@ -810,7 +805,7 @@ impl PerformanceMonitor {
         let preferred_strategy = self
             .execution_times
             .max_by_key(|(_, times)| times.len())
-            .map(|(strategy, _)| strategy.clone())
+            .map(|(strategy_)| strategy.clone())
             .unwrap_or(OptimizationChoice::CPUParallel);
         // Calculate strategy distribution
         let mut strategy_distribution = HashMap::new();

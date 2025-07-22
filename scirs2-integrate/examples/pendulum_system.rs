@@ -4,7 +4,7 @@
 //! It includes simple pendulum, damped pendulum, and driven pendulum systems.
 
 use ndarray::{array, Array1, ArrayView1};
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::f64::consts::PI;
 
 /// Simple pendulum: θ'' + (g/L)sin(θ) = 0

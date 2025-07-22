@@ -8,7 +8,7 @@
 use crate::error::FFTResult;
 use crate::fft::algorithms::{parse_norm_mode, NormMode};
 use ndarray::{Array2, Axis};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 
@@ -31,7 +31,7 @@ use scirs2_core::parallel_ops::*;
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::fft2_parallel;
+/// use scirs2__fft::fft2_parallel;
 /// use ndarray::{array, Array2};
 ///
 /// // Create a simple 2x2 array
@@ -206,10 +206,7 @@ where
 #[allow(dead_code)]
 pub fn fft2_parallel<T>(
     input: &Array2<T>,
-    shape: Option<(usize, usize)>,
-    _axes: Option<(i32, i32)>,
-    _norm: Option<&str>,
-    _workers: Option<usize>,
+    shape: Option<(usize, usize)>, _axes: Option<(i32, i32)>, _norm: Option<&str>, _workers: Option<usize>,
 ) -> FFTResult<Array2<Complex64>>
 where
     T: NumCast + Copy + std::fmt::Debug + 'static,
@@ -394,10 +391,7 @@ where
 #[allow(dead_code)]
 pub fn ifft2_parallel<T>(
     input: &Array2<T>,
-    shape: Option<(usize, usize)>,
-    _axes: Option<(i32, i32)>,
-    _norm: Option<&str>,
-    _workers: Option<usize>,
+    shape: Option<(usize, usize)>, _axes: Option<(i32, i32)>, _norm: Option<&str>, _workers: Option<usize>,
 ) -> FFTResult<Array2<Complex64>>
 where
     T: NumCast + Copy + std::fmt::Debug + 'static,

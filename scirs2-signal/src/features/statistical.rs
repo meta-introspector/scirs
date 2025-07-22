@@ -1,7 +1,9 @@
 use crate::error::SignalResult;
 use crate::measurements;
+use crate::error::SignalResult;
 use std::collections::HashMap;
 
+#[allow(unused_imports)]
 /// Extract statistical features from a time series
 #[allow(dead_code)]
 pub fn extract_statistical_features(
@@ -85,58 +87,58 @@ pub fn extract_statistical_features(
 
 /// Calculate skewness of a signal
 #[allow(dead_code)]
-pub fn calculate_skewness(signal: &[f64], mean: f64, std_dev: f64) -> f64 {
-    if std_dev <= 0.0 || signal.len() < 3 {
+pub fn calculate_skewness(_signal: &[f64], mean: f64, std_dev: f64) -> f64 {
+    if std_dev <= 0.0 || _signal.len() < 3 {
         return 0.0;
     }
 
-    let n = signal.len() as f64;
-    let sum_cubed_diff: f64 = signal.iter().map(|&x| (x - mean).powi(3)).sum();
+    let n = _signal.len() as f64;
+    let sum_cubed_diff: f64 = _signal.iter().map(|&x| (x - mean).powi(3)).sum();
 
     sum_cubed_diff / ((n - 1.0) * std_dev.powi(3))
 }
 
 /// Calculate kurtosis of a signal
 #[allow(dead_code)]
-pub fn calculate_kurtosis(signal: &[f64], mean: f64, std_dev: f64) -> f64 {
-    if std_dev <= 0.0 || signal.len() < 4 {
+pub fn calculate_kurtosis(_signal: &[f64], mean: f64, std_dev: f64) -> f64 {
+    if std_dev <= 0.0 || _signal.len() < 4 {
         return 0.0;
     }
 
-    let n = signal.len() as f64;
-    let sum_quartic_diff: f64 = signal.iter().map(|&x| (x - mean).powi(4)).sum();
+    let n = _signal.len() as f64;
+    let sum_quartic_diff: f64 = _signal.iter().map(|&x| (x - mean).powi(4)).sum();
 
     sum_quartic_diff / ((n - 1.0) * std_dev.powi(4)) - 3.0 // Excess kurtosis
 }
 
 /// Calculate a quantile (percentile) of a sorted array
 #[allow(dead_code)]
-pub fn calculate_quantile(sorted: &[f64], q: f64) -> f64 {
-    if sorted.is_empty() {
+pub fn calculate_quantile(_sorted: &[f64], q: f64) -> f64 {
+    if _sorted.is_empty() {
         return 0.0;
     }
 
-    let pos = q * (sorted.len() - 1) as f64;
+    let pos = q * (_sorted.len() - 1) as f64;
     let idx = pos.floor() as usize;
     let frac = pos - idx as f64;
 
-    if idx + 1 < sorted.len() {
-        sorted[idx] * (1.0 - frac) + sorted[idx + 1] * frac
+    if idx + 1 < _sorted.len() {
+        _sorted[idx] * (1.0 - frac) + _sorted[idx + 1] * frac
     } else {
-        sorted[idx]
+        _sorted[idx]
     }
 }
 
 /// Calculate standard deviation
 #[allow(dead_code)]
-pub fn calculate_std(signal: &[f64]) -> f64 {
-    if signal.is_empty() {
+pub fn calculate_std(_signal: &[f64]) -> f64 {
+    if _signal.is_empty() {
         return 0.0;
     }
 
-    let n = signal.len();
-    let mean = signal.iter().sum::<f64>() / n as f64;
-    let variance = signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n as f64;
+    let n = _signal.len();
+    let mean = _signal.iter().sum::<f64>() / n as f64;
+    let variance = _signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n as f64;
 
     variance.sqrt()
 }
@@ -146,6 +148,8 @@ mod tests {
 
     #[test]
     fn test_extract_statistical_features() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple signal
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 

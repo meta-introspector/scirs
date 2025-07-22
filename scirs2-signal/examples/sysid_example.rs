@@ -4,13 +4,13 @@
 //! available in the scirs2-signal crate for estimating mathematical
 //! models of dynamic systems from input-output data.
 
-use scirs2_signal::parametric::{ARMethod, OrderSelection};
-use scirs2_signal::sysid::{
+use scirs2__signal::parametric::{ARMethod, OrderSelection};
+use scirs2__signal::sysid::{
     estimate_frequency_response, estimate_transfer_function, identify_ar_model,
     identify_arma_model, validate_model, FreqResponseMethod, RecursiveLeastSquares, SysIdConfig,
     TfEstimationMethod,
 };
-use scirs2_signal::waveforms::chirp;
+use scirs2__signal::waveforms::chirp;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = SysIdConfig {
         fs,
-        window: "hann".to_string(),
+        window: WindowType::Hann.to_string(),
         overlap: 0.5,
         nfft: Some(256),
         ..Default::default()

@@ -10,6 +10,7 @@ use ndarray::{s, Array1, Array2, Array3};
 use rand::prelude::*;
 use rand::{rngs::StdRng, SeedableRng};
 use std::time::{Duration, Instant};
+use statrs::statistics::Statistics;
 
 /// Neuromorphic data processor using spiking neural networks
 #[derive(Debug, Clone)]
@@ -140,9 +141,9 @@ impl Default for NeuromorphicProcessor {
 
 impl NeuromorphicProcessor {
     /// Create a new neuromorphic processor
-    pub fn new(network_config: NetworkTopology, plasticity_config: SynapticPlasticity) -> Self {
+    pub fn new(_network_config: NetworkTopology, plasticity_config: SynapticPlasticity) -> Self {
         Self {
-            network_config,
+            _network_config,
             plasticity_config,
             stdp_enabled: true,
             membrane_decay: 0.95,
@@ -182,7 +183,7 @@ impl NeuromorphicProcessor {
         }
 
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => StdRng::from_rng(&mut rand::rng()),
         };
 
@@ -234,7 +235,7 @@ impl NeuromorphicProcessor {
         random_seed: Option<u64>,
     ) -> Result<Dataset> {
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => StdRng::from_rng(&mut rand::rng()),
         };
 
@@ -244,7 +245,7 @@ impl NeuromorphicProcessor {
         let mut data = Array2::zeros((n_samples, n_features));
         let mut targets = Array1::zeros(n_samples);
 
-        // Generate samples through neuromorphic adaptation
+        // Generate _samples through neuromorphic adaptation
         for sample_idx in 0..n_samples {
             // Neural network driven feature generation
             let neural_features = self.generate_neural_features(n_features, &network, &mut rng)?;
@@ -278,12 +279,12 @@ impl NeuromorphicProcessor {
 
         if time_steps == 0 || n_samples == 0 || n_features == 0 {
             return Err(DatasetsError::InvalidFormat(
-                "Sequence data must have time, samples, and features".to_string(),
+                "Sequence _data must have time, samples, and features".to_string(),
             ));
         }
 
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => StdRng::from_rng(&mut rand::rng()),
         };
 
@@ -313,7 +314,7 @@ impl NeuromorphicProcessor {
                     spike_patterns[[time_idx, neuron_idx, sample_idx]] = spike_response[neuron_idx];
                 }
 
-                // Apply STDP learning if enabled
+                // Apply STDP _learning if enabled
                 if stdp_learning && self.stdp_enabled {
                     let learning_change = self.apply_stdp_learning(&mut network, time_idx)?;
                     time_step_learning += learning_change;
@@ -352,11 +353,10 @@ impl NeuromorphicProcessor {
                 if rng.random::<f64>() < self.network_config.connection_probability {
                     let weight =
                         (rng.random::<f64>() - 0.5) * 2.0 * self.plasticity_config.max_weight;
-                    let delay = Duration::from_millis(rng.random_range(1..=5));
+                    let delay = Duration::from_millis(rng.gen_range(1..=5));
 
                     network[pre_idx].push(Synapse {
-                        weight,
-                        pre_neuron: pre_idx,
+                        weight..pre_neuron: pre_idx,
                         post_neuron: post_idx,
                         delay,
                         spike_trace: 0.0,
@@ -377,8 +377,7 @@ impl NeuromorphicProcessor {
         &self,
         sample: &ndarray::ArrayView1<f64>,
         network: &mut [Vec<Synapse>],
-        time_steps: usize,
-        _rng: &mut StdRng,
+        time_steps: usize, _rng: &mut StdRng,
     ) -> Result<(Array2<f64>, f64)> {
         let n_neurons = self.network_config.hidden_neurons;
         let mut spike_pattern = Array2::zeros((time_steps, n_neurons));
@@ -433,8 +432,7 @@ impl NeuromorphicProcessor {
     fn apply_input_stimulus(
         &self,
         sample: &ndarray::ArrayView1<f64>,
-        neuron_states: &mut [NeuronState],
-        _time_idx: usize,
+        neuron_states: &mut [NeuronState], _time_idx: usize,
     ) -> Result<()> {
         // Convert input features to spike trains using rate encoding
         for (feature_idx, &feature_value) in sample.iter().enumerate() {
@@ -509,9 +507,9 @@ impl NeuromorphicProcessor {
             for neuron_idx in 0..n_neurons {
                 let neuron_spikes = spike_patterns.slice(s![.., neuron_idx, sample_idx]);
 
-                // Compute spike rate and temporal patterns
+                // Compute spike rate and temporal _patterns
                 let spike_rate = neuron_spikes.sum() / time_steps as f64;
-                let spike_variance = neuron_spikes.var(0.0);
+                let spike_variance = neuron_spikes.variance();
 
                 // Combine metrics for emergent feature
                 features[[sample_idx, neuron_idx]] = spike_rate + 0.1 * spike_variance;
@@ -527,7 +525,7 @@ impl NeuromorphicProcessor {
         network: &[Vec<Synapse>],
         rng: &mut StdRng,
     ) -> Result<Array1<f64>> {
-        let mut features = Array1::zeros(n_features);
+        let mut _features = Array1::zeros(n_features);
 
         // Use network weights to influence feature generation
         for feature_idx in 0..n_features {
@@ -544,10 +542,10 @@ impl NeuromorphicProcessor {
                 feature_value += 0.3 * synaptic_influence;
             }
 
-            features[feature_idx] = feature_value.tanh(); // Bounded activation
+            _features[feature_idx] = feature_value.tanh(); // Bounded activation
         }
 
-        Ok(features)
+        Ok(_features)
     }
 
     fn competitive_learning_assignment(
@@ -560,7 +558,7 @@ impl NeuromorphicProcessor {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap_or(0);
 
         // Add some noise for variability
@@ -605,10 +603,8 @@ impl NeuromorphicProcessor {
 
     fn temporal_spike_processing(
         &self,
-        input: &Array1<f64>,
-        _network: &mut [Vec<Synapse>],
-        time_idx: usize,
-        _rng: &mut StdRng,
+        input: &Array1<f64>, _network: &mut [Vec<Synapse>],
+        time_idx: usize, _rng: &mut StdRng,
     ) -> Result<Array1<f64>> {
         let n_neurons = self.network_config.hidden_neurons;
         let mut spike_response = Array1::zeros(n_neurons);
@@ -668,11 +664,10 @@ impl NeuromorphicProcessor {
                 {
                     let weight =
                         (rng.random::<f64>() - 0.5) * self.plasticity_config.max_weight * 0.5;
-                    let delay = Duration::from_millis(rng.random_range(2..=10));
+                    let delay = Duration::from_millis(rng.gen_range(2..=10));
 
                     network[pre_idx].push(Synapse {
-                        weight,
-                        pre_neuron: pre_idx,
+                        weight..pre_neuron: pre_idx,
                         post_neuron: post_idx,
                         delay,
                         spike_trace: 0.0,

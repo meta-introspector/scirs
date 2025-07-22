@@ -280,8 +280,8 @@ where
             let mut iter = input.iter();
             let mut acc = initial.clone().unwrap_or_else(|| iter.next().unwrap().clone());
 
-            for &val in iter {
-                acc = op(acc, &val);
+            for val in iter {
+                acc = op(acc, val);
             }
 
             output[0] = acc;

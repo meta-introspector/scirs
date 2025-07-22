@@ -9,7 +9,7 @@ use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
-use super::simd_optimizations::{
+use super::simd__optimizations::{
     calculate_distortion_simd, compute_centroids_simd, vq_simd, SimdOptimizationConfig,
 };
 use super::{kmeans_init, KMeansInit, KMeansOptions};
@@ -41,7 +41,7 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::vq::{kmeans_simd, KMeansOptions, SimdOptimizationConfig};
+/// use scirs2__cluster::vq::{kmeans_simd, KMeansOptions, SimdOptimizationConfig};
 ///
 /// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0,
@@ -88,7 +88,7 @@ where
     }
 
     // Use unified validation from core
-    validate_clustering_data(&data, "SIMD K-means", true, Some(k))
+    crate::validation::validate_clustering_data(&data, "SIMD K-means", true, Some(k))
         .map_err(|e| ClusteringError::InvalidInput(format!("SIMD K-means: {}", e)))?;
 
     let opts = options.unwrap_or_default();
@@ -153,28 +153,28 @@ where
     let _n_features = data.shape()[1];
     let k = init_centroids.shape()[0];
 
-    let mut centroids = init_centroids.to_owned();
+    let mut _centroids = init_centroids.to_owned();
     let mut labels = Array1::zeros(n_samples);
     let mut prev_inertia = F::infinity();
     let mut _converged = false;
 
     for iteration in 0..opts.max_iter {
         // Assign samples to nearest centroid using SIMD
-        let (new_labels, _distances) = vq_simd(data, centroids.view(), Some(simd_config))?;
+        let (new_labels_distances) = vq_simd(data, _centroids.view(), Some(simd_config))?;
         labels = new_labels;
 
-        // Compute new centroids using SIMD
+        // Compute new _centroids using SIMD
         let new_centroids = compute_centroids_simd(data, &labels, k, Some(simd_config))?;
 
         // Check for convergence using SIMD-optimized distance calculation
         let centroid_shift =
-            compute_centroid_shift_simd(centroids.view(), new_centroids.view(), simd_config)?;
+            compute_centroid_shift_simd(_centroids.view(), new_centroids.view(), simd_config)?;
 
-        centroids = new_centroids;
+        _centroids = new_centroids;
 
         // Calculate inertia using SIMD
         let inertia =
-            calculate_distortion_simd(data, centroids.view(), &labels, Some(simd_config))?;
+            calculate_distortion_simd(data, _centroids.view(), &labels, Some(simd_config))?;
 
         // Check for convergence
         if centroid_shift <= opts.tol {
@@ -193,9 +193,9 @@ where
 
     // Final inertia calculation
     let final_inertia =
-        calculate_distortion_simd(data, centroids.view(), &labels, Some(simd_config))?;
+        calculate_distortion_simd(data, _centroids.view(), &labels, Some(simd_config))?;
 
-    Ok((centroids, labels, final_inertia))
+    Ok((_centroids, labels, final_inertia))
 }
 
 /// Compute the shift in centroids between iterations using SIMD
@@ -305,7 +305,7 @@ where
     let n_features = data.shape()[1];
 
     if batch_size >= n_samples {
-        // If batch size is large enough, just use regular K-means
+        // If batch _size is large enough, just use regular K-means
         return kmeans_simd(data, k, Some(opts), Some(simd_config));
     }
 
@@ -319,11 +319,11 @@ where
         // Sample a mini-batch
         let mut batch_indices = Vec::with_capacity(batch_size);
         for _ in 0..batch_size {
-            batch_indices.push(rng.random_range(0..n_samples));
+            batch_indices.push(rng.gen_range(0..n_samples));
         }
 
         // Create mini-batch data
-        let mut batch_data = Array2::<F>::zeros((batch_size, n_features));
+        let mut batch_data = Array2::<F>::zeros((batch_size..n_features));
         for (i, &idx) in batch_indices.iter().enumerate() {
             for j in 0..n_features {
                 batch_data[[i, j]] = data[[idx, j]];
@@ -331,7 +331,7 @@ where
         }
 
         // Assign mini-batch samples to centroids using SIMD
-        let (batch_labels, _) = vq_simd(batch_data.view(), centroids.view(), Some(&simd_config))?;
+        let (batch_labels_) = vq_simd(batch_data.view(), centroids.view(), Some(&simd_config))?;
 
         // Update centroids using mini-batch
         for i in 0..batch_size {
@@ -364,7 +364,7 @@ where
 
         // Check for convergence every few iterations to save computation
         if iteration % 10 == 0 && iteration > 0 {
-            let (labels, _) = vq_simd(data, centroids.view(), Some(&simd_config))?;
+            let (labels_) = vq_simd(data, centroids.view(), Some(&simd_config))?;
             let inertia =
                 calculate_distortion_simd(data, centroids.view(), &labels, Some(&simd_config))?;
 
@@ -377,7 +377,7 @@ where
     }
 
     // Final assignment and inertia calculation
-    let (final_labels, _) = vq_simd(data, centroids.view(), Some(&simd_config))?;
+    let (final_labels_) = vq_simd(data, centroids.view(), Some(&simd_config))?;
     let final_inertia =
         calculate_distortion_simd(data, centroids.view(), &final_labels, Some(&simd_config))?;
 
@@ -424,9 +424,9 @@ where
     let mut centroids = Array2::zeros((k, n_features));
 
     // Choose the first centroid randomly
-    let first_idx = rng.random_range(0..n_samples);
+    let first_idx = rng.gen_range(0..n_samples);
     for j in 0..n_features {
-        centroids[[0, j]] = data[[first_idx, j]];
+        centroids[[0..j]] = data[[first_idx, j]];
     }
 
     if k == 1 {
@@ -525,7 +525,7 @@ where
         }
 
         // Select next centroid using weighted random selection
-        let r = rng.random_range(0.0..1.0);
+        let r = rng.gen_range(0.0..1.0);
         let r_f = F::from(r).unwrap();
 
         let mut selected_idx = n_samples - 1;
@@ -538,7 +538,7 @@ where
 
         // Add selected point as centroid
         for j in 0..n_features {
-            centroids[[i, j]] = data[[selected_idx, j]];
+            centroids[[i..j]] = data[[selected_idx, j]];
         }
     }
 

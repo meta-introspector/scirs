@@ -51,8 +51,8 @@ pub struct Circle {
 
 /// Detect circles using Hough Transform
 #[allow(dead_code)]
-pub fn hough_circles(img: &DynamicImage, config: HoughCircleConfig) -> Result<Vec<Circle>> {
-    let gray = img.to_luma8();
+pub fn hough_circles(_img: &DynamicImage, config: HoughCircleConfig) -> Result<Vec<Circle>> {
+    let gray = _img.to_luma8();
     let (width, height) = (gray.width() as usize, gray.height() as usize);
 
     // Compute edge map and gradients
@@ -129,10 +129,10 @@ pub fn hough_circles(img: &DynamicImage, config: HoughCircleConfig) -> Result<Ve
 
 /// Draw circles on an image
 #[allow(dead_code)]
-pub fn draw_circles(img: &mut GrayImage, circles: &[Circle], intensity: u8) {
+pub fn draw_circles(_img: &mut GrayImage, circles: &[Circle], intensity: u8) {
     for circle in circles {
         draw_circle(
-            img,
+            _img,
             circle.center_x as i32,
             circle.center_y as i32,
             circle.radius as i32,
@@ -144,8 +144,8 @@ pub fn draw_circles(img: &mut GrayImage, circles: &[Circle], intensity: u8) {
 // Helper functions
 
 #[allow(dead_code)]
-fn compute_edges(img: &GrayImage) -> Result<(Array2<f32>, Array2<f32>, Array2<f32>)> {
-    let (height, width) = (img.height() as usize, img.width() as usize);
+fn compute_edges(_img: &GrayImage) -> Result<(Array2<f32>, Array2<f32>, Array2<f32>)> {
+    let (height, width) = (_img.height() as usize, _img.width() as usize);
     let mut edges = Array2::<f32>::zeros((height, width));
     let mut grad_x = Array2::<f32>::zeros((height, width));
     let mut grad_y = Array2::<f32>::zeros((height, width));
@@ -156,26 +156,26 @@ fn compute_edges(img: &GrayImage) -> Result<(Array2<f32>, Array2<f32>, Array2<f3
             let (x_u32, y_u32) = (x as u32, y as u32);
 
             // Sobel X
-            let gx = -(img.get_pixel(x_u32 - 1, y_u32 - 1).0[0] as f32)
-                + 0.0 * img.get_pixel(x_u32, y_u32 - 1).0[0] as f32
-                + img.get_pixel(x_u32 + 1, y_u32 - 1).0[0] as f32
-                + -2.0 * img.get_pixel(x_u32 - 1, y_u32).0[0] as f32
-                + 0.0 * img.get_pixel(x_u32, y_u32).0[0] as f32
-                + 2.0 * img.get_pixel(x_u32 + 1, y_u32).0[0] as f32
-                + -(img.get_pixel(x_u32 - 1, y_u32 + 1).0[0] as f32)
-                + 0.0 * img.get_pixel(x_u32, y_u32 + 1).0[0] as f32
-                + img.get_pixel(x_u32 + 1, y_u32 + 1).0[0] as f32;
+            let gx = -(_img.get_pixel(x_u32 - 1, y_u32 - 1).0[0] as f32)
+                + 0.0 * _img.get_pixel(x_u32, y_u32 - 1).0[0] as f32
+                + _img.get_pixel(x_u32 + 1, y_u32 - 1).0[0] as f32
+                + -2.0 * _img.get_pixel(x_u32 - 1, y_u32).0[0] as f32
+                + 0.0 * _img.get_pixel(x_u32, y_u32).0[0] as f32
+                + 2.0 * _img.get_pixel(x_u32 + 1, y_u32).0[0] as f32
+                + -(_img.get_pixel(x_u32 - 1, y_u32 + 1).0[0] as f32)
+                + 0.0 * _img.get_pixel(x_u32, y_u32 + 1).0[0] as f32
+                + _img.get_pixel(x_u32 + 1, y_u32 + 1).0[0] as f32;
 
             // Sobel Y
-            let gy = -(img.get_pixel(x_u32 - 1, y_u32 - 1).0[0] as f32)
-                + -2.0 * img.get_pixel(x_u32, y_u32 - 1).0[0] as f32
-                + -(img.get_pixel(x_u32 + 1, y_u32 - 1).0[0] as f32)
-                + 0.0 * img.get_pixel(x_u32 - 1, y_u32).0[0] as f32
-                + 0.0 * img.get_pixel(x_u32, y_u32).0[0] as f32
-                + 0.0 * img.get_pixel(x_u32 + 1, y_u32).0[0] as f32
-                + 1.0 * img.get_pixel(x_u32 - 1, y_u32 + 1).0[0] as f32
-                + 2.0 * img.get_pixel(x_u32, y_u32 + 1).0[0] as f32
-                + 1.0 * img.get_pixel(x_u32 + 1, y_u32 + 1).0[0] as f32;
+            let gy = -(_img.get_pixel(x_u32 - 1, y_u32 - 1).0[0] as f32)
+                + -2.0 * _img.get_pixel(x_u32, y_u32 - 1).0[0] as f32
+                + -(_img.get_pixel(x_u32 + 1, y_u32 - 1).0[0] as f32)
+                + 0.0 * _img.get_pixel(x_u32 - 1, y_u32).0[0] as f32
+                + 0.0 * _img.get_pixel(x_u32, y_u32).0[0] as f32
+                + 0.0 * _img.get_pixel(x_u32 + 1, y_u32).0[0] as f32
+                + 1.0 * _img.get_pixel(x_u32 - 1, y_u32 + 1).0[0] as f32
+                + 2.0 * _img.get_pixel(x_u32, y_u32 + 1).0[0] as f32
+                + 1.0 * _img.get_pixel(x_u32 + 1, y_u32 + 1).0[0] as f32;
 
             grad_x[[y, x]] = gx / 255.0;
             grad_y[[y, x]] = gy / 255.0;
@@ -187,15 +187,15 @@ fn compute_edges(img: &GrayImage) -> Result<(Array2<f32>, Array2<f32>, Array2<f3
 }
 
 #[allow(dead_code)]
-fn find_circles(accumulator: &Array3<f32>, threshold: f32) -> Result<Vec<Circle>> {
-    let (height, width, num_radii) = accumulator.dim();
+fn find_circles(_accumulator: &Array3<f32>, threshold: f32) -> Result<Vec<Circle>> {
+    let (height, width, num_radii) = _accumulator.dim();
     let mut circles = Vec::new();
 
     // Find local maxima
     for y in 1..height - 1 {
         for x in 1..width - 1 {
             for r in 1..num_radii - 1 {
-                let val = accumulator[[y, x, r]];
+                let val = _accumulator[[y, x, r]];
 
                 if val < threshold {
                     continue;
@@ -215,7 +215,7 @@ fn find_circles(accumulator: &Array3<f32>, threshold: f32) -> Result<Vec<Circle>
                             let nx = (x as i32 + dx) as usize;
                             let nr = (r as i32 + dr) as usize;
 
-                            if accumulator[[ny, nx, nr]] >= val {
+                            if _accumulator[[ny, nx, nr]] >= val {
                                 is_max = false;
                                 break;
                             }
@@ -283,8 +283,8 @@ fn non_max_suppression(mut circles: Vec<Circle>, min_distance: usize) -> Vec<Cir
 }
 
 #[allow(dead_code)]
-fn draw_circle(img: &mut GrayImage, cx: i32, cy: i32, radius: i32, intensity: u8) {
-    let (width, height) = (img.width() as i32, img.height() as i32);
+fn draw_circle(_img: &mut GrayImage, cx: i32, cy: i32, radius: i32, intensity: u8) {
+    let (width, height) = (_img.width() as i32, _img.height() as i32);
 
     // Draw circle using Bresenham's algorithm
     let mut x = 0;
@@ -293,14 +293,14 @@ fn draw_circle(img: &mut GrayImage, cx: i32, cy: i32, radius: i32, intensity: u8
 
     while x <= y {
         // Draw 8 octants
-        set_pixel(img, cx + x, cy + y, intensity, width, height);
-        set_pixel(img, cx - x, cy + y, intensity, width, height);
-        set_pixel(img, cx + x, cy - y, intensity, width, height);
-        set_pixel(img, cx - x, cy - y, intensity, width, height);
-        set_pixel(img, cx + y, cy + x, intensity, width, height);
-        set_pixel(img, cx - y, cy + x, intensity, width, height);
-        set_pixel(img, cx + y, cy - x, intensity, width, height);
-        set_pixel(img, cx - y, cy - x, intensity, width, height);
+        set_pixel(_img, cx + x, cy + y, intensity, width, height);
+        set_pixel(_img, cx - x, cy + y, intensity, width, height);
+        set_pixel(_img, cx + x, cy - y, intensity, width, height);
+        set_pixel(_img, cx - x, cy - y, intensity, width, height);
+        set_pixel(_img, cx + y, cy + x, intensity, width, height);
+        set_pixel(_img, cx - y, cy + x, intensity, width, height);
+        set_pixel(_img, cx + y, cy - x, intensity, width, height);
+        set_pixel(_img, cx - y, cy - x, intensity, width, height);
 
         if d < 0 {
             d += 4 * x + 6;
@@ -313,9 +313,9 @@ fn draw_circle(img: &mut GrayImage, cx: i32, cy: i32, radius: i32, intensity: u8
 }
 
 #[allow(dead_code)]
-fn set_pixel(img: &mut GrayImage, x: i32, y: i32, intensity: u8, width: i32, height: i32) {
+fn set_pixel(_img: &mut GrayImage, x: i32, y: i32, intensity: u8, width: i32, height: i32) {
     if x >= 0 && x < width && y >= 0 && y < height {
-        img.put_pixel(x as u32, y as u32, Luma([intensity]));
+        _img.put_pixel(x as u32, y as u32, Luma([intensity]));
     }
 }
 

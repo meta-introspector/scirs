@@ -3,8 +3,8 @@
 //! This module provides SIMD optimizations for general sparse matrix operations,
 //! leveraging the scirs2-core SIMD infrastructure for maximum performance.
 
-use crate::csc_array::CscArray;
-use crate::csr_array::CsrArray;
+use crate::csc__array::CscArray;
+use crate::csr__array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, ArrayView1};
@@ -63,8 +63,8 @@ impl Default for SimdOptions {
 /// # Example
 ///
 /// ```rust
-/// use scirs2_sparse::csr_array::CsrArray;
-/// use scirs2_sparse::simd_ops::{simd_csr_matvec, SimdOptions};
+/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2__sparse::simd_ops::{simd_csr_matvec, SimdOptions};
 /// use ndarray::Array1;
 ///
 /// // Create a sparse matrix
@@ -272,8 +272,8 @@ where
     let b_csr = b.to_csr()?;
 
     // Get matrix data
-    let (_a_rows, _a_cols, a_values) = a_csr.find();
-    let (_b_rows, _b_cols, b_values) = b_csr.find();
+    let (_a_rows_a_cols, a_values) = a_csr.find();
+    let (_b_rows_b_cols, b_values) = b_csr.find();
 
     // For sparse element-wise operations, we need to handle the union of non-zero patterns
     // This is a more complex operation that requires merging the sparsity patterns
@@ -594,7 +594,7 @@ where
     let a_csr = a.to_csr()?;
     let b_csc = b.to_csc()?; // CSC is better for column access in matrix multiplication
 
-    let (a_rows, _a_cols) = a_csr.shape();
+    let (a_rows_a_cols) = a_csr.shape();
     let (_b_rows, b_cols) = b_csc.shape();
 
     // Result matrix will be a_rows x b_cols
@@ -785,7 +785,7 @@ where
     S: SparseArray<T>,
 {
     let opts = options.unwrap_or_default();
-    let (_, _, values) = matrix.find();
+    let (__, values) = matrix.find();
 
     match norm_type {
         "fro" | "frobenius" => {
@@ -853,8 +853,8 @@ where
         }
         "inf" | "infinity" => {
             // Infinity norm: maximum absolute row sum
-            let (rows, _cols) = matrix.shape();
-            let (row_indices, _col_indices, values) = matrix.find();
+            let (rows_cols) = matrix.shape();
+            let (row_indices_col_indices, values) = matrix.find();
 
             let mut row_sums = vec![T::zero(); rows];
 
@@ -892,7 +892,7 @@ where
                 .fold(T::zero(), |acc, x| if x > acc { x } else { acc }))
         }
         _ => Err(SparseError::ValueError(format!(
-            "Unknown norm type: {norm_type}"
+            "Unknown norm _type: {norm_type}"
         ))),
     }
 }
@@ -1080,7 +1080,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
     use approx::assert_relative_eq;
 
     #[test]

@@ -5,7 +5,7 @@
 //! maximum scalability and performance.
 
 use ndarray::Array2;
-use scirs2_cluster::advanced_gpu_distributed::{
+use scirs2__cluster::advanced_gpu_distributed::{
     CoordinationStrategy, CustomGpuOptimization, DistributedAdvancedClusterer,
     GpuAccelerationConfig, GpuAdvancedClusterer, GpuDeviceSelection, GpuMemoryStrategy,
     GpuOptimizationLevel, HybridGpuDistributedClusterer, WorkerNodeConfig,
@@ -687,10 +687,10 @@ fn resource_monitoring_demo() -> Result<(), Box<dyn std::error::Error>> {
 // Helper functions to create test datasets
 
 #[allow(dead_code)]
-fn create_large_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
-    let mut data_vec = Vec::with_capacity(n_samples * n_features);
+fn create_large_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+    let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         let cluster_id = i % 5; // 5 clusters
         let base_value = cluster_id as f64 * 10.0;
 
@@ -706,10 +706,10 @@ fn create_large_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_massive_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
-    let mut data_vec = Vec::with_capacity(n_samples * n_features);
+fn create_massive_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+    let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         let cluster_id = i % 8; // 8 clusters for complexity
         let base_x = (cluster_id as f64 * 2.0 * std::f64::consts::PI / 8.0).cos() * 20.0;
         let base_y = (cluster_id as f64 * 2.0 * std::f64::consts::PI / 8.0).sin() * 20.0;
@@ -727,12 +727,12 @@ fn create_massive_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_advanced_massive_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
-    let mut data_vec = Vec::with_capacity(n_samples * n_features);
+fn create_advanced_massive_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+    let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         let mega_cluster = i % 12; // 12 major clusters
-        let sub_cluster = (i / (n_samples / 100)) % 10; // Sub-clustering
+        let sub_cluster = (i / (_n_samples / 100)) % 10; // Sub-clustering
 
         let theta = mega_cluster as f64 * 2.0 * std::f64::consts::PI / 12.0;
         let radius = 50.0 + sub_cluster as f64 * 5.0;
@@ -757,10 +757,10 @@ fn create_advanced_massive_dataset(n_samples: usize, n_features: usize) -> Array
 }
 
 #[allow(dead_code)]
-fn create_optimization_test_data(n_samples: usize, n_features: usize) -> Array2<f64> {
-    let mut data_vec = Vec::with_capacity(n_samples * n_features);
+fn create_optimization_test_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+    let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         for j in 0..n_features {
             let pattern1 = ((i as f64 / 100.0) * std::f64::consts::PI).sin();
             let pattern2 = ((j as f64 / 10.0) * std::f64::consts::PI).cos();
@@ -774,12 +774,12 @@ fn create_optimization_test_data(n_samples: usize, n_features: usize) -> Array2<
 }
 
 #[allow(dead_code)]
-fn create_unbalanced_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
-    let mut data_vec = Vec::with_capacity(n_samples * n_features);
+fn create_unbalanced_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
+    let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
     // Create unbalanced clusters with different densities
-    for i in 0..n_samples {
-        let cluster_assignment = if i < n_samples / 2 {
+    for i in 0.._n_samples {
+        let cluster_assignment = if i < _n_samples / 2 {
             0 // Large cluster
         } else if i < n_samples * 3 / 4 {
             1 // Medium cluster
@@ -807,10 +807,10 @@ fn create_unbalanced_dataset(n_samples: usize, n_features: usize) -> Array2<f64>
 }
 
 #[allow(dead_code)]
-fn create_scaling_test_data(n_samples: usize, n_features: usize) -> Array2<f64> {
-    let mut data_vec = Vec::with_capacity(n_samples * n_features);
+fn create_scaling_test_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+    let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         let cluster_id = i % 6; // 6 clusters
 
         for j in 0..n_features {
@@ -831,10 +831,10 @@ fn create_scaling_test_data(n_samples: usize, n_features: usize) -> Array2<f64> 
 }
 
 #[allow(dead_code)]
-fn create_monitoring_test_data(n_samples: usize, n_features: usize) -> Array2<f64> {
-    let mut data_vec = Vec::with_capacity(n_samples * n_features);
+fn create_monitoring_test_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
+    let mut data_vec = Vec::with_capacity(_n_samples * n_features);
 
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         for j in 0..n_features {
             let spiral_angle = i as f64 * 0.1;
             let spiral_radius = 1.0 + i as f64 * 0.01;

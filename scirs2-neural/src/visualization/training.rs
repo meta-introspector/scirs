@@ -199,10 +199,10 @@ pub enum UpdateMode {
 // Implementation for TrainingVisualizer
 impl<F: Float + Debug + 'static + num_traits::FromPrimitive + Send + Sync> TrainingVisualizer<F> {
     /// Create a new training visualizer
-    pub fn new(config: VisualizationConfig) -> Self {
+    pub fn new(_config: VisualizationConfig) -> Self {
         Self {
             metrics_history: Vec::new(),
-            config,
+            _config,
             active_plots: HashMap::new(),
         }
     }
@@ -402,7 +402,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + Send + Sync> Train
         let mut selected_indices: Vec<usize> = importance_scores
             .iter()
             .take(target_points)
-            .map(|(idx, _)| *idx)
+            .map(|(idx_)| *idx)
             .collect();
         selected_indices.sort();
         for &idx in &selected_indices {
@@ -689,8 +689,7 @@ mod tests {
         assert_eq!(AxisScale::Sqrt, AxisScale::Sqrt);
         let custom = AxisScale::Custom("symlog".to_string());
         match custom {
-            AxisScale::Custom(name) => assert_eq!(name, "symlog"),
-            _ => assert!(false, "Expected custom scale"),
+            AxisScale::Custom(name) => assert_eq!(name, "symlog", _ => assert!(false, "Expected custom scale"),
     fn test_marker_shapes() {
         let shapes = [
             MarkerShape::Circle,
@@ -719,8 +718,7 @@ mod tests {
         assert_eq!(append, UpdateMode::Append);
         assert_eq!(replace, UpdateMode::Replace);
         match rolling {
-            UpdateMode::Rolling(size) => assert_eq!(size, 100),
-            _ => assert!(false, "Expected rolling update mode"),
+            UpdateMode::Rolling(size) => assert_eq!(size, 100, _ => assert!(false, "Expected rolling update mode"),
     fn test_clear_history() {
         visualizer.clear_history();
     fn test_plot_management() {

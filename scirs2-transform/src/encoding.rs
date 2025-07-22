@@ -24,9 +24,9 @@ pub struct SparseMatrix {
 
 impl SparseMatrix {
     /// Create a new empty sparse matrix
-    pub fn new(shape: (usize, usize)) -> Self {
+    pub fn new(_shape: (usize, usize)) -> Self {
         SparseMatrix {
-            shape,
+            _shape,
             row_indices: Vec::new(),
             col_indices: Vec::new(),
             values: Vec::new(),
@@ -114,11 +114,11 @@ impl OneHotEncoder {
     ///
     /// # Returns
     /// * A new OneHotEncoder instance
-    pub fn new(drop: Option<String>, handle_unknown: &str, sparse: bool) -> Result<Self> {
-        if let Some(ref drop_strategy) = drop {
+    pub fn new(_drop: Option<String>, handle_unknown: &str, sparse: bool) -> Result<Self> {
+        if let Some(ref drop_strategy) = _drop {
             if drop_strategy != "first" && drop_strategy != "if_binary" {
                 return Err(TransformError::InvalidInput(
-                    "drop must be 'first', 'if_binary', or None".to_string(),
+                    "_drop must be 'first', 'if_binary', or None".to_string(),
                 ));
             }
         }
@@ -131,7 +131,7 @@ impl OneHotEncoder {
 
         Ok(OneHotEncoder {
             categories_: None,
-            drop,
+            _drop,
             handle_unknown: handle_unknown.to_string(),
             sparse,
         })
@@ -225,8 +225,7 @@ impl OneHotEncoder {
             // Apply drop strategy
             let n_output_cats = match &self.drop {
                 Some(strategy) if strategy == "first" => n_cats.saturating_sub(1),
-                Some(strategy) if strategy == "if_binary" && n_cats == 2 => 1,
-                _ => n_cats,
+                Some(strategy) if strategy == "if_binary" && n_cats == 2 => 1_ => n_cats,
             };
 
             if n_output_cats == 0 {
@@ -249,8 +248,7 @@ impl OneHotEncoder {
             // Determine how many categories to keep
             let (start_idx, n_output_cats) = match &self.drop {
                 Some(strategy) if strategy == "first" => (1, n_cats.saturating_sub(1)),
-                Some(strategy) if strategy == "if_binary" && n_cats == 2 => (0, 1),
-                _ => (0, n_cats),
+                Some(strategy) if strategy == "if_binary" && n_cats == 2 => (0, 1, _ => (0, n_cats),
             };
 
             for (cat_idx, &category) in feature_categories.iter().enumerate() {
@@ -426,8 +424,7 @@ impl OneHotEncoder {
             // Determine which categories to include based on drop strategy
             let (start_idx, n_output_cats) = match &self.drop {
                 Some(strategy) if strategy == "first" => (1, n_cats.saturating_sub(1)),
-                Some(strategy) if strategy == "if_binary" && n_cats == 2 => (0, 1),
-                _ => (0, n_cats),
+                Some(strategy) if strategy == "if_binary" && n_cats == 2 => (0, 1, _ => (0, n_cats),
             };
 
             for &category in feature_categories
@@ -465,10 +462,10 @@ impl OrdinalEncoder {
     ///
     /// # Returns
     /// * A new OrdinalEncoder instance
-    pub fn new(handle_unknown: &str, unknown_value: Option<f64>) -> Result<Self> {
-        if handle_unknown != "error" && handle_unknown != "use_encoded_value" {
+    pub fn new(_handle_unknown: &str, unknown_value: Option<f64>) -> Result<Self> {
+        if _handle_unknown != "error" && _handle_unknown != "use_encoded_value" {
             return Err(TransformError::InvalidInput(
-                "handle_unknown must be 'error' or 'use_encoded_value'".to_string(),
+                "_handle_unknown must be 'error' or 'use_encoded_value'".to_string(),
             ));
         }
 
@@ -633,7 +630,7 @@ impl OrdinalEncoder {
 /// # Examples
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_transform::encoding::TargetEncoder;
+/// use scirs2__transform::encoding::TargetEncoder;
 ///
 /// let x = Array2::from_shape_vec((6, 1), vec![0.0, 1.0, 2.0, 0.0, 1.0, 2.0]).unwrap();
 /// let y = vec![1.0, 2.0, 3.0, 1.5, 2.5, 3.5];
@@ -667,10 +664,10 @@ impl TargetEncoder {
     ///
     /// # Returns
     /// * A new TargetEncoder instance
-    pub fn new(strategy: &str, smoothing: f64, global_stat: f64) -> Result<Self> {
-        if !["mean", "median", "count", "sum"].contains(&strategy) {
+    pub fn new(_strategy: &str, smoothing: f64, global_stat: f64) -> Result<Self> {
+        if !["mean", "median", "count", "sum"].contains(&_strategy) {
             return Err(TransformError::InvalidInput(
-                "strategy must be 'mean', 'median', 'count', or 'sum'".to_string(),
+                "_strategy must be 'mean', 'median', 'count', or 'sum'".to_string(),
             ));
         }
 
@@ -681,7 +678,7 @@ impl TargetEncoder {
         }
 
         Ok(TargetEncoder {
-            strategy: strategy.to_string(),
+            _strategy: _strategy.to_string(),
             smoothing,
             global_stat,
             encodings_: None,
@@ -691,10 +688,10 @@ impl TargetEncoder {
     }
 
     /// Creates a TargetEncoder with mean strategy and default smoothing
-    pub fn with_mean(smoothing: f64) -> Self {
+    pub fn with_mean(_smoothing: f64) -> Self {
         TargetEncoder {
             strategy: "mean".to_string(),
-            smoothing,
+            _smoothing,
             global_stat: 0.0,
             encodings_: None,
             is_fitted: false,
@@ -703,10 +700,10 @@ impl TargetEncoder {
     }
 
     /// Creates a TargetEncoder with median strategy
-    pub fn with_median(smoothing: f64) -> Self {
+    pub fn with_median(_smoothing: f64) -> Self {
         TargetEncoder {
             strategy: "median".to_string(),
-            smoothing,
+            _smoothing,
             global_stat: 0.0,
             encodings_: None,
             is_fitted: false,
@@ -797,8 +794,7 @@ impl TargetEncoder {
                         }
                     }
                     "count" => targets.len() as f64,
-                    "sum" => targets.iter().sum::<f64>(),
-                    _ => unreachable!(),
+                    "sum" => targets.iter().sum::<f64>(, _ => unreachable!(),
                 };
 
                 category_encoding.insert(*category, encoded_value);
@@ -970,11 +966,11 @@ impl TargetEncoder {
             fold_indices.push((start, end));
         }
 
-        // For each fold, train on other folds and predict on this fold
+        // For each fold, train on other _folds and predict on this fold
         for fold in 0..cv_folds {
             let (val_start, val_end) = fold_indices[fold];
 
-            // Collect training data (all folds except current)
+            // Collect training data (all _folds except current)
             let mut train_indices = Vec::new();
             for (other_fold, &(start, end)) in fold_indices.iter().enumerate().take(cv_folds) {
                 if other_fold != fold {
@@ -1030,8 +1026,7 @@ impl TargetEncoder {
                             }
                         }
                         "count" => targets.len() as f64,
-                        "sum" => targets.iter().sum::<f64>(),
-                        _ => unreachable!(),
+                        "sum" => targets.iter().sum::<f64>(, _ => unreachable!(),
                     };
 
                     category_encoding.insert(*category, encoded_value);
@@ -1087,10 +1082,10 @@ impl BinaryEncoder {
     ///
     /// # Returns
     /// * `Result<BinaryEncoder>` - The new encoder instance
-    pub fn new(handle_unknown: &str) -> Result<Self> {
-        if handle_unknown != "error" && handle_unknown != "ignore" {
+    pub fn new(_handle_unknown: &str) -> Result<Self> {
+        if _handle_unknown != "error" && _handle_unknown != "ignore" {
             return Err(TransformError::InvalidInput(
-                "handle_unknown must be 'error' or 'ignore'".to_string(),
+                "_handle_unknown must be 'error' or 'ignore'".to_string(),
             ));
         }
 
@@ -1285,9 +1280,9 @@ impl BinaryEncoder {
     }
 
     /// Converts an integer to binary representation
-    fn int_to_binary(value: usize, n_bits: usize) -> Vec<u8> {
+    fn int_to_binary(_value: usize, n_bits: usize) -> Vec<u8> {
         let mut binary = Vec::with_capacity(n_bits);
-        let mut val = value;
+        let mut val = _value;
 
         for _ in 0..n_bits {
             binary.push((val & 1) as u8);
@@ -1328,7 +1323,7 @@ impl FrequencyEncoder {
     ///
     /// # Returns
     /// * `Result<FrequencyEncoder>` - The new encoder instance
-    pub fn new(normalize: bool, handle_unknown: &str, unknown_value: f64) -> Result<Self> {
+    pub fn new(_normalize: bool, handle_unknown: &str, unknown_value: f64) -> Result<Self> {
         if !["error", "ignore", "use_encoded_value"].contains(&handle_unknown) {
             return Err(TransformError::InvalidInput(
                 "handle_unknown must be 'error', 'ignore', or 'use_encoded_value'".to_string(),
@@ -1337,7 +1332,7 @@ impl FrequencyEncoder {
 
         Ok(FrequencyEncoder {
             frequency_maps_: None,
-            normalize,
+            _normalize,
             handle_unknown: handle_unknown.to_string(),
             unknown_value,
             is_fitted: false,
@@ -1536,10 +1531,10 @@ impl WOEEncoder {
     ///
     /// # Returns
     /// * `Result<WOEEncoder>` - The new encoder instance
-    pub fn new(regularization: f64, handle_unknown: &str, unknown_value: f64) -> Result<Self> {
-        if regularization < 0.0 {
+    pub fn new(_regularization: f64, handle_unknown: &str, unknown_value: f64) -> Result<Self> {
+        if _regularization < 0.0 {
             return Err(TransformError::InvalidInput(
-                "regularization must be non-negative".to_string(),
+                "_regularization must be non-negative".to_string(),
             ));
         }
 
@@ -1552,7 +1547,7 @@ impl WOEEncoder {
         Ok(WOEEncoder {
             woe_maps_: None,
             information_values_: None,
-            regularization,
+            _regularization,
             handle_unknown: handle_unknown.to_string(),
             unknown_value,
             global_woe_: 0.0,
@@ -1566,8 +1561,8 @@ impl WOEEncoder {
     }
 
     /// Creates a WOEEncoder with custom regularization
-    pub fn with_regularization(regularization: f64) -> Result<Self> {
-        Self::new(regularization, "global_woe", 0.0)
+    pub fn with_regularization(_regularization: f64) -> Result<Self> {
+        Self::new(_regularization, "global_woe", 0.0)
     }
 
     /// Fits the WOEEncoder to the input data

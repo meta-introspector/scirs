@@ -6,21 +6,21 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-use scirs2_graph::{
+use scirs2__graph::{
     barabasi_albert_graph, betweenness_centrality, breadth_first_search, connected_components,
     dijkstra_path, erdos_renyi_graph, louvain_communities_result, pagerank_centrality,
     watts_strogatz_graph, DiGraph, Graph, Node,
 };
 
-use scirs2_graph::advanced::{
+use scirs2__graph::advanced::{
     create_enhanced_advanced_processor, create_large_graph_advanced_processor,
     create_performance_advanced_processor, execute_with_enhanced_advanced, AdvancedConfig,
     AdvancedProcessor,
 };
 
-use scirs2_graph::graph_memory_profiler::{AdvancedMemoryProfiler, MemoryProfilerConfig};
+use scirs2__graph::graph_memory_profiler::{AdvancedMemoryProfiler, MemoryProfilerConfig};
 
-use scirs2_graph::numerical_accuracy_validation::{
+use scirs2__graph::numerical_accuracy_validation::{
     create_comprehensive_validation_suite, run_quick_validation, ValidationConfig,
 };
 
@@ -390,7 +390,7 @@ fn generate_final_report(
 ) -> AdvancedValidationReport {
     let mut overall_status = ValidationStatus::Pass;
 
-    // Check processor tests
+    // Check processor _tests
     let processor_failures = processor_tests.values().filter(|&&v| !v).count();
     if processor_failures > 0 {
         overall_status = ValidationStatus::Warning;
@@ -401,12 +401,12 @@ fn generate_final_report(
         overall_status = ValidationStatus::Fail;
     }
 
-    // Check memory efficiency
+    // Check memory _efficiency
     if memory_efficiency < 0.7 {
         overall_status = ValidationStatus::Warning;
     }
 
-    // Check numerical accuracy
+    // Check numerical _accuracy
     if !numerical_accuracy {
         overall_status = ValidationStatus::Fail;
     }
@@ -423,25 +423,25 @@ fn generate_final_report(
 
 /// Print detailed validation report
 #[allow(dead_code)]
-fn print_validation_report(report: &AdvancedValidationReport) {
+fn print_validation_report(_report: &AdvancedValidationReport) {
     println!("\n{}", "=".repeat(60));
     println!("🎯 Advanced MODE FINAL VALIDATION REPORT");
     println!("{}", "=".repeat(60));
 
     // Overall status
-    let status_emoji = match report.overall_status {
+    let status_emoji = match _report.overall_status {
         ValidationStatus::Pass => "✅",
         ValidationStatus::Warning => "⚠️",
         ValidationStatus::Fail => "❌",
     };
     println!(
         "{} Overall Status: {:?}",
-        status_emoji, report.overall_status
+        status_emoji, _report.overall_status
     );
 
     // Processor Configuration Tests
     println!("\n🔧 Processor Configuration Tests:");
-    for (test_name, result) in &report.processor_tests {
+    for (test_name, result) in &_report.processor_tests {
         let emoji = if *result { "✅" } else { "❌" };
         println!(
             "  {} {}: {}",
@@ -453,27 +453,27 @@ fn print_validation_report(report: &AdvancedValidationReport) {
 
     // Algorithm Execution Tests
     println!("\n🧮 Algorithm Execution Tests:");
-    for (algorithm, duration) in &report.algorithm_tests {
+    for (algorithm, duration) in &_report.algorithm_tests {
         println!("  ✅ {}: {:?}", algorithm, duration);
     }
 
     // Memory Efficiency
     println!("\n💾 Memory Efficiency:");
-    let memory_emoji = if report.memory_efficiency >= 0.8 {
+    let memory_emoji = if _report.memory_efficiency >= 0.8 {
         "✅"
-    } else if report.memory_efficiency >= 0.6 {
+    } else if _report.memory_efficiency >= 0.6 {
         "⚠️"
     } else {
         "❌"
     };
     println!(
         "  {} Efficiency Score: {:.2}",
-        memory_emoji, report.memory_efficiency
+        memory_emoji, _report.memory_efficiency
     );
 
     // Numerical Accuracy
     println!("\n🔢 Numerical Accuracy:");
-    let accuracy_emoji = if report.numerical_accuracy {
+    let accuracy_emoji = if _report.numerical_accuracy {
         "✅"
     } else {
         "❌"
@@ -481,7 +481,7 @@ fn print_validation_report(report: &AdvancedValidationReport) {
     println!(
         "  {} Validation: {}",
         accuracy_emoji,
-        if report.numerical_accuracy {
+        if _report.numerical_accuracy {
             "PASS"
         } else {
             "FAIL"
@@ -490,7 +490,7 @@ fn print_validation_report(report: &AdvancedValidationReport) {
 
     // Performance Improvements
     println!("\n⚡ Performance Improvements:");
-    for (algorithm, improvement) in &report.performance_improvements {
+    for (algorithm, improvement) in &_report.performance_improvements {
         let improvement_emoji = if *improvement >= 1.5 {
             "🚀"
         } else if *improvement >= 1.1 {
@@ -506,32 +506,32 @@ fn print_validation_report(report: &AdvancedValidationReport) {
 
     // Summary
     println!("\n📊 VALIDATION SUMMARY:");
-    let passed_processors = report.processor_tests.values().filter(|&&v| v).count();
-    let total_processors = report.processor_tests.len();
+    let passed_processors = _report.processor_tests.values().filter(|&&v| v).count();
+    let total_processors = _report.processor_tests.len();
     println!(
         "  • Processor Tests: {}/{} passed",
         passed_processors, total_processors
     );
     println!(
         "  • Algorithm Tests: {} completed",
-        report.algorithm_tests.len()
+        _report.algorithm_tests.len()
     );
     println!(
         "  • Memory Efficiency: {:.1}%",
-        report.memory_efficiency * 100.0
+        _report.memory_efficiency * 100.0
     );
     println!(
         "  • Numerical Accuracy: {}",
-        if report.numerical_accuracy {
+        if _report.numerical_accuracy {
             "VALIDATED"
         } else {
             "FAILED"
         }
     );
 
-    let avg_improvement = if !report.performance_improvements.is_empty() {
-        report.performance_improvements.values().sum::<f64>()
-            / report.performance_improvements.len() as f64
+    let avg_improvement = if !_report.performance_improvements.is_empty() {
+        _report.performance_improvements.values().sum::<f64>()
+            / _report.performance_improvements.len() as f64
     } else {
         1.0
     };

@@ -26,7 +26,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::legendre;
+/// use scirs2__special::legendre;
 ///
 /// // P₀(x) = 1
 /// assert!((legendre(0, 0.5f64) - 1.0).abs() < 1e-10);
@@ -83,7 +83,7 @@ pub fn legendre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::{legendre, legendre_assoc};
+/// use scirs2__special::{legendre, legendre_assoc};
 ///
 /// // P₀⁰(x) = P₀(x) = 1
 /// assert!((legendre_assoc(0, 0, 0.5f64) - legendre(0, 0.5f64)).abs() < 1e-10);
@@ -244,7 +244,7 @@ pub fn legendre_assoc<F: Float + FromPrimitive + Debug>(n: usize, m: i32, x: F) 
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::laguerre;
+/// use scirs2__special::laguerre;
 ///
 /// // L₀(x) = 1
 /// assert!((laguerre(0, 0.5f64) - 1.0).abs() < 1e-10);
@@ -302,7 +302,7 @@ pub fn laguerre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::{laguerre, laguerre_generalized};
+/// use scirs2__special::{laguerre, laguerre_generalized};
 ///
 /// // L₀⁽⁰⁾(x) = L₀(x) = 1
 /// assert!((laguerre_generalized(0, 0.0f64, 0.5f64) - laguerre(0, 0.5f64)).abs() < 1e-10f64);
@@ -360,7 +360,7 @@ pub fn laguerre_generalized<F: Float + FromPrimitive + Debug>(n: usize, alpha: F
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::hermite;
+/// use scirs2__special::hermite;
 ///
 /// // H₀(x) = 1
 /// assert!((hermite(0, 0.5f64) - 1.0).abs() < 1e-10);
@@ -437,7 +437,7 @@ pub fn hermite<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::hermite_prob;
+/// use scirs2__special::hermite_prob;
 ///
 /// // He₀(x) = 1
 /// assert!((hermite_prob(0, 0.5f64) - 1.0).abs() < 1e-10);
@@ -495,7 +495,7 @@ pub fn hermite_prob<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::chebyshev;
+/// use scirs2__special::chebyshev;
 ///
 /// // T₀(x) = 1
 /// assert!((chebyshev(0, 0.5f64, true) - 1.0).abs() < 1e-10);
@@ -509,7 +509,7 @@ pub fn hermite_prob<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 #[allow(dead_code)]
 pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, first_kind: bool) -> F {
     if first_kind {
-        // Chebyshev polynomials of the first kind T_n(x)
+        // Chebyshev polynomials of the first _kind T_n(x)
 
         // Special cases
         if n == 0 {
@@ -568,7 +568,7 @@ pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, first_kind: b
             unreachable!()
         }
     } else {
-        // Chebyshev polynomials of the second kind U_n(x)
+        // Chebyshev polynomials of the second _kind U_n(x)
 
         // Special cases
         if n == 0 {
@@ -622,7 +622,7 @@ pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, first_kind: b
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::{gegenbauer, chebyshev};
+/// use scirs2__special::{gegenbauer, chebyshev};
 ///
 /// // C₂⁽¹⁾(x) = 2T₂(x) = 2(2x² - 1) = 4x² - 2
 /// let x = 0.5f64;
@@ -712,7 +712,7 @@ pub fn gegenbauer<F: Float + FromPrimitive + Debug>(n: usize, lambda: F, x: F) -
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::{jacobi, legendre};
+/// use scirs2__special::{jacobi, legendre};
 ///
 /// // For α = β = 0, Jacobi polynomials become Legendre polynomials
 /// let x = 0.5f64;

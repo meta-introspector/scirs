@@ -87,12 +87,12 @@ impl<F: IntegrateFloat> EnhancedLsodaState<F> {
     }
 
     /// Update tolerance scaling factors
-    fn update_tol_scale(&mut self, rtol: F, atol: F) {
-        self.tol_scale = calculate_error_weights(&self.y, atol, rtol);
+    fn update_tol_scale(_rtol: F, atol: F) {
+        self.tol_scale = calculate_error_weights(&self.y, atol, _rtol);
     }
 
     /// Add current state to history
-    fn add_to_history(&mut self) {
+    fn add_to_history() {
         self.t_history.push(self.t);
         self.y_history.push(self.y.clone());
         self.dy_history.push(self.dy.clone());
@@ -114,12 +114,12 @@ impl<F: IntegrateFloat> EnhancedLsodaState<F> {
     }
 
     /// Switch method type (between Adams and BDF)
-    fn switch_method(&mut self, new_method: AdaptiveMethodType) -> IntegrateResult<()> {
+    fn switch_method(_new_method: AdaptiveMethodType) -> IntegrateResult<()> {
         // Let the adaptive state handle the switching logic
-        self.adaptive_state.switch_method(new_method, self.steps)?;
+        self.adaptive_state.switch_method(_new_method, self.steps)?;
 
         // Additional state adjustments
-        match new_method {
+        match _new_method {
             AdaptiveMethodType::Implicit | AdaptiveMethodType::BDF => {
                 // When switching to BDF, reset Jacobian
                 self.jacobian = None;
@@ -180,8 +180,8 @@ where
 
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
-        let span = t_end - t_start;
-        span * F::from_f64(1e-10).unwrap() // Minimal step size
+        let _span = t_end - t_start;
+        _span * F::from_f64(1e-10).unwrap() // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {

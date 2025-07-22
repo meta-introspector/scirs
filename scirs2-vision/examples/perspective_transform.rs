@@ -1,7 +1,7 @@
 //! Example demonstrating perspective transformations
 
 use image::{GenericImageView, Pixel, RgbaImage};
-use scirs2_vision::transform::{
+use scirs2__vision::transform::{
     correct_perspective, warp_perspective, BorderMode, PerspectiveTransform,
 };
 use std::env;
@@ -105,20 +105,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a transform that tilts the image (simulating a perspective viewing angle)
 #[allow(dead_code)]
-fn create_tilt_transform(width: u32, height: u32, tilt_factor: f64) -> PerspectiveTransform {
+fn create_tilt_transform(_width: u32, height: u32, tilt_factor: f64) -> PerspectiveTransform {
     // Create a transform that makes the bottom of the image wider than the top
     let src_points = [
         (0.0, 0.0),                    // Top-left
-        (width as f64, 0.0),           // Top-right
-        (width as f64, height as f64), // Bottom-right
+        (_width as f64, 0.0),           // Top-right
+        (_width as f64, height as f64), // Bottom-right
         (0.0, height as f64),          // Bottom-left
     ];
 
     let dst_points = [
-        (width as f64 * tilt_factor, 0.0),                   // Top-left
-        (width as f64 * (1.0 - tilt_factor), 0.0),           // Top-right
-        (width as f64 * (1.0 + tilt_factor), height as f64), // Bottom-right
-        (width as f64 * -tilt_factor, height as f64),        // Bottom-left
+        (_width as f64 * tilt_factor, 0.0),                   // Top-left
+        (_width as f64 * (1.0 - tilt_factor), 0.0),           // Top-right
+        (_width as f64 * (1.0 + tilt_factor), height as f64), // Bottom-right
+        (_width as f64 * -tilt_factor, height as f64),        // Bottom-left
     ];
 
     PerspectiveTransform::from_points(&src_points, &dst_points)
@@ -127,20 +127,20 @@ fn create_tilt_transform(width: u32, height: u32, tilt_factor: f64) -> Perspecti
 
 /// Create a transform that simulates a bird's-eye view
 #[allow(dead_code)]
-fn create_birds_eye_transform(width: u32, height: u32) -> PerspectiveTransform {
+fn create_birds_eye_transform(_width: u32, height: u32) -> PerspectiveTransform {
     // Create a transform that makes the image appear as if viewed from above
     let src_points = [
         (0.0, 0.0),                    // Top-left
-        (width as f64, 0.0),           // Top-right
-        (width as f64, height as f64), // Bottom-right
+        (_width as f64, 0.0),           // Top-right
+        (_width as f64, height as f64), // Bottom-right
         (0.0, height as f64),          // Bottom-left
     ];
 
     let dst_points = [
-        (width as f64 * 0.25, height as f64 * 0.25), // Top-left
-        (width as f64 * 0.75, height as f64 * 0.25), // Top-right
-        (width as f64 * 0.75, height as f64 * 0.75), // Bottom-right
-        (width as f64 * 0.25, height as f64 * 0.75), // Bottom-left
+        (_width as f64 * 0.25, height as f64 * 0.25), // Top-left
+        (_width as f64 * 0.75, height as f64 * 0.25), // Top-right
+        (_width as f64 * 0.75, height as f64 * 0.75), // Bottom-right
+        (_width as f64 * 0.25, height as f64 * 0.75), // Bottom-left
     ];
 
     PerspectiveTransform::from_points(&src_points, &dst_points)
@@ -222,7 +222,7 @@ fn create_border_mode_comparison(
 
 /// Draw simple text on an image
 #[allow(dead_code)]
-fn draw_text(img: &mut RgbaImage, text: &str, x: u32, y: u32) {
+fn draw_text(_img: &mut RgbaImage, text: &str, x: u32, y: u32) {
     let color = image::Rgba([255, 255, 255, 255]);
     let shadow_color = image::Rgba([0, 0, 0, 192]);
 
@@ -230,21 +230,21 @@ fn draw_text(img: &mut RgbaImage, text: &str, x: u32, y: u32) {
     for (i, c) in text.chars().enumerate() {
         let cx = x + i as u32 * 8 + 1;
         let cy = y + 1;
-        draw_char(img, c, cx, cy, shadow_color);
+        draw_char(_img, c, cx, cy, shadow_color);
     }
 
     // Draw text
     for (i, c) in text.chars().enumerate() {
         let cx = x + i as u32 * 8;
         let cy = y;
-        draw_char(img, c, cx, cy, color);
+        draw_char(_img, c, cx, cy, color);
     }
 }
 
 /// Draw a single character (simple bitmap font)
 #[allow(dead_code)]
-fn draw_char(img: &mut RgbaImage, c: char, x: u32, y: u32, color: image::Rgba<u8>) {
-    let (width, height) = img.dimensions();
+fn draw_char(_img: &mut RgbaImage, c: char, x: u32, y: u32, color: image::Rgba<u8>) {
+    let (width, height) = _img.dimensions();
 
     // Simple bitmap patterns for letters and numbers
     let pattern = match c {
@@ -376,8 +376,7 @@ fn draw_char(img: &mut RgbaImage, c: char, x: u32, y: u32, color: image::Rgba<u8
         ],
         '3' => &[
             0b01100000, 0b10010000, 0b00010000, 0b00100000, 0b00010000, 0b10010000, 0b01100000,
-        ],
-        _ => &[
+        ]_ => &[
             0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000,
         ],
     };
@@ -390,7 +389,7 @@ fn draw_char(img: &mut RgbaImage, c: char, x: u32, y: u32, color: image::Rgba<u8
                 let px = x + dx;
                 let py = y + dy as u32;
                 if px < width && py < height {
-                    img.put_pixel(px, py, color);
+                    _img.put_pixel(px, py, color);
                 }
             }
         }

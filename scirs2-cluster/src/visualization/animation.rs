@@ -161,10 +161,10 @@ pub struct IterativeAnimationRecorder {
 
 impl IterativeAnimationRecorder {
     /// Create a new animation recorder
-    pub fn new(config: IterativeAnimationConfig) -> Self {
+    pub fn new(_config: IterativeAnimationConfig) -> Self {
         Self {
             frames: Vec::new(),
-            config,
+            _config,
             start_time: Instant::now(),
             current_iteration: 0,
             previous_centroids: None,
@@ -331,10 +331,10 @@ pub struct StreamingStats {
 
 impl StreamingVisualizer {
     /// Create a new streaming visualizer
-    pub fn new(config: StreamingConfig) -> Self {
+    pub fn new(_config: StreamingConfig) -> Self {
         Self {
             data_buffer: VecDeque::new(),
-            config,
+            _config,
             last_update: Instant::now(),
             bounds: None,
             streaming_stats: StreamingStats {
@@ -407,7 +407,7 @@ impl StreamingVisualizer {
             let recent_points = self
                 .data_buffer
                 .iter()
-                .filter(|(_, _, timestamp)| now.duration_since(*timestamp).as_secs_f64() < 1.0)
+                .filter(|(__, timestamp)| now.duration_since(*timestamp).as_secs_f64() < 1.0)
                 .count();
             self.streaming_stats.points_per_second =
                 recent_points as f64 / time_since_last_update.min(1.0);
@@ -504,7 +504,7 @@ impl StreamingVisualizer {
     fn cleanup_old_points(&mut self, now: Instant) {
         let lifetime = Duration::from_millis(self.config.point_lifetime_ms);
 
-        while let Some((_, _, timestamp)) = self.data_buffer.front() {
+        while let Some((__, timestamp)) = self.data_buffer.front() {
             if now.duration_since(*timestamp) > lifetime {
                 self.data_buffer.pop_front();
             } else {
@@ -562,8 +562,7 @@ fn calculate_max_centroid_movement(
 fn interpolate_frames(
     frame1: &AnimationFrame,
     frame2: &AnimationFrame,
-    t: f64,
-    _config: &IterativeAnimationConfig,
+    t: f64_config: &IterativeAnimationConfig,
 ) -> Result<AnimationFrame> {
     let t = apply_easing(t, EasingFunction::EaseInOut);
 

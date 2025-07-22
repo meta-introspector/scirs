@@ -216,9 +216,9 @@ pub struct VariableNamespaceMut<'env, F: Float> {
 }
 
 impl FullName {
-    fn new(namespace_id: &'static str, variable_name: String) -> Self {
+    fn new(_namespace_id: &'static str, variable_name: String) -> Self {
         FullName {
-            namespace_id: namespace_id.to_string(),
+            namespace_id: _namespace_id.to_string(),
             variable_name,
         }
     }
@@ -277,7 +277,7 @@ pub trait NamespaceTrait<F: Float> {
         self.env()
             .name_to_id
             .iter()
-            .filter_map(|(v_name, _)| {
+            .filter_map(|(v_name_)| {
                 if v_name.namespace_id == self.name() {
                     Some(v_name.variable_name.deref())
                 } else {
@@ -494,8 +494,8 @@ impl VariableEnvironment<f32> {
     /// Creates a new `VariableEnvironment` using the one that was previously persisted.
     ///
     /// Returns the result of the execution.
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<VariableEnvironment<f32>, Box<dyn Error>> {
-        let raw: DeserializedVariableEnvironment<f32> = Self::deserialize(path)?;
+    pub fn load<P: AsRef<Path>>(_path: P) -> Result<VariableEnvironment<f32>, Box<dyn Error>> {
+        let raw: DeserializedVariableEnvironment<f32> = Self::deserialize(_path)?;
         Self::load_internal(raw)
     }
 
@@ -517,8 +517,8 @@ impl VariableEnvironment<f64> {
     /// Creates a new `VariableEnvironment` using the one that was previously persisted.
     ///
     /// Returns the result of the execution.
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<VariableEnvironment<f64>, Box<dyn Error>> {
-        let raw: DeserializedVariableEnvironment<f64> = Self::deserialize(path)?;
+    pub fn load<P: AsRef<Path>>(_path: P) -> Result<VariableEnvironment<f64>, Box<dyn Error>> {
+        let raw: DeserializedVariableEnvironment<f64> = Self::deserialize(_path)?;
         Self::load_internal(raw)
     }
 
@@ -570,11 +570,11 @@ impl<'env, F: Float> VariableEnvironment<F> {
         Ok(())
     }
 
-    fn deserialize<T, P: AsRef<Path>>(path: P) -> Result<T, Box<dyn Error>>
+    fn deserialize<T, P: AsRef<Path>>(_path: P) -> Result<T, Box<dyn Error>>
     where
         T: for<'de> Deserialize<'de>,
     {
-        let f = File::open(path.as_ref())?;
+        let f = File::open(_path.as_ref())?;
         let ret = serde_json::from_reader(f)?;
         Ok(ret)
     }
@@ -834,7 +834,7 @@ fn save_and_load() {
 
         // Now manually compare array values since RefCell<NdArray> doesn't implement AbsDiffEq
         for (vid, array) in env.iter() {
-            let loaded_env_map: HashMap<_, _> = loaded_env.iter().collect();
+            let loaded_env_map: HashMap<__> = loaded_env.iter().collect();
             let loaded_array = loaded_env_map.get(&vid).unwrap();
 
             // Compare arrays by borrowing them and comparing elements

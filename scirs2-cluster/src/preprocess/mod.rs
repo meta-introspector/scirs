@@ -31,7 +31,7 @@ use crate::error::{ClusteringError, Result};
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::preprocess::whiten;
+/// use scirs2__cluster::preprocess::whiten;
 ///
 /// // Example data with 3 features
 /// let data = Array2::from_shape_vec((3, 3), vec![
@@ -105,7 +105,7 @@ pub fn whiten<F: Float + FromPrimitive + Debug>(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::preprocess::standardize;
+/// use scirs2__cluster::preprocess::standardize;
 ///
 /// // Example data with 3 features
 /// let data = Array2::from_shape_vec((3, 3), vec![
@@ -185,7 +185,7 @@ pub fn standardize<F: Float + FromPrimitive + Debug>(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::preprocess::{normalize, NormType};
+/// use scirs2__cluster::preprocess::{normalize, NormType};
 ///
 /// // Example data with 3 features
 /// let data = Array2::from_shape_vec((3, 3), vec![
@@ -292,7 +292,7 @@ pub fn normalize<F: Float + FromPrimitive + Debug>(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::preprocess::min_max_scale;
+/// use scirs2__cluster::preprocess::min_max_scale;
 ///
 /// // Example data with 3 features
 /// let data = Array2::from_shape_vec((3, 3), vec![
@@ -331,7 +331,7 @@ pub fn min_max_scale<F: Float + FromPrimitive + Debug>(
     let (min_val, max_val) = feature_range;
     if min_val >= max_val {
         return Err(ClusteringError::InvalidInput(
-            "Feature range minimum must be less than maximum".into(),
+            "Feature _range minimum must be less than maximum".into(),
         ));
     }
 
@@ -355,14 +355,14 @@ pub fn min_max_scale<F: Float + FromPrimitive + Debug>(
     // Create the scaled data
     let mut result = Array2::zeros(data.dim());
 
-    // Scale each feature to the specified range
+    // Scale each feature to the specified _range
     for j in 0..n_features {
         let min_j = min_values[j];
         let max_j = max_values[j];
         let range_j = max_j - min_j;
 
         if range_j <= F::epsilon() {
-            // If the feature has no variation, set to the middle of the feature range
+            // If the feature has no variation, set to the middle of the feature _range
             let middle = (feature_min + feature_max) / F::from_f64(2.0).unwrap();
             for i in 0..n_samples {
                 result[[i, j]] = middle;
@@ -400,15 +400,13 @@ fn standard_deviation<F: Float + FromPrimitive + Debug>(
     let mean = data.mean_axis(axis).unwrap();
     let n = F::from_usize(match axis {
         Axis(0) => data.shape()[0],
-        Axis(1) => data.shape()[1],
-        _ => return Err(ClusteringError::InvalidInput("Invalid axis".into())),
+        Axis(1) => data.shape()[1]_ => return Err(ClusteringError::InvalidInput("Invalid axis".into())),
     })
     .unwrap();
 
     let mut variance = match axis {
         Axis(0) => Array1::zeros(data.shape()[1]),
-        Axis(1) => Array1::zeros(data.shape()[0]),
-        _ => return Err(ClusteringError::InvalidInput("Invalid axis".into())),
+        Axis(1) => Array1::zeros(data.shape()[0], _ => return Err(ClusteringError::InvalidInput("Invalid axis".into())),
     };
 
     if axis == Axis(0) {

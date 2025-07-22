@@ -1,7 +1,7 @@
-use num_complex::Complex64;
+use num__complex::Complex64;
 use plotly::common::Title;
 use plotly::{common::Mode, layout::Axis, Layout, Plot, Scatter};
-use scirs2_fft::{
+use scirs2__fft::{
     reconstruct_filtered, reconstruct_high_resolution, reconstruct_time_domain, sparse_fft,
     sparse_fft::SparseFFTAlgorithm,
 };
@@ -139,17 +139,17 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 
 // Helper function to compute error between original and reconstructed signals
 #[allow(dead_code)]
-fn compute_error(original: &[f64], reconstructed: &[Complex64]) -> f64 {
-    if original.len() != reconstructed.len() {
+fn compute_error(_original: &[f64], reconstructed: &[Complex64]) -> f64 {
+    if _original.len() != reconstructed.len() {
         // Handle simple case for high-resolution where lengths don't match
         // by just comparing overlapping parts
-        let min_len = original.len().min(reconstructed.len());
-        return compute_error(&original[..min_len], &reconstructed[..min_len]);
+        let min_len = _original.len().min(reconstructed.len());
+        return compute_error(&_original[..min_len], &reconstructed[..min_len]);
     }
 
-    // Convert original signal to complex for comparison
-    let original_complex: Vec<Complex64> =
-        original.iter().map(|&x| Complex64::new(x, 0.0)).collect();
+    // Convert _original signal to complex for comparison
+    let _original_complex: Vec<Complex64> =
+        _original.iter().map(|&x| Complex64::new(x, 0.0)).collect();
 
     // Normalize signals before comparing
     let orig_energy: f64 = original_complex.iter().map(|&x| x.norm_sqr()).sum();
@@ -161,7 +161,7 @@ fn compute_error(original: &[f64], reconstructed: &[Complex64]) -> f64 {
 
     // Compute error between normalized signals
     let mut error_sum = 0.0;
-    for i in 0..original.len() {
+    for i in 0.._original.len() {
         let orig = original_complex[i] * orig_scale;
         let recon = reconstructed[i] * recon_scale;
         error_sum += (orig - recon).norm_sqr();
@@ -169,7 +169,7 @@ fn compute_error(original: &[f64], reconstructed: &[Complex64]) -> f64 {
 
     // Error ranges from 0 (identical) to 2 (completely different)
     // Scale to 0-1 range
-    (error_sum / (2.0 * original.len() as f64)).sqrt()
+    (error_sum / (2.0 * _original.len() as f64)).sqrt()
 }
 
 // Create visualization plots
@@ -194,7 +194,7 @@ fn create_plots(
 
     let mut time_plot = Plot::new();
 
-    // Original noisy signal
+    // Original noisy _signal
     let noisy_trace = Scatter::new(
         (slice_start..slice_end).collect::<Vec<_>>(),
         noisy_signal[slice_start..slice_end].to_vec(),
@@ -261,7 +261,7 @@ fn create_plots(
         .map(|i| hires_slice_start as f64 + i as f64 / 2.0)
         .collect();
 
-    // Original noisy signal
+    // Original noisy _signal
     let orig_trace = Scatter::new(
         orig_times.clone(),
         noisy_signal[hires_slice_start..hires_slice_end].to_vec(),
@@ -269,7 +269,7 @@ fn create_plots(
     .mode(Mode::Lines)
     .name("Original Signal");
 
-    // High-resolution signal (using twice as many points)
+    // High-resolution _signal (using twice as many points)
     let hires_trace = Scatter::new(
         hires_times,
         high_res_real[2 * hires_slice_start..2 * hires_slice_end].to_vec(),

@@ -82,21 +82,21 @@ full = ["standard", "experimental"]
 
 # Individual module features
 linalg = ["dep:scirs2-linalg"]
-# stats = ["dep:scirs2-stats"] # Temporarily disabled due to compilation errors
+stats = [] # Temporarily disabled due to compilation errors - placeholder feature
 integrate = ["dep:scirs2-integrate"]
-# interpolate = ["dep:scirs2-interpolate"] # Temporarily disabled due to compilation errors
+interpolate = [] # Temporarily disabled due to compilation errors - placeholder feature
 optimize = ["dep:scirs2-optimize"]
 fft = ["dep:scirs2-fft"]
-# special = ["dep:scirs2-special"] # Temporarily disabled due to compilation errors
+special = [] # Temporarily disabled due to compilation errors - placeholder feature
 signal = ["dep:scirs2-signal"]
 sparse = ["dep:scirs2-sparse"]
 spatial = ["dep:scirs2-spatial"]
-# cluster = ["dep:scirs2-cluster"] # Temporarily disabled due to compilation errors
+cluster = [] # Temporarily disabled due to compilation errors - placeholder feature
 transform = ["dep:scirs2-transform"]
 metrics = ["dep:scirs2-metrics"]
 ndimage = ["dep:scirs2-ndimage"]
 neural = ["dep:scirs2-neural"]
-# optim = ["dep:scirs2-optim"] # Temporarily disabled due to compilation errors
+optim = [] # Temporarily disabled due to compilation errors - placeholder feature
 series = ["dep:scirs2-series"]
 text = ["dep:scirs2-text"]
 io = ["dep:scirs2-io"]

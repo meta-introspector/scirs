@@ -4,7 +4,7 @@
 //! large datasets that don't fit entirely in memory, using streaming and
 //! progressive processing techniques.
 
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 
 use crate::error::{ClusteringError, Result};
 use crate::vq::euclidean_distance;
+use std::path::PathBuf;
 
 /// Configuration for streaming clustering algorithms
 #[derive(Debug, Clone)]
@@ -56,9 +57,9 @@ pub struct StreamingKMeans<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> StreamingKMeans<F> {
     /// Create a new streaming K-means instance
-    pub fn new(config: StreamingConfig) -> Self {
+    pub fn new(_config: StreamingConfig) -> Self {
         Self {
-            config,
+            _config,
             centers: None,
             weights: None,
             n_samples_processed: 0,
@@ -231,11 +232,11 @@ pub struct ProgressiveHierarchical<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug> ProgressiveHierarchical<F> {
     /// Create a new progressive hierarchical clustering instance
-    pub fn new(config: StreamingConfig) -> Self {
-        let max_representatives = config.max_memory_samples / 10; // Keep 10% as representatives
+    pub fn new(_config: StreamingConfig) -> Self {
+        let max_representatives = _config.max_memory_samples / 10; // Keep 10% as representatives
 
         Self {
-            config,
+            _config,
             representative_points: VecDeque::new(),
             cluster_sizes: VecDeque::new(),
             max_representatives,
@@ -408,22 +409,20 @@ impl<F: Float + FromPrimitive + Debug> ProgressiveHierarchical<F> {
 /// distance matrix in memory.
 pub struct ChunkedDistanceMatrix<F: Float> {
     chunk_size: usize,
-    n_samples: usize,
-    _phantom: std::marker::PhantomData<F>,
+    n_samples: usize, _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive> ChunkedDistanceMatrix<F> {
     /// Create a new chunked distance matrix
-    pub fn new(n_samples: usize, max_memory_mb: usize) -> Self {
+    pub fn new(_n_samples: usize, max_memory_mb: usize) -> Self {
         // Estimate chunk size based on memory limit
         let memory_per_float = std::mem::size_of::<F>();
         let max_elements = (max_memory_mb * 1024 * 1024) / memory_per_float;
-        let chunk_size = (max_elements / n_samples).max(1).min(n_samples);
+        let chunk_size = (max_elements / _n_samples).max(1).min(_n_samples);
 
         Self {
             chunk_size,
-            n_samples,
-            _phantom: std::marker::PhantomData,
+            n_samples_phantom: std::marker::PhantomData,
         }
     }
 
@@ -564,10 +563,10 @@ pub mod memory_management {
 
     impl AdaptiveMemoryManager {
         /// Create a new adaptive memory manager
-        pub fn new(max_memory_mb: usize) -> Self {
+        pub fn new(_max_memory_mb: usize) -> Self {
             Self {
                 current_usage: 0,
-                max_memory: max_memory_mb * 1024 * 1024,
+                max_memory: _max_memory_mb * 1024 * 1024,
                 pressure_threshold: 0.8,
                 enable_disk_storage: true,
                 temp_dir: std::env::temp_dir().into(),
@@ -635,20 +634,18 @@ pub mod memory_management {
     pub struct DiskBackedStorage<F: Float> {
         temp_files: Vec<PathBuf>,
         temp_dir: PathBuf,
-        buffer_size: usize,
-        _phantom: std::marker::PhantomData<F>,
+        buffer_size: usize, _phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + FromPrimitive> DiskBackedStorage<F> {
         /// Create a new disk-backed storage
-        pub fn new(temp_dir: Option<PathBuf>, buffer_size: usize) -> Self {
-            let temp_dir = temp_dir.unwrap_or_else(std::env::temp_dir);
+        pub fn new(_temp_dir: Option<PathBuf>, buffer_size: usize) -> Self {
+            let _temp_dir = _temp_dir.unwrap_or_else(std::env::_temp_dir);
 
             Self {
                 temp_files: Vec::new(),
-                temp_dir,
-                buffer_size,
-                _phantom: std::marker::PhantomData,
+                _temp_dir,
+                buffer_size_phantom: std::marker::PhantomData,
             }
         }
 
@@ -779,8 +776,8 @@ pub mod advanced_streaming {
 
     impl CountMinSketch {
         /// Create a new Count-Min Sketch
-        pub fn new(epsilon: f64, delta: f64) -> Self {
-            let width = (std::f64::consts::E / epsilon).ceil() as usize;
+        pub fn new(_epsilon: f64, delta: f64) -> Self {
+            let width = (std::f64::consts::E / _epsilon).ceil() as usize;
             let depth = (1.0 / delta).ln().ceil() as usize;
 
             let mut tables = Vec::new();
@@ -832,7 +829,7 @@ pub mod advanced_streaming {
         }
 
         /// Get heavy hitters (items with frequency above threshold)
-        pub fn heavy_hitters(&self, _threshold: u64) -> Vec<u64> {
+        pub fn heavy_hitters(&self_threshold: u64) -> Vec<u64> {
             // This is a simplified implementation
             // In practice, you'd need to track candidates more carefully
             Vec::new()
@@ -849,10 +846,10 @@ pub mod advanced_streaming {
 
     impl<T: Clone> ReservoirSampler<T> {
         /// Create a new reservoir sampler
-        pub fn new(capacity: usize) -> Self {
+        pub fn new(_capacity: usize) -> Self {
             Self {
-                reservoir: Vec::with_capacity(capacity),
-                capacity,
+                reservoir: Vec::with_capacity(_capacity),
+                _capacity,
                 seen_count: 0,
             }
         }
@@ -902,10 +899,10 @@ pub mod advanced_streaming {
 
     impl<F: Float + FromPrimitive + std::fmt::Debug> ProgressiveLearner<F> {
         /// Create a new progressive learner
-        pub fn new(initial_lr: F, decay: F, momentum: F) -> Self {
+        pub fn new(_initial_lr: F, decay: F, momentum: F) -> Self {
             Self {
                 model_state: HashMap::new(),
-                learning_rate: initial_lr,
+                learning_rate: _initial_lr,
                 decay_factor: decay,
                 update_count: 0,
                 gradient_memory: HashMap::new(),
@@ -982,11 +979,11 @@ pub mod intelligent_loading {
 
     impl AdaptiveDataLoader {
         /// Create a new adaptive data loader
-        pub fn new(initial_batch_size: usize, target_time_seconds: f64) -> Self {
+        pub fn new(_initial_batch_size: usize, target_time_seconds: f64) -> Self {
             Self {
-                current_batch_size: initial_batch_size,
-                min_batch_size: initial_batch_size / 10,
-                max_batch_size: initial_batch_size * 10,
+                current_batch_size: _initial_batch_size,
+                min_batch_size: _initial_batch_size / 10,
+                max_batch_size: _initial_batch_size * 10,
                 performance_history: VecDeque::with_capacity(10),
                 target_time: target_time_seconds,
                 adjustment_factor: 0.1,
@@ -1066,12 +1063,12 @@ pub mod intelligent_loading {
 
     impl<F: Float + FromPrimitive + std::fmt::Debug> StreamingPreprocessor<F> {
         /// Create a new streaming preprocessor
-        pub fn new(normalize: bool, outlier_threshold: F) -> Self {
+        pub fn new(_normalize: bool, outlier_threshold: F) -> Self {
             Self {
                 running_mean: None,
                 running_var: None,
                 sample_count: 0,
-                normalize,
+                _normalize,
                 outlier_threshold,
                 missing_value_strategy: MissingValueStrategy::FillMean,
             }
@@ -1296,7 +1293,7 @@ pub mod online_algorithms {
             };
 
             Self {
-                centers: initial_centers,
+                _centers: initial_centers,
                 learning_rate_schedule,
                 iteration: 0,
                 adaptive_params,
@@ -1469,7 +1466,7 @@ pub mod online_algorithms {
             let mut predictions = Array1::zeros(n_samples);
 
             for (i, sample) in samples.rows().into_iter().enumerate() {
-                let (cluster, _) = self.find_nearest_cluster(sample)?;
+                let (cluster_) = self.find_nearest_cluster(sample)?;
                 predictions[i] = cluster;
             }
 

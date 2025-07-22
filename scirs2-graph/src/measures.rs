@@ -148,15 +148,15 @@ where
 /// # Space Complexity
 /// O(V) for storing the centrality values
 #[allow(dead_code)]
-fn degree_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
+fn degree_centrality<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    let nodes = graph.nodes();
+    let nodes = _graph.nodes();
     let n = nodes.len() as f64;
-    let degrees = graph.degree_vector();
+    let degrees = _graph.degree_vector();
 
     let mut centrality = HashMap::new();
     let normalization = if n <= 1.0 { 1.0 } else { n - 1.0 };
@@ -171,16 +171,16 @@ where
 
 /// Calculates degree centrality for nodes in a directed graph
 #[allow(dead_code)]
-fn degree_centrality_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
+fn degree_centrality_digraph<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    let nodes = graph.nodes();
+    let nodes = _graph.nodes();
     let n = nodes.len() as f64;
-    let in_degrees = graph.in_degree_vector();
-    let out_degrees = graph.out_degree_vector();
+    let in_degrees = _graph.in_degree_vector();
+    let out_degrees = _graph.out_degree_vector();
 
     let mut centrality = HashMap::new();
     let normalization = if n <= 1.0 { 1.0 } else { n - 1.0 };
@@ -203,7 +203,7 @@ where
 /// # Space Complexity
 /// O(V + E) for the algorithm's data structures
 #[allow(dead_code)]
-fn betweenness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
+fn betweenness_centrality<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight
@@ -217,7 +217,7 @@ where
         + std::default::Default,
     Ix: petgraph::graph::IndexType,
 {
-    let nodes = graph.nodes();
+    let nodes = _graph.nodes();
     let n = nodes.len();
 
     if n <= 1 {
@@ -241,7 +241,7 @@ where
             }
 
             // Find shortest path from s to t
-            if let Ok(Some(path)) = dijkstra_path(graph, s, t) {
+            if let Ok(Some(path)) = dijkstra_path(_graph, s, t) {
                 // Skip source and target nodes
                 for node in &path.nodes[1..path.nodes.len() - 1] {
                     *betweenness.entry(node.clone()).or_insert(0.0) += 1.0;
@@ -261,7 +261,7 @@ where
 
 /// Calculates betweenness centrality for nodes in a directed graph
 #[allow(dead_code)]
-fn betweenness_centrality_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
+fn betweenness_centrality_digraph<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight
@@ -275,7 +275,7 @@ where
         + std::default::Default,
     Ix: petgraph::graph::IndexType,
 {
-    let nodes = graph.nodes();
+    let nodes = _graph.nodes();
     let n = nodes.len();
 
     if n <= 1 {
@@ -299,7 +299,7 @@ where
             }
 
             // Find shortest path from s to t
-            if let Ok(Some(path)) = dijkstra_path_digraph(graph, s, t) {
+            if let Ok(Some(path)) = dijkstra_path_digraph(_graph, s, t) {
                 // Skip source and target nodes
                 for node in &path.nodes[1..path.nodes.len() - 1] {
                     *betweenness.entry(node.clone()).or_insert(0.0) += 1.0;
@@ -319,7 +319,7 @@ where
 
 /// Calculates closeness centrality for nodes in an undirected graph
 #[allow(dead_code)]
-fn closeness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
+fn closeness_centrality<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight
@@ -333,7 +333,7 @@ where
         + std::default::Default,
     Ix: petgraph::graph::IndexType,
 {
-    let nodes = graph.nodes();
+    let nodes = _graph.nodes();
     let n = nodes.len();
 
     if n <= 1 {
@@ -357,7 +357,7 @@ where
             }
 
             // Find shortest path from node to other
-            if let Ok(Some(path)) = dijkstra_path(graph, node, other) {
+            if let Ok(Some(path)) = dijkstra_path(_graph, node, other) {
                 sum_distances += path.total_weight.into();
                 reachable_nodes += 1;
             }
@@ -380,7 +380,7 @@ where
 
 /// Calculates closeness centrality for nodes in a directed graph
 #[allow(dead_code)]
-fn closeness_centrality_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
+fn closeness_centrality_digraph<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight
@@ -394,7 +394,7 @@ where
         + std::default::Default,
     Ix: petgraph::graph::IndexType,
 {
-    let nodes = graph.nodes();
+    let nodes = _graph.nodes();
     let n = nodes.len();
 
     if n <= 1 {
@@ -418,7 +418,7 @@ where
             }
 
             // Find shortest path from node to other
-            if let Ok(Some(path)) = dijkstra_path_digraph(graph, node, other) {
+            if let Ok(Some(path)) = dijkstra_path_digraph(_graph, node, other) {
                 sum_distances += path.total_weight.into();
                 reachable_nodes += 1;
             }
@@ -443,21 +443,21 @@ where
 ///
 /// Uses the power iteration method.
 #[allow(dead_code)]
-fn eigenvector_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
+fn eigenvector_centrality<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
-    let nodes = graph.nodes();
+    let nodes = _graph.nodes();
     let n = nodes.len();
 
     if n == 0 {
-        return Err(GraphError::InvalidGraph("Empty graph".to_string()));
+        return Err(GraphError::InvalidGraph("Empty _graph".to_string()));
     }
 
     // Get adjacency matrix with weights converted to f64
-    let adj_mat = graph.adjacency_matrix();
+    let adj_mat = _graph.adjacency_matrix();
     let mut adj_f64 = Array2::<f64>::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
@@ -514,21 +514,21 @@ where
 ///
 /// Uses the power iteration method.
 #[allow(dead_code)]
-fn eigenvector_centrality_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
+fn eigenvector_centrality_digraph<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
-    let nodes = graph.nodes();
+    let nodes = _graph.nodes();
     let n = nodes.len();
 
     if n == 0 {
-        return Err(GraphError::InvalidGraph("Empty graph".to_string()));
+        return Err(GraphError::InvalidGraph("Empty _graph".to_string()));
     }
 
     // Get adjacency matrix with weights converted to f64
-    let adj_mat = graph.adjacency_matrix();
+    let adj_mat = _graph.adjacency_matrix();
     let mut adj_f64 = Array2::<f64>::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
@@ -591,7 +591,7 @@ where
 /// # Returns
 /// * `Result<HashMap<N, f64>>` - A map from nodes to their clustering coefficients
 #[allow(dead_code)]
-pub fn clustering_coefficient<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
+pub fn clustering_coefficient<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
@@ -599,10 +599,10 @@ where
 {
     let mut coefficients = HashMap::new();
 
-    for (idx, &node) in graph.nodes().iter().enumerate() {
+    for (idx, &node) in _graph.nodes().iter().enumerate() {
         // Get the neighbors of this node
-        let node_idx = petgraph::graph::NodeIndex::new(idx);
-        let neighbors: HashSet<_> = graph.inner().neighbors(node_idx).collect();
+        let node_idx = petgraph::_graph::NodeIndex::new(idx);
+        let neighbors: HashSet<_> = _graph.inner().neighbors(node_idx).collect();
 
         let k = neighbors.len();
 
@@ -617,7 +617,7 @@ where
 
         for &n1 in &neighbors {
             for &n2 in &neighbors {
-                if n1 != n2 && graph.inner().contains_edge(n1, n2) {
+                if n1 != n2 && _graph.inner().contains_edge(n1, n2) {
                     edge_count += 1;
                 }
             }
@@ -646,13 +646,13 @@ where
 /// # Returns
 /// * `Result<f64>` - The global clustering coefficient
 #[allow(dead_code)]
-pub fn graph_density<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<f64>
+pub fn graph_density<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<f64>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    let n = graph.node_count();
+    let n = _graph.node_count();
 
     if n <= 1 {
         return Err(GraphError::InvalidGraph(
@@ -660,7 +660,7 @@ where
         ));
     }
 
-    let m = graph.edge_count();
+    let m = _graph.edge_count();
     let possible_edges = n * (n - 1) / 2;
 
     Ok(m as f64 / possible_edges as f64)
@@ -674,13 +674,13 @@ where
 /// # Returns
 /// * `Result<f64>` - The graph density
 #[allow(dead_code)]
-pub fn graph_density_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<f64>
+pub fn graph_density_digraph<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Result<f64>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    let n = graph.node_count();
+    let n = _graph.node_count();
 
     if n <= 1 {
         return Err(GraphError::InvalidGraph(
@@ -688,7 +688,7 @@ where
         ));
     }
 
-    let m = graph.edge_count();
+    let m = _graph.edge_count();
     let possible_edges = n * (n - 1); // In directed graphs, there can be n(n-1) edges
 
     Ok(m as f64 / possible_edges as f64)
@@ -714,7 +714,7 @@ pub fn katz_centrality<N, E, Ix>(
 ) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num_traits::One + Into<f64> + Copy,
+    E: EdgeWeight + num_traits::Zero + num, _traits::One + Into<f64> + Copy,
     Ix: petgraph::graph::IndexType,
 {
     let nodes = graph.nodes();
@@ -794,7 +794,7 @@ pub fn katz_centrality_digraph<N, E, Ix>(
 ) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num_traits::One + Into<f64> + Copy,
+    E: EdgeWeight + num_traits::Zero + num, _traits::One + Into<f64> + Copy,
     Ix: petgraph::graph::IndexType,
 {
     let nodes = graph.nodes();
@@ -1103,7 +1103,7 @@ where
 
     // Create node index mapping
     let node_to_idx: HashMap<N, usize> = nodes
-        .iter()
+        ._iter()
         .enumerate()
         .map(|(i, n)| (n.clone(), i))
         .collect();
@@ -1112,7 +1112,7 @@ where
     for _ in 0..max_iter {
         // Update authority scores
         new_authorities.fill(0.0);
-        for (i, node) in nodes.iter().enumerate() {
+        for (i, node) in nodes._iter().enumerate() {
             // Authority score is sum of hub scores of nodes pointing to it
             if let Ok(predecessors) = graph.predecessors(node) {
                 for pred in predecessors {
@@ -1125,7 +1125,7 @@ where
 
         // Update hub scores
         new_hubs.fill(0.0);
-        for (i, node) in nodes.iter().enumerate() {
+        for (i, node) in nodes._iter().enumerate() {
             // Hub score is sum of authority scores of nodes it points to
             if let Ok(successors) = graph.successors(node) {
                 for succ in successors {
@@ -1137,8 +1137,8 @@ where
         }
 
         // Normalize scores
-        let auth_norm: f64 = new_authorities.iter().map(|x| x * x).sum::<f64>().sqrt();
-        let hub_norm: f64 = new_hubs.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let auth_norm: f64 = new_authorities._iter().map(|x| x * x).sum::<f64>().sqrt();
+        let hub_norm: f64 = new_hubs._iter().map(|x| x * x).sum::<f64>().sqrt();
 
         if auth_norm > 0.0 {
             for score in &mut new_authorities {
@@ -1154,12 +1154,12 @@ where
 
         // Check convergence
         let auth_diff: f64 = authorities
-            .iter()
+            ._iter()
             .zip(&new_authorities)
             .map(|(old, new)| (old - new).abs())
             .sum();
         let hub_diff: f64 = hubs
-            .iter()
+            ._iter()
             .zip(&new_hubs)
             .map(|(old, new)| (old - new).abs())
             .sum();
@@ -1175,12 +1175,12 @@ where
 
     // Convert to HashMap
     let authority_map = nodes
-        .iter()
+        ._iter()
         .enumerate()
         .map(|(i, n)| (n.clone(), authorities[i]))
         .collect();
     let hub_map = nodes
-        .iter()
+        ._iter()
         .enumerate()
         .map(|(i, n)| (n.clone(), hubs[i]))
         .collect();
@@ -1277,7 +1277,7 @@ where
 ///
 /// Weighted degree centrality is the sum of the weights of all edges incident to a node.
 #[allow(dead_code)]
-fn weighted_degree_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
+fn weighted_degree_centrality<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone,
@@ -1285,12 +1285,12 @@ where
 {
     let mut centrality = HashMap::new();
 
-    for node in graph.nodes() {
+    for node in _graph.nodes() {
         let mut weight_sum = 0.0;
 
-        if let Ok(neighbors) = graph.neighbors(node) {
+        if let Ok(neighbors) = _graph.neighbors(node) {
             for neighbor in neighbors {
-                if let Ok(weight) = graph.edge_weight(node, &neighbor) {
+                if let Ok(weight) = _graph.edge_weight(node, &neighbor) {
                     weight_sum += weight.into();
                 }
             }
@@ -1346,7 +1346,7 @@ where
 ///
 /// Uses Dijkstra's algorithm to find shortest weighted paths between all pairs of nodes.
 #[allow(dead_code)]
-fn weighted_betweenness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
+fn weighted_betweenness_centrality<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight
@@ -1360,7 +1360,7 @@ where
         + Default,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
     let mut centrality: HashMap<N, f64> = nodes.iter().map(|n| (n.clone(), 0.0)).collect();
 
@@ -1369,7 +1369,7 @@ where
         for target in &nodes {
             if source != target {
                 // Find shortest weighted path
-                if let Ok(Some(path)) = dijkstra_path(graph, source, target) {
+                if let Ok(Some(path)) = dijkstra_path(_graph, source, target) {
                     // Count how many times each intermediate node appears
                     for intermediate in &path.nodes[1..path.nodes.len() - 1] {
                         *centrality.get_mut(intermediate).unwrap() += 1.0;
@@ -1442,7 +1442,7 @@ where
 ///
 /// Weighted closeness centrality uses the shortest weighted path distances.
 #[allow(dead_code)]
-fn weighted_closeness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
+fn weighted_closeness_centrality<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight
@@ -1456,7 +1456,7 @@ where
         + Default,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
     let mut centrality = HashMap::new();
 
@@ -1467,7 +1467,7 @@ where
         // Calculate shortest weighted paths to all other nodes
         for other in &nodes {
             if node != other {
-                if let Ok(Some(path)) = dijkstra_path(graph, node, other) {
+                if let Ok(Some(path)) = dijkstra_path(_graph, node, other) {
                     let distance: f64 = path.total_weight.into();
                     total_distance += distance;
                     reachable_count += 1;

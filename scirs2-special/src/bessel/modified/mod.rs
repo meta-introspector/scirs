@@ -38,7 +38,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::i0;
+/// use scirs2__special::bessel::modified::i0;
 ///
 /// // I₀(0) = 1
 /// assert!((i0(0.0f64) - 1.0).abs() < 1e-10);
@@ -146,7 +146,7 @@ pub fn i0<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::i1;
+/// use scirs2__special::bessel::modified::i1;
 ///
 /// // I₁(0) = 0
 /// assert!(i1(0.0f64).abs() < 1e-10);
@@ -263,7 +263,7 @@ pub fn i1<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::{i0, i1, iv};
+/// use scirs2__special::bessel::modified::{i0, i1, iv};
 ///
 /// // I₀(x) comparison
 /// let x = 2.0f64;
@@ -434,7 +434,7 @@ pub fn iv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::k0;
+/// use scirs2__special::bessel::modified::k0;
 ///
 /// // K₀(1) ≈ 0.421
 /// let k0_1 = k0(1.0f64);
@@ -480,7 +480,7 @@ pub fn k0<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::k1;
+/// use scirs2__special::bessel::modified::k1;
 ///
 /// // K₁(1) - test that it returns a reasonable value
 /// let k1_1 = k1(1.0f64);
@@ -528,7 +528,7 @@ pub fn k1<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::{k0, k1, kv};
+/// use scirs2__special::bessel::modified::{k0, k1, kv};
 ///
 /// // K₀(x) comparison
 /// let x = 2.0f64;
@@ -581,7 +581,7 @@ pub fn kv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::i0e;
+/// use scirs2__special::bessel::modified::i0e;
 ///
 /// let x = 10.0f64;
 /// let result = i0e(x);
@@ -609,7 +609,7 @@ pub fn i0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::i1e;
+/// use scirs2__special::bessel::modified::i1e;
 ///
 /// let x = 10.0f64;
 /// let result = i1e(x);
@@ -643,7 +643,7 @@ pub fn i1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::ive;
+/// use scirs2__special::bessel::modified::ive;
 ///
 /// let x = 10.0f64;
 /// let result = ive(2.5, x);
@@ -671,7 +671,7 @@ pub fn ive<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::k0e;
+/// use scirs2__special::bessel::modified::k0e;
 ///
 /// let x = 10.0f64;
 /// let result = k0e(x);
@@ -701,7 +701,7 @@ pub fn k0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::k1e;
+/// use scirs2__special::bessel::modified::k1e;
 ///
 /// let x = 10.0f64;
 /// let result = k1e(x);
@@ -732,7 +732,7 @@ pub fn k1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bessel::modified::kve;
+/// use scirs2__special::bessel::modified::kve;
 ///
 /// let x = 10.0f64;
 /// let result = kve(2.5, x);

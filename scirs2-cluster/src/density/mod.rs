@@ -105,7 +105,7 @@ pub enum DistanceMetric {
 ///
 /// ```
 /// use ndarray::{Array2, ArrayView2};
-/// use scirs2_cluster::density::{dbscan, DistanceMetric};
+/// use scirs2__cluster::density::{dbscan, DistanceMetric};
 ///
 /// // Example data with two clusters and noise
 /// let data = Array2::from_shape_vec((8, 2), vec![
@@ -164,9 +164,9 @@ pub fn dbscan<F: Float + FromPrimitive + Debug + PartialOrd>(
             let point2 = data.row(j).to_vec();
 
             let dist = match metric.unwrap_or(DistanceMetric::Euclidean) {
-                DistanceMetric::Euclidean => distance::euclidean(&point1, &point2),
-                DistanceMetric::Manhattan => distance::manhattan(&point1, &point2),
-                DistanceMetric::Chebyshev => distance::chebyshev(&point1, &point2),
+                DistanceMetric::Euclidean =>, distance::euclidean(&point1, &point2),
+                DistanceMetric::Manhattan =>, distance::manhattan(&point1, &point2),
+                DistanceMetric::Chebyshev =>, distance::chebyshev(&point1, &point2),
                 DistanceMetric::Minkowski => {
                     distance::minkowski(&point1, &point2, F::from(3.0).unwrap())
                 }
@@ -284,8 +284,8 @@ pub fn optics<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     // Convert max_eps to f64 for use with default extraction
     let default_eps = match max_eps {
-        Some(eps) => eps.to_f64().unwrap() / 10.0, // Use smaller epsilon by default
-        None => 0.5,                               // Default eps if none provided
+        Some(_eps) => _eps.to_f64().unwrap() / 10.0, // Use smaller epsilon by default
+        None => 0.5,                               // Default _eps if none provided
     };
 
     Ok(optics::extract_dbscan_clustering(&result, default_eps))

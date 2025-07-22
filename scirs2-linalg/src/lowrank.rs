@@ -125,7 +125,7 @@ where
     // Step 2: Compute Y = A * Ω
     let mut y = a.dot(&omega);
 
-    // Step 3: Power iterations (optional, for improved accuracy)
+    // Step 3: Power _iterations (optional, for improved accuracy)
     for _ in 0..power_iterations {
         // Y = A * (A^T * Y)
         let aty = a.t().dot(&y);
@@ -233,13 +233,13 @@ where
 
     if n_components == 0 {
         return Err(LinalgError::ShapeError(
-            "Number of components must be greater than 0".to_string(),
+            "Number of _components must be greater than 0".to_string(),
         ));
     }
 
     if n_components > n_features.min(n_samples) {
         return Err(LinalgError::ShapeError(format!(
-            "Number of components ({}) cannot exceed min(n_samples, n_features) = {}",
+            "Number of _components ({}) cannot exceed min(n_samples, n_features) = {}",
             n_components,
             n_features.min(n_samples)
         )));
@@ -267,8 +267,8 @@ where
         truncated_svd(&centered_data.view(), n_components, workers)?
     };
 
-    // The principal components are the rows of Vt (columns of V)
-    let components = vt;
+    // The principal _components are the rows of Vt (columns of V)
+    let _components = vt;
 
     // Explained variance is the square of singular values
     let explained_variance = s.mapv(|x| x * x);
@@ -281,7 +281,7 @@ where
         Array1::zeros(n_components)
     };
 
-    Ok((components, explained_variance, explained_variance_ratio))
+    Ok((_components, explained_variance, explained_variance_ratio))
 }
 
 /// Non-negative Matrix Factorization (NMF) using multiplicative updates.

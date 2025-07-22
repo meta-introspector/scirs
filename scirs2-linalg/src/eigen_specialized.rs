@@ -29,11 +29,11 @@ where
 
 /// Wrapper for banded matrix eigenvalues only (SciPy-style)
 #[allow(dead_code)]
-pub fn banded_eigvalsh<F>(matrix: &ArrayView2<F>, bandwidth: usize) -> LinalgResult<Array1<F>>
+pub fn banded_eigvalsh<F>(_matrix: &ArrayView2<F>, bandwidth: usize) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    let (eigenvals, _) = banded_eigen(matrix, bandwidth, false)?;
+    let (eigenvals, _) = banded_eigen(_matrix, bandwidth, false)?;
     Ok(eigenvals)
 }
 
@@ -262,7 +262,7 @@ where
             d[i + 1] = g + p;
             g = c * r - b;
 
-            // Accumulate eigenvectors if needed
+            // Accumulate _eigenvectors if needed
             if let Some(ref mut z_mat) = z {
                 for k in 0..n {
                     let temp = z_mat[[k, i + 1]];
@@ -283,7 +283,7 @@ where
         ));
     }
 
-    // Sort eigenvalues and eigenvectors in ascending order
+    // Sort eigenvalues and _eigenvectors in ascending order
     let mut indices: Vec<usize> = (0..n).collect();
     indices.sort_by(|&i, &j| d[i].partial_cmp(&d[j]).unwrap_or(std::cmp::Ordering::Equal));
 
@@ -352,7 +352,7 @@ where
     let (eigenvals, tri_eigenvecs) =
         tridiagonal_eigen(&tri_diag.view(), &tri_sub.view(), compute_eigenvectors)?;
 
-    // Transform eigenvectors back if needed
+    // Transform _eigenvectors back if needed
     let eigenvecs = if compute_eigenvectors {
         if let (Some(q), Some(tri_vecs)) = (q_matrix, tri_eigenvecs) {
             Some(q.dot(&tri_vecs))
@@ -391,7 +391,7 @@ where
         return Ok(Array1::zeros(0));
     }
 
-    // For circulant matrices, eigenvalues are DFT of the first column
+    // For circulant matrices, eigenvalues are DFT of the first _column
     // This is a simplified version - in practice you'd use an FFT library
     let mut eigenvals = Array1::zeros(n);
 

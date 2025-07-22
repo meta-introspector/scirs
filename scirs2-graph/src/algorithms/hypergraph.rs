@@ -63,8 +63,8 @@ where
     let max_size = max_size.unwrap_or(nodes.len());
 
     // Try all possible subsets up to max_size
-    for size in 1..=max_size.min(nodes.len()) {
-        let combinations = generate_combinations(&nodes, size);
+    for _size in 1..=max_size.min(nodes.len()) {
+        let combinations = generate_combinations(&nodes, _size);
 
         for candidate in combinations {
             let candidate_set: HashSet<N> = candidate.into_iter().collect();
@@ -102,7 +102,7 @@ where
                         .retain(|t| !candidate_set.is_subset(&t.nodes) || t.nodes == candidate_set);
 
                     transversals.push(MinimalTransversal {
-                        size: candidate_set.len(),
+                        _size: candidate_set.len(),
                         nodes: candidate_set,
                         hit_hyperedges,
                     });
@@ -116,22 +116,22 @@ where
 
 /// Generate all combinations of k elements from a vector
 #[allow(dead_code)]
-fn generate_combinations<T: Clone>(items: &[T], k: usize) -> Vec<Vec<T>> {
+fn generate_combinations<T: Clone>(_items: &[T], k: usize) -> Vec<Vec<T>> {
     if k == 0 {
         return vec![vec![]];
     }
-    if k > items.len() {
+    if k > _items.len() {
         return vec![];
     }
-    if k == items.len() {
-        return vec![items.to_vec()];
+    if k == _items.len() {
+        return vec![_items.to_vec()];
     }
 
     let mut result = Vec::new();
 
     // Include first element
-    let first = items[0].clone();
-    let rest = &items[1..];
+    let first = _items[0].clone();
+    let rest = &_items[1..];
     for mut combo in generate_combinations(rest, k - 1) {
         combo.insert(0, first.clone());
         result.push(combo);
@@ -310,13 +310,13 @@ where
 /// # Returns
 /// * The diameter, or None if the hypergraph is disconnected
 #[allow(dead_code)]
-pub fn hypergraph_diameter<N, E, Ix>(hypergraph: &Hypergraph<N, E, Ix>) -> Option<usize>
+pub fn hypergraph_diameter<N, E, Ix>(_hypergraph: &Hypergraph<N, E, Ix>) -> Option<usize>
 where
     N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = hypergraph.nodes().cloned().collect();
+    let nodes: Vec<N> = _hypergraph.nodes().cloned().collect();
     if nodes.len() < 2 {
         return Some(0);
     }
@@ -325,7 +325,7 @@ where
 
     for i in 0..nodes.len() {
         for j in (i + 1)..nodes.len() {
-            if let Some(distance) = hypergraph_distance(hypergraph, &nodes[i], &nodes[j]) {
+            if let Some(distance) = hypergraph_distance(_hypergraph, &nodes[i], &nodes[j]) {
                 max_distance = max_distance.max(distance);
             } else {
                 // Graph is disconnected
@@ -462,13 +462,13 @@ where
 /// # Returns
 /// * True if connected, false otherwise
 #[allow(dead_code)]
-pub fn is_hypergraph_connected<N, E, Ix>(hypergraph: &Hypergraph<N, E, Ix>) -> bool
+pub fn is_hypergraph_connected<N, E, Ix>(_hypergraph: &Hypergraph<N, E, Ix>) -> bool
 where
     N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
-    let components = hypergraph_connected_components(hypergraph);
+    let components = hypergraph_connected_components(_hypergraph);
     components.len() <= 1
 }
 

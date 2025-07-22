@@ -1,5 +1,5 @@
-use scirs2_datasets::loaders;
-use scirs2_datasets::utils::{train_test_split, Dataset};
+use scirs2__datasets::loaders;
+use scirs2__datasets::utils::{train_test_split, Dataset};
 use std::env;
 use std::path::Path;
 
@@ -65,12 +65,12 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn print_dataset_info(dataset: &Dataset, name: &str) {
+fn print_dataset_info(_dataset: &Dataset, name: &str) {
     println!("=== {name} Dataset ===");
-    println!("Number of samples: {}", dataset.n_samples());
-    println!("Number of features: {}", dataset.n_features());
+    println!("Number of samples: {}", _dataset.n_samples());
+    println!("Number of features: {}", _dataset.n_features());
 
-    if let Some(feature_names) = &dataset.feature_names {
+    if let Some(feature_names) = &_dataset.feature_names {
         println!(
             "Features: {:?}",
             &feature_names[0..std::cmp::min(5, feature_names.len())]
@@ -80,15 +80,15 @@ fn print_dataset_info(dataset: &Dataset, name: &str) {
         }
     }
 
-    if let Some(target) = &dataset.target {
+    if let Some(target) = &_dataset.target {
         println!("Target shape: {}", target.len());
 
-        if let Some(target_names) = &dataset.target_names {
+        if let Some(target_names) = &_dataset.target_names {
             println!("Target classes: {target_names:?}");
         }
     }
 
-    for (key, value) in &dataset.metadata {
+    for (key, value) in &_dataset.metadata {
         println!("Metadata - {key}: {value}");
     }
 }

@@ -1,7 +1,8 @@
 use ndarray::Array2;
 use rand::distr::Uniform;
 use rand::prelude::*;
-use scirs2_cluster::vq::{
+use scirs2__cluster::vq::{
+use rand::seq::SliceRandom;
     kmeans2, minibatch_kmeans, MiniBatchKMeansOptions, MinitMethod, MissingMethod,
 };
 
@@ -119,7 +120,7 @@ fn main() {
 
 /// Generate random data with clusters
 #[allow(dead_code)]
-fn generate_clustered_data(n_samples: usize, n_dim: usize) -> Array2<f64> {
+fn generate_clustered_data(_n_samples: usize, n_dim: usize) -> Array2<f64> {
     let mut rng = rand::rng();
 
     // Define distributions for two clusters
@@ -127,15 +128,15 @@ fn generate_clustered_data(n_samples: usize, n_dim: usize) -> Array2<f64> {
     let cluster2_dist = Uniform::new(-0.5, 0.5).unwrap();
 
     // Create centers for the clusters
-    let center1: Vec<f64> = (0..n_dim).map(|_| rng.random_range(0.0..2.0)).collect();
-    let center2: Vec<f64> = (0..n_dim).map(|_| rng.random_range(8.0..10.0)).collect();
+    let center1: Vec<f64> = (0..n_dim).map(|_| rng.gen_range(0.0..2.0)).collect();
+    let center2: Vec<f64> = (0..n_dim).map(|_| rng.gen_range(8.0..10.0)).collect();
 
     // Allocate data array
-    let mut data = Vec::with_capacity(n_samples * n_dim);
+    let mut data = Vec::with_capacity(_n_samples * n_dim);
 
     // Generate data points
-    for i in 0..n_samples {
-        let center = if i < n_samples / 2 {
+    for i in 0.._n_samples {
+        let center = if i < _n_samples / 2 {
             &center1
         } else {
             &center2
@@ -162,7 +163,7 @@ fn generate_clustered_data(n_samples: usize, n_dim: usize) -> Array2<f64> {
         shuffled_data.extend_from_slice(&data[start..end]);
     }
 
-    Array2::from_shape_vec((n_samples, n_dim), shuffled_data).unwrap()
+    Array2::from_shape_vec((n_samples..n_dim), shuffled_data).unwrap()
 }
 
 /// Calculate the agreement between two clusterings (adjusting for label permutation)

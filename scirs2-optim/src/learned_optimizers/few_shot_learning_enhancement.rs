@@ -1315,20 +1315,20 @@ impl<T: Float> Default for FewShotConfig<T> {
     }
 }
 
-impl<T: Float + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>>
+impl<T: Float + Send + Sync + std::iter::Sum + for<'a> + std::iter::Sum<&'a T>>
     FewShotLearningEnhancement<T>
 {
     /// Create new few-shot learning enhancement
-    pub fn new(config: FewShotConfig<T>) -> Result<Self> {
+    pub fn new(_config: FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
-            support_set_manager: SupportSetManager::new(&config)?,
-            meta_learner: FewShotMetaLearner::new(&config)?,
-            prototype_network: PrototypeNetwork::new(&config)?,
-            similarity_matcher: SimilarityMatcher::new(&config)?,
-            task_analyzer: TaskDistributionAnalyzer::new(&config)?,
-            adaptation_controller: AdaptationController::new(&config)?,
-            performance_tracker: FewShotPerformanceTracker::new(&config)?,
-            config,
+            support_set_manager: SupportSetManager::new(&_config)?,
+            meta_learner: FewShotMetaLearner::new(&_config)?,
+            prototype_network: PrototypeNetwork::new(&_config)?,
+            similarity_matcher: SimilarityMatcher::new(&_config)?,
+            task_analyzer: TaskDistributionAnalyzer::new(&_config)?,
+            adaptation_controller: AdaptationController::new(&_config)?,
+            performance_tracker: FewShotPerformanceTracker::new(&_config)?,
+            _config,
         })
     }
 
@@ -1363,7 +1363,7 @@ impl<T: Float + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>>
             start_time.elapsed(),
         )?;
 
-        // Update support set manager
+        // Update support _set manager
         self.support_set_manager
             .add_support_set(task_id.clone(), support_set)?;
 
@@ -1382,8 +1382,7 @@ impl<T: Float + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>>
     }
 
     fn initialize_from_similar_tasks(
-        &self,
-        _similar_tasks: &[String],
+        &self, _similar_tasks: &[String],
     ) -> Result<HashMap<String, Array1<T>>> {
         // Simplified implementation
         Ok(HashMap::new())
@@ -1450,9 +1449,7 @@ impl<T: Float + Send + Sync> SimilarityMatcher<T> {
     }
 
     fn find_similar_tasks(
-        &self,
-        _task_id: &str,
-        _support_set: &SupportSet<T>,
+        &self, _task_id: &str, _support_set: &SupportSet<T>,
     ) -> Result<Vec<String>> {
         // Simplified implementation
         Ok(vec![
@@ -1495,10 +1492,7 @@ impl<T: Float + Send + Sync> AdaptationController<T> {
     }
 
     fn adapt(
-        &mut self,
-        _support_set: &SupportSet<T>,
-        _initial_params: HashMap<String, Array1<T>>,
-        _config: &FewShotConfig<T>,
+        &mut self, _support_set: &SupportSet<T>, _initial_params: HashMap<String, Array1<T>>, _config: &FewShotConfig<T>,
     ) -> Result<AdaptationResult<T>> {
         // Simplified implementation
         Ok(AdaptationResult {
@@ -1523,8 +1517,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> FewShotPerformanceTracker<T> {
     fn record_adaptation(
         &mut self,
         task_id: &str,
-        result: &AdaptationResult<T>,
-        _duration: std::time::Duration,
+        result: &AdaptationResult<T>, _duration: std::time::Duration,
     ) -> Result<()> {
         // Update task-specific performance
         let task_perf = self
@@ -1590,11 +1583,11 @@ impl<T: Float> Default for MetaParameters<T> {
 }
 
 impl<T: Float + Send + Sync> EpisodeMemory<T> {
-    fn new(capacity: usize) -> Self {
+    fn new(_capacity: usize) -> Self {
         Self {
             episodes: VecDeque::new(),
             episode_features: HashMap::new(),
-            capacity,
+            _capacity,
             retrieval_mechanism: MemoryRetrievalMechanism::MostSimilar,
         }
     }
@@ -1631,9 +1624,9 @@ impl<T: Float + Send + Sync> FastAdaptationEngine<T> {
 }
 
 impl<T: Float + Send + Sync> PrototypeUpdateRule<T> {
-    fn new(method: PrototypeUpdateMethod) -> Self {
+    fn new(_method: PrototypeUpdateMethod) -> Self {
         Self {
-            method,
+            _method,
             parameters: HashMap::new(),
             update_history: VecDeque::new(),
         }
@@ -1641,9 +1634,9 @@ impl<T: Float + Send + Sync> PrototypeUpdateRule<T> {
 }
 
 impl<T: Float + Send + Sync> DistanceComputer<T> {
-    fn new(metric: DistanceMetric) -> Self {
+    fn new(_metric: DistanceMetric) -> Self {
         Self {
-            metric,
+            _metric,
             parameters: HashMap::new(),
             distance_cache: HashMap::new(),
             normalization: DistanceNormalization::L2,
@@ -1663,11 +1656,11 @@ impl<T: Float + Send + Sync> SimilarityComputer<T> {
 }
 
 impl<T: Float + Send + Sync> SimilarityCache<T> {
-    fn new(capacity: usize) -> Self {
+    fn new(_capacity: usize) -> Self {
         Self {
             cache: HashMap::new(),
             hit_rate: 0.0,
-            capacity,
+            _capacity,
             eviction_policy: CacheEvictionPolicy::LRU,
         }
     }
@@ -1738,9 +1731,9 @@ impl<T: Float + Send + Sync> ConvergenceDetector<T> {
 }
 
 impl<T: Float + Send + Sync> EarlyStoppingMechanism<T> {
-    fn new(patience: usize) -> Self {
+    fn new(_patience: usize) -> Self {
         Self {
-            patience,
+            _patience,
             best_performance: T::neg_infinity(),
             steps_since_improvement: 0,
             stopping_criterion: StoppingCriterion::default(),
@@ -1749,9 +1742,9 @@ impl<T: Float + Send + Sync> EarlyStoppingMechanism<T> {
 }
 
 impl<T: Float + Send + Sync> AdaptationStrategy<T> {
-    fn new(strategy_type: AdaptationStrategyType) -> Self {
+    fn new(_strategy_type: AdaptationStrategyType) -> Self {
         Self {
-            strategy_type,
+            _strategy_type,
             parameters: HashMap::new(),
             history: VecDeque::new(),
         }
@@ -1759,10 +1752,10 @@ impl<T: Float + Send + Sync> AdaptationStrategy<T> {
 }
 
 impl<T: Float + Send + Sync> AdaptationRateController<T> {
-    fn new(base_rate: T) -> Self {
+    fn new(_base_rate: T) -> Self {
         Self {
-            base_rate,
-            current_rate: base_rate,
+            _base_rate,
+            current_rate: _base_rate,
             schedule: LearningRateSchedule::Constant,
             adaptive_control: false,
         }
@@ -1770,20 +1763,20 @@ impl<T: Float + Send + Sync> AdaptationRateController<T> {
 }
 
 impl<T: Float + Send + Sync> AdaptationMemory<T> {
-    fn new(capacity: usize) -> Self {
+    fn new(_capacity: usize) -> Self {
         Self {
             entries: VecDeque::new(),
-            capacity,
+            _capacity,
             access_patterns: HashMap::new(),
         }
     }
 }
 
 impl<T: Float + Send + Sync> AdaptationPerformanceMonitor<T> {
-    fn new(window_size: usize) -> Self {
+    fn new(_window_size: usize) -> Self {
         Self {
             performance_history: VecDeque::new(),
-            window_size,
+            _window_size,
             trends: PerformanceTrends::default(),
             alert_thresholds: HashMap::new(),
         }
@@ -1791,9 +1784,9 @@ impl<T: Float + Send + Sync> AdaptationPerformanceMonitor<T> {
 }
 
 impl<T: Float + Send + Sync> TaskPerformance<T> {
-    fn new(task_id: String) -> Self {
+    fn new(_task_id: String) -> Self {
         Self {
-            task_id,
+            _task_id,
             metrics: HashMap::new(),
             history: VecDeque::new(),
             adaptation_stats: AdaptationStatistics::default(),
@@ -1823,9 +1816,9 @@ impl<T: Float + Send + Sync> DifficultyModel<T> {
 }
 
 impl<T: Float + Send + Sync> DifficultyFeatureExtractor<T> {
-    fn new(dims: usize) -> Self {
+    fn new(_dims: usize) -> Self {
         Self {
-            feature_dims: dims,
+            feature_dims: _dims,
             method: FeatureExtractionMethod::Statistical,
             cache: HashMap::new(),
         }

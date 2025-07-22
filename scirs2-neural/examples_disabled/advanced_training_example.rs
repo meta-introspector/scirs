@@ -59,7 +59,7 @@ fn generate_regression_dataset<
         // Generate input features
         let mut input_features = Vec::with_capacity(input_dim);
         for _ in 0..input_dim {
-            input_features.push(F::from(rng.random_range(0.0..1.0)).unwrap());
+            input_features.push(F::from(rng.gen_range(0.0..1.0)).unwrap());
         }
         features_vec.extend(input_features.iter());
         // Generate target values (simple linear relationship plus noise)
@@ -71,13 +71,13 @@ fn generate_regression_dataset<
                 val = val + input_features[j] * weight;
             }
             // Add noise
-            let noise = F::from(rng.random_range(-0.1..0.1)).unwrap();
+            let noise = F::from(rng.gen_range(-0.1..0.1)).unwrap();
             val = val + noise;
             target_values.push(val);
         labels_vec.extend(target_values.iter());
     }
     // Create feature and label arrays
-    let features = Array::from_shape_vec([n_samples, input_dim], features_vec.to_vec())?;
+    let features = Array::from_shape_vec([n_samples..input_dim], features_vec.to_vec())?;
     let labels = Array::from_shape_vec([n_samples, output_dim], labels_vec.to_vec())?;
     // Create dataset
     InMemoryDataset::new(features.into_dyn(), labels.into_dyn())
@@ -86,8 +86,8 @@ struct CosineAnnealingScheduler<F: Float + Debug + ScalarOperand> {
     initial_lr: F,
     min_lr: F,
 impl<F: Float + Debug + ScalarOperand> CosineAnnealingScheduler<F> {
-    fn new(initial_lr: F, min_lr: F) -> Self {
-        Self { initial_lr, min_lr }
+    fn new(_initial_lr: F, min_lr: F) -> Self {
+        Self { _initial_lr, min_lr }
 impl<F: Float + Debug + ScalarOperand> LearningRateScheduler<F> for CosineAnnealingScheduler<F> {
     fn get_learning_rate(&mut self, progress: f64) -> Result<F> {
         let cosine = (1.0 + (std::f64::consts::PI * progress).cos()) / 2.0;

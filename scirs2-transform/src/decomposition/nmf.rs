@@ -9,6 +9,7 @@ use num_traits::{Float, NumCast};
 use rand::Rng;
 
 use crate::error::{Result, TransformError};
+use statrs::statistics::Statistics;
 
 /// Non-negative Matrix Factorization (NMF)
 ///
@@ -23,8 +24,7 @@ pub struct NMF {
     init: String,
     /// Solver: 'mu' (multiplicative update), 'cd' (coordinate descent)
     solver: String,
-    /// Beta divergence parameter (0: Euclidean, 1: KL divergence, 2: Frobenius)
-    beta_loss: f64,
+    /// Beta divergence parameter (0: Euclidean, 1: KL divergence, 2: Frobenius), beta_loss: f64,
     /// Maximum number of iterations
     max_iter: usize,
     /// Tolerance for stopping criteria
@@ -33,8 +33,7 @@ pub struct NMF {
     random_state: Option<u64>,
     /// Regularization parameter for components
     alpha: f64,
-    /// L1 ratio for regularization (0: L2, 1: L1)
-    l1_ratio: f64,
+    /// L1 ratio for regularization (0: L2, 1: L1), l1_ratio: f64,
     /// The basis matrix W
     components: Option<Array2<f64>>,
     /// The coefficient matrix H
@@ -50,9 +49,9 @@ impl NMF {
     ///
     /// # Arguments
     /// * `n_components` - Number of components to extract
-    pub fn new(n_components: usize) -> Self {
+    pub fn new(_n_components: usize) -> Self {
         NMF {
-            n_components,
+            _n_components,
             init: "random".to_string(),
             solver: "mu".to_string(),
             beta_loss: 2.0, // Frobenius norm
@@ -61,7 +60,7 @@ impl NMF {
             random_state: None,
             alpha: 0.0,
             l1_ratio: 0.0,
-            components: None,
+            _components: None,
             coefficients: None,
             reconstruction_err: None,
             n_iter: None,
@@ -192,8 +191,7 @@ impl NMF {
     fn initialize_matrices(&self, v: &Array2<f64>) -> Result<(Array2<f64>, Array2<f64>)> {
         match self.init.as_str() {
             "random" => Ok(self.random_initialization(v)),
-            "nndsvd" => self.nndsvd_initialization(v),
-            _ => Ok(self.random_initialization(v)),
+            "nndsvd" => self.nndsvd_initialization(v, _ => Ok(self.random_initialization(v)),
         }
     }
 
@@ -604,7 +602,7 @@ mod tests {
 
     #[test]
     fn test_nmf_regularization() {
-        let x = Array::<f64, _>::eye(10) + 0.1; // Add small value to ensure positivity
+        let x = Array::<f64>::eye(10) + 0.1; // Add small value to ensure positivity
 
         let mut nmf = NMF::new(3).with_regularization(0.1, 0.5).with_max_iter(50);
 
@@ -685,7 +683,7 @@ mod tests {
 
     #[test]
     fn test_nmf_invalid_solver() {
-        let x = Array::<f64, _>::eye(3) + 0.1;
+        let x = Array::<f64>::eye(3) + 0.1;
         let mut nmf = NMF::new(2).with_solver("invalid");
 
         let result = nmf.fit(&x);

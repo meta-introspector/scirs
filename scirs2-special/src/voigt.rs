@@ -58,7 +58,7 @@ use std::fmt::{Debug, Display};
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::voigt_profile;
+/// use scirs2__special::voigt_profile;
 ///
 /// // Pure Gaussian limit (γ → 0)
 /// let result = voigt_profile(0.0, 1.0, 1e-10).unwrap();
@@ -78,7 +78,7 @@ pub fn voigt_profile<T>(x: T, sigma: T, gamma: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
-    check_finite(x, "x")?;
+    check_finite(x, "x value")?;
     check_positive(sigma, "sigma")?;
     check_positive(gamma, "gamma")?;
 
@@ -194,7 +194,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2_special::voigt_profile_array;
+/// use scirs2__special::voigt_profile_array;
 ///
 /// let x = array![-2.0, -1.0, 0.0, 1.0, 2.0];
 /// let result = voigt_profile_array(&x.view(), 1.0, 0.5).unwrap();
@@ -256,7 +256,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::pseudo_voigt;
+/// use scirs2__special::pseudo_voigt;
 ///
 /// // Pure Gaussian (η = 0)
 /// let result = pseudo_voigt(0.0, 1.0, 0.5, 0.0).unwrap();
@@ -273,10 +273,10 @@ pub fn pseudo_voigt<T>(x: T, sigma: T, gamma: T, eta: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
-    check_finite(x, "x")?;
+    check_finite(x, "x value")?;
     check_positive(sigma, "sigma")?;
     check_positive(gamma, "gamma")?;
-    check_finite(eta, "eta")?;
+    check_finite(eta, "eta value")?;
 
     let zero = T::zero();
     let one = T::one();

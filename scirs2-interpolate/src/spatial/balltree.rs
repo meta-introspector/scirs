@@ -17,12 +17,13 @@
 
 use ndarray::Array2;
 use num_traits::{Float, FromPrimitive};
-use ordered_float::OrderedFloat;
+use ordered__float::OrderedFloat;
 use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
 use crate::error::{InterpolateError, InterpolateResult};
+use ndarray::ArrayView1;
 
 /// A node in the Ball Tree
 #[derive(Debug, Clone)]
@@ -49,7 +50,7 @@ struct BallNode<F: Float> {
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_interpolate::spatial::balltree::BallTree;
+/// use scirs2__interpolate::spatial::balltree::BallTree;
 ///
 /// // Create sample 3D points
 /// let points = Array2::from_shape_vec((5, 3), vec![
@@ -107,8 +108,8 @@ where
     /// # Returns
     ///
     /// A new Ball Tree for efficient nearest neighbor searches
-    pub fn new(points: Array2<F>) -> InterpolateResult<Self> {
-        Self::with_leaf_size(points, 10)
+    pub fn new(_points: Array2<F>) -> InterpolateResult<Self> {
+        Self::with_leaf_size(_points, 10)
     }
 
     /// Create a new Ball Tree with a specified leaf size
@@ -121,29 +122,28 @@ where
     /// # Returns
     ///
     /// A new Ball Tree for efficient nearest neighbor searches
-    pub fn with_leaf_size(points: Array2<F>, leaf_size: usize) -> InterpolateResult<Self> {
-        if points.is_empty() {
+    pub fn with_leaf_size(_points: Array2<F>, leaf_size: usize) -> InterpolateResult<Self> {
+        if _points.is_empty() {
             return Err(InterpolateError::InvalidValue(
                 "Points array cannot be empty".to_string(),
             ));
         }
 
-        let n_points = points.shape()[0];
-        let dim = points.shape()[1];
+        let n_points = _points.shape()[0];
+        let dim = _points.shape()[1];
 
         // For very small datasets, just use a simple linear search
         if n_points <= leaf_size {
             let indices: Vec<usize> = (0..n_points).collect();
-            let center = compute_centroid(&points, &indices);
-            let radius = compute_radius(&points, &indices, &center);
+            let center = compute_centroid(&_points, &indices);
+            let radius = compute_radius(&_points, &indices, &center);
 
             let mut tree = Self {
-                points,
+                _points,
                 nodes: Vec::new(),
                 root: None,
                 dim,
-                leaf_size,
-                _phantom: PhantomData,
+                leaf_size_phantom: PhantomData,
             };
 
             if n_points > 0 {
@@ -165,12 +165,11 @@ where
         let est_nodes = (2 * n_points / leaf_size).max(16);
 
         let mut tree = Self {
-            points,
+            _points,
             nodes: Vec::with_capacity(est_nodes),
             root: None,
             dim,
-            leaf_size,
-            _phantom: PhantomData,
+            leaf_size_phantom: PhantomData,
         };
 
         // Build the tree
@@ -202,7 +201,7 @@ where
         }
 
         // Find the dimension with the largest spread
-        let (split_dim, _) = find_max_spread_dimension(&self.points, indices);
+        let (split_dim_) = find_max_spread_dimension(&self.points, indices);
 
         // Find the two points farthest apart along this dimension to use as seeds
         let (seed1, seed2) = find_distant_points(&self.points, indices, split_dim);
@@ -405,13 +404,13 @@ where
 
         // If this is a leaf node, check all points
         if node.left.is_none() && node.right.is_none() {
-            for &idx in &node.indices {
-                let point = self.points.row(idx);
-                let dist = euclidean_distance(query, &point.to_vec());
+            for &_idx in &node.indices {
+                let point = self.points.row(_idx);
+                let _dist = euclidean_distance(query, &point.to_vec());
 
-                if dist < *best_dist {
-                    *best_dist = dist;
-                    *best_idx = idx;
+                if _dist < *best_dist {
+                    *best_dist = _dist;
+                    *best_idx = _idx;
                 }
             }
             return;
@@ -459,7 +458,7 @@ where
         } else {
             // Peek at the top of the max-heap to get the farthest point
             match heap.peek() {
-                Some(&(dist, _)) => dist.into_inner(),
+                Some(&(dist_)) => dist.into_inner(),
                 None => F::infinity(),
             }
         };
@@ -471,12 +470,12 @@ where
 
         // If this is a leaf node, check all points
         if node.left.is_none() && node.right.is_none() {
-            for &idx in &node.indices {
-                let point = self.points.row(idx);
+            for &_idx in &node.indices {
+                let point = self.points.row(_idx);
                 let dist = euclidean_distance(query, &point.to_vec());
 
                 // Add to heap
-                heap.push((OrderedFloat(dist), idx));
+                heap.push((OrderedFloat(dist), _idx));
 
                 // If heap is too large, remove the farthest point
                 if heap.len() > k {
@@ -528,12 +527,12 @@ where
 
         // If this is a leaf node, check all points
         if node.left.is_none() && node.right.is_none() {
-            for &idx in &node.indices {
-                let point = self.points.row(idx);
+            for &_idx in &node.indices {
+                let point = self.points.row(_idx);
                 let dist = euclidean_distance(query, &point.to_vec());
 
                 if dist <= radius {
-                    results.push((idx, dist));
+                    results.push((_idx, dist));
                 }
             }
             return;
@@ -745,7 +744,7 @@ where
             .map(|(dist, idx)| (idx, dist.into_inner()))
             .collect();
 
-        // Sort by distance (since heap gives reverse order)
+        // Sort by _distance (since heap gives reverse order)
         results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
 
         Ok(results)
@@ -768,16 +767,16 @@ where
             let point = self.points.row(i);
             let dist = euclidean_distance(query, &point.to_vec());
 
-            // Early termination if distance exceeds maximum
+            // Early termination if _distance exceeds maximum
             if dist <= max_dist {
                 distances.push((i, dist));
             }
         }
 
-        // Sort by distance
+        // Sort by _distance
         distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
 
-        // Return k nearest within max distance
+        // Return k nearest within max _distance
         distances.truncate(k);
         Ok(distances)
     }
@@ -798,8 +797,8 @@ where
         let center_dist = euclidean_distance(query, &node.center);
 
         // Enhanced distance bounds checking
-        let min_possible_dist = if center_dist > node.radius {
-            center_dist - node.radius
+        let min_possible_dist = if center_dist > node._radius {
+            center_dist - node._radius
         } else {
             F::zero()
         };
@@ -809,7 +808,7 @@ where
             *search_radius
         } else {
             match heap.peek() {
-                Some(&(dist, _)) => dist.into_inner(),
+                Some(&(dist_)) => dist.into_inner(),
                 None => *search_radius,
             }
         };
@@ -821,22 +820,22 @@ where
 
         // If this is a leaf node, check all points
         if node.left.is_none() && node.right.is_none() {
-            for &idx in &node.indices {
-                let point = self.points.row(idx);
+            for &_idx in &node.indices {
+                let point = self.points.row(_idx);
                 let dist = euclidean_distance(query, &point.to_vec());
 
-                // Only consider points within search radius
+                // Only consider points within search _radius
                 if dist <= *search_radius {
-                    heap.push((OrderedFloat(dist), idx));
+                    heap.push((OrderedFloat(dist), _idx));
 
-                    // If heap is too large, remove the farthest point and update search radius
+                    // If heap is too large, remove the farthest point and update search _radius
                     if heap.len() > k {
                         heap.pop();
                     }
 
-                    // Update search radius to the farthest point in current k-nearest set
+                    // Update search _radius to the farthest point in current k-nearest set
                     if heap.len() == k {
-                        if let Some(&(max_dist, _)) = heap.peek() {
+                        if let Some(&(max_dist_)) = heap.peek() {
                             *search_radius = max_dist.into_inner();
                         }
                     }
@@ -856,14 +855,14 @@ where
         let left_center_dist = euclidean_distance(query, &left_node.center);
         let right_center_dist = euclidean_distance(query, &right_node.center);
 
-        let left_min_dist = if left_center_dist > left_node.radius {
-            left_center_dist - left_node.radius
+        let left_min_dist = if left_center_dist > left_node._radius {
+            left_center_dist - left_node._radius
         } else {
             F::zero()
         };
 
-        let right_min_dist = if right_center_dist > right_node.radius {
-            right_center_dist - right_node.radius
+        let right_min_dist = if right_center_dist > right_node._radius {
+            right_center_dist - right_node._radius
         } else {
             F::zero()
         };
@@ -883,7 +882,7 @@ where
             *search_radius
         } else {
             match heap.peek() {
-                Some(&(dist, _)) => dist.into_inner(),
+                Some(&(dist_)) => dist.into_inner(),
                 None => *search_radius,
             }
         };
@@ -951,7 +950,7 @@ where
         // Start with root
         nodes_to_visit.push_back((self.root.unwrap(), F::zero()));
 
-        while let Some((node_idx, _min_dist)) = nodes_to_visit.pop_front() {
+        while let Some((node_idx_min_dist)) = nodes_to_visit.pop_front() {
             if checks_performed >= max_checks {
                 break;
             }
@@ -1027,9 +1026,9 @@ where
 
 /// Compute the centroid (center) of a set of points
 #[allow(dead_code)]
-fn compute_centroid<F: Float + FromPrimitive>(points: &Array2<F>, indices: &[usize]) -> Vec<F> {
+fn compute_centroid<F: Float + FromPrimitive>(_points: &Array2<F>, indices: &[usize]) -> Vec<F> {
     let n_points = indices.len();
-    let n_dims = points.shape()[1];
+    let n_dims = _points.shape()[1];
 
     if n_points == 0 {
         return vec![F::zero(); n_dims];
@@ -1039,13 +1038,13 @@ fn compute_centroid<F: Float + FromPrimitive>(points: &Array2<F>, indices: &[usi
 
     // Sum all point coordinates
     for &idx in indices {
-        let point = points.row(idx);
+        let point = _points.row(idx);
         for d in 0..n_dims {
             center[d] = center[d] + point[d];
         }
     }
 
-    // Divide by number of points
+    // Divide by number of _points
     let n = F::from_usize(n_points).unwrap();
     for val in center.iter_mut() {
         *val = *val / n;
@@ -1056,7 +1055,7 @@ fn compute_centroid<F: Float + FromPrimitive>(points: &Array2<F>, indices: &[usi
 
 /// Compute the radius of a ball containing all points
 #[allow(dead_code)]
-fn compute_radius<F: Float>(points: &Array2<F>, indices: &[usize], center: &[F]) -> F {
+fn compute_radius<F: Float>(_points: &Array2<F>, indices: &[usize], center: &[F]) -> F {
     let n_points = indices.len();
 
     if n_points == 0 {
@@ -1067,7 +1066,7 @@ fn compute_radius<F: Float>(points: &Array2<F>, indices: &[usize], center: &[F])
 
     // Find the maximum distance from center to any point
     for &idx in indices {
-        let point = points.row(idx);
+        let point = _points.row(idx);
         let dist = euclidean_distance(&point.to_vec(), center);
 
         if dist > max_dist {
@@ -1080,9 +1079,9 @@ fn compute_radius<F: Float>(points: &Array2<F>, indices: &[usize], center: &[F])
 
 /// Find the dimension with the largest spread of values
 #[allow(dead_code)]
-fn find_max_spread_dimension<F: Float>(points: &Array2<F>, indices: &[usize]) -> (usize, F) {
+fn find_max_spread_dimension<F: Float>(_points: &Array2<F>, indices: &[usize]) -> (usize, F) {
     let n_points = indices.len();
-    let n_dims = points.shape()[1];
+    let n_dims = _points.shape()[1];
 
     if n_points <= 1 {
         return (0, F::zero());
@@ -1097,7 +1096,7 @@ fn find_max_spread_dimension<F: Float>(points: &Array2<F>, indices: &[usize]) ->
         let mut max_val = F::neg_infinity();
 
         for &idx in indices {
-            let val = points[[idx, d]];
+            let val = _points[[idx, d]];
 
             if val < min_val {
                 min_val = val;
@@ -1262,11 +1261,11 @@ mod tests {
 
         // Test near matches
         let query = vec![0.6, 0.6, 0.6];
-        let (idx, _) = balltree.nearest_neighbor(&query).unwrap();
+        let (idx_) = balltree.nearest_neighbor(&query).unwrap();
         assert_eq!(idx, 4); // Should be closest to (0.5, 0.5, 0.5)
 
         let query = vec![0.9, 0.1, 0.1];
-        let (idx, _) = balltree.nearest_neighbor(&query).unwrap();
+        let (idx_) = balltree.nearest_neighbor(&query).unwrap();
         assert_eq!(idx, 1); // Should be closest to (1.0, 0.0, 0.0)
     }
 

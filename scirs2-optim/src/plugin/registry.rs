@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, RwLock};
+// use std::path::PathBuf; // Duplicate import
 
 /// Central plugin registry for managing all optimizer plugins
 #[derive(Debug)]
@@ -152,19 +153,19 @@ pub struct CacheStats {
 /// Registry event listener trait
 pub trait RegistryEventListener: Debug + Send + Sync {
     /// Called when a plugin is registered
-    fn on_plugin_registered(&mut self, _info: &PluginInfo) {}
+    fn on_plugin_registered(&mut self_info: &PluginInfo) {}
 
     /// Called when a plugin is unregistered
-    fn on_plugin_unregistered(&mut self, _name: &str) {}
+    fn on_plugin_unregistered(&mut self_name: &str) {}
 
     /// Called when a plugin is loaded
-    fn on_plugin_loaded(&mut self, _name: &str) {}
+    fn on_plugin_loaded(&mut self_name: &str) {}
 
     /// Called when a plugin fails to load
-    fn on_plugin_load_failed(&mut self, _name: &str, _error: &str) {}
+    fn on_plugin_load_failed(&mut self_name: &str, _error: &str) {}
 
     /// Called when a plugin is enabled/disabled
-    fn on_plugin_status_changed(&mut self, _name: &str, _status: &PluginStatus) {}
+    fn on_plugin_status_changed(&mut self_name: &str, _status: &PluginStatus) {}
 }
 
 /// Plugin search query
@@ -212,11 +213,11 @@ pub struct PluginSearchResult {
 
 impl PluginRegistry {
     /// Create a new plugin registry
-    pub fn new(config: RegistryConfig) -> Self {
+    pub fn new(_config: RegistryConfig) -> Self {
         Self {
             factories: RwLock::new(HashMap::new()),
             search_paths: RwLock::new(Vec::new()),
-            config,
+            _config,
             cache: Mutex::new(PluginCache::new()),
             event_listeners: RwLock::new(Vec::new()),
         }
@@ -543,7 +544,7 @@ impl PluginRegistry {
         true
     }
 
-    fn discover_plugins_in_directory(&self, _path: &Path) -> Result<usize> {
+    fn discover_plugins_in_directory(&self_path: &Path) -> Result<usize> {
         // In a real implementation, this would scan for plugin files
         // and attempt to load them dynamically
         Ok(0)

@@ -12,6 +12,7 @@ use ndarray::{Array, ArrayD, Axis};
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
+use statrs::statistics::Statistics;
 /// Knowledge distillation method
 #[derive(Debug, Clone, PartialEq)]
 pub enum DistillationMethod {
@@ -128,9 +129,9 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
     DistillationTrainer<F>
 {
     /// Create a new distillation trainer
-    pub fn new(method: DistillationMethod) -> Self {
+    pub fn new(_method: DistillationMethod) -> Self {
         Self {
-            method,
+            _method,
             feature_extractors: HashMap::new(),
             adaptation_layers: HashMap::new(),
             training_stats: DistillationStatistics {
@@ -440,8 +441,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 let mut sum = outputs[0].clone();
                 for output in outputs.iter().skip(1) {
                     sum = sum + *output;
-                Ok(sum / F::from(outputs.len()).unwrap())
-            EnsembleAggregation::Weighted { weights } => {
+                Ok(sum / F::from(outputs.len()).unwrap()), EnsembleAggregation::Weighted { weights } => {
                 if weights.len() != outputs.len() {
                     return Err(NeuralError::InvalidArchitecture(
                         "Weight count doesn't match ensemble size".to_string(),

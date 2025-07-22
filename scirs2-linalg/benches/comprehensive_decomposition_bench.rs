@@ -7,8 +7,8 @@ use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2};
-use scirs2_linalg::complex::decompositions::{complex_eig, complex_lu, complex_qr, complex_svd};
-use scirs2_linalg::*;
+use scirs2__linalg::complex::decompositions::{complex_eig, complex_lu, complex_qr, complex_svd};
+use scirs2__linalg::*;
 use std::time::Duration;
 
 /// Create a well-conditioned test matrix
@@ -45,7 +45,7 @@ fn create_rect_matrix(m: usize, n: usize) -> Array2<f64> {
 /// Create a complex matrix for complex decomposition benchmarks
 #[allow(dead_code)]
 fn create_complex_matrix(n: usize) -> Array2<num_complex::Complex64> {
-    use num_complex::Complex64;
+    use num__complex::Complex64;
     Array2::from_shape_fn((n, n), |(i, j)| {
         Complex64::new(
             ((i + j) as f64 * 0.1).sin(),
@@ -378,7 +378,7 @@ fn bench_polar_decomposition(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("polar_unitary", size), &matrix, |b, m| {
             b.iter(|| {
                 // polar_unitary not available, use polar_decomposition and extract unitary part
-                let (u, _) = advanced_polar_decomposition(black_box(&m.view()), true).unwrap();
+                let (u_) = advanced_polar_decomposition(black_box(&m.view()), true).unwrap();
                 u
             })
         });

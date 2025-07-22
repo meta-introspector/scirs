@@ -4,7 +4,7 @@
 //! for non-blocking processing of large datasets.
 
 use futures::StreamExt;
-use scirs2_io::async_io::{
+use scirs2__io::async_io::{
     process_csv_async, process_file_async, AsyncChunkedReader, AsyncLineReader,
     AsyncStreamingConfig, CancellationToken,
 };
@@ -198,8 +198,8 @@ async fn demonstrate_concurrent_processing() -> Result<(), Box<dyn std::error::E
 
     // Analyze results
     let total_chunks = results.len();
-    let total_checksum: u64 = results.iter().map(|(_, checksum, _)| checksum).sum();
-    let total_bytes: usize = results.iter().map(|(_, _, size)| size).sum();
+    let total_checksum: u64 = results.iter().map(|(_, checksum_)| checksum).sum();
+    let total_bytes: usize = results.iter().map(|(__, size)| size).sum();
 
     println!("     📊 Concurrent Processing Results:");
     println!("       {}", stats.summary());
@@ -303,8 +303,7 @@ async fn demonstrate_async_csv_processing() -> Result<(), Box<dyn std::error::Er
         let category = match i % 4 {
             0 => "A",
             1 => "B",
-            2 => "C",
-            _ => "D",
+            2 => "C"_ => "D",
         };
         let score = 50.0 + (i as f64 * 0.05).cos() * 30.0;
         writeln!(file, "{},{:.2},{},{:.1}", i, value, category, score)?;

@@ -30,8 +30,8 @@
 //!
 //! ```
 //! use ndarray::Array2;
-//! use scirs2_signal::dwt::Wavelet;
-//! use scirs2_signal::wpt2d::wpt2d_full;
+//! use scirs2__signal::dwt::Wavelet;
+//! use scirs2__signal::wpt2d::wpt2d_full;
 //!
 //! // Create a test image
 //! let mut image = Array2::zeros((64, 64));
@@ -56,8 +56,10 @@ use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
 use num_traits::{Float, NumCast};
+use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
+use crate::wpt2d::WaveletPacket2D;
 
 /// Type alias for 2D decomposition result (LL, LH, HL, HH)
 type Decompose2DResult = (Array2<f64>, Array2<f64>, Array2<f64>, Array2<f64>);
@@ -65,8 +67,6 @@ type Decompose2DResult = (Array2<f64>, Array2<f64>, Array2<f64>, Array2<f64>);
 // Import parallel ops for parallel processing when the "parallel" feature is enabled
 #[cfg(feature = "parallel")]
 #[allow(unused_imports)]
-use scirs2_core::parallel_ops::*;
-
 /// Represents a 2D wavelet packet node with its position in the tree and coefficient array.
 #[derive(Clone)]
 pub struct WaveletPacket2D {
@@ -85,9 +85,9 @@ pub struct WaveletPacket2D {
 
 impl WaveletPacket2D {
     /// Creates a new wavelet packet node.
-    pub fn new(level: usize, row: usize, col: usize, coeffs: Array2<f64>, path: String) -> Self {
+    pub fn new(_level: usize, row: usize, col: usize, coeffs: Array2<f64>, path: String) -> Self {
         WaveletPacket2D {
-            level,
+            _level,
             row,
             col,
             coeffs,
@@ -120,16 +120,16 @@ pub struct WaveletPacketTree2D {
 
 impl WaveletPacketTree2D {
     /// Creates a new wavelet packet tree.
-    pub fn new(wavelet: Wavelet, max_level: usize, root_coeffs: Array2<f64>) -> Self {
+    pub fn new(_wavelet: Wavelet, max_level: usize, root_coeffs: Array2<f64>) -> Self {
         let mut packets = HashMap::new();
         let shape = root_coeffs.dim();
 
-        // Create the root node (level 0)
+        // Create the root node (_level 0)
         let root = WaveletPacket2D::new(0, 0, 0, root_coeffs, "".to_string());
         packets.insert((0, 0, 0), root);
 
         WaveletPacketTree2D {
-            wavelet,
+            _wavelet,
             max_level,
             packets,
             original_shape: shape,
@@ -162,7 +162,7 @@ impl WaveletPacketTree2D {
         self.packets
             .iter()
             .filter_map(
-                |((l, _, _), packet)| {
+                |((l__), packet)| {
                     if *l == level {
                         Some(packet)
                     } else {
@@ -235,14 +235,14 @@ impl WaveletPacketTree2D {
         &self,
         selected_packets: &[(usize, usize, usize)],
     ) -> SignalResult<Array2<f64>> {
-        // Create a new tree with only the selected packets
+        // Create a new tree with only the selected _packets
         let mut selective_tree = WaveletPacketTree2D::new(
             self.wavelet,
             self.max_level,
             Array2::zeros(self.original_shape),
         );
 
-        // Add the selected packets to the new tree
+        // Add the selected _packets to the new tree
         for &(level, row, col) in selected_packets {
             if let Some(packet) = self.get_packet(level, row, col) {
                 selective_tree.add_packet(packet.clone());
@@ -274,8 +274,8 @@ impl WaveletPacketTree2D {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::dwt::Wavelet;
-/// use scirs2_signal::wpt2d::wpt2d_full;
+/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2__signal::wpt2d::wpt2d_full;
 ///
 /// // Create a test image
 /// let mut image = Array2::zeros((16, 16));
@@ -316,7 +316,7 @@ where
         return Ok(WaveletPacketTree2D::new(wavelet, 0, root_coeffs));
     }
 
-    // Check if the data dimensions are sufficient for the requested level
+    // Check if the data dimensions are sufficient for the requested _level
     let min_size = 2_usize.pow(max_level as u32);
     let (rows, cols) = data.dim();
 
@@ -352,18 +352,18 @@ fn decompose_node(
     max_level: usize,
     mode: Option<&str>,
 ) -> SignalResult<()> {
-    // If we've reached the maximum level, stop recursion
-    if level >= max_level {
+    // If we've reached the maximum _level, stop recursion
+    if _level >= max_level {
         return Ok(());
     }
 
     // Get the current node's coefficients
     let parent = tree
-        .get_packet(level, row, col)
+        .get_packet(_level, row, col)
         .ok_or_else(|| {
             SignalError::ValueError(format!(
-                "Missing wavelet packet at level {}, position ({}, {})",
-                level, row, col
+                "Missing wavelet packet at _level {}, position ({}, {})",
+                _level, row, col
             ))
         })?
         .clone();
@@ -374,8 +374,8 @@ fn decompose_node(
     // Decompose the coefficients into 4 subbands
     let (ll, lh, hl, hh) = decompose_2d(&parent.coeffs, &filters, mode)?;
 
-    // Calculate child positions in the next level
-    let child_level = level + 1;
+    // Calculate child positions in the next _level
+    let child_level = _level + 1;
     let child_row_base = row * 2;
     let child_col_base = col * 2;
 
@@ -550,8 +550,8 @@ fn decompose_2d(
 
 /// Apply a filter to a signal and downsample by 2.
 #[allow(dead_code)]
-fn apply_filter(signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64> {
-    let n = signal.len();
+fn apply_filter(_signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64> {
+    let n = _signal.len();
     let filter_len = filter.len();
     let extension_mode = mode.unwrap_or("symmetric");
 
@@ -564,7 +564,7 @@ fn apply_filter(signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64> 
 
         let mut sum = 0.0;
         for (j, &filter_val) in filter.iter().enumerate().take(filter_len) {
-            // Calculate the signal index with proper extension
+            // Calculate the _signal index with proper extension
             let signal_idx = match extension_mode {
                 "symmetric" => {
                     let ext_idx = idx as isize - (filter_len as isize / 2) + j as isize;
@@ -590,7 +590,7 @@ fn apply_filter(signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64> 
                 _ => return vec![], // Invalid mode
             };
 
-            sum += signal[signal_idx] * filter_val;
+            sum += _signal[signal_idx] * filter_val;
         }
 
         *item = sum;
@@ -621,8 +621,8 @@ fn apply_filter(signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64> 
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::dwt::Wavelet;
-/// use scirs2_signal::wpt2d::{wpt2d_selective, WaveletPacket2D};
+/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2__signal::wpt2d::{wpt2d_selective, WaveletPacket2D};
 ///
 /// // Create a test image
 /// let mut image = Array2::zeros((32, 32));
@@ -700,18 +700,18 @@ fn decompose_node_selective<F>(
 where
     F: Fn(&WaveletPacket2D) -> bool + Copy,
 {
-    // If we've reached the maximum level, stop recursion
-    if level >= max_level {
+    // If we've reached the maximum _level, stop recursion
+    if _level >= max_level {
         return Ok(());
     }
 
     // Get the current node's coefficients
     let parent = tree
-        .get_packet(level, row, col)
+        .get_packet(_level, row, col)
         .ok_or_else(|| {
             SignalError::ValueError(format!(
-                "Missing wavelet packet at level {}, position ({}, {})",
-                level, row, col
+                "Missing wavelet packet at _level {}, position ({}, {})",
+                _level, row, col
             ))
         })?
         .clone();
@@ -728,8 +728,8 @@ where
     // Decompose the coefficients into 4 subbands
     let (ll, lh, hl, hh) = decompose_2d(&parent.coeffs, &filters, mode)?;
 
-    // Calculate child positions in the next level
-    let child_level = level + 1;
+    // Calculate child positions in the next _level
+    let child_level = _level + 1;
     let child_row_base = row * 2;
     let child_col_base = col * 2;
 
@@ -835,13 +835,12 @@ where
 
 #[cfg(test)]
 mod tests {
-    use ndarray::Array2;
 
     // Helper function to create a test image
-    fn create_test_image(size: usize) -> Array2<f64> {
-        let mut image = Array2::zeros((size, size));
-        for i in 0..size {
-            for j in 0..size {
+    fn create_test_image(_size: usize) -> Array2<f64> {
+        let mut image = Array2::zeros((_size, _size));
+        for i in 0.._size {
+            for j in 0.._size {
                 image[[i, j]] = (i * j) as f64;
             }
         }
@@ -850,6 +849,8 @@ mod tests {
 
     #[test]
     fn test_wpt2d_full_decomposition() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a test image (16x16 for 2 levels of decomposition)
         let image = create_test_image(16);
 
@@ -883,6 +884,8 @@ mod tests {
 
     #[test]
     fn test_wpt2d_selective_decomposition() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a test image (32x32 for 3 levels of decomposition)
         let image = create_test_image(32);
 
@@ -919,6 +922,8 @@ mod tests {
 
     #[test]
     fn test_packet_paths() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a test image (16x16 for 2 levels of decomposition)
         let image = create_test_image(16);
 

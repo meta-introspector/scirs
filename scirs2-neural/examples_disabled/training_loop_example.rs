@@ -14,6 +14,7 @@ use scirs2_neural::utils::{
     analyze_training_history, ascii_plot, export_history_to_csv, LearningRateSchedule, PlotOptions,
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
@@ -154,7 +155,7 @@ fn main() -> Result<()> {
         let mut epoch_loss = 0.0;
         let mut batch_count = 0;
         for (batch, batch_result) in train_loader.enumerate() {
-            let (_batch_x, _batch_y) = batch_result?;
+            let (_batch_x_batch_y) = batch_result?;
             // Update context
             context.batch = batch;
             context.batch_loss = None;
@@ -286,7 +287,7 @@ fn main() -> Result<()> {
 }
 // Create a simple model for classification
 #[allow(dead_code)]
-fn create_model(input_size: usize, num_classes: usize) -> Result<impl Layer<f32>> {
+fn create_model(_input_size: usize, num_classes: usize) -> Result<impl Layer<f32>> {
     // Create a mutable RNG for initialization
     let mut rng = rand::rng();
     // Create a simple neural network model with two hidden layers
@@ -304,10 +305,10 @@ fn create_model(input_size: usize, num_classes: usize) -> Result<impl Layer<f32>
     Ok(model)
 // Helper function to create a directory if it doesn't exist
 #[allow(dead_code)]
-fn create_dir_if_not_exists(path: impl AsRef<Path>) -> Result<()> {
-    let path = path.as_ref();
-    if !path.exists() {
-        std::fs::create_dir_all(path).map_err(|e| {
+fn create_dir_if_not_exists(_path: impl AsRef<Path>) -> Result<()> {
+    let _path = _path.as_ref();
+    if !_path.exists() {
+        std::fs::create_dir_all(_path).map_err(|e| {
             scirs2_neural::error::NeuralError::IOError(format!(
                 "Failed to create directory {}: {}",
                 path.display(),

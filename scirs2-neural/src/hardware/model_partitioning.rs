@@ -126,11 +126,11 @@ pub struct ModelPartitioner {
     constraints: PartitioningConstraints,
 impl ModelPartitioner {
     /// Create a new model partitioner
-    pub fn new(devices: Vec<Arc<dyn Accelerator>>, strategy: PartitioningStrategy) -> Self {
-        let device_profiles = Self::build_device_profiles(&devices);
-        let communication_topology = CommunicationTopology::build_from_devices(&devices);
+    pub fn new(_devices: Vec<Arc<dyn Accelerator>>, strategy: PartitioningStrategy) -> Self {
+        let device_profiles = Self::build_device_profiles(&_devices);
+        let communication_topology = CommunicationTopology::build_from_devices(&_devices);
         Self {
-            devices,
+            _devices,
             device_profiles,
             communication_topology,
             strategy,
@@ -155,8 +155,7 @@ impl ModelPartitioner {
                 2 => LayerType::LSTM { units: 256 },
                 3 => LayerType::Attention {
                     heads: 8,
-                    dims: 512,
-                _ => LayerType::Dense { units: 256 },
+                    dims: 512_ =>, LayerType::Dense { units: 256 },
             };
             let mut device_performance = HashMap::new();
             // Profile performance on each device
@@ -207,7 +206,7 @@ impl ModelPartitioner {
                         .partial_cmp(&perf2.execution_time_us)
                         .unwrap()
                 })
-                .map(|((device_type, device_id), _)| (*device_type, *device_id));
+                .map(|((device_type, device_id)_)| (*device_type, *device_id));
             if let Some((device_type, device_id)) = best_device {
                 // Check if we should continue current partition or start new one
                 if current_device.is_none() || current_device == Some((device_type, device_id)) {
@@ -252,7 +251,7 @@ impl ModelPartitioner {
             let device_id = 0; // Simplified
             let assigned_layers: Vec<usize> = profiles
                 .enumerate()
-                .filter(|(idx, _)| idx % num_devices == device_idx)
+                .filter(|(idx_)| idx % num_devices == device_idx)
                 .map(|(_, profile)| profile.layer_index)
                 .collect();
             if !assigned_layers.is_empty() {
@@ -334,8 +333,7 @@ impl ModelPartitioner {
             AcceleratorType::CPU => (base_time * 2.0, base_energy * 0.5),
             AcceleratorType::CUDA => (base_time * 0.3, base_energy * 1.5),
             AcceleratorType::TPU => (base_time * 0.2, base_energy * 0.8),
-            AcceleratorType::FPGA => (base_time * 0.4, base_energy * 0.3),
-            _ => (base_time, base_energy),
+            AcceleratorType::FPGA => (base_time * 0.4, base_energy * 0.3, _ => (base_time, base_energy),
         Ok(LayerPerformance {
             execution_time_us: adjusted_time,
             energy_consumption_mj: adjusted_energy,
@@ -461,12 +459,12 @@ pub struct CommunicationTopology {
     pub latency_matrix: BTreeMap<(usize, usize), f64>,
 impl CommunicationTopology {
     /// Build communication topology from devices
-    fn build_from_devices(devices: &[Arc<dyn Accelerator>]) -> Self {
+    fn build_from_devices(_devices: &[Arc<dyn Accelerator>]) -> Self {
         let mut bandwidth_matrix = BTreeMap::new();
         let mut latency_matrix = BTreeMap::new();
         // Build all-to-all connectivity with estimated values
-        for i in 0..devices.len() {
-            for j in 0..devices.len() {
+        for i in 0.._devices.len() {
+            for j in 0.._devices.len() {
                 if i == j {
                     // Same device - no communication cost
                     bandwidth_matrix.insert((i, j), f32::INFINITY);
@@ -488,9 +486,9 @@ pub struct PartitioningConstraints {
     pub max_latency_us: Option<f64>,
     /// Energy budget in millijoules
     pub energy_budget_mj: Option<f64>,
-    /// Required devices (must be used)
+    /// Required _devices (must be used)
     pub required_devices: Vec<(AcceleratorType, usize)>,
-    /// Forbidden devices
+    /// Forbidden _devices
     pub forbidden_devices: Vec<(AcceleratorType, usize)>,
 impl Default for PartitioningConstraints {
     fn default() -> Self {

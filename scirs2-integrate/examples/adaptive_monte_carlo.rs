@@ -1,8 +1,8 @@
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
-use rand_distr::{Distribution, Normal};
-use scirs2_integrate::monte_carlo::{importance_sampling, monte_carlo, MonteCarloOptions};
-use scirs2_integrate::qmc::{qmc_quad, Halton, QRNGEngine, Sobol};
+use rand__distr::{Distribution, Normal};
+use scirs2__integrate::monte_carlo::{importance_sampling, monte_carlo, MonteCarloOptions};
+use scirs2__integrate::qmc::{qmc_quad, Halton, QRNGEngine, Sobol};
 use std::f64::consts::PI;
 
 /// Function with a singularity at (1,0) for demonstrating adaptive integration
@@ -38,7 +38,7 @@ fn adaptive_importance_sampling<F>(
 where
     F: Fn(ArrayView1<f64>) -> f64 + Sync,
 {
-    // Step 1: Generate initial samples to identify important regions
+    // Step 1: Generate initial _samples to identify important regions
     let _options = MonteCarloOptions::<f64> {
         n_samples: n_initial_samples,
         seed,
@@ -59,7 +59,7 @@ where
         .map(|&(a, b)| rand_distr::Uniform::new_inclusive(a, b).unwrap())
         .collect();
 
-    // Generate samples and evaluate function
+    // Generate _samples and evaluate function
     for _ in 0..n_initial_samples {
         let mut point = Array1::zeros(dim);
         for (i, dist) in distributions.iter().enumerate() {
@@ -84,7 +84,7 @@ where
             .unwrap_or(std::cmp::Ordering::Equal)
     });
 
-    // Step 3: Create subregions centered on the highest-valued points
+    // Step 3: Create _subregions centered on the highest-valued points
     let n_top_points = n_subregions.min(value_indices.len());
     let mut subregion_results = Vec::with_capacity(n_top_points);
 
@@ -103,8 +103,7 @@ where
         let radius = match center_value.abs() {
             v if v > 1e6 => 0.01,
             v if v > 1e3 => 0.05,
-            v if v > 1e0 => 0.1,
-            _ => 0.2,
+            v if v > 1e0 => 0.1_ => 0.2,
         };
 
         println!(
@@ -228,7 +227,7 @@ where
         ..Default::default()
     };
 
-    println!("Sampling remainder with {remaining_samples} samples");
+    println!("Sampling remainder with {remaining_samples} _samples");
 
     let remainder_result = monte_carlo(&f, ranges, Some(options)).unwrap();
 
@@ -263,7 +262,7 @@ where
 
     // Step 1: First do a standard QMC integration of the whole domain
     // to establish a baseline and identify important regions
-    let a = Array1::from_iter(ranges.iter().map(|&(a, _)| a));
+    let a = Array1::from_iter(ranges.iter().map(|&(a_)| a));
     let b = Array1::from_iter(ranges.iter().map(|&(_, b)| b));
 
     // Get the total domain volume for later calculations
@@ -288,13 +287,13 @@ where
         initial_result.integral
     );
 
-    // Step 2: Sample additional points to identify important regions
-    // Generate QMC points from Sobol sequence for exploration (better coverage properties)
+    // Step 2: Sample additional _points to identify important regions
+    // Generate QMC _points from Sobol sequence for exploration (better coverage properties)
     let mut qrng = Sobol::new(dim, seed);
     let qmc_samples = qrng.random(n_initial_points);
 
-    // Scale QMC points to the integration domain and evaluate the function
-    let mut points = Vec::with_capacity(n_initial_points);
+    // Scale QMC _points to the integration domain and evaluate the function
+    let mut _points = Vec::with_capacity(n_initial_points);
     let mut values = Vec::with_capacity(n_initial_points);
     let mut value_sum = 0.0;
 
@@ -310,7 +309,7 @@ where
         if !value.is_nan() && !value.is_infinite() {
             // Keep track of the sum for calculating importance later
             value_sum += value.abs();
-            points.push(point);
+            _points.push(point);
             values.push(value);
         }
     }
@@ -324,18 +323,18 @@ where
             .unwrap_or(std::cmp::Ordering::Equal)
     });
 
-    // Step 4: Define subregions around important points
+    // Step 4: Define _subregions around important _points
     let n_top_points = n_subregions.min(value_indices.len());
     let mut subregion_results = Vec::with_capacity(n_top_points);
 
     println!("Identified {n_top_points} high-contribution regions");
 
-    // Keep track of the total volume of all subregions to avoid double-counting
+    // Keep track of the total volume of all _subregions to avoid double-counting
     let mut total_subregion_volume = 0.0;
     let mut subregion_volumes = Vec::with_capacity(n_top_points);
 
     for (idx, &point_idx) in value_indices.iter().take(n_top_points).enumerate() {
-        let center_point = &points[point_idx];
+        let center_point = &_points[point_idx];
         let center_value = values[point_idx];
 
         // Adaptive radius based on function value and position in sorted list
@@ -345,8 +344,7 @@ where
         let radius = match center_value.abs() {
             v if v > 1e6 => 0.05 * radius_scale,
             v if v > 1e3 => 0.1 * radius_scale,
-            v if v > 1e0 => 0.15 * radius_scale,
-            _ => 0.2 * radius_scale,
+            v if v > 1e0 => 0.15 * radius_scale_ => 0.2 * radius_scale,
         };
 
         println!(
@@ -368,7 +366,7 @@ where
         // Calculate subregion volume
         let subregion_volume: f64 = (0..dim).map(|i| subregion_b[i] - subregion_a[i]).product();
 
-        // Adjust points based on relative importance and volume
+        // Adjust _points based on relative importance and volume
         let relative_importance = center_value.abs() / value_sum;
         let adjusted_points =
             (subregion_points as f64 * (relative_importance * n_top_points as f64)) as usize;
@@ -431,7 +429,7 @@ where
         (initial_result.integral, initial_result.standard_error)
     } else if coverage_ratio > 0.5 {
         // Method 1: Weighted average of initial estimate and subregion results
-        // This works well when subregions cover most of the domain
+        // This works well when _subregions cover most of the domain
         let mut combined_integral = 0.0;
         let mut combined_variance = 0.0;
 
@@ -457,8 +455,8 @@ where
 
         (combined_integral, combined_variance.sqrt())
     } else {
-        // Method 2: Use initial estimate as baseline and add corrective terms from subregions
-        // This works better when subregions are focused on a small part of the domain
+        // Method 2: Use initial estimate as baseline and add corrective terms from _subregions
+        // This works better when _subregions are focused on a small part of the domain
         let mut refined_integral = initial_result.integral;
         let mut refined_variance = initial_result.standard_error.powi(2);
 

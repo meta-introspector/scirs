@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Basic example of mutating a memory-mapped array
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn basic_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Mutation Example");
     println!("-------------------------");
 
@@ -65,7 +65,7 @@ fn basic_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
 
     // Get a view of the initial data
     {
-        let array_view = mmap.as_array::<ndarray::Ix1>()?;
+        let array_view = mmap.asarray::<ndarray::Ix1>()?;
         println!(
             "Before mutation (first 10 elements): {:?}",
             array_view.slice(ndarray::s![0..10])
@@ -75,7 +75,7 @@ fn basic_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
     // Modify the array using process_chunks_mut (more reliable)
     mmap.process_chunks_mut(
         ChunkingStrategy::Fixed(100), // Process the entire array in one chunk since it's small
-        |chunk_data, _| {
+        |chunk_data_| {
             // Set every 10th element to its index * 100
             for i in 0..10 {
                 if i * 10 < chunk_data.len() {
@@ -87,7 +87,7 @@ fn basic_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
 
     // View the array after mutation
     {
-        let array_view = mmap.as_array::<ndarray::Ix1>()?;
+        let array_view = mmap.asarray::<ndarray::Ix1>()?;
         println!(
             "After mutation (first 10 elements): {:?}",
             array_view.slice(ndarray::s![0..10])
@@ -97,8 +97,8 @@ fn basic_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
     println!("Changes flushed to disk");
 
     // Reopen the file to verify changes were saved
-    let mmap_reopened = create_mmap::<i32, _, _>(&data, &file_path, AccessMode::ReadOnly, 0)?;
-    let array_reopened = mmap_reopened.as_array::<ndarray::Ix1>()?;
+    let mmap_reopened = create_mmap::<i32>(&data, &file_path, AccessMode::ReadOnly, 0)?;
+    let array_reopened = mmap_reopened.asarray::<ndarray::Ix1>()?;
 
     println!(
         "Reopened array (first 10 elements): {:?}",
@@ -124,7 +124,7 @@ fn basic_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
 /// Example of mutating a memory-mapped array using chunk-wise processing
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn chunked_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Chunked Mutation Example");
     println!("---------------------------");
 
@@ -171,12 +171,12 @@ fn chunked_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::E
     println!("All chunks processed");
 
     // Reopen the file to verify changes were saved
-    let mmap_reopened = create_mmap::<i32, _, _>(&data, &file_path, AccessMode::ReadOnly, 0)?;
+    let mmap_reopened = create_mmap::<i32>(&data, &file_path, AccessMode::ReadOnly, 0)?;
 
     // Verify some key points in the array
     println!("Verifying modifications at key points:");
 
-    let array_reopened = mmap_reopened.as_array::<ndarray::Ix1>()?;
+    let array_reopened = mmap_reopened.asarray::<ndarray::Ix1>()?;
 
     for check_idx in 0..num_chunks {
         let pos = check_idx * chunk_size;

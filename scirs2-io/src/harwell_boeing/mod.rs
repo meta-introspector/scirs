@@ -70,8 +70,7 @@ impl FromStr for HBMatrixType {
             ('C', 'S', 'A') => Ok(HBMatrixType::ComplexSymmetric),
             ('C', 'H', 'A') => Ok(HBMatrixType::ComplexHermitian),
             ('C', 'S', 'S') => Ok(HBMatrixType::ComplexSkewSymmetric),
-            ('P', _, _) => Ok(HBMatrixType::Pattern),
-            _ => Err(IoError::FormatError(format!("Unknown matrix type: {s}"))),
+            ('P'__) => Ok(HBMatrixType::Pattern, _ => Err(IoError::FormatError(format!("Unknown matrix type: {s}"))),
         }
     }
 }
@@ -146,13 +145,13 @@ pub struct HBSparseMatrix<T> {
 
 impl HBHeader {
     /// Parse Harwell-Boeing header from file
-    pub fn parse_header<R: BufRead>(reader: &mut R) -> Result<Self> {
+    pub fn parse_header<R: BufRead>(_reader: &mut R) -> Result<Self> {
         let mut lines = Vec::new();
 
         // Read header lines
         for _ in 0..5 {
             let mut line = String::new();
-            reader
+            _reader
                 .read_line(&mut line)
                 .map_err(|e| IoError::FileError(e.to_string()))?;
             lines.push(line.trim_end().to_string());
@@ -307,14 +306,14 @@ impl HBHeader {
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2_io::harwell_boeing::read_harwell_boeing;
+/// use scirs2__io::harwell_boeing::read_harwell_boeing;
 ///
 /// let matrix = read_harwell_boeing("matrix.hb").unwrap();
 /// println!("Matrix: {}x{} with {} non-zeros", matrix.header.nrow, matrix.header.ncol, matrix.header.nnzero);
 /// ```
 #[allow(dead_code)]
-pub fn read_harwell_boeing<P: AsRef<Path>>(path: P) -> Result<HBSparseMatrix<f64>> {
-    let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn read_harwell_boeing<P: AsRef<Path>>(_path: P) -> Result<HBSparseMatrix<f64>> {
+    let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut reader = BufReader::new(file);
 
     // Parse header
@@ -430,7 +429,7 @@ pub fn read_harwell_boeing<P: AsRef<Path>>(path: P) -> Result<HBSparseMatrix<f64
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2_io::harwell_boeing::{write_harwell_boeing, HBSparseMatrix, HBHeader, HBMatrixType};
+/// use scirs2__io::harwell_boeing::{write_harwell_boeing, HBSparseMatrix, HBHeader, HBMatrixType};
 ///
 /// # let header = HBHeader {
 /// #     title: "Test matrix".to_string(),
@@ -448,8 +447,8 @@ pub fn read_harwell_boeing<P: AsRef<Path>>(path: P) -> Result<HBSparseMatrix<f64
 /// write_harwell_boeing("output.hb", &matrix).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn write_harwell_boeing<P: AsRef<Path>>(path: P, matrix: &HBSparseMatrix<f64>) -> Result<()> {
-    let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn write_harwell_boeing<P: AsRef<Path>>(_path: P, matrix: &HBSparseMatrix<f64>) -> Result<()> {
+    let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
     // Write header
@@ -502,13 +501,13 @@ pub fn write_harwell_boeing<P: AsRef<Path>>(path: P, matrix: &HBSparseMatrix<f64
 ///
 /// * `(Array1<usize>, Array1<usize>, Array1<f64>)` - Column pointers, row indices, and values
 #[allow(dead_code)]
-pub fn hb_to_ccs(matrix: &HBSparseMatrix<f64>) -> (Array1<usize>, Array1<usize>, Array1<f64>) {
-    let colptr = Array1::from(matrix.colptr.clone());
-    let rowind = Array1::from(matrix.rowind.clone());
-    let values = if let Some(ref vals) = matrix.values {
+pub fn hb_to_ccs(_matrix: &HBSparseMatrix<f64>) -> (Array1<usize>, Array1<usize>, Array1<f64>) {
+    let colptr = Array1::from(_matrix.colptr.clone());
+    let rowind = Array1::from(_matrix.rowind.clone());
+    let values = if let Some(ref vals) = _matrix.values {
         Array1::from(vals.clone())
     } else {
-        Array1::from(vec![1.0; matrix.rowind.len()]) // Pattern matrix
+        Array1::from(vec![1.0; _matrix.rowind.len()]) // Pattern _matrix
     };
 
     (colptr, rowind, values)
@@ -656,10 +655,10 @@ fn read_integer_data<R: BufRead>(
 
 /// Read real data from file
 #[allow(dead_code)]
-fn read_real_data<R: BufRead>(reader: &mut R, num_lines: usize, data: &mut Vec<f64>) -> Result<()> {
+fn read_real_data<R: BufRead>(_reader: &mut R, num_lines: usize, data: &mut Vec<f64>) -> Result<()> {
     for _ in 0..num_lines {
         let mut line = String::new();
-        reader
+        _reader
             .read_line(&mut line)
             .map_err(|e| IoError::FileError(e.to_string()))?;
 
@@ -675,36 +674,36 @@ fn read_real_data<R: BufRead>(reader: &mut R, num_lines: usize, data: &mut Vec<f
 
 /// Write integer data to file
 #[allow(dead_code)]
-fn write_integer_data<W: Write>(writer: &mut W, data: &[usize], field_width: usize) -> Result<()> {
+fn write_integer_data<W: Write>(_writer: &mut W, data: &[usize], field_width: usize) -> Result<()> {
     const INTS_PER_LINE: usize = 8;
 
     for chunk in data.chunks(INTS_PER_LINE) {
         for (i, &value) in chunk.iter().enumerate() {
             if i > 0 {
-                write!(writer, " ").map_err(|e| IoError::FileError(e.to_string()))?;
+                write!(_writer, " ").map_err(|e| IoError::FileError(e.to_string()))?;
             }
-            write!(writer, "{value:field_width$}")
+            write!(_writer, "{value:field_width$}")
                 .map_err(|e| IoError::FileError(e.to_string()))?;
         }
-        writeln!(writer).map_err(|e| IoError::FileError(e.to_string()))?;
+        writeln!(_writer).map_err(|e| IoError::FileError(e.to_string()))?;
     }
     Ok(())
 }
 
 /// Write real data to file
 #[allow(dead_code)]
-fn write_real_data<W: Write>(writer: &mut W, data: &[f64], field_width: usize) -> Result<()> {
+fn write_real_data<W: Write>(_writer: &mut W, data: &[f64], field_width: usize) -> Result<()> {
     const REALS_PER_LINE: usize = 4;
 
     for chunk in data.chunks(REALS_PER_LINE) {
         for (i, &value) in chunk.iter().enumerate() {
             if i > 0 {
-                write!(writer, " ").map_err(|e| IoError::FileError(e.to_string()))?;
+                write!(_writer, " ").map_err(|e| IoError::FileError(e.to_string()))?;
             }
-            write!(writer, "{value:field_width$.6E}")
+            write!(_writer, "{value:field_width$.6E}")
                 .map_err(|e| IoError::FileError(e.to_string()))?;
         }
-        writeln!(writer).map_err(|e| IoError::FileError(e.to_string()))?;
+        writeln!(_writer).map_err(|e| IoError::FileError(e.to_string()))?;
     }
     Ok(())
 }

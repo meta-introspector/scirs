@@ -8,6 +8,7 @@ use num_traits::{Float, NumCast};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Resample a signal using polyphase filtering.
 ///
 /// # Arguments
@@ -24,7 +25,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::resample::resample;
+/// use scirs2__signal::resample::resample;
 ///
 /// // Generate a simple signal
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -174,7 +175,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::resample::upsample;
+/// use scirs2__signal::resample::upsample;
 ///
 /// // Generate a simple signal
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -227,7 +228,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::resample::downsample;
+/// use scirs2__signal::resample::downsample;
 ///
 /// // Generate a simple signal
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -280,7 +281,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::resample::resample_poly;
+/// use scirs2__signal::resample::resample_poly;
 ///
 /// // Generate a simple signal
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -364,7 +365,7 @@ fn rational_approximation(x: f64) -> (usize, usize) {
 
     let mut best_num = 1;
     let mut best_denom = 1;
-    let mut best_error = (x - 1.0).abs();
+    let mut best_error = ((x - 1.0) as f64).abs();
 
     for denom in 1..=MAX_DENOM {
         let num = (x * denom as f64).round() as usize;
@@ -385,8 +386,7 @@ fn rational_approximation(x: f64) -> (usize, usize) {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_resample_identity() {
         // Resampling with up=1, down=1 should return the original signal
@@ -429,6 +429,8 @@ mod tests {
 
     #[test]
     fn test_resample_poly() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Resample to a specific length
         let signal: Vec<f64> = (0..100).map(|i| (i as f64 * 0.1).sin()).collect();
 

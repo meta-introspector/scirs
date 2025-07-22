@@ -1,13 +1,13 @@
 use ndarray::{array, Array1, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::time::Instant;
 
 // Van der Pol oscillator - stiff when mu is large
 // dy/dt = [y1, mu * (1 - y0^2) * y1 - y0]
 #[allow(dead_code)]
-fn van_der_pol(mu: f64) -> impl Fn(f64, ArrayView1<f64>) -> Array1<f64> + Copy {
-    move |_t: f64, y: ArrayView1<f64>| array![y[1], mu * (1.0 - y[0].powi(2)) * y[1] - y[0]]
+fn van_der_pol(_mu: f64) -> impl Fn(f64, ArrayView1<f64>) -> Array1<f64> + Copy {
+    move |_t: f64, y: ArrayView1<f64>| array![y[1], _mu * (1.0 - y[0].powi(2)) * y[1] - y[0]]
 }
 
 // Robertson chemical reaction system - a classic stiff ODE system

@@ -31,9 +31,9 @@ pub struct GradientClipping<F: Float + Debug + ScalarOperand + Display> {
     clipping_ratio: Option<F>,
 impl<F: Float + Debug + ScalarOperand + Display> GradientClipping<F> {
     /// Create a new gradient clipping callback using global norm
-    pub fn by_global_norm(max_norm: F, log_stats: bool) -> Self {
+    pub fn by_global_norm(_max_norm: F, log_stats: bool) -> Self {
         Self {
-            max_norm,
+            _max_norm,
             method: GradientClippingMethod::ClipByGlobalNorm,
             log_stats,
             clipping_applied: false,
@@ -41,8 +41,8 @@ impl<F: Float + Debug + ScalarOperand + Display> GradientClipping<F> {
         }
     }
     /// Create a new gradient clipping callback using value clipping
-    pub fn by_value(max_value: F, log_stats: bool) -> Self {
-            max_norm: max_value,
+    pub fn by_value(_max_value: F, log_stats: bool) -> Self {
+            max_norm: _max_value,
             method: GradientClippingMethod::ClipByValue,
     /// Returns whether clipping was applied in the last step
     pub fn was_clipping_applied(&self) -> bool {

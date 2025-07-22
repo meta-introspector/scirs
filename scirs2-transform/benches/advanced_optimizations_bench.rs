@@ -9,7 +9,7 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Through
 use ndarray::Array2;
 use ndarray_rand::rand::distributions::Uniform;
 use ndarray_rand::RandomExt;
-use scirs2_transform::*;
+use scirs2__transform::*;
 use std::hint::black_box;
 
 const SAMPLE_SIZES: &[usize] = &[100, 1000, 10_000];
@@ -146,7 +146,7 @@ fn bench_enhanced_pca(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("AdvancedFast", format!("{}x{}", n_samples, n_features)),
                 &data,
-                |b, _data| {
+                |b_data| {
                     let mut advanced_pca =
                         AdvancedFastPCA::new(n_components, n_samples, n_features);
                     b.iter(|| {

@@ -45,19 +45,19 @@ where
 
     // Initial step size
     let mut h = options.h0.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(0.01).unwrap() // 1% of interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(0.01).unwrap() // 1% of interval
     });
 
     // Step limits
     let min_step = options.min_step.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(1e-6).unwrap() // Very small relative to interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(1e-6).unwrap() // Very small relative to interval
     });
 
     let max_step = options.max_step.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(0.1).unwrap() // 10% of interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(0.1).unwrap() // 10% of interval
     });
 
     // Maximum BDF order
@@ -548,19 +548,19 @@ where
 
     // Initial step size
     let mut h = options.h0.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(0.01).unwrap() // 1% of interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(0.01).unwrap() // 1% of interval
     });
 
     // Step limits
     let min_step = options.min_step.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(1e-6).unwrap() // Very small relative to interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(1e-6).unwrap() // Very small relative to interval
     });
 
     let max_step = options.max_step.unwrap_or_else(|| {
-        let span = t_span[1] - t_span[0];
-        span * F::from_f64(0.1).unwrap() // 10% of interval
+        let _span = t_span[1] - t_span[0];
+        _span * F::from_f64(0.1).unwrap() // 10% of interval
     });
 
     // Maximum BDF order
@@ -1015,16 +1015,16 @@ where
 
 /// Predict the next state for fully implicit DAE
 #[allow(dead_code)]
-fn predict_fully_implicit<F>(y_history: &[Array1<F>], order: usize, _h: F) -> Array1<F>
+fn predict_fully_implicit<F>(_y_history: &[Array1<F>], order: usize_h: F) -> Array1<F>
 where
     F: IntegrateFloat,
 {
-    let n = y_history[0].len();
-    let history_len = y_history.len();
+    let n = _y_history[0].len();
+    let history_len = _y_history.len();
 
     if history_len < 2 || order == 1 {
         // For first step or first-order method, just use constant extrapolation
-        return y_history[history_len - 1].clone();
+        return _y_history[history_len - 1].clone();
     }
 
     // For higher-order extrapolation, we'll use a simple polynomial predictor

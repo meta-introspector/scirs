@@ -353,7 +353,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
 
         if deriv_order > 3 {
             return Err(InterpolateError::InvalidValue(format!(
-                "Derivative order must be ≤ 3, got {}",
+                "Derivative _order must be ≤ 3, got {}",
                 deriv_order
             )));
         }
@@ -422,9 +422,8 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
                 0 => Ok(a + dx * (b + dx * (c + dx * d))),
                 1 => Ok(b + dx * (T::from(2.0).unwrap() * c + T::from(3.0).unwrap() * dx * d)),
                 2 => Ok(T::from(2.0).unwrap() * c + T::from(6.0).unwrap() * dx * d),
-                3 => Ok(T::from(6.0).unwrap() * d),
-                _ => Err(InterpolateError::InvalidValue(
-                    "Derivative order must be ≤ 3".to_string(),
+                3 => Ok(T::from(6.0).unwrap() * d, _ => Err(InterpolateError::InvalidValue(
+                    "Derivative _order must be ≤ 3".to_string(),
                 )),
             };
         }
@@ -440,9 +439,8 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
             0 => Ok(a + b * dx + c * (p * dx).sinh() + d * (p * dx).cosh()),
             1 => Ok(b + c * p * (p * dx).cosh() + d * p * (p * dx).sinh()),
             2 => Ok(c * p * p * (p * dx).sinh() + d * p * p * (p * dx).cosh()),
-            3 => Ok(c * p * p * p * (p * dx).cosh() + d * p * p * p * (p * dx).sinh()),
-            _ => Err(InterpolateError::InvalidValue(
-                "Derivative order must be ≤ 3".to_string(),
+            3 => Ok(c * p * p * p * (p * dx).cosh() + d * p * p * p * (p * dx).sinh(), _ => Err(InterpolateError::InvalidValue(
+                "Derivative _order must be ≤ 3".to_string(),
             )),
         }
     }
@@ -471,8 +469,8 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::tension::make_tension_spline;
-    /// use scirs2_interpolate::ExtrapolateMode;
+    /// use scirs2__interpolate::tension::make_tension_spline;
+    /// use scirs2__interpolate::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0, 16.0]; // x^2
@@ -488,8 +486,8 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     pub fn derivatives_all(&self, x_val: T, max_order: usize) -> InterpolateResult<Vec<T>> {
         let mut derivatives = Vec::with_capacity(max_order + 1);
 
-        for order in 0..=max_order {
-            derivatives.push(self.derivative_single(order, x_val)?);
+        for _order in 0..=max_order {
+            derivatives.push(self.derivative_single(_order, x_val)?);
         }
 
         Ok(derivatives)
@@ -514,8 +512,8 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::tension::make_tension_spline;
-    /// use scirs2_interpolate::ExtrapolateMode;
+    /// use scirs2__interpolate::tension::make_tension_spline;
+    /// use scirs2__interpolate::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0, 16.0]; // x^2
@@ -552,8 +550,8 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::tension::make_tension_spline;
-    /// use scirs2_interpolate::ExtrapolateMode;
+    /// use scirs2__interpolate::tension::make_tension_spline;
+    /// use scirs2__interpolate::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![1.0, 1.0, 1.0, 1.0, 1.0]; // Constant function
@@ -663,8 +661,8 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::tension::make_tension_spline;
-    /// use scirs2_interpolate::ExtrapolateMode;
+    /// use scirs2__interpolate::tension::make_tension_spline;
+    /// use scirs2__interpolate::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![0.0, 1.0, 4.0, 9.0, 16.0]; // x^2
@@ -803,8 +801,8 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::tension::make_tension_spline;
-    /// use scirs2_interpolate::ExtrapolateMode;
+    /// use scirs2__interpolate::tension::make_tension_spline;
+    /// use scirs2__interpolate::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![-1.0, 1.0, -1.0, 1.0, -1.0]; // Oscillating function
@@ -845,7 +843,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
         }
 
         Err(InterpolateError::ComputationError(format!(
-            "Root finding did not converge after {} iterations",
+            "Root finding did not converge after {} _iterations",
             max_iter
         )))
     }
@@ -869,8 +867,8 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::tension::make_tension_spline;
-    /// use scirs2_interpolate::ExtrapolateMode;
+    /// use scirs2__interpolate::tension::make_tension_spline;
+    /// use scirs2__interpolate::ExtrapolateMode;
     ///
     /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![0.0, 1.0, 0.0, 1.0, 0.0]; // Wave-like function
@@ -944,7 +942,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
 
             let deriv_a = self.derivative_single(1, a)?;
 
-            if (deriv_a > T::zero()) == (deriv_c > T::zero()) {
+            if (deriv_a > T::zero()) == (deriv_c >, T::zero()) {
                 a = c;
             } else {
                 b = c;

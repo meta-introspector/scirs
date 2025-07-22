@@ -286,7 +286,7 @@ pub use advanced::{
 };
 
 // Graph memory profiling - experimental
-pub use graph_memory_profiler::{
+pub use graph_memory__profiler::{
     AdvancedMemoryProfiler,
     EfficiencyAnalysis,
     MemoryProfile,
@@ -297,7 +297,7 @@ pub use graph_memory_profiler::{
 };
 
 // Numerical accuracy validation - experimental
-pub use numerical_accuracy_validation::{
+pub use numerical_accuracy__validation::{
     create_comprehensive_validation_suite, run_quick_validation, AdvancedNumericalValidator,
     ValidationAlgorithm, ValidationConfig, ValidationReport, ValidationResult,
     ValidationTolerances,

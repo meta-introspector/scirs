@@ -5,13 +5,14 @@
 //! and centroid calculations. All functions provide automatic fallback to scalar
 //! implementations when SIMD is not available.
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};
+use statrs::statistics::Statistics;
 
 /// Configuration for SIMD optimizations
 #[derive(Debug, Clone)]
@@ -110,13 +111,13 @@ where
 ///
 /// * Whitened array with the same shape as input
 #[allow(dead_code)]
-pub fn whiten_simd<F>(obs: &Array2<F>, config: Option<&SimdOptimizationConfig>) -> Result<Array2<F>>
+pub fn whiten_simd<F>(_obs: &Array2<F>, config: Option<&SimdOptimizationConfig>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {
     let config = config.unwrap_or(&SimdOptimizationConfig::default());
-    let n_samples = obs.shape()[0];
-    let n_features = obs.shape()[1];
+    let n_samples = _obs.shape()[0];
+    let n_features = _obs.shape()[1];
 
     if n_samples == 0 || n_features == 0 {
         return Err(ClusteringError::InvalidInput(
@@ -130,35 +131,35 @@ where
         && (optimizer.should_use_simd(n_samples * n_features) || config.force_simd);
 
     if use_simd && config.enable_parallel && n_features > config.parallel_chunk_size {
-        whiten_simd_parallel(obs, config)
+        whiten_simd_parallel(_obs, config)
     } else if use_simd {
-        whiten_simd_sequential(obs)
+        whiten_simd_sequential(_obs)
     } else {
-        whiten_scalar_fallback(obs)
+        whiten_scalar_fallback(_obs)
     }
 }
 
 /// SIMD-optimized sequential whitening
 #[allow(dead_code)]
-fn whiten_simd_sequential<F>(obs: &Array2<F>) -> Result<Array2<F>>
+fn whiten_simd_sequential<F>(_obs: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + SimdUnifiedOps,
 {
-    let n_samples = obs.shape()[0];
-    let n_features = obs.shape()[1];
+    let n_samples = _obs.shape()[0];
+    let n_features = _obs.shape()[1];
     let n_samples_f = F::from(n_samples).unwrap();
 
     // Calculate means using SIMD operations
     let mut means = Array1::<F>::zeros(n_features);
     for j in 0..n_features {
-        let column = obs.column(j);
+        let column = _obs.column(j);
         means[j] = F::simd_sum(&column) / n_samples_f;
     }
 
     // Calculate standard deviations using SIMD operations
     let mut stds = Array1::<F>::zeros(n_features);
     for j in 0..n_features {
-        let column = obs.column(j);
+        let column = _obs.column(j);
         let mean_array = Array1::from_elem(n_samples, means[j]);
         let diff = F::simd_sub(&column, &mean_array.view());
         let squared_diff = F::simd_mul(&diff.view(), &diff.view());
@@ -174,7 +175,7 @@ where
     // Whiten the data using SIMD operations
     let mut whitened = Array2::<F>::zeros((n_samples, n_features));
     for j in 0..n_features {
-        let column = obs.column(j);
+        let column = _obs.column(j);
         let mean_array = Array1::from_elem(n_samples, means[j]);
         let std_array = Array1::from_elem(n_samples, stds[j]);
 
@@ -191,12 +192,12 @@ where
 
 /// Parallel SIMD-optimized whitening for large datasets
 #[allow(dead_code)]
-fn whiten_simd_parallel<F>(obs: &Array2<F>, config: &SimdOptimizationConfig) -> Result<Array2<F>>
+fn whiten_simd_parallel<F>(_obs: &Array2<F>, config: &SimdOptimizationConfig) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {
-    let n_samples = obs.shape()[0];
-    let n_features = obs.shape()[1];
+    let n_samples = _obs.shape()[0];
+    let n_features = _obs.shape()[1];
     let n_samples_f = F::from(n_samples).unwrap();
 
     // Parallel mean calculation
@@ -204,7 +205,7 @@ where
         (0..n_features)
             .into_par_iter()
             .map(|j| {
-                let column = obs.column(j);
+                let column = _obs.column(j);
                 F::simd_sum(&column) / n_samples_f
             })
             .collect::<Vec<_>>()
@@ -212,7 +213,7 @@ where
     } else {
         let mut means = Array1::<F>::zeros(n_features);
         for j in 0..n_features {
-            let column = obs.column(j);
+            let column = _obs.column(j);
             means[j] = F::simd_sum(&column) / n_samples_f;
         }
         means
@@ -223,7 +224,7 @@ where
         (0..n_features)
             .into_par_iter()
             .map(|j| {
-                let column = obs.column(j);
+                let column = _obs.column(j);
                 let mean_array = Array1::from_elem(n_samples, means[j]);
                 let diff = F::simd_sub(&column, &mean_array.view());
                 let squared_diff = F::simd_mul(&diff.view(), &diff.view());
@@ -240,10 +241,10 @@ where
             .collect::<Vec<_>>()
             .into()
     } else {
-        whiten_simd_sequential(obs)?
+        whiten_simd_sequential(_obs)?
             .into_shape((n_samples, n_features))
             .unwrap();
-        return whiten_simd_sequential(obs);
+        return whiten_simd_sequential(_obs);
     };
 
     // Parallel whitening
@@ -257,7 +258,7 @@ where
             .chunks(chunk_size)
             .for_each(|chunk| {
                 for j in chunk {
-                    let column = obs.column(j);
+                    let column = _obs.column(j);
                     let mean_array = Array1::from_elem(n_samples, means[j]);
                     let std_array = Array1::from_elem(n_samples, stds[j]);
 
@@ -275,7 +276,7 @@ where
             });
     } else {
         for j in 0..n_features {
-            let column = obs.column(j);
+            let column = _obs.column(j);
             let mean_array = Array1::from_elem(n_samples, means[j]);
             let std_array = Array1::from_elem(n_samples, stds[j]);
 
@@ -293,19 +294,19 @@ where
 
 /// Scalar fallback for whitening when SIMD is not available
 #[allow(dead_code)]
-fn whiten_scalar_fallback<F>(obs: &Array2<F>) -> Result<Array2<F>>
+fn whiten_scalar_fallback<F>(_obs: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n_samples = obs.shape()[0];
-    let n_features = obs.shape()[1];
+    let n_samples = _obs.shape()[0];
+    let n_features = _obs.shape()[1];
 
     // Calculate mean for each feature
     let mut means = Array1::<F>::zeros(n_features);
     for j in 0..n_features {
         let mut sum = F::zero();
         for i in 0..n_samples {
-            sum = sum + obs[[i, j]];
+            sum = sum + _obs[[i, j]];
         }
         means[j] = sum / F::from(n_samples).unwrap();
     }
@@ -315,7 +316,7 @@ where
     for j in 0..n_features {
         let mut sum = F::zero();
         for i in 0..n_samples {
-            let diff = obs[[i, j]] - means[j];
+            let diff = _obs[[i, j]] - means[j];
             sum = sum + diff * diff;
         }
         stds[j] = (sum / F::from(n_samples - 1).unwrap()).sqrt();
@@ -330,7 +331,7 @@ where
     let mut whitened = Array2::<F>::zeros((n_samples, n_features));
     for i in 0..n_samples {
         for j in 0..n_features {
-            whitened[[i, j]] = (obs[[i, j]] - means[j]) / stds[j];
+            whitened[[i, j]] = (_obs[[i, j]] - means[j]) / stds[j];
         }
     }
 

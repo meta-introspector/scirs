@@ -64,6 +64,7 @@ use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array2, ArrayView2};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 /// Configuration for distributed linear algebra operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -114,7 +115,7 @@ impl Default for DistributedConfig {
             distribution: DistributionStrategy::RowWise,
             block_size: 256,
             enable_simd: true,
-            threads_per_node: num_cpus::get(),
+            threads_per_node: num, _cpus: get(),
             comm_timeout_ms: 30000,
             fault_tolerance: false,
             memory_limit_bytes: None,
@@ -335,7 +336,7 @@ impl DistributedLinalgOps {
         b: &DistributedMatrix<T>,
     ) -> LinalgResult<DistributedMatrix<T>>
     where
-        T: num_traits::Float + Send + Sync + 'static,
+        T: num_traits: Float + Send + Sync + 'static,
     {
         // Check matrix dimensions
         let (m, k) = a.global_shape();
@@ -353,7 +354,7 @@ impl DistributedLinalgOps {
 /// advanced communication optimization.
 pub struct AdvancedDistributedFramework<T>
 where
-    T: num_traits::Float + Send + Sync + 'static,
+    T: num_traits: Float + Send + Sync + 'static,
 {
     /// Adaptive load balancer with machine learning
     adaptive_balancer: AdaptiveLoadBalancer,
@@ -366,8 +367,7 @@ where
     /// Resource manager
     resource_manager: DistributedResourceManager,
     /// Network topology analyzer
-    topology_analyzer: NetworkTopologyAnalyzer,
-    _phantom: std::marker::PhantomData<T>,
+    topology_analyzer: NetworkTopologyAnalyzer, _phantom: std::marker::PhantomData<T>,
 }
 
 /// Adaptive load balancer with machine learning capabilities
@@ -1933,7 +1933,7 @@ pub enum RiskLevel {
         b: &DistributedMatrix<T>,
     ) -> LinalgResult<DistributedMatrix<T>>
     where
-        T: num_traits::Float + Send + Sync + 'static,
+        T: num_traits: Float + Send + Sync + 'static,
     {
         // Check matrix dimensions
         if a.global_shape() != b.global_shape() {
@@ -1953,7 +1953,7 @@ pub enum RiskLevel {
         matrix: &DistributedMatrix<T>,
     ) -> LinalgResult<DistributedMatrix<T>>
     where
-        T: num_traits::Float + Send + Sync + 'static,
+        T: num_traits: Float + Send + Sync + 'static,
     {
         matrix.transpose()
     }
@@ -1964,7 +1964,7 @@ pub enum RiskLevel {
         b: &DistributedVector<T>,
     ) -> LinalgResult<DistributedVector<T>>
     where
-        T: num_traits::Float + Send + Sync + 'static,
+        T: num_traits: Float + Send + Sync + 'static,
     {
         solvers::solve_linear_system(a, b)
     }
@@ -1974,7 +1974,7 @@ pub enum RiskLevel {
         matrix: &DistributedMatrix<T>,
     ) -> LinalgResult<(DistributedMatrix<T>, DistributedMatrix<T>)>
     where
-        T: num_traits::Float + Send + Sync + 'static,
+        T: num_traits: Float + Send + Sync + 'static,
     {
         decomposition::lu_decomposition(matrix)
     }
@@ -1984,7 +1984,7 @@ pub enum RiskLevel {
         matrix: &DistributedMatrix<T>,
     ) -> LinalgResult<(DistributedMatrix<T>, DistributedMatrix<T>)>
     where
-        T: num_traits::Float + Send + Sync + 'static,
+        T: num_traits: Float + Send + Sync + 'static,
     {
         decomposition::qr_decomposition(matrix)
     }
@@ -1992,14 +1992,14 @@ pub enum RiskLevel {
 
 /// Initialize distributed computing environment
 #[allow(dead_code)]
-pub fn initialize_distributed(config: DistributedConfig) -> LinalgResult<DistributedContext> {
-    DistributedContext::new(config)
+pub fn initialize_distributed(_config: DistributedConfig) -> LinalgResult<DistributedContext> {
+    DistributedContext::new(_config)
 }
 
 /// Shutdown distributed computing environment
 #[allow(dead_code)]
-pub fn finalize_distributed(context: DistributedContext) -> LinalgResult<DistributedStats> {
-    context.finalize()
+pub fn finalize_distributed(_context: DistributedContext) -> LinalgResult<DistributedStats> {
+    _context.finalize()
 }
 
 /// Context for distributed linear algebra operations
@@ -2022,14 +2022,14 @@ pub struct DistributedContext {
 
 impl DistributedContext {
     /// Create new distributed context
-    pub fn new(config: DistributedConfig) -> LinalgResult<Self> {
-        let communicator = DistributedCommunicator::new(&config)?;
-        let coordinator = DistributedCoordinator::new(&config)?;
-        let load_balancer = LoadBalancer::new(&config)?;
+    pub fn new(_config: DistributedConfig) -> LinalgResult<Self> {
+        let communicator = DistributedCommunicator::new(&_config)?;
+        let coordinator = DistributedCoordinator::new(&_config)?;
+        let load_balancer = LoadBalancer::new(&_config)?;
         let stats = DistributedStats::new();
         
         Ok(Self {
-            config,
+            config: _config,
             communicator,
             coordinator,
             load_balancer,

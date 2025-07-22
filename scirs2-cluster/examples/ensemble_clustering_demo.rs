@@ -5,7 +5,7 @@
 //! and advanced techniques like meta-learning and Bayesian averaging.
 
 use ndarray::Array2;
-use scirs2_cluster::{
+use scirs2__cluster::{
     ensemble::{
         advanced_ensemble::*, convenience, ClusteringAlgorithm, ConsensusMethod, DiversityStrategy,
         EnsembleClusterer, EnsembleConfig, SamplingStrategy,
@@ -89,8 +89,8 @@ fn generate_test_data() -> Array2<f64> {
 
 /// Demonstrate basic ensemble clustering
 #[allow(dead_code)]
-fn demonstrate_basic_ensemble(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
-    let result = convenience::ensemble_clustering(data.view())?;
+fn demonstrate_basic_ensemble(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+    let result = convenience::ensemble_clustering(_data.view())?;
 
     println!("   📊 Basic ensemble results:");
     println!("      Ensemble quality: {:.4}", result.ensemble_quality);
@@ -113,8 +113,8 @@ fn demonstrate_basic_ensemble(data: &Array2<f64>) -> Result<(), Box<dyn std::err
 
 /// Demonstrate bootstrap ensemble clustering
 #[allow(dead_code)]
-fn demonstrate_bootstrap_ensemble(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
-    let result = convenience::bootstrap_ensemble(data.view(), 8, 0.75)?;
+fn demonstrate_bootstrap_ensemble(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+    let result = convenience::bootstrap_ensemble(_data.view(), 8, 0.75)?;
 
     println!("   📊 Bootstrap ensemble results:");
     println!("      Ensemble quality: {:.4}", result.ensemble_quality);
@@ -134,7 +134,7 @@ fn demonstrate_bootstrap_ensemble(data: &Array2<f64>) -> Result<(), Box<dyn std:
 
 /// Demonstrate different consensus methods
 #[allow(dead_code)]
-fn demonstrate_consensus_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_consensus_methods(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     let consensus_methods = vec![
         ("Majority Voting", ConsensusMethod::MajorityVoting),
         ("Weighted Consensus", ConsensusMethod::WeightedConsensus),
@@ -169,7 +169,7 @@ fn demonstrate_consensus_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::
         };
 
         let ensemble = EnsembleClusterer::new(config);
-        let result = ensemble.fit(data.view())?;
+        let result = ensemble.fit(_data.view())?;
 
         println!("   📊 {} consensus:", name);
         println!(
@@ -391,8 +391,8 @@ fn demonstrate_advanced_ensemble_techniques(
 
 /// Count unique labels in consensus result
 #[allow(dead_code)]
-fn count_unique_labels(labels: &ndarray::Array1<i32>) -> usize {
+fn count_unique_labels(_labels: &ndarray::Array1<i32>) -> usize {
     use std::collections::HashSet;
-    let unique_labels: HashSet<i32> = labels.iter().cloned().collect();
+    let unique_labels: HashSet<i32> = _labels.iter().cloned().collect();
     unique_labels.len()
 }

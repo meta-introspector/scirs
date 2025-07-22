@@ -6,7 +6,7 @@
 use crate::error::FFTResult;
 use crate::fft;
 use ndarray::{Array2, ArrayD, IxDyn};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::fmt::Debug;
@@ -29,8 +29,8 @@ pub fn simd_support_available() -> bool {
 
 /// Apply SIMD normalization (stub - not used in current implementation)
 #[allow(dead_code)]
-pub fn apply_simd_normalization(data: &mut [Complex64], scale: f64) {
-    for c in data.iter_mut() {
+pub fn apply_simd_normalization(_data: &mut [Complex64], scale: f64) {
+    for c in _data.iter_mut() {
         *c *= scale;
     }
 }
@@ -103,9 +103,7 @@ where
 /// SIMD-accelerated 2D inverse FFT
 #[allow(dead_code)]
 pub fn ifft2_simd<T>(
-    _x: &[T],
-    _shape: Option<(usize, usize)>,
-    _norm: Option<&str>,
+    _x: &[T], _shape: Option<(usize, usize)>, _norm: Option<&str>,
 ) -> FFTResult<Array2<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -162,10 +160,7 @@ where
 /// SIMD-accelerated N-dimensional inverse FFT
 #[allow(dead_code)]
 pub fn ifftn_simd<T>(
-    _x: &[T],
-    _shape: Option<&[usize]>,
-    _axes: Option<&[usize]>,
-    _norm: Option<&str>,
+    _x: &[T], _shape: Option<&[usize]>, _axes: Option<&[usize]>, _norm: Option<&str>,
 ) -> FFTResult<ArrayD<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,

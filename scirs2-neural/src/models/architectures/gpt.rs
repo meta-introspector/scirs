@@ -89,11 +89,11 @@ struct GPTEmbeddings<F: Float + Debug + ScalarOperand + Send + Sync> {
     dropout: Dropout<F>,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> GPTEmbeddings<F> {
     /// Create GPT embeddings
-    pub fn new(config: &GPTConfig) -> Result<Self> {
+    pub fn new(_config: &GPTConfig) -> Result<Self> {
         // Token embeddings
         let token_embedding_config = EmbeddingConfig {
-            num_embeddings: config.vocab_size,
-            embedding_dim: config.hidden_size,
+            num_embeddings: _config.vocab_size,
+            embedding_dim: _config.hidden_size,
             padding_idx: None,
             max_norm: None,
             norm_type: 2.0,
@@ -144,7 +144,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for GPTEmbeddings<
         let embeddings = self.dropout.forward(&embeddings)?;
         Ok(embeddings)
     fn backward(
-        &self,
+        &mut self,
         _input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
@@ -316,8 +316,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> GptMlp<F> {
                 x * F::from(0.5).unwrap()
                     * (F::one() + (x + F::from(0.044715).unwrap() * x3).tanh())
             }),
-            "relu" => Box::new(|x: F| x.max(F::zero())),
-            _ => {
+            "relu" => Box::new(|x: F| x.max(F::zero()), _ => {
                 return Err(NeuralError::InferenceError(format!(
                     "Unsupported activation function: {}",
                     config.hidden_act
@@ -390,7 +389,7 @@ pub struct GPTModel<F: Float + Debug + ScalarOperand + Send + Sync> {
     config: GPTConfig,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> GPTModel<F> {
     /// Create a new GPT model
-    pub fn new(config: GPTConfig) -> Result<Self> {
+    pub fn new(_config: GPTConfig) -> Result<Self> {
         let embeddings = GPTEmbeddings::new(&config)?;
         // Create transformer blocks
         let mut blocks = Vec::with_capacity(config.num_hidden_layers);
@@ -422,7 +421,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> GPTModel<F> {
         // Create linear layer for token prediction (weight tied with token embeddings)
         let linear = Dense::new(
             self.config.hidden_size,
-            self.config.vocab_size,
+            self._config.vocab_size,
             None,
             &mut rng,
         )?;

@@ -2,10 +2,11 @@
 use ndarray::{s, Array1, Array2};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
-use scirs2_optim::optimizers::{Adam, LARS, SGD};
-use scirs2_optim::Optimizer;
+use scirs2__optim::optimizers::{Adam, LARS, SGD};
+use scirs2__optim::Optimizer;
 use std::error::Error;
 use std::time::Instant;
+// use statrs::statistics::Statistics; // statrs not available
 
 // Simple loss function for demonstration: linear regression with L2 loss
 #[allow(dead_code)]
@@ -71,17 +72,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Initialize optimizers
     let mut optimizers: Vec<(_, &str, f64)> = vec![
         (
-            Box::new(SGD::new(0.01)) as Box<dyn Optimizer<f64, _>>,
+            Box::new(SGD::new(0.01)) as Box<dyn Optimizer<f64_>>,
             "SGD",
             0.01,
         ),
         (
-            Box::new(Adam::new(0.01)) as Box<dyn Optimizer<f64, _>>,
+            Box::new(Adam::new(0.01)) as Box<dyn Optimizer<f64_>>,
             "Adam",
             0.01,
         ),
         (
-            Box::new(LARS::new(0.01).with_trust_coefficient(0.001)) as Box<dyn Optimizer<f64, _>>,
+            Box::new(LARS::new(0.01).with_trust_coefficient(0.001)) as Box<dyn Optimizer<f64_>>,
             "LARS",
             0.01,
         ),
@@ -128,7 +129,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let duration = start_time.elapsed();
 
         // Final evaluation
-        let (final_loss, _, _) = compute_loss_and_gradient(&weights, &bias, &x, &y);
+        let (final_loss__) = compute_loss_and_gradient(&weights, &bias, &x, &y);
 
         println!("  Training completed in {:?}", duration);
         println!("  Final loss: {:.6}", final_loss);

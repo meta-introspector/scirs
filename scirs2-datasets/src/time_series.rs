@@ -58,7 +58,7 @@ lazy_static::lazy_static! {
 /// # Examples
 ///
 /// ```
-/// use scirs2_datasets::time_series::electrocardiogram;
+/// use scirs2__datasets::time_series::electrocardiogram;
 ///
 /// let ecg = electrocardiogram().unwrap();
 /// println!("ECG data shape: ({}, {})", ecg.n_samples(), ecg.n_features());
@@ -158,13 +158,13 @@ struct StockPrice {
 /// # Examples
 ///
 /// ```ignore
-/// use scirs2_datasets::time_series::stock_market;
+/// use scirs2__datasets::time_series::stock_market;
 ///
 /// let stock_data = stock_market(true).unwrap(); // Get price changes
 /// println!("Stock data shape: ({}, {})", stock_data.n_samples(), stock_data.n_features());
 /// ```
 #[allow(dead_code)]
-pub fn stock_market(returns: bool) -> Result<Dataset> {
+pub fn stock_market(_returns: bool) -> Result<Dataset> {
     // Fetch the stock market data file
     let stock_file = match fetch_data("stock_market.csv", REGISTRY.get("stock_market.csv")) {
         Ok(path) => path,
@@ -227,7 +227,7 @@ pub fn stock_market(returns: bool) -> Result<Dataset> {
     for (i, date) in dates.iter().enumerate() {
         for (j, symbol) in symbols.iter().enumerate() {
             if let Some(record) = date_symbol_map.get(&(date.clone(), symbol.clone())) {
-                data[[i, j]] = if returns {
+                data[[i, j]] = if _returns {
                     record.close - record.open
                 } else {
                     record.close
@@ -252,7 +252,7 @@ pub fn stock_market(returns: bool) -> Result<Dataset> {
             dates.first().unwrap_or(&"unknown".to_string()),
         )
         .with_metadata("end_date", dates.last().unwrap_or(&"unknown".to_string()))
-        .with_metadata("data_type", if returns { "returns" } else { "prices" });
+        .with_metadata("data_type", if _returns { "_returns" } else { "prices" });
 
     Ok(dataset)
 }
@@ -291,7 +291,7 @@ struct WeatherObservation {
 /// # Examples
 ///
 /// ```ignore
-/// use scirs2_datasets::time_series::weather;
+/// use scirs2__datasets::time_series::weather;
 ///
 /// // Get temperature data for all locations
 /// let temp_data = weather(Some("temperature")).unwrap();
@@ -302,8 +302,8 @@ struct WeatherObservation {
 /// println!("All weather data shape: ({}, {})", all_weather.n_samples(), all_weather.n_features());
 /// ```
 #[allow(dead_code)]
-pub fn weather(feature: Option<&str>) -> Result<Dataset> {
-    // Validate feature parameter
+pub fn weather(_feature: Option<&str>) -> Result<Dataset> {
+    // Validate _feature parameter
     let valid_features = vec![
         "temperature",
         "humidity",
@@ -312,10 +312,10 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
         "precipitation",
     ];
 
-    if let Some(f) = feature {
+    if let Some(f) = _feature {
         if !valid_features.contains(&f) {
             return Err(DatasetsError::InvalidFormat(format!(
-                "Invalid feature: {f}. Valid features are: {valid_features:?}"
+                "Invalid _feature: {f}. Valid features are: {valid_features:?}"
             )));
         }
     }
@@ -376,9 +376,9 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
         date_location_map.insert((record.date.clone(), record.location.clone()), record);
     }
 
-    let mut dataset = match feature {
+    let mut dataset = match _feature {
         Some(feat) => {
-            // Single feature mode - create a 2D matrix (dates x locations)
+            // Single _feature mode - create a 2D matrix (dates x locations)
             let mut data = Array2::zeros((dates.len(), locations.len()));
 
             for (i, date) in dates.iter().enumerate() {
@@ -389,8 +389,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
                             "humidity" => record.humidity,
                             "pressure" => record.pressure,
                             "wind_speed" => record.wind_speed,
-                            "precipitation" => record.precipitation,
-                            _ => 0.0, // Should never happen due to validation above
+                            "precipitation" => record.precipitation_ => 0.0, // Should never happen due to validation above
                         };
                     }
                 }
@@ -409,7 +408,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
                     dates.first().unwrap_or(&"unknown".to_string()),
                     dates.last().unwrap_or(&"unknown".to_string())
                 ))
-                .with_metadata("feature", feat)
+                .with_metadata("_feature", feat)
                 .with_metadata("n_locations", &locations.len().to_string())
                 .with_metadata(
                     "start_date",
@@ -421,7 +420,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
         }
         None => {
             // All features mode - create a 2D matrix (dates x (features*locations))
-            // Each location will have multiple columns, one for each feature
+            // Each location will have multiple columns, one for each _feature
             let n_features = valid_features.len();
             let mut data = Array2::zeros((dates.len(), n_features * locations.len()));
 
@@ -441,7 +440,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
                 }
             }
 
-            // Create feature names: for each location, add each feature
+            // Create _feature names: for each location, add each _feature
             let mut feature_names = Vec::with_capacity(n_features * locations.len());
             for location in &locations {
                 for feat in &valid_features {

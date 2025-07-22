@@ -5,7 +5,7 @@
 
 #[allow(unused_imports)]
 use crate::error::Result;
-use crate::gpu::multi_gpu_sync::{
+use crate::gpu::multi_gpu__sync::{
     create_multi_gpu_communicator, MultiGpuCommunicator, SyncFrequency,
 };
 use crate::optimizers::adam::Adam;

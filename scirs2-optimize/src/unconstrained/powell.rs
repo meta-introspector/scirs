@@ -202,7 +202,7 @@ where
     S: Into<f64>,
 {
     // Get bounds on the line search parameter
-    let (a_min, a_max) = line_bounds(x, direction, bounds);
+    let (a_min, a_max) = line_bounds(_x, direction, bounds);
 
     // Degenerate direction ⇒ no movement
     if direction.iter().all(|v| v.abs() <= 1e-16) {
@@ -211,7 +211,7 @@ where
 
     // helper ϕ(α)
     let mut phi = |alpha: f64| -> f64 {
-        let y = x + &(direction * alpha);
+        let y = _x + &(direction * alpha);
         // Project the point onto bounds if needed
         let mut y_bounded = y.clone();
         if let Some(bounds) = bounds {

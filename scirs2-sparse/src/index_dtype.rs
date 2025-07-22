@@ -27,7 +27,7 @@ use crate::error::{SparseError, SparseResult};
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_sparse::index_dtype::get_index_dtype;
+/// use scirs2__sparse::index_dtype::get_index_dtype;
 ///
 /// // Small array, i32 is sufficient
 /// let shape = (100, 100);
@@ -42,13 +42,13 @@ use crate::error::{SparseError, SparseResult};
 /// assert_eq!(dtype_large, "i64");
 /// ```
 #[allow(dead_code)]
-pub fn get_index_dtype(shape: (usize, usize), idx_arrays: &[ArrayView1<usize>]) -> &'static str {
-    let (rows, cols) = shape;
+pub fn get_index_dtype(_shape: (usize, usize), idx_arrays: &[ArrayView1<usize>]) -> &'static str {
+    let (rows, cols) = _shape;
 
     // Maximum index value that could be needed (product of dimensions)
     let theoretical_max = rows.saturating_mul(cols);
 
-    // Find the maximum value in any of the index arrays
+    // Find the maximum value in any of the index _arrays
     let observed_max = if idx_arrays.is_empty() {
         0
     } else {
@@ -93,7 +93,7 @@ pub fn get_index_dtype(shape: (usize, usize), idx_arrays: &[ArrayView1<usize>]) 
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_sparse::index_dtype::safely_cast_index_arrays;
+/// use scirs2__sparse::index_dtype::safely_cast_index_arrays;
 ///
 /// // Valid conversion (all values fit in i32)
 /// let indices = vec![0, 5, 10, 20];
@@ -108,14 +108,14 @@ pub fn get_index_dtype(shape: (usize, usize), idx_arrays: &[ArrayView1<usize>]) 
 /// assert!(result.is_err());
 /// ```
 #[allow(dead_code)]
-pub fn safely_cast_index_arrays<T>(arrays: &[ArrayView1<usize>]) -> SparseResult<Vec<Array1<T>>>
+pub fn safely_cast_index_arrays<T>(_arrays: &[ArrayView1<usize>]) -> SparseResult<Vec<Array1<T>>>
 where
     T: PrimInt + 'static + TryFrom<usize>,
     <T as TryFrom<usize>>::Error: std::fmt::Debug,
 {
-    let mut result = Vec::with_capacity(arrays.len());
+    let mut result = Vec::with_capacity(_arrays.len());
 
-    for array in arrays {
+    for array in _arrays {
         let mut converted = Array1::uninit(array.len());
 
         for (i, &val) in array.iter().enumerate() {
@@ -129,7 +129,7 @@ where
                 Err(_) => {
                     return Err(SparseError::IndexCastOverflow {
                         value: val,
-                        target_type: std::any::type_name::<T>(),
+                        target_type: std::any::type, _name::<T>(),
                     });
                 }
             }
@@ -159,12 +159,12 @@ where
 /// `true` if all values in the array can be represented in the target type,
 /// `false` otherwise.
 #[allow(dead_code)]
-pub fn can_cast_safely<T>(array: ArrayView1<usize>) -> bool
+pub fn can_cast_safely<T>(_array: ArrayView1<usize>) -> bool
 where
     T: PrimInt + 'static + TryFrom<usize>,
     <T as TryFrom<usize>>::Error: std::fmt::Debug,
 {
-    for &val in array.iter() {
+    for &val in _array.iter() {
         if T::try_from(val).is_err() {
             return false;
         }

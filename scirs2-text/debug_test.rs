@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::simd_ops::SimdPatternMatcher;
+    use crate::simd__ops::SimdPatternMatcher;
 
     #[test]
     fn debug_fuzzy_search() {

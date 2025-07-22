@@ -23,9 +23,9 @@ pub struct KernelCompiler {
     cache: HashMap<String, CompiledKernel>,
 impl KernelCompiler {
     /// Create a new kernel compiler
-    pub fn new(optimization_level: OptimizationLevel) -> Self {
+    pub fn new(_optimization_level: OptimizationLevel) -> Self {
         Self {
-            optimization_level,
+            _optimization_level,
             cache: HashMap::new(),
         }
     }
@@ -156,13 +156,12 @@ impl CompilationTarget {
             CompilationTarget::SPIRV => "spirv",
             CompilationTarget::CPU => "cpu",
     /// From accelerator type
-    pub fn from_accelerator(acc_type: AcceleratorType) -> Self {
-        match acc_type {
-            AcceleratorType::CUDA => CompilationTarget::CUDA,
-            AcceleratorType::ROCm => CompilationTarget::OpenCL,
-            AcceleratorType::OneAPI => CompilationTarget::SPIRV,
-            AcceleratorType::Metal => CompilationTarget::Metal,
-            _ => CompilationTarget::CPU,
+    pub fn from_accelerator(_acc_type: AcceleratorType) -> Self {
+        match _acc_type {
+            AcceleratorType::CUDA =>, CompilationTarget::CUDA,
+            AcceleratorType::ROCm =>, CompilationTarget::OpenCL,
+            AcceleratorType::OneAPI =>, CompilationTarget::SPIRV,
+            AcceleratorType::Metal => CompilationTarget::Metal_ =>, CompilationTarget::CPU,
 /// Compiled kernel representation
 #[derive(Clone)]
 pub struct CompiledKernel {
@@ -196,9 +195,8 @@ impl KernelTemplateGenerator {
         k: usize,
         tile_size: usize,
     ) -> String {
-            CompilationTarget::CUDA => Self::cuda_matmul_template(m, n, k, tile_size),
-            CompilationTarget::OpenCL => Self::opencl_matmul_template(m, n, k, tile_size),
-            _ => String::new(),
+            CompilationTarget::CUDA =>, Self::cuda_matmul_template(m, n, k, tile_size),
+            CompilationTarget::OpenCL =>, Self::opencl_matmul_template(m, n, k, tile_size, _ => String::new(),
     /// CUDA matrix multiplication template
     fn cuda_matmul_template(m: usize, n: usize, k: usize, tile_size: usize) -> String {
         format!(
@@ -245,10 +243,7 @@ __global__ void matmul_kernel(
     /// OpenCL matrix multiplication template
     fn opencl_matmul_template(m: usize, n: usize, k: usize, tile_size: usize) -> String {
 __kernel void matmul_kernel(
-    __global const float* A,
-    __global const float* B,
-    __global float* C,
-    __local float As[TILE_SIZE][TILE_SIZE];
+    __global const float* A__global const float* B__global float* C__local float As[TILE_SIZE][TILE_SIZE];
     __local float Bs[TILE_SIZE][TILE_SIZE];
     int gx = get_global_id(0);
     int gy = get_global_id(1);

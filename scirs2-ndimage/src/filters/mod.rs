@@ -15,34 +15,34 @@ pub use bilateral::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
 
 // SIMD specialized exports
 #[cfg(feature = "simd")]
-pub use simd_specialized::{
+pub use simd__specialized::{
     simd_anisotropic_diffusion, simd_bilateral_filter, simd_non_local_means,
 };
 
 // Advanced SIMD optimized exports
 #[cfg(feature = "simd")]
-pub use advanced_simd_optimized::{
+pub use advanced_simd__optimized::{
     advanced_simd_gaussian_pyramid, advanced_simd_morphological_erosion_2d,
     advanced_simd_template_matching,
 };
 
 // Advanced SIMD enhanced exports
 #[cfg(feature = "simd")]
-pub use advanced_simd_enhanced::{
+pub use advanced_simd__enhanced::{
     advanced_simd_convolution_2d, advanced_simd_median_filter,
     advanced_simd_separable_convolution_2d,
 };
 
 // Advanced SIMD extensions exports
 #[cfg(feature = "simd")]
-pub use advanced_simd_extensions::{
+pub use advanced_simd__extensions::{
     advanced_simd_advanced_edge_detection, advanced_simd_multi_scale_lbp,
     advanced_simd_wavelet_pyramid, WaveletPyramid, WaveletType,
 };
 
 // Enhanced SIMD optimizations exports
 #[cfg(feature = "simd")]
-pub use simd_enhanced_optimizations::{
+pub use simd_enhanced__optimizations::{
     simd_gradient_magnitude, simd_histogram, simd_image_moments, simd_local_binary_pattern,
     simd_morphological_operation, GradientOperator, MorphologicalOperation,
 };
@@ -90,7 +90,7 @@ pub use convolve::{
 pub use edge::{gradient_magnitude, laplace, prewitt, roberts, scharr, sobel};
 
 // Optimized edge detection exports
-pub use edge_optimized::{gradient_magnitude_optimized, laplace_2d_optimized, sobel_2d_optimized};
+pub use edge__optimized::{gradient_magnitude_optimized, laplace_2d_optimized, sobel_2d_optimized};
 
 // Extrema module exports (new implementation)
 pub use extrema::{maximum_filter, minimum_filter};
@@ -122,17 +122,17 @@ pub use uniform::{uniform_filter, uniform_filter_separable};
 pub use utils::*;
 
 // Boundary handler exports
-pub use boundary_handler::{
+pub use boundary__handler::{
     apply_filter_with_boundary, convolve_optimized, BoundaryHandler, VirtualBoundaryHandler,
 };
 
 // Memory-efficient filter exports
-pub use memory_efficient::{
+pub use memory__efficient::{
     gaussian_filter_chunked, median_filter_chunked, uniform_filter_chunked,
 };
 
 // Optimized boundary handling exports
-pub use boundary_optimized::{
+pub use boundary__optimized::{
     apply_filter2d_optimized, convolve1d_optimized, convolve2d_optimized, Boundary1D, Boundary2D,
     OptimizedBoundaryOps,
 };

@@ -43,7 +43,7 @@ pub enum NormalizationMethod {
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2_transform::normalize::{normalize_array, NormalizationMethod};
+/// use scirs2__transform::normalize::{normalize_array, NormalizationMethod};
 ///
 /// let data = array![[1.0, 2.0, 3.0],
 ///                   [4.0, 5.0, 6.0],
@@ -288,7 +288,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2_transform::normalize::{normalize_vector, NormalizationMethod};
+/// use scirs2__transform::normalize::{normalize_vector, NormalizationMethod};
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 ///                   
@@ -485,9 +485,9 @@ impl Normalizer {
     ///
     /// # Returns
     /// * A new Normalizer instance
-    pub fn new(method: NormalizationMethod, axis: usize) -> Self {
-        let params = match method {
-            NormalizationMethod::MinMax => NormalizerParams::MinMax {
+    pub fn new(_method: NormalizationMethod, axis: usize) -> Self {
+        let params = match _method {
+            NormalizationMethod::MinMax =>, NormalizerParams::MinMax {
                 min: Array1::zeros(0),
                 max: Array1::zeros(0),
                 new_min: 0.0,
@@ -499,20 +499,20 @@ impl Normalizer {
                 new_min: min,
                 new_max: max,
             },
-            NormalizationMethod::ZScore => NormalizerParams::ZScore {
+            NormalizationMethod::ZScore =>, NormalizerParams::ZScore {
                 mean: Array1::zeros(0),
                 std_dev: Array1::zeros(0),
             },
-            NormalizationMethod::MaxAbs => NormalizerParams::MaxAbs {
+            NormalizationMethod::MaxAbs =>, NormalizerParams::MaxAbs {
                 max_abs: Array1::zeros(0),
             },
-            NormalizationMethod::L1 => NormalizerParams::L1 {
+            NormalizationMethod::L1 =>, NormalizerParams::L1 {
                 l1_norm: Array1::zeros(0),
             },
-            NormalizationMethod::L2 => NormalizerParams::L2 {
+            NormalizationMethod::L2 =>, NormalizerParams::L2 {
                 l2_norm: Array1::zeros(0),
             },
-            NormalizationMethod::Robust => NormalizerParams::Robust {
+            NormalizationMethod::Robust =>, NormalizerParams::Robust {
                 median: Array1::zeros(0),
                 iqr: Array1::zeros(0),
             },

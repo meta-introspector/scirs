@@ -25,7 +25,7 @@ use crate::error::{OptimError, Result};
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::utils::clip_gradients;
+/// use scirs2__optim::utils::clip_gradients;
 ///
 /// let mut gradients = Array1::from_vec(vec![-10.0, 0.5, 8.0, -0.2]);
 /// clip_gradients(&mut gradients, -5.0, 5.0);
@@ -68,7 +68,7 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::utils::clip_gradient_norm;
+/// use scirs2__optim::utils::clip_gradient_norm;
 ///
 /// let mut gradients = Array1::<f64>::from_vec(vec![3.0, 4.0]); // L2 norm = 5.0
 /// clip_gradient_norm(&mut gradients, 1.0f64).unwrap();
@@ -93,15 +93,15 @@ where
         ));
     }
 
-    // Calculate current L2 norm
-    let norm = gradients
+    // Calculate current L2 _norm
+    let _norm = gradients
         .iter()
         .fold(A::zero(), |acc, &x| acc + x * x)
         .sqrt();
 
-    // If norm exceeds max_norm, scale gradients
-    if norm > max_norm {
-        let scale = max_norm / norm;
+    // If _norm exceeds max_norm, scale gradients
+    if _norm > max_norm {
+        let scale = max_norm / _norm;
         for grad in gradients.iter_mut() {
             *grad = *grad * scale;
         }
@@ -127,28 +127,28 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::utils::gradient_centralization;
+/// use scirs2__optim::utils::gradient_centralization;
 ///
 /// let mut gradients = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0]);
 /// gradient_centralization(&mut gradients);
 /// assert_eq!(gradients, Array1::from_vec(vec![-1.0, 0.0, 1.0, 0.0]));
 /// ```
 #[allow(dead_code)]
-pub fn gradient_centralization<A, D>(gradients: &mut Array<A, D>) -> &mut Array<A, D>
+pub fn gradient_centralization<A, D>(_gradients: &mut Array<A, D>) -> &mut Array<A, D>
 where
     A: Float + ScalarOperand + Debug,
     D: Dimension,
 {
     // Calculate mean
-    let sum = gradients.iter().fold(A::zero(), |acc, &x| acc + x);
-    let mean = sum / A::from(gradients.len()).unwrap_or(A::one());
+    let sum = _gradients.iter().fold(A::zero(), |acc, &x| acc + x);
+    let mean = sum / A::from(_gradients.len()).unwrap_or(A::one());
 
     // Subtract mean from each element
-    for grad in gradients.iter_mut() {
+    for grad in _gradients.iter_mut() {
         *grad = *grad - mean;
     }
 
-    gradients
+    _gradients
 }
 
 /// Zero out small gradient values
@@ -166,25 +166,25 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::utils::zero_small_gradients;
+/// use scirs2__optim::utils::zero_small_gradients;
 ///
 /// let mut gradients = Array1::from_vec(vec![0.001, 0.02, -0.005, 0.3]);
 /// zero_small_gradients(&mut gradients, 0.01);
 /// assert_eq!(gradients, Array1::from_vec(vec![0.0, 0.02, 0.0, 0.3]));
 /// ```
 #[allow(dead_code)]
-pub fn zero_small_gradients<A, D>(gradients: &mut Array<A, D>, threshold: A) -> &mut Array<A, D>
+pub fn zero_small_gradients<A, D>(_gradients: &mut Array<A, D>, threshold: A) -> &mut Array<A, D>
 where
     A: Float + ScalarOperand + Debug,
     D: Dimension,
 {
     let abs_threshold = threshold.abs();
 
-    for grad in gradients.iter_mut() {
+    for grad in _gradients.iter_mut() {
         if grad.abs() < abs_threshold {
             *grad = A::zero();
         }
     }
 
-    gradients
+    _gradients
 }

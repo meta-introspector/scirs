@@ -4,10 +4,10 @@
 //! to automatically find the best clustering algorithm and parameters for your data.
 
 use ndarray::Array2;
-use scirs2_cluster::preprocess::standardize;
+use scirs2__cluster::preprocess::standardize;
 
 // Auto-tuning imports
-use scirs2_cluster::{
+use scirs2__cluster::{
     auto_select_clustering_algorithm, quick_algorithm_selection, AutoClusteringSelector, AutoTuner,
     CVStrategy, ClusteringAlgorithm, CrossValidationConfig, EarlyStoppingConfig, EvaluationMetric,
     SearchStrategy, StandardSearchSpaces, TuningConfig,
@@ -102,7 +102,7 @@ fn test_individual_algorithm_tuning(
             TuningConfig {
                 strategy: SearchStrategy::BayesianOptimization {
                     n_initial_points: 10,
-                    acquisition_function: scirs2_cluster::AcquisitionFunction::ExpectedImprovement,
+                    acquisition_function: scirs2, _cluster: AcquisitionFunction::ExpectedImprovement,
                 },
                 max_evaluations: 40,
                 metric: EvaluationMetric::DaviesBouldinIndex,
@@ -309,22 +309,22 @@ fn test_quick_selection(
 
 /// Create dense cluster data for testing
 #[allow(dead_code)]
-fn create_dense_clusters_data(n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_dense_clusters_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand_distr::Normal;
+    use rand__distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(12345);
-    let mut data = Vec::with_capacity(n_samples * n_features);
+    let mut data = Vec::with_capacity(_n_samples * n_features);
 
     let n_clusters = 3;
-    let samples_per_cluster = n_samples / n_clusters;
+    let samples_per_cluster = _n_samples / n_clusters;
 
     // Well-separated clusters
     let cluster_centers = vec![(0.0, 0.0), (5.0, 5.0), (-3.0, 4.0)];
 
     for (i, &(cx, cy)) in cluster_centers.iter().enumerate() {
         let cluster_samples = if i == cluster_centers.len() - 1 {
-            n_samples - i * samples_per_cluster
+            _n_samples - i * samples_per_cluster
         } else {
             samples_per_cluster
         };
@@ -336,81 +336,81 @@ fn create_dense_clusters_data(n_samples: usize, n_features: usize) -> Array2<f64
             data.push(rng.sample(normal_x));
             data.push(rng.sample(normal_y));
 
-            // Add random features
+            // Add random _features
             for _ in 2..n_features {
-                data.push(rng.random_range(-1.0..1.0));
+                data.push(rng.gen_range(-1.0..1.0));
             }
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create sparse data for testing
 #[allow(dead_code)]
-fn create_sparse_data(n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_sparse_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
 
     let mut rng = StdRng::seed_from_u64(67890);
-    let mut data = Vec::with_capacity(n_samples * n_features);
+    let mut data = Vec::with_capacity(_n_samples * n_features);
 
     // Create sparse clusters with many noise points
-    for _ in 0..n_samples {
+    for _ in 0.._n_samples {
         for _ in 0..n_features {
             if rng.random::<f64>() < 0.1 {
                 // 10% density
-                data.push(rng.random_range(-10.0..10.0));
+                data.push(rng.gen_range(-10.0..10.0));
             } else {
                 data.push(0.0);
             }
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create high-dimensional data for testing
 #[allow(dead_code)]
-fn create_high_dimensional_data(n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_high_dimensional_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
 
     let mut rng = StdRng::seed_from_u64(11111);
-    let mut data = Vec::with_capacity(n_samples * n_features);
+    let mut data = Vec::with_capacity(_n_samples * n_features);
 
     // Create data where only first few dimensions contain signal
     let signal_dims = 3;
 
-    for _ in 0..n_samples {
+    for _ in 0.._n_samples {
         // Signal dimensions
         for dim in 0..signal_dims {
             let cluster_id = dim % 3;
-            let value = cluster_id as f64 * 3.0 + rng.random_range(-1.0..1.0);
+            let value = cluster_id as f64 * 3.0 + rng.gen_range(-1.0..1.0);
             data.push(value);
         }
 
         // Noise dimensions
         for _ in signal_dims..n_features {
-            data.push(rng.random_range(-0.5..0.5));
+            data.push(rng.gen_range(-0.5..0.5));
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create noisy data for testing
 #[allow(dead_code)]
-fn create_noisy_data(n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_noisy_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand_distr::Normal;
+    use rand__distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(99999);
-    let mut data = Vec::with_capacity(n_samples * n_features);
+    let mut data = Vec::with_capacity(_n_samples * n_features);
 
     // Create clusters with significant noise
     let cluster_centers = vec![(2.0, 2.0), (-2.0, -2.0), (0.0, 3.0)];
     let noise_level = 2.0; // High noise
 
-    for i in 0..n_samples {
+    for i in 0.._n_samples {
         let cluster_id = i % cluster_centers.len();
         let (cx, cy) = cluster_centers[cluster_id];
 
@@ -420,13 +420,13 @@ fn create_noisy_data(n_samples: usize, n_features: usize) -> Array2<f64> {
         data.push(rng.sample(normal_x));
         data.push(rng.sample(normal_y));
 
-        // Additional noisy features
+        // Additional noisy _features
         for _ in 2..n_features {
-            data.push(rng.random_range(-3.0..3.0));
+            data.push(rng.gen_range(-3.0..3.0));
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 #[cfg(test)]

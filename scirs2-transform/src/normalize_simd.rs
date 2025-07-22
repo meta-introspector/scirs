@@ -36,12 +36,12 @@ pub struct AdaptiveBlockSizer {
 
 impl AdaptiveBlockSizer {
     /// Create adaptive block sizer based on data characteristics
-    pub fn new<F>(data_shape: &[usize]) -> Self
+    pub fn new<F>(_data_shape: &[usize]) -> Self
     where
         F: Float + NumCast,
     {
         let element_size = std::mem::size_of::<F>();
-        let data_size = data_shape.iter().product::<usize>() * element_size;
+        let data_size = _data_shape.iter().product::<usize>() * element_size;
 
         // Adaptive block sizing based on data size and cache characteristics
         let optimal_block_size = if data_size <= L1_CACHE_SIZE / 4 {
@@ -80,29 +80,29 @@ impl AdaptiveBlockSizer {
 
 /// SIMD-accelerated min-max normalization for 1D arrays
 #[allow(dead_code)]
-pub fn simd_minmax_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
+pub fn simd_minmax_normalize_1d<F>(_array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
 {
-    if array.is_empty() {
+    if _array.is_empty() {
         return Err(TransformError::InvalidInput(
-            "Input array is empty".to_string(),
+            "Input _array is empty".to_string(),
         ));
     }
 
-    let min = F::simd_min_element(&array.view());
-    let max = F::simd_max_element(&array.view());
+    let min = F::simd_min_element(&_array.view());
+    let max = F::simd_max_element(&_array.view());
     let range = max - min;
 
     if range.abs() <= F::from(EPSILON).unwrap() {
-        // Constant feature, return array of 0.5
-        return Ok(Array1::from_elem(array.len(), F::from(0.5).unwrap()));
+        // Constant feature, return _array of 0.5
+        return Ok(Array1::from_elem(_array.len(), F::from(0.5).unwrap()));
     }
 
     // Normalize: (x - min) / range
-    let min_array = Array1::from_elem(array.len(), min);
-    let normalized = F::simd_sub(&array.view(), &min_array.view());
-    let range_array = Array1::from_elem(array.len(), range);
+    let min_array = Array1::from_elem(_array.len(), min);
+    let normalized = F::simd_sub(&_array.view(), &min_array.view());
+    let range_array = Array1::from_elem(_array.len(), range);
     let result = F::simd_div(&normalized.view(), &range_array.view());
 
     Ok(result)
@@ -110,33 +110,33 @@ where
 
 /// SIMD-accelerated Z-score normalization for 1D arrays
 #[allow(dead_code)]
-pub fn simd_zscore_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
+pub fn simd_zscore_normalize_1d<F>(_array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
 {
-    if array.is_empty() {
+    if _array.is_empty() {
         return Err(TransformError::InvalidInput(
-            "Input array is empty".to_string(),
+            "Input _array is empty".to_string(),
         ));
     }
 
-    let mean = F::simd_mean(&array.view());
-    let n = F::from(array.len()).unwrap();
+    let mean = F::simd_mean(&_array.view());
+    let n = F::from(_array.len()).unwrap();
 
     // Compute variance
-    let mean_array = Array1::from_elem(array.len(), mean);
-    let centered = F::simd_sub(&array.view(), &mean_array.view());
+    let mean_array = Array1::from_elem(_array.len(), mean);
+    let centered = F::simd_sub(&_array.view(), &mean_array.view());
     let squared = F::simd_mul(&centered.view(), &centered.view());
     let variance = F::simd_sum(&squared.view()) / n;
     let std_dev = variance.sqrt();
 
     if std_dev <= F::from(EPSILON).unwrap() {
         // Constant feature, return zeros
-        return Ok(Array1::zeros(array.len()));
+        return Ok(Array1::zeros(_array.len()));
     }
 
     // Normalize: (x - mean) / std_dev
-    let std_array = Array1::from_elem(array.len(), std_dev);
+    let std_array = Array1::from_elem(_array.len(), std_dev);
     let result = F::simd_div(&centered.view(), &std_array.view());
 
     Ok(result)
@@ -144,53 +144,53 @@ where
 
 /// SIMD-accelerated L2 normalization for 1D arrays
 #[allow(dead_code)]
-pub fn simd_l2_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
+pub fn simd_l2_normalize_1d<F>(_array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
 {
-    if array.is_empty() {
+    if _array.is_empty() {
         return Err(TransformError::InvalidInput(
-            "Input array is empty".to_string(),
+            "Input _array is empty".to_string(),
         ));
     }
 
-    let l2_norm = F::simd_norm(&array.view());
+    let l2_norm = F::simd_norm(&_array.view());
 
     if l2_norm <= F::from(EPSILON).unwrap() {
         // Zero vector, return zeros
-        return Ok(Array1::zeros(array.len()));
+        return Ok(Array1::zeros(_array.len()));
     }
 
     // Normalize: x / l2_norm
-    let norm_array = Array1::from_elem(array.len(), l2_norm);
-    let result = F::simd_div(&array.view(), &norm_array.view());
+    let norm_array = Array1::from_elem(_array.len(), l2_norm);
+    let result = F::simd_div(&_array.view(), &norm_array.view());
 
     Ok(result)
 }
 
 /// SIMD-accelerated max absolute scaling for 1D arrays
 #[allow(dead_code)]
-pub fn simd_maxabs_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
+pub fn simd_maxabs_normalize_1d<F>(_array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
 {
-    if array.is_empty() {
+    if _array.is_empty() {
         return Err(TransformError::InvalidInput(
-            "Input array is empty".to_string(),
+            "Input _array is empty".to_string(),
         ));
     }
 
-    let abs_array = F::simd_abs(&array.view());
+    let abs_array = F::simd_abs(&_array.view());
     let max_abs = F::simd_max_element(&abs_array.view());
 
     if max_abs <= F::from(EPSILON).unwrap() {
         // All zeros, return zeros
-        return Ok(Array1::zeros(array.len()));
+        return Ok(Array1::zeros(_array.len()));
     }
 
     // Normalize: x / max_abs
-    let max_abs_array = Array1::from_elem(array.len(), max_abs);
-    let result = F::simd_div(&array.view(), &max_abs_array.view());
+    let max_abs_array = Array1::from_elem(_array.len(), max_abs);
+    let result = F::simd_div(&_array.view(), &max_abs_array.view());
 
     Ok(result)
 }
@@ -233,8 +233,7 @@ where
         NormalizationMethod::MinMax => simd_normalize_block_minmax(array, &mut normalized, axis)?,
         NormalizationMethod::ZScore => simd_normalize_block_zscore(array, &mut normalized, axis)?,
         NormalizationMethod::L2 => simd_normalize_block_l2(array, &mut normalized, axis)?,
-        NormalizationMethod::MaxAbs => simd_normalize_block_maxabs(array, &mut normalized, axis)?,
-        _ => {
+        NormalizationMethod::MaxAbs => simd_normalize_block_maxabs(array, &mut normalized, axis)?_ => {
             // Fall back to non-SIMD implementation for other methods
             return Err(TransformError::InvalidInput(
                 "SIMD implementation not available for this normalization method".to_string(),
@@ -704,8 +703,7 @@ where
                     NormalizationMethod::MinMax => simd_minmax_normalize_1d(&row_array)?,
                     NormalizationMethod::ZScore => simd_zscore_normalize_1d(&row_array)?,
                     NormalizationMethod::L2 => simd_l2_normalize_1d(&row_array)?,
-                    NormalizationMethod::MaxAbs => simd_maxabs_normalize_1d(&row_array)?,
-                    _ => {
+                    NormalizationMethod::MaxAbs => simd_maxabs_normalize_1d(&row_array)?_ => {
                         return Err(TransformError::InvalidInput(
                             "Unsupported normalization method for tall matrix optimization"
                                 .to_string(),
@@ -754,8 +752,7 @@ where
                     NormalizationMethod::MinMax => simd_minmax_normalize_1d(&col_array)?,
                     NormalizationMethod::ZScore => simd_zscore_normalize_1d(&col_array)?,
                     NormalizationMethod::L2 => simd_l2_normalize_1d(&col_array)?,
-                    NormalizationMethod::MaxAbs => simd_maxabs_normalize_1d(&col_array)?,
-                    _ => {
+                    NormalizationMethod::MaxAbs => simd_maxabs_normalize_1d(&col_array)?_ => {
                         return Err(TransformError::InvalidInput(
                             "Unsupported normalization method for wide matrix optimization"
                                 .to_string(),

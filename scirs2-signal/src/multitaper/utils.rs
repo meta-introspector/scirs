@@ -1,14 +1,16 @@
 //! Utility functions for multitaper spectral estimation.
 
-use super::windows::dpss;
 use crate::error::{SignalError, SignalResult};
 use crate::filter::filtfilt;
 use ndarray::Array2;
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
+use rand::Rng;
 use std::f64::consts::PI;
 use std::fmt::Debug;
+use super::windows::dpss;
 
+#[allow(unused_imports)]
 /// Compute multitaper spectral coherence between two signals.
 ///
 /// This function estimates the spectral coherence between two signals using
@@ -32,7 +34,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::multitaper::coherence;
+/// use scirs2__signal::multitaper::coherence;
 /// use std::f64::consts::PI;
 ///
 /// // Generate two related signals
@@ -66,7 +68,7 @@ use std::fmt::Debug;
 /// // Coherence should be high near 10 Hz
 /// let f10_idx = freqs.iter().enumerate()
 ///     .min_by(|(_, a), (_, b)| ((*a) - 10.0).abs().partial_cmp(&((*b) - 10.0).abs()).unwrap())
-///     .map(|(idx, _)| idx)
+///     .map(|(idx_)| idx)
 ///     .unwrap();
 /// assert!(coh[f10_idx] >= 0.0); // Coherence should be non-negative
 /// ```
@@ -253,8 +255,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::multitaper::multitaper_filtfilt;
-/// use scirs2_signal::filter::butter;
+/// use scirs2__signal::multitaper::multitaper_filtfilt;
+/// use scirs2__signal::filter::butter;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sinusoid with noise)
@@ -281,8 +283,7 @@ pub fn multitaper_filtfilt<T>(
     a: &[f64],
     x: &[T],
     nw: Option<f64>,
-    k: Option<usize>,
-    _pad_type: Option<&str>, // Keep parameter for backward compatibility but mark as unused
+    k: Option<usize>, _pad_type: Option<&str>, // Keep parameter for backward compatibility but mark as unused
 ) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,

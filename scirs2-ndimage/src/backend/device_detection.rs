@@ -179,8 +179,7 @@ impl DeviceManager {
             #[cfg(feature = "opencl")]
             super::Backend::OpenCL => self.opencl_devices.get(device_id),
             #[cfg(all(target_os = "macos", feature = "metal"))]
-            super::Backend::Metal => self.metal_devices.get(device_id),
-            _ => None,
+            super::Backend::Metal => self.metal_devices.get(device_id, _ => None,
         }
     }
 
@@ -351,8 +350,8 @@ fn detect_cuda_devices() -> NdimageResult<Vec<DeviceCapability>> {
 
 #[cfg(feature = "cuda")]
 #[allow(dead_code)]
-fn estimate_gpu_capabilities(name: &str) -> (Option<(u32, u32)>, Option<usize>, Option<usize>) {
-    let name_lower = name.to_lowercase();
+fn estimate_gpu_capabilities(_name: &str) -> (Option<(u32, u32)>, Option<usize>, Option<usize>) {
+    let name_lower = _name.to_lowercase();
 
     // Common GPU architectures and their capabilities
     if name_lower.contains("rtx 40") || name_lower.contains("ada lovelace") {
@@ -378,8 +377,8 @@ fn estimate_gpu_capabilities(name: &str) -> (Option<(u32, u32)>, Option<usize>, 
 
 #[cfg(feature = "cuda")]
 #[allow(dead_code)]
-fn estimate_memory_bandwidth(name: &str) -> Option<f64> {
-    let name_lower = name.to_lowercase();
+fn estimate_memory_bandwidth(_name: &str) -> Option<f64> {
+    let name_lower = _name.to_lowercase();
 
     if name_lower.contains("rtx 4090") {
         Some(1008.0)
@@ -500,8 +499,8 @@ fn detect_opencl_devices() -> NdimageResult<Vec<DeviceCapability>> {
 
 #[cfg(feature = "opencl")]
 #[allow(dead_code)]
-fn estimate_opencl_capabilities(name: &str) -> (usize, usize, usize) {
-    let name_lower = name.to_lowercase();
+fn estimate_opencl_capabilities(_name: &str) -> (usize, usize, usize) {
+    let name_lower = _name.to_lowercase();
 
     if name_lower.contains("intel") {
         // Intel integrated graphics
@@ -537,8 +536,8 @@ fn estimate_opencl_capabilities(name: &str) -> (usize, usize, usize) {
 
 #[cfg(feature = "opencl")]
 #[allow(dead_code)]
-fn estimate_opencl_bandwidth(name: &str) -> Option<f64> {
-    let name_lower = name.to_lowercase();
+fn estimate_opencl_bandwidth(_name: &str) -> Option<f64> {
+    let name_lower = _name.to_lowercase();
 
     if name_lower.contains("intel iris") || name_lower.contains("intel xe") {
         Some(68.0) // GB/s for modern Intel integrated

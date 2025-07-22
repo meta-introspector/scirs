@@ -6,7 +6,7 @@
 //! choice for high-performance scientific computing.
 
 use ndarray::{Array, Array2, Array3, Ix2, Ix3};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     api_compatibility_verification::{ApiCompatibilityTester, CompatibilityConfig},
     backend::{auto_backend, Backend, BackendConfig},
     comprehensive_scipy_validation::{SciPyValidationSuite, ValidationConfig},

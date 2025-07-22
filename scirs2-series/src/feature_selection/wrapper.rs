@@ -28,7 +28,7 @@ impl WrapperMethods {
     ///
     /// ```
     /// use ndarray::{Array1, Array2};
-    /// use scirs2_series::feature_selection::{WrapperMethods, FeatureSelectionConfig};
+    /// use scirs2__series::feature_selection::{WrapperMethods, FeatureSelectionConfig};
     ///
     /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
     /// let target = Array1::from_vec((0..100).map(|x| x as f64).collect());
@@ -413,17 +413,17 @@ impl WrapperMethods {
             ScoringMethod::MeanAbsoluteError => {
                 Self::calculate_mae_score(&selected_features, target)
             }
-            ScoringMethod::RSquared => Self::calculate_r2_score(&selected_features, target),
-            ScoringMethod::AIC => Self::calculate_aic_score(&selected_features, target),
-            ScoringMethod::BIC => Self::calculate_bic_score(&selected_features, target),
+            ScoringMethod::RSquared =>, Self::calculate_r2_score(&selected_features, target),
+            ScoringMethod::AIC =>, Self::calculate_aic_score(&selected_features, target),
+            ScoringMethod::BIC =>, Self::calculate_bic_score(&selected_features, target),
             ScoringMethod::CrossValidation => {
                 Self::calculate_cv_score(&selected_features, target, config.cv_folds)
             }
         }
     }
 
-    fn calculate_mse_score(features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
-        let predictions = Self::fit_predict_linear(features, target)?;
+    fn calculate_mse_score(_features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
+        let predictions = Self::fit_predict_linear(_features, target)?;
         let mse = target
             .iter()
             .zip(predictions.iter())
@@ -434,8 +434,8 @@ impl WrapperMethods {
         Ok(-mse) // Negative because we want higher scores to be better
     }
 
-    fn calculate_mae_score(features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
-        let predictions = Self::fit_predict_linear(features, target)?;
+    fn calculate_mae_score(_features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
+        let predictions = Self::fit_predict_linear(_features, target)?;
         let mae = target
             .iter()
             .zip(predictions.iter())
@@ -446,8 +446,8 @@ impl WrapperMethods {
         Ok(-mae) // Negative because we want higher scores to be better
     }
 
-    fn calculate_r2_score(features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
-        let predictions = Self::fit_predict_linear(features, target)?;
+    fn calculate_r2_score(_features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
+        let predictions = Self::fit_predict_linear(_features, target)?;
         let y_mean = target.sum() / target.len() as f64;
 
         let ss_res = target
@@ -465,10 +465,10 @@ impl WrapperMethods {
         }
     }
 
-    fn calculate_aic_score(features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
-        let predictions = Self::fit_predict_linear(features, target)?;
+    fn calculate_aic_score(_features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
+        let predictions = Self::fit_predict_linear(_features, target)?;
         let n = target.len() as f64;
-        let k = features.ncols() as f64 + 1.0; // +1 for intercept
+        let k = _features.ncols() as f64 + 1.0; // +1 for intercept
 
         let mse = target
             .iter()
@@ -481,10 +481,10 @@ impl WrapperMethods {
         Ok(-aic) // Negative because lower AIC is better
     }
 
-    fn calculate_bic_score(features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
-        let predictions = Self::fit_predict_linear(features, target)?;
+    fn calculate_bic_score(_features: &Array2<f64>, target: &Array1<f64>) -> Result<f64> {
+        let predictions = Self::fit_predict_linear(_features, target)?;
         let n = target.len() as f64;
-        let k = features.ncols() as f64 + 1.0; // +1 for intercept
+        let k = _features.ncols() as f64 + 1.0; // +1 for intercept
 
         let mse = target
             .iter()
@@ -553,9 +553,9 @@ impl WrapperMethods {
     }
 
     /// Fit a linear regression model and return predictions
-    pub fn fit_predict_linear(features: &Array2<f64>, target: &Array1<f64>) -> Result<Array1<f64>> {
-        let coefficients = Self::fit_linear_regression(features, target)?;
-        Ok(Self::predict_linear(features, &coefficients))
+    pub fn fit_predict_linear(_features: &Array2<f64>, target: &Array1<f64>) -> Result<Array1<f64>> {
+        let coefficients = Self::fit_linear_regression(_features, target)?;
+        Ok(Self::predict_linear(_features, &coefficients))
     }
 
     /// Fit a linear regression model and return coefficients
@@ -585,16 +585,16 @@ impl WrapperMethods {
         Ok(coefficients)
     }
 
-    fn predict_linear(features: &Array2<f64>, coefficients: &Array1<f64>) -> Array1<f64> {
-        let n_samples = features.nrows();
-        let n_features = features.ncols();
+    fn predict_linear(_features: &Array2<f64>, coefficients: &Array1<f64>) -> Array1<f64> {
+        let n_samples = _features.nrows();
+        let n_features = _features.ncols();
 
         let mut predictions = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             let mut pred = coefficients[0]; // Intercept
             for j in 0..n_features {
-                pred += coefficients[j + 1] * features[[i, j]];
+                pred += coefficients[j + 1] * _features[[i, j]];
             }
             predictions[i] = pred;
         }
@@ -670,16 +670,16 @@ impl WrapperMethods {
         Ok(x)
     }
 
-    fn calculate_r2_from_predictions(target: &Array1<f64>, predictions: &Array1<f64>) -> f64 {
-        let y_mean = target.sum() / target.len() as f64;
+    fn calculate_r2_from_predictions(_target: &Array1<f64>, predictions: &Array1<f64>) -> f64 {
+        let y_mean = _target.sum() / _target.len() as f64;
 
-        let ss_res = target
+        let ss_res = _target
             .iter()
             .zip(predictions.iter())
             .map(|(y_true, y_pred)| (y_true - y_pred).powi(2))
             .sum::<f64>();
 
-        let ss_tot = target.iter().map(|y| (y - y_mean).powi(2)).sum::<f64>();
+        let ss_tot = _target.iter().map(|y| (y - y_mean).powi(2)).sum::<f64>();
 
         if ss_tot == 0.0 {
             0.0

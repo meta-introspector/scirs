@@ -10,7 +10,7 @@
 use std::error::Error;
 
 #[cfg(feature = "neural_common")]
-use scirs2_metrics::integration::neural;
+use scirs2__metrics::integration::neural;
 
 #[cfg(feature = "neural_common")]
 use std::collections::HashMap;

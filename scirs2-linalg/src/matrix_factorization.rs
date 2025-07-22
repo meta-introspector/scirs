@@ -15,7 +15,7 @@
 
 use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, NumAssign, One, Zero};
-use rand::{self, rng, Rng};
+use rand::{self, Rng};
 use std::fmt::Debug;
 use std::iter::Sum;
 
@@ -115,7 +115,7 @@ where
     let mut h = Array2::<F>::zeros((rank, n));
 
     // Use random initialization
-    let mut rng = rng();
+    let mut rng = rand::rng();
     for i in 0..m {
         for j in 0..rank {
             w[[i, j]] = F::from(rng.random::<f64>()).unwrap() + epsilon;
@@ -554,7 +554,7 @@ where
 
     if c_samples > n || r_samples > m {
         return Err(LinalgError::InvalidInputError(
-            "Number of samples cannot exceed matrix dimensions".to_string(),
+            "Number of _samples cannot exceed matrix dimensions".to_string(),
         ));
     }
 
@@ -642,7 +642,7 @@ where
             // First, compute approximate leverage scores via randomized SVD
 
             // Sketch the matrix for faster SVD
-            let mut rng = rng();
+            let mut rng = rand::rng();
             let omega = Array2::<F>::from_shape_fn((n, k + 5), |_| {
                 F::from(rng.random::<f64>() * 2.0 - 1.0).unwrap()
             });

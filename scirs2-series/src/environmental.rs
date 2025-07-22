@@ -8,6 +8,7 @@ use crate::error::{Result, TimeSeriesError};
 use ndarray::{Array1, Array2};
 use scirs2_core::validation::check_positive;
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 
 /// Climate data anomaly detection methods
 #[derive(Debug, Clone)]
@@ -92,8 +93,8 @@ impl TemperatureAnalysis {
                     current_start = Some(i);
                 }
             } else if let Some(start) = current_start {
-                let duration = i - start;
-                if duration >= min_duration {
+                let _duration = i - start;
+                if _duration >= min_duration {
                     heat_waves.push((start, i - 1));
                 }
                 current_start = None;
@@ -102,8 +103,8 @@ impl TemperatureAnalysis {
 
         // Check for heat wave at end of series
         if let Some(start) = current_start {
-            let duration = self.temperatures.len() - start;
-            if duration >= min_duration {
+            let _duration = self.temperatures.len() - start;
+            if _duration >= min_duration {
                 heat_waves.push((start, self.temperatures.len() - 1));
             }
         }
@@ -119,11 +120,11 @@ impl TemperatureAnalysis {
     ) -> Result<Array1<f64>> {
         let mut gdd = Array1::zeros(self.temperatures.len());
 
-        for (i, &temp) in self.temperatures.iter().enumerate() {
+        for (i, &_temp) in self.temperatures.iter().enumerate() {
             let effective_temp = if let Some(max_t) = max_temp {
-                temp.min(max_t)
+                _temp.min(max_t)
             } else {
-                temp
+                _temp
             };
 
             gdd[i] = (effective_temp - base_temp).max(0.0);
@@ -171,7 +172,7 @@ impl TemperatureAnalysis {
     pub fn climate_normals(&self, window_size: usize) -> Result<Array1<f64>> {
         if window_size > self.temperatures.len() {
             return Err(TimeSeriesError::InvalidInput(
-                "Window size larger than data".to_string(),
+                "Window _size larger than data".to_string(),
             ));
         }
 
@@ -196,22 +197,22 @@ pub struct PrecipitationAnalysis {
 
 impl PrecipitationAnalysis {
     /// Create new precipitation analysis
-    pub fn new(precipitation: Array1<f64>, time_stamps: Array1<i64>) -> Result<Self> {
-        if precipitation.iter().any(|x| !x.is_finite()) {
+    pub fn new(_precipitation: Array1<f64>, time_stamps: Array1<i64>) -> Result<Self> {
+        if _precipitation.iter().any(|x| !x.is_finite()) {
             return Err(TimeSeriesError::InvalidInput(
                 "Precipitation contains non-finite values".to_string(),
             ));
         }
 
-        // Check for negative precipitation
-        if precipitation.iter().any(|&x| x < 0.0) {
+        // Check for negative _precipitation
+        if _precipitation.iter().any(|&x| x < 0.0) {
             return Err(TimeSeriesError::InvalidInput(
                 "Precipitation values cannot be negative".to_string(),
             ));
         }
 
         Ok(Self {
-            precipitation,
+            _precipitation,
             time_stamps,
         })
     }
@@ -249,7 +250,7 @@ impl PrecipitationAnalysis {
     pub fn standardized_precipitation_index(&self, window_size: usize) -> Result<Array1<f64>> {
         if window_size > self.precipitation.len() {
             return Err(TimeSeriesError::InvalidInput(
-                "Window size larger than data".to_string(),
+                "Window _size larger than data".to_string(),
             ));
         }
 
@@ -292,8 +293,7 @@ impl PrecipitationAnalysis {
                 x if x < 2.5 => "Light",
                 x if x < 7.6 => "Moderate",
                 x if x < 35.0 => "Heavy",
-                x if x < 50.0 => "Very Heavy",
-                _ => "Extreme",
+                x if x < 50.0 => "Very Heavy"_ => "Extreme",
             };
 
             *classification.get_mut(category).unwrap() += 1;
@@ -347,19 +347,19 @@ impl AtmosphericAnalysis {
         }
         if wind_speed.iter().any(|x| !x.is_finite()) {
             return Err(TimeSeriesError::InvalidInput(
-                "Wind speed contains non-finite values".to_string(),
+                "Wind _speed contains non-finite values".to_string(),
             ));
         }
 
         if let Some(ref dir) = wind_direction {
             if dir.iter().any(|x| !x.is_finite()) {
                 return Err(TimeSeriesError::InvalidInput(
-                    "Wind direction contains non-finite values".to_string(),
+                    "Wind _direction contains non-finite values".to_string(),
                 ));
             }
             if dir.iter().any(|&x| !(0.0..360.0).contains(&x)) {
                 return Err(TimeSeriesError::InvalidInput(
-                    "Wind direction must be between 0 and 360 degrees".to_string(),
+                    "Wind _direction must be between 0 and 360 degrees".to_string(),
                 ));
             }
         }
@@ -395,8 +395,8 @@ impl AtmosphericAnalysis {
                     current_start = Some(i);
                 }
             } else if let Some(start) = current_start {
-                let duration = i - start;
-                if duration >= min_duration {
+                let _duration = i - start;
+                if _duration >= min_duration {
                     storms.push((start, i - 1));
                 }
                 current_start = None;
@@ -413,7 +413,7 @@ impl AtmosphericAnalysis {
         let mut power_density = Array1::zeros(self.wind_speed.len());
 
         for (i, &speed) in self.wind_speed.iter().enumerate() {
-            // Power density = 0.5 * ρ * v³
+            // Power _density = 0.5 * ρ * v³
             power_density[i] = 0.5 * air_density * speed.powi(3);
         }
 
@@ -513,8 +513,7 @@ impl ClimateIndices {
     /// Calculate Palmer Drought Severity Index (PDSI)
     pub fn palmer_drought_severity_index(
         precipitation: &Array1<f64>,
-        temperature: &Array1<f64>,
-        _latitude: f64,
+        temperature: &Array1<f64>, _latitude: f64,
     ) -> Result<Array1<f64>> {
         if precipitation.len() != temperature.len() {
             return Err(TimeSeriesError::InvalidInput(

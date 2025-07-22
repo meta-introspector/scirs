@@ -1,11 +1,12 @@
 //! Scalogram and related visualizations
 
-use super::transform::cwt;
-use crate::error::SignalResult;
-use num_complex::Complex64;
+use crate::error::{SignalError, SignalResult};
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
+use super::transform::cwt;
 
+#[allow(unused_imports)]
 /// Computes a scalogram (squared magnitude of CWT coefficients) of a signal.
 ///
 /// A scalogram is a visual representation of the energy density of a signal
@@ -25,7 +26,7 @@ use std::fmt::Debug;
 /// # Example
 ///
 /// ```
-/// use scirs2_signal::wavelets::{scalogram, morlet};
+/// use scirs2__signal::wavelets::{scalogram, morlet};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -117,7 +118,7 @@ where
 /// # Example
 ///
 /// ```
-/// use scirs2_signal::wavelets::{cwt_magnitude, morlet};
+/// use scirs2__signal::wavelets::{cwt_magnitude, morlet};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a simple signal
@@ -204,7 +205,7 @@ where
 /// # Example
 ///
 /// ```
-/// use scirs2_signal::wavelets::{cwt_phase, morlet};
+/// use scirs2__signal::wavelets::{cwt_phase, morlet};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a simple signal
@@ -273,7 +274,7 @@ where
 /// # Example
 ///
 /// ```
-/// use scirs2_signal::wavelets::{scale_to_frequency};
+/// use scirs2__signal::wavelets::{scale_to_frequency};
 ///
 /// // Define scales
 /// let scales: Vec<f64> = (1..32).map(|i| i as f64).collect();
@@ -305,17 +306,17 @@ pub fn scale_to_frequency(
 
     if sampling_period <= 0.0 {
         return Err(crate::error::SignalError::ValueError(
-            "Sampling period must be positive".to_string(),
+            "Sampling _period must be positive".to_string(),
         ));
     }
 
     if central_frequency <= 0.0 {
         return Err(crate::error::SignalError::ValueError(
-            "Central frequency must be positive".to_string(),
+            "Central _frequency must be positive".to_string(),
         ));
     }
 
-    // Get the central frequency for this wavelet
+    // Get the central _frequency for this wavelet
     let central_freq = central_frequency;
 
     // Convert scales to frequencies using the formula: f = central_freq / (scale * dt)

@@ -13,7 +13,7 @@
 use ndarray::{array, Array1, ArrayView1};
 use num_traits::Float;
 // use plotters::prelude::*;
-use scirs2_integrate::{
+use scirs2__integrate::{
     bdf_semi_explicit_dae, solve_ivp, solve_semi_explicit_dae, DAEIndex, DAEOptions, DAEType,
     ODEMethod, ODEOptions,
 };
@@ -254,8 +254,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             match i {
                 0 => result_general.n_steps,
                 1 => result_ode.n_steps,
-                2 => result_bdf.n_steps,
-                _ => 0,
+                2 => result_bdf.n_steps_ => 0,
             }
         );
     }

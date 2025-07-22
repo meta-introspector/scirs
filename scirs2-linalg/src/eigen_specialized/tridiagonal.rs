@@ -30,18 +30,18 @@ pub fn tridiagonal_eigvalsh<F>(
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    let n = diagonal.len();
+    let n = _diagonal.len();
 
     if off_diagonal.len() != n - 1 {
         return Err(LinalgError::ShapeError(format!(
-            "Off-diagonal length ({}) must be one less than diagonal length ({})",
+            "Off-_diagonal length ({}) must be one less than _diagonal length ({})",
             off_diagonal.len(),
             n
         )));
     }
 
     // Create copies of the inputs (will be modified during computation)
-    let d = diagonal.to_owned();
+    let d = _diagonal.to_owned();
     let mut e = off_diagonal.to_owned();
 
     // Result array for eigenvalues
@@ -63,7 +63,7 @@ where
         }
     };
 
-    // Zero out small off-diagonal elements
+    // Zero out small off-_diagonal elements
     let tol = F::epsilon().sqrt()
         * eigenvalues
             .iter()
@@ -176,11 +176,11 @@ pub fn tridiagonal_eigh<F>(
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    let n = diagonal.len();
+    let n = _diagonal.len();
 
     if off_diagonal.len() != n - 1 {
         return Err(LinalgError::ShapeError(format!(
-            "Off-diagonal length ({}) must be one less than diagonal length ({})",
+            "Off-_diagonal length ({}) must be one less than _diagonal length ({})",
             off_diagonal.len(),
             n
         )));
@@ -189,7 +189,7 @@ where
     // Create tridiagonal matrix in full form
     let mut tri_matrix = Array2::zeros((n, n));
     for i in 0..n {
-        tri_matrix[[i, i]] = diagonal[i];
+        tri_matrix[[i, i]] = _diagonal[i];
         if i < n - 1 {
             tri_matrix[[i, i + 1]] = off_diagonal[i];
             tri_matrix[[i + 1, i]] = off_diagonal[i];
@@ -218,7 +218,7 @@ where
         // A' = R * Q (reversed order for better convergence)
         let temp = r.dot(&q);
 
-        // Check convergence (check if off-diagonal elements are close to zero)
+        // Check convergence (check if off-_diagonal elements are close to zero)
         let mut is_converged = true;
         for i in 0..n {
             for j in 0..n {
@@ -237,7 +237,7 @@ where
             let mut eigenvalues = Array1::zeros(n);
             let eigenvectors = identity.dot(&q);
 
-            // Eigenvalues are on the diagonal
+            // Eigenvalues are on the _diagonal
             for i in 0..n {
                 eigenvalues[i] = temp[[i, i]];
             }

@@ -200,7 +200,7 @@ where
     SliceInfo<[SliceInfoElem; 2], Dim<[usize; 2]>, Dim<[usize; 2]>>: SliceArg<D>,
 {
     match device {
-        DeviceType::CPU => Box::new(NdarrayWrapper::new(array)),
+        DeviceType::CPU => Box::new(NdarrayWrapper::new(array.clone())),
         DeviceType::GPU => {
             let config = get_auto_device_config();
             let gpu_config = GPUConfig {
@@ -211,7 +211,7 @@ where
                 memory_fraction: 0.9,
             };
 
-            Box::new(GPUNdarray::new(array, gpu_config))
+            Box::new(GPUNdarray::new(array.clone(), gpu_config))
         }
         DeviceType::Distributed => {
             let dist_config = DistributedConfig {

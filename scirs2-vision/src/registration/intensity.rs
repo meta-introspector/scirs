@@ -124,7 +124,7 @@ fn single_level_register(
             break;
         }
 
-        // Update transform based on optimization method
+        // Update _transform based on optimization method
         current_transform = match config.optimizer {
             OptimizationMethod::GradientDescent => update_transform_gradient_descent(
                 &current_transform,
@@ -162,7 +162,7 @@ fn single_level_register(
     }
 
     Ok(RegistrationResult {
-        transform: current_transform,
+        _transform: current_transform,
         final_cost: current_cost,
         iterations: iteration,
         converged,
@@ -187,7 +187,7 @@ fn multi_resolution_register(
 
     // Register from coarse to fine
     for level in (0..config.params.pyramid_levels).rev() {
-        // Scale transform for current level
+        // Scale _transform for current level
         let scale = 2.0_f64.powi(level as i32);
         let mut scaled_transform = current_transform.clone();
         scaled_transform[[0, 2]] /= scale;
@@ -201,9 +201,9 @@ fn multi_resolution_register(
             config,
         )?;
 
-        current_transform = result.transform.clone();
+        current_transform = result._transform.clone();
 
-        // Scale transform back up for next level
+        // Scale _transform back up for next level
         if level > 0 {
             current_transform[[0, 2]] *= 2.0;
             current_transform[[1, 2]] *= 2.0;
@@ -219,8 +219,8 @@ fn multi_resolution_register(
 
 /// Build image pyramid by downsampling
 #[allow(dead_code)]
-fn build_image_pyramid(image: &GrayImage, levels: usize) -> Vec<GrayImage> {
-    let mut pyramid = vec![image.clone()];
+fn build_image_pyramid(_image: &GrayImage, levels: usize) -> Vec<GrayImage> {
+    let mut pyramid = vec![_image.clone()];
 
     for _ in 1..levels {
         let prev = &pyramid[pyramid.len() - 1];
@@ -239,8 +239,8 @@ fn build_image_pyramid(image: &GrayImage, levels: usize) -> Vec<GrayImage> {
 
 /// Downsample image by factor of 2
 #[allow(dead_code)]
-fn downsample_image(image: &GrayImage) -> GrayImage {
-    let (width, height) = image.dimensions();
+fn downsample_image(_image: &GrayImage) -> GrayImage {
+    let (width, height) = _image.dimensions();
     let new_width = width / 2;
     let new_height = height / 2;
 
@@ -252,23 +252,23 @@ fn downsample_image(image: &GrayImage) -> GrayImage {
             let x2 = x * 2;
             let y2 = y * 2;
 
-            let mut sum = image.get_pixel(x2, y2)[0] as u32;
+            let mut sum = _image.get_pixel(x2, y2)[0] as u32;
             let mut count = 1;
 
             if x2 + 1 < width {
-                sum += image.get_pixel(x2 + 1, y2)[0] as u32;
+                sum += _image.get_pixel(x2 + 1, y2)[0] as u32;
                 count += 1;
             }
             if y2 + 1 < height {
-                sum += image.get_pixel(x2, y2 + 1)[0] as u32;
+                sum += _image.get_pixel(x2, y2 + 1)[0] as u32;
                 count += 1;
             }
             if x2 + 1 < width && y2 + 1 < height {
-                sum += image.get_pixel(x2 + 1, y2 + 1)[0] as u32;
+                sum += _image.get_pixel(x2 + 1, y2 + 1)[0] as u32;
                 count += 1;
             }
 
-            downsampled.put_pixel(x, y, image::Luma([(sum / count) as u8]));
+            downsampled.put_pixel(x, y_image::Luma([(sum / count) as u8]));
         }
     }
 
@@ -327,8 +327,7 @@ fn compute_gradient(
             2 => perturbed_transform[[0, 2]] += config.step_size,
             3 => perturbed_transform[[1, 0]] += config.step_size,
             4 => perturbed_transform[[1, 1]] += config.step_size,
-            5 => perturbed_transform[[1, 2]] += config.step_size,
-            _ => {}
+            5 => perturbed_transform[[1, 2]] += config.step_size_ => {}
         }
 
         let perturbed_cost =
@@ -361,14 +360,14 @@ fn update_transform_gradient_descent(
 
 /// Compute Sum of Squared Differences
 #[allow(dead_code)]
-fn compute_ssd(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
-    let (width, height) = image1.dimensions();
+fn compute_ssd(_image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
+    let (width, height) = _image1.dimensions();
     let mut ssd = 0.0;
     let mut count = 0;
 
     for y in 0..height {
         for x in 0..width {
-            let val1 = image1.get_pixel(x, y)[0] as f64;
+            let val1 = _image1.get_pixel(x, y)[0] as f64;
             let val2 = image2.get_pixel(x, y)[0] as f64;
 
             ssd += (val1 - val2).powi(2);
@@ -381,14 +380,14 @@ fn compute_ssd(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
 
 /// Compute Mean Squared Error
 #[allow(dead_code)]
-fn compute_mse(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
-    compute_ssd(image1, image2) // MSE is the same as average SSD
+fn compute_mse(_image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
+    compute_ssd(_image1, image2) // MSE is the same as average SSD
 }
 
 /// Compute Normalized Cross-Correlation
 #[allow(dead_code)]
-fn compute_ncc(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
-    let (width, height) = image1.dimensions();
+fn compute_ncc(_image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
+    let (width, height) = _image1.dimensions();
 
     let mut sum1 = 0.0;
     let mut sum2 = 0.0;
@@ -399,7 +398,7 @@ fn compute_ncc(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
 
     for y in 0..height {
         for x in 0..width {
-            let val1 = image1.get_pixel(x, y)[0] as f64;
+            let val1 = _image1.get_pixel(x, y)[0] as f64;
             let val2 = image2.get_pixel(x, y)[0] as f64;
 
             // Skip zero pixels (likely from warping)
@@ -437,14 +436,14 @@ fn compute_ncc(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
 
 /// Compute Cross-Correlation
 #[allow(dead_code)]
-fn compute_cross_correlation(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
-    let (width, height) = image1.dimensions();
+fn compute_cross_correlation(_image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
+    let (width, height) = _image1.dimensions();
     let mut cc = 0.0;
     let mut count = 0;
 
     for y in 0..height {
         for x in 0..width {
-            let val1 = image1.get_pixel(x, y)[0] as f64;
+            let val1 = _image1.get_pixel(x, y)[0] as f64;
             let val2 = image2.get_pixel(x, y)[0] as f64;
 
             if val2 > 0.0 {
@@ -463,8 +462,8 @@ fn compute_cross_correlation(image1: &GrayImage, image2: &GrayImage) -> Result<f
 
 /// Compute Mutual Information
 #[allow(dead_code)]
-fn compute_mutual_information(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
-    let joint_hist = compute_joint_histogram(image1, image2, 256);
+fn compute_mutual_information(_image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
+    let joint_hist = compute_joint_histogram(_image1, image2, 256);
     let (hist1, hist2) = compute_marginal_histograms(&joint_hist);
 
     let mut mi = 0.0;
@@ -487,8 +486,8 @@ fn compute_mutual_information(image1: &GrayImage, image2: &GrayImage) -> Result<
 
 /// Compute Normalized Mutual Information
 #[allow(dead_code)]
-fn compute_normalized_mutual_information(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
-    let joint_hist = compute_joint_histogram(image1, image2, 256);
+fn compute_normalized_mutual_information(_image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
+    let joint_hist = compute_joint_histogram(_image1, image2, 256);
     let (hist1, hist2) = compute_marginal_histograms(&joint_hist);
 
     let total = joint_hist.sum();
@@ -523,13 +522,13 @@ fn compute_normalized_mutual_information(image1: &GrayImage, image2: &GrayImage)
 
 /// Compute joint histogram of two images
 #[allow(dead_code)]
-fn compute_joint_histogram(image1: &GrayImage, image2: &GrayImage, bins: usize) -> Array2<f64> {
-    let (width, height) = image1.dimensions();
+fn compute_joint_histogram(_image1: &GrayImage, image2: &GrayImage, bins: usize) -> Array2<f64> {
+    let (width, height) = _image1.dimensions();
     let mut hist = Array2::zeros((bins, bins));
 
     for y in 0..height {
         for x in 0..width {
-            let val1 = image1.get_pixel(x, y)[0] as usize;
+            let val1 = _image1.get_pixel(x, y)[0] as usize;
             let val2 = image2.get_pixel(x, y)[0] as usize;
 
             if val1 < bins && val2 < bins && val2 > 0 {
@@ -543,15 +542,15 @@ fn compute_joint_histogram(image1: &GrayImage, image2: &GrayImage, bins: usize) 
 
 /// Compute marginal histograms from joint histogram
 #[allow(dead_code)]
-fn compute_marginal_histograms(joint_hist: &Array2<f64>) -> (Array1<f64>, Array1<f64>) {
-    let (bins1, bins2) = joint_hist.dim();
+fn compute_marginal_histograms(_joint_hist: &Array2<f64>) -> (Array1<f64>, Array1<f64>) {
+    let (bins1, bins2) = _joint_hist.dim();
     let mut hist1 = Array1::zeros(bins1);
     let mut hist2 = Array1::zeros(bins2);
 
     for i in 0..bins1 {
         for j in 0..bins2 {
-            hist1[i] += joint_hist[[i, j]];
-            hist2[j] += joint_hist[[i, j]];
+            hist1[i] += _joint_hist[[i, j]];
+            hist2[j] += _joint_hist[[i, j]];
         }
     }
 
@@ -575,8 +574,8 @@ mod tests {
     use super::*;
     use image::{ImageBuffer, Luma};
 
-    fn create_test_image(width: u32, height: u32, pattern: u8) -> GrayImage {
-        ImageBuffer::from_fn(width, height, |x, y| {
+    fn create_test_image(_width: u32, height: u32, pattern: u8) -> GrayImage {
+        ImageBuffer::from_fn(_width, height, |x, y| {
             Luma([((x + y + pattern as u32) % 256) as u8])
         })
     }
@@ -645,7 +644,7 @@ mod tests {
         let result = compute_gradient(&img1, &img2, &transform, &config);
         assert!(result.is_ok());
 
-        let (gradient, _cost) = result.unwrap();
+        let (gradient_cost) = result.unwrap();
         assert_eq!(gradient.len(), 6);
     }
 }

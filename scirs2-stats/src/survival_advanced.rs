@@ -23,8 +23,7 @@ pub struct AdvancedSurvivalAnalysis<F> {
     /// Fitted models
     models: HashMap<String, SurvivalModel<F>>,
     /// Model performance metrics
-    performance: ModelPerformance<F>,
-    _phantom: PhantomData<F>,
+    performance: ModelPerformance<F>, _phantom: PhantomData<F>,
 }
 
 /// Configuration for advanced survival analysis
@@ -623,9 +622,9 @@ where
         + ndarray::ScalarOperand,
 {
     /// Create new advanced survival analysis
-    pub fn new(config: AdvancedSurvivalConfig<F>) -> Self {
+    pub fn new(_config: AdvancedSurvivalConfig<F>) -> Self {
         Self {
-            config,
+            _config,
             models: HashMap::new(),
             performance: ModelPerformance {
                 concordance_indices: HashMap::new(),
@@ -634,8 +633,7 @@ where
                 time_roc_aucs: HashMap::new(),
                 calibration_slopes: HashMap::new(),
                 cross_validation_scores: HashMap::new(),
-            },
-            _phantom: PhantomData,
+            }_phantom: PhantomData,
         }
     }
 
@@ -806,10 +804,8 @@ where
     /// Fit AFT model
     fn fit_aft_model(
         &self,
-        durations: &ArrayView1<F>,
-        _events: &ArrayView1<bool>,
-        covariates: &ArrayView2<F>,
-        _distribution: AFTDistribution,
+        durations: &ArrayView1<F>, _events: &ArrayView1<bool>,
+        covariates: &ArrayView2<F>, _distribution: AFTDistribution,
     ) -> StatsResult<SurvivalModel<F>> {
         let n_features = covariates.ncols();
 
@@ -840,9 +836,7 @@ where
 
     /// Fit Random Survival Forest
     fn fit_random_forest(
-        &self,
-        _durations: &ArrayView1<F>,
-        _events: &ArrayView1<bool>,
+        &self_durations: &ArrayView1<F>, _events: &ArrayView1<bool>,
         covariates: &ArrayView2<F>,
     ) -> StatsResult<SurvivalModel<F>> {
         let n_features = covariates.ncols();
@@ -870,8 +864,7 @@ where
     /// Fit Deep Survival model
     fn fit_deep_survival(
         &self,
-        durations: &ArrayView1<F>,
-        _events: &ArrayView1<bool>,
+        durations: &ArrayView1<F>, _events: &ArrayView1<bool>,
         covariates: &ArrayView2<F>,
     ) -> StatsResult<SurvivalModel<F>> {
         // Simplified Deep Learning model
@@ -913,8 +906,7 @@ where
             let score = match model {
                 SurvivalModel::Cox(cox) => cox.concordance_index,
                 SurvivalModel::RandomForest(rf) => rf.concordance_index,
-                SurvivalModel::DeepSurvival(deep) => deep.concordance_index,
-                _ => F::from(0.5).unwrap(),
+                SurvivalModel::DeepSurvival(deep) => deep.concordance_index_ =>, F::from(0.5).unwrap(),
             };
             performance_scores.insert(model_name.clone(), score);
         }
@@ -942,8 +934,7 @@ where
     /// Ensemble analysis
     fn ensemble_analysis(
         &self,
-        models: &HashMap<String, SurvivalModel<F>>,
-        _config: &EnsembleConfig<F>,
+        models: &HashMap<String, SurvivalModel<F>>, _config: &EnsembleConfig<F>,
     ) -> StatsResult<EnsembleResults<F>> {
         let n_models = models.len();
 
@@ -992,10 +983,7 @@ where
     /// Causal analysis
     fn causal_analysis(
         &self,
-        durations: &ArrayView1<F>,
-        _events: &ArrayView1<bool>,
-        _covariates: &ArrayView2<F>,
-        _config: &CausalSurvivalConfig<F>,
+        durations: &ArrayView1<F>, _events: &ArrayView1<bool>, _covariates: &ArrayView2<F>, _config: &CausalSurvivalConfig<F>,
     ) -> StatsResult<CausalEffects<F>> {
         // Simplified causal analysis
         let average_treatment_effect = F::from(0.15).unwrap();
@@ -1024,9 +1012,7 @@ where
     /// Competing risks analysis
     fn competing_risks_analysis(
         &self,
-        durations: &ArrayView1<F>,
-        _events: &ArrayView1<bool>,
-        _covariates: &ArrayView2<F>,
+        durations: &ArrayView1<F>, _events: &ArrayView1<bool>, _covariates: &ArrayView2<F>,
         config: &CompetingRisksConfig,
     ) -> StatsResult<CompetingRisksResults<F>> {
         let n_events = config.event_types.len();
@@ -1078,8 +1064,7 @@ where
 
     /// Make survival predictions
     pub fn predict(
-        &self,
-        _model_name: &str,
+        &self, _model_name: &str,
         covariates: &ArrayView2<F>,
         time_points: &ArrayView1<F>,
     ) -> StatsResult<SurvivalPrediction<F>> {

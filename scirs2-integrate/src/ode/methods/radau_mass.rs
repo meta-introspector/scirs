@@ -6,10 +6,10 @@
 use crate::error::IntegrateResult;
 use crate::ode::types::{MassMatrix, MassMatrixType, ODEMethod, ODEOptions, ODEResult};
 use crate::ode::utils::common::calculate_error_weights;
-use crate::ode::utils::dense_output::DenseSolution;
+use crate::ode::utils::dense__output::DenseSolution;
 use crate::ode::utils::interpolation::ContinuousOutputMethod;
 use crate::ode::utils::jacobian;
-use crate::ode::utils::linear_solvers::solve_linear_system;
+use crate::ode::utils::linear__solvers::solve_linear_system;
 use crate::ode::utils::mass_matrix;
 use crate::IntegrateFloat;
 use ndarray::{Array1, Array2, ArrayView1};
@@ -49,20 +49,20 @@ where
     let [t_start, t_end] = t_span;
     let n_dim = y0.len();
 
-    // Verify mass matrix compatibility
+    // Verify mass _matrix compatibility
     mass_matrix::check_mass_compatibility(&mass_matrix, t_start, y0.view())?;
 
     // Determine initial step size if not provided
     let h0 = opts.h0.unwrap_or_else(|| {
         // Simple heuristic for initial step size
-        let span = t_end - t_start;
-        span / F::from_usize(100).unwrap() * F::from_f64(0.1).unwrap() // 0.1% of interval
+        let _span = t_end - t_start;
+        _span / F::from_usize(100).unwrap() * F::from_f64(0.1).unwrap() // 0.1% of interval
     });
 
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
-        let span = t_end - t_start;
-        span * F::from_f64(1e-10).unwrap() // Minimal step size
+        let _span = t_end - t_start;
+        _span * F::from_f64(1e-10).unwrap() // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {
@@ -82,7 +82,7 @@ where
     let c2 = F::from_f64(0.6449489743).unwrap();
     let c3 = F::one();
 
-    // Runge-Kutta matrix A (coefficients a_ij)
+    // Runge-Kutta _matrix A (coefficients a_ij)
     // We're using a 3-stage Radau IIA method
     let a11 = F::from_f64(0.1968154772).unwrap();
     let a12 = F::from_f64(-0.0678338608).unwrap();
@@ -161,7 +161,7 @@ where
         func_evals += 1;
 
         // Better initial guess for stage values
-        // For mass matrix systems, we need a more careful initial guess
+        // For mass _matrix systems, we need a more careful initial guess
         let dy = if mass_matrix.matrix_type == MassMatrixType::Identity {
             f_current.clone()
         } else {
@@ -174,14 +174,14 @@ where
         let mut k2 = y.clone() + dy.clone() * (h * c2);
         let mut k3 = y.clone() + dy.clone() * h;
 
-        // For mass matrix systems, refine the initial guess with one predictor step
+        // For mass _matrix systems, refine the initial guess with one predictor step
         if mass_matrix.matrix_type != MassMatrixType::Identity {
             // Compute better initial derivatives
             let f1_pred = f(t1, k1.view());
             let f2_pred = f(t2, k2.view());
             let f3_pred = f(t3, k3.view());
 
-            // Solve for derivatives through mass matrix
+            // Solve for derivatives through mass _matrix
             let k1_prime_pred =
                 mass_matrix::solve_mass_system(&mass_matrix, t1, k1.view(), f1_pred.view())?;
             let k2_prime_pred =
@@ -209,7 +209,7 @@ where
         let error_weights = calculate_error_weights(&y, atol, rtol);
 
         // Compute Jacobian for Newton iteration
-        // For mass matrix problems, we need both df/dy and dM/dy if state-dependent
+        // For mass _matrix problems, we need both df/dy and dM/dy if state-dependent
         let mut compute_new_jacobian = true;
         let mut newton_converged = false;
         let mut newton_iterations = 0;
@@ -217,17 +217,17 @@ where
         // For mass matrices, we solve the coupled implicit system:
         // k_i = y + h * sum(a_ij * k'_j) where M(t_j, k_j) * k'_j = f(t_j, k_j)
 
-        // Adaptive Newton tolerance based on step size and mass matrix conditioning
+        // Adaptive Newton tolerance based on step size and mass _matrix conditioning
         let mut newton_tol = base_newton_tol * h.max(F::from_f64(1e-3).unwrap());
 
-        // For mass matrix systems, adapt tolerance based on matrix condition
+        // For mass _matrix systems, adapt tolerance based on _matrix condition
         if mass_matrix.matrix_type != MassMatrixType::Identity {
             // Estimate condition number heuristically and adjust tolerance accordingly
             let condition_factor = match mass_matrix.matrix_type {
-                MassMatrixType::Constant => F::from_f64(5.0).unwrap(), // Moderate relaxation
-                MassMatrixType::TimeDependent => F::from_f64(8.0).unwrap(), // More relaxation
-                MassMatrixType::StateDependent => F::from_f64(12.0).unwrap(), // Most relaxation
-                MassMatrixType::Identity => F::one(),                  // No change
+                MassMatrixType::Constant =>, F::from_f64(5.0).unwrap(), // Moderate relaxation
+                MassMatrixType::TimeDependent =>, F::from_f64(8.0).unwrap(), // More relaxation
+                MassMatrixType::StateDependent =>, F::from_f64(12.0).unwrap(), // Most relaxation
+                MassMatrixType::Identity =>, F::one(),                  // No change
             };
             newton_tol *= condition_factor;
 
@@ -253,14 +253,14 @@ where
             // Compute the residuals at each stage
             // r_i = M·(k_i - y)/h - sum(a_ij·f(t_j, k_j))
 
-            // First, get the mass matrix at each stage
+            // First, get the mass _matrix at each stage
             let m1 = mass_matrix.evaluate(t1, k1.view());
             let m2 = mass_matrix.evaluate(t2, k2.view());
             let m3 = mass_matrix.evaluate(t3, k3.view());
 
-            // For identity mass matrix, we can simplify
+            // For identity mass _matrix, we can simplify
             if mass_matrix.matrix_type == MassMatrixType::Identity {
-                // Simplified residual for identity mass matrix
+                // Simplified residual for identity mass _matrix
                 let r1 = (k1.clone() - y.clone()) / h
                     - (f1.clone() * a11 + f2.clone() * a12 + f3.clone() * a13);
                 let r2 = (k2.clone() - y.clone()) / h
@@ -338,7 +338,7 @@ where
                 k2 -= &dk2;
                 k3 -= &dk3;
             } else {
-                // For mass matrix systems, we solve the coupled implicit system:
+                // For mass _matrix systems, we solve the coupled implicit system:
                 // k_i = y + h * sum(a_ij * k'_j) where M(t_j, k_j) * k'_j = f(t_j, k_j)
                 //
                 // This is equivalent to solving:
@@ -390,8 +390,8 @@ where
                     break;
                 }
 
-                // For mass matrix systems, we need to solve the correct Newton system
-                // The Jacobian of the mass matrix system includes both df/dy and mass matrix effects
+                // For mass _matrix systems, we need to solve the correct Newton system
+                // The Jacobian of the mass _matrix system includes both df/dy and mass _matrix effects
 
                 // Compute Jacobian of f if needed
                 if compute_new_jacobian {
@@ -410,15 +410,15 @@ where
                 // Get Jacobian
                 let jac = jac_option.as_ref().unwrap();
 
-                // For mass matrix systems, solve the correct Newton system
-                // The Newton system for mass matrix DAEs has the form:
+                // For mass _matrix systems, solve the correct Newton system
+                // The Newton system for mass _matrix DAEs has the form:
                 // [I - h*a11*M1^(-1)*J1   -h*a12*M1^(-1)*J2    -h*a13*M1^(-1)*J3 ] [dk1]   [r1]
                 // [-h*a21*M2^(-1)*J1     I - h*a22*M2^(-1)*J2  -h*a23*M2^(-1)*J3 ] [dk2] = [r2]
                 // [-h*a31*M3^(-1)*J1    -h*a32*M3^(-1)*J2    I - h*a33*M3^(-1)*J3] [dk3]   [r3]
                 //
                 // For numerical stability, we use a block-diagonal approximation
 
-                // For mass matrix systems, we use a more robust Newton approach
+                // For mass _matrix systems, we use a more robust Newton approach
                 // Instead of computing M^(-1)*J explicitly, we solve the Newton system directly
                 // This avoids numerical issues with computing the inverse of potentially ill-conditioned mass matrices
 
@@ -426,13 +426,12 @@ where
                 let solve_newton_stage = |mass_mat: &Option<Array2<F>>,
                                           residual: &Array1<F>,
                                           jacobian: &Array2<F>,
-                                          a_coeff: F,
-                                          _k_prime: &Array1<F>|
+                                          a_coeff: F_k, _prime: &Array1<F>|
                  -> IntegrateResult<Array1<F>> {
                     match mass_mat {
                         Some(m) => {
-                            // CORRECTED Newton system for mass matrix DAEs:
-                            // For the Radau method with mass matrix M(t,y) * y' = f(t,y)
+                            // CORRECTED Newton system for mass _matrix DAEs:
+                            // For the Radau method with mass _matrix M(t,y) * y' = f(t,y)
                             // The stages satisfy: k_i = y + h * sum(a_ij * k'_j) where M * k'_j = f(t_j, k_j)
                             // The residual is: R_i = k_i - y - h * sum(a_ij * k'_j)
                             //
@@ -462,16 +461,16 @@ where
 
                             // Solve with iterative improvement for better numerical stability
                             let solve_with_conditioning =
-                                |matrix: &Array2<F>, b: &Array1<F>| -> IntegrateResult<Array1<F>> {
-                                    // First attempt with original matrix
-                                    match solve_linear_system(&matrix.view(), &b.view()) {
+                                |_matrix: &Array2<F>, b: &Array1<F>| -> IntegrateResult<Array1<F>> {
+                                    // First attempt with original _matrix
+                                    match solve_linear_system(&_matrix.view(), &b.view()) {
                                         Ok(solution) => {
                                             // Verify solution quality by checking residual
                                             let mut check_residual = Array1::<F>::zeros(n_dim);
                                             for i in 0..n_dim {
                                                 for j in 0..n_dim {
                                                     check_residual[i] +=
-                                                        matrix[[i, j]] * solution[j];
+                                                        _matrix[[i, j]] * solution[j];
                                                 }
                                                 check_residual[i] -= b[i];
                                             }
@@ -535,7 +534,7 @@ where
                             }
                         }
                         None => {
-                            // For identity mass matrix, use standard Newton system: (I - h*a_ii*J) * dk = r
+                            // For identity mass _matrix, use standard Newton system: (I - h*a_ii*J) * dk = r
                             let mut newton_matrix = Array2::<F>::eye(n_dim);
                             for i in 0..n_dim {
                                 for j in 0..n_dim {
@@ -577,9 +576,9 @@ where
             // Force recomputation of Jacobian on next iteration
             jac_option = None;
 
-            // Be more tolerant for mass matrix systems before giving up
+            // Be more tolerant for mass _matrix systems before giving up
             let min_step_tolerance = if mass_matrix.matrix_type != MassMatrixType::Identity {
-                min_step * F::from_f64(0.1).unwrap() // Allow smaller steps for mass matrix problems
+                min_step * F::from_f64(0.1).unwrap() // Allow smaller steps for mass _matrix problems
             } else {
                 min_step
             };
@@ -593,7 +592,7 @@ where
             continue;
         }
 
-        // Compute new solution by solving mass matrix systems for derivatives
+        // Compute new solution by solving mass _matrix systems for derivatives
         let f1 = f(t1, k1.view());
         let f2 = f(t2, k2.view());
         let f3 = f(t3, k3.view());
@@ -605,20 +604,20 @@ where
         let y_new = y.clone() + (k1_prime * b1 + k2_prime * b2 + k3_prime * b3) * h;
         func_evals += 3;
 
-        // Estimate error using embedded method for mass matrix systems
+        // Estimate error using embedded method for mass _matrix systems
         // For Radau IIA with mass matrices, we use a more sophisticated error estimate
         let error = if mass_matrix.matrix_type == MassMatrixType::Identity {
-            // Simple difference for identity mass matrix
+            // Simple difference for identity mass _matrix
             &k3 - &y_new
         } else {
-            // For mass matrix systems, compute error in physical coordinates
-            // Error estimate based on stage differences weighted by mass matrix
+            // For mass _matrix systems, compute error in physical coordinates
+            // Error estimate based on stage differences weighted by mass _matrix
             let stage_diff = &k3 - &k2;
 
-            // Apply mass matrix scaling to error estimate
+            // Apply mass _matrix scaling to error estimate
             match mass_matrix.evaluate(t + h, k3.view()) {
                 Some(ref m3_matrix) => {
-                    // Scale error by mass matrix characteristics
+                    // Scale error by mass _matrix characteristics
                     let mut scaled_error = Array1::<F>::zeros(n_dim);
                     for i in 0..n_dim {
                         let m_ii = m3_matrix[[i, i]];

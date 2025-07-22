@@ -42,13 +42,13 @@ impl ClientCapabilities {
     }
 
     /// Set preferred version
-    pub fn preferred_version(mut self, version: Version) -> Self {
+    pub fn with_preferred_version(mut self, version: Version) -> Self {
         self.preferred_version = Some(version);
         self
     }
 
     /// Add supported version
-    pub fn add_supported_version(mut self, version: Version) -> Self {
+    pub fn with_supported_version(mut self, version: Version) -> Self {
         self.supported_versions.push(version);
         self
     }
@@ -163,7 +163,7 @@ impl VersionNegotiator {
             algorithm: format!("{:?}", self.strategy),
         };
 
-        // Find compatible versions
+        // Find compatible _versions
         let compatible_versions =
             self.find_compatible_versions(client_capabilities, server_versions, &mut metadata)?;
 
@@ -179,7 +179,7 @@ impl VersionNegotiator {
 
         // Select best version based on strategy
         let selected_version =
-            self.select_version(&compatible_versions, client_capabilities, &mut metadata)?;
+            self.apply_strategy(&compatible_versions, client_capabilities, &mut metadata)?;
 
         // Check feature compatibility
         let (available_features, unsupported_features, status) = self.check_feature_compatibility(
@@ -230,7 +230,7 @@ impl VersionNegotiator {
     }
 
     /// Select the best version based on strategy
-    fn select_version(
+    fn apply_strategy(
         &self,
         compatible_versions: &[Version],
         client_capabilities: &ClientCapabilities,
@@ -249,7 +249,7 @@ impl VersionNegotiator {
                         return Ok(preferred.clone());
                     }
                     metadata.warnings.push(
-                        "Client preferred version not available, falling back to latest"
+                        "Client preferred _version not available, falling back to latest"
                             .to_string(),
                     );
                 }
@@ -260,7 +260,7 @@ impl VersionNegotiator {
                 Ok(versions.into_iter().next().unwrap())
             }
             NegotiationStrategy::PreferStable => {
-                // Prefer non-pre-release versions
+                // Prefer non-pre-release _versions
                 let stable_versions: Vec<_> = compatible_versions
                     .iter()
                     .filter(|v| v.is_stable())
@@ -268,16 +268,16 @@ impl VersionNegotiator {
                     .collect();
 
                 if !stable_versions.is_empty() {
-                    let mut versions = stable_versions;
-                    versions.sort();
-                    versions.reverse();
-                    Ok(versions.into_iter().next().unwrap())
+                    let mut _versions = stable_versions;
+                    _versions.sort();
+                    _versions.reverse();
+                    Ok(_versions.into_iter().next().unwrap())
                 } else {
-                    // No stable versions, pick latest
-                    let mut versions = compatible_versions.to_vec();
-                    versions.sort();
-                    versions.reverse();
-                    Ok(versions.into_iter().next().unwrap())
+                    // No stable _versions, pick latest
+                    let mut _versions = compatible_versions.to_vec();
+                    _versions.sort();
+                    _versions.reverse();
+                    Ok(_versions.into_iter().next().unwrap())
                 }
             }
             NegotiationStrategy::PreferFeatureRich => {
@@ -303,9 +303,9 @@ impl VersionNegotiator {
         &self,
         selected_version: &Version,
         client_capabilities: &ClientCapabilities,
-        _metadata: &mut NegotiationMetadata,
+        metadata: &mut NegotiationMetadata,
     ) -> Result<(BTreeSet<String>, BTreeSet<String>, NegotiationStatus), CoreError> {
-        let available_features = self.feature_matrix.get_features(selected_version);
+        let available_features = self.feature_matrix.get_supported_features(selected_version);
         let unsupported_features: BTreeSet<String> = client_capabilities
             .required_features
             .difference(&available_features)
@@ -341,7 +341,7 @@ impl FeatureMatrix {
         }
     }
 
-    fn get_features(&self, version: &Version) -> BTreeSet<String> {
+    fn get_supported_features(&self, version: &Version) -> BTreeSet<String> {
         self.version_features
             .get(version)
             .cloned()
@@ -349,7 +349,7 @@ impl FeatureMatrix {
     }
 
     #[allow(dead_code)]
-    fn add_version_features(&mut self, version: Version, features: BTreeSet<String>) {
+    fn set_version_features(&mut self, version: Version, features: BTreeSet<String>) {
         self.version_features.insert(version, features);
     }
 }
@@ -368,7 +368,7 @@ impl ClientRequirementsBuilder {
     }
 
     /// Set preferred version
-    pub fn prefer_version(mut self, version: Version) -> Self {
+    pub fn preferred_version(mut self, version: Version) -> Self {
         self.capabilities.preferred_version = Some(version);
         self
     }
@@ -408,7 +408,7 @@ mod tests {
     #[test]
     fn test_client_capabilities_builder() {
         let capabilities = ClientRequirementsBuilder::new("test_client", Version::new(1, 0, 0))
-            .prefer_version(Version::new(2, 1, 0))
+            .preferred_version(Version::new(2, 1, 0))
             .support_versions(vec![Version::new(2, 0, 0), Version::new(2, 1, 0)])
             .require_feature("feature1")
             .prefer_feature("feature2")
@@ -452,7 +452,7 @@ mod tests {
 
         let client_capabilities =
             ClientRequirementsBuilder::new("test_client", Version::new(1, 0, 0))
-                .prefer_version(Version::new(1, 1, 0))
+                .preferred_version(Version::new(1, 1, 0))
                 .support_versions(vec![
                     Version::new(1, 0, 0),
                     Version::new(1, 1, 0),

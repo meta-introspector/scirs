@@ -61,15 +61,15 @@ pub struct TestEvaluator<F: Float + Debug + ScalarOperand + FromPrimitive + Send
     prediction_outputs: Option<PredictionOutput<F>>,
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> TestEvaluator<F> {
     /// Create a new test set evaluator
-    pub fn new(config: TestConfig) -> Result<Self> {
+    pub fn new(_config: TestConfig) -> Result<Self> {
         // Create evaluator
         let eval_config = EvaluationConfig {
-            batch_size: config.batch_size,
+            batch_size: _config.batch_size,
             shuffle: false,
-            num_workers: config.num_workers,
-            metrics: config.metrics.clone(),
-            steps: config.steps,
-            verbose: config.verbose,
+            num_workers: _config.num_workers,
+            metrics: _config.metrics.clone(),
+            steps: _config.steps,
+            verbose: _config.verbose,
         };
         let evaluator = Evaluator::new(eval_config)?;
         Ok(Self {
@@ -172,8 +172,8 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> TestEvaluat
         let mut target_shape = first_target.shape().to_vec();
         target_shape[0] = total_samples;
         // Initialize combined arrays
-        let mut combined_preds = Array::<F, _>::zeros(IxDyn(&pred_shape));
-        let mut combined_targets = Array::<F, _>::zeros(IxDyn(&target_shape));
+        let mut combined_preds = Array::<F>::zeros(IxDyn(&pred_shape));
+        let mut combined_targets = Array::<F>::zeros(IxDyn(&target_shape));
         // Copy data from all batches
         let mut current_idx = 0;
         for (pred_batch, target_batch) in all_predictions.iter().zip(all_targets.iter()) {
@@ -189,7 +189,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> TestEvaluat
         // Extract prediction classes and probabilities for classification tasks
         let classes = if first_pred.ndim() > 1 && first_pred.shape()[1] > 1 {
             // Multi-class classification
-            let mut class_indices = Array::<F, _>::zeros(IxDyn(&[combined_preds.shape()[0], 1]));
+            let mut class_indices = Array::<F>::zeros(IxDyn(&[combined_preds.shape()[0], 1]));
             for i in 0..combined_preds.shape()[0] {
                 let mut max_idx = 0;
                 let mut max_val = combined_preds[[i, 0]];
@@ -226,7 +226,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> TestEvaluat
             Some(probs)
         } else if first_pred.ndim() == 2 && first_pred.shape()[1] == 1 {
             // Binary classification with sigmoid outputs
-            let mut probs = Array::<F, _>::zeros(IxDyn(&[combined_preds.shape()[0], 2]));
+            let mut probs = Array::<F>::zeros(IxDyn(&[combined_preds.shape()[0], 2]));
                 let p = combined_preds[[i, 0]];
                 probs[[i, 0]] = F::one() - p;
                 probs[[i, 1]] = p;
@@ -254,7 +254,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> TestEvaluat
                 let target_classes = if outputs.targets.ndim() > 1 && outputs.targets.shape()[1] > 1
                 {
                     // One-hot encoded targets
-                    let mut class_indices = Array::<F, _>::zeros(IxDyn(&[outputs.targets.shape()[0], 1]));
+                    let mut class_indices = Array::<F>::zeros(IxDyn(&[outputs.targets.shape()[0], 1]));
                     for i in 0..outputs.targets.shape()[0] {
                         let mut max_idx = 0;
                         let mut max_val = outputs.targets[[i, 0]];
@@ -268,7 +268,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> TestEvaluat
                     class_indices
                 } else if outputs.targets.ndim() == 2 && outputs.targets.shape()[1] == 1 {
                     // Binary targets
-                    let mut class_indices = Array::<F, _>::zeros((outputs.targets.shape()[0], 1));
+                    let mut class_indices = Array::<F>::zeros((outputs.targets.shape()[0], 1));
                         class_indices[[i, 0]] = if outputs.targets[[i, 0]] >= F::from(0.5).unwrap()
                         {
                             F::from(1).unwrap()
@@ -339,7 +339,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> TestEvaluat
     pub fn confusion_matrix(&self) -> Result<Array<usize, ndarray::Ix2>> {
                 // Determine number of classes
                 // Initialize confusion matrix
-                let mut cm = Array::<usize, _>::zeros((n_classes, n_classes));
+                let mut cm = Array::<usize>::zeros((n_classes, n_classes));
                 // Fill confusion matrix
                     let pred = pred_classes[[i, 0]].to_usize().unwrap_or(0);
                     let target = target_classes[[i, 0]].to_usize().unwrap_or(0);

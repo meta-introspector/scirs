@@ -4,7 +4,7 @@
 //! and functional by testing basic operations from each module.
 
 use ndarray::{array, Array1};
-use scirs2_spatial::{
+use scirs2__spatial::{
     ai_driven_optimization::AIAlgorithmSelector,
     distance::euclidean,
 
@@ -188,7 +188,7 @@ async fn test_neuromorphic(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Test spiking neural clustering
     let mut spiking_clusterer = SpikingNeuralClusterer::new(2);
-    let (labels, _spike_events) = spiking_clusterer.fit(&points.view())?;
+    let (labels_spike_events) = spiking_clusterer.fit(&points.view())?;
 
     if labels.len() != points.nrows() {
         return Err("Neuromorphic clustering returned wrong number of labels".into());
@@ -231,7 +231,7 @@ async fn test_hybrid_algorithms(
         .with_quantum_exploration_ratio(0.7)
         .with_classical_refinement(true);
 
-    let (_centers, labels, _metrics) = hybrid_clusterer.fit(&points.view()).await?;
+    let (_centers, labels_metrics) = hybrid_clusterer.fit(&points.view()).await?;
 
     if labels.len() != points.nrows() {
         return Err("Hybrid clustering returned wrong number of labels".into());

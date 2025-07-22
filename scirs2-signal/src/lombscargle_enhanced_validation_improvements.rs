@@ -11,13 +11,14 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::lombscargle;
-use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig};
+use crate::lombscargle__enhanced::{LombScargleConfig, lombscargle_enhanced};
 use num_traits::Float;
 use rand::Rng;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(unused_imports)]
 /// Enhanced bootstrap validation for confidence intervals
 #[derive(Debug, Clone)]
 pub struct BootstrapValidationResult {
@@ -102,8 +103,8 @@ pub fn validate_bootstrap_confidence_intervals(
     confidence_levels: &[f64],
 ) -> SignalResult<BootstrapValidationResult> {
     check_positive(n_bootstrap, "n_bootstrap")?;
-    check_finite(signal, "signal")?;
-    check_finite(time, "time")?;
+    check_finite(signal, "signal value")?;
+    check_finite(time, "time value")?;
 
     if signal.len() != time.len() {
         return Err(SignalError::ValueError(
@@ -116,7 +117,7 @@ pub fn validate_bootstrap_confidence_intervals(
     let mut successful_iterations = 0;
     let mut bootstrap_powers = Vec::new();
 
-    // Perform bootstrap iterations
+    // Perform _bootstrap iterations
     for _ in 0..n_bootstrap {
         // Resample with replacement
         let mut bootstrap_signal = vec![0.0; n];
@@ -156,7 +157,7 @@ pub fn validate_bootstrap_confidence_intervals(
 
     if successful_iterations < n_bootstrap / 2 {
         return Err(SignalError::ComputationError(format!(
-            "Too many bootstrap failures: {} successful out of {}",
+            "Too many _bootstrap failures: {} successful out of {}",
             successful_iterations, n_bootstrap
         )));
     }
@@ -168,7 +169,7 @@ pub fn validate_bootstrap_confidence_intervals(
         coverage_accuracy.push((conf_level, coverage));
     }
 
-    // Compute bootstrap statistics
+    // Compute _bootstrap statistics
     let bootstrap_bias = compute_bootstrap_bias(&bootstrap_powers)?;
     let bootstrap_variance = compute_bootstrap_variance(&bootstrap_powers)?;
     let consistency_score = compute_consistency_score(&bootstrap_powers)?;
@@ -188,8 +189,8 @@ pub fn analyze_numerical_precision(
     signal: &[f64],
     time: &[f64],
 ) -> SignalResult<PrecisionAnalysisResult> {
-    check_finite(signal, "signal")?;
-    check_finite(time, "time")?;
+    check_finite(signal, "signal value")?;
+    check_finite(time, "time value")?;
 
     // Convert to f32 precision
     let signal_f32: Vec<f32> = signal.iter().map(|&x| x as f32).collect();
@@ -210,15 +211,8 @@ pub fn analyze_numerical_precision(
         Some(1.0),
         None,
     )?;
-    let (freqs_f32, power_f32) = lombscargle(
-        &signal_f32_as_f64,
-        &time_f32_as_f64,
-        None,
-        None,
-        None,
-        None,
-        None,
-    )?;
+    let (freqs_f32, power_f32) = lombscargle(&signal_f32_as_f64, &time_f32_as_f64, None, None, None, None,
+        None, None, None)?;
 
     // Analyze differences
     let mut max_error = 0.0;
@@ -239,7 +233,7 @@ pub fn analyze_numerical_precision(
             }
         }
     }
-    mean_error /= min_len as f64;
+    mean_error /= min_len  as f64;
 
     // Estimate precision loss in bits
     let precision_loss_bits = if max_error > 0.0 {
@@ -260,8 +254,8 @@ pub fn analyze_numerical_precision(
     };
 
     Ok(PrecisionAnalysisResult {
-        f32_f64_max_error: max_error,
-        f32_f64_mean_error: mean_error,
+        f32, _f64_max_error: max_error,
+        f32, _f64_mean_error: mean_error,
         precision_loss_bits,
         stability_score,
         cancellation_events,
@@ -366,7 +360,7 @@ pub fn analyze_statistical_power(
         let mut detection_count = 0;
 
         for _ in 0..n_trials {
-            // Generate test signal with known frequency
+            // Generate test signal with known _frequency
             let time: Vec<f64> = (0..signal_length).map(|i| i as f64).collect();
             let signal: Vec<f64> = time
                 .iter()
@@ -403,7 +397,7 @@ pub fn analyze_statistical_power(
             }
         }
 
-        let detection_power = detection_count as f64 / n_trials as f64;
+        let detection_power = detection_count as f64 / n_trials  as f64;
         power_curve.push((snr_db, detection_power));
 
         // Estimate error rates
@@ -416,14 +410,14 @@ pub fn analyze_statistical_power(
     }
 
     let n_snr_points = snr_range_db.len();
-    let type_i_error_rate = type_i_errors as f64 / n_snr_points.max(1) as f64;
-    let type_ii_error_rate = type_ii_errors as f64 / n_snr_points.max(1) as f64;
+    let type_i_error_rate = type_i_errors as f64 / n_snr_points.max(1)  as f64;
+    let type_ii_error_rate = type_ii_errors as f64 / n_snr_points.max(1)  as f64;
 
     // Find minimum detectable effect size (50% power point)
     let minimum_effect_size = power_curve
         .iter()
         .find(|(_, power)| *power >= 0.5)
-        .map(|(snr, _)| *snr)
+        .map(|(snr_)| *snr)
         .unwrap_or(0.0);
 
     let calibration_score = 100.0 - (type_i_error_rate + type_ii_error_rate) * 50.0;
@@ -443,8 +437,8 @@ pub fn validate_cross_implementation_consistency(
     signal: &[f64],
     time: &[f64],
 ) -> SignalResult<CrossImplementationResult> {
-    check_finite(signal, "signal")?;
-    check_finite(time, "time")?;
+    check_finite(signal, "signal value")?;
+    check_finite(time, "time value")?;
 
     // Standard implementation
     let (freqs_std, power_std) = lombscargle(
@@ -479,7 +473,7 @@ pub fn validate_cross_implementation_consistency(
             frequency_consistency.push(0.0);
         }
     }
-    mean_absolute_deviation /= min_len as f64;
+    mean_absolute_deviation /= min_len  as f64;
 
     // Compute correlation
     let correlation = compute_correlation(&power_std[..min_len], &enhanced_result.power[..min_len]);
@@ -534,8 +528,8 @@ fn compute_bootstrap_coverage(
 }
 
 #[allow(dead_code)]
-fn compute_bootstrap_bias(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
-    if bootstrap_powers.is_empty() {
+fn compute_bootstrap_bias(_bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
+    if _bootstrap_powers.is_empty() {
         return Ok(0.0);
     }
 
@@ -544,7 +538,7 @@ fn compute_bootstrap_bias(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
 
     for i in 0..n_points {
         let values: Vec<f64> = bootstrap_powers.iter().map(|power| power[i]).collect();
-        let mean = values.iter().sum::<f64>() / values.len() as f64;
+        let mean = values.iter().sum::<f64>() / values.len()  as f64;
         let median = compute_median(&values);
         total_bias += (mean - median).abs();
     }
@@ -553,8 +547,8 @@ fn compute_bootstrap_bias(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn compute_bootstrap_variance(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
-    if bootstrap_powers.is_empty() {
+fn compute_bootstrap_variance(_bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
+    if _bootstrap_powers.is_empty() {
         return Ok(0.0);
     }
 
@@ -563,9 +557,9 @@ fn compute_bootstrap_variance(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64
 
     for i in 0..n_points {
         let values: Vec<f64> = bootstrap_powers.iter().map(|power| power[i]).collect();
-        let mean = values.iter().sum::<f64>() / values.len() as f64;
+        let mean = values.iter().sum::<f64>() / values.len()  as f64;
         let variance =
-            values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / (values.len() - 1) as f64;
+            values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / (values.len() - 1)  as f64;
         total_variance += variance;
     }
 
@@ -573,8 +567,8 @@ fn compute_bootstrap_variance(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64
 }
 
 #[allow(dead_code)]
-fn compute_consistency_score(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
-    if bootstrap_powers.len() < 2 {
+fn compute_consistency_score(_bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
+    if _bootstrap_powers.len() < 2 {
         return Ok(0.0);
     }
 
@@ -593,8 +587,8 @@ fn compute_consistency_score(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64>
 }
 
 #[allow(dead_code)]
-fn compute_percentile_interval(values: &[f64], confidence_level: f64) -> (f64, f64) {
-    let mut sorted_values = values.to_vec();
+fn compute_percentile_interval(_values: &[f64], confidence_level: f64) -> (f64, f64) {
+    let mut sorted_values = _values.to_vec();
     sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let alpha = 1.0 - confidence_level;
@@ -605,8 +599,8 @@ fn compute_percentile_interval(values: &[f64], confidence_level: f64) -> (f64, f
 }
 
 #[allow(dead_code)]
-fn compute_median(values: &[f64]) -> f64 {
-    let mut sorted_values = values.to_vec();
+fn compute_median(_values: &[f64]) -> f64 {
+    let mut sorted_values = _values.to_vec();
     sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let n = sorted_values.len();
@@ -623,7 +617,7 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
         return 0.0;
     }
 
-    let n = x.len() as f64;
+    let n = x.len()  as f64;
     let mean_x = x.iter().sum::<f64>() / n;
     let mean_y = y.iter().sum::<f64>() / n;
 
@@ -673,7 +667,7 @@ pub fn comprehensive_lombscargle_validation(
     }
 
     let mut validation_results = ComprehensiveLombScargleValidationResult::default();
-    let mut issues = Vec::new();
+    let mut issues: Vec<String> = Vec::new();
     let mut performance_metrics = Vec::new();
 
     // 1. Statistical Power Analysis
@@ -684,7 +678,7 @@ pub fn comprehensive_lombscargle_validation(
                 test_signal_length,
                 freq,
                 snr_db,
-                bootstrap_iterations / 5, // Fewer iterations for power analysis
+                bootstrap_iterations / 5, // Fewer _iterations for power analysis
             )?;
             power_analysis_results.push((snr_db, freq, power_result));
         }
@@ -771,7 +765,7 @@ pub fn comprehensive_lombscargle_validation(
     let scores = vec![
         power_analysis_results
             .iter()
-            .map(|(_, _, result)| result.calibration_score)
+            .map(|(__, result)| result.calibration_score)
             .sum::<f64>()
             / power_analysis_results.len() as f64,
         validation_results
@@ -789,7 +783,7 @@ pub fn comprehensive_lombscargle_validation(
         simd_consistency_score,
     ];
 
-    validation_results.overall_score = scores.iter().sum::<f64>() / scores.len() as f64;
+    validation_results.overall_score = scores.iter().sum::<f64>() / scores.len()  as f64;
     validation_results.issues = issues;
 
     Ok(validation_results)
@@ -872,7 +866,7 @@ fn test_edge_case_robustness() -> SignalResult<f64> {
         Ok((_, power)) => {
             // Should produce flat spectrum
             let power_variance =
-                power.iter().map(|&p| (p - power[0]).powi(2)).sum::<f64>() / power.len() as f64;
+                power.iter().map(|&p| (p - power[0]).powi(2)).sum::<f64>() / power.len()  as f64;
             if power_variance > 0.1 {
                 score -= 15.0;
             }
@@ -894,7 +888,7 @@ fn test_edge_case_robustness() -> SignalResult<f64> {
         None,
     ) {
         Ok((_, power)) => {
-            if !power.iter().all(|&p| p.is_finite()) {
+            if !power.iter().all(|&p: &f64| p.is_finite()) {
                 score -= 20.0;
             }
         }
@@ -915,7 +909,7 @@ fn test_edge_case_robustness() -> SignalResult<f64> {
         None,
     ) {
         Ok((_, power)) => {
-            if !power.iter().all(|&p| p.is_finite() && p >= 0.0) {
+            if !power.iter().all(|&p: &f64| p.is_finite() && p >= 0.0) {
                 score -= 20.0;
             }
         }
@@ -949,7 +943,7 @@ fn benchmark_lombscargle_performance(
         times.push(start.elapsed().as_secs_f64() * 1000.0); // Convert to ms
     }
 
-    let mean_time = times.iter().sum::<f64>() / times.len() as f64;
+    let mean_time = times.iter().sum::<f64>() / times.len()  as f64;
     let throughput = signal.len() as f64 / (mean_time / 1000.0);
 
     // Simple performance scoring based on throughput
@@ -973,9 +967,9 @@ fn benchmark_lombscargle_performance(
 
 /// Analyze memory efficiency
 #[allow(dead_code)]
-fn analyze_memory_efficiency(signal_length: usize) -> SignalResult<MemoryPerformanceResult> {
-    // Estimate memory usage based on signal length
-    let estimated_memory = signal_length * 16; // Rough estimate: 2 f64 arrays
+fn analyze_memory_efficiency(_signal_length: usize) -> SignalResult<MemoryPerformanceResult> {
+    // Estimate memory usage based on signal _length
+    let estimated_memory = _signal_length * 16; // Rough estimate: 2 f64 arrays
     let efficiency_score = if estimated_memory < 1_000_000 {
         1.0
     } else if estimated_memory < 10_000_000 {
@@ -995,14 +989,14 @@ fn analyze_memory_efficiency(signal_length: usize) -> SignalResult<MemoryPerform
 
 /// Validate SIMD vs scalar consistency
 #[allow(dead_code)]
-fn validate_simd_scalar_consistency(signal: &[f64], time: &[f64]) -> SignalResult<f64> {
+fn validate_simd_scalar_consistency(_signal: &[f64], time: &[f64]) -> SignalResult<f64> {
     // For now, return a high score as we'd need actual SIMD implementation to test
     // In a real implementation, this would compare SIMD-accelerated vs scalar versions
     let consistency_score = 95.0;
 
-    // Basic validation that the signal processing doesn't fail
+    // Basic validation that the _signal processing doesn't fail
     match lombscargle(
-        signal,
+        _signal,
         time,
         None,
         Some("standard"),
@@ -1012,7 +1006,7 @@ fn validate_simd_scalar_consistency(signal: &[f64], time: &[f64]) -> SignalResul
         None,
     ) {
         Ok((_, power)) => {
-            if power.iter().all(|&p| p.is_finite() && p >= 0.0) {
+            if power.iter().all(|&p: &f64| p.is_finite() && p >= 0.0) {
                 Ok(consistency_score)
             } else {
                 Ok(consistency_score * 0.8)

@@ -5,12 +5,13 @@
 //! performance analysis and validation.
 
 use ndarray::{Array1, Array2};
-use num_complex::Complex64;
-use scirs2_signal::{
+use num__complex::Complex64;
+use scirs2__signal::{
     advanced_simd_dwt, advanced_simd_fft, advanced_simd_resample, advanced_simd_rfft,
     advanced_simd_stft, generate_simd_performance_report, AdvancedSimdConfig,
 };
 use std::time::Instant;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -318,8 +319,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("     - AVX512 detected: Use 512-bit vectors for maximum performance")
                 }
                 "AVX2" => println!("     - AVX2 detected: Excellent 256-bit vector performance"),
-                "SSE4.1" => println!("     - SSE4.1 detected: Good baseline performance"),
-                _ => println!("     - {} detected", capability),
+                "SSE4.1" => println!("     - SSE4.1 detected: Good baseline performance", _ => println!("     - {} detected", capability),
             }
         }
     }
@@ -435,8 +435,8 @@ fn create_test_signal_real(n: usize, frequencies: &[f64], sample_rate: f64) -> A
 
 /// Convert real signal to complex for FFT testing
 #[allow(dead_code)]
-fn convert_real_to_complex(real_signal: &Array1<f64>) -> Array1<Complex64> {
-    real_signal.mapv(|x| Complex64::new(x, 0.0))
+fn convert_real_to_complex(_real_signal: &Array1<f64>) -> Array1<Complex64> {
+    _real_signal.mapv(|x| Complex64::new(x, 0.0))
 }
 
 /// Test signals container
@@ -447,6 +447,6 @@ struct TestSignals {
 
 /// Convert real array to complex
 #[allow(dead_code)]
-fn real_to_complex(real: &Array1<f64>) -> Array1<Complex64> {
-    real.mapv(|x| Complex64::new(x, 0.0))
+fn real_to_complex(_real: &Array1<f64>) -> Array1<Complex64> {
+    _real.mapv(|x| Complex64::new(x, 0.0))
 }

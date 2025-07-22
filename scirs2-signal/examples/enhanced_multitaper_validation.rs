@@ -3,7 +3,7 @@
 //! This example demonstrates the comprehensive validation suite for multitaper
 //! spectral estimation, including SciPy reference comparison and Advanced enhancements.
 
-use scirs2_signal::{
+use scirs2__signal::{
     generate_multitaper_validation_report, run_scipy_multitaper_validation,
     EnhancedTestSignalConfig, TestSignalType,
 };
@@ -97,9 +97,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Critical issues
-    if !validation_result.critical_issues.is_empty() {
+    if !validation_result.issues.is_empty() {
         println!("\n⚠️ Critical Issues Found:");
-        for issue in &validation_result.critical_issues {
+        for issue in &validation_result.issues {
             println!("  - {}", issue);
         }
     }

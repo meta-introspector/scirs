@@ -1,6 +1,6 @@
 //! Machine learning based sentiment analysis demonstration
 
-use scirs2_text::{MLSentimentAnalyzer, MLSentimentConfig, TextDataset};
+use scirs2__text::{MLSentimentAnalyzer, MLSentimentConfig, TextDataset};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

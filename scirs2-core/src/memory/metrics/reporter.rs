@@ -55,7 +55,7 @@ impl MemoryReport {
 
         output.push_str(&format!(
             "Memory Report (duration: {})\n",
-            format_duration(self.duration)
+            format_duration(Duration::from_secs(1))
         ));
         output.push_str(&format!(
             "Total Current Usage: {}\n",
@@ -170,7 +170,7 @@ impl MemoryReport {
 
     /// Export the report as JSON - stub when memory_metrics is disabled
     #[cfg(not(feature = "memory_metrics"))]
-    pub fn to_json(&self) -> String {
+    pub fn to_json_2(&self) -> String {
         "{}".to_string()
     }
 
@@ -281,7 +281,7 @@ mod tests {
         let mut component_stats = HashMap::new();
 
         component_stats.insert(
-            "Component1".to_string(),
+            Component1.to_string(),
             ComponentMemoryStats {
                 current_usage: 1024,
                 peak_usage: 2048,
@@ -292,7 +292,7 @@ mod tests {
         );
 
         component_stats.insert(
-            "Component2".to_string(),
+            Component2.to_string(),
             ComponentMemoryStats {
                 current_usage: 512,
                 peak_usage: 1024,
@@ -317,8 +317,8 @@ mod tests {
         assert!(formatted.contains("Total Current Usage: 1.50 KB"));
         assert!(formatted.contains("Total Peak Usage: 3.00 KB"));
         assert!(formatted.contains("Total Allocations: 15"));
-        assert!(formatted.contains("Component1"));
-        assert!(formatted.contains("Component2"));
+        assert!(formatted.contains(Component1));
+        assert!(formatted.contains(Component2));
     }
 
     #[test]
@@ -326,7 +326,7 @@ mod tests {
         let mut component_stats = HashMap::new();
 
         component_stats.insert(
-            "Component1".to_string(),
+            Component1.to_string(),
             ComponentMemoryStats {
                 current_usage: 1024,
                 peak_usage: 2048,
@@ -348,10 +348,10 @@ mod tests {
         #[cfg(feature = "memory_metrics")]
         {
             let json = report.to_json();
-            assert_eq!(json["total_current_usage"], 1024);
-            assert_eq!(json["total_peak_usage"], 2048);
-            assert_eq!(json["total_allocation_count"], 10);
-            assert_eq!(json["components"]["Component1"]["current_usage"], 1024);
+            assert_eq!(json[total_current_usage], 1024);
+            assert_eq!(json[total_peak_usage], 2048);
+            assert_eq!(json[total_allocation_count], 10);
+            assert_eq!(json[components][Component1][current_usage], 1024);
         }
 
         #[cfg(not(feature = "memory_metrics"))]

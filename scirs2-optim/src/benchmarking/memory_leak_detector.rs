@@ -269,8 +269,7 @@ pub trait LeakDetector: Debug + Send + Sync {
 pub trait PatternDetector: Debug + Send + Sync {
     /// Detect memory usage patterns
     fn detect_patterns(
-        &self,
-        snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<MemoryPattern>>;
 
     /// Get detector name
@@ -404,9 +403,9 @@ pub struct PerformanceMetrics {
 
 impl MemoryLeakDetector {
     /// Create a new memory leak detector
-    pub fn new(config: MemoryDetectionConfig) -> Self {
+    pub fn new(_config: MemoryDetectionConfig) -> Self {
         let mut detector = Self {
-            config: config.clone(),
+            _config: _config.clone(),
             allocation_tracker: AllocationTracker::new(),
             pattern_analyzer: MemoryPatternAnalyzer::new(),
             detectors: Vec::new(),
@@ -430,7 +429,7 @@ impl MemoryLeakDetector {
 
         // Add advanced leak detectors
         if self.config.enable_real_time_monitoring {
-            use crate::benchmarking::advanced_leak_detectors::{
+            use crate::benchmarking::advanced_leak__detectors::{
                 ReferenceCountingConfig, ReferenceCountingDetector,
             };
             let ref_counting_config = ReferenceCountingConfig::default();
@@ -578,7 +577,7 @@ impl MemoryLeakDetector {
         let previous =
             &self.pattern_analyzer.usage_patterns[self.pattern_analyzer.usage_patterns.len() - 2];
 
-        let time_diff = recent.timestamp.saturating_sub(previous.timestamp) as f64;
+        let time_diff = (recent.timestamp - previous.timestamp) as f64;
         if time_diff > 0.0 {
             (recent.total_memory as f64 - previous.total_memory as f64) / time_diff
         } else {
@@ -834,11 +833,10 @@ impl MemoryOptimizer {
 
         // Sort by priority and remove duplicates
         recommendations.sort_by(|a, b| match (a.priority.clone(), b.priority.clone()) {
-            (RecommendationPriority::Critical, _) => std::cmp::Ordering::Less,
-            (_, RecommendationPriority::Critical) => std::cmp::Ordering::Greater,
-            (RecommendationPriority::High, _) => std::cmp::Ordering::Less,
-            (_, RecommendationPriority::High) => std::cmp::Ordering::Greater,
-            _ => std::cmp::Ordering::Equal,
+            (RecommendationPriority:: Critical) =>, std::cmp::Ordering::Less,
+            (_, RecommendationPriority::Critical) =>, std::cmp::Ordering::Greater,
+            (RecommendationPriority:: High) =>, std::cmp::Ordering::Less,
+            (_, RecommendationPriority::High) => std::cmp::Ordering::Greater_ =>, std::cmp::Ordering::Equal,
         });
 
         recommendations.dedup_by(|a, b| a.description == b.description);
@@ -865,8 +863,7 @@ impl GrowthBasedLeakDetector {
 
 impl LeakDetector for GrowthBasedLeakDetector {
     fn detect_leaks(
-        &self,
-        _allocation_history: &VecDeque<AllocationEvent>,
+        &self, _allocation_history: &VecDeque<AllocationEvent>,
         usage_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<MemoryLeakResult> {
         if usage_snapshots.len() < 2 {
@@ -934,7 +931,7 @@ impl LeakDetector for GrowthBasedLeakDetector {
                 vec![]
             },
             detailed_analysis: format!(
-                "Memory growth analysis: {:.2}x growth detected over {} snapshots",
+                "Memory growth analysis: {:.2}x growth detected over {} _snapshots",
                 growth_ratio,
                 usage_snapshots.len()
             ),
@@ -967,9 +964,7 @@ impl PatternBasedLeakDetector {
 
 impl LeakDetector for PatternBasedLeakDetector {
     fn detect_leaks(
-        &self,
-        _allocation_history: &VecDeque<AllocationEvent>,
-        _usage_snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self, _allocation_history: &VecDeque<AllocationEvent>, _usage_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<MemoryLeakResult> {
         // Simplified pattern-based detection
         Ok(MemoryLeakResult {
@@ -1010,9 +1005,7 @@ impl StatisticalLeakDetector {
 
 impl LeakDetector for StatisticalLeakDetector {
     fn detect_leaks(
-        &self,
-        _allocation_history: &VecDeque<AllocationEvent>,
-        _usage_snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self, _allocation_history: &VecDeque<AllocationEvent>, _usage_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<MemoryLeakResult> {
         // Simplified statistical detection
         Ok(MemoryLeakResult {
@@ -1055,8 +1048,7 @@ impl TrendPatternDetector {
 
 impl PatternDetector for TrendPatternDetector {
     fn detect_patterns(
-        &self,
-        _snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<MemoryPattern>> {
         Ok(vec![MemoryPattern {
             pattern_type: "trend".to_string(),
@@ -1083,8 +1075,7 @@ impl PeriodicPatternDetector {
 
 impl PatternDetector for PeriodicPatternDetector {
     fn detect_patterns(
-        &self,
-        _snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<MemoryPattern>> {
         Ok(vec![])
     }
@@ -1108,8 +1099,7 @@ impl SpikeAnomalyDetector {
 
 impl AnomalyDetector for SpikeAnomalyDetector {
     fn detect_anomalies(
-        &self,
-        _snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<MemoryAnomaly>> {
         Ok(vec![])
     }
@@ -1131,8 +1121,7 @@ impl LeakAnomalyDetector {
 
 impl AnomalyDetector for LeakAnomalyDetector {
     fn detect_anomalies(
-        &self,
-        _snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<MemoryAnomaly>> {
         Ok(vec![])
     }
@@ -1157,8 +1146,7 @@ impl PoolingStrategy {
 impl OptimizationStrategy for PoolingStrategy {
     fn recommend(
         &self,
-        leak_result: &MemoryLeakResult,
-        _usage_history: &VecDeque<MemoryUsageSnapshot>,
+        leak_result: &MemoryLeakResult_usage, _history: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<OptimizationRecommendation>> {
         let mut recommendations = Vec::new();
 
@@ -1198,8 +1186,7 @@ impl InPlaceStrategy {
 impl OptimizationStrategy for InPlaceStrategy {
     fn recommend(
         &self,
-        leak_result: &MemoryLeakResult,
-        _usage_history: &VecDeque<MemoryUsageSnapshot>,
+        leak_result: &MemoryLeakResult_usage, _history: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<OptimizationRecommendation>> {
         let mut recommendations = Vec::new();
 
@@ -1239,9 +1226,7 @@ impl CacheStrategy {
 
 impl OptimizationStrategy for CacheStrategy {
     fn recommend(
-        &self,
-        _leak_result: &MemoryLeakResult,
-        _usage_history: &VecDeque<MemoryUsageSnapshot>,
+        &self, _leak_result: &MemoryLeakResult_usage, _history: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<OptimizationRecommendation>> {
         Ok(vec![OptimizationRecommendation {
             recommendation_type: RecommendationType::CacheOptimization,

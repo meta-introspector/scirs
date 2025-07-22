@@ -8,6 +8,7 @@ use std::fmt::{Debug, Display};
 
 use crate::error::{Result, TimeSeriesError};
 use crate::utils::{autocorrelation, partial_autocorrelation};
+use statrs::statistics::Statistics;
 
 /// Residual diagnostics for time series models
 #[derive(Debug, Clone)]
@@ -182,19 +183,19 @@ where
 
 /// Calculate skewness and kurtosis
 #[allow(dead_code)]
-fn calculate_moments<S, F>(data: &ArrayBase<S, Ix1>) -> Result<(F, F)>
+fn calculate_moments<S, F>(_data: &ArrayBase<S, Ix1>) -> Result<(F, F)>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Display,
 {
-    let n = F::from(data.len()).unwrap();
-    let mean = data.mean().unwrap_or(F::zero());
+    let n = F::from(_data.len()).unwrap();
+    let mean = _data.mean().unwrap_or(F::zero());
 
     let mut m2 = F::zero();
     let mut m3 = F::zero();
     let mut m4 = F::zero();
 
-    for &x in data.iter() {
+    for &x in _data.iter() {
         let diff = x - mean;
         let diff2 = diff * diff;
         m2 = m2 + diff2;
@@ -260,13 +261,13 @@ where
 
 /// Jarque-Bera test for normality
 #[allow(dead_code)]
-pub fn jarque_bera_test<S, F>(residuals: &ArrayBase<S, Ix1>, alpha: F) -> Result<JarqueBeraTest<F>>
+pub fn jarque_bera_test<S, F>(_residuals: &ArrayBase<S, Ix1>, alpha: F) -> Result<JarqueBeraTest<F>>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Display,
 {
-    let n = F::from(residuals.len()).unwrap();
-    let (skewness, kurtosis) = calculate_moments(residuals)?;
+    let n = F::from(_residuals.len()).unwrap();
+    let (skewness, kurtosis) = calculate_moments(_residuals)?;
 
     // Jarque-Bera statistic
     let statistic = n / F::from(6.0).unwrap()
@@ -286,24 +287,24 @@ where
 
 /// ARCH test for heteroskedasticity
 #[allow(dead_code)]
-pub fn arch_test<S, F>(residuals: &ArrayBase<S, Ix1>, lags: usize, alpha: F) -> Result<ArchTest<F>>
+pub fn arch_test<S, F>(_residuals: &ArrayBase<S, Ix1>, lags: usize, alpha: F) -> Result<ArchTest<F>>
 where
     S: Data<Elem = F>,
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
 {
-    scirs2_core::validation::check_array_finite(residuals, "residuals")?;
+    scirs2_core::validation::check_array_finite(_residuals, "_residuals")?;
 
-    let n = residuals.len();
+    let n = _residuals.len();
     if lags >= n {
         return Err(TimeSeriesError::InvalidInput(
             "Number of lags exceeds residual length".to_string(),
         ));
     }
 
-    // Square the residuals
-    let squared_residuals = residuals.mapv(|x| x * x);
+    // Square the _residuals
+    let squared_residuals = _residuals.mapv(|x| x * x);
 
-    // Regress squared residuals on their lags
+    // Regress squared _residuals on their lags
     use ndarray::Array2;
 
     let y = squared_residuals.slice(ndarray::s![lags..]).to_owned();
@@ -495,7 +496,7 @@ where
     let fold_size = (n - min_train_size - forecast_horizon) / n_folds;
     if fold_size == 0 {
         return Err(TimeSeriesError::InvalidInput(
-            "Too many folds for available data".to_string(),
+            "Too many _folds for available data".to_string(),
         ));
     }
 
@@ -555,7 +556,7 @@ where
 
 /// Simplified chi-squared p-value calculation
 #[allow(dead_code)]
-fn chi_squared_pvalue<F>(statistic: F, df: usize) -> Result<F>
+fn chi_squared_pvalue<F>(_statistic: F, df: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Display,
 {
@@ -566,7 +567,7 @@ where
     if df > 30 {
         let mean = F::from(df).unwrap();
         let std_dev = (F::from(2 * df).unwrap()).sqrt();
-        let z = (statistic - mean) / std_dev;
+        let z = (_statistic - mean) / std_dev;
 
         // Approximate p-value using standard normal
         if z > F::from(3.0).unwrap() {
@@ -586,16 +587,15 @@ where
             3 => (F::from(7.815).unwrap(), F::from(11.345).unwrap()),
             4 => (F::from(9.488).unwrap(), F::from(13.277).unwrap()),
             5 => (F::from(11.070).unwrap(), F::from(15.086).unwrap()),
-            10 => (F::from(18.307).unwrap(), F::from(23.209).unwrap()),
-            _ => (
+            10 => (F::from(18.307).unwrap(), F::from(23.209).unwrap(), _ => (
                 F::from(df).unwrap() * F::from(1.5).unwrap(),
                 F::from(df).unwrap() * F::from(2.0).unwrap(),
             ),
         };
 
-        if statistic > critical_values.1 {
+        if _statistic > critical_values.1 {
             Ok(F::from(0.01).unwrap())
-        } else if statistic > critical_values.0 {
+        } else if _statistic > critical_values.0 {
             Ok(F::from(0.05).unwrap())
         } else {
             Ok(F::from(0.1).unwrap())

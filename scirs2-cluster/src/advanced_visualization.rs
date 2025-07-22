@@ -4,13 +4,14 @@
 //! results, including quantum state visualization, neuromorphic adaptation plots,
 //! and AI algorithm selection insights.
 
-use crate::advanced_clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
+use crate::advanced__clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
 use crate::error::{ClusteringError, Result};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::HashMap;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use statrs::statistics::Statistics;
 
 /// Visualization configuration for Advanced clustering results
 #[derive(Debug, Clone)]
@@ -180,9 +181,9 @@ impl Default for AdvancedVisualizationConfig {
 
 impl AdvancedVisualizer {
     /// Create a new Advanced visualizer
-    pub fn new(config: AdvancedVisualizationConfig) -> Self {
+    pub fn new(_config: AdvancedVisualizationConfig) -> Self {
         Self {
-            config,
+            _config,
             quantum_history: Vec::new(),
             adaptation_timeline: Vec::new(),
             ai_insights: AISelectionInsights::default(),
@@ -519,7 +520,7 @@ impl AdvancedVisualizer {
     /// Calculate quantum weight for each sample based on its properties
     fn calculate_quantum_sample_weight(&self, sample_idx: usize, sample: &ArrayView1<f64>) -> f64 {
         // Quantum weighting based on sample entropy and variance
-        let sample_variance = sample.var(0.0);
+        let sample_variance = sample.variance();
         let sample_mean = sample.mean().unwrap_or(0.0);
 
         // Information theoretic weight
@@ -589,7 +590,7 @@ impl AdvancedVisualizer {
                 }
             }
 
-            // Orthogonalize against previous components using quantum Gram-Schmidt
+            // Orthogonalize against previous _components using quantum Gram-Schmidt
             for prev_comp in 0..component {
                 let prev_vector = eigenvectors.column(prev_comp);
                 let projection = vector.dot(&prev_vector);
@@ -661,8 +662,7 @@ impl AdvancedVisualizer {
             60..=119 => (x, c, 0.0),
             120..=179 => (0.0, c, x),
             180..=239 => (0.0, x, c),
-            240..=299 => (x, 0.0, c),
-            _ => (c, 0.0, x),
+            240..=299 => (x, 0.0, c, _ => (c, 0.0, x),
         };
 
         // Quantum enhancement: add slight iridescence
@@ -682,8 +682,7 @@ impl AdvancedVisualizer {
     ) -> Result<()> {
         match self.config.export_format {
             VisualizationExportFormat::JSONData => self.export_to_json(output, filename),
-            VisualizationExportFormat::InteractiveHTML => self.export_to_html(output, filename),
-            _ => {
+            VisualizationExportFormat::InteractiveHTML => self.export_to_html(output, filename, _ => {
                 // For other formats, return a placeholder implementation
                 println!("Export format not yet implemented, saving as JSON");
                 self.export_to_json(output, filename)
@@ -767,9 +766,9 @@ impl AdvancedVisualizer {
     /// Create comprehensive JSON export data
     #[cfg(feature = "serde")]
     fn create_json_export_data(&self, output: &AdvancedVisualizationOutput) -> serde_json::Value {
-        use serde_json::json;
+        use serde__json::_json;
 
-        json!({
+        _json!({
             "advanced_visualization": {
                 "metadata": {
                     "export_timestamp": std::time::SystemTime::now()
@@ -786,19 +785,19 @@ impl AdvancedVisualizer {
                     "quantum_enhancement": output.cluster_plot.quantum_enhancement,
                     "confidence_levels": output.cluster_plot.confidence_levels
                 },
-                "quantum_coherence": output.quantum_plot.as_ref().map(|qp| json!({
+                "quantum_coherence": output.quantum_plot.as_ref().map(|qp| _json!({
                     "time_points": qp.time_points.len(),
                     "coherence_evolution": format!("{}x{} matrix", qp.coherence_values.nrows(), qp.coherence_values.ncols()),
                     "phase_evolution": format!("{}x{} matrix", qp.phase_evolution.nrows(), qp.phase_evolution.ncols()),
                     "entanglement_connections": qp.entanglement_network.len()
                 })),
-                "neuromorphic_adaptation": output.neuromorphic_plot.as_ref().map(|np| json!({
+                "neuromorphic_adaptation": output.neuromorphic_plot.as_ref().map(|np| _json!({
                     "neuron_activity": format!("{}x{} matrix", np.neuron_activity.nrows(), np.neuron_activity.ncols()),
                     "spike_patterns": format!("{}x{} matrix", np.spike_patterns.nrows(), np.spike_patterns.ncols()),
                     "weight_evolution_steps": np.weight_evolution.len(),
                     "learning_curve_length": np.learning_curve.len()
                 })),
-                "ai_selection": output.ai_selection_plot.as_ref().map(|ap| json!({
+                "ai_selection": output.ai_selection_plot.as_ref().map(|ap| _json!({
                     "algorithms_evaluated": ap.algorithm_scores.len(),
                     "selected_algorithm": ap.selected_algorithm,
                     "selection_timeline_steps": ap.selection_timeline.len(),
@@ -969,7 +968,7 @@ impl AdvancedVisualizer {
             .performance_dashboard
             .improvement_factors
             .iter()
-            .find(|(name, _)| name.contains("Neuromorphic"))
+            .find(|(name_)| name.contains("Neuromorphic"))
             .map(|(_, value)| *value)
             .unwrap_or(1.0)
     }
@@ -980,7 +979,7 @@ impl AdvancedVisualizer {
             .performance_dashboard
             .improvement_factors
             .iter()
-            .find(|(name, _)| name.contains("AI"))
+            .find(|(name_)| name.contains("AI"))
             .map(|(_, value)| *value)
             .unwrap_or(1.0)
     }

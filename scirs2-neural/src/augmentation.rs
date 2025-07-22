@@ -13,6 +13,7 @@ use num_traits::Float;
 use rand::Rng;
 use std::collections::HashMap;
 use std::fmt::Debug;
+use statrs::statistics::Statistics;
 /// Image augmentation transforms
 #[derive(Debug, Clone, PartialEq)]
 pub enum ImageAugmentation {
@@ -208,13 +209,13 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
     AugmentationManager<F>
 {
     /// Create a new augmentation manager
-    pub fn new(rng_seed: Option<u64>) -> Self {
+    pub fn new(_rng_seed: Option<u64>) -> Self {
         Self {
             image_transforms: Vec::new(),
             text_transforms: Vec::new(),
             audio_transforms: Vec::new(),
             mix_strategies: Vec::new(),
-            rng_seed,
+            _rng_seed,
             stats: AugmentationStatistics {
                 samples_processed: 0,
                 avg_intensity: F::zero(),
@@ -330,19 +331,17 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         // In practice, this would involve proper image rotation algorithms
         let result = images.clone();
         for _i in 0..batch_size {
-            let _angle = rng().gen_range(min_angle..=max_angle);
+            let _angle = rng().random_range(min_angle..=max_angle);
             // Apply rotation (simplified - just return original for now)
             // Real implementation would use affine transformations
     fn random_scale(
-        _preserve_aspect_ratio: bool,
-        // Simplified scaling implementation
+        _preserve_aspect_ratio: bool..// Simplified scaling implementation
         // In practice, this would involve proper image scaling algorithms
-            let _scale = rng().gen_range(min_scale..=max_scale);
+            let _scale = rng().random_range(min_scale..=max_scale);
             // Apply scaling (simplified - just return original for now)
             // Real implementation would use interpolation
     fn random_crop(
-        _padding: Option<usize>,
-        if images.ndim() < 4 {
+        _padding: Option<usize>..if images.ndim() < 4 {
             return Err(NeuralError::InvalidArchitecture(
                 "Random crop requires 4D input (NCHW)".to_string(),
             ));
@@ -355,16 +354,14 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
             let start_h = rng().random_range(0..=(height - crop_height));
             let start_w = rng().random_range(0..=(width - crop_width));
             let crop = images.slice(ndarray::s![
-                i,
-                ..,
+                i....,
                 start_h..start_h + crop_height,
                 start_w..start_w + crop_width
             ]);
             result.slice_mut(ndarray::s![i, .., .., ..]).assign(&crop);
         Ok(result.into_dyn())
     fn color_jitter(
-        _saturation: Option<f64>,
-        _hue: Option<f64>,
+        _saturation: Option<f64>, _hue: Option<f64>,
         // Apply brightness adjustment
         if let Some(bright_factor) = brightness {
             let factor =
@@ -376,7 +373,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
                     .unwrap();
             let mean = result.mean().unwrap_or(F::zero());
             result = (result - mean) * factor + mean;
-        // Clamp values to valid range [0, 1] (assuming normalized images)
+        // Clamp values to valid range [0..1] (assuming normalized images)
         result = result.mapv(|x| x.max(F::zero()).min(F::one()));
     fn gaussian_noise(
         if rand::random::<f64>() < probability {
@@ -386,8 +383,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
             });
             result = result + noise;
     fn random_erasing(
-                "Random erasing requires 4D input (NCHW)".to_string(),
-        let fill_val = F::from(fill_value).unwrap_or(F::zero());
+                "Random erasing requires 4D input (NCHW)".to_string()..let fill_val = F::from(fill_value).unwrap_or(F::zero());
                 let area_ratio = rng().random_range(area_ratio_range.0..=area_ratio_range.1);
                 let aspect_ratio =
                     rng().random_range(aspect_ratio_range.0..=aspect_ratio_range.1);
@@ -399,15 +395,13 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
                     let start_w = rng().random_range(0..=(width - mask_width));
                     result
                         .slice_mut(ndarray::s![
-                            i,
-                            ..,
+                            i....,
                             start_h..start_h + mask_height,
                             start_w..start_w + mask_width
                         ])
                         .fill(fill_val);
     fn elastic_deformation(
-        _alpha: f64,
-        _sigma: f64,
+        _alpha: f64_sigma: f64,
         // Simplified elastic deformation implementation
         // In practice, this would involve complex displacement field generation
             // Apply simple noise as a placeholder for elastic deformation
@@ -416,9 +410,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
             result = result + noise * noise_factor;
     /// Apply MixUp augmentation to a batch
     pub fn apply_mixup(
-        &mut self,
-        labels: &ArrayD<F>,
-    ) -> Result<(ArrayD<F>, ArrayD<F>)> {
+        &mut self..labels: &ArrayD<F>,) -> Result<(ArrayD<F>, ArrayD<F>)> {
         if batch_size < 2 {
             return Ok((images.clone(), labels.clone()));
         let lambda = self.sample_beta_distribution(alpha)?;
@@ -464,8 +456,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
             let start_w = rng().random_range(0..=(width - cut_width));
             // Cut and paste
             let patch = images.slice(ndarray::s![
-                j,
-                start_h..start_h + cut_height,
+                j..start_h..start_h + cut_height,
                 start_w..start_w + cut_width
                 .slice_mut(ndarray::s![
                     i,
@@ -582,7 +573,7 @@ mod tests {
         let mut manager = AugmentationManager::<f64>::new(Some(42));
         manager.add_image_transform(ImageAugmentation::RandomHorizontalFlip { probability: 1.0 });
         let input =
-            Array4::<f64>::from_shape_fn((2, 3, 4, 4), |(_, _, _, _)| rand::random()).into_dyn();
+            Array4::<f64>::from_shape_fn((2, 3, 4, 4), |(____)| rand::random()).into_dyn();
         let result = manager.augment_images(&input).unwrap();
         assert_eq!(result.shape(), input.shape());
         assert!(manager.stats.samples_processed > 0);

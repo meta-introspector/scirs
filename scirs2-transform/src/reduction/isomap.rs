@@ -7,11 +7,12 @@
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::validation::{check_positive, check_shape};
-use scirs2_linalg::eigh;
+use scirs2__linalg::eigh;
 use std::collections::BinaryHeap;
 use std::f64;
 
 use crate::error::{Result, TransformError};
+use statrs::statistics::Statistics;
 
 /// Isomap (Isometric Feature Mapping) dimensionality reduction
 ///
@@ -42,9 +43,9 @@ impl Isomap {
     /// # Arguments
     /// * `n_neighbors` - Number of neighbors for graph construction
     /// * `n_components` - Number of dimensions in the embedding space
-    pub fn new(n_neighbors: usize, n_components: usize) -> Self {
+    pub fn new(_n_neighbors: usize, n_components: usize) -> Self {
         Isomap {
-            n_neighbors,
+            _n_neighbors,
             n_components,
             neighbor_mode: "knn".to_string(),
             epsilon: 0.0,
@@ -354,7 +355,7 @@ impl Isomap {
         let geodesic_distances = self.geodesic_distances.as_ref().unwrap();
 
         let (n_new, n_features) = x_new.dim();
-        let (n_training, _) = training_data.dim();
+        let (n_training_) = training_data.dim();
 
         if n_features != training_data.ncols() {
             return Err(TransformError::InvalidInput(format!(
@@ -364,7 +365,7 @@ impl Isomap {
             )));
         }
 
-        // Step 1: Compute distances from new points to all training points
+        // Step 1: Compute distances from _new points to all training points
         let mut distances_to_training = Array2::zeros((n_new, n_training));
         for i in 0..n_new {
             for j in 0..n_training {
@@ -378,7 +379,7 @@ impl Isomap {
         }
 
         // Step 2: Apply Landmark MDS algorithm
-        // For each new point, find its coordinates that minimize stress
+        // For each _new point, find its coordinates that minimize stress
         // with respect to the known training points
         let mut new_embedding = Array2::zeros((n_new, self.n_components));
 
@@ -402,24 +403,23 @@ impl Isomap {
     fn solve_landmark_coordinates(
         &self,
         distances_to_landmarks: &ndarray::ArrayView1<f64>,
-        landmark_embedding: &Array2<f64>,
-        _geodesic_distances: &Array2<f64>,
+        landmark_embedding: &Array2<f64>, _geodesic_distances: &Array2<f64>,
     ) -> Result<Array1<f64>> {
         let n_landmarks = landmark_embedding.nrows();
 
-        // Use a subset of landmarks for efficiency (select k nearest)
+        // Use a subset of _landmarks for efficiency (select k nearest)
         let k_landmarks = (n_landmarks / 2)
             .max(self.n_components + 1)
             .min(n_landmarks);
 
-        // Find k nearest landmarks
+        // Find k nearest _landmarks
         let mut landmark_dists: Vec<(f64, usize)> = distances_to_landmarks
             .indexed_iter()
             .map(|(idx, &dist)| (dist, idx))
             .collect();
         landmark_dists.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
-        // Use the k nearest landmarks
+        // Use the k nearest _landmarks
         let selected_landmarks: Vec<usize> = landmark_dists
             .into_iter()
             .take(k_landmarks)
@@ -427,8 +427,8 @@ impl Isomap {
             .collect();
 
         // Build system: A * x = b where x are the coordinates
-        // Using the constraint that distances in embedding space should
-        // approximate geodesic distances
+        // Using the constraint that _distances in _embedding space should
+        // approximate geodesic _distances
         let mut a = Array2::zeros((k_landmarks, self.n_components));
         let mut b = Array1::zeros(k_landmarks);
         let mut weights = Array1::zeros(k_landmarks);

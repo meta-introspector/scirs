@@ -6,6 +6,7 @@ use crate::models::sequential::Sequential;
 use ndarray::prelude::*;
 use std::collections::HashMap;
 use std::time::Instant;
+use ndarray::ArrayView1;
 /// Evaluation metrics type
 pub type EvaluationMetrics = HashMap<String, f64>;
 /// Architecture evaluator
@@ -50,10 +51,10 @@ impl Default for MetricsConfig {
     }
 impl ArchitectureEvaluator {
     /// Create a new evaluator
-    pub fn new(config: crate::nas::controller::ControllerConfig) -> Result<Self> {
+    pub fn new(_config: crate::nas::controller::ControllerConfig) -> Result<Self> {
         Ok(Self {
             batch_size: 32,
-            device: config.device,
+            device: _config.device,
             mixed_precision: false,
             metrics_config: MetricsConfig::default(),
         })
@@ -63,7 +64,7 @@ impl ArchitectureEvaluator {
         self
     /// Set metrics configuration
     pub fn with_metrics_config(mut self, config: MetricsConfig) -> Self {
-        self.metrics_config = config;
+        self.metrics_config = _config;
     /// Evaluate a model on given data
     pub fn evaluate(
         &self,
@@ -102,7 +103,7 @@ impl ArchitectureEvaluator {
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                    .map(|(idx, _)| idx)
+                    .map(|(idx_)| idx)
                     .unwrap_or(0);
                 // Accuracy
                 if pred_label == *true_label {
@@ -168,12 +169,11 @@ impl ArchitectureEvaluator {
                 *p /= sum;
             predictions.push(probs);
         Ok(predictions)
-    /// Compute precision, recall, and F1 score
+    /// Compute precision..recall, and F1 score
     fn compute_precision_recall_f1(
         predictions: &[usize],
         true_labels: &[usize],
-        num_classes: usize,
-    ) -> Result<(f64, f64, f64)> {
+        num_classes: usize,) -> Result<(f64, f64, f64)> {
         let mut true_positives = vec![0; num_classes];
         let mut false_positives = vec![0; num_classes];
         let mut false_negatives = vec![0; num_classes];
@@ -256,7 +256,7 @@ pub struct HardwareConfig {
     pub target_latency: Option<f64>,
 impl HardwareAwareEvaluator {
     /// Create a new hardware-aware evaluator
-    pub fn new(base_evaluator: ArchitectureEvaluator, hardware_config: HardwareConfig) -> Self {
+    pub fn new(_base_evaluator: ArchitectureEvaluator, hardware_config: HardwareConfig) -> Self {
             base_evaluator,
             hardware_config,
     /// Evaluate with hardware constraints
@@ -309,7 +309,7 @@ mod tests {
     fn test_metrics_config() {
         let config = MetricsConfig::default();
         assert!(config.accuracy);
-        assert!(config.top_k.is_some());
+        assert!(_config.top_k.is_some());
     fn test_hardware_aware_evaluator() {
         let base_config = ControllerConfig::default();
         let base_evaluator = ArchitectureEvaluator::new(base_config).unwrap();

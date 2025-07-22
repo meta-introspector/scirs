@@ -5,7 +5,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use ndarray::{Array2, ArrayView2};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 use std::any::Any;
@@ -14,23 +14,23 @@ use std::num::NonZeroUsize;
 
 // Helper function to attempt downcast to Complex64
 #[allow(dead_code)]
-fn downcast_to_complex<T: 'static>(value: &T) -> Option<Complex64> {
+fn downcast_to_complex<T: 'static>(_value: &T) -> Option<Complex64> {
     // Check if T is Complex64
-    if let Some(complex) = (value as &dyn Any).downcast_ref::<Complex64>() {
+    if let Some(complex) = (_value as &dyn Any).downcast_ref::<Complex64>() {
         return Some(*complex);
     }
 
     // Try to directly convert from num_complex::Complex<f32>
-    if let Some(complex) = (value as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
+    if let Some(complex) = (_value as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
         return Some(Complex64::new(complex.re as f64, complex.im as f64));
     }
 
     // Try to convert from rustfft's Complex type
-    if let Some(complex) = (value as &dyn Any).downcast_ref::<RustComplex<f64>>() {
+    if let Some(complex) = (_value as &dyn Any).downcast_ref::<RustComplex<f64>>() {
         return Some(Complex64::new(complex.re, complex.im));
     }
 
-    if let Some(complex) = (value as &dyn Any).downcast_ref::<RustComplex<f32>>() {
+    if let Some(complex) = (_value as &dyn Any).downcast_ref::<RustComplex<f32>>() {
         return Some(Complex64::new(complex.re as f64, complex.im as f64));
     }
 
@@ -70,8 +70,8 @@ pub enum FftMode {
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::memory_efficient::{fft_inplace, FftMode};
-/// use num_complex::Complex64;
+/// use scirs2__fft::memory_efficient::{fft_inplace, FftMode};
+/// use num__complex::Complex64;
 ///
 /// // Create input and output buffers
 /// let mut input_buffer = vec![Complex64::new(1.0, 0.0),
@@ -114,11 +114,11 @@ pub fn fft_inplace(
     if use_simd {
         // Use the SIMD-accelerated FFT implementation
         let result = match mode {
-            FftMode::Forward => crate::simd_fft::fft_adaptive(
+            FftMode::Forward =>, crate::simd_fft::fft_adaptive(
                 input,
                 if normalize { Some("forward") } else { None },
             )?,
-            FftMode::Inverse => crate::simd_fft::ifft_adaptive(
+            FftMode::Inverse =>, crate::simd_fft::ifft_adaptive(
                 input,
                 if normalize { Some("backward") } else { None },
             )?,
@@ -415,7 +415,7 @@ where
     let input_length = input.len();
     let n_val = n.unwrap_or(input_length);
     let chunk_size_val = chunk_size.unwrap_or(
-        // Default chunk size based on array size
+        // Default chunk _size based on array _size
         if input_length > 1_000_000 {
             // For arrays > 1M, use 1024 * 1024
             1_048_576
@@ -573,7 +573,7 @@ where
     }
 
     // For inverse transforms, we need to normalize by the full length
-    // instead of chunk size, so adjust the scaling
+    // instead of chunk _size, so adjust the scaling
     if mode == FftMode::Inverse {
         let full_scale = 1.0 / (n_val as f64);
         let chunk_scale = 1.0 / (chunk_size_val as f64);

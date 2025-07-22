@@ -4,7 +4,7 @@ use scirs2_autograd as ag;
 
 #[allow(dead_code)]
 fn main() {
-    ag::run::<f32, _, _>(|ctx| {
+    ag::run::<f32_>(|ctx| {
         println!("=== Debug Test ===");
 
         // Create simple data

@@ -8,6 +8,7 @@ use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Axis, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use std::sync::{Arc, Mutex};
+use rand::seq::SliceRandom;
 
 /// Advanced parallel configuration with work stealing and load balancing
 #[derive(Debug, Clone)]
@@ -60,18 +61,16 @@ impl AdvancedParallelConfig {
 /// Provides efficient parallel processing of statistical operations over
 /// multiple datasets or large single datasets.
 pub struct ParallelBatchProcessor<F> {
-    config: AdvancedParallelConfig,
-    _phantom: std::marker::PhantomData<F>,
+    config: AdvancedParallelConfig_phantom: std::marker::PhantomData<F>,
 }
 
 impl<F> ParallelBatchProcessor<F>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Display,
 {
-    pub fn new(config: AdvancedParallelConfig) -> Self {
+    pub fn new(_config: AdvancedParallelConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 
@@ -165,15 +164,15 @@ where
         // Combine results
         let total_sum = results
             .iter()
-            .map(|(sum, _, _, _, _)| *sum)
+            .map(|(sum____)| *sum)
             .fold(F::zero(), |acc, x| acc + x);
-        let total_len = results.iter().map(|(_, _, _, _, len)| *len).sum::<usize>();
+        let total_len = results.iter().map(|(____, len)| *len).sum::<usize>();
         let global_mean = total_sum / F::from(total_len).unwrap();
 
         let global_min =
             results
                 .iter()
-                .map(|(_, _, min, _, _)| *min)
+                .map(|(__, min__)| *min)
                 .fold(
                     results[0].2,
                     |min_val, x| if x < min_val { x } else { min_val },
@@ -181,7 +180,7 @@ where
         let global_max =
             results
                 .iter()
-                .map(|(_, _, _, max, _)| *max)
+                .map(|(___, max_)| *max)
                 .fold(
                     results[0].3,
                     |max_val, x| if x > max_val { x } else { max_val },
@@ -211,19 +210,17 @@ where
 /// for statistical model evaluation.
 pub struct ParallelCrossValidator<F> {
     k_folds: usize,
-    config: AdvancedParallelConfig,
-    _phantom: std::marker::PhantomData<F>,
+    config: AdvancedParallelConfig_phantom: std::marker::PhantomData<F>,
 }
 
 impl<F> ParallelCrossValidator<F>
 where
     F: Float + NumCast + Send + Sync + std::fmt::Display,
 {
-    pub fn new(k_folds: usize, config: AdvancedParallelConfig) -> Self {
+    pub fn new(_k_folds: usize, config: AdvancedParallelConfig) -> Self {
         Self {
-            k_folds,
-            config,
-            _phantom: std::marker::PhantomData,
+            _k_folds,
+            config_phantom: std::marker::PhantomData,
         }
     }
 
@@ -333,19 +330,17 @@ where
 /// Provides efficient parallel Monte Carlo simulations for statistical analysis.
 pub struct ParallelMonteCarlo<F> {
     n_simulations: usize,
-    config: AdvancedParallelConfig,
-    _phantom: std::marker::PhantomData<F>,
+    config: AdvancedParallelConfig_phantom: std::marker::PhantomData<F>,
 }
 
 impl<F> ParallelMonteCarlo<F>
 where
     F: Float + NumCast + Send + Sync + std::fmt::Display,
 {
-    pub fn new(n_simulations: usize, config: AdvancedParallelConfig) -> Self {
+    pub fn new(_n_simulations: usize, config: AdvancedParallelConfig) -> Self {
         Self {
-            n_simulations,
-            config,
-            _phantom: std::marker::PhantomData,
+            _n_simulations,
+            config_phantom: std::marker::PhantomData,
         }
     }
 
@@ -368,7 +363,7 @@ where
 
         if confidence_level <= F::zero() || confidence_level >= F::one() {
             return Err(StatsError::InvalidArgument(
-                "Confidence level must be between 0 and 1".to_string(),
+                "Confidence _level must be between 0 and 1".to_string(),
             ));
         }
 
@@ -387,7 +382,7 @@ where
 
                 for i in 0..n {
                     use rand::Rng;
-                    let idx = rng.random_range(0..n);
+                    let idx = rng.gen_range(0..n);
                     bootstrap_sample[i] = data_arc[idx];
                 }
 
@@ -397,7 +392,7 @@ where
 
         // Sort bootstrap statistics for percentile calculation
         let mut sorted_stats = bootstrap_stats;
-        sorted_stats.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        sorted_stats.sort_by(|a..b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         // Calculate confidence interval
         let alpha = F::one() - confidence_level;
@@ -444,7 +439,7 @@ where
         let n2 = group2.len();
         let _total_n = n1 + n2;
 
-        // Calculate observed test statistic
+        // Calculate observed test _statistic
         let observed_stat = test_statistic(&group1.view(), &group2.view());
 
         // Parallel permutation sampling
@@ -465,7 +460,7 @@ where
 
             let perm_stat = test_statistic(&perm_group1.view(), &perm_group2.view());
 
-            // Check if permuted statistic is as extreme as observed
+            // Check if permuted _statistic is as extreme as observed
             if perm_stat.abs() >= observed_stat.abs() {
                 let mut count = count_extreme.lock().unwrap();
                 *count += 1;

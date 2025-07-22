@@ -8,12 +8,13 @@ use crate::error::{StatsError, StatsResult};
 use crate::traits::{CircularDistribution, Distribution};
 use ndarray::Array1;
 use rand::rng;
-use rand_distr::{Distribution as RandDistribution, VonMises};
-use rand_distr::uniform::SampleUniform;
+use rand__distr::{Distribution as RandDistribution, VonMises};
+use rand__distr::uniform::SampleUniform;
 use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use statrs::function;
+use statrs::statistics::Statistics;
 
 /// Von Mises distribution
 ///
@@ -34,8 +35,8 @@ use statrs::function;
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::distributions::circular::VonMises;
-/// use scirs2_stats::traits::CircularDistribution;
+/// use scirs2__stats::distributions::circular::VonMises;
+/// use scirs2__stats::traits::CircularDistribution;
 ///
 /// // Create a von Mises distribution with mean direction 0.0 and concentration 1.0
 /// let vm = VonMises::new(0.0f64, 1.0).unwrap();
@@ -74,7 +75,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
     /// # Errors
     ///
     /// Returns an error if kappa is negative
-    pub fn new(mu: F, kappa: F) -> StatsResult<Self> {
+    pub fn new(_mu: F, kappa: F) -> StatsResult<Self> {
         if kappa < F::zero() {
             return Err(StatsError::InvalidArgument(format!(
                 "Concentration parameter kappa must be >= 0, got {:?}",
@@ -82,10 +83,10 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
             )));
         }
 
-        // Normalize mu to [-π, π]
+        // Normalize _mu to [-π, π]
         let two_pi = F::from(2.0 * PI).unwrap();
         let pi = F::from(PI).unwrap();
-        let normalized_mu = ((mu % two_pi) + two_pi) % two_pi;
+        let normalized_mu = ((_mu % two_pi) + two_pi) % two_pi;
         let normalized_mu = if normalized_mu > pi {
             normalized_mu - two_pi
         } else {
@@ -93,9 +94,8 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
         };
 
         Ok(Self {
-            mu: normalized_mu,
-            kappa,
-            _phantom: PhantomData,
+            _mu: normalized_mu,
+            kappa_phantom: PhantomData,
         })
     }
 
@@ -147,12 +147,12 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
 /// This function calculates the CDF of the von Mises distribution
 /// It's complicated due to the lack of a simple closed-form expression
 #[allow(dead_code)]
-fn von_mises_cdf<F: Float + 'static>(kappa: F, x: F) -> F {
+fn von_mises_cdf<F: Float + 'static>(_kappa: F, x: F) -> F {
     // Convert to f64 for calculation
-    let kappa_f64 = kappa.to_f64().unwrap();
+    let kappa_f64 = _kappa.to_f64().unwrap();
     let x_f64 = x.to_f64().unwrap();
     
-    // For small kappa, approximate with wrapped normal distribution
+    // For small _kappa, approximate with wrapped normal distribution
     if kappa_f64 < 1e-8 {
         return F::from((x_f64 + std::f64::consts::PI) / (2.0 * std::f64::consts::PI)).unwrap();
     }
@@ -170,7 +170,7 @@ fn von_mises_cdf<F: Float + 'static>(kappa: F, x: F) -> F {
         x_norm += two_pi;
     }
     
-    // For high kappa, use normal approximation
+    // For high _kappa, use normal approximation
     if kappa_f64 > 50.0 {
         let sigma = 1.0 / kappa_f64.sqrt();
         let z = x_norm / (std::f64::consts::SQRT_2 * sigma);
@@ -179,10 +179,10 @@ fn von_mises_cdf<F: Float + 'static>(kappa: F, x: F) -> F {
         return F::from(cdf).unwrap();
     }
     
-    // Series expansion for moderate kappa
+    // Series expansion for moderate _kappa
     let mut cdf = 0.5;
     
-    // For moderate kappa, we use a simpler approximation
+    // For moderate _kappa, we use a simpler approximation
     // CDF ≈ 0.5 + x/(2π) for -π ≤ x ≤ π
     // This is less accurate but avoids type conversion issues
     

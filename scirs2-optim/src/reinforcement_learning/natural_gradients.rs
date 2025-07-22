@@ -95,7 +95,7 @@ impl<T: Float> Default for NaturalGradientConfig<T> {
 /// Natural Policy Gradient optimizer
 pub struct NaturalPolicyGradient<T: Float, P: PolicyNetwork<T>> {
     /// Configuration
-    config: NaturalGradientConfig<T>,
+    _config: NaturalGradientConfig<T>,
 
     /// Policy network
     policy: P,
@@ -174,7 +174,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
     NaturalPolicyGradient<T, P>
 {
     /// Create a new natural policy gradient optimizer
-    pub fn new(config: NaturalGradientConfig<T>, policy: P, param_dim: usize) -> Self {
+    pub fn new(_config: NaturalGradientConfig<T>, policy: P, param_dim: usize) -> Self {
         let fisher_accumulator = FisherAccumulator {
             fisher_sum: Array2::zeros((param_dim, param_dim)),
             sample_count: 0,
@@ -191,7 +191,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
         };
 
         Self {
-            config,
+            _config,
             policy,
             fisher_matrix: None,
             fisher_diagonal: None,
@@ -303,14 +303,14 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
     }
 
     /// Update block diagonal Fisher approximation
-    fn update_block_diagonal_fisher(&mut self, _trajectory: &TrajectoryBatch<T>) -> Result<()> {
+    fn update_block_diagonal_fisher(&mut self_trajectory: &TrajectoryBatch<T>) -> Result<()> {
         // Block diagonal approximation groups parameters into blocks
         // and assumes independence between blocks
         Ok(())
     }
 
     /// Update Kronecker factorization
-    fn update_kronecker_factors(&mut self, _trajectory: &TrajectoryBatch<T>) -> Result<()> {
+    fn update_kronecker_factors(&mut self_trajectory: &TrajectoryBatch<T>) -> Result<()> {
         // Kronecker factorization approximates the Fisher matrix as
         // a Kronecker product of smaller matrices (K-FAC style)
         Ok(())
@@ -378,9 +378,9 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
     /// Apply natural gradient update
     fn apply_natural_gradient_update(&mut self, natural_gradients: &Array1<T>) -> Result<()> {
         // In practice, this would update the policy network parameters
-        // using the natural gradients
+        // using the natural _gradients
 
-        // Apply momentum if previous natural gradients exist
+        // Apply momentum if previous natural _gradients exist
         let update = if let Some(ref prev_ng) = self.natural_grad_state.prev_natural_grad {
             natural_gradients + &(prev_ng * self.natural_grad_state.momentum)
         } else {
@@ -409,17 +409,15 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
     }
 
     /// Update policy network parameters
-    fn update_policy_parameters(&mut self, _update: &Array1<T>) -> Result<()> {
-        // Placeholder for actual parameter update
+    fn update_policy_parameters(&mut self_update: &Array1<T>) -> Result<()> {
+        // Placeholder for actual parameter _update
         // In practice, this would modify the policy network weights
         Ok(())
     }
 
     /// Compute log probability gradients
     fn compute_log_prob_gradients(
-        &self,
-        _obs: &Array1<T>,
-        _action: &Array1<T>,
+        &self_obs: &Array1<T>, _action: &Array1<T>,
     ) -> Result<Array1<T>> {
         // Placeholder for computing gradients of log probability
         // This would typically involve backpropagation through the policy network

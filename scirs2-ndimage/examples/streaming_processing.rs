@@ -1,7 +1,7 @@
 //! Example demonstrating streaming operations for large images
 
 use ndarray::{Array2, ArrayView2};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     filters::fourier::{fourier_gaussian_file, fourier_uniform_file},
     stream_process_file, StreamConfig, StreamableOp, StreamingGaussianFilter,
 };
@@ -45,7 +45,7 @@ fn process_large_image_gaussian() {
 
     // This would process the image in chunks without loading it all into memory
     println!("Would process image of size {:?} in chunks...", shape);
-    // stream_process_file::<f64, ndarray::Ix2, _>(
+    // stream_process_file::<f64, ndarray::Ix2_>(
     //     input_path,
     //     output_path,
     //     shape,
@@ -109,10 +109,7 @@ fn process_with_custom_op() {
         }
 
         fn merge_overlap(
-            &self,
-            _output: &mut ndarray::ArrayViewMut2<f64>,
-            _new_chunk: &ArrayView2<f64>,
-            _overlap_info: &scirs2_ndimage::streaming::OverlapInfo,
+            &self_output: &mut ndarray::ArrayViewMut2<f64>, _new_chunk: &ArrayView2<f64>, _overlap_info: &scirs2, _ndimage: :streaming::OverlapInfo,
         ) -> scirs2_ndimage::NdimageResult<()> {
             // Simple blending in overlap regions
             Ok(())
@@ -130,7 +127,7 @@ fn process_with_custom_op() {
 mod tests {
     use super::*;
     use ndarray::arr2;
-    use scirs2_ndimage::StreamProcessor;
+    use scirs2__ndimage::StreamProcessor;
 
     #[test]
     fn test_streaming_small_array() {

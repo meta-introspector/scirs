@@ -33,7 +33,7 @@
 //!
 //! // Use tracing
 //! if let Some(tracer) = tracing::global_tracer() {
-//!     let span = tracer.start_span("data_processing")?;
+//!     let span = tracer.start_span(data_processing)?;
 //!     span.in_span(|| {
 //!         // Your code here
 //!     });

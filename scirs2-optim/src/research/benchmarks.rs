@@ -7,7 +7,7 @@
 use crate::error::Result;
 use crate::research::experiments::{Experiment, ExperimentResult};
 use crate::optimizers::*;
-use crate::unified_api::OptimizerConfig;
+use crate::unified__api::OptimizerConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
@@ -548,10 +548,10 @@ pub struct BenchmarkSettings {
 
 impl AcademicBenchmarkSuite {
     /// Create a new benchmark suite
-    pub fn new(name: &str) -> Self {
+    pub fn new(_name: &str) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
-            name: name.to_string(),
+            _name: _name.to_string(),
             description: String::new(),
             benchmarks: Vec::new(),
             metrics: Vec::new(),
@@ -760,9 +760,9 @@ impl AcademicBenchmarkSuite {
 
 impl BenchmarkRunner {
     /// Create a new benchmark runner
-    pub fn new(suite: AcademicBenchmarkSuite, settings: BenchmarkSettings) -> Self {
+    pub fn new(_suite: AcademicBenchmarkSuite, settings: BenchmarkSettings) -> Self {
         Self {
-            suite,
+            _suite,
             settings,
             progress_callback: None}
     }
@@ -867,8 +867,7 @@ impl BenchmarkRunner {
         // Simulate optimization run
         let final_objective = match benchmark.objective_function.function_type {
             FunctionType::Quadratic => self.simulate_quadratic_optimization(seed),
-            FunctionType::Rosenbrock => self.simulate_rosenbrock_optimization(seed),
-            _ => self.simulate_generic_optimization(seed)};
+            FunctionType::Rosenbrock => self.simulate_rosenbrock_optimization(seed, _ => self.simulate_generic_optimization(seed)};
         
         let execution_time = start_time.elapsed().as_secs_f64();
         let iterations = std::cmp::min(1000, self.settings.max_iterations);
@@ -895,21 +894,21 @@ impl BenchmarkRunner {
         use scirs2_core::random::{Random, Rng};
         
         let mut rng = Random::default();
-        rng.random_range(1e-8, 1e-4) // Simulate good convergence for quadratic
+        rng.gen_range(1e-8..1e-4) // Simulate good convergence for quadratic
     }
     
     fn simulate_rosenbrock_optimization(&self, seed: u64) -> f64 {
         use scirs2_core::random::{Random, Rng};
         
         let mut rng = Random::default();
-        rng.random_range(1e-6, 1e-2) // Simulate moderate convergence for Rosenbrock
+        rng.gen_range(1e-6..1e-2) // Simulate moderate convergence for Rosenbrock
     }
     
     fn simulate_generic_optimization(&self, seed: u64) -> f64 {
         use scirs2_core::random::{Random, Rng};
         
         let mut rng = Random::default();
-        rng.random_range(1e-5, 1e-1) // Generic optimization results
+        rng.gen_range(1e-5..1e-1) // Generic optimization results
     }
     
     fn generate_synthetic_trajectory(&self, final_value: f64, iterations: usize) -> Vec<f64> {
@@ -918,8 +917,8 @@ impl BenchmarkRunner {
         
         for i in 0..iterations {
             let progress = i as f64 / iterations as f64;
-            let value = initial_value * (1.0 - progress).powi(2) + final_value * progress;
-            trajectory.push(value);
+            let _value = initial_value * (1.0 - progress).powi(2) + final_value * progress;
+            trajectory.push(_value);
         }
         
         trajectory
@@ -1077,8 +1076,8 @@ impl BenchmarkRunner {
         // Calculate rankings based on overall scores
         let mut optimizer_scores: Vec<(String, f64)> = all_results
             .iter()
-            .filter_map(|(name, results)| {
-                results.overall_scores.get("overall_score")
+            .filter_map(|(name, _results)| {
+                _results.overall_scores.get("overall_score")
                     .map(|&score| (name.clone(), score))
             })
             .collect();
@@ -1086,9 +1085,9 @@ impl BenchmarkRunner {
         optimizer_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         
         for (rank, (optimizer_name, score)) in optimizer_scores.iter().enumerate() {
-            if let Some(results) = all_results.get_mut(optimizer_name) {
-                results.ranking.overall_rank = rank + 1;
-                results.ranking.ranking_score = *score;
+            if let Some(_results) = all_results.get_mut(optimizer_name) {
+                _results.ranking.overall_rank = rank + 1;
+                _results.ranking.ranking_score = *score;
             }
         }
         

@@ -18,8 +18,8 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_interpolate::cache::{CachedBSpline, BSplineCache};
-//! use scirs2_interpolate::bspline::ExtrapolateMode;
+//! use scirs2__interpolate::cache::{CachedBSpline, BSplineCache};
+//! use scirs2__interpolate::bspline::ExtrapolateMode;
 //!
 //! // Create a cached B-spline for fast repeated evaluations
 //! let knots = Array1::linspace(0.0, 10.0, 20);
@@ -31,10 +31,7 @@
 //!     3, // degree
 //!     ExtrapolateMode::Extrapolate,
 //!     BSplineCache::default(),
-//! ).unwrap();
-//!
-//! // Fast repeated evaluations using cached basis functions
-//! for x in Array1::linspace(0.0, 10.0, 1000).iter() {
+//! ).unwrap10.0, 1000.iter() {
 //!     let y = cached_spline.evaluate_cached(*x).unwrap();
 //! }
 //! ```
@@ -210,8 +207,8 @@ struct FloatKey<F: Float> {
 
 impl<F: Float> FloatKey<F> {
     #[allow(dead_code)]
-    fn new(value: F, tolerance: F) -> Self {
-        Self { value, tolerance }
+    fn new(_value: F, tolerance: F) -> Self {
+        Self { _value, tolerance }
     }
 }
 
@@ -283,10 +280,10 @@ struct CacheEntry<T> {
 #[allow(dead_code)]
 impl<T> CacheEntry<T> {
     /// Create a new cache entry
-    fn new(value: T, insertion_time: usize) -> Self {
-        let memory_size = std::mem::size_of::<T>() + std::mem::size_of::<Self>();
+    fn new(_value: T, insertion_time: usize) -> Self {
+        let memory_size = std::mem::size_of::<T>() + std::mem::size, _of::<Self>();
         Self {
-            value,
+            _value,
             last_access: insertion_time,
             access_count: 1,
             insertion_time,
@@ -333,11 +330,11 @@ impl<F: crate::traits::InterpolationFloat> Default for BSplineCache<F> {
 #[allow(dead_code)]
 impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
     /// Create a new B-spline cache with the given configuration
-    pub fn new(config: CacheConfig) -> Self {
+    pub fn new(_config: CacheConfig) -> Self {
         Self {
             basis_cache: HashMap::new(),
             span_cache: HashMap::new(),
-            config,
+            _config,
             stats: CacheStats::default(),
             access_counter: 0,
         }
@@ -348,8 +345,7 @@ impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
         &mut self,
         x: F,
         i: usize,
-        k: usize,
-        _knots: &[T],
+        k: usize_knots: &[T],
         computer: impl FnOnce() -> T,
     ) -> T
     where
@@ -527,7 +523,7 @@ impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
         entries.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Remove entries until we're under the target
-        for (key, _, memory_size) in entries {
+        for (key_, memory_size) in entries {
             if current_memory <= target_size {
                 break;
             }
@@ -577,7 +573,7 @@ impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
         entries.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Remove the lowest priority entries
-        for (key, _) in entries.into_iter().take(remove_count) {
+        for (key_) in entries.into_iter().take(remove_count) {
             self.basis_cache.remove(&key);
             if self.config.track_stats {
                 self.stats.evictions += 1;
@@ -653,8 +649,8 @@ where
     ///
     /// ```rust
     /// use ndarray::Array1;
-    /// use scirs2_interpolate::cache::{CachedBSpline, BSplineCache, CacheConfig};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::cache::{CachedBSpline, BSplineCache, CacheConfig};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// let knots = Array1::from_vec(vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0]);
     /// let coeffs = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
@@ -704,8 +700,8 @@ where
     ///
     /// ```rust
     /// use ndarray::Array1;
-    /// use scirs2_interpolate::cache::make_cached_bspline;
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::cache::make_cached_bspline;
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// let knots = Array1::linspace(0.0, 10.0, 11);
     /// let coeffs = Array1::linspace(1.0, 5.0, 8);
@@ -945,8 +941,8 @@ where
     ///
     /// ```rust
     /// use ndarray::Array1;
-    /// use scirs2_interpolate::cache::make_cached_bspline;
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::cache::make_cached_bspline;
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// let knots = Array1::from_vec(vec![0.0, 0.0, 1.0, 2.0, 3.0, 3.0]);
     /// let coeffs = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
@@ -1009,10 +1005,10 @@ pub struct DistanceMatrixCache<F: Float> {
 
 impl<F: crate::traits::InterpolationFloat> DistanceMatrixCache<F> {
     /// Create a new distance matrix cache
-    pub fn new(config: CacheConfig) -> Self {
+    pub fn new(_config: CacheConfig) -> Self {
         Self {
             matrix_cache: HashMap::new(),
-            config,
+            _config,
             stats: CacheStats::default(),
         }
     }

@@ -587,15 +587,15 @@ pub struct ScipyBenchmarkComparison {
 
 impl ScipyBenchmarkComparison {
     /// Create new SciPy comparison framework
-    pub fn new(config: ScipyComparisonConfig) -> StatsResult<Self> {
+    pub fn new(_config: ScipyComparisonConfig) -> StatsResult<Self> {
         // Create temporary directory
-        fs::create_dir_all(&config.temp_dir).map_err(|e| {
+        fs::create_dir_all(&_config.temp_dir).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create temp directory: {}", e))
         })?;
 
         Ok(Self {
-            temp_dir: config.temp_dir.clone(),
-            config,
+            temp_dir: _config.temp_dir.clone(),
+            _config,
         })
     }
 
@@ -725,7 +725,7 @@ print(json.dumps(info))
         }
 
         let output_str = String::from_utf8_lossy(&output.stdout);
-        let info: serde_json::Value = serde_json::from_str(&output_str).map_err(|e| {
+        let info: serde_json: Value = serde, _json::from_str(&output_str).map_err(|e| {
             StatsError::ComputationError(format!("Failed to parse environment info: {}", e))
         })?;
 
@@ -808,10 +808,10 @@ print(json.dumps(info))
 
     /// Generate test data for benchmarking
     fn generate_test_data(&self, size: usize) -> StatsResult<TestData> {
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
         use scirs2_core::rng;
 
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
         })?;
@@ -931,7 +931,7 @@ print(json.dumps(info))
         }
 
         let output_str = String::from_utf8_lossy(&output.stdout);
-        let result: serde_json::Value = serde_json::from_str(&output_str).map_err(|e| {
+        let result: serde_json: Value = serde, _json::from_str(&output_str).map_err(|e| {
             StatsError::ComputationError(format!("Failed to parse SciPy result: {}", e))
         })?;
 
@@ -957,8 +957,8 @@ print(json.dumps(info))
         function_name: &str,
         test_data: &TestData,
     ) -> StatsResult<String> {
-        let data_primary: Vec<String> = test_data.primary.iter().map(|x| x.to_string()).collect();
-        let data_secondary: Vec<String> =
+        let _data_primary: Vec<String> = test_data.primary.iter().map(|x| x.to_string()).collect();
+        let _data_secondary: Vec<String> =
             test_data.secondary.iter().map(|x| x.to_string()).collect();
 
         let script = match function_name {
@@ -969,10 +969,10 @@ import numpy as np
 import time
 import json
 
-data = np.array([{}])
+_data = np.array([{}])
 
 start_time = time.perf_counter()
-result = np.mean(data)
+result = np.mean(_data)
 execution_time = time.perf_counter() - start_time
 
 output = {{
@@ -992,10 +992,10 @@ import numpy as np
 import time
 import json
 
-data = np.array([{}])
+_data = np.array([{}])
 
 start_time = time.perf_counter()
-result = np.std(data, ddof=1)
+result = np.std(_data, ddof=1)
 execution_time = time.perf_counter() - start_time
 
 output = {{
@@ -1321,7 +1321,7 @@ print(json.dumps(output))
             },
             unstable_functions: problematic_functions
                 .iter()
-                .map(|(name, _)| name.clone())
+                .map(|(name_)| name.clone())
                 .collect(),
             condition_number_analysis: ConditionNumberAnalysis {
                 sensitive_functions: Vec::new(),
@@ -1333,7 +1333,7 @@ print(json.dumps(output))
                 max_loss: max_relative_diff,
                 problematic_functions: problematic_functions
                     .iter()
-                    .map(|(name, _)| name.clone())
+                    .map(|(name_)| name.clone())
                     .collect(),
             },
         };
@@ -1362,7 +1362,7 @@ print(json.dumps(output))
                 priority: RecommendationPriority::High,
                 category: RecommendationCategory::Performance,
                 description: "Overall performance is significantly slower than SciPy. Consider SIMD optimizations and algorithm improvements.".to_string(),
-                affected_functions: performance_analysis.slower_functions.iter().map(|(name, _)| name.clone()).collect(),
+                affected_functions: performance_analysis.slower_functions.iter().map(|(name_)| name.clone()).collect(),
                 complexity: ImplementationComplexity::Moderate,
                 expected_impact: ExpectedImpact {
                     performance_improvement: Some(2.0),
@@ -1379,7 +1379,7 @@ print(json.dumps(output))
                 priority: RecommendationPriority::Critical,
                 category: RecommendationCategory::Accuracy,
                 description: "Some functions have significant accuracy differences compared to SciPy. Review numerical algorithms.".to_string(),
-                affected_functions: accuracy_analysis.problematic_functions.iter().map(|(name, _)| name.clone()).collect(),
+                affected_functions: accuracy_analysis.problematic_functions.iter().map(|(name_)| name.clone()).collect(),
                 complexity: ImplementationComplexity::Complex,
                 expected_impact: ExpectedImpact {
                     performance_improvement: None,
@@ -1441,9 +1441,9 @@ pub fn run_scipy_comparison() -> StatsResult<ScipyComparisonReport> {
 
 /// Run comparison for specific functions
 #[allow(dead_code)]
-pub fn run_function_comparison(functions: Vec<String>) -> StatsResult<ScipyComparisonReport> {
+pub fn run_function_comparison(_functions: Vec<String>) -> StatsResult<ScipyComparisonReport> {
     let mut config = ScipyComparisonConfig::default();
-    config.functions_to_test = functions;
+    config.functions_to_test = _functions;
 
     let comparison = ScipyBenchmarkComparison::new(config)?;
     comparison.run_comprehensive_comparison()

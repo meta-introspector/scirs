@@ -36,7 +36,7 @@ impl<F: Float + ScalarOperand + Debug> Adagrad<F> {
     ///
     /// # Arguments
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learning_rate: F) -> Result<Self> {
+    pub fn new(_learning_rate: F) -> Result<Self> {
         let epsilon = F::from(1e-10).ok_or_else(|| {
             NeuralError::InvalidArgument(
                 "Failed to convert 1e-10 to the appropriate floating point type".to_string(),
@@ -52,7 +52,7 @@ impl<F: Float + ScalarOperand + Debug> Adagrad<F> {
     /// Creates a new Adagrad optimizer with the full configuration
     /// * `epsilon` - Small constant for numerical stability
     /// * `weight_decay` - Weight decay factor (L2 regularization)
-    pub fn new_with_config(learning_rate: F, epsilon: F, weight_decay: F) -> Self {
+    pub fn new_with_config(_learning_rate: F, epsilon: F, weight_decay: F) -> Self {
         Self {
             weight_decay,
         }

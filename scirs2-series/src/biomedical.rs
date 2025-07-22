@@ -8,6 +8,7 @@ use crate::error::{Result, TimeSeriesError};
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::validation::check_positive;
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 
 /// Heart rate variability analysis methods
 #[derive(Debug, Clone)]
@@ -34,9 +35,9 @@ pub struct ECGAnalysis {
 
 impl ECGAnalysis {
     /// Create new ECG analysis
-    pub fn new(signal: Array1<f64>, fs: f64) -> Result<Self> {
-        // Check if all signal values are finite
-        if signal.iter().any(|x| !x.is_finite()) {
+    pub fn new(_signal: Array1<f64>, fs: f64) -> Result<Self> {
+        // Check if all _signal values are finite
+        if _signal.iter().any(|x| !x.is_finite()) {
             return Err(TimeSeriesError::InvalidInput(
                 "Signal contains non-finite values".to_string(),
             ));
@@ -45,7 +46,7 @@ impl ECGAnalysis {
             .map_err(|e| TimeSeriesError::InvalidInput(e.to_string()))?;
 
         Ok(Self {
-            signal,
+            _signal,
             fs,
             r_peaks: None,
         })
@@ -319,23 +320,23 @@ pub struct EEGAnalysis {
 
 impl EEGAnalysis {
     /// Create new EEG analysis
-    pub fn new(signals: Array2<f64>, fs: f64, channel_names: Vec<String>) -> Result<Self> {
+    pub fn new(_signals: Array2<f64>, fs: f64, channel_names: Vec<String>) -> Result<Self> {
         // Check if all signal values are finite
-        if signals.iter().any(|x| !x.is_finite()) {
+        if _signals.iter().any(|x| !x.is_finite()) {
             return Err(TimeSeriesError::InvalidInput(
                 "Signals contain non-finite values".to_string(),
             ));
         }
         check_positive(fs, "sampling_frequency")?;
 
-        if signals.nrows() != channel_names.len() {
+        if _signals.nrows() != channel_names.len() {
             return Err(TimeSeriesError::InvalidInput(
                 "Number of channels must match signal dimensions".to_string(),
             ));
         }
 
         Ok(Self {
-            signals,
+            _signals,
             fs,
             channel_names,
         })
@@ -388,7 +389,7 @@ impl EEGAnalysis {
                 let window = channel_signal.slice(ndarray::s![start_idx..end_idx]);
 
                 // Combine multiple seizure indicators
-                let variance = window.var(0.0);
+                let variance = window.variance();
                 let line_length = self.calculate_line_length(&window);
                 let spectral_edge = self.calculate_spectral_edge_frequency(&window)?;
 
@@ -446,13 +447,11 @@ impl EEGAnalysis {
     /// Calculate band power for a frequency range
     fn calculate_band_power(
         &self,
-        signal: &ArrayView1<f64>,
-        _low_freq: f64,
-        _high_freq: f64,
+        signal: &ArrayView1<f64>, _low_freq: f64, _high_freq: f64,
     ) -> Result<f64> {
         // Simplified power calculation using variance as proxy
         // In real implementation, would use FFT and integrate power spectrum
-        let variance = signal.var(0.0);
+        let variance = signal.variance();
         Ok(variance)
     }
 
@@ -468,7 +467,7 @@ impl EEGAnalysis {
     /// Calculate spectral edge frequency
     fn calculate_spectral_edge_frequency(&self, signal: &ArrayView1<f64>) -> Result<f64> {
         // Simplified implementation - in practice would use FFT
-        Ok(signal.var(0.0))
+        Ok(signal.variance())
     }
 
     /// Calculate correlation between two signals
@@ -517,9 +516,9 @@ pub struct EMGAnalysis {
 
 impl EMGAnalysis {
     /// Create new EMG analysis
-    pub fn new(signal: Array1<f64>, fs: f64) -> Result<Self> {
-        // Check if all signal values are finite
-        if signal.iter().any(|x| !x.is_finite()) {
+    pub fn new(_signal: Array1<f64>, fs: f64) -> Result<Self> {
+        // Check if all _signal values are finite
+        if _signal.iter().any(|x| !x.is_finite()) {
             return Err(TimeSeriesError::InvalidInput(
                 "Signal contains non-finite values".to_string(),
             ));
@@ -527,7 +526,7 @@ impl EMGAnalysis {
         check_positive(fs, "sampling_frequency")
             .map_err(|e| TimeSeriesError::InvalidInput(e.to_string()))?;
 
-        Ok(Self { signal, fs })
+        Ok(Self { _signal, fs })
     }
 
     /// Calculate muscle activation envelope
@@ -576,12 +575,12 @@ impl EMGAnalysis {
             let window = self.signal.slice(ndarray::s![start_idx..end_idx]);
 
             // Simplified median frequency calculation
-            median_freqs[w] = window.var(0.0); // Proxy for median frequency
+            median_freqs[w] = window.variance(); // Proxy for median frequency
         }
 
         // Calculate slope of median frequency over time (fatigue indicator)
         let time_points: Array1<f64> = (0..n_windows).map(|i| i as f64).collect();
-        let (slope, _intercept, r_squared) = self.linear_regression(&time_points, &median_freqs)?;
+        let (slope_intercept, r_squared) = self.linear_regression(&time_points, &median_freqs)?;
 
         fatigue_metrics.insert("Median_Freq_Slope".to_string(), slope);
         fatigue_metrics.insert("Fatigue_R_Squared".to_string(), r_squared);

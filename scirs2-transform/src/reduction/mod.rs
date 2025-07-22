@@ -12,13 +12,13 @@ mod umap;
 
 pub use crate::reduction::isomap::Isomap;
 pub use crate::reduction::lle::LLE;
-pub use crate::reduction::spectral_embedding::{AffinityMethod, SpectralEmbedding};
+pub use crate::reduction::spectral__embedding::{AffinityMethod, SpectralEmbedding};
 pub use crate::reduction::tsne::{trustworthiness, TSNE};
 pub use crate::reduction::umap::UMAP;
 
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
-use scirs2_linalg::svd;
+use scirs2__linalg::svd;
 
 use crate::error::{Result, TransformError};
 
@@ -59,12 +59,11 @@ impl PCA {
     ///
     /// # Returns
     /// * A new PCA instance
-    pub fn new(n_components: usize, center: bool, scale: bool) -> Self {
+    pub fn new(_n_components: usize, center: bool, scale: bool) -> Self {
         PCA {
-            n_components,
+            _n_components,
             center,
-            scale,
-            components: None,
+            scale_components: None,
             mean: None,
             std: None,
             singular_values: None,
@@ -290,11 +289,11 @@ impl TruncatedSVD {
     ///
     /// # Returns
     /// * A new TruncatedSVD instance
-    pub fn new(n_components: usize) -> Self {
+    pub fn new(_n_components: usize) -> Self {
         TruncatedSVD {
-            n_components,
+            _n_components,
             singular_values: None,
-            components: None,
+            _components: None,
             explained_variance_ratio: None,
         }
     }
@@ -473,7 +472,7 @@ impl LDA {
     ///
     /// # Returns
     /// * A new LDA instance
-    pub fn new(n_components: usize, solver: &str) -> Result<Self> {
+    pub fn new(_n_components: usize, solver: &str) -> Result<Self> {
         if solver != "svd" && solver != "eigen" {
             return Err(TransformError::InvalidInput(
                 "solver must be 'svd' or 'eigen'".to_string(),
@@ -483,7 +482,7 @@ impl LDA {
         Ok(LDA {
             n_components,
             solver: solver.to_string(),
-            components: None,
+            _components: None,
             means: None,
             explained_variance_ratio: None,
         })
@@ -655,7 +654,7 @@ impl LDA {
             }
 
             // Perform SVD on the transformed between-class scatter matrix
-            let (u_sb, s_sb, _vt_sb) = match svd::<f64>(&sb_transformed.view(), true, None) {
+            let (u_sb, s_sb_vt_sb) = match svd::<f64>(&sb_transformed.view(), true, None) {
                 Ok(result) => result,
                 Err(e) => return Err(TransformError::LinalgError(e)),
             };
@@ -724,7 +723,7 @@ impl LDA {
                 Ok(result) => result,
                 Err(_) => {
                     // Fallback to SVD if eigendecomposition fails
-                    let (u, s, _vt) = match svd::<f64>(&sw_inv_sb.view(), true, None) {
+                    let (u, s_vt) = match svd::<f64>(&sw_inv_sb.view(), true, None) {
                         Ok(result) => result,
                         Err(e) => return Err(TransformError::LinalgError(e)),
                     };

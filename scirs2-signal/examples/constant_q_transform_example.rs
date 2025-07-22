@@ -1,7 +1,8 @@
 use std::fs::File;
 use std::io::Write;
 
-use scirs2_signal::cqt::{
+use scirs2__signal::cqt::{
+use std::f64::consts::PI;
     chromagram, constant_q_transform, cqt_magnitude, inverse_constant_q_transform, CqtConfig,
 };
 
@@ -117,7 +118,7 @@ fn generate_test_signals() -> (
 
 /// Analyze a single tone with the Constant-Q Transform
 #[allow(dead_code)]
-fn analyze_single_tone(signal: &Array1<f64>) {
+fn analyze_single_tone(_signal: &Array1<f64>) {
     // Configure CQT for single tone analysis
     let config = CqtConfig {
         f_min: 55.0,         // A1
@@ -128,7 +129,7 @@ fn analyze_single_tone(signal: &Array1<f64>) {
     };
 
     // Compute CQT
-    let cqt_result = constant_q_transform(signal, &config).unwrap();
+    let cqt_result = constant_q_transform(_signal, &config).unwrap();
 
     // Compute magnitude in dB
     let magnitude = cqt_magnitude(&cqt_result, true, None);
@@ -137,7 +138,7 @@ fn analyze_single_tone(signal: &Array1<f64>) {
     let mut max_bin = 0;
     let mut max_value = -f64::INFINITY;
 
-    for (i, &value) in magnitude.slice(ndarray::s![.., 0]).iter().enumerate() {
+    for (i, &value) in magnitude.slice0].iter().enumerate() {
         if value > max_value {
             max_value = value;
             max_bin = i;
@@ -158,7 +159,7 @@ fn analyze_single_tone(signal: &Array1<f64>) {
 
 /// Analyze a musical chord with the Constant-Q Transform
 #[allow(dead_code)]
-fn analyze_chord(signal: &Array1<f64>) {
+fn analyze_chord(_signal: &Array1<f64>) {
     // Configure CQT
     let config = CqtConfig {
         f_min: 65.41,        // C2
@@ -169,7 +170,7 @@ fn analyze_chord(signal: &Array1<f64>) {
     };
 
     // Compute CQT
-    let cqt_result = constant_q_transform(signal, &config).unwrap();
+    let cqt_result = constant_q_transform(_signal, &config).unwrap();
 
     // Compute magnitude in dB
     let magnitude = cqt_magnitude(&cqt_result, true, None);
@@ -218,7 +219,7 @@ fn analyze_chord(signal: &Array1<f64>) {
 
 /// Analyze a chirp signal to demonstrate time-frequency analysis
 #[allow(dead_code)]
-fn analyze_chirp(signal: &Array1<f64>) {
+fn analyze_chirp(_signal: &Array1<f64>) {
     // Configure CQT for spectrogram
     let config = CqtConfig {
         f_min: 55.0,         // A1
@@ -230,7 +231,7 @@ fn analyze_chirp(signal: &Array1<f64>) {
     };
 
     // Compute CQT spectrogram
-    let cqt_result = constant_q_transform(signal, &config).unwrap();
+    let cqt_result = constant_q_transform(_signal, &config).unwrap();
 
     // Compute magnitude in dB
     let magnitude = cqt_magnitude(&cqt_result, true, None);
@@ -273,7 +274,7 @@ fn analyze_chirp(signal: &Array1<f64>) {
 
 /// Compare CQT's logarithmic frequency resolution with linear resolution
 #[allow(dead_code)]
-fn compare_frequency_resolution(signal: &Array1<f64>) {
+fn compare_frequency_resolution(_signal: &Array1<f64>) {
     // CQT with high resolution
     let cqt_config = CqtConfig {
         f_min: 300.0,        // Start near the first tone (400 Hz)
@@ -284,7 +285,7 @@ fn compare_frequency_resolution(signal: &Array1<f64>) {
     };
 
     // Compute CQT
-    let cqt_result = constant_q_transform(signal, &cqt_config).unwrap();
+    let cqt_result = constant_q_transform(_signal, &cqt_config).unwrap();
 
     // Compute magnitude in dB
     let cqt_magnitude_db = cqt_magnitude(&cqt_result, true, None);
@@ -300,7 +301,7 @@ fn compare_frequency_resolution(signal: &Array1<f64>) {
     // For comparison, compute FFT-based power spectral density (with linear frequency bins)
     let n_fft = 8192; // Large FFT size for better resolution
     let (frequencies, psd) = scirs2_signal::spectral::periodogram(
-        signal.as_slice().unwrap(),
+        _signal.as_slice().unwrap(),
         Some(22050.0),
         None,
         Some(n_fft),
@@ -361,7 +362,7 @@ fn compare_frequency_resolution(signal: &Array1<f64>) {
 
 /// Test signal reconstruction from CQT coefficients
 #[allow(dead_code)]
-fn test_reconstruction(signal: &Array1<f64>) {
+fn test_reconstruction(_signal: &Array1<f64>) {
     // Configure CQT
     let config = CqtConfig {
         f_min: 55.0,         // A1
@@ -372,19 +373,19 @@ fn test_reconstruction(signal: &Array1<f64>) {
     };
 
     // Compute CQT
-    let cqt_result = constant_q_transform(signal, &config).unwrap();
+    let cqt_result = constant_q_transform(_signal, &config).unwrap();
 
-    // Reconstruct signal
-    let reconstructed = inverse_constant_q_transform(&cqt_result, Some(signal.len())).unwrap();
+    // Reconstruct _signal
+    let reconstructed = inverse_constant_q_transform(&cqt_result, Some(_signal.len())).unwrap();
 
     // Compute error metrics
-    let total_error: f64 = signal
+    let total_error: f64 = _signal
         .iter()
         .zip(reconstructed.iter())
         .map(|(&orig, &rec)| (orig - rec).powi(2))
         .sum();
 
-    let signal_power: f64 = signal.iter().map(|&x| x.powi(2)).sum();
+    let _signal_power: f64 = _signal.iter().map(|&x| x.powi(2)).sum();
     let reconstruction_snr = 10.0 * (signal_power / total_error).log10();
 
     println!("Reconstruction SNR: {:.2} dB", reconstruction_snr);
@@ -393,18 +394,18 @@ fn test_reconstruction(signal: &Array1<f64>) {
     let mut file = File::create("reconstruction_comparison.csv").expect("Could not create file");
     writeln!(file, "sample,original,reconstructed").expect("Failed to write header");
 
-    // Only save a portion of the signal for better visualization
+    // Only save a portion of the _signal for better visualization
     let start = 0;
-    let end = (signal.len() as f64 * 0.1) as usize; // First 10% of the signal
+    let end = (_signal.len() as f64 * 0.1) as usize; // First 10% of the _signal
 
     for i in start..end {
-        writeln!(file, "{},{},{}", i, signal[i], reconstructed[i]).expect("Failed to write data");
+        writeln!(file, "{},{},{}", i, _signal[i], reconstructed[i]).expect("Failed to write data");
     }
 }
 
 /// Analyze a chord progression using a chromagram
 #[allow(dead_code)]
-fn analyze_chord_progression(signal: &Array1<f64>) {
+fn analyze_chord_progression(_signal: &Array1<f64>) {
     // Configure CQT for chromagram
     let config = CqtConfig {
         f_min: 65.41,        // C2
@@ -416,7 +417,7 @@ fn analyze_chord_progression(signal: &Array1<f64>) {
     };
 
     // Compute CQT
-    let cqt_result = constant_q_transform(signal, &config).unwrap();
+    let cqt_result = constant_q_transform(_signal, &config).unwrap();
 
     // Compute chromagram
     let chroma = chromagram(&cqt_result, None, None).unwrap();
@@ -468,7 +469,7 @@ fn analyze_chord_progression(signal: &Array1<f64>) {
             .iter()
             .enumerate()
             .filter(|(_, &t)| t >= segment_idx as f64 * 0.5 && t < (segment_idx + 1) as f64 * 0.5)
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .collect();
 
         if segment_frames.is_empty() {

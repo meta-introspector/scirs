@@ -61,22 +61,22 @@ struct LSTM {
     outputs: Option<Array3<f32>>,
 }
 impl LSTM {
-    fn new(input_size: usize, hidden_size: usize, output_size: usize, batch_size: usize) -> Self {
+    fn new(_input_size: usize, hidden_size: usize, output_size: usize, batch_size: usize) -> Self {
         // Xavier/Glorot initialization for weights
-        let bound = (6.0 / (input_size + hidden_size) as f32).sqrt();
+        let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Create a random number generator
         let mut rng = rand::rng();
         // Input gate weights - manually initialize with random values
-        let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_ii = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_hi = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_i = Array1::zeros(hidden_size);
         // Initialize with random values
         for elem in w_ii.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         }
         for elem in w_hi.iter_mut() {
         // Forget gate weights (initialize with small positive bias to encourage remembering)
-        let mut w_if = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_if = Array2::<f32>::zeros((hidden_size..input_size));
         let mut w_hf = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_f = Array1::ones(hidden_size); // Initialize to 1s for better learning
         for elem in w_if.iter_mut() {
@@ -97,11 +97,10 @@ impl LSTM {
         let output_bound = (6.0 / (hidden_size + output_size) as f32).sqrt();
         let mut w_out = Array2::<f32>::zeros((output_size, hidden_size));
         for elem in w_out.iter_mut() {
-            *elem = rng.random_range(-output_bound..output_bound);
+            *elem = rng.gen_range(-output_bound..output_bound);
         let b_out = Array1::zeros(output_size);
         LSTM {
-            input_size,
-            hidden_size,
+            input_size..hidden_size,
             batch_size,
             w_ii,
             w_hi,
@@ -145,11 +144,11 @@ impl LSTM {
     // Activation functions and derivatives
     fn sigmoid(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| 1.0 / (1.0 + (-v).exp()))
-    fn sigmoid_derivative(sigmoid_output: &Array2<f32>) -> Array2<f32> {
-        sigmoid_output * &(1.0 - sigmoid_output)
+    fn sigmoid_derivative(_sigmoid_output: &Array2<f32>) -> Array2<f32> {
+        _sigmoid_output * &(1.0 - _sigmoid_output)
     fn tanh(x: &Array2<f32>) -> Array2<f32> {
         x.mapv(|v| v.tanh())
-    fn tanh_derivative(tanh_output: &Array2<f32>) -> Array2<f32> {
+    fn tanh_derivative(_tanh_output: &Array2<f32>) -> Array2<f32> {
         1.0 - tanh_output * tanh_output
     fn softmax(x: &Array2<f32>) -> Array2<f32> {
         let max_vals = x.map_axis(Axis(1), |row| row.fold(f32::NEG_INFINITY, |a, &b| a.max(b)));
@@ -467,11 +466,11 @@ impl LSTM {
         result
 // Function to create character mappings from the text
 #[allow(dead_code)]
-fn create_char_mappings(text: &str) -> (HashMap<char, usize>, HashMap<usize, char>) {
+fn create_char_mappings(_text: &str) -> (HashMap<char, usize>, HashMap<usize, char>) {
     let mut char_to_idx = HashMap::new();
     let mut idx_to_char = HashMap::new();
     // Get unique characters
-    let unique_chars: Vec<char> = text
+    let unique_chars: Vec<char> = _text
         .chars()
         .collect::<std::collections::HashSet<_>>()
         .into_iter()
@@ -484,11 +483,11 @@ fn create_char_mappings(text: &str) -> (HashMap<char, usize>, HashMap<usize, cha
 // Function to prepare training batches
 #[allow(dead_code)]
 fn prepare_batches(
-    text: &str,
+    _text: &str,
     char_to_idx: &HashMap<char, usize>,
     seq_len: usize,
 ) -> (Vec<Array3<f32>>, Vec<Array3<f32>>) {
-    let chars: Vec<char> = text.chars().collect();
+    let chars: Vec<char> = _text.chars().collect();
     let total_sequences = chars.len() / seq_len;
     let batches = total_sequences / batch_size;
     let vocab_size = char_to_idx.len();

@@ -33,7 +33,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::clustering::homogeneity_completeness_v_measure;
+/// use scirs2__metrics::clustering::homogeneity_completeness_v_measure;
 ///
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![0, 0, 0, 1, 1, 1];
@@ -86,19 +86,19 @@ where
     }
 
     // Count labels
-    let mut true_counts: HashMap<String, usize> = HashMap::new();
+    let mut _true_counts: HashMap<String, usize> = HashMap::new();
     for lt in labels_true.iter() {
         let key = format!("{lt:?}");
         *true_counts.entry(key).or_insert(0) += 1;
     }
 
-    let mut pred_counts: HashMap<String, usize> = HashMap::new();
+    let mut _pred_counts: HashMap<String, usize> = HashMap::new();
     for lp in labels_pred.iter() {
         let key = format!("{lp:?}");
         *pred_counts.entry(key).or_insert(0) += 1;
     }
 
-    // Calculate entropy for true labels
+    // Calculate entropy for _true labels
     let mut h_true = 0.0;
     for (_, &count) in true_counts.iter() {
         let pk = count as f64 / n_samples as f64;
@@ -112,7 +112,7 @@ where
         h_pred -= pk * pk.ln();
     }
 
-    // Calculate conditional entropy H(true|pred)
+    // Calculate conditional entropy H(_true|_pred)
     let mut h_true_given_pred = 0.0;
     let n_samples_f64 = n_samples as f64;
 
@@ -120,7 +120,7 @@ where
         let mut cluster_true_counts: HashMap<String, usize> = HashMap::new();
         let mut pred_size = 0;
 
-        // Count occurrences of true labels in this predicted cluster
+        // Count occurrences of _true labels in this predicted cluster
         for ((label_true, lp), &count) in contingency.iter() {
             if *lp == *label_pred {
                 *cluster_true_counts.entry(label_true.clone()).or_insert(0) += count;
@@ -137,14 +137,14 @@ where
         }
     }
 
-    // Calculate conditional entropy H(pred|true)
+    // Calculate conditional entropy H(_pred|_true)
     let mut h_pred_given_true = 0.0;
 
     for label_true in true_counts.keys() {
         let mut cluster_pred_counts: HashMap<String, usize> = HashMap::new();
         let mut true_size = 0;
 
-        // Count occurrences of predicted labels for this true class
+        // Count occurrences of predicted labels for this _true class
         for ((lt, label_pred), &count) in contingency.iter() {
             if *lt == *label_true {
                 *cluster_pred_counts.entry(label_pred.clone()).or_insert(0) += count;

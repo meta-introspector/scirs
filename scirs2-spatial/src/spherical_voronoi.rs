@@ -23,7 +23,7 @@ type VoronoiDiagramResult = (Array2<f64>, Vec<Vec<usize>>, Array2<f64>);
 /// # Examples
 ///
 /// ```
-/// # use scirs2_spatial::spherical_voronoi::SphericalVoronoi;
+/// # use scirs2__spatial::spherical_voronoi::SphericalVoronoi;
 /// # use ndarray::array;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// // Create points on a sphere (these should be normalized)
@@ -221,7 +221,7 @@ impl SphericalVoronoi {
 
     /// Sorts the vertices of each Voronoi region in a counterclockwise order.
     /// This is useful for visualization purposes.
-    pub fn sort_vertices_of_regions(&mut self) -> SpatialResult<()> {
+    pub fn sort_vertices_of_regions(&self) -> SpatialResult<()> {
         for region_idx in 0..self.regions.len() {
             // Skip regions with less than 3 vertices (they're already "sorted")
             if self.regions[region_idx].len() < 3 {
@@ -242,7 +242,7 @@ impl SphericalVoronoi {
     /// Calculates the areas of the Voronoi regions.
     ///
     /// For 3D point sets, the sum of all areas will be 4π * radius².
-    pub fn calculate_areas(&mut self) -> SpatialResult<&[f64]> {
+    pub fn calculate_areas(&self) -> SpatialResult<&[f64]> {
         // If areas are already calculated, return them
         if let Some(ref areas) = self.areas {
             return Ok(areas);
@@ -323,7 +323,7 @@ impl SphericalVoronoi {
     }
 
     /// Returns pre-calculated areas of Voronoi regions, or calculates them if not already available.
-    pub fn areas(&mut self) -> SpatialResult<&[f64]> {
+    pub fn areas(&self) -> SpatialResult<&[f64]> {
         self.calculate_areas()
     }
 
@@ -481,8 +481,8 @@ impl SphericalVoronoi {
     /// # Returns
     ///
     /// The index of the nearest generator point and its geodesic distance
-    pub fn nearest_generator(&self, point: &ArrayView1<f64>) -> SpatialResult<(usize, f64)> {
-        let distances = self.geodesic_distances_to_generators(point)?;
+    pub fn nearest_generator(_point: &ArrayView1<f64>) -> SpatialResult<(usize, f64)> {
+        let distances = self.geodesic_distances_to_generators(_point)?;
 
         // Find the minimum distance
         let mut min_dist = f64::MAX;
@@ -501,19 +501,19 @@ impl SphericalVoronoi {
     // Private helper methods
 
     /// Computes the numerical rank of a matrix.
-    fn compute_rank(points: &ArrayView2<'_, f64>, tol: f64) -> SpatialResult<usize> {
-        if points.is_empty() {
-            return Err(SpatialError::ValueError("Empty points array".into()));
+    fn compute_rank(_points: &ArrayView2<'_, f64>, tol: f64) -> SpatialResult<usize> {
+        if _points.is_empty() {
+            return Err(SpatialError::ValueError("Empty _points array".into()));
         }
 
-        // Subtract the first point from all points to center the data
-        let npoints = points.nrows();
-        let ndim = points.ncols();
+        // Subtract the first point from all _points to center the data
+        let npoints = _points.nrows();
+        let ndim = _points.ncols();
         let mut centered = Array2::zeros((npoints, ndim));
 
-        let first_point = points.row(0);
+        let first_point = _points.row(0);
         for i in 0..npoints {
-            let row = points.row(i);
+            let row = _points.row(i);
             for j in 0..ndim {
                 centered[[i, j]] = row[j] - first_point[j];
             }
@@ -527,7 +527,7 @@ impl SphericalVoronoi {
         // In a more sophisticated implementation, we'd perform SVD or QR decomposition
         let mut rank = (npoints - 1).min(ndim);
 
-        // Apply tolerance check - if all points are nearly identical, rank is 0
+        // Apply tolerance check - if all _points are nearly identical, rank is 0
         let mut max_distance = 0.0;
         for i in 1..npoints {
             let distance: f64 = (0..ndim)
@@ -545,14 +545,14 @@ impl SphericalVoronoi {
     }
 
     /// Checks if there are duplicate points in the input.
-    fn has_duplicates(points: &ArrayView2<'_, f64>, threshold: f64) -> SpatialResult<bool> {
-        let npoints = points.nrows();
+    fn has_duplicates(_points: &ArrayView2<'_, f64>, threshold: f64) -> SpatialResult<bool> {
+        let npoints = _points.nrows();
         let threshold_sq = threshold * threshold;
 
         for i in 0..npoints {
-            let p1 = points.row(i);
+            let p1 = _points.row(i);
             for j in (i + 1)..npoints {
-                let p2 = points.row(j);
+                let p2 = _points.row(j);
 
                 let dist_sq: f64 = (0..p1.len()).map(|k| (p1[k] - p2[k]).powi(2)).sum();
 
@@ -697,9 +697,9 @@ impl SphericalVoronoi {
     }
 
     /// Calculate the spherical distance between two points on a sphere
-    fn spherical_distance(p1: &Array1<f64>, p2: &Array1<f64>, radius: f64) -> f64 {
+    fn spherical_distance(_p1: &Array1<f64>, p2: &Array1<f64>, radius: f64) -> f64 {
         // Normalize vectors to unit sphere
-        let u1 = p1 / norm(p1);
+        let u1 = _p1 / norm(_p1);
         let u2 = p2 / norm(p2);
 
         // Calculate the dot product, clamped to [-1, 1] to avoid numerical errors
@@ -720,7 +720,7 @@ impl SphericalVoronoi {
     ) -> SpatialResult<Array1<f64>> {
         if simplex_points.len() < 3 {
             return Err(SpatialError::ValueError(
-                "Need at least 3 points to determine a spherical circumcenter".into(),
+                "Need at least 3 _points to determine a spherical circumcenter".into(),
             ));
         }
 
@@ -731,17 +731,17 @@ impl SphericalVoronoi {
             ));
         }
 
-        // Use the first three points to define the triangle
+        // Use the first three _points to define the triangle
         let p1 = &simplex_points[0] - center;
         let p2 = &simplex_points[1] - center;
         let p3 = &simplex_points[2] - center;
 
-        // Normalize points to unit sphere (relative to center)
+        // Normalize _points to unit sphere (relative to center)
         let a = &p1 / norm(&p1) * radius;
         let b = &p2 / norm(&p2) * radius;
         let c = &p3 / norm(&p3) * radius;
 
-        // Check for degeneracy - points are collinear or too close
+        // Check for degeneracy - _points are collinear or too close
         let ab = &b - &a;
         let ac = &c - &a;
         let normal = cross_3d(&ab, &ac);
@@ -749,7 +749,7 @@ impl SphericalVoronoi {
 
         if normal_norm < 1e-10 * radius {
             return Err(SpatialError::ComputationError(
-                "Degenerate simplex: points are nearly collinear".into(),
+                "Degenerate simplex: _points are nearly collinear".into(),
             ));
         }
 
@@ -926,7 +926,7 @@ impl SphericalVoronoi {
         vertex_angles.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Update the region with sorted vertices
-        for (i, (vert_idx, _)) in vertex_angles.into_iter().enumerate() {
+        for (i, (vert_idx_)) in vertex_angles.into_iter().enumerate() {
             region[i] = vert_idx;
         }
 
@@ -934,11 +934,11 @@ impl SphericalVoronoi {
     }
 
     /// Calculates the solid angle subtended by a triangle.
-    fn calculate_solid_angle(vectors: &[ArrayView1<f64>; 3]) -> f64 {
+    fn calculate_solid_angle(_vectors: &[ArrayView1<f64>; 3]) -> f64 {
         // Create owned arrays from views to ensure proper operations
-        let a = vectors[0].to_owned();
-        let b = vectors[1].to_owned();
-        let c = vectors[2].to_owned();
+        let a = _vectors[0].to_owned();
+        let b = _vectors[1].to_owned();
+        let c = _vectors[2].to_owned();
 
         // This implements the formula of Van Oosterom and Strackee
         let numerator = determinant_3d(&a.view(), &b.view(), &c.view());
@@ -951,21 +951,21 @@ impl SphericalVoronoi {
 
     /// Compute matrix rank using proper SVD approach
     #[allow(dead_code)]
-    fn compute_rank_svd(matrix: &Array2<f64>, tol: f64) -> SpatialResult<usize> {
-        let (nrows, ncols) = matrix.dim();
+    fn compute_rank_svd(_matrix: &Array2<f64>, tol: f64) -> SpatialResult<usize> {
+        let (nrows, ncols) = _matrix.dim();
         if nrows == 0 || ncols == 0 {
             return Ok(0);
         }
 
         // For small matrices, use QR decomposition approach
         if nrows <= 10 && ncols <= 10 {
-            return Self::compute_rank_qr(matrix, tol);
+            return Self::compute_rank_qr(_matrix, tol);
         }
 
         // For larger matrices, use iterative approach with column norms
         // This is more computationally efficient than full SVD
         let mut rank = 0;
-        let mut remaining_matrix = matrix.clone();
+        let mut remaining_matrix = _matrix.clone();
 
         for _ in 0..ncols.min(nrows) {
             // Find the column with maximum norm
@@ -992,7 +992,7 @@ impl SphericalVoronoi {
             let pivot_col = remaining_matrix.column(max_col).to_owned();
             let pivot_unit = &pivot_col / max_norm;
 
-            // Update remaining matrix by removing component in direction of pivot
+            // Update remaining _matrix by removing component in direction of pivot
             for j in 0..remaining_matrix.ncols() {
                 if j != max_col {
                     let col = remaining_matrix.column(j).to_owned();
@@ -1019,9 +1019,9 @@ impl SphericalVoronoi {
 
     /// Compute matrix rank using QR decomposition for small matrices
     #[allow(dead_code)]
-    fn compute_rank_qr(matrix: &Array2<f64>, tol: f64) -> SpatialResult<usize> {
-        let (nrows, ncols) = matrix.dim();
-        let mut working_matrix = matrix.clone();
+    fn compute_rank_qr(_matrix: &Array2<f64>, tol: f64) -> SpatialResult<usize> {
+        let (nrows, ncols) = _matrix.dim();
+        let mut working_matrix = _matrix.clone();
         let mut rank = 0;
 
         for col in 0..ncols.min(nrows) {
@@ -1066,21 +1066,21 @@ impl SphericalVoronoi {
     }
 
     /// Find an orthogonal vector to the given vector using Gram-Schmidt process
-    fn find_orthogonal_vector(vector: &Array1<f64>) -> SpatialResult<Array1<f64>> {
-        let dim = vector.len();
+    fn find_orthogonal_vector(_vector: &Array1<f64>) -> SpatialResult<Array1<f64>> {
+        let dim = _vector.len();
         if dim < 2 {
             return Err(SpatialError::ValueError(
                 "Vector dimension must be at least 2".into(),
             ));
         }
 
-        // Start with a standard basis vector that's not parallel to the input
+        // Start with a standard basis _vector that's not parallel to the input
         let mut candidate = Array1::zeros(dim);
 
         // Find the dimension with the smallest absolute component
         let mut min_abs = f64::MAX;
         let mut min_idx = 0;
-        for (i, &val) in vector.iter().enumerate() {
+        for (i, &val) in _vector.iter().enumerate() {
             let abs_val = val.abs();
             if abs_val < min_abs {
                 min_abs = abs_val;
@@ -1088,28 +1088,28 @@ impl SphericalVoronoi {
             }
         }
 
-        // Set the candidate vector to the standard basis vector for that dimension
+        // Set the candidate _vector to the standard basis _vector for that dimension
         candidate[min_idx] = 1.0;
 
-        // Apply Gram-Schmidt to get an orthogonal vector
-        let projection = dot(&candidate, vector);
-        let orthogonal = candidate.clone() - projection * vector;
+        // Apply Gram-Schmidt to get an orthogonal _vector
+        let projection = dot(&candidate, _vector);
+        let orthogonal = candidate.clone() - projection * _vector;
 
         // Normalize the result
         let norm_val = norm(&orthogonal);
         if norm_val < 1e-12 {
-            // If still too small, try a different basis vector
+            // If still too small, try a different basis _vector
             candidate.fill(0.0);
             let next_idx = (min_idx + 1) % dim;
             candidate[next_idx] = 1.0;
 
-            let projection = dot(&candidate, vector);
-            let orthogonal = candidate.clone() - projection * vector;
+            let projection = dot(&candidate, _vector);
+            let orthogonal = candidate.clone() - projection * _vector;
             let norm_val = norm(&orthogonal);
 
             if norm_val < 1e-12 {
                 return Err(SpatialError::ComputationError(
-                    "Could not find orthogonal vector".into(),
+                    "Could not find orthogonal _vector".into(),
                 ));
             }
 
@@ -1460,7 +1460,7 @@ mod tests {
         let norm_val = norm(&test_point);
         let test_point_normalized = test_point / norm_val;
 
-        let (nearest_idx, _) = sv.nearest_generator(&test_point_normalized.view()).unwrap();
+        let (nearest_idx_) = sv.nearest_generator(&test_point_normalized.view()).unwrap();
 
         // The test point should be closest to one of the equatorial points
         assert!(

@@ -185,7 +185,7 @@ where
 
     if kernel_shape.len() != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
-            "Kernel shape must have same length as input dimensions (got {} expected {})",
+            "Kernel _shape must have same length as input dimensions (got {} expected {})",
             kernel_shape.len(),
             input.ndim()
         )));
@@ -201,31 +201,31 @@ where
     // Apply filter at each position
     // For now, we'll use a simple nested loop approach
     // In the future, this could be parallelized
-    let shape = input.shape();
+    let _shape = input._shape();
     let mut indices = vec![0usize; input.ndim()];
 
-    fn increment_indices(indices: &mut [usize], shape: &[usize]) -> bool {
-        for i in (0..indices.len()).rev() {
-            indices[i] += 1;
-            if indices[i] < shape[i] {
+    _fn increment_indices(_indices: &mut [usize], _shape: &[usize]) -> bool {
+        for i in (0.._indices.len()).rev() {
+            _indices[i] += 1;
+            if _indices[i] < _shape[i] {
                 return true;
             }
-            indices[i] = 0;
+            _indices[i] = 0;
         }
         false
     }
 
     loop {
         // Apply filter at current position
-        let value = filter_fn(&handler, &indices);
+        let _value = filter_fn(&handler, &indices);
 
         // Convert output to dynamic for assignment
         let mut output_dyn = output.view_mut().into_dyn();
         let dyn_indices = ndarray::IxDyn(&indices);
-        output_dyn[dyn_indices] = value;
+        output_dyn[dyn_indices] = _value;
 
         // Move to next position
-        if !increment_indices(&mut indices, shape) {
+        if !increment_indices(&mut indices, _shape) {
             break;
         }
     }
@@ -262,13 +262,13 @@ where
             let mut kernel_indices = vec![0usize; handler.ndim()];
 
             // Helper function to increment kernel indices
-            fn increment_kernel_indices(indices: &mut [usize], shape: &[usize]) -> bool {
-                for i in (0..indices.len()).rev() {
-                    indices[i] += 1;
-                    if indices[i] < shape[i] {
+            fn increment_kernel_indices(_indices: &mut [usize], shape: &[usize]) -> bool {
+                for i in (0.._indices.len()).rev() {
+                    _indices[i] += 1;
+                    if _indices[i] < shape[i] {
                         return true;
                     }
-                    indices[i] = 0;
+                    _indices[i] = 0;
                 }
                 false
             }
@@ -282,10 +282,10 @@ where
                         center_pos[i] as isize + kernel_indices[i] as isize - kernel_center[i];
                 }
 
-                // Get value from input (with boundary handling)
+                // Get _value from input (with boundary handling)
                 let input_val = handler.get_value(&input_indices);
 
-                // Get kernel value (flipped for convolution)
+                // Get kernel _value (flipped for convolution)
                 let mut flipped_indices = vec![0usize; handler.ndim()];
                 for i in 0..handler.ndim() {
                     flipped_indices[i] = kernel_shape[i] - kernel_indices[i] - 1;

@@ -11,7 +11,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2_text::spelling::NGramModel;
+//! use scirs2__text::spelling::NGramModel;
 //!
 //! # fn main() {
 //! // Create a new trigram language model
@@ -25,7 +25,7 @@
 //! let context = vec!["quick".to_string(), "brown".to_string()];
 //! let prob = model.probability("fox", &context);
 //!
-//! // Higher probability for words that appeared in the training text
+//! // Higher probability for words that appeared in the training _text
 //! assert!(prob > model.probability("cat", &context));
 //! # }
 //! ```
@@ -58,10 +58,10 @@ pub struct NGramModel {
 
 impl NGramModel {
     /// Create a new n-gram model with the specified order
-    pub fn new(order: usize) -> Self {
-        if order > 3 {
+    pub fn new(_order: usize) -> Self {
+        if _order > 3 {
             // Warn but limit to 3
-            eprintln!("Warning: NGramModel only supports orders up to 3. Using order=3.");
+            eprintln!("Warning: NGramModel only supports orders up to 3. Using _order=3.");
         }
 
         Self {
@@ -69,7 +69,7 @@ impl NGramModel {
             bigrams: HashMap::new(),
             trigrams: HashMap::new(),
             total_words: 0,
-            order: order.clamp(1, 3),
+            _order: _order.clamp(1, 3),
             start_token: "<s>".to_string(),
             end_token: "</s>".to_string(),
         }
@@ -177,8 +177,7 @@ impl NGramModel {
         match self.order {
             1 => self.unigram_probability(word),
             2 => self.bigram_probability(word, context),
-            3 => self.trigram_probability(word, context),
-            _ => self.unigram_probability(word), // Default fallback
+            3 => self.trigram_probability(word, context, _ => self.unigram_probability(word), // Default fallback
         }
     }
 
@@ -296,7 +295,7 @@ impl NGramModel {
 
     /// Generate potential single-edit typos for a word
     pub fn generate_typos(&self, word: &str, num_typos: usize) -> Vec<String> {
-        let mut typos = HashSet::new();
+        let mut _typos = HashSet::new();
         let word = word.to_lowercase();
         let chars: Vec<char> = word.chars().collect();
 
@@ -308,14 +307,14 @@ impl NGramModel {
                     new_word.push(c);
                 }
             }
-            typos.insert(new_word);
+            _typos.insert(new_word);
         }
 
         // Transposition errors (swapping adjacent characters)
         for i in 0..chars.len() - 1 {
             let mut new_chars = chars.clone();
             new_chars.swap(i, i + 1);
-            typos.insert(new_chars.iter().collect());
+            _typos.insert(new_chars.iter().collect());
         }
 
         // Insertion errors (adding one character)
@@ -323,7 +322,7 @@ impl NGramModel {
             for c in 'a'..='z' {
                 let mut new_chars = chars.clone();
                 new_chars.insert(i, c);
-                typos.insert(new_chars.iter().collect());
+                _typos.insert(new_chars.iter().collect());
             }
         }
 
@@ -333,13 +332,13 @@ impl NGramModel {
                 if chars[i] != c {
                     let mut new_chars = chars.clone();
                     new_chars[i] = c;
-                    typos.insert(new_chars.iter().collect());
+                    _typos.insert(new_chars.iter().collect());
                 }
             }
         }
 
         // Convert to Vec and limit by frequency
-        let mut typos_vec: Vec<_> = typos.into_iter().collect();
+        let mut _typos_vec: Vec<_> = _typos.into_iter().collect();
 
         // Sort by word frequency in our model
         typos_vec.sort_by(|a, b| {

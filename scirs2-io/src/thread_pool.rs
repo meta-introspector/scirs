@@ -114,7 +114,7 @@ struct Worker {
 
 impl ThreadPool {
     /// Create a new thread pool with the given configuration
-    pub fn new(config: ThreadPoolConfig) -> Self {
+    pub fn new(_config: ThreadPoolConfig) -> Self {
         let (io_sender, io_receiver) = mpsc::channel();
         let (cpu_sender, cpu_receiver) = mpsc::channel();
 
@@ -123,9 +123,9 @@ impl ThreadPool {
 
         // Create I/O workers
         let io_receiver = Arc::new(Mutex::new(io_receiver));
-        let mut io_workers = Vec::with_capacity(config.io_threads);
+        let mut io_workers = Vec::with_capacity(_config.io_threads);
 
-        for id in 0..config.io_threads {
+        for id in 0.._config.io_threads {
             let receiver = Arc::clone(&io_receiver);
             let stats_clone = Arc::clone(&stats);
             let shutdown_clone = Arc::clone(&shutdown);
@@ -142,9 +142,9 @@ impl ThreadPool {
 
         // Create CPU workers
         let cpu_receiver = Arc::new(Mutex::new(cpu_receiver));
-        let mut cpu_workers = Vec::with_capacity(config.cpu_threads);
+        let mut cpu_workers = Vec::with_capacity(_config.cpu_threads);
 
-        for id in 0..config.cpu_threads {
+        for id in 0.._config.cpu_threads {
             let receiver = Arc::clone(&cpu_receiver);
             let stats_clone = Arc::clone(&stats);
             let shutdown_clone = Arc::clone(&shutdown);
@@ -164,7 +164,7 @@ impl ThreadPool {
             cpu_workers,
             io_sender,
             cpu_sender,
-            config,
+            _config,
             stats,
             shutdown,
         }
@@ -218,8 +218,7 @@ impl ThreadPool {
     /// Execute a function with parallel processing
     pub fn parallel_map<T, F, R>(
         &self,
-        items: Vec<T>,
-        _work_type: WorkType,
+        items: Vec<T>, _work_type: WorkType,
         func: F,
     ) -> Result<Vec<R>>
     where
@@ -406,8 +405,8 @@ static GLOBAL_THREAD_POOL: std::sync::OnceLock<ThreadPool> = std::sync::OnceLock
 
 /// Initialize the global thread pool
 #[allow(dead_code)]
-pub fn init_global_thread_pool(config: ThreadPoolConfig) {
-    let _ = GLOBAL_THREAD_POOL.set(ThreadPool::new(config));
+pub fn init_global_thread_pool(_config: ThreadPoolConfig) {
+    let _ = GLOBAL_THREAD_POOL.set(ThreadPool::new(_config));
 }
 
 /// Get a reference to the global thread pool
@@ -418,11 +417,11 @@ pub fn global_thread_pool() -> &'static ThreadPool {
 
 /// Execute a task on the global thread pool
 #[allow(dead_code)]
-pub fn execute<F>(work_type: WorkType, task: F) -> Result<()>
+pub fn execute<F>(_work_type: WorkType, task: F) -> Result<()>
 where
     F: FnOnce() -> Result<()> + Send + 'static,
 {
-    global_thread_pool().submit(work_type, task)
+    global_thread_pool().submit(_work_type, task)
 }
 
 /// Utility function to determine optimal thread pool configuration based on system

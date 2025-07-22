@@ -7,7 +7,7 @@
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::validation::{check_positive, check_shape};
-use scirs2_linalg::{eigh, solve};
+use scirs2__linalg::{eigh, solve};
 use std::collections::BinaryHeap;
 
 use crate::error::{Result, TransformError};
@@ -41,9 +41,9 @@ impl LLE {
     /// # Arguments
     /// * `n_neighbors` - Number of neighbors to use
     /// * `n_components` - Number of dimensions in the embedding
-    pub fn new(n_neighbors: usize, n_components: usize) -> Self {
+    pub fn new(_n_neighbors: usize, n_components: usize) -> Self {
         LLE {
-            n_neighbors,
+            _n_neighbors,
             n_components,
             reg: 1e-3,
             method: "standard".to_string(),
@@ -265,7 +265,7 @@ impl LLE {
         let x_f64 = x.mapv(|v| num_traits::cast::<S::Elem, f64>(v).unwrap_or(0.0));
 
         // Step 1: Find k nearest neighbors
-        let (neighbors, _distances) = self.find_neighbors(&x_f64.view());
+        let (neighbors_distances) = self.find_neighbors(&x_f64.view());
 
         // Step 2: Compute reconstruction weights
         let weights = self.compute_weights(&x_f64.view(), &neighbors)?;
@@ -363,7 +363,7 @@ impl LLE {
         let training_embedding = self.embedding.as_ref().unwrap();
 
         let (n_new, n_features) = x_new.dim();
-        let (_n_training, _) = training_data.dim();
+        let (_n_training_) = training_data.dim();
 
         if n_features != training_data.ncols() {
             return Err(TransformError::InvalidInput(format!(
@@ -375,7 +375,7 @@ impl LLE {
 
         let mut new_embedding = Array2::zeros((n_new, self.n_components));
 
-        // For each new point, find its reconstruction weights w.r.t. training data
+        // For each _new point, find its reconstruction weights w.r.t. training data
         // and use these weights to compute its embedding coordinates
         for i in 0..n_new {
             let new_coords =
@@ -399,8 +399,8 @@ impl LLE {
         let n_training = training_data.nrows();
         let n_features = training_data.ncols();
 
-        // Step 1: Find k nearest neighbors in training data
-        let mut distances: Vec<(f64, usize)> = Vec::new();
+        // Step 1: Find k nearest neighbors in training _data
+        let mut distances: Vec<(f64, usize)> = Vec::_new();
         for j in 0..n_training {
             let mut dist_sq = 0.0;
             for k in 0..n_features {
@@ -420,7 +420,7 @@ impl LLE {
         let weights =
             self.compute_reconstruction_weights_for_point(x_new, training_data, &neighbor_indices)?;
 
-        // Step 3: Compute embedding as weighted combination of neighbor embeddings
+        // Step 3: Compute _embedding as weighted combination of neighbor embeddings
         let mut new_coords = Array1::zeros(self.n_components);
         for (i, &neighbor_idx) in neighbor_indices.iter().enumerate() {
             for dim in 0..self.n_components {

@@ -16,7 +16,7 @@
 //! Run this example to see step-by-step tutorials with explanations.
 
 use ndarray::{Array2, Array3, ArrayView2, Axis};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     error::NdimageResult, features::*, filters::*, interpolation::*, measurements::*,
     morphology::*, segmentation::*,
 };
@@ -552,7 +552,7 @@ fn tutorial_5_shape_analysis() -> NdimageResult<()> {
 
     use ndarray::IxDyn;
     let binary_dyn = binary_image.clone().into_dimensionality::<IxDyn>().unwrap();
-    let (distances, _) = distance_transform_edt(&binary_dyn, None, true, false)
+    let (distances_) = distance_transform_edt(&binary_dyn, None, true, false)
         .expect("Distance transform failed")?;
     let max_distance = distances.fold(0.0, |acc, &x| acc.max(x));
     println!("   Maximum distance: {:.1} pixels", max_distance);
@@ -968,7 +968,7 @@ fn tutorial_8_advanced_techniques() -> NdimageResult<()> {
     let distance_map = {
         use ndarray::IxDyn;
         let binary_dyn = binary_image.clone().into_dimensionality::<IxDyn>().unwrap();
-        let (distances, _) = distance_transform_edt(&binary_dyn, None, true, false)
+        let (distances_) = distance_transform_edt(&binary_dyn, None, true, false)
             .expect("Distance transform failed")?;
         distances.into_dimensionality::<ndarray::Ix2>().unwrap()
     };
@@ -1119,11 +1119,11 @@ fn tutorial_8_advanced_techniques() -> NdimageResult<()> {
 // Helper functions for creating test images and computing statistics
 
 #[allow(dead_code)]
-fn create_circle_image(height: usize, width: usize, radius: f64) -> Array2<f64> {
-    let center_y = height as f64 / 2.0;
+fn create_circle_image(_height: usize, width: usize, radius: f64) -> Array2<f64> {
+    let center_y = _height as f64 / 2.0;
     let center_x = width as f64 / 2.0;
 
-    Array2::from_shape_fn((height, width), |(i, j)| {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
         let dy = i as f64 - center_y;
         let dx = j as f64 - center_x;
         let distance = (dx * dx + dy * dy).sqrt();
@@ -1137,11 +1137,11 @@ fn create_circle_image(height: usize, width: usize, radius: f64) -> Array2<f64> 
 }
 
 #[allow(dead_code)]
-fn create_square_image(height: usize, width: usize, size: usize) -> Array2<f64> {
-    let start_y = (height - size) / 2;
+fn create_square_image(_height: usize, width: usize, size: usize) -> Array2<f64> {
+    let start_y = (_height - size) / 2;
     let start_x = (width - size) / 2;
 
-    Array2::from_shape_fn((height, width), |(i, j)| {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
         if i >= start_y && i < start_y + size && j >= start_x && j < start_x + size {
             1.0
         } else {
@@ -1151,32 +1151,32 @@ fn create_square_image(height: usize, width: usize, size: usize) -> Array2<f64> 
 }
 
 #[allow(dead_code)]
-fn compute_image_stats(image: &Array2<f64>) -> (f64, f64, f64) {
-    let min = image.fold(f64::INFINITY, |acc, &x| acc.min(x));
-    let max = image.fold(f64::NEG_INFINITY, |acc, &x| acc.max(x));
-    let mean = image.sum() / image.len() as f64;
+fn compute_image_stats(_image: &Array2<f64>) -> (f64, f64, f64) {
+    let min = _image.fold(f64::INFINITY, |acc, &x| acc.min(x));
+    let max = _image.fold(f64::NEG_INFINITY, |acc, &x| acc.max(x));
+    let mean = _image.sum() / _image.len() as f64;
     (min, max, mean)
 }
 
 #[allow(dead_code)]
-fn add_realistic_noise(image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
+fn add_realistic_noise(_image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
     // Simple deterministic noise for reproducible examples
-    image
-        + &Array2::from_shape_fn(image.dim(), |(i, j)| {
+    _image
+        + &Array2::from_shape_fn(_image.dim(), |(i, j)| {
             let hash = ((i * 7 + j * 11) % 17) as f64 / 17.0;
             noise_level * (hash - 0.5) * 2.0
         })
 }
 
 #[allow(dead_code)]
-fn create_edge_test_image(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
+fn create_edge_test_image(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
         // Create various edge patterns
-        if i > height / 2 && i < height / 2 + 3 {
+        if i > _height / 2 && i < _height / 2 + 3 {
             1.0 // Horizontal line
         } else if j > width / 2 && j < width / 2 + 3 {
             1.0 // Vertical line
-        } else if ((i as f64 - height as f64 / 4.0).powi(2)
+        } else if ((i as f64 - _height as f64 / 4.0).powi(2)
             + (j as f64 - width as f64 / 4.0).powi(2))
         .sqrt()
             < 10.0
@@ -1189,20 +1189,20 @@ fn create_edge_test_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn count_edge_pixels(image: &Array2<f64>, threshold: f64) -> usize {
-    image.iter().filter(|&&x| x > threshold).count()
+fn count_edge_pixels(_image: &Array2<f64>, threshold: f64) -> usize {
+    _image.iter().filter(|&&x| x > threshold).count()
 }
 
 #[allow(dead_code)]
-fn roberts_cross_gradient(image: &ArrayView2<f64>) -> NdimageResult<Array2<f64>> {
+fn roberts_cross_gradient(_image: &ArrayView2<f64>) -> NdimageResult<Array2<f64>> {
     // Simple Roberts cross gradient implementation
-    let (height, width) = image.dim();
+    let (height, width) = _image.dim();
     let mut result = Array2::zeros((height, width));
 
     for i in 0..height - 1 {
         for j in 0..width - 1 {
-            let gx = image[[i, j]] - image[[i + 1, j + 1]];
-            let gy = image[[i, j + 1]] - image[[i + 1, j]];
+            let gx = _image[[i, j]] - _image[[i + 1, j + 1]];
+            let gy = _image[[i, j + 1]] - _image[[i + 1, j]];
             result[[i, j]] = (gx * gx + gy * gy).sqrt();
         }
     }
@@ -1211,12 +1211,12 @@ fn roberts_cross_gradient(image: &ArrayView2<f64>) -> NdimageResult<Array2<f64>>
 }
 
 #[allow(dead_code)]
-fn create_binary_shapes_image(height: usize, width: usize) -> Array2<u8> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
+fn create_binary_shapes_image(_height: usize, width: usize) -> Array2<u8> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
         // Create several shapes
-        let center1_y = height / 4;
+        let center1_y = _height / 4;
         let center1_x = width / 4;
-        let center2_y = 3 * height / 4;
+        let center2_y = 3 * _height / 4;
         let center2_x = 3 * width / 4;
 
         let dist1 =
@@ -1226,7 +1226,7 @@ fn create_binary_shapes_image(height: usize, width: usize) -> Array2<u8> {
 
         if dist1 < 12.0
             || dist2 < 8.0
-            || (i > height / 2 - 5 && i < height / 2 + 5 && j > width / 3 && j < 2 * width / 3)
+            || (i > _height / 2 - 5 && i < _height / 2 + 5 && j > width / 3 && j < 2 * width / 3)
         {
             1u8
         } else {
@@ -1236,16 +1236,16 @@ fn create_binary_shapes_image(height: usize, width: usize) -> Array2<u8> {
 }
 
 #[allow(dead_code)]
-fn count_white_pixels<T>(image: &Array2<T>) -> usize
+fn count_white_pixels<T>(_image: &Array2<T>) -> usize
 where
     T: PartialOrd + From<u8>,
 {
-    image.iter().filter(|&&x| x > T::from(0u8)).count()
+    _image.iter().filter(|&&x| x > T::from(0u8)).count()
 }
 
 #[allow(dead_code)]
-fn create_multi_object_image(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
+fn create_multi_object_image(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
         // Create multiple objects of different sizes and intensities
         let objects = [
             ((20, 20), 8.0, 0.8), // (center, radius, intensity)
@@ -1267,9 +1267,9 @@ fn create_multi_object_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_test_pattern_image(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_test_pattern_image(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Create a test pattern with various frequencies
@@ -1282,9 +1282,9 @@ fn create_test_pattern_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_complex_test_image(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_complex_test_image(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Complex pattern with multiple features
@@ -1303,19 +1303,19 @@ fn create_complex_test_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_watershed_markers(distance_map: &Array2<f64>, threshold: f64) -> Array2<u32> {
-    let mut markers = Array2::zeros(distance_map.dim());
+fn create_watershed_markers(_distance_map: &Array2<f64>, threshold: f64) -> Array2<u32> {
+    let mut markers = Array2::zeros(_distance_map.dim());
     let mut label = 1u32;
 
     // Simple peak finding for watershed markers
-    let (height, width) = distance_map.dim();
+    let (height, width) = _distance_map.dim();
     for i in 1..height - 1 {
         for j in 1..width - 1 {
-            if distance_map[[i, j]] > threshold
-                && distance_map[[i, j]] > distance_map[[i - 1, j]]
-                && distance_map[[i, j]] > distance_map[[i + 1, j]]
-                && distance_map[[i, j]] > distance_map[[i, j - 1]]
-                && distance_map[[i, j]] > distance_map[[i, j + 1]]
+            if _distance_map[[i, j]] > threshold
+                && _distance_map[[i, j]] > _distance_map[[i - 1, j]]
+                && _distance_map[[i, j]] > _distance_map[[i + 1, j]]
+                && _distance_map[[i, j]] > _distance_map[[i, j - 1]]
+                && _distance_map[[i, j]] > _distance_map[[i, j + 1]]
             {
                 markers[[i, j]] = label;
                 label += 1;
@@ -1327,7 +1327,7 @@ fn create_watershed_markers(distance_map: &Array2<f64>, threshold: f64) -> Array
 }
 
 #[allow(dead_code)]
-fn estimate_sharpness(image: &Array2<f64>) -> f64 {
+fn estimate_sharpness(_image: &Array2<f64>) -> f64 {
     // Simple sharpness estimate using Laplacian variance
     let laplacian_kernel = Array2::from_shape_vec(
         (3, 3),
@@ -1338,14 +1338,14 @@ fn estimate_sharpness(image: &Array2<f64>) -> f64 {
     // Simple convolution for demonstration
     let mut sum_squares = 0.0;
     let mut count = 0;
-    let (height, width) = image.dim();
+    let (height, width) = _image.dim();
 
     for i in 1..height - 1 {
         for j in 1..width - 1 {
             let mut laplacian = 0.0;
             for ki in 0..3 {
                 for kj in 0..3 {
-                    laplacian += image[[i + ki - 1, j + kj - 1]] * laplacian_kernel[[ki, kj]];
+                    laplacian += _image[[i + ki - 1, j + kj - 1]] * laplacian_kernel[[ki, kj]];
                 }
             }
             sum_squares += laplacian * laplacian;
@@ -1357,23 +1357,23 @@ fn estimate_sharpness(image: &Array2<f64>) -> f64 {
 }
 
 #[allow(dead_code)]
-fn estimate_contrast(image: &Array2<f64>) -> f64 {
-    let stats = compute_image_stats(image);
+fn estimate_contrast(_image: &Array2<f64>) -> f64 {
+    let stats = compute_image_stats(_image);
     stats.1 - stats.0 // max - min
 }
 
 #[allow(dead_code)]
-fn estimate_noise_level(image: &Array2<f64>) -> f64 {
+fn estimate_noise_level(_image: &Array2<f64>) -> f64 {
     // Estimate noise using high-frequency content
-    let (height, width) = image.dim();
+    let (height, width) = _image.dim();
     let mut noise_sum = 0.0;
     let mut count = 0;
 
     for i in 1..height - 1 {
         for j in 1..width - 1 {
             // Simple gradient magnitude as noise indicator
-            let gx = image[[i, j + 1]] - image[[i, j - 1]];
-            let gy = image[[i + 1, j]] - image[[i - 1, j]];
+            let gx = _image[[i, j + 1]] - _image[[i, j - 1]];
+            let gy = _image[[i + 1, j]] - _image[[i - 1, j]];
             noise_sum += (gx * gx + gy * gy).sqrt();
             count += 1;
         }
@@ -1383,9 +1383,9 @@ fn estimate_noise_level(image: &Array2<f64>) -> f64 {
 }
 
 #[allow(dead_code)]
-fn enhance_contrast(image: &Array2<f64>, factor: f64) -> NdimageResult<Array2<f64>> {
-    let stats = compute_image_stats(image);
+fn enhance_contrast(_image: &Array2<f64>, factor: f64) -> NdimageResult<Array2<f64>> {
+    let stats = compute_image_stats(_image);
     let mean = stats.2;
 
-    Ok(image.mapv(|x| ((x - mean) * factor + mean).clamp(0.0, 1.0)))
+    Ok(_image.mapv(|x| ((x - mean) * factor + mean).clamp(0.0, 1.0)))
 }

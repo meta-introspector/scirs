@@ -332,7 +332,7 @@ fn demo_large_numbers() -> CoreResult<()> {
         let one = ArbitraryInt::from_i64(1);
 
         // Use modular arithmetic for efficiency
-        let _mersenne =
+        let mersenne =
             two.mod_pow(&exp, &ArbitraryInt::from_str_radix(&"1".repeat(1000), 10)?)? - one;
 
         // For demonstration, we'll create the actual number for smaller values

@@ -23,7 +23,7 @@ use crate::optimizers::Optimizer;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::optimizers::{Adagrad, Optimizer};
+/// use scirs2__optim::optimizers::{Adagrad, Optimizer};
 ///
 /// // Initialize parameters and gradients
 /// let params = Array1::zeros(5);
@@ -53,9 +53,9 @@ impl<A: Float + ScalarOperand + Debug> Adagrad<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(_learning_rate: A) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             epsilon: A::from(1e-10).unwrap(),
             weight_decay: A::zero(),
             sum_squared_grads: None,
@@ -69,9 +69,9 @@ impl<A: Float + ScalarOperand + Debug> Adagrad<A> {
     /// * `learning_rate` - The learning rate for parameter updates
     /// * `epsilon` - Small constant for numerical stability (default: 1e-10)
     /// * `weight_decay` - Weight decay factor for L2 regularization (default: 0.0)
-    pub fn new_with_config(learning_rate: A, epsilon: A, weight_decay: A) -> Self {
+    pub fn new_with_config(_learning_rate: A, epsilon: A, weight_decay: A) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             epsilon,
             weight_decay,
             sum_squared_grads: None,

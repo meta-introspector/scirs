@@ -8,8 +8,9 @@ use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Distribution, Gamma as RandGamma};
+use rand__distr::{Distribution, Gamma as RandGamma};
 use std::fmt::Debug;
+use statrs::statistics::Statistics;
 
 /// Gamma distribution structure
 pub struct Gamma<F: Float + Send + Sync> {
@@ -39,12 +40,12 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::gamma::Gamma;
+    /// use scirs2__stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// ```
-    pub fn new(shape: F, scale: F, loc: F) -> StatsResult<Self> {
-        if shape <= F::zero() {
+    pub fn new(_shape: F, scale: F, loc: F) -> StatsResult<Self> {
+        if _shape <= F::zero() {
             return Err(StatsError::DomainError(
                 "Shape parameter must be positive".to_string(),
             ));
@@ -57,13 +58,13 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
         }
 
         // Convert to f64 for rand_distr
-        let shape_f64 = <f64 as NumCast>::from(shape).unwrap();
+        let shape_f64 = <f64 as NumCast>::from(_shape).unwrap();
         let scale_f64 = <f64 as NumCast>::from(scale).unwrap();
 
-        // rand_distr uses shape and rate (= 1/scale)
+        // rand_distr uses _shape and rate (= 1/scale)
         match RandGamma::new(shape_f64, 1.0 / scale_f64) {
             Ok(rand_distr) => Ok(Gamma {
-                shape,
+                _shape,
                 scale,
                 loc,
                 rand_distr,
@@ -87,7 +88,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::gamma::Gamma;
+    /// use scirs2__stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// let pdf_at_one = gamma.pdf(1.0);
@@ -137,7 +138,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::gamma::Gamma;
+    /// use scirs2__stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// let cdf_at_one = gamma.cdf(1.0);
@@ -182,14 +183,14 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::gamma::Gamma;
+    /// use scirs2__stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// let x = gamma.ppf(0.5).unwrap();
     /// assert!((x - 1.678).abs() < 1e-3);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p > F::one() {
+        if p < F::zero() || p >, F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));
@@ -268,7 +269,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::gamma::Gamma;
+    /// use scirs2__stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// let samples = gamma.rvs(1000).unwrap();
@@ -293,7 +294,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::gamma::Gamma;
+    /// use scirs2__stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// let samples = gamma.rvs_vec(1000).unwrap();

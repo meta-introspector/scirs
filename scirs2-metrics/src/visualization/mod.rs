@@ -9,7 +9,7 @@
 //! # Basic Usage
 //!
 //! ```
-//! use scirs2_metrics::visualization::{
+//! use scirs2__metrics::visualization::{
 //!     VisualizationData, VisualizationMetadata, PlotType, PlottingBackend, backends
 //! };
 //!
@@ -37,8 +37,8 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2_metrics::classification::confusion_matrix;
-//! use scirs2_metrics::visualization::{
+//! use scirs2__metrics::classification::confusion_matrix;
+//! use scirs2__metrics::visualization::{
 //!     confusion_matrix::confusion_matrix_visualization,
 //!     PlottingBackend, backends
 //! };
@@ -48,7 +48,7 @@
 //! let y_pred = array![0, 2, 1, 0, 0, 2];
 //!
 //! // Create confusion matrix
-//! let (cm, _) = confusion_matrix(&y_true, &y_pred, None).unwrap();
+//! let (cm_) = confusion_matrix(&y_true, &y_pred, None).unwrap();
 //! let cm_f64 = cm.mapv(|x| x as f64);
 //!
 //! // Create visualizer
@@ -79,7 +79,7 @@ pub mod precision_recall;
 pub mod roc_curve;
 
 // Re-export common functionality
-pub use advanced_interactive::{
+pub use advanced__interactive::{
     CollaborationConfig, CollaborationManager, DashboardConfig, DashboardState, DataSource,
     EventResponse, EventSystem, ExportConfig, InteractionConfig, InteractiveDashboard,
     InteractiveWidget, LayoutConfig, LayoutManager, RealtimeConfig, RenderingEngine, ThemeConfig,
@@ -87,15 +87,15 @@ pub use advanced_interactive::{
 };
 pub use backends::PlottingBackend;
 pub use calibration::CalibrationVisualizer;
-pub use confusion_matrix::ConfusionMatrixVisualizer;
+pub use confusion__matrix::ConfusionMatrixVisualizer;
 pub use helpers::*;
 pub use interactive::{
     interactive_roc_curve_from_labels, interactive_roc_curve_visualization, InteractiveOptions,
     InteractiveROCVisualizer,
 };
-pub use learning_curve::LearningCurveVisualizer;
-pub use precision_recall::PrecisionRecallVisualizer;
-pub use roc_curve::ROCCurveVisualizer;
+pub use learning__curve::LearningCurveVisualizer;
+pub use precision__recall::PrecisionRecallVisualizer;
+pub use roc__curve::ROCCurveVisualizer;
 
 use std::collections::HashMap;
 use std::error::Error;
@@ -345,9 +345,9 @@ impl VisualizationMetadata {
     /// # Arguments
     ///
     /// * `title` - The plot title
-    pub fn new(title: impl Into<String>) -> Self {
+    pub fn new(_title: impl Into<String>) -> Self {
         Self {
-            title: title.into(),
+            _title: _title.into(),
             x_label: "X".to_string(),
             y_label: "Y".to_string(),
             plot_type: PlotType::Line,

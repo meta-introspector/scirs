@@ -12,7 +12,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2_spatial::set_distance::hausdorff_distance;
+//! use scirs2__spatial::set_distance::hausdorff_distance;
 //!
 //! // Create two point sets
 //! let points1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -29,6 +29,7 @@ use ndarray::{Array2, ArrayView2};
 use num_traits::Float;
 use rand::prelude::*;
 use rand::{rngs::StdRng, SeedableRng};
+use rand::seq::SliceRandom;
 
 /// Compute the directed Hausdorff distance from set1 to set2.
 ///
@@ -52,7 +53,7 @@ use rand::{rngs::StdRng, SeedableRng};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::set_distance::directed_hausdorff;
+/// use scirs2__spatial::set_distance::directed_hausdorff;
 ///
 /// // Create two point sets
 /// let points1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -173,7 +174,7 @@ pub fn directed_hausdorff<T: Float + Send + Sync>(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::set_distance::hausdorff_distance;
+/// use scirs2__spatial::set_distance::hausdorff_distance;
 ///
 /// // Create two point sets
 /// let points1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -190,8 +191,8 @@ pub fn hausdorff_distance<T: Float + Send + Sync>(
     seed: Option<u64>,
 ) -> T {
     // Compute directed Hausdorff distances in both directions
-    let (dist_forward, _, _) = directed_hausdorff(set1, set2, seed);
-    let (dist_backward, _, _) = directed_hausdorff(set2, set1, seed);
+    let (dist_forward__) = directed_hausdorff(set1, set2, seed);
+    let (dist_backward__) = directed_hausdorff(set2, set1, seed);
 
     // Return the maximum of the two directed distances
     if dist_forward > dist_backward {
@@ -219,7 +220,7 @@ pub fn hausdorff_distance<T: Float + Send + Sync>(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_spatial::set_distance::wasserstein_distance;
+/// use scirs2__spatial::set_distance::wasserstein_distance;
 ///
 /// // Create two point distributions
 /// let points1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -367,7 +368,6 @@ pub fn gromov_hausdorff_distance<T: Float + Send + Sync>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
     use ndarray::array;
 
@@ -376,7 +376,7 @@ mod tests {
         let set1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
         let set2 = array![[0.0, 0.5], [1.0, 0.5], [0.5, 1.0]];
 
-        let (dist, _, _) = directed_hausdorff(&set1.view(), &set2.view(), Some(42));
+        let (dist__) = directed_hausdorff(&set1.view(), &set2.view(), Some(42));
 
         // The directed Hausdorff distance should be 0.5
         // (the maximum minimum distance from a point in set1 to set2)

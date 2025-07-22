@@ -25,28 +25,28 @@ pub struct SparseMatrix {
 
 impl SparseMatrix {
     /// Create a new sparse matrix
-    pub fn new(nrows: usize, ncols: usize) -> Self {
+    pub fn new(_nrows: usize, ncols: usize) -> Self {
         Self {
-            row_ptr: vec![0; nrows + 1],
+            row_ptr: vec![0; _nrows + 1],
             col_idx: Vec::new(),
             values: Vec::new(),
-            nrows,
+            _nrows,
             ncols,
         }
     }
 
     /// Create sparse matrix from dense matrix with threshold
-    pub fn from_dense(matrix: &ArrayView2<f64>, threshold: f64) -> Self {
-        let (nrows, ncols) = matrix.dim();
+    pub fn from_dense(_matrix: &ArrayView2<f64>, threshold: f64) -> Self {
+        let (nrows, ncols) = _matrix.dim();
         let mut row_ptr = vec![0; nrows + 1];
         let mut col_idx = Vec::new();
         let mut values = Vec::new();
 
         for i in 0..nrows {
             for j in 0..ncols {
-                if matrix[[i, j]].abs() > threshold {
+                if _matrix[[i, j]].abs() > threshold {
                     col_idx.push(j);
-                    values.push(matrix[[i, j]]);
+                    values.push(_matrix[[i, j]]);
                 }
             }
             row_ptr[i + 1] = values.len();
@@ -458,8 +458,7 @@ where
 #[allow(dead_code)]
 fn solve_sparse_gauss_newton<F, J>(
     fun: &F,
-    jac: &Option<J>,
-    _sparse_jac: &SparseMatrix,
+    jac: &Option<J>, _sparse_jac: &SparseMatrix,
     x0: &Array1<f64>,
     options: &SparseOptions,
     nfev: &mut usize,
@@ -476,7 +475,7 @@ where
         let residual = fun(&x.view());
         *nfev += 1;
 
-        if let Some(ref jac_fn) = jac {
+        if let Some(ref jac_fn) = _jac {
             let jac_dense = jac_fn(&x.view());
             *njev += 1;
 
@@ -550,16 +549,16 @@ where
 
 /// Compute diagonal element of J^T J for preconditioning
 #[allow(dead_code)]
-fn compute_diagonal_element(jac: &SparseMatrix, col: usize) -> f64 {
+fn compute_diagonal_element(_jac: &SparseMatrix, col: usize) -> f64 {
     let mut diag = 0.0;
 
-    for row in 0..jac.nrows {
-        let start = jac.row_ptr[row];
-        let end = jac.row_ptr[row + 1];
+    for row in 0.._jac.nrows {
+        let start = _jac.row_ptr[row];
+        let end = _jac.row_ptr[row + 1];
 
         for k in start..end {
-            if jac.col_idx[k] == col {
-                diag += jac.values[k].powi(2);
+            if _jac.col_idx[k] == col {
+                diag += _jac.values[k].powi(2);
             }
         }
     }
@@ -570,12 +569,10 @@ fn compute_diagonal_element(jac: &SparseMatrix, col: usize) -> f64 {
 /// Fallback to dense least squares for small or dense problems
 #[allow(dead_code)]
 fn solve_dense_least_squares<F, J>(
-    fun: &F,
-    _jac: &Option<J>,
+    fun: &F_jac: &Option<J>,
     x0: &Array1<f64>,
     options: &SparseOptions,
-    nfev: &mut usize,
-    _njev: &mut usize,
+    nfev: &mut usize_njev: &mut usize,
 ) -> Result<InternalResult, OptimizeError>
 where
     F: Fn(&ArrayView1<f64>) -> Array1<f64>,
@@ -643,9 +640,9 @@ where
 
 /// Estimate memory usage of sparse matrix in MB
 #[allow(dead_code)]
-fn estimate_memory_usage(sparse_matrix: &SparseMatrix) -> f64 {
-    let nnz = sparse_matrix.values.len();
-    let nrows = sparse_matrix.nrows;
+fn estimate_memory_usage(_sparse_matrix: &SparseMatrix) -> f64 {
+    let nnz = _sparse_matrix.values.len();
+    let nrows = _sparse_matrix.nrows;
 
     // Memory for values, column indices, and row pointers
     let memory_bytes = nnz * 8 + nnz * 8 + (nrows + 1) * 8; // f64 + usize + usize

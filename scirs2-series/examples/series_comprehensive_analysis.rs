@@ -4,7 +4,8 @@
 //! including data preprocessing, decomposition, forecasting, and anomaly detection.
 
 use ndarray::{array, Array1};
-use scirs2_series::{
+use scirs2__series::{
+use statrs::statistics::Statistics;
     anomaly::{AnomalyDetector, IsolationForestDetector, ZScoreDetector},
     arima_models::{auto_arima, ArimaSelectionOptions, SelectionCriterion},
     change_point::{CusumDetector, PeltDetector},
@@ -97,12 +98,12 @@ fn generate_synthetic_data() -> Array1<f64> {
 }
 
 #[allow(dead_code)]
-fn preprocess_data(data: &Array1<f64>) -> (Array1<f64>, BoxCoxTransformer<f64>) {
+fn preprocess_data(_data: &Array1<f64>) -> (Array1<f64>, BoxCoxTransformer<f64>) {
     // Apply Box-Cox transformation
     let mut transformer = BoxCoxTransformer::new();
     let transformed = transformer
-        .fit_transform(data)
-        .unwrap_or_else(|_| data.clone());
+        .fit_transform(_data)
+        .unwrap_or_else(|_| _data.clone());
 
     // Apply differencing if needed
     let mut diff_transformer = DifferencingTransformer::new(1);
@@ -114,7 +115,7 @@ fn preprocess_data(data: &Array1<f64>) -> (Array1<f64>, BoxCoxTransformer<f64>) 
 }
 
 #[allow(dead_code)]
-fn decompose_series(data: &Array1<f64>) -> (Array1<f64>, Array1<f64>, Array1<f64>) {
+fn decompose_series(_data: &Array1<f64>) -> (Array1<f64>, Array1<f64>, Array1<f64>) {
     let options = StlOptions {
         seasonal_period: 12,
         seasonal_smoother: 7,
@@ -130,19 +131,19 @@ fn decompose_series(data: &Array1<f64>) -> (Array1<f64>, Array1<f64>, Array1<f64
     };
 
     let mut decomposer = StlDecomposer::new(options);
-    decomposer.decompose(data).unwrap_or_else(|_| {
+    decomposer.decompose(_data).unwrap_or_else(|_| {
         // Fallback to simple decomposition
-        let n = data.len();
-        let trend = Array1::linspace(data[0], data[n - 1], n);
+        let n = _data.len();
+        let trend = Array1::linspace(_data[0], _data[n - 1], n);
         let seasonal = Array1::zeros(n);
-        let residual = data - &trend;
+        let residual = _data - &trend;
         (trend, seasonal, residual)
     })
 }
 
 #[allow(dead_code)]
-fn analyze_decomposition(result: &(Array1<f64>, Array1<f64>, Array1<f64>)) {
-    let (trend, seasonal, residual) = result;
+fn analyze_decomposition(_result: &(Array1<f64>, Array1<f64>, Array1<f64>)) {
+    let (trend, seasonal, residual) = _result;
 
     println!("  Trend variance: {:.2}", calculate_variance(trend));
     println!("  Seasonal variance: {:.2}", calculate_variance(seasonal));
@@ -165,20 +166,20 @@ fn analyze_decomposition(result: &(Array1<f64>, Array1<f64>, Array1<f64>)) {
 }
 
 #[allow(dead_code)]
-fn calculate_variance(data: &Array1<f64>) -> f64 {
-    if data.len() < 2 {
+fn calculate_variance(_data: &Array1<f64>) -> f64 {
+    if _data.len() < 2 {
         return 0.0;
     }
-    let mean = data.mean().unwrap_or(0.0);
-    data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (data.len() - 1) as f64
+    let mean = _data.mean().unwrap_or(0.0);
+    _data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (_data.len() - 1) as f64
 }
 
 #[allow(dead_code)]
-fn extract_and_analyze_features(data: &Array1<f64>) {
+fn extract_and_analyze_features(_data: &Array1<f64>) {
     let config = FeatureConfig::comprehensive();
     let mut extractor = FeatureExtractor::new(config);
 
-    if let Ok(features) = extractor.extract_features(data) {
+    if let Ok(features) = extractor.extract_features(_data) {
         println!("  Extracted {} features", features.len());
 
         // Analyze key features
@@ -195,10 +196,10 @@ fn extract_and_analyze_features(data: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn detect_changes_and_anomalies(data: &Array1<f64>) {
+fn detect_changes_and_anomalies(_data: &Array1<f64>) {
     // Change point detection
     let mut pelt_detector = PeltDetector::new(2.0, 5);
-    if let Ok(change_points) = pelt_detector.detect(data) {
+    if let Ok(change_points) = pelt_detector.detect(_data) {
         println!(
             "  Detected {} change points: {:?}",
             change_points.len(),
@@ -208,24 +209,24 @@ fn detect_changes_and_anomalies(data: &Array1<f64>) {
 
     // Anomaly detection with multiple methods
     let mut z_detector = ZScoreDetector::new(3.0);
-    if let Ok(z_anomalies) = z_detector.detect(data) {
+    if let Ok(z_anomalies) = z_detector.detect(_data) {
         let anomaly_count = z_anomalies.iter().filter(|&&x| x).count();
         println!("  Z-score anomalies: {}", anomaly_count);
     }
 
     let mut isolation_detector = IsolationForestDetector::new(100, 0.1, Some(42));
-    if let Ok(iso_anomalies) = isolation_detector.detect(data) {
+    if let Ok(iso_anomalies) = isolation_detector.detect(_data) {
         let anomaly_count = iso_anomalies.iter().filter(|&&x| x).count();
         println!("  Isolation forest anomalies: {}", anomaly_count);
     }
 }
 
 #[allow(dead_code)]
-fn compare_forecasting_methods(data: &Array1<f64>) {
+fn compare_forecasting_methods(_data: &Array1<f64>) {
     let forecast_horizon = 10;
-    let train_size = data.len() - forecast_horizon;
-    let train_data = data.slice(ndarray::s![..train_size]).to_owned();
-    let test_data = data.slice(ndarray::s![train_size..]).to_owned();
+    let train_size = _data.len() - forecast_horizon;
+    let train_data = _data.slice(ndarray::s![..train_size]).to_owned();
+    let test_data = _data.slice(ndarray::s![train_size..]).to_owned();
 
     println!(
         "  Training on {} points, testing on {} points",
@@ -279,7 +280,7 @@ fn compare_forecasting_methods(data: &Array1<f64>) {
 
     // Method 3: LSTM Neural Network
     let lstm_config = LSTMConfig {
-        base: scirs2_series::forecasting::neural::NeuralConfig {
+        base: scirs2_series: forecasting::neural::NeuralConfig {
             lookback_window: 10,
             forecast_horizon,
             epochs: 50,
@@ -307,25 +308,25 @@ fn compare_forecasting_methods(data: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn calculate_mse(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
-    let min_len = actual.len().min(predicted.len());
+fn calculate_mse(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
+    let min_len = _actual.len().min(predicted.len());
     if min_len == 0 {
         return f64::INFINITY;
     }
 
     let mut sum_sq_error = 0.0;
     for i in 0..min_len {
-        let error = actual[i] - predicted[i];
+        let error = _actual[i] - predicted[i];
         sum_sq_error += error * error;
     }
     sum_sq_error / min_len as f64
 }
 
 #[allow(dead_code)]
-fn advanced_analysis(data: &Array1<f64>) {
+fn advanced_analysis(_data: &Array1<f64>) {
     // Correlation analysis
     let mut corr_analyzer = CrossCorrelationAnalyzer::new();
-    if let Ok(autocorr) = corr_analyzer.autocorrelation(data, 20) {
+    if let Ok(autocorr) = corr_analyzer.autocorrelation(_data, 20) {
         let max_autocorr = autocorr
             .iter()
             .skip(1)
@@ -335,9 +336,9 @@ fn advanced_analysis(data: &Array1<f64>) {
 
     // Dynamic Time Warping self-similarity
     let dtw = DynamicTimeWarping::new();
-    let half_len = data.len() / 2;
-    let first_half = data.slice(ndarray::s![..half_len]).to_owned();
-    let second_half = data.slice(ndarray::s![half_len..half_len * 2]).to_owned();
+    let half_len = _data.len() / 2;
+    let first_half = _data.slice(ndarray::s![..half_len]).to_owned();
+    let second_half = _data.slice(ndarray::s![half_len..half_len * 2]).to_owned();
 
     if let Ok(dtw_distance) = dtw.distance(&first_half, &second_half) {
         println!("  DTW distance between halves: {:.2}", dtw_distance);
@@ -346,7 +347,7 @@ fn advanced_analysis(data: &Array1<f64>) {
     // Clustering analysis
     let clustering_config = ClusteringConfig {
         n_clusters: 3,
-        distance_metric: scirs2_series::clustering::DistanceMetric::Euclidean,
+        distance_metric: scirs2, _series: clustering::DistanceMetric::Euclidean,
         max_iterations: 100,
         tolerance: 1e-4,
         random_seed: Some(42),
@@ -357,8 +358,8 @@ fn advanced_analysis(data: &Array1<f64>) {
     let step_size = 10;
     let mut subsequences = Vec::new();
 
-    for i in (0..data.len() - window_size).step_by(step_size) {
-        let subseq = data.slice(ndarray::s![i..i + window_size]).to_owned();
+    for i in (0.._data.len() - window_size).step_by(step_size) {
+        let subseq = _data.slice(ndarray::s![i..i + window_size]).to_owned();
         subsequences.push(subseq);
     }
 
@@ -375,7 +376,7 @@ fn advanced_analysis(data: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn streaming_analysis_demo(data: &Array1<f64>) {
+fn streaming_analysis_demo(_data: &Array1<f64>) {
     let config = StreamConfig {
         window_size: 50,
         min_observations: 10,
@@ -388,7 +389,7 @@ fn streaming_analysis_demo(data: &Array1<f64>) {
     let mut analyzer = StreamingAnalyzer::new(config).unwrap();
     let mut detected_changes = 0;
 
-    for (i, &value) in data.iter().enumerate() {
+    for (i, &value) in _data.iter().enumerate() {
         if let Ok(_) = analyzer.add_observation(value) {
             let change_points = analyzer.get_change_points();
             if change_points.len() > detected_changes {
@@ -422,7 +423,7 @@ fn streaming_analysis_demo(data: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn validate_models(data: &Array1<f64>) {
+fn validate_models(_data: &Array1<f64>) {
     let cv_config = CrossValidationConfig {
         n_folds: 5,
         test_size: 0.2,
@@ -441,7 +442,7 @@ fn validate_models(data: &Array1<f64>) {
         ..Default::default()
     };
 
-    if let Ok(cv_results) = cross_validate(data, &arima_options, &cv_config) {
+    if let Ok(cv_results) = cross_validate(_data, &arima_options, &cv_config) {
         println!("  Cross-validation results:");
         println!("    Mean MSE: {:.4}", cv_results.mean_score);
         println!("    Std MSE: {:.4}", cv_results.std_score);

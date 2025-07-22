@@ -29,8 +29,8 @@
 //!
 //! ```
 //! use ndarray::Array2;
-//! use scirs2_signal::dwt::Wavelet;
-//! use scirs2_signal::swt2d::swt2d_decompose;
+//! use scirs2__signal::dwt::Wavelet;
+//! use scirs2__signal::swt2d::swt2d_decompose;
 //!
 //! // Create a simple "image"
 //! let mut image = Array2::zeros((8, 8));
@@ -50,17 +50,17 @@
 //! assert_eq!(result.detail_d.shape(), image.shape());
 //! ```
 
+use crate::swt;
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::swt;
 use ndarray::{Array2, Axis};
 use num_traits::{Float, NumCast};
+use scirs2_core::parallel_ops::*;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 // Import parallel ops for parallel processing when the "parallel" feature is enabled
 #[cfg(feature = "parallel")]
-use scirs2_core::parallel_ops::*;
-
 /// Result of a 2D SWT decomposition, containing the approximation and detail coefficients.
 ///
 /// Unlike the standard 2D DWT, all coefficient subbands have the same size as the input image.
@@ -98,8 +98,8 @@ pub struct Swt2dResult {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::dwt::Wavelet;
-/// use scirs2_signal::swt2d::swt2d_decompose;
+/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2__signal::swt2d::swt2d_decompose;
 ///
 /// // Create a simple 4x4 "image"
 /// let data = Array2::from_shape_vec((4, 4), vec![
@@ -282,8 +282,8 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::dwt::Wavelet;
-/// use scirs2_signal::swt2d::swt2d;
+/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2__signal::swt2d::swt2d;
 ///
 /// // Create a simple 8x8 "image"
 /// let mut image = Array2::zeros((8, 8));
@@ -365,8 +365,8 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::dwt::Wavelet;
-/// use scirs2_signal::swt2d::{swt2d_decompose, swt2d_reconstruct};
+/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2__signal::swt2d::{swt2d_decompose, swt2d_reconstruct};
 ///
 /// // Create a simple "image"
 /// let data = Array2::from_shape_vec((4, 4), vec![
@@ -389,8 +389,7 @@ where
 pub fn swt2d_reconstruct(
     decomposition: &Swt2dResult,
     wavelet: Wavelet,
-    level: usize,
-    _mode: Option<&str>,
+    level: usize_mode: Option<&str>,
 ) -> SignalResult<Array2<f64>> {
     if level < 1 {
         return Err(SignalError::ValueError(
@@ -551,8 +550,8 @@ pub fn swt2d_reconstruct(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::dwt::Wavelet;
-/// use scirs2_signal::swt2d::{swt2d, iswt2d};
+/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2__signal::swt2d::{swt2d, iswt2d};
 ///
 /// // Create a simple 8x8 "image"
 /// let mut image = Array2::zeros((8, 8));
@@ -616,10 +615,12 @@ pub fn iswt2d(
 
 #[cfg(test)]
 mod tests {
-    use ndarray::Array2;
+    use approx::assert_relative_eq;
 
     #[test]
     fn test_swt2d_decompose() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple test image
         let mut image = Array2::zeros((8, 8));
         for i in 0..8 {
@@ -644,6 +645,8 @@ mod tests {
 
     #[test]
     fn test_swt2d_reconstruct() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple test image
         let data = Array2::from_shape_vec(
             (4, 4),
@@ -691,6 +694,8 @@ mod tests {
 
     #[test]
     fn test_multi_level_swt2d() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple test image
         let mut image = Array2::zeros((8, 8));
         for i in 0..8 {
@@ -735,7 +740,7 @@ mod tests {
         // Make sure the output has the correct shape and non-zero values
         assert_eq!(reconstructed.shape(), image.shape());
         assert!(
-            reconstructed.iter().any(|&x| x.abs() > 1e-6),
+            reconstructed.iter().any(|&x: &f64| x.abs() > 1e-6),
             "Reconstructed values too small"
         );
     }

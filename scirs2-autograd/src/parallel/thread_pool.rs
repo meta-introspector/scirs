@@ -24,20 +24,20 @@ pub struct AdvancedThreadPool {
 
 impl AdvancedThreadPool {
     /// Create a new advanced thread pool
-    pub fn new(config: ThreadPoolConfig) -> Self {
+    pub fn new(_config: ThreadPoolConfig) -> Self {
         let global_queue = Arc::new(Mutex::new(VecDeque::new()));
         let running = Arc::new(AtomicBool::new(true));
-        let stats = Arc::new(Mutex::new(AdvancedThreadPoolStats::new(config.num_threads)));
+        let stats = Arc::new(Mutex::new(AdvancedThreadPoolStats::new(_config.num_threads)));
 
-        let mut workers = Vec::with_capacity(config.num_threads);
+        let mut workers = Vec::with_capacity(_config.num_threads);
 
-        for id in 0..config.num_threads {
+        for id in 0.._config.num_threads {
             let worker = WorkStealingWorker::new(
                 id,
                 Arc::clone(&global_queue),
                 Arc::clone(&running),
                 Arc::clone(&stats),
-                config.clone(),
+                _config.clone(),
             );
             workers.push(worker);
         }
@@ -45,7 +45,7 @@ impl AdvancedThreadPool {
         Self {
             workers,
             global_queue,
-            config,
+            _config,
             running,
             stats,
         }
@@ -97,7 +97,7 @@ impl AdvancedThreadPool {
                 .iter()
                 .enumerate()
                 .min_by_key(|(_, worker)| worker.get_queue_size())
-                .map(|(id, _)| id)
+                .map(|(id_)| id)
         } else {
             // Simple round-robin based on current time
             let now = Instant::now();
@@ -131,7 +131,7 @@ impl AdvancedThreadPool {
     pub fn resize(&mut self, new_size: usize) -> Result<(), ThreadPoolError> {
         if new_size == 0 {
             return Err(ThreadPoolError::InvalidConfiguration(
-                "Thread pool size cannot be zero".into(),
+                "Thread pool _size cannot be zero".into(),
             ));
         }
 
@@ -281,18 +281,18 @@ impl WorkStealingWorker {
         global_queue: &Arc<Mutex<VecDeque<Task>>>,
         config: &ThreadPoolConfig,
     ) -> Option<Task> {
-        // Try local queue first
+        // Try local _queue first
         {
-            let mut queue = local_queue.lock().unwrap();
-            if let Some(task) = queue.pop_front() {
+            let mut _queue = local_queue.lock().unwrap();
+            if let Some(task) = _queue.pop_front() {
                 return Some(task);
             }
         }
 
-        // Try global queue
+        // Try global _queue
         {
-            let mut queue = global_queue.lock().unwrap();
-            if let Some(task) = queue.pop_front() {
+            let mut _queue = global_queue.lock().unwrap();
+            if let Some(task) = _queue.pop_front() {
                 return Some(task);
             }
         }
@@ -349,15 +349,15 @@ pub struct Task {
 
 impl Task {
     /// Create a new task with completion handle
-    pub fn new<F>(func: F) -> (Self, TaskHandle<()>)
+    pub fn new<F>(_func: F) -> (Self, TaskHandle<()>)
     where
         F: FnOnce() + Send + 'static,
     {
         let (sender, receiver) = std::sync::mpsc::channel();
 
         let task = Task {
-            func: Box::new(move || {
-                func();
+            _func: Box::new(move || {
+                _func();
                 let _ = sender.send(());
             }),
             created_at: Instant::now(),
@@ -444,13 +444,13 @@ pub struct AdvancedThreadPoolStats {
 }
 
 impl AdvancedThreadPoolStats {
-    fn new(num_workers: usize) -> Self {
+    fn new(_num_workers: usize) -> Self {
         Self {
             total_tasks_executed: 0,
             total_execution_time: Duration::ZERO,
             work_steals: 0,
             load_balance_efficiency: 1.0,
-            worker_stats: (0..num_workers).map(WorkerStats::new).collect(),
+            worker_stats: (0.._num_workers).map(WorkerStats::new).collect(),
             queue_contention: 0.0,
         }
     }
@@ -536,16 +536,16 @@ pub struct NumaAwareThreadPool {
 
 impl NumaAwareThreadPool {
     /// Create a NUMA-aware thread pool
-    pub fn new(config: ThreadPoolConfig) -> Self {
+    pub fn new(_config: ThreadPoolConfig) -> Self {
         let topology = NumaTopology::detect();
-        let pools_per_node = config.num_threads / topology.num_nodes.max(1);
+        let pools_per_node = _config.num_threads / topology.num_nodes.max(1);
 
         let mut pools = Vec::with_capacity(topology.num_nodes);
 
         for _ in 0..topology.num_nodes {
             let node_config = ThreadPoolConfig {
                 num_threads: pools_per_node,
-                ..config.clone()
+                .._config.clone()
             };
             pools.push(AdvancedThreadPool::new(node_config));
         }
@@ -565,11 +565,11 @@ impl NumaAwareThreadPool {
     where
         F: FnOnce() + Send + 'static,
     {
-        let node = preferred_node
+        let _node = preferred_node
             .unwrap_or_else(|| self.select_optimal_node())
             .min(self.pools.len() - 1);
 
-        self.pools[node].submit(task)
+        self.pools[_node].submit(task)
     }
 
     /// Select the optimal NUMA node for task placement
@@ -579,7 +579,7 @@ impl NumaAwareThreadPool {
             .iter()
             .enumerate()
             .min_by_key(|(_, pool)| pool.get_stats().total_tasks_executed)
-            .map(|(id, _)| id)
+            .map(|(id_)| id)
             .unwrap_or(0)
     }
 }

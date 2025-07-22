@@ -1,6 +1,6 @@
 use ndarray::Array2;
-use scirs2_cluster::gmm::{gaussian_mixture, CovarianceType, GMMInit, GMMOptions};
-use scirs2_cluster::metrics::silhouette_score;
+use scirs2__cluster::gmm::{gaussian_mixture, CovarianceType, GMMInit, GMMOptions};
+use scirs2__cluster::metrics::silhouette_score;
 
 #[allow(dead_code)]
 fn main() {

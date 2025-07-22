@@ -15,11 +15,11 @@
 
 use crate::error::{IoError, Result};
 #[cfg(feature = "gpu")]
-use crate::gpu_io::GpuIoProcessor;
-use crate::neural_adaptive_io::{
+use crate::gpu__io::GpuIoProcessor;
+use crate::neural_adaptive__io::{
     AdvancedIoProcessor, NeuralAdaptiveIoController, PerformanceFeedback, SystemMetrics,
 };
-use crate::quantum_inspired_io::{QuantumParallelProcessor, QuantumPerformanceStats};
+use crate::quantum_inspired__io::{QuantumParallelProcessor, QuantumPerformanceStats};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, RwLock};
@@ -602,7 +602,7 @@ impl AdvancedCoordinator {
     /// Assess resource availability
     fn assess_resource_availability(&self) -> ResourceAvailability {
         ResourceAvailability {
-            cpu_cores_available: num_cpus::get(),
+            cpu_cores_available: num, _cpus: get(),
             memory_available_gb: 8.0, // Would be detected in real implementation
             gpu_available: self.capabilities.gpu_available,
             simd_available: self.capabilities.simd_available,
@@ -621,8 +621,8 @@ impl AdvancedCoordinator {
     }
 
     /// Extract historical insights
-    fn extract_historical_insights(&self, _data: &[u8]) -> Result<HistoricalInsights> {
-        // Would analyze historical performance data
+    fn extract_historical_insights(&self_data: &[u8]) -> Result<HistoricalInsights> {
+        // Would analyze historical performance _data
         Ok(HistoricalInsights {
             best_performing_strategy: StrategyType::NeuralAdaptive,
             average_improvement_ratio: 1.2,
@@ -633,8 +633,7 @@ impl AdvancedCoordinator {
 
     /// Get meta-learning recommendations
     fn get_meta_learning_recommendations(
-        &self,
-        _data: &[u8],
+        &self_data: &[u8],
     ) -> Result<MetaLearningRecommendations> {
         Ok(MetaLearningRecommendations {
             recommended_strategy: StrategyType::QuantumInspired,
@@ -655,9 +654,7 @@ impl AdvancedCoordinator {
 
     /// Assess quality metrics
     fn assess_quality_metrics(
-        &self,
-        _original: &[u8],
-        _processed: &[u8],
+        &self_original: &[u8], _processed: &[u8],
     ) -> Result<QualityMetrics> {
         Ok(QualityMetrics {
             data_integrity: 0.98,
@@ -1212,14 +1209,14 @@ struct StrategyResult {
 
 impl StrategyResult {
     /// Create a new emergent strategy result
-    fn new_emergent(processed_data: Vec<u8>, processing_time: Duration) -> Self {
+    fn new_emergent(_processed_data: Vec<u8>, processing_time: Duration) -> Self {
         Self {
             strategy_type: StrategyType::EmergentOptimization,
-            processed_data,
+            _processed_data,
             processing_time,
             efficiency_score: 0.95, // High efficiency for emergent processing
             quality_metrics: QualityMetrics {
-                data_integrity: 1.0,
+                _data_integrity: 1.0,
                 compression_efficiency: 0.95,
                 processing_accuracy: 0.98,
                 memory_efficiency: 0.92,
@@ -1330,7 +1327,7 @@ impl MetaLearningSystem {
         Self {}
     }
 
-    fn adapt_to_context(&mut self, _intelligence: &ComprehensiveIntelligence) -> Result<()> {
+    fn adapt_to_context(&mut self_intelligence: &ComprehensiveIntelligence) -> Result<()> {
         Ok(())
     }
 
@@ -1340,11 +1337,9 @@ impl MetaLearningSystem {
 
     /// Extract domain-specific patterns from data
     fn extract_domain_patterns(
-        &mut self,
-        _data: &[u8],
-        _domain: &str,
+        &mut self_data: &[u8], _domain: &str,
     ) -> Result<Vec<DomainPattern>> {
-        // Extract patterns specific to the given domain
+        // Extract patterns specific to the given _domain
         Ok(vec![DomainPattern {
             pattern_type: "domain_specific".to_string(),
             confidence: 0.8,
@@ -1374,13 +1369,13 @@ impl MetaLearningSystem {
     }
 
     /// Apply transferred knowledge to new data
-    fn apply_transferred_knowledge(&self, _data: &[u8]) -> Result<f64> {
+    fn apply_transferred_knowledge(&self_data: &[u8]) -> Result<f64> {
         // Apply learned knowledge and return improvement percentage
         Ok(15.0) // 15% improvement
     }
 
     /// Get confidence in knowledge transfer
-    fn get_transfer_confidence(&self, _data: &[u8]) -> Result<f32> {
+    fn get_transfer_confidence(&self_data: &[u8]) -> Result<f32> {
         Ok(0.85) // 85% confidence
     }
 
@@ -1405,10 +1400,7 @@ impl PerformanceIntelligence {
     }
 
     fn record_performance_data(
-        &mut self,
-        _intelligence: &ComprehensiveIntelligence,
-        _result: &ProcessingResult,
-        _total_time: Duration,
+        &mut self_intelligence: &ComprehensiveIntelligence, _result: &ProcessingResult_total_time: Duration,
     ) -> Result<()> {
         Ok(())
     }
@@ -1422,7 +1414,7 @@ impl PerformanceIntelligence {
     }
 
     /// Update efficiency metrics based on processing results
-    fn update_efficiency_metrics(&mut self, _result: &ProcessingResult) -> Result<()> {
+    fn update_efficiency_metrics(&mut self_result: &ProcessingResult) -> Result<()> {
         // Update internal efficiency tracking based on processing results
         Ok(())
     }
@@ -1470,7 +1462,7 @@ impl ResourceOrchestrator {
     ) -> Result<ResourceAllocation> {
         Ok(ResourceAllocation {
             use_neural_processing: true,
-            neural_threads: num_cpus::get().min(8),
+            neural_threads: num, _cpus: get().min(8),
             neural_memory: 64 * 1024 * 1024, // 64MB
 
             use_quantum_processing: intelligence.data_entropy > 0.5,
@@ -1531,8 +1523,7 @@ impl EmergentBehaviorDetector {
 
     /// Apply emergent optimizations based on advanced pattern analysis
     fn apply_emergent_optimizations(
-        &mut self,
-        _analysis: &crate::enhanced_algorithms::AdvancedPatternAnalysis,
+        &mut self_analysis: &crate::enhanced_algorithms::AdvancedPatternAnalysis,
     ) -> Result<()> {
         // Apply optimizations based on emergent patterns detected
         // This would implement autonomous optimization strategies
@@ -1584,9 +1575,9 @@ pub struct AdvancedProcessingResult {
 }
 
 impl AdvancedProcessingResult {
-    fn new(results: Vec<StrategyResult>, efficiency_score: f32, processing_time: Duration) -> Self {
+    fn new(_results: Vec<StrategyResult>, efficiency_score: f32, processing_time: Duration) -> Self {
         Self {
-            results,
+            _results,
             efficiency_score,
             processing_time,
         }
@@ -1619,9 +1610,9 @@ pub struct DomainLearningResult {
 }
 
 impl DomainLearningResult {
-    fn new(pattern_count: usize, optimization_count: usize) -> Self {
+    fn new(_pattern_count: usize, optimization_count: usize) -> Self {
         Self {
-            pattern_count,
+            _pattern_count,
             optimization_count,
         }
     }
@@ -1645,9 +1636,9 @@ pub struct KnowledgeTransferResult {
 }
 
 impl KnowledgeTransferResult {
-    fn new(improvement_percentage: f64, confidence: f32) -> Self {
+    fn new(_improvement_percentage: f64, confidence: f32) -> Self {
         Self {
-            improvement_percentage,
+            _improvement_percentage,
             confidence,
         }
     }
@@ -1716,9 +1707,9 @@ pub struct AppliedOptimization {
 }
 
 impl AppliedOptimization {
-    fn new(name: &str, description: &str) -> Self {
+    fn new(_name: &str, description: &str) -> Self {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             description: description.to_string(),
         }
     }

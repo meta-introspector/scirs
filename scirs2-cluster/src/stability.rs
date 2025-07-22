@@ -4,7 +4,7 @@
 //! quality of clustering results, including bootstrap validation,
 //! consensus clustering, and stability indices.
 
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
@@ -65,18 +65,16 @@ pub struct StabilityResult<F: Float> {
 /// on multiple bootstrap samples of the data and measuring the consistency
 /// of the results.
 pub struct BootstrapValidator<F: Float> {
-    config: StabilityConfig,
-    _phantom: std::marker::PhantomData<F>,
+    config: StabilityConfig_phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
     BootstrapValidator<F>
 {
     /// Create a new bootstrap validator
-    pub fn new(config: StabilityConfig) -> Self {
+    pub fn new(_config: StabilityConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 
@@ -275,16 +273,14 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
 /// This method combines multiple clustering results to identify
 /// stable cluster structures.
 pub struct ConsensusClusterer<F: Float> {
-    config: StabilityConfig,
-    _phantom: std::marker::PhantomData<F>,
+    config: StabilityConfig_phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display> ConsensusClusterer<F> {
     /// Create a new consensus clusterer
-    pub fn new(config: StabilityConfig) -> Self {
+    pub fn new(_config: StabilityConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 
@@ -448,18 +444,16 @@ impl<F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display> Cons
 
 /// Optimal cluster number selection using stability criteria
 pub struct OptimalKSelector<F: Float> {
-    config: StabilityConfig,
-    _phantom: std::marker::PhantomData<F>,
+    config: StabilityConfig_phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
     OptimalKSelector<F>
 {
     /// Create a new optimal k selector
-    pub fn new(config: StabilityConfig) -> Self {
+    pub fn new(_config: StabilityConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 
@@ -627,19 +621,17 @@ pub mod advanced {
     /// by training on different subsets and testing on held-out data.
     pub struct CrossValidationStability<F: Float> {
         config: StabilityConfig,
-        n_folds: usize,
-        _phantom: std::marker::PhantomData<F>,
+        n_folds: usize, _phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
         CrossValidationStability<F>
     {
         /// Create a new cross-validation stability assessor
-        pub fn new(config: StabilityConfig, n_folds: usize) -> Self {
+        pub fn new(_config: StabilityConfig, n_folds: usize) -> Self {
             Self {
-                config,
-                n_folds,
-                _phantom: std::marker::PhantomData,
+                _config,
+                n_folds_phantom: std::marker::PhantomData,
             }
         }
 
@@ -743,7 +735,7 @@ pub mod advanced {
                     .iter()
                     .enumerate()
                     .filter(|(_, &label)| label == cluster_id)
-                    .map(|(idx, _)| idx)
+                    .map(|(idx_)| idx)
                     .collect();
 
                 let cluster_size = cluster_members.len();
@@ -768,8 +760,7 @@ pub mod advanced {
     /// to the data and measuring how much the clustering results change.
     pub struct PerturbationStability<F: Float> {
         config: StabilityConfig,
-        perturbation_types: Vec<PerturbationType>,
-        _phantom: std::marker::PhantomData<F>,
+        perturbation_types: Vec<PerturbationType>, _phantom: std::marker::PhantomData<F>,
     }
 
     /// Types of perturbations for stability testing
@@ -792,11 +783,10 @@ pub mod advanced {
         PerturbationStability<F>
     {
         /// Create a new perturbation stability assessor
-        pub fn new(config: StabilityConfig, perturbation_types: Vec<PerturbationType>) -> Self {
+        pub fn new(_config: StabilityConfig, perturbation_types: Vec<PerturbationType>) -> Self {
             Self {
-                config,
-                perturbation_types,
-                _phantom: std::marker::PhantomData,
+                _config,
+                perturbation_types_phantom: std::marker::PhantomData,
             }
         }
 
@@ -910,10 +900,10 @@ pub mod advanced {
                     let n_outliers = (n_samples as f64 * outlier_rate) as usize;
 
                     for _ in 0..n_outliers {
-                        let sample_idx = rng.random_range(0..n_samples);
-                        let feature_idx = rng.random_range(0..data.shape()[1]);
+                        let sample_idx = rng.gen_range(0..n_samples);
+                        let feature_idx = rng.gen_range(0..data.shape()[1]);
                         let outlier_value = rng.random::<f64>() * outlier_magnitude;
-                        perturbed[[sample_idx, feature_idx]] = F::from(outlier_value).unwrap();
+                        perturbed[[sample_idx..feature_idx]] = F::from(outlier_value).unwrap();
                     }
                 }
             }
@@ -946,19 +936,17 @@ pub mod advanced {
     /// to understand how clustering behaves at different granularities.
     pub struct MultiScaleStability<F: Float> {
         config: StabilityConfig,
-        scale_factors: Vec<f64>,
-        _phantom: std::marker::PhantomData<F>,
+        scale_factors: Vec<f64>, _phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
         MultiScaleStability<F>
     {
         /// Create a new multi-scale stability assessor
-        pub fn new(config: StabilityConfig, scale_factors: Vec<f64>) -> Self {
+        pub fn new(_config: StabilityConfig, scale_factors: Vec<f64>) -> Self {
             Self {
-                config,
-                scale_factors,
-                _phantom: std::marker::PhantomData,
+                _config,
+                scale_factors_phantom: std::marker::PhantomData,
             }
         }
 
@@ -1024,8 +1012,7 @@ pub mod advanced {
     /// prediction strength criterion.
     pub struct PredictionStrength<F: Float> {
         /// Configuration for prediction strength assessment
-        pub config: PredictionStrengthConfig,
-        _phantom: std::marker::PhantomData<F>,
+        pub config: PredictionStrengthConfig_phantom: std::marker::PhantomData<F>,
     }
 
     /// Configuration for prediction strength method
@@ -1054,10 +1041,9 @@ pub mod advanced {
 
     impl<F: Float + FromPrimitive + Debug> PredictionStrength<F> {
         /// Create a new prediction strength validator
-        pub fn new(config: PredictionStrengthConfig) -> Self {
+        pub fn new(_config: PredictionStrengthConfig) -> Self {
             Self {
-                config,
-                _phantom: std::marker::PhantomData,
+                _config_phantom: std::marker::PhantomData,
             }
         }
 
@@ -1151,7 +1137,7 @@ pub mod advanced {
             // For each pair of test points
             for i in 0..test_size {
                 for j in (i + 1)..test_size {
-                    // Find closest points in training data
+                    // Find closest points in training _data
                     let closest_train_i = self.find_closest_point(&test_data.row(i), train_data)?;
                     let closest_train_j = self.find_closest_point(&test_data.row(j), train_data)?;
 
@@ -1220,7 +1206,7 @@ pub mod advanced {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap_or(0);
 
             Ok(k_range.0 + best_idx)
@@ -1237,18 +1223,16 @@ pub mod advanced {
         /// Subsample ratio for each bootstrap
         pub subsample_ratio: f64,
         /// Random seed for reproducible results
-        pub random_seed: Option<u64>,
-        _phantom: std::marker::PhantomData<F>,
+        pub random_seed: Option<u64>, _phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + FromPrimitive + Debug> JaccardStability<F> {
         /// Create a new Jaccard stability validator
-        pub fn new(n_bootstrap: usize, subsample_ratio: f64, random_seed: Option<u64>) -> Self {
+        pub fn new(_n_bootstrap: usize, subsample_ratio: f64, random_seed: Option<u64>) -> Self {
             Self {
-                n_bootstrap,
+                _n_bootstrap,
                 subsample_ratio,
-                random_seed,
-                _phantom: std::marker::PhantomData,
+                random_seed_phantom: std::marker::PhantomData,
             }
         }
 
@@ -1293,7 +1277,7 @@ pub mod advanced {
                                     .iter()
                                     .enumerate()
                                     .find(|(_, &idx2)| idx1 == idx2)
-                                    .map(|(i2, _)| (i1, i2))
+                                    .map(|(i2_)| (i1, i2))
                             })
                             .collect();
 
@@ -1378,8 +1362,7 @@ pub mod advanced {
     /// global stability measures.
     pub struct ClusterSpecificStability<F: Float> {
         /// Configuration for cluster-specific stability assessment
-        pub config: StabilityConfig,
-        _phantom: std::marker::PhantomData<F>,
+        pub config: StabilityConfig_phantom: std::marker::PhantomData<F>,
     }
 
     /// Results of cluster-specific stability assessment
@@ -1397,10 +1380,9 @@ pub mod advanced {
 
     impl<F: Float + FromPrimitive + Debug> ClusterSpecificStability<F> {
         /// Create a new cluster-specific stability validator
-        pub fn new(config: StabilityConfig) -> Self {
+        pub fn new(_config: StabilityConfig) -> Self {
             Self {
-                config,
-                _phantom: std::marker::PhantomData,
+                _config_phantom: std::marker::PhantomData,
             }
         }
 
@@ -1544,8 +1526,7 @@ pub mod advanced {
         /// Number of random parameter samples per range
         pub n_samples_per_range: usize,
         /// Random seed for reproducible results
-        pub random_seed: Option<u64>,
-        _phantom: std::marker::PhantomData<F>,
+        pub random_seed: Option<u64>, _phantom: std::marker::PhantomData<F>,
     }
 
     /// Results of parameter stability analysis
@@ -1571,8 +1552,7 @@ pub mod advanced {
                 base_k,
                 perturbation_ranges,
                 n_samples_per_range,
-                random_seed,
-                _phantom: std::marker::PhantomData,
+                random_seed_phantom: std::marker::PhantomData,
             }
         }
 

@@ -4,8 +4,8 @@
 
 use approx::assert_relative_eq;
 use ndarray::{array, Array2, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::{solve_ivp, MassMatrix, MassMatrixType, ODEMethod, ODEOptions};
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::{solve_ivp, MassMatrix, MassMatrixType, ODEMethod, ODEOptions};
 use std::f64::consts::PI;
 
 /// Test solving an ODE with a constant mass matrix
@@ -220,7 +220,7 @@ fn test_mass_matrix_creation() {
     assert!(time_dependent.constant_matrix.is_none());
 
     // State-dependent matrix
-    let state_func = |_t: f64, _y: ArrayView1<f64>| Array2::<f64>::eye(2);
+    let state_func = |_t: f64_y: ArrayView1<f64>| Array2::<f64>::eye(2);
     let state_dependent = MassMatrix::state_dependent(state_func);
     assert_eq!(state_dependent.matrix_type, MassMatrixType::StateDependent);
     assert!(state_dependent.state_function.is_some());

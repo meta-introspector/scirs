@@ -16,7 +16,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::pathplanning::dubins::{DubinsPlanner, Pose2D};
+//! use scirs2__spatial::pathplanning::dubins::{DubinsPlanner, Pose2D};
 //!
 //! let start = Pose2D::new(0.0, 0.0, 0.0);  // x, y, theta
 //! let goal = Pose2D::new(5.0, 5.0, std::f64::consts::PI / 2.0);
@@ -68,8 +68,8 @@ impl Pose2D {
     /// # Returns
     ///
     /// * Euclidean distance between positions
-    pub fn distance_to(&self, other: &Pose2D) -> f64 {
-        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
+    pub fn distance_to(_other: &Pose2D) -> f64 {
+        ((self.x - _other.x).powi(2) + (self.y - _other.y).powi(2)).sqrt()
     }
 
     /// Normalize the angle to [-π, π]
@@ -229,7 +229,7 @@ impl DubinsPath {
     /// # Returns
     ///
     /// * Pose at parameter t, or error if t is out of bounds
-    pub fn sample(&self, t: f64) -> SpatialResult<Pose2D> {
+    pub fn sample(t: f64) -> SpatialResult<Pose2D> {
         if !(0.0..=1.0).contains(&t) {
             return Err(SpatialError::ValueError(
                 "Parameter t must be in [0, 1]".to_string(),
@@ -317,12 +317,12 @@ impl DubinsPlanner {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::pathplanning::dubins::DubinsPlanner;
+    /// use scirs2__spatial::pathplanning::dubins::DubinsPlanner;
     ///
     /// let planner = DubinsPlanner::new(1.0);
     /// ```
-    pub fn new(turning_radius: f64) -> Self {
-        Self { turning_radius }
+    pub fn new(_turning_radius: f64) -> Self {
+        Self { _turning_radius }
     }
 
     /// Plan a Dubins path between two poses
@@ -339,7 +339,7 @@ impl DubinsPlanner {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::pathplanning::dubins::{DubinsPlanner, Pose2D};
+    /// use scirs2__spatial::pathplanning::dubins::{DubinsPlanner, Pose2D};
     ///
     /// let start = Pose2D::new(0.0, 0.0, 0.0);
     /// let goal = Pose2D::new(5.0, 5.0, std::f64::consts::PI / 2.0);
@@ -348,24 +348,24 @@ impl DubinsPlanner {
     /// let path = planner.plan(&start, &goal).unwrap();
     /// println!("Path length: {}", path.length());
     /// ```
-    pub fn plan(&self, start: &Pose2D, goal: &Pose2D) -> SpatialResult<DubinsPath> {
+    pub fn plan(_start: &Pose2D, goal: &Pose2D) -> SpatialResult<DubinsPath> {
         if self.turning_radius <= 0.0 {
             return Err(SpatialError::ValueError(
                 "Turning radius must be positive".to_string(),
             ));
         }
 
-        // Normalize start and goal poses
-        let start = start.normalize_angle();
+        // Normalize _start and goal poses
+        let _start = _start.normalize_angle();
         let goal = goal.normalize_angle();
 
         // Transform to local coordinate system
-        let dx = goal.x - start.x;
-        let dy = goal.y - start.y;
+        let dx = goal.x - _start.x;
+        let dy = goal.y - _start.y;
         let d = (dx * dx + dy * dy).sqrt();
         let theta = (dy).atan2(dx);
 
-        let alpha = Self::normalize_angle(start.theta - theta);
+        let alpha = Self::normalize_angle(_start.theta - theta);
         let beta = Self::normalize_angle(goal.theta - theta);
 
         // Compute all possible paths and choose the shortest
@@ -385,7 +385,7 @@ impl DubinsPlanner {
                 if path_length < best_length {
                     best_length = path_length;
                     best_path = Some(DubinsPath::new(
-                        start,
+                        _start,
                         goal,
                         self.turning_radius,
                         path_type,
@@ -421,7 +421,7 @@ impl DubinsPlanner {
     }
 
     /// Compute LSL path segments
-    fn lsl(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn lsl(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let tmp0 = d + alpha.sin() - beta.sin();
         let p_squared =
             2.0 + d * d - 2.0 * (alpha - beta).cos() + 2.0 * d * (alpha.sin() - beta.sin());
@@ -454,7 +454,7 @@ impl DubinsPlanner {
     }
 
     /// Compute LSR path segments
-    fn lsr(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn lsr(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let p_squared =
             -2.0 + d * d + 2.0 * (alpha - beta).cos() + 2.0 * d * (alpha.sin() + beta.sin());
 
@@ -486,7 +486,7 @@ impl DubinsPlanner {
     }
 
     /// Compute RSL path segments
-    fn rsl(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn rsl(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let p_squared =
             d * d - 2.0 + 2.0 * (alpha - beta).cos() - 2.0 * d * (alpha.sin() + beta.sin());
 
@@ -518,7 +518,7 @@ impl DubinsPlanner {
     }
 
     /// Compute RSR path segments
-    fn rsr(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn rsr(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let tmp0 = d - alpha.sin() + beta.sin();
         let p_squared =
             2.0 + d * d - 2.0 * (alpha - beta).cos() - 2.0 * d * (alpha.sin() - beta.sin());
@@ -551,7 +551,7 @@ impl DubinsPlanner {
     }
 
     /// Compute LRL path segments
-    fn lrl(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn lrl(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let tmp0 =
             (6.0 - d * d + 2.0 * (alpha - beta).cos() + 2.0 * d * (alpha.sin() - beta.sin())) / 8.0;
 
@@ -584,7 +584,7 @@ impl DubinsPlanner {
     }
 
     /// Compute RLR path segments
-    fn rlr(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn rlr(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let tmp0 =
             (6.0 - d * d + 2.0 * (alpha - beta).cos() - 2.0 * d * (alpha.sin() - beta.sin())) / 8.0;
 
@@ -617,8 +617,8 @@ impl DubinsPlanner {
     }
 
     /// Normalize angle to [-π, π]
-    fn normalize_angle(angle: f64) -> f64 {
-        let mut normalized = angle % (2.0 * PI);
+    fn normalize_angle(_angle: f64) -> f64 {
+        let mut normalized = _angle % (2.0 * PI);
         if normalized > PI {
             normalized -= 2.0 * PI;
         } else if normalized < -PI {

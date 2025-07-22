@@ -106,7 +106,7 @@ struct AugmentedLagrangianState {
 impl AugmentedLagrangianState {
     fn new(n: usize, m_eq: usize, m_ineq: usize, initial_penalty: f64) -> Self {
         Self {
-            penalty: initial_penalty,
+            _penalty: initial_penalty,
             lambda_eq: if m_eq > 0 {
                 Some(Array1::zeros(m_eq))
             } else {
@@ -245,7 +245,7 @@ where
         x = result.x;
         total_nfev += result.func_evals;
 
-        // Evaluate constraints at current point
+        // Evaluate _constraints at current point
         let c_eq = eq_constraints.as_ref().map(|f| f(&x.view()));
         let c_ineq = ineq_constraints.as_ref().map(|f| f(&x.view()));
 
@@ -350,10 +350,7 @@ where
 #[allow(dead_code)]
 fn compute_optimality<F>(
     fun: &F,
-    x: &Array1<f64>,
-    _c_eq: &Option<Array1<f64>>,
-    _c_ineq: &Option<Array1<f64>>,
-    _state: &AugmentedLagrangianState,
+    x: &Array1<f64>, _c_eq: &Option<Array1<f64>>, _c_ineq: &Option<Array1<f64>>, _state: &AugmentedLagrangianState,
 ) -> f64
 where
     F: Fn(&ArrayView1<f64>) -> f64,

@@ -7,7 +7,7 @@
 //! - Continuous collision detection
 
 // No imports needed
-use scirs2_spatial::collision::*;
+use scirs2__spatial::collision::*;
 
 #[allow(dead_code)]
 fn main() {

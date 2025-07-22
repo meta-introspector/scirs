@@ -421,7 +421,7 @@ impl Worker {
         self.other_workers.push(worker_queue);
     }
 
-    fn run(&self, result_sender: crossbeam::channel::Sender<Box<dyn std::any::Any + Send>>) {
+    fn run(self, result_sender: crossbeam::channel::Sender<Box<dyn std::any::Any + Send>>) {
         let mut consecutive_steals = 0;
         let mut last_steal_attempt = Instant::now();
 
@@ -671,7 +671,7 @@ impl WorkStealingScheduler {
             let result_sender = self.result_sender.clone();
 
             let handle = thread::Builder::new()
-                .name(format!("{worker_id}"))
+                .name(format!("worker-{worker_id}"))
                 .spawn(move || {
                     worker.run(result_sender);
                 })

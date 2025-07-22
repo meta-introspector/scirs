@@ -3,8 +3,8 @@
 // This is a simplified example showing how to use the parallel planning features
 // to create and execute FFT plans in parallel.
 
-use num_complex::Complex64;
-use scirs2_fft::{ParallelExecutor, ParallelPlanner, ParallelPlanningConfig};
+use num__complex::Complex64;
+use scirs2__fft::{ParallelExecutor, ParallelPlanner, ParallelPlanningConfig};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -78,10 +78,10 @@ fn main() {
 
 // Create a simple test signal
 #[allow(dead_code)]
-fn create_signal(size: usize) -> Vec<Complex64> {
-    (0..size)
+fn create_signal(_size: usize) -> Vec<Complex64> {
+    (0.._size)
         .map(|i| {
-            let x = i as f64 / size as f64;
+            let x = i as f64 / _size as f64;
             // Create a sinusoidal signal with a few frequencies
             let val = (2.0 * std::f64::consts::PI * x * 5.0).sin()
                 + 0.5 * (2.0 * std::f64::consts::PI * x * 10.0).sin();

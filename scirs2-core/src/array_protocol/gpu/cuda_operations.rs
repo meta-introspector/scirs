@@ -67,8 +67,8 @@ where
     let a_cpu = a.to_cpu().unwrap();
     let b_cpu = b.to_cpu().unwrap();
 
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64, _>>().unwrap().as_array();
-    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64, _>>().unwrap().as_array();
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
+    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
 
     let result = a_array.dot(b_array);
 
@@ -106,8 +106,8 @@ where
     let a_cpu = a.to_cpu().unwrap();
     let b_cpu = b.to_cpu().unwrap();
 
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64, _>>().unwrap().as_array();
-    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64, _>>().unwrap().as_array();
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
+    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
 
     let result = a_array + b_array;
 
@@ -138,8 +138,8 @@ where
     let a_cpu = a.to_cpu().unwrap();
     let b_cpu = b.to_cpu().unwrap();
 
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64, _>>().unwrap().as_array();
-    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64, _>>().unwrap().as_array();
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
+    let b_array = b_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
 
     let result = a_array * b_array;
 
@@ -165,7 +165,7 @@ where
 
     // Transfer to CPU, perform operation, and transfer back to GPU
     let a_cpu = a.to_cpu().unwrap();
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64, _>>().unwrap().as_array();
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
 
     let result = a_array.t().to_owned();
 
@@ -186,7 +186,7 @@ where
 {
     // Transfer to CPU, perform operation
     let a_cpu = a.to_cpu().unwrap();
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64, _>>().unwrap().as_array();
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
 
     match axis {
         Some(ax) => {
@@ -212,7 +212,7 @@ where
 {
     // Transfer to CPU, perform operation, and transfer back to GPU
     let a_cpu = a.to_cpu().unwrap();
-    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64, _>>().unwrap().as_array();
+    let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
 
     match a_array.clone().into_shape(shape) {
         Ok(result) => {
@@ -254,7 +254,7 @@ where
     let w_out = (input_shape[1] - kernel.shape()[1] + 2 * padding.1) / stride.1 + 1;
 
     // Create a placeholder result array
-    let result = Array::<f64, _>::zeros((h_out, w_out));
+    let result = Array::<f64>::zeros((h_out, w_out));
 
     // Create a new GPU array with the result
     let result_gpu = GPUNdarray::new(result, input.config().clone());
@@ -280,9 +280,9 @@ where
     // For now, we'll create placeholder arrays.
 
     let (m, n) = (shape[0], shape[1]);
-    let u = Array::<f64, _>::eye(m);
-    let s = Array::<f64, _>::ones(m.min(n));
-    let vt = Array::<f64, _>::eye(n);
+    let u = Array::<f64>::eye(m);
+    let s = Array::<f64>::ones(m.min(n));
+    let vt = Array::<f64>::eye(n);
 
     // Create new GPU arrays with the results
     let u_gpu = GPUNdarray::new(u, a.config().clone());
@@ -310,7 +310,7 @@ where
     // For now, we'll create a placeholder identity matrix.
 
     let n = shape[0];
-    let result = Array::<f64, _>::eye(n);
+    let result = Array::<f64>::eye(n);
 
     // Create a new GPU array with the result
     let result_gpu = GPUNdarray::new(result, a.config().clone());

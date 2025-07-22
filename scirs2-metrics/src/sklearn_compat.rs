@@ -73,8 +73,7 @@ pub fn classification_report_sklearn(
     y_true: &Array1<i32>,
     y_pred: &Array1<i32>,
     labels: Option<&[i32]>,
-    target_names: Option<&[String]>,
-    _digits: usize,
+    target_names: Option<&[String]>, _digits: usize,
     zero_division: f64,
 ) -> Result<ClassificationReport> {
     if y_true.len() != y_pred.len() {
@@ -103,10 +102,10 @@ pub fn classification_report_sklearn(
         let (precision, recall, f1, support) =
             calculate_class_metrics(y_true, y_pred, label, zero_division)?;
 
-        let label_name = if let Some(names) = target_names {
+        let label_name = if let Some(_names) = target_names {
             if let Some(pos) = unique_labels.iter().position(|&x| x == label) {
-                if pos < names.len() {
-                    names[pos].clone()
+                if pos < _names.len() {
+                    _names[pos].clone()
                 } else {
                     label.to_string()
                 }
@@ -249,10 +248,10 @@ fn calculate_class_metrics(
 
 /// Equivalent to sklearn.metrics.accuracy_score
 #[allow(dead_code)]
-pub fn accuracy_score_sklearn(y_true: &Array1<i32>, y_pred: &Array1<i32>) -> Result<f64> {
-    if y_true.len() != y_pred.len() {
+pub fn accuracy_score_sklearn(_y_true: &Array1<i32>, y_pred: &Array1<i32>) -> Result<f64> {
+    if _y_true.len() != y_pred.len() {
         return Err(MetricsError::InvalidInput(
-            "y_true and y_pred must have the same length".to_string(),
+            "_y_true and y_pred must have the same length".to_string(),
         ));
     }
 
@@ -271,10 +270,8 @@ pub fn precision_recall_fscore_support_sklearn(
     y_true: &Array1<i32>,
     y_pred: &Array1<i32>,
     beta: f64,
-    labels: Option<&[i32]>,
-    _pos_label: Option<i32>,
-    average: Option<&str>,
-    _warn_for: Option<&[&str]>,
+    labels: Option<&[i32]>, _pos_label: Option<i32>,
+    average: Option<&str>, _warn_for: Option<&[&str]>,
     zero_division: f64,
 ) -> Result<PrecisionRecallFscoreSupport> {
     if y_true.len() != y_pred.len() {
@@ -298,9 +295,9 @@ pub fn precision_recall_fscore_support_sklearn(
     let mut fscores = Vec::new();
     let mut supports = Vec::new();
 
-    for &label in &target_labels {
-        let (precision, recall, _f1, support) =
-            calculate_class_metrics(y_true, y_pred, label, zero_division)?;
+    _for &_label in &target_labels {
+        let (precision, recall_f1, support) =
+            calculate_class_metrics(y_true, y_pred, _label, zero_division)?;
 
         // Calculate F-beta score
         let fbeta = if precision + recall > 0.0 {
@@ -490,18 +487,17 @@ pub fn multilabel_confusion_matrix_sklearn(
             let true_val = y_true[[sample_idx, label]];
             let pred_val = y_pred[[sample_idx, label]];
 
-            let weight = if let Some(weights) = sample_weight {
+            let _weight = if let Some(weights) = sample_weight {
                 weights[sample_idx] as i32
             } else {
                 1
             };
 
             match (true_val, pred_val) {
-                (1, 1) => tp += weight,
-                (0, 1) => fp += weight,
-                (0, 0) => tn += weight,
-                (1, 0) => fn_count += weight,
-                _ => {
+                (1, 1) => tp += _weight,
+                (0, 1) => fp += _weight,
+                (0, 0) => tn += _weight,
+                (1, 0) => fn_count += weight_ => {
                     return Err(MetricsError::InvalidInput(
                         "Labels must be 0 or 1 for multilabel classification".to_string(),
                     ))
@@ -560,7 +556,7 @@ pub fn cohen_kappa_score_sklearn(
     let mut total_weight = 0.0;
 
     for (idx, (&true_val, &pred_val)) in y1.iter().zip(y2.iter()).enumerate() {
-        let weight = if let Some(sw) = sample_weight {
+        let _weight = if let Some(sw) = sample_weight {
             sw[idx]
         } else {
             1.0
@@ -570,8 +566,8 @@ pub fn cohen_kappa_score_sklearn(
             unique_labels.iter().position(|&x| x == true_val),
             unique_labels.iter().position(|&x| x == pred_val),
         ) {
-            confusion_matrix[[true_idx, pred_idx]] += weight;
-            total_weight += weight;
+            confusion_matrix[[true_idx, pred_idx]] += _weight;
+            total_weight += _weight;
         }
     }
 
@@ -684,13 +680,13 @@ pub fn hinge_loss_sklearn(
     let mut total_weight = 0.0;
 
     for (sample_idx, &true_label) in y_true.iter().enumerate() {
-        let weight = if let Some(sw) = sample_weight {
+        let _weight = if let Some(sw) = sample_weight {
             sw[sample_idx]
         } else {
             1.0
         };
 
-        // Find the index of the true label
+        // Find the index of the _true label
         if let Some(true_class_idx) = class_labels.iter().position(|&x| x == true_label) {
             let true_score = y_pred[[sample_idx, true_class_idx]];
 
@@ -704,8 +700,8 @@ pub fn hinge_loss_sklearn(
                 }
             }
 
-            total_loss += weight * sample_loss;
-            total_weight += weight;
+            total_loss += _weight * sample_loss;
+            total_weight += _weight;
         } else {
             return Err(MetricsError::InvalidInput(format!(
                 "Label {} not found in provided labels",
@@ -747,16 +743,16 @@ pub fn zero_one_loss_sklearn(
     let mut total_weight = 0.0;
 
     for (idx, (&true_val, &pred_val)) in y_true.iter().zip(y_pred.iter()).enumerate() {
-        let weight = if let Some(sw) = sample_weight {
+        let _weight = if let Some(sw) = sample_weight {
             sw[idx]
         } else {
             1.0
         };
 
         if true_val != pred_val {
-            total_errors += weight;
+            total_errors += _weight;
         }
-        total_weight += weight;
+        total_weight += _weight;
     }
 
     if normalize {

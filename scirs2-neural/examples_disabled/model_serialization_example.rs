@@ -56,7 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     serialization::save_model(&model, model_path, SerializationFormat::JSON)?;
     println!("\nModel saved to {}", model_path.display());
     // 4. Load the model from the file
-    let loaded_model = serialization::load_model::<f32, _>(model_path, SerializationFormat::JSON)?;
+    let loaded_model = serialization::load_model::<f32>(model_path, SerializationFormat::JSON)?;
         "Model loaded successfully with {} layers",
         loaded_model.num_layers()
     // 5. Test the loaded model with the same input

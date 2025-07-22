@@ -11,6 +11,9 @@ use std::time::{Duration, Instant};
 #[cfg(feature = "regex")]
 use regex;
 
+/// Maximum number of dimensions allowed for arrays
+const MAX_DIMENSIONS: usize = 32;
+
 /// Validation severity levels for different environments
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ValidationLevel {
@@ -718,18 +721,18 @@ where
 
 /// Validate array dimensions
 #[allow(dead_code)]
-pub fn validate_array_dimensions(dims: &[usize], max_dimensions: usize) -> CoreResult<()> {
+pub fn validate_dimensions(dims: &[usize]) -> CoreResult<()> {
     if dims.is_empty() {
         return Err(CoreError::ValidationError(ErrorContext::new(
             "Array must have at least one dimension",
         )));
     }
 
-    if dims.len() > max_dimensions {
+    if dims.len() > MAX_DIMENSIONS {
         return Err(CoreError::ValidationError(ErrorContext::new(format!(
             "Array has {} dimensions, maximum allowed is {}",
             dims.len(),
-            max_dimensions
+            MAX_DIMENSIONS
         ))));
     }
 
@@ -875,16 +878,16 @@ mod tests {
     #[test]
     fn test_array_dimensions_validation() {
         // Valid dimensions
-        assert!(validate_array_dimensions(&[10, 20, 30], 5).is_ok());
+        assert!(validate_dimensions(&[10, 20, 30]).is_ok());
 
         // Empty dimensions
-        assert!(validate_array_dimensions(&[], 5).is_err());
+        assert!(validate_dimensions(&[]).is_err());
 
         // Zero dimension
-        assert!(validate_array_dimensions(&[10, 0, 30], 5).is_err());
+        assert!(validate_dimensions(&[10, 0, 30]).is_err());
 
         // Too many dimensions
-        assert!(validate_array_dimensions(&[1, 2, 3, 4, 5, 6], 5).is_err());
+        assert!(validate_dimensions(&[1, 2, 3, 4, 5, 6]).is_err());
     }
 
     #[test]

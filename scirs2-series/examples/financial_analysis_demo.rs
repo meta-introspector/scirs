@@ -4,13 +4,14 @@
 //! including GARCH volatility modeling, technical indicators, and risk metrics.
 
 use ndarray::{Array1, Array2};
-use scirs2_series::{
+use scirs2__series::{
     correlation::{CorrelationAnalyzer, RollingCorrelation},
     features::{FeatureConfig, FeatureExtractor},
     financial::{Distribution, GarchConfig, GarchModel, MeanModel},
     transformations::NormalizationMethod,
 };
 use std::time::Instant;
+use statrs::statistics::Statistics;
 
 // TODO: Fix imports and re-enable this example
 /*
@@ -93,7 +94,7 @@ fn generate_financial_data() -> (Array1<f64>, Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn generate_student_t(df: f64, seed: u64) -> f64 {
+fn generate_student_t(_df: f64, seed: u64) -> f64 {
     // Simple approximation to t-distribution using Box-Muller + scaling
     let u1 = ((seed * 7919 + 1013) % 10000) as f64 / 10000.0;
     let u2 = ((seed * 7907 + 1019) % 10000) as f64 / 10000.0;
@@ -101,8 +102,8 @@ fn generate_student_t(df: f64, seed: u64) -> f64 {
     let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
 
     // Approximate scaling for t-distribution
-    let scale_factor = if df > 2.0 {
-        (df / (df - 2.0)).sqrt()
+    let scale_factor = if _df > 2.0 {
+        (_df / (_df - 2.0)).sqrt()
     } else {
         2.0
     };
@@ -110,16 +111,16 @@ fn generate_student_t(df: f64, seed: u64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn financial_transformations_demo(prices: &Array1<f64>) {
+fn financial_transformations_demo(_prices: &Array1<f64>) {
     println!("  Applying financial transformations...");
 
     // Log transformation
     let mut log_transformer = LogTransformer::new();
-    match log_transformer.fit_transform(prices) {
+    match log_transformer.fit_transform(_prices) {
         Ok(log_prices) => {
             println!(
                 "    Log transformation: {} -> {} (range: {:.4} to {:.4})",
-                prices.len(),
+                _prices.len(),
                 log_prices.len(),
                 log_prices.iter().fold(f64::INFINITY, |a, &b| a.min(b)),
                 log_prices.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
@@ -130,10 +131,10 @@ fn financial_transformations_demo(prices: &Array1<f64>) {
 
     // Returns transformation
     let mut returns_transformer = ReturnsTransformer::new(false); // Simple returns
-    match returns_transformer.fit_transform(prices) {
+    match returns_transformer.fit_transform(_prices) {
         Ok(simple_returns) => {
             let mean_return = simple_returns.mean().unwrap_or(0.0);
-            let return_volatility = simple_returns.var(0.0).sqrt();
+            let return_volatility = simple_returns.variance().sqrt();
             println!(
                 "    Simple returns: mean={:.4}, volatility={:.4}",
                 mean_return, return_volatility
@@ -144,10 +145,10 @@ fn financial_transformations_demo(prices: &Array1<f64>) {
 
     // Log returns
     let mut log_returns_transformer = ReturnsTransformer::new(true); // Log returns
-    match log_returns_transformer.fit_transform(prices) {
+    match log_returns_transformer.fit_transform(_prices) {
         Ok(log_returns) => {
             let mean_log_return = log_returns.mean().unwrap_or(0.0);
-            let log_return_volatility = log_returns.var(0.0).sqrt();
+            let log_return_volatility = log_returns.variance().sqrt();
             println!(
                 "    Log returns: mean={:.4}, volatility={:.4}",
                 mean_log_return, log_return_volatility
@@ -167,7 +168,7 @@ fn financial_transformations_demo(prices: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn garch_modeling_demo(returns: &Array1<f64>) {
+fn garch_modeling_demo(_returns: &Array1<f64>) {
     println!("  GARCH volatility modeling...");
 
     // Test different GARCH configurations
@@ -215,7 +216,7 @@ fn garch_modeling_demo(returns: &Array1<f64>) {
         let start_time = Instant::now();
 
         let mut garch_model = GarchModel::new(config);
-        match garch_model.fit(returns) {
+        match garch_model.fit(_returns) {
             Ok(result) => {
                 let duration = start_time.elapsed();
                 println!(
@@ -253,7 +254,7 @@ fn garch_modeling_demo(returns: &Array1<f64>) {
                 // Model diagnostics
                 let standardized_residuals = &result.standardized_residuals;
                 let mean_residual = standardized_residuals.mean().unwrap_or(0.0);
-                let residual_std = standardized_residuals.var(0.0).sqrt();
+                let residual_std = standardized_residuals.variance().sqrt();
                 println!(
                     "      Residual diagnostics: mean={:.4}, std={:.4}",
                     mean_residual, residual_std
@@ -267,14 +268,14 @@ fn garch_modeling_demo(returns: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn technical_indicators_demo(prices: &Array1<f64>) {
+fn technical_indicators_demo(_prices: &Array1<f64>) {
     println!("  Computing technical indicators...");
 
     let indicators = TechnicalIndicators::new();
 
     // Moving averages
-    if let Ok(sma_20) = indicators.simple_moving_average(prices, 20) {
-        if let Ok(ema_20) = indicators.exponential_moving_average(prices, 20) {
+    if let Ok(sma_20) = indicators.simple_moving_average(_prices, 20) {
+        if let Ok(ema_20) = indicators.exponential_moving_average(_prices, 20) {
             println!(
                 "    Moving averages (20-period): SMA={:.2}, EMA={:.2}",
                 sma_20.last().unwrap_or(&0.0),
@@ -284,9 +285,9 @@ fn technical_indicators_demo(prices: &Array1<f64>) {
     }
 
     // Bollinger Bands
-    match indicators.bollinger_bands(prices, 20, 2.0) {
+    match indicators.bollinger_bands(_prices, 20, 2.0) {
         Ok((upper, middle, lower)) => {
-            let current_price = prices.last().unwrap_or(&0.0);
+            let current_price = _prices.last().unwrap_or(&0.0);
             let upper_val = upper.last().unwrap_or(&0.0);
             let lower_val = lower.last().unwrap_or(&0.0);
             let middle_val = middle.last().unwrap_or(&0.0);
@@ -306,7 +307,7 @@ fn technical_indicators_demo(prices: &Array1<f64>) {
     }
 
     // RSI (Relative Strength Index)
-    match indicators.relative_strength_index(prices, 14) {
+    match indicators.relative_strength_index(_prices, 14) {
         Ok(rsi) => {
             let current_rsi = rsi.last().unwrap_or(&50.0);
             println!("    RSI (14): {:.1}", current_rsi);
@@ -324,7 +325,7 @@ fn technical_indicators_demo(prices: &Array1<f64>) {
     }
 
     // MACD
-    match indicators.macd(prices, 12, 26, 9) {
+    match indicators.macd(_prices, 12, 26, 9) {
         Ok((macd_line, signal_line, histogram)) => {
             let macd_val = macd_line.last().unwrap_or(&0.0);
             let signal_val = signal_line.last().unwrap_or(&0.0);
@@ -346,10 +347,10 @@ fn technical_indicators_demo(prices: &Array1<f64>) {
     }
 
     // Average True Range (ATR)
-    if let Ok(atr) = indicators.average_true_range(prices, prices, prices, 14) {
+    if let Ok(atr) = indicators.average_true_range(_prices, _prices, _prices, 14) {
         // Simplified: using same array
         let current_atr = atr.last().unwrap_or(&0.0);
-        let current_price = prices.last().unwrap_or(&0.0);
+        let current_price = _prices.last().unwrap_or(&0.0);
         let atr_percentage = (current_atr / current_price) * 100.0;
         println!(
             "    ATR (14): {:.4} ({:.2}% of price)",
@@ -359,16 +360,16 @@ fn technical_indicators_demo(prices: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn risk_metrics_demo(returns: &Array1<f64>) {
+fn risk_metrics_demo(_returns: &Array1<f64>) {
     println!("  Computing risk metrics...");
 
     let risk_calc = RiskMetrics::new();
 
     // Basic risk metrics
-    let mean_return = returns.mean().unwrap_or(0.0);
-    let volatility = returns.var(0.0).sqrt();
-    let min_return = returns.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let max_return = returns.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    let mean_return = _returns.mean().unwrap_or(0.0);
+    let volatility = _returns.variance().sqrt();
+    let min_return = _returns.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let max_return = _returns.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
     println!("    Return statistics:");
     println!(
@@ -385,13 +386,13 @@ fn risk_metrics_demo(returns: &Array1<f64>) {
 
     // Sharpe ratio (assuming risk-free rate of 2%)
     let risk_free_rate = 0.02 / 252.0; // Daily risk-free rate
-    let excess_returns: Array1<f64> = returns.mapv(|r| r - risk_free_rate);
-    let sharpe_ratio = excess_returns.mean().unwrap_or(0.0) / excess_returns.var(0.0).sqrt();
+    let excess_returns: Array1<f64> = _returns.mapv(|r| r - risk_free_rate);
+    let sharpe_ratio = excess_returns.mean().unwrap_or(0.0) / excess_returns.variance().sqrt();
     let annualized_sharpe = sharpe_ratio * (252.0_f64).sqrt();
     println!("    Sharpe ratio: {:.2} (annualized)", annualized_sharpe);
 
     // Downside deviation and Sortino ratio
-    let downside_returns: Vec<f64> = returns.iter().filter(|&&r| r < 0.0).cloned().collect();
+    let downside_returns: Vec<f64> = _returns.iter().filter(|&&r| r < 0.0).cloned().collect();
 
     if !downside_returns.is_empty() {
         let downside_deviation = (downside_returns.iter().map(|r| r * r).sum::<f64>()
@@ -405,7 +406,7 @@ fn risk_metrics_demo(returns: &Array1<f64>) {
     }
 
     // Maximum drawdown
-    match risk_calc.maximum_drawdown(returns) {
+    match risk_calc.maximum_drawdown(_returns) {
         Ok(max_dd) => {
             println!("    Maximum drawdown: {:.2}%", max_dd * 100.0);
         }
@@ -413,7 +414,7 @@ fn risk_metrics_demo(returns: &Array1<f64>) {
     }
 
     // Skewness and kurtosis
-    match risk_calc.skewness(returns) {
+    match risk_calc.skewness(_returns) {
         Ok(skew) => {
             println!(
                 "    Skewness: {:.3} ({})",
@@ -428,7 +429,7 @@ fn risk_metrics_demo(returns: &Array1<f64>) {
         Err(e) => println!("    Skewness calculation failed: {}", e),
     }
 
-    match risk_calc.kurtosis(returns) {
+    match risk_calc.kurtosis(_returns) {
         Ok(kurt) => {
             println!(
                 "    Excess kurtosis: {:.3} ({})",
@@ -492,7 +493,7 @@ fn portfolio_analysis_demo() {
     match analyzer.portfolio_returns(&asset_returns, &weights) {
         Ok(portfolio_returns) => {
             let portfolio_mean = portfolio_returns.mean().unwrap_or(0.0);
-            let portfolio_vol = portfolio_returns.var(0.0).sqrt();
+            let portfolio_vol = portfolio_returns.variance().sqrt();
 
             println!("    Portfolio statistics:");
             println!(
@@ -510,7 +511,7 @@ fn portfolio_analysis_demo() {
             for i in 0..n_assets {
                 let asset_column = asset_returns.column(i);
                 let asset_mean = asset_column.mean().unwrap_or(0.0);
-                let asset_vol = asset_column.var(0.0).sqrt();
+                let asset_vol = asset_column.variance().sqrt();
                 println!(
                     "      Asset {}: return={:.4}, vol={:.4}, weight={:.1}%",
                     i + 1,
@@ -547,7 +548,7 @@ fn portfolio_analysis_demo() {
 }
 
 #[allow(dead_code)]
-fn var_analysis_demo(returns: &Array1<f64>) {
+fn var_analysis_demo(_returns: &Array1<f64>) {
     println!("  Value at Risk (VaR) analysis...");
 
     let var_calc = VaRCalculator::new();
@@ -557,7 +558,7 @@ fn var_analysis_demo(returns: &Array1<f64>) {
         println!("    {}% confidence level:", confidence * 100.0);
 
         // Historical VaR
-        match var_calc.historical_var(returns, confidence) {
+        match var_calc.historical_var(_returns, confidence) {
             Ok(hist_var) => {
                 println!(
                     "      Historical VaR: {:.4} ({:.2}%)",
@@ -569,7 +570,7 @@ fn var_analysis_demo(returns: &Array1<f64>) {
         }
 
         // Parametric VaR (assuming normal distribution)
-        match var_calc.parametric_var(returns, confidence) {
+        match var_calc.parametric_var(_returns, confidence) {
             Ok(param_var) => {
                 println!(
                     "      Parametric VaR: {:.4} ({:.2}%)",
@@ -581,7 +582,7 @@ fn var_analysis_demo(returns: &Array1<f64>) {
         }
 
         // Monte Carlo VaR
-        match var_calc.monte_carlo_var(returns, confidence, 10000) {
+        match var_calc.monte_carlo_var(_returns, confidence, 10000) {
             Ok(mc_var) => {
                 println!(
                     "      Monte Carlo VaR: {:.4} ({:.2}%)",
@@ -593,7 +594,7 @@ fn var_analysis_demo(returns: &Array1<f64>) {
         }
 
         // Expected Shortfall (Conditional VaR)
-        match var_calc.expected_shortfall(returns, confidence) {
+        match var_calc.expected_shortfall(_returns, confidence) {
             Ok(es) => {
                 println!("      Expected Shortfall: {:.4} ({:.2}%)", es, es * 100.0);
             }
@@ -603,16 +604,16 @@ fn var_analysis_demo(returns: &Array1<f64>) {
 
     // VaR backtesting
     println!("    VaR backtesting (95% confidence):");
-    match var_calc.historical_var(returns, 0.95) {
+    match var_calc.historical_var(_returns, 0.95) {
         Ok(var_95) => {
-            let violations: usize = returns.iter().filter(|&&r| r < var_95).count();
-            let violation_rate = violations as f64 / returns.len() as f64;
+            let violations: usize = _returns.iter().filter(|&&r| r < var_95).count();
+            let violation_rate = violations as f64 / _returns.len() as f64;
             let expected_rate = 0.05;
 
             println!(
                 "      Violations: {} out of {} ({:.2}%)",
                 violations,
-                returns.len(),
+                _returns.len(),
                 violation_rate * 100.0
             );
             println!("      Expected rate: {:.2}%", expected_rate * 100.0);
@@ -629,7 +630,7 @@ fn var_analysis_demo(returns: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn backtesting_demo(prices: &Array1<f64>) {
+fn backtesting_demo(_prices: &Array1<f64>) {
     println!("  Strategy backtesting...");
 
     let engine = BacktestEngine::new();
@@ -643,7 +644,7 @@ fn backtesting_demo(prices: &Array1<f64>) {
         long_window: sma_long,
     };
 
-    match engine.backtest(prices, &strategy) {
+    match engine.backtest(_prices, &strategy) {
         Ok(results) => {
             println!(
                 "    Moving Average Crossover ({}/{}) Strategy:",
@@ -678,7 +679,7 @@ fn backtesting_demo(prices: &Array1<f64>) {
         threshold: 2.0,
     };
 
-    match engine.backtest(prices, &mean_reversion_strategy) {
+    match engine.backtest(_prices, &mean_reversion_strategy) {
         Ok(results) => {
             println!("    Mean Reversion Strategy:");
             println!("      Total return: {:.2}%", results.total_return * 100.0);
@@ -691,13 +692,13 @@ fn backtesting_demo(prices: &Array1<f64>) {
 }
 
 #[allow(dead_code)]
-fn advanced_features_demo(prices: &Array1<f64>, returns: &Array1<f64>) {
+fn advanced_features_demo(_prices: &Array1<f64>, returns: &Array1<f64>) {
     println!("  Advanced financial feature extraction...");
 
     let fin_features = FinancialFeatures::new();
 
     // Price-based features
-    match fin_features.price_momentum(prices, vec![5, 10, 20]) {
+    match fin_features.price_momentum(_prices, vec![5, 10, 20]) {
         Ok(momentum_features) => {
             println!(
                 "    Price momentum features: {} values",
@@ -731,7 +732,7 @@ fn advanced_features_demo(prices: &Array1<f64>, returns: &Array1<f64>) {
     }
 
     // Market microstructure features
-    match fin_features.bid_ask_spread_proxy(prices) {
+    match fin_features.bid_ask_spread_proxy(_prices) {
         Ok(spread_proxy) => {
             println!("    Bid-ask spread proxy: {:.6}", spread_proxy);
         }
@@ -739,7 +740,7 @@ fn advanced_features_demo(prices: &Array1<f64>, returns: &Array1<f64>) {
     }
 
     // Liquidity measures
-    match fin_features.amihud_illiquidity(returns, prices) {
+    match fin_features.amihud_illiquidity(returns_prices) {
         Ok(illiquidity) => {
             println!("    Amihud illiquidity measure: {:.8}", illiquidity);
         }
@@ -772,7 +773,7 @@ fn advanced_features_demo(prices: &Array1<f64>, returns: &Array1<f64>) {
     let feature_config = FeatureConfig::financial();
     let mut extractor = FeatureExtractor::new(feature_config);
 
-    match extractor.extract_features(prices) {
+    match extractor.extract_features(_prices) {
         Ok(features) => {
             println!(
                 "    Comprehensive feature extraction: {} features",

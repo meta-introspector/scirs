@@ -1,4 +1,4 @@
-use scirs2_integrate::{
+use scirs2__integrate::{
     legendre_points, BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain,
     LegendreSpectralSolver1D, SpectralBasis, SpectralOptions,
 };
@@ -131,7 +131,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Index  x          dx");
 
     // Get reference Legendre points in [-1, 1]
-    let (lg_points, _) = legendre_points(65);
+    let (lg_points_) = legendre_points(65);
 
     // Print first few points and differences
     for i in 0..5 {

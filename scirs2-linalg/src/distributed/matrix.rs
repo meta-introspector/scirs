@@ -183,8 +183,7 @@ where
     pub fn transpose(&self) -> LinalgResult<DistributedMatrix<T>> {
         match self.distribution.strategy {
             DistributionStrategy::RowWise => self.transpose_row_to_col(),
-            DistributionStrategy::ColumnWise => self.transpose_col_to_row(),
-            _ => Err(LinalgError::NotImplemented(
+            DistributionStrategy::ColumnWise => self.transpose_col_to_row(, _ => Err(LinalgError::NotImplemented(
                 "Transpose for this distribution not implemented".to_string()
             )),
         }
@@ -223,19 +222,19 @@ where
         let communicator = Arc::new(DistributedCommunicator::new(&config)?);
         
         if config.node_rank == 0 {
-            let matrix = global_matrix.ok_or_else(|| {
-                LinalgError::InvalidInput("Root node must provide matrix for broadcast".to_string())
+            let _matrix = global_matrix.ok_or_else(|| {
+                LinalgError::InvalidInput("Root node must provide _matrix for broadcast".to_string())
             })?;
             
             // Broadcast to all other nodes
-            communicator.broadcast_matrix(&matrix.view())?;
+            communicator.broadcast_matrix(&_matrix.view())?;
             
-            // Create distributed matrix on root
-            Self::from_local(matrix, config)
+            // Create distributed _matrix on root
+            Self::from_local(_matrix, config)
         } else {
             // Receive from root
-            let matrix = communicator.recv_matrix(0, MessageTag::Data)?;
-            Self::from_local(matrix, config)
+            let _matrix = communicator.recv_matrix(0, MessageTag::Data)?;
+            Self::from_local(_matrix, config)
         }
     }
     
@@ -256,10 +255,10 @@ where
         
         // Use SIMD operations for local computations
         match (T::zero(), T::one()) {
-            (_, _) if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() => {
+            (_) if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() => {
                 self.gemm_simd_f32(other, alpha, beta)
             }
-            (_, _) if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() => {
+            (_) if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() => {
                 self.gemm_simd_f64(other, alpha, beta)
             }
             _ => {
@@ -439,9 +438,9 @@ pub struct VectorDistribution {
 
 impl VectorDistribution {
     /// Create distribution for a vector
-    pub fn new(global_length: usize, num_nodes: usize, node_rank: usize) -> Self {
-        let elements_per_node = global_length / num_nodes;
-        let remainder = global_length % num_nodes;
+    pub fn new(_global_length: usize, num_nodes: usize, node_rank: usize) -> Self {
+        let elements_per_node = _global_length / num_nodes;
+        let remainder = _global_length % num_nodes;
         
         let start_index = if node_rank < remainder {
             node_rank * (elements_per_node + 1)

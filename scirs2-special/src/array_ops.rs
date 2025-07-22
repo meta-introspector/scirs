@@ -10,18 +10,18 @@ use ndarray::{Array, ArrayView1, Dimension};
 
 /// Safe slice casting replacement for bytemuck::cast_slice
 #[allow(dead_code)]
-fn cast_slice_to_bytes<T>(slice: &[T]) -> &[u8] {
+fn cast_slice_to_bytes<T>(_slice: &[T]) -> &[u8] {
     // SAFETY: This is safe because:
-    // 1. The pointer is derived from a valid slice
+    // 1. The pointer is derived from a valid _slice
     // 2. The size calculation is correct using size_of_val
-    // 3. The lifetime is bounded by the input slice
-    unsafe { std::slice::from_raw_parts(slice.as_ptr() as *const u8, std::mem::size_of_val(slice)) }
+    // 3. The lifetime is bounded by the input _slice
+    unsafe { std::_slice::from_raw_parts(_slice.as_ptr() as *const u8, std::mem::size_of_val(_slice)) }
 }
 
 /// Safe slice casting replacement for bytemuck::cast_slice (reverse)
 #[allow(dead_code)]
-fn cast_bytes_to_slice<T>(bytes: &[u8]) -> &[T] {
-    assert_eq!(bytes.len() % std::mem::size_of::<T>(), 0);
+fn cast_bytes_to_slice<T>(_bytes: &[u8]) -> &[T] {
+    assert_eq!(_bytes.len() % std::mem::size_of::<T>(), 0);
     // SAFETY: This is safe because:
     // 1. We assert that the byte length is a multiple of T's size
     // 2. The pointer is derived from a valid slice
@@ -29,8 +29,8 @@ fn cast_bytes_to_slice<T>(bytes: &[u8]) -> &[T] {
     // 4. The lifetime is bounded by the input slice
     unsafe {
         std::slice::from_raw_parts(
-            bytes.as_ptr() as *const T,
-            bytes.len() / std::mem::size_of::<T>(),
+            _bytes.as_ptr() as *const T,
+            _bytes.len() / std::mem::size_of::<T>(),
         )
     }
 }
@@ -102,15 +102,15 @@ pub mod memory_efficient {
     use super::*;
 
     /// Estimate memory usage for an operation
-    pub fn estimate_memory_usage<T>(shape: &[usize], num_arrays: usize) -> usize {
+    pub fn estimate_memory_usage<T>(_shape: &[usize], num_arrays: usize) -> usize {
         let elem_size = std::mem::size_of::<T>();
-        let total_elements: usize = shape.iter().product();
+        let total_elements: usize = _shape.iter().product();
         total_elements * elem_size * num_arrays
     }
 
     /// Check if operation fits within memory limits
-    pub fn check_memory_limit<T>(shape: &[usize], num_arrays: usize, config: &ArrayConfig) -> bool {
-        estimate_memory_usage::<T>(shape, num_arrays) <= config.memory_limit
+    pub fn check_memory_limit<T>(_shape: &[usize], num_arrays: usize, config: &ArrayConfig) -> bool {
+        estimate_memory_usage::<T>(_shape, num_arrays) <= config.memory_limit
     }
 }
 
@@ -217,8 +217,8 @@ pub mod lazy {
     where
         D: Dimension,
     {
-        pub fn new(input: Array<f64, D>) -> Self {
-            Self { input }
+        pub fn new(_input: Array<f64, D>) -> Self {
+            Self { _input }
         }
     }
 
@@ -254,8 +254,8 @@ pub mod lazy {
     where
         D: Dimension,
     {
-        pub fn new(input: Array<f64, D>) -> Self {
-            Self { input }
+        pub fn new(_input: Array<f64, D>) -> Self {
+            Self { _input }
         }
     }
 
@@ -279,22 +279,22 @@ pub mod lazy {
     }
 
     /// Create a lazy gamma array
-    pub fn lazy_gamma<D>(input: Array<f64, D>, config: ArrayConfig) -> LazyArray<f64, D>
+    pub fn lazy_gamma<D>(_input: Array<f64, D>, config: ArrayConfig) -> LazyArray<f64, D>
     where
         D: Dimension + Send + Sync + 'static,
     {
-        let shape = input.shape().to_vec();
-        let operation = Box::new(LazyGamma::new(input));
+        let shape = _input.shape().to_vec();
+        let operation = Box::new(LazyGamma::new(_input));
         LazyArray::new(operation, shape, config)
     }
 
     /// Create a lazy Bessel J0 array
-    pub fn lazy_bessel_j0<D>(input: Array<f64, D>, config: ArrayConfig) -> LazyArray<f64, D>
+    pub fn lazy_bessel_j0<D>(_input: Array<f64, D>, config: ArrayConfig) -> LazyArray<f64, D>
     where
         D: Dimension + Send + Sync + 'static,
     {
-        let shape = input.shape().to_vec();
-        let operation = Box::new(LazyBesselJ0::new(input));
+        let shape = _input.shape().to_vec();
+        let operation = Box::new(LazyBesselJ0::new(_input));
         LazyArray::new(operation, shape, config)
     }
 }
@@ -317,19 +317,19 @@ pub mod gpu {
     impl GpuBuffer {
         /// Create a new GPU buffer
         #[cfg(feature = "gpu")]
-        pub fn new<T>(ctx: &scirs2_core::gpu::GpuContext, data: &[T]) -> SpecialResult<Self>
+        pub fn new<T>(_ctx: &scirs2_core: :gpu::GpuContext, data: &[T]) -> SpecialResult<Self>
         where
             T: 'static,
         {
             let byte_data = cast_slice_to_bytes(data);
-            let buffer = ctx.create_buffer_with_data(byte_data).map_err(|e| {
+            let buffer = _ctx.create_buffer_with_data(byte_data).map_err(|e| {
                 SpecialError::ComputationError(format!("GPU buffer creation failed: {}", e))
             })?;
 
             Ok(Self {
                 buffer: Some(buffer),
                 size: data.len(),
-                element_size: std::mem::size_of::<T>(),
+                element_size: std::mem::size, _of::<T>(),
                 shape: vec![data.len()],
                 allocated_size: byte_data.len(),
             })
@@ -373,7 +373,7 @@ pub mod gpu {
         /// Create a new advanced GPU pipeline with comprehensive functionality
         #[cfg(feature = "gpu")]
         pub fn new() -> SpecialResult<Self> {
-            use crate::gpu_context_manager::get_best_gpu_context;
+            use crate::gpu_context__manager::get_best_gpu_context;
 
             let context = get_best_gpu_context().map_err(|e| {
                 SpecialError::ComputationError(format!("Failed to create GPU context: {}", e))
@@ -578,19 +578,19 @@ pub mod gpu {
     }
 
     /// GPU-accelerated gamma computation
-    pub async fn gamma_gpu<D>(input: &Array<f64, D>) -> SpecialResult<Array<f64, D>>
+    pub async fn gamma_gpu<D>(_input: &Array<f64, D>) -> SpecialResult<Array<f64, D>>
     where
         D: Dimension,
     {
         #[cfg(feature = "gpu")]
         {
             let pipeline = GpuPipeline::new()?;
-            pipeline.gamma_gpu(input)
+            pipeline.gamma_gpu(_input)
         }
         #[cfg(not(feature = "gpu"))]
         {
             // Fallback to CPU
-            Ok(input.mapv(crate::gamma::gamma))
+            Ok(_input.mapv(crate::gamma::gamma))
         }
     }
 }
@@ -600,11 +600,11 @@ pub mod broadcasting {
     use super::*;
 
     /// Check if two shapes can be broadcast together
-    pub fn can_broadcast(shape1: &[usize], shape2: &[usize]) -> bool {
-        let max_len = shape1.len().max(shape2.len());
+    pub fn can_broadcast(_shape1: &[usize], shape2: &[usize]) -> bool {
+        let max_len = _shape1.len().max(shape2.len());
 
         for i in 0..max_len {
-            let dim1 = shape1.get(shape1.len().wrapping_sub(i + 1)).unwrap_or(&1);
+            let dim1 = _shape1.get(_shape1.len().wrapping_sub(i + 1)).unwrap_or(&1);
             let dim2 = shape2.get(shape2.len().wrapping_sub(i + 1)).unwrap_or(&1);
 
             if *dim1 != 1 && *dim2 != 1 && *dim1 != *dim2 {
@@ -616,18 +616,18 @@ pub mod broadcasting {
     }
 
     /// Compute the broadcast shape of two arrays
-    pub fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Result<Vec<usize>, SpecialError> {
-        if !can_broadcast(shape1, shape2) {
+    pub fn broadcast_shape(_shape1: &[usize], shape2: &[usize]) -> Result<Vec<usize>, SpecialError> {
+        if !can_broadcast(_shape1, shape2) {
             return Err(SpecialError::DomainError(
                 "Arrays cannot be broadcast together".to_string(),
             ));
         }
 
-        let max_len = shape1.len().max(shape2.len());
+        let max_len = _shape1.len().max(shape2.len());
         let mut result = Vec::with_capacity(max_len);
 
         for i in 0..max_len {
-            let dim1 = shape1.get(shape1.len().wrapping_sub(i + 1)).unwrap_or(&1);
+            let dim1 = _shape1.get(_shape1.len().wrapping_sub(i + 1)).unwrap_or(&1);
             let dim2 = shape2.get(shape2.len().wrapping_sub(i + 1)).unwrap_or(&1);
 
             result.push((*dim1).max(*dim2));
@@ -771,24 +771,24 @@ pub mod vectorized {
     }
 
     /// Enhanced error function computation
-    pub fn erf_array<D>(input: &Array<f64, D>, config: &ArrayConfig) -> SpecialResult<Array<f64, D>>
+    pub fn erf_array<D>(_input: &Array<f64, D>, config: &ArrayConfig) -> SpecialResult<Array<f64, D>>
     where
         D: Dimension,
     {
-        if config.parallel && input.len() > config.chunk_size {
+        if config.parallel && _input.len() > config.chunk_size {
             #[cfg(feature = "parallel")]
             {
                 use scirs2_core::parallel_ops::*;
-                let data: Vec<f64> = input.iter().copied().collect();
+                let data: Vec<f64> = _input.iter().copied().collect();
                 let result: Vec<f64> = data.par_iter().map(|&x| crate::erf::erf(x)).collect();
                 return Ok(Array::from_vec(result)
-                    .to_shape(input.dim())
+                    .to_shape(_input.dim())
                     .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
                     .into_owned());
             }
         }
 
-        Ok(input.mapv(crate::erf::erf))
+        Ok(_input.mapv(crate::erf::erf))
     }
 
     /// Enhanced factorial function computation
@@ -820,8 +820,7 @@ pub mod vectorized {
 
     /// Enhanced softmax computation
     pub fn softmax_1d(
-        input: ArrayView1<f64>,
-        _config: &ArrayConfig,
+        input: ArrayView1<f64>, _config: &ArrayConfig,
     ) -> SpecialResult<Array<f64, ndarray::Ix1>> {
         // Use existing optimized implementation from statistical module
         crate::statistical::softmax(input)
@@ -943,11 +942,11 @@ pub mod vectorized {
 
     // ArrayFire kernel for gamma function computation (disabled - placeholder)
     // #[cfg(feature = "arrayfire")]
-    // fn arrayfire_gamma_kernel(input: &arrayfire::Array<f64>) -> SpecialResult<arrayfire::Array<f64>> {
+    // fn arrayfire_gamma_kernel(_input: &arrayfire::Array<f64>) -> SpecialResult<arrayfire::Array<f64>> {
     //     use arrayfire as af;
     //
     //     // Check for negative values (gamma undefined for negative integers)
-    //     let negative_mask = af::lt(input, &0.0, false);
+    //     let negative_mask = af::lt(_input, &0.0, false);
     //     let has_negatives = af::any_true_all(&negative_mask).0;
     //
     //     if has_negatives {
@@ -958,10 +957,10 @@ pub mod vectorized {
     //     // otherwise implement Lanczos approximation
     //     let result = if af::get_backend() == af::Backend::CUDA || af::get_backend() == af::Backend::OPENCL {
     //         // Use GPU-accelerated computation
-    //         arrayfire_gamma_lanczos(input)?
+    //         arrayfire_gamma_lanczos(_input)?
     //     } else {
     //         // Fallback to CPU
-    //         arrayfire_gamma_lanczos(input)?
+    //         arrayfire_gamma_lanczos(_input)?
     //     };
     //
     //     Ok(result)
@@ -1067,8 +1066,7 @@ pub mod complex {
     pub fn lambert_w_array<D>(
         input: &Array<Complex64, D>,
         branch: i32,
-        tolerance: f64,
-        _config: &ArrayConfig,
+        tolerance: f64_config: &ArrayConfig,
     ) -> SpecialResult<Array<Complex64, D>>
     where
         D: Dimension,
@@ -1086,9 +1084,9 @@ pub mod convenience {
     use ndarray::{Array1, Array2};
 
     /// Apply gamma function to 1D array with automatic backend selection
-    pub async fn gamma_1d(input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
+    pub async fn gamma_1d(_input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
         let config = ArrayConfig::default();
-        let result = vectorized::gamma_array(input, &config)?;
+        let result = vectorized::gamma_array(_input, &config)?;
         result.compute().await
     }
 
@@ -1102,9 +1100,9 @@ pub mod convenience {
     }
 
     /// Apply gamma function to 2D array with automatic backend selection
-    pub async fn gamma_2d(input: &Array2<f64>) -> SpecialResult<Array2<f64>> {
+    pub async fn gamma_2d(_input: &Array2<f64>) -> SpecialResult<Array2<f64>> {
         let config = ArrayConfig::default();
-        let result = vectorized::gamma_array(input, &config)?;
+        let result = vectorized::gamma_array(_input, &config)?;
         result.compute().await
     }
 
@@ -1133,17 +1131,17 @@ pub mod convenience {
 
     /// GPU-accelerated gamma computation
     #[cfg(feature = "gpu")]
-    pub async fn gamma_gpu<D>(input: &Array<f64, D>) -> SpecialResult<Array<f64, D>>
+    pub async fn gamma_gpu<D>(_input: &Array<f64, D>) -> SpecialResult<Array<f64, D>>
     where
         D: Dimension,
     {
-        super::gpu::gamma_gpu(input).await
+        super::gpu::gamma_gpu(_input).await
     }
 
     /// Apply Bessel J0 function to 1D array
-    pub fn j0_1d(input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
+    pub fn j0_1d(_input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
         let config = ArrayConfig::default();
-        let result = vectorized::j0_array(input, &config)?;
+        let result = vectorized::j0_array(_input, &config)?;
         result.compute()
     }
 
@@ -1160,13 +1158,13 @@ pub mod convenience {
     }
 
     /// Apply error function to 1D array
-    pub fn erf_1d(input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
+    pub fn erf_1d(_input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
         let config = ArrayConfig::default();
-        vectorized::erf_array(input, &config)
+        vectorized::erf_array(_input, &config)
     }
 
     /// Apply error function with parallel processing
-    pub fn erf_parallel<D>(input: &Array<f64, D>) -> SpecialResult<Array<f64, D>>
+    pub fn erf_parallel<D>(_input: &Array<f64, D>) -> SpecialResult<Array<f64, D>>
     where
         D: Dimension,
     {
@@ -1174,19 +1172,19 @@ pub mod convenience {
             parallel: true,
             ..Default::default()
         };
-        vectorized::erf_array(input, &config)
+        vectorized::erf_array(_input, &config)
     }
 
     /// Apply factorial to 1D array
-    pub fn factorial_1d(input: &Array1<u32>) -> SpecialResult<Array1<f64>> {
+    pub fn factorial_1d(_input: &Array1<u32>) -> SpecialResult<Array1<f64>> {
         let config = ArrayConfig::default();
-        vectorized::factorial_array(input, &config)
+        vectorized::factorial_array(_input, &config)
     }
 
     /// Apply softmax to 1D array
-    pub fn softmax_1d(input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
+    pub fn softmax_1d(_input: &Array1<f64>) -> SpecialResult<Array1<f64>> {
         let config = ArrayConfig::default();
-        vectorized::softmax_1d(input.view(), &config)
+        vectorized::softmax_1d(_input.view(), &config)
     }
 
     /// Batch processing for multiple arrays
@@ -1367,11 +1365,11 @@ mod tests {
     #[test]
     fn test_memory_estimation() {
         let shape = [1000, 1000];
-        let memory = memory_efficient::estimate_memory_usage::<f64>(&shape, 2);
+        let memory = memory_efficient::estimate_memory, _usage::<f64>(&shape, 2);
         assert_eq!(memory, 1000 * 1000 * 8 * 2); // 16MB for two f64 arrays
 
         let config = ArrayConfig::default();
-        assert!(memory_efficient::check_memory_limit::<f64>(
+        assert!(memory_efficient::check_memory, _limit::<f64>(
             &shape, 2, &config
         ));
     }

@@ -40,7 +40,7 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_interpolate::advanced::akima::AkimaSpline;
+    /// use scirs2__interpolate::advanced::akima::AkimaSpline;
     ///
     /// let x = array![0.0f64, 1.0, 2.0, 3.0, 4.0];
     /// let y = array![0.0f64, 1.0, 4.0, 9.0, 16.0];
@@ -260,7 +260,7 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_interpolate::advanced::akima::make_akima_spline;
+/// use scirs2__interpolate::advanced::akima::make_akima_spline;
 ///
 /// let x = array![0.0f64, 1.0, 2.0, 3.0, 4.0];
 /// let y = array![0.0f64, 1.0, 4.0, 9.0, 16.0];
@@ -286,7 +286,7 @@ pub fn akima_interpolate<F: crate::traits::InterpolationFloat>(
     y: &ArrayView1<F>,
     x_new: &ArrayView1<F>,
 ) -> InterpolateResult<Array1<F>> {
-    let spline = AkimaSpline::new(x, y)?;
+    let spline = AkimaSpline::_new(x, y)?;
     spline.evaluate_array(x_new)
 }
 

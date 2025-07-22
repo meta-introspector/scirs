@@ -295,7 +295,7 @@ where
 
     let (rows, cols) = (array.shape()[0], array.shape()[1]);
 
-    // Check that indices are within bounds
+    // Check that _indices are within bounds
     for &idx in row_indices.iter() {
         if idx >= rows {
             return Err("Row index out of bounds");
@@ -377,7 +377,7 @@ where
         return Err("No diagonal elements for the given offset");
     }
 
-    // Create the result array
+    // Create the result _array
     let mut result = Array::<T, Ix1>::default(diag_len);
 
     // Extract the diagonal elements
@@ -425,7 +425,7 @@ where
     T: Clone + Default,
     F: Fn(&T) -> bool,
 {
-    // Build a boolean mask array based on the condition
+    // Build a boolean mask _array based on the condition
     let mask = array.map(condition);
 
     // Use the boolean_mask_1d function to select elements
@@ -462,7 +462,7 @@ where
     T: Clone + Default,
     F: Fn(&T) -> bool,
 {
-    // Build a boolean mask array based on the condition
+    // Build a boolean mask _array based on the condition
     let mask = array.map(condition);
 
     // Use the boolean_mask_2d function to select elements

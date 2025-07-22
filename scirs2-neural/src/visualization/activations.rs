@@ -12,6 +12,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::PathBuf;
+use statrs::statistics::Statistics;
 /// Layer activation visualizer
 #[allow(dead_code)]
 pub struct ActivationVisualizer<F: Float + Debug + ScalarOperand> {
@@ -142,9 +143,9 @@ impl<
     > ActivationVisualizer<F>
 {
     /// Create a new activation visualizer
-    pub fn new(model: Sequential<F>, config: VisualizationConfig) -> Self {
+    pub fn new(_model: Sequential<F>, config: VisualizationConfig) -> Self {
         Self {
-            model,
+            _model,
             config,
             activation_cache: HashMap::new(),
         }
@@ -352,15 +353,13 @@ impl<
                         F::neg_infinity(),
                         |&acc, &x| acc.max(x),
                     );
-                    max_values.insert_axis(ndarray::Axis(max_axis))
-            ChannelAggregation::Min => {
+                    max_values.insert_axis(ndarray::Axis(max_axis)), ChannelAggregation::Min => {
                     let min_axis = processed.ndim() - 1;
                     let min_values =
                         processed.fold_axis(ndarray::Axis(min_axis), F::infinity(), |&acc, &x| {
                             acc.min(x)
                         });
-                    min_values.insert_axis(ndarray::Axis(min_axis))
-            ChannelAggregation::Std => {
+                    min_values.insert_axis(ndarray::Axis(min_axis)), ChannelAggregation::Std => {
                     let std_axis = processed.ndim() - 1;
                     let mean = processed.mean_axis(ndarray::Axis(std_axis)).unwrap();
                     let variance = processed.map_axis(ndarray::Axis(std_axis), |channel| {
@@ -371,8 +370,7 @@ impl<
                             .fold(F::zero(), |acc, x| acc + x);
                         (variance_sum / F::from(channel.len()).unwrap_or(F::one())).sqrt()
                     });
-                    variance.insert_axis(ndarray::Axis(std_axis))
-            ChannelAggregation::Select(channels) => {
+                    variance.insert_axis(ndarray::Axis(std_axis)), ChannelAggregation::Select(channels) => {
                 if processed.ndim() > 2 && !channels.is_empty() {
                     let channel_axis = processed.ndim() - 1;
                     let mut selected_slices = Vec::new();
@@ -405,8 +403,7 @@ impl<
                 let range = max_val - min_val;
                 if range > F::zero() {
                     processed.mapv(|x| (x - min_val) / range)
-                    processed.mapv(|_| F::zero())
-            ActivationNormalization::ZScore => {
+                    processed.mapv(|_| F::zero()), ActivationNormalization::ZScore => {
                 let mean = processed.mean().unwrap_or(F::zero());
                 let variance = processed
                     .iter()
@@ -428,8 +425,7 @@ impl<
                     let range = high_val - low_val;
                     if range > F::zero() {
                         processed.mapv(|x| ((x - low_val) / range).max(F::zero()).min(F::one()))
-                        processed.mapv(|_| F::zero())
-            ActivationNormalization::Custom(_) => {
+                        processed.mapv(|_| F::zero()), ActivationNormalization::Custom(_) => {
                 // Custom normalization would require function pointer or callback
                 // For now, fall back to no normalization
                 processed
@@ -649,7 +645,7 @@ impl<
         let vertical_spacing = 80;
         // Collect unique layers and assign positions
         let mut layers = std::collections::HashSet::new();
-        for (from, to, _) in flow_data {
+        for (from, to_) in flow_data {
             layers.insert(from.clone());
             layers.insert(to.clone());
         let mut layer_positions = std::collections::HashMap::new();
@@ -816,8 +812,7 @@ mod tests {
         assert_eq!(colormaps[0], Colormap::Viridis);
         let custom = Colormap::Custom(vec!["#ff0000".to_string(), "#00ff00".to_string()]);
         match custom {
-            Colormap::Custom(colors) => assert_eq!(colors.len(), 2),
-            _ => unreachable!("Expected custom colormap"),
+            Colormap::Custom(colors) => assert_eq!(colors.len(), 2, _ => unreachable!("Expected custom colormap"),
     fn test_channel_aggregation() {
         let aggregations = [
             ChannelAggregation::None,
@@ -829,8 +824,7 @@ mod tests {
         assert_eq!(aggregations.len(), 6);
         assert_eq!(aggregations[1], ChannelAggregation::Mean);
         match &aggregations[5] {
-            ChannelAggregation::Select(channels) => assert_eq!(channels.len(), 3),
-            _ => unreachable!("Expected select aggregation"),
+            ChannelAggregation::Select(channels) => assert_eq!(channels.len(), 3, _ => unreachable!("Expected select aggregation"),
     fn test_feature_map_info_default() {
         let info = FeatureMapInfo::default();
         assert_eq!(info.layer_name, "unknown");

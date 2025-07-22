@@ -24,7 +24,7 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_signal::filter_banks::{QmfBank, WaveletFilterBank, FilterBankType};
+//! use scirs2__signal::filter_banks::{QmfBank, WaveletFilterBank, FilterBankType};
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!
 //! // Design a QMF filter bank
@@ -47,11 +47,12 @@
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::filter::{butter, FilterType};
+use crate::filter::{FilterType, butter};
 use ndarray::{Array1, Array2};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use std::f64::consts::PI;
 
+#[allow(unused_imports)]
 /// Types of filter banks
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FilterBankType {
@@ -108,10 +109,10 @@ impl QmfBank {
     ///
     /// # Returns
     /// * QMF filter bank instance
-    pub fn new(num_channels: usize, bank_type: FilterBankType) -> SignalResult<Self> {
-        if num_channels < 2 {
+    pub fn new(_num_channels: usize, bank_type: FilterBankType) -> SignalResult<Self> {
+        if _num_channels < 2 {
             return Err(SignalError::ValueError(
-                "Number of channels must be at least 2".to_string(),
+                "Number of _channels must be at least 2".to_string(),
             ));
         }
 
@@ -151,7 +152,7 @@ impl QmfBank {
     ) -> SignalResult<Self> {
         if num_channels < 2 {
             return Err(SignalError::ValueError(
-                "Number of channels must be at least 2".to_string(),
+                "Number of _channels must be at least 2".to_string(),
             ));
         }
 
@@ -186,7 +187,7 @@ impl QmfBank {
         };
 
         // Design Butterworth prototype filter
-        let (b, _a) = butter(order, cutoff, FilterType::Lowpass)?;
+        let (b_a) = butter(order, cutoff, FilterType::Lowpass)?;
         Ok(Array1::from(b))
     }
 
@@ -236,11 +237,11 @@ impl QmfBank {
                 for k in 0..num_channels {
                     for n in 0..filter_length {
                         if k % 2 == 0 {
-                            // Low-pass type filters
+                            // Low-pass _type filters
                             analysis_filters[[k, n]] = prototype[n];
                             synthesis_filters[[k, n]] = prototype[n];
                         } else {
-                            // High-pass type filters (alternating signs)
+                            // High-pass _type filters (alternating signs)
                             analysis_filters[[k, n]] = prototype[n] * (-1.0_f64).powi(n as i32);
                             synthesis_filters[[k, n]] = analysis_filters[[k, n]];
                         }
@@ -267,7 +268,7 @@ impl QmfBank {
                 // Tree-structured filter bank (binary tree)
                 if num_channels.count_ones() != 1 {
                     return Err(SignalError::ValueError(
-                        "Tree-structured filter banks require power-of-2 channels".to_string(),
+                        "Tree-structured filter banks require power-of-2 _channels".to_string(),
                     ));
                 }
 
@@ -507,7 +508,7 @@ impl QmfBank {
             }
 
             // Aliasing occurs when sum deviates from constant
-            let deviation = (sum - 1.0).abs();
+            let deviation = ((sum - 1.0) as f64).abs();
             max_aliasing = max_aliasing.max(deviation);
         }
 
@@ -586,14 +587,14 @@ impl WaveletFilterBank {
     ///
     /// # Returns
     /// * Wavelet filter bank instance
-    pub fn new(wavelet_name: &str, levels: usize) -> SignalResult<Self> {
+    pub fn new(_wavelet_name: &str, levels: usize) -> SignalResult<Self> {
         if levels == 0 {
             return Err(SignalError::ValueError(
                 "Number of levels must be greater than 0".to_string(),
             ));
         }
 
-        // Parse wavelet name and get filters
+        // Parse wavelet _name and get filters
         let wavelet = Self::parse_wavelet_name(wavelet_name)?;
         let filters = wavelet.filters()?;
 
@@ -608,8 +609,8 @@ impl WaveletFilterBank {
     }
 
     /// Parse wavelet name string to Wavelet enum
-    fn parse_wavelet_name(name: &str) -> SignalResult<Wavelet> {
-        match name.to_lowercase().as_str() {
+    fn parse_wavelet_name(_name: &str) -> SignalResult<Wavelet> {
+        match _name.to_lowercase().as_str() {
             "haar" => Ok(Wavelet::Haar),
             "db1" => Ok(Wavelet::DB(1)),
             "db2" => Ok(Wavelet::DB(2)),
@@ -632,10 +633,9 @@ impl WaveletFilterBank {
             "sym5" => Ok(Wavelet::Sym(5)),
             "sym6" => Ok(Wavelet::Sym(6)),
             "meyer" => Ok(Wavelet::Meyer),
-            "dmeyer" => Ok(Wavelet::DMeyer),
-            _ => Err(SignalError::ValueError(format!(
-                "Unknown wavelet name: {}",
-                name
+            "dmeyer" => Ok(Wavelet::DMeyer, _ => Err(SignalError::ValueError(format!(
+                "Unknown wavelet _name: {}",
+                _name
             ))),
         }
     }
@@ -822,7 +822,7 @@ impl CosineModulatedFilterBank {
                 for n in 0..filter_length {
                     let arg = 2.0 * (n as f64) / (filter_length - 1) as f64 - 1.0;
                     let i0_beta = Self::modified_bessel_i0(beta);
-                    let i0_arg = Self::modified_bessel_i0(beta * (1.0 - arg * arg).sqrt());
+                    let i0_arg = Self::modified_bessel_i0((beta * (1.0 - arg * arg) as f64).sqrt());
                     prototype[n] = i0_arg / i0_beta;
                 }
             }
@@ -930,8 +930,8 @@ impl IirStabilizer {
         method: StabilizationMethod,
     ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
         match method {
-            StabilizationMethod::RadialProjection => Self::radial_projection_stabilization(b, a),
-            StabilizationMethod::ZeroPlacement => Self::zero_placement_stabilization(b, a),
+            StabilizationMethod::RadialProjection =>, Self::radial_projection_stabilization(b, a),
+            StabilizationMethod::ZeroPlacement =>, Self::zero_placement_stabilization(b, a),
             StabilizationMethod::BalancedTruncation => {
                 Self::balanced_truncation_stabilization(b, a)
             }
@@ -1003,21 +1003,21 @@ impl IirStabilizer {
     }
 
     /// Find roots of polynomial (simplified implementation)
-    fn find_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
+    fn find_polynomial_roots(_coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
         // This is a simplified implementation for demonstration
         // A full implementation would use a robust root-finding algorithm
         let mut roots = Vec::new();
 
-        if coeffs.len() == 2 {
+        if _coeffs.len() == 2 {
             // Linear case: ax + b = 0
-            if coeffs[0] != 0.0 {
-                roots.push(Complex64::new(-coeffs[1] / coeffs[0], 0.0));
+            if _coeffs[0] != 0.0 {
+                roots.push(Complex64::new(-_coeffs[1] / _coeffs[0], 0.0));
             }
-        } else if coeffs.len() == 3 {
+        } else if _coeffs.len() == 3 {
             // Quadratic case: ax^2 + bx + c = 0
-            let a = coeffs[0];
-            let b = coeffs[1];
-            let c = coeffs[2];
+            let a = _coeffs[0];
+            let b = _coeffs[1];
+            let c = _coeffs[2];
 
             if a != 0.0 {
                 let discriminant = b * b - 4.0 * a * c;
@@ -1038,10 +1038,10 @@ impl IirStabilizer {
     }
 
     /// Reconstruct polynomial from roots
-    fn polynomial_from_roots(roots: &[Complex64]) -> SignalResult<Array1<f64>> {
+    fn polynomial_from_roots(_roots: &[Complex64]) -> SignalResult<Array1<f64>> {
         let mut coeffs = vec![1.0];
 
-        for &root in roots {
+        for &root in _roots {
             let mut new_coeffs = vec![0.0; coeffs.len() + 1];
 
             // Multiply by (z - root)

@@ -71,7 +71,7 @@ where
     let op = processor.create_processor();
 
     // Check if we should use memory-mapped array
-    let input_size = input.len() * std::mem::size_of::<T>();
+    let input_size = input.len() * std::mem::size__of::<T>();
 
     if let Some(threshold) = config.use_mmap_threshold {
         if input_size > threshold {
@@ -193,8 +193,8 @@ struct UniformProcessorV2 {
 }
 
 impl UniformProcessorV2 {
-    fn new(size: Vec<usize>, border_mode: BorderMode) -> Self {
-        Self { size, border_mode }
+    fn new(_size: Vec<usize>, border_mode: BorderMode) -> Self {
+        Self { _size, border_mode }
     }
 }
 
@@ -284,9 +284,9 @@ where
     T: Clone,
     D: Dimension,
 {
-    fn new(kernel: Array<T, D>, border_mode: BorderMode) -> Self {
+    fn new(_kernel: Array<T, D>, border_mode: BorderMode) -> Self {
         Self {
-            kernel,
+            _kernel,
             border_mode,
         }
     }

@@ -7,17 +7,18 @@
 pub mod advanced_continual_learning;
 pub mod elastic_weight_consolidation;
 pub mod shared_backbone;
-pub use advanced_continual_learning::{
+pub use advanced_continual__learning::{
     LateralConnection, LearningWithoutForgetting, LwFConfig, PackNet, PackNetConfig,
     ProgressiveConfig, ProgressiveNeuralNetwork, TaskColumn, TaskMask,
 };
-pub use elastic_weight_consolidation::{EWCConfig, EWC};
-pub use shared_backbone::{MultiTaskArchitecture, SharedBackbone, TaskSpecificHead, TaskType};
+pub use elastic_weight__consolidation::{EWCConfig, EWC};
+pub use shared__backbone::{MultiTaskArchitecture, SharedBackbone, TaskSpecificHead, TaskType};
 use crate::error::Result;
 use crate::models::sequential::Sequential;
 use ndarray::concatenate;
 use ndarray::prelude::*;
 use std::collections::HashMap;
+use ndarray::ArrayView1;
 /// Configuration for continual learning
 #[derive(Debug, Clone)]
 pub struct ContinualConfig {
@@ -104,10 +105,10 @@ pub struct ContinualLearner {
     current_task: usize,
 impl ContinualLearner {
     /// Create a new continual learner
-    pub fn new(config: ContinualConfig, base_model: Sequential<f32>) -> Result<Self> {
-        let memory_bank = MemoryBank::new(config.memory_size);
+    pub fn new(_config: ContinualConfig, base_model: Sequential<f32>) -> Result<Self> {
+        let memory_bank = MemoryBank::new(_config.memory_size);
         Ok(Self {
-            config,
+            _config,
             base_model,
             task_models: Vec::new(),
             memory_bank,
@@ -257,11 +258,11 @@ struct TaskMemory {
     labels: Array1<usize>,
 struct MemorySamples {
 impl MemoryBank {
-    fn new(capacity: usize) -> Self {
-            capacity,
+    fn new(_capacity: usize) -> Self {
+            _capacity,
             task_memories: HashMap::new(),
     fn add_task_data(
-        let samples_per_task = self.capacity / (self.task_memories.len() + 1);
+        let samples_per_task = self._capacity / (self.task_memories.len() + 1);
         // Random sampling for memory
         let num_samples = data.shape()[0].min(samples_per_task);
         let indices: Vec<usize> = (0..data.shape()[0]).collect();
@@ -318,24 +319,24 @@ pub struct MultiTaskLearner {
     task_uncertainties: Option<HashMap<String, f32>>,
 impl MultiTaskLearner {
     /// Create a new multi-task learner
-    pub fn new(config: MultiTaskConfig, input_dim: usize) -> Result<Self> {
-        let shared_backbone = SharedBackbone::new(input_dim, &config.shared_layers)?;
+    pub fn new(_config: MultiTaskConfig, input_dim: usize) -> Result<Self> {
+        let shared_backbone = SharedBackbone::new(input_dim, &_config.shared_layers)?;
         let mut task_heads = HashMap::new();
-        for task_name in &config.task_names {
-            let task_layers = config
+        for task_name in &_config.task_names {
+            let task_layers = _config
                 .task_specific_layers
                 .get(task_name)
                 .cloned()
                 .unwrap_or_else(|| vec![128, 64]);
             let head = TaskSpecificHead::new(
-                config.shared_layers.last().copied().unwrap_or(256),
+                _config.shared_layers.last().copied().unwrap_or(256),
                 &task_layers,
                 10, // Placeholder output dim
             )?;
             task_heads.insert(task_name.clone(), head);
-        let task_uncertainties = if config.uncertainty_weighting {
+        let task_uncertainties = if _config.uncertainty_weighting {
             Some(
-                config
+                _config
                     .task_names
                     .iter()
                     .map(|name| (name.clone(), 0.0))
@@ -679,10 +680,10 @@ pub enum EdgeType {
     Hierarchy,
     Temporal,
 impl AdvancedMemoryManager {
-    pub fn new(capacity: usize, consolidation_strategy: ConsolidationStrategy) -> Self {
+    pub fn new(_capacity: usize, consolidation_strategy: ConsolidationStrategy) -> Self {
             core_memory: CoreMemoryBuffer {
                 samples: Vec::new(),
-                capacity,
+                _capacity,
                 current_size: 0,
             episodic_memory: EpisodicMemoryBuffer {
                 episodes: Vec::new(),
@@ -711,8 +712,7 @@ impl AdvancedMemoryManager {
         match self.consolidation_strategy {
             ConsolidationStrategy::GradientBased => {
                 // Use gradient magnitude as importance
-                Ok(data.iter().map(|&x| x.abs()).sum::<f32>() / data.len() as f32)
-            ConsolidationStrategy::UncertaintyBased => {
+                Ok(data.iter().map(|&x| x.abs()).sum::<f32>() / data.len() as f32), ConsolidationStrategy::UncertaintyBased => {
                 // Use prediction uncertainty
                 Ok(0.5 + 0.3 * rand::random::<f32>()) // Placeholder
             ConsolidationStrategy::DiversityBased => {
@@ -769,7 +769,7 @@ impl AdvancedMemoryManager {
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| a.importance_score.partial_cmp(&b.importance_score).unwrap())
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
     /// Update prototypes in semantic memory
     fn update_prototypes(&mut self, sample: &MemorySample) -> Result<()> {
         // Find nearest prototype

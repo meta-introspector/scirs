@@ -6,7 +6,7 @@
 #![allow(dead_code)]
 
 use super::core::*;
-use crate::benchmarking::cross_platform_tester::{PerformanceBaseline, PlatformTarget};
+use crate::benchmarking::cross_platform__tester::{PerformanceBaseline, PlatformTarget};
 use crate::error::{OptimError, Result};
 use ndarray::Array1;
 use num_traits::Float;
@@ -31,7 +31,7 @@ pub struct BaseOptimizerPlugin<A: Float + std::fmt::Debug> {
     event_handlers: Vec<Box<dyn PluginEventHandler>>,
 }
 
-impl<A: Float + std::fmt::Debug> std::fmt::Debug for BaseOptimizerPlugin<A> {
+impl<A: Float + std::fmt::Debug> + std::fmt::Debug for BaseOptimizerPlugin<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("BaseOptimizerPlugin")
             .field("info", &self.info)
@@ -372,13 +372,13 @@ pub struct BenchmarkConfig {
 /// Plugin development helper macros and utilities
 impl PluginSDK {
     /// Create a plugin template with common functionality
-    pub fn create_plugin_template(name: &str) -> PluginTemplate {
-        PluginTemplate::new(name)
+    pub fn create_plugin_template(_name: &str) -> PluginTemplate {
+        PluginTemplate::new(_name)
     }
 
     /// Validate plugin configuration schema
-    pub fn validate_config_schema(schema: &ConfigSchema) -> Result<()> {
-        for (field_name, field_schema) in &schema.fields {
+    pub fn validate_config_schema(_schema: &ConfigSchema) -> Result<()> {
+        for (field_name, field_schema) in &_schema.fields {
             if field_name.is_empty() {
                 return Err(OptimError::InvalidConfig(
                     "Field name cannot be empty".to_string(),
@@ -396,7 +396,7 @@ impl PluginSDK {
     }
 
     /// Generate plugin manifest template
-    pub fn generate_plugin_manifest(info: &PluginInfo) -> String {
+    pub fn generate_plugin_manifest(_info: &PluginInfo) -> String {
         format!(
             r#"[plugin]
 name = "{}"
@@ -414,7 +414,7 @@ profile = "release"
 [runtime]
 min_rust_version = "1.70.0"
 "#,
-            info.name, info.version, info.description, info.author, info.license
+            _info.name, _info.version, _info.description, _info.author, _info.license
         )
     }
 
@@ -506,10 +506,10 @@ pub enum TemplateFileType {
 
 impl PluginTemplate {
     /// Create a new plugin template
-    pub fn new(name: &str) -> Self {
-        let structure = Self::create_default_structure(name);
+    pub fn new(_name: &str) -> Self {
+        let structure = Self::create_default_structure(_name);
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             structure,
         }
     }
@@ -542,13 +542,13 @@ impl PluginTemplate {
         Ok(())
     }
 
-    fn create_default_structure(name: &str) -> TemplateStructure {
+    fn create_default_structure(_name: &str) -> TemplateStructure {
         let lib_rs_content = format!(
             r#"//! {} optimizer plugin
 //!
 //! This is an auto-generated plugin template.
 
-use scirs2_optim::plugin::*;
+use scirs2__optim::plugin::*;
 use ndarray::Array1;
 use num_traits::Float;
 
@@ -559,9 +559,9 @@ pub struct {}Optimizer<A: Float> {{
 }}
 
 impl<A: Float> {}Optimizer<A> {{
-    pub fn new(learning_rate: A) -> Self {{
+    pub fn new(_learning_rate: A) -> Self {{
         Self {{
-            learning_rate,
+            _learning_rate,
         }}
     }}
 }}
@@ -572,7 +572,7 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<A> for 
         Ok(params - &(gradients * self.learning_rate))
     }}
     
-    fn name(&self) -> &str {{
+    fn _name(&self) -> &str {{
         "{}"
     }}
     
@@ -600,7 +600,7 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<A> for 
         OptimizerConfig::default()
     }}
     
-    fn set_config(&mut self, _config: OptimizerConfig) -> Result<()> {{
+    fn set_config(&mut self_config: OptimizerConfig) -> Result<()> {{
         Ok(())
     }}
     
@@ -608,7 +608,7 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<A> for 
         Ok(OptimizerState::default())
     }}
     
-    fn set_state(&mut self, _state: OptimizerState) -> Result<()> {{
+    fn set_state(&mut self_state: OptimizerState) -> Result<()> {{
         Ok(())
     }}
     
@@ -669,12 +669,12 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPluginFactory<
     }}
 }}
 "#,
-            name, name, name, name, name, name, name, name, name, name
+            _name, _name, _name, _name, _name, _name, _name, _name, _name, _name
         );
 
         let plugin_toml_content = format!(
             r#"[plugin]
-name = "{}"
+_name = "{}"
 version = "0.1.0"
 description = "Custom optimizer plugin"
 author = "Plugin Developer"
@@ -689,7 +689,7 @@ profile = "release"
 [runtime]
 min_rust_version = "1.70.0"
 "#,
-            name
+            _name
         );
 
         let test_content = format!(
@@ -729,11 +729,11 @@ fn test_{}_convergence() {{
     assert!(params.iter().all(|&x| x.abs() < 0.1));
 }}
 "#,
-            name,
-            name.to_lowercase(),
-            name,
-            name.to_lowercase(),
-            name
+            _name,
+            _name.to_lowercase(),
+            _name,
+            _name.to_lowercase(),
+            _name
         );
 
         TemplateStructure {
@@ -761,9 +761,9 @@ fn test_{}_convergence() {{
 
 impl<A: Float + Debug + Send + Sync + 'static> BaseOptimizerPlugin<A> {
     /// Create a new base optimizer plugin
-    pub fn new(info: PluginInfo, capabilities: PluginCapabilities) -> Self {
+    pub fn new(_info: PluginInfo, capabilities: PluginCapabilities) -> Self {
         Self {
-            info,
+            _info,
             capabilities,
             config: OptimizerConfig::default(),
             state: BaseOptimizerState::new(),
@@ -835,16 +835,14 @@ macro_rules! create_optimizer_plugin {
         #[derive(Debug)]
         pub struct $name<A: Float> {
             config: OptimizerConfig,
-            state: OptimizerState,
-            _phantom: std::marker::PhantomData<A>,
+            state: OptimizerState_phantom: std::marker::PhantomData<A>,
         }
 
         impl<A: Float> $name<A> {
             pub fn new() -> Self {
                 Self {
                     config: OptimizerConfig::default(),
-                    state: OptimizerState::default(),
-                    _phantom: std::marker::PhantomData,
+                    state: OptimizerState::default(), _phantom: std::marker::PhantomData,
                 }
             }
         }

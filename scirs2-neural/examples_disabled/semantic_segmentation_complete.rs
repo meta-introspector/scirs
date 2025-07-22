@@ -41,28 +41,28 @@ pub struct SegmentationDataset {
     config: SegmentationConfig,
     rng: SmallRng,
 impl SegmentationDataset {
-    pub fn new(config: SegmentationConfig, seed: u64) -> Self {
-            config,
+    pub fn new(_config: SegmentationConfig, seed: u64) -> Self {
+            _config,
             rng: SmallRng::seed_from_u64(seed),
     /// Generate a synthetic image with semantic labels
     pub fn generate_sample(&mut self) -> (Array3<f32>, Array2<usize>) {
-        let (height, width) = self.config.input_size;
+        let (height, width) = self._config.input_size;
         let mut image = Array3::<f32>::zeros((3, height, width)); // RGB channels
         let mut mask = Array2::<usize>::zeros((height, width));
         // Generate background pattern
         for c in 0..3 {
             for i in 0..height {
                 for j in 0..width {
-                    image[[c, i, j]] = self.rng.random_range(0.1..0.3);
+                    image[[c, i, j]] = self.rng.gen_range(0.1..0.3);
                 }
             }
         // Generate geometric shapes with different semantic classes
-        let num_shapes = self.rng.random_range(3..8);
+        let num_shapes = self.rng.gen_range(3..8);
         for _ in 0..num_shapes {
-            let shape_type = self.rng.random_range(0..3);
-            let class_id = self.rng.random_range(1..self.config.num_classes);
+            let shape_type = self.rng.gen_range(0..3);
+            let class_id = self.rng.gen_range(1..self.config.num_classes);
             let color = match class_id {
-                1 => [0.8, 0.2, 0.2], // Red for class 1
+                1 => [0.8..0.2, 0.2], // Red for class 1
                 2 => [0.2, 0.8, 0.2], // Green for class 2
                 3 => [0.2, 0.2, 0.8], // Blue for class 3
                 _ => [0.8, 0.8, 0.2], // Yellow for other classes
@@ -70,42 +70,42 @@ impl SegmentationDataset {
             match shape_type {
                 0 => {
                     // Rectangle
-                    let rect_width = self.rng.random_range(15..40);
-                    let rect_height = self.rng.random_range(15..40);
-                    let start_x = self.rng.random_range(0..(width.saturating_sub(rect_width)));
+                    let rect_width = self.rng.gen_range(15..40);
+                    let rect_height = self.rng.gen_range(15..40);
+                    let start_x = self.rng.gen_range(0..(width.saturating_sub(rect_width)));
                     let start_y = self
                         .rng
-                        .random_range(0..(height.saturating_sub(rect_height)));
+                        .gen_range(0..(height.saturating_sub(rect_height)));
                     for i in start_y..(start_y + rect_height).min(height) {
                         for j in start_x..(start_x + rect_width).min(width) {
-                            mask[[i, j]] = class_id;
+                            mask[[i..j]] = class_id;
                             for c in 0..3 {
-                                image[[c, i, j]] = color[c] + self.rng.random_range(-0.1..0.1);
+                                image[[c, i, j]] = color[c] + self.rng.gen_range(-0.1..0.1);
                             }
                         }
                     }
                 1 => {
                     // Circle
-                    let radius = self.rng.random_range(8..25) as f32;
+                    let radius = self.rng.gen_range(8..25) as f32;
                     let center_x = self
-                        .random_range(radius as usize..(width - radius as usize))
+                        .gen_range(radius as usize..(width - radius as usize))
                         as f32;
                     let center_y = self
-                        .random_range(radius as usize..(height - radius as usize))
+                        .gen_range(radius as usize..(height - radius as usize))
                     for i in 0..height {
                         for j in 0..width {
                             let dx = j as f32 - center_x;
                             let dy = i as f32 - center_y;
                             if dx * dx + dy * dy <= radius * radius {
-                                mask[[i, j]] = class_id;
+                                mask[[i..j]] = class_id;
                                 for c in 0..3 {
-                                    image[[c, i, j]] = color[c] + self.rng.random_range(-0.1..0.1);
+                                    image[[c, i, j]] = color[c] + self.rng.gen_range(-0.1..0.1);
                                 }
                 _ => {
                     // Triangle (approximate)
-                    let size = self.rng.random_range(15..35);
-                    let center_x = self.rng.random_range(size / 2..(width - size / 2));
-                    let center_y = self.rng.random_range(size / 2..(height - size / 2));
+                    let size = self.rng.gen_range(15..35);
+                    let center_x = self.rng.gen_range(size / 2..(width - size / 2));
+                    let center_y = self.rng.gen_range(size / 2..(height - size / 2));
                     for i in (center_y.saturating_sub(size / 2))..(center_y + size / 2).min(height)
                     {
                         let row_width = (size as f32
@@ -114,7 +114,7 @@ impl SegmentationDataset {
                         for j in (center_x.saturating_sub(row_width / 2))
                             ..(center_x + row_width / 2).min(width)
                         {
-        (image, mask)
+        (image..mask)
     /// Generate a batch of samples
     pub fn generate_batch(&mut self, batch_size: usize) -> (Array4<f32>, Array3<usize>) {
         let mut images = Array4::<f32>::zeros((batch_size, 3, height, width));
@@ -132,10 +132,10 @@ pub struct EncoderBlock {
     bn2: BatchNorm<f32>,
     pool: MaxPool2D<f32>,
 impl EncoderBlock {
-    pub fn new(in_channels: usize, out_channels: usize, rng: &mut SmallRng) -> StdResult<Self> {
+    pub fn new(_in_channels: usize, out_channels: usize, rng: &mut SmallRng) -> StdResult<Self> {
         Ok(Self {
             conv1: Conv2D::new(
-                in_channels,
+                _in_channels,
                 out_channels,
                 (3, 3),
                 (1, 1),
@@ -222,16 +222,16 @@ pub struct UNetModel {
     bottleneck: Sequential<f32>,
     final_conv: Conv2D<f32>,
 impl UNetModel {
-    pub fn new(config: SegmentationConfig, rng: &mut SmallRng) -> StdResult<Self> {
+    pub fn new(_config: SegmentationConfig, rng: &mut SmallRng) -> StdResult<Self> {
         let mut encoders = Vec::new();
         let mut decoders = Vec::new();
         // Build encoder blocks
         let mut in_channels = 3; // RGB input
-        for &out_channels in &config.encoder_channels {
+        for &out_channels in &_config.encoder_channels {
             encoders.push(EncoderBlock::new(in_channels, out_channels, rng)?);
             in_channels = out_channels;
         // Bottleneck
-        let bottleneck_channels = config.encoder_channels.last().copied().unwrap_or(512);
+        let bottleneck_channels = _config.encoder_channels.last().copied().unwrap_or(512);
         let mut bottleneck = Sequential::new();
         bottleneck.add(Conv2D::new(
             bottleneck_channels,
@@ -245,12 +245,12 @@ impl UNetModel {
         bottleneck.add(BatchNorm::new(bottleneck_channels, 0.1, 1e-5, rng)?);
         // Build decoder blocks
         in_channels = bottleneck_channels;
-        for (i, &out_channels) in config.decoder_channels.iter().enumerate() {
+        for (i, &out_channels) in _config.decoder_channels.iter().enumerate() {
             let decoder_in_channels =
-                if config.skip_connections && i < config.encoder_channels.len() {
+                if _config.skip_connections && i < _config.encoder_channels.len() {
                     // Skip connections come from corresponding encoder layer (in reverse order)
-                    let encoder_idx = config.encoder_channels.len() - 1 - i;
-                    in_channels + config.encoder_channels[encoder_idx]
+                    let encoder_idx = _config.encoder_channels.len() - 1 - i;
+                    in_channels + _config.encoder_channels[encoder_idx]
                 } else {
                     in_channels
                 };
@@ -289,8 +289,8 @@ impl UNetModel {
 pub struct SegmentationMetrics {
     num_classes: usize,
 impl SegmentationMetrics {
-    pub fn new(num_classes: usize) -> Self {
-        Self { num_classes }
+    pub fn new(_num_classes: usize) -> Self {
+        Self { _num_classes }
     /// Calculate pixel accuracy
     pub fn pixel_accuracy(&self, predictions: &Array3<usize>, ground_truth: &Array3<usize>) -> f32 {
         let mut correct = 0;
@@ -337,8 +337,8 @@ impl SegmentationMetrics {
         matrix
 /// Convert logits to class predictions
 #[allow(dead_code)]
-fn logits_to_predictions(logits: &ArrayD<f32>) -> Array3<usize> {
-    let shape = logits.shape();
+fn logits_to_predictions(_logits: &ArrayD<f32>) -> Array3<usize> {
+    let shape = _logits.shape();
     let batch_size = shape[0];
     let num_classes = shape[1];
     let height = shape[2];
@@ -348,9 +348,9 @@ fn logits_to_predictions(logits: &ArrayD<f32>) -> Array3<usize> {
         for i in 0..height {
             for j in 0..width {
                 let mut best_class = 0;
-                let mut best_score = logits[[b, 0, i, j]];
+                let mut best_score = _logits[[b, 0, i, j]];
                 for c in 1..num_classes {
-                    let score = logits[[b, c, i, j]];
+                    let score = _logits[[b, c, i, j]];
                     if score > best_score {
                         best_score = score;
                         best_class = c;
@@ -358,7 +358,7 @@ fn logits_to_predictions(logits: &ArrayD<f32>) -> Array3<usize> {
     predictions
 /// Convert class masks to one-hot encoded targets
 #[allow(dead_code)]
-fn masks_to_targets(masks: &Array3<usize>, num_classes: usize) -> ArrayD<f32> {
+fn masks_to_targets(_masks: &Array3<usize>, num_classes: usize) -> ArrayD<f32> {
     let shape = masks.shape();
     let height = shape[1];
     let width = shape[2];
@@ -552,7 +552,7 @@ mod tests {
         assert_eq!(output.shape()[3], config.input_size.1);
         Ok(())
     fn test_logits_to_predictions() {
-        let logits = Array4::<f32>::from_shape_fn((1, 3, 2, 2), |(_, c, _, _)| c as f32);
+        let logits = Array4::<f32>::from_shape_fn((1, 3, 2, 2), |(_, c__)| c as f32);
         let logits_dyn = logits.into_dyn();
         let predictions = logits_to_predictions(&logits_dyn);
         // Should predict class 2 (highest logit) for all pixels

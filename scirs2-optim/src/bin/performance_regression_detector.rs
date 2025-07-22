@@ -4,12 +4,12 @@
 //! in benchmark results using statistical analysis and configurable thresholds.
 
 use clap::{Arg, Command};
-use scirs2_optim::benchmarking::performance_regression_detector::{
+use scirs2__optim::benchmarking::performance_regression_detector::{
     AlertThresholds, BaselineStrategy, CiCdConfig, EnvironmentInfo, MetricType, MetricValue,
     PerformanceMeasurement, PerformanceRegressionDetector, RegressionConfig, RegressionSensitivity,
     StatisticalTest, TestConfiguration,
 };
-use scirs2_optim::error::{OptimError, Result};
+use scirs2__optim::error::{OptimError, Result};
 use serde_json;
 use std::fs;
 use std::path::PathBuf;
@@ -139,8 +139,7 @@ fn main() {
     let sensitivity = match sensitivity_str.as_str() {
         "low" => RegressionSensitivity::Low,
         "medium" => RegressionSensitivity::Medium,
-        "high" => RegressionSensitivity::High,
-        _ => {
+        "high" => RegressionSensitivity::High_ => {
             eprintln!("Error: Invalid sensitivity level");
             process::exit(1);
         }
@@ -150,8 +149,7 @@ fn main() {
         "mann-whitney" => StatisticalTest::MannWhitneyU,
         "t-test" => StatisticalTest::StudentTTest,
         "wilcoxon" => StatisticalTest::WilcoxonSignedRank,
-        "kolmogorov-smirnov" => StatisticalTest::KolmogorovSmirnov,
-        _ => {
+        "kolmogorov-smirnov" => StatisticalTest::KolmogorovSmirnov_ => {
             eprintln!("Error: Invalid statistical test");
             process::exit(1);
         }
@@ -178,8 +176,7 @@ fn main() {
             enabled: true,
             fail_on_regression,
             generate_reports: true,
-            report_format:
-                scirs2_optim::benchmarking::performance_regression_detector::ReportFormat::Json,
+            report_format: scirs2, _optim: benchmarking::performance_regression_detector::ReportFormat::Json,
             report_path: PathBuf::from(output_report),
             webhook_urls: vec![],
             slack_config: None,
@@ -242,10 +239,10 @@ fn run_regression_detection(
     verbose: bool,
 ) -> Result<bool> {
     if verbose {
-        println!("📊 Loading benchmark results...");
+        println!("📊 Loading benchmark _results...");
     }
 
-    // Load benchmark results
+    // Load benchmark _results
     let benchmark_data = load_benchmark_results(benchmark_results)?;
 
     if verbose {
@@ -287,24 +284,24 @@ fn run_regression_detection(
     let regression_results = detector.detect_regressions()?;
 
     if verbose {
-        println!("📝 Generating regression report...");
+        println!("📝 Generating regression _report...");
     }
 
-    // Generate CI/CD report
-    let report = detector.export_for_ci_cd()?;
+    // Generate CI/CD _report
+    let _report = detector.export_for_ci_cd()?;
 
-    // Save report
+    // Save _report
     let output_path = PathBuf::from(output_report);
     let output_dir = output_path.parent().unwrap();
     fs::create_dir_all(output_dir).map_err(|e| {
         OptimError::ResourceError(format!("Failed to create output directory: {e}"))
     })?;
 
-    let report_json = serde_json::to_string_pretty(&report)
-        .map_err(|e| OptimError::OptimizationError(format!("Failed to serialize report: {e}")))?;
+    let report_json = serde_json::to_string_pretty(&_report)
+        .map_err(|e| OptimError::OptimizationError(format!("Failed to serialize _report: {e}")))?;
 
     fs::write(output_report, report_json)
-        .map_err(|e| OptimError::ResourceError(format!("Failed to write report: {e}")))?;
+        .map_err(|e| OptimError::ResourceError(format!("Failed to write _report: {e}")))?;
 
     // Check if regressions were detected
     let has_regressions = !regression_results.is_empty();
@@ -342,11 +339,11 @@ fn run_regression_detection(
 }
 
 #[allow(dead_code)]
-fn load_benchmark_results(path: &str) -> Result<serde_json::Value> {
-    let content = fs::read_to_string(path)
+fn load_benchmark_results(_path: &str) -> Result<serde_json::Value> {
+    let content = fs::read_to_string(_path)
         .map_err(|e| OptimError::ResourceError(format!("Failed to read benchmark results: {e}")))?;
 
-    let data: serde_json::Value = serde_json::from_str(&content).map_err(|e| {
+    let data: serde_json: Value = serde, _json::from_str(&content).map_err(|e| {
         OptimError::OptimizationError(format!("Failed to parse benchmark results: {e}"))
     })?;
 
@@ -355,8 +352,7 @@ fn load_benchmark_results(path: &str) -> Result<serde_json::Value> {
 
 #[allow(dead_code)]
 fn convert_benchmark_data_to_measurements(
-    data: &serde_json::Value,
-    _features: &str,
+    data: &serde_json::Value, _features: &str,
 ) -> Result<Vec<PerformanceMeasurement>> {
     use std::collections::HashMap;
     use std::time::SystemTime;

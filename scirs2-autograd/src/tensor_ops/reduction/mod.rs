@@ -11,7 +11,7 @@ use crate::tensor::{AsTensor, Tensor};
 use crate::Float;
 
 // Import internal operation modules
-use crate::tensor_ops::{array_ops, math_ops, reduction_ops, shape};
+use crate::tensor__ops::{array_ops, math_ops, reduction_ops, shape};
 
 /// Takes sum along specified axes.
 ///
@@ -25,7 +25,7 @@ use crate::tensor_ops::{array_ops, math_ops, reduction_ops, shape};
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::reduce_sum;
+/// use ag::tensor__ops::reduction::reduce_sum;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -65,7 +65,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::reduce_mean;
+/// use ag::tensor__ops::reduction::reduce_mean;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -102,7 +102,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::reduce_prod;
+/// use ag::tensor__ops::reduction::reduce_prod;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -139,7 +139,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::reduce_min;
+/// use ag::tensor__ops::reduction::reduce_min;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 4.], [2., 3.]], g);
@@ -176,7 +176,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::reduce_max;
+/// use ag::tensor__ops::reduction::reduce_max;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 4.], [2., 3.]], g);
@@ -213,7 +213,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::reduce_variance;
+/// use ag::tensor__ops::reduction::reduce_variance;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -266,7 +266,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::sum_all;
+/// use ag::tensor__ops::reduction::sum_all;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -293,7 +293,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::mean_all;
+/// use ag::tensor__ops::reduction::mean_all;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 2.], [3., 4.]], g);
@@ -325,7 +325,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::argmax;
+/// use ag::tensor__ops::reduction::argmax;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 4.], [2., 3.]], g);
@@ -360,7 +360,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::argmin;
+/// use ag::tensor__ops::reduction::argmin;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[1., 4.], [2., 3.]], g);
@@ -392,7 +392,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::reduce_logsumexp;
+/// use ag::tensor__ops::reduction::reduce_logsumexp;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![1., 2., 3.], g);
@@ -425,7 +425,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::add_n;
+/// use ag::tensor__ops::reduction::add_n;
 ///
 /// ag::run(|g| {
 ///    let a = ag::tensor_ops::ones((&[2, 2]), g);
@@ -438,21 +438,21 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn add_n<'graph, A, F: Float>(xs: &[A]) -> Tensor<'graph, F>
+pub fn add_n<'graph, A, F: Float>(_xs: &[A]) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
-    let len = xs.len();
+    let len = _xs.len();
     assert_ne!(len, 0);
     if len == 1 {
-        *xs[0].as_ref()
+        *_xs[0].as_ref()
     } else {
-        let g = xs[0].as_ref().graph();
+        let g = _xs[0].as_ref().graph();
         let mut b = Tensor::builder(g);
-        for x in xs {
+        for x in _xs {
             b = b.append_input(x.as_ref(), false);
         }
-        b.set_shape(&shape(xs[0])).build(array_ops::AddN)
+        b.set_shape(&shape(_xs[0])).build(array_ops::AddN)
     }
 }
 
@@ -516,7 +516,7 @@ where
 /// ```
 /// use ndarray::array;
 /// use scirs2_autograd as ag;
-/// use ag::tensor_ops::reduction::frobenius_norm;
+/// use ag::tensor__ops::reduction::frobenius_norm;
 ///
 /// ag::run(|g| {
 ///    let x = ag::tensor_ops::convert_to_tensor(array![[3., 4.], [0., 0.]], g);
@@ -578,7 +578,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tensor_ops::convert_to_tensor;
+    use crate::tensor__ops::convert_to_tensor;
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
     use ndarray::array;

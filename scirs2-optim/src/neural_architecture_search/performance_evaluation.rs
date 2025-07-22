@@ -1349,14 +1349,14 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
     PerformanceEvaluator<T>
 {
     /// Create new performance evaluator
-    pub fn new(config: EvaluationConfig<T>) -> Result<Self> {
+    pub fn new(_config: EvaluationConfig<T>) -> Result<Self> {
         Ok(Self {
             benchmark_suite: BenchmarkSuite::new()?,
             predictor: None,
             evaluation_cache: EvaluationCache::new(),
             statistical_analyzer: StatisticalAnalyzer::new(),
             resource_monitor: ResourceMonitor::new(),
-            config,
+            _config,
         })
     }
 
@@ -1523,7 +1523,7 @@ impl<T: Float + Default> BenchmarkSuite<T> {
         })
     }
 
-    fn initialize(&mut self, _config: &EvaluationConfig<T>) -> Result<()> {
+    fn initialize(&mut self_config: &EvaluationConfig<T>) -> Result<()> {
         // Initialize standard benchmarks
         self.add_standard_benchmarks()?;
         Ok(())
@@ -1578,8 +1578,7 @@ impl<T: Float + Default> BenchmarkSuite<T> {
     }
 
     fn run_benchmarks(
-        &mut self,
-        _architecture: &OptimizerArchitecture<T>,
+        &mut self_architecture: &OptimizerArchitecture<T>,
     ) -> Result<Vec<TestResult<T>>> {
         let mut results = Vec::new();
 
@@ -1599,11 +1598,11 @@ impl<T: Float + Default> BenchmarkSuite<T> {
         let score = match benchmark.test_function.function_type {
             TestFunctionType::Rosenbrock => {
                 // Simulate Rosenbrock function optimization
-                T::from(0.01 + rng.random::<f64>() * 0.1).unwrap()
+                T::from(0.01 + rng.random_f64() * 0.1).unwrap()
             }
             TestFunctionType::Quadratic => {
                 // Simulate quadratic function optimization
-                T::from(0.001 + rng.random::<f64>() * 0.01).unwrap()
+                T::from(0.001 + rng.random_f64() * 0.01).unwrap()
             }
             _ => {
                 // Default score
@@ -1644,8 +1643,7 @@ impl<T: Float + Default> PerformancePredictor<T> {
     }
 
     pub fn predict_performance(
-        &self,
-        _architecture: &OptimizerArchitecture<T>,
+        &self_architecture: &OptimizerArchitecture<T>,
     ) -> Result<EvaluationResults<T>> {
         // Simple placeholder implementation
         Ok(EvaluationResults {
@@ -1658,7 +1656,7 @@ impl<T: Float + Default> PerformancePredictor<T> {
         })
     }
 
-    pub fn update_with_results(&mut self, _results: &Vec<EvaluationResults<T>>) -> Result<()> {
+    pub fn update_with_results(&mut self_results: &Vec<EvaluationResults<T>>) -> Result<()> {
         // Simple placeholder implementation
         Ok(())
     }

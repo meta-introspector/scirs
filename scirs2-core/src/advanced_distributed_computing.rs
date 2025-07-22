@@ -251,19 +251,19 @@ impl Default for ResourceProfile {
 }
 
 impl ResourceProfile {
-    pub fn from_requirements(analysis: &ResourceAnalysis) -> Self {
-        // Determine resource profile based on analysis
-        if analysis.gpu_required {
+    pub fn from_analysis(_analysis: &ResourceAnalysis) -> Self {
+        // Determine resource profile based on _analysis
+        if _analysis.gpu_required {
             Self::GpuAccelerated
-        } else if analysis.network_intensive {
+        } else if _analysis.network_intensive {
             Self::NetworkIntensive
-        } else if analysis.storage_intensive {
+        } else if _analysis.storage_intensive {
             Self::StorageIntensive
-        } else if analysis.memory_gb > 16 && analysis.cpu_cores > 8 {
+        } else if _analysis.memory_gb > 16 && _analysis.cpu_cores > 8 {
             Self::HighMemoryHighCpu
-        } else if analysis.memory_gb > 16 {
+        } else if _analysis.memory_gb > 16 {
             Self::HighMemoryLowCpu
-        } else if analysis.cpu_cores > 8 {
+        } else if _analysis.cpu_cores > 8 {
             Self::LowMemoryHighCpu
         } else {
             Self::LowMemoryLowCpu
@@ -462,15 +462,15 @@ impl Default for NodePerformanceMetrics {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct NodeResourceUsage {
-    /// CPU utilization (0.0 - 1.0)
+    /// CPU utilization (0.0.saturating_sub(1).0)
     pub cpu_utilization: f64,
-    /// Memory utilization (0.0 - 1.0)
+    /// Memory utilization (0.0.saturating_sub(1).0)
     pub memory_utilization: f64,
-    /// GPU utilization (0.0 - 1.0)
+    /// GPU utilization (0.0.saturating_sub(1).0)
     pub gpu_utilization: Option<f64>,
-    /// Storage utilization (0.0 - 1.0)
+    /// Storage utilization (0.0.saturating_sub(1).0)
     pub storage_utilization: f64,
-    /// Network utilization (0.0 - 1.0)
+    /// Network utilization (0.0.saturating_sub(1).0)
     pub network_utilization: f64,
     /// Power consumption (watts)
     pub power_consumption: Option<f64>,
@@ -635,7 +635,7 @@ pub struct NodeHealthMonitor {
     alert_thresholds: HealthThresholds,
     /// Monitoring configuration
     #[allow(dead_code)]
-    monitoring_config: HealthMonitoringConfig,
+    monitoringconfig: HealthMonitoringConfig,
 }
 
 /// Health check types
@@ -656,7 +656,7 @@ pub struct HealthRecord {
     /// Timestamp
     #[cfg_attr(feature = "serde", serde(skip, default = "default_instant"))]
     pub timestamp: Instant,
-    /// Health score (0.0 - 1.0)
+    /// Health score (0.0.saturating_sub(1).0)
     pub health_score: f64,
     /// Specific metrics
     pub metrics: HashMap<String, f64>,
@@ -1027,7 +1027,7 @@ pub struct RunningTask {
     pub assigned_node: NodeId,
     /// Start time
     pub start_time: Instant,
-    /// Progress (0.0 - 1.0)
+    /// Progress (0.0.saturating_sub(1).0)
     pub progress: f64,
     /// Current status
     pub status: TaskStatus,
@@ -2242,7 +2242,7 @@ impl AdvancedDistributedComputer {
         self.update_submission_stats(start_time.elapsed())?;
 
         // Set up fault tolerance monitoring for the task
-        self.setup_task_monitoring(&task_id)?;
+        self.register_task_for_monitoring(&task_id)?;
 
         println!("📋 Task {} submitted to distributed cluster", task_id.0);
         Ok(task_id)
@@ -2267,9 +2267,9 @@ impl AdvancedDistributedComputer {
 
         // Submit each group to optimal nodes
         for (resource_profile, task_group) in task_groups {
-            let _suitable_nodes = self.find_nodes_for_profile(&resource_profile)?;
+            let suitable_nodes = self.find_nodes_for_profile(&resource_profile)?;
 
-            for (task, _analysis) in task_group {
+            for (task, _task_analysis) in task_group {
                 let task_id = self.submit_task(task)?;
                 task_ids.push(task_id);
             }
@@ -2285,10 +2285,7 @@ impl AdvancedDistributedComputer {
     }
 
     /// Submit a task with fault tolerance and automatic retry
-    pub fn submit_fault_tolerant_task(
-        &self,
-        task: DistributedTask,
-        fault_tolerance_config: FaultToleranceConfig,
+    pub fn submit_with_fault_tolerance(&self, task: DistributedTask, fault_tolerance_config: FaultToleranceConfig,
     ) -> CoreResult<TaskId> {
         // Create fault-tolerant wrapper around the task
         let fault_tolerant_task = self.wrap_with_fault_tolerance(task, fault_tolerance_config)?;
@@ -2297,7 +2294,7 @@ impl AdvancedDistributedComputer {
         let task_id = self.submit_task(fault_tolerant_task)?;
 
         // Set up advanced monitoring and recovery
-        self.setup_advanced_fault_monitoring(&task_id)?;
+        self.register_task_for_monitoring(&task_id)?;
 
         Ok(task_id)
     }
@@ -2315,7 +2312,7 @@ impl AdvancedDistributedComputer {
 
     /// Cancel a task
     pub fn cancel_task(&self, task_id: &TaskId) -> CoreResult<()> {
-        let mut scheduler = self.task_scheduler.lock().map_err(|e| {
+        let scheduler = self.task_scheduler.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire scheduler lock: {e}"
             )))
@@ -2337,7 +2334,7 @@ impl AdvancedDistributedComputer {
 
     /// Scale cluster up or down
     pub fn scale_cluster(&self, target_nodes: usize) -> CoreResult<()> {
-        let mut cluster_manager = self.cluster_manager.lock().map_err(|e| {
+        let cluster_manager = self.cluster_manager.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire cluster manager lock: {e}"
             )))
@@ -2440,7 +2437,7 @@ impl AdvancedDistributedComputer {
         };
 
         // Calculate parallelization potential
-        let _parallelization_factor = self.estimate_parallelization_potential(task)?;
+        let parallelization_factor = self.estimate_parallelization_potential(task)?;
 
         Ok(TaskRequirements {
             min_cpu_cores: (compute_complexity * 16.0) as u32,
@@ -2486,7 +2483,7 @@ impl AdvancedDistributedComputer {
         Ok(suitable_nodes
             .into_iter()
             .take(3)
-            .map(|(id, _)| id)
+            .map(|(id_, _)| id_)
             .collect())
     }
 
@@ -2684,27 +2681,24 @@ impl AdvancedDistributedComputer {
     }
 
     fn find_nodes_for_profile(&self, _profile: &ResourceProfile) -> CoreResult<Vec<NodeId>> {
-        // Simplified implementation - find nodes matching the resource profile
+        // Simplified implementation - find nodes matching the resource _profile
         Ok(vec![
             NodeId("node1".to_string()),
             NodeId("node2".to_string()),
         ])
     }
 
-    fn wrap_with_fault_tolerance(
-        &self,
-        task: DistributedTask,
-        _config: FaultToleranceConfig,
+    fn wrap_with_fault_tolerance(&self, task: DistributedTask, _config: FaultToleranceConfig,
     ) -> CoreResult<DistributedTask> {
         let fault_tolerant_task = task;
         // Note: Task struct doesn't support fault tolerance fields directly
         // Fault tolerance is handled at the execution layer
-        // The config is saved for execution-time use
+        // The _config is saved for execution-time use
 
         Ok(fault_tolerant_task)
     }
 
-    fn update_submission_stats(&self, duration: Duration) -> CoreResult<()> {
+    fn update_submission_stats(&self, _duration: Duration) -> CoreResult<()> {
         let mut stats = self.statistics.write().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire statistics lock: {e}"
@@ -2712,25 +2706,14 @@ impl AdvancedDistributedComputer {
         })?;
 
         stats.total_tasks_processed += 1;
-        stats.avg_task_completion_time = (stats.avg_task_completion_time + duration) / 2;
+        stats.avg_task_completion_time = (stats.avg_task_completion_time + std::time::Duration::from_secs(1)) / 2;
         // Note: last_update field not available in ClusterStatistics
 
         Ok(())
     }
 
-    fn setup_task_monitoring(&self, task_id: &TaskId) -> CoreResult<()> {
-        let mut fault_tolerance = self.fault_tolerance.lock().map_err(|e| {
-            CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
-                "Failed to acquire fault tolerance lock: {e}"
-            )))
-        })?;
-
-        fault_tolerance.register_task_for_advanced_monitoring(task_id)?;
-        Ok(())
-    }
-
-    fn setup_advanced_fault_monitoring(&self, task_id: &TaskId) -> CoreResult<()> {
-        let mut fault_tolerance = self.fault_tolerance.lock().map_err(|e| {
+    fn register_task_for_monitoring(&self, task_id: &TaskId) -> CoreResult<()> {
+        let fault_tolerance = self.fault_tolerance.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire fault tolerance lock: {e}"
             )))
@@ -2759,9 +2742,14 @@ impl ClusterManager {
         Ok(())
     }
 
-    pub fn scale_to(&mut self, _target_nodes: usize) -> CoreResult<()> {
+    pub fn scale_nodes(&self, target_nodes: usize) -> CoreResult<()> {
         println!("📈 Scaling cluster...");
         Ok(())
+    }
+    
+    /// Scale cluster to target number of nodes
+    pub fn scale_to(&self, target_nodes: usize) -> CoreResult<()> {
+        self.scale_nodes(target_nodes)
     }
 
     pub fn get_available_nodes(
@@ -2838,7 +2826,7 @@ impl NodeHealthMonitor {
                 latency_threshold_ms: 1000,
                 health_score_threshold: 0.7,
             },
-            monitoring_config: HealthMonitoringConfig {
+            monitoringconfig: HealthMonitoringConfig {
                 monitoring_interval: Duration::from_secs(30),
                 history_retention: Duration::from_secs(24 * 60 * 60),
                 enable_predictive_analysis: true,
@@ -2926,7 +2914,7 @@ impl AdaptiveTaskScheduler {
             .map(|running_task| running_task.status.clone())
     }
 
-    pub fn cancel_task(&mut self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn cancel_task(&self, _task_id: &TaskId) -> CoreResult<()> {
         println!("❌ Cancelling task...");
         Ok(())
     }
@@ -3156,56 +3144,56 @@ impl FaultToleranceManager {
     }
 
     /// Register a task for advanced monitoring
-    pub fn register_task_for_advanced_monitoring(&mut self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn register_task_for_advanced_monitoring(&self, _task_id: &TaskId) -> CoreResult<()> {
         // Advanced monitoring registration logic
         println!("📊 Registering task for advanced monitoring");
         Ok(())
     }
 
     /// Set up predictive monitoring for a task
-    pub fn setup_predictive_monitoring(&mut self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn cancel_task(&self, _task_id: &TaskId) -> CoreResult<()> {
         // Predictive monitoring setup logic
         println!("🔮 Setting up predictive monitoring");
         Ok(())
     }
 
     /// Enable fault prediction for a task
-    pub fn enable_fault_prediction(&mut self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn enable_fault_prediction(&self, _task_id: &TaskId) -> CoreResult<()> {
         // Fault prediction enablement logic
         println!("🎯 Enabling fault prediction");
         Ok(())
     }
 
     /// Setup anomaly detection for a task
-    pub fn setup_anomaly_detection(&mut self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn setup_anomaly_detection(&self, _task_id: &TaskId) -> CoreResult<()> {
         // Anomaly detection setup logic
         println!("🚨 Setting up anomaly detection");
         Ok(())
     }
 
     /// Setup cascading failure prevention for a task
-    pub fn setup_cascading_failure_prevention(&mut self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn setup_cascading_failure_prevention(&self, _task_id: &TaskId) -> CoreResult<()> {
         // Cascading failure prevention setup logic
         println!("🛡️ Setting up cascading failure prevention");
         Ok(())
     }
 
     /// Setup adaptive recovery strategies for a task
-    pub fn setup_adaptive_recovery_strategies(&mut self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn setup_adaptive_recovery_strategies(&self, _task_id: &TaskId) -> CoreResult<()> {
         // Adaptive recovery strategies setup logic
         println!("♻️ Setting up adaptive recovery strategies");
         Ok(())
     }
 
     /// Enable proactive checkpoint creation for a task
-    pub fn enable_proactive_checkpoint_creation(&mut self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn enable_proactive_checkpoint_creation(&self, _task_id: &TaskId) -> CoreResult<()> {
         // Proactive checkpoint creation enablement logic
         println!("💾 Enabling proactive checkpoint creation");
         Ok(())
     }
 
     /// Setup intelligent load balancing for a task
-    pub fn setup_intelligent_load_balancing(&mut self, _task_id: &TaskId) -> CoreResult<()> {
+    pub fn setup_intelligent_load_balancing(&self, _task_id: &TaskId) -> CoreResult<()> {
         // Intelligent load balancing setup logic
         println!("⚖️ Setting up intelligent load balancing");
         Ok(())
@@ -3257,7 +3245,7 @@ mod tests {
 
     #[test]
     fn test_distributed_computing_config() {
-        let config = DistributedComputingConfig::default();
+        let _config = DistributedComputingConfig::default();
         assert!(config.enable_auto_discovery);
         assert!(config.enable_load_balancing);
         assert!(config.enable_fault_tolerance);
@@ -3343,14 +3331,14 @@ mod tests {
 
     #[test]
     fn test_cluster_manager_creation() {
-        let config = DistributedComputingConfig::default();
+        let _config = DistributedComputingConfig::default();
         let manager = ClusterManager::new(&config);
         assert!(manager.is_ok());
     }
 
     #[test]
     fn test_task_scheduler_creation() {
-        let config = DistributedComputingConfig::default();
+        let _config = DistributedComputingConfig::default();
         let scheduler = AdaptiveTaskScheduler::new(&config);
         assert!(scheduler.is_ok());
     }

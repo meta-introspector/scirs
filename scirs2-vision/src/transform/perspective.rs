@@ -9,6 +9,7 @@ use image::{DynamicImage, GenericImageView, ImageBuffer, Pixel, Rgba};
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use scirs2_core::simd_ops::SimdUnifiedOps;
+use rand::seq::SliceRandom;
 
 /// Border handling methods for areas outside the image boundaries
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -80,8 +81,8 @@ pub struct RansacResult {
 
 impl PerspectiveTransform {
     /// Create a new perspective transformation matrix from raw data
-    pub fn new(data: [f64; 9]) -> Self {
-        let matrix = Array2::from_shape_vec((3, 3), data.to_vec()).unwrap();
+    pub fn new(_data: [f64; 9]) -> Self {
+        let matrix = Array2::from_shape_vec((3, 3), _data.to_vec()).unwrap();
         Self { matrix }
     }
 
@@ -91,8 +92,8 @@ impl PerspectiveTransform {
     }
 
     /// Compute a perspective transformation from point correspondences
-    pub fn from_points(src_points: &[(f64, f64)], dst_points: &[(f64, f64)]) -> Result<Self> {
-        if src_points.len() != dst_points.len() {
+    pub fn from_points(_src_points: &[(f64, f64)], dst_points: &[(f64, f64)]) -> Result<Self> {
+        if _src_points.len() != dst_points.len() {
             return Err(VisionError::InvalidParameter(
                 "Source and destination point sets must have the same length".to_string(),
             ));
@@ -168,8 +169,8 @@ impl PerspectiveTransform {
     /// # Returns
     ///
     /// * The perspective transformation
-    pub fn rect_to_quad(src_rect: (f64, f64, f64, f64), dst_quad: [(f64, f64); 4]) -> Result<Self> {
-        let (x, y, width, height) = src_rect;
+    pub fn rect_to_quad(_src_rect: (f64, f64, f64, f64), dst_quad: [(f64, f64); 4]) -> Result<Self> {
+        let (x, y, width, height) = _src_rect;
 
         let src_points = [
             (x, y),
@@ -191,7 +192,7 @@ impl PerspectiveTransform {
     /// # Returns
     ///
     /// * The perspective transformation
-    pub fn quad_to_rect(src_quad: [(f64, f64); 4], dst_rect: (f64, f64, f64, f64)) -> Result<Self> {
+    pub fn quad_to_rect(_src_quad: [(f64, f64); 4], dst_rect: (f64, f64, f64, f64)) -> Result<Self> {
         let (x, y, width, height) = dst_rect;
 
         let dst_points = [
@@ -201,7 +202,7 @@ impl PerspectiveTransform {
             (x, y + height),
         ];
 
-        Self::from_points(&src_quad, &dst_points)
+        Self::from_points(&_src_quad, &dst_points)
     }
 
     /// Get the inverse transformation
@@ -374,8 +375,8 @@ impl PerspectiveTransform {
     }
 
     // Finds the eigenvector corresponding to the smallest eigenvalue
-    fn find_smallest_eigenvector(matrix: &Array2<f64>) -> Result<Vec<f64>> {
-        let n = matrix.shape()[0];
+    fn find_smallest_eigenvector(_matrix: &Array2<f64>) -> Result<Vec<f64>> {
+        let n = _matrix.shape()[0];
 
         // Start with a random vector
         let mut v = vec![1.0; n];
@@ -397,7 +398,7 @@ impl PerspectiveTransform {
             let mut mv = vec![0.0; n];
             for i in 0..n {
                 for j in 0..n {
-                    mv[i] += matrix[[i, j]] * v[j];
+                    mv[i] += _matrix[[i, j]] * v[j];
                 }
             }
 
@@ -477,7 +478,7 @@ impl PerspectiveTransform {
         let n_points = src_points.len();
         if n_points < params.min_inliers {
             return Err(VisionError::InvalidParameter(format!(
-                "Need at least {} points for RANSAC",
+                "Need at least {} _points for RANSAC",
                 params.min_inliers
             )));
         }
@@ -502,7 +503,7 @@ impl PerspectiveTransform {
             sample_indices.shuffle(&mut rng);
             let sample = &sample_indices[0..4];
 
-            // Extract sample points
+            // Extract sample _points
             let sample_src: Vec<(f64, f64)> = sample.iter().map(|&i| src_points[i]).collect();
             let sample_dst: Vec<(f64, f64)> = sample.iter().map(|&i| dst_points[i]).collect();
 
@@ -696,7 +697,7 @@ pub fn warp_perspective_simd(
                     let color = bilinear_interpolate(src, *src_x, *src_y);
                     dst.put_pixel(dst_x, y, color);
                 } else {
-                    // Handle out-of-bounds pixels according to border mode
+                    // Handle out-of-bounds pixels according to border _mode
                     match border_mode {
                         BorderMode::Constant(color) => {
                             dst.put_pixel(dst_x, y, color);
@@ -780,7 +781,7 @@ pub fn warp_perspective(
                 let color = bilinear_interpolate(src, src_x, src_y);
                 dst.put_pixel(x, y, color);
             } else {
-                // Handle out-of-bounds pixels according to border mode
+                // Handle out-of-bounds pixels according to border _mode
                 match border_mode {
                     BorderMode::Constant(color) => {
                         dst.put_pixel(x, y, color);
@@ -830,8 +831,8 @@ pub fn warp_perspective(
 ///
 /// * Interpolated color value
 #[allow(dead_code)]
-pub fn bilinear_interpolate(img: &DynamicImage, x: f64, y: f64) -> Rgba<u8> {
-    let (width, height) = img.dimensions();
+pub fn bilinear_interpolate(_img: &DynamicImage, x: f64, y: f64) -> Rgba<u8> {
+    let (width, height) = _img.dimensions();
 
     // Get integer and fractional parts
     let x0 = x.floor() as u32;
@@ -843,10 +844,10 @@ pub fn bilinear_interpolate(img: &DynamicImage, x: f64, y: f64) -> Rgba<u8> {
     let dy = y - f64::from(y0);
 
     // Get the four surrounding pixels
-    let p00 = img.get_pixel(x0, y0).to_rgba();
-    let p01 = img.get_pixel(x0, y1).to_rgba();
-    let p10 = img.get_pixel(x1, y0).to_rgba();
-    let p11 = img.get_pixel(x1, y1).to_rgba();
+    let p00 = _img.get_pixel(x0, y0).to_rgba();
+    let p01 = _img.get_pixel(x0, y1).to_rgba();
+    let p10 = _img.get_pixel(x1, y0).to_rgba();
+    let p11 = _img.get_pixel(x1, y1).to_rgba();
 
     // Interpolate each channel separately
     let mut result = [0u8; 4];
@@ -993,13 +994,13 @@ pub fn bilinear_interpolate_simd(
 /// * The reflected coordinate
 #[must_use]
 #[allow(dead_code)]
-pub fn reflect_coordinate(coord: f64, size: f64) -> f64 {
-    if coord < 0.0 {
-        -coord
-    } else if coord >= size {
-        2.0 * size - coord - 1.0
+pub fn reflect_coordinate(_coord: f64, size: f64) -> f64 {
+    if _coord < 0.0 {
+        -_coord
+    } else if _coord >= size {
+        2.0 * size - _coord - 1.0
     } else {
-        coord
+        _coord
     }
 }
 
@@ -1039,8 +1040,8 @@ pub fn modulo(a: f64, b: f64) -> f64 {
 /// Uses SIMD-accelerated edge detection and vectorized contour processing
 /// for 2-3x speedup compared to scalar quad detection algorithms.
 #[allow(dead_code)]
-pub fn detect_quad(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]> {
-    detect_quad_simd(src, threshold)
+pub fn detect_quad(_src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]> {
+    detect_quad_simd(_src, threshold)
 }
 
 /// SIMD-accelerated quadrilateral detection
@@ -1061,13 +1062,13 @@ pub fn detect_quad(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]>
 ///
 /// * Result containing the detected quadrilateral as 4 points
 #[allow(dead_code)]
-pub fn detect_quad_simd(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]> {
+pub fn detect_quad_simd(_src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]> {
     use crate::feature::sobel_edges;
     use crate::preprocessing::gaussian_blur;
     use ndarray::Array2;
 
     // Convert to grayscale
-    let gray = src.to_luma8();
+    let gray = _src.to_luma8();
     let (width, height) = gray.dimensions();
 
     // Convert to array for SIMD processing
@@ -1154,13 +1155,13 @@ pub fn detect_quad_simd(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64)
 ///
 /// * Result containing binary edge map
 #[allow(dead_code)]
-fn simd_binary_threshold(image: &DynamicImage, threshold: u8) -> Result<Array2<f64>> {
-    let (width, height) = image.dimensions();
+fn simd_binary_threshold(_image: &DynamicImage, threshold: u8) -> Result<Array2<f64>> {
+    let (width, height) = _image.dimensions();
     let threshold_f64 = threshold as f64;
 
     // Extract pixel values into a flat array for SIMD processing
     let pixels: Vec<f64> = (0..height)
-        .flat_map(|y| (0..width).map(move |x| image.get_pixel(x, y)[0] as f64))
+        .flat_map(|y| (0..width).map(move |x| _image.get_pixel(x, y)[0] as f64))
         .collect();
 
     // SIMD thresholding
@@ -1205,12 +1206,12 @@ fn simd_binary_threshold(image: &DynamicImage, threshold: u8) -> Result<Array2<f
 ///
 /// * Result containing detected contours
 #[allow(dead_code)]
-fn find_contours_simd(binary_image: &Array2<f64>) -> Result<Vec<Vec<(f64, f64)>>> {
-    let (height, width) = binary_image.dim();
+fn find_contours_simd(_binary_image: &Array2<f64>) -> Result<Vec<Vec<(f64, f64)>>> {
+    let (height, width) = _binary_image.dim();
     let mut contours = Vec::new();
     let mut visited = Array2::from_elem((height, width), false);
 
-    // Process image in blocks for better cache locality
+    // Process _image in blocks for better cache locality
     const BLOCK_SIZE: usize = 64;
 
     for block_y in (1..height - 1).step_by(BLOCK_SIZE) {
@@ -1221,8 +1222,8 @@ fn find_contours_simd(binary_image: &Array2<f64>) -> Result<Vec<Vec<(f64, f64)>>
             // SIMD-accelerated edge pixel detection within block
             for y in block_y..end_y {
                 for x in block_x..end_x {
-                    if binary_image[[y, x]] > 0.5 && !visited[[y, x]] {
-                        let contour = trace_contour_simd(binary_image, &mut visited, x, y)?;
+                    if _binary_image[[y, x]] > 0.5 && !visited[[y, x]] {
+                        let contour = trace_contour_simd(_binary_image, &mut visited, x, y)?;
                         if contour.len() > 10 {
                             // Minimum contour length
                             contours.push(contour);
@@ -1344,18 +1345,18 @@ fn trace_contour_simd(
 ///
 /// * Option containing the quadrilateral if successfully approximated
 #[allow(dead_code)]
-fn approximate_polygon_to_quad_simd(contour: &[(f64, f64)]) -> Option<[(f64, f64); 4]> {
-    if contour.len() < 4 {
+fn approximate_polygon_to_quad_simd(_contour: &[(f64, f64)]) -> Option<[(f64, f64); 4]> {
+    if _contour.len() < 4 {
         return None;
     }
 
     // Use SIMD-accelerated progressive epsilon to find best 4-point approximation
-    let perimeter = calculate_perimeter_simd(contour);
+    let perimeter = calculate_perimeter_simd(_contour);
     let mut epsilon = perimeter * 0.01; // Start with 1% of perimeter
 
     for _ in 0..10 {
         // Try up to 10 different epsilon values
-        let approx = douglas_peucker_simd(contour, epsilon);
+        let approx = douglas_peucker_simd(_contour, epsilon);
         match approx.len().cmp(&4) {
             std::cmp::Ordering::Equal => {
                 return Some([approx[0], approx[1], approx[2], approx[3]]);
@@ -1370,8 +1371,8 @@ fn approximate_polygon_to_quad_simd(contour: &[(f64, f64)]) -> Option<[(f64, f64
     }
 
     // If we can't get exactly 4 points, try SIMD corner detection
-    if contour.len() >= 4 {
-        let corners = find_corner_points_simd(contour);
+    if _contour.len() >= 4 {
+        let corners = find_corner_points_simd(_contour);
         if corners.len() == 4 {
             return Some([corners[0], corners[1], corners[2], corners[3]]);
         }
@@ -1395,18 +1396,18 @@ fn approximate_polygon_to_quad_simd(contour: &[(f64, f64)]) -> Option<[(f64, f64
 ///
 /// * Simplified polygon points
 #[allow(dead_code)]
-fn douglas_peucker_simd(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
-    if points.len() < 3 {
-        return points.to_vec();
+fn douglas_peucker_simd(_points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
+    if _points.len() < 3 {
+        return _points.to_vec();
     }
 
-    // SIMD-accelerated distance computation for all points
-    let start = points[0];
-    let end = points[points.len() - 1];
+    // SIMD-accelerated distance computation for all _points
+    let start = _points[0];
+    let end = _points[_points.len() - 1];
 
     // Extract coordinates for SIMD processing
-    let x_coords: Vec<f64> = points[1..points.len() - 1].iter().map(|p| p.0).collect();
-    let y_coords: Vec<f64> = points[1..points.len() - 1].iter().map(|p| p.1).collect();
+    let x_coords: Vec<f64> = _points[1.._points.len() - 1].iter().map(|p| p.0).collect();
+    let y_coords: Vec<f64> = _points[1.._points.len() - 1].iter().map(|p| p.1).collect();
 
     if x_coords.is_empty() {
         return vec![start, end];
@@ -1425,8 +1426,8 @@ fn douglas_peucker_simd(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> 
 
     if max_dist > epsilon {
         // Recursively simplify both parts
-        let left_part = douglas_peucker_simd(&points[0..=max_index], epsilon);
-        let right_part = douglas_peucker_simd(&points[max_index..], epsilon);
+        let left_part = douglas_peucker_simd(&_points[0..=max_index], epsilon);
+        let right_part = douglas_peucker_simd(&_points[max_index..], epsilon);
 
         let mut result = left_part;
         result.extend(&right_part[1..]); // Exclude first point to avoid duplication
@@ -1527,23 +1528,23 @@ fn point_to_line_distances_simd(
 ///
 /// * Vector of detected corner points
 #[allow(dead_code)]
-fn find_corner_points_simd(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
-    if contour.len() < 8 {
-        return contour.to_vec();
+fn find_corner_points_simd(_contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    if _contour.len() < 8 {
+        return _contour.to_vec();
     }
 
     let mut corners = Vec::new();
-    let window_size = contour.len() / 20; // Adaptive window size
+    let window_size = _contour.len() / 20; // Adaptive window size
     let window_size = window_size.clamp(3, 10);
 
     // SIMD-accelerated curvature computation
-    let curvatures = compute_curvatures_simd(contour, window_size);
+    let curvatures = compute_curvatures_simd(_contour, window_size);
 
     // Find points with high curvature
     for (i, &curvature) in curvatures.iter().enumerate() {
         if curvature > 0.3 {
             // Threshold for corner detection
-            corners.push(contour[i]);
+            corners.push(_contour[i]);
         }
     }
 
@@ -1553,7 +1554,7 @@ fn find_corner_points_simd(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
             .iter()
             .enumerate()
             .map(|(i, &corner)| {
-                let contour_idx = contour.iter().position(|&p| p == corner).unwrap_or(0);
+                let contour_idx = _contour.iter().position(|&p| p == corner).unwrap_or(0);
                 (i, curvatures.get(contour_idx).copied().unwrap_or(0.0))
             })
             .collect();
@@ -1562,7 +1563,7 @@ fn find_corner_points_simd(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
         corners = corner_curvatures
             .into_iter()
             .take(4)
-            .map(|(i, _)| corners[i])
+            .map(|(i_)| corners[i])
             .collect();
     }
 
@@ -1580,8 +1581,8 @@ fn find_corner_points_simd(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
 ///
 /// * Vector of curvature values for each point
 #[allow(dead_code)]
-fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f64> {
-    let n = contour.len();
+fn compute_curvatures_simd(_contour: &[(f64, f64)], window_size: usize) -> Vec<f64> {
+    let n = _contour.len();
     let mut curvatures = vec![0.0; n];
 
     // Process points in SIMD-friendly chunks
@@ -1602,12 +1603,12 @@ fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f6
         }
 
         // Extract coordinates for SIMD processing
-        let prev_x: Vec<f64> = prev_indices.iter().map(|&i| contour[i].0).collect();
-        let prev_y: Vec<f64> = prev_indices.iter().map(|&i| contour[i].1).collect();
-        let curr_x: Vec<f64> = curr_indices.iter().map(|&i| contour[i].0).collect();
-        let curr_y: Vec<f64> = curr_indices.iter().map(|&i| contour[i].1).collect();
-        let next_x: Vec<f64> = next_indices.iter().map(|&i| contour[i].0).collect();
-        let next_y: Vec<f64> = next_indices.iter().map(|&i| contour[i].1).collect();
+        let prev_x: Vec<f64> = prev_indices.iter().map(|&i| _contour[i].0).collect();
+        let prev_y: Vec<f64> = prev_indices.iter().map(|&i| _contour[i].1).collect();
+        let curr_x: Vec<f64> = curr_indices.iter().map(|&i| _contour[i].0).collect();
+        let curr_y: Vec<f64> = curr_indices.iter().map(|&i| _contour[i].1).collect();
+        let next_x: Vec<f64> = next_indices.iter().map(|&i| _contour[i].0).collect();
+        let next_y: Vec<f64> = next_indices.iter().map(|&i| _contour[i].1).collect();
 
         // SIMD vector calculations
         let prev_x_arr = Array1::from_vec(prev_x);
@@ -1665,18 +1666,18 @@ fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f6
 ///
 /// * Total perimeter length
 #[allow(dead_code)]
-fn calculate_perimeter_simd(points: &[(f64, f64)]) -> f64 {
-    if points.len() < 2 {
+fn calculate_perimeter_simd(_points: &[(f64, f64)]) -> f64 {
+    if _points.len() < 2 {
         return 0.0;
     }
 
-    let _n = points.len();
+    let _n = _points.len();
 
     // Extract coordinates
-    let x_coords: Vec<f64> = points.iter().map(|p| p.0).collect();
-    let y_coords: Vec<f64> = points.iter().map(|p| p.1).collect();
+    let x_coords: Vec<f64> = _points.iter().map(|p| p.0).collect();
+    let y_coords: Vec<f64> = _points.iter().map(|p| p.1).collect();
 
-    // Create shifted arrays for next points
+    // Create shifted arrays for next _points
     let mut next_x = x_coords.clone();
     let mut next_y = y_coords.clone();
     next_x.rotate_left(1);
@@ -1708,14 +1709,14 @@ fn calculate_perimeter_simd(points: &[(f64, f64)]) -> f64 {
 ///
 /// * Area of the quadrilateral
 #[allow(dead_code)]
-fn calculate_quad_area_simd(quad: &[(f64, f64); 4]) -> f64 {
+fn calculate_quad_area_simd(_quad: &[(f64, f64); 4]) -> f64 {
     // Extract coordinates
-    let x_coords = Array1::from_vec(vec![quad[0].0, quad[1].0, quad[2].0, quad[3].0]);
-    let y_coords = Array1::from_vec(vec![quad[0].1, quad[1].1, quad[2].1, quad[3].1]);
+    let x_coords = Array1::from_vec(vec![_quad[0].0, _quad[1].0, _quad[2].0, _quad[3].0]);
+    let y_coords = Array1::from_vec(vec![_quad[0].1, _quad[1].1, _quad[2].1, _quad[3].1]);
 
     // Create shifted arrays for next points
-    let next_x = Array1::from_vec(vec![quad[1].0, quad[2].0, quad[3].0, quad[0].0]);
-    let next_y = Array1::from_vec(vec![quad[1].1, quad[2].1, quad[3].1, quad[0].1]);
+    let next_x = Array1::from_vec(vec![_quad[1].0, _quad[2].0, _quad[3].0, _quad[0].0]);
+    let next_y = Array1::from_vec(vec![_quad[1].1, _quad[2].1, _quad[3].1, _quad[0].1]);
 
     // SIMD shoelace formula computation
     let cross1 = f64::simd_mul(&x_coords.view(), &next_y.view());
@@ -1735,8 +1736,8 @@ fn calculate_quad_area_simd(quad: &[(f64, f64); 4]) -> f64 {
 ///
 /// * Quadrilateral points ordered clockwise from top-left
 #[allow(dead_code)]
-fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
-    let points = quad.to_vec();
+fn order_quad_points_simd(_quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
+    let points = _quad.to_vec();
 
     // Find centroid using SIMD
     let x_coords = Array1::from_vec(points.iter().map(|p| p.0).collect());
@@ -1756,7 +1757,7 @@ fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
         .collect();
 
     angles.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-    let sorted_points: Vec<(f64, f64)> = angles.iter().map(|(i, _)| points[*i]).collect();
+    let sorted_points: Vec<(f64, f64)> = angles.iter().map(|(i_)| points[*i]).collect();
 
     // Find the top-left point (minimum x + y) using SIMD
     let sums = f64::simd_add(
@@ -1768,7 +1769,7 @@ fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
         .iter()
         .enumerate()
         .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .unwrap_or(0);
 
     // Reorder to start from top-left and go clockwise
@@ -1782,16 +1783,16 @@ fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
 
 /// Find contours in a binary edge image
 #[allow(dead_code)]
-fn find_contours(binary_image: &Array2<f64>) -> Result<Vec<Vec<(f64, f64)>>> {
-    let (height, width) = binary_image.dim();
+fn find_contours(_binary_image: &Array2<f64>) -> Result<Vec<Vec<(f64, f64)>>> {
+    let (height, width) = _binary_image.dim();
     let mut contours = Vec::new();
     let mut visited = Array2::from_elem((height, width), false);
 
     // Simple contour following algorithm
     for y in 1..height - 1 {
         for x in 1..width - 1 {
-            if binary_image[[y, x]] > 0.5 && !visited[[y, x]] {
-                let contour = trace_contour(binary_image, &mut visited, x, y)?;
+            if _binary_image[[y, x]] > 0.5 && !visited[[y, x]] {
+                let contour = trace_contour(_binary_image, &mut visited, x, y)?;
                 if contour.len() > 10 {
                     // Minimum contour length
                     contours.push(contour);
@@ -1864,18 +1865,18 @@ fn trace_contour(
 
 /// Approximate a polygon contour to a quadrilateral using Douglas-Peucker algorithm
 #[allow(dead_code)]
-fn approximate_polygon_to_quad(contour: &[(f64, f64)]) -> Option<[(f64, f64); 4]> {
-    if contour.len() < 4 {
+fn approximate_polygon_to_quad(_contour: &[(f64, f64)]) -> Option<[(f64, f64); 4]> {
+    if _contour.len() < 4 {
         return None;
     }
 
     // Use progressive epsilon to find best 4-point approximation
-    let perimeter = calculate_perimeter(contour);
+    let perimeter = calculate_perimeter(_contour);
     let mut epsilon = perimeter * 0.01; // Start with 1% of perimeter
 
     for _ in 0..10 {
         // Try up to 10 different epsilon values
-        let approx = douglas_peucker(contour, epsilon);
+        let approx = douglas_peucker(_contour, epsilon);
         match approx.len().cmp(&4) {
             std::cmp::Ordering::Equal => {
                 return Some([approx[0], approx[1], approx[2], approx[3]]);
@@ -1890,8 +1891,8 @@ fn approximate_polygon_to_quad(contour: &[(f64, f64)]) -> Option<[(f64, f64); 4]
     }
 
     // If we can't get exactly 4 points, try to extract 4 corner points
-    if contour.len() >= 4 {
-        let corners = find_corner_points(contour);
+    if _contour.len() >= 4 {
+        let corners = find_corner_points(_contour);
         if corners.len() == 4 {
             return Some([corners[0], corners[1], corners[2], corners[3]]);
         }
@@ -1902,20 +1903,20 @@ fn approximate_polygon_to_quad(contour: &[(f64, f64)]) -> Option<[(f64, f64); 4]
 
 /// Douglas-Peucker algorithm for polygon simplification
 #[allow(dead_code)]
-fn douglas_peucker(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
-    if points.len() < 3 {
-        return points.to_vec();
+fn douglas_peucker(_points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
+    if _points.len() < 3 {
+        return _points.to_vec();
     }
 
     let mut result = Vec::new();
 
-    // Find the point with maximum distance from line between first and last points
-    let start = points[0];
-    let end = points[points.len() - 1];
+    // Find the point with maximum distance from line between first and last _points
+    let start = _points[0];
+    let end = _points[_points.len() - 1];
     let mut max_dist = 0.0;
     let mut max_index = 0;
 
-    for (i, &point) in points.iter().enumerate().skip(1).take(points.len() - 2) {
+    for (i, &point) in _points.iter().enumerate().skip(1).take(_points.len() - 2) {
         let dist = point_to_line_distance(point, start, end);
         if dist > max_dist {
             max_dist = dist;
@@ -1925,8 +1926,8 @@ fn douglas_peucker(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
 
     if max_dist > epsilon {
         // Recursively simplify both parts
-        let left_part = douglas_peucker(&points[0..=max_index], epsilon);
-        let right_part = douglas_peucker(&points[max_index..], epsilon);
+        let left_part = douglas_peucker(&_points[0..=max_index], epsilon);
+        let right_part = douglas_peucker(&_points[max_index..], epsilon);
 
         result.extend(&left_part[0..left_part.len() - 1]); // Exclude last point to avoid duplication
         result.extend(&right_part);
@@ -1940,15 +1941,15 @@ fn douglas_peucker(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
 
 /// Calculate distance from a point to a line segment
 #[allow(dead_code)]
-fn point_to_line_distance(point: (f64, f64), line_start: (f64, f64), line_end: (f64, f64)) -> f64 {
-    let (px, py) = point;
+fn point_to_line_distance(_point: (f64, f64), line_start: (f64, f64), line_end: (f64, f64)) -> f64 {
+    let (px, py) = _point;
     let (x1, y1) = line_start;
     let (x2, y2) = line_end;
 
     let line_length_sq = (x2 - x1).powi(2) + (y2 - y1).powi(2);
 
     if line_length_sq == 0.0 {
-        // Line is actually a point
+        // Line is actually a _point
         return ((px - x1).powi(2) + (py - y1).powi(2)).sqrt();
     }
 
@@ -1961,32 +1962,32 @@ fn point_to_line_distance(point: (f64, f64), line_start: (f64, f64), line_end: (
 
 /// Find corner points in a contour by detecting high curvature points
 #[allow(dead_code)]
-fn find_corner_points(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
-    if contour.len() < 8 {
-        return contour.to_vec();
+fn find_corner_points(_contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    if _contour.len() < 8 {
+        return _contour.to_vec();
     }
 
     let mut corners = Vec::new();
-    let window_size = contour.len() / 20; // Adaptive window size
+    let window_size = _contour.len() / 20; // Adaptive window size
     let window_size = window_size.clamp(3, 10);
 
-    for i in 0..contour.len() {
-        let prev_idx = (i + contour.len() - window_size) % contour.len();
-        let next_idx = (i + window_size) % contour.len();
+    for i in 0.._contour.len() {
+        let prev_idx = (i + _contour.len() - window_size) % _contour.len();
+        let next_idx = (i + window_size) % _contour.len();
 
-        let curvature = calculate_curvature(contour[prev_idx], contour[i], contour[next_idx]);
+        let curvature = calculate_curvature(_contour[prev_idx], _contour[i], _contour[next_idx]);
 
         if curvature > 0.3 {
             // Threshold for corner detection
-            corners.push(contour[i]);
+            corners.push(_contour[i]);
         }
     }
 
     // If we have too many corners, keep only the strongest ones
     if corners.len() > 4 {
         corners.sort_by(|&a, &b| {
-            let curv_a = calculate_curvature_at_point(contour, a);
-            let curv_b = calculate_curvature_at_point(contour, b);
+            let curv_a = calculate_curvature_at_point(_contour, a);
+            let curv_b = calculate_curvature_at_point(_contour, b);
             curv_b.partial_cmp(&curv_a).unwrap()
         });
         corners.truncate(4);
@@ -1997,8 +1998,8 @@ fn find_corner_points(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
 
 /// Calculate curvature at three consecutive points
 #[allow(dead_code)]
-fn calculate_curvature(p1: (f64, f64), p2: (f64, f64), p3: (f64, f64)) -> f64 {
-    let v1 = (p2.0 - p1.0, p2.1 - p1.1);
+fn calculate_curvature(_p1: (f64, f64), p2: (f64, f64), p3: (f64, f64)) -> f64 {
+    let v1 = (p2.0 - _p1.0, p2.1 - _p1.1);
     let v2 = (p3.0 - p2.0, p3.1 - p2.1);
 
     let dot_product = v1.0 * v2.0 + v1.1 * v2.1;
@@ -2018,12 +2019,12 @@ fn calculate_curvature(p1: (f64, f64), p2: (f64, f64), p3: (f64, f64)) -> f64 {
 
 /// Calculate curvature at a specific point in the contour
 #[allow(dead_code)]
-fn calculate_curvature_at_point(contour: &[(f64, f64)], point: (f64, f64)) -> f64 {
-    // Find the closest point in the contour
+fn calculate_curvature_at_point(_contour: &[(f64, f64)], point: (f64, f64)) -> f64 {
+    // Find the closest point in the _contour
     let mut closest_idx = 0;
     let mut min_dist = f64::INFINITY;
 
-    for (i, &p) in contour.iter().enumerate() {
+    for (i, &p) in _contour.iter().enumerate() {
         let dist = ((p.0 - point.0).powi(2) + (p.1 - point.1).powi(2)).sqrt();
         if dist < min_dist {
             min_dist = dist;
@@ -2032,24 +2033,24 @@ fn calculate_curvature_at_point(contour: &[(f64, f64)], point: (f64, f64)) -> f6
     }
 
     let window = 3;
-    let prev_idx = (closest_idx + contour.len() - window) % contour.len();
-    let next_idx = (closest_idx + window) % contour.len();
+    let prev_idx = (closest_idx + _contour.len() - window) % _contour.len();
+    let next_idx = (closest_idx + window) % _contour.len();
 
-    calculate_curvature(contour[prev_idx], contour[closest_idx], contour[next_idx])
+    calculate_curvature(_contour[prev_idx], _contour[closest_idx], _contour[next_idx])
 }
 
 /// Calculate perimeter of a polygon
 #[allow(dead_code)]
-fn calculate_perimeter(points: &[(f64, f64)]) -> f64 {
-    if points.len() < 2 {
+fn calculate_perimeter(_points: &[(f64, f64)]) -> f64 {
+    if _points.len() < 2 {
         return 0.0;
     }
 
     let mut perimeter = 0.0;
-    for i in 0..points.len() {
-        let next_i = (i + 1) % points.len();
-        let dist = ((points[next_i].0 - points[i].0).powi(2)
-            + (points[next_i].1 - points[i].1).powi(2))
+    for i in 0.._points.len() {
+        let next_i = (i + 1) % _points.len();
+        let dist = ((_points[next_i].0 - _points[i].0).powi(2)
+            + (_points[next_i].1 - _points[i].1).powi(2))
         .sqrt();
         perimeter += dist;
     }
@@ -2059,21 +2060,21 @@ fn calculate_perimeter(points: &[(f64, f64)]) -> f64 {
 
 /// Calculate area of a quadrilateral
 #[allow(dead_code)]
-fn calculate_quad_area(quad: &[(f64, f64); 4]) -> f64 {
+fn calculate_quad_area(_quad: &[(f64, f64); 4]) -> f64 {
     // Using the shoelace formula
     let mut area = 0.0;
     for i in 0..4 {
         let j = (i + 1) % 4;
-        area += quad[i].0 * quad[j].1;
-        area -= quad[j].0 * quad[i].1;
+        area += _quad[i].0 * _quad[j].1;
+        area -= _quad[j].0 * _quad[i].1;
     }
     area.abs() / 2.0
 }
 
 /// Order quadrilateral points clockwise starting from top-left
 #[allow(dead_code)]
-fn order_quad_points(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
-    let mut points = quad.to_vec();
+fn order_quad_points(_quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
+    let mut points = _quad.to_vec();
 
     // Find centroid
     let cx = points.iter().map(|p| p.0).sum::<f64>() / 4.0;
@@ -2139,19 +2140,19 @@ pub fn correct_perspective(
     // Intentionally truncating float to integer for pixel dimensions
     let max_height = height_left.max(height_right).round() as u32;
 
-    // Adjust for aspect ratio if provided
-    let (dst_width, dst_height) = if let Some(ratio) = aspect_ratio {
+    // Adjust for aspect _ratio if provided
+    let (dst_width, dst_height) = if let Some(_ratio) = aspect_ratio {
         let current_ratio = f64::from(max_width) / f64::from(max_height);
 
-        if current_ratio > ratio {
+        if current_ratio > _ratio {
             // Width is too large relative to height
             // Intentionally truncating float to integer for pixel dimensions
-            let new_width = (f64::from(max_height) * ratio).round() as u32;
+            let new_width = (f64::from(max_height) * _ratio).round() as u32;
             (new_width, max_height)
         } else {
             // Height is too large relative to width
             // Intentionally truncating float to integer for pixel dimensions
-            let new_height = (f64::from(max_width) / ratio).round() as u32;
+            let new_height = (f64::from(max_width) / _ratio).round() as u32;
             (max_width, new_height)
         }
     } else {
@@ -2185,8 +2186,8 @@ pub fn correct_perspective(
 ///
 /// * The distance between the points
 #[allow(dead_code)]
-fn distance(p1: (f64, f64), p2: (f64, f64)) -> f64 {
-    let (x1, y1) = p1;
+fn distance(_p1: (f64, f64), p2: (f64, f64)) -> f64 {
+    let (x1, y1) = _p1;
     let (x2, y2) = p2;
 
     ((x2 - x1).powi(2) + (y2 - y1).powi(2)).sqrt()

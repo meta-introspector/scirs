@@ -8,7 +8,8 @@ use crate::traits::{ContinuousDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Distribution as RandDistribution, Uniform as RandUniform};
+use rand__distr::{Distribution as RandDistribution, Uniform as RandUniform};
+use statrs::statistics::Statistics;
 
 /// Uniform distribution structure
 pub struct Uniform<F: Float> {
@@ -35,24 +36,24 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::uniform::Uniform;
+    /// use scirs2__stats::distributions::uniform::Uniform;
     ///
     /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
     /// ```
-    pub fn new(low: F, high: F) -> StatsResult<Self> {
-        if low >= high {
+    pub fn new(_low: F, high: F) -> StatsResult<Self> {
+        if _low >= high {
             return Err(StatsError::DomainError(
                 "Lower bound must be less than upper bound".to_string(),
             ));
         }
 
         // Convert to f64 for rand_distr
-        let low_f64 = <f64 as NumCast>::from(low).unwrap();
+        let low_f64 = <f64 as NumCast>::from(_low).unwrap();
         let high_f64 = <f64 as NumCast>::from(high).unwrap();
 
         match RandUniform::new_inclusive(low_f64, high_f64) {
             Ok(rand_distr) => Ok(Uniform {
-                low,
+                _low,
                 high,
                 rand_distr,
             }),
@@ -75,7 +76,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::uniform::Uniform;
+    /// use scirs2__stats::distributions::uniform::Uniform;
     ///
     /// let unif = Uniform::new(0.0f64, 2.0).unwrap();
     /// let pdf_at_one = unif.pdf(1.0);
@@ -103,7 +104,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::uniform::Uniform;
+    /// use scirs2__stats::distributions::uniform::Uniform;
     ///
     /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
     /// let cdf_at_half = unif.cdf(0.5);
@@ -132,14 +133,14 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::uniform::Uniform;
+    /// use scirs2__stats::distributions::uniform::Uniform;
     ///
     /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
     /// let x = unif.ppf(0.75).unwrap();
     /// assert!((x - 0.75).abs() < 1e-10);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p > F::one() {
+        if p < F::zero() || p >, F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));
@@ -162,7 +163,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::uniform::Uniform;
+    /// use scirs2__stats::distributions::uniform::Uniform;
     ///
     /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
     /// let samples = unif.rvs(1000).unwrap();

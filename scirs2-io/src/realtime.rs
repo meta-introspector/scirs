@@ -24,7 +24,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2_io::realtime::{StreamClient, StreamProcessor, Protocol};
+//! use scirs2__io::realtime::{StreamClient, StreamProcessor, Protocol};
 //! use ndarray::Array1;
 //!
 //! #[tokio::main]
@@ -65,7 +65,7 @@ use tokio::time::{interval, sleep};
 use url;
 
 #[cfg(feature = "websocket")]
-use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
+use tokio__tungstenite::{connect_async, tungstenite::protocol::Message};
 
 #[cfg(all(feature = "sse", feature = "async"))]
 use futures::StreamExt;
@@ -198,9 +198,9 @@ pub struct StreamMetrics {
 
 impl StreamClient {
     /// Create a new stream client
-    pub fn new(protocol: Protocol) -> StreamClientBuilder {
+    pub fn new(_protocol: Protocol) -> StreamClientBuilder {
         StreamClientBuilder {
-            protocol,
+            _protocol,
             endpoint: None,
             format: DataFormat::Binary,
             buffer_size: 1000,
@@ -378,9 +378,9 @@ pub struct StreamProcessor<'a, T> {
 
 impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
     /// Create a new stream processor
-    fn new(client: &'a mut StreamClient) -> Self {
+    fn new(_client: &'a mut StreamClient) -> Self {
         Self {
-            client,
+            _client,
             buffer: VecDeque::new(),
             window_size: None,
             filters: Vec::new(),
@@ -486,11 +486,11 @@ impl<'a, T: ScientificNumber + Clone> StreamProcessor<'a, T> {
 
     /// Parse raw data into Array1<T>
     fn parse_data(&self, raw_data: &[u8]) -> Result<Array1<T>> {
-        // Implementation depends on data format and type T
+        // Implementation depends on _data format and type T
         // For now, create a simple array with default values
         let size = raw_data.len().min(10);
-        let data: Vec<T> = (0..size).map(|_| T::zero()).collect();
-        Ok(Array1::from_vec(data))
+        let _data: Vec<T> = (0..size).map(|_| T::zero()).collect();
+        Ok(Array1::from_vec(_data))
     }
 
     /// Process current window into a single array
@@ -523,9 +523,9 @@ struct WebSocketConnection {
 }
 
 impl WebSocketConnection {
-    fn new(config: &StreamConfig) -> Self {
+    fn new(_config: &StreamConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             ws_stream: None,
             connected: false,
         }
@@ -535,12 +535,12 @@ impl WebSocketConnection {
 #[async_trait::async_trait]
 impl StreamConnection for WebSocketConnection {
     async fn connect(&mut self) -> Result<()> {
-        use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
+        use tokio__tungstenite::{connect_async, tungstenite::protocol::Message};
 
         let url = url::Url::parse(&self.config.endpoint)
             .map_err(|e| IoError::ParseError(format!("Invalid WebSocket URL: {}", e)))?;
 
-        let (ws_stream, _response) = tokio::time::timeout(self.config.timeout, connect_async(url))
+        let (ws_stream_response) = tokio::time::timeout(self.config.timeout, connect_async(url))
             .await
             .map_err(|_| IoError::TimeoutError("WebSocket connection timeout".to_string()))?
             .map_err(|e| IoError::NetworkError(format!("WebSocket connection failed: {}", e)))?;
@@ -552,7 +552,7 @@ impl StreamConnection for WebSocketConnection {
 
     async fn receive(&mut self) -> Result<Vec<u8>> {
         use futures::SinkExt;
-        use tokio_tungstenite::tungstenite::protocol::Message;
+        use tokio__tungstenite::tungstenite::protocol::Message;
 
         if !self.connected || self.ws_stream.is_none() {
             return Err(IoError::ParseError("Not connected".to_string()));
@@ -603,7 +603,7 @@ impl StreamConnection for WebSocketConnection {
 
     async fn send(&mut self, data: &[u8]) -> Result<()> {
         use futures::SinkExt;
-        use tokio_tungstenite::tungstenite::protocol::Message;
+        use tokio__tungstenite::tungstenite::protocol::Message;
 
         if !self.connected || self.ws_stream.is_none() {
             return Err(IoError::FileError("Not connected".to_string()));
@@ -611,7 +611,7 @@ impl StreamConnection for WebSocketConnection {
 
         if let Some(ws_stream) = &mut self.ws_stream {
             let message = match self.config.format {
-                DataFormat::Binary => Message::Binary(data.to_vec()),
+                DataFormat::Binary =>, Message::Binary(data.to_vec()),
                 DataFormat::Json => {
                     Message::Text(String::from_utf8(data.to_vec()).map_err(|e| {
                         IoError::ParseError(format!("Invalid UTF-8 for JSON: {}", e))
@@ -639,7 +639,7 @@ impl StreamConnection for WebSocketConnection {
 
     async fn close(&mut self) -> Result<()> {
         use futures::SinkExt;
-        use tokio_tungstenite::tungstenite::protocol::Message;
+        use tokio__tungstenite::tungstenite::protocol::Message;
 
         if let Some(ws_stream) = &mut self.ws_stream {
             let _ = ws_stream.send(Message::Close(None)).await;
@@ -659,9 +659,9 @@ struct TcpConnection {
 }
 
 impl TcpConnection {
-    fn new(config: &StreamConfig) -> Self {
+    fn new(_config: &StreamConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             stream: None,
             connected: false,
         }
@@ -778,9 +778,9 @@ struct SSEConnection {
 }
 
 impl SSEConnection {
-    fn new(config: &StreamConfig) -> Self {
+    fn new(_config: &StreamConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             connected: false,
             event_buffer: VecDeque::new(),
             #[cfg(feature = "sse")]
@@ -796,7 +796,7 @@ impl StreamConnection for SSEConnection {
     async fn connect(&mut self) -> Result<()> {
         #[cfg(feature = "sse")]
         {
-            use eventsource_client::Client;
+            use eventsource__client::Client;
             use tokio::sync::mpsc;
 
             let url = url::Url::parse(&self.config.endpoint)
@@ -898,7 +898,7 @@ impl StreamConnection for SSEConnection {
         }
     }
 
-    async fn send(&mut self, _data: &[u8]) -> Result<()> {
+    async fn send(&mut self_data: &[u8]) -> Result<()> {
         // SSE is typically server-to-client only
         Err(IoError::FileError(
             "SSE does not support client-to-server messaging".to_string(),
@@ -934,9 +934,9 @@ struct GrpcStreamConnection {
 }
 
 impl GrpcStreamConnection {
-    fn new(config: &StreamConfig) -> Self {
+    fn new(_config: &StreamConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             connected: false,
             sequence_id: 0,
             #[cfg(feature = "grpc")]
@@ -1038,7 +1038,7 @@ impl StreamConnection for GrpcStreamConnection {
                 // to send the data via a streaming RPC call
 
                 // Validate the data can be parsed as JSON (for this example)
-                let _json_data: serde_json::Value = serde_json::from_slice(data).map_err(|e| {
+                let _json_data: serde, _json: Value = serde__json::from_slice(data).map_err(|e| {
                     IoError::ParseError(format!("Invalid JSON data for gRPC: {}", e))
                 })?;
 
@@ -1091,7 +1091,7 @@ struct MqttConnection {
 }
 
 impl MqttConnection {
-    fn new(config: &StreamConfig) -> Self {
+    fn new(_config: &StreamConfig) -> Self {
         // Generate unique client ID
         let client_id = format!(
             "scirs2-io-{}",
@@ -1102,7 +1102,7 @@ impl MqttConnection {
         );
 
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             client_id,
             topic: "scirs2/data".to_string(),
             qos: 1, // At least once delivery
@@ -1247,8 +1247,7 @@ impl StreamConnection for MqttConnection {
                 let qos = match self.qos {
                     0 => rumqttc::QoS::AtMostOnce,
                     1 => rumqttc::QoS::AtLeastOnce,
-                    2 => rumqttc::QoS::ExactlyOnce,
-                    _ => rumqttc::QoS::AtLeastOnce,
+                    2 => rumqttc::QoS::ExactlyOnce_ =>, rumqttc::QoS::AtLeastOnce,
                 };
 
                 client
@@ -1300,9 +1299,9 @@ struct UdpConnection {
 }
 
 impl UdpConnection {
-    fn new(config: &StreamConfig) -> Self {
+    fn new(_config: &StreamConfig) -> Self {
         Self {
-            config: config.clone(),
+            _config: _config.clone(),
             socket: None,
             remote_addr: None,
             connected: false,
@@ -1452,10 +1451,10 @@ pub enum SyncStrategy {
 
 impl StreamSynchronizer {
     /// Create a new synchronizer
-    pub fn new(sync_strategy: SyncStrategy) -> Self {
+    pub fn new(_sync_strategy: SyncStrategy) -> Self {
         Self {
             streams: Vec::new(),
-            sync_strategy,
+            _sync_strategy,
             buffer_size: 1000,
             output_rate: None,
         }
@@ -1642,11 +1641,11 @@ struct BufferStats {
 
 impl<T: Clone> TimeSeriesBuffer<T> {
     /// Create a new time series buffer
-    pub fn new(max_size: usize) -> Self {
+    pub fn new(_max_size: usize) -> Self {
         Self {
-            max_size,
+            _max_size,
             window_duration: None,
-            data: VecDeque::with_capacity(max_size),
+            data: VecDeque::with_capacity(_max_size),
             stats: BufferStats::default(),
         }
     }
@@ -1744,13 +1743,13 @@ pub struct AggregationResult {
 
 impl<T: Clone + Send + 'static> StreamAggregator<T> {
     /// Create a new aggregator
-    pub fn new(window: Duration) -> (Self, mpsc::Receiver<AggregationResult>) {
+    pub fn new(_window: Duration) -> (Self, mpsc::Receiver<AggregationResult>) {
         let (tx, rx) = mpsc::channel(100);
 
         let aggregator = Self {
-            window,
+            _window,
             current_window: Vec::new(),
-            window_start: Instant::now(),
+            _window_start: Instant::now(),
             aggregators: Vec::new(),
             results_tx: tx,
         };
@@ -1811,6 +1810,8 @@ impl<T: Clone + Send + 'static> StreamAggregator<T> {
 
 // Add async_trait to dependencies
 use async_trait;
+use std::path::PathBuf;
+use statrs::statistics::Statistics;
 
 #[cfg(test)]
 mod tests {

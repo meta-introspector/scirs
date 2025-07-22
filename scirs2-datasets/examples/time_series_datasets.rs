@@ -1,5 +1,5 @@
 use ndarray::s;
-use scirs2_datasets::time_series::electrocardiogram;
+use scirs2__datasets::time_series::electrocardiogram;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

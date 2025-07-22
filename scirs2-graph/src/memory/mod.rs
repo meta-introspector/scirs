@@ -40,24 +40,24 @@ pub struct MemoryProfiler;
 
 impl MemoryProfiler {
     /// Calculate memory statistics for an undirected graph
-    pub fn profile_graph<N, E, Ix>(graph: &Graph<N, E, Ix>) -> MemoryStats
+    pub fn profile_graph<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> MemoryStats
     where
         N: crate::base::Node + std::fmt::Debug,
         E: crate::base::EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
-        let node_count = graph.node_count();
-        let edge_count = graph.edge_count();
+        let node_count = _graph.node_count();
+        let edge_count = _graph.edge_count();
 
         // Calculate node storage - nodes are stored with their data
         let node_bytes = node_count
-            * (mem::size_of::<N>() + mem::size_of::<petgraph::graph::NodeIndex<Ix>>())
-            + mem::size_of::<std::collections::HashMap<N, petgraph::graph::NodeIndex<Ix>>>();
+            * (mem::size_of::<N>() + mem::size, _of::<petgraph::_graph::NodeIndex<Ix>>())
+            + mem::size_of::<std::collections::HashMap<N, petgraph::_graph::NodeIndex<Ix>>>();
 
-        // Calculate adjacency list storage based on actual graph structure
+        // Calculate adjacency list storage based on actual _graph structure
         let mut adjacency_bytes = 0;
-        for node in graph.nodes() {
-            if let Ok(neighbors) = graph.neighbors(node) {
+        for node in _graph.nodes() {
+            if let Ok(neighbors) = _graph.neighbors(node) {
                 let neighbor_count = neighbors.len();
                 adjacency_bytes += neighbor_count * mem::size_of::<E>() // edge weights
                     + mem::size_of::<Vec<E>>(); // Vec overhead per adjacency list
@@ -65,7 +65,7 @@ impl MemoryProfiler {
         }
 
         // Calculate edge storage
-        let edge_bytes = edge_count * (mem::size_of::<N>() * 2 + mem::size_of::<E>());
+        let edge_bytes = edge_count * (mem::size_of::<N>() * 2 + mem::size, _of::<E>());
 
         // Estimate allocator overhead (typically 8-16 bytes per allocation)
         let allocation_count = node_count + 1; // nodes + main structure
@@ -90,36 +90,36 @@ impl MemoryProfiler {
     }
 
     /// Calculate memory statistics for a directed graph
-    pub fn profile_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> MemoryStats
+    pub fn profile_digraph<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> MemoryStats
     where
         N: crate::base::Node + std::fmt::Debug,
         E: crate::base::EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
-        let node_count = graph.node_count();
-        let edge_count = graph.edge_count();
+        let node_count = _graph.node_count();
+        let edge_count = _graph.edge_count();
 
         // Similar to undirected but with separate in/out adjacency lists
         let node_bytes = node_count
-            * (mem::size_of::<N>() + mem::size_of::<petgraph::graph::NodeIndex<Ix>>())
-            + mem::size_of::<std::collections::HashMap<N, petgraph::graph::NodeIndex<Ix>>>();
+            * (mem::size_of::<N>() + mem::size, _of::<petgraph::_graph::NodeIndex<Ix>>())
+            + mem::size_of::<std::collections::HashMap<N, petgraph::_graph::NodeIndex<Ix>>>();
 
         // Both in-edges and out-edges storage - directed graphs have separate lists
         let mut adjacency_bytes = 0;
-        for node in graph.nodes() {
+        for node in _graph.nodes() {
             // Count successors (outgoing edges)
-            if let Ok(successors) = graph.successors(node) {
+            if let Ok(successors) = _graph.successors(node) {
                 adjacency_bytes +=
-                    successors.len() * mem::size_of::<E>() + mem::size_of::<Vec<E>>();
+                    successors.len() * mem::size_of::<E>() + mem::size, _of::<Vec<E>>();
             }
             // Count predecessors (incoming edges)
-            if let Ok(predecessors) = graph.predecessors(node) {
+            if let Ok(predecessors) = _graph.predecessors(node) {
                 adjacency_bytes +=
-                    predecessors.len() * mem::size_of::<E>() + mem::size_of::<Vec<E>>();
+                    predecessors.len() * mem::size_of::<E>() + mem::size, _of::<Vec<E>>();
             }
         }
 
-        let edge_bytes = edge_count * (mem::size_of::<N>() * 2 + mem::size_of::<E>());
+        let edge_bytes = edge_count * (mem::size_of::<N>() * 2 + mem::size, _of::<E>());
 
         let allocation_count = node_count * 2 + 1; // in/out vecs + main structure
         let overhead_bytes = allocation_count * 16;
@@ -143,15 +143,15 @@ impl MemoryProfiler {
     }
 
     /// Estimate memory usage for a graph of given size
-    pub fn estimate_memory(nodes: usize, edges: usize, directed: bool) -> usize {
-        let _avg_degree = if nodes > 0 {
-            edges as f64 / nodes as f64
+    pub fn estimate_memory(_nodes: usize, edges: usize, directed: bool) -> usize {
+        let _avg_degree = if _nodes > 0 {
+            edges as f64 / _nodes as f64
         } else {
             0.0
         };
 
         // Base node storage
-        let node_bytes = nodes * mem::size_of::<usize>();
+        let node_bytes = _nodes * mem::size_of::<usize>();
 
         // Adjacency list storage
         let edge_entry_size = mem::size_of::<(usize, f64)>();
@@ -161,16 +161,16 @@ impl MemoryProfiler {
 
         // Vec overhead (capacity often > size)
         let vec_overhead =
-            nodes * mem::size_of::<Vec<(usize, f64)>>() * if directed { 2 } else { 1 };
+            _nodes * mem::size_of::<Vec<(usize, f64)>>() * if directed { 2 } else { 1 };
 
         // Allocator overhead
-        let overhead = (nodes + edges / 100) * 16;
+        let overhead = (_nodes + edges / 100) * 16;
 
         node_bytes + adjacency_bytes + vec_overhead + overhead
     }
 
     /// Analyze memory fragmentation in the graph
-    pub fn analyze_fragmentation<N, E, Ix>(graph: &Graph<N, E, Ix>) -> FragmentationReport
+    pub fn analyze_fragmentation<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> FragmentationReport
     where
         N: crate::base::Node + std::fmt::Debug,
         E: crate::base::EdgeWeight,
@@ -180,8 +180,8 @@ impl MemoryProfiler {
         let mut total_capacity = 0;
         let mut total_used = 0;
 
-        for node in graph.nodes() {
-            let degree = graph.degree(node);
+        for node in _graph.nodes() {
+            let degree = _graph.degree(node);
             *degree_distribution.entry(degree).or_insert(0) += 1;
 
             // Estimate Vec capacity vs actual usage
@@ -202,7 +202,7 @@ impl MemoryProfiler {
             total_capacity,
             total_used,
             fragmentation_ratio: fragmentation,
-            wasted_bytes: (total_capacity - total_used) * mem::size_of::<(N, E)>(),
+            wasted_bytes: (total_capacity - total_used) * mem::size, _of::<(N, E)>(),
         }
     }
 }
@@ -846,7 +846,7 @@ mod tests {
             total_capacity: 1000,
             total_used: 500,
             fragmentation_ratio: 0.5, // High fragmentation
-            wasted_bytes: 500 * mem::size_of::<(usize, f64)>(),
+            wasted_bytes: 500 * mem::size, _of::<(usize, f64)>(),
         };
 
         let stats = MemoryStats {

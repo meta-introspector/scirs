@@ -70,17 +70,17 @@ pub struct Synapse {
 
 impl SpikingNeuron {
     /// Create a new LIF neuron
-    pub fn new(config: &NeuromorphicConfig) -> Self {
+    pub fn new(_config: &NeuromorphicConfig) -> Self {
         Self {
             membrane_potential: 0.0,
             resting_potential: 0.0,
-            threshold: config.spike_threshold,
+            threshold: _config.spike_threshold,
             tau_membrane: 0.020, // 20ms membrane time constant
-            refractory_period: config.refractory_period,
+            refractory_period: _config.refractory_period,
             last_spike_time: None,
             input_current: 0.0,
             adaptation_current: 0.0,
-            noise_amplitude: config.noise_level,
+            noise_amplitude: _config.noise_level,
         }
     }
 
@@ -111,7 +111,7 @@ impl SpikingNeuron {
         // Check for spike
         if self.membrane_potential >= self.threshold {
             self.fire_spike();
-            Some(0.0) // Return spike time (relative to current time)
+            Some(0.0) // Return spike _time (relative to _current _time)
         } else {
             None
         }
@@ -135,9 +135,9 @@ impl SpikingNeuron {
 
 impl Synapse {
     /// Create a new synapse
-    pub fn new(source: usize, target: usize, weight: f64, delay: f64) -> Self {
+    pub fn new(_source: usize, target: usize, weight: f64, delay: f64) -> Self {
         Self {
-            source,
+            _source,
             target,
             weight,
             delay,
@@ -210,19 +210,19 @@ impl Synapse {
 
 impl SpikingNeuralNetwork {
     /// Create a new spiking neural network
-    pub fn new(config: NeuromorphicConfig, _num_parameters: usize) -> Self {
-        let mut neurons = Vec::with_capacity(config.num_neurons);
-        for _ in 0..config.num_neurons {
-            neurons.push(SpikingNeuron::new(&config));
+    pub fn new(_config: NeuromorphicConfig_num_parameters: usize) -> Self {
+        let mut neurons = Vec::with_capacity(_config.num_neurons);
+        for _ in 0.._config.num_neurons {
+            neurons.push(SpikingNeuron::new(&_config));
         }
 
         // Create random connectivity
-        let mut synapses = vec![Vec::new(); config.num_neurons];
+        let mut synapses = vec![Vec::new(); _config.num_neurons];
         let connection_probability = 0.1; // 10% connection probability
         let mut rng = rand::rng();
 
-        for i in 0..config.num_neurons {
-            for j in 0..config.num_neurons {
+        for i in 0.._config.num_neurons {
+            for j in 0.._config.num_neurons {
                 if i != j && rng.random_f64() < connection_probability {
                     let weight = (rng.random_f64() - 0.5) * 0.2;
                     let delay = rng.random_f64() * 0.005; // 0-5ms delay
@@ -231,9 +231,9 @@ impl SpikingNeuralNetwork {
             }
         }
 
-        let num_neurons = config.num_neurons;
+        let num_neurons = _config.num_neurons;
         Self {
-            config,
+            _config,
             neurons,
             synapses,
             current_time: 0.0,
@@ -343,7 +343,7 @@ impl SpikingNeuralNetwork {
         for source_neuron in 0..self.config.num_neurons {
             for synapse in &self.synapses[source_neuron] {
                 if synapse.target == target_neuron {
-                    // Check if source neuron spiked recently (within delay)
+                    // Check if source _neuron spiked recently (within delay)
                     if let Some(last_spike) = self.neurons[source_neuron].last_spike_time {
                         let time_since_spike = self.current_time - last_spike;
                         if time_since_spike >= synapse.delay
@@ -361,11 +361,11 @@ impl SpikingNeuralNetwork {
 
     /// Compute objective-based feedback input
     fn compute_feedback_input(&self, neuron_idx: usize, objective_feedback: f64) -> f64 {
-        // Simple feedback scheme: better objective values give positive input
+        // Simple _feedback scheme: better objective values give positive input
         let feedback_strength = 1.0;
         let normalized_feedback = -objective_feedback; // Assume minimization
 
-        // Different neurons get different phases of feedback
+        // Different neurons get different phases of _feedback
         let phase = neuron_idx as f64 / self.config.num_neurons as f64 * 2.0 * std::f64::consts::PI;
         feedback_strength * normalized_feedback * (phase.sin() + 1.0) * 0.5
     }

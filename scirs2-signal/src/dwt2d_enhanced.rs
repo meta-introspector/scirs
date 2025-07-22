@@ -20,12 +20,16 @@
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array2, ArrayView1, ArrayView2, s};
+use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_array_finite, check_positive};
+use statrs::statistics::Statistics;
+use std::f64::consts::PI;
 use std::sync::Arc;
 
+#[allow(unused_imports)]
 /// Enhanced 2D DWT decomposition result
 #[derive(Debug, Clone)]
 pub struct EnhancedDwt2dResult {
@@ -602,7 +606,7 @@ fn apply_filters_scalar_optimized(
             }
         }
         _ => {
-            // General case for arbitrary filter lengths
+            // General case for arbitrary _filter lengths
             for i in 0..n {
                 let max_len = (n - i).min(filter_len);
                 let mut lo_sum = 0.0;
@@ -623,72 +627,72 @@ fn apply_filters_scalar_optimized(
 
 /// Apply boundary padding based on mode
 #[allow(dead_code)]
-fn apply_boundary_padding(signal: &[f64], filter_len: usize, mode: BoundaryMode) -> Vec<f64> {
+fn apply_boundary_padding(_signal: &[f64], filter_len: usize, mode: BoundaryMode) -> Vec<f64> {
     let pad_len = filter_len / 2;
-    let n = signal.len();
+    let n = _signal._len();
     let mut padded = Vec::with_capacity(n + 2 * pad_len);
 
     match mode {
         BoundaryMode::Zero => {
             padded.extend(vec![0.0; pad_len]);
-            padded.extend_from_slice(signal);
+            padded.extend_from_slice(_signal);
             padded.extend(vec![0.0; pad_len]);
         }
         BoundaryMode::Symmetric => {
             // Reflect at boundaries
             for i in (0..pad_len).rev() {
-                padded.push(signal[i.min(n - 1)]);
+                padded.push(_signal[i.min(n - 1)]);
             }
-            padded.extend_from_slice(signal);
+            padded.extend_from_slice(_signal);
             for i in 0..pad_len {
-                padded.push(signal[n - 1 - i.min(n - 1)]);
+                padded.push(_signal[n - 1 - i.min(n - 1)]);
             }
         }
         BoundaryMode::Periodic => {
             // Wrap around
             for i in (n - pad_len)..n {
-                padded.push(signal[i]);
+                padded.push(_signal[i]);
             }
-            padded.extend_from_slice(signal);
+            padded.extend_from_slice(_signal);
             for i in 0..pad_len {
-                padded.push(signal[i]);
+                padded.push(_signal[i]);
             }
         }
         BoundaryMode::Constant(value) => {
             padded.extend(vec![value; pad_len]);
-            padded.extend_from_slice(signal);
+            padded.extend_from_slice(_signal);
             padded.extend(vec![value; pad_len]);
         }
         BoundaryMode::AntiSymmetric => {
             // Anti-symmetric reflection with improved indexing
             for i in 0..pad_len {
                 let idx = (pad_len - i - 1).min(n - 1);
-                padded.push(2.0 * signal[0] - signal[idx]);
+                padded.push(2.0 * _signal[0] - _signal[idx]);
             }
-            padded.extend_from_slice(signal);
+            padded.extend_from_slice(_signal);
             for i in 0..pad_len {
                 let idx = (n - 1 - i).max(0).min(n - 1);
-                padded.push(2.0 * signal[n - 1] - signal[idx]);
+                padded.push(2.0 * _signal[n - 1] - _signal[idx]);
             }
         }
         BoundaryMode::Smooth => {
             // Polynomial extrapolation (linear for simplicity)
             if n >= 2 {
-                let slope_left = signal[1] - signal[0];
-                let slope_right = signal[n - 1] - signal[n - 2];
+                let slope_left = _signal[1] - _signal[0];
+                let slope_right = _signal[n - 1] - _signal[n - 2];
 
                 for i in (1..=pad_len).rev() {
-                    padded.push(signal[0] - i as f64 * slope_left);
+                    padded.push(_signal[0] - i as f64 * slope_left);
                 }
-                padded.extend_from_slice(signal);
+                padded.extend_from_slice(_signal);
                 for i in 1..=pad_len {
-                    padded.push(signal[n - 1] + i as f64 * slope_right);
+                    padded.push(_signal[n - 1] + i as f64 * slope_right);
                 }
             } else {
                 // Fallback to constant
-                padded.extend(vec![signal[0]; pad_len]);
-                padded.extend_from_slice(signal);
-                padded.extend(vec![signal[0]; pad_len]);
+                padded.extend(vec![_signal[0]; pad_len]);
+                padded.extend_from_slice(_signal);
+                padded.extend(vec![_signal[0]; pad_len]);
             }
         }
         BoundaryMode::Adaptive
@@ -696,7 +700,7 @@ fn apply_boundary_padding(signal: &[f64], filter_len: usize, mode: BoundaryMode)
         | BoundaryMode::MirrorCorrect
         | BoundaryMode::ContentAware => {
             // Use enhanced boundary padding for these advanced modes
-            return enhanced_boundary_padding(signal, filter_len, mode);
+            return enhanced_boundary_padding(_signal, filter_len, mode);
         }
     }
 
@@ -705,8 +709,8 @@ fn apply_boundary_padding(signal: &[f64], filter_len: usize, mode: BoundaryMode)
 
 /// Downsample by factor of 2
 #[allow(dead_code)]
-fn downsample(signal: &[f64]) -> Vec<f64> {
-    signal.iter().step_by(2).cloned().collect()
+fn downsample(_signal: &[f64]) -> Vec<f64> {
+    _signal.iter().step_by(2).cloned().collect()
 }
 
 /// Multilevel 2D DWT decomposition
@@ -879,7 +883,7 @@ fn process_dwt2d_block(
     row_offset: usize,
     col_offset: usize,
 ) -> SignalResult<EnhancedDwt2dResult> {
-    // Enhanced block processing with offset-aware optimizations
+    // Enhanced block processing with _offset-aware optimizations
     let (rows, cols) = block.dim();
 
     // Apply block-specific optimizations based on position
@@ -887,7 +891,7 @@ fn process_dwt2d_block(
         // Edge blocks may benefit from different boundary handling
         Dwt2dConfig {
             boundary_mode: match config.boundary_mode {
-                BoundaryMode::Adaptive => BoundaryMode::Symmetric,
+                BoundaryMode::Adaptive =>, BoundaryMode::Symmetric,
                 mode => mode,
             },
             ..*config
@@ -952,7 +956,7 @@ fn compute_dwt2d_quality_metrics(
         .filter(|&&x| x.abs() < threshold)
         .count();
 
-    let sparsity = sparse_coeffs as f64 / total_coeffs as f64;
+    let sparsity = sparse_coeffs as f64 / total_coeffs  as f64;
 
     // Compression ratio estimate (based on sparsity)
     let compression_ratio = if sparsity > 0.1 {
@@ -1011,7 +1015,7 @@ fn compute_edge_preservation_metric(
         .iter()
         .chain(result.detail_v.iter())
         .chain(result.detail_d.iter())
-        .map(|&x| x.abs())
+        .map(|&x: &f64| x.abs())
         .sum::<f64>();
 
     // Normalize and compute preservation ratio
@@ -1248,15 +1252,14 @@ fn enhanced_simd_dwt2d_reconstruct(
 
 /// Enhanced 1D reconstruction with advanced SIMD optimization
 #[allow(dead_code)]
-fn reconstruct_1d_simd(lo: &[f64], hi: &[f64], lo_filter: &[f64], hi_filter: &[f64]) -> Vec<f64> {
-    use ndarray::ArrayView1;
+fn reconstruct_1d_simd(_lo: &[f64], hi: &[f64], lo_filter: &[f64], hi_filter: &[f64]) -> Vec<f64> {
 
-    let n = lo.len() + hi.len();
+    let n = _lo.len() + hi.len();
     let filter_len = lo_filter.len().max(hi_filter.len());
     let mut result = vec![0.0; n + filter_len - 1];
 
     // Enhanced SIMD convolution with memory-aligned operations
-    let lo_view = ArrayView1::from(lo);
+    let lo_view = ArrayView1::from(_lo);
     let hi_view = ArrayView1::from(hi);
     let lo_filter_view = ArrayView1::from(lo_filter);
     let hi_filter_view = ArrayView1::from(hi_filter);
@@ -1267,13 +1270,13 @@ fn reconstruct_1d_simd(lo: &[f64], hi: &[f64], lo_filter: &[f64], hi_filter: &[f
         simd_convolution_accumulate(
             &lo_view,
             &lo_filter_view,
-            &mut result[..lo.len() + lo_filter.len() - 1],
+            &mut result[.._lo.len() + lo_filter.len() - 1],
         );
     } else {
         // Standard implementation for small filters
-        for i in 0..lo.len() {
+        for i in 0.._lo.len() {
             for (j, &coeff) in lo_filter.iter().enumerate() {
-                result[i + j] += lo[i] * coeff;
+                result[i + j] += _lo[i] * coeff;
             }
         }
     }
@@ -1394,10 +1397,10 @@ fn simd_convolution_accumulate(
 
 /// Upsample signal by inserting zeros
 #[allow(dead_code)]
-fn upsample(signal: &[f64]) -> Vec<f64> {
-    let mut upsampled = Vec::with_capacity(signal.len() * 2);
+fn upsample(_signal: &[f64]) -> Vec<f64> {
+    let mut upsampled = Vec::with_capacity(_signal.len() * 2);
 
-    for &val in signal {
+    for &val in _signal {
         upsampled.push(val);
         upsampled.push(0.0);
     }
@@ -1441,11 +1444,11 @@ fn compute_enhanced_edge_preservation_metric(
 
 /// Enhanced multilevel reconstruction with error correction
 #[allow(dead_code)]
-pub fn waverec2_enhanced(decomp: &MultilevelDwt2d) -> SignalResult<Array2<f64>> {
-    let mut current = decomp.approx.clone();
+pub fn waverec2_enhanced(_decomp: &MultilevelDwt2d) -> SignalResult<Array2<f64>> {
+    let mut current = _decomp.approx.clone();
 
     // Reconstruct from coarsest to finest level
-    for (detail_h, detail_v, detail_d) in decomp.details.iter().rev() {
+    for (detail_h, detail_v, detail_d) in _decomp.details.iter().rev() {
         // Create temporary result structure
         let temp_result = EnhancedDwt2dResult {
             approx: current,
@@ -1453,16 +1456,16 @@ pub fn waverec2_enhanced(decomp: &MultilevelDwt2d) -> SignalResult<Array2<f64>> 
             detail_v: detail_v.clone(),
             detail_d: detail_d.clone(),
             original_shape: (detail_h.nrows() * 2, detail_h.ncols() * 2),
-            boundary_mode: decomp.config.boundary_mode,
+            boundary_mode: _decomp.config.boundary_mode,
             metrics: None,
         };
 
         // Reconstruct this level
-        current = enhanced_dwt2d_reconstruct(&temp_result, decomp.wavelet, &decomp.config)?;
+        current = enhanced_dwt2d_reconstruct(&temp_result, _decomp.wavelet, &_decomp.config)?;
     }
 
     // Crop to original size if needed
-    let (target_rows, target_cols) = decomp.original_shape;
+    let (target_rows, target_cols) = _decomp.original_shape;
     let (current_rows, current_cols) = current.dim();
 
     if current_rows > target_rows || current_cols > target_cols {
@@ -1498,7 +1501,7 @@ pub fn enhanced_dwt2d_adaptive(
 
     if energy_threshold <= 0.0 || energy_threshold >= 1.0 {
         return Err(SignalError::ValueError(
-            "Energy threshold must be between 0 and 1".to_string(),
+            "Energy _threshold must be between 0 and 1".to_string(),
         ));
     }
 
@@ -1555,7 +1558,7 @@ pub fn enhanced_dwt2d_adaptive(
 
         // Enhanced stopping criteria
 
-        // 1. Primary energy threshold
+        // 1. Primary energy _threshold
         if energy_ratio < energy_threshold {
             break;
         }
@@ -1630,8 +1633,8 @@ pub fn enhanced_dwt2d_adaptive(
 
 /// Calculate maximum reasonable decomposition levels based on image size
 #[allow(dead_code)]
-fn calculate_max_decomposition_levels(shape: (usize, usize)) -> usize {
-    let (rows, cols) = shape;
+fn calculate_max_decomposition_levels(_shape: (usize, usize)) -> usize {
+    let (rows, cols) = _shape;
     let min_dim = rows.min(cols);
 
     // Allow decomposition until minimum dimension is 4
@@ -1650,7 +1653,7 @@ fn compute_subband_entropy(
     let coeffs: Vec<f64> = detail_h.iter()
         .chain(detail_v.iter())
         .chain(detail_d.iter())
-        .map(|&x| x.abs())
+        .map(|&x: &f64| x.abs())
         .filter(|&x| x > 1e-12) // Filter near-zero values
         .collect();
 
@@ -1752,7 +1755,7 @@ fn compute_coefficient_entropy(
     let coeffs: Vec<f64> = detail_h.iter()
         .chain(detail_v.iter())
         .chain(detail_d.iter())
-        .map(|&x| x.abs())
+        .map(|&x: &f64| x.abs())
         .filter(|&x| x > 1e-12) // Filter near-zero values
         .collect();
 
@@ -1800,8 +1803,8 @@ fn compute_coefficient_sparsity(
 
 /// Compute gradient magnitude using Sobel operator
 #[allow(dead_code)]
-fn compute_gradient_magnitude(image: &Array2<f64>) -> SignalResult<Array2<f64>> {
-    let (rows, cols) = image.dim();
+fn compute_gradient_magnitude(_image: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    let (rows, cols) = _image.dim();
     let mut magnitude = Array2::zeros((rows, cols));
 
     // Sobel kernels
@@ -1816,7 +1819,7 @@ fn compute_gradient_magnitude(image: &Array2<f64>) -> SignalResult<Array2<f64>> 
             // Apply Sobel kernels
             for di in 0..3 {
                 for dj in 0..3 {
-                    let pixel = image[[i + di - 1, j + dj - 1]];
+                    let pixel = _image[[i + di - 1, j + dj - 1]];
                     gx += pixel * sobel_x[di][dj];
                     gy += pixel * sobel_y[di][dj];
                 }
@@ -1831,9 +1834,9 @@ fn compute_gradient_magnitude(image: &Array2<f64>) -> SignalResult<Array2<f64>> 
 
 /// Simplified reconstruction for edge analysis
 #[allow(dead_code)]
-fn reconstruct_for_edge_analysis(result: &EnhancedDwt2dResult) -> SignalResult<Array2<f64>> {
+fn reconstruct_for_edge_analysis(_result: &EnhancedDwt2dResult) -> SignalResult<Array2<f64>> {
     // Simple reconstruction by upsampling and combining subbands
-    let (sub_rows, sub_cols) = result.approx.dim();
+    let (sub_rows, sub_cols) = _result.approx.dim();
     let target_rows = sub_rows * 2;
     let target_cols = sub_cols * 2;
 
@@ -1842,7 +1845,7 @@ fn reconstruct_for_edge_analysis(result: &EnhancedDwt2dResult) -> SignalResult<A
     // Place approximation coefficients in top-left
     for i in 0..sub_rows {
         for j in 0..sub_cols {
-            reconstructed[[i, j]] = result.approx[[i, j]];
+            reconstructed[[i, j]] = _result.approx[[i, j]];
         }
     }
 
@@ -1852,15 +1855,15 @@ fn reconstruct_for_edge_analysis(result: &EnhancedDwt2dResult) -> SignalResult<A
         for j in 0..sub_cols {
             // Horizontal details
             if j + sub_cols < target_cols {
-                reconstructed[[i, j + sub_cols]] += result.detail_h[[i, j]];
+                reconstructed[[i, j + sub_cols]] += _result.detail_h[[i, j]];
             }
             // Vertical details
             if i + sub_rows < target_rows {
-                reconstructed[[i + sub_rows, j]] += result.detail_v[[i, j]];
+                reconstructed[[i + sub_rows, j]] += _result.detail_v[[i, j]];
             }
             // Diagonal details
             if i + sub_rows < target_rows && j + sub_cols < target_cols {
-                reconstructed[[i + sub_rows, j + sub_cols]] += result.detail_d[[i, j]];
+                reconstructed[[i + sub_rows, j + sub_cols]] += _result.detail_d[[i, j]];
             }
         }
     }
@@ -1870,8 +1873,8 @@ fn reconstruct_for_edge_analysis(result: &EnhancedDwt2dResult) -> SignalResult<A
 
 /// Resize array to match target dimensions
 #[allow(dead_code)]
-fn resize_to_match(source: &Array2<f64>, target_dim: (usize, usize)) -> SignalResult<Array2<f64>> {
-    let (src_rows, src_cols) = source.dim();
+fn resize_to_match(_source: &Array2<f64>, target_dim: (usize, usize)) -> SignalResult<Array2<f64>> {
+    let (src_rows, src_cols) = _source._dim();
     let (target_rows, target_cols) = target_dim;
 
     // Simple nearest-neighbor resizing
@@ -1881,7 +1884,7 @@ fn resize_to_match(source: &Array2<f64>, target_dim: (usize, usize)) -> SignalRe
         for j in 0..target_cols {
             let src_i = (i * src_rows) / target_rows;
             let src_j = (j * src_cols) / target_cols;
-            resized[[i, j]] = source[[src_i.min(src_rows - 1), src_j.min(src_cols - 1)]];
+            resized[[i, j]] = _source[[src_i.min(src_rows - 1), src_j.min(src_cols - 1)]];
         }
     }
 
@@ -1890,13 +1893,13 @@ fn resize_to_match(source: &Array2<f64>, target_dim: (usize, usize)) -> SignalRe
 
 /// Compute correlation between edge maps
 #[allow(dead_code)]
-fn compute_edge_correlation(edges1: &Array2<f64>, edges2: &Array2<f64>) -> SignalResult<f64> {
-    let edges1_flat = edges1.view().into_shape_with_order(edges1.len()).unwrap();
+fn compute_edge_correlation(_edges1: &Array2<f64>, edges2: &Array2<f64>) -> SignalResult<f64> {
+    let edges1_flat = _edges1.view().into_shape_with_order(_edges1.len()).unwrap();
     let edges2_flat = edges2.view().into_shape_with_order(edges2.len()).unwrap();
 
     // Compute means
-    let mean1 = edges1_flat.sum() / edges1_flat.len() as f64;
-    let mean2 = edges2_flat.sum() / edges2_flat.len() as f64;
+    let mean1 = edges1_flat.sum() / edges1_flat.len()  as f64;
+    let mean2 = edges2_flat.sum() / edges2_flat.len()  as f64;
 
     // Center the data
     let mut centered1 = edges1_flat.to_owned();
@@ -2012,7 +2015,7 @@ fn estimate_noise_std_from_subbands(
     coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let median = coeffs[coeffs.len() / 2];
-    let mad: f64 = coeffs.iter().map(|&x| (x - median).abs()).sum::<f64>() / coeffs.len() as f64;
+    let mad: f64 = coeffs.iter().map(|&x| (x - median).abs()).sum::<f64>() / coeffs.len()  as f64;
 
     // Convert MAD to standard deviation estimate using robust scaling factor
     Ok(mad / 0.6745)
@@ -2055,8 +2058,8 @@ fn apply_adaptive_threshold(
 
 /// Soft thresholding function
 #[allow(dead_code)]
-fn soft_threshold(coeffs: &mut Array2<f64>, threshold: f64) {
-    for coeff in coeffs.iter_mut() {
+fn soft_threshold(_coeffs: &mut Array2<f64>, threshold: f64) {
+    for coeff in _coeffs.iter_mut() {
         if coeff.abs() > threshold {
             *coeff = coeff.signum() * (coeff.abs() - threshold);
         } else {
@@ -2067,8 +2070,8 @@ fn soft_threshold(coeffs: &mut Array2<f64>, threshold: f64) {
 
 /// Hard thresholding function
 #[allow(dead_code)]
-fn hard_threshold(coeffs: &mut Array2<f64>, threshold: f64) {
-    for coeff in coeffs.iter_mut() {
+fn hard_threshold(_coeffs: &mut Array2<f64>, threshold: f64) {
+    for coeff in _coeffs.iter_mut() {
         if coeff.abs() <= threshold {
             *coeff = 0.0;
         }
@@ -2077,9 +2080,9 @@ fn hard_threshold(coeffs: &mut Array2<f64>, threshold: f64) {
 
 /// SURE threshold estimation
 #[allow(dead_code)]
-fn sure_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
-    let n = coeffs.len() as f64;
-    let mut sorted_coeffs: Vec<f64> = coeffs.iter().map(|x| x.abs()).collect();
+fn sure_threshold(_coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
+    let n = _coeffs.len()  as f64;
+    let mut sorted_coeffs: Vec<f64> = _coeffs.iter().map(|x| x.abs()).collect();
     sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let mut min_risk = f64::INFINITY;
@@ -2099,9 +2102,9 @@ fn sure_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
 
 /// Compute SURE risk for given threshold
 #[allow(dead_code)]
-fn compute_sure_risk(sorted_coeffs: &[f64], threshold: f64, sigma: f64, n: f64, k: usize) -> f64 {
-    let retained = n - k as f64;
-    let sum_sqr: f64 = sorted_coeffs.iter().skip(k).map(|&x| x * x).sum();
+fn compute_sure_risk(_sorted_coeffs: &[f64], threshold: f64, sigma: f64, n: f64, k: usize) -> f64 {
+    let retained = n - k  as f64;
+    let sum_sqr: f64 = _sorted_coeffs.iter().skip(k).map(|&x| x * x).sum();
 
     // SURE risk estimate
     n - 2.0 * retained + sum_sqr / (sigma * sigma)
@@ -2109,9 +2112,9 @@ fn compute_sure_risk(sorted_coeffs: &[f64], threshold: f64, sigma: f64, n: f64, 
 
 /// BayesShrink threshold estimation
 #[allow(dead_code)]
-fn bayes_shrink_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
+fn bayes_shrink_threshold(_coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
     // Estimate signal variance
-    let signal_var = coeffs.iter().map(|&x| x * x).sum::<f64>() / coeffs.len() as f64;
+    let signal_var = _coeffs.iter().map(|&x| x * x).sum::<f64>() / _coeffs.len()  as f64;
     let noise_var = sigma * sigma;
 
     // Clip signal variance to avoid negative values
@@ -2120,40 +2123,40 @@ fn bayes_shrink_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64>
     if signal_var > 0.0 {
         Ok(noise_var / signal_var.sqrt())
     } else {
-        Ok(sigma * (2.0 * coeffs.len() as f64).ln().sqrt())
+        Ok(sigma * (2.0 * _coeffs.len() as f64).ln().sqrt())
     }
 }
 
 /// BiShrink (bivariate shrinkage) for edge preservation
 #[allow(dead_code)]
-fn bishrink_threshold(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult<()> {
-    let (rows, cols) = coeffs.dim();
-    let mut result = coeffs.clone();
+fn bishrink_threshold(_coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult<()> {
+    let (rows, cols) = _coeffs.dim();
+    let mut result = _coeffs.clone();
 
     // Apply BiShrink to 2x2 neighborhoods
     for i in 0..rows {
         for j in 0..cols {
-            let neighbors = get_neighborhood(coeffs, i, j);
+            let neighbors = get_neighborhood(_coeffs, i, j);
             let shrunk = bishrink_neighborhood(&neighbors, sigma);
             result[[i, j]] = shrunk;
         }
     }
 
-    *coeffs = result;
+    *_coeffs = result;
     Ok(())
 }
 
 /// Get 2x2 neighborhood for BiShrink
 #[allow(dead_code)]
-fn get_neighborhood(coeffs: &Array2<f64>, i: usize, j: usize) -> Vec<f64> {
-    let (rows, cols) = coeffs.dim();
+fn get_neighborhood(_coeffs: &Array2<f64>, i: usize, j: usize) -> Vec<f64> {
+    let (rows, cols) = _coeffs.dim();
     let mut neighborhood = Vec::new();
 
     for di in 0..2 {
         for dj in 0..2 {
             let ni = (i + di).min(rows - 1);
             let nj = (j + dj).min(cols - 1);
-            neighborhood.push(coeffs[[ni, nj]]);
+            neighborhood.push(_coeffs[[ni, nj]]);
         }
     }
 
@@ -2162,10 +2165,10 @@ fn get_neighborhood(coeffs: &Array2<f64>, i: usize, j: usize) -> Vec<f64> {
 
 /// Apply BiShrink to neighborhood
 #[allow(dead_code)]
-fn bishrink_neighborhood(neighborhood: &[f64], sigma: f64) -> f64 {
-    let x = neighborhood[0]; // Center coefficient
-    let energy: f64 = neighborhood.iter().map(|&val| val * val).sum();
-    let k = neighborhood.len() as f64;
+fn bishrink_neighborhood(_neighborhood: &[f64], sigma: f64) -> f64 {
+    let x = _neighborhood[0]; // Center coefficient
+    let energy: f64 = _neighborhood.iter().map(|&val| val * val).sum();
+    let k = _neighborhood.len()  as f64;
 
     let variance_x = (energy / k - sigma * sigma).max(0.0);
 
@@ -2179,8 +2182,8 @@ fn bishrink_neighborhood(neighborhood: &[f64], sigma: f64) -> f64 {
 
 /// Non-local means in wavelet domain
 #[allow(dead_code)]
-fn non_local_means_wavelet(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult<()> {
-    let (rows, cols) = coeffs.dim();
+fn non_local_means_wavelet(_coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult<()> {
+    let (rows, cols) = _coeffs.dim();
     let mut result = Array2::zeros((rows, cols));
     let h = sigma * 0.4; // Filtering parameter
     let patch_size = 3;
@@ -2188,7 +2191,7 @@ fn non_local_means_wavelet(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult
 
     for i in 0..rows {
         for j in 0..cols {
-            let patch_i = extract_patch(coeffs, i, j, patch_size);
+            let patch_i = extract_patch(_coeffs, i, j, patch_size);
             let mut weights_sum = 0.0;
             let mut weighted_sum = 0.0;
 
@@ -2200,31 +2203,31 @@ fn non_local_means_wavelet(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult
 
             for si in start_i..end_i {
                 for sj in start_j..end_j {
-                    let patch_s = extract_patch(coeffs, si, sj, patch_size);
+                    let patch_s = extract_patch(_coeffs, si, sj, patch_size);
                     let distance = patch_distance(&patch_i, &patch_s);
                     let weight = (-distance / (h * h)).exp();
 
                     weights_sum += weight;
-                    weighted_sum += weight * coeffs[[si, sj]];
+                    weighted_sum += weight * _coeffs[[si, sj]];
                 }
             }
 
             result[[i, j]] = if weights_sum > 0.0 {
                 weighted_sum / weights_sum
             } else {
-                coeffs[[i, j]]
+                _coeffs[[i, j]]
             };
         }
     }
 
-    *coeffs = result;
+    *_coeffs = result;
     Ok(())
 }
 
 /// Extract patch around given position
 #[allow(dead_code)]
-fn extract_patch(data: &Array2<f64>, i: usize, j: usize, size: usize) -> Vec<f64> {
-    let (rows, cols) = data.dim();
+fn extract_patch(_data: &Array2<f64>, i: usize, j: usize, size: usize) -> Vec<f64> {
+    let (rows, cols) = _data.dim();
     let half_size = size / 2;
     let mut patch = Vec::new();
 
@@ -2232,7 +2235,7 @@ fn extract_patch(data: &Array2<f64>, i: usize, j: usize, size: usize) -> Vec<f64
         for dj in 0..size {
             let ni = (i + di).saturating_sub(half_size).min(rows - 1);
             let nj = (j + dj).saturating_sub(half_size).min(cols - 1);
-            patch.push(data[[ni, nj]]);
+            patch.push(_data[[ni, nj]]);
         }
     }
 
@@ -2241,8 +2244,8 @@ fn extract_patch(data: &Array2<f64>, i: usize, j: usize, size: usize) -> Vec<f64
 
 /// Compute L2 distance between patches
 #[allow(dead_code)]
-fn patch_distance(patch1: &[f64], patch2: &[f64]) -> f64 {
-    patch1
+fn patch_distance(_patch1: &[f64], patch2: &[f64]) -> f64 {
+    _patch1
         .iter()
         .zip(patch2.iter())
         .map(|(a, b)| (a - b).powi(2))
@@ -2251,68 +2254,67 @@ fn patch_distance(patch1: &[f64], patch2: &[f64]) -> f64 {
 
 /// Enhanced content-aware boundary padding
 #[allow(dead_code)]
-pub fn enhanced_boundary_padding(data: &[f64], pad_length: usize, mode: BoundaryMode) -> Vec<f64> {
+pub fn enhanced_boundary_padding(_data: &[f64], pad_length: usize, mode: BoundaryMode) -> Vec<f64> {
     match mode {
         BoundaryMode::ContentAware => {
-            content_aware_padding(data, pad_length).unwrap_or_else(|_| {
+            content_aware_padding(_data, pad_length).unwrap_or_else(|_| {
                 // Fallback to symmetric if content-aware fails
-                apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Symmetric)
+                apply_enhanced_boundary_padding(_data, pad_length, BoundaryMode::Symmetric)
                     .unwrap_or_default()
             })
         }
         BoundaryMode::MirrorCorrect => {
-            mirror_correct_padding(data, pad_length).unwrap_or_else(|_| {
+            mirror_correct_padding(_data, pad_length).unwrap_or_else(|_| {
                 // Fallback to symmetric if mirror correct fails
-                apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Symmetric)
+                apply_enhanced_boundary_padding(_data, pad_length, BoundaryMode::Symmetric)
                     .unwrap_or_default()
             })
         }
-        BoundaryMode::Extrapolate => extrapolate_padding(data, pad_length).unwrap_or_else(|_| {
+        BoundaryMode::Extrapolate => extrapolate_padding(_data, pad_length).unwrap_or_else(|_| {
             // Fallback to smooth if extrapolate fails
-            apply_enhanced_boundary_padding(data, pad_length, BoundaryMode::Smooth)
+            apply_enhanced_boundary_padding(_data, pad_length, BoundaryMode::Smooth)
                 .unwrap_or_default()
-        }),
-        _ => {
+        }, _ => {
             // Use existing implementation for other modes
-            apply_enhanced_boundary_padding(data, pad_length, mode).unwrap_or_default()
+            apply_enhanced_boundary_padding(_data, pad_length, mode).unwrap_or_default()
         }
     }
 }
 
 /// Content-aware padding based on local image structure
 #[allow(dead_code)]
-fn content_aware_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
-    let n = data.len();
+fn content_aware_padding(_data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
+    let n = _data.len();
     let mut result = vec![0.0; n + 2 * pad_length];
 
-    // Copy original data
-    result[pad_length..pad_length + n].copy_from_slice(data);
+    // Copy original _data
+    result[pad_length..pad_length + n].copy_from_slice(_data);
 
     // Left padding - analyze local trend
     if n >= 3 {
-        let trend = estimate_trend(&data[0..3.min(n)]);
+        let trend = estimate_trend(&_data[0..3.min(n)]);
         for i in 0..pad_length {
-            let distance = (pad_length - i) as f64;
-            result[i] = data[0] - trend * distance;
+            let distance = (pad_length - i)  as f64;
+            result[i] = _data[0] - trend * distance;
         }
     } else {
         // Fallback to symmetric for short signals
         for i in 0..pad_length {
-            result[i] = data[i % n];
+            result[i] = _data[i % n];
         }
     }
 
     // Right padding
     if n >= 3 {
         let start_idx = (n - 3).max(0);
-        let trend = estimate_trend(&data[start_idx..n]);
+        let trend = estimate_trend(&_data[start_idx..n]);
         for i in 0..pad_length {
-            let distance = (i + 1) as f64;
-            result[pad_length + n + i] = data[n - 1] + trend * distance;
+            let distance = (i + 1)  as f64;
+            result[pad_length + n + i] = _data[n - 1] + trend * distance;
         }
     } else {
         for i in 0..pad_length {
-            result[pad_length + n + i] = data[n - 1 - (i % n)];
+            result[pad_length + n + i] = _data[n - 1 - (i % n)];
         }
     }
 
@@ -2321,31 +2323,31 @@ fn content_aware_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f6
 
 /// Estimate local trend from data points using robust linear regression
 #[allow(dead_code)]
-fn estimate_trend(data: &[f64]) -> f64 {
-    if data.len() < 2 {
+fn estimate_trend(_data: &[f64]) -> f64 {
+    if _data.len() < 2 {
         return 0.0;
     }
 
     // Robust trend estimation with outlier handling
-    if data.len() == 2 {
-        return data[1] - data[0];
+    if _data.len() == 2 {
+        return _data[1] - _data[0];
     }
 
     // Use weighted least squares for better robustness
-    let n = data.len();
+    let n = _data.len();
     let mut weights = vec![1.0; n];
 
     // Identify and downweight potential outliers
     let median = {
-        let mut sorted = data.to_vec();
+        let mut sorted = _data.to_vec();
         sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         sorted[n / 2]
     };
 
-    let mad: f64 = data.iter().map(|&x| (x - median).abs()).sum::<f64>() / n as f64;
+    let mad: f64 = _data.iter().map(|&x| (x - median).abs()).sum::<f64>() / n  as f64;
 
     if mad > 1e-10 {
-        for (i, &val) in data.iter().enumerate() {
+        for (i, &val) in _data.iter().enumerate() {
             let deviation = (val - median).abs() / mad;
             if deviation > 3.0 {
                 weights[i] = 1.0 / (1.0 + deviation); // Downweight outliers
@@ -2360,8 +2362,8 @@ fn estimate_trend(data: &[f64]) -> f64 {
     }
 
     let weighted_x_sum: f64 = (0..n).map(|i| i as f64 * weights[i]).sum();
-    let weighted_y_sum: f64 = data.iter().enumerate().map(|(i, &y)| y * weights[i]).sum();
-    let weighted_xy_sum: f64 = data
+    let weighted_y_sum: f64 = _data.iter().enumerate().map(|(i, &y)| y * weights[i]).sum();
+    let weighted_xy_sum: f64 = _data
         .iter()
         .enumerate()
         .map(|(i, &y)| i as f64 * y * weights[i])
@@ -2373,23 +2375,23 @@ fn estimate_trend(data: &[f64]) -> f64 {
         (weight_sum * weighted_xy_sum - weighted_x_sum * weighted_y_sum) / denominator
     } else {
         // Fallback to simple difference for degenerate cases
-        (data[n - 1] - data[0]) / (n - 1) as f64
+        (_data[n - 1] - _data[0]) / (n - 1) as f64
     }
 }
 
 /// Mirror padding with edge correction
 #[allow(dead_code)]
-fn mirror_correct_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
-    let n = data.len();
+fn mirror_correct_padding(_data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
+    let n = _data.len();
     let mut result = vec![0.0; n + 2 * pad_length];
 
-    // Copy original data
-    result[pad_length..pad_length + n].copy_from_slice(data);
+    // Copy original _data
+    result[pad_length..pad_length + n].copy_from_slice(_data);
 
     // Apply standard mirror padding first
     for i in 0..pad_length {
-        result[i] = data[(pad_length - i - 1).min(n - 1)];
-        result[pad_length + n + i] = data[n - 1 - (i + 1).min(n - 1)];
+        result[i] = _data[(pad_length - i - 1).min(n - 1)];
+        result[pad_length + n + i] = _data[n - 1 - (i + 1).min(n - 1)];
     }
 
     // Apply edge correction to reduce artifacts
@@ -2399,12 +2401,12 @@ fn mirror_correct_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f
 
         // Left edge correction
         let original = result[pad_length - i - 1];
-        let corrected = data[0] + (data[0] - data[i + 1]) * (i + 1) as f64;
+        let corrected = _data[0] + (_data[0] - _data[i + 1]) * (i + 1)  as f64;
         result[pad_length - i - 1] = original * (1.0 - weight) + corrected * weight;
 
         // Right edge correction
         let original = result[pad_length + n + i];
-        let corrected = data[n - 1] + (data[n - 1] - data[n - i - 2]) * (i + 1) as f64;
+        let corrected = _data[n - 1] + (_data[n - 1] - _data[n - i - 2]) * (i + 1)  as f64;
         result[pad_length + n + i] = original * (1.0 - weight) + corrected * weight;
     }
 
@@ -2413,36 +2415,36 @@ fn mirror_correct_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f
 
 /// Extrapolation padding using local gradients
 #[allow(dead_code)]
-fn extrapolate_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
-    let n = data.len();
+fn extrapolate_padding(_data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
+    let n = _data.len();
     let mut result = vec![0.0; n + 2 * pad_length];
 
-    // Copy original data
-    result[pad_length..pad_length + n].copy_from_slice(data);
+    // Copy original _data
+    result[pad_length..pad_length + n].copy_from_slice(_data);
 
     if n < 2 {
         // Fallback to constant for very short signals
         for i in 0..pad_length {
-            result[i] = data[0];
-            result[pad_length + n + i] = data[n - 1];
+            result[i] = _data[0];
+            result[pad_length + n + i] = _data[n - 1];
         }
         return Ok(result);
     }
 
     // Estimate gradients at edges
-    let left_gradient = data[1] - data[0];
-    let right_gradient = data[n - 1] - data[n - 2];
+    let left_gradient = _data[1] - _data[0];
+    let right_gradient = _data[n - 1] - _data[n - 2];
 
     // Left extrapolation
     for i in 0..pad_length {
-        let distance = (pad_length - i) as f64;
-        result[i] = data[0] - left_gradient * distance;
+        let distance = (pad_length - i)  as f64;
+        result[i] = _data[0] - left_gradient * distance;
     }
 
     // Right extrapolation
     for i in 0..pad_length {
-        let distance = (i + 1) as f64;
-        result[pad_length + n + i] = data[n - 1] + right_gradient * distance;
+        let distance = (i + 1)  as f64;
+        result[pad_length + n + i] = _data[n - 1] + right_gradient * distance;
     }
 
     Ok(result)
@@ -2656,20 +2658,20 @@ fn analyze_and_select_boundary_mode(
 
 /// Calculate edge variance to determine image characteristics
 #[allow(dead_code)]
-fn calculate_edge_variance(data: &Array2<f64>) -> f64 {
-    let (rows, cols) = data.dim();
+fn calculate_edge_variance(_data: &Array2<f64>) -> f64 {
+    let (rows, cols) = _data.dim();
 
     // Extract edges
-    let top_edge = data.row(0);
-    let bottom_edge = data.row(rows - 1);
-    let left_edge = data.column(0);
-    let right_edge = data.column(cols - 1);
+    let top_edge = _data.row(0);
+    let bottom_edge = _data.row(rows - 1);
+    let left_edge = _data.column(0);
+    let right_edge = _data.column(cols - 1);
 
     // Calculate variances
-    let top_var = top_edge.var(0.0);
-    let bottom_var = bottom_edge.var(0.0);
-    let left_var = left_edge.var(0.0);
-    let right_var = right_edge.var(0.0);
+    let top_var = top_edge.variance();
+    let bottom_var = bottom_edge.variance();
+    let left_var = left_edge.variance();
+    let right_var = right_edge.variance();
 
     // Return average edge variance
     (top_var + bottom_var + left_var + right_var) / 4.0
@@ -2677,8 +2679,8 @@ fn calculate_edge_variance(data: &Array2<f64>) -> f64 {
 
 /// Calculate smoothness metric for the image
 #[allow(dead_code)]
-fn calculate_smoothness(data: &Array2<f64>) -> f64 {
-    let (rows, cols) = data.dim();
+fn calculate_smoothness(_data: &Array2<f64>) -> f64 {
+    let (rows, cols) = _data.dim();
 
     if rows < 3 || cols < 3 {
         return 0.5; // Default for small images
@@ -2691,29 +2693,29 @@ fn calculate_smoothness(data: &Array2<f64>) -> f64 {
     for i in 1..(rows - 1) {
         for j in 1..(cols - 1) {
             let laplacian =
-                data[[i - 1, j]] + data[[i + 1, j]] + data[[i, j - 1]] + data[[i, j + 1]]
-                    - 4.0 * data[[i, j]];
+                _data[[i - 1, j]] + _data[[i + 1, j]] + _data[[i, j - 1]] + _data[[i, j + 1]]
+                    - 4.0 * _data[[i, j]];
             total_laplacian += laplacian.abs();
             count += 1;
         }
     }
 
-    let avg_laplacian = total_laplacian / count as f64;
-    let data_range = data.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
-        - data.iter().cloned().fold(f64::INFINITY, f64::min);
+    let avg_laplacian = total_laplacian / count  as f64;
+    let data_range = _data.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
+        - _data.iter().cloned().fold(f64::INFINITY, f64::min);
 
     if data_range < 1e-12 {
         return 1.0; // Constant image is very smooth
     }
 
-    // Normalize by data range and invert (higher value = smoother)
+    // Normalize by _data range and invert (higher value = smoother)
     1.0 / (1.0 + avg_laplacian / data_range)
 }
 
 /// Estimate periodicity of the image
 #[allow(dead_code)]
-fn estimate_periodicity(data: &Array2<f64>) -> f64 {
-    let (rows, cols) = data.dim();
+fn estimate_periodicity(_data: &Array2<f64>) -> f64 {
+    let (rows, cols) = _data.dim();
 
     // Simple correlation-based periodicity detection
     let min_dim = rows.min(cols);
@@ -2731,8 +2733,8 @@ fn estimate_periodicity(data: &Array2<f64>) -> f64 {
 
     for i in 0..half_rows {
         for j in 0..half_cols {
-            let val1 = data[[i, j]];
-            let val2 = data[[i + half_rows, j + half_cols]];
+            let val1 = _data[[i, j]];
+            let val2 = _data[[i + half_rows, j + half_cols]];
 
             correlation += val1 * val2;
             norm1 += val1 * val1;
@@ -2808,9 +2810,9 @@ fn validate_dwt2d_result_enhanced(
         for (subband, name) in subbands {
             let max_val = subband.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
             let min_val = subband.iter().cloned().fold(f64::INFINITY, f64::min);
-            let mean_val = subband.iter().sum::<f64>() / subband.len() as f64;
+            let mean_val = subband.iter().sum::<f64>() / subband.len()  as f64;
             let variance =
-                subband.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / subband.len() as f64;
+                subband.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / subband.len()  as f64;
 
             stats.update(name, max_val, min_val, mean_val, variance);
 
@@ -2867,9 +2869,7 @@ impl WaveletCoefficientStats {
     fn update(
         &mut self,
         subband_name: &str,
-        max_val: f64,
-        _min_val: f64,
-        _mean: f64,
+        max_val: f64, _min_val: f64, _mean: f64,
         variance: f64,
     ) {
         let energy = variance;
@@ -2965,7 +2965,6 @@ fn validate_energy_conservation(
 
 #[cfg(test)]
 mod tests {
-    use ndarray::Array2;
 
     #[test]
     fn test_enhanced_dwt2d_basic() {
@@ -2987,10 +2986,10 @@ mod tests {
         assert_eq!(result.detail_d.dim(), (2, 2));
 
         // Verify all coefficients are finite
-        assert!(result.approx.iter().all(|&x| x.is_finite()));
-        assert!(result.detail_h.iter().all(|&x| x.is_finite()));
-        assert!(result.detail_v.iter().all(|&x| x.is_finite()));
-        assert!(result.detail_d.iter().all(|&x| x.is_finite()));
+        assert!(result.approx.iter().all(|&x: &f64| x.is_finite()));
+        assert!(result.detail_h.iter().all(|&x: &f64| x.is_finite()));
+        assert!(result.detail_v.iter().all(|&x: &f64| x.is_finite()));
+        assert!(result.detail_d.iter().all(|&x: &f64| x.is_finite()));
     }
 
     #[test]
@@ -3011,15 +3010,17 @@ mod tests {
             };
 
             let result = enhanced_dwt2d_decompose(&data, Wavelet::DB(4), &config).unwrap();
-            assert!(result.approx.iter().all(|&x| x.is_finite()));
-            assert!(result.detail_h.iter().all(|&x| x.is_finite()));
-            assert!(result.detail_v.iter().all(|&x| x.is_finite()));
-            assert!(result.detail_d.iter().all(|&x| x.is_finite()));
+            assert!(result.approx.iter().all(|&x: &f64| x.is_finite()));
+            assert!(result.detail_h.iter().all(|&x: &f64| x.is_finite()));
+            assert!(result.detail_v.iter().all(|&x: &f64| x.is_finite()));
+            assert!(result.detail_d.iter().all(|&x: &f64| x.is_finite()));
         }
     }
 
     #[test]
     fn test_perfect_reconstruction() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         let data = Array2::from_shape_fn((8, 8), |(i, j)| (i * j) as f64);
         let config = Dwt2dConfig::default();
 
@@ -3075,7 +3076,7 @@ mod tests {
         let result = enhanced_dwt2d_decompose(&data, Wavelet::DB(2), &config).unwrap();
 
         assert_eq!(result.approx.dim(), (32, 32));
-        assert!(result.approx.iter().all(|&x| x.is_finite()));
+        assert!(result.approx.iter().all(|&x: &f64| x.is_finite()));
     }
 
     #[test]
@@ -3092,7 +3093,7 @@ mod tests {
         let metrics = result.metrics.unwrap();
 
         // Energy preservation should be close to 1.0
-        assert!((metrics.energy_preservation - 1.0).abs() < 0.1);
+        assert!(((metrics.energy_preservation - 1.0) as f64).abs() < 0.1);
 
         // All metrics should be finite and reasonable
         assert!(metrics.approx_energy.is_finite());
@@ -3117,8 +3118,7 @@ mod tests {
 
         // Test different denoising methods
         for method in [
-            DenoisingMethod::Soft,
-            DenoisingMethod::Hard,
+            DenoisingMethod::Soft..DenoisingMethod::Hard,
             DenoisingMethod::BayesShrink,
         ] {
             let denoised =
@@ -3126,7 +3126,7 @@ mod tests {
                     .unwrap();
 
             assert_eq!(denoised.dim(), noisy_data.dim());
-            assert!(denoised.iter().all(|&x| x.is_finite()));
+            assert!(denoised.iter().all(|&x: &f64| x.is_finite()));
 
             // Denoised signal should be closer to clean signal
             let noise_error: f64 = clean_data

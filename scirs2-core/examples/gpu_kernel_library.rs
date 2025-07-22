@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Example demonstrating matrix multiplication with the GEMM kernel
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn matrix_multiply_example(ctx: &GpuContext) -> Result<(), GpuError> {
+fn ctx( &GpuContext) -> Result<(), GpuError> {
     // Create two matrices
     let a = Array2::from_shape_vec(
         (3, 4),
@@ -96,12 +96,12 @@ fn matrix_multiply_example(ctx: &GpuContext) -> Result<(), GpuError> {
         .with_numeric_param("alpha", 1.0)
         .with_numeric_param("beta", 0.0);
 
-    let kernel = ctx.get_specialized_kernel("gemm", &params)?;
+    let kernel = _ctx.get_specialized_kernel("gemm", &params)?;
 
     // Create GPU buffers
-    let a_buffer = ctx.create_buffer_from_slice(a.as_slice().unwrap());
-    let b_buffer = ctx.create_buffer_from_slice(b.as_slice().unwrap());
-    let c_buffer = ctx.create_buffer::<f32>(a.shape()[0] * b.shape()[1]);
+    let a_buffer = _ctx.create_buffer_from_slice(a.as_slice().unwrap());
+    let b_buffer = _ctx.create_buffer_from_slice(b.as_slice().unwrap());
+    let c_buffer = _ctx.create_buffer::<f32>(a.shape()[0] * b.shape()[1]);
 
     // Set kernel parameters
     kernel.set_buffer("a", &a_buffer);
@@ -153,7 +153,7 @@ fn matrix_multiply_example(ctx: &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating vector addition with the AXPY kernel
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn vector_addition_example(ctx: &GpuContext) -> Result<(), GpuError> {
+fn ctx( &GpuContext) -> Result<(), GpuError> {
     // Create two vectors
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
     let mut y = Array1::from_vec(vec![5.0f32, 4.0, 3.0, 2.0, 1.0]);
@@ -162,11 +162,11 @@ fn vector_addition_example(ctx: &GpuContext) -> Result<(), GpuError> {
     println!("Vector y: {:?}", y);
 
     // Get the AXPY kernel
-    let kernel = ctx.get_kernel("axpy")?;
+    let kernel = _ctx.get_kernel(axpy)?;
 
     // Create GPU buffers
-    let x_buffer = ctx.create_buffer_from_slice(x.as_slice().unwrap());
-    let y_buffer = ctx.create_buffer_from_slice(y.as_slice().unwrap());
+    let x_buffer = _ctx.create_buffer_from_slice(x.as_slice().unwrap());
+    let y_buffer = _ctx.create_buffer_from_slice(y.as_slice().unwrap());
 
     // Alpha value for the operation y = alpha * x + y
     let alpha: f32 = 2.0;
@@ -201,21 +201,21 @@ fn vector_addition_example(ctx: &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating vector sum reduction
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn vector_sum_example(ctx: &GpuContext) -> Result<(), GpuError> {
+fn ctx( &GpuContext) -> Result<(), GpuError> {
     // Create a vector
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
 
     println!("Vector: {:?}", x);
 
     // Get the sum reduction kernel
-    let kernel = ctx.get_kernel("sum_reduce")?;
+    let kernel = _ctx.get_kernel(sum_reduce)?;
 
     // For simplicity, we'll assume the vector fits in a single workgroup
     // In practice, we'd need to do multiple passes for large vectors
 
     // Create GPU buffers
-    let input_buffer = ctx.create_buffer_from_slice(x.as_slice().unwrap());
-    let output_buffer = ctx.create_buffer::<f32>(1);
+    let input_buffer = _ctx.create_buffer_from_slice(x.as_slice().unwrap());
+    let output_buffer = _ctx.create_buffer::<f32>(1);
 
     // Set kernel parameters
     kernel.set_buffer("input", &input_buffer);
@@ -243,7 +243,7 @@ fn vector_sum_example(ctx: &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating vector L2 norm
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn vector_norm_example(ctx: &GpuContext) -> Result<(), GpuError> {
+fn ctx( &GpuContext) -> Result<(), GpuError> {
     // Create a vector
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
 
@@ -252,11 +252,11 @@ fn vector_norm_example(ctx: &GpuContext) -> Result<(), GpuError> {
     // Get specialized L2 norm kernel
     let params = KernelParams::new(DataType::Float32).with_string_param("norm_type", "l2");
 
-    let kernel = ctx.get_specialized_kernel("norm_l2", &params)?;
+    let kernel = _ctx.get_specialized_kernel("norm_l2", &params)?;
 
     // Create GPU buffers
-    let input_buffer = ctx.create_buffer_from_slice(x.as_slice().unwrap());
-    let output_buffer = ctx.create_buffer::<f32>(1);
+    let input_buffer = _ctx.create_buffer_from_slice(x.as_slice().unwrap());
+    let output_buffer = _ctx.create_buffer::<f32>(1);
 
     // Set kernel parameters
     kernel.set_buffer("input", &input_buffer);
@@ -285,18 +285,18 @@ fn vector_norm_example(ctx: &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating neural network activation functions
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn activation_functions_example(ctx: &GpuContext) -> Result<(), GpuError> {
+fn ctx( &GpuContext) -> Result<(), GpuError> {
     // Create an input vector
     let x = Array1::from_vec(vec![-2.0f32, -1.0, 0.0, 1.0, 2.0]);
 
     println!("Input: {:?}", x);
 
     // Get the ReLU kernel
-    let relu_kernel = ctx.get_kernel("relu")?;
+    let relu_kernel = _ctx.get_kernel(relu)?;
 
     // Create GPU buffers
-    let input_buffer = ctx.create_buffer_from_slice(x.as_slice().unwrap());
-    let output_buffer = ctx.create_buffer::<f32>(x.len());
+    let input_buffer = _ctx.create_buffer_from_slice(x.as_slice().unwrap());
+    let output_buffer = _ctx.create_buffer::<f32>(x.len());
 
     // Set kernel parameters
     relu_kernel.set_buffer("input", &input_buffer);
@@ -312,7 +312,7 @@ fn activation_functions_example(ctx: &GpuContext) -> Result<(), GpuError> {
     println!("ReLU output: {:?}", relu_result);
 
     // Now try sigmoid
-    let sigmoid_kernel = ctx.get_kernel("sigmoid")?;
+    let sigmoid_kernel = _ctx.get_kernel(sigmoid)?;
 
     // Set kernel parameters
     sigmoid_kernel.set_buffer("input", &input_buffer);

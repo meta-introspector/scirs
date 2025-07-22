@@ -1,7 +1,9 @@
 //! Real-valued wavelets (e.g., Ricker)
 
 use crate::error::{SignalError, SignalResult};
+use std::f64::consts::PI;
 
+#[allow(unused_imports)]
 /// Generate a Ricker (Mexican hat) wavelet
 ///
 /// # Arguments
@@ -16,16 +18,16 @@ use crate::error::{SignalError, SignalResult};
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::wavelets::ricker;
+/// use scirs2__signal::wavelets::ricker;
 ///
 /// // Generate a Ricker wavelet with 100 points and width parameter 4.0
 /// let wavelet = ricker(100, 4.0).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn ricker(points: usize, a: f64) -> SignalResult<Vec<f64>> {
-    if points == 0 {
+pub fn ricker(_points: usize, a: f64) -> SignalResult<Vec<f64>> {
+    if _points == 0 {
         return Err(SignalError::ValueError(
-            "points must be greater than 0".to_string(),
+            "_points must be greater than 0".to_string(),
         ));
     }
 
@@ -36,14 +38,14 @@ pub fn ricker(points: usize, a: f64) -> SignalResult<Vec<f64>> {
     }
 
     // Calculate amplitude factor
-    let amplitude = 2.0 / (std::f64::consts::PI.powf(0.25) * (3.0 * a).sqrt());
+    let amplitude = 2.0 / (std::f64::consts::PI.powf(0.25) * ((3.0 * a) as f64).sqrt());
     let wsq = a * a;
 
     // Generate position vector
-    let mid_point = (points - 1) as f64 / 2.0;
-    let mut wavelet = Vec::with_capacity(points);
+    let mid_point = (_points - 1) as f64 / 2.0;
+    let mut wavelet = Vec::with_capacity(_points);
 
-    for i in 0..points {
+    for i in 0.._points {
         let x = i as f64 - mid_point;
         let xsq = x * x;
         let mod_term = 1.0 - xsq / wsq;

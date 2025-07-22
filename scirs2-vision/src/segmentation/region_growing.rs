@@ -55,7 +55,7 @@ pub struct SeedPoint {
 /// # Example
 ///
 /// ```rust
-/// use scirs2_vision::segmentation::{region_growing, RegionGrowingParams, SeedPoint};
+/// use scirs2__vision::segmentation::{region_growing, RegionGrowingParams, SeedPoint};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -135,10 +135,10 @@ fn grow_region(
 
     let neighbors = get_neighbors(params.connectivity);
 
-    while let Some((x, y)) = queue.pop_front() {
+    while let Some((_x, _y)) = queue.pop_front() {
         for &(dx, dy) in &neighbors {
-            let nx = (x as i32 + dx) as usize;
-            let ny = (y as i32 + dy) as usize;
+            let nx = (_x as i32 + dx) as usize;
+            let ny = (_y as i32 + dy) as usize;
 
             if nx < width as usize && ny < height as usize && !visited[[ny, nx]] {
                 let pixel_value = img.get_pixel(nx as u32, ny as u32)[0] as f32;
@@ -182,8 +182,8 @@ fn auto_seeded_region_growing(
 
 /// Get neighbor offsets based on connectivity
 #[allow(dead_code)]
-fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
-    match connectivity {
+fn get_neighbors(_connectivity: u8) -> Vec<(i32, i32)> {
+    match _connectivity {
         4 => vec![(-1, 0), (1, 0), (0, -1), (0, 1)],
         8 => vec![
             (-1, -1),
@@ -194,19 +194,18 @@ fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
             (1, -1),
             (1, 0),
             (1, 1),
-        ],
-        _ => vec![(-1, 0), (1, 0), (0, -1), (0, 1)], // Default to 4-connectivity
+        ]_ => vec![(-1, 0), (1, 0), (0, -1), (0, 1)], // Default to 4-_connectivity
     }
 }
 
 /// Remove regions smaller than minimum size
 #[allow(dead_code)]
-fn remove_small_regions(labels: &mut Array2<u32>, min_size: usize) {
-    let (height, width) = labels.dim();
+fn remove_small_regions(_labels: &mut Array2<u32>, min_size: usize) {
+    let (height, width) = _labels.dim();
 
     // Count region sizes
     let mut region_sizes = std::collections::HashMap::new();
-    for &label in labels.iter() {
+    for &label in _labels.iter() {
         if label > 0 {
             *region_sizes.entry(label).or_insert(0) += 1;
         }
@@ -215,15 +214,15 @@ fn remove_small_regions(labels: &mut Array2<u32>, min_size: usize) {
     // Find small regions
     let small_regions: HashSet<_> = region_sizes
         .iter()
-        .filter(|(_, &size)| size < min_size)
-        .map(|(&label, _)| label)
+        .filter(|(_, &_size)| _size < min_size)
+        .map(|(&label_)| label)
         .collect();
 
     // Remove small regions
     for y in 0..height {
         for x in 0..width {
-            if small_regions.contains(&labels[[y, x]]) {
-                labels[[y, x]] = 0;
+            if small_regions.contains(&_labels[[y, x]]) {
+                _labels[[y, x]] = 0;
             }
         }
     }
@@ -259,7 +258,7 @@ pub fn adaptive_region_growing(
 
         let label = seed.label.unwrap_or((seed_idx + 1) as u32);
 
-        // Adaptive threshold based on local statistics
+        // Adaptive _threshold based on local statistics
         let local_threshold = base_threshold * (1.0 + local_std[[seed.y, seed.x]] / 128.0);
 
         grow_region_adaptive(
@@ -287,8 +286,7 @@ fn grow_region_adaptive(
     seed_x: usize,
     seed_y: usize,
     label: u32,
-    base_threshold: f32,
-    _local_mean: &Array2<f32>,
+    base_threshold: f32, _local_mean: &Array2<f32>,
     local_std: &Array2<f32>,
 ) {
     let (width, height) = img.dimensions();
@@ -297,29 +295,29 @@ fn grow_region_adaptive(
     visited[[seed_y, seed_x]] = true;
     labels[[seed_y, seed_x]] = label;
 
-    // Running mean of region
+    // Running _mean of region
     let mut region_sum = img.get_pixel(seed_x as u32, seed_y as u32)[0] as f32;
     let mut region_count = 1;
 
-    while let Some((x, y)) = queue.pop_front() {
+    while let Some((_x, _y)) = queue.pop_front() {
         let region_mean = region_sum / region_count as f32;
 
         for &(dx, dy) in &[(-1, 0), (1, 0), (0, -1), (0, 1)] {
-            let nx = (x as i32 + dx) as usize;
-            let ny = (y as i32 + dy) as usize;
+            let nx = (_x as i32 + dx) as usize;
+            let ny = (_y as i32 + dy) as usize;
 
             if nx < width as usize && ny < height as usize && !visited[[ny, nx]] {
                 let pixel_value = img.get_pixel(nx as u32, ny as u32)[0] as f32;
 
-                // Adaptive threshold based on local statistics
-                let threshold = base_threshold * (1.0 + local_std[[ny, nx]] / 128.0);
+                // Adaptive _threshold based on local statistics
+                let _threshold = base_threshold * (1.0 + local_std[[ny, nx]] / 128.0);
 
-                if (pixel_value - region_mean).abs() <= threshold {
+                if (pixel_value - region_mean).abs() <= _threshold {
                     visited[[ny, nx]] = true;
                     labels[[ny, nx]] = label;
                     queue.push_back((nx, ny));
 
-                    // Update running mean
+                    // Update running _mean
                     region_sum += pixel_value;
                     region_count += 1;
                 }
@@ -330,8 +328,8 @@ fn grow_region_adaptive(
 
 /// Compute local mean and standard deviation
 #[allow(dead_code)]
-fn compute_local_stats(img: &GrayImage, window_size: usize) -> Result<(Array2<f32>, Array2<f32>)> {
-    let (width, height) = img.dimensions();
+fn compute_local_stats(_img: &GrayImage, window_size: usize) -> Result<(Array2<f32>, Array2<f32>)> {
+    let (width, height) = _img.dimensions();
     let mut local_mean = Array2::zeros((height as usize, width as usize));
     let mut local_std = Array2::zeros((height as usize, width as usize));
 
@@ -346,7 +344,7 @@ fn compute_local_stats(img: &GrayImage, window_size: usize) -> Result<(Array2<f3
             for wy in y.saturating_sub(half_window)..=(y + half_window).min(height as usize - 1) {
                 for wx in x.saturating_sub(half_window)..=(x + half_window).min(width as usize - 1)
                 {
-                    let val = img.get_pixel(wx as u32, wy as u32)[0] as f32;
+                    let val = _img.get_pixel(wx as u32, wy as u32)[0] as f32;
                     sum += val;
                     sum_sq += val * val;
                     count += 1;
@@ -366,13 +364,13 @@ fn compute_local_stats(img: &GrayImage, window_size: usize) -> Result<(Array2<f3
 
 /// Convert labels to color image for visualization
 #[allow(dead_code)]
-pub fn region_labels_to_color(labels: &Array2<u32>) -> RgbImage {
-    let (height, width) = labels.dim();
+pub fn region_labels_to_color(_labels: &Array2<u32>) -> RgbImage {
+    let (height, width) = _labels.dim();
     let mut result = RgbImage::new(width as u32, height as u32);
 
-    // Find unique labels
+    // Find unique _labels
     let mut unique_labels = HashSet::new();
-    for &label in labels.iter() {
+    for &label in _labels.iter() {
         if label > 0 {
             unique_labels.insert(label);
         }
@@ -397,7 +395,7 @@ pub fn region_labels_to_color(labels: &Array2<u32>) -> RgbImage {
     // Apply colors
     for y in 0..height {
         for x in 0..width {
-            let label = labels[[y, x]];
+            let label = _labels[[y, x]];
             let color = if label == 0 {
                 [0, 0, 0]
             } else {
@@ -422,8 +420,7 @@ fn hsv_to_rgb(h: f32, s: f32, v: f32) -> (f32, f32, f32) {
         1 => (x, c, 0.0),
         2 => (0.0, c, x),
         3 => (0.0, x, c),
-        4 => (x, 0.0, c),
-        _ => (c, 0.0, x),
+        4 => (x, 0.0, c, _ => (c, 0.0, x),
     };
 
     (r + m, g + m, b + m)

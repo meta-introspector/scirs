@@ -133,8 +133,8 @@ impl OptimizationParams {
     }
 
     /// Determine if GPU should be enabled
-    fn should_enable_gpu(gpu: Option<&GpuInfo>) -> bool {
-        gpu.map(|g| g.is_compute_capable()).unwrap_or(false)
+    fn should_enable_gpu(gpu_info: Option<&GpuInfo>) -> bool {
+        gpu_info.map(|g| g.is_compute_capable()).unwrap_or(false)
     }
 
     /// Determine if prefetching should be enabled
@@ -144,7 +144,7 @@ impl OptimizationParams {
     }
 
     /// Get scaling factor for different problem sizes
-    pub fn scaling_factor(&self, problem_size: usize) -> f64 {
+    pub fn get_scaling_factor(problem_size: usize) -> f64 {
         let base_size = 1024 * 1024; // 1MB base
         if problem_size <= base_size {
             1.0
@@ -153,6 +153,11 @@ impl OptimizationParams {
             // Use square root scaling to avoid excessive resource usage
             ratio.sqrt()
         }
+    }
+    
+    /// Instance method to get scaling factor
+    pub fn scaling_factor(&self, problem_size: usize) -> f64 {
+        Self::get_scaling_factor(problem_size)
     }
 
     /// Adjust parameters for specific workload type
@@ -258,7 +263,7 @@ impl Default for IoParams {
 
 impl IoParams {
     /// Generate I/O parameters from network and storage info
-    pub fn from_resources(network: &NetworkInfo, storage: &StorageInfo) -> Self {
+    pub fn from_network(network: &NetworkInfo, storage: &StorageInfo) -> Self {
         let optimal_buffer_size = storage.optimal_io_size.max(network.mtu);
         let concurrent_operations = storage.queue_depth.min(16);
         let enable_async_io = storage.supports_async_io();
@@ -270,6 +275,11 @@ impl IoParams {
             enable_async_io,
             enable_io_cache,
         }
+    }
+    
+    /// Generate I/O parameters from resources (alias for from_network)
+    pub fn from_resources(network: &NetworkInfo, storage: &StorageInfo) -> Self {
+        Self::from_network(network, storage)
     }
 }
 

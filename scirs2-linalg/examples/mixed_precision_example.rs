@@ -9,7 +9,7 @@ use scirs2_linalg::mixed_precision::*;
 
 // Simple benchmark function to compare execution times
 #[allow(dead_code)]
-fn benchmark_fn<F>(name: &str, mut f: F) -> std::time::Duration
+fn benchmark_fn<F>(_name: &str, mut f: F) -> std::time::Duration
 where
     F: FnMut(),
 {
@@ -29,7 +29,7 @@ where
     }
 
     let duration = start.elapsed() / iterations;
-    println!("{}: {:?} per iteration", name, duration);
+    println!("{}: {:?} per iteration", _name, duration);
 
     duration
 }
@@ -463,7 +463,7 @@ fn main() {
         let simd_mm_time = benchmark_fn(
             "SIMD-accelerated mixed precision matrix multiplication",
             || {
-                let _ = simd_mixed_precision_matmul_f32_f64::<f32>(&a_mat.view(), &b_mat.view())
+                let _ = simd_mixed_precision_matmul_f32_f64: :<f32>(&a_mat.view(), &b_mat.view())
                     .unwrap();
             },
         );

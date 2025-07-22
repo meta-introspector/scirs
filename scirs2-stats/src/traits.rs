@@ -69,7 +69,7 @@ pub trait ContinuousDistribution<F: Float>: Distribution<F> {
     fn ppf(&self, q: F) -> StatsResult<F> {
         // Default implementation using binary search
         // This can be overridden for distributions with analytical ppf
-        if q < F::zero() || q > F::one() {
+        if q < F::zero() || q >, F::one() {
             return Err(crate::error::StatsError::InvalidArgument(
                 "Quantile must be in [0, 1]".to_string(),
             ));
@@ -138,7 +138,7 @@ pub trait DiscreteDistribution<F: Float>: Distribution<F> {
     }
 
     /// Percent point function (inverse CDF)
-    fn ppf(&self, _p: F) -> StatsResult<F> {
+    fn ppf(&self_p: F) -> StatsResult<F> {
         Err(crate::error::StatsError::NotImplementedError(
             "PPF not implemented for this discrete distribution".to_string(),
         ))
@@ -273,7 +273,7 @@ pub trait Fittable<F: Float> {
     /// # Returns
     ///
     /// A fitted distribution instance
-    fn fit(data: &Array1<F>) -> StatsResult<Self>
+    fn fit(_data: &Array1<F>) -> StatsResult<Self>
     where
         Self: Sized;
 
@@ -286,7 +286,7 @@ pub trait Fittable<F: Float> {
     /// # Returns
     ///
     /// A tuple of estimated parameters
-    fn mle(data: &Array1<F>) -> StatsResult<Vec<F>>;
+    fn mle(_data: &Array1<F>) -> StatsResult<Vec<F>>;
 }
 
 /// Trait for distributions that can be truncated

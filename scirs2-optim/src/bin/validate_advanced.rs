@@ -93,14 +93,14 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn validate_rust_syntax(path: &str) -> Result<(), String> {
+fn validate_rust_syntax(_path: &str) -> Result<(), String> {
     // Always use basic validation as -Z parse-only requires nightly
-    validate_basic_rust_syntax(path)
+    validate_basic_rust_syntax(_path)
 }
 
 #[allow(dead_code)]
-fn validate_basic_rust_syntax(path: &str) -> Result<(), String> {
-    let content = std::fs::read_to_string(path).map_err(|e| format!("Cannot read file: {}", e))?;
+fn validate_basic_rust_syntax(_path: &str) -> Result<(), String> {
+    let content = std::fs::read_to_string(_path).map_err(|e| format!("Cannot read file: {}", e))?;
 
     // Basic syntax checks
     let mut issues = Vec::new();

@@ -250,8 +250,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::csr::CsrMatrix;
-/// use scirs2_sparse::linalg::matfuncs::twonormest;
+/// use scirs2__sparse::csr::CsrMatrix;
+/// use scirs2__sparse::linalg::matfuncs::twonormest;
 ///
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 1, 2];
@@ -379,8 +379,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::csr::CsrMatrix;
-/// use scirs2_sparse::linalg::matfuncs::condest;
+/// use scirs2__sparse::csr::CsrMatrix;
+/// use scirs2__sparse::linalg::matfuncs::condest;
 ///
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 1, 2];
@@ -413,8 +413,7 @@ where
     // Estimate ||A||
     let norm_a = match norm_type {
         "1" => onenormest(a, None, None)?,
-        "2" => twonormest(a, Some(tol), Some(maxiter))?,
-        _ => {
+        "2" => twonormest(a, Some(tol), Some(maxiter))?_ => {
             return Err(crate::error::SparseError::ValueError(
                 "norm_type must be '1' or '2'".to_string(),
             ))
@@ -1017,8 +1016,8 @@ fn solve_matrix_equation<F: Float + NumAssign>(
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::csr_array::CsrArray;
-/// use scirs2_sparse::linalg::matfuncs::twonormest_enhanced;
+/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2__sparse::linalg::matfuncs::twonormest_enhanced;
 ///
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 1, 2];
@@ -1063,16 +1062,16 @@ where
         return exact_twonorm_enhanced(a);
     }
 
-    // Initialize with provided guess or random unit vector
+    // Initialize with provided _guess or random unit vector
     let mut v = match initial_guess {
-        Some(guess) => {
-            if guess.len() != n {
+        Some(_guess) => {
+            if _guess.len() != n {
                 return Err(crate::error::SparseError::DimensionMismatch {
                     expected: n,
-                    found: guess.len(),
+                    found: _guess.len(),
                 });
             }
-            guess.to_owned()
+            _guess.to_owned()
         }
         None => {
             let mut rng = rand::rng();
@@ -1157,8 +1156,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::csr_array::CsrArray;
-/// use scirs2_sparse::linalg::matfuncs::condest_enhanced;
+/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2__sparse::linalg::matfuncs::condest_enhanced;
 ///
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 1, 2];
@@ -1204,8 +1203,7 @@ where
     // Estimate ||A||
     let norm_a = match norm_type {
         "2" => twonormest_enhanced(a, Some(tol), Some(maxiter), None)?,
-        "1" => onenormest_enhanced(a, None, None)?,
-        _ => {
+        "1" => onenormest_enhanced(a, None, None)?_ => {
             return Err(crate::error::SparseError::ValueError(
                 "norm_type must be '1' or '2'".to_string(),
             ))
@@ -1349,8 +1347,7 @@ where
 /// Estimate ||A^(-1)|| using enhanced inverse power iteration
 #[allow(dead_code)]
 fn estimate_inverse_norm_enhanced<T, S>(
-    a: &S,
-    _norm_type: &str,
+    a: &S_norm_type: &str,
     tol: T,
     maxiter: usize,
 ) -> SparseResult<T>
@@ -1592,7 +1589,7 @@ where
 
     if min_dim == 1 {
         // For 1D case, compute the norm of all entries
-        let (_, _, values) = a.find();
+        let (__, values) = a.find();
         let max_val =
             values
                 .iter()

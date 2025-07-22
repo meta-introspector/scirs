@@ -11,7 +11,7 @@ use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 
 use super::natural::{InterpolationMethod, NaturalNeighborInterpolator};
-use super::voronoi_cell::VoronoiDiagram;
+use super::voronoi__cell::VoronoiDiagram;
 use crate::error::InterpolateResult;
 use crate::parallel::ParallelConfig;
 
@@ -67,7 +67,7 @@ impl<
         let interpolator = NaturalNeighborInterpolator::new(points, values, method)?;
 
         // Use the provided config or the default
-        let parallel_config = config.unwrap_or_default();
+        let parallel_config = _config.unwrap_or_default();
 
         Ok(ParallelNaturalNeighborInterpolator {
             interpolator,

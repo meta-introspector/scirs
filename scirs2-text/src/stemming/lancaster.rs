@@ -26,7 +26,7 @@
 //! # Usage
 //!
 //! ```
-//! use scirs2_text::{LancasterStemmer, Stemmer};
+//! use scirs2__text::{LancasterStemmer, Stemmer};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a Lancaster stemmer with default settings
@@ -52,7 +52,7 @@
 
 use crate::error::Result;
 use crate::stemming::Stemmer;
-use lazy_static::lazy_static;
+use lazy__static::lazy_static;
 use std::collections::HashMap;
 
 // Define the Lancaster stemming rules
@@ -207,7 +207,7 @@ lazy_static! {
     static ref RULES_BY_LETTER: HashMap<char, Vec<usize>> = {
         let mut map: HashMap<char, Vec<usize>> = HashMap::new();
 
-        for (i, (suffix, _, _, _)) in LANCASTER_RULES.iter().enumerate() {
+        for (i, (suffix___)) in LANCASTER_RULES.iter().enumerate() {
             if let Some(first_char) = suffix.chars().next() {
                 map.entry(first_char).or_default().push(i);
             }

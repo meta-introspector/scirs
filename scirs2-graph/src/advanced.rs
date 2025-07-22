@@ -99,10 +99,10 @@ pub struct AdaptiveMemoryManager {
 
 impl AdaptiveMemoryManager {
     /// Create a new adaptive memory manager
-    pub fn new(threshold_mb: usize) -> Self {
+    pub fn new(_threshold_mb: usize) -> Self {
         Self {
             current_usage: 0,
-            threshold_bytes: threshold_mb * 1024 * 1024,
+            threshold_bytes: _threshold_mb * 1024 * 1024,
             usage_history: VecDeque::with_capacity(1000),
             chunk_sizes: HashMap::new(),
             memory_pools: HashMap::new(),
@@ -305,12 +305,12 @@ impl NeuralRLAgent {
             ExplorationStrategy::EpsilonGreedy { epsilon } => {
                 let mut rng = rand::rng();
                 if rng.random::<f64>() < *epsilon {
-                    rng.random_range(0..q_values.len())
+                    rng.gen_range(0..q_values.len())
                 } else {
                     self.get_best_action(&q_values)
                 }
             }
-            ExplorationStrategy::UCB { c } => self.select_ucb_action(&q_values, *c),
+            ExplorationStrategy::UCB { c } => self.select_ucb_action(&q_values..*c),
             ExplorationStrategy::ThompsonSampling { alpha, beta } => {
                 self.select_thompson_sampling_action(&q_values, *alpha, *beta)
             }
@@ -324,7 +324,7 @@ impl NeuralRLAgent {
     fn select_ucb_action(&self, q_values: &[f64], c: f64) -> usize {
         let total_visits: f64 = self
             .algorithm_performance
-            .values()
+            ._values()
             .map(|history| history.len() as f64)
             .sum();
 
@@ -350,13 +350,13 @@ impl NeuralRLAgent {
     }
 
     /// Select action using Thompson Sampling
-    fn select_thompson_sampling_action(&self, q_values: &[f64], _alpha: f64, _beta: f64) -> usize {
+    fn select_thompson_sampling_action(&self, q_values: &[f64], _alpha: f64_beta: f64) -> usize {
         let mut rng = rand::rng();
         let mut best_action = 0;
         let mut best_sample = f64::NEG_INFINITY;
 
         for (action, &_q_value) in q_values.iter().enumerate() {
-            // Sample from beta distribution based on performance
+            // Sample from _beta distribution based on performance
             let performance_mean = self
                 .algorithm_performance
                 .get(&action)
@@ -426,7 +426,7 @@ impl NeuralRLAgent {
             .iter()
             .enumerate()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .unwrap_or(0)
     }
 
@@ -513,15 +513,15 @@ impl NeuralRLAgent {
 
         if rng.random::<f64>() < self.epsilon {
             // Exploration: random algorithm
-            rng.random_range(0..4) // 4 different algorithm strategies
+            rng.gen_range(0..4) // 4 different algorithm strategies
         } else {
             // Exploitation: best known algorithm
             let q_values = self.predict_q_values(&features);
             q_values
                 .iter()
                 .enumerate()
-                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(i, _)| i)
+                .max_by(|a..b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
+                .map(|(i_)| i)
                 .unwrap_or(0)
         }
     }
@@ -550,12 +550,12 @@ impl NeuralRLAgent {
         let mut rng = rand::rng();
 
         for _ in 0..batch_size {
-            batch_indices.push(rng.random_range(0..self.experience_buffer.len()));
+            batch_indices.push(rng.gen_range(0..self.experience_buffer.len()));
         }
 
         // Simplified training update
         for &idx in &batch_indices {
-            let (state, action, reward) = self.experience_buffer[idx].clone();
+            let (state..action, reward) = self.experience_buffer[idx].clone();
             let current_q = self.predict_q_values(&state);
 
             // Target Q-value (simplified)
@@ -572,7 +572,7 @@ impl NeuralRLAgent {
     }
 
     /// Update neural network weights (simplified)
-    fn update_weights(&mut self, _state: &[f64], action: usize, error: f64) {
+    fn update_weights(&mut self_state: &[f64], action: usize, error: f64) {
         // Simplified weight update - in practice would use proper backpropagation
         let learning_step = self.learning_rate * error;
 
@@ -599,9 +599,9 @@ pub struct GPUAccelerationContext {
 
 impl GPUAccelerationContext {
     /// Create new GPU acceleration context
-    pub fn new(memory_pool_mb: usize) -> Self {
+    pub fn new(_memory_pool_mb: usize) -> Self {
         GPUAccelerationContext {
-            memory_pool_mb,
+            _memory_pool_mb,
             utilization_history: Vec::new(),
             gpu_enabled: Self::detect_gpu_availability(),
         }
@@ -669,16 +669,16 @@ pub struct NeuromorphicProcessor {
 
 impl NeuromorphicProcessor {
     /// Create new neuromorphic processor
-    pub fn new(num_neurons: usize, stdp_rate: f64) -> Self {
-        let neuron_potentials = vec![0.0; num_neurons];
+    pub fn new(_num_neurons: usize, stdp_rate: f64) -> Self {
+        let neuron_potentials = vec![0.0; _num_neurons];
         let mut synaptic_weights = Vec::new();
-        let spike_history = vec![Vec::new(); num_neurons];
+        let spike_history = vec![Vec::new(); _num_neurons];
         let mut rng = rand::rng();
 
         // Initialize synaptic weights
-        for _ in 0..num_neurons {
+        for _ in 0.._num_neurons {
             let mut row = Vec::new();
-            for _ in 0..num_neurons {
+            for _ in 0.._num_neurons {
                 row.push(rng.random::<f64>() * 0.01 - 0.005);
             }
             synaptic_weights.push(row);
@@ -787,7 +787,7 @@ impl NeuromorphicProcessor {
     fn apply_stdp_learning(&mut self, spiked_neuron: usize, spike_time: u64) {
         for i in 0..self.neuron_potentials.len() {
             if i != spiked_neuron {
-                // Find recent spikes in pre-synaptic neuron
+                // Find recent spikes in pre-synaptic _neuron
                 for &pre_spike_time in &self.spike_history[i] {
                     let time_diff = spike_time as i64 - pre_spike_time as i64;
                     if time_diff.abs() <= 20 {
@@ -877,12 +877,12 @@ pub struct AdvancedProcessor {
 
 impl AdvancedProcessor {
     /// Create new advanced processor with enhanced features
-    pub fn new(config: AdvancedConfig) -> Self {
+    pub fn new(_config: AdvancedConfig) -> Self {
         let mut neural_agent =
-            NeuralRLAgent::new(4, config.neural_hidden_size, 4, config.learning_rate);
-        let gpu_context = GPUAccelerationContext::new(config.gpu_memory_pool_mb);
+            NeuralRLAgent::new(4, _config.neural_hidden_size, 4, _config.learning_rate);
+        let gpu_context = GPUAccelerationContext::new(_config.gpu_memory_pool_mb);
         let neuromorphic = NeuromorphicProcessor::new(256, 0.01);
-        let memory_manager = AdaptiveMemoryManager::new(config.memory_threshold_mb);
+        let memory_manager = AdaptiveMemoryManager::new(_config.memory_threshold_mb);
 
         // Set advanced exploration strategy
         neural_agent.set_exploration_strategy(ExplorationStrategy::AdaptiveUncertainty {
@@ -890,7 +890,7 @@ impl AdvancedProcessor {
         });
 
         AdvancedProcessor {
-            config,
+            _config,
             neural_agent,
             gpu_context,
             neuromorphic,
@@ -1081,11 +1081,10 @@ impl AdvancedProcessor {
 
         // Algorithm-specific memory multipliers
         let multiplier = match algorithm_name {
-            name if name.contains("dijkstra") => 2.0,
-            name if name.contains("pagerank") => 1.5,
-            name if name.contains("community") => 3.0,
-            name if name.contains("centrality") => 4.0,
-            _ => 1.0,
+            _name if _name.contains("dijkstra") => 2.0,
+            _name if _name.contains("pagerank") => 1.5,
+            _name if _name.contains("community") => 3.0,
+            _name if _name.contains("centrality") => 4.0_ => 1.0,
         };
 
         (base_memory as f64 * multiplier) as usize
@@ -1095,8 +1094,7 @@ impl AdvancedProcessor {
     fn extract_enhanced_algorithm_metrics(
         &self,
         report: &PerformanceReport,
-        neuromorphic_features: &[f64],
-        _selected_strategy: usize,
+        neuromorphic_features: &[f64], _selected_strategy: usize,
     ) -> AlgorithmMetrics {
         AlgorithmMetrics {
             execution_time_us: report.duration.as_micros() as u64,
@@ -1110,7 +1108,7 @@ impl AdvancedProcessor {
 
     /// Calculate accuracy score based on neuromorphic features
     fn calculate_accuracy_score(&self, neuromorphic_features: &[f64]) -> f64 {
-        // Use neuromorphic features to estimate solution quality
+        // Use neuromorphic _features to estimate solution quality
         let feature_sum = neuromorphic_features.iter().sum::<f64>();
         (1.0 / (1.0 + (-feature_sum / 10.0).exp())).clamp(0.7, 1.0)
     }
@@ -1266,8 +1264,7 @@ impl AdvancedProcessor {
     /// Extract algorithm metrics from performance report
     fn extract_algorithm_metrics(
         &self,
-        report: &PerformanceReport,
-        _neuromorphic_features: &[f64],
+        report: &PerformanceReport_neuromorphic_features: &[f64],
     ) -> AlgorithmMetrics {
         AlgorithmMetrics {
             execution_time_us: report.duration.as_micros() as u64,
@@ -2092,8 +2089,7 @@ mod tests {
                 let mut processor = match i {
                     0 => create_enhanced_advanced_processor(),
                     1 => create_large_graph_advanced_processor(),
-                    2 => create_realtime_advanced_processor(),
-                    _ => create_memory_efficient_advanced_processor(),
+                    2 => create_realtime_advanced_processor(, _ => create_memory_efficient_advanced_processor(),
                 };
 
                 let result = execute_with_enhanced_advanced(

@@ -15,6 +15,7 @@ use std::marker::PhantomData;
 
 use super::mls::{PolynomialBasis, WeightFunction};
 use crate::error::{InterpolateError, InterpolateResult};
+use statrs::statistics::Statistics;
 
 /// Local polynomial regression model result
 #[derive(Debug, Clone)]
@@ -97,10 +98,10 @@ impl<F: Float + FromPrimitive> Default for LocalPolynomialConfig<F> {
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2, Axis};
-/// use scirs2_interpolate::local::polynomial::{
+/// use scirs2__interpolate::local::polynomial::{
 ///     LocalPolynomialRegression, LocalPolynomialConfig
 /// };
-/// use scirs2_interpolate::local::mls::{WeightFunction, PolynomialBasis};
+/// use scirs2__interpolate::local::mls::{WeightFunction, PolynomialBasis};
 ///
 /// // Create some 1D data with noise
 /// let x = Array1::<f64>::linspace(0.0, 10.0, 50);
@@ -187,13 +188,13 @@ where
     /// # Returns
     ///
     /// A new LocalPolynomialRegression model
-    pub fn new(points: Array2<F>, values: Array1<F>, bandwidth: F) -> InterpolateResult<Self> {
+    pub fn new(_points: Array2<F>, values: Array1<F>, bandwidth: F) -> InterpolateResult<Self> {
         let config = LocalPolynomialConfig {
             bandwidth,
             ..LocalPolynomialConfig::default()
         };
 
-        Self::with_config(points, values, config)
+        Self::with_config(_points, values, config)
     }
 
     /// Create a new LocalPolynomialRegression with custom configuration
@@ -241,8 +242,7 @@ where
             points,
             values,
             config,
-            response_sd,
-            _phantom: PhantomData,
+            response_sd_phantom: PhantomData,
         })
     }
 
@@ -354,8 +354,7 @@ where
 
         // Filter out points with zero weight (if using compactly supported weight function)
         let effective_radius = match self.config.weight_fn {
-            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.config.bandwidth,
-            _ => F::infinity(),
+            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.config.bandwidth_ =>, F::infinity(),
         };
 
         let mut indices = Vec::new();
@@ -381,7 +380,7 @@ where
             indices = distances
                 .iter()
                 .take(min_points)
-                .map(|&(idx, _)| idx)
+                .map(|&(idx_)| idx)
                 .collect();
             dist_values = distances
                 .iter()
@@ -414,7 +413,7 @@ where
                         F::zero()
                     }
                 }
-                WeightFunction::InverseDistance => F::one() / (self.config.epsilon + r * r),
+                WeightFunction::InverseDistance =>, F::one() / (self.config.epsilon + r * r),
                 WeightFunction::CubicSpline => {
                     if r < F::from_f64(1.0 / 3.0).unwrap() {
                         let r2 = r * r;
@@ -528,8 +527,7 @@ where
     fn fit_weighted_least_squares(
         &self,
         local_points: &Array2<F>,
-        local_values: &Array1<F>,
-        _x: &ArrayView1<F>,
+        local_values: &Array1<F>, _x: &ArrayView1<F>,
         weights: &Array1<F>,
         basis: &Array2<F>,
     ) -> InterpolateResult<RegressionResult<F>> {
@@ -555,16 +553,16 @@ where
         let _xtx = w_basis.t().dot(&w_basis);
         let xty = w_basis.t().dot(&w_values);
 
-        // Compute the hat matrix diagonal (leverage values)
+        // Compute the hat matrix diagonal (leverage _values)
 
         // Solve the system for coefficients
         #[cfg(feature = "linalg")]
         let coefficients = {
-            use scirs2_linalg::solve;
-            let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
-            let xty_f64 = xty.mapv(|x| x.to_f64().unwrap());
+            use scirs2__linalg::solve;
+            let xtx_f64 = xtx.mapv(|_x| _x.to_f64().unwrap());
+            let xty_f64 = xty.mapv(|_x| _x.to_f64().unwrap());
             match solve(&xtx_f64.view(), &xty_f64.view(), None) {
-                Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),
+                Ok(c) => c.mapv(|_x| F::from_f64(_x).unwrap()),
                 Err(_) => {
                     // Fallback: use local weighted mean for numerical stability
                     let mut mean = F::zero();
@@ -622,10 +620,10 @@ where
         // Try to compute the inverse of X'WX
         #[cfg(feature = "linalg")]
         let xtx_inv = {
-            use scirs2_linalg::inv;
-            let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
+            use scirs2__linalg::inv;
+            let xtx_f64 = xtx.mapv(|_x| _x.to_f64().unwrap());
             match inv(&xtx_f64.view(), None) {
-                Ok(inv) => inv.mapv(|x| F::from_f64(x).unwrap()),
+                Ok(inv) => inv.mapv(|_x| F::from_f64(_x).unwrap()),
                 Err(_) => {
                     // If inversion fails, return a simpler result without diagnostics
                     return Ok(RegressionResult {
@@ -656,7 +654,7 @@ where
         // The following code only runs when linalg feature is enabled
         #[cfg(feature = "linalg")]
         {
-            // Compute fitted values for all local points
+            // Compute fitted _values for all local _points
             let fitted_local = basis.dot(&coefficients);
 
             // Compute residuals
@@ -687,7 +685,7 @@ where
                 F::zero()
             };
 
-            // Compute leverage values (diagonal of hat matrix)
+            // Compute leverage _values (diagonal of hat matrix)
             let mut leverage = Array1::zeros(n_points);
             for i in 0..n_points {
                 let w_row = w_basis.row(i);
@@ -695,7 +693,7 @@ where
                 leverage[i] = h_ii;
             }
 
-            // Compute effective degrees of freedom (sum of leverage values)
+            // Compute effective degrees of freedom (sum of leverage _values)
             let effective_df = leverage.sum();
 
             // Compute standard error of the fitted value

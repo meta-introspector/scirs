@@ -7,7 +7,7 @@
 
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
-use crate::ode::utils::dense_output::DenseSolution;
+use crate::ode::utils::dense__output::DenseSolution;
 use ndarray::{Array1, ArrayView1};
 
 /// Direction of zero-crossing for event detection
@@ -51,10 +51,10 @@ pub struct EventSpec<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> EventSpec<F> {
     /// Check if the maximum count has been reached for this event
-    pub fn max_count_reached(&self, _id: &str, current_count: Option<usize>) -> bool {
+    pub fn max_count_reached(&self_id: &str, current_count: Option<usize>) -> bool {
         if let Some(max) = self.max_count {
-            if let Some(count) = current_count {
-                return count >= max;
+            if let Some(_count) = current_count {
+                return _count >= max;
             }
         }
         false
@@ -114,28 +114,28 @@ impl<F: IntegrateFloat> EventRecord<F> {
     }
 
     /// Add a detected event to the record
-    pub fn add_event(&mut self, event: Event<F>) {
-        // Update count for this event type
-        *self.counts.entry(event.id.clone()).or_insert(0) += 1;
+    pub fn add_event(_event: Event<F>) {
+        // Update count for this _event type
+        *self.counts.entry(_event.id.clone()).or_insert(0) += 1;
 
         // Add to the list of events
-        self.events.push(event);
+        self.events.push(_event);
     }
 
     /// Get the count of a specific event type
-    pub fn get_count(&self, id: &str) -> usize {
-        *self.counts.get(id).unwrap_or(&0)
+    pub fn get_count(_id: &str) -> usize {
+        *self.counts.get(_id).unwrap_or(&0)
     }
 
     /// Get all events of a specific type
-    pub fn get_events(&self, id: &str) -> Vec<&Event<F>> {
-        self.events.iter().filter(|e| e.id == id).collect()
+    pub fn get_events(_id: &str) -> Vec<&Event<F>> {
+        self.events.iter().filter(|e| e._id == _id).collect()
     }
 
     /// Check if the maximum event count has been reached for a specific event type
-    pub fn max_count_reached(&self, id: &str, max_count: Option<usize>) -> bool {
+    pub fn max_count_reached(_id: &str, max_count: Option<usize>) -> bool {
         if let Some(max) = max_count {
-            self.get_count(id) >= max
+            self.get_count(_id) >= max
         } else {
             false
         }
@@ -157,11 +157,11 @@ pub struct EventHandler<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> EventHandler<F> {
     /// Create a new event handler with the given event specifications
-    pub fn new(specs: Vec<EventSpec<F>>) -> Self {
-        let last_values = vec![None; specs.len()];
+    pub fn new(_specs: Vec<EventSpec<F>>) -> Self {
+        let last_values = vec![None; _specs.len()];
 
         EventHandler {
-            specs,
+            _specs,
             record: EventRecord::new(),
             last_values,
             last_state: None,
@@ -241,7 +241,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
                 };
 
                 if triggered {
-                    // Refine the event time if requested and dense output is available
+                    // Refine the event time if requested and dense _output is available
                     let (event_t, event_y, event_val, dir) =
                         if spec.precise_time && dense_output.is_some() {
                             self.refine_event_time(
@@ -340,7 +340,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
             // Compute midpoint time
             t_mid = (t_left + t_right) / F::from_f64(2.0).unwrap();
 
-            // Get state at midpoint using dense output
+            // Get state at midpoint using dense _output
             y_mid = dense_output.evaluate(t_mid)?;
 
             // Evaluate event function at midpoint
@@ -380,9 +380,9 @@ impl<F: IntegrateFloat> EventHandler<F> {
 
 /// Function to create a terminal event (one that stops integration when triggered)
 #[allow(dead_code)]
-pub fn terminal_event<F: IntegrateFloat>(id: &str, direction: EventDirection) -> EventSpec<F> {
+pub fn terminal_event<F: IntegrateFloat>(_id: &str, direction: EventDirection) -> EventSpec<F> {
     EventSpec {
-        id: id.to_string(),
+        _id: _id.to_string(),
         direction,
         action: EventAction::Stop,
         threshold: F::from_f64(1e-6).unwrap(),
@@ -443,7 +443,7 @@ impl<F: IntegrateFloat> ODEResultWithEvents<F> {
     }
 
     /// Get the solution at a specific time using dense output
-    pub fn at_time(&self, t: F) -> IntegrateResult<Option<Array1<F>>> {
+    pub fn at_time(t: F) -> IntegrateResult<Option<Array1<F>>> {
         if let Some(ref dense) = self.dense_output {
             Ok(Some(dense.evaluate(t)?))
         } else {
@@ -458,12 +458,12 @@ impl<F: IntegrateFloat> ODEResultWithEvents<F> {
     }
 
     /// Get events of a specific type
-    pub fn get_events(&self, id: &str) -> Vec<&Event<F>> {
-        self.events.get_events(id)
+    pub fn get_events(_id: &str) -> Vec<&Event<F>> {
+        self.events.get_events(_id)
     }
 
     /// Get the first occurrence of a specific event
-    pub fn first_event(&self, id: &str) -> Option<&Event<F>> {
-        self.events.get_events(id).first().copied()
+    pub fn first_event(_id: &str) -> Option<&Event<F>> {
+        self.events.get_events(_id).first().copied()
     }
 }

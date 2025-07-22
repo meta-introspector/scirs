@@ -4,7 +4,7 @@
 //! showing how to prepare data for Python bindings and generate API specifications.
 
 use ndarray::{array, Array2};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     error::NdimageResult,
     python_interop::{
         api_spec::{generate_filter_api_specs, generate_python_docs},
@@ -148,7 +148,7 @@ fn main() -> NdimageResult<()> {
     println!("\n6. Error Handling Integration");
     println!("   ⚠️  Testing error conversion for Python compatibility...");
 
-    use scirs2_ndimage::error::NdimageError;
+    use scirs2__ndimage::error::NdimageError;
 
     let errors = vec![
         NdimageError::InvalidInput("Invalid input data".to_string()),

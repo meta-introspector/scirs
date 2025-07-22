@@ -1,6 +1,6 @@
 //! Sentiment analysis example
 
-use scirs2_text::{LexiconSentimentAnalyzer, RuleBasedSentimentAnalyzer, SentimentLexicon};
+use scirs2__text::{LexiconSentimentAnalyzer, RuleBasedSentimentAnalyzer, SentimentLexicon};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for text in &texts {
         let result = basic_analyzer.analyze(text)?;
-        println!("\nText: \"{text}\"");
+        println!("\nText: \"{_text}\"");
         println!("  Sentiment: {:?}", result.sentiment);
         println!("  Score: {:.2}", result.score);
         println!("  Confidence: {:.2}%", result.confidence * 100.0);

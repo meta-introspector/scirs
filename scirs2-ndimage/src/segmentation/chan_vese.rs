@@ -9,6 +9,7 @@ use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{gaussian_filter, BorderMode};
+use statrs::statistics::Statistics;
 
 /// Parameters for Chan-Vese segmentation
 #[derive(Clone, Debug)]
@@ -60,20 +61,20 @@ fn dirac(x: f64, epsilon: f64) -> f64 {
 
 /// Compute curvature of level set function
 #[allow(dead_code)]
-fn compute_curvature(phi: &ArrayView2<f64>) -> Array2<f64> {
-    let (height, width) = phi.dim();
+fn compute_curvature(_phi: &ArrayView2<f64>) -> Array2<f64> {
+    let (height, width) = _phi.dim();
     let mut curvature = Array2::zeros((height, width));
 
     for i in 1..height - 1 {
         for j in 1..width - 1 {
             // Central differences
-            let phi_x = (phi[[i, j + 1]] - phi[[i, j - 1]]) / 2.0;
-            let phi_y = (phi[[i + 1, j]] - phi[[i - 1, j]]) / 2.0;
+            let phi_x = (_phi[[i, j + 1]] - _phi[[i, j - 1]]) / 2.0;
+            let phi_y = (_phi[[i + 1, j]] - _phi[[i - 1, j]]) / 2.0;
 
-            let phi_xx = phi[[i, j + 1]] - 2.0 * phi[[i, j]] + phi[[i, j - 1]];
-            let phi_yy = phi[[i + 1, j]] - 2.0 * phi[[i, j]] + phi[[i - 1, j]];
-            let phi_xy = (phi[[i + 1, j + 1]] - phi[[i + 1, j - 1]] - phi[[i - 1, j + 1]]
-                + phi[[i - 1, j - 1]])
+            let phi_xx = _phi[[i, j + 1]] - 2.0 * _phi[[i, j]] + _phi[[i, j - 1]];
+            let phi_yy = _phi[[i + 1, j]] - 2.0 * _phi[[i, j]] + _phi[[i - 1, j]];
+            let phi_xy = (_phi[[i + 1, j + 1]] - _phi[[i + 1, j - 1]] - _phi[[i - 1, j + 1]]
+                + _phi[[i - 1, j - 1]])
                 / 4.0;
 
             let denominator = (phi_x * phi_x + phi_y * phi_y).powf(1.5) + 1e-10;
@@ -89,27 +90,27 @@ fn compute_curvature(phi: &ArrayView2<f64>) -> Array2<f64> {
 
 /// Reinitialize level set function to signed distance function
 #[allow(dead_code)]
-fn reinitialize_level_set(phi: &mut Array2<f64>, iterations: usize) {
-    let (height, width) = phi.dim();
+fn reinitialize_level_set(_phi: &mut Array2<f64>, iterations: usize) {
+    let (height, width) = _phi.dim();
     let dt = 0.5;
 
     for _ in 0..iterations {
-        let mut phi_new = phi.clone();
+        let mut phi_new = _phi.clone();
 
         for i in 1..height - 1 {
             for j in 1..width - 1 {
                 // Upwind scheme for reinitialization
-                let a = phi[[i, j]] - phi[[i - 1, j]];
-                let b = phi[[i + 1, j]] - phi[[i, j]];
-                let c = phi[[i, j]] - phi[[i, j - 1]];
-                let d = phi[[i, j + 1]] - phi[[i, j]];
+                let a = _phi[[i, j]] - _phi[[i - 1, j]];
+                let b = _phi[[i + 1, j]] - _phi[[i, j]];
+                let c = _phi[[i, j]] - _phi[[i, j - 1]];
+                let d = _phi[[i, j + 1]] - _phi[[i, j]];
 
                 let a_plus = a.max(0.0);
                 let b_minus = b.min(0.0);
                 let c_plus = c.max(0.0);
                 let d_minus = d.min(0.0);
 
-                let sign_phi = phi[[i, j]] / (phi[[i, j]].abs() + 1e-10);
+                let sign_phi = _phi[[i, j]] / (_phi[[i, j]].abs() + 1e-10);
 
                 let grad_plus = ((a_plus * a_plus).max(b_minus * b_minus)
                     + (c_plus * c_plus).max(d_minus * d_minus))
@@ -130,11 +131,11 @@ fn reinitialize_level_set(phi: &mut Array2<f64>, iterations: usize) {
                     grad_minus
                 };
 
-                phi_new[[i, j]] = phi[[i, j]] - dt * sign_phi * (grad - 1.0);
+                phi_new[[i, j]] = _phi[[i, j]] - dt * sign_phi * (grad - 1.0);
             }
         }
 
-        *phi = phi_new;
+        *_phi = phi_new;
     }
 }
 
@@ -169,11 +170,11 @@ where
     // Convert image to f64
     let img = image.mapv(|x| x.to_f64().unwrap_or(0.0));
 
-    // Initialize level set function
+    // Initialize level _set function
     let mut phi = if let Some(init) = initial_level_set {
         if init.dim() != image.dim() {
             return Err(NdimageError::DimensionError(
-                "Initial level set must have same dimensions as image".into(),
+                "Initial level _set must have same dimensions as image".into(),
             ));
         }
         init.to_owned()
@@ -213,7 +214,7 @@ where
         c1 /= area1.max(1.0);
         c2 /= area2.max(1.0);
 
-        // Update level set
+        // Update level _set
         let phi_old = phi.clone();
         let curvature = compute_curvature(&phi.view());
 
@@ -247,7 +248,7 @@ where
         }
     }
 
-    // Convert level set to binary mask
+    // Convert level _set to binary mask
     let mask = phi.mapv(|x| x >= 0.0);
 
     Ok(mask)
@@ -283,7 +284,7 @@ where
 
     if num_phases == 0 || num_phases > 3 {
         return Err(NdimageError::InvalidInput(
-            "Number of phases must be between 1 and 3".into(),
+            "Number of _phases must be between 1 and 3".into(),
         ));
     }
 
@@ -312,7 +313,7 @@ where
                 }
                 1 => {
                     // Horizontal division
-                    Array2::from_shape_fn((height, width), |(i, _)| {
+                    Array2::from_shape_fn((height, width), |(i_)| {
                         if i < height / 2 {
                             10.0
                         } else {
@@ -402,7 +403,7 @@ where
                             weight = -params.lambda2;
                         }
 
-                        // Compute membership for other phases
+                        // Compute membership for other _phases
                         let mut other_membership = 1.0;
                         for (k, other_phi) in phi_list_snapshot.iter().enumerate() {
                             if k != phase_idx {
@@ -528,8 +529,8 @@ pub fn mask_to_level_set(
 
 /// Create checkerboard initialization for multi-phase segmentation
 #[allow(dead_code)]
-pub fn checkerboard_level_set(shape: (usize, usize), square_size: usize) -> Array2<f64> {
-    let (height, width) = shape;
+pub fn checkerboard_level_set(_shape: (usize, usize), square_size: usize) -> Array2<f64> {
+    let (height, width) = _shape;
 
     Array2::from_shape_fn((height, width), |(i, j)| {
         let row_even = (i / square_size) % 2 == 0;

@@ -1,7 +1,7 @@
 use approx::assert_abs_diff_eq;
 use ndarray::{array, Array2};
-use scirs2_metrics::classification::accuracy_score;
-use scirs2_metrics::fairness::bias_detection::{
+use scirs2__metrics::classification::accuracy_score;
+use scirs2__metrics::fairness::bias_detection::{
     intersectional_fairness, slice_analysis, subgroup_performance,
 };
 

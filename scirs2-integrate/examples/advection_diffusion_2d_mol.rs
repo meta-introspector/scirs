@@ -1,4 +1,4 @@
-use scirs2_integrate::{
+use scirs2__integrate::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, MOLOptions,
     MOLParabolicSolver2D, ODEMethod,
 };
@@ -35,9 +35,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let time_range = [t_start, t_end];
 
     // Diffusion coefficients (constant in both directions)
-    let diffusion_x = move |_x: f64, _y: f64, _t: f64, _u: f64| -> f64 { alpha };
+    let diffusion_x = move |_x: f64_y: f64, _t: f64_u: f64| -> f64 { alpha };
 
-    let diffusion_y = move |_x: f64, _y: f64, _t: f64, _u: f64| -> f64 { alpha };
+    let diffusion_y = move |_x: f64_y: f64, _t: f64_u: f64| -> f64 { alpha };
 
     // Initial condition: Gaussian pulse centered at (0.2, 0.2)
     let initial_condition =
@@ -100,9 +100,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?
     .with_advection(
         // Advection in x-direction
-        move |_x: f64, _y: f64, _t: f64, _u: f64| -> f64 { vx },
+        move |_x: f64_y: f64, _t: f64_u: f64| -> f64 { vx },
         // Advection in y-direction
-        move |_x: f64, _y: f64, _t: f64, _u: f64| -> f64 { vy },
+        move |_x: f64_y: f64, _t: f64_u: f64| -> f64 { vy },
     );
 
     // Solve the PDE

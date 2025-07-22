@@ -1,6 +1,6 @@
 use approx::assert_abs_diff_eq;
 use ndarray::array;
-use scirs2_metrics::ranking::{
+use scirs2__metrics::ranking::{
     click_through_rate, kendalls_tau, map_at_k, mean_average_precision, mean_reciprocal_rank,
     ndcg_score, precision_at_k, recall_at_k, spearmans_rho,
 };

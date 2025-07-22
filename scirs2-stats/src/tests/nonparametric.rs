@@ -30,7 +30,7 @@ use std::cmp::Ordering;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::wilcoxon;
+/// use scirs2__stats::wilcoxon;
 ///
 /// // Create two paired samples
 /// let before = array![125.0, 115.0, 130.0, 140.0, 140.0, 115.0, 140.0, 125.0, 140.0, 135.0];
@@ -73,13 +73,13 @@ where
         differences.push((x[i] - y[i], i));
     }
 
-    // Handle zero differences according to the specified method
+    // Handle zero differences according to the specified _method
     let differences = match zero_method {
         "wilcox" => {
             // Remove zero differences
             differences
                 .into_iter()
-                .filter(|(diff, _)| !diff.is_zero())
+                .filter(|(diff_)| !diff.is_zero())
                 .collect::<Vec<_>>()
         }
         "pratt" => {
@@ -90,7 +90,7 @@ where
             // Split zeros evenly between positive and negative ranks
             // This is more complex and would require special handling
             return Err(StatsError::InvalidArgument(
-                "zsplit method not implemented yet".to_string(),
+                "zsplit _method not implemented yet".to_string(),
             ));
         }
         _ => {
@@ -110,7 +110,7 @@ where
 
     // Sort differences by absolute value for ranking
     let mut ranked_diffs = differences;
-    ranked_diffs.sort_by(|(a, _), (b, _)| a.abs().partial_cmp(&b.abs()).unwrap_or(Ordering::Equal));
+    ranked_diffs.sort_by(|(a_), (b_)| a.abs().partial_cmp(&b.abs()).unwrap_or(Ordering::Equal));
 
     // Assign ranks, handling ties appropriately
     let mut ranks = vec![F::zero(); ranked_diffs.len()];
@@ -140,7 +140,7 @@ where
     let mut w_plus = F::zero();
     let mut w_minus = F::zero();
 
-    for (i, (diff, _)) in ranked_diffs.iter().enumerate() {
+    for (i, (diff_)) in ranked_diffs.iter().enumerate() {
         if diff.is_sign_positive() {
             w_plus = w_plus + ranks[i];
         } else {
@@ -198,7 +198,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::mann_whitney;
+/// use scirs2__stats::mann_whitney;
 ///
 /// // Create two independent samples
 /// let group1 = array![2.9, 3.0, 2.5, 2.6, 3.2, 2.8];
@@ -260,7 +260,7 @@ where
     }
 
     // Sort the values
-    all_values.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    all_values.sort_by(|(a_), (b_)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     // Assign ranks, handling ties
     let n = all_values.len();
@@ -338,7 +338,7 @@ where
         (n1_f * n2_f * (n_f + F::one()) / F::from(12.0).unwrap()) * (F::one() - tie_correction);
     let std_dev_u = var_u.sqrt();
 
-    // Apply continuity correction if requested
+    // Apply _continuity correction if requested
     let correction = if use_continuity {
         F::from(0.5).unwrap()
     } else {
@@ -370,8 +370,7 @@ where
     // Calculate p-value based on the alternative hypothesis
     let p_value = match alternative {
         "less" => normal_cdf(z),
-        "greater" => F::one() - normal_cdf(z),
-        _ => F::from(2.0).unwrap() * normal_cdf(-z.abs()),
+        "greater" => F::one() - normal_cdf(z, _ =>, F::from(2.0).unwrap() * normal_cdf(-z.abs()),
     };
 
     Ok((u, p_value))
@@ -395,7 +394,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::kruskal_wallis;
+/// use scirs2__stats::kruskal_wallis;
 ///
 /// // Create three independent samples
 /// let group1 = array![2.9, 3.0, 2.5, 2.6, 3.2];
@@ -411,19 +410,19 @@ where
 /// let significant = p_value < 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn kruskal_wallis<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
+pub fn kruskal_wallis<F>(_samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
     // Check if there are at least two groups
-    if samples.len() < 2 {
+    if _samples.len() < 2 {
         return Err(StatsError::InvalidArgument(
-            "At least two samples are required for Kruskal-Wallis test".to_string(),
+            "At least two _samples are required for Kruskal-Wallis test".to_string(),
         ));
     }
 
     // Check if any group is empty
-    for (i, sample) in samples.iter().enumerate() {
+    for (i, sample) in _samples.iter().enumerate() {
         if sample.is_empty() {
             return Err(StatsError::InvalidArgument(format!(
                 "Sample {} is empty",
@@ -432,11 +431,11 @@ where
         }
     }
 
-    // Combine all samples into a single vector, keeping track of the group
+    // Combine all _samples into a single vector, keeping track of the group
     let mut all_values = Vec::new();
-    let mut group_sizes = Vec::with_capacity(samples.len());
+    let mut group_sizes = Vec::with_capacity(_samples.len());
 
-    for (group_idx, sample) in samples.iter().enumerate() {
+    for (group_idx, sample) in _samples.iter().enumerate() {
         group_sizes.push(sample.len());
         for &value in sample.iter() {
             all_values.push((value, group_idx));
@@ -444,7 +443,7 @@ where
     }
 
     // Sort all values
-    all_values.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    all_values.sort_by(|(a_), (b_)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     // Assign ranks, handling ties
     let n = all_values.len();
@@ -471,7 +470,7 @@ where
     }
 
     // Calculate rank sums for each group
-    let mut rank_sums = vec![F::zero(); samples.len()];
+    let mut rank_sums = vec![F::zero(); _samples.len()];
     for i in 0..n {
         let group = all_values[i].1;
         rank_sums[group] = rank_sums[group] + ranks[i];
@@ -516,7 +515,7 @@ where
     }
 
     // Calculate p-value (chi-square distribution with k-1 degrees of freedom)
-    let df = F::from(samples.len() - 1).unwrap();
+    let df = F::from(_samples.len() - 1).unwrap();
     let p_value = chi_square_sf(h, df);
 
     Ok((h, p_value))
@@ -540,7 +539,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_stats::friedman;
+/// use scirs2__stats::friedman;
 ///
 /// // Create a 2D array where each row is a subject and each column is a treatment
 /// let data = array![
@@ -558,7 +557,7 @@ where
 /// let significant = p_value < 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn friedman<F>(data: &ndarray::ArrayView2<F>) -> StatsResult<(F, F)>
+pub fn friedman<F>(_data: &ndarray::ArrayView2<F>) -> StatsResult<(F, F)>
 where
     F: Float
         + std::iter::Sum<F>
@@ -568,8 +567,8 @@ where
         + std::fmt::Display,
 {
     // Get the number of subjects (n) and treatments (k)
-    let n = data.nrows();
-    let k = data.ncols();
+    let n = _data.nrows();
+    let k = _data.ncols();
 
     // Check if there are at least 2 subjects and 2 treatments
     if n < 2 || k < 2 {
@@ -578,12 +577,12 @@ where
         ));
     }
 
-    // Rank data within each subject (row)
+    // Rank _data within each subject (row)
     let mut ranks = ndarray::Array2::<F>::zeros((n, k));
 
     for i in 0..n {
         // Extract the row
-        let row = data.row(i);
+        let row = _data.row(i);
 
         // Create a vector of (value, column_index) pairs
         let mut row_data = Vec::with_capacity(k);
@@ -592,7 +591,7 @@ where
         }
 
         // Sort by value
-        row_data.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        row_data.sort_by(|(a_), (b_)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
         // Assign ranks, handling ties
         let mut rank_idx = 0;

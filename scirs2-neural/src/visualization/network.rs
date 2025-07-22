@@ -190,9 +190,9 @@ impl<
     > NetworkVisualizer<F>
 {
     /// Create a new network visualizer
-    pub fn new(model: Sequential<F>, config: VisualizationConfig) -> Self {
+    pub fn new(_model: Sequential<F>, config: VisualizationConfig) -> Self {
         Self {
-            model,
+            _model,
             config,
             layout_cache: None,
         }
@@ -206,8 +206,7 @@ impl<
         match self.config.image_format {
             ImageFormat::SVG => self.generate_svg_visualization(&layout),
             ImageFormat::HTML => self.generate_html_visualization(&layout),
-            ImageFormat::JSON => self.generate_json_visualization(&layout),
-            _ => self.generate_svg_visualization(&layout), // Default to SVG
+            ImageFormat::JSON => self.generate_json_visualization(&layout, _ => self.generate_svg_visualization(&layout), // Default to SVG
     /// Compute network layout using specified algorithm
     fn compute_layout(&self) -> Result<NetworkLayout> {
         // Analyze model structure
@@ -315,8 +314,7 @@ impl<
                 "Attention" => (
                     "#673AB7".to_string(),
                     "#4527A0".to_string(),
-                    Some("◉".to_string()),
-                _ => (
+                    Some("◉".to_string(), _ => (
                     "#9E9E9E".to_string(),
                     "#424242".to_string(),
                     Some("?".to_string()),
@@ -325,14 +323,12 @@ impl<
             let parameter_count = match layer.layer_type.as_str() {
                 "Dense" => 10000, // Placeholder
                 "Conv2D" => 5000,
-                "Conv1D" => 3000,
-                _ => 0,
+                "Conv1D" => 3000_ => 0,
             // Estimate FLOPs (simplified)
             let flops = match layer.layer_type.as_str() {
                 "Dense" => 100000,
                 "Conv2D" => 500000,
-                "Conv1D" => 200000,
-                _ => 1000,
+                "Conv1D" => 200000_ => 1000,
             let position = LayerPosition {
                 name: layer.layer_name.clone(),
                 layer_type: layer.layer_type.clone(),
@@ -1049,8 +1045,7 @@ mod tests {
         assert_eq!(attention, ConnectionType::Attention);
         assert_eq!(recurrent, ConnectionType::Recurrent);
         match custom {
-            ConnectionType::Custom(name) => assert_eq!(name, "test"),
-            _ => unreachable!("Expected custom connection type"),
+            ConnectionType::Custom(name) => assert_eq!(name, "test", _ => unreachable!("Expected custom connection type"),
     fn test_bounding_box_computation() {
         // Test empty positions
         let empty_positions = vec![];

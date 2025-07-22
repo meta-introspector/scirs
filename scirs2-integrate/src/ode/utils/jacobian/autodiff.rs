@@ -8,6 +8,7 @@
 use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
 use ndarray::{Array1, Array2, ArrayView1};
+use std::f64::consts::PI;
 
 /// Compute Jacobian matrix using automatic differentiation
 ///
@@ -31,8 +32,7 @@ use ndarray::{Array1, Array2, ArrayView1};
 pub fn autodiff_jacobian<F, Func>(
     f: &Func,
     t: F,
-    y: &Array1<F>,
-    _f_current: &Array1<F>, // Not needed but kept for API compatibility
+    y: &Array1<F>, _f_current: &Array1<F>, // Not needed but kept for API compatibility
     _perturbation_scale: F, // Not used but kept for API compatibility
 ) -> IntegrateResult<Array2<F>>
 where
@@ -89,11 +89,7 @@ where
 #[cfg(not(feature = "autodiff"))]
 #[allow(dead_code)]
 pub fn autodiff_jacobian<F, Func>(
-    _f: &Func,
-    _t: F,
-    _y: &Array1<F>,
-    _f_current: &Array1<F>,
-    _perturbation_scale: F,
+    _f: &Func_t: F, _y: &Array1<F>, _f_current: &Array1<F>, _perturbation_scale: F,
 ) -> IntegrateResult<Array2<F>>
 where
     F: IntegrateFloat,

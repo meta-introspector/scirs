@@ -1,4 +1,4 @@
-use scirs2_integrate::quad;
+use scirs2__integrate::quad;
 
 #[allow(dead_code)]
 fn main() {

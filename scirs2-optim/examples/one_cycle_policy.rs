@@ -1,7 +1,7 @@
 //! Example demonstrating one-cycle learning rate policy
 
 use ndarray::Array1;
-use scirs2_optim::{
+use scirs2__optim::{
     optimizers::{Optimizer, SGD},
     schedulers::{AnnealStrategy, LearningRateScheduler, OneCycle},
 };
@@ -20,7 +20,7 @@ fn quadratic_gradient(x: &Array1<f64>) -> Array1<f64> {
 
 /// Visualize learning rate and momentum over time
 #[allow(dead_code)]
-fn plot_schedule(initial_lr: f64, max_lr: f64, total_steps: usize, warmup_frac: f64, name: &str) {
+fn plot_schedule(_initial_lr: f64, max_lr: f64, total_steps: usize, warmup_frac: f64, name: &str) {
     println!("\n{} Schedule:", name);
     println!("Step | Learning Rate | Progress");
     println!("-----|---------------|----------");
@@ -28,10 +28,10 @@ fn plot_schedule(initial_lr: f64, max_lr: f64, total_steps: usize, warmup_frac: 
     let mut scheduler = OneCycle::new(initial_lr, max_lr, total_steps, warmup_frac);
     for step in 0..=total_steps {
         if step % (total_steps / 20) == 0 {
-            let lr = scheduler.get_learning_rate();
+            let _lr = scheduler.get_learning_rate();
             let progress = scheduler.get_percentage_complete();
 
-            println!("{:4} | {:13.6} | {:8.1}%", step, lr, progress * 100.0);
+            println!("{:4} | {:13.6} | {:8.1}%", step, _lr, progress * 100.0);
         }
         if step < total_steps {
             scheduler.step();
@@ -99,7 +99,7 @@ fn main() {
     println!("One-Cycle with Adam Optimizer");
     println!("{}", "=".repeat(60));
 
-    use scirs2_optim::optimizers::Adam;
+    use scirs2__optim::optimizers::Adam;
 
     let mut adam = Adam::new(0.001);
     let mut scheduler = OneCycle::new(0.001, 0.01, total_steps, 0.3).with_momentum(0.85, 0.95, 0.9);
@@ -111,7 +111,7 @@ fn main() {
         let gradient = quadratic_gradient(&params);
 
         // Apply scheduler to optimizer
-        scheduler.apply_to::<ndarray::Ix1, _>(&mut adam);
+        scheduler.apply_to::<ndarray::Ix1_>(&mut adam);
 
         // Update parameters
         params = adam.step(&params, &gradient).unwrap();
@@ -145,22 +145,22 @@ fn run_one_cycle_optimization(
     mut scheduler: OneCycle<f64>,
     total_steps: usize,
 ) {
-    let mut params = initial_params.clone();
+    let mut _params = initial_params.clone();
     let mut optimizer = SGD::new(0.001);
 
     // Track metrics
     let mut losses = Vec::new();
-    let initial_loss = quadratic_loss(&params);
+    let initial_loss = quadratic_loss(&_params);
 
     println!("\nOptimization Progress:");
     println!("Initial loss: {:.6}", initial_loss);
 
     for step in 0..total_steps {
         // Compute gradient
-        let gradient = quadratic_gradient(&params);
+        let gradient = quadratic_gradient(&_params);
 
         // Apply learning rate from scheduler
-        scheduler.apply_to::<ndarray::Ix1, _>(&mut optimizer);
+        scheduler.apply_to::<ndarray::Ix1_>(&mut optimizer);
 
         // Apply momentum if available
         if let Some(momentum) = scheduler.get_momentum() {
@@ -168,10 +168,10 @@ fn run_one_cycle_optimization(
         }
 
         // Update parameters
-        params = optimizer.step(&params, &gradient).unwrap();
+        _params = optimizer.step(&_params, &gradient).unwrap();
 
         // Calculate loss
-        let loss = quadratic_loss(&params);
+        let loss = quadratic_loss(&_params);
 
         if step % 20 == 0 {
             losses.push(loss);
@@ -187,7 +187,7 @@ fn run_one_cycle_optimization(
         scheduler.step();
     }
 
-    let final_loss = quadratic_loss(&params);
+    let final_loss = quadratic_loss(&_params);
     losses.push(final_loss);
 
     println!("Final loss: {:.6}", final_loss);
@@ -197,5 +197,5 @@ fn run_one_cycle_optimization(
     );
 
     // Show parameter convergence
-    println!("Final parameters: {:?}", params);
+    println!("Final parameters: {:?}", _params);
 }

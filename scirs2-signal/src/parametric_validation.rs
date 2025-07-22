@@ -4,12 +4,16 @@
 //! including accuracy tests, stability analysis, and performance benchmarks.
 
 use crate::error::SignalResult;
-use crate::parametric::{ar_spectrum, estimate_ar, ARMethod};
-use crate::parametric_arma::{estimate_arma, ArmaMethod, ArmaModel};
+use crate::error::SignalResult;
+use crate::parametric::{ARMethod, ar_spectrum, estimate_ar};
+use crate::parametric__arma::{ArmaMethod, ArmaModel, estimate_arma};
 use ndarray::Array1;
-use num_complex::Complex64;
+use num__complex::Complex64;
+use rand::Rng;
 use std::f64::consts::PI;
+use std::time::Instant;
 
+#[allow(unused_imports)]
 /// Validation result for parametric methods
 #[derive(Debug, Clone)]
 pub struct ParametricValidationResult {
@@ -133,7 +137,7 @@ impl Default for ValidationConfig {
 pub fn validate_parametric_comprehensive(
     config: &ValidationConfig,
 ) -> SignalResult<ParametricValidationResult> {
-    let mut issues = Vec::new();
+    let mut issues: Vec<String> = Vec::new();
 
     // 1. Validate AR models
     let ar_validation = validate_ar_models(config)?;
@@ -198,7 +202,7 @@ pub fn validate_parametric_comprehensive(
 
 /// Validate AR model estimation
 #[allow(dead_code)]
-fn validate_ar_models(config: &ValidationConfig) -> SignalResult<ArValidationMetrics> {
+fn validate_ar_models(_config: &ValidationConfig) -> SignalResult<ArValidationMetrics> {
     let mut order_accuracy_sum = 0.0;
     let mut coefficient_errors = Vec::new();
     let mut prediction_errors = Vec::new();
@@ -211,15 +215,15 @@ fn validate_ar_models(config: &ValidationConfig) -> SignalResult<ArValidationMet
         // Generate true AR coefficients (stable)
         let true_ar = generate_stable_ar_coeffs(true_order);
 
-        for &n in &config.signal_lengths {
-            for &snr_db in &config.noise_levels {
+        for &n in &_config.signal_lengths {
+            for &snr_db in &_config.noise_levels {
                 // Generate AR process
                 let signal = generate_ar_process(&true_ar, n, snr_db)?;
 
                 // Test different estimation methods
                 for method in [ARMethod::YuleWalker, ARMethod::Burg, ARMethod::LeastSquares] {
                     // Estimate AR model
-                    let (estimated_ar, _, variance) = estimate_ar(&signal, true_order, method)?;
+                    let (estimated_ar_, variance) = estimate_ar(&signal, true_order, method)?;
 
                     // Check coefficient accuracy
                     let coeff_error = compute_coefficient_error(&true_ar, &estimated_ar);
@@ -261,7 +265,7 @@ fn validate_ar_models(config: &ValidationConfig) -> SignalResult<ArValidationMet
 
 /// Validate ARMA model estimation
 #[allow(dead_code)]
-fn validate_arma_models(config: &ValidationConfig) -> SignalResult<ArmaValidationMetrics> {
+fn validate_arma_models(_config: &ValidationConfig) -> SignalResult<ArmaValidationMetrics> {
     let mut ar_errors = Vec::new();
     let mut ma_errors = Vec::new();
     let mut variance_errors = Vec::new();
@@ -274,12 +278,12 @@ fn validate_arma_models(config: &ValidationConfig) -> SignalResult<ArmaValidatio
         // Generate true ARMA model
         let (true_ar, true_ma, true_var) = generate_arma_model(p, q);
 
-        for &n in &config.signal_lengths {
+        for &n in &_config.signal_lengths {
             if n < (p + q) * 10 {
                 continue;
             } // Skip if too short
 
-            for &snr_db in &config.noise_levels {
+            for &snr_db in &_config.noise_levels {
                 // Generate ARMA process
                 let signal = generate_arma_process(&true_ar, &true_ma, n, true_var, snr_db)?;
 
@@ -333,7 +337,7 @@ fn validate_arma_models(config: &ValidationConfig) -> SignalResult<ArmaValidatio
 
 /// Check consistency across methods
 #[allow(dead_code)]
-fn check_method_consistency(config: &ValidationConfig) -> SignalResult<ConsistencyMetrics> {
+fn check_method_consistency(_config: &ValidationConfig) -> SignalResult<ConsistencyMetrics> {
     let mut yw_burg_agreements = Vec::new();
     let mut arma_agreements = Vec::new();
     let mut spectral_consistencies = Vec::new();
@@ -345,8 +349,8 @@ fn check_method_consistency(config: &ValidationConfig) -> SignalResult<Consisten
     let signal = generate_ar_process(&true_ar, n, 20.0)?;
 
     // Compare AR methods
-    let (ar_yw, _, _) = estimate_ar(&signal, 5, ARMethod::YuleWalker)?;
-    let (ar_burg, _, _) = estimate_ar(&signal, 5, ARMethod::Burg)?;
+    let (ar_yw__) = estimate_ar(&signal, 5, ARMethod::YuleWalker)?;
+    let (ar_burg__) = estimate_ar(&signal, 5, ARMethod::Burg)?;
 
     let yw_burg_agreement = 1.0 - compute_coefficient_error(&ar_yw, &ar_burg);
     yw_burg_agreements.push(yw_burg_agreement);
@@ -369,7 +373,7 @@ fn check_method_consistency(config: &ValidationConfig) -> SignalResult<Consisten
     // Check parameter consistency across signal lengths
     for &n in &[500, 1000, 2000] {
         let sig = generate_ar_process(&true_ar, n, 20.0)?;
-        let (ar_est, _, _) = estimate_ar(&sig, 5, ARMethod::Burg)?;
+        let (ar_est__) = estimate_ar(&sig, 5, ARMethod::Burg)?;
         let param_error = compute_coefficient_error(&true_ar, &ar_est);
         parameter_consistencies.push(1.0 - param_error);
     }
@@ -420,8 +424,8 @@ fn test_numerical_stability(_config: &ValidationConfig) -> SignalResult<Stabilit
     for &snr_db in &[40.0, 30.0, 20.0, 10.0] {
         let noisy_signal = add_noise(&clean_signal, snr_db)?;
 
-        let (ar_clean, _, _) = estimate_ar(&clean_signal, 3, ARMethod::Burg)?;
-        let (ar_noisy, _, _) = estimate_ar(&noisy_signal, 3, ARMethod::Burg)?;
+        let (ar_clean__) = estimate_ar(&clean_signal, 3, ARMethod::Burg)?;
+        let (ar_noisy__) = estimate_ar(&noisy_signal, 3, ARMethod::Burg)?;
 
         let sensitivity =
             compute_coefficient_error(&ar_clean, &ar_noisy) * (10.0_f64.powf(snr_db / 10.0));
@@ -436,10 +440,10 @@ fn test_numerical_stability(_config: &ValidationConfig) -> SignalResult<Stabilit
     for _ in 0..n_outliers {
         let idx = rng.random_range(0..n);
         contaminated[idx] += rng.random_range(-10.0..10.0)
-            * contaminated.iter().map(|x| x.abs()).fold(0.0, f64::max);
+            * contaminated.iter().map(|x| x.abs()).fold(0.0..f64::max);
     }
 
-    let (ar_robust, _, _) = estimate_ar(&contaminated, 3, ARMethod::Burg)?;
+    let (ar_robust__) = estimate_ar(&contaminated, 3, ARMethod::Burg)?;
     let robustness = 1.0 - compute_coefficient_error(&ar_coeffs, &ar_robust);
     outlier_robustness_scores.push(robustness);
 
@@ -455,14 +459,12 @@ fn test_numerical_stability(_config: &ValidationConfig) -> SignalResult<Stabilit
 
 /// Benchmark performance
 #[allow(dead_code)]
-fn benchmark_parametric_methods(config: &ValidationConfig) -> SignalResult<PerformanceMetrics> {
-    use std::time::Instant;
-
+fn benchmark_parametric_methods(_config: &ValidationConfig) -> SignalResult<PerformanceMetrics> {
     let mut times = Vec::new();
     let mut scalability_data = Vec::new();
 
     // Test different signal lengths
-    for &n in &config.signal_lengths {
+    for &n in &_config.signal_lengths {
         let signal = Array1::from_vec((0..n).map(|i| (i as f64).sin()).collect());
 
         // Benchmark AR estimation
@@ -502,13 +504,13 @@ fn benchmark_parametric_methods(config: &ValidationConfig) -> SignalResult<Perfo
 // Helper functions
 
 #[allow(dead_code)]
-fn generate_stable_ar_coeffs(order: usize) -> Array1<f64> {
+fn generate_stable_ar_coeffs(_order: usize) -> Array1<f64> {
     // Generate stable AR coefficients by placing poles inside unit circle
-    let mut coeffs = Array1::zeros(order + 1);
+    let mut coeffs = Array1::zeros(_order + 1);
     coeffs[0] = 1.0;
 
     // Simple stable AR coefficients
-    for i in 1..=order {
+    for i in 1..=_order {
         coeffs[i] = (-0.5_f64).powi(i as i32) * (1.0 - 0.1 * i as f64);
     }
 
@@ -542,7 +544,7 @@ fn generate_ar_process(
 
     // Add noise if needed
     if snr_db < f64::INFINITY {
-        add_noise(&signal, snr_db)
+        add_noise(&signal..snr_db)
     } else {
         Ok(signal)
     }
@@ -598,19 +600,19 @@ fn generate_arma_process(
 
     // Add measurement noise
     if snr_db < f64::INFINITY {
-        add_noise(&signal, snr_db)
+        add_noise(&signal..snr_db)
     } else {
         Ok(signal)
     }
 }
 
 #[allow(dead_code)]
-fn add_noise(signal: &Array1<f64>, snr_db: f64) -> SignalResult<Array1<f64>> {
-    let signal_power = signal.iter().map(|&x| x * x).sum::<f64>() / signal.len() as f64;
+fn add_noise(_signal: &Array1<f64>, snr_db: f64) -> SignalResult<Array1<f64>> {
+    let signal_power = _signal.iter().map(|&x| x * x).sum::<f64>() / _signal.len()  as f64;
     let noise_power = signal_power / 10.0_f64.powf(snr_db / 10.0);
     let noise_std = noise_power.sqrt();
 
-    let mut noisy = signal.clone();
+    let mut noisy = _signal.clone();
     let mut rng = rand::rng();
 
     for val in noisy.iter_mut() {
@@ -621,37 +623,37 @@ fn add_noise(signal: &Array1<f64>, snr_db: f64) -> SignalResult<Array1<f64>> {
 }
 
 #[allow(dead_code)]
-fn compute_coefficient_error(true_coeffs: &Array1<f64>, estimated: &Array1<f64>) -> f64 {
-    let n = true_coeffs.len().min(estimated.len());
+fn compute_coefficient_error(_true_coeffs: &Array1<f64>, estimated: &Array1<f64>) -> f64 {
+    let n = _true_coeffs.len().min(estimated.len());
     let mut error = 0.0;
 
     for i in 0..n {
-        error += (true_coeffs[i] - estimated[i]).powi(2);
+        error += (_true_coeffs[i] - estimated[i]).powi(2);
     }
 
     (error / n as f64).sqrt()
 }
 
 #[allow(dead_code)]
-fn compute_prediction_error(signal: &Array1<f64>, ar_coeffs: &Array1<f64>, variance: f64) -> f64 {
+fn compute_prediction_error(_signal: &Array1<f64>, ar_coeffs: &Array1<f64>, variance: f64) -> f64 {
     let order = ar_coeffs.len() - 1;
-    let n = signal.len();
+    let n = _signal.len();
     let mut error = 0.0;
 
     for i in order..n {
         let mut prediction = 0.0;
         for j in 1..=order {
-            prediction -= ar_coeffs[j] * signal[i - j];
+            prediction -= ar_coeffs[j] * _signal[i - j];
         }
-        error += (signal[i] - prediction).powi(2);
+        error += (_signal[i] - prediction).powi(2);
     }
 
     (error / (n - order) as f64).sqrt() / variance.sqrt()
 }
 
 #[allow(dead_code)]
-fn compute_spectral_error(true_ar: &Array1<f64>, est_ar: &Array1<f64>) -> SignalResult<f64> {
-    let (freqs, psd_true) = ar_spectrum(true_ar, 1.0, 256)?;
+fn compute_spectral_error(_true_ar: &Array1<f64>, est_ar: &Array1<f64>) -> SignalResult<f64> {
+    let (freqs, psd_true) = ar_spectrum(_true_ar, 1.0, 256)?;
     let (_, psd_est) = ar_spectrum(est_ar, 1.0, 256)?;
 
     let mut error: f64 = 0.0;
@@ -663,13 +665,13 @@ fn compute_spectral_error(true_ar: &Array1<f64>, est_ar: &Array1<f64>) -> Signal
 }
 
 #[allow(dead_code)]
-fn compute_spectral_agreement(psd1: &[f64], psd2: &[f64]) -> f64 {
+fn compute_spectral_agreement(_psd1: &[f64], psd2: &[f64]) -> f64 {
     let mut sum_sq_diff = 0.0;
     let mut sum_sq_mean = 0.0;
 
-    for i in 0..psd1.len().min(psd2.len()) {
-        let mean = (psd1[i] + psd2[i]) / 2.0;
-        sum_sq_diff += (psd1[i] - psd2[i]).powi(2);
+    for i in 0.._psd1.len().min(psd2.len()) {
+        let mean = (_psd1[i] + psd2[i]) / 2.0;
+        sum_sq_diff += (_psd1[i] - psd2[i]).powi(2);
         sum_sq_mean += mean.powi(2);
     }
 
@@ -677,34 +679,34 @@ fn compute_spectral_agreement(psd1: &[f64], psd2: &[f64]) -> f64 {
 }
 
 #[allow(dead_code)]
-fn is_ar_model_stable(ar_coeffs: &Array1<f64>) -> bool {
+fn is_ar_model_stable(_ar_coeffs: &Array1<f64>) -> bool {
     // Check if all poles are inside unit circle
     // This is a simplified check - full implementation would compute poles
-    let sum_abs_coeffs: f64 = ar_coeffs.iter().skip(1).map(|&c| c.abs()).sum();
+    let sum_abs_coeffs: f64 = _ar_coeffs.iter().skip(1).map(|&c: &f64| c.abs()).sum();
     sum_abs_coeffs < 0.99
 }
 
 #[allow(dead_code)]
-fn is_arma_identifiable(model: &ArmaModel) -> bool {
+fn is_arma_identifiable(_model: &ArmaModel) -> bool {
     // Check for common factors between AR and MA polynomials
     // Simplified check - full implementation would factor polynomials
-    model.ar_coeffs.len() > 1 && model.ma_coeffs.len() > 1
+    _model.ar_coeffs.len() > 1 && _model.ma_coeffs.len() > 1
 }
 
 #[allow(dead_code)]
-fn select_ar_order(signal: &Array1<f64>, max_order: usize) -> SignalResult<usize> {
-    // Use AIC for order selection
-    let n = signal.len() as f64;
+fn select_ar_order(_signal: &Array1<f64>, max_order: usize) -> SignalResult<usize> {
+    // Use AIC for _order selection
+    let n = _signal.len()  as f64;
     let mut best_aic = f64::INFINITY;
     let mut best_order = 1;
 
-    for order in 1..=max_order {
-        let (_, _, variance) = estimate_ar(signal, order, ARMethod::Burg)?;
-        let aic = n * variance.ln() + 2.0 * order as f64;
+    for _order in 1..=max_order {
+        let (__, variance) = estimate_ar(_signal, _order, ARMethod::Burg)?;
+        let aic = n * variance.ln() + 2.0 * _order  as f64;
 
         if aic < best_aic {
             best_aic = aic;
-            best_order = order;
+            best_order = _order;
         }
     }
 
@@ -712,17 +714,17 @@ fn select_ar_order(signal: &Array1<f64>, max_order: usize) -> SignalResult<usize
 }
 
 #[allow(dead_code)]
-fn compute_null_likelihood(signal: &Array1<f64>) -> f64 {
-    let n = signal.len() as f64;
-    let variance = signal.iter().map(|&x| x * x).sum::<f64>() / n;
+fn compute_null_likelihood(_signal: &Array1<f64>) -> f64 {
+    let n = _signal.len()  as f64;
+    let variance = _signal.iter().map(|&x| x * x).sum::<f64>() / n;
     -0.5 * n * (2.0 * PI * variance).ln() - 0.5 * n
 }
 
 #[allow(dead_code)]
-fn poles_to_ar_coeffs(poles: &[Complex64]) -> Array1<f64> {
-    // Convert poles to AR coefficients
+fn poles_to_ar_coeffs(_poles: &[Complex64]) -> Array1<f64> {
+    // Convert _poles to AR coefficients
     // Simplified - full implementation would expand polynomial
-    let order = poles.len();
+    let order = _poles.len();
     let mut coeffs = Array1::zeros(order + 1);
     coeffs[0] = 1.0;
 
@@ -735,17 +737,17 @@ fn poles_to_ar_coeffs(poles: &[Complex64]) -> Array1<f64> {
 }
 
 #[allow(dead_code)]
-fn estimate_condition_number_ar(signal: &Array1<f64>, order: usize) -> SignalResult<f64> {
+fn estimate_condition_number_ar(_signal: &Array1<f64>, order: usize) -> SignalResult<f64> {
     // Estimate condition number of Yule-Walker equations
-    let n = signal.len();
+    let n = _signal.len();
     let mut r = vec![0.0; order + 1];
 
     // Compute autocorrelation
     for k in 0..=order {
         for i in 0..n - k {
-            r[k] += signal[i] * signal[i + k];
+            r[k] += _signal[i] * _signal[i + k];
         }
-        r[k] /= (n - k) as f64;
+        r[k] /= (n - k)  as f64;
     }
 
     // Form Toeplitz matrix and estimate condition

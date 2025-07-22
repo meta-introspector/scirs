@@ -8,11 +8,10 @@
 
 use ndarray::{Array, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
-use rand_distr::Normal;
-use scirs2_core::random;
+use rand__distr::Normal;
 use std::collections::{HashMap, VecDeque};
 
-use super::moment_accountant::MomentsAccountant;
+use super::moment__accountant::MomentsAccountant;
 use super::{DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
 use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
@@ -34,7 +33,7 @@ where
     accountant: MomentsAccountant,
 
     /// Random number generator for noise
-    rng: scirs2_core::random::Random,
+    rng: scirs2_core: random::Random,
 
     /// Adaptive clipping state
     adaptive_clipping: Option<AdaptiveClippingState>,
@@ -211,7 +210,7 @@ where
         + Clone
         + Send
         + Sync
-        + ndarray_rand::rand_distr::uniform::SampleUniform
+        + ndarray_rand::rand, _distr::uniform::SampleUniform
         + ndarray::ScalarOperand
         + std::fmt::Debug
         + std::iter::Sum,
@@ -219,7 +218,7 @@ where
     O: Optimizer<A, D> + Send + Sync,
 {
     /// Create a new DP-SGD optimizer
-    pub fn new(base_optimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
+    pub fn new(_base_optimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
         let accountant = MomentsAccountant::new(
             config.noise_multiplier,
             config.target_delta,
@@ -227,7 +226,7 @@ where
             config.dataset_size,
         );
 
-        let rng = random::rng();
+        let rng = scirs2_core::random::rng();
 
         let adaptive_clipping = if config.adaptive_clipping {
             Some(AdaptiveClippingState::new(
@@ -253,8 +252,7 @@ where
             gradient_stats,
             noise_calibrator,
             step_count: 0,
-            current_batch_size: batch_size,
-            _phantom: std::marker::PhantomData,
+            current_batch_size: batch_size, _phantom: std::marker::PhantomData,
         })
     }
 
@@ -379,7 +377,7 @@ where
     /// Set batch size for next iterations
     pub fn set_batch_size(&mut self, batch_size: usize) {
         self.current_batch_size = batch_size;
-        // Update moment accountant with new batch size
+        // Update moment accountant with new batch _size
         self.accountant = MomentsAccountant::new(
             self.config.noise_multiplier,
             self.config.target_delta,
@@ -391,24 +389,24 @@ where
     /// Update privacy configuration
     pub fn update_privacy_config(&mut self, new_config: DifferentialPrivacyConfig) -> Result<()> {
         // Validate that privacy budget doesn't decrease
-        if new_config.target_epsilon < self.config.target_epsilon
-            || new_config.target_delta < self.config.target_delta
+        if new_config.target_epsilon < self._config.target_epsilon
+            || new_config.target_delta < self._config.target_delta
         {
             return Err(OptimError::InvalidConfig(
                 "Cannot decrease privacy budget mid-training".to_string(),
             ));
         }
 
-        self.config = new_config;
-        self.privacy_budget.target_epsilon = self.config.target_epsilon;
-        self.privacy_budget.target_delta = self.config.target_delta;
+        self._config = new_config;
+        self.privacy_budget.target_epsilon = self._config.target_epsilon;
+        self.privacy_budget.target_delta = self._config.target_delta;
 
         // Update moment accountant
         self.accountant = MomentsAccountant::new(
-            self.config.noise_multiplier,
-            self.config.target_delta,
+            self._config.noise_multiplier,
+            self._config.target_delta,
             self.current_batch_size,
-            self.config.dataset_size,
+            self._config.dataset_size,
         );
 
         Ok(())
@@ -643,9 +641,9 @@ where
 // Implementation of helper structures
 
 impl AdaptiveClippingState {
-    fn new(initial_threshold: f64, adaptation_lr: f64) -> Result<Self> {
+    fn new(_initial_threshold: f64, adaptation_lr: f64) -> Result<Self> {
         Ok(Self {
-            current_threshold: initial_threshold,
+            current_threshold: _initial_threshold,
             target_quantile: 0.5,
             adaptation_lr,
             norm_history: VecDeque::with_capacity(1000),
@@ -677,7 +675,7 @@ impl AdaptiveClippingState {
 impl QuantileEstimator {
     fn new() -> Self {
         Self {
-            p2_state: P2AlgorithmState::new(0.5),
+            p2_state: P2, AlgorithmState::new(0.5),
             moving_avg: 0.0,
             ema: 0.0,
             ema_decay: 0.99,
@@ -695,7 +693,7 @@ impl QuantileEstimator {
         }
     }
 
-    fn get_quantile(&self, _quantile: f64) -> f64 {
+    fn get_quantile(&self_quantile: f64) -> f64 {
         if self.p2_state.count >= 5 {
             self.p2_state.get_quantile()
         } else {
@@ -705,12 +703,12 @@ impl QuantileEstimator {
 }
 
 impl P2AlgorithmState {
-    fn new(quantile: f64) -> Self {
+    fn new(_quantile: f64) -> Self {
         Self {
             markers: [0.0; 5],
             values: [0.0; 5],
-            desired_positions: [0.0, quantile / 2.0, quantile, (1.0 + quantile) / 2.0, 1.0],
-            increments: [0.0, quantile / 2.0, quantile, (1.0 + quantile) / 2.0, 1.0],
+            desired_positions: [0.0, _quantile / 2.0, _quantile, (1.0 + _quantile) / 2.0, 1.0],
+            increments: [0.0, _quantile / 2.0, _quantile, (1.0 + _quantile) / 2.0, 1.0],
             count: 0,
         }
     }
@@ -742,12 +740,12 @@ impl P2AlgorithmState {
 }
 
 impl PrivacyBudgetTracker {
-    fn new(config: &DifferentialPrivacyConfig) -> Self {
+    fn new(_config: &DifferentialPrivacyConfig) -> Self {
         Self {
             epsilon_consumed: 0.0,
             delta_consumed: 0.0,
-            target_epsilon: config.target_epsilon,
-            target_delta: config.target_delta,
+            target_epsilon: _config.target_epsilon,
+            target_delta: _config.target_delta,
             epsilon_per_step: 0.0,
             delta_per_step: 0.0,
             consumption_history: Vec::new(),
@@ -814,12 +812,12 @@ impl<A: Float + Default + Clone + std::iter::Sum> GradientStatistics<A> {
 }
 
 impl<A: Float + Default + Clone> NoiseCalibrator<A> {
-    fn new(config: &DifferentialPrivacyConfig) -> Self {
+    fn new(_config: &DifferentialPrivacyConfig) -> Self {
         Self {
-            noise_multiplier: A::from(config.noise_multiplier).unwrap(),
-            base_noise_scale: A::from(config.noise_multiplier * config.l2_norm_clip).unwrap(),
+            noise_multiplier: A::from(_config.noise_multiplier).unwrap(),
+            base_noise_scale: A::from(_config.noise_multiplier * _config.l2_norm_clip).unwrap(),
             adaptive_scaling: false,
-            mechanism: config.noise_mechanism,
+            mechanism: _config.noise_mechanism,
             calibration_history: Vec::new(),
         }
     }

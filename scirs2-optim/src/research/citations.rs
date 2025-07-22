@@ -577,8 +577,8 @@ impl CitationManager {
     
     /// Export citations to BibTeX format
     pub fn export_bibtex(&self, citation_keys: Option<&[String]>) -> String {
-        let citations = if let Some(keys) = citation_keys {
-            keys.iter().filter_map(|key| self.citations.get(key)).collect()
+        let citations = if let Some(_keys) = citation_keys {
+            _keys.iter().filter_map(|key| self.citations.get(key)).collect()
         } else {
             self.citations.values().collect()
         };
@@ -653,12 +653,12 @@ impl CitationManager {
         Ok(format!("({}, {})", authors, year))
     }
     
-    fn format_numbered(&self, citation: &Citation, _style: &CitationStyle) -> Result<String> {
+    fn format_numbered(&self, citation: &Citation_style: &CitationStyle) -> Result<String> {
         // In a real implementation, you'd need to assign numbers based on order
         Ok(format!("[{}]", 1)) // Placeholder
     }
     
-    fn format_superscript(&self, citation: &Citation, _style: &CitationStyle) -> Result<String> {
+    fn format_superscript(&self, citation: &Citation_style: &CitationStyle) -> Result<String> {
         Ok("¹".to_string()) // Placeholder
     }
     
@@ -827,8 +827,7 @@ impl CitationManager {
         if let Some(venue) = &citation.venue {
             let field_name = match citation.publication_type {
                 PublicationType::Article => "journal",
-                PublicationType::InProceedings => "booktitle",
-                _ => "publisher",
+                PublicationType::InProceedings => "booktitle"_ => "publisher",
             };
             bibtex.push_str(&format!("  {} = {{{}}},\n", field_name, venue));
         }
@@ -987,8 +986,8 @@ impl CitationManager {
 
 impl BibTeXProcessor {
     /// Create a new BibTeX processor
-    pub fn new(settings: BibTeXSettings) -> Self {
-        Self { settings }
+    pub fn new(_settings: BibTeXSettings) -> Self {
+        Self { _settings }
     }
     
     /// Parse BibTeX content into citations
@@ -1032,7 +1031,7 @@ impl BibTeXProcessor {
                         .trim_end_matches("\",")
                         .to_string();
                     
-                    if let Some((_, _, ref mut fields)) = current_entry {
+                    if let Some((__, ref mut fields)) = current_entry {
                         fields.insert(field_name, field_value);
                     }
                 }
@@ -1059,8 +1058,7 @@ impl BibTeXProcessor {
             "mastersthesis" => PublicationType::MastersThesis,
             "techreport" => PublicationType::TechReport,
             "manual" => PublicationType::Manual,
-            "unpublished" => PublicationType::Unpublished,
-            _ => PublicationType::Misc,
+            "unpublished" => PublicationType::Unpublished_ =>, PublicationType::Misc,
         }
     }
     
@@ -1077,11 +1075,10 @@ impl BibTeXProcessor {
         // Parse year
         let year = fields.get("year").and_then(|y| y.parse().ok());
         
-        // Determine venue field based on publication type
+        // Determine venue field based on publication _type
         let venue = match pub_type {
             PublicationType::Article => fields.get("journal").cloned(),
-            PublicationType::InProceedings => fields.get("booktitle").cloned(),
-            _ => fields.get("publisher").cloned(),
+            PublicationType::InProceedings => fields.get("booktitle").cloned(, _ => fields.get("publisher").cloned(),
         };
         
         let now = Utc::now();
@@ -1128,7 +1125,7 @@ impl BibTeXProcessor {
                     }
                 } else {
                     // "First Last" format
-                    let parts: Vec<&str> = author_part.split_whitespace().collect();
+                    let parts: Vec<&_str> = author_part.split_whitespace().collect();
                     if parts.len() >= 2 {
                         let first_name = parts[0].to_string();
                         let last_name = parts[parts.len()-1].to_string();

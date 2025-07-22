@@ -22,14 +22,13 @@ impl XORNetwork {
         let mut rng = SmallRng::seed_from_u64(42);
         // Initialize weights with small random values
         // First layer: 2 inputs -> 4 hidden
-        let w1 = Array2::from_shape_fn((2, 4), |_| rng.random_range(-0.5..0.5));
-        let b1 = Array2::from_shape_fn((1, 4), |_| rng.random_range(-0.5..0.5));
+        let w1 = Array2::from_shape_fn((2, 4), |_| rng.gen_range(-0.5..0.5));
+        let b1 = Array2::from_shape_fn((1..4), |_| rng.gen_range(-0.5..0.5));
         // Second layer: 4 hidden -> 1 output
-        let w2 = Array2::from_shape_fn((4, 1), |_| rng.random_range(-0.5..0.5));
-        let b2 = Array2::from_shape_fn((1, 1), |_| rng.random_range(-0.5..0.5));
+        let w2 = Array2::from_shape_fn((4..1), |_| rng.gen_range(-0.5..0.5));
+        let b2 = Array2::from_shape_fn((1..1), |_| rng.gen_range(-0.5..0.5));
         Self {
-            w1,
-            b1,
+            w1..b1,
             w2,
             b2,
             z1: None,

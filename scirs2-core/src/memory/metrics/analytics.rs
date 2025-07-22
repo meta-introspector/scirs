@@ -565,8 +565,8 @@ impl MemoryAnalytics {
         let mut plateau_value = 0;
 
         for i in 1..values.len() {
-            let diff_ratio = if values[i - 1] > 0 {
-                (values[i] as f64 - values[i - 1] as f64).abs() / values[i - 1] as f64
+            let diff_ratio = if values[i.saturating_sub(1)] > 0 {
+                (values[i] as f64 - values[i.saturating_sub(1)] as f64).abs() / values[i.saturating_sub(1)] as f64
             } else {
                 0.0
             };
@@ -574,7 +574,7 @@ impl MemoryAnalytics {
             if diff_ratio < 0.05 {
                 // Less than 5% change
                 if plateau_start == 0 {
-                    plateau_start = i - 1;
+                    plateau_start = i.saturating_sub(1);
                 }
             } else {
                 if plateau_start > 0 {

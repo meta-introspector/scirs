@@ -6,8 +6,8 @@
 use ndarray::{Array1, Array2};
 use ndarray_rand::rand_distr::Normal;
 use ndarray_rand::RandomExt;
-use scirs2_optim::optimizers::{Optimizer, SGD};
-use scirs2_optim::schedulers::{
+use scirs2__optim::optimizers::{Optimizer, SGD};
+use scirs2__optim::schedulers::{
     CosineAnnealing, CosineAnnealingWarmRestarts, LearningRateScheduler,
 };
 use std::time::Instant;
@@ -26,7 +26,7 @@ fn main() {
         n_samples, n_features
     );
 
-    let (x_train, y_train, true_weights, _true_bias) = generate_data(n_samples, n_features);
+    let (x_train, y_train, true_weights_true_bias) = generate_data(n_samples, n_features);
 
     // Parameters for optimization
     let initial_lr = 0.1;
@@ -119,7 +119,7 @@ fn train_linear_regression<S: LearningRateScheduler<f64>>(
     let mut optimizer = SGD::<f64>::new(scheduler.get_learning_rate());
 
     // Initialize parameters
-    let mut weights = Array1::<f64>::zeros(n_features);
+    let mut _weights = Array1::<f64>::zeros(n_features);
     let mut bias = 0.0;
 
     // Training loop
@@ -129,7 +129,7 @@ fn train_linear_regression<S: LearningRateScheduler<f64>>(
         <SGD<f64> as Optimizer<f64, ndarray::Ix1>>::set_learning_rate(&mut optimizer, lr);
 
         // Forward pass
-        let predictions = &x_train.dot(&weights) + bias;
+        let predictions = &x_train.dot(&_weights) + bias;
 
         // Compute error
         let error = predictions - y_train;
@@ -142,7 +142,7 @@ fn train_linear_regression<S: LearningRateScheduler<f64>>(
         let bias_grad = error.sum() / (y_train.len() as f64);
 
         // Update parameters
-        weights = optimizer.step(&weights, &weight_grad).unwrap();
+        _weights = optimizer.step(&_weights, &weight_grad).unwrap();
         bias -= lr * bias_grad;
 
         // Print progress at intervals or warm restart points
@@ -157,14 +157,14 @@ fn train_linear_regression<S: LearningRateScheduler<f64>>(
     }
 
     // Compute final predictions
-    let predictions = &x_train.dot(&weights) + bias;
+    let predictions = &x_train.dot(&_weights) + bias;
 
     // Compute final loss
     let error = predictions - y_train;
     let final_loss = (&error * &error).sum() / (2.0 * error.len() as f64);
 
-    // Compute weight error (L2 distance from true weights)
-    let weight_diff = &weights - true_weights;
+    // Compute weight error (L2 distance from true _weights)
+    let weight_diff = &_weights - true_weights;
     let weight_error = (&weight_diff * &weight_diff).sum().sqrt();
 
     (final_loss, weight_error)
@@ -180,7 +180,7 @@ fn generate_data(
     let true_weights = Array1::random(n_features, Normal::new(0.0, 1.0).unwrap());
     let true_bias = 1.0;
 
-    // Generate random features
+    // Generate random _features
     let x = Array2::random((n_samples, n_features), Normal::new(0.0, 1.0).unwrap());
 
     // Generate target values with noise

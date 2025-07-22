@@ -10,7 +10,7 @@ use ndarray::{Array2, ArrayView2};
 pub mod linear_solvers;
 
 // Re-export useful utilities
-pub use linear_solvers::{matrix_norm, solve_linear_system, solve_lu, vector_norm};
+pub use linear__solvers::{matrix_norm, solve_linear_system, solve_lu, vector_norm};
 
 /// Compute the constraint Jacobian for a constraint function
 #[allow(dead_code)]
@@ -57,15 +57,15 @@ pub fn compute_constraint_jacobian<F: IntegrateFloat>(
 
 /// Check if a matrix is singular
 #[allow(dead_code)]
-pub fn is_singular_matrix<F: IntegrateFloat>(matrix: ArrayView2<F>) -> bool {
-    let n = matrix.nrows();
-    if n != matrix.ncols() {
+pub fn is_singular_matrix<F: IntegrateFloat>(_matrix: ArrayView2<F>) -> bool {
+    let n = _matrix.nrows();
+    if n != _matrix.ncols() {
         return true; // Non-square matrices are considered singular
     }
 
     // Use a simple determinant check for small matrices
     if n == 1 {
-        return matrix[(0, 0)].abs() < F::from_f64(1e-10).unwrap();
+        return _matrix[(0, 0)].abs() < F::from_f64(1e-10).unwrap();
     }
 
     // For larger matrices, check condition number or use LU decomposition
@@ -73,12 +73,12 @@ pub fn is_singular_matrix<F: IntegrateFloat>(matrix: ArrayView2<F>) -> bool {
     let epsilon = F::from_f64(1e-10).unwrap();
 
     for i in 0..n {
-        let diagonal = matrix[(i, i)].abs();
+        let diagonal = _matrix[(i, i)].abs();
         let mut off_diagonal_sum = F::zero();
 
         for j in 0..n {
             if i != j {
-                off_diagonal_sum += matrix[(i, j)].abs();
+                off_diagonal_sum += _matrix[(i, j)].abs();
             }
         }
 

@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
 use ndarray::{Array1, Array2};
-use scirs2_integrate::error::IntegrateResult;
+use scirs2__integrate::error::IntegrateResult;
 #[allow(unused_imports)]
-use scirs2_integrate::ode::utils::linear_solvers::{solve_linear_system, LinearSolverType};
+use scirs2__integrate::ode::utils::linear_solvers::{solve_linear_system, LinearSolverType};
 use std::time::Instant;
 
 // Creates a banded test matrix with specified bandwidth
@@ -81,7 +81,7 @@ fn benchmark_solvers(
 ) -> IntegrateResult<()> {
     println!("\n=== Benchmarking {matrix_type} matrix (size {n}x{n}) ===");
 
-    // Create test matrix based on type
+    // Create test matrix based on _type
     let a = match matrix_type {
         "banded" => {
             let l = lower.unwrap_or(1);
@@ -89,8 +89,7 @@ fn benchmark_solvers(
             println!("  (bandwidths: lower={l}, upper={u})");
             create_banded_matrix(n, l, u)
         }
-        "structured" => create_structured_matrix(n),
-        _ => create_dense_matrix(n),
+        "structured" => create_structured_matrix(n, _ => create_dense_matrix(n),
     };
 
     // Create test right-hand side

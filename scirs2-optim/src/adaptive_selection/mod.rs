@@ -6,8 +6,6 @@
 use crate::error::{OptimError, Result};
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
-use scirs2_core::random;
-use scirs2_core::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 
@@ -181,15 +179,15 @@ pub struct SelectionNetwork<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> SelectionNetwork<A> {
     /// Create a new selection network
-    pub fn new(input_size: usize, hidden_size: usize, num_optimizers: usize) -> Self {
-        let mut rng = random::rng();
+    pub fn new(_input_size: usize, hidden_size: usize, num_optimizers: usize) -> Self {
+        let mut rng = scirs2_core::random::rng();
 
-        let input_weights = Array2::from_shape_fn((hidden_size, input_size), |_| {
-            A::from(rng.random::<f64>()).unwrap() * A::from(0.1).unwrap() - A::from(0.05).unwrap()
+        let input_weights = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+            A::from(rng.random_f64()).unwrap() * A::from(0.1).unwrap() - A::from(0.05).unwrap()
         });
 
         let output_weights = Array2::from_shape_fn((num_optimizers, hidden_size), |_| {
-            A::from(rng.random::<f64>()).unwrap() * A::from(0.1).unwrap() - A::from(0.05).unwrap()
+            A::from(rng.random_f64()).unwrap() * A::from(0.1).unwrap() - A::from(0.05).unwrap()
         });
 
         let input_bias = Array1::zeros(hidden_size);
@@ -274,7 +272,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> SelectionNetw
 
 impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptimizerSelector<A> {
     /// Create a new adaptive optimizer selector
-    pub fn new(strategy: SelectionStrategy) -> Self {
+    pub fn new(_strategy: SelectionStrategy) -> Self {
         let available_optimizers = vec![
             OptimizerType::SGD,
             OptimizerType::SGDMomentum,
@@ -294,7 +292,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
         }
 
         Self {
-            strategy,
+            _strategy,
             performance_history: HashMap::new(),
             problem_optimizer_map: Vec::new(),
             current_problem: None,
@@ -342,8 +340,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
         if problem.dataset_size > 100000 {
             match problem.problem_type {
                 ProblemType::ComputerVision => return Ok(OptimizerType::AdamW),
-                ProblemType::NaturalLanguage => return Ok(OptimizerType::AdamW),
-                _ => return Ok(OptimizerType::Adam),
+                ProblemType::NaturalLanguage => return Ok(OptimizerType::AdamW, _ => return Ok(OptimizerType::Adam),
             }
         }
 
@@ -408,33 +405,30 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
 
     /// Ensemble selection by trying multiple optimizers
     fn ensemble_selection(
-        &self,
-        _problem: &ProblemCharacteristics,
-        num_candidates: usize,
-        _evaluation_steps: usize,
+        &self_problem: &ProblemCharacteristics,
+        num_candidates: usize, _evaluation_steps: usize,
     ) -> Result<OptimizerType> {
-        // Select top candidates based on historical performance
-        let mut candidates = self.available_optimizers.clone();
-        candidates.truncate(num_candidates.min(candidates.len()));
+        // Select top _candidates based on historical performance
+        let mut _candidates = self.available_optimizers.clone();
+        _candidates.truncate(num_candidates.min(_candidates.len()));
 
         // For simplicity, return the first candidate
         // In practice, you would evaluate each for evaluation_steps
-        Ok(candidates[0])
+        Ok(_candidates[0])
     }
 
     /// Bandit-based selection with epsilon-greedy strategy
     fn bandit_selection(
-        &mut self,
-        _problem: &ProblemCharacteristics,
+        &mut self_problem: &ProblemCharacteristics,
         epsilon: f64,
         confidence: f64,
     ) -> Result<OptimizerType> {
-        let mut rng = random::rng();
+        let mut rng = scirs2_core::random::rng();
 
         // Epsilon-greedy exploration
-        if rng.random::<f64>() < epsilon {
+        if rng.random_f64() < epsilon {
             // Explore: random selection
-            let idx = rng.random_range(0, self.available_optimizers.len());
+            let idx = rng.gen_range(0..self.available_optimizers.len());
             return Ok(self.available_optimizers[idx]);
         }
 
@@ -469,8 +463,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
     /// Meta-learning based selection
     fn meta_learning_selection(
         &mut self,
-        problem: &ProblemCharacteristics,
-        _feature_dim: usize,
+        problem: &ProblemCharacteristics_feature_dim: usize,
         k_nearest: usize,
     ) -> Result<OptimizerType> {
         // Extract features from problem
@@ -508,7 +501,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
             // Sort by similarity
             similarities.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
 
-            // Take k nearest and vote
+            // Take k _nearest and vote
             let mut votes: HashMap<OptimizerType, f64> = HashMap::new();
             for (similarity, optimizer, performance) in similarities.iter().take(k_nearest) {
                 let weight = similarity * performance;
@@ -519,7 +512,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
             let best_optimizer = votes
                 .iter()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .map(|(&optimizer, _)| optimizer)
+                .map(|(&optimizer_)| optimizer)
                 .unwrap_or(OptimizerType::Adam);
 
             return Ok(best_optimizer);
@@ -571,7 +564,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
         let mut features = Vec::new();
         let mut labels = Vec::new();
 
-        for (problem, optimizer, _) in &self.problem_optimizer_map {
+        for (problem, optimizer_) in &self.problem_optimizer_map {
             let feature_vec = self.extract_problem_features(problem);
             features.push(feature_vec);
 

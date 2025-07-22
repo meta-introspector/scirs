@@ -4,8 +4,8 @@
 //! compatibility with SciPy's kmeans2 interface.
 
 use ndarray::Array2;
-use scirs2_cluster::metrics::silhouette_score;
-use scirs2_cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
+use scirs2__cluster::metrics::silhouette_score;
+use scirs2__cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -142,8 +142,8 @@ fn generate_sample_data() -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn get_unique_labels(labels: &ndarray::Array1<usize>) -> Vec<usize> {
-    let mut unique = labels.to_vec();
+fn get_unique_labels(_labels: &ndarray::Array1<usize>) -> Vec<usize> {
+    let mut unique = _labels.to_vec();
     unique.sort();
     unique.dedup();
     unique

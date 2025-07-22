@@ -2,11 +2,11 @@
 
 use image::{DynamicImage, ImageBuffer, Luma, Rgb};
 use ndarray::{Array2, Array3};
-use scirs2_vision::error::Result;
-use scirs2_vision::feature::{
+use scirs2__vision::error::Result;
+use scirs2__vision::feature::{
     compute_gradients, sobel_edges_oriented, visualize_gradient_orientation,
 };
-use scirs2_vision::preprocessing::{fast_guided_filter, guided_filter, guided_filter_color};
+use scirs2__vision::preprocessing::{fast_guided_filter, guided_filter, guided_filter_color};
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
@@ -27,11 +27,11 @@ fn main() -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_guided_filter(img: &DynamicImage) -> Result<()> {
+fn demonstrate_guided_filter(_img: &DynamicImage) -> Result<()> {
     println!("\n1. Guided Filter Examples:");
 
     // Convert to grayscale for processing
-    let gray = img.to_luma8();
+    let gray = _img.to_luma8();
     let (width, height) = gray.dimensions();
 
     // Convert to ndarray
@@ -81,10 +81,10 @@ fn demonstrate_guided_filter(img: &DynamicImage) -> Result<()> {
         .expect("Failed to save fast guided filter output");
 
     // Demonstrate color guided filter
-    if img.color() != image::ColorType::L8 {
+    if _img.color() != image::ColorType::L8 {
         println!("  - Applying guided filter to color image");
 
-        let rgb = img.to_rgb8();
+        let rgb = _img.to_rgb8();
         let mut color_array = Array3::zeros((height as usize, width as usize, 3));
 
         for y in 0..height {
@@ -119,19 +119,19 @@ fn demonstrate_guided_filter(img: &DynamicImage) -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_oriented_gradients(img: &DynamicImage) -> Result<()> {
+fn demonstrate_oriented_gradients(_img: &DynamicImage) -> Result<()> {
     println!("\n2. Oriented Gradient Examples:");
 
     // Basic Sobel edge detection
     println!("  - Computing Sobel edges");
-    let (edges, _orientations) = sobel_edges_oriented(img, 0.1, true)?;
+    let (edges_orientations) = sobel_edges_oriented(_img, 0.1, true)?;
     edges
         .save("examples/output/sobel_edges.png")
         .expect("Failed to save Sobel edges");
 
     // Compute raw gradients
     println!("  - Computing gradient magnitude and orientation");
-    let (magnitude, orientation) = compute_gradients(img)?;
+    let (magnitude, orientation) = compute_gradients(_img)?;
 
     // Save gradient magnitude as image
     let (height, width) = magnitude.dim();

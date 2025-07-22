@@ -42,18 +42,18 @@ struct PrivacyAccountant {
     max_epsilon: f64,
 impl FederatedClient {
     /// Create a new federated client
-    pub fn new(config: ClientConfig) -> Result<Self> {
-        let privacy_accountant = if config.enable_privacy {
+    pub fn new(_config: ClientConfig) -> Result<Self> {
+        let privacy_accountant = if _config.enable_privacy {
             Some(PrivacyAccountant {
                 epsilon_spent: 0.0,
                 delta: 1e-5,
-                max_epsilon: config.privacy_budget.unwrap_or(10.0),
+                max_epsilon: _config.privacy_budget.unwrap_or(10.0),
             })
         } else {
             None
         };
         Ok(Self {
-            config,
+            _config,
             local_model: None,
             history: Vec::new(),
             privacy_accountant,
@@ -108,6 +108,8 @@ impl FederatedClient {
         let mut indices: Vec<usize> = (0..num_samples).collect();
         use rand::prelude::*;
 use rand::rng;
+use ndarray::ArrayView1;
+use rand::seq::SliceRandom;
         indices.shuffle(&mut rng());
         for batch_idx in 0..num_batches {
             let start = batch_idx * self.config.batch_size;
@@ -164,7 +166,7 @@ use rand::rng;
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap_or(0);
             if predicted_class == labels[i] {
                 correct += 1;
@@ -198,7 +200,7 @@ use rand::rng;
                     *update *= clip_threshold / norm;
                 }
             // Add Gaussian noise
-            use rand_distr::{Distribution, Normal};
+            use rand__distr::{Distribution, Normal};
             let noise_scale = clip_threshold * (2.0 * (1.0 / accountant.delta).ln()).sqrt()
                 / accountant.max_epsilon;
             let noise_dist = Normal::new(0.0, noise_scale).unwrap();

@@ -1,8 +1,8 @@
 use ndarray::Array2;
-use num_complex::Complex64;
-use scirs2_fft::fft::{fft, fft2};
-use scirs2_fft::memory_efficient::{fft2_efficient, fft_inplace, FftMode};
-use scirs2_fft::PlanCache;
+use num__complex::Complex64;
+use scirs2__fft::fft::{fft, fft2};
+use scirs2__fft::memory_efficient::{fft2_efficient, fft_inplace, FftMode};
+use scirs2__fft::PlanCache;
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
@@ -26,7 +26,7 @@ fn main() {
 
 /// Benchmark 1D FFT operations
 #[allow(dead_code)]
-fn benchmark_1d_ffts(sizes: &[usize], iterations: usize) {
+fn benchmark_1d_ffts(_sizes: &[usize], iterations: usize) {
     println!("\n1D FFT Memory Usage Benchmarking");
     println!("--------------------------------");
     println!(
@@ -38,7 +38,7 @@ fn benchmark_1d_ffts(sizes: &[usize], iterations: usize) {
     // Create plan cache for reuse
     let mut _plan_cache = PlanCache::new();
 
-    for &size in sizes {
+    for &size in _sizes {
         // Create test signal
         let signal = create_test_signal(size);
 
@@ -120,7 +120,7 @@ fn benchmark_1d_ffts(sizes: &[usize], iterations: usize) {
 
 /// Benchmark 2D FFT operations
 #[allow(dead_code)]
-fn benchmark_2d_ffts(sizes: &[(usize, usize)], iterations: usize) {
+fn benchmark_2d_ffts(_sizes: &[(usize, usize)], iterations: usize) {
     println!("\n2D FFT Memory Usage Benchmarking");
     println!("--------------------------------");
     println!(
@@ -132,7 +132,7 @@ fn benchmark_2d_ffts(sizes: &[(usize, usize)], iterations: usize) {
     // Create plan cache for reuse
     let mut _plan_cache = PlanCache::new();
 
-    for &(rows, cols) in sizes {
+    for &(rows, cols) in _sizes {
         // Create test array
         let signal = create_test_array(rows, cols);
 
@@ -216,7 +216,7 @@ fn benchmark_2d_ffts(sizes: &[(usize, usize)], iterations: usize) {
     );
     println!("{:-<70}", "");
 
-    for &(rows, cols) in sizes {
+    for &(rows, cols) in _sizes {
         let size = rows * cols;
         let std_mem =
             size as f64 * std::mem::size_of::<Complex64>() as f64 * 3.5 / (1024.0 * 1024.0);
@@ -233,10 +233,10 @@ fn benchmark_2d_ffts(sizes: &[(usize, usize)], iterations: usize) {
 
 /// Create a test signal with sine waves for 1D FFT
 #[allow(dead_code)]
-fn create_test_signal(size: usize) -> Vec<f64> {
-    let mut signal = Vec::with_capacity(size);
-    for i in 0..size {
-        let x = i as f64 / size as f64;
+fn create_test_signal(_size: usize) -> Vec<f64> {
+    let mut signal = Vec::with_capacity(_size);
+    for i in 0.._size {
+        let x = i as f64 / _size as f64;
         let value = (2.0 * PI * 4.0 * x).sin() + 0.5 * (2.0 * PI * 8.0 * x).sin();
         signal.push(value);
     }
@@ -245,11 +245,11 @@ fn create_test_signal(size: usize) -> Vec<f64> {
 
 /// Create a test array with 2D patterns for 2D FFT
 #[allow(dead_code)]
-fn create_test_array(rows: usize, cols: usize) -> Array2<Complex64> {
-    let mut array = Array2::zeros((rows, cols));
-    for i in 0..rows {
+fn create_test_array(_rows: usize, cols: usize) -> Array2<Complex64> {
+    let mut array = Array2::zeros((_rows, cols));
+    for i in 0.._rows {
         for j in 0..cols {
-            let x = i as f64 / rows as f64;
+            let x = i as f64 / _rows as f64;
             let y = j as f64 / cols as f64;
             let value = (2.0 * PI * 4.0 * x).sin() * (2.0 * PI * 4.0 * y).cos();
             array[[i, j]] = Complex64::new(value, 0.0);
@@ -260,10 +260,10 @@ fn create_test_array(rows: usize, cols: usize) -> Array2<Complex64> {
 
 /// Memory-optimized FFT implementation using memory-efficient algorithms
 #[allow(dead_code)]
-fn optimized_fft(input: &[Complex64]) -> scirs2_fft::error::FFTResult<Vec<Complex64>> {
+fn optimized_fft(_input: &[Complex64]) -> scirs2_fft::error::FFTResult<Vec<Complex64>> {
     // Use the in-place implementation with appropriate buffer sizing
-    let mut input_clone = input.to_vec();
-    let mut output = vec![Complex64::new(0.0, 0.0); input.len()];
+    let mut input_clone = _input.to_vec();
+    let mut output = vec![Complex64::new(0.0, 0.0); _input.len()];
     fft_inplace(&mut input_clone, &mut output, FftMode::Forward, true)?;
     Ok(output)
 }
@@ -275,7 +275,7 @@ fn optimized_fft2(
     shape: Option<(usize, usize)>,
 ) -> scirs2_fft::error::FFTResult<Array2<Complex64>> {
     // Get shape
-    let (_rows, _cols) = match shape {
+    let (_rows_cols) = match shape {
         Some(s) => s,
         None => {
             let shape = input.shape();
@@ -320,9 +320,9 @@ mod memory_tracking {
 
     /// Record a memory allocation
     #[allow(dead_code)]
-    pub fn record_allocation(size: usize) {
+    pub fn record_allocation(_size: usize) {
         ACTIVE_ALLOCATIONS.fetch_add(1, Ordering::SeqCst);
-        TOTAL_ALLOCATED.fetch_add(size, Ordering::SeqCst);
+        TOTAL_ALLOCATED.fetch_add(_size, Ordering::SeqCst);
 
         // Update peak memory usage
         loop {
@@ -344,9 +344,9 @@ mod memory_tracking {
 
     /// Record a memory deallocation
     #[allow(dead_code)]
-    pub fn record_deallocation(size: usize) {
+    pub fn record_deallocation(_size: usize) {
         ACTIVE_ALLOCATIONS.fetch_sub(1, Ordering::SeqCst);
-        TOTAL_ALLOCATED.fetch_sub(size, Ordering::SeqCst);
+        TOTAL_ALLOCATED.fetch_sub(_size, Ordering::SeqCst);
     }
 
     /// Memory usage statistics
@@ -361,15 +361,15 @@ mod memory_tracking {
     impl MemoryStats {
         /// Format memory size in human-readable form
         #[allow(dead_code)]
-        pub fn format_size(size: usize) -> String {
-            if size < 1024 {
-                format!("{} B", size)
-            } else if size < 1024 * 1024 {
-                format!("{:.2} KB", size as f64 / 1024.0)
-            } else if size < 1024 * 1024 * 1024 {
-                format!("{:.2} MB", size as f64 / (1024.0 * 1024.0))
+        pub fn format_size(_size: usize) -> String {
+            if _size < 1024 {
+                format!("{} B", _size)
+            } else if _size < 1024 * 1024 {
+                format!("{:.2} KB", _size as f64 / 1024.0)
+            } else if _size < 1024 * 1024 * 1024 {
+                format!("{:.2} MB", _size as f64 / (1024.0 * 1024.0))
             } else {
-                format!("{:.2} GB", size as f64 / (1024.0 * 1024.0 * 1024.0))
+                format!("{:.2} GB", _size as f64 / (1024.0 * 1024.0 * 1024.0))
             }
         }
 

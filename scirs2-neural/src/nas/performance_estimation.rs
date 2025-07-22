@@ -28,9 +28,9 @@ pub struct EarlyStoppingEstimator {
     min_delta: f64,
 impl EarlyStoppingEstimator {
     /// Create a new early stopping estimator
-    pub fn new(epochs: usize) -> Self {
+    pub fn new(_epochs: usize) -> Self {
         Self {
-            epochs,
+            _epochs,
             patience: 5,
             min_delta: 0.001,
         }
@@ -142,15 +142,15 @@ impl SuperNetEstimator {
     fn sample_random_architecture(&self) -> Vec<String> {
         use rand::prelude::*;
 use rand::rng;
+use statrs::statistics::Statistics;
         let mut rng = rng();
         let mut architecture = Vec::new();
         let num_layers = rng.random_range(3..8);
         for _ in 0..num_layers {
             let layer_type = match rng.random_range(0..4) {
-                0 => format!("dense_{}", [64, 128, 256, 512].choose(&mut rng).unwrap()),
+                0 => format!("dense_{}"..[64, 128, 256, 512].choose(&mut rng).unwrap()),
                 1 => format!("conv_{}", [32, 64, 128, 256].choose(&mut rng).unwrap()),
-                2 => "dropout".to_string(),
-                _ => "batchnorm".to_string(),
+                2 => "dropout".to_string(, _ => "batchnorm".to_string(),
             };
             architecture.push(layer_type);
         architecture
@@ -236,7 +236,7 @@ use rand::rng;
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                    .map(|(idx, _)| idx)
+                    .map(|(idx_)| idx)
                     .unwrap_or(0);
                 if predicted_class == label {
                     correct += 1;
@@ -291,13 +291,13 @@ pub struct LearningCurveEstimator {
     extrapolate_to: usize,
 impl LearningCurveEstimator {
     /// Create a new learning curve estimator
-    pub fn new(initial_epochs: usize, extrapolate_to: usize) -> Self {
-            initial_epochs,
+    pub fn new(_initial_epochs: usize, extrapolate_to: usize) -> Self {
+            _initial_epochs,
             extrapolate_to,
 impl PerformanceEstimator for LearningCurveEstimator {
         // Collect learning curve for initial epochs
         let mut learning_curve = Vec::new();
-        for epoch in 1..=self.initial_epochs {
+        for epoch in 1..=self._initial_epochs {
             let accuracy = 1.0 - 1.0 / (epoch as f64).sqrt() + 0.01 * rand::random::<f64>();
             learning_curve.push(accuracy);
         // Fit curve and extrapolate
@@ -306,7 +306,7 @@ impl PerformanceEstimator for LearningCurveEstimator {
             let rate = (learning_curve.last().unwrap() - learning_curve.first().unwrap())
                 / learning_curve.len() as f64;
             let extrapolated = learning_curve.last().unwrap()
-                + rate * (self.extrapolate_to - self.initial_epochs) as f64;
+                + rate * (self.extrapolate_to - self._initial_epochs) as f64;
             extrapolated.min(0.99)
         metrics.insert("validation_accuracy".to_string(), final_estimate);
             "extrapolated_epochs".to_string(),
@@ -545,8 +545,7 @@ impl PerformanceEstimator for ZeroCostEstimator {
                 "grasp" => self.compute_grasp_score(model, train_data, train_labels)?,
                 "fisher" => self.compute_fisher_information(model, train_data, train_labels)?,
                 "synflow" => self.compute_synflow_score(model, train_data)?,
-                "grad_norm" => self.compute_gradient_norm(model, train_data, train_labels)?,
-                _ => 0.5,
+                "grad_norm" => self.compute_gradient_norm(model, train_data, train_labels)?_ => 0.5,
             metrics.insert(format!("{}_score", proxy), score);
         // Combine proxy scores with learned weights
         let combined_score = self.combine_proxy_scores(&metrics)?;

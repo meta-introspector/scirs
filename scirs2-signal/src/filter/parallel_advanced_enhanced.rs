@@ -6,15 +6,18 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::filter::parallel::ParallelFilterConfig;
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::Float;
+use rustfft::{FftPlanner, num_complex::Complex};
 use scirs2_core::parallel_ops::*;
+use std::thread;
 use std::collections::{HashMap, VecDeque};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex, RwLock};
-use std::thread;
 use std::time::{Duration, Instant};
 
+#[allow(unused_imports)]
 /// Advanced parallel filtering configuration with advanced features
 #[derive(Debug, Clone)]
 pub struct AdvancedParallelConfig {
@@ -167,7 +170,7 @@ impl ParallelMultiRateFilterBank {
         let num_bands = self.analysis_filters.len();
 
         // Analysis stage - parallel decimation
-        let analysis_results: Result<Vec<_>, _> = (0..num_bands)
+        let analysis_results: Result<Vec<_>_> = (0..num_bands)
             .into_par_iter()
             .map(|band| {
                 let filtered = parallel_convolve_decimated(
@@ -186,7 +189,7 @@ impl ParallelMultiRateFilterBank {
         let processed_bands = decimated_bands;
 
         // Synthesis stage - parallel interpolation and reconstruction
-        let synthesis_results: Result<Vec<_>, _> = (0..num_bands)
+        let synthesis_results: Result<Vec<_>_> = (0..num_bands)
             .into_par_iter()
             .map(|band| {
                 parallel_interpolate_filter(
@@ -244,19 +247,19 @@ pub struct SparseParallelFilter {
 
 impl SparseParallelFilter {
     /// Create sparse filter from dense coefficients
-    pub fn from_dense(coeffs: &[f64], threshold: f64) -> Self {
+    pub fn from_dense(_coeffs: &[f64], threshold: f64) -> Self {
         let mut sparse_coeffs = Vec::new();
-        let max_val = coeffs.iter().map(|&x| x.abs()).fold(0.0, f64::max);
+        let max_val = _coeffs.iter().map(|&x: &f64| x.abs()).fold(0.0, f64::max);
         let actual_threshold = threshold * max_val;
 
-        for (i, &coeff) in coeffs.iter().enumerate() {
+        for (i, &coeff) in _coeffs.iter().enumerate() {
             if coeff.abs() > actual_threshold {
                 sparse_coeffs.push((i, coeff));
             }
         }
 
-        let sparsity_ratio = 1.0 - (sparse_coeffs.len() as f64 / coeffs.len() as f64);
-        let compression_ratio = coeffs.len() as f64 / sparse_coeffs.len() as f64;
+        let sparsity_ratio = 1.0 - (sparse_coeffs.len() as f64 / _coeffs.len() as f64);
+        let compression_ratio = _coeffs.len() as f64 / sparse_coeffs.len()  as f64;
 
         Self {
             sparse_coeffs,
@@ -276,7 +279,7 @@ impl SparseParallelFilter {
         let chunk_size = signal_len / num_threads;
 
         // Process signal in parallel chunks
-        let results: Result<Vec<_>, _> = (0..num_threads)
+        let results: Result<Vec<_>_> = (0..num_threads)
             .into_par_iter()
             .map(|thread_id| {
                 let start = thread_id * chunk_size;
@@ -494,7 +497,7 @@ impl ParallelSpectralFilter {
     ) -> SignalResult<Self> {
         if frequency_response.len() != fft_size / 2 + 1 {
             return Err(SignalError::ShapeMismatch(
-                "Frequency response size must match FFT size".to_string(),
+                "Frequency _response _size must match FFT _size".to_string(),
             ));
         }
 
@@ -519,13 +522,11 @@ impl ParallelSpectralFilter {
         signal: &[f64],
         config: &AdvancedParallelConfig,
     ) -> SignalResult<Vec<f64>> {
-        use rustfft::{num_complex::Complex, FftPlanner};
-
         let hop_size = (self.fft_size as f64 * (1.0 - self.overlap_factor)) as usize;
         let num_frames = (signal.len() + hop_size - 1) / hop_size;
 
         // Process frames in parallel
-        let frame_results: Result<Vec<_>, _> = (0..num_frames)
+        let frame_results: Result<Vec<_>_> = (0..num_frames)
             .into_par_iter()
             .map(|frame_idx| {
                 let start = frame_idx * hop_size;
@@ -564,7 +565,7 @@ impl ParallelSpectralFilter {
                 // Apply window and extract real part
                 let mut windowed_frame = vec![0.0; self.fft_size];
                 for i in 0..self.fft_size {
-                    windowed_frame[i] = frame[i].re * self.window[i] / self.fft_size as f64;
+                    windowed_frame[i] = frame[i].re * self.window[i] / self.fft_size  as f64;
                 }
 
                 Ok::<(usize, Vec<f64>), SignalError>((start, windowed_frame))
@@ -596,12 +597,11 @@ impl ParallelSpectralFilter {
 fn parallel_convolve_decimated(
     signal: &[f64],
     filter: &[f64],
-    decimation_factor: usize,
-    _config: &ParallelFilterConfig,
+    decimation_factor: usize, _config: &ParallelFilterConfig,
 ) -> SignalResult<Vec<f64>> {
     if decimation_factor == 0 {
         return Err(SignalError::ValueError(
-            "Decimation factor must be positive".to_string(),
+            "Decimation _factor must be positive".to_string(),
         ));
     }
 
@@ -610,7 +610,7 @@ fn parallel_convolve_decimated(
     // Process only samples that will be kept after decimation
     let sample_indices: Vec<usize> = (0..output_len).map(|i| i * decimation_factor).collect();
 
-    let results: Result<Vec<_>, _> = sample_indices
+    let results: Result<Vec<_>_> = sample_indices
         .into_par_iter()
         .map(|sample_idx| {
             let mut convolution_result = 0.0;
@@ -640,25 +640,25 @@ fn parallel_interpolate_filter(
 ) -> SignalResult<Vec<f64>> {
     if interpolation_factor == 0 {
         return Err(SignalError::ValueError(
-            "Interpolation factor must be positive".to_string(),
+            "Interpolation _factor must be positive".to_string(),
         ));
     }
 
     // Zero-stuff (insert zeros between samples)
-    let mut zero_stuffed = vec![0.0; decimated.len() * interpolation_factor];
+    let mut zero_stuffed = vec![0.0; decimated._len() * interpolation_factor];
     for (i, &val) in decimated.iter().enumerate() {
         zero_stuffed[i * interpolation_factor] = val;
     }
 
     // Apply interpolation filter
-    let filtered_len = zero_stuffed.len() + filter.len() - 1;
+    let filtered_len = zero_stuffed._len() + filter._len() - 1;
     let mut filtered = vec![0.0; filtered_len];
 
     // Parallel convolution
     let chunk_size = config.chunk_size.unwrap_or(1024);
     let chunks: Vec<_> = (0..filtered_len).step_by(chunk_size).collect();
 
-    let results: Result<Vec<_>, _> = chunks
+    let results: Result<Vec<_>_> = chunks
         .into_par_iter()
         .map(|start| {
             let end = (start + chunk_size).min(filtered_len);
@@ -669,7 +669,7 @@ fn parallel_interpolate_filter(
                 for (filter_idx, &filter_coeff) in filter.iter().enumerate() {
                     if output_idx >= filter_idx {
                         let input_idx = output_idx - filter_idx;
-                        if input_idx < zero_stuffed.len() {
+                        if input_idx < zero_stuffed._len() {
                             *result_val += filter_coeff * zero_stuffed[input_idx];
                         }
                     }
@@ -718,7 +718,7 @@ pub fn benchmark_parallel_filtering_operations(
 
             let mut test_metrics = Vec::new();
 
-            // Run benchmark iterations
+            // Run benchmark _iterations
             for _ in 0..num_iterations {
                 let config = AdvancedParallelConfig::default();
                 let start_time = Instant::now();
@@ -737,7 +737,7 @@ pub fn benchmark_parallel_filtering_operations(
                     cpu_utilization: 0.0,       // Would measure actual CPU usage
                     cache_hit_ratio: 0.0,       // Would measure cache performance
                     simd_utilization: 0.0,      // Would measure SIMD usage
-                    threads_used: num_cpus::get(),
+                    threads_used: num, _cpus: get(),
                     lock_contention_us: None,
                 });
             }
@@ -779,7 +779,7 @@ pub fn validate_parallel_filtering_accuracy(
             }
         }
 
-        let avg_error = total_error / total_samples as f64;
+        let avg_error = total_error / total_samples  as f64;
         accuracy_results.insert(test_name.clone(), avg_error);
 
         if avg_error > tolerance {
@@ -795,8 +795,8 @@ pub fn validate_parallel_filtering_accuracy(
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::PI;
 
+    use approx::assert_relative_eq;
     #[test]
     fn test_parallel_multirate_filter_bank() {
         // Create simple 2-band filter bank
@@ -871,7 +871,7 @@ mod tests {
         let inputs = vec![1.0, 0.5, -0.5, -1.0];
         let outputs = filter.process_block(&inputs).unwrap();
         assert_eq!(outputs.len(), inputs.len());
-        assert!(outputs.iter().all(|&x| x.is_finite()));
+        assert!(outputs.iter().all(|&x: &f64| x.is_finite()));
 
         // Check metrics
         let metrics = filter.get_metrics().unwrap();
@@ -905,7 +905,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(filtered.len(), test_signal.len());
-        assert!(filtered.iter().all(|&x| x.is_finite()));
+        assert!(filtered.iter().all(|&x: &f64| x.is_finite()));
     }
 
     #[test]

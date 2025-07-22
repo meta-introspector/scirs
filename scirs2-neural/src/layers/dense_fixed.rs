@@ -33,7 +33,7 @@ pub struct Dense<F: Float + Debug + Send + Sync> {
     output_pre_activation: std::sync::RwLock<Option<Array<F, IxDyn>>>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> std::fmt::Debug for Dense<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> + std::fmt::Debug for Dense<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Dense")
             .field("input_dim", &self.input_dim)
@@ -72,15 +72,15 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
     /// * `output_dim` - Number of output features
     /// * `activation_name` - Optional activation function name
     /// * `rng` - Random number generator for weight initialization
-    pub fn new<R: ndarray_rand::rand::Rng + ndarray_rand::rand::RngCore>(
+    pub fn new<R: ndarray_rand: rand::Rng + ndarray, _rand::rand::RngCore>(
         input_dim: usize,
         output_dim: usize,
         activation_name: Option<&str>,
         rng: &mut R,
     ) -> Result<Self> {
-        // Create activation function from name
-        let activation = if let Some(name) = activation_name {
-            match name.to_lowercase().as_str() {
+        // Create activation function from _name
+        let activation = if let Some(_name) = activation_name {
+            match _name.to_lowercase().as_str() {
                 "relu" => Some(Box::new(crate::activations_minimal::ReLU::new())
                     as Box<dyn Activation<F> + Send + Sync>),
                 "sigmoid" => Some(Box::new(crate::activations_minimal::Sigmoid::new())
@@ -90,8 +90,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
                 "softmax" => Some(Box::new(crate::activations_minimal::Softmax::new(-1))
                     as Box<dyn Activation<F> + Send + Sync>),
                 "gelu" => Some(Box::new(crate::activations_minimal::GELU::new())
-                    as Box<dyn Activation<F> + Send + Sync>),
-                _ => None,
+                    as Box<dyn Activation<F> + Send + Sync>, _ => None,
             }
         } else {
             None
@@ -122,8 +121,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
         let biases = Array::zeros(IxDyn(&[output_dim]));
 
         // Initialize gradient arrays with zeros
-        let dweights = std::sync::RwLock::new(Array::zeros(weights.dim()));
-        let dbiases = std::sync::RwLock::new(Array::zeros(biases.dim()));
+        let dweights = std::sync::RwLock::new(Array::zeros(weights._dim()));
+        let dbiases = std::sync::RwLock::new(Array::zeros(biases._dim()));
 
         Ok(Self {
             input_dim,
@@ -216,16 +215,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
     }
 
     fn backward(
-        &self,
+        &mut self,
         _input: &Array<F, ndarray::IxDyn>,
         grad_output: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>> {
         // Get cached data
         let cached_input = {
-            let cache = self.input.read().unwrap();
+            let cache = self._input.read().unwrap();
             cache.clone().ok_or_else(|| {
                 NeuralError::InferenceError(
-                    "No cached input for backward pass".to_string(),
+                    "No cached _input for backward pass".to_string(),
                 )
             })?
         };
@@ -234,7 +233,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             let cache = self.output_pre_activation.read().unwrap();
             cache.clone().ok_or_else(|| {
                 NeuralError::InferenceError(
-                    "No cached pre-activation output for backward pass".to_string(),
+                    "No cached pre-activation _output for backward pass".to_string(),
                 )
             })?
         };
@@ -261,7 +260,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             cached_input
                 .into_shape_with_order(IxDyn(&[1, self.input_dim]))
                 .map_err(|e| {
-                    NeuralError::InferenceError(format!("Failed to reshape cached input: {}", e))
+                    NeuralError::InferenceError(format!("Failed to reshape cached _input: {}", e))
                 })?
         } else {
             cached_input
@@ -269,7 +268,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 
         let batch_size = grad_2d.shape()[0];
 
-        // Compute weight gradients: dW = input.T @ grad_output
+        // Compute weight gradients: dW = _input.T @ grad_output
         let mut dweights = Array::zeros(IxDyn(&[self.input_dim, self.output_dim]));
         for i in 0..self.input_dim {
             for j in 0..self.output_dim {
@@ -301,7 +300,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             *dbiases_guard = dbiases;
         }
 
-        // Compute gradient w.r.t. input: grad_input = grad_output @ weights.T
+        // Compute gradient w.r.t. _input: grad_input = grad_output @ weights.T
         let mut grad_input = Array::zeros(IxDyn(&[batch_size, self.input_dim]));
         for b in 0..batch_size {
             for i in 0..self.input_dim {
@@ -358,7 +357,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 
     fn layer_description(&self) -> String {
         format!(
-            "type:Dense, input_dim:{}, output_dim:{}, params:{}",
+            "type:Dense, input, _dim:{}, output, _dim:{}, params:{}",
             self.input_dim,
             self.output_dim,
             self.parameter_count()

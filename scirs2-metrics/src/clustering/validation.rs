@@ -32,7 +32,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::clustering::validation::jaccard_similarity;
+/// use scirs2__metrics::clustering::validation::jaccard_similarity;
 ///
 /// let labels_true = array![0, 0, 1, 1, 2, 2];
 /// let labels_pred = array![1, 1, 0, 0, 2, 2];
@@ -97,7 +97,7 @@ where
 
     // Calculate Jaccard similarity
     // Jaccard index = |A ∩ B| / |A ∪ B|
-    // Here, A is the set of pairs in the same cluster in true labels
+    // Here, A is the set of pairs in the same cluster in _true labels
     // B is the set of pairs in the same cluster in predicted labels
     let union_size = same_true + same_pred - same_both;
 
@@ -131,7 +131,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::validation::cluster_stability;
+/// use scirs2__metrics::clustering::validation::cluster_stability;
 ///
 /// let x = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,
@@ -172,13 +172,13 @@ where
 
     if n_runs < 2 {
         return Err(MetricsError::InvalidInput(
-            "Number of runs must be at least 2".to_string(),
+            "Number of _runs must be at least 2".to_string(),
         ));
     }
 
     // Setup RNG
-    let seed = random_seed.unwrap_or_else(rand::random::<u64>);
-    let mut rng = StdRng::seed_from_u64(seed);
+    let _seed = random_seed.unwrap_or_else(rand::random::<u64>);
+    let mut rng = StdRng::seed_from_u64(_seed);
 
     // Get unique clusters
     let mut unique_labels = Vec::new();
@@ -210,9 +210,9 @@ where
         // Add Gaussian noise
         for i in 0..n_samples {
             for j in 0..x.ncols() {
-                let noise: f64 = rng.random_range(-1.0..1.0);
+                let noise: f64 = rng.gen_range(-1.0..1.0);
                 let noise_value = F::from(noise).unwrap() * perturbation_scale;
-                perturbed_data[[i, j]] = x[[i, j]] + noise_value;
+                perturbed_data[[i..j]] = x[[i, j]] + noise_value;
             }
         }
 
@@ -247,7 +247,7 @@ where
             let mut min_dist = F::infinity();
             let mut best_label = 0;
 
-            for (label_idx, _) in unique_labels.iter().enumerate() {
+            for (label_idx_) in unique_labels.iter().enumerate() {
                 let mut dist = F::zero();
                 for j in 0..x.ncols() {
                     let diff = perturbed_data[[i, j]] - centroids[[label_idx, j]];
@@ -303,7 +303,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::clustering::validation::consensus_score;
+/// use scirs2__metrics::clustering::validation::consensus_score;
 ///
 /// let clustering1 = array![0, 0, 0, 1, 1, 1];
 /// let clustering2 = array![1, 1, 1, 0, 0, 0];  // Same as clustering1 but with inverted labels
@@ -313,12 +313,12 @@ where
 /// let score = consensus_score(&all_clusterings).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn consensus_score<S, D>(all_labels: &[&ArrayBase<S, D>]) -> Result<f64>
+pub fn consensus_score<S, D>(_all_labels: &[&ArrayBase<S, D>]) -> Result<f64>
 where
     S: Data<Elem = usize>,
     D: Dimension,
 {
-    if all_labels.is_empty() {
+    if _all_labels.is_empty() {
         return Err(MetricsError::InvalidInput(
             "At least one clustering result is required".to_string(),
         ));
@@ -334,8 +334,8 @@ where
     let n_samples = all_labels[0].len();
 
     // Check that all clusterings have the same number of samples
-    for labels in all_labels.iter().skip(1) {
-        if labels.len() != n_samples {
+    for _labels in all_labels.iter().skip(1) {
+        if _labels.len() != n_samples {
             return Err(MetricsError::InvalidInput(
                 "All clusterings must have the same number of samples".to_string(),
             ));
@@ -351,11 +351,11 @@ where
     // Use a 2D array to store consensus values
     let mut consensus_values = vec![vec![0.0; n_samples]; n_samples];
 
-    for labels in all_labels {
+    for _labels in all_labels {
         for i in 0..n_samples {
             for j in i..n_samples {
-                let label_i = labels.iter().nth(i).unwrap();
-                let label_j = labels.iter().nth(j).unwrap();
+                let label_i = _labels.iter().nth(i).unwrap();
+                let label_j = _labels.iter().nth(j).unwrap();
 
                 if label_i == label_j {
                     consensus_values[i][j] += 1.0;
@@ -415,7 +415,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::clustering::validation::fold_stability;
+/// use scirs2__metrics::clustering::validation::fold_stability;
 ///
 /// let x = Array2::from_shape_vec((10, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 1.3, 2.1, 1.4, 1.9,
@@ -456,19 +456,19 @@ where
 
     if n_folds < 2 {
         return Err(MetricsError::InvalidInput(
-            "Number of folds must be at least 2".to_string(),
+            "Number of _folds must be at least 2".to_string(),
         ));
     }
 
     if fold_size <= 0.0 || fold_size >= 1.0 {
         return Err(MetricsError::InvalidInput(
-            "Fold size must be between 0 and 1 (exclusive)".to_string(),
+            "Fold _size must be between 0 and 1 (exclusive)".to_string(),
         ));
     }
 
     // Setup RNG
-    let seed = random_seed.unwrap_or_else(rand::random::<u64>);
-    let mut rng = StdRng::seed_from_u64(seed);
+    let _seed = random_seed.unwrap_or_else(rand::random::<u64>);
+    let mut rng = StdRng::seed_from_u64(_seed);
 
     // Get unique clusters
     let mut unique_labels = Vec::new();
@@ -488,7 +488,7 @@ where
 
         // Shuffle available indices
         for i in (1..available_indices.len()).rev() {
-            let j = rng.random_range(0..=i);
+            let j = rng.gen_range(0..=i);
             available_indices.swap(i, j);
         }
 

@@ -235,9 +235,9 @@ impl TimeSeriesRegression {
     }
 
     /// Create a new fitter with random seed
-    pub fn with_seed(seed: u64) -> Self {
+    pub fn with_seed(_seed: u64) -> Self {
         Self {
-            random_seed: Some(seed),
+            random_seed: Some(_seed),
         }
     }
 

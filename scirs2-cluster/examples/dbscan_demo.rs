@@ -1,5 +1,5 @@
 use ndarray::Array2;
-use scirs2_cluster::density::{dbscan, labels, DistanceMetric};
+use scirs2__cluster::density::{dbscan, labels, DistanceMetric};
 
 #[allow(dead_code)]
 fn main() {

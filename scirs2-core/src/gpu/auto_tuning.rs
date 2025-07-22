@@ -3,8 +3,8 @@
 //! This module provides capabilities for automatically tuning GPU kernel parameters
 //! to achieve optimal performance on different hardware configurations and workloads.
 
-use crate::gpu::{GpuBackend, GpuError, GpuKernelHandle};
 use rand::Rng;
+use crate::gpu::{GpuBackend, GpuError, GpuKernelHandle};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -46,7 +46,7 @@ pub struct KernelParameters {
     /// Register usage per thread
     pub register_usage: Option<usize>,
     /// Cache configuration hints
-    pub cache_config: CacheConfig,
+    pub cacheconfig: CacheConfig,
     /// Custom parameters for kernel-specific tuning
     pub custom_params: HashMap<String, ParameterValue>,
 }
@@ -58,7 +58,7 @@ impl Default for KernelParameters {
             global_work_size: [1024, 1024, 1],
             local_memory_size: 0,
             register_usage: None,
-            cache_config: CacheConfig::Balanced,
+            cacheconfig: CacheConfig::Balanced,
             custom_params: HashMap::new(),
         }
     }
@@ -313,10 +313,10 @@ impl AutoTuner {
     }
 
     /// Auto-tune a kernel for optimal performance
-    pub fn tune_kernel(
+    pub fn tune(
         &self,
-        kernel_name: &str,
         kernel: &GpuKernelHandle,
+        kernel_name: &str,
         problem_size: &[usize],
         tuning_space: TuningSpace,
     ) -> Result<TuningResult, AutoTuningError> {
@@ -439,7 +439,7 @@ impl AutoTuner {
                             global_work_size: [1024, 1024, 1], // Default
                             local_memory_size,
                             register_usage: None,
-                            cache_config,
+                            cacheconfig: cache_config,
                             custom_params: HashMap::new(),
                         });
                     }
@@ -472,7 +472,7 @@ impl AutoTuner {
                     global_work_size: [1024, 1024, 1],
                     local_memory_size,
                     register_usage: None,
-                    cache_config,
+                    cacheconfig: cache_config,
                     custom_params: HashMap::new(),
                 });
             }
@@ -533,7 +533,7 @@ impl AutoTuner {
     }
 
     /// Check if tuning has converged
-    fn check_convergence(&self, _best_performance: &PerformanceMetrics, iteration: usize) -> bool {
+    fn check_convergence(&self, performance: &PerformanceMetrics, iteration: usize) -> bool {
         // Simple convergence check based on iteration count
         // In practice, would compare recent improvements
         iteration > 10 && iteration % 10 == 0

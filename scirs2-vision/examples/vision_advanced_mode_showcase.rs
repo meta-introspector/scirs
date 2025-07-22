@@ -13,7 +13,7 @@
 //! - Multi-objective optimization balancing speed, accuracy, and energy
 
 use ndarray::Array2;
-use scirs2_vision::{
+use scirs2__vision::{
     // Neuromorphic processing
     AdaptiveNeuromorphicPipeline,
     // AI optimization
@@ -42,7 +42,7 @@ use scirs2_vision::{
 };
 
 // Import additional AI optimization types directly from the module
-use scirs2_vision::ai_optimization::{
+use scirs2__vision::ai_optimization::{
     ActivationType, ArchitectureSearchSpace, AttentionType, ConnectionType, Experience, LayerType,
     PoolingType, ResourceRequirement, WorkloadMeasurement,
 };
@@ -83,12 +83,12 @@ fn main() -> Result<()> {
 
 /// Create a test video sequence with various patterns
 #[allow(dead_code)]
-fn create_test_video_sequence(num_frames: usize, dimensions: (usize, usize)) -> Result<Vec<Frame>> {
+fn create_test_video_sequence(_num_frames: usize, dimensions: (usize, usize)) -> Result<Vec<Frame>> {
     let (height, width) = dimensions;
-    let mut frames = Vec::with_capacity(num_frames);
+    let mut _frames = Vec::with_capacity(_num_frames);
 
-    for i in 0..num_frames {
-        let t = i as f32 / num_frames as f32;
+    for i in 0.._num_frames {
+        let t = i as f32 / _num_frames as f32;
 
         // Create dynamic patterns: moving edges, rotating patterns, noise
         let data = Array2::from_shape_fn((height, width), |(y, x)| {
@@ -118,7 +118,7 @@ fn create_test_video_sequence(num_frames: usize, dimensions: (usize, usize)) -> 
             (edge * 0.6 + pattern * 0.3 + noise_val).min(1.0)
         });
 
-        frames.push(Frame {
+        _frames.push(Frame {
             data,
             timestamp: Instant::now(),
             index: i,
@@ -131,12 +131,12 @@ fn create_test_video_sequence(num_frames: usize, dimensions: (usize, usize)) -> 
         });
     }
 
-    Ok(frames)
+    Ok(_frames)
 }
 
 /// Demonstrate quantum-inspired streaming processing
 #[allow(dead_code)]
-fn quantum_streaming_demo(frames: &[Frame]) -> Result<()> {
+fn quantum_streaming_demo(_frames: &[Frame]) -> Result<()> {
     println!("  Initializing quantum processor...");
 
     // Create quantum-inspired streaming pipeline
@@ -159,14 +159,14 @@ fn quantum_streaming_demo(frames: &[Frame]) -> Result<()> {
         .add_quantum_stage(QuantumSuperpositionStage::new(4))
         .add_quantum_stage(QuantumEntanglementStage::new(6, 0.1));
 
-    println!("  Processing frames with quantum optimization...");
+    println!("  Processing _frames with quantum optimization...");
     let start_time = Instant::now();
     let mut processed_count = 0;
 
-    for (i, frame) in frames.iter().enumerate() {
+    for (i, frame) in _frames.iter().enumerate() {
         if i >= 10 {
             break;
-        } // Process first 10 frames for demo
+        } // Process first 10 _frames for demo
 
         let _result = quantum_pipeline.process_quantum_optimized(frame.clone())?;
         processed_count += 1;
@@ -186,7 +186,7 @@ fn quantum_streaming_demo(frames: &[Frame]) -> Result<()> {
 
     println!("  ✅ Quantum processing complete:");
     println!(
-        "     - Processed {} frames in {:.2}s",
+        "     - Processed {} _frames in {:.2}s",
         processed_count,
         processing_time.as_secs_f32()
     );
@@ -199,7 +199,7 @@ fn quantum_streaming_demo(frames: &[Frame]) -> Result<()> {
 
 /// Demonstrate neuromorphic processing
 #[allow(dead_code)]
-fn neuromorphic_processing_demo(frames: &[Frame]) -> Result<()> {
+fn neuromorphic_processing_demo(_frames: &[Frame]) -> Result<()> {
     println!("  Initializing neuromorphic processor...");
 
     // Create neuromorphic pipeline
@@ -210,10 +210,10 @@ fn neuromorphic_processing_demo(frames: &[Frame]) -> Result<()> {
     let mut total_events = 0;
     let mut total_sparsity = 0.0;
 
-    for (i, frame) in frames.iter().enumerate() {
+    for (i, frame) in _frames.iter().enumerate() {
         if i >= 15 {
             break;
-        } // Process first 15 frames for demo
+        } // Process first 15 _frames for demo
 
         let _result = neuromorphic_pipeline.process_adaptive(frame.clone())?;
         let stats = neuromorphic_pipeline.get_processing_stats();
@@ -442,7 +442,7 @@ fn ai_optimization_demo(_frames: &[Frame]) -> Result<()> {
 
 /// Demonstrate integrated Advanced pipeline
 #[allow(dead_code)]
-fn integrated_advanced_demo(frames: &[Frame]) -> Result<()> {
+fn integrated_advanced_demo(_frames: &[Frame]) -> Result<()> {
     println!("  Creating integrated Advanced pipeline...");
 
     // Create hybrid pipeline combining all Advanced technologies
@@ -460,10 +460,10 @@ fn integrated_advanced_demo(frames: &[Frame]) -> Result<()> {
     let mut total_spike_events = 0;
     let mut optimization_rewards = Vec::new();
 
-    for (i, frame) in frames.iter().enumerate() {
+    for (i, frame) in _frames.iter().enumerate() {
         if i >= 12 {
             break;
-        } // Process 12 frames for integrated demo
+        } // Process 12 _frames for integrated demo
 
         // Stage 1: Quantum-inspired preprocessing
         let (quantum_frame, decision) = quantum_processor.process_quantum_frame(frame.clone())?;
@@ -531,7 +531,7 @@ fn integrated_advanced_demo(frames: &[Frame]) -> Result<()> {
 
     println!("     ⚡ Overall Performance:");
     println!(
-        "        - Processed 12 frames in {:.2}s ({:.1} FPS)",
+        "        - Processed 12 _frames in {:.2}s ({:.1} FPS)",
         processing_time.as_secs_f32(),
         12.0 / processing_time.as_secs_f32()
     );
@@ -561,7 +561,7 @@ fn integrated_advanced_demo(frames: &[Frame]) -> Result<()> {
 
 /// Demonstrate advanced neural-quantum hybrid processing
 #[allow(dead_code)]
-fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
+fn neural_quantum_hybrid_demo(_frames: &[Frame]) -> Result<()> {
     println!("  Initializing Neural-Quantum Hybrid Processor...");
 
     let mut hybrid_processor = NeuralQuantumHybridProcessor::new();
@@ -571,7 +571,7 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
     println!("  ✓ Emergent Behavior Detection: Enabled");
     println!("  ✓ Self-Modification Engine: Standby");
 
-    println!("  Processing frames with advanced capabilities...");
+    println!("  Processing _frames with advanced capabilities...");
     let start_time = Instant::now();
 
     let mut total_emergent_behaviors = 0;
@@ -579,10 +579,10 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
     let mut total_neuromorphic_efficiency = 0.0;
     let mut fusion_quality_scores = Vec::new();
 
-    for (i, frame) in frames.iter().enumerate() {
+    for (i, frame) in _frames.iter().enumerate() {
         if i >= 8 {
             break;
-        } // Process first 8 frames for demo
+        } // Process first 8 _frames for demo
 
         // Process with advanced capabilities
         let result = hybrid_processor.process_advanced(frame.clone())?;
@@ -654,7 +654,7 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
 
     println!("     ⚡ Performance Metrics:");
     println!(
-        "        - Processed 8 frames in {:.2}s ({:.1} FPS)",
+        "        - Processed 8 _frames in {:.2}s ({:.1} FPS)",
         processing_time.as_secs_f32(),
         8.0 / processing_time.as_secs_f32()
     );

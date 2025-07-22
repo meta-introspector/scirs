@@ -22,11 +22,11 @@ pub struct BanditOptimizer {
 
 impl BanditOptimizer {
     /// Create new bandit optimizer
-    pub fn new(num_arms: usize) -> Self {
+    pub fn new(_num_arms: usize) -> Self {
         Self {
-            num_arms,
-            arm_rewards: Array1::zeros(num_arms),
-            arm_counts: Array1::zeros(num_arms),
+            _num_arms,
+            arm_rewards: Array1::zeros(_num_arms),
+            arm_counts: Array1::zeros(_num_arms),
         }
     }
 
@@ -34,7 +34,7 @@ impl BanditOptimizer {
     pub fn select_arm(&self) -> usize {
         let total_counts: usize = self.arm_counts.sum();
         if total_counts == 0 {
-            return rng().random_range(0..self.num_arms);
+            return rand::rng().gen_range(0..self.num_arms);
         }
 
         let mut best_arm = 0;
@@ -60,7 +60,7 @@ impl BanditOptimizer {
     }
 
     /// Update arm with reward
-    pub fn update_arm(&mut self, arm: usize, reward: f64) {
+    pub fn update_arm(&mut self..arm: usize, reward: f64) {
         if arm < self.num_arms {
             self.arm_rewards[arm] += reward;
             self.arm_counts[arm] += 1;
@@ -79,7 +79,7 @@ where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
     let mut bandit = BanditOptimizer::new(3); // 3 strategies
-    let mut params = initial_params.to_owned();
+    let mut _params = initial_params.to_owned();
     let mut best_obj = objective(initial_params);
 
     for _iter in 0..num_nit {
@@ -93,11 +93,11 @@ where
         };
 
         // Simple gradient-like update
-        for i in 0..params.len() {
-            params[i] += (rng().gen::<f64>() - 0.5) * step_size;
+        for i in 0.._params.len() {
+            _params[i] += (rand::rng().gen::<f64>() - 0.5) * step_size;
         }
 
-        let new_obj = objective(&params.view());
+        let new_obj = objective(&_params.view());
         let reward = if new_obj < best_obj { 1.0 } else { 0.0 };
 
         bandit.update_arm(arm, reward);
@@ -108,10 +108,9 @@ where
     }
 
     Ok(OptimizeResults::<f64> {
-        x: params,
+        x: _params,
         fun: best_obj,
-        success: true,
-        nit: num_nit,
+        success: true_nit: num_nit,
         message: "Bandit optimization completed".to_string(),
         jac: None,
         hess: None,

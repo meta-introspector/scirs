@@ -1,6 +1,6 @@
 use ndarray::{Array1, Array2};
-use scirs2_interpolate::local::mls::{MovingLeastSquares, PolynomialBasis, WeightFunction};
-use scirs2_interpolate::spatial::{BallTree, KdTree};
+use scirs2__interpolate::local::mls::{MovingLeastSquares, PolynomialBasis, WeightFunction};
+use scirs2__interpolate::spatial::{BallTree, KdTree};
 use std::error::Error;
 use std::time::Instant;
 
@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for i in 0..n_queries {
         let query = query_points.slice(ndarray::s![i, ..]).to_vec();
-        let (idx, _) = linear_nearest_neighbor(&points, &query)?;
+        let (idx_) = linear_nearest_neighbor(&points, &query)?;
         linear_results.push(idx);
     }
 
@@ -87,7 +87,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for i in 0..n_queries {
         let query = query_points.slice(ndarray::s![i, ..]).to_vec();
-        let (idx, _) = kdtree.nearest_neighbor(&query)?;
+        let (idx_) = kdtree.nearest_neighbor(&query)?;
         kdtree_results.push(idx);
     }
 
@@ -99,7 +99,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for i in 0..n_queries {
         let query = query_points.slice(ndarray::s![i, ..]).to_vec();
-        let (idx, _) = balltree.nearest_neighbor(&query)?;
+        let (idx_) = balltree.nearest_neighbor(&query)?;
         balltree_results.push(idx);
     }
 
@@ -253,7 +253,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let neighbors = kdtree.k_nearest_neighbors(&query_vec, 50)?;
 
         // Extract indices and distances
-        let indices: Vec<usize> = neighbors.iter().map(|&(idx, _)| idx).collect();
+        let indices: Vec<usize> = neighbors.iter().map(|&(idx_)| idx).collect();
         let distances: Vec<f64> = neighbors.iter().map(|&(_, dist)| dist).collect();
 
         // Manually implement weighted interpolation (simplified)

@@ -258,11 +258,11 @@ pub struct SimdStandardScaler<F: Float + NumCast + SimdUnifiedOps> {
 
 impl<F: Float + NumCast + SimdUnifiedOps> SimdStandardScaler<F> {
     /// Creates a new SIMD-accelerated StandardScaler
-    pub fn new(with_mean: bool, with_std: bool) -> Self {
+    pub fn new(_with_mean: bool, with_std: bool) -> Self {
         SimdStandardScaler {
             mean_: None,
             std_: None,
-            with_mean,
+            _with_mean,
             with_std,
         }
     }

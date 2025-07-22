@@ -3,13 +3,14 @@
 //! This module implements state-of-the-art continual learning methods including
 //! Progressive Neural Networks, PackNet, Meta-Learning approaches, and more.
 
-use crate::continual::shared_backbone::{MultiTaskArchitecture, TaskType};
+use crate::continual::shared__backbone::{MultiTaskArchitecture, TaskType};
 use rand::rng;
 use crate::error::{NeuralError, Result};
 use crate::layers::{Dense, Layer};
 use ndarray::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
+use ndarray::ArrayView1;
 /// Progressive Neural Networks for continual learning
 pub struct ProgressiveNeuralNetwork {
     /// Columns (one per task)
@@ -157,10 +158,8 @@ impl LateralConnection {
         });
         let adapter = if source_dim != target_dim {
             Some(Dense::new(
-                source_dim,
-                target_dim,
-                None,
-            )?)
+                source_dim..target_dim,
+                None,)?)
         } else {
             None
         };
@@ -181,21 +180,21 @@ impl LateralConnection {
             Ok(source_activation.dot(&self.weights.t()))
 impl ProgressiveNeuralNetwork {
     /// Create a new Progressive Neural Network
-    pub fn new(input_dim: usize, config: ProgressiveConfig) -> Self {
+    pub fn new(_input_dim: usize, config: ProgressiveConfig) -> Self {
             columns: Vec::new(),
             lateral_connections: Vec::new(),
             current_task: 0,
             config,
     /// Add a new task column
     pub fn add_task(&mut self, output_dim: usize) -> Result<()> {
-        let input_dim = if self.columns.is_empty() {
+        let _input_dim = if self.columns.is_empty() {
             // For the first task, use the original input dimension
             64 // Placeholder - should be passed as parameter
             // For subsequent tasks, augment input with lateral connections
             64 + self.config.lateral_connections_per_layer * self.columns.len()
         let new_column = TaskColumn::new(
             self.current_task,
-            input_dim,
+            _input_dim,
             &self.config.base_layers,
         // Freeze previous columns if configured
         if self.config.freeze_previous_columns {
@@ -262,7 +261,7 @@ impl ProgressiveNeuralNetwork {
             })
             .collect();
         // Forward pass through target column
-        let (output, _) = self.columns[task_id].forward(input, &combined_lateral)?;
+        let (output_) = self.columns[task_id].forward(input, &combined_lateral)?;
         Ok(output)
     /// Train on current task
     pub fn train_current_task(
@@ -343,7 +342,7 @@ pub struct TaskMask {
     available_capacity: Vec<f32>,
 impl TaskMask {
     /// Create a new task mask
-    pub fn new(task_id: usize, layer_shapes: &[(usize, usize)]) -> Self {
+    pub fn new(_task_id: usize, layer_shapes: &[(usize, usize)]) -> Self {
         let layer_masks = layer_shapes
             .iter()
             .map(|(rows, cols)| Array2::from_elem((*rows, *cols), true))
@@ -385,7 +384,7 @@ impl TaskMask {
             self.available_capacity[layer_idx] = remaining_elements as f32 / total_elements as f32;
 impl PackNet {
     /// Create a new PackNet
-    pub fn new(input_dim: usize, backbone_layers: &[usize], config: PackNetConfig) -> Result<Self> {
+    pub fn new(_input_dim: usize, backbone_layers: &[usize], config: PackNetConfig) -> Result<Self> {
         let network = MultiTaskArchitecture::new(input_dim, backbone_layers, &[])?;
             network,
             task_masks: HashMap::new(),
@@ -432,8 +431,7 @@ impl PackNet {
                     target_layer[[i, j]] = false; // Reserve this parameter
     /// Training iteration
     fn train_iteration(
-        task_name: &str,
-        _labels: &ArrayView1<usize>,
+        task_name: &str, _labels: &ArrayView1<usize>,
         // Simplified training
         let _output = self.network.forward_task(data, task_name)?;
         // In practice, would compute actual loss and perform backpropagation
@@ -451,7 +449,7 @@ impl PackNet {
     /// Get network utilization statistics
     pub fn get_utilization_stats(&self) -> HashMap<String, f32> {
         let mut stats = HashMap::new();
-        for (task_id, mask) in &self.task_masks {
+        for (_task_id, mask) in &self.task_masks {
             let avg_capacity: f32 =
                 mask.available_capacity.iter().sum::<f32>() / mask.available_capacity.len() as f32;
             stats.insert(format!("task_{}", task_id), avg_capacity);
@@ -495,8 +493,8 @@ impl Default for LwFConfig {
             distillation_epochs: 50,
 impl LearningWithoutForgetting {
     /// Create a new LwF instance
-    pub fn new(input_dim: usize, backbone_layers: &[usize], config: LwFConfig) -> Result<Self> {
-        let model = MultiTaskArchitecture::new(input_dim, backbone_layers, &[])?;
+    pub fn new(_input_dim: usize, backbone_layers: &[usize], config: LwFConfig) -> Result<Self> {
+        let model = MultiTaskArchitecture::new(_input_dim, backbone_layers, &[])?;
             model,
             teacher_models: Vec::new(),
         // Store current model as teacher if not the first task

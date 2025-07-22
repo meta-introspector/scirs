@@ -117,12 +117,12 @@ pub struct GpuMetricsComputer {
 
 impl GpuMetricsComputer {
     /// Create new GPU metrics computer with hardware detection
-    pub fn new(config: GpuAccelConfig) -> Result<Self> {
+    pub fn new(_config: GpuAccelConfig) -> Result<Self> {
         let capabilities = PlatformCapabilities::detect();
         let gpu_info = Self::detect_gpu_capabilities()?;
 
         Ok(Self {
-            config,
+            _config,
             capabilities,
             gpu_info,
             parallel_config: ParallelConfig::default(),
@@ -131,7 +131,7 @@ impl GpuMetricsComputer {
 
     /// Configure parallel processing
     pub fn with_parallel_config(mut self, config: ParallelConfig) -> Self {
-        self.parallel_config = config;
+        self.parallel_config = _config;
         self
     }
 
@@ -375,10 +375,10 @@ impl GpuMetricsComputer {
     }
 
     /// Estimate SM count based on compute capability and memory
-    fn estimate_sm_count(compute_capability: (u32, u32), total_memory_bytes: usize) -> u32 {
+    fn estimate_sm_count(_compute_capability: (u32, u32), total_memory_bytes: usize) -> u32 {
         let memory_gb = total_memory_bytes / (1024 * 1024 * 1024);
 
-        match compute_capability {
+        match _compute_capability {
             (8, 6) => match memory_gb {
                 // RTX 30xx series
                 24.. => 84,    // RTX 3090
@@ -399,13 +399,11 @@ impl GpuMetricsComputer {
                 11.. => 68,   // RTX 2080 Ti
                 8..=10 => 46, // RTX 2080
                 _ => 36,      // RTX 2070
-            },
-            _ => match memory_gb {
+            }_ => match memory_gb {
                 // Conservative estimates
                 16.. => 80,
                 8..=15 => 60,
-                4..=7 => 40,
-                _ => 20,
+                4..=7 => 40_ => 20,
             },
         }
     }
@@ -523,7 +521,7 @@ impl GpuMetricsComputer {
         let batch_size = y_true_batch.nrows();
         let mut results = Vec::with_capacity(batch_size);
 
-        // Simulate GPU computation with appropriate delays and batch processing
+        // Simulate GPU computation with appropriate delays and _batch processing
         let threads_per_block = gpu_info.max_threads_per_block.min(1024);
         let _blocks_needed =
             (batch_size + threads_per_block as usize - 1) / threads_per_block as usize;
@@ -547,8 +545,7 @@ impl GpuMetricsComputer {
                         "mae" => self
                             .gpu_mae_kernel(&y_true_sample.to_owned(), &y_pred_sample.to_owned())?,
                         "r2_score" => self
-                            .gpu_r2_kernel(&y_true_sample.to_owned(), &y_pred_sample.to_owned())?,
-                        _ => F::zero(),
+                            .gpu_r2_kernel(&y_true_sample.to_owned(), &y_pred_sample.to_owned())?_ => F::zero(),
                     };
                 sample_results.insert(metric.to_string(), result);
             }
@@ -596,8 +593,7 @@ impl GpuMetricsComputer {
                         let result = match metric {
                             "mse" => self.simd_mse(&y_true_sample, &y_pred_sample)?,
                             "mae" => self.simd_mae(&y_true_sample, &y_pred_sample)?,
-                            "r2_score" => self.simd_r2_score(&y_true_sample, &y_pred_sample)?,
-                            _ => F::zero(),
+                            "r2_score" => self.simd_r2_score(&y_true_sample, &y_pred_sample)?_ => F::zero(),
                         };
                         sample_results.insert(metric.to_string(), result);
                     }
@@ -638,8 +634,7 @@ impl GpuMetricsComputer {
                 let result = match metric {
                     "mse" => self.cpu_mse(&y_true_sample, &y_pred_sample)?,
                     "mae" => self.cpu_mae(&y_true_sample, &y_pred_sample)?,
-                    "r2_score" => self.cpu_r2_score(&y_true_sample, &y_pred_sample)?,
-                    _ => F::zero(),
+                    "r2_score" => self.cpu_r2_score(&y_true_sample, &y_pred_sample)?_ => F::zero(),
                 };
                 sample_results.insert(metric.to_string(), result);
             }
@@ -1327,9 +1322,9 @@ impl AdvancedGpuOrchestrator {
 }
 
 impl LoadBalancer {
-    fn new(strategy: LoadBalancingStrategy) -> Self {
+    fn new(_strategy: LoadBalancingStrategy) -> Self {
         Self {
-            strategy,
+            _strategy,
             device_performance: HashMap::new(),
             device_memory_usage: HashMap::new(),
             current_index: 0,
@@ -1396,7 +1391,7 @@ impl LoadBalancer {
         let mut distribution = Vec::new();
         let mut current_start = 0;
 
-        for (idx, _device) in devices.iter().enumerate() {
+        for (idx_device) in devices.iter().enumerate() {
             let work_size = work_per_device + if idx < remainder { 1 } else { 0 };
             let end = current_start + work_size;
             distribution.push((idx, (current_start, end)));
@@ -1408,11 +1403,11 @@ impl LoadBalancer {
 }
 
 impl GpuMemoryManager {
-    fn new(strategy: MemoryAllocationStrategy) -> Self {
+    fn new(_strategy: MemoryAllocationStrategy) -> Self {
         Self {
             device_pools: HashMap::new(),
             allocated_memory: HashMap::new(),
-            allocation_strategy: strategy,
+            allocation_strategy: _strategy,
         }
     }
 
@@ -1429,11 +1424,10 @@ impl GpuMemoryManager {
 }
 
 impl MemoryPool {
-    fn new(total_size: usize) -> Self {
+    fn new(_total_size: usize) -> Self {
         Self {
             available_blocks: vec![MemoryBlock {
-                address: 0,
-                size: total_size,
+                address: 0_size: _total_size,
                 allocated_at: Instant::now(),
             }],
             allocated_blocks: Vec::new(),
@@ -1463,7 +1457,7 @@ impl PerformanceMonitor {
 
         // Store in performance history (simplified)
         println!(
-            "GPU Device {}: Execution time: {:?}, Throughput: {:.2} ops/sec",
+            "GPU Device {}: Execution, time: {:?}, Throughput: {:.2} ops/sec",
             device_id, duration, throughput
         );
 
@@ -1545,7 +1539,7 @@ impl FaultToleranceManager {
             if let Ok(output) = std::process::Command::new("nvidia-smi")
                 .arg("--query-gpu=temperature.gpu,power.draw,power.limit")
                 .arg("--format=csv,noheader,nounits")
-                .arg(format!("--id={}", device_id))
+                .arg(format!("--_id={}", device_id))
                 .output()
             {
                 if output.status.success() {

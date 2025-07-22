@@ -24,7 +24,7 @@
 //! - Parallel processing for batch enhancement
 
 use crate::error::{Result, VisionError};
-use crate::gpu_ops::GpuVisionContext;
+use crate::gpu__ops::GpuVisionContext;
 use ndarray::{s, Array1, Array2, Array3, ArrayView2, Axis};
 
 /// High Dynamic Range (HDR) processor
@@ -55,9 +55,9 @@ pub enum ToneMappingMethod {
 
 impl HDRProcessor {
     /// Create a new HDR processor
-    pub fn new(exposure_values: Vec<f32>, tone_mapping: ToneMappingMethod) -> Self {
+    pub fn new(_exposure_values: Vec<f32>, tone_mapping: ToneMappingMethod) -> Self {
         Self {
-            exposure_values,
+            _exposure_values,
             tone_mapping,
             gpu_context: GpuVisionContext::new().ok(),
         }
@@ -98,7 +98,7 @@ impl HDRProcessor {
     }
 
     /// Compute camera response curve
-    fn compute_response_curve(&self, _images: &[ArrayView2<f32>]) -> Result<Array1<f32>> {
+    fn compute_response_curve(&self_images: &[ArrayView2<f32>]) -> Result<Array1<f32>> {
         // Simplified response curve computation
         // In practice, would use Debevec & Malik algorithm
 
@@ -433,10 +433,10 @@ pub struct SRNetworkWeights {
 
 impl SuperResolutionProcessor {
     /// Create a new super-resolution processor
-    pub fn new(scale_factor: usize, method: SuperResolutionMethod) -> Result<Self> {
-        if !(2..=8).contains(&scale_factor) {
+    pub fn new(_scale_factor: usize, method: SuperResolutionMethod) -> Result<Self> {
+        if !(2..=8).contains(&_scale_factor) {
             return Err(VisionError::InvalidParameter(
-                "Scale factor must be between 2 and 8".to_string(),
+                "Scale _factor must be between 2 and 8".to_string(),
             ));
         }
 
@@ -584,7 +584,7 @@ impl SuperResolutionProcessor {
         image: &ArrayView2<f32>,
         weights: &SRNetworkWeights,
     ) -> Result<Array2<f32>> {
-        let (_height, _width) = image.dim();
+        let (_height_width) = image.dim();
 
         // Feature extraction (first convolution)
         let features =
@@ -757,20 +757,20 @@ impl SuperResolutionProcessor {
         let kernel_size = 9;
 
         // Feature extraction layer (64 filters)
-        let feature_layer = Array3::from_shape_fn((64, kernel_size, kernel_size), |(_, _, _)| {
+        let feature_layer = Array3::from_shape_fn((64, kernel_size, kernel_size), |(___)| {
             rand::random::<f32>() * 0.01 - 0.005
         });
 
         // Mapping layers (32 filters each)
         let mapping_layer1 =
-            Array3::from_shape_fn((32, 1, 1), |(_, _, _)| rand::random::<f32>() * 0.01 - 0.005);
+            Array3::from_shape_fn((32, 1, 1), |(___)| rand::random::<f32>() * 0.01 - 0.005);
 
         let mapping_layer2 =
-            Array3::from_shape_fn((32, 3, 3), |(_, _, _)| rand::random::<f32>() * 0.01 - 0.005);
+            Array3::from_shape_fn((32, 3, 3), |(___)| rand::random::<f32>() * 0.01 - 0.005);
 
         // Reconstruction layer
         let reconstruction_layer =
-            Array3::from_shape_fn((1, 5, 5), |(_, _, _)| rand::random::<f32>() * 0.01 - 0.005);
+            Array3::from_shape_fn((1, 5, 5), |(___)| rand::random::<f32>() * 0.01 - 0.005);
 
         // Bias terms
         let biases = vec![
@@ -817,9 +817,9 @@ pub enum DenoisingMethod {
 
 impl AdvancedDenoiser {
     /// Create a new advanced denoiser
-    pub fn new(method: DenoisingMethod, noise_variance: f32) -> Self {
+    pub fn new(_method: DenoisingMethod, noise_variance: f32) -> Self {
         Self {
-            method,
+            _method,
             noise_variance,
             gpu_context: GpuVisionContext::new().ok(),
         }
@@ -917,18 +917,18 @@ impl AdvancedDenoiser {
 
         let mut similarities = Vec::new();
 
-        // Search for similar blocks
+        // Search for similar _blocks
         let search_start_y = center_y.saturating_sub(search_window / 2);
         let search_end_y = (center_y + search_window / 2).min(height - block_h);
         let search_start_x = center_x.saturating_sub(search_window / 2);
         let search_end_x = (center_x + search_window / 2).min(width - block_w);
 
-        for y in (search_start_y..search_end_y).step_by(2) {
-            for x in (search_start_x..search_end_x).step_by(2) {
-                let candidate_block = image.slice(s![y..y + block_h, x..x + block_w]);
+        for _y in (search_start_y..search_end_y).step_by(2) {
+            for _x in (search_start_x..search_end_x).step_by(2) {
+                let candidate_block = image.slice(s![_y.._y + block_h, _x.._x + block_w]);
                 let similarity = self.compute_block_similarity(ref_block, &candidate_block);
 
-                similarities.push((similarity, y, x));
+                similarities.push((similarity, _y, _x));
             }
         }
 
@@ -936,13 +936,13 @@ impl AdvancedDenoiser {
         similarities.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
         similarities.truncate(max_blocks.min(similarities.len()));
 
-        // Collect similar blocks into 3D array
+        // Collect similar _blocks into 3D array
         let num_blocks = similarities.len();
         let mut similar_blocks = Array3::zeros((block_h, block_w, num_blocks));
 
-        for (i, &(_, y, x)) in similarities.iter().enumerate() {
-            let block = image.slice(s![y..y + block_h, x..x + block_w]);
-            similar_blocks.slice_mut(s![.., .., i]).assign(&block);
+        for (i, &(_, _y, _x)) in similarities.iter().enumerate() {
+            let _block = image.slice(s![_y.._y + block_h, _x.._x + block_w]);
+            similar_blocks.slice_mut(s![.., .., i]).assign(&_block);
         }
 
         Ok(similar_blocks)

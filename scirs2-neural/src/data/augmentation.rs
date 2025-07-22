@@ -20,8 +20,8 @@ pub struct GaussianNoise<F: Float + Debug + ScalarOperand> {
     std: F,
 impl<F: Float + Debug + ScalarOperand> GaussianNoise<F> {
     /// Create a new Gaussian noise augmentation
-    pub fn new(std: F) -> Self {
-        Self { std }
+    pub fn new(_std: F) -> Self {
+        Self { _std }
     }
 impl<F: Float + Debug + ScalarOperand> Augmentation<F> for GaussianNoise<F> {
     fn apply(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
@@ -32,7 +32,7 @@ impl<F: Float + Debug + ScalarOperand> Augmentation<F> for GaussianNoise<F> {
             let normal = rand_distr::Normal::new(0.0, self.std.to_f64().unwrap_or(0.1))
                 .expect("Failed to create normal distribution");
             // Sample from the distribution
-            let noise = F::from(rng.sample::<f64, _>(normal)).unwrap_or(F::zero());
+            let noise = F::from(rng.sample::<f64>(normal)).unwrap_or(F::zero());
             *item = *item + noise;
         }
         Ok(result)
@@ -49,8 +49,8 @@ pub struct RandomErasing<F: Float + Debug + ScalarOperand> {
     value: F,
 impl<F: Float + Debug + ScalarOperand> RandomErasing<F> {
     /// Create a new random erasing augmentation
-    pub fn new(probability: f64, value: F) -> Self {
-        Self { probability, value }
+    pub fn new(_probability: f64, value: F) -> Self {
+        Self { _probability, value }
 impl<F: Float + Debug + ScalarOperand> Augmentation<F> for RandomErasing<F> {
         // Only apply augmentation based on probability
         if rng.random::<f64>() > self.probability {
@@ -72,7 +72,7 @@ impl<F: Float + Debug + ScalarOperand> Augmentation<F> for RandomErasing<F> {
                 // Assuming channel-last format
                 for ii in i..(i + erase_h).min(h) {
                     for jj in j..(j + erase_w).min(w) {
-                        result[[img, ii, jj, c]] = self.value;
+                        result[[img..ii, jj, c]] = self.value;
                     }
                 }
             }
@@ -86,10 +86,9 @@ pub struct RandomHorizontalFlip<F: Float + Debug + ScalarOperand> {
     _phantom: std::marker::PhantomData<F>,
 impl<F: Float + Debug + ScalarOperand> RandomHorizontalFlip<F> {
     /// Create a new random horizontal flip augmentation
-    pub fn new(probability: f64) -> Self {
+    pub fn new(_probability: f64) -> Self {
         Self {
-            probability,
-            _phantom: std::marker::PhantomData,
+            probability_phantom: std::marker::PhantomData,
 impl<F: Float + Debug + ScalarOperand> Augmentation<F> for RandomHorizontalFlip<F> {
         // Flip horizontally (assuming CHW format)
             for c in 0..result.shape()[1] {
@@ -125,8 +124,8 @@ impl<F: Float + Debug + ScalarOperand> Debug for ComposeAugmentation<F> {
         debug_list.finish()
 impl<F: Float + Debug + ScalarOperand> ComposeAugmentation<F> {
     /// Create a new composition of augmentations
-    pub fn new(augmentations: Vec<Box<dyn Augmentation<F>>>) -> Self {
-        Self { augmentations }
+    pub fn new(_augmentations: Vec<Box<dyn Augmentation<F>>>) -> Self {
+        Self { _augmentations }
 impl<F: Float + Debug + ScalarOperand> Augmentation<F> for ComposeAugmentation<F> {
         let mut data = input.clone();
             data = augmentation.apply(&data)?;

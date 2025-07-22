@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2_stats::friedman;
+use scirs2__stats::friedman;
 
 #[allow(dead_code)]
 fn main() {

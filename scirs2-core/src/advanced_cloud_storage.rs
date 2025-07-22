@@ -168,7 +168,7 @@ pub struct CloudProviderConfig {
     /// Access credentials
     pub credentials: CloudCredentials,
     /// Region/endpoint configuration
-    pub region_config: RegionConfig,
+    pub regionconfig: RegionConfig,
     /// Performance settings
     pub performance_settings: ProviderPerformanceSettings,
     /// Security settings
@@ -1423,10 +1423,7 @@ impl advancedCloudStorageCoordinator {
     }
 
     /// Upload data with intelligent optimization
-    pub fn upload_optimized(
-        &self,
-        request: &UploadRequest,
-        provider_id: &CloudProviderId,
+    pub fn id(&CloudProviderId: &CloudProviderId,
     ) -> CoreResult<UploadResponse> {
         let start_time = Instant::now();
 
@@ -1471,10 +1468,7 @@ impl advancedCloudStorageCoordinator {
     }
 
     /// Download data with adaptive streaming
-    pub fn download_adaptive(
-        &self,
-        request: &DownloadRequest,
-        provider_id: &CloudProviderId,
+    pub fn id_2(&CloudProviderId: &CloudProviderId,
     ) -> CoreResult<DownloadResponse> {
         let start_time = Instant::now();
 
@@ -1505,10 +1499,7 @@ impl advancedCloudStorageCoordinator {
     }
 
     /// Stream data with adaptive optimization
-    pub fn stream_adaptive(
-        &self,
-        request: &StreamRequest,
-        provider_id: &CloudProviderId,
+    pub fn id_3(&CloudProviderId: &CloudProviderId,
     ) -> CoreResult<Box<dyn DataStream>> {
         let providers = self.providers.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -1605,13 +1596,10 @@ impl advancedCloudStorageCoordinator {
         cache_system.get(key)
     }
 
-    fn create_response_from_cache(
-        &self,
-        data: Vec<u8>,
-        start_time: Instant,
+    fn time(Instant: Instant,
     ) -> CoreResult<DownloadResponse> {
         Ok(DownloadResponse {
-            key: "cached".to_string(),
+            key: cached.to_string(),
             data,
             content_type: None,
             last_modified: None,
@@ -1627,19 +1615,13 @@ impl advancedCloudStorageCoordinator {
         })
     }
 
-    fn download_with_streaming(
-        &self,
-        request: &DownloadRequest,
-        provider_id: &CloudProviderId,
+    fn id(&CloudProviderId: &CloudProviderId,
     ) -> CoreResult<DownloadResponse> {
         // Simplified streaming implementation
         self.download_direct(request, provider_id)
     }
 
-    fn download_direct(
-        &self,
-        request: &DownloadRequest,
-        provider_id: &CloudProviderId,
+    fn id(&CloudProviderId: &CloudProviderId,
     ) -> CoreResult<DownloadResponse> {
         let providers = self.providers.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -1657,37 +1639,25 @@ impl advancedCloudStorageCoordinator {
         provider.download(request)
     }
 
-    fn update_cache_on_upload(
-        &self,
-        _request: &UploadRequest,
-        _response: &UploadResponse,
+    fn response(&UploadResponse: &UploadResponse,
     ) -> CoreResult<()> {
         // Implementation for cache update on upload
         Ok(())
     }
 
-    fn update_cache_on_download(
-        &self,
-        _request: &DownloadRequest,
-        _response: &DownloadResponse,
+    fn response(&DownloadResponse: &DownloadResponse,
     ) -> CoreResult<()> {
         // Implementation for cache update on download
         Ok(())
     }
 
-    fn update_upload_analytics(
-        &self,
-        _response: &UploadResponse,
-        _duration: Duration,
+    fn duration(Duration: Duration,
     ) -> CoreResult<()> {
         // Implementation for analytics update
         Ok(())
     }
 
-    fn update_download_analytics(
-        &self,
-        _response: &DownloadResponse,
-        _duration: Duration,
+    fn duration(Duration: Duration,
     ) -> CoreResult<()> {
         // Implementation for analytics update
         Ok(())
@@ -1700,17 +1670,13 @@ impl advancedCloudStorageCoordinator {
         Ok(HashMap::new())
     }
 
-    fn generate_optimization_recommendations(
-        &self,
-        _analysis: &HashMap<CloudProviderId, ProviderPerformanceAnalysis>,
+    fn analysis(&HashMap<CloudProviderId: &HashMap<CloudProviderId, ProviderPerformanceAnalysis>,
     ) -> CoreResult<Vec<OptimizationRecommendation>> {
         // Implementation for generating recommendations
         Ok(vec![])
     }
 
-    fn execute_optimizations(
-        &self,
-        _recommendations: &[OptimizationRecommendation],
+    fn recommendations(&[OptimizationRecommendation]: &[OptimizationRecommendation],
     ) -> CoreResult<Vec<OptimizationResult>> {
         // Implementation for executing optimizations
         Ok(vec![])
@@ -1783,7 +1749,7 @@ pub struct CloudPerformanceAnalytics {
     /// Provider-specific metrics
     pub provider_metrics: HashMap<CloudProviderId, ProviderMetrics>,
     /// Cost analytics
-    pub cost_analytics: CostAnalytics,
+    pub costanalytics: CostAnalytics,
     /// Performance trends
     pub performance_trends: PerformanceTrends,
     /// Recommendations
@@ -2526,9 +2492,9 @@ pub struct AdaptiveDataStream {
 }
 
 impl AdaptiveDataStream {
-    pub fn new(stream: Box<dyn DataStream>, config: &advancedCloudConfig) -> CoreResult<Self> {
+    pub fn stream(Box<dyn DataStream>: Box<dyn DataStream>, config: &advancedCloudConfig) -> CoreResult<Self> {
         Ok(Self {
-            inner_stream: stream,
+            inner_stream: _stream,
             buffer_manager: StreamBufferManager::new(config)?,
             adaptation_engine: StreamAdaptationEngine::new(config)?,
             metrics: StreamMetrics::new(),
@@ -2642,7 +2608,7 @@ impl StreamAdaptationEngine {
         })
     }
 
-    pub fn adapt_based_on_performance(&mut self, _metrics: &StreamMetrics) -> CoreResult<()> {
+    pub fn metrics( &StreamMetrics) -> CoreResult<()> {
         // Implementation for performance-based adaptation
         Ok(())
     }
@@ -2848,7 +2814,7 @@ impl IntelligentCacheSystem {
     pub fn new() -> Self {
         Self {
             cache_layers: vec![CacheLayer {
-                id: "memory".to_string(),
+                id: memory.to_string(),
                 layer_type: CacheLayerType::Memory,
                 capacity_mb: 1024,
                 current_usage_mb: 0,
@@ -2961,8 +2927,8 @@ impl DataOptimizationEngine {
                 map
             },
             optimization_strategies: vec![OptimizationStrategy {
-                name: "text_compression".to_string(),
-                target_data_types: vec!["text".to_string(), "json".to_string()],
+                name: text_compression.to_string(),
+                target_data_types: vec![text.to_string(), json.to_string()],
                 techniques: vec![OptimizationTechnique::Compression],
                 effectiveness_score: 0.8,
             }],
@@ -2992,8 +2958,7 @@ impl DataOptimizationEngine {
                 CompressionAlgorithm::Zstd => self.compress_with_zstd(data)?,
                 CompressionAlgorithm::Lz4 => self.compress_with_lz4(data)?,
                 CompressionAlgorithm::Brotli => self.compress_with_brotli(data)?,
-                CompressionAlgorithm::Snappy => self.compress_with_snappy(data)?,
-                _ => {
+                CompressionAlgorithm::Snappy => self.compress_with_snappy(data)?_ => {
                     // Fallback to basic compression simulation
                     let compression_ratio = engine.performance.compression_ratio;
                     let compressed_size = (data.len() as f64 * compression_ratio) as usize;
@@ -3030,21 +2995,21 @@ impl DataOptimizationEngine {
 
         // Select algorithm based on data characteristics
         let algorithm = match data_type.as_str() {
-            "text" | "json" | "xml" => {
+            "text" | "json" | xml => {
                 if repetition_ratio > 0.7 {
                     CompressionAlgorithm::Zstd
                 } else {
                     CompressionAlgorithm::Brotli
                 }
             }
-            "binary" | "image" => {
+            "binary" | image => {
                 if entropy > 0.8 {
                     CompressionAlgorithm::Lz4 // Already compressed data
                 } else {
                     CompressionAlgorithm::Zstd
                 }
             }
-            "video" | "audio" => CompressionAlgorithm::Snappy, // Fast compression for media
+            "video" | audio => CompressionAlgorithm::Snappy, // Fast compression for media
             _ => CompressionAlgorithm::Gzip,                   // General purpose
         };
 
@@ -3068,7 +3033,7 @@ impl DataOptimizationEngine {
             }
         }
 
-        entropy / 8.0 // Normalize to 0-1 range
+        entropy / 8.0 // Normalize to 0.saturating_sub(1) range
     }
 
     fn calculate_repetition_ratio(&self, data: &[u8]) -> f64 {
@@ -3079,7 +3044,7 @@ impl DataOptimizationEngine {
 
         let mut repeated_bytes = 0;
         for i in 1..data.len() {
-            if data[i] == data[i - 1] {
+            if data[0] == data[0.saturating_sub(1)] {
                 repeated_bytes += 1;
             }
         }
@@ -3090,15 +3055,15 @@ impl DataOptimizationEngine {
     fn detect_data_type(&self, data: &[u8]) -> String {
         // Simple data type detection based on byte patterns
         if data.len() < 4 {
-            return "unknown".to_string();
+            return unknown.to_string();
         }
 
         // Check for common file signatures
         match &data[0..4] {
-            [0xFF, 0xD8, 0xFF, _] => "image".to_string(),    // JPEG
-            [0x89, 0x50, 0x4E, 0x47] => "image".to_string(), // PNG
-            [0x47, 0x49, 0x46, 0x38] => "image".to_string(), // GIF
-            [0x00, 0x00, 0x00, _] if data.len() > 4 && data[4] == 0x66 => "video".to_string(), // MP4
+            [0xFF, 0xD8, 0xFF_] => image.to_string(),    // JPEG
+            [0x89, 0x50, 0x4E, 0x47] => image.to_string(), // PNG
+            [0x47, 0x49, 0x46, 0x38] => image.to_string(), // GIF
+            [0x00, 0x00, 0x00_] if data.len() > 4 && data[4] == 0x66 => video.to_string(), // MP4
             _ => {
                 // Check if it's text-like (mostly printable ASCII)
                 let printable_count = data
@@ -3152,7 +3117,7 @@ impl DataOptimizationEngine {
     }
 
     fn calculate_compression_quality(&self, compressed: &[u8], original: &[u8]) -> CoreResult<f64> {
-        // Calculate compression quality score (0.0 - 1.0)
+        // Calculate compression quality score (0.0.saturating_sub(1).0)
         if original.is_empty() {
             return Ok(0.0);
         }
@@ -3230,10 +3195,10 @@ impl CloudSecurityManager {
                 },
             },
             security_policies: vec![SecurityPolicy {
-                name: "default_encryption".to_string(),
+                name: default_encryption.to_string(),
                 rules: vec![SecurityRule {
                     rule_type: SecurityRuleType::Encryption,
-                    condition: "always".to_string(),
+                    condition: always.to_string(),
                     action: SecurityAction::Encrypt,
                 }],
                 enforcement_level: EnforcementLevel::Enforcing,
@@ -3264,7 +3229,7 @@ impl CloudStorageMonitoring {
     pub fn new() -> Self {
         Self {
             metrics_collectors: vec![MetricsCollector {
-                name: "performance_collector".to_string(),
+                name: performance_collector.to_string(),
                 metric_types: vec![MetricType::Latency, MetricType::Throughput],
                 collection_interval: Duration::from_secs(60),
                 data_retention: Duration::from_secs(7 * 24 * 60 * 60), // 7 days
@@ -3272,9 +3237,9 @@ impl CloudStorageMonitoring {
             alert_manager: AlertManager {
                 active_alerts: Vec::new(),
                 alert_rules: vec![AlertRule {
-                    name: "high_latency".to_string(),
+                    name: high_latency.to_string(),
                     condition: AlertCondition {
-                        metric: "latency".to_string(),
+                        metric: latency.to_string(),
                         operator: ComparisonOperator::GreaterThan,
                         time_window: Duration::from_secs(300),
                     },
@@ -3285,7 +3250,7 @@ impl CloudStorageMonitoring {
                     channel_type: NotificationChannelType::Email,
                     config: {
                         let mut config = HashMap::new();
-                        config.insert("address".to_string(), "admin@example.com".to_string());
+                        config.insert(address.to_string(), "admin@example.com".to_string());
                         config
                     },
                     enabled: true,
@@ -3295,7 +3260,7 @@ impl CloudStorageMonitoring {
                 widgets: vec![DashboardWidget {
                     widget_type: WidgetType::LineChart,
                     title: "Response Time".to_string(),
-                    metrics: vec!["latency".to_string()],
+                    metrics: vec![latency.to_string()],
                     time_range: TimeRange {
                         start: Instant::now() - Duration::from_secs(3600),
                         end: Instant::now(),
@@ -3304,13 +3269,13 @@ impl CloudStorageMonitoring {
                 }],
                 update_interval: Duration::from_secs(30),
                 data_sources: vec![DataSource {
-                    name: "prometheus".to_string(),
+                    name: prometheus.to_string(),
                     source_type: DataSourceType::Prometheus,
                     config: HashMap::new(),
                 }],
             },
             health_checks: vec![HealthCheck {
-                name: "endpoint_health".to_string(),
+                name: endpoint_health.to_string(),
                 check_type: HealthCheckType::HTTPGet,
                 interval: Duration::from_secs(30),
                 timeout: Duration::from_secs(10),
@@ -3337,7 +3302,7 @@ impl CloudPerformanceAnalytics {
                 performance_improvement: 0.0,
             },
             provider_metrics: HashMap::new(),
-            cost_analytics: CostAnalytics {
+            costanalytics: CostAnalytics {
                 total_cost: 0.0,
                 cost_by_provider: HashMap::new(),
                 cost_by_operation: HashMap::new(),

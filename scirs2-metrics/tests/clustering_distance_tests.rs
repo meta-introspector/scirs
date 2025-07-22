@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod cluster_distance_tests {
     use ndarray::{array, Array2};
-    use scirs2_metrics::clustering::distance::{
+    use scirs2__metrics::clustering::distance::{
         distance_ratio_index, inter_cluster_distances, intra_cluster_distances, isolation_index,
     };
 

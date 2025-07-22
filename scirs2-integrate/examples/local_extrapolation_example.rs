@@ -5,7 +5,7 @@
 //! to achieve very high accuracy in ODE integration.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2_integrate::ode::{
+use scirs2__integrate::ode::{
     methods::{
         euler_method, gragg_bulirsch_stoer_method, richardson_extrapolation_step, rk4_method,
         ExtrapolationBaseMethod, ExtrapolationOptions,

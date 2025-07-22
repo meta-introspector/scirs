@@ -79,7 +79,7 @@ use crate::error::LinalgResult;
 /// assert_eq!(rand_mat.shape(), &[2, 2]);
 /// ```
 #[allow(dead_code)]
-pub fn uniform<F>(rows: usize, cols: usize, low: F, high: F, seed: Option<u64>) -> Array2<F>
+pub fn uniform<F>(_rows: usize, cols: usize, low: F, high: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
@@ -93,13 +93,13 @@ where
     };
 
     let range = high - low;
-    let mut result = Array2::<F>::zeros((rows, cols));
+    let mut result = Array2::<F>::zeros((_rows, cols));
 
-    for i in 0..rows {
+    for i in 0.._rows {
         for j in 0..cols {
             // Generate random value between 0 and 1
             let r: f64 = rng.random_range(0.0..1.0);
-            // Scale to range [low, high]
+            // Scale to range [low..high]
             let val = low + F::from_f64(r).unwrap() * range;
             result[[i, j]] = val;
         }
@@ -148,15 +148,15 @@ where
 ///
 /// A rows×cols matrix with standard normal distribution
 #[allow(dead_code)]
-pub fn random_normal_matrix<F>(shape: (usize, usize), seed: Option<u64>) -> LinalgResult<Array2<F>>
+pub fn random_normal_matrix<F>(_shape: (usize, usize), seed: Option<u64>) -> LinalgResult<Array2<F>>
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive + NumAssign + 'static,
 {
-    Ok(normal(shape.0, shape.1, F::zero(), F::one(), seed))
+    Ok(normal(_shape.0, _shape.1, F::zero(), F::one(), seed))
 }
 
 #[allow(dead_code)]
-pub fn normal<F>(rows: usize, cols: usize, mean: F, std: F, seed: Option<u64>) -> Array2<F>
+pub fn normal<F>(_rows: usize, cols: usize, mean: F, std: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
@@ -169,9 +169,9 @@ where
         }
     };
 
-    let mut result = Array2::<F>::zeros((rows, cols));
+    let mut result = Array2::<F>::zeros((_rows, cols));
 
-    for i in 0..rows {
+    for i in 0.._rows {
         for j in 0..cols {
             // Box-Muller transform for generating normal values
             let u1: f64 = rng.random_range(0.00001..0.99999); // Avoid 0
@@ -650,9 +650,9 @@ where
         + ndarray::ScalarOperand
         + 'static,
 {
-    // Validate condition number
+    // Validate condition _number
     if condition_number < F::one() {
-        panic!("Condition number must be >= 1.0");
+        panic!("Condition _number must be >= 1.0");
     }
 
     // Generate random orthogonal matrix Q1
@@ -722,7 +722,7 @@ where
 /// // So we just verify the matrix size here
 /// ```
 #[allow(dead_code)]
-pub fn with_eigenvalues<F>(eigenvalues: &Array1<F>, seed: Option<u64>) -> Array2<F>
+pub fn with_eigenvalues<F>(_eigenvalues: &Array1<F>, seed: Option<u64>) -> Array2<F>
 where
     F: Float
         + NumAssign
@@ -735,18 +735,18 @@ where
         + ndarray::ScalarOperand
         + 'static,
 {
-    let n = eigenvalues.len();
+    let n = _eigenvalues.len();
 
     // Generate random orthogonal matrix Q
     let q = orthogonal::<F>(n, seed);
 
-    // Create diagonal matrix with specified eigenvalues
+    // Create diagonal matrix with specified _eigenvalues
     let mut d = Array2::<F>::zeros((n, n));
     for i in 0..n {
-        d[[i, i]] = eigenvalues[i];
+        d[[i, i]] = _eigenvalues[i];
     }
 
-    // Form result = Q * D * Q^T for symmetric matrix with given eigenvalues
+    // Form result = Q * D * Q^T for symmetric matrix with given _eigenvalues
     let temp = q.dot(&d);
     let qt = q.t();
 
@@ -833,20 +833,20 @@ where
 /// assert_eq!(v[[1, 2]], 4.0);  // 2^2
 /// ```
 #[allow(dead_code)]
-pub fn vandermonde<F>(points: &Array1<F>) -> Array2<F>
+pub fn vandermonde<F>(_points: &Array1<F>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
 {
-    let n = points.len();
+    let n = _points.len();
     let mut result = Array2::<F>::zeros((n, n));
 
     for i in 0..n {
-        let x = points[i];
+        let x = _points[i];
 
         // First column is always x^0 = 1
         result[[i, 0]] = F::one();
 
-        // Fill remaining columns: V[i,j] = points[i]^j
+        // Fill remaining columns: V[i,j] = _points[i]^j
         for j in 1..n {
             result[[i, j]] = result[[i, j - 1]] * x;
         }
@@ -969,7 +969,7 @@ where
 /// // but this can be unstable in different test environments, so we omit it here.
 /// ```
 #[allow(dead_code)]
-pub fn low_rank<F>(rows: usize, cols: usize, rank: usize, seed: Option<u64>) -> Array2<F>
+pub fn low_rank<F>(_rows: usize, cols: usize, rank: usize, seed: Option<u64>) -> Array2<F>
 where
     F: Float
         + NumAssign
@@ -982,37 +982,37 @@ where
         + ndarray::ScalarOperand
         + 'static,
 {
-    if rank > rows.min(cols) {
-        panic!("Rank must be less than or equal to min(rows, cols)");
+    if rank > _rows.min(cols) {
+        panic!("Rank must be less than or equal to min(_rows, cols)");
     }
 
     if rank == 0 {
-        return Array2::<F>::zeros((rows, cols));
+        return Array2::<F>::zeros((_rows, cols));
     }
 
     // Create orthogonal left and right factor matrices
-    let mut left = Array2::<F>::zeros((rows, rank));
+    let mut left = Array2::<F>::zeros((_rows, rank));
     let mut right = Array2::<F>::zeros((rank, cols));
 
     // For the left factor, create orthogonal columns
-    if rows >= rank {
-        // If rows >= rank, we can use the orthogonal function directly
-        let temp = orthogonal::<F>(rows, seed);
-        for i in 0..rows {
+    if _rows >= rank {
+        // If _rows >= rank, we can use the orthogonal function directly
+        let temp = orthogonal::<F>(_rows, seed);
+        for i in 0.._rows {
             for j in 0..rank {
                 left[[i, j]] = temp[[i, j]];
             }
         }
     } else {
-        // If rows < rank, fill with random normal values
-        left = normal(rows, rank, F::zero(), F::one(), seed);
+        // If _rows < rank, fill with random normal values
+        left = normal(_rows, rank, F::zero(), F::one(), seed);
     }
 
-    // For the right factor, create orthogonal rows
+    // For the right factor, create orthogonal _rows
     if cols >= rank {
         // If cols >= rank, we can use the orthogonal function and transpose
         let temp = orthogonal::<F>(cols, seed.map(|s| s.wrapping_add(1)));
-        // Take the first rank rows of the transpose
+        // Take the first rank _rows of the transpose
         let temp_t = temp.t();
         for i in 0..rank {
             for j in 0..cols {
@@ -1031,7 +1031,7 @@ where
     }
 
     // We'll directly build the low-rank matrix as a sum of rank-1 outer products
-    let mut result = Array2::<F>::zeros((rows, cols));
+    let mut result = Array2::<F>::zeros((_rows, cols));
 
     // Extract column vectors from left and row vectors from right
     for r in 0..rank {
@@ -1044,7 +1044,7 @@ where
         let v_row = right.row(r).to_owned();
 
         // Add scaled outer product u * v^T to result
-        for i in 0..rows {
+        for i in 0.._rows {
             for j in 0..cols {
                 result[[i, j]] += scaling * u_col[i] * v_row[j];
             }

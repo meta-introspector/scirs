@@ -49,11 +49,11 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
     ) -> Result<Self> {
         if y_true.len() != y_pred.len() {
             return Err(NeuralError::ValidationError(
-                "Predictions and true labels must have the same length".to_string(),
+                "Predictions and _true labels must have the same length".to_string(),
             ));
         }
 
-        // Determine number of classes
+        // Determine number of _classes
         let n_classes = num_classes.unwrap_or_else(|| {
             let max_true = y_true.iter().max().copied().unwrap_or(0);
             let max_pred = y_pred.iter().max().copied().unwrap_or(0);
@@ -69,7 +69,7 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
                 matrix[[*true_label, *pred_label]] = matrix[[*true_label, *pred_label]] + F::one();
             } else {
                 return Err(NeuralError::ValidationError(format!(
-                    "Class index out of bounds: true={true_label}, pred={pred_label}, n_classes={n_classes}"
+                    "Class index out of bounds: _true={true_label}, _pred={pred_label}, n_classes={n_classes}"
                 )));
             }
         }
@@ -78,7 +78,7 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
         let validated_labels = if let Some(label_vec) = labels {
             if label_vec.len() != n_classes {
                 return Err(NeuralError::ValidationError(format!(
-                    "Number of labels ({}) does not match number of classes ({})",
+                    "Number of labels ({}) does not match number of _classes ({})",
                     label_vec.len(),
                     n_classes
                 )));
@@ -100,11 +100,11 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
     /// # Arguments
     /// * `matrix` - Raw confusion matrix data
     /// * `labels` - Optional class labels
-    pub fn from_matrix(matrix: Array2<F>, labels: Option<Vec<String>>) -> Result<Self> {
-        let shape = matrix.shape();
+    pub fn from_matrix(_matrix: Array2<F>, labels: Option<Vec<String>>) -> Result<Self> {
+        let shape = _matrix.shape();
         if shape[0] != shape[1] {
             return Err(NeuralError::ValidationError(
-                "Confusion matrix must be square".to_string(),
+                "Confusion _matrix must be square".to_string(),
             ));
         }
 
@@ -114,7 +114,7 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
         if let Some(ref label_vec) = labels {
             if label_vec.len() != n_classes {
                 return Err(NeuralError::ValidationError(format!(
-                    "Number of labels ({}) does not match matrix size ({})",
+                    "Number of labels ({}) does not match _matrix size ({})",
                     label_vec.len(),
                     n_classes
                 )));
@@ -122,7 +122,7 @@ impl<F: Float + Debug + Display> ConfusionMatrix<F> {
         }
 
         Ok(ConfusionMatrix {
-            matrix,
+            matrix: _matrix,
             labels,
             num_classes: n_classes,
         })

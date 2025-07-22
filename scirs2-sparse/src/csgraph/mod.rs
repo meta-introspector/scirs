@@ -17,8 +17,8 @@
 //! ### Shortest Path
 //!
 //! ```
-//! use scirs2_sparse::csgraph::shortest_path;
-//! use scirs2_sparse::csr_array::CsrArray;
+//! use scirs2__sparse::csgraph::shortest_path;
+//! use scirs2__sparse::csr_array::CsrArray;
 //!
 //! // Create a graph as a sparse matrix
 //! let rows = vec![0, 0, 1, 2];
@@ -33,8 +33,8 @@
 //! ### Connected Components
 //!
 //! ```
-//! use scirs2_sparse::csgraph::connected_components;
-//! use scirs2_sparse::csr_array::CsrArray;
+//! use scirs2__sparse::csgraph::connected_components;
+//! use scirs2__sparse::csr_array::CsrArray;
 //!
 //! // Create a graph
 //! let rows = vec![0, 1, 2, 3];
@@ -58,10 +58,10 @@ pub mod minimum_spanning_tree;
 pub mod shortest_path;
 pub mod traversal;
 
-pub use connected_components::*;
+pub use connected__components::*;
 pub use laplacian::*;
-pub use minimum_spanning_tree::*;
-pub use shortest_path::*;
+pub use minimum_spanning__tree::*;
+pub use shortest__path::*;
 pub use traversal::*;
 
 /// Graph representation modes
@@ -127,22 +127,22 @@ where
 ///
 /// Result indicating if the matrix is a valid graph
 #[allow(dead_code)]
-pub fn validate_graph<T, S>(matrix: &S, directed: bool) -> SparseResult<()>
+pub fn validate_graph<T, S>(_matrix: &S, directed: bool) -> SparseResult<()>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (rows, cols) = matrix.shape();
+    let (rows, cols) = _matrix.shape();
 
     // Graph matrices must be square
     if rows != cols {
         return Err(SparseError::ValueError(
-            "Graph matrix must be square".to_string(),
+            "Graph _matrix must be square".to_string(),
         ));
     }
 
     // Check for negative weights (not allowed in some algorithms)
-    let (row_indices, col_indices, values) = matrix.find();
+    let (row_indices, col_indices, values) = _matrix.find();
     for &value in values.iter() {
         if value < T::zero() {
             return Err(SparseError::ValueError(
@@ -156,11 +156,11 @@ where
         for (i, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
             if row != col {
                 let weight = values[i];
-                let reverse_weight = matrix.get(col, row);
+                let reverse_weight = _matrix.get(col, row);
 
                 if (weight - reverse_weight).abs() > T::from(1e-10).unwrap() {
                     return Err(SparseError::ValueError(
-                        "Undirected graph matrix must be symmetric".to_string(),
+                        "Undirected graph _matrix must be symmetric".to_string(),
                     ));
                 }
             }
@@ -181,15 +181,15 @@ where
 ///
 /// Adjacency list as a vector of vectors of (neighbor, weight) pairs
 #[allow(dead_code)]
-pub fn to_adjacency_list<T, S>(matrix: &S, directed: bool) -> SparseResult<Vec<Vec<(usize, T)>>>
+pub fn to_adjacency_list<T, S>(_matrix: &S, directed: bool) -> SparseResult<Vec<Vec<(usize, T)>>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (n, _) = matrix.shape();
+    let (n_) = _matrix.shape();
     let mut adj_list = vec![Vec::new(); n];
 
-    let (row_indices, col_indices, values) = matrix.find();
+    let (row_indices, col_indices, values) = _matrix.find();
 
     for (i, (&row, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         let weight = values[i];
@@ -199,7 +199,7 @@ where
 
             // For undirected graphs, add the reverse edge only if it doesn't already exist
             if !directed && row != col {
-                // Check if the reverse edge already exists in the matrix
+                // Check if the reverse edge already exists in the _matrix
                 let reverse_exists = row_indices
                     .iter()
                     .zip(col_indices.iter())
@@ -217,28 +217,28 @@ where
 
 /// Get the number of vertices in a graph matrix
 #[allow(dead_code)]
-pub fn num_vertices<T, S>(matrix: &S) -> usize
+pub fn num_vertices<T, S>(_matrix: &S) -> usize
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    matrix.shape().0
+    _matrix.shape().0
 }
 
 /// Get the number of edges in a graph matrix
 #[allow(dead_code)]
-pub fn num_edges<T, S>(matrix: &S, directed: bool) -> SparseResult<usize>
+pub fn num_edges<T, S>(_matrix: &S, directed: bool) -> SparseResult<usize>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let nnz = matrix.nnz();
+    let nnz = _matrix.nnz();
 
     if directed {
         Ok(nnz)
     } else {
         // For undirected graphs, count diagonal elements once and off-diagonal elements half
-        let (row_indices, col_indices, _) = matrix.find();
+        let (row_indices, col_indices_) = _matrix.find();
         let mut diagonal_count = 0;
         let mut off_diagonal_count = 0;
 
@@ -250,7 +250,7 @@ where
             }
         }
 
-        // Off-diagonal edges are counted twice in the matrix (i,j) and (j,i)
+        // Off-diagonal edges are counted twice in the _matrix (i,j) and (j,i)
         Ok(diagonal_count + off_diagonal_count / 2)
     }
 }
@@ -258,7 +258,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
 
     fn create_test_graph() -> CsrArray<f64> {
         // Create a simple 4-vertex graph:

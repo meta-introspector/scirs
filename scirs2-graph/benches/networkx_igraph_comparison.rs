@@ -13,7 +13,7 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use scirs2_graph::{
+use scirs2__graph::{
     algorithms::shortest_path::k_shortest_paths as shortest_path,
     // Core algorithms for comparison
     barabasi_albert_graph,
@@ -151,8 +151,7 @@ impl ExternalBenchmarkRunner {
         let graph_generation = match graph_type {
             "erdos_renyi" => format!("G = nx.erdos_renyi_graph({}, 0.01)", graph_size),
             "barabasi_albert" => format!("G = nx.barabasi_albert_graph({}, 3)", graph_size),
-            "watts_strogatz" => format!("G = nx.watts_strogatz_graph({}, 6, 0.3)", graph_size),
-            _ => format!("G = nx.erdos_renyi_graph({}, 0.01)", graph_size),
+            "watts_strogatz" => format!("G = nx.watts_strogatz_graph({}, 6, 0.3)", graph_size, _ => format!("G = nx.erdos_renyi_graph({}, 0.01)", graph_size),
         };
 
         let algorithm_code = match algorithm {
@@ -164,8 +163,7 @@ impl ExternalBenchmarkRunner {
             "pagerank" => "nx.pagerank(G)".to_string(),
             "connected_components" => "list(nx.connected_components(G))".to_string(),
             "louvain_communities" => "community.greedy_modularity_communities(G)".to_string(),
-            "minimum_spanning_tree" => "nx.minimum_spanning_tree(G)".to_string(),
-            _ => "pass".to_string(),
+            "minimum_spanning_tree" => "nx.minimum_spanning_tree(G)".to_string(, _ => "pass".to_string(),
         };
 
         format!(
@@ -198,10 +196,10 @@ mem_after = measure_memory()
 execution_time_ms = (end_time - start_time) * 1000
 memory_usage_mb = mem_after - mem_before
 
-print(f"EXECUTION_TIME_MS:{{execution_time_ms:.3f}}")
-print(f"MEMORY_USAGE_MB:{{memory_usage_mb:.3f}}")
-print(f"GRAPH_SIZE:{{len(G)}}")
-print(f"GRAPH_EDGES:{{len(G.edges())}}")
+print(f"EXECUTION_TIME, _MS:{{execution_time_ms:.3f}}")
+print(f"MEMORY_USAGE, _MB:{{memory_usage_mb:.3f}}")
+print(f"GRAPH, _SIZE:{{len(G)}}")
+print(f"GRAPH, _EDGES:{{len(G.edges())}}")
 print("SUCCESS:true")
 "#,
             extra_imports = if algorithm == "louvain_communities" {
@@ -574,19 +572,18 @@ pub fn generate_comparison_report() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn measure_scirs2_algorithm(algorithm: &str, size: usize, graph_type: &str) -> f64 {
+fn measure_scirs2_algorithm(_algorithm: &str, size: usize, graph_type: &str) -> f64 {
     let mut rng = StdRng::seed_from_u64(42);
 
     let graph = match graph_type {
         "erdos_renyi" => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
         "barabasi_albert" => barabasi_albert_graph(size, 3, &mut rng).unwrap(),
-        "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).unwrap(),
-        _ => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
+        "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).unwrap(, _ => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
     };
 
     let start = Instant::now();
 
-    match algorithm {
+    match _algorithm {
         "bfs" => {
             let _ = breadth_first_search(&graph, &0);
         }
@@ -613,7 +610,7 @@ fn measure_scirs2_algorithm(algorithm: &str, size: usize, graph_type: &str) -> f
 
 /// Measure scirs2-graph algorithm performance with advanced optimizations
 #[allow(dead_code)]
-fn measure_scirs2_algorithm_with_advanced<N: Node, E: scirs2_graph::EdgeWeight, Ix>(
+fn measure_scirs2_algorithm_with_advanced<N: Node, E: scirs2_graph: EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
 ) -> f64
@@ -621,7 +618,7 @@ where
     N: Clone + std::hash::Hash + Eq,
     Ix: petgraph::graph::IndexType,
 {
-    use scirs2_graph::advanced::{
+    use scirs2__graph::advanced::{
         create_performance_advanced_processor, execute_with_enhanced_advanced,
     };
 
@@ -629,22 +626,22 @@ where
     let start = Instant::now();
 
     let _ = match algorithm {
-        "bfs" => execute_with_enhanced_advanced(&mut processor, graph, "bfs", |g| {
+        "bfs" => execute_with_enhanced_advanced(&mut processor, _graph, "bfs", |g| {
             Ok(breadth_first_search(g, &0))
         }),
-        "dfs" => execute_with_enhanced_advanced(&mut processor, graph, "dfs", |g| {
+        "dfs" => execute_with_enhanced_advanced(&mut processor, _graph, "dfs", |g| {
             Ok(depth_first_search(g, &0))
         }),
-        "pagerank" => execute_with_enhanced_advanced(&mut processor, graph, "pagerank", |g| {
+        "pagerank" => execute_with_enhanced_advanced(&mut processor, _graph, "pagerank", |g| {
             Ok(pagerank_centrality(g, None, None, None))
         }),
         "betweenness_centrality" => {
-            execute_with_enhanced_advanced(&mut processor, graph, "betweenness", |g| {
+            execute_with_enhanced_advanced(&mut processor, _graph, "betweenness", |g| {
                 Ok(betweenness_centrality(g))
             })
         }
         "shortest_path" => {
-            execute_with_enhanced_advanced(&mut processor, graph, "shortest_path", |g| {
+            execute_with_enhanced_advanced(&mut processor, _graph, "shortest_path", |g| {
                 let target = std::cmp::min(10, g.node_count().saturating_sub(1));
                 if target > 0 {
                     shortest_path(g, &0, &target)
@@ -654,12 +651,12 @@ where
             })
         }
         "connected_components" => {
-            execute_with_enhanced_advanced(&mut processor, graph, "connected_components", |g| {
+            execute_with_enhanced_advanced(&mut processor, _graph, "connected_components", |g| {
                 Ok(connected_components(g))
             })
         }
         "louvain_communities" => {
-            execute_with_enhanced_advanced(&mut processor, graph, "louvain", |g| {
+            execute_with_enhanced_advanced(&mut processor, _graph, "louvain", |g| {
                 louvain_communities_result(g, None, None)
             })
         }
@@ -671,7 +668,7 @@ where
 
 /// Measure scirs2-graph algorithm performance without advanced optimizations (standard mode)
 #[allow(dead_code)]
-fn measure_scirs2_algorithm_standard<N: Node, E: scirs2_graph::EdgeWeight, Ix>(
+fn measure_scirs2_algorithm_standard<N: Node, E: scirs2_graph: EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
 ) -> f64
@@ -683,28 +680,28 @@ where
 
     match algorithm {
         "bfs" => {
-            let _ = breadth_first_search(graph, &0);
+            let _ = breadth_first_search(_graph, &0);
         }
         "dfs" => {
-            let _ = depth_first_search(graph, &0);
+            let _ = depth_first_search(_graph, &0);
         }
         "pagerank" => {
-            let _ = pagerank_centrality(graph, None, None, None);
+            let _ = pagerank_centrality(_graph, None, None, None);
         }
         "betweenness_centrality" => {
-            let _ = betweenness_centrality(graph);
+            let _ = betweenness_centrality(_graph);
         }
         "shortest_path" => {
-            let target = std::cmp::min(10, graph.node_count().saturating_sub(1));
+            let target = std::cmp::min(10, _graph.node_count().saturating_sub(1));
             if target > 0 {
-                let _ = shortest_path(graph, &0, &target);
+                let _ = shortest_path(_graph, &0, &target);
             }
         }
         "connected_components" => {
-            let _ = connected_components(graph);
+            let _ = connected_components(_graph);
         }
         "louvain_communities" => {
-            let _ = louvain_communities_result(graph, None, None);
+            let _ = louvain_communities_result(_graph, None, None);
         }
         _ => {}
     }
@@ -713,7 +710,7 @@ where
 }
 
 #[allow(dead_code)]
-fn generate_markdown_report(results: &[(String, String, usize, ComparisonMetrics)]) -> String {
+fn generate_markdown_report(_results: &[(String, String, usize, ComparisonMetrics)]) -> String {
     let mut report = String::new();
 
     report.push_str("# scirs2-graph vs NetworkX/igraph Performance Comparison\n\n");
@@ -722,7 +719,7 @@ fn generate_markdown_report(results: &[(String, String, usize, ComparisonMetrics
     report.push_str("| Algorithm | Graph Type | Size | scirs2-graph (ms) | NetworkX (ms) | Speedup | Status |\n");
     report.push_str("|-----------|------------|------|-------------------|---------------|---------|--------|\n");
 
-    for (algorithm, graph_type, size, metrics) in results {
+    for (algorithm, graph_type, size, metrics) in _results {
         let speedup_str = match metrics.speedup_vs_networkx {
             Some(speedup) => format!("{:.2}x", speedup),
             None => "N/A".to_string(),
@@ -749,7 +746,7 @@ fn generate_markdown_report(results: &[(String, String, usize, ComparisonMetrics
 
     report.push_str("\n## Detailed Analysis\n\n");
 
-    for (algorithm, graph_type, size, metrics) in results {
+    for (algorithm, graph_type, size, metrics) in _results {
         report.push_str(&format!(
             "### {} on {} graph ({} nodes)\n\n",
             algorithm, graph_type, size
@@ -822,8 +819,7 @@ fn bench_advanced_comprehensive_comparison(c: &mut Criterion) {
         let test_graph = match graph_type {
             "erdos_renyi" => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
             "barabasi_albert" => barabasi_albert_graph(size, 3, &mut rng).unwrap(),
-            "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).unwrap(),
-            _ => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
+            "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).unwrap(, _ => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
         };
 
         for algorithm in algorithms {

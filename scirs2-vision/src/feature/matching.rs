@@ -146,8 +146,8 @@ pub struct BruteForceMatcher {
 
 impl BruteForceMatcher {
     /// Create new brute force matcher
-    pub fn new(config: BruteForceConfig) -> Self {
-        Self { config }
+    pub fn new(_config: BruteForceConfig) -> Self {
+        Self { _config }
     }
 
     /// Create default brute force matcher
@@ -322,7 +322,7 @@ impl BruteForceMatcher {
     ) -> Result<Vec<DescriptorMatch>> {
         let mut validated_matches = Vec::new();
 
-        // Create reverse matches
+        // Create reverse _matches
         let mut reverse_matches = HashMap::new();
         for (j, desc2) in descriptors2.iter().enumerate() {
             if let Some(m) = self.find_best_match(j, &desc2.vector, descriptors1)? {
@@ -351,7 +351,7 @@ impl BruteForceMatcher {
     ) -> Result<Vec<DescriptorMatch>> {
         let mut validated_matches = Vec::new();
 
-        // Create reverse matches
+        // Create reverse _matches
         let mut reverse_matches = HashMap::new();
         for (j, desc2) in descriptors2.iter().enumerate() {
             if let Some(m) = self.find_best_binary_match(j, desc2, descriptors1)? {
@@ -446,8 +446,8 @@ pub struct FlannMatcher {
 
 impl FlannMatcher {
     /// Create new FLANN matcher
-    pub fn new(config: FlannConfig) -> Self {
-        Self { config }
+    pub fn new(_config: FlannConfig) -> Self {
+        Self { _config }
     }
 
     /// Create default FLANN matcher
@@ -613,7 +613,7 @@ impl KdTree {
                     .max_by(|(_, a), (_, b)| {
                         a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)
                     })
-                    .map(|(i, _)| i)
+                    .map(|(i_)| i)
                     .unwrap();
 
                 if distance < neighbors[max_idx].1 {
@@ -654,8 +654,8 @@ impl KdTree {
 
 /// Calculate Euclidean distance between two points
 #[allow(dead_code)]
-fn euclidean_distance(p1: &[f32], p2: &[f32]) -> f32 {
-    p1.iter()
+fn euclidean_distance(_p1: &[f32], p2: &[f32]) -> f32 {
+    _p1.iter()
         .zip(p2.iter())
         .map(|(a, b)| (a - b).powi(2))
         .sum::<f32>()
@@ -670,9 +670,9 @@ pub struct RatioTestMatcher {
 
 impl RatioTestMatcher {
     /// Create new ratio test matcher
-    pub fn new(ratio_threshold: f32, distance_metric: DistanceMetric) -> Self {
+    pub fn new(_ratio_threshold: f32, distance_metric: DistanceMetric) -> Self {
         Self {
-            ratio_threshold,
+            _ratio_threshold,
             distance_metric,
         }
     }
@@ -720,9 +720,9 @@ pub struct CrossCheckMatcher {
 
 impl CrossCheckMatcher {
     /// Create new cross-check matcher
-    pub fn new(distance_metric: DistanceMetric) -> Self {
+    pub fn new(_distance_metric: DistanceMetric) -> Self {
         let config = BruteForceConfig {
-            distance_metric,
+            _distance_metric,
             max_distance: f32::MAX,
             cross_check: true,
             use_ratio_test: false,
@@ -752,8 +752,8 @@ pub struct RansacMatcher {
 
 impl RansacMatcher {
     /// Create new RANSAC matcher
-    pub fn new(config: RansacMatcherConfig) -> Self {
-        Self { config }
+    pub fn new(_config: RansacMatcherConfig) -> Self {
+        Self { _config }
     }
 
     /// Create default RANSAC matcher
@@ -801,7 +801,7 @@ impl RansacMatcher {
 
             let mut sample_indices = Vec::new();
             while sample_indices.len() < 4 {
-                let idx = rng.random_range(0..matches.len());
+                let idx = rng.gen_range(0..matches.len());
                 if !sample_indices.contains(&idx) {
                     sample_indices.push(idx);
                 }
@@ -813,7 +813,7 @@ impl RansacMatcher {
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
-                src_points.push([keypoints1[m.query_idx].x, keypoints1[m.query_idx].y]);
+                src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
                 dst_points.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
@@ -872,7 +872,7 @@ impl RansacMatcher {
 
             let mut sample_indices = Vec::new();
             while sample_indices.len() < 8 {
-                let idx = rng.random_range(0..matches.len());
+                let idx = rng.gen_range(0..matches.len());
                 if !sample_indices.contains(&idx) {
                     sample_indices.push(idx);
                 }
@@ -884,7 +884,7 @@ impl RansacMatcher {
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
-                src_points.push([keypoints1[m.query_idx].x, keypoints1[m.query_idx].y]);
+                src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
                 dst_points.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
@@ -941,7 +941,7 @@ impl RansacMatcher {
 
             let mut sample_indices = Vec::new();
             while sample_indices.len() < 5 {
-                let idx = rng.random_range(0..matches.len());
+                let idx = rng.gen_range(0..matches.len());
                 if !sample_indices.contains(&idx) {
                     sample_indices.push(idx);
                 }
@@ -953,7 +953,7 @@ impl RansacMatcher {
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
-                src_points.push([keypoints1[m.query_idx].x, keypoints1[m.query_idx].y]);
+                src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
                 dst_points.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
@@ -1011,7 +1011,7 @@ impl RansacMatcher {
 
             let mut sample_indices = Vec::new();
             while sample_indices.len() < 3 {
-                let idx = rng.random_range(0..matches.len());
+                let idx = rng.gen_range(0..matches.len());
                 if !sample_indices.contains(&idx) {
                     sample_indices.push(idx);
                 }
@@ -1023,7 +1023,7 @@ impl RansacMatcher {
 
             for &idx in &sample_indices {
                 let m = &matches[idx];
-                src_points.push([keypoints1[m.query_idx].x, keypoints1[m.query_idx].y]);
+                src_points.push([keypoints1[m.query_idx].x..keypoints1[m.query_idx].y]);
                 dst_points.push([keypoints2[m.train_idx].x, keypoints2[m.train_idx].y]);
             }
 
@@ -1057,18 +1057,18 @@ impl RansacMatcher {
 
 /// Estimate homography matrix from point correspondences using Direct Linear Transform (DLT)
 #[allow(dead_code)]
-fn estimate_homography(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
-    if src_points.len() != dst_points.len() || src_points.len() < 4 {
+fn estimate_homography(_src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
+    if _src_points.len() != dst_points.len() || _src_points.len() < 4 {
         return Err(VisionError::InvalidParameter(
             "Need at least 4 point correspondences".to_string(),
         ));
     }
 
-    // Normalize points for better numerical stability
+    // Normalize _points for better numerical stability
     let (src_norm, src_transform) = normalize_points(src_points);
     let (dst_norm, dst_transform) = normalize_points(dst_points);
 
-    // Build the coefficient matrix using normalized points
+    // Build the coefficient matrix using normalized _points
     let n = src_points.len();
     let mut a = Array2::zeros((2 * n, 9));
 
@@ -1133,8 +1133,8 @@ fn apply_homography(h: &Array2<f32>, point: [f32; 2]) -> [f32; 2] {
 
 /// Estimate affine transformation from point correspondences using least squares
 #[allow(dead_code)]
-fn estimate_affine(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
-    if src_points.len() != dst_points.len() || src_points.len() < 3 {
+fn estimate_affine(_src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
+    if _src_points.len() != dst_points.len() || _src_points.len() < 3 {
         return Err(VisionError::InvalidParameter(
             "Need at least 3 point correspondences".to_string(),
         ));
@@ -1185,11 +1185,11 @@ fn estimate_affine(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<A
 
 /// Apply affine transformation to a point
 #[allow(dead_code)]
-fn apply_affine(affine: &Array2<f32>, point: [f32; 2]) -> [f32; 2] {
+fn apply_affine(_affine: &Array2<f32>, point: [f32; 2]) -> [f32; 2] {
     let [x, y] = point;
     [
-        affine[[0, 0]] * x + affine[[0, 1]] * y + affine[[0, 2]],
-        affine[[1, 0]] * x + affine[[1, 1]] * y + affine[[1, 2]],
+        _affine[[0, 0]] * x + _affine[[0, 1]] * y + _affine[[0, 2]],
+        _affine[[1, 0]] * x + _affine[[1, 1]] * y + _affine[[1, 2]],
     ]
 }
 
@@ -1198,12 +1198,12 @@ pub mod utils {
     use super::*;
 
     /// Convert confidence score to match quality
-    pub fn confidence_to_quality(confidence: f32) -> MatchQuality {
-        if confidence > 0.8 {
+    pub fn confidence_to_quality(_confidence: f32) -> MatchQuality {
+        if _confidence > 0.8 {
             MatchQuality::Excellent
-        } else if confidence > 0.6 {
+        } else if _confidence > 0.6 {
             MatchQuality::Good
-        } else if confidence > 0.4 {
+        } else if _confidence > 0.4 {
             MatchQuality::Fair
         } else {
             MatchQuality::Poor
@@ -1233,13 +1233,13 @@ pub mod utils {
     }
 
     /// Calculate match statistics
-    pub fn calculate_match_statistics(matches: &[DescriptorMatch]) -> MatchStatistics {
-        if matches.is_empty() {
+    pub fn calculate_match_statistics(_matches: &[DescriptorMatch]) -> MatchStatistics {
+        if _matches.is_empty() {
             return MatchStatistics::default();
         }
 
-        let distances: Vec<f32> = matches.iter().map(|m| m.distance).collect();
-        let confidences: Vec<f32> = matches.iter().map(|m| m.confidence).collect();
+        let distances: Vec<f32> = _matches.iter().map(|m| m.distance).collect();
+        let confidences: Vec<f32> = _matches.iter().map(|m| m.confidence).collect();
 
         let mean_distance = distances.iter().sum::<f32>() / distances.len() as f32;
         let mean_confidence = confidences.iter().sum::<f32>() / confidences.len() as f32;
@@ -1256,7 +1256,7 @@ pub mod utils {
         };
 
         MatchStatistics {
-            count: matches.len(),
+            count: _matches.len(),
             mean_distance,
             median_distance,
             min_distance: distances.iter().fold(f32::INFINITY, |a, &b| a.min(b)),
@@ -1320,18 +1320,18 @@ impl Default for MatchStatistics {
 /// Helper functions for linear algebra operations
 /// Normalize points for better numerical stability in homography estimation
 #[allow(dead_code)]
-fn normalize_points(points: &[[f32; 2]]) -> (Vec<[f32; 2]>, Array2<f32>) {
-    if points.is_empty() {
+fn normalize_points(_points: &[[f32; 2]]) -> (Vec<[f32; 2]>, Array2<f32>) {
+    if _points.is_empty() {
         return (Vec::new(), Array2::eye(3));
     }
 
     // Compute centroid
-    let n = points.len() as f32;
-    let cx = points.iter().map(|p| p[0]).sum::<f32>() / n;
-    let cy = points.iter().map(|p| p[1]).sum::<f32>() / n;
+    let n = _points.len() as f32;
+    let cx = _points.iter().map(|p| p[0]).sum::<f32>() / n;
+    let cy = _points.iter().map(|p| p[1]).sum::<f32>() / n;
 
     // Compute average distance from centroid
-    let avg_dist = points
+    let avg_dist = _points
         .iter()
         .map(|p| ((p[0] - cx).powi(2) + (p[1] - cy).powi(2)).sqrt())
         .sum::<f32>()
@@ -1345,7 +1345,7 @@ fn normalize_points(points: &[[f32; 2]]) -> (Vec<[f32; 2]>, Array2<f32>) {
     };
 
     // Apply normalization transformation
-    let normalized: Vec<[f32; 2]> = points
+    let normalized: Vec<[f32; 2]> = _points
         .iter()
         .map(|p| [(p[0] - cx) * scale, (p[1] - cy) * scale])
         .collect();
@@ -1380,8 +1380,8 @@ fn compute_ata(a: &Array2<f32>) -> Array2<f32> {
 
 /// Find smallest eigenvector for homography estimation using power iteration
 #[allow(dead_code)]
-fn find_smallest_eigenvector_homography(matrix: &Array2<f32>) -> Result<Vec<f32>> {
-    let n = matrix.shape()[0];
+fn find_smallest_eigenvector_homography(_matrix: &Array2<f32>) -> Result<Vec<f32>> {
+    let n = _matrix.shape()[0];
     let mut v = vec![1.0; n];
     v[n - 1] = 1.0; // Bias toward the last element
 
@@ -1396,7 +1396,7 @@ fn find_smallest_eigenvector_homography(matrix: &Array2<f32>) -> Result<Vec<f32>
         let mut mv = vec![0.0; n];
         for i in 0..n {
             for j in 0..n {
-                mv[i] += matrix[[i, j]] * v[j];
+                mv[i] += _matrix[[i, j]] * v[j];
             }
         }
 
@@ -1427,8 +1427,8 @@ fn find_smallest_eigenvector_homography(matrix: &Array2<f32>) -> Result<Vec<f32>
 
 /// Compute 3x3 matrix inverse
 #[allow(dead_code)]
-fn matrix_inverse_3x3(matrix: &Array2<f32>) -> Result<Array2<f32>> {
-    let m = matrix;
+fn matrix_inverse_3x3(_matrix: &Array2<f32>) -> Result<Array2<f32>> {
+    let m = _matrix;
     let det = m[[0, 0]] * (m[[1, 1]] * m[[2, 2]] - m[[1, 2]] * m[[2, 1]])
         - m[[0, 1]] * (m[[1, 0]] * m[[2, 2]] - m[[1, 2]] * m[[2, 0]])
         + m[[0, 2]] * (m[[1, 0]] * m[[2, 1]] - m[[1, 1]] * m[[2, 0]]);
@@ -1561,7 +1561,7 @@ fn estimate_fundamental_matrix(
         ));
     }
 
-    // Normalize points
+    // Normalize _points
     let (src_norm, src_transform) = normalize_points(src_points);
     let (dst_norm, dst_transform) = normalize_points(dst_points);
 
@@ -1617,12 +1617,12 @@ fn estimate_essential_matrix(
 
 /// Compute epipolar error for a point correspondence
 #[allow(dead_code)]
-fn compute_epipolar_error(matrix: &Array2<f32>, p1: &[f32; 3], p2: &[f32; 3]) -> f32 {
+fn compute_epipolar_error(_matrix: &Array2<f32>, p1: &[f32; 3], p2: &[f32; 3]) -> f32 {
     // Compute F * p1
     let mut fp1 = [0.0f32; 3];
     for i in 0..3 {
         for j in 0..3 {
-            fp1[i] += matrix[[i, j]] * p1[j];
+            fp1[i] += _matrix[[i, j]] * p1[j];
         }
     }
 
@@ -1643,11 +1643,11 @@ fn compute_epipolar_error(matrix: &Array2<f32>, p1: &[f32; 3], p2: &[f32; 3]) ->
 
 /// Transpose a 3x3 matrix
 #[allow(dead_code)]
-fn transpose_3x3(matrix: &Array2<f32>) -> Array2<f32> {
+fn transpose_3x3(_matrix: &Array2<f32>) -> Array2<f32> {
     let mut result = Array2::zeros((3, 3));
     for i in 0..3 {
         for j in 0..3 {
-            result[[i, j]] = matrix[[j, i]];
+            result[[i, j]] = _matrix[[j, i]];
         }
     }
     result

@@ -101,7 +101,7 @@ impl PlatformInfo {
             os: std::env::consts::OS.to_string(),
             arch: std::env::consts::ARCH.to_string(),
             cpu_model: Self::detect_cpu_model(),
-            cpu_cores: num_cpus::get(),
+            cpu_cores: num, _cpus: get(),
             memory_gb: Self::detect_memory_gb(),
             rustc_version: Self::detect_rustc_version(),
             optimization_level: Self::detect_optimization_level(),
@@ -381,9 +381,9 @@ pub struct CrossPlatformRegressionDetector {
 
 impl CrossPlatformRegressionDetector {
     /// Create a new regression detector
-    pub fn new(config: CrossPlatformRegressionConfig) -> StatsResult<Self> {
+    pub fn new(_config: CrossPlatformRegressionConfig) -> StatsResult<Self> {
         let mut detector = Self {
-            config,
+            _config,
             baselines: HashMap::new(),
             historical_data: BTreeMap::new(),
         };
@@ -410,7 +410,7 @@ impl CrossPlatformRegressionDetector {
                     if path.extension().map_or(false, |ext| ext == "json") {
                         if let Ok(content) = fs::read_to_string(&path) {
                             if let Ok(baseline) =
-                                serde_json::from_str::<PerformanceBaseline>(&content)
+                                serde_json::from, _str::<PerformanceBaseline>(&content)
                             {
                                 let key = format!(
                                     "{}-{}",
@@ -682,7 +682,7 @@ impl CrossPlatformRegressionDetector {
             .values()
             .flatten()
             .filter(|_m| {
-                // Would match function name from context in real implementation
+                // Would match function _name from context in real implementation
                 true
             })
             .collect();
@@ -820,11 +820,9 @@ impl CrossPlatformRegressionDetector {
 
     /// Generate performance recommendations
     fn generate_recommendations(
-        &self,
-        _function_name: &str,
+        &self, _function_name: &str,
         performance_change_percent: f64,
-        baseline_stats: &BaselineStatistics,
-        _current_measurement: &PerformanceMeasurement,
+        baseline_stats: &BaselineStatistics_current, _measurement: &PerformanceMeasurement,
     ) -> StatsResult<Vec<PerformanceRecommendation>> {
         let mut recommendations = Vec::new();
 

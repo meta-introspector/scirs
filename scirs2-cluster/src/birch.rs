@@ -4,7 +4,7 @@
 //! (Clustering Feature tree) to summarize the data and then applies a global clustering
 //! algorithm on the leaf nodes.
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
+use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -26,20 +26,20 @@ struct ClusteringFeature<F: Float> {
 #[allow(dead_code)]
 impl<F: Float + FromPrimitive + ScalarOperand> ClusteringFeature<F> {
     /// Create a new CF from a single data point
-    fn new(data_point: ArrayView1<F>) -> Self {
-        let squared_sum = data_point.dot(&data_point);
+    fn new(_data_point: ArrayView1<F>) -> Self {
+        let squared_sum = _data_point.dot(&_data_point);
         Self {
             n: 1,
-            linear_sum: data_point.to_owned(),
+            linear_sum: _data_point.to_owned(),
             squared_sum,
         }
     }
 
     /// Create an empty CF
-    fn empty(n_features: usize) -> Self {
+    fn empty(_n_features: usize) -> Self {
         Self {
             n: 0,
-            linear_sum: Array1::zeros(n_features),
+            linear_sum: Array1::zeros(_n_features),
             squared_sum: F::zero(),
         }
     }
@@ -176,9 +176,9 @@ pub struct Birch<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug + ScalarOperand> Birch<F> {
     /// Create a new BIRCH instance
-    pub fn new(options: BirchOptions<F>) -> Self {
+    pub fn new(_options: BirchOptions<F>) -> Self {
         Self {
-            options,
+            _options,
             root: None,
             leaf_entries: Vec::new(),
             n_features: None,
@@ -554,7 +554,7 @@ pub struct BirchStatistics<F: Float> {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::birch::{birch, BirchOptions};
+/// use scirs2__cluster::birch::{birch, BirchOptions};
 ///
 /// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 2.0,
@@ -573,12 +573,12 @@ pub struct BirchStatistics<F: Float> {
 /// let (centroids, labels) = birch(data.view(), options).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn birch<F>(data: ArrayView2<F>, options: BirchOptions<F>) -> Result<(Array2<F>, Array1<i32>)>
+pub fn birch<F>(_data: ArrayView2<F>, options: BirchOptions<F>) -> Result<(Array2<F>, Array1<i32>)>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand,
 {
     let mut model = Birch::new(options);
-    model.fit(data)?;
+    model.fit(_data)?;
     model.extract_clusters()
 }
 

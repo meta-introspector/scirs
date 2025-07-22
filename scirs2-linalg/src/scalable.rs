@@ -130,8 +130,8 @@ impl ScalableConfig {
 ///
 /// * Aspect ratio classification
 #[allow(dead_code)]
-pub fn classify_aspect_ratio<F>(matrix: &ArrayView2<F>, threshold: f64) -> AspectRatio {
-    let (m, n) = matrix.dim();
+pub fn classify_aspect_ratio<F>(_matrix: &ArrayView2<F>, threshold: f64) -> AspectRatio {
+    let (m, n) = _matrix.dim();
     let ratio = m as f64 / n as f64;
 
     if ratio > threshold {
@@ -178,7 +178,7 @@ pub fn tsqr<F>(
 where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
-    let (_m, _n) = matrix.dim();
+    let (_m_n) = matrix.dim();
 
     // Verify this is actually a tall matrix
     if classify_aspect_ratio(matrix, config.aspect_threshold) != AspectRatio::TallSkinny {
@@ -279,7 +279,7 @@ pub fn lq_decomposition<F>(
 where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
-    let (m, _n) = matrix.dim();
+    let (m, n) = matrix.dim();
 
     // Verify this is a short-and-fat matrix
     if classify_aspect_ratio(matrix, config.aspect_threshold) != AspectRatio::ShortFat {

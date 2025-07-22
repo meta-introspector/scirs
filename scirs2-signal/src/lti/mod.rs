@@ -14,7 +14,7 @@
 //! ## Creating Systems
 //!
 //! ```rust
-//! use scirs2_signal::lti::{design, systems::TransferFunction};
+//! use scirs2__signal::lti::{design, systems::TransferFunction};
 //!
 //! // Transfer function: H(s) = 1/(s+1)
 //! let sys1 = design::tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
@@ -36,7 +36,7 @@
 //! ## System Analysis
 //!
 //! ```rust
-//! use scirs2_signal::lti::{design::{tf, ss}, analysis::{bode, analyze_controllability}};
+//! use scirs2__signal::lti::{design::{tf, ss}, analysis::{bode, analyze_controllability}};
 //!
 //! let sys = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
 //!
@@ -54,7 +54,7 @@
 //! ## System Interconnections
 //!
 //! ```rust
-//! use scirs2_signal::lti::design::{tf, series, parallel, feedback};
+//! use scirs2__signal::lti::design::{tf, series, parallel, feedback};
 //!
 //! let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
 //! let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();
@@ -72,7 +72,7 @@
 //! ## Robust Analysis
 //!
 //! ```rust
-//! use scirs2_signal::lti::{design::ss, robust_analysis::{robust_control_observability_analysis, RobustAnalysisConfig}};
+//! use scirs2__signal::lti::{design::ss, robust_analysis::{robust_control_observability_analysis, RobustAnalysisConfig}};
 //!
 //! // Create a multi-input, multi-output system
 //! let sys = ss(
@@ -116,7 +116,12 @@
 //! - [`robust_analysis`] - Enhanced robust controllability/observability analysis
 //! - [`design`] - System creation and interconnection functions
 
+use crate::lti::TransferFunction;
+use num__complex::Complex64;
+use std::f64::consts::PI;
+
 // Re-export all public modules
+#[allow(unused_imports)]
 pub mod analysis;
 pub mod design;
 pub mod robust_analysis;
@@ -134,7 +139,7 @@ pub use analysis::{
 };
 
 // Re-export robust analysis functions and types
-pub use robust_analysis::{
+pub use robust__analysis::{
     robust_control_observability_analysis, AdditiveRobustness, ConfidenceIntervals,
     ControlEffortAnalysis, EnhancedControllabilityAnalysis, EnhancedObservabilityAnalysis,
     EstimationAccuracyAnalysis, FrequencyDomainAnalysis, MinimumEnergyAnalysis,
@@ -161,7 +166,7 @@ pub use design::{
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::system;
+/// use scirs2__signal::lti::system;
 ///
 /// // Create systems
 /// let g1 = system::tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
@@ -176,9 +181,10 @@ pub mod system {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-    use num_complex::Complex64;
-
+use approx::assert_relative_eq;
+    use super::*;
+use crate::lti::design::tf;
+    
     #[test]
     fn test_module_api_compatibility() {
         // Test that the main API functions are accessible
@@ -239,6 +245,8 @@ mod tests {
 
     #[test]
     fn test_comprehensive_analysis() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test a complete analysis workflow
         let ss_sys = ss(
             vec![-1.0, 0.0, 1.0, -2.0], // 2x2 A matrix
@@ -380,4 +388,9 @@ mod tests {
         assert_eq!(impulse.len(), t.len());
         assert_eq!(step.len(), t.len());
     }
+}
+
+#[allow(dead_code)]
+fn tf(_num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
+    TransferFunction::new(_num, den)
 }

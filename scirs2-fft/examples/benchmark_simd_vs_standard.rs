@@ -3,8 +3,8 @@
 //! This example provides a detailed performance comparison between the
 //! SIMD-optimized FFT implementations and the standard implementation.
 
-use num_complex::Complex64;
-use scirs2_fft::{fft, fft2, fft2_simd, fft_simd, fftn, fftn_simd, simd_support_available};
+use num__complex::Complex64;
+use scirs2__fft::{fft, fft2, fft2_simd, fft_simd, fftn, fftn_simd, simd_support_available};
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
@@ -67,8 +67,8 @@ fn record_benchmark(
 
 // Print the benchmark summary
 #[allow(dead_code)]
-fn print_summary(benchmark_results: &[BenchmarkResult]) {
-    for result in benchmark_results {
+fn print_summary(_benchmark_results: &[BenchmarkResult]) {
+    for result in _benchmark_results {
         let speedup = result.standard_time.as_secs_f64() / result.simd_time.as_secs_f64();
         println!(
             "{:<14} | {:<10} | {:<14.6} | {:<14.2}x",
@@ -82,10 +82,10 @@ fn print_summary(benchmark_results: &[BenchmarkResult]) {
 
 // Generate a test signal
 #[allow(dead_code)]
-fn generate_test_signal(size: usize) -> Vec<f64> {
-    let mut signal = Vec::with_capacity(size);
-    for i in 0..size {
-        let t = i as f64 / size as f64;
+fn generate_test_signal(_size: usize) -> Vec<f64> {
+    let mut signal = Vec::with_capacity(_size);
+    for i in 0.._size {
+        let t = i as f64 / _size as f64;
         let value = (2.0 * PI * 4.0 * t).sin() + 0.5 * (2.0 * PI * 16.0 * t).sin();
         signal.push(value);
     }
@@ -94,10 +94,10 @@ fn generate_test_signal(size: usize) -> Vec<f64> {
 
 // Generate a complex test signal
 #[allow(dead_code)]
-fn generate_complex_signal(size: usize) -> Vec<Complex64> {
-    let mut signal = Vec::with_capacity(size);
-    for i in 0..size {
-        let t = i as f64 / size as f64;
+fn generate_complex_signal(_size: usize) -> Vec<Complex64> {
+    let mut signal = Vec::with_capacity(_size);
+    for i in 0.._size {
+        let t = i as f64 / _size as f64;
         let re = (2.0 * PI * 4.0 * t).sin();
         let im = (2.0 * PI * 4.0 * t).cos() * 0.5;
         signal.push(Complex64::new(re, im));
@@ -159,7 +159,7 @@ fn run_benchmark<F, G>(
 
 // Run benchmarks for 1D FFT
 #[allow(dead_code)]
-fn run_1d_benchmarks(results: &mut Vec<BenchmarkResult>) {
+fn run_1d_benchmarks(_results: &mut Vec<BenchmarkResult>) {
     for &size in &[1024, 4096, 16384, 65536] {
         let signal = generate_test_signal(size);
         let iterations = if size < 10000 { 100 } else { 20 };
@@ -168,7 +168,7 @@ fn run_1d_benchmarks(results: &mut Vec<BenchmarkResult>) {
         let simd_fn = || fft_simd(&signal, None).unwrap();
 
         run_benchmark(
-            results,
+            _results,
             "1D FFT",
             &format!("{size}p"),
             iterations,
@@ -186,7 +186,7 @@ fn run_1d_benchmarks(results: &mut Vec<BenchmarkResult>) {
         let simd_fn = || fft_simd(&signal, None).unwrap();
 
         run_benchmark(
-            results,
+            _results,
             "1D FFT (complex)",
             &format!("{size}p"),
             iterations,
@@ -198,7 +198,7 @@ fn run_1d_benchmarks(results: &mut Vec<BenchmarkResult>) {
 
 // Run benchmarks for 2D FFT
 #[allow(dead_code)]
-fn run_2d_benchmarks(results: &mut Vec<BenchmarkResult>) {
+fn run_2d_benchmarks(_results: &mut Vec<BenchmarkResult>) {
     for &size in &[32, 64, 128, 256] {
         let total_elements = size * size;
         let signal = generate_test_signal(total_elements);
@@ -217,7 +217,7 @@ fn run_2d_benchmarks(results: &mut Vec<BenchmarkResult>) {
         };
 
         run_benchmark(
-            results,
+            _results,
             "2D FFT",
             &format!("{size}x{size}"),
             iterations,
@@ -229,7 +229,7 @@ fn run_2d_benchmarks(results: &mut Vec<BenchmarkResult>) {
 
 // Run benchmarks for N-dimensional FFT
 #[allow(dead_code)]
-fn run_nd_benchmarks(results: &mut Vec<BenchmarkResult>) {
+fn run_nd_benchmarks(_results: &mut Vec<BenchmarkResult>) {
     // 3D FFT benchmark
     {
         let width = 16;
@@ -256,7 +256,7 @@ fn run_nd_benchmarks(results: &mut Vec<BenchmarkResult>) {
         };
 
         run_benchmark(
-            results,
+            _results,
             "3D FFT",
             &format!("{width}x{height}x{depth}"),
             iterations,
@@ -292,7 +292,7 @@ fn run_nd_benchmarks(results: &mut Vec<BenchmarkResult>) {
         };
 
         run_benchmark(
-            results,
+            _results,
             "4D FFT",
             &format!("{dim1}x{dim2}x{dim3}x{dim4}"),
             iterations,

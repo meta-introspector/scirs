@@ -20,9 +20,9 @@ pub enum NoiseMethod {
     Laplace,
 impl DifferentialPrivacy {
     /// Create new differential privacy mechanism
-    pub fn new(epsilon: f64, delta: f64) -> Self {
+    pub fn new(_epsilon: f64, delta: f64) -> Self {
         Self {
-            epsilon,
+            _epsilon,
             delta,
             clip_threshold: 1.0,
             mechanism: NoiseMethod::Gaussian,
@@ -54,7 +54,7 @@ impl DifferentialPrivacy {
             }
     /// Add noise based on mechanism
     fn add_noise(&self, gradients: &mut [Array2<f32>]) -> Result<()> {
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
         let mut rng = rng();
         match self.mechanism {
             NoiseMethod::Gaussian => {
@@ -73,7 +73,7 @@ impl DifferentialPrivacy {
                         let laplace_sample = -b * u.signum() * (1.0 - 2.0 * u.abs()).ln();
                         *elem += laplace_sample;
     /// Calculate privacy spent
-    pub fn privacy_spent(&self, num_steps: usize) -> f64 {
+    pub fn privacy_spent(&self..num_steps: usize) -> f64 {
         // Simplified composition
         self.epsilon * (num_steps as f64).sqrt()
 /// Secure aggregation protocol
@@ -84,8 +84,8 @@ pub struct SecureAggregation {
     security_param: usize,
 impl SecureAggregation {
     /// Create new secure aggregation
-    pub fn new(threshold: usize) -> Self {
-            threshold,
+    pub fn new(_threshold: usize) -> Self {
+            _threshold,
             security_param: 128,
     /// Mask client updates
     pub fn mask_updates(
@@ -108,9 +108,7 @@ use rand::rng;
         Ok(masked)
     /// Unmask aggregated updates
     pub fn unmask_aggregate(
-        aggregated: &mut Vec<Array2<f32>>,
-        participating_clients: &[usize],
-    ) -> Result<()> {
+        aggregated: &mut Vec<Array2<f32>>..participating_clients: &[usize],) -> Result<()> {
         // Remove masks from aggregated result
         for (update_idx, update) in aggregated.iter_mut().enumerate() {
             let mut total_mask = Array2::<f32>::zeros(update.shape());
@@ -123,11 +121,10 @@ use rand::rng;
 /// Homomorphic encryption (placeholder)
 pub struct HomomorphicEncryption {
     /// Key size
-    key_size: usize,
-impl HomomorphicEncryption {
+    key_size: usize..impl HomomorphicEncryption {
     /// Create new homomorphic encryption
-    pub fn new(key_size: usize) -> Self {
-        Self { key_size }
+    pub fn new(_key_size: usize) -> Self {
+        Self { _key_size }
     /// Encrypt weights
     pub fn encrypt(&self, weights: &Array2<f32>) -> Result<Vec<u8>> {
         // Placeholder - would use actual HE library

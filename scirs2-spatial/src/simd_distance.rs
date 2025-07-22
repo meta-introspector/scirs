@@ -20,7 +20,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::simd_distance::{simd_euclidean_distance_batch, parallel_pdist};
+//! use scirs2__spatial::simd_distance::{simd_euclidean_distance_batch, parallel_pdist};
 //! use ndarray::array;
 //!
 //! // SIMD batch distance calculation
@@ -64,7 +64,7 @@ impl SimdMetric {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::simd_distance::SimdMetric;
+    /// use scirs2__spatial::simd_distance::SimdMetric;
     ///
     /// let metric = SimdMetric::Euclidean;
     /// assert_eq!(metric.name(), "euclidean");
@@ -211,11 +211,11 @@ pub fn simd_euclidean_distance_batch(
 /// # Returns
 /// * Condensed distance matrix, shape (n*(n-1)/2,)
 #[allow(dead_code)]
-pub fn parallel_pdist(points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResult<Array1<f64>> {
-    let n_points = points.nrows();
+pub fn parallel_pdist(_points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResult<Array1<f64>> {
+    let n_points = _points.nrows();
     if n_points < 2 {
         return Err(SpatialError::ValueError(
-            "Need at least 2 points for distance computation".to_string(),
+            "Need at least 2 _points for distance computation".to_string(),
         ));
     }
 
@@ -225,8 +225,7 @@ pub fn parallel_pdist(points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResu
         "euclidean" => SimdMetric::Euclidean,
         "manhattan" => SimdMetric::Manhattan,
         "sqeuclidean" => SimdMetric::SquaredEuclidean,
-        "chebyshev" => SimdMetric::Chebyshev,
-        _ => {
+        "chebyshev" => SimdMetric::Chebyshev_ => {
             return Err(SpatialError::ValueError(format!(
                 "Unsupported metric: {metric}"
             )))
@@ -240,8 +239,8 @@ pub fn parallel_pdist(points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResu
             // Convert linear index to (i, j) pair
             let (i, j) = linear_to_condensed_indices(idx, n_points);
 
-            let p1 = points.row(i);
-            let p2 = points.row(j);
+            let p1 = _points.row(i);
+            let p2 = _points.row(j);
 
             match metric_enum {
                 SimdMetric::Euclidean => {
@@ -301,8 +300,7 @@ pub fn parallel_cdist(
         "euclidean" => SimdMetric::Euclidean,
         "manhattan" => SimdMetric::Manhattan,
         "sqeuclidean" => SimdMetric::SquaredEuclidean,
-        "chebyshev" => SimdMetric::Chebyshev,
-        _ => {
+        "chebyshev" => SimdMetric::Chebyshev_ => {
             return Err(SpatialError::ValueError(format!(
                 "Unsupported metric: {metric}"
             )))
@@ -369,13 +367,13 @@ pub fn simd_knn_search(
 ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
     if query_points.ncols() != data_points.ncols() {
         return Err(SpatialError::ValueError(
-            "Query and data points must have the same dimension".to_string(),
+            "Query and data _points must have the same dimension".to_string(),
         ));
     }
 
     if k > data_points.nrows() {
         return Err(SpatialError::ValueError(
-            "k cannot be larger than the number of data points".to_string(),
+            "k cannot be larger than the number of data _points".to_string(),
         ));
     }
 
@@ -389,8 +387,7 @@ pub fn simd_knn_search(
         "euclidean" => SimdMetric::Euclidean,
         "manhattan" => SimdMetric::Manhattan,
         "sqeuclidean" => SimdMetric::SquaredEuclidean,
-        "chebyshev" => SimdMetric::Chebyshev,
-        _ => {
+        "chebyshev" => SimdMetric::Chebyshev_ => {
             return Err(SpatialError::ValueError(format!(
                 "Unsupported metric: {metric}"
             )))
@@ -457,10 +454,10 @@ pub fn simd_knn_search(
 
 /// Convert linear index to (i, j) indices for condensed distance matrix
 #[allow(dead_code)]
-fn linear_to_condensed_indices(linear_idx: usize, n: usize) -> (usize, usize) {
+fn linear_to_condensed_indices(_linear_idx: usize, n: usize) -> (usize, usize) {
     // For condensed distance matrix where entry (i,j) with i < j is stored
     // at position (n-1-i)*(n-i)/2 + (j-i-1)
-    let mut k = linear_idx;
+    let mut k = _linear_idx;
     let mut i = 0;
 
     while k >= n - i - 1 {
@@ -474,8 +471,6 @@ fn linear_to_condensed_indices(linear_idx: usize, n: usize) -> (usize, usize) {
 
 /// Advanced-optimized SIMD-accelerated clustering algorithms
 pub mod advanced_simd_clustering {
-    use super::*;
-    use ndarray::{Array1, Array2};
 
     /// Advanced-optimized SIMD K-means implementation with vectorized operations
     pub struct AdvancedSimdKMeans {
@@ -499,13 +494,13 @@ pub mod advanced_simd_clustering {
         }
 
         /// Configure mixed precision (f32 for speed where possible)
-        pub fn with_mixed_precision(mut self, use_mixed_precision: bool) -> Self {
+        pub fn with_mixed_precision(mut use_mixed_precision: bool) -> Self {
             self.use_mixed_precision = use_mixed_precision;
             self
         }
 
         /// Set block size for cache-optimized processing
-        pub fn with_block_size(mut self, block_size: usize) -> Self {
+        pub fn with_block_size(mut block_size: usize) -> Self {
             self.block_size = block_size;
             self
         }
@@ -621,7 +616,7 @@ pub mod advanced_simd_clustering {
                 let max_idx = min_distances
                     .indexed_iter()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                    .map(|(idx, _)| idx)
+                    .map(|(idx_)| idx)
                     .unwrap_or(k % n_points);
 
                 centroids.row_mut(k).assign(&points.row(max_idx));
@@ -667,7 +662,7 @@ pub mod advanced_simd_clustering {
                     let best_k = distances_row
                         .indexed_iter()
                         .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                        .map(|(idx, _)| idx)
+                        .map(|(idx_)| idx)
                         .unwrap_or(0);
 
                     assignments[point_idx] = best_k;
@@ -738,9 +733,9 @@ pub mod advanced_simd_clustering {
         }
 
         /// Compute maximum centroid movement using SIMD operations
-        fn compute_max_centroid_movement(&self, _centroids: &ndarray::ArrayView2<f64>) -> f64 {
+        fn compute_max_centroid_movement(_centroids: &ndarray::ArrayView2<f64>) -> f64 {
             // For simplicity, return a small value indicating convergence
-            // In a full implementation, this would compare with previous centroids
+            // In a full implementation, this would compare with previous _centroids
             self.tolerance * 0.5
         }
     }
@@ -753,7 +748,7 @@ pub mod advanced_simd_clustering {
     }
 
     impl Default for AdvancedSimdNearestNeighbors {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self::new()
         }
     }
@@ -779,7 +774,7 @@ pub mod advanced_simd_clustering {
 
             if k > n_data {
                 return Err(SpatialError::ValueError(format!(
-                    "k ({k}) cannot be larger than number of data points ({n_data})"
+                    "k ({k}) cannot be larger than number of data _points ({n_data})"
                 )));
             }
 
@@ -834,9 +829,7 @@ pub mod advanced_simd_clustering {
 
 /// Hardware-specific SIMD optimizations for maximum performance
 pub mod hardware_specific_simd {
-    use super::*;
-    use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
-    use scirs2_core::simd_ops::PlatformCapabilities;
+use ndarray::s;
 
     /// Advanced-optimized distance calculations with hardware-specific code paths
     pub struct HardwareOptimizedDistances {
@@ -844,7 +837,7 @@ pub mod hardware_specific_simd {
     }
 
     impl Default for HardwareOptimizedDistances {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self::new()
         }
     }
@@ -883,7 +876,7 @@ pub mod hardware_specific_simd {
         }
 
         /// AVX-512 optimized Euclidean distance (8x f64 vectors)
-        fn euclidean_distance_avx512(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
+        fn euclidean_distance_avx512(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
             const SIMD_WIDTH: usize = 8;
             let len = a.len();
             let mut sum = 0.0;
@@ -913,7 +906,7 @@ pub mod hardware_specific_simd {
         }
 
         /// AVX2 optimized Euclidean distance (4x f64 vectors)
-        fn euclidean_distance_avx2(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
+        fn euclidean_distance_avx2(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
             const SIMD_WIDTH: usize = 4;
             let len = a.len();
             let mut sum = 0.0;
@@ -944,7 +937,7 @@ pub mod hardware_specific_simd {
         }
 
         /// ARM NEON optimized Euclidean distance
-        fn euclidean_distance_neon(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
+        fn euclidean_distance_neon(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
             // NEON operations for ARM processors
             const SIMD_WIDTH: usize = 2; // NEON f64 works with 2-element vectors
             let len = a.len();
@@ -973,7 +966,7 @@ pub mod hardware_specific_simd {
         }
 
         /// SSE fallback optimized Euclidean distance
-        fn euclidean_distance_sse(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
+        fn euclidean_distance_sse(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
             const SIMD_WIDTH: usize = 2; // SSE f64 works with 2-element vectors
             let len = a.len();
             let mut sum = 0.0;
@@ -1076,7 +1069,7 @@ pub mod hardware_specific_simd {
 
             if k > n_data {
                 return Err(SpatialError::ValueError(format!(
-                    "k ({k}) cannot be larger than number of data points ({n_data})"
+                    "k ({k}) cannot be larger than number of data _points ({n_data})"
                 )));
             }
 
@@ -1093,7 +1086,7 @@ pub mod hardware_specific_simd {
                     |(query_idx, (mut idx_row, mut dist_row))| -> SpatialResult<()> {
                         let query = query_points.row(query_idx);
 
-                        // Vectorized distance computation to all data points
+                        // Vectorized distance computation to all data _points
                         let all_distances = self.compute_distances_to_all(&query, data_points)?;
 
                         // Find k smallest using partial sort
@@ -1130,7 +1123,7 @@ pub mod hardware_specific_simd {
             let n_data = data_points.nrows();
             let mut distances = Array1::zeros(n_data);
 
-            // Process data points in batches for cache efficiency
+            // Process data _points in batches for cache efficiency
             const BATCH_SIZE: usize = 32;
 
             for batch_start in (0..n_data).step_by(BATCH_SIZE) {
@@ -1157,7 +1150,7 @@ pub mod hardware_specific_simd {
         }
 
         /// Report hardware-specific capabilities
-        pub fn report_capabilities(&self) {
+        pub fn report_capabilities() {
             println!("Hardware-Specific SIMD Capabilities:");
             println!("  AVX-512: {}", self.capabilities.avx512_available);
             println!("  AVX2: {}", self.capabilities.avx2_available);
@@ -1170,8 +1163,6 @@ pub mod hardware_specific_simd {
 
 /// Mixed-precision SIMD operations for enhanced performance
 pub mod mixed_precision_simd {
-    use super::*;
-    use ndarray::{Array1, ArrayView1, ArrayView2};
 
     /// Mixed precision distance computation (f32 where precision allows)
     pub fn simd_euclidean_distance_f32(a: &[f32], b: &[f32]) -> SpatialResult<f32> {
@@ -1261,7 +1252,6 @@ pub mod mixed_precision_simd {
 
 /// Performance benchmarking utilities with advanced metrics
 pub mod bench {
-    use super::*;
     use std::time::Instant;
 
     /// Comprehensive SIMD performance benchmarking
@@ -1334,7 +1324,7 @@ pub mod bench {
         }
 
         /// Print detailed benchmark report
-        pub fn report(&self) {
+        pub fn report() {
             println!("Advanced-SIMD Performance Benchmark Results:");
             println!("  Scalar time:      {:.6} seconds", self.scalar_time);
             println!(
@@ -1344,7 +1334,7 @@ pub mod bench {
 
             if let (Some(f32_time), Some(f32_speedup)) = (self.simd_f32_time, self.simd_f32_speedup)
             {
-                println!("  SIMD f32 time:    {f32_time:.6} seconds ({f32_speedup:.2}x speedup)");
+                println!("  SIMD f32 time:    {f32_time: .6} seconds ({f32_speedup: .2}x speedup)");
             }
         }
     }
@@ -1379,7 +1369,6 @@ pub mod bench {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
     use ndarray::array;
 
@@ -1561,7 +1550,7 @@ mod tests {
 
     #[test]
     fn test_hardware_optimized_distances() {
-        use super::hardware_specific_simd::HardwareOptimizedDistances;
+        use super::hardware_specific__simd::HardwareOptimizedDistances;
 
         let optimizer = HardwareOptimizedDistances::new();
 
@@ -1578,7 +1567,6 @@ mod tests {
 
     #[test]
     fn test_hardware_optimized_batch_matrix() {
-        use super::hardware_specific_simd::HardwareOptimizedDistances;
 
         let points = array![
             [0.0, 0.0],
@@ -1613,7 +1601,6 @@ mod tests {
 
     #[test]
     fn test_hardware_optimized_knn() {
-        use super::hardware_specific_simd::HardwareOptimizedDistances;
 
         let data_points = array![
             [0.0, 0.0],
@@ -1646,7 +1633,7 @@ mod tests {
 
     #[test]
     fn test_mixed_precision_adaptive() {
-        use super::mixed_precision_simd::adaptive_precision_distance_matrix;
+        use super::mixed_precision__simd::adaptive_precision_distance_matrix;
 
         // Small values that fit in f32 range
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -1665,7 +1652,6 @@ mod tests {
 
     #[test]
     fn test_simd_capabilities_reporting() {
-        use super::hardware_specific_simd::HardwareOptimizedDistances;
 
         let optimizer = HardwareOptimizedDistances::new();
 

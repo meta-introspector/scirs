@@ -33,24 +33,24 @@ struct Matrix {
 }
 
 impl Matrix {
-    fn new(rows: usize, cols: usize) -> Self {
+    fn new(_rows: usize, cols: usize) -> Self {
         Self {
-            data: vec![0.0; rows * cols],
-            rows,
+            data: vec![0.0; _rows * cols],
+            _rows,
             cols,
         }
     }
 
-    fn from_vec(data: Vec<f64>, rows: usize, cols: usize) -> Result<Self> {
-        if data.len() != rows * cols {
+    fn from_vec(_data: Vec<f64>, rows: usize, cols: usize) -> Result<Self> {
+        if _data.len() != rows * cols {
             return Err(TestError::InvalidArgument(format!(
                 "Data length {} doesn't match dimensions {}x{}",
-                data.len(),
+                _data.len(),
                 rows,
                 cols
             )));
         }
-        Ok(Self { data, rows, cols })
+        Ok(Self { _data, rows, cols })
     }
 
     fn get(&self, i: usize, j: usize) -> f64 {
@@ -158,13 +158,13 @@ struct DenseLayer {
 }
 
 impl DenseLayer {
-    fn new(input_dim: usize, output_dim: usize) -> Self {
-        let mut weights = Matrix::new(input_dim, output_dim);
+    fn new(_input_dim: usize, output_dim: usize) -> Self {
+        let mut weights = Matrix::new(_input_dim, output_dim);
         let biases = vec![0.0; output_dim];
         
         // Xavier initialization
-        let scale = (2.0 / input_dim as f64).sqrt();
-        for i in 0..input_dim {
+        let scale = (2.0 / _input_dim as f64).sqrt();
+        for i in 0.._input_dim {
             for j in 0..output_dim {
                 weights.set(i, j, scale * (((i + j) as f64 * 0.1) - 0.05));
             }

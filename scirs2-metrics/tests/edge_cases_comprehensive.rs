@@ -5,7 +5,7 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::{array, Array1, Array2};
-use scirs2_metrics::{
+use scirs2__metrics::{
     anomaly::{js_divergence, kl_divergence},
     classification::{accuracy_score, f1_score, precision_score, recall_score},
     clustering::silhouette_score,

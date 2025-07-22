@@ -106,10 +106,10 @@ pub struct TrainingSession<F: Float + Debug + ScalarOperand> {
 
 impl<F: Float + Debug + ScalarOperand> TrainingSession<F> {
     /// Create a new training session
-    pub fn new(config: TrainingConfig) -> Self {
+    pub fn new(_config: TrainingConfig) -> Self {
         Self {
             history: HashMap::new(),
-            initial_learning_rate: F::from(config.learning_rate).unwrap(),
+            initial_learning_rate: F::from(_config.learning_rate).unwrap(),
             epochs_trained: 0,
             current_epoch: 0,
             best_validation_score: None,

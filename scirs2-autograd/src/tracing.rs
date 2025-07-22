@@ -378,8 +378,7 @@ impl ExecutionTracer {
             EventType::OperationExecution { duration, .. } => {
                 *duration >= self.config.min_operation_duration
             }
-            EventType::MemoryAllocation { size, .. } => *size >= self.config.min_memory_threshold,
-            _ => true,
+            EventType::MemoryAllocation { size, .. } => *size >= self.config.min_memory_threshold_ => true,
         }
     }
 
@@ -392,7 +391,7 @@ impl ExecutionTracer {
     }
 
     #[allow(dead_code)]
-    fn compute_gradient_norm<F: Float>(&self, _gradient: &Tensor<F>) -> f64 {
+    fn compute_gradient_norm<F: Float>(&self_gradient: &Tensor<F>) -> f64 {
         // Simplified implementation - would compute actual L2 norm
         1.0
     }
@@ -773,23 +772,23 @@ pub fn init_tracer() -> Arc<Mutex<ExecutionTracer>> {
 
 /// Configure global tracing
 #[allow(dead_code)]
-pub fn configure_tracing(config: TracingConfig) -> Result<(), TracingError> {
+pub fn configure_tracing(_config: TracingConfig) -> Result<(), TracingError> {
     let tracer = init_tracer();
     let mut tracer_guard = tracer
         .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
-    tracer_guard.configure(config);
+    tracer_guard.configure(_config);
     Ok(())
 }
 
 /// Start a new trace session
 #[allow(dead_code)]
-pub fn start_trace_session(name: &str) -> Result<TraceSessionId, TracingError> {
+pub fn start_trace_session(_name: &str) -> Result<TraceSessionId, TracingError> {
     let tracer = init_tracer();
     let mut tracer_guard = tracer
         .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
-    Ok(tracer_guard.start_session(name))
+    Ok(tracer_guard.start_session(_name))
 }
 
 /// End the current trace session
@@ -830,20 +829,20 @@ pub fn get_performance_analysis() -> Result<PerformanceAnalysis, TracingError> {
 
 /// Export traces to a file
 #[allow(dead_code)]
-pub fn export_traces(format: ExportFormat) -> Result<String, TracingError> {
+pub fn export_traces(_format: ExportFormat) -> Result<String, TracingError> {
     let tracer = init_tracer();
     let tracer_guard = tracer
         .lock()
         .map_err(|_| TracingError::ConfigError("Failed to acquire tracer lock".to_string()))?;
-    tracer_guard.export_traces(format)
+    tracer_guard.export_traces(_format)
 }
 
 /// Enable or disable tracing globally
 #[allow(dead_code)]
-pub fn set_tracing_enabled(enabled: bool) -> Result<(), TracingError> {
+pub fn set_tracing_enabled(_enabled: bool) -> Result<(), TracingError> {
     let config = TracingConfig {
-        trace_operations: enabled,
-        trace_gradients: enabled,
+        trace_operations: _enabled,
+        trace_gradients: _enabled,
         ..Default::default()
     };
     configure_tracing(config)

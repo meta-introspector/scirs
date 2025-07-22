@@ -145,8 +145,7 @@ fn main() -> CoreResult<()> {
 
 /// Display ecosystem summary results
 #[allow(dead_code)]
-fn display_ecosystem_summary(
-    result: &scirs2_core::testing::ecosystem_integration::EcosystemTestResult,
+fn integration(:EcosystemTestResult,
 ) {
     println!("📈 ECOSYSTEM HEALTH SUMMARY");
     println!("   Overall Health Score: {:.1}/100", result.health_score);
@@ -312,8 +311,7 @@ fn display_ecosystem_summary(
 
 /// Display final 1.0 release assessment
 #[allow(dead_code)]
-fn display_final_assessment(
-    result: &scirs2_core::testing::ecosystem_integration::EcosystemTestResult,
+fn integration(:EcosystemTestResult,
 ) {
     println!("\n🎯 1.0 RELEASE READINESS ASSESSMENT");
     println!("═══════════════════════════════════════");

@@ -2,11 +2,12 @@
 //!
 //! This module implements PCA techniques for signal processing.
 
-use super::BssConfig;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array2, Axis};
-use scirs2_linalg::eigh;
+use ndarray::{Array2, Axis, s};
+use scirs2__linalg::eigh;
+use super::BssConfig;
 
+#[allow(unused_imports)]
 /// Apply Principal Component Analysis (PCA) to separate mixed signals
 ///
 /// PCA finds uncorrelated components that maximize variance.
@@ -20,12 +21,12 @@ use scirs2_linalg::eigh;
 ///
 /// * Tuple containing (extracted sources, mixing matrix)
 #[allow(dead_code)]
-pub fn pca(signals: &Array2<f64>, config: &BssConfig) -> SignalResult<(Array2<f64>, Array2<f64>)> {
-    let (n_signals, n_samples) = signals.dim();
+pub fn pca(_signals: &Array2<f64>, config: &BssConfig) -> SignalResult<(Array2<f64>, Array2<f64>)> {
+    let (n_signals, n_samples) = _signals.dim();
 
-    // Center the signals
-    let means = signals.mean_axis(Axis(1)).unwrap();
-    let mut centered = signals.clone();
+    // Center the _signals
+    let means = _signals.mean_axis(Axis(1)).unwrap();
+    let mut centered = _signals.clone();
 
     for i in 0..n_signals {
         for j in 0..n_samples {

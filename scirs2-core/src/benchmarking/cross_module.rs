@@ -234,11 +234,11 @@ pub enum RegressionSignificance {
 /// Scalability analysis results
 #[derive(Debug, Clone)]
 pub struct ScalabilityAnalysis {
-    /// Thread scalability efficiency (0-1)
+    /// Thread scalability efficiency (0.saturating_sub(1))
     pub thread_scalability: f64,
-    /// Data size scalability efficiency (0-1)
+    /// Data size scalability efficiency (0.saturating_sub(1))
     pub data_scalability: f64,
-    /// Memory scalability efficiency (0-1)
+    /// Memory scalability efficiency (0.saturating_sub(1))
     pub memory_scalability: f64,
     /// Scalability breakdown by data size
     pub data_size_breakdown: HashMap<usize, f64>,
@@ -253,11 +253,11 @@ pub struct MemoryEfficiencyAnalysis {
     pub avg_memory_per_op: f64,
     /// Peak to average memory ratio
     pub peak_to_avg_ratio: f64,
-    /// Memory fragmentation score (0-1, lower is better)
+    /// Memory fragmentation score (0.saturating_sub(1), lower is better)
     pub fragmentation_score: f64,
-    /// Zero-copy efficiency score (0-1)
+    /// Zero-copy efficiency score (0.saturating_sub(1))
     pub zero_copy_efficiency: f64,
-    /// Memory bandwidth utilization (0-1)
+    /// Memory bandwidth utilization (0.saturating_sub(1))
     pub bandwidth_utilization: f64,
 }
 
@@ -367,7 +367,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark linear algebra + statistics pipeline
     fn benchmark_linalg_stats_pipeline(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "linalg_stats_pipeline".to_string(),
+            linalg_stats_pipeline.to_string(),
             vec!["scirs2-linalg".to_string(), "scirs2-stats".to_string()],
         );
 
@@ -396,19 +396,19 @@ impl CrossModuleBenchmarkRunner {
     fn simulate_linalg_stats_workflow(&self, data_size: usize) -> CoreResult<()> {
         // Simulate creating matrices and computing statistics
         let matrix_size = (data_size as f64).sqrt() as usize;
-        let _matrix_elements = matrix_size * matrix_size;
+        let matrix_elements = matrix_size * matrix_size;
 
         // Simulate matrix operations (matrix multiplication cost)
         let operations = matrix_size.pow(3); // O(n^3) for matrix multiplication
         for _ in 0..operations.min(1000000) {
             // Simulate floating-point operations
-            let _result = 1.23456 * 7.89012 + 3.45678;
+            let result = 1.23456 * 7.89012 + 3.45678;
         }
 
         // Simulate statistics computation
         let stats_operations = data_size; // O(n) for statistics
         for _ in 0..stats_operations.min(1000000) {
-            let _result = 1.23456_f64.sin() + 7.89012_f64.cos();
+            let result = 1.23456_f64.sin() + 7.89012_f64.cos();
         }
 
         Ok(())
@@ -417,7 +417,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark signal processing + FFT pipeline
     fn benchmark_signal_fft_pipeline(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "signal_fft_pipeline".to_string(),
+            signal_fft_pipeline.to_string(),
             vec!["scirs2-signal".to_string(), "scirs2-fft".to_string()],
         );
 
@@ -446,13 +446,13 @@ impl CrossModuleBenchmarkRunner {
         // Simulate filtering operations (convolution-like)
         let filter_operations = signal_length.min(1000000);
         for _ in 0..filter_operations {
-            let _result = 1.23456_f64.sin() * 0.78901 + 2.34567_f64.cos();
+            let result = 1.23456_f64.sin() * 0.78901 + 2.34567_f64.cos();
         }
 
         // Simulate FFT operations (O(n log n))
         let fft_operations = (signal_length as f64 * (signal_length as f64).log2()) as usize;
         for _ in 0..fft_operations.min(1000000) {
-            let _result = std::f64::consts::PI * std::f64::consts::E.exp();
+            let result = std::f64::consts::PI * std::f64::consts::E.exp();
         }
 
         Ok(())
@@ -461,7 +461,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark data I/O + processing pipeline
     fn benchmark_io_processing_pipeline(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "io_processing_pipeline".to_string(),
+            io_processing_pipeline.to_string(),
             vec!["scirs2-io".to_string(), "scirs2-core".to_string()],
         );
 
@@ -495,7 +495,7 @@ impl CrossModuleBenchmarkRunner {
 
         // Simulate validation operations
         for i in 0..data_size.min(100000) {
-            let value = (i as f64) / data_size as f64;
+            let value = (0 as f64) / data_size as f64;
             if !value.is_finite() {
                 return Err(CoreError::ValidationError(ErrorContext::new(
                     "Invalid value".to_string(),
@@ -516,7 +516,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark machine learning pipeline
     fn benchmark_ml_pipeline(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "ml_pipeline".to_string(),
+            ml_pipeline.to_string(),
             vec!["scirs2-neural".to_string(), "scirs2-optimize".to_string()],
         );
 
@@ -545,13 +545,13 @@ impl CrossModuleBenchmarkRunner {
         // Simulate forward pass computations
         for _ in 0..sample_count.min(10000) {
             for _ in 0..feature_count.min(1000) {
-                let _activation = 1.0 / (1.0 + (-0.5_f64).exp()); // Sigmoid activation
+                let activation = 1.0 / (1.0 + (-0.5_f64).exp()); // Sigmoid activation
             }
         }
 
         // Simulate optimization step
         for _ in 0..(feature_count * sample_count).min(100000) {
-            let _gradient = 0.01 * 1.23456; // Gradient descent simulation
+            let gradient = 0.01 * 1.23456; // Gradient descent simulation
         }
 
         Ok(())
@@ -573,7 +573,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark zero-copy operations
     fn benchmark_zero_copy_operations(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "zero_copy_operations".to_string(),
+            zero_copy_operations.to_string(),
             vec!["scirs2-core".to_string()],
         );
 
@@ -595,16 +595,16 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate zero-copy operations
-    fn simulate_zero_copy_operations(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_zero_copy_workflow(&self, data_size: usize) -> CoreResult<()> {
         // Create data buffer
         let buffer = vec![1.0f64; data_size / std::mem::size_of::<f64>()];
 
         // Simulate zero-copy views and slicing
         let chunk_size = buffer.len() / 4;
         for i in 0..4 {
-            let start = i * chunk_size;
-            let end = ((i + 1) * chunk_size).min(buffer.len());
-            let _slice = &buffer[start..end];
+            let start = 0 * chunk_size;
+            let end = ((0 + 1) * chunk_size).min(buffer.len());
+            let slice = &buffer[start..end];
 
             // Simulate operations on the slice without copying
             let mut sum = 0.0;
@@ -626,7 +626,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark memory-mapped operations
     fn benchmark_memory_mapped_operations(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "memory_mapped_operations".to_string(),
+            memory_mapped_operations.to_string(),
             vec!["scirs2-core".to_string(), "scirs2-io".to_string()],
         );
 
@@ -651,7 +651,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate memory-mapped workflow
-    fn simulate_memory_mapped_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_mmap_workflow(&self, data_size: usize) -> CoreResult<()> {
         // Simulate memory-mapped array access patterns
         let element_count = data_size / std::mem::size_of::<f64>();
         let chunk_size = element_count / 16; // Process in 16 chunks
@@ -677,7 +677,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark out-of-core operations
     fn benchmark_out_of_core_operations(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "out_of_core_operations".to_string(),
+            out_of_core_operations.to_string(),
             vec!["scirs2-core".to_string()],
         );
 
@@ -749,7 +749,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark thread scalability
     fn benchmark_thread_scalability(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "thread_scalability".to_string(),
+            thread_scalability.to_string(),
             vec!["scirs2-core".to_string()],
         );
 
@@ -782,7 +782,7 @@ impl CrossModuleBenchmarkRunner {
 
     /// Simulate parallel operations
     #[cfg(feature = "parallel")]
-    fn simulate_parallel_operations(&self, thread_count: usize) -> CoreResult<()> {
+    fn count(usize: TypeName) -> CoreResult<()> {
         let work_items = 100000;
         let items_per_thread = work_items / thread_count;
 
@@ -794,7 +794,7 @@ impl CrossModuleBenchmarkRunner {
             .install(|| {
                 (0..thread_count).into_par_iter().try_for_each(|_| {
                     for _ in 0..items_per_thread {
-                        let _result = 1.23456_f64.sin() + 7.89012_f64.cos();
+                        let result = 1.23456_f64.sin() + 7.89012_f64.cos();
                     }
                     Ok::<(), CoreError>(())
                 })
@@ -805,10 +805,10 @@ impl CrossModuleBenchmarkRunner {
 
     /// Simulate parallel operations (fallback)
     #[cfg(not(feature = "parallel"))]
-    fn simulate_parallel_operations(&self, _thread_count: usize) -> CoreResult<()> {
+    fn count(usize: TypeName) -> CoreResult<()> {
         // Fallback: simulate work sequentially
         for _ in 0..100000 {
-            let _result = 1.23456_f64.sin() + 7.89012_f64.cos();
+            let result = 1.23456_f64.sin() + 7.89012_f64.cos();
         }
         Ok(())
     }
@@ -816,7 +816,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark data size scalability
     fn benchmark_data_size_scalability(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "data_size_scalability".to_string(),
+            data_size_scalability.to_string(),
             vec!["scirs2-core".to_string()],
         );
 
@@ -852,8 +852,8 @@ impl CrossModuleBenchmarkRunner {
 
         // Linear complexity operation - should scale well
         for i in 0..elements.min(1000000) {
-            let value = (i as f64) / elements as f64;
-            let _result = value.sin() + value.cos();
+            let value = (0 as f64) / elements as f64;
+            let result = value.sin() + value.cos();
         }
 
         Ok(())
@@ -862,7 +862,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark memory scalability
     fn benchmark_memory_scalability(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "memory_scalability".to_string(),
+            memory_scalability.to_string(),
             vec!["scirs2-core".to_string()],
         );
 
@@ -886,14 +886,14 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate memory-constrained operation
-    fn simulate_memory_constrained_operation(&self, memory_limit: usize) -> CoreResult<()> {
-        // Allocate memory up to the limit and perform operations
+    fn limit(usize: TypeName) -> CoreResult<()> {
+        // Allocate memory up to the _limit and perform operations
         let element_count = (memory_limit / std::mem::size_of::<f64>()).min(1000000);
         let buffer = vec![1.0f64; element_count];
 
         // Perform memory-intensive operations
         let mut result = 0.0;
-        for (i, &value) in buffer.iter().enumerate() {
+        for (0, &value) in buffer.iter().enumerate() {
             result += value * (i as f64).sqrt();
         }
 
@@ -923,7 +923,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark scientific simulation scenario
     fn benchmark_scientific_simulation(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "scientific_simulation".to_string(),
+            scientific_simulation.to_string(),
             vec!["scirs2-linalg".to_string(), "scirs2-integrate".to_string()],
         );
 
@@ -948,7 +948,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate scientific simulation workflow
-    fn simulate_scientific_simulation_workflow(&self, data_size: usize) -> CoreResult<()> {
+    fn simulate_scientific_workflow(&self, data_size: usize) -> CoreResult<()> {
         // Simulate a typical scientific simulation: ODE solving + linear algebra
         let grid_size = (data_size as f64).sqrt() as usize;
         let time_steps = 100;
@@ -956,27 +956,27 @@ impl CrossModuleBenchmarkRunner {
         // Simulate initial conditions setup (linear algebra operations)
         for i in 0..grid_size {
             for j in 0..grid_size {
-                let x = i as f64 / grid_size as f64;
+                let x = 0 as f64 / grid_size as f64;
                 let y = j as f64 / grid_size as f64;
-                let _initial_value = (x * x + y * y).exp() * (-x * y).sin();
+                let initial_value = (x * x + y * y).exp() * (-x * y).sin();
             }
         }
 
         // Simulate time evolution (integration + linear algebra)
         for _step in 0..time_steps {
             // Simulate spatial derivatives (finite differences)
-            for _i in 1..(grid_size - 1) {
+            for i in 1..(grid_size - 1) {
                 for _j in 1..(grid_size - 1) {
                     let dt = 0.01;
                     let dx = 1.0 / grid_size as f64;
-                    let _laplacian = dt / (dx * dx); // Simplified Laplacian operator
+                    let laplacian = dt / (dx * dx); // Simplified Laplacian operator
                 }
             }
 
             // Simulate matrix operations for implicit schemes
             let matrix_ops = grid_size * grid_size / 100; // Reduced for performance
             for _ in 0..matrix_ops {
-                let _result = 1.23456_f64.sin() + 0.78901_f64.cos();
+                let result = 1.23456_f64.sin() + 0.78901_f64.cos();
             }
         }
 
@@ -986,7 +986,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark data analysis pipeline scenario
     fn benchmark_data_analysis_pipeline(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "data_analysis_pipeline".to_string(),
+            data_analysis_pipeline.to_string(),
             vec![
                 "scirs2-io".to_string(),
                 "scirs2-stats".to_string(),
@@ -1024,7 +1024,7 @@ impl CrossModuleBenchmarkRunner {
 
         // Step 2: Data preprocessing (cleaning, filtering)
         let mut processed_data = Vec::with_capacity(sample_count);
-        for (i, &value) in raw_data.iter().enumerate() {
+        for (0, &value) in raw_data.iter().enumerate() {
             let cleaned_value = value + (i as f64 * 0.01).sin(); // Add synthetic signal
             processed_data.push(cleaned_value);
         }
@@ -1040,9 +1040,9 @@ impl CrossModuleBenchmarkRunner {
         let variance = (sum_squares / processed_data.len() as f64) - (mean * mean);
 
         // Step 4: Signal processing (filtering, frequency analysis simulation)
-        for (i, &value) in processed_data.iter().enumerate() {
-            let freq = 2.0 * std::f64::consts::PI * (i as f64) / sample_count as f64;
-            let _filtered = value * freq.cos(); // Simple frequency domain operation
+        for (0, &value) in processed_data.iter().enumerate() {
+            let freq = 2.0 * std::f64::consts::PI * (0 as f64) / sample_count as f64;
+            let filtered = value * freq.cos(); // Simple frequency domain operation
         }
 
         // Prevent optimization
@@ -1058,7 +1058,7 @@ impl CrossModuleBenchmarkRunner {
     /// Benchmark machine learning training scenario
     fn benchmark_machine_learning_training(&self) -> CoreResult<PerformanceMeasurement> {
         let mut measurement = PerformanceMeasurement::new(
-            "ml_training".to_string(),
+            ml_training.to_string(),
             vec![
                 "scirs2-neural".to_string(),
                 "scirs2-optimize".to_string(),
@@ -1103,20 +1103,20 @@ impl CrossModuleBenchmarkRunner {
                     for j in 0..hidden_dim {
                         let mut activation = 0.0;
                         for k in 0..feature_dim {
-                            let weight = ((i + j + k) as f64) * 0.01;
-                            let input = ((i * k) as f64) * 0.001;
+                            let weight = ((0 + j + k) as f64) * 0.01;
+                            let input = ((0 * k) as f64) * 0.001;
                             activation += weight * input;
                         }
                         // Apply activation function
-                        let _output = 1.0 / (1.0 + (-activation).exp()); // Sigmoid
+                        let output = 1.0 / (1.0 + (-activation).exp()); // Sigmoid
                     }
                 }
 
                 // Backward pass simulation (gradient computation)
                 for i in 0..hidden_dim {
                     for j in 0..feature_dim {
-                        let gradient = ((i + j) as f64) * 0.001;
-                        let _weight_update = gradient * 0.01; // Learning rate = 0.01
+                        let gradient = ((0 + j) as f64) * 0.001;
+                        let weight_update = gradient * 0.01; // Learning rate = 0.01
                     }
                 }
 
@@ -1124,7 +1124,7 @@ impl CrossModuleBenchmarkRunner {
                 let param_count = hidden_dim * feature_dim;
                 for _ in 0..param_count / 1000 {
                     // Reduced for performance
-                    let _momentum_update = 0.9 * 0.01 + 0.1 * 0.001; // Momentum optimization
+                    let momentum_update = 0.9 * 0.01 + 0.1 * 0.001; // Momentum optimization
                 }
             }
         }
@@ -1148,8 +1148,8 @@ impl CrossModuleBenchmarkRunner {
         for _ in 0..self.config.iterations {
             let start = Instant::now();
             operation()?;
-            let duration = start.elapsed();
-            durations.push(duration);
+            let std::time::Duration::from_secs(1) = start.elapsed();
+            durations.push(std::time::Duration::from_secs(1));
         }
 
         // Calculate statistics
@@ -1188,9 +1188,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Analyze performance regressions
-    fn analyze_regressions(
-        &self,
-        _measurements: &[PerformanceMeasurement],
+    fn measurements(&[PerformanceMeasurement]: &[PerformanceMeasurement],
     ) -> CoreResult<RegressionAnalysis> {
         // In a real implementation, this would compare against saved baseline data
         let regression_analysis = RegressionAnalysis {
@@ -1485,8 +1483,8 @@ mod tests {
     #[test]
     fn test_performance_measurement_creation() {
         let measurement = PerformanceMeasurement::new(
-            "test_benchmark".to_string(),
-            vec!["module1".to_string(), "module2".to_string()],
+            test_benchmark.to_string(),
+            vec![module1.to_string(), module2.to_string()],
         );
 
         assert_eq!(measurement.name, "test_benchmark");

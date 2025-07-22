@@ -123,20 +123,20 @@ pub const RESET: &str = "\x1b[0m";
 
 /// Colorize text with a foreground color
 #[allow(dead_code)]
-pub fn colorize<T: Display>(text: T, color: Color) -> String {
-    format!("{}{}{}", color.fg_code(), text, RESET)
+pub fn colorize<T: Display>(_text: T, color: Color) -> String {
+    format!("{}{}{}", color.fg_code(), _text, RESET)
 }
 
 /// Colorize text with a background color
 #[allow(dead_code)]
-pub fn colorize_bg<T: Display>(text: T, color: Color) -> String {
-    format!("{}{}{}", color.bg_code(), text, RESET)
+pub fn colorize_bg<T: Display>(_text: T, color: Color) -> String {
+    format!("{}{}{}", color.bg_code(), _text, RESET)
 }
 
 /// Style text with a text style
 #[allow(dead_code)]
-pub fn stylize<T: Display>(text: T, style: Style) -> String {
-    format!("{}{}{}", style.code(), text, RESET)
+pub fn stylize<T: Display>(_text: T, style: Style) -> String {
+    format!("{}{}{}", style.code(), _text, RESET)
 }
 
 /// Colorize and style text
@@ -231,22 +231,22 @@ impl Default for ColorOptions {
 /// Returns red for values close to 0.0, yellow for values around 0.5,
 /// and green for values close to 1.0
 #[allow(dead_code)]
-pub fn gradient_color(value: f64, options: &ColorOptions) -> Option<Color> {
+pub fn gradient_color(_value: f64, options: &ColorOptions) -> Option<Color> {
     if !options.enabled {
         return None;
     }
-    if !(0.0..=1.0).contains(&value) {
+    if !(0.0..=1.0).contains(&_value) {
         return None;
     }
     // Red -> Yellow -> Green gradient
-    if value < 0.5 {
+    if _value < 0.5 {
         // Red to Yellow (0.0 -> 0.5)
         if options.use_bright {
             Some(Color::BrightRed)
         } else {
             Some(Color::Red)
         }
-    } else if value < 0.7 {
+    } else if _value < 0.7 {
         // Yellow (0.5 -> 0.7)
         if options.use_bright {
             Some(Color::BrightYellow)
@@ -267,36 +267,36 @@ pub fn gradient_color(value: f64, options: &ColorOptions) -> Option<Color> {
 /// This provides a more detailed color spectrum for visualizing data with subtle differences
 /// Returns a spectrum from cool (blues/purples) for low values to warm (reds/yellows) for high values
 #[allow(dead_code)]
-pub fn heatmap_gradient_color(value: f64, options: &ColorOptions) -> Option<Color> {
+pub fn heatmap_gradient_color(_value: f64, options: &ColorOptions) -> Option<Color> {
     if !options.enabled {
         return None;
     }
-    if !(0.0..=1.0).contains(&value) {
+    if !(0.0..=1.0).contains(&_value) {
         return None;
     }
     // More detailed gradient with 5 color stops
-    if value < 0.2 {
+    if _value < 0.2 {
         // Very low values (0.0 -> 0.2)
         if options.use_bright {
             Some(Color::BrightBlue)
         } else {
             Some(Color::Blue)
         }
-    } else if value < 0.4 {
+    } else if _value < 0.4 {
         // Low values (0.2 -> 0.4)
         if options.use_bright {
             Some(Color::BrightCyan)
         } else {
             Some(Color::Cyan)
         }
-    } else if value < 0.6 {
+    } else if _value < 0.6 {
         // Medium values (0.4 -> 0.6)
         if options.use_bright {
             Some(Color::BrightYellow)
         } else {
             Some(Color::Yellow)
         }
-    } else if value < 0.8 {
+    } else if _value < 0.8 {
         // High values (0.6 -> 0.8)
         if options.use_bright {
             Some(Color::BrightRed)
@@ -332,40 +332,40 @@ pub fn colored_metric_cell<T: Display>(
 
 /// Generate a heatmap cell with color gradient for confusion matrix
 #[allow(dead_code)]
-pub fn heatmap_cell<T: Display>(value: T, normalized_value: f64, options: &ColorOptions) -> String {
+pub fn heatmap_cell<T: Display>(_value: T, normalized_value: f64, options: &ColorOptions) -> String {
     if !options.enabled {
-        return format!("{value}");
+        return format!("{_value}");
     }
     if let Some(color) = heatmap_gradient_color(normalized_value, options) {
         // For higher values, use bold to emphasize importance
         if normalized_value > 0.7 {
-            colorize(stylize(value, Style::Bold), color)
+            colorize(stylize(_value, Style::Bold), color)
         } else {
-            colorize(value, color)
+            colorize(_value, color)
         }
     } else {
-        format!("{value}")
+        format!("{_value}")
     }
 }
 
 /// Build a color legend for confusion matrix or other visualizations
 #[allow(dead_code)]
-pub fn color_legend(options: &ColorOptions) -> Option<String> {
-    if !options.enabled {
+pub fn color_legend(_options: &ColorOptions) -> Option<String> {
+    if !_options.enabled {
         return None;
     }
     let mut legend = String::from("Color Legend: ");
-    let low_color = if options.use_bright {
+    let low_color = if _options.use_bright {
         Color::BrightRed
     } else {
         Color::Red
     };
-    let mid_color = if options.use_bright {
+    let mid_color = if _options.use_bright {
         Color::BrightYellow
     } else {
         Color::Yellow
     };
-    let high_color = if options.use_bright {
+    let high_color = if _options.use_bright {
         Color::BrightGreen
     } else {
         Color::Green
@@ -378,14 +378,14 @@ pub fn color_legend(options: &ColorOptions) -> Option<String> {
 
 /// Build a detailed heatmap color legend
 #[allow(dead_code)]
-pub fn heatmap_color_legend(options: &ColorOptions) -> Option<String> {
-    if !options.enabled {
+pub fn heatmap_color_legend(_options: &ColorOptions) -> Option<String> {
+    if !_options.enabled {
         return None;
     }
     let mut legend = String::from("Heatmap Legend: ");
     let colors = [
         (
-            if options.use_bright {
+            if _options.use_bright {
                 Color::BrightBlue
             } else {
                 Color::Blue
@@ -393,7 +393,7 @@ pub fn heatmap_color_legend(options: &ColorOptions) -> Option<String> {
             "Very Low (0.0-0.2)",
         ),
         (
-            if options.use_bright {
+            if _options.use_bright {
                 Color::BrightCyan
             } else {
                 Color::Cyan
@@ -401,7 +401,7 @@ pub fn heatmap_color_legend(options: &ColorOptions) -> Option<String> {
             "Low (0.2-0.4)",
         ),
         (
-            if options.use_bright {
+            if _options.use_bright {
                 Color::BrightYellow
             } else {
                 Color::Yellow
@@ -409,7 +409,7 @@ pub fn heatmap_color_legend(options: &ColorOptions) -> Option<String> {
             "Medium (0.4-0.6)",
         ),
         (
-            if options.use_bright {
+            if _options.use_bright {
                 Color::BrightRed
             } else {
                 Color::Red
@@ -417,7 +417,7 @@ pub fn heatmap_color_legend(options: &ColorOptions) -> Option<String> {
             "High (0.6-0.8)",
         ),
         (
-            if options.use_bright {
+            if _options.use_bright {
                 Color::BrightMagenta
             } else {
                 Color::Magenta

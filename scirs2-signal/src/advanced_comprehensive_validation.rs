@@ -3,19 +3,21 @@
 //! This module combines all enhanced validation capabilities for comprehensive
 //! testing of scirs2-signal implementations in Advanced mode.
 
+use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::lombscargle_edge_case_validation::{run_edge_case_validation, EdgeCaseValidationResult};
-use crate::multitaper::validation::{
-    EnhancedMultitaperValidationResult,
-};
-use crate::parametric_advanced_enhanced::comprehensive_parametric_validation;
-use crate::scipy_validation_comprehensive::{
-    run_comprehensive_scipy_validation, ComprehensiveSciPyValidationResult,
-};
-use crate::wpt_super_validation::{run_advanced_wpt_validation, AdvancedWptValidationResult};
+use crate::lombscargle_edge_case__validation::{EdgeCaseValidationResult, run_edge_case_validation};
+use crate::parametric_advanced__enhanced::comprehensive_parametric_validation;
+use crate::wpt_super__validation::{AdvancedWptValidationResult, run_advanced_wpt_validation};
 use ndarray::Array1;
 use std::time::Instant;
 
+#[allow(unused_imports)]
+use crate::multitaper::validation::{
+    EnhancedMultitaperValidationResult,
+};
+use crate::scipy_validation__comprehensive::{
+    run_comprehensive_scipy_validation, ComprehensiveSciPyValidationResult,
+};
 /// Comprehensive validation result for Advanced mode
 #[derive(Debug, Clone)]
 pub struct ComprehensiveValidationResult {
@@ -148,7 +150,7 @@ fn compute_advanced_score(
     let mut total_score = 0.0;
     let mut weight_sum = 0.0;
 
-    // Edge case validation (weight: 20%)
+    // Edge _case validation (weight: 20%)
     total_score += edge_case.overall_edge_score * 0.20;
     weight_sum += 0.20;
 
@@ -190,7 +192,7 @@ fn estimate_performance_improvements() -> PerformanceImprovements {
 
 /// Generate comprehensive Advanced validation report
 #[allow(dead_code)]
-pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> String {
+pub fn generate_comprehensive_report(_result: &ComprehensiveValidationResult) -> String {
     let mut report = String::new();
 
     report.push_str("# Advanced MODE Comprehensive Validation Report\n\n");
@@ -202,23 +204,23 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     report.push_str("## Executive Summary\n\n");
     report.push_str(&format!(
         "- **Overall Advanced Score:** {:.2}%\n",
-        result.overall_advanced_score
+        _result.overall_advanced_score
     ));
     report.push_str(&format!(
         "- **Total Validation Time:** {:.2}ms\n",
-        result.total_validation_time_ms
+        _result.total_validation_time_ms
     ));
     report.push_str(&format!(
         "- **SIMD Acceleration:** {:.2}x\n",
-        result.performance_improvements.simd_acceleration
+        _result.performance_improvements.simd_acceleration
     ));
     report.push_str(&format!(
         "- **Parallel Speedup:** {:.2}x\n",
-        result.performance_improvements.parallel_speedup
+        _result.performance_improvements.parallel_speedup
     ));
     report.push_str(&format!(
         "- **Overall Efficiency Gain:** {:.2}x\n\n",
-        result.performance_improvements.overall_efficiency_gain
+        _result.performance_improvements.overall_efficiency_gain
     ));
 
     // Detailed Results
@@ -228,11 +230,11 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     report.push_str("### 1. Lomb-Scargle Edge Case Validation\n");
     report.push_str(&format!(
         "- **Edge Case Score:** {:.2}%\n",
-        result.edge_case_validation.overall_edge_score
+        _result.edge_case_validation.overall_edge_score
     ));
     report.push_str(&format!(
         "- **Sparse Sampling Accuracy:** {:.1}%\n",
-        result
+        _result
             .edge_case_validation
             .sparse_sampling
             .advanced_sparse_accuracy
@@ -240,7 +242,7 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     ));
     report.push_str(&format!(
         "- **Dense Sampling Accuracy:** {:.1}%\n",
-        result
+        _result
             .edge_case_validation
             .dense_sampling
             .advanced_dense_accuracy
@@ -248,7 +250,7 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     ));
     report.push_str(&format!(
         "- **Numerical Precision:** {}\n\n",
-        if result
+        if _result
             .edge_case_validation
             .numerical_precision
             .overflow_resistance
@@ -263,23 +265,23 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     report.push_str("### 2. Comprehensive SciPy Validation\n");
     report.push_str(&format!(
         "- **Overall Accuracy:** {:.2}%\n",
-        result
+        _result
             .scipy_validation
             .overall_metrics
             .overall_accuracy_score
     ));
     report.push_str(&format!(
         "- **Pass Rate:** {:.1}%\n",
-        result.scipy_validation.overall_metrics.pass_rate
+        _result.scipy_validation.overall_metrics.pass_rate
     ));
     report.push_str(&format!(
         "- **Critical Failures:** {}\n",
-        result.scipy_validation.overall_metrics.critical_failures
+        _result.scipy_validation.overall_metrics.critical_failures
     ));
 
     // Performance comparison
     report.push_str("- **Performance vs SciPy:**\n");
-    for (function, ratio) in &result.scipy_validation.performance_comparison.speed_ratio {
+    for (function, ratio) in &_result.scipy_validation.performance_comparison.speed_ratio {
         let status = if *ratio > 1.0 { "🚀" } else { "🐌" };
         report.push_str(&format!("  - {}: {:.2}x {}\n", function, ratio, status));
     }
@@ -289,11 +291,11 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     report.push_str("### 3. Enhanced Multitaper Validation\n");
     report.push_str(&format!(
         "- **Multitaper Score:** {:.2}%\n",
-        result.multitaper_validation.basic_validation.overall_score
+        _result.multitaper_validation.basic_validation.overall_score
     ));
     report.push_str(&format!(
         "- **DPSS Orthogonality Error:** {:.2e}\n",
-        result
+        _result
             .multitaper_validation
             .basic_validation
             .dpss_validation
@@ -301,7 +303,7 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     ));
     report.push_str(&format!(
         "- **Spectral Accuracy:** {:.1}%\n\n",
-        result
+        _result
             .multitaper_validation
             .basic_validation
             .spectral_accuracy
@@ -313,11 +315,11 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     report.push_str("### 4. Advanced Wavelet Packet Transform Validation\n");
     report.push_str(&format!(
         "- **WPT Validation Score:** {:.2}%\n",
-        result.wpt_validation.basic_validation.energy_ratio
+        _result.wpt_validation.basic_validation.energy_ratio
     ));
     report.push_str(&format!(
         "- **Perfect Reconstruction:** {:.2e}\n",
-        result
+        _result
             .wpt_validation
             .mathematical_properties
             .perfect_reconstruction
@@ -325,7 +327,7 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     ));
     report.push_str(&format!(
         "- **Mathematical Properties:** {:.1}%\n\n",
-        result
+        _result
             .wpt_validation
             .mathematical_properties
             .orthogonality_advanced
@@ -338,7 +340,7 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     report.push_str("### 5. Parametric Spectral Estimation\n");
     report.push_str(&format!(
         "- **Parametric Validation:** {}\n\n",
-        if result.parametric_validation_passed {
+        if _result.parametric_validation_passed {
             "✅ Passed"
         } else {
             "❌ Failed"
@@ -363,15 +365,15 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     report.push_str("- Numerical precision validation\n\n");
 
     // Recommendations
-    if result.overall_advanced_score < 95.0 {
+    if _result.overall_advanced_score < 95.0 {
         report.push_str("## Recommendations for Further Improvement\n\n");
-        if result.overall_advanced_score < 85.0 {
+        if _result.overall_advanced_score < 85.0 {
             report.push_str("- Focus on numerical stability improvements\n");
         }
-        if result.edge_case_validation.overall_edge_score < 90.0 {
+        if _result.edge_case_validation.overall_edge_score < 90.0 {
             report.push_str("- Enhance edge case handling\n");
         }
-        if result.scipy_validation.overall_metrics.critical_failures > 0 {
+        if _result.scipy_validation.overall_metrics.critical_failures > 0 {
             report.push_str("- Address critical numerical issues\n");
         }
         report.push_str("\n");

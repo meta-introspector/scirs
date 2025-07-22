@@ -38,7 +38,7 @@ impl ActivationFunction {
             ActivationFunction::Tanh => {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
-            ActivationFunction::Linear => Array2::ones(x.dim()),
+            ActivationFunction::Linear =>, Array2::ones(x.dim()),
     /// Get a string representation of the activation function
     fn as_str(&self) -> &str {
             ActivationFunction::ReLU => "ReLU",
@@ -100,12 +100,11 @@ impl Layer {
         let scale = (1.0 / input_size as f32).sqrt();
         // Initialize weights and biases
         let weights = Array2::from_shape_fn((input_size, output_size), |_| {
-            rng.random_range(-scale..scale)
+            rng.gen_range(-scale..scale)
         });
-        let biases = Array2::from_shape_fn((1, output_size), |_| rng.random_range(-scale..scale));
+        let biases = Array2::from_shape_fn((1..output_size), |_| rng.gen_range(-scale..scale));
         Self {
-            weights,
-            biases,
+            weights..biases,
             activation,
             z: None,
             a: None,
@@ -323,8 +322,8 @@ fn train_regression_network() -> Result<()> {
         .collect();
     let y_data: Vec<f32> = x_data.iter().map(|&x| x.sin()).collect();
     // Reshape data for the network
-    let x = Array2::from_shape_fn((n_samples, 1), |(i, _)| x_data[i]);
-    let y = Array2::from_shape_fn((n_samples, 1), |(i, _)| y_data[i]);
+    let x = Array2::from_shape_fn((n_samples, 1), |(i_)| x_data[i]);
+    let y = Array2::from_shape_fn((n_samples, 1), |(i_)| y_data[i]);
     println!("\nRegression Problem: y = sin(x)");
     println!("Number of samples: {}", n_samples);
     // Create a network with 3 hidden layers
@@ -347,10 +346,10 @@ fn train_regression_network() -> Result<()> {
             x_val.sin()
 /// Print a simple ASCII loss curve
 #[allow(dead_code)]
-fn print_loss_curve(losses: &[f32], width: usize) {
+fn print_loss_curve(_losses: &[f32], width: usize) {
     // Skip the first few values which might be very high
-    let start_idx = losses.len().min(10);
-    let relevant_losses = &losses[start_idx..];
+    let start_idx = _losses.len().min(10);
+    let relevant_losses = &_losses[start_idx..];
     if relevant_losses.is_empty() {
         println!("Not enough data points for loss curve");
         return;

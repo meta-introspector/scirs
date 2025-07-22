@@ -249,7 +249,7 @@ impl ComputePlatform {
     pub fn name(&self) -> String {
         match self {
             ComputePlatform::Cpu => "CPU".to_string(),
-            ComputePlatform::Gpu(backend) => format!("GPU ({backend})",),
+            ComputePlatform::Gpu(backend) => format!("GPU ({backend})"),
         }
     }
 }
@@ -424,7 +424,7 @@ impl BenchmarkSuite {
         backend: GpuBackend,
     ) -> Result<BenchmarkResult, BenchmarkError> {
         // Create GPU context
-        let _context =
+        let context =
             GpuContext::new(backend).map_err(|e| BenchmarkError::SetupFailed(e.to_string()))?;
 
         // Warmup
@@ -468,19 +468,19 @@ impl BenchmarkSuite {
         &self,
         operation: BenchmarkOperation,
         problem_size: ProblemSize,
-        _data_type: DataType,
+        data_type: DataType,
     ) -> Result<(), BenchmarkError> {
         match operation {
             BenchmarkOperation::MatrixMultiply => {
                 let n = problem_size.matrix_size();
                 // Simulate matrix multiplication
-                let _result = (0..n * n).map(|i| i as f64).sum::<f64>();
+                let result = (0..n * n).map(|i| i as f64).sum::<f64>();
                 Ok(())
             }
             BenchmarkOperation::VectorOperations => {
                 let n = problem_size.vector_size();
                 // Simulate vector operation
-                let _result = (0..n).map(|i| (i as f64).sin()).sum::<f64>();
+                let result = (0..n).map(|i| (i as f64).sin()).sum::<f64>();
                 Ok(())
             }
             _ => {
@@ -496,18 +496,18 @@ impl BenchmarkSuite {
         &self,
         operation: BenchmarkOperation,
         problem_size: ProblemSize,
-        _data_type: DataType,
-        _backend: GpuBackend,
+        data_type: DataType,
+        backend: GpuBackend,
     ) -> Result<(), BenchmarkError> {
         match operation {
             BenchmarkOperation::MatrixMultiply => {
-                let _n = problem_size.matrix_size();
+                let n = problem_size.matrix_size();
                 // Would launch GPU kernel for matrix multiplication
                 std::thread::sleep(Duration::from_micros(100));
                 Ok(())
             }
             BenchmarkOperation::VectorOperations => {
-                let _n = problem_size.vector_size();
+                let n = problem_size.vector_size();
                 // Would launch GPU kernel for vector operations
                 std::thread::sleep(Duration::from_micros(50));
                 Ok(())
@@ -595,7 +595,7 @@ impl BenchmarkSuite {
     fn generate_recommendation(
         &self,
         operation: BenchmarkOperation,
-        _platform_results: &HashMap<ComputePlatform, BenchmarkResult>,
+        platform_results: &HashMap<ComputePlatform, BenchmarkResult>,
         speedups: &HashMap<GpuBackend, f64>,
     ) -> PlatformRecommendation {
         // Find best GPU speedup

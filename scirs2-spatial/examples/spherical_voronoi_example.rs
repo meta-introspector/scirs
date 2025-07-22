@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2_spatial::spherical_voronoi::SphericalVoronoi;
+use scirs2__spatial::spherical_voronoi::SphericalVoronoi;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -219,9 +219,9 @@ fn generate_random_points_on_sphere(
         let mut z = 0.0;
 
         while !valid {
-            x = rng.random_range(-1.0..1.0);
-            y = rng.random_range(-1.0..1.0);
-            z = rng.random_range(-1.0..1.0);
+            x = rng.gen_range(-1.0..1.0);
+            y = rng.gen_range(-1.0..1.0);
+            z = rng.gen_range(-1.0..1.0);
 
             let d2: f64 = x * x + y * y + z * z;
             if d2 > 0.0 && d2 <= 1.0 {

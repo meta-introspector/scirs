@@ -92,15 +92,15 @@ impl<F: Float + Debug + ScalarOperand + Display + FromPrimitive + Send + Sync>
     ValidationHandler<F>
 {
     /// Create a new validation handler
-    pub fn new(config: ValidationConfig) -> Result<Self> {
+    pub fn new(_config: ValidationConfig) -> Result<Self> {
         // Create evaluator
         let eval_config = EvaluationConfig {
-            batch_size: config.batch_size,
-            shuffle: config.shuffle,
-            num_workers: config.num_workers,
-            metrics: config.metrics.clone(),
-            steps: config.steps,
-            verbose: config.verbose,
+            batch_size: _config.batch_size,
+            shuffle: _config.shuffle,
+            num_workers: _config.num_workers,
+            metrics: _config.metrics.clone(),
+            steps: _config.steps,
+            verbose: _config.verbose,
         };
         let evaluator = Evaluator::new(eval_config)?;
         // Create early stopping state if needed
@@ -110,8 +110,8 @@ impl<F: Float + Debug + ScalarOperand + Display + FromPrimitive + Send + Sync>
             .map(|es_config| EarlyStoppingState {
                 config: es_config.clone(),
                 best_value: match es_config.mode {
-                    EarlyStoppingMode::Min => F::infinity(),
-                    EarlyStoppingMode::Max => F::neg_infinity(),
+                    EarlyStoppingMode::Min =>, F::infinity(),
+                    EarlyStoppingMode::Max =>, F::neg_infinity(),
                 },
                 wait: 0,
                 best_weights: None,
@@ -210,8 +210,8 @@ impl<F: Float + Debug + ScalarOperand + Display + FromPrimitive + Send + Sync>
     pub fn reset_early_stopping(&mut self) {
         if let Some(ref mut es_state) = self.early_stopping {
             es_state.best_value = match es_state.config.mode {
-                EarlyStoppingMode::Min => F::infinity(),
-                EarlyStoppingMode::Max => F::neg_infinity(),
+                EarlyStoppingMode::Min =>, F::infinity(),
+                EarlyStoppingMode::Max =>, F::neg_infinity(),
             es_state.wait = 0;
             es_state.best_weights = None;
             es_state.stopped_epoch = None;

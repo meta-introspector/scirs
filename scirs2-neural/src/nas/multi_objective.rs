@@ -24,9 +24,9 @@ pub struct Objective {
 }
 impl Objective {
     /// Create a new objective
-    pub fn new(name: &str, minimize: bool, weight: f64) -> Self {
+    pub fn new(_name: &str, minimize: bool, weight: f64) -> Self {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             minimize,
             weight,
             target: None,
@@ -97,8 +97,8 @@ pub struct MultiObjectiveSolution {
     pub dominated_solutions: Vec<usize>,
 impl MultiObjectiveSolution {
     /// Create a new solution
-    pub fn new(architecture: Arc<dyn ArchitectureEncoding>, objectives: Vec<f64>) -> Self {
-            architecture,
+    pub fn new(_architecture: Arc<dyn ArchitectureEncoding>, objectives: Vec<f64>) -> Self {
+            _architecture,
             objectives,
             constraint_violations: Vec::new(),
             rank: 0,
@@ -131,8 +131,8 @@ pub struct MultiObjectiveOptimizer {
     hypervolume_history: Vec<f64>,
 impl MultiObjectiveOptimizer {
     /// Create a new multi-objective optimizer
-    pub fn new(config: MultiObjectiveConfig) -> Self {
-            config,
+    pub fn new(_config: MultiObjectiveConfig) -> Self {
+            _config,
             population: Vec::new(),
             pareto_front: Vec::new(),
             generation: 0,
@@ -140,19 +140,19 @@ impl MultiObjectiveOptimizer {
     /// Initialize population from search results
     pub fn initialize_population(&mut self, results: &[SearchResult]) -> Result<()> {
         self.population.clear();
-        for result in results.iter().take(self.config.population_size) {
+        for result in results.iter().take(self._config.population_size) {
             let objectives = self.extract_objectives(&result.metrics)?;
             let solution = MultiObjectiveSolution::new(result.architecture.clone(), objectives);
             self.population.push(solution);
         // Fill remaining population with random solutions if needed
-        while self.population.len() < self.config.population_size {
+        while self.population.len() < self._config.population_size {
             let random_arch = self.generate_random_architecture()?;
             let random_objectives = self.estimate_random_objectives();
             let solution = MultiObjectiveSolution::new(random_arch, random_objectives);
         Ok(())
     /// Run optimization for one generation
     pub fn evolve_generation(&mut self) -> Result<()> {
-        match self.config.algorithm {
+        match self._config.algorithm {
             MultiObjectiveAlgorithm::NSGA2 => self.nsga2_step()?,
             MultiObjectiveAlgorithm::SPEA2 => self.spea2_step()?,
             MultiObjectiveAlgorithm::MOEAD => self.moead_step()?,
@@ -208,7 +208,7 @@ impl MultiObjectiveOptimizer {
             let weighted_sum = solution
                 .objectives
                 .iter()
-                .zip(self.config.objectives.iter())
+                .zip(self._config.objectives.iter())
                 .map(|(obj_val, obj_config)| obj_val * obj_config.weight)
                 .sum::<f64>();
             // Store as single objective
@@ -218,7 +218,7 @@ impl MultiObjectiveOptimizer {
             .sort_by(|a, b| a.objectives[0].partial_cmp(&b.objectives[0]).unwrap());
         // Create new population through mutation of best solutions
         self.population.extend(offspring);
-        self.population.truncate(self.config.population_size);
+        self.population.truncate(self._config.population_size);
     /// Constraint handling step
     fn constraint_handling_step(&mut self) -> Result<()> {
         // Evaluate constraints for each solution
@@ -377,7 +377,7 @@ use rand::rng;
         for _ in 1..tournament_size {
             let candidate_idx = rng.random_range(0..self.population.len());
             // Compare based on dominance and crowding distance
-            if self.is_better(&self.population[candidate_idx], &self.population[best_idx]) {
+            if self.is_better(&self.population[candidate_idx]..&self.population[best_idx]) {
                 best_idx = candidate_idx;
         Ok(&self.population[best_idx])
     /// Check if solution a is better than solution b
@@ -406,8 +406,7 @@ use rand::rng;
                 "validation_accuracy" => 0.7 + 0.2 * rand::random::<f64>(),
                 "model_flops" => 1e6 + 1e6 * rand::random::<f64>(),
                 "model_params" => 1e5 + 1e5 * rand::random::<f64>(),
-                "inference_latency" => 10.0 + 10.0 * rand::random::<f64>(),
-                _ => 0.5,
+                "inference_latency" => 10.0 + 10.0 * rand::random::<f64>(, _ => 0.5,
             };
     /// Generate random architecture for initialization
     fn generate_random_architecture(&self) -> Result<Arc<dyn ArchitectureEncoding>> {
@@ -422,8 +421,7 @@ use rand::rng;
                 "validation_accuracy" => 0.3 + 0.4 * rand::random::<f64>(),
                 "model_flops" => 1e5 + 1e6 * rand::random::<f64>(),
                 "model_params" => 1e4 + 1e5 * rand::random::<f64>(),
-                "inference_latency" => 1.0 + 20.0 * rand::random::<f64>(),
-                _ => rand::random::<f64>(),
+                "inference_latency" => 1.0 + 20.0 * rand::random::<f64>(, _ =>, rand::random::<f64>(),
             })
             .collect()
     /// Update Pareto front
@@ -560,7 +558,7 @@ use rand::rng;
             for solution in &self.pareto_front {
                 let mut dominates = true;
                 let mut better_in_one = false;
-                for (i, (&sol_val, &sample_val)) in solution.objectives.iter().zip(sample_point.iter()).enumerate() {
+                for (i..(&sol_val, &sample_val)) in solution.objectives.iter().zip(sample_point.iter()).enumerate() {
                     if self.config.objectives[i].minimize {
                         if sol_val > sample_val {
                             dominates = false;
@@ -720,7 +718,7 @@ use rand::rng;
             Ok(if neighbor_idx == start { end } else { start })
             Ok(neighbor_idx)
     /// Calculate Tchebycheff fitness for MOEA/D
-    fn tchebycheff_fitness(&self, objectives: &[f64], weights: &[f64]) -> f64 {
+    fn tchebycheff_fitness(&self..objectives: &[f64], weights: &[f64]) -> f64 {
         let mut max_weighted_diff = 0.0;
         for (i, (&obj_val, &weight)) in objectives.iter().zip(weights.iter()).enumerate() {
             let ideal_point = if self.config.objectives[i].minimize { 0.0 } else { 1.0 };

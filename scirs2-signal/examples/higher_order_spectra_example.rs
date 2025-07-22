@@ -2,7 +2,8 @@ use ndarray::{Array1, Array2};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2_signal::higher_order::{
+use scirs2__signal::higher_order::{
+use std::f64::consts::PI;
     biamplitude, bicoherence, bispectrum, cumulative_bispectrum, detect_phase_coupling,
     skewness_spectrum, trispectrum,
 };
@@ -33,7 +34,7 @@ fn main() {
 
     // Demonstrate bispectrum on uncoupled signal
     println!("\n2. Computing bispectrum of signal without phase coupling...");
-    let (bis_uncoupled, _, _) =
+    let (bis_uncoupled__) =
         bispectrum(&signal_no_coupling, nfft, Some("hann"), None, fs).unwrap();
 
     save_matrix_to_csv(
@@ -47,10 +48,10 @@ fn main() {
 
     // Demonstrate bicoherence
     println!("\n3. Computing bicoherence (normalized bispectrum)...");
-    let (bicoh_coupled, (_, _)) =
+    let (bicoh_coupled, (__)) =
         bicoherence(&signal_phase_coupled, nfft, Some("hann"), None, fs).unwrap();
 
-    let (bicoh_uncoupled, (_, _)) =
+    let (bicoh_uncoupled, (__)) =
         bicoherence(&signal_no_coupling, nfft, Some("hann"), None, fs).unwrap();
 
     save_matrix_to_csv(
@@ -93,7 +94,7 @@ fn main() {
 
     // Demonstrate biamplitude
     println!("\n6. Computing biamplitude (detects amplitude coupling)...");
-    let (biamp, (_, _)) = biamplitude(&signal_phase_coupled, nfft, Some("hann"), fs).unwrap();
+    let (biamp, (__)) = biamplitude(&signal_phase_coupled, nfft, Some("hann"), fs).unwrap();
 
     save_matrix_to_csv("biamplitude.csv", &biamp, &f1_axis, &f2_axis);
     println!("   Saved biamplitude to biamplitude.csv");
@@ -121,7 +122,7 @@ fn main() {
     for (i, &angle) in angles.iter().enumerate() {
         let signal = generate_phase_coupled_signal_with_angle(angle);
 
-        let (bicoh, (_, _)) = bicoherence(&signal, nfft, Some("hann"), None, fs).unwrap();
+        let (bicoh, (__)) = bicoherence(&signal, nfft, Some("hann"), None, fs).unwrap();
 
         save_matrix_to_csv(
             &format!("bicoherence_angle_{}.csv", i),
@@ -165,8 +166,7 @@ fn generate_phase_coupled_signal() -> Array1<f64> {
     let noise_level = 0.1;
     let mut rng = rand::rng();
     let noise = Array1::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.random_range(0.0..1.0) - 1.0)),
-    );
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
 
     signal + noise
 }
@@ -186,7 +186,7 @@ fn generate_uncoupled_signal() -> Array1<f64> {
 
     // Generate signal without phase coupling by adding random phase to f3
     let mut rng = rand::rng();
-    let random_phase = rng.random_range(0.0..2.0 * PI);
+    let random_phase = rng.gen_range(0.0..2.0 * PI);
 
     let signal = t.mapv(|ti| {
         (2.0 * PI * f1 * ti).sin()
@@ -197,15 +197,14 @@ fn generate_uncoupled_signal() -> Array1<f64> {
     // Add some noise
     let noise_level = 0.1;
     let noise = Array1::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.random_range(0.0..1.0) - 1.0)),
-    );
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
 
     signal + noise
 }
 
 /// Generates a signal with phase coupling and a specific coupling angle
 #[allow(dead_code)]
-fn generate_phase_coupled_signal_with_angle(angle: f64) -> Array1<f64> {
+fn generate_phase_coupled_signal_with_angle(_angle: f64) -> Array1<f64> {
     // Signal parameters
     let n_samples = 2048;
     let fs = 1000.0;
@@ -216,19 +215,18 @@ fn generate_phase_coupled_signal_with_angle(angle: f64) -> Array1<f64> {
     let f2 = 120.0;
     let f3 = f1 + f2; // Sum frequency
 
-    // Generate signal with specified phase coupling angle
+    // Generate signal with specified phase coupling _angle
     let signal = t.mapv(|ti| {
         (2.0 * PI * f1 * ti).sin()
             + (2.0 * PI * f2 * ti).sin()
-            + 0.5 * (2.0 * PI * f3 * ti + angle).sin()
+            + 0.5 * (2.0 * PI * f3 * ti + _angle).sin()
     });
 
     // Add some noise
     let noise_level = 0.1;
     let mut rng = rand::rng();
     let noise = Array1::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.random_range(0.0..1.0) - 1.0)),
-    );
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
 
     signal + noise
 }
@@ -244,14 +242,14 @@ fn save_matrix_to_csv(
     let mut file =
         File::create(filename).unwrap_or_else(|_| panic!("Failed to create {}", filename));
 
-    // Write header with column labels
+    // Write header with column _labels
     write!(file, "f1/f2").expect("Failed to write header");
     for &col in col_labels.iter() {
         write!(file, ",{:.2}", col).expect("Failed to write header");
     }
     writeln!(file).expect("Failed to write header");
 
-    // Write data with row labels
+    // Write data with row _labels
     for (i, &row_label) in row_labels.iter().enumerate() {
         write!(file, "{:.2}", row_label).expect("Failed to write data");
 
@@ -264,9 +262,9 @@ fn save_matrix_to_csv(
 
 /// Saves two 1D arrays to CSV as columns
 #[allow(dead_code)]
-fn save_array_to_csv(filename: &str, array1: &Array1<f64>, array2: &Array1<f64>) {
+fn save_array_to_csv(_filename: &str, array1: &Array1<f64>, array2: &Array1<f64>) {
     let mut file =
-        File::create(filename).unwrap_or_else(|_| panic!("Failed to create {}", filename));
+        File::create(_filename).unwrap_or_else(|_| panic!("Failed to create {}", _filename));
 
     // Write header
     writeln!(file, "x,y").expect("Failed to write header");

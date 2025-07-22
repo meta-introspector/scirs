@@ -24,15 +24,15 @@ struct SobolState {
 }
 
 impl SobolState {
-    fn new(dimension: usize) -> Self {
+    fn new(_dimension: usize) -> Self {
         let mut direction_numbers = Vec::new();
 
         // Initialize direction numbers for first few dimensions
         // This is a simplified implementation - full Sobol needs proper generating matrices
-        for d in 0..dimension {
+        for d in 0.._dimension {
             let mut dirs = Vec::new();
             if d == 0 {
-                // First dimension uses powers of 2
+                // First _dimension uses powers of 2
                 for i in 0..32 {
                     dirs.push(1u32 << (31 - i));
                 }
@@ -50,7 +50,7 @@ impl SobolState {
         }
 
         SobolState {
-            dimension,
+            _dimension,
             count: 0,
             direction_numbers,
         }
@@ -156,8 +156,7 @@ impl Strategy {
             "rand2bin" => Some(Strategy::Rand2Bin),
             "rand2exp" => Some(Strategy::Rand2Exp),
             "currenttobest1bin" => Some(Strategy::CurrentToBest1Bin),
-            "currenttobest1exp" => Some(Strategy::CurrentToBest1Exp),
-            _ => None,
+            "currenttobest1exp" => Some(Strategy::CurrentToBest1Exp, _ => None,
         }
     }
 }
@@ -184,6 +183,7 @@ where
 }
 
 use ndarray::Array2;
+use rand::seq::SliceRandom;
 
 impl<F> DifferentialEvolution<F>
 where
@@ -261,8 +261,7 @@ where
         match self.options.init.as_str() {
             "latinhypercube" => self.init_latinhypercube(),
             "halton" => self.init_halton(),
-            "sobol" => self.init_sobol(),
-            _ => self.init_random(),
+            "sobol" => self.init_sobol(, _ => self.init_random(),
         }
 
         // If x0 is provided, replace one member with it (bounds-checked)
@@ -418,17 +417,17 @@ where
                 lb + excess
             } else {
                 // If reflection goes beyond upper bound, use random value in range
-                self.rng.random_range(lb..=ub)
+                self.rng.gen_range(lb..=ub)
             }
         } else {
-            // val > ub, reflect around upper bound
+            // val > ub..reflect around upper bound
             let excess = val - ub;
             let range = ub - lb;
             if excess <= range {
                 ub - excess
             } else {
                 // If reflection goes beyond lower bound, use random value in range
-                self.rng.random_range(lb..=ub)
+                self.rng.gen_range(lb..=ub)
             }
         }
     }
@@ -441,9 +440,9 @@ where
         // Select indices for mutation
         let mut indices: Vec<usize> = Vec::with_capacity(5);
         while indices.len() < 5 {
-            let idx = self.rng.random_range(0..popsize);
-            if idx != candidate_idx && !indices.contains(&idx) {
-                indices.push(idx);
+            let _idx = self.rng.gen_range(0..popsize);
+            if _idx != candidate_idx && !indices.contains(&_idx) {
+                indices.push(_idx);
             }
         }
 
@@ -451,7 +450,7 @@ where
             self.options.mutation.0
         } else {
             self.rng
-                .random_range(self.options.mutation.0..self.options.mutation.1)
+                .gen_range(self.options.mutation.0..self.options.mutation.1)
         };
 
         match self.strategy {
@@ -515,7 +514,7 @@ where
 
         // Apply bounds checking after all calculations are done
         for i in 0..self.ndim {
-            mutant[i] = self.ensure_bounds(i, mutant[i]);
+            mutant[i] = self.ensure_bounds(i..mutant[i]);
         }
 
         mutant
@@ -533,9 +532,9 @@ where
             | Strategy::Rand2Bin
             | Strategy::CurrentToBest1Bin => {
                 // Binomial crossover
-                let randn = self.rng.random_range(0..self.ndim);
+                let randn = self.rng.gen_range(0..self.ndim);
                 for i in 0..self.ndim {
-                    if i == randn || self.rng.random_range(0.0..1.0) < self.options.recombination {
+                    if i == randn || self.rng.gen_range(0.0..1.0) < self.options.recombination {
                         trial[i] = mutant[i];
                     }
                 }
@@ -546,12 +545,12 @@ where
             | Strategy::Rand2Exp
             | Strategy::CurrentToBest1Exp => {
                 // Exponential crossover
-                let randn = self.rng.random_range(0..self.ndim);
+                let randn = self.rng.gen_range(0..self.ndim);
                 let mut i = randn;
                 loop {
                     trial[i] = mutant[i];
                     i = (i + 1) % self.ndim;
-                    if i == randn || self.rng.random_range(0.0..1.0) >= self.options.recombination {
+                    if i == randn || self.rng.gen_range(0.0..1.0) >= self.options.recombination {
                         break;
                     }
                 }
@@ -560,7 +559,7 @@ where
 
         // Ensure all trial elements are within bounds after crossover
         for i in 0..self.ndim {
-            trial[i] = self.ensure_bounds(i, trial[i]);
+            trial[i] = self.ensure_bounds(i..trial[i]);
         }
 
         trial
@@ -583,7 +582,7 @@ where
             // Extract just the trials for batch evaluation
             let trials: Vec<Array1<f64>> = trials_and_indices
                 .iter()
-                .map(|(trial, _)| trial.clone())
+                .map(|(trial_)| trial.clone())
                 .collect();
 
             // Extract the parallel options for evaluation

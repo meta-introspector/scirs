@@ -647,7 +647,7 @@ mod tests {
             max: 50.0,
         };
         let middle = Constraint::And(vec![inner, Constraint::NotNull]);
-        let outer = Constraint::Or(vec![middle, Constraint::Pattern("special".to_string())]);
+        let outer = Constraint::Or(vec![middle, Constraint::Pattern(special.to_string())]);
         let complex = Constraint::Not(Box::new(outer));
 
         match complex {
@@ -656,8 +656,7 @@ mod tests {
                     assert_eq!(constraints.len(), 2);
                 }
                 _ => panic!("Expected Or constraint"),
-            },
-            _ => panic!("Expected Not constraint"),
+            }_ => panic!("Expected Not constraint"),
         }
     }
 
@@ -688,12 +687,12 @@ mod tests {
     fn test_array_validation_constraints() {
         let constraints = ArrayValidationConstraints::new()
             .with_shape(vec![10, 20])
-            .with_field_name("test_array")
+            .with_field_name(test_array)
             .check_numeric_quality()
             .check_performance();
 
         assert_eq!(constraints.expected_shape, Some(vec![10, 20]));
-        assert_eq!(constraints.field_name, Some("test_array".to_string()));
+        assert_eq!(constraints.field_name, Some(test_array.to_string()));
         assert!(constraints.check_numeric_quality);
         assert!(constraints.check_performance);
     }

@@ -24,9 +24,9 @@ pub struct TextRank {
 
 impl TextRank {
     /// Create a new TextRank summarizer
-    pub fn new(num_sentences: usize) -> Self {
+    pub fn new(_num_sentences: usize) -> Self {
         Self {
-            num_sentences,
+            _num_sentences,
             damping_factor: 0.85,
             max_iterations: 100,
             threshold: 0.0001,
@@ -38,7 +38,7 @@ impl TextRank {
     pub fn with_damping_factor(mut self, damping_factor: f64) -> Result<Self> {
         if !(0.0..=1.0).contains(&damping_factor) {
             return Err(TextError::InvalidInput(
-                "Damping factor must be between 0 and 1".to_string(),
+                "Damping _factor must be between 0 and 1".to_string(),
             ));
         }
         self.damping_factor = damping_factor;
@@ -156,7 +156,7 @@ impl TextRank {
         indexed_scores
             .iter()
             .take(self.num_sentences)
-            .map(|&(idx, _)| idx)
+            .map(|&(idx_)| idx)
             .collect()
     }
 
@@ -187,9 +187,9 @@ pub struct CentroidSummarizer {
 
 impl CentroidSummarizer {
     /// Create a new centroid summarizer
-    pub fn new(num_sentences: usize) -> Self {
+    pub fn new(_num_sentences: usize) -> Self {
         Self {
-            num_sentences,
+            _num_sentences,
             topic_threshold: 0.1,
             redundancy_threshold: 0.95,
             sentence_tokenizer: Box::new(crate::tokenize::SentenceTokenizer::new()),
@@ -253,7 +253,7 @@ impl CentroidSummarizer {
         similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
         // Select sentences avoiding redundancy
-        for (idx, _) in similarities {
+        for (idx_) in similarities {
             if selected.len() >= self.num_sentences {
                 break;
             }
@@ -322,9 +322,9 @@ pub struct KeywordExtractor {
 
 impl KeywordExtractor {
     /// Create a new keyword extractor
-    pub fn new(num_keywords: usize) -> Self {
+    pub fn new(_num_keywords: usize) -> Self {
         Self {
-            num_keywords,
+            _num_keywords,
             min_df: 0.01, // Unused but kept for API compatibility
             max_df: 0.95, // Unused but kept for API compatibility
             ngram_range: (1, 3),
@@ -334,7 +334,7 @@ impl KeywordExtractor {
     /// Configure n-gram range
     pub fn with_ngram_range(mut self, min_n: usize, max_n: usize) -> Result<Self> {
         if min_n > max_n || min_n == 0 {
-            return Err(TextError::InvalidInput("Invalid n-gram range".to_string()));
+            return Err(TextError::InvalidInput("Invalid _n-gram range".to_string()));
         }
         self.ngram_range = (min_n, max_n);
         Ok(self)
@@ -476,7 +476,7 @@ mod tests {
         let keywords_with_pos = extractor.extract_keywords_with_positions(text).unwrap();
 
         // Should find positions for repeated keywords
-        for (keyword, _, positions) in keywords_with_pos {
+        for (keyword_, positions) in keywords_with_pos {
             if keyword.to_lowercase().contains("machine learning") {
                 assert!(positions.len() >= 2);
             }

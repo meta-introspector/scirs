@@ -8,8 +8,8 @@
 //! - RANSAC-based outlier rejection
 
 use image::{DynamicImage, ImageBuffer, Luma, Rgb, RgbImage};
-use scirs2_vision::error::Result;
-use scirs2_vision::feature::{
+use scirs2__vision::error::Result;
+use scirs2__vision::feature::{
     detect_and_compute, detect_and_compute_orb, match_descriptors, match_orb_descriptors,
     matching::*, OrbConfig,
 };
@@ -42,12 +42,12 @@ fn main() -> Result<()> {
 
 /// Test SIFT-like descriptor matching
 #[allow(dead_code)]
-fn test_descriptor_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
+fn test_descriptor_matching(_img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
     println!("\n1. SIFT-like Descriptor Matching");
     println!("=================================");
 
     // Detect and compute descriptors
-    let descriptors1 = detect_and_compute(img1, 50, 0.01)?;
+    let descriptors1 = detect_and_compute(_img1, 50, 0.01)?;
     let descriptors2 = detect_and_compute(img2, 50, 0.01)?;
 
     println!("Image 1: {} features", descriptors1.len());
@@ -97,7 +97,7 @@ fn test_descriptor_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<
     // Visualize matches
     if !bf_matches.is_empty() {
         let visualization =
-            visualize_matches(img1, img2, &descriptors1, &descriptors2, &bf_matches)?;
+            visualize_matches(_img1, img2, &descriptors1, &descriptors2, &bf_matches)?;
         visualization.save("output/descriptor_matches.png").ok();
         println!("Saved match visualization: output/descriptor_matches.png");
     }
@@ -107,7 +107,7 @@ fn test_descriptor_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<
 
 /// Test ORB descriptor matching
 #[allow(dead_code)]
-fn test_orb_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
+fn test_orb_matching(_img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
     println!("\n2. ORB Descriptor Matching");
     println!("===========================");
 
@@ -121,7 +121,7 @@ fn test_orb_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
         patch_size: 31,
     };
 
-    let orb_desc1 = detect_and_compute_orb(img1, &orb_config)?;
+    let orb_desc1 = detect_and_compute_orb(_img1, &orb_config)?;
     let orb_desc2 = detect_and_compute_orb(img2, &orb_config)?;
 
     println!("ORB Image 1: {} features", orb_desc1.len());
@@ -162,7 +162,7 @@ fn test_orb_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
         let orb_keypoints2: Vec<_> = orb_desc2.iter().map(|d| d.keypoint.clone()).collect();
 
         let visualization = visualize_binary_matches(
-            img1,
+            _img1,
             img2,
             &orb_keypoints1,
             &orb_keypoints2,
@@ -177,12 +177,12 @@ fn test_orb_matching(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
 
 /// Test various matching algorithms
 #[allow(dead_code)]
-fn test_various_matchers(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
+fn test_various_matchers(_img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
     println!("\n3. Various Matching Algorithms");
     println!("===============================");
 
     // Get descriptors
-    let descriptors1 = detect_and_compute(img1, 30, 0.01)?;
+    let descriptors1 = detect_and_compute(_img1, 30, 0.01)?;
     let descriptors2 = detect_and_compute(img2, 30, 0.01)?;
 
     if descriptors1.is_empty() || descriptors2.is_empty() {
@@ -239,12 +239,12 @@ fn test_various_matchers(img1: &DynamicImage, img2: &DynamicImage) -> Result<()>
 
 /// Test RANSAC filtering
 #[allow(dead_code)]
-fn test_ransac_filtering(img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
+fn test_ransac_filtering(_img1: &DynamicImage, img2: &DynamicImage) -> Result<()> {
     println!("\n4. RANSAC Outlier Rejection");
     println!("============================");
 
     // Get descriptors and matches
-    let descriptors1 = detect_and_compute(img1, 50, 0.01)?;
+    let descriptors1 = detect_and_compute(_img1, 50, 0.01)?;
     let descriptors2 = detect_and_compute(img2, 50, 0.01)?;
 
     if descriptors1.is_empty() || descriptors2.is_empty() {
@@ -294,7 +294,7 @@ fn test_ransac_filtering(img1: &DynamicImage, img2: &DynamicImage) -> Result<()>
             // Visualize RANSAC results
             let filename = format!("output/ransac_{model:?}_matches.png").to_lowercase();
             let visualization =
-                visualize_matches(img1, img2, &descriptors1, &descriptors2, &filtered_matches)?;
+                visualize_matches(_img1, img2, &descriptors1, &descriptors2, &filtered_matches)?;
             visualization.save(&filename).ok();
             println!("  Saved visualization: {filename}");
         }
@@ -593,8 +593,8 @@ fn visualize_binary_matches(
 
 /// Draw a keypoint marker
 #[allow(dead_code)]
-fn draw_keypoint(img: &mut RgbImage, x: u32, y: u32, color: Rgb<u8>) {
-    let (width, height) = img.dimensions();
+fn draw_keypoint(_img: &mut RgbImage, x: u32, y: u32, color: Rgb<u8>) {
+    let (width, height) = _img.dimensions();
 
     // Draw a small cross
     for dx in -3..=3 {
@@ -603,7 +603,7 @@ fn draw_keypoint(img: &mut RgbImage, x: u32, y: u32, color: Rgb<u8>) {
             let py = (y as i32 + dy) as u32;
 
             if px < width && py < height && (dx == 0 || dy == 0) {
-                img.put_pixel(px, py, color);
+                _img.put_pixel(px, py, color);
             }
         }
     }
@@ -611,8 +611,8 @@ fn draw_keypoint(img: &mut RgbImage, x: u32, y: u32, color: Rgb<u8>) {
 
 /// Draw a line between two points
 #[allow(dead_code)]
-fn draw_line(img: &mut RgbImage, x1: u32, y1: u32, x2: u32, y2: u32, color: Rgb<u8>) {
-    let (width, height) = img.dimensions();
+fn draw_line(_img: &mut RgbImage, x1: u32, y1: u32, x2: u32, y2: u32, color: Rgb<u8>) {
+    let (width, height) = _img.dimensions();
 
     // Simple line drawing using linear interpolation
     let dx = x2 as i32 - x1 as i32;
@@ -629,7 +629,7 @@ fn draw_line(img: &mut RgbImage, x1: u32, y1: u32, x2: u32, y2: u32, color: Rgb<
         let y = (y1 as f32 + t * dy as f32) as u32;
 
         if x < width && y < height {
-            img.put_pixel(x, y, color);
+            _img.put_pixel(x, y, color);
         }
     }
 }

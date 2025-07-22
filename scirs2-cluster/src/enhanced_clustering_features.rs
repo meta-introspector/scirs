@@ -4,12 +4,12 @@
 //! features including deep learning integration, quantum-inspired algorithms,
 //! and advanced ensemble methods for superior clustering performance.
 
-use crate::advanced_clustering::{
+use crate::advanced__clustering::{
     AdvancedClusterer, AdvancedClusteringResult, QuantumNeuromorphicMetrics,
 };
 use crate::error::{ClusteringError, Result};
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 
@@ -222,7 +222,7 @@ impl TransformerClusterEmbedder {
 
     /// Embed features using transformer architecture
     pub fn embed_features(&mut self, data: &ArrayView2<f64>) -> Result<Array2<f64>> {
-        let (_n_samples, _n_features) = data.dim();
+        let (_n_samples_n_features) = data.dim();
         let _embed_dim = self.embedding_dim;
 
         // Input projection to embedding dimension
@@ -333,12 +333,11 @@ impl TransformerClusterEmbedder {
 
     fn single_head_attention(
         &self,
-        embeddings: &Array2<f64>,
-        _layer_idx: usize,
+        embeddings: &Array2<f64>, _layer_idx: usize,
         head: usize,
         head_dim: usize,
     ) -> Result<Array2<f64>> {
-        let (seq_len, _) = embeddings.dim();
+        let (seq_len_) = embeddings._dim();
 
         // Simplified attention computation
         // Q, K, V projections (using simplified linear transformations)
@@ -945,8 +944,7 @@ impl DeepEnsembleCoordinator {
     pub fn coordinate_ensemble(
         &mut self,
         data: &ArrayView2<f64>,
-        embeddings: &Array2<f64>,
-        _base_result: &AdvancedClusteringResult,
+        embeddings: &Array2<f64>, _base_result: &AdvancedClusteringResult,
     ) -> Result<EnsembleConsensus> {
         // Create ensemble predictions
         let mut ensemble_predictions = Vec::new();
@@ -1002,8 +1000,7 @@ impl DeepEnsembleCoordinator {
 
     fn generate_ensemble_prediction(
         &self,
-        data: &ArrayView2<f64>,
-        _embeddings: &Array2<f64>,
+        data: &ArrayView2<f64>, _embeddings: &Array2<f64>,
         seed: usize,
     ) -> Result<Array1<usize>> {
         let n_samples = data.nrows();

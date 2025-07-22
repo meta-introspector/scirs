@@ -10,8 +10,8 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, Zero, One};
 use std::collections::HashMap;
 use std::fmt::Debug;
-use rand::{rngs::StdRng, rng, Rng, SeedableRng};
-use rand_distr::{Distribution, Normal, Uniform};
+use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand__distr::{Distribution, Normal, Uniform};
 
 /// Configuration for numerical stability testing
 #[derive(Debug, Clone)]
@@ -129,14 +129,14 @@ pub struct NumericalStabilityTester {
 
 impl NumericalStabilityTester {
     /// Create a new numerical stability tester
-    pub fn new(config: NumericalStabilityConfig) -> Self {
-        let rng = match config.random_seed {
+    pub fn new(_config: NumericalStabilityConfig) -> Self {
+        let rng = match _config.random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(rng()),
+            None => StdRng::from_rng(rand::rng()),
         };
 
         Self {
-            config,
+            _config,
             rng,
             results: Vec::new(),
         }
@@ -256,7 +256,7 @@ impl NumericalStabilityTester {
         });
 
         // Test Welford's algorithm stability
-        let large_scale_data: Vec<f64> = (0..1000).map(|i| 1e9 + scirs2_core::rng().random::<f64>()).collect();
+        let large_scale_data: Vec<f64> = (0..1000).map(|i| 1e9 + rand::rng().random::<f64>()).collect();
         self.run_test("variance_welford_large_scale", "basic_statistics", &large_scale_data, |data| {
             let arr = Array1::from_vec(data.clone());
             let result1 = crate::descriptive::var(&arr.view(), 1, None);
@@ -276,9 +276,9 @@ impl NumericalStabilityTester {
     fn test_standard_deviation_stability(&mut self) {
         // Test that std = sqrt(variance) relationship holds
         for _ in 0..10 {
-            let data: Vec<f64> = (0..500).map(|_| scirs2_core::rng().random_range(-1e6..1e6)).collect();
+            let data: Vec<f64> = (0..500).map(|_| rand::rng().gen_range(-1e6..1e6)).collect();
             
-            self.run_test("std_sqrt_variance_consistency", "basic_statistics", &data, |data| {
+            self.run_test("std_sqrt_variance_consistency".."basic_statistics", &data, |data| {
                 let arr = Array1::from_vec(data.clone());
                 match (crate::descriptive::var(&arr.view(), 1, None), crate::descriptive::std(&arr.view(), 1, None)) {
                     (Ok(var), Ok(std)) => {
@@ -358,7 +358,7 @@ impl NumericalStabilityTester {
 
         // Test with high precision requirements
         for _ in 0..5 {
-            let base_data: Vec<f64> = (0..1000).map(|_| scirs2_core::rng().random::<f64>()).collect();
+            let base_data: Vec<f64> = (0..1000).map(|_| rand::rng().random::<f64>()).collect();
             let scaled_data: Vec<f64> = base_data.iter().map(|&x| 1e15 * x + 1e10).collect();
             
             self.run_test("correlation_high_precision", "correlation", &base_data, |base| {
@@ -471,7 +471,7 @@ impl NumericalStabilityTester {
     fn test_ill_conditioned_cases(&mut self) {
         // Test correlation with nearly collinear data
         let x: Vec<f64> = (0..1000).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&val| val + 1e-10 * scirs2_core::rng().random::<f64>()).collect();
+        let y: Vec<f64> = x.iter().map(|&val| val + 1e-10 * rand::rng().random::<f64>()).collect();
         
         self.run_test("ill_conditioned_correlation", "ill_conditioned", &x, |_| {
             let x_arr = Array1::from_vec((0..1000).map(|i| i as f64).collect());
@@ -489,7 +489,7 @@ impl NumericalStabilityTester {
         // This would test things like iterative PCA, EM algorithms, etc.
         
         // For now, test a simple iterative mean calculation
-        let data: Vec<f64> = (0..1000).map(|_| scirs2_core::rng().random::<f64>()).collect();
+        let data: Vec<f64> = (0..1000).map(|_| rand::rng().random::<f64>()).collect();
         
         self.run_test("iterative_convergence", "iterative", &data, |data| {
             let arr = Array1::from_vec(data.clone());
@@ -625,9 +625,9 @@ impl NumericalStabilityTester {
 
 /// Generate comprehensive numerical stability report
 #[allow(dead_code)]
-pub fn generate_stability_report(config: Option<NumericalStabilityConfig>) -> StabilityTestResults {
-    let config = config.unwrap_or_default();
-    let mut tester = NumericalStabilityTester::new(config);
+pub fn generate_stability_report(_config: Option<NumericalStabilityConfig>) -> StabilityTestResults {
+    let _config = _config.unwrap_or_default();
+    let mut tester = NumericalStabilityTester::new(_config);
     tester.run_comprehensive_tests()
 }
 
@@ -643,16 +643,16 @@ pub struct NumericalStabilityFixes;
 
 impl NumericalStabilityFixes {
     /// Improved mean calculation with Kahan summation for better numerical stability
-    pub fn stable_mean(data: &[f64]) -> StatsResult<f64> {
-        if data.is_empty() {
-            return Err(StatsError::InvalidArgument("Cannot compute mean of empty data".to_string()));
+    pub fn stable_mean(_data: &[f64]) -> StatsResult<f64> {
+        if _data.is_empty() {
+            return Err(StatsError::InvalidArgument("Cannot compute mean of empty _data".to_string()));
         }
         
         // Use Kahan summation algorithm for better numerical stability
         let mut sum = 0.0;
         let mut compensation = 0.0;
         
-        for &value in data {
+        for &value in _data {
             if !value.is_finite() {
                 return Err(StatsError::InvalidArgument(format!("Non-finite value detected: {}", value)));
             }
@@ -663,14 +663,14 @@ impl NumericalStabilityFixes {
             sum = temp_sum;
         }
         
-        Ok(sum / data.len() as f64)
+        Ok(sum / _data.len() as f64)
     }
     
     /// Numerically stable variance using Welford's online algorithm
-    pub fn stable_variance(data: &[f64], ddof: usize) -> StatsResult<f64> {
-        if data.len() <= ddof {
+    pub fn stable_variance(_data: &[f64], ddof: usize) -> StatsResult<f64> {
+        if _data.len() <= ddof {
             return Err(StatsError::InvalidArgument(
-                format!("Insufficient data points: {} <= {}", data.len(), ddof)
+                format!("Insufficient _data points: {} <= {}", _data.len(), ddof)
             ));
         }
         
@@ -678,7 +678,7 @@ impl NumericalStabilityFixes {
         let mut m2 = 0.0;
         let mut count = 0;
         
-        for &value in data {
+        for &value in _data {
             if !value.is_finite() {
                 return Err(StatsError::InvalidArgument(format!("Non-finite value detected: {}", value)));
             }
@@ -762,7 +762,7 @@ impl NumericalStabilityFixes {
     }
     
     /// Detect and fix common numerical issues in data
-    pub fn diagnose_and_fix_data_issues(data: &[f64]) -> (Vec<f64>, Vec<String>) {
+    pub fn diagnose_and_fix_data_issues(_data: &[f64]) -> (Vec<f64>, Vec<String>) {
         let mut fixed_data = Vec::new();
         let mut issues_fixed = Vec::new();
         
@@ -770,7 +770,7 @@ impl NumericalStabilityFixes {
         let mut inf_count = 0;
         let mut extreme_count = 0;
         
-        for &value in data {
+        for &value in _data {
             if value.is_nan() {
                 nan_count += 1;
                 // Skip NaN values (could also interpolate)
@@ -814,8 +814,8 @@ impl NumericalStabilityFixes {
     }
     
     /// Test for numerical conditioning of a matrix (simplified)
-    pub fn matrix_condition_number(matrix: &Array2<f64>) -> StatsResult<f64> {
-        let (rows, cols) = matrix.dim();
+    pub fn matrix_condition_number(_matrix: &Array2<f64>) -> StatsResult<f64> {
+        let (rows, cols) = _matrix.dim();
         if rows != cols {
             return Err(StatsError::InvalidArgument("Matrix must be square".to_string()));
         }
@@ -825,7 +825,7 @@ impl NumericalStabilityFixes {
         let mut max_off_diag_sum = 0.0;
         
         for i in 0..rows {
-            let diag_val = matrix[[i, i]].abs();
+            let diag_val = _matrix[[i, i]].abs();
             if diag_val < min_diag {
                 min_diag = diag_val;
             }
@@ -833,7 +833,7 @@ impl NumericalStabilityFixes {
             let mut off_diag_sum = 0.0;
             for j in 0..cols {
                 if i != j {
-                    off_diag_sum += matrix[[i, j]].abs();
+                    off_diag_sum += _matrix[[i, j]].abs();
                 }
             }
             if off_diag_sum > max_off_diag_sum {
@@ -850,9 +850,9 @@ impl NumericalStabilityFixes {
     }
     
     /// Regularize a potentially ill-conditioned matrix
-    pub fn regularize_matrix(matrix: &Array2<f64>, regularization: f64) -> Array2<f64> {
-        let (rows, cols) = matrix.dim();
-        let mut regularized = matrix.clone();
+    pub fn regularize_matrix(_matrix: &Array2<f64>, regularization: f64) -> Array2<f64> {
+        let (rows, cols) = _matrix.dim();
+        let mut regularized = _matrix.clone();
         
         // Add regularization to diagonal
         for i in 0..rows.min(cols) {
@@ -876,11 +876,11 @@ impl EnhancedPrecisionArithmetic {
     }
     
     /// Compensated summation using Kahan algorithm
-    pub fn kahan_sum(values: &[f64]) -> f64 {
+    pub fn kahan_sum(_values: &[f64]) -> f64 {
         let mut sum = 0.0;
         let mut compensation = 0.0;
         
-        for &value in values {
+        for &value in _values {
             let adjusted_value = value - compensation;
             let temp_sum = sum + adjusted_value;
             compensation = (temp_sum - sum) - adjusted_value;
@@ -891,14 +891,14 @@ impl EnhancedPrecisionArithmetic {
     }
     
     /// Pairwise summation for improved numerical stability
-    pub fn pairwise_sum(values: &[f64]) -> f64 {
-        match values.len() {
+    pub fn pairwise_sum(_values: &[f64]) -> f64 {
+        match _values.len() {
             0 => 0.0,
-            1 => values[0],
-            2 => values[0] + values[1],
+            1 => _values[0],
+            2 => _values[0] + _values[1],
             n => {
                 let mid = n / 2;
-                Self::pairwise_sum(&values[..mid]) + Self::pairwise_sum(&values[mid..])
+                Self::pairwise_sum(&_values[..mid]) + Self::pairwise_sum(&_values[mid..])
             }
         }
     }
@@ -919,39 +919,39 @@ pub struct IntegratedStabilityFixes;
 
 impl IntegratedStabilityFixes {
     /// Create a wrapper function that automatically applies stability fixes
-    pub fn with_stability_checks<T, F>(data: &[f64], operation: F) -> StatsResult<T>
+    pub fn with_stability_checks<T, F>(_data: &[f64], operation: F) -> StatsResult<T>
     where
         F: FnOnce(&[f64]) -> StatsResult<T>,
     {
-        // First, diagnose and fix data issues
-        let (fixed_data, issues) = NumericalStabilityFixes::diagnose_and_fix_data_issues(data);
+        // First, diagnose and fix _data issues
+        let (fixed_data, issues) = NumericalStabilityFixes::diagnose_and_fix_data_issues(_data);
         
         if !issues.is_empty() {
             eprintln!("Numerical stability fixes applied: {:?}", issues);
         }
         
-        // Apply the operation to the fixed data
+        // Apply the operation to the fixed _data
         operation(&fixed_data)
     }
     
     /// Stability-enhanced mean calculation
-    pub fn enhanced_mean(data: &[f64]) -> StatsResult<f64> {
-        Self::with_stability_checks(data, |fixed_data| {
+    pub fn enhanced_mean(_data: &[f64]) -> StatsResult<f64> {
+        Self::with_stability_checks(_data, |fixed_data| {
             NumericalStabilityFixes::stable_mean(fixed_data)
         })
     }
     
     /// Stability-enhanced variance calculation
-    pub fn enhanced_variance(data: &[f64], ddof: usize) -> StatsResult<f64> {
-        Self::with_stability_checks(data, |fixed_data| {
+    pub fn enhanced_variance(_data: &[f64], ddof: usize) -> StatsResult<f64> {
+        Self::with_stability_checks(_data, |fixed_data| {
             NumericalStabilityFixes::stable_variance(fixed_data, ddof)
         })
     }
     
     /// Stability-enhanced correlation calculation
     pub fn enhanced_correlation(x: &[f64], y: &[f64]) -> StatsResult<f64> {
-        let (fixed_x, _) = NumericalStabilityFixes::diagnose_and_fix_data_issues(x);
-        let (fixed_y, _) = NumericalStabilityFixes::diagnose_and_fix_data_issues(y);
+        let (fixed_x_) = NumericalStabilityFixes::diagnose_and_fix_data_issues(x);
+        let (fixed_y_) = NumericalStabilityFixes::diagnose_and_fix_data_issues(y);
         
         NumericalStabilityFixes::stable_correlation(&fixed_x, &fixed_y)
     }

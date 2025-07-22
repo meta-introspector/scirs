@@ -269,11 +269,11 @@ pub struct CrossPlatformValidator {
 
 impl CrossPlatformValidator {
     /// Create a new cross-platform validator
-    pub fn new(config: CrossPlatformConfig) -> Self {
+    pub fn new(_config: CrossPlatformConfig) -> Self {
         let platform_info = Self::detect_platform_info();
         
         Self {
-            config,
+            _config,
             platform_info,
         }
     }
@@ -436,7 +436,7 @@ impl CrossPlatformValidator {
             category: TestCategory::NumericalPrecision,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(std::mem::size_of::<f64>() * sample_count * 2),
+            memory_usage_bytes: Some(std::mem::size, _of::<f64>() * sample_count * 2),
             notes: vec!["Testing fundamental arithmetic operations".to_string()],
             accuracy_metrics: Some(accuracy_metrics),
         })
@@ -494,7 +494,7 @@ impl CrossPlatformValidator {
             category: TestCategory::NumericalPrecision,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(std::mem::size_of::<f64>() * sample_count * 2),
+            memory_usage_bytes: Some(std::mem::size, _of::<f64>() * sample_count * 2),
             notes: vec!["Testing transcendental function precision".to_string()],
             accuracy_metrics: Some(accuracy_metrics),
         })
@@ -557,7 +557,7 @@ impl CrossPlatformValidator {
             category: TestCategory::NumericalPrecision,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(test_data.len() * std::mem::size, _of::<f64>()),
             notes: vec!["Testing core statistical function precision".to_string()],
             accuracy_metrics: Some(accuracy_metrics),
         })
@@ -603,14 +603,14 @@ impl CrossPlatformValidator {
             category: TestCategory::NumericalPrecision,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(std::mem::size_of::<f64>() * 4),
+            memory_usage_bytes: Some(std::mem::size, _of::<f64>() * 4),
             notes,
             accuracy_metrics: None,
         })
     }
 
     /// Test SIMD compatibility
-    fn test_simd_compatibility(&self, _issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_simd_compatibility(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test SIMD mean calculation
@@ -671,7 +671,7 @@ impl CrossPlatformValidator {
             category: TestCategory::SIMDCompatibility,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(test_data.len() * std::mem::size, _of::<f64>()),
             notes,
             accuracy_metrics,
         })
@@ -723,7 +723,7 @@ impl CrossPlatformValidator {
             category: TestCategory::SIMDCompatibility,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(test_data.len() * std::mem::size, _of::<f64>()),
             notes,
             accuracy_metrics,
         })
@@ -759,7 +759,7 @@ impl CrossPlatformValidator {
     }
 
     /// Test parallel processing compatibility
-    fn test_parallel_compatibility(&self, _issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_parallel_compatibility(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test parallel mean calculation
@@ -824,7 +824,7 @@ impl CrossPlatformValidator {
             category: TestCategory::ParallelProcessing,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(test_data.len() * std::mem::size, _of::<f64>()),
             notes,
             accuracy_metrics,
         })
@@ -873,7 +873,7 @@ impl CrossPlatformValidator {
             category: TestCategory::ParallelProcessing,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(1000 * std::mem::size_of::<f64>() * 2),
+            memory_usage_bytes: Some(1000 * std::mem::size, _of::<f64>() * 2),
             notes,
             accuracy_metrics: None,
         })
@@ -907,7 +907,7 @@ impl CrossPlatformValidator {
     }
 
     /// Test memory allocation patterns
-    fn test_memory_allocation(&self, _issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_memory_allocation(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test large allocation handling
@@ -949,7 +949,7 @@ impl CrossPlatformValidator {
             category: TestCategory::MemoryAllocation,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(large_size * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(large_size * std::mem::size, _of::<f64>()),
             notes,
             accuracy_metrics: None,
         })
@@ -975,7 +975,7 @@ impl CrossPlatformValidator {
             category: TestCategory::MemoryAllocation,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(1000 * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(1000 * std::mem::size, _of::<f64>()),
             notes,
             accuracy_metrics: None,
         })
@@ -1008,14 +1008,14 @@ impl CrossPlatformValidator {
             category: TestCategory::MemoryAllocation,
             status: TestStatus::Passed,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(allocations.iter().map(|a| a.len() * std::mem::size_of::<f64>()).sum()),
+            memory_usage_bytes: Some(allocations.iter().map(|a| a.len() * std::mem::size, _of::<f64>()).sum()),
             notes,
             accuracy_metrics: None,
         })
     }
 
     /// Test architecture-specific optimizations
-    fn test_architecture_optimizations(&self, _issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_architecture_optimizations(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test CPU cache optimization
@@ -1060,7 +1060,7 @@ impl CrossPlatformValidator {
             category: TestCategory::ArchitectureSpecific,
             status: TestStatus::Passed,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(size * std::mem::size_of::<f64>()),
+            memory_usage_bytes: Some(size * std::mem::size, _of::<f64>()),
             notes,
             accuracy_metrics: None,
         })
@@ -1088,7 +1088,7 @@ impl CrossPlatformValidator {
     }
 
     /// Test OS-specific behavior
-    fn test_os_specific_behavior(&self, _issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_os_specific_behavior(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test OS-specific optimizations
@@ -1145,7 +1145,7 @@ impl CrossPlatformValidator {
     }
 
     /// Test endianness handling
-    fn test_endianness_handling(&self, _issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_endianness_handling(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test byte order consistency
@@ -1186,14 +1186,14 @@ impl CrossPlatformValidator {
             category: TestCategory::EndianessHandling,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(std::mem::size_of::<f64>() + std::mem::size_of::<u32>()),
+            memory_usage_bytes: Some(std::mem::size, _of::<f64>() + std::mem::size_of::<u32>()),
             notes,
             accuracy_metrics: None,
         })
     }
 
     /// Test threading models
-    fn test_threading_models(&self, _issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_threading_models(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test threading model compatibility

@@ -27,7 +27,7 @@ pub fn register_homography_points(
         ));
     }
 
-    // Convert points to matches
+    // Convert _points to matches
     let matches: Vec<PointMatch> = source_points
         .iter()
         .zip(target_points.iter())
@@ -38,7 +38,7 @@ pub fn register_homography_points(
         })
         .collect();
 
-    // Use RANSAC for robust estimation if we have enough points
+    // Use RANSAC for robust estimation if we have enough _points
     if matches.len() >= 8 && params.ransac_iterations > 0 {
         ransac_estimate_transform(&matches, TransformType::Homography, params)
     } else {
@@ -85,7 +85,7 @@ pub fn register_homography_iterative(
         ));
     }
 
-    // Convert points to matches
+    // Convert _points to matches
     let mut matches: Vec<PointMatch> = source_points
         .iter()
         .zip(target_points.iter())

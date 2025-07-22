@@ -1,6 +1,6 @@
 use approx::assert_abs_diff_eq;
 use ndarray::array;
-use scirs2_metrics::classification::one_vs_one::{
+use scirs2__metrics::classification::one_vs_one::{
     one_vs_one_accuracy, one_vs_one_f1_score, one_vs_one_precision_recall,
     weighted_one_vs_one_f1_score,
 };

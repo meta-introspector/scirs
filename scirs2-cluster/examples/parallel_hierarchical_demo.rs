@@ -1,7 +1,7 @@
 //! Demonstration of parallel hierarchical clustering performance and correctness
 
 use ndarray::Array2;
-use scirs2_cluster::hierarchy::{linkage, parallel_linkage, LinkageMethod, Metric};
+use scirs2__cluster::hierarchy::{linkage, parallel_linkage, LinkageMethod, Metric};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -80,11 +80,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a test dataset with the specified number of points
 #[allow(dead_code)]
-fn create_dataset(n_points: usize) -> Array2<f64> {
-    let mut data = Array2::zeros((n_points, 2));
+fn create_dataset(_n_points: usize) -> Array2<f64> {
+    let mut data = Array2::zeros((_n_points, 2));
 
     // Create clusters for testing
-    for i in 0..n_points {
+    for i in 0.._n_points {
         let cluster_id = i % 3; // 3 clusters
         let angle = (i as f64) * 0.5;
 

@@ -233,7 +233,7 @@ pub mod spherical;
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::hankel1;
+/// use scirs2__special::hankel1;
 /// use num_complex::Complex64;
 ///
 /// let result = hankel1(1.0, 1.0);
@@ -293,7 +293,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::hankel2;
+/// use scirs2__special::hankel2;
 /// use num_complex::Complex64;
 ///
 /// let result = hankel2(1.0, 1.0);
@@ -351,7 +351,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::hankel1e;
+/// use scirs2__special::hankel1e;
 ///
 /// let result = hankel1e(1.0, 10.0);
 /// // Scaled version for numerical stability
@@ -384,7 +384,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::hankel2e;
+/// use scirs2__special::hankel2e;
 ///
 /// let result = hankel2e(1.0, 10.0);
 /// // Scaled version for numerical stability

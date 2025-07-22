@@ -135,20 +135,19 @@ impl<F: IntegrateFloat> JacobianManager<F> {
     }
 
     /// Create a new Jacobian manager with specific strategy and structure
-    pub fn with_strategy(strategy: JacobianStrategy, structure: JacobianStructure) -> Self {
+    pub fn with_strategy(_strategy: JacobianStrategy, structure: JacobianStructure) -> Self {
         JacobianManager {
             jacobian: None,
             state_point: None,
             f_eval: None,
             age: 0,
-            max_age: match strategy {
+            max_age: match _strategy {
                 JacobianStrategy::ModifiedNewton => 50,
                 JacobianStrategy::BroydenUpdate => 20,
                 JacobianStrategy::ParallelFiniteDifference => 1,
-                JacobianStrategy::ParallelSparseFiniteDifference => 1,
-                _ => 1, // Other strategies don't reuse as much
+                JacobianStrategy::ParallelSparseFiniteDifference => 1_ => 1, // Other strategies don't reuse as much
             },
-            strategy,
+            _strategy,
             structure,
             condition_estimate: None,
             factorized: false,
@@ -158,8 +157,8 @@ impl<F: IntegrateFloat> JacobianManager<F> {
 
     /// Create a Jacobian manager with automatically selected strategy
     /// based on system size and structure
-    pub fn with_auto_strategy(n_dim: usize, is_banded: bool) -> Self {
-        let (strategy, structure) = if n_dim > 100 {
+    pub fn with_auto_strategy(_n_dim: usize, is_banded: bool) -> Self {
+        let (strategy, structure) = if _n_dim > 100 {
             // For very large systems, use parallel computation
             let parallel_available = cfg!(feature = "parallel");
 
@@ -168,8 +167,8 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                     (
                         JacobianStrategy::ParallelSparseFiniteDifference,
                         JacobianStructure::Banded {
-                            lower: n_dim / 10,
-                            upper: n_dim / 10,
+                            lower: _n_dim / 10,
+                            upper: _n_dim / 10,
                         },
                     )
                 } else {
@@ -200,22 +199,21 @@ impl<F: IntegrateFloat> JacobianManager<F> {
     }
 
     /// Check if the Jacobian needs to be recomputed
-    pub fn needs_update(&self, t: F, y: &Array1<F>, force_age: Option<usize>) -> bool {
+    pub fn needs_update(t: F, y: &Array1<F>, force_age: Option<usize>) -> bool {
         // Always recompute if we don't have a Jacobian yet
         if self.jacobian.is_none() {
             return true;
         }
 
-        // Check age against threshold (possibly overridden)
+        // Check _age against threshold (possibly overridden)
         let max_age = force_age.unwrap_or(self.max_age);
-        if self.age >= max_age {
+        if self._age >= max_age {
             return true;
         }
 
         // For certain strategies, we always recompute
         match self.strategy {
-            JacobianStrategy::FiniteDifference => self.age > 0,
-            _ => {
+            JacobianStrategy::FiniteDifference => self._age > 0_ => {
                 // For other strategies, check if state has changed significantly
                 if let Some((old_t, old_y)) = &self.state_point {
                     // Calculate relative distance between current and previous state
@@ -239,8 +237,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                         JacobianStrategy::BroydenUpdate => (
                             F::from_f64(0.1).unwrap(), // 10% change in time
                             F::from_f64(0.1).unwrap(), // 10% change in y
-                        ),
-                        _ => (
+                        , _ => (
                             F::from_f64(0.01).unwrap(), // 1% change in time
                             F::from_f64(0.01).unwrap(), // 1% change in y
                         ),
@@ -577,40 +574,40 @@ impl<F: IntegrateFloat> JacobianManager<F> {
 
         for j in 0..n {
             // Compute perturbation size scaled by variable magnitude
-            let eps = base_eps * (F::one() + y[j].abs()).max(F::one());
+            let _eps = base_eps * (F::one() + y[j].abs()).max(F::one());
 
             // Perturb the j-th component
             let mut y_perturbed = y.clone();
-            y_perturbed[j] += eps;
+            y_perturbed[j] += _eps;
 
             // Evaluate function at perturbed point
             let f_perturbed = f(t, y_perturbed.view());
 
             // Compute j-th column of Jacobian
             for i in 0..n {
-                jac[[i, j]] = (f_perturbed[i] - f_current[i]) / eps;
+                jac[[i, j]] = (f_perturbed[i] - f_current[i]) / _eps;
             }
         }
     }
 
     /// Get the current Jacobian (returns None if not computed)
-    pub fn jacobian(&self) -> Option<&Array2<F>> {
+    pub fn jacobian(&mut self) -> Option<&Array2<F>> {
         self.jacobian.as_ref()
     }
 
     /// Get the age of the current Jacobian
-    pub fn age(&self) -> usize {
+    pub fn age(&mut self) -> usize {
         self.age
     }
 
     /// Update the age threshold for recomputation
-    pub fn set_max_age(&mut self, max_age: usize) {
-        self.max_age = max_age;
+    pub fn set_max_age(_max_age: usize) {
+        self._max_age = _max_age;
     }
 
     /// Mark the Jacobian as factorized
-    pub fn mark_factorized(&mut self, factorized: bool) {
-        self.factorized = factorized;
+    pub fn mark_factorized(_factorized: bool) {
+        self._factorized = _factorized;
     }
 
     /// Check if the Jacobian is factorized

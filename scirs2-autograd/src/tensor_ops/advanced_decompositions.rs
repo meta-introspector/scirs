@@ -27,12 +27,11 @@ impl<F: Float> Op<F> for SVDJacobiExtractOp {
         match self.component {
             0 => "SVDJacobiExtractU",
             1 => "SVDJacobiExtractS",
-            2 => "SVDJacobiExtractVt",
-            _ => "SVDJacobiExtractUnknown",
+            2 => "SVDJacobiExtractVt"_ => "SVDJacobiExtractUnknown",
         }
     }
 
-    fn compute(&self, _ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(&self_ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         // This is a placeholder - the actual extraction happens in the parent op
         Err(OpError::Other(
             "SVD extraction should be handled by parent op".into(),
@@ -98,12 +97,11 @@ impl<F: Float> Op<F> for RandomizedSVDExtractOp {
         match self.component {
             0 => "RandomizedSVDExtractU",
             1 => "RandomizedSVDExtractS",
-            2 => "RandomizedSVDExtractVt",
-            _ => "RandomizedSVDExtractUnknown",
+            2 => "RandomizedSVDExtractVt"_ => "RandomizedSVDExtractUnknown",
         }
     }
 
-    fn compute(&self, _ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(&self_ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         Err(OpError::Other(
             "Randomized SVD extraction should be handled by parent op".into(),
         ))
@@ -160,12 +158,11 @@ impl<F: Float> Op<F> for GeneralizedEigenExtractOp {
     fn name(&self) -> &'static str {
         match self.component {
             0 => "GeneralizedEigenExtractValues",
-            1 => "GeneralizedEigenExtractVectors",
-            _ => "GeneralizedEigenExtractUnknown",
+            1 => "GeneralizedEigenExtractVectors"_ => "GeneralizedEigenExtractUnknown",
         }
     }
 
-    fn compute(&self, _ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(&self_ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         Err(OpError::Other(
             "Generalized eigen extraction should be handled by parent op".into(),
         ))
@@ -233,12 +230,11 @@ impl<F: Float> Op<F> for QRPivotExtractOp {
         match self.component {
             0 => "QRPivotExtractQ",
             1 => "QRPivotExtractR",
-            2 => "QRPivotExtractP",
-            _ => "QRPivotExtractUnknown",
+            2 => "QRPivotExtractP"_ => "QRPivotExtractUnknown",
         }
     }
 
-    fn compute(&self, _ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
+    fn compute(&self_ctx: &mut ComputeContext<F>) -> Result<(), OpError> {
         Err(OpError::Other(
             "QR pivot extraction should be handled by parent op".into(),
         ))
@@ -308,7 +304,7 @@ fn compute_svd_jacobi<F: Float + ndarray::ScalarOperand + FromPrimitive>(
         // Left Householder for column i
         if i < m - 1 {
             let col = b.slice(s![i.., i]).to_owned();
-            let (h, _) = householder_vector(&col.view())?;
+            let (h_) = householder_vector(&col.view())?;
             let h_mat = householder_matrix(&h, m - i);
 
             // Apply to B and U
@@ -324,7 +320,7 @@ fn compute_svd_jacobi<F: Float + ndarray::ScalarOperand + FromPrimitive>(
         // Right Householder for row i
         if i < n - 2 {
             let row = b.slice(s![i, i + 1..]).to_owned();
-            let (h, _) = householder_vector(&row.view())?;
+            let (h_) = householder_vector(&row.view())?;
             let h_mat = householder_matrix(&h, n - i - 1);
 
             // Apply to B and V
@@ -367,7 +363,7 @@ fn compute_svd_jacobi<F: Float + ndarray::ScalarOperand + FromPrimitive>(
 
                 let (cos, sin) = compute_givens_rotation(a, b, c);
 
-                // Update matrices
+                // Update _matrices
                 diag[i] = cos * cos * a + sin * sin * c + F::from(2.0).unwrap() * cos * sin * b;
                 diag[i + 1] = sin * sin * a + cos * cos * c - F::from(2.0).unwrap() * cos * sin * b;
                 superdiag[i] = F::zero();
@@ -534,7 +530,7 @@ fn compute_qr_pivot<F: Float + ndarray::ScalarOperand>(
 
     for i in 0..k {
         // Find pivot column
-        let (pivot_idx, _) = col_norms
+        let (pivot_idx_) = col_norms
             .slice(s![i..])
             .indexed_iter()
             .max_by(|(_, &a), (_, &b)| a.abs().partial_cmp(&b.abs()).unwrap())
@@ -658,24 +654,24 @@ fn compute_givens_rotation<F: Float>(a: F, b: F, c: F) -> (F, F) {
 }
 
 #[allow(dead_code)]
-fn apply_givens_left<F: Float>(matrix: &mut Array2<F>, i: usize, j: usize, cos: F, sin: F) {
-    let n = matrix.shape()[1];
+fn apply_givens_left<F: Float>(_matrix: &mut Array2<F>, i: usize, j: usize, cos: F, sin: F) {
+    let n = _matrix.shape()[1];
     for k in 0..n {
-        let ai = matrix[[i, k]];
-        let aj = matrix[[j, k]];
-        matrix[[i, k]] = cos * ai - sin * aj;
-        matrix[[j, k]] = sin * ai + cos * aj;
+        let ai = _matrix[[i, k]];
+        let aj = _matrix[[j, k]];
+        _matrix[[i, k]] = cos * ai - sin * aj;
+        _matrix[[j, k]] = sin * ai + cos * aj;
     }
 }
 
 #[allow(dead_code)]
-fn apply_givens_right<F: Float>(matrix: &mut Array2<F>, i: usize, j: usize, cos: F, sin: F) {
-    let m = matrix.shape()[0];
+fn apply_givens_right<F: Float>(_matrix: &mut Array2<F>, i: usize, j: usize, cos: F, sin: F) {
+    let m = _matrix.shape()[0];
     for k in 0..m {
-        let ai = matrix[[k, i]];
-        let aj = matrix[[k, j]];
-        matrix[[k, i]] = cos * ai - sin * aj;
-        matrix[[k, j]] = sin * ai + cos * aj;
+        let ai = _matrix[[k, i]];
+        let aj = _matrix[[k, j]];
+        _matrix[[k, i]] = cos * ai - sin * aj;
+        _matrix[[k, j]] = sin * ai + cos * aj;
     }
 }
 
@@ -710,9 +706,9 @@ fn orthogonalize_qr<F: Float + ndarray::ScalarOperand>(
 }
 
 #[allow(dead_code)]
-fn compute_matrix_inverse<F: Float>(matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F>, OpError> {
-    let n = matrix.shape()[0];
-    let mut a = matrix.to_owned();
+fn compute_matrix_inverse<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F>, OpError> {
+    let n = _matrix.shape()[0];
+    let mut a = _matrix.to_owned();
     let mut inv = Array2::<F>::eye(n);
 
     // Gauss-Jordan elimination

@@ -32,7 +32,7 @@ use crate::gamma::{gamma, gammaln};
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::pbdv;
+/// use scirs2__special::pbdv;
 ///
 /// let (d, dp) = pbdv(1.0, 0.5).unwrap();
 /// println!("D_1(0.5) = {}, D_1'(0.5) = {}", d, dp);
@@ -544,7 +544,7 @@ fn pbdv_asymptotic_neg(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::pbvv;
+/// use scirs2__special::pbvv;
 ///
 /// let (v, vp) = pbvv(1.0, 0.5).unwrap();
 /// println!("V_1(0.5) = {}, V_1'(0.5) = {}", v, vp);
@@ -991,28 +991,28 @@ fn pbvv_asymptotic(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::pbdv_seq;
+/// use scirs2__special::pbdv_seq;
 ///
 /// let (d_values, dp_values) = pbdv_seq(3, 0.5).unwrap();
 /// println!("D_0(0.5) = {}, D_1(0.5) = {}, D_2(0.5) = {}, D_3(0.5) = {}",
 ///         d_values[0], d_values[1], d_values[2], d_values[3]);
 /// ```
 #[allow(dead_code)]
-pub fn pbdv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
+pub fn pbdv_seq(_vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(
             "NaN input to pbdv_seq".to_string(),
         ));
     }
 
-    if vmax == 0 {
+    if _vmax == 0 {
         let (d0, d0p) = pbdv(0.0, x)?;
         return Ok((vec![d0], vec![d0p]));
     }
 
     // Initialize arrays to hold function values and derivatives
-    let mut d_values = vec![0.0; vmax + 1];
-    let mut dp_values = vec![0.0; vmax + 1];
+    let mut d_values = vec![0.0; _vmax + 1];
+    let mut dp_values = vec![0.0; _vmax + 1];
 
     // Compute D_0 and D_1 directly
     let (d0, d0p) = pbdv(0.0, x)?;
@@ -1021,13 +1021,13 @@ pub fn pbdv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
     d_values[0] = d0;
     dp_values[0] = d0p;
 
-    if vmax >= 1 {
+    if _vmax >= 1 {
         d_values[1] = d1;
         dp_values[1] = d1p;
     }
 
     // Use recurrence relation to compute higher orders
-    for v in 2..=vmax {
+    for v in 2..=_vmax {
         // Recurrence relation: D_{v+1}(x) = x*D_v(x) - v*D_{v-1}(x)
         d_values[v] = x * d_values[v - 1] - (v as f64 - 1.0) * d_values[v - 2];
         // Derivative recurrence: D'_{v+1}(x) = x*D'_v(x) - v*D'_{v-1}(x) + D_v(x)
@@ -1051,14 +1051,14 @@ pub fn pbdv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::pbvv_seq;
+/// use scirs2__special::pbvv_seq;
 ///
 /// let (v_values, vp_values) = pbvv_seq(3, 0.5).unwrap();
 /// println!("V_0(0.5) = {}, V_1(0.5) = {}, V_2(0.5) = {}, V_3(0.5) = {}",
 ///         v_values[0], v_values[1], v_values[2], v_values[3]);
 /// ```
 #[allow(dead_code)]
-pub fn pbvv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
+pub fn pbvv_seq(_vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(
             "NaN input to pbvv_seq".to_string(),
@@ -1066,11 +1066,11 @@ pub fn pbvv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
     }
 
     // Initialize arrays to hold function values and derivatives
-    let mut v_values = vec![0.0; vmax + 1];
-    let mut vp_values = vec![0.0; vmax + 1];
+    let mut v_values = vec![0.0; _vmax + 1];
+    let mut vp_values = vec![0.0; _vmax + 1];
 
     // Compute each V_v individually - this can be optimized further
-    for v in 0..=vmax {
+    for v in 0..=_vmax {
         let (v_val, vp_val) = pbvv(v as f64, x)?;
         v_values[v] = v_val;
         vp_values[v] = vp_val;
@@ -1097,7 +1097,7 @@ pub fn pbvv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::pbwa;
+/// use scirs2__special::pbwa;
 ///
 /// let (w, wp) = pbwa(1.0, 0.5).unwrap();
 /// println!("W(1.0, 0.5) = {}, W'(1.0, 0.5) = {}", w, wp);

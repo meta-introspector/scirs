@@ -40,7 +40,7 @@ pub struct ChiSquareResult<F> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::tests::chi2_test::chi2_gof;
+/// use scirs2__stats::tests::chi2_test::chi2_gof;
 ///
 /// // Observed frequencies
 /// let observed = array![16, 18, 16, 14, 12, 12];
@@ -73,7 +73,7 @@ where
         + std::marker::Sync
         + 'static
         + std::fmt::Display,
-    I: num_traits::PrimInt + NumCast + std::fmt::Display,
+    I: num_traits: PrimInt + NumCast + std::fmt::Display,
 {
     // Check if observed is empty
     if observed.is_empty() {
@@ -155,7 +155,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::tests::chi2_test::chi2_independence;
+/// use scirs2__stats::tests::chi2_test::chi2_independence;
 ///
 /// // Observed contingency table
 /// let observed = array![
@@ -165,7 +165,7 @@ where
 /// ];
 ///
 /// // Perform chi-square test of independence
-/// let result = chi2_independence::<f64, _>(&observed.view()).unwrap();
+/// let result = chi2_independence::<f64>(&observed.view()).unwrap();
 ///
 /// println!("Chi-square statistic: {}", result.statistic);
 /// println!("p-value: {}", result.p_value);
@@ -175,7 +175,7 @@ where
 /// let significant = result.p_value < 0.05;
 /// ```
 #[allow(dead_code)]
-pub fn chi2_independence<F, I>(observed: &ArrayView2<I>) -> StatsResult<ChiSquareResult<F>>
+pub fn chi2_independence<F, I>(_observed: &ArrayView2<I>) -> StatsResult<ChiSquareResult<F>>
 where
     F: Float
         + std::iter::Sum<F>
@@ -186,18 +186,18 @@ where
         + std::marker::Sync
         + 'static
         + std::fmt::Display,
-    I: num_traits::PrimInt + NumCast + std::fmt::Display,
+    I: num_traits: PrimInt + NumCast + std::fmt::Display,
 {
-    // Check if observed is empty
-    if observed.is_empty() {
+    // Check if _observed is empty
+    if _observed.is_empty() {
         return Err(StatsError::InvalidArgument(
             "Observed frequencies cannot be empty".to_string(),
         ));
     }
 
     // Get dimensions
-    let rows = observed.shape()[0];
-    let cols = observed.shape()[1];
+    let rows = _observed.shape()[0];
+    let cols = _observed.shape()[1];
 
     if rows < 2 || cols < 2 {
         return Err(StatsError::InvalidArgument(
@@ -205,11 +205,11 @@ where
         ));
     }
 
-    // Convert observed integer frequencies to float
+    // Convert _observed integer frequencies to float
     let mut obs_float = Array2::<F>::zeros((rows, cols));
     for i in 0..rows {
         for j in 0..cols {
-            obs_float[(i, j)] = F::from(observed[(i, j)]).unwrap();
+            obs_float[(i, j)] = F::from(_observed[(i, j)]).unwrap();
         }
     }
 
@@ -277,7 +277,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::tests::chi2_test::chi2_yates;
+/// use scirs2__stats::tests::chi2_test::chi2_yates;
 ///
 /// // Observed 2x2 contingency table
 /// let observed = array![
@@ -286,13 +286,13 @@ where
 /// ];
 ///
 /// // Perform chi-square test with Yates' correction
-/// let result = chi2_yates::<f64, _>(&observed.view()).unwrap();
+/// let result = chi2_yates::<f64>(&observed.view()).unwrap();
 ///
 /// println!("Chi-square statistic (with Yates' correction): {}", result.statistic);
 /// println!("p-value: {}", result.p_value);
 /// ```
 #[allow(dead_code)]
-pub fn chi2_yates<F, I>(observed: &ArrayView2<I>) -> StatsResult<ChiSquareResult<F>>
+pub fn chi2_yates<F, I>(_observed: &ArrayView2<I>) -> StatsResult<ChiSquareResult<F>>
 where
     F: Float
         + std::iter::Sum<F>
@@ -303,11 +303,11 @@ where
         + std::marker::Sync
         + 'static
         + std::fmt::Display,
-    I: num_traits::PrimInt + NumCast + std::fmt::Display,
+    I: num_traits: PrimInt + NumCast + std::fmt::Display,
 {
-    // Check if observed is a 2x2 table
-    let rows = observed.shape()[0];
-    let cols = observed.shape()[1];
+    // Check if _observed is a 2x2 table
+    let rows = _observed.shape()[0];
+    let cols = _observed.shape()[1];
 
     if rows != 2 || cols != 2 {
         return Err(StatsError::InvalidArgument(
@@ -315,11 +315,11 @@ where
         ));
     }
 
-    // Convert observed integer frequencies to float
+    // Convert _observed integer frequencies to float
     let mut obs_float = Array2::<F>::zeros((2, 2));
     for i in 0..2 {
         for j in 0..2 {
-            obs_float[(i, j)] = F::from(observed[(i, j)]).unwrap();
+            obs_float[(i, j)] = F::from(_observed[(i, j)]).unwrap();
         }
     }
 

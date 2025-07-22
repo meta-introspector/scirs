@@ -96,8 +96,8 @@ struct VariableBlock {
 }
 
 impl AdvancedScaleState {
-    fn new(x0: Array1<f64>, options: &AdvancedScaleOptions) -> Result<Self, OptimizeError> {
-        let n = x0.len();
+    fn new(_x0: Array1<f64>, options: &AdvancedScaleOptions) -> Result<Self, OptimizeError> {
+        let n = _x0.len();
 
         // Determine storage strategy
         let variables = if options.use_disk_storage || n > options.mmap_threshold {
@@ -119,7 +119,7 @@ impl AdvancedScaleState {
                 OptimizeError::ComputationError(format!("Failed to create temp file: {}", e))
             })?;
 
-            let bytes: Vec<u8> = x0
+            let bytes: Vec<u8> = _x0
                 .as_slice()
                 .unwrap()
                 .iter()
@@ -136,7 +136,7 @@ impl AdvancedScaleState {
                 active_indices: Vec::new(),
             }
         } else {
-            VariableStorage::Memory(x0)
+            VariableStorage::Memory(_x0)
         };
 
         // Create variable blocks for progressive processing
@@ -171,7 +171,7 @@ impl AdvancedScaleState {
                     OptimizeError::ComputationError(format!("Failed to read from temp file: {}", e))
                 })?;
 
-                let values: Result<Vec<f64>, _> = bytes
+                let values: Result<Vec<f64>_> = bytes
                     .chunks_exact(8)
                     .map(|chunk| {
                         let array: [u8; 8] = chunk.try_into().unwrap();
@@ -191,8 +191,8 @@ impl AdvancedScaleState {
     /// Update variables (writing to disk if necessary)
     fn update_variables(&mut self, new_x: &Array1<f64>) -> Result<(), OptimizeError> {
         match &mut self.variables {
-            VariableStorage::Memory(x) => {
-                x.assign(new_x);
+            VariableStorage::Memory(_x) => {
+                _x.assign(new_x);
                 Ok(())
             }
             VariableStorage::Disk {
@@ -213,7 +213,7 @@ impl AdvancedScaleState {
                     .as_slice()
                     .unwrap()
                     .iter()
-                    .flat_map(|&x| x.to_le_bytes())
+                    .flat_map(|&_x| _x.to_le_bytes())
                     .collect();
 
                 file.seek(SeekFrom::Start(0)).map_err(|e| {
@@ -248,11 +248,11 @@ fn create_variable_blocks(n: usize, block_size: usize) -> Vec<VariableBlock> {
     for i in 0..num_blocks {
         let start_idx = i * block_size;
         let end_idx = std::cmp::min((i + 1) * block_size, n);
-        let size = end_idx - start_idx;
+        let _size = end_idx - start_idx;
 
         blocks.push(VariableBlock {
             start_idx,
-            size,
+            _size,
             priority: 1.0, // Initial priority
             last_updated: 0,
         });
@@ -424,8 +424,8 @@ where
 
 /// Update block priorities based on gradient magnitude
 #[allow(dead_code)]
-fn update_block_priorities(blocks: &mut [VariableBlock], gradient: &CsrArray<f64>) {
-    for block in blocks {
+fn update_block_priorities(_blocks: &mut [VariableBlock], gradient: &CsrArray<f64>) {
+    for block in _blocks {
         // Compute average gradient magnitude in this block
         let mut total_grad_mag = 0.0;
         let mut count = 0;
@@ -441,7 +441,7 @@ fn update_block_priorities(blocks: &mut [VariableBlock], gradient: &CsrArray<f64
         if count > 0 {
             block.priority = total_grad_mag / count as f64;
         } else {
-            block.priority *= 0.9; // Decay priority for blocks with no gradient info
+            block.priority *= 0.9; // Decay priority for _blocks with no gradient info
         }
     }
 }
@@ -539,10 +539,10 @@ pub fn create_advanced_scale_optimizer(
     let available_bytes = available_memory_mb * 1024 * 1024;
 
     // Estimate memory per variable
-    let bytes_per_var = std::mem::size_of::<f64>() * 8; // Variable + gradient + temporaries
+    let bytes_per_var = std::mem::_size_of::<f64>() * 8; // Variable + gradient + temporaries
     let max_vars_in_memory = (available_bytes / bytes_per_var).min(problem_size);
 
-    // Block size based on memory and sparsity
+    // Block _size based on memory and _sparsity
     let block_size = if estimated_sparsity < 0.1 {
         // Very sparse: larger blocks
         (max_vars_in_memory / 4).max(1000)
@@ -564,7 +564,7 @@ pub fn create_advanced_scale_optimizer(
     };
 
     AdvancedScaleOptions {
-        memory_options: super::memory_efficient::create_memory_efficient_optimizer(
+        memory_options: super::memory, _efficient::create_memory_efficient_optimizer(
             max_vars_in_memory,
             available_memory_mb / 2,
         ),
@@ -576,7 +576,7 @@ pub fn create_advanced_scale_optimizer(
         block_size,
         refinement_passes,
         use_disk_storage: use_disk,
-        mmap_threshold: available_bytes / (2 * std::mem::size_of::<f64>()),
+        mmap_threshold: available_bytes / (2 * std::mem::_size, _of::<f64>()),
         compression_level: if available_memory_mb < 256 { 6 } else { 3 },
     }
 }

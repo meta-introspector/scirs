@@ -2,11 +2,12 @@
 //!
 //! This module implements SCA techniques for sparse signal processing.
 
-use super::{ica, BssConfig, IcaMethod, NonlinearityFunction};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array2};
-use scirs2_linalg::solve;
+use ndarray::{Array2, s};
+use scirs2__linalg::solve;
+use super::{BssConfig, IcaMethod, NonlinearityFunction, ica};
 
+#[allow(unused_imports)]
 /// Apply Sparse Component Analysis (SCA) to separate mixed signals
 ///
 /// SCA is useful when the source signals are known to be sparse.

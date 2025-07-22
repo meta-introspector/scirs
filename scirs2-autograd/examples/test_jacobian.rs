@@ -1,5 +1,5 @@
 use ag::prelude::*;
-use ag::tensor_ops::*;
+use ag::tensor__ops::*;
 use scirs2_autograd as ag;
 
 #[allow(dead_code)]

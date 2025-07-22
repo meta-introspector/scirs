@@ -9,15 +9,16 @@ pub mod quantization_aware_training;
 pub mod sparse_training;
 pub mod adaptive_computation;
 pub mod model_compression;
-pub use memory_efficient_training::{MemoryEfficientTrainer, GradientAccumulation};
-pub use gradient_checkpointing::{CheckpointStrategy, GradientCheckpointing};
-pub use quantization_aware_training::{QATConfig, QuantizationAwareTraining};
-pub use sparse_training::{SparseTrainer, SparsitySchedule};
-pub use adaptive_computation::{AdaptiveCompute, EarlyExitStrategy};
-pub use model_compression::{CompressionStrategy, ModelCompressor};
+pub use memory_efficient__training::{MemoryEfficientTrainer, GradientAccumulation};
+pub use gradient__checkpointing::{CheckpointStrategy, GradientCheckpointing};
+pub use quantization_aware__training::{QATConfig, QuantizationAwareTraining};
+pub use sparse__training::{SparseTrainer, SparsitySchedule};
+pub use adaptive__computation::{AdaptiveCompute, EarlyExitStrategy};
+pub use model__compression::{CompressionStrategy, ModelCompressor};
 use crate::error::Result;
 use crate::models::sequential::Sequential;
 use ndarray::prelude::*;
+use ndarray::ArrayView1;
 /// Configuration for on-device training
 #[derive(Debug, Clone)]
 pub struct OnDeviceConfig {
@@ -76,9 +77,9 @@ pub struct OnDeviceOptimizer {
     performance_monitor: PerformanceMonitor,
 impl OnDeviceOptimizer {
     /// Create a new on-device optimizer
-    pub fn new(config: OnDeviceConfig) -> Self {
-            config,
-            memory_tracker: MemoryTracker::new(config.memory_budget_mb),
+    pub fn new(_config: OnDeviceConfig) -> Self {
+            _config,
+            memory_tracker: MemoryTracker::new(_config.memory_budget_mb),
             performance_monitor: PerformanceMonitor::new(),
     
     /// Optimize model for on-device training
@@ -88,19 +89,19 @@ impl OnDeviceOptimizer {
         
         let mut optimizations_applied = Vec::new();
         // Apply gradient checkpointing
-        if self.config.gradient_checkpointing {
+        if self._config.gradient_checkpointing {
             self.apply_gradient_checkpointing(model)?;
             optimizations_applied.push("Gradient Checkpointing");
         // Apply quantization
-        if self.config.quantization {
+        if self._config.quantization {
             self.apply_quantization(model)?;
             optimizations_applied.push("Quantization");
         // Apply sparsity
-        if self.config.sparse_training {
+        if self._config.sparse_training {
             self.apply_sparsity(model)?;
             optimizations_applied.push("Sparse Training");
         // Apply adaptive computation
-        if self.config.adaptive_computation {
+        if self._config.adaptive_computation {
             self.apply_adaptive_computation(model)?;
             optimizations_applied.push("Adaptive Computation");
         let end_memory = self.memory_tracker.current_usage();
@@ -185,14 +186,14 @@ struct MemoryTracker {
     current_usage_mb: usize,
     peak_usage_mb: usize,
 impl MemoryTracker {
-    fn new(budget_mb: usize) -> Self {
-            budget_mb,
+    fn new(_budget_mb: usize) -> Self {
+            _budget_mb,
             current_usage_mb: 0,
             peak_usage_mb: 0,
     fn current_usage(&self) -> usize {
         self.current_usage_mb
     fn allocate(&mut self, size_mb: usize) -> Result<()> {
-        if self.current_usage_mb + size_mb > self.budget_mb {
+        if self.current_usage_mb + size_mb > self._budget_mb {
             return Err(crate::error::NeuralError::ResourceExhausted(
                 format!("Memory budget exceeded: {} + {} > {} MB", 
                     self.current_usage_mb, size_mb, self.budget_mb)

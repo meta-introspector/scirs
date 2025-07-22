@@ -9,11 +9,11 @@
 //! - Performance monitoring and adaptive parameter tuning
 //! - Integration between neural and quantum approaches
 
-use scirs2_io::error::Result;
-use scirs2_io::neural_adaptive_io::{
+use scirs2__io::error::Result;
+use scirs2__io::neural_adaptive_io::{
     AdvancedIoProcessor, NeuralAdaptiveIoController, PerformanceFeedback, SystemMetrics,
 };
-use scirs2_io::quantum_inspired_io::QuantumParallelProcessor;
+use scirs2__io::quantum_inspired_io::QuantumParallelProcessor;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -462,34 +462,34 @@ fn demonstrate_adaptive_learning() -> Result<()> {
 // Helper functions for generating test data
 
 #[allow(dead_code)]
-fn generate_random_data(size: usize) -> Vec<u8> {
-    (0..size).map(|i| ((i * 17 + 23) % 256) as u8).collect()
+fn generate_random_data(_size: usize) -> Vec<u8> {
+    (0.._size).map(|i| ((i * 17 + 23) % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn generate_structured_data(size: usize) -> Vec<u8> {
-    (0..size).map(|i| (i % 64) as u8).collect()
+fn generate_structured_data(_size: usize) -> Vec<u8> {
+    (0.._size).map(|i| (i % 64) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn generate_compressed_pattern(size: usize) -> Vec<u8> {
+fn generate_compressed_pattern(_size: usize) -> Vec<u8> {
     let pattern = vec![1, 2, 3, 4];
-    (0..size).map(|i| pattern[i % pattern.len()]).collect()
+    (0.._size).map(|i| pattern[i % pattern.len()]).collect()
 }
 
 #[allow(dead_code)]
-fn generate_high_entropy_data(size: usize) -> Vec<u8> {
-    (0..size).map(|i| ((i * 157 + 73) % 256) as u8).collect()
+fn generate_high_entropy_data(_size: usize) -> Vec<u8> {
+    (0.._size).map(|i| ((i * 157 + 73) % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn generate_low_entropy_data(size: usize) -> Vec<u8> {
-    vec![42; size]
+fn generate_low_entropy_data(_size: usize) -> Vec<u8> {
+    vec![42; _size]
 }
 
 #[allow(dead_code)]
-fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
-    (0..size)
+fn generate_mixed_pattern_data(_size: usize) -> Vec<u8> {
+    (0.._size)
         .map(|i| {
             if i % 10 < 3 {
                 ((i * 13) % 256) as u8
@@ -501,18 +501,18 @@ fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_benchmark_data(size: usize) -> Vec<u8> {
-    (0..size).map(|i| ((i * 31 + i * i) % 256) as u8).collect()
+fn generate_benchmark_data(_size: usize) -> Vec<u8> {
+    (0.._size).map(|i| ((i * 31 + i * i) % 256) as u8).collect()
 }
 
 #[allow(dead_code)]
-fn calculate_entropy(data: &[u8]) -> f32 {
+fn calculate_entropy(_data: &[u8]) -> f32 {
     let mut frequency = [0u32; 256];
-    for &byte in data {
+    for &byte in _data {
         frequency[byte as usize] += 1;
     }
 
-    let len = data.len() as f32;
+    let len = _data.len() as f32;
     let mut entropy = 0.0;
 
     for &freq in &frequency {

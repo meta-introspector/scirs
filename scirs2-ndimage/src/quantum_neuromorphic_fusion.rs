@@ -19,14 +19,15 @@
 //! - **Quantum-Classical Meta-Learning**: Hybrid learning across quantum and classical domains
 
 use ndarray::{s, Array1, Array2, Array3, Array4, ArrayView2};
-use num_complex::Complex;
+use num__complex::Complex;
 use num_traits::{Float, FromPrimitive, Zero};
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::neuromorphic_computing::{NeuromorphicConfig, SpikingNeuron};
-use crate::quantum_inspired::QuantumConfig;
+use crate::neuromorphic__computing::{NeuromorphicConfig, SpikingNeuron};
+use crate::quantum__inspired::QuantumConfig;
+use statrs::statistics::Statistics;
 
 /// Configuration for quantum-neuromorphic fusion algorithms
 #[derive(Debug, Clone)]
@@ -231,7 +232,7 @@ where
 {
     if image_sequence.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "Empty image sequence".to_string(),
+            "Empty image _sequence".to_string(),
         ));
     }
 
@@ -240,7 +241,7 @@ where
     // Initialize bio-quantum reservoir
     let mut quantum_reservoir = initialize_bio_quantum_reservoir(reservoir_size, config)?;
 
-    // Process sequence through bio-quantum dynamics
+    // Process _sequence through bio-quantum dynamics
     let mut quantum_liquid_states = Vec::new();
 
     for (t, image) in image_sequence.iter().enumerate() {
@@ -345,7 +346,7 @@ where
 {
     if learned_patterns.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "No patterns for consolidation".to_string(),
+            "No _patterns for consolidation".to_string(),
         ));
     }
 
@@ -354,7 +355,7 @@ where
     // Initialize quantum memory states
     let mut quantum_memory = Array2::zeros((height, width));
 
-    // Convert patterns to quantum memory traces
+    // Convert _patterns to quantum memory traces
     let mut quantum_traces = Vec::new();
     for pattern in learned_patterns {
         let quantum_trace = pattern_to_quantum_trace(pattern, config)?;
@@ -614,7 +615,7 @@ fn apply_quantum_stdp_learning(
             if let Some(&last_spike_time) = neuron.classical_neuron.spike_times.back() {
                 if current_time.saturating_sub(last_spike_time) < config.neuromorphic.stdp_window {
                     let stdp_strength = config.neuromorphic.learning_rate
-                        * (-(current_time.saturating_sub(last_spike_time)) as f64
+                        * (-((current_time - last_spike_time)) as f64
                             / config.neuromorphic.stdp_window as f64)
                             .exp();
 
@@ -684,7 +685,7 @@ where
     let (time_steps, num_states, height, width) = quantum_states.dim();
     let mut image = Array2::zeros((height, width));
 
-    // Convert quantum states to classical image
+    // Convert quantum _states to classical image
     for y in 0..height {
         for x in 0..width {
             let mut total_amplitude = 0.0;
@@ -751,8 +752,7 @@ fn update_classical_neuron_dynamics(
 
 #[allow(dead_code)]
 fn initialize_bio_quantum_entanglement(
-    _network: &mut Array2<QuantumSpikingNeuron>,
-    _config: &QuantumNeuromorphicConfig,
+    _network: &mut Array2<QuantumSpikingNeuron>, _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<()> {
     // Implementation would set up entanglement connections
     Ok(())
@@ -760,8 +760,7 @@ fn initialize_bio_quantum_entanglement(
 
 #[allow(dead_code)]
 fn pixel_to_quantum_state(
-    _pixel_value: f64,
-    _config: &QuantumNeuromorphicConfig,
+    _pixel_value: f64, _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array1<Complex<f64>>> {
     // Implementation would convert pixel to quantum state
     Ok(Array1::zeros(4))
@@ -769,9 +768,7 @@ fn pixel_to_quantum_state(
 
 #[allow(dead_code)]
 fn update_bio_quantum_amplitudes(
-    _neuron: &mut QuantumSpikingNeuron,
-    _quantum_input: &Array1<Complex<f64>>,
-    _config: &QuantumNeuromorphicConfig,
+    _neuron: &mut QuantumSpikingNeuron_quantum_input: &Array1<Complex<f64>>, _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<()> {
     // Implementation would update quantum amplitudes with biological constraints
     Ok(())
@@ -779,10 +776,7 @@ fn update_bio_quantum_amplitudes(
 
 #[allow(dead_code)]
 fn process_entangled_correlations(
-    _neuron: &QuantumSpikingNeuron,
-    _network: &Array2<QuantumSpikingNeuron>,
-    _pos: (usize, usize),
-    _config: &QuantumNeuromorphicConfig,
+    _neuron: &QuantumSpikingNeuron_network: &Array2<QuantumSpikingNeuron>, _pos: (usize, usize), _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Complex<f64>> {
     // Implementation would process quantum entanglement correlations
     Ok(Complex::new(0.0, 0.0))
@@ -790,9 +784,7 @@ fn process_entangled_correlations(
 
 #[allow(dead_code)]
 fn apply_neuromorphic_quantum_dynamics(
-    _neuron: &mut QuantumSpikingNeuron,
-    _entangled_response: Complex<f64>,
-    _config: &QuantumNeuromorphicConfig,
+    _neuron: &mut QuantumSpikingNeuron_entangled_response: Complex<f64>, _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<()> {
     // Implementation would apply neuromorphic dynamics to quantum states
     Ok(())
@@ -800,8 +792,7 @@ fn apply_neuromorphic_quantum_dynamics(
 
 #[allow(dead_code)]
 fn quantum_state_to_classical_output(
-    _neuron: &QuantumSpikingNeuron,
-    _config: &QuantumNeuromorphicConfig,
+    _neuron: &QuantumSpikingNeuron_config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<f64> {
     // Implementation would convert quantum state to classical output
     Ok(0.0)
@@ -809,8 +800,7 @@ fn quantum_state_to_classical_output(
 
 #[allow(dead_code)]
 fn initialize_bio_quantum_reservoir(
-    _reservoir_size: usize,
-    _config: &QuantumNeuromorphicConfig,
+    _reservoir_size: usize, _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array1<QuantumSpikingNeuron>> {
     // Implementation would initialize bio-quantum reservoir
     Ok(Array1::from_elem(100, QuantumSpikingNeuron::default()))
@@ -818,41 +808,34 @@ fn initialize_bio_quantum_reservoir(
 
 #[allow(dead_code)]
 fn image_to_bio_quantum_currents<T>(
-    _image: &ArrayView2<T>,
-    _config: &QuantumNeuromorphicConfig,
+    _image: &ArrayView2<T>, _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array2<Complex<f64>>>
 where
     T: Float + FromPrimitive + Copy,
 {
-    // Implementation would convert image to bio-quantum currents
+    // Implementation would convert _image to bio-quantum currents
     Ok(Array2::zeros((1, 1)))
 }
 
 #[allow(dead_code)]
 fn update_bio_quantum_reservoir_dynamics(
-    _reservoir: &mut Array1<QuantumSpikingNeuron>,
-    _currents: &Array2<Complex<f64>>,
-    _config: &QuantumNeuromorphicConfig,
-    _time: usize,
+    _reservoir: &mut Array1<QuantumSpikingNeuron>, _currents: &Array2<Complex<f64>>, _config: &QuantumNeuromorphicConfig_time: usize,
 ) -> NdimageResult<()> {
-    // Implementation would update reservoir dynamics
+    // Implementation would update _reservoir dynamics
     Ok(())
 }
 
 #[allow(dead_code)]
 fn capture_bio_quantum_reservoir_state(
-    _reservoir: &Array1<QuantumSpikingNeuron>,
-    _config: &QuantumNeuromorphicConfig,
+    _reservoir: &Array1<QuantumSpikingNeuron>, _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array1<Complex<f64>>> {
-    // Implementation would capture reservoir state
+    // Implementation would capture _reservoir state
     Ok(Array1::zeros(100))
 }
 
 #[allow(dead_code)]
 fn apply_biological_quantum_decoherence(
-    _reservoir: &mut Array1<QuantumSpikingNeuron>,
-    _config: &QuantumNeuromorphicConfig,
-    _time: usize,
+    _reservoir: &mut Array1<QuantumSpikingNeuron>, _config: &QuantumNeuromorphicConfig_time: usize,
 ) -> NdimageResult<()> {
     // Implementation would apply biological quantum decoherence
     Ok(())
@@ -860,9 +843,7 @@ fn apply_biological_quantum_decoherence(
 
 #[allow(dead_code)]
 fn bio_quantum_readout_with_attention<T>(
-    _states: &[Array1<Complex<f64>>],
-    _output_shape: (usize, usize),
-    _config: &QuantumNeuromorphicConfig,
+    _states: &[Array1<Complex<f64>>], _output_shape: (usize, usize), _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -874,9 +855,7 @@ where
 
 #[allow(dead_code)]
 fn extract_neighborhood<T>(
-    _image: &ArrayView2<T>,
-    _center: (usize, usize),
-    _size: usize,
+    _image: &ArrayView2<T>, _center: (usize, usize), _size: usize,
 ) -> NdimageResult<Array2<f64>>
 where
     T: Float + FromPrimitive + Copy,
@@ -887,19 +866,15 @@ where
 
 #[allow(dead_code)]
 fn neighborhood_to_quantum_states(
-    _neighborhood: &Array2<f64>,
-    _config: &QuantumNeuromorphicConfig,
+    _neighborhood: &Array2<f64>, _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array2<Complex<f64>>> {
-    // Implementation would convert neighborhood to quantum states
+    // Implementation would convert _neighborhood to quantum states
     Ok(Array2::zeros((3, 3)))
 }
 
 #[allow(dead_code)]
 fn apply_quantum_homeostatic_processing(
-    _neuron: &mut QuantumSpikingNeuron,
-    _quantum_neighborhood: &Array2<Complex<f64>>,
-    _config: &QuantumNeuromorphicConfig,
-    _epoch: usize,
+    _neuron: &mut QuantumSpikingNeuron_quantum_neighborhood: &Array2<Complex<f64>>, _config: &QuantumNeuromorphicConfig_epoch: usize,
 ) -> NdimageResult<Complex<f64>> {
     // Implementation would apply quantum homeostatic processing
     Ok(Complex::new(0.0, 0.0))
@@ -907,9 +882,7 @@ fn apply_quantum_homeostatic_processing(
 
 #[allow(dead_code)]
 fn quantum_to_classical_with_homeostasis(
-    _quantum_output: Complex<f64>,
-    _neuron: &QuantumSpikingNeuron,
-    _config: &QuantumNeuromorphicConfig,
+    _quantum_output: Complex<f64>, _neuron: &QuantumSpikingNeuron_config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<f64> {
     // Implementation would convert quantum to classical with homeostasis
     Ok(0.0)
@@ -917,10 +890,7 @@ fn quantum_to_classical_with_homeostasis(
 
 #[allow(dead_code)]
 fn update_quantum_homeostatic_parameters(
-    _neuron: &mut QuantumSpikingNeuron,
-    _classical_output: f64,
-    _config: &QuantumNeuromorphicConfig,
-    _epoch: usize,
+    _neuron: &mut QuantumSpikingNeuron_classical_output: f64, _config: &QuantumNeuromorphicConfig_epoch: usize,
 ) -> NdimageResult<()> {
     // Implementation would update homeostatic parameters
     Ok(())
@@ -928,9 +898,7 @@ fn update_quantum_homeostatic_parameters(
 
 #[allow(dead_code)]
 fn regulate_global_quantum_coherence(
-    _network: &mut Array2<QuantumSpikingNeuron>,
-    _config: &QuantumNeuromorphicConfig,
-    _epoch: usize,
+    _network: &mut Array2<QuantumSpikingNeuron>, _config: &QuantumNeuromorphicConfig_epoch: usize,
 ) -> NdimageResult<()> {
     // Implementation would regulate global quantum coherence
     Ok(())
@@ -938,20 +906,18 @@ fn regulate_global_quantum_coherence(
 
 #[allow(dead_code)]
 fn pattern_to_quantum_trace<T>(
-    _pattern: &Array2<T>,
-    _config: &QuantumNeuromorphicConfig,
+    _pattern: &Array2<T>, _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array2<Complex<f64>>>
 where
     T: Float + FromPrimitive + Copy,
 {
-    // Implementation would convert pattern to quantum trace
+    // Implementation would convert _pattern to quantum trace
     Ok(Array2::zeros((1, 1)))
 }
 
 #[allow(dead_code)]
 fn slow_wave_quantum_consolidation(
-    _traces: &[Array2<Complex<f64>>],
-    _config: &QuantumNeuromorphicConfig,
+    _traces: &[Array2<Complex<f64>>], _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array2<Complex<f64>>> {
     // Implementation would perform slow-wave consolidation
     Ok(Array2::zeros((1, 1)))
@@ -959,9 +925,7 @@ fn slow_wave_quantum_consolidation(
 
 #[allow(dead_code)]
 fn rem_quantum_consolidation(
-    _traces: &[Array2<Complex<f64>>],
-    _config: &QuantumNeuromorphicConfig,
-    _cycle: usize,
+    _traces: &[Array2<Complex<f64>>], _config: &QuantumNeuromorphicConfig_cycle: usize,
 ) -> NdimageResult<Array2<Complex<f64>>> {
     // Implementation would perform REM consolidation
     Ok(Array2::zeros((1, 1)))
@@ -969,9 +933,7 @@ fn rem_quantum_consolidation(
 
 #[allow(dead_code)]
 fn apply_sleep_quantum_decoherence(
-    _memory: &mut Array2<Complex<f64>>,
-    _config: &QuantumNeuromorphicConfig,
-    _cycle: usize,
+    _memory: &mut Array2<Complex<f64>>, _config: &QuantumNeuromorphicConfig_cycle: usize,
 ) -> NdimageResult<()> {
     // Implementation would apply sleep-based decoherence
     Ok(())
@@ -979,22 +941,18 @@ fn apply_sleep_quantum_decoherence(
 
 #[allow(dead_code)]
 fn create_quantum_attention_query<T>(
-    _query: &Array2<T>,
-    _config: &QuantumNeuromorphicConfig,
+    _query: &Array2<T>, _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array2<Complex<f64>>>
 where
     T: Float + FromPrimitive + Copy,
 {
-    // Implementation would create quantum attention query
+    // Implementation would create quantum attention _query
     Ok(Array2::zeros((1, 1)))
 }
 
 #[allow(dead_code)]
 fn compute_quantum_attention(
-    _pixel_value: f64,
-    _quantum_query: &Array2<Complex<f64>>,
-    _pos: (usize, usize),
-    _config: &QuantumNeuromorphicConfig,
+    _pixel_value: f64, _quantum_query: &Array2<Complex<f64>>, _pos: (usize, usize), _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Complex<f64>> {
     // Implementation would compute quantum attention
     Ok(Complex::new(0.0, 0.0))
@@ -1002,10 +960,7 @@ fn compute_quantum_attention(
 
 #[allow(dead_code)]
 fn apply_bio_attention_gate(
-    _attention_amplitude: Complex<f64>,
-    _attention_gates: &Array2<f64>,
-    _pos: (usize, usize),
-    _config: &QuantumNeuromorphicConfig,
+    _attention_amplitude: Complex<f64>, _attention_gates: &Array2<f64>, _pos: (usize, usize), _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<f64> {
     // Implementation would apply bio-inspired attention gate
     Ok(0.0)
@@ -1361,13 +1316,12 @@ pub struct PredictiveCodingResult<T> {
 #[allow(dead_code)]
 pub fn predictive_coding_hierarchy<T>(
     image: ArrayView2<T>,
-    hierarchy_sizes: &[usize],
-    _config: &QuantumNeuromorphicConfig,
+    hierarchy_sizes: &[usize], _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<PredictiveCodingResult<T>>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
-    let (_height, _width) = image.dim();
+    let (_height_width) = image.dim();
     let consciousness_config = ConsciousnessConfig::default();
 
     if hierarchy_sizes.is_empty() {
@@ -1462,8 +1416,7 @@ pub struct MetaCognitiveState {
 #[allow(dead_code)]
 pub fn meta_cognitive_monitoring<T>(
     image: ArrayView2<T>,
-    processing_history: &[Array2<f64>],
-    _config: &QuantumNeuromorphicConfig,
+    processing_history: &[Array2<f64>], _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<(Array2<T>, MetaCognitiveState)>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
@@ -1558,7 +1511,7 @@ where
 
     if image_sequence.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "Empty image sequence".to_string(),
+            "Empty image _sequence".to_string(),
         ));
     }
 
@@ -1687,10 +1640,9 @@ fn attention_schema_processing(
 #[allow(dead_code)]
 fn memory_trace_activation(
     pixel_value: f64,
-    perceptual_activation: f64,
-    _config: &ConsciousnessConfig,
+    perceptual_activation: f64, _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
-    // Simple memory trace based on activation patterns
+    // Simple memory trace based on _activation patterns
     let memory_strength = perceptual_activation * pixel_value;
     let memory_trace = memory_strength * (1.0 - (-memory_strength * 2.0).exp());
 
@@ -1701,8 +1653,7 @@ fn memory_trace_activation(
 fn calculate_coalition_strength(
     perceptual: f64,
     attention: f64,
-    memory: f64,
-    _config: &ConsciousnessConfig,
+    memory: f64_config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     // Coalition strength determines access to global workspace
     let coalition = perceptual * 0.4 + attention * 0.4 + memory * 0.2;
@@ -1715,8 +1666,7 @@ fn global_broadcast_influence(
     attention_module: &mut Array2<f64>,
     memory_module: &mut Array2<f64>,
     broadcast_source: (usize, usize),
-    strength: f64,
-    _config: &ConsciousnessConfig,
+    strength: f64_config: &ConsciousnessConfig,
 ) -> NdimageResult<()> {
     let (height, width) = perceptual_module.dim();
     let (source_y, source_x) = broadcast_source;
@@ -1743,8 +1693,7 @@ fn integrate_conscious_response(
     workspace_activation: f64,
     perceptual: f64,
     attention: f64,
-    memory: f64,
-    _config: &ConsciousnessConfig,
+    memory: f64_config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     // Conscious integration of all information sources
     let integrated = workspace_activation * (perceptual + attention + memory) / 3.0;
@@ -1776,8 +1725,7 @@ fn encode_pixel_to_quantum_states(
 
 #[allow(dead_code)]
 fn calculate_effective_information(
-    system: &Array3<f64>,
-    _config: &ConsciousnessConfig,
+    system: &Array3<f64>, _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let (height, width, states) = system.dim();
 
@@ -1840,8 +1788,7 @@ fn generate_bipartitions(
 fn apply_phi_weighted_processing(
     output: &mut Array2<f64>,
     network: &Array3<f64>,
-    phi_weight: f64,
-    _config: &ConsciousnessConfig,
+    phi_weight: f64, _config: &ConsciousnessConfig,
 ) -> NdimageResult<()> {
     let (height, width, states) = network.dim();
 
@@ -1866,8 +1813,7 @@ fn calculate_num_bipartitions(n: usize) -> usize {
 
 #[allow(dead_code)]
 fn generate_sensory_predictions(
-    representation: &Array2<f64>,
-    _config: &ConsciousnessConfig,
+    representation: &Array2<f64>, _config: &ConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
     let (height, width) = representation.dim();
     let mut predictions = Array2::zeros((height, width));
@@ -1896,11 +1842,9 @@ fn generate_sensory_predictions(
 #[allow(dead_code)]
 fn generate_hierarchical_predictions(
     higher_level: &Array2<f64>,
-    current_level: &Array2<f64>,
-    _level_size: usize,
-    _config: &ConsciousnessConfig,
+    current_level: &Array2<f64>, _level_size: usize, _config: &ConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
-    // Generate predictions from higher-level representations
+    // Generate predictions from higher-_level representations
     let (height, width) = current_level.dim();
     let mut predictions = Array2::zeros((height, width));
 
@@ -1918,8 +1862,7 @@ fn generate_hierarchical_predictions(
 #[allow(dead_code)]
 fn calculate_prediction_error(
     actual: &Array2<f64>,
-    predicted: &Array2<f64>,
-    _config: &ConsciousnessConfig,
+    predicted: &Array2<f64>, _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let diff = actual - predicted;
     let squared_error = diff.mapv(|x| x * x);
@@ -1929,9 +1872,7 @@ fn calculate_prediction_error(
 #[allow(dead_code)]
 fn update_representation_with_error(
     current: &Array2<f64>,
-    prediction: &Array2<f64>,
-    _error: f64,
-    _config: &ConsciousnessConfig,
+    prediction: &Array2<f64>, _error: f64_config: &ConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
     let learning_rate = 0.1;
     let error_signal = current - prediction;
@@ -1942,9 +1883,7 @@ fn update_representation_with_error(
 #[allow(dead_code)]
 fn refine_prediction_top_down(
     higher_prediction: &Array2<f64>,
-    level_prediction: &Array2<f64>,
-    _error: f64,
-    _config: &ConsciousnessConfig,
+    level_prediction: &Array2<f64>, _error: f64_config: &ConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
     let refinement_strength = 0.3;
     let refined =
@@ -1954,8 +1893,7 @@ fn refine_prediction_top_down(
 
 #[allow(dead_code)]
 fn calculate_precision_weights(
-    errors: &[f64],
-    _config: &ConsciousnessConfig,
+    errors: &[f64], _config: &ConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
     let height = 4; // Default size
     let width = 4;
@@ -1972,8 +1910,7 @@ fn calculate_precision_weights(
 fn calculate_processing_confidence(
     _pixel_value: f64,
     history: &[Array2<f64>],
-    position: (usize, usize),
-    _config: &ConsciousnessConfig,
+    position: (usize, usize), _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let (y, x) = position;
 
@@ -2004,8 +1941,7 @@ fn calculate_processing_confidence(
 #[allow(dead_code)]
 fn calculate_processing_effort(
     history: &[Array2<f64>],
-    position: (usize, usize),
-    _config: &ConsciousnessConfig,
+    position: (usize, usize), _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let (y, x) = position;
 
@@ -2033,8 +1969,7 @@ fn calculate_processing_effort(
 fn calculate_error_monitoring_signal(
     pixel_value: f64,
     history: &[Array2<f64>],
-    position: (usize, usize),
-    _config: &ConsciousnessConfig,
+    position: (usize, usize), _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let (y, x) = position;
 
@@ -2063,8 +1998,7 @@ fn calculate_error_monitoring_signal(
 fn integrate_metacognitive_signals(
     confidence: f64,
     effort: f64,
-    error_signal: f64,
-    _config: &ConsciousnessConfig,
+    error_signal: f64, _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     // Integrate meta-cognitive signals
     let metacognitive_value = confidence * 0.4 + (1.0 - effort) * 0.3 + (1.0 - error_signal) * 0.3;
@@ -2086,8 +2020,7 @@ fn calculate_self_awareness_index(
 #[allow(dead_code)]
 fn image_to_temporal_representation<T>(
     image: &ArrayView2<T>,
-    timestamp: usize,
-    _config: &QuantumNeuromorphicConfig,
+    timestamp: usize_config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array3<f64>>
 where
     T: Float + FromPrimitive + Copy,
@@ -2114,19 +2047,18 @@ where
 
 #[allow(dead_code)]
 fn create_consciousness_moment(
-    binding_window: &VecDeque<Array3<f64>>,
-    _config: &ConsciousnessConfig,
+    binding_window: &VecDeque<Array3<f64>>, _config: &ConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
     if binding_window.is_empty() {
         return Err(NdimageError::InvalidInput(
-            "Empty binding window".to_string(),
+            "Empty binding _window".to_string(),
         ));
     }
 
     let (height, width, depth) = binding_window[0].dim();
     let mut consciousness_moment = Array2::zeros((height, width));
 
-    // Integrate temporal binding window
+    // Integrate temporal binding _window
     for y in 0..height {
         for x in 0..width {
             let mut temporal_integration = 0.0;
@@ -2151,8 +2083,7 @@ fn create_consciousness_moment(
 #[allow(dead_code)]
 fn integrate_consciousness_moments<T>(
     moments: &[Array2<f64>],
-    output_shape: (usize, usize),
-    _config: &ConsciousnessConfig,
+    output_shape: (usize, usize), _config: &ConsciousnessConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -3028,7 +2959,7 @@ where
     let mut hybrid_processor = initialize_hybrid_processor(hybrid_config)?;
 
     // Analyze input characteristics
-    let input_analysis = analyze_input_characteristics(&image, config)?;
+    let input_analysis = analyze_input_characteristics(&image, _config)?;
 
     // Select optimal hybrid algorithm
     let selected_algorithm = select_optimal_hybrid_algorithm(
@@ -3042,7 +2973,7 @@ where
         &image,
         &mut hybrid_processor,
         &selected_algorithm,
-        config,
+        _config,
         hybrid_config,
     )?;
 
@@ -3336,8 +3267,7 @@ fn initialize_hybrid_processor(
 
 #[allow(dead_code)]
 fn analyze_input_characteristics<T>(
-    _image: &ArrayView2<T>,
-    _config: &QuantumNeuromorphicConfig,
+    _image: &ArrayView2<T>, _config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<InputAnalysisResult>
 where
     T: Float + FromPrimitive + Copy,
@@ -3357,9 +3287,7 @@ where
 
 #[allow(dead_code)]
 fn select_optimal_hybrid_algorithm(
-    _selector: &mut AdaptiveAlgorithmSelector,
-    _analysis: &InputAnalysisResult,
-    _config: &QuantumClassicalHybridConfig,
+    _selector: &mut AdaptiveAlgorithmSelector_analysis: &InputAnalysisResult, _config: &QuantumClassicalHybridConfig,
 ) -> NdimageResult<HybridAlgorithm> {
     Ok(HybridAlgorithm {
         id: "quantum_enhanced_filtering".to_string(),
@@ -3394,11 +3322,7 @@ fn select_optimal_hybrid_algorithm(
 
 #[allow(dead_code)]
 fn execute_hybrid_processing<T>(
-    image: &ArrayView2<T>,
-    _processor: &mut QuantumClassicalHybridProcessor,
-    _algorithm: &HybridAlgorithm,
-    _config: &QuantumNeuromorphicConfig,
-    _hybrid_config: &QuantumClassicalHybridConfig,
+    image: &ArrayView2<T>, _processor: &mut QuantumClassicalHybridProcessor_algorithm: &HybridAlgorithm, _config: &QuantumNeuromorphicConfig_hybrid_config: &QuantumClassicalHybridConfig,
 ) -> NdimageResult<HybridProcessingResult>
 where
     T: Float + FromPrimitive + Copy,
@@ -3426,19 +3350,15 @@ where
 
 #[allow(dead_code)]
 fn apply_quantum_error_correction(
-    result: &HybridProcessingResult,
-    _error_correction: &mut QuantumErrorCorrectionSystem,
-    _config: &QuantumClassicalHybridConfig,
+    result: &HybridProcessingResult_error_correction: &mut QuantumErrorCorrectionSystem, _config: &QuantumClassicalHybridConfig,
 ) -> NdimageResult<HybridProcessingResult> {
-    // Apply error correction (simplified)
+    // Apply error _correction (simplified)
     Ok(result.clone())
 }
 
 #[allow(dead_code)]
 fn optimize_hybrid_performance(
-    _optimizer: &mut HybridPerformanceOptimizer,
-    _result: &HybridProcessingResult,
-    _config: &QuantumClassicalHybridConfig,
+    _optimizer: &mut HybridPerformanceOptimizer_result: &HybridProcessingResult, _config: &QuantumClassicalHybridConfig,
 ) -> NdimageResult<()> {
     // Perform optimization (simplified)
     Ok(())
@@ -3446,9 +3366,7 @@ fn optimize_hybrid_performance(
 
 #[allow(dead_code)]
 fn extract_hybrid_insights(
-    _result: &HybridProcessingResult,
-    _processor: &QuantumClassicalHybridProcessor,
-    _config: &QuantumClassicalHybridConfig,
+    _result: &HybridProcessingResult_processor: &QuantumClassicalHybridProcessor, _config: &QuantumClassicalHybridConfig,
 ) -> NdimageResult<HybridProcessingInsights> {
     Ok(HybridProcessingInsights {
         performance_analysis: vec![

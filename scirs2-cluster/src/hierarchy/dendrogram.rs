@@ -8,6 +8,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};
+use statrs::statistics::Statistics;
 
 /// Calculates the cophenetic correlation coefficient
 ///

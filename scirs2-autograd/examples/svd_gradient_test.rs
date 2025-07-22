@@ -1,4 +1,4 @@
-use ag::tensor_ops::*;
+use ag::tensor__ops::*;
 use ndarray::{array, Array2, Ix2};
 use scirs2_autograd as ag;
 
@@ -7,7 +7,7 @@ fn main() {
     println!("Testing gradient backpropagation through SVD...");
 
     // Simplified test with a smaller matrix for faster execution
-    ag::run::<f64, _, _>(|g| {
+    ag::run::<f64_>(|g| {
         // Create a simple 2x2 matrix (smaller for faster testing)
         let matrix_data = array![[1.0, 2.0], [3.0, 4.0]];
         let matrix = variable(matrix_data.clone(), g);
@@ -65,11 +65,11 @@ fn main() {
 
                             // Compute SVD for perturbed matrices
                             let matrix_plus = convert_to_tensor(perturbed_plus, g);
-                            let (u_plus, _, _) = svd(matrix_plus);
+                            let (u_plus__) = svd(matrix_plus);
                             let sum_u_plus = u_plus.eval(g).unwrap().sum();
 
                             let matrix_minus = convert_to_tensor(perturbed_minus, g);
-                            let (u_minus, _, _) = svd(matrix_minus);
+                            let (u_minus__) = svd(matrix_minus);
                             let sum_u_minus = u_minus.eval(g).unwrap().sum();
 
                             // Compute finite difference
@@ -152,11 +152,11 @@ fn main() {
 
                             // Compute SVD for perturbed matrices
                             let matrix_plus = convert_to_tensor(perturbed_plus, g);
-                            let (_, s_plus, _) = svd(matrix_plus);
+                            let (_, s_plus_) = svd(matrix_plus);
                             let sum_s_plus = s_plus.eval(g).unwrap().sum();
 
                             let matrix_minus = convert_to_tensor(perturbed_minus, g);
-                            let (_, s_minus, _) = svd(matrix_minus);
+                            let (_, s_minus_) = svd(matrix_minus);
                             let sum_s_minus = s_minus.eval(g).unwrap().sum();
 
                             // Compute finite difference
@@ -239,11 +239,11 @@ fn main() {
 
                             // Compute SVD for perturbed matrices
                             let matrix_plus = convert_to_tensor(perturbed_plus, g);
-                            let (_, _, v_plus) = svd(matrix_plus);
+                            let (__, v_plus) = svd(matrix_plus);
                             let sum_v_plus = v_plus.eval(g).unwrap().sum();
 
                             let matrix_minus = convert_to_tensor(perturbed_minus, g);
-                            let (_, _, v_minus) = svd(matrix_minus);
+                            let (__, v_minus) = svd(matrix_minus);
                             let sum_v_minus = v_minus.eval(g).unwrap().sum();
 
                             // Compute finite difference

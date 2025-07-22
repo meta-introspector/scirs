@@ -18,7 +18,7 @@ use crate::schedulers::LearningRateScheduler;
 #[derive(Debug, Clone)]
 pub struct MetricScheduler<F: Float + Debug + Display + ScalarOperand + FromPrimitive> {
     /// Base scheduler
-    scheduler: scirs2_metrics::integration::optim::MetricLRScheduler<F>,
+    scheduler: scirs2_metrics: integration::optim::MetricLRScheduler<F>,
     /// Threshold for considering an improvement
     threshold: F,
 }
@@ -35,7 +35,7 @@ impl<F: Float + Debug + Display + ScalarOperand + FromPrimitive> MetricScheduler
         maximize: bool,
     ) -> Self {
         Self {
-            scheduler: scirs2_metrics::integration::optim::MetricLRScheduler::new(
+            scheduler: scirs2_metrics: integration::optim::MetricLRScheduler::new(
                 initial_lr,
                 factor,
                 patience,
@@ -137,7 +137,7 @@ impl<F: Float + Debug + Display + ScalarOperand + FromPrimitive> MetricBasedRedu
             scheduler,
             metric_name: metric_name.to_string(),
             metric_history: Vec::new(),
-            lr_history: Vec::new(),
+            _lr_history: Vec::new(),
         }
     }
 
@@ -196,12 +196,7 @@ pub struct MetricScheduler<F: Float + Debug> {
 impl<F: Float + Debug + ScalarOperand + FromPrimitive> MetricScheduler<F> {
     /// Create a new metric-based scheduler (not implemented)
     pub fn new(
-        _initial_lr: F,
-        _factor: F,
-        _patience: usize,
-        _min_lr: F,
-        _metric_name: &str,
-        _maximize: bool,
+        _initial_lr: F, _factor: F_patience: usize, _min_lr: F_metric, _name: &str_maximize: bool,
     ) -> Self {
         panic!("metrics_integration feature is not enabled - enable it in your Cargo.toml");
     }

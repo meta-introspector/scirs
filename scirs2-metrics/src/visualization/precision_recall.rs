@@ -70,7 +70,7 @@ where
         average_precision: Option<f64>,
     ) -> Self {
         PrecisionRecallVisualizer {
-            precision: Some(precision),
+            _precision: Some(_precision),
             recall: Some(recall),
             thresholds,
             average_precision,
@@ -105,8 +105,8 @@ where
             thresholds: None,
             average_precision: None,
             title: "Precision-Recall Curve".to_string(),
-            show_ap: true,
-            show_baseline: true,
+            show_ap: _true,
+            show_baseline: _true,
             y_true: Some(y_true),
             y_score: Some(y_score),
             pos_label,
@@ -224,7 +224,7 @@ where
     f64: From<T>,
 {
     fn prepare_data(&self) -> std::result::Result<VisualizationData, Box<dyn Error>> {
-        let (precision, recall, _, ap) = self
+        let (precision, recall_, ap) = self
             .compute_pr()
             .map_err(|e| Box::new(e) as Box<dyn Error>)?;
 
@@ -315,7 +315,7 @@ pub fn precision_recall_visualization(
     thresholds: Option<Vec<f64>>,
     average_precision: Option<f64>,
 ) -> PrecisionRecallVisualizer<'static, f64, ndarray::OwnedRepr<f64>> {
-    PrecisionRecallVisualizer::new(precision, recall, thresholds, average_precision)
+    PrecisionRecallVisualizer::new(_precision, recall, thresholds, average_precision)
 }
 
 /// Create a Precision-Recall curve visualization from true labels and scores

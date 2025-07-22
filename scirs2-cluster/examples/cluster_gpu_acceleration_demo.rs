@@ -4,10 +4,11 @@
 //! with automatic fallback to CPU when GPU is not available.
 
 use ndarray::Array2;
-use scirs2_cluster::preprocess::standardize;
+use scirs2__cluster::preprocess::standardize;
 
 // GPU acceleration imports
-use scirs2_cluster::{
+use scirs2__cluster::{
+use statrs::statistics::Statistics;
     gpu_accelerated::{gpu_dbscan, gpu_hierarchical, gpu_kmeans},
     DeviceSelection, GpuBackend, GpuConfig, GpuLinkageMethod, MemoryStrategy,
 };
@@ -41,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Test automatic GPU detection and fallback
 #[allow(dead_code)]
-fn test_automatic_gpu_detection(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_automatic_gpu_detection(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Testing Automatic GPU Detection");
     println!("==================================");
 
@@ -60,7 +61,7 @@ fn test_automatic_gpu_detection(data: &Array2<f64>) -> Result<(), Box<dyn std::e
     let start_time = std::time::Instant::now();
 
     let (centroids, labels) = gpu_kmeans(
-        data.view(),
+        _data.view(),
         5, // k=5 clusters
         Some(auto_config.clone()),
     )?;
@@ -75,7 +76,7 @@ fn test_automatic_gpu_detection(data: &Array2<f64>) -> Result<(), Box<dyn std::e
     let start_time = std::time::Instant::now();
 
     let (dbscan_labels, core_samples) = gpu_dbscan(
-        data.view(),
+        _data.view(),
         0.5, // eps
         10,  // min_samples
         Some(auto_config.clone()),
@@ -97,7 +98,7 @@ fn test_automatic_gpu_detection(data: &Array2<f64>) -> Result<(), Box<dyn std::e
     let start_time = std::time::Instant::now();
 
     let (hier_labels, linkage_matrix) = gpu_hierarchical(
-        data.view(),
+        _data.view(),
         4, // n_clusters
         GpuLinkageMethod::Ward,
         Some(auto_config),
@@ -121,7 +122,7 @@ fn test_automatic_gpu_detection(data: &Array2<f64>) -> Result<(), Box<dyn std::e
 
 /// Test specific GPU backends
 #[allow(dead_code)]
-fn test_specific_gpu_backends(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_specific_gpu_backends(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Testing Specific GPU Backends");
     println!("================================");
 
@@ -147,7 +148,7 @@ fn test_specific_gpu_backends(data: &Array2<f64>) -> Result<(), Box<dyn std::err
 
         let start_time = std::time::Instant::now();
 
-        match gpu_kmeans(data.view(), 3, Some(backend_config)) {
+        match gpu_kmeans(_data.view(), 3, Some(backend_config)) {
             Ok((centroids, labels)) => {
                 let duration = start_time.elapsed();
                 println!(
@@ -169,7 +170,7 @@ fn test_specific_gpu_backends(data: &Array2<f64>) -> Result<(), Box<dyn std::err
 
 /// Test different memory strategies
 #[allow(dead_code)]
-fn test_memory_strategies(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_memory_strategies(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Testing Memory Management Strategies");
     println!("======================================");
 
@@ -197,7 +198,7 @@ fn test_memory_strategies(data: &Array2<f64>) -> Result<(), Box<dyn std::error::
 
         let start_time = std::time::Instant::now();
 
-        match gpu_kmeans(data.view(), 4, Some(mem_config)) {
+        match gpu_kmeans(_data.view(), 4, Some(mem_config)) {
             Ok((centroids, labels)) => {
                 let duration = start_time.elapsed();
                 println!(
@@ -219,7 +220,7 @@ fn test_memory_strategies(data: &Array2<f64>) -> Result<(), Box<dyn std::error::
 
 /// Compare performance across different algorithms and configurations
 #[allow(dead_code)]
-fn test_multi_algorithm_comparison(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn test_multi_algorithm_comparison(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. Multi-Algorithm Performance Comparison");
     println!("=========================================");
 
@@ -235,8 +236,8 @@ fn test_multi_algorithm_comparison(data: &Array2<f64>) -> Result<(), Box<dyn std
     };
 
     // Test with smaller subset for faster execution
-    let subset_size = std::cmp::min(1000, data.nrows());
-    let data_subset = data.slice(ndarray::s![0..subset_size, ..]);
+    let subset_size = std::cmp::min(1000, _data.nrows());
+    let data_subset = _data.slice(ndarray::s![0..subset_size, ..]);
 
     println!("Testing algorithms on subset of {} samples...", subset_size);
 
@@ -321,12 +322,12 @@ fn test_multi_algorithm_comparison(data: &Array2<f64>) -> Result<(), Box<dyn std
 
 /// Generate large sample data for performance testing
 #[allow(dead_code)]
-fn create_large_sample_data(n_samples: usize, n_features: usize) -> Array2<f64> {
+fn create_large_sample_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
-    use rand_distr::Normal;
+    use rand__distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(42);
-    let mut data = Vec::with_capacity(n_samples * n_features);
+    let mut data = Vec::with_capacity(_n_samples * n_features);
 
     // Create 5 distinct clusters
     let cluster_centers = vec![
@@ -337,11 +338,11 @@ fn create_large_sample_data(n_samples: usize, n_features: usize) -> Array2<f64> 
         (5.0, 5.0),   // Cluster 5
     ];
 
-    let samples_per_cluster = n_samples / cluster_centers.len();
+    let samples_per_cluster = _n_samples / cluster_centers.len();
 
     for (i, &(center_x, center_y)) in cluster_centers.iter().enumerate() {
         let cluster_samples = if i == cluster_centers.len() - 1 {
-            n_samples - i * samples_per_cluster // Last cluster gets remaining samples
+            _n_samples - i * samples_per_cluster // Last cluster gets remaining _samples
         } else {
             samples_per_cluster
         };
@@ -350,18 +351,18 @@ fn create_large_sample_data(n_samples: usize, n_features: usize) -> Array2<f64> 
         let normal_y = Normal::new(center_y, 1.5).unwrap();
 
         for _ in 0..cluster_samples {
-            // First two features are the main cluster coordinates
+            // First two _features are the main cluster coordinates
             data.push(rng.sample(normal_x));
             data.push(rng.sample(normal_y));
 
-            // Add additional random features
+            // Add additional random _features
             for _ in 2..n_features {
-                data.push(rng.random_range(-1.0..1.0));
+                data.push(rng.gen_range(-1.0..1.0));
             }
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
 }
 
 #[cfg(test)]

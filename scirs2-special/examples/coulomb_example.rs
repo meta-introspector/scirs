@@ -1,4 +1,4 @@
-use scirs2_special::{coulomb_f, coulomb_g, coulomb_h_minus, coulomb_h_plus, coulomb_phase_shift};
+use scirs2__special::{coulomb_f, coulomb_g, coulomb_h_minus, coulomb_h_plus, coulomb_phase_shift};
 use std::error::Error;
 
 #[allow(dead_code)]

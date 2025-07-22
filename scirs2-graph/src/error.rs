@@ -219,9 +219,9 @@ pub enum GraphError {
 
 impl GraphError {
     /// Create a NodeNotFound error with minimal context
-    pub fn node_not_found<T: fmt::Display>(node: T) -> Self {
+    pub fn node_not_found<T: fmt::Display>(_node: T) -> Self {
         Self::NodeNotFound {
-            node: node.to_string(),
+            _node: _node.to_string(),
             graph_size: 0,
             context: "Node lookup operation".to_string(),
         }
@@ -241,9 +241,9 @@ impl GraphError {
     }
 
     /// Create an EdgeNotFound error with minimal context
-    pub fn edge_not_found<S: fmt::Display, T: fmt::Display>(source: S, target: T) -> Self {
+    pub fn edge_not_found<S: fmt::Display, T: fmt::Display>(_source: S, target: T) -> Self {
         Self::EdgeNotFound {
-            src_node: source.to_string(),
+            src_node: _source.to_string(),
             target: target.to_string(),
             context: "Edge lookup operation".to_string(),
         }
@@ -292,9 +292,9 @@ impl GraphError {
     }
 
     /// Create a MemoryError
-    pub fn memory_error(requested: usize, available: usize, context: &str) -> Self {
+    pub fn memory_error(_requested: usize, available: usize, context: &str) -> Self {
         Self::MemoryError {
-            requested,
+            _requested,
             available,
             context: context.to_string(),
         }
@@ -354,8 +354,7 @@ impl GraphError {
             GraphError::Cancelled { .. } => true,
             GraphError::MemoryError { .. } => false,
             GraphError::IOError { .. } => false,
-            GraphError::CoreError(_) => false,
-            _ => false,
+            GraphError::CoreError(_) => false_ => false,
         }
     }
 
@@ -387,8 +386,7 @@ impl GraphError {
                     "Try different resolution parameters".to_string(),
                     "Ensure graph has edges".to_string(),
                     "Consider preprocessing to remove isolates".to_string(),
-                ],
-                _ => vec!["Adjust algorithm parameters".to_string()],
+                ]_ => vec!["Adjust algorithm parameters".to_string()],
             },
             GraphError::MemoryError { .. } => vec![
                 "Use streaming algorithms for large graphs".to_string(),
@@ -399,8 +397,7 @@ impl GraphError {
                 "Increase maximum iterations".to_string(),
                 "Adjust tolerance threshold".to_string(),
                 "Check for numerical stability issues".to_string(),
-            ],
-            _ => vec!["Check input parameters and graph structure".to_string()],
+            ]_ => vec!["Check input parameters and graph structure".to_string()],
         }
     }
 
@@ -420,8 +417,7 @@ impl GraphError {
             GraphError::SerializationError { .. } => "serialization",
             GraphError::Cancelled { .. } => "cancellation",
             GraphError::ConcurrencyError { .. } => "concurrency",
-            GraphError::FormatError { .. } => "format",
-            _ => "other",
+            GraphError::FormatError { .. } => "format"_ => "other",
         }
     }
 }
@@ -431,10 +427,10 @@ pub type Result<T> = std::result::Result<T, GraphError>;
 
 /// Convert std::io::Error to GraphError with path context
 impl From<std::io::Error> for GraphError {
-    fn from(err: std::io::Error) -> Self {
+    fn from(_err: std::io::Error) -> Self {
         GraphError::IOError {
             path: "unknown".to_string(),
-            source: err,
+            source: _err,
         }
     }
 }
@@ -447,9 +443,9 @@ pub struct ErrorContext {
 
 impl ErrorContext {
     /// Create new error context
-    pub fn new(operation: &str) -> Self {
+    pub fn new(_operation: &str) -> Self {
         Self {
-            operation: operation.to_string(),
+            _operation: _operation.to_string(),
             graph_info: None,
         }
     }

@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2_io::serialize::{
+use scirs2__io::serialize::{
     deserialize_array, deserialize_array_with_metadata, deserialize_sparse_matrix,
     deserialize_struct, serialize_array, serialize_array_with_metadata, serialize_sparse_matrix,
     serialize_struct, SerializationFormat, SparseMatrixCOO,

@@ -71,18 +71,18 @@ where
 
 /// Convert a specialized matrix to a matrix-free operator
 #[allow(dead_code)]
-pub fn specialized_to_operator<A, S>(matrix: &S) -> LinalgResult<LinearOperator<A>>
+pub fn specialized_to_operator<A, S>(_matrix: &S) -> LinalgResult<LinearOperator<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug + 'static,
     S: SpecializedMatrix<A> + Sync + 'static + Sized,
 {
-    let nrows = matrix.nrows();
-    let ncols = matrix.ncols();
+    let nrows = _matrix.nrows();
+    let ncols = _matrix.ncols();
 
-    // Create a dense matrix clone to avoid lifetime issues
-    let matrix_clone = matrix.to_dense()?;
+    // Create a dense _matrix clone to avoid lifetime issues
+    let matrix_clone = _matrix.to_dense()?;
 
-    // Create a closure that captures the matrix clone and performs matrix-vector multiplication
+    // Create a closure that captures the _matrix clone and performs _matrix-vector multiplication
     let matvec = move |x: &ArrayView1<A>| {
         let mut result = Array1::zeros(nrows);
         for i in 0..nrows {

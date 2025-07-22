@@ -1,7 +1,7 @@
 //! Example demonstrating the A* path planning algorithm in continuous space with polygon obstacles
 
-use scirs2_spatial::error::SpatialResult;
-use scirs2_spatial::pathplanning::ContinuousAStarPlanner;
+use scirs2__spatial::error::SpatialResult;
+use scirs2__spatial::pathplanning::ContinuousAStarPlanner;
 
 #[allow(dead_code)]
 fn main() -> SpatialResult<()> {

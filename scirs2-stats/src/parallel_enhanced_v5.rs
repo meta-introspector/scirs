@@ -132,7 +132,7 @@ struct WorkStealingQueue<T> {
 }
 
 impl<T: Clone + Send> WorkStealingQueue<T> {
-    fn new(num_cpus::get: usize) -> Self {
+    fn new(_num_cpus: :get: usize) -> Self {
         let thread_queues = (0..num_cpus::get)
             .map(|_| Arc::new(Mutex::new(Vec::new())))
             .collect();
@@ -166,8 +166,7 @@ impl<T: Clone + Send> WorkStealingQueue<T> {
 /// Advanced-advanced parallel processor
 pub struct AdvancedParallelProcessor<F> {
     config: AdvancedParallelConfig,
-    metrics: Option<ParallelPerformanceMetrics>,
-    _phantom: PhantomData<F>,
+    metrics: Option<ParallelPerformanceMetrics>, _phantom: PhantomData<F>,
 }
 
 impl<F> AdvancedParallelProcessor<F>
@@ -179,17 +178,15 @@ where
     pub fn new() -> Self {
         Self {
             config: AdvancedParallelConfig::default(),
-            metrics: None,
-            _phantom: PhantomData,
+            metrics: None_phantom: PhantomData,
         }
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: AdvancedParallelConfig) -> Self {
+    pub fn with_config(_config: AdvancedParallelConfig) -> Self {
         Self {
-            config,
-            metrics: None,
-            _phantom: PhantomData,
+            _config,
+            metrics: None_phantom: PhantomData,
         }
     }
 
@@ -252,7 +249,7 @@ where
                 sequential_time_ms: total_time * 0.2, // Estimate
                 thread_efficiency: 0.85, // Estimate based on overhead
                 load_balance_efficiency: 0.90, // Estimate
-                memory_overhead_bytes: m * n * std::mem::size_of::<F>(),
+                memory_overhead_bytes: m * n * std::mem::size, _of::<F>(),
                 cache_miss_rate: 0.1, // Estimate
             });
         }
@@ -277,7 +274,7 @@ where
         
         if n_bootstrap == 0 {
             return Err(StatsError::InvalidArgument(
-                "Number of bootstrap samples must be positive".to_string(),
+                "Number of _bootstrap samples must be positive".to_string(),
             ));
         }
 
@@ -308,7 +305,7 @@ where
                 sequential_time_ms: total_time * 0.05,
                 thread_efficiency: 0.92,
                 load_balance_efficiency: 0.88,
-                memory_overhead_bytes: n_bootstrap * data.len() * std::mem::size_of::<F>(),
+                memory_overhead_bytes: n_bootstrap * data.len() * std::mem::size, _of::<F>(),
                 cache_miss_rate: 0.05,
             });
         }
@@ -328,7 +325,7 @@ where
         
         if n_samples == 0 {
             return Err(StatsError::InvalidArgument(
-                "Number of samples must be positive".to_string(),
+                "Number of _samples must be positive".to_string(),
             ));
         }
 
@@ -355,7 +352,7 @@ where
                 sequential_time_ms: total_time * 0.10,
                 thread_efficiency: 0.88,
                 load_balance_efficiency: 0.85,
-                memory_overhead_bytes: n_samples * std::mem::size_of::<F>(),
+                memory_overhead_bytes: n_samples * std::mem::size, _of::<F>(),
                 cache_miss_rate: 0.12,
             });
         }
@@ -408,7 +405,7 @@ where
                 sequential_time_ms: total_time * 0.15,
                 thread_efficiency: 0.82,
                 load_balance_efficiency: 0.78,
-                memory_overhead_bytes: data.len() * std::mem::size_of::<F>() * 2,
+                memory_overhead_bytes: data.len() * std::mem::size, _of::<F>() * 2,
                 cache_miss_rate: 0.15,
             });
         }
@@ -434,7 +431,7 @@ where
 
         if max_evaluations == 0 {
             return Err(StatsError::InvalidArgument(
-                "Maximum evaluations must be positive".to_string(),
+                "Maximum _evaluations must be positive".to_string(),
             ));
         }
 
@@ -461,7 +458,7 @@ where
                 sequential_time_ms: total_time * 0.05,
                 thread_efficiency: 0.90,
                 load_balance_efficiency: 0.85,
-                memory_overhead_bytes: max_evaluations * parameter_bounds.len() * std::mem::size_of::<F>(),
+                memory_overhead_bytes: max_evaluations * parameter_bounds.len() * std::mem::size, _of::<F>(),
                 cache_miss_rate: 0.08,
             });
         }
@@ -499,7 +496,7 @@ where
         let n = b.ncols();
         let mut result = Array2::zeros((m, n));
         
-        let chunk_size = (m + num_cpus::get - 1) / num_cpus::get;
+        let chunk_size = (m + num_cpus::get - 1) / num, _cpus::get;
         
         parallel_for(0..num_cpus::get, |thread_id| {
             let start_row = thread_id * chunk_size;
@@ -616,13 +613,13 @@ where
         
         if total_elements < 1_000_000 {
             // Small matrices - use static partitioning
-            self.static_parallel_matrix_multiply(a, b, num_cpus::get)
+            self.static_parallel_matrix_multiply(a, b, num__cpus::get)
         } else if memory_required > 100_000_000 {
             // Large memory requirement - use work stealing for better cache usage
-            self.work_stealing_matrix_multiply(a, b, num_cpus::get)
+            self.work_stealing_matrix_multiply(a, b, num__cpus::get)
         } else {
             // Medium size - use dynamic load balancing
-            self.dynamic_parallel_matrix_multiply(a, b, num_cpus::get)
+            self.dynamic_parallel_matrix_multiply(a, b, num__cpus::get)
         }
     }
 
@@ -648,10 +645,10 @@ where
             let mut rng = StdRng::seed_from_u64((chunk_id as u64).wrapping_mul(12345));
             
             for _ in start_idx..end_idx {
-                // Generate bootstrap sample
+                // Generate _bootstrap sample
                 let mut bootstrap_sample = Array1::zeros(data_len);
                 for j in 0..data_len {
-                    let idx = rng.random_range(0..data_len);
+                    let idx = rng.gen_range(0..data_len);
                     bootstrap_sample[j] = data[idx];
                 }
                 
@@ -670,13 +667,12 @@ where
     }
 
     fn parallel_stratified_bootstrap(
-        &self,
-        data: &ArrayView1<F>,
+        &self..data: &ArrayView1<F>,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
         n_bootstrap: usize,
         chunk_size: usize,
     ) -> StatsResult<Array1<F>> {
-        // Simplified stratified bootstrap - would stratify by data value ranges
+        // Simplified stratified _bootstrap - would stratify by data value ranges
         self.parallel_standard_bootstrap(data, statistic_fn, n_bootstrap, chunk_size)
     }
 
@@ -687,9 +683,9 @@ where
         n_bootstrap: usize,
         chunk_size: usize,
     ) -> StatsResult<Array1<F>> {
-        // Block bootstrap for time series data
+        // Block _bootstrap for time series data
         let data_len = data.len();
-        let block_size = (data_len as f64).sqrt() as usize; // Typical block size
+        let block_size = (data_len as f64).sqrt() as usize; // Typical block _size
         let results = Arc::new(Mutex::new(Vec::with_capacity(n_bootstrap)));
         
         parallel_for(0..n_bootstrap.div_ceil(chunk_size), |chunk_id| {
@@ -704,7 +700,7 @@ where
                 let mut bootstrap_sample = Vec::new();
                 
                 while bootstrap_sample.len() < data_len {
-                    let block_start = rng.random_range(0..(data_len - block_size + 1));
+                    let block_start = rng.gen_range(0..(data_len - block_size + 1));
                     let remaining = data_len - bootstrap_sample.len();
                     let current_block_size = block_size.min(remaining);
                     
@@ -728,13 +724,12 @@ where
     }
 
     fn parallel_bayesian_bootstrap(
-        &self,
-        data: &ArrayView1<F>,
+        &self..data: &ArrayView1<F>,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
         n_bootstrap: usize,
         chunk_size: usize,
     ) -> StatsResult<Array1<F>> {
-        // Bayesian bootstrap using Dirichlet weights
+        // Bayesian _bootstrap using Dirichlet weights
         let data_len = data.len();
         let results = Arc::new(Mutex::new(Vec::with_capacity(n_bootstrap)));
         
@@ -744,7 +739,7 @@ where
             let mut chunk_results = Vec::with_capacity(end_idx - start_idx);
             
             use rand::{rngs::StdRng, SeedableRng};
-            use rand_distr::{Gamma, Distribution};
+            use rand__distr::{Gamma, Distribution};
             let mut rng = StdRng::seed_from_u64((chunk_id as u64).wrapping_mul(98765));
             
             for _ in start_idx..end_idx {
@@ -768,7 +763,7 @@ where
                     }
                 }
                 
-                // Ensure we have the right sample size
+                // Ensure we have the right sample _size
                 while weighted_sample.len() < data_len {
                     weighted_sample.push(data[0]);
                 }
@@ -830,9 +825,9 @@ where
 
         let thread_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
         
-        let total_sum: F = thread_results.iter().map(|(sum, _, _)| *sum).sum();
-        let total_sum_sq: F = thread_results.iter().map(|(_, sum_sq, _)| *sum_sq).sum();
-        let total_samples: usize = thread_results.iter().map(|(_, _, count)| *count).sum();
+        let total_sum: F = thread_results.iter().map(|(sum__)| *sum).sum();
+        let total_sum_sq: F = thread_results.iter().map(|(_, sum_sq_)| *sum_sq).sum();
+        let total_samples: usize = thread_results.iter().map(|(__, count)| *count).sum();
         
         let mean = total_sum / F::from(total_samples).unwrap();
         let integral_estimate = mean * range;
@@ -861,7 +856,7 @@ where
             integrand, bounds, initial_samples, num_cpus::get
         )?;
         
-        // Use remaining samples for refinement in high-variance regions
+        // Use remaining _samples for refinement in high-variance regions
         let remaining_samples = n_samples - initial_samples;
         let refinement_result = self.static_monte_carlo_integration(
             integrand, bounds, remaining_samples, num_cpus::get
@@ -891,8 +886,7 @@ where
         data: &ArrayView2<F>,
         labels: &ArrayView1<F>,
         model_fn: impl Fn(&ArrayView2<F>, &ArrayView1<F>, &ArrayView2<F>) -> StatsResult<Array1<F>> + Send + Sync + Copy,
-        k: usize,
-        _shuffle: bool,
+        k: usize_shuffle: bool,
     ) -> StatsResult<CrossValidationResult<F>> {
         let n = data.nrows();
         let fold_size = n / k;
@@ -960,7 +954,7 @@ where
         model_fn: impl Fn(&ArrayView2<F>, &ArrayView1<F>, &ArrayView2<F>) -> StatsResult<Array1<F>> + Send + Sync + Copy,
         n_splits: usize,
     ) -> StatsResult<CrossValidationResult<F>> {
-        // Time series specific CV - would implement proper temporal splits
+        // Time series specific CV - would implement proper temporal _splits
         self.parallel_k_fold_cv(data, labels, model_fn, n_splits, false)
     }
 

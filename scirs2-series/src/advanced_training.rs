@@ -119,7 +119,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MAML<F> 
 
         // Mean squared error loss
         let mut loss = F::zero();
-        let (batch_size, _) = predictions.dim();
+        let (batch_size_) = predictions.dim();
 
         for i in 0..batch_size {
             for j in 0..self.output_dim {
@@ -133,7 +133,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MAML<F> 
 
     /// Make predictions using current parameters
     fn predict(&self, params: &Array2<F>, inputs: &Array2<F>) -> Result<Array2<F>> {
-        let (batch_size, _) = inputs.dim();
+        let (batch_size_) = inputs.dim();
 
         // Extract weight matrices from flattened parameters
         let (w1, b1, w2, b2) = self.extract_weights(params);
@@ -541,14 +541,14 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
     ) -> Self {
         let input_size = seq_len * feature_dim;
 
-        // Initialize encoder parameters (input -> hidden -> latent_mean, latent_logvar)
+        // Initialize encoder parameters (input -> _hidden -> latent_mean, latent_logvar)
         let encoder_param_count = input_size * encoder_hidden
             + encoder_hidden
             + encoder_hidden * latent_dim * 2
             + latent_dim * 2;
         let mut encoder_params = Array2::zeros((1, encoder_param_count));
 
-        // Initialize decoder parameters (latent -> hidden -> output)
+        // Initialize decoder parameters (latent -> _hidden -> output)
         let decoder_param_count =
             latent_dim * decoder_hidden + decoder_hidden + decoder_hidden * input_size + input_size;
         let mut decoder_params = Array2::zeros((1, decoder_param_count));
@@ -700,7 +700,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
 
     /// Generate new time series by sampling from latent space
     pub fn generate(&self, num_samples: usize) -> Result<Vec<Array2<F>>> {
-        let mut samples = Vec::new();
+        let mut _samples = Vec::new();
 
         for i in 0..num_samples {
             // Sample from prior distribution (standard normal)
@@ -711,10 +711,10 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
             }
 
             let generated = self.decode(&latent)?;
-            samples.push(generated);
+            _samples.push(generated);
         }
 
-        Ok(samples)
+        Ok(_samples)
     }
 
     /// Estimate uncertainty by sampling multiple reconstructions
@@ -726,7 +726,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
         let (latent_mean, latent_logvar) = self.encode(input)?;
         let mut reconstructions = Vec::new();
 
-        // Generate multiple samples
+        // Generate multiple _samples
         for _ in 0..num_samples {
             let latent_sample = self.reparameterize(&latent_mean, &latent_logvar);
             let reconstruction = self.decode(&latent_sample)?;
@@ -1092,7 +1092,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
     ) -> Self {
         // Calculate total parameter count
         let attention_params_per_layer = 4 * d_model * d_model; // Q, K, V, O projections
-        let ff_params_per_layer = 2 * d_model * d_ff + d_ff + d_model; // Two linear layers + biases
+        let ff_params_per_layer = 2 * d_model * d_ff + d_ff + d_model; // Two linear _layers + biases
         let layer_norm_params_per_layer = 2 * d_model * 2; // Two layer norms per layer
         let embedding_params = seq_len * d_model; // Input embeddings
         let output_params = d_model * pred_len; // Final projection
@@ -1640,7 +1640,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
     }
 
     /// Grid search implementation (simplified)
-    fn grid_search(&self, _trial: usize) -> Result<HyperparameterSet<F>> {
+    fn grid_search(&self_trial: usize) -> Result<HyperparameterSet<F>> {
         // For simplicity, use random search with some structure
         self.random_search()
     }
@@ -1682,7 +1682,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
     }
 
     /// Predict mean performance (simplified Gaussian Process)
-    fn predict_mean(&self, _params: &HyperparameterSet<F>) -> Result<F> {
+    fn predict_mean(&self_params: &HyperparameterSet<F>) -> Result<F> {
         // Simplified: return average of historical scores
         if self.history.is_empty() {
             return Ok(F::zero());
@@ -1697,7 +1697,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
     }
 
     /// Predict standard deviation (simplified)
-    fn predict_std(&self, _params: &HyperparameterSet<F>) -> Result<F> {
+    fn predict_std(&self_params: &HyperparameterSet<F>) -> Result<F> {
         // Simplified: return fixed exploration term
         Ok(F::one())
     }
@@ -1880,10 +1880,10 @@ pub struct PrototypicalNetworks<F: Float + Debug + ndarray::ScalarOperand> {
 
 impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> PrototypicalNetworks<F> {
     /// Create new Prototypical Networks model
-    pub fn new(input_dim: usize, feature_dim: usize, hidden_dims: Vec<usize>) -> Self {
+    pub fn new(_input_dim: usize, feature_dim: usize, hidden_dims: Vec<usize>) -> Self {
         // Calculate total parameters for feature extractor
         let mut total_params = 0;
-        let mut layer_sizes = vec![input_dim];
+        let mut layer_sizes = vec![_input_dim];
         layer_sizes.extend(&hidden_dims);
         layer_sizes.push(feature_dim);
 
@@ -1969,11 +1969,11 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Prototyp
             }
 
             if !class_features.is_empty() {
-                // Compute mean of class features
+                // Compute mean of class _features
                 for j in 0..self.feature_dim {
                     let mut sum = F::zero();
-                    for features in &class_features {
-                        sum = sum + features[j];
+                    for _features in &class_features {
+                        sum = sum + _features[j];
                     }
                     prototypes[[class_idx, j]] = sum / F::from(class_features.len()).unwrap();
                 }
@@ -2304,7 +2304,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> REPTILE<
 
         // Mean squared error loss
         let mut loss = F::zero();
-        let (batch_size, _) = predictions.dim();
+        let (batch_size_) = predictions.dim();
 
         for i in 0..batch_size {
             for j in 0..self.output_dim {
@@ -2318,7 +2318,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> REPTILE<
 
     /// Make predictions using current parameters
     fn predict(&self, params: &Array2<F>, inputs: &Array2<F>) -> Result<Array2<F>> {
-        let (batch_size, _) = inputs.dim();
+        let (batch_size_) = inputs.dim();
 
         // Extract weight matrices from flattened parameters
         let (w1, b1, w2, b2) = self.extract_weights(params);
@@ -2567,7 +2567,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MANN<F> 
 
     /// Write to external memory
     fn memory_write(&mut self, controller_output: &Array1<F>) -> Result<()> {
-        // Simplified memory write - update first row with controller output
+        // Simplified memory write - update first row with controller _output
         for i in 0..controller_output.len().min(self.memory_width) {
             self.memory[[0, i]] = controller_output[i];
         }
@@ -2687,9 +2687,9 @@ pub struct MetaOptimizer<F: Float + Debug + ndarray::ScalarOperand> {
 
 impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MetaOptimizer<F> {
     /// Create new meta-optimizer
-    pub fn new(input_dim: usize, hidden_size: usize) -> Self {
+    pub fn new(_input_dim: usize, hidden_size: usize) -> Self {
         // Initialize LSTM parameters
-        let param_count = 4 * hidden_size * (input_dim + hidden_size) + 4 * hidden_size; // 4 gates
+        let param_count = 4 * hidden_size * (_input_dim + hidden_size) + 4 * hidden_size; // 4 gates
         let mut lstm_params = Array2::zeros((1, param_count));
 
         let scale = F::from(1.0).unwrap() / F::from(hidden_size).unwrap().sqrt();

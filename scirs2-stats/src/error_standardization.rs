@@ -11,10 +11,10 @@ pub struct ErrorMessages;
 
 impl ErrorMessages {
     /// Standard dimension mismatch messages
-    pub fn dimension_mismatch(expected: &str, actual: &str) -> StatsError {
+    pub fn dimension_mismatch(_expected: &str, actual: &str) -> StatsError {
         StatsError::dimension_mismatch(format!(
-            "Array dimension mismatch: expected {}, got {}. {}",
-            expected,
+            "Array dimension mismatch: _expected {}, got {}. {}",
+            _expected,
             actual,
             "Ensure all input arrays have compatible dimensions for the operation."
         ))
@@ -38,7 +38,7 @@ impl ErrorMessages {
     }
 
     /// Standard empty array messages
-    pub fn empty_array(array_name: &str) -> StatsError {
+    pub fn empty_array(_array_name: &str) -> StatsError {
         StatsError::invalid_argument(format!(
             "Array '{}' cannot be empty. {}",
             array_name, "Provide an array with at least one element."
@@ -46,10 +46,10 @@ impl ErrorMessages {
     }
 
     /// Standard insufficient data messages
-    pub fn insufficient_data(operation: &str, required: usize, actual: usize) -> StatsError {
+    pub fn insufficient_data(_operation: &str, required: usize, actual: usize) -> StatsError {
         StatsError::invalid_argument(format!(
             "Insufficient data for {}: requires at least {} elements, got {}. {}",
-            operation,
+            _operation,
             required,
             actual,
             if required == 2 {
@@ -61,39 +61,39 @@ impl ErrorMessages {
     }
 
     /// Standard non-positive value messages
-    pub fn non_positive_value(parameter: &str, value: f64) -> StatsError {
+    pub fn non_positive_value(_parameter: &str, value: f64) -> StatsError {
         StatsError::domain(format!(
             "Parameter '{}' must be positive, got {}. {}",
-            parameter, value, "Ensure the value is greater than 0."
+            _parameter, value, "Ensure the value is greater than 0."
         ))
     }
 
     /// Standard probability range messages
-    pub fn invalid_probability(parameter: &str, value: f64) -> StatsError {
+    pub fn invalid_probability(_parameter: &str, value: f64) -> StatsError {
         StatsError::domain(format!(
             "Parameter '{}' must be a valid probability between 0 and 1, got {}. {}",
-            parameter, value, "Probability values must be in the range [0, 1]."
+            _parameter, value, "Probability values must be in the range [0, 1]."
         ))
     }
 
     /// Standard NaN detection messages
-    pub fn nan_detected(context: &str) -> StatsError {
+    pub fn nan_detected(_context: &str) -> StatsError {
         StatsError::invalid_argument(format!(
             "NaN (Not a Number) values detected in {}. {}",
-            context, "Remove NaN values or use functions that handle missing data explicitly."
+            _context, "Remove NaN values or use functions that handle missing data explicitly."
         ))
     }
 
     /// Standard infinite value messages
-    pub fn infinite_value_detected(context: &str) -> StatsError {
+    pub fn infinite_value_detected(_context: &str) -> StatsError {
         StatsError::invalid_argument(format!(
             "Infinite values detected in {}. {}",
-            context, "Check for overflow conditions or extreme values in your data."
+            _context, "Check for overflow conditions or extreme values in your data."
         ))
     }
 
     /// Standard matrix not positive definite messages
-    pub fn not_positive_definite(matrix_name: &str) -> StatsError {
+    pub fn not_positive_definite(_matrix_name: &str) -> StatsError {
         StatsError::computation(format!(
             "Matrix '{}' is not positive definite. {}",
             matrix_name,
@@ -102,7 +102,7 @@ impl ErrorMessages {
     }
 
     /// Standard singular matrix messages
-    pub fn singular_matrix(matrix_name: &str) -> StatsError {
+    pub fn singular_matrix(_matrix_name: &str) -> StatsError {
         StatsError::computation(format!(
             "Matrix '{}' is singular (non-invertible). {}",
             matrix_name, "Check for linear dependencies in your data or add regularization."
@@ -110,27 +110,27 @@ impl ErrorMessages {
     }
 
     /// Standard convergence failure messages
-    pub fn convergence_failure(algorithm: &str, iterations: usize) -> StatsError {
+    pub fn convergence_failure(_algorithm: &str, iterations: usize) -> StatsError {
         StatsError::ConvergenceError(format!(
             "{} failed to converge after {} iterations. {}",
-            algorithm, iterations,
+            _algorithm, iterations,
             "Try increasing the maximum iterations, adjusting tolerance, or using different initial values."
         ))
     }
 
     /// Standard numerical instability messages
-    pub fn numerical_instability(operation: &str, suggestion: &str) -> StatsError {
+    pub fn numerical_instability(_operation: &str, suggestion: &str) -> StatsError {
         StatsError::computation(format!(
             "Numerical instability detected in {}. {}",
-            operation, suggestion
+            _operation, suggestion
         ))
     }
 
     /// Standard unsupported operation messages
-    pub fn unsupported_operation(operation: &str, context: &str) -> StatsError {
+    pub fn unsupported_operation(_operation: &str, context: &str) -> StatsError {
         StatsError::not_implemented(format!(
             "Operation '{}' is not supported for {}. {}",
-            operation,
+            _operation,
             context,
             "Check the documentation for supported operations or consider alternative methods."
         ))
@@ -142,23 +142,23 @@ pub struct ErrorValidator;
 
 impl ErrorValidator {
     /// Validate array for common issues
-    pub fn validate_array<T>(data: &[T], name: &str) -> StatsResult<()>
+    pub fn validate_array<T>(_data: &[T], name: &str) -> StatsResult<()>
     where
         T: PartialOrd + Copy,
     {
-        if data.is_empty() {
+        if _data.is_empty() {
             return Err(ErrorMessages::empty_array(name));
         }
         Ok(())
     }
 
     /// Validate array for finite values (for float types)
-    pub fn validate_finite_array(data: &[f64], name: &str) -> StatsResult<()> {
-        if data.is_empty() {
+    pub fn validate_finite_array(_data: &[f64], name: &str) -> StatsResult<()> {
+        if _data.is_empty() {
             return Err(ErrorMessages::empty_array(name));
         }
 
-        for (i, &value) in data.iter().enumerate() {
+        for (i, &value) in _data.iter().enumerate() {
             if value.is_nan() {
                 return Err(ErrorMessages::nan_detected(&format!("{}[{}]", name, i)));
             }
@@ -173,25 +173,25 @@ impl ErrorValidator {
     }
 
     /// Validate probability value
-    pub fn validate_probability(value: f64, name: &str) -> StatsResult<()> {
-        if value < 0.0 || value > 1.0 {
-            return Err(ErrorMessages::invalid_probability(name, value));
+    pub fn validate_probability(_value: f64, name: &str) -> StatsResult<()> {
+        if _value < 0.0 || _value > 1.0 {
+            return Err(ErrorMessages::invalid_probability(name_value));
         }
-        if value.is_nan() {
+        if _value.is_nan() {
             return Err(ErrorMessages::nan_detected(name));
         }
         Ok(())
     }
 
     /// Validate positive value
-    pub fn validate_positive(value: f64, name: &str) -> StatsResult<()> {
-        if value <= 0.0 {
-            return Err(ErrorMessages::non_positive_value(name, value));
+    pub fn validate_positive(_value: f64, name: &str) -> StatsResult<()> {
+        if _value <= 0.0 {
+            return Err(ErrorMessages::non_positive_value(name_value));
         }
-        if value.is_nan() {
+        if _value.is_nan() {
             return Err(ErrorMessages::nan_detected(name));
         }
-        if value.is_infinite() {
+        if _value.is_infinite() {
             return Err(ErrorMessages::infinite_value_detected(name));
         }
         Ok(())
@@ -216,9 +216,9 @@ impl ErrorValidator {
     }
 
     /// Validate minimum sample size
-    pub fn validate_sample_size(size: usize, minimum: usize, operation: &str) -> StatsResult<()> {
-        if size < minimum {
-            return Err(ErrorMessages::insufficient_data(operation, minimum, size));
+    pub fn validate_sample_size(_size: usize, minimum: usize, operation: &str) -> StatsResult<()> {
+        if _size < minimum {
+            return Err(ErrorMessages::insufficient_data(operation, minimum, _size));
         }
         Ok(())
     }
@@ -242,8 +242,8 @@ pub struct RecoverySuggestions;
 
 impl RecoverySuggestions {
     /// Get recovery suggestions for common statistical errors
-    pub fn get_suggestions(error: &StatsError) -> Vec<(String, PerformanceImpact)> {
-        match error {
+    pub fn get_suggestions(_error: &StatsError) -> Vec<(String, PerformanceImpact)> {
+        match _error {
             StatsError::DimensionMismatch(_) => vec![
                 (
                     "Reshape arrays to have compatible dimensions".to_string(),
@@ -331,8 +331,7 @@ impl RecoverySuggestions {
                     "Use robust statistical methods".to_string(),
                     PerformanceImpact::Moderate,
                 ),
-            ],
-            _ => vec![
+            ]_ => vec![
                 (
                     "Check input data for validity".to_string(),
                     PerformanceImpact::None,
@@ -346,10 +345,10 @@ impl RecoverySuggestions {
     }
 
     /// Get context-specific suggestions for statistical operations
-    pub fn get_context_suggestions(operation: &str) -> HashMap<String, Vec<String>> {
+    pub fn get_context_suggestions(_operation: &str) -> HashMap<String, Vec<String>> {
         let mut suggestions = HashMap::new();
 
-        match operation {
+        match _operation {
             "correlation" => {
                 suggestions.insert(
                     "data_preparation".to_string(),
@@ -421,11 +420,11 @@ pub struct StandardizedErrorReporter;
 
 impl StandardizedErrorReporter {
     /// Generate a comprehensive error report
-    pub fn generate_report(error: &StatsError, context: Option<&str>) -> String {
+    pub fn generate_report(_error: &StatsError, context: Option<&str>) -> String {
         let mut report = String::new();
 
-        // Main error message
-        report.push_str(&format!("❌ Error: {}\n\n", error));
+        // Main _error message
+        report.push_str(&format!("❌ Error: {}\n\n", _error));
 
         // Context information
         if let Some(ctx) = context {
@@ -433,7 +432,7 @@ impl StandardizedErrorReporter {
         }
 
         // Recovery suggestions
-        let suggestions = RecoverySuggestions::get_suggestions(error);
+        let suggestions = RecoverySuggestions::get_suggestions(_error);
         if !suggestions.is_empty() {
             report.push_str("💡 Suggested Solutions:\n");
             for (i, (suggestion, impact)) in suggestions.iter().enumerate() {
@@ -585,8 +584,7 @@ impl BatchErrorHandler {
                         let priority_icon = match action.priority {
                             1 => "🔴",
                             2 => "🟡",
-                            3 => "🟢",
-                            _ => "⚪",
+                            3 => "🟢"_ => "⚪",
                         };
                         report.push_str(&format!("    {} {}\n", priority_icon, action.description));
                     }
@@ -613,7 +611,7 @@ impl BatchErrorHandler {
     pub fn get_error_summary(&self) -> HashMap<String, usize> {
         let mut summary = HashMap::new();
 
-        for (_, error, _) in &self.errors {
+        for (_, error_) in &self.errors {
             let error_type = match error {
                 StatsError::ComputationError(_) => "Computation",
                 StatsError::DomainError(_) => "Domain",
@@ -646,7 +644,7 @@ pub struct ErrorDiagnostics;
 
 impl ErrorDiagnostics {
     /// Generate comprehensive diagnostics for array data
-    pub fn diagnose_array_f64(data: &[f64], _name: &str) -> DataDiagnostics {
+    pub fn diagnose_array_f64(_data: &[f64], _name: &str) -> DataDiagnostics {
         let mut quality_issues = Vec::new();
         let mut nan_count = 0;
         let mut inf_count = 0;
@@ -654,7 +652,7 @@ impl ErrorDiagnostics {
         let mut has_negative = false;
         let mut has_zeros = false;
 
-        for &value in data {
+        for &value in _data {
             if value.is_nan() {
                 nan_count += 1;
             } else if value.is_infinite() {
@@ -705,7 +703,7 @@ impl ErrorDiagnostics {
             quality_issues.push(DataQualityIssue::SmallSample(finite_values.len()));
         }
 
-        // Check for constant data
+        // Check for constant _data
         if let (Some(min_val), Some(max_val)) = (min, max) {
             if (max_val - min_val).abs() < 1e-15 {
                 quality_issues.push(DataQualityIssue::Constant);
@@ -726,8 +724,8 @@ impl ErrorDiagnostics {
         }
 
         DataDiagnostics {
-            shape: vec![data.len()],
-            data_type: "f64".to_string(),
+            shape: vec![_data.len()],
+            _data_type: "f64".to_string(),
             summary: StatsSummary {
                 min,
                 max,
@@ -775,8 +773,8 @@ impl InterModuleErrorChecker {
         // Check for similar error patterns across modules
         let mut error_patterns: HashMap<String, Vec<String>> = HashMap::new();
 
-        for (module, errors) in module_errors {
-            for error in errors {
+        for (module_errors) in module_errors {
+            for error in _errors {
                 let pattern = Self::extract_error_pattern(error);
                 error_patterns
                     .entry(pattern)
@@ -801,8 +799,8 @@ impl InterModuleErrorChecker {
         inconsistencies
     }
 
-    fn extract_error_pattern(error: &StatsError) -> String {
-        match error {
+    fn extract_error_pattern(_error: &StatsError) -> String {
+        match _error {
             StatsError::DimensionMismatch(_) => "dimension_mismatch".to_string(),
             StatsError::InvalidArgument(msg) if msg.contains("empty") => "empty_array".to_string(),
             StatsError::InvalidArgument(msg) if msg.contains("NaN") => "nan_values".to_string(),
@@ -825,8 +823,7 @@ pub struct AutoRecoverySystem;
 impl AutoRecoverySystem {
     /// Attempt automatic recovery for common errors
     pub fn attempt_auto_recovery(
-        error: &StatsError,
-        _context: &EnhancedErrorContext,
+        error: &StatsError_context: &EnhancedErrorContext,
     ) -> Option<RecoveryAction> {
         match error {
             StatsError::InvalidArgument(msg) if msg.contains("NaN") => Some(RecoveryAction {
@@ -855,8 +852,7 @@ impl AutoRecoverySystem {
                 performance_impact: PerformanceImpact::Minimal,
                 code_example: Some("let regularized = matrix + Array2::eye(n) * 1e-6;".to_string()),
                 automatic: true,
-            }),
-            _ => None,
+            }, _ => None,
         }
     }
 }

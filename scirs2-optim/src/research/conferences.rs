@@ -361,7 +361,7 @@ impl ConferenceManager {
         
         let submission_id = uuid::Uuid::new_v4().to_string();
         let submission = Submission {
-            id: submission_id.clone(),
+            _id: submission_id.clone(),
             conference_id: conference_id.to_string(),
             paper_id: paper_id.to_string(),
             status: SubmissionStatus::Submitted,
@@ -418,7 +418,7 @@ impl ConferenceManager {
         self.conferences.values()
             .filter(|conf| {
                 conf.research_areas.iter()
-                    .any(|area| area.to_lowercase().contains(&research_area.to_lowercase()))
+                    .any(|_area| _area.to_lowercase().contains(&research_area.to_lowercase()))
             })
             .collect()
     }

@@ -1,4 +1,4 @@
-use scirs2_integrate::newton_cotes::{newton_cotes, newton_cotes_integrate, NewtonCotesType};
+use scirs2__integrate::newton_cotes::{newton_cotes, newton_cotes_integrate, NewtonCotesType};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -132,7 +132,7 @@ fn main() {
         for i in 0..panels_count {
             let panel_a = a + i as f64 * panel_width;
             let panel_b = panel_a + panel_width;
-            let (panel_result, _) =
+            let (panel_result_) =
                 newton_cotes_integrate(f, panel_a, panel_b, 2, NewtonCotesType::Closed).unwrap();
             trap_sum += panel_result;
         }
@@ -143,7 +143,7 @@ fn main() {
             for i in 0..panels_count / 2 {
                 let panel_a = a + 2.0 * i as f64 * panel_width;
                 let panel_b = panel_a + 2.0 * panel_width;
-                let (panel_result, _) =
+                let (panel_result_) =
                     newton_cotes_integrate(f, panel_a, panel_b, 3, NewtonCotesType::Closed)
                         .unwrap();
                 simp_sum += panel_result;
@@ -186,7 +186,7 @@ fn main() {
                 let poly = |x: f64| x.powi(exact_degree as i32);
                 let exact_integral = 1.0 / (exact_degree as f64 + 1.0);
 
-                let (poly_result, _) =
+                let (poly_result_) =
                     newton_cotes_integrate(poly, 0.0, 1.0, n, NewtonCotesType::Closed).unwrap();
                 let poly_error = (poly_result - exact_integral).abs();
 

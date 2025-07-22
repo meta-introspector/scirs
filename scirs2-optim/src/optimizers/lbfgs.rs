@@ -20,7 +20,7 @@ use crate::optimizers::Optimizer;
 ///
 /// ```no_run
 /// use ndarray::Array1;
-/// use scirs2_optim::optimizers::{LBFGS, Optimizer};
+/// use scirs2__optim::optimizers::{LBFGS, Optimizer};
 ///
 /// // Initialize parameters and gradients
 /// let params = Array1::zeros(5);
@@ -71,9 +71,9 @@ impl<A: Float + ScalarOperand + Debug> LBFGS<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learning_rate: A) -> Self {
+    pub fn new(_learning_rate: A) -> Self {
         Self::new_with_config(
-            learning_rate,
+            _learning_rate,
             100,                    // history_size
             A::from(1e-7).unwrap(), // tolerance_grad
             A::from(1e-4).unwrap(), // c1

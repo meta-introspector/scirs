@@ -139,8 +139,7 @@ impl<T: Clone> RTree<T> {
 
             // Get the subtree
             let child = match &mut self.root.entries[subtree_index] {
-                Entry::NonLeaf { child, .. } => child,
-                _ => {
+                Entry::NonLeaf { child, .. } => child_ => {
                     return Err(crate::error::SpatialError::ComputationError(
                         "Expected a non-leaf entry".into(),
                     ))
@@ -231,8 +230,7 @@ impl<T: Clone> RTree<T> {
 
         // Get the subtree
         let child = match &mut node.entries[subtree_index] {
-            Entry::NonLeaf { child, .. } => child,
-            _ => {
+            Entry::NonLeaf { child, .. } => child_ => {
                 return Err(crate::error::SpatialError::ComputationError(
                     "Expected a non-leaf entry".into(),
                 ))
@@ -277,8 +275,7 @@ impl<T: Clone> RTree<T> {
     pub(crate) fn choose_subtree(
         &self,
         node: &Node<T>,
-        mbr: &Rectangle,
-        _level: usize,
+        mbr: &Rectangle_level: usize,
     ) -> SpatialResult<usize> {
         let mut min_enlargement = f64::MAX;
         let mut min_area = f64::MAX;
@@ -311,17 +308,17 @@ impl<T: Clone> RTree<T> {
     }
 
     /// Split a node that has more than max_entries
-    pub(crate) fn split_node(&self, node: &mut Node<T>) -> SpatialResult<(Node<T>, Node<T>)> {
-        // Create two new nodes: the original (which will be replaced) and the split node
-        let mut node1 = Node::new(node.is_leaf, node.level);
-        let mut node2 = Node::new(node.is_leaf, node.level);
+    pub(crate) fn split_node(_node: &mut Node<T>) -> SpatialResult<(Node<T>, Node<T>)> {
+        // Create two new nodes: the original (which will be replaced) and the split _node
+        let mut node1 = Node::new(_node.is_leaf, _node.level);
+        let mut node2 = Node::new(_node.is_leaf, _node.level);
 
         // Choose two seed entries to initialize the split
-        let (seed1, seed2) = self.choose_split_seeds(node)?;
+        let (seed1, seed2) = self.choose_split_seeds(_node)?;
 
         // Create two groups with the seeds
-        node1.entries.push(node.entries[seed1].clone());
-        node2.entries.push(node.entries[seed2].clone());
+        node1.entries.push(_node.entries[seed1].clone());
+        node2.entries.push(_node.entries[seed2].clone());
 
         // Use a set to track which entries have been assigned
         let mut assigned = HashSet::new();
@@ -333,24 +330,24 @@ impl<T: Clone> RTree<T> {
         let mut mbr2 = node2.entries[0].mbr().clone();
 
         // Assign the remaining entries to the groups using the quadratic cost algorithm
-        while assigned.len() < node.size() {
+        while assigned.len() < _node.size() {
             // If one group needs to be filled to meet the minimum entries requirement
-            let remaining = node.size() - assigned.len();
+            let remaining = _node.size() - assigned.len();
             if node1.size() + remaining == self.min_entries {
                 // Assign all remaining entries to group 1
-                for i in 0..node.size() {
+                for i in 0.._node.size() {
                     if !assigned.contains(&i) {
-                        node1.entries.push(node.entries[i].clone());
-                        mbr1 = mbr1.enlarge(node.entries[i].mbr())?;
+                        node1.entries.push(_node.entries[i].clone());
+                        mbr1 = mbr1.enlarge(_node.entries[i].mbr())?;
                     }
                 }
                 break;
             } else if node2.size() + remaining == self.min_entries {
                 // Assign all remaining entries to group 2
-                for i in 0..node.size() {
+                for i in 0.._node.size() {
                     if !assigned.contains(&i) {
-                        node2.entries.push(node.entries[i].clone());
-                        mbr2 = mbr2.enlarge(node.entries[i].mbr())?;
+                        node2.entries.push(_node.entries[i].clone());
+                        mbr2 = mbr2.enlarge(_node.entries[i].mbr())?;
                     }
                 }
                 break;
@@ -361,13 +358,13 @@ impl<T: Clone> RTree<T> {
             let mut chosen_index = 0;
             let mut add_to_group1 = true;
 
-            for i in 0..node.size() {
+            for i in 0.._node.size() {
                 if assigned.contains(&i) {
                     continue;
                 }
 
                 // Calculate the enlargement needed for both groups
-                let entry_mbr = node.entries[i].mbr();
+                let entry_mbr = _node.entries[i].mbr();
                 let enlargement1 = mbr1.enlargement_area(entry_mbr)?;
                 let enlargement2 = mbr2.enlargement_area(entry_mbr)?;
 
@@ -382,33 +379,33 @@ impl<T: Clone> RTree<T> {
 
             // Add the chosen entry to the preferred group
             if add_to_group1 {
-                node1.entries.push(node.entries[chosen_index].clone());
-                mbr1 = mbr1.enlarge(node.entries[chosen_index].mbr())?;
+                node1.entries.push(_node.entries[chosen_index].clone());
+                mbr1 = mbr1.enlarge(_node.entries[chosen_index].mbr())?;
             } else {
-                node2.entries.push(node.entries[chosen_index].clone());
-                mbr2 = mbr2.enlarge(node.entries[chosen_index].mbr())?;
+                node2.entries.push(_node.entries[chosen_index].clone());
+                mbr2 = mbr2.enlarge(_node.entries[chosen_index].mbr())?;
             }
 
             assigned.insert(chosen_index);
         }
 
-        // Replace the old node with the first group
-        *node = node1;
+        // Replace the old _node with the first group
+        *_node = node1;
 
-        Ok((node.clone(), node2))
+        Ok((_node.clone(), node2))
     }
 
     /// Choose two entries to be the seeds for node splitting
-    pub(crate) fn choose_split_seeds(&self, node: &Node<T>) -> SpatialResult<(usize, usize)> {
+    pub(crate) fn choose_split_seeds(_node: &Node<T>) -> SpatialResult<(usize, usize)> {
         let mut max_waste = -f64::MAX;
         let mut seed1 = 0;
         let mut seed2 = 0;
 
         // Find the two entries that would waste the most area if put together
-        for i in 0..node.size() - 1 {
-            for j in i + 1..node.size() {
-                let mbr_i = node.entries[i].mbr();
-                let mbr_j = node.entries[j].mbr();
+        for i in 0.._node.size() - 1 {
+            for j in i + 1.._node.size() {
+                let mbr_i = _node.entries[i].mbr();
+                let mbr_j = _node.entries[j].mbr();
 
                 // Calculate the area of the MBR containing both entries
                 let combined_mbr = mbr_i.enlarge(mbr_j)?;

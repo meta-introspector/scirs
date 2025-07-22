@@ -24,23 +24,18 @@ use std::marker::PhantomData;
 /// A simplified mock distributed array for testing box_clone
 #[derive(Debug, Clone)]
 struct MockDistributedArray {
-    _data: Vec<f64>, // Prefixed with underscore to indicate it's unused
+    data: Vec<f64>, // Prefixed with underscore to indicate it's unused
     shape: Vec<usize>,
 }
 
 impl MockDistributedArray {
     fn new(data: Vec<f64>, shape: Vec<usize>) -> Self {
-        Self { _data: data, shape }
+        Self { data: data, shape }
     }
 }
 
 impl ArrayProtocol for MockDistributedArray {
-    fn array_function(
-        &self,
-        _func: &scirs2_core::array_protocol::ArrayFunction,
-        _types: &[TypeId],
-        _args: &[Box<dyn Any>],
-        _kwargs: &HashMap<String, Box<dyn Any>>,
+    fn kwargs( &HashMap<String, Box<dyn Any>>,
     ) -> Result<Box<dyn Any>, NotImplemented> {
         Err(NotImplemented)
     }
@@ -61,28 +56,21 @@ impl ArrayProtocol for MockDistributedArray {
 /// A simplified mock GPU array for testing box_clone
 #[derive(Debug, Clone)]
 struct MockGPUArray {
-    _data: Vec<f64>, // Prefixed with underscore to indicate it's unused
-    shape: Vec<usize>,
-    _device: String, // Prefixed with underscore to indicate it's unused
+    data: Vec<f64>, // Prefixed with underscore to indicate it's unused
+    shape: Vec<usize>, device: String, // Prefixed with underscore to indicate it's unused
 }
 
 impl MockGPUArray {
     fn new(data: Vec<f64>, shape: Vec<usize>, device: String) -> Self {
         Self {
-            _data: data,
-            shape,
-            _device: device,
+            data: data,
+            shape_device: device,
         }
     }
 }
 
 impl ArrayProtocol for MockGPUArray {
-    fn array_function(
-        &self,
-        _func: &scirs2_core::array_protocol::ArrayFunction,
-        _types: &[TypeId],
-        _args: &[Box<dyn Any>],
-        _kwargs: &HashMap<String, Box<dyn Any>>,
+    fn kwargs( &HashMap<String, Box<dyn Any>>,
     ) -> Result<Box<dyn Any>, NotImplemented> {
         Err(NotImplemented)
     }
@@ -103,15 +91,13 @@ impl ArrayProtocol for MockGPUArray {
 /// A simplified JIT-enabled array for testing box_clone
 #[derive(Debug, Clone)]
 struct JITEnabledArray<T, A: Clone> {
-    inner: A,
-    _phantom: PhantomData<T>,
+    inner: A_phantom: PhantomData<T>,
 }
 
 impl<T, A: Clone> JITEnabledArray<T, A> {
     fn new(inner: A) -> Self {
         Self {
-            inner,
-            _phantom: PhantomData,
+            inner_phantom: PhantomData,
         }
     }
 }
@@ -121,9 +107,7 @@ where
     T: Clone + Send + Sync + 'static,
     A: ArrayProtocol + Clone + Send + Sync + 'static,
 {
-    fn array_function(
-        &self,
-        func: &scirs2_core::array_protocol::ArrayFunction,
+    fn protocol(:ArrayFunction,
         types: &[TypeId],
         args: &[Box<dyn Any>],
         kwargs: &HashMap<String, Box<dyn Any>>,
@@ -141,8 +125,7 @@ where
 
     fn box_clone(&self) -> Box<dyn ArrayProtocol> {
         Box::new(JITEnabledArray {
-            inner: self.inner.clone(),
-            _phantom: PhantomData::<T>,
+            inner: self.inner.clone(), phantom: PhantomData::<T>,
         })
     }
 }
@@ -252,7 +235,7 @@ fn test_jit_array_box_clone() {
     let wrapped = NdarrayWrapper::new(array);
 
     // Create a JIT-enabled array
-    let jit_array = JITEnabledArray::<f64, _>::new(wrapped);
+    let jit_array = JITEnabledArray::<f64>::new(wrapped);
 
     // Box the array as an ArrayProtocol
     let boxed: Box<dyn ArrayProtocol> = Box::new(jit_array);

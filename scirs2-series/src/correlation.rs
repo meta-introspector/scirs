@@ -10,6 +10,7 @@ use crate::error::TimeSeriesError;
 use ndarray::{s, Array1, Array2};
 use scirs2_core::validation::check_array_finite;
 use std::f64::consts::PI;
+use statrs::statistics::Statistics;
 
 /// Result type for correlation analysis
 pub type CorrelationResult<T> = Result<T, TimeSeriesError>;
@@ -302,9 +303,9 @@ impl CorrelationAnalyzer {
     }
 
     /// Create a new analyzer with random seed
-    pub fn with_seed(seed: u64) -> Self {
+    pub fn with_seed(_seed: u64) -> Self {
         Self {
-            random_seed: Some(seed),
+            random_seed: Some(_seed),
         }
     }
 
@@ -378,7 +379,7 @@ impl CorrelationAnalyzer {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.abs().partial_cmp(&b.abs()).unwrap())
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap_or(0);
 
         let max_correlation = correlations[max_idx];
@@ -817,7 +818,7 @@ impl CorrelationAnalyzer {
         indexed_values.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
         let mut ranks = Array1::zeros(x.len());
-        for (rank, &(original_index, _)) in indexed_values.iter().enumerate() {
+        for (rank, &(original_index_)) in indexed_values.iter().enumerate() {
             ranks[original_index] = rank as f64 + 1.0;
         }
 
@@ -996,8 +997,7 @@ impl CorrelationAnalyzer {
                         j.saturating_sub(1),
                         cost_matrix[[i.saturating_sub(1), j.saturating_sub(1)]],
                     ),
-                ],
-                _ => vec![
+                ]_ => vec![
                     // Simplified for other patterns
                     (
                         i.saturating_sub(1),
@@ -1017,9 +1017,9 @@ impl CorrelationAnalyzer {
                 ],
             };
 
-            let (next_i, next_j, _) = candidates
+            let (next_i, next_j_) = candidates
                 .into_iter()
-                .filter(|(ni, nj, _)| *ni > 0 && *nj > 0)
+                .filter(|(ni, nj_)| *ni > 0 && *nj > 0)
                 .min_by(|a, b| a.2.partial_cmp(&b.2).unwrap())
                 .unwrap_or((1, 1, 0.0));
 
@@ -1098,7 +1098,7 @@ impl CorrelationAnalyzer {
         let max_scale = n_times as f64 / 4.0;
         let scale_factor = (max_scale / min_scale).powf(1.0 / (n_scales - 1) as f64);
 
-        for (scale_idx, _scale) in (0..n_scales).enumerate() {
+        for (scale_idx_scale) in (0..n_scales).enumerate() {
             let current_scale = min_scale * scale_factor.powi(scale_idx as i32);
             frequencies[scale_idx] = config.sampling_freq / (2.0 * PI * current_scale);
 

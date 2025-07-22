@@ -68,7 +68,7 @@ pub trait RansacModel: Sized + Clone {
     type DataPoint: Clone;
 
     /// Estimate model parameters from a minimal set of samples
-    fn estimate(samples: &[Self::DataPoint]) -> Result<Self>;
+    fn estimate(_samples: &[Self::DataPoint]) -> Result<Self>;
 
     /// Calculate residual error for a data point
     fn residual(&self, point: &Self::DataPoint) -> f64;
@@ -77,7 +77,7 @@ pub trait RansacModel: Sized + Clone {
     fn min_samples() -> usize;
 
     /// Refine model using all inliers (optional)
-    fn refine(&self, _inliers: &[Self::DataPoint]) -> Result<Self> {
+    fn refine(&self_inliers: &[Self::DataPoint]) -> Result<Self> {
         // Default implementation returns the same model
         Ok(self.clone())
     }
@@ -107,7 +107,7 @@ pub fn run_ransac<M: RansacModel>(
     }
 
     // Create RNG (using default generator since we don't need precise control for this application)
-    let mut rng = rng();
+    let mut rng = rand::rng();
 
     let n_points = data.len();
     let min_samples = M::min_samples();
@@ -130,7 +130,7 @@ pub fn run_ransac<M: RansacModel>(
 
         // Fisher-Yates shuffle
         for i in (1..n_points).rev() {
-            let j = rng.random_range(0..=i);
+            let j = rng.gen_range(0..=i);
             sample_indices.swap(i, j);
         }
 
@@ -225,8 +225,8 @@ pub struct Homography {
 
 impl Homography {
     /// Create a new homography matrix from raw data
-    pub fn new(matrix_data: &[f64; 9]) -> Self {
-        let matrix = Array2::from_shape_vec((3, 3), matrix_data.to_vec()).unwrap();
+    pub fn new(_matrix_data: &[f64; 9]) -> Self {
+        let matrix = Array2::from_shape_vec((3, 3), _matrix_data.to_vec()).unwrap();
         let inverse = match Self::invert_matrix(&matrix) {
             Ok(inv) => inv,
             Err(_) => Array2::eye(3),
@@ -285,17 +285,17 @@ impl Homography {
     }
 
     /// Compute inverse of a 3x3 matrix
-    fn invert_matrix(matrix: &Array2<f64>) -> Result<Array2<f64>> {
-        if matrix.shape() != [3, 3] {
+    fn invert_matrix(_matrix: &Array2<f64>) -> Result<Array2<f64>> {
+        if _matrix.shape() != [3, 3] {
             return Err(crate::error::VisionError::InvalidParameter(
                 "Matrix must be 3x3".to_string(),
             ));
         }
 
-        let det = matrix[[0, 0]]
-            * (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]])
-            - matrix[[0, 1]] * (matrix[[1, 0]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 0]])
-            + matrix[[0, 2]] * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
+        let det = _matrix[[0, 0]]
+            * (_matrix[[1, 1]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 1]])
+            - _matrix[[0, 1]] * (_matrix[[1, 0]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 0]])
+            + _matrix[[0, 2]] * (_matrix[[1, 0]] * _matrix[[2, 1]] - _matrix[[1, 1]] * _matrix[[2, 0]]);
 
         if det.abs() < 1e-10 {
             return Err(crate::error::VisionError::OperationError(
@@ -305,15 +305,15 @@ impl Homography {
 
         let mut inverse = Array2::zeros((3, 3));
 
-        inverse[[0, 0]] = (matrix[[1, 1]] * matrix[[2, 2]] - matrix[[1, 2]] * matrix[[2, 1]]) / det;
-        inverse[[0, 1]] = (matrix[[0, 2]] * matrix[[2, 1]] - matrix[[0, 1]] * matrix[[2, 2]]) / det;
-        inverse[[0, 2]] = (matrix[[0, 1]] * matrix[[1, 2]] - matrix[[0, 2]] * matrix[[1, 1]]) / det;
-        inverse[[1, 0]] = (matrix[[1, 2]] * matrix[[2, 0]] - matrix[[1, 0]] * matrix[[2, 2]]) / det;
-        inverse[[1, 1]] = (matrix[[0, 0]] * matrix[[2, 2]] - matrix[[0, 2]] * matrix[[2, 0]]) / det;
-        inverse[[1, 2]] = (matrix[[0, 2]] * matrix[[1, 0]] - matrix[[0, 0]] * matrix[[1, 2]]) / det;
-        inverse[[2, 0]] = (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]) / det;
-        inverse[[2, 1]] = (matrix[[0, 1]] * matrix[[2, 0]] - matrix[[0, 0]] * matrix[[2, 1]]) / det;
-        inverse[[2, 2]] = (matrix[[0, 0]] * matrix[[1, 1]] - matrix[[0, 1]] * matrix[[1, 0]]) / det;
+        inverse[[0, 0]] = (_matrix[[1, 1]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 1]]) / det;
+        inverse[[0, 1]] = (_matrix[[0, 2]] * _matrix[[2, 1]] - _matrix[[0, 1]] * _matrix[[2, 2]]) / det;
+        inverse[[0, 2]] = (_matrix[[0, 1]] * _matrix[[1, 2]] - _matrix[[0, 2]] * _matrix[[1, 1]]) / det;
+        inverse[[1, 0]] = (_matrix[[1, 2]] * _matrix[[2, 0]] - _matrix[[1, 0]] * _matrix[[2, 2]]) / det;
+        inverse[[1, 1]] = (_matrix[[0, 0]] * _matrix[[2, 2]] - _matrix[[0, 2]] * _matrix[[2, 0]]) / det;
+        inverse[[1, 2]] = (_matrix[[0, 2]] * _matrix[[1, 0]] - _matrix[[0, 0]] * _matrix[[1, 2]]) / det;
+        inverse[[2, 0]] = (_matrix[[1, 0]] * _matrix[[2, 1]] - _matrix[[1, 1]] * _matrix[[2, 0]]) / det;
+        inverse[[2, 1]] = (_matrix[[0, 1]] * _matrix[[2, 0]] - _matrix[[0, 0]] * _matrix[[2, 1]]) / det;
+        inverse[[2, 2]] = (_matrix[[0, 0]] * _matrix[[1, 1]] - _matrix[[0, 1]] * _matrix[[1, 0]]) / det;
 
         Ok(inverse)
     }
@@ -331,19 +331,19 @@ pub struct PointMatch {
 impl RansacModel for Homography {
     type DataPoint = PointMatch;
 
-    fn estimate(samples: &[Self::DataPoint]) -> Result<Self> {
-        if samples.len() < Self::min_samples() {
+    fn estimate(_samples: &[Self::DataPoint]) -> Result<Self> {
+        if _samples.len() < Self::min_samples() {
             return Err(crate::error::VisionError::InvalidParameter(format!(
-                "Not enough samples: {} < {}",
-                samples.len(),
+                "Not enough _samples: {} < {}",
+                _samples.len(),
                 Self::min_samples()
             )));
         }
 
         // Construct linear system for homography
-        let mut a = Array2::zeros((samples.len() * 2, 9));
+        let mut a = Array2::zeros((_samples.len() * 2, 9));
 
-        for (i, match_point) in samples.iter().enumerate() {
+        for (i, match_point) in _samples.iter().enumerate() {
             let (x1, y1) = match_point.point1;
             let (x2, y2) = match_point.point2;
 
@@ -457,7 +457,7 @@ impl Homography {
             let norm = v.iter().map(|&x| x * x).sum::<f64>().sqrt();
             if norm < 1e-10 {
                 // If we get a zero vector, restart with random
-                let mut rng = rng();
+                let mut rng = rand::rng();
                 for i in 0..n {
                     v[i] = rng.random::<f64>();
                 }
@@ -508,20 +508,20 @@ impl Default for TranslationScale {
 impl RansacModel for TranslationScale {
     type DataPoint = PointMatch;
 
-    fn estimate(samples: &[Self::DataPoint]) -> Result<Self> {
-        if samples.len() < Self::min_samples() {
+    fn estimate(_samples: &[Self::DataPoint]) -> Result<Self> {
+        if _samples.len() < Self::min_samples() {
             return Err(crate::error::VisionError::InvalidParameter(format!(
-                "Not enough samples: {} < {}",
-                samples.len(),
+                "Not enough _samples: {} < {}",
+                _samples.len(),
                 Self::min_samples()
             )));
         }
 
         // Use 2 points to estimate translation, scale, and rotation
-        let (x1_1, y1_1) = samples[0].point1;
-        let (x2_1, y2_1) = samples[0].point2;
-        let (x1_2, y1_2) = samples[1].point1;
-        let (x2_2, y2_2) = samples[1].point2;
+        let (x1_1, y1_1) = _samples[0].point1;
+        let (x2_1, y2_1) = _samples[0].point2;
+        let (x1_2, y1_2) = _samples[1].point1;
+        let (x2_2, y2_2) = _samples[1].point2;
 
         // Compute the displacement vectors
         let dx1 = x1_2 - x1_1;

@@ -5,7 +5,7 @@
 //! financial modeling with advanced analysis capabilities.
 
 use ndarray::Array1;
-use scirs2_integrate::{
+use scirs2__integrate::{
     // Analysis tools
     BifurcationAnalyzer,
     BifurcationPoint,
@@ -227,10 +227,10 @@ impl MultiPhysicsSimulation {
             self.quantum_params.mass,
         );
 
-        // Solve time evolution
+        // Solve _time evolution
         let states = solver.solve_time_dependent(&initial_state, simulation_time)?;
 
-        // Calculate observables over time
+        // Calculate observables over _time
         let mut position_expectation = Vec::new();
         let mut momentum_expectation = Vec::new();
         let mut energy = Vec::new();
@@ -571,7 +571,7 @@ pub struct FluidResults {
 pub struct FinancialResults {
     pub option_price: f64,
     pub monte_carlo_price: f64,
-    pub greeks: scirs2_integrate::Greeks,
+    pub greeks: scirs2_integrate: Greeks,
     pub volatility_sensitivity: (Vec<f64>, Vec<f64>), // (volatilities, prices)
 }
 

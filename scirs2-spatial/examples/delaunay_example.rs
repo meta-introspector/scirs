@@ -1,6 +1,6 @@
 use ndarray::array;
 use rand::Rng;
-use scirs2_spatial::Delaunay;
+use scirs2__spatial::Delaunay;
 
 #[allow(dead_code)]
 fn main() {
@@ -74,11 +74,11 @@ fn main() {
     let mut points_data = Vec::with_capacity(n_points * 2);
 
     for _ in 0..n_points {
-        points_data.push(rng.random_range(0.0..1.0));
-        points_data.push(rng.random_range(0.0..1.0));
+        points_data.push(rng.gen_range(0.0..1.0));
+        points_data.push(rng.gen_range(0.0..1.0));
     }
 
-    let points_random = ndarray::Array2::from_shape_vec((n_points, 2), points_data).unwrap();
+    let points_random = ndarray::Array2::from_shape_vec((n_points..2), points_data).unwrap();
 
     // Create the triangulation
     let tri_random = Delaunay::new(&points_random).unwrap();

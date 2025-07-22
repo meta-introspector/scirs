@@ -103,8 +103,7 @@ where
     /// Generate counterfactual explanation
     pub fn generate_counterfactual(
         &mut self,
-        original_input: &ArrayD<F>,
-        _target_prediction: F,
+        original_input: &ArrayD<F>, _target_prediction: F,
     ) -> Result<ArrayD<F>> {
         // Simplified counterfactual generation
         // In practice, this would use optimization to find minimal perturbations
@@ -126,12 +125,10 @@ where
                 .sum()
                 .to_f64()
                 .unwrap_or(0.0),
-            DistanceMetric::L2 => ((input1 - input2).mapv(|x| x * x).sum().sqrt())
-            DistanceMetric::LInf => (input1 - input2)
+            DistanceMetric::L2 => ((input1 - input2).mapv(|x| x * x).sum().sqrt()), DistanceMetric::LInf => (input1 - input2)
                 .iter()
                 .cloned()
-                .fold(F::zero(), F::max)
-            DistanceMetric::Custom => {
+                .fold(F::zero(), F::max), DistanceMetric::Custom => {
                 // Placeholder for custom distance
                 0.0
             }
@@ -172,8 +169,7 @@ impl<F> LIMEExplainer<F>
             cached_perturbations: HashMap::new(),
     /// Generate local explanation using LIME
     pub fn explain_instance(
-        input: &ArrayD<F>,
-        _target_class: Option<usize>,
+        input: &ArrayD<F>, _target_class: Option<usize>,
         // Simplified LIME implementation
         // In practice, would generate perturbations, train local model, extract coefficients
         let mut explanation = input.mapv(|_| F::zero());

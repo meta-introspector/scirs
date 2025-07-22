@@ -16,6 +16,7 @@ use crate::{
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::time::Instant;
+use statrs::statistics::Statistics;
 
 /// Performance optimization configuration
 #[derive(Debug, Clone)]
@@ -47,7 +48,7 @@ impl Default for PerformanceConfig {
             enable_simd: capabilities.avx2_available
                 || capabilities.avx512_available
                 || capabilities.simd_available,
-            enable_parallel: num_cpus::get() > 1,
+            enable_parallel: num, _cpus: get() > 1,
             simd_threshold: if capabilities.avx512_available {
                 32
             } else {
@@ -91,10 +92,10 @@ pub struct OptimizedLinearDiscriminantAnalysis {
 
 impl OptimizedLinearDiscriminantAnalysis {
     /// Create new optimized LDA instance
-    pub fn new(config: PerformanceConfig) -> Self {
+    pub fn new(_config: PerformanceConfig) -> Self {
         Self {
             lda: LinearDiscriminantAnalysis::new(),
-            config,
+            _config,
             metrics: None,
         }
     }
@@ -111,7 +112,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         handler.validate_finite_array_or_error(x.as_slice().unwrap(), "x", "Optimized LDA fit")?;
         handler.validate_array_or_error(y.as_slice().unwrap(), "y", "Optimized LDA fit")?;
 
-        let (n_samples, _) = x.dim();
+        let (n_samples_) = x.dim();
         if n_samples != y.len() {
             return Err(create_standardized_error(
                 "dimension_mismatch",
@@ -199,13 +200,13 @@ impl OptimizedLinearDiscriminantAnalysis {
         classes.dedup();
         let unique_classes = Array1::from_vec(classes);
         let _n_classes = unique_classes.len();
-        let (_n_samples, _n_features) = x.dim();
+        let (_n_samples_n_features) = x.dim();
 
         // SIMD-optimized class means computation
         let class_means = self.compute_class_means_simd(x, y, &unique_classes)?;
 
         // SIMD-optimized scatter matrices
-        let (_sw, _sb) = self.compute_scatter_matrices_simd(x, y, &unique_classes, &class_means)?;
+        let (_sw_sb) = self.compute_scatter_matrices_simd(x, y, &unique_classes, &class_means)?;
 
         // Use the regular LDA eigenvalue solver (already optimized)
         let _lda_temp = LinearDiscriminantAnalysis::new();
@@ -217,7 +218,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
     /// Parallel-optimized LDA fitting
     fn fit_parallel(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<LDAResult> {
-        let (_n_samples, _n_features) = x.dim();
+        let (_n_samples_n_features) = x.dim();
 
         // Get unique classes
         let mut classes = y.to_vec();
@@ -230,7 +231,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         let class_means = self.compute_class_means_parallel(x, y, &unique_classes)?;
 
         // Parallel scatter matrix computation
-        let (_sw, _sb) =
+        let (_sw_sb) =
             self.compute_scatter_matrices_parallel(x, y, &unique_classes, &class_means)?;
 
         // For now, use regular eigenvalue solver
@@ -253,7 +254,7 @@ impl OptimizedLinearDiscriminantAnalysis {
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == class_label)
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .collect();
 
             if class_indices.is_empty() {
@@ -311,7 +312,7 @@ impl OptimizedLinearDiscriminantAnalysis {
                     .iter()
                     .enumerate()
                     .filter(|(_, &label)| label == class_label)
-                    .map(|(idx, _)| idx)
+                    .map(|(idx_)| idx)
                     .collect();
 
                 if class_indices.is_empty() {
@@ -503,10 +504,10 @@ pub struct OptimizedCanonicalCorrelationAnalysis {
 
 impl OptimizedCanonicalCorrelationAnalysis {
     /// Create new optimized CCA instance
-    pub fn new(config: PerformanceConfig) -> Self {
+    pub fn new(_config: PerformanceConfig) -> Self {
         Self {
             cca: CanonicalCorrelationAnalysis::new(),
-            config,
+            _config,
             metrics: None,
         }
     }
@@ -558,7 +559,7 @@ impl OptimizedCanonicalCorrelationAnalysis {
         let (x_processed, y_processed) = self.center_and_scale_parallel(x, y)?;
 
         // Parallel covariance computation
-        let (_cxx, _cyy, _cxy) = self.compute_covariances_parallel(&x_processed, &y_processed)?;
+        let (_cxx_cyy_cxy) = self.compute_covariances_parallel(&x_processed, &y_processed)?;
 
         // Use regular CCA solver for eigenvalue problem (already optimized)
         self.cca.fit(x, y)
@@ -725,7 +726,7 @@ impl PerformanceBenchmark {
         n_classes: usize,
     ) -> Result<(Array2<f64>, Array1<i32>)> {
         use rand::rng;
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
 
         let mut rng = rng();
         let normal = Normal::new(0.0, 1.0).unwrap();
@@ -758,7 +759,7 @@ impl PerformanceBenchmark {
     }
 
     /// Print benchmark results in a formatted table
-    pub fn print_benchmark_results(results: &[(String, PerformanceMetrics)]) {
+    pub fn print_benchmark_results(_results: &[(String, PerformanceMetrics)]) {
         println!("\n=== PERFORMANCE BENCHMARK RESULTS ===");
         println!(
             "{:<20} {:>12} {:>10} {:>15} {:>8} {:>8}",
@@ -766,7 +767,7 @@ impl PerformanceBenchmark {
         );
         println!("{}", "-".repeat(80));
 
-        for (name, metrics) in results {
+        for (name, metrics) in _results {
             println!(
                 "{:<20} {:>12.2} {:>10.0} {:>15} {:>8} {:>8}",
                 name,

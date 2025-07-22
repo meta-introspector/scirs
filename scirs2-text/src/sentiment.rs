@@ -39,10 +39,10 @@ impl Sentiment {
     }
 
     /// Convert a numerical score to sentiment
-    pub fn from_score(score: f64) -> Self {
-        if score > 0.0 {
+    pub fn from_score(_score: f64) -> Self {
+        if _score > 0.0 {
             Sentiment::Positive
-        } else if score < 0.0 {
+        } else if _score < 0.0 {
             Sentiment::Negative
         } else {
             Sentiment::Neutral
@@ -209,7 +209,7 @@ pub struct LexiconSentimentAnalyzer {
 
 impl LexiconSentimentAnalyzer {
     /// Create a new lexicon-based sentiment analyzer
-    pub fn new(lexicon: SentimentLexicon) -> Self {
+    pub fn new(_lexicon: SentimentLexicon) -> Self {
         let negation_words = vec![
             "not".to_string(),
             "no".to_string(),
@@ -224,7 +224,7 @@ impl LexiconSentimentAnalyzer {
         ];
 
         Self {
-            lexicon,
+            _lexicon,
             tokenizer: Box::new(WordTokenizer::default()),
             negation_words,
             negation_window: 3,
@@ -393,9 +393,9 @@ pub struct RuleBasedSentimentAnalyzer {
 
 impl RuleBasedSentimentAnalyzer {
     /// Create a new rule-based sentiment analyzer
-    pub fn new(lexicon: SentimentLexicon) -> Self {
+    pub fn new(_lexicon: SentimentLexicon) -> Self {
         Self {
-            base_analyzer: LexiconSentimentAnalyzer::new(lexicon),
+            base_analyzer: LexiconSentimentAnalyzer::new(_lexicon),
             rules: SentimentRules::default(),
         }
     }

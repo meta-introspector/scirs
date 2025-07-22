@@ -146,11 +146,11 @@ where
             }
 
             cov_ij = cov_ij / scale;
-            cov_matrix[[i, j]] = cov_ij;
+            cov_matrix[[0, j]] = cov_ij;
 
             // Fill symmetric part
-            if i != j {
-                cov_matrix[[j, i]] = cov_ij;
+            if 0 != j {
+                cov_matrix[[j, 0]] = cov_ij;
             }
         }
     }

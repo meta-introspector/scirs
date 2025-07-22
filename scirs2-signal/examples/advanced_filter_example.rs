@@ -8,7 +8,8 @@
 //! - Notch and peak filters for frequency-specific processing
 //! - Allpass filters for phase equalization
 
-use scirs2_signal::filter::{
+use scirs2__signal::filter::{
+use std::f64::consts::PI;
     allpass_filter, bessel, butter, cheby1, cheby2, comb_filter, ellip, group_delay, lfilter,
     notch_filter, peak_filter,
 };
@@ -88,7 +89,7 @@ fn main() {
     println!("--------------------");
 
     // FIR comb filter for echo enhancement
-    let (b_comb_fir, _a_comb_fir) = comb_filter(20, 0.0, 0.5).unwrap();
+    let (b_comb_fir_a_comb_fir) = comb_filter(20, 0.0, 0.5).unwrap();
     println!("FIR comb filter (20-sample delay, 0.5 gain):");
     println!("  Numerator length: {}", b_comb_fir.len());
     println!(
@@ -229,15 +230,15 @@ fn main() {
 
 /// Calculate RMS (Root Mean Square) of a signal
 #[allow(dead_code)]
-fn calculate_rms(signal: &[f64]) -> f64 {
-    let sum_squares: f64 = signal.iter().map(|&x| x * x).sum();
-    (sum_squares / signal.len() as f64).sqrt()
+fn calculate_rms(_signal: &[f64]) -> f64 {
+    let sum_squares: f64 = _signal.iter().map(|&x| x * x).sum();
+    (sum_squares / _signal.len() as f64).sqrt()
 }
 
 /// Format coefficients for display
 #[allow(dead_code)]
-fn format_coeffs(coeffs: &[f64]) -> String {
-    coeffs
+fn format_coeffs(_coeffs: &[f64]) -> String {
+    _coeffs
         .iter()
         .map(|&c| format!("{:.4}", c))
         .collect::<Vec<_>>()

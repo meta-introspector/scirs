@@ -11,7 +11,7 @@ use std::hash::Hash;
 /// The diameter is the maximum shortest path distance between any two nodes in the graph.
 /// Returns None if the graph is disconnected.
 #[allow(dead_code)]
-pub fn diameter<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Option<f64>
+pub fn diameter<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Option<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight
@@ -25,7 +25,7 @@ where
         + Default,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     if n == 0 {
@@ -37,7 +37,7 @@ where
     // Compute all-pairs shortest paths
     for i in 0..n {
         for j in i + 1..n {
-            match dijkstra_path(graph, &nodes[i], &nodes[j]) {
+            match dijkstra_path(_graph, &nodes[i], &nodes[j]) {
                 Ok(Some(path)) => {
                     let distance: f64 = path.total_weight.into();
                     if distance > max_distance {
@@ -59,7 +59,7 @@ where
 /// is the maximum distance from that node to any other node.
 /// Returns None if the graph is disconnected.
 #[allow(dead_code)]
-pub fn radius<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Option<f64>
+pub fn radius<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Option<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight
@@ -73,7 +73,7 @@ where
         + Default,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     if n == 0 {
@@ -88,7 +88,7 @@ where
 
         for j in 0..n {
             if i != j {
-                match dijkstra_path(graph, &nodes[i], &nodes[j]) {
+                match dijkstra_path(_graph, &nodes[i], &nodes[j]) {
                     Ok(Some(path)) => {
                         let distance: f64 = path.total_weight.into();
                         if distance > max_distance_from_i {
@@ -114,7 +114,7 @@ where
 /// Center nodes are those with minimum eccentricity (equal to the radius).
 /// Returns empty vector if the graph is disconnected.
 #[allow(dead_code)]
-pub fn center_nodes<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<N>
+pub fn center_nodes<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Vec<N>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight
@@ -128,7 +128,7 @@ where
         + Default,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     if n == 0 {
@@ -144,7 +144,7 @@ where
 
         for j in 0..n {
             if i != j {
-                match dijkstra_path(graph, &nodes[i], &nodes[j]) {
+                match dijkstra_path(_graph, &nodes[i], &nodes[j]) {
                     Ok(Some(path)) => {
                         let distance: f64 = path.total_weight.into();
                         if distance > max_distance_from_i {
@@ -168,7 +168,7 @@ where
     nodes
         .into_iter()
         .enumerate()
-        .filter(|(i, _)| (eccentricities[*i] - min_eccentricity).abs() < f64::EPSILON)
+        .filter(|(i_)| (eccentricities[*i] - min_eccentricity).abs() < f64::EPSILON)
         .map(|(_, node)| node)
         .collect()
 }

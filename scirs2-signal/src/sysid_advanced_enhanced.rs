@@ -11,17 +11,19 @@
 //! - Distributed identification for large-scale networked systems
 
 use crate::error::{SignalError, SignalResult};
-use crate::sysid_enhanced::{
-    ComputationalDiagnostics, EnhancedSysIdResult, IdentificationMethod, ModelValidationMetrics,
-    ParameterEstimate, SystemModel,
-};
 use ndarray::{Array1, Array2, Array3};
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::check_finite;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 
+#[allow(unused_imports)]
+use crate::sysid__enhanced::{
+    ComputationalDiagnostics, EnhancedSysIdResult, IdentificationMethod, ModelValidationMetrics,
+    ParameterEstimate, SystemModel,
+};
 /// Advanced-enhanced system identification result with comprehensive analysis
 #[derive(Debug, Clone)]
 pub struct AdvancedEnhancedSysIdResult {
@@ -753,7 +755,7 @@ impl Default for AdvancedEnhancedSysIdConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::sysid_advanced_enhanced::{advanced_enhanced_system_identification, AdvancedEnhancedSysIdConfig};
+/// use scirs2__signal::sysid_advanced_enhanced::{advanced_enhanced_system_identification, AdvancedEnhancedSysIdConfig};
 /// use ndarray::Array1;
 ///
 ///
@@ -943,7 +945,7 @@ fn identify_with_deep_neural_network(
     config: &NeuralNetworkConfig,
     simd_enabled: bool,
 ) -> SignalResult<WeightedModel> {
-    // Architecture search if enabled
+    // Architecture search if _enabled
     let architecture = if config.architecture_search {
         search_optimal_architecture(input, output)?
     } else {
@@ -1159,7 +1161,7 @@ impl Default for SpecializationDomain {
 
 impl SystemModel {
     fn from_neural_network(_network: FeedforwardNetwork) -> SignalResult<Self> {
-        // Convert neural network to ARX model (simplified)
+        // Convert neural _network to ARX model (simplified)
         Ok(SystemModel::ARX {
             a: Array1::ones(3),
             b: Array1::ones(2),
@@ -1214,9 +1216,7 @@ impl RealTimeTracker {
     }
 
     fn handle_system_change(
-        &mut self,
-        _update: &ParameterUpdate,
-        _config: &RealTimeConfig,
+        &mut self_update: &ParameterUpdate, _config: &RealTimeConfig,
     ) -> SignalResult<()> {
         // Increase learning rates temporarily
         self.learning_rates *= 2.0;
@@ -1232,20 +1232,20 @@ impl RealTimeTracker {
 // Implementation of helper functions (simplified for brevity)
 
 #[allow(dead_code)]
-fn validate_identification_signals(input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<()> {
-    if input.len() != output.len() {
+fn validate_identification_signals(_input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<()> {
+    if _input.len() != output.len() {
         return Err(SignalError::ValueError(
             "Input and output signals must have the same length".to_string(),
         ));
     }
 
-    if input.len() < 10 {
+    if _input.len() < 10 {
         return Err(SignalError::ValueError(
             "Signals must have at least 10 samples for identification".to_string(),
         ));
     }
 
-    check_finite(input.as_slice().unwrap(), "input")?;
+    check_finite(_input.as_slice().unwrap(), "_input")?;
     check_finite(output.as_slice().unwrap(), "output")?;
 
     Ok(())
@@ -1253,25 +1253,21 @@ fn validate_identification_signals(input: &Array1<f64>, output: &Array1<f64>) ->
 
 #[allow(dead_code)]
 fn search_optimal_architecture(
-    _input: &Array1<f64>,
-    _output: &Array1<f64>,
+    _input: &Array1<f64>, _output: &Array1<f64>,
 ) -> SignalResult<NetworkArchitecture> {
     // Neural architecture search (simplified)
     Ok(NetworkArchitecture {
-        input_size: 10,
+        _input_size: 10,
         hidden_layers: vec![64, 32],
-        output_size: 1,
+        _output_size: 1,
         total_parameters: 10 * 64 + 64 * 32 + 32 * 1,
     })
 }
 
 #[allow(dead_code)]
 fn train_feedforward_network(
-    _input: &Array1<f64>,
-    _output: &Array1<f64>,
-    architecture: &NetworkArchitecture,
-    _config: &NeuralNetworkConfig,
-    _simd_enabled: bool,
+    _input: &Array1<f64>, _output: &Array1<f64>,
+    architecture: &NetworkArchitecture_config: &NeuralNetworkConfig_simd, _enabled: bool,
 ) -> SignalResult<FeedforwardNetwork> {
     // Train neural network (simplified)
     let mut weights = Vec::new();
@@ -1312,10 +1308,7 @@ fn train_feedforward_network(
 
 #[allow(dead_code)]
 fn perform_bayesian_estimation(
-    _input: &Array1<f64>,
-    _output: &Array1<f64>,
-    _config: &UncertaintyConfig,
-    _simd_enabled: bool,
+    _input: &Array1<f64>, _output: &Array1<f64>, _config: &UncertaintyConfig_simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
     // Bayesian parameter estimation (simplified)
     Ok(SystemModel::ARX {
@@ -1327,9 +1320,7 @@ fn perform_bayesian_estimation(
 
 #[allow(dead_code)]
 fn train_gaussian_process(
-    _input: &Array1<f64>,
-    _output: &Array1<f64>,
-    _simd_enabled: bool,
+    _input: &Array1<f64>, _output: &Array1<f64>, _simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
     // Gaussian process training (simplified)
     Ok(SystemModel::ARX {
@@ -1341,10 +1332,7 @@ fn train_gaussian_process(
 
 #[allow(dead_code)]
 fn train_physics_informed_network(
-    _input: &Array1<f64>,
-    _output: &Array1<f64>,
-    _config: &NeuralNetworkConfig,
-    _simd_enabled: bool,
+    _input: &Array1<f64>, _output: &Array1<f64>, _config: &NeuralNetworkConfig_simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
     // Physics-informed neural network training (simplified)
     Ok(SystemModel::ARX {
@@ -1356,8 +1344,7 @@ fn train_physics_informed_network(
 
 #[allow(dead_code)]
 fn build_model_ensemble(
-    models: Vec<WeightedModel>,
-    _config: &EnsembleConfig,
+    models: Vec<WeightedModel>, _config: &EnsembleConfig,
 ) -> SignalResult<ModelEnsemble> {
     let selection_criteria = ModelSelectionCriteria {
         multi_objective_scores: HashMap::new(),
@@ -1386,9 +1373,9 @@ fn build_model_ensemble(
 }
 
 #[allow(dead_code)]
-fn build_single_model_ensemble(models: Vec<WeightedModel>) -> SignalResult<ModelEnsemble> {
+fn build_single_model_ensemble(_models: Vec<WeightedModel>) -> SignalResult<ModelEnsemble> {
     // Select best single model
-    let best_model = models
+    let best_model = _models
         .into_iter()
         .max_by(|a, b| a.weight.partial_cmp(&b.weight).unwrap())
         .unwrap();
@@ -1397,19 +1384,15 @@ fn build_single_model_ensemble(models: Vec<WeightedModel>) -> SignalResult<Model
 
 #[allow(dead_code)]
 fn initialize_real_time_tracker(
-    _input: &Array1<f64>,
-    _output: &Array1<f64>,
-    _ensemble: &ModelEnsemble,
-    _config: &RealTimeConfig,
+    _input: &Array1<f64>, _output: &Array1<f64>, _ensemble: &ModelEnsemble_config: &RealTimeConfig,
 ) -> SignalResult<RealTimeTracker> {
-    // Initialize real-time tracker with ensemble model
+    // Initialize real-time tracker with _ensemble model
     Ok(RealTimeTracker::default())
 }
 
 #[allow(dead_code)]
 fn perform_uncertainty_quantification(
-    _ensemble: &ModelEnsemble,
-    _config: &UncertaintyConfig,
+    _ensemble: &ModelEnsemble_config: &UncertaintyConfig,
 ) -> SignalResult<UncertaintyAnalysis> {
     // Perform uncertainty quantification (simplified)
     Ok(UncertaintyAnalysis::default())
@@ -1417,7 +1400,7 @@ fn perform_uncertainty_quantification(
 
 #[allow(dead_code)]
 fn extract_neural_models(_models: &[WeightedModel]) -> NeuralModelCollection {
-    // Extract neural models from candidate models
+    // Extract neural _models from candidate _models
     NeuralModelCollection {
         feedforward_models: Vec::new(),
         recurrent_models: Vec::new(),
@@ -1432,11 +1415,11 @@ fn extract_neural_models(_models: &[WeightedModel]) -> NeuralModelCollection {
 }
 
 #[allow(dead_code)]
-fn select_best_base_model(models: &[WeightedModel]) -> SignalResult<EnhancedSysIdResult> {
+fn select_best_base_model(_models: &[WeightedModel]) -> SignalResult<EnhancedSysIdResult> {
     // Select best model for base result (simplified)
     // This would normally convert the best WeightedModel to EnhancedSysIdResult
     Ok(EnhancedSysIdResult {
-        model: models[0].model.clone(),
+        model: _models[0].model.clone(),
         parameters: ParameterEstimate {
             values: Array1::ones(3),
             covariance: Array2::eye(3),
@@ -1459,8 +1442,6 @@ fn select_best_base_model(models: &[WeightedModel]) -> SignalResult<EnhancedSysI
 
 #[cfg(test)]
 mod tests {
-
-    use std::f64::consts::PI;
 
     #[test]
     fn test_advanced_enhanced_system_identification() {

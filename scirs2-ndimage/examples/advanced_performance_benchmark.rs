@@ -9,7 +9,7 @@
 //! - Scalability analysis across different image sizes
 
 use ndarray::{Array2, ArrayView2};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     error::NdimageResult,
     profiling::{
         disable_profiling, enable_memory_profiling, enable_profiling, get_memory_report,
@@ -20,13 +20,13 @@ use std::time::{Duration, Instant};
 
 // Import both standard and advanced SIMD functions for comparison
 #[cfg(feature = "simd")]
-use scirs2_ndimage::filters::{
+use scirs2__ndimage::filters::{
     advanced_simd_advanced_edge_detection, advanced_simd_multi_scale_lbp,
     advanced_simd_wavelet_pyramid, laplace, sobel, WaveletType,
 };
 
 #[cfg(feature = "simd")]
-use scirs2_ndimage::features::{canny, sobel_edges};
+use scirs2__ndimage::features::{canny, sobel_edges};
 
 /// Benchmark configuration
 #[derive(Clone, Debug)]
@@ -72,7 +72,7 @@ struct BenchmarkResult {
 }
 
 impl BenchmarkResult {
-    fn new(operation_name: String, image_size: (usize, usize), durations: &[Duration]) -> Self {
+    fn new(_operation_name: String, image_size: (usize, usize), durations: &[Duration]) -> Self {
         let mean_duration = Duration::from_nanos(
             (durations.iter().map(|d| d.as_nanos()).sum::<u128>() / durations.len() as u128) as u64,
         );
@@ -204,9 +204,9 @@ fn main() -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn create_benchmark_image(height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((height, width), |(i, j)| {
-        let x = i as f64 / height as f64;
+fn create_benchmark_image(_height: usize, width: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_height, width), |(i, j)| {
+        let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
         // Create a complex pattern with multiple frequency components
@@ -361,15 +361,15 @@ fn benchmark_edge_detection(
 
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn benchmark_standard_sobel(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
-    sobel(&image.view(), None, None, None)
+fn benchmark_standard_sobel(_image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
+    sobel(&_image.view(), None, None, None)
 }
 
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn benchmark_standard_canny(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
+fn benchmark_standard_canny(_image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
     canny(
-        image.view(),
+        _image.view(),
         1.0,  // sigma
         0.1,  // low_threshold
         0.3,  // high_threshold
@@ -378,12 +378,12 @@ fn benchmark_standard_canny(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
 }
 
 #[allow(dead_code)]
-fn display_benchmark_summary(results: &[BenchmarkResult]) {
-    // Group results by operation type
+fn display_benchmark_summary(_results: &[BenchmarkResult]) {
+    // Group _results by operation type
     use std::collections::HashMap;
     let mut grouped: HashMap<String, Vec<&BenchmarkResult>> = HashMap::new();
 
-    for result in results {
+    for result in _results {
         let operation_type = result
             .operation_name
             .split_whitespace()
@@ -449,13 +449,13 @@ fn display_benchmark_summary(results: &[BenchmarkResult]) {
 
     // Overall statistics
     println!("--- Overall Statistics ---");
-    let total_operations = results.len();
-    let avg_throughput: f64 = results
+    let total_operations = _results.len();
+    let avg_throughput: f64 = _results
         .iter()
         .map(|r| r.throughput_mpix_per_sec)
         .sum::<f64>()
         / total_operations as f64;
-    let max_throughput = results
+    let max_throughput = _results
         .iter()
         .map(|r| r.throughput_mpix_per_sec)
         .fold(0.0, f64::max);

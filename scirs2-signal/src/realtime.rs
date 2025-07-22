@@ -5,11 +5,13 @@
 //! mechanisms for continuous signal processing applications.
 
 use crate::error::{SignalError, SignalResult};
+use std::thread;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
-use std::thread;
+use std::sync::atomic::Ordering;
 use std::time::{Duration, Instant};
 
+#[allow(unused_imports)]
 /// Configuration for real-time processing
 #[derive(Debug, Clone)]
 pub struct RealtimeConfig {
@@ -74,9 +76,9 @@ pub struct StreamBlock {
 
 impl StreamBlock {
     /// Create a new stream block
-    pub fn new(data: Vec<f64>, channels: usize, sequence: u64) -> Self {
+    pub fn new(_data: Vec<f64>, channels: usize, sequence: u64) -> Self {
         Self {
-            data,
+            _data,
             timestamp: Instant::now(),
             sequence,
             channels,
@@ -118,7 +120,7 @@ pub trait RealtimeProcessor: Send + Sync {
     }
 
     /// Initialize processor with configuration
-    fn initialize(&mut self, _config: &RealtimeConfig) -> SignalResult<()> {
+    fn initialize(&mut self_config: &RealtimeConfig) -> SignalResult<()> {
         Ok(())
     }
 
@@ -137,10 +139,10 @@ pub struct CircularBuffer {
 
 impl CircularBuffer {
     /// Create a new circular buffer
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(_capacity: usize) -> Self {
         Self {
-            buffer: Arc::new(Mutex::new(VecDeque::with_capacity(capacity))),
-            capacity,
+            buffer: Arc::new(Mutex::new(VecDeque::with_capacity(_capacity))),
+            _capacity,
             overrun_count: Arc::new(Mutex::new(0)),
         }
     }
@@ -204,8 +206,7 @@ pub struct StreamProcessor {
     input_buffer: CircularBuffer,
     output_buffer: CircularBuffer,
     stats: Arc<Mutex<RealtimeStats>>,
-    running: Arc<Mutex<bool>>,
-    _process_thread: Option<thread::JoinHandle<()>>,
+    running: Arc<Mutex<bool>>, _process_thread: Option<thread::JoinHandle<()>>,
 }
 
 impl StreamProcessor {
@@ -223,8 +224,7 @@ impl StreamProcessor {
             input_buffer,
             output_buffer,
             stats: Arc::new(Mutex::new(RealtimeStats::default())),
-            running: Arc::new(Mutex::new(false)),
-            _process_thread: None,
+            running: Arc::new(Mutex::new(false)), _process_thread: None,
         })
     }
 
@@ -347,7 +347,7 @@ impl StreamProcessor {
                 let mut output_buf = output_buffer.lock().unwrap();
                 for &sample in &_stream_block.data {
                     if output_buf.len() >= config.buffer_size * 4 {
-                        output_buf.pop_front(); // Drop oldest if buffer full
+                        output_buf.pop_front(); // Drop oldest if _buffer full
                     }
                     output_buf.push_back(sample);
                 }
@@ -404,15 +404,15 @@ pub struct LockFreeRingBuffer {
 
 impl LockFreeRingBuffer {
     /// Create new lock-free ring buffer
-    pub fn new(capacity: usize) -> Self {
-        let mut buffer = Vec::with_capacity(capacity);
-        for _ in 0..capacity {
+    pub fn new(_capacity: usize) -> Self {
+        let mut buffer = Vec::with_capacity(_capacity);
+        for _ in 0.._capacity {
             buffer.push(std::sync::atomic::AtomicU64::new(0));
         }
 
         Self {
             buffer,
-            capacity,
+            _capacity,
             write_pos: std::sync::atomic::AtomicUsize::new(0),
             read_pos: std::sync::atomic::AtomicUsize::new(0),
         }
@@ -420,8 +420,6 @@ impl LockFreeRingBuffer {
 
     /// Write data (non-blocking, returns false if buffer full)
     pub fn write(&self, data: &[f64]) -> bool {
-        use std::sync::atomic::Ordering;
-
         let current_write = self.write_pos.load(Ordering::Acquire);
         let current_read = self.read_pos.load(Ordering::Acquire);
 
@@ -452,7 +450,6 @@ impl LockFreeRingBuffer {
 
     /// Read data (non-blocking, returns actual samples read)
     pub fn read(&self, data: &mut [f64]) -> usize {
-        use std::sync::atomic::Ordering;
 
         let current_read = self.read_pos.load(Ordering::Acquire);
         let current_write = self.write_pos.load(Ordering::Acquire);
@@ -482,7 +479,6 @@ impl LockFreeRingBuffer {
 
     /// Get current fill level
     pub fn fill_level(&self) -> usize {
-        use std::sync::atomic::Ordering;
 
         let current_read = self.read_pos.load(Ordering::Acquire);
         let current_write = self.write_pos.load(Ordering::Acquire);
@@ -503,8 +499,8 @@ pub struct GainProcessor {
 }
 
 impl GainProcessor {
-    pub fn new(gain: f64) -> Self {
-        Self { gain }
+    pub fn new(_gain: f64) -> Self {
+        Self { _gain }
     }
 }
 
@@ -525,10 +521,10 @@ pub struct MovingAverageProcessor {
 }
 
 impl MovingAverageProcessor {
-    pub fn new(window_size: usize) -> Self {
+    pub fn new(_window_size: usize) -> Self {
         Self {
-            window_size,
-            history: VecDeque::with_capacity(window_size),
+            _window_size,
+            history: VecDeque::with_capacity(_window_size),
             sum: 0.0,
         }
     }
@@ -578,9 +574,9 @@ pub struct ZeroLatencyLimiter {
 }
 
 impl ZeroLatencyLimiter {
-    pub fn new(threshold: f64, _lookahead_ms: f64, attack_ms: f64, release_ms: f64) -> Self {
+    pub fn new(_threshold: f64, _lookahead_ms: f64, attack_ms: f64, release_ms: f64) -> Self {
         Self {
-            threshold,
+            _threshold,
             lookahead_samples: 0, // Will be set in initialize
             delay_buffer: VecDeque::new(),
             gain_buffer: VecDeque::new(),

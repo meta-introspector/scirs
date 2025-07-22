@@ -1,8 +1,9 @@
-use scirs2_io::csv::{read_csv_typed, write_csv_typed, ColumnType, CsvReaderConfig, DataValue};
+use scirs2__io::csv::{read_csv_typed, write_csv_typed, ColumnType, CsvReaderConfig, DataValue};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufWriter, Write};
+use statrs::statistics::Statistics;
 
 /// This example demonstrates using CSV functionality for scientific data
 /// with various units, metadata, and mixed types.
@@ -84,8 +85,8 @@ fn create_sample_scientific_data() -> Result<(), Box<dyn Error>> {
 
 /// Extract metadata from comment lines
 #[allow(dead_code)]
-fn extract_metadata_from_file(file_path: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
-    let file = File::open(file_path)?;
+fn extract_metadata_from_file(_file_path: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
+    let file = File::open(_file_path)?;
     let reader = std::io::BufReader::new(file);
     let mut metadata = HashMap::new();
 
@@ -440,9 +441,9 @@ struct ColumnStats {
 }
 
 impl ColumnStats {
-    fn new(name: &str) -> Self {
+    fn new(_name: &str) -> Self {
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             count: 0,
             min: f64::INFINITY,
             max: f64::NEG_INFINITY,

@@ -6,23 +6,25 @@
 //! for analog-to-digital conversion.
 
 use crate::error::{SignalError, SignalResult};
+use crate::lti::TransferFunction;
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
+use std::f64::consts::PI;
+use std::fmt::Debug;
 
+#[allow(unused_imports)]
 // Helper enum for handling either single values or slices
 #[derive(Debug, Clone)]
 pub enum Either<A, B> {
     Left(A),
     Right(B),
 }
-use std::fmt::Debug;
-
 use super::common::{
+use crate::lti::design::tf;
     math::{add_digital_zeros, bilinear_pole_transform, butterworth_poles, prewarp_frequency},
     validation::{convert_filter_type, validate_cutoff_frequency, validate_order},
     FilterCoefficients, FilterType, FilterTypeParam,
 };
-use num_complex::Complex64;
-
 /// Butterworth filter design
 ///
 /// Designs a digital Butterworth filter with maximally flat frequency response
@@ -43,8 +45,8 @@ use num_complex::Complex64;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::iir::butter;
-/// use scirs2_signal::filter::FilterType;
+/// use scirs2__signal::filter::iir::butter;
+/// use scirs2__signal::filter::FilterType;
 ///
 /// // Design a 4th order lowpass Butterworth filter with cutoff at 0.2 times Nyquist
 /// let (b, a) = butter(4, 0.2, FilterType::Lowpass).unwrap();
@@ -69,7 +71,7 @@ where
     // Step 1: Calculate analog Butterworth prototype poles
     let poles = butterworth_poles(order);
 
-    // Step 2: Apply frequency transformation based on filter type
+    // Step 2: Apply frequency transformation based on filter _type
     let (analog_zeros, transformed_poles, gain) = match filter_type {
         FilterType::Lowpass => {
             // Scale poles by cutoff frequency (pre-warping for bilinear transform)
@@ -111,7 +113,7 @@ where
         digital_zeros.push(bilinear_pole_transform(zero));
     }
 
-    // Add zeros in the digital domain based on filter type
+    // Add zeros in the digital domain based on filter _type
     digital_zeros.extend(add_digital_zeros(filter_type, order));
 
     // Step 4: Convert poles and zeros to transfer function coefficients
@@ -137,8 +139,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::iir::butter_bandpass_bandstop;
-/// use scirs2_signal::filter::FilterType;
+/// use scirs2__signal::filter::iir::butter_bandpass_bandstop;
+/// use scirs2__signal::filter::FilterType;
 ///
 /// // Design a 4th order bandpass Butterworth filter from 0.1 to 0.4 times Nyquist
 /// let (b, a) = butter_bandpass_bandstop(4, 0.1, 0.4, FilterType::Bandpass).unwrap();
@@ -161,7 +163,7 @@ pub fn butter_bandpass_bandstop(
 
     if !matches!(filter_type, FilterType::Bandpass | FilterType::Bandstop) {
         return Err(SignalError::ValueError(
-            "Filter type must be Bandpass or Bandstop".to_string(),
+            "Filter _type must be Bandpass or Bandstop".to_string(),
         ));
     }
 
@@ -257,7 +259,7 @@ pub fn butter_bandpass_bandstop(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::iir::cheby1;
+/// use scirs2__signal::filter::iir::cheby1;
 ///
 /// // Design a 4th order Chebyshev I lowpass filter with 0.5 dB ripple
 /// let (b, a) = cheby1(4, 0.5, 0.3, "lowpass").unwrap();
@@ -287,7 +289,7 @@ where
 
     // Calculate Chebyshev Type I analog prototype poles
     let mut poles = Vec::with_capacity(order);
-    let a = (1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0).sqrt()).ln() / order as f64;
+    let a = ((1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0) as f64).sqrt()).ln() / order  as f64;
 
     for k in 0..order {
         let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64);
@@ -354,8 +356,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::iir::cheby1_bandpass_bandstop;
-/// use scirs2_signal::filter::FilterType;
+/// use scirs2__signal::filter::iir::cheby1_bandpass_bandstop;
+/// use scirs2__signal::filter::FilterType;
 ///
 /// // Design a 2nd order Chebyshev I bandpass filter (4 poles total)
 /// let (b, a) = cheby1_bandpass_bandstop(2, 0.5, 0.2, 0.6, FilterType::Bandpass).unwrap();
@@ -384,7 +386,7 @@ where
 
     if !matches!(filter_type, FilterType::Bandpass | FilterType::Bandstop) {
         return Err(SignalError::ValueError(
-            "Filter type must be Bandpass or Bandstop".to_string(),
+            "Filter _type must be Bandpass or Bandstop".to_string(),
         ));
     }
 
@@ -399,7 +401,7 @@ where
 
     // Calculate Chebyshev Type I analog prototype poles
     let mut prototype_poles = Vec::with_capacity(order);
-    let a = (1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0).sqrt()).ln() / order as f64;
+    let a = ((1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0) as f64).sqrt()).ln() / order  as f64;
 
     for k in 0..order {
         let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64);
@@ -495,7 +497,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::iir::cheby2;
+/// use scirs2__signal::filter::iir::cheby2;
 ///
 /// // Design a 4th order Chebyshev II lowpass filter with 40 dB stopband attenuation
 /// let (b, a) = cheby2(4, 40.0, 0.3, "lowpass").unwrap();
@@ -537,7 +539,7 @@ where
     let mut zeros = Vec::with_capacity(order);
 
     // Calculate the parameter related to ripple
-    let a = (epsilon + (epsilon * epsilon + 1.0).sqrt()).ln() / order as f64;
+    let a = ((epsilon + (epsilon * epsilon + 1.0) as f64).sqrt()).ln() / order  as f64;
 
     // Generate poles for Type II (inverse Chebyshev)
     for k in 0..order {
@@ -587,7 +589,7 @@ where
         .map(|&zero| bilinear_pole_transform(zero))
         .collect();
 
-    // Add additional zeros if needed based on filter type
+    // Add additional zeros if needed based on filter _type
     let additional_zeros = order.saturating_sub(analog_zeros.len());
     for _ in 0..additional_zeros {
         if filter_type == FilterType::Highpass {
@@ -620,7 +622,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::iir::ellip;
+/// use scirs2__signal::filter::iir::ellip;
 ///
 /// // Design a 4th order elliptic lowpass filter with 0.5 dB ripple and 40 dB stopband attenuation
 /// let (b, a) = ellip(4, 0.5, 40.0, 0.3, "lowpass").unwrap();
@@ -644,13 +646,13 @@ where
 
     if passband_ripple <= 0.0 {
         return Err(SignalError::ValueError(
-            "Passband ripple must be positive".to_string(),
+            "Passband _ripple must be positive".to_string(),
         ));
     }
 
     if stopband_attenuation <= 0.0 {
         return Err(SignalError::ValueError(
-            "Stopband attenuation must be positive".to_string(),
+            "Stopband _attenuation must be positive".to_string(),
         ));
     }
 
@@ -661,7 +663,7 @@ where
         ));
     }
 
-    // Convert ripple and attenuation from dB to linear
+    // Convert _ripple and _attenuation from dB to linear
     let epsilon_p = (10.0_f64.powf(passband_ripple / 10.0) - 1.0).sqrt();
     let epsilon_s = (10.0_f64.powf(stopband_attenuation / 10.0) - 1.0).sqrt();
 
@@ -674,13 +676,13 @@ where
     // 3. Elliptic integral calculations
 
     // For production readiness, we'll create a filter that approximates elliptic behavior
-    // by combining aspects of Chebyshev I (passband ripple) and Chebyshev II (stopband zeros)
+    // by combining aspects of Chebyshev I (passband _ripple) and Chebyshev II (stopband zeros)
 
     let mut poles = Vec::with_capacity(order);
     let mut zeros = Vec::with_capacity(order);
 
     // Generate poles similar to Chebyshev but with adjustments for elliptic characteristics
-    let a = (1.0 / epsilon_p).asinh() / order as f64;
+    let a = (1.0 / epsilon_p).asinh() / order  as f64;
 
     for k in 0..order {
         let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64);
@@ -762,7 +764,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::iir::bessel;
+/// use scirs2__signal::filter::iir::bessel;
 ///
 /// // Design a 4th order Bessel lowpass filter
 /// let (b, a) = bessel(4, 0.3, "lowpass").unwrap();
@@ -841,8 +843,7 @@ where
             Complex64::new(-0.7111381808485399, -0.7186517314014426),
             Complex64::new(-0.4621740412532122, 1.0344954064286434),
             Complex64::new(-0.4621740412532122, -1.0344954064286434),
-        ],
-        _ => {
+        ]_ => {
             // For higher orders, approximate using Butterworth-like poles
             // with modified positions for Bessel characteristics
             let mut poles = Vec::with_capacity(order);
@@ -857,7 +858,7 @@ where
         }
     };
 
-    // Apply frequency transformation based on filter type
+    // Apply frequency transformation based on filter _type
     let (analog_zeros, transformed_poles, gain) = match filter_type {
         FilterType::Lowpass => {
             let warped_freq = prewarp_frequency(wn);
@@ -891,7 +892,7 @@ where
         .map(|&zero| bilinear_pole_transform(zero))
         .collect();
 
-    // Add zeros in the digital domain based on filter type
+    // Add zeros in the digital domain based on filter _type
     digital_zeros.extend(add_digital_zeros(filter_type, order));
 
     zpk_to_tf(&digital_zeros, &digital_poles, gain)
@@ -999,4 +1000,9 @@ fn zpk_to_tf(
     let a_normalized: Vec<f64> = a.iter().map(|&coeff| coeff / a0).collect();
 
     Ok((b_normalized, a_normalized))
+}
+
+#[allow(dead_code)]
+fn tf(_num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
+    TransferFunction::new(_num, den)
 }

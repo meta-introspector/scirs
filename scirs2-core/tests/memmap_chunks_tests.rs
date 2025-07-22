@@ -39,7 +39,7 @@ mod tests {
         let mmap = create_mmap(&data, &file_path, AccessMode::Write, 0).unwrap();
 
         // Use process_chunks to sum each chunk
-        let chunk_sums = mmap.process_chunks(ChunkingStrategy::Fixed(25), |chunk, _| {
+        let chunk_sums = mmap.process_chunks(ChunkingStrategy::Fixed(25), |chunk_| {
             chunk.iter().map(|&x| x as i64).sum::<i64>()
         });
 
@@ -69,12 +69,12 @@ mod tests {
 
         // Process chunks to make a simple mutation
         // This is more reliable than direct mutation through array view
-        mmap.process_chunks_mut(ChunkingStrategy::Fixed(10), |chunk_data, _| {
+        mmap.process_chunks_mut(ChunkingStrategy::Fixed(10), |chunk_data_| {
             chunk_data[0] = 42;
         });
 
         // Verify changes persisted
-        let array = mmap.as_array::<ndarray::Ix1>().unwrap();
+        let array = mmap.asarray::<ndarray::Ix1>().unwrap();
         println!("After mutation through process_chunks_mut: {:?}", array);
 
         // Test should pass if mutation worked
@@ -98,7 +98,7 @@ mod tests {
             MemoryMappedArray::<i32>::open_zero_copy(&file_path, AccessMode::ReadWrite).unwrap();
 
         // Get the original data
-        let original = mmap.as_array::<ndarray::Ix1>().unwrap();
+        let original = mmap.asarray::<ndarray::Ix1>().unwrap();
         println!(
             "Original data (first 5 elements): {:?}",
             original.slice(ndarray::s![0..5])
@@ -122,7 +122,7 @@ mod tests {
         // Reopen the file
         let reopened_mmap =
             MemoryMappedArray::<i32>::open_zero_copy(&file_path, AccessMode::ReadOnly).unwrap();
-        let modified = reopened_mmap.as_array::<ndarray::Ix1>().unwrap();
+        let modified = reopened_mmap.asarray::<ndarray::Ix1>().unwrap();
 
         println!(
             "Modified data (first 15 elements): {:?}",

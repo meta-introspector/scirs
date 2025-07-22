@@ -513,7 +513,7 @@ impl StandardBenchmarks {
         let mut suite = BenchmarkSuite::new("comprehensive_performance", config.clone());
 
         // Add computation benchmarks
-        let _comp_suite = Self::create_computation_suite(config.clone());
+        let comp_suite = Self::create_computation_suite(config.clone());
         // Note: This is a simplified version - in practice you'd need to extract benchmarks
         suite.add_benchmark(|runner| {
             runner.run("comprehensive_computation", || {

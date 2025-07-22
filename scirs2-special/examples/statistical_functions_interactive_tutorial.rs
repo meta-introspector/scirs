@@ -6,7 +6,7 @@
 //! Run with: cargo run --example statistical_functions_interactive_tutorial
 
 use ndarray::Array1;
-use scirs2_special::*;
+use scirs2__special::*;
 use std::f64::consts::PI;
 use std::io::{self, Write};
 
@@ -35,8 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(5) => machine_learning_applications()?,
             Ok(6) => interactive_proofs_section()?,
             Ok(7) => computational_experiments()?,
-            Ok(8) => quiz_and_challenges()?,
-            _ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(8) => quiz_and_challenges()?_ => println!("❌ Invalid choice. Please try again.\n"),
         }
 
         pause();
@@ -508,8 +507,8 @@ fn quiz_and_challenges() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper functions
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
-    print!("{}", prompt);
+fn get_user_input(_prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    print!("{}", _prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

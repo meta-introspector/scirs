@@ -1,7 +1,7 @@
 use image::{DynamicImage, RgbImage};
-use scirs2_vision::color::{rgb_to_grayscale, ColorSpace};
-use scirs2_vision::preprocessing::StructuringElement;
-use scirs2_vision::segmentation::{threshold_binary, AdaptiveMethod};
+use scirs2__vision::color::{rgb_to_grayscale, ColorSpace};
+use scirs2__vision::preprocessing::StructuringElement;
+use scirs2__vision::segmentation::{threshold_binary, AdaptiveMethod};
 
 #[test]
 #[allow(dead_code)]

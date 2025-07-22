@@ -1,8 +1,8 @@
-use crate::ndarray_ext::{NdArray, NdArrayView};
+use crate::ndarray__ext::{NdArray, NdArrayView};
 use crate::op;
 use crate::tensor::Tensor;
 use crate::tensor_ops;
-use crate::tensor_ops::*;
+use crate::tensor__ops::*;
 use crate::Float;
 use ndarray;
 
@@ -14,7 +14,7 @@ pub struct LogSoftmax {
     pub axis: isize,
 }
 
-impl<T: Float> op::Op<T> for LogSoftmax {
+impl<T: Float>, op::Op<T> for LogSoftmax {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         ctx.append_output(x - &crate::tensor_ops::math_ops::logsumexp_forward(x, self.axis, true));
@@ -30,7 +30,7 @@ impl<T: Float> op::Op<T> for LogSoftmax {
     }
 }
 
-impl<T: Float> op::Op<T> for SigmoidCrossEntropy {
+impl<T: Float>, op::Op<T> for SigmoidCrossEntropy {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x: &NdArrayView<T> = &ctx.input(0);
         let t: &NdArrayView<T> = &ctx.input(1);
@@ -60,10 +60,10 @@ impl<T: Float> op::Op<T> for SigmoidCrossEntropy {
     }
 }
 
-impl<T: Float> op::Op<T> for SparseSoftmaxCrossEntropy {
+impl<T: Float>, op::Op<T> for SparseSoftmaxCrossEntropy {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let (x, t) = (&ctx.input(0), &ctx.input(1));
-        let log_x: NdArray<T> = x - &tensor_ops::math_ops::logsumexp_forward(x, 1, true);
+        let log_x: NdArray<T> = x - &tensor, _ops::math_ops::logsumexp_forward(x, 1, true);
 
         // validation
         {
@@ -136,7 +136,7 @@ impl<T: Float> op::Op<T> for SparseSoftmaxCrossEntropy {
     }
 }
 
-impl<T: Float> op::Op<T> for SparseSoftmaxCrossEntropyGrad {
+impl<T: Float>, op::Op<T> for SparseSoftmaxCrossEntropyGrad {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let log_x = &ctx.input(0); // x is softmax
         let mut x = log_x.map(|a| a.exp());
@@ -157,10 +157,10 @@ impl<T: Float> op::Op<T> for SparseSoftmaxCrossEntropyGrad {
     }
 }
 
-impl<T: Float> op::Op<T> for SoftmaxCrossEntropy {
+impl<T: Float>, op::Op<T> for SoftmaxCrossEntropy {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
-        let log_x: NdArray<T> = x - &tensor_ops::math_ops::logsumexp_forward(x, 1, true);
+        let log_x: NdArray<T> = x - &tensor, _ops::math_ops::logsumexp_forward(x, 1, true);
         // `t` must be one-hot
         let t = &ctx.input(1);
         assert_eq!(log_x.ndim(), 2, "x must be 2-ranked tensor");

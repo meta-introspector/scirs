@@ -348,10 +348,10 @@ pub struct SyclOptimizations {
 #[derive(Debug, Clone)]
 pub struct CudaKernelConfig {
     /// Block size for 1D kernels
-    pub block_size_1d: usize,
+    pub block_size_1, d: usize,
 
     /// Block size for 2D kernels
-    pub block_size_2d: (usize, usize),
+    pub block_size_2, d: (usize, usize),
 
     /// Shared memory per block
     pub shared_memory_per_block: usize,
@@ -791,9 +791,9 @@ impl Default for AlertThresholds {
 
 impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
     /// Create new cross-platform optimizer
-    pub fn new(config: CrossPlatformConfig) -> Result<Self> {
+    pub fn new(_config: CrossPlatformConfig) -> Result<Self> {
         let mut optimizer = Self {
-            config,
+            _config,
             contexts: HashMap::new(),
             active_optimizer: None,
             current_backend: None,
@@ -923,8 +923,7 @@ impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
             DeviceSelectionStrategy::Fastest => self.select_fastest_backend(),
             DeviceSelectionStrategy::LargestMemory => self.select_largest_memory_backend(),
             DeviceSelectionStrategy::LowPower => self.select_low_power_backend(),
-            DeviceSelectionStrategy::Manual { device_id: _ } => self.select_manual_backend(),
-            _ => self.select_fastest_backend(),
+            DeviceSelectionStrategy::Manual { device_id: _ } => self.select_manual_backend(, _ => self.select_fastest_backend(),
         };
 
         if let Some(backend) = backend {
@@ -945,7 +944,7 @@ impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
         self.device_capabilities
             .iter()
             .max_by(|(_, a), (_, b)| a.peak_flops.partial_cmp(&b.peak_flops).unwrap())
-            .map(|(backend, _)| *backend)
+            .map(|(backend_)| *backend)
     }
 
     /// Select backend with largest memory
@@ -953,7 +952,7 @@ impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
         self.device_capabilities
             .iter()
             .max_by_key(|(_, caps)| caps.total_memory)
-            .map(|(backend, _)| *backend)
+            .map(|(backend_)| *backend)
     }
 
     /// Select backend with lowest power consumption
@@ -961,7 +960,7 @@ impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
         self.device_capabilities
             .iter()
             .min_by(|(_, a), (_, b)| a.typical_power.partial_cmp(&b.typical_power).unwrap())
-            .map(|(backend, _)| *backend)
+            .map(|(backend_)| *backend)
     }
 
     /// Select manually specified backend
@@ -1270,14 +1269,13 @@ impl Default for AutoOptimizationState {
 
 /// Get human-readable backend name
 #[allow(dead_code)]
-fn backend_name(backend: GpuBackend) -> &'static str {
-    match backend {
+fn backend_name(_backend: GpuBackend) -> &'static str {
+    match _backend {
         GpuBackend::Cuda => "CUDA",
         GpuBackend::Rocm => "ROCm",
         GpuBackend::Metal => "Metal",
         GpuBackend::Wgpu => "WebGPU",
-        GpuBackend::Cpu => "CPU",
-        _ => "Unknown",
+        GpuBackend::Cpu => "CPU"_ => "Unknown",
     }
 }
 

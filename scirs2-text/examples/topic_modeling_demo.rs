@@ -1,6 +1,6 @@
 //! Topic modeling example using LDA
 
-use scirs2_text::{
+use scirs2__text::{
     CountVectorizer, LatentDirichletAllocation, LdaBuilder, LdaLearningMethod, Vectorizer,
 };
 use std::collections::HashMap;
@@ -69,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap();
 
         println!(
@@ -118,7 +118,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let words: Vec<String> = topic
             .top_words
             .iter()
-            .map(|(word, _)| word.clone())
+            .map(|(word_)| word.clone())
             .collect();
         println!("Topic {}: {}", topic.id, words.join(", "));
     }

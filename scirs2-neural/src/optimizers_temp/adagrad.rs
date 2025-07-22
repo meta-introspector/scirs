@@ -6,7 +6,7 @@ use ndarray::Array;
 use num_traits::Float;
 use std::fmt::Debug;
 // Import from scirs2-optim
-use scirs2_optim::optimizers as optim_optimizers;
+use scirs2__optim::optimizers as optim_optimizers;
 /// Adagrad optimizer.
 ///
 /// Adagrad is an optimizer that adapts the learning rate to the parameters,
@@ -27,7 +27,7 @@ use scirs2_optim::optimizers as optim_optimizers;
 /// adagrad.update(&mut params, &grads).unwrap();
 pub struct Adagrad<F: Float + Debug> {
     /// Inner Adagrad optimizer from scirs2-optim
-    inner: optim_optimizers::Adagrad<F>,
+    inner: optim_optimizers: Adagrad<F>,
     /// Weight decay (L2 regularization)
     weight_decay: F,
 }
@@ -36,14 +36,14 @@ impl<F: Float + Debug> Adagrad<F> {
     ///
     /// # Arguments
     /// * `learning_rate` - Learning rate
-    pub fn new(learning_rate: F) -> Self {
+    pub fn new(_learning_rate: F) -> Self {
         // Default values: epsilon=1e-10, weight_decay=0.0
         let epsilon = F::from(1e-10).unwrap_or(F::zero());
         let weight_decay = F::zero();
         
         Self {
-            inner: optim_optimizers::Adagrad::new_with_config(
-                learning_rate,
+            inner: optim_optimizers: Adagrad::new_with_config(
+                _learning_rate,
                 epsilon,
                 weight_decay
             ),
@@ -54,7 +54,7 @@ impl<F: Float + Debug> Adagrad<F> {
     /// Create a new Adagrad optimizer with custom parameters
     /// * `epsilon` - Small constant for numerical stability
     /// * `weight_decay` - Weight decay (L2 regularization)
-    pub fn new_with_config(learning_rate: F, epsilon: F, weight_decay: F) -> Self {
+    pub fn new_with_config(_learning_rate: F, epsilon: F, weight_decay: F) -> Self {
     /// Get epsilon parameter
     pub fn get_epsilon(&self) -> F {
         self.inner.get_epsilon()

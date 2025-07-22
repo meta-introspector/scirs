@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::panic;
 
 use crate::error::{MetricsError, Result};
+use statrs::statistics::Statistics;
 
 /// Calculate the p-value for McNemar's test
 ///
@@ -39,7 +40,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::evaluation::mcnemars_test;
+/// use scirs2__metrics::evaluation::mcnemars_test;
 ///
 /// // Create a contingency table
 /// let table = array![[50.0, 10.0], [5.0, 35.0]];
@@ -126,7 +127,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::evaluation::cochrans_q_test;
+/// use scirs2__metrics::evaluation::cochrans_q_test;
 ///
 /// // Create binary predictions for 3 models on 10 samples
 /// // (1 = correct prediction, 0 = incorrect prediction)
@@ -246,7 +247,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::evaluation::friedman_test;
+/// use scirs2__metrics::evaluation::friedman_test;
 ///
 /// // Create performance metrics for 3 models on 5 datasets
 /// let performance_metrics = array![
@@ -305,7 +306,7 @@ where
             values_with_indices.push((j, val));
         }
 
-        // Sort by performance (descending order for metrics like accuracy)
+        // Sort by performance (descending order for _metrics like accuracy)
         values_with_indices.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
 
         // Assign ranks (handle ties by averaging)
@@ -384,7 +385,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::evaluation::wilcoxon_signed_rank_test;
+/// use scirs2__metrics::evaluation::wilcoxon_signed_rank_test;
 ///
 /// // Performance metrics for two models across 8 different datasets
 /// let model1_performance = array![0.85, 0.72, 0.91, 0.78, 0.88, 0.83, 0.76, 0.90];
@@ -582,7 +583,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::evaluation::bootstrap_confidence_interval;
+/// use scirs2__metrics::evaluation::bootstrap_confidence_interval;
 ///
 /// // Sample data
 /// let data = array![23.5, 24.1, 25.2, 24.7, 24.9, 25.3, 24.8, 25.1, 23.9, 24.5];
@@ -620,14 +621,14 @@ where
 
     if confidence_level <= 0.0 || confidence_level >= 1.0 {
         return Err(MetricsError::InvalidInput(format!(
-            "Confidence level must be between 0 and 1, got {}",
+            "Confidence _level must be between 0 and 1, got {}",
             confidence_level
         )));
     }
 
     if n_resamples < 1 {
         return Err(MetricsError::InvalidInput(
-            "Number of resamples must be positive".to_string(),
+            "Number of _resamples must be positive".to_string(),
         ));
     }
 
@@ -636,9 +637,9 @@ where
 
     // Initialize random number generator
     let mut rng = match random_seed {
-        Some(seed) => StdRng::seed_from_u64(seed),
+        Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
-            // In rand 0.9.0, use rng() instead of rng()
+            // In rand 0.9.0, use rand::rng() instead of rand::rng()
             let mut r = rand::rng();
             StdRng::from_rng(&mut r)
         }
@@ -652,7 +653,7 @@ where
         let mut resampled_indices = Vec::with_capacity(n);
 
         for _ in 0..n {
-            let idx = rng.random_range(0..n);
+            let idx = rng.gen_range(0..n);
             resampled_indices.push(idx);
         }
 
@@ -665,9 +666,9 @@ where
         // Create a new array from the resampled values
         // We have to cast it back to the appropriate type to use statistic_fn
         let resampled_data = ndarray::Array::from_vec(resampled_data_values)
-            .into_dimensionality::<ndarray::Ix1>()
+            .into__dimensionality::<ndarray::Ix1>()
             .unwrap_or_else(|_| {
-                // If dimensionality conversion fails, create an empty array
+                // If _dimensionality conversion fails..create an empty array
                 ndarray::Array::zeros(0)
             });
 

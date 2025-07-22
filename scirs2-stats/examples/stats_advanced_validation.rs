@@ -18,7 +18,7 @@ fn main() {
     println!("1. 🛡️  Error Handling Module");
 
     // These should compile if the modules are properly structured
-    use scirs2_stats::advanced_error_enhancements::{
+    use scirs2__stats::advanced_error_enhancements::{
         AdvancedContextBuilder, AdvancedErrorMessages, OptimizationSuggestion, RecoveryStrategy,
     };
 
@@ -35,7 +35,7 @@ fn main() {
     // 2. Validate numerical stability module
     println!("2. 🔬 Numerical Stability Module");
 
-    use scirs2_stats::advanced_numerical_stability::{
+    use scirs2__stats::advanced_numerical_stability::{
         AdvancedNumericalStabilityAnalyzer, NumericalStabilityConfig,
     };
 
@@ -50,7 +50,7 @@ fn main() {
     // 3. Validate parallel enhancements module
     println!("3. ⚡ Parallel Processing Module");
 
-    use scirs2_stats::parallel_enhancements::{AdvancedParallelConfig, LoadBalancingStrategy};
+    use scirs2__stats::parallel_enhancements::{AdvancedParallelConfig, LoadBalancingStrategy};
 
     let parallel_config = AdvancedParallelConfig::default();
 
@@ -62,7 +62,7 @@ fn main() {
     // 4. Validate SIMD optimizations module
     println!("4. 🏎️  SIMD Optimizations Module");
 
-    use scirs2_stats::advanced_simd_optimizations::{
+    use scirs2__stats::advanced_simd_optimizations::{
         advanced_batch_statistics, AdvancedSimdConfig,
     };
 
@@ -85,7 +85,7 @@ fn main() {
     // 5. Validate property testing module
     println!("5. 🧪 Property Testing Module");
 
-    use scirs2_stats::advanced_property_tests::AdvancedPropertyTester;
+    use scirs2__stats::advanced_property_tests::AdvancedPropertyTester;
 
     let property_tester = AdvancedPropertyTester::new(simd_config, parallel_config);
 
@@ -97,7 +97,7 @@ fn main() {
     // 6. Test integration with core statistical functions
     println!("6. 📊 Integration with Core Stats");
 
-    use scirs2_stats::{mean, std, var};
+    use scirs2__stats::{mean, std, var};
 
     match mean(&test_data.view()) {
         Ok(mean_val) => println!("   ✅ Mean: {:.6}", mean_val),
@@ -135,10 +135,10 @@ fn main() {
 
 #[allow(dead_code)]
 fn demonstrate_error_recovery() {
-    use scirs2_stats::advanced_error_enhancements::{
+    use scirs2__stats::advanced_error_enhancements::{
         AdvancedContextBuilder, AdvancedErrorRecovery,
     };
-    use scirs2_stats::error::StatsError;
+    use scirs2__stats::error::StatsError;
 
     let context = AdvancedContextBuilder::new(50000)
         .memory_usage(1500.0) // High memory usage

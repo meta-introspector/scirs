@@ -1,10 +1,10 @@
 use ndarray::Array2;
-use scirs2_integrate::ode::ODEMethod;
-use scirs2_integrate::pde::implicit::{
+use scirs2__integrate::ode::ODEMethod;
+use scirs2__integrate::pde::implicit::{
     BackwardEuler1D, CrankNicolson1D, ImplicitMethod, ImplicitOptions,
 };
-use scirs2_integrate::pde::method_of_lines::{MOLOptions, MOLParabolicSolver1D};
-use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
+use scirs2__integrate::pde::method_of_lines::{MOLOptions, MOLParabolicSolver1D};
+use scirs2__integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
 use std::time::Instant;
 
 /// This example demonstrates and compares different numerical methods for solving a stiff PDE:
@@ -53,9 +53,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Define PDE terms
-    let diffusion_coeff = move |_x: f64, _t: f64, _u: f64| epsilon;
-    let advection_coeff = move |_x: f64, _t: f64, _u: f64| velocity;
-    let reaction_term = move |_x: f64, _t: f64, u: f64| reaction_rate * u * (1.0 - u);
+    let diffusion_coeff = move |_x: f64_t: f64, _u: f64| epsilon;
+    let advection_coeff = move |_x: f64_t: f64, _u: f64| velocity;
+    let reaction_term = move |_x: f64_t: f64, u: f64| reaction_rate * u * (1.0 - u);
 
     // Calculate stability limits for explicit methods
     let dx = 1.0 / 100.0;
@@ -239,14 +239,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn try_explicit_method(
     domain: &Domain,
-    time_range: [f64; 2],
-    _dt: f64,
+    time_range: [f64; 2], _dt: f64,
     initial_condition: impl Fn(f64) -> f64 + Send + Sync + 'static,
     diffusion_coeff: impl Fn(f64, f64, f64) -> f64 + Send + Sync + 'static,
     advection_coeff: impl Fn(f64, f64, f64) -> f64 + Send + Sync + 'static,
     reaction_term: impl Fn(f64, f64, f64) -> f64 + Send + Sync + 'static,
     boundary_conditions: &[BoundaryCondition<f64>],
-) -> Result<scirs2_integrate::pde::method_of_lines::MOLResult, Box<dyn std::error::Error>> {
+) -> Result<scirs2_integrate::pde::method_of, _lines::MOLResult, Box<dyn std::error::Error>> {
     let mol_options = MOLOptions {
         ode_method: ODEMethod::RK45,
         atol: 1e-6,
@@ -301,7 +300,7 @@ fn compare_solutions(
     println!("  MOL vs Backward Euler: {mol_be_diff:.6e}");
     println!("  CN vs Backward Euler:  {cn_be_diff:.6e}");
 
-    // Print solution at selected points
+    // Print _solution at selected points
     println!("\nSolution values at selected points:");
     println!("    x    |    MOL    | Crank-Nicolson | Backward Euler");
     println!("------------------------------------------------");

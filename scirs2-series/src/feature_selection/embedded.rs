@@ -30,7 +30,7 @@ impl EmbeddedMethods {
     ///
     /// ```
     /// use ndarray::{Array1, Array2};
-    /// use scirs2_series::feature_selection::EmbeddedMethods;
+    /// use scirs2__series::feature_selection::EmbeddedMethods;
     ///
     /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
     /// let target = Array1::from_vec((0..100).map(|x| x as f64).collect());
@@ -54,7 +54,7 @@ impl EmbeddedMethods {
         }
 
         // Normalize features
-        let (normalized_features, _feature_means, _feature_stds) =
+        let (normalized_features_feature_means_feature_stds) =
             Self::normalize_features(features);
         let target_mean = target.sum() / n_samples as f64;
         let normalized_target = target.mapv(|x| x - target_mean);
@@ -141,7 +141,7 @@ impl EmbeddedMethods {
         alpha: f64,
         n_features: Option<usize>,
     ) -> Result<FeatureSelectionResult> {
-        let (n_samples, n_feat) = features.dim();
+        let (n_samples, n_feat) = _features.dim();
 
         if n_samples != target.len() {
             return Err(TimeSeriesError::DimensionMismatch {
@@ -150,8 +150,8 @@ impl EmbeddedMethods {
             });
         }
 
-        // Normalize features
-        let (normalized_features, _, _) = Self::normalize_features(features);
+        // Normalize _features
+        let (normalized_features__) = Self::normalize_features(_features);
         let target_mean = target.sum() / n_samples as f64;
         let normalized_target = target.mapv(|x| x - target_mean);
 
@@ -167,7 +167,7 @@ impl EmbeddedMethods {
         let xty = xt.dot(&normalized_target);
         let coefficients = WrapperMethods::solve_linear_system(&xtx, &xty)?;
 
-        // Rank features by absolute coefficient values
+        // Rank _features by absolute coefficient values
         let mut feature_scores = Array1::zeros(n_feat);
         let mut indexed_scores: Vec<(usize, f64)> = Vec::new();
 
@@ -179,12 +179,12 @@ impl EmbeddedMethods {
 
         indexed_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Select top features
+        // Select top _features
         let n_to_select = n_features.unwrap_or(n_feat / 2).min(n_feat);
         let selected_features: Vec<usize> = indexed_scores
             .into_iter()
             .take(n_to_select)
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .collect();
 
         let mut metadata = HashMap::new();
@@ -217,7 +217,7 @@ impl EmbeddedMethods {
         target: &Array1<f64>,
         n_features: Option<usize>,
     ) -> Result<FeatureSelectionResult> {
-        let (n_samples, n_feat) = features.dim();
+        let (n_samples, n_feat) = _features.dim();
 
         if n_samples != target.len() {
             return Err(TimeSeriesError::DimensionMismatch {
@@ -230,11 +230,11 @@ impl EmbeddedMethods {
 
         // Calculate feature importance based on variance reduction
         for i in 0..n_feat {
-            let importance = Self::calculate_feature_importance_tree(&features.column(i), target)?;
+            let importance = Self::calculate_feature_importance_tree(&_features.column(i), target)?;
             feature_scores[i] = importance;
         }
 
-        // Select top features
+        // Select top _features
         let n_to_select = n_features.unwrap_or(n_feat / 2).min(n_feat);
         let mut indexed_scores: Vec<(usize, f64)> = feature_scores
             .iter()
@@ -247,7 +247,7 @@ impl EmbeddedMethods {
         let selected_features: Vec<usize> = indexed_scores
             .into_iter()
             .take(n_to_select)
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .collect();
 
         let mut metadata = HashMap::new();
@@ -263,14 +263,14 @@ impl EmbeddedMethods {
 
     // Helper methods
 
-    fn normalize_features(features: &Array2<f64>) -> (Array2<f64>, Array1<f64>, Array1<f64>) {
-        let (n_samples, n_features) = features.dim();
+    fn normalize_features(_features: &Array2<f64>) -> (Array2<f64>, Array1<f64>, Array1<f64>) {
+        let (n_samples, n_features) = _features.dim();
         let mut normalized = Array2::zeros((n_samples, n_features));
         let mut means = Array1::zeros(n_features);
         let mut stds = Array1::zeros(n_features);
 
         for j in 0..n_features {
-            let col = features.column(j);
+            let col = _features.column(j);
             let mean = col.sum() / n_samples as f64;
             let variance = col.mapv(|x| (x - mean).powi(2)).sum() / n_samples as f64;
             let std = variance.sqrt().max(1e-8); // Avoid division by zero
@@ -279,7 +279,7 @@ impl EmbeddedMethods {
             stds[j] = std;
 
             for i in 0..n_samples {
-                normalized[[i, j]] = (features[[i, j]] - mean) / std;
+                normalized[[i, j]] = (_features[[i, j]] - mean) / std;
             }
         }
 

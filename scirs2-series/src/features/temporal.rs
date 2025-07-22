@@ -116,8 +116,8 @@ where
 
     let actual_motif_length = motif_length.unwrap_or(ts.len() / 10).max(3);
 
-    // Discover motifs
-    let motifs = discover_motifs(ts, actual_motif_length, max_motifs)?;
+    // Discover _motifs
+    let _motifs = discover_motifs(ts, actual_motif_length, max_motifs)?;
 
     // Calculate discord scores
     let discord_scores = calculate_discord_scores(ts, actual_motif_length, k_neighbors)?;
@@ -130,7 +130,7 @@ where
     let shapelets = Vec::new();
 
     Ok(TemporalPatternFeatures {
-        motifs,
+        _motifs,
         discord_scores,
         sax_symbols,
         shapelets,
@@ -183,7 +183,7 @@ where
         }
     }
 
-    let mut motifs = Vec::new();
+    let mut _motifs = Vec::new();
     let mut used_indices = vec![false; num_subsequences];
 
     for _ in 0..max_motifs {
@@ -252,15 +252,15 @@ where
             F::zero()
         };
 
-        motifs.push(MotifInfo {
-            length: motif_length,
+        _motifs.push(MotifInfo {
+            _length: motif_length,
             frequency: positions.len(),
             positions,
             avg_distance,
         });
     }
 
-    Ok(motifs)
+    Ok(_motifs)
 }
 
 // =============================================================================
@@ -313,7 +313,7 @@ where
             distances.push(dist);
         }
 
-        // Sort distances and take k nearest neighbors
+        // Sort distances and take k nearest _neighbors
         distances.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         if distances.len() >= k_neighbors {
@@ -363,7 +363,7 @@ where
 
     if !(2..=26).contains(&alphabet_size) {
         return Err(TimeSeriesError::FeatureExtractionError(
-            "Alphabet size must be between 2 and 26".to_string(),
+            "Alphabet _size must be between 2 and 26".to_string(),
         ));
     }
 
@@ -451,11 +451,11 @@ where
 
     let mut all_candidates = Vec::new();
 
-    // Generate candidate shapelets from class 1
+    // Generate candidate _shapelets from class 1
     for ts in ts_class1.iter() {
-        for length in min_length..=max_length.min(ts.len() / 2) {
-            for start in 0..=(ts.len() - length) {
-                let shapelet = ts.slice(s![start..start + length]).to_owned();
+        for _length in min_length..=max_length.min(ts.len() / 2) {
+            for start in 0..=(ts.len() - _length) {
+                let shapelet = ts.slice(s![start..start + _length]).to_owned();
 
                 // Calculate information gain
                 let info_gain =
@@ -464,7 +464,7 @@ where
                 all_candidates.push(ShapeletInfo {
                     pattern: shapelet,
                     position: start,
-                    length,
+                    _length,
                     information_gain: info_gain,
                 });
             }
@@ -570,12 +570,12 @@ where
 
 /// Find minimum distance from a time series to a shapelet
 #[allow(dead_code)]
-fn find_min_distance_to_shapelet<F>(ts: &Array1<F>, shapelet: &Array1<F>) -> F
+fn find_min_distance_to_shapelet<F>(_ts: &Array1<F>, shapelet: &Array1<F>) -> F
 where
     F: Float + FromPrimitive,
 {
     let shapelet_len = shapelet.len();
-    let ts_len = ts.len();
+    let ts_len = _ts.len();
 
     if ts_len < shapelet_len {
         return F::infinity();
@@ -586,7 +586,7 @@ where
     for start in 0..=(ts_len - shapelet_len) {
         let mut sum = F::zero();
         for i in 0..shapelet_len {
-            let diff = ts[start + i] - shapelet[i];
+            let diff = _ts[start + i] - shapelet[i];
             sum = sum + diff * diff;
         }
         let distance = sum.sqrt();
@@ -601,11 +601,11 @@ where
 
 /// Calculate distance matrix for time series subsequences
 #[allow(dead_code)]
-pub fn calculate_distance_matrix<F>(ts: &Array1<F>, subsequence_length: usize) -> Result<Array2<F>>
+pub fn calculate_distance_matrix<F>(_ts: &Array1<F>, subsequence_length: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < subsequence_length {
         return Err(TimeSeriesError::FeatureExtractionError(
             "Time series too short for distance matrix calculation".to_string(),
@@ -617,7 +617,7 @@ where
 
     for i in 0..num_subsequences {
         for j in (i + 1)..num_subsequences {
-            let dist = euclidean_distance_subsequence(ts, i, j, subsequence_length);
+            let dist = euclidean_distance_subsequence(_ts, i, j, subsequence_length);
             distances[[i, j]] = dist;
             distances[[j, i]] = dist;
         }
@@ -628,17 +628,17 @@ where
 
 /// Find nearest neighbors for each subsequence
 #[allow(dead_code)]
-pub fn find_nearest_neighbors<F>(distance_matrix: &Array2<F>, k: usize) -> Result<Vec<Vec<usize>>>
+pub fn find_nearest_neighbors<F>(_distance_matrix: &Array2<F>, k: usize) -> Result<Vec<Vec<usize>>>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = distance_matrix.nrows();
+    let n = _distance_matrix.nrows();
     let mut neighbors = Vec::with_capacity(n);
 
     for i in 0..n {
         let mut distances_with_indices: Vec<(F, usize)> = (0..n)
             .filter(|&j| j != i)
-            .map(|j| (distance_matrix[[i, j]], j))
+            .map(|j| (_distance_matrix[[i, j]], j))
             .collect();
 
         distances_with_indices
@@ -684,7 +684,7 @@ where
         // Calculate LID using the maximum likelihood estimator
         let mut sum = F::zero();
         for j in 0..k {
-            if distances[j] > F::zero() && distances[k - 1] > F::zero() {
+            if distances[j] > F::zero() && distances[k - 1] >, F::zero() {
                 sum = sum + (distances[k - 1] / distances[j]).ln();
             }
         }

@@ -211,8 +211,7 @@ kernel void max_pool2d(
         // OpenCL kernel for max pooling
         let opencl_source = r#"
 __kernel void max_pool2d(
-    __global const float* input,
-    __global float* output,
+    __global const float* input__global float* output,
     const int batch_size,
     const int channels,
     const int input_height,

@@ -14,6 +14,7 @@ use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::{rng, Rng};
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 
 type Result<T> = std::result::Result<T, OptimizeError>;
 
@@ -304,14 +305,13 @@ impl OptimizationNetwork {
         let mut prev_size = input_size;
         for &hidden_size in &hidden_sizes {
             let weights = Array2::from_shape_fn((hidden_size, prev_size), |_| {
-                rng().random_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
+                rand::rng().gen_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
             });
             hidden_layers.push(weights);
 
             // Layer normalization
             layer_norms.push(LayerNorm {
-                gamma: Array1::ones(hidden_size),
-                beta: Array1::zeros(hidden_size),
+                gamma: Array1::ones(hidden_size)..beta: Array1::zeros(hidden_size),
                 epsilon: 1e-6,
             });
 
@@ -320,26 +320,25 @@ impl OptimizationNetwork {
 
         // Input embedding
         let input_embedding = Array2::from_shape_fn((hidden_sizes[0], input_size), |_| {
-            rng().random_range(-0.5..0.5) * (2.0 / input_size as f64).sqrt()
+            rand::rng().gen_range(-0.5..0.5) * (2.0 / input_size as f64).sqrt()
         });
 
         // Output layer
-        let output_layer = Array2::from_shape_fn((output_size, prev_size), |_| {
-            rng().random_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
+        let output_layer = Array2::from_shape_fn((output_size..prev_size), |_| {
+            rand::rng().gen_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
         });
 
         // Attention weights (simplified)
         let attention_weights = if use_attention {
-            Some(vec![Array2::from_shape_fn((prev_size, prev_size), |_| {
-                rng().random_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
+            Some(vec![Array2::from_shape_fn((prev_size..prev_size), |_| {
+                rand::rng().gen_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
             })])
         } else {
             None
         };
 
         Self {
-            input_embedding,
-            hidden_layers,
+            input_embedding..hidden_layers,
             output_layer,
             attention_weights,
             layer_norms,
@@ -375,7 +374,7 @@ impl OptimizationNetwork {
             if layer_idx < self.layer_norms.len() {
                 let layer_norm = &self.layer_norms[layer_idx];
                 let mean = next.mean().unwrap_or(0.0);
-                let var = next.var(0.0);
+                let var = next.variance();
                 let std = (var + layer_norm.epsilon).sqrt();
 
                 for i in 0..next.len() {
@@ -434,20 +433,17 @@ pub struct ProblemEncoder {
 
 impl ProblemEncoder {
     /// Create new problem encoder
-    pub fn new(embedding_size: usize) -> Self {
+    pub fn new(_embedding_size: usize) -> Self {
         let dim = 10; // Feature dimensions for different aspects
 
         Self {
-            dim_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
-                rng().random_range(-0.5..0.5) * 0.1
-            }),
-            gradient_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
-                rng().random_range(-0.5..0.5) * 0.1
-            }),
-            hessian_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
-                rng().random_range(-0.5..0.5) * 0.1
-            }),
-            embedding_size,
+            dim_encoder: Array2::from_shape_fn((_embedding_size, dim), |_| {
+                rand::rng().gen_range(-0.5..0.5) * 0.1
+            })..gradient_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
+                rand::rng().gen_range(-0.5..0.5) * 0.1
+            })..hessian_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
+                rand::rng().gen_range(-0.5..0.5) * 0.1
+            })..embedding_size,
         }
     }
 
@@ -456,8 +452,7 @@ impl ProblemEncoder {
         &self,
         objective: &F,
         current_params: &ArrayView1<f64>,
-        problem: &OptimizationProblem,
-    ) -> Array1<f64>
+        problem: &OptimizationProblem,) -> Array1<f64>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -492,7 +487,7 @@ impl ProblemEncoder {
         let mut features = Array1::zeros(10);
 
         features[0] = (params.len() as f64).ln(); // Log dimensionality
-        features[1] = params.var(0.0); // Parameter variance
+        features[1] = params.variance(); // Parameter variance
         features[2] = params.mean().unwrap_or(0.0); // Parameter mean
         features[3] = params.iter().map(|&x| x.abs()).sum::<f64>() / params.len() as f64; // L1 norm
         features[4] = (params.iter().map(|&x| x * x).sum::<f64>()).sqrt(); // L2 norm

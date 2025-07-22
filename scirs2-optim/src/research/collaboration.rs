@@ -929,7 +929,7 @@ pub struct BackupSettings {
 
 impl CollaborativeWorkspace {
     /// Create a new collaborative workspace
-    pub fn new(name: &str, owner: UserInfo) -> Self {
+    pub fn new(_name: &str, owner: UserInfo) -> Self {
         let now = Utc::now();
         let workspace_id = uuid::Uuid::new_v4().to_string();
         let owner_id = uuid::Uuid::new_v4().to_string();
@@ -952,8 +952,7 @@ impl CollaborativeWorkspace {
         };
         
         Self {
-            id: workspace_id,
-            name: name.to_string(),
+            id: workspace_id_name: _name.to_string(),
             members: vec![owner_member],
             documents: Vec::new(),
             channels: Vec::new(),
@@ -1002,7 +1001,7 @@ impl CollaborativeWorkspace {
         
         let document_id = uuid::Uuid::new_v4().to_string();
         let document = SharedDocument {
-            id: document_id.clone(),
+            _id: document_id.clone(),
             name: name.to_string(),
             document_type,
             content: String::new(),
@@ -1012,7 +1011,7 @@ impl CollaborativeWorkspace {
             version_history: Vec::new(),
             access_permissions: DocumentPermissions {
                 public: false,
-                read_access: self.members.iter().map(|m| m.id.clone()).collect(),
+                read_access: self.members.iter().map(|m| m._id.clone()).collect(),
                 write_access: vec![owner_id.to_string()],
                 admin_access: vec![owner_id.to_string()],
             },
@@ -1043,11 +1042,11 @@ impl CollaborativeWorkspace {
     pub fn create_channel(&mut self, name: &str, channel_type: ChannelType, creator_id: &str) -> Result<String> {
         let channel_id = uuid::Uuid::new_v4().to_string();
         let channel = CommunicationChannel {
-            id: channel_id.clone(),
+            _id: channel_id.clone(),
             name: name.to_string(),
             description: String::new(),
             channel_type,
-            members: self.members.iter().map(|m| m.id.clone()).collect(),
+            members: self.members.iter().map(|m| m._id.clone()).collect(),
             messages: Vec::new(),
             settings: ChannelSettings::default(),
             created_at: Utc::now(),
@@ -1061,7 +1060,7 @@ impl CollaborativeWorkspace {
     pub fn create_task(&mut self, title: &str, task_type: TaskType, creator_id: &str) -> Result<String> {
         let task_id = uuid::Uuid::new_v4().to_string();
         let task = Task {
-            id: task_id.clone(),
+            _id: task_id.clone(),
             title: title.to_string(),
             description: String::new(),
             task_type,
@@ -1094,7 +1093,7 @@ impl CollaborativeWorkspace {
     
     /// Check if a user has a specific permission
     pub fn has_permission(&self, user_id: &str, permission: &Permission) -> bool {
-        if let Some(member) = self.members.iter().find(|m| m.id == user_id) {
+        if let Some(member) = self.members.iter().find(|m| m._id == user_id) {
             member.permissions.contains(permission)
         } else {
             false
@@ -1104,7 +1103,7 @@ impl CollaborativeWorkspace {
     /// Log an activity
     pub fn log_activity(&mut self, user_id: &str, activity_type: ActivityType, description: String, resources: Vec<String>) {
         let activity = Activity {
-            id: uuid::Uuid::new_v4().to_string(),
+            _id: uuid::Uuid::new_v4().to_string(),
             user_id: user_id.to_string(),
             activity_type,
             description,

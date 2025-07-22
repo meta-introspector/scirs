@@ -9,6 +9,7 @@ use scirs2_linalg::quantization::{out_of_core::ChunkedQuantizedMatrix, Quantizat
 use std::env;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
+use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() {
@@ -37,7 +38,7 @@ fn main() {
 
 /// Example using a small matrix to demonstrate basic functionality
 #[allow(dead_code)]
-fn example_small_matrix(file_path: &Path) {
+fn example_small_matrix(_file_path: &Path) {
     println!("Creating a small 10x10 matrix...");
     let matrix = create_random_spd_matrix(10);
 
@@ -47,7 +48,7 @@ fn example_small_matrix(file_path: &Path) {
         &matrix.view(),
         8,
         QuantizationMethod::Symmetric,
-        file_path.to_str().unwrap(),
+        _file_path.to_str().unwrap(),
     )
     .unwrap()
     .symmetric()
@@ -82,7 +83,7 @@ fn example_small_matrix(file_path: &Path) {
 
 /// Example solving a linear system with a medium-sized matrix
 #[allow(dead_code)]
-fn example_medium_matrix(file_path: &Path) {
+fn example_medium_matrix(_file_path: &Path) {
     let size = 100;
     println!("Creating a medium {}x{} matrix...", size, size);
     let matrix = create_random_spd_matrix(size);
@@ -131,7 +132,7 @@ fn example_medium_matrix(file_path: &Path) {
 
 /// Example comparing performance with a large matrix
 #[allow(dead_code)]
-fn example_large_matrix_performance(file_path: &Path) {
+fn example_large_matrix_performance(_file_path: &Path) {
     let size = 1000;
     println!(
         "Creating a large {}x{} matrix (this would be much larger in a real scenario)...",
@@ -248,27 +249,27 @@ fn example_large_matrix_performance(file_path: &Path) {
 
 /// Create a random symmetric positive definite matrix of the given size
 #[allow(dead_code)]
-fn create_random_spd_matrix(size: usize) -> Array2<f32> {
+fn create_random_spd_matrix(_size: usize) -> Array2<f32> {
     // Create a random matrix with values in the range [-1.0, 1.0)
     let mut rng = rand::rng();
-    let mut matrix = Array2::zeros((size, size));
+    let mut matrix = Array2::zeros((_size, _size));
 
-    for i in 0..size {
-        for j in 0..size {
+    for i in 0.._size {
+        for j in 0.._size {
             matrix[[i, j]] = rng.random_range(-1.0..1.0);
         }
     }
 
     // Make it symmetric
-    for i in 0..size {
-        for j in i + 1..size {
-            matrix[[j, i]] = matrix[[i, j]];
+    for i in 0.._size {
+        for j in i + 1.._size {
+            matrix[[j..i]] = matrix[[i, j]];
         }
     }
 
     // Add to the diagonal to ensure positive definiteness
-    for i in 0..size {
-        matrix[[i, i]] += size as f32;
+    for i in 0.._size {
+        matrix[[i, i]] += _size as f32;
     }
 
     matrix
@@ -276,8 +277,8 @@ fn create_random_spd_matrix(size: usize) -> Array2<f32> {
 
 /// Helper to get a temporary file path
 #[allow(dead_code)]
-fn get_temp_file_path(name: &str) -> PathBuf {
+fn get_temp_file_path(_name: &str) -> PathBuf {
     let mut path = env::temp_dir();
-    path.push(format!("quantized_matrix_{}.bin", name));
+    path.push(format!("quantized_matrix_{}.bin", _name));
     path
 }

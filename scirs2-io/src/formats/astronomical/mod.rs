@@ -11,7 +11,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2_io::formats::astronomical::{FitsFile, VOTable};
+//! use scirs2__io::formats::astronomical::{FitsFile, VOTable};
 //! use ndarray::Array2;
 //!
 //! // Read FITS file
@@ -134,8 +134,7 @@ impl FitsHeader {
     pub fn get_bool(&self, keyword: &str) -> Result<bool> {
         match self.get_card(keyword) {
             Some(card) => match &card.value {
-                CardValue::Boolean(b) => Ok(*b),
-                _ => Err(IoError::ParseError(format!(
+                CardValue::Boolean(b) => Ok(*b, _ => Err(IoError::ParseError(format!(
                     "Keyword {keyword} is not a boolean"
                 ))),
             },
@@ -147,8 +146,7 @@ impl FitsHeader {
     pub fn get_i64(&self, keyword: &str) -> Result<i64> {
         match self.get_card(keyword) {
             Some(card) => match &card.value {
-                CardValue::Integer(i) => Ok(*i),
-                _ => Err(IoError::ParseError(format!(
+                CardValue::Integer(i) => Ok(*i, _ => Err(IoError::ParseError(format!(
                     "Keyword {keyword} is not an integer"
                 ))),
             },
@@ -161,8 +159,7 @@ impl FitsHeader {
         match self.get_card(keyword) {
             Some(card) => match &card.value {
                 CardValue::Float(f) => Ok(*f),
-                CardValue::Integer(i) => Ok(*i as f64),
-                _ => Err(IoError::ParseError(format!(
+                CardValue::Integer(i) => Ok(*i as f64, _ => Err(IoError::ParseError(format!(
                     "Keyword {keyword} is not a number"
                 ))),
             },
@@ -174,8 +171,7 @@ impl FitsHeader {
     pub fn get_string(&self, keyword: &str) -> Result<String> {
         match self.get_card(keyword) {
             Some(card) => match &card.value {
-                CardValue::String(s) => Ok(s.clone()),
-                _ => Err(IoError::ParseError(format!(
+                CardValue::String(s) => Ok(s.clone(), _ => Err(IoError::ParseError(format!(
                     "Keyword {keyword} is not a string"
                 ))),
             },
@@ -243,16 +239,15 @@ impl FitsDataType {
     }
 
     /// From BITPIX value
-    pub fn from_bitpix(bitpix: i32) -> Result<Self> {
-        match bitpix {
+    pub fn from_bitpix(_bitpix: i32) -> Result<Self> {
+        match _bitpix {
             8 => Ok(FitsDataType::UInt8),
             16 => Ok(FitsDataType::Int16),
             32 => Ok(FitsDataType::Int32),
             64 => Ok(FitsDataType::Int64),
             -32 => Ok(FitsDataType::Float32),
-            -64 => Ok(FitsDataType::Float64),
-            _ => Err(IoError::ParseError(format!(
-                "Invalid BITPIX value: {bitpix}"
+            -64 => Ok(FitsDataType::Float64, _ => Err(IoError::ParseError(format!(
+                "Invalid BITPIX value: {_bitpix}"
             ))),
         }
     }
@@ -260,10 +255,10 @@ impl FitsDataType {
 
 impl FitsFile {
     /// Open a FITS file
-    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file_path = path.as_ref().to_string_lossy().to_string();
+    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file_path = _path.as_ref().to_string_lossy().to_string();
         let mut file =
-            File::open(path.as_ref()).map_err(|_e| IoError::FileNotFound(file_path.clone()))?;
+            File::open(_path.as_ref()).map_err(|_e| IoError::FileNotFound(file_path.clone()))?;
 
         let mut hdus = Vec::new();
         let mut offset = 0u64;
@@ -283,8 +278,7 @@ impl FitsFile {
                 match header.get_string("XTENSION").ok().as_deref() {
                     Some("IMAGE") => HDUType::Image,
                     Some("TABLE") => HDUType::AsciiTable,
-                    Some("BINTABLE") => HDUType::BinaryTable,
-                    _ => HDUType::Image,
+                    Some("BINTABLE") => HDUType::BinaryTable_ =>, HDUType::Image,
                 }
             };
 
@@ -335,12 +329,12 @@ impl FitsFile {
     }
 
     /// Read a header from the current file position
-    fn read_header<R: Read>(reader: &mut R) -> Result<FitsHeader> {
+    fn read_header<R: Read>(_reader: &mut R) -> Result<FitsHeader> {
         let mut header = FitsHeader::new();
         let mut card_buf = [0u8; 80];
 
         loop {
-            reader
+            _reader
                 .read_exact(&mut card_buf)
                 .map_err(|e| IoError::ParseError(format!("Failed to read header card: {e}")))?;
 
@@ -359,8 +353,8 @@ impl FitsFile {
     }
 
     /// Parse a single header card
-    fn parse_header_card(card_str: &str) -> Option<HeaderCard> {
-        if card_str.len() < 8 {
+    fn parse_header_card(_card_str: &str) -> Option<HeaderCard> {
+        if _card_str.len() < 8 {
             return None;
         }
 
@@ -413,9 +407,9 @@ impl FitsFile {
     }
 
     /// Parse a card value
-    fn parse_card_value(value_str: &str) -> CardValue {
+    fn parse_card_value(_value_str: &str) -> CardValue {
         // Boolean
-        if value_str == "T" {
+        if _value_str == "T" {
             return CardValue::Boolean(true);
         }
         if value_str == "F" {
@@ -442,17 +436,17 @@ impl FitsFile {
     }
 
     /// Calculate data size from header
-    fn calculate_data_size(header: &FitsHeader) -> Result<usize> {
+    fn calculate_data_size(_header: &FitsHeader) -> Result<usize> {
         // For images
-        if let Ok(bitpix) = header.get_i64("BITPIX") {
+        if let Ok(bitpix) = _header.get_i64("BITPIX") {
             let mut size = (bitpix.abs() / 8) as usize;
 
             // Get NAXIS
-            let naxis = header.get_i64("NAXIS").unwrap_or(0) as usize;
+            let naxis = _header.get_i64("NAXIS").unwrap_or(0) as usize;
 
             for i in 1..=naxis {
                 let axis_key = format!("NAXIS{i}");
-                if let Ok(axis_size) = header.get_i64(&axis_key) {
+                if let Ok(axis_size) = _header.get_i64(&axis_key) {
                     size *= axis_size as usize;
                 }
             }
@@ -461,8 +455,8 @@ impl FitsFile {
         }
 
         // For tables
-        if let Ok(naxis2) = header.get_i64("NAXIS2") {
-            if let Ok(naxis1) = header.get_i64("NAXIS1") {
+        if let Ok(naxis2) = _header.get_i64("NAXIS2") {
+            if let Ok(naxis1) = _header.get_i64("NAXIS1") {
                 return Ok((naxis1 * naxis2) as usize);
             }
         }
@@ -555,29 +549,28 @@ impl FitsFile {
 
 /// Trait for numeric types supported by FITS
 pub trait FitsNumeric: Default + Clone {
-    fn read_fits<R: Read>(reader: &mut R, data_type: FitsDataType) -> Result<Self>;
+    fn read_fits<R: Read>(_reader: &mut R, data_type: FitsDataType) -> Result<Self>;
     fn write_fits<W: Write>(&self, writer: &mut W, data_type: FitsDataType) -> Result<()>;
 }
 
 impl FitsNumeric for f32 {
-    fn read_fits<R: Read>(reader: &mut R, data_type: FitsDataType) -> Result<Self> {
+    fn read_fits<R: Read>(_reader: &mut R, data_type: FitsDataType) -> Result<Self> {
         match data_type {
-            FitsDataType::Float32 => reader
+            FitsDataType::Float32 => _reader
                 .read_f32::<BigEndian>()
                 .map_err(|e| IoError::ParseError(format!("Failed to read f32: {e}"))),
-            FitsDataType::Float64 => reader
+            FitsDataType::Float64 => _reader
                 .read_f64::<BigEndian>()
                 .map(|v| v as f32)
                 .map_err(|e| IoError::ParseError(format!("Failed to read f64: {e}"))),
-            FitsDataType::Int16 => reader
+            FitsDataType::Int16 => _reader
                 .read_i16::<BigEndian>()
                 .map(|v| v as f32)
                 .map_err(|e| IoError::ParseError(format!("Failed to read i16: {e}"))),
-            FitsDataType::Int32 => reader
+            FitsDataType::Int32 => _reader
                 .read_i32::<BigEndian>()
                 .map(|v| v as f32)
-                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}"))),
-            _ => Err(IoError::ParseError(format!(
+                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}")), _ => Err(IoError::ParseError(format!(
                 "Unsupported conversion from {data_type:?} to f32"
             ))),
         }
@@ -587,8 +580,7 @@ impl FitsNumeric for f32 {
         match data_type {
             FitsDataType::Float32 => writer
                 .write_f32::<BigEndian>(*self)
-                .map_err(|e| IoError::FileError(format!("Failed to write f32: {e}"))),
-            _ => Err(IoError::FileError(format!(
+                .map_err(|e| IoError::FileError(format!("Failed to write f32: {e}")), _ => Err(IoError::FileError(format!(
                 "Unsupported conversion from f32 to {data_type:?}"
             ))),
         }
@@ -596,20 +588,19 @@ impl FitsNumeric for f32 {
 }
 
 impl FitsNumeric for f64 {
-    fn read_fits<R: Read>(reader: &mut R, data_type: FitsDataType) -> Result<Self> {
+    fn read_fits<R: Read>(_reader: &mut R, data_type: FitsDataType) -> Result<Self> {
         match data_type {
-            FitsDataType::Float64 => reader
+            FitsDataType::Float64 => _reader
                 .read_f64::<BigEndian>()
                 .map_err(|e| IoError::ParseError(format!("Failed to read f64: {e}"))),
-            FitsDataType::Float32 => reader
+            FitsDataType::Float32 => _reader
                 .read_f32::<BigEndian>()
                 .map(|v| v as f64)
                 .map_err(|e| IoError::ParseError(format!("Failed to read f32: {e}"))),
-            FitsDataType::Int32 => reader
+            FitsDataType::Int32 => _reader
                 .read_i32::<BigEndian>()
                 .map(|v| v as f64)
-                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}"))),
-            _ => Err(IoError::ParseError(format!(
+                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}")), _ => Err(IoError::ParseError(format!(
                 "Unsupported conversion from {data_type:?} to f64"
             ))),
         }
@@ -619,8 +610,7 @@ impl FitsNumeric for f64 {
         match data_type {
             FitsDataType::Float64 => writer
                 .write_f64::<BigEndian>(*self)
-                .map_err(|e| IoError::FileError(format!("Failed to write f64: {e}"))),
-            _ => Err(IoError::FileError(format!(
+                .map_err(|e| IoError::FileError(format!("Failed to write f64: {e}")), _ => Err(IoError::FileError(format!(
                 "Unsupported conversion from f64 to {data_type:?}"
             ))),
         }
@@ -635,8 +625,8 @@ pub struct FitsWriter {
 
 impl FitsWriter {
     /// Create a new FITS file
-    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::create(path.as_ref())
+    pub fn create<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
 
         Ok(Self {
@@ -885,7 +875,7 @@ impl VOTable {
     pub fn get_column_data(&self, column_index: usize) -> Result<Vec<&VOTableValue>> {
         if column_index >= self.columns.len() {
             return Err(IoError::ParseError(format!(
-                "Column index {column_index} out of range"
+                "Column _index {column_index} out of range"
             )));
         }
 
@@ -1006,9 +996,9 @@ pub struct GeoTransform {
 
 impl GeoTransform {
     /// Create a new coordinate transformation
-    pub fn new(ref_lon: f64, ref_lat: f64, lon_scale: f64, lat_scale: f64) -> Self {
+    pub fn new(_ref_lon: f64, ref_lat: f64, lon_scale: f64, lat_scale: f64) -> Self {
         Self {
-            ref_lon,
+            _ref_lon,
             ref_lat,
             lon_scale,
             lat_scale,
@@ -1065,19 +1055,19 @@ pub struct WCSTransform {
 
 impl WCSTransform {
     /// Create WCS transform from FITS header
-    pub fn from_fits_header(header: &FitsHeader) -> Result<Self> {
+    pub fn from_fits_header(_header: &FitsHeader) -> Result<Self> {
         Ok(Self {
-            crval1: header.get_f64("CRVAL1").unwrap_or(0.0),
-            crval2: header.get_f64("CRVAL2").unwrap_or(0.0),
-            crpix1: header.get_f64("CRPIX1").unwrap_or(1.0),
-            crpix2: header.get_f64("CRPIX2").unwrap_or(1.0),
-            cdelt1: header.get_f64("CDELT1").unwrap_or(1.0),
-            cdelt2: header.get_f64("CDELT2").unwrap_or(1.0),
+            crval1: _header.get_f64("CRVAL1").unwrap_or(0.0),
+            crval2: _header.get_f64("CRVAL2").unwrap_or(0.0),
+            crpix1: _header.get_f64("CRPIX1").unwrap_or(1.0),
+            crpix2: _header.get_f64("CRPIX2").unwrap_or(1.0),
+            cdelt1: _header.get_f64("CDELT1").unwrap_or(1.0),
+            cdelt2: _header.get_f64("CDELT2").unwrap_or(1.0),
             cd_matrix: None, // Could be extracted from CD1_1, CD1_2, etc.
-            ctype1: header
+            ctype1: _header
                 .get_string("CTYPE1")
                 .unwrap_or("RA---TAN".to_string()),
-            ctype2: header
+            ctype2: _header
                 .get_string("CTYPE2")
                 .unwrap_or("DEC--TAN".to_string()),
         })
@@ -1114,10 +1104,9 @@ pub struct FitsTableReader {
 
 impl FitsTableReader {
     /// Create a new table reader
-    pub fn new(hdu: HDU) -> Result<Self> {
-        match hdu.hdu_type {
-            HDUType::AsciiTable | HDUType::BinaryTable => Ok(Self { hdu }),
-            _ => Err(IoError::ParseError("HDU is not a table".to_string())),
+    pub fn new(_hdu: HDU) -> Result<Self> {
+        match _hdu.hdu_type {
+            HDUType::AsciiTable | HDUType::BinaryTable => Ok(Self { _hdu }, _ => Err(IoError::ParseError("HDU is not a table".to_string())),
         }
     }
 
@@ -1126,7 +1115,7 @@ impl FitsTableReader {
         // Simplified implementation - would need full FITS table parsing
         let mut values = Vec::new();
 
-        // Mock some data based on column name
+        // Mock some data based on column _name
         match column_name {
             "FLUX" => {
                 for i in 0..100 {

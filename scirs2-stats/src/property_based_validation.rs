@@ -117,9 +117,9 @@ impl Default for PropertyTestConfig {
 
 impl PropertyBasedValidator {
     /// Create a new property-based validator
-    pub fn new(config: PropertyTestConfig) -> Self {
+    pub fn new(_config: PropertyTestConfig) -> Self {
         Self {
-            config,
+            _config,
             test_results: HashMap::new(),
         }
     }
@@ -278,8 +278,7 @@ impl MathematicalProperty<Array1<f64>> for MeanTranslationInvariance {
         let translated_mean = mean(&translated.view());
 
         let property_holds = match (original_mean, translated_mean) {
-            (Ok(orig), Ok(trans)) => (trans - orig - translation).abs() < 1e-12,
-            _ => false,
+            (Ok(orig), Ok(trans)) => (trans - orig - translation).abs() < 1e-12_ => false,
         };
 
         PropertyTestResult {
@@ -310,14 +309,14 @@ impl MathematicalProperty<Array1<f64>> for MeanTranslationInvariance {
 
     fn generate_test_cases(&self, config: &PropertyTestConfig) -> Vec<Array1<f64>> {
         use rand::prelude::*;
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
 
         let mut rng = StdRng::seed_from_u64(config.seed);
         let normal = Normal::new(0.0, 1.0).unwrap();
         let mut test_cases = Vec::new();
 
         for _ in 0..config.test_cases_per_property {
-            let size = rng.random_range(10..1000);
+            let size = rng.gen_range(10..1000);
             let mut data = Array1::zeros(size);
 
             for val in data.iter_mut() {
@@ -330,7 +329,7 @@ impl MathematicalProperty<Array1<f64>> for MeanTranslationInvariance {
         // Add edge cases
         if config.test_edge_cases {
             test_cases.push(Array1::from_vec(vec![0.0]));
-            test_cases.push(Array1::from_vec(vec![f64::MAX, f64::MIN]));
+            test_cases.push(Array1::from_vec(vec![f64::MAX..f64::MIN]));
             test_cases.push(Array1::from_vec(vec![-1.0, 1.0]));
         }
 
@@ -355,8 +354,7 @@ impl MathematicalProperty<Array1<f64>> for VarianceTranslationInvariance {
         let translated_var = var(&translated.view(), 1, None);
 
         let property_holds = match (original_var, translated_var) {
-            (Ok(orig), Ok(trans)) => (trans - orig).abs() < 1e-12,
-            _ => false,
+            (Ok(orig), Ok(trans)) => (trans - orig).abs() < 1e-12_ => false,
         };
 
         PropertyTestResult {
@@ -454,14 +452,14 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationBounds {
 
     fn generate_test_cases(&self, config: &PropertyTestConfig) -> Vec<(Array1<f64>, Array1<f64>)> {
         use rand::prelude::*;
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
 
         let mut rng = StdRng::seed_from_u64(config.seed);
         let normal = Normal::new(0.0, 1.0).unwrap();
         let mut test_cases = Vec::new();
 
         for _ in 0..config.test_cases_per_property {
-            let size = rng.random_range(10..1000);
+            let size = rng.gen_range(10..1000);
             let mut x = Array1::zeros(size);
             let mut y = Array1::zeros(size);
 
@@ -470,7 +468,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationBounds {
                 y[i] = normal.sample(&mut rng);
             }
 
-            test_cases.push((x, y));
+            test_cases.push((x..y));
         }
 
         // Add edge cases
@@ -503,9 +501,9 @@ pub struct ComprehensivePropertyTestSuite {
 
 impl ComprehensivePropertyTestSuite {
     /// Create a new comprehensive test suite
-    pub fn new(config: PropertyTestConfig) -> Self {
+    pub fn new(_config: PropertyTestConfig) -> Self {
         Self {
-            validator: PropertyBasedValidator::new(config),
+            validator: PropertyBasedValidator::new(_config),
         }
     }
 
@@ -741,8 +739,7 @@ impl MathematicalProperty<Array1<f64>> for QuantileMonotonicity {
         );
 
         let property_holds = match (q25.clone(), q50.clone(), q75.clone()) {
-            (Ok(q25_val), Ok(q50_val), Ok(q75_val)) => q25_val <= q50_val && q50_val <= q75_val,
-            _ => false,
+            (Ok(q25_val), Ok(q50_val), Ok(q75_val)) => q25_val <= q50_val && q50_val <= q75_val_ => false,
         };
 
         PropertyTestResult {
@@ -961,8 +958,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationSymmetry {
         let corr_yx = pearson_r(&y.view(), &x.view());
 
         let property_holds = match (corr_xy.clone(), corr_yx.clone()) {
-            (Ok(xy), Ok(yx)) => (xy - yx).abs() < 1e-12,
-            _ => false,
+            (Ok(xy), Ok(yx)) => (xy - yx).abs() < 1e-12_ => false,
         };
 
         PropertyTestResult {

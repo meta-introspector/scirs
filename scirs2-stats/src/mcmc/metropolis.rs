@@ -2,9 +2,9 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2};
-use rand_distr::{Distribution, Uniform};
+use rand__distr::{Distribution, Uniform};
 use scirs2_core::validation::*;
-use scirs2_linalg::{det, inv};
+use scirs2__linalg::{det, inv};
 use std::fmt::Debug;
 
 /// Target distribution trait for MCMC sampling
@@ -22,8 +22,8 @@ pub trait ProposalDistribution: Send + Sync {
     fn sample<R: rand::Rng + ?Sized>(&self, current: &Array1<f64>, rng: &mut R) -> Array1<f64>;
 
     /// Compute the log density ratio q(x|y) / q(y|x) for asymmetric proposals
-    fn log_ratio(&self, _from: &Array1<f64>, _to: &Array1<f64>) -> f64 {
-        0.0 // Default to symmetric proposal
+    fn log_ratio(&self_from: &Array1<f64>, _to: &Array1<f64>) -> f64 {
+        0.0 // Default _to symmetric proposal
     }
 }
 
@@ -36,15 +36,15 @@ pub struct RandomWalkProposal {
 
 impl RandomWalkProposal {
     /// Create a new random walk proposal
-    pub fn new(step_size: f64) -> Result<Self> {
-        check_positive(step_size, "step_size")?;
-        Ok(Self { step_size })
+    pub fn new(_step_size: f64) -> Result<Self> {
+        check_positive(_step_size, "_step_size")?;
+        Ok(Self { _step_size })
     }
 }
 
 impl ProposalDistribution for RandomWalkProposal {
     fn sample<R: rand::Rng + ?Sized>(&self, current: &Array1<f64>, rng: &mut R) -> Array1<f64> {
-        use rand_distr::Normal;
+        use rand__distr::Normal;
         let normal = Normal::new(0.0, self.step_size).unwrap();
         current + Array1::from_shape_fn(current.len(), |_| normal.sample(rng))
     }
@@ -68,20 +68,20 @@ pub struct MetropolisHastings<T: TargetDistribution, P: ProposalDistribution> {
 
 impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
     /// Create a new Metropolis-Hastings sampler
-    pub fn new(target: T, proposal: P, initial: Array1<f64>) -> Result<Self> {
+    pub fn new(_target: T, proposal: P, initial: Array1<f64>) -> Result<Self> {
         check_array_finite(&initial, "initial")?;
-        if initial.len() != target.dim() {
+        if initial.len() != _target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
-                "initial dimension ({}) must match target dimension ({})",
+                "initial dimension ({}) must match _target dimension ({})",
                 initial.len(),
-                target.dim()
+                _target.dim()
             )));
         }
 
-        let current_log_density = target.log_density(&initial);
+        let current_log_density = _target.log_density(&initial);
 
         Ok(Self {
-            target,
+            _target,
             proposal,
             current: initial,
             current_log_density,
@@ -115,14 +115,14 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
     /// Sample multiple states from the distribution
     pub fn sample<R: rand::Rng + ?Sized>(&mut self, n_samples: usize, rng: &mut R) -> Array2<f64> {
         let dim = self.current.len();
-        let mut samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples, dim));
 
         for i in 0..n_samples {
             let sample = self.step(rng);
-            samples.row_mut(i).assign(&sample);
+            _samples.row_mut(i).assign(&sample);
         }
 
-        samples
+        _samples
     }
 
     /// Sample with thinning to reduce autocorrelation
@@ -135,17 +135,17 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
         check_positive(thin, "thin")?;
 
         let dim = self.current.len();
-        let mut samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples, dim));
 
         for i in 0..n_samples {
             // Take thin steps but only keep the last one
             for _ in 0..thin {
                 self.step(rng);
             }
-            samples.row_mut(i).assign(&self.current);
+            _samples.row_mut(i).assign(&self.current);
         }
 
-        Ok(samples)
+        Ok(_samples)
     }
 
     /// Get the acceptance rate
@@ -249,16 +249,16 @@ pub struct MultivariateNormalTarget {
 
 impl MultivariateNormalTarget {
     /// Create a new multivariate normal target
-    pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
-        check_array_finite(&mean, "mean")?;
+    pub fn new(_mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
+        check_array_finite(&_mean, "_mean")?;
         check_array_finite(&covariance, "covariance")?;
-        if covariance.nrows() != mean.len() || covariance.ncols() != mean.len() {
+        if covariance.nrows() != _mean.len() || covariance.ncols() != _mean.len() {
             return Err(StatsError::DimensionMismatch(format!(
                 "covariance shape ({}, {}) must be ({}, {})",
                 covariance.nrows(),
                 covariance.ncols(),
-                mean.len(),
-                mean.len()
+                _mean.len(),
+                _mean.len()
             )));
         }
 
@@ -278,11 +278,11 @@ impl MultivariateNormalTarget {
             ));
         }
 
-        let d = mean.len() as f64;
+        let d = _mean.len() as f64;
         let log_norm_const = -0.5 * (d * (2.0 * std::f64::consts::PI).ln() + det_value.ln());
 
         Ok(Self {
-            mean,
+            _mean,
             precision,
             log_norm_const,
         })
@@ -311,11 +311,11 @@ pub struct CustomTarget<F> {
 
 impl<F> CustomTarget<F> {
     /// Create a new custom target distribution
-    pub fn new(dim: usize, log_density_fn: F) -> Result<Self> {
-        check_positive(dim, "dim")?;
+    pub fn new(_dim: usize, log_density_fn: F) -> Result<Self> {
+        check_positive(_dim, "_dim")?;
         Ok(Self {
             log_density_fn,
-            dim,
+            _dim,
         })
     }
 }

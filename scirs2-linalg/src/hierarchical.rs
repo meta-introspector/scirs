@@ -118,9 +118,9 @@ pub struct HSSNode<F> {
 
 impl ClusterNode {
     /// Create a new cluster node
-    pub fn new(start: usize, end: usize, level: usize) -> Self {
+    pub fn new(_start: usize, end: usize, level: usize) -> Self {
         Self {
-            start,
+            start: _start,
             end,
             left: None,
             right: None,
@@ -173,15 +173,15 @@ where
         max_rank: usize,
         min_block_size: usize,
     ) -> LinalgResult<Self> {
-        let size = matrix.nrows();
-        if size != matrix.ncols() {
+        let _size = matrix.nrows();
+        if _size != matrix.ncols() {
             return Err(LinalgError::ShapeError(
                 "Matrix must be square for H-matrix construction".to_string(),
             ));
         }
 
-        let row_cluster = build_cluster_tree(0, size, min_block_size);
-        let col_cluster = build_cluster_tree(0, size, min_block_size);
+        let row_cluster = build_cluster_tree(0, _size, min_block_size);
+        let col_cluster = build_cluster_tree(0, _size, min_block_size);
 
         let root_block = Self::build_hmatrix_block(
             matrix,
@@ -193,7 +193,7 @@ where
         )?;
 
         Ok(HMatrix {
-            size,
+            size: _size,
             root_block,
             tolerance,
             max_rank,
@@ -210,8 +210,8 @@ where
         max_rank: usize,
         min_block_size: usize,
     ) -> LinalgResult<HMatrixBlock<F>> {
-        let row_size = row_cluster.size();
-        let col_size = col_cluster.size();
+        let row_size = row_cluster.end - row_cluster.start;
+        let col_size = col_cluster.end - col_cluster.start;
 
         // Extract submatrix
         let submatrix = matrix.slice(ndarray::s![
@@ -228,12 +228,12 @@ where
             });
         }
 
-        // Try low-rank approximation
+        // Try low-_rank approximation
         let min_dim = row_size.min(col_size);
         let target_rank = (max_rank.min(min_dim / 2)).max(1);
 
         if let Ok((u, s, vt)) = randomized_svd(&submatrix, target_rank, Some(5), Some(1), None) {
-            // Check if low-rank approximation is accurate enough
+            // Check if low-_rank approximation is accurate enough
             let mut effective_rank = 0;
             let max_singular_value = s[0];
 
@@ -246,7 +246,7 @@ where
             }
 
             if effective_rank < target_rank && effective_rank > 0 {
-                // Create low-rank representation: A ≈ U * S * V^T = (U * S) * V^T
+                // Create low-_rank representation: A ≈ U * S * V^T = (U * S) * V^T
                 let mut u_scaled = Array2::zeros((row_size, effective_rank));
                 let mut v_scaled = Array2::zeros((col_size, effective_rank));
 
@@ -273,7 +273,7 @@ where
             }
         }
 
-        // If low-rank approximation fails, subdivide the block
+        // If low-_rank approximation fails, subdivide the block
         let mut child_blocks = Vec::new();
 
         // Create child clusters (clone to avoid ownership issues)
@@ -490,15 +490,15 @@ where
     /// # Returns
     ///
     /// * HSS matrix representation
-    pub fn from_dense(matrix: &ArrayView2<F>, tolerance: F) -> LinalgResult<Self> {
-        let size = matrix.nrows();
-        if size != matrix.ncols() {
+    pub fn from_dense(_matrix: &ArrayView2<F>, tolerance: F) -> LinalgResult<Self> {
+        let size = _matrix.nrows();
+        if size != _matrix.ncols() {
             return Err(LinalgError::ShapeError(
                 "Matrix must be square for HSS construction".to_string(),
             ));
         }
 
-        let tree = Self::build_hss_tree(matrix, 0, size, 0, tolerance)?;
+        let tree = Self::build_hss_tree(_matrix, 0, size, 0, tolerance)?;
 
         Ok(HSSMatrix {
             size,
@@ -655,14 +655,14 @@ where
 
 /// Build cluster tree for hierarchical matrix construction
 #[allow(dead_code)]
-pub fn build_cluster_tree(start: usize, end: usize, min_size: usize) -> ClusterNode {
-    if end - start <= min_size {
-        return ClusterNode::new(start, end, 0);
+pub fn build_cluster_tree(_start: usize, end: usize, min_size: usize) -> ClusterNode {
+    if end - _start <= min_size {
+        return ClusterNode::new(_start, end, 0);
     }
 
-    let mid = (start + end) / 2;
-    let mut node = ClusterNode::new(start, end, 0);
-    node.left = Some(Box::new(build_cluster_tree(start, mid, min_size)));
+    let mid = (_start + end) / 2;
+    let mut node = ClusterNode::new(_start, end, 0);
+    node.left = Some(Box::new(build_cluster_tree(_start, mid, min_size)));
     node.right = Some(Box::new(build_cluster_tree(mid, end, min_size)));
 
     node
@@ -705,7 +705,7 @@ where
         svd(matrix, false, None)?
     };
 
-    // Determine effective rank based on singular value decay
+    // Determine effective _rank based on singular value decay
     let mut effective_rank = 0;
     if !s.is_empty() {
         let max_sv = s[0];
@@ -722,7 +722,7 @@ where
         return Ok(None);
     }
 
-    // Create optimal low-rank approximation
+    // Create optimal low-_rank approximation
     let mut u_approx = Array2::zeros((m, effective_rank));
     let mut v_approx = Array2::zeros((n, effective_rank));
 

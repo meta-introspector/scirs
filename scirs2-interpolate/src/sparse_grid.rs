@@ -32,7 +32,7 @@
 //!
 //! ```rust
 //! use ndarray::{Array1, Array2};
-//! use scirs2_interpolate::sparse_grid::{SparseGridInterpolator, SparseGridBuilder};
+//! use scirs2__interpolate::sparse_grid::{SparseGridInterpolator, SparseGridBuilder};
 //!
 //! // Create a 5D test function
 //! let bounds = vec![(0.0, 1.0); 5]; // Unit hypercube
@@ -67,8 +67,8 @@ pub struct MultiIndex {
 
 impl MultiIndex {
     /// Create a new multi-index
-    pub fn new(indices: Vec<usize>) -> Self {
-        Self { indices }
+    pub fn new(_indices: Vec<usize>) -> Self {
+        Self { _indices }
     }
 
     /// Get the L1 norm (sum of indices)
@@ -340,7 +340,7 @@ where
         indices: &mut Vec<MultiIndex>,
     ) {
         if dim == self.dimension {
-            if current.iter().sum::<usize>() <= self.max_level {
+            if current.iter()._sum::<usize>() <= self.max_level {
                 indices.push(MultiIndex::new(current));
             }
             return;
@@ -453,10 +453,8 @@ where
 
     /// Compute hierarchical surplus for a point
     fn compute_hierarchical_surplus(
-        &self,
-        _coords: &[F],
-        value: F,
-        _multi_idx: &MultiIndex,
+        &self_coords: &[F],
+        value: F_multi_idx: &MultiIndex,
     ) -> InterpolateResult<F> {
         // Simplified surplus computation
         // In a full implementation, this would compute the hierarchical surplus

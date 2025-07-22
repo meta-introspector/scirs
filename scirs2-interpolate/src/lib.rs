@@ -245,21 +245,21 @@ pub mod scipy_compatibility;
 // Re-exports for convenience
 
 // Advanced mode coordinator for advanced AI-driven optimization
-// pub use advanced_coordinator::{
+// pub use advanced__coordinator::{
 //     create_advanced_interpolation_coordinator,
 //     create_advanced_interpolation_coordinator_with_config, AdvancedInterpolationConfig,
 //     AdvancedInterpolationCoordinator, InterpolationPerformanceMetrics, InterpolationRecommendation,
 // }; // Missing module
 
-pub use adaptive_gp::{
+pub use adaptive__gp::{
     make_adaptive_gp, AdaptiveGPConfig, AdaptiveGaussianProcess, GPStats, KernelHyperparameters,
     KernelModel, KernelType as GPKernelType,
 };
-pub use adaptive_learning::{
+pub use adaptive__learning::{
     make_active_learner, ActiveLearner, ActiveLearningConfig, LearningStats, SamplingCandidate,
     SamplingStrategy,
 };
-pub use adaptive_singularity::{
+pub use adaptive__singularity::{
     apply_singularity_handling, SingularityDetector, SingularityDetectorConfig, SingularityInfo,
     SingularityType, TreatmentStrategy,
 };
@@ -267,23 +267,23 @@ pub use advanced::akima::{make_akima_spline, AkimaSpline};
 pub use advanced::barycentric::{
     make_barycentric_interpolator, BarycentricInterpolator, BarycentricTriangulation,
 };
-pub use advanced::enhanced_kriging::{
+pub use advanced::enhanced__kriging::{
     make_bayesian_kriging, make_enhanced_kriging, make_universal_kriging, AnisotropicCovariance,
     BayesianKrigingBuilder, BayesianPredictionResult, EnhancedKriging, EnhancedKrigingBuilder,
     TrendFunction,
 };
-pub use advanced::enhanced_rbf::{
+pub use advanced::enhanced__rbf::{
     make_accurate_rbf, make_auto_rbf, make_fast_rbf, EnhancedRBFInterpolator, EnhancedRBFKernel,
     KernelType, KernelWidthStrategy,
 };
-pub use advanced::fast_kriging::{
+pub use advanced::fast__kriging::{
     make_fixed_rank_kriging, make_hodlr_kriging, make_local_kriging, make_tapered_kriging,
     FastKriging, FastKrigingBuilder, FastKrigingMethod, FastPredictionResult,
 };
 pub use advanced::kriging::{make_kriging_interpolator, CovarianceFunction, KrigingInterpolator};
 pub use advanced::rbf::{RBFInterpolator, RBFKernel};
 pub use advanced::thinplate::{make_thinplate_interpolator, ThinPlateSpline};
-pub use advanced_statistical::{
+pub use advanced__statistical::{
     make_fda_interpolator, make_multi_output_interpolator, make_piecewise_polynomial_interpolator,
     BasisType, FDAConfig, FunctionalDataInterpolator, MultiOutputInterpolator,
     PiecewisePolynomialInterpolator,
@@ -312,7 +312,7 @@ pub use cache::{
     make_cached_bspline, make_cached_bspline_with_config, BSplineCache, CacheConfig, CacheStats,
     CachedBSpline, DistanceMatrixCache,
 };
-pub use cache_aware::{
+pub use cache__aware::{
     make_cache_aware_rbf, CacheAwareBSpline, CacheAwareRBF, CacheOptimizedConfig,
     CacheOptimizedStats, CacheSizes,
 };
@@ -324,7 +324,7 @@ pub use deprecation::{
     configure_deprecation, init_deprecation_system, issue_deprecation_warning, DeprecationConfig,
     DeprecationInfo, DeprecationLevel, FeatureRegistry,
 };
-pub use doc_enhancements::{
+pub use doc__enhancements::{
     get_method_documentation, print_method_comparison, ComputationalComplexity, MemoryComplexity,
     MethodDocumentation, PerformanceCharacteristics, UsageRecommendation,
 };
@@ -359,7 +359,7 @@ pub use extrapolation::{
     Extrapolator,
     PhysicsLaw,
 };
-pub use fast_bspline::{
+pub use fast__bspline::{
     make_cached_fast_bspline_evaluator, make_fast_bspline_evaluator,
     make_fast_bspline_evaluator_owned, FastBSplineEvaluator, TensorProductFastEvaluator,
 };
@@ -367,18 +367,18 @@ pub use geospatial::{
     make_climate_interpolator, make_elevation_interpolator, CoordinateSystem, GeospatialConfig,
     GeospatialInterpolator, GeospatialResult, InterpolationModel, SpatialStats,
 };
-pub use gpu_accelerated::{
+pub use gpu__accelerated::{
     get_gpu_device_info, gpu_utils, is_gpu_acceleration_available, make_gpu_rbf_interpolator,
     GpuBatchSplineEvaluator, GpuConfig, GpuDeviceInfo, GpuKernelConfig, GpuMemoryManager,
     GpuRBFInterpolator, GpuRBFKernel, GpuStats,
 };
-pub use statistical_advanced::{
+pub use statistical__advanced::{
     AdvancedBootstrap, BcaBootstrap, BootstrapMethod, KernelParameters, SavitzkyGolayFilter,
     StatisticalSpline, VariationalSparseGP,
 };
 
 // Production GPU acceleration
-pub use gpu_production::{
+pub use gpu__production::{
     DeviceMetrics, GpuDevice, GpuMemoryPool, ProductionGpuAccelerator, ProductionGpuConfig,
     ProductionPerformanceReport, SystemMetrics, WorkloadDistribution,
 };
@@ -390,7 +390,7 @@ pub use hermite::{
     make_hermite_spline, make_hermite_spline_with_derivatives, make_natural_hermite_spline,
     make_periodic_hermite_spline, make_quintic_hermite_spline, DerivativeSpec, HermiteSpline,
 };
-pub use high_dimensional::{
+pub use high__dimensional::{
     make_knn_interpolator, make_local_rbf_interpolator, make_pca_interpolator,
     DimensionReductionMethod, HighDimensionalInterpolator, HighDimensionalInterpolatorBuilder,
     InterpolatorStats, LocalMethod, LocalRBFType, SparseStrategy, SpatialIndexType,
@@ -420,17 +420,17 @@ pub use local::polynomial::{
     make_loess, make_robust_loess, LocalPolynomialConfig, LocalPolynomialRegression,
     RegressionResult,
 };
-pub use memory_monitor::{
+pub use memory__monitor::{
     get_all_reports, get_global_stats, get_monitor_report, start_monitoring, stop_monitoring,
     GlobalMemoryStats, LeakIndicators, MemoryMonitor, MemoryReport, PerformanceGrade,
     PerformanceSummary,
 };
 pub use multiscale::{make_adaptive_bspline, MultiscaleBSpline, RefinementCriterion};
-// pub use neural_enhanced::{
+// pub use neural__enhanced::{
 //     make_neural_enhanced_interpolator, ActivationType, EnhancementStrategy, NeuralArchitecture,
 //     NeuralEnhancedInterpolator, NeuralTrainingConfig, TrainingStats,
 // };
-pub use numerical_stability::{
+pub use numerical__stability::{
     analyze_interpolation_edge_cases, apply_tikhonov_regularization,
     assess_enhanced_matrix_condition, assess_matrix_condition, check_safe_division,
     compute_adaptive_regularization, early_numerical_warning_system, enhanced_matrix_multiply,
@@ -447,32 +447,32 @@ pub use parallel::{
     ParallelEvaluate, ParallelLocalPolynomialRegression, ParallelMovingLeastSquares,
 };
 pub use penalized::{cross_validate_lambda, pspline_with_custom_penalty, PSpline, PenaltyType};
-pub use physics_informed::{
+pub use physics__informed::{
     make_mass_conserving_interpolator, make_monotonic_physics_interpolator,
     make_smooth_physics_interpolator, ConservationLaw, PhysicalConstraint, PhysicsInformedConfig,
     PhysicsInformedInterpolator, PhysicsInformedResult,
 };
-pub use production_validation::{
+pub use production__validation::{
     validate_production_readiness, validate_production_readiness_with_config,
     ProductionValidationConfig, ProductionValidationReport, ProductionValidator,
 };
-pub use scattered_optimized::{
+pub use scattered__optimized::{
     make_optimized_scattered_interpolator, OptimizedScatteredInterpolator, OptimizedScatteredStats,
     ScatteredConfig,
 };
 #[cfg(feature = "simd")]
-pub use simd_bspline::SimdBSplineEvaluator;
-pub use simd_optimized::{
+pub use simd__bspline::SimdBSplineEvaluator;
+pub use simd__optimized::{
     get_simd_config, is_simd_available, simd_bspline_basis_functions, simd_bspline_batch_evaluate,
     simd_distance_matrix, simd_rbf_evaluate, RBFKernel as SimdRBFKernel, SimdConfig,
 };
-pub use simd_performance_validation::{
+pub use simd_performance__validation::{
     run_simd_validation, run_simd_validation_with_config, SimdPerformanceValidator,
     SimdValidationConfig, ValidationSummary,
 };
 
 // Comprehensive SIMD validation exports for 0.1.0 stable release
-pub use simd_comprehensive_validation::{
+pub use simd_comprehensive__validation::{
     quick_simd_validation, validate_simd_performance, validate_simd_with_config,
     AccuracyValidationResult, CpuArchitecture, InstructionSet,
     PerformanceSummary as SimdPerformanceSummary, SimdPerformanceResult,
@@ -484,7 +484,7 @@ pub use smoothing::{
     make_adaptive_smoothing_spline, make_error_based_smoothing_spline,
     make_optimized_smoothing_spline, KnotStrategy, VariableKnotSpline,
 };
-pub use sparse_grid::{
+pub use sparse__grid::{
     make_adaptive_sparse_grid_interpolator, make_sparse_grid_from_data,
     make_sparse_grid_interpolator, GridPoint, MultiIndex, SparseGridBuilder,
     SparseGridInterpolator, SparseGridStats,
@@ -531,7 +531,7 @@ pub use statistical::{
 // Note: AdvancedBootstrap, BcaBootstrap, BootstrapMethod, KernelParameters,
 // SavitzkyGolayFilter, StatisticalSpline, VariationalSparseGP, KernelType
 // are already imported above from statistical_advanced module
-pub use scipy_compatibility::{
+pub use scipy__compatibility::{
     create_compatibility_checker, quick_compatibility_check, ApiCoverageResults,
     BehaviorValidationResults, CompatibilityConfig, CompatibilityReport, DifferenceSeverity,
     ErrorType, FeaturePriority, ImplementationEffort, MissingFeature,
@@ -543,7 +543,7 @@ pub use streaming::{
     StreamingConfig, StreamingInterpolator, StreamingMethod, StreamingPoint,
     StreamingRBFInterpolator, StreamingStats,
 };
-pub use structured_matrix::{
+pub use structured__matrix::{
     create_bspline_band_matrix, solve_band_system, solve_sparse_system,
     solve_structured_least_squares, BandMatrix, CSRMatrix,
 };
@@ -569,7 +569,7 @@ pub use voronoi::{
 };
 
 // Enhanced performance validation exports
-// pub use performance_validation_enhanced::{
+// pub use performance_validation__enhanced::{
 //     quick_validation, validate_stable_release_readiness, validate_with_config,
 //     AccuracyMetrics as EnhancedAccuracyMetrics, AllocationStats, CpuCapabilities,
 //     CrossPlatformConfig, ImpactAssessment, IssueCategory, IssueSeverity, LeakAnalysis,
@@ -581,7 +581,7 @@ pub use voronoi::{
 // };
 
 // Enhanced production hardening exports
-// pub use production_hardening_enhanced::{
+// pub use production_hardening__enhanced::{
 //     quick_production_hardening, run_production_hardening, run_production_hardening_with_config,
 //     AlertSeverity, ConcurrentAccessConfig, CpuIntensiveConfig, DataDistribution,
 //     ErrorMessageAssessment, ErrorMessageQuality, ErrorQualityConfig, HardeningCategory,
@@ -594,7 +594,7 @@ pub use voronoi::{
 // };
 
 // Enhanced documentation polish exports
-// pub use documentation_polish_enhanced::{
+// pub use documentation_polish__enhanced::{
 //     polish_documentation_for_stable_release, polish_documentation_with_config,
 //     quick_documentation_review, ApiStabilityDocumentation, AudienceLevel as PolishAudienceLevel,
 //     BenchmarkComparison, BenchmarkResult as DocBenchmarkResult, BestPracticesGuide,
@@ -613,11 +613,11 @@ pub use voronoi::{
 // };
 
 // SciPy parity completion exports
-// pub use scipy_complete_parity::{
+// pub use scipy_complete__parity::{
 //     create_scipy_interface, validate_scipy_parity as validate_complete_scipy_parity, PPoly,
 //     SciPyBSpline, SciPyCompatInterface, SciPyCubicSpline, SciPyInterpolate,
 // };
-// pub use scipy_parity_completion::{
+// pub use scipy_parity__completion::{
 //     create_scipy_parity_checker, quick_scipy_parity_check, validate_scipy_parity, FeatureAnalysis,
 //     MissingFeature as ParityMissingFeature, ParityCompletionConfig, PartialFeature,
 //     PerformanceComparison as ParityPerformanceComparison, SciPyFeature, SciPyParityCompletion,
@@ -625,7 +625,7 @@ pub use voronoi::{
 // };
 
 // API stabilization exports for 0.1.0 stable release
-// pub use api_stabilization_enhanced::{
+// pub use api_stabilization__enhanced::{
 //     analyze_api_for_stable_release, analyze_api_with_config, quick_api_analysis, ApiAnalysisResult,
 //     ApiIssue, ApiStabilizationAnalyzer, ApiStabilizationReport, BreakingChangeAssessment,
 //     DeprecationItem, IssueCategory as ApiIssueCategory, IssueSeverity as ApiIssueSeverity,
@@ -633,7 +633,7 @@ pub use voronoi::{
 // };
 
 // Production stress testing exports for production hardening
-pub use production_stress_testing::{
+pub use production_stress__testing::{
     run_production_stress_tests, run_quick_stress_tests, run_stress_tests_with_config,
     ProductionImpact, ProductionReadiness as StressProductionReadiness, ProductionStressTester,
     StressTestCategory, StressTestConfig as StressTestingConfig, StressTestIssue, StressTestReport,
@@ -641,7 +641,7 @@ pub use production_stress_testing::{
 };
 
 // Documentation enhancement exports for 0.1.0 stable release
-pub use documentation_enhancement::{
+pub use documentation__enhancement::{
     enhance_documentation_for_stable_release, enhance_documentation_with_config,
     quick_documentation_analysis, AudienceLevel, DocumentationAnalysisResult, DocumentationConfig,
     DocumentationEnhancer, DocumentationIssue as EnhancementDocumentationIssue,
@@ -650,7 +650,7 @@ pub use documentation_enhancement::{
 };
 
 // SciPy parity enhancement exports for stable release
-// pub use scipy_parity_enhanced::{
+// pub use scipy_parity__enhanced::{
 //     enhance_scipy_parity_for_stable_release, enhance_scipy_parity_with_config,
 //     quick_scipy_parity_analysis, CompatibilityTestResult, FeatureGapAnalysis,
 //     FeaturePriority as EnhancedFeaturePriority, FocusArea, ImplementationLevel,

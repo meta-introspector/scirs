@@ -4,7 +4,7 @@
 //! I/O operations across different file formats.
 
 use ndarray::{Array1, Array2};
-use scirs2_io::{
+use scirs2__io::{
     csv,
     error::IoError,
     matrix_market::{
@@ -605,14 +605,14 @@ fn demonstrate_pipeline_processing(
 // Helper functions
 
 #[allow(dead_code)]
-fn generate_csv_data(rows: usize) -> Vec<Vec<String>> {
+fn generate_csv_data(_rows: usize) -> Vec<Vec<String>> {
     let mut data = vec![vec![
         "id".to_string(),
         "value".to_string(),
         "label".to_string(),
     ]];
 
-    for i in 0..rows {
+    for i in 0.._rows {
         data.push(vec![
             i.to_string(),
             (i as f64 * 0.1).to_string(),

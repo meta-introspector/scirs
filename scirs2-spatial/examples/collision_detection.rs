@@ -1,4 +1,4 @@
-use scirs2_spatial::collision::{
+use scirs2__spatial::collision::{
     circle_circle_collision, continuous_sphere_sphere_collision, point_box2d_collision,
     point_box3d_collision, point_circle_collision, point_sphere_collision, ray_box3d_collision,
     ray_sphere_collision, ray_triangle3d_collision, sphere_sphere_collision, Box2D, Box3D, Circle,
@@ -299,7 +299,7 @@ fn main() {
                 println!("  Spheres will collide at time {collision_time:.2?}");
 
                 // Extract the collision time as a float (the first element of the tuple)
-                let (t, _, _) = collision_time;
+                let (t__) = collision_time;
                 let collision_time_float = t;
 
                 // Calculate positions at collision time

@@ -20,13 +20,13 @@ use num_traits::Float;
 /// * `Ok(())` if the matrix is not empty
 /// * `Err(LinalgError)` if the matrix is empty
 #[allow(dead_code)]
-pub fn validate_not_empty_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_not_empty_matrix<F>(_matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
-    if matrix.is_empty() {
+    if _matrix.is_empty() {
         return Err(LinalgError::ShapeError(format!(
-            "{operation} failed: Input matrix cannot be empty"
+            "{operation} failed: Input _matrix cannot be empty"
         )));
     }
     Ok(())
@@ -44,13 +44,13 @@ where
 /// * `Ok(())` if the vector is not empty
 /// * `Err(LinalgError)` if the vector is empty
 #[allow(dead_code)]
-pub fn validate_not_empty_vector<F>(vector: &ArrayView1<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_not_empty_vector<F>(_vector: &ArrayView1<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
-    if vector.is_empty() {
+    if _vector.is_empty() {
         return Err(LinalgError::ShapeError(format!(
-            "{operation} failed: Input vector cannot be empty"
+            "{operation} failed: Input _vector cannot be empty"
         )));
     }
     Ok(())
@@ -68,15 +68,15 @@ where
 /// * `Ok(())` if the matrix is square
 /// * `Err(LinalgError)` if the matrix is not square
 #[allow(dead_code)]
-pub fn validate_square_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_square_matrix<F>(_matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
-    if matrix.nrows() != matrix.ncols() {
-        let rows = matrix.nrows();
-        let cols = matrix.ncols();
+    if _matrix.nrows() != _matrix.ncols() {
+        let rows = _matrix.nrows();
+        let cols = _matrix.ncols();
         return Err(LinalgError::ShapeError(format!(
-            "{operation} failed: Matrix must be square\\nMatrix shape: {rows}×{cols}\\nExpected: Square matrix (n×n)"
+            "{operation} failed: Matrix must be square\\nMatrix shape: {rows}×{cols}\\nExpected: Square _matrix (n×n)"
         )));
     }
     Ok(())
@@ -143,7 +143,7 @@ where
         let b_rows = matrix_b.nrows();
         let b_cols = matrix_b.ncols();
         return Err(LinalgError::ShapeError(format!(
-            "{operation} failed: Matrix rows must match\\nFirst matrix shape: {a_rows}×{a_cols}\\nSecond matrix shape: {b_rows}×{b_cols}\\nExpected: Same number of rows"
+            "{operation} failed: Matrix _rows must match\\nFirst matrix shape: {a_rows}×{a_cols}\\nSecond matrix shape: {b_rows}×{b_cols}\\nExpected: Same number of _rows"
         )));
     }
     Ok(())
@@ -161,11 +161,11 @@ where
 /// * `Ok(())` if all values are finite
 /// * `Err(LinalgError)` if any value is non-finite
 #[allow(dead_code)]
-pub fn validate_finite_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_finite_matrix<F>(_matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
-    for &val in matrix.iter() {
+    for &val in _matrix.iter() {
         if !val.is_finite() {
             return Err(LinalgError::InvalidInputError(format!(
                 "{operation} failed: Matrix contains non-finite values"
@@ -187,11 +187,11 @@ where
 /// * `Ok(())` if all values are finite
 /// * `Err(LinalgError)` if any value is non-finite
 #[allow(dead_code)]
-pub fn validate_finite_vector<F>(vector: &ArrayView1<F>, operation: &str) -> LinalgResult<()>
+pub fn validate_finite_vector<F>(_vector: &ArrayView1<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
 {
-    for &val in vector.iter() {
+    for &val in _vector.iter() {
         if !val.is_finite() {
             return Err(LinalgError::InvalidInputError(format!(
                 "{operation} failed: Vector contains non-finite values"
@@ -420,7 +420,7 @@ where
 {
     if max_iterations == 0 {
         return Err(LinalgError::InvalidInputError(format!(
-            "{operation} failed: Maximum iterations must be > 0, got {max_iterations}"
+            "{operation} failed: Maximum _iterations must be > 0, got {max_iterations}"
         )));
     }
 
@@ -470,24 +470,24 @@ where
     }
 
     let (rows, cols) = matrix.dim();
-    let size = if required_square {
+    let _size = if required_square {
         rows
     } else {
         std::cmp::max(rows, cols)
     };
 
     if let Some(min) = min_size {
-        if size < min {
+        if _size < min {
             return Err(LinalgError::InvalidInputError(format!(
-                "{operation} failed: Matrix size {size} is below minimum required size {min}"
+                "{operation} failed: Matrix _size {_size} is below minimum required _size {min}"
             )));
         }
     }
 
     if let Some(max) = max_size {
-        if size > max {
+        if _size > max {
             return Err(LinalgError::InvalidInputError(format!(
-                "{operation} failed: Matrix size {size} exceeds maximum allowed size {max}"
+                "{operation} failed: Matrix _size {_size} exceeds maximum allowed _size {max}"
             )));
         }
     }

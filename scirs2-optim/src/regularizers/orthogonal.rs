@@ -19,7 +19,7 @@ use crate::regularizers::Regularizer;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_optim::regularizers::{OrthogonalRegularization, Regularizer};
+/// use scirs2__optim::regularizers::{OrthogonalRegularization, Regularizer};
 ///
 /// let ortho_reg = OrthogonalRegularization::new(0.01);
 /// let weights = array![[1.0, 0.0], [0.0, 1.0]];
@@ -40,8 +40,8 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> OrthogonalRegularization<
     /// # Arguments
     ///
     /// * `lambda` - Regularization strength
-    pub fn new(lambda: A) -> Self {
-        Self { lambda }
+    pub fn new(_lambda: A) -> Self {
+        Self { _lambda }
     }
 
     /// Compute orthogonal penalty for a 2D weight matrix
@@ -223,13 +223,13 @@ mod tests {
         let ortho = OrthogonalRegularization::new(0.01);
 
         // 3D array - should return zero penalty
-        let params = Array::<f64, _>::zeros((2, 2, 2));
-        let mut gradient = Array::<f64, _>::zeros((2, 2, 2));
+        let params = Array::<f64>::zeros((2, 2, 2));
+        let mut gradient = Array::<f64>::zeros((2, 2, 2));
 
         let penalty = ortho.apply(&params, &mut gradient).unwrap();
         assert_eq!(penalty, 0.0);
 
         // Gradient should be unchanged
-        assert_eq!(gradient, Array::<f64, _>::zeros((2, 2, 2)));
+        assert_eq!(gradient, Array::<f64>::zeros((2, 2, 2)));
     }
 }

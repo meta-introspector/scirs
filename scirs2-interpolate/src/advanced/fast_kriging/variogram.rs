@@ -3,7 +3,7 @@
 //! This module provides functionality for estimating and modeling variograms,
 //! which describe the spatial correlation structure of a dataset.
 
-use crate::advanced::enhanced_kriging::AnisotropicCovariance;
+use crate::advanced::enhanced__kriging::AnisotropicCovariance;
 use crate::error::InterpolateResult;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
@@ -63,7 +63,7 @@ pub struct VariogramBin<F: Float> {
 ///
 /// ```
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::fast_kriging::variogram::compute_empirical_variogram;
+/// use scirs2__interpolate::advanced::fast_kriging::variogram::compute_empirical_variogram;
 ///
 /// // Create a simple 2D dataset
 /// let points = Array2::from_shape_vec((5, 2), vec![
@@ -116,11 +116,11 @@ where
         ));
     }
 
-    // Calculate maximum distance if not provided
+    // Calculate maximum _distance if not provided
     let max_dist = match max_distance {
         Some(dist) => dist,
         None => {
-            // Estimate max distance as the diagonal of the bounding box
+            // Estimate max _distance as the diagonal of the bounding box
             let mut max_d = F::zero();
             for i in 0..n_points {
                 for j in (i + 1)..n_points {
@@ -142,25 +142,25 @@ where
     // Calculate bin width
     let bin_width = max_dist / F::from_usize(n_bins).unwrap();
 
-    // Initialize bins
-    let mut bins = vec![
+    // Initialize _bins
+    let mut _bins = vec![
         VariogramBin {
-            distance: F::zero(),
+            _distance: F::zero(),
             semivariance: F::zero(),
             count: 0,
         };
         n_bins
     ];
 
-    // For each bin, set the center distance
+    // For each bin, set the center _distance
     for i in 0..n_bins {
-        bins[i].distance = F::from_usize(i).unwrap() * bin_width + bin_width / F::from(2).unwrap();
+        _bins[i]._distance = F::from_usize(i).unwrap() * bin_width + bin_width / F::from(2).unwrap();
     }
 
     // Compute empirical variogram by comparing all pairs of points
     for i in 0..n_points {
         for j in (i + 1)..n_points {
-            // Calculate distance between points
+            // Calculate _distance between points
             let mut dist_sq = F::zero();
             for d in 0..n_dims {
                 let diff = points[[i, d]] - points[[j, d]];
@@ -175,25 +175,25 @@ where
             // Find appropriate bin
             let bin_idx = (dist / bin_width).to_usize().unwrap_or(n_bins - 1);
             if bin_idx < n_bins {
-                bins[bin_idx].semivariance = bins[bin_idx].semivariance + semivariogram_value;
-                bins[bin_idx].count += 1;
+                _bins[bin_idx].semivariance = _bins[bin_idx].semivariance + semivariogram_value;
+                _bins[bin_idx].count += 1;
             }
         }
     }
 
-    // Normalize bins by count
-    for bin in &mut bins {
+    // Normalize _bins by count
+    for bin in &mut _bins {
         if bin.count > 0 {
             bin.semivariance = bin.semivariance / F::from_usize(bin.count).unwrap();
         }
     }
 
-    // Filter out empty bins
-    let valid_bins: Vec<VariogramBin<F>> = bins.into_iter().filter(|bin| bin.count > 0).collect();
+    // Filter out empty _bins
+    let valid_bins: Vec<VariogramBin<F>> = _bins.into_iter().filter(|bin| bin.count > 0).collect();
 
     if valid_bins.is_empty() {
         return Err(crate::error::InterpolateError::ComputationError(
-            "No valid bins found for variogram estimation".to_string(),
+            "No valid _bins found for variogram estimation".to_string(),
         ));
     }
 
@@ -219,7 +219,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::advanced::fast_kriging::variogram::{
+/// use scirs2__interpolate::advanced::fast_kriging::variogram::{
 ///     compute_empirical_variogram, fit_variogram_model, VariogramModel
 /// };
 ///
@@ -267,7 +267,7 @@ where
 
     #[cfg(feature = "linalg")]
     {
-        use ndarray_linalg::LeastSquaresSvd;
+        use ndarray__linalg::LeastSquaresSvd;
 
         // Initial guess for parameters
         let max_semivariance = bins

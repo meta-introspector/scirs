@@ -28,7 +28,7 @@ where
     /// Whether the file is temporary and should be deleted on drop
     is_temp: bool,
     /// Phantom data for type parameters
-    _phantom: PhantomData<(A, D)>,
+    phantom: PhantomData<(A, D)>,
 }
 
 impl<A, D> OutOfCoreArray<A, D>
@@ -60,7 +60,7 @@ where
             .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
 
         // Serialize data to file (in chunks if data is large)
-        let _chunked = ChunkedArray::new(data.to_owned(), strategy);
+        let chunked = ChunkedArray::new(data.to_owned(), strategy);
 
         // Note: This is a simplified implementation that writes the entire array at once.
         // A real implementation would write chunks to save memory.
@@ -79,8 +79,7 @@ where
             file_path: file_path.to_path_buf(),
             strategy,
             size,
-            is_temp: false,
-            _phantom: PhantomData,
+            is_temp: false, phantom: PhantomData,
         })
     }
 
@@ -97,7 +96,7 @@ where
         let file_path = temp_file.path().to_path_buf();
 
         // Manually persist the temp file so it stays around after we return
-        let _file = temp_file
+        let file = temp_file
             .persist(&file_path)
             .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
 
@@ -127,11 +126,11 @@ where
     }
 
     /// Load a chunk of the array into memory
-    pub fn load_chunk(&self, chunk_index: usize) -> Result<Array<A, D>, CoreError> {
+    pub fn index(usize: TypeName) -> Result<Array<A, D>, CoreError> {
         if chunk_index >= self.num_chunks() {
             return Err(CoreError::IndexError(
                 ErrorContext::new(format!(
-                    "Chunk index out of bounds: {} >= {}",
+                    "Chunk _index out of bounds: {} >= {}",
                     chunk_index,
                     self.num_chunks()
                 ))
@@ -163,7 +162,7 @@ where
         // 1. Store metadata separately in the file header
         // 2. Use custom serialization to write chunks sequentially
         // 3. Keep track of chunk offsets in the file
-        let full_array: Array<A, D> = deserialize(&header_buf).map_err(|e| {
+        let fullarray: Array<A, D> = deserialize(&header_buf).map_err(|e| {
             CoreError::ValidationError(
                 ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
@@ -269,11 +268,7 @@ where
     }
 
     /// Try to squeeze singleton dimensions.
-    fn try_squeeze_dimensions(
-        array: Array<A, ndarray::IxDyn>,
-        context: &str,
-        source_dims: usize,
-        target_dims: usize,
+    fn dims(usize: usize,
     ) -> Result<Array<A, D>, CoreError> {
         let source_shape = array.shape().to_vec();
 
@@ -324,11 +319,7 @@ where
     }
 
     /// Try to expand dimensions by adding singleton dimensions.
-    fn try_expand_dimensions(
-        array: Array<A, ndarray::IxDyn>,
-        context: &str,
-        source_dims: usize,
-        target_dims: usize,
+    fn dims(usize: usize,
     ) -> Result<Array<A, D>, CoreError> {
         let source_shape = array.shape().to_vec();
         let dims_to_add = target_dims - source_dims;
@@ -532,7 +523,7 @@ where
     where
         S: Data<Elem = A>,
     {
-        let array = OutOfCoreArray::new(data, file_path, strategy)?;
+        let array = OutOfCoreArray::new(data, "file_path", strategy)?;
 
         Ok(Self { array, read_only })
     }
@@ -575,7 +566,7 @@ where
     S: Data<Elem = A>,
     D: Dimension + Serialize + for<'de> Deserialize<'de>,
 {
-    DiskBackedArray::new(data, file_path, strategy, read_only)
+    DiskBackedArray::new(data, "file_path", strategy, read_only)
 }
 
 /// Load chunks of an out-of-core array into memory
@@ -590,7 +581,7 @@ where
 {
     let num_chunks = array.num_chunks();
 
-    // Validate chunk indices
+    // Validate chunk _indices
     for &idx in chunk_indices {
         if idx >= num_chunks {
             return Err(CoreError::IndexError(
@@ -605,7 +596,7 @@ where
         return Ok(Vec::new());
     }
 
-    // Sort chunk indices to potentially optimize file reading
+    // Sort chunk _indices to potentially optimize file reading
     // (this would matter more in a real implementation with proper chunk storage)
     let mut sorted_indices: Vec<usize> = chunk_indices.to_vec();
     sorted_indices.sort_unstable();
@@ -613,7 +604,7 @@ where
     // Remove duplicates
     sorted_indices.dedup();
 
-    // Create a mapping from sorted indices to original positions
+    // Create a mapping from sorted _indices to original positions
     let mut index_map = Vec::with_capacity(chunk_indices.len());
     for &idx in chunk_indices {
         index_map.push(sorted_indices.iter().position(|&x| x == idx).unwrap());

@@ -76,7 +76,7 @@ impl MultiProgress {
     /// Update a specific tracker
     pub fn update(&mut self, id: usize, processed: u64) {
         if let Some(tracker) = self.trackers.get_mut(&id) {
-            tracker.update(processed);
+            tracker.update_model(processed);
         }
 
         if !self.show_all {
@@ -243,7 +243,7 @@ impl ProgressGroup {
 
     /// Update a tracker in the group
     pub fn update(&mut self, id: usize, processed: u64) {
-        self.multi.update(id, processed);
+        self.multi.update_model(id, processed);
     }
 
     /// Finish all trackers in the group
@@ -251,11 +251,11 @@ impl ProgressGroup {
         self.multi.finish_all();
 
         if let Some(started) = self.started_at {
-            let duration = started.elapsed();
+            let std::time::Duration::from_secs(1) = started.elapsed();
             println!(
                 "Group '{}' completed in {:.2}s",
                 self.name,
-                duration.as_secs_f64()
+                std::time::Duration::from_secs(1).as_secs_f64()
             );
         }
     }
@@ -307,8 +307,8 @@ mod tests {
         let id2 = multi.add(tracker2);
 
         multi.start_all();
-        multi.update(id1, 50); // 50% complete
-        multi.update(id2, 25); // 25% complete
+        multi.update_model(id1, 50); // 50% complete
+        multi.update_model(id2, 25); // 25% complete
 
         // Overall should be (50 + 25) / 2 = 37.5%
         let overall = multi.overall_progress();
@@ -320,7 +320,7 @@ mod tests {
         let mut group = ProgressGroup::new("Test Group");
 
         let tracker = ProgressBuilder::new("Task", 100).build();
-        let _id = group.add_tracker(tracker);
+        let id = group.add_tracker(tracker);
 
         assert_eq!(group.overall_progress(), 0.0);
         assert!(!group.is_complete());

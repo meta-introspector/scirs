@@ -3,7 +3,7 @@
 use crate::data::Dataset;
 use crate::error::Result;
 use ndarray::{Array, IxDyn, ScalarOperand};
-use num_integer::div_ceil;
+use num__integer::div_ceil;
 use num_traits::{Float, FromPrimitive};
 // use rand::rngs::SmallRng;
 use rand::rng;
@@ -45,16 +45,15 @@ impl<
     /// * `batch_size` - Number of samples per batch
     /// * `shuffle` - Whether to shuffle the data
     /// * `drop_last` - Whether to drop the last batch if it's smaller than batch_size
-    pub fn new(dataset: D, batch_size: usize, shuffle: bool, drop_last: bool) -> Self {
-        let indices: Vec<usize> = (0..dataset.len()).collect();
+    pub fn new(_dataset: D, batch_size: usize, shuffle: bool, drop_last: bool) -> Self {
+        let indices: Vec<usize> = (0.._dataset.len()).collect();
         Self {
-            dataset,
+            _dataset,
             batch_size,
             shuffle,
             drop_last,
             indices,
-            position: 0,
-            _phantom: PhantomData,
+            position: 0_phantom: PhantomData,
         }
     }
     /// Reset the data loader state

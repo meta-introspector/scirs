@@ -27,7 +27,7 @@ where
     slice_info: SliceInfo<Vec<SliceInfoElem>, D, D>,
 
     /// Phantom data for dimension type
-    _phantom: PhantomData<D>,
+    phantom: PhantomData<D>,
 }
 
 impl<A, D> MemoryMappedSlice<A, D>
@@ -36,14 +36,11 @@ where
     D: Dimension,
 {
     /// Creates a new slice from a memory-mapped array and slice information.
-    pub fn new(
-        source: MemoryMappedArray<A>,
-        slice_info: SliceInfo<Vec<SliceInfoElem>, D, D>,
-    ) -> Self {
+    pub fn new(source: MemoryMappedArray<A>, slice_info: SliceInfo<Vec<SliceInfoElem>, D, D>) -> Self {
         Self {
             source,
             slice_info,
-            _phantom: PhantomData,
+            phantom: PhantomData,
         }
     }
 
@@ -118,11 +115,11 @@ where
         }
 
         // Convert to target dimension type using a more robust approach
-        Self::convert_dims_to_target_type(&result_dims, source_shape)
+        Self::convert_dims_to_target_type(&result_dims, &self.source.shape)
     }
 
     /// Convert dimensions vector to target dimension type D
-    fn convert_dims_to_target_type(result_dims: &[usize], source_shape: &[usize]) -> CoreResult<D> {
+    fn convert_dims_to_target_type(result_dims: &[usize], source_shape: &D) -> CoreResult<D> {
         let source_ndim = result_dims.len();
         let target_ndim = D::NDIM;
 
@@ -389,12 +386,7 @@ where
     }
 
     /// Try to expand dimensions by adding singleton dimensions.
-    fn try_expand_dimensions(
-        array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>,
-        context: &str,
-        source_dims: usize,
-        target_dims: usize,
-    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+    fn try_expand_dimensions(array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>, context: &str, source_dims: usize, target_dims: usize) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
         let source_shape = array.shape().to_vec();
         let dims_to_add = target_dims - source_dims;
 
@@ -443,12 +435,7 @@ where
     }
 
     /// Try to squeeze singleton dimensions.
-    fn try_squeeze_dimensions(
-        array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>,
-        context: &str,
-        source_dims: usize,
-        target_dims: usize,
-    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+    fn try_squeeze_dimensions(array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>, context: &str, source_dims: usize, target_dims: usize) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
         let source_shape = array.shape().to_vec();
 
         // Find and remove singleton dimensions
@@ -502,10 +489,7 @@ where
     }
 
     /// Generic slice loading that works for all dimension types
-    fn load_slice_generic(
-        &self,
-        data_slice: &[A],
-    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+    fn load_slice_generic(&self, data_slice: &[A]) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
         use ndarray::IxDyn;
 
         // Validate dimension compatibility first
@@ -526,7 +510,7 @@ where
         let sliced = self.apply_slice_safely_owned(source_array, slice_elements)?;
 
         // Convert to target dimension with robust error handling
-        Self::safe_dimensionality_conversion(sliced, "sliced array ")
+        Self::safe_dimensionality_conversion(sliced, "sliced array")
     }
 
     /// Validate that the slice operation is compatible with target dimension
@@ -584,11 +568,7 @@ where
     }
 
     /// Safely apply slice to array view with proper error handling, returning owned array
-    fn apply_slice_safely_owned(
-        &self,
-        source_array: ndarray::ArrayView<A, IxDyn>,
-        slice_elements: &[SliceInfoElem],
-    ) -> CoreResult<ndarray::Array<A, IxDyn>> {
+    fn apply_slice_safely_owned(&self, source_array: ndarray::ArrayView<A, IxDyn>, slice_elements: &[SliceInfoElem]) -> CoreResult<ndarray::Array<A, IxDyn>> {
         if slice_elements.is_empty() {
             return Ok(source_array.to_owned());
         }
@@ -653,7 +633,7 @@ where
 /// Extension trait for adding slicing functionality to MemoryMappedArray.
 pub trait MemoryMappedSlicing<A: Clone + Copy + 'static + Send + Sync> {
     /// Creates a slice of the memory-mapped array using standard slice syntax.
-    fn slice<I, E>(&self, _info: I) -> CoreResult<MemoryMappedSlice<A, E>>
+    fn slice<I, E>(&self, slice_info: I) -> CoreResult<MemoryMappedSlice<A, E>>
     where
         I: ndarray::SliceArg<E>,
         E: Dimension;
@@ -665,15 +645,11 @@ pub trait MemoryMappedSlicing<A: Clone + Copy + 'static + Send + Sync> {
     ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix1>>;
 
     /// Creates a 2D slice using ranges for each dimension.
-    fn slice_2d(
-        &self,
-        row_range: impl RangeBounds<usize>,
-        col_range: impl RangeBounds<usize>,
-    ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix2>>;
+    fn slice_2d(&self, row_range: impl RangeBounds<usize>, col_range: impl RangeBounds<usize>) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix2>>;
 }
 
 impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryMappedArray<A> {
-    fn slice<I, E>(&self, _info: I) -> CoreResult<MemoryMappedSlice<A, E>>
+    fn slice<I, E>(&self, slice_info: I) -> CoreResult<MemoryMappedSlice<A, E>>
     where
         I: ndarray::SliceArg<E>,
         E: Dimension,
@@ -698,7 +674,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
         }
 
         let slice_info = unsafe { SliceInfo::new(elems) }.map_err(|_| {
-            CoreError::ShapeError(ErrorContext::new("Failed to create slice info "))
+            CoreError::ShapeError(ErrorContext::new("Failed to create slice info"))
         })?;
 
         // Create a slice that references the original memory-mapped array
@@ -713,10 +689,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
         Ok(MemoryMappedSlice::new(source, slice_info))
     }
 
-    fn slice_1d(
-        &self,
-        range: impl RangeBounds<usize>,
-    ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix1>> {
+    fn slice_1d(&self, range: impl RangeBounds<usize>) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix1>> {
         // Convert to explicit range
         let start = match range.start_bound() {
             std::ops::Bound::Included(&n) => n,
@@ -758,11 +731,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
         Ok(MemoryMappedSlice::new(source, slice_info))
     }
 
-    fn slice_2d(
-        &self,
-        row_range: impl RangeBounds<usize>,
-        col_range: impl RangeBounds<usize>,
-    ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix2>> {
+    fn slice_2d(&self, row_range: impl RangeBounds<usize>, col_range: impl RangeBounds<usize>) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix2>> {
         // Ensure we're working with a 2D array
         if self.shape.len() != 2 {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
@@ -771,7 +740,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
             ))));
         }
 
-        // Convert row range to explicit range
+        // Convert row _range to explicit _range
         let row_start = match row_range.start_bound() {
             std::ops::Bound::Included(&n) => n,
             std::ops::Bound::Excluded(&n) => n + 1,
@@ -784,7 +753,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
             std::ops::Bound::Unbounded => self.shape[0],
         };
 
-        // Convert column range to explicit range
+        // Convert column _range to explicit _range
         let col_start = match col_range.start_bound() {
             std::ops::Bound::Included(&n) => n,
             std::ops::Bound::Excluded(&n) => n + 1,
@@ -800,14 +769,14 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
         // Validate ranges
         if row_start >= row_end || row_end > self.shape[0] {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
-                "Invalid row slice range {}..{} for array of shape {:?}",
+                "Invalid row slice _range {}..{} for array of shape {:?}",
                 row_start, row_end, self.shape
             ))));
         }
 
         if col_start >= col_end || col_end > self.shape[1] {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
-                "Invalid column slice range {}..{} for array of shape {:?}",
+                "Invalid column slice _range {}..{} for array of shape {:?}",
                 col_start, col_end, self.shape
             ))));
         }

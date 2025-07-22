@@ -4,7 +4,7 @@
 //! cross-validation utilities provided by scirs2-datasets.
 
 use ndarray::{Array1, Array2};
-use scirs2_datasets::{k_fold_split, stratified_k_fold_split, time_series_split, Dataset};
+use scirs2__datasets::{k_fold_split, stratified_k_fold_split, time_series_split, Dataset};
 
 #[allow(dead_code)]
 fn main() {
@@ -32,7 +32,7 @@ fn main() {
 
     for (i, (train_indices, val_indices)) in k_folds.iter().enumerate() {
         println!(
-            "Fold {}: Train size: {}, Validation size: {}",
+            "Fold {}: Train, size: {}, Validation size: {}",
             i + 1,
             train_indices.len(),
             val_indices.len()
@@ -56,7 +56,7 @@ fn main() {
         let class_1_count = val_targets.iter().filter(|&&x| x == 1.0).count();
 
         println!(
-            "Fold {}: Train size: {}, Validation size: {}",
+            "Fold {}: Train, size: {}, Validation size: {}",
             i + 1,
             train_indices.len(),
             val_indices.len()
@@ -73,7 +73,7 @@ fn main() {
 
     for (i, (train_indices, val_indices)) in ts_folds.iter().enumerate() {
         println!(
-            "Split {}: Train size: {}, Test size: {}",
+            "Split {}: Train, size: {}, Test size: {}",
             i + 1,
             train_indices.len(),
             val_indices.len()

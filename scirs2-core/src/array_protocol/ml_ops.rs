@@ -132,7 +132,7 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml_ops::activation"
+    "scirs2::array_protocol::ml, ops: :activation"
 );
 
 array_function_dispatch!(
@@ -250,13 +250,11 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml_ops::conv2d"
+    "scirs2::array_protocol::ml, ops: :conv2d"
 );
 
 array_function_dispatch!(
-    fn max_pool2d(
-        input: &dyn ArrayProtocol,
-        kernel_size: (usize, usize),
+    fn max_pool2d(input: &dyn ArrayProtocol, kernel_size: (usize, usize),
         stride: (usize, usize),
         padding: (usize, usize),
     ) -> Result<Box<dyn ArrayProtocol>, OperationError> {
@@ -359,7 +357,7 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml_ops::max_pool2d"
+    "scirs2::array_protocol::ml, ops: :max_pool2d"
 );
 
 array_function_dispatch!(
@@ -405,7 +403,7 @@ array_function_dispatch!(
 
                 // Get dimensions
                 let _batch_size = input.shape()[0];
-                let _height = input.shape()[1];
+                let height = input.shape()[1];
                 let _width = input.shape()[2];
                 let channels = input.shape()[3];
 
@@ -430,11 +428,11 @@ array_function_dispatch!(
 
                 let batch_size = input.shape()[0];
                 let height = input.shape()[1];
-                let width = input.shape()[2];
+                let _width = input.shape()[2];
 
                 for b in 0..batch_size {
                     for h in 0..height {
-                        for w in 0..width {
+                        for w in 0.._width {
                             for c in 0..channels {
                                 let x = input[[b, h, w, c]];
                                 let m = mean[[c]];
@@ -490,7 +488,7 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml_ops::batch_norm"
+    "scirs2::array_protocol::ml, ops: :batch_norm"
 );
 
 array_function_dispatch!(
@@ -595,7 +593,7 @@ array_function_dispatch!(
 
         Ok(result)
     },
-    "scirs2::array_protocol::ml_ops::cross_entropy"
+    "scirs2::array_protocol::ml, ops: :cross_entropy"
 );
 
 array_function_dispatch!(
@@ -673,7 +671,7 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml_ops::dropout"
+    "scirs2::array_protocol::ml, ops: :dropout"
 );
 
 array_function_dispatch!(
@@ -729,7 +727,7 @@ array_function_dispatch!(
                 }
 
                 // Apply scaling
-                let _scale_factor = scale.unwrap_or_else(|| {
+                let scale_factor = scale.unwrap_or_else(|| {
                     // Default scale factor is 1/sqrt(d_k)
                     let d_k_f64 = d_k as f64;
                     if d_k_f64 > 0.0 {
@@ -875,5 +873,5 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml_ops::self_attention"
+    "scirs2::array_protocol::ml, ops: :self_attention"
 );

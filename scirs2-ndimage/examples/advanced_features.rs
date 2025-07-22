@@ -8,7 +8,7 @@
 //! - SciPy-compatible API
 
 use ndarray::{array, Array2};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     backend::{Backend, BackendBuilder},
     error::NdimageResult,
     filters::simd_specialized::{
@@ -23,7 +23,7 @@ use scirs2_ndimage::{
 
 // Import advanced SIMD extensions
 #[cfg(feature = "simd")]
-use scirs2_ndimage::filters::{
+use scirs2__ndimage::filters::{
     advanced_simd_advanced_edge_detection, advanced_simd_multi_scale_lbp,
     advanced_simd_wavelet_pyramid, WaveletType,
 };
@@ -138,8 +138,8 @@ fn create_test_image() -> Array2<f64> {
 
 #[cfg(feature = "cuda")]
 #[allow(dead_code)]
-fn demo_gpu_acceleration(image: &Array2<f64>) -> NdimageResult<()> {
-    use scirs2_ndimage::backend::cuda::CudaOperations;
+fn demo_gpu_acceleration(_image: &Array2<f64>) -> NdimageResult<()> {
+    use scirs2__ndimage::backend::cuda::CudaOperations;
 
     println!("Setting up GPU backend...");
 
@@ -155,7 +155,7 @@ fn demo_gpu_acceleration(image: &Array2<f64>) -> NdimageResult<()> {
 
     // Perform Gaussian filter on GPU
     let sigma = [2.0, 2.0];
-    let gpu_result = cuda_ops.gaussian_filter_2d(&image.view(), sigma)?;
+    let gpu_result = cuda_ops.gaussian_filter_2d(&_image.view(), sigma)?;
 
     println!(
         "GPU Gaussian filter completed: {}x{}",
@@ -164,7 +164,7 @@ fn demo_gpu_acceleration(image: &Array2<f64>) -> NdimageResult<()> {
     );
 
     // Compare with CPU version
-    let cpu_result = gaussian_filter(image, sigma.to_vec(), None, None, None, None)?;
+    let cpu_result = gaussian_filter(_image, sigma.to_vec(), None, None, None, None)?;
 
     // Calculate difference
     let diff = (&gpu_result - &cpu_result).mapv(|x| x.abs()).sum();
@@ -181,11 +181,11 @@ fn demo_gpu_acceleration(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
+fn demo_simd_filters(_image: &Array2<f64>) -> NdimageResult<()> {
     // 1. Bilateral filter - edge-preserving smoothing
     println!("Running SIMD bilateral filter...");
     let bilateral_result = simd_bilateral_filter(
-        image.view(),
+        _image.view(),
         5.0,     // spatial sigma
         10.0,    // range sigma
         Some(7), // window size
@@ -195,8 +195,8 @@ fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
     // 2. Guided filter - structure-preserving smoothing
     println!("Running SIMD guided filter...");
     let guided_result = simd_guided_filter(
-        image.view(),
-        image.view(), // using image as its own guide
+        _image.view(),
+        _image.view(), // using _image as its own guide
         5,            // radius
         0.01,         // epsilon
     )?;
@@ -205,7 +205,7 @@ fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
     // 3. Adaptive median filter - impulse noise removal
     println!("Running SIMD adaptive median filter...");
     let adaptive_median_result = simd_adaptive_median_filter(
-        image.view(),
+        _image.view(),
         7, // max window size
     )?;
     println!("Adaptive median filter completed");
@@ -214,11 +214,11 @@ fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demo_scipy_compat(image: &Array2<f64>) -> NdimageResult<()> {
+fn demo_scipy_compat(_image: &Array2<f64>) -> NdimageResult<()> {
     // 1. Gaussian filter with SciPy-style API
     println!("Running Gaussian filter (SciPy API)...");
     let gaussian_result = gaussian_filter(
-        image,
+        _image,
         vec![2.0, 2.0],  // sigma
         Some(0),         // order (0 = Gaussian)
         Some("reflect"), // mode
@@ -229,19 +229,19 @@ fn demo_scipy_compat(image: &Array2<f64>) -> NdimageResult<()> {
     // 2. Zoom (resize) operation
     println!("Running zoom operation...");
     let zoomed = zoom(
-        image,
+        _image,
         vec![2.0, 2.0],   // zoom factors
         Some(3),          // spline order
         Some("constant"), // mode
         Some(0.0),        // cval
         Some(true),       // prefilter
     )?;
-    println!("Zoomed image size: {}x{}", zoomed.nrows(), zoomed.ncols());
+    println!("Zoomed _image size: {}x{}", zoomed.nrows(), zoomed.ncols());
 
     // 3. Rotate operation
     println!("Running rotation...");
     let rotated = rotate(
-        &image.view(),
+        &_image.view(),
         45.0,             // angle in degrees
         None,             // axes
         Some(false),      // reshape
@@ -253,7 +253,7 @@ fn demo_scipy_compat(image: &Array2<f64>) -> NdimageResult<()> {
     // 4. Laplacian edge detection
     println!("Running Laplacian filter...");
     let edges = laplace(
-        image,
+        _image,
         Some("reflect"), // mode
         None,            // cval
     )?;
@@ -265,13 +265,13 @@ fn demo_scipy_compat(image: &Array2<f64>) -> NdimageResult<()> {
 
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn demo_advanced_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
+fn demo_advanced_simd_extensions(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("Demonstrating advanced SIMD extensions...");
 
     // 1. Wavelet pyramid decomposition
     println!("Running advanced-SIMD wavelet pyramid...");
     let pyramid = advanced_simd_wavelet_pyramid(
-        image.view(),
+        _image.view(),
         3,                 // levels
         WaveletType::Haar, // wavelet type
     )?;
@@ -301,7 +301,7 @@ fn demo_advanced_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
     let radii = [1, 2, 3];
     let sample_points = [8, 16, 24];
 
-    let lbp_result = advanced_simd_multi_scale_lbp(image.view(), &radii, &sample_points)?;
+    let lbp_result = advanced_simd_multi_scale_lbp(_image.view(), &radii, &sample_points)?;
 
     println!(
         "Multi-scale LBP completed: {}x{}",
@@ -326,7 +326,7 @@ fn demo_advanced_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
     // 3. Advanced edge detection
     println!("Running advanced-SIMD advanced edge detection...");
     let edges = advanced_simd_advanced_edge_detection(
-        image.view(),
+        _image.view(),
         1.0, // sigma for Gaussian smoothing
         0.1, // low threshold factor
         0.3, // high threshold factor
@@ -343,7 +343,7 @@ fn demo_advanced_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
     let total_pixels = edges.len();
     let edge_percentage = (edge_pixels as f64 / total_pixels as f64) * 100.0;
     println!(
-        "  Detected edges: {} pixels ({:.2}% of image)",
+        "  Detected edges: {} pixels ({:.2}% of _image)",
         edge_pixels, edge_percentage
     );
 
@@ -354,7 +354,7 @@ fn demo_advanced_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
         ("Biorthogonal", WaveletType::Biorthogonal),
     ] {
         let pyramid = advanced_simd_wavelet_pyramid(
-            image.view(),
+            _image.view(),
             2, // levels
             wavelet_type,
         )?;

@@ -9,7 +9,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::{Float, NumAssign};
-use rand_distr::{Distribution, Normal};
+use rand__distr::{Distribution, Normal};
 use scirs2_core::Rng;
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 use std::fmt::Display;
@@ -36,12 +36,12 @@ where
     }
 
     /// Compute Hessian matrix (optional, for Riemannian HMC)
-    fn hessian(&self, _x: &Array1<F>) -> Option<Array2<F>> {
+    fn hessian(&self_x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 
     /// Compute Fisher information metric (optional, for Riemannian HMC)
-    fn fisher_information(&self, _x: &Array1<F>) -> Option<Array2<F>> {
+    fn fisher_information(&self_x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 }
@@ -130,8 +130,7 @@ pub struct EnhancedHamiltonianMonteCarlo<T, F> {
     /// Adaptation state
     pub adaptation_state: AdaptationState<F>,
     /// Statistics
-    pub stats: HMCStatistics,
-    _phantom: PhantomData<F>,
+    pub stats: HMCStatistics_phantom: PhantomData<F>,
 }
 
 /// Adaptation state for HMC
@@ -207,21 +206,21 @@ where
         + 'static,
 {
     /// Create new enhanced HMC sampler
-    pub fn new(target: T, initial: Array1<F>, config: EnhancedHMCConfig) -> StatsResult<Self> {
+    pub fn new(_target: T, initial: Array1<F>, config: EnhancedHMCConfig) -> StatsResult<Self> {
         check_array_finite(&initial, "initial")?;
 
-        if initial.len() != target.dim() {
+        if initial.len() != _target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
-                "Initial position dimension ({}) must match target dimension ({})",
+                "Initial position dimension ({}) must match _target dimension ({})",
                 initial.len(),
-                target.dim()
+                _target.dim()
             )));
         }
 
         let dim = initial.len();
         let mass_matrix = Array2::eye(dim);
         let mass_inv = Array2::eye(dim);
-        let current_log_density = target.log_density(&initial);
+        let current_log_density = _target.log_density(&initial);
         let step_size = F::from(config.initial_step_size).unwrap();
 
         let adaptation_state = AdaptationState {
@@ -229,7 +228,7 @@ where
             step_size_state: DualAveragingState {
                 log_step_avg: config.initial_step_size.ln(),
                 h_avg: 0.0,
-                target_accept: config.target_accept_rate,
+                _target_accept: config.target_accept_rate,
                 gamma: 0.05,
                 t0: 10.0,
                 kappa: 0.75,
@@ -244,7 +243,7 @@ where
         };
 
         Ok(Self {
-            target,
+            _target,
             position: initial,
             current_log_density,
             config,
@@ -252,8 +251,7 @@ where
             mass_inv,
             step_size,
             adaptation_state,
-            stats: HMCStatistics::default(),
-            _phantom: PhantomData,
+            stats: HMCStatistics::default(), _phantom: PhantomData,
         })
     }
 
@@ -611,14 +609,14 @@ where
         rng: &mut R,
     ) -> StatsResult<Array2<F>> {
         let dim = self.position.len();
-        let mut samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples, dim));
 
         for i in 0..n_samples {
             let sample = self.step(rng)?;
-            samples.row_mut(i).assign(&sample);
+            _samples.row_mut(i).assign(&sample);
         }
 
-        Ok(samples)
+        Ok(_samples)
     }
 }
 

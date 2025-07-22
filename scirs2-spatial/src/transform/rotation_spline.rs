@@ -31,7 +31,7 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 /// # Examples
 ///
 /// ```
-/// use scirs2_spatial::transform::{Rotation, RotationSpline};
+/// use scirs2__spatial::transform::{Rotation, RotationSpline};
 /// use ndarray::array;
 /// use std::f64::consts::PI;
 ///
@@ -81,7 +81,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -93,8 +93,8 @@ impl RotationSpline {
     /// let times = vec![0.0, 1.0, 2.0];
     /// let spline = RotationSpline::new(&rotations, &times).unwrap();
     /// ```
-    pub fn new(rotations: &[Rotation], times: &[f64]) -> SpatialResult<Self> {
-        if rotations.is_empty() {
+    pub fn new(_rotations: &[Rotation], times: &[f64]) -> SpatialResult<Self> {
+        if _rotations.is_empty() {
             return Err(SpatialError::ValueError("Rotations cannot be empty".into()));
         }
 
@@ -102,10 +102,10 @@ impl RotationSpline {
             return Err(SpatialError::ValueError("Times cannot be empty".into()));
         }
 
-        if rotations.len() != times.len() {
+        if _rotations.len() != times.len() {
             return Err(SpatialError::ValueError(format!(
-                "Number of rotations ({}) must match number of times ({})",
-                rotations.len(),
+                "Number of _rotations ({}) must match number of times ({})",
+                _rotations.len(),
                 times.len()
             )));
         }
@@ -123,12 +123,12 @@ impl RotationSpline {
             }
         }
 
-        // Make a copy of the rotations and times
-        let rotations = rotations.to_vec();
+        // Make a copy of the _rotations and times
+        let _rotations = _rotations.to_vec();
         let times = times.to_vec();
 
         Ok(RotationSpline {
-            rotations,
+            _rotations,
             times,
             velocities: None,
             interpolation_type: "slerp".to_string(),
@@ -148,7 +148,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -163,8 +163,8 @@ impl RotationSpline {
     /// // Set the interpolation type to cubic (natural cubic spline)
     /// spline.set_interpolation_type("cubic").unwrap();
     /// ```
-    pub fn set_interpolation_type(&mut self, interp_type: &str) -> SpatialResult<()> {
-        match interp_type.to_lowercase().as_str() {
+    pub fn set_interpolation_type(_interp_type: &str) -> SpatialResult<()> {
+        match _interp_type.to_lowercase().as_str() {
             "slerp" => {
                 self.interpolation_type = "slerp".to_string();
                 self.velocities = None;
@@ -177,13 +177,13 @@ impl RotationSpline {
                 Ok(())
             }
             _ => Err(SpatialError::ValueError(format!(
-                "Invalid interpolation type: {interp_type}. Must be 'slerp' or 'cubic'"
+                "Invalid interpolation _type: {interp_type}. Must be 'slerp' or 'cubic'"
             ))),
         }
     }
 
     /// Compute velocities for natural cubic spline interpolation
-    fn compute_velocities(&mut self) {
+    fn compute_velocities() {
         if self.velocities.is_some() {
             return; // Already computed
         }
@@ -242,8 +242,8 @@ impl RotationSpline {
 
     /// Compute the second derivatives for natural cubic spline interpolation
     #[allow(dead_code)]
-    fn compute_natural_spline_second_derivatives(&self, values: &[f64]) -> Vec<f64> {
-        let n = values.len();
+    fn compute_natural_spline_second_derivatives(_values: &[f64]) -> Vec<f64> {
+        let n = _values.len();
         if n <= 2 {
             return vec![0.0; n];
         }
@@ -268,8 +268,8 @@ impl RotationSpline {
             b[i] = 2.0 * (h_i + h_ip1);
             c[i] = h_ip1;
 
-            let fd_i = (values[i + 1] - values[i]) / h_i;
-            let fd_ip1 = (values[i + 2] - values[i + 1]) / h_ip1;
+            let fd_i = (_values[i + 1] - _values[i]) / h_i;
+            let fd_ip1 = (_values[i + 2] - _values[i + 1]) / h_ip1;
             d[i] = 6.0 * (fd_ip1 - fd_i);
         }
 
@@ -332,7 +332,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -347,7 +347,7 @@ impl RotationSpline {
     /// // Interpolate at t=0.5 (halfway between the first two rotations)
     /// let rot_half = spline.interpolate(0.5);
     /// ```
-    pub fn interpolate(&self, t: f64) -> Rotation {
+    pub fn interpolate(t: f64) -> Rotation {
         let n = self.times.len();
 
         // Handle boundary cases
@@ -370,13 +370,12 @@ impl RotationSpline {
         // Interpolate within the segment based on interpolation type
         match self.interpolation_type.as_str() {
             "slerp" => self.interpolate_slerp(t, idx),
-            "cubic" => self.interpolate_cubic(t, idx),
-            _ => self.interpolate_slerp(t, idx), // Default to slerp
+            "cubic" => self.interpolate_cubic(t, idx, _ => self.interpolate_slerp(t, idx), // Default to slerp
         }
     }
 
     /// Interpolate the rotation spline at a given time using Slerp
-    fn interpolate_slerp(&self, t: f64, idx: usize) -> Rotation {
+    fn interpolate_slerp(t: f64, idx: usize) -> Rotation {
         let t0 = self.times[idx];
         let t1 = self.times[idx + 1];
         let normalized_t = (t - t0) / (t1 - t0);
@@ -389,7 +388,7 @@ impl RotationSpline {
     }
 
     /// Interpolate the rotation spline at a given time using cubic spline
-    fn interpolate_cubic(&self, t: f64, idx: usize) -> Rotation {
+    fn interpolate_cubic(t: f64, idx: usize) -> Rotation {
         // Ensure velocities are computed
         if self.velocities.is_none() {
             let mut mutable_self = self.clone();
@@ -445,7 +444,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     ///
     /// let rotations = vec![
@@ -471,7 +470,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     ///
     /// let rotations = vec![
@@ -501,7 +500,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -517,7 +516,7 @@ impl RotationSpline {
     /// assert_eq!(sample_times.len(), 5);
     /// assert_eq!(sample_rotations.len(), 5);
     /// ```
-    pub fn sample(&self, n: usize) -> (Vec<f64>, Vec<Rotation>) {
+    pub fn sample(n: usize) -> (Vec<f64>, Vec<Rotation>) {
         if n <= 1 {
             return (vec![self.times[0]], vec![self.rotations[0].clone()]);
         }
@@ -553,7 +552,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -566,8 +565,8 @@ impl RotationSpline {
     ///
     /// let spline = RotationSpline::from_key_rotations(&key_rots, &key_times).unwrap();
     /// ```
-    pub fn from_key_rotations(key_rots: &[Rotation], key_times: &[f64]) -> SpatialResult<Self> {
-        Self::new(key_rots, key_times)
+    pub fn from_key_rotations(_key_rots: &[Rotation], key_times: &[f64]) -> SpatialResult<Self> {
+        Self::new(_key_rots, key_times)
     }
 
     /// Get the current interpolation type
@@ -579,7 +578,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     ///
     /// let rotations = vec![
@@ -591,7 +590,7 @@ impl RotationSpline {
     ///
     /// assert_eq!(spline.interpolation_type(), "slerp");
     /// ```
-    pub fn interpolation_type(&self) -> &str {
+    pub fn interpolation_type(&self) -> &'_ str {
         &self.interpolation_type
     }
 
@@ -608,7 +607,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -623,7 +622,7 @@ impl RotationSpline {
     /// let velocity = spline.angular_velocity(0.5);
     /// // Should be approximately [0, 0, PI]
     /// ```
-    pub fn angular_velocity(&self, t: f64) -> SpatialResult<Array1<f64>> {
+    pub fn angular_velocity(t: f64) -> SpatialResult<Array1<f64>> {
         let n = self.times.len();
 
         // Handle boundary cases
@@ -643,13 +642,12 @@ impl RotationSpline {
         // Calculate angular velocity based on interpolation type
         match self.interpolation_type.as_str() {
             "slerp" => self.angular_velocity_slerp(t, idx),
-            "cubic" => Ok(self.angular_velocity_cubic(t, idx)),
-            _ => self.angular_velocity_slerp(t, idx), // Default to slerp
+            "cubic" => Ok(self.angular_velocity_cubic(t, idx), _ => self.angular_velocity_slerp(t, idx), // Default to slerp
         }
     }
 
     /// Calculate angular velocity using Slerp interpolation
-    fn angular_velocity_slerp(&self, t: f64, idx: usize) -> SpatialResult<Array1<f64>> {
+    fn angular_velocity_slerp(t: f64, idx: usize) -> SpatialResult<Array1<f64>> {
         let t0 = self.times[idx];
         let t1 = self.times[idx + 1];
         let dt = t1 - t0;
@@ -690,7 +688,7 @@ impl RotationSpline {
     }
 
     /// Calculate angular velocity using cubic spline interpolation
-    fn angular_velocity_cubic(&self, t: f64, idx: usize) -> Array1<f64> {
+    fn angular_velocity_cubic(t: f64, idx: usize) -> Array1<f64> {
         // Ensure velocities are computed
         if self.velocities.is_none() {
             let mut mutable_self = self.clone();
@@ -745,7 +743,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -763,7 +761,7 @@ impl RotationSpline {
     /// // Calculate angular acceleration at t=0.5
     /// let acceleration = spline.angular_acceleration(0.5);
     /// ```
-    pub fn angular_acceleration(&self, t: f64) -> Array1<f64> {
+    pub fn angular_acceleration(t: f64) -> Array1<f64> {
         // Cubic interpolation is needed for meaningful acceleration
         if self.interpolation_type != "cubic" {
             return Array1::zeros(3); // Slerp has constant velocity, so acceleration is zero
@@ -790,7 +788,7 @@ impl RotationSpline {
     }
 
     /// Calculate angular acceleration using cubic spline interpolation
-    fn angular_acceleration_cubic(&self, t: f64, idx: usize) -> Array1<f64> {
+    fn angular_acceleration_cubic(t: f64, idx: usize) -> Array1<f64> {
         // Ensure velocities are computed
         if self.velocities.is_none() {
             let mut mutable_self = self.clone();
@@ -836,7 +834,6 @@ impl RotationSpline {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
     use std::f64::consts::PI;
 
     #[test]

@@ -85,19 +85,19 @@ impl EvaluationReport {
         dataset_name: &str,
         metrics: HashMap<String, f64>,
     ) -> Result<()> {
-        // Add model name if not already present
+        // Add model _name if not already present
         if !self.model_names.contains(&model_name.to_string()) {
             self.model_names.push(model_name.to_string());
         }
 
-        // Add dataset name if not already present
+        // Add dataset _name if not already present
         if !self.dataset_names.contains(&dataset_name.to_string()) {
             self.dataset_names.push(dataset_name.to_string());
         }
 
         // Add metric results
         for (metric_name, value) in metrics {
-            // Add metric name if not already present
+            // Add metric _name if not already present
             if !self.metric_names.contains(&metric_name) {
                 self.metric_names.push(metric_name.clone());
             }
@@ -265,7 +265,7 @@ impl EvaluationReport {
         }
 
         // Extract model names
-        models.into_iter().map(|(name, _)| name).collect()
+        models.into_iter().map(|(name_)| _name).collect()
     }
 
     /// Generate a formatted report of evaluation results
@@ -345,10 +345,10 @@ impl<X, Y> BatchEvaluator<X, Y> {
     /// # Arguments
     ///
     /// * `metrics` - List of metric names to compute
-    pub fn new(metrics: Vec<String>) -> Self {
+    pub fn new(_metrics: Vec<String>) -> Self {
         BatchEvaluator {
             models: HashMap::new(),
-            metrics,
+            _metrics,
         }
     }
 
@@ -435,7 +435,7 @@ impl<X, Y> BatchEvaluator<X, Y> {
 /// ```
 /// # /*
 /// use ndarray::{Array1, Array2};
-/// use scirs2_metrics::evaluation::workflow::learning_curve;
+/// use scirs2__metrics::evaluation::workflow::learning_curve;
 ///
 /// // Define a function that trains and evaluates a model
 /// let model_evaluator = |x_train: &Array2<f64>, y_train: &Array1<f64>,
@@ -460,15 +460,9 @@ impl<X, Y> BatchEvaluator<X, Y> {
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
 pub fn learning_curve<X, Y, F>(
-    _model_evaluator: F,
-    _x_train: &X,
-    _y_train: &Y,
-    _x_test: &X,
-    _y_test: &Y,
-    train_sizes_ratio: &[f64],
-    _metric: &str,
-    n_splits: usize,
-    _random_seed: Option<u64>,
+    _model_evaluator: F_x, _train: &X_y_train: &Y_x, _test: &X_y_test: &Y,
+    train_sizes_ratio: &[f64], _metric: &str,
+    n_splits: usize, _random_seed: Option<u64>,
 ) -> Result<(Vec<usize>, Vec<f64>, Vec<f64>)>
 where
     F: Fn(&X, &Y, &X, &Y) -> f64,
@@ -490,10 +484,10 @@ where
     // In a real implementation, we would need trait bounds to query data size
     // We'll estimate a reasonable sample size based on typical ML datasets and ratios
 
-    // Estimate sample size based on maximum ratio and reasonable assumptions
+    // Estimate sample size based on maximum _ratio and reasonable assumptions
     let max_ratio = train_sizes_ratio.iter().fold(0.0f64, |a: f64, &b| a.max(b));
     let estimated_max_samples = if max_ratio > 0.0 {
-        // Assume the maximum ratio corresponds to a reasonable dataset size
+        // Assume the maximum _ratio corresponds to a reasonable dataset size
         // Scale based on complexity: smaller ratios suggest smaller base datasets
         let base_estimate = if max_ratio >= 1.0 {
             2000 // Full dataset scenarios
@@ -508,21 +502,21 @@ where
     };
 
     let n_samples = estimated_max_samples;
-    let train_sizes: Vec<usize> = train_sizes_ratio
+    let _train_sizes: Vec<usize> = train_sizes_ratio
         .iter()
-        .map(|&ratio| (ratio * n_samples as f64).round() as usize)
+        .map(|&_ratio| (_ratio * n_samples as f64).round() as usize)
         .collect();
 
     // Initialize results
     let mut train_scores = Vec::with_capacity(train_sizes.len());
     let mut test_scores = Vec::with_capacity(train_sizes.len());
 
-    // Compute learning curve for each train size
+    // Compute learning curve for each _train size
     // In a real implementation, we would perform the cross-validation
     // For now, we simulate results
 
     for &train_size in &train_sizes {
-        // Simulate train and test scores based on training size
+        // Simulate _train and _test scores based on training size
         // In a real implementation, this would involve subsampling and cross-validation
         let train_score = 0.5 + 0.4 * (1.0 - (train_size as f64 / n_samples as f64).powf(-0.5));
         let test_score = 0.4 + 0.4 * (1.0 - (train_size as f64 / n_samples as f64).powf(-0.2));
@@ -555,13 +549,13 @@ impl<X, Y> PipelineEvaluator<X, Y> {
     /// * `name` - Name of the pipeline
     /// * `preprocessor` - Preprocessing function
     /// * `trainer` - Model training function
-    pub fn new<P, T>(name: &str, preprocessor: P, trainer: T) -> Self
+    pub fn new<P, T>(_name: &str, preprocessor: P, trainer: T) -> Self
     where
         P: Fn(&X) -> Result<X> + 'static,
         T: Fn(&X, &Y) -> Result<Box<dyn ModelEvaluator<X, Y>>> + 'static,
     {
         PipelineEvaluator {
-            name: name.to_string(),
+            _name: _name.to_string(),
             preprocessor: Box::new(preprocessor),
             trainer: Box::new(trainer),
         }
@@ -621,17 +615,15 @@ mod tests {
     }
 
     impl DummyModel {
-        fn new(accuracy: f64) -> Self {
-            DummyModel { accuracy }
+        fn new(_accuracy: f64) -> Self {
+            DummyModel { _accuracy }
         }
     }
 
     // Implement ModelEvaluator for DummyModel with Vec<f64> as X and Y
     impl ModelEvaluator<Vec<f64>, Vec<f64>> for DummyModel {
         fn evaluate(
-            &self,
-            _x_test: &Vec<f64>,
-            _y_test: &Vec<f64>,
+            &self, _x_test: &Vec<f64>, _y_test: &Vec<f64>,
             metrics: &[String],
         ) -> Result<HashMap<String, f64>> {
             let mut results = HashMap::new();

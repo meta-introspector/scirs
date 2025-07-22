@@ -1068,7 +1068,7 @@ mod integration_tests {
         // 5. Decompose the matrix
         let (p, l, u) = compat::lu(&a.view(), false, false, true, false).unwrap();
         let (q_opt, r) = compat::qr(&a.view(), false, None, "full", false, true).unwrap();
-        let (_eigenvals, _eigenvecs_opt) = compat::eigh(
+        let _eigenvals_eigenvecs_opt = compat::eigh(
             &a.view(),
             None,
             false,

@@ -9,17 +9,17 @@ use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function for safe conversion from usize to float
 #[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult<T> {
+    T::from_usize(_value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
     })
 }
 
 /// Helper function for safe conversion from float to usize
 #[allow(dead_code)]
-fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
-    value.to_usize().ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert float value to usize"))
+fn safe_float_to_usize<T: Float>(_value: T) -> NdimageResult<usize> {
+    _value.to_usize().ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert float _value to usize"))
     })
 }
 
@@ -35,7 +35,7 @@ fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 ///
 /// * `Result<T>` - Processed coordinate
 #[allow(dead_code)]
-pub fn handle_boundary<T>(coord: T, size: usize, mode: BoundaryMode) -> NdimageResult<T>
+pub fn handle_boundary<T>(_coord: T, size: usize, mode: BoundaryMode) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
@@ -43,8 +43,8 @@ where
     let size_t = safe_usize_to_float(size)?;
 
     // Handle within-bounds case
-    if coord >= T::zero() && coord < size_t {
-        return Ok(coord);
+    if _coord >= T::zero() && _coord < size_t {
+        return Ok(_coord);
     }
 
     // Handle out-of-bounds according to mode
@@ -54,11 +54,11 @@ where
             // The actual handling would be done by the caller
             Err(NdimageError::InterpolationError(format!(
                 "Coordinate {:?} out of bounds for size {} with constant mode",
-                coord, size
+                _coord, size
             )))
         }
         BoundaryMode::Nearest => {
-            if coord < T::zero() {
+            if _coord < T::zero() {
                 Ok(T::zero())
             } else {
                 Ok(size_t - T::one())
@@ -330,30 +330,30 @@ where
 
 /// Apply boundary condition to a coordinate
 #[allow(dead_code)]
-pub fn apply_boundary_condition(coord: isize, dim_size: isize, mode: &BoundaryMode) -> usize {
+pub fn apply_boundary_condition(_coord: isize, dim_size: isize, mode: &BoundaryMode) -> usize {
     match mode {
         BoundaryMode::Constant => {
-            if coord < 0 || coord >= dim_size {
+            if _coord < 0 || _coord >= dim_size {
                 // Return a value that will be caught as out of bounds
                 dim_size as usize
             } else {
-                coord as usize
+                _coord as usize
             }
         }
         BoundaryMode::Nearest => {
-            if coord < 0 {
+            if _coord < 0 {
                 0
-            } else if coord >= dim_size {
+            } else if _coord >= dim_size {
                 (dim_size - 1) as usize
             } else {
-                coord as usize
+                _coord as usize
             }
         }
         BoundaryMode::Wrap => {
             if dim_size == 0 {
                 0
             } else {
-                let wrapped = ((coord % dim_size) + dim_size) % dim_size;
+                let wrapped = ((_coord % dim_size) + dim_size) % dim_size;
                 wrapped as usize
             }
         }
@@ -361,12 +361,12 @@ pub fn apply_boundary_condition(coord: isize, dim_size: isize, mode: &BoundaryMo
             if dim_size <= 1 {
                 0
             } else {
-                let reflected = if coord < 0 {
-                    (-coord - 1) % dim_size
-                } else if coord >= dim_size {
-                    (2 * dim_size - coord - 1) % dim_size
+                let reflected = if _coord < 0 {
+                    (-_coord - 1) % dim_size
+                } else if _coord >= dim_size {
+                    (2 * dim_size - _coord - 1) % dim_size
                 } else {
-                    coord
+                    _coord
                 };
                 reflected as usize
             }
@@ -376,12 +376,12 @@ pub fn apply_boundary_condition(coord: isize, dim_size: isize, mode: &BoundaryMo
                 0
             } else {
                 let period = 2 * (dim_size - 1);
-                let mirrored = if coord < 0 {
-                    (-coord) % period
-                } else if coord >= dim_size {
-                    period - ((coord - dim_size + 1) % period) - 1
+                let mirrored = if _coord < 0 {
+                    (-_coord) % period
+                } else if _coord >= dim_size {
+                    period - ((_coord - dim_size + 1) % period) - 1
                 } else {
-                    coord
+                    _coord
                 };
                 (mirrored.min(dim_size - 1)) as usize
             }

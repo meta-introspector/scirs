@@ -5,8 +5,8 @@
 //! performance tuning, and cross-domain knowledge transfer.
 
 use ndarray::Array1;
-use num_complex::Complex64;
-use scirs2_fft::{
+use num__complex::Complex64;
+use scirs2__fft::{
     advancedFftConfig,
     advanced_coordinator::{FftAlgorithmType, MemoryAllocationStrategy},
     create_advanced_fft_coordinator,
@@ -238,9 +238,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a sine wave signal for testing
 #[allow(dead_code)]
-fn create_sine_wave(length: usize, frequency: f64, sample_rate: f64) -> Array1<Complex64> {
+fn create_sine_wave(_length: usize, frequency: f64, sample_rate: f64) -> Array1<Complex64> {
     Array1::from_vec(
-        (0..length)
+        (0.._length)
             .map(|i| {
                 let t = i as f64 / sample_rate;
                 let value = (2.0 * PI * frequency * t).sin();
@@ -252,12 +252,12 @@ fn create_sine_wave(length: usize, frequency: f64, sample_rate: f64) -> Array1<C
 
 /// Create a linear chirp signal for testing
 #[allow(dead_code)]
-fn create_chirp_signal(length: usize, f0: f64, f1: f64, sample_rate: f64) -> Array1<Complex64> {
+fn create_chirp_signal(_length: usize, f0: f64, f1: f64, sample_rate: f64) -> Array1<Complex64> {
     Array1::from_vec(
-        (0..length)
+        (0.._length)
             .map(|i| {
                 let t = i as f64 / sample_rate;
-                let total_time = length as f64 / sample_rate;
+                let total_time = _length as f64 / sample_rate;
                 let freq = f0 + (f1 - f0) * t / total_time;
                 let phase = 2.0 * PI * freq * t;
                 let value = phase.sin();
@@ -269,19 +269,19 @@ fn create_chirp_signal(length: usize, f0: f64, f1: f64, sample_rate: f64) -> Arr
 
 /// Create a sparse signal for testing
 #[allow(dead_code)]
-fn create_sparse_signal(length: usize, sparsity: f64) -> Array1<Complex64> {
+fn create_sparse_signal(_length: usize, sparsity: f64) -> Array1<Complex64> {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
     let mut rng = StdRng::seed_from_u64(42); // Fixed seed for reproducibility
 
     Array1::from_vec(
-        (0..length)
+        (0.._length)
             .map(|_| {
                 if rng.random::<f64>() < sparsity {
-                    let magnitude: f64 = rng.random_range(-1.0..1.0);
-                    let phase = rng.random_range(0.0..2.0 * PI);
-                    Complex64::from_polar(magnitude.abs(), phase)
+                    let magnitude: f64 = rng.gen_range(-1.0..1.0);
+                    let phase = rng.gen_range(0.0..2.0 * PI);
+                    Complex64::from_polar(magnitude.abs()..phase)
                 } else {
                     Complex64::new(0.0, 0.0)
                 }
@@ -292,23 +292,22 @@ fn create_sparse_signal(length: usize, sparsity: f64) -> Array1<Complex64> {
 
 /// Estimate performance improvement from recommendation
 #[allow(dead_code)]
-fn estimate_performance_improvement(recommendation: &scirs2_fft::FftRecommendation) -> f64 {
+fn estimate_performance_improvement(_recommendation: &scirs2_fft: :FftRecommendation) -> f64 {
     // This is a mock implementation - in reality, this would be based on
     // benchmark data and algorithm characteristics
-    match recommendation.recommended_algorithm {
+    match _recommendation.recommended_algorithm {
         FftAlgorithmType::ChirpZTransform => 2.5,
         FftAlgorithmType::BluesteinAlgorithm => 2.0,
         FftAlgorithmType::GpuAcceleratedFft => 10.0,
-        FftAlgorithmType::QuantumInspiredFft => 5.0,
-        _ => 1.2,
+        FftAlgorithmType::QuantumInspiredFft => 5.0_ => 1.2,
     }
 }
 
 /// Estimate memory efficiency gain from recommendation
 #[allow(dead_code)]
-fn estimate_memory_efficiency(recommendation: &scirs2_fft::FftRecommendation) -> f64 {
+fn estimate_memory_efficiency(_recommendation: &scirs2_fft: :FftRecommendation) -> f64 {
     // Mock implementation based on memory strategy
-    match recommendation.memory_strategy.allocation_strategy {
+    match _recommendation.memory_strategy.allocation_strategy {
         MemoryAllocationStrategy::Conservative => 3.0,
         MemoryAllocationStrategy::Adaptive => 2.5,
         MemoryAllocationStrategy::Aggressive => 1.2,
@@ -448,13 +447,13 @@ fn demonstrate_quantum_optimization(
 
 /// Create a 2D image-like signal for testing
 #[allow(dead_code)]
-fn create_2d_image_signal(width: usize, height: usize) -> Array1<Complex64> {
+fn create_2d_image_signal(_width: usize, height: usize) -> Array1<Complex64> {
     // Flatten a 2D image pattern into 1D for this demo
     Array1::from_vec(
-        (0..width * height)
+        (0.._width * height)
             .map(|i| {
-                let x = (i % width) as f64;
-                let y = (i / width) as f64;
+                let x = (i % _width) as f64;
+                let y = (i / _width) as f64;
                 let value = ((x * 0.1).sin() * (y * 0.1).cos()).abs();
                 Complex64::new(value, 0.0)
             })
@@ -464,7 +463,7 @@ fn create_2d_image_signal(width: usize, height: usize) -> Array1<Complex64> {
 
 /// Create a scientific data signal for testing
 #[allow(dead_code)]
-fn create_scientific_data_signal(length: usize) -> Array1<Complex64> {
+fn create_scientific_data_signal(_length: usize) -> Array1<Complex64> {
     // Simulate scientific data with multiple frequency components and noise
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
@@ -472,9 +471,9 @@ fn create_scientific_data_signal(length: usize) -> Array1<Complex64> {
     let mut rng = StdRng::seed_from_u64(123);
 
     Array1::from_vec(
-        (0..length)
+        (0.._length)
             .map(|i| {
-                let t = i as f64 / length as f64;
+                let t = i as f64 / _length as f64;
 
                 // Multiple frequency components
                 let signal = (2.0 * PI * 5.0 * t).sin()
@@ -482,9 +481,9 @@ fn create_scientific_data_signal(length: usize) -> Array1<Complex64> {
                     + 0.3 * (2.0 * PI * 47.0 * t).cos();
 
                 // Add noise
-                let noise = rng.random_range(-0.1..0.1);
+                let noise = rng.gen_range(-0.1..0.1);
 
-                Complex64::new(signal + noise, 0.0)
+                Complex64::new(signal + noise..0.0)
             })
             .collect(),
     )
@@ -492,12 +491,12 @@ fn create_scientific_data_signal(length: usize) -> Array1<Complex64> {
 
 /// Create a signal for testing quantum optimization
 #[allow(dead_code)]
-fn create_quantum_test_signal(length: usize) -> Array1<Complex64> {
+fn create_quantum_test_signal(_length: usize) -> Array1<Complex64> {
     // Create a signal with quantum-like superposition characteristics
     Array1::from_vec(
-        (0..length)
+        (0.._length)
             .map(|i| {
-                let t = i as f64 / length as f64;
+                let t = i as f64 / _length as f64;
 
                 // Superposition of multiple states
                 let state1 = (2.0 * PI * 7.0 * t).sin();

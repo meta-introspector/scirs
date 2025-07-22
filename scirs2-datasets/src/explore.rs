@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
+use ndarray::ArrayView1;
 
 /// Configuration for dataset exploration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -240,8 +241,8 @@ pub struct DatasetExplorer {
 
 impl DatasetExplorer {
     /// Create a new dataset explorer
-    pub fn new(config: ExploreConfig) -> Self {
-        Self { config }
+    pub fn new(_config: ExploreConfig) -> Self {
+        Self { _config }
     }
 
     /// Create with default configuration
@@ -320,8 +321,7 @@ impl DatasetExplorer {
                 }
                 "5" => self.display_quality_assessment(&summary.quality_assessment)?,
                 "6" => self.export_summary(&summary)?,
-                "q" | "quit" | "exit" => break,
-                _ => println!("Invalid command. Please try again."),
+                "q" | "quit" | "exit" => break_ => println!("Invalid command. Please try again."),
             }
         }
 
@@ -459,8 +459,8 @@ impl DatasetExplorer {
         })
     }
 
-    fn percentile(sorted_values: &[f64], p: f64) -> Option<f64> {
-        if sorted_values.is_empty() {
+    fn percentile(_sorted_values: &[f64], p: f64) -> Option<f64> {
+        if _sorted_values.is_empty() {
             return None;
         }
 
@@ -491,8 +491,7 @@ impl DatasetExplorer {
             match unique_values.len() {
                 1 => InferredDataType::Unknown, // Constant
                 2 => InferredDataType::Binary,
-                3..=20 => InferredDataType::Categorical,
-                _ => InferredDataType::Numerical,
+                3..=20 => InferredDataType::Categorical_ =>, InferredDataType::Numerical,
             }
         } else {
             InferredDataType::Numerical
@@ -671,15 +670,14 @@ impl DatasetExplorer {
     }
 
     fn assess_quality(
-        &self,
-        _dataset: &Dataset,
+        &self_dataset: &Dataset,
         statistics: &FeatureStatistics,
         missing_data: &MissingDataAnalysis,
     ) -> Result<QualityAssessment> {
         let mut issues = Vec::new();
         let mut quality_score = 100.0;
 
-        // Check missing data
+        // Check missing _data
         if missing_data.missing_percentage > 5.0 {
             let severity = if missing_data.missing_percentage > 20.0 {
                 Severity::High
@@ -692,12 +690,12 @@ impl DatasetExplorer {
             issues.push(QualityIssue {
                 issue_type: IssueType::MissingData,
                 severity,
-                description: format!("{:.1}% of data is missing", missing_data.missing_percentage),
+                description: format!("{:.1}% of _data is missing", missing_data.missing_percentage),
                 affected_features: missing_data
                     .feature_missing
                     .iter()
-                    .filter(|(_, _, pct)| *pct > 5.0)
-                    .map(|(name, _, _)| name.clone())
+                    .filter(|(__, pct)| *pct > 5.0)
+                    .map(|(name__)| name.clone())
                     .collect(),
             });
 
@@ -1066,7 +1064,7 @@ impl DatasetExplorer {
         Ok(())
     }
 
-    fn display_feature_detail(&self, feature: &FeatureStats, _dataset: &Dataset) -> Result<()> {
+    fn display_feature_detail(&self, feature: &FeatureStats_dataset: &Dataset) -> Result<()> {
         println!("\n📊 Feature: {}", feature.name);
         println!("==================");
         println!("Type: {:?}", feature.data_type);
@@ -1176,32 +1174,32 @@ pub mod convenience {
     use super::*;
 
     /// Quick dataset summary with default configuration
-    pub fn quick_summary(dataset: &Dataset) -> Result<DatasetSummary> {
+    pub fn quick_summary(_dataset: &Dataset) -> Result<DatasetSummary> {
         let explorer = DatasetExplorer::default_config();
-        explorer.summarize(dataset)
+        explorer.summarize(_dataset)
     }
 
     /// Display basic dataset information
-    pub fn info(dataset: &Dataset) -> Result<()> {
+    pub fn info(_dataset: &Dataset) -> Result<()> {
         let explorer = DatasetExplorer::default_config();
-        let summary = explorer.summarize(dataset)?;
+        let summary = explorer.summarize(_dataset)?;
         explorer.display_basic_info(&summary.info);
         Ok(())
     }
 
     /// Start interactive exploration
-    pub fn explore(dataset: &Dataset) -> Result<()> {
+    pub fn explore(_dataset: &Dataset) -> Result<()> {
         let config = ExploreConfig {
             interactive: true,
             ..Default::default()
         };
 
         let explorer = DatasetExplorer::new(config);
-        explorer.interactive_explore(dataset)
+        explorer.interactive_explore(_dataset)
     }
 
     /// Export dataset summary to file
-    pub fn export_summary(dataset: &Dataset, format: OutputFormat, filename: &str) -> Result<()> {
+    pub fn export_summary(_dataset: &Dataset, format: OutputFormat, filename: &str) -> Result<()> {
         let config = ExploreConfig {
             output_format: format,
             ..Default::default()
@@ -1209,12 +1207,11 @@ pub mod convenience {
         let output_format = config.output_format;
 
         let explorer = DatasetExplorer::new(config);
-        let summary = explorer.summarize(dataset)?;
+        let summary = explorer.summarize(_dataset)?;
 
         let content = match output_format {
-            OutputFormat::Json => serde_json::to_string_pretty(&summary)
-                .map_err(|e| DatasetsError::SerdeError(e.to_string()))?,
-            _ => {
+            OutputFormat::Json =>, serde_json::to_string_pretty(&summary)
+                .map_err(|e| DatasetsError::SerdeError(e.to_string()))?_ => {
                 return Err(DatasetsError::InvalidFormat(
                     "Only JSON export is currently supported in convenience function".to_string(),
                 ))

@@ -41,7 +41,7 @@ pub struct ODEOptions {
 }
 
 impl Default for ODEOptions {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             method: ODEMethod::RK45,
             rtol: 1e-3,
@@ -56,45 +56,45 @@ impl Default for ODEOptions {
 
 impl ODEOptions {
     /// Create a new set of options with the given method.
-    pub fn new(method: ODEMethod) -> Self {
+    pub fn new(_method: ODEMethod) -> Self {
         Self {
-            method,
+            _method,
             ..Default::default()
         }
     }
 
     /// Set the relative tolerance.
-    pub fn with_rtol(mut self, rtol: f64) -> Self {
+    pub fn with_rtol(mut rtol: f64) -> Self {
         self.rtol = rtol;
         self
     }
 
     /// Set the absolute tolerance.
-    pub fn with_atol(mut self, atol: f64) -> Self {
+    pub fn with_atol(mut atol: f64) -> Self {
         self.atol = atol;
         self
     }
 
     /// Set the initial step size.
-    pub fn with_first_step(mut self, first_step: f64) -> Self {
+    pub fn with_first_step(mut first_step: f64) -> Self {
         self.first_step = Some(first_step);
         self
     }
 
     /// Set the maximum step size.
-    pub fn with_max_step(mut self, max_step: f64) -> Self {
+    pub fn with_max_step(mut max_step: f64) -> Self {
         self.max_step = Some(max_step);
         self
     }
 
     /// Set the maximum number of steps.
-    pub fn with_max_steps(mut self, max_steps: usize) -> Self {
+    pub fn with_max_steps(mut max_steps: usize) -> Self {
         self.max_steps = max_steps;
         self
     }
 
     /// Enable or disable dense output.
-    pub fn with_dense_output(mut self, dense_output: bool) -> Self {
+    pub fn with_dense_output(mut dense_output: bool) -> Self {
         self.dense_output = dense_output;
         self
     }

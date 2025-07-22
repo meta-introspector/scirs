@@ -582,7 +582,7 @@ fn projected_gradient_norm(x: &Array1<f64>, g: &Array1<f64>, bounds: Option<&Bou
 /// Projects the search direction to ensure we don't move in a direction that
 /// immediately violates the bounds.
 #[allow(dead_code)]
-fn project_direction(direction: &mut Array1<f64>, x: &Array1<f64>, bounds: Option<&Bounds>) {
+fn project_direction(_direction: &mut Array1<f64>, x: &Array1<f64>, bounds: Option<&Bounds>) {
     if bounds.is_none() {
         return; // No bounds, no projection needed
     }
@@ -594,16 +594,16 @@ fn project_direction(direction: &mut Array1<f64>, x: &Array1<f64>, bounds: Optio
 
         // Check if we're at a bound
         if let Some(lb) = bounds.lower[i] {
-            if (xi - lb).abs() < 1e-10 && direction[i] < 0.0 {
-                // At lower bound and moving in negative direction
-                direction[i] = 0.0;
+            if (xi - lb).abs() < 1e-10 && _direction[i] < 0.0 {
+                // At lower bound and moving in negative _direction
+                _direction[i] = 0.0;
             }
         }
 
         if let Some(ub) = bounds.upper[i] {
-            if (xi - ub).abs() < 1e-10 && direction[i] > 0.0 {
-                // At upper bound and moving in positive direction
-                direction[i] = 0.0;
+            if (xi - ub).abs() < 1e-10 && _direction[i] > 0.0 {
+                // At upper bound and moving in positive _direction
+                _direction[i] = 0.0;
             }
         }
     }
@@ -624,7 +624,7 @@ where
     S: Into<f64>,
 {
     // Get bounds on the line search parameter
-    let (a_min, a_max) = compute_line_bounds(x, direction, bounds);
+    let (a_min, a_max) = compute_line_bounds(_x, direction, bounds);
 
     // Use a more robust line search with bounds
     let c1 = 1e-4; // Sufficient decrease parameter (Armijo condition)
@@ -636,7 +636,7 @@ where
     // If bounds fully constrain movement, return that constrained step
     if a_max <= 0.0 || a_min >= a_max {
         alpha = if a_max > 0.0 { a_max } else { 0.0 };
-        let x_new = x + alpha * direction;
+        let x_new = _x + alpha * direction;
         *nfev += 1;
         let f_new = fun(&x_new.view()).into();
         return (alpha, f_new);
@@ -647,7 +647,7 @@ where
 
     // Function to evaluate a point on the line
     let mut f_line = |alpha: f64| {
-        let mut x_new = x + alpha * direction;
+        let mut x_new = _x + alpha * direction;
 
         // Project onto bounds
         if let Some(bounds) = bounds {

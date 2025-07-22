@@ -5,12 +5,14 @@
 //! and enhanced numerical stability assessments.
 
 use crate::error::SignalResult;
+use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
 use ndarray::Array1;
 use rand::Rng;
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(unused_imports)]
 /// Advanced-enhanced validation result with advanced metrics
 #[derive(Debug, Clone)]
 pub struct AdvancedEnhancedLombScargleValidationResult {
@@ -31,7 +33,7 @@ pub struct AdvancedEnhancedLombScargleValidationResult {
     /// Overall enhanced score (0-100)
     pub enhanced_overall_score: f64,
     /// Critical issues requiring attention
-    pub critical_issues: Vec<String>,
+    pub issues: Vec<String>,
     /// Performance recommendations
     pub recommendations: Vec<String>,
 }
@@ -139,8 +141,9 @@ pub fn run_advanced_enhanced_lombscargle_validation(
 ) -> SignalResult<AdvancedEnhancedLombScargleValidationResult> {
     println!("Running advanced-enhanced Lomb-Scargle validation in Advanced mode...");
 
-    let mut critical_issues = Vec::new();
+    let mut critical_issues: Vec<String> = Vec::new();
     let mut recommendations = Vec::new();
+    let mut issues: Vec<String> = Vec::new();
 
     // 1. Basic accuracy validation
     let basic_validation = validate_basic_accuracy()?;
@@ -183,7 +186,7 @@ pub fn run_advanced_enhanced_lombscargle_validation(
     }
 
     if statistical_robustness.chi_squared_pvalue < 0.05 {
-        critical_issues.push("Statistical distribution inconsistency detected".to_string());
+        issues.push("Statistical distribution inconsistency detected".to_string());
         recommendations.push("Validate normalization and statistical assumptions".to_string());
     }
 
@@ -206,7 +209,7 @@ pub fn run_advanced_enhanced_lombscargle_validation(
         signal_detection,
         false_alarm_analysis,
         enhanced_overall_score,
-        critical_issues,
+        issues,
         recommendations,
     })
 }
@@ -257,7 +260,7 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .unwrap();
 
         let detected_freq = freqs[max_idx];
@@ -438,7 +441,7 @@ fn analyze_performance_scaling() -> SignalResult<PerformanceScalingMetrics> {
             None,
             None,
         )?;
-        let elapsed = start.elapsed().as_millis() as f64;
+        let elapsed = start.elapsed().as_millis()  as f64;
         times.push(elapsed);
     }
 
@@ -506,13 +509,13 @@ fn validate_false_alarm_rates() -> SignalResult<FalseAlarmAnalysisMetrics> {
 // Helper functions for specific tests (simplified implementations)
 
 #[allow(dead_code)]
-fn find_peaks(data: &[f64], threshold_ratio: f64) -> Vec<usize> {
-    let max_val = data.iter().cloned().fold(0.0, f64::max);
+fn find_peaks(_data: &[f64], threshold_ratio: f64) -> Vec<usize> {
+    let max_val = _data.iter().cloned().fold(0.0, f64::max);
     let threshold = max_val * threshold_ratio;
 
     let mut peaks = Vec::new();
-    for i in 1..(data.len() - 1) {
-        if data[i] > threshold && data[i] > data[i - 1] && data[i] > data[i + 1] {
+    for i in 1..(_data.len() - 1) {
+        if _data[i] > threshold && _data[i] > _data[i - 1] && _data[i] > _data[i + 1] {
             peaks.push(i);
         }
     }
@@ -749,9 +752,9 @@ pub fn generate_advanced_enhanced_validation_report(
     ));
 
     // Issues and recommendations
-    if !result.critical_issues.is_empty() {
+    if !result.issues.is_empty() {
         report.push_str("\n--- Critical Issues ---\n");
-        for issue in &result.critical_issues {
+        for issue in &result.issues {
             report.push_str(&format!("⚠️  {}\n", issue));
         }
     }

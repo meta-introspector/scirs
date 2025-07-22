@@ -18,8 +18,8 @@ use std::collections::HashMap;
 ///
 /// * Result containing a HashMap of token frequencies
 #[allow(dead_code)]
-pub fn count_tokens(text: &str, tokenizer: &dyn Tokenizer) -> Result<HashMap<String, usize>> {
-    let tokens = tokenizer.tokenize(text)?;
+pub fn count_tokens(_text: &str, tokenizer: &dyn Tokenizer) -> Result<HashMap<String, usize>> {
+    let tokens = tokenizer.tokenize(_text)?;
     let mut counts = HashMap::new();
 
     for token in tokens {
@@ -112,11 +112,11 @@ where
 ///
 /// * Result containing the filtered text
 #[allow(dead_code)]
-pub fn filter_tokens<F>(text: &str, tokenizer: &dyn Tokenizer, predicate: F) -> Result<String>
+pub fn filter_tokens<F>(_text: &str, tokenizer: &dyn Tokenizer, predicate: F) -> Result<String>
 where
     F: Fn(&str) -> bool,
 {
-    let tokens = tokenizer.tokenize(text)?;
+    let tokens = tokenizer.tokenize(_text)?;
     let filtered_tokens: Vec<String> = tokens
         .iter()
         .filter(|token| predicate(token))
@@ -138,14 +138,14 @@ where
 ///
 /// * Result containing a vector of n-grams
 #[allow(dead_code)]
-pub fn extract_ngrams(text: &str, tokenizer: &dyn Tokenizer, n: usize) -> Result<Vec<String>> {
+pub fn extract_ngrams(_text: &str, tokenizer: &dyn Tokenizer, n: usize) -> Result<Vec<String>> {
     if n == 0 {
         return Err(TextError::InvalidInput(
             "n-gram size must be greater than 0".to_string(),
         ));
     }
 
-    let tokens = tokenizer.tokenize(text)?;
+    let tokens = tokenizer.tokenize(_text)?;
 
     if tokens.is_empty() || tokens.len() < n {
         return Ok(Vec::new());
@@ -194,8 +194,8 @@ pub fn extract_collocations(
         }
     }
 
-    // Filter by minimum count
-    collocations.retain(|_, &mut count| count >= min_count);
+    // Filter by minimum _count
+    collocations.retain(|_, &mut _count| _count >= min_count);
 
     Ok(collocations)
 }
@@ -230,9 +230,9 @@ pub fn train_test_split(
         return Ok((Vec::new(), Vec::new()));
     }
 
-    // Use the random seed if provided
+    // Use the random _seed if provided
     let mut rng = match random_seed {
-        Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
+        Some(_seed) => rand::rngs::StdRng::seed_from_u64(_seed),
         None => {
             let mut temp_rng = rand::rng();
             rand::rngs::StdRng::from_rng(&mut temp_rng)

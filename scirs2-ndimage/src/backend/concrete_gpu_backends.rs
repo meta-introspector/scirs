@@ -14,15 +14,15 @@ use num_traits::{Float, FromPrimitive};
 
 #[cfg(any(feature = "cuda", feature = "opencl"))]
 #[allow(unused_imports)]
-use crate::backend::gpu_acceleration_framework::{
+use crate::backend::gpu_acceleration__framework::{
     CompiledKernel, GpuBuffer, GpuBufferHandle, KernelHandle,
 };
 
 #[cfg(feature = "cuda")]
-use crate::backend::gpu_acceleration_framework::{CudaBufferHandle, CudaKernelHandle};
+use crate::backend::gpu_acceleration__framework::{CudaBufferHandle, CudaKernelHandle};
 
 #[cfg(feature = "opencl")]
-use crate::backend::gpu_acceleration_framework::{OpenCLBufferHandle, OpenCLKernelHandle};
+use crate::backend::gpu_acceleration__framework::{OpenCLBufferHandle, OpenCLKernelHandle};
 use crate::error::{NdimageError, NdimageResult};
 
 /// CUDA backend implementation
@@ -331,16 +331,16 @@ impl CudaBackend {
         Ok(1) // Assume 1 device for testing
     }
 
-    fn create_context(device_id: i32) -> NdimageResult<CudaContext> {
+    fn create_context(_device_id: i32) -> NdimageResult<CudaContext> {
         // Placeholder: would initialize CUDA context and stream
         Ok(CudaContext {
             context: 0x1000, // Dummy context handle
-            device_id,
+            _device_id,
             stream: 0x2000, // Dummy stream handle
         })
     }
 
-    fn get_device_properties(device_id: i32) -> NdimageResult<CudaDeviceProperties> {
+    fn get_device_properties(_device_id: i32) -> NdimageResult<CudaDeviceProperties> {
         // Placeholder: would query actual device properties
         Ok(CudaDeviceProperties {
             name: "GeForce RTX 4090".to_string(),
@@ -641,7 +641,7 @@ impl OpenCLBackend {
         })
     }
 
-    fn get_device_properties(context: &OpenCLContext) -> NdimageResult<OpenCLDeviceProperties> {
+    fn get_device_properties(_context: &OpenCLContext) -> NdimageResult<OpenCLDeviceProperties> {
         // Placeholder: would query actual OpenCL device properties
         Ok(OpenCLDeviceProperties {
             name: "AMD Radeon RX 7900 XTX".to_string(),
@@ -727,9 +727,7 @@ impl OpenCLBackend {
         // OpenCL kernel source for 2D convolution
         r#"
 __kernel void convolution_2d(
-    __global const float* input,
-    __global const float* kernel,
-    __global float* output,
+    __global const float* input__global const float* kernel__global float* output,
     const int input_width,
     const int input_height,
     const int kernel_width,

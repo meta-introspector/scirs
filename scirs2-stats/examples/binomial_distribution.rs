@@ -1,5 +1,6 @@
-use scirs2_stats::distributions::binomial::Binomial;
+use scirs2__stats::distributions::binomial::Binomial;
 use std::error::Error;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {

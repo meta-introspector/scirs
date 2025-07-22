@@ -141,7 +141,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> CurriculumManager<A, D> {
         strategy: CurriculumStrategy,
         importance_strategy: ImportanceWeightingStrategy,
     ) -> Self {
-        let initial_difficulty = match &strategy {
+        let initial_difficulty = match &_strategy {
             CurriculumStrategy::Linear {
                 start_difficulty, ..
             } => *start_difficulty,
@@ -155,21 +155,20 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> CurriculumManager<A, D> {
         };
 
         Self {
-            strategy,
+            _strategy,
             current_difficulty: initial_difficulty,
             step_count: 0,
             performance_history: VecDeque::new(),
             sample_difficulties: HashMap::new(),
             importance_strategy,
             sample_weights: HashMap::new(),
-            adversarial_config: None,
-            _phantom: PhantomData,
+            adversarial_config: None, _phantom: PhantomData,
         }
     }
 
     /// Enable adversarial training
     pub fn enable_adversarial_training(&mut self, config: AdversarialConfig<A>) {
-        self.adversarial_config = Some(config);
+        self.adversarial_config = Some(_config);
     }
 
     /// Disable adversarial training
@@ -366,8 +365,8 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> CurriculumManager<A, D> {
             .fold(A::zero(), |acc, &w| acc + w);
 
         for (i, &sample_id) in sample_ids.iter().enumerate() {
-            let weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
-            self.sample_weights.insert(sample_id, weight);
+            let _weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
+            self.sample_weights.insert(sample_id_weight);
         }
 
         Ok(())
@@ -401,8 +400,8 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> CurriculumManager<A, D> {
             .fold(A::zero(), |acc, &w| acc + w);
 
         for (i, &sample_id) in sample_ids.iter().enumerate() {
-            let weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
-            self.sample_weights.insert(sample_id, weight);
+            let _weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
+            self.sample_weights.insert(sample_id_weight);
         }
 
         Ok(())
@@ -424,7 +423,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> CurriculumManager<A, D> {
             .iter()
             .fold(A::neg_infinity(), |a, &b| A::max(a, b));
 
-        // Compute softmax weights (higher uncertainty = higher weight)
+        // Compute softmax weights (higher uncertainty = higher _weight)
         let mut unnormalized_weights = Vec::new();
         for &uncertainty in uncertainties {
             let normalized_uncertainty = (uncertainty - max_uncertainty) / temp;
@@ -436,8 +435,8 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> CurriculumManager<A, D> {
             .fold(A::zero(), |acc, &w| acc + w);
 
         for (i, &sample_id) in sample_ids.iter().enumerate() {
-            let weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
-            self.sample_weights.insert(sample_id, weight);
+            let _weight = A::max(min_w, unnormalized_weights[i] / sum_weights);
+            self.sample_weights.insert(sample_id_weight);
         }
 
         Ok(())
@@ -688,16 +687,15 @@ pub struct AdaptiveCurriculum<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> AdaptiveCurriculum<A, D> {
     /// Create a new adaptive curriculum
-    pub fn new(curricula: Vec<CurriculumManager<A, D>>, switch_threshold: A) -> Self {
-        let num_curricula = curricula.len();
+    pub fn new(_curricula: Vec<CurriculumManager<A, D>>, switch_threshold: A) -> Self {
+        let num_curricula = _curricula.len();
         Self {
-            curricula,
+            _curricula,
             active_curriculum: 0,
             curriculum_performance: vec![VecDeque::new(); num_curricula],
             switch_threshold,
             min_steps_before_switch: 100,
-            steps_since_switch: 0,
-            _phantom: PhantomData,
+            steps_since_switch: 0, _phantom: PhantomData,
         }
     }
 
@@ -723,7 +721,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> AdaptiveCurriculum<A, D> {
         let mut best_performance = current_performance;
 
         // Find best performing curriculum
-        for (i, _) in self.curricula.iter().enumerate() {
+        for (i_) in self.curricula.iter().enumerate() {
             if i != self.active_curriculum {
                 let perf = self.get_average_performance(i);
                 if perf > best_performance + self.switch_threshold {

@@ -7,7 +7,7 @@
 //! The CSV format is:
 //! x, j₀(x), j₁(x), j₂(x), j₃(x), y₀(x), y₁(x), j₀_scaled(x), j₁_scaled(x)
 
-use scirs2_special::bessel::spherical::{spherical_jn, spherical_jn_scaled, spherical_yn};
+use scirs2__special::bessel::spherical::{spherical_jn, spherical_jn_scaled, spherical_yn};
 use std::fs::File;
 use std::io::{self, Write};
 
@@ -53,7 +53,7 @@ fn main() -> io::Result<()> {
 }
 
 #[allow(dead_code)]
-fn write_bessel_values(file: &mut File, x: f64) -> io::Result<()> {
+fn write_bessel_values(_file: &mut File, x: f64) -> io::Result<()> {
     // Calculate regular spherical Bessel functions
     let j0 = spherical_jn(0, x);
     let j1 = spherical_jn(1, x);
@@ -68,7 +68,7 @@ fn write_bessel_values(file: &mut File, x: f64) -> io::Result<()> {
 
     // Write row to CSV
     writeln!(
-        file,
+        _file,
         "{:.6},{:.10},{:.10},{:.10},{:.10},{:.10},{:.10},{:.10},{:.10}",
         x, j0, j1, j2, j3, y0, y1, j0_scaled, j1_scaled
     )

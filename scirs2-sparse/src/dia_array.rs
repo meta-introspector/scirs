@@ -8,11 +8,11 @@ use num_traits::Float;
 use std::fmt::{self, Debug};
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::coo_array::CooArray;
-use crate::csr_array::CsrArray;
-use crate::dok_array::DokArray;
+use crate::coo__array::CooArray;
+use crate::csr__array::CsrArray;
+use crate::dok__array::DokArray;
 use crate::error::{SparseError, SparseResult};
-use crate::lil_array::LilArray;
+use crate::lil__array::LilArray;
 use crate::sparray::{SparseArray, SparseSum};
 
 /// DIA Array format
@@ -76,8 +76,8 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2_sparse::dia_array::DiaArray;
-    /// use scirs2_sparse::sparray::SparseArray;
+    /// use scirs2__sparse::dia_array::DiaArray;
+    /// use scirs2__sparse::sparray::SparseArray;
     /// use ndarray::Array1;
     ///
     /// // Create a 3x3 sparse array with main diagonal and upper diagonal
@@ -133,11 +133,11 @@ where
     /// # Returns
     ///
     /// * A new empty DIA array
-    pub fn empty(shape: (usize, usize)) -> Self {
+    pub fn empty(_shape: (usize, usize)) -> Self {
         DiaArray {
             data: Vec::new(),
             offsets: Vec::new(),
-            shape,
+            _shape,
         }
     }
 
@@ -560,9 +560,9 @@ where
                     .cloned()
                     .zip(self.data.drain(..))
                     .collect();
-                offset_data.sort_by_key(|&(offset, _)| offset);
+                offset_data.sort_by_key(|&(offset_)| offset);
 
-                self.offsets = offset_data.iter().map(|&(offset, _)| offset).collect();
+                self.offsets = offset_data.iter().map(|&(offset_)| offset).collect();
                 self.data = offset_data.into_iter().map(|(_, data)| data).collect();
 
                 // Get the index of the newly added diagonal
@@ -617,9 +617,9 @@ where
             .cloned()
             .zip(self.data.drain(..))
             .collect();
-        offset_data.sort_by_key(|&(offset, _)| offset);
+        offset_data.sort_by_key(|&(offset_)| offset);
 
-        self.offsets = offset_data.iter().map(|&(offset, _)| offset).collect();
+        self.offsets = offset_data.iter().map(|&(offset_)| offset).collect();
         self.data = offset_data.into_iter().map(|(_, data)| data).collect();
     }
 

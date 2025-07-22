@@ -60,8 +60,8 @@ fn generate_anisotropic_data() -> (Array2<f64>, Array1<f64>) {
 
     // Create points with non-uniform spacing
     for i in 0..n_samples {
-        points[[i, 0]] = rng.random_range(0.0, 10.0);
-        points[[i, 1]] = rng.random_range(0.0, 10.0);
+        points[[i, 0]] = rng.gen_range(0.0..10.0);
+        points[[i, 1]] = rng.gen_range(0.0..10.0);
 
         // Generate values with anisotropic spatial correlation
         let x = points[[i, 0]];
@@ -69,7 +69,7 @@ fn generate_anisotropic_data() -> (Array2<f64>, Array1<f64>) {
 
         // Different length scales in x and y
         let base_value = 5.0 * f64::sin(x / 3.0) * f64::cos(y / 1.5);
-        let noise = rng.random_range(-0.5, 0.5);
+        let noise = rng.gen_range(-0.5..0.5);
 
         values[i] = base_value + noise;
     }
@@ -79,15 +79,15 @@ fn generate_anisotropic_data() -> (Array2<f64>, Array1<f64>) {
 
 /// Generate a grid of points for prediction
 #[allow(dead_code)]
-fn _generate_prediction_grid(n_grid: usize) -> Array2<f64> {
-    let grid_size = n_grid * n_grid;
+fn _generate_prediction_grid(_n_grid: usize) -> Array2<f64> {
+    let grid_size = _n_grid * _n_grid;
     let mut grid_points = Array2::zeros((grid_size, 2));
 
-    let step = 10.0 / (n_grid as f64 - 1.0);
+    let step = 10.0 / (_n_grid as f64 - 1.0);
 
-    for i in 0..n_grid {
-        for j in 0..n_grid {
-            let idx = i * n_grid + j;
+    for i in 0.._n_grid {
+        for j in 0.._n_grid {
+            let idx = i * _n_grid + j;
             grid_points[[idx, 0]] = i as f64 * step;
             grid_points[[idx, 1]] = j as f64 * step;
         }
@@ -98,8 +98,7 @@ fn _generate_prediction_grid(n_grid: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn anisotropic_kriging_example(
-    _points: &Array2<f64>,
-    _values: &Array1<f64>,
+    _points: &Array2<f64>, _values: &Array1<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Skip this example as EnhancedKrigingBuilder is not fully implemented
     println!("  EnhancedKrigingBuilder is not fully implemented in this version");
@@ -108,8 +107,7 @@ fn anisotropic_kriging_example(
 
 #[allow(dead_code)]
 fn universal_kriging_example(
-    _points: &Array2<f64>,
-    _values: &Array1<f64>,
+    _points: &Array2<f64>, _values: &Array1<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Skip this example as EnhancedKrigingBuilder is not fully implemented
     println!("  EnhancedKrigingBuilder is not fully implemented in this version");
@@ -118,8 +116,7 @@ fn universal_kriging_example(
 
 #[allow(dead_code)]
 fn bayesian_kriging_example(
-    _points: &Array2<f64>,
-    _values: &Array1<f64>,
+    _points: &Array2<f64>, _values: &Array1<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Skip this example as BayesianKrigingBuilder is not fully implemented
     println!("  BayesianKrigingBuilder is not fully implemented in this version");
@@ -128,8 +125,7 @@ fn bayesian_kriging_example(
 
 #[allow(dead_code)]
 fn model_comparison_example(
-    _points: &Array2<f64>,
-    _values: &Array1<f64>,
+    _points: &Array2<f64>, _values: &Array1<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Skip this example as model comparison is not fully implemented
     println!("  Model comparison is not fully implemented in this version");
@@ -158,8 +154,8 @@ impl _ArrayStats for ArrayView1<'_, f64> {
 
 /// Print quantiles from sample array
 #[allow(dead_code)]
-fn _print_quantiles(samples: &ArrayView1<f64>) {
-    let mut sorted: Vec<f64> = samples.iter().cloned().collect();
+fn _print_quantiles(_samples: &ArrayView1<f64>) {
+    let mut sorted: Vec<f64> = _samples.iter().cloned().collect();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let n = sorted.len();

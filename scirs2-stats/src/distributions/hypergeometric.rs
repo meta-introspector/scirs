@@ -8,7 +8,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_stats::distributions;
+//! use scirs2__stats::distributions;
 //!
 //! // Create a hypergeometric distribution
 //! // N = 20 (population size)
@@ -54,6 +54,7 @@ use num_traits::{cast::NumCast, Float, FloatConst};
 use rand::rng;
 use scirs2_core::Rng;
 use std::cmp;
+use statrs::statistics::Statistics;
 
 /// Hypergeometric distribution
 ///
@@ -93,9 +94,9 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
     /// - if n_population, n_success, or n_draws is 0
     /// - if n_success > n_population
     /// - if n_draws > n_population
-    pub fn new(n_population: usize, n_success: usize, n_draws: usize, loc: F) -> StatsResult<Self> {
+    pub fn new(_n_population: usize, n_success: usize, n_draws: usize, loc: F) -> StatsResult<Self> {
         // Check parameter validity
-        if n_population == 0 {
+        if _n_population == 0 {
             return Err(StatsError::InvalidArgument(
                 "Population size must be positive".to_string(),
             ));
@@ -103,13 +104,13 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
 
         if n_success > n_population {
             return Err(StatsError::InvalidArgument(
-                "Number of success states cannot exceed population size".to_string(),
+                "Number of _success states cannot exceed _population size".to_string(),
             ));
         }
 
         if n_draws > n_population {
             return Err(StatsError::InvalidArgument(
-                "Number of draws cannot exceed population size".to_string(),
+                "Number of _draws cannot exceed _population size".to_string(),
             ));
         }
 
@@ -289,7 +290,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
 
 /// Computes the natural logarithm of the binomial coefficient "n choose k"
 #[allow(dead_code)]
-fn ln_binomial(n: usize, k: usize) -> f64 {
+fn ln_binomial(n: usize..k: usize) -> f64 {
     if k > n {
         return f64::NEG_INFINITY;
     }
@@ -328,7 +329,7 @@ fn ln_binomial(n: usize, k: usize) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2_stats::distributions;
+/// use scirs2__stats::distributions;
 ///
 /// // Create a hypergeometric distribution
 /// // N = 20 (population size)

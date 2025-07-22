@@ -16,7 +16,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_integrate::scheduling::{WorkStealingPool, Task};
+//! use scirs2__integrate::scheduling::{WorkStealingPool, Task};
 //!
 //! // Create work-stealing pool with 4 threads
 //! let pool = WorkStealingPool::new(4);
@@ -39,7 +39,7 @@ pub trait WorkStealingTask: Send + 'static {
     type Output: Send;
 
     /// Execute the task
-    fn execute(self) -> Self::Output;
+    fn execute(&mut self) -> Self::Output;
 
     /// Estimate computational cost (for load balancing)
     fn estimated_cost(&self) -> f64 {
@@ -47,12 +47,12 @@ pub trait WorkStealingTask: Send + 'static {
     }
 
     /// Check if task can be subdivided for better load balancing
-    fn can_subdivide(&self) -> bool {
+    fn can_subdivide() -> bool {
         false
     }
 
     /// Subdivide task into smaller tasks (if possible)
-    fn subdivide(self) -> Vec<Box<dyn WorkStealingTask<Output = Self::Output>>>
+    fn subdivide() -> Vec<Box<dyn WorkStealingTask<Output = Self::Output>>>
     where
         Self: Sized,
     {
@@ -76,17 +76,17 @@ where
     R: Send + 'static,
 {
     /// Create a new task from closure
-    pub fn new(func: F) -> Self {
+    pub fn new(_func: F) -> Self {
         Self {
-            func: Some(func),
+            _func: Some(_func),
             cost_estimate: 1.0,
         }
     }
 
     /// Create task with cost estimate
-    pub fn with_cost(func: F, cost: f64) -> Self {
+    pub fn with_cost(_func: F, cost: f64) -> Self {
         Self {
-            func: Some(func),
+            _func: Some(_func),
             cost_estimate: cost,
         }
     }
@@ -99,7 +99,7 @@ where
 {
     type Output = R;
 
-    fn execute(mut self) -> Self::Output {
+    fn execute(&mut self) -> Self::Output {
         (self.func.take().unwrap())()
     }
 
@@ -123,12 +123,12 @@ impl<T: WorkStealingTask> WorkStealingDeque<T> {
         }
     }
 
-    fn push_back(&mut self, task: T) {
-        self.total_cost += task.estimated_cost();
-        self.items.push_back(task);
+    fn push_back(_task: T) {
+        self.total_cost += _task.estimated_cost();
+        self.items.push_back(_task);
     }
 
-    fn pop_back(&mut self) -> Option<T> {
+    fn pop_back(&self) -> Option<T> {
         if let Some(task) = self.items.pop_back() {
             self.total_cost -= task.estimated_cost();
             Some(task)
@@ -137,7 +137,7 @@ impl<T: WorkStealingTask> WorkStealingDeque<T> {
         }
     }
 
-    fn steal_front(&mut self) -> Option<T> {
+    fn steal_front(&self) -> Option<T> {
         if let Some(task) = self.items.pop_front() {
             self.total_cost -= task.estimated_cost();
             Some(task)
@@ -155,7 +155,7 @@ impl<T: WorkStealingTask> WorkStealingDeque<T> {
         self.items.is_empty()
     }
 
-    fn total_cost(&self) -> f64 {
+    fn total_cost() -> f64 {
         self.total_cost
     }
 }
@@ -218,11 +218,11 @@ pub struct PoolStatistics {
 
 impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
     /// Create new work-stealing pool with specified number of threads
-    pub fn new(num_threads: usize) -> Self {
-        let num_threads = num_threads.max(1);
+    pub fn new(_num_threads: usize) -> Self {
+        let _num_threads = _num_threads.max(1);
 
         let worker_states = Arc::new(
-            (0..num_threads)
+            (0.._num_threads)
                 .map(|_| WorkerState::new())
                 .collect::<Vec<_>>(),
         );
@@ -234,7 +234,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
         let cv_mutex = Arc::new(Mutex::new(()));
         let stats = Arc::new(Mutex::new(PoolStatistics::default()));
 
-        let workers = (0..num_threads)
+        let workers = (0.._num_threads)
             .map(|worker_id| {
                 let worker_states = Arc::clone(&worker_states);
                 let global_queue = Arc::clone(&global_queue);
@@ -272,9 +272,9 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
     }
 
     /// Submit a single task for execution
-    pub fn submit(&self, task: T) {
+    pub fn submit(_task: T) {
         let mut global_queue = self.global_queue.lock().unwrap();
-        global_queue.push_back(task);
+        global_queue.push_back(_task);
         drop(global_queue);
 
         // Notify workers
@@ -282,9 +282,9 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
     }
 
     /// Submit multiple tasks for execution
-    pub fn submit_all(&self, tasks: Vec<T>) {
+    pub fn submit_all(_tasks: Vec<T>) {
         let mut global_queue = self.global_queue.lock().unwrap();
-        for task in tasks {
+        for task in _tasks {
             global_queue.push_back(task);
         }
         drop(global_queue);
@@ -317,7 +317,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
     }
 
     /// Get current pool statistics
-    pub fn statistics(&self) -> PoolStatistics {
+    pub fn statistics() -> PoolStatistics {
         let mut stats = self.stats.lock().unwrap();
 
         // Update statistics from worker states
@@ -371,10 +371,10 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
         let my_state = &worker_states[worker_id];
 
         while !shutdown.load(Ordering::Relaxed) {
-            // Try to get work from local queue first
+            // Try to get work from local _queue first
             let mut task_opt = my_state.local_queue.lock().unwrap().pop_back();
 
-            // If no local work, try global queue
+            // If no local work, try global _queue
             if task_opt.is_none() {
                 task_opt = global_queue.lock().unwrap().pop_back();
             }
@@ -483,12 +483,11 @@ where
     Func: Fn(F) -> F + Send + Clone + 'static,
 {
     /// Create new adaptive integration task
-    pub fn new(integrand: Func, interval: (F, F), tolerance: F, max_depth: usize) -> Self {
+    pub fn new(_integrand: Func, interval: (F, F), tolerance: F, max_depth: usize) -> Self {
         Self {
-            integrand,
+            _integrand,
             interval,
-            tolerance,
-            depth: 0,
+            tolerance_depth: 0,
             max_depth,
         }
     }
@@ -539,7 +538,7 @@ where
 {
     type Output = IntegrateResult<F>;
 
-    fn execute(self) -> Self::Output {
+    fn execute(&mut self) -> Self::Output {
         let result = self.integrate_region();
         Ok(result)
     }
@@ -553,7 +552,7 @@ where
         self.depth < self.max_depth && self.estimate_error() > self.tolerance
     }
 
-    fn subdivide(self) -> Vec<Box<dyn WorkStealingTask<Output = Self::Output>>> {
+    fn subdivide(&self) -> Vec<Box<dyn WorkStealingTask<Output = Self::Output>>> {
         let (a, b) = self.interval;
         let mid = (a + b) / F::from(2.0).unwrap();
 
@@ -584,7 +583,6 @@ where
 mod tests {
     use super::*;
     use std::sync::atomic::AtomicI32;
-    use std::time::Duration;
 
     #[test]
     fn test_work_stealing_pool_basic() {

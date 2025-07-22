@@ -14,8 +14,8 @@
 //! Run with: cargo run --example interactive_proof_explorer
 
 use ndarray::{Array1, Array2};
-use num_complex::Complex64;
-use scirs2_special::*;
+use num__complex::Complex64;
+use scirs2__special::*;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::io::{self, Write};
@@ -898,8 +898,7 @@ impl ProofExplorer {
                     1 => 1.0 / 12.0,
                     2 => -1.0 / 360.0,
                     3 => 1.0 / 1260.0,
-                    4 => -1.0 / 1680.0,
-                    _ => 0.0,
+                    4 => -1.0 / 1680.0_ => 0.0,
                 };
 
                 sum += bernoulli_coeff / x.powi(2 * k as i32 - 1);
@@ -1040,7 +1039,7 @@ impl ProofExplorer {
         println!("🏆 Congratulations! You have successfully completed:");
         println!("📜 {}", proof.title);
         println!(
-            "⏱️ Total time: {:.1} minutes",
+            "⏱️ Total _time: {:.1} minutes",
             total_time.as_secs_f64() / 60.0
         );
         println!("🎯 Mathematical level: {:?}", proof.mathematical_level);
@@ -1213,8 +1212,7 @@ impl ProofExplorer {
             "2" => self.show_complex_analysis_reference()?,
             "3" => self.show_asymptotic_methods_reference()?,
             "4" => self.show_number_theory_reference()?,
-            "5" => self.show_historical_reference()?,
-            _ => return Ok(()),
+            "5" => self.show_historical_reference()?_ => return Ok(()),
         }
 
         Ok(())
@@ -1567,8 +1565,8 @@ fn wait_for_user_input() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
-    print!("{}", prompt);
+fn get_user_input(_prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    print!("{}", _prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

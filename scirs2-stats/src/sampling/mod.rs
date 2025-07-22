@@ -9,6 +9,7 @@ use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::Float;
 use rand::prelude::*;
 use rand::SeedableRng;
+use statrs::statistics::Statistics;
 
 /// Distribution trait for statistical distributions that can be sampled
 pub trait SampleableDistribution<T> {
@@ -31,7 +32,7 @@ pub trait SampleableDistribution<T> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::{sampling, distributions};
+/// use scirs2__stats::{sampling, distributions};
 ///
 /// // Create a normal distribution
 /// let normal = distributions::norm(0.0f64, 1.0).unwrap();
@@ -41,7 +42,7 @@ pub trait SampleableDistribution<T> {
 /// assert_eq!(samples.len(), 100);
 /// ```
 #[allow(dead_code)]
-pub fn sample_distribution<T, D>(dist: &D, size: usize) -> StatsResult<Array1<T>>
+pub fn sample_distribution<T, D>(_dist: &D, size: usize) -> StatsResult<Array1<T>>
 where
     T: Float + std::iter::Sum<T> + std::ops::Div<Output = T>,
     D: SampleableDistribution<T>,
@@ -52,7 +53,7 @@ where
         ));
     }
 
-    let samples = dist.rvs(size)?;
+    let samples = _dist.rvs(size)?;
     Ok(Array1::from_vec(samples))
 }
 
@@ -72,7 +73,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::sampling;
+/// use scirs2__stats::sampling;
 ///
 /// // Create an array
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -108,7 +109,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::sampling;
+/// use scirs2__stats::sampling;
 ///
 /// // Create an array
 /// let data = array![1, 2, 3, 4, 5];
@@ -142,7 +143,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::sampling;
+/// use scirs2__stats::sampling;
 ///
 /// // Create an array and group labels
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
@@ -194,7 +195,7 @@ where
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut rng = scirs2_core::rng();
+            let mut rng = rand::rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -215,7 +216,7 @@ where
         // Sample without replacement using Fisher-Yates shuffle
         let mut indices_copy = indices.clone();
         for i in 0..size {
-            let j = rng.random_range(i..indices_copy.len());
+            let j = rng.gen_range(i..indices_copy.len());
             indices_copy.swap(i, j);
             result.push(indices_copy[i]);
         }
@@ -242,7 +243,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::sampling;
+/// use scirs2__stats::sampling;
 ///
 /// // Create an array and group labels
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
@@ -271,7 +272,7 @@ where
 
     if n_resamples == 0 {
         return Err(StatsError::InvalidArgument(
-            "Number of resamples must be positive".to_string(),
+            "Number of _resamples must be positive".to_string(),
         ));
     }
 
@@ -285,7 +286,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut rng = scirs2_core::rng();
+            let mut rng = rand::rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -299,9 +300,9 @@ where
         // Sample from each group proportionally
         for (_, indices) in group_indices.iter() {
             for _ in 0..indices.len() {
-                let random_idx = rng.random_range(0..indices.len());
+                let random_idx = rng.gen_range(0..indices.len());
                 let selected_idx = indices[random_idx];
-                samples[[resample_idx, sample_idx]] = x[selected_idx];
+                samples[[resample_idx..sample_idx]] = x[selected_idx];
                 sample_idx += 1;
             }
         }
@@ -329,7 +330,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::sampling;
+/// use scirs2__stats::sampling;
 ///
 /// // Create a time series
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -357,19 +358,19 @@ where
 
     if block_size == 0 {
         return Err(StatsError::InvalidArgument(
-            "Block size must be positive".to_string(),
+            "Block _size must be positive".to_string(),
         ));
     }
 
     if block_size > x.len() {
         return Err(StatsError::InvalidArgument(
-            "Block size cannot exceed array length".to_string(),
+            "Block _size cannot exceed array length".to_string(),
         ));
     }
 
     if n_resamples == 0 {
         return Err(StatsError::InvalidArgument(
-            "Number of resamples must be positive".to_string(),
+            "Number of _resamples must be positive".to_string(),
         ));
     }
 
@@ -377,7 +378,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut rng = scirs2_core::rng();
+            let mut rng = rand::rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -398,7 +399,7 @@ where
         // Fill the resample with blocks
         while sample_pos < data_len {
             // Choose a random starting position for the block
-            let start_pos = rng.random_range(0..max_start_pos);
+            let start_pos = rng.gen_range(0..max_start_pos);
 
             // Copy the block (with wrapping if circular)
             for block_offset in 0..block_size {
@@ -412,7 +413,7 @@ where
                     start_pos + block_offset
                 };
 
-                samples[[resample_idx, sample_pos]] = x[data_idx];
+                samples[[resample_idx..sample_pos]] = x[data_idx];
                 sample_pos += 1;
             }
         }
@@ -452,7 +453,7 @@ where
 
     if block_size == 0 || block_size > x.len() {
         return Err(StatsError::InvalidArgument(
-            "Block size must be positive and not exceed array length".to_string(),
+            "Block _size must be positive and not exceed array length".to_string(),
         ));
     }
 
@@ -470,7 +471,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut rng = scirs2_core::rng();
+            let mut rng = rand::rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -490,7 +491,7 @@ where
             }
 
             // Choose a random block
-            let block_idx = rng.random_range(0..blocks.len());
+            let block_idx = rng.gen_range(0..blocks.len());
             let selected_block = &blocks[block_idx];
 
             // Copy elements from the block
@@ -498,7 +499,7 @@ where
                 if sample_pos >= data_len {
                     break;
                 }
-                samples[[resample_idx, sample_pos]] = value;
+                samples[[resample_idx..sample_pos]] = value;
                 sample_pos += 1;
             }
         }
@@ -544,7 +545,7 @@ where
 
     if n_resamples == 0 {
         return Err(StatsError::InvalidArgument(
-            "Number of resamples must be positive".to_string(),
+            "Number of _resamples must be positive".to_string(),
         ));
     }
 
@@ -552,7 +553,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
-            let mut rng = scirs2_core::rng();
+            let mut rng = rand::rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -566,12 +567,12 @@ where
 
         while sample_pos < data_len {
             // Choose a random starting position
-            let start_pos = rng.random_range(0..data_len);
+            let start_pos = rng.gen_range(0..data_len);
             let mut current_pos = start_pos;
 
             // Generate a block with geometric length
             loop {
-                samples[[resample_idx, sample_pos]] = x[current_pos];
+                samples[[resample_idx..sample_pos]] = x[current_pos];
                 sample_pos += 1;
 
                 if sample_pos >= data_len {
@@ -643,7 +644,7 @@ where
     let mut rng = match seed {
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value + 1),
         None => {
-            let mut rng = scirs2_core::rng();
+            let mut rng = rand::rng();
             let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
@@ -711,7 +712,7 @@ where
 {
     if confidence_level <= 0.0 || confidence_level >= 1.0 {
         return Err(StatsError::InvalidArgument(
-            "Confidence level must be between 0 and 1".to_string(),
+            "Confidence _level must be between 0 and 1".to_string(),
         ));
     }
 

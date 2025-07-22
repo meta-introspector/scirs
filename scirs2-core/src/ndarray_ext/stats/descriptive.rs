@@ -85,7 +85,7 @@ where
                     for j in 0..cols {
                         sum = sum + array[[i, j]];
                     }
-                    result[i] = sum / n;
+                    result[0] = sum / n;
                 }
 
                 Ok(result)
@@ -205,7 +205,7 @@ where
                         row_values[row_values.len() / 2]
                     };
 
-                    result[i] = median_value;
+                    result[0] = median_value;
                 }
 
                 Ok(result)
@@ -371,7 +371,7 @@ where
                     }
 
                     let divisor = T::from_usize(cols - ddof).unwrap();
-                    result[i] = sum_sq_diff / divisor;
+                    result[0] = sum_sq_diff / divisor;
                 }
 
                 Ok(result)
@@ -623,7 +623,7 @@ where
                         for j in 0..cols {
                             sum = sum + array[[i, j]];
                         }
-                        result[i] = sum;
+                        result[0] = sum;
                     }
 
                     Ok(result)
@@ -806,12 +806,12 @@ where
                         let idx_high = pos.ceil() as usize;
 
                         if idx_low == idx_high {
-                            result[i] = row_values[idx_low];
+                            result[0] = row_values[idx_low];
                         } else {
                             let weight_high = pos - (idx_low as f64);
                             let weight_low = 1.0 - weight_high;
 
-                            result[i] = row_values[idx_low] * T::from_f64(weight_low).unwrap()
+                            result[0] = row_values[idx_low] * T::from_f64(weight_low).unwrap()
                                 + row_values[idx_high] * T::from_f64(weight_high).unwrap();
                         }
                     }

@@ -4,8 +4,8 @@
 //! stability of automatic differentiation computations across various scenarios,
 //! precision levels, and edge cases.
 
-use super::numerical_analysis::{ConditionNumberAnalysis, ErrorPropagationAnalysis};
-use super::stability_metrics::{
+use super::numerical__analysis::{ConditionNumberAnalysis, ErrorPropagationAnalysis};
+use super::stability__metrics::{
     compute_forward_stability, BackwardStabilityMetrics, ForwardStabilityMetrics, StabilityGrade,
 };
 use super::StabilityError;
@@ -53,9 +53,9 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: TestConfig) -> Self {
+    pub fn with_config(_config: TestConfig) -> Self {
         Self {
-            config,
+            _config,
             results: TestResults::<F>::new(),
             scenarios: Vec::new(),
             benchmarks: Vec::new(),
@@ -77,8 +77,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
 
     /// Run all stability tests with graph context
     pub fn run_all_tests_with_context(
-        &mut self,
-        _graph: &'a mut crate::Context<F>,
+        &mut self_graph: &'a mut crate::Context<F>,
     ) -> Result<TestSummary, StabilityError> {
         let start_time = Instant::now();
 
@@ -426,8 +425,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     /// Run precision sensitivity tests
     #[allow(dead_code)]
     fn run_precision_sensitivity_tests(
-        &mut self,
-        _graph: &'a mut crate::Context<F>,
+        &mut self_graph: &'a mut crate::Context<F>,
     ) -> Result<(), StabilityError> {
         // Test would compare f32 vs f64 precision
         // For now, simplified implementation
@@ -535,26 +533,24 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     ) -> bool {
         // Test passes if actual stability grade is at least as good as expected
         match (metrics.stability_grade, test_case.expected_stability) {
-            (StabilityGrade::Excellent, _) => true,
+            (StabilityGrade:: Excellent) => true,
             (StabilityGrade::Good, StabilityGrade::Excellent) => false,
-            (StabilityGrade::Good, _) => true,
+            (StabilityGrade:: Good) => true,
             (StabilityGrade::Fair, StabilityGrade::Excellent | StabilityGrade::Good) => false,
-            (StabilityGrade::Fair, _) => true,
+            (StabilityGrade:: Fair) => true,
             (StabilityGrade::Poor, StabilityGrade::Unstable) => true,
-            (StabilityGrade::Poor, _) => false,
-            (StabilityGrade::Unstable, _) => false,
+            (StabilityGrade:: Poor) => false,
+            (StabilityGrade:: Unstable) => false,
         }
     }
 
     #[allow(dead_code)]
     fn run_edge_case_test(
-        &self,
-        _name: &str,
-        _edge_case: EdgeCaseTest<F>,
+        &self_name: &str, _edge_case: EdgeCaseTest<F>,
     ) -> Result<EdgeCaseTestResult, StabilityError> {
         // Simplified implementation
         Ok(EdgeCaseTestResult {
-            case_name: _name.to_string(),
+            _case_name: _name.to_string(),
             behavior_observed: EdgeCaseBehavior::Stable,
             behavior_expected: _edge_case.expected_behavior,
             passed: true,
@@ -578,7 +574,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
         Ok(BenchmarkResult {
             tensor_size: size,
             analysis_duration: duration,
-            memory_usage: size * std::mem::size_of::<F>(),
+            memory_usage: size * std::mem::size, _of::<F>(),
             operations_per_second: (size as f64 / duration.as_secs_f64()) as u64,
         })
     }
@@ -784,8 +780,8 @@ pub struct TestResults<'a, F: Float> {
     pub test_results: Vec<StabilityTestResult>,
     pub conditioning_analyses: Vec<ConditionNumberAnalysis>,
     pub error_propagation_analyses: Vec<ErrorPropagationAnalysis<'a, F>>,
-    pub stability_analyses: Vec<super::numerical_analysis::StabilityAnalysis>,
-    pub roundoff_analyses: Vec<super::numerical_analysis::RoundoffErrorAnalysis>,
+    pub stability_analyses: Vec<super::numerical, _analysis::StabilityAnalysis>,
+    pub roundoff_analyses: Vec<super::numerical, _analysis::RoundoffErrorAnalysis>,
     pub edge_case_results: Vec<EdgeCaseTestResult>,
     pub precision_results: Vec<PrecisionTestResult>,
     pub scenario_results: Vec<ScenarioTestResult>,
@@ -822,7 +818,7 @@ impl<F: Float> TestResults<'_, F> {
         self.scenario_results.clear();
     }
 
-    pub fn add_test_result(&mut self, _name: String, result: StabilityTestResult) {
+    pub fn add_test_result(&mut self_name: String, result: StabilityTestResult) {
         self.test_results.push(result);
     }
 }

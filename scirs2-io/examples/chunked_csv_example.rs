@@ -1,5 +1,5 @@
 use ndarray::Array2;
-use scirs2_io::csv::{read_csv_chunked, CsvReaderConfig, CsvWriterConfig};
+use scirs2__io::csv::{read_csv_chunked, CsvReaderConfig, CsvWriterConfig};
 use std::error::Error;
 use std::time::{Duration, Instant};
 

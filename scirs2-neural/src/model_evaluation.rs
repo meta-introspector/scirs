@@ -14,6 +14,7 @@ use num_traits::FromPrimitive;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::iter::Sum;
+use statrs::statistics::Statistics;
 /// Evaluation metrics for different types of tasks
 #[derive(Debug, Clone, PartialEq)]
 pub enum EvaluationMetric {
@@ -285,8 +286,7 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
                 // This is a simplified implementation
                 let top_k_correct = self.compute_top_k_accuracy(y_true, y_pred, *k)?;
                     value: top_k_correct,
-                    metadata: [("k".to_string(), k.to_string())].iter().cloned().collect(),
-            _ => {
+                    metadata: [("k".to_string(), k.to_string())].iter().cloned().collect(, _ => {
                 // For other classification metrics, return a placeholder
                     value: F::from(0.5).unwrap(),
                     std_dev: Some(F::from(0.1).unwrap()),
@@ -339,8 +339,7 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
         // Simplified cross-validation implementation
         let n_folds = match &self.cv_strategy {
             Some(CrossValidationStrategy::KFold { k, .. }) => *k,
-            Some(CrossValidationStrategy::StratifiedKFold { k, .. }) => *k,
-            _ => 5, // Default to 5-fold
+            Some(CrossValidationStrategy::StratifiedKFold { k, .. }) => *k_ => 5, // Default to 5-fold
         let mut fold_scores = Vec::new();
         let data_size = y_true.len();
         let fold_size = data_size / n_folds;
@@ -375,7 +374,7 @@ impl<F: Float + Debug + 'static + Sum + Clone + Copy + FromPrimitive> ModelEvalu
             let best_idx = scores
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap_or(0);
             mean_scores.insert(metric_name.clone(), mean);
             std_scores.insert(metric_name.clone(), std_dev);

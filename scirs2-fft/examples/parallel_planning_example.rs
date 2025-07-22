@@ -8,9 +8,9 @@
 // 4. Execute FFTs in parallel using the created plans
 // 5. Perform batch FFT execution for multiple inputs
 
-use num_complex::Complex64;
+use num__complex::Complex64;
 // Import from the main API instead of the internal module
-use scirs2_fft::{ParallelExecutor, ParallelPlanner, ParallelPlanningConfig};
+use scirs2__fft::{ParallelExecutor, ParallelPlanner, ParallelPlanningConfig};
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]
@@ -149,10 +149,10 @@ fn main() {
 
 /// Create a test signal of the given size
 #[allow(dead_code)]
-fn create_test_signal(size: usize) -> Vec<Complex64> {
-    let mut signal = Vec::with_capacity(size);
-    for i in 0..size {
-        let phase = 2.0 * std::f64::consts::PI * (i as f64) / (size as f64);
+fn create_test_signal(_size: usize) -> Vec<Complex64> {
+    let mut signal = Vec::with_capacity(_size);
+    for i in 0.._size {
+        let phase = 2.0 * std::f64::consts::PI * (i as f64) / (_size as f64);
         signal.push(Complex64::new(phase.cos(), phase.sin()));
     }
     signal

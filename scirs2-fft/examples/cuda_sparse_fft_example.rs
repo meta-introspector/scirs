@@ -1,7 +1,7 @@
-use num_complex::Complex64;
+use num__complex::Complex64;
 use plotly::common::Title;
 use plotly::{common::Mode, layout::Axis, Layout, Plot, Scatter};
-use scirs2_fft::{
+use scirs2__fft::{
     sparse_fft,
     sparse_fft::SparseFFTAlgorithm,
     sparse_fft_gpu::GPUBackend,
@@ -36,7 +36,7 @@ fn main() {
     init_global_memory_manager(
         GPUBackend::CUDA,
         0, // First device
-        scirs2_fft::sparse_fft_gpu_memory::AllocationStrategy::CacheBySize,
+        scirs2_fft::sparse_fft_gpu, _memory::AllocationStrategy::CacheBySize,
         1024 * 1024 * 1024, // 1 GB limit
     )
     .unwrap();
@@ -101,7 +101,7 @@ fn main() {
     // Get unique index-value pairs sorted by magnitude
     let mut cpu_components: Vec<(usize, Complex64)> = Vec::new();
     for (&idx, &val) in cpu_result.indices.iter().zip(cpu_result.values.iter()) {
-        if !cpu_components.iter().any(|(i, _)| *i == idx) {
+        if !cpu_components.iter().any(|(i_)| *i == idx) {
             cpu_components.push((idx, val));
         }
     }
@@ -128,7 +128,7 @@ fn main() {
     // Get unique index-value pairs sorted by magnitude
     let mut cuda_components: Vec<(usize, Complex64)> = Vec::new();
     for (&idx, &val) in cuda_result.indices.iter().zip(cuda_result.values.iter()) {
-        if !cuda_components.iter().any(|(i, _)| *i == idx) {
+        if !cuda_components.iter().any(|(i_)| *i == idx) {
             cuda_components.push((idx, val));
         }
     }
@@ -221,8 +221,8 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 #[allow(dead_code)]
 fn create_comparison_plot(
     signal: &[f64],
-    cpu_result: &scirs2_fft::sparse_fft::SparseFFTResult,
-    cuda_result: &scirs2_fft::sparse_fft::SparseFFTResult,
+    cpu_result: &scirs2, _fft: :sparse_fft::SparseFFTResult,
+    cuda_result: &scirs2, _fft: :sparse_fft::SparseFFTResult,
 ) {
     // Create time domain plot
     let mut time_plot = Plot::new();
@@ -245,7 +245,7 @@ fn create_comparison_plot(
 
     // Compute full spectrum for comparison
     let signal_complex: Vec<Complex64> = signal.iter().map(|&x| Complex64::new(x, 0.0)).collect();
-    let full_spectrum = scirs2_fft::fft(&signal_complex, None).unwrap();
+    let full_spectrum = scirs2_fft::_fft(&signal_complex, None).unwrap();
     let full_magnitudes: Vec<f64> = full_spectrum.iter().map(|c| c.norm()).collect();
 
     // Full FFT trace

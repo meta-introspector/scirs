@@ -56,23 +56,23 @@ where
         )));
     }
 
-    // Generate standard normal samples
+    // Generate standard normal _samples
     let z = random_normal_matrix::<F>((n_samples, p), rng_seed)?;
 
     // Compute Cholesky factorization of covariance matrix
     let l = cholesky(cov, None)?;
 
-    // Transform samples: X = μ + Z * L^T
-    let mut samples = Array2::zeros((n_samples, p));
+    // Transform _samples: X = μ + Z * L^T
+    let mut _samples = Array2::zeros((n_samples, p));
     for i in 0..n_samples {
         let z_row = z.row(i);
         let transformed = l.t().dot(&z_row);
         for j in 0..p {
-            samples[[i, j]] = mean[j] + transformed[j];
+            _samples[[i, j]] = mean[j] + transformed[j];
         }
     }
 
-    Ok(samples)
+    Ok(_samples)
 }
 
 /// Generate samples from a matrix normal distribution
@@ -106,15 +106,15 @@ where
         + Sync
         + 'static,
 {
-    let mut samples = Vec::with_capacity(n_samples);
+    let mut _samples = Vec::with_capacity(n_samples);
 
     for i in 0..n_samples {
-        let seed = rng_seed.map(|s| s.wrapping_add(i as u64));
-        let sample = crate::stats::distributions::sample_matrix_normal(params, seed)?;
-        samples.push(sample);
+        let _seed = rng_seed.map(|s| s.wrapping_add(i as u64));
+        let sample = crate::stats::distributions::sample_matrix_normal(params, _seed)?;
+        _samples.push(sample);
     }
 
-    Ok(samples)
+    Ok(_samples)
 }
 
 /// Generate samples from a Wishart distribution
@@ -148,15 +148,15 @@ where
         + Sync
         + 'static,
 {
-    let mut samples = Vec::with_capacity(n_samples);
+    let mut _samples = Vec::with_capacity(n_samples);
 
     for i in 0..n_samples {
-        let seed = rng_seed.map(|s| s.wrapping_add(i as u64));
-        let sample = crate::stats::distributions::sample_wishart(params, seed)?;
-        samples.push(sample);
+        let _seed = rng_seed.map(|s| s.wrapping_add(i as u64));
+        let sample = crate::stats::distributions::sample_wishart(params, _seed)?;
+        _samples.push(sample);
     }
 
-    Ok(samples)
+    Ok(_samples)
 }
 
 /// Generate samples from an inverse Wishart distribution
@@ -204,16 +204,16 @@ where
     let scale_inv = crate::basic::inv(scale, None)?;
     let wishart_params = WishartParams::new(scale_inv, dof)?;
 
-    let mut samples = Vec::with_capacity(n_samples);
+    let mut _samples = Vec::with_capacity(n_samples);
 
     for i in 0..n_samples {
-        let seed = rng_seed.map(|s| s.wrapping_add(i as u64));
-        let wishart_sample = crate::stats::distributions::sample_wishart(&wishart_params, seed)?;
+        let _seed = rng_seed.map(|s| s.wrapping_add(i as u64));
+        let wishart_sample = crate::stats::distributions::sample_wishart(&wishart_params, _seed)?;
         let inverse_wishart_sample = crate::basic::inv(&wishart_sample.view(), None)?;
-        samples.push(inverse_wishart_sample);
+        _samples.push(inverse_wishart_sample);
     }
 
-    Ok(samples)
+    Ok(_samples)
 }
 
 /// Sample from a matrix-variate t-distribution
@@ -262,27 +262,27 @@ where
         )));
     }
 
-    let mut samples = Vec::with_capacity(n_samples);
+    let mut _samples = Vec::with_capacity(n_samples);
 
     for i in 0..n_samples {
-        let seed = rng_seed.map(|s| s.wrapping_add(i as u64));
+        let _seed = rng_seed.map(|s| s.wrapping_add(i as u64));
 
         // Sample from matrix normal
         let matrix_normal_params =
             MatrixNormalParams::new(mean.to_owned(), row_cov.to_owned(), col_cov.to_owned())?;
         let normal_sample =
-            crate::stats::distributions::sample_matrix_normal(&matrix_normal_params, seed)?;
+            crate::stats::distributions::sample_matrix_normal(&matrix_normal_params, _seed)?;
 
         // Sample chi-square for scaling (simplified - using normal approximation)
-        let chi_approx = random_normal_matrix::<F>((1, 1), seed)?;
+        let chi_approx = random_normal_matrix::<F>((1, 1), _seed)?;
         let scale_factor = (dof / (dof + chi_approx[[0, 0]] * chi_approx[[0, 0]])).sqrt();
 
         // Scale the normal sample
         let t_sample = mean + &((&normal_sample - mean) * scale_factor);
-        samples.push(t_sample);
+        _samples.push(t_sample);
     }
 
-    Ok(samples)
+    Ok(_samples)
 }
 
 /// Generate bootstrap samples from a dataset
@@ -314,15 +314,15 @@ where
     let mut samples = Vec::with_capacity(n_bootstrap);
 
     // Simple pseudorandom number generation for sampling indices
-    let mut seed = rng_seed.unwrap_or(42);
+    let mut _seed = rng_seed.unwrap_or(42);
 
     for _ in 0..n_bootstrap {
         let mut bootstrap_sample = Array2::zeros((n_sample, p));
 
         for i in 0..n_sample {
             // Simple linear congruential generator for index selection
-            seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
-            let index = (seed as usize) % n_original;
+            _seed = _seed.wrapping_mul(1664525).wrapping_add(1013904223);
+            let index = (_seed as usize) % n_original;
 
             // Copy the selected row
             for j in 0..p {
@@ -360,15 +360,15 @@ where
     let p = data.ncols();
 
     let mut samples = Vec::with_capacity(n_permutations);
-    let mut seed = rng_seed.unwrap_or(42);
+    let mut _seed = rng_seed.unwrap_or(42);
 
     for _ in 0..n_permutations {
         let mut permuted_sample = data.to_owned();
 
         // Fisher-Yates shuffle algorithm
         for i in (1..n).rev() {
-            seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
-            let j = (seed as usize) % (i + 1);
+            _seed = _seed.wrapping_mul(1664525).wrapping_add(1013904223);
+            let j = (_seed as usize) % (i + 1);
 
             // Swap rows i and j
             for k in 0..p {
@@ -427,30 +427,30 @@ where
 
     let mut current = initial_value;
     let mut current_log_density = log_density(&current.view())?;
-    let mut samples = Vec::with_capacity(n_samples);
+    let mut _samples = Vec::with_capacity(n_samples);
     let mut accepted = 0;
 
     // Cholesky factor for proposal covariance
     let l = cholesky(proposal_cov, None)?;
 
     for i in 0..total_samples {
-        let seed = rng_seed.map(|s| s.wrapping_add(i as u64));
+        let _seed = rng_seed.map(|s| s.wrapping_add(i as u64));
 
         // Generate proposal
-        let noise = random_normal_matrix::<F>((m, n), seed)?;
+        let noise = random_normal_matrix::<F>((m, n), _seed)?;
         let proposal_noise = l.t().dot(&noise);
         let proposal = &current + &proposal_noise;
 
         // Compute acceptance probability
         let proposal_log_density = match log_density(&proposal.view()) {
-            Ok(density) => density,
-            Err(_) => F::neg_infinity(), // Reject if density evaluation fails
+            Ok(_density) => _density,
+            Err(_) => F::neg_infinity(), // Reject if _density evaluation fails
         };
 
         let log_alpha = proposal_log_density - current_log_density;
 
         // Accept or reject
-        let uniform_sample = random_normal_matrix::<F>((1, 1), seed)?;
+        let uniform_sample = random_normal_matrix::<F>((1, 1), _seed)?;
         let uniform = (uniform_sample[[0, 0]].abs() % F::one()).abs(); // Rough uniform approximation
 
         if log_alpha > uniform.ln() {
@@ -459,9 +459,9 @@ where
             accepted += 1;
         }
 
-        // Collect sample after burn-in
+        // Collect sample after burn-_in
         if i >= burn_in {
-            samples.push(current.clone());
+            _samples.push(current.clone());
         }
     }
 
@@ -473,7 +473,7 @@ where
         );
     }
 
-    Ok(samples)
+    Ok(_samples)
 }
 
 #[cfg(test)]

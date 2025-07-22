@@ -1,7 +1,7 @@
 use plotly::common::Mode;
 use plotly::{Plot, Scatter};
-use scirs2_signal::dwt::{wavedec, waverec, Wavelet};
-use scirs2_signal::waveforms::chirp;
+use scirs2__signal::dwt::{wavedec, waverec, Wavelet};
+use scirs2__signal::waveforms::chirp;
 
 #[allow(dead_code)]
 fn main() {
@@ -14,11 +14,11 @@ fn main() {
     let mut rng = rand::rng();
     let noisy_signal = signal
         .iter()
-        .map(|&x| x + 0.1 * rng.random_range(-1.0..1.0))
+        .map(|&x| x + 0.1 * rng.gen_range(-1.0..1.0))
         .collect::<Vec<f64>>();
 
     // Perform DWT with Meyer wavelet (3 levels)
-    let coeffs = wavedec(&noisy_signal, Wavelet::Meyer, Some(3), None).unwrap();
+    let coeffs = wavedec(&noisy_signal..Wavelet::Meyer, Some(3), None).unwrap();
 
     // Extract the coefficients
     let approx = &coeffs[0]; // Final approximation (cA3)
@@ -125,8 +125,8 @@ fn main() {
 
 // Helper function to apply thresholding to coefficients
 #[allow(dead_code)]
-fn apply_threshold(coeffs: &mut [f64], threshold: f64) {
-    for val in coeffs.iter_mut() {
+fn apply_threshold(_coeffs: &mut [f64], threshold: f64) {
+    for val in _coeffs.iter_mut() {
         if val.abs() < threshold {
             *val = 0.0;
         }
@@ -135,7 +135,7 @@ fn apply_threshold(coeffs: &mut [f64], threshold: f64) {
 
 // Compare the Meyer wavelet with other wavelet families
 #[allow(dead_code)]
-fn compare_wavelets(signal: &[f64], noisy_signal: &[f64], t: &[f64]) {
+fn compare_wavelets(_signal: &[f64], noisy_signal: &[f64], t: &[f64]) {
     // Wavelet families to compare
     let wavelets = vec![
         (Wavelet::Haar, "Haar"),
@@ -148,13 +148,13 @@ fn compare_wavelets(signal: &[f64], noisy_signal: &[f64], t: &[f64]) {
     // Create a plot for the comparison
     let mut plot = Plot::new();
 
-    // Add original signal
-    let original_trace = Scatter::new(t.to_vec(), signal.to_vec())
+    // Add original _signal
+    let original_trace = Scatter::new(t.to_vec(), _signal.to_vec())
         .name("Original Signal")
         .mode(Mode::Lines);
     plot.add_trace(original_trace);
 
-    // Add noisy signal
+    // Add noisy _signal
     let noisy_trace = Scatter::new(t.to_vec(), noisy_signal.to_vec())
         .name("Noisy Signal")
         .mode(Mode::Lines);
@@ -175,12 +175,12 @@ fn compare_wavelets(signal: &[f64], noisy_signal: &[f64], t: &[f64]) {
         let denoised = waverec(&denoised_coeffs, wavelet).unwrap();
 
         // Calculate MSE
-        let mse: f64 = signal
+        let mse: f64 = _signal
             .iter()
             .zip(denoised.iter())
             .map(|(&s, &d)| (s - d).powi(2))
             .sum::<f64>()
-            / signal.len() as f64;
+            / _signal.len() as f64;
 
         println!("{} wavelet MSE: {:.6e}", name, mse);
 

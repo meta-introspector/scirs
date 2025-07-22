@@ -6,7 +6,7 @@
 use crate::error::{CoreError, CoreResult};
 use crate::profiling::hardware_counters::{CounterType, CounterValue, HardwareCounterManager};
 use crate::profiling::system_monitor::{SystemMetrics, SystemMonitor, SystemMonitorError};
-use rand::{rng, Rng};
+use rand::{Rng};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -503,7 +503,7 @@ impl ContinuousPerformanceMonitor {
                 &mut alert_cooldown_map,
             );
 
-            // Perform trend analysis periodically
+            // Perform trend _analysis periodically
             if snapshot_start.duration_since(last_trend_analysis) >= config.trend_window {
                 if config.enable_trend_analysis {
                     Self::perform_trend_analysis(&metrics_history, &trend_analysis, &config);
@@ -532,7 +532,7 @@ impl ContinuousPerformanceMonitor {
     fn collect_metrics_snapshot(
         system_monitor: &Option<Arc<Mutex<SystemMonitor>>>,
         hardware_manager: &Option<Arc<Mutex<HardwareCounterManager>>>,
-        _app_provider: Option<&(dyn ApplicationMetricsProvider + Send + Sync)>,
+        app_provider: Option<&(dyn ApplicationMetricsProvider + Send + Sync)>,
     ) -> MetricsSnapshot {
         let timestamp = Instant::now();
 
@@ -572,7 +572,7 @@ impl ContinuousPerformanceMonitor {
         active_alerts: &Arc<RwLock<HashMap<String, PerformanceAlert>>>,
         cooldown_map: &mut HashMap<String, Instant>,
     ) {
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let now = Instant::now();
 
         // Check system metrics alerts
@@ -590,7 +590,7 @@ impl ContinuousPerformanceMonitor {
                         id: format!(
                             "cpu_{elapsed}_{random}",
                             elapsed = now.elapsed().as_secs(),
-                            random = rng.random::<u32>()
+                            random = rng.gen::<u32>()
                         ),
                         alert_type: AlertType::HighCpuUsage,
                         severity: if sys_metrics.cpu_usage > alert_config.cpu_threshold * 1.2 {
@@ -627,7 +627,7 @@ impl ContinuousPerformanceMonitor {
                         now,
                     ) {
                         let alert = PerformanceAlert {
-                            id: format!("mem_{}_{}", now.elapsed().as_secs(), rng.random::<u32>()),
+                            id: format!("mem_{}_{}", now.elapsed().as_secs(), rng.gen::<u32>()),
                             alert_type: AlertType::HighMemoryUsage,
                             severity: if memory_usage_percent > alert_config.memory_threshold * 1.1
                             {
@@ -667,7 +667,7 @@ impl ContinuousPerformanceMonitor {
                     id: format!(
                         "resp_{elapsed}_{random}",
                         elapsed = now.elapsed().as_secs(),
-                        random = rng.random::<u32>()
+                        random = rng.gen::<u32>()
                     ),
                     alert_type: AlertType::HighResponseTime,
                     severity: AlertSeverity::Warning,
@@ -816,7 +816,7 @@ impl ContinuousPerformanceMonitor {
         trend_analysis: &Arc<RwLock<HashMap<String, TrendAnalysis>>>,
         recommendations: &Arc<RwLock<Vec<OptimizationRecommendation>>>,
     ) {
-        let _history = metrics_history.read().unwrap();
+        let history = metrics_history.read().unwrap();
         let trends = trend_analysis.read().unwrap();
         let mut new_recommendations = Vec::new();
 
@@ -899,7 +899,7 @@ impl ContinuousPerformanceMonitor {
     /// Get recent metrics history
     pub fn get_metrics_history(&self, duration: Duration) -> Vec<MetricsSnapshot> {
         let history = self.metrics_history.read().unwrap();
-        let cutoff = Instant::now() - duration;
+        let cutoff = Instant::now() - std::time::Duration::from_secs(1);
 
         history
             .iter()

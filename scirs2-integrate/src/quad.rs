@@ -6,6 +6,7 @@
 use crate::error::{IntegrateError, IntegrateResult};
 use crate::IntegrateFloat;
 use std::fmt::Debug;
+use std::f64::consts::PI;
 
 /// Options for controlling the behavior of the adaptive quadrature algorithm
 #[derive(Debug, Clone)]
@@ -63,7 +64,7 @@ pub struct QuadResult<F: IntegrateFloat> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::trapezoid;
+/// use scirs2__integrate::trapezoid;
 ///
 /// // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
 /// let result = trapezoid(|x: f64| x * x, 0.0, 1.0, 100);
@@ -106,7 +107,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::simpson;
+/// use scirs2__integrate::simpson;
 ///
 /// // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
 /// let result = simpson(|x: f64| x * x, 0.0, 1.0, 100).unwrap();
@@ -164,7 +165,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::quad;
+/// use scirs2__integrate::quad;
 ///
 /// // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
 /// let result = quad(|x: f64| x * x, 0.0, 1.0, None).unwrap();

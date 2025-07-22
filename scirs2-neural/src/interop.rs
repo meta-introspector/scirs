@@ -445,7 +445,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 initializers: weights.clone(),
             metadata: metadata.clone(),
     fn serialize_onnx_model(&self, model: &ONNXModel<F>, output_path: &Path) -> Result<()> {
-        use serde_json::json;
+        use serde__json::json;
         // Create ONNX-compatible model representation
         let mut graph_nodes = Vec::new();
         let mut graph_initializers = Vec::new();
@@ -551,7 +551,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         let contents = std::fs::read_to_string(model_path).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to read ONNX file: {e}"))
         // Parse JSON-formatted ONNX model
-        let onnx_json: serde_json::Value = serde_json::from_str(&contents).map_err(|e| {
+        let onnx_json: serde, _json: Value = serde_json::from_str(&contents).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to parse ONNX JSON: {e}"))
         // Extract opset version
         let opset_version = onnx_json["opset_import"][0]["version"]
@@ -632,8 +632,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                                 } else if let Some(f) = attr["f"].as_f64() {
                                     AttributeValue::Float(f)
                                 } else if let Some(s) = attr["s"].as_str() {
-                                    AttributeValue::String(s.to_string())
-                                    AttributeValue::String("unknown".to_string())
+                                    AttributeValue::String(s.to_string()), AttributeValue::String("unknown".to_string())
                                 };
                                 attributes.insert(attr_name.to_string(), attr_value);
                             }
@@ -774,11 +773,11 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         let mut variables_data = serde_json::Map::new();
         // Convert variables to TensorFlow format
         for (var_name, tensor) in &tf_model.variables {
-            variables_data.insert(var_name.clone(), json!({
+            variables_data.insertjson!({
                 "tensor": {
                     "dtype": "DT_FLOAT",
                     "tensor_shape": {
-                        "dim": tensor.shape().iter().map(|&d| json!({"size": d})).collect::<Vec<_>>()
+                        "dim": tensor.shape(.iter().map(|&d| json!({"size": d})).collect::<Vec<_>>()
                     },
                     "tensor_content": tensor_data
                 "variable_name": var_name
@@ -835,10 +834,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 });
         Ok(report)
     fn validate_numerical(
-        _original: &ConvertedModel<F>,
-        _converted: &ConvertedModel<F>,
-        _test_inputs: &[ArrayD<F>],
-        _tolerance: f64,
+        _original: &ConvertedModel<F>, _converted: &ConvertedModel<F>, _test_inputs: &[ArrayD<F>], _tolerance: f64,
         // Simplified numerical validation
         Ok(ValidationReport::new())
     fn validate_full(

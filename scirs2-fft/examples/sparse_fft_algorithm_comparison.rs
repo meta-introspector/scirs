@@ -4,8 +4,8 @@ use plotly::{
 };
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use rand_distr::{Distribution, Normal};
-use scirs2_fft::{
+use rand__distr::{Distribution, Normal};
+use scirs2__fft::{
     sparse_fft::{SparseFFTAlgorithm, SparseFFTResult, WindowFunction},
     sparse_fft_gpu::GPUBackend,
     sparse_fft_gpu_cuda::{cuda_sparse_fft, get_cuda_devices},
@@ -43,16 +43,16 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)], noise_level: f64
 
 /// Calculate relative error between identified frequencies and ground truth
 #[allow(dead_code)]
-fn calculate_frequency_error(result: &SparseFFTResult, true_frequencies: &[(usize, f64)]) -> f64 {
+fn calculate_frequency_error(_result: &SparseFFTResult, true_frequencies: &[(usize, f64)]) -> f64 {
     let mut min_error_sum = 0.0;
     let mut found_count = 0;
 
     // For each true frequency, find the closest detected frequency
-    for &(true_freq, _true_amp) in true_frequencies {
+    for &(true_freq_true_amp) in true_frequencies {
         let mut min_error = f64::MAX;
 
         // Find the closest detected frequency
-        for &detected_freq in result.indices.iter() {
+        for &detected_freq in _result.indices.iter() {
             let error =
                 (detected_freq as f64 - true_freq as f64).abs() / (true_freq as f64).max(1.0);
             if error < min_error {
@@ -71,7 +71,7 @@ fn calculate_frequency_error(result: &SparseFFTResult, true_frequencies: &[(usiz
     if found_count > 0 {
         min_error_sum / found_count as f64
     } else {
-        1.0 // All frequencies missed
+        1.0 // All _frequencies missed
     }
 }
 

@@ -1,6 +1,6 @@
 use ndarray::{array, Array1};
 use plotters::prelude::*;
-use scirs2_spatial::transform::{Rotation, RotationSpline};
+use scirs2__spatial::transform::{Rotation, RotationSpline};
 use std::error::Error;
 use std::f64::consts::PI;
 

@@ -1,9 +1,9 @@
 use ndarray::{Array1, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::utils::jacobian::{
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::utils::jacobian::{
     parallel_finite_difference_jacobian, JacobianManager, JacobianStrategy, JacobianStructure,
 };
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::time::Instant;
 
 /// This example demonstrates the parallel Jacobian computation capabilities
@@ -118,7 +118,7 @@ fn benchmark_jacobian_strategies(
         ),
     ];
 
-    // If sparse, also test sparse strategies
+    // If _sparse, also test _sparse strategies
     let sparse_strategies = if is_sparse {
         vec![
             (
@@ -140,7 +140,7 @@ fn benchmark_jacobian_strategies(
     // Time to compute one Jacobian with each strategy
     println!("1. Time to compute a single Jacobian:");
 
-    for &(strategy, name) in &all_strategies {
+    for &(strategy, _name) in &all_strategies {
         // Get point to evaluate Jacobian
         let t = 0.0;
         let y = initial_condition.clone();
@@ -160,13 +160,13 @@ fn benchmark_jacobian_strategies(
         let _ = jac_manager.update_jacobian(t, &y, &system_function.clone(), None)?;
         let elapsed = start.elapsed();
 
-        println!("{:30}: {:.3} ms", name, elapsed.as_secs_f64() * 1000.0);
+        println!("{:30}: {:.3} ms", _name, elapsed.as_secs_f64() * 1000.0);
     }
 
     // Time to solve the ODE with each strategy
     println!("\n2. Time to solve the ODE:");
 
-    for &(_strategy, name) in &all_strategies {
+    for &(_strategy, _name) in &all_strategies {
         // Set up options
         let _structure = if is_sparse {
             JacobianStructure::Sparse
@@ -187,7 +187,7 @@ fn benchmark_jacobian_strategies(
         // Set the strategy as a custom option (this would require extending ODEOptions)
         // For a real implementation, you'd need to modify the ODEOptions struct
         // to include Jacobian strategy. We're simulating this here.
-        println!("Solving with strategy: {name}");
+        println!("Solving with strategy: {_name}");
 
         // For testing purposes, just showing the general approach
         // Time the solution
@@ -200,7 +200,7 @@ fn benchmark_jacobian_strategies(
         )?;
         let elapsed = start.elapsed();
 
-        println!("{:30}: {:.3} ms", name, elapsed.as_secs_f64() * 1000.0);
+        println!("{:30}: {:.3} ms", _name, elapsed.as_secs_f64() * 1000.0);
         println!(
             "  - Steps: {}, Function evals: {}, Jacobian evals: {}",
             result.n_steps, result.n_eval, result.n_jac

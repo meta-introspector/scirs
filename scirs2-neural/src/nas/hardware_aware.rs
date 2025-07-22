@@ -86,12 +86,12 @@ pub struct LatencyPredictor {
     platform: HardwarePlatform,
 impl LatencyPredictor {
     /// Create a new latency predictor for a platform
-    pub fn new(platform: HardwarePlatform) -> Self {
+    pub fn new(_platform: HardwarePlatform) -> Self {
         let mut predictor = Self {
             operation_latencies: HashMap::new(),
             memory_costs: HashMap::new(),
             parallelization_factors: HashMap::new(),
-            platform,
+            _platform,
         };
         predictor.initialize_platform_characteristics();
         predictor
@@ -244,8 +244,7 @@ impl LatencyPredictor {
             HardwarePlatform::CPU => 5.0,
             HardwarePlatform::GPU => 20.0,
             HardwarePlatform::MobileARM => 10.0,
-            HardwarePlatform::EdgeTPU => 15.0,
-            _ => 8.0,
+            HardwarePlatform::EdgeTPU => 15.0_ => 8.0,
         Ok(base_overhead + num_layers * 0.5)
 /// Memory usage predictor
 pub struct MemoryPredictor {
@@ -283,8 +282,7 @@ impl MemoryPredictor {
                 LayerType::Embedding {
                     vocab_size,
                     embedding_dim,
-                } => vocab_size * embedding_dim,
-                _ => 0, // No parameters for other layers
+                } => vocab_size * embedding_dim_ => 0, // No parameters for other layers
             };
             // 4 bytes per float32 parameter
             weights_memory += layer_params as f64 * 4.0;
@@ -302,8 +300,7 @@ impl MemoryPredictor {
             HardwarePlatform::CPU => 50.0,
             HardwarePlatform::GPU => 100.0,
             HardwarePlatform::MobileARM => 25.0,
-            HardwarePlatform::EdgeTPU => 30.0,
-            _ => 40.0,
+            HardwarePlatform::EdgeTPU => 30.0_ => 40.0,
         Ok(overhead_mb)
     /// Compute output shape (simplified version)
             _ => Ok(input_shape.to_vec()),
@@ -344,8 +341,7 @@ impl EnergyPredictor {
         let power = match layer {
                 .power_characteristics
                 .unwrap_or(100.0),
-                .unwrap_or(150.0),
-            _ => 10.0, // Low energy for other operations
+                .unwrap_or(150.0, _ => 10.0, // Low energy for other operations
         // Assume 1ms operation time for energy calculation
         Ok(power * 1.0)
     /// Get static power consumption
@@ -365,23 +361,23 @@ pub struct HardwareAwareSearch {
     violation_history: Vec<HashMap<String, f64>>,
 impl HardwareAwareSearch {
     /// Create a new hardware-aware search
-    pub fn new(constraints: HardwareConstraints) -> Self {
-        let latency_predictor = LatencyPredictor::new(constraints.platform.clone());
-        let memory_predictor = MemoryPredictor::new(constraints.platform.clone());
-        let energy_predictor = EnergyPredictor::new(constraints.platform.clone());
+    pub fn new(_constraints: HardwareConstraints) -> Self {
+        let latency_predictor = LatencyPredictor::new(_constraints.platform.clone());
+        let memory_predictor = MemoryPredictor::new(_constraints.platform.clone());
+        let energy_predictor = EnergyPredictor::new(_constraints.platform.clone());
         let mut constraint_weights = HashMap::new();
         constraint_weights.insert("latency".to_string(), 0.3);
         constraint_weights.insert("memory".to_string(), 0.25);
         constraint_weights.insert("energy".to_string(), 0.2);
         constraint_weights.insert("model_size".to_string(), 0.15);
         constraint_weights.insert("throughput".to_string(), 0.1);
-            constraints,
+            _constraints,
             latency_predictor,
             memory_predictor,
             energy_predictor,
             constraint_weights,
             violation_history: Vec::new(),
-    /// Evaluate hardware constraints for an architecture
+    /// Evaluate hardware _constraints for an architecture
     pub fn evaluate_constraints(
         &mut self,
         architecture: &Arc<dyn ArchitectureEncoding>,
@@ -390,31 +386,31 @@ impl HardwareAwareSearch {
         let mut violations = HashMap::new();
         // Predict latency
         let predicted_latency = self.latency_predictor.predict_latency(&arch, input_shape)?;
-        if let Some(max_latency) = self.constraints.max_latency_ms {
+        if let Some(max_latency) = self._constraints.max_latency_ms {
             let violation = (predicted_latency - max_latency).max(0.0) / max_latency;
             violations.insert("latency".to_string(), violation);
         // Predict memory usage
         let predicted_memory = self
             .memory_predictor
             .predict_memory_usage(&arch, input_shape)?;
-        if let Some(max_memory) = self.constraints.max_memory_mb {
+        if let Some(max_memory) = self._constraints.max_memory_mb {
             let violation = (predicted_memory - max_memory).max(0.0) / max_memory;
             violations.insert("memory".to_string(), violation);
         // Predict energy consumption
         let predicted_energy = self
             .energy_predictor
             .predict_energy(&arch, predicted_latency)?;
-        if let Some(max_energy) = self.constraints.max_energy_mj {
+        if let Some(max_energy) = self._constraints.max_energy_mj {
             let violation = (predicted_energy - max_energy).max(0.0) / max_energy;
             violations.insert("energy".to_string(), violation);
         // Estimate model size (simplified)
         let model_size = self.estimate_model_size(&arch)?;
-        if let Some(max_size) = self.constraints.max_model_size_mb {
+        if let Some(max_size) = self._constraints.max_model_size_mb {
             let violation = (model_size - max_size).max(0.0) / max_size;
             violations.insert("model_size".to_string(), violation);
         // Estimate throughput
         let throughput = 1000.0 / predicted_latency; // inferences per second
-        if let Some(min_throughput) = self.constraints.min_throughput {
+        if let Some(min_throughput) = self._constraints.min_throughput {
             let violation = (min_throughput - throughput).max(0.0) / min_throughput;
             violations.insert("throughput".to_string(), violation);
         // Store violation history
@@ -518,7 +514,7 @@ impl HardwareAwareSearch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::nas::search_space::Architecture;
+    use crate::nas::search__space::Architecture;
     #[test]
     fn test_hardware_constraints_default() {
         let constraints = HardwareConstraints::default();

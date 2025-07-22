@@ -6,7 +6,7 @@
 //! This is particularly useful when migrating from SciPy to scirs2-interpolate
 //! to ensure equivalent functionality and results.
 
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     create_compatibility_checker, quick_compatibility_check, CompatibilityConfig, FeaturePriority,
     InterpolateResult,
 };
@@ -215,26 +215,25 @@ fn main() -> InterpolateResult<()> {
 }
 
 #[allow(dead_code)]
-fn get_compatibility_level(score: f64) -> &'static str {
-    match score {
+fn get_compatibility_level(_score: f64) -> &'static str {
+    match _score {
         s if s >= 0.95 => "Excellent - Full production ready",
         s if s >= 0.90 => "Very Good - Suitable for most use cases",
         s if s >= 0.80 => "Good - Some limitations, mostly compatible",
         s if s >= 0.70 => "Fair - Notable differences, careful migration needed",
-        s if s >= 0.60 => "Poor - Significant gaps, limited compatibility",
-        _ => "Very Poor - Major incompatibilities",
+        s if s >= 0.60 => "Poor - Significant gaps, limited compatibility"_ => "Very Poor - Major incompatibilities",
     }
 }
 
 #[allow(dead_code)]
-fn print_migration_guidance(report: &scirs2_interpolate::CompatibilityReport) {
-    println!("   When migrating from SciPy to scirs2-interpolate:");
+fn print_migration_guidance(_report: &scirs2_interpolate: :CompatibilityReport) {
+    println!("   When migrating from SciPy to scirs2-_interpolate:");
 
-    if report.compatibility_score >= 0.90 {
+    if _report.compatibility_score >= 0.90 {
         println!("   ✓ Migration should be straightforward");
         println!("   ✓ Most SciPy code will work with minimal changes");
         println!("   ✓ Performance should be similar or better");
-    } else if report.compatibility_score >= 0.75 {
+    } else if _report.compatibility_score >= 0.75 {
         println!("   ⚠ Migration requires some attention");
         println!("   ⚠ Review parameter differences carefully");
         println!("   ⚠ Test critical functionality thoroughly");
@@ -250,13 +249,13 @@ fn print_migration_guidance(report: &scirs2_interpolate::CompatibilityReport) {
     println!("     - Array indexing is bounds-checked by default");
     println!("     - Memory management is automatic (no manual cleanup needed)");
 
-    if !report
+    if !_report
         .parameter_compatibility
         .parameter_differences
         .is_empty()
     {
         println!("   📝 Parameter mapping required for:");
-        let functions: std::collections::HashSet<_> = report
+        let functions: std::collections::HashSet<_> = _report
             .parameter_compatibility
             .parameter_differences
             .iter()

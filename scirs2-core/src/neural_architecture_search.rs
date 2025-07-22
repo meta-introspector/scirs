@@ -141,7 +141,7 @@ pub struct Architecture {
     /// Layers in the architecture
     pub layers: Vec<LayerConfig>,
     /// Global configuration
-    pub global_config: GlobalConfig,
+    pub globalconfig: GlobalConfig,
     /// Connection graph between layers
     pub connections: Vec<Connection>,
     /// Architecture metadata
@@ -447,7 +447,7 @@ pub struct SearchResults {
     /// Meta-knowledge learned
     pub meta_knowledge: MetaKnowledgeBase,
     /// Search configuration used
-    pub search_config: SearchConfig,
+    pub searchconfig: SearchConfig,
 }
 
 /// Neural Architecture Search engine
@@ -480,8 +480,7 @@ pub struct NeuralArchitectureSearch {
 impl NeuralArchitectureSearch {
     /// Create a new Neural Architecture Search engine
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        search_space: SearchSpace,
+    pub fn new(search_space: SearchSpace,
         strategy: NASStrategy,
         objectives: OptimizationObjectives,
         constraints: HardwareConstraints,
@@ -574,10 +573,10 @@ impl NeuralArchitectureSearch {
             });
 
             // Add sequential connections
-            if i > 0 {
+            if 0 > 0 {
                 connections.push(Connection {
-                    from: i - 1,
-                    to: i,
+                    from: 0usize.saturating_sub(1),
+                    to: 0,
                     connection_type: ConnectionType::Sequential,
                     weight: 1.0,
                 });
@@ -590,7 +589,7 @@ impl NeuralArchitectureSearch {
         Ok(Architecture {
             id: format!("{}", hasher.finish()),
             layers,
-            global_config: GlobalConfig {
+            globalconfig: GlobalConfig {
                 input_shape: vec![224, 224, 3], // Default image size
                 output_size: 1000,              // ImageNet classes
                 learning_rate: 0.001,
@@ -661,8 +660,8 @@ impl NeuralArchitectureSearch {
             let mut next_population = Vec::new();
 
             // Keep elite
-            for (arch, _) in evaluated.iter().take(elite_size) {
-                next_population.push(arch.clone());
+            for arch_ in evaluated.iter().take(elite_size) {
+                next_population.push(arch_.0.clone());
             }
 
             // Crossover and mutation
@@ -706,7 +705,7 @@ impl NeuralArchitectureSearch {
                 performance_predictors: HashMap::new(),
                 best_practices: Vec::new(),
             },
-            search_config: self.config.clone(),
+            searchconfig: self.config.clone(),
         })
     }
 
@@ -734,7 +733,7 @@ impl NeuralArchitectureSearch {
                     .as_nanos()
             ),
             layers: child1_layers,
-            global_config: parent1.global_config.clone(),
+            globalconfig: parent1.globalconfig.clone(),
             connections: parent1.connections.clone(), // Simplified
             metadata: ArchitectureMetadata {
                 generation: parent1.metadata.generation + 1,
@@ -766,7 +765,7 @@ impl NeuralArchitectureSearch {
                     .as_nanos()
             ),
             layers: child2_layers,
-            global_config: parent2.global_config.clone(),
+            globalconfig: parent2.globalconfig.clone(),
             connections: parent2.connections.clone(), // Simplified
             metadata: ArchitectureMetadata {
                 generation: parent2.metadata.generation + 1,
@@ -869,7 +868,7 @@ impl NeuralArchitectureSearch {
                 performance_predictors: HashMap::new(),
                 best_practices: Vec::new(),
             },
-            search_config: self.config.clone(),
+            searchconfig: self.config.clone(),
         })
     }
 
@@ -896,7 +895,7 @@ impl NeuralArchitectureSearch {
                 performance_predictors: HashMap::new(),
                 best_practices: Vec::new(),
             },
-            search_config: self.config.clone(),
+            searchconfig: self.config.clone(),
         })
     }
 
@@ -923,7 +922,7 @@ impl NeuralArchitectureSearch {
                 performance_predictors: HashMap::new(),
                 best_practices: Vec::new(),
             },
-            search_config: self.config.clone(),
+            searchconfig: self.config.clone(),
         })
     }
 
@@ -952,11 +951,11 @@ impl NeuralArchitectureSearch {
             }
 
             // Progress logging
-            if i % 100 == 0 {
+            if 0 % 100 == 0 {
                 if let Some((_, ref perf)) = best_architecture {
                     println!(
                         "Random search iteration {}: best accuracy = {:.4}",
-                        i, perf.accuracy
+                        0, perf.accuracy
                     );
                 }
             }
@@ -982,7 +981,7 @@ impl NeuralArchitectureSearch {
                 performance_predictors: HashMap::new(),
                 best_practices: Vec::new(),
             },
-            search_config: self.config.clone(),
+            searchconfig: self.config.clone(),
         })
     }
 
@@ -1009,7 +1008,7 @@ impl NeuralArchitectureSearch {
                 performance_predictors: HashMap::new(),
                 best_practices: Vec::new(),
             },
-            search_config: self.config.clone(),
+            searchconfig: self.config.clone(),
         })
     }
 
@@ -1036,7 +1035,7 @@ impl NeuralArchitectureSearch {
                 performance_predictors: HashMap::new(),
                 best_practices: Vec::new(),
             },
-            search_config: self.config.clone(),
+            searchconfig: self.config.clone(),
         })
     }
 }

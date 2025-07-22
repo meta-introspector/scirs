@@ -1,6 +1,6 @@
-use num_complex::Complex64;
+use num__complex::Complex64;
 use rand::Rng;
-use scirs2_fft::{
+use scirs2__fft::{
     execute_cuda_spectral_flatness_sparse_fft, gpu_sparse_fft, sparse_fft,
     sparse_fft::SparseFFTAlgorithm, spectral_flatness_sparse_fft, GPUBackend, WindowFunction,
 };
@@ -19,20 +19,18 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 }
 
 #[allow(dead_code)]
-fn add_noise(signal: &[f64], noise_level: f64) -> Vec<f64> {
+fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
     let mut rng = rand::rng();
-    signal
+    _signal
         .iter()
-        .map(|&x| x + rng.random_range(-noise_level..noise_level))
+        .map(|&x| x + rng.gen_range(-noise_level..noise_level))
         .collect()
 }
 
 #[allow(dead_code)]
 fn print_result(
-    name: &str,
-    result: &scirs2_fft::sparse_fft::SparseFFTResult,
-    expected_freqs: &[usize],
-) {
+    name: &str..result: &scirs2_fft::sparse, _fft::SparseFFTResult,
+    expected_freqs: &[usize],) {
     println!("=== {name} Results ===");
     println!("Algorithm: {:?}", result.algorithm);
     println!(

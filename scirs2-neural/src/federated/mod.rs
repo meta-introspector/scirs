@@ -12,7 +12,7 @@ pub mod personalized;
 pub mod privacy;
 pub mod server;
 pub mod strategies;
-pub use advanced_algorithms::{AggregatorFactory, FedAdagrad, FedAdam, FedAvgM, FedLAG, SCAFFOLD};
+pub use advanced__algorithms::{AggregatorFactory, FedAdagrad, FedAdam, FedAvgM, FedLAG, SCAFFOLD};
 pub use aggregation::{AggregationStrategy, FedAvg, FedProx, FedYogi, Krum, Median, TrimmedMean};
 pub use client::{ClientConfig, FederatedClient};
 pub use communication::{
@@ -97,17 +97,17 @@ pub struct RoundStatistics {
     pub privacy_spent: Option<f64>,
 impl FederatedLearning {
     /// Create a new federated learning instance
-    pub fn new(config: FederatedConfig, num_clients: usize) -> Result<Self> {
-        let server = FederatedServer::new(ServerConfig::from(&config))?;
+    pub fn new(_config: FederatedConfig, num_clients: usize) -> Result<Self> {
+        let server = FederatedServer::new(ServerConfig::from(&_config))?;
         let mut clients = Vec::with_capacity(num_clients);
         for i in 0..num_clients {
             let client_config = ClientConfig {
                 client_id: i,
-                local_epochs: config.local_epochs,
-                batch_size: config.local_batch_size,
-                learning_rate: config.learning_rate,
-                enable_privacy: config.privacy_budget.is_some(),
-                privacy_budget: config.privacy_budget,
+                local_epochs: _config.local_epochs,
+                batch_size: _config.local_batch_size,
+                learning_rate: _config.learning_rate,
+                enable_privacy: _config.privacy_budget.is_some(),
+                privacy_budget: _config.privacy_budget,
             };
             clients.push(FederatedClient::new(client_config)?);
         Ok(Self {
@@ -167,6 +167,8 @@ impl FederatedLearning {
     fn select_clients(&self) -> Result<Vec<usize>> {
         use rand::prelude::*;
 use rand::rng;
+use ndarray::ArrayView1;
+use rand::seq::SliceRandom;
         let mut rng = rng();
         match self.config.client_selection.as_str() {
             "random" => {
@@ -184,11 +186,11 @@ use rand::rng;
                     .clients
                     .iter()
                     .enumerate()
-                    .map(|(i, _)| (i, 1.0 + rng.random::<f32>()))
+                    .map(|(i_)| (i, 1.0 + rng.random::<f32>()))
                     .collect();
                 weighted_indices.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
                 Ok(weighted_indices
-                    .map(|(i, _)| i)
+                    .map(|(i_)| i)
             _ => {
                 // Default to random
                 self.select_clients()

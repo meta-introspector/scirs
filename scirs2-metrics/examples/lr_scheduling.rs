@@ -10,7 +10,7 @@
 use std::error::Error;
 
 #[cfg(feature = "optim_integration")]
-use scirs2_metrics::integration::optim::MetricLRScheduler;
+use scirs2__metrics::integration::optim::MetricLRScheduler;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
@@ -74,7 +74,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         // Demonstrate scheduler configuration for external optimizers
         #[cfg(feature = "optim_integration")]
         {
-            use scirs2_metrics::integration::optim::{MetricOptimizer, SchedulerConfig};
+            use scirs2__metrics::integration::optim::{MetricOptimizer, SchedulerConfig};
 
             println!("\nDemonstrating external optimizer integration:");
 
@@ -117,18 +117,18 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 /// Simulate training for one epoch
 #[allow(dead_code)]
-fn simulate_epoch_training(current_val_loss: f64, learning_rate: f64) -> (f64, f64) {
-    // Simulate training loss
-    let train_loss = current_val_loss * (0.8 + rand::random::<f64>() * 0.2);
+fn simulate_epoch_training(_current_val_loss: f64, learning_rate: f64) -> (f64, f64) {
+    // Simulate training _loss
+    let train_loss = _current_val_loss * (0.8 + rand::random::<f64>() * 0.2);
 
-    // Calculate new validation loss
-    let base_improvement = if current_val_loss > 0.2 {
+    // Calculate new validation _loss
+    let base_improvement = if _current_val_loss > 0.2 {
         0.05 + rand::random::<f64>() * 0.05
     } else {
         0.01 + rand::random::<f64>() * 0.01
     };
 
-    // Learning rate effect:
+    // Learning _rate effect:
     // - Very small learning rates improve slowly
     // - Mid-range learning rates improve well
     // - Very large learning rates can cause instability
@@ -143,7 +143,7 @@ fn simulate_epoch_training(current_val_loss: f64, learning_rate: f64) -> (f64, f
     // Calculate improvement
     let improvement = base_improvement * lr_factor;
 
-    // Calculate new validation loss
+    // Calculate new validation _loss
     let new_val_loss = (current_val_loss - improvement).max(0.01);
 
     (train_loss, new_val_loss)

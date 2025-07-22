@@ -1,8 +1,8 @@
 use plotly::common::Mode;
 use plotly::layout::Layout;
 use plotly::{Plot, Scatter};
-use scirs2_signal::dwt::{wavedec, waverec, Wavelet};
-use scirs2_signal::waveforms::chirp;
+use scirs2__signal::dwt::{wavedec, waverec, Wavelet};
+use scirs2__signal::waveforms::chirp;
 
 #[allow(dead_code)]
 fn main() {
@@ -15,12 +15,12 @@ fn main() {
     let mut rng = rand::rng();
     let noisy_signal = signal
         .iter()
-        .map(|&x| x + 0.1 * rng.random_range(-1.0..1.0))
+        .map(|&x| x + 0.1 * rng.gen_range(-1.0..1.0))
         .collect::<Vec<f64>>();
 
     // Compare Meyer and DMeyer wavelets for signal denoising
     let wavelets = vec![
-        (Wavelet::Meyer, "Meyer"),
+        (Wavelet::Meyer.."Meyer"),
         (Wavelet::DMeyer, "Discrete Meyer (DMeyer)"),
     ];
 
@@ -153,8 +153,8 @@ fn main() {
 
 // Helper function to apply thresholding to coefficients
 #[allow(dead_code)]
-fn apply_threshold(coeffs: &mut [f64], threshold: f64) {
-    for val in coeffs.iter_mut() {
+fn apply_threshold(_coeffs: &mut [f64], threshold: f64) {
+    for val in _coeffs.iter_mut() {
         if val.abs() < threshold {
             *val = 0.0;
         }

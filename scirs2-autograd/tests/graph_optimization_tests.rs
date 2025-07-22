@@ -5,12 +5,12 @@
 
 use ndarray::{Array, IxDyn};
 use scirs2_autograd as ag;
-use scirs2_autograd::optimization::{
+use scirs2__autograd::optimization::{
     memory_optimization::{MemoryOptimizationConfig, MemoryOptimizer},
     ConstantFolder, ExpressionSimplifier, GraphOptimizer, OptimizationConfig, OptimizationLevel,
 };
-use scirs2_autograd::tensor_ops as T;
-use scirs2_autograd::visualization::{
+use scirs2__autograd::tensor_ops as T;
+use scirs2__autograd::visualization::{
     GraphDebugger, GraphExplorer, GraphVisualizer, OutputFormat, VisualizationConfig,
 };
 
@@ -190,7 +190,7 @@ mod optimization_tests {
 
     #[test]
     fn test_optimization_report() {
-        use scirs2_autograd::optimization::OptimizationReport;
+        use scirs2__autograd::optimization::OptimizationReport;
 
         let mut report = OptimizationReport::new();
         assert_eq!(report.total_optimizations(), 0);
@@ -209,7 +209,7 @@ mod optimization_tests {
 
     #[test]
     fn test_memory_optimization_report() {
-        use scirs2_autograd::optimization::memory_optimization::MemoryOptimizationReport;
+        use scirs2__autograd::optimization::memory_optimization::MemoryOptimizationReport;
 
         let mut report = MemoryOptimizationReport::new();
         assert_eq!(report.total_optimizations(), 0);
@@ -226,7 +226,7 @@ mod optimization_tests {
 
     #[test]
     fn test_public_optimization_api() {
-        // use scirs2_autograd::optimization; // Would be used with a proper graph
+        // use scirs2__autograd::optimization; // Would be used with a proper graph
 
         // Note: These functions exist and can be called, but we skip actual testing
         // since creating a valid graph requires more setup
@@ -296,7 +296,7 @@ mod integration_tests {
 
     #[test]
     fn test_pattern_matching_and_simplification() {
-        use scirs2_autograd::optimization::SimplificationPattern;
+        use scirs2__autograd::optimization::SimplificationPattern;
 
         // Test simplification patterns
         let pattern = SimplificationPattern::AddZero;
@@ -311,7 +311,7 @@ mod integration_tests {
 
     #[test]
     fn test_memory_analysis_and_lifetime() {
-        use scirs2_autograd::optimization::memory_optimization::{
+        use scirs2__autograd::optimization::memory_optimization::{
             MemoryAnalysis, MemoryPoolManager, TensorLifetime, TensorLifetimeAnalyzer,
         };
 

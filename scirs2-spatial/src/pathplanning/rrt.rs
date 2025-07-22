@@ -25,7 +25,7 @@ use crate::distance::EuclideanDistance;
 use crate::error::{SpatialError, SpatialResult};
 use crate::kdtree::KDTree;
 use crate::pathplanning::astar::Path;
-// use crate::safe_conversions::*;
+// use crate::safe__conversions::*;
 
 /// Type alias for the collision checking function
 type CollisionCheckFn = Box<dyn Fn(&Array1<f64>, &Array1<f64>) -> bool>;
@@ -50,7 +50,7 @@ pub struct RRTConfig {
 }
 
 impl Default for RRTConfig {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         RRTConfig {
             max_iterations: 10000,
             step_size: 0.5,
@@ -113,12 +113,12 @@ impl Clone for RRTPlanner {
 
 impl RRTPlanner {
     /// Create a new RRT planner with the given configuration
-    pub fn new(config: RRTConfig, dimension: usize) -> Self {
-        let seed = config.seed.unwrap_or_else(rand::random);
+    pub fn new(_config: RRTConfig, dimension: usize) -> Self {
+        let seed = _config.seed.unwrap_or_else(rand::random);
         let rng = StdRng::seed_from_u64(seed);
 
         RRTPlanner {
-            config,
+            _config,
             collision_checker: None,
             rng,
             dimension,
@@ -129,7 +129,7 @@ impl RRTPlanner {
     /// Set the collision checking function
     ///
     /// The function should return true if there is a collision between the two points
-    pub fn with_collision_checker<F>(mut self, collision_checker: F) -> Self
+    pub fn with_collision_checker<F>(mut collision_checker: F) -> Self
     where
         F: Fn(&Array1<f64>, &Array1<f64>) -> bool + 'static,
     {
@@ -162,28 +162,28 @@ impl RRTPlanner {
             }
         }
 
-        self.bounds = Some((min_bounds, max_bounds));
+        self._bounds = Some((min_bounds, max_bounds));
         Ok(self)
     }
 
     /// Sample a random point in the configuration space
-    fn sample_random_point(&mut self) -> SpatialResult<Array1<f64>> {
+    fn sample_random_point(&self) -> SpatialResult<Array1<f64>> {
         let (min_bounds, max_bounds) = self.bounds.as_ref().ok_or_else(|| {
             SpatialError::ValueError("Bounds must be set before sampling".to_string())
         })?;
         let mut point = Array1::zeros(self.dimension);
 
         for i in 0..self.dimension {
-            point[i] = self.rng.random_range(min_bounds[i]..max_bounds[i]);
+            point[i] = self.rng.gen_range(min_bounds[i]..max_bounds[i]);
         }
 
         Ok(point)
     }
 
     /// Sample a random point with goal bias
-    fn sample_with_goal_bias(&mut self, goal: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
-        if self.rng.random_range(0.0..1.0) < self.config.goal_bias {
-            Ok(goal.to_owned())
+    fn sample_with_goal_bias(_goal: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
+        if self.rng.gen_range(0.0..1.0) < self.config.goal_bias {
+            Ok(_goal.to_owned())
         } else {
             self.sample_random_point()
         }
@@ -191,23 +191,20 @@ impl RRTPlanner {
 
     /// Find the nearest node in the tree to the given point
     fn find_nearest_node(
-        &self,
-        point: &ArrayView1<f64>,
-        _nodes: &[RRTNode],
-        kdtree: &KDTree<f64, EuclideanDistance<f64>>,
-    ) -> SpatialResult<usize> {
+        &self, point: &ArrayView1<f64>, _nodes: &[RRTNode],
+        kdtree: &KDTree<f64, EuclideanDistance<f64>>,) -> SpatialResult<usize> {
         let point_vec = point.to_vec();
-        let (indices, _) = kdtree.query(point_vec.as_slice(), 1)?;
+        let (indices_) = kdtree.query(point_vec.as_slice(), 1)?;
         Ok(indices[0])
     }
 
     /// Compute a new point that is step_size distance from nearest toward random_point
-    fn steer(&self, nearest: &ArrayView1<f64>, random_point: &ArrayView1<f64>) -> Array1<f64> {
-        let mut direction = random_point - nearest;
+    fn steer(_nearest: &ArrayView1<f64>, random_point: &ArrayView1<f64>) -> Array1<f64> {
+        let mut direction = random_point - _nearest;
         let norm = direction.iter().map(|&x| x * x).sum::<f64>().sqrt();
 
         if norm < 1e-10 {
-            return nearest.to_owned();
+            return _nearest.to_owned();
         }
 
         // Scale to step_size
@@ -215,13 +212,13 @@ impl RRTPlanner {
             direction *= self.config.step_size / norm;
         }
 
-        nearest + direction
+        _nearest + direction
     }
 
     /// Check if there is a valid path between two points
-    fn is_valid_connection(&self, from: &ArrayView1<f64>, to: &ArrayView1<f64>) -> bool {
+    fn is_valid_connection(_from: &ArrayView1<f64>, to: &ArrayView1<f64>) -> bool {
         if let Some(ref collision_checker) = self.collision_checker {
-            !collision_checker(&from.to_owned(), &to.to_owned())
+            !collision_checker(&_from.to_owned(), &to.to_owned())
         } else {
             true // No collision checker provided, assume valid
         }
@@ -430,9 +427,9 @@ impl RRTPlanner {
             .expect("KDTree query failed");
 
         // Check each nearby node as a potential parent
-        for (idx, &node_idx) in near_indices.iter().enumerate() {
+        for (_idx, &node_idx) in near_indices.iter().enumerate() {
             let node = &nodes[node_idx];
-            let dist = near_distances[idx];
+            let dist = near_distances[_idx];
 
             // Calculate the cost if we came through this node
             let cost_from_start = node.cost + dist;
@@ -470,13 +467,13 @@ impl RRTPlanner {
             .expect("KDTree query failed");
 
         // Check if we can improve the path to any nearby node by going through the new node
-        for (idx, &node_idx) in near_indices.iter().enumerate() {
+        for (_idx, &node_idx) in near_indices.iter().enumerate() {
             // Skip the node itself
             if node_idx == new_node_idx {
                 continue;
             }
 
-            let dist = near_distances[idx];
+            let dist = near_distances[_idx];
             let cost_through_new = new_cost + dist;
 
             // Create temporary copy of the position to avoid borrowing conflicts
@@ -497,27 +494,27 @@ impl RRTPlanner {
 
     /// Update costs in a subtree after rewiring
     #[allow(clippy::only_used_in_recursion)]
-    fn update_subtree_costs(&self, nodes: &mut [RRTNode], node_idx: usize) {
+    fn update_subtree_costs(_nodes: &mut [RRTNode], node_idx: usize) {
         // Find all children of this node
-        let children: Vec<usize> = nodes
+        let children: Vec<usize> = _nodes
             .iter()
             .enumerate()
             .filter(|(_, node)| node.parent == Some(node_idx))
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| _idx)
             .collect();
 
         // Update each child's cost and recursively update its subtree
         for &child_idx in &children {
             // Create temporary copies to avoid borrowing conflicts
-            let parent_cost = nodes[node_idx].cost;
-            let parent_position = nodes[node_idx].position.clone();
-            let child_position = nodes[child_idx].position.clone();
+            let parent_cost = _nodes[node_idx].cost;
+            let parent_position = _nodes[node_idx].position.clone();
+            let child_position = _nodes[child_idx].position.clone();
 
             let edge_cost = euclidean_distance(&parent_position.view(), &child_position.view());
-            nodes[child_idx].cost = parent_cost + edge_cost;
+            _nodes[child_idx].cost = parent_cost + edge_cost;
 
             // Recursively update this child's subtree
-            self.update_subtree_costs(nodes, child_idx);
+            self.update_subtree_costs(_nodes, child_idx);
         }
     }
 
@@ -648,18 +645,18 @@ impl RRTPlanner {
         // Extract path from start to connection point
         let mut forward_path = Vec::new();
         let mut current_idx = Some(start_idx);
-        while let Some(idx) = current_idx {
-            forward_path.push(start_tree[idx].position.clone());
-            current_idx = start_tree[idx].parent;
+        while let Some(_idx) = current_idx {
+            forward_path.push(start_tree[_idx].position.clone());
+            current_idx = start_tree[_idx].parent;
         }
         forward_path.reverse(); // Reverse to get start to connection
 
         // Extract path from goal to connection point
         let mut backward_path = Vec::new();
         let mut current_idx = Some(goal_idx);
-        while let Some(idx) = current_idx {
-            backward_path.push(goal_tree[idx].position.clone());
-            current_idx = goal_tree[idx].parent;
+        while let Some(_idx) = current_idx {
+            backward_path.push(goal_tree[_idx].position.clone());
+            current_idx = goal_tree[_idx].parent;
         }
         // No need to reverse - we want connection to goal
 
@@ -677,14 +674,14 @@ impl RRTPlanner {
     }
 
     /// Extract the path from the RRT tree
-    fn extract_path(&self, nodes: &[RRTNode], goal_idx: usize) -> Path<Array1<f64>> {
+    fn extract_path(_nodes: &[RRTNode], goal_idx: usize) -> Path<Array1<f64>> {
         let mut path = Vec::new();
         let mut current_idx = Some(goal_idx);
-        let cost = nodes[goal_idx].cost;
+        let cost = _nodes[goal_idx].cost;
 
-        while let Some(idx) = current_idx {
-            path.push(nodes[idx].position.clone());
-            current_idx = nodes[idx].parent;
+        while let Some(_idx) = current_idx {
+            path.push(_nodes[_idx].position.clone());
+            current_idx = _nodes[_idx].parent;
         }
 
         // Reverse to get start to goal
@@ -735,8 +732,7 @@ impl RRT2DPlanner {
 
         Ok(RRT2DPlanner {
             planner,
-            obstacles,
-            _collision_step_size: collision_step_size,
+            obstacles_collision_step_size: collision_step_size,
         })
     }
 
@@ -825,7 +821,7 @@ impl RRT2DPlanner {
     }
 
     /// Check if a point is inside a polygon using ray casting algorithm
-    fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
+    fn point_in_polygon(_point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
         if polygon.len() < 3 {
             return false;
         }
@@ -839,8 +835,8 @@ impl RRT2DPlanner {
             let xj = polygon[j][0];
             let yj = polygon[j][1];
 
-            let intersect = ((yi > point[1]) != (yj > point[1]))
-                && (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi) + xi);
+            let intersect = ((yi > _point[1]) != (yj > _point[1]))
+                && (_point[0] < (xj - xi) * (_point[1] - yi) / (yj - yi) + xi);
 
             if intersect {
                 inside = !inside;

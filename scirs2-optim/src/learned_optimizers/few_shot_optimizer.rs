@@ -80,7 +80,7 @@ pub struct SupportSet<T: Float> {
     /// Task metadata
     pub task_metadata: TaskMetadata,
 
-    /// Support set statistics
+    /// Support _set statistics
     pub statistics: SupportSetStatistics<T>,
 
     /// Temporal ordering (if applicable)
@@ -826,7 +826,7 @@ pub struct FastAdaptationConfig {
     pub max_adaptation_time: Duration,
 
     /// Performance threshold
-    pub performance_threshold: f64,
+    pub _performance_threshold: f64,
 }
 
 /// Performance tracker for few-shot learning
@@ -978,8 +978,7 @@ impl<T: Float + Send + Sync> FewShotLearningSystem<T> {
 
     fn select_adaptation_strategy(
         &self,
-        task_data: &TaskData<T>,
-        _similar_tasks: &[MemoryEpisode<T>],
+        task_data: &TaskData<T>, _similar_tasks: &[MemoryEpisode<T>],
     ) -> Result<AdaptationStrategyType> {
         // Strategy selection based on task characteristics and historical performance
         match task_data.domain_info.difficulty_level {
@@ -1044,9 +1043,7 @@ impl<T: Float + Send + Sync> PrototypicalNetwork<T> {
     }
 
     fn update_prototypes(
-        &mut self,
-        _task_data: &TaskData<T>,
-        _result: &AdaptationResult<T>,
+        &mut self, _task_data: &TaskData<T>, _result: &AdaptationResult<T>,
     ) -> Result<()> {
         Ok(()) // Placeholder
     }
@@ -1076,17 +1073,13 @@ impl<T: Float + Send + Sync> EpisodicMemoryBank<T> {
     }
 
     fn retrieve_similar(
-        &self,
-        _task_data: &TaskData<T>,
-        _k: usize,
+        &self, _task_data: &TaskData<T>, _k: usize,
     ) -> Result<Vec<MemoryEpisode<T>>> {
         Ok(Vec::new()) // Placeholder
     }
 
     fn store_episode(
-        &mut self,
-        _task_data: TaskData<T>,
-        _result: AdaptationResult<T>,
+        &mut self, _task_data: TaskData<T>, _result: AdaptationResult<T>,
     ) -> Result<()> {
         Ok(()) // Placeholder
     }
@@ -1100,11 +1093,7 @@ impl<T: Float + Send + Sync> FastAdaptationEngine<T> {
     }
 
     fn adapt_fast(
-        &mut self,
-        _optimizer: &mut dyn FewShotOptimizer<T>,
-        _task_data: &TaskData<T>,
-        _strategy: AdaptationStrategyType,
-        _config: &AdaptationConfig,
+        &mut self_optimizer: &mut dyn FewShotOptimizer<T>, _task_data: &TaskData<T>, _strategy: AdaptationStrategyType_config: &AdaptationConfig,
     ) -> Result<AdaptationResult<T>> {
         // Simplified adaptation result
         Ok(AdaptationResult {
@@ -1147,7 +1136,7 @@ impl<T: Float + Send + Sync> FewShotPerformanceTracker<T> {
         ))
     }
 
-    fn record_performance(&mut self, _result: &AdaptationResult<T>) -> Result<()> {
+    fn record_performance(&mut self_result: &AdaptationResult<T>) -> Result<()> {
         Ok(()) // Placeholder
     }
 }

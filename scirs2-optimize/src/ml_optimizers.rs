@@ -9,6 +9,7 @@ use crate::unconstrained::result::OptimizeResult;
 use ndarray::{Array1, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::Float;
 use std::collections::HashMap;
+use rand::seq::SliceRandom;
 
 /// L1 regularization (Lasso) optimizer using proximal gradient descent
 #[derive(Debug, Clone)]
@@ -27,9 +28,9 @@ pub struct LassoOptimizer<F: Float> {
 
 impl<F: Float + ScalarOperand> LassoOptimizer<F> {
     /// Create a new Lasso optimizer
-    pub fn new(lambda: F, learning_rate: F) -> Self {
+    pub fn new(_lambda: F, learning_rate: F) -> Self {
         Self {
-            lambda,
+            _lambda,
             learning_rate,
             max_iter: 1000,
             tol: F::from(1e-6).unwrap(),
@@ -38,9 +39,9 @@ impl<F: Float + ScalarOperand> LassoOptimizer<F> {
     }
 
     /// Create a new accelerated Lasso optimizer (FISTA)
-    pub fn fista(lambda: F, learning_rate: F) -> Self {
+    pub fn fista(_lambda: F, learning_rate: F) -> Self {
         Self {
-            lambda,
+            _lambda,
             learning_rate,
             max_iter: 1000,
             tol: F::from(1e-6).unwrap(),
@@ -150,9 +151,9 @@ pub struct GroupLassoOptimizer<F: Float> {
 
 impl<F: Float + ScalarOperand> GroupLassoOptimizer<F> {
     /// Create a new Group Lasso optimizer
-    pub fn new(lambda: F, learning_rate: F, groups: Vec<usize>) -> Self {
+    pub fn new(_lambda: F, learning_rate: F, groups: Vec<usize>) -> Self {
         Self {
-            lambda,
+            _lambda,
             learning_rate,
             max_iter: 1000,
             tol: F::from(1e-6).unwrap(),
@@ -260,9 +261,9 @@ pub struct ElasticNetOptimizer<F: Float> {
 
 impl<F: Float + ScalarOperand> ElasticNetOptimizer<F> {
     /// Create a new Elastic Net optimizer
-    pub fn new(lambda1: F, lambda2: F, learning_rate: F) -> Self {
+    pub fn new(_lambda1: F, lambda2: F, learning_rate: F) -> Self {
         Self {
-            lambda1,
+            _lambda1,
             lambda2,
             learning_rate,
             max_iter: 1000,
@@ -349,9 +350,9 @@ pub struct ADMMOptimizer<F: Float> {
 
 impl<F: Float + ScalarOperand> ADMMOptimizer<F> {
     /// Create a new ADMM optimizer
-    pub fn new(rho: F) -> Self {
+    pub fn new(_rho: F) -> Self {
         Self {
-            rho,
+            _rho,
             eps_pri: F::from(1e-3).unwrap(),
             eps_dual: F::from(1e-3).unwrap(),
             max_iter: 1000,
@@ -497,7 +498,7 @@ impl<F: Float + ScalarOperand> CoordinateDescentOptimizer<F> {
             let coords: Vec<usize> = if self.random {
                 use rand::{rng, seq::SliceRandom};
                 let mut coords: Vec<usize> = (0..n).collect();
-                coords.shuffle(&mut rng());
+                coords.shuffle(&mut rand::rng());
                 coords
             } else {
                 (0..n).collect()

@@ -8,7 +8,7 @@
 //! # Example
 //! ```
 //! use ndarray::Array1;
-//! use scirs2_signal::separation::{multiband_separation, harmonic_percussive_separation};
+//! use scirs2__signal::separation::{multiband_separation, harmonic_percussive_separation};
 //!
 //! // Multi-band separation
 //! let signal = Array1::from_vec(vec![1.0, 0.5, -0.3, 0.8, -0.2]);
@@ -19,10 +19,11 @@
 //! ```
 
 use crate::error::{SignalError, SignalResult};
-use crate::filter::{butter, lfilter, FilterType};
-// use std::f64::consts::PI; // Unused import removed
+use crate::filter::{FilterType, butter, lfilter};
 use ndarray::Array1;
 
+#[allow(unused_imports)]
+// use std::f64::consts::PI; // Unused import removed
 /// Configuration for multi-band separation
 #[derive(Debug, Clone)]
 pub struct MultibandConfig {
@@ -91,7 +92,7 @@ impl Default for HarmonicPercussiveConfig {
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::separation::multiband_separation;
+/// use scirs2__signal::separation::multiband_separation;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 0.5, -0.3, 0.8, -0.2, 0.1, -0.6, 0.4]);
 /// let cutoffs = vec![0.1, 0.3, 0.5]; // Creates 4 bands: 0-0.1, 0.1-0.3, 0.3-0.5, 0.5-1.0
@@ -101,8 +102,7 @@ impl Default for HarmonicPercussiveConfig {
 #[allow(dead_code)]
 pub fn multiband_separation(
     signal: &Array1<f64>,
-    cutoff_freqs: &[f64],
-    _sample_rate: f64,
+    cutoff_freqs: &[f64], _sample_rate: f64,
     config: Option<MultibandConfig>,
 ) -> SignalResult<Vec<Array1<f64>>> {
     if signal.is_empty() {
@@ -190,7 +190,7 @@ pub fn multiband_separation(
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_signal::separation::harmonic_percussive_separation;
+/// use scirs2__signal::separation::harmonic_percussive_separation;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 0.5, -0.3, 0.8, -0.2, 0.1, -0.6, 0.4]);
 /// let (harmonic, percussive) = harmonic_percussive_separation(&signal, 1000.0, None).unwrap();
@@ -199,8 +199,7 @@ pub fn multiband_separation(
 /// ```
 #[allow(dead_code)]
 pub fn harmonic_percussive_separation(
-    signal: &Array1<f64>,
-    _sample_rate: f64,
+    signal: &Array1<f64>, _sample_rate: f64,
     config: Option<HarmonicPercussiveConfig>,
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     if signal.is_empty() {
@@ -230,7 +229,7 @@ pub fn harmonic_percussive_separation(
 
     let percussive_adjusted: Vec<f64> = percussive_vec
         .iter()
-        .map(|&x| x * (2.0 - config.separation_power).sqrt().max(0.1))
+        .map((|&x| x * (2.0 - config.separation_power) as f64).sqrt().max(0.1))
         .collect();
 
     Ok((
@@ -243,6 +242,8 @@ mod tests {
 
     #[test]
     fn test_multiband_separation() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a test signal with multiple frequency components
         let sample_rate = 1000.0;
         let duration = 1.0;
@@ -292,6 +293,8 @@ mod tests {
 
     #[test]
     fn test_harmonic_percussive_separation() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple test signal
         let sample_rate = 1000.0;
         let duration = 0.5;

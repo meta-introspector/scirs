@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2, Array3};
-use scirs2_ndimage::filters::{
+use scirs2__ndimage::filters::{
     bilateral_filter,
     filter_functions,
     gaussian_filter,
@@ -21,7 +21,7 @@ use scirs2_ndimage::filters::{
 use std::time::Duration;
 
 #[cfg(feature = "simd")]
-use scirs2_ndimage::filters::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
+use scirs2__ndimage::filters::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
 
 /// Benchmark generic filter with different functions
 #[allow(dead_code)]

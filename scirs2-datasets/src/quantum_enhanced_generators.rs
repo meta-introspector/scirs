@@ -36,10 +36,10 @@ impl Default for QuantumDatasetGenerator {
 
 impl QuantumDatasetGenerator {
     /// Create a new quantum dataset generator
-    pub fn new(n_qubits: usize, gate_fidelity: f64) -> Self {
+    pub fn new(_n_qubits: usize, gate_fidelity: f64) -> Self {
         Self {
             coherence_time: 1000.0,
-            n_qubits,
+            _n_qubits,
             gate_fidelity,
             quantum_advantage: true,
         }
@@ -61,7 +61,7 @@ impl QuantumDatasetGenerator {
         }
 
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => StdRng::from_rng(&mut rand::rng()),
         };
 
@@ -81,11 +81,11 @@ impl QuantumDatasetGenerator {
             // Generate quantum state for this sample
             let quantum_state = self.generate_quantum_state(n_features, class_id, &mut rng)?;
 
-            // Apply quantum entanglement to features
+            // Apply quantum entanglement to _features
             let entangled_features =
                 self.apply_quantum_entanglement(&quantum_state, &entanglement_matrix)?;
 
-            // Store entangled features in dataset
+            // Store entangled _features in dataset
             for feature_idx in 0..n_features {
                 data[[sample_idx, feature_idx]] = entangled_features[feature_idx];
             }
@@ -110,7 +110,7 @@ impl QuantumDatasetGenerator {
         }
 
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => StdRng::from_rng(&mut rand::rng()),
         };
 
@@ -130,7 +130,7 @@ impl QuantumDatasetGenerator {
             // Compute target using quantum dot product
             let target = self.quantum_dot_product(&transformed_features, &quantum_coefficients)?;
 
-            // Add quantum or classical noise
+            // Add quantum or classical _noise
             let noisy_target = if quantum_noise {
                 target + self.generate_quantum_noise(noise_amplitude, &mut rng)?
             } else {
@@ -164,25 +164,25 @@ impl QuantumDatasetGenerator {
         }
 
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut targets = Array1::zeros(n_samples);
 
-        // Generate quantum cluster centers using superposition
+        // Generate quantum cluster _centers using superposition
         let quantum_centers =
             self.generate_quantum_cluster_centers(n_centers, n_features, &mut rng)?;
 
         for sample_idx in 0..n_samples {
-            // Quantum cluster assignment with interference
+            // Quantum cluster assignment with _interference
             let (cluster_id, interference_weight) =
                 self.quantum_cluster_assignment(n_centers, quantum_interference, &mut rng)?;
 
             targets[sample_idx] = cluster_id as f64;
 
-            // Generate sample around quantum center with interference effects
+            // Generate sample around quantum center with _interference effects
             let center = &quantum_centers[cluster_id];
             for feature_idx in 0..n_features {
                 let base_value = center[feature_idx];
@@ -280,16 +280,16 @@ impl QuantumDatasetGenerator {
         n_features: usize,
         rng: &mut StdRng,
     ) -> Result<Array1<f64>> {
-        let mut features = Array1::zeros(n_features);
+        let mut _features = Array1::zeros(n_features);
 
         for i in 0..n_features {
             // Quantum feature generation using Bloch sphere parameterization
             let theta = rng.random::<f64>() * PI;
             let phi = rng.random::<f64>() * 2.0 * PI;
-            features[i] = theta.sin() * phi.cos() + theta.cos();
+            _features[i] = theta.sin() * phi.cos() + theta.cos();
         }
 
-        Ok(features)
+        Ok(_features)
     }
 
     fn apply_quantum_rotations(
@@ -341,7 +341,7 @@ impl QuantumDatasetGenerator {
         n_features: usize,
         rng: &mut StdRng,
     ) -> Result<Vec<Array1<f64>>> {
-        let mut centers = Vec::with_capacity(n_centers);
+        let mut _centers = Vec::with_capacity(n_centers);
 
         for center_idx in 0..n_centers {
             let mut center = Array1::zeros(n_features);
@@ -355,10 +355,10 @@ impl QuantumDatasetGenerator {
                 center[feature_idx] = quantum_amplitude * feature_phase.cos();
             }
 
-            centers.push(center);
+            _centers.push(center);
         }
 
-        Ok(centers)
+        Ok(_centers)
     }
 
     fn quantum_cluster_assignment(

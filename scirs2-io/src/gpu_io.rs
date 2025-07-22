@@ -52,15 +52,15 @@ impl GpuIoProcessor {
     }
 
     /// Create a new GPU I/O processor with a specific backend
-    pub fn with_backend(backend: GpuBackend) -> Result<Self> {
-        if !Self::is_backend_available(backend) {
+    pub fn with_backend(_backend: GpuBackend) -> Result<Self> {
+        if !Self::is_backend_available(_backend) {
             return Err(IoError::Other(format!(
-                "GPU backend {} is not available",
-                backend
+                "GPU _backend {} is not available",
+                _backend
             )));
         }
 
-        let device = GpuDevice::new(backend, 0);
+        let device = GpuDevice::new(_backend, 0);
         let capabilities = PlatformCapabilities::detect();
 
         Ok(Self {
@@ -82,8 +82,7 @@ impl GpuIoProcessor {
             if Self::is_backend_available(backend) {
                 // Additional validation - check if we can actually create a device
                 match Self::validate_backend(backend) {
-                    Ok(true) => return Ok(backend),
-                    _ => continue,
+                    Ok(true) => return Ok(backend, _ => continue,
                 }
             }
         }
@@ -94,29 +93,28 @@ impl GpuIoProcessor {
     }
 
     /// Validate that a backend is functional (not just available)
-    pub fn validate_backend(backend: GpuBackend) -> Result<bool> {
-        if !backend.is_available() {
+    pub fn validate_backend(_backend: GpuBackend) -> Result<bool> {
+        if !_backend.is_available() {
             return Ok(false);
         }
 
         // Try to create a test device and perform a simple operation
-        match GpuDevice::new(backend, 0) {
+        match GpuDevice::new(_backend, 0) {
             device => {
-                // Additional validation based on backend type
-                match backend {
-                    GpuBackend::Cuda => Self::validate_cuda_backend(&device),
-                    GpuBackend::Metal => Self::validate_metal_backend(&device),
-                    GpuBackend::OpenCL => Self::validate_opencl_backend(&device),
-                    _ => Ok(false),
+                // Additional validation based on _backend type
+                match _backend {
+                    GpuBackend::Cuda =>, Self::validate_cuda_backend(&device),
+                    GpuBackend::Metal =>, Self::validate_metal_backend(&device),
+                    GpuBackend::OpenCL =>, Self::validate_opencl_backend(&device, _ => Ok(false),
                 }
             }
         }
     }
 
     /// Validate CUDA backend functionality
-    fn validate_cuda_backend(device: &GpuDevice) -> Result<bool> {
+    fn validate_cuda_backend(_device: &GpuDevice) -> Result<bool> {
         // Check CUDA compute capability and available memory
-        match device.get_info() {
+        match _device.get_info() {
             info => {
                 // Require at least compute capability 3.5 and 1GB memory
                 Ok(info.compute_capability >= 3.5 && info.memory_gb >= 1.0)
@@ -125,9 +123,9 @@ impl GpuIoProcessor {
     }
 
     /// Validate Metal backend functionality  
-    fn validate_metal_backend(device: &GpuDevice) -> Result<bool> {
+    fn validate_metal_backend(_device: &GpuDevice) -> Result<bool> {
         // Check Metal feature set support
-        match device.get_info() {
+        match _device.get_info() {
             info => {
                 // Require Metal 2.0+ support and sufficient memory
                 Ok(info.metal_version >= 2.0 && info.memory_gb >= 1.0)
@@ -136,9 +134,9 @@ impl GpuIoProcessor {
     }
 
     /// Validate OpenCL backend functionality
-    fn validate_opencl_backend(device: &GpuDevice) -> Result<bool> {
+    fn validate_opencl_backend(_device: &GpuDevice) -> Result<bool> {
         // Check OpenCL version and extensions
-        match device.get_info() {
+        match _device.get_info() {
             info => {
                 // Require OpenCL 1.2+ and basic extensions
                 Ok(info.opencl_version >= 1.2 && info.supports_fp64)
@@ -168,8 +166,8 @@ impl GpuIoProcessor {
     }
 
     /// Check if a specific backend is available
-    pub fn is_backend_available(backend: GpuBackend) -> bool {
-        backend.is_available()
+    pub fn is_backend_available(_backend: GpuBackend) -> bool {
+        _backend.is_available()
     }
 
     /// List all available backends on the system
@@ -201,7 +199,7 @@ pub trait GpuArrayOps<T: GpuDataType> {
     fn to_gpu(&self) -> Result<GpuBuffer<T>>;
 
     /// Transfer array from GPU
-    fn from_gpu(gpu_buffer: &GpuBuffer<T>) -> Result<Self>
+    fn from_gpu(_gpu_buffer: &GpuBuffer<T>) -> Result<Self>
     where
         Self: Sized;
 }
@@ -238,8 +236,7 @@ pub mod gpu_compression {
                 match self.gpu_processor.backend() {
                     GpuBackend::Cuda => self.compress_cuda(data, algorithm, level),
                     GpuBackend::Metal => self.compress_metal(data, algorithm, level),
-                    GpuBackend::OpenCL => self.compress_opencl(data, algorithm, level),
-                    _ => {
+                    GpuBackend::OpenCL => self.compress_opencl(data, algorithm, level, _ => {
                         // Fallback to CPU implementation
                         Err(IoError::Other(format!(
                             "GPU backend {} not supported for compression",
@@ -282,7 +279,7 @@ pub mod gpu_compression {
                 }
             } else {
                 Err(IoError::Other(
-                    "Data size too small for GPU acceleration".to_string(),
+                    "Data _size too small for GPU acceleration".to_string(),
                 ))
             }
         }
@@ -562,13 +559,13 @@ pub mod gpu_compression {
                 if offset + 4 > data.len() {
                     return Err(IoError::Other("Invalid compressed data format".to_string()));
                 }
-                let size = u32::from_le_bytes([
+                let _size = u32::from_le_bytes([
                     data[offset],
                     data[offset + 1],
                     data[offset + 2],
                     data[offset + 3],
                 ]) as usize;
-                chunk_sizes.push(size);
+                chunk_sizes.push(_size);
                 offset += 4;
             }
 
@@ -576,12 +573,12 @@ pub mod gpu_compression {
             use scirs2_core::parallel_ops::*;
 
             let mut chunk_data = Vec::new();
-            for &size in &chunk_sizes {
-                if offset + size > data.len() {
+            for &_size in &chunk_sizes {
+                if offset + _size > data.len() {
                     return Err(IoError::Other("Invalid compressed data format".to_string()));
                 }
-                chunk_data.push(&data[offset..offset + size]);
-                offset += size;
+                chunk_data.push(&data[offset..offset + _size]);
+                offset += _size;
             }
 
             let decompressed_chunks: Result<Vec<Vec<u8>>> = chunk_data
@@ -618,10 +615,10 @@ pub mod gpu_compression {
             }
 
             // Convert bytes back to T array
-            let element_size = std::mem::size_of::<T>();
+            let element_size = std::mem::_size_of::<T>();
             if combined_data.len() % element_size != 0 {
                 return Err(IoError::Other(
-                    "Decompressed data size mismatch".to_string(),
+                    "Decompressed data _size mismatch".to_string(),
                 ));
             }
 
@@ -664,13 +661,13 @@ pub mod gpu_compression {
                         "Invalid Metal compressed data format".to_string(),
                     ));
                 }
-                let size = u32::from_le_bytes([
+                let _size = u32::from_le_bytes([
                     data[offset],
                     data[offset + 1],
                     data[offset + 2],
                     data[offset + 3],
                 ]) as usize;
-                chunk_sizes.push(size);
+                chunk_sizes.push(_size);
                 offset += 4;
             }
 
@@ -701,7 +698,7 @@ pub mod gpu_compression {
             let num_chunks = u32::from_le_bytes([data[12], data[13], data[14], data[15]]) as usize;
             let mut offset = 16;
 
-            // Read chunk metadata (index + size pairs)
+            // Read chunk metadata (index + _size pairs)
             let mut chunk_info = Vec::with_capacity(num_chunks);
             for _ in 0..num_chunks {
                 if offset + 8 > data.len() {
@@ -726,8 +723,8 @@ pub mod gpu_compression {
             }
 
             // Sort by index to ensure correct order
-            chunk_info.sort_by_key(|(index, _)| *index);
-            let chunk_sizes: Vec<usize> = chunk_info.into_iter().map(|(_, size)| size).collect();
+            chunk_info.sort_by_key(|(index_)| *index);
+            let chunk_sizes: Vec<usize> = chunk_info.into_iter().map(|(_, _size)| _size).collect();
 
             // Decompress chunks using OpenCL-optimized parallel processing
             self.decompress_chunks_parallel(data, offset, &chunk_sizes, algorithm)
@@ -772,9 +769,8 @@ pub mod gpu_compression {
                         zstd::bulk::decompress(chunk, 16 * 1024 * 1024) // 16MB max
                             .map_err(|e| IoError::Other(e.to_string()))
                     }
-                    CompressionAlgorithm::Lz4 => lz4_flex::decompress_size_prepended(chunk)
-                        .map_err(|e| IoError::Other(format!("LZ4 decompression error: {}", e))),
-                    _ => Err(IoError::UnsupportedFormat(format!(
+                    CompressionAlgorithm::Lz4 =>, lz4_flex::decompress_size_prepended(chunk)
+                        .map_err(|e| IoError::Other(format!("LZ4 decompression error: {}", e)), _ => Err(IoError::UnsupportedFormat(format!(
                         "Compression algorithm {:?} not supported",
                         algorithm
                     ))),
@@ -836,8 +832,7 @@ pub mod gpu_transform {
 
             match self.gpu_processor.backend() {
                 GpuBackend::Cuda => self.f64_to_f32_cuda(input),
-                GpuBackend::Metal => self.f64_to_f32_metal(input),
-                _ => Err(IoError::Other(format!(
+                GpuBackend::Metal => self.f64_to_f32_metal(input, _ => Err(IoError::Other(format!(
                     "GPU backend {} not supported for type conversion",
                     self.gpu_processor.backend()
                 ))),
@@ -926,8 +921,7 @@ pub mod gpu_matrix {
 
             match self.gpu_processor.backend() {
                 GpuBackend::Cuda => self.transpose_cuda(matrix),
-                GpuBackend::Metal => self.transpose_metal(matrix),
-                _ => Err(IoError::Other(format!(
+                GpuBackend::Metal => self.transpose_metal(matrix, _ => Err(IoError::Other(format!(
                     "GPU backend {} not supported for matrix operations",
                     self.gpu_processor.backend()
                 ))),
@@ -1004,8 +998,7 @@ pub mod gpu_checksum {
 
             match self.gpu_processor.backend() {
                 GpuBackend::Cuda => self.crc32_cuda(data),
-                GpuBackend::Metal => self.crc32_metal(data),
-                _ => Err(IoError::Other(format!(
+                GpuBackend::Metal => self.crc32_metal(data, _ => Err(IoError::Other(format!(
                     "GPU backend {} not supported for checksum calculation",
                     self.gpu_processor.backend()
                 ))),
@@ -1157,12 +1150,12 @@ pub mod gpu_memory {
     }
 
     impl PooledBuffer {
-        fn new(buffer: GpuBuffer<u8>, id: usize, allocation_source: String) -> Self {
+        fn new(_buffer: GpuBuffer<u8>, id: usize, allocation_source: String) -> Self {
             let now = Instant::now();
-            let size = buffer.size();
+            let size = _buffer.size();
 
             Self {
-                buffer,
+                _buffer,
                 metadata: BufferMetadata {
                     id,
                     size,
@@ -1215,15 +1208,15 @@ pub mod gpu_memory {
     }
 
     impl FragmentationManager {
-        fn new(total_size: usize) -> Self {
+        fn new(_total_size: usize) -> Self {
             let mut free_space_map = BTreeMap::new();
-            free_space_map.insert(total_size, vec![0]);
+            free_space_map.insert(_total_size, vec![0]);
 
             Self {
                 free_space_map,
                 allocated_space_map: BTreeMap::new(),
-                total_size,
-                largest_free_block: total_size,
+                _total_size,
+                largest_free_block: _total_size,
             }
         }
 
@@ -1318,11 +1311,11 @@ pub mod gpu_memory {
 
     impl AdvancedGpuMemoryPool {
         /// Create a new advanced GPU memory pool
-        pub fn new(device: GpuDevice, config: PoolConfig) -> Self {
+        pub fn new(_device: GpuDevice, config: PoolConfig) -> Self {
             let fragmentation_manager = FragmentationManager::new(config.max_pool_size);
 
             Self {
-                device,
+                _device,
                 free_buffers: BTreeMap::new(),
                 allocated_buffers: HashMap::new(),
                 allocation_stats: AllocationStats::default(),
@@ -1333,8 +1326,8 @@ pub mod gpu_memory {
         }
 
         /// Create with default configuration
-        pub fn with_defaults(device: GpuDevice) -> Self {
-            Self::new(device, PoolConfig::default())
+        pub fn with_defaults(_device: GpuDevice) -> Self {
+            Self::new(_device, PoolConfig::default())
         }
 
         /// Allocate a buffer with smart reuse strategy
@@ -1674,14 +1667,14 @@ pub mod gpu_memory {
 
     impl GpuMemoryPool {
         /// Create a new GPU memory pool
-        pub fn new(device: GpuDevice, max_pool_size: usize) -> Self {
+        pub fn new(_device: GpuDevice, max_pool_size: usize) -> Self {
             let config = PoolConfig {
                 max_pool_size,
                 ..PoolConfig::default()
             };
 
             Self {
-                advanced_pool: AdvancedGpuMemoryPool::new(device, config),
+                advanced_pool: AdvancedGpuMemoryPool::new(_device, config),
             }
         }
 
@@ -1733,10 +1726,10 @@ pub mod gpu_streaming {
 
     impl GpuStreamProcessor {
         /// Create a new GPU stream processor
-        pub fn new(chunk_size: usize, overlap_factor: f32) -> Result<Self> {
+        pub fn new(_chunk_size: usize, overlap_factor: f32) -> Result<Self> {
             Ok(Self {
                 gpu_processor: GpuIoProcessor::new()?,
-                chunk_size,
+                _chunk_size,
                 overlap_factor,
             })
         }
@@ -1853,10 +1846,10 @@ pub mod gpu_matrix_advanced {
 
     impl GpuMatrixProcessor {
         /// Create a new GPU matrix processor
-        pub fn new(tile_size: usize) -> Result<Self> {
+        pub fn new(_tile_size: usize) -> Result<Self> {
             Ok(Self {
                 gpu_processor: GpuIoProcessor::new()?,
-                tile_size,
+                _tile_size,
             })
         }
 
@@ -2288,14 +2281,13 @@ impl AdvancedMultiGpuProcessor {
         })
     }
 
-    fn get_device_count_for_backend(backend: GpuBackend) -> Result<usize> {
+    fn get_device_count_for_backend(_backend: GpuBackend) -> Result<usize> {
         // This would typically query the GPU driver
         // For now, return a reasonable default
-        match backend {
-            GpuBackend::Cuda => Ok(if backend.is_available() { 1 } else { 0 }),
-            GpuBackend::Metal => Ok(if backend.is_available() { 1 } else { 0 }),
-            GpuBackend::OpenCL => Ok(if backend.is_available() { 1 } else { 0 }),
-            _ => Ok(0),
+        match _backend {
+            GpuBackend::Cuda => Ok(if _backend.is_available() { 1 } else { 0 }),
+            GpuBackend::Metal => Ok(if _backend.is_available() { 1 } else { 0 }),
+            GpuBackend::OpenCL => Ok(if _backend.is_available() { 1 } else { 0 }, _ => Ok(0),
         }
     }
 
@@ -2426,8 +2418,8 @@ pub struct IntelligentLoadBalancer {
 }
 
 impl IntelligentLoadBalancer {
-    pub fn new(devices: &[GpuDevice]) -> Result<Self> {
-        let device_capabilities = devices
+    pub fn new(_devices: &[GpuDevice]) -> Result<Self> {
+        let device_capabilities = _devices
             .iter()
             .map(|device| DeviceCapability::from_device(device))
             .collect();
@@ -2479,8 +2471,7 @@ impl IntelligentLoadBalancer {
 
     fn generate_partitioning_candidates(
         &self,
-        data_shape: (usize, usize),
-        _requirements: &ComputationRequirements,
+        data_shape: (usize, usize), _requirements: &ComputationRequirements,
     ) -> Vec<PartitioningStrategy> {
         let device_count = self.device_capabilities.len();
         let mut strategies = Vec::new();
@@ -2613,23 +2604,20 @@ impl TensorAccelerationEngine {
     }
 
     fn execute_tensor_kernel<T>(
-        &self,
-        _kernel: CompiledKernel,
+        &self_kernel: CompiledKernel,
         a: &Array2<T>,
         b: &Array2<T>,
     ) -> Result<Array2<T>>
     where
         T: GpuDataType + Clone,
     {
-        // Simplified implementation - would execute actual GPU kernel
+        // Simplified implementation - would execute actual GPU _kernel
         Ok(a.dot(b))
     }
 
     fn execute_convolution_kernel<T>(
-        &self,
-        _kernel: CompiledKernel,
-        input: &Array2<T>,
-        _filter: &Array2<T>,
+        &self_kernel: CompiledKernel,
+        input: &Array2<T>, _filter: &Array2<T>,
     ) -> Result<Array2<T>>
     where
         T: GpuDataType + Clone,
@@ -2639,10 +2627,8 @@ impl TensorAccelerationEngine {
     }
 
     fn execute_fused_kernel<T, F>(
-        &self,
-        _kernel: CompiledKernel,
-        inputs: Vec<&Array2<T>>,
-        _operation: F,
+        &self_kernel: CompiledKernel,
+        inputs: Vec<&Array2<T>>, _operation: F,
     ) -> Result<Array2<T>>
     where
         T: GpuDataType + Clone,
@@ -2772,17 +2758,17 @@ pub struct ComputationRequirements {
 }
 
 impl ComputationRequirements {
-    pub fn analyze<T, F>(data: &Array2<T>, _computation: &F) -> Result<Self>
+    pub fn analyze<T, F>(_data: &Array2<T>, _computation: &F) -> Result<Self>
     where
         T: GpuDataType,
         F: Fn(&ArrayView2<T>) -> Result<Array2<T>>,
     {
-        let data_size = data.len() * std::mem::size_of::<T>();
+        let data_size = _data.len() * std::mem::size_of::<T>();
 
         Ok(Self {
             memory_bound_ratio: if data_size > 1024 * 1024 { 0.8 } else { 0.3 },
-            compute_intensity: (data.nrows() * data.ncols()) as f64,
-            data_locality: 0.7,
+            compute_intensity: (_data.nrows() * _data.ncols()) as f64,
+            _data_locality: 0.7,
             synchronization_overhead: 0.1,
         })
     }
@@ -2823,8 +2809,8 @@ pub struct DeviceCapability {
 }
 
 impl DeviceCapability {
-    pub fn from_device(device: &GpuDevice) -> Self {
-        let info = device.get_info();
+    pub fn from_device(_device: &GpuDevice) -> Self {
+        let info = _device.get_info();
 
         Self {
             compute_score: info.compute_units as f64 * info.base_clock_mhz,
@@ -2857,8 +2843,7 @@ impl PerformancePredictor {
     }
 
     pub fn predict_execution_time(
-        &self,
-        _strategy: &PartitioningStrategy,
+        &self_strategy: &PartitioningStrategy,
         requirements: &ComputationRequirements,
     ) -> Result<f64> {
         // Simplified prediction model
@@ -2883,18 +2868,16 @@ pub struct GpuTaskScheduler {
 }
 
 impl GpuTaskScheduler {
-    pub fn new(device_count: usize) -> Self {
+    pub fn new(_device_count: usize) -> Self {
         Self {
             task_queue: Vec::new(),
-            device_count,
+            _device_count,
             scheduler_policy: SchedulerPolicy::LoadBalanced,
         }
     }
 
     pub fn schedule_tasks<T, F>(
-        &mut self,
-        _partitioning: PartitioningStrategy,
-        _computation: &F,
+        &mut self_partitioning: PartitioningStrategy, _computation: &F,
     ) -> Result<Vec<GpuTask<T>>>
     where
         T: GpuDataType + Clone + Send + Sync,
@@ -2961,8 +2944,8 @@ pub struct GpuPerformanceMonitor {
 }
 
 impl GpuPerformanceMonitor {
-    pub fn new(devices: &[GpuDevice]) -> Self {
-        let device_metrics = devices.iter().map(|_| DeviceMetrics::new()).collect();
+    pub fn new(_devices: &[GpuDevice]) -> Self {
+        let device_metrics = _devices.iter().map(|_| DeviceMetrics::new()).collect();
 
         Self {
             device_metrics,
@@ -2973,8 +2956,7 @@ impl GpuPerformanceMonitor {
     pub fn record_execution<T>(
         &mut self,
         requirements: &ComputationRequirements,
-        execution_time: Duration,
-        _results: &[TaskResult<T>],
+        execution_time: Duration, _results: &[TaskResult<T>],
     ) {
         let record = PerformanceRecord {
             timestamp: Utc::now(),
@@ -3056,8 +3038,8 @@ pub struct DataLayoutAnalyzer {
 }
 
 impl DataLayoutAnalyzer {
-    pub fn new(devices: &[GpuDevice]) -> Self {
-        let device_info = devices
+    pub fn new(_devices: &[GpuDevice]) -> Self {
+        let device_info = _devices
             .iter()
             .enumerate()
             .map(|(id, device)| {
@@ -3075,11 +3057,11 @@ impl DataLayoutAnalyzer {
             .collect();
 
         Self {
-            devices: device_info,
+            _devices: device_info,
         }
     }
 
-    pub fn analyze_optimal_layout<T>(&self, _data: &Array2<T>) -> Result<DataLayoutPlan<T>>
+    pub fn analyze_optimal_layout<T>(&self_data: &Array2<T>) -> Result<DataLayoutPlan<T>>
     where
         T: GpuDataType,
     {
@@ -3346,12 +3328,12 @@ pub struct MemoryPool {
 }
 
 impl MemoryPool {
-    pub fn new(size: usize, memory_type: MemoryType, _unified_memory: bool) -> Result<Self> {
+    pub fn new(_size: usize, memory_type: MemoryType_unified, _memory: bool) -> Result<Self> {
         Ok(Self {
             memory_type,
-            total_size: size,
+            total_size: _size,
             allocated_size: 0,
-            free_blocks: vec![MemoryBlock { offset: 0, size }],
+            free_blocks: vec![MemoryBlock { offset: 0, _size }],
         })
     }
 
@@ -3388,8 +3370,7 @@ impl MemoryPool {
             Ok(GpuAllocation {
                 offset: block.offset,
                 size: bytes_needed,
-                memory_type: self.memory_type,
-                _phantom: PhantomData,
+                memory_type: self.memory_type, _phantom: PhantomData,
             })
         } else {
             Err(IoError::Other("Out of memory".to_string()))
@@ -3442,8 +3423,7 @@ pub struct MemoryBlock {
 pub struct GpuAllocation<T> {
     pub offset: usize,
     pub size: usize,
-    pub memory_type: MemoryType,
-    _phantom: PhantomData<T>,
+    pub memory_type: MemoryType, _phantom: PhantomData<T>,
 }
 
 impl<T> GpuAllocation<T> {
@@ -3516,7 +3496,7 @@ impl GpuGarbageCollector {
         Ok(())
     }
 
-    fn defragment_pool(&self, _pool: &mut MemoryPool) -> Result<()> {
+    fn defragment_pool(&self_pool: &mut MemoryPool) -> Result<()> {
         // Simplified defragmentation
         Ok(())
     }
@@ -3601,8 +3581,7 @@ impl MultiPrecisionProcessor {
         match error_analysis.required_precision_bits {
             0..=16 => Ok(PrecisionMode::Half),
             17..=32 => Ok(PrecisionMode::Single),
-            33..=64 => Ok(PrecisionMode::Double),
-            _ => Ok(PrecisionMode::Quadruple),
+            33..=64 => Ok(PrecisionMode::Double, _ => Ok(PrecisionMode::Quadruple),
         }
     }
 }
@@ -3621,7 +3600,7 @@ impl NumericalErrorAnalyzer {
         }
     }
 
-    pub fn analyze_numerical_stability<T>(&self, _data: &Array2<T>) -> Result<ErrorAnalysis>
+    pub fn analyze_numerical_stability<T>(&self_data: &Array2<T>) -> Result<ErrorAnalysis>
     where
         T: GpuDataType,
     {
@@ -3655,10 +3634,10 @@ pub enum StabilityRating {
 /// Advanced AI-driven GPU optimization with machine learning
 pub mod advanced_gpu_optimization {
     use super::*;
-    use crate::neural_adaptive_io::{
+    use crate::neural_adaptive__io::{
         NeuralAdaptiveIoController, OptimizationDecisions, SystemMetrics,
     };
-    use crate::quantum_inspired_io::{QuantumIoParams, QuantumParallelProcessor};
+    use crate::quantum_inspired__io::{QuantumIoParams, QuantumParallelProcessor};
     use std::collections::VecDeque;
     use std::sync::{Arc, RwLock};
     use std::time::{Duration, Instant};
@@ -4059,7 +4038,7 @@ pub mod advanced_gpu_optimization {
                 return cached_size;
             }
 
-            // Calculate optimal size based on data characteristics
+            // Calculate optimal _size based on data characteristics
             let base_size = data_size * 2; // Double buffering
             let alignment_overhead = (base_size + 4095) & !4095; // 4KB alignment
             let optimization_margin = (alignment_overhead as f32 * 1.2) as usize; // 20% margin

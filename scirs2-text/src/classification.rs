@@ -8,6 +8,7 @@ use crate::vectorize::{TfidfVectorizer, Vectorizer};
 use ndarray::{Array2, Axis};
 use rand::prelude::*;
 use rand::SeedableRng;
+use rand::seq::SliceRandom;
 
 /// Text feature selector
 ///
@@ -186,7 +187,7 @@ impl TextClassificationMetrics {
 
         if predictions.len() != true_labels.len() {
             return Err(TextError::InvalidInput(
-                "Predictions and labels must have the same length".to_string(),
+                "Predictions and _labels must have the same length".to_string(),
             ));
         }
 
@@ -223,7 +224,7 @@ impl TextClassificationMetrics {
 
         if predictions.len() != true_labels.len() {
             return Err(TextError::InvalidInput(
-                "Predictions and labels must have the same length".to_string(),
+                "Predictions and _labels must have the same length".to_string(),
             ));
         }
 
@@ -273,7 +274,7 @@ impl TextClassificationMetrics {
     {
         if predictions.len() != true_labels.len() {
             return Err(TextError::InvalidInput(
-                "Predictions and labels must have the same length".to_string(),
+                "Predictions and _labels must have the same length".to_string(),
             ));
         }
 
@@ -299,7 +300,7 @@ impl TextClassificationMetrics {
     {
         if predictions.len() != true_labels.len() {
             return Err(TextError::InvalidInput(
-                "Predictions and labels must have the same length".to_string(),
+                "Predictions and _labels must have the same length".to_string(),
             ));
         }
 
@@ -354,15 +355,15 @@ pub struct TextDataset {
 
 impl TextDataset {
     /// Create a new text dataset
-    pub fn new(texts: Vec<String>, labels: Vec<String>) -> Result<Self> {
-        if texts.len() != labels.len() {
+    pub fn new(_texts: Vec<String>, labels: Vec<String>) -> Result<Self> {
+        if _texts.len() != labels.len() {
             return Err(TextError::InvalidInput(
                 "Texts and labels must have the same length".to_string(),
             ));
         }
 
         Ok(Self {
-            texts,
+            _texts,
             labels,
             label_index: None,
         })
@@ -438,9 +439,9 @@ impl TextDataset {
         let mut indices: Vec<usize> = (0..self.len()).collect();
 
         // Shuffle indices
-        if let Some(seed) = random_seed {
-            // Use deterministic RNG with seed
-            let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+        if let Some(_seed) = random_seed {
+            // Use deterministic RNG with _seed
+            let mut rng = rand::rngs::StdRng::seed_from_u64(_seed);
             indices.shuffle(&mut rng);
         } else {
             // Use standard rng
@@ -500,9 +501,9 @@ impl TextClassificationPipeline {
     }
 
     /// Create a new pipeline with the given vectorizer
-    pub fn new(vectorizer: TfidfVectorizer) -> Self {
+    pub fn new(_vectorizer: TfidfVectorizer) -> Self {
         Self {
-            vectorizer,
+            _vectorizer,
             feature_selector: None,
         }
     }

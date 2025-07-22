@@ -58,6 +58,16 @@ impl MemoryInfo {
         #[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos")))]
         return Ok(Self::default());
     }
+    
+    fn parse_meminfo_value(line: &str) -> Option<u64> {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() < 2 {
+            return None;
+        }
+        
+        // The second part is typically the value in KB
+        parts[1].parse::<u64>().ok()
+    }
 
     /// Detect memory information on Linux
     #[cfg(target_os = "linux")]
@@ -100,14 +110,14 @@ impl MemoryInfo {
         let pressure = Self::detect_memory_pressure();
 
         let swap_info = SwapInfo {
-            total: swap_total,
-            free: swap_free,
-            used: swap_total - swap_free,
+            total: swap_total as usize,
+            free: swap_free as usize,
+            used: (swap_total - swap_free) as usize,
         };
 
         Ok(Self {
-            total_memory,
-            available_memory,
+            total_memory: total_memory as usize,
+            available_memory: available_memory as usize,
             page_size,
             bandwidth_gbps,
             latency_ns,
@@ -119,7 +129,7 @@ impl MemoryInfo {
 
     /// Parse value from /proc/meminfo line
     #[allow(dead_code)]
-    fn parse_meminfo_value(line: &str) -> Option<usize> {
+    fn parse_meminfo_line(line: &str) -> Option<usize> {
         let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.len() >= 2 {
             parts[1].parse().ok()

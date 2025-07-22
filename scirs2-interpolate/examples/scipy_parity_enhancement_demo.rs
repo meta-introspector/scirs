@@ -3,7 +3,7 @@
 //! This example demonstrates how to use the SciPy parity enhancement tools
 //! to analyze and complete remaining SciPy features for the stable release.
 
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     enhance_scipy_parity_for_stable_release, enhance_scipy_parity_with_config,
     quick_scipy_parity_analysis, CompatibilityStatus, FeaturePriority, FocusArea,
     ImplementationLevel, ParityConfig, ParityReadiness, PerformanceCategory,
@@ -151,32 +151,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Analyze parity enhancement results in detail
 #[allow(dead_code)]
-fn analyze_parity_results(report: &scirs2_interpolate::SciPyParityReport) {
+fn analyze_parity_results(_report: &scirs2_interpolate: :SciPyParityReport) {
     println!("Detailed Parity Analysis:");
 
     // Overall statistics
     println!("  Feature Coverage:");
-    println!("    Total Features: {}", report.total_features);
+    println!("    Total Features: {}", _report.total_features);
     println!(
         "    Complete: {} ({:.1}%)",
-        report.complete_features,
-        (report.complete_features as f32 / report.total_features as f32) * 100.0
+        _report.complete_features,
+        (_report.complete_features as f32 / _report.total_features as f32) * 100.0
     );
     println!(
         "    Partial: {} ({:.1}%)",
-        report.partial_features,
-        (report.partial_features as f32 / report.total_features as f32) * 100.0
+        _report.partial_features,
+        (_report.partial_features as f32 / _report.total_features as f32) * 100.0
     );
     println!(
         "    Missing: {} ({:.1}%)",
-        report.missing_features,
-        (report.missing_features as f32 / report.total_features as f32) * 100.0
+        _report.missing_features,
+        (_report.missing_features as f32 / _report.total_features as f32) * 100.0
     );
 
     // Critical gaps
-    if !report.critical_gaps.is_empty() {
-        println!("  ⚠️  {} critical gaps found:", report.critical_gaps.len());
-        for gap in &report.critical_gaps {
+    if !_report.critical_gaps.is_empty() {
+        println!("  ⚠️  {} critical gaps found:", _report.critical_gaps.len());
+        for gap in &_report.critical_gaps {
             println!(
                 "    - {}: {:?}",
                 gap.scipy_feature, gap.implementation_status
@@ -187,8 +187,8 @@ fn analyze_parity_results(report: &scirs2_interpolate::SciPyParityReport) {
     }
 
     // Implementation progress
-    if !report.implementation_progress.is_empty() {
-        let in_progress = report
+    if !_report.implementation_progress.is_empty() {
+        let in_progress = _report
             .implementation_progress
             .iter()
             .filter(|p| p.completion_percentage < 100.0)
@@ -198,7 +198,7 @@ fn analyze_parity_results(report: &scirs2_interpolate::SciPyParityReport) {
             println!("  🔧 {} features currently in development", in_progress);
         }
 
-        let completed = report
+        let completed = _report
             .implementation_progress
             .iter()
             .filter(|p| p.completion_percentage >= 100.0)
@@ -212,12 +212,12 @@ fn analyze_parity_results(report: &scirs2_interpolate::SciPyParityReport) {
 
 /// Analyze feature gaps by priority level
 #[allow(dead_code)]
-fn analyze_gaps_by_priority(report: &scirs2_interpolate::SciPyParityReport) {
+fn analyze_gaps_by_priority(_report: &scirs2_interpolate: :SciPyParityReport) {
     use std::collections::HashMap;
 
     let mut priority_stats: HashMap<String, (usize, usize, usize)> = HashMap::new();
 
-    for gap in &report.gap_analysis {
+    for gap in &_report.gap_analysis {
         let priority_name = format!("{:?}", gap.priority);
         let stats = priority_stats.entry(priority_name).or_insert((0, 0, 0));
 
@@ -258,10 +258,10 @@ fn analyze_gaps_by_priority(report: &scirs2_interpolate::SciPyParityReport) {
 
 /// Track implementation progress for active features
 #[allow(dead_code)]
-fn track_implementation_progress(report: &scirs2_interpolate::SciPyParityReport) {
+fn track_implementation_progress(_report: &scirs2_interpolate: :SciPyParityReport) {
     println!("Implementation Progress:");
 
-    if report.implementation_progress.is_empty() {
+    if _report.implementation_progress.is_empty() {
         println!("  No active implementations tracked");
         return;
     }
@@ -269,7 +269,7 @@ fn track_implementation_progress(report: &scirs2_interpolate::SciPyParityReport)
     let mut by_stage: HashMap<String, Vec<&scirs2_interpolate::ImplementationStatus>> =
         HashMap::new();
 
-    for status in &report.implementation_progress {
+    for status in &_report.implementation_progress {
         let stage_name = format!("{:?}", status.stage);
         by_stage
             .entry(stage_name)
@@ -298,46 +298,46 @@ fn track_implementation_progress(report: &scirs2_interpolate::SciPyParityReport)
     }
 
     // Progress summary
-    let avg_completion: f32 = report
+    let avg_completion: f32 = _report
         .implementation_progress
         .iter()
         .map(|s| s.completion_percentage)
         .sum::<f32>()
-        / report.implementation_progress.len() as f32;
+        / _report.implementation_progress.len() as f32;
 
     println!("  Average completion: {:.1}%", avg_completion);
 }
 
 /// Analyze compatibility test results
 #[allow(dead_code)]
-fn analyze_compatibility_results(report: &scirs2_interpolate::SciPyParityReport) {
+fn analyze_compatibility_results(_report: &scirs2_interpolate: :SciPyParityReport) {
     println!("Compatibility Test Results:");
 
-    if report.compatibility_results.is_empty() {
+    if _report.compatibility_results.is_empty() {
         println!("  No compatibility tests run");
         return;
     }
 
-    let total_tests = report.compatibility_results.len();
-    let fully_compatible = report
+    let total_tests = _report.compatibility_results.len();
+    let fully_compatible = _report
         .compatibility_results
         .iter()
         .filter(|r| r.status == CompatibilityStatus::FullyCompatible)
         .count();
 
-    let mostly_compatible = report
+    let mostly_compatible = _report
         .compatibility_results
         .iter()
         .filter(|r| r.status == CompatibilityStatus::MostlyCompatible)
         .count();
 
-    let partially_compatible = report
+    let partially_compatible = _report
         .compatibility_results
         .iter()
         .filter(|r| r.status == CompatibilityStatus::PartiallyCompatible)
         .count();
 
-    let incompatible = report
+    let incompatible = _report
         .compatibility_results
         .iter()
         .filter(|r| r.status == CompatibilityStatus::Incompatible)
@@ -366,7 +366,7 @@ fn analyze_compatibility_results(report: &scirs2_interpolate::SciPyParityReport)
     );
 
     // Show problematic tests
-    let problematic_tests: Vec<_> = report
+    let problematic_tests: Vec<_> = _report
         .compatibility_results
         .iter()
         .filter(|r| {
@@ -399,16 +399,16 @@ fn analyze_compatibility_results(report: &scirs2_interpolate::SciPyParityReport)
 
 /// Analyze performance comparison results
 #[allow(dead_code)]
-fn analyze_performance_comparisons(report: &scirs2_interpolate::SciPyParityReport) {
+fn analyze_performance_comparisons(_report: &scirs2_interpolate: :SciPyParityReport) {
     println!("Performance Comparison Results:");
 
-    if report.performance_comparisons.is_empty() {
+    if _report.performance_comparisons.is_empty() {
         println!("  No performance comparisons run");
         return;
     }
 
-    let total_comparisons = report.performance_comparisons.len();
-    let faster_count = report
+    let total_comparisons = _report.performance_comparisons.len();
+    let faster_count = _report
         .performance_comparisons
         .iter()
         .filter(|p| {
@@ -417,13 +417,13 @@ fn analyze_performance_comparisons(report: &scirs2_interpolate::SciPyParityRepor
         })
         .count();
 
-    let similar_count = report
+    let similar_count = _report
         .performance_comparisons
         .iter()
         .filter(|p| p.performance_category == PerformanceCategory::Similar)
         .count();
 
-    let slower_count = report
+    let slower_count = _report
         .performance_comparisons
         .iter()
         .filter(|p| {
@@ -450,7 +450,7 @@ fn analyze_performance_comparisons(report: &scirs2_interpolate::SciPyParityRepor
     );
 
     // Calculate average performance ratio
-    let avg_ratio: f64 = report
+    let avg_ratio: f64 = _report
         .performance_comparisons
         .iter()
         .map(|p| p.performance_ratio)
@@ -472,7 +472,7 @@ fn analyze_performance_comparisons(report: &scirs2_interpolate::SciPyParityRepor
     }
 
     // Show significant performance differences
-    let significant_differences: Vec<_> = report
+    let significant_differences: Vec<_> = _report
         .performance_comparisons
         .iter()
         .filter(|p| p.performance_ratio > 2.0 || p.performance_ratio < 0.5)
@@ -504,8 +504,8 @@ fn analyze_performance_comparisons(report: &scirs2_interpolate::SciPyParityRepor
 
 /// Provide actionable plan for completing SciPy parity
 #[allow(dead_code)]
-fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
-    match report.readiness {
+fn provide_parity_action_plan(_report: &scirs2_interpolate: :SciPyParityReport) {
+    match _report.readiness {
         ParityReadiness::Ready => {
             println!("✅ SCIPY PARITY READY FOR STABLE RELEASE");
             println!("  SciPy parity meets requirements for stable release.");
@@ -521,15 +521,15 @@ fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
             let mut action_count = 1;
 
             // Critical gaps
-            if !report.critical_gaps.is_empty() {
+            if !_report.critical_gaps.is_empty() {
                 println!(
                     "    {}. Complete {} critical features",
                     action_count,
-                    report.critical_gaps.len()
+                    _report.critical_gaps.len()
                 );
                 action_count += 1;
 
-                for (i, gap) in report.critical_gaps.iter().enumerate() {
+                for (i, gap) in _report.critical_gaps.iter().enumerate() {
                     if i < 3 {
                         println!(
                             "       - {}: {} hours estimated",
@@ -537,13 +537,13 @@ fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
                         );
                     }
                 }
-                if report.critical_gaps.len() > 3 {
-                    println!("       ... and {} more", report.critical_gaps.len() - 3);
+                if _report.critical_gaps.len() > 3 {
+                    println!("       ... and {} more", _report.critical_gaps.len() - 3);
                 }
             }
 
             // High priority features
-            let high_priority_missing = report
+            let high_priority_missing = _report
                 .gap_analysis
                 .iter()
                 .filter(|gap| {
@@ -561,7 +561,7 @@ fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
             }
 
             // Compatibility issues
-            let compatibility_issues = report
+            let compatibility_issues = _report
                 .compatibility_results
                 .iter()
                 .filter(|r| {
@@ -582,7 +582,7 @@ fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
             println!("  IMMEDIATE ACTIONS REQUIRED:");
 
             // Calculate total effort for critical and high priority features
-            let critical_effort: u32 = report
+            let critical_effort: u32 = _report
                 .gap_analysis
                 .iter()
                 .filter(|gap| {
@@ -592,7 +592,7 @@ fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
                 .map(|gap| gap.effort_estimate.total_hours)
                 .sum();
 
-            let high_effort: u32 = report
+            let high_effort: u32 = _report
                 .gap_analysis
                 .iter()
                 .filter(|gap| {
@@ -604,12 +604,12 @@ fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
 
             println!(
                 "    1. Complete {} critical features (~{} hours)",
-                report.critical_gaps.len(),
+                _report.critical_gaps.len(),
                 critical_effort
             );
 
             if high_effort > 0 {
-                let high_count = report
+                let high_count = _report
                     .gap_analysis
                     .iter()
                     .filter(|gap| {
@@ -632,11 +632,11 @@ fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
 
             println!(
                 "    1. Immediately implement {} critical features",
-                report.critical_gaps.len()
+                _report.critical_gaps.len()
             );
 
             // Show critical features that need immediate attention
-            for (i, gap) in report.critical_gaps.iter().enumerate() {
+            for (i, gap) in _report.critical_gaps.iter().enumerate() {
                 if i < 5 {
                     println!(
                         "       - {}: {:?} ({} hours)",
@@ -646,10 +646,10 @@ fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
                     );
                 }
             }
-            if report.critical_gaps.len() > 5 {
+            if _report.critical_gaps.len() > 5 {
                 println!(
                     "       ... and {} more critical features",
-                    report.critical_gaps.len() - 5
+                    _report.critical_gaps.len() - 5
                 );
             }
 
@@ -660,7 +660,7 @@ fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
     }
 
     // Effort estimation
-    let total_remaining_effort: u32 = report
+    let total_remaining_effort: u32 = _report
         .gap_analysis
         .iter()
         .filter(|gap| gap.implementation_status != ImplementationLevel::Complete)
@@ -675,18 +675,18 @@ fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
         );
     }
 
-    // Priority recommendations from the report
-    if !report.recommendations.is_empty() {
+    // Priority recommendations from the _report
+    if !_report.recommendations.is_empty() {
         println!("  Key Recommendations:");
-        for (i, recommendation) in report.recommendations.iter().enumerate() {
+        for (i, recommendation) in _report.recommendations.iter().enumerate() {
             if i < 5 {
                 println!("    - {}", recommendation);
             }
         }
-        if report.recommendations.len() > 5 {
+        if _report.recommendations.len() > 5 {
             println!(
                 "    ... and {} more recommendations",
-                report.recommendations.len() - 5
+                _report.recommendations.len() - 5
             );
         }
     }

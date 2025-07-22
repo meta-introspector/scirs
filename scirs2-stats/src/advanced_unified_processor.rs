@@ -8,9 +8,9 @@
 #![allow(dead_code)]
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_handling_enhancements::{AdvancedContextBuilder, AdvancedErrorMessages};
-use crate::error_standardization::ErrorMessages;
-use crate::advanced_stubs::{
+use crate::error_handling__enhancements::{AdvancedContextBuilder, AdvancedErrorMessages};
+use crate::error__standardization::ErrorMessages;
+use crate::advanced__stubs::{
     BatchOperation, BatchResults, AdvancedSimdConfig, AdvancedSimdOptimizer,
     create_exhaustive_numerical_stability_tester,
     ComprehensiveStabilityResult as StabilityAnalysisReport,
@@ -93,14 +93,14 @@ pub struct AdvancedUnifiedProcessor {
 
 impl AdvancedUnifiedProcessor {
     /// Create a new unified Advanced processor
-    pub fn new(config: AdvancedProcessorConfig) -> Self {
+    pub fn new(_config: AdvancedProcessorConfig) -> Self {
         Self {
             parallel_processor: create_advanced_parallel_processor(),
             stability_analyzer: create_exhaustive_numerical_stability_tester(),
             capabilities: PlatformCapabilities::detect(),
             simd_processor: None,
             performance_history: Vec::new(),
-            config,
+            _config,
         }
     }
 
@@ -170,7 +170,7 @@ impl AdvancedUnifiedProcessor {
             simd_enabled: strategy.uses_simd(),
             parallel_enabled: strategy.uses_parallel(),
             stability_tested: self.config.enable_stability_testing,
-            memory_usage_mb: self.estimate_memory_usage::<F>(n),
+            memory_usage_mb: self.estimate_memory, _usage::<F>(n),
         };
 
         if self.config.enable_performance_monitoring {
@@ -316,7 +316,7 @@ impl AdvancedUnifiedProcessor {
                 (ProcessingStrategy::SimdOnly, AdvancedTimeSeriesOperation::MovingWindow) => {
                     advanced_moving_window_stats(data, window_size, &self.config.simd_config)?
                 }
-                (ProcessingStrategy::ParallelOnly, _) => {
+                (ProcessingStrategy:: ParallelOnly) => {
                     let ts_operations = self.convert_to_parallel_ts_operations(operations);
                     let parallel_result = self.parallel_processor.process_time_series(
                         data,
@@ -343,7 +343,7 @@ impl AdvancedUnifiedProcessor {
             simd_enabled: strategy.uses_simd(),
             parallel_enabled: strategy.uses_parallel(),
             stability_tested: false,
-            memory_usage_mb: self.estimate_memory_usage::<F>(n),
+            memory_usage_mb: self.estimate_memory, _usage::<F>(n),
         };
 
         Ok(AdvancedTimeSeriesResult {
@@ -404,8 +404,7 @@ impl AdvancedUnifiedProcessor {
 
     fn determine_processing_strategy(
         &self,
-        data_size: usize,
-        _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
+        data_size: usize, _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
     ) -> StatsResult<ProcessingStrategy> {
         match self.config.optimization_mode {
             OptimizationMode::Performance => {
@@ -481,7 +480,7 @@ impl AdvancedUnifiedProcessor {
                     .partial_cmp(&avg_b)
                     .unwrap_or(std::cmp::Ordering::Equal)
             })
-            .map(|(&strategy, _)| strategy)
+            .map(|(&strategy_)| strategy)
             .unwrap_or(ProcessingStrategy::Standard);
 
         Ok(best_strategy)
@@ -490,8 +489,7 @@ impl AdvancedUnifiedProcessor {
     fn determine_matrix_processing_strategy(
         &self,
         n_rows: usize,
-        n_cols: usize,
-        _operation: &AdvancedMatrixOperation,
+        n_cols: usize, _operation: &AdvancedMatrixOperation,
     ) -> StatsResult<ProcessingStrategy> {
         let total_elements = n_rows * n_cols;
 
@@ -722,14 +720,13 @@ impl AdvancedUnifiedProcessor {
         operations
             .iter()
             .map(|op| match op {
-                AdvancedTimeSeriesOperation::MovingWindow => TimeSeriesOperation::MovingAverage,
+                AdvancedTimeSeriesOperation::MovingWindow =>, TimeSeriesOperation::MovingAverage,
             })
             .collect()
     }
 
     fn convert_parallel_ts_result<F>(
-        &self,
-        _result: crate::parallel_enhancements::AdvancedParallelTimeSeriesResult<F>,
+        &self_result: crate::parallel_enhancements::AdvancedParallelTimeSeriesResult<F>,
     ) -> StatsResult<MovingWindowResult<F>>
     where
         F: Float + NumCast + Copy
@@ -746,10 +743,7 @@ impl AdvancedUnifiedProcessor {
     }
 
     fn process_time_series_standard<F, D>(
-        &self,
-        _data: &ArrayBase<D, Ix1>,
-        _window_size: usize,
-        _operation: AdvancedTimeSeriesOperation,
+        &self_data: &ArrayBase<D, Ix1>, _window_size: usize, _operation: AdvancedTimeSeriesOperation,
     ) -> StatsResult<MovingWindowResult<F>>
     where
         F: Float + NumCast + Copy,
@@ -767,9 +761,7 @@ impl AdvancedUnifiedProcessor {
     }
 
     fn generate_recommendations(
-        &self,
-        _metrics: &ProcessingMetrics,
-        _stability_report: &Option<StabilityAnalysisReport>,
+        &self_metrics: &ProcessingMetrics_stability, _report: &Option<StabilityAnalysisReport>,
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
 

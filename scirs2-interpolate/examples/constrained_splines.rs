@@ -1,6 +1,6 @@
 use ndarray::{s, Array1};
-use scirs2_interpolate::bspline::ExtrapolateMode as BSplineExtrapolateMode;
-use scirs2_interpolate::constrained::{ConstrainedSpline, Constraint};
+use scirs2__interpolate::bspline::ExtrapolateMode as BSplineExtrapolateMode;
+use scirs2__interpolate::constrained::{ConstrainedSpline, Constraint};
 
 #[allow(dead_code)]
 fn main() {
@@ -208,21 +208,21 @@ fn main() {
         .iter()
         .enumerate()
         .filter(|(_, &x)| x < 3.0)
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .collect::<Vec<_>>();
 
     let region2_indices = x_fine_region
         .iter()
         .enumerate()
         .filter(|(_, &x)| (3.0..7.0).contains(&x))
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .collect::<Vec<_>>();
 
     let region3_indices = x_fine_region
         .iter()
         .enumerate()
         .filter(|(_, &x)| x >= 7.0)
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .collect::<Vec<_>>();
 
     let min_dy_region1 = region1_indices

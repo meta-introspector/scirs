@@ -5,11 +5,10 @@
 //! sensitive information about the training data.
 
 use crate::error::{OptimError, Result};
-use crate::privacy::moment_accountant::MomentsAccountant;
+use crate::privacy::moment__accountant::MomentsAccountant;
 use crate::privacy::{DifferentialPrivacyConfig, PrivacyBudget};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use scirs2_core::random;
 use std::collections::HashMap;
 
 /// Privacy-preserving hyperparameter optimizer
@@ -236,16 +235,14 @@ pub trait NoisyOptimizer<T: Float>: Send + Sync {
     fn suggest_next(
         &mut self,
         parameter_space: &ParameterSpace<T>,
-        evaluation_history: &[HPOEvaluation<T>],
-        _privacy_budget: &PrivacyBudget,
+        evaluation_history: &[HPOEvaluation<T>], _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>>;
 
     /// Update optimizer with new evaluation result
     fn update(
         &mut self,
         config: &ParameterConfiguration<T>,
-        result: &HPOResult<T>,
-        _privacy_budget: &PrivacyBudget,
+        result: &HPOResult<T>, _privacy_budget: &PrivacyBudget,
     ) -> Result<()>;
 
     /// Get optimizer name
@@ -439,7 +436,7 @@ pub struct ObjectiveNoiseMechanism<T: Float> {
     noise_params: NoiseParameters<T>,
 
     /// Random number generator
-    rng: scirs2_core::random::Random<rand::rngs::StdRng>,
+    rng: scirs2_core: random::Random,
 }
 
 /// Noise parameters
@@ -948,47 +945,47 @@ pub enum EvaluationStatus {
 
 impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
     /// Create new private hyperparameter optimizer
-    pub fn new(config: PrivateHPOConfig<T>, parameter_space: ParameterSpace<T>) -> Result<Self> {
+    pub fn new(_config: PrivateHPOConfig<T>, parameter_space: ParameterSpace<T>) -> Result<Self> {
         let budget_manager = HPOBudgetManager::new(
-            config.base_privacy_config.clone(),
-            config.budget_allocation,
-            config.num_evaluations,
+            _config.base_privacy_config.clone(),
+            _config.budget_allocation,
+            _config.num_evaluations,
         )?;
 
         let privacy_accountant = MomentsAccountant::new(
-            config.base_privacy_config.noise_multiplier,
-            config.base_privacy_config.target_delta,
-            config.base_privacy_config.batch_size,
-            config.base_privacy_config.dataset_size,
+            _config.base_privacy_config.noise_multiplier,
+            _config.base_privacy_config.target_delta,
+            _config.base_privacy_config.batch_size,
+            _config.base_privacy_config.dataset_size,
         );
 
         let mut noisy_optimizers: HashMap<String, Box<dyn NoisyOptimizer<T>>> = HashMap::new();
 
         // Add default noisy optimizers based on configuration
-        match config.search_algorithm {
+        match _config.search_algorithm {
             SearchAlgorithm::RandomSearch => {
                 noisy_optimizers.insert(
                     "random_search".to_string(),
-                    Box::new(PrivateRandomSearch::new(config.clone())?),
+                    Box::new(PrivateRandomSearch::new(_config.clone())?),
                 );
             }
             SearchAlgorithm::BayesianOptimization => {
                 noisy_optimizers.insert(
                     "bayesian_opt".to_string(),
-                    Box::new(PrivateBayesianOptimization::new(config.clone())?),
+                    Box::new(PrivateBayesianOptimization::new(_config.clone())?),
                 );
             }
             _ => {
                 // Default to random search
                 noisy_optimizers.insert(
                     "random_search".to_string(),
-                    Box::new(PrivateRandomSearch::new(config.clone())?),
+                    Box::new(PrivateRandomSearch::new(_config.clone())?),
                 );
             }
         }
 
         Ok(Self {
-            config,
+            _config,
             budget_manager,
             noisy_optimizers,
             parameter_space,
@@ -1014,8 +1011,7 @@ impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
         // Get the primary optimizer
         let optimizer_name = match self.config.search_algorithm {
             SearchAlgorithm::RandomSearch => "random_search",
-            SearchAlgorithm::BayesianOptimization => "bayesian_opt",
-            _ => "random_search",
+            SearchAlgorithm::BayesianOptimization => "bayesian_opt"_ => "random_search",
         };
 
         for iteration in 0..self.config.num_evaluations {
@@ -1135,8 +1131,7 @@ impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
             average_evaluation_time: 0.0,
             total_optimization_time: 0.0,
             convergence_iteration: None,
-            budget_efficiency: 0.0,
-            _phantom: std::marker::PhantomData,
+            budget_efficiency: 0.0, _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -1242,17 +1237,17 @@ pub struct PrivateRandomSearch<T: Float> {
     config: PrivateHPOConfig<T>,
 
     /// Random number generator
-    rng: scirs2_core::random::Random<rand::rngs::StdRng>,
+    rng: scirs2_core: random::Random,
 
     /// Evaluation history
     history: Vec<HPOEvaluation<T>>,
 }
 
 impl<T: Float + Send + Sync> PrivateRandomSearch<T> {
-    pub fn new(config: PrivateHPOConfig<T>) -> Result<Self> {
+    pub fn new(_config: PrivateHPOConfig<T>) -> Result<Self> {
         Ok(Self {
-            config,
-            rng: random::Random::with_seed(42),
+            _config,
+            rng: scirs2_core: random::Random::with_seed(42),
             history: Vec::new(),
         })
     }
@@ -1261,9 +1256,7 @@ impl<T: Float + Send + Sync> PrivateRandomSearch<T> {
 impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
     fn suggest_next(
         &mut self,
-        parameter_space: &ParameterSpace<T>,
-        _evaluation_history: &[HPOEvaluation<T>],
-        _privacy_budget: &PrivacyBudget,
+        parameter_space: &ParameterSpace<T>, _evaluation_history: &[HPOEvaluation<T>], _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>> {
         let mut values = HashMap::new();
 
@@ -1272,7 +1265,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                 ParameterType::Continuous => {
                     let min = param_def.bounds.min.unwrap_or(T::zero());
                     let max = param_def.bounds.max.unwrap_or(T::one());
-                    let random_val = T::from(self.rng.random_range(0.0, 1.0)).unwrap();
+                    let random_val = T::from(self.rng.gen_range(0.0..1.0)).unwrap();
                     ParameterValue::Continuous(min + random_val * (max - min))
                 }
                 ParameterType::Integer => {
@@ -1288,15 +1281,15 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                         .unwrap_or(T::from(100).unwrap())
                         .to_i64()
                         .unwrap_or(100);
-                    ParameterValue::Integer(self.rng.random_range(min, max + 1))
+                    ParameterValue::Integer(self.rng.random_range(min..max + 1))
                 }
-                ParameterType::Boolean => ParameterValue::Boolean(self.rng.random_range(0, 2) == 1),
+                ParameterType::Boolean =>, ParameterValue::Boolean(self.rng.gen_range(0..2) == 1),
                 ParameterType::Categorical(categories) => {
-                    let idx = self.rng.random_range(0, categories.len());
+                    let idx = self.rng.gen_range(0..categories.len());
                     ParameterValue::Categorical(categories[idx].clone())
                 }
                 ParameterType::Ordinal(values) => {
-                    let idx = self.rng.random_range(0, values.len());
+                    let idx = self.rng.gen_range(0..values.len());
                     ParameterValue::Ordinal(idx)
                 }
             };
@@ -1306,16 +1299,13 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
 
         Ok(ParameterConfiguration {
             values,
-            id: format!("config_{}", self.history.len()),
+            id: format!("config_{}", self._history.len()),
             metadata: HashMap::new(),
         })
     }
 
     fn update(
-        &mut self,
-        _config: &ParameterConfiguration<T>,
-        _result: &HPOResult<T>,
-        _privacy_budget: &PrivacyBudget,
+        &mut self_config: &ParameterConfiguration<T>, _result: &HPOResult<T>, _privacy_budget: &PrivacyBudget,
     ) -> Result<()> {
         // Random search doesn't need to update based on results
         Ok(())
@@ -1342,9 +1332,9 @@ pub struct PrivateBayesianOptimization<T: Float> {
 }
 
 impl<T: Float + Send + Sync> PrivateBayesianOptimization<T> {
-    pub fn new(config: PrivateHPOConfig<T>) -> Result<Self> {
+    pub fn new(_config: PrivateHPOConfig<T>) -> Result<Self> {
         Ok(Self {
-            config,
+            _config,
             gp_model: None,
             acquisition_fn: AcquisitionFunction::new(),
             history: Vec::new(),
@@ -1356,12 +1346,11 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
     fn suggest_next(
         &mut self,
         parameter_space: &ParameterSpace<T>,
-        evaluation_history: &[HPOEvaluation<T>],
-        _privacy_budget: &PrivacyBudget,
+        evaluation_history: &[HPOEvaluation<T>], _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>> {
         if evaluation_history.is_empty() {
             // First evaluation - use random sampling
-            let mut rng = random::Random::with_seed(42);
+            let mut rng = scirs2_core::random::Random::with_seed(42);
             let mut values = HashMap::new();
 
             for (param_name, param_def) in &parameter_space.parameters {
@@ -1369,7 +1358,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
                     ParameterType::Continuous => {
                         let min = param_def.bounds.min.unwrap_or(T::zero());
                         let max = param_def.bounds.max.unwrap_or(T::one());
-                        let random_val = T::from(rng.random_range(0.0, 1.0)).unwrap();
+                        let random_val = T::from(rng.gen_range(0.0..1.0)).unwrap();
                         ParameterValue::Continuous(min + random_val * (max - min))
                     }
                     _ => {
@@ -1397,10 +1386,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
     }
 
     fn update(
-        &mut self,
-        _config: &ParameterConfiguration<T>,
-        _result: &HPOResult<T>,
-        _privacy_budget: &PrivacyBudget,
+        &mut self_config: &ParameterConfiguration<T>, _result: &HPOResult<T>, _privacy_budget: &PrivacyBudget,
     ) -> Result<()> {
         // Update Gaussian process model with new data point
         // This is a simplified implementation
@@ -1621,12 +1607,12 @@ impl<T: Float + Send + Sync> ObjectiveNoiseMechanism<T> {
                 epsilon: 1.0,
                 delta: Some(1e-5),
             },
-            rng: random::Random::with_seed(42),
+            rng: scirs2_core: random::Random::with_seed(42),
         }
     }
 
     pub fn add_noise(&mut self, value: f64, _privacy_budget: &PrivacyBudget) -> Result<f64> {
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
 
         match self.mechanism_type {
             HyperparameterNoiseMechanism::Gaussian => {
@@ -1658,8 +1644,7 @@ impl<T: Float + Send + Sync> SampleBasedSensitivityEstimator<T> {
             num_samples: 1000,
             sampling_strategy: SamplingStrategy::Uniform,
             confidence_level: 0.95,
-            bootstrap_estimator: BootstrapEstimator::new(),
-            _phantom: std::marker::PhantomData,
+            bootstrap_estimator: BootstrapEstimator::new(), _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1669,8 +1654,7 @@ impl<T: Float + Send + Sync> BootstrapEstimator<T> {
         Self {
             num_bootstrap: 1000,
             confidence_interval: (0.025, 0.975),
-            bias_correction: true,
-            _phantom: std::marker::PhantomData,
+            bias_correction: true, _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1706,8 +1690,7 @@ impl<T: Float + Send + Sync> ConfidenceEstimation<T> {
         Self {
             confidence_level: 0.95,
             estimation_method: ConfidenceEstimationMethod::Normal,
-            bootstrap_params: None,
-            _phantom: std::marker::PhantomData,
+            bootstrap_params: None, _phantom: std::marker::PhantomData,
         }
     }
 }

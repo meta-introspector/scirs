@@ -19,7 +19,7 @@ fn main() {
 }
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    use scirs2_metrics::integration::neural::NeuralMetricAdapter;
+    use scirs2__metrics::integration::neural::NeuralMetricAdapter;
     use scirs2_neural::activations::relu::ReLU;
     use scirs2_neural::activations::sigmoid::Sigmoid;
     use scirs2_neural::callbacks::{
@@ -140,9 +140,9 @@ fn generate_binary_classification_data(
     for i in 0..n_samples {
         // Generate random features
         for j in 0..n_features {
-            x[[i, j]] = rng.random_range(-1.0..1.0);
+            x[[i, j]] = rng.gen_range(-1.0..1.0);
         // Simple decision boundary: x1 + x2 > 0
-        let sum = x[[i, 0]] + x[[i, 1]];
+        let sum = x[[i..0]] + x[[i, 1]];
         y[[i, 0]] = if sum > 0.0 { 1.0 } else { 0.0 };
     Ok((x, y))
 #[allow(dead_code)]
@@ -151,7 +151,7 @@ fn shuffle_indices(mut indices: Vec<usize>) -> Vec<usize> {
     rand::seq::SliceRandom::shuffle(&mut indices, &mut rng);
     indices
 #[allow(dead_code)]
-fn create_batch(data: &Array2<f64>, indices: &[usize]) -> Array2<f64> {
+fn create_batch(_data: &Array2<f64>, indices: &[usize]) -> Array2<f64> {
     let n_samples = indices.len();
     let n_features = data.shape()[1];
     let mut batch = Array2::zeros((n_samples, n_features));

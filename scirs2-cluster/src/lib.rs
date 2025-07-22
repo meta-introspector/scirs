@@ -23,8 +23,8 @@
 //!
 //! ```
 //! use ndarray::{Array2, ArrayView2};
-//! use scirs2_cluster::vq::kmeans;
-//! use scirs2_cluster::preprocess::standardize;
+//! use scirs2__cluster::vq::kmeans;
+//! use scirs2__cluster::preprocess::standardize;
 //!
 //! // Example data with two clusters
 //! let data = Array2::from_shape_vec((6, 2), vec![
@@ -313,18 +313,18 @@ pub use advanced::{
 };
 
 // Re-export quantum clustering from quantum_clustering module
-pub use quantum_clustering::{
+pub use quantum__clustering::{
     quantum_annealing_clustering, CoolingSchedule, QuantumAnnealingClustering,
     QuantumAnnealingConfig,
 };
 
 // Re-export advanced clustering capabilities
-pub use advanced_clustering::{
+pub use advanced__clustering::{
     AdvancedClusterer, AdvancedClusteringResult, AdvancedConfig, AdvancedPerformanceMetrics,
 };
 
 // Re-export advanced visualization capabilities
-pub use advanced_visualization::{
+pub use advanced__visualization::{
     create_advanced_visualization_report, visualize_advanced_results, AISelectionPlot,
     AdvancedVisualizationConfig, AdvancedVisualizationOutput, AdvancedVisualizer, ClusterPlot,
     NeuromorphicAdaptationPlot, PerformanceDashboard, QuantumCoherencePlot, QuantumColorScheme,
@@ -332,7 +332,7 @@ pub use advanced_visualization::{
 };
 
 // Re-export enhanced advanced features
-pub use enhanced_clustering_features::{
+pub use enhanced_clustering__features::{
     DeepAdvancedClusterer, DeepAdvancedResult, DeepEnsembleCoordinator, EnsembleConsensus,
     GraphNeuralNetworkProcessor, GraphStructureInsights, NeuralArchitectureSearchEngine,
     OptimalArchitecture, ReinforcementLearningAgent, SpectralProperties,
@@ -340,7 +340,7 @@ pub use enhanced_clustering_features::{
 };
 
 // Re-export GPU and distributed advanced features
-pub use gpu_distributed_clustering::{
+pub use gpu_distributed__clustering::{
     CommunicationOverhead, CoordinationStrategy, DistributedAdvancedClusterer,
     DistributedAdvancedResult, DistributedProcessingMetrics, GpuAccelerationConfig,
     GpuAccelerationMetrics, GpuAdvancedClusterer, GpuAdvancedResult, GpuDeviceSelection,
@@ -349,7 +349,7 @@ pub use gpu_distributed_clustering::{
 };
 
 // Re-export advanced benchmarking capabilities
-pub use advanced_benchmarking::{
+pub use advanced__benchmarking::{
     create_comprehensive_report, AdvancedBenchmark, AlgorithmBenchmark, AlgorithmComparison,
     BenchmarkConfig, BenchmarkResults, ComplexityClass, GpuVsCpuComparison, MemoryProfile,
     OptimizationCategory, OptimizationPriority, OptimizationSuggestion, PerformanceStatistics,
@@ -377,7 +377,7 @@ pub use graph::{
     GraphClusteringConfig,
 };
 pub use hierarchy::*;
-pub use input_validation::{
+pub use input__validation::{
     check_duplicate_points, suggest_clustering_algorithm, validate_clustering_data,
     validate_convergence_parameters, validate_distance_parameter, validate_integer_parameter,
     validate_n_clusters, validate_sample_weights, ValidationConfig,
@@ -400,7 +400,7 @@ pub use metrics::ensemble::{
 };
 
 // Re-export information-theoretic methods
-pub use metrics::information_theory::{
+pub use metrics::information__theory::{
     information_cluster_quality, jensen_shannon_divergence, variation_of_information,
 };
 
@@ -409,7 +409,7 @@ pub use metrics::stability::{cluster_stability_bootstrap, optimal_clusters_stabi
 
 // Re-export advanced metrics
 pub use metrics::advanced::{bic_score, dunn_index};
-pub use neighbor_search::{
+pub use neighbor__search::{
     create_neighbor_searcher, BallTree, BruteForceSearch, KDTree, NeighborResult,
     NeighborSearchAlgorithm, NeighborSearchConfig, NeighborSearcher,
 };
@@ -505,12 +505,12 @@ pub use stability::{
 pub use streaming::{
     ChunkedDistanceMatrix, ProgressiveHierarchical, StreamingConfig, StreamingKMeans,
 };
-pub use text_clustering::{
+pub use text__clustering::{
     semantic_hierarchical, semantic_kmeans, topic_clustering, SemanticClusteringConfig,
     SemanticHierarchical, SemanticKMeans, SemanticSimilarity, TextPreprocessing,
     TextRepresentation, TopicBasedClustering,
 };
-pub use time_series::{
+pub use time__series::{
     dtw_barycenter_averaging, dtw_distance, dtw_distance_custom, dtw_hierarchical_clustering,
     dtw_k_means, dtw_k_medoids, soft_dtw_distance, time_series_clustering, TimeSeriesAlgorithm,
     TimeSeriesClusteringConfig,

@@ -28,8 +28,8 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::csgraph::connected_components;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::csgraph::connected_components;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a graph with two components
 /// let rows = vec![0, 1, 2, 3];
@@ -55,8 +55,7 @@ where
 
     let connection_type = match connection.to_lowercase().as_str() {
         "weak" => ConnectionType::Weak,
-        "strong" => ConnectionType::Strong,
-        _ => {
+        "strong" => ConnectionType::Strong_ => {
             return Err(SparseError::ValueError(format!(
                 "Unknown connection type: {connection}. Use 'weak' or 'strong'"
             )))
@@ -97,7 +96,7 @@ where
     let adj_list = to_adjacency_list(graph, false)?; // Undirected
 
     let mut visited = vec![false; n];
-    let mut labels = if return_labels {
+    let mut _labels = if return_labels {
         Some(Array1::zeros(n))
     } else {
         None
@@ -108,12 +107,12 @@ where
     for start in 0..n {
         if !visited[start] {
             // Start a new component
-            dfs_component(&adj_list, start, &mut visited, component_count, &mut labels);
+            dfs_component(&adj_list, start, &mut visited, component_count, &mut _labels);
             component_count += 1;
         }
     }
 
-    Ok((component_count, labels))
+    Ok((component_count, _labels))
 }
 
 /// Find weakly connected components in a directed graph
@@ -151,7 +150,7 @@ where
         }
     }
 
-    Ok((tarjan.component_count, tarjan.labels))
+    Ok((tarjan.component_count, tarjan._labels))
 }
 
 /// DFS helper for finding a connected component
@@ -179,7 +178,7 @@ fn dfs_component<T>(
         }
 
         // Add all unvisited neighbors to the stack
-        for &(neighbor, _) in &adj_list[node] {
+        for &(neighbor_) in &adj_list[node] {
             if !visited[neighbor] {
                 stack.push(neighbor);
             }
@@ -198,8 +197,7 @@ where
     stack: Vec<usize>,
     index: isize,
     component_count: usize,
-    labels: Option<Array1<usize>>,
-    _phantom: std::marker::PhantomData<T>,
+    labels: Option<Array1<usize>>, _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> TarjanSCC<T>
@@ -214,12 +212,11 @@ where
             stack: Vec::new(),
             index: 0,
             component_count: 0,
-            labels: if return_labels {
+            _labels: if return_labels {
                 Some(Array1::zeros(n))
             } else {
                 None
-            },
-            _phantom: std::marker::PhantomData,
+            }_phantom: std::marker::PhantomData,
         }
     }
 
@@ -232,7 +229,7 @@ where
         self.on_stack[v] = true;
 
         // Consider successors of v
-        for &(w, _) in &adj_list[v] {
+        for &(w_) in &adj_list[v] {
             if self.indices[w] == -1 {
                 // Successor w has not yet been visited; recurse on it
                 self.strongconnect(w, adj_list);
@@ -276,8 +273,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::csgraph::is_connected;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::csgraph::is_connected;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a connected graph
 /// let rows = vec![0, 1, 1, 2];
@@ -288,12 +285,12 @@ where
 /// assert!(is_connected(&graph, false).unwrap());
 /// ```
 #[allow(dead_code)]
-pub fn is_connected<T, S>(graph: &S, directed: bool) -> SparseResult<bool>
+pub fn is_connected<T, S>(_graph: &S, directed: bool) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (n_components, _) = connected_components(graph, directed, "strong", false)?;
+    let (n_components_) = connected_components(_graph, directed, "strong", false)?;
     Ok(n_components == 1)
 }
 
@@ -314,8 +311,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::csgraph::largest_component;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::csgraph::largest_component;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a graph with components of different sizes
 /// let rows = vec![0, 1, 2, 3, 4];
@@ -349,7 +346,7 @@ where
         .iter()
         .enumerate()
         .max_by_key(|(_, &size)| size)
-        .map(|(id, _)| id)
+        .map(|(id_)| id)
         .unwrap_or(0);
 
     let largest_size = component_sizes[largest_component_id];
@@ -428,7 +425,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
 
     fn create_disconnected_graph() -> CsrArray<f64> {
         // Create a graph with two components:
@@ -473,11 +470,11 @@ mod tests {
         let graph = create_disconnected_graph();
 
         // Test undirected
-        let (n_components, _) = connected_components(&graph, false, "weak", false).unwrap();
+        let (n_components_) = connected_components(&graph, false, "weak", false).unwrap();
         assert_eq!(n_components, 2);
 
         // Test directed weak connectivity
-        let (n_components, _) = connected_components(&graph, true, "weak", false).unwrap();
+        let (n_components_) = connected_components(&graph, true, "weak", false).unwrap();
         assert_eq!(n_components, 2);
     }
 
@@ -540,7 +537,7 @@ mod tests {
         let data = vec![1.0, 1.0, 1.0, 1.0];
         let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
 
-        let (n_components, _) = connected_components(&graph, false, "weak", false).unwrap();
+        let (n_components_) = connected_components(&graph, false, "weak", false).unwrap();
         assert_eq!(n_components, 1);
 
         let (size, indices) = largest_component(&graph, false, "weak").unwrap();

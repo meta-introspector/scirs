@@ -69,8 +69,7 @@ impl FromStr for Window {
             "nuttall" => Ok(Window::Nuttall),
             "barthann" => Ok(Window::Barthann),
             "cosine" | "cos" => Ok(Window::Cosine),
-            "exponential" | "exp" => Ok(Window::Exponential),
-            _ => Err(FFTError::ValueError(format!("Unknown window type: {s}"))),
+            "exponential" | "exp" => Ok(Window::Exponential, _ => Err(FFTError::ValueError(format!("Unknown window type: {s}"))),
         }
     }
 }
@@ -90,7 +89,7 @@ impl FromStr for Window {
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::window::{Window, get_window};
+/// use scirs2__fft::window::{Window, get_window};
 ///
 /// // Create a Hann window
 /// let win = get_window(Window::Hann, 10, true).unwrap();
@@ -105,7 +104,7 @@ impl FromStr for Window {
 /// assert_eq!(win.len(), 10);
 /// ```
 #[allow(dead_code)]
-pub fn get_window<T>(window: T, n: usize, sym: bool) -> FFTResult<Array1<f64>>
+pub fn get_window<T>(_window: T, n: usize, sym: bool) -> FFTResult<Array1<f64>>
 where
     T: Into<WindowParam>,
 {
@@ -115,10 +114,10 @@ where
         ));
     }
 
-    let window_param = window.into();
+    let window_param = _window.into();
     let window_type = match window_param {
         WindowParam::Type(wt) => wt,
-        WindowParam::Name(s) => Window::from_str(&s)?,
+        WindowParam::Name(s) =>, Window::from_str(&s)?,
     };
 
     match window_type {
@@ -152,8 +151,8 @@ pub enum WindowParam {
 }
 
 impl From<Window> for WindowParam {
-    fn from(window: Window) -> Self {
-        WindowParam::Type(window)
+    fn from(_window: Window) -> Self {
+        WindowParam::Type(_window)
     }
 }
 
@@ -634,7 +633,7 @@ fn bessel_i0(x: f64) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::window::{Window, apply_window};
+/// use scirs2__fft::window::{Window, apply_window};
 /// use ndarray::Array1;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
@@ -680,7 +679,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::window::{Window, enbw};
+/// use scirs2__fft::window::{Window, enbw};
 /// use approx::assert_relative_eq;
 ///
 /// let bandwidth = enbw(Window::Hann, 1024).unwrap();
@@ -690,8 +689,8 @@ where
 ///
 /// Returns an error if the window calculation fails.
 #[allow(dead_code)]
-pub fn enbw(window: Window, n: usize) -> FFTResult<f64> {
-    let w = get_window(window, n, true)?;
+pub fn enbw(_window: Window, n: usize) -> FFTResult<f64> {
+    let w = get_window(_window, n, true)?;
 
     let sum_squared = w.iter().map(|&x| x.powi(2)).sum::<f64>();
     let square_sum = w.iter().sum::<f64>().powi(2);

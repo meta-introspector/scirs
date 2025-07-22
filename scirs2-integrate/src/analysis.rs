@@ -6,9 +6,10 @@
 // LyapunovCalculator is defined in this module
 use crate::error::{IntegrateError, IntegrateResult as Result};
 use ndarray::{s, Array1, Array2};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use rand::Rng;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 
 /// Bifurcation point information
 #[derive(Debug, Clone)]
@@ -206,9 +207,9 @@ pub struct BifurcationAnalyzer {
 
 impl BifurcationAnalyzer {
     /// Create a new bifurcation analyzer
-    pub fn new(dimension: usize, parameter_range: (f64, f64), parameter_samples: usize) -> Self {
+    pub fn new(_dimension: usize, parameter_range: (f64, f64), parameter_samples: usize) -> Self {
         Self {
-            dimension,
+            _dimension,
             parameter_range,
             parameter_samples,
             fixed_point_tolerance: 1e-8,
@@ -298,8 +299,8 @@ impl BifurcationAnalyzer {
         let mut parameter_grid = Array2::zeros((samples_1, samples_2));
         let mut stability_map = Array2::zeros((samples_1, samples_2));
 
-        let step_1 = (parameter_range_1.1 - parameter_range_1.0) / (samples_1 - 1) as f64;
-        let step_2 = (parameter_range_2.1 - parameter_range_2.0) / (samples_2 - 1) as f64;
+        let step_1 = (parameter_range_1._1 - parameter_range_1.0) / (samples_1 - _1) as f64;
+        let step_2 = (parameter_range_2._1 - parameter_range_2.0) / (samples_2 - _1) as f64;
 
         for i in 0..samples_1 {
             for j in 0..samples_2 {
@@ -310,7 +311,7 @@ impl BifurcationAnalyzer {
 
                 // Find fixed point and analyze stability
                 // Create a wrapper system with combined parameters
-                let combined_system = |x: &Array1<f64>, _: f64| system(x, param_1, param_2);
+                let combined_system = |x: &Array1<f64>_: f64| system(x, param_1, param_2);
                 match self.find_fixed_point(&combined_system, initial_guess, 0.0) {
                     Ok(fixed_point) => {
                         let jacobian = self.compute_jacobian_two_param(
@@ -334,15 +335,15 @@ impl BifurcationAnalyzer {
                         stability_map[[i, j]] = if has_positive && has_negative {
                             3.0 // Saddle
                         } else if has_positive {
-                            2.0 // Unstable
+                            _2.0 // Unstable
                         } else if has_negative {
-                            1.0 // Stable
+                            _1.0 // Stable
                         } else {
                             4.0 // Center/Neutral
                         };
                     }
                     Err(_) => {
-                        stability_map[[i, j]] = -1.0; // No fixed point
+                        stability_map[[i, j]] = -_1.0; // No fixed point
                     }
                 }
             }
@@ -413,7 +414,7 @@ impl BifurcationAnalyzer {
                         let eigenvalues = self.compute_eigenvalues(&jacobian)?;
 
                         if self.is_bifurcation_point(&eigenvalues) {
-                            // Found a bifurcation point
+                            // Found a bifurcation _point
                             break;
                         }
                     }
@@ -666,14 +667,14 @@ impl BifurcationAnalyzer {
     }
 
     /// Compute eigenvalues of a matrix using QR algorithm
-    fn compute_eigenvalues(&self, matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
-        // Convert to complex matrix for eigenvalue computation
-        let n = matrix.nrows();
+    fn compute_eigenvalues(_matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+        // Convert to complex _matrix for eigenvalue computation
+        let n = _matrix.nrows();
         let mut a = Array2::<Complex64>::zeros((n, n));
 
         for i in 0..n {
             for j in 0..n {
-                a[[i, j]] = Complex64::new(matrix[[i, j]], 0.0);
+                a[[i, j]] = Complex64::new(_matrix[[i, j]], 0.0);
             }
         }
 
@@ -874,7 +875,7 @@ impl BifurcationAnalyzer {
 
                 // Check if they form a complex conjugate pair
                 if (prev1.conj() - prev2).norm() < tolerance {
-                    // Find corresponding pair in current eigenvalues
+                    // Find corresponding pair in current _eigenvalues
                     for k in 0..curr_eigenvalues.len() {
                         for l in (k + 1)..curr_eigenvalues.len() {
                             let curr1 = curr_eigenvalues[k];
@@ -947,7 +948,7 @@ impl BifurcationAnalyzer {
             }
         }
 
-        // Simple heuristic: if multiple real eigenvalues cross zero
+        // Simple heuristic: if multiple real _eigenvalues cross zero
         if zero_crossings >= 2 {
             return Some(BifurcationType::Pitchfork);
         }
@@ -1103,7 +1104,7 @@ impl BifurcationAnalyzer {
             }
         }
 
-        // Test function 3: Real parts of complex conjugate pairs for Hopf bifurcations
+        // Test function 3: Real parts of complex conjugate _pairs for Hopf bifurcations
         for (prev, curr) in eigenvalue_pairs {
             if prev.im.abs() > tolerance && curr.im.abs() > tolerance {
                 // Check if real part crosses zero
@@ -1126,8 +1127,7 @@ impl BifurcationAnalyzer {
 
     /// Detect cusp bifurcation (higher-order fold bifurcation)
     fn detect_cusp_bifurcation(
-        &self,
-        _prev_eigenvalues: &[Complex64],
+        &self, _prev_eigenvalues: &[Complex64],
         curr_eigenvalues: &[Complex64],
         prev_jacobian: &Array2<f64>,
         curr_jacobian: &Array2<f64>,
@@ -1148,7 +1148,7 @@ impl BifurcationAnalyzer {
             // For a cusp, the determinant should have a very flat crossing
             // (small first derivative but non-zero higher derivatives)
             if det_derivative_estimate.abs() < tolerance * 10.0 {
-                // Additional check: multiple eigenvalues near zero
+                // Additional check: multiple _eigenvalues near zero
                 let near_zero_eigenvalues = curr_eigenvalues
                     .iter()
                     .filter(|eig| eig.norm() < tolerance * 10.0)
@@ -1167,15 +1167,13 @@ impl BifurcationAnalyzer {
 
     /// Detect Bogdanov-Takens bifurcation (double zero eigenvalue)
     fn detect_bogdanov_takens_bifurcation(
-        &self,
-        _prev_eigenvalues: &[Complex64],
-        curr_eigenvalues: &[Complex64],
-        _prev_jacobian: &Array2<f64>,
+        &self, _prev_eigenvalues: &[Complex64],
+        curr_eigenvalues: &[Complex64], _prev_jacobian: &Array2<f64>,
         curr_jacobian: &Array2<f64>,
         tolerance: f64,
     ) -> Option<BifurcationType> {
         // Bogdanov-Takens bifurcation has:
-        // 1. Two zero eigenvalues
+        // 1. Two zero _eigenvalues
         // 2. The Jacobian has rank n-2
 
         let curr_zero_eigenvalues = curr_eigenvalues
@@ -1201,13 +1199,13 @@ impl BifurcationAnalyzer {
     }
 
     /// Compute determinant of a matrix using LU decomposition
-    fn compute_determinant(&self, matrix: &Array2<f64>) -> f64 {
-        let n = matrix.nrows();
-        if n != matrix.ncols() {
+    fn compute_determinant(_matrix: &Array2<f64>) -> f64 {
+        let n = _matrix.nrows();
+        if n != _matrix.ncols() {
             return 0.0; // Not square
         }
 
-        let mut lu = matrix.clone();
+        let mut lu = _matrix.clone();
         let mut determinant = 1.0;
 
         // LU decomposition with partial pivoting
@@ -1233,7 +1231,7 @@ impl BifurcationAnalyzer {
                 determinant *= -1.0; // Row swap changes sign
             }
 
-            // Check for singular matrix
+            // Check for singular _matrix
             if lu[[k, k]].abs() < 1e-14 {
                 return 0.0;
             }
@@ -1253,16 +1251,16 @@ impl BifurcationAnalyzer {
     }
 
     /// Compute trace of a matrix
-    fn compute_trace(&self, matrix: &Array2<f64>) -> f64 {
-        let n = std::cmp::min(matrix.nrows(), matrix.ncols());
-        (0..n).map(|i| matrix[[i, i]]).sum()
+    fn compute_trace(_matrix: &Array2<f64>) -> f64 {
+        let n = std::cmp::min(_matrix.nrows(), _matrix.ncols());
+        (0..n).map(|i| _matrix[[i, i]]).sum()
     }
 
     /// Estimate the rank of a matrix using SVD-like approach
-    fn estimate_matrix_rank(&self, matrix: &Array2<f64>, tolerance: f64) -> usize {
+    fn estimate_matrix_rank(_matrix: &Array2<f64>, tolerance: f64) -> usize {
         // Simplified rank estimation using QR decomposition
-        let (m, n) = matrix.dim();
-        let mut a = matrix.clone();
+        let (m, n) = _matrix.dim();
+        let mut a = _matrix.clone();
         let mut rank = 0;
 
         for k in 0..std::cmp::min(m, n) {
@@ -1334,7 +1332,7 @@ impl BifurcationAnalyzer {
             let (pred_solution, pred_parameter) =
                 self.predictor_step(&current_solution, current_parameter, param_step);
 
-            // Corrector step: Newton iteration to get back on solution curve
+            // Corrector step: Newton iteration to get back on _solution curve
             match self.corrector_step(&system, &pred_solution, pred_parameter) {
                 Ok((corrected_solution, corrected_parameter)) => {
                     current_solution = corrected_solution;
@@ -1348,7 +1346,7 @@ impl BifurcationAnalyzer {
                     if let Some(ref prev_eigs) = previous_eigenvalues {
                         if let Some(bif_type) = self.detect_bifurcation(prev_eigs, &eigenvalues) {
                             bifurcation_points.push(BifurcationPoint {
-                                parameter_value: current_parameter,
+                                _parameter_value: current_parameter,
                                 state: current_solution.clone(),
                                 bifurcation_type: bif_type,
                                 eigenvalues: eigenvalues.clone(),
@@ -1395,12 +1393,12 @@ impl BifurcationAnalyzer {
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
     {
         // Newton iteration to correct the prediction
-        let mut solution = predicted_solution.clone();
-        let parameter = predicted_parameter; // Keep parameter fixed
+        let mut _solution = predicted_solution.clone();
+        let _parameter = predicted_parameter; // Keep _parameter fixed
 
         for _ in 0..10 {
             // Max 10 Newton iterations
-            let residual = system(&solution, parameter);
+            let residual = system(&_solution, _parameter);
             let sum_squares = residual.iter().map(|&r| r * r).sum::<f64>();
             if sum_squares < 0.0 {
                 return Err(IntegrateError::ComputationError(
@@ -1410,12 +1408,12 @@ impl BifurcationAnalyzer {
             let residual_norm = sum_squares.sqrt();
 
             if residual_norm < 1e-10 {
-                return Ok((solution, parameter));
+                return Ok((_solution, _parameter));
             }
 
-            let jacobian = self.compute_jacobian(system, &solution, parameter)?;
+            let jacobian = self.compute_jacobian(system, &_solution, _parameter)?;
             let delta = self.solve_linear_system(&jacobian, &(-&residual))?;
-            solution += &delta;
+            _solution += &delta;
         }
 
         Err(IntegrateError::ConvergenceError(
@@ -1424,7 +1422,7 @@ impl BifurcationAnalyzer {
     }
 
     /// Solve linear system using LU decomposition
-    fn solve_linear_system(&self, a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+    fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
         let n = a.nrows();
         let mut lu = a.clone();
         let mut x = b.clone();
@@ -1504,10 +1502,8 @@ impl BifurcationAnalyzer {
     }
     /// Compute tangent vector for continuation
     fn compute_tangent_vector<F>(
-        &self,
-        _system: &F,
-        point: &Array1<f64>,
-        _parameter: f64,
+        &self_system: &F,
+        point: &Array1<f64>, _parameter: f64,
     ) -> Result<Array1<f64>>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
@@ -1519,21 +1515,14 @@ impl BifurcationAnalyzer {
     }
 
     /// Check if point is a bifurcation point based on eigenvalues
-    fn is_bifurcation_point(&self, eigenvalues: &[Complex64]) -> bool {
-        // Check for eigenvalues crossing the imaginary axis
-        eigenvalues.iter().any(|&eig| eig.re.abs() < 1e-8)
+    fn is_bifurcation_point(_eigenvalues: &[Complex64]) -> bool {
+        // Check for _eigenvalues crossing the imaginary axis
+        _eigenvalues.iter().any(|&eig| eig.re.abs() < 1e-8)
     }
 
     /// Compute parameter interaction effects
     fn compute_parameter_interaction<F>(
-        &self,
-        _system: &F,
-        _nominal_parameters: &std::collections::HashMap<String, f64>,
-        _nominal_state: &Array1<f64>,
-        _param1: &str,
-        _param2: &str,
-        _pert1: f64,
-        _pert2: f64,
+        &self_system: &F_nominal, _parameters: &std::collections::HashMap<String, f64>, _nominal_state: &Array1<f64>, _param1: &str_param2: &str, _pert1: f64_pert2: f64,
     ) -> Result<Array1<f64>>
     where
         F: Fn(&Array1<f64>, &std::collections::HashMap<String, f64>) -> Array1<f64>,
@@ -1544,9 +1533,7 @@ impl BifurcationAnalyzer {
 
     /// Hopf normal form analysis
     fn hopf_normal_form<F>(
-        &self,
-        _system: &F,
-        _bifurcation_point: &BifurcationPoint,
+        &self_system: &F_bifurcation, _point: &BifurcationPoint,
     ) -> Result<NormalFormResult>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
@@ -1561,9 +1548,7 @@ impl BifurcationAnalyzer {
 
     /// Fold normal form analysis
     fn fold_normal_form<F>(
-        &self,
-        _system: &F,
-        _bifurcation_point: &BifurcationPoint,
+        &self_system: &F_bifurcation, _point: &BifurcationPoint,
     ) -> Result<NormalFormResult>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
@@ -1578,9 +1563,7 @@ impl BifurcationAnalyzer {
 
     /// Pitchfork normal form analysis
     fn pitchfork_normal_form<F>(
-        &self,
-        _system: &F,
-        _bifurcation_point: &BifurcationPoint,
+        &self_system: &F_bifurcation, _point: &BifurcationPoint,
     ) -> Result<NormalFormResult>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
@@ -1595,9 +1578,7 @@ impl BifurcationAnalyzer {
 
     /// Transcritical normal form analysis
     fn transcritical_normal_form<F>(
-        &self,
-        _system: &F,
-        _bifurcation_point: &BifurcationPoint,
+        &self_system: &F_bifurcation, _point: &BifurcationPoint,
     ) -> Result<NormalFormResult>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
@@ -1613,8 +1594,7 @@ impl BifurcationAnalyzer {
     /// Extract bifurcation curves from stability map by detecting transitions
     fn extract_bifurcation_curves(
         &self,
-        stability_map: &Array2<f64>,
-        _parameter_grid: &Array2<f64>,
+        stability_map: &Array2<f64>, _parameter_grid: &Array2<f64>,
         param_range_1: (f64, f64),
         param_range_2: (f64, f64),
     ) -> crate::error::IntegrateResult<Vec<BifurcationCurve>> {
@@ -1733,8 +1713,8 @@ impl BifurcationAnalyzer {
     }
 
     /// Classify bifurcation type based on stability transition
-    fn classify_bifurcation_type(&self, from_stability: f64, to_stability: f64) -> BifurcationType {
-        match (from_stability, to_stability) {
+    fn classify_bifurcation_type(_from_stability: f64, to_stability: f64) -> BifurcationType {
+        match (_from_stability, to_stability) {
             // Transition from stable to unstable (or vice versa)
             (f, t) if (f - 1.0).abs() < 0.1 && (t - 2.0).abs() < 0.1 => BifurcationType::Fold,
             (f, t) if (f - 2.0).abs() < 0.1 && (t - 1.0).abs() < 0.1 => BifurcationType::Fold,
@@ -1771,9 +1751,9 @@ pub struct StabilityAnalyzer {
 
 impl StabilityAnalyzer {
     /// Create a new stability analyzer
-    pub fn new(dimension: usize) -> Self {
+    pub fn new(_dimension: usize) -> Self {
         Self {
-            dimension,
+            _dimension,
             tolerance: 1e-8,
             integration_time: 100.0,
             basin_grid_size: 50,
@@ -1781,22 +1761,22 @@ impl StabilityAnalyzer {
     }
 
     /// Perform comprehensive stability analysis
-    pub fn analyze_stability<F>(&self, system: F, domain: &[(f64, f64)]) -> Result<StabilityResult>
+    pub fn analyze_stability<F>(_system: F, domain: &[(f64, f64)]) -> Result<StabilityResult>
     where
         F: Fn(&Array1<f64>) -> Array1<f64> + Send + Sync + Clone + 'static,
     {
         // Find fixed points
-        let fixed_points = self.find_fixed_points(&system, domain)?;
+        let fixed_points = self.find_fixed_points(&_system, domain)?;
 
         // Find periodic orbits (simplified)
-        let periodic_orbits = self.find_periodic_orbits(&system, domain)?;
+        let periodic_orbits = self.find_periodic_orbits(&_system, domain)?;
 
         // Compute Lyapunov exponents
-        let lyapunov_exponents = self.compute_lyapunov_exponents(&system)?;
+        let lyapunov_exponents = self.compute_lyapunov_exponents(&_system)?;
 
         // Analyze basins of attraction
         let basin_analysis = if self.dimension == 2 {
-            Some(self.analyze_basins(&system, domain, &fixed_points)?)
+            Some(self.analyze_basins(&_system, domain, &fixed_points)?)
         } else {
             None
         };
@@ -1810,7 +1790,7 @@ impl StabilityAnalyzer {
     }
 
     /// Find fixed points in the given domain
-    fn find_fixed_points<F>(&self, system: &F, domain: &[(f64, f64)]) -> Result<Vec<FixedPoint>>
+    fn find_fixed_points<F>(_system: &F, domain: &[(f64, f64)]) -> Result<Vec<FixedPoint>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -1822,7 +1802,7 @@ impl StabilityAnalyzer {
         self.generate_grid_points(domain, grid_size, &mut initial_guesses);
 
         for guess in initial_guesses {
-            if let Ok(fixed_point) = self.newton_raphson_fixed_point(system, &guess) {
+            if let Ok(fixed_point) = self.newton_raphson_fixed_point(_system, &guess) {
                 // Check if this fixed point is already found
                 let mut is_duplicate = false;
                 for existing_fp in &fixed_points {
@@ -1840,7 +1820,7 @@ impl StabilityAnalyzer {
 
                 if !is_duplicate {
                     // Compute stability
-                    let jacobian = self.compute_jacobian_at_point(system, &fixed_point)?;
+                    let jacobian = self.compute_jacobian_at_point(_system, &fixed_point)?;
                     let eigenvalues = self.compute_real_eigenvalues(&jacobian)?;
                     let eigenvectors = self.compute_eigenvectors(&jacobian, &eigenvalues)?;
                     let stability = self.classify_stability(&eigenvalues);
@@ -1879,7 +1859,7 @@ impl StabilityAnalyzer {
 
             // Check for division by zero in step calculation
             if grid_size <= 1 {
-                return; // Skip invalid grid size
+                return; // Skip invalid grid _size
             }
             let step = (domain[dim].1 - domain[dim].0) / (grid_size - 1) as f64;
             for i in 0..grid_size {
@@ -1941,7 +1921,7 @@ impl StabilityAnalyzer {
     }
 
     /// Compute Jacobian at a specific point
-    fn compute_jacobian_at_point<F>(&self, system: &F, x: &Array1<f64>) -> Result<Array2<f64>>
+    fn compute_jacobian_at_point<F>(_system: &F, x: &Array1<f64>) -> Result<Array2<f64>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -1949,7 +1929,7 @@ impl StabilityAnalyzer {
         let n = x.len();
         let mut jacobian = Array2::zeros((n, n));
 
-        let f0 = system(x);
+        let f0 = _system(x);
 
         // Check for valid step size
         if h.abs() < 1e-15 {
@@ -1961,7 +1941,7 @@ impl StabilityAnalyzer {
         for j in 0..n {
             let mut x_plus = x.clone();
             x_plus[j] += h;
-            let f_plus = system(&x_plus);
+            let f_plus = _system(&x_plus);
 
             for i in 0..n {
                 jacobian[[i, j]] = (f_plus[i] - f0[i]) / h;
@@ -1972,9 +1952,9 @@ impl StabilityAnalyzer {
     }
 
     /// Solve linear system using Gaussian elimination
-    fn gaussian_elimination(&self, augmented: &Array2<f64>) -> Result<Array1<f64>> {
-        let n = augmented.nrows();
-        let mut a = augmented.clone();
+    fn gaussian_elimination(_augmented: &Array2<f64>) -> Result<Array1<f64>> {
+        let n = _augmented.nrows();
+        let mut a = _augmented.clone();
 
         // Forward elimination
         for k in 0..n {
@@ -2031,15 +2011,15 @@ impl StabilityAnalyzer {
     }
 
     /// Compute real eigenvalues (simplified implementation)
-    fn compute_real_eigenvalues(&self, matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+    fn compute_real_eigenvalues(_matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
         // For now, use a simplified approach for 2x2 matrices
-        let n = matrix.nrows();
+        let n = _matrix.nrows();
 
         if n == 2 {
-            let a = matrix[[0, 0]];
-            let b = matrix[[0, 1]];
-            let c = matrix[[1, 0]];
-            let d = matrix[[1, 1]];
+            let a = _matrix[[0, 0]];
+            let b = _matrix[[0, 1]];
+            let c = _matrix[[1, 0]];
+            let d = _matrix[[1, 1]];
 
             let trace = a + d;
             let det = a * d - b * c;
@@ -2063,14 +2043,14 @@ impl StabilityAnalyzer {
             }
         } else {
             // For higher dimensions, use the QR algorithm
-            self.eigenvalues_qr_algorithm(matrix)
+            self.eigenvalues_qr_algorithm(_matrix)
         }
     }
 
     /// Compute eigenvalues using QR algorithm for larger matrices
-    fn eigenvalues_qr_algorithm(&self, matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
-        let n = matrix.nrows();
-        let mut a = matrix.clone();
+    fn eigenvalues_qr_algorithm(_matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+        let n = _matrix.nrows();
+        let mut a = _matrix.clone();
         let max_iterations = 100;
         let tolerance = 1e-10;
 
@@ -2128,9 +2108,9 @@ impl StabilityAnalyzer {
     }
 
     /// Reduce matrix to upper Hessenberg form using Householder reflections
-    fn reduce_to_hessenberg(&self, matrix: &Array2<f64>) -> Result<Array2<f64>> {
-        let n = matrix.nrows();
-        let mut h = matrix.clone();
+    fn reduce_to_hessenberg(_matrix: &Array2<f64>) -> Result<Array2<f64>> {
+        let n = _matrix.nrows();
+        let mut h = _matrix.clone();
 
         for k in 0..(n - 2) {
             // Extract the column below the diagonal
@@ -2180,10 +2160,10 @@ impl StabilityAnalyzer {
     }
 
     /// QR decomposition for real matrices
-    fn qr_decomposition_real(&self, matrix: &Array2<f64>) -> Result<(Array2<f64>, Array2<f64>)> {
-        let (m, n) = matrix.dim();
+    fn qr_decomposition_real(_matrix: &Array2<f64>) -> Result<(Array2<f64>, Array2<f64>)> {
+        let (m, n) = _matrix.dim();
         let mut q = Array2::<f64>::eye(m);
-        let mut r = matrix.clone();
+        let mut r = _matrix.clone();
 
         for k in 0..std::cmp::min(m - 1, n) {
             // Extract column k from row k onwards
@@ -2228,25 +2208,24 @@ impl StabilityAnalyzer {
 
     /// Compute eigenvectors (simplified)
     fn compute_eigenvectors(
-        &self,
-        _matrix: &Array2<f64>,
+        &self_matrix: &Array2<f64>,
         eigenvalues: &[Complex64],
     ) -> Result<Array2<Complex64>> {
         let n = eigenvalues.len();
         let eigenvectors = Array2::<Complex64>::zeros((n, n));
 
-        // Simplified: return identity matrix
+        // Simplified: return identity _matrix
         // In practice, would solve (A - λI)v = 0 for each eigenvalue
         Ok(eigenvectors)
     }
 
     /// Classify stability based on eigenvalues
-    fn classify_stability(&self, eigenvalues: &[Complex64]) -> StabilityType {
+    fn classify_stability(_eigenvalues: &[Complex64]) -> StabilityType {
         let mut has_positive_real = false;
         let mut has_negative_real = false;
         let mut has_zero_real = false;
 
-        for eigenvalue in eigenvalues {
+        for eigenvalue in _eigenvalues {
             if eigenvalue.re > 1e-10 {
                 has_positive_real = true;
             } else if eigenvalue.re < -1e-10 {
@@ -2411,19 +2390,19 @@ impl StabilityAnalyzer {
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
         let n_steps = (period / dt) as usize;
-        let mut state = initial_state.clone();
+        let mut _state = initial_state.clone();
 
         // Fourth-order Runge-Kutta integration
         for _ in 0..n_steps {
-            let k1 = system(&state);
-            let k2 = system(&(&state + &(&k1 * (dt / 2.0))));
-            let k3 = system(&(&state + &(&k2 * (dt / 2.0))));
-            let k4 = system(&(&state + &(&k3 * dt)));
+            let k1 = system(&_state);
+            let k2 = system(&(&_state + &(&k1 * (dt / 2.0))));
+            let k3 = system(&(&_state + &(&k2 * (dt / 2.0))));
+            let k4 = system(&(&_state + &(&k3 * dt)));
 
-            state += &((&k1 + &k2 * 2.0 + &k3 * 2.0 + &k4) * (dt / 6.0));
+            _state += &((&k1 + &k2 * 2.0 + &k3 * 2.0 + &k4) * (dt / 6.0));
         }
 
-        Ok(state)
+        Ok(_state)
     }
 
     /// Compute flow map Jacobian using finite differences
@@ -2484,8 +2463,8 @@ impl StabilityAnalyzer {
         &self,
         floquet_multipliers: &[Complex64],
     ) -> StabilityType {
-        // For periodic orbits, stability is determined by Floquet multipliers
-        // Stable if all multipliers have |λ| < 1
+        // For periodic orbits, stability is determined by Floquet _multipliers
+        // Stable if all _multipliers have |λ| < 1
         // Unstable if any multiplier has |λ| > 1
 
         let max_magnitude = floquet_multipliers
@@ -2498,7 +2477,7 @@ impl StabilityAnalyzer {
         } else if max_magnitude > 1.0 + 1e-10 {
             StabilityType::Unstable
         } else {
-            // One or more multipliers on unit circle
+            // One or more _multipliers on unit circle
             let on_unit_circle = floquet_multipliers
                 .iter()
                 .any(|m| (m.norm() - 1.0).abs() < 1e-10);
@@ -2580,7 +2559,7 @@ impl StabilityAnalyzer {
             let curr_distance = self.distance_to_section(&state, section_normal, section_point);
 
             if prev_distance * curr_distance < 0.0 {
-                // Crossed the section, refine the crossing point
+                // Crossed the section, refine the crossing _point
                 if let Ok(crossing_point) =
                     self.refine_section_crossing(system, &state, dt, section_normal, section_point)
                 {
@@ -2605,7 +2584,7 @@ impl StabilityAnalyzer {
         section_normal: &Array1<f64>,
         section_point: &Array1<f64>,
     ) -> f64 {
-        let relative_pos = point - section_point;
+        let relative_pos = _point - section_point;
         relative_pos.dot(section_normal)
     }
 
@@ -2655,7 +2634,7 @@ impl StabilityAnalyzer {
     ) -> Result<PeriodicOrbit> {
         if return_points.len() < 3 {
             return Err(IntegrateError::ComputationError(
-                "Insufficient return points for periodicity analysis".to_string(),
+                "Insufficient return _points for periodicity analysis".to_string(),
             ));
         }
 
@@ -2765,15 +2744,15 @@ impl StabilityAnalyzer {
     }
 
     /// Detect dominant period using autocorrelation
-    fn detect_dominant_period(&self, trajectory: &[Array1<f64>], dt: f64) -> Result<f64> {
-        if trajectory.len() < 100 {
+    fn detect_dominant_period(_trajectory: &[Array1<f64>], dt: f64) -> Result<f64> {
+        if _trajectory.len() < 100 {
             return Err(IntegrateError::ComputationError(
                 "Trajectory too short for period detection".to_string(),
             ));
         }
 
         // Use first component for period detection
-        let signal: Vec<f64> = trajectory.iter().map(|state| state[0]).collect();
+        let signal: Vec<f64> = _trajectory.iter().map(|state| state[0]).collect();
 
         // Autocorrelation approach
         let max_lag = std::cmp::min(signal.len() / 4, 500);
@@ -2828,11 +2807,11 @@ impl StabilityAnalyzer {
     }
 
     /// Remove duplicate periodic orbits based on spatial proximity
-    fn remove_duplicate_periodic_orbits(&self, orbits: Vec<PeriodicOrbit>) -> Vec<PeriodicOrbit> {
+    fn remove_duplicate_periodic_orbits(_orbits: Vec<PeriodicOrbit>) -> Vec<PeriodicOrbit> {
         let mut filtered: Vec<PeriodicOrbit> = Vec::new();
         let tolerance = 1e-4;
 
-        for orbit in orbits {
+        for orbit in _orbits {
             let mut is_duplicate = false;
 
             for existing in &filtered {
@@ -2928,7 +2907,7 @@ impl StabilityAnalyzer {
     }
 
     /// Compute Lyapunov exponents
-    fn compute_lyapunov_exponents<F>(&self, system: &F) -> Result<Option<Array1<f64>>>
+    fn compute_lyapunov_exponents<F>(_system: &F) -> Result<Option<Array1<f64>>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64> + Send + Sync + Clone,
     {
@@ -2941,13 +2920,12 @@ impl StabilityAnalyzer {
         // (we'd ideally use an attractor, but this is a reasonable default)
         let initial_state = Array1::zeros(self.dimension);
 
-        // Use adaptive time step based on system dimension
+        // Use adaptive time step based on _system dimension
         let dt = match self.dimension {
             1 => 0.01,
             2 => 0.005,
             3 => 0.002,
-            4..=6 => 0.001,
-            _ => 0.0005,
+            4..=6 => 0.001_ => 0.0005,
         };
 
         // Calculate number of exponents to compute (typically all for small systems)
@@ -2960,11 +2938,11 @@ impl StabilityAnalyzer {
 
         let calculator = advanced_analysis::LyapunovCalculator::new(n_exponents, dt);
 
-        // Use integration time that scales with system complexity
+        // Use integration time that scales with _system complexity
         let integration_time = self.integration_time * (self.dimension as f64).sqrt();
 
-        // Clone the system function to satisfy trait bounds
-        let system_clone = system.clone();
+        // Clone the _system function to satisfy trait bounds
+        let system_clone = _system.clone();
         let system_wrapper = move |state: &Array1<f64>| system_clone(state);
 
         match calculator.calculate_lyapunov_exponents(
@@ -3070,14 +3048,14 @@ impl StabilityAnalyzer {
         // Simple Euler integration
         let dt = 0.01;
         let n_steps = (self.integration_time / dt) as usize;
-        let mut state = initial_state.clone();
+        let mut _state = initial_state.clone();
 
         for _ in 0..n_steps {
-            let derivative = system(&state);
-            state += &(derivative * dt);
+            let derivative = system(&_state);
+            _state += &(derivative * dt);
         }
 
-        Ok(state)
+        Ok(_state)
     }
 }
 
@@ -3152,9 +3130,6 @@ mod tests {
 
 /// Advanced analysis tools for complex dynamical systems
 pub mod advanced_analysis {
-    use super::*;
-    use crate::error::{IntegrateError, IntegrateResult as Result};
-    use ndarray::{Array1, Array2};
 
     /// Poincaré section analysis for periodic orbit detection
     pub struct PoincareAnalyzer {
@@ -3257,20 +3232,20 @@ pub mod advanced_analysis {
         }
 
         /// Calculate distance from point to section
-        fn distance_from_section(&self, point: &Array1<f64>) -> f64 {
-            let relative_pos = point - &self.section_point;
+        fn distance_from_section(_point: &Array1<f64>) -> f64 {
+            let relative_pos = _point - &self.section_point;
             relative_pos.dot(&self.section_normal)
         }
 
         /// Compute return map from crossings
-        fn compute_return_map(&self, crossings: &[Array1<f64>]) -> Result<ReturnMap> {
+        fn compute_return_map(_crossings: &[Array1<f64>]) -> Result<ReturnMap> {
             let mut current_points = Vec::new();
             let mut next_points = Vec::new();
 
-            for i in 0..crossings.len() - 1 {
+            for i in 0.._crossings.len() - 1 {
                 // Project points onto section (remove normal component)
-                let current_projected = self.project_to_section(&crossings[i]);
-                let next_projected = self.project_to_section(&crossings[i + 1]);
+                let current_projected = self.project_to_section(&_crossings[i]);
+                let next_projected = self.project_to_section(&_crossings[i + 1]);
 
                 current_points.push(current_projected);
                 next_points.push(next_projected);
@@ -3283,31 +3258,31 @@ pub mod advanced_analysis {
         }
 
         /// Project point onto Poincaré section
-        fn project_to_section(&self, point: &Array1<f64>) -> Array1<f64> {
-            let distance = self.distance_from_section(point);
-            point - distance * &self.section_normal
+        fn project_to_section(_point: &Array1<f64>) -> Array1<f64> {
+            let distance = self.distance_from_section(_point);
+            _point - distance * &self.section_normal
         }
 
         /// Detect periodic orbits from crossings
-        fn detect_periodic_orbits(&self, crossings: &[Array1<f64>]) -> Result<Vec<PeriodicOrbit>> {
+        fn detect_periodic_orbits(_crossings: &[Array1<f64>]) -> Result<Vec<PeriodicOrbit>> {
             let mut periodic_orbits = Vec::new();
             let tolerance = 1e-6;
 
             // Look for approximate returns to previous crossing points
-            for i in 0..crossings.len() {
-                for j in (i + 2)..crossings.len() {
-                    let distance = self.euclidean_distance(&crossings[i], &crossings[j]);
+            for i in 0.._crossings.len() {
+                for j in (i + 2).._crossings.len() {
+                    let distance = self.euclidean_distance(&_crossings[i], &_crossings[j]);
                     if distance < tolerance {
                         // Found potential periodic orbit
                         let period_length = j - i;
-                        let representative_point = crossings[i].clone();
+                        let representative_point = _crossings[i].clone();
 
                         // Verify periodicity by checking intermediate points
                         let mut is_periodic = true;
                         for k in 1..period_length {
-                            if i + k < crossings.len() && j + k < crossings.len() {
+                            if i + k < _crossings.len() && j + k < _crossings.len() {
                                 let dist =
-                                    self.euclidean_distance(&crossings[i + k], &crossings[j + k]);
+                                    self.euclidean_distance(&_crossings[i + k], &_crossings[j + k]);
                                 if dist > tolerance {
                                     is_periodic = false;
                                     break;
@@ -3333,7 +3308,7 @@ pub mod advanced_analysis {
             Ok(periodic_orbits)
         }
 
-        fn euclidean_distance(&self, a: &Array1<f64>, b: &Array1<f64>) -> f64 {
+        fn euclidean_distance(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
             (a - b).iter().map(|&x| x * x).sum::<f64>().sqrt()
         }
     }
@@ -3378,9 +3353,9 @@ pub mod advanced_analysis {
 
     impl LyapunovCalculator {
         /// Create new Lyapunov calculator
-        pub fn new(n_exponents: usize, dt: f64) -> Self {
+        pub fn new(_n_exponents: usize, dt: f64) -> Self {
             Self {
-                n_exponents,
+                _n_exponents,
                 perturbation_magnitude: 1e-8,
                 renormalization_interval: 100,
                 dt,
@@ -3406,20 +3381,20 @@ pub mod advanced_analysis {
                 ));
             }
 
-            // Initialize state and tangent vectors
-            let mut state = initial_state.clone();
+            // Initialize _state and tangent vectors
+            let mut _state = initial_state.clone();
             let mut tangent_vectors = self.initialize_tangent_vectors(dim)?;
             let mut lyapunov_sums = Array1::zeros(self.n_exponents);
 
             // Main integration loop
             for step in 0..n_steps {
                 // Evolve main trajectory
-                let derivative = system(&state);
-                state += &(derivative * self.dt);
+                let derivative = system(&_state);
+                _state += &(derivative * self.dt);
 
                 // Evolve tangent vectors
                 for i in 0..self.n_exponents {
-                    let jacobian = self.compute_jacobian(&system, &state)?;
+                    let jacobian = self.compute_jacobian(&system, &_state)?;
                     let tangent_derivative = jacobian.dot(&tangent_vectors.column(i));
                     let old_tangent = tangent_vectors.column(i).to_owned();
                     tangent_vectors
@@ -3446,14 +3421,13 @@ pub mod advanced_analysis {
         }
 
         /// Initialize orthonormal tangent vectors
-        fn initialize_tangent_vectors(&self, dim: usize) -> Result<Array2<f64>> {
-            let mut vectors = Array2::zeros((dim, self.n_exponents));
+        fn initialize_tangent_vectors(_dim: usize) -> Result<Array2<f64>> {
+            let mut vectors = Array2::zeros((_dim, self.n_exponents));
 
             // Initialize with random vectors
-            use rand::Rng;
             let mut rng = rand::rng();
             for i in 0..self.n_exponents {
-                for j in 0..dim {
+                for j in 0.._dim {
                     vectors[[j, i]] = rng.random::<f64>() - 0.5;
                 }
             }
@@ -3479,7 +3453,7 @@ pub mod advanced_analysis {
         }
 
         /// Compute Jacobian matrix using finite differences
-        fn compute_jacobian<F>(&self, system: &F, state: &Array1<f64>) -> Result<Array2<f64>>
+        fn compute_jacobian<F>(_system: &F, state: &Array1<f64>) -> Result<Array2<f64>>
         where
             F: Fn(&Array1<f64>) -> Array1<f64>,
         {
@@ -3494,8 +3468,8 @@ pub mod advanced_analysis {
                 state_plus[j] += h;
                 state_minus[j] -= h;
 
-                let f_plus = system(&state_plus);
-                let f_minus = system(&state_minus);
+                let f_plus = _system(&state_plus);
+                let f_minus = _system(&state_minus);
 
                 for i in 0..dim {
                     jacobian[[i, j]] = (f_plus[i] - f_minus[i]) / (2.0 * h);
@@ -3506,9 +3480,9 @@ pub mod advanced_analysis {
         }
 
         /// QR decomposition using Gram-Schmidt
-        fn qr_decomposition(&self, matrix: &Array2<f64>) -> Result<(Array2<f64>, Array2<f64>)> {
-            let (_m, n) = matrix.dim();
-            let mut q = matrix.clone();
+        fn qr_decomposition(_matrix: &Array2<f64>) -> Result<(Array2<f64>, Array2<f64>)> {
+            let (_m, n) = _matrix.dim();
+            let mut q = _matrix.clone();
             let mut r = Array2::zeros((n, n));
 
             for j in 0..n {
@@ -3563,20 +3537,20 @@ pub mod advanced_analysis {
                 reference_state += &(ref_derivative * self.dt);
                 nearby_state += &(nearby_derivative * self.dt);
 
-                // Calculate separation
+                // Calculate _separation
                 let separation_vector = &nearby_state - &reference_state;
-                let separation = separation_vector.iter().map(|&x| x * x).sum::<f64>().sqrt();
+                let _separation = separation_vector.iter().map(|&x| x * x).sum::<f64>().sqrt();
 
                 // Check if rescaling is needed
-                if (separation > max_separation || separation < min_separation)
-                    && separation > 1e-15
+                if (_separation > max_separation || _separation < min_separation)
+                    && _separation > 1e-15
                 {
                     // Add to Lyapunov sum
-                    lyapunov_sum += separation.ln();
+                    lyapunov_sum += _separation.ln();
                     n_rescales += 1;
 
-                    // Rescale the separation vector
-                    let scale_factor = self.perturbation_magnitude / separation;
+                    // Rescale the _separation vector
+                    let scale_factor = self.perturbation_magnitude / _separation;
                     nearby_state = &reference_state + &(separation_vector * scale_factor);
                 }
             }
@@ -3598,7 +3572,7 @@ pub mod advanced_analysis {
             let n = time_series.len();
             if n < embedding_dimension * delay + 1 {
                 return Err(IntegrateError::ValueError(
-                    "Time series too short for embedding".to_string(),
+                    "Time _series too short for embedding".to_string(),
                 ));
             }
 
@@ -3660,7 +3634,7 @@ pub mod advanced_analysis {
         }
 
         /// Helper function for distance calculation between arrays
-        fn euclidean_distance_arrays(&self, a: &Array1<f64>, b: &Array1<f64>) -> f64 {
+        fn euclidean_distance_arrays(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
             (a - b).iter().map(|&x| x * x).sum::<f64>().sqrt()
         }
 
@@ -3681,11 +3655,10 @@ pub mod advanced_analysis {
             let mut all_exponents = Array2::zeros((n_trials, n_exponents));
 
             // Calculate Lyapunov exponents multiple times with slightly different initial conditions
-            use rand::Rng;
             let mut rng = rand::rng();
 
             for trial in 0..n_trials {
-                // Add small random perturbation to initial state
+                // Add small random perturbation to initial _state
                 let mut perturbed_initial = initial_state.clone();
                 for i in 0..dim {
                     perturbed_initial[i] += (rng.random::<f64>() - 0.5) * 1e-6;
@@ -3742,7 +3715,7 @@ pub mod advanced_analysis {
     }
 
     impl Default for FractalAnalyzer {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self::new()
         }
     }
@@ -3770,17 +3743,17 @@ pub mod advanced_analysis {
         }
 
         /// Standard box counting dimension
-        fn box_counting_dimension(&self, points: &[Array1<f64>]) -> Result<FractalDimension> {
-            if points.is_empty() {
+        fn box_counting_dimension(_points: &[Array1<f64>]) -> Result<FractalDimension> {
+            if _points.is_empty() {
                 return Err(IntegrateError::ValueError(
                     "Cannot analyze empty point set".to_string(),
                 ));
             }
 
-            let dim = points[0].len();
+            let dim = _points[0].len();
 
             // Find bounding box
-            let (min_bounds, max_bounds) = self.find_bounding_box(points);
+            let (min_bounds, max_bounds) = self.find_bounding_box(_points);
             let domain_size = max_bounds
                 .iter()
                 .zip(min_bounds.iter())
@@ -3796,7 +3769,7 @@ pub mod advanced_analysis {
                 let scale = self.scale_range.0 * (self.scale_range.1 / self.scale_range.0).powf(t);
 
                 let box_size = scale * domain_size;
-                let count = self.count_occupied_boxes(points, &min_bounds, box_size, dim)?;
+                let count = self.count_occupied_boxes(_points, &min_bounds, box_size, dim)?;
 
                 scales.push(scale);
                 counts.push(count as f64);
@@ -3819,14 +3792,14 @@ pub mod advanced_analysis {
         }
 
         /// Differential box counting for higher accuracy
-        fn differential_box_counting(&self, points: &[Array1<f64>]) -> Result<FractalDimension> {
+        fn differential_box_counting(_points: &[Array1<f64>]) -> Result<FractalDimension> {
             // Simplified implementation - would need full differential box counting
-            self.box_counting_dimension(points)
+            self.box_counting_dimension(_points)
         }
 
         /// Correlation dimension using Grassberger-Procaccia algorithm
-        fn correlation_dimension(&self, points: &[Array1<f64>]) -> Result<FractalDimension> {
-            let n_points = points.len();
+        fn correlation_dimension(_points: &[Array1<f64>]) -> Result<FractalDimension> {
+            let n_points = _points.len();
             let mut scales = Vec::new();
             let mut correlations = Vec::new();
 
@@ -3837,7 +3810,7 @@ pub mod advanced_analysis {
                 let mut count = 0;
                 for i in 0..n_points {
                     for j in i + 1..n_points {
-                        let distance = self.euclidean_distance(&points[i], &points[j]);
+                        let distance = self.euclidean_distance(&_points[i], &_points[j]);
                         if distance < r {
                             count += 1;
                         }
@@ -3864,7 +3837,7 @@ pub mod advanced_analysis {
                 ));
             }
 
-            let filtered_scales: Vec<f64> = filtered_data.iter().map(|(s, _)| *s).collect();
+            let filtered_scales: Vec<f64> = filtered_data.iter().map(|(s_)| *s).collect();
             let filtered_correlations: Vec<f64> = filtered_data.iter().map(|(_, c)| *c).collect();
 
             let dimension =
@@ -3884,12 +3857,12 @@ pub mod advanced_analysis {
         }
 
         /// Helper functions
-        fn find_bounding_box(&self, points: &[Array1<f64>]) -> (Array1<f64>, Array1<f64>) {
-            let dim = points[0].len();
+        fn find_bounding_box(_points: &[Array1<f64>]) -> (Array1<f64>, Array1<f64>) {
+            let dim = _points[0].len();
             let mut min_bounds = Array1::from_elem(dim, f64::INFINITY);
             let mut max_bounds = Array1::from_elem(dim, f64::NEG_INFINITY);
 
-            for point in points {
+            for point in _points {
                 for i in 0..dim {
                     min_bounds[i] = min_bounds[i].min(point[i]);
                     max_bounds[i] = max_bounds[i].max(point[i]);
@@ -3920,10 +3893,10 @@ pub mod advanced_analysis {
             Ok(occupied_boxes.len())
         }
 
-        fn calculate_slope_from_log_data(&self, x_data: &[f64], y_data: &[f64]) -> Result<f64> {
-            if x_data.len() != y_data.len() || x_data.len() < 2 {
+        fn calculate_slope_from_log_data(_x_data: &[f64], y_data: &[f64]) -> Result<f64> {
+            if _x_data.len() != y_data.len() || _x_data.len() < 2 {
                 return Err(IntegrateError::ValueError(
-                    "Insufficient data for slope calculation".to_string(),
+                    "Insufficient _data for slope calculation".to_string(),
                 ));
             }
 
@@ -3941,8 +3914,8 @@ pub mod advanced_analysis {
             Ok(slope)
         }
 
-        fn calculate_r_squared(&self, x_data: &[f64], y_data: &[f64], slope: f64) -> Result<f64> {
-            let log_x: Vec<f64> = x_data.iter().map(|&x| x.ln()).collect();
+        fn calculate_r_squared(_x_data: &[f64], y_data: &[f64], slope: f64) -> Result<f64> {
+            let log_x: Vec<f64> = _x_data.iter().map(|&x| x.ln()).collect();
             let log_y: Vec<f64> = y_data.iter().map(|&y| y.ln()).collect();
 
             let mean_y = log_y.iter().sum::<f64>() / log_y.len() as f64;
@@ -3962,7 +3935,7 @@ pub mod advanced_analysis {
             Ok(r_squared)
         }
 
-        fn euclidean_distance(&self, a: &Array1<f64>, b: &Array1<f64>) -> f64 {
+        fn euclidean_distance(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
             a.iter()
                 .zip(b.iter())
                 .map(|(&x, &y)| (x - y).powi(2))
@@ -4011,9 +3984,9 @@ pub mod advanced_analysis {
 
     impl RecurrenceAnalyzer {
         /// Create new recurrence analyzer
-        pub fn new(threshold: f64, embedding_dimension: usize, time_delay: usize) -> Self {
+        pub fn new(_threshold: f64, embedding_dimension: usize, time_delay: usize) -> Self {
             Self {
-                threshold,
+                _threshold,
                 embedding_dimension,
                 time_delay,
                 distance_metric: DistanceMetric::Euclidean,
@@ -4042,13 +4015,13 @@ pub mod advanced_analysis {
         }
 
         /// Create delay coordinate embedding
-        fn create_embedding(&self, time_series: &[f64]) -> Result<Vec<Array1<f64>>> {
-            let n = time_series.len();
+        fn create_embedding(_time_series: &[f64]) -> Result<Vec<Array1<f64>>> {
+            let n = _time_series.len();
             let embedded_length = n - (self.embedding_dimension - 1) * self.time_delay;
 
             if embedded_length <= 0 {
                 return Err(IntegrateError::ValueError(
-                    "Time series too short for given embedding parameters".to_string(),
+                    "Time _series too short for given embedding parameters".to_string(),
                 ));
             }
 
@@ -4066,13 +4039,13 @@ pub mod advanced_analysis {
         }
 
         /// Compute recurrence matrix
-        fn compute_recurrence_matrix(&self, vectors: &[Array1<f64>]) -> Result<Array2<bool>> {
-            let n = vectors.len();
+        fn compute_recurrence_matrix(_vectors: &[Array1<f64>]) -> Result<Array2<bool>> {
+            let n = _vectors.len();
             let mut recurrence_matrix = Array2::from_elem((n, n), false);
 
             for i in 0..n {
                 for j in 0..n {
-                    let distance = self.calculate_distance(&vectors[i], &vectors[j]);
+                    let distance = self.calculate_distance(&_vectors[i], &_vectors[j]);
                     recurrence_matrix[[i, j]] = distance <= self.threshold;
                 }
             }
@@ -4081,7 +4054,7 @@ pub mod advanced_analysis {
         }
 
         /// Calculate distance between vectors
-        fn calculate_distance(&self, a: &Array1<f64>, b: &Array1<f64>) -> f64 {
+        fn calculate_distance(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
             match self.distance_metric {
                 DistanceMetric::Euclidean => a
                     .iter()
@@ -4101,16 +4074,16 @@ pub mod advanced_analysis {
         }
 
         /// Calculate Recurrence Quantification Analysis measures
-        fn calculate_rqa_measures(&self, recurrence_matrix: &Array2<bool>) -> Result<RQAMeasures> {
-            let n = recurrence_matrix.nrows();
+        fn calculate_rqa_measures(_recurrence_matrix: &Array2<bool>) -> Result<RQAMeasures> {
+            let n = _recurrence_matrix.nrows();
             let total_points = (n * n) as f64;
 
             // Recurrence rate
-            let recurrent_points = recurrence_matrix.iter().filter(|&&x| x).count() as f64;
+            let recurrent_points = _recurrence_matrix.iter().filter(|&&x| x).count() as f64;
             let recurrence_rate = recurrent_points / total_points;
 
             // Determinism (percentage of recurrent points forming diagonal lines)
-            let diagonal_lines = self.find_diagonal_lines(recurrence_matrix, 2)?;
+            let diagonal_lines = self.find_diagonal_lines(_recurrence_matrix, 2)?;
             let diagonal_points: usize = diagonal_lines.iter().map(|line| line.length).sum();
             let determinism = diagonal_points as f64 / recurrent_points;
 
@@ -4187,8 +4160,7 @@ pub mod advanced_analysis {
                         if current_length >= min_length {
                             lines.push(RecurrentLine {
                                 start_i,
-                                start_j,
-                                length: current_length,
+                                start_j_length: current_length,
                                 line_type: LineType::Diagonal,
                             });
                         }
@@ -4200,8 +4172,7 @@ pub mod advanced_analysis {
                 if current_length >= min_length {
                     lines.push(RecurrentLine {
                         start_i,
-                        start_j,
-                        length: current_length,
+                        start_j_length: current_length,
                         line_type: LineType::Diagonal,
                     });
                 }
@@ -4234,7 +4205,7 @@ pub mod advanced_analysis {
                             lines.push(RecurrentLine {
                                 start_i,
                                 start_j: j,
-                                length: current_length,
+                                _length: current_length,
                                 line_type: LineType::Vertical,
                             });
                         }
@@ -4247,7 +4218,7 @@ pub mod advanced_analysis {
                     lines.push(RecurrentLine {
                         start_i,
                         start_j: j,
-                        length: current_length,
+                        _length: current_length,
                         line_type: LineType::Vertical,
                     });
                 }
@@ -4320,9 +4291,9 @@ pub mod advanced_analysis {
 
     impl ContinuationAnalyzer {
         /// Create new continuation analyzer
-        pub fn new(param_range: (f64, f64), n_steps: usize) -> Self {
+        pub fn new(_param_range: (f64, f64), n_steps: usize) -> Self {
             Self {
-                param_range,
+                _param_range,
                 n_steps,
                 tol: 1e-8,
                 max_newton_iter: 50,
@@ -4359,15 +4330,13 @@ pub mod advanced_analysis {
                 // Check for bifurcations
                 if let Some(bif_type) = self.detect_bifurcation(&eigenvalues) {
                     bifurcation_points.push(BifurcationPointData {
-                        parameter: param,
-                        state: fixed_point.clone(),
+                        parameter: param_state: fixed_point.clone(),
                         bifurcation_type: bif_type,
                     });
                 }
 
                 fixed_points.push(FixedPointData {
-                    parameter: param,
-                    state: fixed_point.clone(),
+                    parameter: param_state: fixed_point.clone(),
                     eigenvalues: eigenvalues.clone(),
                     stability: self.classify_stability(&eigenvalues),
                 });
@@ -4445,7 +4414,7 @@ pub mod advanced_analysis {
         }
 
         /// Solve linear system using Gaussian elimination
-        fn solve_linear_system(&self, a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+        fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
             let n = a.nrows();
             let mut aug = Array2::zeros((n, n + 1));
 
@@ -4493,14 +4462,14 @@ pub mod advanced_analysis {
         }
 
         /// Compute eigenvalues for 2x2 matrices
-        fn compute_eigenvalues(&self, matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
-            let n = matrix.nrows();
+        fn compute_eigenvalues(_matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+            let n = _matrix.nrows();
 
             if n == 2 {
-                let a = matrix[[0, 0]];
-                let b = matrix[[0, 1]];
-                let c = matrix[[1, 0]];
-                let d = matrix[[1, 1]];
+                let a = _matrix[[0, 0]];
+                let b = _matrix[[0, 1]];
+                let c = _matrix[[1, 0]];
+                let d = _matrix[[1, 1]];
 
                 let trace = a + d;
                 let det = a * d - b * c;
@@ -4527,8 +4496,8 @@ pub mod advanced_analysis {
         }
 
         /// Detect bifurcation types
-        fn detect_bifurcation(&self, eigenvalues: &[Complex64]) -> Option<BifurcationType> {
-            for eigenval in eigenvalues {
+        fn detect_bifurcation(_eigenvalues: &[Complex64]) -> Option<BifurcationType> {
+            for eigenval in _eigenvalues {
                 if eigenval.im == 0.0 && eigenval.re.abs() < 1e-6 {
                     return Some(BifurcationType::SaddleNode);
                 }
@@ -4541,8 +4510,8 @@ pub mod advanced_analysis {
         }
 
         /// Classify stability
-        fn classify_stability(&self, eigenvalues: &[Complex64]) -> StabilityType {
-            for eigenval in eigenvalues {
+        fn classify_stability(_eigenvalues: &[Complex64]) -> StabilityType {
+            for eigenval in _eigenvalues {
                 if eigenval.re > 1e-12 {
                     return StabilityType::Unstable;
                 }
@@ -4563,9 +4532,9 @@ pub mod advanced_analysis {
 
     impl MonodromyAnalyzer {
         /// Create new monodromy analyzer
-        pub fn new(period: f64, n_steps: usize) -> Self {
+        pub fn new(_period: f64, n_steps: usize) -> Self {
             Self {
-                period,
+                _period,
                 tol: 1e-8,
                 n_steps,
             }
@@ -4593,7 +4562,7 @@ pub mod advanced_analysis {
                 // Euler step for fundamental matrix: dΦ/dt = J(t)Φ
                 fundamental_matrix = &fundamental_matrix + &(jac.dot(&fundamental_matrix) * dt);
 
-                // RK4 for state evolution
+                // RK4 for _state evolution
                 let k1 = system(&current_state);
                 let k2 = system(&(&current_state + &(&k1 * (dt / 2.0))));
                 let k3 = system(&(&current_state + &(&k2 * (dt / 2.0))));
@@ -4616,7 +4585,7 @@ pub mod advanced_analysis {
         }
 
         /// Compute numerical Jacobian
-        fn numerical_jacobian<F>(&self, system: &F, x: &Array1<f64>) -> Result<Array2<f64>>
+        fn numerical_jacobian<F>(_system: &F, x: &Array1<f64>) -> Result<Array2<f64>>
         where
             F: Fn(&Array1<f64>) -> Array1<f64>,
         {
@@ -4630,8 +4599,8 @@ pub mod advanced_analysis {
                 x_plus[j] += h;
                 x_minus[j] -= h;
 
-                let f_plus = system(&x_plus);
-                let f_minus = system(&x_minus);
+                let f_plus = _system(&x_plus);
+                let f_minus = _system(&x_minus);
 
                 for i in 0..n {
                     jac[[i, j]] = (f_plus[i] - f_minus[i]) / (2.0 * h);
@@ -4642,14 +4611,14 @@ pub mod advanced_analysis {
         }
 
         /// Compute eigenvalues
-        fn compute_eigenvalues(&self, matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
-            let n = matrix.nrows();
+        fn compute_eigenvalues(_matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+            let n = _matrix.nrows();
 
             if n == 2 {
-                let a = matrix[[0, 0]];
-                let b = matrix[[0, 1]];
-                let c = matrix[[1, 0]];
-                let d = matrix[[1, 1]];
+                let a = _matrix[[0, 0]];
+                let b = _matrix[[0, 1]];
+                let c = _matrix[[1, 0]];
+                let d = _matrix[[1, 1]];
 
                 let trace = a + d;
                 let det = a * d - b * c;
@@ -4676,8 +4645,8 @@ pub mod advanced_analysis {
         }
 
         /// Classify periodic stability
-        fn classify_periodic_stability(&self, multipliers: &[Complex64]) -> PeriodicStabilityType {
-            let max_magnitude = multipliers.iter().map(|m| m.norm()).fold(0.0, f64::max);
+        fn classify_periodic_stability(_multipliers: &[Complex64]) -> PeriodicStabilityType {
+            let max_magnitude = _multipliers.iter().map(|m| m.norm()).fold(0.0, f64::max);
 
             if max_magnitude > 1.0 + 1e-6 {
                 PeriodicStabilityType::Unstable
@@ -4744,7 +4713,6 @@ pub mod advanced_analysis {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
 
         #[test]
         fn test_poincare_analyzer() {
@@ -4868,9 +4836,8 @@ pub mod advanced_analysis {
 /// This module provides advanced machine learning techniques for predicting
 /// bifurcation points and classifying bifurcation types in dynamical systems.
 pub mod ml_bifurcation_prediction {
-    use super::*;
     use std::collections::VecDeque;
-    use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex};
 
     /// Neural network for bifurcation classification and prediction
     #[derive(Debug, Clone)]
@@ -6103,9 +6070,9 @@ pub mod ml_bifurcation_prediction {
 
     impl BifurcationPredictionNetwork {
         /// Create a new bifurcation prediction network
-        pub fn new(input_size: usize, hidden_layers: Vec<usize>, output_size: usize) -> Self {
+        pub fn new(_input_size: usize, hidden_layers: Vec<usize>, output_size: usize) -> Self {
             let architecture = NetworkArchitecture {
-                input_size,
+                _input_size,
                 hidden_layers: hidden_layers.clone(),
                 output_size,
                 activation_functions: vec![ActivationFunction::ReLU; hidden_layers.len() + 1],
@@ -6127,20 +6094,20 @@ pub mod ml_bifurcation_prediction {
         }
 
         /// Initialize network parameters
-        fn initialize_parameters(arch: &NetworkArchitecture) -> ModelParameters {
+        fn initialize_parameters(_arch: &NetworkArchitecture) -> ModelParameters {
             let mut weights = Vec::new();
             let mut biases = Vec::new();
 
-            let mut prev_size = arch.input_size;
-            for &layer_size in &arch.hidden_layers {
+            let mut prev_size = _arch.input_size;
+            for &layer_size in &_arch.hidden_layers {
                 weights.push(Array2::zeros((prev_size, layer_size)));
                 biases.push(Array1::zeros(layer_size));
                 prev_size = layer_size;
             }
 
             // Output layer
-            weights.push(Array2::zeros((prev_size, arch.output_size)));
-            biases.push(Array1::zeros(arch.output_size));
+            weights.push(Array2::zeros((prev_size, _arch.output_size)));
+            biases.push(Array1::zeros(_arch.output_size));
 
             ModelParameters {
                 weights,
@@ -6211,7 +6178,7 @@ pub mod ml_bifurcation_prediction {
         }
 
         /// Apply dropout during training
-        fn apply_dropout(&self, x: &Array1<f64>, dropout_rate: f64) -> Result<Array1<f64>> {
+        fn apply_dropout(x: &Array1<f64>, dropout_rate: f64) -> Result<Array1<f64>> {
             if dropout_rate == 0.0 {
                 return Ok(x.clone());
             }
@@ -6279,13 +6246,13 @@ pub mod ml_bifurcation_prediction {
         }
 
         /// Train for one epoch
-        fn train_epoch(&mut self, training_data: &[(Array1<f64>, Array1<f64>)]) -> Result<f64> {
+        fn train_epoch(_training_data: &[(Array1<f64>, Array1<f64>)]) -> Result<f64> {
             let mut total_loss = 0.0;
             let batch_size = self.training_config.batch_size;
 
-            for batch_start in (0..training_data.len()).step_by(batch_size) {
-                let batch_end = (batch_start + batch_size).min(training_data.len());
-                let batch = &training_data[batch_start..batch_end];
+            for batch_start in (0.._training_data.len()).step_by(batch_size) {
+                let batch_end = (batch_start + batch_size).min(_training_data.len());
+                let batch = &_training_data[batch_start..batch_end];
 
                 let batch_loss = self.train_batch(batch)?;
                 total_loss += batch_loss;
@@ -6295,10 +6262,10 @@ pub mod ml_bifurcation_prediction {
         }
 
         /// Train on a single batch
-        fn train_batch(&mut self, batch: &[(Array1<f64>, Array1<f64>)]) -> Result<f64> {
+        fn train_batch(_batch: &[(Array1<f64>, Array1<f64>)]) -> Result<f64> {
             let mut total_loss = 0.0;
 
-            for (input, target) in batch {
+            for (input, target) in _batch {
                 let prediction = self.forward(input)?;
                 let loss = self.calculate_loss(&prediction, target)?;
                 total_loss += loss;
@@ -6307,19 +6274,19 @@ pub mod ml_bifurcation_prediction {
                 self.backward(&prediction, target, input)?;
             }
 
-            Ok(total_loss / batch.len() as f64)
+            Ok(total_loss / _batch.len() as f64)
         }
 
         /// Calculate loss
-        fn calculate_loss(&self, prediction: &Array1<f64>, target: &Array1<f64>) -> Result<f64> {
+        fn calculate_loss(_prediction: &Array1<f64>, target: &Array1<f64>) -> Result<f64> {
             match self.training_config.loss_function {
                 LossFunction::MSE => {
-                    let diff = prediction - target;
-                    Ok(diff.dot(&diff) / prediction.len() as f64)
+                    let diff = _prediction - target;
+                    Ok(diff.dot(&diff) / _prediction.len() as f64)
                 }
                 LossFunction::CrossEntropy => {
                     let epsilon = 1e-15;
-                    let pred_clipped = prediction.mapv(|p| p.max(epsilon).min(1.0 - epsilon));
+                    let pred_clipped = _prediction.mapv(|p| p.max(epsilon).min(1.0 - epsilon));
                     let loss = -target
                         .iter()
                         .zip(pred_clipped.iter())
@@ -6329,7 +6296,7 @@ pub mod ml_bifurcation_prediction {
                 }
                 LossFunction::FocalLoss(alpha, gamma) => {
                     let epsilon = 1e-15;
-                    let pred_clipped = prediction.mapv(|p| p.max(epsilon).min(1.0 - epsilon));
+                    let pred_clipped = _prediction.mapv(|p| p.max(epsilon).min(1.0 - epsilon));
                     let loss = -alpha
                         * target
                             .iter()
@@ -6339,7 +6306,7 @@ pub mod ml_bifurcation_prediction {
                     Ok(loss)
                 }
                 LossFunction::HuberLoss(delta) => {
-                    let diff = prediction - target;
+                    let diff = _prediction - target;
                     let abs_diff = diff.mapv(|d| d.abs());
                     let loss = abs_diff
                         .iter()
@@ -6351,22 +6318,19 @@ pub mod ml_bifurcation_prediction {
                             }
                         })
                         .sum::<f64>();
-                    Ok(loss / prediction.len() as f64)
+                    Ok(loss / _prediction.len() as f64)
                 }
                 LossFunction::WeightedMSE => {
                     // Placeholder implementation
-                    let diff = prediction - target;
-                    Ok(diff.dot(&diff) / prediction.len() as f64)
+                    let diff = _prediction - target;
+                    Ok(diff.dot(&diff) / _prediction.len() as f64)
                 }
             }
         }
 
         /// Backward pass (gradient computation)
         fn backward(
-            &mut self,
-            _prediction: &Array1<f64>,
-            _target: &Array1<f64>,
-            _input: &Array1<f64>,
+            &mut self_prediction: &Array1<f64>, _target: &Array1<f64>, _input: &Array1<f64>,
         ) -> Result<()> {
             // Placeholder for backpropagation implementation
             // In a real implementation, this would compute gradients and update weights
@@ -6387,20 +6351,20 @@ pub mod ml_bifurcation_prediction {
         }
 
         /// Get current learning rate
-        fn get_current_learning_rate(&self, epoch: usize) -> f64 {
+        fn get_current_learning_rate(_epoch: usize) -> f64 {
             match &self.training_config.learning_rate {
                 LearningRateSchedule::Constant(lr) => *lr,
                 LearningRateSchedule::ExponentialDecay {
                     initial_lr,
                     decay_rate,
                     decay_steps,
-                } => initial_lr * decay_rate.powf(epoch as f64 / *decay_steps as f64),
+                } => initial_lr * decay_rate.powf(_epoch as f64 / *decay_steps as f64),
                 LearningRateSchedule::CosineAnnealing {
                     initial_lr,
                     min_lr,
                     cycle_length,
                 } => {
-                    let cycle_pos = (epoch % cycle_length) as f64 / *cycle_length as f64;
+                    let cycle_pos = (_epoch % cycle_length) as f64 / *cycle_length as f64;
                     min_lr
                         + (initial_lr - min_lr) * (1.0 + (cycle_pos * std::f64::consts::PI).cos())
                             / 2.0
@@ -6409,7 +6373,7 @@ pub mod ml_bifurcation_prediction {
                     initial_lr,
                     drop_rate,
                     epochs_drop,
-                } => initial_lr * drop_rate.powf((epoch / epochs_drop) as f64),
+                } => initial_lr * drop_rate.powf((_epoch / epochs_drop) as f64),
                 LearningRateSchedule::Adaptive { initial_lr, .. } => {
                     // Placeholder for adaptive learning rate
                     *initial_lr
@@ -6419,9 +6383,7 @@ pub mod ml_bifurcation_prediction {
 
         /// Check if early stopping should be triggered
         fn should_early_stop(
-            &self,
-            _training_metrics: &[EpochMetrics],
-            _validation_metrics: &[EpochMetrics],
+            &self, _training_metrics: &[EpochMetrics], _validation_metrics: &[EpochMetrics],
         ) -> bool {
             if !self.training_config.early_stopping.enabled {
                 return false;
@@ -6450,13 +6412,13 @@ pub mod ml_bifurcation_prediction {
         }
 
         /// Classify bifurcation type from network output
-        fn classify_bifurcation_type(&self, output: &Array1<f64>) -> Result<BifurcationType> {
+        fn classify_bifurcation_type(_output: &Array1<f64>) -> Result<BifurcationType> {
             // Find the class with highest probability
-            let max_idx = output
+            let max_idx = _output
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap_or(0);
 
             // Map index to bifurcation type
@@ -6466,17 +6428,16 @@ pub mod ml_bifurcation_prediction {
                 2 => BifurcationType::Pitchfork,
                 3 => BifurcationType::Hopf,
                 4 => BifurcationType::PeriodDoubling,
-                5 => BifurcationType::Homoclinic,
-                _ => BifurcationType::Unknown,
+                5 => BifurcationType::Homoclinic_ =>, BifurcationType::Unknown,
             };
 
             Ok(bifurcation_type)
         }
 
         /// Calculate prediction confidence
-        fn calculate_confidence(&self, output: &Array1<f64>) -> Result<f64> {
+        fn calculate_confidence(_output: &Array1<f64>) -> Result<f64> {
             // Use max probability as confidence
-            let max_prob = output.iter().cloned().fold(0.0, f64::max);
+            let max_prob = _output.iter().cloned().fold(0.0, f64::max);
             Ok(max_prob)
         }
     }
@@ -6511,7 +6472,7 @@ pub mod ml_bifurcation_prediction {
 
     // Default implementations for configuration structures
     impl Default for TrainingConfiguration {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 learning_rate: LearningRateSchedule::Constant(0.001),
                 optimizer: Optimizer::Adam {
@@ -6530,7 +6491,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for RegularizationConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 l1_lambda: 0.0,
                 l2_lambda: 0.001,
@@ -6542,7 +6503,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for EarlyStoppingConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 enabled: true,
                 monitor: "val_loss".to_string(),
@@ -6554,7 +6515,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for FeatureExtraction {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 time_series_features: TimeSeriesFeatures::default(),
                 phase_space_features: PhaseSpaceFeatures::default(),
@@ -6567,7 +6528,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for TimeSeriesFeatures {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 window_size: 100,
                 overlap: 0.5,
@@ -6581,7 +6542,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for PhaseSpaceFeatures {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 embedding_dim: 3,
                 time_delay: 1,
@@ -6594,7 +6555,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for FrequencyFeatures {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 psd_features: true,
                 frequency_bins: 128,
@@ -6607,7 +6568,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for TopologicalFeatures {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 persistent_homology: true,
                 max_dimension: 2,
@@ -6618,7 +6579,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for StatisticalFeatures {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 moments: true,
                 quantiles: true,
@@ -6649,7 +6610,7 @@ pub mod ml_bifurcation_prediction {
         }
 
         /// Start real-time monitoring
-        pub fn start_monitoring(&mut self) -> Result<()> {
+        pub fn start_monitoring(&self) -> Result<()> {
             // Implementation would start monitoring threads
             // This is a placeholder for the actual monitoring loop
             Ok(())
@@ -6705,13 +6666,13 @@ pub mod ml_bifurcation_prediction {
         }
 
         /// Extract time series features
-        fn extract_time_series_features(&self, data: &[Array1<f64>]) -> Result<Array1<f64>> {
-            if data.is_empty() {
+        fn extract_time_series_features(_data: &[Array1<f64>]) -> Result<Array1<f64>> {
+            if _data.is_empty() {
                 return Ok(Array1::zeros(0));
             }
 
-            // Convert to single time series (assuming 1D data)
-            let time_series: Vec<f64> = data.iter().map(|arr| arr[0]).collect();
+            // Convert to single time series (assuming 1D _data)
+            let time_series: Vec<f64> = _data.iter().map(|arr| arr[0]).collect();
 
             let mut features = Vec::new();
 
@@ -6735,7 +6696,7 @@ pub mod ml_bifurcation_prediction {
                 / time_series
                     .iter()
                     .enumerate()
-                    .map(|(i, _)| (i as f64 - x_mean).powi(2))
+                    .map(|(i_)| (i as f64 - x_mean).powi(2))
                     .sum::<f64>();
 
             features.push(slope);
@@ -6744,13 +6705,13 @@ pub mod ml_bifurcation_prediction {
         }
 
         /// Extract phase space features
-        fn extract_phase_space_features(&self, data: &[Array1<f64>]) -> Result<Array1<f64>> {
-            if data.len() < 3 {
+        fn extract_phase_space_features(_data: &[Array1<f64>]) -> Result<Array1<f64>> {
+            if _data.len() < 3 {
                 return Ok(Array1::zeros(0));
             }
 
             // Simple phase space reconstruction (time delay embedding)
-            let time_series: Vec<f64> = data.iter().map(|arr| arr[0]).collect();
+            let time_series: Vec<f64> = _data.iter().map(|arr| arr[0]).collect();
             let embedding_dim = 3;
             let delay = 1;
 
@@ -6795,11 +6756,11 @@ pub mod ml_bifurcation_prediction {
         }
 
         /// Generate an alert for a detected bifurcation
-        fn generate_alert(&mut self, prediction: &BifurcationPrediction) -> Result<()> {
+        fn generate_alert(_prediction: &BifurcationPrediction) -> Result<()> {
             // Create alert message
             let alert_message = format!(
                 "Bifurcation detected: {:?} at parameter {} with confidence {:.3}",
-                prediction.bifurcation_type, prediction.predicted_parameter, prediction.confidence
+                _prediction.bifurcation_type, _prediction.predicted_parameter, _prediction.confidence
             );
 
             // Log alert (placeholder implementation)
@@ -6813,7 +6774,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for AlertSystemConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             let mut alert_thresholds = HashMap::new();
             alert_thresholds.insert(BifurcationType::Fold, 0.8);
             alert_thresholds.insert(BifurcationType::Hopf, 0.7);
@@ -6829,7 +6790,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for AlertSuppressionConfig {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 min_interval: std::time::Duration::from_secs(60),
                 max_alerts_per_window: 10,
@@ -6840,7 +6801,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for AlertMetrics {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 alerts_generated: 0,
                 false_alarms: 0,
@@ -6852,7 +6813,7 @@ pub mod ml_bifurcation_prediction {
     }
 
     impl Default for AdaptiveThresholdSystem {
-        fn default() -> Self {
+        fn default(&self) -> Self {
             Self {
                 adaptation_method: ThresholdAdaptationMethod::ExponentialMovingAverage,
                 learning_rate: 0.01,
@@ -6870,7 +6831,6 @@ pub mod ml_bifurcation_prediction {
     /// Test functionality for ML bifurcation prediction
     #[cfg(test)]
     mod tests {
-        use super::*;
 
         #[test]
         fn test_bifurcation_network_creation() {

@@ -1452,8 +1452,7 @@ impl<T: Float> EvaluationProtocol<T> {
         Ok(Self {
             strategy: EvaluationStrategy::CrossValidation,
             metrics: vec![EvaluationMetric::Accuracy],
-            cross_validation: None,
-            _phantom: std::marker::PhantomData,
+            cross_validation: None, _phantom: std::marker::PhantomData,
             statistical_tests: vec![],
         })
     }
@@ -2620,28 +2619,28 @@ pub struct ContinualLearningMetrics {
 
 // Implementation begins here
 
-impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>>
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> + std::iter::Sum<&'a T>>
     TransformerOptimizer<T>
 {
     /// Create a new Transformer optimizer
-    pub fn new(config: TransformerOptimizerConfig) -> Result<Self> {
+    pub fn new(_config: TransformerOptimizerConfig) -> Result<Self> {
         // Validate configuration
-        Self::validate_config(&config)?;
+        Self::validate_config(&_config)?;
 
         // Initialize Transformer network
-        let transformer_network = TransformerNetwork::new(&config)?;
+        let transformer_network = TransformerNetwork::new(&_config)?;
 
         // Initialize sequence buffer
-        let sequence_buffer = SequenceBuffer::new(config.max_sequence_length);
+        let sequence_buffer = SequenceBuffer::new(_config.max_sequence_length);
 
         // Initialize meta-learner
-        let meta_learner = TransformerMetaLearner::new(&config)?;
+        let meta_learner = TransformerMetaLearner::new(&_config)?;
 
         // Initialize position encoder
-        let position_encoder = PositionalEncoder::new(&config)?;
+        let position_encoder = PositionalEncoder::new(&_config)?;
 
         // Initialize strategy predictor
-        let strategy_predictor = StrategyPredictor::new(&config)?;
+        let strategy_predictor = StrategyPredictor::new(&_config)?;
 
         // Initialize metrics
         let metrics = TransformerOptimizerMetrics::new();
@@ -2650,7 +2649,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
         let rng = Random::default();
 
         Ok(Self {
-            config,
+            _config,
             transformer_network,
             sequence_buffer,
             meta_learner,
@@ -2805,7 +2804,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
         gradients: &Array1<T>,
         strategy: OptimizationStrategy,
     ) -> Result<Array1<T>> {
-        // Get the last output from the sequence
+        // Get the last _output from the sequence
         let last_output = transformer_output.slice(s![-1, ..]).to_owned();
 
         // Apply strategy-specific transformations
@@ -2818,7 +2817,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
                 last_output.mapv(|x| x * scale)
             }
             OptimizationStrategy::Momentum => {
-                // Use transformer output as momentum-like update
+                // Use transformer _output as momentum-like update
                 last_output
             }
             OptimizationStrategy::SecondOrder => {
@@ -2857,9 +2856,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
     /// Update performance metrics
     #[allow(dead_code)]
     fn update_metrics(
-        &mut self,
-        _gradients: &Array1<T>,
-        _updates: &Array1<T>,
+        &mut self_gradients: &Array1<T>, _updates: &Array1<T>,
         strategy: OptimizationStrategy,
     ) {
         // Update attention statistics
@@ -3044,32 +3041,32 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
     }
 
     /// Validate configuration
-    fn validate_config(config: &TransformerOptimizerConfig) -> Result<()> {
-        if config.model_dim == 0 {
+    fn validate_config(_config: &TransformerOptimizerConfig) -> Result<()> {
+        if _config.model_dim == 0 {
             return Err(OptimError::InvalidConfig(
                 "Model dimension must be positive".to_string(),
             ));
         }
 
-        if config.num_heads == 0 {
+        if _config.num_heads == 0 {
             return Err(OptimError::InvalidConfig(
                 "Number of heads must be positive".to_string(),
             ));
         }
 
-        if config.model_dim % config.num_heads != 0 {
+        if _config.model_dim % _config.num_heads != 0 {
             return Err(OptimError::InvalidConfig(
                 "Model dimension must be divisible by number of heads".to_string(),
             ));
         }
 
-        if config.num_layers == 0 {
+        if _config.num_layers == 0 {
             return Err(OptimError::InvalidConfig(
                 "Number of layers must be positive".to_string(),
             ));
         }
 
-        if config.max_sequence_length == 0 {
+        if _config.max_sequence_length == 0 {
             return Err(OptimError::InvalidConfig(
                 "Max sequence length must be positive".to_string(),
             ));
@@ -3100,40 +3097,39 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
 // In a production system, these would be fully implemented
 
 impl<T: Float + Default + Clone + std::iter::Sum> TransformerNetwork<T> {
-    fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
+    fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
         let mut rng = scirs2_core::random::rng();
 
         // Initialize input embedding
-        let input_embedding = InputEmbedding::new(config.model_dim, config.model_dim);
+        let input_embedding = InputEmbedding::new(_config.model_dim, _config.model_dim);
 
         // Initialize transformer layers
-        let mut layers = Vec::with_capacity(config.num_layers);
-        for _ in 0..config.num_layers {
-            layers.push(TransformerLayer::new(config, &mut rng)?);
+        let mut layers = Vec::with_capacity(_config.num_layers);
+        for _ in 0.._config.num_layers {
+            layers.push(TransformerLayer::new(_config, &mut rng)?);
         }
 
         // Initialize output projection
         let output_projection =
-            OutputProjectionLayer::new(config.model_dim, config.model_dim, &mut rng);
+            OutputProjectionLayer::new(_config.model_dim, _config.model_dim, &mut rng);
 
         // Initialize output layer norm
-        let output_layer_norm = LayerNorm::new(config.model_dim);
+        let output_layer_norm = LayerNorm::new(_config.model_dim);
 
         // Initialize position encoder
-        let position_encoder = PositionalEncoder::new_internal(config)?;
+        let position_encoder = PositionalEncoder::new_internal(_config)?;
 
         Ok(Self {
             input_embedding,
             layers,
             output_projection,
             output_layer_norm,
-            position_encoder,
-            config: config.clone(),
+            position_encoder_config: _config.clone(),
         })
     }
 
     fn forward(&mut self, input: &Array2<T>) -> Result<Array2<T>> {
-        let (_seq_len, _) = input.dim();
+        let (_seq_len_) = input.dim();
 
         // Input embedding
         let mut x = self.input_embedding.forward(input)?;
@@ -3157,15 +3153,15 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerNetwork<T> {
 }
 
 impl<T: Float + Default + Clone> SequenceBuffer<T> {
-    fn new(max_length: usize) -> Self {
+    fn new(_max_length: usize) -> Self {
         Self {
-            gradient_sequences: VecDeque::with_capacity(max_length),
-            parameter_sequences: VecDeque::with_capacity(max_length),
-            loss_sequences: VecDeque::with_capacity(max_length),
-            lr_sequences: VecDeque::with_capacity(max_length),
-            update_sequences: VecDeque::with_capacity(max_length),
-            attention_masks: VecDeque::with_capacity(max_length),
-            max_length,
+            gradient_sequences: VecDeque::with_capacity(_max_length),
+            parameter_sequences: VecDeque::with_capacity(_max_length),
+            loss_sequences: VecDeque::with_capacity(_max_length),
+            lr_sequences: VecDeque::with_capacity(_max_length),
+            update_sequences: VecDeque::with_capacity(_max_length),
+            attention_masks: VecDeque::with_capacity(_max_length),
+            _max_length,
             current_length: 0,
             features_cache: None,
         }
@@ -3209,26 +3205,26 @@ impl<T: Float + Default + Clone> SequenceBuffer<T> {
 }
 
 impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
-    fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
+    fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
         // Initialize meta-transformer (optional for higher-level meta-learning)
-        let meta_transformer = if config.model_dim >= 256 {
+        let meta_transformer = if _config.model_dim >= 256 {
             // Only create meta-transformer for larger models
-            let mut meta_config = config.clone();
+            let mut meta_config = _config.clone();
             meta_config.num_layers = 2; // Smaller meta-transformer
-            meta_config.model_dim = config.model_dim / 2;
+            meta_config.model_dim = _config.model_dim / 2;
             Some(TransformerNetwork::new(&meta_config)?)
         } else {
             None
         };
 
         // Initialize domain adapter
-        let domain_adapter = DomainAdapter::new(config)?;
+        let domain_adapter = DomainAdapter::new(_config)?;
 
         // Initialize few-shot learner
-        let few_shot_learner = FewShotLearner::new(config)?;
+        let few_shot_learner = FewShotLearner::new(_config)?;
 
         // Initialize continual learning state
-        let continual_learning = ContinualLearningState::new(config)?;
+        let continual_learning = ContinualLearningState::new(_config)?;
 
         Ok(Self {
             strategy: MetaOptimizationStrategy::MAML, // Default to MAML
@@ -3324,7 +3320,7 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
             let adapted_loss = self.compute_task_loss(task, network)?;
             let meta_grad = self.compute_meta_gradient(network, &original_params, adapted_loss)?;
 
-            // Accumulate meta-gradients
+            // Accumulate meta-_gradients
             self.accumulate_meta_gradients(meta_gradients, &meta_grad)?;
 
             // Restore original parameters for next task
@@ -3432,13 +3428,13 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
 
         // Encode domain information
         let domain_encoding = match task.domain.domain_type {
-            DomainType::Vision => T::from(1.0).unwrap(),
-            DomainType::NLP => T::from(2.0).unwrap(),
-            DomainType::RL => T::from(3.0).unwrap(),
-            DomainType::TimeSeries => T::from(4.0).unwrap(),
-            DomainType::Graph => T::from(5.0).unwrap(),
-            DomainType::Scientific => T::from(6.0).unwrap(),
-            DomainType::General => T::from(0.0).unwrap(),
+            DomainType::Vision =>, T::from(1.0).unwrap(),
+            DomainType::NLP =>, T::from(2.0).unwrap(),
+            DomainType::RL =>, T::from(3.0).unwrap(),
+            DomainType::TimeSeries =>, T::from(4.0).unwrap(),
+            DomainType::Graph =>, T::from(5.0).unwrap(),
+            DomainType::Scientific =>, T::from(6.0).unwrap(),
+            DomainType::General =>, T::from(0.0).unwrap(),
         };
         embedding[7] = domain_encoding;
 
@@ -3453,8 +3449,7 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
 
     // Helper methods for meta-learning
     fn initialize_meta_gradients(
-        &self,
-        _network: &TransformerNetwork<T>,
+        &self_network: &TransformerNetwork<T>,
     ) -> Result<MetaGradients<T>> {
         // Simplified meta-gradients initialization
         Ok(MetaGradients {
@@ -3462,7 +3457,7 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
         })
     }
 
-    fn save_network_params(&self, _network: &TransformerNetwork<T>) -> Result<NetworkParams<T>> {
+    fn save_network_params(&self_network: &TransformerNetwork<T>) -> Result<NetworkParams<T>> {
         // Simplified parameter saving
         Ok(NetworkParams {
             params: HashMap::new(),
@@ -3470,9 +3465,7 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
     }
 
     fn restore_network_params(
-        &self,
-        _network: &mut TransformerNetwork<T>,
-        _params: &NetworkParams<T>,
+        &self_network: &mut TransformerNetwork<T>, _params: &NetworkParams<T>,
     ) -> Result<()> {
         // Simplified parameter restoration
         Ok(())
@@ -3484,9 +3477,7 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
     }
 
     fn compute_task_gradients(
-        &self,
-        _task: &TaskInfo<T>,
-        _network: &TransformerNetwork<T>,
+        &self_task: &TaskInfo<T>, _network: &TransformerNetwork<T>,
     ) -> Result<TaskGradients<T>> {
         // Simplified gradient computation
         Ok(TaskGradients {
@@ -3495,20 +3486,14 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
     }
 
     fn apply_inner_update(
-        &self,
-        _network: &mut TransformerNetwork<T>,
-        _gradients: &TaskGradients<T>,
-        _lr: T,
+        &self_network: &mut TransformerNetwork<T>, _gradients: &TaskGradients<T>, _lr: T,
     ) -> Result<()> {
         // Simplified inner update
         Ok(())
     }
 
     fn compute_meta_gradient(
-        &self,
-        _network: &TransformerNetwork<T>,
-        _original_params: &NetworkParams<T>,
-        _loss: T,
+        &self_network: &TransformerNetwork<T>, _original_params: &NetworkParams<T>, _loss: T,
     ) -> Result<MetaGradient<T>> {
         // Simplified meta-gradient computation
         Ok(MetaGradient {
@@ -3517,44 +3502,33 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
     }
 
     fn accumulate_meta_gradients(
-        &self,
-        _meta_gradients: &mut MetaGradients<T>,
-        _grad: &MetaGradient<T>,
+        &self, _meta_gradients: &mut MetaGradients<T>, _grad: &MetaGradient<T>,
     ) -> Result<()> {
         // Simplified meta-gradient accumulation
         Ok(())
     }
 
     fn apply_meta_update(
-        &self,
-        _network: &mut TransformerNetwork<T>,
-        _meta_gradients: &MetaGradients<T>,
-        _lr: T,
+        &self_network: &mut TransformerNetwork<T>, _meta_gradients: &MetaGradients<T>, _lr: T,
     ) -> Result<()> {
         // Simplified meta-update
         Ok(())
     }
 
     fn accumulate_params(
-        &self,
-        _accumulated: &mut NetworkParams<T>,
-        _params: &NetworkParams<T>,
+        &self_accumulated: &mut NetworkParams<T>, _params: &NetworkParams<T>,
     ) -> Result<()> {
         // Simplified parameter accumulation
         Ok(())
     }
 
-    fn scale_params(&self, _params: &mut NetworkParams<T>, _scale: T) -> Result<()> {
+    fn scale_params(&self_params: &mut NetworkParams<T>, _scale: T) -> Result<()> {
         // Simplified parameter scaling
         Ok(())
     }
 
     fn apply_reptile_update(
-        &self,
-        _network: &mut TransformerNetwork<T>,
-        _original: &NetworkParams<T>,
-        _accumulated: &NetworkParams<T>,
-        _lr: T,
+        &self_network: &mut TransformerNetwork<T>, _original: &NetworkParams<T>, _accumulated: &NetworkParams<T>, _lr: T,
     ) -> Result<()> {
         // Simplified Reptile update
         Ok(())
@@ -3641,10 +3615,7 @@ impl<T: Float + Default + Clone> FewShotLearner<T> {
 
     #[allow(dead_code)]
     fn adapt(
-        &mut self,
-        _support_set: &SupportSet<T>,
-        _target_task: &TaskInfo<T>,
-        _network: &mut TransformerNetwork<T>,
+        &mut self, _support_set: &SupportSet<T>, _target_task: &TaskInfo<T>, _network: &mut TransformerNetwork<T>,
     ) -> Result<FewShotAdaptationResult<T>> {
         // Simplified few-shot adaptation
         Ok(FewShotAdaptationResult {
@@ -3668,9 +3639,7 @@ impl<T: Float + Default + Clone> ContinualLearningState<T> {
 
     #[allow(dead_code)]
     fn update(
-        &mut self,
-        _new_task: &TaskInfo<T>,
-        _network: &mut TransformerNetwork<T>,
+        &mut self, _new_task: &TaskInfo<T>, _network: &mut TransformerNetwork<T>,
     ) -> Result<ContinualUpdateResult<T>> {
         // Simplified continual learning update
         Ok(ContinualUpdateResult {
@@ -3703,8 +3672,7 @@ impl<T: Float + Default + Clone> SupportSetEncoder<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             encoder_type: "simple".to_string(),
-            encoding_dim: 64,
-            _phantom: std::marker::PhantomData,
+            encoding_dim: 64, _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -3718,8 +3686,7 @@ pub struct PrototypeComputer<T: Float> {
 impl<T: Float + Default + Clone> PrototypeComputer<T> {
     fn new() -> Result<Self> {
         Ok(Self {
-            prototype_type: "centroid".to_string(),
-            _phantom: std::marker::PhantomData,
+            prototype_type: "centroid".to_string(), _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -3733,8 +3700,7 @@ pub struct AdaptationNetwork<T: Float> {
 impl<T: Float + Default + Clone> AdaptationNetwork<T> {
     fn new() -> Result<Self> {
         Ok(Self {
-            network_type: "linear".to_string(),
-            _phantom: std::marker::PhantomData,
+            network_type: "linear".to_string(), _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -3748,8 +3714,7 @@ pub struct MemoryAugmentation<T: Float> {
 impl<T: Float + Default + Clone> MemoryAugmentation<T> {
     fn new() -> Result<Self> {
         Ok(Self {
-            augmentation_type: "simple".to_string(),
-            _phantom: std::marker::PhantomData,
+            augmentation_type: "simple".to_string(), _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -3763,8 +3728,7 @@ pub struct ContinualMemoryBuffer<T: Float> {
 impl<T: Float + Default + Clone> ContinualMemoryBuffer<T> {
     fn new() -> Result<Self> {
         Ok(Self {
-            buffer_type: "simple".to_string(),
-            _phantom: std::marker::PhantomData,
+            buffer_type: "simple".to_string(), _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -3777,22 +3741,22 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
         ))
     }
 
-    fn encode(&self, _input: &Array2<T>) -> Result<Array2<T>> {
+    fn encode(&self_input: &Array2<T>) -> Result<Array2<T>> {
         // Placeholder implementation for external interface
         Err(OptimError::InvalidConfig(
             "PositionalEncoder encode not implemented".to_string(),
         ))
     }
 
-    fn new_internal(config: &TransformerOptimizerConfig) -> Result<Self> {
-        let max_seq_len = config.max_sequence_length;
-        let model_dim = config.model_dim;
+    fn new_internal(_config: &TransformerOptimizerConfig) -> Result<Self> {
+        let max_seq_len = _config.max_sequence_length;
+        let model_dim = _config.model_dim;
 
         let mut cached_encodings = None;
         let mut position_embeddings = None;
         let mut alibi_slopes = None;
 
-        match config.pos_encoding_type {
+        match _config.pos_encoding_type {
             PositionalEncodingType::Sinusoidal => {
                 // Precompute sinusoidal encodings
                 let mut encodings = Array2::zeros((max_seq_len, model_dim));
@@ -3820,13 +3784,13 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
                 // Xavier initialization
                 let bound = (6.0 / (max_seq_len + model_dim) as f64).sqrt();
                 for elem in embeddings.iter_mut() {
-                    *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
+                    *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound).unwrap();
                 }
                 position_embeddings = Some(embeddings);
             }
             PositionalEncodingType::ALiBi => {
                 // Initialize ALiBi slopes
-                let num_heads = config.num_heads;
+                let num_heads = _config.num_heads;
                 let mut slopes = Array1::zeros(num_heads);
 
                 for h in 0..num_heads {
@@ -3858,7 +3822,7 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
         }
 
         Ok(Self {
-            encoding_type: config.pos_encoding_type,
+            encoding_type: _config.pos_encoding_type,
             cached_encodings,
             max_seq_len,
             model_dim,
@@ -3921,11 +3885,11 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
 
 impl<T: Float + Default + Clone> StrategyPredictor<T> {
     #[allow(dead_code)]
-    fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
+    fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
         let _rng = scirs2_core::random::rng();
 
         // Initialize strategy prediction network
-        let prediction_network = StrategyNetwork::new(config)?;
+        let prediction_network = StrategyNetwork::new(_config)?;
 
         // Define available optimization strategies
         let strategies = vec![
@@ -3963,13 +3927,13 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
     }
 
     fn predict_strategy(&mut self, transformer_output: &Array2<T>) -> Result<OptimizationStrategy> {
-        let (seq_len, _model_dim) = transformer_output.dim();
+        let (seq_len_model_dim) = transformer_output.dim();
 
         if seq_len == 0 {
             return Ok(OptimizationStrategy::Adaptive);
         }
 
-        // Use the last output from the sequence for strategy prediction
+        // Use the last _output from the sequence for strategy prediction
         let last_output = transformer_output.slice(s![-1, ..]).to_owned();
 
         // Forward pass through strategy prediction network
@@ -4008,17 +3972,16 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
 
     #[allow(dead_code)]
     fn apply_adaptive_selection(
-        &self,
-        _predicted_idx: usize,
+        &self, _predicted_idx: usize,
         strategy_scores: &Array1<T>,
     ) -> Result<usize> {
         // Apply epsilon-greedy exploration
         let mut rng = scirs2_core::random::rng();
         let epsilon = 0.1; // 10% exploration
 
-        if rng.random::<f64>() < epsilon {
+        if rng.random_f64() < epsilon {
             // Explore: choose randomly
-            Ok(rng.random_range(0, self.strategies.len()))
+            Ok(rng.gen_range(0..self.strategies.len()))
         } else {
             // Exploit: use performance-weighted selection
             let mut weighted_scores = strategy_scores.clone();
@@ -4074,9 +4037,9 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
 }
 
 impl<T: Float + Default + Clone> StrategyNetwork<T> {
-    fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
-        let input_dim = config.model_dim;
-        let hidden_dim = config.model_dim / 2;
+    fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
+        let input_dim = _config.model_dim;
+        let hidden_dim = _config.model_dim / 2;
         let num_strategies = 7; // Number of optimization strategies
 
         let mut rng = scirs2_core::random::rng();
@@ -4103,7 +4066,7 @@ impl<T: Float + Default + Clone> StrategyNetwork<T> {
         }
 
         // Initialize strategy embeddings
-        let embedding_dim = config.model_dim / 4;
+        let embedding_dim = _config.model_dim / 4;
         let mut strategy_embeddings = Array2::zeros((num_strategies, embedding_dim));
         let bound_embed = (6.0 / (num_strategies + embedding_dim) as f64).sqrt();
         for elem in strategy_embeddings.iter_mut() {
@@ -4214,14 +4177,14 @@ pub struct StrategyPerformanceUpdate<T: Float> {
 
 // Implementation of supporting components
 impl<T: Float + Default + Clone> InputEmbedding<T> {
-    fn new(input_dim: usize, model_dim: usize) -> Self {
-        let mut weights = Array2::zeros((input_dim, model_dim));
+    fn new(_input_dim: usize, model_dim: usize) -> Self {
+        let mut weights = Array2::zeros((_input_dim, model_dim));
         let mut rng = scirs2_core::random::rng();
 
         // Xavier initialization
-        let bound = (6.0 / (input_dim + model_dim) as f64).sqrt();
+        let bound = (6.0 / (_input_dim + model_dim) as f64).sqrt();
         for elem in weights.iter_mut() {
-            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound).unwrap();
         }
 
         Self {
@@ -4259,28 +4222,28 @@ impl<T: Float + Default + Clone> InputEmbedding<T> {
 }
 
 impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
-    fn new(config: &TransformerOptimizerConfig, _rng: &mut impl Rng) -> Result<Self> {
-        let self_attention = MultiHeadAttention::new(config)?;
-        let cross_attention = if config.cross_attention {
-            Some(MultiHeadAttention::new(config)?)
+    fn new(_config: &TransformerOptimizerConfig_rng: &mut impl Rng) -> Result<Self> {
+        let self_attention = MultiHeadAttention::new(_config)?;
+        let cross_attention = if _config.cross_attention {
+            Some(MultiHeadAttention::new(_config)?)
         } else {
             None
         };
 
-        let feed_forward = FeedForwardNetwork::new(config)?;
+        let feed_forward = FeedForwardNetwork::new(_config)?;
 
-        let ln1 = LayerNorm::new(config.model_dim);
-        let ln2 = LayerNorm::new(config.model_dim);
-        let ln3 = if config.cross_attention {
-            Some(LayerNorm::new(config.model_dim))
+        let ln1 = LayerNorm::new(_config.model_dim);
+        let ln2 = LayerNorm::new(_config.model_dim);
+        let ln3 = if _config.cross_attention {
+            Some(LayerNorm::new(_config.model_dim))
         } else {
             None
         };
 
-        let dropout1 = DropoutLayer::new(config.attention_dropout);
-        let dropout2 = DropoutLayer::new(config.ff_dropout);
-        let dropout3 = if config.cross_attention {
-            Some(DropoutLayer::new(config.attention_dropout))
+        let dropout1 = DropoutLayer::new(_config.attention_dropout);
+        let dropout2 = DropoutLayer::new(_config.ff_dropout);
+        let dropout3 = if _config.cross_attention {
+            Some(DropoutLayer::new(_config.attention_dropout))
         } else {
             None
         };
@@ -4295,7 +4258,7 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
             dropout1,
             dropout2,
             dropout3,
-            pre_layer_norm: config.pre_layer_norm,
+            pre_layer_norm: _config.pre_layer_norm,
         })
     }
 
@@ -4358,9 +4321,9 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
 }
 
 impl<T: Float + Default + Clone> MultiHeadAttention<T> {
-    fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
-        let model_dim = config.model_dim;
-        let num_heads = config.num_heads;
+    fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
+        let model_dim = _config.model_dim;
+        let num_heads = _config.num_heads;
         let head_dim = model_dim / num_heads;
 
         if model_dim % num_heads != 0 {
@@ -4380,29 +4343,29 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         let mut wo = Array2::zeros((model_dim, model_dim));
 
         for elem in wq.iter_mut() {
-            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound).unwrap();
         }
         for elem in wk.iter_mut() {
-            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound).unwrap();
         }
         for elem in wv.iter_mut() {
-            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound).unwrap();
         }
         for elem in wo.iter_mut() {
-            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound).unwrap();
         }
 
-        let relative_bias = if config.relative_position_bias {
+        let relative_bias = if _config.relative_position_bias {
             Some(RelativePositionBias::new(
-                config.max_sequence_length,
+                _config.max_sequence_length,
                 num_heads,
             )?)
         } else {
             None
         };
 
-        let rope_embeddings = if config.use_rope {
-            Some(RoPEEmbeddings::new(config.max_sequence_length, head_dim)?)
+        let rope_embeddings = if _config.use_rope {
+            Some(RoPEEmbeddings::new(_config.max_sequence_length, head_dim)?)
         } else {
             None
         };
@@ -4415,7 +4378,7 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
             num_heads,
             head_dim,
             model_dim,
-            optimization: config.attention_optimization,
+            optimization: _config.attention_optimization,
             relative_bias,
             attention_scores: None,
             attention_weights: None,
@@ -4605,9 +4568,9 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
 }
 
 impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
-    fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
-        let model_dim = config.model_dim;
-        let ff_dim = config.ff_dim;
+    fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
+        let model_dim = _config.model_dim;
+        let ff_dim = _config.ff_dim;
         let mut rng = scirs2_core::random::rng();
 
         // Initialize weights with Xavier initialization
@@ -4633,7 +4596,7 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
             linear2,
             bias2,
             activation: ActivationFunction::GELU,
-            dropout: DropoutLayer::new(config.ff_dropout),
+            dropout: DropoutLayer::new(_config.ff_dropout),
         })
     }
 
@@ -4720,12 +4683,12 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
 }
 
 impl<T: Float + Default + Clone + std::iter::Sum> LayerNorm<T> {
-    fn new(dim: usize) -> Self {
+    fn new(_dim: usize) -> Self {
         Self {
-            gamma: Array1::ones(dim),
-            beta: Array1::zeros(dim),
+            gamma: Array1::ones(_dim),
+            beta: Array1::zeros(_dim),
             eps: T::from(1e-6).unwrap(),
-            dim,
+            _dim,
         }
     }
 
@@ -4771,13 +4734,13 @@ impl<T: Float + Default + Clone + std::iter::Sum> LayerNorm<T> {
 }
 
 impl<T: Float + Default + Clone> OutputProjectionLayer<T> {
-    fn new(input_dim: usize, output_dim: usize, rng: &mut impl Rng) -> Self {
-        let mut weights = Array2::zeros((input_dim, output_dim));
+    fn new(_input_dim: usize, output_dim: usize, rng: &mut impl Rng) -> Self {
+        let mut weights = Array2::zeros((_input_dim, output_dim));
 
         // Xavier initialization
-        let bound = (6.0 / (input_dim + output_dim) as f64).sqrt();
+        let bound = (6.0 / (_input_dim + output_dim) as f64).sqrt();
         for elem in weights.iter_mut() {
-            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound).unwrap();
         }
 
         let bias = Array1::zeros(output_dim);
@@ -4833,9 +4796,9 @@ impl<T: Float + Default + Clone> OutputProjectionLayer<T> {
 }
 
 impl DropoutLayer {
-    fn new(prob: f64) -> Self {
+    fn new(_prob: f64) -> Self {
         Self {
-            prob,
+            _prob,
             training: true,
         }
     }
@@ -4853,14 +4816,14 @@ impl DropoutLayer {
 
 // Placeholder implementations for specialized components
 impl<T: Float + Default + Clone> RelativePositionBias<T> {
-    fn new(max_distance: usize, num_heads: usize) -> Result<Self> {
-        let bias_table_size = 2 * max_distance - 1;
+    fn new(_max_distance: usize, num_heads: usize) -> Result<Self> {
+        let bias_table_size = 2 * _max_distance - 1;
         let mut bias_table = Array2::zeros((bias_table_size, num_heads));
         let mut rng = scirs2_core::random::rng();
 
         let bound = 0.1;
         for elem in bias_table.iter_mut() {
-            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound).unwrap();
         }
 
         Ok(Self {
@@ -4872,11 +4835,11 @@ impl<T: Float + Default + Clone> RelativePositionBias<T> {
 }
 
 impl<T: Float + Default + Clone> RoPEEmbeddings<T> {
-    fn new(max_seq_len: usize, dim: usize) -> Result<Self> {
-        let mut cos_cached = Array2::zeros((max_seq_len, dim));
-        let mut sin_cached = Array2::zeros((max_seq_len, dim));
+    fn new(_max_seq_len: usize, dim: usize) -> Result<Self> {
+        let mut cos_cached = Array2::zeros((_max_seq_len, dim));
+        let mut sin_cached = Array2::zeros((_max_seq_len, dim));
 
-        for pos in 0..max_seq_len {
+        for pos in 0.._max_seq_len {
             for i in 0..dim / 2 {
                 let theta = T::from(pos).unwrap()
                     / T::from(10000.0_f64.powf(2.0 * (i as f64) / dim as f64)).unwrap();

@@ -5,7 +5,7 @@
 //! SIMD optimizations, and property-based testing.
 
 use ndarray::{Array1, Array2};
-use scirs2_stats::{
+use scirs2__stats::{
     advanced_error_enhancements::{AdvancedContextBuilder, AdvancedErrorMessages},
     advanced_numerical_stability::{AdvancedNumericalStabilityAnalyzer, NumericalStabilityConfig},
     advanced_property_tests::AdvancedPropertyTester,

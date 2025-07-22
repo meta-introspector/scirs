@@ -19,7 +19,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// # Examples
 ///
 /// ```
-/// use scirs2_ndimage::morphology::{generate_binary_structure, Connectivity};
+/// use scirs2__ndimage::morphology::{generate_binary_structure, Connectivity};
 ///
 /// // Create a 2D structure with face connectivity (4-connectivity in 2D)
 /// let structure = generate_binary_structure(2, Connectivity::Face).unwrap();
@@ -50,7 +50,7 @@ pub fn generate_binary_structure(
 
     // Create a structure of shape (3, 3, ..., 3) with rank dimensions
     let shape = vec![3; rank];
-    let mut structure = Array::<bool, _>::from_elem(IxDyn(&shape), false);
+    let mut structure = Array::<bool>::from_elem(IxDyn(&shape), false);
 
     // Center indices (1, 1, ..., 1)
     let center = vec![1; rank];
@@ -187,13 +187,13 @@ where
 ///
 /// * `Result<Array<bool, IxDyn>>` - Box structuring element
 #[allow(dead_code)]
-pub fn box_structure(shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
+pub fn box_structure(_shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
     // Validate inputs
-    if shape.is_empty() {
+    if _shape.is_empty() {
         return Err(NdimageError::InvalidInput("Shape cannot be empty".into()));
     }
 
-    for &s in shape {
+    for &s in _shape {
         if s == 0 {
             return Err(NdimageError::InvalidInput(
                 "Shape dimensions must be greater than 0".into(),
@@ -202,7 +202,7 @@ pub fn box_structure(shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
     }
 
     // Create a box of ones
-    let structure = Array::<bool, _>::from_elem(IxDyn(shape), true);
+    let structure = Array::<bool>::from_elem(IxDyn(_shape), true);
     Ok(structure)
 }
 
@@ -217,9 +217,9 @@ pub fn box_structure(shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
 ///
 /// * `Result<Array<bool, IxDyn>>` - Disk structuring element
 #[allow(dead_code)]
-pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Array<bool, IxDyn>> {
+pub fn disk_structure(_radius: f64, dimension: Option<usize>) -> NdimageResult<Array<bool, IxDyn>> {
     // Validate inputs
-    if radius <= 0.0 {
+    if _radius <= 0.0 {
         return Err(NdimageError::InvalidInput(
             "Radius must be greater than 0".into(),
         ));
@@ -232,15 +232,15 @@ pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Ar
         ));
     }
 
-    // Create a disk structure by checking if each position is within the radius
-    let size = (2.0 * radius).round() as usize;
+    // Create a disk structure by checking if each position is within the _radius
+    let size = (2.0 * _radius).round() as usize;
     if size % 2 == 0 {
         // Make it odd for symmetry
         let size = size + 1;
         let shape = vec![size; dim];
         let center = (size - 1) as f64 / 2.0;
 
-        let mut structure = Array::<bool, _>::from_elem(IxDyn(&shape), false);
+        let mut structure = Array::<bool>::from_elem(IxDyn(&shape), false);
 
         // For 2D case
         if dim == 2 {
@@ -249,14 +249,14 @@ pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Ar
                     let dx = i as f64 - center;
                     let dy = j as f64 - center;
                     let distance = (dx * dx + dy * dy).sqrt();
-                    if distance <= radius {
+                    if distance <= _radius {
                         structure[[i, j]] = true;
                     }
                 }
             }
         } else {
             // For higher dimensions, still create a simple box for now
-            let size = (2.0 * radius.ceil() + 1.0) as usize;
+            let size = (2.0 * _radius.ceil() + 1.0) as usize;
             let shape = vec![size; dim];
             return box_structure(&shape);
         }
@@ -266,7 +266,7 @@ pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Ar
         let shape = vec![size; dim];
         let center = (size - 1) as f64 / 2.0;
 
-        let mut structure = Array::<bool, _>::from_elem(IxDyn(&shape), false);
+        let mut structure = Array::<bool>::from_elem(IxDyn(&shape), false);
 
         // For 2D case
         if dim == 2 {
@@ -275,14 +275,14 @@ pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Ar
                     let dx = i as f64 - center;
                     let dy = j as f64 - center;
                     let distance = (dx * dx + dy * dy).sqrt();
-                    if distance <= radius {
+                    if distance <= _radius {
                         structure[[i, j]] = true;
                     }
                 }
             }
         } else {
             // For higher dimensions, still create a simple box for now
-            let size = (2.0 * radius.ceil() + 1.0) as usize;
+            let size = (2.0 * _radius.ceil() + 1.0) as usize;
             let shape = vec![size; dim];
             return box_structure(&shape);
         }
@@ -294,8 +294,8 @@ pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Ar
 /// Generate a binary structure for morphological operations (dynamic dimension version)
 ///
 /// Creates a default cross-shaped structure for each rank
-pub(crate) fn generate_binary_structure_dyn(rank: usize) -> NdimageResult<Array<bool, IxDyn>> {
-    generate_binary_structure(rank, Connectivity::Face)
+pub(crate) fn generate_binary_structure_dyn(_rank: usize) -> NdimageResult<Array<bool, IxDyn>> {
+    generate_binary_structure(_rank, Connectivity::Face)
 }
 
 #[cfg(test)]

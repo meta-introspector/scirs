@@ -32,18 +32,18 @@ mod duration_serde {
     use serde::{Deserialize, Deserializer, Serializer};
     use std::time::Duration;
 
-    pub fn serialize<S>(duration: &Duration, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(_duration: &Duration, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        serializer.serialize_u64(duration.as_millis() as u64)
+        serializer.serialize_u64(_duration.as_millis() as u64)
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
+    pub fn deserialize<'de, D>(_deserializer: D) -> Result<Duration, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let millis = u64::deserialize(deserializer)?;
+        let millis = u64::deserialize(_deserializer)?;
         Ok(Duration::from_millis(millis))
     }
 }
@@ -1602,14 +1602,14 @@ impl Default for AdvancedClusterConfig {
 
 impl AdvancedDistributedCoordinator {
     /// Create new advanced distributed coordinator
-    pub fn new(config: AdvancedClusterConfig) -> Result<Self> {
+    pub fn new(_config: AdvancedClusterConfig) -> Result<Self> {
         let consensus: Box<dyn ConsensusManager + Send + Sync> =
-            match config.consensus_config.algorithm {
-                ConsensusAlgorithm::Raft => Box::new(RaftConsensus::new(
+            match _config.consensus_config.algorithm {
+                ConsensusAlgorithm::Raft =>, Box::new(RaftConsensus::new(
                     "coordinator".to_string(),
-                    config.consensus_config.clone(),
+                    _config.consensus_config.clone(),
                 )?),
-                ConsensusAlgorithm::Pbft => Box::new(PbftConsensus::new(
+                ConsensusAlgorithm::Pbft =>, Box::new(PbftConsensus::new(
                     "coordinator".to_string(),
                     vec![
                         "coordinator".to_string(),
@@ -1618,12 +1618,12 @@ impl AdvancedDistributedCoordinator {
                         "node3".to_string(),
                     ],
                 )?),
-                ConsensusAlgorithm::ProofOfStake => Box::new(ProofOfStakeConsensus::new(
+                ConsensusAlgorithm::ProofOfStake =>, Box::new(ProofOfStakeConsensus::new(
                     "coordinator".to_string(),
                     1000, // stake amount
                     100,  // minimum stake
                 )?),
-                ConsensusAlgorithm::SimpleMajority => Box::new(SimpleMajorityConsensus::new(
+                ConsensusAlgorithm::SimpleMajority =>, Box::new(SimpleMajorityConsensus::new(
                     "coordinator".to_string(),
                     vec![
                         "coordinator".to_string(),
@@ -1649,19 +1649,19 @@ impl AdvancedDistributedCoordinator {
             };
 
         Ok(Self {
-            config: config.clone(),
+            _config: _config.clone(),
             consensus: Arc::new(Mutex::new(consensus)),
             shard_manager: Arc::new(Mutex::new(ShardManager::new(
-                config.sharding_config.clone(),
+                _config.sharding_config.clone(),
             ))),
             fault_manager: Arc::new(Mutex::new(FaultRecoveryManager::new(
-                config.fault_tolerance.clone(),
+                _config.fault_tolerance.clone(),
             ))),
             scaling_manager: Arc::new(Mutex::new(AutoScalingManager::new(
-                config.auto_scaling.clone(),
+                _config.auto_scaling.clone(),
             ))),
             optimizer: Arc::new(Mutex::new(PerformanceOptimizer::new(
-                config.optimization_config.clone(),
+                _config.optimization_config.clone(),
             ))),
             cluster_state: Arc::new(RwLock::new(ClusterState::new())),
             scheduler: Arc::new(Mutex::new(TaskScheduler::new())),
@@ -1711,9 +1711,7 @@ impl AdvancedDistributedCoordinator {
 
     /// Create data shards for distributed processing
     fn create_data_shards<F>(
-        &self,
-        _y_true: &ArrayView2<'_, F>,
-        _y_pred: &ArrayView2<'_, F>,
+        &self, _y_true: &ArrayView2<'_, F>, _y_pred: &ArrayView2<'_, F>,
         total_samples: usize,
     ) -> Result<Vec<DataShard>>
     where
@@ -1887,8 +1885,7 @@ impl AdvancedDistributedCoordinator {
                         "accuracy" => 0.9123,
                         "precision" => 0.8934,
                         "recall" => 0.9012,
-                        "f1_score" => 0.8967,
-                        _ => 0.5,
+                        "f1_score" => 0.8967_ => 0.5,
                     };
                     metrics.insert(metric_name.clone(), simulated_value);
                 }
@@ -1897,8 +1894,7 @@ impl AdvancedDistributedCoordinator {
                     DataRange::Index {
                         start_index,
                         end_index,
-                    } => end_index - start_index,
-                    _ => 100, // Default sample count
+                    } => end_index - start_index_ => 100, // Default sample count
                 };
 
                 Ok(TaskOutput::MetricsResult {
@@ -1926,7 +1922,7 @@ impl AdvancedDistributedCoordinator {
             aggregated_metrics.insert(metric_name.to_string(), 0.0);
         }
 
-        // Aggregate results from all tasks
+        // Aggregate _results from all tasks
         for result in task_results {
             if let TaskOutput::MetricsResult {
                 metrics,
@@ -1957,8 +1953,7 @@ impl AdvancedDistributedCoordinator {
     fn update_optimization_strategies(
         &self,
         execution_times: &HashMap<String, u64>,
-        total_samples: usize,
-        _feature_count: usize,
+        total_samples: usize, _feature_count: usize,
     ) -> Result<()> {
         let mut optimizer = self.optimizer.lock().map_err(|_| {
             MetricsError::ComputationError("Failed to acquire optimizer lock".to_string())
@@ -1972,7 +1967,7 @@ impl AdvancedDistributedCoordinator {
         };
 
         let throughput = if avg_execution_time > 0.0 {
-            (total_samples as f64) / (avg_execution_time / 1000.0) // samples per second
+            (total_samples as f64) / (avg_execution_time / 1000.0) // _samples per second
         } else {
             0.0
         };
@@ -2025,9 +2020,9 @@ impl AdvancedDistributedCoordinator {
 
 // Implementation stubs for required structures
 impl RaftConsensus {
-    fn new(node_id: String, config: ConsensusConfig) -> Result<Self> {
+    fn new(_node_id: String, config: ConsensusConfig) -> Result<Self> {
         Ok(Self {
-            node_id,
+            _node_id,
             current_term: 0,
             voted_for: None,
             log: Vec::new(),
@@ -2138,8 +2133,7 @@ impl ConsensusManager for RaftConsensus {
                 task_id: task.task_id.clone(),
                 data_shard,
                 metrics: metric_names,
-            },
-            _ => {
+            }_ => {
                 return Err(MetricsError::ComputationError(
                     "Unsupported task type".to_string(),
                 ));
@@ -2168,7 +2162,7 @@ impl ConsensusManager for RaftConsensus {
         let mut node_states = HashMap::new();
         node_states.insert(self.node_id.clone(), self.state.clone());
 
-        for (node_id, _) in &self.peers {
+        for (node_id_) in &self.peers {
             node_states.insert(node_id.clone(), NodeState::Follower);
         }
 
@@ -2336,7 +2330,7 @@ pub enum PbftNodeState {
 
 impl PbftConsensus {
     /// Create new PBFT consensus instance
-    pub fn new(node_id: String, node_list: Vec<String>) -> Result<Self> {
+    pub fn new(_node_id: String, node_list: Vec<String>) -> Result<Self> {
         let total_nodes = node_list.len();
         if total_nodes < 4 {
             return Err(MetricsError::ComputationError(
@@ -2414,19 +2408,19 @@ impl PbftConsensus {
     pub fn handle_pre_prepare(&mut self, pre_prepare: PrePrepareMessage) -> Result<()> {
         let seq_num = pre_prepare.sequence_number;
 
-        // Validate pre-prepare message
+        // Validate pre-_prepare message
         if pre_prepare.view_number != self.view_number {
             return Err(MetricsError::ComputationError(
-                "Invalid view number in pre-prepare".to_string(),
+                "Invalid view number in pre-_prepare".to_string(),
             ));
         }
 
-        // Store pre-prepare and send prepare message
+        // Store pre-_prepare and send _prepare message
         self.pre_prepare_messages
             .insert(seq_num, pre_prepare.clone());
         self.phase_status.insert(seq_num, PbftPhase::Prepare);
 
-        // Send prepare message
+        // Send _prepare message
         self.send_prepare(seq_num, &pre_prepare.request)?;
 
         Ok(())
@@ -2529,7 +2523,7 @@ impl PbftConsensus {
 
         // In a real implementation, execute the actual operation
         println!(
-            "PBFT: Executed request with sequence number {}",
+            "PBFT: Executed request with sequence _number {}",
             sequence_number
         );
 
@@ -2573,8 +2567,8 @@ impl PbftConsensus {
 
     /// Handle node failure
     pub fn handle_node_failure(&mut self, failed_node: &str) -> Result<()> {
-        // Remove failed node from node list
-        self.node_list.retain(|node| node != failed_node);
+        // Remove failed _node from _node list
+        self.node_list.retain(|_node| _node != failed_node);
 
         // If primary failed, start view change
         if self.primary_node.as_ref() == Some(&failed_node.to_string()) {
@@ -2593,7 +2587,7 @@ impl ConsensusManager for PbftConsensus {
         let request = PbftRequest {
             request_id: task.task_id.clone(),
             client_id: "metrics_coordinator".to_string(),
-            operation: format!("execute_task:{}", task.task_type.to_string()),
+            operation: format!("execute, _task:{}", task.task_type.to_string()),
             timestamp: SystemTime::now(),
             sequence_number: self.sequence_number,
         };
@@ -2607,9 +2601,8 @@ impl ConsensusManager for PbftConsensus {
         for node in &self.node_list {
             let state = if node == &self.node_id {
                 match self.node_state {
-                    PbftNodeState::Normal => NodeState::Leader, // Simplified
-                    PbftNodeState::ViewChange => NodeState::Candidate,
-                    _ => NodeState::Follower,
+                    PbftNodeState::Normal =>, NodeState::Leader, // Simplified
+                    PbftNodeState::ViewChange => NodeState::Candidate_ =>, NodeState::Follower,
                 }
             } else {
                 NodeState::Follower
@@ -2744,10 +2737,10 @@ pub enum SlashingType {
 
 impl ProofOfStakeConsensus {
     /// Create new PoS consensus instance
-    pub fn new(node_id: String, stake: u64, min_stake: u64) -> Result<Self> {
-        if stake < min_stake {
+    pub fn new(_node_id: String, stake: u64, min_stake: u64) -> Result<Self> {
+        if _stake < min_stake {
             return Err(MetricsError::ComputationError(
-                "Insufficient stake to participate".to_string(),
+                "Insufficient _stake to participate".to_string(),
             ));
         }
 
@@ -2756,7 +2749,7 @@ impl ProofOfStakeConsensus {
             node_id.clone(),
             ValidatorInfo {
                 node_id: node_id.clone(),
-                stake,
+                _stake,
                 is_active: true,
                 last_block_proposed: None,
                 slash_count: 0,
@@ -2768,8 +2761,8 @@ impl ProofOfStakeConsensus {
             node_id,
             current_epoch: 0,
             validators,
-            stake,
-            total_stake: stake,
+            _stake,
+            total_stake: _stake,
             current_validator: None,
             blockchain: Vec::new(),
             pending_transactions: VecDeque::new(),
@@ -3002,7 +2995,7 @@ impl ProofOfStakeConsensus {
             .filter(|(_, v)| {
                 v.is_active && v.last_block_proposed.is_none() && self.current_epoch > 2
             })
-            .map(|(id, _)| id.clone())
+            .map(|(id_)| id.clone())
             .collect();
 
         for validator_id in inactive_validators {
@@ -3018,7 +3011,7 @@ impl ConsensusManager for ProofOfStakeConsensus {
         let transaction = Transaction {
             tx_id: task.task_id.clone(),
             sender: "metrics_coordinator".to_string(),
-            operation: format!("execute_task:{}", task.task_type.to_string()),
+            operation: format!("execute, _task:{}", task.task_type.to_string()),
             data: Vec::new(), // Simplified
             timestamp: SystemTime::now(),
         };
@@ -3154,7 +3147,7 @@ pub enum ConsensusResult {
 
 impl SimpleMajorityConsensus {
     /// Create new simple majority consensus instance
-    pub fn new(node_id: String, node_list: Vec<String>) -> Result<Self> {
+    pub fn new(_node_id: String, node_list: Vec<String>) -> Result<Self> {
         let mut node_states = HashMap::new();
         for node in &node_list {
             node_states.insert(node.clone(), NodeHealthStatus::Healthy);
@@ -3440,8 +3433,7 @@ impl ConsensusManager for SimpleMajorityConsensus {
                         NodeState::Follower
                     }
                 }
-                Some(NodeHealthStatus::Degraded) => NodeState::Candidate,
-                _ => NodeState::Follower,
+                Some(NodeHealthStatus::Degraded) => NodeState::Candidate_ =>, NodeState::Follower,
             };
             node_states.insert(node.clone(), state);
         }
@@ -3495,20 +3487,20 @@ impl ConsensusManager for SimpleMajorityConsensus {
 }
 
 impl ShardManager {
-    fn new(config: ShardingConfig) -> Self {
+    fn new(_config: ShardingConfig) -> Self {
         let mut shard_map = HashMap::new();
         let mut shards = HashMap::new();
 
         // Initialize shards based on configuration
-        for shard_idx in 0..config.shard_count {
+        for shard_idx in 0.._config.shard_count {
             let shard_id = format!("shard_{}", shard_idx);
             let shard = DataShard {
                 shard_id: shard_id.clone(),
                 data_range: DataRange::Hash {
-                    start_hash: (u64::MAX / config.shard_count as u64) * shard_idx as u64,
-                    end_hash: (u64::MAX / config.shard_count as u64) * (shard_idx + 1) as u64,
+                    start_hash: (u64::MAX / _config.shard_count as u64) * shard_idx as u64,
+                    end_hash: (u64::MAX / _config.shard_count as u64) * (shard_idx + 1) as u64,
                 },
-                replicas: (0..config.replication_factor)
+                replicas: (0.._config.replication_factor)
                     .map(|i| format!("node_{}", (shard_idx + i) % 8))
                     .collect(),
                 primary_replica: format!("node_{}", shard_idx % 8),
@@ -3541,7 +3533,7 @@ impl ShardManager {
 
     /// Find shard for given data hash
     fn find_shard(&self, data_hash: u64) -> Option<&DataShard> {
-        // Find the closest hash in our shard map
+        // Find the closest _hash in our shard map
         let mut best_match = None;
         let mut min_distance = u64::MAX;
 
@@ -3720,10 +3712,10 @@ impl FaultRecoveryManager {
 }
 
 impl AutoScalingManager {
-    fn new(config: AutoScalingConfig) -> Self {
+    fn new(_config: AutoScalingConfig) -> Self {
         Self {
-            current_nodes: config.min_nodes,
-            target_nodes: config.min_nodes,
+            current_nodes: _config.min_nodes,
+            target_nodes: _config.min_nodes,
             scaling_history: VecDeque::new(),
             metrics_history: VecDeque::new(),
             scaling_policies: Vec::new(),
@@ -4540,10 +4532,9 @@ impl DistributedClusterOrchestrator {
     ) -> Result<DataDistribution> {
         // Implement data distribution strategy based on job requirements and node capabilities
         let strategy = match job.job_type {
-            JobType::Classification | JobType::Regression => DataDistributionStrategy::ByBatch,
-            JobType::Clustering => DataDistributionStrategy::ByFeature,
-            JobType::CrossValidation => DataDistributionStrategy::ByFold,
-            _ => DataDistributionStrategy::ByBatch,
+            JobType::Classification | JobType::Regression =>, DataDistributionStrategy::ByBatch,
+            JobType::Clustering =>, DataDistributionStrategy::ByFeature,
+            JobType::CrossValidation => DataDistributionStrategy::ByFold_ =>, DataDistributionStrategy::ByBatch,
         };
 
         Ok(DataDistribution {
@@ -4701,7 +4692,7 @@ impl DistributedClusterOrchestrator {
         Ok(())
     }
 
-    fn check_node_health(&self, _node: &ClusterNode) -> Result<NodeHealth> {
+    fn check_node_health(&self_node: &ClusterNode) -> Result<NodeHealth> {
         // Simplified health check
         Ok(NodeHealth {
             status: HealthStatus::Healthy,
@@ -4859,12 +4850,12 @@ impl AdvancedWorkScheduler {
                 node.capabilities.cpu.cores >= job.resource_requirements.cpu_cores &&
                 node.capabilities.memory.total_gb >= job.resource_requirements.memory_gb
             })
-            .take(3) // Select up to 3 nodes
+            .take(3) // Select up to 3 _nodes
             .collect();
 
         if suitable_nodes.is_empty() {
             return Err(MetricsError::ComputationError(
-                "No suitable nodes found".to_string(),
+                "No suitable _nodes found".to_string(),
             ));
         }
 
@@ -5097,7 +5088,7 @@ impl ServiceDiscovery {
     fn new() -> Self {
         Self {}
     }
-    fn register(&mut self, _id: &str, _addr: &SocketAddr) -> Result<()> {
+    fn register(&mut self_id: &str, _addr: &SocketAddr) -> Result<()> {
         Ok(())
     }
 }

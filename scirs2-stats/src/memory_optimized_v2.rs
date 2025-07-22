@@ -15,6 +15,7 @@ use std::rc::Rc;
 
 #[cfg(feature = "memmap")]
 use memmap2::Mmap;
+use statrs::statistics::Statistics;
 
 /// Memory usage configuration
 #[derive(Debug, Clone)]
@@ -47,12 +48,12 @@ pub struct MemoryPool<F> {
 }
 
 impl<F: Float> MemoryPool<F> {
-    pub fn new(config: MemoryConfig) -> Self {
+    pub fn new(_config: MemoryConfig) -> Self {
         // Create pools for different sizes (powers of 2)
         let pools = vec![VecDeque::new(); 20]; // Up to 2^20 elements
         Self {
             pools: RefCell::new(pools),
-            config,
+            _config,
         }
     }
 
@@ -184,9 +185,9 @@ where
     F: Float + NumCast,
     D: Data<Elem = F> + std::fmt::Display,
 {
-    pub fn new(data: &'a ArrayBase<D, Ix1>) -> Self {
+    pub fn new(_data: &'a ArrayBase<D, Ix1>) -> Self {
         Self {
-            data,
+            _data,
             mean: RefCell::new(None),
             variance: RefCell::new(None),
             min: RefCell::new(None),
@@ -287,11 +288,11 @@ pub struct StreamingCovariance<F> {
 }
 
 impl<F: Float + NumCast + std::fmt::Display> StreamingCovariance<F> {
-    pub fn new(n_features: usize, pool: Rc<MemoryPool<F>>) -> Self {
+    pub fn new(_n_features: usize, pool: Rc<MemoryPool<F>>) -> Self {
         Self {
             n: 0,
-            means: vec![F::zero(); n_features],
-            cov: vec![vec![F::zero(); n_features]; n_features],
+            means: vec![F::zero(); _n_features],
+            cov: vec![vec![F::zero(); _n_features]; _n_features],
             pool,
         }
     }
@@ -356,12 +357,12 @@ pub struct MemoryMappedStats {
 
 #[cfg(feature = "memmap")]
 impl MemoryMappedStats {
-    pub fn new(path: &std::path::Path) -> StatsResult<Self> {
+    pub fn new(_path: &std::path::Path) -> StatsResult<Self> {
         use std::fs::OpenOptions;
 
         let file = OpenOptions::new()
             .read(true)
-            .open(path)
+            .open(_path)
             .map_err(|e| StatsError::computation(format!("Failed to open file: {}", e)))?;
 
         let metadata = file

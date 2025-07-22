@@ -6,11 +6,11 @@
 //! problem complexities and system configurations.
 
 use ndarray::ArrayView1;
-use scirs2_integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
+use scirs2__integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
 use std::time::Instant;
 
 #[cfg(feature = "parallel")]
-use scirs2_integrate::monte_carlo_parallel::{
+use scirs2__integrate::monte_carlo_parallel::{
     adaptive_parallel_monte_carlo, parallel_monte_carlo, ParallelMonteCarloOptions,
 };
 
@@ -59,8 +59,7 @@ fn test_simple_function() -> Result<(), Box<dyn std::error::Error>> {
     // Sequential Monte Carlo
     let seq_options = MonteCarloOptions {
         n_samples,
-        seed: Some(42),
-        _phantom: PhantomData,
+        seed: Some(42), _phantom: PhantomData,
         ..Default::default()
     };
 
@@ -83,8 +82,7 @@ fn test_simple_function() -> Result<(), Box<dyn std::error::Error>> {
             seed: Some(42),
             n_threads: Some(4),
             batch_size: 50_000,
-            use_chunking: true,
-            _phantom: PhantomData,
+            use_chunking: true, _phantom: PhantomData,
             ..Default::default()
         };
 
@@ -135,8 +133,7 @@ fn test_expensive_function() -> Result<(), Box<dyn std::error::Error>> {
     // Sequential Monte Carlo
     let seq_options = MonteCarloOptions {
         n_samples,
-        seed: Some(123),
-        _phantom: PhantomData,
+        seed: Some(123), _phantom: PhantomData,
         ..Default::default()
     };
 
@@ -159,8 +156,7 @@ fn test_expensive_function() -> Result<(), Box<dyn std::error::Error>> {
             seed: Some(123),
             n_threads: Some(4),
             batch_size: 25_000,
-            use_chunking: true,
-            _phantom: PhantomData,
+            use_chunking: true, _phantom: PhantomData,
             ..Default::default()
         };
 
@@ -200,8 +196,7 @@ fn test_multidimensional_integration() -> Result<(), Box<dyn std::error::Error>>
     // Sequential Monte Carlo
     let seq_options = MonteCarloOptions {
         n_samples,
-        seed: Some(456),
-        _phantom: PhantomData,
+        seed: Some(456), _phantom: PhantomData,
         ..Default::default()
     };
 
@@ -224,8 +219,7 @@ fn test_multidimensional_integration() -> Result<(), Box<dyn std::error::Error>>
             seed: Some(456),
             n_threads: Some(8), // Use more threads for high-dimensional problems
             batch_size: 100_000,
-            use_chunking: true,
-            _phantom: PhantomData,
+            use_chunking: true, _phantom: PhantomData,
             ..Default::default()
         };
 
@@ -281,8 +275,7 @@ fn test_adaptive_parallel_integration() -> Result<(), Box<dyn std::error::Error>
             n_samples: 100_000, // Initial samples
             seed: Some(789),
             n_threads: Some(4),
-            batch_size: 50_000,
-            _phantom: PhantomData,
+            batch_size: 50_000, _phantom: PhantomData,
             ..Default::default()
         };
 

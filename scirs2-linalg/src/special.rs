@@ -36,11 +36,11 @@ use crate::solve::solve_multiple;
 /// // c is a 4x4 matrix with a in the top-left and b in the bottom-right
 /// ```
 #[allow(dead_code)]
-pub fn block_diag<F>(arrays: &[&ArrayView2<F>]) -> LinalgResult<Array2<F>>
+pub fn block_diag<F>(_arrays: &[&ArrayView2<F>]) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    if arrays.is_empty() {
+    if _arrays.is_empty() {
         return Err(LinalgError::ShapeError(
             "At least one array must be provided".to_string(),
         ));
@@ -49,7 +49,7 @@ where
     // Calculate output dimensions
     let mut n_rows = 0;
     let mut n_cols = 0;
-    for arr in arrays {
+    for arr in _arrays {
         n_rows += arr.nrows();
         n_cols += arr.ncols();
     }
@@ -60,7 +60,7 @@ where
     // Place each input matrix on the diagonal
     let mut r_idx = 0;
     let mut c_idx = 0;
-    for arr in arrays {
+    for arr in _arrays {
         let rows = arr.nrows();
         let cols = arr.ncols();
 

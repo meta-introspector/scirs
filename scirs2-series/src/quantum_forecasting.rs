@@ -12,7 +12,7 @@
 //! - **Quantum-Inspired Optimization**: Quantum annealing for hyperparameter tuning
 
 use ndarray::{Array1, Array2, Array3};
-use num_complex::Complex;
+use num__complex::Complex;
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -32,8 +32,8 @@ pub struct QuantumState<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> QuantumState<F> {
     /// Create new quantum state
-    pub fn new(num_qubits: usize) -> Self {
-        let num_states = 1 << num_qubits; // 2^num_qubits
+    pub fn new(_num_qubits: usize) -> Self {
+        let num_states = 1 << _num_qubits; // 2^_num_qubits
         let mut amplitudes = Array1::zeros(num_states);
 
         // Initialize in |0...0⟩ state
@@ -41,7 +41,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumState<F> {
 
         Self {
             amplitudes,
-            num_qubits,
+            _num_qubits,
         }
     }
 
@@ -149,10 +149,10 @@ pub struct QuantumAttention<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> QuantumAttention<F> {
     /// Create new quantum attention layer
-    pub fn new(model_dim: usize, num_heads: usize, qubits_per_head: usize) -> Result<Self> {
-        if model_dim % num_heads != 0 {
+    pub fn new(_model_dim: usize, num_heads: usize, qubits_per_head: usize) -> Result<Self> {
+        if _model_dim % num_heads != 0 {
             return Err(TimeSeriesError::InvalidInput(
-                "Model dimension must be divisible by number of heads".to_string(),
+                "Model dimension must be divisible by number of _heads".to_string(),
             ));
         }
 
@@ -177,10 +177,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAttention<F> {
     }
 
     /// Initialize quantum parameters
-    fn init_params(num_heads: usize, qubits_per_head: usize) -> Array2<F> {
-        let mut params = Array2::zeros((num_heads, qubits_per_head));
+    fn init_params(_num_heads: usize, qubits_per_head: usize) -> Array2<F> {
+        let mut params = Array2::zeros((_num_heads, qubits_per_head));
 
-        for i in 0..num_heads {
+        for i in 0.._num_heads {
             for j in 0..qubits_per_head {
                 // Initialize with random angles
                 let angle =
@@ -193,10 +193,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAttention<F> {
     }
 
     /// Random matrix initialization
-    fn random_matrix(rows: usize, cols: usize, std_dev: F) -> Array2<F> {
-        let mut matrix = Array2::zeros((rows, cols));
+    fn random_matrix(_rows: usize, cols: usize, std_dev: F) -> Array2<F> {
+        let mut matrix = Array2::zeros((_rows, cols));
 
-        for i in 0..rows {
+        for i in 0.._rows {
             for j in 0..cols {
                 let rand_val = ((i + j * 17) % 1000) as f64 / 1000.0 - 0.5;
                 matrix[[i, j]] = F::from(rand_val).unwrap() * std_dev;
@@ -208,7 +208,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAttention<F> {
 
     /// Quantum attention forward pass
     pub fn forward(&self, input: &Array2<F>) -> Result<Array2<F>> {
-        let (seq_len, _) = input.dim();
+        let (seq_len_) = input.dim();
 
         // Classical projections
         let queries = self.linear_transform(input, &self.w_query);
@@ -278,7 +278,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAttention<F> {
             for d in 0..head_dim {
                 let mut weighted_value = F::zero();
 
-                for j in 0..seq_len.min(probabilities.len()) {
+                for j in 0..seq_len.min(probabilities._len()) {
                     let v_idx = head * head_dim + d;
                     if v_idx < values.ncols() && j < values.nrows() {
                         weighted_value = weighted_value + probabilities[j] * values[[j, v_idx]];
@@ -344,12 +344,12 @@ pub struct VariationalQuantumCircuit<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> VariationalQuantumCircuit<F> {
     /// Create new variational quantum circuit
-    pub fn new(num_qubits: usize, depth: usize, input_dim: usize) -> Self {
+    pub fn new(_num_qubits: usize, depth: usize, input_dim: usize) -> Self {
         // Initialize parameters randomly
-        let mut parameters = Array3::zeros((depth, num_qubits, 3)); // 3 parameters per qubit per layer
+        let mut parameters = Array3::zeros((depth, _num_qubits, 3)); // 3 parameters per qubit per layer
 
         for layer in 0..depth {
-            for qubit in 0..num_qubits {
+            for qubit in 0.._num_qubits {
                 for param in 0..3 {
                     let val = ((layer + qubit * 7 + param * 13) % 1000) as f64 / 1000.0
                         * std::f64::consts::PI
@@ -471,11 +471,11 @@ pub enum QuantumKernelType {
 
 impl<F: Float + Debug + Clone + FromPrimitive> QuantumKernel<F> {
     /// Create new quantum kernel
-    pub fn new(num_qubits: usize, kernel_type: QuantumKernelType) -> Self {
-        let mut feature_map_params = Array2::zeros((num_qubits, 3));
+    pub fn new(_num_qubits: usize, kernel_type: QuantumKernelType) -> Self {
+        let mut feature_map_params = Array2::zeros((_num_qubits, 3));
 
         // Initialize feature map parameters
-        for i in 0..num_qubits {
+        for i in 0.._num_qubits {
             for j in 0..3 {
                 let val = ((i + j * 11) % 100) as f64 / 100.0 * std::f64::consts::PI;
                 feature_map_params[[i, j]] = F::from(val).unwrap();
@@ -603,7 +603,7 @@ pub struct QuantumAnnealingOptimizer<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> QuantumAnnealingOptimizer<F> {
     /// Create new quantum annealing optimizer
-    pub fn new(num_vars: usize, max_iterations: usize) -> Self {
+    pub fn new(_num_vars: usize, max_iterations: usize) -> Self {
         // Create temperature schedule (exponential cooling)
         let mut temperature_schedule = Array1::zeros(max_iterations);
         let initial_temp = F::from(10.0).unwrap();
@@ -644,7 +644,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAnnealingOptimizer<F> {
             // Generate neighbor solution (quantum tunneling effect)
             let neighbor = self.generate_neighbor_solution(temperature);
 
-            // Evaluate objective function
+            // Evaluate objective _function
             let current_energy = objective_function(&self.current_solution);
             let neighbor_energy = objective_function(&neighbor);
 
@@ -809,7 +809,7 @@ mod tests {
         let pi = std::f64::consts::PI;
         state.apply_rotation(0, pi, 0.0).unwrap();
 
-        let (measurement, _) = state.measure();
+        let (measurement_) = state.measure();
         assert_eq!(measurement, 1); // Should measure |1⟩ state
     }
 }
@@ -860,10 +860,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
         input_dim: usize,
         output_dim: usize,
     ) -> Self {
-        let mut layers = Vec::new();
+        let mut _layers = Vec::new();
 
         for layer_idx in 0..num_layers {
-            let circuit_depth = 3; // Fixed depth for each layer
+            let circuit_depth = 3; // Fixed depth for each _layer
             let circuit =
                 VariationalQuantumCircuit::new(qubits_per_layer, circuit_depth, input_dim);
 
@@ -892,11 +892,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
 
             let activation = match layer_idx % 3 {
                 0 => QuantumActivation::QuantumReLU,
-                1 => QuantumActivation::QuantumSigmoid,
-                _ => QuantumActivation::QuantumTanh,
+                1 => QuantumActivation::QuantumSigmoid_ =>, QuantumActivation::QuantumTanh,
             };
 
-            layers.push(QuantumLayer {
+            _layers.push(QuantumLayer {
                 circuit,
                 linear_weights,
                 activation,
@@ -904,7 +903,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
         }
 
         Self {
-            layers,
+            _layers,
             qubits_per_layer,
             input_dim,
             output_dim,
@@ -1046,8 +1045,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
 
     /// Update parameters using quantum-inspired optimization
     fn update_parameters_quantum_inspired(
-        &mut self,
-        _training_data: &[(Array1<F>, Array1<F>)],
+        &mut self, _training_data: &[(Array1<F>, Array1<F>)],
         learning_rate: F,
         iteration: usize,
     ) -> Result<()> {
@@ -1151,13 +1149,13 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
         output_dim: usize,
         combination_method: QuantumEnsembleMethod,
     ) -> Self {
-        let mut models = Vec::new();
+        let mut _models = Vec::new();
 
         for i in 0..num_models {
             let num_layers = 2 + (i % 3); // Vary architecture
-            let model =
+            let _model =
                 QuantumNeuralNetwork::new(num_layers, qubits_per_model, input_dim, output_dim);
-            models.push(model);
+            _models.push(_model);
         }
 
         // Initialize equal weights
@@ -1167,7 +1165,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
         }
 
         Self {
-            models,
+            _models,
             model_weights,
             combination_method,
         }
@@ -1330,7 +1328,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
         let objective = |weights: &Array1<F>| -> F {
             // Normalize weights
             let weight_sum: F = weights.iter().cloned().sum();
-            let normalized_weights: Array1<F> = if weight_sum > F::zero() {
+            let normalized_weights: Array1<F> = if weight_sum >, F::zero() {
                 weights.mapv(|w| w / weight_sum)
             } else {
                 Array1::from_elem(num_models, F::one() / F::from(num_models).unwrap())
@@ -1435,13 +1433,13 @@ pub struct TensorConnection {
 
 impl<F: Float + Debug + Clone + FromPrimitive> QuantumTensorNetwork<F> {
     /// Create new quantum tensor network for time series
-    pub fn new(sequence_length: usize, bond_dimension: usize) -> Self {
+    pub fn new(_sequence_length: usize, bond_dimension: usize) -> Self {
         let mut nodes = Vec::new();
         let mut connections = Vec::new();
         let mut bond_dimensions = HashMap::new();
 
         // Create chain topology for time series
-        for i in 0..sequence_length {
+        for i in 0.._sequence_length {
             let node = TensorNode {
                 id: i,
                 tensor: Array3::zeros((2, bond_dimension, bond_dimension)), // 2 for qubit
@@ -1676,8 +1674,8 @@ pub struct SyndromeResult<F: Float> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> QuantumErrorCorrection<F> {
     /// Create new quantum error correction system
-    pub fn new(code_type: ErrorCorrectionCode, logical_qubits: usize) -> Self {
-        let physical_qubits = match code_type {
+    pub fn new(_code_type: ErrorCorrectionCode, logical_qubits: usize) -> Self {
+        let physical_qubits = match _code_type {
             ErrorCorrectionCode::RepetitionCode => logical_qubits * 3,
             ErrorCorrectionCode::ShorCode => logical_qubits * 9,
             ErrorCorrectionCode::SteaneCode => logical_qubits * 7,
@@ -1912,7 +1910,7 @@ pub struct AdvantageMetrics<F: Float + Debug + Clone> {
 
 impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumAdvantagePredictor<F> {
     /// Create new quantum advantage predictor
-    pub fn new(num_features: usize, num_qubits: usize) -> Self {
+    pub fn new(_num_features: usize, num_qubits: usize) -> Self {
         let feature_map = QuantumFeatureMap {
             encoding: QuantumEncoding::AngleEncoding,
             num_qubits,
@@ -1968,7 +1966,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumAdvant
         self.train_classical_baseline(training_data)?;
         let classical_train_time = classical_start.elapsed().as_secs_f64();
 
-        // Evaluate on test data
+        // Evaluate on test _data
         let quantum_performance = self.evaluate_quantum_model(test_data)?;
         let classical_performance = self.evaluate_classical_model(test_data)?;
 
@@ -1989,7 +1987,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumAdvant
     fn train_quantum_model(&mut self, training_data: &[(Array1<F>, F)]) -> Result<()> {
         // Simplified quantum training using variational methods
         for _epoch in 0..10 {
-            for (features, _target) in training_data.iter().take(100) {
+            for (features_target) in training_data.iter().take(100) {
                 // Limit for demo
                 let _quantum_features = self.qml_model.vqc.forward(features)?;
                 // Gradient updates would go here in full implementation

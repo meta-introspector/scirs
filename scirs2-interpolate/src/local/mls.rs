@@ -60,7 +60,7 @@ pub enum PolynomialBasis {
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::local::mls::{MovingLeastSquares, WeightFunction, PolynomialBasis};
+/// use scirs2__interpolate::local::mls::{MovingLeastSquares, WeightFunction, PolynomialBasis};
 ///
 /// // Create some 2D scattered data
 /// let points = Array2::from_shape_vec((5, 2), vec![
@@ -166,8 +166,7 @@ where
             basis,
             bandwidth,
             epsilon: F::from_f64(1e-10).unwrap(),
-            max_points: None,
-            _phantom: PhantomData,
+            max_points: None, _phantom: PhantomData,
         })
     }
 
@@ -299,8 +298,7 @@ where
 
         // Filter out points with zero weight (if using compactly supported weight function)
         let effective_radius = match self.weight_fn {
-            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.bandwidth,
-            _ => F::infinity(),
+            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.bandwidth_ =>, F::infinity(),
         };
 
         let mut indices = Vec::new();
@@ -325,7 +323,7 @@ where
             indices = distances
                 .iter()
                 .take(min_points)
-                .map(|&(idx, _)| idx)
+                .map(|&(idx_)| idx)
                 .collect();
             dist_values = distances
                 .iter()
@@ -358,7 +356,7 @@ where
                         F::zero()
                     }
                 }
-                WeightFunction::InverseDistance => F::one() / (self.epsilon + r * r),
+                WeightFunction::InverseDistance =>, F::one() / (self.epsilon + r * r),
                 WeightFunction::CubicSpline => {
                     if r < F::from_f64(1.0 / 3.0).unwrap() {
                         let r2 = r * r;
@@ -511,7 +509,7 @@ where
         // Solve the system for coefficients
         #[cfg(feature = "linalg")]
         let coeffs = {
-            use scirs2_linalg::solve;
+            use scirs2__linalg::solve;
             let btb_f64 = btb.mapv(|x| x.to_f64().unwrap());
             let bty_f64 = bty.mapv(|x| x.to_f64().unwrap());
             match solve(&btb_f64.view(), &bty_f64.view(), None) {

@@ -3,7 +3,7 @@
 //! This example demonstrates device enumeration, selection, and workload
 //! distribution across multiple GPU devices for high-performance sparse FFT.
 
-use scirs2_fft::{
+use scirs2__fft::{
     sparse_fft_multi_gpu::{MultiGPUConfig, MultiGPUSparseFFT, WorkloadDistribution},
     FFTResult,
 };
@@ -137,9 +137,8 @@ fn test_workload_distribution_strategies() -> FFTResult<()> {
 #[allow(dead_code)]
 fn test_strategy(
     config: MultiGPUConfig,
-    signal: &[f64],
-    _sparsity: usize,
-) -> FFTResult<(scirs2_fft::sparse_fft::SparseFFTResult, String)> {
+    signal: &[f64], _sparsity: usize,
+) -> FFTResult<(scirs2_fft::sparse, _fft::SparseFFTResult, String)> {
     let mut processor = MultiGPUSparseFFT::new(config);
     processor.initialize()?;
 
@@ -182,7 +181,7 @@ fn test_performance_scaling() -> FFTResult<()> {
             let start = Instant::now();
 
             match test_strategy(config, &signal, 10) {
-                Ok((result, _)) => {
+                Ok((result_)) => {
                     let elapsed = start.elapsed();
                     let throughput = signal_size as f64 / elapsed.as_secs_f64();
 
@@ -315,7 +314,7 @@ fn display_system_info() {
 
         let gpu_count = devices
             .iter()
-            .filter(|d| d.backend != scirs2_fft::sparse_fft_gpu::GPUBackend::CPUFallback)
+            .filter(|d| d.backend != scirs2_fft::sparse_fft, _gpu::GPUBackend::CPUFallback)
             .count();
         let total_memory: usize = devices.iter().map(|d| d.memory_total).sum();
         let total_compute_units: usize = devices.iter().map(|d| d.compute_units).sum();

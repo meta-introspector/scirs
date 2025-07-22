@@ -1,9 +1,9 @@
 use crate::ndarray_ext;
-use crate::ndarray_ext::{NdArray, NdArrayView};
+use crate::ndarray__ext::{NdArray, NdArrayView};
 use crate::op;
 use crate::tensor::Tensor;
 use crate::tensor_ops;
-use crate::tensor_ops::*;
+use crate::tensor__ops::*;
 use crate::Float;
 use ndarray;
 use std::f32;
@@ -132,13 +132,13 @@ fn preprocess_axes<T: Float>(
     sparse_axes: bool,
 ) -> Vec<usize> {
     if sparse_axes {
-        ndarray_ext::sparse_to_dense(axes)
+        ndarray_ext::sparse_to_dense(_axes)
     } else {
-        ndarray_ext::normalize_negative_axes(axes, x.ndim())
+        ndarray_ext::normalize_negative_axes(_axes, x.ndim())
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceSumToScalar {
+impl<T: Float>, op::Op<T> for ReduceSumToScalar {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         // Debug information for empty arrays
@@ -161,7 +161,7 @@ impl<T: Float> op::Op<T> for ReduceSumToScalar {
 
 struct ReduceSumToScalarGrad;
 
-impl<T: Float> op::Op<T> for ReduceSumToScalarGrad {
+impl<T: Float>, op::Op<T> for ReduceSumToScalarGrad {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let shape = ndarray_ext::as_shape(&ctx.input(1));
         let ret = unsafe {
@@ -181,7 +181,7 @@ impl<T: Float> op::Op<T> for ReduceSumToScalarGrad {
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceSum {
+impl<T: Float>, op::Op<T> for ReduceSum {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let axes = preprocess_axes(x, &ctx.input(1), self.sparse_axes);
@@ -205,7 +205,7 @@ impl<T: Float> op::Op<T> for ReduceSum {
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceMean {
+impl<T: Float>, op::Op<T> for ReduceMean {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let axes = preprocess_axes(x, &ctx.input(1), self.sparse_axes);
@@ -254,7 +254,7 @@ impl<T: Float> op::Op<T> for ReduceMean {
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceProd {
+impl<T: Float>, op::Op<T> for ReduceProd {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let axes = preprocess_axes(x, &ctx.input(1), self.sparse_axes);
@@ -283,7 +283,7 @@ impl<T: Float> op::Op<T> for ReduceProd {
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceMin {
+impl<T: Float>, op::Op<T> for ReduceMin {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let axes = preprocess_axes(x, &ctx.input(1), self.sparse_axes);
@@ -305,7 +305,7 @@ impl<T: Float> op::Op<T> for ReduceMin {
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceMax {
+impl<T: Float>, op::Op<T> for ReduceMax {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let axes = preprocess_axes(x, &ctx.input(1), self.sparse_axes);
@@ -436,7 +436,7 @@ fn argx_helper<T: Float>(
         .unwrap()
 }
 
-impl<T: Float> op::Op<T> for ArgMin {
+impl<T: Float>, op::Op<T> for ArgMin {
     // cf. https://github.com/tensorflow/compiler/tf2xla/kernels/index_ops.cc
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
@@ -450,7 +450,7 @@ impl<T: Float> op::Op<T> for ArgMin {
     }
 }
 
-impl<T: Float> op::Op<T> for ArgMax {
+impl<T: Float>, op::Op<T> for ArgMax {
     // cf. https://github.com/tensorflow/compiler/tf2xla/kernels/index_ops.cc
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
@@ -464,7 +464,7 @@ impl<T: Float> op::Op<T> for ArgMax {
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceGradCommon {
+impl<T: Float>, op::Op<T> for ReduceGradCommon {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         //  broadcast `gy` into `target_shape`
         let gy = ctx.input(0);
@@ -504,7 +504,7 @@ impl<T: Float> op::Op<T> for ReduceGradCommon {
     }
 
     fn grad(&self, ctx: &mut crate::op::GradientContext<T>) {
-        let sum = tensor_ops::reduction_ops::ReduceSum {
+        let sum = tensor_ops::reduction, _ops::ReduceSum {
             keep_dims: self.should_make_broadcast_dims,
             sparse_axes: self.sparse_axes,
         };
@@ -519,7 +519,7 @@ impl<T: Float> op::Op<T> for ReduceGradCommon {
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceVariance {
+impl<T: Float>, op::Op<T> for ReduceVariance {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let axes = preprocess_axes(x, &ctx.input(1), self.sparse_axes);
@@ -559,7 +559,7 @@ impl<T: Float> op::Op<T> for ReduceVariance {
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceSumAll {
+impl<T: Float>, op::Op<T> for ReduceSumAll {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         ctx.append_output(ndarray::arr0(x.sum()).into_dyn());
@@ -575,7 +575,7 @@ impl<T: Float> op::Op<T> for ReduceSumAll {
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceMeanAll {
+impl<T: Float>, op::Op<T> for ReduceMeanAll {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let len = x.len() as f32;
@@ -598,7 +598,7 @@ impl<T: Float> op::Op<T> for ReduceMeanAll {
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceAll {
+impl<T: Float>, op::Op<T> for ReduceAll {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let axes = preprocess_axes(x, &ctx.input(1), false);
@@ -649,7 +649,7 @@ impl<T: Float> op::Op<T> for ReduceAll {
     }
 }
 
-impl<T: Float> op::Op<T> for ReduceAny {
+impl<T: Float>, op::Op<T> for ReduceAny {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let axes = preprocess_axes(x, &ctx.input(1), false);

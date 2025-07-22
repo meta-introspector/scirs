@@ -19,7 +19,7 @@
 //! ## Usage
 //!
 //! ```rust
-//! use scirs2_signal::scipy_validation::{validate_all, ValidationConfig};
+//! use scirs2__signal::scipy_validation::{validate_all, ValidationConfig};
 //!
 //! // Run comprehensive validation suite
 //! let config = ValidationConfig::default();
@@ -36,15 +36,21 @@
 //! }
 //! ```
 
-use crate::dwt::Wavelet;
+use crate::dwt::{Wavelet, wavedec, waverec};
 use crate::error::{SignalError, SignalResult};
-use crate::filter::FilterType;
-use crate::parametric::ARMethod;
+use crate::filter::{FilterType, butter, cheby1, cheby2, lfilter};
+use crate::lombscargle::lombscargle;
+use crate::multitaper::enhanced::{MultitaperConfig, enhanced_pmtm};
+use crate::parametric::{ARMethod, ar_spectrum, estimate_ar};
+use crate::waveforms::chirp;
+use crate::window::{blackman, hamming, hann, tukey};
+use crate::window::kaiser::kaiser;
+use ndarray::Array1;
+use rand::Rng;
+use std::collections::HashMap;
 use std::f64::consts::PI;
 
-use ndarray::Array1;
-use std::collections::HashMap;
-
+#[allow(unused_imports)]
 /// Configuration for SciPy validation
 #[derive(Debug, Clone)]
 pub struct ValidationConfig {
@@ -154,19 +160,19 @@ impl ValidationResults {
 
 /// Run comprehensive validation against SciPy
 #[allow(dead_code)]
-pub fn validate_all(config: &ValidationConfig) -> SignalResult<ValidationResults> {
+pub fn validate_all(_config: &ValidationConfig) -> SignalResult<ValidationResults> {
     let start_time = std::time::Instant::now();
     let mut test_results = HashMap::new();
 
     // Validate different categories of functions
-    validate_filtering(&mut test_results, config)?;
-    validate_spectral_analysis(&mut test_results, config)?;
-    validate_wavelets(&mut test_results, config)?;
-    validate_windows(&mut test_results, config)?;
-    validate_signal_generation(&mut test_results, config)?;
-    validate_convolution_correlation(&mut test_results, config)?;
-    validate_resampling(&mut test_results, config)?;
-    validate_peak_detection(&mut test_results, config)?;
+    validate_filtering(&mut test_results, _config)?;
+    validate_spectral_analysis(&mut test_results, _config)?;
+    validate_wavelets(&mut test_results, _config)?;
+    validate_windows(&mut test_results, _config)?;
+    validate_signal_generation(&mut test_results, _config)?;
+    validate_convolution_correlation(&mut test_results, _config)?;
+    validate_resampling(&mut test_results, _config)?;
+    validate_peak_detection(&mut test_results, _config)?;
 
     let total_time = start_time.elapsed().as_secs_f64() * 1000.0;
 
@@ -224,13 +230,12 @@ fn validate_butterworth_filter(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-    use crate::filter::FilterType;
 
     let start_time = std::time::Instant::now();
     let test_name = "butterworth_filter".to_string();
-    let mut max_abs_error = 0.0;
-    let mut max_rel_error = 0.0;
-    let mut rmse_sum = 0.0;
+    let mut max_abs_error: f64 = 0.0;
+    let mut max_rel_error: f64 = 0.0;
+    let mut rmse_sum: f64 = 0.0;
     let mut num_cases = 0;
     let mut passed = true;
     let mut error_message = None;
@@ -308,18 +313,14 @@ fn test_single_cheby1_filter(
     fs: f64,
     order: usize,
     filter_type: FilterType,
-    ripple: f64,
-    _config: &ValidationConfig,
+    ripple: f64_config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
-    use crate::filter::{cheby1, lfilter};
-    use crate::waveforms::chirp;
-
     // Create test signal (chirp from 0.1*fs to 0.4*fs)
     let duration = n as f64 / fs;
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
     let test_signal = chirp(&t, 0.1 * fs, duration, 0.4 * fs, "linear", 0.0)?;
 
-    // Define filter parameters based on type
+    // Define filter parameters based on _type
     let (critical_freq, btype) = match filter_type {
         FilterType::Lowpass => (vec![0.2 * fs], "low"),
         FilterType::Highpass => (vec![0.2 * fs], "high"),
@@ -353,15 +354,12 @@ fn test_single_cheby2_filter(
     attenuation: f64,
     config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
-    use crate::filter::{cheby2, lfilter};
-    use crate::waveforms::chirp;
-
     // Create test signal (chirp from 0.1*fs to 0.4*fs)
     let duration = n as f64 / fs;
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
     let test_signal = chirp(&t, 0.1 * fs, duration, 0.4 * fs, "linear", 0.0)?;
 
-    // Define filter parameters based on type
+    // Define filter parameters based on _type
     let (critical_freq, btype) = match filter_type {
         FilterType::Lowpass => (vec![0.2 * fs], "low"),
         FilterType::Highpass => (vec![0.2 * fs], "high"),
@@ -392,15 +390,12 @@ fn test_single_butter_filter(
     filter_type: FilterType,
     config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
-    use crate::filter::butter;
-    use crate::waveforms::chirp;
-
     // Create test signal (chirp from 0.1*fs to 0.4*fs)
     let duration = n as f64 / fs;
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
     let test_signal = chirp(&t, 0.1 * fs, duration, 0.4 * fs, "linear", 0.0)?;
 
-    // Define filter parameters based on type
+    // Define filter parameters based on _type
     let (critical_freq, btype) = match filter_type {
         FilterType::Lowpass => (vec![0.2 * fs], "low"),
         FilterType::Highpass => (vec![0.2 * fs], "high"),
@@ -425,11 +420,7 @@ fn test_single_butter_filter(
 /// Simplified reference implementation (in practice, this would call SciPy via Python)
 #[allow(dead_code)]
 fn reference_butter_filter(
-    signal: &[f64],
-    _order: usize,
-    _critical_freq: &[f64],
-    _btype: &str,
-    _fs: f64,
+    signal: &[f64], _order: usize_critical_freq: &[f64], _btype: &str_fs: f64,
 ) -> SignalResult<Vec<f64>> {
     // This is a placeholder - in a real implementation, you would:
     // 1. Call SciPy via Python binding (pyo3)
@@ -444,9 +435,7 @@ fn reference_butter_filter(
 /// Reference Chebyshev Type I filter implementation
 #[allow(dead_code)]
 fn reference_cheby1_filter(
-    signal: &[f64],
-    _order: usize,
-    _ripple: f64,
+    signal: &[f64], _order: usize_ripple: f64,
     critical_freq: &[f64],
     btype: &str,
     fs: f64,
@@ -473,9 +462,7 @@ fn reference_cheby1_filter(
 /// Reference Chebyshev Type II filter implementation
 #[allow(dead_code)]
 fn reference_cheby2_filter(
-    signal: &[f64],
-    _order: usize,
-    _attenuation: f64,
+    signal: &[f64], _order: usize_attenuation: f64,
     critical_freq: &[f64],
     btype: &str,
     fs: f64,
@@ -511,20 +498,20 @@ fn reference_cheby2_filter(
 
 /// Calculate absolute error, relative error, and RMSE between two signals
 #[allow(dead_code)]
-fn calculate_errors(signal1: &[f64], signal2: &[f64]) -> SignalResult<(f64, f64, f64)> {
-    if signal1.len() != signal2.len() {
+fn calculate_errors(_signal1: &[f64], signal2: &[f64]) -> SignalResult<(f64, f64, f64)> {
+    if _signal1.len() != signal2.len() {
         return Err(SignalError::ValueError(
             "Signals must have the same length for error calculation".to_string(),
         ));
     }
 
-    let n = signal1.len();
+    let n = _signal1.len();
     let mut max_abs_error: f64 = 0.0;
     let mut max_rel_error: f64 = 0.0;
     let mut mse = 0.0;
 
     for i in 0..n {
-        let abs_error = (signal1[i] - signal2[i]).abs();
+        let abs_error = (_signal1[i] - signal2[i]).abs();
         max_abs_error = max_abs_error.max(abs_error);
 
         let rel_error = if signal2[i].abs() > 1e-15 {
@@ -548,7 +535,6 @@ fn validate_chebyshev_filter(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-    use crate::filter::FilterType;
 
     let start_time = std::time::Instant::now();
     let test_name = "chebyshev_filter".to_string();
@@ -670,8 +656,7 @@ fn validate_chebyshev_filter(
 /// Validate Elliptic filters
 #[allow(dead_code)]
 fn validate_elliptic_filter(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     // Implementation similar to other filter validations
 
@@ -693,8 +678,7 @@ fn validate_elliptic_filter(
 /// Validate Bessel filters
 #[allow(dead_code)]
 fn validate_bessel_filter(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     // Implementation similar to other filter validations
 
@@ -716,8 +700,7 @@ fn validate_bessel_filter(
 /// Validate filtfilt (zero-phase filtering)
 #[allow(dead_code)]
 fn validate_filtfilt(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     // Implementation would test filtfilt against SciPy's filtfilt
 
@@ -766,8 +749,7 @@ fn validate_spectral_analysis(
 /// Validate periodogram against SciPy
 #[allow(dead_code)]
 fn validate_periodogram(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "periodogram".to_string(),
@@ -787,8 +769,7 @@ fn validate_periodogram(
 /// Validate Welch's method against SciPy
 #[allow(dead_code)]
 fn validate_welch(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "welch".to_string(),
@@ -808,8 +789,7 @@ fn validate_welch(
 /// Validate STFT against SciPy
 #[allow(dead_code)]
 fn validate_stft(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "stft".to_string(),
@@ -934,7 +914,6 @@ fn validate_dwt(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-    use crate::dwt::Wavelet;
 
     let start_time = std::time::Instant::now();
     let test_name = "dwt".to_string();
@@ -1027,8 +1006,7 @@ fn validate_dwt(
 /// Validate CWT against SciPy
 #[allow(dead_code)]
 fn validate_cwt(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "cwt".to_string(),
@@ -1048,8 +1026,7 @@ fn validate_cwt(
 /// Validate wavelet families against SciPy
 #[allow(dead_code)]
 fn validate_wavelet_families(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "wavelet_families".to_string(),
@@ -1074,9 +1051,9 @@ fn validate_windows(
 ) -> SignalResult<()> {
     let start_time = std::time::Instant::now();
     let test_name = "windows".to_string();
-    let mut max_abs_error = 0.0;
-    let mut max_rel_error = 0.0;
-    let mut rmse_sum = 0.0;
+    let mut max_abs_error: f64 = 0.0;
+    let mut max_rel_error: f64 = 0.0;
+    let mut rmse_sum: f64 = 0.0;
     let mut num_cases = 0;
     let mut passed = true;
     let mut error_message = None;
@@ -1158,8 +1135,7 @@ fn validate_windows(
 /// Validate signal generation functions
 #[allow(dead_code)]
 fn validate_signal_generation(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "signal_generation".to_string(),
@@ -1179,8 +1155,7 @@ fn validate_signal_generation(
 /// Validate convolution and correlation
 #[allow(dead_code)]
 fn validate_convolution_correlation(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "convolution_correlation".to_string(),
@@ -1200,8 +1175,7 @@ fn validate_convolution_correlation(
 /// Validate resampling operations
 #[allow(dead_code)]
 fn validate_resampling(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "resampling".to_string(),
@@ -1221,8 +1195,7 @@ fn validate_resampling(
 /// Validate peak detection
 #[allow(dead_code)]
 fn validate_peak_detection(
-    results: &mut HashMap<String, ValidationTestResult>,
-    _config: &ValidationConfig,
+    results: &mut HashMap<String, ValidationTestResult>, _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "peak_detection".to_string(),
@@ -1245,12 +1218,8 @@ fn test_single_multitaper(
     n: usize,
     fs: f64,
     nw: f64,
-    k: Option<usize>,
-    _config: &ValidationConfig,
+    k: Option<usize>, _config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
-    use crate::multitaper::enhanced::{enhanced_pmtm, MultitaperConfig};
-    use crate::waveforms::chirp;
-
     // Create test signal (chirp with known spectral characteristics)
     let duration = n as f64 / fs;
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
@@ -1284,13 +1253,13 @@ fn validate_lombscargle(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-    // use crate::lombscargle_enhanced_validation::run_enhanced_validation;
+    // use crate::lombscargle_enhanced__validation::run_enhanced_validation;
 
     let start_time = std::time::Instant::now();
     let test_name = "lombscargle".to_string();
-    let mut max_abs_error = 0.0;
-    let mut max_rel_error = 0.0;
-    let mut rmse_sum = 0.0;
+    let mut max_abs_error: f64 = 0.0;
+    let mut max_rel_error: f64 = 0.0;
+    let mut rmse_sum: f64 = 0.0;
     let mut num_cases = 0;
     let mut passed = true;
     let mut error_message = None;
@@ -1355,9 +1324,6 @@ fn test_single_lombscargle(
     fs: f64,
     config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
-    use crate::lombscargle::lombscargle;
-    use rand::Rng;
-
     // Create irregularly sampled test signal
     let mut rng = rand::rng();
     let mut t: Vec<f64> = Vec::new();
@@ -1366,8 +1332,8 @@ fn test_single_lombscargle(
     // Generate irregular time samples
     let duration = n as f64 / fs;
     for i in 0..n {
-        let base_time = i as f64 * duration / n as f64;
-        let jitter = rng.random_range(-0.1..0.1) * duration / n as f64;
+        let base_time = i as f64 * duration / n  as f64;
+        let jitter = rng.random_range(-0.1..0.1) * duration / n  as f64;
         let time = (base_time + jitter).max(0.0).min(duration);
         t.push(time);
 
@@ -1388,7 +1354,7 @@ fn test_single_lombscargle(
     let our_result = lombscargle(&t, &signal, &freqs, false)?; // false = not normalized
 
     // Reference implementation (simplified)
-    let reference_result = reference_lombscargle(&t, &signal, &freqs)?;
+    let reference_result = reference_lombscargle(&t, &signal, &freqs, None, None)?;
 
     // Calculate errors
     let errors = calculate_errors(&our_result, &reference_result)?;
@@ -1402,13 +1368,12 @@ fn validate_parametric_spectral(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-    use crate::parametric::ARMethod;
 
     let start_time = std::time::Instant::now();
     let test_name = "parametric_spectral".to_string();
-    let mut max_abs_error = 0.0;
-    let mut max_rel_error = 0.0;
-    let mut rmse_sum = 0.0;
+    let mut max_abs_error: f64 = 0.0;
+    let mut max_rel_error: f64 = 0.0;
+    let mut rmse_sum: f64 = 0.0;
     let mut num_cases = 0;
     let mut passed = true;
     let mut error_message = None;
@@ -1490,16 +1455,12 @@ fn test_single_dwt(
     level: usize,
     config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
-    use crate::dwt::{wavedec, waverec};
-
-    use std::f64::consts::PI;
-
     // Create test signal with known characteristics
     let mut test_signal = vec![0.0; n];
 
     // Generate a multi-component signal for comprehensive testing
     for i in 0..n {
-        let t = i as f64 / n as f64;
+        let t = i as f64 / n  as f64;
         // Combination of sine waves at different frequencies
         test_signal[i] = (2.0 * PI * 4.0 * t).sin()
             + 0.5 * (2.0 * PI * 16.0 * t).sin()
@@ -1538,9 +1499,6 @@ fn test_single_ar_estimation(
     method: ARMethod,
     config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
-    use crate::parametric::{ar_spectrum, estimate_ar};
-    use crate::waveforms::chirp;
-
     // Create test signal with known AR characteristics
     let duration = n as f64 / fs;
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
@@ -1548,7 +1506,7 @@ fn test_single_ar_estimation(
     let signal_array = Array1::from_vec(test_signal);
 
     // Our implementation
-    let (ar_coeffs, _reflection_coeffs, _variance) = estimate_ar(&signal_array, order, method)?;
+    let (ar_coeffs_reflection_coeffs_variance) = estimate_ar(&signal_array, order, method)?;
 
     // Compute AR spectrum
     let freqs: Vec<f64> = (0..=n / 2).map(|i| i as f64 * fs / n as f64).collect();
@@ -1568,14 +1526,14 @@ fn test_single_ar_estimation(
 /// In a production implementation, this would load reference data that was
 /// computed offline using SciPy and stored in files or embedded in the binary.
 #[allow(dead_code)]
-pub fn load_reference_data(test_name: &str, _parameters: &str) -> SignalResult<Vec<f64>> {
+pub fn load_reference_data(_test_name: &str, _parameters: &str) -> SignalResult<Vec<f64>> {
     // This is a placeholder implementation
     // In practice, you would:
     // 1. Load from embedded data files
-    // 2. Use a lookup table based on test parameters
+    // 2. Use a lookup table based on test _parameters
     // 3. Call Python/SciPy via subprocess or FFI
 
-    match test_name {
+    match _test_name {
         "butterworth_lowpass_order2_fs100_fc20" => {
             // Return pre-computed reference data
             Ok(vec![1.0, 0.8, 0.6, 0.4, 0.2]) // Placeholder
@@ -1595,9 +1553,6 @@ fn test_single_window(
     params: &[f64],
     config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
-    use crate::window::kaiser::kaiser;
-    use crate::window::{blackman, hamming, hann, tukey};
-
     // Our implementation
     let our_window = match window_type {
         "hann" => hann(n)?,
@@ -1613,7 +1568,7 @@ fn test_single_window(
         }
         _ => {
             return Err(SignalError::ValueError(format!(
-                "Unknown window type: {}",
+                "Unknown window _type: {}",
                 window_type
             )))
         }
@@ -1635,9 +1590,7 @@ fn test_single_window(
 #[allow(dead_code)]
 fn reference_multitaper_psd(
     signal: &[f64],
-    fs: f64,
-    _nw: f64,
-    _k: Option<usize>,
+    fs: f64_nw: f64, _k: Option<usize>,
 ) -> SignalResult<Vec<f64>> {
     // Simplified reference - in practice would use actual SciPy output
     // This should be replaced with either:
@@ -1724,8 +1677,7 @@ fn reference_ar_spectrum(
 #[allow(dead_code)]
 fn reference_dwt_reconstruction(
     signal: &[f64],
-    wavelet: Wavelet,
-    _level: usize,
+    wavelet: Wavelet_level: usize,
 ) -> SignalResult<Vec<f64>> {
     // Simplified reference implementation for DWT perfect reconstruction
     // In practice, this would use pywt.wavedec + pywt.waverec
@@ -1787,7 +1739,7 @@ fn reference_window_function(
         }
         "blackman" => {
             for i in 0..n {
-                let phase = 2.0 * PI * i as f64 / (n - 1) as f64;
+                let phase = 2.0 * PI * i as f64 / (n - 1)  as f64;
                 window[i] = 0.42 - 0.5 * phase.cos() + 0.08 * (2.0 * phase).cos();
             }
         }
@@ -1796,7 +1748,7 @@ fn reference_window_function(
             // Simplified Kaiser window (without proper Bessel function)
             for i in 0..n {
                 let x = 2.0 * i as f64 / (n - 1) as f64 - 1.0;
-                let arg = beta * (1.0 - x * x).sqrt();
+                let arg = beta * ((1.0 - x * x) as f64).sqrt();
                 window[i] = (arg / beta).exp(); // Simplified approximation
             }
         }
@@ -1806,10 +1758,10 @@ fn reference_window_function(
 
             for i in 0..n {
                 if i < taper_len {
-                    let phase = PI * i as f64 / taper_len as f64;
+                    let phase = PI * i as f64 / taper_len  as f64;
                     window[i] = 0.5 * (1.0 - phase.cos());
                 } else if i >= n - taper_len {
-                    let phase = PI * (n - 1 - i) as f64 / taper_len as f64;
+                    let phase = PI * (n - 1 - i) as f64 / taper_len  as f64;
                     window[i] = 0.5 * (1.0 - phase.cos());
                 } else {
                     window[i] = 1.0;
@@ -1818,7 +1770,7 @@ fn reference_window_function(
         }
         _ => {
             return Err(SignalError::ValueError(format!(
-                "Unknown window type: {}",
+                "Unknown window _type: {}",
                 window_type
             )))
         }
@@ -1843,8 +1795,7 @@ pub fn validate_quick() -> SignalResult<ValidationResults> {
 /// Reference signal generation for validation testing
 #[allow(dead_code)]
 fn reference_signal_generation(
-    t: &[f64],
-    _fs: f64,
+    t: &[f64], _fs: f64,
     signal_type: &str,
     freq: f64,
 ) -> SignalResult<Vec<f64>> {
@@ -1901,7 +1852,7 @@ fn reference_signal_generation(
         }
         _ => {
             return Err(SignalError::ValueError(format!(
-                "Unknown signal type: {}",
+                "Unknown signal _type: {}",
                 signal_type
             )))
         }
@@ -1912,23 +1863,23 @@ fn reference_signal_generation(
 
 /// Generate detailed validation report
 #[allow(dead_code)]
-pub fn generate_validation_report(results: &ValidationResults) -> String {
+pub fn generate_validation_report(_results: &ValidationResults) -> String {
     let mut report = String::new();
 
     report.push_str("=== SciPy Numerical Validation Report ===\n\n");
 
     // Summary
-    report.push_str(&results.summary_report());
+    report.push_str(&_results.summary_report());
     report.push_str("\n\n");
 
-    // Detailed results
+    // Detailed _results
     report.push_str("=== Detailed Test Results ===\n\n");
 
-    let mut test_names: Vec<_> = results.test_results.keys().collect();
+    let mut test_names: Vec<_> = _results.test_results.keys().collect();
     test_names.sort();
 
     for test_name in test_names {
-        let result = &results.test_results[test_name];
+        let result = &_results.test_results[test_name];
 
         report.push_str(&format!("Test: {}\n", result.test_name));
         report.push_str(&format!(
@@ -1958,11 +1909,11 @@ pub fn generate_validation_report(results: &ValidationResults) -> String {
     }
 
     // Recommendations
-    if !results.all_passed() {
+    if !_results.all_passed() {
         report.push_str("=== Recommendations ===\n\n");
         report.push_str("The following tests failed and require attention:\n\n");
 
-        for failure in results.failures() {
+        for failure in _results.failures() {
             report.push_str(&format!(
                 "- {}: {}\n",
                 failure.test_name,
@@ -2049,8 +2000,8 @@ mod tests {
 
         let hann_window = reference_window_function(n, "hann", &[]).unwrap();
         assert_eq!(hann_window.len(), n);
-        assert!((hann_window[0] - 0.0).abs() < 1e-10); // Hann window starts at 0
-        assert!((hann_window[n / 2] - 1.0).abs() < 0.1); // Approximate peak at center
+        assert!(((hann_window[0] - 0.0) as f64).abs() < 1e-10); // Hann window starts at 0
+        assert!(((hann_window[n / 2] - 1.0) as f64).abs() < 0.1); // Approximate peak at center
 
         let hamming_window = reference_window_function(n, "hamming", &[]).unwrap();
         assert_eq!(hamming_window.len(), n);
@@ -2072,6 +2023,6 @@ mod tests {
         // Square wave should be either 1.0 or -1.0
         assert!(square_signal
             .iter()
-            .all(|&x| (x - 1.0).abs() < 1e-10 || (x + 1.0).abs() < 1e-10));
+            .all((|&x| (x - 1.0) as f64).abs() < 1e-10 || ((x + 1.0) as f64).abs() < 1e-10));
     }
 }

@@ -1,6 +1,6 @@
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
-use crate::tensor_ops::convert_to_tensor;
+use crate::tensor__ops::convert_to_tensor;
 use crate::Float;
 use ndarray::{Array2, ArrayView2, Ix2};
 
@@ -77,8 +77,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for PolarExtractOp {
 
         match self.component {
             0 => ctx.append_output(u.into_dyn()),
-            1 => ctx.append_output(p.into_dyn()),
-            _ => {
+            1 => ctx.append_output(p.into_dyn(), _ => {
                 return Err(OpError::Other(
                     "Invalid component index for polar decomposition".into(),
                 ))
@@ -171,8 +170,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for SchurExtractOp {
 
         match self.component {
             0 => ctx.append_output(q.into_dyn()),
-            1 => ctx.append_output(t.into_dyn()),
-            _ => {
+            1 => ctx.append_output(t.into_dyn(), _ => {
                 return Err(OpError::Other(
                     "Invalid component index for Schur decomposition".into(),
                 ))
@@ -205,7 +203,7 @@ fn compute_polar_decomposition<F: Float + ndarray::ScalarOperand>(
     // A = UΣV^T => polar decomposition: A = (UV^T)(VΣV^T)
 
     // For simplicity, use power iteration to get dominant singular vectors
-    let (_u_vec, _sigma) = power_iteration_svd(matrix, 20, F::epsilon() * F::from(100.0).unwrap());
+    let (_u_vec_sigma) = power_iteration_svd(matrix, 20, F::epsilon() * F::from(100.0).unwrap());
 
     if m == n && n <= 3 {
         // For small square matrices, use simplified approach
@@ -298,17 +296,17 @@ fn compute_schur_decomposition<F: Float + ndarray::ScalarOperand>(
 
 /// Simple QR decomposition using Gram-Schmidt
 #[allow(dead_code)]
-fn compute_qr<F: Float>(matrix: &ArrayView2<F>) -> Result<(Array2<F>, Array2<F>), OpError> {
-    let (m, n) = matrix.dim();
+fn compute_qr<F: Float>(_matrix: &ArrayView2<F>) -> Result<(Array2<F>, Array2<F>), OpError> {
+    let (m, n) = _matrix.dim();
     let k = m.min(n);
 
     let mut q = Array2::<F>::zeros((m, k));
     let mut r = Array2::<F>::zeros((k, n));
 
     for j in 0..k {
-        // Copy column j of matrix to column j of Q
+        // Copy column j of _matrix to column j of Q
         for i in 0..m {
-            q[[i, j]] = matrix[[i, j]];
+            q[[i, j]] = _matrix[[i, j]];
         }
 
         // Orthogonalize against previous columns
@@ -342,7 +340,7 @@ fn compute_qr<F: Float>(matrix: &ArrayView2<F>) -> Result<(Array2<F>, Array2<F>)
         for col in (j + 1)..n {
             let mut dot_product = F::zero();
             for row in 0..m {
-                dot_product += q[[row, j]] * matrix[[row, col]];
+                dot_product += q[[row, j]] * _matrix[[row, col]];
             }
             r[[j, col]] = dot_product;
         }
@@ -411,11 +409,11 @@ fn matrix_sqrt<F: Float + ndarray::ScalarOperand>(
 
 /// Simple matrix inverse for small matrices
 #[allow(dead_code)]
-fn matrix_inverse_simple<F: Float>(matrix: &ArrayView2<F>) -> Result<Array2<F>, OpError> {
-    let n = matrix.shape()[0];
+fn matrix_inverse_simple<F: Float>(_matrix: &ArrayView2<F>) -> Result<Array2<F>, OpError> {
+    let n = _matrix.shape()[0];
 
     if n == 1 {
-        let elem = matrix[[0, 0]];
+        let elem = _matrix[[0, 0]];
         if elem.abs() < F::epsilon() {
             return Err(OpError::Other("Matrix is singular".into()));
         }
@@ -423,10 +421,10 @@ fn matrix_inverse_simple<F: Float>(matrix: &ArrayView2<F>) -> Result<Array2<F>, 
         inv[[0, 0]] = F::one() / elem;
         Ok(inv)
     } else if n == 2 {
-        let a = matrix[[0, 0]];
-        let b = matrix[[0, 1]];
-        let c = matrix[[1, 0]];
-        let d = matrix[[1, 1]];
+        let a = _matrix[[0, 0]];
+        let b = _matrix[[0, 1]];
+        let c = _matrix[[1, 0]];
+        let d = _matrix[[1, 1]];
 
         let det = a * d - b * c;
         if det.abs() < F::epsilon() {
@@ -442,7 +440,7 @@ fn matrix_inverse_simple<F: Float>(matrix: &ArrayView2<F>) -> Result<Array2<F>, 
         Ok(inv)
     } else {
         // For larger matrices, use Gauss-Jordan elimination
-        let mut a = matrix.to_owned();
+        let mut a = _matrix.to_owned();
         let mut inv = Array2::<F>::eye(n);
 
         for i in 0..n {
@@ -491,11 +489,11 @@ fn matrix_inverse_simple<F: Float>(matrix: &ArrayView2<F>) -> Result<Array2<F>, 
 
 /// Check if matrix is diagonal
 #[allow(dead_code)]
-fn is_diagonal<F: Float>(matrix: &ArrayView2<F>) -> bool {
-    let (m, n) = matrix.dim();
+fn is_diagonal<F: Float>(_matrix: &ArrayView2<F>) -> bool {
+    let (m, n) = _matrix.dim();
     for i in 0..m {
         for j in 0..n {
-            if i != j && matrix[[i, j]].abs() > F::epsilon() {
+            if i != j && _matrix[[i, j]].abs() > F::epsilon() {
                 return false;
             }
         }
@@ -505,12 +503,12 @@ fn is_diagonal<F: Float>(matrix: &ArrayView2<F>) -> bool {
 
 /// Check if matrix is invertible (simplified)
 #[allow(dead_code)]
-fn is_invertible<F: Float>(matrix: &ArrayView2<F>) -> bool {
-    let n = matrix.shape()[0];
+fn is_invertible<F: Float>(_matrix: &ArrayView2<F>) -> bool {
+    let n = _matrix.shape()[0];
 
     // Simple check: diagonal dominance
     for i in 0..n {
-        if matrix[[i, i]].abs() < F::epsilon() {
+        if _matrix[[i, i]].abs() < F::epsilon() {
             return false;
         }
     }
@@ -525,7 +523,7 @@ fn power_iteration_svd<F: Float + ndarray::ScalarOperand>(
     max_iter: usize,
     tol: F,
 ) -> (ndarray::Array1<F>, F) {
-    let (m, _n) = matrix.dim();
+    let (m_n) = matrix.dim();
 
     // Initialize with random unit vector
     let mut u = ndarray::Array1::<F>::zeros(m);
@@ -537,7 +535,7 @@ fn power_iteration_svd<F: Float + ndarray::ScalarOperand>(
     }
 
     // Normalize
-    let norm = u.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+    let norm = u._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
     if norm > F::epsilon() {
         u.mapv_inplace(|x| x / norm);
     }
@@ -552,13 +550,13 @@ fn power_iteration_svd<F: Float + ndarray::ScalarOperand>(
         let atau = matrix.t().dot(&au);
 
         // Compute norm
-        let sigma = atau.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+        let sigma = atau._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
 
         // Check convergence
         if (sigma - prev_sigma).abs() < tol {
             let au_final = matrix.dot(&u);
             let sigma_final = au_final
-                .iter()
+                ._iter()
                 .fold(F::zero(), |acc, &x| acc + x * x)
                 .sqrt();
             return (u, sigma_final);
@@ -567,7 +565,7 @@ fn power_iteration_svd<F: Float + ndarray::ScalarOperand>(
         prev_sigma = sigma;
 
         // Normalize for next iteration
-        let norm = atau.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+        let norm = atau._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
         if norm > F::epsilon() {
             u = atau.mapv(|x| x / norm);
         }
@@ -575,7 +573,7 @@ fn power_iteration_svd<F: Float + ndarray::ScalarOperand>(
 
     // Final estimate
     let au = matrix.dot(&u);
-    let sigma = au.iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
+    let sigma = au._iter().fold(F::zero(), |acc, &x| acc + x * x).sqrt();
     (u, sigma)
 }
 

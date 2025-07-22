@@ -33,8 +33,8 @@ use std::marker::PhantomData;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::optimizers::{SAM, SGD};
-/// use scirs2_optim::Optimizer;
+/// use scirs2__optim::optimizers::{SAM, SGD};
+/// use scirs2__optim::Optimizer;
 ///
 /// // Create a base optimizer
 /// let sgd = SGD::new(0.1);
@@ -45,7 +45,7 @@ use std::marker::PhantomData;
 /// // First step to compute perturbed parameters and store perturbed gradients
 /// let params = Array1::zeros(10);
 /// let gradients = Array1::ones(10);
-/// let (perturbed_params, _) = optimizer.first_step(&params, &gradients).unwrap();
+/// let (perturbed_params_) = optimizer.first_step(&params, &gradients).unwrap();
 ///
 /// // Second step to update original parameters using gradients at perturbed parameters
 /// // Normally, you would compute new gradients at perturbed_params
@@ -81,28 +81,26 @@ where
     D: Dimension,
 {
     /// Creates a new SAM optimizer with the given inner optimizer and default settings
-    pub fn new(inner_optimizer: O) -> Self {
+    pub fn new(_inner_optimizer: O) -> Self {
         Self {
-            inner_optimizer,
+            _inner_optimizer,
             rho: A::from(0.05).unwrap(),
             epsilon: A::from(1e-12).unwrap(),
             adaptive: false,
             perturbed_params: None,
-            original_params: None,
-            _phantom: PhantomData,
+            original_params: None, _phantom: PhantomData,
         }
     }
 
     /// Creates a new SAM optimizer with the given inner optimizer and configuration
-    pub fn with_config(inner_optimizer: O, rho: A, adaptive: bool) -> Self {
+    pub fn with_config(_inner_optimizer: O, rho: A, adaptive: bool) -> Self {
         Self {
-            inner_optimizer,
+            _inner_optimizer,
             rho,
             epsilon: A::from(1e-12).unwrap(),
             adaptive,
             perturbed_params: None,
-            original_params: None,
-            _phantom: PhantomData,
+            original_params: None, _phantom: PhantomData,
         }
     }
 
@@ -217,13 +215,12 @@ where
     ///
     /// Updated parameters after applying the "sharpness-aware" update
     pub fn second_step(
-        &mut self,
-        _params: &Array<A, D>,
+        &mut self_params: &Array<A, D>,
         gradients: &Array<A, D>,
     ) -> Result<Array<A, D>> {
         // Get original parameters
         let original_params = match &self.original_params {
-            Some(params) => params,
+            Some(_params) => _params,
             None => {
                 return Err(OptimError::OptimizationError(
                     "Must call first_step before second_step".to_string(),
@@ -261,8 +258,7 @@ where
             epsilon: self.epsilon,
             adaptive: self.adaptive,
             perturbed_params: self.perturbed_params.clone(),
-            original_params: self.original_params.clone(),
-            _phantom: PhantomData,
+            original_params: self.original_params.clone(), _phantom: PhantomData,
         }
     }
 }
@@ -295,7 +291,7 @@ where
         // for both steps, which doesn't fully implement the SAM algorithm
 
         // First step: compute perturbed parameters
-        let (_, _) = self.first_step(params, gradients)?;
+        let (__) = self.first_step(params, gradients)?;
 
         // Second step: update with the same gradients
         // Note: In a real implementation, you should compute new gradients at the perturbed point
@@ -313,12 +309,12 @@ where
 
 /// Calculate the L2 norm of an array
 #[allow(dead_code)]
-fn calculate_norm<A, D>(array: &Array<A, D>) -> Result<A>
+fn calculate_norm<A, D>(_array: &Array<A, D>) -> Result<A>
 where
     A: Float + ScalarOperand + Debug,
     D: Dimension,
 {
-    let squared_sum = array.iter().fold(A::zero(), |acc, &x| acc + x * x);
+    let squared_sum = _array.iter().fold(A::zero(), |acc, &x| acc + x * x);
     let norm = squared_sum.sqrt();
 
     if !norm.is_finite() {
@@ -340,7 +336,7 @@ mod tests {
     #[test]
     fn test_sam_creation() {
         let sgd = SGD::new(0.01);
-        let optimizer: SAM<f64, _, ndarray::Ix1> = SAM::new(sgd);
+        let optimizer: SAM<f64_, ndarray::Ix1> = SAM::new(sgd);
 
         assert_abs_diff_eq!(optimizer.rho(), 0.05);
         assert_abs_diff_eq!(optimizer.get_learning_rate(), 0.01);
@@ -350,7 +346,7 @@ mod tests {
     #[test]
     fn test_sam_with_config() {
         let sgd = SGD::new(0.01);
-        let optimizer: SAM<f64, _, ndarray::Ix1> = SAM::with_config(sgd, 0.1, true);
+        let optimizer: SAM<f64_, ndarray::Ix1> = SAM::with_config(sgd, 0.1, true);
 
         assert_abs_diff_eq!(optimizer.rho(), 0.1);
         assert!(optimizer.is_adaptive());
@@ -359,7 +355,7 @@ mod tests {
     #[test]
     fn test_sam_first_step() {
         let sgd = SGD::new(0.1);
-        let mut optimizer: SAM<f64, _, ndarray::Ix1> = SAM::new(sgd);
+        let mut optimizer: SAM<f64_, ndarray::Ix1> = SAM::new(sgd);
 
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
@@ -384,7 +380,7 @@ mod tests {
     #[test]
     fn test_sam_adaptive() {
         let sgd = SGD::new(0.1);
-        let mut optimizer: SAM<f64, _, ndarray::Ix1> = SAM::with_config(sgd, 0.05, true);
+        let mut optimizer: SAM<f64_, ndarray::Ix1> = SAM::with_config(sgd, 0.05, true);
 
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
@@ -409,13 +405,13 @@ mod tests {
     #[test]
     fn test_sam_second_step() {
         let sgd = SGD::new(0.1);
-        let mut optimizer: SAM<f64, _, ndarray::Ix1> = SAM::new(sgd);
+        let mut optimizer: SAM<f64_, ndarray::Ix1> = SAM::new(sgd);
 
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
 
         // First step to set up perturbed parameters
-        let (_, _) = optimizer.first_step(&params, &gradients).unwrap();
+        let (__) = optimizer.first_step(&params, &gradients).unwrap();
 
         // Simulate computing new gradients at perturbed point
         let new_gradients = Array1::from_vec(vec![0.15, 0.25, 0.35]);
@@ -435,7 +431,7 @@ mod tests {
     #[test]
     fn test_sam_reset() {
         let sgd = SGD::new(0.1);
-        let mut optimizer: SAM<f64, _, ndarray::Ix1> = SAM::new(sgd);
+        let mut optimizer: SAM<f64_, ndarray::Ix1> = SAM::new(sgd);
 
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
@@ -454,7 +450,7 @@ mod tests {
     #[test]
     fn test_sam_error_handling() {
         let sgd = SGD::new(0.1);
-        let mut optimizer: SAM<f64, _, ndarray::Ix1> = SAM::new(sgd);
+        let mut optimizer: SAM<f64_, ndarray::Ix1> = SAM::new(sgd);
 
         // Gradient with all zeros should return error
         let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);

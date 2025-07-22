@@ -899,7 +899,7 @@ where
         current = grey_erosion_2d_optimized(&current, Some(struct_elem), Some(1), None, None)?;
 
         // Constrain by mask (pointwise maximum)
-        for ((c, m), _p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
+        for ((c, m)_p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
             *c = (*c).max(*m);
         }
 
@@ -967,7 +967,7 @@ where
         current = grey_dilation_2d_optimized(&current, Some(struct_elem), Some(1), None, None)?;
 
         // Constrain by mask (pointwise minimum)
-        for ((c, m), _p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
+        for ((c, m)_p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
             *c = (*c).min(*m);
         }
 
@@ -1017,8 +1017,7 @@ where
 {
     match method {
         MorphOperation::Dilation => geodesic_dilation_2d(marker, mask, structure, None),
-        MorphOperation::Erosion => geodesic_erosion_2d(marker, mask, structure, None),
-        _ => Err(crate::error::NdimageError::InvalidInput(
+        MorphOperation::Erosion => geodesic_erosion_2d(marker, mask, structure, None, _ => Err(crate::error::NdimageError::InvalidInput(
             "Only dilation and erosion methods are supported for reconstruction".into(),
         )),
     }
@@ -1204,17 +1203,17 @@ where
 
     // This is a simplified implementation
     // In a full implementation, you would use the max-tree or component tree
-    // Here we use a threshold-based approach for demonstration
+    // Here we use a _threshold-based approach for demonstration
 
     let mut result = input.clone();
     let (height, width) = input.dim();
 
-    // Simple threshold-based area opening
-    let threshold = compute_threshold_for_area(input, area_threshold)?;
+    // Simple _threshold-based area opening
+    let _threshold = compute_threshold_for_area(input, area_threshold)?;
 
     for i in 0..height {
         for j in 0..width {
-            if input[[i, j]] < threshold {
+            if input[[i, j]] < _threshold {
                 result[[i, j]] = T::zero();
             }
         }
@@ -1277,16 +1276,16 @@ fn create_structuring_element(
 
 /// Helper function to normalize an array to [0, 1] range
 #[allow(dead_code)]
-fn normalize_array<T>(array: &mut Array2<T>) -> NdimageResult<()>
+fn normalize_array<T>(_array: &mut Array2<T>) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
-    let min_val = array.iter().fold(T::infinity(), |acc, &x| acc.min(x));
-    let max_val = array.iter().fold(T::neg_infinity(), |acc, &x| acc.max(x));
+    let min_val = _array.iter().fold(T::infinity(), |acc, &x| acc.min(x));
+    let max_val = _array.iter().fold(T::neg_infinity(), |acc, &x| acc.max(x));
 
     let range = max_val - min_val;
     if range > T::zero() {
-        for value in array.iter_mut() {
+        for value in _array.iter_mut() {
             *value = (*value - min_val) / range;
         }
     }
@@ -1296,12 +1295,12 @@ where
 
 /// Helper function to compute threshold for area opening
 #[allow(dead_code)]
-fn compute_threshold_for_area<T>(input: &Array2<T>, _area_threshold: usize) -> NdimageResult<T>
+fn compute_threshold_for_area<T>(_input: &Array2<T>, _area_threshold: usize) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
-    // Simplified implementation - use median as threshold
-    let mut values: Vec<T> = input.iter().copied().collect();
+    // Simplified implementation - use median as _threshold
+    let mut values: Vec<T> = _input.iter().copied().collect();
     values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let median_idx = values.len() / 2;

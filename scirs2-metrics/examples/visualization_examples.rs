@@ -4,7 +4,7 @@
 //! for metrics results, such as ROC curves, confusion matrices, etc.
 
 use ndarray::{array, Array2};
-use scirs2_metrics::{
+use scirs2__metrics::{
     classification::confusion_matrix,
     classification::curves::{calibration_curve, precision_recall_curve, roc_curve},
     visualization::{
@@ -15,8 +15,8 @@ use scirs2_metrics::{
 
 // Helper function to print what would be rendered
 #[allow(dead_code)]
-fn print_visualization_info(title: &str, plot_type: &PlotType, filename: &str) {
-    println!("Would render a {plot_type:?} plot titled '{title}' to {filename}");
+fn print_visualization_info(_title: &str, plot_type: &PlotType, filename: &str) {
+    println!("Would render a {plot_type:?} plot titled '{_title}' to {filename}");
 }
 
 #[allow(dead_code)]
@@ -28,7 +28,7 @@ fn main() {
     let y_true = array![0, 1, 2, 0, 1, 2, 0, 1, 2];
     let y_pred = array![0, 2, 1, 0, 0, 2, 1, 1, 2];
 
-    let (cm, _) = confusion_matrix(&y_true, &y_pred, None).unwrap();
+    let (cm_) = confusion_matrix(&y_true, &y_pred, None).unwrap();
     println!("Confusion Matrix:\n{cm:?}");
 
     // Create a visualizer for the confusion matrix
@@ -98,7 +98,7 @@ fn main() {
     println!("\n===== Example 4: Calibration Curve Visualization =====");
 
     // Compute calibration curve
-    let (prob_true, prob_pred, _) = calibration_curve(&y_true_binary, &y_score, Some(5)).unwrap();
+    let (prob_true, prob_pred_) = calibration_curve(&y_true_binary, &y_score, Some(5)).unwrap();
     println!("Calibration Curve Points: {} points", prob_true.len());
 
     // Create a visualizer for the calibration curve

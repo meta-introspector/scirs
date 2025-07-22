@@ -201,7 +201,7 @@ impl PCA {
         n_components: usize,
         n_samples: usize,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
-        use ndarray_linalg::SVD;
+        use ndarray__linalg::SVD;
 
         // Perform SVD: X = U * S * V^T
         let (_u, s, vt) = data
@@ -209,8 +209,8 @@ impl PCA {
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
         let v = vt.unwrap().t().to_owned();
 
-        // Extract components
-        let components = v.slice(ndarray::s![.., ..n_components]).to_owned();
+        // Extract _components
+        let _components = v.slice(ndarray::s![.., ..n_components]).to_owned();
 
         // Compute explained variance
         let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
@@ -221,7 +221,7 @@ impl PCA {
         let explained_variance_ratio = &explained_variance / total_variance;
 
         Ok((
-            components.t().to_owned(),
+            _components.t().to_owned(),
             explained_variance,
             explained_variance_ratio,
             singular_values,
@@ -235,9 +235,9 @@ impl PCA {
         n_components: usize,
         n_samples: usize,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
-        use ndarray_linalg::{QR, SVD};
+        use ndarray__linalg::{QR, SVD};
         use rand::{rngs::StdRng, SeedableRng};
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
 
         let n_features = data.ncols();
         let n_oversamples = 10.min((n_features - n_components) / 2);
@@ -269,21 +269,21 @@ impl PCA {
 
         for _ in 0..n_iter {
             // QR decomposition
-            let (_q_mat, _r) = q.qr().map_err(|e| {
+            let (_q_mat_r) = q.qr().map_err(|e| {
                 StatsError::ComputationError(format!("QR decomposition failed: {}", e))
             })?;
             q = _q_mat;
 
             // Project back
             let z = data.t().dot(&q);
-            let (_q_mat, _r) = z.qr().map_err(|e| {
+            let (_q_mat_r) = z.qr().map_err(|e| {
                 StatsError::ComputationError(format!("QR decomposition failed: {}", e))
             })?;
             q = data.dot(&_q_mat);
         }
 
         // Final QR decomposition
-        let (q_final, _) = q.qr().map_err(|e| {
+        let (q_final_) = q.qr().map_err(|e| {
             StatsError::ComputationError(format!("Final QR decomposition failed: {}", e))
         })?;
 
@@ -297,8 +297,8 @@ impl PCA {
 
         let v = vt.unwrap().t().to_owned();
 
-        // Extract components
-        let components = v.slice(ndarray::s![.., ..n_components]).to_owned();
+        // Extract _components
+        let _components = v.slice(ndarray::s![.., ..n_components]).to_owned();
 
         // Compute explained variance
         let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
@@ -309,7 +309,7 @@ impl PCA {
         let explained_variance_ratio = &explained_variance / total_variance;
 
         Ok((
-            components.t().to_owned(),
+            _components.t().to_owned(),
             explained_variance,
             explained_variance_ratio,
             singular_values,
@@ -393,12 +393,12 @@ impl PCA {
 
 /// Compute the optimal number of components using Minka's MLE
 #[allow(dead_code)]
-pub fn mle_components(data: ArrayView2<f64>, max_components: Option<usize>) -> Result<usize> {
-    check_array_finite(&data, "data")?;
-    let (n_samples, n_features) = data.dim();
+pub fn mle_components(_data: ArrayView2<f64>, max_components: Option<usize>) -> Result<usize> {
+    check_array_finite(&_data, "_data")?;
+    let (n_samples, n_features) = _data.dim();
 
     let pca = PCA::new().with_n_components(max_components.unwrap_or(n_features.min(n_samples)));
-    let result = pca.fit(data)?;
+    let result = pca.fit(_data)?;
 
     let eigenvalues = &result.explained_variance;
     let n = n_samples as f64;
@@ -460,15 +460,14 @@ pub struct IncrementalPCA {
 
 impl IncrementalPCA {
     /// Create a new incremental PCA instance
-    pub fn new(n_components: usize, batch_size: usize) -> Result<Self> {
-        check_positive(n_components, "n_components")?;
+    pub fn new(_n_components: usize, batch_size: usize) -> Result<Self> {
+        check_positive(_n_components, "_n_components")?;
         check_positive(batch_size, "batch_size")?;
 
         Ok(Self {
-            pca: PCA::new().with_n_components(n_components),
+            pca: PCA::new().with_n_components(_n_components),
             batch_size,
-            mean: None,
-            components: None,
+            mean: None_components: None,
             singular_values: None,
             n_samples_seen: 0,
             svd_u: None,
@@ -510,7 +509,7 @@ impl IncrementalPCA {
 
         if self.svd_u.is_none() {
             // First batch - initialize with standard SVD
-            use ndarray_linalg::SVD;
+            use ndarray__linalg::SVD;
             let (u, s, vt) = centered_batch
                 .svd(true, true)
                 .map_err(|e| StatsError::ComputationError(format!("Initial SVD failed: {}", e)))?;
@@ -536,7 +535,7 @@ impl IncrementalPCA {
             let residual = &centered_batch - &projection.dot(&v_old.t());
 
             // QR decomposition of residual
-            use ndarray_linalg::QR;
+            use ndarray__linalg::QR;
             let (q_res, r_res) = residual.qr().map_err(|e| {
                 StatsError::ComputationError(format!("QR decomposition failed: {}", e))
             })?;
@@ -562,7 +561,7 @@ impl IncrementalPCA {
             }
 
             // SVD of augmented matrix
-            use ndarray_linalg::SVD;
+            use ndarray__linalg::SVD;
             let (u_aug, s_aug, vt_aug) = augmented.svd(true, true).map_err(|e| {
                 StatsError::ComputationError(format!("Augmented SVD failed: {}", e))
             })?;

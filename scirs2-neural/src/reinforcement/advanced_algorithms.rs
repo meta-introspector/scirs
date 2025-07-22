@@ -5,7 +5,7 @@
 
 use crate::error::Result;
 use crate::reinforcement::policy::PolicyNetwork;
-use crate::reinforcement::replay_buffer::{PrioritizedReplayBuffer, ReplayBuffer};
+use crate::reinforcement::replay__buffer::{PrioritizedReplayBuffer, ReplayBuffer};
 use crate::reinforcement::value::{QNetwork, ValueNetwork};
 use crate::reinforcement::{ExperienceBatch, LossInfo, RLAgent};
 use ndarray::prelude::*;
@@ -216,7 +216,7 @@ impl TD3 {
         Ok(actor_loss)
     /// Sample noise for exploration or target smoothing
     fn sample_noise(&self, size: usize, std: f32) -> Array1<f32> {
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
         let mut rng = rng();
         let normal = Normal::new(0.0, std).unwrap();
         Array1::from_shape_fn(size, |_| normal.sample(&mut rng))
@@ -534,7 +534,7 @@ impl IMPALA {
             entropy_loss: Some(entropy_loss),
             total_loss,
 impl RLAgent for IMPALA {
-        let (action, _value, _log_prob) = self.actor_critic.forward(observation)?;
+        let (action_value_log_prob) = self.actor_critic.forward(observation)?;
         // Convert batch to trajectory experiences
             let state = batch.states.row(i).to_owned();
             let action = batch.actions.row(i).to_owned();
@@ -658,14 +658,14 @@ impl Default for ExplorationConfig {
             noise_std: 0.1,
             curiosity_beta: 0.1,
 impl ExplorationStrategy {
-    pub fn new(strategy_type: ExplorationStrategyType, config: ExplorationConfig) -> Self {
-            strategy_type,
+    pub fn new(_strategy_type: ExplorationStrategyType, config: ExplorationConfig) -> Self {
+            _strategy_type,
     /// Select action with exploration
     pub fn select_action(
         q_values: &Array1<f32>,
         state: &ArrayView1<f32>,
     ) -> Result<usize> {
-        match self.strategy_type {
+        match self._strategy_type {
             ExplorationStrategyType::EpsilonGreedy => {
                 let epsilon = self.config.epsilon_end + 
                     (self.config.epsilon_start - self.config.epsilon_end) * 
@@ -674,14 +674,16 @@ impl ExplorationStrategy {
                     // Random action
                     use rand::prelude::*;
 use rand::rng;
+use ndarray::ArrayView1;
+use statrs::statistics::Statistics;
                     let mut rng = rng();
                     Ok(rng.random_range(0..q_values.len()))
                 } else {
                     // Greedy action
                     Ok(q_values.iter()
                         .enumerate()
-                        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                        .map(|(i, _)| i)
+                        .max_by(|(_..a), (_, b)| a.partial_cmp(b).unwrap())
+                        .map(|(i_)| i)
                         .unwrap_or(0))
                 }
             ExplorationStrategyType::UCB => {
@@ -696,11 +698,11 @@ use rand::rng;
                 Ok(ucb_values.iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                    .map(|(i, _)| i)
+                    .map(|(i_)| i)
                     .unwrap_or(0))
             ExplorationStrategyType::ThompsonSampling => {
                 // Thompson Sampling (simplified)
-                use rand_distr::{Distribution, Normal};
+                use rand__distr::{Distribution, Normal};
                 let mut rng = rng();
                 let normal = Normal::new(0.0, 1.0).unwrap();
                 let mut sampled_values = Array1::zeros(q_values.len());

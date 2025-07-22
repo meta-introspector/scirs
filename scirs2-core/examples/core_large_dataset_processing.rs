@@ -4,20 +4,21 @@ use scirs2_core::array::{mask_array, MaskedArray};
 use scirs2_core::memory_efficient::{create_disk_array, ChunkingStrategy};
 use std::time::Instant;
 use tempfile::tempdir;
+use statrs::statistics::Statistics;
 
 /// Simulates loading a chunk of a large dataset
 #[allow(dead_code)]
-fn load_data_chunk(_chunk_idx: usize, chunk_size: usize, n_features: usize) -> Array2<f64> {
+fn features( usize) -> Array2<f64> {
     let mut rng = rand::rng();
-    Array2::from_shape_fn((chunk_size, n_features), |_| rng.random_range(0.0..100.0))
+    Array2::from_shape_fn((chunk_size, n_features), |_| rng.gen_range(0.0..100.0))
 }
 
 /// Normalizes data (center and scale)
 #[allow(dead_code)]
-fn normalize_chunk(chunk: &Array2<f64>) -> Array2<f64> {
-    let mut normalized = chunk.clone();
-    for col in 0..chunk.shape()[1] {
-        let column = chunk.slice(ndarray::s![.., col]);
+fn chunk( &Array2<f64>) -> Array2<f64> {
+    let mut normalized = _chunk.clone();
+    for col in 0.._chunk.shape()[1] {
+        let column = _chunk.slice(ndarray::s![....col]);
         let mean = column.mean().unwrap_or(0.0);
         let std_dev = column.std(0.0);
 
@@ -114,7 +115,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a temporary directory for out-of-core storage
     let temp_dir = tempdir()?;
     let normalized_path = temp_dir.path().join("normalized.bin");
-    let _outliers_path = temp_dir.path().join("outliers.bin");
+    let outliers_path = temp_dir.path().join("outliers.bin");
 
     // Step 1: Load and normalize data in chunks
     println!("Step 1: Normalize data in chunks and store on disk");
@@ -137,7 +138,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for i in 1..n_chunks {
         println!("  Processing chunk {}/{}", i + 1, n_chunks);
         let chunk = load_data_chunk(i, chunk_size, n_features);
-        let _normalized = normalize_chunk(&chunk);
+        let normalized = normalize_chunk(&chunk);
 
         // In a real implementation, we would append this to the disk array
         // For this example, we'll just simulate the process
@@ -147,7 +148,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Step 2: Detect outliers and create a masked array
     println!("\nStep 2: Detect outliers in normalized data");
-    let _start = Instant::now();
+    let start = Instant::now();
 
     // Load some chunks back from disk to detect outliers
     let normalized_data = disk_array.load()?;

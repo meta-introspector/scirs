@@ -27,9 +27,9 @@ impl<F: Float + Debug + ScalarOperand> VisualizationCallback<F> {
     ///
     /// # Arguments
     /// * `frequency` - How often to visualize metrics (in epochs)
-    pub fn new(frequency: usize) -> Self {
+    pub fn new(_frequency: usize) -> Self {
         Self {
-            frequency,
+            _frequency,
             show_plots: true,
             save_path: None,
             tracked_metrics: vec!["train_loss".to_string(), "val_loss".to_string()],

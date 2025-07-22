@@ -1,10 +1,12 @@
 //! Histogram-based feature extraction for images
 
-use super::types::ImageFeatureOptions;
+use crate::error::SignalResult;
 use crate::error::SignalResult;
 use ndarray::Array2;
 use std::collections::HashMap;
+use super::types::ImageFeatureOptions;
 
+#[allow(unused_imports)]
 /// Extract histogram features from an image
 #[allow(dead_code)]
 pub fn extract_histogram_features(
@@ -62,7 +64,7 @@ pub fn extract_histogram_features(
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(idx, _)| idx)
+        .map(|(idx_)| idx)
         .unwrap_or(0);
 
     let mode_value = min_val + (mode_bin as f64 + 0.5) * (max_val - min_val) / bin_count as f64;

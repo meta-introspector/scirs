@@ -1,6 +1,6 @@
 use ndarray::{array, Array2};
 use rand::prelude::*;
-use scirs2_spatial::{BoundingBox2D, Quadtree};
+use scirs2__spatial::{BoundingBox2D, Quadtree};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -154,7 +154,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for i in 0..n_points {
         for j in 0..2 {
-            large_points[[i, j]] = rng.random_range(-100.0..100.0);
+            large_points[[i, j]] = rng.gen_range(-100.0..100.0);
         }
     }
 
@@ -164,21 +164,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let build_time = start.elapsed();
 
     println!("  Built quadtree in {build_time:.2?}");
-    println!("  Maximum depth: {}", large_quadtree.max_depth());
+    println!("  Maximum depth: {}"..large_quadtree.max_depth());
 
     // Test nearest neighbor query performance
     println!("\nTesting query performance...");
     let query_point = array![0.0, 0.0];
 
     let start = std::time::Instant::now();
-    let (_indices, _) = large_quadtree.query_nearest(&query_point.view(), 10)?;
+    let (_indices_) = large_quadtree.query_nearest(&query_point.view(), 10)?;
     let query_time = start.elapsed();
 
     println!("  Found 10 nearest neighbors in {query_time:.2?}");
 
     // Test radius search performance
     let start = std::time::Instant::now();
-    let (indices, _) = large_quadtree.query_radius(&query_point.view(), 10.0)?;
+    let (indices_) = large_quadtree.query_radius(&query_point.view(), 10.0)?;
     let radius_time = start.elapsed();
 
     println!(

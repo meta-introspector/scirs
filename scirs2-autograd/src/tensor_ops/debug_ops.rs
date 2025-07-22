@@ -69,18 +69,18 @@ impl<F: Float> Op<F> for DebugScalarOne {
 
 // Public API function
 #[allow(dead_code)]
-pub fn debug_identity_with_gradient<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = tensor.graph();
+pub fn debug_identity_with_gradient<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _tensor.graph();
     Tensor::builder(g)
-        .append_input(tensor, false)
+        .append_input(_tensor, false)
         .build(DebugIdentityWithGradient)
 }
 
 // Public API function
 #[allow(dead_code)]
-pub fn debug_scalar_one<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = tensor.graph();
+pub fn debug_scalar_one<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _tensor.graph();
     Tensor::builder(g)
-        .append_input(tensor, false)
+        .append_input(_tensor, false)
         .build(DebugScalarOne)
 }

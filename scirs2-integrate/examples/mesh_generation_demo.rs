@@ -2,8 +2,8 @@
 //!
 //! A simple demonstration of the automatic mesh generation capabilities.
 
-use scirs2_integrate::pde::finite_element::{ElementType, Point};
-use scirs2_integrate::pde::mesh_generation::{
+use scirs2__integrate::pde::finite_element::{ElementType, Point};
+use scirs2__integrate::pde::mesh_generation::{
     AutoMeshGenerator, BoundarySpecification, Domain, MeshGenerationParams,
 };
 

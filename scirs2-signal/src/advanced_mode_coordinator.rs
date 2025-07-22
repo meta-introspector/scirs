@@ -3,11 +3,14 @@
 //! This module coordinates all Advanced mode enhancements across the signal processing
 //! suite, providing a unified interface for high-performance, validated implementations.
 
+use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use num_traits::Float;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(unused_imports)]
 /// Configuration for Advanced mode operations
 #[derive(Debug, Clone)]
 pub struct AdvancedConfig {
@@ -102,9 +105,9 @@ impl AdvancedCoordinator {
     }
 
     /// Create a new Advanced coordinator with custom configuration
-    pub fn with_config(config: AdvancedConfig) -> Self {
+    pub fn with_config(_config: AdvancedConfig) -> Self {
         Self {
-            config,
+            _config,
             performance_history: Vec::new(),
         }
     }

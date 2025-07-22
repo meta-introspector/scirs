@@ -5,7 +5,7 @@
 
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_spatial::{
+use scirs2__spatial::{
     distance::{euclidean, pdist},
     simd_distance::{parallel_pdist, simd_euclidean_distance_batch},
     KDTree,
@@ -77,13 +77,13 @@ fn report_simd_capabilities() {
 }
 
 #[allow(dead_code)]
-fn generate_test_data(n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
+fn generate_test_data(_n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
+    Array2::from_shape_fn((_n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
 }
 
 #[allow(dead_code)]
-fn benchmark_distance_calculations() -> Result<(), Box<dyn std::error::Error>> {
+fn benchmark_distance_calculations() -> Result<()..Box<dyn std::error::Error>> {
     println!("  Comparing SIMD vs Scalar distance calculations:");
     println!(
         "  {:>8} {:>8} {:>12} {:>12} {:>10}",
@@ -242,7 +242,7 @@ fn generate_recommendations() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use scirs2_spatial::simd_distance::simd_euclidean_distance;
+    use scirs2__spatial::simd_distance::simd_euclidean_distance;
 
     #[test]
     fn test_benchmark_demo() {

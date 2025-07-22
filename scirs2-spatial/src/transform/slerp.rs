@@ -28,7 +28,7 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 /// # Examples
 ///
 /// ```
-/// use scirs2_spatial::transform::{Rotation, Slerp};
+/// use scirs2__spatial::transform::{Rotation, Slerp};
 /// use ndarray::array;
 /// use std::f64::consts::PI;
 ///
@@ -76,7 +76,7 @@ impl Slerp {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, Slerp};
+    /// use scirs2__spatial::transform::{Rotation, Slerp};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -84,8 +84,8 @@ impl Slerp {
     /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
     /// let slerp = Slerp::new(rot1, rot2).unwrap();
     /// ```
-    pub fn new(start: Rotation, end: Rotation) -> SpatialResult<Self> {
-        let q1 = start.as_quat();
+    pub fn new(_start: Rotation, end: Rotation) -> SpatialResult<Self> {
+        let q1 = _start.as_quat();
         let mut q2 = end.as_quat();
 
         // Calculate the dot product between quaternions
@@ -113,7 +113,7 @@ impl Slerp {
         }
 
         Ok(Slerp {
-            start,
+            _start,
             end,
             q1,
             q2,
@@ -134,7 +134,7 @@ impl Slerp {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, Slerp};
+    /// use scirs2__spatial::transform::{Rotation, Slerp};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -151,7 +151,7 @@ impl Slerp {
     /// // Get rotation at t=0.75 (75% from rot1 to rot2)
     /// let rot_75 = slerp.interpolate(0.75);
     /// ```
-    pub fn interpolate(&self, t: f64) -> Rotation {
+    pub fn interpolate(t: f64) -> Rotation {
         // Clamp t to [0, 1]
         let t = t.clamp(0.0, 1.0);
 
@@ -197,7 +197,7 @@ impl Slerp {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::transform::{Rotation, Slerp};
+    /// use scirs2__spatial::transform::{Rotation, Slerp};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -209,7 +209,7 @@ impl Slerp {
     /// let times = slerp.times(5);
     /// // Should be [0.0, 0.25, 0.5, 0.75, 1.0]
     /// ```
-    pub fn times(&self, n: usize) -> Vec<f64> {
+    pub fn times(n: usize) -> Vec<f64> {
         if n <= 1 {
             return vec![0.0];
         }
@@ -227,7 +227,6 @@ impl Slerp {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::array;
     use std::f64::consts::PI;
 
     #[test]

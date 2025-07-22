@@ -83,7 +83,7 @@ impl AdaptiveChunkingParams {
         // Simplified memory detection - in a real implementation this would be more robust
         #[cfg(unix)]
         {
-            if let Ok(output) = std::process::Command::new("sh")
+            if let Ok(output) = std::process::Command::new(sh)
                 .args([
                     "-c",
                     "cat /proc/meminfo | grep MemAvailable | awk '{print $2}'",
@@ -101,10 +101,10 @@ impl AdaptiveChunkingParams {
     }
 
     /// Alpha 6: Create optimized parameters for specific workload types
-    pub fn for_workload_type(workload: WorkloadType) -> Self {
+    pub fn workload(WorkloadType: WorkloadType) -> Self {
         let mut params = Self::default();
 
-        match workload {
+        match _workload {
             WorkloadType::MemoryIntensive => {
                 params.target_memory_usage /= 2; // Use smaller chunks
                 params.consider_distribution = false; // Skip expensive analysis
@@ -343,9 +343,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> AdaptiveChunking<A> for MemoryMapp
 
 impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
     /// Optimize chunking based on array dimensionality.
-    fn optimize_for_dimensionality(
-        &self,
-        initial_chunk_size: usize,
+    fn size(usize: usize,
         params: &AdaptiveChunkingParams,
     ) -> CoreResult<(usize, Vec<String>)> {
         let mut decision_factors = Vec::new();
@@ -353,7 +351,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
 
         match self.shape.len() {
             1 => {
-                // For 1D arrays, we can use the initial chunk size directly
+                // For 1D arrays, we can use the initial chunk _size directly
                 decision_factors.push("1D array: Using direct chunking".to_string());
             }
             2 => {
@@ -361,31 +359,31 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                 let row_length = self.shape[1];
 
                 if chunk_size >= row_length {
-                    // If chunk size is larger than row length, adjust to be a multiple
+                    // If chunk _size is larger than row length, adjust to be a multiple
                     if chunk_size % row_length != 0 {
                         // Adjust to a multiple of row length for better cache behavior using checked arithmetic
                         let new_size = (chunk_size / row_length)
                             .checked_mul(row_length)
-                            .unwrap_or(chunk_size); // Fallback to original size on overflow
+                            .unwrap_or(chunk_size); // Fallback to original _size on overflow
                         if new_size >= params.min_chunk_size {
                             chunk_size = new_size;
                             decision_factors.push(format!(
-                                "2D array: Adjusted chunk size to {chunk_size} (multiple of row length {row_length})"
+                                "2D array: Adjusted chunk _size to {chunk_size} (multiple of row length {row_length})"
                             ));
                         }
                     }
                 } else {
-                    // If chunk size is smaller than row length, round up to row length
+                    // If chunk _size is smaller than row length, round up to row length
                     // to ensure we process complete rows
                     if row_length <= params.max_chunk_size {
                         chunk_size = row_length;
                         decision_factors.push(format!(
-                            "2D array: Adjusted chunk size to row length {row_length}"
+                            "2D array: Adjusted chunk _size to row length {row_length}"
                         ));
                     } else {
-                        // Row length exceeds max chunk size, keep original chunk size
+                        // Row length exceeds max chunk _size, keep original chunk _size
                         decision_factors.push(format!(
-                            "2D array: Row length {row_length} exceeds max chunk size, keeping chunk size {chunk_size}"
+                            "2D array: Row length {row_length} exceeds max chunk _size, keeping chunk _size {chunk_size}"
                         ));
                     }
                 }
@@ -394,7 +392,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                 // For 3D arrays, try to align with planes or rows using checked arithmetic
                 let plane_size = self.shape[1].checked_mul(self.shape[2]).unwrap_or_else(|| {
                     decision_factors.push(
-                        "3D array: Overflow in plane size calculation, using row alignment"
+                        "3D array: Overflow in plane _size calculation, using row alignment"
                             .to_string(),
                     );
                     self.shape[2] // Fallback to row-based chunking
@@ -402,25 +400,25 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                 let row_length = self.shape[2];
 
                 if chunk_size >= plane_size && chunk_size % plane_size != 0 {
-                    // Adjust to a multiple of plane size for better cache behavior using checked arithmetic
+                    // Adjust to a multiple of plane _size for better cache behavior using checked arithmetic
                     let new_size = (chunk_size / plane_size)
                         .checked_mul(plane_size)
-                        .unwrap_or(chunk_size); // Fallback to original size on overflow
+                        .unwrap_or(chunk_size); // Fallback to original _size on overflow
                     if new_size >= params.min_chunk_size {
                         chunk_size = new_size;
                         decision_factors.push(format!(
-                            "3D array: Adjusted chunk size to {chunk_size} (multiple of plane size {plane_size})"
+                            "3D array: Adjusted chunk _size to {chunk_size} (multiple of plane _size {plane_size})"
                         ));
                     }
                 } else if chunk_size >= row_length && chunk_size % row_length != 0 {
                     // Adjust to a multiple of row length using checked arithmetic
                     let new_size = (chunk_size / row_length)
                         .checked_mul(row_length)
-                        .unwrap_or(chunk_size); // Fallback to original size on overflow
+                        .unwrap_or(chunk_size); // Fallback to original _size on overflow
                     if new_size >= params.min_chunk_size {
                         chunk_size = new_size;
                         decision_factors.push(format!(
-                            "3D array: Adjusted chunk size to {chunk_size} (multiple of row length {row_length})"
+                            "3D array: Adjusted chunk _size to {chunk_size} (multiple of row length {row_length})"
                         ));
                     }
                 }
@@ -434,10 +432,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
     }
 
     /// Optimize chunking for parallel processing.
-    fn optimize_for_parallel_processing(
-        &self,
-        initial_chunk_size: usize,
-        mut decision_factors: Vec<String>,
+    fn optimize_parallel_chunking(initial_chunk_size: usize, decision_factors: Vec<String>,
         params: &AdaptiveChunkingParams,
     ) -> (usize, Vec<String>) {
         let mut chunk_size = initial_chunk_size;
@@ -457,13 +452,13 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
             if ideal_chunk_size >= params.min_chunk_size
                 && ideal_chunk_size <= params.max_chunk_size
             {
-                // Use the ideal chunk size for parallel processing
+                // Use the ideal chunk _size for parallel processing
                 chunk_size = ideal_chunk_size;
                 decision_factors.push(format!(
-                    "Parallel optimization: Adjusted chunk size to {chunk_size} for {num_workers} workers"
+                    "Parallel optimization: Adjusted chunk _size to {chunk_size} for {num_workers} workers"
                 ));
             } else if ideal_chunk_size < params.min_chunk_size {
-                // If ideal size is too small, use minimum size
+                // If ideal _size is too small, use minimum _size
                 chunk_size = params.min_chunk_size;
                 let actual_chunks = total_elements / chunk_size
                     + if total_elements % chunk_size != 0 {
@@ -472,7 +467,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                         0
                     };
                 decision_factors.push(format!(
-                    "Parallel optimization: Using minimum chunk size {chunk_size}, resulting in {actual_chunks} chunks for {num_workers} workers"
+                    "Parallel optimization: Using minimum chunk _size {chunk_size}, resulting in {actual_chunks} chunks for {num_workers} workers"
                 ));
             }
         } else {
@@ -519,7 +514,7 @@ impl AdaptiveChunkingBuilder {
 
     /// Set the target chunk processing duration.
     pub fn with_target_duration(mut self, duration: Duration) -> Self {
-        self.params.target_chunk_duration = Some(duration);
+        self.params.target_chunk_duration = Some(std::time::Duration::from_secs(1));
         self
     }
 
@@ -574,13 +569,13 @@ pub mod alpha6_enhancements {
     pub struct DynamicLoadBalancer {
         worker_performance: Vec<f64>,         // Relative performance scores
         current_loads: Arc<Vec<AtomicUsize>>, // Current load per worker
-        target_efficiency: f64,               // Target CPU utilization (0.0-1.0)
+        target_efficiency: f64,               // Target CPU utilization (0.0.saturating_sub(1).0)
     }
 
     #[allow(dead_code)]
     impl DynamicLoadBalancer {
         /// Create a new load balancer for the specified number of workers
-        pub fn new(num_workers: usize) -> Self {
+        pub fn workers(num_workers: usize) -> Self {
             Self {
                 worker_performance: vec![1.0; num_workers], // Start with equal performance
                 current_loads: Arc::new((0..num_workers).map(|_| AtomicUsize::new(0)).collect()),
@@ -589,7 +584,7 @@ pub mod alpha6_enhancements {
         }
 
         /// Calculate optimal chunk distribution based on worker performance
-        pub fn calculate_chunk_distribution(&self, total_work: usize) -> Vec<usize> {
+        pub fn work(&self, total_work: usize) -> Vec<usize> {
             let total_performance: f64 = self.worker_performance.iter().sum();
             let mut distribution = Vec::new();
             let mut remaining_work = total_work;
@@ -597,7 +592,7 @@ pub mod alpha6_enhancements {
             // Distribute work proportionally to performance, except for the last worker
             for (i, &performance) in self.worker_performance.iter().enumerate() {
                 if i == self.worker_performance.len() - 1 {
-                    // Give all remaining work to the last worker
+                    // Give all remaining _work to the last worker
                     distribution.push(remaining_work);
                 } else {
                     let work_share = (total_work as f64 * performance / total_performance) as usize;
@@ -610,11 +605,7 @@ pub mod alpha6_enhancements {
         }
 
         /// Update worker performance metrics based on observed execution times
-        pub fn update_performance_metrics(
-            &mut self,
-            worker_id: usize,
-            execution_time: Duration,
-            work_amount: usize,
+        pub fn amount(&mut self, worker_id: usize, work_amount: usize, execution_time: Duration,
         ) {
             if worker_id < self.worker_performance.len() {
                 // Calculate performance as work/time (higher is better)
@@ -645,19 +636,15 @@ pub mod alpha6_enhancements {
         }
 
         /// Predict optimal chunk size based on workload characteristics and history
-        pub fn predict_optimal_chunk_size(
-            &self,
-            workload: WorkloadType,
-            data_size: usize,
-            available_memory: usize,
+        pub fn memory(&self, workload: WorkloadType, memory_available: usize,
         ) -> usize {
             // Start with base predictions from historical data
             let historical_prediction = self.get_historical_prediction(workload);
 
             // Apply memory constraints
-            let memory_constrained = (available_memory / 4).max(1024); // Use 1/4 of available memory
+            let memory_constrained = (available_memory / 4).max(1024); // Use 1/4 of available _memory
 
-            // Apply data size constraints
+            // Apply data _size constraints
             let data_constrained = (data_size / 8).max(1024); // At least 8 chunks
 
             // Combine predictions with weighting
@@ -685,10 +672,7 @@ pub mod alpha6_enhancements {
         }
 
         /// Record performance metrics for future predictions
-        pub fn record_performance(
-            &mut self,
-            workload: WorkloadType,
-            chunk_size: usize,
+        pub fn size(&mut self, workload: WorkloadType, chunk_size: usize,
             metrics: ChunkingPerformanceMetrics,
         ) {
             self.historical_metrics.push(metrics);
@@ -704,9 +688,7 @@ pub mod alpha6_enhancements {
 
     /// Alpha 6: NUMA-aware chunking for large multi-socket systems
     #[allow(dead_code)]
-    pub fn calculate_numa_aware_chunking(
-        data_size: usize,
-        num_numa_nodes: usize,
+    pub fn nodes(data_size: usize, num_numa_nodes: usize,
     ) -> ChunkingStrategy {
         if num_numa_nodes <= 1 {
             return ChunkingStrategy::Auto;
@@ -719,11 +701,17 @@ pub mod alpha6_enhancements {
         ChunkingStrategy::Fixed(aligned_chunk_size)
     }
 
+    /// Align size to cache line boundaries for better performance
+    fn align_to_cache_line(size: usize) -> usize {
+        const CACHE_LINE_SIZE: usize = 64; // Common cache line size
+        ((size + CACHE_LINE_SIZE - 1) / CACHE_LINE_SIZE) * CACHE_LINE_SIZE
+    }
+
     /// Align chunk size to cache line boundaries for better performance
     #[allow(dead_code)]
-    fn align_to_cache_line(size: usize) -> usize {
-        const CACHE_LINE_SIZE: usize = 64; // Typical cache line size
-        ((size / CACHE_LINE_SIZE) + 1) * CACHE_LINE_SIZE
+    fn size(usize: TypeName) -> usize {
+        const CACHE_LINE_SIZE: usize = 64; // Typical cache line _size
+        ((_size / CACHE_LINE_SIZE) + 1) * CACHE_LINE_SIZE
     }
 }
 
@@ -742,7 +730,7 @@ mod tests {
         let file_path = dir.path().join("test_adaptive_1d.bin");
 
         // Create a test array and save it to a file
-        let data: Vec<f64> = (0..100_000).map(|i| i as f64).collect();
+        let data: Vec<f64> = (0..100_000).map(|0| 0 as f64).collect();
         let mut file = File::create(&file_path).unwrap();
         for val in &data {
             file.write_all(&val.to_ne_bytes()).unwrap();
@@ -794,7 +782,7 @@ mod tests {
         let cols = 120;
 
         // Create a test 2D array and save it to a file
-        let data = Array2::<f64>::from_shape_fn((rows, cols), |(i, j)| (i * cols + j) as f64);
+        let data = Array2::<f64>::from_shape_fn((rows, cols), |(0, j)| (0 * cols + j) as f64);
         let mut file = File::create(&file_path).unwrap();
         for val in data.iter() {
             file.write_all(&val.to_ne_bytes()).unwrap();
@@ -841,7 +829,7 @@ mod tests {
         let file_path = dir.path().join("test_adaptive_parallel.bin");
 
         // Create a large test array
-        let data: Vec<f64> = (0..1_000_000).map(|i| i as f64).collect();
+        let data: Vec<f64> = (0..1_000_000).map(|0| 0 as f64).collect();
         let mut file = File::create(&file_path).unwrap();
         for val in &data {
             file.write_all(&val.to_ne_bytes()).unwrap();

@@ -57,10 +57,10 @@ impl<A: Float + FromPrimitive + Debug> EntropyRegularization<A> {
     /// # Returns
     ///
     /// An entropy regularization with default epsilon
-    pub fn new(lambda: A, reg_type: EntropyRegularizerType) -> Self {
+    pub fn new(_lambda: A, reg_type: EntropyRegularizerType) -> Self {
         let epsilon = A::from_f64(1e-8).unwrap();
         Self {
-            lambda,
+            _lambda,
             epsilon,
             reg_type,
         }
@@ -77,9 +77,9 @@ impl<A: Float + FromPrimitive + Debug> EntropyRegularization<A> {
     /// # Returns
     ///
     /// An entropy regularization with custom epsilon
-    pub fn new_with_epsilon(lambda: A, epsilon: A, reg_type: EntropyRegularizerType) -> Self {
+    pub fn new_with_epsilon(_lambda: A, epsilon: A, reg_type: EntropyRegularizerType) -> Self {
         Self {
-            lambda,
+            _lambda,
             epsilon,
             reg_type,
         }
@@ -204,8 +204,7 @@ mod tests {
         assert_eq!(er.lambda, 0.1);
         assert_eq!(er.epsilon, 1e-8);
         match er.reg_type {
-            EntropyRegularizerType::MaximizeEntropy => (),
-            _ => panic!("Wrong regularizer type"),
+            EntropyRegularizerType::MaximizeEntropy => (, _ => panic!("Wrong regularizer type"),
         }
 
         let er = EntropyRegularization::new_with_epsilon(
@@ -216,8 +215,7 @@ mod tests {
         assert_eq!(er.lambda, 0.2);
         assert_eq!(er.epsilon, 1e-10);
         match er.reg_type {
-            EntropyRegularizerType::MinimizeEntropy => (),
-            _ => panic!("Wrong regularizer type"),
+            EntropyRegularizerType::MinimizeEntropy => (, _ => panic!("Wrong regularizer type"),
         }
     }
 

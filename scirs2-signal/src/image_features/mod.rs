@@ -4,7 +4,13 @@
 //! including color histograms, texture features, edge features, and more.
 //! These features can be used for image analysis, classification, and retrieval.
 
+use crate::error::{SignalError, SignalResult};
+use ndarray::Array2;
+use std::collections::HashMap;
+use std::fmt::Debug;
+
 // Import internal modules
+#[allow(unused_imports)]
 mod color;
 mod edge;
 mod haralick;
@@ -28,11 +34,6 @@ pub use texture::extract_texture_features;
 pub use types::ImageFeatureOptions;
 
 // Common imports for internal use
-use crate::error::{SignalError, SignalResult};
-use ndarray::Array2;
-use std::collections::HashMap;
-use std::fmt::Debug;
-
 /// Extract features from a grayscale image
 ///
 /// # Arguments
@@ -48,7 +49,7 @@ use std::fmt::Debug;
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_signal::image_features::{extract_image_features, ImageFeatureOptions};
+/// use scirs2__signal::image_features::{extract_image_features, ImageFeatureOptions};
 ///
 /// // Create a simple test image (8x8)
 /// let mut image = Array2::zeros((8, 8));
@@ -134,7 +135,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array3, Dim};
-/// use scirs2_signal::image_features::{extract_color_image_features, ImageFeatureOptions};
+/// use scirs2__signal::image_features::{extract_color_image_features, ImageFeatureOptions};
 ///
 /// // Create a simple test RGB image (8x8x3)
 /// let mut image = Array3::zeros((8, 8, 3));

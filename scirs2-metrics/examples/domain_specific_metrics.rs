@@ -4,7 +4,7 @@
 //! different machine learning domains.
 
 use ndarray::Array1;
-use scirs2_metrics::domains::*;
+use scirs2__metrics::domains::*;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 /// Computer Vision - Object Detection Example
 #[allow(dead_code)]
 fn computer_vision_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    use scirs2_metrics::domains::computer_vision::*;
+    use scirs2__metrics::domains::computer_vision::*;
 
     let cv_metrics = ObjectDetectionMetrics::new().with_confidence_threshold(0.5);
 
@@ -95,7 +95,7 @@ fn computer_vision_example() -> Result<(), Box<dyn std::error::Error + Send + Sy
 /// Natural Language Processing - Text Classification Example
 #[allow(dead_code)]
 fn nlp_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    use scirs2_metrics::domains::nlp::*;
+    use scirs2__metrics::domains::nlp::*;
 
     // Text Generation Example
     let text_gen_metrics = TextGenerationMetrics::new();
@@ -137,7 +137,7 @@ fn nlp_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 /// Time Series - Forecasting Example
 #[allow(dead_code)]
 fn time_series_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    use scirs2_metrics::domains::time_series::*;
+    use scirs2__metrics::domains::time_series::*;
 
     let forecasting_metrics = ForecastingMetrics::new();
 
@@ -194,7 +194,7 @@ fn time_series_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
 /// Recommender Systems - Ranking Example
 #[allow(dead_code)]
 fn recommender_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    use scirs2_metrics::domains::recommender::*;
+    use scirs2__metrics::domains::recommender::*;
 
     let ranking_metrics = RecommenderRankingMetrics::new()
         .with_k_values(vec![5, 10])
@@ -253,7 +253,7 @@ fn recommender_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
 /// Anomaly Detection Example
 #[allow(dead_code)]
 fn anomaly_detection_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    use scirs2_metrics::domains::anomaly_detection::*;
+    use scirs2__metrics::domains::anomaly_detection::*;
 
     // Basic Detection Metrics
     let detection_metrics = DetectionMetrics::new().with_threshold(0.5);

@@ -5,7 +5,7 @@
 //! data quality issues.
 
 use ndarray::Array2;
-use scirs2_datasets::{
+use scirs2__datasets::{
     add_time_series_noise, inject_missing_data, inject_outliers, load_iris, make_corrupted_dataset,
     make_time_series, MissingPattern, OutlierType,
 };
@@ -341,8 +341,8 @@ fn demonstrate_real_world_applications() {
 
 /// Calculate basic statistics for a 2D array
 #[allow(dead_code)]
-fn calculate_basic_stats(data: &Array2<f64>) -> (f64, f64, f64, f64) {
-    let valid_values: Vec<f64> = data.iter().filter(|&&x| !x.is_nan()).cloned().collect();
+fn calculate_basic_stats(_data: &Array2<f64>) -> (f64, f64, f64, f64) {
+    let valid_values: Vec<f64> = _data.iter().filter(|&&x| !x.is_nan()).cloned().collect();
 
     if valid_values.is_empty() {
         return (0.0, 0.0, 0.0, 0.0);

@@ -3,8 +3,8 @@
 //! This example shows how to use the Infomap algorithm to detect community structure
 //! in graphs using information-theoretic principles.
 
-use scirs2_graph::algorithms::louvain_communities_result;
-use scirs2_graph::{generators::create_graph, infomap_communities};
+use scirs2__graph::algorithms::louvain_communities_result;
+use scirs2__graph::{generators::create_graph, infomap_communities};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

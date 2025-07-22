@@ -457,7 +457,7 @@ fn trust_region_subproblem(
         // Take the step
         let s_next = &s + &(&p * alpha);
 
-        // Check if we exceed the trust radius
+        // Check if we exceed the trust _radius
         if s_next.dot(&s_next).sqrt() >= trust_radius {
             // Find the boundary step
             let (_alpha, boundary_step) = find_boundary_step(&s, &p, trust_radius);
@@ -683,7 +683,7 @@ fn trust_region_exact_subproblem(
             step += &(&eigvec_i * newton_step[i]);
         }
 
-        // Check if the Newton step is within the trust radius
+        // Check if the Newton step is within the trust _radius
         let step_norm = step.dot(&step).sqrt();
         if step_norm <= trust_radius {
             // Unconstrained minimizer is within the trust region
@@ -805,8 +805,8 @@ fn solve_tridiagonal_system(t: &Array2<f64>, b: &Array1<f64>, lambda: f64) -> Ar
 
 /// Compute eigendecomposition of a matrix (simplified version)
 #[allow(dead_code)]
-fn compute_eig_decomposition(mat: &Array2<f64>) -> (Array1<f64>, Array2<f64>) {
-    let n = mat.nrows();
+fn compute_eig_decomposition(_mat: &Array2<f64>) -> (Array1<f64>, Array2<f64>) {
+    let n = _mat.nrows();
 
     // This is a simplistic approach to eigendecomposition
     // For production code, you would use a library like nalgebra or ndarray-linalg
@@ -815,7 +815,7 @@ fn compute_eig_decomposition(mat: &Array2<f64>) -> (Array1<f64>, Array2<f64>) {
     let mut eigvecs = Array2::zeros((n, n));
 
     // Create a copy of the matrix for deflation
-    let mut mat_copy = mat.clone();
+    let mut mat_copy = _mat.clone();
 
     for k in 0..n {
         // Initialize a simple vector for the power method

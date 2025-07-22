@@ -4,7 +4,7 @@
 //! which store only the upper triangular portion of a symmetric distance matrix
 //! in a flattened 1D array format for memory efficiency.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::Debug;
 
@@ -28,7 +28,7 @@ use crate::error::{ClusteringError, Result};
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::hierarchy::condensed_matrix::square_to_condensed;
+/// use scirs2__cluster::hierarchy::condensed_matrix::square_to_condensed;
 ///
 /// let square = Array2::from_shape_vec((3, 3), vec![
 ///     0.0, 1.0, 2.0,
@@ -48,14 +48,14 @@ pub fn square_to_condensed<F: Float + Zero + Copy>(
 
     if n != m {
         return Err(ClusteringError::InvalidInput(format!(
-            "Distance matrix must be square, got {}x{}",
+            "Distance _matrix must be square, got {}x{}",
             n, m
         )));
     }
 
     if n < 2 {
         return Err(ClusteringError::InvalidInput(
-            "Distance matrix must be at least 2x2".to_string(),
+            "Distance _matrix must be at least 2x2".to_string(),
         ));
     }
 
@@ -90,7 +90,7 @@ pub fn square_to_condensed<F: Float + Zero + Copy>(
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_cluster::hierarchy::condensed_matrix::condensed_to_square;
+/// use scirs2__cluster::hierarchy::condensed_matrix::condensed_to_square;
 ///
 /// let condensed = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 /// let square = condensed_to_square(condensed.view()).unwrap();
@@ -114,7 +114,7 @@ pub fn condensed_to_square<F: Float + Zero + Copy>(
 
     if n * (n - 1) / 2 != condensed_len {
         return Err(ClusteringError::InvalidInput(format!(
-            "Invalid condensed matrix size: {} elements doesn't correspond to n*(n-1)/2 for any integer n",
+            "Invalid condensed _matrix size: {} elements doesn't correspond to n*(n-1)/2 for any integer n",
             condensed_len
         )));
     }
@@ -154,7 +154,7 @@ pub fn condensed_to_square<F: Float + Zero + Copy>(
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_cluster::hierarchy::condensed_matrix::get_distance;
+/// use scirs2__cluster::hierarchy::condensed_matrix::get_distance;
 ///
 /// let condensed = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 /// let distance = get_distance(condensed.view(), 0, 2, 3).unwrap();
@@ -181,7 +181,7 @@ pub fn get_distance<F: Float + Zero + Copy>(
     let expected_len = n * (n - 1) / 2;
     if condensed_matrix.len() != expected_len {
         return Err(ClusteringError::InvalidInput(format!(
-            "Condensed matrix length {} doesn't match expected {} for n={}",
+            "Condensed _matrix length {} doesn't match expected {} for n={}",
             condensed_matrix.len(),
             expected_len,
             n
@@ -191,12 +191,12 @@ pub fn get_distance<F: Float + Zero + Copy>(
     // Ensure i < j for indexing
     let (min_idx, max_idx) = if i < j { (i, j) } else { (j, i) };
 
-    // Calculate the index in the condensed matrix
+    // Calculate the index in the condensed _matrix
     let condensed_idx = n * min_idx - (min_idx * (min_idx + 1)) / 2 + (max_idx - min_idx - 1);
 
     if condensed_idx >= condensed_matrix.len() {
         return Err(ClusteringError::InvalidInput(format!(
-            "Computed index {} is out of bounds for condensed matrix of length {}",
+            "Computed index {} is out of bounds for condensed _matrix of length {}",
             condensed_idx,
             condensed_matrix.len()
         )));
@@ -248,7 +248,7 @@ pub fn set_distance<F: Float + Zero + Copy>(
     let expected_len = n * (n - 1) / 2;
     if condensed_matrix.len() != expected_len {
         return Err(ClusteringError::InvalidInput(format!(
-            "Condensed matrix length {} doesn't match expected {} for n={}",
+            "Condensed _matrix length {} doesn't match expected {} for n={}",
             condensed_matrix.len(),
             expected_len,
             n
@@ -258,12 +258,12 @@ pub fn set_distance<F: Float + Zero + Copy>(
     // Ensure i < j for indexing
     let (min_idx, max_idx) = if i < j { (i, j) } else { (j, i) };
 
-    // Calculate the index in the condensed matrix
+    // Calculate the index in the condensed _matrix
     let condensed_idx = n * min_idx - (min_idx * (min_idx + 1)) / 2 + (max_idx - min_idx - 1);
 
     if condensed_idx >= condensed_matrix.len() {
         return Err(ClusteringError::InvalidInput(format!(
-            "Computed index {} is out of bounds for condensed matrix of length {}",
+            "Computed index {} is out of bounds for condensed _matrix of length {}",
             condensed_idx,
             condensed_matrix.len()
         )));
@@ -306,11 +306,11 @@ pub fn condensed_size(n: usize) -> usize {
 ///
 /// * `Result<usize>` - Number of points, or error if size is invalid
 #[allow(dead_code)]
-pub fn points_from_condensed_size(condensed_len: usize) -> Result<usize> {
-    let n_float = (1.0 + (1.0 + 8.0 * condensed_len as f64).sqrt()) / 2.0;
+pub fn points_from_condensed_size(_condensed_len: usize) -> Result<usize> {
+    let n_float = (1.0 + (1.0 + 8.0 * _condensed_len as f64).sqrt()) / 2.0;
     let n = n_float as usize;
 
-    if n * (n - 1) / 2 != condensed_len {
+    if n * (n - 1) / 2 != _condensed_len {
         return Err(ClusteringError::InvalidInput(format!(
             "Invalid condensed matrix size: {} elements doesn't correspond to n*(n-1)/2 for any integer n",
             condensed_len
@@ -340,7 +340,7 @@ pub fn validate_condensed_matrix<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     if condensed_len == 0 {
         return Err(ClusteringError::InvalidInput(
-            "Condensed matrix cannot be empty".to_string(),
+            "Condensed _matrix cannot be empty".to_string(),
         ));
     }
 
@@ -349,7 +349,7 @@ pub fn validate_condensed_matrix<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     if n < 2 {
         return Err(ClusteringError::InvalidInput(
-            "Condensed matrix must represent at least 2 points".to_string(),
+            "Condensed _matrix must represent at least 2 points".to_string(),
         ));
     }
 

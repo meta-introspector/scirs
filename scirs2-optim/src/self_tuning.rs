@@ -11,7 +11,6 @@ use crate::optimizers::*;
 use crate::schedulers::*;
 use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
-use scirs2_core::random;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
@@ -342,7 +341,7 @@ impl<
     > SelfTuningOptimizer<A, D>
 {
     /// Create new self-tuning optimizer
-    pub fn new(config: SelfTuningConfig) -> Result<Self> {
+    pub fn new(_config: SelfTuningConfig) -> Result<Self> {
         let mut optimizer_candidates = Vec::new();
 
         // Add default optimizer candidates
@@ -401,7 +400,7 @@ impl<
         };
 
         Ok(Self {
-            config,
+            _config,
             current_optimizer,
             optimizer_candidates,
             performance_history: VecDeque::new(),
@@ -495,7 +494,7 @@ impl<
     }
 
     /// Determine if optimizer should be adapted
-    fn should_adapt_optimizer(&self, _stats: &PerformanceStats) -> bool {
+    fn should_adapt_optimizer(&self_stats: &PerformanceStats) -> bool {
         if self.performance_history.len() < self.config.evaluation_window / 2 {
             return false;
         }
@@ -595,7 +594,7 @@ impl<
         let mut best_score = f64::NEG_INFINITY;
         let mut best_idx = 0;
 
-        for (i, _candidate) in self.optimizer_candidates.iter().enumerate() {
+        for (i_candidate) in self.optimizer_candidates.iter().enumerate() {
             let ucb_score = if self.bandit_state.selection_counts[i] == 0 {
                 f64::INFINITY
             } else {
@@ -618,11 +617,11 @@ impl<
 
     /// Epsilon-greedy optimizer selection
     fn select_epsilon_greedy(&self) -> usize {
-        let mut rng = random::rng();
+        let mut rng = scirs2_core::random::rng();
 
         if A::from(rng.random_f64()).unwrap() < A::from(self.config.exploration_rate).unwrap() {
             // Explore: random selection
-            rng.random_range(0, self.optimizer_candidates.len())
+            rng.gen_range(0..self.optimizer_candidates.len())
         } else {
             // Exploit: best performing optimizer
             self.bandit_state
@@ -630,7 +629,7 @@ impl<
                 .iter()
                 .enumerate()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap_or(0)
         }
     }
@@ -638,17 +637,17 @@ impl<
     /// Thompson sampling optimizer selection
     fn select_thompson_sampling(&self) -> usize {
         // Simplified Thompson sampling - in practice would use Beta distributions
-        let mut rng = random::rng();
+        let mut rng = scirs2_core::random::rng();
 
         let mut best_sample = f64::NEG_INFINITY;
         let mut best_idx = 0;
 
-        for (i, _) in self.optimizer_candidates.iter().enumerate() {
+        for (i_) in self.optimizer_candidates.iter().enumerate() {
             let mean = self.bandit_state.reward_estimates[i];
             let std = self.bandit_state.confidence_bounds[i];
-            let sample = rng.random_range(mean - std, mean + std);
+            let sample = rng.gen_range(mean - std..mean + std);
 
-            if sample > best_sample {
+            if sample > A::from(best_sample).unwrap() {
                 best_sample = sample;
                 best_idx = i;
             }
@@ -673,12 +672,12 @@ impl<
                     .partial_cmp(&b.1.average_performance)
                     .unwrap()
             })
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap_or(0)
     }
 
     /// Meta-learning based optimizer selection
-    fn select_optimizer_meta_learning(&self, _stats: &PerformanceStats) -> usize {
+    fn select_optimizer_meta_learning(&self_stats: &PerformanceStats) -> usize {
         // Simplified meta-learning - would use problem features in practice
         0
     }
@@ -717,7 +716,7 @@ impl<
     }
 
     /// Adapt other hyperparameters
-    fn maybe_adapt_hyperparameters(&mut self, _stats: &PerformanceStats) -> Result<()> {
+    fn maybe_adapt_hyperparameters(&mut self_stats: &PerformanceStats) -> Result<()> {
         // Placeholder for hyperparameter adaptation
         // Would implement Bayesian optimization, random search, etc.
         Ok(())
@@ -812,21 +811,19 @@ pub struct SelfTuningStatistics {
 
 // Wrapper implementations for existing optimizers
 struct AdamOptimizerWrapper<A: Float + ScalarOperand + Debug, D: Dimension> {
-    inner: crate::optimizers::Adam<A>,
-    _phantom: std::marker::PhantomData<D>,
+    inner: crate::optimizers::Adam<A>, _phantom: std::marker::PhantomData<D>,
 }
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> AdamOptimizerWrapper<A, D> {
-    fn new(lr: f64, beta1: f64, beta2: f64, eps: f64, weight_decay: f64) -> Self {
+    fn new(_lr: f64, beta1: f64, beta2: f64, eps: f64, weight_decay: f64) -> Self {
         Self {
             inner: crate::optimizers::Adam::new_with_config(
-                A::from(lr).unwrap(),
+                A::from(_lr).unwrap(),
                 A::from(beta1).unwrap(),
                 A::from(beta2).unwrap(),
                 A::from(eps).unwrap(),
                 A::from(weight_decay).unwrap(),
-            ),
-            _phantom: std::marker::PhantomData,
+            ), _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -867,32 +864,29 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
         HashMap::new()
     }
 
-    fn set_state(&mut self, _state: HashMap<String, Vec<u8>>) -> Result<()> {
+    fn set_state(&mut self_state: HashMap<String, Vec<u8>>) -> Result<()> {
         Ok(())
     }
 
     fn clone_optimizer(&self) -> Box<dyn OptimizerTrait<A, D>> {
         Box::new(AdamOptimizerWrapper {
-            inner: self.inner.clone(),
-            _phantom: std::marker::PhantomData,
+            inner: self.inner.clone(), _phantom: std::marker::PhantomData,
         })
     }
 }
 
 struct SGDOptimizerWrapper<A: Float + ScalarOperand + Debug, D: Dimension> {
-    inner: crate::optimizers::SGD<A>,
-    _phantom: std::marker::PhantomData<D>,
+    inner: crate::optimizers::SGD<A>, _phantom: std::marker::PhantomData<D>,
 }
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> SGDOptimizerWrapper<A, D> {
-    fn new(lr: f64, momentum: f64, weight_decay: f64, _nesterov: bool) -> Self {
+    fn new(_lr: f64, momentum: f64, weight_decay: f64, _nesterov: bool) -> Self {
         Self {
             inner: crate::optimizers::SGD::new_with_config(
-                A::from(lr).unwrap(),
+                A::from(_lr).unwrap(),
                 A::from(momentum).unwrap(),
                 A::from(weight_decay).unwrap(),
-            ),
-            _phantom: std::marker::PhantomData,
+            ), _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -933,34 +927,31 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
         HashMap::new()
     }
 
-    fn set_state(&mut self, _state: HashMap<String, Vec<u8>>) -> Result<()> {
+    fn set_state(&mut self_state: HashMap<String, Vec<u8>>) -> Result<()> {
         Ok(())
     }
 
     fn clone_optimizer(&self) -> Box<dyn OptimizerTrait<A, D>> {
         Box::new(SGDOptimizerWrapper {
-            inner: self.inner.clone(),
-            _phantom: std::marker::PhantomData,
+            inner: self.inner.clone(), _phantom: std::marker::PhantomData,
         })
     }
 }
 
 struct AdamWOptimizerWrapper<A: Float + ScalarOperand + Debug, D: Dimension> {
-    inner: crate::optimizers::AdamW<A>,
-    _phantom: std::marker::PhantomData<D>,
+    inner: crate::optimizers::AdamW<A>, _phantom: std::marker::PhantomData<D>,
 }
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> AdamWOptimizerWrapper<A, D> {
-    fn new(lr: f64, beta1: f64, beta2: f64, eps: f64, weight_decay: f64) -> Self {
+    fn new(_lr: f64, beta1: f64, beta2: f64, eps: f64, weight_decay: f64) -> Self {
         Self {
             inner: crate::optimizers::AdamW::new_with_config(
-                A::from(lr).unwrap(),
+                A::from(_lr).unwrap(),
                 A::from(beta1).unwrap(),
                 A::from(beta2).unwrap(),
                 A::from(eps).unwrap(),
                 A::from(weight_decay).unwrap(),
-            ),
-            _phantom: std::marker::PhantomData,
+            ), _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1001,14 +992,13 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
         HashMap::new()
     }
 
-    fn set_state(&mut self, _state: HashMap<String, Vec<u8>>) -> Result<()> {
+    fn set_state(&mut self_state: HashMap<String, Vec<u8>>) -> Result<()> {
         Ok(())
     }
 
     fn clone_optimizer(&self) -> Box<dyn OptimizerTrait<A, D>> {
         Box::new(AdamWOptimizerWrapper {
-            inner: self.inner.clone(),
-            _phantom: std::marker::PhantomData,
+            inner: self.inner.clone(), _phantom: std::marker::PhantomData,
         })
     }
 }

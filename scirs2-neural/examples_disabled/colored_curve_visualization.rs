@@ -1,7 +1,7 @@
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand::rngs::SmallRng;
-use rand_distr::StandardNormal;
+use rand__distr::StandardNormal;
 use scirs2_neural::utils::colors::ColorOptions;
 use scirs2_neural::utils::evaluation::{LearningCurve, ROCCurve};
 
@@ -22,9 +22,9 @@ fn main() {
         .iter()
         .map(|&label| {
             if label == 1 {
-                0.7 + 0.3 * rng.sample::<f64, _>(StandardNormal)
+                0.7 + 0.3 * rng.sample::<f64>(StandardNormal)
             } else {
-                0.3 + 0.3 * rng.sample::<f64, _>(StandardNormal)
+                0.3 + 0.3 * rng.sample::<f64>(StandardNormal)
             }
         })
     // Convert to ndarray views
@@ -51,15 +51,15 @@ fn main() {
     // Simulate learning curves for different training set sizes
     let train_sizes = Array1::from(vec![100, 200, 300, 400, 500]);
     // Simulated training scores for each size (5 sizes, 3 CV folds)
-    let train_scores = Array2::from_shape_fn((5, 3), |(i, _j)| {
+    let train_scores = Array2::from_shape_fn((5, 3), |(i_j)| {
         let base = 0.5 + 0.4 * (i as f64 / 4.0);
-        let noise = 0.05 * rng.sample::<f64, _>(StandardNormal);
+        let noise = 0.05 * rng.sample::<f64>(StandardNormal);
         base + noise
     });
     // Simulated validation scores (typically lower than training)
-    let val_scores = Array2::from_shape_fn((5, 3), |(i, _j)| {
+    let val_scores = Array2::from_shape_fn((5, 3), |(i_j)| {
         let base = 0.4 + 0.3 * (i as f64 / 4.0);
-        let noise = 0.07 * rng.sample::<f64, _>(StandardNormal);
+        let noise = 0.07 * rng.sample::<f64>(StandardNormal);
     // Create learning curve
     let learning_curve = LearningCurve::new(train_sizes, train_scores, val_scores).unwrap();
     // Plot learning curve with color

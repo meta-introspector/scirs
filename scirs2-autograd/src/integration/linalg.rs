@@ -29,9 +29,9 @@ pub struct LinalgContext<'a, F: Float> {
 
 impl<'a, F: Float> LinalgContext<'a, F> {
     /// Create new linalg context
-    pub fn new(operation: LinalgOperation) -> Self {
+    pub fn new(_operation: LinalgOperation) -> Self {
         Self {
-            operation,
+            _operation,
             inputs: Vec::new(),
             parameters: HashMap::new(),
             grad_mode: GradientMode::Forward,
@@ -356,7 +356,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         })
     }
 
-    fn execute_custom(&self, _name: &str) -> Result<LinalgResult<'a, F>, IntegrationError> {
+    fn execute_custom(&self_name: &str) -> Result<LinalgResult<'a, F>, IntegrationError> {
         // Placeholder for custom operations
         let graph = if !self.inputs.is_empty() {
             self.inputs[0].graph()
@@ -564,10 +564,9 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         let norm_value = match norm_type {
             "1" => self.compute_l1_norm(input),
             "2" | "fro" => self.compute_l2_norm(input),
-            "inf" => self.compute_inf_norm(input),
-            _ => {
+            "inf" => self.compute_inf_norm(input, _ => {
                 return Err(IntegrationError::ModuleCompatibility(format!(
-                    "Unsupported norm type: {norm_type}"
+                    "Unsupported norm _type: {norm_type}"
                 )))
             }
         };
@@ -811,7 +810,7 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         }
     }
 
-    fn assess_stability(&self, _inputs: &[Tensor<F>]) -> NumericalStability {
+    fn assess_stability(&self_inputs: &[Tensor<F>]) -> NumericalStability {
         // Simplified stability assessment
         NumericalStability::Stable
     }
@@ -856,16 +855,14 @@ impl LinalgParameter {
     pub fn as_float(&self) -> Option<f64> {
         match self {
             LinalgParameter::Float(val) => Some(*val),
-            LinalgParameter::Int(val) => Some(*val as f64),
-            _ => None,
+            LinalgParameter::Int(val) => Some(*val as f64, _ => None,
         }
     }
 
     /// Get as string
     pub fn as_string(&self) -> Option<String> {
         match self {
-            LinalgParameter::String(val) => Some(val.clone()),
-            _ => None,
+            LinalgParameter::String(val) => Some(val.clone(), _ => None,
         }
     }
 }
@@ -987,9 +984,9 @@ pub fn create_matmul_context<'a, F: Float>(
 
 /// Create an SVD context
 #[allow(dead_code)]
-pub fn create_svd_context<F: Float>(input: Tensor<F>, full_matrices: bool) -> LinalgContext<F> {
+pub fn create_svd_context<F: Float>(_input: Tensor<F>, full_matrices: bool) -> LinalgContext<F> {
     LinalgContext::new(LinalgOperation::SVD)
-        .add_input(input)
+        .add_input(_input)
         .add_parameter(
             "full_matrices".to_string(),
             LinalgParameter::Bool(full_matrices),
@@ -1160,7 +1157,7 @@ mod tests {
                         memory_accesses: tensor.data().len() as u64,
                     },
                     numerical_stability: NumericalStability::Stable,
-                    memory_usage: tensor.data().len() * std::mem::size_of::<f32>(),
+                    memory_usage: tensor.data().len() * std::mem::size, _of::<f32>(),
                 },
             };
 

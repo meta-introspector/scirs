@@ -278,19 +278,13 @@ impl super::PlottingBackend for PlotlyInteractiveBackend {
     }
 
     fn render_svg(
-        &self,
-        _data: &VisualizationData,
-        _metadata: &VisualizationMetadata,
-        _options: &VisualizationOptions,
+        &self_data: &VisualizationData, _metadata: &VisualizationMetadata_options: &VisualizationOptions,
     ) -> Result<Vec<u8>, Box<dyn Error>> {
         Err("SVG rendering not supported by Plotly interactive backend".into())
     }
 
     fn render_png(
-        &self,
-        _data: &VisualizationData,
-        _metadata: &VisualizationMetadata,
-        _options: &VisualizationOptions,
+        &self_data: &VisualizationData, _metadata: &VisualizationMetadata_options: &VisualizationOptions,
     ) -> Result<Vec<u8>, Box<dyn Error>> {
         Err("PNG rendering not supported by Plotly interactive backend".into())
     }

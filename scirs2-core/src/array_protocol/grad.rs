@@ -20,7 +20,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
-use ndarray::{Array, Dimension, IxDyn};
+use ndarray::{Array, ArrayD, Dimension, IxDyn};
 
 use crate::array_protocol::operations::matmul;
 use crate::array_protocol::{ArrayProtocol, NdarrayWrapper};
@@ -112,7 +112,7 @@ impl Default for GradientDict {
 
 // Convert Box<dyn ArrayProtocol> to Rc<dyn ArrayProtocol> with proper trait object handling
 #[allow(dead_code)]
-fn box_to_rc_array_protocol(boxed: Box<dyn ArrayProtocol>) -> Rc<dyn ArrayProtocol> {
+fn boxed_to_rc(boxed: Box<dyn ArrayProtocol>) -> Rc<dyn ArrayProtocol> {
     // We need to create an Rc from a Box that contains a trait object.
     // The most reliable way is to create a new NdarrayWrapper by extracting the ndarray data.
 
@@ -131,8 +131,14 @@ fn box_to_rc_array_protocol(boxed: Box<dyn ArrayProtocol>) -> Rc<dyn ArrayProtoc
 
     // If that fails, try other types like f32, etc.
     // For now, create a placeholder 1x1 array as fallback
-    let fallback_array = Array::<f64, _>::zeros(IxDyn(&[1, 1]));
+    let fallback_array = ArrayD::<f64>::zeros(IxDyn(&[1, 1]));
     Rc::new(NdarrayWrapper::new(fallback_array))
+}
+
+// Helper function to convert Box<dyn ArrayProtocol> to Rc<dyn ArrayProtocol>
+#[allow(dead_code)]
+fn box_to_rc_array_protocol(boxed: Box<dyn ArrayProtocol>) -> Rc<dyn ArrayProtocol> {
+    boxed_to_rc(boxed)
 }
 
 // Import the functions with the correct return type for our use
@@ -157,24 +163,24 @@ fn ones_like(a: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
     // Try different numeric types
     if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
         let shape = a_array.as_array().shape();
-        let ones = Array::<f64, _>::ones(IxDyn(shape));
+        let ones = ArrayD::<f64>::ones(IxDyn(shape));
         Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
     } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>() {
         let shape = a_array.as_array().shape();
-        let ones = Array::<f32, _>::ones(IxDyn(shape));
+        let ones = ArrayD::<f32>::ones(IxDyn(shape));
         Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
     } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>() {
         let shape = a_array.as_array().shape();
-        let ones = Array::<i32, _>::ones(IxDyn(shape));
+        let ones = ArrayD::<i32>::ones(IxDyn(shape));
         Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
     } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>() {
         let shape = a_array.as_array().shape();
-        let ones = Array::<i64, _>::ones(IxDyn(shape));
+        let ones = ArrayD::<i64>::ones(IxDyn(shape));
         Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
     } else {
         // Try to get shape information using the array protocol methods
         let shape = a.shape().to_vec();
-        let ones = Array::<f64, _>::ones(IxDyn(&shape));
+        let ones = ArrayD::<f64>::ones(IxDyn(&shape));
         Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
     }
 }
@@ -187,7 +193,7 @@ fn broadcast_to(a: &dyn ArrayProtocol, shape: &[usize]) -> CoreResult<Box<dyn Ar
         // Handle scalar broadcasting
         if array.len() == 1 {
             let value = array.iter().next().cloned().unwrap_or(0.0);
-            let broadcasted = Array::<f64, _>::from_elem(IxDyn(shape), value);
+            let broadcasted = ArrayD::<f64>::from_elem(IxDyn(shape), value);
             Ok(Box::new(NdarrayWrapper::new(broadcasted)) as Box<dyn ArrayProtocol>)
         } else if array.shape() == shape {
             // Shapes already match
@@ -228,7 +234,7 @@ fn broadcast_to(a: &dyn ArrayProtocol, shape: &[usize]) -> CoreResult<Box<dyn Ar
         let array = a_array.as_array();
         if array.len() == 1 {
             let value = array.iter().next().cloned().unwrap_or(0.0);
-            let broadcasted = Array::<f32, _>::from_elem(IxDyn(shape), value);
+            let broadcasted = ArrayD::<f32>::from_elem(IxDyn(shape), value);
             Ok(Box::new(NdarrayWrapper::new(broadcasted)) as Box<dyn ArrayProtocol>)
         } else if array.shape() == shape {
             Ok(Box::new(NdarrayWrapper::new(array.clone())) as Box<dyn ArrayProtocol>)
@@ -242,7 +248,7 @@ fn broadcast_to(a: &dyn ArrayProtocol, shape: &[usize]) -> CoreResult<Box<dyn Ar
         }
     } else {
         // Fallback: create an array of ones with the target shape
-        let ones = Array::<f64, _>::ones(IxDyn(shape));
+        let ones = ArrayD::<f64>::ones(IxDyn(shape));
         Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
     }
 }
@@ -271,9 +277,9 @@ struct Node {
 
 impl Node {
     /// Create a new leaf node.
-    fn new_leaf(value: Rc<dyn ArrayProtocol>, requires_grad: bool) -> Self {
+    fn leaf(requires_grad: bool) -> Self {
         Self {
-            value,
+            value: Rc::new(NdarrayWrapper::new(ndarray::Array0::<f64>::zeros(()))) as Rc<dyn ArrayProtocol>,
             grad: None,
             op: None,
             inputs: Vec::new(),
@@ -307,7 +313,10 @@ pub struct GradientTensor {
 impl GradientTensor {
     /// Create a new gradient tensor from a value.
     pub fn new(value: Rc<dyn ArrayProtocol>, requires_grad: bool) -> Self {
-        let node = Rc::new(RefCell::new(Node::new_leaf(value, requires_grad)));
+        let mut node_inner = Node::leaf(requires_grad);
+        node_inner.value = value;
+        node_inner.grad = None;
+        let node = Rc::new(RefCell::new(node_inner));
         Self { node }
     }
 
@@ -327,7 +336,7 @@ impl GradientTensor {
     }
 
     /// Get the gradient of the tensor.
-    pub fn grad(&self) -> Option<Rc<dyn ArrayProtocol>> {
+    pub fn grad_2(&self) -> Option<Rc<dyn ArrayProtocol>> {
         self.node.borrow().grad.clone()
     }
 
@@ -337,7 +346,7 @@ impl GradientTensor {
     }
 
     /// Set whether gradient computation is required for this tensor.
-    pub fn set_requires_grad(&self, requires_grad: bool) {
+    pub fn set_requires_grad(&mut self, requires_grad: bool) {
         self.node.borrow_mut().requires_grad = requires_grad;
     }
 
@@ -353,7 +362,8 @@ impl GradientTensor {
     }
 
     /// Set the value of the tensor (for updating variables during optimization).
-    pub fn set_value(&self, new_value: Rc<dyn ArrayProtocol>) {
+    pub fn set_value(&mut self, new_value: Rc<dyn ArrayProtocol>) {
+        self.node.borrow_mut().grad = None; // Clear gradient when value changes
         self.node.borrow_mut().value = new_value;
     }
 
@@ -418,7 +428,7 @@ impl GradientTensor {
             }
 
             // Get the gradient of this node
-            let node_grad = match node.grad() {
+            let node_grad = match node.grad_2() {
                 Some(g) => g,
                 None => continue, // Skip nodes with no gradient
             };
@@ -977,7 +987,7 @@ pub fn grad_mean(a: &GradientTensor) -> CoreResult<GradientTensor> {
     {
         let array = a_array.as_array();
         let mean_value = array.mean().unwrap_or(0.0);
-        let result = Array::<f64, _>::from_elem(IxDyn(&[1]), mean_value);
+        let result = ArrayD::<f64>::from_elem(IxDyn(&[1]), mean_value);
         let result_wrapped = NdarrayWrapper::new(result);
         let result_rc: Rc<dyn ArrayProtocol> = Rc::new(result_wrapped);
         Ok(GradientTensor::from_op(
@@ -991,7 +1001,7 @@ pub fn grad_mean(a: &GradientTensor) -> CoreResult<GradientTensor> {
     {
         let array = a_array.as_array();
         let mean_value = array.mean().unwrap_or(0.0f32);
-        let result = Array::<f32, _>::from_elem(IxDyn(&[1]), mean_value);
+        let result = ArrayD::<f32>::from_elem(IxDyn(&[1]), mean_value);
         let result_wrapped = NdarrayWrapper::new(result);
         let result_rc: Rc<dyn ArrayProtocol> = Rc::new(result_wrapped);
         Ok(GradientTensor::from_op(
@@ -1024,8 +1034,7 @@ impl Variable {
     {
         let tensor = GradientTensor::from_array(array, true);
         Self {
-            tensor,
-            name: name.to_string(),
+            tensor, name: name.to_string(),
         }
     }
 
@@ -1040,8 +1049,8 @@ impl Variable {
     }
 
     /// Get the gradient of the variable.
-    pub fn grad(&self) -> Option<Rc<dyn ArrayProtocol>> {
-        self.tensor.grad()
+    pub fn grad_2(&self) -> Option<Rc<dyn ArrayProtocol>> {
+        self.tensor.grad_2()
     }
 
     /// Get the name of the variable.
@@ -1060,7 +1069,7 @@ impl Variable {
     }
 
     /// Set the value of the variable (for updating during optimization).
-    pub fn set_value(&self, new_value: Box<dyn ArrayProtocol>) {
+    pub fn set_value(&mut self, new_value: Box<dyn ArrayProtocol>) {
         let new_value_rc = self.box_to_rc(new_value);
         self.tensor.set_value(new_value_rc);
     }
@@ -1077,7 +1086,7 @@ impl Variable {
             Rc::new(NdarrayWrapper::new(array_clone))
         } else {
             // Fallback for other types
-            let fallback_array = Array::<f64, _>::zeros(IxDyn(&[1, 1]));
+            let fallback_array = ArrayD::<f64>::zeros(IxDyn(&[1, 1]));
             Rc::new(NdarrayWrapper::new(fallback_array))
         }
     }
@@ -1154,8 +1163,8 @@ impl SGD {
 
 impl Optimizer for SGD {
     fn step(&mut self) -> CoreResult<()> {
-        for (i, var) in self.variables.iter().enumerate() {
-            if let Some(grad) = var.grad() {
+        for (i, var) in self.variables.iter_mut().enumerate() {
+            if let Some(grad) = var.grad_2() {
                 let var_value = var.value();
 
                 // Compute update with momentum
@@ -1240,8 +1249,7 @@ pub struct Adam {
 
 impl Adam {
     /// Create a new Adam optimizer.
-    pub fn new(
-        learning_rate: f64,
+    pub fn new(learning_rate: f64,
         beta1: Option<f64>,
         beta2: Option<f64>,
         epsilon: Option<f64>,
@@ -1263,8 +1271,8 @@ impl Optimizer for Adam {
     fn step(&mut self) -> CoreResult<()> {
         self.t += 1;
 
-        for (i, var) in self.variables.iter().enumerate() {
-            if let Some(grad) = var.grad() {
+        for (i, var) in self.variables.iter_mut().enumerate() {
+            if let Some(grad) = var.grad_2() {
                 let var_value = var.value();
 
                 // Ensure we have space for state variables
@@ -1492,7 +1500,7 @@ mod tests {
         // Check properties
         assert!(tensor.requires_grad());
         assert!(tensor.is_leaf());
-        assert!(tensor.grad().is_none());
+        assert!(tensor.grad_2().is_none());
     }
 
     #[test]
@@ -1535,7 +1543,7 @@ mod tests {
         }
 
         // Check gradients
-        let a_grad = match a.grad() {
+        let a_grad = match a.grad_2() {
             Some(grad) => grad,
             None => {
                 println!("Skipping test_gradient_computation_add: no gradient for a");
@@ -1552,7 +1560,7 @@ mod tests {
         };
         assert_eq!(a_grad_array.as_array(), &array![[1.0, 1.0], [1.0, 1.0]]);
 
-        let b_grad = match b.grad() {
+        let b_grad = match b.grad_2() {
             Some(grad) => grad,
             None => {
                 println!("Skipping test_gradient_computation_add: no gradient for b");
@@ -1612,7 +1620,7 @@ mod tests {
         }
 
         // Check gradients
-        let a_grad = match a.grad() {
+        let a_grad = match a.grad_2() {
             Some(grad) => grad,
             None => {
                 println!("Skipping test_gradient_computation_multiply: no gradient for a");
@@ -1631,7 +1639,7 @@ mod tests {
         };
         assert_eq!(a_grad_array.as_array(), &array![[3.0, 3.0], [3.0, 3.0]]);
 
-        let b_grad = match b.grad() {
+        let b_grad = match b.grad_2() {
             Some(grad) => grad,
             None => {
                 println!("Skipping test_gradient_computation_multiply: no gradient for b");
@@ -1685,8 +1693,8 @@ mod tests {
                 optimizer.zero_grad();
 
                 // Check that gradients are zeroed
-                assert!(optimizer.variables()[0].grad().is_none());
-                assert!(optimizer.variables()[1].grad().is_none());
+                assert!(optimizer.variables()[0].grad_2().is_none());
+                assert!(optimizer.variables()[1].grad_2().is_none());
             }
             Err(e) => {
                 println!("Skipping test_sgd_optimizer - step failed: {e}");

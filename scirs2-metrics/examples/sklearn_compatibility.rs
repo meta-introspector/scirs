@@ -4,8 +4,8 @@
 //! and shows how they produce identical results to their scikit-learn counterparts.
 
 use ndarray::{Array1, Array2};
-use scirs2_metrics::error::Result;
-use scirs2_metrics::sklearn_compat::*;
+use scirs2__metrics::error::Result;
+use scirs2__metrics::sklearn_compat::*;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
@@ -146,7 +146,7 @@ fn precision_recall_fscore_support_example() -> Result<()> {
     // Test with different beta values for F-beta score
     println!("\n  F-beta scores with different beta values:");
     for &beta in &[0.5, 1.0, 2.0] {
-        let (_, _, fbeta, _) = precision_recall_fscore_support_sklearn(
+        let (__, fbeta_) = precision_recall_fscore_support_sklearn(
             &y_true,
             &y_pred,
             beta,

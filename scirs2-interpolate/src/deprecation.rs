@@ -14,7 +14,7 @@
 //! # Usage
 //!
 //! ```rust
-//! use scirs2_interpolate::deprecation::{deprecated_function, DeprecationLevel};
+//! use scirs2__interpolate::deprecation::{deprecated_function, DeprecationLevel};
 //!
 //! #[deprecated_function(
 //!     since = "0.1.0",
@@ -109,16 +109,16 @@ pub fn init_deprecation_system() {
 
 /// Configure deprecation warning behavior
 #[allow(dead_code)]
-pub fn configure_deprecation(config: DeprecationConfig) {
+pub fn configure_deprecation(_config: DeprecationConfig) {
     init_deprecation_system();
     if let Ok(mut global_config) = DEPRECATION_CONFIG.get().unwrap().lock() {
-        *global_config = config;
+        *global_config = _config;
     }
 }
 
 /// Issue a deprecation warning if enabled
 #[allow(dead_code)]
-pub fn issue_deprecation_warning(info: &DeprecationInfo) {
+pub fn issue_deprecation_warning(_info: &DeprecationInfo) {
     init_deprecation_system();
 
     if let Ok(mut config) = DEPRECATION_CONFIG.get().unwrap().lock() {
@@ -126,14 +126,14 @@ pub fn issue_deprecation_warning(info: &DeprecationInfo) {
             return;
         }
 
-        let count = config.warning_counts.entry(info.name.clone()).or_insert(0);
+        let count = config.warning_counts.entry(_info.name.clone()).or_insert(0);
         *count += 1;
 
         if *count > config.max_warning_count {
             return;
         }
 
-        let warning_msg = format_deprecation_warning(info);
+        let warning_msg = format_deprecation_warning(_info);
 
         if config.warnings_as_errors {
             panic!("Deprecation error: {warning_msg}");
@@ -145,23 +145,23 @@ pub fn issue_deprecation_warning(info: &DeprecationInfo) {
 
 /// Format a deprecation warning message
 #[allow(dead_code)]
-fn format_deprecation_warning(info: &DeprecationInfo) -> String {
+fn format_deprecation_warning(_info: &DeprecationInfo) -> String {
     let mut msg = format!(
         "Function '{}' is deprecated since v{}",
-        info.name, info.since
+        _info.name, _info.since
     );
 
-    if let Some(remove_version) = &info.remove_in {
+    if let Some(remove_version) = &_info.remove_in {
         msg.push_str(&format!(" and will be removed in v{remove_version}"));
     }
 
-    msg.push_str(&format!(": {}", info.reason));
+    msg.push_str(&format!(": {}", _info.reason));
 
-    if let Some(alternative) = &info.alternative {
+    if let Some(alternative) = &_info.alternative {
         msg.push_str(&format!(" Use '{alternative}' instead."));
     }
 
-    if let Some(notes) = &info.migration_notes {
+    if let Some(notes) = &_info.migration_notes {
         msg.push_str(&format!(" Migration notes: {notes}"));
     }
 
@@ -277,25 +277,25 @@ impl FeatureRegistry {
     }
 
     /// Get features planned for removal in specific version
-    pub fn features_removed_in(version: &str) -> Vec<DeprecationInfo> {
+    pub fn features_removed_in(_version: &str) -> Vec<DeprecationInfo> {
         Self::deprecated_features()
             .into_iter()
-            .filter(|f| f.remove_in.as_ref().map(|v| v == version).unwrap_or(false))
+            .filter(|f| f.remove_in.as_ref().map(|v| v == _version).unwrap_or(false))
             .collect()
     }
 
     /// Check if a feature is deprecated
-    pub fn is_feature_deprecated(feature_name: &str) -> bool {
+    pub fn is_feature_deprecated(_feature_name: &str) -> bool {
         Self::deprecated_features()
             .iter()
-            .any(|f| f.name == feature_name)
+            .any(|f| f._name == _feature_name)
     }
 
     /// Get deprecation info for a specific feature
-    pub fn get_deprecation_info(feature_name: &str) -> Option<DeprecationInfo> {
+    pub fn get_deprecation_info(_feature_name: &str) -> Option<DeprecationInfo> {
         Self::deprecated_features()
             .into_iter()
-            .find(|f| f.name == feature_name)
+            .find(|f| f._name == _feature_name)
     }
 }
 
@@ -304,44 +304,44 @@ pub mod convenience {
     use crate::experimental_feature;
 
     /// Mark a GPU feature as experimental
-    pub fn warn_gpu_experimental(feature_name: &str) {
+    pub fn warn_gpu_experimental(_feature_name: &str) {
         experimental_feature!(
-            feature_name,
+            _feature_name,
             "GPU acceleration support is experimental and may change significantly"
         );
     }
 
     /// Mark a neural network feature as experimental  
-    pub fn warn_neural_experimental(feature_name: &str) {
+    pub fn warn_neural_experimental(_feature_name: &str) {
         experimental_feature!(
-            feature_name,
+            _feature_name,
             "Neural network enhanced interpolation is experimental"
         );
     }
 
     /// Mark a physics-informed feature as experimental
-    pub fn warn_physics_experimental(feature_name: &str) {
+    pub fn warn_physics_experimental(_feature_name: &str) {
         experimental_feature!(
-            feature_name,
+            _feature_name,
             "Physics-informed interpolation methods are experimental"
         );
     }
 
     /// Issue a matrix conditioning warning
-    pub fn warn_matrix_conditioning(condition_number: f64, context: &str) {
-        if condition_number > 1e14 {
+    pub fn warn_matrix_conditioning(_condition_number: f64, context: &str) {
+        if _condition_number > 1e14 {
             eprintln!(
-                "NUMERICAL WARNING: Poor matrix conditioning (condition number: {condition_number:.2e}) in {context}. \
+                "NUMERICAL WARNING: Poor matrix conditioning (condition _number: {condition_number:.2e}) in {context}. \
                 Consider regularization or data preprocessing."
             );
         }
     }
 
     /// Issue a performance warning for large datasets
-    pub fn warn_performance_large_dataset(operation: &str, size: usize, threshold: usize) {
+    pub fn warn_performance_large_dataset(_operation: &str, size: usize, threshold: usize) {
         if size > threshold {
             eprintln!(
-                "PERFORMANCE WARNING: {operation} with {size} data points may be slow. \
+                "PERFORMANCE WARNING: {_operation} with {size} data points may be slow. \
                 Consider using fast variants or GPU acceleration if available."
             );
         }

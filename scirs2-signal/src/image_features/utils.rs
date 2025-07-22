@@ -2,43 +2,44 @@
 
 use ndarray::Array2;
 
+#[allow(unused_imports)]
 /// Calculate skewness of a vector
 #[allow(dead_code)]
-pub fn calculate_skewness(data: &[f64], mean: f64, std_dev: f64) -> f64 {
-    if std_dev <= 0.0 || data.len() < 3 {
+pub fn calculate_skewness(_data: &[f64], mean: f64, std_dev: f64) -> f64 {
+    if std_dev <= 0.0 || _data.len() < 3 {
         return 0.0;
     }
 
-    let n = data.len() as f64;
-    let sum_cubed_diff: f64 = data.iter().map(|&x| (x - mean).powi(3)).sum();
+    let n = _data.len() as f64;
+    let sum_cubed_diff: f64 = _data.iter().map(|&x| (x - mean).powi(3)).sum();
 
     sum_cubed_diff / ((n - 1.0) * std_dev.powi(3))
 }
 
 /// Calculate kurtosis of a vector
 #[allow(dead_code)]
-pub fn calculate_kurtosis(data: &[f64], mean: f64, std_dev: f64) -> f64 {
-    if std_dev <= 0.0 || data.len() < 4 {
+pub fn calculate_kurtosis(_data: &[f64], mean: f64, std_dev: f64) -> f64 {
+    if std_dev <= 0.0 || _data.len() < 4 {
         return 0.0;
     }
 
-    let n = data.len() as f64;
-    let sum_quartic_diff: f64 = data.iter().map(|&x| (x - mean).powi(4)).sum();
+    let n = _data.len() as f64;
+    let sum_quartic_diff: f64 = _data.iter().map(|&x| (x - mean).powi(4)).sum();
 
     sum_quartic_diff / ((n - 1.0) * std_dev.powi(4)) - 3.0 // Excess kurtosis
 }
 
 /// Calculate raw moment of an image
 #[allow(dead_code)]
-pub fn calculate_raw_moment(image: &Array2<f64>, p: usize, q: usize) -> f64 {
-    let shape = image.shape();
+pub fn calculate_raw_moment(_image: &Array2<f64>, p: usize, q: usize) -> f64 {
+    let shape = _image.shape();
     let height = shape[0];
     let width = shape[1];
 
     let mut moment = 0.0;
     for i in 0..height {
         for j in 0..width {
-            moment += (i as f64).powi(p as i32) * (j as f64).powi(q as i32) * image[[i, j]];
+            moment += (i as f64).powi(p as i32) * (j as f64).powi(q as i32) * _image[[i, j]];
         }
     }
     moment
@@ -46,8 +47,8 @@ pub fn calculate_raw_moment(image: &Array2<f64>, p: usize, q: usize) -> f64 {
 
 /// Compute Gray Level Co-occurrence Matrix (GLCM)
 #[allow(dead_code)]
-pub fn compute_glcm(image: &Array2<f64>, distance: usize, num_levels: usize) -> Array2<f64> {
-    let shape = image.shape();
+pub fn compute_glcm(_image: &Array2<f64>, distance: usize, num_levels: usize) -> Array2<f64> {
+    let shape = _image.shape();
     let height = shape[0];
     let width = shape[1];
 
@@ -56,8 +57,8 @@ pub fn compute_glcm(image: &Array2<f64>, distance: usize, num_levels: usize) -> 
     }
 
     // Find min and max values for scaling
-    let min_val = image.iter().fold(f64::MAX, |a, &b| a.min(b));
-    let max_val = image.iter().fold(f64::MIN, |a, &b| a.max(b));
+    let min_val = _image.iter().fold(f64::MAX, |a, &b| a.min(b));
+    let max_val = _image.iter().fold(f64::MIN, |a, &b| a.max(b));
 
     // Initialize GLCM
     let mut glcm = Array2::zeros((num_levels, num_levels));
@@ -73,9 +74,9 @@ pub fn compute_glcm(image: &Array2<f64>, distance: usize, num_levels: usize) -> 
                 row = 0;
                 col = 0;
             } else {
-                row = ((image[[i, j]] - min_val) / (max_val - min_val) * (num_levels - 1) as f64)
+                row = ((_image[[i, j]] - min_val) / (max_val - min_val) * (num_levels - 1) as f64)
                     .round() as usize;
-                col = ((image[[i, j + distance]] - min_val) / (max_val - min_val)
+                col = ((_image[[i, j + distance]] - min_val) / (max_val - min_val)
                     * (num_levels - 1) as f64)
                     .round() as usize;
             }

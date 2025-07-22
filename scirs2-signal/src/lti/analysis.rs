@@ -8,10 +8,13 @@
 //! - System equivalence checking
 //! - Matrix utilities for system analysis
 
-use super::systems::{LtiSystem, StateSpace};
 use crate::error::{SignalError, SignalResult};
+use crate::lti::TransferFunction;
+use crate::lti::systems::StateSpace;
 use std::f64::consts::PI;
+use super::systems::LtiSystem;
 
+#[allow(unused_imports)]
 /// Calculate the Bode plot data (magnitude and phase) for an LTI system
 ///
 /// Computes the frequency response at specified frequencies and converts
@@ -30,7 +33,7 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::{systems::TransferFunction, analysis::bode};
+/// use scirs2__signal::lti::{systems::TransferFunction, analysis::bode};
 ///
 /// let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
 /// let freqs = vec![0.1, 1.0, 10.0];
@@ -194,7 +197,7 @@ pub struct KalmanDecomposition {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::{systems::StateSpace, analysis::analyze_controllability};
+/// use scirs2__signal::lti::{systems::StateSpace, analysis::analyze_controllability};
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
@@ -203,21 +206,21 @@ pub struct KalmanDecomposition {
 /// assert!(analysis.is_controllable);
 /// ```
 #[allow(dead_code)]
-pub fn analyze_controllability(ss: &StateSpace) -> SignalResult<ControllabilityAnalysis> {
-    let n = ss.n_states; // Number of states
+pub fn analyze_controllability(_ss: &StateSpace) -> SignalResult<ControllabilityAnalysis> {
+    let n = _ss.n_states; // Number of states
     if n == 0 {
         return Err(SignalError::ValueError("Empty state matrix".to_string()));
     }
 
-    let m = ss.n_inputs; // Number of inputs
+    let m = _ss.n_inputs; // Number of inputs
     if m == 0 {
         return Err(SignalError::ValueError("Empty input matrix".to_string()));
     }
 
     // Build controllability matrix: [B AB A²B ... A^(n-1)B]
     // Convert flattened matrices to 2D format for easier manipulation
-    let a_matrix = flatten_to_2d(&ss.a, n, n)?;
-    let b_matrix = flatten_to_2d(&ss.b, n, m)?;
+    let a_matrix = flatten_to_2d(&_ss.a, n, n)?;
+    let b_matrix = flatten_to_2d(&_ss.b, n, m)?;
 
     // Initialize controllability matrix with the right dimensions: n x (n*m)
     let mut controllability_matrix = vec![vec![0.0; n * m]; n];
@@ -272,7 +275,7 @@ pub fn analyze_controllability(ss: &StateSpace) -> SignalResult<ControllabilityA
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::{systems::StateSpace, analysis::analyze_observability};
+/// use scirs2__signal::lti::{systems::StateSpace, analysis::analyze_observability};
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
@@ -281,21 +284,21 @@ pub fn analyze_controllability(ss: &StateSpace) -> SignalResult<ControllabilityA
 /// assert!(analysis.is_observable);
 /// ```
 #[allow(dead_code)]
-pub fn analyze_observability(ss: &StateSpace) -> SignalResult<ObservabilityAnalysis> {
-    let n = ss.n_states; // Number of states
+pub fn analyze_observability(_ss: &StateSpace) -> SignalResult<ObservabilityAnalysis> {
+    let n = _ss.n_states; // Number of states
     if n == 0 {
         return Err(SignalError::ValueError("Empty state matrix".to_string()));
     }
 
-    let p = ss.n_outputs; // Number of outputs
+    let p = _ss.n_outputs; // Number of outputs
     if p == 0 {
         return Err(SignalError::ValueError("Empty output matrix".to_string()));
     }
 
     // Build observability matrix: [C; CA; CA²; ...; CA^(n-1)]
     // Convert flattened matrices to 2D format for easier manipulation
-    let a_matrix = flatten_to_2d(&ss.a, n, n)?;
-    let c_matrix = flatten_to_2d(&ss.c, p, n)?;
+    let a_matrix = flatten_to_2d(&_ss.a, n, n)?;
+    let c_matrix = flatten_to_2d(&_ss.c, p, n)?;
 
     // Initialize observability matrix with the right dimensions: (n*p) x n
     let mut observability_matrix = vec![vec![0.0; n]; n * p];
@@ -348,7 +351,7 @@ pub fn analyze_observability(ss: &StateSpace) -> SignalResult<ObservabilityAnaly
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::{systems::StateSpace, analysis::analyze_control_observability};
+/// use scirs2__signal::lti::{systems::StateSpace, analysis::analyze_control_observability};
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
@@ -416,7 +419,7 @@ pub type GramianPair = (Vec<Vec<f64>>, Vec<Vec<f64>>);
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::{systems::StateSpace, analysis::compute_lyapunov_gramians};
+/// use scirs2__signal::lti::{systems::StateSpace, analysis::compute_lyapunov_gramians};
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
@@ -425,8 +428,8 @@ pub type GramianPair = (Vec<Vec<f64>>, Vec<Vec<f64>>);
 /// ```
 #[allow(clippy::needless_range_loop)]
 #[allow(dead_code)]
-pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
-    let n = ss.n_states;
+pub fn compute_lyapunov_gramians(_ss: &StateSpace) -> SignalResult<GramianPair> {
+    let n = _ss.n_states;
     if n == 0 {
         return Err(SignalError::ValueError("Empty state matrix".to_string()));
     }
@@ -449,8 +452,8 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
     let mut bb_t = vec![vec![0.0; n]; n];
     for i in 0..n {
         for j in 0..n {
-            for k in 0..ss.n_inputs {
-                bb_t[i][j] += ss.b[i * ss.n_inputs + k] * ss.b[j * ss.n_inputs + k];
+            for k in 0.._ss.n_inputs {
+                bb_t[i][j] += _ss.b[i * _ss.n_inputs + k] * _ss.b[j * _ss.n_inputs + k];
             }
         }
     }
@@ -459,8 +462,8 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
     let mut ct_c = vec![vec![0.0; n]; n];
     for i in 0..n {
         for j in 0..n {
-            for k in 0..ss.n_outputs {
-                ct_c[i][j] += ss.c[k * n + i] * ss.c[k * n + j];
+            for k in 0.._ss.n_outputs {
+                ct_c[i][j] += _ss.c[k * n + i] * _ss.c[k * n + j];
             }
         }
     }
@@ -476,7 +479,7 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
                 let mut awc_at = 0.0;
                 for k in 0..n {
                     for l in 0..n {
-                        awc_at += ss.a[i * n + k] * wc[k][l] * ss.a[j * n + l];
+                        awc_at += _ss.a[i * n + k] * wc[k][l] * _ss.a[j * n + l];
                     }
                 }
                 wc_new[i][j] -= awc_at;
@@ -489,7 +492,7 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
                 let mut at_wo_a = 0.0;
                 for k in 0..n {
                     for l in 0..n {
-                        at_wo_a += ss.a[k * n + i] * wo[k][l] * ss.a[l * n + j];
+                        at_wo_a += _ss.a[k * n + i] * wo[k][l] * _ss.a[l * n + j];
                     }
                 }
                 wo_new[i][j] -= at_wo_a;
@@ -536,7 +539,7 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::lti::{systems::StateSpace, analysis::complete_kalman_decomposition};
+/// use scirs2__signal::lti::{systems::StateSpace, analysis::complete_kalman_decomposition};
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0, 0.0, 1.0, -2.0], vec![1.0, 0.0],
@@ -546,15 +549,15 @@ pub fn compute_lyapunov_gramians(ss: &StateSpace) -> SignalResult<GramianPair> {
 /// assert!(decomp.co_dimension + decomp.c_no_dimension + decomp.nc_o_dimension + decomp.nc_no_dimension == 2);
 /// ```
 #[allow(dead_code)]
-pub fn complete_kalman_decomposition(ss: &StateSpace) -> SignalResult<KalmanDecomposition> {
-    let n = ss.n_states;
+pub fn complete_kalman_decomposition(_ss: &StateSpace) -> SignalResult<KalmanDecomposition> {
+    let n = _ss.n_states;
     if n == 0 {
         return Err(SignalError::ValueError("Empty state matrix".to_string()));
     }
 
     // Get controllability and observability analyses
-    let controllability = analyze_controllability(ss)?;
-    let observability = analyze_observability(ss)?;
+    let controllability = analyze_controllability(_ss)?;
+    let observability = analyze_observability(_ss)?;
 
     // Compute orthogonal bases for controllable and observable subspaces
     let controllable_basis = compute_orthogonal_basis(&controllability.controllability_matrix)?;
@@ -668,7 +671,7 @@ pub fn complete_kalman_decomposition(ss: &StateSpace) -> SignalResult<KalmanDeco
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_signal::lti::{systems::TransferFunction, analysis::systems_equivalent};
+/// use scirs2__signal::lti::{systems::TransferFunction, analysis::systems_equivalent};
 ///
 /// let tf1 = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
 /// let tf2 = TransferFunction::new(vec![2.0], vec![2.0, 2.0], None).unwrap();
@@ -742,20 +745,20 @@ pub fn systems_equivalent(
 ///
 /// Condition number (ratio of largest to smallest singular value)
 #[allow(dead_code)]
-pub fn matrix_condition_number(matrix: &[Vec<f64>]) -> SignalResult<f64> {
-    if matrix.is_empty() || matrix[0].is_empty() {
-        return Err(SignalError::ValueError("Empty matrix".to_string()));
+pub fn matrix_condition_number(_matrix: &[Vec<f64>]) -> SignalResult<f64> {
+    if _matrix.is_empty() || _matrix[0].is_empty() {
+        return Err(SignalError::ValueError("Empty _matrix".to_string()));
     }
 
     // For this simplified implementation, we'll use the Frobenius norm
     // In practice, would compute SVD for accurate condition number
 
-    let rows = matrix.len();
-    let cols = matrix[0].len();
+    let rows = _matrix.len();
+    let cols = _matrix[0].len();
 
     // Compute Frobenius norm
     let mut norm_sum = 0.0;
-    for row in matrix {
+    for row in _matrix {
         for &val in row {
             norm_sum += val * val;
         }
@@ -774,8 +777,8 @@ pub fn matrix_condition_number(matrix: &[Vec<f64>]) -> SignalResult<f64> {
 
 /// Convert a flattened matrix to 2D format
 #[allow(dead_code)]
-fn flatten_to_2d(flat: &[f64], rows: usize, cols: usize) -> SignalResult<Vec<Vec<f64>>> {
-    if flat.len() != rows * cols {
+fn flatten_to_2d(_flat: &[f64], rows: usize, cols: usize) -> SignalResult<Vec<Vec<f64>>> {
+    if _flat.len() != rows * cols {
         return Err(SignalError::ValueError(
             "Matrix dimensions don't match flattened size".to_string(),
         ));
@@ -784,7 +787,7 @@ fn flatten_to_2d(flat: &[f64], rows: usize, cols: usize) -> SignalResult<Vec<Vec
     let mut matrix = vec![vec![0.0; cols]; rows];
     for i in 0..rows {
         for j in 0..cols {
-            matrix[i][j] = flat[i * cols + j];
+            matrix[i][j] = _flat[i * cols + j];
         }
     }
 
@@ -820,12 +823,12 @@ fn matrix_multiply(a: &[Vec<f64>], b: &[Vec<f64>]) -> SignalResult<Vec<Vec<f64>>
 
 /// Compute the rank of a matrix using Gaussian elimination
 #[allow(dead_code)]
-fn matrix_rank(matrix: &[Vec<f64>]) -> SignalResult<usize> {
-    if matrix.is_empty() || matrix[0].is_empty() {
+fn matrix_rank(_matrix: &[Vec<f64>]) -> SignalResult<usize> {
+    if _matrix.is_empty() || _matrix[0].is_empty() {
         return Ok(0);
     }
 
-    let mut working_matrix = matrix.to_vec();
+    let mut working_matrix = _matrix.to_vec();
     let rows = working_matrix.len();
     let cols = working_matrix[0].len();
     let tolerance = 1e-10;
@@ -868,19 +871,19 @@ fn matrix_rank(matrix: &[Vec<f64>]) -> SignalResult<usize> {
 /// Compute orthogonal basis from a matrix using QR decomposition (simplified)
 #[allow(clippy::needless_range_loop)]
 #[allow(dead_code)]
-fn compute_orthogonal_basis(matrix: &[Vec<f64>]) -> SignalResult<Vec<Vec<f64>>> {
-    if matrix.is_empty() || matrix[0].is_empty() {
+fn compute_orthogonal_basis(_matrix: &[Vec<f64>]) -> SignalResult<Vec<Vec<f64>>> {
+    if _matrix.is_empty() || _matrix[0].is_empty() {
         return Ok(Vec::new());
     }
 
-    let m = matrix.len();
-    let n = matrix[0].len();
+    let m = _matrix.len();
+    let n = _matrix[0].len();
 
-    // Transpose matrix to work with column vectors
+    // Transpose _matrix to work with column vectors
     let mut columns = vec![vec![0.0; m]; n];
     for i in 0..m {
         for j in 0..n {
-            columns[j][i] = matrix[i][j];
+            columns[j][i] = _matrix[i][j];
         }
     }
 
@@ -1040,17 +1043,18 @@ fn dot_product(a: &[f64], b: &[f64]) -> f64 {
 
 /// Helper function: compute norm of a vector
 #[allow(dead_code)]
-fn vector_norm(vec: &[f64]) -> f64 {
-    vec.iter().map(|x| x * x).sum::<f64>().sqrt()
+fn vector_norm(_vec: &[f64]) -> f64 {
+    _vec.iter().map(|x| x * x).sum::<f64>().sqrt()
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::lti::systems::{StateSpace, TransferFunction};
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
+use crate::lti::design::tf;
     #[test]
     fn test_bode_plot() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple first-order system H(s) = 1 / (s + 1)
         let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
 
@@ -1168,4 +1172,9 @@ mod tests {
         assert_relative_eq!(result[1][0], 43.0);
         assert_relative_eq!(result[1][1], 50.0);
     }
+}
+
+#[allow(dead_code)]
+fn tf(_num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
+    TransferFunction::new(_num, den)
 }

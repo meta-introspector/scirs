@@ -36,7 +36,7 @@ const MAX_ITERATIONS: usize = 100;
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::lambert_w;
+/// use scirs2__special::lambert_w;
 /// use num_complex::Complex64;
 ///
 /// let w = lambert_w(Complex64::new(1.0, 0.0), 0, 1e-8).unwrap();
@@ -217,7 +217,7 @@ fn initial_guess(z: Complex64, k: i32) -> Complex64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::lambert_w_real;
+/// use scirs2__special::lambert_w_real;
 ///
 /// let w = lambert_w_real(1.0, 1e-8).unwrap();
 /// assert!((w - 0.56714329040978384).abs() < 1e-10);

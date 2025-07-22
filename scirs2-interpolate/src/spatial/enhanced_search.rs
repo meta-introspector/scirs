@@ -192,10 +192,10 @@ pub struct SearchStats {
 
 impl QueryKey {
     /// Create a new query key from coordinates
-    fn from_coords<F: Float + FromPrimitive>(coords: &[F], k: usize, radius: Option<F>) -> Self {
+    fn from_coords<F: Float + FromPrimitive>(_coords: &[F], k: usize, radius: Option<F>) -> Self {
         const QUANTIZATION_FACTOR: f64 = 1000.0;
 
-        let quantized_coords: Vec<i64> = coords
+        let quantized_coords: Vec<i64> = _coords
             .iter()
             .map(|&x| (x.to_f64().unwrap_or(0.0) * QUANTIZATION_FACTOR).round() as i64)
             .collect();
@@ -204,7 +204,7 @@ impl QueryKey {
             radius.map(|r| (r.to_f64().unwrap_or(0.0) * QUANTIZATION_FACTOR).round() as i64);
 
         Self {
-            coords: quantized_coords,
+            _coords: quantized_coords,
             k,
             radius: quantized_radius,
         }
@@ -227,7 +227,7 @@ where
     ///
     /// ```rust
     /// use ndarray::Array2;
-    /// use scirs2_interpolate::spatial::enhanced_search::{
+    /// use scirs2__interpolate::spatial::enhanced_search::{
     ///     EnhancedNearestNeighborSearcher, IndexType, SearchConfig
     /// };
     ///
@@ -258,9 +258,9 @@ where
             ));
         }
 
-        // Determine the best index type if using adaptive
+        // Determine the best index _type if using adaptive
         let actual_index_type = match index_type {
-            IndexType::Adaptive => Self::choose_index_type(n_points, n_dims, &config),
+            IndexType::Adaptive =>, Self::choose_index_type(n_points, n_dims, &config),
             other => other,
         };
 
@@ -282,8 +282,8 @@ where
     }
 
     /// Choose the best index type based on data characteristics
-    fn choose_index_type(n_points: usize, n_dims: usize, config: &SearchConfig) -> IndexType {
-        if config.approximation_factor > 1.0 && n_points > 10000 {
+    fn choose_index_type(_n_points: usize, n_dims: usize, config: &SearchConfig) -> IndexType {
+        if config.approximation_factor > 1.0 && _n_points > 10000 {
             // Use LSH for large datasets with approximate search
             IndexType::LSH
         } else if n_dims <= 10 && n_points > 100 {
@@ -333,7 +333,7 @@ where
     ///
     /// ```rust
     /// use ndarray::{Array1, Array2};
-    /// use scirs2_interpolate::spatial::enhanced_search::{
+    /// use scirs2__interpolate::spatial::enhanced_search::{
     ///     EnhancedNearestNeighborSearcher, IndexType, SearchConfig
     /// };
     ///
@@ -558,7 +558,7 @@ where
 
             if neighbors.len() < k {
                 neighbors.push(std::cmp::Reverse((OrderedFloat(distance), idx)));
-            } else if let Some(&std::cmp::Reverse((OrderedFloat(max_dist), _))) = neighbors.peek() {
+            } else if let Some(&std::cmp::Reverse((OrderedFloat(max_dist)_))) = neighbors.peek() {
                 if distance < max_dist {
                     neighbors.pop();
                     neighbors.push(std::cmp::Reverse((OrderedFloat(distance), idx)));
@@ -589,7 +589,7 @@ where
 
             if neighbors.len() < k {
                 neighbors.push(std::cmp::Reverse((OrderedFloat(distance), idx)));
-            } else if let Some(&std::cmp::Reverse((OrderedFloat(max_dist), _))) = neighbors.peek() {
+            } else if let Some(&std::cmp::Reverse((OrderedFloat(max_dist)_))) = neighbors.peek() {
                 if distance < max_dist {
                     neighbors.pop();
                     neighbors.push(std::cmp::Reverse((OrderedFloat(distance), idx)));
@@ -629,8 +629,8 @@ where
     }
 
     /// Compute squared Euclidean distance between two points
-    fn euclidean_distance_squared(p1: &ArrayView1<F>, p2: &ArrayView1<F>) -> F {
-        p1.iter()
+    fn euclidean_distance_squared(_p1: &ArrayView1<F>, p2: &ArrayView1<F>) -> F {
+        _p1.iter()
             .zip(p2.iter())
             .map(|(&a, &b)| {
                 let diff = a - b;
@@ -689,26 +689,25 @@ impl<F: Float> Ord for OrderedFloat<F> {
 /// Implementation of KD-tree for efficient nearest neighbor search
 impl<F: Float + FromPrimitive> KdTreeIndex<F> {
     /// Build a new KD-tree from points
-    pub fn new(points: &Array2<F>) -> InterpolateResult<Self> {
-        if points.is_empty() {
+    pub fn new(_points: &Array2<F>) -> InterpolateResult<Self> {
+        if _points.is_empty() {
             return Err(InterpolateError::invalid_input("Points array is empty"));
         }
 
-        let dimensions = points.ncols();
-        let num_points = points.nrows();
+        let dimensions = _points.ncols();
+        let num_points = _points.nrows();
 
         // Create point indices
         let mut indices: Vec<usize> = (0..num_points).collect();
 
         // Build the tree recursively
         let mut nodes = Vec::new();
-        let root = Self::build_tree_recursive(points, &mut indices, 0, dimensions, &mut nodes)?;
+        let root = Self::build_tree_recursive(_points, &mut indices, 0, dimensions, &mut nodes)?;
 
         Ok(Self {
             nodes,
             root,
-            dimensions,
-            points: points.to_owned(),
+            dimensions_points: _points.to_owned(),
         })
     }
 
@@ -966,26 +965,25 @@ impl<F: Float> Ord for Neighbor<F> {
 
 impl<F: Float + FromPrimitive> BallTreeIndex<F> {
     /// Build a new Ball tree from points
-    pub fn new(points: &Array2<F>) -> InterpolateResult<Self> {
-        if points.is_empty() {
+    pub fn new(_points: &Array2<F>) -> InterpolateResult<Self> {
+        if _points.is_empty() {
             return Err(InterpolateError::invalid_input("Points array is empty"));
         }
 
-        let dimensions = points.ncols();
-        let num_points = points.nrows();
+        let dimensions = _points.ncols();
+        let num_points = _points.nrows();
 
         // Create point indices
         let mut indices: Vec<usize> = (0..num_points).collect();
 
         // Build the tree recursively
         let mut nodes = Vec::new();
-        let root = Self::build_tree_recursive(points, &mut indices, dimensions, &mut nodes)?;
+        let root = Self::build_tree_recursive(_points, &mut indices, dimensions, &mut nodes)?;
 
         Ok(Self {
             nodes,
             root,
-            dimensions,
-            points: points.to_owned(),
+            dimensions_points: _points.to_owned(),
         })
     }
 
@@ -1238,13 +1236,13 @@ impl<F: Float + FromPrimitive> BallTreeIndex<F> {
 }
 
 impl<F: Float + FromPrimitive> LSHIndex<F> {
-    pub fn new(points: &Array2<F>, config: &SearchConfig) -> InterpolateResult<Self> {
-        if points.is_empty() {
+    pub fn new(_points: &Array2<F>, config: &SearchConfig) -> InterpolateResult<Self> {
+        if _points.is_empty() {
             return Err(InterpolateError::invalid_input("Points array is empty"));
         }
 
-        let dimensions = points.ncols();
-        let num_points = points.nrows();
+        let dimensions = _points.ncols();
+        let num_points = _points.nrows();
 
         // LSH parameters based on data characteristics and config
         let num_tables = if num_points > 10000 { 20 } else { 10 };
@@ -1292,8 +1290,8 @@ impl<F: Float + FromPrimitive> LSHIndex<F> {
             bucket_width,
         };
 
-        // Build hash tables by inserting all points
-        for (point_idx, point) in points.axis_iter(ndarray::Axis(0)).enumerate() {
+        // Build hash tables by inserting all _points
+        for (point_idx, point) in _points.axis_iter(ndarray::Axis(0)).enumerate() {
             for table_idx in 0..num_tables {
                 let hash_key = index.compute_hash(&point, table_idx)?;
                 index.hash_tables[table_idx]
@@ -1395,7 +1393,7 @@ impl<F: Float + FromPrimitive> LSHIndex<F> {
 
             if neighbors.len() < k {
                 neighbors.push(std::cmp::Reverse((OrderedFloat(distance), candidate_idx)));
-            } else if let Some(&std::cmp::Reverse((OrderedFloat(max_dist), _))) = neighbors.peek() {
+            } else if let Some(&std::cmp::Reverse((OrderedFloat(max_dist)_))) = neighbors.peek() {
                 if distance < max_dist {
                     neighbors.pop();
                     neighbors.push(std::cmp::Reverse((OrderedFloat(distance), candidate_idx)));
@@ -1484,7 +1482,7 @@ impl<F: Float + FromPrimitive> LSHIndex<F> {
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_interpolate::spatial::enhanced_search::{
+/// use scirs2__interpolate::spatial::enhanced_search::{
 ///     make_enhanced_searcher, SearchConfig
 /// };
 ///
@@ -1926,8 +1924,8 @@ mod tests {
         // Sort both results by index to compare (since ties might be ordered differently)
         let mut kdtree_sorted = kdtree_neighbors.clone();
         let mut balltree_sorted = balltree_neighbors.clone();
-        kdtree_sorted.sort_by_key(|&(idx, _)| idx);
-        balltree_sorted.sort_by_key(|&(idx, _)| idx);
+        kdtree_sorted.sort_by_key(|&(idx_)| idx);
+        balltree_sorted.sort_by_key(|&(idx_)| idx);
 
         // Check that the same points are found (distances should be very close)
         for i in 0..k {

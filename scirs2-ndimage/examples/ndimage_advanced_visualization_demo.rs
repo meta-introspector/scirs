@@ -4,7 +4,8 @@
 //! including interactive HTML visualizations, export utilities, and comparison views.
 
 use ndarray::{Array2, ArrayView2};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
+use statrs::statistics::Statistics;
     error::NdimageResult,
     filters::gaussian_filter,
     visualization::{
@@ -174,10 +175,10 @@ fn main() -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn create_sample_image(size: usize) -> Array2<f64> {
-    Array2::from_shape_fn((size, size), |(i, j)| {
-        let x = i as f64 / size as f64;
-        let y = j as f64 / size as f64;
+fn create_sample_image(_size: usize) -> Array2<f64> {
+    Array2::from_shape_fn((_size, _size), |(i, j)| {
+        let x = i as f64 / _size as f64;
+        let y = j as f64 / _size as f64;
 
         // Create an interesting pattern with multiple features
         let wave1 = (x * 10.0).sin() * (y * 10.0).cos();
@@ -189,9 +190,9 @@ fn create_sample_image(size: usize) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn add_noise(image: &Array2<f64>) -> Array2<f64> {
+fn add_noise(_image: &Array2<f64>) -> Array2<f64> {
     let mut rng = ndarray_rand::rand::rng();
-    image.mapv(|x| x + (ndarray_rand::rand::Rng::gen::<f64>(&mut rng) - 0.5) * 0.1)
+    _image.mapv(|x| x + (ndarray_rand::rand::Rng::gen::<f64>(&mut rng) - 0.5) * 0.1)
 }
 
 struct ImageStats {
@@ -202,12 +203,12 @@ struct ImageStats {
 }
 
 #[allow(dead_code)]
-fn compute_image_stats(image: &ArrayView2<f64>) -> ImageStats {
-    let mean = image.mean().unwrap_or(0.0);
-    let min = image.iter().cloned().fold(f64::INFINITY, f64::min);
-    let max = image.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+fn compute_image_stats(_image: &ArrayView2<f64>) -> ImageStats {
+    let mean = _image.mean().unwrap_or(0.0);
+    let min = _image.iter().cloned().fold(f64::INFINITY, f64::min);
+    let max = _image.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 
-    let variance = image.mapv(|x| (x - mean).powi(2)).mean().unwrap_or(0.0);
+    let variance = _image.mapv(|x| (x - mean).powi(2)).mean().unwrap_or(0.0);
     let std_dev = variance.sqrt();
 
     ImageStats {

@@ -58,13 +58,13 @@ pub struct DistributedProcessor {
 
 impl DistributedProcessor {
     /// Create a new distributed processor
-    pub fn new(config: DistributedConfig) -> Result<Self> {
+    pub fn new(_config: DistributedConfig) -> Result<Self> {
         let cache_dir = dirs::cache_dir()
             .ok_or_else(|| DatasetsError::Other("Could not determine cache directory".to_string()))?
             .join("scirs2-datasets");
         let cache = DatasetCache::new(cache_dir);
 
-        Ok(Self { config, cache })
+        Ok(Self { _config, cache })
     }
 
     /// Create with default configuration
@@ -281,14 +281,14 @@ impl DistributedProcessor {
             DatasetsError::InvalidFormat("Stratified sampling requires target values".to_string())
         })?;
 
-        // Group samples by class
+        // Group _samples by class
         let mut class_groups: HashMap<i32, Vec<usize>> = HashMap::new();
         for (idx, &value) in target.iter().enumerate() {
             let class = value as i32;
             class_groups.entry(class).or_default().push(idx);
         }
 
-        // Calculate samples per class
+        // Calculate _samples per class
         let n_classes = class_groups.len();
         let base_samples_per_class = n_samples / n_classes;
         let remainder = n_samples % n_classes;
@@ -465,9 +465,9 @@ impl DistributedProcessor {
         Self::select_samples_static(dataset, indices)
     }
 
-    fn select_samples_static(dataset: &Dataset, indices: &[usize]) -> Result<Dataset> {
-        let selected_data = dataset.data.select(Axis(0), indices);
-        let selected_target = dataset
+    fn select_samples_static(_dataset: &Dataset, indices: &[usize]) -> Result<Dataset> {
+        let selected_data = _dataset.data.select(Axis(0), indices);
+        let selected_target = _dataset
             .target
             .as_ref()
             .map(|target| target.select(Axis(0), indices));
@@ -475,11 +475,11 @@ impl DistributedProcessor {
         Ok(Dataset {
             data: selected_data,
             target: selected_target,
-            feature_names: dataset.feature_names.clone(),
-            target_names: dataset.target_names.clone(),
-            feature_descriptions: dataset.feature_descriptions.clone(),
+            feature_names: _dataset.feature_names.clone(),
+            target_names: _dataset.target_names.clone(),
+            feature_descriptions: _dataset.feature_descriptions.clone(),
             description: Some("Distributed sample".to_string()),
-            metadata: dataset.metadata.clone(),
+            metadata: _dataset.metadata.clone(),
         })
     }
 
@@ -529,8 +529,8 @@ impl DistributedProcessor {
         })
     }
 
-    fn compute_chunk_statistics(chunk: &Dataset) -> Result<ChunkStatistics> {
-        let data = &chunk.data;
+    fn compute_chunk_statistics(_chunk: &Dataset) -> Result<ChunkStatistics> {
+        let data = &_chunk.data;
         let n_features = data.ncols();
         let n_samples = data.nrows() as f64;
 
@@ -614,8 +614,8 @@ impl DistributedProcessor {
         })
     }
 
-    fn apply_scaling(dataset: &Dataset, params: &ScalingParameters) -> Result<Dataset> {
-        let mut scaled_data = dataset.data.clone();
+    fn apply_scaling(_dataset: &Dataset, params: &ScalingParameters) -> Result<Dataset> {
+        let mut scaled_data = _dataset.data.clone();
 
         match params.method {
             ScalingMethod::StandardScaler => {
@@ -663,12 +663,12 @@ impl DistributedProcessor {
 
         Ok(Dataset {
             data: scaled_data,
-            target: dataset.target.clone(),
-            feature_names: dataset.feature_names.clone(),
-            target_names: dataset.target_names.clone(),
-            feature_descriptions: dataset.feature_descriptions.clone(),
-            description: Some("Distributed scaled dataset".to_string()),
-            metadata: dataset.metadata.clone(),
+            target: _dataset.target.clone(),
+            feature_names: _dataset.feature_names.clone(),
+            target_names: _dataset.target_names.clone(),
+            feature_descriptions: _dataset.feature_descriptions.clone(),
+            description: Some("Distributed scaled _dataset".to_string()),
+            metadata: _dataset.metadata.clone(),
         })
     }
 }
@@ -714,13 +714,13 @@ pub struct ScalingParameters {
 }
 
 impl ScalingParameters {
-    fn from_statistics(stats: &GlobalStatistics, method: ScalingMethod) -> Self {
+    fn from_statistics(_stats: &GlobalStatistics, method: ScalingMethod) -> Self {
         Self {
             method,
-            means: stats.means.clone(),
-            stds: stats.stds.clone(),
-            mins: stats.mins.clone(),
-            maxs: stats.maxs.clone(),
+            means: _stats.means.clone(),
+            stds: _stats.stds.clone(),
+            mins: _stats.mins.clone(),
+            maxs: _stats.maxs.clone(),
         }
     }
 }

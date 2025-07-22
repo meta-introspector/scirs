@@ -184,7 +184,7 @@ impl Default for MemoryProfilerConfig {
 
 impl AdvancedMemoryProfiler {
     /// Create a new memory profiler
-    pub fn new(config: MemoryProfilerConfig) -> Self {
+    pub fn new(_config: MemoryProfilerConfig) -> Self {
         let now = SystemTime::now();
         Self {
             profile: MemoryProfile {
@@ -203,7 +203,7 @@ impl AdvancedMemoryProfiler {
                     recommendations: Vec::new(),
                 },
             },
-            config,
+            _config,
             active_allocations: HashMap::new(),
             start_time: now,
             last_gc_time: now,
@@ -432,7 +432,7 @@ impl AdvancedMemoryProfiler {
         Ix: petgraph::graph::IndexType,
     {
         let node_size = std::mem::size_of::<N>();
-        let edge_size = std::mem::size_of::<E>() + std::mem::size_of::<Ix>() * 2; // source + target
+        let edge_size = std::mem::size_of::<E>() + std::mem::size, _of::<Ix>() * 2; // source + target
         let index_size = std::mem::size_of::<Ix>();
 
         let base_graph_overhead = 1024; // Estimated overhead for graph structure
@@ -461,10 +461,10 @@ impl AdvancedMemoryProfiler {
     /// Estimate workspace memory for an algorithm
     fn estimate_workspace_memory(&self, algorithm_name: &str) -> usize {
         match algorithm_name {
-            name if name.contains("pagerank") => 1024 * 1024, // 1MB for PageRank workspace
-            name if name.contains("community") => 2048 * 1024, // 2MB for community detection
-            name if name.contains("centrality") => 512 * 1024, // 512KB for centrality
-            name if name.contains("shortest") => 1536 * 1024, // 1.5MB for shortest paths
+            _name if _name.contains("pagerank") => 1024 * 1024, // 1MB for PageRank workspace
+            _name if _name.contains("community") => 2048 * 1024, // 2MB for community detection
+            _name if _name.contains("centrality") => 512 * 1024, // 512KB for centrality
+            _name if _name.contains("shortest") => 1536 * 1024, // 1.5MB for shortest paths
             _ => 256 * 1024,                                  // 256KB default
         }
     }
@@ -483,7 +483,7 @@ impl AdvancedMemoryProfiler {
         }
 
         let memory_growth_ratio = final_memory as f64 / initial_memory as f64;
-        // Efficiency decreases with memory growth
+        // Efficiency decreases with _memory growth
         1.0 / memory_growth_ratio.max(1.0)
     }
 
@@ -844,8 +844,7 @@ impl AdvancedMemoryProfiler {
             let size_range = match allocation.size {
                 0..=1024 => "Small (<1KB)",
                 1025..=10240 => "Medium (1-10KB)",
-                10241..=102400 => "Large (10-100KB)",
-                _ => "Very Large (>100KB)",
+                10241..=102400 => "Large (10-100KB)"_ => "Very Large (>100KB)",
             };
 
             *distribution.entry(size_range.to_string()).or_insert(0) += 1;
@@ -1050,7 +1049,7 @@ where
     // Record initial state
     profiler.record_allocation("stress_test", 0, "test_initialization", true);
 
-    // Execute the test function
+    // Execute the test _function
     let test_result = test_function(processor);
 
     let test_duration = test_start.elapsed();
@@ -1092,15 +1091,15 @@ pub fn generate_profiled_large_graph(
     num_nodes: usize,
     graph_type: &str,
 ) -> Result<crate::base::Graph<usize, f64>> {
-    println!("🏗️  Generating profiled {graph_type} graph with {num_nodes} nodes");
+    println!("🏗️  Generating profiled {graph_type} graph with {num_nodes} _nodes");
 
     let generation_start = std::time::Instant::now();
-    profiler.record_allocation("graph_generation", num_nodes * 8, "nodes", true);
+    profiler.record_allocation("graph_generation", num_nodes * 8, "_nodes", true);
 
     let mut graph = crate::base::Graph::new();
     let mut rng = rand::rng();
 
-    // Add nodes with memory tracking
+    // Add _nodes with memory tracking
     const NODE_BATCH_SIZE: usize = 25_000;
     for batch_start in (0..num_nodes).step_by(NODE_BATCH_SIZE) {
         let batch_end = (batch_start + NODE_BATCH_SIZE).min(num_nodes);
@@ -1119,20 +1118,19 @@ pub fn generate_profiled_large_graph(
 
         if batch_start % (NODE_BATCH_SIZE * 10) == 0 {
             println!(
-                "   📊 Added {} nodes, current memory usage estimate: {:.1} MB",
+                "   📊 Added {} _nodes, current memory usage estimate: {:.1} MB",
                 batch_end,
                 (batch_end * 16) as f64 / 1_000_000.0
             );
         }
     }
 
-    // Add edges based on graph type
+    // Add edges based on graph _type
     let target_edges = match graph_type {
         "sparse" => num_nodes * 2,
         "medium" => num_nodes * 4,
         "dense" => num_nodes * 8,
-        "scale_free" => (num_nodes as f64 * 2.5) as usize,
-        _ => num_nodes * 3, // default
+        "scale_free" => (num_nodes as f64 * 2.5) as usize_ => num_nodes * 3, // default
     };
 
     profiler.record_allocation("graph_generation", target_edges * 24, "edges", true);
@@ -1140,12 +1138,12 @@ pub fn generate_profiled_large_graph(
     let mut edges_added = 0;
     while edges_added < target_edges && edges_added < num_nodes * 10 {
         // Prevent infinite loop
-        let source = rng.random_range(0..num_nodes);
-        let target = rng.random_range(0..num_nodes);
+        let source = rng.gen_range(0..num_nodes);
+        let target = rng.gen_range(0..num_nodes);
 
         if source != target {
             let weight: f64 = rng.random();
-            if graph.add_edge(source, target, weight).is_ok() {
+            if graph.add_edge(source..target, weight).is_ok() {
                 edges_added += 1;
 
                 if edges_added % 100_000 == 0 {
@@ -1157,7 +1155,7 @@ pub fn generate_profiled_large_graph(
 
     let generation_time = generation_start.elapsed();
     println!(
-        "✅ Graph generation completed in {:?}: {} nodes, {} edges",
+        "✅ Graph generation completed in {:?}: {} _nodes, {} edges",
         generation_time,
         graph.node_count(),
         graph.edge_count()

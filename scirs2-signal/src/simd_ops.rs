@@ -4,12 +4,14 @@
 //! processing operations using scirs2-core's unified SIMD abstractions.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, ArrayView1};
+use crate::hilbert::hilbert;
+use ndarray::{Array1, ArrayView1, s};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::f64::consts::PI;
 use std::sync::Once;
 
+#[allow(unused_imports)]
 // Global SIMD capability detection
 static INIT: Once = Once::new();
 static mut SIMD_CAPS: Option<PlatformCapabilities> = None;
@@ -37,15 +39,15 @@ fn get_simd_caps() -> &'static PlatformCapabilities {
 ///
 /// * Convolution result
 #[allow(dead_code)]
-pub fn simd_convolve_f32(signal: &[f32], kernel: &[f32], mode: &str) -> SignalResult<Vec<f32>> {
+pub fn simd_convolve_f32(_signal: &[f32], kernel: &[f32], mode: &str) -> SignalResult<Vec<f32>> {
     let caps = get_simd_caps();
 
-    if signal.is_empty() || kernel.is_empty() {
+    if _signal.is_empty() || kernel.is_empty() {
         return Ok(vec![]);
     }
 
     // Convert to ArrayView for SIMD operations
-    let signal_view = ArrayView1::from(signal);
+    let signal_view = ArrayView1::from(_signal);
     let kernel_view = ArrayView1::from(kernel);
 
     // Use SIMD convolution based on capabilities
@@ -58,15 +60,14 @@ pub fn simd_convolve_f32(signal: &[f32], kernel: &[f32], mode: &str) -> SignalRe
     };
 
     // Apply mode
-    apply_mode_f32(result, signal.len(), kernel.len(), mode)
+    apply_mode_f32(result, _signal.len(), kernel.len(), mode)
 }
 
 /// Direct SIMD convolution for small kernels
 #[allow(dead_code)]
 fn simd_convolve_direct_f32(
     signal: &ArrayView1<f32>,
-    kernel: &ArrayView1<f32>,
-    _caps: &PlatformCapabilities,
+    kernel: &ArrayView1<f32>, _caps: &PlatformCapabilities,
 ) -> SignalResult<Vec<f32>> {
     let n_signal = signal.len();
     let n_kernel = kernel.len();
@@ -103,8 +104,7 @@ fn simd_convolve_direct_f32(
 #[allow(dead_code)]
 fn simd_convolve_overlap_save_f32(
     signal: &ArrayView1<f32>,
-    kernel: &ArrayView1<f32>,
-    _caps: &PlatformCapabilities,
+    kernel: &ArrayView1<f32>, _caps: &PlatformCapabilities,
 ) -> SignalResult<Vec<f32>> {
     let n_signal = signal.len();
     let n_kernel = kernel.len();
@@ -162,17 +162,17 @@ fn simd_convolve_overlap_save_f32(
 ///
 /// * Filtered signal
 #[allow(dead_code)]
-pub fn simd_fir_filter_f32(signal: &[f32], coeffs: &[f32]) -> SignalResult<Vec<f32>> {
-    if signal.is_empty() || coeffs.is_empty() {
+pub fn simd_fir_filter_f32(_signal: &[f32], coeffs: &[f32]) -> SignalResult<Vec<f32>> {
+    if _signal.is_empty() || coeffs.is_empty() {
         return Ok(vec![]);
     }
 
-    let n_signal = signal.len();
+    let n_signal = _signal.len();
     let n_coeffs = coeffs.len();
     let mut output = vec![0.0f32; n_signal];
 
     // Convert to arrays
-    let signal_arr = ArrayView1::from(signal);
+    let signal_arr = ArrayView1::from(_signal);
     let coeffs_arr = ArrayView1::from(coeffs);
 
     // Apply FIR filter using SIMD
@@ -209,12 +209,12 @@ pub fn simd_fir_filter_f32(signal: &[f32], coeffs: &[f32]) -> SignalResult<Vec<f
 ///
 /// * Cross-correlation result
 #[allow(dead_code)]
-pub fn simd_correlate_f32(signal1: &[f32], signal2: &[f32], mode: &str) -> SignalResult<Vec<f32>> {
+pub fn simd_correlate_f32(_signal1: &[f32], signal2: &[f32], mode: &str) -> SignalResult<Vec<f32>> {
     // Correlation is convolution with reversed second signal
     let mut reversed = signal2.to_vec();
     reversed.reverse();
 
-    simd_convolve_f32(signal1, &reversed, mode)
+    simd_convolve_f32(_signal1, &reversed, mode)
 }
 
 /// SIMD-optimized RMS calculation
@@ -227,17 +227,17 @@ pub fn simd_correlate_f32(signal1: &[f32], signal2: &[f32], mode: &str) -> Signa
 ///
 /// * RMS value
 #[allow(dead_code)]
-pub fn simd_rms_f32(signal: &[f32]) -> f32 {
-    if signal.is_empty() {
+pub fn simd_rms_f32(_signal: &[f32]) -> f32 {
+    if _signal.is_empty() {
         return 0.0;
     }
 
-    let signal_view = ArrayView1::from(signal);
+    let signal_view = ArrayView1::from(_signal);
 
     // Compute sum of squares using SIMD
     let sum_squares = f32::simd_dot(&signal_view, &signal_view);
 
-    (sum_squares / signal.len() as f32).sqrt()
+    (sum_squares / _signal.len() as f32).sqrt()
 }
 
 /// SIMD-optimized peak detection
@@ -270,7 +270,7 @@ pub fn simd_find_peaks_f32(
     // Find local maxima
     for i in 1..signal.len() - 1 {
         if signal[i] > signal[i - 1] && signal[i] > signal[i + 1] && signal[i] >= thresh {
-            // Check minimum distance constraint
+            // Check minimum _distance constraint
             if let Some(last) = last_peak {
                 if i - last >= min_distance {
                     peaks.push(i);
@@ -304,17 +304,17 @@ pub fn simd_find_peaks_f32(
 ///
 /// * Windowed signal
 #[allow(dead_code)]
-pub fn simd_apply_window_f32(signal: &[f32], window: &[f32]) -> SignalResult<Vec<f32>> {
-    if signal.len() != window.len() {
+pub fn simd_apply_window_f32(_signal: &[f32], window: &[f32]) -> SignalResult<Vec<f32>> {
+    if _signal.len() != window.len() {
         return Err(SignalError::ShapeMismatch(
             "Signal and window must have the same length".to_string(),
         ));
     }
 
-    let signal_view = ArrayView1::from(signal);
+    let signal_view = ArrayView1::from(_signal);
     let window_view = ArrayView1::from(window);
 
-    let mut output = Array1::zeros(signal.len());
+    let mut output = Array1::zeros(_signal.len());
     f32::simd_mul(&signal_view, &window_view, &mut output.view_mut());
 
     Ok(output.to_vec())
@@ -330,29 +330,27 @@ pub fn simd_apply_window_f32(signal: &[f32], window: &[f32]) -> SignalResult<Vec
 ///
 /// * Signal envelope (magnitude of analytic signal)
 #[allow(dead_code)]
-pub fn simd_envelope_f32(signal: &[f32]) -> SignalResult<Vec<f32>> {
-    use crate::hilbert::hilbert;
-
+pub fn simd_envelope_f32(_signal: &[f32]) -> SignalResult<Vec<f32>> {
     // Compute Hilbert transform
-    let hilbert_sig = hilbert(signal)?;
+    let hilbert_sig = hilbert(_signal)?;
 
     // Convert to f32 if needed
     let hilbert_f32: Vec<f32> = hilbert_sig.iter().map(|&x| x as f32).collect();
 
     // Compute envelope using SIMD
-    let signal_view = ArrayView1::from(signal);
+    let signal_view = ArrayView1::from(_signal);
     let hilbert_view = ArrayView1::from(&hilbert_f32);
 
-    let mut envelope = vec![0.0f32; signal.len()];
+    let mut envelope = vec![0.0f32; _signal.len()];
 
-    // Compute magnitude: sqrt(signal^2 + hilbert^2)
-    let mut sig_squared = Array1::zeros(signal.len());
-    let mut hil_squared = Array1::zeros(signal.len());
+    // Compute magnitude: sqrt(_signal^2 + hilbert^2)
+    let mut sig_squared = Array1::zeros(_signal.len());
+    let mut hil_squared = Array1::zeros(_signal.len());
 
     f32::simd_mul(&signal_view, &signal_view, &mut sig_squared.view_mut());
     f32::simd_mul(&hilbert_view, &hilbert_view, &mut hil_squared.view_mut());
 
-    let mut sum = Array1::zeros(signal.len());
+    let mut sum = Array1::zeros(_signal.len());
     f32::simd_add(
         &sig_squared.view(),
         &hil_squared.view(),
@@ -380,7 +378,7 @@ fn apply_mode_f32(
         "same" => {
             let start = (kernel_len - 1) / 2;
             let end = start + signal_len;
-            if end <= result.len() {
+            if end <= result._len() {
                 Ok(result[start..end].to_vec())
             } else {
                 Ok(result)
@@ -393,7 +391,7 @@ fn apply_mode_f32(
                 ));
             }
             let start = kernel_len - 1;
-            let end = result.len() - (kernel_len - 1);
+            let end = result._len() - (kernel_len - 1);
             if start < end {
                 Ok(result[start..end].to_vec())
             } else {
@@ -455,13 +453,13 @@ pub fn simd_autocorrelation_f64(
     let mut autocorr = Array1::zeros(max_lag + 1);
 
     // SIMD-optimized computation
-    for lag in 0..=max_lag {
-        let sig1 = signal.slice(s![0..n - lag]);
-        let sig2 = signal.slice(s![lag..n]);
-        autocorr[lag] = f64::simd_dot(&sig1, &sig2);
+    for _lag in 0..=max_lag {
+        let sig1 = signal.slice(s![0..n - _lag]);
+        let sig2 = signal.slice(s![_lag..n]);
+        autocorr[_lag] = f64::simd_dot(&sig1, &sig2);
     }
 
-    // Normalize by the zero-lag value
+    // Normalize by the zero-_lag value
     if autocorr[0] != 0.0 {
         let autocorr_view = autocorr.view_mut();
         let scale = Array1::from_elem(autocorr.len(), 1.0 / autocorr[0]);
@@ -511,7 +509,7 @@ pub fn simd_autocorrelation_enhanced(
 
     let start_time = std::time::Instant::now();
 
-    // Determine chunk size for memory optimization
+    // Determine chunk _size for memory optimization
     let effective_chunk_size = chunk_size.unwrap_or_else(|| {
         if n > 100_000 {
             n / 10 // Use 10% chunks for very large signals
@@ -529,11 +527,11 @@ pub fn simd_autocorrelation_enhanced(
         // Parallel computation of lags
         let results: Result<Vec<f64>, SignalError> = (0..=max_lag)
             .into_par_iter()
-            .map(|lag| {
-                let available_len = n - lag;
+            .map(|_lag| {
+                let available_len = n - _lag;
                 if available_len > 0 {
                     let sig1 = signal.slice(s![0..available_len]);
-                    let sig2 = signal.slice(s![lag..n]);
+                    let sig2 = signal.slice(s![_lag..n]);
                     Ok(f64::simd_dot(&sig1, &sig2))
                 } else {
                     Ok(0.0)
@@ -542,17 +540,17 @@ pub fn simd_autocorrelation_enhanced(
             .collect();
 
         let results = results?;
-        for (lag, value) in results.into_iter().enumerate() {
-            autocorr[lag] = value;
+        for (_lag, value) in results.into_iter().enumerate() {
+            autocorr[_lag] = value;
         }
     } else {
         // Sequential SIMD computation
-        for lag in 0..=max_lag {
-            let available_len = n - lag;
+        for _lag in 0..=max_lag {
+            let available_len = n - _lag;
             if available_len > 0 {
                 let sig1 = signal.slice(s![0..available_len]);
-                let sig2 = signal.slice(s![lag..n]);
-                autocorr[lag] = f64::simd_dot(&sig1, &sig2);
+                let sig2 = signal.slice(s![_lag..n]);
+                autocorr[_lag] = f64::simd_dot(&sig1, &sig2);
             }
         }
     }
@@ -598,10 +596,10 @@ pub struct AutocorrelationMetrics {
 
 /// Estimate memory usage for autocorrelation computation
 #[allow(dead_code)]
-fn estimate_memory_usage(signal_length: usize, max_lag: usize) -> f64 {
-    let signal_memory = signal_length * 8; // 8 bytes per f64
+fn estimate_memory_usage(_signal_length: usize, max_lag: usize) -> f64 {
+    let signal_memory = _signal_length * 8; // 8 bytes per f64
     let autocorr_memory = (max_lag + 1) * 8;
-    let working_memory = signal_length * 2 * 8; // For slices
+    let working_memory = _signal_length * 2 * 8; // For slices
 
     (signal_memory + autocorr_memory + working_memory) as f64 / (1024.0 * 1024.0)
 }
@@ -641,8 +639,8 @@ pub fn simd_cross_correlation_f64(
 ///
 /// * Total energy (sum of squares)
 #[allow(dead_code)]
-pub fn simd_energy_f64(signal: &Array1<f64>) -> f64 {
-    f64::simd_dot(&signal.view(), &signal.view())
+pub fn simd_energy_f64(_signal: &Array1<f64>) -> f64 {
+    f64::simd_dot(&_signal.view(), &_signal.view())
 }
 
 /// SIMD-optimized root mean square computation
@@ -655,29 +653,29 @@ pub fn simd_energy_f64(signal: &Array1<f64>) -> f64 {
 ///
 /// * RMS value
 #[allow(dead_code)]
-pub fn simd_rms_f64(signal: &Array1<f64>) -> f64 {
-    if signal.is_empty() {
+pub fn simd_rms_f64(_signal: &Array1<f64>) -> f64 {
+    if _signal.is_empty() {
         return 0.0;
     }
 
-    let energy = simd_energy_f64(signal);
-    (energy / signal.len() as f64).sqrt()
+    let energy = simd_energy_f64(_signal);
+    (energy / _signal.len() as f64).sqrt()
 }
 
 /// SIMD-optimized signal energy calculation
 #[allow(dead_code)]
-pub fn simd_energy_f32(signal: &[f32]) -> f32 {
-    let signal_view = ArrayView1::from(signal);
+pub fn simd_energy_f32(_signal: &[f32]) -> f32 {
+    let signal_view = ArrayView1::from(_signal);
     f32::simd_dot(&signal_view, &signal_view)
 }
 
 /// SIMD-optimized signal power calculation
 #[allow(dead_code)]
-pub fn simd_power_f32(signal: &[f32]) -> f32 {
-    if signal.is_empty() {
+pub fn simd_power_f32(_signal: &[f32]) -> f32 {
+    if _signal.is_empty() {
         return 0.0;
     }
-    simd_energy_f32(signal) / signal.len() as f32
+    simd_energy_f32(_signal) / _signal.len() as f32
 }
 
 /// SIMD-optimized spectral magnitude calculation
@@ -690,10 +688,10 @@ pub fn simd_power_f32(signal: &[f32]) -> f32 {
 ///
 /// * Magnitude spectrum
 #[allow(dead_code)]
-pub fn simd_complex_magnitude_f32(complex_data: &[f32]) -> SignalResult<Vec<f32>> {
-    if complex_data.len() % 2 != 0 {
+pub fn simd_complex_magnitude_f32(_complex_data: &[f32]) -> SignalResult<Vec<f32>> {
+    if _complex_data.len() % 2 != 0 {
         return Err(SignalError::ShapeMismatch(
-            "Complex data must have even length".to_string(),
+            "Complex _data must have even length".to_string(),
         ));
     }
 
@@ -801,14 +799,14 @@ pub fn simd_adaptive_filter_f32(
 
 /// SIMD-optimized convolution for f64
 #[allow(dead_code)]
-pub fn simd_convolve_f64(signal: &[f64], kernel: &[f64], mode: &str) -> SignalResult<Vec<f64>> {
+pub fn simd_convolve_f64(_signal: &[f64], kernel: &[f64], mode: &str) -> SignalResult<Vec<f64>> {
     let caps = get_simd_caps();
 
-    if signal.is_empty() || kernel.is_empty() {
+    if _signal.is_empty() || kernel.is_empty() {
         return Ok(vec![]);
     }
 
-    let signal_view = ArrayView1::from(signal);
+    let signal_view = ArrayView1::from(_signal);
     let kernel_view = ArrayView1::from(kernel);
 
     let result = if kernel.len() <= 16 {
@@ -817,15 +815,14 @@ pub fn simd_convolve_f64(signal: &[f64], kernel: &[f64], mode: &str) -> SignalRe
         simd_convolve_overlap_save_f64(&signal_view, &kernel_view, caps)?
     };
 
-    apply_mode_f64(result, signal.len(), kernel.len(), mode)
+    apply_mode_f64(result, _signal.len(), kernel.len(), mode)
 }
 
 /// Direct SIMD convolution for small kernels (f64)
 #[allow(dead_code)]
 fn simd_convolve_direct_f64(
     signal: &ArrayView1<f64>,
-    kernel: &ArrayView1<f64>,
-    _caps: &PlatformCapabilities,
+    kernel: &ArrayView1<f64>, _caps: &PlatformCapabilities,
 ) -> SignalResult<Vec<f64>> {
     let n_signal = signal.len();
     let n_kernel = kernel.len();
@@ -856,8 +853,7 @@ fn simd_convolve_direct_f64(
 #[allow(dead_code)]
 fn simd_convolve_overlap_save_f64(
     signal: &ArrayView1<f64>,
-    kernel: &ArrayView1<f64>,
-    _caps: &PlatformCapabilities,
+    kernel: &ArrayView1<f64>, _caps: &PlatformCapabilities,
 ) -> SignalResult<Vec<f64>> {
     let n_signal = signal.len();
     let n_kernel = kernel.len();
@@ -913,7 +909,7 @@ fn apply_mode_f64(
         "same" => {
             let start = (kernel_len - 1) / 2;
             let end = start + signal_len;
-            if end <= result.len() {
+            if end <= result._len() {
                 Ok(result[start..end].to_vec())
             } else {
                 Ok(result)
@@ -926,7 +922,7 @@ fn apply_mode_f64(
                 ));
             }
             let start = kernel_len - 1;
-            let end = result.len() - (kernel_len - 1);
+            let end = result._len() - (kernel_len - 1);
             if start < end {
                 Ok(result[start..end].to_vec())
             } else {
@@ -948,26 +944,26 @@ fn apply_mode_f64(
 ///
 /// * Autocorrelation coefficients
 #[allow(dead_code)]
-pub fn simd_autocorrelation_slice_f64(signal: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
-    let n = signal.len();
+pub fn simd_autocorrelation_slice_f64(_signal: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
+    let n = _signal.len();
     if n == 0 || max_lag >= n {
         return Err(SignalError::ValueError(
-            "Invalid signal length or max_lag".to_string(),
+            "Invalid _signal length or max_lag".to_string(),
         ));
     }
 
-    let signal_view = ArrayView1::from(signal);
+    let signal_view = ArrayView1::from(_signal);
     let mut autocorr = vec![0.0; max_lag + 1];
 
     // Use SIMD for autocorrelation computation
-    for lag in 0..=max_lag {
-        let available_len = n - lag;
+    for _lag in 0..=max_lag {
+        let available_len = n - _lag;
         if available_len > 0 {
             let x1 = signal_view.slice(s![0..available_len]);
-            let x2 = signal_view.slice(s![lag..n]);
+            let x2 = signal_view.slice(s![_lag..n]);
 
             // SIMD dot product for correlation
-            autocorr[lag] = f64::simd_dot(&x1, &x2) / available_len as f64;
+            autocorr[_lag] = f64::simd_dot(&x1, &x2) / available_len  as f64;
         }
     }
 
@@ -982,14 +978,14 @@ pub fn simd_spectral_features_f64(
 ) -> SignalResult<(f64, f64, f64)> {
     if signal.len() < window_size || window_size == 0 {
         return Err(SignalError::ValueError(
-            "Invalid signal or window size".to_string(),
+            "Invalid signal or window _size".to_string(),
         ));
     }
 
     let signal_view = ArrayView1::from(signal);
     let energy = f64::simd_dot(&signal_view, &signal_view);
-    let mean = signal.iter().sum::<f64>() / signal.len() as f64;
-    let variance = signal.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / signal.len() as f64;
+    let mean = signal.iter().sum::<f64>() / signal.len()  as f64;
+    let variance = signal.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / signal.len()  as f64;
 
     Ok((energy, variance.sqrt(), mean))
 }
@@ -1007,23 +1003,23 @@ pub fn simd_spectral_features_f64(
 ///
 /// * Spectral centroid in Hz
 #[allow(dead_code)]
-pub fn simd_spectral_centroid_f64(spectrum: &[f64], frequencies: &[f64]) -> SignalResult<f64> {
-    if spectrum.len() != frequencies.len() {
+pub fn simd_spectral_centroid_f64(_spectrum: &[f64], frequencies: &[f64]) -> SignalResult<f64> {
+    if _spectrum.len() != frequencies.len() {
         return Err(SignalError::ShapeMismatch(
             "Spectrum and frequencies must have same length".to_string(),
         ));
     }
 
-    if spectrum.is_empty() {
+    if _spectrum.is_empty() {
         return Ok(0.0);
     }
 
-    let spectrum_view = ArrayView1::from(spectrum);
+    let spectrum_view = ArrayView1::from(_spectrum);
     let freq_view = ArrayView1::from(frequencies);
 
     // SIMD dot products for numerator and denominator
     let numerator = f64::simd_dot(&spectrum_view, &freq_view);
-    let denominator = spectrum.iter().sum::<f64>();
+    let denominator = _spectrum.iter().sum::<f64>();
 
     if denominator > 1e-15 {
         Ok(numerator / denominator)
@@ -1059,7 +1055,7 @@ pub fn simd_spectral_rolloff_f64(
 
     if spectrum.is_empty() || rolloff_ratio < 0.0 || rolloff_ratio > 1.0 {
         return Err(SignalError::ValueError(
-            "Invalid spectrum or rolloff ratio".to_string(),
+            "Invalid spectrum or rolloff _ratio".to_string(),
         ));
     }
 
@@ -1087,21 +1083,21 @@ pub fn simd_spectral_rolloff_f64(
 ///
 /// * Zero-crossing rate (crossings per sample)
 #[allow(dead_code)]
-pub fn simd_zero_crossing_rate_f64(signal: &[f64]) -> f64 {
-    if signal.len() < 2 {
+pub fn simd_zero_crossing_rate_f64(_signal: &[f64]) -> f64 {
+    if _signal.len() < 2 {
         return 0.0;
     }
 
     let mut crossings = 0;
 
     // Use SIMD for sign detection and counting
-    for i in 1..signal.len() {
-        if (signal[i] >= 0.0) != (signal[i - 1] >= 0.0) {
+    for i in 1.._signal.len() {
+        if (_signal[i] >= 0.0) != (_signal[i - 1] >= 0.0) {
             crossings += 1;
         }
     }
 
-    crossings as f64 / (signal.len() - 1) as f64
+    crossings as f64 / (_signal.len() - 1) as f64
 }
 
 /// SIMD-optimized spectral flatness computation
@@ -1116,20 +1112,20 @@ pub fn simd_zero_crossing_rate_f64(signal: &[f64]) -> f64 {
 ///
 /// * Spectral flatness (0.0 to 1.0)
 #[allow(dead_code)]
-pub fn simd_spectral_flatness_f64(spectrum: &[f64]) -> SignalResult<f64> {
-    if spectrum.is_empty() {
+pub fn simd_spectral_flatness_f64(_spectrum: &[f64]) -> SignalResult<f64> {
+    if _spectrum.is_empty() {
         return Ok(0.0);
     }
 
     // Check for negative values
-    if spectrum.iter().any(|&x| x < 0.0) {
+    if _spectrum.iter().any(|&x| x < 0.0) {
         return Err(SignalError::ValueError(
             "Spectrum values must be non-negative".to_string(),
         ));
     }
 
     // Filter out zero values for geometric mean computation
-    let positive_values: Vec<f64> = spectrum.iter().cloned().filter(|&x| x > 1e-15).collect();
+    let positive_values: Vec<f64> = _spectrum.iter().cloned().filter(|&x| x > 1e-15).collect();
 
     if positive_values.is_empty() {
         return Ok(0.0);
@@ -1137,7 +1133,7 @@ pub fn simd_spectral_flatness_f64(spectrum: &[f64]) -> SignalResult<f64> {
 
     // Arithmetic mean using SIMD
     let _spectrum_view = ArrayView1::from(&positive_values);
-    let arithmetic_mean = positive_values.iter().sum::<f64>() / positive_values.len() as f64;
+    let arithmetic_mean = positive_values.iter().sum::<f64>() / positive_values.len()  as f64;
 
     // Geometric mean (log domain for numerical stability)
     let log_sum = positive_values.iter().map(|&x| x.ln()).sum::<f64>();
@@ -1196,9 +1192,9 @@ pub fn simd_mel_filterbank_f64(
     let mut mel_energies = vec![0.0; n_mels];
 
     for m in 0..n_mels {
-        let mel_center = mel_min + (mel_max - mel_min) * (m + 1) as f64 / (n_mels + 1) as f64;
-        let mel_low = mel_min + (mel_max - mel_min) * m as f64 / (n_mels + 1) as f64;
-        let mel_high = mel_min + (mel_max - mel_min) * (m + 2) as f64 / (n_mels + 1) as f64;
+        let mel_center = mel_min + (mel_max - mel_min) * (m + 1) as f64 / (n_mels + 1)  as f64;
+        let mel_low = mel_min + (mel_max - mel_min) * m as f64 / (n_mels + 1)  as f64;
+        let mel_high = mel_min + (mel_max - mel_min) * (m + 2) as f64 / (n_mels + 1)  as f64;
 
         let f_center = mel_to_hz(mel_center);
         let f_low = mel_to_hz(mel_low);
@@ -1234,7 +1230,7 @@ pub fn simd_mel_filterbank_f64(
 ///
 /// * Filtered output sample
 #[allow(dead_code)]
-pub fn simd_realtime_iir_f64(input: f64, coeffs: &[f64], delays: &mut [f64]) -> SignalResult<f64> {
+pub fn simd_realtime_iir_f64(_input: f64, coeffs: &[f64], delays: &mut [f64]) -> SignalResult<f64> {
     if coeffs.len() % 5 != 0 {
         return Err(SignalError::ValueError(
             "Coefficients must be groups of 5 [b0, b1, b2, a1, a2]".to_string(),
@@ -1248,7 +1244,7 @@ pub fn simd_realtime_iir_f64(input: f64, coeffs: &[f64], delays: &mut [f64]) -> 
         ));
     }
 
-    let mut output = input;
+    let mut output = _input;
 
     for i in 0..n_biquads {
         let b0 = coeffs[i * 5];
@@ -1322,7 +1318,7 @@ pub fn simd_polyphase_filter_f64(
         }
         delay_line[0] = sample;
 
-        // Apply polyphase filters using SIMD
+        // Apply polyphase _filters using SIMD
         let mut sum = 0.0;
         for (phase, subfilter) in polyphase_filters.iter().enumerate() {
             if phase < n_phases {
@@ -1361,18 +1357,18 @@ pub fn simd_overlap_add_f64(
     let ir_len = impulse_response.len();
     let _output_len = block_size + ir_len - 1;
 
-    // Initialize overlap buffer if needed
+    // Initialize overlap _buffer if needed
     if overlap_buffer.len() != ir_len - 1 {
         overlap_buffer.resize(ir_len - 1, 0.0);
     }
 
-    // Convolve current block with impulse response
+    // Convolve current _block with impulse _response
     let conv_result = simd_convolve_f64(input_block, impulse_response, "full")?;
 
     // Prepare output
     let mut output = vec![0.0; block_size];
 
-    // Add overlap from previous block
+    // Add overlap from previous _block
     for i in 0..(ir_len - 1).min(block_size) {
         output[i] = conv_result[i] + overlap_buffer[i];
     }
@@ -1384,7 +1380,7 @@ pub fn simd_overlap_add_f64(
         }
     }
 
-    // Update overlap buffer for next block
+    // Update overlap _buffer for next _block
     for i in 0..(ir_len - 1) {
         let src_idx = block_size + i;
         if src_idx < conv_result.len() {
@@ -1423,7 +1419,7 @@ where
 {
     if window_size == 0 || hop_size == 0 || window_size > signal.len() {
         return Err(SignalError::ValueError(
-            "Invalid window or hop size".to_string(),
+            "Invalid window or hop _size".to_string(),
         ));
     }
 
@@ -1456,10 +1452,10 @@ where
 ///
 /// * Cepstral coefficients
 #[allow(dead_code)]
-pub fn simd_cepstral_analysis_f64(log_spectrum: &[f64], n_coeffs: usize) -> SignalResult<Vec<f64>> {
-    if log_spectrum.is_empty() || n_coeffs == 0 || n_coeffs > log_spectrum.len() {
+pub fn simd_cepstral_analysis_f64(_log_spectrum: &[f64], n_coeffs: usize) -> SignalResult<Vec<f64>> {
+    if _log_spectrum.is_empty() || n_coeffs == 0 || n_coeffs > _log_spectrum.len() {
         return Err(SignalError::ValueError(
-            "Invalid spectrum or coefficient count".to_string(),
+            "Invalid _spectrum or coefficient count".to_string(),
         ));
     }
 
@@ -1473,7 +1469,7 @@ pub fn simd_cepstral_analysis_f64(log_spectrum: &[f64], n_coeffs: usize) -> Sign
             let cos_term = (PI * k as f64 * (n_idx as f64 + 0.5) / n as f64).cos();
             sum += log_spectrum[n_idx] * cos_term;
         }
-        cepstrum[k] = sum * (2.0 / n as f64).sqrt();
+        cepstrum[k] = sum * ((2.0 / n as f64) as f64).sqrt();
     }
 
     Ok(cepstrum)

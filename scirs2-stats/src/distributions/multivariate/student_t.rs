@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Axis, Data, Ix1, Ix2};
 use rand::rng;
-use rand_distr::{ChiSquared, Distribution, Normal as RandNormal};
+use rand__distr::{ChiSquared, Distribution, Normal as RandNormal};
 use std::fmt::Debug;
 
 // Import the helper functions used by MultivariateNormal
@@ -111,7 +111,7 @@ impl MultivariateT {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::student_t::MultivariateT;
+    /// use scirs2__stats::distributions::multivariate::student_t::MultivariateT;
     ///
     /// // Create a 2D multivariate Student's t-distribution with 5 degrees of freedom
     /// let mean = array![0.0, 0.0];
@@ -192,7 +192,7 @@ impl MultivariateT {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::student_t::MultivariateT;
+    /// use scirs2__stats::distributions::multivariate::student_t::MultivariateT;
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
@@ -249,7 +249,7 @@ impl MultivariateT {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::student_t::MultivariateT;
+    /// use scirs2__stats::distributions::multivariate::student_t::MultivariateT;
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
@@ -305,7 +305,7 @@ impl MultivariateT {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::student_t::MultivariateT;
+    /// use scirs2__stats::distributions::multivariate::student_t::MultivariateT;
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
@@ -333,7 +333,7 @@ impl MultivariateT {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::student_t::MultivariateT;
+    /// use scirs2__stats::distributions::multivariate::student_t::MultivariateT;
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
@@ -409,7 +409,7 @@ impl MultivariateT {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distributions::multivariate;
+/// use scirs2__stats::distributions::multivariate;
 ///
 /// let mean = array![0.0, 0.0];
 /// let scale = array![[1.0, 0.5], [0.5, 2.0]];

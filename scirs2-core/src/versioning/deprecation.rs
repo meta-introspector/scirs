@@ -259,6 +259,35 @@ pub enum CommunicationChannel {
     DirectNotification,
 }
 
+/// Helper function to create a deprecation timeline
+fn deprecation_timeline(version: &Version, replacement_version: Option<&Version>) -> DeprecationTimeline {
+    let now = chrono::Utc::now();
+    let deprecated_date = now + chrono::Duration::days(30);
+    let end_of_life = now + chrono::Duration::days(180);
+    let removal_date = now + chrono::Duration::days(365);
+    
+    let milestones = vec![
+        DeprecationMilestone {
+            date: deprecated_date,
+            description: format!("Version {} will be deprecated", version),
+            actions: vec!["Update to newer version".to_string()],
+        },
+        DeprecationMilestone {
+            date: end_of_life,
+            description: format!("Version {} reaches end of life", version),
+            actions: vec!["Support will be discontinued".to_string()],
+        },
+    ];
+    
+    DeprecationTimeline {
+        announced: now,
+        deprecated_date,
+        end_of_life,
+        removal_date: Some(removal_date),
+        milestones,
+    }
+}
+
 /// Deprecation manager implementation
 pub struct DeprecationManager {
     /// Deprecation policy
@@ -475,7 +504,7 @@ impl DeprecationManager {
 
     /// Apply major version superseded rule
     fn apply_major_version_rule(
-        &mut self,
+        &self,
         versions_to_keep: u32,
     ) -> Result<Vec<MaintenanceAction>, CoreError> {
         let mut actions = Vec::new();
@@ -503,11 +532,15 @@ impl DeprecationManager {
                                 let latest_major = major_keys.last().unwrap();
                                 let replacement = Version::new(*latest_major, 0, 0);
 
-                                let _announcement = self.announce_deprecation(
-                                    version,
-                                    DeprecationReason::SupersededBy(replacement.clone()),
-                                    Some(replacement),
-                                )?;
+                                let _announcement = DeprecationAnnouncement {
+                                    version: version.clone(),
+                                    announcement_date: chrono::Utc::now(),
+                                    timeline: deprecation_timeline(version, Some(&replacement)),
+                                    message: format!("Version {} is deprecated in favor of {}", version, replacement),
+                                    migration_instructions: Some(format!("Please migrate to version {}", replacement)),
+                                    support_contact: None,
+                                    communication_channels: vec![],
+                                };
 
                                 actions.push(MaintenanceAction::AutoDeprecation {
                                     version: version.clone(),
@@ -527,7 +560,7 @@ impl DeprecationManager {
 
     /// Apply age-based deprecation rule
     fn apply_age_based_rule(
-        &mut self,
+        &self,
         max_age_days: u32,
         now: chrono::DateTime<chrono::Utc>,
     ) -> Result<Vec<MaintenanceAction>, CoreError> {
@@ -538,11 +571,15 @@ impl DeprecationManager {
             if status.phase == DeprecationPhase::Active {
                 let age = now.signed_duration_since(status.announced_date);
                 if age > max_age {
-                    let _announcement = self.announce_deprecation(
-                        version,
-                        DeprecationReason::MaintenanceBurden,
-                        None,
-                    )?;
+                    let _announcement = DeprecationAnnouncement {
+                        version: version.clone(),
+                        timeline: deprecation_timeline(version, None),
+                        announcement_date: now,
+                        message: format!("Version {} deprecated due to maintenance burden", version),
+                        migration_instructions: Some(format!("Please upgrade to newer version")),
+                        support_contact: Some("support@scirs.org".to_string()),
+                        communication_channels: vec![CommunicationChannel::Documentation, CommunicationChannel::Email],
+                    };
 
                     actions.push(MaintenanceAction::AutoDeprecation {
                         version: version.clone(),
@@ -573,9 +610,7 @@ impl DeprecationManager {
     }
 
     /// Generate deprecation message
-    fn generate_deprecation_message(
-        &self,
-        version: &Version,
+    fn generate_deprecation_message(&self, version: &Version,
         reason: &DeprecationReason,
         replacement: Option<&Version>,
     ) -> String {
@@ -610,9 +645,7 @@ impl DeprecationManager {
     }
 
     /// Generate migration instructions
-    fn generate_migration_instructions(
-        &self,
-        _version: &Version,
+    fn generate_migration_instructions(&self, current_version: &Version,
         replacement: Option<&Version>,
     ) -> Option<String> {
         replacement.map(|replacement| {

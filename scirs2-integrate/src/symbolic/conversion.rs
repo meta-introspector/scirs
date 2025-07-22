@@ -46,7 +46,7 @@ impl<F: IntegrateFloat> HigherOrderODE<F> {
     }
 
     /// Get the state variable names for the first-order system
-    pub fn state_variables(&self) -> Vec<Variable> {
+    pub fn state_variables() -> Vec<Variable> {
         (0..self.order)
             .map(|i| Variable::indexed(&self.dependent_var, i))
             .collect()
@@ -159,7 +159,6 @@ fn substitute_derivatives<F: IntegrateFloat>(
     expr: &SymbolicExpression<F>,
     variable_map: &HashMap<String, Variable>,
 ) -> SymbolicExpression<F> {
-    use SymbolicExpression::*;
 
     match expr {
         Var(v) => {
@@ -195,8 +194,7 @@ fn substitute_derivatives<F: IntegrateFloat>(
         Cos(a) => Cos(Box::new(substitute_derivatives(a, variable_map))),
         Exp(a) => Exp(Box::new(substitute_derivatives(a, variable_map))),
         Ln(a) => Ln(Box::new(substitute_derivatives(a, variable_map))),
-        Sqrt(a) => Sqrt(Box::new(substitute_derivatives(a, variable_map))),
-        _ => expr.clone(),
+        Sqrt(a) => Sqrt(Box::new(substitute_derivatives(a, variable_map)), _ => expr.clone(),
     }
 }
 
@@ -206,7 +204,6 @@ pub fn example_damped_oscillator<F: IntegrateFloat>(
     omega: F,
     damping: F,
 ) -> IntegrateResult<FirstOrderSystem<F>> {
-    use SymbolicExpression::*;
 
     // Second-order ODE: x'' + 2*damping*x' + omega^2*x = 0
     // Rearranged: x'' = -2*damping*x' - omega^2*x
@@ -300,14 +297,14 @@ impl<F: IntegrateFloat> SystemConverter<F> {
     }
 
     /// Add a higher-order ODE to the system
-    pub fn add_ode(mut self, ode: HigherOrderODE<F>) -> Self {
+    pub fn add_ode(mut ode: HigherOrderODE<F>) -> Self {
         self.total_states += ode.order;
         self.odes.push(ode);
         self
     }
 
     /// Convert the entire system to first-order
-    pub fn convert(self) -> IntegrateResult<FirstOrderSystem<F>> {
+    pub fn convert(&self) -> IntegrateResult<FirstOrderSystem<F>> {
         let mut all_state_vars = Vec::new();
         let mut all_expressions = Vec::new();
         let mut all_variable_map = HashMap::new();
@@ -335,11 +332,9 @@ impl<F: IntegrateFloat> Default for SystemConverter<F> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_second_order_conversion() {
-        use SymbolicExpression::*;
 
         // Test x'' = -x
         let x: SymbolicExpression<f64> = Var(Variable::new("x"));

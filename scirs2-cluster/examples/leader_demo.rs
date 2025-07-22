@@ -1,7 +1,7 @@
 //! Example demonstrating the Leader clustering algorithm
 
 use ndarray::array;
-use scirs2_cluster::{
+use scirs2__cluster::{
     euclidean_distance, leader_clustering, manhattan_distance, LeaderClustering, LeaderNode,
     LeaderTree,
 };
@@ -129,8 +129,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         [10.1, 1.1],
     ];
 
-    let (leaders_orig, _) = leader_clustering(data.view(), 1.5, euclidean_distance)?;
-    let (leaders_shuf, _) = leader_clustering(shuffled_data.view(), 1.5, euclidean_distance)?;
+    let (leaders_orig_) = leader_clustering(data.view(), 1.5, euclidean_distance)?;
+    let (leaders_shuf_) = leader_clustering(shuffled_data.view(), 1.5, euclidean_distance)?;
 
     println!("Original order - {} clusters", leaders_orig.nrows());
     println!("Shuffled order - {} clusters", leaders_shuf.nrows());
@@ -140,7 +140,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn print_tree_node<F: num_traits::Float + std::fmt::Display>(
+fn print_tree_node<F: num_traits: Float + std::fmt::Display>(
     node: &LeaderNode<F>,
     depth: usize,
     index: usize,

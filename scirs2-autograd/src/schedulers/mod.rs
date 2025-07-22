@@ -7,7 +7,7 @@ pub mod cosine_annealing;
 pub mod exponential;
 pub mod step;
 
-pub use cosine_annealing::CosineAnnealingLR;
+pub use cosine__annealing::CosineAnnealingLR;
 pub use exponential::ExponentialLR;
 pub use step::StepLR;
 
@@ -58,7 +58,7 @@ pub trait LRScheduler<F: Float> {
     /// Vector of learning rates for each step in the range
     fn get_lr_sequence(&self, start_step: usize, end_step: usize) -> Vec<F> {
         (start_step..end_step)
-            .map(|step| self.get_lr(step))
+            .map(|_step| self.get_lr(_step))
             .collect()
     }
 }
@@ -76,13 +76,13 @@ impl<F: Float> ConstantLR<F> {
     ///
     /// # Arguments
     /// * `lr` - The constant learning rate to use
-    pub fn new(lr: F) -> Self {
-        Self { lr }
+    pub fn new(_lr: F) -> Self {
+        Self { _lr }
     }
 }
 
 impl<F: Float> LRScheduler<F> for ConstantLR<F> {
-    fn get_lr(&self, _step: usize) -> F {
+    fn get_lr(&self_step: usize) -> F {
         self.lr
     }
 }
@@ -104,9 +104,9 @@ impl<F: Float> LinearLR<F> {
     /// * `start_lr` - Initial learning rate
     /// * `end_lr` - Final learning rate
     /// * `total_steps` - Total number of steps over which to interpolate
-    pub fn new(start_lr: F, end_lr: F, total_steps: usize) -> Self {
+    pub fn new(_start_lr: F, end_lr: F, total_steps: usize) -> Self {
         Self {
-            start_lr,
+            _start_lr,
             end_lr,
             total_steps,
         }

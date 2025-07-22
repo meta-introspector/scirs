@@ -20,6 +20,7 @@ use std::os::unix::fs::FileExt;
 // Memory mapping support
 #[cfg(windows)]
 use std::os::windows::fs::FileExt;
+use std::path::PathBuf;
 
 /// Configuration for adaptive memory compression
 #[derive(Debug, Clone)]
@@ -160,10 +161,10 @@ impl BlockId {
     }
 
     /// Create BlockId from u64 (for deserialization)
-    pub fn from_u64(value: u64) -> Self {
+    pub fn from_u64(_value: u64) -> Self {
         // This is a simplified reverse operation - in practice you'd want a proper bijection
-        let matrix_id = value / 1000000;
-        let remainder = value % 1000000;
+        let matrix_id = _value / 1000000;
+        let remainder = _value % 1000000;
         let block_row = (remainder / 1000) as usize;
         let block_col = (remainder % 1000) as usize;
         Self {
@@ -252,13 +253,13 @@ struct MemoryMappedFile {
 impl MemoryMappedFile {
     /// Create a new memory-mapped file
     #[allow(dead_code)]
-    fn new(file_path: PathBuf, size: usize) -> SparseResult<Self> {
+    fn new(_file_path: PathBuf, size: usize) -> SparseResult<Self> {
         let file = OpenOptions::new()
             .create(true)
             .truncate(true)
             .read(true)
             .write(true)
-            .open(&file_path)
+            .open(&_file_path)
             .map_err(|e| SparseError::Io(format!("Failed to create file {file_path:?}: {e}")))?;
 
         // Set file size if creating new file
@@ -353,8 +354,8 @@ impl MemoryMappedFile {
 
 impl AdaptiveMemoryCompressor {
     /// Create a new adaptive memory compressor
-    pub fn new(config: AdaptiveCompressionConfig) -> SparseResult<Self> {
-        let block_cache = BlockCache::new(config.cache_size);
+    pub fn new(_config: AdaptiveCompressionConfig) -> SparseResult<Self> {
+        let block_cache = BlockCache::new(_config.cache_size);
         let access_tracker = AccessTracker::default();
 
         // Initialize hierarchical compression levels
@@ -363,34 +364,34 @@ impl AdaptiveMemoryCompressor {
                 level: 1,
                 compression_ratio: 2.0,
                 algorithm: CompressionAlgorithm::RLE,
-                block_size: config.block_size,
+                block_size: _config.block_size,
                 access_threshold: 100,
             },
             CompressionLevel {
                 level: 2,
                 compression_ratio: 4.0,
                 algorithm: CompressionAlgorithm::Delta,
-                block_size: config.block_size / 2,
+                block_size: _config.block_size / 2,
                 access_threshold: 50,
             },
             CompressionLevel {
                 level: 3,
                 compression_ratio: 8.0,
                 algorithm: CompressionAlgorithm::LZ77,
-                block_size: config.block_size / 4,
+                block_size: _config.block_size / 4,
                 access_threshold: 10,
             },
         ];
 
         // Initialize out-of-core manager if enabled
-        let out_of_core_manager = if config.out_of_core {
-            Some(OutOfCoreManager::new(&config.temp_directory)?)
+        let out_of_core_manager = if _config.out_of_core {
+            Some(OutOfCoreManager::new(&_config.temp_directory)?)
         } else {
             None
         };
 
         Ok(Self {
-            config,
+            _config,
             memory_usage: AtomicUsize::new(0),
             compression_stats: Arc::new(Mutex::new(CompressionStats::default())),
             block_cache: Arc::new(Mutex::new(block_cache)),
@@ -486,8 +487,7 @@ impl AdaptiveMemoryCompressor {
                 compressed_size,
                 compression_ratio: total_size as f64 / compressed_size.max(1) as f64,
                 compression_time,
-            },
-            _phantom: PhantomData,
+            }_phantom: PhantomData,
         })
     }
 
@@ -819,8 +819,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_none<T>(
         &self,
-        matrix_id: u64,
-        _rows: usize,
+        matrix_id: u64, _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -870,8 +869,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_rle<T>(
         &self,
-        matrix_id: u64,
-        _rows: usize,
+        matrix_id: u64, _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -925,8 +923,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_delta<T>(
         &self,
-        matrix_id: u64,
-        _rows: usize,
+        matrix_id: u64, _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -981,8 +978,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_huffman<T>(
         &self,
-        matrix_id: u64,
-        _rows: usize,
+        matrix_id: u64, _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -1036,8 +1032,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_lz77<T>(
         &self,
-        matrix_id: u64,
-        _rows: usize,
+        matrix_id: u64, _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -1092,8 +1087,7 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_sparse_optimized<T>(
         &self,
-        matrix_id: u64,
-        _rows: usize,
+        matrix_id: u64, _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -1319,7 +1313,7 @@ impl AdaptiveMemoryCompressor {
         let mut codes_assigned = 0u32;
         let _total_symbols = sorted_freq.len();
 
-        for (value, _freq) in sorted_freq {
+        for (value_freq) in sorted_freq {
             // Simple code assignment - in practice, this would be a proper Huffman tree
             let code = codes_assigned;
             huffman_codes.insert(value, (code, code_length));
@@ -1812,8 +1806,7 @@ impl AdaptiveMemoryCompressor {
                 // RLE or Delta compression
                 match block.block_type {
                     BlockType::Indices => self.decompress_rle(&block.compressed_data),
-                    BlockType::IndPtr => self.decompress_delta(&block.compressed_data),
-                    _ => Ok(block.compressed_data.clone()),
+                    BlockType::IndPtr => self.decompress_delta(&block.compressed_data, _ => Ok(block.compressed_data.clone()),
                 }
             }
             2 => {
@@ -1904,11 +1897,11 @@ impl AdaptiveMemoryCompressor {
         Ok(values)
     }
 
-    fn parse_combined_data<T>(&self, _data: &[u8]) -> SparseResult<(Vec<usize>, Vec<usize>, Vec<T>)>
+    fn parse_combined_data<T>(&self_data: &[u8]) -> SparseResult<(Vec<usize>, Vec<usize>, Vec<T>)>
     where
         T: Float + NumAssign + Send + Sync + Copy,
     {
-        // Placeholder for combined data parsing
+        // Placeholder for combined _data parsing
         Ok((Vec::new(), Vec::new(), Vec::new()))
     }
 
@@ -1944,8 +1937,7 @@ impl AdaptiveMemoryCompressor {
                 compressed_size: total_size,
                 compression_ratio: 1.0,
                 compression_time: 0.0,
-            },
-            _phantom: PhantomData,
+            }_phantom: PhantomData,
         })
     }
 
@@ -2003,22 +1995,22 @@ impl AdaptiveMemoryCompressor {
 // Supporting structures and implementations
 
 impl BlockCache {
-    fn new(max_size: usize) -> Self {
+    fn new(_max_size: usize) -> Self {
         Self {
             cache: HashMap::new(),
             access_order: VecDeque::new(),
-            max_size,
+            _max_size,
             current_size: 0,
         }
     }
 }
 
 impl OutOfCoreManager {
-    fn new(temp_dir: &str) -> SparseResult<Self> {
-        std::fs::create_dir_all(temp_dir).map_err(SparseError::IoError)?;
+    fn new(_temp_dir: &str) -> SparseResult<Self> {
+        std::fs::create_dir_all(_temp_dir).map_err(SparseError::IoError)?;
 
         Ok(Self {
-            temp_dir: temp_dir.to_string(),
+            temp_dir: _temp_dir.to_string(),
             file_counter: AtomicUsize::new(0),
             active_files: HashMap::new(),
             memory_mapped_files: HashMap::new(),
@@ -2091,8 +2083,7 @@ impl OutOfCoreManager {
                 0 => BlockType::IndPtr,
                 1 => BlockType::Indices,
                 2 => BlockType::Data,
-                3 => BlockType::Combined,
-                _ => BlockType::Combined,
+                3 => BlockType::Combined_ =>, BlockType::Combined,
             },
             compressed_data,
             original_size: header.original_size,
@@ -2244,14 +2235,14 @@ impl BlockHeader {
     }
 
     #[allow(dead_code)]
-    fn deserialize(data: &[u8]) -> SparseResult<Self> {
-        if data.len() < std::mem::size_of::<BlockHeaderSerialized>() {
+    fn deserialize(_data: &[u8]) -> SparseResult<Self> {
+        if _data.len() < std::mem::size_of::<BlockHeaderSerialized>() {
             return Err(SparseError::Io("Invalid header size".to_string()));
         }
 
         // Convert from bytes
         let serialized: BlockHeaderSerialized = unsafe {
-            let ptr = data.as_ptr() as *const BlockHeaderSerialized;
+            let ptr = _data.as_ptr() as *const BlockHeaderSerialized;
             ptr.read()
         };
 
@@ -2276,8 +2267,7 @@ pub struct CompressedMatrix<T> {
     pub compressed_blocks: Vec<CompressedBlock>,
     pub compression_algorithm: CompressionAlgorithm,
     pub block_size: usize,
-    pub metadata: CompressionMetadata,
-    _phantom: PhantomData<T>,
+    pub metadata: CompressionMetadata_phantom: PhantomData<T>,
 }
 
 /// Compressed block of matrix data

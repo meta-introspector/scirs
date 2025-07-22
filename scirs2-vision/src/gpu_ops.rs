@@ -89,42 +89,42 @@ impl GpuVisionContext {
     }
 
     /// Create a new GPU vision context with a specific backend
-    pub fn with_backend(backend: GpuBackend) -> Result<Self> {
-        match GpuContext::new(backend) {
+    pub fn with_backend(_backend: GpuBackend) -> Result<Self> {
+        match GpuContext::new(_backend) {
             Ok(context) => {
-                eprintln!("Successfully created GPU context with requested backend: {backend:?}");
-                Ok(Self { context, backend })
+                eprintln!("Successfully created GPU context with requested _backend: {_backend:?}");
+                Ok(Self { context, _backend })
             }
             Err(error) => {
-                let detailed_error = match backend {
+                let detailed_error = match _backend {
                     GpuBackend::Cuda => {
                         format!(
-                            "CUDA backend failed: {error}. Ensure NVIDIA drivers are installed and CUDA-capable GPU is available."
+                            "CUDA _backend failed: {error}. Ensure NVIDIA drivers are installed and CUDA-capable GPU is available."
                         )
                     }
                     GpuBackend::Metal => {
                         format!(
-                            "Metal backend failed: {error}. Metal is only available on macOS with compatible hardware."
+                            "Metal _backend failed: {error}. Metal is only available on macOS with compatible hardware."
                         )
                     }
                     GpuBackend::OpenCL => {
                         format!(
-                            "OpenCL backend failed: {error}. Check OpenCL runtime installation and driver support."
+                            "OpenCL _backend failed: {error}. Check OpenCL runtime installation and driver support."
                         )
                     }
                     GpuBackend::Wgpu => {
                         format!(
-                            "WebGPU backend failed: {error}. Check GPU drivers and WebGPU support."
+                            "WebGPU _backend failed: {error}. Check GPU drivers and WebGPU support."
                         )
                     }
                     GpuBackend::Cpu => {
                         format!(
-                            "CPU backend failed: {error}. This should not happen as CPU backend should always be available."
+                            "CPU _backend failed: {error}. This should not happen as CPU _backend should always be available."
                         )
                     }
                     GpuBackend::Rocm => {
                         format!(
-                            "ROCm backend failed: {error}. Check ROCm installation and AMD GPU drivers."
+                            "ROCm _backend failed: {error}. Check ROCm installation and AMD GPU drivers."
                         )
                     }
                 };
@@ -500,7 +500,7 @@ extern "C" __global__ void gradient_magnitude(
     float* __restrict__ magnitude,
     int size
 ) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int idx = blockIdx._x * blockDim._x + threadIdx._x;
     if (idx < size) {
         float gx = grad_x[idx];
         float gy = grad_y[idx];
@@ -519,7 +519,7 @@ extern "C" __global__ void gradient_magnitude(
 @compute @workgroup_size(256)
 #[allow(dead_code)]
 fn gradient_magnitude(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let idx = global_id.x;
+    let idx = global_id._x;
     if (idx >= size) {
         return;
     }
@@ -607,9 +607,9 @@ pub fn gpu_gaussian_blur(
 
 /// Generate 1D Gaussian kernel
 #[allow(dead_code)]
-fn generate_gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
-    let half = size / 2;
-    let mut kernel = vec![0.0f32; size];
+fn generate_gaussian_kernel(_size: usize, sigma: f32) -> Vec<f32> {
+    let half = _size / 2;
+    let mut kernel = vec![0.0f32; _size];
     let mut sum = 0.0f32;
 
     for (i, kernel_val) in kernel.iter_mut().enumerate() {
@@ -779,8 +779,7 @@ fn separable_conv_1d(@builtin(global_invocation_id) global_id: vec3<u32>) {
     output[idx] = sum;
 }
 "#
-        .to_string(),
-        _ => {
+        .to_string(, _ => {
             // Fall back for unsupported backends
             return Ok(input.to_vec());
         }
@@ -854,7 +853,7 @@ pub fn gpu_harris_corners(
     threshold: f32,
 ) -> Result<Array2<f32>> {
     // Compute gradients
-    let (grad_x, grad_y, _) = gpu_sobel_gradients(ctx, image)?;
+    let (grad_x, grad_y_) = gpu_sobel_gradients(ctx, image)?;
 
     // Compute structure tensor elements
     let ixx = gpu_element_wise_multiply(ctx, &grad_x.view(), &grad_x.view())?;
@@ -1222,7 +1221,7 @@ impl GpuMemoryPool {
     }
 
     /// Return a buffer to the pool
-    pub fn return_buffer(&mut self, size: usize, buffer: scirs2_core::gpu::GpuBuffer<f32>) {
+    pub fn return_buffer(&mut self, size: usize, buffer: scirs2_core: gpu::GpuBuffer<f32>) {
         let pool = self.buffers.entry(size).or_default();
         if pool.len() < self.max_pool_size {
             pool.push(buffer);
@@ -1476,7 +1475,7 @@ impl AsyncGpuProcessor {
             }
             GpuOperation::GaussianBlur(sigma) => gpu_gaussian_blur(&self.context, image, sigma),
             GpuOperation::SobelEdges => {
-                let (_, _, magnitude) = gpu_sobel_gradients(&self.context, image)?;
+                let (__, magnitude) = gpu_sobel_gradients(&self.context, image)?;
                 Ok(magnitude)
             }
         }
@@ -1515,7 +1514,7 @@ impl GpuPerformanceProfiler {
     }
 
     /// Start timing an operation
-    pub fn start_timing(&self, _operation: &str) -> std::time::Instant {
+    pub fn start_timing(&self_operation: &str) -> std::time::Instant {
         std::time::Instant::now()
     }
 
@@ -1676,7 +1675,7 @@ pub fn gpu_multi_head_attention(
 
     if hidden_dim % num_heads != 0 {
         return Err(VisionError::InvalidInput(
-            "Hidden dimension must be divisible by number of heads".to_string(),
+            "Hidden dimension must be divisible by number of _heads".to_string(),
         ));
     }
 
@@ -2215,9 +2214,7 @@ pub enum LayerType {
 /// Helper functions for GPU neural layers (simplified implementations)
 #[allow(dead_code)]
 fn gpu_conv_layer(
-    ctx: &GpuVisionContext,
-    _input: &scirs2_core::gpu::GpuBuffer<f32>,
-    _weights: &Array2<f32>,
+    ctx: &GpuVisionContext_input: &scirs2_core: :gpu::GpuBuffer<f32>, _weights: &Array2<f32>,
     config: &LayerConfig,
     input_shape: (usize, usize),
 ) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
@@ -2234,8 +2231,7 @@ fn gpu_conv_layer(
 
 #[allow(dead_code)]
 fn gpu_maxpool_layer(
-    ctx: &GpuVisionContext,
-    _input: &scirs2_core::gpu::GpuBuffer<f32>,
+    ctx: &GpuVisionContext_input: &scirs2_core: :gpu::GpuBuffer<f32>,
     config: &LayerConfig,
     input_shape: (usize, usize),
 ) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
@@ -2248,9 +2244,7 @@ fn gpu_maxpool_layer(
 
 #[allow(dead_code)]
 fn gpu_dense_layer(
-    ctx: &GpuVisionContext,
-    _input: &scirs2_core::gpu::GpuBuffer<f32>,
-    _weights: &Array2<f32>,
+    ctx: &GpuVisionContext_input: &scirs2_core: :gpu::GpuBuffer<f32>, _weights: &Array2<f32>,
     config: &LayerConfig,
 ) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
     let output_buffer = ctx.context.create_buffer::<f32>(config.output_channels);
@@ -2259,8 +2253,7 @@ fn gpu_dense_layer(
 
 #[allow(dead_code)]
 fn gpu_relu_layer(
-    ctx: &GpuVisionContext,
-    _input: &scirs2_core::gpu::GpuBuffer<f32>,
+    ctx: &GpuVisionContext_input: &scirs2_core: :gpu::GpuBuffer<f32>,
     shape: (usize, usize),
 ) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
     // ReLU can be applied in-place, but for simplicity we create a new buffer
@@ -2269,16 +2262,16 @@ fn gpu_relu_layer(
 }
 
 #[allow(dead_code)]
-fn compute_conv_output_shape(input_shape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
-    let (h, w) = input_shape;
+fn compute_conv_output_shape(_input_shape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
+    let (h, w) = _input_shape;
     let out_h = (h + 2 * config.padding - config.kernel_size) / config.stride + 1;
     let out_w = (w + 2 * config.padding - config.kernel_size) / config.stride + 1;
     (out_h, out_w)
 }
 
 #[allow(dead_code)]
-fn compute_pool_output_shape(input_shape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
-    let (h, w) = input_shape;
+fn compute_pool_output_shape(_input_shape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
+    let (h, w) = _input_shape;
     let out_h = h / config.stride;
     let out_w = w / config.stride;
     (out_h, out_w)

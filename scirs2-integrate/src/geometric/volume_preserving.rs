@@ -5,6 +5,7 @@
 
 use crate::error::{IntegrateError, IntegrateResult as Result};
 use ndarray::{Array1, Array2, ArrayView1};
+use std::f64::consts::PI;
 #[allow(unused_imports)]
 use scirs2_core::constants::PI;
 #[allow(unused_imports)]
@@ -19,10 +20,10 @@ pub trait DivergenceFreeFlow {
     fn dim(&self) -> usize;
 
     /// Evaluate the vector field at a point
-    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64>;
+    fn evaluate(x: &ArrayView1<f64>, t: f64) -> Array1<f64>;
 
     /// Verify divergence-free condition (for debugging)
-    fn verify_divergence_free(&self, x: &ArrayView1<f64>, t: f64, h: f64) -> f64 {
+    fn verify_divergence_free(x: &ArrayView1<f64>, t: f64, h: f64) -> f64 {
         let n = self.dim();
         let mut div = 0.0;
 
@@ -71,9 +72,9 @@ pub enum VolumePreservingMethod {
 
 impl VolumePreservingIntegrator {
     /// Create a new volume-preserving integrator
-    pub fn new(dt: f64, method: VolumePreservingMethod) -> Self {
+    pub fn new(_dt: f64, method: VolumePreservingMethod) -> Self {
         Self {
-            dt,
+            _dt,
             method,
             tol: 1e-10,
             max_iter: 100,
@@ -81,13 +82,13 @@ impl VolumePreservingIntegrator {
     }
 
     /// Set tolerance for implicit methods
-    pub fn with_tolerance(mut self, tol: f64) -> Self {
+    pub fn with_tolerance(mut tol: f64) -> Self {
         self.tol = tol;
         self
     }
 
     /// Integrate one step
-    pub fn step<F>(&self, x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
+    pub fn step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -150,7 +151,7 @@ impl VolumePreservingIntegrator {
     }
 
     /// Splitting method for special structures
-    fn splitting_step<F>(&self, x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
+    fn splitting_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -159,7 +160,7 @@ impl VolumePreservingIntegrator {
     }
 
     /// Projection method (project back to divergence-free manifold)
-    fn projection_step<F>(&self, x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
+    fn projection_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -173,7 +174,7 @@ impl VolumePreservingIntegrator {
     }
 
     /// Fourth-order composition method
-    fn composition_step<F>(&self, x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
+    fn composition_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -274,7 +275,7 @@ pub struct IncompressibleFlow;
 
 impl IncompressibleFlow {
     /// 2D circular flow
-    pub fn circular_2d() -> CircularFlow2D {
+    pub fn circular_2d(&self) -> CircularFlow2D {
         CircularFlow2D { omega: 1.0 }
     }
 
@@ -299,7 +300,7 @@ impl DivergenceFreeFlow for CircularFlow2D {
         2
     }
 
-    fn evaluate(&self, x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
+    fn evaluate(x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
         Array1::from_vec(vec![-self.omega * x[1], self.omega * x[0]])
     }
 }
@@ -316,7 +317,7 @@ impl DivergenceFreeFlow for ABCFlow {
         3
     }
 
-    fn evaluate(&self, x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
+    fn evaluate(x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
         Array1::from_vec(vec![
             self.a * x[1].sin() + self.c * x[2].cos(),
             self.b * x[2].sin() + self.a * x[0].cos(),
@@ -337,7 +338,7 @@ impl DivergenceFreeFlow for DoubleGyre {
         2
     }
 
-    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
+    fn evaluate(x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
         let a_t = self.epsilon * (self.omega * t).sin();
         let b_t = 1.0 - 2.0 * self.epsilon * (self.omega * t).sin();
 
@@ -354,10 +355,10 @@ impl DivergenceFreeFlow for DoubleGyre {
 /// Stream function based flow representation
 pub trait StreamFunction {
     /// Evaluate stream function at a point
-    fn psi(&self, x: f64, y: f64, t: f64) -> f64;
+    fn psi(x: f64, y: f64, t: f64) -> f64;
 
     /// Compute velocity field from stream function
-    fn velocity(&self, x: f64, y: f64, t: f64) -> (f64, f64) {
+    fn velocity(x: f64, y: f64, t: f64) -> (f64, f64) {
         let h = 1e-8;
 
         // u = ∂ψ/∂y
@@ -379,7 +380,7 @@ pub struct StuartVortex {
 }
 
 impl StreamFunction for StuartVortex {
-    fn psi(&self, x: f64, y: f64, _t: f64) -> f64 {
+    fn psi(&self, x: f64, y: f64_t: f64) -> f64 {
         -self.alpha.ln() * y.cos() + self.alpha * (self.k * x).cos() * y.sin()
     }
 }
@@ -389,7 +390,7 @@ impl DivergenceFreeFlow for StuartVortex {
         2
     }
 
-    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
+    fn evaluate(x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
         let (u, v) = self.velocity(x[0], x[1], t);
         Array1::from_vec(vec![u, v])
     }
@@ -413,7 +414,7 @@ impl DivergenceFreeFlow for TaylorGreenVortex {
         2
     }
 
-    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
+    fn evaluate(x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
         let (u, v) = self.velocity(x[0], x[1], t);
         Array1::from_vec(vec![u, v])
     }
@@ -438,7 +439,7 @@ where
         self.dim
     }
 
-    fn evaluate(&self, x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
+    fn evaluate(x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
         let n = self.dim / 2;
         let h = 1e-8;
         let mut dx = Array1::zeros(self.dim);
@@ -475,9 +476,9 @@ pub struct ModifiedMidpointIntegrator {
 
 impl ModifiedMidpointIntegrator {
     /// Create a new modified midpoint integrator
-    pub fn new(dt: f64, correction_factor: f64) -> Self {
+    pub fn new(_dt: f64, correction_factor: f64) -> Self {
         Self {
-            base: VolumePreservingIntegrator::new(dt, VolumePreservingMethod::ImplicitMidpoint),
+            base: VolumePreservingIntegrator::new(_dt, VolumePreservingMethod::ImplicitMidpoint),
             correction_factor,
         }
     }
@@ -521,8 +522,8 @@ pub struct VariationalIntegrator {
 
 impl VariationalIntegrator {
     /// Create a new variational integrator
-    pub fn new(dt: f64, n_quad: usize) -> Self {
-        Self { dt, n_quad }
+    pub fn new(_dt: f64, n_quad: usize) -> Self {
+        Self { _dt, n_quad }
     }
 
     /// Discrete Lagrangian for volume-preserving flow
@@ -572,8 +573,7 @@ impl VariationalIntegrator {
                     0.5,
                     0.5 + 0.5 * (0.6_f64).sqrt(),
                 ],
-            )),
-            _ => Err(IntegrateError::ValueError(format!(
+            ), _ => Err(IntegrateError::ValueError(format!(
                 "Quadrature order {} not implemented",
                 self.n_quad
             ))),
@@ -593,15 +593,15 @@ pub struct DiscreteGradientIntegrator {
 
 impl DiscreteGradientIntegrator {
     /// Create a new discrete gradient integrator
-    pub fn new(dt: f64) -> Self {
+    pub fn new(_dt: f64) -> Self {
         Self {
-            dt,
+            _dt,
             invariants: Vec::new(),
         }
     }
 
     /// Add an invariant function to preserve
-    pub fn add_invariant<I>(mut self, invariant: I) -> Self
+    pub fn add_invariant<I>(mut invariant: I) -> Self
     where
         I: Fn(&ArrayView1<f64>) -> f64 + 'static,
     {
@@ -638,7 +638,7 @@ impl DiscreteGradientIntegrator {
     }
 
     /// Standard gradient computation
-    fn gradient(&self, x: &ArrayView1<f64>, invariant_idx: usize) -> Array1<f64> {
+    fn gradient(x: &ArrayView1<f64>, invariant_idx: usize) -> Array1<f64> {
         let h = &self.invariants[invariant_idx];
         let eps = 1e-8;
         let n = x.len();
@@ -695,19 +695,19 @@ impl VolumeChecker {
     }
 
     /// Estimate volume using bounding box (simplified)
-    fn estimate_volume(points: &Array2<f64>) -> Result<f64> {
-        if points.nrows() == 0 {
+    fn estimate_volume(_points: &Array2<f64>) -> Result<f64> {
+        if _points.nrows() == 0 {
             return Ok(0.0);
         }
 
-        let dim = points.ncols();
-        let mut min_coords = points.row(0).to_owned();
-        let mut max_coords = points.row(0).to_owned();
+        let dim = _points.ncols();
+        let mut min_coords = _points.row(0).to_owned();
+        let mut max_coords = _points.row(0).to_owned();
 
-        for i in 1..points.nrows() {
+        for i in 1.._points.nrows() {
             for j in 0..dim {
-                min_coords[j] = min_coords[j].min(points[[i, j]]);
-                max_coords[j] = max_coords[j].max(points[[i, j]]);
+                min_coords[j] = min_coords[j].min(_points[[i, j]]);
+                max_coords[j] = max_coords[j].max(_points[[i, j]]);
             }
         }
 

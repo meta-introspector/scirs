@@ -707,7 +707,7 @@ where
         return Ok(x);
     }
 
-    // Perform V-cycles
+    // Perform V-_cycles
     for _ in 0..v_cycles {
         // Perform a single V-cycle
         x = v_cycle(

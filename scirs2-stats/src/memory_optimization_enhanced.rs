@@ -368,9 +368,9 @@ struct SelectionEvent {
 
 impl EnhancedMemoryOptimizer {
     /// Create a new enhanced memory optimizer
-    pub fn new(config: MemoryOptimizationConfig) -> Self {
+    pub fn new(_config: MemoryOptimizationConfig) -> Self {
         let monitor = Arc::new(RwLock::new(MemoryMonitor::new()));
-        let cache_manager = Arc::new(RwLock::new(SmartCacheManager::new(&config)));
+        let cache_manager = Arc::new(RwLock::new(SmartCacheManager::new(&_config)));
         let pool_allocator = Arc::new(Mutex::new(PoolAllocator::new()));
         let algorithm_selector = Arc::new(RwLock::new(MemoryAwareSelector::new()));
 
@@ -379,7 +379,7 @@ impl EnhancedMemoryOptimizer {
             cache_manager,
             pool_allocator,
             algorithm_selector,
-            config,
+            _config,
         }
     }
 
@@ -564,10 +564,10 @@ impl EnhancedMemoryOptimizer {
         conditions: &MemoryConditions,
     ) -> MemoryLayout {
         match conditions.pressure {
-            MemoryPressure::Low => MemoryLayout::Contiguous,
-            MemoryPressure::Medium => MemoryLayout::Chunked(self.optimal_chunk_size(data_size)),
-            MemoryPressure::High => MemoryLayout::Streaming,
-            MemoryPressure::Critical => MemoryLayout::MemoryMapped,
+            MemoryPressure::Low =>, MemoryLayout::Contiguous,
+            MemoryPressure::Medium =>, MemoryLayout::Chunked(self.optimal_chunk_size(data_size)),
+            MemoryPressure::High =>, MemoryLayout::Streaming,
+            MemoryPressure::Critical =>, MemoryLayout::MemoryMapped,
         }
     }
 
@@ -583,7 +583,7 @@ impl EnhancedMemoryOptimizer {
         }
     }
 
-    fn predict_performance(&self, _data_size: usize, _operation: &str) -> PerformanceScore {
+    fn predict_performance(&self_data_size: usize, _operation: &str) -> PerformanceScore {
         // Implement performance prediction based on historical data
         PerformanceScore {
             time_score: 85.0,
@@ -598,13 +598,12 @@ impl EnhancedMemoryOptimizer {
         data_size: usize,
         operation: &str,
     ) -> MemoryRequirements {
-        let base_memory = data_size * std::mem::size_of::<f64>();
+        let base_memory = data_size * std::mem::_size_of::<f64>();
         let overhead_multiplier = match operation {
             "mean" => 1.1,
             "variance" => 1.3,
             "correlation" => 2.0,
-            "regression" => 2.5,
-            _ => 1.5,
+            "regression" => 2.5_ => 1.5,
         };
 
         MemoryRequirements {
@@ -643,8 +642,8 @@ impl EnhancedMemoryOptimizer {
     }
 
     fn optimal_chunk_size(&self, data_size: usize) -> usize {
-        // Calculate optimal chunk size based on cache characteristics
-        (32 * 1024).min(data_size / 4) // 32KB or 1/4 of data size
+        // Calculate optimal chunk _size based on cache characteristics
+        (32 * 1024).min(data_size / 4) // 32KB or 1/4 of data _size
     }
 
     fn estimate_bandwidth_utilization(&self) -> f64 {
@@ -740,13 +739,13 @@ impl MemoryMonitor {
 }
 
 impl SmartCacheManager {
-    fn new(config: &MemoryOptimizationConfig) -> Self {
+    fn new(_config: &MemoryOptimizationConfig) -> Self {
         Self {
             cache: BTreeMap::new(),
             access_analyzer: AccessPatternAnalyzer::new(),
             prefetch_predictor: PrefetchPredictor::new(),
             stats: CacheStatistics::new(),
-            config: config.clone(),
+            _config: _config.clone(),
         }
     }
 
@@ -806,8 +805,7 @@ impl MemoryAwareSelector {
 
     fn select_algorithm(
         &self,
-        operation: &str,
-        _data_size: usize,
+        operation: &str, _data_size: usize,
         conditions: &MemoryConditions,
     ) -> String {
         // Select optimal algorithm based on memory conditions

@@ -23,7 +23,7 @@
 //! ## Computer Vision Metrics
 //!
 //! ```
-//! use scirs2_metrics::domains::computer_vision::ObjectDetectionMetrics;
+//! use scirs2__metrics::domains::computer_vision::ObjectDetectionMetrics;
 //! use ndarray::array;
 //!
 //! let mut cv_metrics = ObjectDetectionMetrics::new();
@@ -49,7 +49,7 @@
 //! ## NLP Metrics
 //!
 //! ```
-//! use scirs2_metrics::domains::nlp::TextGenerationMetrics;
+//! use scirs2__metrics::domains::nlp::TextGenerationMetrics;
 //!
 //! let mut nlp_metrics = TextGenerationMetrics::new();
 //!
@@ -197,36 +197,36 @@ pub fn create_domain_suite() -> DomainSuite {
 
 /// Collection of domain-specific metric calculators
 pub struct DomainSuite {
-    cv_metrics: computer_vision::ComputerVisionSuite,
+    cv_metrics: computer, _vision: ComputerVisionSuite,
     nlp_metrics: nlp::NLPSuite,
-    ts_metrics: time_series::TimeSeriesSuite,
+    ts_metrics: time, _series: TimeSeriesSuite,
     rec_metrics: recommender::RecommenderSuite,
-    ad_metrics: anomaly_detection::AnomalyDetectionSuite,
-    gen_ai_metrics: generative_ai::GenerativeAISuite<f64>,
-    audio_metrics: audio_processing::AudioProcessingMetrics,
-    gnn_metrics: graph_neural_networks::GraphNeuralNetworkMetrics,
+    ad_metrics: anomaly, _detection: AnomalyDetectionSuite,
+    gen_ai_metrics: generative, _ai: GenerativeAISuite<f64>,
+    audio_metrics: audio, _processing: AudioProcessingMetrics,
+    gnn_metrics: graph_neural, _networks: GraphNeuralNetworkMetrics,
     biomedical_metrics: biomedical::BiomedicalSuite,
     financial_metrics: financial::FinancialSuite,
-    quantum_ml_metrics: quantum_ml::QuantumMLSuite,
-    edge_ai_metrics: edge_ai::EdgeAISuite,
+    quantum_ml_metrics: quantum, _ml: QuantumMLSuite,
+    edge_ai_metrics: edge, _ai: EdgeAISuite,
 }
 
 impl DomainSuite {
     /// Create a new domain suite with all available domain metrics
     pub fn new() -> Self {
         Self {
-            cv_metrics: computer_vision::ComputerVisionSuite::new(),
+            cv_metrics: computer, _vision: ComputerVisionSuite::new(),
             nlp_metrics: nlp::NLPSuite::new(),
-            ts_metrics: time_series::TimeSeriesSuite::new(),
+            ts_metrics: time, _series: TimeSeriesSuite::new(),
             rec_metrics: recommender::RecommenderSuite::new(),
-            ad_metrics: anomaly_detection::AnomalyDetectionSuite::new(),
-            gen_ai_metrics: generative_ai::GenerativeAISuite::new(),
-            audio_metrics: audio_processing::AudioProcessingMetrics::new(),
-            gnn_metrics: graph_neural_networks::GraphNeuralNetworkMetrics::new(),
+            ad_metrics: anomaly, _detection: AnomalyDetectionSuite::new(),
+            gen_ai_metrics: generative, _ai: GenerativeAISuite::new(),
+            audio_metrics: audio, _processing: AudioProcessingMetrics::new(),
+            gnn_metrics: graph_neural, _networks: GraphNeuralNetworkMetrics::new(),
             biomedical_metrics: biomedical::BiomedicalSuite::new(),
             financial_metrics: financial::FinancialSuite::new(),
-            quantum_ml_metrics: quantum_ml::QuantumMLSuite::new(),
-            edge_ai_metrics: edge_ai::EdgeAISuite::new(),
+            quantum_ml_metrics: quantum, _ml: QuantumMLSuite::new(),
+            edge_ai_metrics: edge, _ai: EdgeAISuite::new(),
         }
     }
 

@@ -140,7 +140,7 @@ where
 ///     (batch_size, channels, height, width),
 ///     |(b, c, h, w)| (h * width + w) as f32 + 0.1
 /// // Apply max pooling with kernel_size 2, stride 2, padding 0
-/// let (output, _) = max_pool2d(&input.view(), 2, 2, 0).unwrap();
+/// let (output_) = max_pool2d(&input.view(), 2, 2, 0).unwrap();
 /// // Output shape should be [batch_size, channels, height/stride, width/stride]
 /// assert_eq!(output.shape(), &[batch_size, channels, height/2, width/2]);
 #[allow(dead_code)]
@@ -240,8 +240,7 @@ pub fn col2im<F>(
     batch_size: usize,
     channels: usize,
     height: usize,
-    width: usize,
-    _stride: usize,
+    width: usize_stride: usize,
     let out_height = height + 2 * padding - kernel_height + 1;
     let out_width = width + 2 * padding - kernel_width + 1;
     // Validate column shape

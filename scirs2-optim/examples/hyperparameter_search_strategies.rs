@@ -10,8 +10,8 @@
 use ndarray::Array1;
 use num_traits::Float;
 use rand::{rng, Rng};
-use scirs2_optim::error::Result;
-use scirs2_optim::meta_learning::*;
+use scirs2__optim::error::Result;
+use scirs2__optim::meta_learning::*;
 use std::collections::HashMap;
 
 /// Simulated machine learning model for demonstration
@@ -24,12 +24,12 @@ struct MockModel {
 }
 
 impl MockModel {
-    fn new(hyperparams: &HashMap<String, f64>) -> Self {
+    fn new(_hyperparams: &HashMap<String, f64>) -> Self {
         Self {
-            learning_rate: hyperparams.get("learning_rate").copied().unwrap_or(0.001),
-            weight_decay: hyperparams.get("weight_decay").copied().unwrap_or(0.0),
-            batch_size: hyperparams.get("batch_size").copied().unwrap_or(32.0) as usize,
-            momentum: hyperparams.get("momentum").copied().unwrap_or(0.9),
+            learning_rate: _hyperparams.get("learning_rate").copied().unwrap_or(0.001),
+            weight_decay: _hyperparams.get("weight_decay").copied().unwrap_or(0.0),
+            batch_size: _hyperparams.get("batch_size").copied().unwrap_or(32.0) as usize,
+            momentum: _hyperparams.get("momentum").copied().unwrap_or(0.9),
             performance: 0.0,
         }
     }
@@ -37,10 +37,10 @@ impl MockModel {
     /// Simulate training and return validation performance
     fn train_and_evaluate(&mut self) -> f64 {
         // Simulate realistic performance based on hyperparameters
-        let mut rng = rng();
+        let mut rng = rand::rng();
 
         // Base performance with some randomness
-        let mut performance = 0.5 + rng.random::<f64>() * 0.1;
+        let mut performance = 0.5 + rng.random_f64() * 0.1;
 
         // Learning rate effects
         if self.learning_rate > 0.0001 && self.learning_rate < 0.01 {
@@ -222,7 +222,7 @@ fn random_search_example() -> Result<()> {
         .windows(2)
         .enumerate()
         .filter(|(_, window)| window[1] > window[0])
-        .map(|(i, _)| i + 1)
+        .map(|(i_)| i + 1)
         .collect::<Vec<_>>();
 
     println!("Improvements found at trials: {:?}", improvement_steps);
@@ -342,14 +342,14 @@ fn population_based_training_example() -> Result<()> {
         let hyperparams = HashMap::from([
             (
                 "learning_rate".to_string(),
-                0.001 * (1.0 + rng().random::<f64>()),
+                0.001 * (1.0 + rand::rng().random_f64()),
             ),
-            ("weight_decay".to_string(), 0.01 * rng().random::<f64>()),
+            ("weight_decay".to_string(), 0.01 * rand::rng().random_f64()),
             (
                 "batch_size".to_string(),
-                32.0 + rng().random::<f64>() * 96.0,
+                32.0 + rand::rng().random_f64() * 96.0,
             ),
-            ("momentum".to_string(), 0.9 + rng().random::<f64>() * 0.09),
+            ("momentum".to_string(), 0.9 + rand::rng().random_f64() * 0.09),
         ]);
 
         let mut model = MockModel::new(&hyperparams);
@@ -374,7 +374,7 @@ fn population_based_training_example() -> Result<()> {
 
             // Perturb hyperparameters
             for (param, value) in new_hyperparams.iter_mut() {
-                let perturbation = 1.0 + (rng().random::<f64>() - 0.5) * 0.2;
+                let perturbation = 1.0 + (rand::rng().random_f64() - 0.5) * 0.2;
                 *value *= perturbation;
 
                 // Apply bounds
@@ -382,8 +382,7 @@ fn population_based_training_example() -> Result<()> {
                     "learning_rate" => *value = value.clamp(1e-5, 1e-1),
                     "weight_decay" => *value = value.clamp(0.0, 0.1),
                     "batch_size" => *value = value.clamp(16.0, 256.0),
-                    "momentum" => *value = value.clamp(0.0, 0.999),
-                    _ => {}
+                    "momentum" => *value = value.clamp(0.0, 0.999, _ => {}
                 }
             }
 
@@ -398,7 +397,7 @@ fn population_based_training_example() -> Result<()> {
         // Statistics for this generation
         let best_performance = population[0].1;
         let avg_performance: f64 =
-            population.iter().map(|(_, perf, _)| perf).sum::<f64>() / population.len() as f64;
+            population.iter().map(|(_, perf_)| perf).sum::<f64>() / population.len() as f64;
         let worst_performance = population.last().unwrap().1;
 
         if generation % 5 == 4 {
@@ -424,7 +423,7 @@ fn population_based_training_example() -> Result<()> {
     // Population diversity analysis
     let lr_values: Vec<f64> = population
         .iter()
-        .map(|(params, _, _)| params["learning_rate"])
+        .map(|(params__)| params["learning_rate"])
         .collect();
     let lr_std = {
         let mean = lr_values.iter().sum::<f64>() / lr_values.len() as f64;
@@ -452,27 +451,27 @@ fn neural_predictor_example() -> Result<()> {
 
     for _ in 0..200 {
         // Simulate different problem characteristics
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let features = Array1::from_vec(vec![
-            rng.random::<f64>() * 10000.0,    // dataset_size
-            rng.random::<f64>() * 1000.0,     // input_dims
-            2.0 + rng.random::<f64>() * 98.0, // num_classes
-            0.6 + rng.random::<f64>() * 0.3,  // train_ratio
-            0.1 + rng.random::<f64>() * 0.2,  // val_ratio
-            0.1 + rng.random::<f64>() * 0.2,  // test_ratio
-            rng.random::<f64>(),              // sparsity
-            rng.random::<f64>() * 0.1,        // noise_level
+            rng.random_f64() * 10000.0,    // dataset_size
+            rng.random_f64() * 1000.0,     // input_dims
+            2.0 + rng.random_f64() * 98.0, // num_classes
+            0.6 + rng.random_f64() * 0.3,  // train_ratio
+            0.1 + rng.random_f64() * 0.2,  // val_ratio
+            0.1 + rng.random_f64() * 0.2,  // test_ratio
+            rng.random_f64(),              // sparsity
+            rng.random_f64() * 0.1,        // noise_level
         ]);
 
         // Simulate optimal hyperparameters for this problem
         let optimal_hyperparams = HashMap::from([
             (
                 "learning_rate".to_string(),
-                0.001 + rng.random::<f64>() * 0.009,
+                0.001 + rng.random_f64() * 0.009,
             ),
-            ("weight_decay".to_string(), rng.random::<f64>() * 0.01),
-            ("batch_size".to_string(), 16.0 + rng.random::<f64>() * 112.0),
-            ("momentum".to_string(), 0.9 + rng.random::<f64>() * 0.09),
+            ("weight_decay".to_string(), rng.random_f64() * 0.01),
+            ("batch_size".to_string(), 16.0 + rng.random_f64() * 112.0),
+            ("momentum".to_string(), 0.9 + rng.random_f64() * 0.09),
         ]);
 
         training_features.push(features);
@@ -506,13 +505,13 @@ fn neural_predictor_example() -> Result<()> {
 
         // Compare with random hyperparameters
         let random_hyperparams = HashMap::from([
-            ("learning_rate".to_string(), rng().random::<f64>() * 0.01),
-            ("weight_decay".to_string(), rng().random::<f64>() * 0.01),
+            ("learning_rate".to_string(), rand::rng().random_f64() * 0.01),
+            ("weight_decay".to_string(), rand::rng().random_f64() * 0.01),
             (
                 "batch_size".to_string(),
-                16.0 + rng().random::<f64>() * 112.0,
+                16.0 + rand::rng().random_f64() * 112.0,
             ),
-            ("momentum".to_string(), 0.9 + rng().random::<f64>() * 0.09),
+            ("momentum".to_string(), 0.9 + rand::rng().random_f64() * 0.09),
         ]);
 
         let mut random_model = MockModel::new(&random_hyperparams);
@@ -578,10 +577,10 @@ fn multi_objective_optimization_example() -> Result<()> {
 
     // Find Pareto optimal solutions
     let mut pareto_optimal = Vec::new();
-    for (i, (params_i, acc_i, time_i, _)) in pareto_front.iter().enumerate() {
+    for (i, (params_i, acc_i, time_i_)) in pareto_front.iter().enumerate() {
         let mut is_dominated = false;
 
-        for (j, (_, acc_j, time_j, _)) in pareto_front.iter().enumerate() {
+        for (j, (_, acc_j, time_j_)) in pareto_front.iter().enumerate() {
             if i != j
                 && *acc_j >= *acc_i
                 && *time_j <= *time_i
@@ -682,7 +681,7 @@ fn sensitivity_analysis_example() -> Result<()> {
         );
 
         // Calculate sensitivity (performance variance)
-        let performances: Vec<f64> = results.iter().map(|(_, _, perf)| *perf).collect();
+        let performances: Vec<f64> = results.iter().map(|(__, perf)| *perf).collect();
         let mean_perf = performances.iter().sum::<f64>() / performances.len() as f64;
         let variance = performances
             .iter()

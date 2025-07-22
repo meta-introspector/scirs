@@ -21,7 +21,7 @@ const LN_PI: f64 = 1.1447298858494002; // ln(π)
 ///
 /// The Struve function H_v(x) is defined as:
 ///
-/// H_v(x) = (z/2)^(v+1) / (sqrt(π) * Γ(v+3/2)) * ∫_0^π sin(z*cos(θ)) * (sin(θ))^(2v+1) dθ
+/// H_v(x) = (z/2)^(v+1) / (sqrt(π) * Γ(v+3/2)) * ∫_0_^π sin(z*cos(θ)) * (sin(θ))^(2v+1) dθ
 ///
 /// where Γ is the gamma function.
 ///
@@ -37,7 +37,7 @@ const LN_PI: f64 = 1.1447298858494002; // ln(π)
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::struve;
+/// use scirs2__special::struve;
 ///
 /// let h0_1 = struve(0.0, 1.0).unwrap();
 /// println!("H_0(1.0) = {}", h0_1);
@@ -555,7 +555,7 @@ fn log_gamma(x: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::mod_struve;
+/// use scirs2__special::mod_struve;
 ///
 /// let l0_1 = mod_struve(0.0, 1.0).unwrap();
 /// println!("L_0(1.0) = {}", l0_1);
@@ -973,10 +973,10 @@ fn fact_squared(n: usize) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::it_struve0;
+/// use scirs2__special::it_struve0;
 ///
 /// let its0_1 = it_struve0(1.0).unwrap();
-/// println!("∫_0^1 H_0(t) dt = {}", its0_1);
+/// println!("∫_0_^1 H_0(t) dt = {}", its0_1);
 /// ```
 #[allow(dead_code)]
 pub fn it_struve0(x: f64) -> SpecialResult<f64> {
@@ -1124,10 +1124,10 @@ fn fact_squared_log(n: usize) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::it2_struve0;
+/// use scirs2__special::it2_struve0;
 ///
 /// let it2s0_1 = it2_struve0(1.0).unwrap();
-/// println!("∫_0^x ∫_0^t H_0(s) ds dt = {}", it2s0_1);
+/// println!("∫_0_^x ∫_0_^t H_0(s) ds dt = {}", it2s0_1);
 /// ```
 #[allow(dead_code)]
 pub fn it2_struve0(x: f64) -> SpecialResult<f64> {
@@ -1182,10 +1182,10 @@ pub fn it2_struve0(x: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::it_mod_struve0;
+/// use scirs2__special::it_mod_struve0;
 ///
 /// let itl0_1 = it_mod_struve0(1.0).unwrap();
-/// println!("∫_0^1 L_0(t) dt = {}", itl0_1);
+/// println!("∫_0_^1 L_0(t) dt = {}", itl0_1);
 /// ```
 #[allow(dead_code)]
 pub fn it_mod_struve0(x: f64) -> SpecialResult<f64> {

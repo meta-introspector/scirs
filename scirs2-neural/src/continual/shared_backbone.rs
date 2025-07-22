@@ -8,6 +8,7 @@ use rand::rng;
 use crate::layers::{Dense, Layer};
 use ndarray::prelude::*;
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 /// Shared backbone network for multi-task learning
 pub struct SharedBackbone {
     /// Layers of the shared backbone
@@ -19,9 +20,9 @@ pub struct SharedBackbone {
 }
 impl SharedBackbone {
     /// Create a new shared backbone
-    pub fn new(input_dim: usize, layer_sizes: &[usize]) -> Result<Self> {
+    pub fn new(_input_dim: usize, layer_sizes: &[usize]) -> Result<Self> {
         let mut layers: Vec<Box<dyn Layer<f32> + Send + Sync>> = Vec::new();
-        let mut current_dim = input_dim;
+        let mut current_dim = _input_dim;
         for &layer_size in layer_sizes {
             // Create dense layer
             let dense_layer = Dense::<f32>::new(
@@ -353,11 +354,8 @@ mod tests {
         let regression = TaskType::Regression { output_dim: 5 };
         let multi_label = TaskType::MultiLabel { num_labels: 8 };
         match classification {
-            TaskType::Classification { num_classes } => assert_eq!(num_classes, 10),
-            _ => unreachable!("Expected Classification task type"),
+            TaskType::Classification { num_classes } => assert_eq!(num_classes, 10, _ => unreachable!("Expected Classification task type"),
         match regression {
-            TaskType::Regression { output_dim } => assert_eq!(output_dim, 5),
-            _ => unreachable!("Expected Regression task type"),
+            TaskType::Regression { output_dim } => assert_eq!(output_dim, 5, _ => unreachable!("Expected Regression task type"),
         match multi_label {
-            TaskType::MultiLabel { num_labels } => assert_eq!(num_labels, 8),
-            _ => unreachable!("Expected MultiLabel task type"),
+            TaskType::MultiLabel { num_labels } => assert_eq!(num_labels, 8, _ => unreachable!("Expected MultiLabel task type"),

@@ -6,6 +6,7 @@
 use super::Dataset;
 use ndarray::{Array1, Array2};
 use std::error::Error;
+use statrs::statistics::Statistics;
 
 /// Correlation insights from dataset analysis
 #[derive(Debug, Clone)]
@@ -267,8 +268,8 @@ impl AdvancedDatasetAnalyzer {
 }
 
 /// Perform quick quality assessment of a dataset
-pub fn quick_quality_assessment(dataset: &Dataset) -> Result<f64, Box<dyn Error>> {
-    let data = &dataset.data;
+pub fn quick_quality_assessment(_dataset: &Dataset) -> Result<f64, Box<dyn Error>> {
+    let data = &_dataset.data;
 
     // Quick quality assessment based on basic statistics
     let n_samples = data.nrows();

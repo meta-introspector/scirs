@@ -1,4 +1,4 @@
-use crate::ndarray_ext::{NdArray, NdArrayView, RawNdArrayView};
+use crate::ndarray__ext::{NdArray, NdArrayView, RawNdArrayView};
 
 use crate::tensor::Tensor;
 use crate::{Context, Graph};
@@ -62,10 +62,10 @@ pub struct Evaluator<'c, 'g, F: Float> {
 // public APIs
 impl<'c, 'g, F: Float> Evaluator<'c, 'g, F> {
     /// Creates new Evaluator with Context.
-    pub fn new(ctx: &'c Context<'g, F>) -> Self {
+    pub fn new(_ctx: &'c Context<'g, F>) -> Self {
         Evaluator {
             targets: vec![],
-            ctx,
+            _ctx,
             feeder: None,
         }
     }
@@ -148,7 +148,7 @@ impl<'c, 'g, F: Float> Evaluator<'c, 'g, F> {
 
         // Prepare input feeds
         if let Some(feeder) = &self.feeder {
-            for (key, array, _) in &feeder.feeds {
+            for (key, array_) in &feeder.feeds {
                 match key {
                     PlaceholderKey::Name(name) => {
                         if let Some(tid) = self.ctx.get_tensor_by_name(name) {
@@ -213,8 +213,7 @@ impl<'c, 'g, F: Float> Evaluator<'c, 'g, F> {
 pub struct Feeder<'g, F: Float> {
     feeds: Vec<(
         PlaceholderKey,
-        RawNdArrayView<F>,
-        std::marker::PhantomData<&'g ()>,
+        RawNdArrayView<F> + std::marker::PhantomData<&'g ()>,
     )>,
 }
 

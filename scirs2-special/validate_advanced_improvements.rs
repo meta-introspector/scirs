@@ -1,7 +1,7 @@
 // Quick validation script for Advanced mode improvements
 // Run with: cargo run --bin validate_advanced_improvements
 
-use scirs2_special::{
+use scirs2__special::{
     polygamma, dawsn, 
     i0_prime, i1_prime, k0_prime, k1_prime,
     i0, i1, k0, k1

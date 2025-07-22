@@ -1,7 +1,7 @@
-use num_complex::Complex64;
+use num__complex::Complex64;
 use plotly::common::Title;
 use plotly::{common::Mode, layout::Axis, Layout, Plot, Scatter};
-use scirs2_fft::{
+use scirs2__fft::{
     adaptive_sparse_fft, fft, frequency_pruning_sparse_fft, reconstruct_spectrum, sparse_fft,
     sparse_fft::SparseFFTAlgorithm, sparse_fft2, spectral_flatness_sparse_fft,
 };
@@ -62,7 +62,7 @@ fn main() {
             .iter()
             .zip(sparse_result.values.iter())
         {
-            if !unique_components.iter().any(|(i, _)| *i == idx) {
+            if !unique_components.iter().any(|(i_)| *i == idx) {
                 unique_components.push((idx, val));
             }
         }
@@ -133,7 +133,7 @@ fn main() {
         .iter()
         .zip(pruning_result.values.iter())
     {
-        if !unique_components.iter().any(|(i, _)| *i == idx) {
+        if !unique_components.iter().any(|(i_)| *i == idx) {
             unique_components.push((idx, val));
         }
     }
@@ -193,7 +193,7 @@ fn main() {
         .iter()
         .zip(flatness_result.values.iter())
     {
-        if !unique_components.iter().any(|(i, _)| *i == idx) {
+        if !unique_components.iter().any(|(i_)| *i == idx) {
             unique_components.push((idx, val));
         }
     }
@@ -283,12 +283,12 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 
 // Helper function to create a 2D sparse signal
 #[allow(dead_code)]
-fn create_2d_sparse_signal(rows: usize, cols: usize) -> Vec<f64> {
-    let mut signal = vec![0.0; rows * cols];
+fn create_2d_sparse_signal(_rows: usize, cols: usize) -> Vec<f64> {
+    let mut signal = vec![0.0; _rows * cols];
 
-    for i in 0..rows {
+    for i in 0.._rows {
         for j in 0..cols {
-            let x = 2.0 * PI * (i as f64) / (rows as f64);
+            let x = 2.0 * PI * (i as f64) / (_rows as f64);
             let y = 2.0 * PI * (j as f64) / (cols as f64);
             signal[i * cols + j] = (2.0 * x + 3.0 * y).sin() + 0.5 * (5.0 * x).sin();
         }
@@ -299,16 +299,16 @@ fn create_2d_sparse_signal(rows: usize, cols: usize) -> Vec<f64> {
 
 // Helper function to compute relative error
 #[allow(dead_code)]
-fn compute_relative_error(original: &[Complex64], reconstructed: &[Complex64]) -> f64 {
+fn compute_relative_error(_original: &[Complex64], reconstructed: &[Complex64]) -> f64 {
     // Make sure we're comparing signals of the same length
-    let len = std::cmp::min(original.len(), reconstructed.len());
+    let len = std::cmp::min(_original.len(), reconstructed.len());
 
     if len == 0 {
         return 1.0; // Return max error if signals are empty
     }
 
     // Normalize signals before comparing
-    let orig_energy: f64 = original.iter().take(len).map(|c| c.norm_sqr()).sum();
+    let orig_energy: f64 = _original.iter().take(len).map(|c| c.norm_sqr()).sum();
     let recon_energy: f64 = reconstructed.iter().take(len).map(|c| c.norm_sqr()).sum();
 
     // Compute scaling factors
@@ -326,7 +326,7 @@ fn compute_relative_error(original: &[Complex64], reconstructed: &[Complex64]) -
     // Compute error between normalized signals
     let mut error_sum = 0.0;
     for i in 0..len {
-        let orig = original[i] * orig_scale;
+        let orig = _original[i] * orig_scale;
         let recon = reconstructed[i] * recon_scale;
         error_sum += (orig - recon).norm_sqr();
     }
@@ -341,7 +341,7 @@ fn compute_relative_error(original: &[Complex64], reconstructed: &[Complex64]) -
 fn create_plots(
     signal: &[f64],
     full_magnitudes: &[f64],
-    sparse_result: &scirs2_fft::sparse_fft::SparseFFTResult,
+    sparse_result: &scirs2, _fft: :sparse_fft::SparseFFTResult,
 ) {
     // Create time domain plot
     let mut time_plot = Plot::new();

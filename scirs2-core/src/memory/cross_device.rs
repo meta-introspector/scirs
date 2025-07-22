@@ -132,7 +132,7 @@ pub struct MemoryAllocation {
 impl MemoryAllocation {
     /// Create a new memory allocation record
     pub fn new(
-        id: String,
+        allocation_id: String,
         device: DeviceType,
         size: usize,
         address: usize,
@@ -140,7 +140,7 @@ impl MemoryAllocation {
     ) -> Self {
         let now = std::time::Instant::now();
         Self {
-            id,
+            id: allocation_id,
             device,
             size,
             address,
@@ -338,7 +338,7 @@ impl Device for GpuContextWrapper {
         let buffer = self.inner.create_buffer::<u8>(size);
         // In a real implementation, we'd extract the actual device pointer
         // For now, we'll use a placeholder based on buffer properties
-        let _buffer = buffer; // Store the buffer (in real implementation, we'd track this)
+        let buffer = buffer; // Store the buffer (in real implementation, we'd track this)
         Ok(size) // Return the size as a placeholder ID
     }
 
@@ -599,7 +599,7 @@ impl CrossDeviceMemoryManager {
     }
 
     /// Clean up unused allocations
-    pub fn cleanup_unused(&self, max_age: std::time::Duration) -> usize {
+    pub fn cleanup_unused_allocations(&self, max_age: std::time::Duration) -> usize {
         let mut allocations = self.allocations.write().unwrap();
         let now = std::time::Instant::now();
         let mut cleaned = 0;
@@ -625,7 +625,7 @@ impl CrossDeviceMemoryManager {
             *counter
         };
 
-        format!(":016x{counter}")
+        format!("{counter:016x}")
     }
 
     /// Internal method to remove allocation (called by CrossDeviceBuffer on drop)
@@ -660,7 +660,7 @@ pub struct CrossDeviceBuffer<T> {
     address: usize,
     count: usize,
     manager: Arc<CrossDeviceMemoryManager>,
-    _phantom: std::marker::PhantomData<T>,
+    phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> CrossDeviceBuffer<T> {
@@ -678,7 +678,7 @@ impl<T> CrossDeviceBuffer<T> {
             address,
             count,
             manager,
-            _phantom: std::marker::PhantomData,
+            phantom: std::marker::PhantomData,
         }
     }
 
@@ -709,7 +709,7 @@ impl<T> CrossDeviceBuffer<T> {
     }
 
     /// Transfer this buffer to another device
-    pub fn transfer_to(&self, device_type: &DeviceType) -> CoreResult<CrossDeviceBuffer<T>>
+    pub fn to_device(&self, device_type: &DeviceType) -> CoreResult<CrossDeviceBuffer<T>>
     where
         T: Copy + 'static,
     {
@@ -784,7 +784,7 @@ impl<T> Clone for CrossDeviceBuffer<T> {
             address: self.address,
             count: self.count,
             manager: self.manager.clone(),
-            _phantom: std::marker::PhantomData,
+            phantom: std::marker::PhantomData,
         }
     }
 }

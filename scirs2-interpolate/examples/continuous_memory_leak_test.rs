@@ -4,7 +4,7 @@
 //! memory usage to detect any potential memory leaks or unbounded growth.
 
 use ndarray::{Array1, Array2};
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     advanced::rbf::RBFInterpolator,
     advanced::rbf::RBFKernel,
     error::InterpolateResult,
@@ -72,9 +72,9 @@ pub struct ContinuousMemoryTester {
 
 impl ContinuousMemoryTester {
     /// Create a new continuous memory tester
-    pub fn new(config: MemoryTestConfig) -> Self {
+    pub fn new(_config: MemoryTestConfig) -> Self {
         Self {
-            config,
+            _config,
             monitor: MemoryMonitor::new("continuous_test"),
             results: None,
         }

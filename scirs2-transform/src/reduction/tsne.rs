@@ -71,12 +71,12 @@ struct OctTreeNode {
 
 impl SpatialTree {
     /// Create a new quadtree for 2D embeddings
-    fn new_quadtree(embedding: &Array2<f64>) -> Result<Self> {
-        let n_samples = embedding.shape()[0];
+    fn new_quadtree(_embedding: &Array2<f64>) -> Result<Self> {
+        let n_samples = _embedding.shape()[0];
 
-        if embedding.shape()[1] != 2 {
+        if _embedding.shape()[1] != 2 {
             return Err(TransformError::InvalidInput(
-                "QuadTree requires 2D embedding".to_string(),
+                "QuadTree requires 2D _embedding".to_string(),
             ));
         }
 
@@ -87,8 +87,8 @@ impl SpatialTree {
         let mut y_max = f64::NEG_INFINITY;
 
         for i in 0..n_samples {
-            let x = embedding[[i, 0]];
-            let y = embedding[[i, 1]];
+            let x = _embedding[[i, 0]];
+            let y = _embedding[[i, 1]];
             x_min = x_min.min(x);
             x_max = x_max.max(x);
             y_min = y_min.min(y);
@@ -119,18 +119,18 @@ impl SpatialTree {
         };
 
         // Build the tree
-        root.build_tree(embedding)?;
+        root.build_tree(_embedding)?;
 
         Ok(SpatialTree::QuadTree(root))
     }
 
     /// Create a new octree for 3D embeddings
-    fn new_octree(embedding: &Array2<f64>) -> Result<Self> {
-        let n_samples = embedding.shape()[0];
+    fn new_octree(_embedding: &Array2<f64>) -> Result<Self> {
+        let n_samples = _embedding.shape()[0];
 
-        if embedding.shape()[1] != 3 {
+        if _embedding.shape()[1] != 3 {
             return Err(TransformError::InvalidInput(
-                "OctTree requires 3D embedding".to_string(),
+                "OctTree requires 3D _embedding".to_string(),
             ));
         }
 
@@ -143,9 +143,9 @@ impl SpatialTree {
         let mut z_max = f64::NEG_INFINITY;
 
         for i in 0..n_samples {
-            let x = embedding[[i, 0]];
-            let y = embedding[[i, 1]];
-            let z = embedding[[i, 2]];
+            let x = _embedding[[i, 0]];
+            let y = _embedding[[i, 1]];
+            let z = _embedding[[i, 2]];
             x_min = x_min.min(x);
             x_max = x_max.max(x);
             y_min = y_min.min(y);
@@ -182,7 +182,7 @@ impl SpatialTree {
         };
 
         // Build the tree
-        root.build_tree(embedding)?;
+        root.build_tree(_embedding)?;
 
         Ok(SpatialTree::OctTree(root))
     }
@@ -427,8 +427,8 @@ impl QuadTreeNode {
             }
         } else if self.is_leaf {
             // Leaf node without center of mass (empty node)
-            for &idx in &self.point_indices {
-                if idx != point_idx {
+            for &_idx in &self.point_indices {
+                if _idx != point_idx {
                     // Compute exact force for this point
                     // This will be handled by attractive forces in the main gradient computation
                 }
@@ -678,8 +678,7 @@ impl OctTreeNode {
     #[allow(clippy::too_many_arguments)]
     fn compute_forces_recursive_oct(
         &self,
-        point: &Array1<f64>,
-        _point_idx: usize,
+        point: &Array1<f64>, _point_idx: usize,
         angle: f64,
         degrees_of_freedom: f64,
         force: &mut Array1<f64>,
@@ -718,8 +717,7 @@ impl OctTreeNode {
             } else if let Some(ref children) = self.children {
                 for child in children.iter() {
                     child.compute_forces_recursive_oct(
-                        point,
-                        _point_idx,
+                        point_point_idx,
                         angle,
                         degrees_of_freedom,
                         force,
@@ -1380,7 +1378,7 @@ impl TSNE {
         let degrees_of_freedom = (n_components - 1).max(1) as f64;
 
         // Initialize variables for optimization
-        let mut embedding = initial_embedding;
+        let mut _embedding = initial_embedding;
         let mut update = Array2::zeros((n_samples, n_components));
         let mut gains = Array2::ones((n_samples, n_components));
         let mut error = f64::INFINITY;
@@ -1403,14 +1401,14 @@ impl TSNE {
         for i in 0..exploration_n_iter {
             // Compute gradient and error for early exaggeration phase
             let (curr_error, grad) = if self.method == "barnes_hut" {
-                self.compute_gradient_barnes_hut(&embedding, &p_early, degrees_of_freedom)?
+                self.compute_gradient_barnes_hut(&_embedding, &p_early, degrees_of_freedom)?
             } else {
-                self.compute_gradient_exact(&embedding, &p_early, degrees_of_freedom)?
+                self.compute_gradient_exact(&_embedding, &p_early, degrees_of_freedom)?
             };
 
             // Perform gradient update with momentum and gains
             self.gradient_update(
-                &mut embedding,
+                &mut _embedding,
                 &mut update,
                 &mut gains,
                 &grad,
@@ -1456,15 +1454,15 @@ impl TSNE {
         for i in iter + 1..self.max_iter {
             // Compute gradient and error for normal phase
             let (curr_error, grad) = if self.method == "barnes_hut" {
-                self.compute_gradient_barnes_hut(&embedding, &p, degrees_of_freedom)?
+                self.compute_gradient_barnes_hut(&_embedding, &p, degrees_of_freedom)?
             } else {
-                self.compute_gradient_exact(&embedding, &p, degrees_of_freedom)?
+                self.compute_gradient_exact(&_embedding, &p, degrees_of_freedom)?
             };
             error = curr_error;
 
             // Perform gradient update with momentum and gains
             self.gradient_update(
-                &mut embedding,
+                &mut _embedding,
                 &mut update,
                 &mut gains,
                 &grad,
@@ -1510,7 +1508,7 @@ impl TSNE {
             );
         }
 
-        Ok((embedding, error, iter + 1))
+        Ok((_embedding, error, iter + 1))
     }
 
     /// Compute gradient and error for exact t-SNE with optional multicore support
@@ -1790,7 +1788,7 @@ impl TSNE {
                 // Ensure minimum gain
                 gains[[i, j]] = gains[[i, j]].max(0.01);
 
-                // Update with momentum and adaptive learning rate
+                // Update with momentum and adaptive learning _rate
                 update[[i, j]] = momentum * update[[i, j]] - eta * gains[[i, j]] * grad[[i, j]];
                 embedding[[i, j]] += update[[i, j]];
             }
@@ -1879,7 +1877,7 @@ where
         }
     }
 
-    // Compute pairwise distances in embedded space
+    // Compute pairwise distances in _embedded space
     let mut dist_embedded = Array2::zeros((n_samples, n_samples));
     for i in 0..n_samples {
         for j in 0..n_samples {
@@ -1897,7 +1895,7 @@ where
         }
     }
 
-    // For each point, find the n_neighbors nearest neighbors in the original space
+    // For each point, find the n_neighbors nearest _neighbors in the original space
     let mut nn_orig = Array2::<usize>::zeros((n_samples, n_neighbors));
     for i in 0..n_samples {
         // Get the indices of the sorted distances
@@ -1906,12 +1904,12 @@ where
         pairs.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // The first element will be i itself (distance 0), so skip it
-        for (j, &(idx, _)) in pairs.iter().enumerate().take(n_neighbors) {
+        for (j, &(idx_)) in pairs.iter().enumerate().take(n_neighbors) {
             nn_orig[[i, j]] = idx;
         }
     }
 
-    // For each point, find the n_neighbors nearest neighbors in the embedded space
+    // For each point, find the n_neighbors nearest _neighbors in the _embedded space
     let mut nn_embedded = Array2::<usize>::zeros((n_samples, n_neighbors));
     for i in 0..n_samples {
         // Get the indices of the sorted distances
@@ -1920,15 +1918,14 @@ where
         pairs.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // The first element will be i itself (distance 0), so skip it
-        for (j, &(idx, _)) in pairs.iter().enumerate().take(n_neighbors) {
-            nn_embedded[[i, j]] = idx;
+        for (j, &(idx_)) in pairs.iterj]] = idx;
         }
     }
 
     // Calculate the trustworthiness score
     let mut t = 0.0;
     for i in 0..n_samples {
-        for &j in nn_embedded.row(i).iter() {
+        for &j in nn_embedded.row(i.iter() {
             // Check if j is not in the n_neighbors nearest neighbors in the original space
             let is_not_neighbor = !nn_orig.row(i).iter().any(|&nn| nn == j);
 
@@ -1939,7 +1936,7 @@ where
                     row.iter().enumerate().map(|(idx, &d)| (idx, d)).collect();
                 pairs.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-                let rank = pairs.iter().position(|&(idx, _)| idx == j).unwrap_or(0) - n_neighbors;
+                let rank = pairs.iter().position(|&(idx_)| idx == j).unwrap_or(0) - n_neighbors;
 
                 t += rank as f64;
             }
@@ -2163,16 +2160,16 @@ mod tests {
     }
 
     // Helper function to compute average pairwise distance within a group
-    fn average_pairwise_distance(points: &ArrayBase<ndarray::ViewRepr<&f64>, Ix2>) -> f64 {
-        let n = points.shape()[0];
+    fn average_pairwise_distance(_points: &ArrayBase<ndarray::ViewRepr<&f64>, Ix2>) -> f64 {
+        let n = _points.shape()[0];
         let mut total_dist = 0.0;
         let mut count = 0;
 
         for i in 0..n {
             for j in i + 1..n {
                 let mut dist_squared = 0.0;
-                for k in 0..points.shape()[1] {
-                    let diff = points[[i, k]] - points[[j, k]];
+                for k in 0.._points.shape()[1] {
+                    let diff = _points[[i, k]] - _points[[j, k]];
                     dist_squared += diff * diff;
                 }
                 total_dist += dist_squared.sqrt();

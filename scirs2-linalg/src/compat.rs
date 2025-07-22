@@ -132,10 +132,7 @@ where
 pub fn eig<F>(
     a: &ArrayView2<F>,
     b: Option<&ArrayView2<F>>,
-    left: bool,
-    _right: bool,
-    _overwrite_a: bool,
-    _overwrite_b: bool,
+    left: bool, _right: bool, _overwrite_a: bool, _overwrite_b: bool,
     check_finite: bool,
     homogeneous_eigvals: bool,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
@@ -179,7 +176,7 @@ where
         ));
     }
 
-    // Note: _overwrite_a, _overwrite_b are ignored in our implementation
+    // Note: _overwrite_a_overwrite_b are ignored in our implementation
     // Our implementation returns complex eigenvalues/eigenvectors
     // We return an error for now as SciPy compat would need real conversion handling
     Err(LinalgError::NotImplementedError(
@@ -208,16 +205,11 @@ where
 #[allow(dead_code)]
 pub fn eigh<F>(
     a: &ArrayView2<F>,
-    b: Option<&ArrayView2<F>>,
-    _lower: bool,
-    eigvals_only: bool,
-    _overwrite_a: bool,
-    _overwrite_b: bool,
+    b: Option<&ArrayView2<F>>, _lower: bool,
+    eigvals_only: bool, _overwrite_a: bool, _overwrite_b: bool,
     check_finite: bool,
     subset_by_index: Option<(usize, usize)>,
-    subset_by_value: Option<(F, F)>,
-    _driver: Option<&str>,
-    _type_param: u32,
+    subset_by_value: Option<(F, F)>, _driver: Option<&str>, _type_param: u32,
 ) -> LinalgResult<(Array1<F>, Option<Array2<F>>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -253,7 +245,7 @@ where
         ));
     }
 
-    // Note: lower, overwrite_a, overwrite_b, driver, type_param are not used
+    // Note: _lower, overwrite_a, overwrite_b, _driver, type_param are not used
     if eigvals_only {
         let eigenvalues = eigen::eigvalsh(a, None)?;
         Ok((eigenvalues, None))
@@ -277,8 +269,7 @@ where
 #[allow(dead_code)]
 pub fn lu<F>(
     a: &ArrayView2<F>,
-    permute_l: bool,
-    _overwrite_a: bool,
+    permute_l: bool, _overwrite_a: bool,
     check_finite: bool,
     p_indices: bool,
 ) -> LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>
@@ -319,9 +310,7 @@ where
 /// * Tuple of (Q, R) or just R based on mode
 #[allow(dead_code)]
 pub fn qr<F>(
-    a: &ArrayView2<F>,
-    _overwrite_a: bool,
-    _lwork: Option<usize>,
+    a: &ArrayView2<F>, _overwrite_a: bool, _lwork: Option<usize>,
     mode: &str,
     pivoting: bool,
     check_finite: bool,
@@ -345,7 +334,7 @@ where
         ));
     }
 
-    // Note: overwrite_a and lwork are ignored in our implementation
+    // Note: overwrite_a and _lwork are ignored in our implementation
     match mode {
         "full" | "economic" => {
             let (q, r) = decomposition::qr(a, None)?;
@@ -380,10 +369,8 @@ where
 pub fn svd<F>(
     a: &ArrayView2<F>,
     full_matrices: bool,
-    compute_uv: bool,
-    _overwrite_a: bool,
-    check_finite: bool,
-    _lapack_driver: &str,
+    compute_uv: bool, _overwrite_a: bool,
+    check_finite: bool, _lapack_driver: &str,
 ) -> LinalgResult<SvdResult<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -422,8 +409,7 @@ where
 #[allow(dead_code)]
 pub fn cholesky<F>(
     a: &ArrayView2<F>,
-    lower: bool,
-    _overwrite_a: bool,
+    lower: bool, _overwrite_a: bool,
     check_finite: bool,
 ) -> LinalgResult<Array2<F>>
 where
@@ -469,9 +455,7 @@ where
 pub fn compat_solve<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
-    lower: bool,
-    _overwrite_a: bool,
-    _overwrite_b: bool,
+    lower: bool, _overwrite_a: bool, _overwrite_b: bool,
     check_finite: bool,
     assume_a: Option<&str>,
     transposed: bool,
@@ -502,7 +486,7 @@ where
         ));
     }
 
-    // Note: _overwrite_a, _overwrite_b are ignored in our implementation
+    // Note: _overwrite_a_overwrite_b are ignored in our implementation
     solve::solve_multiple(a, b, None)
 }
 
@@ -564,8 +548,7 @@ where
 pub fn norm<F>(
     a: &ArrayView2<F>,
     ord: Option<&str>,
-    axis: Option<usize>,
-    _keepdims: bool,
+    axis: Option<usize>, _keepdims: bool,
     check_finite: bool,
 ) -> LinalgResult<F>
 where
@@ -664,8 +647,7 @@ where
 #[allow(dead_code)]
 pub fn pinv<F>(
     a: &ArrayView2<F>,
-    rcond: Option<F>,
-    _hermitian: bool,
+    rcond: Option<F>, _hermitian: bool,
     check_finite: bool,
 ) -> LinalgResult<Array2<F>>
 where
@@ -756,8 +738,7 @@ where
 #[allow(dead_code)]
 pub fn matrix_rank<F>(
     a: &ArrayView2<F>,
-    tol: Option<F>,
-    _hermitian: bool,
+    tol: Option<F>, _hermitian: bool,
     check_finite: bool,
 ) -> LinalgResult<usize>
 where
@@ -794,11 +775,8 @@ where
 pub fn lstsq<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
-    cond: Option<F>,
-    _overwrite_a: bool,
-    _overwrite_b: bool,
-    check_finite: bool,
-    _lapack_driver: Option<&str>,
+    cond: Option<F>, _overwrite_a: bool, _overwrite_b: bool,
+    check_finite: bool, _lapack_driver: Option<&str>,
 ) -> LinalgResult<LstsqResult<F>>
 where
     F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
@@ -820,7 +798,7 @@ where
         }
     }
 
-    // Convert 2D b to 1D for our lstsq function
+    // Convert 2D _b to 1D for our lstsq function
     let b_1d = if b.ncols() == 1 {
         b.column(0).to_owned()
     } else {
@@ -881,8 +859,7 @@ pub fn solve_triangular<F>(
     b: &ArrayView2<F>,
     lower: bool,
     trans: u8,
-    unit_diagonal: bool,
-    _overwrite_b: bool,
+    unit_diagonal: bool, _overwrite_b: bool,
     check_finite: bool,
 ) -> LinalgResult<Array2<F>>
 where
@@ -911,7 +888,7 @@ where
         ));
     }
 
-    // Convert 2D b to 1D for our solve_triangular function
+    // Convert 2D _b to 1D for our solve_triangular function
     let b_1d = if b.ncols() == 1 {
         b.column(0).to_owned()
     } else {
@@ -937,9 +914,7 @@ where
 /// * Tuple of (R, Q)
 #[allow(dead_code)]
 pub fn rq<F>(
-    a: &ArrayView2<F>,
-    _overwrite_a: bool,
-    _lwork: Option<usize>,
+    a: &ArrayView2<F>, _overwrite_a: bool, _lwork: Option<usize>,
     mode: &str,
     check_finite: bool,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
@@ -1083,10 +1058,7 @@ where
 #[allow(dead_code)]
 pub fn schur<F>(
     a: &ArrayView2<F>,
-    output: &str,
-    _lwork: Option<usize>,
-    _overwrite_a: bool,
-    _sort: Option<fn(F) -> bool>,
+    output: &str, _lwork: Option<usize>, _overwrite_a: bool, _sort: Option<fn(F) -> bool>,
     check_finite: bool,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
@@ -1121,26 +1093,26 @@ where
 /// # Returns
 /// * Block diagonal matrix
 #[allow(dead_code)]
-pub fn block_diag<F>(arrays: &[ArrayView2<F>]) -> LinalgResult<Array2<F>>
+pub fn block_diag<F>(_arrays: &[ArrayView2<F>]) -> LinalgResult<Array2<F>>
 where
     F: Float + Zero,
 {
-    if arrays.is_empty() {
+    if _arrays.is_empty() {
         return Err(LinalgError::InvalidInput(
             "Cannot create block diagonal matrix from empty array list".to_string(),
         ));
     }
 
     // Calculate total dimensions
-    let total_rows: usize = arrays.iter().map(|a| a.nrows()).sum();
-    let total_cols: usize = arrays.iter().map(|a| a.ncols()).sum();
+    let total_rows: usize = _arrays.iter().map(|a| a.nrows()).sum();
+    let total_cols: usize = _arrays.iter().map(|a| a.ncols()).sum();
 
     let mut result = Array2::zeros((total_rows, total_cols));
 
     let mut row_offset = 0;
     let mut col_offset = 0;
 
-    for array in arrays {
+    for array in _arrays {
         let (rows, cols) = array.dim();
         result
             .slice_mut(ndarray::s![
@@ -1168,10 +1140,7 @@ where
 /// * Solution to the banded system
 #[allow(dead_code)]
 pub fn solve_banded<F>(
-    _ab: &ArrayView2<F>,
-    _b: &ArrayView2<F>,
-    _overwrite_ab: bool,
-    _overwrite_b: bool,
+    _ab: &ArrayView2<F>, _b: &ArrayView2<F>, _overwrite_ab: bool, _overwrite_b: bool,
     check_finite: bool,
 ) -> LinalgResult<Array2<F>>
 where

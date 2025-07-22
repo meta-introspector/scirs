@@ -621,9 +621,9 @@ pub struct AnomalyConfig {
 
 impl AdvancedMemoryLeakDetector {
     /// Create a new advanced memory leak detector
-    pub fn new(config: MemoryLeakConfig) -> Result<Self> {
+    pub fn new(_config: MemoryLeakConfig) -> Result<Self> {
         let memory_history = Arc::new(RwLock::new(VecDeque::with_capacity(
-            config.max_history_size,
+            _config.max_history_size,
         )));
         let active_sessions = Arc::new(Mutex::new(HashMap::new()));
 
@@ -632,7 +632,7 @@ impl AdvancedMemoryLeakDetector {
         let statistics = MemoryStatistics::default();
 
         Ok(Self {
-            config,
+            _config,
             memory_history,
             active_sessions,
             leak_analyzer,
@@ -658,7 +658,7 @@ impl AdvancedMemoryLeakDetector {
         let session = MonitoringSession {
             session_id: session_id.clone(),
             start_time: Instant::now(),
-            config: session_config,
+            _config: session_config,
             snapshots: VecDeque::new(),
             analysis_results: None,
             statistics: SessionStatistics::default(),
@@ -972,9 +972,8 @@ impl AdvancedMemoryLeakDetector {
         growth_analysis: &GrowthAnalysis,
     ) -> Result<LeakCharacteristics> {
         let leak_type = match growth_analysis.trend_type {
-            GrowthTrendType::Linear => LeakType::ClassicLeak,
-            GrowthTrendType::Exponential => LeakType::UnboundedGrowth,
-            _ => LeakType::ClassicLeak,
+            GrowthTrendType::Linear =>, LeakType::ClassicLeak,
+            GrowthTrendType::Exponential => LeakType::UnboundedGrowth_ =>, LeakType::ClassicLeak,
         };
 
         Ok(LeakCharacteristics {
@@ -988,8 +987,7 @@ impl AdvancedMemoryLeakDetector {
 
     fn generate_recommendations(
         &self,
-        growth_analysis: &GrowthAnalysis,
-        _pattern_analysis: &PatternAnalysisResult,
+        growth_analysis: &GrowthAnalysis_pattern, _analysis: &PatternAnalysisResult,
         leak_characteristics: &LeakCharacteristics,
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
@@ -1032,8 +1030,7 @@ impl AdvancedMemoryLeakDetector {
             severity: match analysis_result.severity {
                 s if s >= 0.9 => AlertSeverity::Critical,
                 s if s >= 0.7 => AlertSeverity::High,
-                s if s >= 0.5 => AlertSeverity::Medium,
-                _ => AlertSeverity::Low,
+                s if s >= 0.5 => AlertSeverity::Medium_ =>, AlertSeverity::Low,
             },
             alert_type: MemoryAlertType::MemoryLeak,
             message: format!(
@@ -1049,9 +1046,7 @@ impl AdvancedMemoryLeakDetector {
     }
 
     fn update_statistics(
-        &self,
-        _session: &MonitoringSession,
-        _analysis_result: &LeakAnalysisResult,
+        &self_session: &MonitoringSession_analysis, _result: &LeakAnalysisResult,
     ) -> Result<()> {
         // Implementation would update global statistics
         Ok(())
@@ -1082,9 +1077,9 @@ pub struct MemoryLeakReport {
 // Implementation stubs for the analysis engines
 
 impl LeakAnalysisEngine {
-    fn new(config: AnalysisConfig) -> Self {
+    fn new(_config: AnalysisConfig) -> Self {
         Self {
-            config,
+            _config,
             statistical_analyzer: StatisticalAnalyzer::new(StatisticalConfig::default()),
             pattern_detector: PatternDetector::new(PatternConfig::default()),
             anomaly_detector: AnomalyDetector::new(AnomalyConfig::default()),
@@ -1133,27 +1128,27 @@ impl LeakAnalysisEngine {
 }
 
 impl StatisticalAnalyzer {
-    fn new(config: StatisticalConfig) -> Self {
-        Self { config }
+    fn new(_config: StatisticalConfig) -> Self {
+        Self { _config }
     }
 }
 
 impl PatternDetector {
-    fn new(config: PatternConfig) -> Self {
-        Self { config }
+    fn new(_config: PatternConfig) -> Self {
+        Self { _config }
     }
 }
 
 impl AnomalyDetector {
-    fn new(config: AnomalyConfig) -> Self {
-        Self { config }
+    fn new(_config: AnomalyConfig) -> Self {
+        Self { _config }
     }
 }
 
 impl MemoryAlertSystem {
-    fn new(config: AlertConfig) -> Self {
+    fn new(_config: AlertConfig) -> Self {
         Self {
-            config,
+            _config,
             alert_history: VecDeque::new(),
             alert_handlers: Vec::new(),
         }

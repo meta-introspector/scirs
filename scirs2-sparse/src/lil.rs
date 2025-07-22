@@ -37,7 +37,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2_sparse::lil::LilMatrix;
+    /// use scirs2__sparse::lil::LilMatrix;
     ///
     /// // Create a 3x3 sparse matrix
     /// let mut matrix = LilMatrix::<f64>::new((3, 3));
@@ -49,8 +49,8 @@ where
     /// matrix.set(2, 0, 4.0);
     /// matrix.set(2, 1, 5.0);
     /// ```
-    pub fn new(shape: (usize, usize)) -> Self {
-        let (rows, cols) = shape;
+    pub fn new(_shape: (usize, usize)) -> Self {
+        let (rows, cols) = _shape;
 
         let data = vec![Vec::new(); rows];
         let indices = vec![Vec::new(); rows];

@@ -7,6 +7,7 @@ use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
 use tempfile::tempdir;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -66,7 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Alternative: calculate mean manually
     let start = Instant::now();
-    let data = array.as_array::<ndarray::Ix1>()?;
+    let data = array.asarray::<ndarray::Ix1>()?;
     let mean = data.mean().unwrap_or(0.0);
     let elapsed = start.elapsed();
     println!("Mean: {:.2} (calculated in {:.2?})", mean, elapsed);
@@ -83,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Compare with loading the entire array
     println!("\nComparison with loading the entire array:");
     let start = Instant::now();
-    let loaded_array = array.readonly_array::<ndarray::Ix1>()?;
+    let loaded_array = array.readonlyarray::<ndarray::Ix1>()?;
     let loaded_sum: f64 = loaded_array.iter().sum();
     let elapsed = start.elapsed();
     println!(
@@ -107,15 +108,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // println!("Mean of squared values: {:.2}", squared_mean);
 
     // Alternative: calculate mean manually
-    let squared_data = squared.as_array::<ndarray::Ix1>()?;
+    let squared_data = squared.asarray::<ndarray::Ix1>()?;
     let squared_mean = squared_data.mean().unwrap_or(0.0);
     println!("Mean of squared values: {:.2}", squared_mean);
 
     // Compare with conventional approach
     println!("\nComparison with conventional approach:");
     let start = Instant::now();
-    let loaded_array = array.readonly_array::<ndarray::Ix1>()?;
-    let squared_loaded: Array<f64, _> = loaded_array.map(|&x| x * x);
+    let loaded_array = array.readonlyarray::<ndarray::Ix1>()?;
+    let squared_loaded: Array<f64_> = loaded_array.map(|&x| x * x);
     let squared_loaded_mean = squared_loaded.mean().unwrap();
     let elapsed = start.elapsed();
     println!(
@@ -156,7 +157,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // let sum_mean = sum_array.mean_zero_copy()?;
 
     // Alternative: calculate mean manually
-    let sum_data = sum_array.as_array::<ndarray::Ix1>()?;
+    let sum_data = sum_array.asarray::<ndarray::Ix1>()?;
     let sum_mean = sum_data.mean().unwrap_or(0.0);
     println!(
         "Mean of sum array: {:.2} (expected: {:.2})",
@@ -264,7 +265,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut result = 0.0;
     for _ in 0..n_runs {
         let start = Instant::now();
-        let full_array = bench_array.readonly_array::<ndarray::Ix1>()?;
+        let full_array = bench_array.readonlyarray::<ndarray::Ix1>()?;
         result = full_array.iter().sum();
         total_time += start.elapsed().as_millis();
     }
@@ -297,7 +298,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let strategy = ChunkingStrategy::Fixed(chunk_size);
 
         // Process chunks
-        let chunk_sums = bench_array.process_chunks(strategy, |chunk, _| chunk.iter().sum::<f64>());
+        let chunk_sums = bench_array.process_chunks(strategy, |chunk_| chunk.iter().sum::<f64>());
 
         // Calculate final sum
         result = chunk_sums.iter().sum();
@@ -323,7 +324,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // Process chunks in parallel
             let chunk_sums =
-                bench_array.process_chunks_parallel(strategy, |chunk, _| chunk.iter().sum::<f64>());
+                bench_array.process_chunks_parallel(strategy, |chunk_| chunk.iter().sum::<f64>());
 
             // Calculate final sum
             result = chunk_sums.iter().sum();

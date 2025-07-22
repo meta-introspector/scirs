@@ -20,7 +20,7 @@ use crate::regularizers::Regularizer;
 ///
 /// ```
 /// use ndarray::{Array4, array};
-/// use scirs2_optim::regularizers::SpatialDropout;
+/// use scirs2__optim::regularizers::SpatialDropout;
 ///
 /// let spatial_dropout = SpatialDropout::new(0.3).unwrap(); // 30% dropout rate
 ///
@@ -44,8 +44,8 @@ impl<A: Float + Debug + ScalarOperand> SpatialDropout<A> {
     /// # Arguments
     ///
     /// * `drop_prob` - Probability of dropping each feature map (0.0 to 1.0)
-    pub fn new(drop_prob: A) -> Result<Self> {
-        if drop_prob < A::zero() || drop_prob > A::one() {
+    pub fn new(_drop_prob: A) -> Result<Self> {
+        if _drop_prob < A::zero() || _drop_prob >, A::one() {
             return Err(OptimError::InvalidConfig(
                 "Drop probability must be between 0.0 and 1.0".to_string(),
             ));
@@ -111,7 +111,7 @@ impl<A: Float + Debug + ScalarOperand> SpatialDropout<A> {
 ///
 /// ```
 /// use ndarray::{Array3, array};
-/// use scirs2_optim::regularizers::FeatureDropout;
+/// use scirs2__optim::regularizers::FeatureDropout;
 ///
 /// let feature_dropout = FeatureDropout::new(0.5).unwrap(); // 50% dropout rate
 ///
@@ -135,8 +135,8 @@ impl<A: Float + Debug + ScalarOperand> FeatureDropout<A> {
     /// # Arguments
     ///
     /// * `drop_prob` - Probability of dropping each feature (0.0 to 1.0)
-    pub fn new(drop_prob: A) -> Result<Self> {
-        if drop_prob < A::zero() || drop_prob > A::one() {
+    pub fn new(_drop_prob: A) -> Result<Self> {
+        if _drop_prob < A::zero() || _drop_prob >, A::one() {
             return Err(OptimError::InvalidConfig(
                 "Drop probability must be between 0.0 and 1.0".to_string(),
             ));
@@ -197,14 +197,14 @@ impl<A: Float + Debug + ScalarOperand> FeatureDropout<A> {
 impl<A: Float + Debug + ScalarOperand, D: Dimension + ndarray::RemoveAxis> Regularizer<A, D>
     for SpatialDropout<A>
 {
-    fn apply(&self, _params: &Array<A, D>, gradients: &mut Array<A, D>) -> Result<A> {
+    fn apply(&self_params: &Array<A, D>, gradients: &mut Array<A, D>) -> Result<A> {
         // Apply spatial dropout to gradients during training
         let masked_gradients = self.apply(gradients, true);
         gradients.assign(&masked_gradients);
         Ok(A::zero())
     }
 
-    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self_params: &Array<A, D>) -> Result<A> {
         // Spatial dropout doesn't add a penalty term
         Ok(A::zero())
     }
@@ -214,14 +214,14 @@ impl<A: Float + Debug + ScalarOperand, D: Dimension + ndarray::RemoveAxis> Regul
 impl<A: Float + Debug + ScalarOperand, D: Dimension + ndarray::RemoveAxis> Regularizer<A, D>
     for FeatureDropout<A>
 {
-    fn apply(&self, _params: &Array<A, D>, gradients: &mut Array<A, D>) -> Result<A> {
+    fn apply(&self_params: &Array<A, D>, gradients: &mut Array<A, D>) -> Result<A> {
         // Apply feature dropout to gradients during training
         let masked_gradients = self.apply(gradients, true);
         gradients.assign(&masked_gradients);
         Ok(A::zero())
     }
 
-    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self_params: &Array<A, D>) -> Result<A> {
         // Feature dropout doesn't add a penalty term
         Ok(A::zero())
     }
@@ -369,7 +369,7 @@ mod tests {
 
         let _penalty_apply = sd.apply(&params, true);
         let penalty_reg =
-            <SpatialDropout<f64> as Regularizer<f64, _>>::apply(&sd, &params, &mut gradient)
+            <SpatialDropout<f64> as Regularizer<f64_>>::apply(&sd, &params, &mut gradient)
                 .unwrap();
         assert_eq!(penalty_reg, 0.0);
 

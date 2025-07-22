@@ -51,9 +51,9 @@ where
     /// # Returns
     ///
     /// * A new ConfusionMatrixVisualizer
-    pub fn new(matrix: Array2<f64>, labels: Option<Vec<String>>) -> Self {
+    pub fn new(_matrix: Array2<f64>, labels: Option<Vec<String>>) -> Self {
         ConfusionMatrixVisualizer {
-            matrix,
+            _matrix,
             labels,
             title: "Confusion Matrix".to_string(),
             normalize: false,
@@ -88,7 +88,7 @@ where
             title: "Confusion Matrix".to_string(),
             normalize: false,
             color_map: ColorMap::BlueRed,
-            include_text: true,
+            include_text: _true,
             y_true: Some(y_true),
             y_pred: Some(y_pred),
         })
@@ -164,7 +164,7 @@ where
             let y_pred = self.y_pred.unwrap();
 
             // Calculate confusion matrix
-            let (cm, _) = confusion_matrix(y_true, y_pred, None)?;
+            let (cm_) = confusion_matrix(y_true, y_pred, None)?;
 
             // Normalize if requested
             if self.normalize {

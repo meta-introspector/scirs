@@ -15,8 +15,8 @@
 //!
 //! Run with: cargo run --example enhanced_derivation_studio
 
-use num_complex::Complex64;
-use scirs2_special::*;
+use num__complex::Complex64;
+use scirs2__special::*;
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};
 use std::time::{Duration, Instant};
@@ -888,8 +888,7 @@ impl DerivationStudio {
                 get_user_input("Continue to next step (enter), repeat (r), or quit (q): ")?;
             match next_action.to_lowercase().as_str() {
                 "q" => break,
-                "r" => continue,
-                _ => current_step += 1,
+                "r" => continue_ => current_step += 1,
             }
 
             if current_step < path.steps.len() {
@@ -1366,7 +1365,7 @@ impl DerivationStudio {
         println!("📜 {}", derivation.target_result);
         println!("🛤️ Using the {} approach", path.name);
         println!(
-            "⏱️ Total time: {:.1} minutes",
+            "⏱️ Total _time: {:.1} minutes",
             total_time.as_secs_f64() / 60.0
         );
         println!("🎯 Difficulty level: {:?}", derivation.difficulty_level);
@@ -1524,8 +1523,7 @@ impl DerivationStudio {
             "1" => self.verify_gamma_identities()?,
             "2" => self.verify_bessel_properties()?,
             "3" => self.verify_error_function_series()?,
-            "4" => self.verify_asymptotic_approximations()?,
-            _ => return Ok(()),
+            "4" => self.verify_asymptotic_approximations()?_ => return Ok(()),
         }
 
         Ok(())
@@ -1686,8 +1684,7 @@ impl DerivationStudio {
             "1" => self.function_comparison_plots()?,
             "2" => self.complex_function_visualization()?,
             "3" => self.series_convergence_animation()?,
-            "4" => self.asymptotic_behavior_comparison()?,
-            _ => return Ok(()),
+            "4" => self.asymptotic_behavior_comparison()?_ => return Ok(()),
         }
 
         Ok(())
@@ -2215,8 +2212,8 @@ fn wait_for_user_input() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
-    print!("{}", prompt);
+fn get_user_input(_prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    print!("{}", _prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;

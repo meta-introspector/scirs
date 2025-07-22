@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use crate::ode::{solve_ivp, ODEOptions};
-use crate::pde::finite_difference::FiniteDifferenceScheme;
+use crate::pde::finite__difference::FiniteDifferenceScheme;
 use crate::pde::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, PDEError, PDEResult,
     PDESolution, PDESolverInfo,
@@ -99,22 +99,22 @@ impl MOLParabolicSolver3D {
             ));
         }
 
-        // Validate time range
+        // Validate time _range
         if time_range[0] >= time_range[1] {
             return Err(PDEError::DomainError(
-                "Invalid time range: start must be less than end".to_string(),
+                "Invalid time _range: start must be less than end".to_string(),
             ));
         }
 
-        // Validate boundary conditions
+        // Validate boundary _conditions
         if boundary_conditions.len() != 6 {
             return Err(PDEError::BoundaryConditions(
-                "3D parabolic PDE requires exactly 6 boundary conditions (one for each face)"
+                "3D parabolic PDE requires exactly 6 boundary _conditions (one for each face)"
                     .to_string(),
             ));
         }
 
-        // Ensure we have boundary conditions for all dimensions/faces
+        // Ensure we have boundary _conditions for all dimensions/faces
         let has_x_lower = boundary_conditions
             .iter()
             .any(|bc| bc.location == BoundaryLocation::Lower && bc.dimension == 0);
@@ -142,7 +142,7 @@ impl MOLParabolicSolver3D {
             || !has_z_upper
         {
             return Err(PDEError::BoundaryConditions(
-                "3D parabolic PDE requires boundary conditions for all faces of the domain"
+                "3D parabolic PDE requires boundary _conditions for all faces of the domain"
                     .to_string(),
             ));
         }
@@ -187,13 +187,13 @@ impl MOLParabolicSolver3D {
     }
 
     /// Set the finite difference scheme for spatial discretization
-    pub fn with_fd_scheme(mut self, scheme: FiniteDifferenceScheme) -> Self {
+    pub fn with_fd_scheme(mut scheme: FiniteDifferenceScheme) -> Self {
         self.fd_scheme = scheme;
         self
     }
 
     /// Solve the 3D parabolic PDE
-    pub fn solve(self) -> PDEResult<MOL3DResult> {
+    pub fn solve(&self) -> PDEResult<MOL3DResult> {
         let start_time = Instant::now();
 
         // Generate spatial grids
@@ -542,7 +542,7 @@ fn apply_boundary_condition_3d(
     match bc.bc_type {
         BoundaryConditionType::Dirichlet => {
             // Fixed value: u = bc.value
-            // For Dirichlet, we set dudt = 0 to maintain the fixed value
+            // For Dirichlet, we set dudt = 0 to maintain the _fixed value
 
             if let Some(i) = i_fixed {
                 // X-direction boundary (left or right face)
@@ -1457,17 +1457,17 @@ fn apply_dirichlet_conditions_to_initial_3d(
 
 /// Convert a MOL3DResult to a PDESolution
 impl From<MOL3DResult> for PDESolution<f64> {
-    fn from(result: MOL3DResult) -> Self {
+    fn from(_result: MOL3DResult) -> Self {
         let mut grids = Vec::new();
 
         // Add time grid
-        grids.push(result.t.clone());
+        grids.push(_result.t.clone());
 
         // Extract spatial grids from solution shape
-        let nt = result.t.len();
-        let nz = result.u.shape()[1];
-        let ny = result.u.shape()[2];
-        let nx = result.u.shape()[3];
+        let nt = _result.t.len();
+        let nz = _result.u.shape()[1];
+        let ny = _result.u.shape()[2];
+        let nx = _result.u.shape()[3];
 
         // Create spatial grids (we don't have the actual grid values, so use linspace)
         let z_grid = Array1::linspace(0.0, 1.0, nz);
@@ -1483,7 +1483,7 @@ impl From<MOL3DResult> for PDESolution<f64> {
         let total_spatial_points = nx * ny * nz;
 
         // Reshape the 4D array (time, z, y, x) to 2D (time, spatial_points)
-        let u_reshaped = result
+        let u_reshaped = _result
             .u
             .into_shape_with_order((nt, total_spatial_points))
             .unwrap();
@@ -1494,7 +1494,7 @@ impl From<MOL3DResult> for PDESolution<f64> {
         // Create solver info
         let info = PDESolverInfo {
             num_iterations: 0, // This information is not available directly
-            computation_time: result.computation_time,
+            computation_time: _result.computation_time,
             residual_norm: None,
             convergence_history: None,
             method: "Method of Lines (3D)".to_string(),

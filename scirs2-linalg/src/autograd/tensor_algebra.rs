@@ -42,8 +42,8 @@ pub fn contract<F: Float + Debug + Send + Sync + 'static>(
         ));
     }
 
-    let a_shape = a.shape();
-    let b_shape = b.shape();
+    let a_shape = _a.shape();
+    let b_shape = _b.shape();
 
     // Check contracted dimensions have the same size
     for (&dim_a, &dim_b) in dims_a.iter().zip(dims_b.iter()) {
@@ -79,7 +79,7 @@ pub fn contract<F: Float + Debug + Send + Sync + 'static>(
     // This implementation handles matrix-matrix contraction (like matmul)
     // and vector-vector contraction (like dot product)
 
-    if a.data.ndim() == 2 && b.data.ndim() == 2 && dims_a == &[1] && dims_b == &[0] {
+    if _a.data.ndim() == 2 && _b.data.ndim() == 2 && dims_a == &[1] && dims_b == &[0] {
         // This is matrix multiplication: A[i,j] * B[j,k] -> C[i,k]
         let m = a_shape[0];
         let n = a_shape[1];
@@ -93,21 +93,21 @@ pub fn contract<F: Float + Debug + Send + Sync + 'static>(
             for k in 0..p {
                 let mut sum = F::zero();
                 for j in 0..n {
-                    sum = sum + a.data[[i, j]] * b.data[[j, k]];
+                    sum = sum + _a.data[[i, j]] * _b.data[[j, k]];
                 }
                 result_data[[i, k]] = sum;
             }
         }
 
         let result_data = result_data.into_dyn();
-        let requires_grad = a.requires_grad || b.requires_grad;
+        let requires_grad = _a.requires_grad || _b.requires_grad;
 
         if requires_grad {
-            let a_data = a.data.clone();
-            let b_data = b.data.clone();
+            let a_data = _a.data.clone();
+            let b_data = _b.data.clone();
 
             // Backward function for the first tensor
-            let backward_a = if a.requires_grad {
+            let backward_a = if _a.requires_grad {
                 Some(
                     Box::new(move |grad: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
                         // dA[i,j] = sum_k dC[i,k] * B[j,k]
@@ -135,7 +135,7 @@ pub fn contract<F: Float + Debug + Send + Sync + 'static>(
             };
 
             // Backward function for the second tensor
-            let backward_b = if b.requires_grad {
+            let backward_b = if _b.requires_grad {
                 Some(
                     Box::new(move |grad: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
                         // dB[j,k] = sum_i dC[i,k] * A[i,j]
@@ -164,7 +164,7 @@ pub fn contract<F: Float + Debug + Send + Sync + 'static>(
 
             let node = Node::new(
                 scirs2_autograd::graph::OpType::Activation("contract".to_string()),
-                vec![a, b],
+                vec![_a_b],
                 vec![backward_a, backward_b],
             );
 
@@ -174,25 +174,25 @@ pub fn contract<F: Float + Debug + Send + Sync + 'static>(
         } else {
             Ok(Tensor::new(result_data, false))
         }
-    } else if a.data.ndim() == 1 && b.data.ndim() == 1 && dims_a == &[0] && dims_b == &[0] {
+    } else if _a.data.ndim() == 1 && _b.data.ndim() == 1 && dims_a == &[0] && dims_b == &[0] {
         // This is dot product: A[i] * B[i] -> C[]
         let n = a_shape[0];
 
         // Compute the dot produc
         let mut dot_product = F::zero();
         for i in 0..n {
-            dot_product = dot_product + a.data[i] * b.data[i];
+            dot_product = dot_product + _a.data[i] * _b.data[i];
         }
 
         let result_data = Array::from_elem(IxDyn(&[1]), dot_product);
-        let requires_grad = a.requires_grad || b.requires_grad;
+        let requires_grad = _a.requires_grad || _b.requires_grad;
 
         if requires_grad {
-            let a_data = a.data.clone();
-            let b_data = b.data.clone();
+            let a_data = _a.data.clone();
+            let b_data = _b.data.clone();
 
             // Backward function for the first tensor
-            let backward_a = if a.requires_grad {
+            let backward_a = if _a.requires_grad {
                 Some(
                     Box::new(move |grad: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
                         // dA[i] = dC * B[i]
@@ -212,7 +212,7 @@ pub fn contract<F: Float + Debug + Send + Sync + 'static>(
             };
 
             // Backward function for the second tensor
-            let backward_b = if b.requires_grad {
+            let backward_b = if _b.requires_grad {
                 Some(
                     Box::new(move |grad: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
                         // dB[i] = dC * A[i]
@@ -233,7 +233,7 @@ pub fn contract<F: Float + Debug + Send + Sync + 'static>(
 
             let node = Node::new(
                 scirs2_autograd::graph::OpType::Activation("contract_dot".to_string()),
-                vec![a, b],
+                vec![_a_b],
                 vec![backward_a, backward_b],
             );
 
@@ -523,7 +523,7 @@ pub mod variable {
         dims_a: &[usize],
         dims_b: &[usize],
     ) -> AutogradResult<Variable<F>> {
-        let result_tensor = super::contract(&a.tensor, &b.tensor, dims_a, dims_b)?;
+        let result_tensor = super::contract(&_a.tensor, &_b.tensor, dims_a, dims_b)?;
         Ok(Variable {
             tensor: result_tensor,
         })

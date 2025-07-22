@@ -1,23 +1,23 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2, ArrayView2};
-use scirs2_linalg::quantization::{
+use scirs2__linalg::quantization::{
     calibration::{calibrate_matrix, CalibrationConfig, CalibrationMethod},
     quantize_matrix, quantize_vector, QuantizationMethod,
 };
 
 #[cfg(feature = "simd")]
-use scirs2_linalg::quantization::simd::{simd_quantized_matmul, simd_quantized_matvec};
+use scirs2__linalg::quantization::simd::{simd_quantized_matmul, simd_quantized_matvec};
 use std::hint::black_box;
 
 // Helper functions to generate test data
 #[allow(dead_code)]
-fn create_random_array2_f32(rows: usize, cols: usize) -> Array2<f32> {
-    Array2::from_shape_fn((rows, cols), |(i, j)| ((i * cols + j) % 100) as f32 / 100.0)
+fn create_random_array2_f32(_rows: usize, cols: usize) -> Array2<f32> {
+    Array2::from_shape_fn((_rows, cols), |(i, j)| ((i * cols + j) % 100) as f32 / 100.0)
 }
 
 #[allow(dead_code)]
-fn create_random_array1_f32(size: usize) -> Array1<f32> {
-    Array1::from_iter((0..size).map(|i| (i % 100) as f32 / 100.0))
+fn create_random_array1_f32(_size: usize) -> Array1<f32> {
+    Array1::from_iter((0.._size).map(|i| (i % 100) as f32 / 100.0))
 }
 
 // Regular matrix multiplication for comparison
@@ -44,7 +44,7 @@ fn bench_quantization(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("Quantize_Int8", &id_string),
                 &size,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         black_box(quantize_matrix(
                             &black_box(matrix.view()),
@@ -59,7 +59,7 @@ fn bench_quantization(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("Quantize_PerChannel", &id_string),
                 &size,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         black_box(quantize_matrix(
                             &black_box(matrix.view()),
@@ -103,7 +103,7 @@ fn bench_quantized_ops(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("RegularMatMul", &id_string),
                 &size,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         black_box(regular_matmul_f32(
                             &black_box(matrix_a.view()),
@@ -123,7 +123,7 @@ fn bench_quantized_ops(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("QuantizedMatMul", &id_string),
                 &size,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         black_box(
                             simd_quantized_matmul(
@@ -147,7 +147,7 @@ fn bench_quantized_ops(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("QuantizedMatVec", &id_string),
                 &size,
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         black_box(
                             simd_quantized_matvec(&qa_clone2, &qa_params_clone2, &vector.view())
@@ -200,17 +200,17 @@ fn bench_calibration(c: &mut Criterion) {
         let ema_config_clone = ema_config.clone();
 
         // Benchmark different calibration methods
-        group.bench_with_input(BenchmarkId::new("MinMax", size), &size, |b, _| {
+        group.bench_with_input(BenchmarkId::new("MinMax", size), &size, |b_| {
             b.iter(|| black_box(calibrate_matrix(&matrix.view(), 8, &minmax_config_clone).unwrap()))
         });
 
-        group.bench_with_input(BenchmarkId::new("Percentile", size), &size, |b, _| {
+        group.bench_with_input(BenchmarkId::new("Percentile", size), &size, |b_| {
             b.iter(|| {
                 black_box(calibrate_matrix(&matrix.view(), 8, &percentile_config_clone).unwrap())
             })
         });
 
-        group.bench_with_input(BenchmarkId::new("EMA", size), &size, |b, _| {
+        group.bench_with_input(BenchmarkId::new("EMA", size), &size, |b_| {
             b.iter(|| black_box(calibrate_matrix(&matrix.view(), 8, &ema_config_clone).unwrap()))
         });
     }

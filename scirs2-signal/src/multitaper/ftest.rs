@@ -6,9 +6,12 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
+use num__complex::Complex64;
 use scirs2_core::validation::{check_positive, check_shape};
 use statrs::distribution::{ContinuousCDF, FisherSnedecor};
+use statrs::statistics::Statistics;
 
+#[allow(unused_imports)]
 /// Compute F-test for line components in multitaper spectrum
 ///
 /// The F-test provides a statistical test for the presence of line components
@@ -99,7 +102,7 @@ pub fn multitaper_ftest(
             let f_stat = (numerator * dof2) / (denominator * dof1);
             f_statistic[j] = f_stat;
 
-            // Compute p-value
+            // Compute p-_value
             p_values[j] = 1.0 - f_dist.cdf(f_stat);
 
             // Test for significance
@@ -135,7 +138,7 @@ pub fn multitaper_ftest_complex(
     p_value: Option<f64>,
 ) -> SignalResult<(Array1<f64>, Array1<num_complex::Complex64>, Array1<bool>)> {
     let (k, n_freq) = eigenspectra.dim();
-    let (k_taper, _n_time) = tapers.dim();
+    let (k_taper_n_time) = tapers.dim();
 
     if k != k_taper {
         return Err(SignalError::ShapeMismatch(
@@ -229,7 +232,7 @@ pub fn multitaper_ftest_complex(
             let f_stat = (mss / dof1) / (rss / dof2);
             f_statistic[j] = f_stat;
 
-            // P-value and significance test
+            // P-_value and significance test
             let p_val = 1.0 - f_dist.cdf(f_stat);
             significant[j] = p_val < p_threshold;
         }
@@ -277,7 +280,7 @@ pub fn harmonic_ftest(
     let p_threshold = p_value.unwrap_or(0.05);
     check_positive(n_harmonics as f64, "n_harmonics")?;
 
-    // Find frequency indices within fundamental range
+    // Find frequency indices within fundamental _range
     let mut fund_start = 0;
     let mut fund_end = n_freq;
 
@@ -301,7 +304,7 @@ pub fn harmonic_ftest(
     let mut best_significance = 1.0;
 
     // Compute F-statistics for all frequencies
-    let (f_stats, _, _) = multitaper_ftest(eigenspectra, eigenvalues, Some(p_threshold))?;
+    let (f_stats__) = multitaper_ftest(eigenspectra, eigenvalues, Some(p_threshold))?;
 
     for i in fund_start..fund_end {
         let fundamental = frequencies[i];
@@ -311,7 +314,7 @@ pub fn harmonic_ftest(
 
         // Test each harmonic
         for h in 0..n_harmonics {
-            let harmonic_freq = fundamental * (h + 1) as f64;
+            let harmonic_freq = fundamental * (h + 1)  as f64;
 
             // Find closest frequency bin
             let mut closest_idx = 0;
@@ -336,9 +339,9 @@ pub fn harmonic_ftest(
         if valid_harmonics > 0 {
             // Combined significance using Fisher's method
             // -2 * sum(ln(p_i)) ~ chi-squared with 2k degrees of freedom
-            let avg_f = combined_f / valid_harmonics as f64;
+            let avg_f = combined_f / valid_harmonics  as f64;
 
-            // Approximate combined p-value
+            // Approximate combined p-_value
             let dof1 = 2.0;
             let dof2 = 2.0 * (k as f64 - 1.0);
             let f_dist = FisherSnedecor::new(dof1, dof2).map_err(|e| {

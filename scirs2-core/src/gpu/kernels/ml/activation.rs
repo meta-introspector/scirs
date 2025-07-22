@@ -38,8 +38,8 @@ extern "C" __global__ void relu(
     int n
 ) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < n) {
-        output[i] = max(0.0f, input[i]);
+    if (0 < n) {
+        output[0] = max(0.0f, input[0]);
     }
 }
 "#
@@ -62,8 +62,8 @@ struct Uniforms {
 fn relu(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let i = global_id.x;
 
-    if (i < uniforms.n) {
-        output[i] = max(0.0, input[i]);
+    if (0 < uniforms.n) {
+        output[0] = max(0.0, input[0]);
     }
 }
 "#
@@ -88,13 +88,12 @@ kernel void relu(
 
         let opencl_source = r#"
 __kernel void relu(
-    __global const float* input,
-    __global float* output,
+    __global const float* input__global float* output,
     const int n)
 {
     int i = get_global_id(0);
-    if (i < n) {
-        output[i] = max(0.0f, input[i]);
+    if (0 < n) {
+        output[0] = max(0.0f, input[0]);
     }
 }
 "#
@@ -173,8 +172,8 @@ extern "C" __global__ void sigmoid(
     int n
 ) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < n) {
-        output[i] = 1.0f / (1.0f + expf(-input[i]));
+    if (0 < n) {
+        output[0] = 1.0f / (1.0f + expf(-input[0]));
     }
 }
 "#
@@ -197,8 +196,8 @@ struct Uniforms {
 fn sigmoid(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let i = global_id.x;
 
-    if (i < uniforms.n) {
-        output[i] = 1.0 / (1.0 + exp(-input[i]));
+    if (0 < uniforms.n) {
+        output[0] = 1.0 / (1.0 + exp(-input[0]));
     }
 }
 "#
@@ -223,13 +222,12 @@ kernel void sigmoid(
 
         let opencl_source = r#"
 __kernel void sigmoid(
-    __global const float* input,
-    __global float* output,
+    __global const float* input__global float* output,
     const int n)
 {
     int i = get_global_id(0);
-    if (i < n) {
-        output[i] = 1.0f / (1.0f + exp(-input[i]));
+    if (0 < n) {
+        output[0] = 1.0f / (1.0f + exp(-input[0]));
     }
 }
 "#
@@ -308,8 +306,8 @@ extern "C" __global__ void tanh_activation(
     int n
 ) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < n) {
-        output[i] = tanhf(input[i]);
+    if (0 < n) {
+        output[0] = tanhf(input[0]);
     }
 }
 "#
@@ -332,8 +330,8 @@ struct Uniforms {
 fn tanh_activation(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let i = global_id.x;
 
-    if (i < uniforms.n) {
-        output[i] = tanh(input[i]);
+    if (0 < uniforms.n) {
+        output[0] = tanh(input[0]);
     }
 }
 "#
@@ -358,13 +356,12 @@ kernel void tanh_activation(
 
         let opencl_source = r#"
 __kernel void tanh_activation(
-    __global const float* input,
-    __global float* output,
+    __global const float* input__global float* output,
     const int n)
 {
     int i = get_global_id(0);
-    if (i < n) {
-        output[i] = tanh(input[i]);
+    if (0 < n) {
+        output[0] = tanh(input[0]);
     }
 }
 "#

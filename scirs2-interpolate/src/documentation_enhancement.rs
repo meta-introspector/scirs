@@ -338,9 +338,9 @@ pub struct EducationalValue {
 
 impl DocumentationEnhancer {
     /// Create a new documentation enhancer
-    pub fn new(config: DocumentationConfig) -> Self {
+    pub fn new(_config: DocumentationConfig) -> Self {
         Self {
-            config,
+            _config,
             analysis_results: Vec::new(),
             user_guides: Vec::new(),
             example_validations: Vec::new(),
@@ -580,8 +580,7 @@ impl DocumentationEnhancer {
                 true,
                 vec!["Requires GPU to run".to_string()],
                 vec!["Add fallback for systems without GPU".to_string()],
-            ),
-            _ => (true, true, vec![], vec![]),
+            , _ => (true, true, vec![], vec![]),
         };
 
         let status = if !compiles {
@@ -938,7 +937,7 @@ scirs2-interpolate = "0.1.0""#
                     instructions: "Create some sample data points to interpolate".to_string(),
                     code: Some(
                         r#"use ndarray::Array1;
-use scirs2_interpolate::*;
+use scirs2__interpolate::*;
 
 let x = Array1::from_vec(vec![0.0, 1.0, 2.0, 3.0, 4.0]);
 let y = Array1::from_vec(vec![0.0, 1.0, 4.0, 9.0, 16.0]);"#
@@ -1106,7 +1105,7 @@ println!("Interpolated values: {:?}", y_new);"#
     fn create_basic_example(&self) -> CodeExample {
         CodeExample {
             title: "Basic Linear Interpolation".to_string(),
-            code: r#"use scirs2_interpolate::*;
+            code: r#"use scirs2__interpolate::*;
 use ndarray::Array1;
 
 let x = Array1::from_vec(vec![0.0, 1.0, 2.0]);
@@ -1225,12 +1224,12 @@ if config.is_available() {
             title: "Method Selection Matrix".to_string(),
             code: r#"// Pseudo-code for method selection
 #[allow(dead_code)]
-fn select_method(data_size: usize, smoothness_required: bool, has_derivatives: bool) -> InterpolationMethod {
-    match (data_size, smoothness_required, has_derivatives) {
-        (n, false, _) if n < 1000 => InterpolationMethod::Linear,
+fn select_method(_data_size: usize, smoothness_required: bool, has_derivatives: bool) -> InterpolationMethod {
+    match (_data_size, smoothness_required, has_derivatives) {
+        (n, false_) if n < 1000 => InterpolationMethod::Linear,
         (n, true, false) if n < 10000 => InterpolationMethod::Cubic,
         (n, true, true) if n < 10000 => InterpolationMethod::Hermite,
-        (_, _, _) => InterpolationMethod::BSpline,
+        (___) => InterpolationMethod::BSpline,
     }
 }"#.to_string(),
             expected_output: None,
@@ -1293,7 +1292,7 @@ println!("Throughput: {} points/sec", x_new.len() as f64 / duration.as_secs_f64(
 // result = f(x_new)
 
 // SciRS2 (Rust):
-use scirs2_interpolate::*;
+use scirs2__interpolate::*;
 let result = linear_interpolate(&x.view(), &y.view(), &x_new.view())?;
 
 // Key differences:
@@ -1377,7 +1376,7 @@ let result = linear_interpolate(&x.view(), &y.view(), &x_new.view())?;
                 recommendations.push("⚠️  Minor documentation improvements needed".to_string());
                 if !critical_issues.is_empty() {
                     recommendations.push(format!(
-                        "Fix {} critical documentation issues",
+                        "Fix {} critical documentation _issues",
                         critical_issues.len()
                     ));
                 }
@@ -1404,7 +1403,7 @@ let result = linear_interpolate(&x.view(), &y.view(), &x_new.view())?;
         let missing_error_docs = self
             .analysis_results
             .iter()
-            .flat_map(|r| &r.issues)
+            .flat_map(|r| &r._issues)
             .filter(|i| matches!(i.category, DocumentationIssueCategory::MissingErrorDocs))
             .count();
 

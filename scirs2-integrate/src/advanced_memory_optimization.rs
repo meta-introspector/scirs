@@ -458,7 +458,7 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     ) -> IntegrateResult<ProblemCharacteristics> {
         Ok(ProblemCharacteristics {
             dimension: problem_size,
-            estimated_memory_footprint: problem_size * std::mem::size_of::<F>() * 10, // Estimate
+            estimated_memory_footprint: problem_size * std::mem::_size, _of::<F>() * 10, // Estimate
             access_pattern: self.infer_access_pattern(method_type)?,
             computational_intensity: self.estimate_computational_intensity(method_type)?,
             data_locality: self.analyze_data_locality(problem_size)?,
@@ -487,15 +487,14 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
             numa_placement: self.design_numa_placement(&requirements)?,
             prefetch_schedule: self.design_prefetch_schedule(&requirements, expected_iterations)?,
             buffer_reuse_plan: self.design_buffer_reuse(&requirements)?,
-            optimization_applied: vec!["Comprehensive optimization".to_string()],
-            _phantom: PhantomData,
+            optimization_applied: vec!["Comprehensive optimization".to_string()], _phantom: PhantomData,
         })
     }
 
     /// Apply cache optimizations based on plan
-    fn apply_cache_optimizations(&self, plan: &OptimizationPlan<F>) -> IntegrateResult<()> {
+    fn apply_cache_optimizations(_plan: &OptimizationPlan<F>) -> IntegrateResult<()> {
         let cache_optimizer = self.cache_optimizer.lock().unwrap();
-        cache_optimizer.apply_optimizations(plan)
+        cache_optimizer.apply_optimizations(_plan)
     }
 
     /// Allocate L1 cache-optimized memory
@@ -533,8 +532,7 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
             optimization_applied: vec![
                 "L1CacheOptimized".to_string(),
                 "CacheLineAligned".to_string(),
-            ],
-            _phantom: PhantomData,
+            ], _phantom: PhantomData,
         })
     }
 
@@ -572,16 +570,14 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
             optimization_applied: vec![
                 "L2CacheOptimized".to_string(),
                 "PrefetchOptimized".to_string(),
-            ],
-            _phantom: PhantomData,
+            ], _phantom: PhantomData,
         })
     }
 
     /// Allocate L3 cache-optimized memory
     fn allocate_l3_optimized(
         &self,
-        size: usize,
-        _strategy: AllocationStrategy,
+        size: usize_strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
         let mut hierarchy = self.hierarchy_manager.write().unwrap();
 
@@ -611,16 +607,14 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
             optimization_applied: vec![
                 "L3CacheOptimized".to_string(),
                 "SharedMemoryOptimized".to_string(),
-            ],
-            _phantom: PhantomData,
+            ], _phantom: PhantomData,
         })
     }
 
     /// Allocate NUMA-optimized main memory
     fn allocate_numa_optimized(
         &self,
-        size: usize,
-        _strategy: AllocationStrategy,
+        size: usize_strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
         let numa_manager = self.numa_manager.read().unwrap();
         let optimal_node = numa_manager.select_optimal_node(size)?;
@@ -663,16 +657,14 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
                     "StandardPages"
                 }
                 .to_string(),
-            ],
-            _phantom: PhantomData,
+            ], _phantom: PhantomData,
         })
     }
 
     /// Allocate GPU-optimized memory
     fn allocate_gpu_optimized(
         &self,
-        size: usize,
-        _strategy: AllocationStrategy,
+        size: usize_strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
         let mut hierarchy = self.hierarchy_manager.write().unwrap();
 
@@ -700,18 +692,17 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
             memory_tier: MemoryTier::GpuMemory,
             size,
             alignment: 256, // GPU memory alignment
-            optimization_applied: vec!["GpuOptimized".to_string(), "CoherencyManaged".to_string()],
-            _phantom: PhantomData,
+            optimization_applied: vec!["GpuOptimized".to_string(), "CoherencyManaged".to_string()], _phantom: PhantomData,
         })
     }
 
     /// Select optimal GPU memory type based on size and usage
-    fn select_optimal_gpu_memory_type(&self, size: usize) -> IntegrateResult<GpuMemoryType> {
+    fn select_optimal_gpu_memory_type(_size: usize) -> IntegrateResult<GpuMemoryType> {
         // Simple heuristic - would be more sophisticated in practice
-        if size < 48 * 1024 {
+        if _size < 48 * 1024 {
             // < 48KB
             Ok(GpuMemoryType::Shared)
-        } else if size < 64 * 1024 {
+        } else if _size < 64 * 1024 {
             // < 64KB
             Ok(GpuMemoryType::Constant)
         } else {
@@ -720,18 +711,17 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Infer access pattern from method type
-    fn infer_access_pattern(&self, method_type: &str) -> IntegrateResult<AccessPattern> {
-        match method_type.to_lowercase().as_str() {
+    fn infer_access_pattern(_method_type: &str) -> IntegrateResult<AccessPattern> {
+        match _method_type.to_lowercase().as_str() {
             "rk4" | "rk45" | "rk23" => Ok(AccessPattern::Sequential),
             "bdf" | "lsoda" => Ok(AccessPattern::Random), // Due to Jacobian operations
-            "symplectic" => Ok(AccessPattern::Blocked { block_size: 1024 }),
-            _ => Ok(AccessPattern::Sequential),
+            "symplectic" => Ok(AccessPattern::Blocked { block_size: 1024 }, _ => Ok(AccessPattern::Sequential),
         }
     }
 
     /// Estimate computational intensity
-    fn estimate_computational_intensity(&self, method_type: &str) -> IntegrateResult<f64> {
-        match method_type.to_lowercase().as_str() {
+    fn estimate_computational_intensity(_method_type: &str) -> IntegrateResult<f64> {
+        match _method_type.to_lowercase().as_str() {
             "rk4" => Ok(4.0),   // 4 function evaluations per step
             "rk45" => Ok(6.0),  // 6 function evaluations per step
             "bdf" => Ok(2.0),   // Implicit method, fewer evaluations but more linear algebra
@@ -741,9 +731,9 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Analyze data locality characteristics
-    fn analyze_data_locality(&self, problem_size: usize) -> IntegrateResult<f64> {
-        // Simple heuristic based on problem size
-        if problem_size < 1000 {
+    fn analyze_data_locality(_problem_size: usize) -> IntegrateResult<f64> {
+        // Simple heuristic based on problem _size
+        if _problem_size < 1000 {
             Ok(0.9) // High locality for small problems
         } else if problem_size < 100000 {
             Ok(0.6) // Medium locality
@@ -753,8 +743,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Assess parallelism potential
-    fn assess_parallelism(&self, method_type: &str) -> IntegrateResult<f64> {
-        match method_type.to_lowercase().as_str() {
+    fn assess_parallelism(_method_type: &str) -> IntegrateResult<f64> {
+        match _method_type.to_lowercase().as_str() {
             "rk4" | "rk45" | "rk23" => Ok(0.8), // High parallelism in explicit methods
             "bdf" => Ok(0.4),                   // Limited by linear solves
             "lsoda" => Ok(0.6),                 // Mixed
@@ -764,37 +754,31 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
 
     // Helper method implementations (simplified for brevity)
     fn design_optimal_layout(
-        &self,
-        _requirements: &MemoryRequirements<F>,
+        &self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<MemoryLayout> {
         Ok(MemoryLayout::SoA) // Structure of Arrays for better vectorization
     }
 
     fn design_cache_strategy(
-        &self,
-        _requirements: &MemoryRequirements<F>,
+        &self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<CacheStrategy> {
         Ok(CacheStrategy::Adaptive)
     }
 
     fn design_numa_placement(
-        &self,
-        _requirements: &MemoryRequirements<F>,
+        &self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<NumaPlacement> {
         Ok(NumaPlacement::LocalFirst)
     }
 
     fn design_prefetch_schedule(
-        &self,
-        _requirements: &MemoryRequirements<F>,
-        _iterations: usize,
+        &self_requirements: &MemoryRequirements<F>, _iterations: usize,
     ) -> IntegrateResult<PrefetchSchedule> {
         Ok(PrefetchSchedule::Adaptive)
     }
 
     fn design_buffer_reuse(
-        &self,
-        _requirements: &MemoryRequirements<F>,
+        &self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<BufferReuseStrategy> {
         Ok(BufferReuseStrategy::LRU)
     }
@@ -925,8 +909,7 @@ impl<F: IntegrateFloat> AllocationPredictor<F> {
 
     fn predict_optimal_allocation(
         &self,
-        size: usize,
-        _memory_type: MemoryType,
+        size: usize, _memory_type: MemoryType,
     ) -> IntegrateResult<AllocationStrategy> {
         // Simplified prediction logic
         let memory_tier = if size < 1024 {
@@ -955,8 +938,7 @@ impl<F: IntegrateFloat> AllocationPredictor<F> {
             total_size: characteristics.estimated_memory_footprint,
             working_set_size: characteristics.estimated_memory_footprint / 2,
             peak_usage: characteristics.estimated_memory_footprint * 3 / 2,
-            temporal_pattern: TemporalAccessPattern::Uniform,
-            _phantom: std::marker::PhantomData,
+            temporal_pattern: TemporalAccessPattern::Uniform, _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -971,7 +953,7 @@ impl<F: IntegrateFloat> CacheOptimizer<F> {
         })
     }
 
-    fn apply_optimizations(&self, _plan: &OptimizationPlan<F>) -> IntegrateResult<()> {
+    fn apply_optimizations(_plan: &OptimizationPlan<F>) -> IntegrateResult<()> {
         // Implementation would apply various cache optimizations
         Ok(())
     }
@@ -998,7 +980,7 @@ impl NumaTopologyManager {
         })
     }
 
-    fn select_optimal_node(&self, _size: usize) -> IntegrateResult<usize> {
+    fn select_optimal_node(_size: usize) -> IntegrateResult<usize> {
         // Simplified - return first node
         Ok(0)
     }
@@ -1043,7 +1025,7 @@ impl CacheHierarchyInfo {
         Default::default()
     }
 
-    pub fn detect() -> IntegrateResult<Self> {
+    pub fn detect(&self) -> IntegrateResult<Self> {
         Ok(Self {
             l1_size: 32 * 1024,       // 32KB L1 cache
             l2_size: 256 * 1024,      // 256KB L2 cache
@@ -1054,7 +1036,7 @@ impl CacheHierarchyInfo {
 }
 
 impl Default for CacheHierarchyInfo {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             l1_size: 32 * 1024,
             l2_size: 256 * 1024,
@@ -1161,16 +1143,14 @@ pub struct CacheAwareAlgorithmSelector {
 #[derive(Debug, Clone)]
 pub struct DataLayoutOptimizer<F: IntegrateFloat> {
     layout_performance: HashMap<String, f64>,
-    optimization_history: Vec<MemoryLayout>,
-    _phantom: std::marker::PhantomData<F>,
+    optimization_history: Vec<MemoryLayout>, _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for DataLayoutOptimizer<F> {
     fn default() -> Self {
         Self {
             layout_performance: HashMap::new(),
-            optimization_history: Vec::new(),
-            _phantom: std::marker::PhantomData,
+            optimization_history: Vec::new(), _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1323,7 +1303,7 @@ impl NumaTopology {
         Default::default()
     }
 
-    pub fn detect() -> IntegrateResult<Self> {
+    pub fn detect(&self) -> IntegrateResult<Self> {
         Ok(Self {
             num_nodes: 1,
             node_distances: vec![vec![0]],
@@ -1362,7 +1342,7 @@ impl ProblemCharacteristicAnalyzer {
 }
 
 impl Default for ProblemCharacteristicAnalyzer {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }

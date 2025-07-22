@@ -77,14 +77,14 @@ pub struct QuantumState {
 
 impl QuantumState {
     /// Create a new quantum state with given dimensions
-    pub fn new(dimensions: usize) -> Self {
-        let mut amplitudes = Array1::zeros(dimensions);
+    pub fn new(_dimensions: usize) -> Self {
+        let mut amplitudes = Array1::zeros(_dimensions);
         amplitudes[0] = 1.0; // Start in |0⟩ state
 
         Self {
             amplitudes,
-            phases: Array1::zeros(dimensions),
-            entanglement: Array2::eye(dimensions),
+            phases: Array1::zeros(_dimensions),
+            entanglement: Array2::eye(_dimensions),
             error_correction: QuantumErrorCorrection::default(),
             decoherence_rate: 0.001,
             gate_history: Vec::new(),
@@ -202,9 +202,9 @@ pub struct QuantumAnnealingOptimizer {
 
 impl QuantumAnnealingOptimizer {
     /// Create a new quantum annealing optimizer
-    pub fn new(problem_size: usize) -> Self {
-        let problem_hamiltonian = Self::create_problem_hamiltonian(problem_size);
-        let mixing_hamiltonian = Self::create_mixing_hamiltonian(problem_size);
+    pub fn new(_problem_size: usize) -> Self {
+        let problem_hamiltonian = Self::create_problem_hamiltonian(_problem_size);
+        let mixing_hamiltonian = Self::create_mixing_hamiltonian(_problem_size);
         let annealing_schedule = Self::create_annealing_schedule(100);
 
         Self {
@@ -250,19 +250,19 @@ impl QuantumAnnealingOptimizer {
     }
 
     /// Create problem Hamiltonian encoding the optimization problem
-    fn create_problem_hamiltonian(size: usize) -> Array2<f32> {
-        let mut hamiltonian = Array2::zeros((size, size));
+    fn create_problem_hamiltonian(_size: usize) -> Array2<f32> {
+        let mut hamiltonian = Array2::zeros((_size, _size));
 
         // Encode I/O optimization problem
         // Diagonal terms represent parameter costs
-        for i in 0..size {
-            hamiltonian[[i, i]] = (i as f32 / size as f32 - 0.5).powi(2);
+        for i in 0.._size {
+            hamiltonian[[i, i]] = (i as f32 / _size as f32 - 0.5).powi(2);
         }
 
         // Off-diagonal terms represent parameter interactions
-        for i in 0..size {
-            for j in i + 1..size {
-                let interaction = 0.1 * ((i as f32 - j as f32) / size as f32).cos();
+        for i in 0.._size {
+            for j in i + 1.._size {
+                let interaction = 0.1 * ((i as f32 - j as f32) / _size as f32).cos();
                 hamiltonian[[i, j]] = interaction;
                 hamiltonian[[j, i]] = interaction;
             }
@@ -272,15 +272,15 @@ impl QuantumAnnealingOptimizer {
     }
 
     /// Create mixing Hamiltonian for quantum tunneling
-    fn create_mixing_hamiltonian(size: usize) -> Array2<f32> {
-        let mut hamiltonian = Array2::zeros((size, size));
+    fn create_mixing_hamiltonian(_size: usize) -> Array2<f32> {
+        let mut hamiltonian = Array2::zeros((_size, _size));
 
         // Create transverse field (quantum tunneling)
-        for i in 0..size {
+        for i in 0.._size {
             if i > 0 {
                 hamiltonian[[i, i - 1]] = 1.0;
             }
-            if i < size - 1 {
+            if i < _size - 1 {
                 hamiltonian[[i, i + 1]] = 1.0;
             }
         }
@@ -289,9 +289,9 @@ impl QuantumAnnealingOptimizer {
     }
 
     /// Create annealing schedule
-    fn create_annealing_schedule(steps: usize) -> Vec<f32> {
-        (0..steps)
-            .map(|i| 1.0 - (i as f32 / steps as f32))
+    fn create_annealing_schedule(_steps: usize) -> Vec<f32> {
+        (0.._steps)
+            .map(|i| 1.0 - (i as f32 / _steps as f32))
             .collect()
     }
 
@@ -355,11 +355,11 @@ pub struct QuantumParallelProcessor {
 
 impl QuantumParallelProcessor {
     /// Create a new quantum parallel processor
-    pub fn new(processing_dimensions: usize) -> Self {
+    pub fn new(_processing_dimensions: usize) -> Self {
         Self {
-            quantum_state: Arc::new(RwLock::new(QuantumState::new(processing_dimensions))),
+            quantum_state: Arc::new(RwLock::new(QuantumState::new(_processing_dimensions))),
             optimizer: Arc::new(RwLock::new(QuantumAnnealingOptimizer::new(
-                processing_dimensions,
+                _processing_dimensions,
             ))),
             params: QuantumIoParams::default(),
             performance_history: Arc::new(RwLock::new(Vec::new())),
@@ -448,8 +448,7 @@ impl QuantumParallelProcessor {
             0 => self.strategy_quantum_superposition(data),
             1 => self.strategy_quantum_entanglement(data),
             2 => self.strategy_quantum_interference(data),
-            3 => self.strategy_quantum_tunneling(data),
-            _ => self.strategy_classical_fallback(data),
+            3 => self.strategy_quantum_tunneling(data, _ => self.strategy_classical_fallback(data),
         }
     }
 

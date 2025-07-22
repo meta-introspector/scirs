@@ -11,6 +11,7 @@ use crate::stochastic::{
 };
 use crate::unconstrained::result::OptimizeResult;
 use ndarray::Array1;
+use statrs::statistics::Statistics;
 
 /// Options for RMSProp optimization
 #[derive(Debug, Clone)]

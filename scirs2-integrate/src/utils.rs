@@ -5,6 +5,7 @@
 use crate::{IntegrateError, IntegrateFloat, IntegrateResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_core::safe_ops::safe_divide;
+// use crate::error::{IntegrateError, IntegrateResult}; // Already imported
 
 /// Compute the numerical Jacobian of a vector-valued function
 ///
@@ -29,17 +30,17 @@ where
     F: IntegrateFloat,
     Func: Fn(ArrayView1<F>) -> Array1<F>,
 {
-    let n = x.len();
+    let n = _x.len();
     let f_x = match f_x {
         Some(val) => val.to_owned(),
-        None => f(x),
+        None => f(_x),
     };
     let m = f_x.len();
 
     let mut jac = Array2::<F>::zeros((m, n));
 
     for i in 0..n {
-        let mut x_perturbed = x.to_owned();
+        let mut x_perturbed = _x.to_owned();
         x_perturbed[i] += eps;
 
         let f_perturbed = f(x_perturbed.view());
@@ -293,7 +294,7 @@ where
 
         // Check if we've converged
         let norm = f_x
-            .iter()
+            ._iter()
             .map(|&v| v.abs())
             .fold(F::zero(), |a, b| a.max(b));
         if norm < tol {
@@ -355,7 +356,7 @@ where
 
         // Check if we've converged
         let norm = f_tx
-            .iter()
+            ._iter()
             .map(|&v| v.abs())
             .fold(F::zero(), |a, b| a.max(b));
         if norm < tol {

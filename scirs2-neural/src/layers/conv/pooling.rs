@@ -14,8 +14,7 @@ pub struct MaxPool2D<F: Float + Debug + Send + Sync> {
     pool_size: (usize, usize),
     #[allow(dead_code)]
     stride: (usize, usize),
-    name: Option<String>,
-    _phantom: PhantomData<F>,
+    name: Option<String>, _phantom: PhantomData<F>,
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> MaxPool2D<F> {
@@ -27,8 +26,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> MaxPool2D<F> {
         Ok(Self {
             pool_size,
             stride,
-            name: name.map(String::from),
-            _phantom: PhantomData,
+            name: name.map(String::from), _phantom: PhantomData,
         })
     }
 }
@@ -87,9 +85,9 @@ pub struct AdaptiveAvgPool2D<F: Float + Debug + Send + Sync> {
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> AdaptiveAvgPool2D<F> {
-    pub fn new(output_size: (usize, usize), name: Option<&str>) -> Result<Self> {
+    pub fn new(_output_size: (usize, usize), name: Option<&str>) -> Result<Self> {
         Ok(Self {
-            output_size,
+            _output_size,
             name: name.map(String::from),
         })
     }
@@ -125,9 +123,9 @@ pub struct AdaptiveMaxPool2D<F: Float + Debug + Send + Sync> {
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> AdaptiveMaxPool2D<F> {
-    pub fn new(output_size: (usize, usize), name: Option<&str>) -> Result<Self> {
+    pub fn new(_output_size: (usize, usize), name: Option<&str>) -> Result<Self> {
         Ok(Self {
-            output_size,
+            _output_size,
             name: name.map(String::from),
         })
     }
@@ -162,9 +160,9 @@ pub struct GlobalAvgPool2D<F: Float + Debug + Send + Sync> {
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> GlobalAvgPool2D<F> {
-    pub fn new(name: Option<&str>) -> Result<Self> {
+    pub fn new(_name: Option<&str>) -> Result<Self> {
         Ok(Self {
-            name: name.map(String::from),
+            _name: _name.map(String::from),
         })
     }
 }
@@ -199,9 +197,9 @@ pub struct AdaptiveAvgPool1D<F: Float + Debug + Send + Sync> {
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> AdaptiveAvgPool1D<F> {
-    pub fn new(output_size: usize, name: Option<&str>) -> Result<Self> {
+    pub fn new(_output_size: usize, name: Option<&str>) -> Result<Self> {
         Ok(Self {
-            output_size,
+            _output_size,
             name: name.map(String::from),
         })
     }
@@ -236,9 +234,9 @@ pub struct AdaptiveMaxPool1D<F: Float + Debug + Send + Sync> {
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> AdaptiveMaxPool1D<F> {
-    pub fn new(output_size: usize, name: Option<&str>) -> Result<Self> {
+    pub fn new(_output_size: usize, name: Option<&str>) -> Result<Self> {
         Ok(Self {
-            output_size,
+            _output_size,
             name: name.map(String::from),
         })
     }
@@ -273,9 +271,9 @@ pub struct AdaptiveAvgPool3D<F: Float + Debug + Send + Sync> {
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> AdaptiveAvgPool3D<F> {
-    pub fn new(output_size: (usize, usize, usize), name: Option<&str>) -> Result<Self> {
+    pub fn new(_output_size: (usize, usize, usize), name: Option<&str>) -> Result<Self> {
         Ok(Self {
-            output_size,
+            _output_size,
             name: name.map(String::from),
         })
     }
@@ -306,16 +304,14 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Adap
 #[derive(Debug)]
 pub struct AdaptiveMaxPool3D<F: Float + Debug + Send + Sync> {
     output_size: (usize, usize, usize),
-    name: Option<String>,
-    _phantom: PhantomData<F>,
+    name: Option<String>, _phantom: PhantomData<F>,
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> AdaptiveMaxPool3D<F> {
-    pub fn new(output_size: (usize, usize, usize), name: Option<&str>) -> Result<Self> {
+    pub fn new(_output_size: (usize, usize, usize), name: Option<&str>) -> Result<Self> {
         Ok(Self {
-            output_size,
-            name: name.map(String::from),
-            _phantom: PhantomData,
+            _output_size,
+            name: name.map(String::from), _phantom: PhantomData,
         })
     }
 }
@@ -376,7 +372,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F> for
         vec![]
     }
 
-    fn set_parameters(&mut self, _params: Vec<Array<F, IxDyn>>) -> Result<()> {
+    fn set_parameters(&mut self_params: Vec<Array<F, IxDyn>>) -> Result<()> {
         Ok(())
     }
 }
@@ -392,7 +388,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F>
         vec![]
     }
 
-    fn set_parameters(&mut self, _params: Vec<Array<F, IxDyn>>) -> Result<()> {
+    fn set_parameters(&mut self_params: Vec<Array<F, IxDyn>>) -> Result<()> {
         Ok(())
     }
 }
@@ -408,7 +404,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F>
         vec![]
     }
 
-    fn set_parameters(&mut self, _params: Vec<Array<F, IxDyn>>) -> Result<()> {
+    fn set_parameters(&mut self_params: Vec<Array<F, IxDyn>>) -> Result<()> {
         Ok(())
     }
 }
@@ -424,7 +420,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> ParamLayer<F>
         vec![]
     }
 
-    fn set_parameters(&mut self, _params: Vec<Array<F, IxDyn>>) -> Result<()> {
+    fn set_parameters(&mut self_params: Vec<Array<F, IxDyn>>) -> Result<()> {
         Ok(())
     }
 }

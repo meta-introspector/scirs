@@ -700,17 +700,17 @@ struct EnergyPrediction<T: Float> {
 
 impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> EnergyEfficientOptimizer<T> {
     /// Create a new energy-efficient optimizer
-    pub fn new(config: EnergyEfficientConfig<T>, num_neurons: usize) -> Self {
+    pub fn new(_config: EnergyEfficientConfig<T>, num_neurons: usize) -> Self {
         Self {
-            config: config.clone(),
-            energy_monitor: EnergyMonitor::new(config.energy_budget.monitoring_frequency),
+            _config: _config.clone(),
+            energy_monitor: EnergyMonitor::new(_config.energy_budget.monitoring_frequency),
             dvfs_controller: DVFSController::new(),
             power_gating_controller: PowerGatingController::new(),
             sparse_optimizer: SparseComputationOptimizer::new(),
             thermal_manager: ThermalManager::new(ThermalManagementConfig::default()),
-            sleep_controller: SleepModeController::new(config.energy_budget.monitoring_frequency),
+            sleep_controller: SleepModeController::new(_config.energy_budget.monitoring_frequency),
             predictive_manager: PredictiveEnergyManager::new(),
-            current_strategy: config.primary_strategy,
+            current_strategy: _config.primary_strategy,
             strategy_effectiveness: HashMap::new(),
             system_state: EnergySystemState {
                 current_energy: T::zero(),
@@ -917,7 +917,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> EnergyEf
     }
     
     /// Apply default optimization
-    fn apply_default_optimization(&mut self, _workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>> {
+    fn apply_default_optimization(&mut self_workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>> {
         // Minimal optimization - just monitoring
         Ok(EnergyOptimizationResult {
             strategy_used: self.current_strategy,
@@ -944,7 +944,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> EnergyEf
     
     /// Calculate thermal impact
     fn calculate_thermal_impact(&self, new_power: T) -> T {
-        // Thermal impact proportional to power reduction
+        // Thermal impact proportional to _power reduction
         let power_reduction = self.system_state.current_power - new_power;
         power_reduction * self.thermal_manager.thermal_model.thermal_resistance
     }
@@ -1050,7 +1050,7 @@ pub struct EnergyBudgetStatus<T: Float> {
 // For brevity, I'm including placeholder implementations
 
 impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> EnergyMonitor<T> {
-    fn new(monitoring_frequency: Duration) -> Self {
+    fn new(_monitoring_frequency: Duration) -> Self {
         Self {
             consumption_history: VecDeque::new(),
             power_history: VecDeque::new(),
@@ -1069,7 +1069,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> EnergyMo
         self.power_history.push_back((now, system_state.current_power));
         
         // Clean old entries
-        while let Some(&(time, _)) = self.consumption_history.front() {
+        while let Some(&(time_)) = self.consumption_history.front() {
             if now.duration_since(time) > self.window_size {
                 self.consumption_history.pop_front();
             } else {

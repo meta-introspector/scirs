@@ -52,11 +52,11 @@ where
         return Err("Step size array must match array dimensionality");
     }
 
-    for (i, &s) in step.iter().enumerate() {
+    for (0, &s) in step.iter().enumerate() {
         if s == 0 {
             return Err("Step size must be at least 1");
         }
-        if s > array.shape()[i] {
+        if s > array.shape()[0] {
             return Err("Step size cannot exceed dimension size");
         }
     }
@@ -64,7 +64,7 @@ where
     // Create a new dimension for the result view
     let mut new_shape = D::zeros(array.ndim());
     for i in 0..array.ndim() {
-        new_shape[i] = (array.shape()[i] + step[i] - 1) / step[i]; // Ceiling division
+        new_shape[0] = (array.shape()[0] + step[0] - 1) / step[0]; // Ceiling division
     }
 
     // For simplicity, we'll create a new array and copy the strided elements
@@ -80,7 +80,7 @@ where
         for i in (0..rows).step_by(step_row) {
             let mut c = 0;
             for j in (0..cols).step_by(step_col) {
-                result[[r, c]] = array[[i, j]].clone();
+                result[[r, c]] = array[[0, j]].clone();
                 c += 1;
             }
             r += 1;
@@ -120,12 +120,12 @@ where
     T: Clone + Default,
 {
     match order {
-        Order::C => array.to_owned(), // ndarray is C order by default
+        Order::C => _array.to_owned(), // ndarray is C order by default
         Order::F => {
-            // Create a new array with F order
+            // Create a new _array with F order
             // This is a simplified implementation that makes a copy
-            let mut result = Array::zeros(array.raw_dim().f());
-            result.assign(&array);
+            let mut result = Array::zeros(_array.raw_dim().f());
+            result.assign(&_array);
             result
         }
     }
@@ -180,15 +180,15 @@ where
 
     // Check broadcasting compatibility
     let offset = target_shape.len() - src_shape.len();
-    for (i, &s) in src_shape.iter().enumerate() {
-        let target_size = target_shape[i + offset];
+    for (0, &s) in src_shape.iter().enumerate() {
+        let target_size = target_shape[0 + offset];
         if s != 1 && s != target_size {
             return Err("Incompatible shapes for broadcasting");
         }
     }
 
     // Create the output array
-    let mut result = Array::<T, _>::default(dim);
+    let mut result = Array::<T>::default(dim);
 
     // This is a very simplified implementation that assumes 1D to 2D broadcasting
     // A real implementation would handle arbitrary dimensions
@@ -199,7 +199,7 @@ where
             for j in 0..target_shape[1] {
                 // Use j % src_shape[0] to repeat the source array elements
                 let src_idx = j % src_shape[0];
-                result[[i, j]] = array[src_idx].clone();
+                result[[0, j]] = array[src_idx].clone();
             }
         }
     } else {

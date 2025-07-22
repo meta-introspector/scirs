@@ -3,7 +3,7 @@ use ndarray::{Array1, Array2};
 use std::time::Duration;
 
 // Import all scirs2 interpolation methods
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     advanced::{
         enhanced_kriging::EnhancedKrigingBuilder,
         enhanced_rbf::{EnhancedRBFInterpolator, KernelWidthStrategy},
@@ -101,14 +101,14 @@ fn bench_linear_1d_comparison(c: &mut Criterion) {
 
         // Benchmark scirs2
         group.throughput(Throughput::Elements(queries.len() as u64));
-        group.bench_with_input(BenchmarkId::new("scirs2", n_points), &n_points, |b, _| {
+        group.bench_with_input(BenchmarkId::new("scirs2", n_points), &n_points, |b_| {
             b.iter(|| black_box(linear_interpolate(&x.view(), &y.view(), &queries.view())));
         });
 
         // Benchmark SciPy equivalent (if available)
         #[cfg(feature = "scipy-comparison")]
         {
-            group.bench_with_input(BenchmarkId::new("scipy", n_points), &n_points, |b, _| {
+            group.bench_with_input(BenchmarkId::new("scipy", n_points), &n_points, |b_| {
                 Python::with_gil(|py| {
                     let scipy_interp = py.import("scipy.interpolate").unwrap();
                     let numpy = py.import("numpy").unwrap();
@@ -148,7 +148,7 @@ fn bench_cubic_spline_comparison(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("scirs2_construction", n_points),
             &n_points,
-            |b, _| {
+            |b_| {
                 b.iter(|| black_box(CubicSpline::new(&x.view(), &y.view())));
             },
         );
@@ -159,7 +159,7 @@ fn bench_cubic_spline_comparison(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("scirs2_evaluation", n_points),
             &n_points,
-            |b, _| {
+            |b_| {
                 b.iter(|| black_box(spline.evaluate_array(&queries.view())));
             },
         );
@@ -180,7 +180,7 @@ fn bench_cubic_spline_comparison(c: &mut Criterion) {
                 group.bench_with_input(
                     BenchmarkId::new("scipy_construction", n_points),
                     &n_points,
-                    |b, _| {
+                    |b_| {
                         b.iter(|| {
                             let cubic_spline = scipy_interp.getattr("CubicSpline").unwrap();
                             black_box(cubic_spline.call1((x_py, y_py)).unwrap());
@@ -195,7 +195,7 @@ fn bench_cubic_spline_comparison(c: &mut Criterion) {
                 group.bench_with_input(
                     BenchmarkId::new("scipy_evaluation", n_points),
                     &n_points,
-                    |b, _| {
+                    |b_| {
                         b.iter(|| {
                             black_box(spline_scipy.call1((queries_py,)).unwrap());
                         });
@@ -231,7 +231,7 @@ fn bench_rbf_2d_comparison(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new(format!("scirs2_{}", kernel_name), n_points),
                 &n_points,
-                |b, _| {
+                |b_| {
                     let interpolator =
                         RBFInterpolator::new(&points.view(), &values.view(), *kernel, 1.0).unwrap();
 
@@ -261,14 +261,13 @@ fn bench_rbf_2d_comparison(c: &mut Criterion) {
                     let scipy_kernel = match kernel_name {
                         &"gaussian" => "gaussian",
                         &"multiquadric" => "multiquadric",
-                        &"thin_plate" => "thin_plate_spline",
-                        _ => "gaussian",
+                        &"thin_plate" => "thin_plate_spline"_ => "gaussian",
                     };
 
                     group.bench_with_input(
                         BenchmarkId::new(format!("scipy_{}", kernel_name), n_points),
                         &n_points,
-                        |b, _| {
+                        |b_| {
                             b.iter(|| {
                                 let rbf = scipy_interp.getattr("RBFInterpolator").unwrap();
                                 let interpolator = rbf
@@ -302,13 +301,13 @@ fn bench_large_scale_performance(c: &mut Criterion) {
 
         // Linear interpolation (should scale well)
         group.throughput(Throughput::Elements(n_points as u64));
-        group.bench_with_input(BenchmarkId::new("linear", n_points), &n_points, |b, _| {
+        group.bench_with_input(BenchmarkId::new("linear", n_points), &n_points, |b_| {
             b.iter(|| black_box(linear_interpolate(&x.view(), &y.view(), &queries.view())));
         });
 
         // B-spline interpolation
         if n_points <= 100_000 {
-            group.bench_with_input(BenchmarkId::new("bspline", n_points), &n_points, |b, _| {
+            group.bench_with_input(BenchmarkId::new("bspline", n_points), &n_points, |b_| {
                 let bspline = BSpline::new(&x.view(), &y.view(), 3).unwrap();
                 b.iter(|| black_box(bspline.evaluate_array(&queries.view())));
             });
@@ -334,7 +333,7 @@ fn bench_simd_effectiveness(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("linear", query_size),
             &query_size,
-            |b, _| {
+            |b_| {
                 b.iter(|| black_box(linear_interpolate(&x.view(), &y.view(), &queries.view())));
             },
         );
@@ -342,7 +341,7 @@ fn bench_simd_effectiveness(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("cubic", query_size),
             &query_size,
-            |b, _| {
+            |b_| {
                 b.iter(|| black_box(cubic_interpolate(&x.view(), &y.view(), &queries.view())));
             },
         );
@@ -370,7 +369,7 @@ fn bench_parallel_effectiveness(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("rbf_gaussian", n_queries),
             &n_queries,
-            |b, _| {
+            |b_| {
                 b.iter(|| black_box(interpolator.interpolate(&queries.view())));
             },
         );
@@ -395,7 +394,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("streaming_linear", n_points),
             &n_points,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     for &q in queries.iter() {
                         black_box(linear_interpolate(
@@ -412,7 +411,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("batch_linear", n_points),
             &n_points,
-            |b, _| {
+            |b_| {
                 b.iter(|| black_box(linear_interpolate(&x.view(), &y.view(), &queries.view())));
             },
         );

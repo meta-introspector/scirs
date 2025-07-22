@@ -1,5 +1,5 @@
 use ndarray::{array, Array1};
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     generate_knots, make_interp_bspline, make_lsq_bspline, BSpline, BSplineExtrapolateMode,
 };
 

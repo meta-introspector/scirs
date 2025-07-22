@@ -8,8 +8,9 @@ use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Distribution, StudentT as RandStudentT};
+use rand__distr::{Distribution, StudentT as RandStudentT};
 use std::f64::consts::PI;
+use statrs::statistics::Statistics;
 
 /// Student's t distribution structure
 pub struct StudentT<F: Float + Send + Sync> {
@@ -39,13 +40,13 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::student_t::StudentT;
+    /// use scirs2__stats::distributions::student_t::StudentT;
     ///
     /// // Standard t-distribution with 5 degrees of freedom
     /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
     /// ```
-    pub fn new(df: F, loc: F, scale: F) -> StatsResult<Self> {
-        if df <= F::zero() {
+    pub fn new(_df: F, loc: F, scale: F) -> StatsResult<Self> {
+        if _df <= F::zero() {
             return Err(StatsError::DomainError(
                 "Degrees of freedom must be positive".to_string(),
             ));
@@ -58,11 +59,11 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
         }
 
         // Convert to f64 for rand_distr
-        let df_f64 = <f64 as NumCast>::from(df).unwrap();
+        let df_f64 = <f64 as NumCast>::from(_df).unwrap();
 
         match RandStudentT::new(df_f64) {
             Ok(rand_distr) => Ok(StudentT {
-                df,
+                _df,
                 loc,
                 scale,
                 rand_distr,
@@ -86,7 +87,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::student_t::StudentT;
+    /// use scirs2__stats::distributions::student_t::StudentT;
     ///
     /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
     /// let pdf_at_zero = t.pdf(0.0);
@@ -128,7 +129,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::student_t::StudentT;
+    /// use scirs2__stats::distributions::student_t::StudentT;
     ///
     /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
     /// let cdf_at_zero = t.cdf(0.0);
@@ -194,7 +195,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::student_t::StudentT;
+    /// use scirs2__stats::distributions::student_t::StudentT;
     ///
     /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
     /// let samples = t.rvs(1000).unwrap();
@@ -219,7 +220,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::student_t::StudentT;
+    /// use scirs2__stats::distributions::student_t::StudentT;
     ///
     /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
     /// let samples = t.rvs_vec(1000).unwrap();
@@ -442,7 +443,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousD
     fn ppf(&self, p: F) -> StatsResult<F> {
         // Student's t-distribution doesn't have a closed-form quantile function
         // Implement a basic numerical approximation for common cases
-        if p < F::zero() || p > F::one() {
+        if p < F::zero() || p >, F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));

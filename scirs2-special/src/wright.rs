@@ -56,7 +56,7 @@ const EULER_MASCHERONI: f64 = 0.577_215_664_901_532_9;
 ///
 /// ```
 /// use num_complex::Complex64;
-/// use scirs2_special::wright_omega;
+/// use scirs2__special::wright_omega;
 ///
 /// let z = Complex64::new(0.0, 0.0);
 /// let omega = wright_omega(z, 1e-8).unwrap();
@@ -137,7 +137,7 @@ pub fn wright_omega(z: Complex64, tol: Option<f64>) -> SpecialResult<Complex64> 
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::wright_omega_real;
+/// use scirs2__special::wright_omega_real;
 /// use approx::assert_relative_eq;
 ///
 /// let x = 1.0;
@@ -213,7 +213,7 @@ pub fn wright_omega_real(x: f64, tol: Option<f64>) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::wright_omega_real_optimized;
+/// use scirs2__special::wright_omega_real_optimized;
 /// use approx::assert_relative_eq;
 ///
 /// let x = 1.0;
@@ -353,7 +353,7 @@ pub fn wright_omega_real_optimized(x: f64, tol: Option<f64>) -> SpecialResult<f6
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::wright_omega_optimized;
+/// use scirs2__special::wright_omega_optimized;
 /// use num_complex::Complex64;
 /// use approx::assert_relative_eq;
 ///

@@ -102,11 +102,11 @@ impl Metadata {
     }
 
     /// Create metadata with a specific schema version
-    pub fn with_schema(version: &str) -> Self {
+    pub fn with_schema(_version: &str) -> Self {
         Self {
             data: IndexMap::new(),
             extensions: HashMap::new(),
-            schema_version: version.to_string(),
+            schema_version: _version.to_string(),
         }
     }
 
@@ -123,16 +123,14 @@ impl Metadata {
     /// Get a typed metadata value
     pub fn get_string(&self, key: &str) -> Option<&str> {
         match self.get(key)? {
-            MetadataValue::String(s) => Some(s),
-            _ => None,
+            MetadataValue::String(s) => Some(s, _ => None,
         }
     }
 
     /// Get integer metadata value
     pub fn get_integer(&self, key: &str) -> Option<i64> {
         match self.get(key)? {
-            MetadataValue::Integer(i) => Some(*i),
-            _ => None,
+            MetadataValue::Integer(i) => Some(*i, _ => None,
         }
     }
 
@@ -140,8 +138,7 @@ impl Metadata {
     pub fn get_float(&self, key: &str) -> Option<f64> {
         match self.get(key)? {
             MetadataValue::Float(f) => Some(*f),
-            MetadataValue::Integer(i) => Some(*i as f64),
-            _ => None,
+            MetadataValue::Integer(i) => Some(*i as f64, _ => None,
         }
     }
 
@@ -184,7 +181,7 @@ impl Metadata {
     /// Convert metadata to a specific format
     pub fn to_format(&self, format: MetadataFormat) -> Result<String> {
         match format {
-            MetadataFormat::Json => serde_json::to_string_pretty(self)
+            MetadataFormat::Json =>, serde_json::to_string_pretty(self)
                 .map_err(|e| IoError::SerializationError(e.to_string())),
             MetadataFormat::Yaml => {
                 serde_yaml::to_string(self).map_err(|e| IoError::SerializationError(e.to_string()))
@@ -196,11 +193,11 @@ impl Metadata {
     }
 
     /// Load metadata from a file
-    pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
-        let path = path.as_ref();
-        let content = std::fs::read_to_string(path).map_err(IoError::Io)?;
+    pub fn from_file(_path: impl AsRef<Path>) -> Result<Self> {
+        let _path = _path.as_ref();
+        let content = std::fs::read_to_string(_path).map_err(IoError::Io)?;
 
-        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
+        let extension = _path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
 
         match extension {
             "json" => serde_json::from_str(&content)
@@ -225,8 +222,7 @@ impl Metadata {
         let format = match extension {
             "json" => MetadataFormat::Json,
             "yaml" | "yml" => MetadataFormat::Yaml,
-            "toml" => MetadataFormat::Toml,
-            _ => {
+            "toml" => MetadataFormat::Toml_ => {
                 return Err(IoError::UnsupportedFormat(format!(
                     "Unknown metadata format: {}",
                     extension
@@ -241,15 +237,13 @@ impl Metadata {
     /// Add processing history entry
     pub fn add_processing_history(&mut self, entry: ProcessingHistoryEntry) -> Result<()> {
         let history = match self.data.get_mut(standard_keys::PROCESSING_HISTORY) {
-            Some(MetadataValue::Array(arr)) => arr,
-            _ => {
+            Some(MetadataValue::Array(arr)) => arr_ => {
                 self.data.insert(
                     standard_keys::PROCESSING_HISTORY.to_string(),
                     MetadataValue::Array(Vec::new()),
                 );
                 match self.data.get_mut(standard_keys::PROCESSING_HISTORY) {
-                    Some(MetadataValue::Array(arr)) => arr,
-                    _ => {
+                    Some(MetadataValue::Array(arr)) => arr_ => {
                         return Err(IoError::Other(
                             "Failed to create processing history array".to_string(),
                         ))
@@ -288,10 +282,10 @@ pub struct ProcessingHistoryEntry {
 }
 
 impl ProcessingHistoryEntry {
-    pub fn new(operation: impl Into<String>) -> Self {
+    pub fn new(_operation: impl Into<String>) -> Self {
         Self {
             timestamp: Utc::now(),
-            operation: operation.into(),
+            _operation: _operation.into(),
             parameters: IndexMap::new(),
             user: std::env::var("USER").ok(),
         }
@@ -414,8 +408,7 @@ impl MetadataSchema {
             (MetadataValue::Array(arr), MetadataFieldType::Array(elem_type)) => {
                 arr.iter().all(|v| self.validate_type(v, elem_type))
             }
-            (MetadataValue::Object(_), MetadataFieldType::Object) => true,
-            _ => false,
+            (MetadataValue::Object(_), MetadataFieldType::Object) => true_ => false,
         }
     }
 
@@ -594,8 +587,8 @@ impl From<bool> for MetadataValue {
 }
 
 impl From<DateTime<Utc>> for MetadataValue {
-    fn from(dt: DateTime<Utc>) -> Self {
-        MetadataValue::DateTime(dt)
+    fn from(_dt: DateTime<Utc>) -> Self {
+        MetadataValue::DateTime(_dt)
     }
 }
 
@@ -736,7 +729,7 @@ impl MetadataIndex {
                 values
                     .iter()
                     .filter(|(_, v)| *v >= min && *v <= max)
-                    .map(|(id, _)| id.clone())
+                    .map(|(id_)| id.clone())
                     .collect()
             })
             .unwrap_or_default()
@@ -755,7 +748,7 @@ impl MetadataIndex {
                 values
                     .iter()
                     .filter(|(_, dt)| *dt >= start && *dt <= end)
-                    .map(|(id, _)| id.clone())
+                    .map(|(id_)| id.clone())
                     .collect()
             })
             .unwrap_or_default()
@@ -785,19 +778,19 @@ pub struct MetadataVersion {
 }
 
 impl MetadataVersionControl {
-    pub fn new(initial: Metadata) -> Self {
+    pub fn new(_initial: Metadata) -> Self {
         let version = MetadataVersion {
             id: uuid::Uuid::new_v4().to_string(),
             timestamp: Utc::now(),
-            metadata: initial.clone(),
+            metadata: _initial.clone(),
             parent_id: None,
             message: "Initial version".to_string(),
             author: std::env::var("USER").ok(),
-            hash: Self::compute_hash(&initial),
+            hash: Self::compute_hash(&_initial),
         };
 
         Self {
-            current: Arc::new(RwLock::new(initial)),
+            current: Arc::new(RwLock::new(_initial)),
             history: Arc::new(RwLock::new(vec![version])),
             max_versions: 100,
         }
@@ -839,7 +832,7 @@ impl MetadataVersionControl {
             .read()
             .unwrap()
             .iter()
-            .find(|v| v.id == version_id)
+            .find(|v| v._id == version_id)
             .cloned()
     }
 
@@ -870,8 +863,8 @@ impl MetadataVersionControl {
         Ok(())
     }
 
-    fn compute_hash(metadata: &Metadata) -> String {
-        let json = serde_json::to_string(metadata).unwrap_or_default();
+    fn compute_hash(_metadata: &Metadata) -> String {
+        let json = serde_json::to_string(_metadata).unwrap_or_default();
         let mut hasher = Sha256::new();
         hasher.update(json.as_bytes());
         format!("{:x}", hasher.finalize())
@@ -887,13 +880,13 @@ pub struct MetadataDiff {
 }
 
 impl MetadataDiff {
-    pub fn compute(old: &Metadata, new: &Metadata) -> Self {
+    pub fn compute(_old: &Metadata, new: &Metadata) -> Self {
         let mut added = IndexMap::new();
         let mut removed = IndexMap::new();
         let mut modified = IndexMap::new();
 
         // Find removed and modified fields
-        for (key, old_value) in &old.data {
+        for (key, old_value) in &_old.data {
             match new.data.get(key) {
                 None => {
                     removed.insert(key.clone(), old_value.clone());
@@ -907,7 +900,7 @@ impl MetadataDiff {
 
         // Find added fields
         for (key, new_value) in &new.data {
-            if !old.data.contains_key(key) {
+            if !_old.data.contains_key(key) {
                 added.insert(key.clone(), new_value.clone());
             }
         }
@@ -938,9 +931,9 @@ pub struct MetadataTemplate {
 }
 
 impl MetadataTemplate {
-    pub fn new(base: Metadata) -> Self {
+    pub fn new(_base: Metadata) -> Self {
         Self {
-            base,
+            _base,
             overridable: HashSet::new(),
             required: HashSet::new(),
             defaults: IndexMap::new(),
@@ -1113,7 +1106,7 @@ impl MetadataReferenceResolver {
         references
             .iter()
             .filter(|(_, refs)| refs.contains(id))
-            .map(|(referencing_id, _)| referencing_id.clone())
+            .map(|(referencing_id_)| referencing_id.clone())
             .collect()
     }
 }
@@ -1232,9 +1225,9 @@ pub struct MetadataRepository {
 
 #[cfg(feature = "reqwest")]
 impl MetadataRepository {
-    pub fn new(url: impl Into<String>) -> Self {
+    pub fn new(_url: impl Into<String>) -> Self {
         Self {
-            url: url.into(),
+            _url: _url.into(),
             cache: Arc::new(RwLock::new(HashMap::new())),
             client: reqwest::blocking::Client::new(),
         }
@@ -1433,8 +1426,7 @@ impl MetadataExtractor {
             "png" | "jpg" | "jpeg" | "gif" | "bmp" | "tiff" => "image",
             "wav" | "mp3" | "flac" | "ogg" => "audio",
             "nc" | "nc4" => "netcdf",
-            "h5" | "hdf5" => "hdf5",
-            _ => {
+            "h5" | "hdf5" => "hdf5"_ => {
                 return Err(IoError::UnsupportedFormat(format!(
                     "No extractor for format: {}",
                     extension

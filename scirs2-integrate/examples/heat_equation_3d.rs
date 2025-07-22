@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use scirs2_integrate::{
+use scirs2__integrate::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, MOLOptions,
     MOLParabolicSolver3D, PDESolution,
 };
@@ -28,9 +28,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let t_span = [0.0, 1.0];
 
     // Diffusion coefficients (constant for heat equation)
-    let diffusion_x = move |_x: f64, _y: f64, _z: f64, _t: f64, _u: f64| d;
-    let diffusion_y = move |_x: f64, _y: f64, _z: f64, _t: f64, _u: f64| d;
-    let diffusion_z = move |_x: f64, _y: f64, _z: f64, _t: f64, _u: f64| d;
+    let diffusion_x = move |_x: f64_y: f64, _z: f64_t: f64, _u: f64| d;
+    let diffusion_y = move |_x: f64_y: f64, _z: f64_t: f64, _u: f64| d;
+    let diffusion_z = move |_x: f64_y: f64, _z: f64_t: f64, _u: f64| d;
 
     // Initial condition: u(x,y,z,0) = sin(πx) * sin(πy) * sin(πz)
     let initial_condition =
@@ -87,7 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Solver options
     let options = MOLOptions {
-        ode_method: scirs2_integrate::ODEMethod::Bdf,
+        ode_method: scirs2, _integrate: ODEMethod::Bdf,
         atol: 1e-6,
         rtol: 1e-3,
         max_steps: Some(5000),
@@ -231,7 +231,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for (t_idx, &t) in t_values
         .iter()
         .enumerate()
-        .filter(|(i, _)| i % (nt / 10).max(1) == 0)
+        .filter(|(i_)| i % (nt / 10).max(1) == 0)
     {
         let flat_idx = center_z * ny * nx + center_y * nx + center_x;
         let u_numerical = pde_solution.values[t_idx][[flat_idx, 0]];
@@ -323,11 +323,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper function to find the index of the closest value in an array
 #[allow(dead_code)]
-fn find_closest_index(arr: &Array1<f64>, value: f64) -> usize {
+fn find_closest_index(_arr: &Array1<f64>, value: f64) -> usize {
     let mut min_dist = f64::MAX;
     let mut min_idx = 0;
 
-    for (i, &x) in arr.iter().enumerate() {
+    for (i, &x) in _arr.iter().enumerate() {
         let dist = (x - value).abs();
         if dist < min_dist {
             min_dist = dist;

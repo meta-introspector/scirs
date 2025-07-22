@@ -6,7 +6,7 @@
 //! - Coordinate system transformations
 //! - Spherical geometry operations
 
-use scirs2_spatial::geospatial::*;
+use scirs2__spatial::geospatial::*;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -346,8 +346,7 @@ fn spherical_geometry_example() -> Result<(), Box<dyn std::error::Error>> {
         let name = match i {
             0 => "Miami",
             1 => "Bermuda",
-            2 => "San Juan",
-            _ => "Unknown",
+            2 => "San Juan"_ => "Unknown",
         };
         println!("  {name}: ({lat:.4}°, {lon:.4}°)");
     }
@@ -524,7 +523,7 @@ fn geospatial_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
     // Find the centroid of the monitoring network
     let centroid_lat = monitoring_stations
         .iter()
-        .map(|(_, (lat, _))| lat)
+        .map(|(_, (lat_))| lat)
         .sum::<f64>()
         / monitoring_stations.len() as f64;
     let centroid_lon = monitoring_stations
@@ -568,14 +567,14 @@ fn geospatial_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Helper function to format coordinates in degrees, minutes, seconds
 #[allow(dead_code)]
-fn format_dms(decimal_degrees: f64, is_latitude: bool) -> String {
-    let abs_degrees = decimal_degrees.abs();
-    let degrees = abs_degrees.floor() as i32;
-    let minutes = ((abs_degrees - degrees as f64) * 60.0).floor() as i32;
-    let seconds = ((abs_degrees - degrees as f64) * 60.0 - minutes as f64) * 60.0;
+fn format_dms(_decimal_degrees: f64, is_latitude: bool) -> String {
+    let abs_degrees = _decimal_degrees.abs();
+    let _degrees = abs_degrees.floor() as i32;
+    let minutes = ((abs_degrees - _degrees as f64) * 60.0).floor() as i32;
+    let seconds = ((abs_degrees - _degrees as f64) * 60.0 - minutes as f64) * 60.0;
 
     let direction = if is_latitude {
-        if decimal_degrees >= 0.0 {
+        if _decimal_degrees >= 0.0 {
             "N"
         } else {
             "S"
@@ -586,13 +585,13 @@ fn format_dms(decimal_degrees: f64, is_latitude: bool) -> String {
         "W"
     };
 
-    format!("{degrees}°{minutes}'{seconds:.1}\"{direction}")
+    format!("{_degrees}°{minutes}'{seconds:.1}\"{direction}")
 }
 
 /// Calculate the centroid of a set of geographic points
 #[allow(dead_code)]
-fn geographic_centroid(points: &[(f64, f64)]) -> (f64, f64) {
-    if points.is_empty() {
+fn geographic_centroid(_points: &[(f64, f64)]) -> (f64, f64) {
+    if _points.is_empty() {
         return (0.0, 0.0);
     }
 
@@ -600,7 +599,7 @@ fn geographic_centroid(points: &[(f64, f64)]) -> (f64, f64) {
     let mut y_sum = 0.0;
     let mut z_sum = 0.0;
 
-    for (lat, lon) in points {
+    for (lat, lon) in _points {
         let lat_rad = lat * PI / 180.0;
         let lon_rad = lon * PI / 180.0;
 
@@ -609,7 +608,7 @@ fn geographic_centroid(points: &[(f64, f64)]) -> (f64, f64) {
         z_sum += lat_rad.sin();
     }
 
-    let n = points.len() as f64;
+    let n = _points.len() as f64;
     let x_avg = x_sum / n;
     let y_avg = y_sum / n;
     let z_avg = z_sum / n;

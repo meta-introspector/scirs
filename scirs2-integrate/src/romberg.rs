@@ -8,7 +8,7 @@ use crate::error::{IntegrateError, IntegrateResult};
 use crate::quad::trapezoid;
 use crate::IntegrateFloat;
 use ndarray::{Array1, Array2, ArrayView1};
-use rand_distr::{Distribution, Uniform};
+use rand__distr::{Distribution, Uniform};
 use std::fmt::Debug;
 
 /// Options for controlling the behavior of Romberg integration
@@ -70,7 +70,7 @@ pub struct RombergResult<F: IntegrateFloat> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::romberg::romberg;
+/// use scirs2__integrate::romberg::romberg;
 ///
 /// // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
 /// let result = romberg(|x: f64| x * x, 0.0, 1.0, None).unwrap();
@@ -173,7 +173,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_integrate::romberg::{MultiRombergResult, IntegrationMethod};
+/// use scirs2__integrate::romberg::{MultiRombergResult, IntegrationMethod};
 ///
 /// // This struct holds the result of a multi-dimensional Romberg integration
 /// let result = MultiRombergResult {
@@ -283,7 +283,7 @@ fn integrate_adaptive_nested<F, Func>(
     opts: &RombergOptions<F>,
 ) -> IntegrateResult<MultiRombergResult<F>>
 where
-    F: IntegrateFloat + rand_distr::uniform::SampleUniform,
+    F: IntegrateFloat + rand__distr::uniform::SampleUniform,
     Func: Fn(ArrayView1<F>) -> F + Copy,
 {
     let n_dims = ranges.len();

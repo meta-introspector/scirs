@@ -138,11 +138,11 @@ pub struct PageHinkleyDetector<A: Float> {
 
 impl<A: Float> PageHinkleyDetector<A> {
     /// Create a new Page-Hinkley detector
-    pub fn new(threshold: A, warning_threshold: A) -> Self {
+    pub fn new(_threshold: A, warning_threshold: A) -> Self {
         Self {
             sum: A::zero(),
             min_sum: A::zero(),
-            threshold,
+            _threshold,
             warning_threshold,
             sample_count: 0,
             last_drift: None,
@@ -199,11 +199,11 @@ pub struct AdwinDetector<A: Float> {
 
 impl<A: Float + Sum> AdwinDetector<A> {
     /// Create a new ADWIN detector
-    pub fn new(delta: A, max_window_size: usize) -> Self {
+    pub fn new(_delta: A, max_window_size: usize) -> Self {
         Self {
             window: VecDeque::new(),
             max_window_size,
-            delta,
+            _delta,
             min_window_size: 10,
         }
     }
@@ -289,9 +289,9 @@ pub struct DdmDetector<A: Float> {
     /// Standard deviation of error rate
     error_std: A,
     /// Minimum error rate + 2*std
-    min_error_plus_2std: A,
+    min_error_plus_2, std: A,
     /// Minimum error rate + 3*std
-    min_error_plus_3std: A,
+    min_error_plus_3, std: A,
     /// Sample count
     sample_count: usize,
     /// Error count
@@ -304,8 +304,8 @@ impl<A: Float> DdmDetector<A> {
         Self {
             error_rate: A::zero(),
             error_std: A::one(),
-            min_error_plus_2std: A::from(f64::MAX).unwrap(),
-            min_error_plus_3std: A::from(f64::MAX).unwrap(),
+            min_error_plus_2, std: A::from(f64::MAX).unwrap(),
+            min_error_plus_3, std: A::from(f64::MAX).unwrap(),
             sample_count: 0,
             error_count: 0,
         }
@@ -322,7 +322,7 @@ impl<A: Float> DdmDetector<A> {
             return DriftStatus::Stable;
         }
 
-        // Update error rate and standard deviation
+        // Update _error rate and standard deviation
         self.error_rate = A::from(self.error_count as f64 / self.sample_count as f64).unwrap();
         let p = self.error_rate;
         let n = A::from(self.sample_count as f64).unwrap();
@@ -384,19 +384,19 @@ pub struct ConceptDriftDetector<A: Float> {
 
 impl<A: Float + std::fmt::Debug + Sum> ConceptDriftDetector<A> {
     /// Create a new concept drift detector
-    pub fn new(config: DriftDetectorConfig) -> Self {
-        let threshold = A::from(config.threshold).unwrap();
-        let warning_threshold = A::from(config.warning_threshold).unwrap();
-        let delta = A::from(config.alpha).unwrap();
+    pub fn new(_config: DriftDetectorConfig) -> Self {
+        let threshold = A::from(_config.threshold).unwrap();
+        let warning_threshold = A::from(_config.warning_threshold).unwrap();
+        let delta = A::from(_config.alpha).unwrap();
 
         Self {
             ph_detector: PageHinkleyDetector::new(threshold, warning_threshold),
-            adwin_detector: AdwinDetector::new(delta, config.window_size),
+            adwin_detector: AdwinDetector::new(delta, _config.window_size),
             ddm_detector: DdmDetector::new(),
             ensemble_history: VecDeque::with_capacity(10),
             drift_events: Vec::new(),
             performance_tracker: PerformanceDriftTracker::new(),
-            config,
+            _config,
         }
     }
 
@@ -412,8 +412,7 @@ impl<A: Float + std::fmt::Debug + Sum> ConceptDriftDetector<A> {
             match self.config.method {
                 DriftDetectionMethod::PageHinkley => ph_status,
                 DriftDetectionMethod::Adwin => adwin_status,
-                DriftDetectionMethod::DriftDetectionMethod => ddm_status,
-                _ => ph_status, // Default fallback
+                DriftDetectionMethod::DriftDetectionMethod => ddm_status_ => ph_status, // Default fallback
             }
         };
 
@@ -595,8 +594,8 @@ impl<A: Float + std::iter::Sum> PerformanceDriftTracker<A> {
         }
 
         let recent_avg =
-            recent.iter().map(|(p, _, _)| *p).sum::<A>() / A::from(recent.len()).unwrap();
-        let older_avg = older.iter().map(|(p, _, _)| *p).sum::<A>() / A::from(older.len()).unwrap();
+            recent.iter().map(|(p__)| *p).sum::<A>() / A::from(recent.len()).unwrap();
+        let older_avg = older.iter().map(|(p__)| *p).sum::<A>() / A::from(older.len()).unwrap();
 
         recent_avg - older_avg
     }
@@ -1081,7 +1080,7 @@ pub mod advanced_drift_analysis {
             base_results: &[DriftStatus],
             matched_pattern: &Option<DriftPattern<A>>,
         ) -> CombinedDetectionResult<A> {
-            // Weighted voting based on detector confidence and pattern matching
+            // Weighted voting based on detector confidence and _pattern matching
             let drift_votes = base_results
                 .iter()
                 .filter(|&&s| s == DriftStatus::Drift)
@@ -1284,8 +1283,7 @@ pub mod advanced_drift_analysis {
 
         fn analyze_impact(
             &mut self,
-            features: &PatternFeatures<A>,
-            _pattern: &Option<DriftPattern<A>>,
+            features: &PatternFeatures<A>, _pattern: &Option<DriftPattern<A>>,
         ) -> Result<DriftImpact<A>> {
             let performance_degradation = features.variance; // Simplified
             let urgency_level = if performance_degradation > A::from(1.0).unwrap() {
@@ -1316,10 +1314,7 @@ pub mod advanced_drift_analysis {
         }
 
         fn select_strategy(
-            &mut self,
-            _features: &PatternFeatures<A>,
-            _impact: &DriftImpact<A>,
-            _pattern: &Option<DriftPattern<A>>,
+            &mut self_features: &PatternFeatures<A>, _impact: &DriftImpact<A>, _pattern: &Option<DriftPattern<A>>,
         ) -> Result<Option<AdaptationStrategy<A>>> {
             // Simplified strategy selection
             let strategy = AdaptationStrategy {
@@ -1386,9 +1381,9 @@ pub mod advanced_drift_analysis {
     }
 
     impl<A: Float> EpsilonGreedyBandit<A> {
-        fn new(epsilon: A) -> Self {
+        fn new(_epsilon: A) -> Self {
             Self {
-                epsilon,
+                _epsilon,
                 action_values: HashMap::new(),
                 action_counts: HashMap::new(),
                 total_trials: 0,

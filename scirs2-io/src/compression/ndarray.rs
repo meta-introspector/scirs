@@ -82,11 +82,11 @@ where
     let level = level.unwrap_or(6);
     let compressed_data = compress_data(&flat_data, algorithm, Some(level))?;
 
-    // Create metadata
-    let metadata = CompressedArrayMetadata {
+    // Create _metadata
+    let _metadata = CompressedArrayMetadata {
         shape: array.shape().to_vec(),
         dtype: std::any::type_name::<A>().to_string(),
-        element_size: std::mem::size_of::<A>(),
+        element_size: std::mem::size, _of::<A>(),
         algorithm: format!("{algorithm:?}"),
         original_size: flat_data.len(),
         compressed_size: compressed_data.len(),
@@ -97,7 +97,7 @@ where
 
     // Create the complete compressed array structure
     let compressed_array = CompressedArray {
-        metadata,
+        _metadata,
         data: compressed_data,
     };
 
@@ -123,14 +123,14 @@ where
 ///
 /// The decompressed array
 #[allow(dead_code)]
-pub fn decompress_array<P, A, D>(path: P) -> Result<ArrayBase<OwnedRepr<A>, D>>
+pub fn decompress_array<P, A, D>(_path: P) -> Result<ArrayBase<OwnedRepr<A>, D>>
 where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
     D: Dimension + for<'de> Deserialize<'de>,
 {
     // Read the compressed file
-    let mut file = File::open(path)
+    let mut file = File::open(_path)
         .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?;
 
     let mut serialized = Vec::new();
@@ -146,8 +146,7 @@ where
         "Gzip" => CompressionAlgorithm::Gzip,
         "Zstd" => CompressionAlgorithm::Zstd,
         "Lz4" => CompressionAlgorithm::Lz4,
-        "Bzip2" => CompressionAlgorithm::Bzip2,
-        _ => {
+        "Bzip2" => CompressionAlgorithm::Bzip2_ => {
             return Err(IoError::DecompressionError(format!(
                 "Unknown compression algorithm: {}",
                 compressed_array.metadata.algorithm
@@ -232,7 +231,7 @@ where
     let metadata = CompressedArrayMetadata {
         shape: array.shape().to_vec(),
         dtype: std::any::type_name::<A>().to_string(),
-        element_size: std::mem::size_of::<A>(),
+        element_size: std::mem::_size, _of::<A>(),
         algorithm: format!("{algorithm:?}"),
         original_size: total_original_size,
         compressed_size: total_compressed_size,
@@ -254,13 +253,13 @@ where
     let mut file = File::create(path)
         .map_err(|e| IoError::FileError(format!("Failed to create output file: {e}")))?;
 
-    // Write metadata size and metadata first
+    // Write metadata _size and metadata first
     let serialized_metadata =
         bincode::serialize(&metadata).map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     let metadata_size = serialized_metadata.len() as u64;
     file.write_all(&metadata_size.to_le_bytes())
-        .map_err(|e| IoError::FileError(format!("Failed to write metadata size: {e}")))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write metadata _size: {e}")))?;
 
     file.write_all(&serialized_metadata)
         .map_err(|e| IoError::FileError(format!("Failed to write metadata: {e}")))?;
@@ -270,11 +269,11 @@ where
     file.write_all(&num_chunks.to_le_bytes())
         .map_err(|e| IoError::FileError(format!("Failed to write chunk count: {e}")))?;
 
-    // Write each chunk with its size prefix
+    // Write each chunk with its _size prefix
     for chunk in compressed_chunks {
         let chunk_size = chunk.len() as u64;
         file.write_all(&chunk_size.to_le_bytes())
-            .map_err(|e| IoError::FileError(format!("Failed to write chunk size: {e}")))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write chunk _size: {e}")))?;
 
         file.write_all(&chunk)
             .map_err(|e| IoError::FileError(format!("Failed to write chunk data: {e}")))?;
@@ -323,8 +322,7 @@ where
         "Gzip" => CompressionAlgorithm::Gzip,
         "Zstd" => CompressionAlgorithm::Zstd,
         "Lz4" => CompressionAlgorithm::Lz4,
-        "Bzip2" => CompressionAlgorithm::Bzip2,
-        _ => {
+        "Bzip2" => CompressionAlgorithm::Bzip2_ => {
             return Err(IoError::DecompressionError(format!(
                 "Unknown compression algorithm: {}",
                 metadata.algorithm
@@ -466,7 +464,7 @@ where
     // Get the raw slice for zero-copy access
     if let Some(slice) = array.as_slice() {
         let bytes = bytemuck::cast_slice(slice);
-        let bytes_per_chunk = chunk_size * std::mem::size_of::<A>();
+        let bytes_per_chunk = chunk_size * std::mem::_size_of::<A>();
 
         let (compressed_chunks, total_original_size, total_compressed_size) = if use_parallel {
             // Parallel compression for large arrays
@@ -534,7 +532,7 @@ where
         let metadata = CompressedArrayMetadata {
             shape: array.shape().to_vec(),
             dtype: std::any::type_name::<A>().to_string(),
-            element_size: std::mem::size_of::<A>(),
+            element_size: std::mem::_size, _of::<A>(),
             algorithm: format!("{algorithm:?}"),
             original_size: total_original_size,
             compressed_size: combined_data.len(),
@@ -583,8 +581,7 @@ where
         "Gzip" => CompressionAlgorithm::Gzip,
         "Lz4" => CompressionAlgorithm::Lz4,
         "Zstd" => CompressionAlgorithm::Zstd,
-        "Bzip2" => CompressionAlgorithm::Bzip2,
-        _ => {
+        "Bzip2" => CompressionAlgorithm::Bzip2_ => {
             return Err(IoError::FormatError(format!(
                 "Unknown compression algorithm: {}",
                 compressed.metadata.algorithm

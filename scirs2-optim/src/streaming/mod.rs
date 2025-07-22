@@ -19,12 +19,12 @@ pub mod low_latency;
 pub mod streaming_metrics;
 
 // Re-export key types for convenience
-pub use concept_drift::{ConceptDriftDetector, DriftDetectorConfig, DriftEvent, DriftStatus};
-pub use enhanced_adaptive_lr::{
+pub use concept__drift::{ConceptDriftDetector, DriftDetectorConfig, DriftEvent, DriftStatus};
+pub use enhanced_adaptive__lr::{
     AdaptationStatistics, AdaptiveLRConfig, EnhancedAdaptiveLRController,
 };
-pub use low_latency::{LowLatencyConfig, LowLatencyMetrics, LowLatencyOptimizer};
-pub use streaming_metrics::{MetricsSample, MetricsSummary, StreamingMetricsCollector};
+pub use low__latency::{LowLatencyConfig, LowLatencyMetrics, LowLatencyOptimizer};
+pub use streaming__metrics::{MetricsSample, MetricsSummary, StreamingMetricsCollector};
 
 use crate::optimizers::Optimizer;
 
@@ -409,7 +409,7 @@ where
     O: Optimizer<A, D> + Send + Sync,
 {
     /// Create a new streaming optimizer
-    pub fn new(base_optimizer: O, config: StreamingConfig) -> Result<Self> {
+    pub fn new(_base_optimizer: O, config: StreamingConfig) -> Result<Self> {
         let lr_adaptation_state = LearningRateAdaptationState {
             current_lr: A::from(0.01).unwrap(), // Default learning rate
             accumulated_gradients: None,
@@ -634,7 +634,7 @@ where
         abs_values.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
         // Zero out all but top-k elements
-        for (i, _) in abs_values.iter().skip(k) {
+        for (i_) in abs_values.iter().skip(k) {
             compressed[*i] = A::zero();
         }
 
@@ -773,7 +773,7 @@ where
         Ok(())
     }
 
-    fn check_concept_drift(&mut self, _update: &Array1<A>) -> Result<()> {
+    fn check_concept_drift(&mut self_update: &Array1<A>) -> Result<()> {
         // Simplified concept drift detection based on loss
         let current_loss = A::from(self.metrics.current_loss).unwrap();
 
@@ -852,7 +852,7 @@ where
         Ok(result.into_dimensionality::<ndarray::Ix1>()?)
     }
 
-    fn async_update(&mut self, _params: &Array1<A>, gradient: &Array1<A>) -> Result<Array1<A>> {
+    fn async_update(&mut self_params: &Array1<A>, gradient: &Array1<A>) -> Result<Array1<A>> {
         if let Some(ref mut async_state) = self.async_state {
             // Add to update queue
             let gradient_generic = gradient.clone().into_dimensionality::<D>()?;
@@ -1346,12 +1346,12 @@ pub struct MultiStreamCoordinator<A: Float> {
 }
 
 impl<A: Float> MultiStreamCoordinator<A> {
-    pub fn new(config: &StreamingConfig) -> Result<Self> {
+    pub fn new(_config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             stream_configs: HashMap::new(),
             sync_buffer: HashMap::new(),
             global_clock: Instant::now(),
-            max_sync_window_ms: config.latency_budget_ms * 2,
+            max_sync_window_ms: _config.latency_budget_ms * 2,
             stream_priorities: HashMap::new(),
             load_balancer: LoadBalancingStrategy::RoundRobin,
         })
@@ -1441,10 +1441,10 @@ pub struct PredictiveStreamingEngine<A: Float> {
 }
 
 impl<A: Float> PredictiveStreamingEngine<A> {
-    pub fn new(config: &StreamingConfig) -> Result<Self> {
+    pub fn new(_config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
-            prediction_model: PredictionModel::new(config.buffer_size)?,
-            historical_buffer: VecDeque::with_capacity(config.buffer_size * 2),
+            prediction_model: PredictionModel::new(_config.buffer_size)?,
+            historical_buffer: VecDeque::with_capacity(_config.buffer_size * 2),
             prediction_horizon: 10,
             confidence_threshold: A::from(0.8).unwrap(),
             adaptation_rate: A::from(0.1).unwrap(),
@@ -1456,7 +1456,7 @@ impl<A: Float> PredictiveStreamingEngine<A> {
         &mut self,
         current_data: &[StreamingDataPoint<A>],
     ) -> Result<Vec<StreamingDataPoint<A>>> {
-        // Update model with current data
+        // Update model with current _data
         for data_point in current_data {
             self.historical_buffer.push_back(data_point.clone());
             if self.historical_buffer.len() > self.historical_buffer.capacity() {
@@ -1483,10 +1483,10 @@ pub struct PredictionModel<A: Float> {
 }
 
 impl<A: Float> PredictionModel<A> {
-    pub fn new(feature_dim: usize) -> Result<Self> {
+    pub fn new(_feature_dim: usize) -> Result<Self> {
         Ok(Self {
-            weights: Array1::zeros(feature_dim),
-            feature_dim,
+            weights: Array1::zeros(_feature_dim),
+            _feature_dim,
             model_order: 3,
         })
     }
@@ -1541,11 +1541,11 @@ pub struct StreamFusionOptimizer<A: Float> {
 }
 
 impl<A: Float + std::ops::DivAssign + ndarray::ScalarOperand> StreamFusionOptimizer<A> {
-    pub fn new(config: &StreamingConfig) -> Result<Self> {
+    pub fn new(_config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             fusion_strategy: FusionStrategy::WeightedAverage,
             stream_weights: HashMap::new(),
-            fusion_buffer: VecDeque::with_capacity(config.buffer_size),
+            fusion_buffer: VecDeque::with_capacity(_config.buffer_size),
             consensus_mechanism: ConsensusAlgorithm::MajorityVoting,
         })
     }
@@ -1662,9 +1662,9 @@ pub struct AdvancedQoSManager {
 }
 
 impl AdvancedQoSManager {
-    pub fn new(config: AdvancedQoSConfig) -> Self {
+    pub fn new(_config: AdvancedQoSConfig) -> Self {
         Self {
-            config,
+            _config,
             current_status: QoSStatus {
                 is_compliant: true,
                 violations: Vec::new(),
@@ -1726,9 +1726,9 @@ pub struct RealTimeOptimizer {
 }
 
 impl RealTimeOptimizer {
-    pub fn new(config: RealTimeConfig) -> Result<Self> {
+    pub fn new(_config: RealTimeConfig) -> Result<Self> {
         Ok(Self {
-            config,
+            _config,
             performance_metrics: RealTimeMetrics::default(),
             optimization_state: RTOptimizationState::default(),
         })
@@ -1789,14 +1789,14 @@ pub struct AdaptiveResourceManager {
 }
 
 impl AdaptiveResourceManager {
-    pub fn new(config: &StreamingConfig) -> Result<Self> {
+    pub fn new(_config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             allocation_strategy: ResourceAllocationStrategy::Adaptive,
             current_usage: ResourceUsage::default(),
             constraints: ResourceConstraints {
-                max_memory_mb: config.memory_budget_mb,
+                max_memory_mb: _config.memory_budget_mb,
                 max_cpu_cores: 4,
-                max_latency_ms: config.latency_budget_ms,
+                max_latency_ms: _config.latency_budget_ms,
             },
             allocation_history: VecDeque::with_capacity(100),
         })
@@ -1877,12 +1877,12 @@ pub struct PipelineExecutionManager<A: Float> {
 }
 
 impl<A: Float> PipelineExecutionManager<A> {
-    pub fn new(parallelism_degree: usize, processing_priority: StreamPriority) -> Self {
+    pub fn new(_parallelism_degree: usize, processing_priority: StreamPriority) -> Self {
         Self {
             pipeline_stages: Vec::new(),
-            parallelism_degree,
+            _parallelism_degree,
             processing_priority,
-            stage_coordinator: StageCoordinator::new(parallelism_degree),
+            stage_coordinator: StageCoordinator::new(_parallelism_degree),
         }
     }
 
@@ -1917,11 +1917,11 @@ pub struct StageCoordinator {
 }
 
 impl StageCoordinator {
-    pub fn new(parallelism_degree: usize) -> Self {
+    pub fn new(_parallelism_degree: usize) -> Self {
         Self {
             coordination_strategy: CoordinationStrategy::DataParallel,
             synchronization_barriers: Vec::new(),
-            parallelism_degree,
+            _parallelism_degree,
         }
     }
 }

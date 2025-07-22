@@ -85,11 +85,11 @@ impl RobustLoss for SquaredLoss {
         0.5 * r * r
     }
 
-    fn weight(&self, _r: f64) -> f64 {
+    fn weight(&self_r: f64) -> f64 {
         1.0
     }
 
-    fn weight_derivative(&self, _r: f64) -> f64 {
+    fn weight_derivative(&self_r: f64) -> f64 {
         0.0
     }
 }
@@ -108,9 +108,9 @@ impl HuberLoss {
     ///
     /// The delta parameter determines the transition from quadratic to linear behavior.
     /// Smaller delta provides more robustness but less efficiency.
-    pub fn new(delta: f64) -> Self {
-        assert!(delta > 0.0, "Delta must be positive");
-        HuberLoss { delta }
+    pub fn new(_delta: f64) -> Self {
+        assert!(_delta > 0.0, "Delta must be positive");
+        HuberLoss { _delta }
     }
 }
 
@@ -402,7 +402,7 @@ where
         prev_weights = weights.clone();
 
         // Compute Jacobian
-        let (jac, _jac_evals) = match &jacobian {
+        let (jac_jac_evals) = match &jacobian {
             Some(jac_fn) => {
                 let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
                 njev += 1;
@@ -505,11 +505,7 @@ where
 #[allow(dead_code)]
 fn gradient_based_robust_optimizer<F, J, L, D, S1, S2>(
     _residuals: F,
-    x0: &ArrayBase<S1, Ix1>,
-    _loss: L,
-    _jacobian: Option<J>,
-    _data: &ArrayBase<S2, Ix1>,
-    _options: &RobustOptions,
+    x0: &ArrayBase<S1, Ix1>, _loss: L_jacobian: Option<J>, _data: &ArrayBase<S2, Ix1>, _options: &RobustOptions,
 ) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&[f64], &[D]) -> Array1<f64>,
@@ -521,7 +517,7 @@ where
 {
     // For now, return a basic implementation
     // In practice, this would implement a gradient-based optimization
-    // using the robust loss function directly
+    // using the robust _loss function directly
     let mut result = OptimizeResults::<f64>::default();
     result.x = x0.to_owned();
     result.fun = 0.0;
@@ -533,8 +529,8 @@ where
 
 /// Compute the total robust cost
 #[allow(dead_code)]
-fn compute_robust_cost<L: RobustLoss>(residuals: &Array1<f64>, loss: &L) -> f64 {
-    residuals.iter().map(|&r| loss.loss(r)).sum()
+fn compute_robust_cost<L: RobustLoss>(_residuals: &Array1<f64>, loss: &L) -> f64 {
+    _residuals.iter().map(|&r| loss.loss(r)).sum()
 }
 
 /// Simple linear system solver (same as in least_squares.rs)
@@ -645,11 +641,11 @@ mod tests {
     #[test]
     fn test_irls_convergence() {
         // Simple quadratic minimization
-        fn residual(x: &[f64], _: &[f64]) -> Array1<f64> {
+        fn residual(x: &[f64]_: &[f64]) -> Array1<f64> {
             array![x[0] - 1.0, x[1] - 2.0]
         }
 
-        fn jacobian(_x: &[f64], _: &[f64]) -> Array2<f64> {
+        fn jacobian(_x: &[f64]_: &[f64]) -> Array2<f64> {
             array![[1.0, 0.0], [0.0, 1.0]]
         }
 

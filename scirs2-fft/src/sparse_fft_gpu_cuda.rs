@@ -4,10 +4,10 @@
 //! the scirs2-core::gpu module. All direct GPU API calls are forbidden.
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse_fft::{
+use crate::sparse__fft::{
     SparseFFTAlgorithm, SparseFFTConfig, SparseFFTResult, SparsityEstimationMethod, WindowFunction,
 };
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::gpu::{GpuBackend, GpuDevice};
 use scirs2_core::simd_ops::PlatformCapabilities;
@@ -53,10 +53,7 @@ pub struct GpuMemoryManager;
 
 impl GpuMemoryManager {
     pub fn allocate(
-        &self,
-        _size: usize,
-        _location: BufferLocation,
-        _buffer_type: BufferType,
+        &self_size: usize, _location: BufferLocation_buffer_type: BufferType,
     ) -> FFTResult<BufferDescriptor> {
         Err(FFTError::NotImplementedError(
             "GPU memory management needs to be implemented with scirs2-core::gpu abstractions"
@@ -64,7 +61,7 @@ impl GpuMemoryManager {
         ))
     }
 
-    pub fn free(&self, _descriptor: BufferDescriptor) -> FFTResult<()> {
+    pub fn free(&self_descriptor: BufferDescriptor) -> FFTResult<()> {
         Err(FFTError::NotImplementedError(
             "GPU memory management needs to be implemented with scirs2-core::gpu abstractions"
                 .to_string(),
@@ -98,8 +95,8 @@ pub struct GpuDeviceInfo {
 
 impl GpuDeviceInfo {
     /// Create GPU device info using core abstractions
-    pub fn new(device_id: usize) -> FFTResult<Self> {
-        let device = GpuDevice::new(GpuBackend::default(), device_id);
+    pub fn new(_device_id: usize) -> FFTResult<Self> {
+        let device = GpuDevice::new(GpuBackend::default(), _device_id);
         Ok(Self {
             device,
             initialized: true,
@@ -116,7 +113,7 @@ impl GpuDeviceInfo {
 #[allow(dead_code)]
 pub struct FftGpuContext {
     /// Core GPU context
-    core_context: scirs2_core::gpu::GpuContext,
+    core_context: scirs2_core: gpu::GpuContext,
     /// Device ID
     device_id: i32,
     /// Device information
@@ -129,21 +126,21 @@ pub struct FftGpuContext {
 
 impl FftGpuContext {
     /// Create a new FFT GPU context for the specified device
-    pub fn new(device_id: i32) -> FFTResult<Self> {
+    pub fn new(_device_id: i32) -> FFTResult<Self> {
         // Create core GPU context
         let gpu_backend = scirs2_core::gpu::GpuBackend::Cuda;
         let core_context = scirs2_core::gpu::GpuContext::new(gpu_backend)
             .map_err(|e| FFTError::ComputationError(e.to_string()))?;
 
         // Create device info using core abstractions
-        let device_info = GpuDeviceInfo::new(device_id as usize)?;
+        let device_info = GpuDeviceInfo::new(_device_id as usize)?;
 
         // Create stream
-        let stream = GpuStream::new(device_id)?;
+        let stream = GpuStream::new(_device_id)?;
 
         Ok(Self {
             core_context,
-            device_id,
+            _device_id,
             device_info,
             stream,
             initialized: true,
@@ -194,7 +191,7 @@ impl FftGpuContext {
 
         if host_size_bytes > device_size_bytes {
             return Err(FFTError::DimensionError(format!(
-                "Host buffer size ({host_size_bytes} bytes) exceeds device buffer size ({device_size_bytes} bytes)"
+                "Host _buffer size ({host_size_bytes} bytes) exceeds device _buffer size ({device_size_bytes} bytes)"
             )));
         }
 
@@ -215,7 +212,7 @@ impl FftGpuContext {
 
         if device_size_bytes > host_size_bytes {
             return Err(FFTError::DimensionError(format!(
-                "Device buffer size ({device_size_bytes} bytes) exceeds host buffer size ({host_size_bytes} bytes)"
+                "Device _buffer size ({device_size_bytes} bytes) exceeds host _buffer size ({host_size_bytes} bytes)"
             )));
         }
 
@@ -239,9 +236,9 @@ pub struct GpuSparseFFT {
 
 impl GpuSparseFFT {
     /// Create a new CUDA-accelerated sparse FFT processor
-    pub fn new(device_id: i32, config: SparseFFTConfig) -> FFTResult<Self> {
+    pub fn new(_device_id: i32, config: SparseFFTConfig) -> FFTResult<Self> {
         // Use FftGpuContext which wraps scirs2-core::gpu
-        let context = FftGpuContext::new(device_id)?;
+        let context = FftGpuContext::new(_device_id)?;
 
         Ok(Self {
             context,
@@ -262,7 +259,7 @@ impl GpuSparseFFT {
 
         // Allocate input buffer
         let input_buffer = memory_manager.allocate(
-            signal_size * std::mem::size_of::<Complex64>(),
+            signal_size * std::mem::_size_of::<Complex64>(),
             BufferLocation::Device,
             BufferType::Input,
         )?;
@@ -272,14 +269,14 @@ impl GpuSparseFFT {
         let max_components = self.config.sparsity.min(signal_size);
 
         let output_values_buffer = memory_manager.allocate(
-            max_components * std::mem::size_of::<Complex64>(),
+            max_components * std::mem::_size_of::<Complex64>(),
             BufferLocation::Device,
             BufferType::Output,
         )?;
         self.output_values_buffer = Some(output_values_buffer);
 
         let output_indices_buffer = memory_manager.allocate(
-            max_components * std::mem::size_of::<usize>(),
+            max_components * std::mem::_size_of::<usize>(),
             BufferLocation::Device,
             BufferType::Output,
         )?;
@@ -340,7 +337,7 @@ impl GpuSparseFFT {
 
         // Use the appropriate kernel based on the algorithm
         let result = match self.config.algorithm {
-            SparseFFTAlgorithm::Sublinear => crate::execute_cuda_sublinear_sparse_fft(
+            SparseFFTAlgorithm::Sublinear =>, crate::execute_cuda_sublinear_sparse_fft(
                 &signal_complex,
                 self.config.sparsity,
                 self.config.algorithm,
@@ -517,7 +514,7 @@ pub fn get_cuda_devices() -> FFTResult<Vec<GpuDeviceInfo>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sparse_fft_gpu_memory::AllocationStrategy;
+    use crate::sparse_fft_gpu__memory::AllocationStrategy;
     use std::f64::consts::PI;
 
     // Helper function to create a sparse signal

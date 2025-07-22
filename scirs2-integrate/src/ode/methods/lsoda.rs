@@ -110,14 +110,14 @@ impl<F: IntegrateFloat> LsodaState<F> {
     }
 
     /// Update tolerance scaling factors
-    fn update_tol_scale(&mut self, rtol: F, atol: F) {
+    fn update_tol_scale(_rtol: F, atol: F) {
         for i in 0..self.y.len() {
-            self.tol_scale[i] = atol + rtol * self.y[i].abs();
+            self.tol_scale[i] = atol + _rtol * self.y[i].abs();
         }
     }
 
     /// Add current state to history
-    fn add_to_history(&mut self) {
+    fn add_to_history() {
         self.t_history.push(self.t);
         self.y_history.push(self.y.clone());
         self.dy_history.push(self.dy.clone());
@@ -136,9 +136,9 @@ impl<F: IntegrateFloat> LsodaState<F> {
     }
 
     /// Switch method type
-    fn switch_method(&mut self, new_method: LsodaMethodType) {
+    fn switch_method(_new_method: LsodaMethodType) {
         // Track switches between methods
-        if self.method_type == LsodaMethodType::Adams && new_method == LsodaMethodType::Bdf {
+        if self.method_type == LsodaMethodType::Adams && _new_method == LsodaMethodType::Bdf {
             self.nonstiff_to_stiff_switches += 1;
 
             // When switching to Bdf, reset order and jacobian
@@ -151,7 +151,7 @@ impl<F: IntegrateFloat> LsodaState<F> {
             // When switching to Adams, be more conservative
             self.order = 1;
 
-            // Optionally reduce step size when switching to non-stiff method
+            // Optionally reduce step size when switching to non-stiff _method
             if self.rejected_steps > 2 {
                 let half = F::from_f64(0.5)
                     .ok_or_else(|| {
@@ -168,7 +168,7 @@ impl<F: IntegrateFloat> LsodaState<F> {
         self.steps_since_switch = 0;
         self.recently_switched = true;
 
-        // Update method type
+        // Update _method type
         self.method_type = new_method;
     }
 }
@@ -204,19 +204,19 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Check if the problem is stiff based on multiple indicators
-    fn is_stiff(&self, state: &LsodaState<F>) -> bool {
+    fn is_stiff(_state: &LsodaState<F>) -> bool {
         // Don't switch methods too frequently
-        if state.steps_since_switch < self.min_steps_before_switch {
+        if _state.steps_since_switch < self.min_steps_before_switch {
             return false;
         }
 
         // If already using Bdf, require more evidence to switch back to Adams
-        if state.method_type == LsodaMethodType::Bdf {
-            return state.non_stiffness_detected_count < self.non_stiffness_threshold;
+        if _state.method_type == LsodaMethodType::Bdf {
+            return _state.non_stiffness_detected_count < self.non_stiffness_threshold;
         }
 
         // If using Adams, check if we should switch to Bdf
-        state.stiffness_detected_count >= self.stiffness_threshold
+        _state.stiffness_detected_count >= self.stiffness_threshold
     }
 }
 
@@ -269,17 +269,17 @@ where
     // Determine initial step size if not provided
     let h0 = opts.h0.unwrap_or_else(|| {
         // Simple heuristic for initial step size
-        let span = t_end - t_start;
+        let _span = t_end - t_start;
         let hundred = F::from_usize(100).unwrap_or_else(|| F::from(100).unwrap());
         let tenth = F::from_f64(0.1).unwrap_or_else(|| F::from(0.1).unwrap());
-        span / hundred * tenth // 0.1% of interval
+        _span / hundred * tenth // 0.1% of interval
     });
 
     // Determine minimum and maximum step sizes
     let min_step = opts.min_step.unwrap_or_else(|| {
-        let span = t_end - t_start;
+        let _span = t_end - t_start;
         let epsilon = F::from_f64(1e-10).unwrap_or_else(|| F::from(1e-10).unwrap());
-        span * epsilon // Minimal step size
+        _span * epsilon // Minimal step size
     });
 
     let max_step = opts.max_step.unwrap_or_else(|| {

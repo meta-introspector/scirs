@@ -41,7 +41,7 @@ impl ProgressRenderer {
     }
 
     /// Render percentage-only progress
-    pub fn render_percentage(&self, description: &str, stats: &ProgressStats) {
+    pub fn renderpercentage(&self, description: &str, stats: &ProgressStats) {
         let output = format!(
             "{description}: {percentage:.1}%",
             percentage = stats.percentage
@@ -50,7 +50,7 @@ impl ProgressRenderer {
     }
 
     /// Render basic progress bar
-    pub fn render_bar(
+    pub fn render_basic(
         &self,
         description: &str,
         stats: &ProgressStats,
@@ -84,8 +84,8 @@ impl ProgressRenderer {
         &mut self,
         description: &str,
         stats: &ProgressStats,
-        symbols: &ProgressSymbols,
         show_eta: bool,
+        symbols: &ProgressSymbols,
     ) {
         self.spinner_index = (self.spinner_index + 1) % symbols.spinner.len();
         let spinner = &symbols.spinner[self.spinner_index];
@@ -103,14 +103,14 @@ impl ProgressRenderer {
     }
 
     /// Render detailed progress bar with statistics
-    pub fn render_detailed_bar(
+    pub fn render_detailed(
         &self,
         description: &str,
         stats: &ProgressStats,
         width: usize,
+        show_speed: bool,
         show_eta: bool,
         show_statistics: bool,
-        show_speed: bool,
         symbols: &ProgressSymbols,
     ) {
         let percentage = stats.percentage;

@@ -114,7 +114,7 @@ where
 
     // Phase 1: Find an interval containing acceptable points
     let (interval_result, fev1, gev1) = find_interval(
-        fun, grad_fun, x, f0, derphi0, direction, alpha, options, bounds,
+        _fun, grad_fun, x, f0, derphi0, direction, alpha, options, bounds,
     )?;
 
     nfev += fev1;
@@ -133,7 +133,7 @@ where
         IntervalResult::Bracket(alpha_lo, alpha_hi, f_lo, f_hi, g_lo) => {
             // Phase 2: Zoom to find exact step
             let (zoom_result, fev2, gev2) = zoom_search(
-                fun, grad_fun, x, f0, derphi0, direction, alpha_lo, alpha_hi, f_lo, f_hi, g_lo,
+                _fun, grad_fun, x, f0, derphi0, direction, alpha_lo, alpha_hi, f_lo, f_hi, g_lo,
                 options, bounds,
             )?;
 
@@ -203,7 +203,7 @@ where
 
         // Evaluate function at alpha
         let x_alpha = x + alpha * direction;
-        let f_alpha = fun(&x_alpha.view()).into();
+        let f_alpha = _fun(&x_alpha.view()).into();
         nfev += 1;
 
         // Check Armijo condition and sufficient decrease
@@ -282,8 +282,7 @@ fn zoom_search<F, G, S>(
     mut f_lo: f64,
     mut f_hi: f64,
     mut derphi_lo: f64,
-    options: &StrongWolfeOptions,
-    _bounds: Option<&Bounds>,
+    options: &StrongWolfeOptions_bounds: Option<&Bounds>,
 ) -> Result<ZoomSearchResult, OptimizeError>
 where
     F: FnMut(&ArrayView1<f64>) -> S,
@@ -303,7 +302,7 @@ where
 
         // Evaluate function at trial point
         let x_alpha = x + alpha * direction;
-        let f_alpha = fun(&x_alpha.view()).into();
+        let f_alpha = _fun(&x_alpha.view()).into();
         nfev += 1;
 
         // Check Armijo condition
@@ -343,7 +342,7 @@ where
     // If we reach here, return the best point found
     let alpha = if f_lo < f_hi { alpha_lo } else { alpha_hi };
     let x_alpha = x + alpha * direction;
-    let f_alpha = fun(&x_alpha.view()).into();
+    let f_alpha = _fun(&x_alpha.view()).into();
     let g_alpha = grad_fun(&x_alpha.view());
     nfev += 1;
     ngev += 1;
@@ -358,8 +357,7 @@ fn safeguarded_interpolation(
     alpha_hi: f64,
     f_lo: f64,
     f_hi: f64,
-    derphi_lo: f64,
-    _derphi0: f64,
+    derphi_lo: f64, _derphi0: f64,
 ) -> f64 {
     let delta = alpha_hi - alpha_lo;
 
@@ -401,8 +399,8 @@ fn safeguarded_interpolation(
 
 /// Create Strong Wolfe options optimized for specific optimization methods
 #[allow(dead_code)]
-pub fn create_strong_wolfe_options_for_method(method: &str) -> StrongWolfeOptions {
-    match method.to_lowercase().as_str() {
+pub fn create_strong_wolfe_options_for_method(_method: &str) -> StrongWolfeOptions {
+    match _method.to_lowercase().as_str() {
         "bfgs" | "lbfgs" | "sr1" | "dfp" => StrongWolfeOptions {
             c1: 1e-4,
             c2: 0.9,
@@ -435,8 +433,7 @@ pub fn create_strong_wolfe_options_for_method(method: &str) -> StrongWolfeOption
             tolerance: 1e-12,
             use_safeguarded_interpolation: true,
             use_extrapolation: false, // More conservative for Newton
-        },
-        _ => StrongWolfeOptions::default(),
+        }_ => StrongWolfeOptions::default(),
     }
 }
 

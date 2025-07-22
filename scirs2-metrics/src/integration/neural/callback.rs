@@ -39,9 +39,9 @@ impl<
     > MetricsCallback<F>
 {
     /// Create a new metrics callback with the specified metrics
-    pub fn new(metrics: Vec<NeuralMetricAdapter<F>>, verbose: bool) -> Self {
+    pub fn new(_metrics: Vec<NeuralMetricAdapter<F>>, verbose: bool) -> Self {
         Self {
-            metrics,
+            _metrics,
             last_results: HashMap::new(),
             history: Vec::new(),
             verbose,
@@ -109,7 +109,7 @@ impl<
 {
     fn on_event(
         &mut self,
-        timing: scirs2_neural::callbacks::CallbackTiming,
+        timing: scirs2_neural: callbacks::CallbackTiming,
         context: &mut scirs2_neural::callbacks::CallbackContext<F>,
     ) -> scirs2_neural::error::Result<()> {
         // We only want to compute metrics after each epoch
@@ -118,7 +118,7 @@ impl<
         }
 
         // Currently, we don't have access to predictions and targets in the callback context
-        // This would require changes to scirs2-neural's callback system
+        // This would require changes to scirs2-_neural's callback system
         // For now, we'll just log that the callback was invoked
 
         if self.verbose {

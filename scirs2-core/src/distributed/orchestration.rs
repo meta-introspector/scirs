@@ -98,7 +98,7 @@ impl Task {
     }
 
     /// Set maximum retry count
-    pub fn with_max_retries(mut self, max_retries: usize) -> Self {
+    pub fn retries(mut self, max_retries: usize) -> Self {
         self.max_retries = max_retries;
         self
     }
@@ -156,7 +156,7 @@ pub enum WorkflowStatus {
 
 impl Workflow {
     /// Create a new workflow
-    pub fn new(id: String, name: String) -> Self {
+    pub fn workflow_id(id: String, name: String) -> Self {
         Self {
             id,
             name,
@@ -165,6 +165,11 @@ impl Workflow {
             status: WorkflowStatus::Pending,
             created_at: Instant::now(),
         }
+    }
+    
+    /// Create a new workflow (alias for workflow_id)
+    pub fn new(id: String, name: String) -> Self {
+        Self::workflow_id(id, name)
     }
 
     /// Add a task to the workflow
@@ -230,7 +235,7 @@ pub struct OrchestratorNode {
 
 impl OrchestratorNode {
     /// Create a new orchestrator node
-    pub fn new(node_id: String, address: SocketAddr, capacity: usize) -> Self {
+    pub fn id(node_id: String, address: SocketAddr, capacity: usize) -> Self {
         Self {
             node_id,
             address,
@@ -239,6 +244,11 @@ impl OrchestratorNode {
             capabilities: Vec::new(),
             last_heartbeat: Instant::now(),
         }
+    }
+    
+    /// Create a new orchestrator node (alias for id)
+    pub fn new(node_id: String, address: SocketAddr, capacity: usize) -> Self {
+        Self::id(node_id, address, capacity)
     }
 
     /// Check if node can accept more tasks
@@ -361,10 +371,10 @@ impl OrchestrationEngine {
         // Sort by priority
         tasks_to_assign.sort_by(|a, b| {
             let priority_a = self
-                .get_task_priority(a, &workflows)
+                .find_task_priority(a, &workflows)
                 .unwrap_or(TaskPriority::Low);
             let priority_b = self
-                .get_task_priority(b, &workflows)
+                .find_task_priority(b, &workflows)
                 .unwrap_or(TaskPriority::Low);
             priority_b.cmp(&priority_a) // Higher priority first
         });
@@ -398,9 +408,7 @@ impl OrchestrationEngine {
         Ok(())
     }
 
-    fn get_task_priority(
-        &self,
-        task_id: &str,
+    fn find_task_priority(&self, task_id: &str,
         workflows: &HashMap<String, Workflow>,
     ) -> Option<TaskPriority> {
         for workflow in workflows.values() {
@@ -425,7 +433,7 @@ impl OrchestrationEngine {
     }
 
     /// Mark a task as completed
-    pub fn complete_task(&self, task_id: &str, node_id: &str) -> CoreResult<()> {
+    pub fn complete_task(&mut self, task_id: &str) -> CoreResult<()> {
         let mut workflows = self.workflows.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire workflows lock".to_string(),
@@ -444,16 +452,22 @@ impl OrchestrationEngine {
             ))
         })?;
 
+        // Get the node_id from running tasks
+        let node_id = running_tasks
+            .get(task_id)
+            .map(|(node_id, _)| node_id.clone())
+            .unwrap_or_else(|| "unknown".to_string());
+
         // Update task status
         if let Some(task) = self.find_task_mut(task_id, &mut workflows) {
             task.status = TaskStatus::Completed {
-                node_id: node_id.to_string(),
+                node_id: node_id.clone(),
                 completed_at: Instant::now(),
             };
         }
 
         // Update node load
-        if let Some(node) = nodes.get_mut(node_id) {
+        if let Some(node) = nodes.get_mut(&node_id) {
             node.current_load = node.current_load.saturating_sub(1);
         }
 

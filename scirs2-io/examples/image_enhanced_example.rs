@@ -8,12 +8,12 @@
 //! - Quality-preserving image operations
 
 use ndarray::Array3;
-use scirs2_io::image::enhanced::{
+use scirs2__io::image::enhanced::{
     batch_convert_with_compression, create_image_pyramid, save_high_quality, save_lossless,
     CompressionOptions, CompressionQuality, EnhancedImageProcessor, InterpolationMethod,
     PyramidConfig,
 };
-use scirs2_io::image::{save_image, ColorMode, ImageData, ImageFormat, ImageMetadata};
+use scirs2__io::image::{save_image, ColorMode, ImageData, ImageFormat, ImageMetadata};
 use std::time::Instant;
 use tempfile::tempdir;
 
@@ -305,13 +305,13 @@ fn demonstrate_lossless_compression() -> Result<(), Box<dyn std::error::Error>> 
 
     // Analyze compression efficiency
     println!("  🔹 Compression efficiency analysis:");
-    if let Some((_, _, best_jpeg_size, _, _, _)) = results
+    if let Some((__, best_jpeg_size___)) = results
         .iter()
-        .min_by_key(|(_, _, jpeg_size, _, _, _)| *jpeg_size)
+        .min_by_key(|(__, jpeg_size___)| *jpeg_size)
     {
-        if let Some((_, _, worst_jpeg_size, _, _, _)) = results
+        if let Some((__, worst_jpeg_size___)) = results
             .iter()
-            .max_by_key(|(_, _, jpeg_size, _, _, _)| *jpeg_size)
+            .max_by_key(|(__, jpeg_size___)| *jpeg_size)
         {
             let compression_ratio = *worst_jpeg_size as f64 / *best_jpeg_size as f64;
             println!("    Best JPEG compression ratio: {:.1}x", compression_ratio);
@@ -578,7 +578,7 @@ fn demonstrate_batch_processing() -> Result<(), Box<dyn std::error::Error>> {
 
     // Analyze file sizes
     println!("  🔹 Analyzing compression results:");
-    for (name, _) in &test_images {
+    for (name_) in &test_images {
         let original_path = input_dir.join(format!("{}.png", name));
         let lossless_path = lossless_output.join(format!("{}.png", name));
         let hq_path = hq_output.join(format!("{}.jpg", name));
@@ -775,7 +775,7 @@ fn demonstrate_performance_features() -> Result<(), Box<dyn std::error::Error>> 
     }
 
     cached_processor.clear_cache();
-    let (final_count, _) = cached_processor.cache_stats();
+    let (final_count_) = cached_processor.cache_stats();
     println!("    Cache cleared: {} items remaining", final_count);
 
     println!("  ✅ Performance testing completed!");

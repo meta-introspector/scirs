@@ -1,6 +1,6 @@
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
-use crate::tensor_ops::convert_to_tensor;
+use crate::tensor__ops::convert_to_tensor;
 use crate::Float;
 use ndarray::ScalarOperand;
 use ndarray::{Array1, Array2, Ix2};
@@ -232,11 +232,11 @@ impl<F: Float + ScalarOperand + FromPrimitive> Op<F> for EigenvaluesOp {
 
 // Helper functions
 #[allow(dead_code)]
-fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
-    let n = matrix.shape()[0];
+fn is_symmetric_matrix<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> bool {
+    let n = _matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (matrix[[i, j]] - matrix[[j, i]]).abs() > F::epsilon() {
+            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > F::epsilon() {
                 return false;
             }
         }
@@ -464,11 +464,11 @@ fn compute_general_eigen<F: Float + ScalarOperand + FromPrimitive>(
 
 // Helper function to check if a matrix is nearly symmetric
 #[allow(dead_code)]
-fn is_nearly_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>, tol: F) -> bool {
-    let n = matrix.shape()[0];
+fn is_nearly_symmetric_matrix<F: Float>(_matrix: &ndarray::ArrayView2<F>, tol: F) -> bool {
+    let n = _matrix.shape()[0];
     for i in 0..n {
         for j in i + 1..n {
-            if (matrix[[i, j]] - matrix[[j, i]]).abs() > tol {
+            if (_matrix[[i, j]] - _matrix[[j, i]]).abs() > tol {
                 return false;
             }
         }
@@ -572,7 +572,7 @@ fn compute_eigenvalues_only<F: Float + ScalarOperand + FromPrimitive>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array1<F>, OpError> {
     // Simplified implementation - use full eigen decomposition but return only values
-    let (values, _) = if is_symmetric_matrix(matrix) {
+    let (values_) = if is_symmetric_matrix(matrix) {
         compute_symmetric_eigen(matrix)?
     } else {
         compute_general_eigen(matrix)?
@@ -723,8 +723,7 @@ impl<F: Float + ScalarOperand + FromPrimitive> Op<F> for EigenExtractOp {
         // Return the requested component
         match self.component {
             0 => ctx.append_output(eigenvalues.into_dyn()),
-            1 => ctx.append_output(eigenvectors.into_dyn()),
-            _ => {
+            1 => ctx.append_output(eigenvectors.into_dyn(), _ => {
                 return Err(OpError::Other(
                     "Invalid component index for eigen extraction".into(),
                 ))

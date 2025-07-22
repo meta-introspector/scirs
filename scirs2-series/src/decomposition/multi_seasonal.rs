@@ -80,7 +80,7 @@ impl Default for MultiSeasonalConfig {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_series::decomposition::{decompose_multi_seasonal, MultiSeasonalConfig};
+/// use scirs2__series::decomposition::{decompose_multi_seasonal, MultiSeasonalConfig};
 ///
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0,
 ///                 2.0, 3.0, 4.0, 3.0, 2.0, 3.0, 4.0, 3.0, 2.0, 3.0, 4.0, 3.0];
@@ -206,11 +206,11 @@ where
 
 /// Detects seasonal periods automatically using multiple methods
 #[allow(dead_code)]
-fn detect_seasonal_periods<F>(ts: &Array1<F>, config: &MultiSeasonalConfig) -> Result<Vec<usize>>
+fn detect_seasonal_periods<F>(_ts: &Array1<F>, config: &MultiSeasonalConfig) -> Result<Vec<usize>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = ts.len();
+    let n = _ts.len();
     let max_period = if config.max_period == 0 {
         n / 3
     } else {
@@ -220,32 +220,32 @@ where
     let mut period_scores = Vec::new();
 
     // Method 1: Autocorrelation-based detection
-    let acf_periods = detect_periods_acf(ts, config.min_period, max_period)?;
+    let acf_periods = detect_periods_acf(_ts, config.min_period, max_period)?;
     for period in acf_periods {
-        let strength = calculate_seasonal_strength(ts, period, &config.model)?;
+        let strength = calculate_seasonal_strength(_ts, period, &config.model)?;
         if strength > config.seasonal_strength_threshold {
             period_scores.push((period, strength));
         }
     }
 
     // Method 2: Periodogram-based detection
-    let pgram_periods = detect_periods_periodogram(ts, config.min_period, max_period)?;
+    let pgram_periods = detect_periods_periodogram(_ts, config.min_period, max_period)?;
     for period in pgram_periods {
-        let strength = calculate_seasonal_strength(ts, period, &config.model)?;
+        let strength = calculate_seasonal_strength(_ts, period, &config.model)?;
         if strength > config.seasonal_strength_threshold {
             // Check if already detected
-            if !period_scores.iter().any(|(p, _)| *p == period) {
+            if !period_scores.iter().any(|(p_)| *p == period) {
                 period_scores.push((period, strength));
             }
         }
     }
 
     // Method 3: Multiple autocorrelation peaks
-    let multi_acf_periods = detect_multiple_acf_peaks(ts, config.min_period, max_period)?;
+    let multi_acf_periods = detect_multiple_acf_peaks(_ts, config.min_period, max_period)?;
     for period in multi_acf_periods {
-        let strength = calculate_seasonal_strength(ts, period, &config.model)?;
+        let strength = calculate_seasonal_strength(_ts, period, &config.model)?;
         if strength > config.seasonal_strength_threshold
-            && !period_scores.iter().any(|(p, _)| *p == period)
+            && !period_scores.iter().any(|(p_)| *p == period)
         {
             period_scores.push((period, strength));
         }
@@ -256,7 +256,7 @@ where
 
     // Extract periods and filter out harmonics
     let mut periods = Vec::new();
-    for (period, _) in period_scores {
+    for (period_) in period_scores {
         // Check if this period is not a harmonic of an existing period
         let is_harmonic = periods
             .iter()
@@ -272,11 +272,11 @@ where
 
 /// Detects periods using autocorrelation function
 #[allow(dead_code)]
-fn detect_periods_acf<F>(ts: &Array1<F>, min_period: usize, max_period: usize) -> Result<Vec<usize>>
+fn detect_periods_acf<F>(_ts: &Array1<F>, min_period: usize, max_period: usize) -> Result<Vec<usize>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let acf = autocorrelation(ts, Some(max_period))?;
+    let acf = autocorrelation(_ts, Some(max_period))?;
     let mut periods = Vec::new();
 
     // Find local maxima in ACF
@@ -306,14 +306,14 @@ where
     let mut periods = Vec::new();
 
     // Simple periodogram computation
-    for period in min_period..=max_period.min(n / 2) {
+    for _period in min_period..=max_period.min(n / 2) {
         let mut sum_cos = F::zero();
         let mut sum_sin = F::zero();
 
         for i in 0..n {
             let angle = F::from_f64(2.0 * std::f64::consts::PI).unwrap()
                 * F::from_usize(i).unwrap()
-                / F::from_usize(period).unwrap();
+                / F::from_usize(_period).unwrap();
             sum_cos = sum_cos + ts[i] * angle.cos();
             sum_sin = sum_sin + ts[i] * angle.sin();
         }
@@ -322,7 +322,7 @@ where
         let threshold = F::from_f64(0.1).unwrap() * F::from_usize(n).unwrap().powi(2);
 
         if power > threshold {
-            periods.push(period);
+            periods.push(_period);
         }
     }
 
@@ -385,8 +385,7 @@ where
 #[allow(dead_code)]
 fn calculate_seasonal_strength<F>(
     ts: &Array1<F>,
-    period: usize,
-    _model: &DecompositionModel,
+    period: usize_model: &DecompositionModel,
 ) -> Result<f64>
 where
     F: Float + FromPrimitive + Debug,
@@ -450,8 +449,7 @@ where
 #[allow(dead_code)]
 fn extract_multi_seasonal_trend<F>(
     ts: &Array1<F>,
-    periods: &[usize],
-    _config: &MultiSeasonalConfig,
+    periods: &[usize], _config: &MultiSeasonalConfig,
 ) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -562,14 +560,14 @@ where
 {
     if seasonal_components.is_empty() {
         return Err(TimeSeriesError::DecompositionError(
-            "No seasonal components to combine".to_string(),
+            "No seasonal _components to combine".to_string(),
         ));
     }
 
     let n = seasonal_components[0].len();
     let mut combined = match model {
-        DecompositionModel::Additive => Array1::zeros(n),
-        DecompositionModel::Multiplicative => Array1::ones(n),
+        DecompositionModel::Additive =>, Array1::zeros(n),
+        DecompositionModel::Multiplicative =>, Array1::ones(n),
     };
 
     for component in seasonal_components {
@@ -586,15 +584,15 @@ where
 
 /// Calculates robust mean using median
 #[allow(dead_code)]
-fn robust_mean<F>(values: &[F]) -> F
+fn robust_mean<F>(_values: &[F]) -> F
 where
     F: Float + FromPrimitive + Debug,
 {
-    if values.is_empty() {
+    if _values.is_empty() {
         return F::zero();
     }
 
-    let mut sorted = values.to_vec();
+    let mut sorted = _values.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let len = sorted.len();
@@ -608,11 +606,11 @@ where
 }
 
 #[allow(dead_code)]
-fn calculate_l2_norm<F>(arr: &Array1<F>) -> Result<F>
+fn calculate_l2_norm<F>(_arr: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let sum_squares = arr.iter().fold(F::zero(), |acc, &x| acc + x * x);
+    let sum_squares = _arr.iter().fold(F::zero(), |acc, &x| acc + x * x);
     Ok(sum_squares.sqrt())
 }
 

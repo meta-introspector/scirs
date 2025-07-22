@@ -20,7 +20,7 @@
 //!
 //! ```rust
 //! use ndarray::{Array1, Array2};
-//! use scirs2_interpolate::voronoi::{
+//! use scirs2__interpolate::voronoi::{
 //!     NaturalNeighborInterpolator, InterpolationMethod
 //! };
 //!
@@ -72,4 +72,4 @@ pub use parallel::{
     make_parallel_laplace_interpolator, make_parallel_natural_neighbor_interpolator,
     make_parallel_sibson_interpolator, ParallelNaturalNeighborInterpolator,
 };
-pub use voronoi_cell::{VoronoiCell, VoronoiDiagram};
+pub use voronoi__cell::{VoronoiCell, VoronoiDiagram};

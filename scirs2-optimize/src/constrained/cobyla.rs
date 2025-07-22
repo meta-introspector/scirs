@@ -249,8 +249,7 @@ where
 fn build_linear_models(
     xpt: &Array2<f64>,
     fval: &Array1<f64>,
-    con: &Array2<f64>,
-    _x: &Array1<f64>,
+    con: &Array2<f64>, _x: &Array1<f64>,
     n: usize,
     num_constraints: usize,
 ) -> OptimizeResult<(Array1<f64>, Array2<f64>)> {
@@ -348,7 +347,7 @@ fn update_interpolation_set(
 
 // Implement error conversion for validation errors
 impl From<scirs2_core::error::CoreError> for OptimizeError {
-    fn from(error: scirs2_core::error::CoreError) -> Self {
-        OptimizeError::ValueError(error.to_string())
+    fn from(_error: scirs2_core: error::CoreError) -> Self {
+        OptimizeError::ValueError(_error.to_string())
     }
 }

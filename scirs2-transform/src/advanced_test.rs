@@ -5,7 +5,7 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::auto_feature_engineering::{AutoFeatureEngineer, DatasetMetaFeatures};
+    use crate::auto_feature__engineering::{AutoFeatureEngineer, DatasetMetaFeatures};
     use crate::{
         AdvancedNeuromorphicProcessor, AdvancedQuantumOptimizer, NeuromorphicTransformationSystem,
         QuantumTransformationOptimizer, TransformationType,
@@ -179,14 +179,14 @@ mod tests {
     }
 
     #[allow(dead_code)]
-    fn create_test_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
+    fn create_test_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
         use rand::Rng;
         let mut rng = rand::rng();
-        let mut data = Array2::zeros((n_samples, n_features));
+        let mut data = Array2::zeros((_n_samples, n_features));
 
-        for i in 0..n_samples {
+        for i in 0.._n_samples {
             for j in 0..n_features {
-                data[[i, j]] = rng.random_range(-10.0..10.0);
+                data[[i, j]] = rng.gen_range(-10.0..10.0);
             }
         }
 

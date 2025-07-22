@@ -11,15 +11,16 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::analysis::KalmanDecomposition;
-use crate::lti::robust_analysis::{
-    EnhancedControllabilityAnalysis, EnhancedObservabilityAnalysis, RobustAnalysisConfig,
-};
 use crate::lti::systems::StateSpace;
 use ndarray::{Array1, Array2, Array3};
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
 
+#[allow(unused_imports)]
+use crate::lti::robust__analysis::{
+    EnhancedControllabilityAnalysis, EnhancedObservabilityAnalysis, RobustAnalysisConfig,
+};
 /// Advanced-enhanced controllability and observability analysis result
 #[derive(Debug, Clone)]
 pub struct AdvancedControllabilityObservabilityResult {
@@ -1767,8 +1768,8 @@ fn estimate_analysis_memory_usage(n: usize) -> f64 {
 }
 
 #[allow(dead_code)]
-fn estimate_numerical_accuracy(config: &AdvancedAnalysisConfig) -> f64 {
-    match config.optimization_level {
+fn estimate_numerical_accuracy(_config: &AdvancedAnalysisConfig) -> f64 {
+    match _config.optimization_level {
         OptimizationLevel::MaxAccuracy => 0.999,
         OptimizationLevel::Balanced => 0.995,
         OptimizationLevel::MaxPerformance => 0.99,
@@ -1778,10 +1779,11 @@ fn estimate_numerical_accuracy(config: &AdvancedAnalysisConfig) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use crate::lti::systems::StateSpace;
 
     #[test]
     fn test_advanced_controllability_observability_analysis() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Create a simple test system
         let ss = StateSpace::new(
             vec![-1.0, 0.0, 1.0, -2.0], // 2x2 A matrix

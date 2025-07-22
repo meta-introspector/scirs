@@ -1,6 +1,7 @@
 //! Error types for the SciRS2 spatial module
 
 use thiserror::Error;
+use crate::error::{SpatialError, SpatialResult};
 
 /// Spatial error type
 #[derive(Error, Debug)]

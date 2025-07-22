@@ -270,7 +270,7 @@ impl RiskManagementMetrics {
 
         if var_index < sorted_returns.len() {
             let daily_var = -sorted_returns[var_index]; // VaR is positive for losses
-                                                        // Scale for holding period (assuming sqrt of time scaling)
+                                                        // Scale for holding _period (assuming sqrt of time scaling)
             let holding_period_factor = F::from(holding_period).unwrap().sqrt();
             Ok(daily_var * holding_period_factor)
         } else {
@@ -342,7 +342,7 @@ impl RiskManagementMetrics {
     {
         if portfolio_returns.len() != market_returns.len() {
             return Err(MetricsError::InvalidInput(
-                "Portfolio and market returns must have same length".to_string(),
+                "Portfolio and market _returns must have same length".to_string(),
             ));
         }
 
@@ -429,7 +429,7 @@ impl PortfolioMetrics {
         F: Float + num_traits::FromPrimitive + std::iter::Sum,
     {
         if portfolio_returns.is_empty() {
-            return Ok(F::zero());
+            _return Ok(F::zero());
         }
 
         let mean_return = portfolio_returns.iter().cloned().sum::<F>()
@@ -470,11 +470,11 @@ impl PortfolioMetrics {
     {
         if portfolio_returns.len() != benchmark_returns.len() {
             return Err(MetricsError::InvalidInput(
-                "Portfolio and benchmark returns must have same length".to_string(),
+                "Portfolio and benchmark _returns must have same length".to_string(),
             ));
         }
 
-        // Calculate active returns
+        // Calculate active _returns
         let active_returns: Vec<F> = portfolio_returns
             .iter()
             .zip(benchmark_returns.iter())
@@ -484,7 +484,7 @@ impl PortfolioMetrics {
         let mean_active_return =
             active_returns.iter().cloned().sum::<F>() / F::from(active_returns.len()).unwrap();
 
-        // Calculate tracking error (standard deviation of active returns)
+        // Calculate tracking error (standard deviation of active _returns)
         let tracking_error = {
             let variance = active_returns
                 .iter()
@@ -570,7 +570,7 @@ impl CreditRiskMetrics {
     {
         if predicted_scores.len() != actual_defaults.len() {
             return Err(MetricsError::InvalidInput(
-                "Predicted scores and actual defaults must have same length".to_string(),
+                "Predicted _scores and actual _defaults must have same length".to_string(),
             ));
         }
 
@@ -620,7 +620,7 @@ impl CreditRiskMetrics {
     {
         if predicted_scores.len() != actual_defaults.len() {
             return Err(MetricsError::InvalidInput(
-                "Predicted scores and actual defaults must have same length".to_string(),
+                "Predicted _scores and actual _defaults must have same length".to_string(),
             ));
         }
 
@@ -676,11 +676,11 @@ impl CreditRiskMetrics {
     {
         if num_buckets == 0 {
             return Err(MetricsError::InvalidInput(
-                "Number of buckets must be greater than 0".to_string(),
+                "Number of _buckets must be greater than 0".to_string(),
             ));
         }
 
-        // Create score buckets based on baseline distribution
+        // Create score _buckets based on baseline distribution
         let mut baseline_sorted: Vec<F> = baseline_scores.iter().cloned().collect();
         baseline_sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
@@ -707,7 +707,7 @@ impl CreditRiskMetrics {
             let current_pct =
                 F::from(current_counts[i]).unwrap() / F::from(current_scores.len()).unwrap();
 
-            if baseline_pct > F::zero() && current_pct > F::zero() {
+            if baseline_pct > F::zero() && current_pct >, F::zero() {
                 let ratio = current_pct / baseline_pct;
                 psi = psi + (current_pct - baseline_pct) * ratio.ln();
             }
@@ -1002,7 +1002,7 @@ impl RegulatoryMetrics {
             Ok(tier1_capital / risk_weighted_assets)
         } else {
             Err(MetricsError::InvalidInput(
-                "Risk-weighted assets must be greater than zero".to_string(),
+                "Risk-weighted _assets must be greater than zero".to_string(),
             ))
         }
     }
@@ -1016,7 +1016,7 @@ impl RegulatoryMetrics {
             Ok(tier1_capital / total_exposure)
         } else {
             Err(MetricsError::InvalidInput(
-                "Total exposure must be greater than zero".to_string(),
+                "Total _exposure must be greater than zero".to_string(),
             ))
         }
     }
@@ -1034,7 +1034,7 @@ impl RegulatoryMetrics {
             Ok(high_quality_liquid_assets / net_cash_outflows)
         } else {
             Err(MetricsError::InvalidInput(
-                "Net cash outflows must be greater than zero".to_string(),
+                "Net cash _outflows must be greater than zero".to_string(),
             ))
         }
     }

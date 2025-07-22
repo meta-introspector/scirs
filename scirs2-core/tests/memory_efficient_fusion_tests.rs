@@ -23,11 +23,11 @@ mod tests {
         }
 
         fn can_fuse_with(&self, other: &dyn FusedOp) -> bool {
-            other.name() == "SqrtOp"
+            other.name() == SqrtOp
         }
 
         fn fuse_with(&self, other: &dyn FusedOp) -> Arc<dyn FusedOp> {
-            if other.name() == "SqrtOp" {
+            if other.name() == SqrtOp {
                 // Square followed by sqrt is identity
                 Arc::new(IdentityOp)
             } else {
@@ -65,11 +65,11 @@ mod tests {
         }
 
         fn can_fuse_with(&self, other: &dyn FusedOp) -> bool {
-            other.name() == "SquareOp"
+            other.name() == SquareOp
         }
 
         fn fuse_with(&self, other: &dyn FusedOp) -> Arc<dyn FusedOp> {
-            if other.name() == "SquareOp" {
+            if other.name() == SquareOp {
                 // Sqrt followed by square is identity
                 Arc::new(IdentityOp)
             } else {
@@ -113,7 +113,7 @@ mod tests {
             TypeId::of::<f64>()
         }
 
-        fn can_fuse_with(&self, _other: &dyn FusedOp) -> bool {
+        fn other( &dyn FusedOp) -> bool {
             true
         }
 
@@ -176,13 +176,13 @@ mod tests {
             fn output_type(&self) -> TypeId {
                 TypeId::of::<i32>()
             }
-            fn can_fuse_with(&self, _: &dyn FusedOp) -> bool {
+            fn can_fuse_with(&self_: &dyn FusedOp) -> bool {
                 false
             }
-            fn fuse_with(&self, _: &dyn FusedOp) -> Arc<dyn FusedOp> {
+            fn fuse_with(&self_: &dyn FusedOp) -> Arc<dyn FusedOp> {
                 Arc::new(MismatchOp)
             }
-            fn apply(&self, _: &dyn Any) -> Result<Box<dyn Any>, CoreError> {
+            fn apply(&self_: &dyn Any) -> Result<Box<dyn Any>, CoreError> {
                 Ok(Box::new(0))
             }
             fn clone_op(&self) -> Arc<dyn FusedOp> {

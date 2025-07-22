@@ -5,7 +5,7 @@
 //! coordinates instead of falling back to RBF interpolation.
 
 use ndarray::{Array1, Array2};
-use scirs2_interpolate::griddata::{griddata, GriddataMethod};
+use scirs2__interpolate::griddata::{griddata, GriddataMethod};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

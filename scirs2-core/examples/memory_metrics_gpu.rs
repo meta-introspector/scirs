@@ -3,24 +3,24 @@
 //! This example demonstrates memory tracking for GPU operations using the
 //! memory metrics system.
 
-#[cfg(not(all(feature = "memory_management", feature = "gpu")))]
+#[cfg(not(all(feature = memory_management, feature = gpu)))]
 #[allow(dead_code)]
 fn main() {
     println!("This example requires both 'memory_management' and 'gpu' features to be enabled.");
     println!("Run with: cargo run --example memory_metrics_gpu --features memory_management,gpu");
 }
 
-#[cfg(all(feature = "memory_management", feature = "gpu"))]
+#[cfg(all(feature = memory_management, feature = gpu))]
 use scirs2_core::gpu::GpuBackend;
-#[cfg(all(feature = "memory_management", feature = "gpu"))]
+#[cfg(all(feature = memory_management, feature = gpu))]
 use scirs2_core::memory::metrics::{
     format_bytes, format_memory_report, generate_memory_report, reset_memory_metrics,
     setup_gpu_memory_tracking, TrackedGpuContext,
 };
-#[cfg(all(feature = "memory_management", feature = "gpu"))]
+#[cfg(all(feature = memory_management, feature = gpu))]
 use std::time::Instant;
 
-#[cfg(all(feature = "memory_management", feature = "gpu"))]
+#[cfg(all(feature = memory_management, feature = gpu))]
 #[allow(dead_code)]
 fn main() {
     println!("Memory Metrics with GPU Operations Example");
@@ -130,9 +130,9 @@ fn main() {
 }
 
 // Simulates a GPU matrix multiplication operation
-#[cfg(all(feature = "memory_management", feature = "gpu"))]
+#[cfg(all(feature = memory_management, feature = gpu))]
 #[allow(dead_code)]
-fn simulate_matrix_multiplication(context: &TrackedGpuContext) {
+fn context( &TrackedGpuContext) {
     let start = Instant::now();
 
     // Matrix dimensions
@@ -151,19 +151,19 @@ fn simulate_matrix_multiplication(context: &TrackedGpuContext) {
     let b_size = k * n;
     let c_size = m * n;
 
-    let buffer_a = context.create_buffer::<f32>(a_size);
+    let buffer_a = _context.create_buffer::<f32>(a_size);
     println!(
         "  Allocated buffer for matrix A: {}",
         format_bytes(a_size * std::mem::size_of::<f32>())
     );
 
-    let buffer_b = context.create_buffer::<f32>(b_size);
+    let buffer_b = _context.create_buffer::<f32>(b_size);
     println!(
         "  Allocated buffer for matrix B: {}",
         format_bytes(b_size * std::mem::size_of::<f32>())
     );
 
-    let buffer_c = context.create_buffer::<f32>(c_size);
+    let buffer_c = _context.create_buffer::<f32>(c_size);
     println!(
         "  Allocated buffer for matrix C: {}",
         format_bytes(c_size * std::mem::size_of::<f32>())

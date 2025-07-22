@@ -1,5 +1,5 @@
 use ndarray::{array, Array1, Array2}; // ArrayView1は使用していない
-use scirs2_interpolate::{
+use scirs2__interpolate::{
     cubic_interpolate,
 
     // N-dimensional interpolation
@@ -47,7 +47,7 @@ fn demo_1d_interpolation() {
     let y = array![0.0, 1.0, 4.0, 9.0, 16.0]; // y = x²
 
     // Import ExtrapolateMode for Interp1d
-    use scirs2_interpolate::interp1d::ExtrapolateMode;
+    use scirs2__interpolate::interp1d::ExtrapolateMode;
 
     // Create interpolator objects
     let interp_nearest = Interp1d::new(

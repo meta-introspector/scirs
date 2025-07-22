@@ -4,6 +4,7 @@ use crate::error::Result;
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
+use statrs::statistics::Statistics;
 /// Trait for data transforms
 pub trait Transform<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync>:
     Send + Sync + Debug
@@ -26,11 +27,11 @@ pub struct StandardScaler<F: Float + Debug + ScalarOperand + FromPrimitive + Sen
     fit_per_sample: bool,
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> StandardScaler<F> {
     /// Create a new standard scaler
-    pub fn new(fit_per_sample: bool) -> Self {
+    pub fn new(_fit_per_sample: bool) -> Self {
         Self {
             mean: None,
             std: None,
-            fit_per_sample,
+            _fit_per_sample,
         }
     }
     /// Fit the scaler to the data
@@ -110,10 +111,10 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> MinMaxScale
     /// Create a new MinMax scaler with default range [0, 1]
         Self::with_range(F::zero(), F::one(), fit_per_sample)
     /// Create a new MinMax scaler with custom range
-    pub fn with_range(min_val: F, max_val: F, fit_per_sample: bool) -> Self {
+    pub fn with_range(_min_val: F, max_val: F, fit_per_sample: bool) -> Self {
             min: None,
             max: None,
-            range: (min_val, max_val),
+            range: (_min_val, max_val),
             // Just compute global min and max
             let min = match data.iter().min_by(|a, b| a.partial_cmp(b).unwrap()) {
                 Some(&val) => val,
@@ -185,18 +186,17 @@ pub struct OneHotEncoder<F: Float + Debug + ScalarOperand + FromPrimitive + Send
     _phantom: std::marker::PhantomData<F>,
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> OneHotEncoder<F> {
     /// Create a new one-hot encoder
-    pub fn new(n_classes: usize) -> Self {
-            n_classes,
-            _phantom: std::marker::PhantomData,
+    pub fn new(_n_classes: usize) -> Self {
+            n_classes_phantom: std::marker::PhantomData,
     /// Transform class indices to one-hot encoded vectors
         let shape = data.shape();
         let n_samples = shape[0];
-        // Create output array with shape [n_samples, n_classes]
-        let mut result = Array::zeros(IxDyn(&[n_samples, self.n_classes]));
+        // Create output array with shape [n_samples_n_classes]
+        let mut result = Array::zeros(IxDyn(&[n_samples, self._n_classes]));
         // Fill one-hot encoded values
         for i in 0..n_samples {
             let class_idx = data[[i]].to_usize().unwrap_or(0);
-            if class_idx >= self.n_classes {
+            if class_idx >= self._n_classes {
                 return Err(crate::error::NeuralError::InferenceError(format!(
                     "Class index {} is out of bounds for {} classes",
                     class_idx, self.n_classes
@@ -232,8 +232,8 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> Clone for C
                 .collect(),
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> ComposeTransform<F> {
     /// Create a new composition of transforms
-    pub fn new(transforms: Vec<Box<dyn Transform<F> + Send + Sync>>) -> Self {
-        Self { transforms }
+    pub fn new(_transforms: Vec<Box<dyn Transform<F> + Send + Sync>>) -> Self {
+        Self { _transforms }
     for ComposeTransform<F>
         let mut data = input.clone();
             data = transform.apply(&data)?;

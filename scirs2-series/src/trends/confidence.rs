@@ -31,7 +31,7 @@ use crate::error::{Result, TimeSeriesError};
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_series::trends::{compute_trend_confidence_interval, ConfidenceIntervalOptions, ConfidenceIntervalMethod};
+/// use scirs2__series::trends::{compute_trend_confidence_interval, ConfidenceIntervalOptions, ConfidenceIntervalMethod};
 ///
 /// // Create a sample time series with a trend and noise
 /// let n = 100;
@@ -137,7 +137,7 @@ where
             let mut sample = Array1::<F>::zeros(n);
 
             for b in 0..num_blocks {
-                let start_idx = rng.random_range(0..(n - block_length.min(n) + 1));
+                let start_idx = rng.gen_range(0..(n - block_length.min(n) + 1));
                 let end_idx = start_idx + block_length.min(n - start_idx);
 
                 for i in 0..end_idx.saturating_sub(start_idx) {
@@ -154,7 +154,7 @@ where
             let mut sample = Array1::<F>::zeros(n);
 
             for i in 0..n {
-                let residual_idx = rng.random_range(0..n);
+                let residual_idx = rng.gen_range(0..n);
                 sample[i] = trend[i] + residuals[residual_idx];
             }
 
@@ -177,7 +177,7 @@ where
             values.push(trend[i]);
         }
 
-        values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        values.sort_by(|a..b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let lower_idx = (lower_percentile / 100.0 * (num_bootstrap as f64)).round() as usize;
         let upper_idx = (upper_percentile / 100.0 * (num_bootstrap as f64)).round() as usize;
@@ -222,8 +222,7 @@ where
     let critical_value = match options.level {
         0.90 => 1.645,
         0.95 => 1.96,
-        0.99 => 2.576,
-        _ => {
+        0.99 => 2.576_ => {
             // Approximate normal quantile for arbitrary confidence level
             let p = (F::one() + F::from_f64(options.level).unwrap()) / F::from_f64(2.0).unwrap();
             normal_quantile(p.to_f64().unwrap())?
@@ -278,8 +277,7 @@ where
     let critical_value = match options.level {
         0.90 => 1.645,
         0.95 => 1.96,
-        0.99 => 2.576,
-        _ => {
+        0.99 => 2.576_ => {
             // Approximate normal quantile for arbitrary confidence level
             let p = (F::one() + F::from_f64(options.level).unwrap()) / F::from_f64(2.0).unwrap();
             normal_quantile(p.to_f64().unwrap())?
@@ -387,7 +385,7 @@ fn normal_quantile(p: f64) -> Result<f64> {
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_series::trends::{
+/// use scirs2__series::trends::{
 ///     create_trend_with_ci, SplineTrendOptions, ConfidenceIntervalOptions,
 ///     SplineType, KnotPlacementStrategy, ConfidenceIntervalMethod,
 ///     estimate_spline_trend

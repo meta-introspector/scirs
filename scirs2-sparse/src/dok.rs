@@ -37,7 +37,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2_sparse::dok::DokMatrix;
+    /// use scirs2__sparse::dok::DokMatrix;
     ///
     /// // Create a 3x3 sparse matrix
     /// let mut matrix = DokMatrix::<f64>::new((3, 3));
@@ -49,8 +49,8 @@ where
     /// matrix.set(2, 0, 4.0);
     /// matrix.set(2, 1, 5.0);
     /// ```
-    pub fn new(shape: (usize, usize)) -> Self {
-        let (rows, cols) = shape;
+    pub fn new(_shape: (usize, usize)) -> Self {
+        let (rows, cols) = _shape;
 
         DokMatrix {
             rows,
@@ -153,7 +153,7 @@ where
 
         // Sort by row, then column for deterministic output
         let mut entries: Vec<_> = self.data.iter().collect();
-        entries.sort_by_key(|&(&(row, col), _)| (row, col));
+        entries.sort_by_key(|&(&(row, col)_)| (row, col));
 
         for (&(row, col), &value) in entries {
             data.push(value);

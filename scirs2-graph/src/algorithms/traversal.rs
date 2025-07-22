@@ -24,13 +24,13 @@ use crate::error::{GraphError, Result};
 /// # Space Complexity
 /// O(V) for the visited set and queue.
 #[allow(dead_code)]
-pub fn breadth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
+pub fn breadth_first_search<N, E, Ix>(_graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !graph.has_node(source) {
+    if !_graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
             "Source node {source:?} not found"
         )));
@@ -41,20 +41,20 @@ where
     let mut result = Vec::new();
 
     // Find the starting node index
-    let start_idx = graph
+    let start_idx = _graph
         .inner()
         .node_indices()
-        .find(|&idx| graph.inner()[idx] == *source)
+        .find(|&idx| _graph.inner()[idx] == *source)
         .unwrap();
 
     queue.push_back(start_idx);
     visited.insert(start_idx);
 
     while let Some(current_idx) = queue.pop_front() {
-        result.push(graph.inner()[current_idx].clone());
+        result.push(_graph.inner()[current_idx].clone());
 
         // Visit all unvisited neighbors
-        for neighbor_idx in graph.inner().neighbors(current_idx) {
+        for neighbor_idx in _graph.inner().neighbors(current_idx) {
             if !visited.contains(&neighbor_idx) {
                 visited.insert(neighbor_idx);
                 queue.push_back(neighbor_idx);
@@ -145,13 +145,13 @@ where
 /// O(V) for the visited set and stack. In the worst case, the stack
 /// can contain all vertices (e.g., in a linear graph).
 #[allow(dead_code)]
-pub fn depth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
+pub fn depth_first_search<N, E, Ix>(_graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !graph.has_node(source) {
+    if !_graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
             "Source node {source:?} not found"
         )));
@@ -162,10 +162,10 @@ where
     let mut result = Vec::new();
 
     // Find the starting node index
-    let start_idx = graph
+    let start_idx = _graph
         .inner()
         .node_indices()
-        .find(|&idx| graph.inner()[idx] == *source)
+        .find(|&idx| _graph.inner()[idx] == *source)
         .unwrap();
 
     stack.push(start_idx);
@@ -173,10 +173,10 @@ where
     while let Some(current_idx) = stack.pop() {
         if !visited.contains(&current_idx) {
             visited.insert(current_idx);
-            result.push(graph.inner()[current_idx].clone());
+            result.push(_graph.inner()[current_idx].clone());
 
             // Add all unvisited neighbors to the stack (in reverse order for consistent traversal)
-            let mut neighbors: Vec<_> = graph.inner().neighbors(current_idx).collect();
+            let mut neighbors: Vec<_> = _graph.inner().neighbors(current_idx).collect();
             neighbors.reverse();
             for neighbor_idx in neighbors {
                 if !visited.contains(&neighbor_idx) {
@@ -198,13 +198,13 @@ where
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in DFS order
 #[allow(dead_code)]
-pub fn depth_first_search_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N) -> Result<Vec<N>>
+pub fn depth_first_search_digraph<N, E, Ix>(_graph: &DiGraph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !graph.has_node(source) {
+    if !_graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
             "Source node {source:?} not found"
         )));
@@ -215,10 +215,10 @@ where
     let mut result = Vec::new();
 
     // Find the starting node index
-    let start_idx = graph
+    let start_idx = _graph
         .inner()
         .node_indices()
-        .find(|&idx| graph.inner()[idx] == *source)
+        .find(|&idx| _graph.inner()[idx] == *source)
         .unwrap();
 
     stack.push(start_idx);
@@ -226,10 +226,10 @@ where
     while let Some(current_idx) = stack.pop() {
         if !visited.contains(&current_idx) {
             visited.insert(current_idx);
-            result.push(graph.inner()[current_idx].clone());
+            result.push(_graph.inner()[current_idx].clone());
 
-            // Add all unvisited neighbors to the stack (outgoing edges only for directed graph)
-            let mut neighbors: Vec<_> = graph
+            // Add all unvisited neighbors to the stack (outgoing edges only for directed _graph)
+            let mut neighbors: Vec<_> = _graph
                 .inner()
                 .neighbors_directed(current_idx, petgraph::Direction::Outgoing)
                 .collect();
@@ -685,7 +685,7 @@ where
     let mut forward_path = Vec::new();
     let mut current = meeting_point;
 
-    // Build forward path (from start to meeting point)
+    // Build forward path (from start to meeting _point)
     while current != start_idx {
         forward_path.push(graph.inner()[current].clone());
         current = forward_parent[&current];
@@ -693,12 +693,12 @@ where
     forward_path.push(graph.inner()[start_idx].clone());
     forward_path.reverse();
 
-    // Build backward path (from meeting point to goal)
+    // Build backward path (from meeting _point to goal)
     let mut backward_path = Vec::new();
     current = meeting_point;
     while current != goal_idx {
-        if let Some(&parent) = backward_parent.get(&current) {
-            current = parent;
+        if let Some(&_parent) = backward_parent.get(&current) {
+            current = _parent;
             backward_path.push(graph.inner()[current].clone());
         } else {
             break;
@@ -735,7 +735,7 @@ where
     let mut forward_path = Vec::new();
     let mut current = meeting_point;
 
-    // Build forward path (from start to meeting point)
+    // Build forward path (from start to meeting _point)
     while current != start_idx {
         forward_path.push(graph.inner()[current].clone());
         current = forward_parent[&current];
@@ -743,12 +743,12 @@ where
     forward_path.push(graph.inner()[start_idx].clone());
     forward_path.reverse();
 
-    // Build backward path (from meeting point to goal)
+    // Build backward path (from meeting _point to goal)
     let mut backward_path = Vec::new();
     current = meeting_point;
     while current != goal_idx {
-        if let Some(&parent) = backward_parent.get(&current) {
-            current = parent;
+        if let Some(&_parent) = backward_parent.get(&current) {
+            current = _parent;
             backward_path.push(graph.inner()[current].clone());
         } else {
             break;

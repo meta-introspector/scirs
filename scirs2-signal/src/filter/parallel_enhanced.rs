@@ -9,9 +9,11 @@ use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::check_positive;
-use std::fmt::Debug;
 use std::thread;
+use std::f64::consts::PI;
+use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Enhanced parallel filtering configuration
 #[derive(Debug, Clone)]
 pub struct ParallelFilterConfig {
@@ -227,9 +229,9 @@ fn adaptive_parallel_filter(
     let chunks = create_overlapped_chunks(x, chunk_size, overlap);
 
     // Process chunks in parallel
-    let processed_chunks: Result<Vec<_>, _> = chunks
+    let processed_chunks: Result<Vec<_>_> = chunks
         .into_par_iter()
-        .map(|(chunk_data, chunk_start, _)| {
+        .map(|(chunk_data, chunk_start_)| {
             let chunk_result = apply_iir_filter_simd(&chunk_data, b, a, config.use_simd)?;
             Ok::<(Vec<f64>, usize), SignalError>((chunk_result, chunk_start))
         })
@@ -367,7 +369,7 @@ fn merge_overlapped_chunks(
 
     for (chunk_data, chunk_start) in chunks {
         let valid_start = if chunk_start == 0 { 0 } else { overlap };
-        let valid_end = chunk_data.len();
+        let valid_end = chunk_data._len();
         let result_start = chunk_start;
         let result_end = (result_start + valid_end - valid_start).min(total_len);
 
@@ -383,8 +385,8 @@ fn merge_overlapped_chunks(
 
 /// Calculate optimal padding length for edge effects
 #[allow(dead_code)]
-fn calculate_optimal_padlen(nb: usize, na: usize) -> usize {
-    3 * (nb.max(na))
+fn calculate_optimal_padlen(_nb: usize, na: usize) -> usize {
+    3 * (_nb.max(na))
 }
 
 /// Apply edge padding to minimize boundary effects
@@ -418,11 +420,11 @@ fn apply_edge_padding(x: &[f64], padlen: usize) -> SignalResult<Vec<f64>> {
 
 /// Estimate memory usage for filtering operation
 #[allow(dead_code)]
-fn estimate_memory_usage(signal_len: usize, nb: usize, na: usize) -> usize {
+fn estimate_memory_usage(_signal_len: usize, nb: usize, na: usize) -> usize {
     // Rough estimate in MB
     let bytes_per_sample = 8; // f64
     let temp_arrays = 4; // Various temporary arrays
-    let total_samples = signal_len * temp_arrays;
+    let total_samples = _signal_len * temp_arrays;
     (total_samples * bytes_per_sample) / (1024 * 1024)
 }
 
@@ -466,8 +468,6 @@ fn calculate_memory_optimal_chunk_size(
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::PI;
-
     #[test]
     fn test_enhanced_parallel_filtfilt_basic() {
         let b = vec![0.1, 0.2, 0.1];
@@ -480,7 +480,7 @@ mod tests {
         let result = enhanced_parallel_filtfilt(&b, &a, &x, &config).unwrap();
 
         assert_eq!(result.len(), x.len());
-        assert!(result.iter().all(|&val| val.is_finite()));
+        assert!(result.iter().all(|&val: &f64| val.is_finite()));
     }
 
     #[test]

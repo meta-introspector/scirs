@@ -39,9 +39,9 @@ where
     T: Float + Debug + Display + Copy + Zero + One + Send + Sync + 'static + std::ops::AddAssign,
 {
     /// Create a new banded array
-    pub fn new(data: Array2<T>, kl: usize, ku: usize, shape: (usize, usize)) -> SparseResult<Self> {
+    pub fn new(_data: Array2<T>, kl: usize, ku: usize, shape: (usize, usize)) -> SparseResult<Self> {
         let expected_bands = kl + ku + 1;
-        let (bands, cols) = data.dim();
+        let (bands, cols) = _data.dim();
 
         if bands != expected_bands {
             return Err(SparseError::ValueError(format!(
@@ -57,7 +57,7 @@ where
         }
 
         Ok(Self {
-            data,
+            _data,
             kl,
             ku,
             shape,
@@ -65,15 +65,15 @@ where
     }
 
     /// Create a new zero banded array
-    pub fn zeros(shape: (usize, usize), kl: usize, ku: usize) -> Self {
+    pub fn zeros(_shape: (usize, usize), kl: usize, ku: usize) -> Self {
         let bands = kl + ku + 1;
-        let data = Array2::zeros((bands, shape.0));
+        let data = Array2::zeros((bands, _shape.0));
 
         Self {
             data,
             kl,
             ku,
-            shape,
+            _shape,
         }
     }
 
@@ -118,8 +118,8 @@ where
     }
 
     /// Create tridiagonal matrix
-    pub fn tridiagonal(diag: &[T], lower: &[T], upper: &[T]) -> SparseResult<Self> {
-        let n = diag.len();
+    pub fn tridiagonal(_diag: &[T], lower: &[T], upper: &[T]) -> SparseResult<Self> {
+        let n = _diag.len();
 
         if lower.len() != n - 1 || upper.len() != n - 1 {
             return Err(SparseError::ValueError(
@@ -130,7 +130,7 @@ where
         let mut result = Self::zeros((n, n), 1, 1);
 
         // Main diagonal
-        for (i, &val) in diag.iter().enumerate() {
+        for (i, &val) in _diag.iter().enumerate() {
             result.set_unchecked(i, i, val);
         }
 

@@ -4,7 +4,7 @@
 // the appropriate dtype for sparse array indices and safely cast index arrays.
 
 use ndarray::Array1;
-use scirs2_sparse::{
+use scirs2__sparse::{
     can_cast_safely, get_index_dtype, safely_cast_index_arrays, CooArray, SparseArray,
 };
 

@@ -1,9 +1,9 @@
-use crate::ndarray_ext::{NdArray, NdArrayView};
+use crate::ndarray__ext::{NdArray, NdArrayView};
 use crate::op;
 
 use crate::tensor::Tensor;
 
-use crate::tensor_ops::*;
+use crate::tensor__ops::*;
 use crate::Float;
 use ndarray;
 
@@ -88,7 +88,7 @@ pub fn softmax_impl<T: Float>(x: &NdArrayView<T>, axis: isize) -> NdArray<T> {
     tmp
 }
 
-impl<T: Float> op::Op<T> for Softmax {
+impl<T: Float>, op::Op<T> for Softmax {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let ret = softmax_impl(&ctx.input(0), self.axis);
         ctx.append_output(ret);
@@ -103,7 +103,7 @@ impl<T: Float> op::Op<T> for Softmax {
     }
 }
 
-impl<T: Float> op::Op<T> for Softplus {
+impl<T: Float>, op::Op<T> for Softplus {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let ret = ctx.input(0).map(move |a| (a.exp() + T::one()).ln());
         ctx.append_output(ret);
@@ -119,7 +119,7 @@ impl<T: Float> op::Op<T> for Softplus {
     }
 }
 
-impl<T: Float> op::Op<T> for Sigmoid {
+impl<T: Float>, op::Op<T> for Sigmoid {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let half = T::from(0.5).unwrap();
         let ret = ctx
@@ -136,7 +136,7 @@ impl<T: Float> op::Op<T> for Sigmoid {
     }
 }
 
-impl<T: Float> op::Op<T> for ReLU {
+impl<T: Float>, op::Op<T> for ReLU {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let ret = ctx.input(0).map(|a| a.max(T::zero()));
         ctx.append_output(ret);
@@ -151,7 +151,7 @@ impl<T: Float> op::Op<T> for ReLU {
     }
 }
 
-impl<T: Float> op::Op<T> for Identity {
+impl<T: Float>, op::Op<T> for Identity {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         // do nothing
         let ret = ctx.input(0);
@@ -165,7 +165,7 @@ impl<T: Float> op::Op<T> for Identity {
     }
 }
 
-impl<T: Float> op::Op<T> for Elu<T> {
+impl<T: Float>, op::Op<T> for Elu<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let ret = ctx.input(0).mapv(move |a| {
             if a > T::zero() {
@@ -189,7 +189,7 @@ impl<T: Float> op::Op<T> for Elu<T> {
     }
 }
 
-impl<T: Float> op::Op<T> for EluGrad<T> {
+impl<T: Float>, op::Op<T> for EluGrad<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         let a = x.mapv(move |a| {
@@ -213,7 +213,7 @@ impl<T: Float> op::Op<T> for EluGrad<T> {
 /// Swish activation function: x * sigmoid(x)
 pub struct Swish;
 
-impl<T: Float> op::Op<T> for Swish {
+impl<T: Float>, op::Op<T> for Swish {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         // Compute sigmoid(x) first
@@ -245,7 +245,7 @@ impl<T: Float> op::Op<T> for Swish {
 /// GELU(x) = 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x³)))
 pub struct Gelu;
 
-impl<T: Float> op::Op<T> for Gelu {
+impl<T: Float>, op::Op<T> for Gelu {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
 
@@ -302,7 +302,7 @@ impl<T: Float> op::Op<T> for Gelu {
 /// Mish(x) = x * tanh(ln(1 + exp(x)))
 pub struct Mish;
 
-impl<T: Float> op::Op<T> for Mish {
+impl<T: Float>, op::Op<T> for Mish {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
 
@@ -359,7 +359,7 @@ pub struct PReLU<T> {
     pub alpha: T,
 }
 
-impl<T: Float> op::Op<T> for PReLU<T> {
+impl<T: Float>, op::Op<T> for PReLU<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
         let ret = x.mapv(|val| {
@@ -394,7 +394,7 @@ pub struct PReLUGrad<T> {
     pub alpha: T,
 }
 
-impl<T: Float> op::Op<T> for PReLUGrad<T> {
+impl<T: Float>, op::Op<T> for PReLUGrad<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
         let gy = ctx.input(1);
@@ -409,7 +409,7 @@ impl<T: Float> op::Op<T> for PReLUGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(&self, _ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(&self_ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }
@@ -421,7 +421,7 @@ pub struct LearnableELU<T> {
     pub alpha: T,
 }
 
-impl<T: Float> op::Op<T> for LearnableELU<T> {
+impl<T: Float>, op::Op<T> for LearnableELU<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
         let ret = x.mapv(|val| {
@@ -456,7 +456,7 @@ pub struct LearnableELUGrad<T> {
     pub alpha: T,
 }
 
-impl<T: Float> op::Op<T> for LearnableELUGrad<T> {
+impl<T: Float>, op::Op<T> for LearnableELUGrad<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
         let gy = ctx.input(1);
@@ -471,7 +471,7 @@ impl<T: Float> op::Op<T> for LearnableELUGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(&self, _ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(&self_ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }
@@ -483,7 +483,7 @@ pub struct LearnableSwish<T> {
     pub beta: T,
 }
 
-impl<T: Float> op::Op<T> for LearnableSwish<T> {
+impl<T: Float>, op::Op<T> for LearnableSwish<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
         let half = T::from(0.5).unwrap();
@@ -519,7 +519,7 @@ pub struct LearnableSwishGrad<T> {
     pub beta: T,
 }
 
-impl<T: Float> op::Op<T> for LearnableSwishGrad<T> {
+impl<T: Float>, op::Op<T> for LearnableSwishGrad<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
         let gy = ctx.input(1);
@@ -540,7 +540,7 @@ impl<T: Float> op::Op<T> for LearnableSwishGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(&self, _ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(&self_ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }
@@ -556,7 +556,7 @@ pub struct AdaptiveActivation<T> {
     pub e: T, // sigmoid scaling
 }
 
-impl<T: Float> op::Op<T> for AdaptiveActivation<T> {
+impl<T: Float>, op::Op<T> for AdaptiveActivation<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
         let half = T::from(0.5).unwrap();
@@ -606,7 +606,7 @@ pub struct AdaptiveActivationGrad<T> {
     pub e: T,
 }
 
-impl<T: Float> op::Op<T> for AdaptiveActivationGrad<T> {
+impl<T: Float>, op::Op<T> for AdaptiveActivationGrad<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = ctx.input(0);
         let gy = ctx.input(1);
@@ -633,7 +633,7 @@ impl<T: Float> op::Op<T> for AdaptiveActivationGrad<T> {
         Ok(())
     }
 
-    fn grad<'a>(&self, _ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
+    fn grad<'a>(&self_ctx: &mut crate::op::GradientContext<'a, 'a, T>) {
         // Second-order gradients not implemented
     }
 }

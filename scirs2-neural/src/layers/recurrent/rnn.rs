@@ -121,7 +121,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> RNN<F> {
         // Validate parameters
         if input_size == 0 || hidden_size == 0 {
             return Err(NeuralError::InvalidArchitecture(
-                "Input size and hidden size must be positive".to_string(),
+                "Input _size and hidden _size must be positive".to_string(),
             ));
         }
         // Initialize weights with Xavier/Glorot initialization
@@ -129,7 +129,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> RNN<F> {
             NeuralError::InvalidArchitecture("Failed to convert scale factor".to_string())
         })?;
         let scale_hh = F::from(1.0 / (hidden_size as f64).sqrt()).ok_or_else(|| {
-            NeuralError::InvalidArchitecture("Failed to convert hidden size scale".to_string())
+            NeuralError::InvalidArchitecture("Failed to convert hidden _size scale".to_string())
         })?;
         // Initialize input-to-hidden weights
         let mut weight_ih_vec: Vec<F> = Vec::with_capacity(hidden_size * input_size);
@@ -302,8 +302,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for RNN<
 
     fn backward(
         &self,
-        input: &Array<F, IxDyn>,
-        _grad_output: &Array<F, IxDyn>,
+        input: &Array<F, IxDyn>, _grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         // Retrieve cached values
         let input_ref = match self.input_cache.read() {

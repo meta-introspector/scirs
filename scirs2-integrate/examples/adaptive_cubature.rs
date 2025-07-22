@@ -1,8 +1,8 @@
 #![recursion_limit = "512"]
 
 use ndarray::{Array1, ArrayView1};
-use scirs2_integrate::error::{IntegrateError, IntegrateResult};
-use scirs2_integrate::gaussian::GaussLegendreQuadrature;
+use scirs2__integrate::error::{IntegrateError, IntegrateResult};
+use scirs2__integrate::gaussian::GaussLegendreQuadrature;
 use std::collections::VecDeque;
 use std::f64::consts::PI;
 use std::time::Instant;
@@ -93,8 +93,7 @@ where
     let initial_region = SubRegion {
         a: a.clone(),
         b: b.clone(),
-        error: f64::INFINITY,
-        depth: 0,
+        error: f64::INFINITY_depth: 0,
     };
 
     // Initialize with the first region
@@ -105,8 +104,8 @@ where
         // Get the region with the largest estimated error
         let current_region = region_queue.pop_front().unwrap();
 
-        // Update max depth reached
-        max_depth_reached = max_depth_reached.max(current_region.depth);
+        // Update max _depth reached
+        max_depth_reached = max_depth_reached.max(current_region._depth);
 
         // Compute integral for this region
         let (region_est, region_err, region_evals) =
@@ -115,7 +114,7 @@ where
 
         // Check if region meets convergence criteria
         if region_err <= tol * (b[0] - a[0]) / (current_region.b[0] - current_region.a[0])
-            || current_region.depth >= max_depth
+            || current_region._depth >= max_depth
         {
             // Accept this region's contribution
             total_integral += region_est;
@@ -148,19 +147,17 @@ where
         let right_b = current_region.b.clone();
         right_a[max_width_dim] = mid_point;
 
-        // Create new subregions with increased depth
+        // Create new subregions with increased _depth
         let left_region = SubRegion {
             a: left_a,
             b: left_b,
-            error: f64::INFINITY,
-            depth: current_region.depth + 1,
+            error: f64::INFINITY_depth: current_region._depth + 1,
         };
 
         let right_region = SubRegion {
             a: right_a,
             b: right_b,
-            error: f64::INFINITY,
-            depth: current_region.depth + 1,
+            error: f64::INFINITY_depth: current_region._depth + 1,
         };
 
         // Add new regions to the queue
@@ -211,7 +208,7 @@ where
     println!("Adaptive cubature completed in {elapsed:.2?}");
     println!("Total evaluations: {n_evals}");
     println!("Total subregions: {n_subregions}");
-    println!("Maximum depth: {max_depth_reached}");
+    println!("Maximum _depth: {max_depth_reached}");
 
     Ok(AdaptiveCubatureResult {
         value: total_integral,

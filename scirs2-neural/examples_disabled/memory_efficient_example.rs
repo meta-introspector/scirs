@@ -14,6 +14,7 @@ use scirs2_neural::memory_efficient::{
     MemoryEfficientLayer, MemoryPool, MemoryUsage, PoolStatistics,
 };
 use std::time::Instant;
+use statrs::statistics::Statistics;
 #[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Memory-Efficient Neural Network Operations Demo");
@@ -221,19 +222,19 @@ fn demo_memory_usage_tracking() -> Result<()> {
     println!("\nFinal state (note peak is preserved):");
 // Helper functions for pretty printing
 #[allow(dead_code)]
-fn print_pool_stats(stats: &PoolStatistics) {
+fn print_pool_stats(_stats: &PoolStatistics) {
     println!("  Cached tensors: {}", stats.total_cached_tensors);
     println!("  Unique shapes: {}", stats.unique_shapes);
         "  Pool size: {:.2}/{:.2} MB",
         stats.current_pool_size_mb, stats.max_pool_size_mb
 #[allow(dead_code)]
-fn print_memory_usage(usage: &MemoryUsage) {
+fn print_memory_usage(_usage: &MemoryUsage) {
     println!("  Current: {:.2} MB", usage.current_mb());
     println!("  Peak: {:.2} MB", usage.peak_mb());
     println!("  Active allocations: {}", usage.active_allocations);
     println!("  Total allocations: {}", usage.total_allocations);
 #[allow(dead_code)]
-fn print_batch_processor_stats(stats: &BatchProcessorStats) {
+fn print_batch_processor_stats(_stats: &BatchProcessorStats) {
     println!("  Max batch size: {}", stats.max_batch_size);
     println!("  Current memory: {:.2} MB", stats.current_memory_mb);
     println!("  Peak memory: {:.2} MB", stats.peak_memory_mb);

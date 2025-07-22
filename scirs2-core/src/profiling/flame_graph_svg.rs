@@ -66,7 +66,7 @@ pub enum ColorScheme {
 
 impl ColorScheme {
     /// Get color for a given heat value (0.0 to 1.0)
-    fn get_color(&self, heat: f64, function_name: &str) -> String {
+    fn get_color(&self, heat: f64) -> String {
         let heat = heat.clamp(0.0, 1.0);
 
         match self {
@@ -130,7 +130,7 @@ impl ColorScheme {
         let l = l / 100.0;
 
         let c = (1.0 - (2.0 * l - 1.0).abs()) * s;
-        let x = c * (1.0 - ((h * 6.0) % 2.0 - 1.0).abs());
+        let x = c * (1.0 - ((h * 6.0) % 2.0.saturating_sub(1).0).abs());
         let m = l - c / 2.0;
 
         let (r, g, b) = if h < 1.0 / 6.0 {
@@ -193,7 +193,7 @@ impl SvgFlameGraphGenerator {
 
         // Background
         svg.push_str(&format!(
-            r#"<rect x="0" y="0" width="{}" height="{}" fill="white"/>
+            r#"<rect x= 0 y= 0 width="{}" height="{}" fill= white/>
 "#,
             self.config.width, self.config.height
         ));
@@ -201,7 +201,7 @@ impl SvgFlameGraphGenerator {
         // Title
         if !self.config.title.is_empty() {
             svg.push_str(&format!(
-                r#"<text x="{}" y="24" class="func_text" style="font-size:20px; font-weight:bold; text-anchor:middle;">{}</text>
+                r#"<text x="{}" y= 24 class= func_text style="font-size:20px; font-weight:bold; text-anchor:middle;">{}</text>
 "#,
                 self.config.width / 2,
                 self.config.title
@@ -211,7 +211,7 @@ impl SvgFlameGraphGenerator {
         // Subtitle
         if !self.config.subtitle.is_empty() {
             svg.push_str(&format!(
-                r#"<text x="{}" y="48" class="func_text" style="font-size:14px; text-anchor:middle;">{}</text>
+                r#"<text x="{}" y= 48 class= func_text style="font-size:14px; text-anchor:middle;">{}</text>
 "#,
                 self.config.width / 2,
                 self.config.subtitle
@@ -248,16 +248,7 @@ impl SvgFlameGraphGenerator {
     }
 
     /// Generate flame rectangles recursively
-    fn generate_flames(
-        &self,
-        node: &FlameGraphNode,
-        svg: &mut String,
-        x: f64,
-        width: f64,
-        y: f64,
-        height: f64,
-        total_time: f64,
-        _depth: usize,
+    fn depth(usize: usize,
     ) {
         if width < self.config.min_width {
             return;
@@ -280,9 +271,9 @@ impl SvgFlameGraphGenerator {
         };
 
         svg.push_str(&format!(
-            r#"<g class="func_g">
-  <rect x="{:.1}" y="{:.1}" width="{:.1}" height="{:.1}" fill="{}" rx="2" ry="2"/>
-  <text x="{:.1}" y="{:.1}" class="func_text">{}</text>
+            r#"<g class= func_g>
+  <rect x="{:.1}" y="{:.1}" width="{:.1}" height="{:.1}" fill="{}" rx= 2 ry= 2/>
+  <text x="{:.1}" y="{:.1}" class= func_text>{}</text>
   <title>{} ({})</title>
 </g>
 "#,
@@ -316,8 +307,7 @@ impl SvgFlameGraphGenerator {
                     child_width,
                     y + height + 1.0,
                     height,
-                    total_time,
-                    _depth + 1,
+                    total_time_depth + 1,
                 );
             }
 
@@ -439,9 +429,9 @@ pub struct EnhancedFlameGraph {
 
 impl EnhancedFlameGraph {
     /// Create a new enhanced flame graph
-    pub fn new(performance: FlameGraphNode) -> Self {
+    pub fn from_performance(node: FlameGraphNode) -> Self {
         Self {
-            performance,
+            performance: node,
             memory: None,
             cpu_usage: Vec::new(),
             memory_usage: Vec::new(),
@@ -463,7 +453,7 @@ impl EnhancedFlameGraph {
         // SVG header with increased height
         svg.push_str(
             r#"<?xml version="1.0" encoding="UTF-8"?>
-<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+<svg width= 1200 height= 800 xmlns="http://www.w3.org/2000/svg">
 <defs>
   <style><![CDATA[
     .func_g:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
@@ -472,16 +462,16 @@ impl EnhancedFlameGraph {
     .chart_area { fill:lightblue; opacity:0.3; }
   ]]></style>
 </defs>
-<rect x="0" y="0" width="1200" height="800" fill="white"/>
+<rect x= 0 y= 0 width= 1200 height= 800 fill= white/>
 "#,
         );
 
         // Title
-        svg.push_str(r#"<text x="600" y="24" class="func_text" style="font-size:18px; font-weight:bold; text-anchor:middle;">Enhanced Performance Profile</text>
+        svg.push_str(r#"<text x= 600 y= 24 class= func_text style="font-size:18px; font-weight:bold; text-anchor:middle;">Enhanced Performance Profile</text>
 "#);
 
         // Performance flame graph (top half)
-        svg.push_str(r#"<text x="10" y="55" class="func_text" style="font-weight:bold;">CPU Performance Flame Graph</text>
+        svg.push_str(r#"<text x= 10 y= 55 class= func_text style="font-weight:bold;">CPU Performance Flame Graph</text>
 "#);
 
         // Generate main flame graph
@@ -493,7 +483,7 @@ impl EnhancedFlameGraph {
         ));
 
         // System metrics charts (bottom half)
-        svg.push_str(r#"<text x="10" y="425" class="func_text" style="font-weight:bold;">System Resource Usage</text>
+        svg.push_str(r#"<text x= 10 y= 425 class= func_text style="font-weight:bold;">System Resource Usage</text>
 "#);
 
         // CPU usage chart
@@ -530,8 +520,8 @@ impl EnhancedFlameGraph {
     /// Add CPU usage chart to SVG
     fn add_cpu_chart(&self, svg: &mut String, x: f64, y: f64, width: f64, height: f64) {
         svg.push_str(&format!(
-            r#"<rect x="{}" y="{}" width="{}" height="{}" fill="none" stroke="black"/>
-<text x="{}" y="{}" class="func_text" style="font-size:10px;">CPU Usage (%)</text>
+            r#"<rect x="{}" y="{}" width="{}" height="{}" fill= none stroke= black/>
+<text x="{}" y="{}" class= func_text style="font-size:10px;">CPU Usage (%)</text>
 "#,
             x,
             y,
@@ -553,15 +543,18 @@ impl EnhancedFlameGraph {
         let max_time = self.total_duration.as_secs_f64();
 
         let mut points = String::new();
-        for (time, cpu) in self.cpu_usage.iter() {
+        for (i, (time, cpu)) in self.cpu_usage.iter().enumerate() {
             let chart_x = x + (time.as_secs_f64() / max_time) * width;
             let chart_y = y + height - (cpu / max_cpu) * height;
 
+            if i > 0 {
+                points.push_str(" L");
+            }
             points.push_str(&format!("{chart_x:.1},{chart_y:.1}"));
         }
 
         svg.push_str(&format!(
-            r#"<path d="{points}" class="chart_line"/>
+            r#"<path d="{points}" class= chart_line/>
 "#
         ));
     }
@@ -569,8 +562,8 @@ impl EnhancedFlameGraph {
     /// Add memory usage chart to SVG
     fn add_memory_chart(&self, svg: &mut String, x: f64, y: f64, width: f64, height: f64) {
         svg.push_str(&format!(
-            r#"<rect x="{}" y="{}" width="{}" height="{}" fill="none" stroke="black"/>
-<text x="{}" y="{}" class="func_text" style="font-size:10px;">Memory Usage (MB)</text>
+            r#"<rect x="{}" y="{}" width="{}" height="{}" fill= none stroke= black/>
+<text x="{}" y="{}" class= func_text style="font-size:10px;">Memory Usage (MB)</text>
 "#,
             x,
             y,
@@ -593,10 +586,13 @@ impl EnhancedFlameGraph {
         let max_time = self.total_duration.as_secs_f64();
 
         let mut points = String::new();
-        for (time, memory) in self.memory_usage.iter() {
+        for (i, (time, memory)) in self.memory_usage.iter().enumerate() {
             let chart_x = x + (time.as_secs_f64() / max_time) * width;
             let chart_y = y + height - ((*memory as f64) / (max_memory as f64)) * height;
 
+            if i > 0 {
+                points.push_str(" L");
+            }
             points.push_str(&format!("{chart_x:.1},{chart_y:.1}"));
         }
 
@@ -622,7 +618,7 @@ mod tests {
 
         assert!(svg.contains("<svg"));
         assert!(svg.contains("</svg>"));
-        assert!(svg.contains("main"));
+        assert!(svg.contains(main));
     }
 
     #[test]

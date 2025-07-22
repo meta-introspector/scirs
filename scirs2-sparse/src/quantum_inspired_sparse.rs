@@ -165,11 +165,11 @@ enum QuantumCode {
 
 impl QuantumSparseProcessor {
     /// Create a new quantum-inspired sparse matrix processor
-    pub fn new(config: QuantumSparseConfig) -> Self {
-        let qubit_count = config.qubit_count;
+    pub fn new(_config: QuantumSparseConfig) -> Self {
+        let qubit_count = _config.qubit_count;
         let state_size = 1 << qubit_count; // 2^n states
 
-        let logical_qubit_count = config.logical_qubits;
+        let logical_qubit_count = _config.logical_qubits;
         let mut logical_qubits = Vec::new();
 
         // Initialize logical qubits with error correction
@@ -194,7 +194,7 @@ impl QuantumSparseProcessor {
         };
 
         Self {
-            config,
+            _config,
             quantum_state,
             measurement_cache: HashMap::new(),
             operation_counter: AtomicUsize::new(0),
@@ -793,8 +793,7 @@ impl QuantumSparseProcessor {
 
     /// Classify the type of quantum error
     fn classify_error_type(
-        &self,
-        _logical_qubit: &LogicalQubit,
+        &self, _logical_qubit: &LogicalQubit,
         syndrome_strength: f64,
     ) -> QuantumError {
         // Simplified error classification based on syndrome patterns

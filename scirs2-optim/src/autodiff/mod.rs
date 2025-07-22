@@ -227,9 +227,9 @@ struct ComputationCheckpoint<T: Float> {
 
 impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
     /// Create a new automatic differentiation engine
-    pub fn new(config: AutodiffConfig) -> Self {
+    pub fn new(_config: AutodiffConfig) -> Self {
         Self {
-            config,
+            _config,
             graph: Vec::new(),
             variables: HashMap::new(),
             tape: Vec::new(),
@@ -292,8 +292,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
             HessianApproximation::Exact => self.compute_exact_hessian(output_id),
             HessianApproximation::BFGS => self.compute_bfgs_hessian(),
             HessianApproximation::LBFGS => self.compute_lbfgs_hessian(),
-            HessianApproximation::Diagonal => self.compute_diagonal_hessian(output_id),
-            _ => Err(OptimError::InvalidConfig(
+            HessianApproximation::Diagonal => self.compute_diagonal_hessian(output_id, _ => Err(OptimError::InvalidConfig(
                 "Unsupported Hessian approximation".to_string(),
             )),
         }
@@ -485,8 +484,8 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
             let n = gradient_new.len();
             self.hessian_state = Some(HessianApproximationState {
                 method: HessianApproximation::BFGS,
-                gradient_history: Vec::new(),
-                update_history: Vec::new(),
+                gradient_history: Vec::_new(),
+                update_history: Vec::_new(),
                 inverse_hessian: Some(Array2::eye(n)),
                 lbfgs_memory: None,
                 max_history: 100,
@@ -542,8 +541,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
 
     /// Compute meta-gradients for meta-learning
     pub fn compute_meta_gradients(
-        &mut self,
-        _inner_steps: usize,
+        &mut self, _inner_steps: usize,
         outer_objective_id: usize,
     ) -> Result<Vec<T>> {
         if !self.config.enable_meta_gradients {
@@ -765,7 +763,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
 
         // Create output node
         let output_node = ADNode {
-            value: output_value,
+            _value: output_value,
             gradient: vec![T::zero()],
             hessian: None,
             operation: Operation::Custom(op_name.to_string()),

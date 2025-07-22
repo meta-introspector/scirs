@@ -1,8 +1,8 @@
 use ndarray::{array, Array2};
-use scirs2_stats::{linear_regression, polyfit};
+use scirs2__stats::{linear_regression, polyfit};
 
 // Temporarily commenting out multilinear_regression due to linalg crate errors
-// use scirs2_stats::{linear_regression, multilinear_regression, polyfit};
+// use scirs2__stats::{linear_regression, multilinear_regression, polyfit};
 
 #[allow(dead_code)]
 fn main() {

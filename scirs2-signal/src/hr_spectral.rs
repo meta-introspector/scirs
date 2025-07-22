@@ -6,15 +6,16 @@
 //! and can resolve closely spaced frequency components.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, ArrayView1, Axis};
-// use ndarray_linalg::{Eig, Inverse};
-use num_complex::Complex64;
+use ndarray::{Array1, Array2, ArrayView1, Axis, s};
+use num__complex::Complex64;
 use num_traits::Zero;
-use scirs2_linalg::complex::complex_inverse;
-use scirs2_linalg::complex::decompositions::{complex_eig, complex_eigh};
-use scirs2_linalg::solve as compute_solve;
+use scirs2__linalg::solve as compute_solve;
+use scirs2__linalg::complex::complex_inverse;
+use scirs2__linalg::complex::decompositions::{complex_eig, complex_eigh};
 use std::f64::consts::PI;
 
+#[allow(unused_imports)]
+// use ndarray__linalg::{Eig, Inverse};
 /// Configuration for high-resolution spectral estimation
 #[derive(Debug, Clone)]
 pub struct HrSpectralConfig {
@@ -83,8 +84,8 @@ pub struct HrSpectralResult {
 ///
 /// * High-resolution spectral estimate using MUSIC algorithm
 #[allow(dead_code)]
-pub fn music(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSpectralResult> {
-    let (n_samples, n_snapshots) = data.dim();
+pub fn music(_data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSpectralResult> {
+    let (n_samples, n_snapshots) = _data.dim();
 
     if n_samples == 0 || n_snapshots == 0 {
         return Err(SignalError::ValueError(
@@ -93,7 +94,7 @@ pub fn music(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSp
     }
 
     // Convert to complex for processing
-    let complex_data: Array2<Complex64> = data.mapv(|x| Complex64::new(x, 0.0));
+    let complex_data: Array2<Complex64> = _data.mapv(|x| Complex64::new(x, 0.0));
 
     // Estimate correlation matrix
     let correlation_matrix = estimate_correlation_matrix(&complex_data)?;
@@ -132,7 +133,7 @@ pub fn music(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSp
     let spectrum = compute_music_spectrum(&noise_eigenvectors, &frequencies)?;
 
     // Extract eigenvalues for result
-    let eigenvals: Array1<f64> = eigen_pairs.iter().map(|(val, _)| *val).collect();
+    let eigenvals: Array1<f64> = eigen_pairs.iter().map(|(val_)| *val).collect();
 
     Ok(HrSpectralResult {
         frequencies,
@@ -154,8 +155,8 @@ pub fn music(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSp
 ///
 /// * High-resolution spectral estimate using ESPRIT algorithm
 #[allow(dead_code)]
-pub fn esprit(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSpectralResult> {
-    let (n_samples, _n_snapshots) = data.dim();
+pub fn esprit(_data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSpectralResult> {
+    let (n_samples_n_snapshots) = _data.dim();
 
     if n_samples < 2 {
         return Err(SignalError::ValueError(
@@ -164,7 +165,7 @@ pub fn esprit(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrS
     }
 
     // Convert to complex
-    let complex_data: Array2<Complex64> = data.mapv(|x| Complex64::new(x, 0.0));
+    let complex_data: Array2<Complex64> = _data.mapv(|x| Complex64::new(x, 0.0));
 
     // Estimate correlation matrix
     let correlation_matrix = estimate_correlation_matrix(&complex_data)?;
@@ -236,7 +237,7 @@ pub fn esprit(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrS
     let frequencies = create_frequency_grid(config);
     let spectrum = create_line_spectrum(&frequencies, &source_freqs)?;
 
-    let eigenvals: Array1<f64> = eigen_pairs.iter().map(|(val, _)| *val).collect();
+    let eigenvals: Array1<f64> = eigen_pairs.iter().map(|(val_)| *val).collect();
 
     Ok(HrSpectralResult {
         frequencies,
@@ -262,7 +263,7 @@ pub fn minimum_variance(
     data: &Array2<f64>,
     config: &HrSpectralConfig,
 ) -> SignalResult<HrSpectralResult> {
-    let (n_samples, _) = data.dim();
+    let (n_samples_) = data.dim();
 
     // Convert to complex
     let complex_data: Array2<Complex64> = data.mapv(|x| Complex64::new(x, 0.0));
@@ -459,15 +460,15 @@ pub fn prony(
 
 /// Estimate correlation matrix from data
 #[allow(dead_code)]
-fn estimate_correlation_matrix(data: &Array2<Complex64>) -> SignalResult<Array2<Complex64>> {
-    let (n_samples, n_snapshots) = data.dim();
+fn estimate_correlation_matrix(_data: &Array2<Complex64>) -> SignalResult<Array2<Complex64>> {
+    let (n_samples, n_snapshots) = _data.dim();
     let mut correlation = Array2::zeros((n_samples, n_samples));
 
     for i in 0..n_samples {
         for j in 0..n_samples {
             let mut sum = Complex64::zero();
             for k in 0..n_snapshots {
-                sum += data[[i, k]] * data[[j, k]].conj();
+                sum += _data[[i, k]] * _data[[j, k]].conj();
             }
             correlation[[i, j]] = sum / n_snapshots as f64;
         }
@@ -493,7 +494,7 @@ fn determine_signal_dimension(
     }
 
     // Automatic detection based on eigenvalue drop
-    let eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val, _)| *val).collect();
+    let eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val_)| *val).collect();
 
     if eigenvalues.is_empty() {
         return Ok(0);
@@ -513,9 +514,9 @@ fn determine_signal_dimension(
 
 /// Create frequency grid for spectrum evaluation
 #[allow(dead_code)]
-fn create_frequency_grid(config: &HrSpectralConfig) -> Array1<f64> {
-    let [start, end] = config.freq_range;
-    Array1::linspace(start, end, config.num_freqs)
+fn create_frequency_grid(_config: &HrSpectralConfig) -> Array1<f64> {
+    let [start, end] = _config.freq_range;
+    Array1::linspace(start, end, _config.num_freqs)
 }
 
 /// Compute MUSIC pseudospectrum
@@ -618,7 +619,7 @@ fn create_line_spectrum(
     let mut spectrum = Array1::zeros(frequency_grid.len());
 
     for &source_freq in source_frequencies {
-        // Find closest frequency in grid
+        // Find closest frequency in _grid
         let closest_idx = frequency_grid
             .iter()
             .enumerate()
@@ -676,22 +677,22 @@ fn create_autocorrelation_matrix(
 
 /// Find roots of polynomial (simplified implementation)
 #[allow(dead_code)]
-fn find_polynomial_roots(coeffs: &[Complex64]) -> SignalResult<Vec<Complex64>> {
-    let n = coeffs.len() - 1;
+fn find_polynomial_roots(_coeffs: &[Complex64]) -> SignalResult<Vec<Complex64>> {
+    let n = _coeffs.len() - 1;
 
     if n == 0 {
         return Ok(vec![]);
     }
 
     // Check for degenerate cases
-    if coeffs.iter().all(|&c| c.norm() < 1e-12) {
+    if _coeffs.iter().all(|&c| c.norm() < 1e-12) {
         // All coefficients are zero
         return Ok(vec![]);
     }
 
     // Normalize coefficients to avoid numerical issues
-    let max_coeff = coeffs.iter().map(|c| c.norm()).fold(0.0, f64::max);
-    let normalized_coeffs: Vec<Complex64> = coeffs.iter().map(|&c| c / max_coeff).collect();
+    let max_coeff = _coeffs.iter().map(|c| c.norm()).fold(0.0, f64::max);
+    let normalized_coeffs: Vec<Complex64> = _coeffs.iter().map(|&c| c / max_coeff).collect();
 
     // Find the first non-zero coefficient (leading coefficient)
     let first_nonzero = normalized_coeffs.iter().position(|&c| c.norm() > 1e-12);
@@ -753,8 +754,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_music_basic() {
         // Create test signal with two sinusoids

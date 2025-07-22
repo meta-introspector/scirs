@@ -4,7 +4,7 @@
 //! hierarchical clustering data structures to ensure they meet mathematical
 //! requirements and are suitable for downstream analysis.
 
-use ndarray::{ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -45,7 +45,7 @@ pub fn validate_linkage_matrix<
     // Check dimensions
     if n_merges != n_observations - 1 {
         return Err(ClusteringError::InvalidInput(format!(
-            "Linkage matrix should have {} rows for {} observations, got {}",
+            "Linkage _matrix should have {} rows for {} _observations, got {}",
             n_observations - 1,
             n_observations,
             n_merges
@@ -54,7 +54,7 @@ pub fn validate_linkage_matrix<
 
     if n_cols != 4 {
         return Err(ClusteringError::InvalidInput(format!(
-            "Linkage matrix should have 4 columns, got {}",
+            "Linkage _matrix should have 4 columns, got {}",
             n_cols
         )));
     }
@@ -73,7 +73,7 @@ pub fn validate_linkage_matrix<
             || !count.is_finite()
         {
             return Err(ClusteringError::InvalidInput(format!(
-                "Non-finite values in linkage matrix at row {}",
+                "Non-finite values in linkage _matrix at row {}",
                 i
             )));
         }
@@ -183,7 +183,7 @@ pub fn validate_cluster_extraction_params<
     criterion: &str,
     threshold: F,
 ) -> Result<()> {
-    // First validate the linkage matrix itself
+    // First validate the linkage _matrix itself
     let n_observations = linkage_matrix.shape()[0] + 1;
     validate_linkage_matrix(linkage_matrix, n_observations)?;
 
@@ -252,14 +252,14 @@ pub fn validate_distance_matrix<
 
         if n * (n - 1) / 2 != n_elements {
             return Err(ClusteringError::InvalidInput(format!(
-                "Invalid condensed distance matrix size: {} elements doesn't correspond to n*(n-1)/2 for any integer n",
+                "Invalid condensed distance _matrix size: {} elements doesn't correspond to n*(n-1)/2 for any integer n",
                 n_elements
             )));
         }
 
         if n < 2 {
             return Err(ClusteringError::InvalidInput(
-                "Distance matrix must represent at least 2 observations".to_string(),
+                "Distance _matrix must represent at least 2 observations".to_string(),
             ));
         }
     }
@@ -308,17 +308,17 @@ pub fn validate_square_distance_matrix<
     let n = distance_matrix.shape()[0];
     let m = distance_matrix.shape()[1];
 
-    // Check square matrix
+    // Check square _matrix
     if n != m {
         return Err(ClusteringError::InvalidInput(format!(
-            "Distance matrix must be square, got {}x{}",
+            "Distance _matrix must be square, got {}x{}",
             n, m
         )));
     }
 
     if n < 2 {
         return Err(ClusteringError::InvalidInput(
-            "Distance matrix must be at least 2x2".to_string(),
+            "Distance _matrix must be at least 2x2".to_string(),
         ));
     }
 
@@ -353,7 +353,7 @@ pub fn validate_square_distance_matrix<
         }
     }
 
-    // Check symmetry
+    // Check _symmetry
     if check_symmetry {
         for i in 0..n {
             for j in (i + 1)..n {
@@ -363,7 +363,7 @@ pub fn validate_square_distance_matrix<
 
                 if diff > F::from(1e-10).unwrap() {
                     return Err(ClusteringError::InvalidInput(format!(
-                        "Distance matrix is not symmetric: d({}, {}) = {} != d({}, {}) = {}",
+                        "Distance _matrix is not symmetric: d({}, {}) = {} != d({}, {}) = {}",
                         i, j, val_ij, j, i, val_ji
                     )));
                 }
@@ -371,7 +371,7 @@ pub fn validate_square_distance_matrix<
         }
     }
 
-    // Check triangle inequality
+    // Check triangle _inequality
     if check_triangle_inequality {
         for i in 0..n {
             for j in 0..n {
@@ -383,7 +383,7 @@ pub fn validate_square_distance_matrix<
 
                         if d_ik > d_ij + d_jk + F::from(1e-10).unwrap() {
                             return Err(ClusteringError::InvalidInput(format!(
-                                "Triangle inequality violated: d({}, {}) = {} > d({}, {}) + d({}, {}) = {} + {}",
+                                "Triangle _inequality violated: d({}, {}) = {} > d({}, {}) + d({}, {}) = {} + {}",
                                 i, k, d_ik, i, j, j, k, d_ij, d_jk
                             )));
                         }
@@ -421,13 +421,13 @@ pub fn validate_cluster_consistency<
     // Check dimensions
     if cluster_assignments.len() != n_observations {
         return Err(ClusteringError::InvalidInput(format!(
-            "Cluster assignments length {} doesn't match number of observations {}",
+            "Cluster _assignments length {} doesn't match number of observations {}",
             cluster_assignments.len(),
             n_observations
         )));
     }
 
-    // First validate the linkage matrix
+    // First validate the linkage _matrix
     validate_linkage_matrix(linkage_matrix, n_observations)?;
 
     // Check that cluster IDs are in valid range
@@ -458,7 +458,7 @@ pub fn validate_cluster_consistency<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{Array1, Array2};
+    use ndarray::{ArrayView1, Array1, Array2};
 
     #[test]
     fn test_validate_linkage_matrix_valid() {

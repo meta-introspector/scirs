@@ -5,8 +5,8 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::array;
-use scirs2_metrics::classification::accuracy_score;
-use scirs2_metrics::integration::optim::{
+use scirs2__metrics::classification::accuracy_score;
+use scirs2__metrics::integration::optim::{
     MetricOptimizer, MetricSchedulerTrait, OptimizationMode, SchedulerConfig,
 };
 
@@ -231,16 +231,16 @@ struct MockScheduler<F> {
 }
 
 impl<F: Clone> MockScheduler<F> {
-    fn new(lr: F) -> Self {
+    fn new(_lr: F) -> Self {
         Self {
-            learning_rate: lr,
+            learning_rate: _lr,
             mode: OptimizationMode::Minimize,
         }
     }
 }
 
 impl MetricSchedulerTrait<f64> for MockScheduler<f64> {
-    fn step_with_metric(&mut self, _metric: f64) -> f64 {
+    fn step_with_metric(&mut self_metric: f64) -> f64 {
         // Simple mock: reduce LR by 10% on each step
         self.learning_rate *= 0.9;
         self.learning_rate

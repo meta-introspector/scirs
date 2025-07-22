@@ -4,7 +4,7 @@
 //! of common tensor operations, particularly focusing on reshape and slice operations
 //! that minimize memory allocations and maximize cache efficiency.
 
-use crate::ndarray_ext::NdArrayView;
+use crate::ndarray__ext::NdArrayView;
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
 use crate::Float;
@@ -101,7 +101,7 @@ impl<F: Float> Op<F> for EfficientReshapeOp {
                 Err(_) => {
                     // Zero-copy failed, fall back to copying
                     cache.insert(input_shape, &self.new_shape, false);
-                    let flattened: Array<F, _> = input.iter().cloned().collect();
+                    let flattened: Array<F> = input.iter().cloned().collect();
                     flattened
                         .into_shape_with_order(IxDyn(&self.new_shape))
                         .unwrap()
@@ -109,7 +109,7 @@ impl<F: Float> Op<F> for EfficientReshapeOp {
             }
         } else {
             // Always copy (useful when zero-copy behavior is not desired)
-            let flattened: Array<F, _> = input.iter().cloned().collect();
+            let flattened: Array<F> = input.iter().cloned().collect();
             flattened
                 .into_shape_with_order(IxDyn(&self.new_shape))
                 .unwrap()
@@ -148,8 +148,8 @@ pub struct SliceRange {
 }
 
 impl SliceRange {
-    pub fn new(start: Option<isize>, end: Option<isize>, step: Option<isize>) -> Self {
-        Self { start, end, step }
+    pub fn new(_start: Option<isize>, end: Option<isize>, step: Option<isize>) -> Self {
+        Self { _start, end, step }
     }
 
     pub fn full() -> Self {
@@ -160,10 +160,10 @@ impl SliceRange {
         }
     }
 
-    pub fn single(index: isize) -> Self {
+    pub fn single(_index: isize) -> Self {
         Self {
-            start: Some(index),
-            end: Some(index + 1),
+            start: Some(_index),
+            end: Some(_index + 1),
             step: Some(1),
         }
     }
@@ -346,7 +346,7 @@ impl<F: Float> Op<F> for EfficientConcatOp {
 
             // Create a slice of the gradient for this input
             // For now, use a simplified approach
-            let grad_slice = crate::tensor_ops::zeros(&input_shape, graph);
+            let grad_slice = crate::tensor__ops::zeros(&input_shape, graph);
 
             ctx.append_input_grad(i, Some(grad_slice));
         }
@@ -357,10 +357,7 @@ impl<F: Float> Op<F> for EfficientConcatOp {
 #[allow(dead_code)]
 fn copy_slice_data<F: Float>(
     output: &mut Array<F, IxDyn>,
-    input: &NdArrayView<F>,
-    _slice_start: &[usize],
-    _slice_end: &[usize],
-    _axis: usize,
+    input: &NdArrayView<F>, _slice_start: &[usize], _slice_end: &[usize], _axis: usize,
 ) {
     // This is a simplified implementation
     // In practice, this would use optimized memory copying operations
@@ -381,13 +378,12 @@ fn copy_slice_data<F: Float>(
 /// Efficient reshape operation with optional zero-copy optimization
 #[allow(dead_code)]
 pub fn efficient_reshape<'g, F: Float>(
-    tensor: &Tensor<'g, F>,
-    _new_shape: &Tensor<'g, F>,
+    tensor: &Tensor<'g, F>, _new_shape: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {
     let g = tensor.graph();
 
-    // Extract shape values - this is simplified
-    // In practice, we'd need to evaluate the shape tensor to get the actual values
+    // Extract _shape values - this is simplified
+    // In practice, we'd need to evaluate the _shape tensor to get the actual values
     let shape_values = vec![1]; // Placeholder - would extract from new_shape tensor
 
     Tensor::builder(g)
@@ -431,29 +427,28 @@ pub fn efficient_slice<'g, F: Float>(
 
 /// Efficient concatenation of multiple tensors
 #[allow(dead_code)]
-pub fn efficient_concat<'g, F: Float>(tensors: &[&Tensor<'g, F>], axis: usize) -> Tensor<'g, F> {
-    if tensors.is_empty() {
+pub fn efficient_concat<'g, F: Float>(_tensors: &[&Tensor<'g, F>], axis: usize) -> Tensor<'g, F> {
+    if _tensors.is_empty() {
         panic!("Cannot concatenate empty tensor list");
     }
 
-    let g = tensors[0].graph();
+    let g = _tensors[0].graph();
     let mut builder = Tensor::builder(g);
 
-    for tensor in tensors {
+    for tensor in _tensors {
         builder = builder.append_input(*tensor, false);
     }
 
     builder.build(EfficientConcatOp {
         axis,
-        num_inputs: tensors.len(),
+        num_inputs: _tensors.len(),
     })
 }
 
 /// Efficient transpose operation with cache-friendly memory access
 #[allow(dead_code)]
 pub fn efficient_transpose<'g, F: Float>(
-    tensor: &Tensor<'g, F>,
-    _axes: Option<&[usize]>,
+    tensor: &Tensor<'g, F>, _axes: Option<&[usize]>,
 ) -> Tensor<'g, F> {
     // For now, use the standard transpose operation
     // In a full implementation, this would be optimized for cache efficiency

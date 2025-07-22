@@ -8,7 +8,8 @@ use crate::traits::{DiscreteDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Distribution as RandDistribution, Poisson as RandPoisson};
+use rand__distr::{Distribution as RandDistribution, Poisson as RandPoisson};
+use statrs::statistics::Statistics;
 
 /// Poisson distribution structure
 pub struct Poisson<F: Float> {
@@ -35,24 +36,24 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::poisson::Poisson;
+    /// use scirs2__stats::distributions::poisson::Poisson;
     ///
     /// // Poisson distribution with rate 3.0
     /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
     /// ```
-    pub fn new(mu: F, loc: F) -> StatsResult<Self> {
-        if mu <= F::zero() {
+    pub fn new(_mu: F, loc: F) -> StatsResult<Self> {
+        if _mu <= F::zero() {
             return Err(StatsError::DomainError(
-                "Rate parameter (mu) must be positive".to_string(),
+                "Rate parameter (_mu) must be positive".to_string(),
             ));
         }
 
         // Convert to f64 for rand_distr
-        let mu_f64 = <f64 as NumCast>::from(mu).unwrap();
+        let mu_f64 = <f64 as NumCast>::from(_mu).unwrap();
 
         match RandPoisson::new(mu_f64) {
             Ok(rand_distr) => Ok(Poisson {
-                mu,
+                _mu,
                 loc,
                 rand_distr,
             }),
@@ -75,7 +76,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::poisson::Poisson;
+    /// use scirs2__stats::distributions::poisson::Poisson;
     ///
     /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
     /// let pmf_at_two = poisson.pmf(2.0);
@@ -115,7 +116,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::poisson::Poisson;
+    /// use scirs2__stats::distributions::poisson::Poisson;
     ///
     /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
     /// let cdf_at_four = poisson.cdf(4.0);
@@ -166,7 +167,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::poisson::Poisson;
+    /// use scirs2__stats::distributions::poisson::Poisson;
     ///
     /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
     /// let samples = poisson.rvs(1000).unwrap();
@@ -237,7 +238,7 @@ impl<F: Float + NumCast + std::fmt::Display> DiscreteDistribution<F> for Poisson
         self.cdf(x)
     }
 
-    fn ppf(&self, _p: F) -> StatsResult<F> {
+    fn ppf(&self_p: F) -> StatsResult<F> {
         // Poisson does not have a simple inverse CDF formula,
         // so we'd typically need to implement a numerical solution.
         // For now, we'll return an error to indicate this isn't implemented.

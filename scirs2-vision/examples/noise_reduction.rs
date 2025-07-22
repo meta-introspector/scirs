@@ -8,7 +8,7 @@
 
 use image::{DynamicImage, GenericImage, GenericImageView, ImageBuffer, Rgba};
 use rand::random;
-use scirs2_vision::preprocessing::{bilateral_filter, gaussian_blur, median_filter};
+use scirs2__vision::preprocessing::{bilateral_filter, gaussian_blur, median_filter};
 use std::error::Error;
 use std::path::PathBuf;
 
@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Load or create an image
     let input_image = get_input_image()?;
-    let (_width, _height) = input_image.dimensions();
+    let (_width_height) = input_image.dimensions();
 
     // Create a copy with random noise (salt and pepper)
     let mut noisy_image = input_image.to_rgba8();
@@ -111,8 +111,8 @@ fn get_input_image() -> Result<DynamicImage, Box<dyn Error>> {
 
 /// Add salt and pepper noise to an image
 #[allow(dead_code)]
-fn add_salt_and_pepper_noise(img: &mut ImageBuffer<Rgba<u8>, Vec<u8>>, noise_amount: f64) {
-    let (width, height) = img.dimensions();
+fn add_salt_and_pepper_noise(_img: &mut ImageBuffer<Rgba<u8>, Vec<u8>>, noise_amount: f64) {
+    let (width, height) = _img.dimensions();
     let noise_pixels = (width * height) as f64 * noise_amount;
 
     for _ in 0..(noise_pixels as u32) {
@@ -127,7 +127,7 @@ fn add_salt_and_pepper_noise(img: &mut ImageBuffer<Rgba<u8>, Vec<u8>>, noise_amo
         };
 
         if x < width && y < height {
-            img.put_pixel(x, y, color);
+            _img.put_pixel(x, y, color);
         }
     }
 }

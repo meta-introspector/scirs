@@ -5,7 +5,7 @@
 //! interquartile range, and range.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::ErrorMessages;
+use crate::error__standardization::ErrorMessages;
 use crate::{mean, median};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
@@ -31,7 +31,7 @@ use std::cmp::Ordering;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::mean_abs_deviation;
+/// use scirs2__stats::mean_abs_deviation;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 ///
@@ -103,7 +103,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::median_abs_deviation;
+/// use scirs2__stats::median_abs_deviation;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 100.0];  // Note the outlier
 ///
@@ -166,7 +166,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::iqr;
+/// use scirs2__stats::iqr;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
 ///
@@ -213,7 +213,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::data_range;
+/// use scirs2__stats::data_range;
 ///
 /// let data = array![5.0, 2.0, 10.0, 3.0, 7.0];
 ///
@@ -275,7 +275,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::coef_variation;
+/// use scirs2__stats::coef_variation;
 ///
 /// let data = array![10.0, 12.0, 8.0, 11.0, 9.0];
 ///
@@ -340,7 +340,7 @@ where
     }
 
     // Validate the percentile value
-    if q < F::zero() || q > F::from(100.0).unwrap() {
+    if q < F::zero() || q >, F::from(100.0).unwrap() {
         return Err(StatsError::InvalidArgument(
             "Percentile must be between 0 and 100".to_string(),
         ));
@@ -408,7 +408,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::gini_coefficient;
+/// use scirs2__stats::gini_coefficient;
 ///
 /// // Perfect equality
 /// let equal_data = array![100.0, 100.0, 100.0, 100.0, 100.0];

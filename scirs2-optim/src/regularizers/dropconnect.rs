@@ -18,7 +18,7 @@ use crate::regularizers::Regularizer;
 ///
 /// ```
 /// use ndarray::{Array2, array};
-/// use scirs2_optim::regularizers::DropConnect;
+/// use scirs2__optim::regularizers::DropConnect;
 ///
 /// let dropconnect = DropConnect::new(0.5).unwrap(); // 50% connection dropout
 /// let weights = array![[1.0, 2.0], [3.0, 4.0]];
@@ -47,8 +47,8 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
     /// # Returns
     ///
     /// A new DropConnect instance or error if probability is invalid
-    pub fn new(drop_prob: A) -> Result<Self> {
-        if drop_prob < A::zero() || drop_prob > A::one() {
+    pub fn new(_drop_prob: A) -> Result<Self> {
+        if _drop_prob < A::zero() || _drop_prob >, A::one() {
             return Err(OptimError::InvalidConfig(
                 "Drop probability must be between 0.0 and 1.0".to_string(),
             ));
@@ -115,7 +115,7 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
         let keep_prob = A::one() - self.drop_prob;
         let keep_prob_f64 = keep_prob.to_f64().unwrap();
 
-        // Create mask with same shape as weights
+        // Create mask with same _shape as weights
         let mut rng = scirs2_core::random::rng();
         let mask = Array::from_shape_fn(weights_shape, |_| {
             rng.random_bool_with_chance(keep_prob_f64)
@@ -148,7 +148,7 @@ impl<A: Float + Debug + ScalarOperand, D: Dimension> Regularizer<A, D> for DropC
         Ok(A::zero())
     }
 
-    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self_params: &Array<A, D>) -> Result<A> {
         // DropConnect doesn't add a penalty term to the loss
         Ok(A::zero())
     }

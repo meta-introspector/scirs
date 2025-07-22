@@ -54,8 +54,8 @@ pub fn compress_jacobian_pattern(
 ///
 /// Two columns can have the same color if they don't both have nonzeros in the same row
 #[allow(dead_code)]
-fn color_jacobian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
-    let (_m, n) = sparsity.shape();
+fn color_jacobian_columns(_sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
+    let (_m, n) = _sparsity.shape();
     let mut coloring = vec![0; n];
 
     // For each column, find the lowest color that doesn't conflict
@@ -63,11 +63,11 @@ fn color_jacobian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimi
         let mut used_colors = HashSet::new();
 
         // Find all rows where this column has a nonzero
-        let col_rows = get_column_nonzero_rows(sparsity, col);
+        let col_rows = get_column_nonzero_rows(_sparsity, col);
 
         // Check previously colored columns that share rows with this column
         for prev_col in 0..col {
-            let prev_col_rows = get_column_nonzero_rows(sparsity, prev_col);
+            let prev_col_rows = get_column_nonzero_rows(_sparsity, prev_col);
 
             // If columns share any row, they can't have the same color
             if col_rows.iter().any(|&row| prev_col_rows.contains(&row)) {
@@ -88,12 +88,12 @@ fn color_jacobian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimi
 
 /// Helper function to get rows where a column has nonzero entries
 #[allow(dead_code)]
-fn get_column_nonzero_rows(sparsity: &CsrArray<f64>, col: usize) -> HashSet<usize> {
+fn get_column_nonzero_rows(_sparsity: &CsrArray<f64>, col: usize) -> HashSet<usize> {
     let mut rows = HashSet::new();
-    let (m, _) = sparsity.shape();
+    let (m_) = _sparsity.shape();
 
     for row in 0..m {
-        let val = sparsity.get(row, col);
+        let val = _sparsity.get(row, col);
         if val.abs() > 1e-15 {
             rows.insert(row);
         }
@@ -118,7 +118,7 @@ fn get_column_nonzero_rows(sparsity: &CsrArray<f64>, col: usize) -> HashSet<usiz
 pub fn compress_hessian_pattern(
     sparsity: &CsrArray<f64>,
 ) -> Result<(CsrArray<f64>, Array2<f64>), OptimizeError> {
-    let (n, _) = sparsity.shape();
+    let (n_) = sparsity.shape();
 
     // Perform distance-2 coloring for Hessian
     let coloring = color_hessian_columns(sparsity)?;
@@ -139,12 +139,12 @@ pub fn compress_hessian_pattern(
 /// 1. They are not adjacent (H[i,j] = 0)
 /// 2. They don't share any common neighbors
 #[allow(dead_code)]
-fn color_hessian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
-    let (n, _) = sparsity.shape();
+fn color_hessian_columns(_sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
+    let (n_) = _sparsity.shape();
     let mut coloring = vec![0; n];
 
     // Build adjacency information for efficient neighbor lookup
-    let adjacency = build_adjacency_list(sparsity);
+    let adjacency = build_adjacency_list(_sparsity);
 
     // For each column, find the lowest color that doesn't conflict
     for col in 0..n {
@@ -182,14 +182,14 @@ fn color_hessian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimiz
 
 /// Build adjacency list representation of the sparsity pattern
 #[allow(dead_code)]
-fn build_adjacency_list(sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
-    let (n, _) = sparsity.shape();
+fn build_adjacency_list(_sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
+    let (n_) = _sparsity.shape();
     let mut adjacency = vec![HashSet::new(); n];
 
     for i in 0..n {
         for j in 0..n {
             if i != j {
-                let val = sparsity.get(i, j);
+                let val = _sparsity.get(i, j);
                 if val.abs() > 1e-15 {
                     adjacency[i].insert(j);
                     adjacency[j].insert(i); // Symmetric
@@ -220,8 +220,7 @@ fn build_adjacency_list(sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
 #[allow(dead_code)]
 pub fn reconstruct_jacobian(
     gradients: &ArrayView2<f64>,
-    b: &ArrayView2<f64>,
-    _c: &ArrayView2<f64>,
+    b: &ArrayView2<f64>, _c: &ArrayView2<f64>,
     sparsity: &CsrArray<f64>,
 ) -> Result<CsrArray<f64>, OptimizeError> {
     let (m, n) = sparsity.shape();
@@ -308,7 +307,7 @@ pub fn reconstruct_hessian_central_diff(
     sparsity: &CsrArray<f64>,
     h: f64,
 ) -> Result<CsrArray<f64>, OptimizeError> {
-    let (n, _) = sparsity.shape();
+    let (n_) = sparsity.shape();
     let (grad_n, num_colors) = gradients_forward.dim();
     let (p_n, p_colors) = p.dim();
 

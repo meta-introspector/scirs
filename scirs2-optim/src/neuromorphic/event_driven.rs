@@ -394,9 +394,9 @@ struct TemporalCorrelationTracker<T: Float> {
 }
 
 impl<T: Float + Send + Sync> TemporalCorrelationTracker<T> {
-    fn new(correlation_window: T) -> Self {
+    fn new(_correlation_window: T) -> Self {
         Self {
-            correlation_window,
+            _correlation_window,
             event_history: VecDeque::new(),
             correlation_patterns: HashMap::new(),
         }
@@ -407,7 +407,7 @@ impl<T: Float + Send + Sync> TemporalCorrelationTracker<T> {
         self.event_history.push_back((time, event_type, neuron_id));
         
         // Remove old events outside correlation window
-        while let Some(&(old_time, _, _)) = self.event_history.front() {
+        while let Some(&(old_time__)) = self.event_history.front() {
             if time - old_time > self.correlation_window {
                 self.event_history.pop_front();
             } else {
@@ -420,7 +420,7 @@ impl<T: Float + Send + Sync> TemporalCorrelationTracker<T> {
     }
     
     fn update_correlations(&mut self, current_time: T, current_event: EventType) {
-        for &(event_time, event_type, _) in &self.event_history {
+        for &(event_time, event_type_) in &self.event_history {
             if current_time - event_time <= self.correlation_window {
                 let correlation_key = (event_type, current_event);
                 let time_diff = current_time - event_time;
@@ -445,9 +445,9 @@ struct EventRateLimiter<T: Float> {
 }
 
 impl<T: Float + Send + Sync> EventRateLimiter<T> {
-    fn new(rate_limits: HashMap<EventType, T>) -> Self {
+    fn new(_rate_limits: HashMap<EventType, T>) -> Self {
         Self {
-            rate_limits,
+            _rate_limits,
             event_counts: HashMap::new(),
             last_reset: Instant::now(),
             reset_interval: Duration::from_secs(1),
@@ -483,9 +483,9 @@ struct EventCompressionEngine<T: Float> {
 }
 
 impl<T: Float + Send + Sync> EventCompressionEngine<T> {
-    fn new(algorithm: EventCompressionAlgorithm) -> Self {
+    fn new(_algorithm: EventCompressionAlgorithm) -> Self {
         Self {
-            algorithm,
+            _algorithm,
             compression_buffer: Vec::new(),
             decompression_buffer: Vec::new(),
         }
@@ -526,12 +526,12 @@ impl<T: Float + Send + Sync> EventCompressionEngine<T> {
         Ok(data)
     }
     
-    fn delta_encode_event(&mut self, _event: &NeuromorphicEvent<T>) -> Result<Vec<u8>> {
+    fn delta_encode_event(&mut self_event: &NeuromorphicEvent<T>) -> Result<Vec<u8>> {
         // Simplified delta encoding implementation
         Ok(vec![0u8; 16])
     }
     
-    fn sparse_encode_event(&mut self, _event: &NeuromorphicEvent<T>) -> Result<Vec<u8>> {
+    fn sparse_encode_event(&mut self_event: &NeuromorphicEvent<T>) -> Result<Vec<u8>> {
         // Simplified sparse encoding implementation
         Ok(vec![0u8; 8])
     }
@@ -589,9 +589,9 @@ impl<T: Float + Send + Sync> AdaptiveEventHandler<T> {
     
     fn get_adaptation_factor(&self) -> T {
         match self.current_strategy {
-            AdaptationStrategy::Conservative => T::from(0.5).unwrap(),
-            AdaptationStrategy::Balanced => T::one(),
-            AdaptationStrategy::Aggressive => T::from(1.5).unwrap(),
+            AdaptationStrategy::Conservative =>, T::from(0.5).unwrap(),
+            AdaptationStrategy::Balanced =>, T::one(),
+            AdaptationStrategy::Aggressive =>, T::from(1.5).unwrap(),
         }
     }
 }
@@ -605,9 +605,9 @@ struct DistributedEventCoordinator<T: Float> {
 }
 
 impl<T: Float + Send + Sync> DistributedEventCoordinator<T> {
-    fn new(strategy: LoadBalancingStrategy, num_workers: usize) -> Self {
+    fn new(_strategy: LoadBalancingStrategy, num_workers: usize) -> Self {
         Self {
-            load_balancing: strategy,
+            load_balancing: _strategy,
             worker_loads: HashMap::new(),
             current_worker: 0,
             total_workers: num_workers,
@@ -629,7 +629,7 @@ impl<T: Float + Send + Sync> DistributedEventCoordinator<T> {
                 // Find worker with minimum load
                 self.worker_loads.iter()
                     .min_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-                    .map(|(&worker_id, _)| worker_id)
+                    .map(|(&worker_id_)| worker_id)
                     .unwrap_or(0)
             }
             _ => 0,
@@ -650,7 +650,7 @@ impl<T: Float + Send + Sync> EventDrivenOptimizer<T> {
         num_neurons: usize,
     ) -> Self {
         let mut optimizer = Self {
-            config: config.clone(),
+            _config: _config.clone(),
             stdp_config: stdp_config.clone(),
             membrane_config: membrane_config.clone(),
             event_queue: BinaryHeap::new(),
@@ -665,15 +665,15 @@ impl<T: Float + Send + Sync> EventDrivenOptimizer<T> {
                 pending_updates: HashMap::new(),
             },
             event_handlers: HashMap::new(),
-            correlation_tracker: TemporalCorrelationTracker::new(config.correlation_window),
-            rate_limiter: EventRateLimiter::new(config.rate_limits.clone()),
+            correlation_tracker: TemporalCorrelationTracker::new(_config.correlation_window),
+            rate_limiter: EventRateLimiter::new(_config.rate_limits.clone()),
             metrics: NeuromorphicMetrics::default(),
-            distributed_coordinator: if config.distributed_processing {
-                Some(DistributedEventCoordinator::new(config.load_balancing, 4))
+            distributed_coordinator: if _config.distributed_processing {
+                Some(DistributedEventCoordinator::new(_config.load_balancing, 4))
             } else {
                 None
             },
-            compression_engine: EventCompressionEngine::new(config.compression_algorithm),
+            compression_engine: EventCompressionEngine::new(_config.compression_algorithm),
             adaptive_handler: AdaptiveEventHandler::new(),
         };
         
@@ -855,7 +855,7 @@ impl<T: Float + Send + Sync> EventDrivenOptimizer<T> {
         
         stats.total_processed += 1;
         
-        // Update average processing time using exponential moving average
+        // Update average processing _time using exponential moving average
         let alpha = T::from(0.1).unwrap();
         stats.avg_processing_time = stats.avg_processing_time * (T::one() - alpha) + processing_time * alpha;
         

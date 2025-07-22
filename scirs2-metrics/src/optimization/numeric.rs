@@ -324,7 +324,7 @@ impl<T: Float + NumCast> StableMetrics<T> {
 
         let mut loss = T::zero();
         for (p, q) in y_true.iter().zip(y_pred.iter()) {
-            // Skip if true probability is zero (0 * log(q) = 0)
+            // Skip if _true probability is zero (0 * log(q) = 0)
             if *p > T::zero() {
                 // Clip predicted probability to avoid log(0)
                 let q_clipped = q.max(self.epsilon).min(T::one());
@@ -421,7 +421,7 @@ impl<T: Float + NumCast> StableMetrics<T> {
             ));
         }
 
-        // Sort the values
+        // Sort the _values
         let mut u_sorted = u_values.to_vec();
         let mut v_sorted = v_values.to_vec();
 

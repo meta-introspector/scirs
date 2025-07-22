@@ -158,7 +158,7 @@ impl Pipeline {
     pub fn get_step(&self, name: &str) -> Option<&dyn Transformer> {
         self.steps
             .iter()
-            .find(|(n, _)| n == name)
+            .find(|(n_)| n == name)
             .map(|(_, t)| t.as_ref())
     }
 
@@ -166,7 +166,7 @@ impl Pipeline {
     pub fn get_step_mut(&mut self, name: &str) -> Option<&mut Box<dyn Transformer>> {
         self.steps
             .iter_mut()
-            .find(|(n, _)| n == name)
+            .find(|(n_)| n == name)
             .map(|(_, t)| t)
     }
 }
@@ -201,10 +201,10 @@ impl ColumnTransformer {
     ///
     /// # Arguments
     /// * `remainder` - How to handle unspecified columns
-    pub fn new(remainder: RemainderOption) -> Self {
+    pub fn new(_remainder: RemainderOption) -> Self {
         ColumnTransformer {
             transformers: Vec::new(),
-            remainder,
+            _remainder,
             fitted: false,
         }
     }
@@ -244,7 +244,7 @@ impl ColumnTransformer {
         let n_features = x_f64.shape()[1];
 
         // Validate column indices
-        for (name, _, columns) in &self.transformers {
+        for (name_, columns) in &self.transformers {
             for &col in columns {
                 if col >= n_features {
                     return Err(TransformError::InvalidInput(format!(
@@ -352,15 +352,15 @@ impl ColumnTransformer {
 
 /// Extracts specific columns from a 2D array
 #[allow(dead_code)]
-fn extract_columns(data: &Array2<f64>, columns: &[usize]) -> Array2<f64> {
-    let n_samples = data.shape()[0];
+fn extract_columns(_data: &Array2<f64>, columns: &[usize]) -> Array2<f64> {
+    let n_samples = _data.shape()[0];
     let n_cols = columns.len();
 
     let mut result = Array2::zeros((n_samples, n_cols));
 
     for (j, &col_idx) in columns.iter().enumerate() {
         for i in 0..n_samples {
-            result[[i, j]] = data[[i, col_idx]];
+            result[[i, j]] = _data[[i, col_idx]];
         }
     }
 
@@ -369,21 +369,21 @@ fn extract_columns(data: &Array2<f64>, columns: &[usize]) -> Array2<f64> {
 
 /// Concatenates arrays horizontally
 #[allow(dead_code)]
-fn concatenate_horizontal(arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
-    if arrays.is_empty() {
+fn concatenate_horizontal(_arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
+    if _arrays.is_empty() {
         return Err(TransformError::InvalidInput(
             "Cannot concatenate empty array list".to_string(),
         ));
     }
 
-    let n_samples = arrays[0].shape()[0];
-    let total_features: usize = arrays.iter().map(|a| a.shape()[1]).sum();
+    let n_samples = _arrays[0].shape()[0];
+    let total_features: usize = _arrays.iter().map(|a| a.shape()[1]).sum();
 
-    // Verify all arrays have the same number of samples
-    for arr in arrays {
+    // Verify all _arrays have the same number of samples
+    for arr in _arrays {
         if arr.shape()[0] != n_samples {
             return Err(TransformError::InvalidInput(
-                "All arrays must have the same number of samples".to_string(),
+                "All _arrays must have the same number of samples".to_string(),
             ));
         }
     }
@@ -391,7 +391,7 @@ fn concatenate_horizontal(arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
     let mut result = Array2::zeros((n_samples, total_features));
     let mut col_offset = 0;
 
-    for arr in arrays {
+    for arr in _arrays {
         let n_cols = arr.shape()[1];
         for i in 0..n_samples {
             for j in 0..n_cols {
@@ -406,9 +406,9 @@ fn concatenate_horizontal(arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
 
 /// Make a pipeline from a list of (name, transformer) tuples
 #[allow(dead_code)]
-pub fn make_pipeline(steps: Vec<(&str, Box<dyn Transformer>)>) -> Pipeline {
+pub fn make_pipeline(_steps: Vec<(&str, Box<dyn Transformer>)>) -> Pipeline {
     let mut pipeline = Pipeline::new();
-    for (name, transformer) in steps {
+    for (name, transformer) in _steps {
         pipeline = pipeline.add_step(name, transformer);
     }
     pipeline

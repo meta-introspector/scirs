@@ -46,7 +46,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distribution_characteristics::{mode, ModeMethod};
+/// use scirs2__stats::distribution_characteristics::{mode, ModeMethod};
 ///
 /// // Unimodal data
 /// let data = array![1, 2, 2, 3, 2, 4, 5];
@@ -86,7 +86,7 @@ where
             let mode_value = counts
                 .iter()
                 .filter(|(_, &count)| count == max_count)
-                .map(|(&value, _)| value)
+                .map(|(&value_)| value)
                 .min()
                 .ok_or_else(|| StatsError::InvalidArgument("Failed to compute mode".to_string()))?;
 
@@ -100,7 +100,7 @@ where
             let mut mode_values: Vec<T> = counts
                 .iter()
                 .filter(|(_, &count)| count == max_count)
-                .map(|(&value, _)| value)
+                .map(|(&value_)| value)
                 .collect();
 
             // Sort the mode values for consistent output
@@ -131,7 +131,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distribution_characteristics::entropy;
+/// use scirs2__stats::distribution_characteristics::entropy;
 ///
 /// // Uniform distribution (maximum entropy)
 /// let uniform = array![1, 2, 3, 4, 5, 6];
@@ -196,7 +196,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distribution_characteristics::kl_divergence;
+/// use scirs2__stats::distribution_characteristics::kl_divergence;
 ///
 /// // Create two probability distributions
 /// let p = array![0.5f64, 0.5];
@@ -281,7 +281,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distribution_characteristics::cross_entropy;
+/// use scirs2__stats::distribution_characteristics::cross_entropy;
 ///
 /// // Create two probability distributions
 /// let p = array![0.5f64, 0.5];
@@ -379,7 +379,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distribution_characteristics::skewness_ci;
+/// use scirs2__stats::distribution_characteristics::skewness_ci;
 ///
 /// // Calculate skewness with 95% confidence interval
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0, 10.0];
@@ -404,7 +404,7 @@ where
         + Sync
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
-    use crate::sampling::bootstrap;
+    use crate::sampling::_bootstrap;
     use crate::skew;
 
     if x.is_empty() {
@@ -431,10 +431,10 @@ where
     // Calculate point estimate
     let estimate = skew(x, bias, None)?;
 
-    // Generate bootstrap samples
-    let samples = bootstrap(x, n_boot, seed)?;
+    // Generate _bootstrap samples
+    let samples = _bootstrap(x, n_boot, seed)?;
 
-    // Calculate skewness for each bootstrap sample
+    // Calculate skewness for each _bootstrap sample
     let mut bootstrap_skew = Vec::with_capacity(n_boot);
 
     for i in 0..n_boot {
@@ -444,7 +444,7 @@ where
         }
     }
 
-    // Sort bootstrap statistics for percentile confidence intervals
+    // Sort _bootstrap statistics for percentile confidence intervals
     bootstrap_skew.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Calculate percentile indices
@@ -487,7 +487,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distribution_characteristics::kurtosis_ci;
+/// use scirs2__stats::distribution_characteristics::kurtosis_ci;
 ///
 /// // Calculate kurtosis with 95% confidence interval
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0, 10.0];
@@ -514,7 +514,7 @@ where
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     use crate::kurtosis;
-    use crate::sampling::bootstrap;
+    use crate::sampling::_bootstrap;
 
     if x.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -540,10 +540,10 @@ where
     // Calculate point estimate
     let estimate = kurtosis(x, fisher, bias, None)?;
 
-    // Generate bootstrap samples
-    let samples = bootstrap(x, n_boot, seed)?;
+    // Generate _bootstrap samples
+    let samples = _bootstrap(x, n_boot, seed)?;
 
-    // Calculate kurtosis for each bootstrap sample
+    // Calculate kurtosis for each _bootstrap sample
     let mut bootstrap_kurt = Vec::with_capacity(n_boot);
 
     for i in 0..n_boot {
@@ -553,7 +553,7 @@ where
         }
     }
 
-    // Sort bootstrap statistics for percentile confidence intervals
+    // Sort _bootstrap statistics for percentile confidence intervals
     bootstrap_kurt.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     // Calculate percentile indices

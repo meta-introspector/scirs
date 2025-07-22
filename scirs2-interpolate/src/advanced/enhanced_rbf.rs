@@ -143,8 +143,7 @@ where
     lambda: F,
     use_polynomial: bool,
     use_multiscale: bool,
-    scale_parameters: Option<Array1<F>>,
-    _phantom: PhantomData<F>,
+    scale_parameters: Option<Array1<F>>, _phantom: PhantomData<F>,
 }
 
 impl<F> Default for EnhancedRBFBuilder<F>
@@ -194,8 +193,7 @@ where
             lambda: F::from_f64(1e-10).unwrap(),
             use_polynomial: false,
             use_multiscale: false,
-            scale_parameters: None,
-            _phantom: PhantomData,
+            scale_parameters: None, _phantom: PhantomData,
         }
     }
 
@@ -235,9 +233,9 @@ where
 
     /// Set anisotropic scale factors for each dimension
     pub fn with_scale_factors(mut self, scale_factors: Array1<F>) -> Self {
-        // Ensure all scale factors are positive
+        // Ensure all scale _factors are positive
         if scale_factors.iter().any(|&s| s <= F::zero()) {
-            panic!("scale factors must be positive");
+            panic!("scale _factors must be positive");
         }
         self.scale_factors = Some(scale_factors);
         self
@@ -267,7 +265,7 @@ where
     /// Set scale parameters for multi-scale approach
     pub fn with_scale_parameters(mut self, scale_parameters: Array1<F>) -> Self {
         if scale_parameters.iter().any(|&s| s <= F::zero()) {
-            panic!("scale parameters must be positive");
+            panic!("scale _parameters must be positive");
         }
         self.scale_parameters = Some(scale_parameters);
         self
@@ -456,8 +454,7 @@ where
             lambda: self.lambda,
             use_polynomial: self.use_polynomial,
             use_multiscale: self.use_multiscale,
-            scale_parameters: Some(scale_parameters),
-            _phantom: PhantomData,
+            scale_parameters: Some(scale_parameters), _phantom: PhantomData,
         })
     }
 
@@ -474,9 +471,9 @@ where
         let n_points = points.shape()[0];
         let n_dims = points.shape()[1];
 
-        // Determine system size based on whether we're using a polynomial trend
+        // Determine system size based on whether we're using a _polynomial trend
         let n_poly_terms = if use_polynomial {
-            n_dims + 1 // Linear polynomial: [1, x1, x2, ..., xn]
+            n_dims + 1 // Linear _polynomial: [1, x1, x2, ..., xn]
         } else {
             0
         };
@@ -501,9 +498,9 @@ where
             a_matrix[[i, i]] += lambda;
         }
 
-        // If using polynomial trend, add the polynomial terms
+        // If using _polynomial trend, add the _polynomial terms
         if use_polynomial {
-            // Fill the polynomial blocks
+            // Fill the _polynomial blocks
             for i in 0..n_points {
                 // Constant term
                 a_matrix[[i, n_points]] = F::one();
@@ -539,12 +536,12 @@ where
             let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());
 
             // Use scirs2-linalg's solve function
-            use scirs2_linalg::solve;
+            use scirs2__linalg::solve;
             match solve(&a_matrix_f64.view(), &rhs_f64.view(), None) {
                 Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),
                 Err(_) => {
                     // If the system is singular or near-singular, try SVD-based solution
-                    use scirs2_linalg::lstsq;
+                    use scirs2__linalg::lstsq;
                     match lstsq(&a_matrix_f64.view(), &rhs_f64.view(), None) {
                         Ok(result) => result.x.mapv(|x| F::from_f64(x).unwrap()),
                         Err(_) => {
@@ -574,9 +571,9 @@ where
         let n_dims = points.shape()[1];
         let n_scales = scale_parameters.len();
 
-        // Determine system size based on whether we're using a polynomial trend
+        // Determine system size based on whether we're using a _polynomial trend
         let n_poly_terms = if use_polynomial {
-            n_dims + 1 // Linear polynomial: [1, x1, x2, ..., xn]
+            n_dims + 1 // Linear _polynomial: [1, x1, x2, ..., xn]
         } else {
             0
         };
@@ -630,11 +627,11 @@ where
             a_matrix[[i, i]] += lambda;
         }
 
-        // If using polynomial trend, add the polynomial terms
+        // If using _polynomial trend, add the _polynomial terms
         if use_polynomial {
             let poly_start = n_points * n_scales;
 
-            // Fill the polynomial blocks for each scale
+            // Fill the _polynomial blocks for each scale
             for scale_idx in 0..n_scales {
                 for i in 0..n_points {
                     let row_idx = scale_idx * n_points + i;
@@ -676,12 +673,12 @@ where
             let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap());
 
             // Use scirs2-linalg's solve function
-            use scirs2_linalg::solve;
+            use scirs2__linalg::solve;
             match solve(&a_matrix_f64.view(), &rhs_f64.view(), None) {
                 Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),
                 Err(_) => {
                     // If the system is singular or near-singular, try SVD-based solution
-                    use scirs2_linalg::lstsq;
+                    use scirs2__linalg::lstsq;
                     match lstsq(&a_matrix_f64.view(), &rhs_f64.view(), None) {
                         Ok(result) => result.x.mapv(|x| F::from_f64(x).unwrap()),
                         Err(_) => {
@@ -698,9 +695,9 @@ where
     }
 
     /// Calculate the Euclidean distance between two points with anisotropic scaling
-    fn scaled_distance(p1: &ArrayView1<F>, p2: &ArrayView1<F>, scale_factors: &Array1<F>) -> F {
+    fn scaled_distance(_p1: &ArrayView1<F>, p2: &ArrayView1<F>, scale_factors: &Array1<F>) -> F {
         let mut sum_sq = F::zero();
-        for ((&x1, &x2), &scale) in p1.iter().zip(p2.iter()).zip(scale_factors.iter()) {
+        for ((&x1, &x2), &scale) in _p1.iter().zip(p2.iter()).zip(scale_factors.iter()) {
             let diff = (x1 - x2) / scale;
             sum_sq += diff * diff;
         }
@@ -719,7 +716,7 @@ where
         let n_points = points.shape()[0];
         if k_folds > n_points {
             return Err(InterpolateError::invalid_input(
-                "Number of folds cannot exceed number of points".to_string(),
+                "Number of _folds cannot exceed number of points".to_string(),
             ));
         }
 
@@ -930,15 +927,15 @@ where
     }
 
     /// Helper function to calculate mean distance between all pairs of points
-    fn calculate_mean_distance(points: &ArrayView2<F>, scale_factors: &Array1<F>) -> F {
-        let n_points = points.shape()[0];
+    fn calculate_mean_distance(_points: &ArrayView2<F>, scale_factors: &Array1<F>) -> F {
+        let n_points = _points.shape()[0];
         let mut total_dist = F::zero();
         let mut pair_count = 0;
 
         for i in 0..n_points {
             for j in i + 1..n_points {
-                let point_i = points.slice(ndarray::s![i, ..]);
-                let point_j = points.slice(ndarray::s![j, ..]);
+                let point_i = _points.slice(ndarray::s![i, ..]);
+                let point_j = _points.slice(ndarray::s![j, ..]);
                 total_dist += Self::scaled_distance(&point_i, &point_j, scale_factors);
                 pair_count += 1;
             }
@@ -952,13 +949,13 @@ where
     }
 
     /// Helper function to extract a subset of points
-    fn extract_points_subset(points: &ArrayView2<F>, indices: &[usize]) -> Array2<F> {
-        let n_dims = points.shape()[1];
+    fn extract_points_subset(_points: &ArrayView2<F>, indices: &[usize]) -> Array2<F> {
+        let n_dims = _points.shape()[1];
         let mut subset = Array2::zeros((indices.len(), n_dims));
 
         for (i, &idx) in indices.iter().enumerate() {
             for j in 0..n_dims {
-                subset[[i, j]] = points[[idx, j]];
+                subset[[i, j]] = _points[[idx, j]];
             }
         }
 
@@ -966,11 +963,11 @@ where
     }
 
     /// Helper function to extract a subset of values
-    fn extract_values_subset(values: &ArrayView1<F>, indices: &[usize]) -> Array1<F> {
+    fn extract_values_subset(_values: &ArrayView1<F>, indices: &[usize]) -> Array1<F> {
         let mut subset = Array1::zeros(indices.len());
 
         for (i, &idx) in indices.iter().enumerate() {
-            subset[i] = values[idx];
+            subset[i] = _values[idx];
         }
 
         subset
@@ -1048,9 +1045,9 @@ where
     /// Evaluate the RBF kernel function (standard or enhanced)
     fn evaluate_kernel(r: F, epsilon: F, kernel: KernelType<F>) -> F {
         match kernel {
-            KernelType::Standard(k) => Self::evaluate_standard_kernel(r, epsilon, k),
-            KernelType::Enhanced(k) => Self::evaluate_enhanced_kernel(r, epsilon, k),
-            KernelType::Custom(_, _) => {
+            KernelType::Standard(k) =>, Self::evaluate_standard_kernel(r, epsilon, k),
+            KernelType::Enhanced(k) =>, Self::evaluate_enhanced_kernel(r, epsilon, k),
+            KernelType::Custom(__) => {
                 // In a real implementation, we would call a registered custom kernel function
                 // For now, default to a basic Gaussian
                 (-r * r / (epsilon * epsilon)).exp()
@@ -1066,7 +1063,7 @@ where
         match kernel {
             RBFKernel::Gaussian => (-r2 / eps2).exp(),
             RBFKernel::Multiquadric => (r2 + eps2).sqrt(),
-            RBFKernel::InverseMultiquadric => F::one() / (r2 + eps2).sqrt(),
+            RBFKernel::InverseMultiquadric =>, F::one() / (r2 + eps2).sqrt(),
             RBFKernel::ThinPlateSpline => {
                 if r == F::zero() {
                     return F::zero();
@@ -1178,15 +1175,15 @@ where
     /// Interpolate at new points
     pub fn interpolate(&self, query_points: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
         // Check dimensions
-        if query_points.shape()[1] != self.points.shape()[1] {
+        if query_points.shape()[1] != self._points.shape()[1] {
             return Err(InterpolateError::DimensionMismatch(
-                "query points must have the same dimension as sample points".to_string(),
+                "query _points must have the same dimension as sample _points".to_string(),
             ));
         }
 
         let n_query = query_points.shape()[0];
-        let n_points = self.points.shape()[0];
-        let n_dims = self.points.shape()[1];
+        let n_points = self._points.shape()[0];
+        let n_dims = self._points.shape()[1];
         let mut result = Array1::zeros(n_query);
 
         if self.use_multiscale {
@@ -1202,7 +1199,7 @@ where
                     let epsilon = self.scale_parameters.as_ref().unwrap()[scale_idx];
 
                     for i in 0..n_points {
-                        let sample_point = self.points.slice(ndarray::s![i, ..]);
+                        let sample_point = self._points.slice(ndarray::s![i, ..]);
                         let r = EnhancedRBFBuilder::<F>::scaled_distance(
                             &query_point,
                             &sample_point,
@@ -1236,7 +1233,7 @@ where
 
                 // Evaluate RBF contribution
                 for i in 0..n_points {
-                    let sample_point = self.points.slice(ndarray::s![i, ..]);
+                    let sample_point = self._points.slice(ndarray::s![i, ..]);
                     let r = EnhancedRBFBuilder::<F>::scaled_distance(
                         &query_point,
                         &sample_point,
@@ -1299,7 +1296,7 @@ where
 
         // For a basic implementation, just compute error at sample points
         // and apply a correction factor
-        let (mse, _, _) = self.calculate_error()?;
+        let (mse__) = self.calculate_error()?;
 
         // Apply a correction factor to estimate LOO error
         // This is a very rough approximation
@@ -1349,7 +1346,7 @@ where
             KernelType::Enhanced(EnhancedRBFKernel::BeckertWendland(a)) => {
                 format!("Beckert-Wendland (α={a})")
             }
-            KernelType::Custom(_, _) => "Custom".to_string(),
+            KernelType::Custom(__) => "Custom".to_string(),
         };
 
         let scale_str = if self.use_multiscale {
@@ -1539,7 +1536,7 @@ where
 ///
 /// An enhanced RBF interpolator with equivalent functionality
 #[allow(dead_code)]
-pub fn enhance_rbf<F>(rbf: &RBFInterpolator<F>) -> InterpolateResult<EnhancedRBFInterpolator<F>>
+pub fn enhance_rbf<F>(_rbf: &RBFInterpolator<F>) -> InterpolateResult<EnhancedRBFInterpolator<F>>
 where
     F: Float
         + FromPrimitive
@@ -1560,7 +1557,7 @@ where
         + 'static,
 {
     // Extract data from the standard RBF interpolator
-    let _points = rbf.interpolate(&Array2::ones((1, 2)).view()).map_err(|_| {
+    let _points = _rbf.interpolate(&Array2::ones((1, 2)).view()).map_err(|_| {
         InterpolateError::InvalidState(
             "Failed to extract data from standard RBF interpolator".to_string(),
         )
@@ -1568,8 +1565,8 @@ where
 
     // Create an enhanced RBF interpolator with equivalent parameters
     EnhancedRBFInterpolator::builder()
-        .with_standard_kernel(rbf.kernel())
-        .with_epsilon(rbf.epsilon())
+        .with_standard_kernel(_rbf.kernel())
+        .with_epsilon(_rbf.epsilon())
         .build(&Array2::ones((1, 2)).view(), &Array1::zeros(1).view())
 }
 

@@ -11,6 +11,7 @@ use std::collections::HashSet;
 
 use crate::base::{DiGraph, Graph};
 use crate::error::{GraphError, Result};
+use rand::seq::SliceRandom;
 
 /// Create a new empty undirected graph
 #[allow(dead_code)]
@@ -246,14 +247,14 @@ pub fn tree_graph<R: Rng>(n: usize, rng: &mut R) -> Result<Graph<usize, f64>> {
     let mut tree_nodes = Vec::new();
 
     // Start with a random node
-    let start = rng.random_range(0..n);
+    let start = rng.gen_range(0..n);
     in_tree[start] = true;
     tree_nodes.push(start);
 
     // Add n-1 edges to complete the tree
     for _ in 1..n {
         // Pick a random node already in the tree
-        let tree_node = tree_nodes[rng.random_range(0..tree_nodes.len())];
+        let tree_node = tree_nodes[rng.gen_range(0..tree_nodes.len())];
 
         // Pick a random node not yet in the tree
         let candidates: Vec<usize> = (0..n).filter(|&i| !in_tree[i]).collect();
@@ -261,10 +262,10 @@ pub fn tree_graph<R: Rng>(n: usize, rng: &mut R) -> Result<Graph<usize, f64>> {
             break;
         }
 
-        let new_node = candidates[rng.random_range(0..candidates.len())];
+        let new_node = candidates[rng.gen_range(0..candidates.len())];
 
         // Add edge and mark node as in tree
-        graph.add_edge(tree_node, new_node, 1.0)?;
+        graph.add_edge(tree_node..new_node, 1.0)?;
         in_tree[new_node] = true;
         tree_nodes.push(new_node);
     }
@@ -321,12 +322,12 @@ where
     let mut rank: std::collections::HashMap<N, usize> =
         nodes.iter().map(|n| (n.clone(), 0)).collect();
 
-    fn find<N: crate::base::Node>(parent: &mut std::collections::HashMap<N, N>, node: &N) -> N {
-        if parent[node] != *node {
-            let root = find(parent, &parent[node].clone());
-            parent.insert(node.clone(), root.clone());
+    fn find<N: crate::base::Node>(_parent: &mut std::collections::HashMap<N, N>, node: &N) -> N {
+        if _parent[node] != *node {
+            let root = find(_parent, &_parent[node].clone());
+            _parent.insert(node.clone(), root.clone());
         }
-        parent[node].clone()
+        _parent[node].clone()
     }
 
     fn union<N: crate::base::Node>(
@@ -393,11 +394,11 @@ where
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A forest containing the specified trees
 #[allow(dead_code)]
-pub fn forest_graph<R: Rng>(tree_sizes: &[usize], rng: &mut R) -> Result<Graph<usize, f64>> {
+pub fn forest_graph<R: Rng>(_tree_sizes: &[usize], rng: &mut R) -> Result<Graph<usize, f64>> {
     let mut forest = Graph::new();
     let mut node_offset = 0;
 
-    for &tree_size in tree_sizes {
+    for &tree_size in _tree_sizes {
         if tree_size == 0 {
             continue;
         }
@@ -464,8 +465,8 @@ pub fn cycle_graph(n: usize) -> Result<Graph<usize, f64>> {
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A grid graph where node ID = row * cols + col
 #[allow(dead_code)]
-pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
-    if rows == 0 || cols == 0 {
+pub fn grid_2d_graph(_rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
+    if _rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
             "Grid dimensions must be positive".to_string(),
         ));
@@ -474,12 +475,12 @@ pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
     let mut graph = Graph::new();
 
     // Add all nodes
-    for i in 0..(rows * cols) {
+    for i in 0..(_rows * cols) {
         graph.add_node(i);
     }
 
     // Add edges to adjacent nodes (4-connectivity)
-    for row in 0..rows {
+    for row in 0.._rows {
         for col in 0..cols {
             let node_id = row * cols + col;
 
@@ -490,7 +491,7 @@ pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
             }
 
             // Connect to bottom neighbor
-            if row + 1 < rows {
+            if row + 1 < _rows {
                 let bottom_neighbor = (row + 1) * cols + col;
                 graph.add_edge(node_id, bottom_neighbor, 1.0)?;
             }
@@ -510,8 +511,8 @@ pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A 3D grid graph where node ID = z*x_dim*y_dim + y*x_dim + x
 #[allow(dead_code)]
-pub fn grid_3d_graph(x_dim: usize, y_dim: usize, z_dim: usize) -> Result<Graph<usize, f64>> {
-    if x_dim == 0 || y_dim == 0 || z_dim == 0 {
+pub fn grid_3d_graph(_x_dim: usize, y_dim: usize, z_dim: usize) -> Result<Graph<usize, f64>> {
+    if _x_dim == 0 || y_dim == 0 || z_dim == 0 {
         return Err(GraphError::InvalidGraph(
             "Grid dimensions must be positive".to_string(),
         ));
@@ -563,8 +564,8 @@ pub fn grid_3d_graph(x_dim: usize, y_dim: usize, z_dim: usize) -> Result<Graph<u
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A triangular lattice where each node has up to 6 neighbors
 #[allow(dead_code)]
-pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
-    if rows == 0 || cols == 0 {
+pub fn triangular_lattice_graph(_rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
+    if _rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
             "Lattice dimensions must be positive".to_string(),
         ));
@@ -573,11 +574,11 @@ pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize,
     let mut graph = Graph::new();
 
     // Add all nodes
-    for i in 0..(rows * cols) {
+    for i in 0..(_rows * cols) {
         graph.add_node(i);
     }
 
-    for row in 0..rows {
+    for row in 0.._rows {
         for col in 0..cols {
             let node_id = row * cols + col;
 
@@ -589,20 +590,20 @@ pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize,
             }
 
             // Bottom neighbor
-            if row + 1 < rows {
+            if row + 1 < _rows {
                 let bottom_neighbor = (row + 1) * cols + col;
                 graph.add_edge(node_id, bottom_neighbor, 1.0)?;
             }
 
             // Diagonal connections for triangular lattice
             // Bottom-right diagonal
-            if row + 1 < rows && col + 1 < cols {
+            if row + 1 < _rows && col + 1 < cols {
                 let diag_neighbor = (row + 1) * cols + (col + 1);
                 graph.add_edge(node_id, diag_neighbor, 1.0)?;
             }
 
-            // Bottom-left diagonal (for even rows)
-            if row + 1 < rows && col > 0 && row % 2 == 0 {
+            // Bottom-left diagonal (for even _rows)
+            if row + 1 < _rows && col > 0 && row % 2 == 0 {
                 let diag_neighbor = (row + 1) * cols + (col - 1);
                 graph.add_edge(node_id, diag_neighbor, 1.0)?;
             }
@@ -621,8 +622,8 @@ pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize,
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A hexagonal lattice where each node has exactly 3 neighbors
 #[allow(dead_code)]
-pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
-    if rows == 0 || cols == 0 {
+pub fn hexagonal_lattice_graph(_rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
+    if _rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
             "Lattice dimensions must be positive".to_string(),
         ));
@@ -631,11 +632,11 @@ pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, 
     let mut graph = Graph::new();
 
     // Add all nodes
-    for i in 0..(rows * cols) {
+    for i in 0..(_rows * cols) {
         graph.add_node(i);
     }
 
-    for row in 0..rows {
+    for row in 0.._rows {
         for col in 0..cols {
             let node_id = row * cols + col;
 
@@ -650,8 +651,8 @@ pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, 
 
             // Connect in honeycomb pattern
             if row % 2 == 0 {
-                // Even rows: connect down-left and down-right
-                if row + 1 < rows {
+                // Even _rows: connect down-left and down-right
+                if row + 1 < _rows {
                     if col > 0 {
                         let down_left = (row + 1) * cols + (col - 1);
                         graph.add_edge(node_id, down_left, 1.0)?;
@@ -662,8 +663,8 @@ pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, 
                     }
                 }
             } else {
-                // Odd rows: connect down-left and down-right with offset
-                if row + 1 < rows {
+                // Odd _rows: connect down-left and down-right with offset
+                if row + 1 < _rows {
                     let down_left = (row + 1) * cols + col;
                     graph.add_edge(node_id, down_left, 1.0)?;
 
@@ -749,12 +750,12 @@ pub fn watts_strogatz_graph<R: Rng>(
             }
 
             // Add rewired edge to a random node
-            let mut new_target = rng.random_range(0..n);
+            let mut new_target = rng.gen_range(0..n);
             while new_target == edge.source || new_graph.has_node(&new_target) {
-                new_target = rng.random_range(0..n);
+                new_target = rng.gen_range(0..n);
             }
 
-            new_graph.add_edge(edge.source, new_target, 1.0)?;
+            new_graph.add_edge(edge.source..new_target, 1.0)?;
             graph = new_graph;
         }
     }
@@ -790,14 +791,14 @@ pub fn stochastic_block_model<R: Rng>(
 
     if block_matrix.len() != block_sizes.len() {
         return Err(GraphError::InvalidGraph(
-            "Block matrix dimensions must match number of blocks".to_string(),
+            "Block _matrix dimensions must match number of blocks".to_string(),
         ));
     }
 
     for row in block_matrix {
         if row.len() != block_sizes.len() {
             return Err(GraphError::InvalidGraph(
-                "Block matrix must be square".to_string(),
+                "Block _matrix must be square".to_string(),
             ));
         }
         for &prob in row {
@@ -904,7 +905,7 @@ pub fn planted_partition_model<R: Rng>(
 
     // Create block matrix
     let mut block_matrix = vec![vec![p_out; k]; k];
-    for (i, row) in block_matrix.iter_mut().enumerate().take(k) {
+    for (i, row) _in block_matrix.iter_mut().enumerate().take(k) {
         row[i] = p_in;
     }
 
@@ -966,14 +967,14 @@ pub fn configuration_model<R: Rng>(
     // Randomly connect stubs to form edges
     while stubs.len() >= 2 {
         // Pick two random stubs
-        let idx1 = rng.random_range(0..stubs.len());
+        let idx1 = rng.gen_range(0..stubs.len());
         let stub1 = stubs.remove(idx1);
 
-        let idx2 = rng.random_range(0..stubs.len());
+        let idx2 = rng.gen_range(0..stubs.len());
         let stub2 = stubs.remove(idx2);
 
         // Connect the nodes (allow self-loops and multiple edges)
-        graph.add_edge(stub1, stub2, 1.0)?;
+        graph.add_edge(stub1..stub2, 1.0)?;
     }
 
     Ok(graph)
@@ -1012,7 +1013,7 @@ pub fn simple_configuration_model<R: Rng>(
 
     let n = degree_sequence.len();
 
-    // Check for degree sequence constraints for simple graphs
+    // Check for degree _sequence constraints for simple graphs
     for &degree in degree_sequence {
         if degree >= n {
             return Err(GraphError::InvalidGraph(
@@ -1021,9 +1022,9 @@ pub fn simple_configuration_model<R: Rng>(
         }
     }
 
-    let mut attempts = 0;
+    let mut _attempts = 0;
 
-    while attempts < max_attempts {
+    while _attempts < max_attempts {
         let mut graph = Graph::new();
 
         // Add all nodes
@@ -1044,23 +1045,23 @@ pub fn simple_configuration_model<R: Rng>(
         // Randomly connect stubs to form edges
         while stubs.len() >= 2 && success {
             // Pick two random stubs
-            let idx1 = rng.random_range(0..stubs.len());
+            let idx1 = rng.gen_range(0..stubs.len());
             let stub1 = stubs[idx1];
 
-            let idx2 = rng.random_range(0..stubs.len());
+            let idx2 = rng.gen_range(0..stubs.len());
             let stub2 = stubs[idx2];
 
             // Check for self-loop or existing edge
-            if stub1 == stub2 || graph.has_edge(&stub1, &stub2) {
+            if stub1 == stub2 || graph.has_edge(&stub1..&stub2) {
                 // Try a few more times before giving up on this attempt
                 let mut retries = 0;
                 let mut found_valid = false;
 
                 while retries < 50 && !found_valid {
-                    let new_idx2 = rng.random_range(0..stubs.len());
+                    let new_idx2 = rng.gen_range(0..stubs.len());
                     let new_stub2 = stubs[new_idx2];
 
-                    if stub1 != new_stub2 && !graph.has_edge(&stub1, &new_stub2) {
+                    if stub1 != new_stub2 && !graph.has_edge(&stub1..&new_stub2) {
                         // Remove stubs and add edge
                         // Remove the larger index first to avoid index shifting issues
                         if idx1 > new_idx2 {
@@ -1097,11 +1098,11 @@ pub fn simple_configuration_model<R: Rng>(
             return Ok(graph);
         }
 
-        attempts += 1;
+        _attempts += 1;
     }
 
     Err(GraphError::InvalidGraph(
-        "Could not generate simple graph with given degree sequence after maximum attempts"
+        "Could not generate simple graph with given degree _sequence after maximum _attempts"
             .to_string(),
     ))
 }

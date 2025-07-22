@@ -10,8 +10,8 @@ use std::iter::Sum;
 
 // Helper function to convert ndarray::ShapeError to LinalgError
 #[allow(dead_code)]
-fn shape_err_to_linalg(err: ndarray::ShapeError) -> crate::error::LinalgError {
-    crate::error::LinalgError::ShapeError(err.to_string())
+fn shape_err_to_linalg(_err: ndarray::ShapeError) -> crate::error::LinalgError {
+    crate::error::LinalgError::ShapeError(_err.to_string())
 }
 
 use crate::decomposition::cholesky;
@@ -637,16 +637,16 @@ where
     /// # Returns
     ///
     /// * New K-FAC optimizer instance
-    pub fn new(decay_factor: Option<F>, base_damping: Option<F>) -> Self {
-        let decay = decay_factor.unwrap_or_else(|| F::from(0.95).unwrap());
-        let damping = base_damping.unwrap_or_else(|| F::from(1e-4).unwrap());
+    pub fn new(_decay_factor: Option<F>, base_damping: Option<F>) -> Self {
+        let decay = _decay_factor.unwrap_or_else(|| F::from(0.95).unwrap());
+        let _damping = base_damping.unwrap_or_else(|| F::from(1e-4).unwrap());
 
         Self {
             decay_factor: decay,
-            base_damping: damping,
-            adaptive_damping: damping,
-            min_damping: damping / F::from(10.0).unwrap(),
-            max_damping: damping * F::from(100.0).unwrap(),
+            base_damping: _damping,
+            adaptive_damping: _damping,
+            min_damping: _damping / F::from(10.0).unwrap(),
+            max_damping: _damping * F::from(100.0).unwrap(),
             step_count: 0,
             input_cov_avg: None,
             output_cov_avg: None,
@@ -760,13 +760,13 @@ where
     ///
     pub fn adjust_damping(&mut self, loss_improved: bool, improvement_ratio: Option<F>) {
         if loss_improved {
-            // Loss improved: decrease damping
-            if let Some(ratio) = improvement_ratio {
-                if ratio > F::from(0.75).unwrap() {
+            // Loss _improved: decrease damping
+            if let Some(_ratio) = improvement_ratio {
+                if _ratio > F::from(0.75).unwrap() {
                     // Very good step: aggressive damping reduction
                     self.adaptive_damping =
                         (self.adaptive_damping / F::from(3.0).unwrap()).max(self.min_damping);
-                } else if ratio > F::from(0.25).unwrap() {
+                } else if _ratio > F::from(0.25).unwrap() {
                     // Good step: moderate damping reduction
                     self.adaptive_damping =
                         (self.adaptive_damping / F::from(2.0).unwrap()).max(self.min_damping);
@@ -830,11 +830,11 @@ where
     /// # Returns
     ///
     /// * New block-diagonal Fisher structure
-    pub fn new(layer_dims: Vec<(usize, usize)>, damping: F) -> Self {
+    pub fn new(_layer_dims: Vec<(usize, usize)>, damping: F) -> Self {
         Self {
             layer_factors: Vec::new(),
             inverse_factors: Vec::new(),
-            layer_dims,
+            layer_dims: _layer_dims,
             damping,
         }
     }
@@ -984,7 +984,7 @@ where
             .zip(self.inverse_factors.iter())
             .zip(self.layer_dims.iter())
         {
-            // Ensure gradients have the expected shape
+            // Ensure _gradients have the expected shape
             let (batch_size, grad_output_dim) = grads.dim();
             if grad_output_dim != output_dim {
                 return Err(LinalgError::ShapeError(format!(
@@ -995,10 +995,10 @@ where
             // Create extended gradient matrix with bias terms (add column of zeros for bias gradient)
             let mut extended_grads = Array2::zeros((input_dim + 1, output_dim));
 
-            // Copy the weight gradients
+            // Copy the weight _gradients
             for i in 0..input_dim {
                 for j in 0..output_dim {
-                    // Average gradients across batch
+                    // Average _gradients across batch
                     let mut sum = F::zero();
                     for b in 0..batch_size {
                         sum += grads[[b, j]]; // Accumulate gradient for output j
@@ -1006,7 +1006,7 @@ where
                     extended_grads[[i, j]] = sum / F::from(batch_size).unwrap();
                 }
             }
-            // Bias gradients are typically the mean of output gradients
+            // Bias _gradients are typically the mean of output _gradients
             for j in 0..output_dim {
                 let mut sum = F::zero();
                 for b in 0..batch_size {
@@ -1104,8 +1104,7 @@ pub fn advanced_kfac_step<F>(
     kfac_optimizer: &mut KFACOptimizer<F>,
     input_acts: &ArrayView2<F>,
     output_grads: &ArrayView2<F>,
-    learning_rate: F,
-    _momentum: Option<F>,
+    learning_rate: F, _momentum: Option<F>,
     gradient_clip: Option<F>,
 ) -> LinalgResult<Array2<F>>
 where
@@ -1133,7 +1132,7 @@ where
         }
     }
 
-    // Apply momentum if specified (would need momentum state in optimizer)
+    // Apply _momentum if specified (would need _momentum state in _optimizer)
     // For now, just use the natural gradient directly
 
     // Update weights: w = w - lr * natural_grad
@@ -1149,14 +1148,14 @@ where
 
 /// Compute stable matrix inverse with enhanced regularization
 #[allow(dead_code)]
-fn stable_matrix_inverse<F>(matrix: &ArrayView2<F>, damping: F) -> LinalgResult<Array2<F>>
+fn stable_matrix_inverse<F>(_matrix: &ArrayView2<F>, damping: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
-    let n = matrix.nrows();
+    let n = _matrix.nrows();
 
     // Add damping to ensure positive definiteness
-    let mut regularized = matrix.to_owned();
+    let mut regularized = _matrix.to_owned();
     for i in 0..n {
         regularized[[i, i]] += damping;
     }
@@ -1202,7 +1201,7 @@ where
             // Fallback: use diagonal approximation with heavy regularization
             let mut inv = Array2::zeros((n, n));
             for i in 0..n {
-                let diag_val = matrix[[i, i]] + damping * F::from(100.0).unwrap();
+                let diag_val = _matrix[[i, i]] + damping * F::from(100.0).unwrap();
                 inv[[i, i]] = F::one() / diag_val;
             }
             Ok(inv)

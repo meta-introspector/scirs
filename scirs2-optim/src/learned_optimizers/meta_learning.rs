@@ -1183,19 +1183,19 @@ impl<
     > MetaLearningFramework<T>
 {
     /// Create a new meta-learning framework
-    pub fn new(config: MetaLearningConfig) -> Result<Self> {
-        let meta_learner = Self::create_meta_learner(&config)?;
-        let task_manager = TaskDistributionManager::new(&config)?;
-        let meta_validator = MetaValidator::new(&config)?;
-        let adaptation_engine = AdaptationEngine::new(&config)?;
-        let transfer_manager = TransferLearningManager::new(&config.transfer_settings)?;
-        let continual_learner = ContinualLearningSystem::new(&config.continual_settings)?;
-        let multitask_coordinator = MultiTaskCoordinator::new(&config.multitask_settings)?;
+    pub fn new(_config: MetaLearningConfig) -> Result<Self> {
+        let meta_learner = Self::create_meta_learner(&_config)?;
+        let task_manager = TaskDistributionManager::new(&_config)?;
+        let meta_validator = MetaValidator::new(&_config)?;
+        let adaptation_engine = AdaptationEngine::new(&_config)?;
+        let transfer_manager = TransferLearningManager::new(&_config.transfer_settings)?;
+        let continual_learner = ContinualLearningSystem::new(&_config.continual_settings)?;
+        let multitask_coordinator = MultiTaskCoordinator::new(&_config.multitask_settings)?;
         let meta_tracker = MetaOptimizationTracker::new();
-        let few_shot_learner = FewShotLearner::new(&config.few_shot_settings)?;
+        let few_shot_learner = FewShotLearner::new(&_config.few_shot_settings)?;
 
         Ok(Self {
-            config,
+            _config,
             meta_learner,
             task_manager,
             meta_validator,
@@ -1539,13 +1539,13 @@ impl<
         D: Dimension,
     > MAMLLearner<T, D>
 {
-    pub fn new(config: MAMLConfig<T>) -> Result<Self> {
+    pub fn new(_config: MAMLConfig<T>) -> Result<Self> {
         let inner_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> =
-            Box::new(crate::optimizers::SGD::new(config.inner_lr));
+            Box::new(crate::optimizers::SGD::new(_config.inner_lr));
         let outer_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> =
-            Box::new(crate::optimizers::SGD::new(config.outer_lr));
+            Box::new(crate::optimizers::SGD::new(_config.outer_lr));
         let gradient_engine = GradientComputationEngine::new()?;
-        let second_order_engine = if config.second_order {
+        let second_order_engine = if _config.second_order {
             Some(SecondOrderGradientEngine::new()?)
         } else {
             None
@@ -1553,7 +1553,7 @@ impl<
         let adaptation_history = VecDeque::with_capacity(1000);
 
         Ok(Self {
-            config,
+            _config,
             inner_optimizer,
             outer_optimizer,
             gradient_engine,
@@ -1647,7 +1647,7 @@ impl<
             // Compute gradients
             let gradients = self.compute_gradients(&adapted_parameters, loss)?;
 
-            // Update parameters
+            // Update _parameters
             let learning_rate = T::from(self.config.inner_lr).unwrap();
             for (name, param) in adapted_parameters.iter_mut() {
                 if let Some(grad) = gradients.get(name) {
@@ -1687,8 +1687,7 @@ impl<
 
     fn evaluate_query_set(
         &self,
-        task: &MetaTask<T>,
-        _adapted_parameters: &HashMap<String, Array1<T>>,
+        task: &MetaTask<T>, _adapted_parameters: &HashMap<String, Array1<T>>,
     ) -> Result<QueryEvaluationResult<T>> {
         // Compute predictions on query set
         let mut predictions = Vec::new();
@@ -1730,8 +1729,7 @@ impl<
 impl<T: Float + Default + Clone + std::iter::Sum, D: Dimension> MAMLLearner<T, D> {
     fn compute_support_loss(
         &self,
-        task: &MetaTask<T>,
-        _parameters: &HashMap<String, Array1<T>>,
+        task: &MetaTask<T>, _parameters: &HashMap<String, Array1<T>>,
     ) -> Result<T> {
         let mut total_loss = T::zero();
 
@@ -1752,8 +1750,7 @@ impl<T: Float + Default + Clone + std::iter::Sum, D: Dimension> MAMLLearner<T, D
 
     fn compute_gradients(
         &self,
-        parameters: &HashMap<String, Array1<T>>,
-        _loss: T,
+        parameters: &HashMap<String, Array1<T>>, _loss: T,
     ) -> Result<HashMap<String, Array1<T>>> {
         let mut gradients = HashMap::new();
 
@@ -1772,22 +1769,18 @@ impl<T: Float + Default + Clone + std::iter::Sum, D: Dimension> MAMLLearner<T, D
 
 /// Meta-validation system for meta-learning
 pub struct MetaValidator<T: Float> {
-    config: MetaLearningConfig,
-    _phantom: std::marker::PhantomData<T>,
+    config: MetaLearningConfig_phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> MetaValidator<T> {
-    pub fn new(config: &MetaLearningConfig) -> Result<Self> {
+    pub fn new(_config: &MetaLearningConfig) -> Result<Self> {
         Ok(Self {
-            config: config.clone(),
-            _phantom: std::marker::PhantomData,
+            _config: _config.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
     pub fn validate(
-        &self,
-        _meta_parameters: &MetaParameters<T>,
-        _tasks: &[MetaTask<T>],
+        &self, _meta_parameters: &MetaParameters<T>, _tasks: &[MetaTask<T>],
     ) -> Result<ValidationResult> {
         // Placeholder validation implementation
         Ok(ValidationResult {
@@ -1800,24 +1793,18 @@ impl<T: Float + Default + Clone> MetaValidator<T> {
 
 /// Adaptation engine for meta-learning
 pub struct AdaptationEngine<T: Float> {
-    config: MetaLearningConfig,
-    _phantom: std::marker::PhantomData<T>,
+    config: MetaLearningConfig_phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> AdaptationEngine<T> {
-    pub fn new(config: &MetaLearningConfig) -> Result<Self> {
+    pub fn new(_config: &MetaLearningConfig) -> Result<Self> {
         Ok(Self {
-            config: config.clone(),
-            _phantom: std::marker::PhantomData,
+            _config: _config.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
     pub fn adapt(
-        &mut self,
-        _task: &MetaTask<T>,
-        _meta_parameters: &HashMap<String, Array1<T>>,
-        _meta_learner: &mut dyn MetaLearner<T>,
-        _inner_steps: usize,
+        &mut self_task: &MetaTask<T>, _meta_parameters: &HashMap<String, Array1<T>>, _meta_learner: &mut dyn MetaLearner<T>, _inner_steps: usize,
     ) -> Result<TaskAdaptationResult<T>> {
         // Placeholder adaptation implementation
         Ok(TaskAdaptationResult {
@@ -1836,23 +1823,18 @@ impl<T: Float + Default + Clone> AdaptationEngine<T> {
 
 /// Transfer learning manager
 pub struct TransferLearningManager<T: Float> {
-    settings: TransferLearningSettings,
-    _phantom: std::marker::PhantomData<T>,
+    settings: TransferLearningSettings_phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> TransferLearningManager<T> {
-    pub fn new(settings: &TransferLearningSettings) -> Result<Self> {
+    pub fn new(_settings: &TransferLearningSettings) -> Result<Self> {
         Ok(Self {
-            settings: settings.clone(),
-            _phantom: std::marker::PhantomData,
+            _settings: _settings.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
     pub fn transfer(
-        &mut self,
-        _source_tasks: &[MetaTask<T>],
-        _target_tasks: &[MetaTask<T>],
-        _meta_parameters: &HashMap<String, Array1<T>>,
+        &mut self, _source_tasks: &[MetaTask<T>], _target_tasks: &[MetaTask<T>], _meta_parameters: &HashMap<String, Array1<T>>,
     ) -> Result<TransferLearningResult<T>> {
         // Placeholder implementation
         Ok(TransferLearningResult {
@@ -1870,22 +1852,19 @@ impl<T: Float + Default + Clone> TransferLearningManager<T> {
 
 /// Continual learning system
 pub struct ContinualLearningSystem<T: Float> {
-    settings: ContinualLearningSettings,
-    _phantom: std::marker::PhantomData<T>,
+    settings: ContinualLearningSettings_phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> ContinualLearningSystem<T> {
-    pub fn new(settings: &ContinualLearningSettings) -> Result<Self> {
+    pub fn new(_settings: &ContinualLearningSettings) -> Result<Self> {
         Ok(Self {
-            settings: settings.clone(),
-            _phantom: std::marker::PhantomData,
+            _settings: _settings.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
     pub fn learn_sequence(
         &mut self,
-        sequence: &[MetaTask<T>],
-        _meta_parameters: &mut HashMap<String, Array1<T>>,
+        sequence: &[MetaTask<T>], _meta_parameters: &mut HashMap<String, Array1<T>>,
     ) -> Result<ContinualLearningResult<T>> {
         // Placeholder implementation for continual learning
         let mut sequence_results = Vec::new();
@@ -1915,22 +1894,19 @@ impl<T: Float + Default + Clone> ContinualLearningSystem<T> {
 
 /// Multi-task coordinator
 pub struct MultiTaskCoordinator<T: Float> {
-    settings: MultiTaskSettings,
-    _phantom: std::marker::PhantomData<T>,
+    settings: MultiTaskSettings_phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> MultiTaskCoordinator<T> {
-    pub fn new(settings: &MultiTaskSettings) -> Result<Self> {
+    pub fn new(_settings: &MultiTaskSettings) -> Result<Self> {
         Ok(Self {
-            settings: settings.clone(),
-            _phantom: std::marker::PhantomData,
+            _settings: _settings.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
     pub fn learn_simultaneously(
         &mut self,
-        tasks: &[MetaTask<T>],
-        _meta_parameters: &mut HashMap<String, Array1<T>>,
+        tasks: &[MetaTask<T>], _meta_parameters: &mut HashMap<String, Array1<T>>,
     ) -> Result<MultiTaskResult<T>> {
         // Placeholder implementation for multi-task learning
         let mut task_results = Vec::new();
@@ -1960,23 +1936,18 @@ impl<T: Float + Default + Clone> MultiTaskCoordinator<T> {
 
 /// Meta-optimization tracker
 pub struct MetaOptimizationTracker<T: Float> {
-    step_count: usize,
-    _phantom: std::marker::PhantomData<T>,
+    step_count: usize, _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> MetaOptimizationTracker<T> {
     pub fn new() -> Self {
         Self {
-            step_count: 0,
-            _phantom: std::marker::PhantomData,
+            step_count: 0, _phantom: std::marker::PhantomData,
         }
     }
 
     pub fn record_epoch(
-        &mut self,
-        _epoch: usize,
-        _training_result: &TrainingResult,
-        _validation_result: &ValidationResult,
+        &mut self_epoch: usize_training, _result: &TrainingResult_validation_result: &ValidationResult,
     ) -> Result<()> {
         self.step_count += 1;
         // Placeholder implementation
@@ -1999,47 +1970,39 @@ impl<T: Float + Default + Clone> MetaOptimizationTracker<T> {
 
 /// Task distribution manager
 pub struct TaskDistributionManager<T: Float> {
-    config: MetaLearningConfig,
-    _phantom: std::marker::PhantomData<T>,
+    config: MetaLearningConfig_phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> TaskDistributionManager<T> {
-    pub fn new(config: &MetaLearningConfig) -> Result<Self> {
+    pub fn new(_config: &MetaLearningConfig) -> Result<Self> {
         Ok(Self {
-            config: config.clone(),
-            _phantom: std::marker::PhantomData,
+            _config: _config.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
     pub fn sample_task_batch(
-        &self,
-        _tasks: &[MetaTask<T>],
+        &self_tasks: &[MetaTask<T>],
         batch_size: usize,
     ) -> Result<Vec<MetaTask<T>>> {
-        // Placeholder implementation - sample random tasks
+        // Placeholder implementation - sample random _tasks
         Ok(vec![MetaTask::default(); batch_size.min(10)])
     }
 }
 
 /// Few-shot learner
 pub struct FewShotLearner<T: Float> {
-    settings: FewShotSettings,
-    _phantom: std::marker::PhantomData<T>,
+    settings: FewShotSettings_phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> FewShotLearner<T> {
-    pub fn new(settings: &FewShotSettings) -> Result<Self> {
+    pub fn new(_settings: &FewShotSettings) -> Result<Self> {
         Ok(Self {
-            settings: settings.clone(),
-            _phantom: std::marker::PhantomData,
+            _settings: _settings.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
     pub fn learn(
-        &mut self,
-        _support_set: &TaskDataset<T>,
-        _query_set: &TaskDataset<T>,
-        _meta_parameters: &HashMap<String, Array1<T>>,
+        &mut self, _support_set: &TaskDataset<T>, _query_set: &TaskDataset<T>, _meta_parameters: &HashMap<String, Array1<T>>,
     ) -> Result<FewShotResult<T>> {
         // Placeholder implementation
         Ok(FewShotResult {

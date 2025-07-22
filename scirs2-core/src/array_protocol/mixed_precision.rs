@@ -179,7 +179,7 @@ where
     }
 
     /// Create a new mixed-precision array with specified compute precision.
-    pub fn with_compute_precision(array: Array<T, D>, compute_precision: Precision) -> Self {
+    pub fn with_compute_precision(data: Array<T, D>, compute_precision: Precision) -> Self {
         let storage_precision = match std::mem::size_of::<T>() {
             2 => Precision::Half,
             4 => Precision::Single,
@@ -188,7 +188,7 @@ where
         };
 
         Self {
-            array,
+            array: data,
             storage_precision,
             compute_precision,
         }
@@ -263,7 +263,8 @@ where
                         let _precision_to_use = match (precision, other_precision) {
                             (Precision::Double, _) | (_, Precision::Double) => Precision::Double,
                             (Precision::Mixed, _) | (_, Precision::Mixed) => Precision::Mixed,
-                            _ => Precision::Single,
+                            (Precision::Single, _) | (_, Precision::Single) => Precision::Single,
+                            (Precision::Half, Precision::Half) => Precision::Half,
                         };
 
                         // We can't modify kwargs, so we'll just forward directly
@@ -317,7 +318,8 @@ where
                         let _precision_to_use = match (precision, other_precision) {
                             (Precision::Double, _) | (_, Precision::Double) => Precision::Double,
                             (Precision::Mixed, _) | (_, Precision::Mixed) => Precision::Mixed,
-                            _ => Precision::Single,
+                            (Precision::Single, _) | (_, Precision::Single) => Precision::Single,
+                            (Precision::Half, Precision::Half) => Precision::Half,
                         };
 
                         // We can't modify kwargs, so we'll just forward directly
@@ -433,8 +435,8 @@ where
         }
     }
 
-    fn supports_precision(&self, _precision: Precision) -> bool {
-        matches!(_precision, Precision::Single | Precision::Double)
+    fn supports_precision(&self, precision: Precision) -> bool {
+        matches!(precision, Precision::Single | Precision::Double)
     }
 }
 
@@ -469,7 +471,7 @@ where
             match std::mem::size_of::<T>() {
                 4 => Precision::Single,
                 8 => Precision::Double,
-                _ => Precision::Mixed,
+            _ => Precision::Mixed,
             }
         }
     }

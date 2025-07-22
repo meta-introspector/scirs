@@ -1532,7 +1532,7 @@ where
     /// Generate optimization recommendations
     fn generate_recommendations(
         &self,
-        _workload: &WorkloadCharacteristics,
+        _workload: &WorkloadCharacteristics, 
         _data: &ArrayView2<T>,
     ) -> LinalgResult<Vec<OptimizationRecommendation<T>>> {
         let recommendations = vec![
@@ -1819,8 +1819,8 @@ where
     }
 
     fn select_algorithm(
-        &self,
-        _data: &ArrayView2<T>,
+        &self, 
+        _data: &ArrayView2<T>, 
         _constraints: &CompressionConstraints,
     ) -> LinalgResult<CompressionAlgorithm> {
         // Simplified selection
@@ -2101,8 +2101,7 @@ where
     }
 
     fn learn_patterns(
-        &self,
-        _access_traces: &[MemoryAccessPattern<T>],
+        &self, _access_traces: &[MemoryAccessPattern<T>],
     ) -> LinalgResult<OptimizationRecommendations<T>> {
         Ok(OptimizationRecommendations {
             prefetch_strategies: Vec::new(),
@@ -2188,10 +2187,10 @@ impl<T> PolicyNetwork<T> {
 }
 
 impl<T> ExperienceReplayBuffer<T> {
-    fn new(capacity: usize) -> Self {
+    fn new(_capacity: usize) -> Self {
         Self {
-            buffer: VecDeque::with_capacity(capacity),
-            capacity,
+            buffer: VecDeque::with_capacity(_capacity),
+            capacity: _capacity,
             current_size: 0,
         }
     }

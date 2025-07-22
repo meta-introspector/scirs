@@ -243,8 +243,7 @@ impl<
             PolicyGradientMethod::PPOAdaptiveKL => self.update_ppo_adaptive_kl(trajectory),
             PolicyGradientMethod::TRPO => self.update_trpo(trajectory),
             PolicyGradientMethod::Reinforce => self.update_reinforce(trajectory),
-            PolicyGradientMethod::ActorCritic => self.update_actor_critic(trajectory),
-            _ => Err(OptimError::InvalidConfig(
+            PolicyGradientMethod::ActorCritic => self.update_actor_critic(trajectory, _ => Err(OptimError::InvalidConfig(
                 "Method not implemented".to_string(),
             )),
         }
@@ -316,7 +315,7 @@ impl<
                     / T::from(mini_batch.observations.nrows()).unwrap();
 
                 // Entropy loss (negative to encourage exploration)
-                let entropy_loss = -policy_eval.entropy.mean().unwrap_or(T::zero());
+                let entropy_loss = -policy_eval.entropy.iter().copied().sum::<T>() / T::from(policy_eval.entropy.len()).unwrap_or(T::zero());
 
                 // Value function loss
                 let value_loss = if let Some(ref value_net) = self.value_network {
@@ -370,7 +369,7 @@ impl<
                     .iter()
                     .filter(|&&r| {
                         let clip_eps = self.config.ppo_config.clip_epsilon;
-                        r < T::one() - clip_eps || r > T::one() + clip_eps
+                        r < T::one() - clip_eps || r >, T::one() + clip_eps
                     })
                     .count();
                 clip_fraction =
@@ -454,7 +453,7 @@ impl<
                 .unwrap_or(T::zero())
         };
 
-        let entropy_loss = -policy_eval.entropy.mean().unwrap_or(T::zero());
+        let entropy_loss = -policy_eval.entropy.iter().copied().sum::<T>() / T::from(policy_eval.entropy.len()).unwrap_or(T::zero());
         let total_loss = policy_loss + self.config.base_config.entropy_coeff * entropy_loss;
 
         self.update_networks_with_loss(total_loss, policy_loss, T::zero())?;
@@ -477,8 +476,7 @@ impl<
 
     /// Update networks with computed losses
     fn update_networks_with_loss(
-        &mut self,
-        _total_loss: T,
+        &mut self, _total_loss: T,
         policy_loss: T,
         value_loss: T,
     ) -> Result<()> {
@@ -553,7 +551,7 @@ impl<
     ) -> Result<HashMap<String, Array1<T>>> {
         let mut clipped_gradients = HashMap::new();
 
-        // Compute global gradient norm
+        // Compute global gradient _norm
         let mut total_norm = T::zero();
         for (_, grad) in gradients {
             total_norm = total_norm + grad.iter().map(|&g| g * g).sum::<T>();
@@ -694,3 +692,4 @@ impl<
 
 // Import slice syntax
 use ndarray::s;
+// use statrs::statistics::Statistics; // statrs not available

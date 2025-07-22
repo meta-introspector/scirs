@@ -12,23 +12,23 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 ///
 /// This implementation uses SIMD operations for partitioning when beneficial.
 #[allow(dead_code)]
-pub fn quickselect_simd<F>(arr: &mut [F], k: usize) -> F
+pub fn quickselect_simd<F>(_arr: &mut [F], k: usize) -> F
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
 {
-    if arr.len() == 1 {
-        return arr[0];
+    if _arr.len() == 1 {
+        return _arr[0];
     }
 
     let mut left = 0;
-    let mut right = arr.len() - 1;
+    let mut right = _arr.len() - 1;
     let optimizer = AutoOptimizer::new();
 
     while left < right {
-        let pivot_idx = partition_simd(arr, left, right, &optimizer);
+        let pivot_idx = partition_simd(_arr, left, right, &optimizer);
 
         if k == pivot_idx {
-            return arr[k];
+            return _arr[k];
         } else if k < pivot_idx {
             right = pivot_idx - 1;
         } else {
@@ -36,18 +36,18 @@ where
         }
     }
 
-    arr[k]
+    _arr[k]
 }
 
 /// SIMD-optimized partition function for quickselect
 #[allow(dead_code)]
-fn partition_simd<F>(arr: &mut [F], left: usize, right: usize, optimizer: &AutoOptimizer) -> usize
+fn partition_simd<F>(_arr: &mut [F], left: usize, right: usize, optimizer: &AutoOptimizer) -> usize
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
 {
     // Choose pivot using median-of-three
     let mid = left + (right - left) / 2;
-    let pivot = median_of_three(arr[left], arr[mid], arr[right]);
+    let pivot = median_of_three(_arr[left], _arr[mid], _arr[right]);
 
     let mut i = left;
     let mut j = right;
@@ -64,7 +64,7 @@ where
                 let mut found = false;
 
                 for offset in 0..chunk_size {
-                    if arr[i + offset] >= pivot {
+                    if _arr[i + offset] >= pivot {
                         i += offset;
                         found = true;
                         break;
@@ -84,7 +84,7 @@ where
                 let mut found = false;
 
                 for offset in 0..chunk_size {
-                    if arr[j - offset] <= pivot {
+                    if _arr[j - offset] <= pivot {
                         j -= offset;
                         found = true;
                         break;
@@ -99,10 +99,10 @@ where
             }
         } else {
             // Scalar path
-            while i < j && arr[i] < pivot {
+            while i < j && _arr[i] < pivot {
                 i += 1;
             }
-            while i < j && arr[j] > pivot {
+            while i < j && _arr[j] > pivot {
                 j -= 1;
             }
         }
@@ -111,7 +111,7 @@ where
             break;
         }
 
-        arr.swap(i, j);
+        _arr.swap(i, j);
         i += 1;
         j -= 1;
     }
@@ -166,7 +166,7 @@ where
         ));
     }
 
-    if q < F::zero() || q > F::one() {
+    if q < F::zero() || q >, F::one() {
         return Err(StatsError::invalid_argument(
             "Quantile must be between 0 and 1",
         ));
@@ -252,7 +252,7 @@ where
 
     // Validate quantiles
     for &q in quantiles.iter() {
-        if q < F::zero() || q > F::one() {
+        if q < F::zero() || q >, F::one() {
             return Err(StatsError::invalid_argument(
                 "All quantiles must be between 0 and 1",
             ));
@@ -282,11 +282,11 @@ where
 /// SIMD-accelerated sorting for arrays
 ///
 /// Uses SIMD operations for comparison and swapping when beneficial
-pub(crate) fn simd_sort<F>(data: &mut [F])
+pub(crate) fn simd_sort<F>(_data: &mut [F])
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
 {
-    let n = data.len();
+    let n = _data.len();
     let optimizer = AutoOptimizer::new();
 
     if n <= 1 {
@@ -295,28 +295,28 @@ where
 
     // For small arrays, use insertion sort
     if n <= 32 {
-        insertion_sort(data);
+        insertion_sort(_data);
         return;
     }
 
     // For larger arrays, use introsort with SIMD optimizations
     let max_depth = (n.ilog2() * 2) as usize;
-    introsort_simd(data, 0, n - 1, max_depth, &optimizer);
+    introsort_simd(_data, 0, n - 1, max_depth, &optimizer);
 }
 
 /// Insertion sort for small arrays
 #[allow(dead_code)]
-fn insertion_sort<F: Float>(data: &mut [F]) {
-    for i in 1..data.len() {
-        let key = data[i];
+fn insertion_sort<F: Float>(_data: &mut [F]) {
+    for i in 1.._data.len() {
+        let key = _data[i];
         let mut j = i;
 
-        while j > 0 && data[j - 1] > key {
-            data[j] = data[j - 1];
+        while j > 0 && _data[j - 1] > key {
+            _data[j] = _data[j - 1];
             j -= 1;
         }
 
-        data[j] = key;
+        _data[j] = key;
     }
 }
 
@@ -343,7 +343,7 @@ fn introsort_simd<F>(
         return;
     }
 
-    // Switch to heapsort if we hit the depth limit
+    // Switch to heapsort if we hit the depth _limit
     if depth_limit == 0 {
         heapsort(&mut data[left..=right]);
         return;
@@ -362,51 +362,51 @@ fn introsort_simd<F>(
 
 /// Heapsort fallback for worst-case scenarios
 #[allow(dead_code)]
-fn heapsort<F: Float>(data: &mut [F]) {
-    let n = data.len();
+fn heapsort<F: Float>(_data: &mut [F]) {
+    let n = _data.len();
 
     // Build heap
     for i in (0..n / 2).rev() {
-        heapify(data, n, i);
+        heapify(_data, n, i);
     }
 
     // Extract elements from heap
     for i in (1..n).rev() {
-        data.swap(0, i);
-        heapify(data, i, 0);
+        _data.swap(0, i);
+        heapify(_data, i, 0);
     }
 }
 
 #[allow(dead_code)]
-fn heapify<F: Float>(data: &mut [F], n: usize, i: usize) {
+fn heapify<F: Float>(_data: &mut [F], n: usize, i: usize) {
     let mut largest = i;
     let left = 2 * i + 1;
     let right = 2 * i + 2;
 
-    if left < n && data[left] > data[largest] {
+    if left < n && _data[left] > _data[largest] {
         largest = left;
     }
 
-    if right < n && data[right] > data[largest] {
+    if right < n && _data[right] > _data[largest] {
         largest = right;
     }
 
     if largest != i {
-        data.swap(i, largest);
-        heapify(data, n, largest);
+        _data.swap(i, largest);
+        heapify(_data, n, largest);
     }
 }
 
 /// Compute quantile from sorted array
 #[allow(dead_code)]
-fn compute_quantile_from_sorted<F>(sorted_data: &[F], q: F, method: &str) -> StatsResult<F>
+fn compute_quantile_from_sorted<F>(_sorted_data: &[F], q: F, method: &str) -> StatsResult<F>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    let n = sorted_data.len();
+    let n = _sorted_data.len();
 
     if q == F::zero() {
-        return Ok(sorted_data[0]);
+        return Ok(_sorted_data[0]);
     }
     if q == F::one() {
         return Ok(sorted_data[n - 1]);
@@ -464,7 +464,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
     D: DataMut<Elem = F>,
 {
-    if p < F::zero() || p > F::from(100.0).unwrap() {
+    if p < F::zero() || p >, F::from(100.0).unwrap() {
         return Err(StatsError::invalid_argument(
             "Percentile must be between 0 and 100",
         ));

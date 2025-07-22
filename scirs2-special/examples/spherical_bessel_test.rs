@@ -2,7 +2,7 @@
 // This demonstrates the use of both regular and scaled spherical Bessel functions
 // with various argument ranges
 
-use scirs2_special::bessel::spherical::{spherical_jn, spherical_jn_scaled, spherical_yn};
+use scirs2__special::bessel::spherical::{spherical_jn, spherical_jn_scaled, spherical_yn};
 
 #[allow(dead_code)]
 fn main() {

@@ -5,7 +5,7 @@
 
 use crate::error::{OptimError, Result};
 use crate::optimizers::*;
-use crate::unified_api::OptimizerConfig;
+use crate::unified__api::OptimizerConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
@@ -496,11 +496,11 @@ pub struct ResourceMonitor {
 
 impl Experiment {
     /// Create a new experiment
-    pub fn new(name: &str) -> Self {
+    pub fn new(_name: &str) -> Self {
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
-            name: name.to_string(),
+            _name: _name.to_string(),
             hypothesis: String::new(),
             description: String::new(),
             status: ExperimentStatus::Planning,
@@ -615,7 +615,7 @@ impl Experiment {
         report.push_str(&format!("- **Max Epochs**: {}\n", self.config.max_epochs));
         
         report.push_str("\n## Optimizers\n\n");
-        for (name, _config) in &self.optimizer_configs {
+        for (name_config) in &self.optimizer_configs {
             report.push_str(&format!("- {}\n", name));
         }
         
@@ -837,12 +837,12 @@ impl Default for ExperimentMetadata {
 
 impl ResourceMonitor {
     /// Create a new resource monitor
-    pub fn new(interval_seconds: u64) -> Self {
+    pub fn new(_interval_seconds: u64) -> Self {
         Self {
             cpu_usage: Vec::new(),
             memory_usage: Vec::new(),
             gpu_memory_usage: Vec::new(),
-            interval_seconds,
+            _interval_seconds,
         }
     }
     

@@ -8,6 +8,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::sync::Arc;
+use statrs::statistics::Statistics;
 
 /// Enhanced parallel configuration
 #[derive(Debug, Clone)]
@@ -29,7 +30,7 @@ impl Default for EnhancedParallelConfig {
         Self {
             num_threads: None,
             min_chunk_size: 1000,
-            max_chunks: num_cpus::get() * 4,
+            max_chunks: num, _cpus: get() * 4,
             numa_aware: true,
             work_stealing: true,
         }
@@ -38,8 +39,7 @@ impl Default for EnhancedParallelConfig {
 
 /// Enhanced parallel statistics processor
 pub struct EnhancedParallelProcessor<F> {
-    config: EnhancedParallelConfig,
-    _phantom: std::marker::PhantomData<F>,
+    config: EnhancedParallelConfig_phantom: std::marker::PhantomData<F>,
 }
 
 impl<F> EnhancedParallelProcessor<F>
@@ -60,16 +60,14 @@ where
     /// Create new enhanced parallel processor
     pub fn new() -> Self {
         Self {
-            config: EnhancedParallelConfig::default(),
-            _phantom: std::marker::PhantomData,
+            config: EnhancedParallelConfig::default(), _phantom: std::marker::PhantomData,
         }
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: EnhancedParallelConfig) -> Self {
+    pub fn with_config(_config: EnhancedParallelConfig) -> Self {
         Self {
-            config,
-            _phantom: std::marker::PhantomData,
+            _config_phantom: std::marker::PhantomData,
         }
     }
 
@@ -231,11 +229,11 @@ where
                 None => Random::with_seed(i as u64), // Use index as seed for determinism in parallel
             };
 
-            // Generate bootstrap sample
+            // Generate _bootstrap sample
             let n = data_arc.len();
             let mut bootstrap_sample = Array1::zeros(n);
             for j in 0..n {
-                let idx = rng.random_range(0, n);
+                let idx = rng.gen_range(0..n);
                 bootstrap_sample[j] = data_arc[idx];
             }
 
@@ -308,7 +306,7 @@ where
         }
 
         for &q in quantiles {
-            if q < F::zero() || q > F::one() {
+            if q < F::zero() || q >, F::one() {
                 return Err(StatsError::InvalidArgument(
                     "Quantiles must be in [0, 1]".to_string(),
                 ));
@@ -368,13 +366,13 @@ where
         mean_x: F,
         mean_y: F,
     ) -> StatsResult<F> {
-        if x.len() != y.len() {
+        if _x.len() != _y.len() {
             return Err(StatsError::DimensionMismatch(
                 "Arrays must have the same length".to_string(),
             ));
         }
 
-        let n = x.len();
+        let n = _x.len();
         if n < 2 {
             return Ok(F::zero());
         }
@@ -389,8 +387,8 @@ where
                 let mut sum_y2 = F::zero();
 
                 for &i in indices {
-                    let dx = x[i] - mean_x;
-                    let dy = y[i] - mean_y;
+                    let dx = _x[i] - mean_x;
+                    let dy = _y[i] - mean_y;
                     sum_xy = sum_xy + dx * dy;
                     sum_x2 = sum_x2 + dx * dx;
                     sum_y2 = sum_y2 + dy * dy;
@@ -426,7 +424,7 @@ pub struct MatrixParallelResult<F> {
 
 /// High-level convenience functions
 #[allow(dead_code)]
-pub fn mean_parallel_advanced<F>(data: &ArrayView1<F>) -> StatsResult<F>
+pub fn mean_parallel_advanced<F>(_data: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float
         + NumCast
@@ -442,11 +440,11 @@ where
         + num_traits::FromPrimitive,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
-    processor.mean_parallel_enhanced(data)
+    processor.mean_parallel_enhanced(_data)
 }
 
 #[allow(dead_code)]
-pub fn variance_parallel_advanced<F>(data: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
+pub fn variance_parallel_advanced<F>(_data: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
     F: Float
         + NumCast
@@ -462,11 +460,11 @@ where
         + num_traits::FromPrimitive,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
-    processor.variance_parallel_enhanced(data, ddof)
+    processor.variance_parallel_enhanced(_data, ddof)
 }
 
 #[allow(dead_code)]
-pub fn correlation_matrix_parallel_advanced<F>(matrix: &ArrayView2<F>) -> StatsResult<Array2<F>>
+pub fn correlation_matrix_parallel_advanced<F>(_matrix: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
     F: Float
         + NumCast
@@ -482,7 +480,7 @@ where
         + num_traits::FromPrimitive,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
-    processor.correlation_matrix_parallel(matrix)
+    processor.correlation_matrix_parallel(_matrix)
 }
 
 #[allow(dead_code)]

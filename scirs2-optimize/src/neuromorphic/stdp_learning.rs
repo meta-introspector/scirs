@@ -12,6 +12,7 @@ use ndarray::{Array1, ArrayView1};
 use rand::Rng;
 use scirs2_core::error::CoreResult as Result;
 use std::collections::VecDeque;
+use statrs::statistics::Statistics;
 
 /// Advanced Multi-Timescale STDP with Metaplasticity
 #[derive(Debug, Clone)]
@@ -70,7 +71,7 @@ pub struct AdvancedAdvancedSTDP {
 
 impl AdvancedAdvancedSTDP {
     /// Create new advanced STDP rule with sophisticated plasticity mechanisms
-    pub fn new(eta_ltp: f64, eta_ltd: f64, target_firing_rate: f64) -> Self {
+    pub fn new(_eta_ltp: f64, eta_ltd: f64, target_firing_rate: f64) -> Self {
         Self {
             // Initialize traces
             pre_trace_fast: 0.0,
@@ -104,10 +105,10 @@ impl AdvancedAdvancedSTDP {
             tau_metaplasticity: 100.0, // 100s metaplasticity
 
             // Learning rates
-            eta_ltp,
+            _eta_ltp,
             eta_ltd,
-            eta_triplet: eta_ltp * 0.1,
-            eta_homeostatic: eta_ltp * 0.01,
+            eta_triplet: _eta_ltp * 0.1,
+            eta_homeostatic: _eta_ltp * 0.01,
 
             // BCM thresholds
             theta_d: 0.2,
@@ -145,7 +146,7 @@ impl AdvancedAdvancedSTDP {
         // Decay all traces
         self.decay_traces(dt);
 
-        // Update spike histories
+        // Update _spike histories
         if pre_spike {
             self.spike_history_pre.push_back(current_time);
             if self.spike_history_pre.len() > 100 {
@@ -164,7 +165,7 @@ impl AdvancedAdvancedSTDP {
         // 1. Pairwise STDP with multiple timescales
         total_weight_change += self.compute_pairwise_stdp(pre_spike, post_spike);
 
-        // 2. Triplet STDP for complex spike patterns
+        // 2. Triplet STDP for complex _spike patterns
         total_weight_change += self.compute_triplet_stdp(pre_spike, post_spike);
 
         // 3. Calcium-based plasticity rules
@@ -182,7 +183,7 @@ impl AdvancedAdvancedSTDP {
         // Apply global scaling factor
         total_weight_change *= self.scaling_factor;
 
-        // Apply weight bounds and soft constraints
+        // Apply _weight bounds and soft constraints
         let new_weight = current_weight + total_weight_change;
         self.apply_weight_constraints(new_weight)
     }
@@ -203,7 +204,7 @@ impl AdvancedAdvancedSTDP {
         self.calcium_concentration = self.calcium_concentration.min(1.0);
     }
 
-    fn update_metaplasticity(&mut self, _current_time: f64, objective_improvement: f64) {
+    fn update_metaplasticity(&mut self_current_time: f64, objective_improvement: f64) {
         // Store recent activity
         self.recent_activity.push_back(objective_improvement);
         if self.recent_activity.len() > 1000 {
@@ -229,7 +230,7 @@ impl AdvancedAdvancedSTDP {
         }
     }
 
-    fn update_homeostasis(&mut self, _pre_spike: bool, post_spike: bool, dt: f64) {
+    fn update_homeostasis(&mut self_pre_spike: bool, post_spike: bool, dt: f64) {
         // Update current firing rate estimate
         let spike_rate = if post_spike { 1.0 / dt } else { 0.0 };
         self.current_firing_rate = 0.999 * self.current_firing_rate + 0.001 * spike_rate;
@@ -313,8 +314,7 @@ impl AdvancedAdvancedSTDP {
     fn compute_bcm_plasticity(
         &self,
         pre_spike: bool,
-        post_spike: bool,
-        _current_weight: f64,
+        post_spike: bool, _current_weight: f64,
     ) -> f64 {
         if !pre_spike && !post_spike {
             return 0.0;
@@ -385,11 +385,11 @@ pub struct STDPLearningRule {
 
 impl STDPLearningRule {
     /// Create new simple STDP rule
-    pub fn new(learning_rate: f64) -> Self {
+    pub fn new(_learning_rate: f64) -> Self {
         Self {
             pre_trace: 0.0,
             post_trace: 0.0,
-            learning_rate,
+            _learning_rate,
             tau_plus: 0.020,  // 20ms
             tau_minus: 0.020, // 20ms
         }
@@ -487,11 +487,11 @@ impl Default for NetworkStats {
 
 impl AdvancedSTDPNetwork {
     /// Create new advanced STDP network
-    pub fn new(layer_sizes: Vec<usize>, target_firing_rate: f64, learning_rate: f64) -> Self {
+    pub fn new(_layer_sizes: Vec<usize>, target_firing_rate: f64, learning_rate: f64) -> Self {
         let mut layers = Vec::new();
         let mut advanced_stdp_rules = Vec::new();
 
-        for (layer_idx, &size) in layer_sizes.iter().enumerate() {
+        for (layer_idx, &size) in _layer_sizes.iter().enumerate() {
             let layer = STDPLayer {
                 size,
                 potentials: Array1::zeros(size),
@@ -597,7 +597,7 @@ impl AdvancedSTDPNetwork {
             }
 
             prev_objective = current_objective;
-            self.nit = iteration + 1;
+            self._nit = iteration + 1;
         }
 
         Ok(self.best_params.clone())
@@ -605,8 +605,7 @@ impl AdvancedSTDPNetwork {
 
     fn encode_parameters_to_spikes(
         &self,
-        params: &Array1<f64>,
-        _current_time: f64,
+        params: &Array1<f64>, _current_time: f64,
     ) -> Vec<Vec<bool>> {
         let mut spike_patterns = Vec::new();
 
@@ -713,7 +712,7 @@ impl AdvancedSTDPNetwork {
         Ok(())
     }
 
-    fn decode_parameters_from_network(&self, _current_time: f64) -> Array1<f64> {
+    fn decode_parameters_from_network(&self_current_time: f64) -> Array1<f64> {
         let mut updates = Array1::zeros(self.current_params.len());
 
         // Use firing rates from first layer as parameter updates
@@ -740,7 +739,7 @@ impl AdvancedSTDPNetwork {
         base_step * improvement_factor * decay_factor
     }
 
-    fn update_network_statistics(&mut self, _current_time: f64) {
+    fn update_network_statistics(&mut self_current_time: f64) {
         // Compute average plasticity
         let mut total_plasticity = 0.0;
         let mut count = 0;
@@ -760,7 +759,7 @@ impl AdvancedSTDPNetwork {
         // Compute network synchrony (simplified)
         let mut synchrony = 0.0;
         for layer in &self.layers {
-            let rate_variance = layer.firing_rates.var(0.0);
+            let rate_variance = layer.firing_rates.variance();
             synchrony += 1.0 / (1.0 + rate_variance);
         }
         self.network_stats.synchrony = synchrony / self.layers.len() as f64;
@@ -790,29 +789,29 @@ pub fn stdp_optimize<F>(
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
-    let mut params = initial_params.to_owned();
-    let mut stdp_rules: Vec<STDPLearningRule> = (0..params.len())
+    let mut _params = initial_params.to_owned();
+    let mut stdp_rules: Vec<STDPLearningRule> = (0.._params.len())
         .map(|_| STDPLearningRule::new(0.01))
         .collect();
 
-    let mut prev_obj = objective(&params.view());
+    let mut prev_obj = objective(&_params.view());
 
     for _iter in 0..num_nit {
-        let current_obj = objective(&params.view());
+        let current_obj = objective(&_params.view());
         let improvement = prev_obj - current_obj;
 
         // More sophisticated spike-based encoding
         for (i, rule) in stdp_rules.iter_mut().enumerate() {
-            let pre_spike = rand::rng().gen::<f64>() < (params[i].abs() * 0.1).min(0.5);
+            let pre_spike = rand::rng().gen::<f64>() < (_params[i].abs() * 0.1).min(0.5);
             let post_spike = improvement > 0.0 && rand::rng().gen::<f64>() < 0.2;
 
-            params[i] = rule.update_weight(params[i], pre_spike, post_spike, 0.001);
+            _params[i] = rule.update_weight(_params[i], pre_spike, post_spike, 0.001);
         }
 
         prev_obj = current_obj;
     }
 
-    Ok(params)
+    Ok(_params)
 }
 
 /// Advanced-advanced STDP optimization with full network simulation

@@ -17,12 +17,12 @@ pub mod graphml;
 pub mod json;
 pub mod matrix_market;
 
-use adjacency_list::{
+use adjacency__list::{
     read_adjacency_list_format, read_adjacency_list_format_digraph, write_adjacency_list_format,
     write_adjacency_list_format_digraph,
 };
 use dot::{read_dot_format, read_dot_format_digraph, write_dot_format, write_dot_format_digraph};
-use edge_list::{
+use edge__list::{
     read_edge_list_format, read_edge_list_format_digraph, write_edge_list_format,
     write_edge_list_format_digraph,
 };
@@ -34,7 +34,7 @@ use graphml::{
 use json::{
     read_json_format, read_json_format_digraph, write_json_format, write_json_format_digraph,
 };
-use matrix_market::{
+use matrix__market::{
     read_matrix_market_format, read_matrix_market_format_digraph, write_matrix_market_format,
     write_matrix_market_format_digraph,
 };
@@ -70,20 +70,20 @@ pub enum GraphFormat {
 /// * `Ok(Graph)` - The graph read from the file
 /// * `Err(GraphError)` - If there was an error reading the file
 #[allow(dead_code)]
-pub fn read_graph<N, E, P>(path: P, format: GraphFormat, weighted: bool) -> Result<Graph<N, E>>
+pub fn read_graph<N, E, P>(_path: P, format: GraphFormat, weighted: bool) -> Result<Graph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
     match format {
-        GraphFormat::EdgeList => read_edge_list_format(path, weighted),
-        GraphFormat::AdjacencyList => read_adjacency_list_format(path, weighted),
-        GraphFormat::Dot => read_dot_format(path, weighted),
-        GraphFormat::Json => read_json_format(path, weighted),
-        GraphFormat::GraphML => read_graphml_format(path, weighted),
-        GraphFormat::Gml => read_gml_format(path, weighted),
-        GraphFormat::MatrixMarket => read_matrix_market_format(path, weighted),
+        GraphFormat::EdgeList => read_edge_list_format(_path, weighted),
+        GraphFormat::AdjacencyList => read_adjacency_list_format(_path, weighted),
+        GraphFormat::Dot => read_dot_format(_path, weighted),
+        GraphFormat::Json => read_json_format(_path, weighted),
+        GraphFormat::GraphML => read_graphml_format(_path, weighted),
+        GraphFormat::Gml => read_gml_format(_path, weighted),
+        GraphFormat::MatrixMarket => read_matrix_market_format(_path, weighted),
     }
 }
 
@@ -98,20 +98,20 @@ where
 /// * `Ok(DiGraph)` - The directed graph read from the file
 /// * `Err(GraphError)` - If there was an error reading the file
 #[allow(dead_code)]
-pub fn read_digraph<N, E, P>(path: P, format: GraphFormat, weighted: bool) -> Result<DiGraph<N, E>>
+pub fn read_digraph<N, E, P>(_path: P, format: GraphFormat, weighted: bool) -> Result<DiGraph<N, E>>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
     P: AsRef<Path>,
 {
     match format {
-        GraphFormat::EdgeList => read_edge_list_format_digraph(path, weighted),
-        GraphFormat::AdjacencyList => read_adjacency_list_format_digraph(path, weighted),
-        GraphFormat::Dot => read_dot_format_digraph(path, weighted),
-        GraphFormat::Json => read_json_format_digraph(path, weighted),
-        GraphFormat::GraphML => read_graphml_format_digraph(path, weighted),
-        GraphFormat::Gml => read_gml_format_digraph(path, weighted),
-        GraphFormat::MatrixMarket => read_matrix_market_format_digraph(path, weighted),
+        GraphFormat::EdgeList => read_edge_list_format_digraph(_path, weighted),
+        GraphFormat::AdjacencyList => read_adjacency_list_format_digraph(_path, weighted),
+        GraphFormat::Dot => read_dot_format_digraph(_path, weighted),
+        GraphFormat::Json => read_json_format_digraph(_path, weighted),
+        GraphFormat::GraphML => read_graphml_format_digraph(_path, weighted),
+        GraphFormat::Gml => read_gml_format_digraph(_path, weighted),
+        GraphFormat::MatrixMarket => read_matrix_market_format_digraph(_path, weighted),
     }
 }
 

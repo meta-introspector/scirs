@@ -3,7 +3,7 @@
 //! This example demonstrates the new streaming and iterator interfaces
 //! for memory-efficient processing of large datasets.
 
-use scirs2_io::streaming::{
+use scirs2__io::streaming::{
     process_csv_chunked, process_file_chunked, ChunkedReader, LineChunkedReader, StreamingConfig,
     StreamingCsvReader,
 };
@@ -342,7 +342,7 @@ fn demonstrate_parallel_streaming() -> Result<(), Box<dyn std::error::Error>> {
         &test_file,
         config,
         true, // Has header
-        |rows, chunk_id, _header| -> scirs2_io::error::Result<Vec<f64>> {
+        |rows, chunk_id_header| -> scirs2_io::error::Result<Vec<f64>> {
             // Simulate parallel processing within chunk
             use scirs2_core::parallel_ops::*;
 

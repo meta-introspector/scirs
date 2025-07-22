@@ -4,7 +4,7 @@
 //! the convergence of fixed-point iterations and nonlinear solvers.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2_integrate::acceleration::{AcceleratorOptions, AitkenAccelerator, AndersonAccelerator};
+use scirs2__integrate::acceleration::{AcceleratorOptions, AitkenAccelerator, AndersonAccelerator};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -247,11 +247,11 @@ fn stiff_fixed_point(x: ArrayView1<f64>) -> Array1<f64> {
 type IterationFunction = Box<dyn Fn(ArrayView1<f64>) -> Array1<f64>>;
 
 #[allow(dead_code)]
-fn solve_standard(problem: &IterationFunction, max_iters: usize, tolerance: f64) -> usize {
+fn solve_standard(_problem: &IterationFunction, max_iters: usize, tolerance: f64) -> usize {
     let mut x = Array1::from_vec(vec![0.0, 0.0]);
 
     for iter in 1..=max_iters {
-        let x_new = problem(x.view());
+        let x_new = _problem(x.view());
         let error = ((x_new[0] - x[0]).powi(2) + (x_new[1] - x[1]).powi(2)).sqrt();
 
         x = x_new;
@@ -265,13 +265,13 @@ fn solve_standard(problem: &IterationFunction, max_iters: usize, tolerance: f64)
 }
 
 #[allow(dead_code)]
-fn solve_anderson(problem: &IterationFunction, max_iters: usize, tolerance: f64) -> usize {
+fn solve_anderson(_problem: &IterationFunction, max_iters: usize, tolerance: f64) -> usize {
     let mut accelerator = AndersonAccelerator::new(2, AcceleratorOptions::default());
     let mut x = Array1::from_vec(vec![0.0, 0.0]);
     let mut x_prev = x.clone();
 
     for iter in 1..=max_iters {
-        let g_x = problem(x.view());
+        let g_x = _problem(x.view());
 
         if let Some(x_new) = accelerator.accelerate(x.view(), g_x.view()) {
             let error = ((x_new[0] - x_prev[0]).powi(2) + (x_new[1] - x_prev[1]).powi(2)).sqrt();

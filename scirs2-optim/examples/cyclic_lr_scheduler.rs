@@ -1,7 +1,7 @@
 //! Example demonstrating cyclic learning rate scheduling
 
 use ndarray::Array1;
-use scirs2_optim::{
+use scirs2__optim::{
     optimizers::{Optimizer, SGD},
     schedulers::{CyclicLR, LearningRateScheduler},
 };
@@ -82,7 +82,7 @@ fn main() {
     // 4. Custom scale function
     println!("\nCustom Scale Function (Sine Wave):");
     let mut custom_scheduler =
-        CyclicLR::triangular(0.0001, 0.001, 50).with_scale_fn(|step, half_cycle, _, _| {
+        CyclicLR::triangular(0.0001, 0.001, 50).with_scale_fn(|step, half_cycle__| {
             let position = (step % (2 * half_cycle)) as f64 / (2.0 * half_cycle as f64);
             (position * std::f64::consts::PI * 2.0).sin().abs()
         });
@@ -105,7 +105,7 @@ fn run_optimization<LR: LearningRateScheduler<f64>>(
 
         // Get current learning rate from scheduler
         let lr = scheduler.get_learning_rate();
-        scheduler.apply_to::<ndarray::Ix1, _>(optimizer);
+        scheduler.apply_to::<ndarray::Ix1_>(optimizer);
 
         // Update parameters
         params = optimizer.step(&params, &gradient).unwrap();

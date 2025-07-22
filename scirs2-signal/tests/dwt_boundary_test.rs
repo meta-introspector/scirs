@@ -1,9 +1,11 @@
 #[cfg(test)]
 mod dwt_boundary_tests {
-    use scirs2_signal::dwt::extend_signal;
+    use scirs2__signal::dwt::extend_signal;
 
     #[test]
     fn test_symmetric_extension() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test with a simple signal
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
@@ -24,6 +26,8 @@ mod dwt_boundary_tests {
 
     #[test]
     fn test_periodic_extension() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test with a simple signal
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
@@ -44,6 +48,8 @@ mod dwt_boundary_tests {
 
     #[test]
     fn test_zero_extension() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test with a simple signal
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
@@ -64,6 +70,8 @@ mod dwt_boundary_tests {
 
     #[test]
     fn test_constant_extension() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test with a simple signal
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 
@@ -84,6 +92,8 @@ mod dwt_boundary_tests {
 
     #[test]
     fn test_reflect_extension() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Test with a simple signal
         let signal = vec![1.0, 2.0, 3.0, 4.0];
 

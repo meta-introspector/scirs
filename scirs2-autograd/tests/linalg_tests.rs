@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod tests {
-    use ag::tensor_ops::*;
+    use ag::tensor__ops::*;
     use approx::assert_relative_eq;
     use scirs2_autograd as ag;
 
     #[test]
     fn test_eye() {
-        ag::run::<f64, _, _>(|ctx| {
+        ag::run::<f64_>(|ctx| {
             let eye_matrix = eye(3, ctx);
             let result = eye_matrix.eval(ctx).unwrap();
 
@@ -25,7 +25,7 @@ mod tests {
 
     #[test]
     fn test_trace() {
-        ag::run::<f64, _, _>(|ctx| {
+        ag::run::<f64_>(|ctx| {
             let matrix = ag::tensor_ops::convert_to_tensor(
                 ndarray::array![[1., 2.], [3., 4.]].into_dyn(),
                 ctx,
@@ -41,7 +41,7 @@ mod tests {
 
     #[test]
     fn test_diag_operations() {
-        ag::run::<f64, _, _>(|ctx| {
+        ag::run::<f64_>(|ctx| {
             // Test diag creation
             let vector =
                 ag::tensor_ops::convert_to_tensor(ndarray::array![1., 2., 3.].into_dyn(), ctx);
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn test_qr_decomposition() {
-        ag::run::<f64, _, _>(|ctx| {
+        ag::run::<f64_>(|ctx| {
             let a = ag::tensor_ops::random_normal(&[4, 3], 0.0, 1.0, ctx);
             let (q, r) = qr(a);
 

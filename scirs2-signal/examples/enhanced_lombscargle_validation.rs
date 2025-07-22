@@ -80,7 +80,7 @@ fn test_basic_lombscargle() -> Result<(), Box<dyn std::error::Error>> {
         .iter()
         .enumerate()
         .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
         .unwrap();
 
     let detected_freq1 = freqs[peak1_idx];

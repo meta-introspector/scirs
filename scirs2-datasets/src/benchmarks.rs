@@ -36,9 +36,9 @@ pub struct BenchmarkResult {
 
 impl BenchmarkResult {
     /// Create a new benchmark result
-    pub fn new(operation: String, parameters: HashMap<String, String>) -> Self {
+    pub fn new(_operation: String, parameters: HashMap<String, String>) -> Self {
         Self {
-            operation,
+            _operation,
             parameters,
             duration: Duration::ZERO,
             memory_used: None,
@@ -129,9 +129,9 @@ pub struct BenchmarkSuite {
 
 impl BenchmarkSuite {
     /// Create a new benchmark suite
-    pub fn new(name: String) -> Self {
+    pub fn new(_name: String) -> Self {
         Self {
-            name,
+            _name,
             results: Vec::new(),
             total_duration: Duration::ZERO,
         }
@@ -445,9 +445,9 @@ impl BenchmarkRunner {
     /// Benchmark CSV loading performance
     pub fn benchmark_csv_loading<P: AsRef<Path>>(&self, csv_path: P) -> BenchmarkSuite {
         let mut suite = BenchmarkSuite::new("CSV Loading".to_string());
-        let path = csv_path.as_ref();
+        let _path = csv_path.as_ref();
 
-        if !path.exists() {
+        if !_path.exists() {
             let mut result = BenchmarkResult::new("csv_loading".to_string(), HashMap::new());
             result = result.failure("CSV file not found".to_string());
             suite.add_result(result);
@@ -457,11 +457,11 @@ impl BenchmarkRunner {
         // Standard CSV loading
         let std_params = HashMap::from([
             ("method".to_string(), "standard".to_string()),
-            ("file".to_string(), path.to_string_lossy().to_string()),
+            ("file".to_string(), _path.to_string_lossy().to_string()),
         ]);
         let std_result = self.run_benchmark("csv_standard", std_params, || {
             let config = CsvConfig::default().with_header(true);
-            match load_csv(path, config) {
+            match load_csv(_path, config) {
                 Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
                 Err(e) => Err(format!("Failed to load CSV: {e}")),
             }
@@ -471,14 +471,14 @@ impl BenchmarkRunner {
         // Parallel CSV loading
         let par_params = HashMap::from([
             ("method".to_string(), "parallel".to_string()),
-            ("file".to_string(), path.to_string_lossy().to_string()),
+            ("file".to_string(), _path.to_string_lossy().to_string()),
         ]);
         let par_result = self.run_benchmark("csv_parallel", par_params, || {
             let csv_config = CsvConfig::default().with_header(true);
             let streaming_config = StreamingConfig::default()
                 .with_parallel(true)
                 .with_chunk_size(1000);
-            match load_csv_parallel(path, csv_config, streaming_config) {
+            match load_csv_parallel(_path, csv_config, streaming_config) {
                 Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
                 Err(e) => Err(format!("Failed to load CSV in parallel: {e}")),
             }
@@ -522,8 +522,8 @@ pub struct PerformanceComparison {
 
 impl PerformanceComparison {
     /// Create a new performance comparison
-    pub fn new(baseline: BenchmarkSuite, current: BenchmarkSuite) -> Self {
-        Self { baseline, current }
+    pub fn new(_baseline: BenchmarkSuite, current: BenchmarkSuite) -> Self {
+        Self { _baseline, current }
     }
 
     /// Calculate speedup ratio for matching operations

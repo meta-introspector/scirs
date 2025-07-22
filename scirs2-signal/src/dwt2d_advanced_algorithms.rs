@@ -10,14 +10,16 @@
 //! - Intelligent coefficient thresholding
 
 use crate::dwt::{Wavelet, WaveletFilters};
-use crate::dwt2d_enhanced::{Dwt2dConfig, EnhancedDwt2dResult};
+use crate::dwt2d__enhanced::{Dwt2dConfig, EnhancedDwt2dResult};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, Array3};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
+use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 
+#[allow(unused_imports)]
 /// Advanced 2D DWT decomposition result with multiple representations
 #[derive(Debug, Clone)]
 pub struct AdvancedDwt2dResult {
@@ -158,7 +160,7 @@ pub fn advanced_dwt2d_decompose(
 ) -> SignalResult<AdvancedDwt2dResult> {
     // Validate input
     // Data validation handled by transform
-    check_positive(config.decomposition_levels, "decomposition_levels")?;
+    check_positive(_config.decomposition_levels, "decomposition_levels")?;
 
     let (rows, cols) = data.dim();
     if rows < 4 || cols < 4 {
@@ -346,7 +348,7 @@ fn compute_directional_dwt2d(
 
                 if response > max_response {
                     max_response = response;
-                    best_orientation = (dir_idx as f64 * PI) / n_directions as f64;
+                    best_orientation = (dir_idx as f64 * PI) / n_directions  as f64;
                 }
             }
 
@@ -506,13 +508,13 @@ fn compute_multiscale_analysis(
 
 /// Dilate a filter by inserting zeros
 #[allow(dead_code)]
-fn dilate_filter(filter: &[f64], scale: usize) -> Vec<f64> {
+fn dilate_filter(_filter: &[f64], scale: usize) -> Vec<f64> {
     if scale <= 1 {
-        return filter.to_vec();
+        return _filter.to_vec();
     }
 
     let mut dilated = Vec::new();
-    for &coeff in filter {
+    for &coeff in _filter {
         dilated.push(coeff);
         for _ in 1..scale {
             dilated.push(0.0);
@@ -599,7 +601,7 @@ fn create_directional_filter_bank(
     let base_filters = wavelet.filters()?;
 
     for dir in 0..n_directions {
-        let angle = (dir as f64 * PI) / n_directions as f64;
+        let angle = (dir as f64 * PI) / n_directions  as f64;
         let directional_filter = create_steerable_filter(&base_filters, angle)?;
         filter_bank.push(directional_filter);
     }
@@ -609,8 +611,8 @@ fn create_directional_filter_bank(
 
 /// Create steerable filter for specific direction
 #[allow(dead_code)]
-fn create_steerable_filter(base_filters: &WaveletFilters, angle: f64) -> SignalResult<Array2<f64>> {
-    let filter_size = 7; // Standard size for directional filters
+fn create_steerable_filter(_base_filters: &WaveletFilters, angle: f64) -> SignalResult<Array2<f64>> {
+    let filter_size = 7; // Standard size for directional _filters
     let mut filter = Array2::zeros((filter_size, filter_size));
     let center = filter_size / 2;
 
@@ -620,8 +622,8 @@ fn create_steerable_filter(base_filters: &WaveletFilters, angle: f64) -> SignalR
 
     for i in 0..filter_size {
         for j in 0..filter_size {
-            let x = i as f64 - center as f64;
-            let y = j as f64 - center as f64;
+            let x = i as f64 - center  as f64;
+            let y = j as f64 - center  as f64;
 
             // Rotate coordinates
             let x_rot = x * angle.cos() + y * angle.sin();
@@ -647,21 +649,21 @@ fn create_steerable_filter(base_filters: &WaveletFilters, angle: f64) -> SignalR
 // Additional helper function stubs (implementations would be quite extensive)
 
 #[allow(dead_code)]
-fn apply_directional_filter(data: &Array2<f64>, filter: &Array2<f64>) -> SignalResult<Array2<f64>> {
+fn apply_directional_filter(_data: &Array2<f64>, filter: &Array2<f64>) -> SignalResult<Array2<f64>> {
     // Stub implementation - would apply 2D convolution
-    Ok(data.clone())
+    Ok(_data.clone())
 }
 
 #[allow(dead_code)]
-fn downsample_2d(data: &Array2<f64>) -> Array2<f64> {
-    let (rows, cols) = data.dim();
+fn downsample_2d(_data: &Array2<f64>) -> Array2<f64> {
+    let (rows, cols) = _data.dim();
     let new_rows = (rows + 1) / 2;
     let new_cols = (cols + 1) / 2;
     let mut result = Array2::zeros((new_rows, new_cols));
 
     for i in 0..new_rows {
         for j in 0..new_cols {
-            result[[i, j]] = data[[i * 2, j * 2]];
+            result[[i, j]] = _data[[i * 2, j * 2]];
         }
     }
 
@@ -669,17 +671,15 @@ fn downsample_2d(data: &Array2<f64>) -> Array2<f64> {
 }
 
 #[allow(dead_code)]
-fn create_dual_tree_filters(wavelet: Wavelet) -> SignalResult<(WaveletFilters, WaveletFilters)> {
+fn create_dual_tree_filters(_wavelet: Wavelet) -> SignalResult<(WaveletFilters, WaveletFilters)> {
     // Stub - would create orthogonal filter pairs
-    let filters = wavelet.filters()?;
+    let filters = _wavelet.filters()?;
     Ok((filters.clone(), filters.clone()))
 }
 
 #[allow(dead_code)]
 fn apply_tree_decomposition(
-    _data: &Array2<f64>,
-    _filters: &WaveletFilters,
-    _levels: usize,
+    _data: &Array2<f64>, _filters: &WaveletFilters_levels: usize,
 ) -> SignalResult<Array3<f64>> {
     // Stub implementation
     Ok(Array3::zeros((1, 1, 1)))
@@ -687,8 +687,7 @@ fn apply_tree_decomposition(
 
 #[allow(dead_code)]
 fn compute_translation_invariance(
-    _data: &Array2<f64>,
-    _coeffs: &[Array3<f64>],
+    _data: &Array2<f64>, _coeffs: &[Array3<f64>],
 ) -> SignalResult<f64> {
     Ok(0.95) // Placeholder
 }
@@ -699,22 +698,22 @@ fn compute_shift_invariance(_coeffs: &Array3<Complex64>) -> SignalResult<f64> {
 }
 
 #[allow(dead_code)]
-fn compute_edge_map(data: &Array2<f64>) -> SignalResult<Array2<f64>> {
+fn compute_edge_map(_data: &Array2<f64>) -> SignalResult<Array2<f64>> {
     // Simple Sobel edge detection
-    let (rows, cols) = data.dim();
+    let (rows, cols) = _data.dim();
     let mut edges = Array2::zeros((rows, cols));
 
     for i in 1..rows - 1 {
         for j in 1..cols - 1 {
-            let gx = data[[i - 1, j - 1]] - data[[i - 1, j + 1]]
-                + 2.0 * (data[[i, j - 1]] - data[[i, j + 1]])
-                + data[[i + 1, j - 1]]
-                - data[[i + 1, j + 1]];
+            let gx = _data[[i - 1, j - 1]] - _data[[i - 1, j + 1]]
+                + 2.0 * (_data[[i, j - 1]] - _data[[i, j + 1]])
+                + _data[[i + 1, j - 1]]
+                - _data[[i + 1, j + 1]];
 
-            let gy = data[[i - 1, j - 1]] - data[[i + 1, j - 1]]
-                + 2.0 * (data[[i - 1, j]] - data[[i + 1, j]])
-                + data[[i - 1, j + 1]]
-                - data[[i + 1, j + 1]];
+            let gy = _data[[i - 1, j - 1]] - _data[[i + 1, j - 1]]
+                + 2.0 * (_data[[i - 1, j]] - _data[[i + 1, j]])
+                + _data[[i - 1, j + 1]]
+                - _data[[i + 1, j + 1]];
 
             edges[[i, j]] = (gx * gx + gy * gy).sqrt();
         }
@@ -724,20 +723,20 @@ fn compute_edge_map(data: &Array2<f64>) -> SignalResult<Array2<f64>> {
 }
 
 #[allow(dead_code)]
-fn compute_structural_similarity(img1: &Array2<f64>, img2: &Array2<f64>) -> SignalResult<f64> {
+fn compute_structural_similarity(_img1: &Array2<f64>, img2: &Array2<f64>) -> SignalResult<f64> {
     // Simplified SSIM computation
-    let mean1 = img1.mean().unwrap_or(0.0);
+    let mean1 = _img1.mean().unwrap_or(0.0);
     let mean2 = img2.mean().unwrap_or(0.0);
 
-    let var1 = img1.mapv(|x| (x - mean1).powi(2)).mean().unwrap_or(0.0);
+    let var1 = _img1.mapv(|x| (x - mean1).powi(2)).mean().unwrap_or(0.0);
     let var2 = img2.mapv(|x| (x - mean2).powi(2)).mean().unwrap_or(0.0);
 
-    let covar = img1
+    let covar = _img1
         .iter()
         .zip(img2.iter())
         .map(|(&a, &b)| (a - mean1) * (b - mean2))
         .sum::<f64>()
-        / (img1.len() as f64);
+        / (_img1.len() as f64);
 
     let c1 = 0.01;
     let c2 = 0.03;
@@ -761,16 +760,14 @@ fn compute_edge_continuity(_edges1: &Array2<f64>, _edges2: &Array2<f64>) -> Sign
 
 #[allow(dead_code)]
 fn compute_noise_suppression(
-    _original: &Array2<f64>,
-    _reconstructed: &Array2<f64>,
+    _original: &Array2<f64>, _reconstructed: &Array2<f64>,
 ) -> SignalResult<f64> {
     Ok(0.88) // Placeholder
 }
 
 #[allow(dead_code)]
 fn compute_texture_preservation(
-    _original: &Array2<f64>,
-    _reconstructed: &Array2<f64>,
+    _original: &Array2<f64>, _reconstructed: &Array2<f64>,
 ) -> SignalResult<f64> {
     Ok(0.92) // Placeholder
 }
@@ -783,21 +780,19 @@ fn find_scale_space_extrema(_coeffs: &Array3<f64>, scale: usize) -> Vec<(usize, 
 
 #[allow(dead_code)]
 fn update_local_frequency_map(
-    _freq_map: &mut Array2<f64>,
-    _coeffs: &Array3<f64>,
-    _level: usize,
+    _freq_map: &mut Array2<f64>, _coeffs: &Array3<f64>, _level: usize,
 ) -> SignalResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
-fn find_optimal_decomposition_depth(scale_energy: &[f64]) -> usize {
-    // Find the level with maximum energy ratio
+fn find_optimal_decomposition_depth(_scale_energy: &[f64]) -> usize {
+    // Find the level with maximum _energy ratio
     let mut max_ratio = 0.0;
     let mut optimal_depth = 1;
 
-    for i in 1..scale_energy.len() {
-        let ratio = scale_energy[i - 1] / (scale_energy[i] + 1e-10);
+    for i in 1.._scale_energy.len() {
+        let ratio = _scale_energy[i - 1] / (_scale_energy[i] + 1e-10);
         if ratio > max_ratio {
             max_ratio = ratio;
             optimal_depth = i;

@@ -12,7 +12,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2_metrics::fairness::{
+//! use scirs2__metrics::fairness::{
 //!     demographic_parity_difference, equalized_odds_difference, equal_opportunity_difference
 //! };
 //!
@@ -50,7 +50,7 @@
 //!
 //! ```
 //! use ndarray::{array, Array2};
-//! use scirs2_metrics::fairness::consistency_score;
+//! use scirs2__metrics::fairness::consistency_score;
 //!
 //! // Features matrix: each row is an individual, each column is a feature
 //! let features = Array2::from_shape_vec((6, 2),
@@ -84,8 +84,8 @@
 //!
 //! ```
 //! use ndarray::{array, Array2};
-//! use scirs2_metrics::fairness::{demographic_parity_difference, disparate_impact};
-//! use scirs2_metrics::fairness::robustness::{
+//! use scirs2__metrics::fairness::{demographic_parity_difference, disparate_impact};
+//! use scirs2__metrics::fairness::robustness::{
 //!     performance_invariance, influence_function, perturbation_sensitivity, PerturbationType
 //! };
 //!
@@ -118,10 +118,10 @@
 //!
 //! ```
 //! use ndarray::{array, Array2};
-//! use scirs2_metrics::fairness::bias_detection::{
+//! use scirs2__metrics::fairness::bias_detection::{
 //!     slice_analysis, subgroup_performance, intersectional_fairness
 //! };
-//! use scirs2_metrics::classification::accuracy_score;
+//! use scirs2__metrics::classification::accuracy_score;
 //!
 //! // For demo purposes, create a simple dataset
 //! let y_true = array![0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0];
@@ -187,7 +187,7 @@ pub mod robustness;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::fairness::demographic_parity_difference;
+/// use scirs2__metrics::fairness::demographic_parity_difference;
 ///
 /// let y_pred = array![1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
 /// let protected_group = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
@@ -226,23 +226,23 @@ where
 
     let zero = T::zero();
 
-    // Count positive predictions in each group
+    // Count positive predictions in each _group
     let mut protected_group_positive = 0;
     let mut protected_group_total = 0;
     let mut unprotected_group_positive = 0;
     let mut unprotected_group_total = 0;
 
-    for (pred, group) in y_pred.iter().zip(protected_group.iter()) {
-        if group > &zero {
-            // Protected group
+    for (_pred_group) in y_pred.iter().zip(protected_group.iter()) {
+        if _group > &zero {
+            // Protected _group
             protected_group_total += 1;
-            if pred > &zero {
+            if _pred > &zero {
                 protected_group_positive += 1;
             }
         } else {
-            // Unprotected group
+            // Unprotected _group
             unprotected_group_total += 1;
-            if pred > &zero {
+            if _pred > &zero {
                 unprotected_group_positive += 1;
             }
         }
@@ -251,11 +251,11 @@ where
     // Check if there are members in both groups
     if protected_group_total == 0 || unprotected_group_total == 0 {
         return Err(MetricsError::InvalidInput(
-            "Each group must have at least one member".to_string(),
+            "Each _group must have at least one member".to_string(),
         ));
     }
 
-    // Calculate positive prediction rates for each group
+    // Calculate positive prediction rates for each _group
     let protected_rate = protected_group_positive as f64 / protected_group_total as f64;
     let unprotected_rate = unprotected_group_positive as f64 / unprotected_group_total as f64;
 
@@ -283,7 +283,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::fairness::disparate_impact;
+/// use scirs2__metrics::fairness::disparate_impact;
 ///
 /// let y_pred = array![1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
 /// let protected_group = array![1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
@@ -323,23 +323,23 @@ where
 
     let zero = T::zero();
 
-    // Count positive predictions in each group
+    // Count positive predictions in each _group
     let mut protected_group_positive = 0;
     let mut protected_group_total = 0;
     let mut unprotected_group_positive = 0;
     let mut unprotected_group_total = 0;
 
-    for (pred, group) in y_pred.iter().zip(protected_group.iter()) {
-        if group > &zero {
-            // Protected group
+    for (_pred_group) in y_pred.iter().zip(protected_group.iter()) {
+        if _group > &zero {
+            // Protected _group
             protected_group_total += 1;
-            if pred > &zero {
+            if _pred > &zero {
                 protected_group_positive += 1;
             }
         } else {
-            // Unprotected group
+            // Unprotected _group
             unprotected_group_total += 1;
-            if pred > &zero {
+            if _pred > &zero {
                 unprotected_group_positive += 1;
             }
         }
@@ -348,11 +348,11 @@ where
     // Check if there are members in both groups
     if protected_group_total == 0 || unprotected_group_total == 0 {
         return Err(MetricsError::InvalidInput(
-            "Each group must have at least one member".to_string(),
+            "Each _group must have at least one member".to_string(),
         ));
     }
 
-    // Calculate positive prediction rates for each group
+    // Calculate positive prediction rates for each _group
     let protected_rate = protected_group_positive as f64 / protected_group_total as f64;
     let unprotected_rate = unprotected_group_positive as f64 / unprotected_group_total as f64;
 
@@ -389,7 +389,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::fairness::equalized_odds_difference;
+/// use scirs2__metrics::fairness::equalized_odds_difference;
 ///
 /// let y_true = array![0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
 /// let y_pred = array![1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
@@ -432,7 +432,7 @@ where
 
     let zero = T::zero();
 
-    // Initialize counters for each group and outcome
+    // Initialize counters for each _group and outcome
     let mut protected_true_positives = 0;
     let mut protected_false_positives = 0;
     let mut protected_true_negatives = 0;
@@ -443,37 +443,37 @@ where
     let mut unprotected_true_negatives = 0;
     let mut unprotected_false_negatives = 0;
 
-    // Calculate confusion matrix values for each group
-    for ((truth, pred), group) in y_true.iter().zip(y_pred.iter()).zip(protected_group.iter()) {
-        if group > &zero {
-            // Protected group
+    // Calculate confusion matrix values for each _group
+    for ((truth, _pred), _group) in y_true.iter().zip(y_pred.iter()).zip(protected_group.iter()) {
+        if _group > &zero {
+            // Protected _group
             if truth > &zero {
                 // Positive class
-                if pred > &zero {
+                if _pred > &zero {
                     protected_true_positives += 1;
                 } else {
                     protected_false_negatives += 1;
                 }
             } else {
                 // Negative class
-                if pred > &zero {
+                if _pred > &zero {
                     protected_false_positives += 1;
                 } else {
                     protected_true_negatives += 1;
                 }
             }
         } else {
-            // Unprotected group
+            // Unprotected _group
             if truth > &zero {
                 // Positive class
-                if pred > &zero {
+                if _pred > &zero {
                     unprotected_true_positives += 1;
                 } else {
                     unprotected_false_negatives += 1;
                 }
             } else {
                 // Negative class
-                if pred > &zero {
+                if _pred > &zero {
                     unprotected_false_positives += 1;
                 } else {
                     unprotected_true_negatives += 1;
@@ -482,8 +482,8 @@ where
         }
     }
 
-    // Calculate true positive rates (TPR) and false positive rates (FPR) for each group
-    // Handle cases where a group might not have any positives or negatives
+    // Calculate _true positive rates (TPR) and false positive rates (FPR) for each _group
+    // Handle cases where a _group might not have any positives or negatives
     let protected_tpr = if protected_true_positives + protected_false_negatives > 0 {
         protected_true_positives as f64
             / (protected_true_positives + protected_false_negatives) as f64
@@ -540,7 +540,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::fairness::equal_opportunity_difference;
+/// use scirs2__metrics::fairness::equal_opportunity_difference;
 ///
 /// let y_true = array![0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
 /// let y_pred = array![1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0];
@@ -583,26 +583,26 @@ where
 
     let zero = T::zero();
 
-    // Initialize counters for true positives and false negatives in each group
+    // Initialize counters for _true positives and false negatives in each _group
     let mut protected_true_positives = 0;
     let mut protected_false_negatives = 0;
     let mut unprotected_true_positives = 0;
     let mut unprotected_false_negatives = 0;
 
-    // Count true positives and false negatives for each group
-    for ((truth, pred), group) in y_true.iter().zip(y_pred.iter()).zip(protected_group.iter()) {
+    // Count _true positives and false negatives for each _group
+    for ((truth, _pred), _group) in y_true.iter().zip(y_pred.iter()).zip(protected_group.iter()) {
         if truth > &zero {
-            // Only consider cases where true label is positive
-            if group > &zero {
-                // Protected group
-                if pred > &zero {
+            // Only consider cases where _true label is positive
+            if _group > &zero {
+                // Protected _group
+                if _pred > &zero {
                     protected_true_positives += 1;
                 } else {
                     protected_false_negatives += 1;
                 }
             } else {
-                // Unprotected group
-                if pred > &zero {
+                // Unprotected _group
+                if _pred > &zero {
                     unprotected_true_positives += 1;
                 } else {
                     unprotected_false_negatives += 1;
@@ -611,14 +611,14 @@ where
         }
     }
 
-    // Calculate true positive rates for each group
+    // Calculate _true positive rates for each _group
     let protected_tpr = if protected_true_positives + protected_false_negatives > 0 {
         protected_true_positives as f64
             / (protected_true_positives + protected_false_negatives) as f64
     } else {
-        // If there are no positive examples in the protected group
+        // If there are no positive examples in the protected _group
         return Err(MetricsError::InvalidInput(
-            "No positive examples in protected group".to_string(),
+            "No positive examples in protected _group".to_string(),
         ));
     };
 
@@ -626,13 +626,13 @@ where
         unprotected_true_positives as f64
             / (unprotected_true_positives + unprotected_false_negatives) as f64
     } else {
-        // If there are no positive examples in the unprotected group
+        // If there are no positive examples in the unprotected _group
         return Err(MetricsError::InvalidInput(
-            "No positive examples in unprotected group".to_string(),
+            "No positive examples in unprotected _group".to_string(),
         ));
     };
 
-    // Return the absolute difference in true positive rates
+    // Return the absolute difference in _true positive rates
     Ok((protected_tpr - unprotected_tpr).abs())
 }
 
@@ -657,7 +657,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::fairness::consistency_score;
+/// use scirs2__metrics::fairness::consistency_score;
 ///
 /// // Features matrix (6 instances, 2 features each)
 /// let features = Array2::from_shape_vec((6, 2),
@@ -733,10 +733,10 @@ where
     let mut consistency_sum = 0.0;
     for i in 0..n_samples {
         // Get distances from instance i to all other instances
-        let mut neighbors: Vec<_> = distances.iter().filter(|(idx, _, _)| *idx == i).collect();
+        let mut neighbors: Vec<_> = distances.iter().filter(|(idx__)| *idx == i).collect();
 
         // Sort by distance
-        neighbors.sort_by(|(_, _, dist_a), (_, _, dist_b)| {
+        neighbors.sort_by(|(__, dist_a), (__, dist_b)| {
             dist_a.partial_cmp(dist_b).unwrap_or(Ordering::Equal)
         });
 
@@ -744,7 +744,7 @@ where
         let nearest_k = neighbors
             .iter()
             .take(k)
-            .map(|(_, j, _)| *j)
+            .map(|(_, j_)| *j)
             .collect::<Vec<_>>();
 
         // Calculate mean absolute difference between prediction and neighbors' predictions

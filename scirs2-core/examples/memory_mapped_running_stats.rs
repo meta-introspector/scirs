@@ -20,6 +20,7 @@ use std::path::Path;
 use std::time::Instant;
 #[cfg(feature = "memory_efficient")]
 use tempfile::tempdir;
+use statrs::statistics::Statistics;
 
 #[cfg(not(feature = "memory_efficient"))]
 #[allow(dead_code)]
@@ -51,7 +52,7 @@ impl OnlineStats {
     // Update stats with a batch of values
     fn update_batch(&mut self, values: ArrayView1<f64>) {
         for &x in values.iter() {
-            self.update(x);
+            self.update_model(x);
         }
     }
 
@@ -136,8 +137,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Create a large dataset for demonstration purposes
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn create_large_dataset(
-    temp_dir: &Path,
+fn dir( &Path,
 ) -> Result<MemoryMappedArray<f64>, Box<dyn std::error::Error>> {
     println!("\n1. Creating Large Dataset");
     println!("------------------------");
@@ -343,7 +343,7 @@ fn normalize_data(
             // Calculate and print statistics of normalized data
             let mut norm_stats = OnlineStats::new();
             for &x in chunk_data.iter() {
-                norm_stats.update(x);
+                norm_stats.update_model(x);
             }
 
             println!(
@@ -382,11 +382,11 @@ fn calculate_verification_stats(
     let sample_size = mmap.size.min(1_000_000); // Max 1 million elements
     let stride = (mmap.size / sample_size).max(1);
 
-    let array = mmap.as_array::<ndarray::Ix1>()?;
+    let array = mmap.asarray::<ndarray::Ix1>()?;
     let mut stats = OnlineStats::new();
 
     for i in (0..mmap.size).step_by(stride) {
-        stats.update(array[i]);
+        stats.update_model(array[i]);
     }
 
     Ok(stats)

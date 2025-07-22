@@ -3,8 +3,10 @@
 //! This module provides various wavelet filter definitions, including Haar, Daubechies,
 //! Symlets, Coiflets, Biorthogonal, and Meyer wavelets.
 
+use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 
+#[allow(unused_imports)]
 /// Represents a wavelet filter pair (decomposition and reconstruction filters)
 #[derive(Clone)]
 pub struct WaveletFilters {
@@ -605,8 +607,7 @@ fn db_filters(n: usize) -> SignalResult<WaveletFilters> {
             -0.000000081726461,
             0.000000079784918,
             -0.000000007962295,
-        ],
-        _ => {
+        ]_ => {
             return Err(SignalError::ValueError(format!(
                 "Daubechies wavelet db{} is not supported. Valid values: 1-20.",
                 n
@@ -728,8 +729,7 @@ fn sym_filters(n: usize) -> SignalResult<WaveletFilters> {
             -0.099219543576373,
             -0.012592909212478,
             0.032755032597835,
-        ],
-        _ => {
+        ]_ => {
             // Fall back to Daubechies for other orders, with a note
             // In a full implementation, we would include coefficients for all supported symlets
             let db_wavelet = db_filters(n)?;
@@ -880,8 +880,7 @@ fn coif_filters(n: usize) -> SignalResult<WaveletFilters> {
             0.0021782363583355,
             0.0003585896879330,
             -0.0002120808398259,
-        ],
-        _ => {
+        ]_ => {
             return Err(SignalError::ValueError(format!(
                 "Coiflet wavelet coif{} is not supported. Valid values: 1-5.",
                 n
@@ -922,9 +921,9 @@ fn coif_filters(n: usize) -> SignalResult<WaveletFilters> {
 
 /// Biorthogonal wavelet filters
 #[allow(dead_code)]
-fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
+fn bior_filters(_nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
     // Biorthogonal wavelets use different filters for decomposition and reconstruction
-    // The filters are defined by their order (nr, nd)
+    // The filters are defined by their order (_nr, nd)
 
     // Check valid combinations for biorthogonal wavelets
     let valid_combinations = [
@@ -945,14 +944,14 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
         (6, 8),
     ];
 
-    if !valid_combinations.contains(&(nr, nd)) {
+    if !valid_combinations.contains(&(_nr, nd)) {
         return Err(SignalError::ValueError(format!(
             "Invalid biorthogonal wavelet specification: bior{}.{}. Valid combinations are: {:?}",
-            nr, nd, valid_combinations
+            _nr, nd, valid_combinations
         )));
     }
 
-    match (nr, nd) {
+    match (_nr, nd) {
         // bior1.1 - Same as Haar
         (1, 1) => {
             let dec_lo = vec![0.7071067811865475, 0.7071067811865475];
@@ -965,8 +964,8 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
                 dec_hi,
                 rec_lo,
                 rec_hi,
-                &format!("bior{}.{}", nr, nd),
-                nr,
+                &format!("bior{}.{}", _nr, nd),
+                _nr,
             ))
         }
 
@@ -1000,8 +999,8 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
                 dec_hi,
                 rec_lo,
                 rec_hi,
-                &format!("bior{}.{}", nr, nd),
-                nr,
+                &format!("bior{}.{}", _nr, nd),
+                _nr,
             ))
         }
 
@@ -1039,8 +1038,8 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
                 dec_hi,
                 rec_lo,
                 rec_hi,
-                &format!("bior{}.{}", nr, nd),
-                nr,
+                &format!("bior{}.{}", _nr, nd),
+                _nr,
             ))
         }
 
@@ -1077,8 +1076,8 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
                 dec_hi,
                 rec_lo,
                 rec_hi,
-                &format!("bior{}.{}", nr, nd),
-                nr,
+                &format!("bior{}.{}", _nr, nd),
+                _nr,
             ))
         }
 
@@ -1130,8 +1129,7 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
                     -0.0129475118625466,
                     -0.0030210861012608,
                     0.0015105430506304,
-                ],
-                _ => unreachable!(),
+                ]_ => unreachable!(),
             };
 
             // Define rec_lo - same for all bior2.x
@@ -1159,8 +1157,8 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
                 dec_hi,
                 rec_lo,
                 rec_hi,
-                &format!("bior{}.{}", nr, nd),
-                nr,
+                &format!("bior{}.{}", _nr, nd),
+                _nr,
             ))
         }
 
@@ -1197,8 +1195,8 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
                 dec_hi,
                 rec_lo,
                 rec_hi,
-                &format!("bior{}.{}", nr, nd),
-                nr,
+                &format!("bior{}.{}", _nr, nd),
+                _nr,
             ))
         }
 
@@ -1245,8 +1243,8 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
                 dec_hi,
                 rec_lo,
                 rec_hi,
-                &format!("bior{}.{}", nr, nd),
-                nr,
+                &format!("bior{}.{}", _nr, nd),
+                _nr,
             ))
         }
 
@@ -1254,14 +1252,14 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
         // return a reasonable error
         _ => Err(SignalError::ValueError(format!(
             "Biorthogonal wavelet bior{}.{} is not fully implemented yet.",
-            nr, nd
+            _nr, nd
         ))),
     }
 }
 
 /// Reverse biorthogonal wavelet filters
 #[allow(dead_code)]
-fn rbior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
+fn rbior_filters(_nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
     // Reverse biorthogonal wavelets are just biorthogonal wavelets with
     // decomposition and reconstruction filters swapped
 
@@ -1284,15 +1282,15 @@ fn rbior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
         (6, 8),
     ];
 
-    if !valid_combinations.contains(&(nr, nd)) {
+    if !valid_combinations.contains(&(_nr, nd)) {
         return Err(SignalError::ValueError(format!(
             "Invalid reverse biorthogonal wavelet specification: rbio{}.{}. Valid combinations are: {:?}",
-            nr, nd, valid_combinations
+            _nr, nd, valid_combinations
         )));
     }
 
     // First get the biorthogonal filters
-    let bior = bior_filters(nd, nr)?; // Note the swapped 'nd' and 'nr' parameters
+    let bior = bior_filters(nd_nr)?; // Note the swapped 'nd' and '_nr' parameters
 
     // Swap decomposition and reconstruction filters
     let filters = WaveletFilters::new(
@@ -1300,8 +1298,8 @@ fn rbior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
         bior.rec_hi, // dec_hi becomes rec_hi
         bior.dec_lo, // rec_lo becomes dec_lo
         bior.dec_hi, // rec_hi becomes dec_hi
-        &format!("rbio{}.{}", nr, nd),
-        nr,
+        &format!("rbio{}.{}", _nr, nd),
+        _nr,
     );
 
     Ok(filters)

@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use approx::assert_relative_eq;
-    use scirs2_fft::{fft, fft_simd, simd_support_available};
+    use scirs2__fft::{fft, fft_simd, simd_support_available};
 
     #[test]
     fn test_simd_fft_basic() {

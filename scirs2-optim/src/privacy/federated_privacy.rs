@@ -5,8 +5,8 @@
 //! differential privacy, privacy amplification through federation, advanced
 //! threat modeling, and cross-silo federated learning with heterogeneous clients.
 
-use super::moment_accountant::MomentsAccountant;
-use super::noise_mechanisms::{
+use super::moment__accountant::MomentsAccountant;
+use super::noise__mechanisms::{
     GaussianMechanism, LaplaceMechanism, NoiseMechanism as NoiseMechanismTrait,
 };
 use super::{AccountingMethod, DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
@@ -1603,8 +1603,7 @@ pub struct AdaptiveBudgetManager<T: Float> {
     global_budget_tracker: GlobalBudgetTracker,
     utility_estimator: UtilityEstimator,
     fairness_monitor: FairnessMonitor,
-    contextual_analyzer: ContextualAnalyzer,
-    _phantom: std::marker::PhantomData<T>,
+    contextual_analyzer: ContextualAnalyzer, _phantom: std::marker::PhantomData<T>,
 }
 
 /// Communication efficiency optimizer
@@ -1976,11 +1975,11 @@ impl FairnessMonitor {
 
 impl<T: Float + Default + Clone + ndarray::ScalarOperand> FederatedMetaLearner<T> {
     /// Create a new federated meta-learner
-    pub fn new(parameter_size: usize) -> Self {
+    pub fn new(_parameter_size: usize) -> Self {
         Self {
-            meta_parameters: Array1::zeros(parameter_size),
+            meta_parameters: Array1::zeros(_parameter_size),
             client_adaptations: HashMap::new(),
-            meta_gradient_buffer: Array1::zeros(parameter_size),
+            meta_gradient_buffer: Array1::zeros(_parameter_size),
             task_distributions: HashMap::new(),
         }
     }
@@ -2061,7 +2060,7 @@ impl<T: Float> TaskDetector<T> {
     }
 
     /// Detect task changes in the given updates
-    pub fn detect_task_change(&mut self, _updates: &[Array1<T>]) -> Result<bool> {
+    pub fn detect_task_change(&mut self_updates: &[Array1<T>]) -> Result<bool> {
         // Placeholder implementation - always returns false for now
         // In a real implementation, this would analyze gradient patterns
         // to detect task changes
@@ -2535,23 +2534,23 @@ impl<
     > FederatedPrivacyCoordinator<T>
 {
     /// Create a new federated privacy coordinator
-    pub fn new(config: FederatedPrivacyConfig) -> Result<Self> {
+    pub fn new(_config: FederatedPrivacyConfig) -> Result<Self> {
         let global_accountant = MomentsAccountant::new(
-            config.base_config.noise_multiplier,
-            config.base_config.target_delta,
-            config.clients_per_round,
-            config.total_clients,
+            _config.base_config.noise_multiplier,
+            _config.base_config.target_delta,
+            _config.clients_per_round,
+            _config.total_clients,
         );
 
-        let secure_aggregator = SecureAggregator::new(config.secure_aggregation.clone())?;
+        let secure_aggregator = SecureAggregator::new(_config.secure_aggregation.clone())?;
         let amplification_analyzer =
-            PrivacyAmplificationAnalyzer::new(config.amplification_config.clone());
+            PrivacyAmplificationAnalyzer::new(_config.amplification_config.clone());
         let cross_device_manager =
-            CrossDevicePrivacyManager::new(config.cross_device_config.clone());
-        let composition_analyzer = FederatedCompositionAnalyzer::new(config.composition_method);
+            CrossDevicePrivacyManager::new(_config.cross_device_config.clone());
+        let composition_analyzer = FederatedCompositionAnalyzer::new(_config.composition_method);
 
         Ok(Self {
-            config,
+            _config,
             client_accountants: HashMap::new(),
             global_accountant,
             secure_aggregator,
@@ -2575,7 +2574,7 @@ impl<
     ) -> Result<FederatedRoundPlan> {
         self.current_round += 1;
 
-        // Sample clients for this round
+        // Sample _clients for this round
         let selected_clients = self.sample_clients(available_clients)?;
 
         // Check global privacy budget
@@ -2644,7 +2643,7 @@ impl<
                     .aggregate_with_masks(client_updates, aggregation_plan)
             } else {
                 return Err(OptimError::InvalidConfig(
-                    "Secure aggregation enabled but no aggregation plan provided".to_string(),
+                    "Secure aggregation enabled but no aggregation _plan provided".to_string(),
                 ));
             }
         } else {
@@ -2664,9 +2663,8 @@ impl<
         // Select noise mechanism
         let mut noise_mechanism: Box<dyn NoiseMechanismTrait<T> + Send> =
             match self.config.base_config.noise_mechanism {
-                NoiseMechanism::Gaussian => Box::new(GaussianMechanism::new()),
-                NoiseMechanism::Laplace => Box::new(LaplaceMechanism::new()),
-                _ => Box::new(GaussianMechanism::new()),
+                NoiseMechanism::Gaussian =>, Box::new(GaussianMechanism::new()),
+                NoiseMechanism::Laplace => Box::new(LaplaceMechanism::new(), _ =>, Box::new(GaussianMechanism::new()),
             };
 
         // Apply noise with federated-specific sensitivity
@@ -2698,7 +2696,7 @@ impl<
         // Filter out Byzantine clients
         let filtered_updates: HashMap<String, Array1<T>> = client_updates
             .iter()
-            .filter(|(client_id, _)| {
+            .filter(|(client_id_)| {
                 !outlier_results
                     .iter()
                     .any(|result| &result.client_id == *client_id && result.is_outlier)
@@ -2722,7 +2720,7 @@ impl<
             .compress_and_schedule(&personalized_updates, round_plan)?;
 
         // 5. Continual learning adaptation
-        let updates_vec: Vec<_> = compressed_updates.values().cloned().collect();
+        let _updates_vec: Vec<_> = compressed_updates.values().cloned().collect();
         if self
             .continual_learning_coordinator
             .task_detector
@@ -2887,7 +2885,7 @@ impl<
         allocations: &HashMap<String, AdaptivePrivacyAllocation>,
     ) -> Result<T> {
         let max_sensitivity: f64 = allocations.values()
-            .map(|alloc| alloc.epsilon * 0.1) // Compute sensitivity based on epsilon
+            .map(|alloc| alloc.epsilon * 0.1) // Compute sensitivity based on _epsilon
             .fold(0.0, f64::max);
         Ok(T::from(max_sensitivity).unwrap_or_else(|| T::from(1.0).unwrap()))
     }
@@ -2902,15 +2900,15 @@ impl<
             return Ok(Vec::new());
         }
 
-        // Sort clients by weight (descending)
+        // Sort _clients by weight (descending)
         let mut weighted_clients: Vec<_> = sampling_weights.iter().collect();
         weighted_clients.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Select top clients based on weights
+        // Select top _clients based on _weights
         let selected = weighted_clients
             .into_iter()
             .take(num_clients.min(sampling_weights.len()))
-            .map(|(client_id, _)| client_id.clone())
+            .map(|(client_id_)| client_id.clone())
             .collect();
 
         Ok(selected)
@@ -2918,8 +2916,7 @@ impl<
 
     /// Compute selection diversity metrics
     fn compute_selection_diversity(
-        &self,
-        _selected_clients: &[String],
+        &self, _selected_clients: &[String],
     ) -> Result<DiversityMetrics> {
         Ok(DiversityMetrics {
             geographic_diversity: 0.8, // Placeholder
@@ -2965,8 +2962,7 @@ impl<
     /// Enhanced client sampling with fairness and Byzantine awareness
     pub fn enhanced_client_sampling(
         &mut self,
-        available_clients: &[String],
-        _round_plan: &FederatedRoundPlan,
+        available_clients: &[String], _round_plan: &FederatedRoundPlan,
     ) -> Result<EnhancedSamplingResult> {
         // Get client reputation scores
         let reputation_scores = self
@@ -2998,7 +2994,7 @@ impl<
             })
             .collect();
 
-        // Sample clients based on weights
+        // Sample _clients based on weights
         let selected_clients =
             self.weighted_client_sampling(&sampling_weights, self.config.clients_per_round)?;
 
@@ -3086,7 +3082,7 @@ impl<
                 let mut selected = Vec::new();
                 let mut remaining = available_clients.to_vec();
                 for _ in 0..target_count.min(remaining.len()) {
-                    let index = rng.random_range(0, remaining.len());
+                    let index = rng.gen_range(0..remaining.len());
                     selected.push(remaining.swap_remove(index));
                 }
                 Ok(selected)
@@ -3095,7 +3091,7 @@ impl<
                 let sampling_rate = target_count as f64 / available_clients.len() as f64;
                 let selected = available_clients
                     .iter()
-                    .filter(|_| rng.random::<f64>() < sampling_rate)
+                    .filter(|_| rng.random_f64() < sampling_rate)
                     .cloned()
                     .collect::<Vec<_>>();
 
@@ -3127,7 +3123,7 @@ impl<
         available_clients: &[String],
         target_count: usize,
     ) -> Result<Vec<String>> {
-        // Group clients by device type
+        // Group _clients by device type
         let mut device_groups: HashMap<DeviceType, Vec<String>> = HashMap::new();
 
         for client_id in available_clients {
@@ -3148,19 +3144,19 @@ impl<
         let mut selected = Vec::new();
         let mut rng = scirs2_core::random::rng();
 
-        for (_, clients) in device_groups {
-            if clients.is_empty() {
+        for (__clients) in device_groups {
+            if _clients.is_empty() {
                 continue;
             }
 
-            let group_target = (target_count * clients.len() / available_clients.len()).max(1);
-            let group_target = group_target.min(clients.len());
+            let group_target = (target_count * _clients.len() / available_clients.len()).max(1);
+            let group_target = group_target.min(_clients.len());
 
             // Random selection from group
-            let mut group_clients = clients;
+            let mut group_clients = _clients;
             let mut group_selected = Vec::new();
             for _ in 0..group_target.min(group_clients.len()) {
-                let index = rng.random_range(0, group_clients.len());
+                let index = rng.gen_range(0..group_clients.len());
                 group_selected.push(group_clients.swap_remove(index));
             }
             selected.extend(group_selected);
@@ -3187,10 +3183,10 @@ impl<
                 let weight = if let Some(profile) =
                     self.cross_device_manager.device_profiles.get(client_id)
                 {
-                    // Lower weight for frequently participating clients
+                    // Lower weight for frequently participating _clients
                     1.0 / (1.0 + profile.participation_frequency)
                 } else {
-                    1.0 // Default weight for unknown clients
+                    1.0 // Default weight for unknown _clients
                 };
                 (client_id.clone(), weight)
             })
@@ -3206,7 +3202,7 @@ impl<
                 break;
             }
 
-            let random_weight = rng.random::<f64>() * total_weight;
+            let random_weight = rng.random_f64() * total_weight;
             let mut cumulative_weight = 0.0;
 
             for (i, (_, weight)) in client_weights.iter().enumerate() {
@@ -3237,7 +3233,7 @@ impl<
         for (_, cluster_clients) in clusters {
             if !cluster_clients.is_empty() && selected.len() < target_count {
                 if !cluster_clients.is_empty() {
-                    let index = rng.random_range(0, cluster_clients.len());
+                    let index = rng.gen_range(0..cluster_clients.len());
                     let client = &cluster_clients[index];
                     selected.push(client.clone());
                     remaining_clients.retain(|c| c != client);
@@ -3248,7 +3244,7 @@ impl<
         // Fill remaining slots randomly
         let remaining_slots = target_count.saturating_sub(selected.len());
         for _ in 0..remaining_slots.min(remaining_clients.len()) {
-            let index = rng.random_range(0, remaining_clients.len());
+            let index = rng.gen_range(0..remaining_clients.len());
             selected.push(remaining_clients.swap_remove(index));
         }
 
@@ -3388,7 +3384,7 @@ impl<
     fn simple_aggregate(&self, client_updates: &HashMap<String, Array1<T>>) -> Result<Array1<T>> {
         if client_updates.is_empty() {
             return Err(OptimError::InvalidConfig(
-                "No client updates provided".to_string(),
+                "No client _updates provided".to_string(),
             ));
         }
 
@@ -3398,13 +3394,13 @@ impl<
         for update in client_updates.values() {
             if update.len() != aggregated.len() {
                 return Err(OptimError::InvalidConfig(
-                    "Client updates have different dimensions".to_string(),
+                    "Client _updates have different dimensions".to_string(),
                 ));
             }
             aggregated = aggregated + update;
         }
 
-        // Average the updates
+        // Average the _updates
         let num_clients = T::from(client_updates.len()).unwrap();
         aggregated = aggregated / num_clients;
 
@@ -3622,10 +3618,10 @@ impl<
 // Implementation of helper structures
 
 impl<T: Float + Send + Sync + ndarray::ScalarOperand> SecureAggregator<T> {
-    fn new(config: SecureAggregationConfig) -> Result<Self> {
-        let min_clients = config.min_clients;
+    fn new(_config: SecureAggregationConfig) -> Result<Self> {
+        let min_clients = _config.min_clients;
         Ok(Self {
-            config,
+            _config,
             client_masks: HashMap::new(),
             shared_randomness: Arc::new(std::sync::Mutex::new(Random::default())),
             aggregation_threshold: min_clients,
@@ -3645,8 +3641,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SecureAggregator<T> {
             let mask_size = self.config.masking_dimension;
 
             let mask = Array1::from_iter(
-                (0..mask_size).map(|_| T::from(client_rng.random_range(-1.0, 1.0)).unwrap()),
-            );
+                (0..mask_size).map(|_| T::from(client_rng.gen_range(-1.0..1.0)).unwrap()).. );
 
             self.client_masks.insert(client_id.clone(), mask);
         }
@@ -3661,8 +3656,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SecureAggregator<T> {
 
     fn aggregate_with_masks(
         &self,
-        client_updates: &HashMap<String, Array1<T>>,
-        _aggregation_plan: &SecureAggregationPlan,
+        client_updates: &HashMap<String, Array1<T>>, _aggregation_plan: &SecureAggregationPlan,
     ) -> Result<Array1<T>> {
         if client_updates.len() < self.aggregation_threshold {
             return Err(OptimError::InvalidConfig(
@@ -3697,9 +3691,9 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SecureAggregator<T> {
 }
 
 impl PrivacyAmplificationAnalyzer {
-    fn new(config: AmplificationConfig) -> Self {
+    fn new(_config: AmplificationConfig) -> Self {
         Self {
-            config,
+            _config,
             subsampling_history: VecDeque::with_capacity(1000),
             amplification_factors: HashMap::new(),
         }
@@ -3774,9 +3768,9 @@ impl PrivacyAmplificationAnalyzer {
 }
 
 impl<T: Float + Send + Sync> CrossDevicePrivacyManager<T> {
-    fn new(config: CrossDeviceConfig) -> Self {
+    fn new(_config: CrossDeviceConfig) -> Self {
         Self {
-            config,
+            _config,
             user_clusters: HashMap::new(),
             device_profiles: HashMap::new(),
             temporal_correlations: HashMap::new(),
@@ -3814,9 +3808,9 @@ impl<T: Float + Send + Sync> CrossDevicePrivacyManager<T> {
 }
 
 impl FederatedCompositionAnalyzer {
-    fn new(method: FederatedCompositionMethod) -> Self {
+    fn new(_method: FederatedCompositionMethod) -> Self {
         Self {
-            method,
+            _method,
             round_compositions: Vec::new(),
             client_compositions: HashMap::new(),
         }
@@ -3933,7 +3927,7 @@ pub struct RoundPrivacyAnalysis {
 /// Privacy guarantees summary
 #[derive(Debug, Clone)]
 pub struct PrivacyGuarantees {
-    pub epsilon: f64,
+    pub _epsilon: f64,
     pub delta: f64,
     pub composition_method: FederatedCompositionMethod,
     pub amplification_enabled: bool,
@@ -4117,23 +4111,20 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
 
     #[allow(dead_code)]
     pub fn detect_byzantine_clients(
-        &mut self,
-        _client_updates: &HashMap<String, Array1<T>>,
-        _round: usize,
+        &mut self, _client_updates: &HashMap<String, Array1<T>>, _round: usize,
     ) -> Result<Vec<OutlierDetectionResult>> {
         Ok(Vec::new())
     }
 
     #[allow(dead_code)]
-    pub fn get_client_reputations(&self, _clients: &[String]) -> HashMap<String, f64> {
+    pub fn get_client_reputations(&self_clients: &[String]) -> HashMap<String, f64> {
         HashMap::new()
     }
 
     #[allow(dead_code)]
     pub fn robust_aggregate(
         &self,
-        client_updates: &HashMap<String, Array1<T>>,
-        _allocations: &HashMap<String, AdaptivePrivacyAllocation>,
+        client_updates: &HashMap<String, Array1<T>>, _allocations: &HashMap<String, AdaptivePrivacyAllocation>,
     ) -> Result<Array1<T>> {
         if let Some(first_update) = client_updates.values().next() {
             let mut result = Array1::zeros(first_update.len());
@@ -4145,7 +4136,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
 
             Ok(result / count)
         } else {
-            Err(OptimError::InvalidConfig("No client updates".to_string()))
+            Err(OptimError::InvalidConfig("No client _updates".to_string()))
         }
     }
 
@@ -4189,8 +4180,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
     #[allow(dead_code)]
     pub fn personalize_client_updates(
         &self,
-        client_updates: &HashMap<String, Array1<T>>,
-        _round_plan: &FederatedRoundPlan,
+        client_updates: &HashMap<String, Array1<T>>, _round_plan: &FederatedRoundPlan,
     ) -> Result<HashMap<String, Array1<T>>> {
         Ok(client_updates.clone())
     }
@@ -4203,25 +4193,21 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
 
     #[allow(dead_code)]
     pub fn cluster_clients(
-        &self,
-        _client_updates: &HashMap<String, Array1<T>>,
+        &self, _client_updates: &HashMap<String, Array1<T>>,
     ) -> Result<HashMap<usize, Vec<String>>> {
         Ok(HashMap::new())
     }
 
     #[allow(dead_code)]
     pub fn generate_personalized_models(
-        &self,
-        _cluster_assignments: &HashMap<usize, Vec<String>>,
-        _meta_gradients: &HashMap<String, Array1<T>>,
+        &self, _cluster_assignments: &HashMap<usize, Vec<String>>, _meta_gradients: &HashMap<String, Array1<T>>,
     ) -> Result<HashMap<String, PersonalizedModel<T>>> {
         Ok(HashMap::new())
     }
 
     #[allow(dead_code)]
     pub fn compute_effectiveness_metrics(
-        &self,
-        _personalized_models: &HashMap<String, PersonalizedModel<T>>,
+        &self, _personalized_models: &HashMap<String, PersonalizedModel<T>>,
     ) -> Result<PersonalizationEffectivenessMetrics> {
         Ok(PersonalizationEffectivenessMetrics {
             global_model_improvement: 0.1,
@@ -4242,16 +4228,13 @@ impl<T: Float + std::fmt::Debug> AdaptiveBudgetManager<T> {
             global_budget_tracker: GlobalBudgetTracker::new(),
             utility_estimator: UtilityEstimator::new(),
             fairness_monitor: FairnessMonitor::new(),
-            contextual_analyzer: ContextualAnalyzer::new(),
-            _phantom: std::marker::PhantomData,
+            contextual_analyzer: ContextualAnalyzer::new(), _phantom: std::marker::PhantomData,
         })
     }
 
     #[allow(dead_code)]
     pub fn compute_adaptive_allocations(
-        &self,
-        _client_updates: &HashMap<String, Array1<T>>,
-        _round_plan: &FederatedRoundPlan,
+        &self, _client_updates: &HashMap<String, Array1<T>>, _round_plan: &FederatedRoundPlan,
     ) -> Result<HashMap<String, AdaptivePrivacyAllocation>> {
         Ok(HashMap::new())
     }
@@ -4284,14 +4267,13 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> CommunicationOpt
     #[allow(dead_code)]
     pub fn compress_and_schedule(
         &self,
-        client_updates: &HashMap<String, Array1<T>>,
-        _round_plan: &FederatedRoundPlan,
+        client_updates: &HashMap<String, Array1<T>>, _round_plan: &FederatedRoundPlan,
     ) -> Result<HashMap<String, Array1<T>>> {
         Ok(client_updates.clone())
     }
 
     #[allow(dead_code)]
-    pub fn compute_efficiency_scores(&self, _clients: &[String]) -> Result<HashMap<String, f64>> {
+    pub fn compute_efficiency_scores(&self_clients: &[String]) -> Result<HashMap<String, f64>> {
         Ok(HashMap::new())
     }
 }
@@ -4327,9 +4309,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ContinualLearnin
 
     #[allow(dead_code)]
     pub fn adapt_to_new_task(
-        &mut self,
-        _updates: &HashMap<String, Array1<T>>,
-        _round: usize,
+        &mut self_updates: &HashMap<String, Array1<T>>, _round: usize,
     ) -> Result<()> {
         Ok(())
     }
@@ -4925,13 +4905,13 @@ pub mod secure_aggregation_protocols {
 
     impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> AdvancedSecureAggregator<T> {
         /// Create a new advanced secure aggregator
-        pub fn new(config: AdvancedSecureAggregationConfig) -> Result<Self> {
+        pub fn new(_config: AdvancedSecureAggregationConfig) -> Result<Self> {
             let key_manager = SecureKeyManager::new()?;
             let fault_detector = ByzantineFaultDetector::new();
 
             Ok(Self {
-                active_protocol: config.protocol,
-                config,
+                active_protocol: _config.protocol,
+                _config,
                 key_manager,
                 fault_detector,
                 metrics: SecureAggregationMetrics::default(),
@@ -5000,7 +4980,7 @@ pub mod secure_aggregation_protocols {
                 });
             }
 
-            // Store the valid share
+            // Store the valid _share
             self.round_state
                 .received_shares
                 .insert(client_share.client_id.clone(), client_share);
@@ -5117,7 +5097,7 @@ pub mod secure_aggregation_protocols {
                 for (i, &(xi, yi)) in points.iter().enumerate() {
                     let mut lagrange_coeff = T::one();
 
-                    for (k, &(xk, _)) in points.iter().enumerate() {
+                    for (k, &(xk_)) in points.iter().enumerate() {
                         if i != k {
                             lagrange_coeff = lagrange_coeff * (-xk) / (xi - xk);
                         }
@@ -5318,7 +5298,7 @@ pub mod secure_aggregation_protocols {
             }
         }
 
-        fn detect_anomaly(&self, _values: &Array1<T>) -> Result<bool> {
+        fn detect_anomaly(&self_values: &Array1<T>) -> Result<bool> {
             // Simplified anomaly detection - in practice would be more sophisticated
             Ok(false)
         }
@@ -5342,11 +5322,11 @@ pub mod secure_aggregation_protocols {
 /// Implementation of missing key structures for federated privacy
 impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> StatisticalAnalyzer<T> {
     /// Create new statistical analyzer
-    pub fn new(window_size: usize, significance_level: f64) -> Self {
+    pub fn new(_window_size: usize, significance_level: f64) -> Self {
         Self {
-            window_size,
+            _window_size,
             significance_level,
-            test_statistics: VecDeque::with_capacity(window_size),
+            test_statistics: VecDeque::with_capacity(_window_size),
         }
     }
 
@@ -5459,18 +5439,18 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> RobustEstimators
     ) -> Result<Array1<T>> {
         if client_updates.is_empty() {
             return Err(OptimError::InvalidConfig(
-                "No client updates provided".to_string(),
+                "No client _updates provided".to_string(),
             ));
         }
 
         let first_update = client_updates.values().next().unwrap();
         let dim = first_update.len();
 
-        // Verify all updates have same dimension
+        // Verify all _updates have same dimension
         for update in client_updates.values() {
             if update.len() != dim {
                 return Err(OptimError::InvalidConfig(
-                    "Client updates have different dimensions".to_string(),
+                    "Client _updates have different dimensions".to_string(),
                 ));
             }
         }
@@ -5507,7 +5487,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> RobustEstimators
     ) -> Result<Array1<T>> {
         if client_updates.is_empty() {
             return Err(OptimError::InvalidConfig(
-                "No client updates provided".to_string(),
+                "No client _updates provided".to_string(),
             ));
         }
 
@@ -5568,7 +5548,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> RobustEstimators
         let best_client = scores
             .iter()
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(client, _)| client)
+            .map(|(client_)| client)
             .ok_or_else(|| OptimError::InvalidConfig("Failed to find best client".to_string()))?;
 
         Ok(client_updates[best_client].clone())
@@ -5602,8 +5582,7 @@ impl UtilityEstimator {
         privacy_cost: f64,
     ) -> Result<UtilityMeasurement> {
         let measurement = UtilityMeasurement {
-            round,
-            accuracy: model_accuracy,
+            round_accuracy: model_accuracy,
             loss: 1.0 - model_accuracy, // Simple approximation
             convergence_rate,
             noise_level: privacy_cost,
@@ -5654,9 +5633,9 @@ impl UtilityEstimator {
 
 impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> CompressionEngine<T> {
     /// Create new compression engine
-    pub fn new(strategy: CompressionStrategy) -> Self {
+    pub fn new(_strategy: CompressionStrategy) -> Self {
         Self {
-            strategy,
+            _strategy,
             compression_history: VecDeque::with_capacity(100),
             error_feedback_memory: HashMap::new(),
         }
@@ -5665,8 +5644,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> CompressionEngin
     /// Compress gradient updates
     pub fn compress(
         &mut self,
-        gradients: &Array1<T>,
-        _round: usize,
+        gradients: &Array1<T>, _round: usize,
     ) -> Result<CompressionResult<T>> {
         let original_size = gradients.len() * std::mem::size_of::<T>();
         let start_time = std::time::Instant::now();
@@ -5758,7 +5736,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> CompressionEngin
         let keep_probability = 1.0 - sparsity_ratio;
 
         let sparse_gradients = gradients.mapv(|x| {
-            if rng.random::<f64>() < keep_probability {
+            if rng.random_f64() < keep_probability {
                 x / T::from(keep_probability).unwrap() // Unbiased estimator
             } else {
                 T::zero()
@@ -5787,8 +5765,7 @@ impl BandwidthMonitor {
     pub fn record_measurement(
         &mut self,
         bytes_transmitted: u64,
-        transmission_time_ms: u64,
-        _round: usize,
+        transmission_time_ms: u64, _round: usize,
     ) -> BandwidthMeasurement {
         let bandwidth_bps = if transmission_time_ms > 0 {
             (bytes_transmitted * 8 * 1000) / transmission_time_ms
@@ -5841,10 +5818,10 @@ impl BandwidthMonitor {
         self.current_conditions = NetworkConditions {
             available_bandwidth: avg_bandwidth,
             network_quality: match self.assess_connection_quality(avg_bandwidth, avg_latency) {
-                ConnectionQuality::Excellent => NetworkQuality::Excellent,
-                ConnectionQuality::Good => NetworkQuality::Good,
-                ConnectionQuality::Fair => NetworkQuality::Fair,
-                ConnectionQuality::Poor => NetworkQuality::Poor,
+                ConnectionQuality::Excellent =>, NetworkQuality::Excellent,
+                ConnectionQuality::Good =>, NetworkQuality::Good,
+                ConnectionQuality::Fair =>, NetworkQuality::Fair,
+                ConnectionQuality::Poor =>, NetworkQuality::Poor,
             },
             congestion_level: self
                 .congestion_level_to_f64(self.assess_congestion_level(&recent_measurements)),

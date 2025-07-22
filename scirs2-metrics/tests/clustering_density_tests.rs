@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod clustering_density_tests {
     use ndarray::{array, Array2};
-    use scirs2_metrics::clustering::density::{
+    use scirs2__metrics::clustering::density::{
         density_based_cluster_validity, local_density_factor, relative_density_index,
     };
 

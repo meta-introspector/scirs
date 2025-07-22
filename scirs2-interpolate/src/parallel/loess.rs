@@ -32,9 +32,9 @@ use crate::spatial::kdtree::KdTree;
 /// # #[cfg(feature = "linalg")]
 /// # {
 /// use ndarray::{Array1, Array2};
-/// use scirs2_interpolate::parallel::{ParallelLocalPolynomialRegression, ParallelConfig};
-/// use scirs2_interpolate::local::polynomial::LocalPolynomialConfig;
-/// use scirs2_interpolate::local::mls::{WeightFunction, PolynomialBasis};
+/// use scirs2__interpolate::parallel::{ParallelLocalPolynomialRegression, ParallelConfig};
+/// use scirs2__interpolate::local::polynomial::LocalPolynomialConfig;
+/// use scirs2__interpolate::local::mls::{WeightFunction, PolynomialBasis};
 ///
 /// // Create sample 1D data
 /// let x = Array1::<f64>::linspace(0.0, 10.0, 100);
@@ -104,17 +104,16 @@ where
     /// # Returns
     ///
     /// A new ParallelLocalPolynomialRegression model
-    pub fn new(points: Array2<F>, values: Array1<F>, bandwidth: F) -> InterpolateResult<Self> {
+    pub fn new(_points: Array2<F>, values: Array1<F>, bandwidth: F) -> InterpolateResult<Self> {
         // Create standard LOESS model
-        let loess = LocalPolynomialRegression::new(points.clone(), values, bandwidth)?;
+        let loess = LocalPolynomialRegression::new(_points.clone(), values, bandwidth)?;
 
         // Create KD-tree for efficient neighbor searching
-        let kdtree = KdTree::new(points)?;
+        let kdtree = KdTree::new(_points)?;
 
         Ok(Self {
             loess,
-            kdtree,
-            _phantom: PhantomData,
+            kdtree_phantom: PhantomData,
         })
     }
 
@@ -142,8 +141,7 @@ where
 
         Ok(Self {
             loess,
-            kdtree,
-            _phantom: PhantomData,
+            kdtree_phantom: PhantomData,
         })
     }
 
@@ -350,7 +348,7 @@ fn apply_weight<F: Float + FromPrimitive>(r: F, weight_fn: WeightFunction) -> F 
                 F::zero()
             }
         }
-        WeightFunction::InverseDistance => F::one() / (F::from_f64(1e-10).unwrap() + r * r),
+        WeightFunction::InverseDistance =>, F::one() / (F::from_f64(1e-10).unwrap() + r * r),
         WeightFunction::CubicSpline => {
             if r < F::from_f64(1.0 / 3.0).unwrap() {
                 let r2 = r * r;
@@ -454,7 +452,7 @@ fn fit_local_polynomial<F: Float + FromPrimitive + 'static>(
 
     #[cfg(feature = "linalg")]
     let coefficients = {
-        use scirs2_linalg::solve;
+        use scirs2__linalg::solve;
         let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
         let xty_f64 = xty.mapv(|x| x.to_f64().unwrap());
         solve(&xtx_f64.view(), &xty_f64.view(), None)

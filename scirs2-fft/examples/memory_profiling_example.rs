@@ -5,9 +5,9 @@
 //! variants and provides estimates of memory usage.
 
 use ndarray::Array2;
-use num_complex::Complex64;
-use scirs2_fft::memory_efficient::{fft2_efficient, fft_inplace, FftMode};
-use scirs2_fft::{fft, fft2, frft, rfft, PlanCache};
+use num__complex::Complex64;
+use scirs2__fft::memory_efficient::{fft2_efficient, fft_inplace, FftMode};
+use scirs2__fft::{fft, fft2, frft, rfft, PlanCache};
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
@@ -164,12 +164,12 @@ pub fn profile_fft_2d() -> Vec<MemoryProfile> {
 
 /// Generate memory usage report
 #[allow(dead_code)]
-pub fn generate_memory_report(profiles: &[MemoryProfile]) {
+pub fn generate_memory_report(_profiles: &[MemoryProfile]) {
     println!("=== Memory Usage Report ===");
     println!("Operation | Size | Est. Memory (MB) | Time (ms)");
     println!("{}", "-".repeat(70));
 
-    for profile in profiles {
+    for profile in _profiles {
         println!(
             "{:9} | {:6} | {:16.2} | {:9.2}",
             profile.operation,

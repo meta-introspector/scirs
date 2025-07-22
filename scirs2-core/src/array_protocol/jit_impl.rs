@@ -21,7 +21,7 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::{Arc, LazyLock, RwLock};
 
-use crate::array_protocol::{ArrayProtocol, JITArray, JITFunction, JITFunctionFactory};
+use crate::array_protocol::{ArrayProtocol, ArrayFunction, JITArray, JITFunction, JITFunctionFactory};
 use crate::error::{CoreError, CoreResult, ErrorContext};
 
 /// JIT compilation backends
@@ -104,10 +104,7 @@ impl Debug for JITFunctionImpl {
 impl JITFunctionImpl {
     /// Create a new JIT function.
     #[must_use]
-    pub fn new(
-        source: String,
-        function: Box<JITFunctionType>,
-        compile_info: HashMap<String, String>,
+    pub fn new(source: String, function: Box<JITFunctionType>, compile_info: HashMap<String, String>,
     ) -> Self {
         Self {
             source,
@@ -195,7 +192,7 @@ impl LLVMFunctionFactory {
 }
 
 impl JITFunctionFactory for LLVMFunctionFactory {
-    fn create(&self, expression: &str, array_type_id: TypeId) -> CoreResult<Box<dyn JITFunction>> {
+    fn create_jit_function(&self, expression: &str, array_type_id: TypeId) -> CoreResult<Box<dyn JITFunction>> {
         // Check if the function is already in the cache
         if self.config.use_cache {
             let cache_key = format!("{expression}-{array_type_id:?}");
@@ -271,7 +268,7 @@ impl CraneliftFunctionFactory {
 }
 
 impl JITFunctionFactory for CraneliftFunctionFactory {
-    fn create(&self, expression: &str, array_type_id: TypeId) -> CoreResult<Box<dyn JITFunction>> {
+    fn create_jit_function(&self, expression: &str, array_type_id: TypeId) -> CoreResult<Box<dyn JITFunction>> {
         // Check if the function is already in the cache
         if self.config.use_cache {
             let cache_key = format!("{expression}-{array_type_id:?}");
@@ -326,9 +323,7 @@ impl JITManager {
     }
 
     /// Get a JIT function factory that supports the given array type.
-    pub fn get_factory_for_array_type(
-        &self,
-        array_type_id: TypeId,
+    pub fn get_factory_for_array_type(&self, array_type_id: TypeId
     ) -> Option<&dyn JITFunctionFactory> {
         for factory in &self.factories {
             if factory.supports_array_type(array_type_id) {
@@ -339,14 +334,11 @@ impl JITManager {
     }
 
     /// Compile a JIT function for the given expression and array type.
-    pub fn compile(
-        &self,
-        expression: &str,
-        array_type_id: TypeId,
+    pub fn compile(&self, expression: &str, array_type_id: TypeId
     ) -> CoreResult<Box<dyn JITFunction>> {
         // Find a factory that supports the array type
         if let Some(factory) = self.get_factory_for_array_type(array_type_id) {
-            factory.create(expression, array_type_id)
+            factory.create_jit_function(expression, array_type_id)
         } else {
             Err(CoreError::JITError(ErrorContext::new(format!(
                 "No JIT factory supports array type: {array_type_id:?}"
@@ -398,15 +390,14 @@ pub struct JITEnabledArray<T, A> {
     inner: A,
 
     /// Phantom data for the element type
-    _phantom: PhantomData<T>,
+    phantom: PhantomData<T>,
 }
 
 impl<T, A> JITEnabledArray<T, A> {
     /// Create a new JIT-enabled array.
     pub fn new(inner: A) -> Self {
         Self {
-            inner,
-            _phantom: PhantomData,
+            inner, phantom: PhantomData,
         }
     }
 
@@ -419,8 +410,7 @@ impl<T, A> JITEnabledArray<T, A> {
 impl<T, A: Clone> Clone for JITEnabledArray<T, A> {
     fn clone(&self) -> Self {
         Self {
-            inner: self.inner.clone(),
-            _phantom: PhantomData::<T>,
+            inner: self.inner.clone(), phantom: PhantomData::<T>,
         }
     }
 }
@@ -436,7 +426,7 @@ where
         let jit_manager = jit_manager.read().unwrap();
 
         // Compile the function
-        jit_manager.compile(expression, TypeId::of::<A>())
+        (*jit_manager).compile(expression, TypeId::of::<A>())
     }
 
     fn supports_jit(&self) -> bool {
@@ -480,9 +470,7 @@ where
     T: Send + Sync + 'static,
     A: ArrayProtocol + Clone + Send + Sync + 'static,
 {
-    fn array_function(
-        &self,
-        func: &crate::array_protocol::ArrayFunction,
+    fn array_function(&self, func: &ArrayFunction,
         types: &[TypeId],
         args: &[Box<dyn Any>],
         kwargs: &HashMap<String, Box<dyn Any>>,
@@ -508,7 +496,7 @@ where
         let inner_clone = self.inner.clone();
         Box::new(Self {
             inner: inner_clone,
-            _phantom: PhantomData::<T>,
+            phantom: PhantomData::<T>,
         })
     }
 }
@@ -533,7 +521,7 @@ mod tests {
 
         // Compile the function
         let array_type_id = TypeId::of::<NdarrayWrapper<f64, ndarray::Ix2>>();
-        let jit_function = factory.create(expression, array_type_id).unwrap();
+        let jit_function = factory.create_jit_function(expression, array_type_id).unwrap();
 
         // Check the function's properties
         assert_eq!(jit_function.source(), expression);

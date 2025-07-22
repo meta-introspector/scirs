@@ -267,6 +267,12 @@ pub struct ProductionConfig {
 }
 
 impl ProductionConfig {
+    /// Register a configuration key-value pair
+    pub fn register_config(&mut self, key: &str, value: String) -> CoreResult<()> {
+        // Use the set method to register configuration
+        self.set(key, value.as_str())
+    }
+
     /// Create a new production configuration manager
     pub fn new() -> Self {
         let mut validators: HashMap<String, Box<dyn ConfigValidator>> = HashMap::new();
@@ -476,12 +482,7 @@ impl ProductionConfig {
     }
 
     /// Register a configuration entry with validation
-    pub fn register_config(
-        &self,
-        key: String,
-        default_value: Option<String>,
-        validator: Option<String>,
-        hot_reloadable: bool,
+    pub fn register(&mut self, key: String, default_value: Option<String>, validator: Option<String>, reloadable: bool,
         description: Option<String>,
     ) -> CoreResult<()> {
         let mut entries = self.entries.write().map_err(|_| {
@@ -493,31 +494,21 @@ impl ProductionConfig {
             return Ok(()); // Already registered
         }
 
-        let value = if let Some(default) = &default_value {
-            ConfigValue {
-                value: default.clone(),
-                source: ConfigSource::Default,
-                timestamp: SystemTime::now(),
-                is_sensitive: self.is_sensitive_key(&key),
-                description: description.clone(),
-            }
-        } else {
-            ConfigValue {
-                value: String::new(),
-                source: ConfigSource::Default,
-                timestamp: SystemTime::now(),
-                is_sensitive: self.is_sensitive_key(&key),
-                description: description.clone(),
-            }
+        let value = ConfigValue {
+            value: default_value.clone().unwrap_or_default(),
+            source: ConfigSource::Default,
+            timestamp: SystemTime::now(),
+            is_sensitive: self.is_sensitive_key(&key),
+            description: description.clone(),
         };
 
         let entry = ConfigEntry {
             key: key.clone(),
             value,
             validator,
-            hot_reloadable,
+            hot_reloadable: reloadable,
             default_value,
-            env_var: Some(format!("key_upper{}", key.to_uppercase())),
+            env_var: Some(format!("SCIRS_{}", key.to_uppercase())),
         };
 
         entries.insert(key, entry);
@@ -539,11 +530,7 @@ impl ProductionConfig {
     }
 
     /// Set feature flag
-    pub fn set_feature_flag(
-        &self,
-        name: String,
-        enabled: bool,
-        rollout_percentage: f64,
+    pub fn set_feature_flag(&mut self, name: String, enabled: bool, rollout_percentage: f64,
     ) -> CoreResult<()> {
         let mut flags = self.feature_flags.write().map_err(|_| {
             CoreError::ConfigError(ErrorContext::new("Failed to acquire feature flags lock"))
@@ -728,7 +715,7 @@ impl fmt::Display for ConfigSummary {
 
 /// Global configuration instance
 static GLOBAL_CONFIG: std::sync::LazyLock<ProductionConfig> = std::sync::LazyLock::new(|| {
-    let config = ProductionConfig::new();
+    let mut config = ProductionConfig::new();
 
     // Load from environment on startup
     if let Err(e) = config.load_from_env() {
@@ -736,7 +723,7 @@ static GLOBAL_CONFIG: std::sync::LazyLock<ProductionConfig> = std::sync::LazyLoc
     }
 
     // Register common configurations
-    let _ = config.register_config(
+    let _ = config.register(
         "log_level".to_string(),
         Some("info".to_string()),
         None,
@@ -744,7 +731,7 @@ static GLOBAL_CONFIG: std::sync::LazyLock<ProductionConfig> = std::sync::LazyLoc
         Some("Logging level (trace, debug, info, warn, error)".to_string()),
     );
 
-    let _ = config.register_config(
+    let _ = config.register(
         "max_memory_mb".to_string(),
         Some("1024".to_string()),
         Some("positive_int".to_string()),
@@ -752,7 +739,7 @@ static GLOBAL_CONFIG: std::sync::LazyLock<ProductionConfig> = std::sync::LazyLoc
         Some("Maximum memory usage in megabytes".to_string()),
     );
 
-    let _ = config.register_config(
+    let _ = config.register(
         "worker_threads".to_string(),
         Some("4".to_string()),
         Some("positive_int".to_string()),
@@ -837,7 +824,7 @@ mod tests {
 
     #[test]
     fn test_config_operations() {
-        let config = ProductionConfig::new();
+        let mut config = ProductionConfig::new();
 
         // Test setting and getting
         config.set("test_key", "test_value").unwrap();
@@ -856,7 +843,7 @@ mod tests {
 
     #[test]
     fn test_feature_flags() {
-        let config = ProductionConfig::new();
+        let mut config = ProductionConfig::new();
 
         config
             .set_feature_flag("test_feature".to_string(), true, 100.0)
@@ -882,10 +869,10 @@ mod tests {
 
     #[test]
     fn test_config_registration() {
-        let config = ProductionConfig::new();
+        let mut config = ProductionConfig::new();
 
         config
-            .register_config(
+            .register(
                 "test_config".to_string(),
                 Some("default_value".to_string()),
                 Some("positive_int".to_string()),

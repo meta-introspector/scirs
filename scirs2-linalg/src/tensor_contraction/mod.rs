@@ -79,35 +79,35 @@ where
 
     // Check that the contraction axes have compatible dimensions
     for (i, (&ax_a, &ax_b)) in axes_a.iter().zip(axes_b.iter()).enumerate() {
-        if ax_a >= a.ndim() {
+        if ax_a >= _a.ndim() {
             return Err(LinalgError::ShapeError(format!(
                 "Axis {} out of bounds for first input with dimension {}",
                 ax_a,
-                a.ndim()
+                _a.ndim()
             )));
         }
 
-        if ax_b >= b.ndim() {
+        if ax_b >= _b.ndim() {
             return Err(LinalgError::ShapeError(format!(
                 "Axis {} out of bounds for second input with dimension {}",
                 ax_b,
-                b.ndim()
+                _b.ndim()
             )));
         }
 
-        if a.shape()[ax_a] != b.shape()[ax_b] {
+        if _a.shape()[ax_a] != _b.shape()[ax_b] {
             return Err(LinalgError::ShapeError(format!(
                 "Dimension mismatch at index {}: {} != {}",
                 i,
-                a.shape()[ax_a],
-                b.shape()[ax_b]
+                _a.shape()[ax_a],
+                _b.shape()[ax_b]
             )));
         }
     }
 
     // Determine the axes that are not contracted
-    let free_axes_a: Vec<usize> = (0..a.ndim()).filter(|&ax| !axes_a.contains(&ax)).collect();
-    let free_axes_b: Vec<usize> = (0..b.ndim()).filter(|&ax| !axes_b.contains(&ax)).collect();
+    let free_axes_a: Vec<usize> = (0.._a.ndim()).filter(|&ax| !axes_a.contains(&ax)).collect();
+    let free_axes_b: Vec<usize> = (0.._b.ndim()).filter(|&ax| !axes_b.contains(&ax)).collect();
 
     // Determine the shape of the result tensor
     let mut result_shape = Vec::with_capacity(free_axes_a.len() + free_axes_b.len());
@@ -115,18 +115,18 @@ where
     let mut free_dims_b = Vec::with_capacity(free_axes_b.len());
 
     for &ax in &free_axes_a {
-        result_shape.push(a.shape()[ax]);
-        free_dims_a.push(a.shape()[ax]);
+        result_shape.push(_a.shape()[ax]);
+        free_dims_a.push(_a.shape()[ax]);
     }
 
     for &ax in &free_axes_b {
-        result_shape.push(b.shape()[ax]);
-        free_dims_b.push(b.shape()[ax]);
+        result_shape.push(_b.shape()[ax]);
+        free_dims_b.push(_b.shape()[ax]);
     }
 
     // Convert to dynamic array views
-    let a_dyn = a.view().into_dyn();
-    let b_dyn = b.view().into_dyn();
+    let a_dyn = _a.view().into_dyn();
+    let b_dyn = _b.view().into_dyn();
 
     // Create the result tensor
     let result = ArrayD::zeros(result_shape.clone());
@@ -172,8 +172,8 @@ where
             let free_idx_b = &free_idx[free_dims_a.len()..];
 
             // Prepare indexing arrays
-            let mut a_idx = vec![0; a.ndim()];
-            let mut b_idx = vec![0; b.ndim()];
+            let mut a_idx = vec![0; _a.ndim()];
+            let mut b_idx = vec![0; _b.ndim()];
 
             // Set free indices
             for (i, &ax) in free_axes_a.iter().enumerate() {
@@ -189,10 +189,10 @@ where
 
             // Recursively compute the contraction for all contracted indices
             fn accumulate_sum<A>(
-                a: &ArrayViewD<A>,
-                b: &ArrayViewD<A>,
-                a_idx: &mut Vec<usize>,
-                b_idx: &mut Vec<usize>,
+                _a: &ArrayViewD<A>,
+                _b: &ArrayViewD<A>,
+                _a_idx: &mut Vec<usize>,
+                _b_idx: &mut Vec<usize>,
                 axes_a: &[usize],
                 axes_b: &[usize],
                 depth: usize,
@@ -202,18 +202,18 @@ where
             {
                 if depth == axes_a.len() {
                     // All contracted indices are set, accumulate the product
-                    *sum += a[a_idx.as_slice()] * b[b_idx.as_slice()];
+                    *sum += _a[a_idx.as_slice()] * _b[b_idx.as_slice()];
                     return;
                 }
 
                 let ax_a = axes_a[depth];
                 let ax_b = axes_b[depth];
-                let dim = a.shape()[ax_a]; // Dimension size for this contracted axis
+                let dim = _a.shape()[ax_a]; // Dimension size for this contracted axis
 
                 for i in 0..dim {
                     a_idx[ax_a] = i;
                     b_idx[ax_b] = i;
-                    accumulate_sum(a, b, a_idx, b_idx, axes_a, axes_b, depth + 1, sum);
+                    accumulate_sum(_a, _b, a_idx, b_idx, axes_a, axes_b, depth + 1, sum);
                 }
             }
 
@@ -346,15 +346,15 @@ where
         max_depth: usize,
         all_indices: &mut Vec<Vec<usize>>,
     ) {
-        if depth == max_depth {
+        if _depth == max_depth {
             all_indices.push(current);
             return;
         }
 
         let mut current = current;
-        for i in 0..shape[depth] {
+        for i in 0..shape[_depth] {
             current.push(i);
-            generate_batch_indices(shape, current.clone(), depth + 1, max_depth, all_indices);
+            generate_batch_indices(shape, current.clone(), _depth + 1, max_depth, all_indices);
             current.pop();
         }
     }
@@ -523,8 +523,7 @@ where
         shape: &[usize],
         current: Vec<usize>,
         depth: usize,
-        mode: usize,
-        _mode_dim: usize,
+        mode: usize, _mode_dim: usize,
         all_indices: &mut Vec<Vec<usize>>,
     ) {
         if depth == shape.len() {
@@ -534,7 +533,7 @@ where
 
         // Skip mode dimension
         if depth == mode {
-            generate_indices_without_mode(shape, current, depth + 1, mode, _mode_dim, all_indices);
+            generate_indices_without_mode(shape, current, depth + 1, mode_mode_dim, all_indices);
             return;
         }
 
@@ -548,8 +547,7 @@ where
                 shape,
                 current.clone(),
                 depth + 1,
-                mode,
-                _mode_dim,
+                mode_mode_dim,
                 all_indices,
             );
             current.pop();
@@ -653,9 +651,9 @@ where
     A: Clone + Float + NumAssign + Zero + Send + Sync + Sum + Debug + 'static,
 {
     // Parse the einsum string
-    fn parse_einsum_notation(einsum_str: &str) -> LinalgResult<(Vec<Vec<char>>, Vec<char>)> {
+    fn parse_einsum_notation(_einsum_str: &_str) -> LinalgResult<(Vec<Vec<char>>, Vec<char>)> {
         // Split the string into input and output parts
-        let parts: Vec<&str> = einsum_str.split("->").collect();
+        let parts: Vec<&_str> = _einsum_str.split("->").collect();
         if parts.len() != 2 {
             return Err(LinalgError::ValueError(
                 "Einsum string must contain exactly one '->'".to_string(),
@@ -663,7 +661,7 @@ where
         }
 
         // Parse input indices
-        let inputs: Vec<&str> = parts[0].split(',').collect();
+        let inputs: Vec<&_str> = parts[0].split(',').collect();
         let mut input_indices = Vec::with_capacity(inputs.len());
         for input in inputs {
             let indices: Vec<char> = input.trim().chars().collect();
@@ -798,17 +796,17 @@ where
             where
                 A: Clone + Float + NumAssign + Zero + One,
             {
-                // Base case: all contracted indices have values assigned
+                // Base case: all contracted _indices have _values assigned
                 if depth == contracted_indices.len() {
                     // Compute product of tensor elements
                     let mut product = A::one();
 
-                    for (tensor, indices) in tensors.iter().zip(input_indices.iter()) {
+                    for (tensor_indices) in tensors.iter().zip(input_indices.iter()) {
                         // Create index array for this tensor
                         let tensor_indices: Vec<usize> =
-                            indices.iter().map(|&idx| index_values[&idx]).collect();
+                            _indices.iter().map(|&idx| index_values[&idx]).collect();
 
-                        // Multiply by tensor element at these indices
+                        // Multiply by tensor element at these _indices
                         product *= tensor[tensor_indices.as_slice()];
                     }
 
@@ -817,10 +815,10 @@ where
 
                 // Recursive case: assign a value to the current contracted index
                 let idx = contracted_indices[depth];
-                let dim = index_to_dim[&idx];
+                let _dim = index_to_dim[&idx];
                 let mut sum = A::zero();
 
-                for i in 0..dim {
+                for i in 0.._dim {
                     index_values.insert(idx, i);
                     sum += compute_sum_recursive(
                         tensors,
@@ -966,26 +964,26 @@ where
 // Helper function to unfold a tensor along a specified mode
 // "Unfolding" means reshaping a tensor into a matrix
 #[allow(dead_code)]
-fn unfold<A>(tensor: &ArrayD<A>, mode: usize) -> LinalgResult<Array2<A>>
+fn unfold<A>(_tensor: &ArrayD<A>, mode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + Debug + Send + Sync,
 {
-    if mode >= tensor.ndim() {
+    if mode >= _tensor.ndim() {
         return Err(LinalgError::ShapeError(format!(
-            "Mode {} is out of bounds for tensor with {} dimensions",
+            "Mode {} is out of bounds for _tensor with {} dimensions",
             mode,
-            tensor.ndim()
+            _tensor.ndim()
         )));
     }
 
-    let shape = tensor.shape();
+    let shape = _tensor.shape();
     let mode_dim = shape[mode];
 
     // Calculate the product of all other dimensions
     let other_dims_prod: usize = shape
         .iter()
         .enumerate()
-        .filter(|&(i, _)| i != mode)
+        .filter(|&(i_)| i != mode)
         .map(|(_, &dim)| dim)
         .product();
 
@@ -993,13 +991,13 @@ where
     let mut result = Array2::zeros((mode_dim, other_dims_prod));
 
     // Helper function to calculate column index
-    fn calc_col_idx(idx: &[usize], shape: &[usize], mode: usize) -> usize {
+    fn calc_col_idx(_idx: &[usize], shape: &[usize], mode: usize) -> usize {
         let mut col_idx = 0;
         let mut stride = 1;
 
         for dim in (0..shape.len()).rev() {
             if dim != mode {
-                col_idx += idx[dim] * stride;
+                col_idx += _idx[dim] * stride;
                 stride *= shape[dim];
             }
         }
@@ -1007,8 +1005,8 @@ where
         col_idx
     }
 
-    // Populate the unfolded tensor (vectorized for better performance)
-    let tensor_shape = tensor.shape().to_vec();
+    // Populate the unfolded _tensor (vectorized for better performance)
+    let tensor_shape = _tensor.shape().to_vec();
 
     // Generate all indices
     let mut all_indices = Vec::new();
@@ -1044,7 +1042,7 @@ where
         .map(|idx| {
             let mode_idx = idx[mode];
             let col_idx = calc_col_idx(idx, &tensor_shape, mode);
-            let val = tensor[idx.as_slice()];
+            let val = _tensor[idx.as_slice()];
             (mode_idx, col_idx, val)
         })
         .collect();

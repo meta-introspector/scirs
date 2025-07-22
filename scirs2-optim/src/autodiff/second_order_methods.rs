@@ -769,8 +769,8 @@ pub mod utils {
     use super::*;
     
     /// Compute condition number of Hessian
-    pub fn compute_condition_number<T: Float>(hessian: &HessianMatrix<T>) -> Option<T> {
-        if let Some(ref eigenvalues) = hessian.eigenvalues {
+    pub fn compute_condition_number<T: Float>(_hessian: &HessianMatrix<T>) -> Option<T> {
+        if let Some(ref eigenvalues) = _hessian.eigenvalues {
             let max_eigenval = eigenvalues.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
             let min_eigenval = eigenvalues.iter().fold(T::infinity(), |a, &b| a.min(b));
             
@@ -785,10 +785,10 @@ pub mod utils {
     }
     
     /// Check if Hessian is positive definite
-    pub fn is_positive_definite<T: Float>(hessian: &HessianMatrix<T>) -> bool {
-        if let Some(ref eigenvalues) = hessian.eigenvalues {
+    pub fn is_positive_definite<T: Float>(_hessian: &HessianMatrix<T>) -> bool {
+        if let Some(ref eigenvalues) = _hessian.eigenvalues {
             eigenvalues.iter().all(|&val| val > T::zero())
-        } else if let Some(ref diagonal) = hessian.diagonal {
+        } else if let Some(ref diagonal) = _hessian.diagonal {
             diagonal.iter().all(|&val| val > T::zero())
         } else {
             false
@@ -796,9 +796,9 @@ pub mod utils {
     }
     
     /// Add damping to Hessian for numerical stability
-    pub fn add_damping<T: Float>(hessian: &mut Array2<T>, damping: T) {
-        for i in 0..hessian.nrows() {
-            hessian[[i, i]] = hessian[[i, i]] + damping;
+    pub fn add_damping<T: Float>(_hessian: &mut Array2<T>, damping: T) {
+        for i in 0.._hessian.nrows() {
+            _hessian[[i, i]] = _hessian[[i, i]] + damping;
         }
     }
     

@@ -91,8 +91,8 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array1, Array2};
-    /// use scirs2_interpolate::nurbs::{NurbsCurve};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::nurbs::{NurbsCurve};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create a NURBS circle (quadratic with 9 control points)
     /// let control_points = array![
@@ -129,10 +129,10 @@ where
         degree: usize,
         extrapolate: ExtrapolateMode,
     ) -> InterpolateResult<Self> {
-        // Check that control points and weights have the same length
+        // Check that control _points and weights have the same length
         if control_points.shape()[0] != weights.len() {
             return Err(InterpolateError::invalid_input(
-                "Control points and weights must have the same length".to_string(),
+                "Control _points and weights must have the same length".to_string(),
             ));
         }
 
@@ -145,7 +145,7 @@ where
             }
         }
 
-        // Create homogeneous coordinates by multiplying control points by weights
+        // Create homogeneous coordinates by multiplying control _points by weights
         let n = control_points.shape()[0];
         let dim = control_points.shape()[1];
         let mut homogeneous_coords = Array1::zeros(n);
@@ -573,9 +573,9 @@ where
         let mut all_derivs = vec![vec![T::zero(); n]; max_order + 1];
 
         // Compute all derivatives up to max_order
-        for order in 0..=max_order {
+        for _order in 0..=max_order {
             for i in 0..n {
-                all_derivs[order][i] = self.basis_function_derivative(i, t, order)?;
+                all_derivs[_order][i] = self.basis_function_derivative(i, t, _order)?;
             }
         }
 
@@ -666,8 +666,8 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array1};
-    /// use scirs2_interpolate::nurbs::NurbsCurve;
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::nurbs::NurbsCurve;
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create a simple NURBS curve
     /// let control_points = array![[0.0, 0.0], [1.0, 1.0], [2.0, 0.0]];
@@ -723,8 +723,8 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array1};
-    /// use scirs2_interpolate::nurbs::NurbsCurve;
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::nurbs::NurbsCurve;
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create a simple NURBS curve
     /// let control_points = array![[0.0, 0.0], [1.0, 1.0], [2.0, 0.0]];
@@ -751,9 +751,9 @@ where
         // Order 0 is the curve point itself
         derivatives.push(self.evaluate(t)?);
 
-        // Compute derivatives of order 1 through max_order
-        for order in 1..=max_order {
-            derivatives.push(self.derivative(t, order)?);
+        // Compute derivatives of _order 1 through max_order
+        for _order in 1..=max_order {
+            derivatives.push(self.derivative(t_order)?);
         }
 
         Ok(derivatives)
@@ -778,8 +778,8 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array1};
-    /// use scirs2_interpolate::nurbs::NurbsCurve;
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::nurbs::NurbsCurve;
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create a simple NURBS curve
     /// let control_points = array![[0.0, 0.0], [1.0, 1.0], [2.0, 0.0]];
@@ -845,8 +845,8 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array1};
-    /// use scirs2_interpolate::nurbs::NurbsCurve;
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::nurbs::NurbsCurve;
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create a simple NURBS curve
     /// let control_points = array![[0.0, 0.0], [1.0, 1.0], [2.0, 0.0]];
@@ -907,7 +907,7 @@ where
         }
 
         Err(InterpolateError::ComputationError(format!(
-            "Root finding did not converge after {} iterations",
+            "Root finding did not converge after {} _iterations",
             max_iter
         )))
     }
@@ -932,8 +932,8 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array1};
-    /// use scirs2_interpolate::nurbs::NurbsCurve;
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::nurbs::NurbsCurve;
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create a simple NURBS curve
     /// let control_points = array![[0.0, 0.0], [1.0, 1.0], [2.0, 0.0]];
@@ -960,7 +960,7 @@ where
     ) -> InterpolateResult<Vec<T>> {
         if component >= self.dimension {
             return Err(InterpolateError::invalid_input(format!(
-                "Component {} out of range for curve dimension {}",
+                "Component {} out of _range for curve dimension {}",
                 component, self.dimension
             )));
         }
@@ -1030,7 +1030,7 @@ where
 
             let deriv_a = self.derivative(a, 1)?;
 
-            if (deriv_a[component] > T::zero()) == (deriv_c[component] > T::zero()) {
+            if (deriv_a[component] > T::zero()) == (deriv_c[component] >, T::zero()) {
                 a = c;
             } else {
                 b = c;
@@ -1220,8 +1220,8 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array1, Array2};
-    /// use scirs2_interpolate::nurbs::{NurbsSurface};
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::nurbs::{NurbsSurface};
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create a simple NURBS surface (3x3 grid of control points)
     /// let control_points = array![
@@ -1264,17 +1264,17 @@ where
         degree_v: usize,
         extrapolate: ExtrapolateMode,
     ) -> InterpolateResult<Self> {
-        // Check that control points and weights have the same length
+        // Check that control _points and weights have the same length
         if control_points.shape()[0] != weights.len() {
             return Err(InterpolateError::invalid_input(
-                "Control points and weights must have the same length".to_string(),
+                "Control _points and weights must have the same length".to_string(),
             ));
         }
 
-        // Check that the number of control points matches the specified dimensions
+        // Check that the number of control _points matches the specified dimensions
         if control_points.shape()[0] != n_u * n_v {
             return Err(InterpolateError::invalid_input(format!(
-                "Expected {} control points for a {}x{} grid, got {}",
+                "Expected {} control _points for a {}x{} grid, got {}",
                 n_u * n_v,
                 n_u,
                 n_v,
@@ -1285,7 +1285,7 @@ where
         // Check that the knot vectors have the correct length
         if knots_u.len() != n_u + degree_u + 1 {
             return Err(InterpolateError::invalid_input(format!(
-                "Expected {} knots in u direction for {} control points and degree {}, got {}",
+                "Expected {} knots in _u direction for {} control _points and degree {}, got {}",
                 n_u + degree_u + 1,
                 n_u,
                 degree_u,
@@ -1295,7 +1295,7 @@ where
 
         if knots_v.len() != n_v + degree_v + 1 {
             return Err(InterpolateError::invalid_input(format!(
-                "Expected {} knots in v direction for {} control points and degree {}, got {}",
+                "Expected {} knots in _v direction for {} control _points and degree {}, got {}",
                 n_v + degree_v + 1,
                 n_v,
                 degree_v,
@@ -1316,7 +1316,7 @@ where
         for i in 1..knots_u.len() {
             if knots_u[i] < knots_u[i - 1] {
                 return Err(InterpolateError::invalid_input(
-                    "Knots in u direction must be non-decreasing".to_string(),
+                    "Knots in _u direction must be non-decreasing".to_string(),
                 ));
             }
         }
@@ -1324,7 +1324,7 @@ where
         for i in 1..knots_v.len() {
             if knots_v[i] < knots_v[i - 1] {
                 return Err(InterpolateError::invalid_input(
-                    "Knots in v direction must be non-decreasing".to_string(),
+                    "Knots in _v direction must be non-decreasing".to_string(),
                 ));
             }
         }
@@ -1717,8 +1717,8 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array1};
-    /// use scirs2_interpolate::nurbs::NurbsSurface;
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::nurbs::NurbsSurface;
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create a simple NURBS surface
     /// let control_points = array![
@@ -1825,8 +1825,8 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array1};
-    /// use scirs2_interpolate::nurbs::NurbsSurface;
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::nurbs::NurbsSurface;
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create a simple NURBS surface
     /// let control_points = array![
@@ -1860,25 +1860,25 @@ where
             vec![vec![Array1::zeros(self.dimension); max_order_v + 1]; max_order_u + 1];
 
         // Order (0,0) is the surface point itself
-        derivatives[0][0] = self.evaluate(u, v)?;
+        derivatives[0][0] = self.evaluate(_u_v)?;
 
-        // Pure partial derivatives in u direction
+        // Pure partial derivatives in _u direction
         for i in 1..=max_order_u {
             if i == 1 {
-                derivatives[i][0] = self.derivative_u(u, v)?;
+                derivatives[i][0] = self.derivative_u(_u_v)?;
             } else {
-                // Higher order u derivatives using generalized quotient rule
-                derivatives[i][0] = self.compute_higher_order_u_derivative(u, v, i)?;
+                // Higher order _u derivatives using generalized quotient rule
+                derivatives[i][0] = self.compute_higher_order_u_derivative(_u, _v, i)?;
             }
         }
 
-        // Pure partial derivatives in v direction
+        // Pure partial derivatives in _v direction
         for j in 1..=max_order_v {
             if j == 1 {
-                derivatives[0][j] = self.derivative_v(u, v)?;
+                derivatives[0][j] = self.derivative_v(_u_v)?;
             } else {
-                // Higher order v derivatives using generalized quotient rule
-                derivatives[0][j] = self.compute_higher_order_v_derivative(u, v, j)?;
+                // Higher order _v derivatives using generalized quotient rule
+                derivatives[0][j] = self.compute_higher_order_v_derivative(_u, _v, j)?;
             }
         }
 
@@ -1886,10 +1886,10 @@ where
         for i in 1..=max_order_u {
             for j in 1..=max_order_v {
                 if i == 1 && j == 1 {
-                    derivatives[i][j] = self.mixed_derivative(u, v)?;
+                    derivatives[i][j] = self.mixed_derivative(_u_v)?;
                 } else {
                     // Higher order mixed derivatives using generalized quotient rule
-                    derivatives[i][j] = self.compute_higher_order_mixed_derivative(u, v, i, j)?;
+                    derivatives[i][j] = self.compute_higher_order_mixed_derivative(_u, _v, i, j)?;
                 }
             }
         }
@@ -1918,8 +1918,8 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array1};
-    /// use scirs2_interpolate::nurbs::NurbsSurface;
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::nurbs::NurbsSurface;
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create a simple NURBS surface
     /// let control_points = array![
@@ -1992,7 +1992,7 @@ where
 
                 // Area element using metric tensor determinant
                 let det = deriv_u_norm_sq * deriv_v_norm_sq - dot_product * dot_product;
-                Ok(det.max(T::zero()).sqrt())
+                Ok(det._max(T::zero()).sqrt())
             }
         };
 
@@ -2057,8 +2057,8 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array1};
-    /// use scirs2_interpolate::nurbs::NurbsSurface;
-    /// use scirs2_interpolate::bspline::ExtrapolateMode;
+    /// use scirs2__interpolate::nurbs::NurbsSurface;
+    /// use scirs2__interpolate::bspline::ExtrapolateMode;
     ///
     /// // Create a simple NURBS surface
     /// let control_points = array![
@@ -2349,26 +2349,26 @@ where
         order_v: usize,
     ) -> InterpolateResult<Array1<T>> {
         if order_u == 0 && order_v == 0 {
-            return self.evaluate(u, v);
+            return self.evaluate(_u_v);
         }
         if order_u == 1 && order_v == 0 {
-            return self.derivative_u(u, v);
+            return self.derivative_u(_u_v);
         }
         if order_u == 0 && order_v == 1 {
-            return self.derivative_v(u, v);
+            return self.derivative_v(_u_v);
         }
         if order_u == 1 && order_v == 1 {
-            return self.mixed_derivative(u, v);
+            return self.mixed_derivative(_u_v);
         }
 
         // Compute all needed basis derivatives in both directions
         let mut basis_u_derivs = Vec::new();
         for i in 0..=order_u {
-            basis_u_derivs.push(self.compute_basis_derivatives_u(u, i)?);
+            basis_u_derivs.push(self.compute_basis_derivatives_u(_u, i)?);
         }
         let mut basis_v_derivs = Vec::new();
         for j in 0..=order_v {
-            basis_v_derivs.push(self.compute_basis_derivatives_v(v, j)?);
+            basis_v_derivs.push(self.compute_basis_derivatives_v(_v, j)?);
         }
 
         // Compute mixed derivatives of weighted control points A^(p,q) and weights w^(p,q)
@@ -2515,13 +2515,13 @@ pub fn make_nurbs_circle<
 
     if start >= end {
         return Err(InterpolateError::invalid_input(
-            "Start angle must be less than end angle".to_string(),
+            "Start _angle must be less than end _angle".to_string(),
         ));
     }
 
     let angle_span = end - start;
 
-    // Determine the number of segments needed based on the angle span
+    // Determine the number of segments needed based on the _angle span
     let full_circle = T::from(2.0 * std::f64::consts::PI).unwrap();
     let num_segments = if (angle_span - full_circle).abs() < T::epsilon() {
         // Full circle: use 4 segments (quadratic NURBS)
@@ -2545,14 +2545,14 @@ pub fn make_nurbs_circle<
     let mut control_points = Array2::zeros((num_ctrl_points, 2));
     let mut weights = Array1::zeros(num_ctrl_points);
 
-    // Compute the angle increment per segment
+    // Compute the _angle increment per segment
     let angle_inc = angle_span / T::from(num_segments).unwrap();
 
     // Weight factor for the middle control points
     let w = T::from(1.0 / 2.0_f64.sqrt()).unwrap();
 
     for i in 0..num_segments {
-        // Start angle for this segment
+        // Start _angle for this segment
         let theta1 = start + T::from(i).unwrap() * angle_inc;
         let theta2 = theta1 + angle_inc;
 

@@ -7,8 +7,9 @@ use crate::sampling::SampleableDistribution;
 use crate::traits::{Distribution as DistributionTrait, MultivariateDistribution};
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Axis, Data, Ix1, Ix2};
 use rand::rng;
-use rand_distr::{Distribution as RandDistribution, Normal as RandNormal};
+use rand__distr::{Distribution as RandDistribution, Normal as RandNormal};
 use std::fmt::Debug;
+use statrs::statistics::Statistics;
 
 /// Multivariate Normal distribution structure
 #[derive(Debug, Clone)]
@@ -43,30 +44,30 @@ impl MultivariateNormal {
     ///
     /// ```
     /// use ndarray::{array, Array1, Array2};
-    /// use scirs2_stats::distributions::multivariate::normal::MultivariateNormal;
+    /// use scirs2__stats::distributions::multivariate::normal::MultivariateNormal;
     ///
     /// // Create a 2D multivariate normal distribution
     /// let mean = array![0.0, 0.0];
     /// let cov = array![[1.0, 0.5], [0.5, 2.0]];
     /// let mvn = MultivariateNormal::new(mean, cov).unwrap();
     /// ```
-    pub fn new<D1, D2>(mean: ArrayBase<D1, Ix1>, cov: ArrayBase<D2, Ix2>) -> StatsResult<Self>
+    pub fn new<D1, D2>(_mean: ArrayBase<D1, Ix1>, cov: ArrayBase<D2, Ix2>) -> StatsResult<Self>
     where
         D1: Data<Elem = f64>,
         D2: Data<Elem = f64>,
     {
         // Validate dimensions
-        let dim = mean.len();
+        let dim = _mean.len();
         if cov.shape()[0] != dim || cov.shape()[1] != dim {
             return Err(StatsError::DimensionMismatch(format!(
-                "Covariance matrix shape ({:?}) must match mean vector length ({})",
+                "Covariance matrix shape ({:?}) must match _mean vector length ({})",
                 cov.shape(),
                 dim
             )));
         }
 
         // Create owned copies of inputs
-        let mean = mean.to_owned();
+        let _mean = _mean.to_owned();
         let cov = cov.to_owned();
 
         // Compute Cholesky decomposition (lower triangular L where Σ = L·L^T)
@@ -89,7 +90,7 @@ impl MultivariateNormal {
         })?;
 
         Ok(MultivariateNormal {
-            mean,
+            _mean,
             cov,
             dim,
             cholesky_l,
@@ -112,7 +113,7 @@ impl MultivariateNormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::normal::MultivariateNormal;
+    /// use scirs2__stats::distributions::multivariate::normal::MultivariateNormal;
     ///
     /// let mean = array![0.0, 0.0];
     /// let cov = array![[1.0, 0.0], [0.0, 1.0]];
@@ -162,7 +163,7 @@ impl MultivariateNormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::normal::MultivariateNormal;
+    /// use scirs2__stats::distributions::multivariate::normal::MultivariateNormal;
     ///
     /// let mean = array![0.0, 0.0];
     /// let cov = array![[1.0, 0.5], [0.5, 2.0]];
@@ -218,7 +219,7 @@ impl MultivariateNormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::normal::MultivariateNormal;
+    /// use scirs2__stats::distributions::multivariate::normal::MultivariateNormal;
     ///
     /// let mean = array![0.0, 0.0];
     /// let cov = array![[1.0, 0.5], [0.5, 2.0]];
@@ -246,7 +247,7 @@ impl MultivariateNormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::normal::MultivariateNormal;
+    /// use scirs2__stats::distributions::multivariate::normal::MultivariateNormal;
     ///
     /// let mean = array![0.0, 0.0];
     /// let cov = array![[1.0, 0.0], [0.0, 1.0]];
@@ -386,7 +387,7 @@ pub fn compute_inverse_from_cholesky(l: &Array2<f64>) -> Result<Array2<f64>, Str
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distributions::multivariate;
+/// use scirs2__stats::distributions::multivariate;
 ///
 /// let mean = array![0.0, 0.0];
 /// let cov = array![[1.0, 0.5], [0.5, 2.0]];

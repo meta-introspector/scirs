@@ -83,9 +83,9 @@ pub struct ProgressReader<R: Read> {
 
 impl<R: Read> ProgressReader<R> {
     /// Create a new progress reader
-    pub fn new(inner: R) -> Self {
+    pub fn new(_inner: R) -> Self {
         Self {
-            inner,
+            _inner,
             bytes_read: 0,
             total_bytes: None,
             progress_callback: None,
@@ -176,9 +176,9 @@ pub struct ProgressWriter<W: Write> {
 
 impl<W: Write> ProgressWriter<W> {
     /// Create a new progress writer
-    pub fn new(inner: W) -> Self {
+    pub fn new(_inner: W) -> Self {
         Self {
-            inner,
+            _inner,
             bytes_written: 0,
             total_bytes: None,
             progress_callback: None,
@@ -270,8 +270,8 @@ pub struct ChunkedReader {
 
 impl ChunkedReader {
     /// Create a new chunked reader
-    pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize) -> Result<Self> {
-        let file = std::fs::File::open(path.as_ref())
+    pub fn new<P: AsRef<Path>>(_path: P, chunk_size: usize) -> Result<Self> {
+        let file = std::fs::File::open(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
 
         let file_size = file
@@ -353,8 +353,8 @@ pub struct ChunkedWriter {
 
 impl ChunkedWriter {
     /// Create a new chunked writer
-    pub fn new<P: AsRef<Path>>(path: P, buffer_size: usize) -> Result<Self> {
-        let file = std::fs::File::create(path.as_ref())
+    pub fn new<P: AsRef<Path>>(_path: P, buffer_size: usize) -> Result<Self> {
+        let file = std::fs::File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
 
         Ok(Self {
@@ -435,7 +435,7 @@ pub fn copy_with_progress<R: Read, W: Write>(
         total_copied += bytes_read as u64;
 
         // Report progress if needed
-        if let Some(ref callback) = progress_callback {
+        if let Some(ref _callback) = progress_callback {
             if total_copied - last_progress_report >= progress_interval {
                 let elapsed = start_time.elapsed().as_secs_f64();
                 let rate = if elapsed > 0.0 {
@@ -461,14 +461,14 @@ pub fn copy_with_progress<R: Read, W: Write>(
                     eta_seconds,
                 };
 
-                callback(progress);
+                _callback(progress);
                 last_progress_report = total_copied;
             }
         }
     }
 
     // Final progress report
-    if let Some(ref callback) = progress_callback {
+    if let Some(ref _callback) = progress_callback {
         let elapsed = start_time.elapsed().as_secs_f64();
         let rate = if elapsed > 0.0 {
             total_copied as f64 / elapsed
@@ -483,7 +483,7 @@ pub fn copy_with_progress<R: Read, W: Write>(
             eta_seconds: Some(0.0),
         };
 
-        callback(progress);
+        _callback(progress);
     }
 
     Ok(total_copied)
@@ -527,7 +527,7 @@ where
         total_copied += bytes_read as u64;
 
         // Report progress if needed
-        if let Some(ref callback) = progress_callback {
+        if let Some(ref _callback) = progress_callback {
             if total_copied - last_progress_report >= progress_interval {
                 let elapsed = start_time.elapsed().as_secs_f64();
                 let rate = if elapsed > 0.0 {
@@ -553,7 +553,7 @@ where
                     eta_seconds,
                 };
 
-                callback(progress);
+                _callback(progress);
                 last_progress_report = total_copied;
             }
         }

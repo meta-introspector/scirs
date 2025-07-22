@@ -5,7 +5,7 @@
 //! and other variants used in spectral graph theory.
 
 use super::{num_vertices, validate_graph};
-use crate::csr_array::CsrArray;
+use crate::csr__array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::Array1;
@@ -29,8 +29,7 @@ impl LaplacianType {
         match s.to_lowercase().as_str() {
             "standard" | "unnormalized" => Ok(Self::Standard),
             "normalized" | "symmetric" => Ok(Self::Normalized),
-            "random_walk" | "random-walk" | "randomwalk" => Ok(Self::RandomWalk),
-            _ => Err(SparseError::ValueError(format!(
+            "random_walk" | "random-walk" | "randomwalk" => Ok(Self::RandomWalk, _ => Err(SparseError::ValueError(format!(
                 "Unknown Laplacian type: {s}. Use 'standard', 'normalized', or 'random_walk'"
             ))),
         }
@@ -55,8 +54,8 @@ impl LaplacianType {
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::csgraph::laplacian;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::csgraph::laplacian;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// // Create a simple graph
 /// let rows = vec![0, 1, 1, 2];
@@ -65,7 +64,7 @@ impl LaplacianType {
 /// let graph = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
 ///
 /// // Compute standard Laplacian
-/// let (laplacian, _) = laplacian(&graph, false, false, true).unwrap();
+/// let (laplacian_) = laplacian(&graph, false, false, true).unwrap();
 /// ```
 #[allow(dead_code)]
 pub fn laplacian<T, S>(
@@ -148,22 +147,22 @@ where
         ),
     }
     .map(|laplacian| {
-        let diag = if return_diag { Some(degrees) } else { None };
-        (laplacian, diag)
+        let _diag = if return_diag { Some(degrees) } else { None };
+        (laplacian, _diag)
     })
 }
 
 /// Compute out-degrees for all vertices
 #[allow(dead_code)]
-fn compute_out_degrees<T, S>(graph: &S) -> SparseResult<Array1<T>>
+fn compute_out_degrees<T, S>(_graph: &S) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let n = num_vertices(graph);
+    let n = num_vertices(_graph);
     let mut degrees = Array1::zeros(n);
 
-    let (row_indices, _, values) = graph.find();
+    let (row_indices_, values) = _graph.find();
 
     for (i, &row) in row_indices.iter().enumerate() {
         degrees[row] = degrees[row] + values[i];
@@ -174,15 +173,15 @@ where
 
 /// Compute in-degrees for all vertices
 #[allow(dead_code)]
-fn compute_in_degrees<T, S>(graph: &S) -> SparseResult<Array1<T>>
+fn compute_in_degrees<T, S>(_graph: &S) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let n = num_vertices(graph);
+    let n = num_vertices(_graph);
     let mut degrees = Array1::zeros(n);
 
-    let (_, col_indices, values) = graph.find();
+    let (_, col_indices, values) = _graph.find();
 
     for (i, &col) in col_indices.iter().enumerate() {
         degrees[col] = degrees[col] + values[i];
@@ -353,8 +352,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_sparse::csgraph::degree_matrix;
-/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2__sparse::csgraph::degree_matrix;
+/// use scirs2__sparse::csr_array::CsrArray;
 ///
 /// let rows = vec![0, 1, 1, 2];
 /// let cols = vec![1, 0, 2, 1];
@@ -364,15 +363,15 @@ where
 /// let degrees = degree_matrix(&graph, true).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn degree_matrix<T, S>(graph: &S, use_out_degree: bool) -> SparseResult<Array1<T>>
+pub fn degree_matrix<T, S>(_graph: &S, use_out_degree: bool) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
     if use_out_degree {
-        compute_out_degrees(graph)
+        compute_out_degrees(_graph)
     } else {
-        compute_in_degrees(graph)
+        compute_in_degrees(_graph)
     }
 }
 
@@ -396,7 +395,7 @@ where
 /// using sparse eigenvalue solvers. The smallest eigenvalue is always 0 for
 /// connected graphs, so we find the k=2 smallest eigenvalues and return the second one.
 #[allow(dead_code)]
-pub fn algebraic_connectivity<T, S>(graph: &S, normalized: bool) -> SparseResult<T>
+pub fn algebraic_connectivity<T, S>(_graph: &S, normalized: bool) -> SparseResult<T>
 where
     T: Float
         + Debug
@@ -409,13 +408,13 @@ where
     S: SparseArray<T>,
 {
     use crate::linalg::{lanczos, LanczosOptions};
-    use crate::sym_csr::SymCsrMatrix;
+    use crate::sym__csr::SymCsrMatrix;
 
-    validate_graph(graph, false)?; // Ensure it's a valid undirected graph
+    validate_graph(_graph, false)?; // Ensure it's a valid undirected _graph
 
     // Compute the Laplacian matrix
-    let (laplacian, _) = compute_laplacian_matrix(
-        graph,
+    let (laplacian_) = compute_laplacian_matrix(
+        _graph,
         if normalized {
             LaplacianType::Normalized
         } else {
@@ -524,19 +523,19 @@ where
 ///
 /// True if the matrix is a valid Laplacian, false otherwise
 #[allow(dead_code)]
-pub fn is_laplacian<T, S>(matrix: &S, tol: T) -> SparseResult<bool>
+pub fn is_laplacian<T, S>(_matrix: &S, tol: T) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (n, m) = matrix.shape();
+    let (n, m) = _matrix.shape();
 
     // Must be square
     if n != m {
         return Ok(false);
     }
 
-    let (row_indices, col_indices, values) = matrix.find();
+    let (row_indices, col_indices, values) = _matrix.find();
 
     // Check row sums are approximately zero
     let mut row_sums = vec![T::zero(); n];
@@ -566,7 +565,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
     use approx::assert_relative_eq;
 
     fn create_simple_graph() -> CsrArray<f64> {
@@ -630,7 +629,7 @@ mod tests {
     #[test]
     fn test_normalized_laplacian() {
         let graph = create_simple_graph();
-        let (laplacian, _) =
+        let (laplacian_) =
             compute_laplacian_matrix(&graph, LaplacianType::Normalized, false, true).unwrap();
 
         // Check diagonal elements are 1
@@ -648,7 +647,7 @@ mod tests {
     #[test]
     fn test_random_walk_laplacian() {
         let graph = create_simple_graph();
-        let (laplacian, _) =
+        let (laplacian_) =
             compute_laplacian_matrix(&graph, LaplacianType::RandomWalk, false, true).unwrap();
 
         // Check diagonal elements are 1
@@ -668,7 +667,7 @@ mod tests {
         let graph = create_simple_graph();
 
         // Test standard Laplacian
-        let (lap_std, _) = laplacian(&graph, false, false, true).unwrap();
+        let (lap_std_) = laplacian(&graph, false, false, true).unwrap();
         assert_relative_eq!(lap_std.get(0, 0), 2.0);
 
         // Test normalized Laplacian
@@ -692,7 +691,7 @@ mod tests {
     #[test]
     fn test_laplacian_row_sums() {
         let graph = create_simple_graph();
-        let (laplacian, _) =
+        let (laplacian_) =
             compute_laplacian_matrix(&graph, LaplacianType::Standard, false, true).unwrap();
 
         // Row sums of Laplacian should be zero
@@ -708,7 +707,7 @@ mod tests {
     #[test]
     fn test_is_laplacian() {
         let graph = create_simple_graph();
-        let (laplacian, _) =
+        let (laplacian_) =
             compute_laplacian_matrix(&graph, LaplacianType::Standard, false, true).unwrap();
 
         // Our computed Laplacian should pass the validation

@@ -41,7 +41,7 @@ pub struct ErrorHistogram<F: Float> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::regression::error_histogram;
+/// use scirs2__metrics::regression::error_histogram;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
@@ -69,7 +69,7 @@ where
 
     if n_bins == 0 {
         return Err(MetricsError::InvalidInput(
-            "Number of bins must be positive".to_string(),
+            "Number of _bins must be positive".to_string(),
         ));
     }
 
@@ -157,7 +157,7 @@ pub struct QQPlotData<F: Float> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::regression::qq_plot_data;
+/// use scirs2__metrics::regression::qq_plot_data;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
@@ -183,7 +183,7 @@ where
 
     if n_quantiles < 2 {
         return Err(MetricsError::InvalidInput(
-            "Number of quantiles must be at least 2".to_string(),
+            "Number of _quantiles must be at least 2".to_string(),
         ));
     }
 
@@ -214,7 +214,7 @@ where
         std_residuals.push((r - mean) / std_dev);
     }
 
-    // Calculate theoretical quantiles
+    // Calculate theoretical _quantiles
     let mut theoretical_quantiles = Vec::with_capacity(n_quantiles);
     let mut sample_quantiles = Vec::with_capacity(n_quantiles);
 
@@ -360,7 +360,7 @@ pub struct ResidualAnalysis<F: Float> {
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2_metrics::regression::residual_analysis;
+/// use scirs2__metrics::regression::residual_analysis;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
@@ -393,22 +393,22 @@ where
 
     let n_samples = y_true.len();
 
-    // Check X matrix dimensions
+    // Check X _matrix dimensions
     if let Some(x_mat) = x {
         if x_mat.shape()[0] != n_samples {
             return Err(MetricsError::InvalidInput(format!(
-                "X matrix has {} rows, but y_true has {} elements",
+                "X _matrix has {} rows, but y_true has {} elements",
                 x_mat.shape()[0],
                 n_samples
             )));
         }
     }
 
-    // Check hat matrix dimensions
+    // Check hat _matrix dimensions
     if let Some(h_mat) = hat_matrix {
         if h_mat.shape() != [n_samples, n_samples] {
             return Err(MetricsError::InvalidInput(format!(
-                "Hat matrix has shape {:?}, but should be [{}, {}]",
+                "Hat _matrix has shape {:?}, but should be [{}, {}]",
                 h_mat.shape(),
                 n_samples,
                 n_samples
@@ -440,33 +440,33 @@ where
         standardized_residuals.push((r - residual_mean) / residual_std);
     }
 
-    // Calculate leverage (hat matrix diagonal)
+    // Calculate leverage (hat _matrix diagonal)
     let leverage = if let Some(h_mat) = hat_matrix {
-        // Extract diagonal from provided hat matrix
+        // Extract diagonal from provided hat _matrix
         let mut h_diag = Vec::with_capacity(n_samples);
         for i in 0..n_samples {
             h_diag.push(h_mat[[i, i]]);
         }
         h_diag
     } else if let Some(x_mat) = x {
-        // Calculate hat matrix diagonal using X matrix: diag(X (X'X)^(-1) X')
+        // Calculate hat _matrix diagonal using X _matrix: diag(X (X'X)^(-1) X')
         let p = x_mat.shape()[1]; // Number of predictors
         let xt = x_mat.t();
 
         // Calculate X'X
         let xtx = xt.dot(x_mat);
 
-        // Invert X'X (simplified - not a proper matrix inversion)
+        // Invert X'X (simplified - not a proper _matrix inversion)
         let mut xtx_inv = Array2::<F>::zeros((p, p));
 
-        // Diagonal matrix as a simple approximation
+        // Diagonal _matrix as a simple approximation
         for i in 0..p {
             if xtx[[i, i]] > F::epsilon() {
                 xtx_inv[[i, i]] = F::one() / xtx[[i, i]];
             }
         }
 
-        // Calculate hat matrix diagonal
+        // Calculate hat _matrix diagonal
         let mut h_diag = Vec::with_capacity(n_samples);
         for i in 0..n_samples {
             let mut h_ii = F::zero();
@@ -480,7 +480,7 @@ where
 
         h_diag
     } else {
-        // No X matrix or hat matrix provided, use default
+        // No X _matrix or hat _matrix provided, use default
         vec![F::one() / NumCast::from(n_samples).unwrap(); n_samples]
     };
 
@@ -501,7 +501,7 @@ where
     for (i, &r) in standardized_residuals.iter().enumerate() {
         let h_ii = leverage[i];
         if h_ii < F::one() {
-            // Use a default number of parameters if no X matrix was provided
+            // Use a default number of parameters if no X _matrix was provided
             let p_value = if let Some(x_mat) = x {
                 x_mat.shape()[1]
             } else {
@@ -550,10 +550,10 @@ where
     let mut denominator = F::zero();
 
     for (i, &sq_r) in squared_residuals.iter().enumerate() {
-        let pred = y_pred.iter().nth(i).unwrap();
+        let _pred = y_pred.iter().nth(i).unwrap();
         let diff = sq_r - mean_sq_residual;
         numerator = numerator + diff * diff;
-        denominator = denominator + (*pred) * (*pred);
+        denominator = denominator + (*_pred) * (*_pred);
     }
 
     let breusch_pagan = if denominator > F::epsilon() {
@@ -624,7 +624,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::regression::test_heteroscedasticity;
+/// use scirs2__metrics::regression::test_heteroscedasticity;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
@@ -665,10 +665,10 @@ where
     let mut denominator = F::zero();
 
     for (i, &sq_r) in squared_residuals.iter().enumerate() {
-        let pred = y_pred.iter().nth(i).unwrap();
+        let _pred = y_pred.iter().nth(i).unwrap();
         let diff = sq_r - mean_sq_residual;
         numerator = numerator + diff * diff;
-        denominator = denominator + (*pred) * (*pred);
+        denominator = denominator + (*_pred) * (*_pred);
     }
 
     if denominator < F::epsilon() {
@@ -696,7 +696,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::regression::test_autocorrelation;
+/// use scirs2__metrics::regression::test_autocorrelation;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
@@ -768,7 +768,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::regression::test_normality;
+/// use scirs2__metrics::regression::test_normality;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];

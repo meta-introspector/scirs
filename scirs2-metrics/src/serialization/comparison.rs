@@ -308,16 +308,16 @@ pub fn combine_collections(
 ///
 /// * A new collection with filtered metrics
 #[allow(dead_code)]
-pub fn filter_metrics<F>(collection: &MetricCollection, filter_fn: F) -> MetricCollection
+pub fn filter_metrics<F>(_collection: &MetricCollection, filter_fn: F) -> MetricCollection
 where
     F: Fn(&MetricResult) -> bool,
 {
     let mut filtered = MetricCollection::new(
-        &format!("{} (filtered)", collection.name),
-        collection.description.as_deref(),
+        &format!("{} (filtered)", _collection.name),
+        _collection.description.as_deref(),
     );
 
-    for metric in &collection.metrics {
+    for metric in &_collection.metrics {
         if filter_fn(metric) {
             filtered.add_metric(metric.clone());
         }
@@ -337,8 +337,8 @@ where
 ///
 /// * A new collection with filtered metrics
 #[allow(dead_code)]
-pub fn filter_by_name(collection: &MetricCollection, pattern: &str) -> MetricCollection {
-    filter_metrics(collection, |metric| metric.name.contains(pattern))
+pub fn filter_by_name(_collection: &MetricCollection, pattern: &str) -> MetricCollection {
+    filter_metrics(_collection, |metric| metric.name.contains(pattern))
 }
 
 /// Get metrics from a collection by time range
@@ -361,7 +361,7 @@ pub fn filter_by_time_range(
     let now = chrono::Utc::now();
 
     Ok(filter_metrics(collection, |metric| {
-        let age = now - metric.timestamp;
-        age >= end_age && age <= start_age
+        let _age = now - metric.timestamp;
+        _age >= end_age && _age <= start_age
     }))
 }

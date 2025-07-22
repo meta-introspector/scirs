@@ -8,8 +8,9 @@ use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand_distr::{Beta as RandBeta, Distribution};
+use rand__distr::{Beta as RandBeta, Distribution};
 use std::fmt::Debug;
+use statrs::statistics::Statistics;
 
 /// Beta distribution structure
 pub struct Beta<F: Float> {
@@ -42,12 +43,12 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::beta::Beta;
+    /// use scirs2__stats::distributions::beta::Beta;
     ///
     /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
     /// ```
-    pub fn new(alpha: F, beta: F, loc: F, scale: F) -> StatsResult<Self> {
-        if alpha <= F::zero() {
+    pub fn new(_alpha: F, beta: F, loc: F, scale: F) -> StatsResult<Self> {
+        if _alpha <= F::zero() {
             return Err(StatsError::DomainError(
                 "Alpha parameter must be positive".to_string(),
             ));
@@ -66,12 +67,12 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
         }
 
         // Convert to f64 for rand_distr
-        let alpha_f64 = <f64 as NumCast>::from(alpha).unwrap();
+        let alpha_f64 = <f64 as NumCast>::from(_alpha).unwrap();
         let beta_f64 = <f64 as NumCast>::from(beta).unwrap();
 
         match RandBeta::new(alpha_f64, beta_f64) {
             Ok(rand_distr) => Ok(Beta {
-                alpha,
+                _alpha,
                 beta,
                 loc,
                 scale,
@@ -96,7 +97,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::beta::Beta;
+    /// use scirs2__stats::distributions::beta::Beta;
     ///
     /// // Special case: beta(2,3)
     /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
@@ -110,14 +111,14 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
         // If x is outside [loc, loc+scale], PDF is 0
         // Special case for alpha=1, beta=1 (uniform)
         if self.alpha == F::one() && self.beta == F::one() {
-            if x_adj < F::zero() || x_adj > F::one() {
+            if x_adj < F::zero() || x_adj >, F::one() {
                 return F::zero();
             }
             return F::one() / self.scale;
         }
 
         // For all other cases
-        if x_adj < F::zero() || x_adj > F::one() {
+        if x_adj < F::zero() || x_adj >, F::one() {
             return F::zero();
         }
 
@@ -162,7 +163,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::beta::Beta;
+    /// use scirs2__stats::distributions::beta::Beta;
     ///
     /// let beta = Beta::new(2.0f64, 2.0, 0.0, 1.0).unwrap();
     /// let cdf_at_half = beta.cdf(0.5);
@@ -235,14 +236,14 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::beta::Beta;
+    /// use scirs2__stats::distributions::beta::Beta;
     ///
     /// let beta = Beta::new(2.0f64, 2.0, 0.0, 1.0).unwrap();
     /// let x = beta.ppf(0.5).unwrap();
     /// assert!((x - 0.5).abs() < 1e-6);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p > F::one() {
+        if p < F::zero() || p >, F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));
@@ -323,7 +324,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::beta::Beta;
+    /// use scirs2__stats::distributions::beta::Beta;
     ///
     /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
     /// let samples = beta.rvs_vec(1000).unwrap();
@@ -354,7 +355,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_stats::distributions::beta::Beta;
+    /// use scirs2__stats::distributions::beta::Beta;
     ///
     /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
     /// let samples = beta.rvs(1000).unwrap();
@@ -430,7 +431,7 @@ fn initial_beta_quantile_guess<F: Float + NumCast>(p: F, alpha: F, beta: F) -> F
     }
 
     // If alpha and beta are large, use normal approximation
-    if alpha > F::from(8.0).unwrap() && beta > F::from(8.0).unwrap() {
+    if alpha > F::from(8.0).unwrap() && beta >, F::from(8.0).unwrap() {
         // Beta approximated as normal
         let mu = alpha / (alpha + beta);
         let sigma =

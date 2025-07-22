@@ -52,7 +52,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2_sparse::coo::CooMatrix;
+    /// use scirs2__sparse::coo::CooMatrix;
     ///
     /// // Create a 3x3 sparse matrix with 5 non-zero elements
     /// let rows = vec![0, 0, 1, 2, 2];
@@ -78,7 +78,7 @@ where
 
         let (rows, cols) = shape;
 
-        // Check indices are within bounds
+        // Check _indices are within bounds
         if row_indices.iter().any(|&i| i >= rows) {
             return Err(SparseError::ValueError(
                 "Row index out of bounds".to_string(),
@@ -109,8 +109,8 @@ where
     /// # Returns
     ///
     /// * A new empty COO matrix
-    pub fn empty(shape: (usize, usize)) -> Self {
-        let (rows, cols) = shape;
+    pub fn empty(_shape: (usize, usize)) -> Self {
+        let (rows, cols) = _shape;
 
         CooMatrix {
             rows,

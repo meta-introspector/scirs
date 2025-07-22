@@ -1,5 +1,7 @@
-use rand::{rngs::StdRng, SeedableRng};
+use rand::SeedableRng;
+use rand::rngs::StdRng;
 
+#[allow(unused_imports)]
 #[allow(dead_code)]
 fn main() {
     // Test from_entropy

@@ -66,20 +66,20 @@ impl Default for AdvancedAdvancedSimdConfig {
 }
 
 impl VectorWidth {
-    fn from_capabilities(capabilities: &PlatformCapabilities) -> Self {
-        if capabilities.avx512_available {
+    fn from_capabilities(_capabilities: &PlatformCapabilities) -> Self {
+        if _capabilities.avx512_available {
             Self {
                 f64_lanes: 8,  // 512-bit / 64-bit = 8 f64 elements
                 f32_lanes: 16, // 512-bit / 32-bit = 16 f32 elements
                 optimal_chunk: 64,
             }
-        } else if capabilities.avx2_available {
+        } else if _capabilities.avx2_available {
             Self {
                 f64_lanes: 4,  // 256-bit / 64-bit = 4 f64 elements
                 f32_lanes: 8,  // 256-bit / 32-bit = 8 f32 elements
                 optimal_chunk: 32,
             }
-        } else if capabilities.simd_available {
+        } else if _capabilities.simd_available {
             Self {
                 f64_lanes: 2,  // 128-bit / 64-bit = 2 f64 elements
                 f32_lanes: 4,  // 128-bit / 32-bit = 4 f32 elements
@@ -97,8 +97,7 @@ impl VectorWidth {
 
 /// Advanced-advanced SIMD statistical processor
 pub struct AdvancedAdvancedSimdProcessor<F> {
-    config: AdvancedAdvancedSimdConfig,
-    _phantom: PhantomData<F>,
+    config: AdvancedAdvancedSimdConfig_phantom: PhantomData<F>,
 }
 
 /// Advanced regression result with SIMD optimizations
@@ -160,16 +159,14 @@ where
     /// Create new advanced SIMD processor
     pub fn new() -> Self {
         Self {
-            config: AdvancedAdvancedSimdConfig::default(),
-            _phantom: PhantomData,
+            config: AdvancedAdvancedSimdConfig::default(), _phantom: PhantomData,
         }
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: AdvancedAdvancedSimdConfig) -> Self {
+    pub fn with_config(_config: AdvancedAdvancedSimdConfig) -> Self {
         Self {
-            config,
-            _phantom: PhantomData,
+            _config_phantom: PhantomData,
         }
     }
 
@@ -198,7 +195,7 @@ where
             ));
         }
 
-        // Prepare design matrix with optional intercept
+        // Prepare design matrix with optional _intercept
         let design_matrix = if include_intercept {
             self.add_intercept_column_simd(x)?
         } else {

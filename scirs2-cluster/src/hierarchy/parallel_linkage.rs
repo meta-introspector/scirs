@@ -143,29 +143,29 @@ fn parallel_find_closest_clusters<
             let cluster_i = active_clusters[i];
             let cluster_j = active_clusters[j];
 
-            // Calculate distance between clusters based on the linkage method
+            // Calculate distance between _clusters based on the linkage method
             let dist = match method {
                 LinkageMethod::Single => parallel_single_linkage(
-                    &clusters[cluster_i],
-                    &clusters[cluster_j],
+                    &_clusters[cluster_i],
+                    &_clusters[cluster_j],
                     distances,
                     n_samples,
                 ),
                 LinkageMethod::Complete => parallel_complete_linkage(
-                    &clusters[cluster_i],
-                    &clusters[cluster_j],
+                    &_clusters[cluster_i],
+                    &_clusters[cluster_j],
                     distances,
                     n_samples,
                 ),
                 LinkageMethod::Average => parallel_average_linkage(
-                    &clusters[cluster_i],
-                    &clusters[cluster_j],
+                    &_clusters[cluster_i],
+                    &_clusters[cluster_j],
                     distances,
                     n_samples,
                 ),
                 LinkageMethod::Ward => parallel_ward_linkage(
-                    &clusters[cluster_i],
-                    &clusters[cluster_j],
+                    &_clusters[cluster_i],
+                    &_clusters[cluster_j],
                     distances,
                     n_samples,
                 ),
@@ -176,8 +176,8 @@ fn parallel_find_closest_clusters<
                     Ok(median_linkage(cluster_i, cluster_j, centroids.unwrap()))
                 }
                 LinkageMethod::Weighted => parallel_weighted_linkage(
-                    &clusters[cluster_i],
-                    &clusters[cluster_j],
+                    &_clusters[cluster_i],
+                    &_clusters[cluster_j],
                     distances,
                     n_samples,
                 ),
@@ -356,10 +356,7 @@ fn median_linkage<F: Float>(_cluster_i: usize, _cluster_j: usize, _centroids: &A
 /// Update centroid (not parallelized - used as-is from linkage.rs)
 #[allow(dead_code)]
 fn update_centroid<F: Float>(
-    _centroids: &mut Array2<F>,
-    _method: LinkageMethod,
-    _n_samples: usize,
-    _cluster_id: usize,
+    _centroids: &mut Array2<F>, _method: LinkageMethod_n_samples: usize, _cluster_id: usize,
 ) {
     // Placeholder implementation
 }

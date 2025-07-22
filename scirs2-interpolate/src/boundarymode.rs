@@ -189,7 +189,7 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
                         Ok(BoundaryResult::AllowExtrapolation(x))
                     }
                     ExtrapolateMode::Nan => {
-                        // Return NaN for points outside the interpolation domain
+                        // Return NaN for _points outside the interpolation domain
                         Ok(BoundaryResult::DirectValue(T::nan()))
                     }
                 }
@@ -214,14 +214,14 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
                 if let Some(lower_val) = self.lower_value {
                     // Use provided boundary value
                     Ok(BoundaryResult::DirectValue(lower_val + gradient_t * dx))
-                } else if let (Some(vals), Some(points)) = (values, domain_points) {
+                } else if let (Some(vals), Some(_points)) = (values, domain_points) {
                     // Find the value at the lower boundary
-                    let idx = self.find_nearest_point_index(self.lower_bound, points)?;
+                    let idx = self.find_nearest_point_index(self.lower_bound, _points)?;
                     let lower_val = vals[idx];
                     Ok(BoundaryResult::DirectValue(lower_val + gradient_t * dx))
                 } else {
                     Err(InterpolateError::InvalidState(
-                        "Values or domain points not provided for LinearGradient mode".to_string(),
+                        "Values or domain _points not provided for LinearGradient mode".to_string(),
                     ))
                 }
             }
@@ -267,9 +267,9 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
                 let offset = self.lower_bound - x;
                 let x_mapped = self.lower_bound + offset;
 
-                if let (Some(vals), Some(points)) = (values, domain_points) {
+                if let (Some(vals), Some(_points)) = (values, domain_points) {
                     // Find the value at the mapped point
-                    let mapped_index = self.find_nearest_point_index(x_mapped, points)?;
+                    let mapped_index = self.find_nearest_point_index(x_mapped_points)?;
                     let mapped_value = vals[mapped_index];
 
                     // Negate the value for antisymmetric reflection
@@ -306,7 +306,7 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
                         Ok(BoundaryResult::AllowExtrapolation(x))
                     }
                     ExtrapolateMode::Nan => {
-                        // Return NaN for points outside the interpolation domain
+                        // Return NaN for _points outside the interpolation domain
                         Ok(BoundaryResult::DirectValue(T::nan()))
                     }
                 }
@@ -331,14 +331,14 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
                 if let Some(upper_val) = self.upper_value {
                     // Use provided boundary value
                     Ok(BoundaryResult::DirectValue(upper_val + gradient_t * dx))
-                } else if let (Some(vals), Some(points)) = (values, domain_points) {
+                } else if let (Some(vals), Some(_points)) = (values, domain_points) {
                     // Find the value at the upper boundary
-                    let idx = self.find_nearest_point_index(self.upper_bound, points)?;
+                    let idx = self.find_nearest_point_index(self.upper_bound, _points)?;
                     let upper_val = vals[idx];
                     Ok(BoundaryResult::DirectValue(upper_val + gradient_t * dx))
                 } else {
                     Err(InterpolateError::InvalidState(
-                        "Values or domain points not provided for LinearGradient mode".to_string(),
+                        "Values or domain _points not provided for LinearGradient mode".to_string(),
                     ))
                 }
             }
@@ -384,9 +384,9 @@ impl<T: Float + std::fmt::Display> BoundaryParameters<T> {
                 let offset = x - self.upper_bound;
                 let x_mapped = self.upper_bound - offset;
 
-                if let (Some(vals), Some(points)) = (values, domain_points) {
+                if let (Some(vals), Some(_points)) = (values, domain_points) {
                     // Find the value at the mapped point
-                    let mapped_index = self.find_nearest_point_index(x_mapped, points)?;
+                    let mapped_index = self.find_nearest_point_index(x_mapped_points)?;
                     let mapped_value = vals[mapped_index];
 
                     // Negate the value for antisymmetric reflection
@@ -641,15 +641,13 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 0.0),
-            _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 0.0, _ => panic!("Expected MappedPoint result"),
         }
 
         // Test point above upper boundary
         let result = boundary.map_point(15.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 10.0),
-            _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 10.0, _ => panic!("Expected MappedPoint result"),
         }
     }
 
@@ -660,15 +658,13 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::DirectValue(v) => assert_abs_diff_eq!(v, 0.0),
-            _ => panic!("Expected DirectValue result"),
+            BoundaryResult::DirectValue(v) => assert_abs_diff_eq!(v, 0.0, _ => panic!("Expected DirectValue result"),
         }
 
         // Test point above upper boundary
         let result = boundary.map_point(15.0, None, None).unwrap();
         match result {
-            BoundaryResult::DirectValue(v) => assert_abs_diff_eq!(v, 0.0),
-            _ => panic!("Expected DirectValue result"),
+            BoundaryResult::DirectValue(v) => assert_abs_diff_eq!(v, 0.0, _ => panic!("Expected DirectValue result"),
         }
     }
 
@@ -679,22 +675,19 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
-            _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
         }
 
         // Test point above upper boundary
         let result = boundary.map_point(15.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
-            _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
         }
 
         // Test multiple periods
         let result = boundary.map_point(25.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
-            _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
         }
     }
 
@@ -705,22 +698,19 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
-            _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
         }
 
         // Test point above upper boundary
         let result = boundary.map_point(15.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
-            _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
         }
 
         // Test multiple reflections
         let result = boundary.map_point(-15.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
-            _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
         }
     }
 
@@ -731,8 +721,7 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPointWithSignChange(x) => assert_abs_diff_eq!(x, 5.0),
-            _ => panic!("Expected MappedPointWithSignChange result"),
+            BoundaryResult::MappedPointWithSignChange(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPointWithSignChange result"),
         }
 
         // Test with provided values
@@ -793,8 +782,7 @@ mod tests {
         // Test point inside domain
         let result = boundary.map_point(5.0, None, None).unwrap();
         match result {
-            BoundaryResult::InsideDomain(x) => assert_abs_diff_eq!(x, 5.0),
-            _ => panic!("Expected InsideDomain result"),
+            BoundaryResult::InsideDomain(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected InsideDomain result"),
         }
     }
 
@@ -810,15 +798,13 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::AllowExtrapolation(x) => assert_abs_diff_eq!(x, -5.0),
-            _ => panic!("Expected AllowExtrapolation result"),
+            BoundaryResult::AllowExtrapolation(x) => assert_abs_diff_eq!(x, -5.0, _ => panic!("Expected AllowExtrapolation result"),
         }
 
         // Test point above upper boundary
         let result = boundary.map_point(15.0, None, None).unwrap();
         match result {
-            BoundaryResult::AllowExtrapolation(x) => assert_abs_diff_eq!(x, 15.0),
-            _ => panic!("Expected AllowExtrapolation result"),
+            BoundaryResult::AllowExtrapolation(x) => assert_abs_diff_eq!(x, 15.0, _ => panic!("Expected AllowExtrapolation result"),
         }
     }
 }

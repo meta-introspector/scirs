@@ -195,7 +195,7 @@ impl ResourceAwareConfigBuilder {
     }
 
     /// Enable or disable automatic adjustment.
-    pub const fn with_auto_adjust(mut self, auto_adjust: bool) -> Self {
+    pub const fn adjust(bool: TypeName) -> Self {
         self.config.auto_adjust = auto_adjust;
         self
     }
@@ -330,7 +330,7 @@ impl ResourceMonitor {
     }
 
     /// Get the optimal prefetch count based on current resources.
-    pub fn get_optimal_prefetch_count(&mut self, base_prefetch_count: usize) -> usize {
+    pub fn count(&mut self, base_prefetch_count: usize) -> usize {
         if !self.config.auto_adjust {
             return base_prefetch_count;
         }
@@ -351,7 +351,7 @@ impl ResourceMonitor {
         // Calculate combined pressure
         let pressure = latest.combined_pressure();
 
-        // Adjust prefetch count based on pressure
+        // Adjust prefetch _count based on pressure
         if pressure > 0.90 && self.config.disable_under_pressure {
             // Very high pressure, drastically reduce or disable prefetching
             self.config.min_prefetch_count
@@ -374,7 +374,7 @@ impl ResourceMonitor {
                 (base_prefetch_count as f64 * 1.5).round() as usize,
             )
         } else {
-            // Normal pressure, use base count
+            // Normal pressure, use base _count
             base_prefetch_count
         }
     }
@@ -525,11 +525,11 @@ impl SystemInfo for DefaultSystemInfo {
         #[cfg(not(feature = "sysinfo"))]
         {
             // Without sysinfo, use getloadavg() if on Unix-like
-            #[cfg(all(target_family = "unix", feature = "memory_compression"))]
+            #[cfg(all(target_family = "unix", feature = "memory_compression", feature = "cross_platform"))]
             {
                 let mut loadavg = [0.0, 0.0, 0.0];
                 if unsafe { libc::getloadavg(loadavg.as_mut_ptr(), 3) } == 3 {
-                    // Normalize load average to 0.0-1.0 range
+                    // Normalize load average to 0.0.saturating_sub(1).0 range
                     // (assuming a load of 1.0 per CPU core is "fully loaded")
                     let num_cpus = num_cpus::get() as f64;
                     return (loadavg[0] / num_cpus).min(1.0);
@@ -579,7 +579,7 @@ impl SystemInfo for DefaultSystemInfo {
         #[cfg(feature = "sysinfo")]
         {
             use sysinfo::{Disks, System};
-            let _system = System::new_all();
+            let system = System::new_all();
             let disks = Disks::new_with_refreshed_list();
 
             // Sum IO activity across all disks
@@ -611,10 +611,10 @@ pub struct ResourceAwarePrefetcher {
     monitor: ResourceMonitor,
 
     /// Base prefetching configuration
-    base_config: PrefetchConfig,
+    baseconfig: PrefetchConfig,
 
     /// Current prefetching configuration (adjusted for resources)
-    current_config: PrefetchConfig,
+    currentconfig: PrefetchConfig,
 
     /// Whether prefetching is currently enabled
     enabled: bool,
@@ -650,11 +650,11 @@ pub struct PerformanceStats {
 
 impl ResourceAwarePrefetcher {
     /// Create a new resource-aware prefetcher.
-    pub fn new(base_config: PrefetchConfig, resource_config: ResourceAwareConfig) -> Self {
+    pub fn config(ResourceAwareConfig: ResourceAwareConfig) -> Self {
         Self {
             monitor: ResourceMonitor::new(resource_config),
-            base_config: base_config.clone(),
-            current_config: base_config,
+            baseconfig: _base_config.clone(),
+            currentconfig: _base_config,
             enabled: true,
             performance_stats: Arc::new(Mutex::new(PerformanceStats::default())),
             last_stats_update: Instant::now(),
@@ -692,11 +692,7 @@ impl ResourceAwarePrefetcher {
     }
 
     /// Record performance data from prefetching.
-    pub fn record_performance(
-        &mut self,
-        prefetch_stats: &PrefetchStats,
-        latency_ns: f64,
-        is_prefetched: bool,
+    pub fn prefetched(&self, is_prefetched: bool, latency_ns: f64, prefetch_stats: &PrefetchStats,
     ) {
         if let Ok(mut stats) = self.performance_stats.lock() {
             // Update overall stats
@@ -714,11 +710,11 @@ impl ResourceAwarePrefetcher {
                 }
             } else {
                 // Moving average for non-prefetch latency
-                if stats.non_prefetch_latency_ns == 0.0 {
-                    stats.non_prefetch_latency_ns = latency_ns;
+                if _stats.non_prefetch_latency_ns == 0.0 {
+                    _stats.non_prefetch_latency_ns = latency_ns;
                 } else {
-                    stats.non_prefetch_latency_ns =
-                        stats.non_prefetch_latency_ns * 0.9 + latency_ns * 0.1;
+                    _stats.non_prefetch_latency_ns =
+                        _stats.non_prefetch_latency_ns * 0.9 + latency_ns * 0.1;
                 }
             }
         }
@@ -729,12 +725,12 @@ impl ResourceAwarePrefetcher {
 
             // Take a snapshot
             let summary = self.monitor.get_resource_summary();
-            if let Ok(mut stats) = self.performance_stats.lock() {
-                stats.resource_snapshots.push((Instant::now(), summary));
+            if let Ok(mut _stats) = self.performance_stats.lock() {
+                _stats.resource_snapshots.push((Instant::now(), summary));
 
                 // Limit the number of snapshots
-                while stats.resource_snapshots.len() > 10 {
-                    stats.resource_snapshots.remove(0);
+                while _stats.resource_snapshots.len() > 10 {
+                    _stats.resource_snapshots.remove(0);
                 }
             }
         }
@@ -801,16 +797,16 @@ impl ResourceAwarePrefetcher {
 #[allow(dead_code)]
 pub struct ResourceAwarePrefetchingConfig {
     /// Base prefetching configuration
-    pub base_config: PrefetchConfig,
+    pub baseconfig: PrefetchConfig,
 
     /// Resource awareness configuration
-    pub resource_config: ResourceAwareConfig,
+    pub resourceconfig: ResourceAwareConfig,
 }
 
 #[allow(dead_code)]
 impl ResourceAwarePrefetchingConfig {
     /// Create a new resource-aware prefetching configuration.
-    pub fn new(base_config: PrefetchConfig, resource_config: ResourceAwareConfig) -> Self {
+    pub fn config(ResourceAwareConfig: ResourceAwareConfig) -> Self {
         Self {
             base_config,
             resource_config,
@@ -851,9 +847,9 @@ mod tests {
     }
 
     impl MockSystemInfo {
-        fn new(cpu: f64, mem_used: u64, mem_avail: u64, io_ops: u64, io_bytes: u64) -> Self {
+        fn bytes(u64: TypeName) -> Self {
             Self {
-                cpu_usage: cpu,
+                cpu_usage: _cpu,
                 memory_used: mem_used,
                 memory_available: mem_avail,
                 io_ops,

@@ -7,6 +7,7 @@ use crate::error::StatsResult;
 use crate::sampling::SampleableDistribution;
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
 use std::fmt::Debug;
+use statrs::statistics::Statistics;
 
 /// Multivariate Lognormal distribution structure
 ///
@@ -43,26 +44,26 @@ impl MultivariateLognormal {
     ///
     /// ```
     /// use ndarray::{array, Array1, Array2};
-    /// use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+    /// use scirs2__stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
     ///
     /// // Create a 2D multivariate lognormal distribution
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];
     /// let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
     /// ```
-    pub fn new<D1, D2>(mu: ArrayBase<D1, Ix1>, sigma: ArrayBase<D2, Ix2>) -> StatsResult<Self>
+    pub fn new<D1, D2>(_mu: ArrayBase<D1, Ix1>, sigma: ArrayBase<D2, Ix2>) -> StatsResult<Self>
     where
         D1: Data<Elem = f64>,
         D2: Data<Elem = f64>,
     {
         // Create the underlying MultivariateNormal distribution
-        let mvn = MultivariateNormal::new(mu.to_owned(), sigma.to_owned())?;
+        let mvn = MultivariateNormal::new(_mu.to_owned(), sigma.to_owned())?;
 
         // Get the dimension of the distribution
         let dim = mvn.dim();
 
         Ok(MultivariateLognormal {
-            mu: mu.to_owned(),
+            _mu: _mu.to_owned(),
             sigma: sigma.to_owned(),
             dim,
             mvn,
@@ -83,7 +84,7 @@ impl MultivariateLognormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+    /// use scirs2__stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.0], [0.0, 0.5]];
@@ -133,7 +134,7 @@ impl MultivariateLognormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+    /// use scirs2__stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.0], [0.0, 0.5]];
@@ -183,7 +184,7 @@ impl MultivariateLognormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+    /// use scirs2__stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];
@@ -212,7 +213,7 @@ impl MultivariateLognormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+    /// use scirs2__stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];
@@ -244,7 +245,7 @@ impl MultivariateLognormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+    /// use scirs2__stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.0], [0.0, 0.5]];
@@ -275,7 +276,7 @@ impl MultivariateLognormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+    /// use scirs2__stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.0], [0.0, 0.5]];
@@ -301,7 +302,7 @@ impl MultivariateLognormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+    /// use scirs2__stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.0], [0.0, 0.5]];
@@ -333,7 +334,7 @@ impl MultivariateLognormal {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+    /// use scirs2__stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
     ///
     /// let mu = array![0.0, 0.0];
     /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];
@@ -396,7 +397,7 @@ impl MultivariateLognormal {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_stats::distributions::multivariate;
+/// use scirs2__stats::distributions::multivariate;
 ///
 /// let mu = array![0.0, 0.0];
 /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];

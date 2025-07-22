@@ -471,14 +471,14 @@ pub struct AdvancedPerformanceThreadPool {
 
 impl AdvancedPerformanceThreadPool {
     /// Create a new advanced-performance thread pool
-    pub fn new(config: AdvancedThreadPoolConfig) -> LinalgResult<Self> {
+    pub fn new(_config: AdvancedThreadPoolConfig) -> LinalgResult<Self> {
         let stats = Arc::new(Mutex::new(AdvancedPerformanceStats::default()));
-        let thread_manager = Arc::new(Mutex::new(DynamicThreadManager::new(&config.base_config)?));
+        let thread_manager = Arc::new(Mutex::new(DynamicThreadManager::new(&_config.base_config)?));
         let workload_predictor = Arc::new(Mutex::new(WorkloadPredictor::new()));
         let profiler = Arc::new(Mutex::new(ThreadPoolProfiler::new()));
 
         Ok(Self {
-            config,
+            config: _config,
             stats,
             thread_manager,
             workload_predictor,
@@ -549,10 +549,10 @@ pub struct DynamicThreadManager {
 
 impl DynamicThreadManager {
     /// Create a new dynamic thread manager
-    pub fn new(config: &ThreadPoolConfig) -> LinalgResult<Self> {
+    pub fn new(_config: &ThreadPoolConfig) -> LinalgResult<Self> {
         Ok(Self {
-            config: config.clone(),
-            current_threads: config.active_threads,
+            config: _config.clone(),
+            current_threads: _config.active_threads,
             cpu_utilization_history: Vec::new(),
             last_scaling_time: Instant::now(),
             scaling_history: Vec::new(),
@@ -886,7 +886,7 @@ impl ProfileMetrics {
         let diff = new_time_ms - new_avg_ms;
         self.execution_time_variance = ((n - 1.0) * self.execution_time_variance + diff * diff) / n;
 
-        // Update optimal thread count heuristic
+        // Update optimal thread _count heuristic
         if execution_time < self.avg_execution_time {
             self.optimal_thread_count = thread_count;
         }
@@ -1135,9 +1135,9 @@ pub struct ScopedThreadPool {
 
 impl ScopedThreadPool {
     /// Create a new scoped thread pool
-    pub fn new(config: ThreadPoolConfig, cleanup_timeout: Duration) -> Self {
+    pub fn new(_config: ThreadPoolConfig, cleanup_timeout: Duration) -> Self {
         Self {
-            config,
+            config: _config,
             created_at: Instant::now(),
             cleanup_timeout,
         }

@@ -11,11 +11,12 @@
 //! - Performance profiling and monitoring
 
 use ndarray::{Array2, Array3};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     adaptive_advanced_optimizer::*, error::Result, fusion_core::*, gpu_operations::*,
     performance_profiler::*,
 };
 use std::time::Instant;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
@@ -61,7 +62,7 @@ fn main() -> Result<()> {
             format!("quantum_consciousness_{}", name),
             &DataCharacteristics {
                 dimensions: image.shape().to_vec(),
-                element_size: std::mem::size_of::<f64>(),
+                element_size: std::mem::size, _of::<f64>(),
                 complexity_score: calculate_complexity_score(&image.view()),
                 access_pattern: AccessPattern::Sequential,
             },
@@ -105,7 +106,7 @@ fn main() -> Result<()> {
             format!("meta_learning_{}", name),
             &DataCharacteristics {
                 dimensions: image.shape().to_vec(),
-                element_size: std::mem::size_of::<f64>(),
+                element_size: std::mem::size, _of::<f64>(),
                 complexity_score: calculate_complexity_score(&image.view()),
                 access_pattern: AccessPattern::Random,
             },
@@ -124,7 +125,7 @@ fn main() -> Result<()> {
         let workload = WorkloadCharacteristics {
             data_size: image.len(),
             complexity_estimate: calculate_complexity_score(&image.view()),
-            memory_requirements: image.len() * std::mem::size_of::<f64>(),
+            memory_requirements: image.len() * std::mem::size, _of::<f64>(),
             parallelizability: 0.8,
         };
 
@@ -297,14 +298,14 @@ fn create_test_datasets() -> Vec<(String, Array2<f64>)> {
 
 /// Calculate complexity score for an image
 #[allow(dead_code)]
-fn calculate_complexity_score<D>(image: &ndarray::ArrayView<f64, D>) -> f64
+fn calculate_complexity_score<D>(_image: &ndarray::ArrayView<f64, D>) -> f64
 where
     D: ndarray::Dimension,
 {
     // Simple complexity metric based on variance and size
-    let size = image.len() as f64;
-    let mean = image.mean().unwrap_or(0.0);
-    let variance = image.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / size;
+    let size = _image.len() as f64;
+    let mean = _image.mean().unwrap_or(0.0);
+    let variance = _image.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / size;
 
     (size.log10() * variance).max(1.0)
 }

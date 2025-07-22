@@ -22,6 +22,7 @@ use std::io::BufReader;
 use std::path::Path;
 
 use crate::error::{IoError, Result};
+use std::path::PathBuf;
 
 /// Image color mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -57,15 +58,14 @@ pub enum ImageFormat {
 
 impl ImageFormat {
     /// Get format from file extension
-    pub fn from_extension(ext: &str) -> Self {
-        match ext.to_lowercase().as_str() {
+    pub fn from_extension(_ext: &str) -> Self {
+        match _ext.to_lowercase().as_str() {
             "png" => ImageFormat::PNG,
             "jpg" | "jpeg" => ImageFormat::JPEG,
             "bmp" => ImageFormat::BMP,
             "tiff" | "tif" => ImageFormat::TIFF,
             "gif" => ImageFormat::GIF,
-            "webp" => ImageFormat::WEBP,
-            _ => ImageFormat::Other,
+            "webp" => ImageFormat::WEBP_ =>, ImageFormat::Other,
         }
     }
 
@@ -191,23 +191,23 @@ pub struct AnimationData {
 ///
 /// # Example
 /// ```no_run
-/// use scirs2_io::image::load_image;
+/// use scirs2__io::image::load_image;
 ///
 /// let image_data = load_image("photo.jpg")?;
 /// println!("Image size: {}x{}", image_data.metadata.width, image_data.metadata.height);
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn load_image<P: AsRef<Path>>(path: P) -> Result<ImageData> {
-    let path = path.as_ref();
-    let img = image::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn load_image<P: AsRef<Path>>(_path: P) -> Result<ImageData> {
+    let _path = _path.as_ref();
+    let img = image::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
 
     let width = img.width();
     let height = img.height();
     let format =
-        ImageFormat::from_extension(path.extension().and_then(|ext| ext.to_str()).unwrap_or(""));
+        ImageFormat::from_extension(_path.extension().and_then(|ext| ext.to_str()).unwrap_or(""));
 
-    let file_size = fs::metadata(path)
+    let file_size = fs::metadata(_path)
         .map(|metadata| metadata.len())
         .unwrap_or(0);
 
@@ -220,7 +220,7 @@ pub fn load_image<P: AsRef<Path>>(path: P) -> Result<ImageData> {
         .map_err(|e| IoError::FormatError(e.to_string()))?;
 
     // Try to read EXIF metadata
-    let exif = read_exif_metadata(path)?;
+    let exif = read_exif_metadata(_path)?;
 
     let metadata = ImageMetadata {
         width,
@@ -243,7 +243,7 @@ pub fn load_image<P: AsRef<Path>>(path: P) -> Result<ImageData> {
 ///
 /// # Example
 /// ```no_run
-/// use scirs2_io::image::{load_image, save_image, ImageFormat};
+/// use scirs2__io::image::{load_image, save_image, ImageFormat};
 ///
 /// let image_data = load_image("input.jpg")?;
 /// save_image(&image_data, "output.png", Some(ImageFormat::PNG))?;
@@ -260,8 +260,8 @@ pub fn save_image<P: AsRef<Path>>(
         ImageFormat::from_extension(path.extension().and_then(|ext| ext.to_str()).unwrap_or(""))
     });
 
-    let (height, width, _) = image_data.data.dim();
-    let raw_data = image_data.data.iter().cloned().collect::<Vec<u8>>();
+    let (height, width_) = image_data._data.dim();
+    let raw_data = image_data._data.iter().cloned().collect::<Vec<u8>>();
 
     let img_buffer = image::RgbImage::from_raw(width as u32, height as u32, raw_data)
         .ok_or_else(|| IoError::FormatError("Invalid image dimensions".to_string()))?;
@@ -291,7 +291,7 @@ pub fn save_image<P: AsRef<Path>>(
 ///
 /// # Example
 /// ```no_run
-/// use scirs2_io::image::{convert_image, ImageFormat};
+/// use scirs2__io::image::{convert_image, ImageFormat};
 ///
 /// convert_image("photo.jpg", "photo.png", ImageFormat::PNG)?;
 /// # Ok::<(), scirs2_io::error::IoError>(())
@@ -318,18 +318,18 @@ pub fn convert_image<P1: AsRef<Path>, P2: AsRef<Path>>(
 ///
 /// # Example
 /// ```no_run
-/// use scirs2_io::image::{load_image, resize_image};
+/// use scirs2__io::image::{load_image, resize_image};
 ///
 /// let image_data = load_image("large_photo.jpg")?;
 /// let resized = resize_image(&image_data, 800, 600)?;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn resize_image(image_data: &ImageData, new_width: u32, new_height: u32) -> Result<ImageData> {
-    let (height, width, _) = image_data.data.dim();
-    let raw_data = image_data.data.iter().cloned().collect::<Vec<u8>>();
+pub fn resize_image(_image_data: &ImageData, new_width: u32, new_height: u32) -> Result<ImageData> {
+    let (_height, width_) = _image_data._data.dim();
+    let raw_data = _image_data._data.iter().cloned().collect::<Vec<u8>>();
 
-    let img_buffer = image::RgbImage::from_raw(width as u32, height as u32, raw_data)
+    let img_buffer = image::RgbImage::from_raw(_width as u32, _height as u32, raw_data)
         .ok_or_else(|| IoError::FormatError("Invalid image dimensions".to_string()))?;
 
     let dynamic_img = image::DynamicImage::ImageRgb8(img_buffer);
@@ -342,12 +342,12 @@ pub fn resize_image(image_data: &ImageData, new_width: u32, new_height: u32) -> 
         Array3::from_shape_vec((new_height as usize, new_width as usize, 3), resized_raw)
             .map_err(|e| IoError::FormatError(e.to_string()))?;
 
-    let mut new_metadata = image_data.metadata.clone();
-    new_metadata.width = new_width;
-    new_metadata.height = new_height;
+    let mut new_metadata = _image_data.metadata.clone();
+    new_metadata._width = new_width;
+    new_metadata._height = new_height;
 
     Ok(ImageData {
-        data: resized_data,
+        _data: resized_data,
         metadata: new_metadata,
     })
 }
@@ -362,16 +362,16 @@ pub fn resize_image(image_data: &ImageData, new_width: u32, new_height: u32) -> 
 ///
 /// # Example
 /// ```no_run
-/// use scirs2_io::image::get_image_info;
+/// use scirs2__io::image::get_image_info;
 ///
 /// let info = get_image_info("photo.jpg")?;
 /// println!("Image: {}x{} pixels", info.width, info.height);
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn get_image_info<P: AsRef<Path>>(path: P) -> Result<ImageMetadata> {
-    let path = path.as_ref();
-    let reader = image::ImageReader::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn get_image_info<P: AsRef<Path>>(_path: P) -> Result<ImageMetadata> {
+    let _path = _path.as_ref();
+    let reader = image::ImageReader::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
 
     let reader = reader
         .with_guessed_format()
@@ -382,14 +382,14 @@ pub fn get_image_info<P: AsRef<Path>>(path: P) -> Result<ImageMetadata> {
         .map_err(|e| IoError::FileError(e.to_string()))?;
 
     let format =
-        ImageFormat::from_extension(path.extension().and_then(|ext| ext.to_str()).unwrap_or(""));
+        ImageFormat::from_extension(_path.extension().and_then(|ext| ext.to_str()).unwrap_or(""));
 
-    let file_size = fs::metadata(path)
+    let file_size = fs::metadata(_path)
         .map(|metadata| metadata.len())
         .unwrap_or(0);
 
     // Try to read EXIF metadata
-    let exif = read_exif_metadata(path)?;
+    let exif = read_exif_metadata(_path)?;
 
     Ok(ImageMetadata {
         width: dimensions.0,
@@ -411,16 +411,16 @@ pub fn get_image_info<P: AsRef<Path>>(path: P) -> Result<ImageMetadata> {
 ///
 /// # Example
 /// ```no_run
-/// use scirs2_io::image::load_animation;
+/// use scirs2__io::image::load_animation;
 ///
 /// let animation = load_animation("animated.gif")?;
 /// println!("Animation has {} frames", animation.frames.len());
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn load_animation<P: AsRef<Path>>(path: P) -> Result<AnimationData> {
-    let path = path.as_ref();
-    let file = std::fs::File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
+pub fn load_animation<P: AsRef<Path>>(_path: P) -> Result<AnimationData> {
+    let _path = _path.as_ref();
+    let file = std::fs::File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
     let decoder = image::codecs::gif::GifDecoder::new(reader)
@@ -483,7 +483,7 @@ pub fn load_animation<P: AsRef<Path>>(path: P) -> Result<AnimationData> {
 ///
 /// # Example
 /// ```no_run
-/// use scirs2_io::image::read_exif_metadata;
+/// use scirs2__io::image::read_exif_metadata;
 ///
 /// if let Some(exif) = read_exif_metadata("photo.jpg")? {
 ///     if let Some(gps) = exif.gps {
@@ -493,8 +493,8 @@ pub fn load_animation<P: AsRef<Path>>(path: P) -> Result<AnimationData> {
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn read_exif_metadata<P: AsRef<Path>>(path: P) -> Result<Option<ExifMetadata>> {
-    let _path = path.as_ref();
+pub fn read_exif_metadata<P: AsRef<Path>>(_path: P) -> Result<Option<ExifMetadata>> {
+    let _path = _path.as_ref();
 
     // Try to read EXIF data using the `exif` crate
     #[cfg(feature = "exif")]
@@ -502,7 +502,7 @@ pub fn read_exif_metadata<P: AsRef<Path>>(path: P) -> Result<Option<ExifMetadata
         use std::fs::File;
         use std::io::BufReader;
 
-        let file = match File::open(path) {
+        let file = match File::open(_path) {
             Ok(f) => f,
             Err(_) => return Ok(None), // File not found or permission denied
         };
@@ -694,8 +694,7 @@ pub fn read_exif_metadata<P: AsRef<Path>>(path: P) -> Result<Option<ExifMetadata
                 if !vec.is_empty() {
                     camera.white_balance = Some(match vec[0] {
                         0 => "Auto".to_string(),
-                        1 => "Manual".to_string(),
-                        _ => "Unknown".to_string(),
+                        1 => "Manual".to_string(, _ => "Unknown".to_string(),
                     });
                 }
             }
@@ -785,7 +784,7 @@ pub fn read_exif_metadata<P: AsRef<Path>>(path: P) -> Result<Option<ExifMetadata
 ///
 /// # Example
 /// ```no_run
-/// use scirs2_io::image::find_images;
+/// use scirs2__io::image::find_images;
 ///
 /// let images = find_images("./photos", "*.{jpg,png}", true)?;
 /// for image_path in images {
@@ -808,8 +807,8 @@ pub fn find_images<P: AsRef<Path>>(
     let paths = glob::glob(&search_pattern)
         .map_err(|e| IoError::FileError(e.to_string()))?
         .filter_map(|entry| entry.ok())
-        .filter(|path| {
-            let ext = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
+        .filter(|_path| {
+            let ext = _path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
             matches!(
                 ext.to_lowercase().as_str(),
                 "jpg" | "jpeg" | "png" | "bmp" | "tiff" | "tif" | "gif" | "webp"
@@ -829,7 +828,7 @@ pub fn find_images<P: AsRef<Path>>(
 ///
 /// # Example
 /// ```no_run
-/// use scirs2_io::image::{batch_process_images, ImageData, resize_image};
+/// use scirs2__io::image::{batch_process_images, ImageData, resize_image};
 ///
 /// batch_process_images(
 ///     "./input",
@@ -839,19 +838,19 @@ pub fn find_images<P: AsRef<Path>>(
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn batch_process_images<P1, P2, F>(input_dir: P1, output_dir: P2, processor: F) -> Result<()>
+pub fn batch_process_images<P1, P2, F>(_input_dir: P1, output_dir: P2, processor: F) -> Result<()>
 where
     P1: AsRef<Path>,
     P2: AsRef<Path>,
     F: Fn(&ImageData) -> Result<ImageData>,
 {
-    let input_dir = input_dir.as_ref();
+    let _input_dir = _input_dir.as_ref();
     let output_dir = output_dir.as_ref();
 
     // Create output directory if it doesn't exist
     fs::create_dir_all(output_dir).map_err(|e| IoError::FileError(e.to_string()))?;
 
-    let image_files = find_images(input_dir, "*", false)?;
+    let image_files = find_images(_input_dir, "*", false)?;
 
     for input_path in image_files {
         let file_name = input_path

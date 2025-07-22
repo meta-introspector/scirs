@@ -3,7 +3,7 @@
 //! This example demonstrates the advanced-sophisticated enhancements added to scirs2-datasets,
 //! including advanced analytics, GPU optimization, and adaptive streaming processing.
 
-use scirs2_datasets::{
+use scirs2__datasets::{
     // Adaptive streaming
     create_adaptive_engine_with_config,
     // Core functionality
@@ -24,6 +24,7 @@ use scirs2_datasets::{
     TrendIndicators,
 };
 use std::time::Instant;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -70,13 +71,13 @@ fn create_sample_dataset() -> Result<Dataset, Box<dyn std::error::Error>> {
 
 /// Demonstrate advanced analytics capabilities
 #[allow(dead_code)]
-fn demonstrate_advanced_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_advanced_analytics(_dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧠 Advanced Analytics Demonstration");
     println!("==========================================");
 
     // Quick quality assessment
     println!("📈 Running quick quality assessment...");
-    let quick_quality = quick_quality_assessment(dataset)?;
+    let quick_quality = quick_quality_assessment(_dataset)?;
     println!("   Quality Score: {quick_quality:.3}");
 
     // Comprehensive advanced-analysis
@@ -88,7 +89,7 @@ fn demonstrate_advanced_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::
         .with_advanced_precision(true)
         .with_significance_threshold(0.01);
 
-    let metrics = analyzer.analyze_dataset_quality(dataset)?;
+    let metrics = analyzer.analyze_dataset_quality(_dataset)?;
     let analysis_time = start_time.elapsed();
 
     println!("   Analysis completed in: {analysis_time:?}");
@@ -198,7 +199,7 @@ fn demonstrate_advanced_gpu_optimization() -> Result<(), Box<dyn std::error::Err
 
 /// Demonstrate adaptive streaming capabilities
 #[allow(dead_code)]
-fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
+fn demonstrate_adaptive_streaming(_dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 Adaptive Streaming Demonstration");
     println!("===================================");
 
@@ -210,7 +211,7 @@ fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::
 
     // Simulate streaming data
     println!("📡 Simulating data stream...");
-    let data = &dataset.data;
+    let data = &_dataset.data;
     let chunk_size = 20;
     let num_chunks = (data.nrows() / chunk_size).min(10); // Limit for demo
 
@@ -221,7 +222,7 @@ fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::
         let start_row = i * chunk_size;
         let end_row = (start_row + chunk_size).min(data.nrows());
 
-        // Create chunk from dataset slice
+        // Create chunk from _dataset slice
         let chunk_data = data.slice(ndarray::s![start_row..end_row, ..]).to_owned();
 
         let chunk = StreamChunk {

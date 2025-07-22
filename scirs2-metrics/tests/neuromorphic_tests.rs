@@ -6,7 +6,7 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(dead_code)]
 
-use scirs2_metrics::domains::neuromorphic::*;
+use scirs2__metrics::domains::neuromorphic::*;
 use std::time::Duration;
 
 #[cfg(test)]

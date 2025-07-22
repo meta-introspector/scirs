@@ -8,7 +8,7 @@
 //!
 //! Note: This requires scikit-learn to be installed for Python comparison benchmarks
 
-use scirs2_datasets::{
+use scirs2__datasets::{
     benchmarks::{BenchmarkRunner, BenchmarkSuite},
     load_boston, load_breast_cancer, load_digits, load_iris, load_wine, make_classification,
     make_regression,
@@ -53,8 +53,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn analyze_toy_dataset_performance(suites: &[BenchmarkSuite]) {
-    if let Some(toy_suite) = suites.iter().find(|s| s.name == "Toy Datasets") {
+fn analyze_toy_dataset_performance(_suites: &[BenchmarkSuite]) {
+    if let Some(toy_suite) = _suites.iter().find(|s| s.name == "Toy Datasets") {
         println!("\n📊 TOY DATASET LOADING ANALYSIS");
         println!("{}", "-".repeat(40));
 
@@ -107,8 +107,8 @@ fn analyze_toy_dataset_performance(suites: &[BenchmarkSuite]) {
 }
 
 #[allow(dead_code)]
-fn analyze_data_generation_performance(suites: &[BenchmarkSuite]) {
-    if let Some(gen_suite) = suites.iter().find(|s| s.name == "Data Generation") {
+fn analyze_data_generation_performance(_suites: &[BenchmarkSuite]) {
+    if let Some(gen_suite) = _suites.iter().find(|s| s.name == "Data Generation") {
         println!("\n🔬 DATA GENERATION ANALYSIS");
         println!("{}", "-".repeat(40));
 
@@ -177,13 +177,13 @@ fn analyze_generation_type(
 }
 
 #[allow(dead_code)]
-fn analyze_scaling_performance(suite: &BenchmarkSuite) {
+fn analyze_scaling_performance(_suite: &BenchmarkSuite) {
     println!("\n  📈 SCALING ANALYSIS:");
 
     // Group results by sample size
     let mut size_groups: HashMap<usize, Vec<_>> = HashMap::new();
 
-    for result in suite.successful_results() {
+    for result in _suite.successful_results() {
         size_groups.entry(result.samples).or_default().push(result);
     }
 
@@ -312,8 +312,7 @@ fn run_sklearn_toy_dataset_comparison() {
                     "boston" => load_boston().map(|_| ()),
                     "digits" => load_digits().map(|_| ()),
                     "wine" => load_wine(false).map(|_| ()),
-                    "breast_cancer" => load_breast_cancer().map(|_| ()),
-                    _ => Ok(()),
+                    "breast_cancer" => load_breast_cancer().map(|_| (), _ => Ok(()),
                 };
                 let scirs2_time = scirs2_start.elapsed().as_secs_f64();
 
@@ -354,7 +353,7 @@ fn run_sklearn_generation_comparison() {
     ];
 
     for (n_samples, n_features, gen_type) in configs {
-        let (python_code, scirs2_fn): (&str, Box<dyn Fn() -> Result<_, _>>) = match gen_type {
+        let (python_code, scirs2_fn): (&str, Box<dyn Fn() -> Result<__>>) = match gen_type {
             "classification" => (
                 &format!("from sklearn.datasets import make_classification; make_classification(n_samples={n_samples}, n_features={n_features}, random_state=42)"),
                 Box::new(move || make_classification(n_samples, n_features, 3, 2, 4, Some(42)))
@@ -362,8 +361,7 @@ fn run_sklearn_generation_comparison() {
             "regression" => (
                 &format!("from sklearn.datasets import make_regression; make_regression(n_samples={n_samples}, n_features={n_features}, random_state=42)"),
                 Box::new(move || make_regression(n_samples, n_features, 3, 0.1, Some(42)))
-            ),
-            _ => continue,
+            , _ => continue,
         };
 
         // Time Python execution
@@ -416,7 +414,7 @@ fn run_sklearn_generation_comparison() {
 }
 
 #[allow(dead_code)]
-fn generate_performance_report(suites: &[BenchmarkSuite]) {
+fn generate_performance_report(_suites: &[BenchmarkSuite]) {
     println!("\n📋 PERFORMANCE SUMMARY REPORT");
     println!("{}", "=".repeat(60));
 
@@ -424,7 +422,7 @@ fn generate_performance_report(suites: &[BenchmarkSuite]) {
     let mut total_samples = 0;
     let mut total_duration = Duration::ZERO;
 
-    for suite in suites {
+    for suite in _suites {
         total_operations += suite.results.len();
         total_samples += suite.total_samples();
         total_duration += suite.total_duration;
@@ -458,7 +456,7 @@ fn generate_performance_report(suites: &[BenchmarkSuite]) {
     // Recommendations
     println!("\n  💡 RECOMMENDATIONS:");
 
-    if let Some(gen_suite) = suites.iter().find(|s| s.name == "Data Generation") {
+    if let Some(gen_suite) = _suites.iter().find(|s| s.name == "Data Generation") {
         let successful = gen_suite.successful_results();
         let failed = gen_suite.failed_results();
 
@@ -486,12 +484,12 @@ fn generate_performance_report(suites: &[BenchmarkSuite]) {
 }
 
 #[allow(dead_code)]
-fn format_duration(duration: Duration) -> String {
-    if duration.as_secs() > 0 {
-        format!("{:.2}s", duration.as_secs_f64())
-    } else if duration.as_millis() > 0 {
-        format!("{}ms", duration.as_millis())
+fn format_duration(_duration: Duration) -> String {
+    if _duration.as_secs() > 0 {
+        format!("{:.2}s", _duration.as_secs_f64())
+    } else if _duration.as_millis() > 0 {
+        format!("{}ms", _duration.as_millis())
     } else {
-        format!("{}μs", duration.as_micros())
+        format!("{}μs", _duration.as_micros())
     }
 }

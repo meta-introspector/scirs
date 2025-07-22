@@ -170,7 +170,7 @@ impl ZeroCopyBuffer {
             }
             // SAFETY: We've explicitly checked that raw_ptr is not null above
             // The layout is validated by Layout::from_size_align() earlier
-            // The memory is properly aligned and allocated for the specified size
+            // The memory is properly aligned and allocated for the specified _size
             NonNull::new_unchecked(raw_ptr)
         };
 
@@ -646,7 +646,7 @@ impl BufferPool {
 /// Work-stealing task for the scheduler
 pub trait WorkStealingTask: Send + 'static {
     /// Execute the task
-    fn execute(self: Box<Self>);
+    fn execute(&self);
 }
 
 /// Work-stealing scheduler for efficient parallel processing
@@ -925,7 +925,7 @@ where
 
     /// Worker loop for processing data
     fn worker_loop(
-        _worker_id: usize,
+        worker_id: usize,
         input_queue: Arc<LockFreeQueue<T>>,
         output_queue: Arc<LockFreeQueue<U>>,
         process_fn: Arc<dyn Fn(T) -> CoreResult<U> + Send + Sync>,

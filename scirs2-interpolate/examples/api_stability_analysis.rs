@@ -3,11 +3,11 @@
 //! This example runs comprehensive API stabilization analysis to identify
 //! issues that need to be addressed before the stable release.
 
-use scirs2_interpolate::api_stabilization_enhanced::{
+use scirs2__interpolate::api_stabilization_enhanced::{
     analyze_api_for_stable_release, analyze_api_with_config, quick_api_analysis,
     StabilizationConfig, StrictnessLevel,
 };
-use scirs2_interpolate::InterpolateResult;
+use scirs2__interpolate::InterpolateResult;
 
 #[allow(dead_code)]
 fn main() -> InterpolateResult<()> {
@@ -66,13 +66,13 @@ fn main() -> InterpolateResult<()> {
 
             println!("\n=== ANALYSIS SUMMARY ===");
             match report.overall_readiness {
-                scirs2_interpolate::api_stabilization_enhanced::StableReleaseReadiness::Ready => {
+                scirs2_interpolate::api_stabilization, _enhanced::StableReleaseReadiness::Ready => {
                     println!("✅ API is READY for 0.1.0 stable release!");
                 }
-                scirs2_interpolate::api_stabilization_enhanced::StableReleaseReadiness::NearlyReady => {
+                scirs2_interpolate::api_stabilization, _enhanced::StableReleaseReadiness::NearlyReady => {
                     println!("⚠️  API is NEARLY READY - address remaining issues");
                 }
-                scirs2_interpolate::api_stabilization_enhanced::StableReleaseReadiness::NotReady => {
+                scirs2_interpolate::api_stabilization, _enhanced::StableReleaseReadiness::NotReady => {
                     println!("❌ API is NOT READY - significant work required");
                 }
             }

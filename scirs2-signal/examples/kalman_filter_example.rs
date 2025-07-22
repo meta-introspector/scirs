@@ -1,10 +1,12 @@
+use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2};
 // use plotters::prelude::*;  // Plotters dependency not available
 use rand::rng;
-use rand_distr::{Distribution, Normal};
-use scirs2_signal::{kalman, SignalError, SignalResult};
+use rand__distr::{Distribution, Normal};
+use scirs2__signal::{kalman, SignalError, SignalResult};
 use std::fs::File;
 use std::io::Write;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> SignalResult<()> {
@@ -53,9 +55,9 @@ fn generate_noisy_sine(
         signal[i] += normal.sample(&mut rng);
 
         // Add outliers with specified probability
-        if let (Some(prob), Some(scale)) = (outlier_prob, outlier_scale) {
-            if rand::random::<f64>() < prob {
-                signal[i] += normal.sample(&mut rng) * scale;
+        if let (Some(_prob), Some(_scale)) = (outlier_prob, outlier_scale) {
+            if rand::random::<f64>() < _prob {
+                signal[i] += normal.sample(&mut rng) * _scale;
             }
         }
     }
@@ -65,14 +67,14 @@ fn generate_noisy_sine(
 
 /// Export signal data to CSV for external plotting
 #[allow(dead_code)]
-fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
+fn export_to_csv(_file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file =
-        File::create(file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
+        File::create(_file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     // Write header
     let header = signals
         .iter()
-        .map(|(name, _)| name.to_string())
+        .map(|(name_)| _name.to_string())
         .collect::<Vec<String>>()
         .join(",");
     writeln!(file, "{}", header).map_err(|e| SignalError::ComputationError(e.to_string()))?;

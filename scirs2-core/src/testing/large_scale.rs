@@ -236,7 +236,7 @@ impl LargeDatasetGenerator {
 
         use std::io::Write;
         let chunk_size = self.config.chunk_size.min(size);
-        let _num_elements_per_chunk = chunk_size / std::mem::size_of::<f64>();
+        let num_elements_per_chunk = chunk_size / std::mem::size_of::<f64>();
         let mut bytes_written = 0;
 
         while bytes_written < size {
@@ -299,7 +299,7 @@ impl LargeDatasetGenerator {
 
         use std::io::Write;
         let chunk_size = self.config.chunk_size.min(size);
-        let _num_elements_per_chunk = chunk_size / std::mem::size_of::<f64>();
+        let num_elements_per_chunk = chunk_size / std::mem::size_of::<f64>();
         let mut bytes_written = 0;
 
         #[cfg(feature = "random")]
@@ -315,8 +315,8 @@ impl LargeDatasetGenerator {
                 .map(|_| {
                     #[cfg(feature = "random")]
                     {
-                        if rng.random_range(0.0..=1.0) < density {
-                            rng.random_range(-1000.0..=1000.0)
+                        if rng.gen_range(0.0..=1.0) < density {
+                            rng.gen_range(-1000.0..=1000.0)
                         } else {
                             0.0
                         }
@@ -426,7 +426,7 @@ impl LargeScaleProcessor {
         let mut chunks_processed = 0;
         let mut accumulator = 0.0;
         let chunk_size = self.config.chunk_size;
-        let _elements_per_chunk = chunk_size / std::mem::size_of::<f64>();
+        let elements_per_chunk = chunk_size / std::mem::size_of::<f64>();
 
         while bytes_processed < file_size {
             let remaining = file_size - bytes_processed;
@@ -512,7 +512,7 @@ impl LargeScaleProcessor {
         }
 
         // Create memory-mapped array
-        let _mmap_array =
+        let mmap_array =
             MemoryMappedArray::<f64>::open(dataset_path, &[num_elements]).map_err(|e| {
                 CoreError::IoError(ErrorContext::new(format!(
                     "Failed to create memory map: {:?}",
@@ -530,7 +530,7 @@ impl LargeScaleProcessor {
 
             // Access chunk data from memory-mapped array
             let chunk_data = {
-                let array = _mmap_array.as_array::<ndarray::Ix1>().map_err(|e| {
+                let array = mmap_array.asarray::<ndarray::Ix1>().map_err(|e| {
                     CoreError::ComputationError(ErrorContext::new(format!(
                         "Failed to access memory-mapped array: {:?}",
                         e
@@ -579,7 +579,7 @@ impl LargeScaleProcessor {
         &self,
         dataset_path: &Path,
     ) -> CoreResult<LargeScaleTestResult> {
-        let _start_time = Instant::now();
+        let start_time = Instant::now();
         let mut result = LargeScaleTestResult::new("out_of_core_reduction".to_string());
 
         // Perform sum reduction as a test operation
@@ -695,7 +695,7 @@ impl LargeScaleTestUtils {
             }
 
             Ok(TestResult::success(
-                result.duration,
+                result.std::time::Duration::from_secs(1),
                 result.chunks_processed,
             ))
         });
@@ -726,7 +726,7 @@ impl LargeScaleTestUtils {
             }
 
             Ok(TestResult::success(
-                result.duration,
+                result.std::time::Duration::from_secs(1),
                 result.chunks_processed,
             ))
         });
@@ -754,7 +754,7 @@ impl LargeScaleTestUtils {
             }
 
             Ok(TestResult::success(
-                result.duration,
+                result.std::time::Duration::from_secs(1),
                 result.chunks_processed,
             ))
         });

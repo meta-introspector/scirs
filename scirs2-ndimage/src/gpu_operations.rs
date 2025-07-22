@@ -12,7 +12,7 @@ use std::sync::Arc;
 use ndarray::{Array, ArrayView, ArrayView2, Dimension, Ix2};
 use num_traits::{Float, FromPrimitive};
 
-use crate::backend::gpu_acceleration_framework::{
+use crate::backend::gpu_acceleration__framework::{
     GpuAccelerationManager, GpuPerformanceReport, MemoryPoolConfig,
 };
 use crate::backend::{Backend, DeviceManager};
@@ -73,16 +73,16 @@ struct OperationInfo {
 
 impl GpuOperations {
     /// Create a new GPU operations manager
-    pub fn new(config: GpuOperationsConfig) -> NdimageResult<Self> {
+    pub fn new(_config: GpuOperationsConfig) -> NdimageResult<Self> {
         let acceleration_manager = Arc::new(GpuAccelerationManager::new(
-            config.memory_pool_config.clone(),
+            _config.memory_pool_config.clone(),
         )?);
         let device_manager = DeviceManager::new()?;
 
         let mut gpu_ops = Self {
             acceleration_manager,
             device_manager,
-            config,
+            _config,
             operation_registry: HashMap::new(),
         };
 
@@ -369,8 +369,7 @@ impl GpuOperations {
             match op_info.preferred_backend {
                 Backend::Cuda if capabilities.cuda_available => return Ok(Backend::Cuda),
                 Backend::OpenCL if capabilities.opencl_available => return Ok(Backend::OpenCL),
-                Backend::Metal if capabilities.metal_available => return Ok(Backend::Metal),
-                _ => {}
+                Backend::Metal if capabilities.metal_available => return Ok(Backend::Metal, _ => {}
             }
         }
 
@@ -404,11 +403,9 @@ impl GpuOperations {
 
     fn execute_gpu_convolution<T>(
         &self,
-        input: ArrayView2<T>,
-        _kernel: ArrayView2<T>,
+        input: ArrayView2<T>, _kernel: ArrayView2<T>,
         kernel_source: &str,
-        backend: Backend,
-        _mode: BoundaryMode,
+        backend: Backend_mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync,
@@ -417,22 +414,19 @@ impl GpuOperations {
         // For now, we'll use the acceleration manager framework
         self.acceleration_manager
             .execute_operation("convolution_2d", input.into_dyn(), kernel_source, backend)
-            .map(|result| result.into_dimensionality::<Ix2>().unwrap())
+            .map(|result| result.into__dimensionality::<Ix2>().unwrap())
     }
 
     fn execute_gpu_morphology<T>(
         &self,
-        input: ArrayView2<T>,
-        _structuring_element: ArrayView2<bool>,
+        input: ArrayView2<T>, _structuring_element: ArrayView2<bool>,
         kernel_source: &str,
-        backend: Backend,
-        _mode: BoundaryMode,
-        _operation: MorphologyOperation,
+        backend: Backend_mode: BoundaryMode, _operation: MorphologyOperation,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
-        // Execute morphological operation on GPU
+        // Execute morphological _operation on GPU
         self.acceleration_manager
             .execute_operation(
                 "morphological_operation",
@@ -445,11 +439,9 @@ impl GpuOperations {
 
     fn execute_gpu_gaussian<T>(
         &self,
-        input: ArrayView2<T>,
-        _sigma: (f64, f64),
+        input: ArrayView2<T>, _sigma: (f64, f64),
         kernel_source: &str,
-        backend: Backend,
-        _mode: BoundaryMode,
+        backend: Backend_mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync,
@@ -462,8 +454,7 @@ impl GpuOperations {
 
     fn execute_gpu_distance_transform<T>(
         &self,
-        input: ArrayView2<T>,
-        _metric: DistanceMetric,
+        input: ArrayView2<T>, _metric: DistanceMetric,
         kernel_source: &str,
         backend: Backend,
     ) -> NdimageResult<Array<T, Ix2>>

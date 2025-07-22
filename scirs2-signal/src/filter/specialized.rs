@@ -5,11 +5,14 @@
 //! applications such as noise removal, echo cancellation, and phase shifting.
 
 use crate::error::{SignalError, SignalResult};
-
-use super::common::{validation::validate_cutoff_frequency, FilterCoefficients};
+use crate::lti::TransferFunction;
+use num__complex::Complex64;
+use std::f64::consts::PI;
+use super::common::{FilterCoefficients, validation::validate_cutoff_frequency};
 use super::transform::zpk_to_tf;
-use num_complex::Complex64;
+use crate::lti::design::tf;
 
+#[allow(unused_imports)]
 /// Design a notch filter to remove a specific frequency
 ///
 /// A notch filter provides sharp attenuation at a specific frequency while
@@ -28,19 +31,19 @@ use num_complex::Complex64;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::specialized::notch_filter;
+/// use scirs2__signal::filter::specialized::notch_filter;
 ///
 /// // Remove 60 Hz interference from signal sampled at 1000 Hz
 /// // Normalized frequency = 60 / (1000/2) = 0.12
 /// let (b, a) = notch_filter(0.12, 35.0).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn notch_filter(notch_freq: f64, quality_factor: f64) -> SignalResult<FilterCoefficients> {
-    validate_cutoff_frequency(notch_freq)?;
+pub fn notch_filter(_notch_freq: f64, quality_factor: f64) -> SignalResult<FilterCoefficients> {
+    validate_cutoff_frequency(_notch_freq)?;
 
     if quality_factor <= 0.0 {
         return Err(SignalError::ValueError(
-            "Quality factor must be positive".to_string(),
+            "Quality _factor must be positive".to_string(),
         ));
     }
 
@@ -87,7 +90,7 @@ pub fn notch_filter(notch_freq: f64, quality_factor: f64) -> SignalResult<Filter
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::specialized::comb_filter;
+/// use scirs2__signal::filter::specialized::comb_filter;
 ///
 /// // Create echo effect with 100-sample delay
 /// let (b, a) = comb_filter(100, 0.5, 1.0).unwrap();
@@ -109,13 +112,13 @@ pub fn comb_filter(
 
     if feedback_gain.abs() >= 1.0 {
         return Err(SignalError::ValueError(
-            "Feedback gain must be between -1 and 1 for stability".to_string(),
+            "Feedback _gain must be between -1 and 1 for stability".to_string(),
         ));
     }
 
     if !(0.0..=1.0).contains(&feedforward_gain) {
         return Err(SignalError::ValueError(
-            "Feedforward gain must be between 0 and 1".to_string(),
+            "Feedforward _gain must be between 0 and 1".to_string(),
         ));
     }
 
@@ -153,18 +156,18 @@ pub fn comb_filter(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::specialized::allpass_filter;
+/// use scirs2__signal::filter::specialized::allpass_filter;
 ///
 /// // Create allpass filter with 90-degree phase shift around 0.2 normalized frequency
 /// let (b, a) = allpass_filter(0.2, 0.9).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn allpass_filter(pole_frequency: f64, pole_radius: f64) -> SignalResult<FilterCoefficients> {
-    validate_cutoff_frequency(pole_frequency)?;
+pub fn allpass_filter(_pole_frequency: f64, pole_radius: f64) -> SignalResult<FilterCoefficients> {
+    validate_cutoff_frequency(_pole_frequency)?;
 
     if !(0.0..1.0).contains(&pole_radius) {
         return Err(SignalError::ValueError(
-            "Pole radius must be between 0 and 1".to_string(),
+            "Pole _radius must be between 0 and 1".to_string(),
         ));
     }
 
@@ -208,7 +211,7 @@ pub fn allpass_second_order(
 
     if !(0.0..1.0).contains(&pole_radius) {
         return Err(SignalError::ValueError(
-            "Pole radius must be between 0 and 1".to_string(),
+            "Pole _radius must be between 0 and 1".to_string(),
         ));
     }
 
@@ -246,22 +249,22 @@ pub fn allpass_second_order(
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::specialized::hilbert_filter;
+/// use scirs2__signal::filter::specialized::hilbert_filter;
 ///
 /// // Design 65-tap Hilbert transformer
 /// let h = hilbert_filter(65).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn hilbert_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
-    if num_taps < 3 {
+pub fn hilbert_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
+    if _num_taps < 3 {
         return Err(SignalError::ValueError(
-            "Number of taps must be at least 3".to_string(),
+            "Number of _taps must be at least 3".to_string(),
         ));
     }
 
     if num_taps % 2 == 0 {
         return Err(SignalError::ValueError(
-            "Number of taps should be odd for linear phase".to_string(),
+            "Number of _taps should be odd for linear phase".to_string(),
         ));
     }
 
@@ -310,22 +313,22 @@ pub fn hilbert_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::specialized::differentiator_filter;
+/// use scirs2__signal::filter::specialized::differentiator_filter;
 ///
 /// // Design 21-tap differentiator
 /// let h = differentiator_filter(21).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn differentiator_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
-    if num_taps < 3 {
+pub fn differentiator_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
+    if _num_taps < 3 {
         return Err(SignalError::ValueError(
-            "Number of taps must be at least 3".to_string(),
+            "Number of _taps must be at least 3".to_string(),
         ));
     }
 
     if num_taps % 2 == 0 {
         return Err(SignalError::ValueError(
-            "Number of taps should be odd for linear phase".to_string(),
+            "Number of _taps should be odd for linear phase".to_string(),
         ));
     }
 
@@ -368,16 +371,16 @@ pub fn differentiator_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::specialized::integrator_filter;
+/// use scirs2__signal::filter::specialized::integrator_filter;
 ///
 /// // Design 21-tap integrator
 /// let h = integrator_filter(21).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn integrator_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
-    if num_taps < 3 {
+pub fn integrator_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
+    if _num_taps < 3 {
         return Err(SignalError::ValueError(
-            "Number of taps must be at least 3".to_string(),
+            "Number of _taps must be at least 3".to_string(),
         ));
     }
 
@@ -407,20 +410,20 @@ pub fn integrator_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::specialized::fractional_delay_filter;
+/// use scirs2__signal::filter::specialized::fractional_delay_filter;
 ///
 /// // Design filter with 2.5 sample delay
 /// let h = fractional_delay_filter(2.5, 21).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn fractional_delay_filter(delay: f64, num_taps: usize) -> SignalResult<Vec<f64>> {
+pub fn fractional_delay_filter(_delay: f64, num_taps: usize) -> SignalResult<Vec<f64>> {
     if num_taps < 3 {
         return Err(SignalError::ValueError(
-            "Number of taps must be at least 3".to_string(),
+            "Number of _taps must be at least 3".to_string(),
         ));
     }
 
-    if delay < 0.0 {
+    if _delay < 0.0 {
         return Err(SignalError::ValueError(
             "Delay must be non-negative".to_string(),
         ));
@@ -429,10 +432,10 @@ pub fn fractional_delay_filter(delay: f64, num_taps: usize) -> SignalResult<Vec<
     let mut h = vec![0.0; num_taps];
     let center = (num_taps - 1) as f64 / 2.0;
 
-    // Use sinc interpolation for fractional delay
+    // Use sinc interpolation for fractional _delay
     for (i, item) in h.iter_mut().enumerate() {
         let n = i as f64 - center;
-        let shifted_n = n - delay;
+        let shifted_n = n - _delay;
 
         if shifted_n.abs() < 1e-10 {
             *item = 1.0; // sinc(0) = 1
@@ -468,16 +471,16 @@ pub fn fractional_delay_filter(delay: f64, num_taps: usize) -> SignalResult<Vec<
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::specialized::dc_blocker;
+/// use scirs2__signal::filter::specialized::dc_blocker;
 ///
 /// // Design DC blocker with very low cutoff
 /// let (b, a) = dc_blocker(0.995).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn dc_blocker(pole_location: f64) -> SignalResult<FilterCoefficients> {
-    if pole_location <= 0.0 || pole_location >= 1.0 {
+pub fn dc_blocker(_pole_location: f64) -> SignalResult<FilterCoefficients> {
+    if _pole_location <= 0.0 || _pole_location >= 1.0 {
         return Err(SignalError::ValueError(
-            "Pole location must be between 0 and 1".to_string(),
+            "Pole _location must be between 0 and 1".to_string(),
         ));
     }
 
@@ -506,7 +509,7 @@ pub fn dc_blocker(pole_location: f64) -> SignalResult<FilterCoefficients> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::filter::specialized::peak_filter;
+/// use scirs2__signal::filter::specialized::peak_filter;
 ///
 /// // Boost 6 dB at 0.3 normalized frequency with 1 octave bandwidth
 /// let (b, a) = peak_filter(0.3, 6.0, 1.0).unwrap();
@@ -545,4 +548,9 @@ pub fn peak_filter(
     let a = vec![1.0, a1 / a0, a2 / a0];
 
     Ok((b, a))
+}
+
+#[allow(dead_code)]
+fn tf(_num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
+    TransferFunction::new(_num, den)
 }

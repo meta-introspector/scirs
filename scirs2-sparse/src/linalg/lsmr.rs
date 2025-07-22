@@ -89,8 +89,8 @@ pub struct LSMRResult<T> {
 /// # Example
 ///
 /// ```rust
-/// use scirs2_sparse::csr_array::CsrArray;
-/// use scirs2_sparse::linalg::lsmr::{lsmr, LSMROptions};
+/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2__sparse::linalg::lsmr::{lsmr, LSMROptions};
 /// use ndarray::Array1;
 ///
 /// // Create an overdetermined system
@@ -358,12 +358,12 @@ where
 
 /// Helper function for matrix-vector multiplication
 #[allow(dead_code)]
-fn matrix_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+fn matrix_vector_multiply<T, S>(_matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (rows, cols) = matrix.shape();
+    let (rows, cols) = _matrix.shape();
     if x.len() != cols {
         return Err(SparseError::DimensionMismatch {
             expected: cols,
@@ -372,7 +372,7 @@ where
     }
 
     let mut result = Array1::zeros(rows);
-    let (row_indices, col_indices, values) = matrix.find();
+    let (row_indices, col_indices, values) = _matrix.find();
 
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[i] = result[i] + values[k] * x[j];
@@ -383,12 +383,12 @@ where
 
 /// Helper function for matrix transpose-vector multiplication
 #[allow(dead_code)]
-fn matrix_transpose_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+fn matrix_transpose_vector_multiply<T, S>(_matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (rows, cols) = matrix.shape();
+    let (rows, cols) = _matrix.shape();
     if x.len() != rows {
         return Err(SparseError::DimensionMismatch {
             expected: rows,
@@ -397,7 +397,7 @@ where
     }
 
     let mut result = Array1::zeros(cols);
-    let (row_indices, col_indices, values) = matrix.find();
+    let (row_indices, col_indices, values) = _matrix.find();
 
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[j] = result[j] + values[k] * x[i];
@@ -417,12 +417,12 @@ where
 
 /// Compute standard errors (simplified implementation)
 #[allow(dead_code)]
-fn compute_standard_errors<T, S>(matrix: &S, residual_norm: T, n: usize) -> SparseResult<Array1<T>>
+fn compute_standard_errors<T, S>(_matrix: &S, residual_norm: T, n: usize) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (m, _) = matrix.shape();
+    let (m_) = _matrix.shape();
 
     // Simplified standard error computation
     let variance = if m > n {
@@ -438,7 +438,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
     use approx::assert_relative_eq;
 
     #[test]

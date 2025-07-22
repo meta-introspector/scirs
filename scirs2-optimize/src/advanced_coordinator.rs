@@ -164,9 +164,9 @@ pub struct AdvancedState {
 }
 
 impl AdvancedState {
-    fn new(num_params: usize, num_strategies: usize) -> Self {
+    fn new(_num_params: usize, num_strategies: usize) -> Self {
         Self {
-            global_best_solution: Array1::zeros(num_params),
+            global_best_solution: Array1::zeros(_num_params),
             global_best_objective: f64::INFINITY,
             total_evaluations: 0,
             current_iteration: 0,
@@ -204,23 +204,23 @@ pub struct AdvancedCoordinator {
 
 impl AdvancedCoordinator {
     /// Create new Advanced Coordinator
-    pub fn new(config: AdvancedConfig, initial_params: &ArrayView1<f64>) -> Self {
+    pub fn new(_config: AdvancedConfig, initial_params: &ArrayView1<f64>) -> Self {
         let num_params = initial_params.len();
         let num_strategies = 3; // quantum, neuromorphic, meta-learning
         let state = AdvancedState::new(num_params, num_strategies);
 
         // Initialize optimizers based on configuration
-        let quantum_optimizer = if config.enable_quantum {
+        let quantum_optimizer = if _config.enable_quantum {
             Some(QuantumInspiredOptimizer::new(
                 initial_params,
-                config.max_nit,
+                _config.max_nit,
                 32, // quantum states
             ))
         } else {
             None
         };
 
-        let neuromorphic_optimizer = if config.enable_neuromorphic {
+        let neuromorphic_optimizer = if _config.enable_neuromorphic {
             let neuro_config = NeuromorphicConfig {
                 total_time: 10.0,
                 num_neurons: 200,
@@ -231,7 +231,7 @@ impl AdvancedCoordinator {
             None
         };
 
-        let meta_learning_optimizer = if config.enable_meta_learning {
+        let meta_learning_optimizer = if _config.enable_meta_learning {
             let meta_config = LearnedOptimizationConfig {
                 meta_training_episodes: 1000,
                 use_transformer: true,
@@ -244,7 +244,7 @@ impl AdvancedCoordinator {
         };
 
         Self {
-            config,
+            _config,
             state,
             quantum_optimizer,
             neuromorphic_optimizer,
@@ -710,15 +710,15 @@ impl AdvancedCoordinator {
         if improvement_rate < 0.001 {
             // Switch to more exploratory strategy
             self.config.strategy = match self.config.strategy {
-                AdvancedStrategy::AdaptiveSelection => AdvancedStrategy::QuantumNeuralFusion,
+                AdvancedStrategy::AdaptiveSelection =>, AdvancedStrategy::QuantumNeuralFusion,
                 AdvancedStrategy::QuantumNeuralFusion => {
                     AdvancedStrategy::NeuromorphicQuantumHybrid
                 }
                 AdvancedStrategy::NeuromorphicQuantumHybrid => {
                     AdvancedStrategy::MetaLearningQuantum
                 }
-                AdvancedStrategy::MetaLearningQuantum => AdvancedStrategy::FullAdvanced,
-                AdvancedStrategy::FullAdvanced => AdvancedStrategy::AdaptiveSelection,
+                AdvancedStrategy::MetaLearningQuantum =>, AdvancedStrategy::FullAdvanced,
+                AdvancedStrategy::FullAdvanced =>, AdvancedStrategy::AdaptiveSelection,
             };
         }
 
@@ -813,8 +813,8 @@ struct CrossModalFusionEngine {
 }
 
 impl CrossModalFusionEngine {
-    fn new(num_params: usize) -> Self {
-        Self { num_params }
+    fn new(_num_params: usize) -> Self {
+        Self { _num_params }
     }
 
     fn fuse_solutions(

@@ -529,14 +529,14 @@ pub struct Alert {
 
 impl PerformanceRegressionDetector {
     /// Create a new performance regression detector
-    pub fn new(config: RegressionConfig) -> Result<Self> {
-        let historical_data = PerformanceDatabase::new(config.max_history_size)?;
+    pub fn new(_config: RegressionConfig) -> Result<Self> {
+        let historical_data = PerformanceDatabase::new(_config.max_history_size)?;
         let statistical_analyzer = StatisticalAnalyzer::new(StatisticalConfig::default());
         let regression_analyzer = RegressionAnalyzer::new(RegressionAnalysisConfig::default());
         let alert_system = AlertSystem::new(AlertConfig::default());
 
         Ok(Self {
-            config,
+            _config,
             historical_data,
             statistical_analyzer,
             regression_analyzer,
@@ -678,10 +678,9 @@ impl PerformanceRegressionDetector {
                     RegressionType::AbruptRegression
                 }
             }
-            MetricType::ExecutionTime => RegressionType::IncreasedLatency,
-            MetricType::Throughput => RegressionType::ReducedThroughput,
-            MetricType::ErrorRate => RegressionType::IncreasedErrorRate,
-            _ => {
+            MetricType::ExecutionTime =>, RegressionType::IncreasedLatency,
+            MetricType::Throughput =>, RegressionType::ReducedThroughput,
+            MetricType::ErrorRate =>, RegressionType::IncreasedErrorRate_ => {
                 if self.is_gradual_change(values) {
                     RegressionType::GradualRegression
                 } else {
@@ -927,8 +926,7 @@ impl PerformanceRegressionDetector {
         match severity {
             s if s >= 0.9 => AlertSeverity::Critical,
             s if s >= 0.7 => AlertSeverity::High,
-            s if s >= 0.5 => AlertSeverity::Medium,
-            _ => AlertSeverity::Low,
+            s if s >= 0.5 => AlertSeverity::Medium_ =>, AlertSeverity::Low,
         }
     }
 
@@ -1275,9 +1273,9 @@ impl std::fmt::Display for MetricType {
 // Implementation stubs for supporting types
 
 impl PerformanceDatabase {
-    fn new(max_size: usize) -> Result<Self> {
+    fn new(_max_size: usize) -> Result<Self> {
         Ok(Self {
-            measurements: VecDeque::with_capacity(max_size),
+            measurements: VecDeque::with_capacity(_max_size),
             trends: HashMap::new(),
             baselines: HashMap::new(),
             metadata: DatabaseMetadata {
@@ -1325,8 +1323,8 @@ impl PerformanceDatabase {
 }
 
 impl StatisticalAnalyzer {
-    fn new(config: StatisticalConfig) -> Self {
-        Self { config }
+    fn new(_config: StatisticalConfig) -> Self {
+        Self { _config }
     }
 
     fn perform_regression_test(
@@ -1352,10 +1350,7 @@ impl StatisticalAnalyzer {
     }
 
     fn calculate_p_value(
-        &self,
-        _values: &[f64],
-        _baseline: Option<&MetricValue>,
-        _test_type: &StatisticalTest,
+        &self_values: &[f64], _baseline: Option<&MetricValue>, _test_type: &StatisticalTest,
     ) -> f64 {
         // Simplified - would implement actual statistical tests
         0.05
@@ -1391,18 +1386,18 @@ impl StatisticalAnalyzer {
 }
 
 impl RegressionAnalyzer {
-    fn new(config: RegressionAnalysisConfig) -> Self {
+    fn new(_config: RegressionAnalysisConfig) -> Self {
         Self {
             current_results: Vec::new(),
-            config,
+            _config,
         }
     }
 }
 
 impl AlertSystem {
-    fn new(config: AlertConfig) -> Self {
+    fn new(_config: AlertConfig) -> Self {
         Self {
-            config,
+            _config,
             alert_history: VecDeque::new(),
         }
     }
@@ -1620,7 +1615,7 @@ mod tests {
     #[test]
     fn test_regression_type_classification() {
         let config = RegressionConfig::default();
-        let detector = PerformanceRegressionDetector::new(config).unwrap();
+        let detector = PerformanceRegressionDetector::new(_config).unwrap();
 
         // Memory leak pattern (monotonic increase)
         let memory_leak_values = vec![100.0, 105.0, 110.0, 115.0, 120.0];
@@ -1679,8 +1674,7 @@ impl std::hash::Hash for MetricType {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
-            MetricType::Custom(name) => name.hash(state),
-            _ => {}
+            MetricType::Custom(name) => name.hash(state, _ => {}
         }
     }
 }
@@ -1688,8 +1682,7 @@ impl std::hash::Hash for MetricType {
 impl PartialEq for MetricType {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (MetricType::Custom(a), MetricType::Custom(b)) => a == b,
-            _ => std::mem::discriminant(self) == std::mem::discriminant(other),
+            (MetricType::Custom(a), MetricType::Custom(b)) => a == b_ =>, std::mem::discriminant(self) == std::mem::discriminant(other),
         }
     }
 }

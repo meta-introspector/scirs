@@ -124,11 +124,10 @@ pub struct ProgressionRecord<T: Float> {
 
 impl<T: Float + Send + Sync + std::iter::Sum> ProgressiveNAS<T> {
     /// Create new progressive NAS
-    pub fn new(config: &NASConfig<T>) -> Result<Self> {
-        let progression_strategy = match config.search_budget {
+    pub fn new(_config: &NASConfig<T>) -> Result<Self> {
+        let progression_strategy = match _config.search_budget {
             budget if budget < 50 => ProgressionStrategy::TimeBased(Duration::from_secs(300)),
-            budget if budget < 200 => ProgressionStrategy::BudgetBased(budget / 4),
-            _ => ProgressionStrategy::Adaptive,
+            budget if budget < 200 => ProgressionStrategy::BudgetBased(budget / 4, _ =>, ProgressionStrategy::Adaptive,
         };
 
         Ok(Self {
@@ -147,8 +146,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> ProgressiveNAS<T> {
                 self.current_phase = match phase_index {
                     0 => SearchPhase::Initial,
                     1 => SearchPhase::Intermediate,
-                    2 => SearchPhase::Advanced,
-                    _ => SearchPhase::Final,
+                    2 => SearchPhase::Advanced_ =>, SearchPhase::Final,
                 };
             }
             ProgressionStrategy::Adaptive => {
@@ -171,8 +169,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> ProgressiveNAS<T> {
                 self.current_phase = match phases_elapsed {
                     0 => SearchPhase::Initial,
                     1 => SearchPhase::Intermediate,
-                    2 => SearchPhase::Advanced,
-                    _ => SearchPhase::Final,
+                    2 => SearchPhase::Advanced_ =>, SearchPhase::Final,
                 };
             }
             ProgressionStrategy::PerformanceBased(threshold) => {
@@ -194,10 +191,10 @@ impl<T: Float + Send + Sync + std::iter::Sum> ProgressiveNAS<T> {
     /// Advance to next phase
     fn advance_phase(&mut self) {
         self.current_phase = match self.current_phase {
-            SearchPhase::Initial => SearchPhase::Intermediate,
-            SearchPhase::Intermediate => SearchPhase::Advanced,
-            SearchPhase::Advanced => SearchPhase::Final,
-            SearchPhase::Final => SearchPhase::Final,
+            SearchPhase::Initial =>, SearchPhase::Intermediate,
+            SearchPhase::Intermediate =>, SearchPhase::Advanced,
+            SearchPhase::Advanced =>, SearchPhase::Final,
+            SearchPhase::Final =>, SearchPhase::Final,
         };
     }
 
@@ -222,7 +219,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> ProgressiveNAS<T> {
         let sum_x2 = recent_trends
             .iter()
             .enumerate()
-            .map(|(i, _)| T::from(i * i).unwrap())
+            .map(|(i_)| T::from(i * i).unwrap())
             .sum::<T>();
 
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
@@ -347,10 +344,10 @@ impl<T: Float + Send + Sync> ComplexityScheduler<T> {
         match self.strategy {
             SchedulingStrategy::Linear => {
                 let phase_factor = match phase {
-                    SearchPhase::Initial => T::from(0.25).unwrap(),
-                    SearchPhase::Intermediate => T::from(0.5).unwrap(),
-                    SearchPhase::Advanced => T::from(0.75).unwrap(),
-                    SearchPhase::Final => T::one(),
+                    SearchPhase::Initial =>, T::from(0.25).unwrap(),
+                    SearchPhase::Intermediate =>, T::from(0.5).unwrap(),
+                    SearchPhase::Advanced =>, T::from(0.75).unwrap(),
+                    SearchPhase::Final =>, T::one(),
                 };
                 self.current_complexity = self.max_complexity * phase_factor;
             }

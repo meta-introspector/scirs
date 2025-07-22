@@ -50,7 +50,7 @@ impl AdaptiveController {
     }
 
     /// Calculate the next optimal update interval
-    pub fn next_interval(&self, current_progress: f64) -> Duration {
+    pub fn calculate_interval(&self, current_progress: f64) -> Duration {
         // Base interval from target frequency
         let base_interval = Duration::from_secs_f64(1.0 / self.target_frequency);
 

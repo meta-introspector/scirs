@@ -8,9 +8,9 @@
 //! Build with: cargo run --example autodiff_jacobian --features autodiff
 
 use ndarray::{array, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::utils::jacobian::{is_autodiff_available, JacobianStrategy};
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions, ODEResult};
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::utils::jacobian::{is_autodiff_available, JacobianStrategy};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions, ODEResult};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -110,9 +110,9 @@ fn main() -> IntegrateResult<()> {
     if results.len() > 1 {
         println!("\nEfficiency comparison (relative to finite difference):");
 
-        let base_time = if let Some((_, time, _)) = results
+        let base_time = if let Some((_, time_)) = results
             .iter()
-            .find(|(name, _, _)| *name == "Finite Difference")
+            .find(|(name__)| *name == "Finite Difference")
         {
             *time
         } else {
@@ -143,27 +143,27 @@ fn main() -> IntegrateResult<()> {
 
 // Helper function for comparing solutions
 #[allow(dead_code)]
-fn solution_diff(res1: &ODEResult<f64>, res2: &ODEResult<f64>) -> f64 {
+fn solution_diff(_res1: &ODEResult<f64>, res2: &ODEResult<f64>) -> f64 {
     // Find common time points to compare
     let mut max_diff: f64 = 0.0;
 
     // Sample a few points for comparison
     let sample_times = [
-        res1.t[0],
-        res1.t[res1.t.len() / 4],
-        res1.t[res1.t.len() / 2],
-        res1.t[3 * res1.t.len() / 4],
-        *res1.t.last().unwrap(),
+        _res1.t[0],
+        _res1.t[_res1.t.len() / 4],
+        _res1.t[_res1.t.len() / 2],
+        _res1.t[3 * _res1.t.len() / 4],
+        *_res1.t.last().unwrap(),
     ];
 
     for &t in &sample_times {
         // Find closest points in each solution
-        let idx1 = res1
+        let idx1 = _res1
             .t
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| (t - **a).abs().partial_cmp(&(t - **b).abs()).unwrap())
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap();
 
         let idx2 = res2
@@ -171,11 +171,11 @@ fn solution_diff(res1: &ODEResult<f64>, res2: &ODEResult<f64>) -> f64 {
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| (t - **a).abs().partial_cmp(&(t - **b).abs()).unwrap())
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap();
 
         // Compute difference
-        let y1 = &res1.y[idx1];
+        let y1 = &_res1.y[idx1];
         let y2 = &res2.y[idx2];
 
         let diff = (0..y1.len())

@@ -30,7 +30,7 @@ where
     let (height, width) = input.dim();
     let mut output = Array::zeros((height, width));
 
-    // Pre-compute sampling points in a circle
+    // Pre-compute sampling _points in a circle
     let sampling_points = compute_circle_sampling_points(radius, n_points)?;
 
     // Process in SIMD-friendly chunks
@@ -235,11 +235,11 @@ where
 /// Computes spatial moments up to specified order using vectorized operations
 /// for efficient shape analysis and feature extraction.
 #[allow(dead_code)]
-pub fn simd_image_moments<T>(input: ArrayView2<T>, max_order: usize) -> NdimageResult<Array<T, Ix2>>
+pub fn simd_image_moments<T>(_input: ArrayView2<T>, max_order: usize) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
-    let (height, width) = input.dim();
+    let (height, width) = _input.dim();
     let total_orders = (max_order + 1) * (max_order + 1);
     let mut moments = Array::zeros((max_order + 1, max_order + 1));
 
@@ -269,10 +269,10 @@ where
             // Process rows with SIMD
             for y in 0..height {
                 let y_power = y_powers[(j, y)];
-                let input_row = input.slice(s![y, ..]);
+                let input_row = _input.slice(s![y, ..]);
                 let x_power_row = x_powers.slice(s![i, ..]);
 
-                // SIMD dot product of (input * x_power) * y_power
+                // SIMD dot product of (_input * x_power) * y_power
                 let simd_width = T::simd_width();
                 let num_chunks = width / simd_width;
 
@@ -327,7 +327,7 @@ where
 
     let mut output = Array::zeros((height, width));
 
-    // Pre-compute structuring element offsets for faster access
+    // Pre-compute structuring _element offsets for faster access
     let se_offsets: Vec<(isize, isize)> = structuring_element
         .indexed_iter()
         .filter_map(|((y, x), &active)| {
@@ -360,7 +360,7 @@ where
                     MorphologicalOperation::Dilation => vec![T::neg_infinity(); simd_width],
                 };
 
-                // Apply structuring element
+                // Apply structuring _element
                 for &(dy, dx) in &se_offsets {
                     let ny = y as isize + dy;
                     let nx_base = x as isize + dx;
@@ -396,8 +396,8 @@ where
             // Handle remaining pixels
             while x < width {
                 let mut result_value = match operation {
-                    MorphologicalOperation::Erosion => T::infinity(),
-                    MorphologicalOperation::Dilation => T::neg_infinity(),
+                    MorphologicalOperation::Erosion =>, T::infinity(),
+                    MorphologicalOperation::Dilation =>, T::neg_infinity(),
                 };
 
                 for &(dy, dx) in &se_offsets {
@@ -440,25 +440,25 @@ fn compute_circle_sampling_points(
     radius: usize,
     n_points: usize,
 ) -> NdimageResult<Vec<(f64, f64)>> {
-    let mut points = Vec::with_capacity(n_points);
+    let mut _points = Vec::with_capacity(n_points);
     let radius_f = radius as f64;
 
     for i in 0..n_points {
         let angle = 2.0 * std::f64::consts::PI * i as f64 / n_points as f64;
         let dx = radius_f * angle.cos();
         let dy = radius_f * angle.sin();
-        points.push((dx, dy));
+        _points.push((dx, dy));
     }
 
-    Ok(points)
+    Ok(_points)
 }
 
 #[allow(dead_code)]
-fn bilinear_interpolate<T>(input: &ArrayView2<T>, x: f64, y: f64) -> NdimageResult<T>
+fn bilinear_interpolate<T>(_input: &ArrayView2<T>, x: f64, y: f64) -> NdimageResult<T>
 where
     T: Float + FromPrimitive,
 {
-    let (height, width) = input.dim();
+    let (height, width) = _input.dim();
 
     let x0 = x.floor() as usize;
     let y0 = y.floor() as usize;
@@ -469,10 +469,10 @@ where
     let dy = T::from_f64(y - y0 as f64).unwrap_or(T::zero());
 
     let one = T::one();
-    let v00 = input[(y0, x0)];
-    let v01 = input[(y0, x1)];
-    let v10 = input[(y1, x0)];
-    let v11 = input[(y1, x1)];
+    let v00 = _input[(y0, x0)];
+    let v01 = _input[(y0, x1)];
+    let v10 = _input[(y1, x0)];
+    let v11 = _input[(y1, x1)];
 
     let interpolated = v00 * (one - dx) * (one - dy)
         + v01 * dx * (one - dy)
@@ -483,11 +483,11 @@ where
 }
 
 #[allow(dead_code)]
-fn get_gradient_kernels<T>(operator: GradientOperator) -> NdimageResult<(Vec<T>, Vec<T>)>
+fn get_gradient_kernels<T>(_operator: GradientOperator) -> NdimageResult<(Vec<T>, Vec<T>)>
 where
     T: Float + FromPrimitive,
 {
-    let kernel_x = match operator {
+    let kernel_x = match _operator {
         GradientOperator::Sobel => vec![
             T::from_f64(-1.0).unwrap(),
             T::from_f64(0.0).unwrap(),
@@ -505,7 +505,7 @@ where
         ],
     };
 
-    let kernel_y = match operator {
+    let kernel_y = match _operator {
         GradientOperator::Sobel => vec![
             T::from_f64(1.0).unwrap(),
             T::from_f64(2.0).unwrap(),
@@ -541,9 +541,9 @@ where
     let mut output = Array::zeros((height, width));
 
     // Simplified convolution (would be replaced with optimized version)
-    for y in 0..height {
-        for x in 0..width {
-            output[(y, x)] = input[(y, x)]; // Placeholder
+    for _y in 0..height {
+        for _x in 0..width {
+            output[(_y, _x)] = input[(_y, _x)]; // Placeholder
         }
     }
 
@@ -551,24 +551,24 @@ where
 }
 
 #[allow(dead_code)]
-fn find_min_max_simd<T>(data: &[T]) -> NdimageResult<(T, T)>
+fn find_min_max_simd<T>(_data: &[T]) -> NdimageResult<(T, T)>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps + PartialOrd,
 {
-    if data.is_empty() {
+    if _data.is_empty() {
         return Err(NdimageError::InvalidInput("Empty array".to_string()));
     }
 
     let simd_width = T::simd_width();
-    let num_chunks = data.len() / simd_width;
+    let num_chunks = _data.len() / simd_width;
 
-    let mut min_val = data[0];
-    let mut max_val = data[0];
+    let mut min_val = _data[0];
+    let mut max_val = _data[0];
 
     // Process SIMD chunks
     for chunk_idx in 0..num_chunks {
         let start_idx = chunk_idx * simd_width;
-        let chunk = &data[start_idx..start_idx + simd_width];
+        let chunk = &_data[start_idx..start_idx + simd_width];
 
         let chunk_min = T::simd_min_reduce(chunk);
         let chunk_max = T::simd_max_reduce(chunk);
@@ -582,7 +582,7 @@ where
     }
 
     // Handle remaining elements
-    for &value in &data[(num_chunks * simd_width)..] {
+    for &value in &_data[(num_chunks * simd_width)..] {
         if value < min_val {
             min_val = value;
         }

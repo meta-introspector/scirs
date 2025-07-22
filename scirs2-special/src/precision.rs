@@ -383,17 +383,17 @@ pub mod extreme {
 /// Error analysis and precision estimation utilities
 pub mod error_analysis {
     /// Estimate the relative error in a computation
-    pub fn relative_error(computed: f64, exact: f64) -> f64 {
+    pub fn relative_error(_computed: f64, exact: f64) -> f64 {
         if exact == 0.0 {
-            computed.abs()
+            _computed.abs()
         } else {
-            ((computed - exact) / exact).abs()
+            ((_computed - exact) / exact).abs()
         }
     }
 
     /// Estimate the number of accurate decimal digits
-    pub fn accurate_digits(computed: f64, exact: f64) -> u32 {
-        let rel_err = relative_error(computed, exact);
+    pub fn accurate_digits(_computed: f64, exact: f64) -> u32 {
+        let rel_err = relative_error(_computed, exact);
         if rel_err == 0.0 {
             16 // Maximum for f64
         } else {
@@ -402,8 +402,8 @@ pub mod error_analysis {
     }
 
     /// Check if a result meets the required precision threshold
-    pub fn check_precision(computed: f64, exact: f64, required_digits: u32) -> bool {
-        accurate_digits(computed, exact) >= required_digits
+    pub fn check_precision(_computed: f64, exact: f64, required_digits: u32) -> bool {
+        accurate_digits(_computed, exact) >= required_digits
     }
 }
 

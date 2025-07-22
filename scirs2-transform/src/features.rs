@@ -35,9 +35,9 @@ impl PolynomialFeatures {
     ///
     /// # Returns
     /// * A new PolynomialFeatures instance
-    pub fn new(degree: usize, interaction_only: bool, include_bias: bool) -> Self {
+    pub fn new(_degree: usize, interaction_only: bool, include_bias: bool) -> Self {
         PolynomialFeatures {
-            degree,
+            _degree,
             interaction_only,
             include_bias,
         }
@@ -67,7 +67,7 @@ impl PolynomialFeatures {
             }
             n
         } else {
-            // Number of polynomial features is equivalent to the number of terms
+            // Number of polynomial _features is equivalent to the number of terms
             // in a polynomial of degree `degree` in `n_features` variables
             let n = if self.include_bias { 1 } else { 0 };
             n + (0..=self.degree)
@@ -194,7 +194,7 @@ impl PolynomialFeatures {
                 result: &mut Array2<f64>,
                 col_idx: &mut usize,
             ) -> Result<()> {
-                if degree == 0 {
+                if _degree == 0 {
                     // Skip the bias term and individual features
                     let sum: usize = powers.iter().sum();
                     if sum >= 2 && sum <= max_degree {
@@ -231,14 +231,14 @@ impl PolynomialFeatures {
                 }
 
                 for j in start..powers.len() {
-                    // When interaction_only=true, only consider powers of 0 or 1
-                    let max_power = if interaction_only { 1 } else { degree };
+                    // When interaction_only=true, _only consider powers of 0 or 1
+                    let max_power = if interaction_only { 1 } else { _degree };
                     for p in 1..=max_power {
                         powers[j] += p;
                         generate_combinations(
                             powers,
                             j + 1,
-                            degree - p,
+                            _degree - p,
                             max_degree,
                             interaction_only,
                             array,
@@ -299,7 +299,7 @@ impl PolynomialFeatures {
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2_transform::features::binarize;
+/// use scirs2__transform::features::binarize;
 ///
 /// let data = array![[1.0, -1.0, 2.0],
 ///                   [2.0, 0.0, 0.0],
@@ -308,15 +308,15 @@ impl PolynomialFeatures {
 /// let binarized = binarize(&data, 0.0).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn binarize<S>(array: &ArrayBase<S, Ix2>, threshold: f64) -> Result<Array2<f64>>
+pub fn binarize<S>(_array: &ArrayBase<S, Ix2>, threshold: f64) -> Result<Array2<f64>>
 where
     S: Data,
     S::Elem: Float + NumCast,
 {
     // Enhanced input validation
-    if array.is_empty() {
+    if _array.is_empty() {
         return Err(TransformError::InvalidInput(
-            "Input array cannot be empty".to_string(),
+            "Input _array cannot be empty".to_string(),
         ));
     }
 
@@ -326,20 +326,20 @@ where
         ));
     }
 
-    let array_f64 = array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
+    let array_f64 = _array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
 
     // Validate for NaN or infinite values
     for &val in array_f64.iter() {
         if !val.is_finite() {
             return Err(TransformError::DataValidationError(
-                "Input array contains non-finite values (NaN or infinity)".to_string(),
+                "Input _array contains non-finite values (NaN or infinity)".to_string(),
             ));
         }
     }
 
     if !array_f64.is_standard_layout() {
         return Err(TransformError::InvalidInput(
-            "Input array must be in standard memory layout".to_string(),
+            "Input _array must be in standard memory layout".to_string(),
         ));
     }
 
@@ -396,7 +396,7 @@ where
     let shape = array_f64.shape();
     let n_features = if axis == 0 { shape[1] } else { shape[0] };
 
-    let mut quantiles = Array2::zeros((n_features, n_quantiles));
+    let mut _quantiles = Array2::zeros((n_features, n_quantiles));
 
     for i in 0..n_features {
         // Extract the data along the given axis
@@ -409,15 +409,15 @@ where
         let mut sorted_data = data.clone();
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Compute quantiles
+        // Compute _quantiles
         for j in 0..n_quantiles {
             let q = j as f64 / (n_quantiles - 1) as f64;
             let idx = (q * (sorted_data.len() - 1) as f64).round() as usize;
-            quantiles[[i, j]] = sorted_data[idx];
+            _quantiles[[i, j]] = sorted_data[idx];
         }
     }
 
-    Ok(quantiles)
+    Ok(_quantiles)
 }
 
 /// Discretizes features using equal-width bins
@@ -692,7 +692,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_transform::features::power_transform;
+/// use scirs2__transform::features::power_transform;
 ///
 /// let data = array![[1.0, 2.0, 3.0],
 ///                   [4.0, 5.0, 6.0],
@@ -791,17 +791,17 @@ where
 
 /// Estimate optimal lambda parameter using maximum likelihood estimation
 #[allow(dead_code)]
-fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
-    if data.is_empty() {
+fn estimate_optimal_lambda(_data: &[f64], method: &str) -> Result<f64> {
+    if _data.is_empty() {
         return Err(TransformError::InvalidInput(
-            "Empty data for lambda estimation".to_string(),
+            "Empty _data for lambda estimation".to_string(),
         ));
     }
 
-    // Check data constraints based on transformation method
+    // Check _data constraints based on transformation method
     if method == "box-cox" {
         // Box-Cox requires all positive values
-        if data.iter().any(|&x| x <= 0.0) {
+        if _data.iter().any(|&x| x <= 0.0) {
             return Err(TransformError::InvalidInput(
                 "Box-Cox transformation requires all positive values".to_string(),
             ));
@@ -816,7 +816,7 @@ fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
 
     // Grid search for optimal lambda
     for &lambda in &lambda_range {
-        let log_likelihood = compute_log_likelihood(data, lambda, method)?;
+        let log_likelihood = compute_log_likelihood(_data, lambda, method)?;
 
         if log_likelihood > best_log_likelihood {
             best_log_likelihood = log_likelihood;
@@ -827,7 +827,7 @@ fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
     // Refine with golden section search around the best point
     let tolerance = 1e-6;
     let refined_lambda = golden_section_search(
-        data,
+        _data,
         method,
         best_lambda - 0.5,
         best_lambda + 0.5,
@@ -839,13 +839,13 @@ fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
 
 /// Compute log-likelihood for given lambda parameter
 #[allow(dead_code)]
-fn compute_log_likelihood(data: &[f64], lambda: f64, method: &str) -> Result<f64> {
-    let n = data.len() as f64;
-    let mut transformed_data = Vec::with_capacity(data.len());
+fn compute_log_likelihood(_data: &[f64], lambda: f64, method: &str) -> Result<f64> {
+    let n = _data.len() as f64;
+    let mut transformed_data = Vec::with_capacity(_data.len());
     let mut jacobian_sum = 0.0;
 
     // Apply transformation and compute Jacobian
-    for &x in data {
+    for &x in _data {
         let (y, jacobian) = match method {
             "box-cox" => {
                 if x <= 0.0 {
@@ -892,7 +892,7 @@ fn compute_log_likelihood(data: &[f64], lambda: f64, method: &str) -> Result<f64
         jacobian_sum += jacobian;
     }
 
-    // Compute sample variance of transformed data
+    // Compute sample variance of transformed _data
     let mean = transformed_data.iter().sum::<f64>() / n;
     let variance = transformed_data
         .iter()
@@ -1015,15 +1015,15 @@ impl PowerTransformer {
     ///
     /// # Returns
     /// * A new PowerTransformer instance
-    pub fn new(method: &str, standardize: bool) -> Result<Self> {
-        if method != "yeo-johnson" && method != "box-cox" {
+    pub fn new(_method: &str, standardize: bool) -> Result<Self> {
+        if _method != "yeo-johnson" && _method != "box-cox" {
             return Err(TransformError::InvalidInput(
-                "method must be 'yeo-johnson' or 'box-cox'".to_string(),
+                "_method must be 'yeo-johnson' or 'box-cox'".to_string(),
             ));
         }
 
         Ok(PowerTransformer {
-            method: method.to_string(),
+            _method: _method.to_string(),
             standardize,
             lambdas_: None,
             means_: None,
@@ -1034,10 +1034,10 @@ impl PowerTransformer {
 
     /// Creates a new PowerTransformer with Yeo-Johnson method
     #[allow(dead_code)]
-    pub fn yeo_johnson(standardize: bool) -> Self {
+    pub fn yeo_johnson(_standardize: bool) -> Self {
         PowerTransformer {
             method: "yeo-johnson".to_string(),
-            standardize,
+            _standardize,
             lambdas_: None,
             means_: None,
             stds_: None,
@@ -1047,10 +1047,10 @@ impl PowerTransformer {
 
     /// Creates a new PowerTransformer with Box-Cox method
     #[allow(dead_code)]
-    pub fn box_cox(standardize: bool) -> Self {
+    pub fn box_cox(_standardize: bool) -> Self {
         PowerTransformer {
             method: "box-cox".to_string(),
-            standardize,
+            _standardize,
             lambdas_: None,
             means_: None,
             stds_: None,
@@ -1499,16 +1499,16 @@ fn box_cox_log_jacobian(x: f64, lambda: f64) -> f64 {
 /// # Returns
 /// * `Result<Array2<f64>>` - The log-transformed array
 #[allow(dead_code)]
-pub fn log_transform<S>(array: &ArrayBase<S, Ix2>, epsilon: f64) -> Result<Array2<f64>>
+pub fn log_transform<S>(_array: &ArrayBase<S, Ix2>, epsilon: f64) -> Result<Array2<f64>>
 where
     S: Data,
     S::Elem: Float + NumCast,
 {
-    let array_f64 = array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
+    let array_f64 = _array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
 
     if !array_f64.is_standard_layout() {
         return Err(TransformError::InvalidInput(
-            "Input array must be in standard memory layout".to_string(),
+            "Input _array must be in standard memory layout".to_string(),
         ));
     }
 

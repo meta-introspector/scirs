@@ -34,21 +34,21 @@ fn create_xor_dataset() -> (Array2<f32>, Array2<f32>) {
 }
 // Create a simple neural network model for the XOR problem
 #[allow(dead_code)]
-fn create_xor_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
+fn create_xor_model(_rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // Input layer with 2 neurons (XOR has 2 inputs)
-    let dense1 = Dense::new(2, 8, Some("relu"), rng)?;
+    let dense1 = Dense::new(2, 8, Some("relu"), _rng)?;
     model.add_layer(dense1);
     // Hidden layer
-    let dense2 = Dense::new(8, 4, Some("relu"), rng)?;
+    let dense2 = Dense::new(8, 4, Some("relu"), _rng)?;
     model.add_layer(dense2);
     // Output layer with 1 neuron (XOR has 1 output)
-    let dense3 = Dense::new(4, 1, Some("sigmoid"), rng)?;
+    let dense3 = Dense::new(4, 1, Some("sigmoid"), _rng)?;
     model.add_layer(dense3);
     Ok(model)
 // Evaluate model by printing predictions for the XOR problem
 #[allow(dead_code)]
-fn evaluate_model(model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>) -> Result<f32> {
+fn evaluate_model(_model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>) -> Result<f32> {
     let predictions = model.forward(&x.clone().into_dyn())?;
     let binary_thresh = 0.5;
     println!("\nModel predictions:");
@@ -99,10 +99,10 @@ fn main() -> Result<()> {
     Ok(())
 // Train with step decay learning rate scheduling
 #[allow(dead_code)]
-fn train_with_step_decay(rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f32>) -> Result<()> {
+fn train_with_step_decay(_rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f32>) -> Result<()> {
     println!("\n1. Training with Step Decay Learning Rate Scheduling");
     println!("--------------------------------------------------");
-    let mut model = create_xor_model(rng)?;
+    let mut model = create_xor_model(_rng)?;
     println!("Created model with {} layers", model.num_layers());
     // Setup loss function and optimizer with step decay scheduling
     let loss_fn = MeanSquaredError::new();
@@ -150,7 +150,7 @@ fn train_with_step_decay(rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f32>) -
     evaluate_model(&model, x, y)?;
 // Train with cosine annealing learning rate scheduling
 #[allow(dead_code)]
-fn train_with_cosine_annealing(rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f32>) -> Result<()> {
+fn train_with_cosine_annealing(_rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f32>) -> Result<()> {
     println!("\n2. Training with Cosine Annealing Learning Rate Scheduling");
     println!("--------------------------------------------------------");
     // Setup loss function and optimizer with cosine annealing scheduling

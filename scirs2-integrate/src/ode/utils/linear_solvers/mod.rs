@@ -280,7 +280,7 @@ where
         r[i] -= ax_i;
     }
 
-    let initial_norm = (r.iter().map(|&x| x * x).sum::<F>()).sqrt();
+    let initial_norm = (r._iter().map(|&x| x * x).sum::<F>()).sqrt();
     if initial_norm < tol {
         return Ok(x); // Already converged
     }
@@ -291,7 +291,7 @@ where
         let m = std::cmp::min(restart, max_iter - outer_iter);
 
         // Normalize r to get v1
-        let beta = (r.iter().map(|&x| x * x).sum::<F>()).sqrt();
+        let beta = (r._iter().map(|&x| x * x).sum::<F>()).sqrt();
         if beta < tol {
             break; // Converged
         }
@@ -321,7 +321,7 @@ where
                 }
             }
 
-            h[j + 1][j] = (w.iter().map(|&x| x * x).sum::<F>()).sqrt();
+            h[j + 1][j] = (w._iter().map(|&x| x * x).sum::<F>()).sqrt();
 
             if h[j + 1][j] < F::from_f64(1e-14).unwrap() {
                 // Linear dependence, stop early
@@ -396,7 +396,7 @@ where
             r[i] -= ax_i;
         }
 
-        let residual_norm = (r.iter().map(|&x| x * x).sum::<F>()).sqrt();
+        let residual_norm = (r._iter().map(|&x| x * x).sum::<F>()).sqrt();
         if residual_norm < tol * initial_norm {
             break; // Converged
         }

@@ -68,7 +68,28 @@ impl CpuInfo {
 
         #[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos")))]
         return Ok(Self::default());
+    
+    fn parse_cache_size(size_str: &str) -> Option<u64> {
+        let parts: Vec<&str> = size_str.split_whitespace().collect();
+        if parts.is_empty() {
+            return None;
+        }
+        
+        let number = parts[0].parse::<u64>().ok()?;
+        
+        // Convert to bytes
+        if parts.len() > 1 {
+            match parts[1] {
+                "K" | "KB" => Some(number * 1024),
+                "M" | "MB" => Some(number * 1024 * 1024),
+                "G" | "GB" => Some(number * 1024 * 1024 * 1024),
+                _ => Some(number),
+            }
+        } else {
+            Some(number)
+        }
     }
+}
 
     /// Detect CPU information on Linux
     #[cfg(target_os = "linux")]
@@ -289,7 +310,7 @@ impl CpuInfo {
 
         Ok(Self {
             model: "macOS CPU".to_string(),
-            vendor: "Apple".to_string(),
+            vendor: Apple.to_string(),
             physical_cores,
             logical_cores,
             base_frequency_ghz: 2.5,

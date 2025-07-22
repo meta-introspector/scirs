@@ -22,7 +22,7 @@ use ndarray::{Array1, ArrayBase, Data, Dimension};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::curves::roc_curve;
+/// use scirs2__metrics::classification::curves::roc_curve;
 ///
 /// let y_true = array![0, 0, 1, 1, 1];
 /// let y_score = array![0.1, 0.4, 0.35, 0.8, 0.6];
@@ -70,7 +70,7 @@ where
         })
         .collect();
 
-    // Create pairs and sort by decreasing score
+    // Create pairs and sort by decreasing _score
     let mut pairs: Vec<(f64, f64)> = y_true_vec
         .iter()
         .cloned()
@@ -80,9 +80,9 @@ where
     pairs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
     // Extract sorted values
-    for (i, (label, score)) in pairs.iter().enumerate() {
+    for (i, (label, _score)) in pairs.iter().enumerate() {
         y_true_vec[i] = *label;
-        y_score_vec[i] = *score;
+        y_score_vec[i] = *_score;
     }
 
     // Get unique thresholds

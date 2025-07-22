@@ -22,7 +22,7 @@
 //! - Memory-optimized track management
 
 use crate::error::{Result, VisionError};
-use crate::gpu_ops::GpuVisionContext;
+use crate::gpu__ops::GpuVisionContext;
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::VecDeque;
 use std::time::Instant;
@@ -115,16 +115,16 @@ pub struct KalmanFilter {
 
 impl KalmanFilter {
     /// Create a new Kalman filter for bounding box tracking
-    pub fn new_bbox_tracker(initial_bbox: &BoundingBox) -> Self {
+    pub fn new_bbox_tracker(_initial_bbox: &BoundingBox) -> Self {
         let state_dim = 8; // [x, y, vx, vy, w, h, vw, vh]
         let obs_dim = 4; // [x, y, w, h]
 
         // Initialize state with bounding box and zero velocities
         let mut state = Array1::zeros(state_dim);
-        state[0] = initial_bbox.x + initial_bbox.width / 2.0; // center x
-        state[1] = initial_bbox.y + initial_bbox.height / 2.0; // center y
-        state[4] = initial_bbox.width;
-        state[5] = initial_bbox.height;
+        state[0] = _initial_bbox.x + _initial_bbox.width / 2.0; // center x
+        state[1] = _initial_bbox.y + _initial_bbox.height / 2.0; // center y
+        state[4] = _initial_bbox.width;
+        state[5] = _initial_bbox.height;
 
         // State transition matrix (constant velocity model)
         let dt = 1.0; // time step
@@ -326,7 +326,7 @@ pub enum TrackState {
 
 impl Track {
     /// Create a new track
-    pub fn new(id: u32, initial_detection: &Detection) -> Self {
+    pub fn new(_id: u32, initial_detection: &Detection) -> Self {
         let kalman_filter = KalmanFilter::new_bbox_tracker(&initial_detection.bbox);
         let mut features = VecDeque::new();
 
@@ -335,7 +335,7 @@ impl Track {
         }
 
         Self {
-            id,
+            _id,
             kalman_filter,
             features,
             max_features: 10,
@@ -467,18 +467,18 @@ pub struct Detection {
 
 impl Detection {
     /// Create a new detection
-    pub fn new(bbox: BoundingBox) -> Self {
+    pub fn new(_bbox: BoundingBox) -> Self {
         Self {
-            bbox,
+            _bbox,
             feature: None,
             timestamp: Instant::now(),
         }
     }
 
     /// Create detection with appearance feature
-    pub fn with_feature(bbox: BoundingBox, feature: Array1<f32>) -> Self {
+    pub fn with_feature(_bbox: BoundingBox, feature: Array1<f32>) -> Self {
         Self {
-            bbox,
+            _bbox,
             feature: Some(feature),
             timestamp: Instant::now(),
         }
@@ -564,7 +564,7 @@ impl DeepSORT {
         };
 
         // Associate detections with tracks
-        let (matched_pairs, unmatched_detections, _unmatched_tracks) =
+        let (matched_pairs, unmatched_detections_unmatched_tracks) =
             self.associate_detections_to_tracks(&detections_with_features)?;
 
         // Update matched tracks
@@ -721,9 +721,9 @@ pub struct AppearanceExtractor {
 
 impl AppearanceExtractor {
     /// Create a new appearance extractor
-    pub fn new(feature_dim: usize) -> Self {
+    pub fn new(_feature_dim: usize) -> Self {
         Self {
-            feature_dim,
+            _feature_dim,
             gpu_context: GpuVisionContext::new().ok(),
         }
     }
@@ -807,7 +807,7 @@ impl AppearanceExtractor {
         // In practice, this would use a pre-trained network
 
         // Apply Gaussian blur as feature preprocessing
-        let blurred = crate::gpu_ops::gpu_gaussian_blur(gpu_ctx, image, 1.0)?;
+        let blurred = crate::gpu__ops::gpu_gaussian_blur(gpu_ctx, image, 1.0)?;
 
         // Downsample to fixed size
         let downsampled = self.downsample_gpu(gpu_ctx, &blurred.view())?;
@@ -834,8 +834,7 @@ impl AppearanceExtractor {
 
     /// GPU downsampling
     fn downsample_gpu(
-        &self,
-        _gpu_ctx: &GpuVisionContext,
+        &self, _gpu_ctx: &GpuVisionContext,
         image: &ArrayView2<f32>,
     ) -> Result<Array2<f32>> {
         // Simplified downsampling for demonstration

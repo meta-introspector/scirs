@@ -11,7 +11,7 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_series::features::complexity::*;
+//! use scirs2__series::features::complexity::*;
 //!
 //! let ts = Array1::from_vec(vec![1.0, 2.0, 1.5, 3.0, 2.5, 4.0, 3.5, 5.0]);
 //! let approx_entropy = calculate_approximate_entropy(&ts, 2, 0.1).unwrap();
@@ -45,17 +45,17 @@ use super::utils::{
 /// # Returns
 /// Approximate entropy value (higher values indicate more irregularity)
 #[allow(dead_code)]
-pub fn calculate_approximate_entropy<F>(ts: &Array1<F>, m: usize, r: F) -> Result<F>
+pub fn calculate_approximate_entropy<F>(_ts: &Array1<F>, m: usize, r: F) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if ts.len() < m + 1 {
+    if _ts.len() < m + 1 {
         return Err(TimeSeriesError::FeatureExtractionError(
             "Time series too short for approximate entropy calculation".to_string(),
         ));
     }
 
-    let n = ts.len();
+    let n = _ts.len();
 
     // Create embedding vectors
     let mut phi_m = F::zero();
@@ -70,8 +70,8 @@ where
             let mut is_match = true;
 
             for k in 0..m {
-                let x = *ts.get(i + k).unwrap();
-                let y = *ts.get(j + k).unwrap();
+                let x = *_ts.get(i + k).unwrap();
+                let y = *_ts.get(j + k).unwrap();
                 if (x - y).abs() > r {
                     is_match = false;
                     break;
@@ -97,8 +97,8 @@ where
             let mut is_match = true;
 
             for k in 0..m + 1 {
-                let x = *ts.get(i + k).unwrap();
-                let y = *ts.get(j + k).unwrap();
+                let x = *_ts.get(i + k).unwrap();
+                let y = *_ts.get(j + k).unwrap();
                 if (x - y).abs() > r {
                     is_match = false;
                     break;
@@ -132,17 +132,17 @@ where
 /// # Returns
 /// Sample entropy value (higher values indicate more irregularity)
 #[allow(dead_code)]
-pub fn calculate_sample_entropy<F>(ts: &Array1<F>, m: usize, r: F) -> Result<F>
+pub fn calculate_sample_entropy<F>(_ts: &Array1<F>, m: usize, r: F) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    if ts.len() < m + 2 {
+    if _ts.len() < m + 2 {
         return Err(TimeSeriesError::FeatureExtractionError(
             "Time series too short for sample entropy calculation".to_string(),
         ));
     }
 
-    let n = ts.len();
+    let n = _ts.len();
 
     // Count matches for m and m+1
     let mut a = F::zero(); // Number of template matches of length m+1
@@ -154,8 +154,8 @@ where
             let mut is_match_m = true;
 
             for k in 0..m {
-                let x = *ts.get(i + k).unwrap();
-                let y = *ts.get(j + k).unwrap();
+                let x = *_ts.get(i + k).unwrap();
+                let y = *_ts.get(j + k).unwrap();
                 if (x - y).abs() > r {
                     is_match_m = false;
                     break;
@@ -166,8 +166,8 @@ where
                 b = b + F::one();
 
                 // Check additional element for m+1
-                let x = *ts.get(i + m).unwrap();
-                let y = *ts.get(j + m).unwrap();
+                let x = *_ts.get(i + m).unwrap();
+                let y = *_ts.get(j + m).unwrap();
                 if (x - y).abs() <= r {
                     a = a + F::one();
                 }
@@ -204,11 +204,11 @@ where
 /// # Returns
 /// Permutation entropy value
 #[allow(dead_code)]
-pub fn calculate_permutation_entropy<F>(ts: &Array1<F>, order: usize) -> Result<F>
+pub fn calculate_permutation_entropy<F>(_ts: &Array1<F>, order: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < order {
         return Err(TimeSeriesError::InsufficientData {
             message: "Time series too short for permutation entropy".to_string(),
@@ -223,7 +223,7 @@ where
     // Generate all permutation patterns
     for i in 0..=(n - order) {
         let mut indices: Vec<usize> = (0..order).collect();
-        let window: Vec<F> = (0..order).map(|j| ts[i + j]).collect();
+        let window: Vec<F> = (0..order).map(|j| _ts[i + j]).collect();
 
         // Sort indices by corresponding values
         indices.sort_by(|&a, &b| {
@@ -261,13 +261,13 @@ where
 /// # Returns
 /// Normalized Lempel-Ziv complexity value
 #[allow(dead_code)]
-pub fn calculate_lempel_ziv_complexity<F>(ts: &Array1<F>) -> Result<F>
+pub fn calculate_lempel_ziv_complexity<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
     // Convert to binary sequence based on median
     let median = {
-        let mut sorted: Vec<F> = ts.iter().cloned().collect();
+        let mut sorted: Vec<F> = _ts.iter().cloned().collect();
         sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         let n = sorted.len();
         if n % 2 == 0 {
@@ -277,7 +277,7 @@ where
         }
     };
 
-    let binary_seq: Vec<u8> = ts
+    let binary_seq: Vec<u8> = _ts
         .iter()
         .map(|&x| if x >= median { 1 } else { 0 })
         .collect();
@@ -334,11 +334,11 @@ where
 /// # Returns
 /// Fractal dimension value
 #[allow(dead_code)]
-pub fn calculate_higuchi_fractal_dimension<F>(ts: &Array1<F>, k_max: usize) -> Result<F>
+pub fn calculate_higuchi_fractal_dimension<F>(_ts: &Array1<F>, k_max: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = ts.len();
+    let n = _ts.len();
     let mut log_k_vec = Vec::new();
     let mut log_l_vec = Vec::new();
 
@@ -361,7 +361,7 @@ where
                 let idx1 = m + i * k - 1;
                 let idx2 = m + (i - 1) * k - 1;
                 if idx1 < n && idx2 < n {
-                    l_mk = l_mk + (ts[idx1] - ts[idx2]).abs();
+                    l_mk = l_mk + (_ts[idx1] - _ts[idx2]).abs();
                 }
             }
 
@@ -409,16 +409,16 @@ where
 /// # Returns
 /// Hurst exponent value (typically between 0 and 1)
 #[allow(dead_code)]
-pub fn calculate_hurst_exponent<F>(ts: &Array1<F>) -> Result<F>
+pub fn calculate_hurst_exponent<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < 20 {
         return Ok(F::from(0.5).unwrap());
     }
 
-    estimate_hurst_exponent(ts)
+    estimate_hurst_exponent(_ts)
 }
 
 /// Calculate DFA (Detrended Fluctuation Analysis) exponent
@@ -432,22 +432,22 @@ where
 /// # Returns
 /// DFA exponent value
 #[allow(dead_code)]
-pub fn calculate_dfa_exponent<F>(ts: &Array1<F>) -> Result<F>
+pub fn calculate_dfa_exponent<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < 20 {
         return Ok(F::zero());
     }
 
-    let mean = ts.sum() / F::from(n).unwrap();
+    let mean = _ts.sum() / F::from(n).unwrap();
 
     // Create integrated series
     let mut integrated = Array1::zeros(n);
     let mut sum = F::zero();
     for i in 0..n {
-        sum = sum + (ts[i] - mean);
+        sum = sum + (_ts[i] - mean);
         integrated[i] = sum;
     }
 
@@ -547,11 +547,11 @@ where
 /// # Returns
 /// Spectral entropy value
 #[allow(dead_code)]
-pub fn calculate_spectral_entropy<F>(power_spectrum: &Array1<F>) -> Result<F>
+pub fn calculate_spectral_entropy<F>(_power_spectrum: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let total_power: F = power_spectrum.sum();
+    let total_power: F = _power_spectrum.sum();
     if total_power == F::zero() {
         return Ok(F::zero());
     }
@@ -573,11 +573,11 @@ where
 
 /// Calculate Shannon entropy for discretized data
 #[allow(dead_code)]
-pub fn calculate_shannon_entropy<F>(ts: &Array1<F>, n_bins: usize) -> Result<F>
+pub fn calculate_shannon_entropy<F>(_ts: &Array1<F>, n_bins: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let probabilities = discretize_and_get_probabilities(ts, n_bins)?;
+    let probabilities = discretize_and_get_probabilities(_ts, n_bins)?;
 
     let mut entropy = F::zero();
     for &p in probabilities.iter() {
@@ -591,15 +591,15 @@ where
 
 /// Calculate Rényi entropy with parameter alpha
 #[allow(dead_code)]
-pub fn calculate_renyi_entropy<F>(ts: &Array1<F>, n_bins: usize, alpha: f64) -> Result<F>
+pub fn calculate_renyi_entropy<F>(_ts: &Array1<F>, n_bins: usize, alpha: f64) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
     if alpha == 1.0 {
-        return calculate_shannon_entropy(ts, n_bins);
+        return calculate_shannon_entropy(_ts, n_bins);
     }
 
-    let probabilities = discretize_and_get_probabilities(ts, n_bins)?;
+    let probabilities = discretize_and_get_probabilities(_ts, n_bins)?;
     let alpha_f = F::from(alpha).unwrap();
 
     let mut sum = F::zero();
@@ -619,15 +619,15 @@ where
 
 /// Calculate Tsallis entropy with parameter q
 #[allow(dead_code)]
-pub fn calculate_tsallis_entropy<F>(ts: &Array1<F>, n_bins: usize, q: f64) -> Result<F>
+pub fn calculate_tsallis_entropy<F>(_ts: &Array1<F>, n_bins: usize, q: f64) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
     if q == 1.0 {
-        return calculate_shannon_entropy(ts, n_bins);
+        return calculate_shannon_entropy(_ts, n_bins);
     }
 
-    let probabilities = discretize_and_get_probabilities(ts, n_bins)?;
+    let probabilities = discretize_and_get_probabilities(_ts, n_bins)?;
     let q_f = F::from(q).unwrap();
 
     let mut sum = F::zero();
@@ -643,11 +643,11 @@ where
 
 /// Calculate relative entropy (KL divergence from uniform distribution)
 #[allow(dead_code)]
-pub fn calculate_relative_entropy<F>(ts: &Array1<F>, n_bins: usize) -> Result<F>
+pub fn calculate_relative_entropy<F>(_ts: &Array1<F>, n_bins: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let probabilities = discretize_and_get_probabilities(ts, n_bins)?;
+    let probabilities = discretize_and_get_probabilities(_ts, n_bins)?;
     let uniform_prob = F::one() / F::from(n_bins).unwrap();
 
     let mut kl_div = F::zero();
@@ -662,17 +662,17 @@ where
 
 /// Calculate differential entropy (continuous version)
 #[allow(dead_code)]
-pub fn calculate_differential_entropy<F>(ts: &Array1<F>) -> Result<F>
+pub fn calculate_differential_entropy<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < 2 {
         return Ok(F::zero());
     }
 
     // Use kernel density estimation approach
-    let std_dev = calculate_std_dev(ts);
+    let std_dev = calculate_std_dev(_ts);
     if std_dev == F::zero() {
         return Ok(F::neg_infinity());
     }
@@ -688,11 +688,11 @@ where
 
 /// Calculate weighted permutation entropy
 #[allow(dead_code)]
-pub fn calculate_weighted_permutation_entropy<F>(ts: &Array1<F>, order: usize) -> Result<F>
+pub fn calculate_weighted_permutation_entropy<F>(_ts: &Array1<F>, order: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < order + 1 {
         return Ok(F::zero());
     }
@@ -701,7 +701,7 @@ where
     let mut total_weight = F::zero();
 
     for i in 0..=n - order {
-        let window = &ts.slice(s![i..i + order]);
+        let window = &_ts.slice(s![i..i + order]);
 
         // Calculate relative variance as weight
         let mean = window.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(order).unwrap();
@@ -803,12 +803,12 @@ where
 
 /// Calculate effective complexity
 #[allow(dead_code)]
-pub fn calculate_effective_complexity<F>(ts: &Array1<F>, n_bins: usize) -> Result<F>
+pub fn calculate_effective_complexity<F>(_ts: &Array1<F>, n_bins: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let lz_complexity = calculate_lempel_ziv_complexity(ts)?;
-    let entropy = calculate_shannon_entropy(ts, n_bins)?;
+    let lz_complexity = calculate_lempel_ziv_complexity(_ts)?;
+    let entropy = calculate_shannon_entropy(_ts, n_bins)?;
 
     // Effective complexity balances order and disorder
     let max_entropy = F::from(n_bins as f64).unwrap().ln();
@@ -825,12 +825,12 @@ where
 
 /// Calculate fractal entropy
 #[allow(dead_code)]
-pub fn calculate_fractal_entropy<F>(ts: &Array1<F>) -> Result<F>
+pub fn calculate_fractal_entropy<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
     // Simplified fractal dimension-based entropy
-    let fractal_dim = estimate_fractal_dimension(ts)?;
+    let fractal_dim = estimate_fractal_dimension(_ts)?;
     let max_dim = F::from(2.0).unwrap(); // Maximum for time series
 
     let normalized_dim = fractal_dim / max_dim;
@@ -842,12 +842,12 @@ where
 
 /// Calculate DFA entropy
 #[allow(dead_code)]
-pub fn calculate_dfa_entropy<F>(ts: &Array1<F>) -> Result<F>
+pub fn calculate_dfa_entropy<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
     // Simplified DFA-based entropy
-    let dfa_exponent = estimate_dfa_exponent(ts)?;
+    let dfa_exponent = estimate_dfa_exponent(_ts)?;
 
     // Convert DFA exponent to entropy measure
     let entropy = -dfa_exponent * dfa_exponent.ln();
@@ -856,7 +856,7 @@ where
 
 /// Calculate multifractal entropy width
 #[allow(dead_code)]
-pub fn calculate_multifractal_entropy_width<F>(ts: &Array1<F>) -> Result<F>
+pub fn calculate_multifractal_entropy_width<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
@@ -864,7 +864,7 @@ where
     let mut entropies = Vec::new();
 
     for scale in 2..=8 {
-        let coarse_grained = coarse_grain_series(ts, scale)?;
+        let coarse_grained = coarse_grain_series(_ts, scale)?;
         if coarse_grained.len() > 10 {
             let entropy = calculate_shannon_entropy(&coarse_grained, 8)?;
             entropies.push(entropy);
@@ -883,11 +883,11 @@ where
 
 /// Calculate Hurst entropy
 #[allow(dead_code)]
-pub fn calculate_hurst_entropy<F>(ts: &Array1<F>) -> Result<F>
+pub fn calculate_hurst_entropy<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let hurst_exponent = estimate_hurst_exponent(ts)?;
+    let hurst_exponent = estimate_hurst_exponent(_ts)?;
 
     // Convert Hurst exponent to entropy measure
     // Hurst = 0.5 (random) -> high entropy
@@ -904,30 +904,30 @@ where
 
 /// Calculate entropy rate
 #[allow(dead_code)]
-pub fn calculate_entropy_rate<F>(ts: &Array1<F>, max_lag: usize) -> Result<F>
+pub fn calculate_entropy_rate<F>(_ts: &Array1<F>, max_lag: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < max_lag + 2 {
         return Ok(F::zero());
     }
 
     // Simple approximation using conditional entropy
     let n_bins = 10;
-    let joint_entropy = calculate_joint_entropy(ts, max_lag, n_bins)?;
-    let conditional_entropy = calculate_conditional_entropy(ts, max_lag, n_bins)?;
+    let joint_entropy = calculate_joint_entropy(_ts, max_lag, n_bins)?;
+    let conditional_entropy = calculate_conditional_entropy(_ts, max_lag, n_bins)?;
 
     Ok(joint_entropy - conditional_entropy)
 }
 
 /// Calculate conditional entropy
 #[allow(dead_code)]
-pub fn calculate_conditional_entropy<F>(ts: &Array1<F>, lag: usize, n_bins: usize) -> Result<F>
+pub fn calculate_conditional_entropy<F>(_ts: &Array1<F>, lag: usize, n_bins: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < lag + 1 {
         return Ok(F::zero());
     }
@@ -936,11 +936,11 @@ where
     let mut joint_counts = std::collections::HashMap::new();
     let mut marginal_counts = std::collections::HashMap::new();
 
-    let (min_val, max_val) = find_min_max(ts);
+    let (min_val, max_val) = find_min_max(_ts);
 
     for i in 0..n - lag {
-        let current_bin = discretize_value(ts[i], min_val, max_val, n_bins);
-        let future_bin = discretize_value(ts[i + lag], min_val, max_val, n_bins);
+        let current_bin = discretize_value(_ts[i], min_val, max_val, n_bins);
+        let future_bin = discretize_value(_ts[i + lag], min_val, max_val, n_bins);
 
         *joint_counts.entry((current_bin, future_bin)).or_insert(0) += 1;
         *marginal_counts.entry(current_bin).or_insert(0) += 1;
@@ -949,7 +949,7 @@ where
     let total = (n - lag) as f64;
     let mut conditional_entropy = F::zero();
 
-    for ((x_bin, _y_bin), &joint_count) in joint_counts.iter() {
+    for ((x_bin_y_bin), &joint_count) in joint_counts.iter() {
         let marginal_count = marginal_counts[x_bin];
 
         let p_xy = F::from(joint_count as f64 / total).unwrap();
@@ -966,25 +966,25 @@ where
 
 /// Calculate mutual information between lagged values
 #[allow(dead_code)]
-pub fn calculate_mutual_information_lag<F>(ts: &Array1<F>, lag: usize, n_bins: usize) -> Result<F>
+pub fn calculate_mutual_information_lag<F>(_ts: &Array1<F>, lag: usize, n_bins: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < lag + 1 {
         return Ok(F::zero());
     }
 
-    let current_entropy = calculate_shannon_entropy(&ts.slice(s![0..n - lag]).to_owned(), n_bins)?;
-    let future_entropy = calculate_shannon_entropy(&ts.slice(s![lag..]).to_owned(), n_bins)?;
-    let joint_entropy = calculate_joint_entropy(ts, lag, n_bins)?;
+    let current_entropy = calculate_shannon_entropy(&_ts.slice(s![0..n - lag]).to_owned(), n_bins)?;
+    let future_entropy = calculate_shannon_entropy(&_ts.slice(s![lag..]).to_owned(), n_bins)?;
+    let joint_entropy = calculate_joint_entropy(_ts, lag, n_bins)?;
 
     Ok(current_entropy + future_entropy - joint_entropy)
 }
 
 /// Calculate transfer entropy
 #[allow(dead_code)]
-pub fn calculate_transfer_entropy<F>(ts: &Array1<F>, lag: usize, n_bins: usize) -> Result<F>
+pub fn calculate_transfer_entropy<F>(_ts: &Array1<F>, lag: usize, n_bins: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
@@ -992,15 +992,15 @@ where
     // TE = H(X_{t+1} | X_t) - H(X_{t+1} | X_t, Y_t)
     // For single series, this becomes more complex - using approximation
 
-    let conditional_entropy_single = calculate_conditional_entropy(ts, 1, n_bins)?;
-    let conditional_entropy_multi = calculate_conditional_entropy(ts, lag, n_bins)?;
+    let conditional_entropy_single = calculate_conditional_entropy(_ts, 1, n_bins)?;
+    let conditional_entropy_multi = calculate_conditional_entropy(_ts, lag, n_bins)?;
 
     Ok((conditional_entropy_single - conditional_entropy_multi).abs())
 }
 
 /// Calculate excess entropy (stored information)
 #[allow(dead_code)]
-pub fn calculate_excess_entropy<F>(ts: &Array1<F>, max_lag: usize) -> Result<F>
+pub fn calculate_excess_entropy<F>(_ts: &Array1<F>, max_lag: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
@@ -1008,7 +1008,7 @@ where
     let mut block_entropies = Vec::new();
 
     for block_size in 1..=max_lag {
-        let entropy = calculate_block_entropy(ts, block_size, n_bins)?;
+        let entropy = calculate_block_entropy(_ts, block_size, n_bins)?;
         block_entropies.push(entropy);
     }
 
@@ -1032,21 +1032,21 @@ where
 
 /// Calculate joint entropy for two variables
 #[allow(dead_code)]
-fn calculate_joint_entropy<F>(ts: &Array1<F>, lag: usize, n_bins: usize) -> Result<F>
+fn calculate_joint_entropy<F>(_ts: &Array1<F>, lag: usize, n_bins: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < lag + 1 {
         return Ok(F::zero());
     }
 
-    let (min_val, max_val) = find_min_max(ts);
+    let (min_val, max_val) = find_min_max(_ts);
     let mut joint_counts = std::collections::HashMap::new();
 
     for i in 0..n - lag {
-        let current_bin = discretize_value(ts[i], min_val, max_val, n_bins);
-        let future_bin = discretize_value(ts[i + lag], min_val, max_val, n_bins);
+        let current_bin = discretize_value(_ts[i], min_val, max_val, n_bins);
+        let future_bin = discretize_value(_ts[i + lag], min_val, max_val, n_bins);
         *joint_counts.entry((current_bin, future_bin)).or_insert(0) += 1;
     }
 
@@ -1065,22 +1065,22 @@ where
 
 /// Calculate block entropy
 #[allow(dead_code)]
-fn calculate_block_entropy<F>(ts: &Array1<F>, block_size: usize, n_bins: usize) -> Result<F>
+fn calculate_block_entropy<F>(_ts: &Array1<F>, block_size: usize, n_bins: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < block_size {
         return Ok(F::zero());
     }
 
     let mut block_counts = std::collections::HashMap::new();
-    let (min_val, max_val) = find_min_max(ts);
+    let (min_val, max_val) = find_min_max(_ts);
 
     for i in 0..=n - block_size {
         let mut block_pattern = Vec::new();
         for j in 0..block_size {
-            block_pattern.push(discretize_value(ts[i + j], min_val, max_val, n_bins));
+            block_pattern.push(discretize_value(_ts[i + j], min_val, max_val, n_bins));
         }
         *block_counts.entry(block_pattern).or_insert(0) += 1;
     }
@@ -1100,12 +1100,12 @@ where
 
 /// Estimate fractal dimension using box counting
 #[allow(dead_code)]
-fn estimate_fractal_dimension<F>(ts: &Array1<F>) -> Result<F>
+fn estimate_fractal_dimension<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
     // Simplified fractal dimension estimation
-    let n = ts.len();
+    let n = _ts.len();
     if n < 4 {
         return Ok(F::one());
     }
@@ -1149,22 +1149,22 @@ where
 
 /// Estimate DFA exponent
 #[allow(dead_code)]
-fn estimate_dfa_exponent<F>(ts: &Array1<F>) -> Result<F>
+fn estimate_dfa_exponent<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
     // Simplified DFA calculation
-    let n = ts.len();
+    let n = _ts.len();
     if n < 10 {
         return Ok(F::from(0.5).unwrap());
     }
 
     // Calculate cumulative sum
-    let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap();
+    let mean = _ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap();
     let mut cumsum = Vec::with_capacity(n);
     let mut sum = F::zero();
 
-    for &x in ts.iter() {
+    for &x in _ts.iter() {
         sum = sum + (x - mean);
         cumsum.push(sum);
     }
@@ -1229,16 +1229,16 @@ where
 
 /// Estimate Hurst exponent using R/S analysis
 #[allow(dead_code)]
-fn estimate_hurst_exponent<F>(ts: &Array1<F>) -> Result<F>
+fn estimate_hurst_exponent<F>(_ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    let n = ts.len();
+    let n = _ts.len();
     if n < 10 {
         return Ok(F::from(0.5).unwrap());
     }
 
-    let _mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap();
+    let _mean = _ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap();
 
     // Calculate R/S statistic for different window sizes
     let mut rs_values = Vec::new();
@@ -1251,7 +1251,7 @@ where
         for i in 0..n_windows {
             let start = i * window_size;
             let end = start + window_size;
-            let window = &ts.slice(s![start..end]);
+            let window = &_ts.slice(s![start..end]);
 
             // Calculate cumulative deviations
             let window_mean =
@@ -1321,31 +1321,31 @@ where
 
 /// Calculate simple permutation entropy implementation
 #[allow(dead_code)]
-pub fn calculate_permutation_entropy_simple<F>(signal: &Array1<F>) -> Result<F>
+pub fn calculate_permutation_entropy_simple<F>(_signal: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    calculate_permutation_entropy(signal, 3)
+    calculate_permutation_entropy(_signal, 3)
 }
 
 /// Calculate simple sample entropy implementation
 #[allow(dead_code)]
-pub fn calculate_sample_entropy_simple<F>(signal: &Array1<F>) -> Result<F>
+pub fn calculate_sample_entropy_simple<F>(_signal: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let std_dev = calculate_std_dev(signal);
+    let std_dev = calculate_std_dev(_signal);
     let tolerance = F::from(0.2).unwrap() * std_dev;
-    calculate_sample_entropy(signal, 2, tolerance)
+    calculate_sample_entropy(_signal, 2, tolerance)
 }
 
 /// Calculate cross entropy between two signals (simplified)
 #[allow(dead_code)]
-pub fn calculate_cross_entropy_simple<F>(signal1: &Array1<F>, signal2: &Array1<F>) -> Result<F>
+pub fn calculate_cross_entropy_simple<F>(_signal1: &Array1<F>, signal2: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
 {
-    if signal1.len() != signal2.len() {
+    if _signal1.len() != signal2.len() {
         return Err(TimeSeriesError::FeatureExtractionError(
             "Signals must have the same length for cross entropy".to_string(),
         ));
@@ -1353,12 +1353,12 @@ where
 
     // Simple cross entropy approximation using discretized distributions
     let n_bins = 10;
-    let prob1 = discretize_and_get_probabilities(signal1, n_bins)?;
+    let prob1 = discretize_and_get_probabilities(_signal1, n_bins)?;
     let prob2 = discretize_and_get_probabilities(signal2, n_bins)?;
 
     let mut cross_entropy = F::zero();
     for (p1, p2) in prob1.iter().zip(prob2.iter()) {
-        if *p1 > F::zero() && *p2 > F::zero() {
+        if *p1 > F::zero() && *p2 >, F::zero() {
             cross_entropy = cross_entropy - (*p1) * p2.ln();
         }
     }

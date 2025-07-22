@@ -5,7 +5,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use crate::fft::ifft;
-use num_complex::Complex64;
+use num__complex::Complex64;
 
 use super::algorithms::SparseFFTResult;
 
@@ -23,7 +23,7 @@ use super::algorithms::SparseFFTResult;
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_fft::sparse_fft::{sparse_fft, reconstruct_spectrum};
+/// use scirs2__fft::sparse_fft::{sparse_fft, reconstruct_spectrum};
 ///
 /// // Generate a sparse signal
 /// let n = 64;
@@ -73,7 +73,7 @@ pub fn reconstruct_spectrum(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_fft::sparse_fft::{sparse_fft, reconstruct_time_domain};
+/// use scirs2__fft::sparse_fft::{sparse_fft, reconstruct_time_domain};
 ///
 /// // Generate a sparse signal
 /// let n = 64;
@@ -129,7 +129,7 @@ pub fn reconstruct_time_domain(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_fft::sparse_fft::{sparse_fft, reconstruct_high_resolution};
+/// use scirs2__fft::sparse_fft::{sparse_fft, reconstruct_high_resolution};
 ///
 /// // Generate a sparse signal
 /// let n = 32;
@@ -156,7 +156,7 @@ pub fn reconstruct_high_resolution(
 ) -> FFTResult<Vec<Complex64>> {
     if target_length < original_length {
         return Err(FFTError::DimensionError(format!(
-            "Target length {target_length} must be greater than or equal to original length {original_length}"
+            "Target _length {target_length} must be greater than or equal to original _length {original_length}"
         )));
     }
 
@@ -170,7 +170,7 @@ pub fn reconstruct_high_resolution(
         spectrum[index] = *value;
     }
 
-    // Scale the frequencies to the new length
+    // Scale the frequencies to the new _length
     let mut high_res_spectrum = vec![Complex64::new(0.0, 0.0); target_length];
 
     // For components below the Nyquist frequency
@@ -193,7 +193,7 @@ pub fn reconstruct_high_resolution(
 
     // Handle the negative frequencies (those above Nyquist in the original spectrum)
     if original_length % 2 == 0 {
-        // Even length case - map original negative frequencies to the new negative frequencies
+        // Even _length case - map original negative frequencies to the new negative frequencies
         #[allow(clippy::needless_range_loop)]
         for i in (original_nyquist + 1)..original_length {
             // Calculate the relative position in the negative frequency range
@@ -204,12 +204,12 @@ pub fn reconstruct_high_resolution(
             }
         }
 
-        // If even length, also copy the Nyquist component
+        // If even _length, also copy the Nyquist component
         if original_length % 2 == 0 && target_length % 2 == 0 {
             high_res_spectrum[target_nyquist] = spectrum[original_nyquist];
         }
     } else {
-        // Odd length case
+        // Odd _length case
         #[allow(clippy::needless_range_loop)]
         for i in (original_nyquist + 1)..original_length {
             // Calculate the relative position in the negative frequency range
@@ -240,7 +240,7 @@ pub fn reconstruct_high_resolution(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2_fft::sparse_fft::{sparse_fft, reconstruct_filtered};
+/// use scirs2__fft::sparse_fft::{sparse_fft, reconstruct_filtered};
 ///
 /// // Generate a sparse signal
 /// let n = 64;

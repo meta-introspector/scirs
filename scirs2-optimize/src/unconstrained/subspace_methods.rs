@@ -85,10 +85,10 @@ struct SubspaceState {
 }
 
 impl SubspaceState {
-    fn new(seed: Option<u64>) -> Self {
-        let rng = match seed {
+    fn new(_seed: Option<u64>) -> Self {
+        let rng = match _seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => StdRng::seed_from_u64(42), // Use a fixed seed as fallback
+            None => StdRng::seed_from_u64(42), // Use a fixed _seed as fallback
         };
 
         Self {
@@ -125,8 +125,8 @@ impl SubspaceState {
             // Generate sparse random vector
             let num_nonzeros = (n / 10).clamp(1, 20); // At most 20 nonzeros
             for _ in 0..num_nonzeros {
-                let idx = self.rng.random_range(0..n);
-                vec[idx] = self.rng.random_range(-1.0..1.0); // Random value in [-1, 1]
+                let idx = self.rng.gen_range(0..n);
+                vec[idx] = self.rng.gen_range(-1.0..1.0); // Random value in [-1..1]
             }
             // Normalize
             let norm = vec.mapv(|x: f64| x.powi(2)).sum().sqrt();
@@ -188,25 +188,25 @@ impl SubspaceState {
 
 /// Orthogonalize basis vectors using modified Gram-Schmidt
 #[allow(dead_code)]
-fn orthogonalize_basis(basis: &mut Vec<Array1<f64>>) {
-    for i in 0..basis.len() {
+fn orthogonalize_basis(_basis: &mut Vec<Array1<f64>>) {
+    for i in 0.._basis.len() {
         // Normalize current vector
-        let norm = basis[i].mapv(|x: f64| x.powi(2)).sum().sqrt();
+        let norm = _basis[i].mapv(|x: f64| x.powi(2)).sum().sqrt();
         if norm > 1e-12 {
-            basis[i] = &basis[i] / norm;
+            _basis[i] = &_basis[i] / norm;
         } else {
             continue;
         }
 
         // Orthogonalize against all previous vectors
-        for j in i + 1..basis.len() {
-            let dot_product = basis[i].dot(&basis[j]);
-            basis[j] = &basis[j] - dot_product * &basis[i];
+        for j in i + 1.._basis.len() {
+            let dot_product = _basis[i].dot(&_basis[j]);
+            _basis[j] = &_basis[j] - dot_product * &_basis[i];
         }
     }
 
     // Remove zero vectors
-    basis.retain(|v| v.mapv(|x: f64| x.powi(2)).sum().sqrt() > 1e-12);
+    _basis.retain(|v| v.mapv(|x: f64| x.powi(2)).sum().sqrt() > 1e-12);
 }
 
 /// Random coordinate descent method
@@ -234,7 +234,7 @@ where
         // Perform coordinate descent on random coordinates
         for _ in 0..options.coord_max_iter {
             // Select random coordinate
-            let coord = state.rng.random_range(0..n);
+            let coord = state.rng.gen_range(0..n);
 
             // Line search along coordinate direction
             let _f_current = fun(&x.view());
@@ -257,7 +257,7 @@ where
             if grad_coord.abs() > options.tol {
                 // Perform line search in the negative gradient direction
                 let direction = -grad_coord.signum();
-                let step_size = find_step_size(&mut fun, &x, coord, direction, &mut nfev);
+                let step_size = find_step_size(&mut fun..&x, coord, direction, &mut nfev);
 
                 if step_size > 0.0 {
                     x[coord] += direction * step_size;
@@ -445,7 +445,7 @@ where
         }
 
         // Line search
-        let (step_size, _) = backtracking_line_search(
+        let (step_size_) = backtracking_line_search(
             &mut |x_view| fun(x_view),
             &x.view(),
             best_f,
@@ -550,7 +550,7 @@ where
         }
 
         // Line search
-        let (step_size, _) = backtracking_line_search(
+        let (step_size_) = backtracking_line_search(
             &mut |x_view| fun(x_view),
             &x.view(),
             best_f,
@@ -834,7 +834,7 @@ where
 
 /// Compute finite difference gradient
 #[allow(dead_code)]
-fn compute_finite_diff_gradient<F>(fun: &mut F, x: &Array1<f64>, nfev: &mut usize) -> Array1<f64>
+fn compute_finite_diff_gradient<F>(_fun: &mut F, x: &Array1<f64>, nfev: &mut usize) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,
 {
@@ -842,13 +842,13 @@ where
     let mut grad = Array1::zeros(n);
     let eps = 1e-8;
 
-    let f0 = fun(&x.view());
+    let f0 = _fun(&x.view());
     *nfev += 1;
 
     for i in 0..n {
         let mut x_plus = x.clone();
         x_plus[i] += eps;
-        let f_plus = fun(&x_plus.view());
+        let f_plus = _fun(&x_plus.view());
         *nfev += 1;
 
         grad[i] = (f_plus - f0) / eps;

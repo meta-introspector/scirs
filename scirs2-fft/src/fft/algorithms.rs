@@ -7,7 +7,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use ndarray::{Array2, ArrayD, Axis, IxDyn};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 use scirs2_core::safe_ops::{safe_divide, safe_sqrt};
@@ -34,38 +34,37 @@ impl From<&str> for NormMode {
         match s {
             "backward" => NormMode::Backward,
             "ortho" => NormMode::Ortho,
-            "forward" => NormMode::Forward,
-            _ => NormMode::None,
+            "forward" => NormMode::Forward_ =>, NormMode::None,
         }
     }
 }
 
 /// Convert a normalization mode string to NormMode enum
 #[allow(dead_code)]
-pub fn parse_norm_mode(norm: Option<&str>, is_inverse: bool) -> NormMode {
-    match norm {
+pub fn parse_norm_mode(_norm: Option<&str>, is_inverse: bool) -> NormMode {
+    match _norm {
         Some(s) => NormMode::from(s),
-        None if is_inverse => NormMode::Backward, // Default for inverse transforms
+        None if is_inverse => NormMode::Backward, // Default for _inverse transforms
         None => NormMode::None,                   // Default for forward transforms
     }
 }
 
 /// Apply normalization to FFT results based on the specified mode
 #[allow(dead_code)]
-fn apply_normalization(data: &mut [Complex64], n: usize, mode: NormMode) -> FFTResult<()> {
+fn apply_normalization(_data: &mut [Complex64], n: usize, mode: NormMode) -> FFTResult<()> {
     match mode {
         NormMode::None => {} // No normalization
         NormMode::Backward => {
-            let n_f64 = n as f64;
+            let n_f64 = n  as f64;
             let scale = safe_divide(1.0, n_f64).map_err(|_| {
                 FFTError::ValueError(
                     "Division by zero in backward normalization: FFT size is zero".to_string(),
                 )
             })?;
-            data.iter_mut().for_each(|c| *c *= scale);
+            _data.iter_mut().for_each(|c| *c *= scale);
         }
         NormMode::Ortho => {
-            let n_f64 = n as f64;
+            let n_f64 = n  as f64;
             let sqrt_n = safe_sqrt(n_f64).map_err(|_| {
                 FFTError::ComputationError(
                     "Invalid square root in orthogonal normalization".to_string(),
@@ -74,16 +73,16 @@ fn apply_normalization(data: &mut [Complex64], n: usize, mode: NormMode) -> FFTR
             let scale = safe_divide(1.0, sqrt_n).map_err(|_| {
                 FFTError::ValueError("Division by zero in orthogonal normalization".to_string())
             })?;
-            data.iter_mut().for_each(|c| *c *= scale);
+            _data.iter_mut().for_each(|c| *c *= scale);
         }
         NormMode::Forward => {
-            let n_f64 = n as f64;
+            let n_f64 = n  as f64;
             let scale = safe_divide(1.0, n_f64).map_err(|_| {
                 FFTError::ValueError(
                     "Division by zero in forward normalization: FFT size is zero".to_string(),
                 )
             })?;
-            data.iter_mut().for_each(|c| *c *= scale);
+            _data.iter_mut().for_each(|c| *c *= scale);
         }
     }
     Ok(())
@@ -91,38 +90,38 @@ fn apply_normalization(data: &mut [Complex64], n: usize, mode: NormMode) -> FFTR
 
 /// Convert a single value to Complex64
 #[allow(dead_code)]
-fn convert_to_complex<T>(val: T) -> FFTResult<Complex64>
+fn convert_to_complex<T>(_val: T) -> FFTResult<Complex64>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // First try to cast directly to f64 (for real numbers)
-    if let Some(real) = num_traits::cast::<T, f64>(val) {
+    if let Some(real) = num_traits::cast::<T, f64>(_val) {
         return Ok(Complex64::new(real, 0.0));
     }
 
     // If direct casting fails, check if it's already a Complex64
     use std::any::Any;
-    if let Some(complex) = (&val as &dyn Any).downcast_ref::<Complex64>() {
+    if let Some(complex) = (&_val as &dyn Any).downcast_ref::<Complex64>() {
         return Ok(*complex);
     }
 
     // Try to handle f32 complex numbers
-    if let Some(complex32) = (&val as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
+    if let Some(complex32) = (&_val as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
         return Ok(Complex64::new(complex32.re as f64, complex32.im as f64));
     }
 
     Err(FFTError::ValueError(format!(
-        "Could not convert {val:?} to numeric type"
+        "Could not convert {_val:?} to numeric type"
     )))
 }
 
 /// Convert input data to complex values
 #[allow(dead_code)]
-fn to_complex<T>(input: &[T]) -> FFTResult<Vec<Complex64>>
+fn to_complex<T>(_input: &[T]) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
-    input.iter().map(|&val| convert_to_complex(val)).collect()
+    _input.iter().map(|&val| convert_to_complex(val)).collect()
 }
 
 /// Compute the 1-dimensional Fast Fourier Transform
@@ -139,8 +138,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::fft;
-/// use num_complex::Complex64;
+/// use scirs2__fft::fft;
+/// use num__complex::Complex64;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -153,21 +152,21 @@ where
 /// assert!(spectrum[0].im.abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn fft<T>(input: &[T], n: Option<usize>) -> FFTResult<Vec<Complex64>>
+pub fn fft<T>(_input: &[T], n: Option<usize>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // Input validation
-    if input.is_empty() {
+    if _input.is_empty() {
         return Err(FFTError::ValueError("Input cannot be empty".to_string()));
     }
 
     // Determine the FFT size (n or next power of 2 if n is None)
-    let input_len = input.len();
+    let input_len = _input.len();
     let fft_size = n.unwrap_or_else(|| input_len.next_power_of_two());
 
-    // Convert input to complex numbers
-    let mut data = to_complex(input)?;
+    // Convert _input to complex numbers
+    let mut data = to_complex(_input)?;
 
     // Pad or truncate data to match fft_size
     if fft_size != input_len {
@@ -214,8 +213,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::{fft, ifft};
-/// use num_complex::Complex64;
+/// use scirs2__fft::{fft, ifft};
+/// use num__complex::Complex64;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -233,21 +232,21 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn ifft<T>(input: &[T], n: Option<usize>) -> FFTResult<Vec<Complex64>>
+pub fn ifft<T>(_input: &[T], n: Option<usize>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
     // Input validation
-    if input.is_empty() {
+    if _input.is_empty() {
         return Err(FFTError::ValueError("Input cannot be empty".to_string()));
     }
 
     // Determine the FFT size
-    let input_len = input.len();
+    let input_len = _input.len();
     let fft_size = n.unwrap_or_else(|| input_len.next_power_of_two());
 
-    // Convert input to complex numbers
-    let mut data = to_complex(input)?;
+    // Convert _input to complex numbers
+    let mut data = to_complex(_input)?;
 
     // Pad or truncate data to match fft_size
     if fft_size != input_len {
@@ -280,7 +279,7 @@ where
     // Apply 1/N normalization (standard for IFFT)
     apply_normalization(&mut result, fft_size, NormMode::Backward)?;
 
-    // Truncate if necessary to match the original input length
+    // Truncate if necessary to match the original _input length
     if n.is_none() && fft_size > input_len {
         result.truncate(input_len);
     }
@@ -304,7 +303,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::fft2;
+/// use scirs2__fft::fft2;
 /// use ndarray::{array, Array2};
 ///
 /// // Create a simple 2x2 array
@@ -443,7 +442,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::{fft2, ifft2};
+/// use scirs2__fft::{fft2, ifft2};
 /// use ndarray::{array, Array2};
 ///
 /// // Create a simple 2x2 array
@@ -586,7 +585,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::fftn;
+/// use scirs2__fft::fftn;
 /// use ndarray::{Array, IxDyn};
 ///
 /// // Create a 3D array
@@ -606,9 +605,7 @@ pub fn fftn<T>(
     input: &ArrayD<T>,
     shape: Option<Vec<usize>>,
     axes: Option<Vec<usize>>,
-    norm: Option<&str>,
-    _overwrite_x: Option<bool>,
-    _workers: Option<usize>,
+    norm: Option<&str>, _overwrite_x: Option<bool>, _workers: Option<usize>,
 ) -> FFTResult<ArrayD<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -727,7 +724,7 @@ where
             NormMode::None => 1.0, // Should not happen due to earlier check
         };
 
-        result.mapv_inplace(|x| x * scale);
+        result.mapv_inplace(|_x| _x * scale);
     }
 
     Ok(result)
@@ -751,9 +748,9 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::{fftn, ifftn};
+/// use scirs2__fft::{fftn, ifftn};
 /// use ndarray::{Array, IxDyn};
-/// use num_complex::Complex64;
+/// use num__complex::Complex64;
 ///
 /// // Create a 3D array
 /// let mut data = Array::zeros(IxDyn(&[2, 2, 2]));
@@ -787,9 +784,7 @@ pub fn ifftn<T>(
     input: &ArrayD<T>,
     shape: Option<Vec<usize>>,
     axes: Option<Vec<usize>>,
-    norm: Option<&str>,
-    _overwrite_x: Option<bool>,
-    _workers: Option<usize>,
+    norm: Option<&str>, _overwrite_x: Option<bool>, _workers: Option<usize>,
 ) -> FFTResult<ArrayD<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -910,7 +905,7 @@ where
         };
 
         if scale != 1.0 {
-            result.mapv_inplace(|x| x * scale);
+            result.mapv_inplace(|_x| _x * scale);
         }
     }
 

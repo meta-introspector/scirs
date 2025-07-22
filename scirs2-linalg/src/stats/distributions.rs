@@ -39,8 +39,8 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> MatrixN
     /// # Returns
     ///
     /// * Matrix normal parameters
-    pub fn new(mean: Array2<F>, row_cov: Array2<F>, col_cov: Array2<F>) -> LinalgResult<Self> {
-        let (m, n) = mean.dim();
+    pub fn new(_mean: Array2<F>, row_cov: Array2<F>, col_cov: Array2<F>) -> LinalgResult<Self> {
+        let (m, n) = _mean.dim();
 
         if row_cov.dim() != (m, m) {
             return Err(LinalgError::ShapeError(format!(
@@ -61,7 +61,7 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> MatrixN
         }
 
         Ok(Self {
-            mean,
+            mean: _mean,
             row_cov,
             col_cov,
         })
@@ -90,10 +90,10 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> Wishart
     /// # Returns
     ///
     /// * Wishart parameters
-    pub fn new(scale: Array2<F>, dof: F) -> LinalgResult<Self> {
-        let p = scale.nrows();
+    pub fn new(_scale: Array2<F>, dof: F) -> LinalgResult<Self> {
+        let p = _scale.nrows();
 
-        if scale.nrows() != scale.ncols() {
+        if _scale.nrows() != _scale.ncols() {
             return Err(LinalgError::ShapeError(
                 "Scale matrix must be square".to_string(),
             ));
@@ -106,7 +106,7 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> Wishart
             )));
         }
 
-        Ok(Self { scale, dof })
+        Ok(Self { scale: _scale, dof })
     }
 }
 
@@ -452,24 +452,24 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> Inverse
     /// # Returns
     ///
     /// * Validated InverseWishartParams
-    pub fn new(scale: Array2<F>, dof: F) -> LinalgResult<Self> {
-        if scale.nrows() != scale.ncols() {
+    pub fn new(_scale: Array2<F>, dof: F) -> LinalgResult<Self> {
+        if _scale.nrows() != _scale.ncols() {
             return Err(LinalgError::ShapeError(format!(
                 "Scale matrix must be square, got shape {:?}",
-                scale.shape()
+                _scale.shape()
             )));
         }
 
-        let p = F::from(scale.nrows()).unwrap();
+        let p = F::from(_scale.nrows()).unwrap();
         if dof <= p - F::one() {
             return Err(LinalgError::InvalidInputError(format!(
                 "Degrees of freedom must be > dimension - 1, got dof = {} for dimension {}",
                 dof,
-                scale.nrows()
+                _scale.nrows()
             )));
         }
 
-        Ok(InverseWishartParams { scale, dof })
+        Ok(InverseWishartParams { scale: _scale, dof })
     }
 }
 

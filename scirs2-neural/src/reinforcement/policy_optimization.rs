@@ -10,6 +10,8 @@ use crate::reinforcement::{ExperienceBatch, LossInfo, RLAgent};
 use ndarray::prelude::*;
 use num_traits::Float;
 use std::collections::HashMap;
+use ndarray::ArrayView1;
+use statrs::statistics::Statistics;
 /// Natural Policy Gradients (NPG) implementation
 pub struct NaturalPolicyGradient {
     /// Policy network
@@ -252,8 +254,8 @@ pub struct InverseModel {
     /// Network for predicting action
     action_predictor: ValueNetwork,
 impl InverseModel {
-    pub fn new(feature_dim: usize, action_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
-        let action_predictor = ValueNetwork::new(feature_dim * 2, action_dim, hidden_sizes)?;
+    pub fn new(_feature_dim: usize, action_dim: usize, hidden_sizes: Vec<usize>) -> Result<Self> {
+        let action_predictor = ValueNetwork::new(_feature_dim * 2, action_dim, hidden_sizes)?;
         Ok(Self { action_predictor })
     /// Predict action from state features
     pub fn predict_action(
@@ -480,7 +482,7 @@ impl MAMLAgent {
             total_loss: total_meta_loss,
     /// Fast adaptation to a new task
     pub fn fast_adapt(&self, support_batch: &ExperienceBatch) -> Result<PolicyNetwork> {
-        let (adapted_policy, _) = self.inner_loop_adaptation(support_batch)?;
+        let (adapted_policy_) = self.inner_loop_adaptation(support_batch)?;
         Ok(adapted_policy)
 impl RLAgent for MAMLAgent {
         self.meta_policy.sample_action(observation)

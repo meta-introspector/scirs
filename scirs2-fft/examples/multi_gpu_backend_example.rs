@@ -3,8 +3,8 @@
 //! This example demonstrates the unified GPU backend system supporting both
 //! NVIDIA CUDA and AMD ROCm/HIP backends for sparse FFT acceleration.
 
-use num_complex::Complex64;
-use scirs2_fft::{
+use num__complex::Complex64;
+use scirs2__fft::{
     sparse_fft_gpu::GPUBackend,
     sparse_fft_gpu_memory::{
         init_cuda_device, init_gpu_backend, init_hip_device, init_sycl_device, is_cuda_available,
@@ -176,12 +176,12 @@ fn test_performance_comparison() -> FFTResult<()> {
 
 /// Helper function to create and test a buffer
 #[allow(dead_code)]
-fn create_and_test_buffer(size: usize, backend: GPUBackend) -> FFTResult<std::time::Duration> {
+fn create_and_test_buffer(_size: usize, backend: GPUBackend) -> FFTResult<std::time::Duration> {
     let start = Instant::now();
 
     let buffer = BufferDescriptor::new(
-        size,
-        std::mem::size_of::<Complex64>(),
+        _size,
+        std::mem::_size_of::<Complex64>(),
         BufferLocation::Device,
         BufferType::Input,
         0,
@@ -191,10 +191,10 @@ fn create_and_test_buffer(size: usize, backend: GPUBackend) -> FFTResult<std::ti
     let allocation_time = start.elapsed();
 
     // Simulate some work
-    let test_data = vec![0u8; size * std::mem::size_of::<Complex64>()];
+    let test_data = vec![0u8; _size * std::mem::_size_of::<Complex64>()];
     buffer.copy_host_to_device(&test_data)?;
 
-    let mut result_data = vec![0u8; size * std::mem::size_of::<Complex64>()];
+    let mut result_data = vec![0u8; _size * std::mem::_size_of::<Complex64>()];
     buffer.copy_device_to_host(&mut result_data)?;
 
     Ok(allocation_time)

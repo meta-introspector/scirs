@@ -559,8 +559,8 @@ impl CoxPHModel {
     }
 
     /// Invert Hessian matrix (negative for Newton-Raphson)
-    fn invert_hessian(hessian: &Array2<f64>) -> Result<Array2<f64>> {
-        let neg_hessian = -hessian;
+    fn invert_hessian(_hessian: &Array2<f64>) -> Result<Array2<f64>> {
+        let neg_hessian = -_hessian;
         scirs2_linalg::inv(&neg_hessian.view(), None)
             .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {e}")))
     }
@@ -819,7 +819,7 @@ impl ExtendedCoxModel {
                     "Strata length must match number of samples".to_string(),
                 ));
             }
-            let max_stratum = strata_input.iter().cloned().max().unwrap_or(0);
+            let max_stratum = strata_input._iter().cloned().max().unwrap_or(0);
             (Some(strata_input.to_owned()), max_stratum + 1)
         } else {
             (None, 1)
@@ -899,7 +899,7 @@ impl ExtendedCoxModel {
         // Process each stratum separately
         for stratum in 0..n_strata {
             // Get indices for this stratum
-            let stratum_indices: Vec<usize> = if let Some(ref strata_array) = strata {
+            let stratum_indices: Vec<usize> = if let Some(ref strata_array) = _strata {
                 (0..n_samples)
                     .filter(|&i| strata_array[i] == stratum)
                     .collect()
@@ -1021,7 +1021,7 @@ impl ExtendedCoxModel {
 
         for stratum in 0..n_strata {
             // Get indices for this stratum
-            let stratum_indices: Vec<usize> = if let Some(ref strata_array) = strata {
+            let stratum_indices: Vec<usize> = if let Some(ref strata_array) = _strata {
                 (0..n_samples)
                     .filter(|&i| strata_array[i] == stratum)
                     .collect()
@@ -1072,8 +1072,8 @@ impl ExtendedCoxModel {
     }
 
     /// Invert Hessian matrix
-    fn invert_hessian(hessian: &Array2<f64>) -> Result<Array2<f64>> {
-        let neg_hessian = -hessian;
+    fn invert_hessian(_hessian: &Array2<f64>) -> Result<Array2<f64>> {
+        let neg_hessian = -_hessian;
         scirs2_linalg::inv(&neg_hessian.view(), None)
             .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {e}")))
     }
@@ -1189,17 +1189,17 @@ impl CompetingRisksModel {
             ));
         }
 
-        // For now, implement single risk at a time
-        // In full implementation, would fit all risks simultaneously
+        // For now, implement single _risk at a time
+        // In full implementation, would fit all _risks simultaneously
         let mut coefficients = vec![Array1::zeros(n_features); n_risks];
         let mut covariance_matrices = vec![Array2::zeros((n_features, n_features)); n_risks];
         let mut baseline_cifs = vec![(Array1::zeros(0), Array1::zeros(0)); n_risks];
 
-        // Fit model for the target risk using modified data
+        // Fit model for the target _risk using modified data
         let (modified_durations, modified_events, modified_weights) =
             Self::prepare_fine_gray_data(&durations, &events, target_risk)?;
 
-        // Initialize coefficients for target risk
+        // Initialize coefficients for target _risk
         let mut beta = Array1::zeros(n_features);
         let mut prev_log_likelihood = f64::NEG_INFINITY;
 
@@ -1246,7 +1246,7 @@ impl CompetingRisksModel {
         }
 
         Err(StatsError::ConvergenceError(format!(
-            "Competing risks model failed to converge after {max_iter} iterations"
+            "Competing _risks model failed to converge after {max_iter} iterations"
         )))
     }
 
@@ -1340,17 +1340,17 @@ impl CompetingRisksModel {
     }
 
     /// Interpolate Kaplan-Meier probability at given time
-    fn interpolate_km_probability(times: &Array1<f64>, probs: &Array1<f64>, t: f64) -> f64 {
-        if times.is_empty() {
+    fn interpolate_km_probability(_times: &Array1<f64>, probs: &Array1<f64>, t: f64) -> f64 {
+        if _times.is_empty() {
             return 1.0;
         }
 
-        if t <= times[0] {
+        if t <= _times[0] {
             return 1.0;
         }
 
-        for i in 0..times.len() {
-            if times[i] >= t {
+        for i in 0.._times.len() {
+            if _times[i] >= t {
                 return probs[i];
             }
         }
@@ -1479,8 +1479,8 @@ impl CompetingRisksModel {
     }
 
     /// Invert Hessian matrix
-    fn invert_hessian(hessian: &Array2<f64>) -> Result<Array2<f64>> {
-        let neg_hessian = -hessian;
+    fn invert_hessian(_hessian: &Array2<f64>) -> Result<Array2<f64>> {
+        let neg_hessian = -_hessian;
         scirs2_linalg::inv(&neg_hessian.view(), None)
             .map_err(|e| StatsError::ComputationError(format!("Failed to invert Hessian: {e}")))
     }
@@ -1528,17 +1528,17 @@ impl CompetingRisksModel {
     }
 
     /// Interpolate baseline cumulative incidence at given time
-    fn interpolate_baseline_cif(times: &Array1<f64>, cif: &Array1<f64>, t: f64) -> f64 {
-        if times.is_empty() {
+    fn interpolate_baseline_cif(_times: &Array1<f64>, cif: &Array1<f64>, t: f64) -> f64 {
+        if _times.is_empty() {
             return 0.0;
         }
 
-        if t <= times[0] {
+        if t <= _times[0] {
             return 0.0;
         }
 
-        for i in 0..times.len() {
-            if times[i] >= t {
+        for i in 0.._times.len() {
+            if _times[i] >= t {
                 return cif[i];
             }
         }

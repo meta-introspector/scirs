@@ -120,7 +120,7 @@ impl<T> Message<T> {
             source,
             destination,
             tag,
-            size_bytes: std::mem::size_of::<T>(),
+            size_bytes: std::mem::size, _of::<T>(),
             sequence,
             timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -155,18 +155,18 @@ pub struct DistributedCommunicator {
 
 impl DistributedCommunicator {
     /// Create a new distributed communicator
-    pub fn new(config: &super::DistributedConfig) -> LinalgResult<Self> {
+    pub fn new(_config: &super::DistributedConfig) -> LinalgResult<Self> {
         // Create node address mapping (simplified - in practice would use discovery service)
         let mut node_addresses = HashMap::new();
-        for rank in 0..config.num_nodes {
+        for rank in 0.._config.num_nodes {
             let port = 7000 + rank; // Base port + rank
             node_addresses.insert(rank, format!("127.0.0.1:{}", port));
         }
 
         Ok(Self {
-            rank: config.node_rank,
-            size: config.num_nodes,
-            backend: config.backend,
+            rank: _config.node_rank,
+            size: _config.num_nodes,
+            backend: _config.backend,
             sequence_counter: Arc::new(Mutex::new(0)),
             message_buffer: Arc::new(Mutex::new(HashMap::new())),
             stats: Arc::new(Mutex::new(CommunicationStats::default())),
@@ -274,13 +274,13 @@ impl DistributedCommunicator {
             // Root node collects from all others
             let mut matrices = Vec::with_capacity(self.size);
             
-            // Add local matrix
+            // Add local _matrix
             matrices.push(local_matrix.to_owned());
             
             // Receive from other nodes
             for source in 1..self.size {
-                let matrix = self.recv_matrix(source, MessageTag::Data)?;
-                matrices.push(matrix);
+                let _matrix = self.recv_matrix(source, MessageTag::Data)?;
+                matrices.push(_matrix);
             }
             
             Ok(Some(matrices))
@@ -300,8 +300,8 @@ impl DistributedCommunicator {
         if let Some(matrices) = self.gather_matrices(local_matrix)? {
             // Sum all matrices (only on root)
             let mut result = matrices[0].clone();
-            for matrix in matrices.iter().skip(1) {
-                result = &result + matrix;
+            for _matrix in matrices.iter().skip(1) {
+                result = &result + _matrix;
             }
             
             // Broadcast result to all nodes
@@ -382,8 +382,7 @@ impl DistributedCommunicator {
             },
             CommunicationBackend::MPI => {
                 // MPI finalization would go here
-            },
-            _ => {
+            }_ => {
                 // Other backends cleanup
             },
         }
@@ -583,22 +582,22 @@ impl DistributedCommunicator {
         Ok(Message { metadata, data })
     }
     
-    fn send_mpi(&self, _message: Message<Vec<u8>>) -> LinalgResult<()> {
+    fn send_mpi(&self_message: Message<Vec<u8>>) -> LinalgResult<()> {
         // MPI implementation would go here
         Err(LinalgError::NotImplemented("MPI backend not implemented".to_string()))
     }
     
-    fn recv_mpi(&self, _source: usize, _tag: MessageTag) -> LinalgResult<Message<Vec<u8>>> {
+    fn recv_mpi(&self_source: usize, _tag: MessageTag) -> LinalgResult<Message<Vec<u8>>> {
         // MPI implementation would go here
         Err(LinalgError::NotImplemented("MPI backend not implemented".to_string()))
     }
     
-    fn send_rdma(&self, _message: Message<Vec<u8>>) -> LinalgResult<()> {
+    fn send_rdma(&self_message: Message<Vec<u8>>) -> LinalgResult<()> {
         // RDMA implementation would go here
         Err(LinalgError::NotImplemented("RDMA backend not implemented".to_string()))
     }
     
-    fn recv_rdma(&self, _source: usize, _tag: MessageTag) -> LinalgResult<Message<Vec<u8>>> {
+    fn recv_rdma(&self_source: usize, _tag: MessageTag) -> LinalgResult<Message<Vec<u8>>> {
         // RDMA implementation would go here
         Err(LinalgError::NotImplemented("RDMA backend not implemented".to_string()))
     }
@@ -645,8 +644,8 @@ impl DistributedCommunicator {
     
     /// Decompress data (mock implementation)
     fn decompress_data(&self, compressed_data: &[u8]) -> LinalgResult<Vec<u8>> {
-        // In a real implementation, this would decompress LZ4 data
-        // For now, just return the original data
+        // In a real implementation, this would decompress LZ4 _data
+        // For now, just return the original _data
         Ok(compressed_data.to_vec())
     }
 }

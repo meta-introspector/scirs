@@ -1,3 +1,4 @@
+use std::f64::consts::PI;
 //! Spatial transformations module
 //!
 //! This module provides functionality for spatial transformations including rotations,
@@ -15,7 +16,7 @@ mod slerp;
 pub mod spherical;
 
 // Re-exports for public API
-pub use rigid_transform::RigidTransform;
+pub use rigid__transform::RigidTransform;
 pub use rotation::Rotation;
-pub use rotation_spline::RotationSpline;
+pub use rotation__spline::RotationSpline;
 pub use slerp::Slerp;

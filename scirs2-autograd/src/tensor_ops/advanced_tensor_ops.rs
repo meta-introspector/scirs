@@ -1,6 +1,6 @@
 use crate::op::{ComputeContext, GradientContext, Op, OpError};
 use crate::tensor::Tensor;
-use crate::tensor_ops::convert_to_tensor;
+use crate::tensor__ops::convert_to_tensor;
 use crate::Float;
 use ndarray::{Array2, ArrayD, IxDyn};
 
@@ -308,8 +308,7 @@ fn solve_square_system<F: Float>(
 
 #[allow(dead_code)]
 fn compute_solution_shape(
-    a_shape: &[usize],
-    _b_shape: &[usize],
+    a_shape: &[usize], _b_shape: &[usize],
     axes: &Option<Vec<i32>>,
 ) -> Result<Vec<usize>, OpError> {
     let ndim_a = a_shape.len();
@@ -361,8 +360,7 @@ fn reshape_solution<F: Float>(
 #[allow(dead_code)]
 fn compute_grad_b<F: Float>(
     _a: &ArrayD<F>,
-    grad_x: &ArrayD<F>,
-    _axes: &Option<Vec<i32>>,
+    grad_x: &ArrayD<F>, _axes: &Option<Vec<i32>>,
 ) -> ArrayD<F> {
     // Simplified: return grad_x with appropriate shape
     grad_x.clone()
@@ -370,12 +368,10 @@ fn compute_grad_b<F: Float>(
 
 #[allow(dead_code)]
 fn compute_grad_a<F: Float>(
-    _grad_x: &ArrayD<F>,
-    _x: &ArrayD<F>,
-    a_shape: &[usize],
-    _axes: &Option<Vec<i32>>,
+    _grad_x: &ArrayD<F>, _x: &ArrayD<F>,
+    a_shape: &[usize], _axes: &Option<Vec<i32>>,
 ) -> ArrayD<F> {
-    // Simplified: return negative outer product with appropriate shape
+    // Simplified: return negative outer product with appropriate _shape
     // This is a placeholder - actual implementation would compute proper tensor product
     ArrayD::<F>::zeros(IxDyn(a_shape))
 }
@@ -383,10 +379,10 @@ fn compute_grad_a<F: Float>(
 // Einsum helpers
 
 #[allow(dead_code)]
-fn parse_einsum_pattern(pattern: &str) -> Result<(Vec<String>, String), OpError> {
-    let parts: Vec<&str> = pattern.split("->").collect();
+fn parse_einsum_pattern(_pattern: &str) -> Result<(Vec<String>, String), OpError> {
+    let parts: Vec<&str> = _pattern.split("->").collect();
     if parts.len() != 2 {
-        return Err(OpError::Other("Invalid einsum pattern".into()));
+        return Err(OpError::Other("Invalid einsum _pattern".into()));
     }
 
     let input_part = parts[0];
@@ -449,10 +445,7 @@ fn compute_elementwise_mul<F: Float>(
 
 #[allow(dead_code)]
 fn compute_general_einsum<F: Float>(
-    a: &ndarray::ArrayViewD<F>,
-    _b: &ndarray::ArrayViewD<F>,
-    _input_specs: &[String],
-    _output_spec: &str,
+    a: &ndarray::ArrayViewD<F>, _b: &ndarray::ArrayViewD<F>, _input_specs: &[String], _output_spec: &str,
 ) -> Result<ArrayD<F>, OpError> {
     // Simplified implementation - just return first input for now
     Ok(a.to_owned())

@@ -6,7 +6,7 @@
 #![allow(dead_code)]
 
 #[allow(unused_imports)]
-use crate::gpu_ops::{
+use crate::gpu__ops::{
     GpuBackend, GpuBuffer, GpuBufferExt, GpuDataType, GpuDevice, GpuError, GpuKernelHandle,
 };
 use num_traits::Float;
@@ -231,17 +231,16 @@ where
 fn calculate_optimal_dimensions(
     backend: GpuBackend,
     problem_size: usize,
-    workgroup_size: [u32; 3],
-    _compute_units: u32,
+    workgroup_size: [u32; 3], _compute_units: u32,
 ) -> (Vec<usize>, Vec<usize>) {
     let optimal_workgroup = match backend {
         GpuBackend::Cuda => {
-            // NVIDIA GPUs prefer multiples of 32 (warp size)
+            // NVIDIA GPUs prefer multiples of 32 (warp _size)
             let warp_aligned = workgroup_size[0].div_ceil(32) * 32;
             [warp_aligned.min(1024), 1, 1] // Max 1024 threads per block
         }
         GpuBackend::OpenCL => {
-            // Generic OpenCL workgroup size
+            // Generic OpenCL workgroup _size
             [
                 workgroup_size[0].min(256),
                 workgroup_size[1],
@@ -249,21 +248,21 @@ fn calculate_optimal_dimensions(
             ]
         }
         GpuBackend::Metal => {
-            // Apple GPUs prefer multiples of 32 (simdgroup size)
+            // Apple GPUs prefer multiples of 32 (simdgroup _size)
             let simd_aligned = workgroup_size[0].div_ceil(32) * 32;
             [simd_aligned.min(1024), 1, 1]
         }
         GpuBackend::Cpu => {
-            // CPU execution can use any workgroup size
+            // CPU execution can use any workgroup _size
             workgroup_size
         }
         GpuBackend::Rocm => {
-            // AMD GPUs prefer multiples of 64 (wavefront size)
+            // AMD GPUs prefer multiples of 64 (wavefront _size)
             let wave_aligned = workgroup_size[0].div_ceil(64) * 64;
             [wave_aligned.min(1024), 1, 1]
         }
         GpuBackend::Wgpu => {
-            // WebGPU conservative workgroup size
+            // WebGPU conservative workgroup _size
             [workgroup_size[0].min(256), 1, 1]
         }
     };
@@ -300,15 +299,14 @@ where
     // - Use shared memory for better coalescing
     // - Employ warp-level primitives for efficient reduction
 
-    // Calculate optimal grid size for CUDA
-    let _warp_size = 32; // Standard CUDA warp size
+    // Calculate optimal grid _size for CUDA
+    let _warp_size = 32; // Standard CUDA warp _size
     let block_size = local_size[0].min(1024); // Max threads per block
     let grid_size = rows.div_ceil(block_size);
 
-    // Calculate shared memory size based on block size and data type
+    // Calculate shared memory _size based on block _size and data type
     let shared_memory_size = match config.memory_strategy {
-        MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * block_size,
-        _ => 0,
+        MemoryStrategy::SharedMemory =>, std::mem::_size_of::<T>() * block_size_ => 0,
     };
 
     // Enhanced kernel arguments with CUDA-specific optimizations
@@ -364,17 +362,16 @@ where
     // - Use local memory for efficient data sharing
     // - Implement vectorization when possible
 
-    // Query device capabilities for optimal work-group size
+    // Query device capabilities for optimal work-group _size
     let max_work_group_size = device.get_max_work_group_size().unwrap_or(256);
     let optimal_local_size = local_size[0].min(max_work_group_size);
 
-    // Calculate global work size (must be multiple of local work size in OpenCL)
+    // Calculate global work _size (must be multiple of local work _size in OpenCL)
     let aligned_global_size = rows.div_ceil(optimal_local_size) * optimal_local_size;
 
-    // Calculate local memory size for work-group sharing
+    // Calculate local memory _size for work-group sharing
     let local_memory_size = match config.memory_strategy {
-        MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * optimal_local_size,
-        _ => 0,
+        MemoryStrategy::SharedMemory =>, std::mem::_size_of::<T>() * optimal_local_size_ => 0,
     };
 
     // Enhanced OpenCL kernel arguments
@@ -428,7 +425,7 @@ where
     // - Leverage unified memory architecture for optimal data access
 
     // Metal threadgroup sizing (optimal for Apple GPU architectures)
-    let simdgroup_size = 32; // Apple GPU simdgroup size
+    let simdgroup_size = 32; // Apple GPU simdgroup _size
     let max_threads_per_group = device.get_max_threads_per_threadgroup().unwrap_or(1024);
     let optimal_threadgroup_size = local_size[0].min(max_threads_per_group);
 
@@ -439,10 +436,9 @@ where
     // Calculate number of threadgroups
     let num_threadgroups = (rows + aligned_threadgroup_size - 1) / aligned_threadgroup_size;
 
-    // Threadgroup memory size for Metal
+    // Threadgroup memory _size for Metal
     let threadgroup_memory_size = match config.memory_strategy {
-        MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * aligned_threadgroup_size,
-        _ => 0,
+        MemoryStrategy::SharedMemory =>, std::mem::_size_of::<T>() * aligned_threadgroup_size_ => 0,
     };
 
     // Enhanced Metal kernel arguments
@@ -465,7 +461,7 @@ where
     // Execute with Metal-optimized parameters
     device.execute_kernel_with_args(kernel, metal_global_size, metal_local_size, metal_args)?;
 
-    // Metal command buffer commit and wait
+    // Metal command _buffer commit and wait
     device.commit_and_wait()?;
 
     Ok(())
@@ -505,7 +501,7 @@ where
         y[i] = sum;
     }
 
-    // Copy result back to GPU buffer (this would be handled by the buffer implementation)
+    // Copy result back to GPU _buffer (this would be handled by the _buffer implementation)
     Ok(())
 }
 
@@ -671,8 +667,7 @@ pub fn execute_triangular_solve_kernel<T>(
     indices_buffer: &GpuBuffer<u32>,
     data_buffer: &GpuBuffer<T>,
     b_buffer: &GpuBuffer<T>,
-    x_buffer: &GpuBuffer<T>,
-    _config: &GpuKernelConfig,
+    x_buffer: &GpuBuffer<T>, _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -709,8 +704,7 @@ where
             data_buffer,
             b_buffer,
             x_buffer,
-        ),
-        _ => device.execute_kernel_with_args(
+        , _ => device.execute_kernel_with_args(
             kernel,
             &global_size,
             &local_size,
@@ -840,10 +834,10 @@ pub enum MemoryLayout {
 }
 
 impl GpuMemoryManager {
-    pub fn new(backend: GpuBackend) -> Result<Self, GpuError> {
-        let device = GpuDevice::get_default(backend)?;
+    pub fn new(_backend: GpuBackend) -> Result<Self, GpuError> {
+        let device = GpuDevice::get_default(_backend)?;
 
-        let alignment_preference = match backend {
+        let alignment_preference = match _backend {
             GpuBackend::Cuda => 128,  // CUDA prefers 128-byte alignment
             GpuBackend::OpenCL => 64, // OpenCL prefers 64-byte alignment
             GpuBackend::Metal => 16,  // Metal prefers 16-byte alignment
@@ -868,7 +862,7 @@ impl GpuMemoryManager {
         T: GpuDataType + Default + 'static,
     {
         let aligned_size =
-            self.align_size(size * std::mem::size_of::<T>()) / std::mem::size_of::<T>();
+            self.align_size(size * std::mem::size_of::<T>()) / std::mem::size, _of::<T>();
         let key = (aligned_size, std::any::TypeId::of::<T>());
 
         // Try to get from pool first
@@ -964,8 +958,7 @@ impl GpuMemoryManager {
     /// Optimize data transfer between host and device with adaptive strategies
     pub fn transfer_data_optimized<T>(
         &mut self,
-        host_data: &[T],
-        _priority: TransferPriority,
+        host_data: &[T], _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: GpuDataType + Copy,
@@ -976,15 +969,15 @@ impl GpuMemoryManager {
         let buffer = match self.device.backend() {
             #[cfg(feature = "gpu")]
             GpuBackend::Cuda => {
-                self.transfer_data_cuda_optimized(host_data, transfer_size, _priority)
+                self.transfer_data_cuda_optimized(host_data, transfer_size_priority)
             }
             #[cfg(feature = "gpu")]
             GpuBackend::OpenCL => {
-                self.transfer_data_opencl_optimized(host_data, transfer_size, _priority)
+                self.transfer_data_opencl_optimized(host_data, transfer_size_priority)
             }
             #[cfg(feature = "gpu")]
             GpuBackend::Metal => {
-                self.transfer_data_metal_optimized(host_data, transfer_size, _priority)
+                self.transfer_data_metal_optimized(host_data, transfer_size_priority)
             }
             _ => {
                 // Standard transfer for CPU or when GPU not available
@@ -1007,22 +1000,21 @@ impl GpuMemoryManager {
     fn transfer_data_cuda_optimized<T>(
         &self,
         host_data: &[T],
-        transfer_size: usize,
-        _priority: TransferPriority,
+        transfer_size: usize, _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: GpuDataType + Copy,
     {
-        match (transfer_size, _priority) {
-            // Large high-priority transfers: use pinned memory and async transfer
-            (size, TransferPriority::High | TransferPriority::Critical)
-                if size > 4 * 1024 * 1024 =>
+        match (transfer_size_priority) {
+            // Large high-_priority transfers: use pinned memory and async transfer
+            (_size, TransferPriority::High | TransferPriority::Critical)
+                if _size > 4 * 1024 * 1024 =>
             {
                 // Use pinned host memory for faster transfers
                 self.device.create_buffer(host_data) // Would use cudaHostAlloc in real implementation
             }
             // Medium transfers: use memory coalescing
-            (size, _) if size > 64 * 1024 => self.device.create_buffer(host_data),
+            (size_) if _size > 64 * 1024 => self.device.create_buffer(host_data),
             // Small transfers: standard approach
             _ => self.device.create_buffer(host_data),
         }
@@ -1033,8 +1025,7 @@ impl GpuMemoryManager {
     fn transfer_data_opencl_optimized<T>(
         &self,
         host_data: &[T],
-        transfer_size: usize,
-        _priority: TransferPriority,
+        transfer_size: usize, _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: GpuDataType + Copy,
@@ -1052,8 +1043,7 @@ impl GpuMemoryManager {
     fn transfer_data_metal_optimized<T>(
         &self,
         host_data: &[T],
-        transfer_size: usize,
-        _priority: TransferPriority,
+        transfer_size: usize, _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: GpuDataType + Copy,
@@ -1190,10 +1180,10 @@ where
     T: GpuDataType + Copy,
 {
     let priority = match access_pattern {
-        AccessPattern::Sequential => TransferPriority::Normal,
-        AccessPattern::Random => TransferPriority::High,
-        AccessPattern::Strided { .. } => TransferPriority::High,
-        AccessPattern::Blocked => TransferPriority::Normal,
+        AccessPattern::Sequential =>, TransferPriority::Normal,
+        AccessPattern::Random =>, TransferPriority::High,
+        AccessPattern::Strided { .. } =>, TransferPriority::High,
+        AccessPattern::Blocked =>, TransferPriority::Normal,
     };
 
     memory_manager.transfer_data_optimized(matrix_data, priority)
@@ -1220,12 +1210,12 @@ pub fn optimize_memory_bandwidth(
     access_pattern: AccessPattern,
 ) -> MemoryStrategy {
     match (backend, access_pattern, data_size) {
-        (GpuBackend::Cuda, AccessPattern::Sequential, size) if size > 1024 * 1024 => {
+        (GpuBackend::Cuda, AccessPattern::Sequential, _size) if _size > 1024 * 1024 => {
             MemoryStrategy::Coalesced
         }
-        (GpuBackend::Cuda, AccessPattern::Random, _) => MemoryStrategy::TextureMemory,
-        (GpuBackend::OpenCL, AccessPattern::Blocked, _) => MemoryStrategy::SharedMemory,
-        (GpuBackend::Metal, _, size) if size > 512 * 1024 => {
+        (GpuBackend::Cuda, AccessPattern:: Random) =>, MemoryStrategy::TextureMemory,
+        (GpuBackend::OpenCL, AccessPattern:: Blocked) =>, MemoryStrategy::SharedMemory,
+        (GpuBackend:: Metal, _size) if _size > 512 * 1024 => {
             MemoryStrategy::SharedMemory // Unified memory architecture
         }
         _ => MemoryStrategy::Standard,
@@ -1298,9 +1288,9 @@ pub fn calculate_adaptive_workgroup_size(
     };
 
     let memory_strategy = if available_memory > 512 * 1024 * 1024 {
-        MemoryStrategy::SharedMemory // Use shared memory if plenty available
+        MemoryStrategy::SharedMemory // Use shared _memory if plenty available
     } else {
-        MemoryStrategy::Coalesced // Use coalesced access for limited memory
+        MemoryStrategy::Coalesced // Use coalesced access for limited _memory
     };
 
     GpuKernelConfig {
@@ -1317,15 +1307,13 @@ pub fn calculate_adaptive_workgroup_size(
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_spmv_kernel<T>(
-    _device: &GpuDevice,
-    _kernel: &GpuKernelHandle,
+    _device: &GpuDevice_kernel: &GpuKernelHandle,
     rows: usize,
     indptr_buffer: &GpuBuffer<u32>,
     indices_buffer: &GpuBuffer<u32>,
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
-    y_buffer: &GpuBuffer<T>,
-    _config: &GpuKernelConfig,
+    y_buffer: &GpuBuffer<T>, _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -1346,15 +1334,13 @@ where
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_symmetric_spmv_kernel<T>(
-    _device: &GpuDevice,
-    _kernel: &GpuKernelHandle,
+    _device: &GpuDevice_kernel: &GpuKernelHandle,
     rows: usize,
     indptr_buffer: &GpuBuffer<u32>,
     indices_buffer: &GpuBuffer<u32>,
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
-    y_buffer: &GpuBuffer<T>,
-    _config: &GpuKernelConfig,
+    y_buffer: &GpuBuffer<T>, _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -1375,15 +1361,13 @@ where
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_triangular_solve_kernel<T>(
-    _device: &GpuDevice,
-    _kernel: &GpuKernelHandle,
+    _device: &GpuDevice_kernel: &GpuKernelHandle,
     n: usize,
     indptr_buffer: &GpuBuffer<u32>,
     indices_buffer: &GpuBuffer<u32>,
     data_buffer: &GpuBuffer<T>,
     b_buffer: &GpuBuffer<T>,
-    x_buffer: &GpuBuffer<T>,
-    _config: &GpuKernelConfig,
+    x_buffer: &GpuBuffer<T>, _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -1406,9 +1390,9 @@ pub struct GpuPerformanceProfiler {
 }
 
 impl GpuPerformanceProfiler {
-    pub fn new(backend: GpuBackend) -> Self {
+    pub fn new(_backend: GpuBackend) -> Self {
         Self {
-            backend,
+            _backend,
             timing_data: std::collections::HashMap::new(),
         }
     }

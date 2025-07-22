@@ -8,6 +8,7 @@ use crate::error::{MetricsError, Result};
 use crate::regression::{mean_absolute_error, mean_squared_error, r2_score};
 use ndarray::{s, Array1, Array2};
 use std::collections::HashMap;
+use statrs::statistics::Statistics;
 
 /// Forecasting evaluation results
 #[derive(Debug, Clone)]
@@ -147,8 +148,8 @@ impl ForecastingMetrics {
         let smape = self.calculate_smape(y_true, y_pred)?;
 
         // Calculate MASE
-        let mase = if let Some(train) = y_train {
-            self.calculate_mase(y_true, y_pred, train)?
+        let mase = if let Some(_train) = y_train {
+            self.calculate_mase(y_true, y_pred, _train)?
         } else if let Some(naive) = &self.naive_forecast {
             self.calculate_mase_with_naive(y_true, y_pred, naive)?
         } else {
@@ -162,7 +163,7 @@ impl ForecastingMetrics {
         let forecast_bias = y_pred
             .iter()
             .zip(y_true.iter())
-            .map(|(pred, true_val)| pred - true_val)
+            .map(|(_pred, true_val)| _pred - true_val)
             .sum::<f64>()
             / y_true.len() as f64;
 
@@ -198,7 +199,7 @@ impl ForecastingMetrics {
             Ok(100.0 * sum / count as f64)
         } else {
             Err(MetricsError::ComputationError(
-                "All true values are zero".to_string(),
+                "All _true values are zero".to_string(),
             ))
         }
     }
@@ -294,9 +295,9 @@ impl ForecastingMetrics {
             return Ok(0.0);
         }
 
-        let _baseline = if let Some(train) = y_train {
-            if !train.is_empty() {
-                train[train.len() - 1]
+        let _baseline = if let Some(_train) = y_train {
+            if !_train.is_empty() {
+                _train[_train.len() - 1]
             } else {
                 y_true[0]
             }
@@ -327,9 +328,9 @@ impl ForecastingMetrics {
         let mse_forecast = mean_squared_error(y_true, y_pred)?;
 
         // Calculate MSE of naive forecast (no-change forecast)
-        let baseline = if let Some(train) = y_train {
-            if !train.is_empty() {
-                train[train.len() - 1]
+        let baseline = if let Some(_train) = y_train {
+            if !_train.is_empty() {
+                _train[_train.len() - 1]
             } else {
                 y_true[0]
             }
@@ -397,8 +398,7 @@ impl TimeSeriesAnomalyMetrics {
                 (1, 1) => tp += 1,
                 (0, 1) => fp += 1,
                 (0, 0) => tn += 1,
-                (1, 0) => fn_count += 1,
-                _ => {
+                (1, 0) => fn_count += 1_ => {
                     return Err(MetricsError::InvalidInput(
                         "Invalid label values".to_string(),
                     ))
@@ -465,11 +465,11 @@ impl TimeSeriesAnomalyMetrics {
             return Err(MetricsError::InvalidInput("Length mismatch".to_string()));
         }
 
-        // Create pairs of (score, label) and sort by score
+        // Create pairs of (_score, label) and sort by _score
         let mut pairs: Vec<(f64, i32)> = y_score
             .iter()
             .zip(y_true.iter())
-            .map(|(&score, &label)| (score, label))
+            .map(|(&_score, &label)| (_score, label))
             .collect();
         pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
@@ -508,11 +508,11 @@ impl TimeSeriesAnomalyMetrics {
         y_true: &Array1<i32>,
         y_pred: &Array1<i32>,
     ) -> Result<(f64, f64)> {
-        // Find true anomaly windows
+        // Find _true anomaly windows
         let true_anomalies = self.find_anomaly_segments(y_true);
         let pred_anomalies = self.find_anomaly_segments(y_pred);
 
-        // For each true anomaly, check if any prediction falls within tolerance window
+        // For each _true anomaly, check if any prediction falls within tolerance window
         let mut true_positive_segments = 0;
         for (start, end) in &true_anomalies {
             let window_start = start.saturating_sub(self.tolerance_window);
@@ -527,7 +527,7 @@ impl TimeSeriesAnomalyMetrics {
             }
         }
 
-        // For each predicted anomaly, check if it's within tolerance of any true anomaly
+        // For each predicted anomaly, check if it's within tolerance of any _true anomaly
         let mut correctly_detected_segments = 0;
         for (pred_start, pred_end) in &pred_anomalies {
             let has_true_anomaly = true_anomalies.iter().any(|(true_start, true_end)| {
@@ -603,7 +603,7 @@ impl TrendAnalysisMetrics {
     ) -> Result<TrendAnalysisResults> {
         if time_series.len() < 10 {
             return Err(MetricsError::InvalidInput(
-                "Time series too short for trend analysis".to_string(),
+                "Time _series too short for trend analysis".to_string(),
             ));
         }
 
@@ -749,7 +749,7 @@ impl TrendAnalysisMetrics {
         let var1 = self.calculate_variance(&first_half.to_vec())?;
         let var2 = self.calculate_variance(&second_half.to_vec())?;
 
-        // Simple test: variance ratio should be close to 1 for stationary series
+        // Simple test: variance ratio should be close to 1 for stationary _series
         let ratio = if var2 > 1e-10 { var1 / var2 } else { 1.0 };
         Ok(ratio > 0.5 && ratio < 2.0)
     }

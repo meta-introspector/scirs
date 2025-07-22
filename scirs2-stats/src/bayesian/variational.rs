@@ -7,6 +7,7 @@ use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::validation::*;
 use std::f64::consts::PI;
+use statrs::statistics::Statistics;
 
 /// Mean-field variational inference for Bayesian linear regression
 ///
@@ -35,12 +36,12 @@ pub struct VariationalBayesianRegression {
 
 impl VariationalBayesianRegression {
     /// Create a new variational Bayesian regression model
-    pub fn new(n_features: usize, fit_intercept: bool) -> Result<Self> {
-        check_positive(n_features, "n_features")?;
+    pub fn new(_n_features: usize, fit_intercept: bool) -> Result<Self> {
+        check_positive(_n_features, "_n_features")?;
 
         // Initialize with weakly informative priors
-        let prior_mean_beta = Array1::zeros(n_features);
-        let prior_cov_beta = Array2::eye(n_features) * 100.0; // Large variance = weak prior
+        let prior_mean_beta = Array1::zeros(_n_features);
+        let prior_cov_beta = Array2::eye(_n_features) * 100.0; // Large variance = weak prior
         let prior_shape_tau = 1e-3;
         let prior_rate_tau = 1e-3;
 
@@ -53,7 +54,7 @@ impl VariationalBayesianRegression {
             prior_cov_beta,
             prior_shape_tau,
             prior_rate_tau,
-            n_features,
+            _n_features,
             fit_intercept,
         })
     }
@@ -142,7 +143,7 @@ impl VariationalBayesianRegression {
         let mut prev_elbo = f64::NEG_INFINITY;
         let mut elbo_history = Vec::new();
 
-        for iter in 0..max_iter {
+        for _iter in 0..max_iter {
             // Update q(β)
             self.update_beta_variational(&xtx, &xty, &prior_precision)?;
 
@@ -154,7 +155,7 @@ impl VariationalBayesianRegression {
             elbo_history.push(elbo);
 
             // Check convergence
-            if iter > 0 && (elbo - prev_elbo).abs() < tol {
+            if _iter > 0 && (elbo - prev_elbo).abs() < tol {
                 break;
             }
 
@@ -183,15 +184,15 @@ impl VariationalBayesianRegression {
         xty: &Array1<f64>,
         prior_precision: &Array2<f64>,
     ) -> Result<()> {
-        // Expected precision: E[τ] = shape / rate
+        // Expected _precision: E[τ] = shape / rate
         let expected_tau = self.shape_tau / self.rate_tau;
 
-        // Posterior precision
+        // Posterior _precision
         let precision_beta = prior_precision + &(xtx * expected_tau);
 
         // Posterior covariance
         self.cov_beta = scirs2_linalg::inv(&precision_beta.view(), None).map_err(|e| {
-            StatsError::ComputationError(format!("Failed to invert precision: {}", e))
+            StatsError::ComputationError(format!("Failed to invert _precision: {}", e))
         })?;
 
         // Posterior mean
@@ -460,8 +461,8 @@ pub struct VariationalARD {
 
 impl VariationalARD {
     /// Create new Variational ARD model
-    pub fn new(n_features: usize, fit_intercept: bool) -> Result<Self> {
-        check_positive(n_features, "n_features")?;
+    pub fn new(_n_features: usize, fit_intercept: bool) -> Result<Self> {
+        check_positive(_n_features, "_n_features")?;
 
         // Weakly informative priors
         let prior_shape_alpha = 1e-3;
@@ -470,17 +471,17 @@ impl VariationalARD {
         let prior_rate_tau = 1e-3;
 
         Ok(Self {
-            mean_beta: Array1::zeros(n_features),
-            var_beta: Array1::from_elem(n_features, 1.0),
-            shape_alpha: Array1::from_elem(n_features, prior_shape_alpha),
-            rate_alpha: Array1::from_elem(n_features, prior_rate_alpha),
+            mean_beta: Array1::zeros(_n_features),
+            var_beta: Array1::from_elem(_n_features, 1.0),
+            shape_alpha: Array1::from_elem(_n_features, prior_shape_alpha),
+            rate_alpha: Array1::from_elem(_n_features, prior_rate_alpha),
             shape_tau: prior_shape_tau,
             rate_tau: prior_rate_tau,
             prior_shape_alpha,
             prior_rate_alpha,
             prior_shape_tau,
             prior_rate_tau,
-            n_features,
+            _n_features,
             fit_intercept,
         })
     }
@@ -498,7 +499,7 @@ impl VariationalARD {
         check_positive(max_iter, "max_iter")?;
         check_positive(tol, "tol")?;
 
-        let (n_samples, _n_features) = x.dim();
+        let (n_samples_n_features) = x.dim();
         if y.len() != n_samples {
             return Err(StatsError::DimensionMismatch(format!(
                 "y length ({}) must match x rows ({})",
@@ -531,7 +532,7 @@ impl VariationalARD {
         let mut prev_elbo = f64::NEG_INFINITY;
         let mut elbo_history = Vec::new();
 
-        for iter in 0..max_iter {
+        for _iter in 0..max_iter {
             // Update q(β)
             self.update_beta_ard(&xtx, &xty)?;
 
@@ -546,12 +547,12 @@ impl VariationalARD {
             elbo_history.push(elbo);
 
             // Check convergence
-            if iter > 0 && (elbo - prev_elbo).abs() < tol {
+            if _iter > 0 && (elbo - prev_elbo).abs() < tol {
                 break;
             }
 
             // Prune irrelevant features
-            if iter % 10 == 0 {
+            if _iter % 10 == 0 {
                 self.prune_features()?;
             }
 
@@ -741,7 +742,7 @@ impl VariationalARDResult {
             .iter()
             .enumerate()
             .filter(|(_, &alpha)| alpha < threshold) // Low precision = high relevance
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .collect()
     }
 

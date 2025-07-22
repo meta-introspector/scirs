@@ -28,7 +28,7 @@
 //!
 //! ```rust
 //! use ndarray::Array2;
-//! use scirs2_interpolate::simd_optimized::{
+//! use scirs2__interpolate::simd_optimized::{
 //!     simd_rbf_evaluate, simd_distance_matrix, RBFKernel
 //! };
 //!
@@ -313,7 +313,7 @@ where
                     exp_arg.exp()
                 }
                 RBFKernel::Multiquadric => (dist_sq + epsilon * epsilon).sqrt(),
-                RBFKernel::InverseMultiquadric => F::one() / (dist_sq + epsilon * epsilon).sqrt(),
+                RBFKernel::InverseMultiquadric =>, F::one() / (dist_sq + epsilon * epsilon).sqrt(),
                 RBFKernel::Linear => dist,
                 RBFKernel::Cubic => dist * dist * dist,
             };
@@ -605,14 +605,14 @@ where
 
 /// Find the knot span for a given parameter value
 #[allow(dead_code)]
-fn find_knot_span<F>(knots: &ArrayView1<F>, n: usize, degree: usize, x: F) -> usize
+fn find_knot_span<F>(_knots: &ArrayView1<F>, n: usize, degree: usize, x: F) -> usize
 where
     F: Float + FromPrimitive + PartialOrd,
 {
-    if x >= knots[n] {
+    if x >= _knots[n] {
         return n - 1;
     }
-    if x <= knots[degree] {
+    if x <= _knots[degree] {
         return degree;
     }
 
@@ -621,8 +621,8 @@ where
     let mut high = n;
     let mut mid = (low + high) / 2;
 
-    while x < knots[mid] || x >= knots[mid + 1] {
-        if x < knots[mid] {
+    while x < _knots[mid] || x >= _knots[mid + 1] {
+        if x < _knots[mid] {
             high = mid;
         } else {
             low = mid;

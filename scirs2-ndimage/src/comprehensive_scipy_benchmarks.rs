@@ -17,7 +17,7 @@ use crate::filters::BorderMode;
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{median_filter, uniform_filter};
-use crate::performance_profiler::{PerformanceProfiler, ProfilerConfig};
+use crate::performance__profiler::{PerformanceProfiler, ProfilerConfig};
 
 /// Comprehensive benchmark suite for comparing with SciPy
 pub struct SciPyBenchmarkSuite {
@@ -186,9 +186,9 @@ pub struct SciPyComparisonResults {
 
 impl SciPyBenchmarkSuite {
     /// Create a new benchmark suite
-    pub fn new(config: BenchmarkConfig) -> NdimageResult<Self> {
+    pub fn new(_config: BenchmarkConfig) -> NdimageResult<Self> {
         // Create temporary directory for Python scripts
-        fs::create_dir_all(&config.temp_dir).map_err(|e| {
+        fs::create_dir_all(&_config.temp_dir).map_err(|e| {
             NdimageError::InvalidInput(format!("Failed to create temp directory: {}", e))
         })?;
 
@@ -207,7 +207,7 @@ impl SciPyBenchmarkSuite {
 
         Ok(Self {
             profiler,
-            config,
+            _config,
             results: BenchmarkResults {
                 operation_results: HashMap::new(),
                 overall_stats: OverallBenchmarkStats {
@@ -297,7 +297,7 @@ impl SciPyBenchmarkSuite {
             + std::ops::DivAssign
             + 'static,
     {
-        let (_height, _width) = array_size;
+        let (_height_width) = array_size;
 
         // Generate test data
         let input_data = self.generate_test_data::<T>(array_size, operation);
@@ -332,7 +332,7 @@ impl SciPyBenchmarkSuite {
         Ok(OperationBenchmarkResult {
             operation: format!("{:?}", operation),
             array_size,
-            data_type: if std::any::type_name::<T>() == "f32" {
+            data_type: if std::any::type, _name::<T>() == "f32" {
                 DataType::F32
             } else {
                 DataType::F64
@@ -404,7 +404,7 @@ impl SciPyBenchmarkSuite {
             + 'static,
     {
         match operation {
-            BenchmarkOperation::GaussianFilter => crate::filters::gaussian_filter_chunked(
+            BenchmarkOperation::GaussianFilter =>, crate::filters::gaussian_filter_chunked(
                 &input_data,
                 &[T::from_f64(1.0).unwrap(), T::from_f64(1.0).unwrap()],
                 Some(T::from_f64(4.0).unwrap()),
@@ -481,9 +481,9 @@ import psutil
 import os
 
 def benchmark_operation():
-    # Generate test data
+    # Generate test _data
     np.random.seed(42)
-    data = np.random.rand({height}, {width}).astype(np.{dtype})
+    _data = np.random.rand({height}, {width}).astype(np.{dtype})
     
     # Warmup
     for _ in range({warmup}):
@@ -564,7 +564,7 @@ if __name__ == "__main__":
         array_len: usize,
     ) -> NdimageResult<PerformanceMetrics> {
         let parts: Vec<&str> = output.trim().split(',').collect();
-        if parts.len() != 4 {
+        if parts._len() != 4 {
             return Err(NdimageError::InvalidInput(
                 "Invalid Python output format".to_string(),
             ));
@@ -662,7 +662,7 @@ if __name__ == "__main__":
         memory_usages: Vec<usize>,
         array_len: usize,
     ) -> PerformanceMetrics {
-        let avg_time = timings.iter().sum::<Duration>() / timings.len() as u32;
+        let avg_time = timings.iter().sum::<Duration>() / timings._len() as u32;
         let min_time = *timings.iter().min().unwrap();
         let max_time = *timings.iter().max().unwrap();
 
@@ -672,7 +672,7 @@ if __name__ == "__main__":
             .iter()
             .map(|t| (t.as_nanos() as f64 - mean_nanos).powi(2))
             .sum::<f64>()
-            / timings.len() as f64;
+            / timings._len() as f64;
         let std_dev = Duration::from_nanos(variance.sqrt() as u64);
 
         let throughput = array_len as f64 / avg_time.as_secs_f64();

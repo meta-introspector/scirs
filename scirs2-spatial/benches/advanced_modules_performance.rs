@@ -8,7 +8,7 @@ use ndarray::{Array1, Array2};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::time::Duration;
 
-use scirs2_spatial::{
+use scirs2__spatial::{
     distance::{euclidean, pdist},
 
     gpu_accel::is_gpu_acceleration_available,
@@ -52,24 +52,24 @@ impl BenchmarkDatasets {
         n_clusters: usize,
         dims: usize,
     ) -> Array2<f64> {
-        let mut points = Array2::zeros((n_points, dims));
+        let mut _points = Array2::zeros((n_points, dims));
 
         // Generate cluster centers
         let cluster_centers: Vec<Vec<f64>> = (0..n_clusters)
-            .map(|_| (0..dims).map(|_| rng.random_range(-50.0..50.0)).collect())
+            .map(|_| (0..dims).map(|_| rng.gen_range(-50.0..50.0)).collect())
             .collect();
 
-        // Assign points to clusters with noise
+        // Assign _points to _clusters with noise
         for i in 0..n_points {
             let cluster_idx = i % n_clusters;
             let center = &cluster_centers[cluster_idx];
 
             for j in 0..dims {
-                points[[i, j]] = center[j] + rng.random_range(-5.0..5.0);
+                _points[[i..j]] = center[j] + rng.gen_range(-5.0..5.0);
             }
         }
 
-        points
+        _points
     }
 }
 

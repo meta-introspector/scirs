@@ -2,7 +2,7 @@
 //!
 //! A minimal test of the chemical equilibrium functionality to verify it works.
 
-use scirs2_integrate::ode::chemical_equilibrium::{systems, ActivityModel};
+use scirs2__integrate::ode::chemical_equilibrium::{systems, ActivityModel};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

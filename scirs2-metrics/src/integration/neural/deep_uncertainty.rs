@@ -17,6 +17,7 @@ use num_traits::Float;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
 use std::iter::Sum;
+use statrs::statistics::Statistics;
 
 /// Deep learning uncertainty quantifier
 pub struct DeepUncertaintyQuantifier<F: Float> {
@@ -131,7 +132,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         let entropy_decomposition =
             self.compute_entropy_decomposition(&mc_dropout_uncertainty.predictions)?;
 
-        // Temperature scaling (if enabled and calibration data available)
+        // Temperature scaling (if enabled and _calibration data available)
         let temperature_scaling = if self.enable_temperature_scaling
             && x_calibration.is_some()
             && y_calibration.is_some()
@@ -245,7 +246,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         // Compute prediction intervals
         let prediction_intervals = self.compute_ensemble_prediction_intervals(&predictions)?;
 
-        // Compute mutual information between models
+        // Compute mutual information between _models
         let mutual_information = self.compute_model_mutual_information(&predictions)?;
 
         Ok(EnsembleUncertainty {
@@ -405,7 +406,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         let calibrated_probabilities =
             calibrated_logits.mapv(|x| F::one() / (F::one() + (-x).exp()));
 
-        // Compute calibration metrics
+        // Compute _calibration metrics
         let pre_calibration_ece = self.compute_expected_calibration_error(
             &logits.mapv(|x| F::one() / (F::one() + (-x).exp())),
             y_calibration,
@@ -418,7 +419,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
             calibrated_probabilities,
             pre_calibration_ece,
             post_calibration_ece,
-            calibration_improvement: pre_calibration_ece - post_calibration_ece,
+            _calibration_improvement: pre_calibration_ece - post_calibration_ece,
         })
     }
 
@@ -595,7 +596,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     ) -> Result<(Vec<F>, Array2<F>)> {
         let (_n_weights, rank) = deviation_matrix.dim();
 
-        // Compute covariance matrix: D^T * D
+        // Compute covariance _matrix: D^T * D
         let covariance = deviation_matrix.t().dot(deviation_matrix);
 
         // Simplified eigendecomposition (in practice, use proper linear algebra library)
@@ -704,7 +705,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     fn enhance_sample_diversity(&self, weight_samples: &mut [SWAGWeightSample<F>]) -> Result<()> {
         let n_samples = weight_samples.len();
 
-        // Compute pairwise distances between samples
+        // Compute pairwise distances between _samples
         let mut distances = Array2::zeros((n_samples, n_samples));
         for i in 0..n_samples {
             for j in (i + 1)..n_samples {
@@ -717,7 +718,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
             }
         }
 
-        // Apply diversity enhancement if samples are too similar
+        // Apply diversity enhancement if _samples are too similar
         let min_distance_threshold = F::from(0.01).unwrap();
         for i in 0..n_samples {
             let mut too_close_neighbors = 0;
@@ -727,7 +728,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
                 }
             }
 
-            // Add noise to samples that are too close to others
+            // Add noise to _samples that are too close to others
             if too_close_neighbors > n_samples / 4 {
                 let noise_scale = min_distance_threshold * F::from(0.5).unwrap();
                 for weight in &mut weight_samples[i].weights {
@@ -747,13 +748,12 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     fn model_with_weights<M>(
         &self,
         model: &M,
-        x: &ArrayView2<F>,
-        _weights: &SWAGWeightSample<F>,
+        x: &ArrayView2<F>, _weights: &SWAGWeightSample<F>,
     ) -> Result<Array1<F>>
     where
         M: Fn(&ArrayView2<F>, bool) -> Array1<F>,
     {
-        // In practice, you would apply the weights to the actual neural network
+        // In practice, you would apply the _weights to the actual neural network
         // For simulation, we apply noise to the output
         let base_predictions = model(x, false);
         let mut weighted_predictions = base_predictions.clone();
@@ -849,7 +849,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         // Compute deviation matrix D
         let mut deviation_matrix = Array2::zeros((n_weights, rank));
 
-        // Use subset of weight samples for low-rank approximation
+        // Use subset of weight _samples for low-rank approximation
         let step = weight_samples.len() / rank.max(1);
         for (k, i) in (0..weight_samples.len())
             .step_by(step)
@@ -1322,26 +1322,26 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
 
     /// Initialize realistic weights with proper scaling
     fn initialize_realistic_weights(&self, n_weights: usize) -> Result<Vec<F>> {
-        let mut weights = Vec::with_capacity(n_weights);
+        let mut _weights = Vec::with_capacity(n_weights);
 
-        // Xavier initialization: weights ~ N(0, 2/(n_in + n_out))
+        // Xavier initialization: _weights ~ N(0, 2/(n_in + n_out))
         let fan_in = 100; // Simulated input dimension
         let fan_out = 10; // Simulated output dimension
         let std = (F::from(2.0).unwrap() / F::from(fan_in + fan_out).unwrap()).sqrt();
 
         for i in 0..n_weights {
             let weight = self.sample_gaussian_with_seed(i) * std;
-            weights.push(weight);
+            _weights.push(weight);
         }
 
-        Ok(weights)
+        Ok(_weights)
     }
 
     /// Compute SWA mean from weight trajectory
     fn compute_swa_mean(&self, weight_trajectory: &[Vec<F>]) -> Result<Vec<F>> {
         if weight_trajectory.is_empty() {
             return Err(MetricsError::InvalidInput(
-                "Empty weight trajectory".to_string(),
+                "Empty weight _trajectory".to_string(),
             ));
         }
 
@@ -1372,8 +1372,8 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         let n_epochs = weight_trajectory.len();
         let mut diagonal_variance = vec![F::zero(); n_weights];
 
-        for weights in weight_trajectory {
-            for (i, &weight) in weights.iter().enumerate() {
+        for _weights in weight_trajectory {
+            for (i, &weight) in _weights.iter().enumerate() {
                 let deviation = weight - mean_weights[i];
                 diagonal_variance[i] = diagonal_variance[i] + deviation * deviation;
             }
@@ -1394,9 +1394,9 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     ) -> Result<Vec<Vec<F>>> {
         let mut deviations = Vec::new();
 
-        for weights in weight_trajectory {
+        for _weights in weight_trajectory {
             let mut deviation = Vec::new();
-            for (i, &weight) in weights.iter().enumerate() {
+            for (i, &weight) in _weights.iter().enumerate() {
                 deviation.push(weight - mean_weights[i]);
             }
             deviations.push(deviation);
@@ -1441,12 +1441,12 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
     fn compute_deviation_penalty(&self, weights: &[F], mean_weights: &[F]) -> Result<F> {
         let mut penalty = F::zero();
 
-        for (&weight, &mean_weight) in weights.iter().zip(mean_weights.iter()) {
+        for (&weight, &mean_weight) in _weights.iter().zip(mean_weights.iter()) {
             let deviation = weight - mean_weight;
             penalty = penalty + deviation * deviation;
         }
 
-        Ok(penalty / F::from(weights.len()).unwrap())
+        Ok(penalty / F::from(_weights.len()).unwrap())
     }
 
     /// Compute weight distance between two weight vectors

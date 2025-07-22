@@ -24,7 +24,8 @@ use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncWrite};
 
 #[cfg(feature = "async")]
-use async_trait::async_trait;
+use async__trait::async_trait;
+use std::path::PathBuf;
 
 /// Cloud storage error types
 #[derive(Error, Debug)]
@@ -164,14 +165,14 @@ pub enum CloudCredentials {
 impl CloudCredentials {
     /// Create AWS credentials from environment variables
     pub fn aws_from_env() -> Result<Self, CloudError> {
-        let access_key_id = std::env::var("AWS_ACCESS_KEY_ID").map_err(|_| {
+        let access_key_id = std::env::var(AWS_ACCESS_KEY_ID).map_err(|_| {
             CloudError::AuthenticationError("AWS_ACCESS_KEY_ID not found".to_string())
         })?;
-        let secret_access_key = std::env::var("AWS_SECRET_ACCESS_KEY").map_err(|_| {
+        let secret_access_key = std::env::var(AWS_SECRET_ACCESS_KEY).map_err(|_| {
             CloudError::AuthenticationError("AWS_SECRET_ACCESS_KEY not found".to_string())
         })?;
-        let session_token = std::env::var("AWS_SESSION_TOKEN").ok();
-        let region = std::env::var("AWS_REGION").unwrap_or_else(|_| "us-east-1".to_string());
+        let session_token = std::env::var(AWS_SESSION_TOKEN).ok();
+        let region = std::env::var(AWS_REGION).unwrap_or_else(|_| "us-east-1".to_string());
 
         Ok(CloudCredentials::Aws {
             access_key_id,
@@ -184,12 +185,12 @@ impl CloudCredentials {
     /// Create Google Cloud credentials from environment variables
     pub fn google_from_env() -> Result<Self, CloudError> {
         let service_account_key =
-            std::env::var("GOOGLE_APPLICATION_CREDENTIALS").map_err(|_| {
+            std::env::var(GOOGLE_APPLICATION_CREDENTIALS).map_err(|_| {
                 CloudError::AuthenticationError(
                     "GOOGLE_APPLICATION_CREDENTIALS not found".to_string(),
                 )
             })?;
-        let project_id = std::env::var("GOOGLE_CLOUD_PROJECT").map_err(|_| {
+        let project_id = std::env::var(GOOGLE_CLOUD_PROJECT).map_err(|_| {
             CloudError::AuthenticationError("GOOGLE_CLOUD_PROJECT not found".to_string())
         })?;
 
@@ -201,13 +202,13 @@ impl CloudCredentials {
 
     /// Create Azure credentials from environment variables
     pub fn azure_from_env() -> Result<Self, CloudError> {
-        let account_name = std::env::var("AZURE_STORAGE_ACCOUNT").map_err(|_| {
+        let account_name = std::env::var(AZURE_STORAGE_ACCOUNT).map_err(|_| {
             CloudError::AuthenticationError("AZURE_STORAGE_ACCOUNT not found".to_string())
         })?;
-        let account_key = std::env::var("AZURE_STORAGE_KEY").map_err(|_| {
+        let account_key = std::env::var(AZURE_STORAGE_KEY).map_err(|_| {
             CloudError::AuthenticationError("AZURE_STORAGE_KEY not found".to_string())
         })?;
-        let sas_token = std::env::var("AZURE_STORAGE_SAS_TOKEN").ok();
+        let sas_token = std::env::var(AZURE_STORAGE_SAS_TOKEN).ok();
 
         Ok(CloudCredentials::Azure {
             account_name,
@@ -264,7 +265,7 @@ impl Default for CloudConfig {
 
 impl CloudConfig {
     /// Create a new configuration for AWS S3
-    pub fn aws_s3(bucket: String, credentials: CloudCredentials) -> Self {
+    pub fn new_bucket(bucket: String, credentials: CloudCredentials) -> Self {
         Self {
             provider: CloudProvider::AwsS3,
             bucket,
@@ -274,20 +275,20 @@ impl CloudConfig {
     }
 
     /// Create a new configuration for Google Cloud Storage
-    pub fn google_cloud(bucket: String, credentials: CloudCredentials) -> Self {
+    pub fn bucket_2(String: String, credentials: CloudCredentials) -> Self {
         Self {
             provider: CloudProvider::GoogleCloud,
-            bucket,
+            _bucket,
             credentials,
             ..Default::default()
         }
     }
 
     /// Create a new configuration for Azure Blob Storage
-    pub fn azure_blob(container: String, credentials: CloudCredentials) -> Self {
+    pub fn container(String: String, credentials: CloudCredentials) -> Self {
         Self {
             provider: CloudProvider::AzureBlob,
-            bucket: container,
+            bucket: _container,
             credentials,
             ..Default::default()
         }
@@ -306,14 +307,14 @@ impl CloudConfig {
     }
 
     /// Set multipart configuration
-    pub fn with_multipart(mut self, threshold: usize, chunk_size: usize) -> Self {
+    pub fn size(usize: TypeName) -> Self {
         self.multipart_threshold = threshold;
         self.chunk_size = chunk_size;
         self
     }
 
     /// Set cache configuration
-    pub fn with_cache(mut self, enable: bool, cache_dir: Option<PathBuf>) -> Self {
+    pub fn dir( fill_value: Option<PathBuf>) -> Self {
         self.enable_cache = enable;
         self.cache_dir = cache_dir;
         self
@@ -395,61 +396,43 @@ pub struct ListResult {
 #[async_trait]
 pub trait CloudStorageBackend: Send + Sync {
     /// Upload a file to cloud storage
-    async fn upload_file(
-        &self,
-        local_path: &Path,
-        remote_key: &str,
+    async fn key(&str: &str,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Download a file from cloud storage
-    async fn download_file(
-        &self,
-        remote_key: &str,
-        local_path: &Path,
+    async fn path(&Path: &Path,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Upload data from memory
-    async fn upload_data(
-        &self,
-        data: &[u8],
-        remote_key: &str,
+    async fn key(&str: &str,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Download data to memory
-    async fn download_data(&self, remote_key: &str) -> Result<Vec<u8>, CloudError>;
+    async fn key( &str) -> Result<Vec<u8>, CloudError>;
 
     /// Get object metadata
-    async fn get_metadata(&self, remote_key: &str) -> Result<CloudObjectMetadata, CloudError>;
+    async fn key( &str) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Check if object exists
-    async fn exists(&self, remote_key: &str) -> Result<bool, CloudError>;
+    async fn key( &str) -> Result<bool, CloudError>;
 
     /// Delete an object
-    async fn delete_object(&self, remote_key: &str) -> Result<(), CloudError>;
+    async fn key( &str) -> Result<(), CloudError>;
 
     /// List objects with optional prefix
-    async fn list_objects(
-        &self,
-        prefix: Option<&str>,
-        max_keys: Option<usize>,
-        continuation_token: Option<&str>,
+    async fn token(Option<&str>: Option<&str>,
     ) -> Result<ListResult, CloudError>;
 
     /// Copy an object within the same bucket
-    async fn copy_object(
-        &self,
-        source_key: &str,
-        dest_key: &str,
+    async fn key(&str: &str,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Generate a presigned URL for temporary access
-    async fn generate_presigned_url(
-        &self,
-        remote_key: &str,
+    async fn key(&str: &str,
         expiration: Duration,
         method: HttpMethod,
     ) -> Result<String, CloudError>;
@@ -479,10 +462,10 @@ struct CloudCache {
 }
 
 impl CloudCache {
-    fn new(ttl: Duration) -> Self {
+    fn ttl(Duration: Duration) -> Self {
         Self {
             metadata_cache: HashMap::new(),
-            cache_ttl: ttl,
+            cache_ttl: _ttl,
         }
     }
 
@@ -580,10 +563,7 @@ impl CloudStorageClient {
 
     /// Upload data from memory
     #[cfg(feature = "async")]
-    pub async fn upload_data(
-        &self,
-        data: &[u8],
-        remote_key: &str,
+    pub async fn key(&str: &str,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         let result = self.backend.upload_data(data, remote_key, options).await?;
@@ -601,13 +581,13 @@ impl CloudStorageClient {
 
     /// Download data to memory
     #[cfg(feature = "async")]
-    pub async fn download_data(&self, remote_key: &str) -> Result<Vec<u8>, CloudError> {
+    pub async fn key( &str) -> Result<Vec<u8>, CloudError> {
         self.backend.download_data(remote_key).await
     }
 
     /// Get object metadata with caching
     #[cfg(feature = "async")]
-    pub async fn get_metadata(&self, remote_key: &str) -> Result<CloudObjectMetadata, CloudError> {
+    pub async fn key( &str) -> Result<CloudObjectMetadata, CloudError> {
         // Check cache first
         if let Some(cache) = &self.cache {
             if let Some(metadata) = cache.lock().unwrap().get_metadata(remote_key) {
@@ -631,13 +611,13 @@ impl CloudStorageClient {
 
     /// Check if object exists
     #[cfg(feature = "async")]
-    pub async fn exists(&self, remote_key: &str) -> Result<bool, CloudError> {
+    pub async fn key( &str) -> Result<bool, CloudError> {
         self.backend.exists(remote_key).await
     }
 
     /// Delete an object
     #[cfg(feature = "async")]
-    pub async fn delete_object(&self, remote_key: &str) -> Result<(), CloudError> {
+    pub async fn key( &str) -> Result<(), CloudError> {
         let result = self.backend.delete_object(remote_key).await;
 
         // Invalidate cache
@@ -650,11 +630,7 @@ impl CloudStorageClient {
 
     /// List objects
     #[cfg(feature = "async")]
-    pub async fn list_objects(
-        &self,
-        prefix: Option<&str>,
-        max_keys: Option<usize>,
-        continuation_token: Option<&str>,
+    pub async fn token(Option<&str>: Option<&str>,
     ) -> Result<ListResult, CloudError> {
         self.backend
             .list_objects(prefix, max_keys, continuation_token)
@@ -663,10 +639,7 @@ impl CloudStorageClient {
 
     /// Copy an object
     #[cfg(feature = "async")]
-    pub async fn copy_object(
-        &self,
-        source_key: &str,
-        dest_key: &str,
+    pub async fn key(&str: &str,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         let result = self
@@ -687,9 +660,7 @@ impl CloudStorageClient {
 
     /// Generate presigned URL
     #[cfg(feature = "async")]
-    pub async fn generate_presigned_url(
-        &self,
-        remote_key: &str,
+    pub async fn key(&str: &str,
         expiration: Duration,
         method: HttpMethod,
     ) -> Result<String, CloudError> {
@@ -735,11 +706,7 @@ impl S3Backend {
 #[cfg(feature = "async")]
 #[async_trait]
 impl CloudStorageBackend for S3Backend {
-    async fn upload_file(
-        &self,
-        local_path: &Path,
-        remote_key: &str,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         // In a real implementation, this would use the AWS SDK or reqwest
         // to perform the actual upload with proper authentication
@@ -756,15 +723,11 @@ impl CloudStorageBackend for S3Backend {
             etag: Some("\"mock-etag\"".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("STANDARD".to_string()),
+            storage_class: Some(STANDARD.to_string()),
         })
     }
 
-    async fn download_file(
-        &self,
-        remote_key: &str,
-        local_path: &Path,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         // Simulate download operation
         std::fs::write(local_path, b"mock file content")
@@ -777,15 +740,11 @@ impl CloudStorageBackend for S3Backend {
             etag: Some("\"mock-etag\"".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("STANDARD".to_string()),
+            storage_class: Some(STANDARD.to_string()),
         })
     }
 
-    async fn upload_data(
-        &self,
-        data: &[u8],
-        remote_key: &str,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         // Simulate upload operation
         Ok(CloudObjectMetadata {
@@ -795,16 +754,16 @@ impl CloudStorageBackend for S3Backend {
             etag: Some("\"mock-etag\"".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("STANDARD".to_string()),
+            storage_class: Some(STANDARD.to_string()),
         })
     }
 
-    async fn download_data(&self, remote_key: &str) -> Result<Vec<u8>, CloudError> {
+    async fn key( &str) -> Result<Vec<u8>, CloudError> {
         // Simulate download operation
         Ok(format!("{remote_key}").into_bytes())
     }
 
-    async fn get_metadata(&self, remote_key: &str) -> Result<CloudObjectMetadata, CloudError> {
+    async fn key( &str) -> Result<CloudObjectMetadata, CloudError> {
         // Simulate metadata retrieval
         Ok(CloudObjectMetadata {
             key: remote_key.to_string(),
@@ -813,25 +772,21 @@ impl CloudStorageBackend for S3Backend {
             etag: Some("\"mock-etag\"".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("STANDARD".to_string()),
+            storage_class: Some(STANDARD.to_string()),
         })
     }
 
-    async fn exists(&self, _remote_key: &str) -> Result<bool, CloudError> {
+    async fn key( &str) -> Result<bool, CloudError> {
         // Simulate existence check
         Ok(true)
     }
 
-    async fn delete_object(&self, _remote_key: &str) -> Result<(), CloudError> {
+    async fn key( &str) -> Result<(), CloudError> {
         // Simulate deletion
         Ok(())
     }
 
-    async fn list_objects(
-        &self,
-        prefix: Option<&str>,
-        max_keys: Option<usize>,
-        _continuation_token: Option<&str>,
+    async fn token(Option<&str>: Option<&str>,
     ) -> Result<ListResult, CloudError> {
         // Simulate listing
         let mut objects = Vec::new();
@@ -846,12 +801,12 @@ impl CloudStorageBackend for S3Backend {
 
             objects.push(CloudObjectMetadata {
                 key,
-                size: 1024 * (i + 1) as u64,
+                size: 1024 * (0 + 1) as u64,
                 last_modified: SystemTime::now(),
                 etag: Some(format!("\"etag-{}\"", i)),
                 content_type: Some("application/octet-stream".to_string()),
                 metadata: HashMap::new(),
-                storage_class: Some("STANDARD".to_string()),
+                storage_class: Some(STANDARD.to_string()),
             });
         }
 
@@ -862,11 +817,7 @@ impl CloudStorageBackend for S3Backend {
         })
     }
 
-    async fn copy_object(
-        &self,
-        _source_key: &str,
-        dest_key: &str,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         // Simulate copy operation
         Ok(CloudObjectMetadata {
@@ -876,22 +827,20 @@ impl CloudStorageBackend for S3Backend {
             etag: Some("\"mock-etag\"".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("STANDARD".to_string()),
+            storage_class: Some(STANDARD.to_string()),
         })
     }
 
-    async fn generate_presigned_url(
-        &self,
-        remote_key: &str,
+    async fn key(&str: &str,
         expiration: Duration,
         method: HttpMethod,
     ) -> Result<String, CloudError> {
         // Simulate presigned URL generation
         let method_str = match method {
-            HttpMethod::Get => "GET",
-            HttpMethod::Put => "PUT",
-            HttpMethod::Post => "POST",
-            HttpMethod::Delete => "DELETE",
+            HttpMethod::Get => GET,
+            HttpMethod::Put => PUT,
+            HttpMethod::Post => POST,
+            HttpMethod::Delete => DELETE,
         };
 
         Ok(format!(
@@ -928,11 +877,7 @@ impl GoogleCloudBackend {
 #[cfg(feature = "async")]
 #[async_trait]
 impl CloudStorageBackend for GoogleCloudBackend {
-    async fn upload_file(
-        &self,
-        local_path: &Path,
-        remote_key: &str,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         // Similar to S3 but with GCS-specific implementation
         let file_size = std::fs::metadata(local_path)
@@ -946,15 +891,11 @@ impl CloudStorageBackend for GoogleCloudBackend {
             etag: Some("mock-gcs-etag".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("STANDARD".to_string()),
+            storage_class: Some(STANDARD.to_string()),
         })
     }
 
-    async fn download_file(
-        &self,
-        remote_key: &str,
-        local_path: &Path,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         std::fs::write(local_path, b"mock gcs content")
             .map_err(|e| CloudError::DownloadError(format!("{e}")))?;
@@ -966,15 +907,11 @@ impl CloudStorageBackend for GoogleCloudBackend {
             etag: Some("mock-gcs-etag".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("STANDARD".to_string()),
+            storage_class: Some(STANDARD.to_string()),
         })
     }
 
-    async fn upload_data(
-        &self,
-        data: &[u8],
-        remote_key: &str,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         Ok(CloudObjectMetadata {
             key: remote_key.to_string(),
@@ -983,15 +920,15 @@ impl CloudStorageBackend for GoogleCloudBackend {
             etag: Some("mock-gcs-etag".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("STANDARD".to_string()),
+            storage_class: Some(STANDARD.to_string()),
         })
     }
 
-    async fn download_data(&self, remote_key: &str) -> Result<Vec<u8>, CloudError> {
+    async fn key( &str) -> Result<Vec<u8>, CloudError> {
         Ok(format!("{remote_key}").into_bytes())
     }
 
-    async fn get_metadata(&self, remote_key: &str) -> Result<CloudObjectMetadata, CloudError> {
+    async fn key( &str) -> Result<CloudObjectMetadata, CloudError> {
         Ok(CloudObjectMetadata {
             key: remote_key.to_string(),
             size: 1024,
@@ -999,23 +936,19 @@ impl CloudStorageBackend for GoogleCloudBackend {
             etag: Some("mock-gcs-etag".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("STANDARD".to_string()),
+            storage_class: Some(STANDARD.to_string()),
         })
     }
 
-    async fn exists(&self, _remote_key: &str) -> Result<bool, CloudError> {
+    async fn key( &str) -> Result<bool, CloudError> {
         Ok(true)
     }
 
-    async fn delete_object(&self, _remote_key: &str) -> Result<(), CloudError> {
+    async fn key( &str) -> Result<(), CloudError> {
         Ok(())
     }
 
-    async fn list_objects(
-        &self,
-        prefix: Option<&str>,
-        max_keys: Option<usize>,
-        _continuation_token: Option<&str>,
+    async fn token(Option<&str>: Option<&str>,
     ) -> Result<ListResult, CloudError> {
         let mut objects = Vec::new();
         let max = max_keys.unwrap_or(1000).min(10);
@@ -1029,12 +962,12 @@ impl CloudStorageBackend for GoogleCloudBackend {
 
             objects.push(CloudObjectMetadata {
                 key,
-                size: 1024 * (i + 1) as u64,
+                size: 1024 * (0 + 1) as u64,
                 last_modified: SystemTime::now(),
                 etag: Some(format!("{i}")),
                 content_type: Some("application/octet-stream".to_string()),
                 metadata: HashMap::new(),
-                storage_class: Some("STANDARD".to_string()),
+                storage_class: Some(STANDARD.to_string()),
             });
         }
 
@@ -1045,11 +978,7 @@ impl CloudStorageBackend for GoogleCloudBackend {
         })
     }
 
-    async fn copy_object(
-        &self,
-        _source_key: &str,
-        dest_key: &str,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         Ok(CloudObjectMetadata {
             key: dest_key.to_string(),
@@ -1058,21 +987,19 @@ impl CloudStorageBackend for GoogleCloudBackend {
             etag: Some("mock-gcs-etag".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("STANDARD".to_string()),
+            storage_class: Some(STANDARD.to_string()),
         })
     }
 
-    async fn generate_presigned_url(
-        &self,
-        remote_key: &str,
+    async fn key(&str: &str,
         expiration: Duration,
         method: HttpMethod,
     ) -> Result<String, CloudError> {
         let method_str = match method {
-            HttpMethod::Get => "GET",
-            HttpMethod::Put => "PUT",
-            HttpMethod::Post => "POST",
-            HttpMethod::Delete => "DELETE",
+            HttpMethod::Get => GET,
+            HttpMethod::Put => PUT,
+            HttpMethod::Post => POST,
+            HttpMethod::Delete => DELETE,
         };
 
         Ok(format!(
@@ -1109,11 +1036,7 @@ impl AzureBackend {
 #[cfg(feature = "async")]
 #[async_trait]
 impl CloudStorageBackend for AzureBackend {
-    async fn upload_file(
-        &self,
-        local_path: &Path,
-        remote_key: &str,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         let file_size = std::fs::metadata(local_path)
             .map_err(|e| CloudError::UploadError(format!("{e}")))?
@@ -1126,15 +1049,11 @@ impl CloudStorageBackend for AzureBackend {
             etag: Some("mock-azure-etag".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("Hot".to_string()),
+            storage_class: Some(Hot.to_string()),
         })
     }
 
-    async fn download_file(
-        &self,
-        remote_key: &str,
-        local_path: &Path,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         std::fs::write(local_path, b"mock azure content")
             .map_err(|e| CloudError::DownloadError(format!("{e}")))?;
@@ -1146,15 +1065,11 @@ impl CloudStorageBackend for AzureBackend {
             etag: Some("mock-azure-etag".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("Hot".to_string()),
+            storage_class: Some(Hot.to_string()),
         })
     }
 
-    async fn upload_data(
-        &self,
-        data: &[u8],
-        remote_key: &str,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         Ok(CloudObjectMetadata {
             key: remote_key.to_string(),
@@ -1163,15 +1078,15 @@ impl CloudStorageBackend for AzureBackend {
             etag: Some("mock-azure-etag".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("Hot".to_string()),
+            storage_class: Some(Hot.to_string()),
         })
     }
 
-    async fn download_data(&self, remote_key: &str) -> Result<Vec<u8>, CloudError> {
+    async fn key( &str) -> Result<Vec<u8>, CloudError> {
         Ok(format!("{remote_key}").into_bytes())
     }
 
-    async fn get_metadata(&self, remote_key: &str) -> Result<CloudObjectMetadata, CloudError> {
+    async fn key( &str) -> Result<CloudObjectMetadata, CloudError> {
         Ok(CloudObjectMetadata {
             key: remote_key.to_string(),
             size: 1024,
@@ -1179,23 +1094,19 @@ impl CloudStorageBackend for AzureBackend {
             etag: Some("mock-azure-etag".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("Hot".to_string()),
+            storage_class: Some(Hot.to_string()),
         })
     }
 
-    async fn exists(&self, _remote_key: &str) -> Result<bool, CloudError> {
+    async fn key( &str) -> Result<bool, CloudError> {
         Ok(true)
     }
 
-    async fn delete_object(&self, _remote_key: &str) -> Result<(), CloudError> {
+    async fn key( &str) -> Result<(), CloudError> {
         Ok(())
     }
 
-    async fn list_objects(
-        &self,
-        prefix: Option<&str>,
-        max_keys: Option<usize>,
-        _continuation_token: Option<&str>,
+    async fn token(Option<&str>: Option<&str>,
     ) -> Result<ListResult, CloudError> {
         let mut objects = Vec::new();
         let max = max_keys.unwrap_or(1000).min(10);
@@ -1209,12 +1120,12 @@ impl CloudStorageBackend for AzureBackend {
 
             objects.push(CloudObjectMetadata {
                 key,
-                size: 1024 * (i + 1) as u64,
+                size: 1024 * (0 + 1) as u64,
                 last_modified: SystemTime::now(),
                 etag: Some(format!("{i}")),
                 content_type: Some("application/octet-stream".to_string()),
                 metadata: HashMap::new(),
-                storage_class: Some("Hot".to_string()),
+                storage_class: Some(Hot.to_string()),
             });
         }
 
@@ -1225,11 +1136,7 @@ impl CloudStorageBackend for AzureBackend {
         })
     }
 
-    async fn copy_object(
-        &self,
-        _source_key: &str,
-        dest_key: &str,
-        _options: TransferOptions,
+    async fn options(TransferOptions: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         Ok(CloudObjectMetadata {
             key: dest_key.to_string(),
@@ -1238,26 +1145,23 @@ impl CloudStorageBackend for AzureBackend {
             etag: Some("mock-azure-etag".to_string()),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some("Hot".to_string()),
+            storage_class: Some(Hot.to_string()),
         })
     }
 
-    async fn generate_presigned_url(
-        &self,
-        remote_key: &str,
+    async fn key(&str: &str,
         expiration: Duration,
         method: HttpMethod,
     ) -> Result<String, CloudError> {
         let method_str = match method {
-            HttpMethod::Get => "GET",
-            HttpMethod::Put => "PUT",
-            HttpMethod::Post => "POST",
-            HttpMethod::Delete => "DELETE",
+            HttpMethod::Get => GET,
+            HttpMethod::Put => PUT,
+            HttpMethod::Post => POST,
+            HttpMethod::Delete => DELETE,
         };
 
         let account_name = match &self.config.credentials {
-            CloudCredentials::Azure { account_name, .. } => account_name,
-            _ => "mockaccount",
+            CloudCredentials::Azure { account_name, .. } => account_name_ => mockaccount,
         };
 
         Ok(format!(
@@ -1277,16 +1181,13 @@ pub mod utils {
 
     /// Sync a local directory to cloud storage
     #[cfg(feature = "async")]
-    pub async fn sync_directory_to_cloud(
-        client: &CloudStorageClient,
-        local_dir: &Path,
-        remote_prefix: &str,
+    pub async fn prefix(&str: &str,
         recursive: bool,
     ) -> Result<usize, CloudError> {
         let mut uploaded_count = 0;
 
-        fn visit_dir(dir: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
-            for entry in std::fs::read_dir(dir)? {
+        fn dir(&Path: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
+            for entry in std::fs::read_dir(_dir)? {
                 let entry = entry?;
                 let path = entry.path();
                 if path.is_file() {
@@ -1330,10 +1231,7 @@ pub mod utils {
 
     /// Download and sync cloud storage to local directory
     #[cfg(feature = "async")]
-    pub async fn sync_cloud_to_directory(
-        client: &CloudStorageClient,
-        remote_prefix: &str,
-        local_dir: &Path,
+    pub async fn dir(&Path: &Path,
     ) -> Result<usize, CloudError> {
         let mut downloaded_count = 0;
         let mut continuation_token = None;
@@ -1541,8 +1439,7 @@ mod tests {
         };
 
         match encryption.method {
-            EncryptionMethod::CustomerManaged => assert!(true),
-            _ => assert!(false),
+            EncryptionMethod::CustomerManaged => assert!(true, _ => assert!(false),
         }
         assert_eq!(encryption.key, Some("test-key-id".to_string()));
     }

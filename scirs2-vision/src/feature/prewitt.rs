@@ -26,7 +26,7 @@ use ndarray::Array2;
 /// # Example
 ///
 /// ```rust
-/// use scirs2_vision::feature::prewitt_edges;
+/// use scirs2__vision::feature::prewitt_edges;
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -36,8 +36,8 @@ use ndarray::Array2;
 /// # }
 /// ```
 #[allow(dead_code)]
-pub fn prewitt_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
-    let array = image_to_array(img)?;
+pub fn prewitt_edges(_img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
+    let array = image_to_array(_img)?;
     let (height, width) = array.dim();
 
     // Create output array
@@ -95,8 +95,8 @@ pub fn prewitt_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
 ///
 /// * Result containing a tuple of (magnitude array, direction array in radians)
 #[allow(dead_code)]
-pub fn prewitt_gradients(img: &DynamicImage) -> Result<(Array2<f32>, Array2<f32>)> {
-    let array = image_to_array(img)?;
+pub fn prewitt_gradients(_img: &DynamicImage) -> Result<(Array2<f32>, Array2<f32>)> {
+    let array = image_to_array(_img)?;
     let (height, width) = array.dim();
 
     // Create output arrays

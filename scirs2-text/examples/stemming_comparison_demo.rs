@@ -1,4 +1,4 @@
-use scirs2_text::{LancasterStemmer, PorterStemmer, SimpleLemmatizer, SnowballStemmer, Stemmer};
+use scirs2__text::{LancasterStemmer, PorterStemmer, SimpleLemmatizer, SnowballStemmer, Stemmer};
 use std::error::Error;
 
 #[allow(dead_code)]

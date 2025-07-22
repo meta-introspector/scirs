@@ -13,7 +13,7 @@ use crate::{Context, Float};
 pub use adagrad::AdaGrad;
 pub use adam::Adam;
 pub use adamw::AdamW;
-pub use momentum_sgd::MomentumSGD;
+pub use momentum__sgd::MomentumSGD;
 pub use sgd::SGD;
 
 /// Differentiates `losses` with all the relevant variables in the `namespace`

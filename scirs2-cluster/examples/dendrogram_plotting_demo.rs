@@ -4,12 +4,12 @@
 //! to create publication-ready dendrograms from hierarchical clustering results.
 
 use ndarray::Array2;
-use scirs2_cluster::hierarchy::{linkage, LinkageMethod, Metric};
+use scirs2__cluster::hierarchy::{linkage, LinkageMethod, Metric};
 
 #[cfg(feature = "plotters")]
-use scirs2_cluster::{save_dendrogram_plot, PlotFormat, PlotOutput};
+use scirs2__cluster::{save_dendrogram_plot, PlotFormat, PlotOutput};
 
-use scirs2_cluster::hierarchy::visualization::{
+use scirs2__cluster::hierarchy::visualization::{
     ColorScheme, ColorThreshold, DendrogramConfig, DendrogramOrientation,
 };
 
@@ -121,7 +121,7 @@ fn create_dendrograms(
             line_width: 3.0,
             font_size: 14.0,
             truncate_mode: None,
-            styling: scirs2_cluster::hierarchy::visualization::DendrogramStyling::default(),
+            styling: scirs2_cluster: hierarchy::visualization::DendrogramStyling::default(),
         };
 
         let output = PlotOutput {
@@ -248,7 +248,7 @@ fn create_dendrograms(
 #[allow(dead_code)]
 fn create_sample_data() -> Array2<f64> {
     use rand::prelude::*;
-    use rand_distr::Normal;
+    use rand__distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(12345);
     let mut data = Vec::with_capacity(60); // 12 points * 5 features

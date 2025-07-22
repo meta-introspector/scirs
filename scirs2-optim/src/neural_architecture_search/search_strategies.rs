@@ -286,9 +286,9 @@ pub struct BaselineOptimizer<T: Float> {
 }
 
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum> RandomSearch<T> {
-    pub fn new(seed: Option<u64>) -> Self {
-        let rng = if let Some(seed) = seed {
-            Random::with_seed(seed)
+    pub fn new(_seed: Option<u64>) -> Self {
+        let rng = if let Some(_seed) = _seed {
+            Random::with_seed(_seed)
         } else {
             Random::with_seed(42)
         };
@@ -311,20 +311,19 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
 
     fn generate_architecture(
         &mut self,
-        search_space: &SearchSpaceConfig,
-        _history: &VecDeque<SearchResult<T>>,
+        search_space: &SearchSpaceConfig, _history: &VecDeque<SearchResult<T>>,
     ) -> Result<OptimizerArchitecture<T>> {
         use crate::neural_architecture_search::OptimizerComponent;
 
         // Randomly select number of components
-        let num_components = self.rng.random_range(1, 5);
+        let num_components = self.rng.gen_range(1..5);
         let mut components = Vec::new();
 
         for _ in 0..num_components {
             // Randomly select component type
             let component_config = &search_space.optimizer_components[self
                 .rng
-                .random_range(0, search_space.optimizer_components.len())];
+                .gen_range(0..search_space.optimizer_components.len())];
 
             let mut hyperparameters = HashMap::new();
 
@@ -332,21 +331,21 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
             for (param_name, param_range) in &component_config.hyperparameter_ranges {
                 let value = match param_range {
                     super::ParameterRange::Continuous(min, max) => {
-                        let val = self.rng.random_range(*min, *max);
+                        let val = self.rng.gen_range(*min..*max);
                         T::from(val).unwrap()
                     }
                     super::ParameterRange::LogUniform(min, max) => {
                         let log_min = min.ln();
                         let log_max = max.ln();
-                        let log_val = self.rng.random_range(log_min, log_max);
+                        let log_val = self.rng.gen_range(log_min..log_max);
                         T::from(log_val.exp()).unwrap()
                     }
                     super::ParameterRange::Integer(min, max) => {
-                        let val = self.rng.random_range(*min, *max) as f64;
+                        let val = self.rng.gen_range(*min..*max) as f64;
                         T::from(val).unwrap()
                     }
                     super::ParameterRange::Boolean => {
-                        let val = if self.rng.random::<f64>() < 0.5 {
+                        let val = if self.rng.random_f64() < 0.5 {
                             1.0
                         } else {
                             0.0
@@ -354,7 +353,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
                         T::from(val).unwrap()
                     }
                     super::ParameterRange::Discrete(values) => {
-                        let idx = self.rng.random_range(0, values.len());
+                        let idx = self.rng.gen_range(0..values.len());
                         T::from(values[idx]).unwrap()
                     }
                     super::ParameterRange::Categorical(_values) => {
@@ -463,7 +462,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
 
         let mut rng = scirs2_core::random::rng();
         for _ in 0..self.tournament_size {
-            let idx = rng.random_range(0, self.population.len());
+            let idx = rng.gen_range(0..self.population.len());
             if fitness_scores[idx] > best_fitness {
                 best_fitness = fitness_scores[idx];
                 best_idx = idx;
@@ -599,7 +598,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
                     .iter()
                     .enumerate()
                     .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                    .map(|(idx, _)| idx)
+                    .map(|(idx_)| idx)
                     .unwrap_or(0);
 
                 self.population[worst_idx] = child.clone();
@@ -611,7 +610,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
         }
 
         // Fallback to random generation
-        let idx = scirs2_core::random::rng().random_range(0, self.population.len());
+        let idx = scirs2_core::random::rng().gen_range(0..self.population.len());
         self.statistics.total_architectures_generated += 1;
         Ok(self.population[idx].clone())
     }
@@ -720,8 +719,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static + std:
 
     fn generate_architecture(
         &mut self,
-        search_space: &SearchSpaceConfig,
-        _history: &VecDeque<SearchResult<T>>,
+        search_space: &SearchSpaceConfig, _history: &VecDeque<SearchResult<T>>,
     ) -> Result<OptimizerArchitecture<T>> {
         // Use controller to generate architecture
         let state = self.encode_search_space(search_space)?;
@@ -807,8 +805,7 @@ impl<T: Float + Default + Clone> ReinforcementLearningSearch<T> {
     }
 
     fn decode_actions_to_architecture(
-        &self,
-        _actions: &Array1<T>,
+        &self_actions: &Array1<T>,
         search_space: &SearchSpaceConfig,
     ) -> Result<OptimizerArchitecture<T>> {
         use crate::neural_architecture_search::OptimizerComponent;
@@ -817,7 +814,7 @@ impl<T: Float + Default + Clone> ReinforcementLearningSearch<T> {
         let component_config = &search_space.optimizer_components[0];
         let mut hyperparameters = HashMap::new();
 
-        for (param_name, _param_range) in &component_config.hyperparameter_ranges {
+        for (param_name_param_range) in &component_config.hyperparameter_ranges {
             hyperparameters.insert(param_name.clone(), T::from(0.01).unwrap());
         }
 
@@ -855,17 +852,17 @@ impl<T: Float + Default> Default for SearchStrategyStatistics<T> {
 
 // Implementation stubs for complex components
 impl<T: Float + Default + Clone + 'static> ControllerNetwork<T> {
-    fn new(hidden_size: usize, num_layers: usize) -> Self {
+    fn new(_hidden_size: usize, num_layers: usize) -> Self {
         let mut lstm_weights = Vec::new();
         let mut lstm_biases = Vec::new();
         let mut hidden_states = Vec::new();
         let mut cell_states = Vec::new();
 
         for _ in 0..num_layers {
-            lstm_weights.push(Array2::zeros((hidden_size * 4, hidden_size)));
-            lstm_biases.push(Array1::zeros(hidden_size * 4));
-            hidden_states.push(Array1::zeros(hidden_size));
-            cell_states.push(Array1::zeros(hidden_size));
+            lstm_weights.push(Array2::zeros((_hidden_size * 4, _hidden_size)));
+            lstm_biases.push(Array1::zeros(_hidden_size * 4));
+            hidden_states.push(Array1::zeros(_hidden_size));
+            cell_states.push(Array1::zeros(_hidden_size));
         }
 
         Self {
@@ -905,14 +902,14 @@ impl<T: Float + Default + Clone + 'static> ControllerNetwork<T> {
 }
 
 impl<T: Float + Default> ExperienceBuffer<T> {
-    fn new(capacity: usize) -> Self {
+    fn new(_capacity: usize) -> Self {
         Self {
             states: VecDeque::new(),
             actions: VecDeque::new(),
             rewards: VecDeque::new(),
             next_states: VecDeque::new(),
             dones: VecDeque::new(),
-            capacity,
+            _capacity,
         }
     }
 
@@ -924,7 +921,7 @@ impl<T: Float + Default> ExperienceBuffer<T> {
         next_state: Array1<T>,
         done: bool,
     ) {
-        self.states.push_back(state);
+        self.states.push_back(_state);
         self.actions.push_back(action);
         self.rewards.push_back(reward);
         self.next_states.push_back(next_state);
@@ -946,9 +943,9 @@ impl<T: Float + Default> ExperienceBuffer<T> {
 }
 
 impl<T: Float + Default> PolicyOptimizer<T> {
-    fn new(learning_rate: T) -> Self {
+    fn new(_learning_rate: T) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             momentum: T::from(0.9).unwrap(),
             velocity: HashMap::new(),
             gradient_clip_norm: T::from(1.0).unwrap(),
@@ -967,9 +964,9 @@ impl<T: Float + Default> BaselinePredictor<T> {
 }
 
 impl<T: Float + Default> BaselineOptimizer<T> {
-    fn new(learning_rate: T) -> Self {
+    fn new(_learning_rate: T) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             momentum: T::from(0.9).unwrap(),
             velocity: Vec::new(),
         }
@@ -997,7 +994,7 @@ impl<
             architecture_weights: Array3::zeros((num_edges, num_operations, 1)),
             weight_optimizer: WeightOptimizer::new(T::from(0.025).unwrap()),
             temperature: T::from(temperature).unwrap(),
-            gumbel_softmax: use_gumbel,
+            _gumbel_softmax: use_gumbel,
             continuous_relaxation: true,
             statistics: SearchStrategyStatistics::default(),
             discretization_strategy: DiscretizationStrategy::Progressive,
@@ -1042,7 +1039,7 @@ impl<
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                    .map(|(idx, _)| idx)
+                    .map(|(idx_)| idx)
                     .unwrap_or(0),
                 DiscretizationStrategy::Sampling => {
                     let probs = self.softmax(&edge_weights.to_owned());
@@ -1065,7 +1062,7 @@ impl<
                         .iter()
                         .enumerate()
                         .find(|(_, &weight)| weight > threshold)
-                        .map(|(idx, _)| idx)
+                        .map(|(idx_)| idx)
                         .unwrap_or(0)
                 }
                 DiscretizationStrategy::Progressive => {
@@ -1077,7 +1074,7 @@ impl<
                         .max_by(|(_, a), (_, b)| {
                             a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
                         })
-                        .map(|(idx, _)| idx)
+                        .map(|(idx_)| idx)
                         .unwrap_or(0)
                 }
             };
@@ -1087,8 +1084,7 @@ impl<
                 0 => ComponentType::SGD,
                 1 => ComponentType::Adam,
                 2 => ComponentType::AdaGrad,
-                3 => ComponentType::RMSprop,
-                _ => ComponentType::Adam,
+                3 => ComponentType::RMSprop_ =>, ComponentType::Adam,
             };
 
             let mut hyperparameters = HashMap::new();
@@ -1130,9 +1126,7 @@ impl<
     }
 
     fn generate_architecture(
-        &mut self,
-        _search_space: &SearchSpaceConfig,
-        _history: &VecDeque<SearchResult<T>>,
+        &mut self, _search_space: &SearchSpaceConfig, _history: &VecDeque<SearchResult<T>>,
     ) -> Result<OptimizerArchitecture<T>> {
         if self.continuous_relaxation {
             // Generate continuous relaxation of architecture
@@ -1322,8 +1316,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
 
     fn generate_architecture(
         &mut self,
-        search_space: &SearchSpaceConfig,
-        _history: &VecDeque<SearchResult<T>>,
+        search_space: &SearchSpaceConfig, _history: &VecDeque<SearchResult<T>>,
     ) -> Result<OptimizerArchitecture<T>> {
         let architecture = self.suggest_next_architecture(search_space)?;
         self.statistics.total_architectures_generated += 1;
@@ -1375,9 +1368,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
 
 // Implementation stubs for supporting components
 impl<T: Float + Default> WeightOptimizer<T> {
-    fn new(learning_rate: T) -> Self {
+    fn new(_learning_rate: T) -> Self {
         Self {
-            learning_rate,
+            _learning_rate,
             momentum: T::from(0.9).unwrap(),
             weight_decay: T::from(1e-4).unwrap(),
             velocity: Array3::zeros((0, 0, 0)),
@@ -1396,21 +1389,21 @@ impl<T: Float + Default> GaussianProcess<T> {
         }
     }
 
-    fn fit(&mut self, _x: &[Array1<T>], _y: &[T]) -> Result<()> {
+    fn fit(&mut self_x: &[Array1<T>], _y: &[T]) -> Result<()> {
         // Simplified GP fitting
         Ok(())
     }
 
-    fn predict(&self, _x: &Array1<T>) -> Result<(T, T)> {
+    fn predict(&self_x: &Array1<T>) -> Result<(T, T)> {
         // Simplified prediction - return mean and variance
         Ok((T::from(0.5).unwrap(), T::from(0.1).unwrap()))
     }
 }
 
 impl<T: Float + Default> AcquisitionFunction<T> {
-    fn new(function_type: AcquisitionType, exploration_weight: T) -> Self {
+    fn new(_function_type: AcquisitionType, exploration_weight: T) -> Self {
         Self {
-            function_type,
+            _function_type,
             exploration_weight,
             current_best: T::zero(),
         }
@@ -1457,9 +1450,9 @@ impl<T: Float + Default> AcquisitionFunction<T> {
 }
 
 impl<T: Float + Default> GPKernel<T> {
-    fn new(kernel_type: KernelType) -> Self {
+    fn new(_kernel_type: KernelType) -> Self {
         Self {
-            kernel_type,
+            _kernel_type,
             hyperparameters: Array1::ones(2), // length_scale and signal_variance
         }
     }
@@ -1475,7 +1468,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static + std:
     ) -> Self {
         Self {
             predictor_network: PredictorNetwork::new(predictor_architecture),
-            architecture_encoder: ArchitectureEncoder::new(embedding_dim),
+            _architecture_encoder: ArchitectureEncoder::new(embedding_dim),
             search_optimizer: SearchOptimizer::new(
                 SearchOptimizerType::Adam,
                 T::from(0.001).unwrap(),
@@ -1507,7 +1500,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static + std:
         }
 
         // Encode all architectures
-        let encoded_archs: std::result::Result<Vec<_>, _> = architectures
+        let encoded_archs: std::result::Result<Vec<_>_> = architectures
             .iter()
             .map(|arch| self.architecture_encoder.encode(arch))
             .collect();
@@ -1515,7 +1508,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static + std:
 
         // Train predictor network
         for (encoded_arch, &target_performance) in encoded_archs.iter().zip(performances.iter()) {
-            let (prediction, _) = self
+            let (prediction_) = self
                 .predictor_network
                 .forward_with_uncertainty(encoded_arch)?;
             let _loss = (prediction - target_performance).powf(T::from(2.0).unwrap());
@@ -1668,16 +1661,16 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static + std:
 
 // Implementation for supporting components
 impl<T: Float + Default + Clone + 'static + std::iter::Sum> PredictorNetwork<T> {
-    fn new(architecture: Vec<usize>) -> Self {
+    fn new(_architecture: Vec<usize>) -> Self {
         let mut layers = Vec::new();
-        for i in 0..architecture.len() - 1 {
-            layers.push(PredictorLayer::new(architecture[i], architecture[i + 1]));
+        for i in 0.._architecture.len() - 1 {
+            layers.push(PredictorLayer::new(_architecture[i], _architecture[i + 1]));
         }
 
         Self {
             layers,
-            dropout_rates: vec![T::from(0.1).unwrap(); architecture.len() - 1],
-            architecture,
+            dropout_rates: vec![T::from(0.1).unwrap(); _architecture.len() - 1],
+            _architecture,
         }
     }
 
@@ -1709,10 +1702,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum> PredictorNetwork<T> 
     }
 
     fn backward_update(
-        &mut self,
-        _input: &Array1<T>,
-        _target: T,
-        _optimizer: &mut SearchOptimizer<T>,
+        &mut self_input: &Array1<T>, _target: T_optimizer: &mut SearchOptimizer<T>,
     ) -> Result<()> {
         // Simplified backward pass - in practice would implement proper backpropagation
         Ok(())
@@ -1730,9 +1720,9 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum> PredictorNetwork<T> 
 }
 
 impl<T: Float + Default + Clone + 'static> PredictorLayer<T> {
-    fn new(input_size: usize, output_size: usize) -> Self {
+    fn new(_input_size: usize, output_size: usize) -> Self {
         Self {
-            weights: Array2::zeros((output_size, input_size)),
+            weights: Array2::zeros((output_size, _input_size)),
             bias: Array1::zeros(output_size),
             activation: ActivationFunction::ReLU,
         }
@@ -1758,7 +1748,7 @@ impl<T: Float + Default + Clone + 'static> PredictorLayer<T> {
 
     fn apply_activation(&self, x: &Array1<T>) -> Array1<T> {
         match self.activation {
-            ActivationFunction::ReLU => x.mapv(|xi| if xi > T::zero() { xi } else { T::zero() }),
+            ActivationFunction::ReLU => x.mapv(|xi| if xi >, T::zero() { xi } else { T::zero() }),
             ActivationFunction::GELU => x.mapv(|xi| {
                 let x_f64 = xi.to_f64().unwrap_or(0.0);
                 let gelu_val = 0.5
@@ -1777,10 +1767,10 @@ impl<T: Float + Default + Clone + 'static> PredictorLayer<T> {
 }
 
 impl<T: Float + Default + Clone> ArchitectureEncoder<T> {
-    fn new(embedding_dim: usize) -> Self {
+    fn new(_embedding_dim: usize) -> Self {
         Self {
-            encoding_weights: Array2::zeros((embedding_dim, 64)), // Assume max 64 components
-            embedding_dim,
+            encoding_weights: Array2::zeros((_embedding_dim, 64)), // Assume max 64 components
+            _embedding_dim,
             max_components: 64,
         }
     }
@@ -1810,24 +1800,24 @@ impl<T: Float + Default + Clone> ArchitectureEncoder<T> {
 }
 
 impl<T: Float + Default + Clone> SearchOptimizer<T> {
-    fn new(optimizer_type: SearchOptimizerType, learning_rate: T) -> Self {
+    fn new(_optimizer_type: SearchOptimizerType, learning_rate: T) -> Self {
         Self {
-            optimizer_type,
+            _optimizer_type,
             learning_rate,
             momentum: T::from(0.9).unwrap(),
             parameters: HashMap::new(),
         }
     }
 
-    fn update_parameters(&mut self, _gradients: &HashMap<String, Array1<T>>) -> Result<()> {
+    fn update_parameters(&mut self_gradients: &HashMap<String, Array1<T>>) -> Result<()> {
         // Simplified parameter update
         Ok(())
     }
 }
 
 /// Convert ComponentType to u8 for encoding
-fn component_type_to_u8(component_type: &ComponentType) -> u8 {
-    match component_type {
+fn component_type_to_u8(_component_type: &ComponentType) -> u8 {
+    match _component_type {
         ComponentType::SGD => 0,
         ComponentType::Adam => 1,
         ComponentType::AdaGrad => 2,

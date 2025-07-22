@@ -9,6 +9,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, One, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
+use statrs::statistics::Statistics;
 
 /// Configuration for hardware acceleration
 #[derive(Debug, Clone)]
@@ -167,9 +168,9 @@ impl SimdDistanceMetrics {
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: HardwareAccelConfig) -> Self {
+    pub fn with_config(_config: HardwareAccelConfig) -> Self {
         Self {
-            config,
+            _config,
             capabilities: HardwareCapabilities::detect(),
         }
     }
@@ -352,9 +353,9 @@ impl SimdStatistics {
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: HardwareAccelConfig) -> Self {
+    pub fn with_config(_config: HardwareAccelConfig) -> Self {
         Self {
-            config,
+            _config,
             capabilities: HardwareCapabilities::detect(),
         }
     }
@@ -454,9 +455,9 @@ impl HardwareAcceleratedMatrix {
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: HardwareAccelConfig) -> Self {
+    pub fn with_config(_config: HardwareAccelConfig) -> Self {
         Self {
-            config,
+            _config,
             capabilities: HardwareCapabilities::detect(),
         }
     }
@@ -517,8 +518,7 @@ impl HardwareAcceleratedMatrix {
                 let distance = match metric {
                     "euclidean" => simd_distances.euclidean_distance_simd(&row_i, &row_j)?,
                     "manhattan" => simd_distances.manhattan_distance_simd(&row_i, &row_j)?,
-                    "cosine" => simd_distances.cosine_distance_simd(&row_i, &row_j)?,
-                    _ => {
+                    "cosine" => simd_distances.cosine_distance_simd(&row_i, &row_j)?_ => {
                         return Err(MetricsError::InvalidInput(format!(
                             "Unsupported metric: {}",
                             metric

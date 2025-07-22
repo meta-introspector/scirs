@@ -16,7 +16,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use scirs2_fft::sparse_fft::{sparse_fft, SparseFFTConfig, SparsityEstimationMethod};
+//! use scirs2__fft::sparse_fft::{sparse_fft, SparseFFTConfig, SparsityEstimationMethod};
 //!
 //! // Create a sparse signal
 //! let signal = vec![1.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.25, 0.0];

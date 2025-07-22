@@ -45,9 +45,9 @@ pub struct S3Config {
 
 impl S3Config {
     /// Create a new S3 configuration
-    pub fn new(bucket: &str, region: &str, access_key: &str, secret_key: &str) -> Self {
+    pub fn new(_bucket: &str, region: &str, access_key: &str, secret_key: &str) -> Self {
         Self {
-            bucket: bucket.to_string(),
+            _bucket: _bucket.to_string(),
             region: region.to_string(),
             access_key: access_key.to_string(),
             secret_key: secret_key.to_string(),
@@ -84,9 +84,9 @@ pub struct GcsConfig {
 
 impl GcsConfig {
     /// Create a new GCS configuration
-    pub fn new(bucket: &str, project_id: &str) -> Self {
+    pub fn new(_bucket: &str, project_id: &str) -> Self {
         Self {
-            bucket: bucket.to_string(),
+            _bucket: _bucket.to_string(),
             project_id: project_id.to_string(),
             credentials_path: None,
             credentials_json: None,
@@ -121,9 +121,9 @@ pub struct AzureConfig {
 
 impl AzureConfig {
     /// Create a new Azure configuration
-    pub fn new(account: &str, container: &str, access_key: &str) -> Self {
+    pub fn new(_account: &str, container: &str, access_key: &str) -> Self {
         Self {
-            account: account.to_string(),
+            _account: _account.to_string(),
             container: container.to_string(),
             access_key: access_key.to_string(),
             endpoint: None,
@@ -217,10 +217,7 @@ impl CloudProvider {
 
     // AWS S3 implementations
     async fn s3_upload<P: AsRef<Path>>(
-        &self,
-        _config: &S3Config,
-        _local_path: P,
-        _remote_path: &str,
+        &self_config: &S3Config_local, _path: P_remote_path: &str,
     ) -> Result<()> {
         #[cfg(feature = "aws-sdk-s3")]
         {
@@ -235,10 +232,7 @@ impl CloudProvider {
     }
 
     async fn s3_download<P: AsRef<Path>>(
-        &self,
-        _config: &S3Config,
-        _remote_path: &str,
-        _local_path: P,
+        &self_config: &S3Config_remote, _path: &str, _local_path: P,
     ) -> Result<()> {
         #[cfg(feature = "aws-sdk-s3")]
         {
@@ -251,7 +245,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn s3_list(&self, _config: &S3Config, _path: &str) -> Result<Vec<String>> {
+    async fn s3_list(&self_config: &S3Config, _path: &str) -> Result<Vec<String>> {
         #[cfg(feature = "aws-sdk-s3")]
         {
             // Implementation with AWS SDK would go here
@@ -263,7 +257,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn s3_exists(&self, _config: &S3Config, _path: &str) -> Result<bool> {
+    async fn s3_exists(&self_config: &S3Config, _path: &str) -> Result<bool> {
         #[cfg(feature = "aws-sdk-s3")]
         {
             // Implementation with AWS SDK would go here
@@ -275,7 +269,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn s3_metadata(&self, _config: &S3Config, _path: &str) -> Result<FileMetadata> {
+    async fn s3_metadata(&self_config: &S3Config, _path: &str) -> Result<FileMetadata> {
         #[cfg(feature = "aws-sdk-s3")]
         {
             // Implementation with AWS SDK would go here
@@ -294,7 +288,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn s3_delete(&self, _config: &S3Config, _path: &str) -> Result<()> {
+    async fn s3_delete(&self_config: &S3Config, _path: &str) -> Result<()> {
         #[cfg(feature = "aws-sdk-s3")]
         {
             // Implementation with AWS SDK would go here
@@ -308,10 +302,7 @@ impl CloudProvider {
 
     // Google Cloud Storage implementations
     async fn gcs_upload<P: AsRef<Path>>(
-        &self,
-        _config: &GcsConfig,
-        _local_path: P,
-        _remote_path: &str,
+        &self_config: &GcsConfig_local, _path: P_remote_path: &str,
     ) -> Result<()> {
         #[cfg(feature = "google-cloud-storage")]
         {
@@ -325,10 +316,7 @@ impl CloudProvider {
     }
 
     async fn gcs_download<P: AsRef<Path>>(
-        &self,
-        _config: &GcsConfig,
-        _remote_path: &str,
-        _local_path: P,
+        &self_config: &GcsConfig_remote, _path: &str, _local_path: P,
     ) -> Result<()> {
         #[cfg(feature = "google-cloud-storage")]
         {
@@ -341,7 +329,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn gcs_list(&self, _config: &GcsConfig, _path: &str) -> Result<Vec<String>> {
+    async fn gcs_list(&self_config: &GcsConfig, _path: &str) -> Result<Vec<String>> {
         #[cfg(feature = "google-cloud-storage")]
         {
             // Implementation with GCS SDK would go here
@@ -353,7 +341,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn gcs_exists(&self, _config: &GcsConfig, _path: &str) -> Result<bool> {
+    async fn gcs_exists(&self_config: &GcsConfig, _path: &str) -> Result<bool> {
         #[cfg(feature = "google-cloud-storage")]
         {
             // Implementation with GCS SDK would go here
@@ -365,7 +353,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn gcs_metadata(&self, _config: &GcsConfig, _path: &str) -> Result<FileMetadata> {
+    async fn gcs_metadata(&self_config: &GcsConfig, _path: &str) -> Result<FileMetadata> {
         #[cfg(feature = "google-cloud-storage")]
         {
             // Implementation with GCS SDK would go here
@@ -384,7 +372,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn gcs_delete(&self, _config: &GcsConfig, _path: &str) -> Result<()> {
+    async fn gcs_delete(&self_config: &GcsConfig, _path: &str) -> Result<()> {
         #[cfg(feature = "google-cloud-storage")]
         {
             // Implementation with GCS SDK would go here
@@ -398,10 +386,7 @@ impl CloudProvider {
 
     // Azure Blob Storage implementations
     async fn azure_upload<P: AsRef<Path>>(
-        &self,
-        _config: &AzureConfig,
-        _local_path: P,
-        _remote_path: &str,
+        &self_config: &AzureConfig_local, _path: P_remote_path: &str,
     ) -> Result<()> {
         #[cfg(feature = "azure-storage-blobs")]
         {
@@ -415,10 +400,7 @@ impl CloudProvider {
     }
 
     async fn azure_download<P: AsRef<Path>>(
-        &self,
-        _config: &AzureConfig,
-        _remote_path: &str,
-        _local_path: P,
+        &self_config: &AzureConfig_remote, _path: &str, _local_path: P,
     ) -> Result<()> {
         #[cfg(feature = "azure-storage-blobs")]
         {
@@ -431,7 +413,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn azure_list(&self, _config: &AzureConfig, _path: &str) -> Result<Vec<String>> {
+    async fn azure_list(&self_config: &AzureConfig, _path: &str) -> Result<Vec<String>> {
         #[cfg(feature = "azure-storage-blobs")]
         {
             // Implementation with Azure SDK would go here
@@ -443,7 +425,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn azure_exists(&self, _config: &AzureConfig, _path: &str) -> Result<bool> {
+    async fn azure_exists(&self_config: &AzureConfig, _path: &str) -> Result<bool> {
         #[cfg(feature = "azure-storage-blobs")]
         {
             // Implementation with Azure SDK would go here
@@ -455,7 +437,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn azure_metadata(&self, _config: &AzureConfig, _path: &str) -> Result<FileMetadata> {
+    async fn azure_metadata(&self_config: &AzureConfig, _path: &str) -> Result<FileMetadata> {
         #[cfg(feature = "azure-storage-blobs")]
         {
             // Implementation with Azure SDK would go here
@@ -474,7 +456,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn azure_delete(&self, _config: &AzureConfig, _path: &str) -> Result<()> {
+    async fn azure_delete(&self_config: &AzureConfig, _path: &str) -> Result<()> {
         #[cfg(feature = "azure-storage-blobs")]
         {
             // Implementation with Azure SDK would go here
@@ -490,21 +472,21 @@ impl CloudProvider {
 /// Cloud storage utility functions
 /// Create a mock file metadata for testing
 #[allow(dead_code)]
-pub fn create_mock_metadata(name: &str, size: u64) -> FileMetadata {
+pub fn create_mock_metadata(_name: &str, size: u64) -> FileMetadata {
     FileMetadata {
-        name: name.to_string(),
+        _name: _name.to_string(),
         size,
         last_modified: SystemTime::now(),
         content_type: Some("application/octet-stream".to_string()),
-        etag: Some(format!("etag-{}", name)),
+        etag: Some(format!("etag-{}", _name)),
         metadata: HashMap::new(),
     }
 }
 
 /// Validate cloud provider configuration
 #[allow(dead_code)]
-pub fn validate_config(provider: &CloudProvider) -> Result<()> {
-    match provider {
+pub fn validate_config(_provider: &CloudProvider) -> Result<()> {
+    match _provider {
         CloudProvider::S3(config) => {
             if config.bucket.is_empty() {
                 return Err(IoError::ConfigError(

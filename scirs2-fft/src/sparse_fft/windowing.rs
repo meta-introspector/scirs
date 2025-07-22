@@ -4,7 +4,7 @@
 //! before performing sparse FFT operations to reduce spectral leakage.
 
 use crate::error::{FFTError, FFTResult};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::f64::consts::PI;
 use std::fmt::Debug;
@@ -38,7 +38,7 @@ where
         return Ok(signal_complex);
     }
 
-    // Apply the selected window function
+    // Apply the selected window _function
     let windowed_signal = match window_function {
         WindowFunction::None => signal_complex, // Already handled above, but included for completeness
 
@@ -85,12 +85,12 @@ where
 
         WindowFunction::Kaiser => {
             let mut windowed = signal_complex;
-            let beta = kaiser_beta;
+            let _beta = kaiser_beta;
             let alpha = (n - 1) as f64 / 2.0;
-            let i0_beta = modified_bessel_i0(beta);
+            let i0_beta = modified_bessel_i0(_beta);
 
             for (i, sample) in windowed.iter_mut().enumerate() {
-                let x = beta * (1.0 - ((i as f64 - alpha) / alpha).powi(2)).sqrt();
+                let x = _beta * (1.0 - ((i as f64 - alpha) / alpha).powi(2)).sqrt();
                 let window_val = modified_bessel_i0(x) / i0_beta;
                 *sample *= window_val;
             }

@@ -212,8 +212,8 @@ impl std::fmt::Debug for GpuEvent {
             .field(
                 "callbacks",
                 &format!(
-                    "{count} callbacks",
-                    count = self.callbacks.lock().unwrap().len()
+                    "{} callbacks",
+                    self.callbacks.lock().unwrap().len()
                 ),
             )
             .finish()
@@ -566,7 +566,6 @@ pub trait AsyncGpuOps {
     /// Launch a kernel asynchronously
     fn launch_async(
         &self,
-        kernel: &GpuKernelHandle,
         work_groups: [u32; 3],
         stream: &Arc<GpuStream>,
     ) -> Arc<GpuEvent>;

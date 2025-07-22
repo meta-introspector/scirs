@@ -10,6 +10,7 @@ use rand::{seq::SliceRandom, Rng};
 use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::Hash;
+use rand::seq::SliceRandom;
 
 /// Finds a minimum cut in a graph using Karger's algorithm
 ///
@@ -25,13 +26,13 @@ use std::hash::Hash;
 /// # Space Complexity
 /// O(n) for storing the partition and temporary data structures.
 #[allow(dead_code)]
-pub fn minimum_cut<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<(f64, Vec<bool>)>
+pub fn minimum_cut<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<(f64, Vec<bool>)>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone,
     Ix: IndexType,
 {
-    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
     let n = nodes.len();
 
     if n < 2 {
@@ -53,7 +54,7 @@ where
             }
 
             // Calculate cut value
-            let cut_value = calculate_cut_value(graph, &nodes, &partition);
+            let cut_value = calculate_cut_value(_graph, &nodes, &partition);
 
             if cut_value < min_cut_value {
                 min_cut_value = cut_value;
@@ -65,12 +66,12 @@ where
     } else {
         // For larger graphs, use a heuristic approach
         // This is a simplified version - a full implementation would use Karger's algorithm
-        minimum_cut_heuristic(graph, &nodes)
+        minimum_cut_heuristic(_graph, &nodes)
     }
 }
 
 #[allow(dead_code)]
-fn calculate_cut_value<N, E, Ix>(graph: &Graph<N, E, Ix>, nodes: &[N], partition: &[bool]) -> f64
+fn calculate_cut_value<N, E, Ix>(_graph: &Graph<N, E, Ix>, nodes: &[N], partition: &[bool]) -> f64
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64>,
@@ -79,12 +80,12 @@ where
     let mut cut_value = 0.0;
 
     for (i, node_i) in nodes.iter().enumerate() {
-        if let Ok(neighbors) = graph.neighbors(node_i) {
+        if let Ok(neighbors) = _graph.neighbors(node_i) {
             for neighbor in neighbors {
                 if let Some(j) = nodes.iter().position(|n| n == &neighbor) {
                     // Only count edges going from partition A to partition B
                     if partition[i] && !partition[j] {
-                        if let Ok(weight) = graph.edge_weight(node_i, &neighbor) {
+                        if let Ok(weight) = _graph.edge_weight(node_i, &neighbor) {
                             cut_value += weight.into();
                         }
                     }
@@ -97,7 +98,7 @@ where
 }
 
 #[allow(dead_code)]
-fn minimum_cut_heuristic<N, E, Ix>(graph: &Graph<N, E, Ix>, nodes: &[N]) -> Result<(f64, Vec<bool>)>
+fn minimum_cut_heuristic<N, E, Ix>(_graph: &Graph<N, E, Ix>, nodes: &[N]) -> Result<(f64, Vec<bool>)>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone,
@@ -112,7 +113,7 @@ where
 
     for _ in 0..10 {
         let mut partition = vec![false; n];
-        let size_a = rng.random_range(1..n);
+        let size_a = rng.gen_range(1..n);
 
         // Randomly select nodes for partition A
         let mut indices: Vec<usize> = (0..n).collect();
@@ -122,7 +123,7 @@ where
             partition[indices[i]] = true;
         }
 
-        let cut_value = calculate_cut_value(graph, nodes, &partition);
+        let cut_value = calculate_cut_value(_graph..nodes, &partition);
 
         if cut_value < best_cut_value {
             best_cut_value = cut_value;
@@ -158,16 +159,16 @@ where
 /// Dinic's algorithm is more efficient than Ford-Fulkerson for dense graphs
 /// and performs particularly well on networks with unit capacities.
 #[allow(dead_code)]
-pub fn dinic_max_flow<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<f64>
+pub fn dinic_max_flow<N, E, Ix>(_graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone + std::ops::Sub<Output = E> + num_traits::Zero + PartialOrd,
     Ix: IndexType,
 {
-    if !graph.contains_node(source) {
+    if !_graph.contains_node(source) {
         return Err(GraphError::node_not_found("node"));
     }
-    if !graph.contains_node(sink) {
+    if !_graph.contains_node(sink) {
         return Err(GraphError::node_not_found("node"));
     }
     if source == sink {
@@ -176,13 +177,13 @@ where
         ));
     }
 
-    // Build residual graph with capacities
-    let mut residual_graph = DinicResidualGraph::new(graph, source, sink)?;
+    // Build residual _graph with capacities
+    let mut residual_graph = DinicResidualGraph::new(_graph, source, sink)?;
     let mut max_flow = 0.0f64;
 
     // Main Dinic's algorithm loop
     loop {
-        // Build level graph using BFS
+        // Build level _graph using BFS
         if !residual_graph.build_level_graph() {
             break; // No augmenting path exists
         }
@@ -213,7 +214,7 @@ struct DinicResidualGraph<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> DinicResidualGraph<N> {
-    fn new<E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<Self>
+    fn new<E, Ix>(_graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
         Ix: IndexType,
@@ -221,15 +222,15 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> DinicResidualGraph<N> {
         let mut adj: HashMap<N, Vec<(N, f64, usize)>> = HashMap::new();
 
         // Initialize adjacency lists for all nodes
-        for node in graph.nodes() {
+        for node in _graph.nodes() {
             adj.insert(node.clone(), Vec::new());
         }
 
-        // Add edges to residual graph
-        for node in graph.nodes() {
-            if let Ok(successors) = graph.successors(node) {
+        // Add edges to residual _graph
+        for node in _graph.nodes() {
+            if let Ok(successors) = _graph.successors(node) {
                 for successor in successors {
-                    if let Ok(weight) = graph.edge_weight(node, &successor) {
+                    if let Ok(weight) = _graph.edge_weight(node, &successor) {
                         let capacity: f64 = weight.into();
 
                         // Forward edge
@@ -279,7 +280,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> DinicResidualGraph<N> {
 
         while let Some(node) = queue.pop_front() {
             if let Some(edges) = self.adj.get(&node) {
-                for (neighbor, capacity, _) in edges {
+                for (neighbor, capacity_) in edges {
                     if *capacity > 0.0 && self.level.get(neighbor) == Some(&-1) {
                         self.level.insert(neighbor.clone(), self.level[&node] + 1);
                         queue.push_back(neighbor.clone());
@@ -574,16 +575,16 @@ where
 /// # Space Complexity  
 /// O(V + E) for the residual graph and distance labels
 #[allow(dead_code)]
-pub fn isap_max_flow<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<f64>
+pub fn isap_max_flow<N, E, Ix>(_graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + Clone + std::ops::Sub<Output = E> + num_traits::Zero + PartialOrd,
     Ix: IndexType,
 {
-    if !graph.contains_node(source) {
+    if !_graph.contains_node(source) {
         return Err(GraphError::node_not_found("node"));
     }
-    if !graph.contains_node(sink) {
+    if !_graph.contains_node(sink) {
         return Err(GraphError::node_not_found("node"));
     }
     if source == sink {
@@ -592,7 +593,7 @@ where
         ));
     }
 
-    let mut isap_graph = ISAPGraph::new(graph, source, sink)?;
+    let mut isap_graph = ISAPGraph::new(_graph, source, sink)?;
     Ok(isap_graph.compute_max_flow())
 }
 
@@ -783,7 +784,7 @@ struct FordFulkersonResidualGraph<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FordFulkersonResidualGraph<N> {
-    fn new<E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<Self>
+    fn new<E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
         Ix: IndexType,
@@ -792,15 +793,15 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FordFulkersonResidualGraph<N
         let mut original_capacity: HashMap<(N, N), f64> = HashMap::new();
 
         // Initialize adjacency lists for all nodes
-        for node in graph.nodes() {
+        for node in _graph.nodes() {
             adj.insert(node.clone(), Vec::new());
         }
 
-        // Add edges to residual graph
-        for node in graph.nodes() {
-            if let Ok(successors) = graph.successors(node) {
+        // Add edges to residual _graph
+        for node in _graph.nodes() {
+            if let Ok(successors) = _graph.successors(node) {
                 for successor in successors {
-                    if let Ok(weight) = graph.edge_weight(node, &successor) {
+                    if let Ok(weight) = _graph.edge_weight(node, &successor) {
                         let capacity: f64 = weight.into();
 
                         // Forward edge
@@ -856,10 +857,10 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FordFulkersonResidualGraph<N
         path.push(current.clone());
 
         if let Some(neighbors) = self.adj.get(current) {
-            for (neighbor, capacity) in neighbors {
-                if !visited.contains(neighbor) && *capacity > 0.0 {
+            for (neighbor_capacity) in neighbors {
+                if !visited.contains(neighbor) && *_capacity > 0.0 {
                     let bottleneck =
-                        self.dfs_helper(neighbor, sink, visited, path, min_capacity.min(*capacity));
+                        self.dfs_helper(neighbor, sink, visited, path, min_capacity.min(*_capacity));
                     if bottleneck > 0.0 {
                         return bottleneck;
                     }
@@ -968,12 +969,12 @@ struct ISAPGraph<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
-    fn new<E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<Self>
+    fn new<E, Ix>(_graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
         Ix: IndexType,
     {
-        let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+        let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
         let n = nodes.len();
         let mut adj: HashMap<N, Vec<(N, f64, usize)>> = HashMap::new();
         let mut distance: HashMap<N, usize> = HashMap::new();
@@ -985,11 +986,11 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
             distance.insert(node.clone(), n);
         }
 
-        // Build residual graph
-        for node in graph.nodes() {
-            if let Ok(successors) = graph.successors(node) {
+        // Build residual _graph
+        for node in _graph.nodes() {
+            if let Ok(successors) = _graph.successors(node) {
                 for successor in successors {
-                    if let Ok(weight) = graph.edge_weight(node, &successor) {
+                    if let Ok(weight) = _graph.edge_weight(node, &successor) {
                         let capacity: f64 = weight.into();
 
                         let rev_idx = adj.get(&successor).map(|v| v.len()).unwrap_or(0);
@@ -1019,7 +1020,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
         while let Some(current) = queue.pop_front() {
             let curr_dist = distance[&current];
             if let Some(neighbors) = adj.get(&current) {
-                for (neighbor, _, _) in neighbors {
+                for (neighbor__) in neighbors {
                     if distance[neighbor] == n {
                         distance.insert(neighbor.clone(), curr_dist + 1);
                         gap[curr_dist + 1] += 1;
@@ -1063,7 +1064,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
             if let Some(adj_edges) = self.adj.get(&current) {
                 while iter[self.get_node_index(&current)] < adj_edges.len() {
                     let edge_idx = iter[self.get_node_index(&current)];
-                    let (neighbor, capacity, _) = &adj_edges[edge_idx];
+                    let (neighbor, capacity_) = &adj_edges[edge_idx];
 
                     if *capacity > 0.0 && self.distance[neighbor] == current_dist - 1 {
                         // Found admissible arc
@@ -1099,7 +1100,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
                 // Relabel current node
                 let mut min_dist = self.n;
                 if let Some(adj_edges) = self.adj.get(&current) {
-                    for (neighbor, capacity, _) in adj_edges {
+                    for (neighbor, capacity_) in adj_edges {
                         if *capacity > 0.0 {
                             min_dist = min_dist.min(self.distance[neighbor]);
                         }
@@ -1118,7 +1119,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
                 }
 
                 // Retreat to previous node
-                if let Some((prev_node, _)) = stack.pop() {
+                if let Some((prev_node_)) = stack.pop() {
                     current = prev_node;
                 } else {
                     break;
@@ -1130,7 +1131,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
                 // Find bottleneck capacity
                 for (node, edge_idx) in &stack {
                     if let Some(adj_edges) = self.adj.get(node) {
-                        let (_, capacity, _) = &adj_edges[*edge_idx];
+                        let (_, capacity_) = &adj_edges[*edge_idx];
                         bottleneck = bottleneck.min(*capacity);
                     }
                 }
@@ -1143,7 +1144,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
                             adj_edges[*edge_idx].1 -= bottleneck;
 
                             // Increase reverse capacity
-                            let (neighbor, _, rev_idx) = &adj_edges[*edge_idx].clone();
+                            let (neighbor_, rev_idx) = &adj_edges[*edge_idx].clone();
                             if let Some(neighbor_edges) = self.adj.get_mut(neighbor) {
                                 neighbor_edges[*rev_idx].1 += bottleneck;
                             }
@@ -1183,7 +1184,7 @@ struct CapacityScalingGraph<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> CapacityScalingGraph<N> {
-    fn new<E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<Self>
+    fn new<E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
         Ix: IndexType,
@@ -1191,13 +1192,13 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> CapacityScalingGraph<N> {
         let mut adj: HashMap<N, Vec<(N, f64)>> = HashMap::new();
         let mut max_capacity: f64 = 0.0;
 
-        // Build residual graph and find maximum capacity
-        for node in graph.nodes() {
+        // Build residual _graph and find maximum capacity
+        for node in _graph.nodes() {
             adj.insert(node.clone(), Vec::new());
 
-            if let Ok(successors) = graph.successors(node) {
+            if let Ok(successors) = _graph.successors(node) {
                 for successor in successors {
-                    if let Ok(weight) = graph.edge_weight(node, &successor) {
+                    if let Ok(weight) = _graph.edge_weight(node, &successor) {
                         let capacity: f64 = weight.into();
                         max_capacity = max_capacity.max(capacity);
                         adj.entry(node.clone())
@@ -1330,7 +1331,7 @@ struct MinCostMaxFlowGraph<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> MinCostMaxFlowGraph<N> {
-    fn new<E, Ix, F>(graph: &DiGraph<N, E, Ix>, cost_fn: F) -> Result<Self>
+    fn new<E, Ix, F>(_graph: &DiGraph<N, E, Ix>, cost_fn: F) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
         Ix: IndexType,
@@ -1338,12 +1339,12 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> MinCostMaxFlowGraph<N> {
     {
         let mut adj: HashMap<N, Vec<(N, f64, f64)>> = HashMap::new();
 
-        for node in graph.nodes() {
+        for node in _graph.nodes() {
             adj.insert(node.clone(), Vec::new());
 
-            if let Ok(successors) = graph.successors(node) {
+            if let Ok(successors) = _graph.successors(node) {
                 for successor in successors {
-                    if let Ok(weight) = graph.edge_weight(node, &successor) {
+                    if let Ok(weight) = _graph.edge_weight(node, &successor) {
                         let cost = cost_fn(&weight);
                         let capacity: f64 = weight.into();
 
@@ -1465,7 +1466,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> MinCostMaxFlowGraph<N> {
 
             // Update forward edge
             if let Some(neighbors) = self.adj.get_mut(from) {
-                for (neighbor, capacity, _) in neighbors {
+                for (neighbor, capacity_) in neighbors {
                     if neighbor == to {
                         *capacity -= flow;
                         break;
@@ -1475,7 +1476,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> MinCostMaxFlowGraph<N> {
 
             // Update backward edge
             if let Some(neighbors) = self.adj.get_mut(to) {
-                for (neighbor, capacity, _) in neighbors {
+                for (neighbor, capacity_) in neighbors {
                     if neighbor == from {
                         *capacity += flow;
                         break;
@@ -1493,13 +1494,13 @@ struct ParallelFlowGraph<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug> ParallelFlowGraph<N> {
-    fn new<E, Ix>(graph: &DiGraph<N, E, Ix>, num_threads: usize) -> Result<Self>
+    fn new<E, Ix>(_graph: &DiGraph<N, E, Ix>, num_threads: usize) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone + Send + Sync,
         Ix: IndexType + Send + Sync,
     {
-        // Simplified graph partitioning - would use proper graph partitioning algorithms
-        let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+        // Simplified _graph partitioning - would use proper _graph partitioning algorithms
+        let nodes: Vec<N> = _graph.nodes().into_iter().cloned().collect();
         let chunk_size = nodes.len().div_ceil(num_threads);
         let mut subgraphs = Vec::new();
 
@@ -1536,7 +1537,7 @@ impl<N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug> ParallelFlowGr
             let local_flows: Vec<f64> = (0..self.num_threads)
                 .into_par_iter()
                 .enumerate()
-                .map(|(partition_id, _)| self.compute_partition_flow(partition_id, source, sink))
+                .map(|(partition_id_)| self.compute_partition_flow(partition_id, source, sink))
                 .collect();
 
             // Phase 2: Synchronization and cross-partition flow balancing
@@ -1694,10 +1695,7 @@ impl<N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug> ParallelFlowGr
 
     /// Balance flows across partition boundaries
     fn balance_cross_partition_flows(
-        &self,
-        _source: &N,
-        _sink: &N,
-        _partition_flows: &[f64],
+        &self_source: &N, _sink: &N_partition_flows: &[f64],
     ) -> f64 {
         // Simplified cross-partition balancing
         // In a full implementation, this would:
@@ -1719,7 +1717,7 @@ struct MultiSourceSinkGraph<N: Node> {
 }
 
 impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> MultiSourceSinkGraph<N> {
-    fn new<E, Ix>(graph: &DiGraph<N, E, Ix>, sources: &[N], sinks: &[N]) -> Result<Self>
+    fn new<E, Ix>(_graph: &DiGraph<N, E, Ix>, sources: &[N], sinks: &[N]) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone,
         Ix: IndexType,
@@ -1729,13 +1727,13 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> MultiSourceSinkGraph<N> {
         let super_source = N::from("__SUPER_SOURCE__");
         let super_sink = N::from("__SUPER_SINK__");
 
-        // Copy original graph
-        for node in graph.nodes() {
+        // Copy original _graph
+        for node in _graph.nodes() {
             adj.insert(node.clone(), Vec::new());
 
-            if let Ok(successors) = graph.successors(node) {
+            if let Ok(successors) = _graph.successors(node) {
                 for successor in successors {
-                    if let Ok(weight) = graph.edge_weight(node, &successor) {
+                    if let Ok(weight) = _graph.edge_weight(node, &successor) {
                         let capacity: f64 = weight.into();
                         adj.entry(node.clone())
                             .or_default()

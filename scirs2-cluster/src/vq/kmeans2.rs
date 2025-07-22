@@ -3,7 +3,7 @@
 use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use rand::{rngs::StdRng, Rng, RngCore, SeedableRng};
-use rand_distr::{Distribution, Normal};
+use rand__distr::{Distribution, Normal};
 use std::fmt::Debug;
 use std::str::FromStr;
 
@@ -40,8 +40,7 @@ impl MinitMethod {
         match s.to_lowercase().as_str() {
             "random" => Ok(MinitMethod::Random),
             "points" => Ok(MinitMethod::Points),
-            "k-means++" | "kmeans++" | "plusplus" => Ok(MinitMethod::PlusPlus),
-            _ => Err(ClusteringError::InvalidInput(format!(
+            "k-means++" | "kmeans++" | "plusplus" => Ok(MinitMethod::PlusPlus, _ => Err(ClusteringError::InvalidInput(format!(
                 "Unknown initialization method: '{}'. Valid options are: 'random', 'points', 'k-means++'",
                 s
             ))),
@@ -116,10 +115,10 @@ where
     let check_finite_flag = check_finite.unwrap_or(true);
 
     // Use unified validation
-    validate_clustering_data(&data, "K-means", check_finite_flag, Some(k))
+    crate::validation::validate_clustering_data(&data, "K-means", check_finite_flag, Some(k))
         .map_err(|e| ClusteringError::InvalidInput(format!("K-means: {}", e)))?;
 
-    check_n_clusters_bounds(&data, k, "K-means")
+    crate::validation::check_n_clusters_bounds(&data, k, "K-means")
         .map_err(|e| ClusteringError::InvalidInput(format!("{}", e)))?;
 
     check_iteration_params(iterations, threshold, "K-means")
@@ -141,7 +140,7 @@ where
         let prev_centroids = centroids.clone();
 
         // Assign samples to nearest centroid
-        let (new_labels, _distances) = vq(data, centroids.view())?;
+        let (new_labels_distances) = vq(data, centroids.view())?;
         labels = new_labels;
 
         // Compute new centroids
@@ -221,7 +220,7 @@ where
     }
 
     // Final assignment
-    let (final_labels, _) = vq(data, centroids.view())?;
+    let (final_labels_) = vq(data, centroids.view())?;
 
     Ok((centroids, final_labels))
 }
@@ -252,7 +251,7 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2_cluster::vq::kmeans2_str;
+/// use scirs2__cluster::vq::kmeans2_str;
 ///
 /// let data = Array2::from_shape_vec((6, 2), vec![
 ///     1.0, 1.0, 1.1, 1.1, 0.9, 0.9,
@@ -289,8 +288,7 @@ where
     let missing_method = if let Some(missing_str) = missing {
         match missing_str.to_lowercase().as_str() {
             "warn" => Some(MissingMethod::Warn),
-            "raise" => Some(MissingMethod::Raise),
-            _ => {
+            "raise" => Some(MissingMethod::Raise, _ => {
                 return Err(ClusteringError::InvalidInput(format!(
                     "Unknown missing method: '{}'. Valid options are: 'warn', 'raise'",
                     missing_str
@@ -317,12 +315,12 @@ where
 /// Random initialization: generate k centroids from a Gaussian with mean and
 /// variance estimated from the data
 #[allow(dead_code)]
-fn krandinit<F>(data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
+fn krandinit<F>(_data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
-    let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
+    let n_samples = _data.shape()[0];
+    let n_features = _data.shape()[1];
 
     // Calculate mean and variance for each feature
     let mut means = Array1::<F>::zeros(n_features);
@@ -331,13 +329,13 @@ where
     for j in 0..n_features {
         let mut sum = F::zero();
         for i in 0..n_samples {
-            sum = sum + data[[i, j]];
+            sum = sum + _data[[i, j]];
         }
         means[j] = sum / F::from(n_samples).unwrap();
 
         let mut var_sum = F::zero();
         for i in 0..n_samples {
-            let diff = data[[i, j]] - means[j];
+            let diff = _data[[i, j]] - means[j];
             var_sum = var_sum + diff * diff;
         }
         vars[j] = var_sum / F::from(n_samples).unwrap();
@@ -346,8 +344,8 @@ where
     // Generate random centroids from Gaussian distribution
     let mut centroids = Array2::<F>::zeros((k, n_features));
 
-    let mut rng: Box<dyn RngCore> = if let Some(seed) = random_seed {
-        Box::new(StdRng::from_seed([seed as u8; 32]))
+    let mut rng: Box<dyn RngCore> = if let Some(_seed) = random_seed {
+        Box::new(StdRng::from_seed([_seed as u8; 32]))
     } else {
         Box::new(rand::rng())
     };
@@ -373,15 +371,15 @@ where
 
 /// Points initialization: choose k observations (rows) at random from data
 #[allow(dead_code)]
-fn kpoints<F>(data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
+fn kpoints<F>(_data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug,
 {
-    let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
+    let n_samples = _data.shape()[0];
+    let n_features = _data.shape()[1];
 
-    let mut rng: Box<dyn RngCore> = if let Some(seed) = random_seed {
-        Box::new(StdRng::from_seed([seed as u8; 32]))
+    let mut rng: Box<dyn RngCore> = if let Some(_seed) = random_seed {
+        Box::new(StdRng::from_seed([_seed as u8; 32]))
     } else {
         Box::new(rand::rng())
     };
@@ -391,16 +389,16 @@ where
 
     // Shuffle and take first k
     for i in 0..k {
-        let j = rng.random_range(i..n_samples);
+        let j = rng.gen_range(i..n_samples);
         indices.swap(i, j);
     }
 
-    // Extract centroids from data
+    // Extract centroids from _data
     let mut centroids = Array2::zeros((k, n_features));
     for i in 0..k {
         let idx = indices[i];
         for j in 0..n_features {
-            centroids[[i, j]] = data[[idx, j]];
+            centroids[[i, j]] = _data[[idx, j]];
         }
     }
 
@@ -409,15 +407,15 @@ where
 
 /// K-means++ initialization
 #[allow(dead_code)]
-fn kmeans_plus_plus<F>(data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
+fn kmeans_plus_plus<F>(_data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
-    let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
+    let n_samples = _data.shape()[0];
+    let n_features = _data.shape()[1];
 
-    let mut rng: Box<dyn RngCore> = if let Some(seed) = random_seed {
-        Box::new(StdRng::from_seed([seed as u8; 32]))
+    let mut rng: Box<dyn RngCore> = if let Some(_seed) = random_seed {
+        Box::new(StdRng::from_seed([_seed as u8; 32]))
     } else {
         Box::new(rand::rng())
     };
@@ -425,9 +423,9 @@ where
     let mut centroids = Array2::zeros((k, n_features));
 
     // Choose first centroid randomly
-    let first_idx = rng.random_range(0..n_samples);
+    let first_idx = rng.gen_range(0..n_samples);
     for j in 0..n_features {
-        centroids[[0, j]] = data[[first_idx, j]];
+        centroids[[0..j]] = _data[[first_idx, j]];
     }
 
     // Choose remaining centroids
@@ -438,7 +436,7 @@ where
         for j in 0..n_samples {
             let mut min_dist = F::infinity();
             for c in 0..i {
-                let dist = euclidean_distance(data.slice(s![j, ..]), centroids.slice(s![c, ..]));
+                let dist = euclidean_distance(_data.slice(s![j, ..]), centroids.slice(s![c, ..]));
                 if dist < min_dist {
                     min_dist = dist;
                 }
@@ -468,7 +466,7 @@ where
 
         // Add chosen centroid
         for j in 0..n_features {
-            centroids[[i, j]] = data[[next_idx, j]];
+            centroids[[i, j]] = _data[[next_idx, j]];
         }
     }
 
@@ -711,7 +709,7 @@ mod tests {
         ];
 
         // Test with different iteration counts
-        let (centroids_few, _) = kmeans2(
+        let (centroids_few_) = kmeans2(
             data.view(),
             2,
             Some(1),
@@ -723,7 +721,7 @@ mod tests {
         )
         .unwrap();
 
-        let (centroids_many, _) = kmeans2(
+        let (centroids_many_) = kmeans2(
             data.view(),
             2,
             Some(100),

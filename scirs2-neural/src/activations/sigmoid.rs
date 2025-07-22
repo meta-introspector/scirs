@@ -52,13 +52,13 @@ impl<F: Float + Debug> Activation<F> for Sigmoid {
         output: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>> {
         let one = F::one();
-        let mut grad_input = Array::zeros(output.raw_dim());
+        let mut grad_input = Array::zeros(_output.raw_dim());
         // For sigmoid: derivative = sigmoid(x) * (1 - sigmoid(x))
-        // output already contains sigmoid(x), so we compute output * (1 - output)
-        // grad_input = grad_output * (output * (1 - output))
+        // _output already contains sigmoid(x), so we compute _output * (1 - _output)
+        // grad_input = grad_output * (_output * (1 - _output))
         Zip::from(&mut grad_input)
             .and(grad_output)
-            .and(output)
+            .and(_output)
             .for_each(|grad_in, &grad_out, &out| {
                 *grad_in = grad_out * out * (one - out);
             });

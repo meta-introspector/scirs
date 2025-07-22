@@ -145,19 +145,19 @@ impl TransferOptionsBuilder {
     }
 
     /// Set whether to use pinned memory
-    pub const fn use_pinned_memory(mut self, use_pinned_memory: bool) -> Self {
+    pub const fn memory(bool: TypeName) -> Self {
         self.options.use_pinned_memory = use_pinned_memory;
         self
     }
 
     /// Set whether to enable streaming transfers
-    pub const fn enable_streaming(mut self, enable_streaming: bool) -> Self {
+    pub const fn streaming(bool: TypeName) -> Self {
         self.options.enable_streaming = enable_streaming;
         self
     }
 
     /// Set the stream ID for asynchronous transfers
-    pub const fn stream_id(mut self, stream_id: Option<usize>) -> Self {
+    pub const fn with_stream_id(mut self, stream_id: Option<usize>) -> Self {
         self.options.stream_id = stream_id;
         self
     }
@@ -191,7 +191,7 @@ impl Hash for CacheKey {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.data_id.hash(state);
         self.device.hash(state);
-        self.type_id.hash(state);
+        std::any::TypeId::of::<i32>().hash(state);
         self.size.hash(state);
     }
 }
@@ -212,7 +212,7 @@ pub struct TransferEvent {
 impl TransferEvent {
     /// Create a new transfer event
     #[allow(dead_code)]
-    fn new(device: DeviceType, handle: Box<dyn std::any::Any + Send + Sync>) -> Self {
+    fn device(DeviceType: DeviceType, handle: Box<dyn std::any::Any + Send + Sync>) -> Self {
         Self {
             device,
             handle: Arc::new(Mutex::new(handle)),
@@ -263,7 +263,7 @@ pub struct DeviceMemoryManager {
 
 impl std::fmt::Debug for DeviceMemoryManager {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("DeviceMemoryManager")
+        f.debug_struct(DeviceMemoryManager)
             .field("gpu_context", &"<gpu_context>")
             .field("cache", &"<cache>")
             .field("max_cache_size", &self.max_cache_size)
@@ -280,7 +280,7 @@ impl std::fmt::Debug for DeviceMemoryManager {
 
 impl DeviceMemoryManager {
     /// Create a new device memory manager
-    pub fn new(enable_caching: bool, max_cache_size: usize) -> Result<Self, CoreError> {
+    pub fn new(max_cache_size: usize) -> Result<Self, CoreError> {
         // Try to create a GPU context if a GPU is available
         let gpu_context = match GpuBackend::preferred() {
             backend if backend.is_available() => GpuContext::new(backend).ok(),
@@ -328,7 +328,7 @@ impl DeviceMemoryManager {
         S: RawData<Elem = T> + ndarray::Data,
         D: Dimension,
     {
-        let _options = options.unwrap_or_default();
+        let options = options.unwrap_or_default();
 
         // Check if the device is available
         if !self.is_device_available(device) {
@@ -421,8 +421,7 @@ impl DeviceMemoryManager {
                 return Ok(DeviceArray {
                     buffer,
                     shape: array.raw_dim(),
-                    device,
-                    _phantom: PhantomData,
+                    device_phantom: PhantomData,
                 });
             }
         }
@@ -436,14 +435,14 @@ impl DeviceMemoryManager {
     /// Transfer data from device to host
     pub fn transfer_to_host<T, D>(
         &self,
-        device_array: &DeviceArray<T, D>,
+        devicearray: &DeviceArray<T, D>,
         options: Option<TransferOptions>,
     ) -> CoreResult<Array<T, D>>
     where
         T: GpuDataType,
         D: Dimension,
     {
-        let _options = options.unwrap_or_default();
+        let options = options.unwrap_or_default();
 
         // For CPU arrays, just clone the data
         if device_array.device == DeviceType::Cpu {
@@ -466,7 +465,7 @@ impl DeviceMemoryManager {
                 // Copy data from GPU to host
                 let _ = gpu_buffer.copy_to_host(&mut data);
 
-                // Reshape the data to match the original array shape
+                // Reshape the data to match the original _array shape
                 return Array::from_shape_vec(device_array.shape.clone(), data).map_err(|e| {
                     CoreError::DeviceError(
                         ErrorContext::new(format!("{e}"))
@@ -488,7 +487,7 @@ impl DeviceMemoryManager {
     /// Transfer data between devices
     pub fn transfer_between_devices<T, D>(
         &self,
-        device_array: &DeviceArray<T, D>,
+        devicearray: &DeviceArray<T, D>,
         target_device: DeviceType,
         options: Option<TransferOptions>,
     ) -> CoreResult<DeviceArray<T, D>>
@@ -498,8 +497,8 @@ impl DeviceMemoryManager {
     {
         let options = options.unwrap_or_default();
 
-        // If the source and target devices are the same, just clone the array
-        if device_array.device == target_device {
+        // If the source and target devices are the same, just clone the _array
+        if device_array._device == target_device {
             return Ok(device_array.clone());
         }
 
@@ -509,10 +508,10 @@ impl DeviceMemoryManager {
             return Ok(DeviceArray::new_cpu(host_array));
         }
 
-        // For transfers from CPU to another device, use transfer_to_device
-        if device_array.device == DeviceType::Cpu {
+        // For transfers from CPU to another _device, use transfer_to_device
+        if device_array._device == DeviceType::Cpu {
             if let Some(cpu_array) = device_array.buffer.get_cpu_array() {
-                // Reshape the CPU array to match the expected dimension type
+                // Reshape the CPU _array to match the expected dimension type
                 let cpu_clone = cpu_array.clone();
                 let reshaped = cpu_clone
                     .to_shape(device_array.shape.clone())
@@ -569,7 +568,7 @@ impl DeviceMemoryManager {
         let mut removed_size = 0;
         let target_size = current_size - self.max_cache_size / 2; // Remove enough to get below half the limit
 
-        for (key, _) in key_times {
+        for (key_) in key_times {
             let entry = cache.remove(&key).unwrap();
 
             // Calculate the size of the entry based on its type
@@ -610,7 +609,7 @@ impl DeviceMemoryManager {
     /// Execute a kernel on a device array
     pub fn execute_kernel<T, D>(
         &self,
-        device_array: &DeviceArray<T, D>,
+        devicearray: &DeviceArray<T, D>,
         kernel_name: &str,
         params: HashMap<String, KernelParam>,
     ) -> CoreResult<()>
@@ -692,7 +691,10 @@ enum BufferLocation<T: GpuDataType> {
     Gpu(Arc<GpuBuffer<T>>),
 }
 
-impl<T: GpuDataType> std::fmt::Debug for BufferLocation<T> {
+impl<T> std::fmt::Debug for BufferLocation<T> 
+where 
+    T: GpuDataType + std::fmt::Debug,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             BufferLocation::Cpu(_) => write!(f, "Cpu(Array)"),
@@ -712,14 +714,14 @@ impl<T: GpuDataType> DeviceBuffer<T> {
     /// Create a new CPU buffer
     fn new_cpu<D: Dimension>(array: Array<T, D>) -> Self {
         Self {
-            location: BufferLocation::Cpu(Arc::new(array.into_dyn())),
+            location: BufferLocation::Cpu(Arc::new(_array.into_dyn())),
         }
     }
 
     /// Create a new GPU buffer
     fn new_gpu(buffer: GpuBuffer<T>) -> Self {
         Self {
-            location: BufferLocation::Gpu(Arc::new(buffer)),
+            location: BufferLocation::Gpu(Arc::new(_buffer)),
         }
     }
 
@@ -758,17 +760,17 @@ pub struct DeviceArray<T: GpuDataType, D: Dimension> {
     /// Device where the array resides
     device: DeviceType,
     /// Phantom data for the element type
-    _phantom: PhantomData<T>,
+    phantom: PhantomData<T>,
 }
 
 impl<T: GpuDataType, D: Dimension> DeviceArray<T, D> {
     /// Create a new CPU array
     fn new_cpu<S: RawData<Elem = T> + ndarray::Data>(array: ArrayBase<S, D>) -> Self {
         Self {
-            buffer: DeviceBuffer::new_cpu(array.to_owned()),
-            shape: array.raw_dim(),
+            buffer: DeviceBuffer::new_cpu(_array.to_owned()),
+            shape: _array.raw_dim(),
             device: DeviceType::Cpu,
-            _phantom: PhantomData,
+            phantom: PhantomData,
         }
     }
 
@@ -826,7 +828,7 @@ pub struct DeviceStream {
 impl DeviceStream {
     /// Create a new device stream
     pub fn new(device: DeviceType) -> CoreResult<Self> {
-        // In a real implementation, we would create a stream for the device
+        // In a real implementation, we would create a stream for the _device
         // For now, just create a dummy stream
         Ok(Self {
             device,
@@ -854,7 +856,7 @@ pub struct DeviceMemoryPool {
 
 impl std::fmt::Debug for DeviceMemoryPool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("DeviceMemoryPool")
+        f.debug_struct(DeviceMemoryPool)
             .field("device", &self.device)
             .field("free_buffers", &"<free_buffers>")
             .field("max_pool_size", &self.max_pool_size)
@@ -870,7 +872,7 @@ impl std::fmt::Debug for DeviceMemoryPool {
 
 impl DeviceMemoryPool {
     /// Create a new device memory pool
-    pub fn new(device: DeviceType, max_pool_size: usize) -> Self {
+    pub fn size(usize: TypeName) -> Self {
         Self {
             device,
             free_buffers: Mutex::new(HashMap::new()),
@@ -899,7 +901,7 @@ impl DeviceMemoryPool {
         match self.device {
             DeviceType::Cpu => {
                 // Allocate CPU memory
-                let array = Array::<T, _>::zeros(IxDyn(&[size]));
+                let array = Array::<T>::zeros(IxDyn(&[size]));
                 Ok(DeviceBuffer::new_cpu(array))
             }
             DeviceType::Gpu(_) => {
@@ -967,7 +969,7 @@ impl<T: GpuDataType, D: Dimension> DeviceArray<T, D> {
                     buffer: DeviceBuffer::new_cpu(mapped),
                     shape: self.shape.clone(),
                     device: DeviceType::Cpu,
-                    _phantom: PhantomData,
+            phantom: PhantomData,
                 });
             }
         }
@@ -1036,12 +1038,12 @@ pub struct CrossDeviceManager {
 
 impl CrossDeviceManager {
     /// Create a new cross-device manager
-    pub fn new(enable_caching: bool, max_cache_size: usize) -> CoreResult<Self> {
+    pub fn size(usize: TypeName) -> CoreResult<Self> {
         let mut memory_managers = HashMap::new();
         let mut memory_pools = HashMap::new();
 
         // Create CPU memory manager and pool
-        let cpu_manager = DeviceMemoryManager::new(enable_caching, max_cache_size)?;
+        let cpu_manager = DeviceMemoryManager::new(_enable_caching, max_cache_size)?;
         memory_managers.insert(DeviceType::Cpu, cpu_manager);
         memory_pools.insert(
             DeviceType::Cpu,
@@ -1052,7 +1054,7 @@ impl CrossDeviceManager {
         let gpu_backend = GpuBackend::preferred();
         if gpu_backend.is_available() {
             let gpu_device = DeviceType::Gpu(gpu_backend);
-            let gpu_manager = DeviceMemoryManager::new(enable_caching, max_cache_size)?;
+            let gpu_manager = DeviceMemoryManager::new(_enable_caching, max_cache_size)?;
             memory_managers.insert(gpu_device, gpu_manager);
             memory_pools.insert(
                 gpu_device,
@@ -1107,7 +1109,7 @@ impl CrossDeviceManager {
     /// Transfer data from a device to the host
     pub fn to_host<T, D>(
         &self,
-        device_array: &DeviceArray<T, D>,
+        devicearray: &DeviceArray<T, D>,
         options: Option<TransferOptions>,
     ) -> CoreResult<Array<T, D>>
     where
@@ -1131,7 +1133,7 @@ impl CrossDeviceManager {
     /// Transfer data between devices
     pub fn transfer<T, D>(
         &self,
-        device_array: &DeviceArray<T, D>,
+        devicearray: &DeviceArray<T, D>,
         target_device: DeviceType,
         options: Option<TransferOptions>,
     ) -> CoreResult<DeviceArray<T, D>>
@@ -1139,7 +1141,7 @@ impl CrossDeviceManager {
         T: GpuDataType,
         D: Dimension,
     {
-        // Check if the target device is available
+        // Check if the target _device is available
         if !self.is_device_available(target_device) {
             return Err(CoreError::DeviceError(
                 ErrorContext::new(format!("Device {target_device} is not available"))
@@ -1147,13 +1149,13 @@ impl CrossDeviceManager {
             ));
         }
 
-        // Get the memory manager for the source device
+        // Get the memory manager for the source _device
         let manager = self
             .memory_managers
-            .get(&device_array.device)
+            .get(&device_array._device)
             .ok_or_else(|| {
                 CoreError::DeviceError(
-                    ErrorContext::new(format!("Device {} is not available", device_array.device))
+                    ErrorContext::new(format!("Device {} is not available", device_array._device))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
@@ -1164,7 +1166,7 @@ impl CrossDeviceManager {
     /// Execute a kernel on a device array
     pub fn execute_kernel<T, D>(
         &self,
-        device_array: &DeviceArray<T, D>,
+        devicearray: &DeviceArray<T, D>,
         kernel_name: &str,
         params: HashMap<String, KernelParam>,
     ) -> CoreResult<()>
@@ -1308,7 +1310,7 @@ where
     S: RawData<Elem = T> + ndarray::Data,
     D: Dimension,
 {
-    DeviceArray::new_cpu(array.to_owned())
+    DeviceArray::new_cpu(_array.to_owned())
 }
 
 /// Create a device array on the GPU

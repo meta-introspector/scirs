@@ -45,7 +45,7 @@ pub struct ChemicalConfig {
 }
 
 impl Default for ChemicalConfig {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self {
             system_type: ChemicalSystemType::MassAction,
             dt: 0.001,
@@ -207,9 +207,9 @@ pub struct ChemicalIntegrator {
 
 impl ChemicalIntegrator {
     /// Create a new chemical integrator
-    pub fn new(config: ChemicalConfig, properties: ChemicalProperties) -> Self {
+    pub fn new(_config: ChemicalConfig, properties: ChemicalProperties) -> Self {
         Self {
-            config,
+            _config,
             properties,
             previous_state: None,
             jacobian_cache: None,
@@ -350,7 +350,7 @@ impl ChemicalIntegrator {
             }
             ReactionType::MichaelisMenten => {
                 // Michaelis-Menten: rate = Vmax * [S] / (Km + [S])
-                if let Some(&(substrate_idx, _)) = reaction.reactants.first() {
+                if let Some(&(substrate_idx_)) = reaction.reactants.first() {
                     if substrate_idx < concentrations.len() {
                         let substrate_conc = concentrations[substrate_idx];
                         let km = 0.1; // Should be parameterized
@@ -360,7 +360,7 @@ impl ChemicalIntegrator {
             }
             ReactionType::Hill { coefficient } => {
                 // Hill kinetics: rate = Vmax * [S]^n / (K^n + [S]^n)
-                if let Some(&(substrate_idx, _)) = reaction.reactants.first() {
+                if let Some(&(substrate_idx_)) = reaction.reactants.first() {
                     if substrate_idx < concentrations.len() {
                         let substrate_conc = concentrations[substrate_idx];
                         let k_half = 0.1_f64; // Should be parameterized
@@ -372,7 +372,7 @@ impl ChemicalIntegrator {
             }
             ReactionType::CompetitiveInhibition => {
                 // Competitive inhibition: rate = Vmax * [S] / (Km * (1 + [I]/Ki) + [S])
-                if let Some(&(substrate_idx, _)) = reaction.reactants.first() {
+                if let Some(&(substrate_idx_)) = reaction.reactants.first() {
                     if substrate_idx < concentrations.len() {
                         let substrate_conc = concentrations[substrate_idx];
                         let km = 0.1; // Should be parameterized
@@ -389,7 +389,7 @@ impl ChemicalIntegrator {
             }
             ReactionType::NonCompetitiveInhibition => {
                 // Non-competitive inhibition: rate = Vmax * [S] / ((Km + [S]) * (1 + [I]/Ki))
-                if let Some(&(substrate_idx, _)) = reaction.reactants.first() {
+                if let Some(&(substrate_idx_)) = reaction.reactants.first() {
                     if substrate_idx < concentrations.len() {
                         let substrate_conc = concentrations[substrate_idx];
                         let km = 0.1; // Should be parameterized
@@ -412,7 +412,7 @@ impl ChemicalIntegrator {
                     }
                 }
                 let ki = 0.1; // Should be parameterized
-                for &(product_idx, _) in &reaction.products {
+                for &(product_idx_) in &reaction.products {
                     if product_idx < concentrations.len() {
                         rate /= 1.0 + concentrations[product_idx] / ki;
                     }
@@ -537,12 +537,12 @@ impl ChemicalIntegrator {
     }
 
     /// Calculate conservation error
-    fn calculate_conservation_error(&self, concentrations: &Array1<f64>) -> f64 {
+    fn calculate_conservation_error(_concentrations: &Array1<f64>) -> f64 {
         if let Some(ref conservation_matrix) = self.properties.conservation_matrix {
             // Calculate conservation error as || C * x - C * x0 ||
             let initial_conservation =
                 conservation_matrix.dot(&self.properties.initial_concentrations);
-            let current_conservation = conservation_matrix.dot(concentrations);
+            let current_conservation = conservation_matrix.dot(_concentrations);
             (&current_conservation - &initial_conservation)
                 .iter()
                 .map(|x| x.abs())
@@ -553,17 +553,17 @@ impl ChemicalIntegrator {
     }
 
     /// Calculate constraint violation
-    fn calculate_constraint_violation(&self, concentrations: &Array1<f64>) -> f64 {
-        // Check for negative concentrations
-        concentrations
+    fn calculate_constraint_violation(_concentrations: &Array1<f64>) -> f64 {
+        // Check for negative _concentrations
+        _concentrations
             .iter()
             .map(|&x| if x < 0.0 { -x } else { 0.0 })
             .sum()
     }
 
     /// Estimate stiffness ratio
-    fn estimate_stiffness_ratio(&self, reaction_rates: &Array1<f64>) -> f64 {
-        if reaction_rates.len() < 2 {
+    fn estimate_stiffness_ratio(_reaction_rates: &Array1<f64>) -> f64 {
+        if _reaction_rates.len() < 2 {
             return 1.0;
         }
 
@@ -669,14 +669,14 @@ pub mod systems {
 
         let reactions = vec![
             Reaction {
-                rate_constant: forward_rate,
+                _rate_constant: forward_rate,
                 reactants: vec![(0, 1.0)], // A -> B
                 products: vec![(1, 1.0)],
                 reaction_type: ReactionType::Elementary,
                 arrhenius: None,
             },
             Reaction {
-                rate_constant: reverse_rate,
+                _rate_constant: reverse_rate,
                 reactants: vec![(1, 1.0)], // B -> A
                 products: vec![(0, 1.0)],
                 reaction_type: ReactionType::Elementary,
@@ -857,14 +857,14 @@ pub mod systems {
 
         let reactions = vec![
             Reaction {
-                rate_constant: fast_rate,
+                _rate_constant: fast_rate,
                 reactants: vec![(0, 1.0)], // A -> B (fast)
                 products: vec![(1, 1.0)],
                 reaction_type: ReactionType::Elementary,
                 arrhenius: None,
             },
             Reaction {
-                rate_constant: slow_rate,
+                _rate_constant: slow_rate,
                 reactants: vec![(1, 1.0)], // B -> C (slow)
                 products: vec![(2, 1.0)],
                 reaction_type: ReactionType::Elementary,
@@ -887,7 +887,7 @@ pub mod systems {
         };
 
         let state = ChemicalState {
-            concentrations: initial_conc_array,
+            _concentrations: initial_conc_array,
             reaction_rates: Array1::zeros(2),
             time: 0.0,
         };
@@ -898,7 +898,6 @@ pub mod systems {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_abs_diff_eq;
 
     #[test]

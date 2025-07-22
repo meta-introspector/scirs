@@ -5,7 +5,7 @@
 //! domain-specific imaging applications.
 
 use ndarray::{Array, Array1, Array2, Array3, ArrayView2, Axis, Ix2, Ix3};
-use scirs2_ndimage::{
+use scirs2__ndimage::{
     analysis::{
         compute_local_variance, image_entropy, structural_similarity_index, texture_analysis,
         ImageQualityMetrics, TextureMetrics,
@@ -157,7 +157,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sharpened = pan_sharpen(
         panchromatic.view(),
         multispectral.view(),
-        scirs2_ndimage::domain_specific::satellite::PanSharpenMethod::Brovey,
+        scirs2_ndimage::domain, _specific::satellite::PanSharpenMethod::Brovey,
     )?;
 
     println!("✓ Satellite image processing completed");
@@ -512,7 +512,7 @@ fn generate_synthetic_medical_volume() -> Array3<f32> {
 
 #[allow(dead_code)]
 fn generate_synthetic_microscopy_image() -> Array3<f32> {
-    Array3::from_shape_fn((256, 256, 3), |(i, j, _channel)| {
+    Array3::from_shape_fn((256, 256, 3), |(i, j_channel)| {
         let x = i as f32 / 256.0;
         let y = j as f32 / 256.0;
 
@@ -622,8 +622,8 @@ fn generate_reference_image() -> Array2<f32> {
 }
 
 #[allow(dead_code)]
-fn add_degradation(image: &Array2<f32>) -> Array2<f32> {
-    image.mapv(|x| (x + 0.1 * (x * 100.0).sin()).max(-1.0).min(1.0))
+fn add_degradation(_image: &Array2<f32>) -> Array2<f32> {
+    _image.mapv(|x| (x + 0.1 * (x * 100.0).sin()).max(-1.0).min(1.0))
 }
 
 #[allow(dead_code)]
@@ -644,24 +644,25 @@ fn create_circular_contour(
 
 // Helper functions for counting results
 #[allow(dead_code)]
-fn count_structures(array: &Array3<f32>) -> usize {
-    array.iter().filter(|&&x| x > 0.5).count()
+fn count_structures(_array: &Array3<f32>) -> usize {
+    _array.iter().filter(|&&x| x > 0.5).count()
 }
 
 #[allow(dead_code)]
-fn count_water_regions(mask: &Array2<u8>) -> usize {
-    mask.iter().filter(|&&x| x > 0).count() / 100 // Approximate region count
+fn count_water_regions(_mask: &Array2<u8>) -> usize {
+    _mask.iter().filter(|&&x| x > 0).count() / 100 // Approximate region count
 }
 
 #[allow(dead_code)]
-fn count_ml_features(edges: &Array2<f32>) -> usize {
-    edges.iter().filter(|&&x| x > 0.1).count()
+fn count_ml_features(_edges: &Array2<f32>) -> usize {
+    _edges.iter().filter(|&&x| x > 0.1).count()
 }
 
 #[allow(dead_code)]
-fn count_regions(array: &Array2<i32>) -> usize {
-    let max_label = array.iter().cloned().max().unwrap_or(0);
+fn count_regions(_array: &Array2<i32>) -> usize {
+    let max_label = _array.iter().cloned().max().unwrap_or(0);
     max_label as usize
 }
 
 use ndarray::s;
+use statrs::statistics::Statistics;

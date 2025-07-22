@@ -32,7 +32,7 @@ use crate::error::{Result, TimeSeriesError};
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_series::trends::{robust_trend_filter, RobustFilterOptions, RobustFilterMethod, WeightFunction};
+/// use scirs2__series::trends::{robust_trend_filter, RobustFilterOptions, RobustFilterMethod, WeightFunction};
 ///
 /// // Create a sample time series with a trend, noise, and outliers
 /// let n = 100;
@@ -57,16 +57,16 @@ use crate::error::{Result, TimeSeriesError};
 /// assert_eq!(trend.len(), ts.len());
 /// ```
 #[allow(dead_code)]
-pub fn robust_trend_filter<F>(ts: &Array1<F>, options: &RobustFilterOptions) -> Result<Array1<F>>
+pub fn robust_trend_filter<F>(_ts: &Array1<F>, options: &RobustFilterOptions) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
-    if ts.len() < 3 {
+    if _ts.len() < 3 {
         return Err(TimeSeriesError::InsufficientData {
             message: "Time series too short for robust trend filtering (minimum length: 3)"
                 .to_string(),
             required: 3,
-            actual: ts.len(),
+            actual: _ts.len(),
         });
     }
 
@@ -85,9 +85,9 @@ where
 
     // Apply the selected filtering method
     match options.method {
-        RobustFilterMethod::HodrickPrescott => robust_hodrick_prescott(ts, options),
-        RobustFilterMethod::L1Filter => l1_trend_filter(ts, options),
-        RobustFilterMethod::Whittaker => robust_whittaker_smoother(ts, options),
+        RobustFilterMethod::HodrickPrescott => robust_hodrick_prescott(_ts, options),
+        RobustFilterMethod::L1Filter => l1_trend_filter(_ts, options),
+        RobustFilterMethod::Whittaker => robust_whittaker_smoother(_ts, options),
     }
 }
 
@@ -125,7 +125,7 @@ where
 
     let scaled_residuals: Vec<F> = residuals.iter().map(|&r| r.abs() / scale).collect();
 
-    // Apply the selected weight function
+    // Apply the selected weight _function
     let weights: Vec<F> = scaled_residuals
         .iter()
         .map(|&u| {
@@ -155,7 +155,7 @@ where
                         F::zero()
                     }
                 }
-                WeightFunction::Cauchy => F::one() / (F::one() + scaled_u * scaled_u),
+                WeightFunction::Cauchy =>, F::one() / (F::one() + scaled_u * scaled_u),
             }
         })
         .collect();
@@ -165,11 +165,11 @@ where
 
 /// Implements the robust Hodrick-Prescott filter
 #[allow(dead_code)]
-fn robust_hodrick_prescott<F>(ts: &Array1<F>, options: &RobustFilterOptions) -> Result<Array1<F>>
+fn robust_hodrick_prescott<F>(_ts: &Array1<F>, options: &RobustFilterOptions) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
-    let n = ts.len();
+    let n = _ts.len();
     let lambda = F::from_f64(options.lambda).unwrap();
     let max_iter = options.max_iter;
     let tol = F::from_f64(options.tol).unwrap();
@@ -208,7 +208,7 @@ where
         // Compute right-hand side
         let mut rhs = Array1::<F>::zeros(n);
         for i in 0..n {
-            rhs[i] = w[[i, i]] * ts[i];
+            rhs[i] = w[[i, i]] * _ts[i];
         }
 
         // Solve the system using Cholesky decomposition
@@ -265,7 +265,7 @@ where
         }
 
         // Update weights based on residuals
-        let residuals: Vec<F> = (0..n).map(|i| ts[i] - trend[i]).collect();
+        let residuals: Vec<F> = (0..n).map(|i| _ts[i] - trend[i]).collect();
         weights = calculate_robust_weights(&residuals, options.weight_function, tuning_parameter)?;
     }
 
@@ -274,11 +274,11 @@ where
 
 /// Implements the L1 trend filter
 #[allow(dead_code)]
-fn l1_trend_filter<F>(ts: &Array1<F>, options: &RobustFilterOptions) -> Result<Array1<F>>
+fn l1_trend_filter<F>(_ts: &Array1<F>, options: &RobustFilterOptions) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
-    let n = ts.len();
+    let n = _ts.len();
     let lambda = F::from_f64(options.lambda).unwrap();
     let max_iter = options.max_iter;
     let tol = F::from_f64(options.tol).unwrap();
@@ -289,7 +289,7 @@ where
     let m = d.shape()[0];
 
     // Initialize trend estimate as the original time series
-    let mut trend = ts.clone();
+    let mut trend = _ts.clone();
     let mut prev_trend = Array1::<F>::zeros(n);
 
     // Auxiliary variables for ADMM optimization
@@ -337,7 +337,7 @@ where
 
         // x-update: solve (I + D'D)x = y + D'(z - u)
         let dt_zu = d.t().dot(&(z.clone() - u.clone()));
-        let rhs = ts + &dt_zu;
+        let rhs = _ts + &dt_zu;
 
         // Forward substitution
         let mut y_temp = Array1::<F>::zeros(n);
@@ -397,11 +397,11 @@ where
 
 /// Implements the robust Whittaker smoother
 #[allow(dead_code)]
-fn robust_whittaker_smoother<F>(ts: &Array1<F>, options: &RobustFilterOptions) -> Result<Array1<F>>
+fn robust_whittaker_smoother<F>(_ts: &Array1<F>, options: &RobustFilterOptions) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
-    let n = ts.len();
+    let n = _ts.len();
     let lambda = F::from_f64(options.lambda).unwrap();
     let max_iter = options.max_iter;
     let tol = F::from_f64(options.tol).unwrap();
@@ -415,7 +415,7 @@ where
     let mut weights = vec![F::one(); n];
 
     // Initialize trend estimate
-    let mut trend = ts.clone();
+    let mut trend = _ts.clone();
     let mut prev_trend = Array1::<F>::zeros(n);
 
     // Iteratively reweighted least squares
@@ -441,7 +441,7 @@ where
         // Compute right-hand side
         let mut rhs = Array1::<F>::zeros(n);
         for i in 0..n {
-            rhs[i] = w[[i, i]] * ts[i];
+            rhs[i] = w[[i, i]] * _ts[i];
         }
 
         // Solve the system using Cholesky decomposition
@@ -498,7 +498,7 @@ where
         }
 
         // Update weights based on residuals
-        let residuals: Vec<F> = (0..n).map(|i| ts[i] - trend[i]).collect();
+        let residuals: Vec<F> = (0..n).map(|i| _ts[i] - trend[i]).collect();
         weights = calculate_robust_weights(&residuals, options.weight_function, tuning_parameter)?;
     }
 
@@ -529,12 +529,12 @@ where
     F: Float + FromPrimitive + Debug + 'static,
 {
     // First, compute the main trend estimate
-    let trend = robust_trend_filter(ts, options)?;
+    let trend = robust_trend_filter(ts_options)?;
 
     // Then compute confidence intervals
     let (lower, upper) =
         super::confidence::compute_trend_confidence_interval(ts, &trend, ci_options, |data| {
-            robust_trend_filter(data, options)
+            robust_trend_filter(data_options)
         })?;
 
     Ok(TrendWithConfidenceInterval {

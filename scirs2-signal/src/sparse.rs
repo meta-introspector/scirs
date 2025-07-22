@@ -1,18 +1,21 @@
+use crate::dwt::Wavelet;
+use crate::error::{SignalError, SignalResult};
+use ndarray::{Array1, Array2, s};
+use num__complex::Complex64;
+use rand::{Rng, SeedableRng};
+use rand::rngs::StdRng;
+use rand::seq::SliceRandom;
+use rand__distr::Distribution;
+use rustfft::{FftPlanner, num_complex::Complex};
+use scirs2__linalg::{solve, vector_norm};
+use std::cmp::min;
+
 // Sparse signal recovery module
 //
 // This module implements various sparse signal recovery techniques including compressed sensing,
 // L1/L0 regularization, basis pursuit, matching pursuit, and orthogonal matching pursuit.
 
-use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2};
-use num_complex::Complex64;
-use rand::seq::SliceRandom;
-use rand::{rngs::StdRng, SeedableRng};
-use rand_distr::Distribution;
-use rustfft::{num_complex::Complex, FftPlanner};
-use scirs2_linalg::{solve, vector_norm};
-use std::cmp::min;
-
+#[allow(unused_imports)]
 /// Configuration for sparse signal recovery algorithms
 #[derive(Debug, Clone)]
 pub struct SparseRecoveryConfig {
@@ -538,7 +541,7 @@ pub fn cosamp(
 
         // Get the indices of the 2K largest entries
         let selected_indices: Vec<usize> =
-            proxy_values.iter().take(2 * k).map(|&(i, _)| i).collect();
+            proxy_values.iter().take(2 * k).map(|&(i_)| i).collect();
 
         // Merge with current support (non-zero indices in x)
         let mut support = Vec::new();
@@ -594,7 +597,7 @@ pub fn cosamp(
 
         // Create new solution with K largest entries
         let mut x_new = Array1::<f64>::zeros(n);
-        for &(i, _) in temp_values.iter().take(k) {
+        for &(i_) in temp_values.iter().take(k) {
             x_new[i] = x_temp[i];
         }
 
@@ -709,7 +712,7 @@ pub fn iht(
 
         // Create new solution with K largest entries
         let mut x_new = Array1::<f64>::zeros(n);
-        for &(i, _) in values.iter().take(k) {
+        for &(i_) in values.iter().take(k) {
             x_new[i] = x_grad[i];
         }
 
@@ -789,7 +792,7 @@ pub fn subspace_pursuit(
     initial_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
     // Initialize support with K largest correlations
-    let mut support: Vec<usize> = initial_values.iter().take(k).map(|&(i, _)| i).collect();
+    let mut support: Vec<usize> = initial_values.iter().take(k).map(|&(i_)| i).collect();
 
     // Subspace Pursuit iterations
     for _ in 0..config.max_iterations {
@@ -829,7 +832,7 @@ pub fn subspace_pursuit(
         corr_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
         // Get the indices of the K largest correlations
-        let new_candidates: Vec<usize> = corr_values.iter().take(k).map(|&(i, _)| i).collect();
+        let new_candidates: Vec<usize> = corr_values.iter().take(k).map(|&(i_)| i).collect();
 
         // Merge supports
         let mut merged_support = support.clone();
@@ -872,7 +875,7 @@ pub fn subspace_pursuit(
         merged_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
         // Update support with K largest coefficients
-        let new_support: Vec<usize> = merged_values.iter().take(k).map(|&(i, _)| i).collect();
+        let new_support: Vec<usize> = merged_values.iter().take(k).map(|&(i_)| i).collect();
 
         // Check if support has changed
         if support == new_support {
@@ -943,7 +946,7 @@ pub fn smooth_l0(
     phi: &Array2<f64>,
     config: &SparseRecoveryConfig,
 ) -> SignalResult<Array1<f64>> {
-    let (_m, _n) = phi.dim();
+    let (_m_n) = phi.dim();
 
     // Initialize solution with minimum L2 norm solution
     let phi_t = phi.t();
@@ -1115,8 +1118,7 @@ pub fn compressed_sensing_recover(
 /// * Recovered full signal
 #[allow(dead_code)]
 pub fn sparse_transform_recovery<F, G>(
-    y: &Array1<f64>,
-    _transform_forward: F,
+    y: &Array1<f64>, _transform_forward: F,
     transform_inverse: G,
     mask: Option<&Array1<f64>>,
     method: SparseRecoveryMethod,
@@ -1145,8 +1147,8 @@ where
     // Count observed samples
     let m = mask.iter().filter(|&&x| x > 0.5).count();
 
-    // Create sensing matrix (masked inverse transform)
-    // For each column j, compute inverse transform of a unit vector at position j,
+    // Create sensing matrix (masked _inverse transform)
+    // For each column j, compute _inverse transform of a unit vector at position j,
     // then apply the observation mask
     let mut phi = Array2::<f64>::zeros((m, n));
 
@@ -1155,7 +1157,7 @@ where
         let mut unit = Array1::<f64>::zeros(n);
         unit[j] = 1.0;
 
-        // Apply inverse transform
+        // Apply _inverse transform
         let col = transform_inverse(&unit)?;
 
         // Apply mask and store in the appropriate column
@@ -1395,18 +1397,18 @@ pub fn random_sensing_matrix(m: usize, n: usize, seed: Option<u64>) -> Array2<f6
 ///
 /// * Coherence (maximum absolute inner product between normalized columns)
 #[allow(dead_code)]
-pub fn matrix_coherence(phi: &Array2<f64>) -> SignalResult<f64> {
-    let (_, n) = phi.dim();
+pub fn matrix_coherence(_phi: &Array2<f64>) -> SignalResult<f64> {
+    let (_, n) = _phi.dim();
 
     let mut max_coherence = 0.0;
 
     for i in 0..n {
-        let col_i = phi.slice(s![.., i]);
+        let col_i = _phi.slice(s![.., i]);
         let norm_i = vector_norm(&col_i.view(), 2)
             .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
 
         for j in i + 1..n {
-            let col_j = phi.slice(s![.., j]);
+            let col_j = _phi.slice(s![.., j]);
             let norm_j = vector_norm(&col_j.view(), 2)
                 .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
 
@@ -1431,8 +1433,8 @@ pub fn matrix_coherence(phi: &Array2<f64>) -> SignalResult<f64> {
 ///
 /// * Estimated RIP constant
 #[allow(dead_code)]
-pub fn estimate_rip_constant(phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
-    let (_m, n) = phi.dim();
+pub fn estimate_rip_constant(_phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
+    let (_m, n) = _phi.dim();
 
     if s > n {
         return Err(SignalError::ValueError(
@@ -1443,8 +1445,6 @@ pub fn estimate_rip_constant(phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
     // For exact computation, we would need to check all (n choose s) submatrices,
     // which is computationally infeasible for large n and s.
     // Instead, we use a Monte Carlo approach with random sparse vectors.
-    use rand::Rng;
-
     const NUM_TRIALS: usize = 1000;
     let mut rng = rand::rng();
 
@@ -1472,7 +1472,7 @@ pub fn estimate_rip_constant(phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
         x.mapv_inplace(|val| val / x_norm);
 
         // Compute Phi * x
-        let y = phi.dot(&x);
+        let y = _phi.dot(&x);
 
         // Compute the ratio ||Phi * x||^2 / ||x||^2
         // Since x is normalized, ||x||^2 = 1

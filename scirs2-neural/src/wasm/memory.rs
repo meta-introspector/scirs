@@ -172,8 +172,8 @@ impl Default for ParallelConfig {
             work_stealing: false,
 impl WasmMemoryConfig {
     /// Create a new memory configuration
-    pub fn new(initial_pages: u32, maximum_pages: Option<u32>) -> Self {
-            initial_pages,
+    pub fn new(_initial_pages: u32, maximum_pages: Option<u32>) -> Self {
+            _initial_pages,
             maximum_pages,
     /// Create a configuration for small models
     pub fn small() -> Self {
@@ -193,7 +193,7 @@ impl WasmMemoryConfig {
             growth_strategy: MemoryGrowthStrategy::PreAllocated,
     /// Get total initial memory size in bytes
     pub fn initial_size_bytes(&self) -> usize {
-        self.initial_pages as usize * 65536 // 64KB per page
+        self._initial_pages as usize * 65536 // 64KB per page
     /// Get maximum memory size in bytes
     pub fn max_size_bytes(&self) -> Option<usize> {
         self.maximum_pages.map(|pages| pages as usize * 65536)
@@ -335,7 +335,7 @@ impl MemoryManager {
         &self.parallel_config
     /// Calculate total memory requirements
     pub fn calculate_memory_requirements(&self, model_size: usize) -> WasmMemoryRequirements {
-        let base_memory = self.config.initial_size_bytes();
+        let base_memory = self._config.initial_size_bytes();
         let model_memory = model_size;
         let cache_overhead = if self.cache_config.enable {
             model_size / 10 // 10% overhead for caching
@@ -392,11 +392,11 @@ impl WasmMemoryRequirements {
             preload_percent: (self.preload_overhead as f64 / total_f) * 100.0,
             worker_percent: (self.worker_overhead as f64 / total_f) * 100.0,
     /// Format memory size as human-readable string
-    pub fn format_size(bytes: usize) -> String {
+    pub fn format_size(_bytes: usize) -> String {
         const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB"];
-        if bytes == 0 {
+        if _bytes == 0 {
             return "0 B".to_string();
-        let mut size = bytes as f64;
+        let mut size = _bytes as f64;
         let mut unit_index = 0;
         while size >= 1024.0 && unit_index < UNITS.len() - 1 {
             size /= 1024.0;

@@ -178,8 +178,7 @@ impl<T: InterpolationFloat> SciPyCompatInterface<T> {
         let mut interface = Self {
             method_registry: HashMap::new(),
             parameter_mappings: HashMap::new(),
-            scipy_version: "1.13.0".to_string(),
-            _phantom: PhantomData,
+            scipy_version: "1.13.0".to_string(), _phantom: PhantomData,
         };
 
         interface.initialize_method_registry();
@@ -648,14 +647,14 @@ impl<T: InterpolationFloat> SciPyCubicSpline<T> {
         let bc = bc_type.unwrap_or(SciPyBoundaryCondition::NotAKnot);
 
         let inner = match &bc {
-            SciPyBoundaryCondition::Natural => CubicSpline::new(x, y)?,
-            SciPyBoundaryCondition::NotAKnot => CubicSpline::new_not_a_knot(x, y)?,
+            SciPyBoundaryCondition::Natural =>, CubicSpline::new(x, y)?,
+            SciPyBoundaryCondition::NotAKnot =>, CubicSpline::new_not_a_knot(x, y)?,
             SciPyBoundaryCondition::Clamped(left, right) => {
                 let left_t = T::from_f64(*left).unwrap();
                 let right_t = T::from_f64(*right).unwrap();
                 CubicSpline::new_clamped(x, y, left_t, right_t)?
             }
-            SciPyBoundaryCondition::Periodic => CubicSpline::new_periodic(x, y)?,
+            SciPyBoundaryCondition::Periodic =>, CubicSpline::new_periodic(x, y)?,
             SciPyBoundaryCondition::Custom(_) => {
                 return Err(InterpolateError::NotImplemented(
                     "Custom boundary conditions not yet implemented".to_string(),
@@ -754,12 +753,9 @@ impl<T: InterpolationFloat> SciPyCubicSpline<T> {
 
     /// Solve for x values where spline equals y (SciPy interface)
     pub fn solve(
-        &self,
-        _y: T,
-        _discontinuity: Option<bool>,
-        _extrapolate: Option<bool>,
+        &self_y: T, _discontinuity: Option<bool>, _extrapolate: Option<bool>,
     ) -> InterpolateResult<Vec<T>> {
-        // This would implement root-finding for spline(x) - y = 0
+        // This would implement root-finding for spline(x) - _y = 0
         // Simplified implementation for now
         let roots = self.inner.find_roots(T::from_f64(1e-10).unwrap(), 100)?;
         Ok(roots)
@@ -865,8 +861,7 @@ impl SciPyInterpolate {
     pub fn PPoly<T: InterpolationFloat>(
         c: Array2<T>,
         x: Array1<T>,
-        extrapolate: Option<bool>,
-        _axis: Option<i32>,
+        extrapolate: Option<bool>, _axis: Option<i32>,
     ) -> InterpolateResult<PPoly<T>> {
         let extrap_mode = if extrapolate.unwrap_or(true) {
             ExtrapolationMethod::Linear

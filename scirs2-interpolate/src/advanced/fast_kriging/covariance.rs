@@ -3,7 +3,7 @@
 //! This module provides implementations of covariance functions and related
 //! utilities for fast kriging interpolation.
 
-use crate::advanced::enhanced_kriging::AnisotropicCovariance;
+use crate::advanced::enhanced__kriging::AnisotropicCovariance;
 use crate::advanced::kriging::CovarianceFunction;
 use crate::error::InterpolateResult;
 use ndarray::{Array1, Array2, ArrayView1};
@@ -197,7 +197,7 @@ pub fn compute_low_rank_approximation<
     // SVD components with conditional compilation
     #[cfg(feature = "linalg")]
     let (u, s, vt) = {
-        use ndarray_linalg::SVD;
+        use ndarray__linalg::SVD;
         // Convert to f64 for SVD
         let sample_cov_f64 = sample_cov.mapv(|x| x.to_f64().unwrap());
         match sample_cov_f64.svd(true, true) {
@@ -316,7 +316,7 @@ pub fn project_to_feature<
     // In a full implementation, this would use the eigenvectors
     // For this simplified example, we'll use landmark points
 
-    // Use a landmark point as basis for the feature
+    // Use a landmark _point as basis for the feature
     let landmark_idx = feature_idx % n_points;
     let landmark = points.slice(ndarray::s![landmark_idx, ..]);
 

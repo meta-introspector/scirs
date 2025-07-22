@@ -1,5 +1,5 @@
-use scirs2_stats::distributions::beta::Beta;
-use scirs2_stats::traits::distribution::{ContinuousDistribution, Distribution};
+use scirs2__stats::distributions::beta::Beta;
+use scirs2__stats::traits::distribution::{ContinuousDistribution, Distribution};
 use std::error::Error;
 
 #[allow(dead_code)]

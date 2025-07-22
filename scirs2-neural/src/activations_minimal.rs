@@ -226,8 +226,8 @@ impl ReLU {
         Self { alpha: 0.0 }
     }
 
-    pub fn leaky(alpha: f64) -> Self {
-        Self { alpha }
+    pub fn leaky(_alpha: f64) -> Self {
+        Self { alpha: _alpha }
     }
 }
 
@@ -280,8 +280,8 @@ pub struct Softmax {
 }
 
 impl Softmax {
-    pub fn new(axis: isize) -> Self {
-        Self { axis }
+    pub fn new(_axis: isize) -> Self {
+        Self { axis: _axis }
     }
 }
 
@@ -322,7 +322,7 @@ impl<F: Float + Debug> Activation<F> for Softmax {
         grad_output: &Array<F, ndarray::IxDyn>,
         input: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>> {
-        // Forward pass to get softmax output
+        // Forward pass to get softmax _output
         let softmax_output = self.forward(input)?;
         let mut grad_input = Array::zeros(grad_output.raw_dim());
 

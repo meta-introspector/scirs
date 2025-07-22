@@ -189,8 +189,7 @@ pub unsafe fn avx512_gemm_f32(
             // Apply alpha and beta, then store results
             for ii in 0..MR.min(m - i) {
                 let result = if beta != 0.0 {
-                    _mm512_fmadd_ps(alpha_vec, c_vec[ii], 
-                                   _mm512_mul_ps(beta_vec, c_vec[ii]))
+                    _mm512_fmadd_ps(alpha_vec, c_vec[ii]_mm512_mul_ps(beta_vec, c_vec[ii]))
                 } else {
                     _mm512_mul_ps(alpha_vec, c_vec[ii])
                 };
@@ -230,31 +229,31 @@ pub unsafe fn avx512_mixed_precision_gemm(
             let mut c_acc = [_mm512_setzero_ps(); MR];
             
             for l in 0..k {
-                // Load f16 data and convert to f32
+                // Load _f16 data and convert to _f32
                 let mut a_f32 = [_mm512_setzero_ps(); MR];
                 for ii in 0..MR.min(m - i) {
                     let a_f16_val = *a_f16.add((i + ii) * k + l);
                     
-                    // Convert f16 to f32 (simplified - would use proper conversion)
-                    let a_f32_val = f32::from_bits((a_f16_val as u32) << 16);
+                    // Convert _f16 to _f32 (simplified - would use proper conversion)
+                    let a_f32_val = _f32::from_bits((a_f16_val as u32) << 16);
                     a_f32[ii] = _mm512_set1_ps(a_f32_val);
                 }
                 
-                // Load and convert B vector from f16 to f32
+                // Load and convert B vector from _f16 to _f32
                 let mut b_f32_vals = [0.0f32; 16];
                 for jj in 0..NR.min(n - j) {
                     let b_f16_val = *b_f16.add(l * n + j + jj);
-                    b_f32_vals[jj] = f32::from_bits((b_f16_val as u32) << 16);
+                    b_f32_vals[jj] = _f32::from_bits((b_f16_val as u32) << 16);
                 }
                 let b_f32 = _mm512_loadu_ps(b_f32_vals.as_ptr());
                 
-                // Accumulate in f32 precision
+                // Accumulate in _f32 precision
                 for ii in 0..MR.min(m - i) {
                     c_acc[ii] = _mm512_fmadd_ps(a_f32[ii], b_f32, c_acc[ii]);
                 }
             }
             
-            // Store f32 results
+            // Store _f32 results
             for ii in 0..MR.min(m - i) {
                 if j + NR <= n {
                     _mm512_storeu_ps(c_f32.add((i + ii) * n + j), c_acc[ii]);
@@ -712,7 +711,7 @@ impl AdaptiveSIMDDispatcher {
             for j in 0..n {
                 let mut sum = 0.0f32;
                 for l in 0..k {
-                    // Convert f16 to f32 (simplified conversion)
+                    // Convert _f16 to f32 (simplified conversion)
                     let a_f32 = f32::from_bits((a_f16[[i, l]] as u32) << 16);
                     let b_f32 = f32::from_bits((b_f16[[l, j]] as u32) << 16);
                     sum += a_f32 * b_f32;
@@ -739,11 +738,11 @@ pub struct CacheOptimizedOperations {
 }
 
 impl CacheOptimizedOperations {
-    pub fn new(capabilities: &AdvancedHardwareCapabilities) -> Self {
+    pub fn new(_capabilities: &AdvancedHardwareCapabilities) -> Self {
         Self {
-            l1_block_size: (capabilities.l1_cache_size / 8).next_power_of_two().min(256),
-            l2_block_size: (capabilities.l2_cache_size / 8).next_power_of_two().min(2048),
-            l3_block_size: (capabilities.l3_cache_size / 8).next_power_of_two().min(8192),
+            l1_block_size: (_capabilities.l1_cache_size / 8).next_power_of_two().min(256),
+            l2_block_size: (_capabilities.l2_cache_size / 8).next_power_of_two().min(2048),
+            l3_block_size: (_capabilities.l3_cache_size / 8).next_power_of_two().min(8192),
         }
     }
     
@@ -784,12 +783,12 @@ impl CacheOptimizedOperations {
         unsafe {
             use std::arch::x86_64::*;
             let prefetch_ptr = ptr.add(offset) as *const i8;
-            _mm_prefetch(prefetch_ptr, _MM_HINT_T1);
+            _mm_prefetch(prefetch_ptr_MM_HINT_T1);
         }
     }
     
     #[cfg(not(target_arch = "x86_64"))]
-    fn prefetch_memory(&self, _ptr: *const f32, _offset: usize) {
+    fn prefetch_memory(&self_ptr: *const f32_offset: usize) {
         // No-op for non-x86 platforms
     }
 }

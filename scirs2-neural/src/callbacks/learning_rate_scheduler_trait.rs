@@ -28,6 +28,6 @@ impl<F: Float + Debug + ScalarOperand> LearningRateScheduler<F> for super::Cosin
         let lr = self.calculate_lr(step);
         Ok(lr)
 impl<F: Float + Debug + ScalarOperand> LearningRateScheduler<F> for super::ReduceOnPlateau<F> {
-    fn get_learning_rate(&mut self, _progress: f64) -> Result<F> {
+    fn get_learning_rate(&mut self_progress: f64) -> Result<F> {
         // ReduceOnPlateau doesn't use progress - it relies on callback monitoring
         // So we just return the current learning rate

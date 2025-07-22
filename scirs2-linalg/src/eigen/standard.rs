@@ -369,7 +369,7 @@ where
     }
 
     // Use power iteration to estimate largest eigenvalue
-    let (lambda_max, _) = power_iteration(a, 100, F::from(1e-8).unwrap())?;
+    let (lambda_max_, _) = power_iteration(a, 100, F::from(1e-8).unwrap())?;
 
     // Estimate smallest eigenvalue using inverse iteration
     // For simplicity, use a heuristic based on trace and determinant
@@ -389,12 +389,12 @@ where
     };
 
     let lambda_min = if det_estimate.abs() > F::from(1e-15).unwrap() {
-        det_estimate / lambda_max.powf(F::from(n - 1).unwrap())
+        det_estimate / lambda_max_.powf(F::from(n - 1).unwrap())
     } else {
         F::from(1e-15).unwrap()
     };
 
-    let condition = lambda_max.abs() / lambda_min.abs().max(F::from(1e-15).unwrap());
+    let condition = lambda_max_.abs() / lambda_min.abs().max(F::from(1e-15).unwrap());
     Ok(condition)
 }
 
@@ -427,8 +427,7 @@ where
 /// Advanced-precise 2x2 eigenvalue computation with Kahan summation
 #[allow(dead_code)]
 fn advanced_precise_2x2_eig<F>(
-    a: &ArrayView2<F>,
-    _precision_target: F,
+    a: &ArrayView2<F>, _precision_target: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -508,14 +507,14 @@ where
 
 /// Kahan summation algorithm for enhanced numerical precision
 #[allow(dead_code)]
-fn kahan_sum<F>(values: &[F]) -> F
+fn kahan_sum<F>(_values: &[F]) -> F
 where
     F: Float + NumAssign,
 {
     let mut sum = F::zero();
     let mut c = F::zero(); // Compensation for lost low-order bits
 
-    for &value in values {
+    for &value in _values {
         let y = value - c;
         let t = sum + y;
         c = (t - sum) - y;
@@ -831,26 +830,26 @@ where
 
 /// Enhanced Gram-Schmidt orthogonalization with numerical stability
 #[allow(dead_code)]
-fn gram_schmidt_orthogonalization<F>(matrix: &mut Array2<F>) -> LinalgResult<()>
+fn gram_schmidt_orthogonalization<F>(_matrix: &mut Array2<F>) -> LinalgResult<()>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
-    let n = matrix.nrows();
-    let m = matrix.ncols();
+    let n = _matrix.nrows();
+    let m = _matrix.ncols();
 
     for i in 0..m {
         // Normalize current column
-        let mut col_i = matrix.column(i).to_owned();
+        let mut col_i = _matrix.column(i).to_owned();
         let norm_i = vector_norm(&col_i.view(), 2)?;
 
         if norm_i > F::epsilon() {
             col_i.mapv_inplace(|x| x / norm_i);
-            matrix.column_mut(i).assign(&col_i);
+            _matrix.column_mut(i).assign(&col_i);
         }
 
         // Orthogonalize against previous columns
         for j in (i + 1)..m {
-            let mut col_j = matrix.column(j).to_owned();
+            let mut col_j = _matrix.column(j).to_owned();
 
             // Compute projection coefficient with Kahan summation
             let mut dot_product = F::zero();
@@ -867,7 +866,7 @@ where
                 col_j[k] -= dot_product * col_i[k];
             }
 
-            matrix.column_mut(j).assign(&col_j);
+            _matrix.column_mut(j).assign(&col_j);
         }
     }
 
@@ -878,8 +877,7 @@ where
 #[allow(dead_code)]
 fn advanced_precise_iterative_eig<F>(
     a: &ArrayView2<F>,
-    precision_target: F,
-    _workers: Option<usize>,
+    precision_target: F, _workers: Option<usize>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -1588,7 +1586,7 @@ mod tests {
         assert_relative_eq!(eigenvalues[1].im, 0.0, epsilon = 1e-10);
 
         // Test eigh
-        let (eigenvalues, _) = eigh(&a.view(), None).unwrap();
+        let (eigenvalues, _eigenvectors) = eigh(&a.view(), None).unwrap();
         // The eigenvalues might be returned in a different order
         assert!(
             (eigenvalues[0] - 3.0).abs() < 1e-10 && (eigenvalues[1] - 4.0).abs() < 1e-10

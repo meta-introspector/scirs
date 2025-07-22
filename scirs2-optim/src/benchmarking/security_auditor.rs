@@ -1013,9 +1013,9 @@ enum TestPayload {
 
 impl SecurityAuditor {
     /// Create a new security auditor
-    pub fn new(config: SecurityAuditConfig) -> Result<Self> {
+    pub fn new(_config: SecurityAuditConfig) -> Result<Self> {
         Ok(Self {
-            config,
+            _config,
             input_validator: InputValidationAnalyzer::new(),
             privacy_analyzer: PrivacyGuaranteesAnalyzer::new(),
             memory_analyzer: MemorySafetyAnalyzer::new(),
@@ -1128,22 +1128,21 @@ impl SecurityAuditor {
     /// Generate test payload based on payload type
     fn generate_test_payload(&self, payload_type: &PayloadType) -> TestPayload {
         match payload_type {
-            PayloadType::NaNPayload => TestPayload::FloatArray(vec![f64::NAN, 1.0, 2.0]),
+            PayloadType::NaNPayload =>, TestPayload::FloatArray(vec![f64::NAN, 1.0, 2.0]),
             PayloadType::InfinityPayload => {
                 TestPayload::FloatArray(vec![f64::INFINITY, f64::NEG_INFINITY])
             }
-            PayloadType::ExtremeValuePayload(val) => TestPayload::FloatArray(vec![*val, -*val]),
-            PayloadType::ZeroSizedPayload => TestPayload::EmptyArray,
-            PayloadType::DimensionMismatchPayload => TestPayload::MismatchedDimensions,
-            PayloadType::NegativeLearningRate => TestPayload::NegativeFloat(-1.0),
-            PayloadType::InvalidPrivacyParams => TestPayload::InvalidPrivacy,
+            PayloadType::ExtremeValuePayload(val) =>, TestPayload::FloatArray(vec![*val, -*val]),
+            PayloadType::ZeroSizedPayload =>, TestPayload::EmptyArray,
+            PayloadType::DimensionMismatchPayload =>, TestPayload::MismatchedDimensions,
+            PayloadType::NegativeLearningRate =>, TestPayload::NegativeFloat(-1.0),
+            PayloadType::InvalidPrivacyParams =>, TestPayload::InvalidPrivacy,
         }
     }
 
     /// Test input validation with specific payload
     fn test_input_validation(
-        &self,
-        _test: &InputValidationTest,
+        &self_test: &InputValidationTest,
         payload: &TestPayload,
     ) -> Result<()> {
         match payload {
@@ -1216,7 +1215,7 @@ impl SecurityAuditor {
     fn simulate_optimizer_with_negative_params(&self, learning_rate: f64) -> Result<()> {
         if learning_rate < 0.0 {
             return Err(OptimError::InvalidConfig(
-                "Negative learning rate not allowed".to_string(),
+                "Negative learning _rate not allowed".to_string(),
             ));
         }
         Ok(())
@@ -1350,8 +1349,8 @@ impl SecurityAuditor {
     }
 
     /// Test membership inference attack resistance
-    fn test_membership_inference(&mut self, _test: &PrivacyTest) -> Result<()> {
-        // Simulate membership inference test
+    fn test_membership_inference(&mut self_test: &PrivacyTest) -> Result<()> {
+        // Simulate membership inference _test
         // This would involve training models and testing if membership can be inferred
 
         // For demonstration, we'll simulate a privacy violation detection
@@ -1365,7 +1364,7 @@ impl SecurityAuditor {
                 violation_magnitude: 0.5,
             },
             confidence: 0.85,
-            evidence: vec!["Statistical test indicates membership can be inferred".to_string()],
+            evidence: vec!["Statistical _test indicates membership can be inferred".to_string()],
         };
 
         self.privacy_analyzer.violations.push(violation);
@@ -1374,10 +1373,10 @@ impl SecurityAuditor {
     }
 
     /// Test budget exhaustion attack
-    fn test_budget_exhaustion(&mut self, _test: &PrivacyTest) -> Result<()> {
-        // Simulate budget exhaustion test
+    fn test_budget_exhaustion(&mut self_test: &PrivacyTest) -> Result<()> {
+        // Simulate budget exhaustion _test
         let verification_result = BudgetVerificationResult {
-            test_name: "Budget Exhaustion Test".to_string(),
+            _test_name: "Budget Exhaustion Test".to_string(),
             budget_status: BudgetStatus::Critical,
             remaining_budget: 0.1,
             projected_exhaustion: Some(10),
@@ -1561,7 +1560,7 @@ impl SecurityAuditor {
     }
 
     /// Test precision loss
-    fn test_precision_loss(&mut self, _test: &NumericalStabilityTest) -> Result<()> {
+    fn test_precision_loss(&mut self_test: &NumericalStabilityTest) -> Result<()> {
         // Simulate precision tracking
         let precision_measurement = PrecisionMeasurement {
             step: 1,
@@ -2146,10 +2145,10 @@ impl SecurityAuditor {
                 matrix.push(RiskMatrixEntry {
                     vulnerability_type: format!("{:?} Severity Issues", severity),
                     likelihood: match severity {
-                        SeverityLevel::Critical => RiskLikelihood::High,
-                        SeverityLevel::High => RiskLikelihood::Medium,
-                        SeverityLevel::Medium => RiskLikelihood::Medium,
-                        SeverityLevel::Low => RiskLikelihood::Low,
+                        SeverityLevel::Critical =>, RiskLikelihood::High,
+                        SeverityLevel::High =>, RiskLikelihood::Medium,
+                        SeverityLevel::Medium =>, RiskLikelihood::Medium,
+                        SeverityLevel::Low =>, RiskLikelihood::Low,
                     },
                     impact: RiskImpact::from_severity(&severity),
                     overall_risk: self.calculate_risk_score(&severity),
@@ -2303,12 +2302,12 @@ pub enum RiskImpact {
 }
 
 impl RiskImpact {
-    fn from_severity(severity: &SeverityLevel) -> Self {
-        match severity {
-            SeverityLevel::Critical => RiskImpact::High,
-            SeverityLevel::High => RiskImpact::High,
-            SeverityLevel::Medium => RiskImpact::Medium,
-            SeverityLevel::Low => RiskImpact::Low,
+    fn from_severity(_severity: &SeverityLevel) -> Self {
+        match _severity {
+            SeverityLevel::Critical =>, RiskImpact::High,
+            SeverityLevel::High =>, RiskImpact::High,
+            SeverityLevel::Medium =>, RiskImpact::Medium,
+            SeverityLevel::Low =>, RiskImpact::Low,
         }
     }
 }

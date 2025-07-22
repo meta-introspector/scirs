@@ -5,8 +5,10 @@
 //! frequency-domain responses (Bode plots, Nyquist plots).
 
 use crate::error::{SignalError, SignalResult};
-use crate::lti::LtiSystem;
+use crate::lti::{LtiSystem, TransferFunction};
+use crate::lti::design::tf;
 
+#[allow(unused_imports)]
 /// Calculate the impulse response of an LTI system
 ///
 /// # Arguments
@@ -21,8 +23,8 @@ use crate::lti::LtiSystem;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::lti::TransferFunction;
-/// use scirs2_signal::lti_response::impulse_response;
+/// use scirs2__signal::lti::TransferFunction;
+/// use scirs2__signal::lti_response::impulse_response;
 ///
 /// // Create a simple first-order system: H(s) = 1 / (s + 1)
 /// let system = TransferFunction::new(
@@ -45,8 +47,8 @@ use crate::lti::LtiSystem;
 /// assert!(response.iter().all(|x| x.is_finite()));
 /// ```
 #[allow(dead_code)]
-pub fn impulse_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
-    system.impulse_response(t)
+pub fn impulse_response<T: LtiSystem>(_system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
+    _system.impulse_response(t)
 }
 
 /// Calculate the step response of an LTI system
@@ -63,8 +65,8 @@ pub fn impulse_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::lti::TransferFunction;
-/// use scirs2_signal::lti_response::step_response;
+/// use scirs2__signal::lti::TransferFunction;
+/// use scirs2__signal::lti_response::step_response;
 ///
 /// // Create a simple first-order system: H(s) = 1 / (s + 1)
 /// let system = TransferFunction::new(
@@ -87,8 +89,8 @@ pub fn impulse_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec
 /// assert!(response.iter().all(|x| x.is_finite()));
 /// ```
 #[allow(dead_code)]
-pub fn step_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
-    system.step_response(t)
+pub fn step_response<T: LtiSystem>(_system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
+    _system.step_response(t)
 }
 
 /// Simulate the response of an LTI system to an arbitrary input
@@ -106,8 +108,8 @@ pub fn step_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f6
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::lti::TransferFunction;
-/// use scirs2_signal::lti_response::lsim;
+/// use scirs2__signal::lti::TransferFunction;
+/// use scirs2__signal::lti_response::lsim;
 ///
 /// // Create a simple first-order system: H(s) = 1 / (s + 1)
 /// let system = TransferFunction::new(
@@ -126,10 +128,10 @@ pub fn step_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f6
 /// // Output should be the convolution of the input with the impulse response
 /// assert_eq!(y.len(), t.len());
 /// // Basic sanity checks
-/// assert!(y.iter().all(|&val| val.is_finite()));
+/// assert!(y.iter().all(|&val: &f64| val.is_finite()));
 /// ```
 #[allow(dead_code)]
-pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<f64>> {
+pub fn lsim<T: LtiSystem>(_system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<f64>> {
     if t.is_empty() || u.is_empty() {
         return Ok(Vec::new());
     }
@@ -141,7 +143,7 @@ pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<
     }
 
     // Convert to state-space for simulation
-    let ss = system.to_ss()?;
+    let ss = _system.to_ss()?;
 
     // Initialize state and output vectors
     let mut x = vec![0.0; ss.n_states];
@@ -152,7 +154,7 @@ pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<
         // Calculate time step (assuming uniform spacing)
         let dt = if t.len() > 1 { t[1] - t[0] } else { 0.001 };
 
-        // Simulate the system using improved forward Euler integration
+        // Simulate the _system using improved forward Euler integration
         // Initialize state to zero
         for k in 0..t.len() {
             // Calculate output: y = Cx + Du
@@ -257,8 +259,6 @@ pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<
 
 #[cfg(test)]
 mod tests {
-    use crate::lti::TransferFunction;
-
     #[test]
     #[ignore = "Implementation needs more work on numerical integration"]
     fn test_first_order_impulse_response() {
@@ -336,6 +336,6 @@ mod tests {
 
         // The response should follow the input with some lag and amplitude change
         // Just check that the response is non-zero
-        assert!(y.iter().any(|&val| val.abs() > 1e-6));
+        assert!(y.iter().any(|&val: &f64| val.abs() > 1e-6));
     }
 }

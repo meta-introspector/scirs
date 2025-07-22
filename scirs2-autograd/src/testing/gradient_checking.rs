@@ -48,7 +48,7 @@ impl Default for GradientCheckConfig {
 
 /// Gradient checking engine
 pub struct GradientChecker<F: Float> {
-    config: GradientCheckConfig,
+    _config: GradientCheckConfig,
     finite_diff_computer: FiniteDifferenceComputer<F>,
 }
 
@@ -62,11 +62,11 @@ impl<F: Float> GradientChecker<F> {
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: GradientCheckConfig) -> Self {
+    pub fn with_config(_config: GradientCheckConfig) -> Self {
         let finite_diff_computer =
-            FiniteDifferenceComputer::with_config(config.finite_diff_config.clone());
+            FiniteDifferenceComputer::with_config(_config.finite_diff_config.clone());
         Self {
-            config,
+            _config,
             finite_diff_computer,
         }
     }
@@ -117,7 +117,7 @@ impl<F: Float> GradientChecker<F> {
     where
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
-        // Compute numerical gradient using finite differences
+        // Compute numerical _gradient using finite differences
         let numerical_gradient = self
             .finite_diff_computer
             .compute_gradient(|x| function(x), input)?;
@@ -211,8 +211,7 @@ impl<F: Float> GradientChecker<F> {
 
     /// Check second-order gradients (Hessian)
     fn check_second_order_gradients(
-        &self,
-        _input: &Tensor<F>,
+        &self_input: &Tensor<F>,
     ) -> Result<SecondOrderCheck, StabilityError> {
         // Simplified implementation - would compute and compare Hessians
         Ok(SecondOrderCheck {
@@ -249,8 +248,7 @@ impl<F: Float> GradientChecker<F> {
     /// Compute analytical gradient at a test point
     #[allow(dead_code)]
     fn compute_analytical_gradient_at_point<'a, Func>(
-        &self,
-        _function: &Func,
+        &self_function: &Func,
         input: &'a Tensor<'a, F>,
     ) -> Result<Tensor<'a, F>, StabilityError>
     where
@@ -469,10 +467,7 @@ impl<F: Float> VectorFunctionChecker<F> {
 
     /// Check gradients of a vector-valued function (Jacobian)
     pub fn check_jacobian<Func>(
-        &self,
-        _function: Func,
-        _input: &Tensor<F>,
-        _analytical_jacobian: &Array<F, IxDyn>,
+        &self_function: Func, _input: &Tensor<F>, _analytical_jacobian: &Array<F, IxDyn>,
     ) -> Result<JacobianCheckResult<'_, F>, StabilityError>
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
@@ -500,11 +495,10 @@ impl<F: Float> VectorFunctionChecker<F> {
     #[allow(dead_code)]
     fn extract_jacobian_row<'a>(
         &self,
-        jacobian: &Array<F, IxDyn>,
-        _row: usize,
+        jacobian: &Array<F, IxDyn>, _row: usize,
         graph: &'a Graph<F>,
     ) -> Result<Tensor<'a, F>, StabilityError> {
-        // Extract a specific row from the Jacobian matrix
+        // Extract a specific _row from the Jacobian matrix
         // Simplified implementation
         let row_data = vec![F::zero(); jacobian.shape()[1]];
         Ok(Tensor::from_vec(row_data, vec![jacobian.shape()[1]], graph))
@@ -539,8 +533,7 @@ impl<F: Float> ParameterGradientChecker<F> {
 
     /// Check gradients with respect to model parameters
     pub fn check_parameter_gradients<'a, Func>(
-        &self,
-        _loss_function: Func,
+        &self_loss_function: Func,
         parameters: &'a HashMap<String, Tensor<'a, F>>,
         analytical_gradients: &'a HashMap<String, Tensor<'a, F>>,
     ) -> Result<ParameterCheckResult<'_, F>, StabilityError>
@@ -626,10 +619,7 @@ where
 /// Comprehensive gradient check with detailed results
 #[allow(dead_code)]
 pub fn comprehensive_gradient_check<'a, F: Float, Func>(
-    _function: Func,
-    _input: &'a Tensor<'a, F>,
-    _analytical_gradient: &'a Tensor<'a, F>,
-    _config: GradientCheckConfig,
+    _function: Func_input: &'a Tensor<'a, F>, _analytical_gradient: &'a Tensor<'a, F>, _config: GradientCheckConfig,
 ) -> Result<GradientCheckResult<'a, F>, StabilityError>
 where
     Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,

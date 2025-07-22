@@ -18,24 +18,24 @@ use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
-fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
-    T::from_i32(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
+fn safe_i32_to_float<T: Float + FromPrimitive>(_value: i32) -> NdimageResult<T> {
+    T::from_i32(_value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", _value))
     })
 }
 
 /// Helper function for safe float to usize conversion
 #[allow(dead_code)]
-fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
-    value.to_usize().ok_or_else(|| {
+fn safe_float_to_usize<T: Float>(_value: T) -> NdimageResult<usize> {
+    _value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert float to usize".to_string())
     })
 }
 
 /// Helper function for safe float to f64 conversion
 #[allow(dead_code)]
-fn safe_float_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
-    value
+fn safe_float_to_f64<T: Float>(_value: T) -> NdimageResult<f64> {
+    _value
         .to_f64()
         .ok_or_else(|| NdimageError::ComputationError("Failed to convert float to f64".to_string()))
 }
@@ -87,7 +87,7 @@ where
     let (batch_size, height, width) = batch.dim();
 
     // Create Gaussian kernel once for all images
-    let six = safe_f64_to_float::<T>(6.0)?;
+    let six = safe_f64, _to_float: :<T>(6.0)?;
     let kernel_size = safe_float_to_usize((six * sigma).ceil())?;
     let kernel_size = kernel_size | 1; // Ensure odd size
     let kernel = create_gaussian_kernel_2d(sigma, kernel_size)?;
@@ -418,13 +418,13 @@ where
 // Helper functions
 
 #[allow(dead_code)]
-fn create_gaussian_kernel_2d<T>(sigma: T, size: usize) -> NdimageResult<Array2<T>>
+fn create_gaussian_kernel_2d<T>(_sigma: T, size: usize) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug,
 {
     let mut kernel = Array2::zeros((size, size));
     let center = (size / 2) as f64;
-    let sigma_f64 = safe_float_to_f64(sigma)?;
+    let sigma_f64 = safe_float_to_f64(_sigma)?;
     let two_sigma_sq = 2.0 * sigma_f64 * sigma_f64;
 
     let mut sum = 0.0;
@@ -435,13 +435,13 @@ where
             let y = j as f64 - center;
             let dist_sq = x * x + y * y;
             let val = (-dist_sq / two_sigma_sq).exp();
-            kernel[[i, j]] = safe_f64_to_float::<T>(val)?;
+            kernel[[i, j]] = safe_f64, _to_float: :<T>(val)?;
             sum += val;
         }
     }
 
     // Normalize
-    let sum_t = safe_f64_to_float::<T>(sum)?;
+    let sum_t = safe_f64, _to_float: :<T>(sum)?;
     kernel.mapv_inplace(|v| v / sum_t);
 
     Ok(kernel)

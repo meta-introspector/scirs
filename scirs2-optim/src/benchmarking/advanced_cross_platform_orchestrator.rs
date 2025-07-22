@@ -4,11 +4,11 @@
 //! integration, containerized testing environments, automated test matrix generation,
 //! and comprehensive platform compatibility validation.
 
-use crate::benchmarking::cross_platform_tester::{
+use crate::benchmarking::cross_platform__tester::{
     CrossPlatformTester, CrossPlatformConfig, PlatformTarget, TestCategory, TestResult,
     TestStatus, PerformanceMetrics, CompatibilityIssue, PlatformRecommendation
 };
-use crate::benchmarking::ci_cd_automation::{CiCdAutomation, CiCdAutomationConfig};
+use crate::benchmarking::ci_cd__automation::{CiCdAutomation, CiCdAutomationConfig};
 use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, BTreeMap};
@@ -17,6 +17,7 @@ use std::time::{Duration, Instant, SystemTime};
 use std::process::{Command, Child, Stdio};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::path::PathBuf;
 
 /// Advanced cross-platform testing orchestrator
 #[derive(Debug)]
@@ -1094,21 +1095,21 @@ pub enum AlertLevel {
 
 impl CrossPlatformOrchestrator {
     /// Create a new cross-platform orchestrator
-    pub fn new(config: OrchestratorConfig) -> Result<Self> {
-        let cloud_providers = Self::initialize_cloud_providers(&config.cloud_config)?;
-        let container_manager = ContainerManager::new(config.container_config.clone())?;
-        let matrix_generator = TestMatrixGenerator::new(config.matrix_config.clone())?;
+    pub fn new(_config: OrchestratorConfig) -> Result<Self> {
+        let cloud_providers = Self::initialize_cloud_providers(&_config.cloud_config)?;
+        let container_manager = ContainerManager::new(_config.container_config.clone())?;
+        let matrix_generator = TestMatrixGenerator::new(_config.matrix_config.clone())?;
         let result_aggregator = ResultAggregator::new();
-        let resource_manager = PlatformResourceManager::new(config.resource_limits.clone())?;
+        let resource_manager = PlatformResourceManager::new(_config.resource_limits.clone())?;
         
-        let ci_cd_integration = if let Some(ci_cd_config) = &config.ci_cd_config {
+        let ci_cd_integration = if let Some(ci_cd_config) = &_config.ci_cd_config {
             Some(CiCdAutomation::new(CiCdAutomationConfig::default())?)
         } else {
             None
         };
 
         Ok(Self {
-            config,
+            _config,
             cloud_providers,
             container_manager,
             matrix_generator,
@@ -1180,26 +1181,26 @@ impl CrossPlatformOrchestrator {
     }
 
     /// Initialize cloud providers based on configuration
-    fn initialize_cloud_providers(config: &CloudConfig) -> Result<Vec<Box<dyn CloudProvider>>> {
+    fn initialize_cloud_providers(_config: &CloudConfig) -> Result<Vec<Box<dyn CloudProvider>>> {
         let mut providers: Vec<Box<dyn CloudProvider>> = Vec::new();
         
-        if let Some(aws_config) = &config.aws {
+        if let Some(aws_config) = &_config.aws {
             providers.push(Box::new(AwsProvider::new(aws_config.clone())?));
         }
         
-        if let Some(azure_config) = &config.azure {
+        if let Some(azure_config) = &_config.azure {
             providers.push(Box::new(AzureProvider::new(azure_config.clone())?));
         }
         
-        if let Some(gcp_config) = &config.gcp {
+        if let Some(gcp_config) = &_config.gcp {
             providers.push(Box::new(GcpProvider::new(gcp_config.clone())?));
         }
         
-        if let Some(github_config) = &config.github_actions {
+        if let Some(github_config) = &_config.github_actions {
             providers.push(Box::new(GitHubActionsProvider::new(github_config.clone())?));
         }
         
-        for custom_config in &config.custom_providers {
+        for custom_config in &_config.custom_providers {
             providers.push(Box::new(CustomProvider::new(custom_config.clone())?));
         }
         
@@ -1871,9 +1872,9 @@ pub struct CompatibilityAnalysis {
 // Implementation stubs for supporting types
 
 impl TestMatrixGenerator {
-    fn new(config: TestMatrixConfig) -> Result<Self> {
+    fn new(_config: TestMatrixConfig) -> Result<Self> {
         Ok(Self {
-            config,
+            _config,
             generated_matrix: Vec::new(),
         })
     }
@@ -1915,15 +1916,14 @@ impl TestMatrixGenerator {
 }
 
 impl ContainerManager {
-    fn new(config: ContainerConfig) -> Result<Self> {
-        let runtime_interface: Box<dyn ContainerRuntime + Send + Sync> = match config.runtime {
-            ContainerRuntime::Docker => Box::new(DockerRuntime::new()?),
-            ContainerRuntime::Podman => Box::new(PodmanRuntime::new()?),
-            _ => return Err(OptimError::UnsupportedFeature("Container runtime not supported".to_string())),
+    fn new(_config: ContainerConfig) -> Result<Self> {
+        let runtime_interface: Box<dyn ContainerRuntime + Send + Sync> = match _config.runtime {
+            ContainerRuntime::Docker =>, Box::new(DockerRuntime::new()?),
+            ContainerRuntime::Podman =>, Box::new(PodmanRuntime::new()?, _ => return Err(OptimError::UnsupportedFeature("Container runtime not supported".to_string())),
         };
 
         Ok(Self {
-            config,
+            _config,
             active_containers: Arc::new(Mutex::new(HashMap::new())),
             runtime_interface,
         })
@@ -1951,7 +1951,7 @@ impl ContainerManager {
             image: image.clone(),
             status: ContainerStatus::Running,
             start_time: Instant::now(),
-            config,
+            _config,
         })
     }
 
@@ -2080,11 +2080,11 @@ impl ResultAggregator {
 }
 
 impl PlatformResourceManager {
-    fn new(limits: ResourceLimits) -> Result<Self> {
+    fn new(_limits: ResourceLimits) -> Result<Self> {
         Ok(Self {
             allocations: HashMap::new(),
-            usage_tracker: ResourceUsageTracker::new(limits.clone()),
-            cost_tracker: CostTracker::new(limits.budget_limits),
+            usage_tracker: ResourceUsageTracker::new(_limits.clone()),
+            cost_tracker: CostTracker::new(_limits.budget_limits),
         })
     }
 
@@ -2098,21 +2098,21 @@ impl PlatformResourceManager {
 }
 
 impl ResourceUsageTracker {
-    fn new(limits: ResourceLimits) -> Self {
+    fn new(_limits: ResourceLimits) -> Self {
         Self {
             usage_history: Vec::new(),
             current_usage: ResourceUsage::default(),
-            limits,
+            _limits,
         }
     }
 }
 
 impl CostTracker {
-    fn new(budget_limits: BudgetLimits) -> Self {
+    fn new(_budget_limits: BudgetLimits) -> Self {
         Self {
             current_costs: CloudCosts::default(),
             cost_history: Vec::new(),
-            budget_limits,
+            _budget_limits,
             alerts: Vec::new(),
         }
     }
@@ -2126,8 +2126,8 @@ struct AwsProvider {
 }
 
 impl AwsProvider {
-    fn new(config: AwsConfig) -> Result<Self> {
-        Ok(Self { config })
+    fn new(_config: AwsConfig) -> Result<Self> {
+        Ok(Self { _config })
     }
 }
 
@@ -2195,16 +2195,14 @@ impl CloudProvider for AwsProvider {
             (2..=4, 2049..=8192) => "t3.medium",
             (4..=8, 8193..=16384) => "c5.xlarge",
             (8..=16, 16385..=32768) => "c5.2xlarge",
-            (16..=32, 32769..=65536) => "c5.4xlarge",
-            _ => "c5.large", // Default fallback
+            (16..=32, 32769..=65536) => "c5.4xlarge"_ => "c5.large", // Default fallback
         };
         
         // Adjust for GPU requirements
         if requirements.gpu_required {
             return Ok(match requirements.memory_mb {
                 0..=16384 => "p3.2xlarge",
-                16385..=65536 => "p3.8xlarge", 
-                _ => "p3.16xlarge",
+                16385..=65536 => "p3.8xlarge"_ => "p3.16xlarge",
             }.to_string());
         }
         
@@ -2216,8 +2214,7 @@ impl CloudProvider for AwsProvider {
         let zone = match target {
             PlatformTarget::LinuxX64 | PlatformTarget::LinuxArm64 => "us-west-2a",
             PlatformTarget::WindowsX64 | PlatformTarget::WindowsArm64 => "us-east-1a",
-            PlatformTarget::MacOSX64 | PlatformTarget::MacOSArm64 => "us-west-1a",
-            _ => "us-west-2a", // Default
+            PlatformTarget::MacOSX64 | PlatformTarget::MacOSArm64 => "us-west-1a"_ => "us-west-2a", // Default
         };
         
         Ok(zone.to_string())
@@ -2234,8 +2231,8 @@ struct AzureProvider {
 }
 
 impl AzureProvider {
-    fn new(config: AzureConfig) -> Result<Self> {
-        Ok(Self { config })
+    fn new(_config: AzureConfig) -> Result<Self> {
+        Ok(Self { _config })
     }
 }
 
@@ -2245,7 +2242,7 @@ impl CloudProvider for AzureProvider {
     fn supported_platforms(&self) -> Vec<PlatformTarget> {
         vec![PlatformTarget::LinuxX64, PlatformTarget::WindowsX64]
     }
-    fn provision_instance(&self, _spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
+    fn provision_instance(&self_spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
         Err(OptimError::NotImplemented("Azure provisioning not implemented".to_string()))
     }
     fn get_current_costs(&self) -> Result<CloudCosts> {
@@ -2260,8 +2257,8 @@ struct GcpProvider {
 }
 
 impl GcpProvider {
-    fn new(config: GcpConfig) -> Result<Self> {
-        Ok(Self { config })
+    fn new(_config: GcpConfig) -> Result<Self> {
+        Ok(Self { _config })
     }
 }
 
@@ -2271,7 +2268,7 @@ impl CloudProvider for GcpProvider {
     fn supported_platforms(&self) -> Vec<PlatformTarget> {
         vec![PlatformTarget::LinuxX64, PlatformTarget::LinuxArm64]
     }
-    fn provision_instance(&self, _spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
+    fn provision_instance(&self_spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
         Err(OptimError::NotImplemented("GCP provisioning not implemented".to_string()))
     }
     fn get_current_costs(&self) -> Result<CloudCosts> {
@@ -2286,8 +2283,8 @@ struct GitHubActionsProvider {
 }
 
 impl GitHubActionsProvider {
-    fn new(config: GitHubActionsConfig) -> Result<Self> {
-        Ok(Self { config })
+    fn new(_config: GitHubActionsConfig) -> Result<Self> {
+        Ok(Self { _config })
     }
 }
 
@@ -2297,7 +2294,7 @@ impl CloudProvider for GitHubActionsProvider {
     fn supported_platforms(&self) -> Vec<PlatformTarget> {
         vec![PlatformTarget::LinuxX64, PlatformTarget::MacOSX64, PlatformTarget::WindowsX64]
     }
-    fn provision_instance(&self, _spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
+    fn provision_instance(&self_spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
         Err(OptimError::NotImplemented("GitHub Actions provisioning not implemented".to_string()))
     }
     fn get_current_costs(&self) -> Result<CloudCosts> {
@@ -2312,8 +2309,8 @@ struct CustomProvider {
 }
 
 impl CustomProvider {
-    fn new(config: CustomCloudConfig) -> Result<Self> {
-        Ok(Self { config })
+    fn new(_config: CustomCloudConfig) -> Result<Self> {
+        Ok(Self { _config })
     }
 }
 
@@ -2323,7 +2320,7 @@ impl CloudProvider for CustomProvider {
     fn supported_platforms(&self) -> Vec<PlatformTarget> {
         self.config.platform_mappings.keys().cloned().collect()
     }
-    fn provision_instance(&self, _spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
+    fn provision_instance(&self_spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
         Err(OptimError::NotImplemented("Custom provider provisioning not implemented".to_string()))
     }
     fn get_current_costs(&self) -> Result<CloudCosts> {
@@ -2347,7 +2344,7 @@ impl ContainerRuntime for DockerRuntime {
     fn build_image(&self, _dockerfile_path: &Path, _tag: &str) -> Result<String> {
         Err(OptimError::NotImplemented("Docker build not implemented".to_string()))
     }
-    fn run_container(&self, _image: &str, _config: &ContainerRunConfig) -> Result<String> {
+    fn run_container(&self_image: &str, _config: &ContainerRunConfig) -> Result<String> {
         Ok("dummy_container_id".to_string())
     }
     fn stop_container(&self, _container_id: &str) -> Result<()> { Ok(()) }
@@ -2379,7 +2376,7 @@ impl ContainerRuntime for PodmanRuntime {
     fn build_image(&self, _dockerfile_path: &Path, _tag: &str) -> Result<String> {
         Err(OptimError::NotImplemented("Podman build not implemented".to_string()))
     }
-    fn run_container(&self, _image: &str, _config: &ContainerRunConfig) -> Result<String> {
+    fn run_container(&self_image: &str, _config: &ContainerRunConfig) -> Result<String> {
         Ok("dummy_container_id".to_string())
     }
     fn stop_container(&self, _container_id: &str) -> Result<()> { Ok(()) }
@@ -2426,7 +2423,7 @@ impl Default for TestMatrixConfig {
                     priority: 10,
                     required_for_release: true,
                     is_baseline: true,
-                    config: HashMap::new(),
+                    _config: HashMap::new(),
                     resource_requirements: PlatformResourceRequirements::default(),
                 }
             ],

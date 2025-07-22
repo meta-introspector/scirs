@@ -531,7 +531,7 @@ impl TPURuntime {
                     .filter(|d| d.device_id % 8 == id)
         Ok(devices)
     /// Create a simulated TPU device for testing
-    fn create_simulated_device(device_id: u32) -> Result<TPUDevice> {
+    fn create_simulated_device(_device_id: u32) -> Result<TPUDevice> {
         // Determine generation based on environment or default to v4
         let generation = if let Ok(gen) = std::env::var("TPU_GENERATION") {
             match gen.as_str() {
@@ -554,11 +554,11 @@ impl TPURuntime {
             utilization: 0.0,
             temperature: 40.0 + (device_id as f32 * 2.0), // Vary temperature slightly
     /// Parse TPU configuration from TPU name
-    fn parse_tpu_config(tpu_name: &str) -> Result<(TPUGeneration, u32)> {
+    fn parse_tpu_config(_tpu_name: &str) -> Result<(TPUGeneration, u32)> {
         // Parse names like "v4-8", "v3-32", etc.
         if let Some(caps) = regex::Regex::new(r"v(\d+)-(\d+)")
             .unwrap()
-            .captures(tpu_name)
+            .captures(_tpu_name)
         {
             let version = caps.get(1).unwrap().as_str();
             let cores =
@@ -569,8 +569,7 @@ impl TPURuntime {
                 "2" => TPUGeneration::V2,
                 "3" => TPUGeneration::V3,
                 "4" => TPUGeneration::V4,
-                "5" => TPUGeneration::V5,
-                _ => TPUGeneration::Custom(format!("v{}", version)),
+                "5" => TPUGeneration::V5_ =>, TPUGeneration::Custom(format!("v{}", version)),
             };
             Ok((generation, cores))
             // Default fallback
@@ -590,22 +589,22 @@ impl TPURuntime {
                         }
                     }
     /// Get default number of cores for TPU generation
-    fn get_default_cores(generation: &TPUGeneration) -> u32 {
-        match generation {
+    fn get_default_cores(_generation: &TPUGeneration) -> u32 {
+        match _generation {
             TPUGeneration::V2 => 4,
             TPUGeneration::V3 => 8,
             TPUGeneration::V4 => 4,
             TPUGeneration::V5 => 4,
             TPUGeneration::Custom(_) => 4,
-    /// Get memory per core for TPU generation
-    fn get_memory_per_core(generation: &TPUGeneration) -> usize {
+    /// Get memory per core for TPU _generation
+    fn get_memory_per_core(_generation: &TPUGeneration) -> usize {
             TPUGeneration::V2 => 8 * 1024 * 1024 * 1024,  // 8GB
             TPUGeneration::V3 => 16 * 1024 * 1024 * 1024, // 16GB
             TPUGeneration::V4 => 32 * 1024 * 1024 * 1024, // 32GB
             TPUGeneration::V5 => 64 * 1024 * 1024 * 1024, // 64GB
             TPUGeneration::Custom(_) => 16 * 1024 * 1024 * 1024, // Default 16GB
-    /// Get peak TOPS for TPU generation
-    fn get_peak_tops(generation: &TPUGeneration) -> f64 {
+    /// Get peak TOPS for TPU _generation
+    fn get_peak_tops(_generation: &TPUGeneration) -> f64 {
             TPUGeneration::V2 => 45.0,         // 45 TOPS
             TPUGeneration::V3 => 123.0,        // 123 TOPS
             TPUGeneration::V4 => 275.0,        // 275 TOPS
@@ -800,7 +799,7 @@ impl TPURuntime {
                 // Convert to f32 (simplified)
                 let f32_data = input.mapv(|x| x.to_f32().unwrap_or(0.0));
                 Ok(TPUTensor {
-                    data: f32_data,
+                    data: f32, _data,
                     spec: TensorSpec {
                         shape: input.shape().to_vec(),
                         dtype: TPUDataType::F32,
@@ -860,10 +859,10 @@ impl TPURuntime {
             .collect())
 impl XLACompiler {
     /// Create a new XLA compiler
-    pub fn new(target_generation: TPUGeneration) -> Result<Self> {
+    pub fn new(_target_generation: TPUGeneration) -> Result<Self> {
         let optimization_config = XLAOptimizationConfig {
             max_fusion_depth: 4,
-            target_generation,
+            _target_generation,
             compilation_cache: Arc::new(RwLock::new(HashMap::new())),
             optimization_config,
             stats: Arc::new(RwLock::new(XLACompilationStats::default())),
@@ -907,7 +906,7 @@ impl XLACompiler {
         let estimated_execution_time = (estimated_flops / 1_000_000) as u64; // Rough estimate
         Ok(TPUKernelMetadata {
             name: program.program_id.clone(),
-            target_generation: self.target_generation.clone(),
+            target_generation: self._target_generation.clone(),
             required_cores: 1, // Simplified
             estimated_execution_time_us: estimated_execution_time,
             memory_footprint: program
@@ -951,11 +950,11 @@ impl XLACompiler {
             TPUDataType::C128 => 16,
     /// Estimate performance characteristics
     fn estimate_performance(&self, program: &XLAProgram) -> Result<TPUPerformanceEstimates> {
-        let memory_bandwidth = match self.target_generation {
+        let memory_bandwidth = match self._target_generation {
             TPUGeneration::V4 => 1200.0, // GB/s for TPU v4
             TPUGeneration::V3 => 900.0,  // GB/s for TPU v3
             _ => 600.0,                  // Conservative estimate
-        let compute_throughput = match self.target_generation {
+        let compute_throughput = match self._target_generation {
             TPUGeneration::V4 => 275e12, // 275 TOPS
             TPUGeneration::V3 => 123e12, // 123 TOPS
             _ => 50e12,                  // Conservative estimate
@@ -999,15 +998,15 @@ impl XLACompiler {
                 stats.total_compile_time_ms / stats.programs_compiled as f64;
 impl TPUMemoryManager {
     /// Create a new TPU memory manager
-    pub fn new(devices: &[TPUDevice]) -> Result<Self> {
+    pub fn new(_devices: &[TPUDevice]) -> Result<Self> {
         let mut memory_pools = HashMap::new();
-        for device in devices {
+        for device in _devices {
             let pool = TPUMemoryPool::new(
                 device.device_id,
                 device.memory_per_core * device.num_cores as usize,
             )?;
             memory_pools.insert(device.device_id, pool);
-            devices: devices.to_vec(),
+            devices: _devices.to_vec(),
             memory_pools,
             allocations: Arc::new(RwLock::new(HashMap::new())),
             stats: Arc::new(RwLock::new(TPUMemoryStats::default())),
@@ -1059,7 +1058,7 @@ impl TPUMemoryManager {
                 stats.current_memory_usage = stats.current_memory_usage.saturating_sub(size);
 impl TPUMemoryPool {
     /// Create a new memory pool for device
-    pub fn new(device_id: u32, total_size: usize) -> Result<Self> {
+    pub fn new(_device_id: u32, total_size: usize) -> Result<Self> {
         let mut free_blocks = VecDeque::new();
         // Initialize with one large free block
         free_blocks.push_back(MemoryBlock {

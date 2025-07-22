@@ -16,7 +16,7 @@
 //! ## Usage Examples
 //!
 //! ```rust
-//! use scirs2_special::{gamma, SpecialError, SpecialResult};
+//! use scirs2__special::{gamma, SpecialError, SpecialResult};
 //!
 //! // Function that can return different error types
 //! fn safe_gamma(x: f64) -> SpecialResult<f64> {
@@ -156,7 +156,7 @@ pub enum SpecialError {
 /// # Usage Examples
 ///
 /// ```rust
-/// use scirs2_special::{SpecialResult, SpecialError};
+/// use scirs2__special::{SpecialResult, SpecialError};
 ///
 /// fn safe_computation(x: f64) -> SpecialResult<f64> {
 ///     if x < 0.0 {
@@ -182,8 +182,8 @@ pub type SpecialResult<T> = Result<T, SpecialError>;
 /// Automatically converts `ParseFloatError` into `SpecialError::ValueError`
 /// for seamless error propagation when parsing numerical input.
 impl From<std::num::ParseFloatError> for SpecialError {
-    fn from(err: std::num::ParseFloatError) -> Self {
-        SpecialError::ValueError(format!("Failed to parse float: {err}"))
+    fn from(_err: std::num::ParseFloatError) -> Self {
+        SpecialError::ValueError(format!("Failed to parse float: {_err}"))
     }
 }
 
@@ -192,7 +192,7 @@ impl From<std::num::ParseFloatError> for SpecialError {
 /// Automatically converts `std::io::Error` into `SpecialError::ComputationError`
 /// for handling file I/O failures during computation or data loading.
 impl From<std::io::Error> for SpecialError {
-    fn from(err: std::io::Error) -> Self {
-        SpecialError::ComputationError(format!("IO error: {err}"))
+    fn from(_err: std::io::Error) -> Self {
+        SpecialError::ComputationError(format!("IO error: {_err}"))
     }
 }

@@ -6,7 +6,7 @@
 //!
 //! Run with: cargo run --example comprehensive_performance_benchmark --features gpu,simd,parallel
 
-use scirs2_special::performance_benchmarks::{
+use scirs2__special::performance_benchmarks::{
     comprehensive_benchmark, quick_benchmark, BenchmarkConfig, GammaBenchmarks,
 };
 use std::env;
@@ -64,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn run_custom_benchmark(
-) -> Result<scirs2_special::performance_benchmarks::BenchmarkSuite, Box<dyn std::error::Error>> {
+) -> Result<scirs2_special::performance, _benchmarks::BenchmarkSuite, Box<dyn std::error::Error>> {
     let config = BenchmarkConfig {
         array_sizes: vec![
             100,       // Small arrays
@@ -97,7 +97,7 @@ fn run_custom_benchmark(
 
 #[allow(dead_code)]
 fn save_benchmark_results(
-    suite: &scirs2_special::performance_benchmarks::BenchmarkSuite,
+    suite: &scirs2_special::performance, _benchmarks::BenchmarkSuite,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Save text report
     let report = suite.generate_report();
@@ -112,7 +112,7 @@ fn save_benchmark_results(
 
 #[allow(dead_code)]
 fn generate_performance_recommendations(
-    suite: &scirs2_special::performance_benchmarks::BenchmarkSuite,
+    suite: &scirs2_special::performance, _benchmarks::BenchmarkSuite,
 ) {
     println!("\n{}", "=".repeat(60));
     println!("PERFORMANCE RECOMMENDATIONS");
@@ -149,14 +149,13 @@ fn generate_performance_recommendations(
         let size_range = match result.array_size {
             0..=1000 => "Small (≤1K)",
             1001..=10000 => "Medium (1K-10K)",
-            10001..=100000 => "Large (10K-100K)",
-            _ => "Very Large (>100K)",
+            10001..=100000 => "Large (10K-100K)"_ => "Very Large (>100K)",
         };
 
         size_recommendations
             .entry(size_range)
             .and_modify(
-                |current: &mut &scirs2_special::performance_benchmarks::BenchmarkResult| {
+                |current: &mut &scirs2_special::performance, _benchmarks::BenchmarkResult| {
                     if result.speedup_factor.unwrap_or(1.0) > current.speedup_factor.unwrap_or(1.0)
                     {
                         *current = result;
@@ -324,7 +323,7 @@ fn generate_performance_recommendations(
 /// Example of how to use the benchmark results programmatically
 #[allow(dead_code)]
 fn analyze_results_programmatically(
-    suite: &scirs2_special::performance_benchmarks::BenchmarkSuite,
+    suite: &scirs2__special::performance_benchmarks::BenchmarkSuite,
 ) {
     // Find the fastest implementation for each array size
     let mut fastest_by_size = std::collections::HashMap::new();
@@ -334,7 +333,7 @@ fn analyze_results_programmatically(
             fastest_by_size
                 .entry(result.array_size)
                 .and_modify(
-                    |current: &mut &scirs2_special::performance_benchmarks::BenchmarkResult| {
+                    |current: &mut &scirs2_special::performance, _benchmarks::BenchmarkResult| {
                         if result.average_time < current.average_time {
                             *current = result;
                         }

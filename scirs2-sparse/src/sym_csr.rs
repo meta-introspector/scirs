@@ -5,7 +5,7 @@
 //! triangular part of the matrix.
 
 use crate::csr::CsrMatrix;
-use crate::csr_array::CsrArray;
+use crate::csr__array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use num_traits::Float;
 use std::fmt::Debug;
@@ -145,18 +145,18 @@ where
     /// # Returns
     ///
     /// A symmetric CSR matrix
-    pub fn from_csr(matrix: &CsrMatrix<T>) -> SparseResult<Self> {
-        let (rows, cols) = matrix.shape();
+    pub fn from_csr(_matrix: &CsrMatrix<T>) -> SparseResult<Self> {
+        let (rows, cols) = _matrix.shape();
 
-        // Ensure matrix is square
+        // Ensure _matrix is square
         if rows != cols {
             return Err(SparseError::ValueError(
-                "Symmetric matrix must be square".to_string(),
+                "Symmetric _matrix must be square".to_string(),
             ));
         }
 
-        // Check if the matrix is symmetric
-        if !Self::is_symmetric(matrix) {
+        // Check if the _matrix is symmetric
+        if !Self::is_symmetric(_matrix) {
             return Err(SparseError::ValueError(
                 "Matrix must be symmetric to convert to SymCSR format".to_string(),
             ));
@@ -168,12 +168,12 @@ where
         let mut indptr = vec![0];
 
         for i in 0..rows {
-            for j in matrix.indptr[i]..matrix.indptr[i + 1] {
-                let col = matrix.indices[j];
+            for j in _matrix.indptr[i].._matrix.indptr[i + 1] {
+                let col = _matrix.indices[j];
 
                 // Only include elements in lower triangular part (including diagonal)
                 if col <= i {
-                    data.push(matrix.data[j]);
+                    data.push(_matrix.data[j]);
                     indices.push(col);
                 }
             }
@@ -198,8 +198,8 @@ where
     /// # Returns
     ///
     /// `true` if the matrix is symmetric, `false` otherwise
-    pub fn is_symmetric(matrix: &CsrMatrix<T>) -> bool {
-        let (rows, cols) = matrix.shape();
+    pub fn is_symmetric(_matrix: &CsrMatrix<T>) -> bool {
+        let (rows, cols) = _matrix.shape();
 
         // Must be square
         if rows != cols {
@@ -208,12 +208,12 @@ where
 
         // Compare each element (i,j) with (j,i)
         for i in 0..rows {
-            for j_ptr in matrix.indptr[i]..matrix.indptr[i + 1] {
-                let j = matrix.indices[j_ptr];
-                let val = matrix.data[j_ptr];
+            for j_ptr in _matrix.indptr[i].._matrix.indptr[i + 1] {
+                let j = _matrix.indices[j_ptr];
+                let val = _matrix.data[j_ptr];
 
                 // Find the corresponding (j,i) element
-                let i_val = matrix.get(j, i);
+                let i_val = _matrix.get(j, i);
 
                 // Check if a[i,j] == a[j,i] with sufficient tolerance
                 let diff = (val - i_val).abs();
@@ -391,8 +391,8 @@ where
     /// # Returns
     ///
     /// SymCSR array
-    pub fn new(matrix: SymCsrMatrix<T>) -> Self {
-        Self { inner: matrix }
+    pub fn new(_matrix: SymCsrMatrix<T>) -> Self {
+        Self { inner: _matrix }
     }
 
     /// Create a SymCSR array from a regular CSR array
@@ -404,8 +404,8 @@ where
     /// # Returns
     ///
     /// A symmetric CSR array
-    pub fn from_csr_array(array: &CsrArray<T>) -> SparseResult<Self> {
-        let shape = array.shape();
+    pub fn from_csr_array(_array: &CsrArray<T>) -> SparseResult<Self> {
+        let shape = _array.shape();
         let (rows, cols) = shape;
 
         // Ensure matrix is square
@@ -417,9 +417,9 @@ where
 
         // Create a temporary CSR matrix to check symmetry
         let csr_matrix = CsrMatrix::new(
-            array.get_data().to_vec(),
-            array.get_indptr().to_vec(),
-            array.get_indices().to_vec(),
+            _array.get_data().to_vec(),
+            _array.get_indptr().to_vec(),
+            _array.get_indices().to_vec(),
             shape,
         )?;
 

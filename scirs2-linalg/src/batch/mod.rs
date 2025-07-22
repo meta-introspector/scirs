@@ -60,12 +60,12 @@ pub use attention::{
 /// assert_eq!(result[[1, 1, 0]], 230.0);
 /// ```
 #[allow(dead_code)]
-pub fn batch_matmul<F>(batch_a: &ArrayView3<F>, b: &ArrayView2<F>) -> LinalgResult<Array3<F>>
+pub fn batch_matmul<F>(_batch_a: &ArrayView3<F>, b: &ArrayView2<F>) -> LinalgResult<Array3<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Check dimensions compatibility
-    let (batch_size, m, k1) = batch_a.dim();
+    let (batch_size, m, k1) = _batch_a.dim();
     let (k2, n) = b.dim();
 
     if k1 != k2 {
@@ -84,7 +84,7 @@ where
                 // Compute the dot product between row i of matrix from batch_a and column j of b
                 let mut sum = F::zero();
                 for k in 0..k1 {
-                    sum += batch_a[[batch_idx, i, k]] * b[[k, j]];
+                    sum += _batch_a[[batch_idx, i, k]] * b[[k, j]];
                 }
                 result[[batch_idx, i, j]] = sum;
             }
@@ -137,12 +137,12 @@ where
 /// assert_eq!(result[[1, 1]], 230.0);
 /// ```
 #[allow(dead_code)]
-pub fn batch_matvec<F>(batch_a: &ArrayView3<F>, x: &ArrayView1<F>) -> LinalgResult<Array2<F>>
+pub fn batch_matvec<F>(_batch_a: &ArrayView3<F>, x: &ArrayView1<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Check dimensions compatibility
-    let (batch_size, m, n) = batch_a.dim();
+    let (batch_size, m, n) = _batch_a.dim();
     let x_len = x.len();
 
     if n != x_len {
@@ -160,7 +160,7 @@ where
             // Compute the dot product between row i of matrix from batch_a and vector x
             let mut sum = F::zero();
             for j in 0..n {
-                sum += batch_a[[batch_idx, i, j]] * x[j];
+                sum += _batch_a[[batch_idx, i, j]] * x[j];
             }
             result[[batch_idx, i]] = sum;
         }
@@ -256,7 +256,7 @@ where
         }
     }
 
-    // Initialize result array with a copy of the input batch
+    // Initialize result array with _a copy of the input batch
     let mut result = batch_a.to_owned();
 
     // Perform batch addition
@@ -324,11 +324,11 @@ where
 /// assert_eq!(result[[1, 1]], 12.0);
 /// ```
 #[allow(dead_code)]
-pub fn batch_sum<F>(batch_a: &ArrayView3<F>) -> Array2<F>
+pub fn batch_sum<F>(_batch_a: &ArrayView3<F>) -> Array2<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    batch_a.sum_axis(Axis(0))
+    _batch_a.sum_axis(Axis(0))
 }
 
 #[cfg(test)]

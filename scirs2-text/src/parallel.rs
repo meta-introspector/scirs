@@ -20,9 +20,9 @@ pub struct ParallelTokenizer<T: Tokenizer + Send + Sync> {
 
 impl<T: Tokenizer + Send + Sync> ParallelTokenizer<T> {
     /// Create a new parallel tokenizer
-    pub fn new(tokenizer: T) -> Self {
+    pub fn new(_tokenizer: T) -> Self {
         Self {
-            tokenizer,
+            _tokenizer,
             chunk_size: 1000,
         }
     }
@@ -86,9 +86,9 @@ pub struct ParallelVectorizer<T: Vectorizer + Send + Sync> {
 
 impl<T: Vectorizer + Send + Sync> ParallelVectorizer<T> {
     /// Create a new parallel vectorizer
-    pub fn new(vectorizer: T) -> Self {
+    pub fn new(_vectorizer: T) -> Self {
         Self {
-            vectorizer: Arc::new(vectorizer),
+            _vectorizer: Arc::new(_vectorizer),
             chunk_size: 100,
         }
     }
@@ -163,7 +163,7 @@ pub struct ParallelTextProcessor {
 impl Default for ParallelTextProcessor {
     fn default() -> Self {
         Self {
-            num_threads: num_cpus::get(),
+            num_threads: num, _cpus: get(),
         }
     }
 }
@@ -262,9 +262,9 @@ pub struct ParallelCorpusProcessor {
 
 impl ParallelCorpusProcessor {
     /// Create a new parallel corpus processor
-    pub fn new(batch_size: usize) -> Self {
+    pub fn new(_batch_size: usize) -> Self {
         Self {
-            batch_size,
+            _batch_size,
             num_threads: None,
             max_memory: None,
         }
@@ -316,7 +316,7 @@ impl ParallelCorpusProcessor {
             // Sort by index and flatten results
             let mut sorted_results: Vec<_> =
                 indexed_results.into_iter().filter_map(|r| r.ok()).collect();
-            sorted_results.sort_by_key(|(idx, _)| *idx);
+            sorted_results.sort_by_key(|(idx_)| *idx);
 
             let mut results_guard = results.lock().unwrap();
             for (_, batch_results) in sorted_results {
@@ -397,7 +397,7 @@ impl ParallelCorpusProcessor {
         // Sort by index and flatten results
         let mut sorted_results: Vec<_> =
             indexed_results.into_iter().filter_map(|r| r.ok()).collect();
-        sorted_results.sort_by_key(|(idx, _)| *idx);
+        sorted_results.sort_by_key(|(idx_)| *idx);
 
         let mut final_results = Vec::new();
         for (_, batch_results) in sorted_results {

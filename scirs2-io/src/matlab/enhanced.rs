@@ -48,8 +48,8 @@ pub struct EnhancedMatFile {
 
 impl EnhancedMatFile {
     /// Create a new enhanced MAT file handler
-    pub fn new(config: MatFileConfig) -> Self {
-        Self { config }
+    pub fn new(_config: MatFileConfig) -> Self {
+        Self { _config }
     }
 
     /// Write variables to a MAT file with enhanced features
@@ -85,8 +85,8 @@ impl EnhancedMatFile {
     }
 
     /// Estimate the size of a MatType
-    fn estimate_mat_type_size(mat_type: &MatType) -> usize {
-        match mat_type {
+    fn estimate_mat_type_size(_mat_type: &MatType) -> usize {
+        match _mat_type {
             MatType::Double(array) => array.len() * 8,
             MatType::Single(array) => array.len() * 4,
             MatType::Int8(array) => array.len(),
@@ -110,7 +110,7 @@ impl EnhancedMatFile {
     }
 
     /// Check if a file is in v7.3 format
-    pub fn is_v73_file<P: AsRef<Path>>(&self, _path: P) -> Result<bool> {
+    pub fn is_v73_file<P: AsRef<Path>>(&self_path: P) -> Result<bool> {
         // Try to read as HDF5 file
         #[cfg(feature = "hdf5")]
         {
@@ -141,7 +141,7 @@ impl EnhancedMatFile {
 
     /// Write variables using MAT v7.3 format (fallback without HDF5)
     #[cfg(not(feature = "hdf5"))]
-    fn write_v73<P: AsRef<Path>>(&self, _path: P, _vars: &HashMap<String, MatType>) -> Result<()> {
+    fn write_v73<P: AsRef<Path>>(&self_path: P, _vars: &HashMap<String, MatType>) -> Result<()> {
         Err(IoError::Other(
             "MAT v7.3 format requires HDF5 feature".to_string(),
         ))
@@ -165,7 +165,7 @@ impl EnhancedMatFile {
 
     /// Read variables using MAT v7.3 format (fallback without HDF5)
     #[cfg(not(feature = "hdf5"))]
-    fn read_v73<P: AsRef<Path>>(&self, _path: P) -> Result<HashMap<String, MatType>> {
+    fn read_v73<P: AsRef<Path>>(&self_path: P) -> Result<HashMap<String, MatType>> {
         Err(IoError::Other(
             "MAT v7.3 format requires HDF5 feature".to_string(),
         ))
@@ -540,7 +540,7 @@ impl EnhancedMatFile {
                 .zip(&sparse.coo.values)
                 .map(|((r, c), v)| (*c, *r, v.clone()))
                 .collect();
-            entries.sort_by_key(|(c, r, _)| (*c, *r));
+            entries.sort_by_key(|(c, r_)| (*c, *r));
 
             let mut current_col = 0;
             for (col, row, val) in entries {
@@ -672,23 +672,23 @@ pub fn read_mat_enhanced<P: AsRef<Path>>(
 
 /// Create a complex number MatType
 #[allow(dead_code)]
-pub fn create_complex_array(real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatType> {
-    use num_complex::Complex64;
+pub fn create_complex_array(_real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatType> {
+    use num__complex::Complex64;
 
-    if real.shape() != imag.shape() {
+    if _real.shape() != imag.shape() {
         return Err(IoError::FormatError(
             "Real and imaginary parts must have the same shape".to_string(),
         ));
     }
 
-    // Create a complex array by combining real and imaginary parts
+    // Create a complex array by combining _real and imaginary parts
     let _complex_array =
-        ArrayD::from_shape_fn(real.raw_dim(), |idx| Complex64::new(real[&idx], imag[&idx]));
+        ArrayD::from_shape_fn(_real.raw_dim(), |idx| Complex64::new(_real[&idx], imag[&idx]));
 
-    // For now, store as a struct with real and imag fields
+    // For now, store as a struct with _real and imag fields
     // This is how MATLAB v7.3 stores complex data internally
     let mut fields = HashMap::new();
-    fields.insert("real".to_string(), MatType::Double(real));
+    fields.insert("_real".to_string(), MatType::Double(_real));
     fields.insert("imag".to_string(), MatType::Double(imag));
 
     Ok(MatType::Struct(fields))
@@ -696,14 +696,14 @@ pub fn create_complex_array(real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatT
 
 /// Create a cell array MatType
 #[allow(dead_code)]
-pub fn create_cell_array(cells: Vec<MatType>) -> MatType {
-    MatType::Cell(cells)
+pub fn create_cell_array(_cells: Vec<MatType>) -> MatType {
+    MatType::Cell(_cells)
 }
 
 /// Create a structure MatType
 #[allow(dead_code)]
-pub fn create_struct(fields: HashMap<String, MatType>) -> MatType {
-    MatType::Struct(fields)
+pub fn create_struct(_fields: HashMap<String, MatType>) -> MatType {
+    MatType::Struct(_fields)
 }
 
 /// Advanced v7.3+ features for large data handling
@@ -788,7 +788,7 @@ impl MatV73Features {
     ) -> Result<()> {
         if source_files.len() != source_datasets.len() {
             return Err(IoError::FormatError(
-                "Number of source files must match number of source datasets".to_string(),
+                "Number of source _files must match number of source _datasets".to_string(),
             ));
         }
 
@@ -871,7 +871,7 @@ impl MatV73Sparse {
                 .zip(&sparse.coo.values)
                 .map(|((r, c), v)| (*c, *r, v.clone()))
                 .collect();
-            entries.sort_by_key(|(c, r, _)| (*c, *r));
+            entries.sort_by_key(|(c, r_)| (*c, *r));
 
             let mut current_col = 0;
             for (col, row, val) in entries {
@@ -915,18 +915,16 @@ impl MatV73Sparse {
 
     /// Read a sparse matrix from v7.3 format
     #[cfg(feature = "hdf5")]
-    pub fn read_sparse<P: AsRef<Path>>(path: P, name: &str) -> Result<crate::sparse::SparseMatrix> {
-        let file = HDF5File::open(path, FileMode::ReadOnly)?;
+    pub fn read_sparse<P: AsRef<Path>>(_path: P, name: &str) -> Result<crate::sparse::SparseMatrix> {
+        let file = HDF5File::open(_path, FileMode::ReadOnly)?;
 
         // Read sparse matrix metadata
         let nrows = match file.get_attribute(name, "MATLAB_sparse_nrows") {
-            Some(AttributeValue::Integer(n)) => n as usize,
-            _ => return Err(IoError::Other("Missing sparse matrix rows".to_string())),
+            Some(AttributeValue::Integer(n)) => n as usize_ => return Err(IoError::Other("Missing sparse matrix rows".to_string())),
         };
 
         let ncols = match file.get_attribute(name, "MATLAB_sparse_ncols") {
-            Some(AttributeValue::Integer(n)) => n as usize,
-            _ => return Err(IoError::Other("Missing sparse matrix cols".to_string())),
+            Some(AttributeValue::Integer(n)) => n as usize_ => return Err(IoError::Other("Missing sparse matrix cols".to_string())),
         };
 
         // Read sparse data components

@@ -72,8 +72,8 @@ pub struct GCROTResult<T> {
 /// # Example
 ///
 /// ```rust
-/// use scirs2_sparse::csr_array::CsrArray;
-/// use scirs2_sparse::linalg::gcrot::{gcrot, GCROTOptions};
+/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2__sparse::linalg::gcrot::{gcrot, GCROTOptions};
 /// use ndarray::Array1;
 ///
 /// // Create a simple matrix
@@ -260,7 +260,7 @@ where
     S: SparseArray<T>,
 {
     let n = r.len();
-    let k = c_vectors.ncols(); // Number of vectors in truncated space
+    let k = c_vectors.ncols(); // Number of _vectors in truncated space
 
     // Start with the current residual
     let mut v = r.to_owned();
@@ -318,12 +318,12 @@ where
 
 /// Helper function for matrix-vector multiplication
 #[allow(dead_code)]
-fn matrix_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
+fn matrix_vector_multiply<T, S>(_matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (rows, cols) = matrix.shape();
+    let (rows, cols) = _matrix.shape();
     if x.len() != cols {
         return Err(SparseError::DimensionMismatch {
             expected: cols,
@@ -332,7 +332,7 @@ where
     }
 
     let mut result = Array1::zeros(rows);
-    let (row_indices, col_indices, values) = matrix.find();
+    let (row_indices, col_indices, values) = _matrix.find();
 
     for (k, (&i, &j)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
         result[i] = result[i] + values[k] * x[j];
@@ -365,7 +365,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr_array::CsrArray;
+    use crate::csr__array::CsrArray;
 
     #[test]
     fn test_gcrot_simple_system() {

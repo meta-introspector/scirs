@@ -10,7 +10,7 @@ use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba};
 use ndarray::{Array1, Array2};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-// use scirs2_linalg::solve;
+// use scirs2__linalg::solve;
 use std::f64::consts::PI;
 
 /// Non-rigid transformation interface
@@ -124,7 +124,7 @@ impl ThinPlateSpline {
             l[[n + 2, i]] = source_points[i].1;
         }
 
-        // Extract x and y coordinates from target points
+        // Extract x and y coordinates from target _points
         let mut target_x = Array1::zeros(n + 3);
         let mut target_y = Array1::zeros(n + 3);
 
@@ -269,8 +269,8 @@ impl ElasticDeformation {
     /// # Returns
     ///
     /// * Result containing the elastic deformation
-    pub fn new(width: u32, height: u32, alpha: f64, sigma: f64, seed: Option<u64>) -> Result<Self> {
-        if width == 0 || height == 0 {
+    pub fn new(_width: u32, height: u32, alpha: f64, sigma: f64, seed: Option<u64>) -> Result<Self> {
+        if _width == 0 || height == 0 {
             return Err(VisionError::InvalidParameter(
                 "Width and height must be positive".to_string(),
             ));
@@ -293,13 +293,13 @@ impl ElasticDeformation {
         };
 
         // Generate random displacement fields
-        let mut dx_map = Array2::zeros((height as usize, width as usize));
-        let mut dy_map = Array2::zeros((height as usize, width as usize));
+        let mut dx_map = Array2::zeros((height as usize, _width as usize));
+        let mut dy_map = Array2::zeros((height as usize, _width as usize));
 
         for y in 0..height as usize {
-            for x in 0..width as usize {
-                dx_map[[y, x]] = rng.random_range(-1.0..1.0);
-                dy_map[[y, x]] = rng.random_range(-1.0..1.0);
+            for x in 0.._width as usize {
+                dx_map[[y, x]] = rng.gen_range(-1.0..1.0);
+                dy_map[[y..x]] = rng.gen_range(-1.0..1.0);
             }
         }
 
@@ -314,7 +314,7 @@ impl ElasticDeformation {
         Ok(Self {
             dx_map,
             dy_map,
-            width,
+            _width,
             height,
         })
     }
@@ -401,7 +401,7 @@ pub fn warp_non_rigid(
                 let color = crate::transform::perspective::bilinear_interpolate(src, src_x, src_y);
                 dst.put_pixel(x, y, color);
             } else {
-                // Handle out-of-bounds pixels according to border mode
+                // Handle out-of-bounds pixels according to border _mode
                 match border_mode {
                     crate::transform::perspective::BorderMode::Constant(color) => {
                         dst.put_pixel(x, y, color);
@@ -526,8 +526,8 @@ pub fn warp_elastic(
 ///
 /// * The squared distance between the points
 #[allow(dead_code)]
-fn squared_distance(p1: (f64, f64), p2: (f64, f64)) -> f64 {
-    let (x1, y1) = p1;
+fn squared_distance(_p1: (f64, f64), p2: (f64, f64)) -> f64 {
+    let (x1, y1) = _p1;
     let (x2, y2) = p2;
 
     (x2 - x1).powi(2) + (y2 - y1).powi(2)
@@ -544,8 +544,8 @@ fn squared_distance(p1: (f64, f64), p2: (f64, f64)) -> f64 {
 ///
 /// * Result containing the filtered array
 #[allow(dead_code)]
-fn gaussian_filter(input: &Array2<f64>, sigma: f64) -> Result<Array2<f64>> {
-    let (height, width) = input.dim();
+fn gaussian_filter(_input: &Array2<f64>, sigma: f64) -> Result<Array2<f64>> {
+    let (height, width) = _input.dim();
 
     // Determine kernel size (odd number, approximately 3*sigma on each side)
     let kernel_radius = (3.0 * sigma).ceil() as usize;
@@ -579,7 +579,7 @@ fn gaussian_filter(input: &Array2<f64>, sigma: f64) -> Result<Array2<f64>> {
 
                 if x_pos >= 0 && x_pos < width as isize {
                     let kernel_value = kernel[k];
-                    sum += input[[y, x_pos as usize]] * kernel_value;
+                    sum += _input[[y, x_pos as usize]] * kernel_value;
                     weight_sum += kernel_value;
                 }
             }

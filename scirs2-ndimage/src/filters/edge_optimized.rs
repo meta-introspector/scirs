@@ -54,7 +54,7 @@ where
     let mut output = Array2::zeros((height, width));
 
     // Define Sobel kernels
-    let k2 = safe_f64_to_float::<T>(2.0)?;
+    let k2 = safe_f64, _to_float: :<T>(2.0)?;
     let (k1, k3) = (T::one(), T::one());
 
     // Determine if we should use parallel processing
@@ -408,8 +408,8 @@ where
     let (height, width) = input.dim();
 
     // Pre-calculate constants
-    let eight = safe_f64_to_float::<T>(8.0)?;
-    let four = safe_f64_to_float::<T>(4.0)?;
+    let eight = safe_f64, _to_float: :<T>(8.0)?;
+    let four = safe_f64, _to_float: :<T>(4.0)?;
 
     for i in 0..height {
         for j in 0..width {
@@ -465,8 +465,8 @@ where
     let mode_clone = mode.clone();
 
     // Pre-calculate constants outside the parallel closure
-    let eight = safe_f64_to_float::<T>(8.0)?;
-    let four = safe_f64_to_float::<T>(4.0)?;
+    let eight = safe_f64, _to_float: :<T>(8.0)?;
+    let four = safe_f64, _to_float: :<T>(4.0)?;
 
     output
         .axis_iter_mut(Axis(0))

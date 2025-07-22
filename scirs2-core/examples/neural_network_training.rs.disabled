@@ -158,7 +158,7 @@ fn main() {
     );
 
     // Create loss function
-    let loss_fn = CrossEntropyLoss::new(Some("mean"));
+    let loss_fn = CrossEntropyLoss::new(Some(mean));
     println!("Created CrossEntropyLoss loss function");
 
     // Part 4: Train the model
@@ -262,7 +262,7 @@ fn main() {
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(i, _)| i)
+        .map(|(i_)| i)
     {
         Some(class) => class,
         None => {
@@ -276,10 +276,10 @@ fn main() {
 
 // Helper function to get model from trainer
 #[allow(dead_code)]
-fn get_model_from_trainer(_trainer: &Trainer) -> Sequential {
+fn trainer( &Trainer) -> Sequential {
     // In a real implementation, we would have a method on Trainer to access the model
     // This is just a workaround for the example
-    // Note: in production code, you should use proper trainer.get_model() accessor method
+    // Note: in production code, you should use proper _trainer.get_model() accessor method
 
     // Since we can't safely transmute to get the model in this case,
     // we'll create a new model with the same structure as a workaround

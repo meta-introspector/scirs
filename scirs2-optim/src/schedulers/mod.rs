@@ -45,15 +45,15 @@ mod step_decay;
 
 // Re-export schedulers
 pub use constant::ConstantScheduler;
-pub use cosine_annealing::CosineAnnealing;
-pub use cosine_annealing_warm_restarts::CosineAnnealingWarmRestarts;
+pub use cosine__annealing::CosineAnnealing;
+pub use cosine_annealing_warm__restarts::CosineAnnealingWarmRestarts;
 pub use curriculum::{CurriculumScheduler, CurriculumStage, TransitionStrategy};
-pub use custom_scheduler::{CombinedScheduler, CustomScheduler, SchedulerBuilder};
-pub use cyclic_lr::{CyclicLR, CyclicMode};
-pub use exponential_decay::ExponentialDecay;
-pub use linear_decay::LinearDecay;
-pub use linear_warmup_decay::{DecayStrategy, LinearWarmupDecay};
-pub use noise_injection::{NoiseDistribution, NoiseInjectionScheduler};
-pub use one_cycle::{AnnealStrategy, OneCycle};
-pub use reduce_on_plateau::ReduceOnPlateau;
-pub use step_decay::StepDecay;
+pub use custom__scheduler::{CombinedScheduler, CustomScheduler, SchedulerBuilder};
+pub use cyclic__lr::{CyclicLR, CyclicMode};
+pub use exponential__decay::ExponentialDecay;
+pub use linear__decay::LinearDecay;
+pub use linear_warmup__decay::{DecayStrategy, LinearWarmupDecay};
+pub use noise__injection::{NoiseDistribution, NoiseInjectionScheduler};
+pub use one__cycle::{AnnealStrategy, OneCycle};
+pub use reduce_on__plateau::ReduceOnPlateau;
+pub use step__decay::StepDecay;

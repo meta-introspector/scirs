@@ -7,8 +7,8 @@ use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_linalg::matrixfree::{conjugate_gradient, gmres, LinearOperator};
-use scirs2_linalg::quantization::{
+use scirs2__linalg::matrixfree::{conjugate_gradient, gmres, LinearOperator};
+use scirs2__linalg::quantization::{
     quantized_matrixfree::quantized_to_linear_operator,
     quantized_matrixfree::QuantizedMatrixFreeOp,
     solvers::{
@@ -20,28 +20,28 @@ use scirs2_linalg::quantization::{
 
 /// Create a random matrix with specified dimensions
 #[allow(dead_code)]
-fn create_random_array2_f32(rows: usize, cols: usize) -> Array2<f32> {
+fn create_random_array2_f32(_rows: usize, cols: usize) -> Array2<f32> {
     let mut rng = rand::rng();
-    let mut matrix = Array2::zeros((rows, cols));
+    let mut matrix = Array2::zeros((_rows, cols));
 
-    for i in 0..rows {
+    for i in 0.._rows {
         for j in 0..cols {
             matrix[[i, j]] = rng.random_range(-1.0..1.0);
         }
     }
 
-    // For SPD matrices (used in CG), we need to ensure positive definiteness
-    if rows == cols {
+    // For SPD matrices (used in CG)..we need to ensure positive definiteness
+    if _rows == cols {
         // Make the matrix symmetric
-        for i in 0..rows {
+        for i in 0.._rows {
             for j in i + 1..cols {
                 matrix[[j, i]] = matrix[[i, j]];
             }
         }
 
         // Add a diagonal dominance to ensure positive definiteness
-        for i in 0..rows {
-            matrix[[i, i]] += rows as f32;
+        for i in 0.._rows {
+            matrix[[i, i]] += _rows as f32;
         }
     }
 

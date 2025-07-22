@@ -204,7 +204,7 @@ impl From<MemoryReport> for SnapshotReport {
             total_allocation_count: report.total_allocation_count,
             total_allocated_bytes: report.total_allocated_bytes,
             component_stats,
-            duration_ms: report.duration.as_millis() as u64,
+            duration_ms: duration.as_millis() as u64,
         }
     }
 }
@@ -703,7 +703,7 @@ pub fn compare_snapshots(first_id: &str, second_id: &str) -> Option<SnapshotDiff
 
 /// Save all snapshots to a directory using the global snapshot manager
 #[allow(dead_code)]
-pub fn save_snapshots(dir: impl AsRef<Path>) -> io::Result<()> {
+pub fn save_all_snapshots(dir: impl AsRef<Path>) -> io::Result<()> {
     let manager = match global_snapshot_manager().lock() {
         Ok(guard) => guard,
         Err(poisoned) => {
@@ -716,7 +716,7 @@ pub fn save_snapshots(dir: impl AsRef<Path>) -> io::Result<()> {
 
 /// Load all snapshots from a directory using the global snapshot manager
 #[allow(dead_code)]
-pub fn load_snapshots(dir: impl AsRef<Path>) -> io::Result<()> {
+pub fn load_all_snapshots(dir: impl AsRef<Path>) -> io::Result<()> {
     let mut manager = match global_snapshot_manager().lock() {
         Ok(guard) => guard,
         Err(poisoned) => {
@@ -753,7 +753,7 @@ mod tests {
     #[test]
     fn test_snapshot_creation() {
         // Use unwrap_or_else to make sure we can continue even with a poisoned mutex
-        let _lock = TEST_MUTEX
+        let lock = TEST_MUTEX
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         println!("test_snapshot_creation started");
@@ -854,7 +854,7 @@ mod tests {
     #[test]
     fn test_snapshot_manager() {
         // Use unwrap_or_else for better error handling
-        let _lock = TEST_MUTEX
+        let lock = TEST_MUTEX
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         println!("test_snapshot_manager started");
@@ -964,7 +964,7 @@ mod tests {
     #[test]
     fn test_global_snapshot_manager() {
         // Lock to prevent concurrent access to global state
-        let _lock = match TEST_MUTEX.lock() {
+        let lock = match TEST_MUTEX.lock() {
             Ok(guard) => guard,
             Err(poisoned) => {
                 // Still use the poisoned lock by recovering the guard
@@ -1236,7 +1236,7 @@ mod tests {
     #[test]
     fn test_leak_detection() {
         // Use unwrap_or_else for better error handling
-        let _lock = TEST_MUTEX
+        let lock = TEST_MUTEX
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         println!("test_leak_detection started");

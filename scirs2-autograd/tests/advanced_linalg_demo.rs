@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod advanced_linalg_demo_tests {
-    use ag::tensor_ops::linear_algebra::*;
-    use ag::tensor_ops::ConditionType;
-    use ag::tensor_ops::*;
+    use ag::tensor__ops::linear_algebra::*;
+    use ag::tensor__ops::ConditionType;
+    use ag::tensor__ops::*;
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
     use ndarray::array;

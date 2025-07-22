@@ -4,7 +4,7 @@
 //! Lomb-Scargle periodogram, including SciPy comparison, SIMD validation,
 //! memory profiling, and statistical validation.
 
-use scirs2_signal::{generate_advanced_lombscargle_report, run_advanced_lombscargle_validation};
+use scirs2__signal::{generate_advanced_lombscargle_report, run_advanced_lombscargle_validation};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -306,10 +306,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Critical Issues Summary
-    if !validation_result.critical_issues.is_empty() {
+    if !validation_result.issues.is_empty() {
         println!("\n🚨 **CRITICAL ISSUES REQUIRING ATTENTION**");
         println!("==========================================");
-        for (i, issue) in validation_result.critical_issues.iter().enumerate() {
+        for (i, issue) in validation_result.issues.iter().enumerate() {
             println!("{}. ❌ {}", i + 1, issue);
         }
     } else {

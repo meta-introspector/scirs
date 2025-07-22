@@ -407,7 +407,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
 
         // For cubic Hermite splines, derivatives above 3 are zero
         // For quintic Hermite splines, derivatives above 5 are zero
-        let max_deriv = if self.order == 3 { 3 } else { 5 };
+        let max_deriv = if self._order == 3 { 3 } else { 5 };
 
         if deriv_order > max_deriv {
             // Return zeros for higher derivatives that are known to be zero
@@ -478,8 +478,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
             0 => Ok(a + dx * (b + dx * (c + dx * d))),
             1 => Ok(b + dx * (T::from(2.0).unwrap() * c + T::from(3.0).unwrap() * dx * d)),
             2 => Ok(T::from(2.0).unwrap() * c + T::from(6.0).unwrap() * dx * d),
-            3 => Ok(T::from(6.0).unwrap() * d),
-            _ => Ok(T::zero()), // Higher derivatives are zero for cubic splines
+            3 => Ok(T::from(6.0).unwrap() * d, _ => Ok(T::zero()), // Higher derivatives are zero for cubic splines
         }
     }
 

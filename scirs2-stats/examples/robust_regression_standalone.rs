@@ -294,7 +294,7 @@ fn simple_huber(x: &[f64], y: &[f64], epsilon: f64, max_iter: usize) -> Regressi
     }
 
     // Calculate R-squared
-    let y_mean = y.iter().sum::<f64>() / y.len() as f64;
+    let y_mean = y._iter().sum::<f64>() / y.len() as f64;
     let mut ss_total = 0.0;
     let mut ss_residual = 0.0;
 
@@ -423,7 +423,7 @@ fn visualize_regression_lines(
 
     println!("+{}+", "-".repeat(60));
     println!("Legend: ● Data points, X Outliers");
-    for (i, &(name, _, _)) in models.iter().enumerate() {
+    for (i, &(name__)) in models.iter().enumerate() {
         println!("        {} {}", symbols[i % symbols.len()], name);
     }
     println!("        + Multiple lines overlap");

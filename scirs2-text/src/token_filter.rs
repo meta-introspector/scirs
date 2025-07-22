@@ -42,9 +42,9 @@ impl Default for LengthFilter {
 
 impl LengthFilter {
     /// Create a new length filter
-    pub fn new(min_length: usize, max_length: usize) -> Self {
+    pub fn new(_min_length: usize, max_length: usize) -> Self {
         Self {
-            min_length,
+            _min_length,
             max_length,
         }
     }
@@ -118,14 +118,14 @@ impl FrequencyFilter {
     }
 
     /// Create a new frequency filter from token counts
-    pub fn from_counts(token_counts: HashMap<String, usize>, min_count: usize) -> Self {
-        let total_count = token_counts.values().sum();
+    pub fn from_counts(_token_counts: HashMap<String, usize>, min_count: usize) -> Self {
+        let total_count = _token_counts.values().sum();
 
         Self {
             min_count,
             max_count: None,
             max_freq: None,
-            token_counts,
+            _token_counts,
             total_count,
         }
     }
@@ -222,14 +222,14 @@ pub struct RegexFilter {
 
 impl RegexFilter {
     /// Create a new regex filter
-    pub fn new(pattern: &str, keep_matching: bool) -> Result<Self> {
-        match Regex::new(pattern) {
+    pub fn new(_pattern: &str, keep_matching: bool) -> Result<Self> {
+        match Regex::new(_pattern) {
             Ok(regex) => Ok(Self {
-                pattern: regex,
+                _pattern: regex,
                 keep_matching,
             }),
             Err(e) => Err(TextError::InvalidInput(format!(
-                "Invalid regex pattern: {e}"
+                "Invalid regex _pattern: {e}"
             ))),
         }
     }
@@ -259,19 +259,19 @@ pub struct StopwordsFilter {
 
 impl StopwordsFilter {
     /// Create a new stopwords filter
-    pub fn new(stopwords: Vec<String>, remove_stopwords: bool) -> Self {
+    pub fn new(_stopwords: Vec<String>, remove_stopwords: bool) -> Self {
         Self {
-            stopwords: stopwords.into_iter().collect(),
+            _stopwords: _stopwords.into_iter().collect(),
             remove_stopwords,
         }
     }
 
     /// Create a stopwords filter from a file
-    pub fn from_file(path: &str) -> Result<Self> {
+    pub fn from_file(_path: &str) -> Result<Self> {
         use std::fs::File;
         use std::io::{BufRead, BufReader};
 
-        let file = File::open(path).map_err(|e| TextError::IoError(e.to_string()))?;
+        let file = File::open(_path).map_err(|e| TextError::IoError(e.to_string()))?;
         let reader = BufReader::new(file);
 
         let mut stopwords = HashSet::new();
@@ -406,8 +406,8 @@ where
     F: Fn(&str) -> bool + Send + Sync,
 {
     /// Create a new custom filter with the given predicate
-    pub fn new(predicate: F) -> Self {
-        Self { predicate }
+    pub fn new(_predicate: F) -> Self {
+        Self { _predicate }
     }
 }
 

@@ -321,7 +321,7 @@ fn pro_cv_asymptotic(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::pro_cv;
+/// use scirs2__special::pro_cv;
 ///
 /// // Special case: c=0 reduces to Legendre functions
 /// let lambda_00 = pro_cv(0, 0, 0.0).unwrap();
@@ -464,7 +464,7 @@ pub fn pro_cv(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::pro_cv_seq;
+/// use scirs2__special::pro_cv_seq;
 ///
 /// // Test for c=0 case
 /// let values = pro_cv_seq(0, 3, 0.0).unwrap();
@@ -671,8 +671,8 @@ fn obl_cv_asymptotic(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// # use scirs2_special::obl_cv;
-/// # use scirs2_special::error::SpecialError;
+/// # use scirs2__special::obl_cv;
+/// # use scirs2__special::error::SpecialError;
 /// # fn test() -> Result<(), SpecialError> {
 /// // Test the special case c=0
 /// let cv = obl_cv(0, 0, 0.0)?;
@@ -752,8 +752,8 @@ pub fn obl_cv(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// # Examples
 ///
 /// ```
-/// # use scirs2_special::obl_cv_seq;
-/// # use scirs2_special::error::SpecialError;
+/// # use scirs2__special::obl_cv_seq;
+/// # use scirs2__special::error::SpecialError;
 /// # fn test() -> Result<(), SpecialError> {
 /// // Test the special case c=0
 /// let values = obl_cv_seq(0, 3, 0.0)?;
@@ -814,7 +814,7 @@ pub fn obl_cv_seq(m: i32, n: i32, c: f64) -> SpecialResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::pro_ang1;
+/// use scirs2__special::pro_ang1;
 ///
 /// // Case c=0: reduces to associated Legendre functions
 /// let (s_val, s_prime) = pro_ang1(0, 1, 0.0, 0.5).unwrap();
@@ -822,7 +822,7 @@ pub fn obl_cv_seq(m: i32, n: i32, c: f64) -> SpecialResult<Vec<f64>> {
 /// assert!((s_val - 0.5).abs() < 1e-12);
 ///
 /// // Non-zero c case
-/// let (s_val_c, _) = pro_ang1(0, 1, 1.0, 0.5).unwrap();
+/// let (s_val_c_) = pro_ang1(0, 1, 1.0, 0.5).unwrap();
 /// // Value should be perturbed from Legendre function value
 /// assert!((s_val_c - s_val).abs() > 1e-10);
 ///
@@ -938,7 +938,7 @@ pub fn pro_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::pro_rad1;
+/// use scirs2__special::pro_rad1;
 ///
 /// // Case c=0: reduces to associated Legendre functions
 /// let (r_val, r_prime) = pro_rad1(0, 1, 0.0, 1.5).unwrap();
@@ -946,14 +946,14 @@ pub fn pro_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// assert!((r_val - 1.5).abs() < 1e-12);
 ///
 /// // Small c perturbation
-/// let (r_val_pert, _) = pro_rad1(0, 1, 0.1, 2.0).unwrap();
-/// let (r_val_leg, _) = pro_rad1(0, 1, 0.0, 2.0).unwrap();
+/// let (r_val_pert_) = pro_rad1(0, 1, 0.1, 2.0).unwrap();
+/// let (r_val_leg_) = pro_rad1(0, 1, 0.0, 2.0).unwrap();
 /// // Perturbation should be small for small c
 /// assert!((r_val_pert - r_val_leg).abs() < 0.1);
 ///
 /// // Moderate c value - demonstrates exponential growth
-/// let (r_small, _) = pro_rad1(0, 0, 2.0, 1.1).unwrap();
-/// let (r_large, _) = pro_rad1(0, 0, 2.0, 3.0).unwrap();
+/// let (r_small_) = pro_rad1(0, 0, 2.0, 1.1).unwrap();
+/// let (r_large_) = pro_rad1(0, 0, 2.0, 3.0).unwrap();
 /// assert!(r_large.abs() > r_small.abs()); // Growth with ξ
 /// ```
 ///
@@ -1111,7 +1111,7 @@ pub fn pro_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::pro_rad2;
+/// use scirs2__special::pro_rad2;
 ///
 /// // Test basic functionality - pro_rad2 is the second kind radial function
 /// let (q_val, q_prime) = pro_rad2(0, 0, 0.5, 2.0).unwrap();
@@ -1119,7 +1119,7 @@ pub fn pro_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// assert!(q_prime.is_finite()); // Derivative should be finite
 ///
 /// // For moderate values, function should not be zero (unlike first kind)
-/// let (q_nonzero, _) = pro_rad2(0, 1, 1.0, 1.5).unwrap();
+/// let (q_nonzero_) = pro_rad2(0, 1, 1.0, 1.5).unwrap();
 /// assert!(q_nonzero.abs() > 1e-10); // Should have significant magnitude
 ///
 /// // Test that derivative is computed correctly
@@ -1254,7 +1254,7 @@ pub fn pro_rad2(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::obl_ang1;
+/// use scirs2__special::obl_ang1;
 ///
 /// // Case c=0: oblate functions reduce to prolate (Legendre) functions
 /// let (t_val, t_prime) = obl_ang1(0, 1, 0.0, 0.5).unwrap();
@@ -1262,12 +1262,12 @@ pub fn pro_rad2(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// assert!((t_val - 0.5).abs() < 1e-12);
 ///
 /// // Non-zero c case for oblate spheroids
-/// let (t_val_c, _) = obl_ang1(0, 1, 1.0, 0.5).unwrap();
+/// let (t_val_c_) = obl_ang1(0, 1, 1.0, 0.5).unwrap();
 /// // Value should differ from c=0 case
 /// assert!((t_val_c - t_val).abs() > 1e-10);
 ///
 /// // Test oblate-specific behavior (imaginary c parameter)
-/// let (t_val_obl, _) = obl_ang1(1, 2, 2.0, 0.3).unwrap();
+/// let (t_val_obl_) = obl_ang1(1, 2, 2.0, 0.3).unwrap();
 /// assert!(t_val_obl.is_finite()); // Should be well-defined
 /// ```
 #[allow(dead_code)]
@@ -1363,7 +1363,7 @@ pub fn obl_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::obl_rad1;
+/// use scirs2__special::obl_rad1;
 ///
 /// // Basic test for oblate radial function of the first kind
 /// let (r_val, r_prime) = obl_rad1(0, 0, 0.5, 1.5).unwrap();
@@ -1371,11 +1371,11 @@ pub fn obl_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// assert!(r_prime.is_finite()); // Derivative should be finite
 ///
 /// // For c=0, should reduce to spherical Bessel behavior
-/// let (r_zero_c, _) = obl_rad1(0, 1, 0.0, 2.0).unwrap();
+/// let (r_zero_c_) = obl_rad1(0, 1, 0.0, 2.0).unwrap();
 /// assert!(r_zero_c.abs() > 1e-10); // Should have non-zero value
 ///
 /// // Test with higher order
-/// let (r_higher, _) = obl_rad1(2, 3, 1.0, 1.8).unwrap();
+/// let (r_higher_) = obl_rad1(2, 3, 1.0, 1.8).unwrap();
 /// assert!(r_higher.is_finite()); // Should be well-defined
 /// ```
 #[allow(dead_code)]
@@ -1607,7 +1607,7 @@ pub fn obl_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::obl_rad2;
+/// use scirs2__special::obl_rad2;
 ///
 /// // Basic test for oblate radial function of the second kind
 /// let (q_val, q_prime) = obl_rad2(0, 0, 0.5, 1.5).unwrap();
@@ -1615,11 +1615,11 @@ pub fn obl_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// assert!(q_prime.is_finite()); // Derivative should be finite
 ///
 /// // Second kind functions typically have different behavior from first kind
-/// let (q_nonzero, _) = obl_rad2(0, 1, 1.0, 2.0).unwrap();
+/// let (q_nonzero_) = obl_rad2(0, 1, 1.0, 2.0).unwrap();
 /// assert!(q_nonzero.abs() > 1e-10); // Should have significant magnitude
 ///
 /// // Test with higher parameters
-/// let (q_higher, _) = obl_rad2(1, 2, 0.8, 1.6).unwrap();
+/// let (q_higher_) = obl_rad2(1, 2, 0.8, 1.6).unwrap();
 /// assert!(q_higher.is_finite()); // Should be well-defined
 /// ```
 #[allow(dead_code)]

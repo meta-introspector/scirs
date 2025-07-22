@@ -23,7 +23,7 @@ use ndarray::{Array1, ArrayBase, Data, Dimension};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::curves::calibration_curve;
+/// use scirs2__metrics::classification::curves::calibration_curve;
 ///
 /// let y_true = array![0, 0, 1, 1, 1];
 /// let y_prob = array![0.1, 0.4, 0.35, 0.8, 0.6];
@@ -55,10 +55,10 @@ where
         });
     }
 
-    let bins = n_bins.unwrap_or(5);
-    if bins < 2 {
+    let _bins = n_bins.unwrap_or(5);
+    if _bins < 2 {
         return Err(MetricsError::InvalidArgument(
-            "Number of bins must be at least 2".to_string(),
+            "Number of _bins must be at least 2".to_string(),
         ));
     }
 
@@ -86,19 +86,19 @@ where
         .collect::<Result<Vec<f64>, MetricsError>>()?;
 
     // Define bin edges
-    let bin_width = 1.0 / bins as f64;
-    let edges: Vec<f64> = (0..=bins).map(|i| i as f64 * bin_width).collect();
+    let bin_width = 1.0 / _bins as f64;
+    let edges: Vec<f64> = (0..=_bins).map(|i| i as f64 * bin_width).collect();
 
     // Initialize arrays for results
-    let mut prob_true = vec![0.0; bins];
-    let mut prob_pred = vec![0.0; bins];
-    let mut counts = vec![0; bins];
+    let mut prob_true = vec![0.0; _bins];
+    let mut prob_pred = vec![0.0; _bins];
+    let mut counts = vec![0; _bins];
 
-    // Assign samples to bins and compute statistics
+    // Assign samples to _bins and compute statistics
     for (true_val, prob_val) in y_true_vec.iter().zip(y_prob_vec.iter()) {
         // Find the bin index
-        let mut bin_idx = bins - 1;
-        for i in 0..bins {
+        let mut bin_idx = _bins - 1;
+        for i in 0.._bins {
             if *prob_val < edges[i + 1] {
                 bin_idx = i;
                 break;
@@ -112,7 +112,7 @@ where
     }
 
     // Compute mean values for each bin
-    for i in 0..bins {
+    for i in 0.._bins {
         if counts[i] > 0 {
             prob_true[i] /= counts[i] as f64;
             prob_pred[i] /= counts[i] as f64;

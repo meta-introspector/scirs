@@ -403,8 +403,8 @@ impl AsyncDifferentialEvolution {
                 loop {
                     // Get next evaluation request
                     let request = {
-                        let mut rx = request_rx.lock().await;
-                        rx.recv().await
+                        let mut _rx = request_rx.lock().await;
+                        _rx.recv().await
                     };
 
                     match request {
@@ -497,8 +497,7 @@ impl AsyncDifferentialEvolution {
 
     /// Check if we should proceed with partial results
     async fn should_proceed_with_partial_results(
-        &self,
-        _stats: &Arc<RwLock<AsyncOptimizationStats>>,
+        &self_stats: &Arc<RwLock<AsyncOptimizationStats>>,
         completed: usize,
     ) -> bool {
         match self.config.slow_evaluation_strategy {
@@ -548,7 +547,7 @@ impl AsyncDifferentialEvolution {
         let mean = if !finite_fitness.is_empty() {
             finite_fitness.iter().sum::<f64>() / finite_fitness.len() as f64
         } else {
-            return false; // No finite fitness values to check
+            return false; // No finite fitness _values to check
         };
         let variance = if !finite_fitness.is_empty() {
             finite_fitness
@@ -564,7 +563,7 @@ impl AsyncDifferentialEvolution {
         let std_dev = if variance >= 0.0 {
             variance.sqrt()
         } else {
-            0.0 // Handle numerical errors that might produce small negative values
+            0.0 // Handle numerical errors that might produce small negative _values
         };
         std_dev < self.tolerance
     }
@@ -572,8 +571,7 @@ impl AsyncDifferentialEvolution {
     /// Generate next population using differential evolution
     fn generate_next_population(
         &self,
-        current_population: &Array2<f64>,
-        _fitness_values: &[f64],
+        current_population: &Array2<f64>, _fitness_values: &[f64],
     ) -> Array2<f64> {
         let mut new_population = Array2::zeros((self.population_size, self.dimensions));
         let mut rng = rand::rng();
@@ -582,7 +580,7 @@ impl AsyncDifferentialEvolution {
             // Select three random individuals (different from current)
             let mut indices = Vec::new();
             while indices.len() < 3 {
-                let idx = rng.random_range(0..self.population_size);
+                let idx = rng.gen_range(0..self.population_size);
                 if idx != i && !indices.contains(&idx) {
                     indices.push(idx);
                 }
@@ -591,7 +589,7 @@ impl AsyncDifferentialEvolution {
             // Create mutant vector
             let mut mutant = Array1::zeros(self.dimensions);
             for j in 0..self.dimensions {
-                mutant[j] = current_population[[indices[0], j]]
+                mutant[j] = current_population[[indices[0]..j]]
                     + self.mutation_factor
                         * (current_population[[indices[1], j]]
                             - current_population[[indices[2], j]]);
@@ -606,7 +604,7 @@ impl AsyncDifferentialEvolution {
 
             // Crossover
             let mut trial = current_population.row(i).to_owned();
-            let r = rng.random_range(0..self.dimensions);
+            let r = rng.gen_range(0..self.dimensions);
 
             for j in 0..self.dimensions {
                 if j == r || rng.random_f64() < self.crossover_probability {
@@ -643,7 +641,7 @@ mod tests {
             x.iter().map(|&xi| xi.powi(2)).sum::<f64>()
         };
 
-        let bounds_lower = Array1::from_vec(vec![-5.0, -5.0]);
+        let bounds_lower = Array1::from_vec(vec![-5.0..-5.0]);
         let bounds_upper = Array1::from_vec(vec![5.0, 5.0]);
 
         let optimizer = AsyncDifferentialEvolution::new(2, Some(20), None)
@@ -670,7 +668,7 @@ mod tests {
         // Function with varying evaluation times
         let objective = |x: Array1<f64>| async move {
             // Simulate varying computation times (10ms to 100ms)
-            let delay = rand::rng().random_range(10..=100);
+            let delay = rand::rng().gen_range(10..=100);
             sleep(Duration::from_millis(delay)).await;
 
             // Rosenbrock function (2D)
@@ -679,7 +677,7 @@ mod tests {
             a.powi(2) + 100.0 * b.powi(2)
         };
 
-        let bounds_lower = Array1::from_vec(vec![-2.0, -2.0]);
+        let bounds_lower = Array1::from_vec(vec![-2.0..-2.0]);
         let bounds_upper = Array1::from_vec(vec![2.0, 2.0]);
 
         let config = AsyncOptimizationConfig {

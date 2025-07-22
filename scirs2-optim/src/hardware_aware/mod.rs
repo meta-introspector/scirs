@@ -443,19 +443,19 @@ pub struct OptimizationState<A: Float, D: Dimension> {
 }
 
 impl<
-        A: Float + ScalarOperand + Debug + std::iter::Sum + for<'a> std::iter::Sum<&'a A>,
+        A: Float + ScalarOperand + Debug + std::iter::Sum + for<'a> + std::iter::Sum<&'a A>,
         D: Dimension,
     > HardwareAwareOptimizer<A, D>
 {
     /// Create a new hardware-aware optimizer
-    pub fn new(platform: HardwarePlatform, initial_parameters: Array<A, D>) -> Self {
-        let config = Self::default_config_for_platform(&platform);
+    pub fn new(_platform: HardwarePlatform, initial_parameters: Array<A, D>) -> Self {
+        let config = Self::default_config_for_platform(&_platform);
         let profiler = PerformanceProfiler::new();
         let resource_monitor = ResourceMonitor::new();
         let adaptive_tuner = AdaptiveTuner::new();
 
         let current_state = OptimizationState {
-            parameters: initial_parameters,
+            _parameters: initial_parameters,
             gradient_accumulator: None,
             optimizer_state: HashMap::new(),
             step_count: 0,
@@ -463,7 +463,7 @@ impl<
         };
 
         Self {
-            platform,
+            _platform,
             config,
             profiler,
             resource_monitor,
@@ -522,7 +522,7 @@ impl<
         cache_size: usize,
         simd_support: SIMDSupport,
     ) -> Result<()> {
-        // Optimize batch size for cache efficiency
+        // Optimize batch _size for cache efficiency
         let cache_friendly_batch_size = (cache_size / 4) / self.current_state.parameters.len(); // Rough estimate
         self.config.batch_size = cache_friendly_batch_size.clamp(16, 512);
 
@@ -616,9 +616,9 @@ impl<
             }
         }
 
-        // Memory bandwidth optimizations
+        // Memory _bandwidth optimizations
         if memory_bandwidth < 500.0 {
-            // Low bandwidth
+            // Low _bandwidth
             self.config.memory_strategy = MemoryStrategy::GradientAccumulation {
                 accumulation_steps: 4,
             };
@@ -653,7 +653,7 @@ impl<
             A::from(matrix_units as f64).unwrap(),
         );
 
-        // Use all available matrix units
+        // Use all available matrix _units
         self.config.parallelization = ParallelizationStrategy::TensorParallel {
             tensor_parallel_size: matrix_units.min(8),
         };
@@ -728,29 +728,28 @@ impl<
         network_bandwidth: f64,
         node_hardware: &HardwarePlatform,
     ) -> Result<()> {
-        // Scale batch size with number of nodes
+        // Scale batch size with number of _nodes
         let base_batch_size = match node_hardware {
             HardwarePlatform::GPU { .. } => 128,
-            HardwarePlatform::CPU { .. } => 64,
-            _ => 32,
+            HardwarePlatform::CPU { .. } => 64_ => 32,
         };
         self.config.batch_size = base_batch_size * num_nodes;
 
-        // Configure communication strategy based on network bandwidth
+        // Configure communication strategy based on network _bandwidth
         let communication = if network_bandwidth >= 100.0 {
-            // High bandwidth (100 Gbps+)
+            // High _bandwidth (100 Gbps+)
             CommunicationStrategy::AllReduce {
                 algorithm: AllReduceAlgorithm::Ring,
                 compression: false,
             }
         } else if network_bandwidth >= 10.0 {
-            // Medium bandwidth (10 Gbps+)
+            // Medium _bandwidth (10 Gbps+)
             CommunicationStrategy::AllReduce {
                 algorithm: AllReduceAlgorithm::Tree,
                 compression: true,
             }
         } else {
-            // Low bandwidth
+            // Low _bandwidth
             CommunicationStrategy::ParameterServer {
                 num_servers: (num_nodes / 4).max(1),
                 update_frequency: 10,
@@ -816,7 +815,7 @@ impl<
         let current_performance = self.get_average_performance();
 
         if current_performance < target_performance {
-            // Need to improve performance
+            // Need to improve _performance
             self.tune_for_performance()?;
         } else {
             // Can optimize for efficiency
@@ -914,8 +913,8 @@ impl<
     }
 
     /// Create default configuration for platform
-    fn default_config_for_platform(platform: &HardwarePlatform) -> HardwareOptimizationConfig<A> {
-        match platform {
+    fn default_config_for_platform(_platform: &HardwarePlatform) -> HardwareOptimizationConfig<A> {
+        match _platform {
             HardwarePlatform::CPU { .. } => HardwareOptimizationConfig {
                 batch_size: 64,
                 memory_strategy: MemoryStrategy::Standard,

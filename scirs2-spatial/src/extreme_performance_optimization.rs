@@ -32,7 +32,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::extreme_performance_optimization::{ExtremeOptimizer, AdvancedfastDistanceMatrix};
+//! use scirs2__spatial::extreme_performance_optimization::{ExtremeOptimizer, AdvancedfastDistanceMatrix};
 //! use ndarray::array;
 //!
 //! // Extreme performance distance matrix computation
@@ -535,7 +535,7 @@ pub struct PerformancePrediction {
 }
 
 impl Default for ExtremeOptimizer {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -562,37 +562,37 @@ impl ExtremeOptimizer {
     }
 
     /// Enable extreme SIMD vectorization
-    pub fn with_extreme_simd(mut self, enabled: bool) -> Self {
+    pub fn with_extreme_simd(mut enabled: bool) -> Self {
         self.extreme_simd = enabled;
         self
     }
 
     /// Enable cache-oblivious algorithms
-    pub fn with_cache_oblivious_algorithms(mut self, enabled: bool) -> Self {
+    pub fn with_cache_oblivious_algorithms(mut enabled: bool) -> Self {
         self.cache_oblivious = enabled;
         self
     }
 
     /// Enable branch-free execution
-    pub fn with_branch_free_execution(mut self, enabled: bool) -> Self {
+    pub fn with_branch_free_execution(mut enabled: bool) -> Self {
         self.branch_free = enabled;
         self
     }
 
     /// Enable lock-free data structures
-    pub fn with_lock_free_structures(mut self, enabled: bool) -> Self {
+    pub fn with_lock_free_structures(mut enabled: bool) -> Self {
         self.lock_free = enabled;
         self
     }
 
     /// Enable NUMA optimization
-    pub fn with_numa_optimization(mut self, enabled: bool) -> Self {
+    pub fn with_numa_optimization(mut enabled: bool) -> Self {
         self.numa_optimization = enabled;
         self
     }
 
     /// Enable JIT compilation
-    pub fn with_jit_compilation(mut self, enabled: bool) -> Self {
+    pub fn with_jit_compilation(mut enabled: bool) -> Self {
         self.jit_compilation = enabled;
         if enabled {
             self.jit_compiler = Some(JitCompiler::new());
@@ -601,19 +601,19 @@ impl ExtremeOptimizer {
     }
 
     /// Enable zero-copy operations
-    pub fn with_zero_copy_operations(mut self, enabled: bool) -> Self {
+    pub fn with_zero_copy_operations(mut enabled: bool) -> Self {
         self.zero_copy = enabled;
         self
     }
 
     /// Enable prefetch optimization
-    pub fn with_prefetch_optimization(mut self, enabled: bool) -> Self {
+    pub fn with_prefetch_optimization(mut enabled: bool) -> Self {
         self.prefetch_optimization = enabled;
         self
     }
 
     /// Enable instruction-level parallelism maximization
-    pub fn with_ilp_maximization(mut self, enabled: bool) -> Self {
+    pub fn with_ilp_maximization(mut enabled: bool) -> Self {
         self.ilp_maximization = enabled;
         self
     }
@@ -698,7 +698,7 @@ impl ExtremeOptimizer {
 }
 
 impl Default for HardwarePerformanceCounters {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -736,7 +736,7 @@ impl HardwarePerformanceCounters {
 
 impl NumaTopologyInfo {
     /// Detect NUMA topology
-    pub fn detect() -> Self {
+    pub fn detect(&self) -> Self {
         // Simulated NUMA detection - in real implementation would query system
         Self {
             num_nodes: 2,
@@ -751,7 +751,7 @@ impl NumaTopologyInfo {
 
 impl CacheHierarchyInfo {
     /// Detect cache hierarchy
-    pub fn detect() -> Self {
+    pub fn detect(&self) -> Self {
         // Simulated cache detection - in real implementation would query CPUID
         Self {
             l1_size_kb: 32,
@@ -768,7 +768,7 @@ impl CacheHierarchyInfo {
 }
 
 impl Default for JitCompiler {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -843,7 +843,7 @@ impl JitCompiler {
 }
 
 impl Default for ExtremeMemoryAllocator {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         Self::new()
     }
 }
@@ -923,9 +923,9 @@ impl ExtremeMemoryAllocator {
 
 impl AdvancedfastDistanceMatrix {
     /// Create new advancedfast distance matrix computer
-    pub fn new(optimizer: ExtremeOptimizer) -> Self {
+    pub fn new(_optimizer: ExtremeOptimizer) -> Self {
         Self {
-            optimizer,
+            _optimizer,
             vectorized_kernels: VectorizedKernels {
                 avx512_kernels: HashMap::new(),
                 avx2_kernels: HashMap::new(),
@@ -1115,12 +1115,12 @@ impl AdvancedfastDistanceMatrix {
         // Use iterative implementation to avoid stack overflow
         let mut stack = vec![(start_row, start_col, height, width)];
 
-        while let Some((row, col, h, w)) = stack.pop() {
+        while let Some((_row, _col, h, w)) = stack.pop() {
             // Base case: small enough to fit in cache
             if h <= 32 || w <= 32 {
                 // Apply direct optimization for small blocks
-                for i in row..(row + h) {
-                    for j in col..(col + w) {
+                for i in _row..(_row + h) {
+                    for j in _col..(_col + w) {
                         if i < matrix.nrows() && j < matrix.ncols() {
                             // Apply cache-friendly computation pattern
                             std::hint::black_box(&matrix[[i, j]]); // Cache-optimized access
@@ -1135,10 +1135,10 @@ impl AdvancedfastDistanceMatrix {
             let mid_col = w / 2;
 
             // Push quadrants in reverse Z-order (so they're processed in correct order)
-            stack.push((row + mid_row, col + mid_col, h - mid_row, w - mid_col));
-            stack.push((row + mid_row, col, h - mid_row, mid_col));
-            stack.push((row, col + mid_col, mid_row, w - mid_col));
-            stack.push((row, col, mid_row, mid_col));
+            stack.push((_row + mid_row, _col + mid_col, h - mid_row, w - mid_col));
+            stack.push((_row + mid_row, _col, h - mid_row, mid_col));
+            stack.push((_row, _col + mid_col, mid_row, w - mid_col));
+            stack.push((_row, _col, mid_row, mid_col));
         }
 
         Ok(())
@@ -1220,7 +1220,7 @@ impl AdvancedfastDistanceMatrix {
     }
 
     /// Branch-free square root using bit manipulation and Newton-Raphson
-    fn branch_free_sqrt(&self, x: f64) -> f64 {
+    fn branch_free_sqrt(x: f64) -> f64 {
         if x <= 0.0 {
             return 0.0;
         }
@@ -1243,13 +1243,13 @@ impl AdvancedfastDistanceMatrix {
     }
 
     /// Apply branch-free thresholding and normalization operations
-    async fn apply_branch_free_thresholding(&self, matrix: &mut Array2<f64>) -> SpatialResult<()> {
-        let (rows, cols) = matrix.dim();
+    async fn apply_branch_free_thresholding(_matrix: &mut Array2<f64>) -> SpatialResult<()> {
+        let (rows, cols) = _matrix.dim();
 
         // Branch-free operations using arithmetic instead of conditionals
         for i in 0..rows {
             for j in 0..cols {
-                let val = matrix[[i, j]];
+                let val = _matrix[[i, j]];
 
                 // Branch-free clamping: clamp(val, 0.0, 1000.0)
                 let clamped = val.clamp(0.0, 1000.0);
@@ -1261,7 +1261,7 @@ impl AdvancedfastDistanceMatrix {
                     0.0
                 };
 
-                matrix[[i, j]] = normalized;
+                _matrix[[i, j]] = normalized;
             }
         }
 
@@ -1269,13 +1269,13 @@ impl AdvancedfastDistanceMatrix {
     }
 
     /// Apply lock-free optimization
-    async fn apply_lock_free_optimization(&self, matrix: &mut Array2<f64>) -> SpatialResult<()> {
-        use std::sync::atomic::{AtomicU64, Ordering};
+    async fn apply_lock_free_optimization(_matrix: &mut Array2<f64>) -> SpatialResult<()> {
+use std::sync::atomic::AtomicU64;
         use std::sync::Arc;
 
-        let (rows, cols) = matrix.dim();
+        let (rows, cols) = _matrix.dim();
 
-        // Implement lock-free parallel matrix operations using atomic operations
+        // Implement lock-free parallel _matrix operations using atomic operations
         // and work-stealing algorithms for maximum scalability
 
         // Create atomic counters for lock-free coordination
@@ -1299,18 +1299,18 @@ impl AdvancedfastDistanceMatrix {
                 let start_idx = chunk_id * chunk_size;
                 let end_idx = (start_idx + chunk_size).min(rows * cols);
 
-                // Lock-free matrix element processing
+                // Lock-free _matrix element processing
                 for linear_idx in start_idx..end_idx {
                     let i = linear_idx / cols;
                     let j = linear_idx % cols;
 
                     if i < rows && j < cols {
                         // Apply lock-free atomic-like operations on floating point values
-                        let current_val = matrix[[i, j]];
+                        let current_val = _matrix[[i, j]];
 
                         // Simulate compare-and-swap optimization
                         let optimized_val = self.lock_free_optimize_value(current_val);
-                        matrix[[i, j]] = optimized_val;
+                        _matrix[[i, j]] = optimized_val;
                     }
                 }
 
@@ -1327,7 +1327,7 @@ impl AdvancedfastDistanceMatrix {
         }
 
         // Apply lock-free memory ordering optimizations
-        self.apply_memory_ordering_optimization(matrix).await?;
+        self.apply_memory_ordering_optimization(_matrix).await?;
 
         // Update performance counters
         self.optimizer
@@ -1339,10 +1339,10 @@ impl AdvancedfastDistanceMatrix {
     }
 
     /// Lock-free value optimization using atomic-like operations
-    fn lock_free_optimize_value(&self, value: f64) -> f64 {
+    fn lock_free_optimize_value(_value: f64) -> f64 {
         // Apply branchless optimization functions
-        let abs_val = value.abs();
-        let sign = if value >= 0.0 { 1.0 } else { -1.0 };
+        let abs_val = _value.abs();
+        let sign = if _value >= 0.0 { 1.0 } else { -1.0 };
 
         // Lock-free smoothing function
         let smoothed = abs_val / (1.0 + abs_val * 0.01);
@@ -1390,9 +1390,9 @@ impl AdvancedfastDistanceMatrix {
 
 impl SelfOptimizingAlgorithm {
     /// Create new self-optimizing algorithm
-    pub fn new(algorithm_type: &str) -> Self {
+    pub fn new(_algorithm_type: &str) -> Self {
         Self {
-            algorithm_type: algorithm_type.to_string(),
+            algorithm_type: _algorithm_type.to_string(),
             hardware_feedback: false,
             runtime_codegen: false,
             adaptive_memory: false,
@@ -1411,19 +1411,19 @@ impl SelfOptimizingAlgorithm {
     }
 
     /// Enable hardware performance counter feedback
-    pub fn with_hardware_counter_feedback(mut self, enabled: bool) -> Self {
+    pub fn with_hardware_counter_feedback(mut enabled: bool) -> Self {
         self.hardware_feedback = enabled;
         self
     }
 
     /// Enable runtime code generation
-    pub fn with_runtime_code_generation(mut self, enabled: bool) -> Self {
+    pub fn with_runtime_code_generation(mut enabled: bool) -> Self {
         self.runtime_codegen = enabled;
         self
     }
 
     /// Enable adaptive memory patterns
-    pub fn with_adaptive_memory_patterns(mut self, enabled: bool) -> Self {
+    pub fn with_adaptive_memory_patterns(mut enabled: bool) -> Self {
         self.adaptive_memory = enabled;
         self
     }
@@ -1486,7 +1486,7 @@ impl SelfOptimizingAlgorithm {
     }
 
     /// Optimize based on hardware counters
-    async fn optimize_based_on_hardware_counters(&mut self) -> SpatialResult<()> {
+    async fn optimize_based_on_hardware_counters() -> SpatialResult<()> {
         // Simulate hardware-guided optimization
         self.optimization_history.push(OptimizationRecord {
             timestamp: Instant::now(),
@@ -1520,14 +1520,14 @@ impl SelfOptimizingAlgorithm {
     }
 
     /// Generate optimized code
-    async fn generate_optimized_code(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
-        let _ = data; // Placeholder
+    async fn generate_optimized_code(_data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
+        let _ = _data; // Placeholder
         Ok(())
     }
 
     /// Optimize memory patterns
-    async fn optimize_memory_patterns(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
-        let _ = data; // Placeholder
+    async fn optimize_memory_patterns(_data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
+        let _ = _data; // Placeholder
         Ok(())
     }
 
@@ -1536,7 +1536,7 @@ impl SelfOptimizingAlgorithm {
         &self,
         data: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array1<usize>> {
-        let (n_points, _) = data.dim();
+        let (n_points_) = data.dim();
 
         // Simulate clustering with extreme optimizations
         let mut assignments = Array1::zeros(n_points);
@@ -1569,8 +1569,7 @@ impl SelfOptimizingAlgorithm {
 
     /// Update performance model
     async fn update_performance_model(
-        &mut self,
-        _before: ExtremePerformanceMetrics,
+        &mut self_before: ExtremePerformanceMetrics,
         after: ExtremePerformanceMetrics,
     ) -> SpatialResult<()> {
         self.performance_model.accuracy = 0.95;
@@ -1615,7 +1614,7 @@ pub async fn benchmark_extreme_optimizations(
     let elapsed = start_time.elapsed();
 
     // Calculate performance metrics
-    let (n_points, _) = data.dim();
+    let (n_points_) = data.dim();
     let operations = n_points * (n_points - 1) / 2; // Pairwise distances
     let ops_per_second = operations as f64 / elapsed.as_secs_f64();
 
@@ -1741,7 +1740,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_self_optimizing_algorithm() {
+    async fn test__optimizing_algorithm() {
         let mut algorithm = SelfOptimizingAlgorithm::new("clustering")
             .with_hardware_counter_feedback(true)
             .with_runtime_code_generation(true)

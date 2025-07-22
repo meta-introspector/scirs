@@ -102,7 +102,7 @@ fn test_parameter_preservation() -> Result<()> {
 fn test_error_handling() -> Result<()> {
     let invalid_path = temp_dir.path().join("invalid.json");
     // Try to load non-existent file
-    let result = load_model::<f32, _>(&invalid_path, SerializationFormat::JSON);
+    let result = load_model::<f32>(&invalid_path, SerializationFormat::JSON);
     assert!(result.is_err());
     // Create invalid JSON file
     fs::write(&invalid_path, "invalid json content")?;

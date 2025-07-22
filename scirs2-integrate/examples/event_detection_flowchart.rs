@@ -5,8 +5,8 @@
 //! It simulates a simple system with multiple events and explains what happens at each step.
 
 use ndarray::{array, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::{
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::{
     solve_ivp_with_events, terminal_event, EventAction, EventDirection, EventSpec, ODEMethod,
     ODEOptions, ODEOptionsWithEvents,
 };
@@ -81,8 +81,7 @@ fn main() -> IntegrateResult<()> {
             max_count: None,
             precise_time: true,
         },
-        // Event 3: Terminal event (stop when amplitude falls below threshold)
-        terminal_event::<f64>("threshold", EventDirection::Falling),
+        // Event 3: Terminal event (stop when amplitude falls below threshold), terminal_event::<f64>("threshold", EventDirection::Falling),
     ];
 
     // Step 4: Set up solver options
@@ -143,8 +142,7 @@ fn main() -> IntegrateResult<()> {
             ("zero_crossing", -1) => "↓ (falling)",
             ("peak", 1) => "↑ (valley)",
             ("peak", -1) => "↓ (peak)",
-            ("threshold", _) => "↓ (terminal)",
-            _ => "?",
+            ("threshold"_) => "↓ (terminal)"_ => "?",
         };
 
         println!("  t = {time:.4}: {id:15} | y = {value:.6} | direction: {dir_str}");

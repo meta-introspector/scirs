@@ -4,6 +4,7 @@
 //! for accurate computation of special functions, particularly in edge cases.
 
 /// Mathematical constants with high precision for floating-point calculations.
+
 #[allow(dead_code)]
 pub mod f64 {
     /// π (pi) with high precision

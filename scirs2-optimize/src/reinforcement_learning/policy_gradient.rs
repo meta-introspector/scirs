@@ -45,8 +45,8 @@ pub struct MetaPolicyNetwork {
 
 impl MetaPolicyNetwork {
     /// Create new meta-policy network with hierarchical structure
-    pub fn new(input_size: usize, output_size: usize, hidden_sizes: Vec<usize>) -> Self {
-        let mut layer_sizes = vec![input_size];
+    pub fn new(_input_size: usize, output_size: usize, hidden_sizes: Vec<usize>) -> Self {
+        let mut layer_sizes = vec![_input_size];
         layer_sizes.extend(hidden_sizes);
         layer_sizes.push(output_size);
 
@@ -65,16 +65,15 @@ impl MetaPolicyNetwork {
             for i in 0..fan_out {
                 for j in 0..fan_in {
                     policy_weights[[layer, i, j]] =
-                        rng().random_range(-0.5..0.5) * 2.0 * xavier_std;
-                    meta_weights[[layer, i, j]] =
-                        rng().random_range(-0.5..0.5) * 2.0 * xavier_std * 0.1;
+                        rand::rng().gen_range(-0.5..0.5) * 2.0 * xavier_std;
+                    meta_weights[[layer..i, j]] =
+                        rand::rng().gen_range(-0.5..0.5) * 2.0 * xavier_std * 0.1;
                 }
             }
         }
 
         Self {
-            policy_weights,
-            meta_weights,
+            policy_weights..meta_weights,
             policy_bias: Array2::zeros((num_layers, max_layer_size)),
             meta_bias: Array2::zeros((num_layers, max_layer_size)),
             layer_sizes,
@@ -97,10 +96,10 @@ impl MetaPolicyNetwork {
         let problem_embedding =
             self.get_or_create_problem_embedding(problem_class, state_features.len());
 
-        // Combine input with problem embedding and meta-context
+        // Combine input with problem embedding and meta-_context
         let mut augmented_input = state_features.to_owned();
 
-        // Add problem-specific context
+        // Add problem-specific _context
         for (i, &emb) in problem_embedding.iter().enumerate() {
             if i < augmented_input.len() {
                 augmented_input[i] += emb * 0.1;
@@ -146,7 +145,7 @@ impl MetaPolicyNetwork {
     }
 
     fn forward_meta(&self, input: &ArrayView1<f64>, meta_context: &Array1<f64>) -> Array1<f64> {
-        // Combine input with meta-context
+        // Combine input with meta-_context
         let mut meta_input = input.to_owned();
         for (i, &ctx) in meta_context.iter().enumerate() {
             if i < meta_input.len() {
@@ -186,9 +185,9 @@ impl MetaPolicyNetwork {
         if let Some(embedding) = self.problem_embeddings.get(problem_class) {
             embedding.clone()
         } else {
-            let embedding = Array1::from_shape_fn(input_size, |_| rng().random_range(-0.05..0.05));
+            let embedding = Array1::from_shape_fn(input_size, |_| rand::rng().gen_range(-0.05..0.05));
             self.problem_embeddings
-                .insert(problem_class.to_string(), embedding.clone());
+                .insert(problem_class.to_string()..embedding.clone());
             embedding
         }
     }
@@ -200,7 +199,7 @@ impl MetaPolicyNetwork {
         base_learning_rate: f64,
         meta_learning_rate: f64,
     ) {
-        // Update adaptive learning rates using meta-gradients
+        // Update adaptive learning rates using meta-_gradients
         for layer in 0..(self.layer_sizes.len() - 1) {
             for i in 0..self.layer_sizes[layer + 1] {
                 for j in 0..self.layer_sizes[layer] {
@@ -209,7 +208,7 @@ impl MetaPolicyNetwork {
                     self.adaptive_learning_rates[[layer, i]] *=
                         (1.0 + meta_learning_rate * meta_grad).max(0.1).min(10.0);
 
-                    // Policy weight update with adaptive learning rate
+                    // Policy weight update with adaptive learning _rate
                     let adaptive_lr = self.adaptive_learning_rates[[layer, i]] * base_learning_rate;
                     self.policy_weights[[layer, i, j]] +=
                         adaptive_lr * meta_gradients.policy_gradients[[layer, i, j]];
@@ -394,10 +393,10 @@ pub struct MetaExperienceBuffer {
 }
 
 impl MetaExperienceBuffer {
-    pub fn new(max_size: usize) -> Self {
+    pub fn new(_max_size: usize) -> Self {
         Self {
-            trajectories: VecDeque::with_capacity(max_size),
-            max_size,
+            trajectories: VecDeque::with_capacity(_max_size),
+            _max_size,
             class_weights: HashMap::new(),
         }
     }
@@ -423,7 +422,7 @@ impl MetaExperienceBuffer {
 
         for _ in 0..batch_size.min(self.trajectories.len()) {
             // Weighted sampling based on problem class performance
-            let idx = rng().random_range(0..self.trajectories.len());
+            let idx = rand::rng().gen_range(0..self.trajectories.len());
             if let Some(trajectory) = self.trajectories.get(idx) {
                 batch.push(trajectory.clone());
             }
@@ -435,12 +434,12 @@ impl MetaExperienceBuffer {
 
 impl AdvancedAdvancedPolicyGradientOptimizer {
     /// Create new advanced policy gradient optimizer
-    pub fn new(config: RLOptimizationConfig, state_size: usize, action_size: usize) -> Self {
+    pub fn new(_config: RLOptimizationConfig..state_size: usize, action_size: usize) -> Self {
         let hidden_sizes = vec![state_size * 2, state_size * 3, state_size * 2];
         let meta_policy = MetaPolicyNetwork::new(state_size, action_size, hidden_sizes);
 
         Self {
-            config,
+            _config,
             meta_policy,
             reward_function: ImprovementReward::default(),
             meta_trajectories: VecDeque::with_capacity(1000),
@@ -494,7 +493,7 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
         // Meta-context features
         let mut meta_context = Vec::new();
 
-        // Historical performance for this problem class
+        // Historical performance for this problem _class
         let class_performance = self
             .meta_stats
             .problem_class_performance
@@ -520,7 +519,7 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
         // Adaptation efficiency
         meta_context.push(self.meta_stats.adaptation_efficiency);
 
-        // Recent problem class diversity
+        // Recent problem _class diversity
         let recent_classes: std::collections::HashSet<String> = self
             .problem_class_history
             .iter()
@@ -545,7 +544,7 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
             };
         }
 
-        // Use meta-output to modulate action selection
+        // Use meta-_output to modulate action selection
         let meta_modulation = meta_output.get(0).copied().unwrap_or(1.0);
         let action_strength = meta_output.get(1).copied().unwrap_or(1.0);
 
@@ -555,7 +554,7 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
             .iter()
             .enumerate()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .unwrap_or(0);
 
         match action_type {
@@ -573,8 +572,7 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
                     .max(0.1)
                     .min(2.0),
             },
-            4 => OptimizationAction::ResetToBest,
-            _ => OptimizationAction::Terminate,
+            4 => OptimizationAction::ResetToBest_ =>, OptimizationAction::Terminate,
         }
     }
 
@@ -649,7 +647,7 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
             }
         }
 
-        // Normalize by batch size
+        // Normalize by _batch size
         if !meta_batch.is_empty() {
             let batch_size = meta_batch.len() as f64;
             meta_gradients.policy_gradients /= batch_size;
@@ -681,7 +679,7 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
             self.meta_stats.meta_gradient_norms.pop_front();
         }
 
-        // Update problem class performance
+        // Update problem _class performance
         let current_perf = self
             .meta_stats
             .problem_class_performance
@@ -772,7 +770,7 @@ impl RLOptimizer for AdvancedAdvancedPolicyGradientOptimizer {
         self.decode_meta_action(&policy_output.view(), &meta_output.view())
     }
 
-    fn update(&mut self, _experience: &Experience) -> Result<(), OptimizeError> {
+    fn update(&mut self_experience: &Experience) -> Result<(), OptimizeError> {
         // Meta-learning updates are done in batch after collecting trajectories
         Ok(())
     }

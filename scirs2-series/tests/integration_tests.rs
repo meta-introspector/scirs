@@ -5,7 +5,8 @@
 
 use approx::assert_abs_diff_eq;
 use ndarray::{Array1, Array2, Axis};
-use scirs2_series::{
+use scirs2__series::{
+use statrs::statistics::Statistics;
     anomaly::AnomalyDetector,
     arima_models::ArimaModel,
     biomedical::ECGAnalysis,
@@ -56,7 +57,7 @@ fn generate_test_series(
         let noise = ((rng_state % 20000) as f64 / 20000.0 - 0.5) * noise_std;
 
         let trend_component = (i as f64) * trend;
-        let seasonal_component = (2.0 * std::f64::consts::PI * (i % seasonal_period) as f64
+        let seasonal_component = (2.0 * _std::f64::consts::PI * (i % seasonal_period) as f64
             / seasonal_period as f64)
             .sin()
             * 5.0;
@@ -69,12 +70,12 @@ fn generate_test_series(
 
 /// Generate time series with known change points
 #[allow(dead_code)]
-fn generate_change_point_series(length: usize, change_points: &[usize]) -> Array1<f64> {
-    let mut series = Array1::zeros(length);
+fn generate_change_point_series(_length: usize, change_points: &[usize]) -> Array1<f64> {
+    let mut series = Array1::zeros(_length);
     let mut current_mean = 10.0;
     let mut next_change_idx = 0;
 
-    for i in 0..length {
+    for i in 0.._length {
         // Check if we've hit a change point
         if next_change_idx < change_points.len() && i == change_points[next_change_idx] {
             current_mean += 20.0; // Significant shift

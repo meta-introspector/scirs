@@ -64,7 +64,7 @@ impl DistributedScheduler {
     }
 
     /// Schedule next batch of tasks
-    pub fn schedule_tasks(&self, available_nodes: &[NodeInfo]) -> CoreResult<Vec<TaskAssignment>> {
+    pub fn schedule_next(&self, available_nodes: &[NodeInfo]) -> CoreResult<Vec<TaskAssignment>> {
         let mut queue = self.task_queue.lock().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new("Failed to acquire task queue lock"))
         })?;
@@ -107,11 +107,7 @@ impl DistributedScheduler {
         Ok(assignments)
     }
 
-    fn schedule_fcfs(
-        &self,
-        queue: &mut TaskQueue,
-        available_nodes: &[NodeInfo],
-        load_balancer: &mut LoadBalancer,
+    fn schedule_fcfs(&self, queue: &mut TaskQueue, available_nodes: &[NodeInfo], load_balancer: &mut LoadBalancer
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
 
@@ -138,11 +134,7 @@ impl DistributedScheduler {
         Ok(assignments)
     }
 
-    fn schedule_priority(
-        &self,
-        queue: &mut TaskQueue,
-        available_nodes: &[NodeInfo],
-        load_balancer: &mut LoadBalancer,
+    fn schedule_priority(&self, queue: &mut TaskQueue, available_nodes: &[NodeInfo], load_balancer: &mut LoadBalancer
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
         let mut scheduled_tasks = Vec::new();
@@ -175,11 +167,7 @@ impl DistributedScheduler {
         Ok(assignments)
     }
 
-    fn schedule_load_balanced(
-        &self,
-        queue: &mut TaskQueue,
-        available_nodes: &[NodeInfo],
-        load_balancer: &mut LoadBalancer,
+    fn schedule_load_balanced(&self, queue: &mut TaskQueue, available_nodes: &[NodeInfo], load_balancer: &mut LoadBalancer
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
 
@@ -211,11 +199,7 @@ impl DistributedScheduler {
         Ok(assignments)
     }
 
-    fn schedule_resource_aware(
-        &self,
-        queue: &mut TaskQueue,
-        available_nodes: &[NodeInfo],
-        load_balancer: &mut LoadBalancer,
+    fn schedule_resource_aware(&self, queue: &mut TaskQueue, available_nodes: &[NodeInfo], load_balancer: &mut LoadBalancer
     ) -> CoreResult<Vec<TaskAssignment>> {
         let mut assignments = Vec::new();
 
@@ -391,7 +375,7 @@ impl ExecutionTracker {
         Ok(())
     }
 
-    pub fn complete_task(&mut self, task_id: &TaskId, execution_time: Duration) -> CoreResult<()> {
+    pub fn mark_task_complete(&mut self, task_id: &TaskId, execution_time: Duration) -> CoreResult<()> {
         if let Some(assignment) = self.active_assignments.remove(task_id) {
             let completed_task = CompletedTask {
                 task_id: task_id.clone(),
@@ -411,7 +395,7 @@ impl ExecutionTracker {
         Ok(())
     }
 
-    pub fn fail_task(&mut self, task_id: &TaskId, error: String) -> CoreResult<()> {
+    pub fn mark_task_failed(&mut self, task_id: &TaskId, error: String) -> CoreResult<()> {
         if let Some(assignment) = self.active_assignments.remove(task_id) {
             let failed_task = FailedTask {
                 task_id: task_id.clone(),
@@ -464,7 +448,7 @@ impl LoadBalancer {
     ) -> CoreResult<Option<NodeInfo>> {
         match self.balancing_strategy {
             LoadBalancingStrategy::RoundRobin => self.select_round_robin(nodes),
-            LoadBalancingStrategy::LeastLoaded => self.select_least_loaded_impl(task, nodes),
+            LoadBalancingStrategy::LeastLoaded => self.select_least_loaded(task, nodes),
             LoadBalancingStrategy::ResourceBased => self.select_resource_based(task, nodes),
         }
     }
@@ -474,7 +458,7 @@ impl LoadBalancer {
         task: &DistributedTask,
         nodes: &[NodeInfo],
     ) -> CoreResult<Option<NodeInfo>> {
-        self.select_least_loaded_impl(task, nodes)
+        self.select_least_loaded(task, nodes)
     }
 
     pub fn select_best_fit_node(
@@ -495,9 +479,7 @@ impl LoadBalancer {
         Ok(Some(nodes[index].clone()))
     }
 
-    fn select_least_loaded_impl(
-        &self,
-        _task: &DistributedTask,
+    fn select_least_loaded(&self, _task: &DistributedTask,
         nodes: &[NodeInfo],
     ) -> CoreResult<Option<NodeInfo>> {
         if nodes.is_empty() {
@@ -538,7 +520,7 @@ impl LoadBalancer {
         node: &NodeInfo,
         requirements: &ResourceRequirements,
     ) -> bool {
-        let available = self.get_available_capacity(&node.id, &node.capabilities);
+        let available = self.available_capacity(&node.id, &node.capabilities);
 
         available.cpu_cores >= requirements.cpu_cores
             && available.memory_gb >= requirements.memory_gb
@@ -551,7 +533,7 @@ impl LoadBalancer {
         node: &NodeInfo,
         requirements: &ResourceRequirements,
     ) -> usize {
-        let available = self.get_available_capacity(&node.id, &node.capabilities);
+        let available = self.available_capacity(&node.id, &node.capabilities);
 
         let cpu_waste = available.cpu_cores.saturating_sub(requirements.cpu_cores);
         let memory_waste = available.memory_gb.saturating_sub(requirements.memory_gb);
@@ -563,10 +545,7 @@ impl LoadBalancer {
         cpu_waste + memory_waste + gpu_waste + disk_waste / 10 // Scale disk waste
     }
 
-    fn get_available_capacity(
-        &self,
-        node_id: &str,
-        total_capacity: &super::cluster::NodeCapabilities,
+    fn available_capacity(&self, node_id: &str, total_capacity: &super::cluster::NodeCapabilities
     ) -> ComputeCapacity {
         let used = self
             .node_loads

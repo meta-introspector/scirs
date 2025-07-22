@@ -18,6 +18,7 @@ use crate::voronoi::Voronoi;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::HashMap;
 use std::fmt;
+use std::f64::consts::PI;
 
 /// Natural Neighbor interpolator for scattered data
 ///
@@ -27,7 +28,7 @@ use std::fmt;
 /// # Examples
 ///
 /// ```
-/// use scirs2_spatial::interpolate::NaturalNeighborInterpolator;
+/// use scirs2__spatial::interpolate::NaturalNeighborInterpolator;
 /// use ndarray::array;
 ///
 /// // Create sample points and values
@@ -112,14 +113,14 @@ impl NaturalNeighborInterpolator {
     /// * If points are not 2D
     /// * If fewer than 3 points are provided
     /// * If the Delaunay triangulation fails
-    pub fn new(points: &ArrayView2<'_, f64>, values: &ArrayView1<f64>) -> SpatialResult<Self> {
+    pub fn new(_points: &ArrayView2<'_, f64>, values: &ArrayView1<f64>) -> SpatialResult<Self> {
         // Check input dimensions
-        let n_points = points.nrows();
-        let dim = points.ncols();
+        let n_points = _points.nrows();
+        let dim = _points.ncols();
 
         if n_points != values.len() {
             return Err(SpatialError::DimensionError(format!(
-                "Number of points ({}) must match number of values ({})",
+                "Number of _points ({}) must match number of values ({})",
                 n_points,
                 values.len()
             )));
@@ -127,24 +128,24 @@ impl NaturalNeighborInterpolator {
 
         if dim != 2 {
             return Err(SpatialError::DimensionError(format!(
-                "Natural neighbor interpolation currently only supports 2D points, got {dim}D"
+                "Natural neighbor interpolation currently only supports 2D _points, got {dim}D"
             )));
         }
 
         if n_points < 3 {
             return Err(SpatialError::ValueError(
-                "Natural neighbor interpolation requires at least 3 points".to_string(),
+                "Natural neighbor interpolation requires at least 3 _points".to_string(),
             ));
         }
 
         // Create Delaunay triangulation
-        let delaunay = Delaunay::new(&points.to_owned())?;
+        let delaunay = Delaunay::new(&_points.to_owned())?;
 
         // Create Voronoi diagram
-        let voronoi = Voronoi::new(points, false)?;
+        let voronoi = Voronoi::new(_points, false)?;
 
         Ok(Self {
-            points: points.to_owned(),
+            _points: _points.to_owned(),
             values: values.to_owned(),
             delaunay,
             voronoi,
@@ -167,27 +168,27 @@ impl NaturalNeighborInterpolator {
     ///
     /// * If the point dimensions don't match the interpolator
     /// * If the point is outside the convex hull of the input points
-    pub fn interpolate(&self, point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn interpolate(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
         // Check dimension
-        if point.len() != self.dim {
+        if _point.len() != self.dim {
             return Err(SpatialError::DimensionError(format!(
-                "Query point has dimension {}, expected {}",
-                point.len(),
+                "Query _point has dimension {}, expected {}",
+                _point.len(),
                 self.dim
             )));
         }
 
-        // Find the simplex (triangle) containing the point
-        let simplex_idx = self.delaunay.find_simplex(point.as_slice().unwrap());
+        // Find the simplex (triangle) containing the _point
+        let simplex_idx = self.delaunay.find_simplex(_point.as_slice().unwrap());
 
         if simplex_idx.is_none() {
             return Err(SpatialError::ValueError(
-                "Query point is outside the convex hull of the input points".to_string(),
+                "Query _point is outside the convex hull of the input points".to_string(),
             ));
         }
 
         // Get the natural neighbor coordinates
-        let weights = self.natural_neighbor_weights(point)?;
+        let weights = self.natural_neighbor_weights(_point)?;
 
         // Compute the weighted sum
         let mut result = 0.0;
@@ -211,24 +212,24 @@ impl NaturalNeighborInterpolator {
     /// # Errors
     ///
     /// * If the points dimensions don't match the interpolator
-    pub fn interpolate_many(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
+    pub fn interpolate_many(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
         // Check dimensions
-        if points.ncols() != self.dim {
+        if _points.ncols() != self.dim {
             return Err(SpatialError::DimensionError(format!(
-                "Query points have dimension {}, expected {}",
-                points.ncols(),
+                "Query _points have dimension {}, expected {}",
+                _points.ncols(),
                 self.dim
             )));
         }
 
-        let n_queries = points.nrows();
+        let n_queries = _points.nrows();
         let mut results = Array1::zeros(n_queries);
 
         // Interpolate each point
         for i in 0..n_queries {
-            let point = points.row(i);
+            let point = _points.row(i);
 
-            // Handle points outside the convex hull by returning NaN
+            // Handle _points outside the convex hull by returning NaN
             match self.interpolate(&point) {
                 Ok(value) => results[i] = value,
                 Err(_) => results[i] = f64::NAN,
@@ -355,7 +356,7 @@ impl NaturalNeighborInterpolator {
         // Compute the distance-based weight with distance decay
         let distance = Self::euclidean_distance(query_point, &neighbor_point);
         if distance < 1e-12 {
-            return Ok(1.0); // Query point is very close to this neighbor
+            return Ok(1.0); // Query _point is very close to this neighbor
         }
 
         // Use inverse distance weighting with a natural neighbor adjustment
@@ -364,7 +365,7 @@ impl NaturalNeighborInterpolator {
         // Adjust weight based on how "natural" this neighbor is
         let mut adjustment = 1.0;
 
-        // Consider the angles to other neighbors to determine influence
+        // Consider the angles to other _neighbors to determine influence
         let mut angle_sum = 0.0;
         let mut neighbor_count = 0;
 
@@ -372,7 +373,7 @@ impl NaturalNeighborInterpolator {
             if other_neighbor_idx != neighbor_idx {
                 let other_neighbor_point = self.points.row(other_neighbor_idx);
 
-                // Compute angle between vectors from query to both neighbors
+                // Compute angle between vectors from query to both _neighbors
                 let v1_x = neighbor_point[0] - query_point[0];
                 let v1_y = neighbor_point[1] - query_point[1];
                 let v2_x = other_neighbor_point[0] - query_point[0];
@@ -422,8 +423,8 @@ impl NaturalNeighborInterpolator {
         let simplex = &self.delaunay.simplices()[simplex_idx];
         let mut vertices = Vec::new();
 
-        for &idx in simplex {
-            vertices.push(self.points.row(idx));
+        for &_idx in simplex {
+            vertices.push(self.points.row(_idx));
         }
 
         // For 2D, we have a triangle
@@ -482,7 +483,7 @@ impl NaturalNeighborInterpolator {
     ///
     /// * If the region is empty
     #[allow(dead_code)]
-    fn get_voronoi_vertices(voronoi: &Voronoi, region: &[i64]) -> SpatialResult<Array2<f64>> {
+    fn get_voronoi_vertices(_voronoi: &Voronoi, region: &[i64]) -> SpatialResult<Array2<f64>> {
         if region.is_empty() {
             return Err(SpatialError::ValueError("Empty Voronoi region".to_string()));
         }
@@ -503,7 +504,7 @@ impl NaturalNeighborInterpolator {
             if idx >= 0 {
                 vertices
                     .row_mut(j)
-                    .assign(&voronoi.vertices().row(idx as usize));
+                    .assign(&_voronoi.vertices().row(idx as usize));
                 j += 1;
             }
         }
@@ -525,12 +526,12 @@ impl NaturalNeighborInterpolator {
     ///
     /// * If the polygon has fewer than 3 vertices
     #[allow(dead_code)]
-    fn polygon_area(vertices: &Array2<f64>) -> SpatialResult<f64> {
-        let n = vertices.nrows();
+    fn polygon_area(_vertices: &Array2<f64>) -> SpatialResult<f64> {
+        let n = _vertices.nrows();
 
         if n < 3 {
             return Err(SpatialError::ValueError(format!(
-                "Polygon must have at least 3 vertices, got {n}"
+                "Polygon must have at least 3 _vertices, got {n}"
             )));
         }
 
@@ -538,7 +539,7 @@ impl NaturalNeighborInterpolator {
 
         for i in 0..n {
             let j = (i + 1) % n;
-            area += vertices[[i, 0]] * vertices[[j, 1]] - vertices[[j, 0]] * vertices[[i, 1]];
+            area += _vertices[[i, 0]] * _vertices[[j, 1]] - _vertices[[j, 0]] * _vertices[[i, 1]];
         }
 
         Ok(area.abs() / 2.0)
@@ -554,10 +555,10 @@ impl NaturalNeighborInterpolator {
     /// # Returns
     ///
     /// Euclidean distance between the points
-    fn euclidean_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
+    fn euclidean_distance(_p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
         let mut sum_sq = 0.0;
-        for i in 0..p1.len().min(p2.len()) {
-            let diff = p1[i] - p2[i];
+        for i in 0.._p1.len().min(p2.len()) {
+            let diff = _p1[i] - p2[i];
             sum_sq += diff * diff;
         }
         sum_sq.sqrt()
@@ -601,7 +602,7 @@ impl NaturalNeighborInterpolator {
 
         // Add the closest candidates, but limit the total number for performance
         let max_additional = (self.n_points / 4).clamp(10, 20);
-        for (idx, _) in candidates.into_iter().take(max_additional) {
+        for (idx_) in candidates.into_iter().take(max_additional) {
             neighbors.push(idx);
         }
 
@@ -619,7 +620,7 @@ impl NaturalNeighborInterpolator {
             all_distances
                 .sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-            for (idx, _) in all_distances.into_iter().take(3 - neighbors.len()) {
+            for (idx_) in all_distances.into_iter().take(3 - neighbors.len()) {
                 neighbors.push(idx);
             }
         }
@@ -648,7 +649,7 @@ impl NaturalNeighborInterpolator {
             distances.last().copied().unwrap_or(base_radius)
         };
 
-        // Adapt the search radius based on local density
+        // Adapt the search _radius based on local density
         let adaptive_radius = (base_radius * 2.0).max(k_nearest_dist * 1.5);
 
         Ok(adaptive_radius)
@@ -693,9 +694,9 @@ impl NaturalNeighborInterpolator {
         let bary_weights = self.barycentric_weights(point, simplex_idx)?;
 
         let mut weights = HashMap::new();
-        for (i, &idx) in simplex.iter().enumerate() {
+        for (i, &_idx) in simplex.iter().enumerate() {
             if bary_weights[i] > 1e-10 {
-                weights.insert(idx, bary_weights[i]);
+                weights.insert(_idx, bary_weights[i]);
             }
         }
 

@@ -3,8 +3,8 @@
 //! This example shows how to use the memory-efficient STFT implementation
 //! to process large signals without consuming excessive memory.
 
-use scirs2_signal::stft::{MemoryEfficientStft, MemoryEfficientStftConfig, StftConfig};
-use scirs2_signal::window;
+use scirs2__signal::stft::{MemoryEfficientStft, MemoryEfficientStftConfig, StftConfig};
+use scirs2__signal::window;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -345,6 +345,7 @@ fn magnitude_only_processing() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
     use std::time::Instant;
+use std::f64::consts::PI;
 
     let fs = 16000.0;
     let duration = 20.0;

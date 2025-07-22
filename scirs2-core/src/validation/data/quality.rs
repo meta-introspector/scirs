@@ -341,8 +341,7 @@ impl QualityAnalyzer {
 
     /// Detect outliers and create quality issues
     fn detect_outliers<S, D>(
-        &self,
-        _array: &ArrayBase<S, D>,
+        &self, array: &ArrayBase<S, D>,
         stats: &StatisticalSummary,
         field_name: &str,
     ) -> Result<Vec<QualityIssue>, CoreError>
@@ -405,7 +404,7 @@ impl QualityAnalyzer {
         // Check for consistent differences (arithmetic progression)
         let mut diff_scores = Vec::new();
         for i in 1..values.len() {
-            diff_scores.push(values[i] - values[i - 1]);
+            diff_scores.push(values[i] - values[i.saturating_sub(1)]);
         }
 
         // Calculate variance of differences

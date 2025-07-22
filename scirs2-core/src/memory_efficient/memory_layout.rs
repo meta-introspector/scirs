@@ -110,12 +110,7 @@ impl MemoryLayout {
     }
 
     /// Create a new layout with specified order and element size
-    pub fn new_with_order(
-        shape: &[usize],
-        order: LayoutOrder,
-        element_size: usize,
-        alignment: usize,
-    ) -> Self {
+    pub fn new_with_order(shape: &[usize], order: LayoutOrder, element_size: usize, alignment: usize) -> Self {
         let strides = Self::calculate_strides(shape, order, element_size);
         let total_size = shape.iter().product::<usize>() * element_size;
         let is_contiguous = Self::check_contiguous(shape, &strides, element_size);
@@ -165,11 +160,7 @@ impl MemoryLayout {
     }
 
     /// Calculate strides for given shape and order
-    pub fn calculate_strides(
-        shape: &[usize],
-        order: LayoutOrder,
-        element_size: usize,
-    ) -> Vec<isize> {
+    pub fn calculate_strides(shape: &[usize], order: LayoutOrder, element_size: usize) -> Vec<isize> {
         if shape.is_empty() {
             return Vec::new();
         }
@@ -291,7 +282,7 @@ impl MemoryLayout {
     }
 
     /// Get multi-dimensional indices for linear index
-    pub fn multi_index(&self, linear_idx: usize) -> CoreResult<Vec<usize>> {
+    pub fn multi_indices(&self, linear_idx: usize) -> CoreResult<Vec<usize>> {
         let total_elements = self.shape.iter().product::<usize>();
         if linear_idx >= total_elements {
             return Err(CoreError::IndexError(
@@ -470,7 +461,7 @@ impl MemoryLayout {
     }
 
     /// Create a view with different shape (without copying data)
-    pub fn view(&self, new_shape: &[usize], new_strides: Option<&[isize]>) -> CoreResult<Self> {
+    pub fn new_with_shape_and_strides(&self, new_shape: &[usize], new_strides: Option<&[isize]>) -> CoreResult<Self> {
         let strides = if let Some(strides) = new_strides {
             if strides.len() != new_shape.len() {
                 return Err(CoreError::ShapeError(
@@ -582,7 +573,7 @@ impl ArrayLayout {
         }
 
         for i in 1..strides.len() {
-            if strides[i] < strides[i - 1] {
+            if strides[i] < strides[i.saturating_sub(1)] {
                 return false;
             }
         }
@@ -668,7 +659,7 @@ impl LayoutConverter {
             // Convert each element in the chunk
             #[allow(clippy::needless_range_loop)]
             for linear_idx in start..end {
-                let source_indices = source_layout.multi_index(linear_idx)?;
+                let source_indices = source_layout.multi_indices(linear_idx)?;
                 let target_linear_idx = target_layout.linear_index(&source_indices)?;
                 result[target_linear_idx] = data[linear_idx];
             }
@@ -831,13 +822,13 @@ mod tests {
     fn test_multi_indexing() {
         let layout = MemoryLayout::new_c_order(&[3, 4]);
 
-        assert_eq!(layout.multi_index(0).unwrap(), vec![0, 0]);
-        assert_eq!(layout.multi_index(1).unwrap(), vec![0, 1]);
-        assert_eq!(layout.multi_index(4).unwrap(), vec![1, 0]);
-        assert_eq!(layout.multi_index(11).unwrap(), vec![2, 3]);
+        assert_eq!(layout.multi_indices(0).unwrap(), vec![0, 0]);
+        assert_eq!(layout.multi_indices(1).unwrap(), vec![0, 1]);
+        assert_eq!(layout.multi_indices(4).unwrap(), vec![1, 0]);
+        assert_eq!(layout.multi_indices(11).unwrap(), vec![2, 3]);
 
         // Test bounds
-        assert!(layout.multi_index(12).is_err());
+        assert!(layout.multi_indices(12).is_err());
     }
 
     #[test]

@@ -571,11 +571,7 @@ impl WorkloadProfileBuilder {
     }
 
     /// Set parallelism profile
-    pub const fn with_parallelism(
-        mut self,
-        parallelizable: bool,
-        optimal_threads: Option<usize>,
-    ) -> Self {
+    pub fn with_parallelism(mut self, parallelizable: bool, optimal_threads: Option<usize>) -> Self {
         self.parallelism_profile.parallelizable = parallelizable;
         self.parallelism_profile.optimal_threads = optimal_threads;
         self
@@ -959,7 +955,7 @@ impl AdaptiveOptimizer {
     }
 
     /// Get workload-specific optimization hints
-    pub fn get_workload_hints(&self, workload_name: &str) -> CoreResult<OptimizationHints> {
+    pub fn get_optimization_hints(&self, workload_name: &str) -> CoreResult<OptimizationHints> {
         if let Ok(workloads) = self.workloads.read() {
             if let Some(workload) = workloads.get(workload_name) {
                 return Ok(workload.get_optimization_hints());
@@ -989,7 +985,7 @@ impl AdaptiveOptimizer {
     }
 
     /// Calculate performance trend
-    fn calculate_trend(&self, workload: &str, metric_name: &str, _current_value: f64) -> Trend {
+    fn calculate_trend(&self, workload: &str, metric_name: &str, _value: f64) -> Trend {
         if let Ok(history) = self.performance_history.lock() {
             if let Some(workload_metrics) = history.get(workload) {
                 let recent_values: Vec<f64> = workload_metrics
@@ -1091,8 +1087,8 @@ impl AdaptiveOptimizer {
                     if latest.name == "execution_time" && latest.trend == Trend::Degrading {
                         recommendations.push(OptimizationRecommendation {
                             parameter: "thread_count".to_string(),
-                            current_value: "4".to_string(),
-                            suggested_value: "8".to_string(),
+                            current_value: 4.to_string(),
+                            suggested_value: 8.to_string(),
                             expected_impact: Impact {
                                 performance_improvement: 25.0,
                                 memory_change: 10.0,
@@ -1109,8 +1105,8 @@ impl AdaptiveOptimizer {
                     if latest.name == "memory_usage" && latest.value > 2000.0 {
                         recommendations.push(OptimizationRecommendation {
                             parameter: "chunk_size".to_string(),
-                            current_value: "1048576".to_string(),
-                            suggested_value: "524288".to_string(),
+                            current_value: 1048576.to_string(),
+                            suggested_value: 524288.to_string(),
                             expected_impact: Impact {
                                 performance_improvement: 5.0,
                                 memory_change: -30.0,

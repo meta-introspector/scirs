@@ -58,26 +58,26 @@ pub enum VisionError {
 impl Clone for VisionError {
     fn clone(&self) -> Self {
         match self {
-            VisionError::ImageLoadError(s) => VisionError::ImageLoadError(s.clone()),
-            VisionError::InvalidParameter(s) => VisionError::InvalidParameter(s.clone()),
-            VisionError::OperationError(s) => VisionError::OperationError(s.clone()),
-            VisionError::NdimageError(s) => VisionError::NdimageError(s.clone()),
-            VisionError::IoError(e) => VisionError::Other(format!("I/O error: {e}")),
-            VisionError::TypeConversionError(s) => VisionError::TypeConversionError(s.clone()),
-            VisionError::ShapeError(e) => VisionError::Other(format!("Shape error: {e}")),
-            VisionError::LinAlgError(s) => VisionError::LinAlgError(s.clone()),
-            VisionError::GpuError(s) => VisionError::GpuError(s.clone()),
-            VisionError::DimensionMismatch(s) => VisionError::DimensionMismatch(s.clone()),
-            VisionError::InvalidInput(s) => VisionError::InvalidInput(s.clone()),
-            VisionError::Other(s) => VisionError::Other(s.clone()),
+            VisionError::ImageLoadError(s) =>, VisionError::ImageLoadError(s.clone()),
+            VisionError::InvalidParameter(s) =>, VisionError::InvalidParameter(s.clone()),
+            VisionError::OperationError(s) =>, VisionError::OperationError(s.clone()),
+            VisionError::NdimageError(s) =>, VisionError::NdimageError(s.clone()),
+            VisionError::IoError(e) =>, VisionError::Other(format!("I/O error: {e}")),
+            VisionError::TypeConversionError(s) =>, VisionError::TypeConversionError(s.clone()),
+            VisionError::ShapeError(e) =>, VisionError::Other(format!("Shape error: {e}")),
+            VisionError::LinAlgError(s) =>, VisionError::LinAlgError(s.clone()),
+            VisionError::GpuError(s) =>, VisionError::GpuError(s.clone()),
+            VisionError::DimensionMismatch(s) =>, VisionError::DimensionMismatch(s.clone()),
+            VisionError::InvalidInput(s) =>, VisionError::InvalidInput(s.clone()),
+            VisionError::Other(s) =>, VisionError::Other(s.clone()),
         }
     }
 }
 
 /// Convert GPU errors to vision errors
 impl From<scirs2_core::gpu::GpuError> for VisionError {
-    fn from(err: scirs2_core::gpu::GpuError) -> Self {
-        VisionError::GpuError(err.to_string())
+    fn from(_err: scirs2_core: gpu::GpuError) -> Self {
+        VisionError::GpuError(_err.to_string())
     }
 }
 
@@ -332,9 +332,9 @@ impl Default for SystemStateMonitor {
 
 impl ErrorRecoveryManager {
     /// Create a new error recovery manager
-    pub fn new(config: RecoveryConfig) -> Self {
+    pub fn new(_config: RecoveryConfig) -> Self {
         Self {
-            config,
+            _config,
             error_history: std::collections::VecDeque::with_capacity(1000),
             system_monitor: SystemStateMonitor::new(),
             recovery_stats: RecoveryStatistics::default(),
@@ -456,13 +456,12 @@ impl ErrorRecoveryManager {
     /// Determine error severity level
     fn determine_error_severity(&self, error: &VisionError) -> ErrorSeverity {
         match error {
-            VisionError::InvalidParameter(_) | VisionError::InvalidInput(_) => ErrorSeverity::Low,
+            VisionError::InvalidParameter(_) | VisionError::InvalidInput(_) =>, ErrorSeverity::Low,
             VisionError::OperationError(_) | VisionError::TypeConversionError(_) => {
                 ErrorSeverity::Medium
             }
-            VisionError::LinAlgError(_) | VisionError::DimensionMismatch(_) => ErrorSeverity::High,
-            VisionError::IoError(_) | VisionError::Other(_) => ErrorSeverity::Critical,
-            _ => ErrorSeverity::Medium,
+            VisionError::LinAlgError(_) | VisionError::DimensionMismatch(_) =>, ErrorSeverity::High,
+            VisionError::IoError(_) | VisionError::Other(_) => ErrorSeverity::Critical_ =>, ErrorSeverity::Medium,
         }
     }
 
@@ -670,9 +669,9 @@ static ERROR_RECOVERY: std::sync::Mutex<Option<ErrorRecoveryManager>> = std::syn
 
 /// Initialize global error recovery manager
 #[allow(dead_code)]
-pub fn initialize_error_recovery(config: RecoveryConfig) {
+pub fn initialize_error_recovery(_config: RecoveryConfig) {
     let mut global_recovery = ERROR_RECOVERY.lock().unwrap();
-    *global_recovery = Some(ErrorRecoveryManager::new(config));
+    *global_recovery = Some(ErrorRecoveryManager::new(_config));
 }
 
 /// Get global error recovery manager

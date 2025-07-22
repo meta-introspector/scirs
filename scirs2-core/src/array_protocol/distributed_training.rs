@@ -103,7 +103,7 @@ pub struct DistributedNode {
     model: Sequential,
 
     /// Communication channel to other nodes (kept private to avoid warning).
-    _channel: CommunicationChannel,
+    channel: CommunicationChannel,
 }
 
 impl DistributedNode {
@@ -116,7 +116,7 @@ impl DistributedNode {
         Self {
             config,
             model,
-            _channel: CommunicationChannel::new(channel),
+            channel: CommunicationChannel::new(channel),
         }
     }
 
@@ -286,12 +286,12 @@ impl MockDistributedCommunication {
 
 impl DistributedCommunication for MockDistributedCommunication {
     fn send(&self, _tensor: Box<dyn ArrayProtocol>, _destination: usize) -> CoreResult<()> {
-        // In a real implementation, this would send the tensor to the destination worker
+        // In a real implementation, this would send the _tensor to the _destination worker
         Ok(())
     }
 
     fn recv(&self, _source: usize) -> CoreResult<Box<dyn ArrayProtocol>> {
-        // In a real implementation, this would receive a tensor from the source worker
+        // In a real implementation, this would receive a tensor from the _source worker
         Err(CoreError::NotImplementedError(ErrorContext::new(
             "recv not implemented for MockDistributedCommunication".to_string(),
         )))
@@ -373,10 +373,10 @@ pub struct DistributedDataset {
     dataset: Box<dyn Dataset>,
 
     /// Number of workers (kept private to avoid warning).
-    _num_workers: usize,
+    num_workers: usize,
 
     /// Rank of the current worker (kept private to avoid warning).
-    _rank: usize,
+    rank: usize,
 
     /// Indices of samples assigned to this worker.
     indices: Vec<usize>,
@@ -405,8 +405,8 @@ impl DistributedDataset {
 
         Self {
             dataset,
-            _num_workers: num_workers,
-            _rank: rank,
+            num_workers,
+            rank,
             indices,
         }
     }
@@ -447,7 +447,7 @@ pub struct DistributedTrainer {
     channel: CommunicationChannel,
 
     /// Batch counter for synchronization (kept private to avoid warning).
-    _batch_counter: usize,
+    batch_counter: usize,
 }
 
 impl DistributedTrainer {
@@ -460,17 +460,12 @@ impl DistributedTrainer {
         Self {
             trainer,
             config,
-            channel: CommunicationChannel::new(channel),
-            _batch_counter: 0,
+            channel: CommunicationChannel::new(channel), batch_counter: 0,
         }
     }
 
     /// Train the model in a distributed setting.
-    pub fn train(
-        &mut self,
-        train_loader: DataLoader,
-        num_epochs: usize,
-        val_loader: Option<DataLoader>,
+    pub fn train(&mut self, train_loader: &mut DataLoader, num_epochs: usize, val_loader: Option<&mut DataLoader>,
     ) -> CoreResult<()> {
         // Synchronize initial model parameters
         self.synchronize_parameters()?;
@@ -514,11 +509,7 @@ impl DistributedTrainer {
     }
 
     /// Train the model using data parallelism.
-    fn train_data_parallel(
-        &mut self,
-        train_loader: DataLoader,
-        num_epochs: usize,
-        val_loader: Option<DataLoader>,
+    fn train_data_parallel(&mut self, train_loader: &mut DataLoader, num_epochs: usize, val_loader: Option<&mut DataLoader>,
     ) -> CoreResult<()> {
         // Create a callback for parameter synchronization
         let _sync_callback = ParameterSyncCallback::new(
@@ -536,11 +527,7 @@ impl DistributedTrainer {
     }
 
     /// Train the model using model parallelism.
-    fn train_model_parallel(
-        &self,
-        _train_loader: DataLoader,
-        _num_epochs: usize,
-        _val_loader: Option<DataLoader>,
+    fn train_model_parallel(&mut self, _train_loader: &mut DataLoader, _num_epochs: usize, _val_loader: Option<&mut DataLoader>,
     ) -> CoreResult<()> {
         // This is a simplified implementation for demonstration purposes.
         // In a real implementation, this would implement a custom training loop
@@ -550,11 +537,7 @@ impl DistributedTrainer {
     }
 
     /// Train the model using hybrid parallelism.
-    fn train_hybrid_parallel(
-        &self,
-        _train_loader: DataLoader,
-        _num_epochs: usize,
-        _val_loader: Option<DataLoader>,
+    fn train_hybrid_parallel(&mut self, _train_loader: &mut DataLoader, _num_epochs: usize, _val_loader: Option<&mut DataLoader>,
     ) -> CoreResult<()> {
         // This is a simplified implementation for demonstration purposes.
         // In a real implementation, this would implement a custom training loop
@@ -564,11 +547,7 @@ impl DistributedTrainer {
     }
 
     /// Train the model using pipeline parallelism.
-    fn train_pipeline_parallel(
-        &self,
-        _train_loader: DataLoader,
-        _num_epochs: usize,
-        _val_loader: Option<DataLoader>,
+    fn train_pipeline_parallel(&mut self, _train_loader: &mut DataLoader, _num_epochs: usize, _val_loader: Option<&mut DataLoader>,
     ) -> CoreResult<()> {
         // This is a simplified implementation for demonstration purposes.
         // In a real implementation, this would implement a custom training loop
@@ -603,12 +582,12 @@ impl ParameterSyncCallback {
 
 impl TrainingCallback for ParameterSyncCallback {
     fn on_epoch_start(&mut self, _epoch: usize, _num_epochs: usize) {
-        // Reset batch counter at the start of each epoch
+        // Reset batch counter at the start of each _epoch
         self.batch_counter = 0;
     }
 
     fn on_epoch_end(&mut self, _epoch: usize, _num_epochs: usize, _metrics: &Metrics) {
-        // Synchronize parameters at the end of each epoch
+        // Synchronize parameters at the end of each _epoch
         // This is a simplified implementation for demonstration purposes.
         // In a real implementation, this would call channel.all_reduce() for each parameter.
 
@@ -623,7 +602,7 @@ impl TrainingCallback for ParameterSyncCallback {
     }
 
     fn on_batch_end(&mut self, _batch: usize, _num_batches: usize, _loss: f64) {
-        // Increment batch counter
+        // Increment _batch counter
         self.batch_counter += 1;
 
         // Synchronize parameters if needed

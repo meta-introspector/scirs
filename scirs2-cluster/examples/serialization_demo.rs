@@ -1,7 +1,7 @@
 //! Example demonstrating clustering model serialization and persistence
 
 use ndarray::{array, Array2};
-use scirs2_cluster::{
+use scirs2__cluster::{
     hierarchy::{linkage, LinkageMethod},
     kmeans_to_model, save_hierarchy, save_kmeans,
     vq::kmeans2,
@@ -36,9 +36,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn kmeans_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn kmeans_example(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     // Perform K-means clustering
-    let (centroids, labels) = kmeans2(data.view(), 3, None, None, None, None, None, None)?;
+    let (centroids, labels) = kmeans2(_data.view(), 3, None, None, None, None, None, None)?;
     println!(
         "K-means clustering completed with {} clusters",
         centroids.nrows()
@@ -60,10 +60,10 @@ fn kmeans_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> 
 }
 
 #[allow(dead_code)]
-fn hierarchical_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn hierarchical_example(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     // Perform hierarchical clustering
-    let linkage_matrix = linkage(data.view(), LinkageMethod::Average, Metric::Euclidean)?;
-    let n_observations = data.nrows();
+    let linkage_matrix = linkage(_data.view(), LinkageMethod::Average, Metric::Euclidean)?;
+    let n_observations = _data.nrows();
 
     // Create model with sample labels
     let labels = vec![

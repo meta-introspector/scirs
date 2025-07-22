@@ -1,4 +1,4 @@
-use scirs2_text::{BpeConfig, BpeTokenizer, Result, Tokenizer};
+use scirs2__text::{BpeConfig, BpeTokenizer, Result, Tokenizer};
 use std::path::Path;
 
 #[allow(dead_code)]

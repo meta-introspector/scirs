@@ -33,7 +33,7 @@ pub struct Dropout<F: Float + Debug + Send + Sync> {
 }
 
 // Manual implementation of Debug because dyn RngCore doesn't implement Debug
-impl<F: Float + Debug + Send + Sync> std::fmt::Debug for Dropout<F> {
+impl<F: Float + Debug + Send + Sync> + std::fmt::Debug for Dropout<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Dropout")
             .field("p", &self.p)
@@ -52,8 +52,7 @@ impl<F: Float + Debug + Send + Sync> Clone for Dropout<F> {
             rng: Arc::new(RwLock::new(Box::new(rng))),
             training: self.training,
             input_cache: Arc::new(RwLock::new(None)),
-            mask_cache: Arc::new(RwLock::new(None)),
-            _phantom: PhantomData,
+            mask_cache: Arc::new(RwLock::new(None)), _phantom: PhantomData,
         }
     }
 }
@@ -82,8 +81,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dropout<F> {
             rng: Arc::new(RwLock::new(Box::new(rng.clone()))),
             training: true,
             input_cache: Arc::new(RwLock::new(None)),
-            mask_cache: Arc::new(RwLock::new(None)),
-            _phantom: PhantomData,
+            mask_cache: Arc::new(RwLock::new(None)), _phantom: PhantomData,
         })
     }
 
@@ -122,7 +120,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Drop
         }
 
         // In training mode, create a binary mask and apply it
-        let mut mask = Array::<F, _>::from_elem(input.dim(), F::one());
+        let mut mask = Array::<F>::from_elem(input.dim(), F::one());
         let one = F::one();
         let zero = F::zero();
 
@@ -162,7 +160,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Drop
     }
 
     fn backward(
-        &self,
+        &mut self,
         _input: &Array<F, IxDyn>,
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
@@ -201,7 +199,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Drop
         Ok(grad_input)
     }
 
-    fn update(&mut self, _learning_rate: F) -> Result<()> {
+    fn update(&mut self, learning_rate: F) -> Result<()> {
         // Dropout has no parameters to update
         Ok(())
     }

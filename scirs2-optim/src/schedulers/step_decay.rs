@@ -14,7 +14,7 @@ use crate::schedulers::LearningRateScheduler;
 /// # Examples
 ///
 /// ```
-/// use scirs2_optim::schedulers::{StepDecay, LearningRateScheduler};
+/// use scirs2__optim::schedulers::{StepDecay, LearningRateScheduler};
 ///
 /// // Create a scheduler with initial learning rate 0.1, gamma 0.1,
 /// // and step size 3 (decay learning rate every 3 steps)
@@ -57,13 +57,13 @@ impl<A: Float + Debug> StepDecay<A> {
     /// * `initial_lr` - Initial learning rate
     /// * `gamma` - Multiplicative factor of learning rate decay
     /// * `step_size` - Number of steps between learning rate decay
-    pub fn new(initial_lr: A, gamma: A, step_size: usize) -> Self {
+    pub fn new(_initial_lr: A, gamma: A, step_size: usize) -> Self {
         Self {
-            initial_lr,
+            _initial_lr,
             gamma,
             step_size,
             step: 0,
-            current_lr: initial_lr,
+            current_lr: _initial_lr,
         }
     }
 }

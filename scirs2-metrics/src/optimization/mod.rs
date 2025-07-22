@@ -24,8 +24,8 @@
 //! ## Using StableMetrics for numerical stability
 //!
 //! ```
-//! use scirs2_metrics::optimization::numeric::StableMetrics;
-//! use scirs2_metrics::error::Result;
+//! use scirs2__metrics::optimization::numeric::StableMetrics;
+//! use scirs2__metrics::error::Result;
 //!
 //! fn compute_kl_divergence(p: &[f64], q: &[f64]) -> Result<f64> {
 //!     let stable = StableMetrics::<f64>::new()
@@ -38,13 +38,13 @@
 //! ## Using parallel computation for batch metrics
 //!
 //! ```
-//! use scirs2_metrics::optimization::parallel::{ParallelConfig, compute_metrics_batch};
-//! use scirs2_metrics::error::Result;
+//! use scirs2__metrics::optimization::parallel::{ParallelConfig, compute_metrics_batch};
+//! use scirs2__metrics::error::Result;
 //! use ndarray::Array1;
 //!
-//! fn compute_multiple_metrics(y_true: &Array1<f64>, y_pred: &Array1<f64>) -> Result<Vec<f64>> {
+//! fn compute_multiple_metrics(_y_true: &Array1<f64>, y_pred: &Array1<f64>) -> Result<Vec<f64>> {
 //!     let config = ParallelConfig {
-//!         parallel_enabled: true,
+//!         parallel_enabled: _true,
 //!         min_chunk_size: 1000,
 //!         num_threads: None,
 //!     };
@@ -60,8 +60,8 @@
 //! ## Using memory-efficient metrics for large datasets
 //!
 //! ```
-//! use scirs2_metrics::optimization::memory::{StreamingMetric, ChunkedMetrics};
-//! use scirs2_metrics::error::Result;
+//! use scirs2__metrics::optimization::memory::{StreamingMetric, ChunkedMetrics};
+//! use scirs2__metrics::error::Result;
 //!
 //! struct StreamingMeanAbsoluteError;
 //!
@@ -94,8 +94,8 @@
 //! ## Using quantum-inspired acceleration for large-scale computations
 //!
 //! ```
-//! use scirs2_metrics::optimization::quantum_acceleration::{QuantumMetricsComputer, QuantumConfig};
-//! use scirs2_metrics::error::Result;
+//! use scirs2__metrics::optimization::quantum_acceleration::{QuantumMetricsComputer, QuantumConfig};
+//! use scirs2__metrics::error::Result;
 //! use ndarray::Array1;
 //!
 //! fn compute_quantum_correlation(x: &Array1<f64>, y: &Array1<f64>) -> Result<f64> {
@@ -120,21 +120,21 @@ pub mod quantum_acceleration;
 pub mod simd_gpu;
 
 // Re-export common functionality
-pub use advanced_memory_optimization::{
+pub use advanced_memory__optimization::{
     AdvancedMemoryPool, AllocationStrategy, BlockType, MemoryBlock, MemoryPoolConfig, MemoryStats,
     StrategyBenchmark,
 };
 pub use distributed::{
     DistributedConfig, DistributedMetricsBuilder, DistributedMetricsCoordinator,
 };
-pub use distributed_advanced::{
+pub use distributed__advanced::{
     AdvancedClusterConfig, AdvancedDistributedCoordinator, AutoScalingConfig, ClusterState,
     ConsensusAlgorithm, ConsensusConfig, DistributedTask, FaultToleranceConfig, LocalityConfig,
     NodeInfo, NodeRole, NodeStatus, OptimizationConfig, ResourceRequirements, ShardingConfig,
     ShardingStrategy, TaskPriority, TaskType,
 };
-pub use gpu_acceleration::{BenchmarkResults, GpuAccelConfig, GpuInfo, GpuMetricsComputer};
-pub use gpu_kernels::{
+pub use gpu__acceleration::{BenchmarkResults, GpuAccelConfig, GpuInfo, GpuMetricsComputer};
+pub use gpu__kernels::{
     AdvancedGpuComputer, BatchSettings, CudaContext, ErrorHandling, GpuApi, GpuComputeConfig,
     GpuComputeResults, GpuPerformanceStats, KernelMetrics, KernelOptimization, MemoryStrategy,
     OpenClContext, TransferMetrics, VectorizationLevel,
@@ -146,8 +146,8 @@ pub use hardware::{
 pub use memory::{ChunkedMetrics, StreamingMetric};
 pub use numeric::{StableMetric, StableMetrics};
 pub use parallel::ParallelConfig;
-pub use quantum_acceleration::{
+pub use quantum__acceleration::{
     InterferencePatterns, QuantumBenchmarkResults, QuantumConfig, QuantumMetricsComputer,
     QuantumProcessor, SuperpositionManager, VqeParameters,
 };
-pub use simd_gpu::SimdMetrics;
+pub use simd__gpu::SimdMetrics;

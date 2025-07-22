@@ -2,8 +2,8 @@
 
 use image::{DynamicImage, ImageBuffer, Luma};
 use ndarray::{Array2, Array3};
-use scirs2_vision::error::Result;
-use scirs2_vision::preprocessing::{
+use scirs2__vision::error::Result;
+use scirs2__vision::preprocessing::{
     adaptive_gamma_correction, auto_gamma_correction, gamma_correction, nlm_denoise,
     nlm_denoise_color, nlm_denoise_parallel,
 };
@@ -27,11 +27,11 @@ fn main() -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_nlm_denoising(img: &DynamicImage) -> Result<()> {
+fn demonstrate_nlm_denoising(_img: &DynamicImage) -> Result<()> {
     println!("\n1. Non-Local Means Denoising:");
 
     // Add synthetic noise to the image
-    let noisy_img = add_gaussian_noise(img, 0.05);
+    let noisy_img = add_gaussian_noise(_img, 0.05);
     noisy_img
         .save("examples/output/noisy_input.png")
         .expect("Failed to save noisy image");
@@ -95,7 +95,7 @@ fn demonstrate_nlm_denoising(img: &DynamicImage) -> Result<()> {
         .expect("Failed to save parallel result");
 
     // Test color denoising if image is color
-    if img.color() != image::ColorType::L8 {
+    if _img.color() != image::ColorType::L8 {
         println!("  - Testing color NLM denoising");
 
         let rgb = noisy_img.to_rgb8();
@@ -133,7 +133,7 @@ fn demonstrate_nlm_denoising(img: &DynamicImage) -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_gamma_correction(img: &DynamicImage) -> Result<()> {
+fn demonstrate_gamma_correction(_img: &DynamicImage) -> Result<()> {
     println!("\n2. Gamma Correction Examples:");
 
     // Basic gamma correction with different values
@@ -141,13 +141,12 @@ fn demonstrate_gamma_correction(img: &DynamicImage) -> Result<()> {
     let gamma_values = vec![0.5, 1.0, 1.5, 2.2];
 
     for gamma in gamma_values {
-        let corrected = gamma_correction(img, gamma)?;
+        let corrected = gamma_correction(_img, gamma)?;
         let output_path = format!("examples/output/gamma_{gamma}.png");
 
         match corrected {
             DynamicImage::ImageLuma8(gray) => gray.save(&output_path),
-            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path),
-            _ => corrected.save(&output_path),
+            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path, _ => corrected.save(&output_path),
         }
         .expect("Failed to save gamma corrected image");
 
@@ -159,13 +158,12 @@ fn demonstrate_gamma_correction(img: &DynamicImage) -> Result<()> {
     let target_brightnesses = vec![0.3, 0.5, 0.7];
 
     for target in target_brightnesses {
-        let auto_corrected = auto_gamma_correction(img, target)?;
+        let auto_corrected = auto_gamma_correction(_img, target)?;
         let output_path = format!("examples/output/auto_gamma_target_{target}.png");
 
         match auto_corrected {
             DynamicImage::ImageLuma8(gray) => gray.save(&output_path),
-            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path),
-            _ => auto_corrected.save(&output_path),
+            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path, _ => auto_corrected.save(&output_path),
         }
         .expect("Failed to save auto gamma corrected image");
 
@@ -177,13 +175,12 @@ fn demonstrate_gamma_correction(img: &DynamicImage) -> Result<()> {
     let window_sizes = vec![5, 15, 25];
 
     for window_size in window_sizes {
-        let adaptive = adaptive_gamma_correction(img, window_size, (0.5, 2.0))?;
+        let adaptive = adaptive_gamma_correction(_img, window_size, (0.5, 2.0))?;
         let output_path = format!("examples/output/adaptive_gamma_window_{window_size}.png");
 
         match adaptive {
             DynamicImage::ImageLuma8(gray) => gray.save(&output_path),
-            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path),
-            _ => adaptive.save(&output_path),
+            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path, _ => adaptive.save(&output_path),
         }
         .expect("Failed to save adaptive gamma corrected image");
 
@@ -195,13 +192,13 @@ fn demonstrate_gamma_correction(img: &DynamicImage) -> Result<()> {
 
 /// Add Gaussian noise to an image
 #[allow(dead_code)]
-fn add_gaussian_noise(img: &DynamicImage, noise_level: f32) -> DynamicImage {
-    use rand_distr::{Distribution, Normal};
+fn add_gaussian_noise(_img: &DynamicImage, noise_level: f32) -> DynamicImage {
+    use rand__distr::{Distribution, Normal};
 
     let mut rng = rand::rng();
     let normal = Normal::new(0.0, noise_level).unwrap();
 
-    match img {
+    match _img {
         DynamicImage::ImageLuma8(gray) => {
             let (width, height) = gray.dimensions();
             let mut noisy = ImageBuffer::new(width, height);
@@ -216,7 +213,7 @@ fn add_gaussian_noise(img: &DynamicImage, noise_level: f32) -> DynamicImage {
             DynamicImage::ImageLuma8(noisy)
         }
         _ => {
-            let rgb = img.to_rgb8();
+            let rgb = _img.to_rgb8();
             let (width, height) = rgb.dimensions();
             let mut noisy = image::RgbImage::new(width, height);
 

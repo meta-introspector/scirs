@@ -53,10 +53,10 @@ pub struct ParameterAverager<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
     /// Create a new parameter averager
-    pub fn new(strategy: AveragingStrategy, num_nodes: usize) -> Self {
+    pub fn new(_strategy: AveragingStrategy, num_nodes: usize) -> Self {
         Self {
             averaged_params: Vec::new(),
-            strategy,
+            _strategy,
             node_weights: HashMap::new(),
             num_nodes,
             momentum_buffer: None,
@@ -112,7 +112,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
                 self.initialize(first_params)?;
             } else {
                 return Err(OptimError::InvalidConfig(
-                    "No parameters provided for initialization".to_string(),
+                    "No _parameters provided for initialization".to_string(),
                 ));
             }
         }
@@ -159,14 +159,14 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
 
     /// Simple arithmetic averaging
     fn arithmetic_average(&mut self, node_parameters: &[(usize, Vec<Array<A, D>>)]) -> Result<()> {
-        // Reset averaged parameters
+        // Reset averaged _parameters
         for param in &mut self.averaged_params {
             param.fill(A::zero());
         }
 
         let num_nodes = A::from(node_parameters.len()).unwrap();
 
-        // Sum all parameters
+        // Sum all _parameters
         for (_node_id, params) in node_parameters {
             for (avg_param, param) in self.averaged_params.iter_mut().zip(params.iter()) {
                 Zip::from(avg_param).and(param).for_each(|avg, &p| {
@@ -185,7 +185,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
 
     /// Weighted averaging using node weights
     fn weighted_average(&mut self, node_parameters: &[(usize, Vec<Array<A, D>>)]) -> Result<()> {
-        // Reset averaged parameters
+        // Reset averaged _parameters
         for param in &mut self.averaged_params {
             param.fill(A::zero());
         }
@@ -193,7 +193,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
         // Compute total weight
         let total_weight: A = node_parameters
             .iter()
-            .map(|(node_id, _)| self.node_weights.get(node_id).copied().unwrap_or(A::zero()))
+            .map(|(node_id_)| self.node_weights.get(node_id).copied().unwrap_or(A::zero()))
             .fold(A::zero(), |acc, w| acc + w);
 
         if total_weight <= A::zero() {
@@ -233,7 +233,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
         let momentum_factor = A::from(momentum).unwrap();
         let one_minus_momentum = A::one() - momentum_factor;
 
-        // First compute arithmetic average of incoming parameters
+        // First compute arithmetic average of incoming _parameters
         let mut current_average: Vec<Array<A, D>> = self
             .averaged_params
             .iter()
@@ -281,7 +281,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
         let decay_factor = A::from(decay).unwrap();
         let one_minus_decay = A::one() - decay_factor;
 
-        // First compute arithmetic average of incoming parameters
+        // First compute arithmetic average of incoming _parameters
         let mut current_average: Vec<Array<A, D>> = self
             .averaged_params
             .iter()
@@ -541,7 +541,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> DistributedCoordinator<A, D
     ) -> Result<CommunicationResult<A, D>> {
         let mut aggregated = false;
 
-        // Submit all updates
+        // Submit all _updates
         for (node_id, params) in node_updates {
             aggregated = self.parameter_server.submit_update(node_id, params)? || aggregated;
         }
@@ -789,9 +789,9 @@ pub struct GradientCompressor<A: Float, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCompressor<A, D> {
     /// Create a new gradient compressor
-    pub fn new(strategy: CompressionStrategy) -> Self {
+    pub fn new(_strategy: CompressionStrategy) -> Self {
         Self {
-            strategy,
+            _strategy,
             error_state: None,
             stats: CompressionStats::new(),
         }
@@ -1127,8 +1127,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCompressor<A, D> {
                 match bits {
                     1..=8 => data.push(quantized as u8),
                     9..=16 => data.extend_from_slice(&(quantized as u16).to_le_bytes()),
-                    17..=32 => data.extend_from_slice(&quantized.to_le_bytes()),
-                    _ => unreachable!(),
+                    17..=32 => data.extend_from_slice(&quantized.to_le_bytes(), _ => unreachable!(),
                 }
             }
 

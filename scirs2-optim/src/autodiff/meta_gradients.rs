@@ -441,7 +441,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         let mut engine = Self::new(algorithm, inner_config, outer_config);
         engine.advanced_config = advanced_config;
 
-        // Configure higher-order engine based on advanced config
+        // Configure higher-order engine based on advanced _config
         if engine.advanced_config.use_higher_order_hessian {
             engine.higher_order_engine.set_mixed_mode(true);
         }
@@ -623,7 +623,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
             // Inner loop adaptation (multiple steps)
             let adapted_params = self.inner_loop_adaptation(meta_params, task, objective_fn)?;
 
-            // Reptile gradient: direction from meta-params to adapted params
+            // Reptile gradient: direction from meta-_params to adapted _params
             let reptile_gradient = &adapted_params - meta_params;
             meta_gradients = meta_gradients + reptile_gradient * task.weight;
 
@@ -750,24 +750,24 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<Array1<T>> {
-        let mut params = meta_params.clone();
+        let mut _params = meta_params.clone();
         let lr = T::from(self.inner_loop_config.learning_rate).unwrap();
 
         for _step in 0..self.inner_loop_config.num_steps {
             // Compute gradient on support set
             let gradient =
-                self.compute_gradient_wrt_params(&params, &task.support_set, objective_fn)?;
+                self.compute_gradient_wrt_params(&_params, &task.support_set, objective_fn)?;
 
             // SGD update
-            params = params - gradient.clone() * lr;
+            _params = _params - gradient.clone() * lr;
 
             // Check stop condition
-            if self.check_stop_condition(&gradient, &params, task, objective_fn)? {
+            if self.check_stop_condition(&gradient, &_params, task, objective_fn)? {
                 break;
             }
         }
 
-        Ok(params)
+        Ok(_params)
     }
 
     /// Solve inner optimization to convergence (for IFT)
@@ -777,13 +777,13 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<Array1<T>> {
-        let mut params = meta_params.clone();
+        let mut _params = meta_params.clone();
         let lr = T::from(self.inner_loop_config.learning_rate).unwrap();
         let convergence_threshold = T::from(1e-6).unwrap();
 
         for _step in 0..self.inner_loop_config.max_steps {
             let gradient =
-                self.compute_gradient_wrt_params(&params, &task.support_set, objective_fn)?;
+                self.compute_gradient_wrt_params(&_params, &task.support_set, objective_fn)?;
 
             // Check convergence
             let grad_norm = gradient.iter().map(|&g| g * g).sum::<T>().sqrt();
@@ -792,10 +792,10 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
             }
 
             // Update parameters
-            params = params - gradient * lr;
+            _params = _params - gradient * lr;
         }
 
-        Ok(params)
+        Ok(_params)
     }
 
     /// Compute second-order meta-gradients using advanced higher-order differentiation
@@ -828,8 +828,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Advanced second-order meta-gradients using higher-order engine
     fn compute_advanced_second_order_gradients(
         &mut self,
-        meta_params: &Array1<T>,
-        _adapted_params: &Array1<T>,
+        meta_params: &Array1<T>, _adapted_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<Array1<T>> {
@@ -963,8 +962,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Fallback finite difference second-order computation
     fn compute_finite_difference_second_order(
         &self,
-        meta_params: &Array1<T>,
-        _adapted_params: &Array1<T>,
+        meta_params: &Array1<T>, _adapted_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<Array1<T>> {
@@ -995,8 +993,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
 
     /// Compute first-order meta-gradients
     fn compute_first_order_meta_gradients(
-        &self,
-        _meta_params: &Array1<T>,
+        &self, _meta_params: &Array1<T>,
         adapted_params: &Array1<T>,
         task: &MetaTask<T>,
         objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
@@ -1015,7 +1012,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     ) -> Result<Array1<T>> {
         // Simplified IFT computation
         // In practice, this would solve: dψ/dθ = -H^(-1) * d²L/dψdθ
-        // where ψ are optimal params, θ are meta-params, H is Hessian
+        // where ψ are optimal _params, θ are meta-_params, H is Hessian
 
         let eps = T::from(1e-6).unwrap();
         let mut gradients = Array1::zeros(meta_params.len());
@@ -1026,7 +1023,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
 
             let optimal_plus = self.solve_inner_optimization(&meta_plus, task, objective_fn)?;
 
-            // Approximate derivative of optimal params w.r.t. meta-params
+            // Approximate derivative of optimal _params w.r.t. meta-_params
             let param_derivative = (&optimal_plus - optimal_params) / eps;
 
             // Chain rule: dL/dθ = dL/dψ * dψ/dθ
@@ -1092,10 +1089,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Check inner loop stop condition
     fn check_stop_condition(
         &self,
-        gradient: &Array1<T>,
-        _params: &Array1<T>,
-        _task: &MetaTask<T>,
-        _objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
+        gradient: &Array1<T>, _params: &Array1<T>, _task: &MetaTask<T>, _objective_fn: &impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<bool> {
         match &self.inner_loop_config.stop_condition {
             StopCondition::FixedSteps => Ok(false), // Always run fixed number of steps
@@ -1186,7 +1180,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         let norm1 = grad1.iter().map(|&x| x * x).sum::<T>().sqrt();
         let norm2 = grad2.iter().map(|&x| x * x).sum::<T>().sqrt();
 
-        if norm1 > T::zero() && norm2 > T::zero() {
+        if norm1 > T::zero() && norm2 >, T::zero() {
             let cosine = grad1.dot(&grad2) / (norm1 * norm2);
             Ok(cosine)
         } else {
@@ -1234,8 +1228,8 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         }
 
         // Create objective functions for each task
-        let objective1 = |params: &Array1<T>| objective_fn(params, meta_params, &task1.support_set);
-        let objective2 = |params: &Array1<T>| objective_fn(params, meta_params, &task2.support_set);
+        let objective1 = |_params: &Array1<T>| objective_fn(_params, meta_params, &task1.support_set);
+        let objective2 = |_params: &Array1<T>| objective_fn(_params, meta_params, &task2.support_set);
 
         let hessian_config = HessianConfig {
             exact: true,
@@ -1270,7 +1264,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
             }
         }
 
-        if norm1 > T::zero() && norm2 > T::zero() {
+        if norm1 > T::zero() && norm2 >, T::zero() {
             Ok(similarity / (norm1.sqrt() * norm2.sqrt()))
         } else {
             Ok(T::zero())
@@ -1360,8 +1354,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     fn compute_per_parameter_learning_rates(
         &self,
         meta_params: &Array1<T>,
-        gradient: &Array1<T>,
-        _task: &MetaTask<T>,
+        gradient: &Array1<T>, _task: &MetaTask<T>,
     ) -> Result<Array1<T>> {
         let mut learning_rates = Array1::zeros(meta_params.len());
         let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
@@ -1378,8 +1371,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
 
     /// Compute adaptive gradient-based learning rates
     fn compute_adaptive_gradient_rates(
-        &self,
-        _meta_params: &Array1<T>,
+        &self, _meta_params: &Array1<T>,
         gradient: &Array1<T>,
     ) -> Result<Array1<T>> {
         let mut learning_rates = Array1::zeros(gradient.len());
@@ -1414,9 +1406,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Compute learned adaptation rule (placeholder)
     fn compute_learned_adaptation_rule(
         &self,
-        meta_params: &Array1<T>,
-        _gradient: &Array1<T>,
-        _task: &MetaTask<T>,
+        meta_params: &Array1<T>, _gradient: &Array1<T>, _task: &MetaTask<T>,
     ) -> Result<Array1<T>> {
         // Placeholder: would use a learned neural network
         let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
@@ -1426,9 +1416,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     /// Compute meta-learned adaptation rates (placeholder)
     fn compute_meta_learned_rates(
         &self,
-        meta_params: &Array1<T>,
-        _gradient: &Array1<T>,
-        _task: &MetaTask<T>,
+        meta_params: &Array1<T>, _gradient: &Array1<T>, _task: &MetaTask<T>,
     ) -> Result<Array1<T>> {
         // Placeholder: would use meta-learned adaptation
         let base_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
@@ -1439,10 +1427,10 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
 /// Checkpoint manager implementation
 impl<T: Float + Default + Clone> CheckpointManager<T> {
     /// Create a new checkpoint manager
-    pub fn new(max_checkpoints: usize, memory_threshold: usize) -> Self {
+    pub fn new(_max_checkpoints: usize, memory_threshold: usize) -> Self {
         Self {
-            checkpoints: HashMap::new(),
-            max_checkpoints,
+            _checkpoints: HashMap::new(),
+            _max_checkpoints,
             memory_threshold,
             current_memory: 0,
             policy: CheckpointPolicy::MemoryThreshold,
@@ -1456,7 +1444,7 @@ impl<T: Float + Default + Clone> CheckpointManager<T> {
         policy: CheckpointPolicy,
     ) -> Self {
         Self {
-            checkpoints: HashMap::new(),
+            _checkpoints: HashMap::new(),
             max_checkpoints,
             memory_threshold,
             current_memory: 0,

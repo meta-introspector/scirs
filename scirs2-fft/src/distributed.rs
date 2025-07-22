@@ -7,7 +7,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::fft;
 use ndarray::{s, ArrayBase, ArrayD, Data, Dimension, IxDyn};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -104,14 +104,14 @@ pub trait Communicator: Send + Sync + Debug {
 
 impl DistributedFFT {
     /// Create a new distributed FFT manager
-    pub fn new(config: DistributedConfig, communicator: Arc<dyn Communicator>) -> Self {
+    pub fn new(_config: DistributedConfig, communicator: Arc<dyn Communicator>) -> Self {
         Self {
-            config,
+            _config,
             communicator,
         }
     }
 
-    /// Perform distributed FFT on the input data
+    /// Perform distributed FFT on the input _data
     pub fn distributed_fft<S, D>(&self, input: &ArrayBase<S, D>) -> FFTResult<ArrayD<Complex64>>
     where
         S: Data,
@@ -124,7 +124,7 @@ impl DistributedFFT {
         // Convert input to dynamic array for easier indexing
         let input_dyn = input.to_owned().into_dyn();
 
-        // 1. First decompose the data according to our strategy
+        // 1. First decompose the _data according to our strategy
         let local_data = self.decompose_data(&input_dyn)?;
 
         // Measure decomposition time
@@ -137,7 +137,7 @@ impl DistributedFFT {
         // Measure local FFT time
         let local_fft_time = start.elapsed() - decomp_time;
 
-        // 3. Communicate with other nodes to exchange data
+        // 3. Communicate with other nodes to exchange _data
         let exchanged_data = self.exchange_data(&local_result)?;
 
         // Measure communication time
@@ -161,7 +161,7 @@ impl DistributedFFT {
         Ok(final_result)
     }
 
-    /// Decompose the input data based on the current strategy
+    /// Decompose the input _data based on the current strategy
     pub fn decompose_data<T>(&self, input: &ArrayD<T>) -> FFTResult<ArrayD<Complex64>>
     where
         T: Into<Complex64> + Copy + NumCast,
@@ -177,7 +177,7 @@ impl DistributedFFT {
         }
     }
 
-    /// Perform local FFT computation on a portion of data
+    /// Perform local FFT computation on a portion of _data
     fn perform_local_fft(
         &self,
         input: &ArrayD<Complex64>,
@@ -228,13 +228,13 @@ impl DistributedFFT {
         Ok(())
     }
 
-    /// Exchange data between nodes to complete the distributed computation
+    /// Exchange _data between nodes to complete the distributed computation
     fn exchange_data(&self, local_result: &ArrayD<Complex64>) -> FFTResult<ArrayD<Complex64>> {
         // Simplified implementation
-        // In a real implementation, this would use the communicator to exchange data
+        // In a real implementation, this would use the communicator to exchange _data
         // based on the communication pattern
 
-        // For testing purposes, we'll just return the local result
+        // For testing purposes, we'll just return the local _result
         if self.config.node_count == 1 || self.config.rank == 0 {
             return Ok(local_result.clone());
         }
@@ -243,13 +243,13 @@ impl DistributedFFT {
         // This is a placeholder that would be replaced with actual communication code
         match self.config.communication {
             CommunicationPattern::AllToAll => {
-                // Flatten the data for communication
+                // Flatten the _data for communication
                 let flattened: Vec<Complex64> = local_result.iter().copied().collect();
 
                 // In a real implementation, this would do an all-to-all exchange
                 let _result = self.communicator.all_to_all(&flattened)?;
 
-                // For testing, just return the local result
+                // For testing, just return the local _result
                 Ok(local_result.clone())
             }
             CommunicationPattern::PointToPoint => {
@@ -264,13 +264,13 @@ impl DistributedFFT {
         }
     }
 
-    /// Finalize the result by combining data from all nodes
+    /// Finalize the result by combining _data from all nodes
     fn finalize_result(
         &self,
         exchanged_data: &ArrayD<Complex64>,
         output_dim: &[usize],
     ) -> FFTResult<ArrayD<Complex64>> {
-        // In a real implementation, this would reorganize the data
+        // In a real implementation, this would reorganize the _data
         // from all nodes into the final result
 
         // For testing purposes with a single node, we can reshape directly
@@ -295,7 +295,7 @@ impl DistributedFFT {
                 }
 
                 if all_match && !output.is_empty() && !exchanged_data.is_empty() {
-                    // Copy data to output
+                    // Copy _data to output
                     let flat_output = output.as_slice_mut().unwrap();
                     for (i, &val) in exchanged_data.iter().enumerate().take(flat_output.len()) {
                         flat_output[i] = val;
@@ -317,7 +317,7 @@ impl DistributedFFT {
 
             Ok(output)
         } else {
-            // On non-root nodes, we would have sent our data to the root
+            // On non-root nodes, we would have sent our _data to the root
             // so we just return an empty result
             Err(FFTError::ValueError(
                 "Only the root node (rank 0) produces the final output".to_string(),
@@ -337,7 +337,7 @@ impl DistributedFFT {
     {
         let shape = input.shape();
 
-        // For testing, limit the size
+        // For _testing, limit the size
         let max_size = if is_testing {
             self.config.max_local_size
         } else {
@@ -365,7 +365,7 @@ impl DistributedFFT {
             return Ok(ArrayD::zeros(IxDyn(&[0])));
         }
 
-        // Apply size limits for testing
+        // Apply size limits for _testing
         let actual_end = my_end.min(my_start + max_size);
 
         // Calculate my slab's shape
@@ -375,7 +375,7 @@ impl DistributedFFT {
         // Create output array
         let mut output = ArrayD::zeros(IxDyn(my_shape.as_slice()));
 
-        // Copy my portion of the data using dynamic indexing
+        // Copy my portion of the _data using dynamic indexing
         if input.ndim() == 1 {
             // 1D case
             for i in my_start..actual_end {
@@ -430,7 +430,7 @@ impl DistributedFFT {
     {
         let shape = input.shape();
 
-        // For testing, limit the size
+        // For _testing, limit the size
         let max_size = if is_testing {
             self.config.max_local_size
         } else {
@@ -467,7 +467,7 @@ impl DistributedFFT {
         let my_row = self.config.rank / p2;
         let my_col = self.config.rank % p2;
 
-        // Calculate my portion of the data
+        // Calculate my portion of the _data
         let n1 = shape[0];
         let n2 = shape[1];
 
@@ -486,7 +486,7 @@ impl DistributedFFT {
             return Ok(ArrayD::zeros(IxDyn(&[0])));
         }
 
-        // Apply size limits for testing
+        // Apply size limits for _testing
         let actual_end_row = my_end_row.min(my_start_row + max_size);
         let actual_end_col = my_end_col.min(my_start_col + max_size);
 
@@ -498,7 +498,7 @@ impl DistributedFFT {
         // Create output array
         let mut output = ArrayD::zeros(IxDyn(my_shape.as_slice()));
 
-        // Copy my portion of the data using dynamic indexing
+        // Copy my portion of the _data using dynamic indexing
         if input.ndim() == 2 {
             // 2D case
             for i in my_start_row..actual_end_row {
@@ -543,7 +543,7 @@ impl DistributedFFT {
     {
         let shape = input.shape();
 
-        // For testing, limit the size
+        // For _testing, limit the size
         let max_size = if is_testing {
             self.config.max_local_size
         } else {
@@ -583,7 +583,7 @@ impl DistributedFFT {
         let my_row = remainder / p3;
         let my_col = remainder % p3;
 
-        // Calculate my portion of the data
+        // Calculate my portion of the _data
         let n1 = shape[0];
         let n2 = shape[1];
         let n3 = shape[2];
@@ -607,7 +607,7 @@ impl DistributedFFT {
             return Ok(ArrayD::zeros(IxDyn(&[0])));
         }
 
-        // Apply size limits for testing
+        // Apply size limits for _testing
         let actual_end_plane = my_end_plane.min(my_start_plane + max_size);
         let actual_end_row = my_end_row.min(my_start_row + max_size);
         let actual_end_col = my_end_col.min(my_start_col + max_size);
@@ -621,7 +621,7 @@ impl DistributedFFT {
         // Create output array
         let mut output = ArrayD::zeros(IxDyn(my_shape.as_slice()));
 
-        // Copy my portion of the data using dynamic indexing
+        // Copy my portion of the _data using dynamic indexing
         if input.ndim() == 3 {
             // 3D case
             for i in my_start_plane..actual_end_plane {
@@ -659,13 +659,13 @@ impl DistributedFFT {
 
         // Choose the decomposition strategy based on the input dimensions and node count
         if ndim == 1 || self.config.node_count == 1 {
-            // For 1D data or single node, just use slab decomposition
+            // For 1D _data or single node, just use slab decomposition
             self.slab_decomposition(input, is_testing)
         } else if ndim == 2 || self.config.node_count < 8 {
-            // For 2D data or small node counts, use slab decomposition
+            // For 2D _data or small node counts, use slab decomposition
             self.slab_decomposition(input, is_testing)
         } else if ndim == 3 && self.config.node_count >= 8 {
-            // For 3D data with enough nodes, use pencil decomposition
+            // For 3D _data with enough nodes, use pencil decomposition
             // Create a reasonable process grid if not provided
             let mut config = self.config.clone();
             if config.process_grid.len() < 2 {
@@ -681,7 +681,7 @@ impl DistributedFFT {
 
             temp_dfft.pencil_decomposition(input, is_testing)
         } else if ndim >= 3 && self.config.node_count >= 27 {
-            // For 3D+ data with many nodes, use volumetric decomposition
+            // For 3D+ _data with many nodes, use volumetric decomposition
             // Create a reasonable process grid if not provided
             let mut config = self.config.clone();
             if config.process_grid.len() < 3 {
@@ -706,10 +706,10 @@ impl DistributedFFT {
 
     /// Create a mock instance for testing
     #[cfg(test)]
-    pub fn new_mock(config: DistributedConfig) -> Self {
-        let communicator = Arc::new(MockCommunicator::new(config.node_count, config.rank));
+    pub fn new_mock(_config: DistributedConfig) -> Self {
+        let communicator = Arc::new(MockCommunicator::new(_config.node_count, _config.rank));
         Self {
-            config,
+            _config,
             communicator,
         }
     }
@@ -726,13 +726,13 @@ pub struct BasicCommunicator {
 
 impl BasicCommunicator {
     /// Create a new basic communicator
-    pub fn new(size: usize, rank: usize) -> Self {
-        Self { size, rank }
+    pub fn new(_size: usize, rank: usize) -> Self {
+        Self { _size, rank }
     }
 }
 
 impl Communicator for BasicCommunicator {
-    fn send(&self, data: &[Complex64], dest: usize, _tag: usize) -> FFTResult<()> {
+    fn send(&self, data: &[Complex64], dest: usize_tag: usize) -> FFTResult<()> {
         if dest >= self.size {
             return Err(FFTError::ValueError(format!(
                 "Invalid destination rank: {} (size: {})",
@@ -749,7 +749,7 @@ impl Communicator for BasicCommunicator {
         Ok(())
     }
 
-    fn recv(&self, src: usize, _tag: usize, size: usize) -> FFTResult<Vec<Complex64>> {
+    fn recv(&self, src: usize_tag: usize, size: usize) -> FFTResult<Vec<Complex64>> {
         if src >= self.size {
             return Err(FFTError::ValueError(format!(
                 "Invalid source rank: {} (size: {})",
@@ -764,7 +764,7 @@ impl Communicator for BasicCommunicator {
 
     fn all_to_all(&self, send_data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
         // In a real implementation, this would perform an all-to-all communication
-        // For demonstration, we'll just return the same data
+        // For demonstration, we'll just return the same _data
         Ok(send_data.to_vec())
     }
 
@@ -792,13 +792,13 @@ pub struct MockCommunicator {
 
 impl MockCommunicator {
     /// Create a new mock communicator
-    pub fn new(size: usize, rank: usize) -> Self {
-        Self { size, rank }
+    pub fn new(_size: usize, rank: usize) -> Self {
+        Self { _size, rank }
     }
 }
 
 impl Communicator for MockCommunicator {
-    fn send(&self, _data: &[Complex64], dest: usize, _tag: usize) -> FFTResult<()> {
+    fn send(&self_data: &[Complex64], dest: usize_tag: usize) -> FFTResult<()> {
         if dest >= self.size {
             return Err(FFTError::ValueError(format!(
                 "Invalid destination rank: {} (size: {})",
@@ -810,7 +810,7 @@ impl Communicator for MockCommunicator {
         Ok(())
     }
 
-    fn recv(&self, src: usize, _tag: usize, size: usize) -> FFTResult<Vec<Complex64>> {
+    fn recv(&self, src: usize_tag: usize, size: usize) -> FFTResult<Vec<Complex64>> {
         if src >= self.size {
             return Err(FFTError::ValueError(format!(
                 "Invalid source rank: {} (size: {})",

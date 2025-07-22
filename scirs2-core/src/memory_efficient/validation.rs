@@ -17,7 +17,7 @@ where
     S: ndarray::Data,
     D: Dimension,
 {
-    if array.is_empty() {
+    if _array.is_empty() {
         return Err(CoreError::ValidationError(
             ErrorContext::new("Array is empty".to_string())
                 .with_location(ErrorLocation::new(file!(), line!())),
@@ -38,12 +38,12 @@ where
 /// * `Ok(())` if the shapes match
 /// * `Err(CoreError::ValidationError)` if the shapes don't match
 #[allow(dead_code)]
-pub fn check_shapes_match<D1, D2>(shape1: D1, shape2: D2) -> CoreResult<()>
+pub fn check_shapes_match<D1, D2>(_shape1: D1, shape2: D2) -> CoreResult<()>
 where
     D1: AsRef<[usize]>,
     D2: AsRef<[usize]>,
 {
-    let s1 = shape1.as_ref();
+    let s1 = _shape1.as_ref();
     let s2 = shape2.as_ref();
 
     if s1 != s2 {
@@ -71,7 +71,7 @@ where
     S: ndarray::Data,
     D: Dimension,
 {
-    let shape = array.shape();
+    let shape = _array.shape();
 
     if shape.len() != 2 {
         return Err(CoreError::ValidationError(

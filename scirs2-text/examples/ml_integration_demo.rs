@@ -1,6 +1,6 @@
 //! Machine learning integration example
 
-use scirs2_text::{
+use scirs2__text::{
     BatchTextProcessor, FeatureExtractionMode, MLTextPreprocessor, TextDataset, TextMLPipeline,
 };
 

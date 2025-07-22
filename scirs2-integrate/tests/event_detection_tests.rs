@@ -5,8 +5,8 @@
 
 use approx::assert_relative_eq;
 use ndarray::{array, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ode::{
+use scirs2__integrate::error::IntegrateResult;
+use scirs2__integrate::ode::{
     solve_ivp_with_events, EventAction, EventDirection, EventSpec, ODEMethod, ODEOptions,
     ODEOptionsWithEvents,
 };
@@ -18,7 +18,7 @@ fn test_basic_event_detection() -> IntegrateResult<()> {
     // Simple ODE: dy/dt = 1.0 (meaning y = t + y0)
     // Event: y crosses y = 2.0
 
-    let f = |_t: f64, _y: ArrayView1<f64>| array![1.0];
+    let f = |_t: f64_y: ArrayView1<f64>| array![1.0];
 
     let event_funcs = vec![
         |_t: f64, y: ArrayView1<f64>| y[0] - 2.0, // Event when y = 2.0
@@ -150,7 +150,7 @@ fn test_precise_event_location() -> IntegrateResult<()> {
     // Cubic function that crosses zero with steep gradient
     // dy/dt = 3t² (solution: y = t³ + y0)
 
-    let f = |t: f64, _y: ArrayView1<f64>| array![3.0 * t * t];
+    let f = |t: f64_y: ArrayView1<f64>| array![3.0 * t * t];
 
     let event_funcs = vec![
         |_t: f64, y: ArrayView1<f64>| y[0], // Event when y = 0

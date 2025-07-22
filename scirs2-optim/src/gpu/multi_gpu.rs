@@ -222,7 +222,7 @@ impl StrategyPerformanceMetrics {
     }
 
     fn calculate_score(&self, tensor_size: usize) -> f64 {
-        // Higher score for better efficiency, adjusted for tensor size
+        // Higher score for better efficiency, adjusted for tensor _size
         let size_factor = if tensor_size > 1000000 { 2.0 } else { 1.0 }; // Favor strategies for large tensors
         self.efficiency_score * size_factor
     }
@@ -354,8 +354,7 @@ impl<A: Float> MultiGpuSync<A> {
             perf_monitor,
             adaptive_selector,
             async_handles,
-            step_counter: 0,
-            _phantom: PhantomData,
+            step_counter: 0, _phantom: PhantomData,
         })
     }
 
@@ -608,7 +607,7 @@ impl<A: Float> MultiGpuSync<A> {
                 start_time: std::time::Instant::now(),
                 expected_completion: std::time::Duration::from_millis(10), // Estimate
                 strategy: SyncStrategy::PipelineParallel,
-                data_size: gradients.len() * std::mem::size_of::<A>(),
+                data_size: gradients.len() * std::mem::size, _of::<A>(),
                 status: AsyncCommStatus::InProgress,
             };
 
@@ -853,17 +852,17 @@ pub struct MultiGpuSetup {
 
 impl MultiGpuSetup {
     /// Initialize multi-GPU setup
-    pub fn new(num_gpus: usize, max_param_size: usize) -> Result<Self, GpuOptimError> {
+    pub fn new(_num_gpus: usize, max_param_size: usize) -> Result<Self, GpuOptimError> {
         let mut contexts = Vec::new();
         let mut sync_managers = Vec::new();
 
-        for rank in 0..num_gpus {
+        for rank in 0.._num_gpus {
             // Create GPU context for each device
             let context = Arc::new(GpuContext::new(scirs2_core::gpu::GpuBackend::Cuda)?);
 
             // Create sync manager
             let config = MultiGpuConfig {
-                num_gpus,
+                _num_gpus,
                 rank,
                 ..Default::default()
             };

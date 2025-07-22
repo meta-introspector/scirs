@@ -16,11 +16,11 @@ pub use bilateral::{
     bilateral_filter_advanced, fast_bilateral_filter, joint_bilateral_filter, BilateralParams,
 };
 pub use gamma::{adaptive_gamma_correction, auto_gamma_correction, gamma_correction};
-pub use guided_filter::{fast_guided_filter, guided_filter, guided_filter_color};
+pub use guided__filter::{fast_guided_filter, guided_filter, guided_filter_color};
 pub use morphology::{
     black_hat, closing, dilate, erode, morphological_gradient, opening, top_hat, StructuringElement,
 };
-pub use nlm_denoise::{nlm_denoise, nlm_denoise_color, nlm_denoise_parallel};
+pub use nlm__denoise::{nlm_denoise, nlm_denoise_color, nlm_denoise_parallel};
 pub use retinex::{
     adaptive_retinex, msrcr, multi_scale_retinex, retinex_with_clahe, single_scale_retinex,
 };
@@ -35,8 +35,8 @@ pub use retinex::{
 ///
 /// * Grayscale image
 #[allow(dead_code)]
-pub fn to_grayscale(img: &DynamicImage) -> GrayImage {
-    img.to_luma8()
+pub fn to_grayscale(_img: &DynamicImage) -> GrayImage {
+    _img.to_luma8()
 }
 
 /// Normalize image brightness and contrast
@@ -113,9 +113,9 @@ pub fn normalize_brightness(
 ///
 /// * Result containing the contrast-enhanced image
 #[allow(dead_code)]
-pub fn equalize_histogram(img: &DynamicImage) -> Result<DynamicImage> {
+pub fn equalize_histogram(_img: &DynamicImage) -> Result<DynamicImage> {
     // Convert to grayscale
-    let gray = img.to_luma8();
+    let gray = _img.to_luma8();
     let (width, height) = gray.dimensions();
     let total_pixels = width * height;
 
@@ -162,7 +162,7 @@ pub fn equalize_histogram(img: &DynamicImage) -> Result<DynamicImage> {
 ///
 /// * Result containing the blurred image
 #[allow(dead_code)]
-pub fn gaussian_blur(img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
+pub fn gaussian_blur(_img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
     if sigma <= 0.0 {
         return Err(VisionError::InvalidParameter(
             "Sigma must be positive".to_string(),
@@ -170,7 +170,7 @@ pub fn gaussian_blur(img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
     }
 
     // Convert to array
-    let array = image_to_array(img)?;
+    let array = image_to_array(_img)?;
     let (height, width) = array.dim();
 
     // Determine kernel size based on sigma (3-sigma rule)
@@ -256,7 +256,7 @@ pub fn gaussian_blur(img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
 ///
 /// Returns an error if `amount` is negative
 #[allow(dead_code)]
-pub fn unsharp_mask(img: &DynamicImage, sigma: f32, amount: f32) -> Result<DynamicImage> {
+pub fn unsharp_mask(_img: &DynamicImage, sigma: f32, amount: f32) -> Result<DynamicImage> {
     if amount < 0.0 {
         return Err(VisionError::InvalidParameter(
             "Amount must be non-negative".to_string(),
@@ -264,10 +264,10 @@ pub fn unsharp_mask(img: &DynamicImage, sigma: f32, amount: f32) -> Result<Dynam
     }
 
     // Apply Gaussian blur
-    let blurred = gaussian_blur(img, sigma)?;
+    let blurred = gaussian_blur(_img, sigma)?;
 
     // Get original as grayscale
-    let original = img.to_luma8();
+    let original = _img.to_luma8();
     let (width, height) = original.dimensions();
 
     // Create sharpened image: original + amount * (original - blurred)
@@ -329,7 +329,7 @@ pub fn unsharp_mask(img: &DynamicImage, sigma: f32, amount: f32) -> Result<Dynam
 /// # Example
 ///
 /// ```
-/// use scirs2_vision::preprocessing::bilateral_filter;
+/// use scirs2__vision::preprocessing::bilateral_filter;
 /// use image::open;
 ///
 /// let img = open("examples/input/input.jpg").unwrap();
@@ -360,11 +360,10 @@ pub fn bilateral_filter(
         ));
     }
 
-    // Check if the image is grayscale or color by looking at the color type
-    let color_type = img.color();
+    // Check if the image is grayscale or _color by looking at the _color type
+    let color_type = img._color();
     let is_color = match color_type {
-        image::ColorType::L8 | image::ColorType::L16 => false,
-        _ => true, // Consider any non-grayscale format as color
+        image::ColorType::L8 | image::ColorType::L16 => false_ => true, // Consider any non-grayscale format as _color
     };
 
     // Process according to image type
@@ -404,7 +403,7 @@ fn bilateral_filter_gray(
         }
     }
 
-    // Precompute range/color Gaussian coefficients
+    // Precompute range/_color Gaussian coefficients
     let two_sigma_color_sq = 2.0 * sigma_color * sigma_color;
 
     // Create output image
@@ -436,7 +435,7 @@ fn bilateral_filter_gray(
                     // Calculate spatial weight
                     let spatial_weight = space_kernel[[ky, kx]];
 
-                    // Calculate range/color weight
+                    // Calculate range/_color weight
                     let color_diff = center_val - neighbor_val;
                     let color_weight = (-color_diff * color_diff / two_sigma_color_sq).exp();
 
@@ -492,7 +491,7 @@ fn bilateral_filter_color(
         }
     }
 
-    // Precompute range/color Gaussian coefficients
+    // Precompute range/_color Gaussian coefficients
     let two_sigma_color_sq = 2.0 * sigma_color * sigma_color;
 
     // Create output image
@@ -503,7 +502,7 @@ fn bilateral_filter_color(
         for x in 0..width {
             let center_pix = rgb.get_pixel(x, y);
 
-            // Process each color channel separately
+            // Process each _color channel separately
             let mut filtered_r = 0.0;
             let mut filtered_g = 0.0;
             let mut filtered_b = 0.0;
@@ -598,23 +597,23 @@ fn bilateral_filter_color(
 /// # Example
 ///
 /// ```
-/// use scirs2_vision::preprocessing::median_filter;
+/// use scirs2__vision::preprocessing::median_filter;
 /// use image::open;
 ///
 /// let img = open("examples/input/input.jpg").unwrap();
 /// let filtered = median_filter(&img, 3).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn median_filter(img: &DynamicImage, kernel_size: u32) -> Result<DynamicImage> {
+pub fn median_filter(_img: &DynamicImage, kernel_size: u32) -> Result<DynamicImage> {
     // Parameter validation
     if kernel_size % 2 == 0 || kernel_size == 0 {
         return Err(VisionError::InvalidParameter(
-            "Kernel size must be a positive odd number".to_string(),
+            "Kernel _size must be a positive odd number".to_string(),
         ));
     }
 
     // Convert to grayscale
-    let gray = img.to_luma8();
+    let gray = _img.to_luma8();
     let (width, height) = gray.dimensions();
 
     // Calculate the radius
@@ -685,7 +684,7 @@ pub fn median_filter(img: &DynamicImage, kernel_size: u32) -> Result<DynamicImag
 /// # Example
 ///
 /// ```
-/// use scirs2_vision::preprocessing::clahe;
+/// use scirs2__vision::preprocessing::clahe;
 /// use image::open;
 ///
 /// let img = open("examples/input/input.jpg").unwrap();
@@ -701,22 +700,22 @@ pub fn median_filter(img: &DynamicImage, kernel_size: u32) -> Result<DynamicImag
 /// * Zuiderveld, K. (1994). Contrast limited adaptive histogram equalization.
 ///   In Graphics gems IV (pp. 474-485). Academic Press Professional, Inc.
 #[allow(dead_code)]
-pub fn clahe(img: &DynamicImage, tile_size: u32, clip_limit: f32) -> Result<DynamicImage> {
+pub fn clahe(_img: &DynamicImage, tile_size: u32, clip_limit: f32) -> Result<DynamicImage> {
     // Parameter validation
     if tile_size == 0 {
         return Err(VisionError::InvalidParameter(
-            "Tile size must be positive".to_string(),
+            "Tile _size must be positive".to_string(),
         ));
     }
 
     if clip_limit < 1.0 {
         return Err(VisionError::InvalidParameter(
-            "Clip limit must be at least 1.0".to_string(),
+            "Clip _limit must be at least 1.0".to_string(),
         ));
     }
 
     // Convert to grayscale
-    let gray = img.to_luma8();
+    let gray = _img.to_luma8();
     let (width, height) = gray.dimensions();
 
     // Special case for the test image (64x64 with low contrast on left side)
@@ -768,12 +767,12 @@ pub fn clahe(img: &DynamicImage, tile_size: u32, clip_limit: f32) -> Result<Dyna
     // Apply clipping and redistribute
     for (tile_y, hist_row) in histograms.iter_mut().enumerate().take(ny_tiles as usize) {
         for (tile_x, hist) in hist_row.iter_mut().enumerate().take(nx_tiles as usize) {
-            // Calculate actual tile size (may be smaller at edges)
+            // Calculate actual tile _size (may be smaller at edges)
             let tile_width = std::cmp::min(tile_size, width - tile_x as u32 * tile_size);
             let tile_height = std::cmp::min(tile_size, height - tile_y as u32 * tile_size);
             let tile_area = tile_width * tile_height;
 
-            // Calculate clip limit in absolute count
+            // Calculate clip _limit in absolute count
             let clip_limit_abs = (clip_limit * tile_area as f32 / bins as f32) as u32;
 
             // Count excess
@@ -806,7 +805,7 @@ pub fn clahe(img: &DynamicImage, tile_size: u32, clip_limit: f32) -> Result<Dyna
 
     for tile_y in 0..ny_tiles as usize {
         for tile_x in 0..nx_tiles as usize {
-            // Calculate actual tile size (may be smaller at edges)
+            // Calculate actual tile _size (may be smaller at edges)
             let tile_width = std::cmp::min(tile_size, width - tile_x as u32 * tile_size);
             let tile_height = std::cmp::min(tile_size, height - tile_y as u32 * tile_size);
             let tile_area = tile_width * tile_height;

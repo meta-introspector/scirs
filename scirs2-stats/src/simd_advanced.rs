@@ -10,7 +10,7 @@
 //! - Vector instruction pipelining
 
 use crate::error::{StatsError, StatsResult};
-use crate::simd_enhanced_v6::AdvancedSimdOps;
+use crate::simd_enhanced__v6::AdvancedSimdOps;
 use ndarray::ArrayView1;
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
@@ -100,8 +100,7 @@ pub enum MemoryPattern {
 pub struct AdvancedSimdProcessor<F> {
     config: AdvancedSimdConfig,
     vector_strategy: VectorStrategy,
-    memory_pattern: MemoryPattern,
-    _phantom: PhantomData<F>,
+    memory_pattern: MemoryPattern, _phantom: PhantomData<F>,
 }
 
 /// Advanced statistics result with performance metrics
@@ -154,33 +153,31 @@ where
         Self {
             config,
             vector_strategy,
-            memory_pattern,
-            _phantom: PhantomData,
+            memory_pattern_phantom: PhantomData,
         }
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: AdvancedSimdConfig) -> Self {
-        let vector_strategy = Self::select_optimal_vector_strategy(&config);
-        let memory_pattern = Self::select_optimal_memory_pattern(&config);
+    pub fn with_config(_config: AdvancedSimdConfig) -> Self {
+        let vector_strategy = Self::select_optimal_vector_strategy(&_config);
+        let memory_pattern = Self::select_optimal_memory_pattern(&_config);
 
         Self {
-            config,
+            _config,
             vector_strategy,
-            memory_pattern,
-            _phantom: PhantomData,
+            memory_pattern_phantom: PhantomData,
         }
     }
 
     /// Select optimal vector strategy based on platform capabilities
-    fn select_optimal_vector_strategy(config: &AdvancedSimdConfig) -> VectorStrategy {
-        if config.platform.avx512_available && config.enable_pipelining {
+    fn select_optimal_vector_strategy(_config: &AdvancedSimdConfig) -> VectorStrategy {
+        if _config.platform.avx512_available && _config.enable_pipelining {
             VectorStrategy::MultiVector { num_registers: 4 }
-        } else if config.platform.avx2_available {
+        } else if _config.platform.avx2_available {
             VectorStrategy::UnrolledVector { unroll_factor: 4 }
-        } else if config.enable_cache_blocking {
+        } else if _config.enable_cache_blocking {
             VectorStrategy::CacheBlockedVector {
-                block_size: config.l1_cache_size / 4,
+                block_size: _config.l1_cache_size / 4,
             }
         } else {
             VectorStrategy::SingleVector
@@ -188,16 +185,16 @@ where
     }
 
     /// Select optimal memory access pattern
-    fn select_optimal_memory_pattern(config: &AdvancedSimdConfig) -> MemoryPattern {
-        if config.enable_cache_blocking {
+    fn select_optimal_memory_pattern(_config: &AdvancedSimdConfig) -> MemoryPattern {
+        if _config.enable_cache_blocking {
             MemoryPattern::Blocked {
-                block_size: config.l1_cache_size / std::mem::size_of::<f64>(),
+                block_size: _config.l1_cache_size / std::mem::size, _of::<f64>(),
             }
-        } else if config.enable_prefetch {
+        } else if _config.enable_prefetch {
             MemoryPattern::SequentialPrefetch
         } else {
             MemoryPattern::Tiled {
-                tile_size: config.cache_line_size / std::mem::size_of::<f64>(),
+                tile_size: _config.cache_line_size / std::mem::size, _of::<f64>(),
             }
         }
     }
@@ -258,7 +255,7 @@ where
         let mut vector_ops_count = 0;
         let mut prefetch_hits = 0;
 
-        // Process chunks with multiple vector registers
+        // Process chunks with multiple vector _registers
         for chunk_idx in 0..n_chunks {
             let base_offset = chunk_idx * chunk_size;
 
@@ -834,21 +831,21 @@ struct BlockResult<F> {
 
 impl CacheAwareVectorProcessor {
     /// Create new cache-aware processor
-    pub fn new(config: &AdvancedSimdConfig) -> Self {
+    pub fn new(_config: &AdvancedSimdConfig) -> Self {
         Self {
-            l1_block_size: config.l1_cache_size / std::mem::size_of::<f64>(),
-            l2_block_size: config.l2_cache_size / std::mem::size_of::<f64>(),
-            vector_width: config.vector_width,
-            prefetch_distance: config.vector_width * 4, // Prefetch 4 vectors ahead
+            l1_block_size: _config.l1_cache_size / std::mem::size, _of::<f64>(),
+            l2_block_size: _config.l2_cache_size / std::mem::size, _of::<f64>(),
+            vector_width: _config.vector_width,
+            prefetch_distance: _config.vector_width * 4, // Prefetch 4 vectors ahead
         }
     }
 }
 
 /// Convenience functions for different precision types
 #[allow(dead_code)]
-pub fn advanced_mean_f64(data: &ArrayView1<f64>) -> StatsResult<AdvancedStatsResult<f64>> {
+pub fn advanced_mean_f64(_data: &ArrayView1<f64>) -> StatsResult<AdvancedStatsResult<f64>> {
     let processor = AdvancedSimdProcessor::<f64>::new();
-    processor.compute_advanced_statistics(data)
+    processor.compute_advanced_statistics(_data)
 }
 
 /// Computes advanced-high-performance statistics for single-precision floating-point data.
@@ -875,15 +872,15 @@ pub fn advanced_mean_f64(data: &ArrayView1<f64>) -> StatsResult<AdvancedStatsRes
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_stats::advanced_simd_advanced::advanced_mean_f32;
+/// use scirs2__stats::advanced_simd_advanced::advanced_mean_f32;
 ///
 /// let data = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
 /// let result = advanced_mean_f32(&data.view()).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn advanced_mean_f32(data: &ArrayView1<f32>) -> StatsResult<AdvancedStatsResult<f32>> {
+pub fn advanced_mean_f32(_data: &ArrayView1<f32>) -> StatsResult<AdvancedStatsResult<f32>> {
     let processor = AdvancedSimdProcessor::<f32>::new();
-    processor.compute_advanced_statistics(data)
+    processor.compute_advanced_statistics(_data)
 }
 
 #[cfg(test)]

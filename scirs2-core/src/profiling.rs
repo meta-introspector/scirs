@@ -33,13 +33,13 @@
 //! });
 //!
 //! // Time a code block with more control
-//! let timer = Timer::start("data_processing");
+//! let timer = Timer::start(data_processing);
 //! // Perform data processing
 //! // ...
 //! timer.stop();
 //!
 //! // Track memory allocations
-//! let tracker = MemoryTracker::start("large_array_operation");
+//! let tracker = MemoryTracker::start(large_array_operation);
 //! let large_array = vec![0; 1_000_000];
 //! // ...
 //! tracker.stop();
@@ -385,7 +385,7 @@ impl Profiler {
 
     /// Get the global profiler instance
     pub fn global() -> &'static Mutex<Profiler> {
-        static GLOBAL_PROFILER: Lazy<Mutex<Profiler>> = Lazy::new(|| Mutex::new(Profiler::new()));
+        static GLOBAL_PROFILER: once_cell::sync::Lazy<Mutex<Profiler>> = once_cell::sync::Lazy::new(|| Mutex::new(Profiler::new()));
         &GLOBAL_PROFILER
     }
 
@@ -822,11 +822,11 @@ pub mod advanced {
 
                 // Navigate to the correct node in the tree
                 let mut current_node = &mut self.root;
-                for (depth, name) in self.call_stack.iter().enumerate() {
+                for (_depth, name) in self.call_stack.iter().enumerate() {
                     current_node = current_node
                         .children
                         .entry(name.clone())
-                        .or_insert_with(|| FlameGraphNode::new(name.clone(), depth + 1));
+                        .or_insert_with(|| FlameGraphNode::new(name.clone(), _depth + 1));
                 }
 
                 // Add the sample
@@ -1284,7 +1284,7 @@ pub mod advanced {
 
             let max_memory = memory_hist.iter().max().copied().unwrap_or(0);
 
-            let total_network_in: u64 = network_hist.iter().map(|(bytes_in, _)| *bytes_in).sum();
+            let total_network_in: u64 = network_hist.iter().map(|(bytes_in_)| *bytes_in).sum();
             let total_network_out: u64 = network_hist.iter().map(|(_, bytes_out)| *bytes_out).sum();
 
             ResourceStats {
@@ -1894,11 +1894,11 @@ pub mod comprehensive {
     #[derive(Debug, Clone)]
     pub struct ComprehensiveConfig {
         /// System monitoring configuration
-        pub system_config: SystemMonitorConfig,
+        pub systemconfig: SystemMonitorConfig,
         /// Alert configuration
-        pub alert_config: AlertConfig,
+        pub alertconfig: AlertConfig,
         /// SVG flame graph configuration
-        pub svg_config: SvgFlameGraphConfig,
+        pub svgconfig: SvgFlameGraphConfig,
         /// Enable automatic bottleneck detection
         pub enable_bottleneck_detection: bool,
         /// Enable automatic alert notifications
@@ -1912,9 +1912,9 @@ pub mod comprehensive {
     impl Default for ComprehensiveConfig {
         fn default() -> Self {
             Self {
-                system_config: SystemMonitorConfig::default(),
-                alert_config: AlertConfig::default(),
-                svg_config: SvgFlameGraphConfig::default(),
+                systemconfig: SystemMonitorConfig::default(),
+                alertconfig: AlertConfig::default(),
+                svgconfig: SvgFlameGraphConfig::default(),
                 enable_bottleneck_detection: true,
                 enable_alerts: true,
                 enable_flame_graphs: true,
@@ -1943,7 +1943,7 @@ pub mod comprehensive {
             // Start application profiler
             self.app_profiler.lock().unwrap().start();
 
-            // Start system monitor
+            // Start system _monitor
             self.system_monitor.start()?;
 
             self.session_start = Instant::now();
@@ -2080,7 +2080,7 @@ pub mod comprehensive {
 
         /// Get recent alerts
         pub fn get_recent_alerts(&self, duration: Duration) -> Vec<SystemAlert> {
-            self.system_alerter.get_recent_alerts(duration)
+            self.system_alerter.get_recent_alerts(std::time::Duration::from_secs(1))
         }
     }
 
@@ -2189,7 +2189,7 @@ pub mod comprehensive {
                 )
                 .unwrap();
                 for bottleneck in &self.bottleneck_reports {
-                    writeln!(report, "Operation: {op}", op = bottleneck.operation).unwrap();
+                    writeln!(report, "Operation: {}", bottleneck.operation).unwrap();
                     writeln!(report, "Type: {:?}", bottleneck.bottleneck_type).unwrap();
                     writeln!(report, "Severity: {:.2}", bottleneck.severity).unwrap();
                     writeln!(report, "Description: {}", bottleneck.description).unwrap();

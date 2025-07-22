@@ -9,7 +9,7 @@ use criterion::{
 };
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_spatial::{
+use scirs2__spatial::{
     distance::{euclidean, pdist},
     simd_distance::{
         parallel_cdist, parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch,
@@ -34,23 +34,21 @@ const BENCHMARK_SEED: u64 = 12345;
 
 /// Generate reproducible random points for benchmarking
 #[allow(dead_code)]
-fn generate_points(n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
+fn generate_points(_n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
-    Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
+    Array2::from_shape_fn((_n_points, dimensions), |_| rng.gen_range(-10.0..10.0))
 }
 
 /// Generate two sets of random points for cross-distance benchmarks
 #[allow(dead_code)]
 fn generate_point_pairs(
-    n1: usize,
-    n2: usize,
+    n1: usize..n2: usize,
     dimensions: usize,
-    seed: u64,
-) -> (Array2<f64>, Array2<f64>) {
+    seed: u64,) -> (Array2<f64>, Array2<f64>) {
     let mut rng = StdRng::seed_from_u64(seed);
-    let points1 = Array2::from_shape_fn((n1, dimensions), |_| rng.random_range(-10.0..10.0));
-    let points2 = Array2::from_shape_fn((n2, dimensions), |_| rng.random_range(-10.0..10.0));
-    (points1, points2)
+    let points1 = Array2::from_shape_fn((n1, dimensions), |_| rng.gen_range(-10.0..10.0));
+    let points2 = Array2::from_shape_fn((n2..dimensions), |_| rng.gen_range(-10.0..10.0));
+    (points1..points2)
 }
 
 /// Benchmark SIMD vs scalar distance calculations for different data sizes
@@ -71,7 +69,7 @@ fn bench_simd_vs_scalar_distance(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("scalar_euclidean", format!("{size}x{dim}")),
                 &(size, dim),
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         for (row1, row2) in points1.outer_iter().zip(points2.outer_iter()) {
                             black_box(euclidean(
@@ -87,7 +85,7 @@ fn bench_simd_vs_scalar_distance(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("simd_euclidean_batch", format!("{size}x{dim}")),
                 &(size, dim),
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         black_box(
                             simd_euclidean_distance_batch(&points1.view(), &points2.view())
@@ -101,7 +99,7 @@ fn bench_simd_vs_scalar_distance(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("simd_euclidean_individual", format!("{size}x{dim}")),
                 &(size, dim),
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         for (row1, row2) in points1.outer_iter().zip(points2.outer_iter()) {
                             black_box(
@@ -134,12 +132,12 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
         group.throughput(Throughput::Elements((size * (size - 1) / 2) as u64));
 
         // Sequential pdist
-        group.bench_with_input(BenchmarkId::new("sequential_pdist", size), &size, |b, _| {
+        group.bench_with_input(BenchmarkId::new("sequential_pdist", size), &size, |b_| {
             b.iter(|| black_box(pdist(&points, euclidean)))
         });
 
         // Parallel pdist
-        group.bench_with_input(BenchmarkId::new("parallel_pdist", size), &size, |b, _| {
+        group.bench_with_input(BenchmarkId::new("parallel_pdist", size), &size, |b_| {
             b.iter(|| black_box(parallel_pdist(&points.view(), "euclidean").unwrap()))
         });
     }
@@ -153,7 +151,7 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("kdtree_construction", size),
             &size,
-            |b, _| b.iter(|| black_box(KDTree::new(&points).unwrap())),
+            |b_| b.iter(|| black_box(KDTree::new(&points).unwrap())),
         );
     }
 
@@ -178,7 +176,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("memory_efficient_pdist", format!("{data_size_mb:.1}MB")),
             &size,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     // Only compute a subset to avoid memory explosion
                     let subset_size = (size / 10).max(100);
@@ -192,7 +190,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("chunked_processing", format!("{data_size_mb:.1}MB")),
             &size,
-            |b, _| {
+            |b_| {
                 b.iter(|| {
                     let chunk_size = 1000;
                     let mut total_distance = 0.0;
@@ -241,8 +239,7 @@ fn bench_distance_metrics_comparison(c: &mut Criterion) {
             metric,
             |b, metric| match metric {
                 "euclidean" => b.iter(|| black_box(simd_euclidean_distance(&p1, &p2).unwrap())),
-                "manhattan" => b.iter(|| black_box(simd_manhattan_distance(&p1, &p2).unwrap())),
-                _ => unreachable!(),
+                "manhattan" => b.iter(|| black_box(simd_manhattan_distance(&p1, &p2).unwrap()), _ => unreachable!(),
             },
         );
     }
@@ -290,12 +287,12 @@ fn bench_cross_architecture_performance(c: &mut Criterion) {
         group.throughput(Throughput::Elements(dim as u64));
 
         // Benchmark SIMD implementation
-        group.bench_with_input(BenchmarkId::new("simd_euclidean", dim), &dim, |b, _| {
+        group.bench_with_input(BenchmarkId::new("simd_euclidean", dim), &dim, |b_| {
             b.iter(|| black_box(simd_euclidean_distance(&p1, &p2).unwrap()))
         });
 
         // Benchmark scalar fallback
-        group.bench_with_input(BenchmarkId::new("scalar_euclidean", dim), &dim, |b, _| {
+        group.bench_with_input(BenchmarkId::new("scalar_euclidean", dim), &dim, |b_| {
             b.iter(|| black_box(euclidean(&p1, &p2)))
         });
     }
@@ -317,14 +314,14 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("kdtree_construction", size),
             &size,
-            |b, _| b.iter(|| black_box(KDTree::new(&points).unwrap())),
+            |b_| b.iter(|| black_box(KDTree::new(&points).unwrap())),
         );
 
         // BallTree construction
         group.bench_with_input(
             BenchmarkId::new("balltree_construction", size),
             &size,
-            |b, _| {
+            |b_| {
                 b.iter(|| black_box(BallTree::with_euclidean_distance(&points.view(), 10).unwrap()))
             },
         );
@@ -337,7 +334,7 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("kdtree_query", format!("{size}pts_k{k}")),
                 &(size, k),
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         for query in query_points.outer_iter() {
                             black_box(kdtree.query(query.as_slice().unwrap(), k).unwrap());
@@ -349,7 +346,7 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("balltree_query", format!("{size}pts_k{k}")),
                 &(size, k),
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         for query in query_points.outer_iter() {
                             black_box(balltree.query(query.as_slice().unwrap(), k, true).unwrap());
@@ -422,7 +419,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(expected_operations as u64));
 
-        group.bench_with_input(BenchmarkId::new("pdist_scaling", size), &size, |b, _| {
+        group.bench_with_input(BenchmarkId::new("pdist_scaling", size), &size, |b_| {
             b.iter(|| {
                 // Limit computation to avoid excessive runtime
                 let subset_size = if size > 2000 { 1000 } else { size };
@@ -445,7 +442,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("cdist_scaling", format!("{n}x{m}")),
                 &(n, m),
-                |b, _| {
+                |b_| {
                     b.iter(|| {
                         black_box(
                             parallel_cdist(&points1.view(), &points2.view(), "euclidean").unwrap(),

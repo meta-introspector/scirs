@@ -129,22 +129,22 @@ pub use reduction::{
 };
 pub use scaling::{MaxAbsScaler, QuantileTransformer};
 pub use selection::{MutualInfoSelector, RecursiveFeatureElimination, VarianceThreshold};
-pub use time_series::{FourierFeatures, LagFeatures, TimeSeriesFeatures, WaveletFeatures};
+pub use time__series::{FourierFeatures, LagFeatures, TimeSeriesFeatures, WaveletFeatures};
 
 #[cfg(feature = "simd")]
-pub use normalize_simd::{
+pub use normalize__simd::{
     simd_l2_normalize_1d, simd_maxabs_normalize_1d, simd_minmax_normalize_1d,
     simd_normalize_adaptive, simd_normalize_array, simd_normalize_batch, simd_zscore_normalize_1d,
     AdaptiveBlockSizer,
 };
 
 #[cfg(feature = "simd")]
-pub use features_simd::{
+pub use features__simd::{
     simd_binarize, simd_polynomial_features_optimized, simd_power_transform, SimdPolynomialFeatures,
 };
 
 #[cfg(feature = "simd")]
-pub use scaling_simd::{SimdMaxAbsScaler, SimdRobustScaler, SimdStandardScaler};
+pub use scaling__simd::{SimdMaxAbsScaler, SimdRobustScaler, SimdStandardScaler};
 
 pub use graph::{
     adjacency_to_edge_list, edge_list_to_adjacency, ActivationType, DeepWalk, GraphAutoencoder,
@@ -154,12 +154,12 @@ pub use image::{
     resize_images, rgb_to_grayscale, BlockNorm, HOGDescriptor, ImageNormMethod, ImageNormalizer,
     PatchExtractor,
 };
-pub use optimization_config::{
+pub use optimization__config::{
     AdaptiveParameterTuner, AdvancedConfigOptimizer, AutoTuner, ConfigurationPredictor,
     DataCharacteristics, OptimizationConfig, OptimizationReport, PerformanceMetric, SystemMonitor,
     SystemResources, TransformationRecommendation,
 };
-pub use out_of_core::{
+pub use out_of__core::{
     csv_chunks, ChunkedArrayReader, ChunkedArrayWriter, OutOfCoreConfig, OutOfCoreNormalizer,
     OutOfCoreTransformer,
 };
@@ -188,7 +188,7 @@ pub use distributed::{
 };
 
 // Automated feature engineering exports
-pub use auto_feature_engineering::{
+pub use auto_feature__engineering::{
     AdvancedMetaLearningSystem, AutoFeatureEngineer, DatasetMetaFeatures, EnhancedMetaFeatures,
     MultiObjectiveRecommendation, TransformationConfig, TransformationType,
 };
@@ -201,7 +201,7 @@ pub use quantum_optimization::{
 };
 
 // Neuromorphic computing exports
-pub use neuromorphic_adaptation::{
+pub use neuromorphic__adaptation::{
     AdvancedNeuromorphicMetrics, AdvancedNeuromorphicProcessor, NeuromorphicAdaptationNetwork,
     NeuromorphicMemorySystem, NeuromorphicTransformationSystem, SpikingNeuron, SystemState,
     TransformationEpisode,

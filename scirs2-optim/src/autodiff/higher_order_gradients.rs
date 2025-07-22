@@ -827,7 +827,7 @@ impl<T: Float + Default + Clone> HigherOrderGradients<T> {
         CacheStats {
             cache_size: self.derivative_cache.len(),
             max_cache_size: self.memory_config.max_cache_size,
-            memory_usage: self.derivative_cache.len() * std::mem::size_of::<Array1<T>>(),
+            memory_usage: self.derivative_cache.len() * std::mem::size, _of::<Array1<T>>(),
         }
     }
 }
@@ -871,10 +871,10 @@ pub mod utils {
     use super::*;
     
     /// Check if Hessian is positive definite
-    pub fn is_positive_definite<T: Float>(hessian: &HessianMatrix<T>) -> bool {
-        if let Some(ref eigenvalues) = hessian.eigenvalues {
+    pub fn is_positive_definite<T: Float>(_hessian: &HessianMatrix<T>) -> bool {
+        if let Some(ref eigenvalues) = _hessian.eigenvalues {
             eigenvalues.iter().all(|&val| val > T::zero())
-        } else if let Some(ref matrix) = hessian.full_matrix {
+        } else if let Some(ref matrix) = _hessian.full_matrix {
             // Simplified check using diagonal elements
             matrix.diag().iter().all(|&val| val > T::zero())
         } else {
@@ -883,13 +883,13 @@ pub mod utils {
     }
     
     /// Compute condition number from eigenvalues
-    pub fn condition_number<T: Float>(eigenvalues: &Array1<T>) -> Option<T> {
-        if eigenvalues.is_empty() {
+    pub fn condition_number<T: Float>(_eigenvalues: &Array1<T>) -> Option<T> {
+        if _eigenvalues.is_empty() {
             return None;
         }
         
-        let max_eigenval = eigenvalues.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
-        let min_eigenval = eigenvalues.iter().fold(T::infinity(), |a, &b| a.min(b));
+        let max_eigenval = _eigenvalues.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
+        let min_eigenval = _eigenvalues.iter().fold(T::infinity(), |a, &b| a.min(b));
         
         if min_eigenval > T::zero() {
             Some(max_eigenval / min_eigenval)
@@ -899,9 +899,9 @@ pub mod utils {
     }
     
     /// Estimate sparsity ratio of a matrix
-    pub fn sparsity_ratio<T: Float>(matrix: &Array2<T>, tolerance: T) -> f64 {
-        let total_elements = matrix.len();
-        let nonzero_elements = matrix.iter()
+    pub fn sparsity_ratio<T: Float>(_matrix: &Array2<T>, tolerance: T) -> f64 {
+        let total_elements = _matrix.len();
+        let nonzero_elements = _matrix.iter()
             .filter(|&&val| val.abs() > tolerance)
             .count();
         
@@ -909,14 +909,14 @@ pub mod utils {
     }
     
     /// Create identity Hessian (for initialization)
-    pub fn identity_hessian<T: Float>(size: usize) -> HessianMatrix<T> {
+    pub fn identity_hessian<T: Float>(_size: usize) -> HessianMatrix<T> {
         HessianMatrix {
-            full_matrix: Some(Array2::eye(size)),
+            full_matrix: Some(Array2::eye(_size)),
             diagonal: None,
             block_diagonal: None,
             kfac_factors: None,
-            eigenvalues: Some(Array1::ones(size)),
-            eigenvectors: Some(Array2::eye(size)),
+            eigenvalues: Some(Array1::ones(_size)),
+            eigenvectors: Some(Array2::eye(_size)),
             condition_number: Some(T::one()),
             sparsity_pattern: None,
         }

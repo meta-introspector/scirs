@@ -18,7 +18,7 @@
 //!
 //! ```
 //! use ndarray::Array2;
-//! use scirs2_metrics::ranking::label::{
+//! use scirs2__metrics::ranking::label::{
 //!     coverage_error_multiple, label_ranking_loss, label_ranking_average_precision_score
 //! };
 //!
@@ -44,7 +44,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2_metrics::ranking::{mean_reciprocal_rank, ndcg_score,
+//! use scirs2__metrics::ranking::{mean_reciprocal_rank, ndcg_score,
 //!     mean_average_precision, precision_at_k, recall_at_k};
 //!
 //! // Example: search engine results where each array is a different query
@@ -102,7 +102,7 @@ pub mod label;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::ranking::mean_reciprocal_rank;
+/// use scirs2__metrics::ranking::mean_reciprocal_rank;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)
@@ -152,21 +152,21 @@ where
     for (true_relevance, scores) in y_true.iter().zip(y_score.iter()) {
         if true_relevance.shape() != scores.shape() {
             return Err(MetricsError::InvalidInput(format!(
-                "Relevance and score arrays have different shapes: {:?} vs {:?}",
+                "Relevance and _score arrays have different shapes: {:?} vs {:?}",
                 true_relevance.shape(),
                 scores.shape()
             )));
         }
 
-        // Create pairs of (score, relevance) for sorting
-        let mut score_relevance: Vec<_> = scores
+        // Create pairs of (_score, relevance) for sorting
+        let mut _score_relevance: Vec<_> = scores
             .iter()
             .zip(true_relevance.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
-        // Sort by score in descending order
-        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        // Sort by _score in descending order
+        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Find the first relevant item and calculate reciprocal rank
         let zero = T::zero();
@@ -174,7 +174,7 @@ where
         for (rank, (_, relevance)) in score_relevance.iter().enumerate() {
             if *relevance > zero {
                 reciprocal_ranks.push(1.0 / (rank as f64 + 1.0));
-                found_relevant = true;
+                found_relevant = _true;
                 break;
             }
         }
@@ -192,18 +192,18 @@ where
 
 /// Helper function to calculate Discounted Cumulative Gain (DCG) for a single query
 #[allow(dead_code)]
-fn dcg<T>(relevance_scores: &[T], k: Option<usize>) -> f64
+fn dcg<T>(_relevance_scores: &[T], k: Option<usize>) -> f64
 where
     T: Real + Clone,
 {
     let limit = k
-        .unwrap_or(relevance_scores.len())
-        .min(relevance_scores.len());
+        .unwrap_or(_relevance_scores.len())
+        .min(_relevance_scores.len());
 
     // DCG formula: sum(rel_i / log2(i+1)) for i=1..k
     (0..limit)
         .map(|i| {
-            let rel = relevance_scores[i].to_f64().unwrap_or(0.0);
+            let rel = _relevance_scores[i].to_f64().unwrap_or(0.0);
             // If relevance is binary (0 or 1), we use the standard formula
             // For graded relevance, we can use the alternative formula: (2^rel - 1) / log2(i+2)
             rel / (((i + 2) as f64).log2())
@@ -231,7 +231,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::ranking::ndcg_score;
+/// use scirs2__metrics::ranking::ndcg_score;
 ///
 /// let y_true = vec![
 ///     array![0.0, 1.0, 0.0, 0.0, 0.0],  // First query: second result is relevant
@@ -276,7 +276,7 @@ where
     for (true_relevance, scores) in y_true.iter().zip(y_score.iter()) {
         if true_relevance.shape() != scores.shape() {
             return Err(MetricsError::InvalidInput(format!(
-                "Relevance and score arrays have different shapes: {:?} vs {:?}",
+                "Relevance and _score arrays have different shapes: {:?} vs {:?}",
                 true_relevance.shape(),
                 scores.shape()
             )));
@@ -286,17 +286,17 @@ where
         let relevance_vec: Vec<_> = true_relevance.iter().cloned().collect();
         let scores_vec: Vec<_> = scores.iter().cloned().collect();
 
-        // Create pairs of (score, relevance) for sorting by score
-        let mut score_relevance: Vec<_> = scores_vec
+        // Create pairs of (_score, relevance) for sorting by _score
+        let mut _score_relevance: Vec<_> = scores_vec
             .iter()
             .zip(relevance_vec.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
-        // Sort by score in descending order
-        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        // Sort by _score in descending order
+        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
-        // Extract relevance values in score-sorted order
+        // Extract relevance values in _score-sorted order
         let sorted_relevance: Vec<_> = score_relevance.iter().map(|(_, r)| r.clone()).collect();
 
         // Sort relevance values for ideal DCG calculation (descending order)
@@ -325,16 +325,16 @@ where
 
 /// Helper function to calculate Average Precision for a single query
 #[allow(dead_code)]
-fn average_precision<T>(y_true_sorted: &[T], k: Option<usize>) -> f64
+fn average_precision<T>(_y_true_sorted: &[T], k: Option<usize>) -> f64
 where
     T: Real + Clone,
 {
     let zero = T::zero();
-    let k = k.unwrap_or(y_true_sorted.len());
-    let limit = k.min(y_true_sorted.len());
+    let k = k.unwrap_or(_y_true_sorted.len());
+    let limit = k.min(_y_true_sorted.len());
 
     // Calculate the total number of relevant items
-    let total_relevant = y_true_sorted.iter().filter(|&&r| r > zero).count();
+    let total_relevant = _y_true_sorted.iter().filter(|&&r| r > zero).count();
 
     if total_relevant == 0 {
         return 0.0;
@@ -376,7 +376,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::ranking::mean_average_precision;
+/// use scirs2__metrics::ranking::mean_average_precision;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)
@@ -423,23 +423,23 @@ where
     for (true_relevance, scores) in y_true.iter().zip(y_score.iter()) {
         if true_relevance.shape() != scores.shape() {
             return Err(MetricsError::InvalidInput(format!(
-                "Relevance and score arrays have different shapes: {:?} vs {:?}",
+                "Relevance and _score arrays have different shapes: {:?} vs {:?}",
                 true_relevance.shape(),
                 scores.shape()
             )));
         }
 
-        // Create pairs of (score, relevance) for sorting
-        let mut score_relevance: Vec<_> = scores
+        // Create pairs of (_score, relevance) for sorting
+        let mut _score_relevance: Vec<_> = scores
             .iter()
             .zip(true_relevance.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
-        // Sort by score in descending order
-        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        // Sort by _score in descending order
+        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
-        // Extract relevance values in score-sorted order
+        // Extract relevance values in _score-sorted order
         let sorted_relevance: Vec<_> = score_relevance.iter().map(|(_, r)| r.clone()).collect();
 
         // Calculate average precision for this query
@@ -471,7 +471,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::ranking::precision_at_k;
+/// use scirs2__metrics::ranking::precision_at_k;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)
@@ -525,21 +525,21 @@ where
     for (true_relevance, scores) in y_true.iter().zip(y_score.iter()) {
         if true_relevance.shape() != scores.shape() {
             return Err(MetricsError::InvalidInput(format!(
-                "Relevance and score arrays have different shapes: {:?} vs {:?}",
+                "Relevance and _score arrays have different shapes: {:?} vs {:?}",
                 true_relevance.shape(),
                 scores.shape()
             )));
         }
 
-        // Create pairs of (score, relevance) for sorting
-        let mut score_relevance: Vec<_> = scores
+        // Create pairs of (_score, relevance) for sorting
+        let mut _score_relevance: Vec<_> = scores
             .iter()
             .zip(true_relevance.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
-        // Sort by score in descending order
-        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        // Sort by _score in descending order
+        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Get top k results (or all if k > length)
         let limit = k.min(score_relevance.len());
@@ -578,7 +578,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::ranking::recall_at_k;
+/// use scirs2__metrics::ranking::recall_at_k;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)
@@ -632,7 +632,7 @@ where
     for (true_relevance, scores) in y_true.iter().zip(y_score.iter()) {
         if true_relevance.shape() != scores.shape() {
             return Err(MetricsError::InvalidInput(format!(
-                "Relevance and score arrays have different shapes: {:?} vs {:?}",
+                "Relevance and _score arrays have different shapes: {:?} vs {:?}",
                 true_relevance.shape(),
                 scores.shape()
             )));
@@ -647,15 +647,15 @@ where
             continue;
         }
 
-        // Create pairs of (score, relevance) for sorting
-        let mut score_relevance: Vec<_> = scores
+        // Create pairs of (_score, relevance) for sorting
+        let mut _score_relevance: Vec<_> = scores
             .iter()
             .zip(true_relevance.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
-        // Sort by score in descending order
-        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        // Sort by _score in descending order
+        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Get top k results (or all if k > length)
         let limit = k.min(score_relevance.len());
@@ -695,7 +695,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::ranking::kendalls_tau;
+/// use scirs2__metrics::ranking::kendalls_tau;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
@@ -785,7 +785,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::ranking::spearmans_rho;
+/// use scirs2__metrics::ranking::spearmans_rho;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
@@ -852,7 +852,7 @@ where
         .collect();
 
     // Sort by value
-    value_index.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    value_index.sort_by(|(a_), (b_)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     // Assign ranks (handling ties)
     let mut ranks = vec![0.0; n];
@@ -906,7 +906,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::ranking::map_at_k;
+/// use scirs2__metrics::ranking::map_at_k;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)
@@ -964,7 +964,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::ranking::click_through_rate;
+/// use scirs2__metrics::ranking::click_through_rate;
 ///
 /// // Example: search engine results where each array is a different query
 /// // Values indicate whether a result is relevant (1.0) or not (0.0)
@@ -1021,21 +1021,21 @@ where
     for (true_relevance, scores) in y_true.iter().zip(y_score.iter()) {
         if true_relevance.shape() != scores.shape() {
             return Err(MetricsError::InvalidInput(format!(
-                "Relevance and score arrays have different shapes: {:?} vs {:?}",
+                "Relevance and _score arrays have different shapes: {:?} vs {:?}",
                 true_relevance.shape(),
                 scores.shape()
             )));
         }
 
-        // Create pairs of (score, relevance) for sorting
-        let mut score_relevance: Vec<_> = scores
+        // Create pairs of (_score, relevance) for sorting
+        let mut _score_relevance: Vec<_> = scores
             .iter()
             .zip(true_relevance.iter())
             .map(|(s, r)| (s.clone(), r.clone()))
             .collect();
 
-        // Sort by score in descending order
-        score_relevance.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
+        // Sort by _score in descending order
+        score_relevance.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
         // Get top k results (or all if k > length)
         let limit = k.min(score_relevance.len());

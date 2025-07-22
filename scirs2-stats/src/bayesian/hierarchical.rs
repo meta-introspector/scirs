@@ -5,9 +5,10 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use rand_distr::{Distribution, Gamma, Normal};
+use rand__distr::{Distribution, Gamma, Normal};
 use scirs2_core::validation::*;
 use scirs2_core::Rng;
+use statrs::statistics::Statistics;
 
 /// Hierarchical linear model with random intercepts and slopes
 ///
@@ -58,7 +59,7 @@ impl HierarchicalLinearModel {
             fixed_effects,
             random_effects_cov,
             residual_variance: 1.0,
-            groups: Array1::zeros(0),
+            _groups: Array1::zeros(0),
             n_groups,
             n_level1_predictors,
             n_level2_predictors,
@@ -119,7 +120,7 @@ impl HierarchicalLinearModel {
         let mut random_effects = Array2::zeros((self.n_groups, n_random_effects));
 
         // MCMC iterations
-        for iter in 0..n_iter {
+        for _iter in 0..n_iter {
             // 1. Update random effects for each group
             self.update_random_effects(&y, &x_level1, &x_level2, &mut random_effects, rng)?;
 
@@ -133,8 +134,8 @@ impl HierarchicalLinearModel {
             self.update_random_effects_covariance(&random_effects, rng)?;
 
             // Store samples after burnin
-            if iter >= burnin {
-                let sample_idx = iter - burnin;
+            if _iter >= burnin {
+                let sample_idx = _iter - burnin;
 
                 // Store fixed effects
                 let mut fixed_flat = Array1::zeros(n_fixed);
@@ -190,7 +191,7 @@ impl HierarchicalLinearModel {
     }
 
     /// Update random effects for each group using Gibbs sampling
-    fn update_random_effects<R: scirs2_core::Rng + ?Sized>(
+    fn update_random_effects<R: scirs2_core: Rng + ?Sized>(
         &self,
         y: &ArrayView1<f64>,
         x_level1: &ArrayView2<f64>,
@@ -223,13 +224,13 @@ impl HierarchicalLinearModel {
                 x_group.row_mut(i).assign(&x_level1.row(obs_idx));
             }
 
-            // Compute posterior parameters for random effects
+            // Compute posterior parameters for random _effects
             let precision_prior = scirs2_linalg::inv(&self.random_effects_cov.view(), None)
                 .map_err(|e| {
                     StatsError::ComputationError(format!("Failed to invert covariance: {}", e))
                 })?;
 
-            // Design matrix for random effects (intercept + slopes if enabled)
+            // Design matrix for random _effects (intercept + slopes if enabled)
             let mut z_group = Array2::zeros((n_group_obs, n_random_effects));
             z_group.column_mut(0).fill(1.0); // Intercept
             if self.random_slopes && n_random_effects > 1 {
@@ -368,7 +369,7 @@ impl HierarchicalLinearModel {
     }
 
     /// Update random effects covariance matrix using inverse Wishart
-    fn update_random_effects_covariance<R: scirs2_core::Rng + ?Sized>(
+    fn update_random_effects_covariance<R: scirs2_core: Rng + ?Sized>(
         &mut self,
         random_effects: &Array2<f64>,
         rng: &mut R,
@@ -376,12 +377,12 @@ impl HierarchicalLinearModel {
         let n_random_effects = random_effects.ncols();
         let n_groups = random_effects.nrows();
 
-        // Compute sample covariance of random effects
+        // Compute sample covariance of random _effects
         let mut sum_outer_products = Array2::<f64>::zeros((n_random_effects, n_random_effects));
 
         for group in 0..n_groups {
-            let effects = random_effects.row(group);
-            let outer = outer_product(&effects.to_owned());
+            let _effects = random_effects.row(group);
+            let outer = outer_product(&_effects.to_owned());
             sum_outer_products = sum_outer_products + outer;
         }
 
@@ -505,7 +506,7 @@ impl HierarchicalModelResults {
         for param in 0..n_params {
             let samples = self.fixed_effects_samples.column(param);
             let mean = samples.mean().unwrap_or(0.0);
-            let std = samples.var(0.0).sqrt();
+            let std = samples.variance().sqrt();
 
             let mut sorted_samples = samples.to_vec();
             sorted_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -532,7 +533,7 @@ impl HierarchicalModelResults {
         for param in 0..n_params {
             let samples = self.tau_samples.column(param);
             let mean = samples.mean().unwrap_or(0.0);
-            let std = samples.var(0.0).sqrt();
+            let std = samples.variance().sqrt();
 
             let mut sorted_samples = samples.to_vec();
             sorted_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -571,16 +572,16 @@ pub struct HierarchicalANOVA {
 
 impl HierarchicalANOVA {
     /// Create new hierarchical ANOVA
-    pub fn new(n_groups: usize) -> Result<Self> {
-        check_positive(n_groups, "n_groups")?;
+    pub fn new(_n_groups: usize) -> Result<Self> {
+        check_positive(_n_groups, "_n_groups")?;
 
         Ok(Self {
-            group_means: Array1::zeros(n_groups),
+            group_means: Array1::zeros(_n_groups),
             overall_mean: 0.0,
             between_variance: 1.0,
             within_variance: 1.0,
-            groups: Array1::zeros(0),
-            n_groups,
+            _groups: Array1::zeros(0),
+            _n_groups,
         })
     }
 
@@ -616,7 +617,7 @@ impl HierarchicalANOVA {
         let mut group_counts = vec![0; self.n_groups];
         let mut group_sums = vec![0.0; self.n_groups];
 
-        for (&obs_group, &obs_y) in groups.iter().zip(y.iter()) {
+        for (&obs_group, &obs_y) in groups._iter().zip(y._iter()) {
             if obs_group >= self.n_groups {
                 return Err(StatsError::InvalidArgument(format!(
                     "Group {} exceeds n_groups {}",
@@ -628,7 +629,7 @@ impl HierarchicalANOVA {
         }
 
         // MCMC iterations
-        for iter in 0..n_iter {
+        for _iter in 0..n_iter {
             // 1. Update group means
             for group in 0..self.n_groups {
                 if group_counts[group] > 0 {
@@ -675,7 +676,7 @@ impl HierarchicalANOVA {
             // 3. Update between-group variance
             let sum_sq_deviations: f64 = self
                 .group_means
-                .iter()
+                ._iter()
                 .map(|&mean| (mean - self.overall_mean).powi(2))
                 .sum();
 
@@ -694,7 +695,7 @@ impl HierarchicalANOVA {
             let mut within_sum_sq = 0.0;
             let mut total_obs = 0;
 
-            for (&obs_group, &obs_y) in groups.iter().zip(y.iter()) {
+            for (&obs_group, &obs_y) in groups._iter().zip(y._iter()) {
                 let residual = obs_y - self.group_means[obs_group];
                 within_sum_sq += residual * residual;
                 total_obs += 1;
@@ -710,8 +711,8 @@ impl HierarchicalANOVA {
             self.within_variance = 1.0 / precision;
 
             // Store samples after burnin
-            if iter >= burnin {
-                let sample_idx = iter - burnin;
+            if _iter >= burnin {
+                let sample_idx = _iter - burnin;
                 group_means_samples
                     .row_mut(sample_idx)
                     .assign(&self.group_means);

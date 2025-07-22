@@ -293,7 +293,7 @@ pub fn get_activation_calibration_config(
     outlier_sensitive: bool,
 ) -> CalibrationConfig {
     let mut config = if outlier_sensitive {
-        // Outlier-sensitive activations benefit from MSE optimization
+        // Outlier-_sensitive activations benefit from MSE optimization
         CalibrationConfig {
             method: CalibrationMethod::MSEOptimization,
             num_bins: 1024,
@@ -311,7 +311,7 @@ pub fn get_activation_calibration_config(
     };
 
     // For activations like ReLU outputs, asymmetric is better
-    // For activations with both positive and negative values, symmetric may be better
+    // For activations with both positive and _negative values, symmetric may be better
     config.symmetric = !non_negative;
 
     config
@@ -1172,14 +1172,14 @@ where
 
 /// Find the minimum and maximum values in a matrix
 #[allow(dead_code)]
-pub fn find_min_max<F>(matrix: &ArrayView2<F>) -> (f32, f32)
+pub fn find_min_max<F>(_matrix: &ArrayView2<F>) -> (f32, f32)
 where
     F: num_traits::Float + num_traits::AsPrimitive<f32>,
 {
     let mut min_val = f32::MAX;
     let mut max_val = f32::MIN;
 
-    for &val in matrix.iter() {
+    for &val in _matrix.iter() {
         let val_f32 = val.as_();
         if val_f32.is_finite() {
             min_val = min_val.min(val_f32);
@@ -1203,14 +1203,14 @@ where
 
 /// Find the minimum and maximum values in a vector
 #[allow(dead_code)]
-pub fn find_min_max_vec<F>(vector: &ArrayView1<F>) -> (f32, f32)
+pub fn find_min_max_vec<F>(_vector: &ArrayView1<F>) -> (f32, f32)
 where
     F: num_traits::Float + num_traits::AsPrimitive<f32>,
 {
     let mut min_val = f32::MAX;
     let mut max_val = f32::MIN;
 
-    for &val in vector.iter() {
+    for &val in _vector.iter() {
         let val_f32 = val.as_();
         if val_f32.is_finite() {
             min_val = min_val.min(val_f32);
@@ -1252,8 +1252,8 @@ where
         return histogram;
     }
 
-    for &val in matrix.iter() {
-        let val_f32 = val.as_();
+    for &_val in matrix.iter() {
+        let val_f32 = _val.as_();
         if val_f32.is_finite() {
             let bin_idx = ((val_f32 - min_val) / bin_width).floor() as usize;
             let bin_idx = bin_idx.min(num_bins - 1); // Ensure we don't go out of bounds
@@ -1284,8 +1284,8 @@ where
         return histogram;
     }
 
-    for &val in vector.iter() {
-        let val_f32 = val.as_();
+    for &_val in vector.iter() {
+        let val_f32 = _val.as_();
         if val_f32.is_finite() {
             let bin_idx = ((val_f32 - min_val) / bin_width).floor() as usize;
             let bin_idx = bin_idx.min(num_bins - 1); // Ensure we don't go out of bounds
@@ -1407,8 +1407,7 @@ fn optimize_thresholds_kl_divergence(
 #[allow(dead_code)]
 fn calculate_kl_divergence_symmetric(
     distribution: &[f32],
-    min_val: f32,
-    _max_val: f32,
+    min_val: f32, _max_val: f32,
     bin_width: f32,
     abs_max: f32,
     quantization_step: f32,
@@ -1428,7 +1427,7 @@ fn calculate_kl_divergence_symmetric(
         } else if orig_val < -abs_max {
             -abs_max
         } else {
-            // Round to nearest quantization step
+            // Round to nearest quantization _step
             (orig_val / quantization_step).round() * quantization_step
         };
 
@@ -1456,8 +1455,7 @@ fn calculate_kl_divergence_symmetric(
 #[allow(dead_code)]
 fn calculate_kl_divergence_asymmetric(
     distribution: &[f32],
-    min_val: f32,
-    _max_val: f32,
+    min_val: f32, _max_val: f32,
     bin_width: f32,
     quant_min: f32,
     quant_max: f32,
@@ -1478,7 +1476,7 @@ fn calculate_kl_divergence_asymmetric(
         } else if orig_val < quant_min {
             quant_min
         } else {
-            // Round to nearest quantization step
+            // Round to nearest quantization _step
             let steps = ((orig_val - quant_min) / quantization_step).round();
             quant_min + steps * quantization_step
         };
@@ -1505,7 +1503,7 @@ fn calculate_kl_divergence_asymmetric(
 
 /// Optimize symmetric scale factor using MSE
 #[allow(dead_code)]
-fn optimize_symmetric_scale<F>(matrix: &ArrayView2<F>, bits: u8, base_scale: f32) -> f32
+fn optimize_symmetric_scale<F>(_matrix: &ArrayView2<F>, bits: u8, base_scale: f32) -> f32
 where
     F: num_traits::Float + Debug + num_traits::AsPrimitive<f32> + num_traits::FromPrimitive,
     f32: num_traits::AsPrimitive<F>,
@@ -1521,15 +1519,15 @@ where
     let mut best_scale = base_scale;
     let mut min_mse = f32::MAX;
 
-    // Test each scale factor
-    for &scale in &scales {
+    // Test each _scale factor
+    for &_scale in &scales {
         // Create temporary quantization parameters
-        let abs_max = matrix
+        let abs_max = _matrix
             .mapv(|x| x.as_().abs())
             .fold(0.0, |a: f32, &b| a.max(b));
         let params = QuantizationParams {
             bits,
-            scale,
+            scale: _scale,
             zero_point: 0,
             min_val: -abs_max,
             max_val: abs_max,
@@ -1544,21 +1542,21 @@ where
         };
 
         // Manually simulate quantization and dequantization for F type
-        let matrix_f32 = matrix.mapv(|x| x.as_());
-        let scale = params.scale;
+        let matrix_f32 = _matrix.mapv(|x| x.as_());
+        let _scale = params.scale;
         let dequantized = matrix_f32.mapv(|x| {
-            let quantized = (x / scale)
+            let quantized = (x / _scale)
                 .round()
                 .clamp(-(1 << (bits - 1)) as f32, ((1 << (bits - 1)) - 1) as f32);
-            quantized * scale
+            quantized * _scale
         });
 
         // Calculate MSE
-        let mse = (&matrix_f32 - &dequantized).mapv(|x| x * x).sum() / matrix.len() as f32;
+        let mse = (&matrix_f32 - &dequantized).mapv(|x| x * x).sum() / _matrix.len() as f32;
 
         if mse < min_mse {
             min_mse = mse;
-            best_scale = scale;
+            best_scale = _scale;
         }
     }
 
@@ -1567,7 +1565,7 @@ where
 
 /// Optimize symmetric scale factor for vectors using MSE
 #[allow(dead_code)]
-fn optimize_symmetric_scale_vec<F>(vector: &ArrayView1<F>, bits: u8, base_scale: f32) -> f32
+fn optimize_symmetric_scale_vec<F>(_vector: &ArrayView1<F>, bits: u8, base_scale: f32) -> f32
 where
     F: num_traits::Float + Debug + num_traits::AsPrimitive<f32> + num_traits::FromPrimitive,
     f32: num_traits::AsPrimitive<F>,
@@ -1583,15 +1581,15 @@ where
     let mut best_scale = base_scale;
     let mut min_mse = f32::MAX;
 
-    // Test each scale factor
-    for &scale in &scales {
+    // Test each _scale factor
+    for &_scale in &scales {
         // Create temporary QuantizationParams
-        let abs_max = vector
+        let abs_max = _vector
             .mapv(|x| x.as_().abs())
             .fold(0.0, |a: f32, &b| a.max(b));
         let params = QuantizationParams {
             bits,
-            scale,
+            scale: _scale,
             zero_point: 0,
             min_val: -abs_max,
             max_val: abs_max,
@@ -1606,21 +1604,21 @@ where
         };
 
         // Manually simulate quantization and dequantization for F type
-        let vector_f32 = vector.mapv(|x| x.as_());
-        let scale = params.scale;
+        let vector_f32 = _vector.mapv(|x| x.as_());
+        let _scale = params.scale;
         let dequantized = vector_f32.mapv(|x| {
-            let quantized = (x / scale)
+            let quantized = (x / _scale)
                 .round()
                 .clamp(-(1 << (bits - 1)) as f32, ((1 << (bits - 1)) - 1) as f32);
-            quantized * scale
+            quantized * _scale
         });
 
         // Calculate MSE
-        let mse = (&vector_f32 - &dequantized).mapv(|x| x * x).sum() / vector.len() as f32;
+        let mse = (&vector_f32 - &dequantized).mapv(|x| x * x).sum() / _vector.len() as f32;
 
         if mse < min_mse {
             min_mse = mse;
-            best_scale = scale;
+            best_scale = _scale;
         }
     }
 
@@ -1660,13 +1658,13 @@ where
     let mut best_zero_point = base_zero_point;
     let mut min_mse = f32::MAX;
 
-    // Test each combination of scale and zero point
-    for &scale in &scales {
+    // Test each combination of _scale and zero _point
+    for &_scale in &scales {
         for &zero_point in &zero_points {
             // Create temporary QuantizationParams
             let mut params = QuantizationParams {
                 bits,
-                scale,
+                scale: _scale,
                 zero_point,
                 min_val: 0.0, // Will be set by quantize_matrix
                 max_val: 0.0, // Will be set by quantize_matrix
@@ -1678,7 +1676,7 @@ where
 
             // Manually simulate affine quantization and dequantization for F type
             let matrix_f32 = matrix.mapv(|x| x.as_());
-            let scale = params.scale;
+            let _scale = params.scale;
             let zero_point = params.zero_point;
 
             // Find min/max values for the matrix
@@ -1694,10 +1692,10 @@ where
             params.max_val = max_val;
 
             let dequantized = matrix_f32.mapv(|x| {
-                let quantized = ((x / scale) + zero_point as f32)
+                let quantized = ((x / _scale) + zero_point as f32)
                     .round()
                     .clamp(0.0, ((1 << bits) - 1) as f32);
-                (quantized - zero_point as f32) * scale
+                (quantized - zero_point as f32) * _scale
             });
 
             // Calculate MSE
@@ -1705,7 +1703,7 @@ where
 
             if mse < min_mse {
                 min_mse = mse;
-                best_scale = scale;
+                best_scale = _scale;
                 best_zero_point = zero_point;
             }
         }
@@ -1747,13 +1745,13 @@ where
     let mut best_zero_point = base_zero_point;
     let mut min_mse = f32::MAX;
 
-    // Test each combination of scale and zero point
-    for &scale in &scales {
+    // Test each combination of _scale and zero _point
+    for &_scale in &scales {
         for &zero_point in &zero_points {
             // Create temporary QuantizationParams
             let mut params = QuantizationParams {
                 bits,
-                scale,
+                scale: _scale,
                 zero_point,
                 min_val: 0.0, // Will be set by quantize_vector
                 max_val: 0.0, // Will be set by quantize_vector
@@ -1765,7 +1763,7 @@ where
 
             // Manually simulate affine quantization and dequantization for F type
             let vector_f32 = vector.mapv(|x| x.as_());
-            let scale = params.scale;
+            let _scale = params.scale;
             let zero_point = params.zero_point;
 
             // Find min/max values for the vector
@@ -1781,10 +1779,10 @@ where
             params.max_val = max_val;
 
             let dequantized = vector_f32.mapv(|x| {
-                let quantized = ((x / scale) + zero_point as f32)
+                let quantized = ((x / _scale) + zero_point as f32)
                     .round()
                     .clamp(0.0, ((1 << bits) - 1) as f32);
-                (quantized - zero_point as f32) * scale
+                (quantized - zero_point as f32) * _scale
             });
 
             // Calculate MSE
@@ -1792,7 +1790,7 @@ where
 
             if mse < min_mse {
                 min_mse = mse;
-                best_scale = scale;
+                best_scale = _scale;
                 best_zero_point = zero_point;
             }
         }
@@ -1835,10 +1833,10 @@ pub fn create_params_from_range(
 
 /// Determine the appropriate data type based on bit width
 #[allow(dead_code)]
-pub fn determine_data_type(bits: u8) -> super::QuantizedDataType {
+pub fn determine_data_type(_bits: u8) -> super::QuantizedDataType {
     use super::QuantizedDataType;
 
-    match bits {
+    match _bits {
         4 => QuantizedDataType::Int4,     // Default to Int4 for 4-bit
         8 => QuantizedDataType::Int8,     // Default to Int8 for 8-bit
         16 => QuantizedDataType::Float16, // Default to Float16 for 16-bit
@@ -1966,7 +1964,7 @@ mod tests {
         let params = calibrate_matrix(&matrix.view(), 8, &config).unwrap();
 
         // Quantize and dequantize
-        let (quantized, _) = quantize_matrix(&matrix.view(), 8, params.method);
+        let quantized = quantize_matrix(&matrix.view(), 8, params.method);
         let dequantized = dequantize_matrix(&quantized, &params);
 
         // Check that dequantized values are close to original

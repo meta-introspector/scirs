@@ -195,7 +195,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Attention<F> {
             AttentionType::Multiplicative => {
                 // Expand decoder state for each encoder position
                 // Batched dot product
-                let mut scores = Array::<F, _>::zeros((batch_size, seq_len));
+                let mut scores = Array::<F>::zeros((batch_size, seq_len));
                 for b in 0..batch_size {
                     let decoder_slice = expanded_decoder.slice(ndarray::s![b, 0, ..]);
                     for s in 0..seq_len {
@@ -217,7 +217,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Attention<F> {
                         for i in 0..weight.len() {
                             dot_product = dot_product + weight[i] * encoder_slice[i];
         // Apply softmax to get attention weights
-        let mut attention_weights = Array::<F, _>::zeros(attention_scores.raw_dim());
+        let mut attention_weights = Array::<F>::zeros(attention_scores.raw_dim());
         // Manual softmax implementation
         for b in 0..batch_size {
             let mut row = attention_scores.slice(ndarray::s![b, ..]).to_owned();
@@ -256,7 +256,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Attention<F> {
         let output = self.output_projection.forward(&flattened_dyn)?;
         Ok((output, attention_weights))
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Attention<F> {
-    fn forward(&self, _input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
+    fn forward(&mut self,
+        _input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         Err(NeuralError::InvalidArchitecture("Attention layer requires separate decoder state and encoder outputs. Use the dedicated forward method.".to_string()))
     fn backward(
         _input: &Array<F, IxDyn>,
@@ -271,7 +272,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Attention<F> {
         // 2. Backpropagate through softmax
         // 3. Compute gradients for all projection layers
         // 4. Return gradients for both decoder_state and encoder_outputs
-        let grad_input = Array::<F, _>::zeros(grad_output.dim());
+        let grad_input = Array::<F>::zeros(grad_output.dim());
         Ok(grad_input)
     fn update(&mut self, learning_rate: F) -> Result<()> {
         // Update all projection layers
@@ -368,8 +369,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2SeqEncoder<F> {
                         let brnn = ThreadSafeBidirectional::new(Box::new(rnn), None)?;
                         Box::new(brnn)
                     } else {
-                        Box::new(rnn)
-                RNNCellType::LSTM => {
+                        Box::new(rnn), RNNCellType::LSTM => {
                     // Use thread-safe RNN as a replacement for LSTM until LSTM is made thread-safe
                     // For true thread safety, we'll use our ThreadSafeRNN with tanh activation
                     // as a temporary replacement for LSTM
@@ -427,7 +427,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Seq2SeqEncoder
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // This simplified version only returns the output sequences
         // For the full state, use the dedicated forward method
-        let (output, _) = self.forward(input)?;
+        let (output_) = self.forward(input)?;
         Ok(output)
         input: &Array<F, IxDyn>,
         // Seq2SeqEncoder backward: reverse the forward pass
@@ -534,7 +534,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2SeqDecoder<F> {
                 // Apply attention
                 // Convert to IxDyn for compatibility with Layer trait
                 let dyn_last_hidden = last_hidden.to_owned().into_dyn();
-                let (attentional_hidden, _) = attention.forward(&dyn_last_hidden, encoder_out)?;
+                let (attentional_hidden_) = attention.forward(&dyn_last_hidden, encoder_out)?;
                 // Project to vocabulary size
                 self.output_projection.forward(&attentional_hidden)?
                 return Err(NeuralError::InvalidArchitecture(
@@ -555,7 +555,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2SeqDecoder<F> {
         let batch_size = input_tokens.shape()[0];
         let seq_len = input_tokens.shape()[1];
         // Prepare output buffer
-        let mut outputs = Array::<F, _>::zeros((batch_size, seq_len, self.vocab_size));
+        let mut outputs = Array::<F>::zeros((batch_size, seq_len, self.vocab_size));
         let mut states = initial_states.to_vec();
         // Process each time step
         for t in 0..seq_len {
@@ -581,7 +581,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Seq2SeqDecoder
         // Initialize empty states
         let mut initial_states = Vec::new();
         for _ in 0..self.rnn_layers.len() {
-            let state = Array::<F, _>::zeros((batch_size, self.hidden_dim)).into_dyn();
+            let state = Array::<F>::zeros((batch_size, self.hidden_dim)).into_dyn();
             initial_states.push(state);
         // Forward sequence without encoder outputs
         self.forward_sequence(input, &initial_states, None)
@@ -617,7 +617,7 @@ pub struct Seq2Seq<F: Float + Debug + ScalarOperand + Send + Sync> {
     pub config: Seq2SeqConfig,
 impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2Seq<F> {
     /// Create a new Seq2Seq model
-    pub fn new(config: Seq2SeqConfig) -> Result<Self> {
+    pub fn new(_config: Seq2SeqConfig) -> Result<Self> {
         // Create encoder
         let encoder = Seq2SeqEncoder::<F>::new(
             config.input_vocab_size,
@@ -652,7 +652,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2Seq<F> {
             let batch_size = input_seq.shape()[0];
             let mut initial_states = Vec::new();
             for _ in 0..self.config.num_layers {
-                let state = Array::<F, _>::zeros((batch_size, self.config.hidden_dim)).into_dyn();
+                let state = Array::<F>::zeros((batch_size, self.config.hidden_dim)).into_dyn();
                 initial_states.push(state);
             initial_states
         // Decode target sequence with teacher forcing
@@ -671,10 +671,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2Seq<F> {
         // Prepare decoder initial states
         let decoder_states = if self.config.encoder_cell_type == self.config.decoder_cell_type {
         // Initialize first decoder input with start tokens
-        let mut decoder_input = Array::<F, _>::zeros((batch_size, 1));
+        let mut decoder_input = Array::<F>::zeros((batch_size, 1));
             decoder_input[[b, 0]] = F::from(start_token_id as f64).unwrap();
         let mut decoder_input = decoder_input.into_dyn();
-        let mut output_ids = Array::<F, _>::zeros((batch_size, max_len));
+        let mut output_ids = Array::<F>::zeros((batch_size, max_len));
         let mut states = decoder_states;
         // Keep track of completed sequences
         let mut completed = vec![false; batch_size];
@@ -684,7 +684,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2Seq<F> {
                 self.decoder
                     .forward_step(&decoder_input, &states, Some(&encoder_outputs))?;
             // Get most probable token
-            let mut next_tokens = Array::<F, _>::zeros((batch_size, 1));
+            let mut next_tokens = Array::<F>::zeros((batch_size, 1));
                 if completed[b] {
                     continue;
                 // Find max probability token
@@ -717,7 +717,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2Seq<F> {
             embedding_dim: hidden_dim,
         Self::new(config)
     /// Create a small and fast Seq2Seq model
-    pub fn create_small_model(src_vocab_size: usize, tgt_vocab_size: usize) -> Result<Self> {
+    pub fn create_small_model(_src_vocab_size: usize, tgt_vocab_size: usize) -> Result<Self> {
             embedding_dim: 128,
             hidden_dim: 256,
             num_layers: 1,
@@ -730,7 +730,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Seq2Seq<F> {
         // and automatically generates decoder outputs without teacher forcing
         self.generate(
             input,
-            Some(self.config.max_seq_len),
+            Some(self._config.max_seq_len),
             0, // Assuming 0 is the start token
             None,
         )

@@ -3,7 +3,7 @@
 // This example demonstrates the enhanced statistical spelling correction
 // functionality in the scirs2-text crate, including context-aware correction.
 
-use scirs2_text::{
+use scirs2__text::{
     DictionaryCorrector, ErrorModel, SpellingCorrector, StatisticalCorrector,
     StatisticalCorrectorConfig,
 };
@@ -67,11 +67,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Function to train the language model with sample text
 #[allow(dead_code)]
-fn train_language_model(corrector: &mut StatisticalCorrector) {
+fn train_language_model(_corrector: &mut StatisticalCorrector) {
     println!("Training language model with sample text...");
 
     // Add sample training text
-    corrector.add_training_text(SAMPLE_TRAINING_TEXT);
+    _corrector.add_training_text(SAMPLE_TRAINING_TEXT);
 
     // Add more specialized training examples for context disambiguation
     let additional_examples = [
@@ -105,18 +105,18 @@ fn train_language_model(corrector: &mut StatisticalCorrector) {
     ];
 
     for example in &additional_examples {
-        corrector.add_training_text(example);
+        _corrector.add_training_text(example);
     }
 
     println!(
         "Language model trained with {} words vocabulary\n",
-        corrector.vocabulary_size()
+        _corrector.vocabulary_size()
     );
 }
 
 // Function to add specific words for consistent example behavior
 #[allow(dead_code)]
-fn add_example_words(corrector: &mut StatisticalCorrector) {
+fn add_example_words(_corrector: &mut StatisticalCorrector) {
     // Add specific words to the dictionary
     let word_frequencies = [
         // Common misspelled words
@@ -143,7 +143,7 @@ fn add_example_words(corrector: &mut StatisticalCorrector) {
     ];
 
     for (word, freq) in &word_frequencies {
-        corrector.add_word(word, *freq);
+        _corrector.add_word(word, *freq);
     }
 }
 
@@ -173,7 +173,7 @@ fn compare_correctors(
     );
     println!("{:-<45}", "");
 
-    for (misspelled, _expected) in &test_cases {
+    for (misspelled_expected) in &test_cases {
         let dict_correction = dict_corrector.correct(misspelled)?;
         let stat_correction = stat_corrector.correct(misspelled)?;
 
@@ -182,11 +182,11 @@ fn compare_correctors(
 
     println!("\nDictionary sizes:");
     println!(
-        "  - Dictionary corrector: {} words",
+        "  - Dictionary _corrector: {} words",
         dict_corrector.dictionary_size()
     );
     println!(
-        "  - Statistical corrector: {} words (+ {} in language model)",
+        "  - Statistical _corrector: {} words (+ {} in language model)",
         stat_corrector.dictionary_size(),
         stat_corrector.vocabulary_size()
     );
@@ -254,17 +254,17 @@ fn performance_test(
     // Create test text with a mix of correct and incorrect words
     let test_text = TEXT_WITH_CONTEXT_MISSPELLINGS.repeat(10);
 
-    // Measure dictionary corrector performance
+    // Measure dictionary _corrector performance
     let start = Instant::now();
     let _ = dict_corrector.correct_text(&test_text)?;
     let dict_time = start.elapsed();
 
-    // Measure statistical corrector performance
+    // Measure statistical _corrector performance
     let start = Instant::now();
     let _ = stat_corrector.correct_text(&test_text)?;
     let stat_time = start.elapsed();
 
-    // Create a non-contextual statistical corrector for comparison
+    // Create a non-contextual statistical _corrector for comparison
     let non_context_config = StatisticalCorrectorConfig {
         use_context: false,
         ..Default::default()
@@ -275,7 +275,7 @@ fn performance_test(
     train_language_model(&mut non_context_corrector);
     add_example_words(&mut non_context_corrector);
 
-    // Measure non-contextual statistical corrector performance
+    // Measure non-contextual statistical _corrector performance
     let start = Instant::now();
     let _ = non_context_corrector.correct_text(&test_text)?;
     let non_context_time = start.elapsed();
@@ -284,9 +284,9 @@ fn performance_test(
         "Performance comparison on text with {} characters:",
         test_text.len()
     );
-    println!("  - Dictionary corrector: {dict_time:?}");
-    println!("  - Statistical corrector (without context): {non_context_time:?}");
-    println!("  - Statistical corrector (with context): {stat_time:?}");
+    println!("  - Dictionary _corrector: {dict_time:?}");
+    println!("  - Statistical _corrector (without context): {non_context_time:?}");
+    println!("  - Statistical _corrector (with context): {stat_time:?}");
 
     Ok(())
 }

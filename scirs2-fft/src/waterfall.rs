@@ -47,7 +47,7 @@ use num_traits::NumCast;
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::waterfall_3d;
+/// use scirs2__fft::waterfall_3d;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -91,7 +91,7 @@ where
 
     // Compute spectrogram
     let (freqs, times, spec_data) = if log_scale {
-        // Use normalized spectrogram (log scale)
+        // Use normalized spectrogram (log _scale)
         spectrogram_normalized(x, Some(fs), Some(nperseg), Some(noverlap), Some(db_range))?
     } else {
         // Use linear amplitude spectrogram
@@ -160,7 +160,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::waterfall_mesh;
+/// use scirs2__fft::waterfall_mesh;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -203,7 +203,7 @@ where
 
     // Compute spectrogram
     let (freqs, times, spec_data) = if log_scale {
-        // Use normalized spectrogram (log scale)
+        // Use normalized spectrogram (log _scale)
         spectrogram_normalized(x, Some(fs), Some(nperseg), Some(noverlap), Some(db_range))?
     } else {
         // Use linear amplitude spectrogram
@@ -273,7 +273,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::waterfall_lines;
+/// use scirs2__fft::waterfall_lines;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -322,7 +322,7 @@ where
 
     // Compute spectrogram
     let (freqs, times, spec_data) = if log_scale {
-        // Use normalized spectrogram (log scale)
+        // Use normalized spectrogram (log _scale)
         spectrogram_normalized(x, Some(fs), Some(nperseg), Some(noverlap), Some(db_range))?
     } else {
         // Use linear amplitude spectrogram
@@ -412,7 +412,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::waterfall_mesh_colored;
+/// use scirs2__fft::waterfall_mesh_colored;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -457,7 +457,7 @@ where
 
     // Compute spectrogram
     let (freqs, times, spec_data) = if log_scale {
-        // Use normalized spectrogram (log scale)
+        // Use normalized spectrogram (log _scale)
         spectrogram_normalized(x, Some(fs), Some(nperseg), Some(noverlap), Some(db_range))?
     } else {
         // Use linear amplitude spectrogram
@@ -556,7 +556,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::waterfall::apply_colormap;
+/// use scirs2__fft::waterfall::apply_colormap;
 /// use ndarray::Array1;
 ///
 /// // Create some test amplitudes
@@ -576,9 +576,9 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn apply_colormap(amplitudes: &Array1<f64>, colormap: &str) -> FFTResult<Array2<f64>> {
-    // Verify that amplitudes are in range [0, 1]
-    for &amp in amplitudes.iter() {
+pub fn apply_colormap(_amplitudes: &Array1<f64>, colormap: &str) -> FFTResult<Array2<f64>> {
+    // Verify that _amplitudes are in range [0, 1]
+    for &amp in _amplitudes.iter() {
         if !(0.0..=1.0).contains(&amp) {
             return Err(FFTError::ValueError(
                 "Amplitude values must be in range [0, 1]".to_string(),
@@ -587,13 +587,13 @@ pub fn apply_colormap(amplitudes: &Array1<f64>, colormap: &str) -> FFTResult<Arr
     }
 
     // Create output array
-    let n_values = amplitudes.len();
+    let n_values = _amplitudes.len();
     let mut colors = Array2::zeros((n_values, 3));
 
     match colormap {
         "jet" => {
             // Jet colormap: blue -> cyan -> yellow -> red
-            for (i, &amp) in amplitudes.iter().enumerate() {
+            for (i, &amp) in _amplitudes.iter().enumerate() {
                 // Red component
                 colors[[i, 0]] = if amp < 0.35 {
                     0.0
@@ -628,7 +628,7 @@ pub fn apply_colormap(amplitudes: &Array1<f64>, colormap: &str) -> FFTResult<Arr
         }
         "viridis" => {
             // Viridis colormap: dark blue -> green -> yellow
-            for (i, &amp) in amplitudes.iter().enumerate() {
+            for (i, &amp) in _amplitudes.iter().enumerate() {
                 // Simplified approximation of viridis
                 colors[[i, 0]] = amp.powf(1.5) * 0.9; // Red increases nonlinearly
                 colors[[i, 1]] = amp.powf(0.8) * 0.9; // Green increases faster
@@ -641,7 +641,7 @@ pub fn apply_colormap(amplitudes: &Array1<f64>, colormap: &str) -> FFTResult<Arr
         }
         "plasma" => {
             // Plasma colormap: dark purple -> red -> yellow
-            for (i, &amp) in amplitudes.iter().enumerate() {
+            for (i, &amp) in _amplitudes.iter().enumerate() {
                 colors[[i, 0]] = 0.05 + amp.powf(0.7) * 0.95; // Red increases quickly
                 colors[[i, 1]] = amp.powf(2.0) * 0.9; // Green increases slowly then faster
                 colors[[i, 2]] = if amp < 0.7 {
@@ -653,7 +653,7 @@ pub fn apply_colormap(amplitudes: &Array1<f64>, colormap: &str) -> FFTResult<Arr
         }
         "grayscale" => {
             // Grayscale: black -> white
-            for (i, &amp) in amplitudes.iter().enumerate() {
+            for (i, &amp) in _amplitudes.iter().enumerate() {
                 colors[[i, 0]] = amp; // Red
                 colors[[i, 1]] = amp; // Green
                 colors[[i, 2]] = amp; // Blue
@@ -661,7 +661,7 @@ pub fn apply_colormap(amplitudes: &Array1<f64>, colormap: &str) -> FFTResult<Arr
         }
         "hot" => {
             // Hot colormap: black -> red -> yellow -> white
-            for (i, &amp) in amplitudes.iter().enumerate() {
+            for (i, &amp) in _amplitudes.iter().enumerate() {
                 colors[[i, 0]] = (amp * 3.0).min(1.0); // Red rises fastest
                 colors[[i, 1]] = ((amp - 0.33) * 3.0).clamp(0.0, 1.0); // Green rises next
                 colors[[i, 2]] = ((amp - 0.66) * 3.0).clamp(0.0, 1.0); // Blue rises last
@@ -683,9 +683,9 @@ mod tests {
     use std::f64::consts::PI;
 
     // Generate a test signal (chirp: frequency increases with time)
-    fn generate_chirp(fs: f64, duration: f64) -> Vec<f64> {
-        let n_samples = (fs * duration) as usize;
-        let t: Vec<f64> = (0..n_samples).map(|i| i as f64 / fs).collect();
+    fn generate_chirp(_fs: f64, duration: f64) -> Vec<f64> {
+        let n_samples = (_fs * duration) as usize;
+        let t: Vec<f64> = (0..n_samples).map(|i| i as f64 / _fs).collect();
 
         t.iter()
             .map(|&ti| (2.0 * PI * (10.0 + 50.0 * ti) * ti).sin())

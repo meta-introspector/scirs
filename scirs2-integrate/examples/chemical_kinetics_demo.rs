@@ -4,8 +4,8 @@
 //! chemical kinetics and reaction networks, including stiff reaction systems,
 //! enzyme kinetics, and various reaction mechanisms.
 
-use scirs2_integrate::ode::chemical::{ChemicalIntegrator, StiffIntegrationMethod};
-use scirs2_integrate::ode::chemical_systems;
+use scirs2__integrate::ode::chemical::{ChemicalIntegrator, StiffIntegrationMethod};
+use scirs2__integrate::ode::chemical_systems;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -383,8 +383,7 @@ fn demonstrate_stiff_reactions() -> Result<(), Box<dyn std::error::Error>> {
         "   Using {} integration method with dt = {} s",
         match stiff_method {
             StiffIntegrationMethod::BDF2 => "BDF2",
-            StiffIntegrationMethod::ImplicitEuler => "Implicit Euler",
-            _ => "Other",
+            StiffIntegrationMethod::ImplicitEuler => "Implicit Euler"_ => "Other",
         },
         dt
     );

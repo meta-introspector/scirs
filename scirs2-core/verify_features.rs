@@ -33,7 +33,7 @@ fn main() {
 
 #[allow(dead_code)]
 fn test_ecosystem_coordinator() {
-    let _coordinator = scirs2_core::ecosystem_bridge::advancedEcosystemCoordinator::new();
+    let coordinator = scirs2_core::ecosystem_bridge::advancedEcosystemCoordinator::new();
     println!("✓ advancedEcosystemCoordinator::new() works");
 }
 
@@ -41,7 +41,7 @@ fn test_ecosystem_coordinator() {
 fn test_distributed_computer() {
     match scirs2_core::advanced_distributed_computing::advancedDistributedComputer::new() {
         Ok(_) => println!("✓ advancedDistributedComputer::new() works"),
-        Err(e) => println!("⚠ advancedDistributedComputer::new() failed: {}", e),
+        Err(e) => println!("⚠ advancedDistributedComputer::new(), failed: {}", e),
     }
 }
 
@@ -51,7 +51,7 @@ fn test_neural_architecture_search() {
     let objectives = scirs2_core::neural_architecture_search::OptimizationObjectives::default();
     let constraints = scirs2_core::neural_architecture_search::HardwareConstraints::default();
     let config = scirs2_core::neural_architecture_search::SearchConfig {
-        strategy: scirs2_core::neural_architecture_search::NASStrategy::Evolutionary,
+        strategy: scirs2_core: neural_architecture_search: :NASStrategy::Evolutionary,
         max_evaluations: 10,
         population_size: 5,
         max_generations: 3,
@@ -65,7 +65,7 @@ fn test_neural_architecture_search() {
         config,
     ) {
         Ok(_) => println!("✓ NeuralArchitectureSearch::new() works"),
-        Err(e) => println!("⚠ NeuralArchitectureSearch::new() failed: {}", e),
+        Err(e) => println!("⚠ NeuralArchitectureSearch::new(), failed: {}", e),
     }
 }
 
@@ -74,6 +74,6 @@ fn test_neural_architecture_search() {
 fn test_jit_compiler() {
     match scirs2_core::advanced_jit_compilation::advancedJitCompiler::new() {
         Ok(_) => println!("✓ advancedJitCompiler::new() works"),
-        Err(e) => println!("⚠ advancedJitCompiler::new() failed: {}", e),
+        Err(e) => println!("⚠ advancedJitCompiler::new(), failed: {}", e),
     }
 }

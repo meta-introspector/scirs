@@ -1,7 +1,7 @@
 //! Provides helper functions for testing.
 use crate::evaluation::Feeder;
 use crate::tensor::Tensor;
-use crate::tensor_ops::*;
+use crate::tensor__ops::*;
 use crate::{ndarray_ext, Context, Float};
 
 /// Checks the validity of `gradients` with finite difference trick.
@@ -167,17 +167,17 @@ pub fn gradient_check<F: Float>(
 
 /// Prints a summary of the model architecture to help with debugging.
 #[allow(dead_code)]
-pub fn print_model_summary<F: Float>(model: &Tensor<F>) {
-    let _ = model;
+pub fn print_model_summary<F: Float>(_model: &Tensor<F>) {
+    let _ = _model;
     // Implementation placeholder
-    // In a real implementation, this would print a summary of the model architecture
+    // In a real implementation, this would print a summary of the _model architecture
     println!("Model summary: [placeholder]");
 }
 
 /// Helper function to profile memory usage of a model.
 #[allow(dead_code)]
-pub fn profile_memory_usage<F: Float>(model: &Tensor<F>, inputs: &[Tensor<F>]) {
-    let _ = (model, inputs);
+pub fn profile_memory_usage<F: Float>(_model: &Tensor<F>, inputs: &[Tensor<F>]) {
+    let _ = (_model, inputs);
     // Implementation placeholder
     // In a real implementation, this would profile memory usage during forward and backward passes
     println!("Memory usage: [placeholder]");

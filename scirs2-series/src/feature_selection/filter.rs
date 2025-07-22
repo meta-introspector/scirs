@@ -28,7 +28,7 @@ impl FilterMethods {
     ///
     /// ```
     /// use ndarray::Array2;
-    /// use scirs2_series::feature_selection::FilterMethods;
+    /// use scirs2__series::feature_selection::FilterMethods;
     ///
     /// let features = Array2::from_shape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
     /// let result = FilterMethods::variance_threshold(&features, 0.1).unwrap();
@@ -162,7 +162,7 @@ impl FilterMethods {
         n_bins: usize,
         n_features: Option<usize>,
     ) -> Result<FeatureSelectionResult> {
-        let (n_samples, n_feat) = features.dim();
+        let (n_samples, n_feat) = _features.dim();
 
         if n_samples != target.len() {
             return Err(TimeSeriesError::DimensionMismatch {
@@ -182,12 +182,12 @@ impl FilterMethods {
         let mut feature_scores = Array1::zeros(n_feat);
 
         for i in 0..n_feat {
-            let feature_col = features.column(i);
+            let feature_col = _features.column(i);
             let mi = Self::calculate_mutual_information(&feature_col, target, n_bins)?;
             feature_scores[i] = mi;
         }
 
-        // Select top features
+        // Select top _features
         let n_to_select = n_features.unwrap_or(n_feat / 2).min(n_feat);
         let mut indexed_scores: Vec<(usize, f64)> = feature_scores
             .iter()
@@ -200,7 +200,7 @@ impl FilterMethods {
         let selected_features: Vec<usize> = indexed_scores
             .into_iter()
             .take(n_to_select)
-            .map(|(idx, _)| idx)
+            .map(|(idx_)| idx)
             .collect();
 
         let mut metadata = HashMap::new();
@@ -391,7 +391,7 @@ impl FilterMethods {
     ) -> Result<f64> {
         let n = x.len();
 
-        // Create bins
+        // Create _bins
         let x_min = x.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let x_max = x.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let y_min = y.iter().fold(f64::INFINITY, |a, &b| a.min(b));
@@ -424,8 +424,8 @@ impl FilterMethods {
         // Calculate mutual information
         let mut mi = 0.0;
 
-        for (i, _) in x_counts.iter().enumerate().take(n_bins) {
-            for (j, _) in y_counts.iter().enumerate().take(n_bins) {
+        for (i_) in x_counts.iter().enumerate().take(n_bins) {
+            for (j_) in y_counts.iter().enumerate().take(n_bins) {
                 if joint_counts[i][j] > 0 && x_counts[i] > 0 && y_counts[j] > 0 {
                     let p_xy = joint_counts[i][j] as f64 / n as f64;
                     let p_x = x_counts[i] as f64 / n as f64;
@@ -485,14 +485,13 @@ impl FilterMethods {
         Ok(f_stat)
     }
 
-    fn f_critical_value(alpha: f64, n: usize) -> f64 {
+    fn f_critical_value(_alpha: f64, n: usize) -> f64 {
         // Simplified approximation for F(1, n-2) critical values
         // In practice, use proper F-distribution tables or functions
-        match alpha {
+        match _alpha {
             a if a <= 0.01 => 6.635 + 10.0 / (n as f64),
             a if a <= 0.05 => 3.841 + 5.0 / (n as f64),
-            a if a <= 0.10 => 2.706 + 3.0 / (n as f64),
-            _ => 1.0,
+            a if a <= 0.10 => 2.706 + 3.0 / (n as f64, _ => 1.0,
         }
     }
 }

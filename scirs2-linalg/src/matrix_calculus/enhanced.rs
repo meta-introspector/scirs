@@ -644,30 +644,30 @@ where
 
     if grid_points < 2 {
         return Err(LinalgError::InvalidInputError(
-            "Grid points must be at least 2 per dimension".to_string(),
+            "Grid _points must be at least 2 per dimension".to_string(),
         ));
     }
 
     let dims = domain.nrows();
     let mut critical_points = Vec::new();
 
-    // Generate a grid of test points
-    // For each dimension, create a set of points
+    // Generate a grid of test _points
+    // For each dimension, create a set of _points
     let mut grid_dimensions = Vec::with_capacity(dims);
     for i in 0..dims {
         let min = domain[[i, 0]];
         let max = domain[[i, 1]];
 
-        let mut points = Vec::with_capacity(grid_points);
+        let mut _points = Vec::with_capacity(grid_points);
         for j in 0..grid_points {
             let t = F::from(j as f64 / (grid_points - 1) as f64).unwrap();
-            points.push(min + t * (max - min));
+            _points.push(min + t * (max - min));
         }
 
-        grid_dimensions.push(points);
+        grid_dimensions.push(_points);
     }
 
-    // Now generate all combinations of points in the grid
+    // Now generate all combinations of _points in the grid
     fn generate_grid_points<F: Float + Copy>(
         dims: &[Vec<F>],
         current: &mut Vec<F>,
@@ -690,7 +690,7 @@ where
     let mut all_grid_points = Vec::new();
     generate_grid_points(&grid_dimensions, &mut Vec::new(), 0, &mut all_grid_points);
 
-    // Check each grid point for critical points
+    // Check each grid point for critical _points
     for point in all_grid_points {
         let grad = gradient(f, &point.view(), None)?;
 

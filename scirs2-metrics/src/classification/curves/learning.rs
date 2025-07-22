@@ -23,7 +23,7 @@ use ndarray::{Array1, ArrayBase, Data, Dimension};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::classification::curves::learning_curve;
+/// use scirs2__metrics::classification::curves::learning_curve;
 ///
 /// let train_sizes = array![0.2, 0.4, 0.6, 0.8, 1.0];
 /// let train_scores = array![0.7, 0.8, 0.85, 0.9, 0.92];
@@ -69,7 +69,7 @@ where
             let val: f64 = x.clone().into();
             if val <= 0.0 {
                 return Err(MetricsError::InvalidArgument(
-                    "Training sizes must be positive".to_string(),
+                    "Training _sizes must be positive".to_string(),
                 ));
             }
 
@@ -82,7 +82,7 @@ where
         })
         .collect::<Result<Vec<usize>, MetricsError>>()?;
 
-    // Convert scores to f64
+    // Convert _scores to f64
     let train_scores_f64: Vec<f64> = train_scores
         .iter()
         .map(|x| {

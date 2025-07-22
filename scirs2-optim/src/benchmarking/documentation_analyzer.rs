@@ -7,6 +7,7 @@ use crate::error::Result;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+// use std::path::PathBuf; // Duplicate import
 
 /// Documentation analyzer for API completeness and quality
 #[derive(Debug)]
@@ -524,9 +525,9 @@ pub struct UserSatisfactionMetrics {
 
 impl DocumentationAnalyzer {
     /// Create a new documentation analyzer
-    pub fn new(config: AnalyzerConfig) -> Self {
+    pub fn new(_config: AnalyzerConfig) -> Self {
         Self {
-            config,
+            _config,
             analysis_results: AnalysisResults::default(),
             metrics: DocumentationMetrics::default(),
         }
@@ -657,7 +658,7 @@ impl DocumentationAnalyzer {
         let mut file_total_items = 0;
 
         while current_line < lines.len() {
-            if let Some((item, category, line_num)) = self.parse_public_item(&lines, current_line) {
+            if let Some((item, _category, line_num)) = self.parse_public_item(&lines, current_line) {
                 *total_items += 1;
                 file_total_items += 1;
 
@@ -670,13 +671,13 @@ impl DocumentationAnalyzer {
                         name: item,
                         file_path: file_path.to_path_buf(),
                         line_number: line_num + 1,
-                        category: category.clone(),
+                        _category: _category.clone(),
                         visibility: VisibilityLevel::Public,
-                        suggested_template: self.generate_doc_template(&category),
+                        suggested_template: self.generate_doc_template(&_category),
                     };
 
                     undocumented_by_category
-                        .entry(category)
+                        .entry(_category)
                         .or_insert_with(Vec::new)
                         .push(undocumented_item);
                 }
@@ -684,7 +685,7 @@ impl DocumentationAnalyzer {
             current_line += 1;
         }
 
-        // Calculate module quality score
+        // Calculate _module quality score
         let module_name = file_path
             .file_stem()
             .and_then(|s| s.to_str())
@@ -712,31 +713,31 @@ impl DocumentationAnalyzer {
             return None;
         }
 
-        let line = lines[start_line].trim();
+        let _line = lines[start_line].trim();
 
         // Simple parsing for demonstration - in practice would use syn crate
-        if line.starts_with("pub fn ") {
-            if let Some(name) = self.extract_function_name(line) {
+        if _line.starts_with("pub fn ") {
+            if let Some(name) = self.extract_function_name(_line) {
                 return Some((name, ItemCategory::Function, start_line));
             }
-        } else if line.starts_with("pub struct ") {
-            if let Some(name) = self.extract_struct_name(line) {
+        } else if _line.starts_with("pub struct ") {
+            if let Some(name) = self.extract_struct_name(_line) {
                 return Some((name, ItemCategory::Struct, start_line));
             }
-        } else if line.starts_with("pub enum ") {
-            if let Some(name) = self.extract_enum_name(line) {
+        } else if _line.starts_with("pub enum ") {
+            if let Some(name) = self.extract_enum_name(_line) {
                 return Some((name, ItemCategory::Enum, start_line));
             }
-        } else if line.starts_with("pub trait ") {
-            if let Some(name) = self.extract_trait_name(line) {
+        } else if _line.starts_with("pub trait ") {
+            if let Some(name) = self.extract_trait_name(_line) {
                 return Some((name, ItemCategory::Trait, start_line));
             }
-        } else if line.starts_with("pub mod ") {
-            if let Some(name) = self.extract_module_name(line) {
+        } else if _line.starts_with("pub mod ") {
+            if let Some(name) = self.extract_module_name(_line) {
                 return Some((name, ItemCategory::Module, start_line));
             }
-        } else if line.starts_with("pub const ") {
-            if let Some(name) = self.extract_const_name(line) {
+        } else if _line.starts_with("pub const ") {
+            if let Some(name) = self.extract_const_name(_line) {
                 return Some((name, ItemCategory::Constant, start_line));
             }
         }
@@ -748,10 +749,10 @@ impl DocumentationAnalyzer {
     fn has_documentation(&self, lines: &[&str], item_line: usize) -> bool {
         // Look for doc comments before the item
         for i in (0..item_line).rev() {
-            let line = lines[i].trim();
-            if line.starts_with("///") || line.starts_with("//!") {
+            let _line = lines[i].trim();
+            if _line.starts_with("///") || _line.starts_with("//!") {
                 return true;
-            } else if !line.is_empty() && !line.starts_with("//") {
+            } else if !_line.is_empty() && !_line.starts_with("//") {
                 break;
             }
         }
@@ -881,7 +882,7 @@ impl DocumentationAnalyzer {
         for (line_num, line) in lines.iter().enumerate() {
             let trimmed = line.trim();
 
-            // Count functions for coverage
+            // Count functions for _coverage
             if trimmed.starts_with("pub fn ") || trimmed.starts_with("fn ") {
                 total_functions += 1;
             }
@@ -921,7 +922,7 @@ impl DocumentationAnalyzer {
             }
         }
 
-        // Calculate coverage for this module
+        // Calculate _coverage for this module
         let module_name = file_path
             .file_stem()
             .and_then(|s| s.to_str())
@@ -934,14 +935,14 @@ impl DocumentationAnalyzer {
             100.0
         };
 
-        let coverage = ExampleCoverage {
+        let _coverage = ExampleCoverage {
             functions_with_examples,
             total_functions,
             coverage_percentage,
             complexity_distribution: HashMap::new(), // Would be filled by more sophisticated analysis
         };
 
-        example_coverage.insert(module_name, coverage);
+        example_coverage.insert(module_name_coverage);
 
         Ok(())
     }
@@ -955,8 +956,7 @@ impl DocumentationAnalyzer {
 
     /// Calculate example quality metrics
     fn calculate_example_quality_metrics(
-        &self,
-        _example_coverage: &HashMap<String, ExampleCoverage>,
+        &self, _example_coverage: &HashMap<String, ExampleCoverage>,
     ) -> ExampleQualityMetrics {
         // Simplified metrics calculation
         ExampleQualityMetrics {
@@ -1103,7 +1103,7 @@ impl DocumentationAnalyzer {
     }
 
     /// Validate a URL
-    fn validate_url(&self, _url: &str) -> bool {
+    fn validate_url(&self_url: &str) -> bool {
         // Simplified validation - in practice would make HTTP requests
         true // Assume all URLs are valid for demonstration
     }
@@ -1295,8 +1295,7 @@ impl DocumentationAnalyzer {
                             "Include proper syntax highlighting".to_string(),
                         ],
                         expected_impact: 0.15,
-                    },
-                    _ => StyleRecommendation {
+                    }_ => StyleRecommendation {
                         category: category.clone(),
                         description: format!("Address {:?} inconsistencies", category),
                         implementation_steps: vec!["Review and standardize".to_string()],
@@ -1475,8 +1474,7 @@ impl DocumentationAnalyzer {
                         "{}: {}",
                         match category {
                             ItemCategory::Function => "Function",
-                            ItemCategory::Struct => "Struct",
-                            _ => "Item",
+                            ItemCategory::Struct => "Struct"_ => "Item",
                         },
                         item.name
                     ));
@@ -1972,7 +1970,7 @@ mod tests {
     #[test]
     fn test_function_name_extraction() {
         let analyzer = DocumentationAnalyzer::new(AnalyzerConfig::default());
-        let line = "pub fn my_function(param: i32) -> Result<(), Error>";
+        let line = "pub fn my_function(_param: i32) -> Result<(), Error>";
         let name = analyzer.extract_function_name(line);
         assert_eq!(name, Some("my_function".to_string()));
     }

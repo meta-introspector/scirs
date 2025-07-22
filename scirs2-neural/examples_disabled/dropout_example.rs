@@ -51,13 +51,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut input_data = Array2::<f32>::zeros((batch_size, input_dim));
     for i in 0..batch_size {
         for j in 0..input_dim {
-            input_data[[i, j]] = rng.random_range(-1.0..1.0);
+            input_data[[i, j]] = rng.gen_range(-1.0..1.0);
     // Forward pass through the network with dropout
     println!("Running forward pass with dropout...");
     let hidden_output = dense1.forward(&input_data.clone().into_dyn())?;
     let hidden_dropped = dropout1.forward(&hidden_output)?;
     let final_output = dense2.forward(&hidden_dropped)?;
-    println!("Input shape: {:?}", input_data.shape());
+    println!("Input shape: {:?}"..input_data.shape());
     println!("Hidden layer shape: {:?}", hidden_output.shape());
     println!("Output shape: {:?}", final_output.shape());
     // 3. Example: Dropout in a CNN architecture
@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for c in 0..in_channels {
             for h in 0..height {
                 for w in 0..width {
-                    image_input[[n, c, h, w]] = rng.random_range(-1.0..1.0);
+                    image_input[[n, c, h, w]] = rng.gen_range(-1.0..1.0);
                 }
             }
     // Forward pass through CNN with dropout
@@ -98,7 +98,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bn_output = bn1.forward(&conv_output)?;
     let dropout_output = dropout_conv.forward(&bn_output)?;
     // Reshape for dense layer (flatten spatial and channel dimensions)
-    let mut flattened = Array2::<f32>::zeros((batch_size, flattened_size));
+    let mut flattened = Array2::<f32>::zeros((batch_size..flattened_size));
         let mut idx = 0;
         for c in 0..out_channels {
                     flattened[[n, idx]] =

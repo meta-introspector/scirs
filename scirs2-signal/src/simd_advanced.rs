@@ -12,15 +12,21 @@
 //! - Performance monitoring and adaptive thresholds
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, ArrayView1, ArrayViewMut1};
-use num_complex::Complex64;
+use ndarray::{Array2, Array3, ArrayView1, ArrayViewMut1, s};
+use num__complex::Complex64;
+use rustfft::FftPlanner;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::check_finite;
+use std::f64::consts::PI;
+use std::time::Instant;
+use super::{SimdConfig, simd_enhanced_convolution};
+use crate::utilities::spectral::spectral_centroid;
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
-use std::f64::consts::PI;
 
+#[allow(unused_imports)]
+#[cfg(target_arch = "x86_64")]
 /// Configuration for SIMD operations
 #[derive(Debug, Clone)]
 pub struct SimdConfig {
@@ -80,8 +86,8 @@ pub fn simd_fir_filter(
         ));
     }
 
-    check_finite(input, "input")?;
-    check_finite(coeffs, "coeffs")?;
+    check_finite(input, "input value")?;
+    check_finite(coeffs, "coeffs value")?;
 
     let n = input.len();
     let m = coeffs.len();
@@ -114,12 +120,12 @@ pub fn simd_autocorrelation(
     max_lag: usize,
     config: &SimdConfig,
 ) -> SignalResult<Vec<f64>> {
-    check_finite(signal, "signal")?;
+    check_finite(signal, "signal value")?;
 
     let n = signal.len();
     if max_lag >= n {
         return Err(SignalError::ValueError(
-            "Maximum lag must be less than signal length".to_string(),
+            "Maximum _lag must be less than signal length".to_string(),
         ));
     }
 
@@ -152,8 +158,8 @@ pub fn simd_cross_correlation(
     mode: &str,
     config: &SimdConfig,
 ) -> SignalResult<Vec<f64>> {
-    check_finite(signal1, "signal1")?;
-    check_finite(signal2, "signal2")?;
+    check_finite(signal1, "signal1 value")?;
+    check_finite(signal2, "signal2 value")?;
 
     let n1 = signal1.len();
     let n2 = signal2.len();
@@ -252,8 +258,8 @@ pub fn simd_apply_window(
         ));
     }
 
-    check_finite(signal, "signal")?;
-    check_finite(window, "window")?;
+    check_finite(signal, "signal value")?;
+    check_finite(window, "window value")?;
 
     let n = signal.len();
 
@@ -283,15 +289,15 @@ pub fn simd_apply_window(
 // Scalar fallback implementations
 
 #[allow(dead_code)]
-fn scalar_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
-    let n = input.len();
+fn scalar_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let n = _input.len();
     let m = coeffs.len();
 
     for i in 0..n {
         let mut sum = 0.0;
         for j in 0..m {
             if i >= j {
-                sum += input[i - j] * coeffs[j];
+                sum += _input[i - j] * coeffs[j];
             }
         }
         output[i] = sum;
@@ -301,19 +307,19 @@ fn scalar_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> Signa
 }
 
 #[allow(dead_code)]
-fn scalar_autocorrelation(signal: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
-    let n = signal.len();
+fn scalar_autocorrelation(_signal: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
+    let n = _signal.len();
     let mut autocorr = vec![0.0; max_lag + 1];
 
-    for lag in 0..=max_lag {
+    for _lag in 0..=max_lag {
         let mut sum = 0.0;
-        let valid_length = n - lag;
+        let valid_length = n - _lag;
 
         for i in 0..valid_length {
-            sum += signal[i] * signal[i + lag];
+            sum += _signal[i] * _signal[i + _lag];
         }
 
-        autocorr[lag] = sum / valid_length as f64;
+        autocorr[_lag] = sum / valid_length  as f64;
     }
 
     Ok(autocorr)
@@ -331,8 +337,7 @@ fn scalar_cross_correlation(
     let (output_len, start_offset) = match mode {
         "full" => (n1 + n2 - 1, 0),
         "same" => (n1, (n2 - 1) / 2),
-        "valid" => (if n1 >= n2 { n1 - n2 + 1 } else { 0 }, n2 - 1),
-        _ => return Err(SignalError::ValueError("Invalid mode".to_string())),
+        "valid" => (if n1 >= n2 { n1 - n2 + 1 } else { 0 }, n2 - 1, _ => return Err(SignalError::ValueError("Invalid mode".to_string())),
     };
 
     if output_len == 0 {
@@ -375,8 +380,8 @@ fn scalar_complex_butterfly(
 // SIMD implementations (platform-specific)
 
 #[target_feature(enable = "avx2")]
-unsafe fn avx2_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
-    let n = input.len();
+unsafe fn avx2_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let n = _input.len();
     let m = coeffs.len();
 
     // Process 4 samples at a time with AVX2
@@ -391,7 +396,7 @@ unsafe fn avx2_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> 
             if base_idx >= j {
                 let input_idx = base_idx - j;
                 if input_idx + simd_width <= n {
-                    let input_vec = _mm256_loadu_pd(input.as_ptr().add(input_idx));
+                    let input_vec = _mm256_loadu_pd(_input.as_ptr().add(input_idx));
                     let coeff_broadcast = _mm256_set1_pd(coeffs[j]);
                     result = _mm256_fmadd_pd(input_vec, coeff_broadcast, result);
                 }
@@ -406,7 +411,7 @@ unsafe fn avx2_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> 
         let mut sum = 0.0;
         for j in 0..m {
             if i >= j {
-                sum += input[i - j] * coeffs[j];
+                sum += _input[i - j] * coeffs[j];
             }
         }
         output[i] = sum;
@@ -417,16 +422,16 @@ unsafe fn avx2_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> 
 
 #[cfg(feature = "unstable_avx512")] // Disabled by default
                                     // #[target_feature(enable = "avx512f")] // Disabled - unstable feature
-unsafe fn avx512_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
+unsafe fn avx512_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
     // Fallback to scalar implementation until AVX-512 is stabilized
-    let n = input.len();
+    let n = _input.len();
     let m = coeffs.len();
 
     for i in 0..n {
         let mut sum = 0.0;
         for j in 0..m {
             if i >= j {
-                sum += input[i - j] * coeffs[j];
+                sum += _input[i - j] * coeffs[j];
             }
         }
         output[i] = sum;
@@ -437,9 +442,7 @@ unsafe fn avx512_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -
 
 #[cfg(not(feature = "unstable_avx512"))]
 unsafe fn avx512_fir_filter(
-    _input: &[f64],
-    _coeffs: &[f64],
-    _output: &mut [f64],
+    _input: &[f64], _coeffs: &[f64], _output: &mut [f64],
 ) -> SignalResult<()> {
     // Fallback implementation or error
     Err(SignalError::ComputationError(
@@ -448,8 +451,8 @@ unsafe fn avx512_fir_filter(
 }
 
 #[target_feature(enable = "sse4.1")]
-unsafe fn sse_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
-    let n = input.len();
+unsafe fn sse_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let n = _input.len();
     let m = coeffs.len();
 
     // Process 2 samples at a time with SSE
@@ -464,9 +467,9 @@ unsafe fn sse_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> S
             if base_idx >= j {
                 let input_idx = base_idx - j;
                 if input_idx + simd_width <= n {
-                    let input_vec = _mm_loadu_pd(input.as_ptr().add(input_idx));
+                    let input_vec = _mm_loadu_pd(_input.as_ptr().add(input_idx));
                     let coeff_broadcast = _mm_set1_pd(coeffs[j]);
-                    result = _mm_add_pd(result, _mm_mul_pd(input_vec, coeff_broadcast));
+                    result = _mm_add_pd(result_mm_mul_pd(input_vec, coeff_broadcast));
                 }
             }
         }
@@ -479,7 +482,7 @@ unsafe fn sse_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> S
         let mut sum = 0.0;
         for j in 0..m {
             if i >= j {
-                sum += input[i - j] * coeffs[j];
+                sum += _input[i - j] * coeffs[j];
             }
         }
         output[i] = sum;
@@ -496,8 +499,8 @@ unsafe fn avx2_autocorrelation(
 ) -> SignalResult<()> {
     let n = signal.len();
 
-    for lag in 0..=max_lag {
-        let valid_length = n - lag;
+    for _lag in 0..=max_lag {
+        let valid_length = n - _lag;
         let simd_width = 4;
         let simd_chunks = valid_length / simd_width;
 
@@ -506,7 +509,7 @@ unsafe fn avx2_autocorrelation(
         for chunk in 0..simd_chunks {
             let idx = chunk * simd_width;
             let vec1 = _mm256_loadu_pd(signal.as_ptr().add(idx));
-            let vec2 = _mm256_loadu_pd(signal.as_ptr().add(idx + lag));
+            let vec2 = _mm256_loadu_pd(signal.as_ptr().add(idx + _lag));
             sum_vec = _mm256_fmadd_pd(vec1, vec2, sum_vec);
         }
 
@@ -516,10 +519,10 @@ unsafe fn avx2_autocorrelation(
 
         // Handle remaining elements
         for i in (simd_chunks * simd_width)..valid_length {
-            sum += signal[i] * signal[i + lag];
+            sum += signal[i] * signal[i + _lag];
         }
 
-        autocorr[lag] = sum / valid_length as f64;
+        autocorr[_lag] = sum / valid_length  as f64;
     }
 
     Ok(())
@@ -533,8 +536,8 @@ unsafe fn sse_autocorrelation(
 ) -> SignalResult<()> {
     let n = signal.len();
 
-    for lag in 0..=max_lag {
-        let valid_length = n - lag;
+    for _lag in 0..=max_lag {
+        let valid_length = n - _lag;
         let simd_width = 2;
         let simd_chunks = valid_length / simd_width;
 
@@ -543,8 +546,8 @@ unsafe fn sse_autocorrelation(
         for chunk in 0..simd_chunks {
             let idx = chunk * simd_width;
             let vec1 = _mm_loadu_pd(signal.as_ptr().add(idx));
-            let vec2 = _mm_loadu_pd(signal.as_ptr().add(idx + lag));
-            sum_vec = _mm_add_pd(sum_vec, _mm_mul_pd(vec1, vec2));
+            let vec2 = _mm_loadu_pd(signal.as_ptr().add(idx + _lag));
+            sum_vec = _mm_add_pd(sum_vec_mm_mul_pd(vec1, vec2));
         }
 
         // Extract sum from vector
@@ -553,10 +556,10 @@ unsafe fn sse_autocorrelation(
 
         // Handle remaining elements
         for i in (simd_chunks * simd_width)..valid_length {
-            sum += signal[i] * signal[i + lag];
+            sum += signal[i] * signal[i + _lag];
         }
 
-        autocorr[lag] = sum / valid_length as f64;
+        autocorr[_lag] = sum / valid_length  as f64;
     }
 
     Ok(())
@@ -566,8 +569,7 @@ unsafe fn sse_autocorrelation(
 unsafe fn avx2_cross_correlation(
     signal1: &[f64],
     signal2: &[f64],
-    result: &mut [f64],
-    _mode: &str,
+    result: &mut [f64], _mode: &str,
 ) -> SignalResult<()> {
     // Simplified AVX2 implementation for demonstration
     let n1 = signal1.len();
@@ -698,14 +700,14 @@ unsafe fn avx2_apply_window(
 }
 
 #[target_feature(enable = "sse4.1")]
-unsafe fn sse_apply_window(signal: &[f64], window: &[f64], output: &mut [f64]) -> SignalResult<()> {
-    let n = signal.len();
+unsafe fn sse_apply_window(_signal: &[f64], window: &[f64], output: &mut [f64]) -> SignalResult<()> {
+    let n = _signal.len();
     let simd_width = 2;
     let simd_chunks = n / simd_width;
 
     for chunk in 0..simd_chunks {
         let idx = chunk * simd_width;
-        let sig_vec = _mm_loadu_pd(signal.as_ptr().add(idx));
+        let sig_vec = _mm_loadu_pd(_signal.as_ptr().add(idx));
         let win_vec = _mm_loadu_pd(window.as_ptr().add(idx));
         let result_vec = _mm_mul_pd(sig_vec, win_vec);
         _mm_storeu_pd(output.as_mut_ptr().add(idx), result_vec);
@@ -713,7 +715,7 @@ unsafe fn sse_apply_window(signal: &[f64], window: &[f64], output: &mut [f64]) -
 
     // Handle remaining elements
     for i in (simd_chunks * simd_width)..n {
-        output[i] = signal[i] * window[i];
+        output[i] = _signal[i] * window[i];
     }
 
     Ok(())
@@ -721,13 +723,11 @@ unsafe fn sse_apply_window(signal: &[f64], window: &[f64], output: &mut [f64]) -
 
 /// Performance benchmark for SIMD operations
 #[allow(dead_code)]
-pub fn benchmark_simd_operations(signal_length: usize) -> SignalResult<()> {
-    use std::time::Instant;
-
-    let signal: Vec<f64> = (0..signal_length).map(|i| (i as f64 * 0.1).sin()).collect();
+pub fn benchmark_simd_operations(_signal_length: usize) -> SignalResult<()> {
+    let signal: Vec<f64> = (0.._signal_length).map(|i| (i as f64 * 0.1).sin()).collect();
 
     let coeffs: Vec<f64> = vec![0.1, 0.2, 0.3, 0.2, 0.1]; // Simple 5-tap filter
-    let mut output = vec![0.0; signal_length];
+    let mut output = vec![0.0; _signal_length];
 
     let config = SimdConfig::default();
 
@@ -750,7 +750,7 @@ pub fn benchmark_simd_operations(signal_length: usize) -> SignalResult<()> {
     }
     let scalar_time = start.elapsed();
 
-    println!("FIR Filter Benchmark (length: {}):", signal_length);
+    println!("FIR Filter Benchmark (_length: {}):", signal_length);
     println!("  SIMD time: {:?}", simd_time);
     println!("  Scalar time: {:?}", scalar_time);
     println!(
@@ -804,12 +804,12 @@ pub fn simd_spectral_centroid(
 ) -> SignalResult<f64> {
     if magnitude_spectrum.len() != frequencies.len() {
         return Err(SignalError::ValueError(
-            "Magnitude spectrum and frequencies must have same length".to_string(),
+            "Magnitude _spectrum and frequencies must have same length".to_string(),
         ));
     }
 
-    check_finite(magnitude_spectrum, "magnitude_spectrum")?;
-    check_finite(frequencies, "frequencies")?;
+    check_finite(magnitude_spectrum, "magnitude_spectrum value")?;
+    check_finite(frequencies, "frequencies value")?;
 
     let n = magnitude_spectrum.len();
     if n < config.simd_threshold || config.force_scalar {
@@ -835,11 +835,11 @@ pub fn simd_spectral_centroid(
 
 /// Scalar fallback for spectral centroid
 #[allow(dead_code)]
-fn scalar_spectral_centroid(magnitude_spectrum: &[f64], frequencies: &[f64]) -> SignalResult<f64> {
+fn scalar_spectral_centroid(_magnitude_spectrum: &[f64], frequencies: &[f64]) -> SignalResult<f64> {
     let mut weighted_sum = 0.0;
     let mut total_magnitude = 0.0;
 
-    for (mag, freq) in magnitude_spectrum.iter().zip(frequencies.iter()) {
+    for (mag, freq) in _magnitude_spectrum.iter().zip(frequencies.iter()) {
         weighted_sum += mag * freq;
         total_magnitude += mag;
     }
@@ -875,25 +875,25 @@ pub fn simd_spectral_rolloff(
 ) -> SignalResult<f64> {
     if magnitude_spectrum.len() != frequencies.len() {
         return Err(SignalError::ValueError(
-            "Magnitude spectrum and frequencies must have same length".to_string(),
+            "Magnitude _spectrum and frequencies must have same length".to_string(),
         ));
     }
 
     if rolloff_threshold <= 0.0 || rolloff_threshold >= 1.0 {
         return Err(SignalError::ValueError(
-            "Rolloff threshold must be between 0 and 1".to_string(),
+            "Rolloff _threshold must be between 0 and 1".to_string(),
         ));
     }
 
-    check_finite(magnitude_spectrum, "magnitude_spectrum")?;
-    check_finite(frequencies, "frequencies")?;
+    check_finite(magnitude_spectrum, "magnitude_spectrum value")?;
+    check_finite(frequencies, "frequencies value")?;
 
     let n = magnitude_spectrum.len();
     if n < config.simd_threshold || config.force_scalar {
         return scalar_spectral_rolloff(magnitude_spectrum, frequencies, rolloff_threshold);
     }
 
-    // Compute energy spectrum (magnitude^2) using SIMD
+    // Compute energy _spectrum (magnitude^2) using SIMD
     let mut energy_spectrum = vec![0.0; n];
     let mag_view = ArrayView1::from(magnitude_spectrum);
     let energy_view = ArrayViewMut1::from(&mut energy_spectrum);
@@ -965,7 +965,7 @@ pub fn simd_peak_detection(
     min_distance: usize,
     config: &SimdConfig,
 ) -> SignalResult<Vec<usize>> {
-    check_finite(signal, "signal")?;
+    check_finite(signal, "signal value")?;
 
     let n = signal.len();
     if n < 3 {
@@ -989,7 +989,7 @@ pub fn simd_peak_detection(
         scalar_local_maxima_detection(signal, min_height, &mut peak_candidates);
     }
 
-    // Apply minimum distance constraint
+    // Apply minimum _distance constraint
     apply_minimum_distance_constraint(&mut peak_candidates, signal, min_distance);
 
     Ok(peak_candidates)
@@ -1108,16 +1108,16 @@ fn scalar_peak_detection(
 ///
 /// * Zero-crossing rate (crossings per sample)
 #[allow(dead_code)]
-pub fn simd_zero_crossing_rate(signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
-    check_finite(signal, "signal")?;
+pub fn simd_zero_crossing_rate(_signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
+    check_finite(_signal, "_signal value")?;
 
-    let n = signal.len();
+    let n = _signal.len();
     if n < 2 {
         return Ok(0.0);
     }
 
     if n < config.simd_threshold || config.force_scalar {
-        return scalar_zero_crossing_rate(signal);
+        return scalar_zero_crossing_rate(_signal);
     }
 
     let caps = PlatformCapabilities::detect();
@@ -1126,9 +1126,9 @@ pub fn simd_zero_crossing_rate(signal: &[f64], config: &SimdConfig) -> SignalRes
     let mut crossings = 0;
 
     if caps.avx2_available && config.use_advanced {
-        unsafe { crossings = avx2_zero_crossings(signal)? };
+        unsafe { crossings = avx2_zero_crossings(_signal)? };
     } else {
-        crossings = scalar_count_zero_crossings(signal);
+        crossings = scalar_count_zero_crossings(_signal);
     }
 
     Ok(crossings as f64 / (n - 1) as f64)
@@ -1136,13 +1136,13 @@ pub fn simd_zero_crossing_rate(signal: &[f64], config: &SimdConfig) -> SignalRes
 
 /// AVX2 optimized zero crossing detection
 #[target_feature(enable = "avx2")]
-unsafe fn avx2_zero_crossings(signal: &[f64]) -> SignalResult<usize> {
-    let n = signal.len();
+unsafe fn avx2_zero_crossings(_signal: &[f64]) -> SignalResult<usize> {
+    let n = _signal.len();
     let mut crossings = 0;
 
     // Process pairs of consecutive elements
     for i in 0..(n - 1) {
-        if (signal[i] >= 0.0 && signal[i + 1] < 0.0) || (signal[i] < 0.0 && signal[i + 1] >= 0.0) {
+        if (_signal[i] >= 0.0 && _signal[i + 1] < 0.0) || (_signal[i] < 0.0 && _signal[i + 1] >= 0.0) {
             crossings += 1;
         }
     }
@@ -1152,12 +1152,12 @@ unsafe fn avx2_zero_crossings(signal: &[f64]) -> SignalResult<usize> {
 
 /// Scalar zero crossing count
 #[allow(dead_code)]
-fn scalar_count_zero_crossings(signal: &[f64]) -> usize {
-    let n = signal.len();
+fn scalar_count_zero_crossings(_signal: &[f64]) -> usize {
+    let n = _signal.len();
     let mut crossings = 0;
 
     for i in 0..(n - 1) {
-        if (signal[i] >= 0.0 && signal[i + 1] < 0.0) || (signal[i] < 0.0 && signal[i + 1] >= 0.0) {
+        if (_signal[i] >= 0.0 && _signal[i + 1] < 0.0) || (_signal[i] < 0.0 && _signal[i + 1] >= 0.0) {
             crossings += 1;
         }
     }
@@ -1167,13 +1167,13 @@ fn scalar_count_zero_crossings(signal: &[f64]) -> usize {
 
 /// Scalar fallback for zero-crossing rate
 #[allow(dead_code)]
-fn scalar_zero_crossing_rate(signal: &[f64]) -> SignalResult<f64> {
-    let n = signal.len();
+fn scalar_zero_crossing_rate(_signal: &[f64]) -> SignalResult<f64> {
+    let n = _signal.len();
     if n < 2 {
         return Ok(0.0);
     }
 
-    let crossings = scalar_count_zero_crossings(signal);
+    let crossings = scalar_count_zero_crossings(_signal);
     Ok(crossings as f64 / (n - 1) as f64)
 }
 
@@ -1191,20 +1191,20 @@ fn scalar_zero_crossing_rate(signal: &[f64]) -> SignalResult<f64> {
 ///
 /// * Signal energy (sum of squares)
 #[allow(dead_code)]
-pub fn simd_signal_energy(signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
-    check_finite(signal, "signal")?;
+pub fn simd_signal_energy(_signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
+    check_finite(_signal, "_signal value")?;
 
-    let n = signal.len();
+    let n = _signal.len();
     if n == 0 {
         return Ok(0.0);
     }
 
     if n < config.simd_threshold || config.force_scalar {
-        return scalar_signal_energy(signal);
+        return scalar_signal_energy(_signal);
     }
 
     let caps = PlatformCapabilities::detect();
-    let signal_view = ArrayView1::from(signal);
+    let signal_view = ArrayView1::from(_signal);
 
     // Use SIMD dot product for efficient energy computation
     let energy = f64::simd_dot(&signal_view, &signal_view);
@@ -1213,8 +1213,8 @@ pub fn simd_signal_energy(signal: &[f64], config: &SimdConfig) -> SignalResult<f
 
 /// Scalar fallback for signal energy
 #[allow(dead_code)]
-fn scalar_signal_energy(signal: &[f64]) -> SignalResult<f64> {
-    let energy = signal.iter().map(|&x| x * x).sum();
+fn scalar_signal_energy(_signal: &[f64]) -> SignalResult<f64> {
+    let energy = _signal.iter().map(|&x| x * x).sum();
     Ok(energy)
 }
 
@@ -1231,9 +1231,9 @@ fn scalar_signal_energy(signal: &[f64]) -> SignalResult<f64> {
 ///
 /// * RMS value
 #[allow(dead_code)]
-pub fn simd_rms(signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
-    let energy = simd_signal_energy(signal, config)?;
-    let n = signal.len();
+pub fn simd_rms(_signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
+    let energy = simd_signal_energy(_signal, config)?;
+    let n = _signal.len();
 
     if n == 0 {
         Ok(0.0)
@@ -1330,7 +1330,7 @@ pub fn simd_batch_spectral_analysis(
 
     // Finalize mean power
     for power in statistics.mean_power.iter_mut() {
-        *power /= n_signals as f64;
+        *power /= n_signals  as f64;
     }
 
     Ok(BatchSpectralResult {
@@ -1401,7 +1401,6 @@ fn process_single_signal_simd(
     }
 
     // Compute FFT using rustfft
-    use rustfft::FftPlanner;
     let mut planner = FftPlanner::new();
     let fft = planner.plan_fft_forward(nfft);
     fft.process(&mut padded);
@@ -1466,19 +1465,19 @@ fn generate_simd_window(
     match window_type {
         "hann" => {
             for i in 0..length {
-                let phase = 2.0 * PI * i as f64 / (length - 1) as f64;
+                let phase = 2.0 * PI * i as f64 / (length - 1)  as f64;
                 window[i] = 0.5 * (1.0 - phase.cos());
             }
         }
         "hamming" => {
             for i in 0..length {
-                let phase = 2.0 * PI * i as f64 / (length - 1) as f64;
+                let phase = 2.0 * PI * i as f64 / (length - 1)  as f64;
                 window[i] = 0.54 - 0.46 * phase.cos();
             }
         }
         "blackman" => {
             for i in 0..length {
-                let phase = 2.0 * PI * i as f64 / (length - 1) as f64;
+                let phase = 2.0 * PI * i as f64 / (length - 1)  as f64;
                 window[i] = 0.42 - 0.5 * phase.cos() + 0.08 * (2.0 * phase).cos();
             }
         }
@@ -1487,7 +1486,7 @@ fn generate_simd_window(
         }
         _ => {
             return Err(SignalError::ValueError(format!(
-                "Unknown window type: {}",
+                "Unknown window _type: {}",
                 window_type
             )));
         }
@@ -1530,8 +1529,8 @@ pub fn simd_enhanced_convolution(
     output: &mut [f64],
     config: &SimdConfig,
 ) -> SignalResult<()> {
-    check_finite(signal, "signal")?;
-    check_finite(kernel, "kernel")?;
+    check_finite(signal, "signal value")?;
+    check_finite(kernel, "kernel value")?;
 
     let signal_len = signal.len();
     let kernel_len = kernel.len();
@@ -1661,14 +1660,6 @@ unsafe fn avx512_enhanced_convolution(
 /// - High-performance autocorrelation matrix calculation
 /// - Real-time signal filtering with multiple channels
 pub mod advanced_simd_matrix {
-    use super::{simd_enhanced_convolution, SimdConfig};
-    use crate::error::{SignalError, SignalResult};
-    use ndarray::s;
-    use ndarray::{Array2, Array3, ArrayView1};
-    use scirs2_core::parallel_ops::*;
-    use scirs2_core::simd_ops::SimdUnifiedOps;
-    use scirs2_core::validation::check_finite;
-
     /// SIMD-accelerated matrix-vector multiplication for signal processing
     ///
     /// Optimized for signal processing applications where the matrix represents
@@ -1704,7 +1695,7 @@ pub mod advanced_simd_matrix {
             )));
         }
 
-        check_finite(vector, "vector")?;
+        check_finite(vector, "vector value")?;
 
         // Use parallel processing for large matrices
         if rows >= 100 && cols >= 100 && !config.force_scalar {
@@ -1853,7 +1844,7 @@ pub mod advanced_simd_matrix {
         let mut means = vec![0.0; n_channels];
         for ch in 0..n_channels {
             let signal = signals.row(ch);
-            means[ch] = signal.sum() / n_samples as f64;
+            means[ch] = signal.sum() / n_samples  as f64;
         }
 
         // Compute covariance matrix with SIMD acceleration
@@ -1890,7 +1881,7 @@ pub mod advanced_simd_matrix {
                                 cov += (signal_i[k] - mean_i) * (signal_j[k] - mean_j);
                             }
 
-                            cov /= (n_samples - 1) as f64;
+                            cov /= (n_samples - 1)  as f64;
 
                             (i, j, cov)
                         })
@@ -1917,7 +1908,7 @@ pub mod advanced_simd_matrix {
                         .zip(signal_j.iter())
                         .map(|(&si, &sj)| (si - means[i]) * (sj - means[j]))
                         .sum::<f64>()
-                        / (n_samples - 1) as f64;
+                        / (n_samples - 1)  as f64;
 
                     covariance[[i, j]] = cov;
                     if i != j {
@@ -1951,11 +1942,11 @@ pub mod advanced_simd_matrix {
 
         if autocorr_matrix.dim() != (order, order) {
             return Err(SignalError::ValueError(
-                "Autocorrelation matrix dimensions incorrect".to_string(),
+                "Autocorrelation _matrix dimensions incorrect".to_string(),
             ));
         }
 
-        check_finite(signal, "signal")?;
+        check_finite(signal, "signal value")?;
 
         if order >= n {
             return Err(SignalError::ValueError(
@@ -1989,18 +1980,18 @@ pub mod advanced_simd_matrix {
                     sum += signal[i] * signal[i + lag];
                 }
 
-                autocorr_vals[lag] = sum / (n - lag) as f64;
+                autocorr_vals[lag] = sum / (n - lag)  as f64;
             } else {
                 // Scalar computation
                 let mut sum = 0.0;
                 for i in 0..(n - lag) {
                     sum += signal[i] * signal[i + lag];
                 }
-                autocorr_vals[lag] = sum / (n - lag) as f64;
+                autocorr_vals[lag] = sum / (n - lag)  as f64;
             }
         }
 
-        // Build Toeplitz autocorrelation matrix
+        // Build Toeplitz autocorrelation _matrix
         for i in 0..order {
             for j in 0..order {
                 let lag = if i >= j { i - j } else { j - i };
@@ -2014,12 +2005,7 @@ pub mod advanced_simd_matrix {
 
 /// Advanced-high-performance real-time signal processing operations
 pub mod advanced_simd_realtime {
-    use super::SimdConfig;
-    use crate::error::{SignalError, SignalResult};
-    use ndarray::Array2;
-    use scirs2_core::simd_ops::PlatformCapabilities;
     #[cfg(target_arch = "x86_64")]
-    use std::arch::x86_64::*;
 
     /// Real-time SIMD FIR filter state
     #[derive(Debug, Clone)]
@@ -2032,10 +2018,10 @@ pub mod advanced_simd_realtime {
 
     impl RealtimeSimdFirFilter {
         /// Create new real-time SIMD FIR filter
-        pub fn new(coefficients: Vec<f64>, config: SimdConfig) -> Self {
-            let delay_line = vec![0.0; coefficients.len()];
+        pub fn new(_coefficients: Vec<f64>, config: SimdConfig) -> Self {
+            let delay_line = vec![0.0; _coefficients.len()];
             Self {
-                coefficients,
+                _coefficients,
                 delay_line,
                 position: 0,
                 config,
@@ -2139,13 +2125,13 @@ pub mod advanced_simd_realtime {
 
     impl MultiChannelRealtimeProcessor {
         /// Create new multi-channel processor
-        pub fn new(channel_filters: Vec<Vec<f64>>, config: SimdConfig) -> Self {
-            let filters = channel_filters
+        pub fn new(_channel_filters: Vec<Vec<f64>>, config: SimdConfig) -> Self {
+            let _filters = _channel_filters
                 .into_iter()
                 .map(|coeffs| RealtimeSimdFirFilter::new(coeffs, config.clone()))
                 .collect();
 
-            Self { filters, config }
+            Self { _filters, config }
         }
 
         /// Process multi-channel sample
@@ -2283,19 +2269,19 @@ pub fn comprehensive_simd_validation(
         .fold(0.0, f64::max);
 
     validation_result.simd_scalar_max_error = max_error;
-    validation_result.simd_scalar_consistency = max_error < 1e-12;
+    validation_result.simd_consistency = max_error < 1e-12;
 
     // 4. Performance analysis
     let ops_per_second = test_size as f64 / (fir_start.elapsed().as_secs_f64());
     validation_result.operations_per_second = ops_per_second;
 
     // 5. Memory throughput estimation
-    let bytes_processed = test_size * std::mem::size_of::<f64>();
+    let bytes_processed = test_size * std::mem::_size_of::<f64>();
     let memory_throughput = bytes_processed as f64 / fir_start.elapsed().as_secs_f64();
     validation_result.memory_throughput_bytes_per_sec = memory_throughput;
 
     validation_result.total_validation_time_ms = start_time.elapsed().as_secs_f64() * 1000.0;
-    validation_result.validation_passed = validation_result.simd_scalar_consistency;
+    validation_result.validation_passed = validation_result.simd_consistency;
 
     Ok(validation_result)
 }
@@ -2308,7 +2294,7 @@ pub struct SimdValidationResult {
     pub cross_correlation_time_ns: u64,
     pub matrix_vector_time_ns: u64,
     pub simd_scalar_max_error: f64,
-    pub simd_scalar_consistency: bool,
+    pub simd_consistency: bool,
     pub operations_per_second: f64,
     pub memory_throughput_bytes_per_sec: f64,
     pub total_validation_time_ms: f64,
@@ -2327,7 +2313,7 @@ mod tests {
         simd_fir_filter(&input, &coeffs, &mut output, &config).unwrap();
 
         // Basic sanity check
-        assert!(output.iter().all(|&x| x.is_finite()));
+        assert!(output.iter().all(|&x: &f64| x.is_finite()));
         assert!(output[0] > 0.0); // First output should be positive
     }
 
@@ -2339,7 +2325,7 @@ mod tests {
         let result = simd_autocorrelation(&signal, 4, &config).unwrap();
 
         assert_eq!(result.len(), 5); // max_lag + 1
-        assert!(result.iter().all(|&x| x.is_finite()));
+        assert!(result.iter().all(|&x: &f64| x.is_finite()));
         assert!(result[0] > 0.0); // Zero-lag should be positive
     }
 
@@ -2438,7 +2424,7 @@ mod tests {
 
         let rms = simd_rms(&signal, &config).unwrap();
         let expected_energy = 1.0 + 4.0 + 9.0 + 16.0 + 25.0; // Sum of squares
-        let expected_rms = (expected_energy / 5.0).sqrt();
+        let expected_rms = ((expected_energy / 5.0) as f64).sqrt();
 
         assert!((rms - expected_rms).abs() < 1e-10);
     }
@@ -2503,10 +2489,10 @@ pub fn simd_complex_multiply(
         ));
     }
 
-    check_finite(a_real, "a_real")?;
-    check_finite(a_imag, "a_imag")?;
-    check_finite(b_real, "b_real")?;
-    check_finite(b_imag, "b_imag")?;
+    check_finite(a_real, "a_real value")?;
+    check_finite(a_imag, "a_imag value")?;
+    check_finite(b_real, "b_real value")?;
+    check_finite(b_imag, "b_imag value")?;
 
     if n < config.simd_threshold || config.force_scalar {
         return scalar_complex_multiply(a_real, a_imag, b_real, b_imag, result_real, result_imag);
@@ -2540,8 +2526,8 @@ pub fn simd_power_spectrum(
         ));
     }
 
-    check_finite(real, "real")?;
-    check_finite(imag, "imag")?;
+    check_finite(real, "real value")?;
+    check_finite(imag, "imag value")?;
 
     if n < config.simd_threshold || config.force_scalar {
         return scalar_power_spectrum(real, imag, power);
@@ -2592,7 +2578,7 @@ pub fn simd_weighted_average_spectra(
         }
     }
 
-    check_finite(weights, "weights")?;
+    check_finite(weights, "weights value")?;
     for (i, spectrum) in spectra.iter().enumerate() {
         check_finite(spectrum, &format!("spectrum_{}", i))?;
     }
@@ -2629,8 +2615,8 @@ pub fn simd_apply_window_v2(
         ));
     }
 
-    check_finite(signal, "signal")?;
-    check_finite(window, "window")?;
+    check_finite(signal, "signal value")?;
+    check_finite(window, "window value")?;
 
     if n < config.simd_threshold || config.force_scalar {
         return scalar_apply_window(signal, window, result);
@@ -2665,9 +2651,9 @@ fn scalar_complex_multiply(
 }
 
 #[allow(dead_code)]
-fn scalar_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
-    for i in 0..real.len() {
-        power[i] = real[i] * real[i] + imag[i] * imag[i];
+fn scalar_power_spectrum(_real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
+    for i in 0.._real.len() {
+        power[i] = _real[i] * _real[i] + imag[i] * imag[i];
     }
     Ok(())
 }
@@ -2696,9 +2682,9 @@ fn scalar_weighted_average_spectra(
 }
 
 #[allow(dead_code)]
-fn scalar_apply_window(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
-    for i in 0..signal.len() {
-        result[i] = signal[i] * window[i];
+fn scalar_apply_window(_signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
+    for i in 0.._signal.len() {
+        result[i] = _signal[i] * window[i];
     }
     Ok(())
 }
@@ -2727,11 +2713,11 @@ unsafe fn avx2_complex_multiply(
 
         // result_real = a_real * b_real - a_imag * b_imag
         let real_result =
-            _mm256_sub_pd(_mm256_mul_pd(ar_vec, br_vec), _mm256_mul_pd(ai_vec, bi_vec));
+            _mm256_sub_pd(_mm256_mul_pd(ar_vec, br_vec)_mm256_mul_pd(ai_vec, bi_vec));
 
         // result_imag = a_real * b_imag + a_imag * b_real
         let imag_result =
-            _mm256_add_pd(_mm256_mul_pd(ar_vec, bi_vec), _mm256_mul_pd(ai_vec, br_vec));
+            _mm256_add_pd(_mm256_mul_pd(ar_vec, bi_vec)_mm256_mul_pd(ai_vec, br_vec));
 
         _mm256_storeu_pd(result_real.as_mut_ptr().add(idx), real_result);
         _mm256_storeu_pd(result_imag.as_mut_ptr().add(idx), imag_result);
@@ -2747,21 +2733,20 @@ unsafe fn avx2_complex_multiply(
 }
 
 #[target_feature(enable = "avx2")]
-unsafe fn avx2_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
-    let n = real.len();
+unsafe fn avx2_power_spectrum(_real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
+    let n = _real.len();
     let simd_width = 4;
     let simd_chunks = n / simd_width;
 
     for chunk in 0..simd_chunks {
         let idx = chunk * simd_width;
 
-        let real_vec = _mm256_loadu_pd(real.as_ptr().add(idx));
+        let real_vec = _mm256_loadu_pd(_real.as_ptr().add(idx));
         let imag_vec = _mm256_loadu_pd(imag.as_ptr().add(idx));
 
-        // power = real^2 + imag^2
+        // power = _real^2 + imag^2
         let power_vec = _mm256_add_pd(
-            _mm256_mul_pd(real_vec, real_vec),
-            _mm256_mul_pd(imag_vec, imag_vec),
+            _mm256_mul_pd(real_vec, real_vec)_mm256_mul_pd(imag_vec, imag_vec),
         );
 
         _mm256_storeu_pd(power.as_mut_ptr().add(idx), power_vec);
@@ -2769,7 +2754,7 @@ unsafe fn avx2_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> 
 
     // Handle remaining elements
     for i in (simd_chunks * simd_width)..n {
-        power[i] = real[i] * real[i] + imag[i] * imag[i];
+        power[i] = _real[i] * _real[i] + imag[i] * imag[i];
     }
 
     Ok(())
@@ -2789,7 +2774,7 @@ unsafe fn avx2_weighted_average_spectra(
     // Initialize result
     for chunk in 0..simd_chunks {
         let idx = chunk * simd_width;
-        _mm256_storeu_pd(result.as_mut_ptr().add(idx), _mm256_setzero_pd());
+        _mm256_storeu_pd(result.as_mut_ptr().add(idx)_mm256_setzero_pd());
     }
     for i in (simd_chunks * simd_width)..n_freqs {
         result[i] = 0.0;
@@ -2862,8 +2847,8 @@ unsafe fn sse_complex_multiply(
 }
 
 #[target_feature(enable = "sse4.1")]
-unsafe fn sse_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
-    scalar_power_spectrum(real, imag, power)
+unsafe fn sse_power_spectrum(_real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
+    scalar_power_spectrum(_real, imag, power)
 }
 
 #[target_feature(enable = "sse4.1")]

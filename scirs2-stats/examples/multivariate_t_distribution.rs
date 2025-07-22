@@ -1,7 +1,7 @@
 //! Example of using multivariate Student's t-distribution in scirs2-stats
 
 use ndarray::array;
-use scirs2_stats::distributions::multivariate;
+use scirs2__stats::distributions::multivariate;
 
 #[allow(dead_code)]
 fn main() {

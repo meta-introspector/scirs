@@ -5,8 +5,8 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::Array1;
-use num_complex::Complex64;
-use scirs2_fft::{fft, fft2, fftn, frft, ifft, irfft, rfft};
+use num__complex::Complex64;
+use scirs2__fft::{fft, fft2, fftn, frft, ifft, irfft, rfft};
 use std::f64::consts::PI;
 
 /// Benchmark basic 1D FFT operations
@@ -151,7 +151,7 @@ fn bench_memory_efficient(c: &mut Criterion) {
             |b, signal| {
                 b.iter(|| {
                     let mut data = signal.clone();
-                    use scirs2_fft::memory_efficient::{fft_inplace, FftMode};
+                    use scirs2__fft::memory_efficient::{fft_inplace, FftMode};
                     let mut workspace = vec![Complex64::new(0.0, 0.0); data.len()];
                     fft_inplace(
                         black_box(&mut data),
@@ -182,7 +182,7 @@ fn bench_memory_efficient(c: &mut Criterion) {
             &data_2d,
             |b, data| {
                 b.iter(|| {
-                    use scirs2_fft::memory_efficient::{fft2_efficient, FftMode};
+                    use scirs2__fft::memory_efficient::{fft2_efficient, FftMode};
                     fft2_efficient(black_box(&data.view()), None, FftMode::Forward, false)
                 })
             },

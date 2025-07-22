@@ -149,8 +149,8 @@ unsafe impl Send for DeviceBuffer {}
 unsafe impl Sync for DeviceBuffer {}
 impl DeviceBuffer {
     /// Create a new device buffer
-    pub fn new(ptr: *mut u8, size: usize, device_id: usize) -> Self {
-        Self::new_with_type(ptr, size, device_id, MemoryType::Device)
+    pub fn new(_ptr: *mut u8, size: usize, device_id: usize) -> Self {
+        Self::new_with_type(_ptr, size, device_id, MemoryType::Device)
     /// Create a new device buffer with specified memory type
     pub fn new_with_type(
         ptr: *mut u8,
@@ -161,7 +161,7 @@ impl DeviceBuffer {
         static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let id = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         Self {
-            ptr,
+            _ptr,
             size,
             device_id,
             id,
@@ -373,7 +373,7 @@ impl Kernel for MatMulKernel {
         WorkDimensions {
             global: (self.m, self.n, 1),
             local: (16, 16, 1), // 16x16 thread blocks
-            shared_memory: 2 * 16 * 16 * std::mem::size_of::<f32>(),
+            shared_memory: 2 * 16 * 16 * std::mem::size, _of::<f32>(),
     fn memory_requirements(&self) -> KernelMemoryRequirements {
         let a_size = self.m * self.k * std::mem::size_of::<f32>();
         let b_size = self.k * self.n * std::mem::size_of::<f32>();
@@ -451,7 +451,7 @@ impl Default for CPUAccelerator {
                 compute_capability: (1, 0),
                 total_memory: 16 * 1024 * 1024 * 1024, // 16GB
                 memory_bandwidth: 50.0,
-                compute_units: num_cpus::get() as u32,
+                compute_units: num, _cpus: get() as u32,
                 peak_tflops_fp32: 0.5,
                 peak_tflops_fp16: 1.0,
                 peak_tflops_int8: 2.0,
@@ -567,7 +567,7 @@ impl Accelerator for CPUAccelerator {
             shared_memory_usage: work_dim.shared_memory,
         // CPU utilization can be estimated from system load
         // This is a simplified implementation
-        Ok(scirs2_core::parallel_ops::get_num_threads() as f32 / num_cpus::get() as f32)
+        Ok(scirs2_core::parallel_ops::get_num_threads() as f32 / num, _cpus::get() as f32)
         // CPU temperature would require system-specific monitoring
         // Return a safe default temperature
         Ok(65.0)
@@ -590,7 +590,7 @@ impl Drop for DeviceBuffer {
 pub struct CUDAAccelerator {
     device_id: usize,
 impl CUDAAccelerator {
-    pub fn new(device_id: usize) -> Result<Self> {
+    pub fn new(_device_id: usize) -> Result<Self> {
         let capabilities = AcceleratorCapabilities {
             name: format!("CUDA Device {}", device_id),
             compute_capability: (8, 6),            // Default to modern GPU
@@ -623,8 +623,7 @@ impl Accelerator for CUDAAccelerator {
                 "Failed to allocate CUDA memory".to_string(),
         Ok(DeviceBuffer::new(ptr, size, self.device_id))
         let shape = (elements, 1);
-        _inputs: &[&DeviceBuffer],
-        _outputs: &mut [&mut DeviceBuffer],
+        _inputs: &[&DeviceBuffer], _outputs: &mut [&mut DeviceBuffer],
         println!(
             "Executing kernel: {} on CUDA device {}",
             kernel.name(),
@@ -888,7 +887,7 @@ impl Accelerator for IPUAccelerator {
 pub struct AcceleratorFactory;
 impl AcceleratorFactory {
     /// Create an accelerator of the specified type
-    pub fn create(accelerator_type: AcceleratorType) -> Result<Arc<dyn Accelerator>> {
+    pub fn create(_accelerator_type: AcceleratorType) -> Result<Arc<dyn Accelerator>> {
         match accelerator_type {
             AcceleratorType::CPU => Ok(Arc::new(CPUAccelerator::default())),
             AcceleratorType::CUDA => Ok(Arc::new(CUDAAccelerator::new(0)?)),

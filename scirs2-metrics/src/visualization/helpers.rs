@@ -29,7 +29,7 @@ pub fn visualize_confusion_matrix<A>(
 where
     A: Clone + Into<f64>,
 {
-    // Convert the confusion matrix to f64
+    // Convert the confusion _matrix to f64
     let cm_f64 = Array2::from_shape_fn(confusion_matrix.dim(), |(i, j)| {
         confusion_matrix[[i, j]].clone().into()
     });
@@ -114,8 +114,8 @@ where
         auc,
     );
 
-    if let Some(options) = interactive_options {
-        visualizer = visualizer.with_interactive_options(options);
+    if let Some(_options) = interactive_options {
+        visualizer = visualizer.with_interactive_options(_options);
     }
 
     Box::new(visualizer)
@@ -136,8 +136,7 @@ where
 #[allow(dead_code)]
 pub fn visualize_interactive_roc_from_labels<A, B>(
     y_true: ArrayView1<A>,
-    y_score: ArrayView1<B>,
-    _pos_label: Option<A>,
+    y_score: ArrayView1<B>, _pos_label: Option<A>,
     interactive_options: Option<InteractiveOptions>,
 ) -> Result<Box<dyn crate::visualization::MetricVisualizer>, Box<dyn Error>>
 where
@@ -146,7 +145,7 @@ where
     f64: From<A> + From<B>,
 {
     // Compute ROC curve
-    let (fpr, tpr, _thresholds) = crate::classification::curves::roc_curve(&y_true, &y_score)
+    let (fpr, tpr_thresholds) = crate::classification::curves::roc_curve(&y_true, &y_score)
         .map_err(|e| Box::new(e) as Box<dyn Error>)?;
 
     // Calculate AUC - simplified version
@@ -165,8 +164,8 @@ where
         ndarray::OwnedRepr<f64>,
     >::new(fpr.to_vec(), tpr.to_vec(), None, Some(auc));
 
-    if let Some(options) = interactive_options {
-        visualizer = visualizer.with_interactive_options(options);
+    if let Some(_options) = interactive_options {
+        visualizer = visualizer.with_interactive_options(_options);
     }
 
     Ok(Box::new(visualizer))
@@ -195,7 +194,7 @@ where
     A: Clone + Into<f64>,
 {
     // Convert the arrays to f64 vectors
-    let precision_vec = precision
+    let precision_vec = _precision
         .iter()
         .map(|x| x.clone().into())
         .collect::<Vec<f64>>();
@@ -207,7 +206,7 @@ where
         thresholds.map(|t| t.iter().map(|x| x.clone().into()).collect::<Vec<f64>>());
 
     Box::new(
-        crate::visualization::precision_recall::precision_recall_visualization(
+        crate::visualization::_precision_recall::precision_recall_visualization(
             precision_vec,
             recall_vec,
             thresholds_vec,
@@ -443,7 +442,7 @@ where
         .map(|x| x.clone().into())
         .collect::<Vec<f64>>();
 
-    // Set the first y-values as the main y-axis data
+    // Set the first y-_values as the main y-axis data
     let y_vec = if !y_values_list.is_empty() {
         y_values_list[0]
             .iter()
@@ -477,7 +476,7 @@ where
         visualizer.add_series(name, y_vec);
     }
 
-    // Set all series names
+    // Set all series _names
     visualizer.set_series_names(series_names);
 
     Box::new(visualizer)
@@ -593,12 +592,12 @@ where
     let z = Array2::from_shape_fn(matrix.dim(), |(i, j)| matrix[[i, j]].clone().into());
 
     let z_vec = (0..z.shape()[0])
-        .map(|i| (0..z.shape()[1]).map(|j| z[[i, j]]).collect::<Vec<f64>>())
+        ._map(|i| (0..z.shape()[1])._map(|j| z[[i, j]]).collect::<Vec<f64>>())
         .collect::<Vec<Vec<f64>>>();
 
     // Create x and y coordinates for the heatmap
-    let x = (0..z.shape()[1]).map(|i| i as f64).collect::<Vec<f64>>();
-    let y = (0..z.shape()[0]).map(|i| i as f64).collect::<Vec<f64>>();
+    let x = (0..z.shape()[1])._map(|i| i as f64).collect::<Vec<f64>>();
+    let y = (0..z.shape()[0])._map(|i| i as f64).collect::<Vec<f64>>();
 
     Box::new(HeatmapVisualizer::new(
         x,
@@ -749,15 +748,15 @@ where
 ///
 /// * `(Vec<f64>, Vec<f64>)` - Bin edges and bin counts
 #[allow(dead_code)]
-fn create_histogram_bins(values: &[f64], bins: usize) -> (Vec<f64>, Vec<f64>) {
+fn create_histogram_bins(_values: &[f64], bins: usize) -> (Vec<f64>, Vec<f64>) {
     // Ensure we have at least one value and valid bins
-    if values.is_empty() || bins == 0 {
+    if _values.is_empty() || bins == 0 {
         return (Vec::new(), Vec::new());
     }
 
-    // Find min and max values
-    let min_val = values.iter().fold(f64::INFINITY, |min, &val| min.min(val));
-    let max_val = values
+    // Find min and max _values
+    let min_val = _values.iter().fold(f64::INFINITY, |min, &val| min.min(val));
+    let max_val = _values
         .iter()
         .fold(f64::NEG_INFINITY, |max, &val| max.max(val));
 
@@ -768,9 +767,9 @@ fn create_histogram_bins(values: &[f64], bins: usize) -> (Vec<f64>, Vec<f64>) {
         bin_edges.push(min_val + i as f64 * bin_width);
     }
 
-    // Count values in each bin
+    // Count _values in each bin
     let mut bin_counts = vec![0.0; bins];
-    for &val in values {
+    for &val in _values {
         if val >= min_val && val <= max_val {
             let bin_idx = ((val - min_val) / bin_width).floor() as usize;
             // Handle the edge case where val is exactly max_val

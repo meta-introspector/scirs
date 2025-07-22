@@ -22,9 +22,7 @@ use crate::error::{NdimageError, NdimageResult};
 #[allow(dead_code)]
 pub fn pad_array<T, D>(
     input: &Array<T, D>,
-    pad_width: &[(usize, usize)],
-    _mode: &MorphBorderMode,
-    _constant_value: T,
+    pad_width: &[(usize, usize)], _mode: &MorphBorderMode_constant_value: T,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
@@ -39,7 +37,7 @@ where
 
     if pad_width.len() != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
-            "Pad width must have same length as input dimensions (got {} expected {})",
+            "Pad _width must have same length as input dimensions (got {} expected {})",
             pad_width.len(),
             input.ndim()
         )));
@@ -65,19 +63,19 @@ where
 ///
 /// * `Result<()>` - Ok if valid, Error otherwise
 #[allow(dead_code)]
-pub fn validate_structure<D>(structure: &Array<bool, D>) -> NdimageResult<()>
+pub fn validate_structure<D>(_structure: &Array<bool, D>) -> NdimageResult<()>
 where
     D: Dimension,
 {
     // Validate inputs
-    if structure.ndim() == 0 {
+    if _structure.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Structure cannot be 0-dimensional".into(),
         ));
     }
 
     // Require at least one True value
-    if !structure.iter().any(|&x| x) {
+    if !_structure.iter().any(|&x| x) {
         return Err(NdimageError::InvalidInput(
             "Structure must have at least one True value".into(),
         ));
@@ -85,7 +83,7 @@ where
 
     // For proper validation we would also check:
     // - All dimensions are odd (so there's a clear center)
-    // - The structure has a center element that is True
+    // - The _structure has a center element that is True
 
     Ok(())
 }

@@ -4,7 +4,7 @@
 //! efficient handling of large datasets without loading them entirely into memory.
 
 use ndarray::{Array1, Array2, Array3};
-use scirs2_io::mmap::{create_mmap_array, read_mmap_array, MmapArray, MmapArrayMut};
+use scirs2__io::mmap::{create_mmap_array, read_mmap_array, MmapArray, MmapArrayMut};
 use std::time::Instant;
 use tempfile::tempdir;
 

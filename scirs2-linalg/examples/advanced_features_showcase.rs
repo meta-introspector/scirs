@@ -91,9 +91,9 @@ fn performance_optimization_demo() -> LinalgResult<()> {
 fn simd_operations_demo() -> LinalgResult<()> {
     // SIMD demonstration commented out for compilation simplicity
     // In a real implementation, you would use:
-    // - scirs2_linalg::simd_ops::gemm::simd_gemm_f64 for matrix multiplication
-    // - scirs2_linalg::simd_ops::transpose::simd_transpose_f64 for transpose
-    // - scirs2_linalg::simd_ops::norms::simd_frobenius_norm_f64 for norms
+    // - scirs2_linalg::simd, _ops::gemm::simd_gemm_f64 for matrix multiplication
+    // - scirs2_linalg::simd, _ops::transpose::simd_transpose_f64 for transpose
+    // - scirs2_linalg::simd, _ops::norms::simd_frobenius_norm_f64 for norms
 
     println!("⚡ SIMD-Accelerated Operations");
     println!("{}", "=".repeat(50));
@@ -340,7 +340,7 @@ fn specialized_algorithms_demo() -> LinalgResult<()> {
     println!("  Symmetric tridiagonal matrix (discrete Laplacian)");
 
     // Eigenvalues of symmetric tridiagonal matrices can be computed very efficiently
-    let (tridiag_eigenvals, _) = scirs2_linalg::eigh(&tridiag.view(), None)?;
+    let (tridiag_eigenvals, _eigenvecs) = scirs2_linalg::eigh(&tridiag.view(), None)?;
     println!(
         "  Eigenvalue range: [{:.6}, {:.6}]",
         tridiag_eigenvals[0],

@@ -109,7 +109,7 @@ impl GemmKernel {
     }
 
     /// Create a GEMM kernel with specific alpha and beta values
-    pub fn with_alpha_beta(_alpha: f32, _beta: f32) -> Box<dyn GpuKernel> {
+    pub fn with_alpha_beta(alpha: f32, beta: f32) -> Box<dyn GpuKernel> {
         let kernel = Self::new();
 
         // Generate specialized kernel sources with hard-coded alpha/beta values
@@ -464,8 +464,7 @@ __kernel void gemm_standard(
     }
 
     /// Generate a specialized kernel for the given dimensions
-    fn generate_specialized_kernel(
-        &self,
+    fn generate_kernel(
         data_type: DataType,
         m: usize,
         n: usize,
@@ -524,7 +523,7 @@ impl GpuKernel for GemmKernel {
         let n = params.output_dims.get(1).copied().unwrap_or(0);
 
         // Generate specialized kernel
-        let specialized = self.generate_specialized_kernel(params.data_type, m, n, k)?;
+        let specialized = Self::generate_kernel(params.data_type, m, n, k)?;
 
         Ok(Box::new(specialized))
     }

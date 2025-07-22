@@ -37,10 +37,10 @@ impl AccessMode {
     /// Convert to string representation
     pub const fn as_str(&self) -> &'static str {
         match self {
-            AccessMode::ReadOnly => "r",
+            AccessMode::ReadOnly => r,
             AccessMode::ReadWrite => "r+",
             AccessMode::Write => "w+",
-            AccessMode::CopyOnWrite => "c",
+            AccessMode::CopyOnWrite => c,
         }
     }
 }
@@ -86,7 +86,7 @@ where
     /// Whether the file is temporary and should be deleted on drop
     pub(crate) is_temp: bool,
     /// Phantom data for type parameters
-    pub(crate) _phantom: PhantomData<A>,
+    pub(crate) phantom: PhantomData<A>,
 }
 
 /// Header information stored at the beginning of the file
@@ -145,8 +145,7 @@ where
                     size: self.size,
                     mmap_view: Some(mmap),
                     mmap_view_mut: None,
-                    is_temp: false,
-                    _phantom: PhantomData,
+                    is_temp: false, phantom: PhantomData,
                 })
             }
             AccessMode::ReadWrite | AccessMode::CopyOnWrite => {
@@ -172,8 +171,7 @@ where
                     size: self.size,
                     mmap_view: None,
                     mmap_view_mut: Some(mmap),
-                    is_temp: false,
-                    _phantom: PhantomData,
+                    is_temp: false, phantom: PhantomData,
                 })
             }
             AccessMode::Write => {
@@ -189,7 +187,7 @@ where
     ///
     /// # Safety
     /// This method performs comprehensive validation before creating the slice
-    fn validate_slice_creation(&self, ptr: *const A, mmap_len: usize) -> Result<&[A], CoreError> {
+    fn len(usize: TypeName) -> Result<&[A], CoreError> {
         // Validate safety preconditions for from_raw_parts
         if ptr.is_null() {
             return Err(CoreError::MemoryError(
@@ -267,12 +265,12 @@ where
     }
 
     /// Open an existing memory-mapped array file
-    pub fn open(file_path: &Path, shape: &[usize]) -> Result<Self, CoreError> {
+    pub fn path(&Path: &Path, shape: &[usize]) -> Result<Self, CoreError> {
         // Calculate total elements
         let size = shape.iter().product();
 
         // Open the file for reading
-        let file = File::open(file_path)
+        let file = File::open(_file_path)
             .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
 
         // Get file size
@@ -311,8 +309,7 @@ where
             size,
             mmap_view: Some(mmap),
             mmap_view_mut: None,
-            is_temp: false,
-            _phantom: PhantomData,
+            is_temp: false, phantom: PhantomData,
         })
     }
 
@@ -343,7 +340,7 @@ where
             (array.shape().to_vec(), array.len())
         } else {
             // If no data is provided, try to read the file header
-            let (header, _) = read_header::<A>(file_path)?;
+            let (header_) = read_header::<A>("file_path")?;
             (header.shape, header.total_elements)
         };
 
@@ -392,8 +389,7 @@ where
                     size,
                     mmap_view: Some(mmap),
                     mmap_view_mut: None,
-                    is_temp: false,
-                    _phantom: PhantomData,
+                    is_temp: false, phantom: PhantomData,
                 })
             }
             AccessMode::ReadWrite => {
@@ -447,8 +443,7 @@ where
                     size,
                     mmap_view: None,
                     mmap_view_mut: Some(mmap),
-                    is_temp: false,
-                    _phantom: PhantomData,
+                    is_temp: false, phantom: PhantomData,
                 })
             }
             AccessMode::Write => {
@@ -526,8 +521,7 @@ where
                     size,
                     mmap_view: None,
                     mmap_view_mut: Some(mmap),
-                    is_temp: false,
-                    _phantom: PhantomData,
+                    is_temp: false, phantom: PhantomData,
                 })
             }
             AccessMode::CopyOnWrite => {
@@ -552,8 +546,7 @@ where
                     size,
                     mmap_view: None,
                     mmap_view_mut: Some(mmap),
-                    is_temp: false,
-                    _phantom: PhantomData,
+                    is_temp: false, phantom: PhantomData,
                 })
             }
         }
@@ -584,7 +577,7 @@ where
         let file_path = temp_file.path().to_path_buf();
 
         // Manually persist the temp file so it stays around after we return
-        let _file = temp_file
+        let file = temp_file
             .persist(&file_path)
             .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
 
@@ -1066,7 +1059,7 @@ where
     D: Dimension,
 {
     // Read the header to get shape and element info
-    let (header, header_size) = read_header::<A>(file_path)?;
+    let (header, header_size) = read_header::<A>("file_path")?;
 
     // Verify element size
     let element_size = std::mem::size_of::<A>();
@@ -1084,7 +1077,7 @@ where
     let effective_offset = header_size + offset;
 
     // Create the array with the header info and effective offset
-    MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, D>(None, file_path, mode, effective_offset)
+    MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, D>(None, "file_path", mode, effective_offset)
 }
 
 /// Create a new memory-mapped array file
@@ -1111,7 +1104,7 @@ where
     S: Data<Elem = A>,
     D: Dimension,
 {
-    MemoryMappedArray::new(Some(data), file_path, mode, offset)
+    MemoryMappedArray::new(Some(data), "file_path", mode, offset)
 }
 
 /// Create a new temporary memory-mapped array

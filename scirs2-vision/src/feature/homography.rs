@@ -54,7 +54,7 @@ pub fn find_homography(
     // Configure RANSAC
     let config = RansacConfig {
         max_iterations: 2000,
-        threshold: ransac_threshold,
+        _threshold: ransac_threshold,
         min_inliers: 4,
         confidence,
         seed: None,
@@ -104,7 +104,7 @@ pub fn find_homography_from_matches(
     let mut src_points = Vec::with_capacity(matches.len());
     let mut dst_points = Vec::with_capacity(matches.len());
 
-    for &(idx1, idx2, _) in matches {
+    for &(idx1, idx2_) in matches {
         if idx1 >= keypoints1.len() || idx2 >= keypoints2.len() {
             return Err(crate::error::VisionError::InvalidParameter(format!(
                 "Invalid keypoint indices: ({idx1}, {idx2})"
@@ -241,7 +241,7 @@ pub fn perspective_transform(
     src_quad: &[(f64, f64); 4],
     dst_quad: &[(f64, f64); 4],
 ) -> Result<Homography> {
-    find_homography(src_quad, dst_quad, 1e-10, 0.99).map(|(h, _)| h)
+    find_homography(src_quad, dst_quad, 1e-10, 0.99).map(|(h_)| h)
 }
 
 /// Fit a rectangle to a set of points
@@ -254,8 +254,8 @@ pub fn perspective_transform(
 ///
 /// * Rectangle corners (top-left, top-right, bottom-right, bottom-left)
 #[allow(dead_code)]
-pub fn fit_rectangle(points: &[(f64, f64)]) -> [(f64, f64); 4] {
-    if points.is_empty() {
+pub fn fit_rectangle(_points: &[(f64, f64)]) -> [(f64, f64); 4] {
+    if _points.is_empty() {
         return [(0.0, 0.0); 4];
     }
 
@@ -265,7 +265,7 @@ pub fn fit_rectangle(points: &[(f64, f64)]) -> [(f64, f64); 4] {
     let mut max_x = f64::MIN;
     let mut max_y = f64::MIN;
 
-    for &(x, y) in points {
+    for &(x, y) in _points {
         min_x = min_x.min(x);
         min_y = min_y.min(y);
         max_x = max_x.max(x);

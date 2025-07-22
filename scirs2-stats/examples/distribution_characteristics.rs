@@ -1,8 +1,8 @@
 use ndarray::array;
-use scirs2_stats::distribution_characteristics::{
+use scirs2__stats::distribution_characteristics::{
     cross_entropy, entropy, kl_divergence, kurtosis_ci, mode, skewness_ci, ModeMethod,
 };
-use scirs2_stats::skew;
+use scirs2__stats::skew;
 
 #[allow(dead_code)]
 fn main() {

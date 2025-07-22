@@ -5,7 +5,7 @@
 //! triangular part of the matrix.
 
 use crate::coo::CooMatrix;
-use crate::coo_array::CooArray;
+use crate::coo__array::CooArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use num_traits::Float;
@@ -136,18 +136,18 @@ where
     /// # Returns
     ///
     /// A symmetric COO matrix
-    pub fn from_coo(matrix: &CooMatrix<T>) -> SparseResult<Self> {
-        let (rows, cols) = matrix.shape();
+    pub fn from_coo(_matrix: &CooMatrix<T>) -> SparseResult<Self> {
+        let (rows, cols) = _matrix.shape();
 
-        // Ensure matrix is square
+        // Ensure _matrix is square
         if rows != cols {
             return Err(SparseError::ValueError(
-                "Symmetric matrix must be square".to_string(),
+                "Symmetric _matrix must be square".to_string(),
             ));
         }
 
-        // Check if the matrix is symmetric
-        if !Self::is_symmetric(matrix) {
+        // Check if the _matrix is symmetric
+        if !Self::is_symmetric(_matrix) {
             return Err(SparseError::ValueError(
                 "Matrix must be symmetric to convert to SymCOO format".to_string(),
             ));
@@ -158,9 +158,9 @@ where
         let mut row_indices = Vec::new();
         let mut col_indices = Vec::new();
 
-        let rows_vec = matrix.row_indices();
-        let cols_vec = matrix.col_indices();
-        let data_vec = matrix.data();
+        let rows_vec = _matrix.row_indices();
+        let cols_vec = _matrix.col_indices();
+        let data_vec = _matrix.data();
 
         for i in 0..data_vec.len() {
             let row = rows_vec[i];
@@ -191,8 +191,8 @@ where
     /// # Returns
     ///
     /// `true` if the matrix is symmetric, `false` otherwise
-    pub fn is_symmetric(matrix: &CooMatrix<T>) -> bool {
-        let (rows, cols) = matrix.shape();
+    pub fn is_symmetric(_matrix: &CooMatrix<T>) -> bool {
+        let (rows, cols) = _matrix.shape();
 
         // Must be square
         if rows != cols {
@@ -200,7 +200,7 @@ where
         }
 
         // Convert to dense to check symmetry (more efficient for COO format)
-        let dense = matrix.to_dense();
+        let dense = _matrix.to_dense();
 
         for i in 0..rows {
             for j in 0..i {
@@ -376,8 +376,8 @@ where
     /// # Returns
     ///
     /// SymCOO array
-    pub fn new(matrix: SymCooMatrix<T>) -> Self {
-        Self { inner: matrix }
+    pub fn new(_matrix: SymCooMatrix<T>) -> Self {
+        Self { inner: _matrix }
     }
 
     /// Create a SymCOO array from triplets (row, col, value)
@@ -427,12 +427,12 @@ where
                 dense[row][col] = data[i];
             }
 
-            // Check if the matrix is symmetric
+            // Check if the matrix is _symmetric
             for i in 0..n {
                 for j in 0..i {
                     if (dense[i][j] - dense[j][i]).abs() > T::epsilon() {
                         return Err(SparseError::ValueError(
-                            "Input is not symmetric. Use enforce_symmetric=true to force symmetry"
+                            "Input is not _symmetric. Use enforce_symmetric=true to force symmetry"
                                 .to_string(),
                         ));
                     }
@@ -454,12 +454,12 @@ where
                 }
             }
 
-            // Create the symmetric matrix
+            // Create the _symmetric matrix
             let sym_coo = SymCooMatrix::new(sym_data, sym_rows, sym_cols, shape)?;
             return Ok(Self { inner: sym_coo });
         }
 
-        // Create a symmetric matrix by averaging corresponding elements
+        // Create a _symmetric matrix by averaging corresponding elements
         let n = shape.0;
 
         // First, build a dense matrix with all input elements
@@ -487,7 +487,7 @@ where
             dense[row][col] = data[i];
         }
 
-        // Make symmetric by averaging a_ij and a_ji
+        // Make _symmetric by averaging a_ij and a_ji
         for i in 0..n {
             for j in 0..i {
                 let avg = (dense[i][j] + dense[j][i]) / (T::one() + T::one());
@@ -524,8 +524,8 @@ where
     /// # Returns
     ///
     /// A symmetric COO array
-    pub fn from_coo_array(array: &CooArray<T>) -> SparseResult<Self> {
-        let shape = array.shape();
+    pub fn from_coo_array(_array: &CooArray<T>) -> SparseResult<Self> {
+        let shape = _array.shape();
         let (rows, cols) = shape;
 
         // Ensure matrix is square
@@ -537,9 +537,9 @@ where
 
         // Create a temporary COO matrix to check symmetry
         let coo_matrix = CooMatrix::new(
-            array.get_data().to_vec(),
-            array.get_rows().to_vec(),
-            array.get_cols().to_vec(),
+            _array.get_data().to_vec(),
+            _array.get_rows().to_vec(),
+            _array.get_cols().to_vec(),
             shape,
         )?;
 

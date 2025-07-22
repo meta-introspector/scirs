@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
-use crate::advanced_fusion_algorithms::{AdvancedConfig, AdvancedState};
+use crate::advanced_fusion__algorithms::{AdvancedConfig, AdvancedState};
 use crate::error::{NdimageError, NdimageResult};
 
 /// Comprehensive validation framework for Advanced operations
@@ -89,9 +89,9 @@ impl ComprehensiveValidator {
     }
 
     /// Create new validator with custom configuration
-    pub fn with_config(config: ValidationConfig) -> Self {
+    pub fn with_config(_config: ValidationConfig) -> Self {
         Self {
-            config,
+            _config,
             benchmarks: HashMap::new(),
             error_history: Vec::new(),
         }
@@ -190,7 +190,7 @@ impl ComprehensiveValidator {
         let time_per_pixel = processing_time.as_nanos() / total_pixels as u128;
         if time_per_pixel > self.config.max_time_per_pixel as u128 {
             report.warnings.push(format!(
-                "Processing time per pixel ({} ns) exceeds threshold ({} ns)",
+                "Processing _time per pixel ({} ns) exceeds threshold ({} ns)",
                 time_per_pixel, self.config.max_time_per_pixel
             ));
         }
@@ -413,15 +413,15 @@ where
     let start_time = Instant::now();
 
     // Perform Advanced processing
-    let (output, state) =
+    let (output_state) =
         crate::advanced_fusion_algorithms::fusion_processing(image, config, previous_state)?;
 
     let processing_time = start_time.elapsed();
 
     // Post-processing validation
-    let report = validator.validate_output(&output, &state, processing_time)?;
+    let report = validator.validate_output(&output, &_state, processing_time)?;
 
-    Ok((output, state, report))
+    Ok((output, _state, report))
 }
 
 #[cfg(test)]

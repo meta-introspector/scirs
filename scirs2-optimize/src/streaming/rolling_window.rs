@@ -80,7 +80,7 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
     ) -> Self {
         let window_size = config.window_size;
         Self {
-            parameters: initial_parameters,
+            _parameters: initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),
@@ -88,7 +88,7 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
             window_optimizer: window_optimizer_type,
             refit_every_update,
             refit_frequency: window_size / 4, // Default: refit every quarter window
-            update_counter: 0,
+            _update_counter: 0,
         }
     }
 
@@ -309,7 +309,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for RollingWindowOptimize
         let start_time = std::time::Instant::now();
         let old_parameters = self.parameters.clone();
 
-        // Add data point to window
+        // Add data _point to window
         self.update_window(data_point.clone());
         self.update_counter += 1;
 

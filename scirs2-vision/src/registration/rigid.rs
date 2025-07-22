@@ -27,7 +27,7 @@ pub fn register_rigid_points(
         ));
     }
 
-    // Convert points to matches
+    // Convert _points to matches
     let matches: Vec<PointMatch> = source_points
         .iter()
         .zip(target_points.iter())
@@ -38,7 +38,7 @@ pub fn register_rigid_points(
         })
         .collect();
 
-    // Use RANSAC for robust estimation if we have enough points
+    // Use RANSAC for robust estimation if we have enough _points
     if matches.len() >= 4 && params.ransac_iterations > 0 {
         ransac_estimate_transform(&matches, TransformType::Rigid, params)
     } else {
@@ -138,7 +138,7 @@ pub fn register_rigid_icp(
         current_transform =
             crate::registration::compose_transforms(&current_transform, &step_transform);
 
-        // Apply transformation to source points
+        // Apply transformation to source _points
         transformed_source = crate::registration::transform_points(
             &source_points
                 .iter()

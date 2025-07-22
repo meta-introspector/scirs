@@ -32,7 +32,7 @@
 //! ### Matrix API (Legacy)
 //!
 //! ```
-//! use scirs2_sparse::csr::CsrMatrix;
+//! use scirs2__sparse::csr::CsrMatrix;
 //!
 //! // Create a sparse matrix in CSR format
 //! let rows = vec![0, 0, 1, 2, 2];
@@ -46,7 +46,7 @@
 //! ### Array API (Recommended)
 //!
 //! ```
-//! use scirs2_sparse::csr_array::CsrArray;
+//! use scirs2__sparse::csr_array::CsrArray;
 //!
 //! // Create a sparse array in CSR format
 //! let rows = vec![0, 0, 1, 2, 2];
@@ -71,41 +71,41 @@ pub use sparray::{is_sparse, SparseArray, SparseSum};
 
 // Trait for symmetric sparse arrays
 pub mod sym_sparray;
-pub use sym_sparray::SymSparseArray;
+pub use sym__sparray::SymSparseArray;
 
 // No spatial module in sparse
 
 // Array API (recommended)
 pub mod csr_array;
-pub use csr_array::CsrArray;
+pub use csr__array::CsrArray;
 
 pub mod csc_array;
-pub use csc_array::CscArray;
+pub use csc__array::CscArray;
 
 pub mod coo_array;
-pub use coo_array::CooArray;
+pub use coo__array::CooArray;
 
 pub mod dok_array;
-pub use dok_array::DokArray;
+pub use dok__array::DokArray;
 
 pub mod lil_array;
-pub use lil_array::LilArray;
+pub use lil__array::LilArray;
 
 pub mod dia_array;
-pub use dia_array::DiaArray;
+pub use dia__array::DiaArray;
 
 pub mod bsr_array;
-pub use bsr_array::BsrArray;
+pub use bsr__array::BsrArray;
 
 pub mod banded_array;
-pub use banded_array::BandedArray;
+pub use banded__array::BandedArray;
 
 // Symmetric array formats
 pub mod sym_csr;
-pub use sym_csr::{SymCsrArray, SymCsrMatrix};
+pub use sym__csr::{SymCsrArray, SymCsrMatrix};
 
 pub mod sym_coo;
-pub use sym_coo::{SymCooArray, SymCooMatrix};
+pub use sym__coo::{SymCooArray, SymCooMatrix};
 
 // Legacy matrix formats
 pub mod csr;
@@ -249,11 +249,11 @@ pub use combine::{block_diag, bmat, hstack, kron, kronsum, tril, triu, vstack};
 
 // Index dtype handling utilities
 pub mod index_dtype;
-pub use index_dtype::{can_cast_safely, get_index_dtype, safely_cast_index_arrays};
+pub use index__dtype::{can_cast_safely, get_index_dtype, safely_cast_index_arrays};
 
 // Optimized operations for symmetric sparse formats
 pub mod sym_ops;
-pub use sym_ops::{
+pub use sym__ops::{
     sym_coo_matvec, sym_csr_matvec, sym_csr_quadratic_form, sym_csr_rank1_update, sym_csr_trace,
 };
 
@@ -261,33 +261,33 @@ pub use sym_ops::{
 pub mod gpu_kernel_execution;
 pub mod gpu_ops;
 pub mod gpu_spmv_implementation;
-pub use gpu_kernel_execution::{
+pub use gpu_kernel__execution::{
     calculate_adaptive_workgroup_size, execute_spmv_kernel, execute_symmetric_spmv_kernel,
     execute_triangular_solve_kernel, GpuKernelConfig, GpuMemoryManager as GpuKernelMemoryManager,
     GpuPerformanceProfiler, MemoryStrategy,
 };
-pub use gpu_ops::{
+pub use gpu__ops::{
     gpu_sparse_matvec, gpu_sym_sparse_matvec, AdvancedGpuOps, GpuKernelScheduler, GpuMemoryManager,
     GpuOptions, GpuProfiler, OptimizedGpuOps,
 };
-pub use gpu_spmv_implementation::GpuSpMV;
+pub use gpu_spmv__implementation::GpuSpMV;
 
 // Memory-efficient algorithms and patterns
 pub mod memory_efficient;
-pub use memory_efficient::{
+pub use memory__efficient::{
     streaming_sparse_matvec, CacheAwareOps, MemoryPool, MemoryTracker, OutOfCoreProcessor,
 };
 
 // SIMD-accelerated operations
 pub mod simd_ops;
-pub use simd_ops::{
+pub use simd__ops::{
     simd_csr_matvec, simd_sparse_elementwise, simd_sparse_linear_combination, simd_sparse_matmul,
     simd_sparse_norm, simd_sparse_scale, simd_sparse_transpose, ElementwiseOp, SimdOptions,
 };
 
 // Parallel vector operations for iterative solvers
 pub mod parallel_vector_ops;
-pub use parallel_vector_ops::{
+pub use parallel_vector__ops::{
     advanced_sparse_matvec_csr, parallel_axpy, parallel_dot, parallel_linear_combination,
     parallel_norm2, parallel_sparse_matvec_csr, parallel_vector_add, parallel_vector_copy,
     parallel_vector_scale, parallel_vector_sub, ParallelVectorOptions,
@@ -295,32 +295,32 @@ pub use parallel_vector_ops::{
 
 // Quantum-inspired sparse matrix operations (Advanced mode)
 pub mod quantum_inspired_sparse;
-pub use quantum_inspired_sparse::{
+pub use quantum_inspired__sparse::{
     QuantumProcessorStats, QuantumSparseConfig, QuantumSparseProcessor, QuantumStrategy,
 };
 
 // Neural-adaptive sparse matrix operations (Advanced mode)
 pub mod neural_adaptive_sparse;
-pub use neural_adaptive_sparse::{
+pub use neural_adaptive__sparse::{
     NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor, NeuralProcessorStats, OptimizationStrategy,
 };
 
 // Quantum-Neural hybrid optimization (Advanced mode)
 pub mod quantum_neural_hybrid;
-pub use quantum_neural_hybrid::{
+pub use quantum_neural__hybrid::{
     HybridStrategy, QuantumNeuralConfig, QuantumNeuralHybridProcessor, QuantumNeuralHybridStats,
 };
 
 // Adaptive memory compression for advanced-large sparse matrices (Advanced mode)
 pub mod adaptive_memory_compression;
-pub use adaptive_memory_compression::{
+pub use adaptive_memory__compression::{
     AdaptiveCompressionConfig, AdaptiveMemoryCompressor, CompressedMatrix, CompressionAlgorithm,
     MemoryStats,
 };
 
 // Real-time performance monitoring and adaptation (Advanced mode)
 pub mod realtime_performance_monitor;
-pub use realtime_performance_monitor::{
+pub use realtime_performance__monitor::{
     Alert, AlertSeverity, Forecast, PerformanceMetrics, PerformanceMonitorConfig,
     PerformanceSample, ProcessorType, RealTimePerformanceMonitor,
 };
@@ -381,9 +381,9 @@ pub struct SparseWarning;
 
 /// Check if an object is a sparse array
 #[allow(dead_code)]
-pub fn is_sparse_array<T>(obj: &dyn SparseArray<T>) -> bool
+pub fn is_sparse_array<T>(_obj: &dyn SparseArray<T>) -> bool
 where
-    T: num_traits::Float
+    T: num_traits: Float
         + std::fmt::Debug
         + Copy
         + std::ops::Add<Output = T>
@@ -392,14 +392,14 @@ where
         + std::ops::Div<Output = T>
         + 'static,
 {
-    sparray::is_sparse(obj)
+    sparray::is_sparse(_obj)
 }
 
 /// Check if an object is a symmetric sparse array
 #[allow(dead_code)]
-pub fn is_sym_sparse_array<T>(obj: &dyn SymSparseArray<T>) -> bool
+pub fn is_sym_sparse_array<T>(_obj: &dyn SymSparseArray<T>) -> bool
 where
-    T: num_traits::Float
+    T: num_traits: Float
         + std::fmt::Debug
         + Copy
         + std::ops::Add<Output = T>
@@ -408,30 +408,30 @@ where
         + std::ops::Div<Output = T>
         + 'static,
 {
-    obj.is_symmetric()
+    _obj.is_symmetric()
 }
 
 /// Check if an object is a sparse matrix (legacy API)
 #[allow(dead_code)]
-pub fn is_sparse_matrix(obj: &dyn std::any::Any) -> bool {
-    obj.is::<CsrMatrix<f64>>()
-        || obj.is::<CscMatrix<f64>>()
-        || obj.is::<CooMatrix<f64>>()
-        || obj.is::<DokMatrix<f64>>()
-        || obj.is::<LilMatrix<f64>>()
-        || obj.is::<DiaMatrix<f64>>()
-        || obj.is::<BsrMatrix<f64>>()
-        || obj.is::<SymCsrMatrix<f64>>()
-        || obj.is::<SymCooMatrix<f64>>()
-        || obj.is::<CsrMatrix<f32>>()
-        || obj.is::<CscMatrix<f32>>()
-        || obj.is::<CooMatrix<f32>>()
-        || obj.is::<DokMatrix<f32>>()
-        || obj.is::<LilMatrix<f32>>()
-        || obj.is::<DiaMatrix<f32>>()
-        || obj.is::<BsrMatrix<f32>>()
-        || obj.is::<SymCsrMatrix<f32>>()
-        || obj.is::<SymCooMatrix<f32>>()
+pub fn is_sparse_matrix(_obj: &dyn std::any::Any) -> bool {
+    _obj.is::<CsrMatrix<f64>>()
+        || _obj.is::<CscMatrix<f64>>()
+        || _obj.is::<CooMatrix<f64>>()
+        || _obj.is::<DokMatrix<f64>>()
+        || _obj.is::<LilMatrix<f64>>()
+        || _obj.is::<DiaMatrix<f64>>()
+        || _obj.is::<BsrMatrix<f64>>()
+        || _obj.is::<SymCsrMatrix<f64>>()
+        || _obj.is::<SymCooMatrix<f64>>()
+        || _obj.is::<CsrMatrix<f32>>()
+        || _obj.is::<CscMatrix<f32>>()
+        || _obj.is::<CooMatrix<f32>>()
+        || _obj.is::<DokMatrix<f32>>()
+        || _obj.is::<LilMatrix<f32>>()
+        || _obj.is::<DiaMatrix<f32>>()
+        || _obj.is::<BsrMatrix<f32>>()
+        || _obj.is::<SymCsrMatrix<f32>>()
+        || _obj.is::<SymCooMatrix<f32>>()
 }
 
 #[cfg(test)]
@@ -683,7 +683,7 @@ mod tests {
     #[test]
     fn test_construct_sym_utils() {
         // Test creating an identity matrix
-        let eye = construct_sym::eye_sym_array::<f64>(3, "csr").unwrap();
+        let eye = construct_sym::eye_sym, _array::<f64>(3, "csr").unwrap();
 
         assert_eq!(eye.shape(), (3, 3));
         assert_eq!(SparseArray::get(&*eye, 0, 0), 1.0);

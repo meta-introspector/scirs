@@ -9,11 +9,15 @@
 //! - Directional wavelets and steerable filters
 
 use crate::dwt::Wavelet;
-use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
+use crate::dwt2d__enhanced::{BoundaryMode, Dwt2dConfig, enhanced_dwt2d_decompose};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array2};
+use ndarray::{Array2, s};
+use rand::Rng;
 use scirs2_core::validation::check_array_finite;
+use statrs::statistics::Statistics;
+use std::f64::consts::PI;
 
+#[allow(unused_imports)]
 /// Advanced 2D wavelet processing configuration
 #[derive(Debug, Clone)]
 pub struct AdvancedWaveletConfig {
@@ -304,7 +308,7 @@ fn estimate_noise_variance(
     image: &Array2<f64>,
     multi_scale: &MultiScaleDecomposition,
 ) -> SignalResult<f64> {
-    // Use finest scale diagonal coefficients for noise estimation
+    // Use finest _scale diagonal coefficients for noise estimation
     if let Some(finest_level) = multi_scale.levels.first() {
         let diagonal_coeffs = &finest_level.details.2;
 
@@ -351,7 +355,7 @@ fn adaptive_threshold_processing(
     let mut processed_levels = Vec::new();
 
     for (level_idx, level) in multi_scale.levels.iter().enumerate() {
-        let scale_factor = level.scale;
+        let scale_factor = level._scale;
         let adaptive_threshold =
             compute_adaptive_threshold(&level.details, noise_variance, scale_factor, config)?;
 
@@ -375,8 +379,7 @@ fn adaptive_threshold_processing(
         processed_levels.push(WaveletLevel {
             approx: level.approx.clone(),
             details: (processed_lh, processed_hl, processed_hh),
-            level: level.level,
-            scale: level.scale,
+            level: level.level_scale: level._scale,
         });
     }
 
@@ -404,7 +407,7 @@ fn compute_adaptive_threshold(
         ThresholdSelection::Adaptive => {
             let base_threshold = sigma * (2.0 * scale_factor.ln()).sqrt();
             let local_variance = compute_local_variance(details, config.local_window_size)?;
-            Ok(base_threshold * (1.0 + local_variance / noise_variance).sqrt())
+            Ok((base_threshold * (1.0 + local_variance / noise_variance) as f64).sqrt())
         }
         _ => {
             // Default to universal threshold
@@ -426,9 +429,9 @@ fn compute_bayes_threshold(
     all_coeffs.extend(details.1.iter());
     all_coeffs.extend(details.2.iter());
 
-    // Estimate signal variance
+    // Estimate signal _variance
     let empirical_variance =
-        all_coeffs.iter().map(|&&x| x * x).sum::<f64>() / all_coeffs.len() as f64;
+        all_coeffs.iter().map(|&&x| x * x).sum::<f64>() / all_coeffs.len()  as f64;
     let signal_variance = (empirical_variance - noise_variance).max(0.0);
 
     if signal_variance > 0.0 {
@@ -453,7 +456,7 @@ fn compute_sure_threshold(
     let mut sorted_coeffs: Vec<f64> = all_coeffs.iter().map(|&&x| x.abs()).collect();
     sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    let n = sorted_coeffs.len() as f64;
+    let n = sorted_coeffs.len()  as f64;
     let sigma = noise_variance.sqrt();
 
     // Find threshold that minimizes SURE
@@ -573,8 +576,8 @@ fn apply_threshold_2d(
 
 /// Apply adaptive thresholding
 #[allow(dead_code)]
-fn adaptive_threshold_2d(coeffs: &mut Array2<f64>, base_threshold: f64) -> SignalResult<()> {
-    let (rows, cols) = coeffs.dim();
+fn adaptive_threshold_2d(_coeffs: &mut Array2<f64>, base_threshold: f64) -> SignalResult<()> {
+    let (rows, cols) = _coeffs.dim();
     let window_size = 5;
     let half_window = window_size / 2;
 
@@ -586,16 +589,16 @@ fn adaptive_threshold_2d(coeffs: &mut Array2<f64>, base_threshold: f64) -> Signa
             let end_j = (j + half_window + 1).min(cols);
 
             // Compute local statistics
-            let window = coeffs.slice(s![start_i..end_i, start_j..end_j]);
+            let window = _coeffs.slice(s![start_i..end_i, start_j..end_j]);
             let local_std =
-                window.iter().map(|&x| x.powi(2)).sum::<f64>().sqrt() / window.len() as f64;
+                window.iter().map(|&x| x.powi(2)).sum::<f64>().sqrt() / window.len()  as f64;
 
-            // Adaptive threshold
+            // Adaptive _threshold
             let adaptive_thresh = base_threshold * (1.0 + local_std);
 
             // Apply soft thresholding
-            let x = coeffs[[i, j]];
-            coeffs[[i, j]] = if x.abs() <= adaptive_thresh {
+            let x = _coeffs[[i, j]];
+            _coeffs[[i, j]] = if x.abs() <= adaptive_thresh {
                 0.0
             } else {
                 x.signum() * (x.abs() - adaptive_thresh)
@@ -608,14 +611,14 @@ fn adaptive_threshold_2d(coeffs: &mut Array2<f64>, base_threshold: f64) -> Signa
 
 /// Apply edge-preserving thresholding
 #[allow(dead_code)]
-fn edge_preserving_threshold_2d(coeffs: &mut Array2<f64>, threshold: f64) -> SignalResult<()> {
-    let (rows, cols) = coeffs.dim();
+fn edge_preserving_threshold_2d(_coeffs: &mut Array2<f64>, threshold: f64) -> SignalResult<()> {
+    let (rows, cols) = _coeffs.dim();
 
     for i in 1..rows - 1 {
         for j in 1..cols - 1 {
             // Compute local gradient
-            let gx = coeffs[[i + 1, j]] - coeffs[[i - 1, j]];
-            let gy = coeffs[[i, j + 1]] - coeffs[[i, j - 1]];
+            let gx = _coeffs[[i + 1, j]] - _coeffs[[i - 1, j]];
+            let gy = _coeffs[[i, j + 1]] - _coeffs[[i, j - 1]];
             let gradient_mag = (gx * gx + gy * gy).sqrt();
 
             // Edge-preserving factor
@@ -623,8 +626,8 @@ fn edge_preserving_threshold_2d(coeffs: &mut Array2<f64>, threshold: f64) -> Sig
             let adaptive_thresh = threshold * edge_factor;
 
             // Apply thresholding
-            let x = coeffs[[i, j]];
-            coeffs[[i, j]] = if x.abs() <= adaptive_thresh {
+            let x = _coeffs[[i, j]];
+            _coeffs[[i, j]] = if x.abs() <= adaptive_thresh {
                 0.0
             } else {
                 x.signum() * (x.abs() - adaptive_thresh)
@@ -649,7 +652,7 @@ fn standard_threshold_processing(
     let mut processed_levels = Vec::new();
 
     for level in &multi_scale.levels {
-        let scale_adjusted_threshold = universal_threshold / level.scale.sqrt();
+        let scale_adjusted_threshold = universal_threshold / level._scale.sqrt();
 
         let processed_lh = apply_threshold_2d(
             &level.details.0,
@@ -670,8 +673,7 @@ fn standard_threshold_processing(
         processed_levels.push(WaveletLevel {
             approx: level.approx.clone(),
             details: (processed_lh, processed_hl, processed_hh),
-            level: level.level,
-            scale: level.scale,
+            level: level.level_scale: level._scale,
         });
     }
 
@@ -712,14 +714,14 @@ fn edge_preserving_enhancement(
 
 /// Compute edge map using gradient magnitude
 #[allow(dead_code)]
-fn compute_edge_map(image: &Array2<f64>) -> SignalResult<Array2<f64>> {
-    let (rows, cols) = image.dim();
+fn compute_edge_map(_image: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    let (rows, cols) = _image.dim();
     let mut edge_map = Array2::zeros((rows, cols));
 
     for i in 1..rows - 1 {
         for j in 1..cols - 1 {
-            let gx = image[[i + 1, j]] - image[[i - 1, j]];
-            let gy = image[[i, j + 1]] - image[[i, j - 1]];
+            let gx = _image[[i + 1, j]] - _image[[i - 1, j]];
+            let gy = _image[[i, j + 1]] - _image[[i, j - 1]];
             edge_map[[i, j]] = (gx * gx + gy * gy).sqrt();
         }
     }
@@ -735,10 +737,10 @@ fn compute_edge_map(image: &Array2<f64>) -> SignalResult<Array2<f64>> {
 
 /// Reconstruct image from processed wavelet levels
 #[allow(dead_code)]
-fn reconstruct_from_levels(levels: &[WaveletLevel]) -> SignalResult<Array2<f64>> {
+fn reconstruct_from_levels(_levels: &[WaveletLevel]) -> SignalResult<Array2<f64>> {
     // This is a simplified reconstruction - would need proper inverse DWT
     // For now, return the finest scale approximation with detail enhancement
-    if let Some(finest_level) = levels.first() {
+    if let Some(finest_level) = _levels.first() {
         let mut result = finest_level.approx.clone();
 
         // Add back some high-frequency information
@@ -755,7 +757,7 @@ fn reconstruct_from_levels(levels: &[WaveletLevel]) -> SignalResult<Array2<f64>>
         Ok(result)
     } else {
         Err(SignalError::ComputationError(
-            "No wavelet levels to reconstruct from".to_string(),
+            "No wavelet _levels to reconstruct from".to_string(),
         ))
     }
 }
@@ -767,7 +769,7 @@ fn compute_denoising_metrics(
     denoised: &Array2<f64>,
     noise_variance: f64,
 ) -> DenoisingMetrics {
-    let n = original.len() as f64;
+    let n = original.len()  as f64;
 
     // Compute residual (assumed to be noise)
     let mut residual_variance = 0.0;
@@ -823,7 +825,7 @@ fn compute_edge_metrics(
         .zip(processed_edges.iter())
         .map(|(&orig, &proc)| if orig > 0.0 { proc / orig } else { 1.0 })
         .sum::<f64>()
-        / original_edges.len() as f64;
+        / original_edges.len()  as f64;
 
     Ok(EdgeMetrics {
         edge_strength: edge_strength.min(1.0),
@@ -858,12 +860,12 @@ fn compute_texture_features(
         energy.push(level_energy);
 
         // Contrast (variance of coefficients)
-        let mean = all_details.iter().map(|&&x| x).sum::<f64>() / all_details.len() as f64;
+        let mean = all_details.iter().map(|&&x| x).sum::<f64>() / all_details.len()  as f64;
         let level_contrast = all_details
             .iter()
             .map(|&&x| (x - mean).powi(2))
             .sum::<f64>()
-            / all_details.len() as f64;
+            / all_details.len()  as f64;
         contrast.push(level_contrast);
 
         // Homogeneity (inverse variance)
@@ -877,7 +879,7 @@ fn compute_texture_features(
             hist[bin] += 1;
         }
 
-        let total = all_details.len() as f64;
+        let total = all_details.len()  as f64;
         let level_entropy = hist
             .iter()
             .filter(|&&count| count > 0)
@@ -910,10 +912,6 @@ mod tests {
     use super::{
         advanced_wavelet_denoising, apply_threshold_2d, AdvancedWaveletConfig, ThresholdMethod,
     };
-    use crate::dwt::Wavelet;
-    use ndarray::Array2;
-    use std::f64::consts::PI;
-
     #[test]
     fn test_advanced_wavelet_denoising() {
         // Create test image with noise
@@ -928,7 +926,7 @@ mod tests {
         let noisy_image = clean_image.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
 
         let config = AdvancedWaveletConfig::default();
-        let result = advanced_wavelet_denoising(&noisy_image, Wavelet::DB(4), &config).unwrap();
+        let result = advanced_wavelet_denoising(&noisy_image..Wavelet::DB(4), &config).unwrap();
 
         assert_eq!(result.processed_image.dim(), noisy_image.dim());
         assert!(result.denoising_metrics.noise_variance > 0.0);

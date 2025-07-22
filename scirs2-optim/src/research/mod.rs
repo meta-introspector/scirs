@@ -19,7 +19,7 @@
 //! ## Setting up a Research Project
 //!
 //! ```rust
-//! use scirs2_optim::research::*;
+//! use scirs2__optim::research::*;
 //!
 //! let project = ResearchProject::new("Neural Optimizer Comparison")
 //!     .add_researcher("Dr. Alice Smith", "alice@university.edu")
@@ -56,7 +56,7 @@ pub use citations::*;
 pub use benchmarks::*;
 pub use reproducibility::*;
 pub use conferences::*;
-pub use peer_review::*;
+pub use peer__review::*;
 pub use datasets::*;
 pub use funding::*;
 
@@ -475,10 +475,10 @@ pub enum NotificationFrequency {
 
 impl ResearchProject {
     /// Create a new research project
-    pub fn new(name: &str) -> Self {
+    pub fn new(_name: &str) -> Self {
         let now = Utc::now();
         Self {
-            name: name.to_string(),
+            _name: _name.to_string(),
             description: String::new(),
             research_area: ResearchArea::MachineLearning,
             status: ProjectStatus::Planning,
@@ -653,12 +653,12 @@ impl Default for PublicationSettings {
 
 impl ResearchProjectManager {
     /// Create a new research project manager
-    pub fn new(storage_dir: PathBuf) -> Result<Self> {
-        std::fs::create_dir_all(&storage_dir)?;
+    pub fn new(_storage_dir: PathBuf) -> Result<Self> {
+        std::fs::create_dir_all(&_storage_dir)?;
         
         Ok(Self {
             projects: HashMap::new(),
-            storage_dir,
+            _storage_dir,
             settings: ManagerSettings::default(),
         })
     }

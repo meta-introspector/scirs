@@ -131,7 +131,7 @@ pub enum DistributionType<F> {
     },
 }
 
-impl<F: std::fmt::Debug> std::fmt::Debug for DistributionType<F> {
+impl<F: std::fmt::Debug> + std::fmt::Debug for DistributionType<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DistributionType::Normal { mean, precision } => f
@@ -224,7 +224,7 @@ impl<F: Clone> Clone for DistributionType<F> {
             DistributionType::Exponential { rate } => {
                 DistributionType::Exponential { rate: rate.clone() }
             }
-            DistributionType::Horseshoe { tau } => DistributionType::Horseshoe { tau: tau.clone() },
+            DistributionType::Horseshoe { tau } =>, DistributionType::Horseshoe { tau: tau.clone() },
             DistributionType::Laplace { location, scale } => DistributionType::Laplace {
                 location: location.clone(),
                 scale: scale.clone(),
@@ -402,8 +402,7 @@ pub struct AdvancedBayesianRegression<F> {
     /// MCMC configuration
     pub mcmc_config: MCMCConfig,
     /// Variational inference configuration
-    pub vi_config: VIConfig,
-    _phantom: PhantomData<F>,
+    pub vi_config: VIConfig, _phantom: PhantomData<F>,
 }
 
 /// MCMC configuration for non-conjugate models
@@ -672,7 +671,7 @@ where
             // Sort by criterion (lower is better for most criteria)
             model_scores.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-            let ranking: Vec<String> = model_scores.into_iter().map(|(id, _)| id).collect();
+            let ranking: Vec<String> = model_scores.into_iter().map(|(id_)| id).collect();
             rankings.insert(*criterion, ranking);
         }
 
@@ -705,12 +704,11 @@ where
 
     /// Fit a single model
     fn fit_single_model(
-        &self,
-        _model: &BayesianModel<F>,
+        &self_model: &BayesianModel<F>,
         x: &ArrayView2<F>,
         y: &ArrayView1<F>,
     ) -> StatsResult<AdvancedBayesianResult<F>> {
-        // Simplified model fitting - would implement actual inference
+        // Simplified _model fitting - would implement actual inference
         let n_params = x.ncols();
         let n_samples = 1000;
 
@@ -775,10 +773,8 @@ where
 
     /// Cross-validate model
     fn cross_validate_model(
-        &self,
-        _model: &BayesianModel<F>,
-        x: &ArrayView2<F>,
-        _y: &ArrayView1<F>,
+        &self_model: &BayesianModel<F>,
+        x: &ArrayView2<F>, _y: &ArrayView1<F>,
     ) -> StatsResult<CrossValidationResult<F>> {
         let k = self.cv_config.k_folds;
         let fold_scores = Array1::ones(k);
@@ -924,7 +920,7 @@ where
 
         if noise_level <= F::zero() {
             return Err(StatsError::InvalidArgument(
-                "Noise level must be positive".to_string(),
+                "Noise _level must be positive".to_string(),
             ));
         }
 
@@ -1078,25 +1074,25 @@ where
         + std::fmt::Display,
 {
     /// Create new Bayesian neural network
-    pub fn new(architecture: Vec<usize>, activations: Vec<ActivationType>) -> StatsResult<Self> {
-        if architecture.len() < 2 {
+    pub fn new(_architecture: Vec<usize>, activations: Vec<ActivationType>) -> StatsResult<Self> {
+        if _architecture.len() < 2 {
             return Err(StatsError::InvalidArgument(
                 "Architecture must have at least input and output layers".to_string(),
             ));
         }
 
-        if activations.len() != architecture.len() - 1 {
+        if activations.len() != _architecture.len() - 1 {
             return Err(StatsError::InvalidArgument(
                 "Number of activations must equal number of layers - 1".to_string(),
             ));
         }
 
-        let n_layers = architecture.len() - 1;
+        let n_layers = _architecture.len() - 1;
 
         // Initialize priors with appropriate scales based on layer sizes
         let weight_priors = (0..n_layers)
             .map(|i| {
-                let fan_in = F::from(architecture[i]).unwrap();
+                let fan_in = F::from(_architecture[i]).unwrap();
                 let precision = fan_in; // Xavier initialization scale
                 DistributionType::Normal {
                     mean: F::zero(),
@@ -1113,7 +1109,7 @@ where
             .collect();
 
         Ok(Self {
-            architecture,
+            _architecture,
             activations,
             weight_priors,
             bias_priors,
@@ -1132,7 +1128,7 @@ where
                     F::zero()
                 }
             }
-            ActivationType::Sigmoid => F::one() / (F::one() + (-x).exp()),
+            ActivationType::Sigmoid =>, F::one() / (F::one() + (-x).exp()),
             ActivationType::Tanh => x.tanh(),
             ActivationType::Swish => x / (F::one() + (-x).exp()),
             ActivationType::GELU => {
@@ -1222,7 +1218,7 @@ where
     }
 
     /// Sample parameters from priors
-    fn sample_from_normal(mean: F, precision: F) -> StatsResult<F> {
+    fn sample_from_normal(_mean: F, precision: F) -> StatsResult<F> {
         // Simple Box-Muller transform
         let u1 = F::from(0.5).unwrap(); // Would use actual random numbers
         let u2 = F::from(0.5).unwrap();
@@ -1231,14 +1227,13 @@ where
             * (F::from(2.0 * std::f64::consts::PI).unwrap() * u2).cos();
 
         let std_dev = F::one() / precision.sqrt();
-        Ok(mean + std_dev * z)
+        Ok(_mean + std_dev * z)
     }
 
     /// Make predictions with uncertainty quantification
     pub fn predict_with_uncertainty(
         &self,
-        x: &ArrayView2<F>,
-        _n_samples: usize,
+        x: &ArrayView2<F>, _n_samples: usize,
     ) -> StatsResult<(Array2<F>, Array2<F>)> {
         check_array_finite(x, "x")?;
 

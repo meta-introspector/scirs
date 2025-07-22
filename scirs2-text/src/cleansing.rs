@@ -4,7 +4,7 @@
 //! HTML stripping, URL handling, and various normalization operations.
 
 use crate::error::Result;
-use lazy_static::lazy_static;
+use lazy__static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 
@@ -728,36 +728,36 @@ impl Default for AdvancedTextCleaner {
 
 /// Strip HTML and XML tags from text
 #[allow(dead_code)]
-pub fn strip_html_tags(text: &str) -> String {
-    HTML_TAG_PATTERN.replace_all(text, " ").to_string()
+pub fn strip_html_tags(_text: &str) -> String {
+    HTML_TAG_PATTERN.replace_all(_text, " ").to_string()
 }
 
 /// Replace URLs with a placeholder
 #[allow(dead_code)]
-pub fn replace_urls(text: &str, placeholder: &str) -> String {
-    URL_PATTERN.replace_all(text, placeholder).to_string()
+pub fn replace_urls(_text: &str, placeholder: &str) -> String {
+    URL_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Replace email addresses with a placeholder
 #[allow(dead_code)]
-pub fn replace_emails(text: &str, placeholder: &str) -> String {
-    EMAIL_PATTERN.replace_all(text, placeholder).to_string()
+pub fn replace_emails(_text: &str, placeholder: &str) -> String {
+    EMAIL_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Replace phone numbers with a placeholder
 #[allow(dead_code)]
-pub fn replace_phone_numbers(text: &str, placeholder: &str) -> String {
-    PHONE_PATTERN.replace_all(text, placeholder).to_string()
+pub fn replace_phone_numbers(_text: &str, placeholder: &str) -> String {
+    PHONE_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Expand common contractions
 #[allow(dead_code)]
-pub fn expand_contractions(text: &str) -> String {
-    let mut result = text.to_string();
+pub fn expand_contractions(_text: &str) -> String {
+    let mut result = _text.to_string();
 
     // Sort contractions by length (descending) to avoid partial replacements
     let mut contractions: Vec<_> = CONTRACTIONS.iter().collect();
-    contractions.sort_by_key(|(k, _)| std::cmp::Reverse(k.len()));
+    contractions.sort_by_key(|(k_)| std::cmp::Reverse(k.len()));
 
     for (contraction, expansion) in contractions {
         let escaped = regex::escape(contraction);
@@ -772,21 +772,21 @@ pub fn expand_contractions(text: &str) -> String {
 
 /// Normalize Unicode text (NFD -> NFC)
 #[allow(dead_code)]
-pub fn normalize_unicode(text: &str) -> Result<String> {
-    use unicode_normalization::UnicodeNormalization;
-    Ok(text.nfc().collect())
+pub fn normalize_unicode(_text: &str) -> Result<String> {
+    use unicode__normalization::UnicodeNormalization;
+    Ok(_text.nfc().collect())
 }
 
 /// Normalize whitespace (multiple spaces to single space, trim)
 #[allow(dead_code)]
-pub fn normalize_whitespace(text: &str) -> String {
+pub fn normalize_whitespace(_text: &str) -> String {
     #[cfg(feature = "simd")]
     {
-        // Use SIMD to find whitespace positions for ASCII text
-        if text.is_ascii() && crate::simd_ops::SimdStringOps::is_available() {
-            let positions = crate::simd_ops::SimdStringOps::find_whitespace_positions(text);
+        // Use SIMD to find whitespace positions for ASCII _text
+        if _text.is_ascii() && crate::simd_ops::SimdStringOps::is_available() {
+            let positions = crate::simd_ops::SimdStringOps::find_whitespace_positions(_text);
             if positions.is_empty() {
-                return text.trim().to_string();
+                return _text.trim().to_string();
             }
             // Fall through to regex-based approach for complex whitespace normalization
         }
@@ -796,32 +796,32 @@ pub fn normalize_whitespace(text: &str) -> String {
         static ref WHITESPACE_PATTERN: Regex = Regex::new(r"\s+").unwrap();
     }
 
-    WHITESPACE_PATTERN.replace_all(text.trim(), " ").to_string()
+    WHITESPACE_PATTERN.replace_all(_text.trim(), " ").to_string()
 }
 
 /// Remove accents from text
 #[allow(dead_code)]
-pub fn remove_accents(text: &str) -> String {
-    use unicode_normalization::UnicodeNormalization;
+pub fn remove_accents(_text: &str) -> String {
+    use unicode__normalization::UnicodeNormalization;
 
-    text.nfd()
+    _text.nfd()
         .filter(|c| !unicode_normalization::char::is_combining_mark(*c))
         .collect()
 }
 
 /// Convert various dash types to regular hyphen
 #[allow(dead_code)]
-pub fn normalize_dashes(text: &str) -> String {
+pub fn normalize_dashes(_text: &str) -> String {
     lazy_static! {
         static ref DASH_PATTERN: Regex = Regex::new(r"[\u{2010}-\u{2015}\u{2212}]").unwrap();
     }
 
-    DASH_PATTERN.replace_all(text, "-").to_string()
+    DASH_PATTERN.replace_all(_text, "-").to_string()
 }
 
 /// Convert various quote types to regular quotes
 #[allow(dead_code)]
-pub fn normalize_quotes(text: &str) -> String {
+pub fn normalize_quotes(_text: &str) -> String {
     lazy_static! {
         static ref SINGLE_QUOTE_PATTERN: Regex =
             Regex::new(r"[\u{2018}\u{2019}\u{201A}\u{201B}]").unwrap();
@@ -829,116 +829,116 @@ pub fn normalize_quotes(text: &str) -> String {
             Regex::new(r"[\u{201C}\u{201D}\u{201E}\u{201F}]").unwrap();
     }
 
-    let text = SINGLE_QUOTE_PATTERN.replace_all(text, "'");
-    DOUBLE_QUOTE_PATTERN.replace_all(&text, "\"").to_string()
+    let _text = SINGLE_QUOTE_PATTERN.replace_all(_text, "'");
+    DOUBLE_QUOTE_PATTERN.replace_all(&_text, "\"").to_string()
 }
 
 /// Normalize numbers in text
 #[allow(dead_code)]
-pub fn normalize_numbers(text: &str, placeholder: &str) -> String {
-    NUMBER_PATTERN.replace_all(text, placeholder).to_string()
+pub fn normalize_numbers(_text: &str, placeholder: &str) -> String {
+    NUMBER_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Normalize currency values in text
 #[allow(dead_code)]
-pub fn normalize_currencies(text: &str, placeholder: &str) -> String {
-    CURRENCY_PATTERN.replace_all(text, placeholder).to_string()
+pub fn normalize_currencies(_text: &str, placeholder: &str) -> String {
+    CURRENCY_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Normalize percentage values in text
 #[allow(dead_code)]
-pub fn normalize_percentages(text: &str, placeholder: &str) -> String {
+pub fn normalize_percentages(_text: &str, placeholder: &str) -> String {
     PERCENTAGE_PATTERN
-        .replace_all(text, placeholder)
+        .replace_all(_text, placeholder)
         .to_string()
 }
 
 /// Normalize ordinal numbers in text
 #[allow(dead_code)]
-pub fn normalize_ordinals(text: &str, placeholder: &str) -> String {
-    ORDINAL_PATTERN.replace_all(text, placeholder).to_string()
+pub fn normalize_ordinals(_text: &str, placeholder: &str) -> String {
+    ORDINAL_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Normalize dates in text
 #[allow(dead_code)]
-pub fn normalize_dates(text: &str, placeholder: &str) -> String {
-    DATE_PATTERN.replace_all(text, placeholder).to_string()
+pub fn normalize_dates(_text: &str, placeholder: &str) -> String {
+    DATE_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Normalize times in text
 #[allow(dead_code)]
-pub fn normalize_times(text: &str, placeholder: &str) -> String {
-    TIME_PATTERN.replace_all(text, placeholder).to_string()
+pub fn normalize_times(_text: &str, placeholder: &str) -> String {
+    TIME_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Normalize fractions in text
 #[allow(dead_code)]
-pub fn normalize_fractions(text: &str, placeholder: &str) -> String {
-    FRACTION_PATTERN.replace_all(text, placeholder).to_string()
+pub fn normalize_fractions(_text: &str, placeholder: &str) -> String {
+    FRACTION_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Normalize roman numerals in text
 #[allow(dead_code)]
-pub fn normalize_roman_numerals(text: &str, placeholder: &str) -> String {
+pub fn normalize_roman_numerals(_text: &str, placeholder: &str) -> String {
     ROMAN_NUMERAL_PATTERN
-        .replace_all(text, placeholder)
+        .replace_all(_text, placeholder)
         .to_string()
 }
 
 /// Normalize scientific notation in text
 #[allow(dead_code)]
-pub fn normalize_scientific_notation(text: &str, placeholder: &str) -> String {
+pub fn normalize_scientific_notation(_text: &str, placeholder: &str) -> String {
     SCIENTIFIC_NOTATION_PATTERN
-        .replace_all(text, placeholder)
+        .replace_all(_text, placeholder)
         .to_string()
 }
 
 /// Normalize temperatures in text
 #[allow(dead_code)]
-pub fn normalize_temperatures(text: &str, placeholder: &str) -> String {
+pub fn normalize_temperatures(_text: &str, placeholder: &str) -> String {
     TEMPERATURE_PATTERN
-        .replace_all(text, placeholder)
+        .replace_all(_text, placeholder)
         .to_string()
 }
 
 /// Normalize measurements in text
 #[allow(dead_code)]
-pub fn normalize_measurements(text: &str, placeholder: &str) -> String {
+pub fn normalize_measurements(_text: &str, placeholder: &str) -> String {
     MEASUREMENT_PATTERN
-        .replace_all(text, placeholder)
+        .replace_all(_text, placeholder)
         .to_string()
 }
 
 /// Normalize version numbers in text
 #[allow(dead_code)]
-pub fn normalize_versions(text: &str, placeholder: &str) -> String {
-    VERSION_PATTERN.replace_all(text, placeholder).to_string()
+pub fn normalize_versions(_text: &str, placeholder: &str) -> String {
+    VERSION_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Normalize IP addresses in text
 #[allow(dead_code)]
-pub fn normalize_ip_addresses(text: &str, placeholder: &str) -> String {
+pub fn normalize_ip_addresses(_text: &str, placeholder: &str) -> String {
     IP_ADDRESS_PATTERN
-        .replace_all(text, placeholder)
+        .replace_all(_text, placeholder)
         .to_string()
 }
 
 /// Normalize hexadecimal numbers in text
 #[allow(dead_code)]
-pub fn normalize_hex_numbers(text: &str, placeholder: &str) -> String {
-    HEX_PATTERN.replace_all(text, placeholder).to_string()
+pub fn normalize_hex_numbers(_text: &str, placeholder: &str) -> String {
+    HEX_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Normalize binary numbers in text
 #[allow(dead_code)]
-pub fn normalize_binary_numbers(text: &str, placeholder: &str) -> String {
-    BINARY_PATTERN.replace_all(text, placeholder).to_string()
+pub fn normalize_binary_numbers(_text: &str, placeholder: &str) -> String {
+    BINARY_PATTERN.replace_all(_text, placeholder).to_string()
 }
 
 /// Normalize all number formats comprehensively
 #[allow(dead_code)]
-pub fn normalize_all_numbers(text: &str, placeholder: &str) -> String {
-    let mut result = text.to_string();
+pub fn normalize_all_numbers(_text: &str, placeholder: &str) -> String {
+    let mut result = _text.to_string();
 
     // Apply in order of specificity (most specific first)
     result = normalize_scientific_notation(&result, placeholder);

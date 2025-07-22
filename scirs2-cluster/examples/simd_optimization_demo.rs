@@ -4,7 +4,7 @@
 //! comparing performance between standard and SIMD-accelerated implementations.
 
 use ndarray::Array2;
-use scirs2_cluster::vq::{
+use scirs2__cluster::vq::{
     kmeans, kmeans_simd, vq, vq_simd, whiten, whiten_simd, KMeansOptions, SimdOptimizationConfig,
 };
 use std::time::Instant;
@@ -118,7 +118,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         tol: 1e-4,
         random_seed: Some(42),
         n_init: 1,
-        init_method: scirs2_cluster::vq::KMeansInit::KMeansPlusPlus,
+        init_method: scirs2, _cluster: vq::KMeansInit::KMeansPlusPlus,
     };
 
     let start = Instant::now();
@@ -155,7 +155,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sizes = [100, 500, 1000, 5000];
 
     for &size in &sizes {
-        let (test_data, _) = generate_synthetic_data(size, 10, 3);
+        let (test_data_) = generate_synthetic_data(size, 10, 3);
 
         let start = Instant::now();
         let _ = kmeans(
@@ -289,7 +289,7 @@ fn generate_synthetic_data(
     let mut centers = Array2::zeros((n_clusters, n_features));
     for i in 0..n_clusters {
         for j in 0..n_features {
-            centers[[i, j]] = rng.random_range(-10.0..10.0);
+            centers[[i, j]] = rng.gen_range(-10.0..10.0);
         }
     }
 
@@ -306,8 +306,8 @@ fn generate_synthetic_data(
 
         while sample_idx < end_idx {
             for j in 0..n_features {
-                let noise = rng.random_range(-1.0..1.0);
-                data[[sample_idx, j]] = centers[[cluster, j]] + noise;
+                let noise = rng.gen_range(-1.0..1.0);
+                data[[sample_idx..j]] = centers[[cluster, j]] + noise;
             }
             labels.push(cluster);
             sample_idx += 1;
@@ -319,15 +319,15 @@ fn generate_synthetic_data(
 
 /// Generate random centroids for testing
 #[allow(dead_code)]
-fn generate_centroids(n_clusters: usize, n_features: usize) -> Array2<f64> {
+fn generate_centroids(_n_clusters: usize, n_features: usize) -> Array2<f64> {
     use rand::Rng;
 
     let mut rng = rand::rng();
-    let mut centroids = Array2::zeros((n_clusters, n_features));
+    let mut centroids = Array2::zeros((_n_clusters, n_features));
 
-    for i in 0..n_clusters {
+    for i in 0.._n_clusters {
         for j in 0..n_features {
-            centroids[[i, j]] = rng.random_range(-5.0..5.0);
+            centroids[[i, j]] = rng.gen_range(-5.0..5.0);
         }
     }
 

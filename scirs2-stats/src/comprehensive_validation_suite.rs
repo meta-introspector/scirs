@@ -13,13 +13,13 @@
 //! - Automated regression detection
 
 use crate::error::{StatsError, StatsResult};
-use crate::numerical_stability_analyzer::{
+use crate::numerical_stability__analyzer::{
     NumericalStabilityAnalyzer, StabilityAnalysisResult, StabilityConfig,
 };
-use crate::property_based_validation::{
+use crate::property_based__validation::{
     ComprehensivePropertyTestSuite, PropertyTestConfig, PropertyTestResult,
 };
-use crate::scipy_benchmark_framework::{BenchmarkConfig, BenchmarkResult, ScipyBenchmarkFramework};
+use crate::scipy_benchmark__framework::{BenchmarkConfig, BenchmarkResult, ScipyBenchmarkFramework};
 use ndarray::{Array1, ArrayView1};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -314,14 +314,14 @@ impl Default for ValidationSuiteConfig {
 
 impl ComprehensiveValidationSuite {
     /// Create a new comprehensive validation suite
-    pub fn new(config: ValidationSuiteConfig) -> Self {
+    pub fn new(_config: ValidationSuiteConfig) -> Self {
         Self {
-            benchmark_framework: ScipyBenchmarkFramework::new(config.benchmark_config.clone()),
+            benchmark_framework: ScipyBenchmarkFramework::new(_config.benchmark_config.clone()),
             property_test_suite: ComprehensivePropertyTestSuite::new(
-                config.property_config.clone(),
+                _config.property_config.clone(),
             ),
-            stability_analyzer: NumericalStabilityAnalyzer::new(config.stability_config.clone()),
-            config,
+            stability_analyzer: NumericalStabilityAnalyzer::new(_config.stability_config.clone()),
+            _config,
             cached_results: HashMap::new(),
         }
     }
@@ -344,7 +344,7 @@ impl ComprehensiveValidationSuite {
     {
         let start_time = Instant::now();
 
-        // Run SciPy benchmarks if reference available
+        // Run SciPy benchmarks if _reference available
         let benchmark_results = if let Some(scipy_func) = scipy_reference {
             self.benchmark_framework.benchmark_function(
                 function_name,
@@ -413,7 +413,7 @@ impl ComprehensiveValidationSuite {
     /// Generate test data for validation
     fn generate_test_data(&self, size: usize) -> StatsResult<Array1<f64>> {
         use rand::prelude::*;
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
 
         let mut rng = StdRng::seed_from_u64(self.config.property_config.seed);
         let normal = Normal::new(0.0, 1.0)
@@ -597,7 +597,7 @@ impl ComprehensiveValidationSuite {
             readiness_score += 20.0;
         }
 
-        // Cross-validation confidence
+        // Cross-_validation confidence
         if cross_validation.validation_confidence > 0.8 {
             readiness_score += 10.0;
         }

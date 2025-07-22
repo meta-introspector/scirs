@@ -9,7 +9,7 @@
 //! cargo run --example memory_mapped_parallel --features="memory_efficient parallel"
 //! ```
 
-#[cfg(all(feature = "memory_efficient", feature = "parallel"))]
+#[cfg(all(feature = memory_efficient, feature = parallel))]
 #[allow(dead_code)]
 fn main() {
     use ndarray::Array1;
@@ -115,7 +115,7 @@ fn main() {
     // Verify that the mutation worked by computing the sum
     println!("\nVerifying the mutation worked...");
     let sum_after_mutation: f64 = mmap
-        .process_chunks(ChunkingStrategy::Fixed(chunk_size), |chunk, _| {
+        .process_chunks(ChunkingStrategy::Fixed(chunk_size), |chunk_| {
             chunk.iter().sum::<f64>()
         })
         .iter()
@@ -132,7 +132,7 @@ fn main() {
     println!("\nSuccessfully completed all operations!");
 }
 
-#[cfg(not(all(feature = "memory_efficient", feature = "parallel")))]
+#[cfg(not(all(feature = memory_efficient, feature = parallel)))]
 #[allow(dead_code)]
 fn main() {
     println!("This example requires the 'memory_efficient' and 'parallel' features.");

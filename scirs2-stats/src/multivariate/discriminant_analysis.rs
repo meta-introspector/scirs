@@ -4,7 +4,7 @@
 //! Quadratic Discriminant Analysis (QDA) for classification and dimensionality reduction.
 
 use crate::error::{StatsError, StatsResult as Result};
-use crate::error_handling_v2::ErrorCode;
+use crate::error_handling__v2::ErrorCode;
 use crate::{unified_error_handling::global_error_handler, validate_or_error};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 
@@ -164,7 +164,7 @@ impl LinearDiscriminantAnalysis {
         }
 
         // Compute class statistics
-        let (class_means, class_priors, _class_counts) =
+        let (class_means, class_priors_class_counts) =
             self.compute_class_statistics(x, y, &unique_classes)?;
 
         // Compute within-class and between-class scatter matrices
@@ -239,7 +239,7 @@ impl LinearDiscriminantAnalysis {
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == class_label)
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .collect();
 
             if class_indices.is_empty() {
@@ -317,7 +317,7 @@ impl LinearDiscriminantAnalysis {
         }
 
         // Compute between-class scatter
-        for (class_idx, _) in classes.iter().enumerate() {
+        for (class_idx_) in classes.iter().enumerate() {
             let class_mean = class_means.row(class_idx);
             let class_count = y
                 .iter()
@@ -359,7 +359,7 @@ impl LinearDiscriminantAnalysis {
 
     /// SVD-based solver (more numerically stable)
     fn solve_svd(&self, sw: &Array2<f64>, sb: &Array2<f64>) -> Result<(Array2<f64>, Array1<f64>)> {
-        use ndarray_linalg::SVD;
+        use ndarray__linalg::SVD;
 
         // Cholesky decomposition of Sw = L * L^T
         let l = scirs2_linalg::cholesky(&sw.view(), None).map_err(|e| {
@@ -377,7 +377,7 @@ impl LinearDiscriminantAnalysis {
         let m = l_inv.dot(sb).dot(&l_inv.t());
 
         // SVD of M
-        let (u, s, _vt) = m
+        let (u, s_vt) = m
             .svd(true, false)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
 
@@ -390,7 +390,7 @@ impl LinearDiscriminantAnalysis {
         let mut eigen_pairs: Vec<_> = s.iter().cloned().zip(scalings.columns()).collect();
         eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
 
-        let eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val, _)| *val).collect();
+        let eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val_)| *val).collect();
         let eigenvectors: Array2<f64> = Array2::from_shape_vec(
             (scalings.nrows(), eigenvalues.len()),
             eigen_pairs
@@ -424,7 +424,7 @@ impl LinearDiscriminantAnalysis {
         sw: &Array2<f64>,
         sb: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
-        use ndarray_linalg::Eigh;
+        use ndarray__linalg::Eigh;
 
         // Compute Sw^{-1} * Sb
         let sw_inv = scirs2_linalg::inv(&sw.view(), None).map_err(|e| {
@@ -449,7 +449,7 @@ impl LinearDiscriminantAnalysis {
             .collect();
         eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
 
-        let sorted_eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val, _)| *val).collect();
+        let sorted_eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val_)| *val).collect();
         let sorted_eigenvectors: Array2<f64> = Array2::from_shape_vec(
             (eigenvectors.nrows(), sorted_eigenvalues.len()),
             eigen_pairs
@@ -529,7 +529,7 @@ impl LinearDiscriminantAnalysis {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap();
             predictions[i] = result.classes[max_idx];
         }
@@ -700,7 +700,7 @@ impl QuadraticDiscriminantAnalysis {
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == class_label)
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .collect();
 
             let class_size = class_indices.len();
@@ -783,7 +783,7 @@ impl QuadraticDiscriminantAnalysis {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap();
             predictions[i] = result.classes[max_idx];
         }

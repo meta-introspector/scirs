@@ -5,7 +5,7 @@
 
 use chrono::{DateTime, Utc};
 use clap::{Arg, ArgMatches, Command};
-use scirs2_optim::error::{OptimError, Result};
+use scirs2__optim::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
@@ -251,12 +251,12 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn handle_create_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
-    let results_file = matches.get_one::<String>("results-file").unwrap();
-    let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
-    let features = matches.get_one::<String>("features").unwrap();
-    let commit_hash = matches.get_one::<String>("commit-hash").unwrap();
-    let branch = matches.get_one::<String>("branch").unwrap();
+fn handle_create_baseline(_matches: &ArgMatches, verbose: bool) -> Result<()> {
+    let results_file = _matches.get_one::<String>("results-file").unwrap();
+    let baseline_dir = _matches.get_one::<String>("baseline-dir").unwrap();
+    let features = _matches.get_one::<String>("features").unwrap();
+    let commit_hash = _matches.get_one::<String>("commit-hash").unwrap();
+    let branch = _matches.get_one::<String>("branch").unwrap();
 
     if verbose {
         println!("🏗️  Creating new performance baseline:");
@@ -303,13 +303,13 @@ fn handle_create_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn handle_update_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
-    let results_file = matches.get_one::<String>("results-file").unwrap();
-    let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
-    let features = matches.get_one::<String>("features").unwrap();
-    let commit_hash = matches.get_one::<String>("commit-hash").unwrap();
-    let branch = matches.get_one::<String>("branch").unwrap();
-    let merge_strategy = matches.get_one::<String>("merge-strategy").unwrap();
+fn handle_update_baseline(_matches: &ArgMatches, verbose: bool) -> Result<()> {
+    let results_file = _matches.get_one::<String>("results-file").unwrap();
+    let baseline_dir = _matches.get_one::<String>("baseline-dir").unwrap();
+    let features = _matches.get_one::<String>("features").unwrap();
+    let commit_hash = _matches.get_one::<String>("commit-hash").unwrap();
+    let branch = _matches.get_one::<String>("branch").unwrap();
+    let merge_strategy = _matches.get_one::<String>("merge-strategy").unwrap();
 
     if verbose {
         println!("🔄 Updating performance baseline:");
@@ -374,9 +374,9 @@ fn handle_update_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn handle_validate_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
-    let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
-    let features = matches.get_one::<String>("features").unwrap();
+fn handle_validate_baseline(_matches: &ArgMatches, verbose: bool) -> Result<()> {
+    let baseline_dir = _matches.get_one::<String>("baseline-dir").unwrap();
+    let features = _matches.get_one::<String>("features").unwrap();
 
     let baseline_path = PathBuf::from(baseline_dir).join(format!("baseline_{}.json", features));
 
@@ -440,8 +440,8 @@ fn handle_validate_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn handle_list_baselines(matches: &ArgMatches, verbose: bool) -> Result<()> {
-    let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
+fn handle_list_baselines(_matches: &ArgMatches, verbose: bool) -> Result<()> {
+    let baseline_dir = _matches.get_one::<String>("baseline-dir").unwrap();
 
     if verbose {
         println!("📋 Listing baselines in: {}", baseline_dir);
@@ -491,9 +491,9 @@ fn handle_list_baselines(matches: &ArgMatches, verbose: bool) -> Result<()> {
 }
 
 #[allow(dead_code)]
-fn handle_show_baseline_info(matches: &ArgMatches, verbose: bool) -> Result<()> {
-    let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
-    let features = matches.get_one::<String>("features").unwrap();
+fn handle_show_baseline_info(_matches: &ArgMatches, verbose: bool) -> Result<()> {
+    let baseline_dir = _matches.get_one::<String>("baseline-dir").unwrap();
+    let features = _matches.get_one::<String>("features").unwrap();
 
     let baseline_path = PathBuf::from(baseline_dir).join(format!("baseline_{}.json", features));
 
@@ -568,8 +568,8 @@ fn handle_show_baseline_info(matches: &ArgMatches, verbose: bool) -> Result<()> 
 }
 
 #[allow(dead_code)]
-fn load_performance_results(path: &str) -> Result<serde_json::Value> {
-    let content = fs::read_to_string(path)
+fn load_performance_results(_path: &str) -> Result<serde_json::Value> {
+    let content = fs::read_to_string(_path)
         .map_err(|e| OptimError::ResourceError(format!("Failed to read results file: {}", e)))?;
 
     serde_json::from_str(&content)
@@ -577,8 +577,8 @@ fn load_performance_results(path: &str) -> Result<serde_json::Value> {
 }
 
 #[allow(dead_code)]
-fn load_baseline(path: &PathBuf) -> Result<BaselineMetrics> {
-    let content = fs::read_to_string(path)
+fn load_baseline(_path: &PathBuf) -> Result<BaselineMetrics> {
+    let content = fs::read_to_string(_path)
         .map_err(|e| OptimError::ResourceError(format!("Failed to read baseline file: {}", e)))?;
 
     serde_json::from_str(&content)
@@ -586,13 +586,13 @@ fn load_baseline(path: &PathBuf) -> Result<BaselineMetrics> {
 }
 
 #[allow(dead_code)]
-fn save_baseline(baseline: &BaselineMetrics, path: &PathBuf) -> Result<()> {
-    let content = serde_json::to_string_pretty(baseline).map_err(|e| {
-        OptimError::OptimizationError(format!("Failed to serialize baseline: {}", e))
+fn save_baseline(_baseline: &BaselineMetrics, path: &PathBuf) -> Result<()> {
+    let content = serde_json::to_string_pretty(_baseline).map_err(|e| {
+        OptimError::OptimizationError(format!("Failed to serialize _baseline: {}", e))
     })?;
 
     fs::write(path, content)
-        .map_err(|e| OptimError::ResourceError(format!("Failed to write baseline file: {}", e)))
+        .map_err(|e| OptimError::ResourceError(format!("Failed to write _baseline file: {}", e)))
 }
 
 #[allow(dead_code)]
@@ -712,7 +712,7 @@ fn merge_baseline_with_results(
                         }
                         _ => {
                             return Err(OptimError::ConfigurationError(format!(
-                                "Unknown merge strategy: {}",
+                                "Unknown merge _strategy: {}",
                                 merge_strategy
                             )));
                         }
@@ -779,8 +779,8 @@ fn merge_baseline_with_results(
 }
 
 #[allow(dead_code)]
-fn extract_numeric_value(value: &serde_json::Value) -> Option<f64> {
-    match value {
+fn extract_numeric_value(_value: &serde_json: :Value) -> Option<f64> {
+    match _value {
         serde_json::Value::Number(n) => n.as_f64(),
         serde_json::Value::Object(obj) => {
             // Try common numeric fields
@@ -796,27 +796,27 @@ fn extract_numeric_value(value: &serde_json::Value) -> Option<f64> {
 }
 
 #[allow(dead_code)]
-fn validate_baseline(baseline: &BaselineMetrics) -> Result<bool> {
+fn validate_baseline(_baseline: &BaselineMetrics) -> Result<bool> {
     // Basic validation checks
-    if baseline.metrics.is_empty() {
+    if _baseline.metrics.is_empty() {
         return Ok(false);
     }
 
-    if baseline.metadata.sample_count == 0 {
+    if _baseline.metadata.sample_count == 0 {
         return Ok(false);
     }
 
-    if baseline.statistical_summary.total_benchmarks == 0 {
+    if _baseline.statistical_summary.total_benchmarks == 0 {
         return Ok(false);
     }
 
     // Check for reasonable quality score
-    if baseline.statistical_summary.quality_score < 50.0 {
+    if _baseline.statistical_summary.quality_score < 50.0 {
         return Ok(false);
     }
 
     // Validate individual metrics
-    for (_name, metric) in &baseline.metrics {
+    for (_name, metric) in &_baseline.metrics {
         if metric.samples.is_empty() {
             return Ok(false);
         }
@@ -834,8 +834,8 @@ fn validate_baseline(baseline: &BaselineMetrics) -> Result<bool> {
 }
 
 #[allow(dead_code)]
-fn find_baseline_files(baseline_dir: &str) -> Result<Vec<PathBuf>> {
-    let dir_path = PathBuf::from(baseline_dir);
+fn find_baseline_files(_baseline_dir: &str) -> Result<Vec<PathBuf>> {
+    let dir_path = PathBuf::from(_baseline_dir);
 
     if !dir_path.exists() {
         return Ok(vec![]);
@@ -871,7 +871,7 @@ fn get_platform_info() -> PlatformInfo {
     PlatformInfo {
         os: std::env::consts::OS.to_string(),
         arch: std::env::consts::ARCH.to_string(),
-        cpu_cores: num_cpus::get(),
+        cpu_cores: num, _cpus: get(),
         rust_version: "stable".to_string(), // Simplified since RUSTC_VERSION env var not available
     }
 }

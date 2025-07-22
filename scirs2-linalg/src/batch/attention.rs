@@ -59,7 +59,7 @@ where
 
     // Process each batch independently
     for b in 0..batch_size {
-        // Extract query for this batch
+        // Extract _query for this batch
         let query_b = batch_query.slice(ndarray::s![b, .., ..]);
 
         // Calculate attention scores: Q * K^T
@@ -189,7 +189,7 @@ where
 
     check_dimensions(
         seq_len_k == seq_len_v,
-        format!("Key and value sequence lengths must match: {seq_len_k} vs {seq_len_v}"),
+        format!("Key and _value sequence lengths must match: {seq_len_k} vs {seq_len_v}"),
     )?;
 
     // Check weight matrix dimensions
@@ -235,7 +235,7 @@ where
 
     // Apply projections for all batches
     for b in 0..batch_size {
-        // Project query
+        // Project _query
         for i in 0..seq_len_q {
             for j in 0..d_model {
                 let mut sum = F::zero();
@@ -246,7 +246,7 @@ where
             }
         }
 
-        // Project key
+        // Project _key
         for i in 0..seq_len_k {
             for j in 0..d_model {
                 let mut sum = F::zero();
@@ -257,7 +257,7 @@ where
             }
         }
 
-        // Project value
+        // Project _value
         for i in 0..seq_len_v {
             for j in 0..d_model {
                 let mut sum = F::zero();
@@ -430,12 +430,12 @@ where
 
     check_dimensions(
         d_model == d_model_k,
-        format!("Query and key dimensions must match: {d_model} vs {d_model_k}"),
+        format!("Query and _key dimensions must match: {d_model} vs {d_model_k}"),
     )?;
 
     check_dimensions(
         seq_len_k == seq_len_v,
-        format!("Key and value sequence lengths must match: {seq_len_k} vs {seq_len_v}"),
+        format!("Key and _value sequence lengths must match: {seq_len_k} vs {seq_len_v}"),
     )?;
 
     // Determine block sizes
@@ -451,12 +451,12 @@ where
         let key_b = batch_key.slice(ndarray::s![b, .., ..]);
         let value_b = batch_value.slice(ndarray::s![b, .., ..]);
 
-        // Process query blocks
+        // Process _query blocks
         for q_start in (0..seq_len_q).step_by(block_size_q) {
             let q_end = (q_start + block_size_q).min(seq_len_q);
             let q_block = query_b.slice(ndarray::s![q_start..q_end, ..]);
 
-            // For each query block, process all key/value blocks
+            // For each _query block, process all _key/_value blocks
             let mut m_block = Array1::<F>::from_elem(q_end - q_start, F::neg_infinity());
             let mut l_block = Array1::<F>::zeros(q_end - q_start);
 
@@ -491,8 +491,7 @@ where
                                     }
                                 }
                             }
-                        },
-                        _ => return Err(LinalgError::NotImplementedError(
+                        }_ => return Err(LinalgError::NotImplementedError(
                             "Flash attention currently only supports causal masks for batched operations".to_string()
                         )),
                     }
@@ -526,7 +525,7 @@ where
                         m_block[i] = m_new;
                     }
 
-                    // Compute contribution of current key-value block
+                    // Compute contribution of current _key-_value block
                     let mut block_sum = F::zero();
                     let mut block_output = Array1::<F>::zeros(d_model_v);
 

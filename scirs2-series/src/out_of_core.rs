@@ -15,7 +15,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use scirs2_series::out_of_core::{ChunkedProcessor, ProcessingConfig};
+//! use scirs2__series::out_of_core::{ChunkedProcessor, ProcessingConfig};
 //!
 //! // Process a large dataset in chunks
 //! let config = ProcessingConfig::new()
@@ -40,6 +40,7 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use std::time::Instant;
+use std::path::PathBuf;
 
 /// Configuration for out-of-core processing
 #[derive(Debug, Clone)]
@@ -67,7 +68,7 @@ impl Default for ProcessingConfig {
             overlap: 1_000,
             parallel_processing: true,
             max_memory_usage: 1_073_741_824, // 1 GB
-            num_threads: num_cpus::get(),
+            num_threads: num, _cpus: get(),
             buffer_size: 8192,
             report_progress: true,
         }
@@ -267,8 +268,8 @@ pub struct MmapTimeSeriesReader {
 
 impl MmapTimeSeriesReader {
     /// Create new memory-mapped reader for binary f64 data
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path.as_ref())
+    pub fn new<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        let file = File::open(_path.as_ref())
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {e}")))?;
 
         let file_size = file
@@ -359,8 +360,8 @@ pub struct CsvTimeSeriesReader {
 
 impl CsvTimeSeriesReader {
     /// Create new CSV reader
-    pub fn new<P: AsRef<Path>>(path: P, column_index: usize, has_header: bool) -> Result<Self> {
-        let file_path = path.as_ref().to_path_buf();
+    pub fn new<P: AsRef<Path>>(_path: P, column_index: usize, has_header: bool) -> Result<Self> {
+        let file_path = _path.as_ref().to_path_buf();
 
         if !file_path.exists() {
             return Err(TimeSeriesError::IOError("File does not exist".to_string()));
@@ -410,9 +411,9 @@ impl CsvTimeSeriesReader {
         let mut current_line = 0;
         let mut data_line = 0;
 
-        for line in reader.lines() {
-            let line =
-                line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {e}")))?;
+        for _line in reader.lines() {
+            let _line =
+                _line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read _line: {e}")))?;
 
             // Skip header
             if current_line == 0 && self.has_header {
@@ -422,11 +423,11 @@ impl CsvTimeSeriesReader {
 
             // Check if we've reached the start of our chunk
             if data_line >= start_line {
-                let fields: Vec<&str> = line.split(',').collect();
+                let fields: Vec<&str> = _line.split(',').collect();
 
                 if self.column_index >= fields.len() {
                     return Err(TimeSeriesError::InvalidInput(format!(
-                        "Column index {} out of bounds for line with {} fields",
+                        "Column index {} out of bounds for _line with {} fields",
                         self.column_index,
                         fields.len()
                     )));
@@ -466,9 +467,9 @@ pub struct ChunkedProcessor {
 
 impl ChunkedProcessor {
     /// Create new chunked processor
-    pub fn new(config: ProcessingConfig) -> Self {
+    pub fn new(_config: ProcessingConfig) -> Self {
         Self {
-            config,
+            _config,
             stats: StreamingStats::new(),
             progress: ProgressInfo {
                 chunk_number: 0,
@@ -706,12 +707,12 @@ pub struct OutOfCoreMovingAverage {
 
 impl OutOfCoreMovingAverage {
     /// Create new moving average calculator
-    pub fn new(window_size: usize) -> Result<Self> {
-        check_positive(window_size, "window_size")?;
+    pub fn new(_window_size: usize) -> Result<Self> {
+        check_positive(_window_size, "_window_size")?;
 
         Ok(Self {
-            window_size,
-            buffer: VecDeque::with_capacity(window_size),
+            _window_size,
+            buffer: VecDeque::with_capacity(_window_size),
             current_sum: 0.0,
         })
     }
@@ -770,20 +771,20 @@ pub struct OutOfCoreQuantileEstimator {
 
 impl OutOfCoreQuantileEstimator {
     /// Create new quantile estimator
-    pub fn new(quantile: f64) -> Result<Self> {
-        if !(0.0..=1.0).contains(&quantile) {
+    pub fn new(_quantile: f64) -> Result<Self> {
+        if !(0.0..=1.0).contains(&_quantile) {
             return Err(TimeSeriesError::InvalidInput(
                 "Quantile must be between 0 and 1".to_string(),
             ));
         }
 
         Ok(Self {
-            quantile,
+            _quantile,
             positions: [
                 1.0,
-                1.0 + 2.0 * quantile,
-                1.0 + 4.0 * quantile,
-                3.0 + 2.0 * quantile,
+                1.0 + 2.0 * _quantile,
+                1.0 + 4.0 * _quantile,
+                3.0 + 2.0 * _quantile,
                 5.0,
             ],
             heights: [0.0; 5],
@@ -915,7 +916,7 @@ pub mod utils {
         let max_chunk_points =
             (available_memory_bytes as f64 * safety_factor) as usize / element_size;
 
-        // Ensure chunk size is reasonable (between 1K and 10M points)
+        // Ensure chunk size is reasonable (between 1K and 10M _points)
         max_chunk_points.clamp(1_000, 10_000_000).min(total_points)
     }
 
@@ -945,7 +946,7 @@ pub mod utils {
             let line =
                 line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {e}")))?;
 
-            // Skip header
+            // Skip _header
             if line_number == 0 && has_header {
                 line_number += 1;
                 continue;
@@ -955,7 +956,7 @@ pub mod utils {
 
             if column_index >= fields.len() {
                 return Err(TimeSeriesError::InvalidInput(format!(
-                    "Column index {} out of bounds for line with {} fields",
+                    "Column _index {} out of bounds for line with {} fields",
                     column_index,
                     fields.len()
                 )));

@@ -1,6 +1,4 @@
 //! Perfect Reconstruction Filter Banks and Multirate Processing
-#![allow(non_snake_case)]
-#![allow(clippy::needless_range_loop)]
 //!
 //! This module provides comprehensive multirate signal processing capabilities including:
 //! - Perfect reconstruction (PR) filter banks
@@ -22,9 +20,13 @@
 //! Polyphase structures provide computationally efficient implementations of multirate
 //! systems by operating at the lowest possible sampling rate.
 
+#[allow(unused_imports)]
+#[allow(non_snake_case)]
+#[allow(clippy::needless_range_loop)]
+
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, Array3};
-use num_complex::Complex64;
+use ndarray::{Array1, Array2, Array3, ArrayView1, s};
+use num__complex::Complex64;
 use std::f64::consts::PI;
 
 /// Configuration for perfect reconstruction filter banks
@@ -118,10 +120,10 @@ impl PerfectReconstructionFilterBank {
         design_method: PrFilterDesign,
     ) -> SignalResult<(Array2<f64>, Array2<f64>)> {
         match design_method {
-            PrFilterDesign::Orthogonal => Self::design_orthogonal_filters(config),
-            PrFilterDesign::Biorthogonal => Self::design_biorthogonal_filters(config),
-            PrFilterDesign::LinearPhase => Self::design_linear_phase_filters(config),
-            PrFilterDesign::ModulatedDft => Self::design_modulated_dft_filters(config),
+            PrFilterDesign::Orthogonal =>, Self::design_orthogonal_filters(config),
+            PrFilterDesign::Biorthogonal =>, Self::design_biorthogonal_filters(config),
+            PrFilterDesign::LinearPhase =>, Self::design_linear_phase_filters(config),
+            PrFilterDesign::ModulatedDft =>, Self::design_modulated_dft_filters(config),
             PrFilterDesign::CustomPrototype(ref prototype) => {
                 Self::design_from_prototype(config, prototype)
             }
@@ -279,14 +281,14 @@ impl PerfectReconstructionFilterBank {
     }
 
     /// Design prototype lowpass filter
-    fn design_prototype_lowpass(length: usize, num_channels: usize) -> SignalResult<Array1<f64>> {
-        let mut prototype = Array1::zeros(length);
+    fn design_prototype_lowpass(_length: usize, num_channels: usize) -> SignalResult<Array1<f64>> {
+        let mut prototype = Array1::zeros(_length);
         let cutoff = PI / num_channels as f64;
 
         // Design using windowed sinc function
-        let center = (length - 1) as f64 / 2.0;
+        let center = (_length - 1) as f64 / 2.0;
 
-        for n in 0..length {
+        for n in 0.._length {
             let t = n as f64 - center;
             let sinc_val = if t == 0.0 {
                 cutoff / PI
@@ -296,7 +298,7 @@ impl PerfectReconstructionFilterBank {
 
             // Apply Kaiser window
             let beta = 8.0; // Kaiser window parameter
-            let window_val = Self::kaiser_window(n, length, beta);
+            let window_val = Self::kaiser_window(n, _length, beta);
 
             prototype[n] = sinc_val * window_val;
         }
@@ -315,8 +317,8 @@ impl PerfectReconstructionFilterBank {
         analysis_prototype: &Array1<f64>,
         num_channels: usize,
     ) -> SignalResult<Array1<f64>> {
-        // For simplicity, use a scaled version of the analysis prototype
-        // In practice, this would involve solving for the dual prototype
+        // For simplicity, use a scaled version of the analysis _prototype
+        // In practice, this would involve solving for the dual _prototype
         let scaling_factor = 2.0 / num_channels as f64;
         Ok(analysis_prototype * scaling_factor)
     }
@@ -361,13 +363,13 @@ impl PerfectReconstructionFilterBank {
     }
 
     /// Design extended prototype for DFT filter bank
-    fn design_extended_prototype(length: usize, num_channels: usize) -> SignalResult<Array1<f64>> {
-        let mut prototype = Array1::zeros(length);
-        let overlap = length / num_channels;
+    fn design_extended_prototype(_length: usize, num_channels: usize) -> SignalResult<Array1<f64>> {
+        let mut prototype = Array1::zeros(_length);
+        let overlap = _length / num_channels;
 
-        // Design with extended length for better frequency selectivity
-        for n in 0..length {
-            let t = n as f64 - (length - 1) as f64 / 2.0;
+        // Design with extended _length for better frequency selectivity
+        for n in 0.._length {
+            let t = n as f64 - (_length - 1) as f64 / 2.0;
             let normalized_t = t / overlap as f64;
 
             // Modified Kaiser-Bessel derived window
@@ -388,7 +390,7 @@ impl PerfectReconstructionFilterBank {
     fn kaiser_window(n: usize, length: usize, beta: f64) -> f64 {
         let arg = 2.0 * n as f64 / (length - 1) as f64 - 1.0;
         let i0_beta = Self::modified_bessel_i0(beta);
-        let i0_arg = Self::modified_bessel_i0(beta * (1.0 - arg * arg).sqrt());
+        let i0_arg = Self::modified_bessel_i0((beta * (1.0 - arg * arg) as f64).sqrt());
         i0_arg / i0_beta
     }
 
@@ -398,7 +400,7 @@ impl PerfectReconstructionFilterBank {
             0.0
         } else {
             let i0_alpha = Self::modified_bessel_i0(alpha);
-            let i0_arg = Self::modified_bessel_i0(alpha * (1.0 - t * t).sqrt());
+            let i0_arg = Self::modified_bessel_i0((alpha * (1.0 - t * t) as f64).sqrt());
             i0_arg / i0_alpha
         }
     }
@@ -927,11 +929,11 @@ impl MultirateConverter {
     }
 
     /// Design anti-aliasing filter
-    fn design_antialiasing_filter(length: usize, cutoff: f64) -> SignalResult<Array1<f64>> {
-        let mut filter = Array1::zeros(length);
-        let center = (length - 1) as f64 / 2.0;
+    fn design_antialiasing_filter(_length: usize, cutoff: f64) -> SignalResult<Array1<f64>> {
+        let mut filter = Array1::zeros(_length);
+        let center = (_length - 1) as f64 / 2.0;
 
-        for n in 0..length {
+        for n in 0.._length {
             let t = n as f64 - center;
             let sinc_val = if t == 0.0 {
                 cutoff / PI
@@ -940,8 +942,8 @@ impl MultirateConverter {
             };
 
             // Apply window (Blackman)
-            let window_val = 0.42 - 0.5 * (2.0 * PI * n as f64 / (length - 1) as f64).cos()
-                + 0.08 * (4.0 * PI * n as f64 / (length - 1) as f64).cos();
+            let window_val = 0.42 - 0.5 * (2.0 * PI * n as f64 / (_length - 1) as f64).cos()
+                + 0.08 * (4.0 * PI * n as f64 / (_length - 1) as f64).cos();
 
             filter[n] = sinc_val * window_val;
         }
@@ -1081,7 +1083,7 @@ mod tests {
 
         // Test with impulse signal
         let impulse = Array1::from_vec(vec![1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
-        let (error, _is_perfect) = filter_bank.verify_perfect_reconstruction(&impulse).unwrap();
+        let (error_is_perfect) = filter_bank.verify_perfect_reconstruction(&impulse).unwrap();
 
         // For a properly designed filter bank, reconstruction error should be reasonable
         // Note: Perfect reconstruction may not be achieved with simple designs

@@ -232,9 +232,9 @@ impl Default for StabilityConfig {
 
 impl NumericalStabilityAnalyzer {
     /// Create a new numerical stability analyzer
-    pub fn new(config: StabilityConfig) -> Self {
+    pub fn new(_config: StabilityConfig) -> Self {
         Self {
-            config,
+            _config,
             analysis_results: HashMap::new(),
         }
     }
@@ -546,12 +546,12 @@ impl NumericalStabilityAnalyzer {
             });
         }
 
-        // Error propagation recommendations
+        // Error _propagation recommendations
         if error_propagation.error_amplification > 100.0 {
             recommendations.push(StabilityRecommendation {
                 recommendation_type: RecommendationType::Numerical,
                 description: "High error amplification detected".to_string(),
-                suggestion: "Implement error analysis and use more stable numerical methods"
+                suggestion: "Implement error _analysis and use more stable numerical methods"
                     .to_string(),
                 priority: RecommendationPriority::High,
                 expected_improvement: 25.0,

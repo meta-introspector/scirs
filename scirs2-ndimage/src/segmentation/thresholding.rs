@@ -9,9 +9,9 @@ use num_traits::{Float, FromPrimitive, NumAssign};
 
 /// Helper function for safe conversion from usize to float
 #[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult<T> {
+    T::from_usize(_value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
     })
 }
 
@@ -30,7 +30,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::segmentation::threshold_binary;
+/// use scirs2__ndimage::segmentation::threshold_binary;
 ///
 /// let image = array![
 ///     [0.0, 0.2, 0.5],
@@ -41,13 +41,13 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// let mask = threshold_binary(&image, 0.5).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn threshold_binary<T, D>(image: &Array<T, D>, threshold: T) -> NdimageResult<Array<T, D>>
+pub fn threshold_binary<T, D>(_image: &Array<T, D>, threshold: T) -> NdimageResult<Array<T, D>>
 where
     T: Float + NumAssign + std::fmt::Debug + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Apply threshold by mapping over the input array
-    let result = image.mapv(|val| if val > threshold { T::one() } else { T::zero() });
+    let result = _image.mapv(|val| if val > threshold { T::one() } else { T::zero() });
 
     Ok(result)
 }
@@ -70,7 +70,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::segmentation::otsu_threshold;
+/// use scirs2__ndimage::segmentation::otsu_threshold;
 ///
 /// let image = array![
 ///     [0.1, 0.2, 0.3],
@@ -82,7 +82,7 @@ where
 /// ```
 /// ```
 #[allow(dead_code)]
-pub fn otsu_threshold<T, D>(image: &Array<T, D>, bins: usize) -> NdimageResult<(Array<T, D>, T)>
+pub fn otsu_threshold<T, D>(_image: &Array<T, D>, bins: usize) -> NdimageResult<(Array<T, D>, T)>
 where
     T: Float + NumAssign + std::fmt::Debug + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
@@ -93,7 +93,7 @@ where
     let mut min_val = Float::infinity();
     let mut max_val = Float::neg_infinity();
 
-    for &val in image.iter() {
+    for &val in _image.iter() {
         if val < min_val {
             min_val = val;
         }
@@ -102,10 +102,10 @@ where
         }
     }
 
-    // Handle edge case of flat image
+    // Handle edge case of flat _image
     if min_val == max_val {
-        // Create a binary image with all zeros (as all values == threshold)
-        let binary = threshold_binary(image, min_val)?;
+        // Create a binary _image with all zeros (as all values == threshold)
+        let binary = threshold_binary(_image, min_val)?;
         return Ok((binary, min_val));
     }
 
@@ -113,14 +113,14 @@ where
     let mut hist = vec![0; nbins];
     let bin_width = (max_val - min_val) / safe_usize_to_float(nbins)?;
 
-    for &val in image.iter() {
+    for &val in _image.iter() {
         let bin = ((val - min_val) / bin_width).to_usize().unwrap_or(0);
         let bin_index = std::cmp::min(bin, nbins - 1);
         hist[bin_index] += 1;
     }
 
     // Calculate total pixels
-    let total_pixels = image.len();
+    let total_pixels = _image.len();
 
     // Compute cumulative sums
     let mut cum_sum = vec![0; nbins];
@@ -169,8 +169,8 @@ where
     // Convert threshold index back to intensity value
     let threshold = min_val + safe_usize_to_float(threshold_idx)? * bin_width;
 
-    // Create binary image using the threshold
-    let binary = threshold_binary(image, threshold)?;
+    // Create binary _image using the threshold
+    let binary = threshold_binary(_image, threshold)?;
 
     Ok((binary, threshold))
 }
@@ -195,7 +195,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_ndimage::segmentation::{adaptive_threshold, AdaptiveMethod};
+/// use scirs2__ndimage::segmentation::{adaptive_threshold, AdaptiveMethod};
 ///
 /// let image = array![
 ///     [0.1, 0.2, 0.7],
@@ -221,7 +221,7 @@ pub fn adaptive_threshold<T>(
 where
     T: Float + NumAssign + std::fmt::Debug,
 {
-    // Check block size (must be odd)
+    // Check block _size (must be odd)
     if block_size % 2 == 0 || block_size < 3 {
         return Err(NdimageError::InvalidInput(
             "block_size must be odd and at least 3".to_string(),
@@ -267,9 +267,9 @@ where
                         let dist = safe_usize_to_float(dist_sq as usize)?.sqrt();
 
                         // Gaussian weight
-                        let sigma = safe_usize_to_float(radius)? / safe_f64_to_float::<T>(2.0)?;
+                        let sigma = safe_usize_to_float(radius)? / safe_f64, _to_float: :<T>(2.0)?;
                         let weight =
-                            (-dist * dist / (safe_f64_to_float::<T>(2.0)? * sigma * sigma)).exp();
+                            (-dist * dist / (safe_f64, _to_float: :<T>(2.0)? * sigma * sigma)).exp();
 
                         weighted_sum += val * weight;
                         weight_sum += weight;

@@ -53,7 +53,7 @@ pub use utils::{ConstraintSatisfactionSummary, ConstraintViolationInfo};
 // Re-export the main methods from ConstrainedSpline
 impl<T> ConstrainedSpline<T>
 where
-    T: num_traits::Float
+    T: num_traits: Float
         + num_traits::FromPrimitive
         + std::fmt::Debug
         + std::fmt::Display

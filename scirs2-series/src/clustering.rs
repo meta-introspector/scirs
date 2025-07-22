@@ -307,10 +307,10 @@ impl TimeSeriesClusterer {
     }
 
     /// Create a new clusterer with random seed
-    pub fn with_seed(seed: u64) -> Self {
+    pub fn with_seed(_seed: u64) -> Self {
         Self {
-            random_seed: Some(seed),
-            correlation_analyzer: CorrelationAnalyzer::with_seed(seed),
+            random_seed: Some(_seed),
+            correlation_analyzer: CorrelationAnalyzer::with_seed(_seed),
         }
     }
 
@@ -329,7 +329,7 @@ impl TimeSeriesClusterer {
         data: &Array2<f64>,
         config: &KMeansConfig,
     ) -> ClusteringResult<TimeSeriesClusteringResult> {
-        let (n_series, _series_length) = data.dim();
+        let (n_series_series_length) = data.dim();
 
         if n_series < config.n_clusters {
             return Err(TimeSeriesError::InvalidInput(
@@ -380,7 +380,7 @@ impl TimeSeriesClusterer {
                         .iter()
                         .enumerate()
                         .filter(|(_, &label)| label == k)
-                        .map(|(i, _)| i)
+                        .map(|(i_)| i)
                         .collect();
 
                     if !cluster_points.is_empty() {
@@ -457,7 +457,7 @@ impl TimeSeriesClusterer {
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == k)
-                .map(|(i, _)| i)
+                .map(|(i_)| i)
                 .collect();
 
             if !cluster_points.is_empty() {
@@ -554,7 +554,7 @@ impl TimeSeriesClusterer {
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == k)
-                .map(|(i, _)| i)
+                .map(|(i_)| i)
                 .collect();
 
             if !cluster_points.is_empty() {
@@ -616,7 +616,7 @@ impl TimeSeriesClusterer {
 
         if train_labels.len() != n_train {
             return Err(TimeSeriesError::InvalidInput(
-                "Training data and labels must have the same number of samples".to_string(),
+                "Training _data and _labels must have the same number of samples".to_string(),
             ));
         }
 
@@ -642,7 +642,7 @@ impl TimeSeriesClusterer {
             let k_neighbors = distances.iter().take(config.k).cloned().collect::<Vec<_>>();
 
             // Store neighbor distances
-            for (idx, (dist, _)) in k_neighbors.iter().enumerate() {
+            for (idx, (dist_)) in k_neighbors.iter().enumerate() {
                 if idx < neighbor_distances.ncols() {
                     neighbor_distances[[i, idx]] = *dist;
                 }
@@ -681,7 +681,7 @@ impl TimeSeriesClusterer {
                 .iter()
                 .enumerate()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap_or(0);
 
             predicted_labels[i] = predicted_class;
@@ -1050,7 +1050,7 @@ impl TimeSeriesClusterer {
             .iter()
             .enumerate()
             .filter(|(_, &label)| label != usize::MAX)
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .collect();
 
         if valid_indices.len() < 2 {

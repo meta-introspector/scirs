@@ -18,8 +18,8 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2_interpolate::adaptive_learning::{ActiveLearner, SamplingStrategy};
-//! use scirs2_interpolate::multiscale::MultiscaleBSpline;
+//! use scirs2__interpolate::adaptive_learning::{ActiveLearner, SamplingStrategy};
+//! use scirs2__interpolate::multiscale::MultiscaleBSpline;
 //!
 //! // Create sample data
 //! let x = Array1::linspace(0.0_f64, 10.0_f64, 20);
@@ -188,14 +188,14 @@ where
     /// # Returns
     ///
     /// A new `ActiveLearner` instance ready for adaptive sampling
-    pub fn new(interpolator: MultiscaleBSpline<T>, strategy: SamplingStrategy) -> Self {
-        // Extract domain bounds from the interpolator
-        let x_data = interpolator.x_data();
+    pub fn new(_interpolator: MultiscaleBSpline<T>, strategy: SamplingStrategy) -> Self {
+        // Extract domain bounds from the _interpolator
+        let x_data = _interpolator.x_data();
         let domain_min = x_data[0];
         let domain_max = x_data[x_data.len() - 1];
 
         Self {
-            interpolator,
+            _interpolator,
             config: ActiveLearningConfig::default(),
             strategy,
             sample_points: Array1::zeros(0),
@@ -297,7 +297,7 @@ where
     ) -> InterpolateResult<bool> {
         if new_x.len() != new_y.len() {
             return Err(InterpolateError::DimensionMismatch(format!(
-                "x and y arrays must have same length, got {} and {}",
+                "_x and _y arrays must have same length, got {} and {}",
                 new_x.len(),
                 new_y.len()
             )));
@@ -318,7 +318,7 @@ where
         combined_x.extend_from_slice(new_x.as_slice().unwrap());
         combined_y.extend_from_slice(new_y.as_slice().unwrap());
 
-        // Create combined arrays and sort by x values
+        // Create combined arrays and sort by _x values
         let mut data_pairs: Vec<_> = combined_x.into_iter().zip(combined_y).collect();
         data_pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
@@ -383,7 +383,7 @@ where
         let mut candidates = Vec::new();
         let _domain_range = self.domain_max - self.domain_min;
 
-        // Generate candidate points across the domain
+        // Generate candidate _points across the domain
         let num_candidates = num_points * 10; // Oversample to allow selection
         let candidate_points = Array1::linspace(
             self.domain_min.to_f64().unwrap(),
@@ -403,7 +403,7 @@ where
         // Sort by utility (uncertainty) in descending order
         utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
-        // Select points ensuring minimum distance constraint
+        // Select _points ensuring minimum distance constraint
         let mut selected_points = Vec::new();
         for (location, utility, info_type) in utilities {
             if self.is_valid_location(location, &selected_points) {
@@ -455,7 +455,7 @@ where
             }
         }
 
-        // Also add points between high-error regions
+        // Also add _points between high-error regions
         for i in 0..error_locations.len().saturating_sub(1) {
             let mid_point =
                 (error_locations[i].0 + error_locations[i + 1].0) / T::from(2.0).unwrap();
@@ -471,7 +471,7 @@ where
         // Sort by error magnitude
         error_locations.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
-        // Select points ensuring minimum distance constraint
+        // Select _points ensuring minimum distance constraint
         let mut selected_points = Vec::new();
         for (location, utility, info_type) in error_locations {
             if self.is_valid_location(location, &selected_points) {
@@ -513,7 +513,7 @@ where
     ) -> InterpolateResult<Vec<SamplingCandidate<T>>> {
         let mut candidates = Vec::new();
 
-        // Generate candidate points
+        // Generate candidate _points
         let num_candidates = num_points * 10;
         let candidate_points = Array1::linspace(
             self.domain_min.to_f64().unwrap(),
@@ -523,7 +523,7 @@ where
 
         let mut gradient_utilities = Vec::new();
 
-        // Estimate gradients at candidate points
+        // Estimate gradients at candidate _points
         for &x_val in candidate_points.iter() {
             let x_t = T::from(x_val).unwrap();
 
@@ -540,7 +540,7 @@ where
         // Sort by gradient magnitude in descending order
         gradient_utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
-        // Select points ensuring minimum distance constraint
+        // Select _points ensuring minimum distance constraint
         let mut selected_points = Vec::new();
         for (location, utility, info_type) in gradient_utilities {
             if self.is_valid_location(location, &selected_points) {
@@ -600,7 +600,7 @@ where
         // Sort by expected improvement
         combined_utilities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
-        // Select points ensuring minimum distance constraint
+        // Select _points ensuring minimum distance constraint
         let mut selected_points = Vec::new();
         for (location, utility, info_type) in combined_utilities {
             if self.is_valid_location(location, &selected_points) {
@@ -692,7 +692,7 @@ where
         // Sort by combined utility
         all_candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
-        // Select points ensuring minimum distance constraint
+        // Select _points ensuring minimum distance constraint
         let mut selected_points = Vec::new();
         for (location, utility, info_type) in all_candidates {
             if self.is_valid_location(location, &selected_points) {
@@ -738,7 +738,7 @@ where
             return false;
         }
 
-        // Check minimum distance to existing sample points
+        // Check minimum distance to existing sample _points
         let x_data = self.interpolator.x_data();
         for &sample_x in x_data.iter() {
             if (location - sample_x).abs() < self.config.min_sample_distance {
@@ -746,7 +746,7 @@ where
             }
         }
 
-        // Check minimum distance to other selected points
+        // Check minimum distance to other selected _points
         for &point in existing_points {
             if (location - point).abs() < self.config.min_sample_distance {
                 return false;

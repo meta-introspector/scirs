@@ -30,7 +30,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Basic region analysis
 /// ```rust
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::measurements::region_properties;
+/// use scirs2__ndimage::measurements::region_properties;
 ///
 /// // Image with different regions
 /// let image = array![
@@ -58,7 +58,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Cell morphology analysis
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_ndimage::measurements::region_properties;
+/// use scirs2__ndimage::measurements::region_properties;
 ///
 /// // Simulate segmented cell image
 /// let cell_intensities = Array2::from_shape_fn((50, 50), |(i, j)| {
@@ -95,7 +95,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Selective property extraction
 /// ```rust
 /// use ndarray::array;
-/// use scirs2_ndimage::measurements::region_properties;
+/// use scirs2__ndimage::measurements::region_properties;
 ///
 /// let data = array![
 ///     [1.0, 2.0, 5.0, 6.0],
@@ -119,7 +119,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Materials analysis workflow
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_ndimage::measurements::region_properties;
+/// use scirs2__ndimage::measurements::region_properties;
 ///
 /// // Simulate microscopy image of material grains
 /// let grain_image = Array2::from_shape_fn((100, 100), |(i, j)| {
@@ -160,7 +160,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// ## Medical imaging: lesion characterization
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_ndimage::measurements::region_properties;
+/// use scirs2__ndimage::measurements::region_properties;
 ///
 /// // Simulate medical image with lesions
 /// let medical_scan = Array2::from_shape_fn((80, 80), |(i, j)| {
@@ -242,8 +242,7 @@ use crate::error::{NdimageError, NdimageResult};
 #[allow(dead_code)]
 pub fn region_properties<T, D>(
     input: &Array<T, D>,
-    labels: &Array<usize, D>,
-    _properties: Option<Vec<&str>>,
+    labels: &Array<usize, D>, _properties: Option<Vec<&str>>,
 ) -> NdimageResult<Vec<RegionProperties<T>>>
 where
     T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
@@ -272,14 +271,14 @@ where
 
     let mut region_props = Vec::new();
 
-    // Compute properties for each region
+    // Compute _properties for each region
     for &label in unique_labels.iter() {
         let mut area = 0;
         let mut sum_coords = vec![T::zero(); input.ndim()];
         let mut min_coords = vec![usize::MAX; input.ndim()];
         let mut max_coords = vec![0; input.ndim()];
 
-        // Iterate through all pixels to compute properties
+        // Iterate through all pixels to compute _properties
         for (coords, (&value, &pixel_label)) in input.indexed_iter().zip(labels.iter()) {
             if pixel_label == label {
                 area += 1;
@@ -360,7 +359,7 @@ where
 /// ## Basic object detection in 2D
 /// ```rust
 /// use ndarray::{Array2, array};
-/// use scirs2_ndimage::measurements::find_objects;
+/// use scirs2__ndimage::measurements::find_objects;
 ///
 /// let labeled_image = array![
 ///     [0, 1, 1, 0, 0],
@@ -380,7 +379,7 @@ where
 /// ## Cell detection and extraction workflow
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_ndimage::measurements::find_objects;
+/// use scirs2__ndimage::measurements::find_objects;
 ///
 /// // Simulate cell segmentation result
 /// let cell_labels = Array2::from_shape_fn((100, 100), |(i, j)| {
@@ -417,7 +416,7 @@ where
 /// ## 3D object detection
 /// ```rust
 /// use ndarray::Array3;
-/// use scirs2_ndimage::measurements::find_objects;
+/// use scirs2__ndimage::measurements::find_objects;
 ///
 /// // Create 3D labeled volume
 /// let labeled_volume = Array3::from_shape_fn((50, 50, 50), |(z, y, x)| {
@@ -447,7 +446,7 @@ where
 /// ## Object extraction and cropping
 /// ```rust
 /// use ndarray::{Array2, s};
-/// use scirs2_ndimage::measurements::find_objects;
+/// use scirs2__ndimage::measurements::find_objects;
 ///
 /// let segmented_image = Array2::from_shape_fn((60, 60), |(i, j)| {
 ///     // Create multiple objects
@@ -481,7 +480,7 @@ where
 /// ## Quality control: filter objects by size
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_ndimage::measurements::find_objects;
+/// use scirs2__ndimage::measurements::find_objects;
 ///
 /// let detection_result = Array2::from_shape_fn((100, 100), |(i, j)| {
 ///     // Simulate detection with objects of various sizes
@@ -548,12 +547,12 @@ where
 /// - [`count_labels`]: Count pixels in each object
 /// - Label connectivity functions for segmentation preprocessing
 #[allow(dead_code)]
-pub fn find_objects<D>(input: &Array<usize, D>) -> NdimageResult<Vec<Vec<usize>>>
+pub fn find_objects<D>(_input: &Array<usize, D>) -> NdimageResult<Vec<Vec<usize>>>
 where
     D: Dimension,
 {
     // Validate inputs
-    if input.ndim() == 0 {
+    if _input.ndim() == 0 {
         return Err(NdimageError::InvalidInput(
             "Input array cannot be 0-dimensional".into(),
         ));
@@ -561,7 +560,7 @@ where
 
     // Find all unique labels (excluding background label 0)
     let mut unique_labels = std::collections::HashSet::new();
-    for &label in input.iter() {
+    for &label in _input.iter() {
         if label > 0 {
             unique_labels.insert(label);
         }
@@ -575,12 +574,12 @@ where
 
     // Calculate bounding box for each object
     for &label in unique_labels.iter() {
-        let mut min_coords = vec![usize::MAX; input.ndim()];
-        let mut max_coords = vec![0; input.ndim()];
+        let mut min_coords = vec![usize::MAX; _input.ndim()];
+        let mut max_coords = vec![0; _input.ndim()];
         let mut found_object = false;
 
         // Scan through all pixels to find object bounds
-        for (coords, &pixel_label) in input.indexed_iter() {
+        for (coords, &pixel_label) in _input.indexed_iter() {
             if pixel_label == label {
                 found_object = true;
 
@@ -595,7 +594,7 @@ where
         if found_object {
             // Create bounding box in the format [min1, max1, min2, max2, ...]
             let mut bbox = Vec::new();
-            for i in 0..input.ndim() {
+            for i in 0.._input.ndim() {
                 bbox.push(min_coords[i]);
                 bbox.push(max_coords[i] + 1); // Add 1 to make it exclusive end
             }

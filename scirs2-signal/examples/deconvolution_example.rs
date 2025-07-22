@@ -1,8 +1,9 @@
+use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2};
 // use plotters::prelude::*; // Commented out until plotters is added as dependency
 use rand::rng;
-use rand_distr::{Distribution, Normal};
-use scirs2_signal::{deconvolution, SignalError, SignalResult};
+use rand__distr::{Distribution, Normal};
+use scirs2__signal::{deconvolution, SignalError, SignalResult};
 // use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
@@ -555,7 +556,7 @@ fn regularization_parameter_selection() -> SignalResult<()> {
         .iter()
         .enumerate()
         .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-        .map(|(idx, _)| idx)
+        .map(|(idx_)| idx)
         .unwrap();
     let optimal_param = param_values[min_mse_idx];
 
@@ -614,26 +615,26 @@ fn regularization_parameter_selection() -> SignalResult<()> {
 
 /// Calculate mean squared error between two signals
 #[allow(dead_code)]
-fn calculate_mse(estimate: &Array1<f64>, true_signal: &Array1<f64>) -> f64 {
-    estimate
+fn calculate_mse(_estimate: &Array1<f64>, true_signal: &Array1<f64>) -> f64 {
+    _estimate
         .iter()
         .zip(true_signal.iter())
         .map(|(est, true_val)| (est - true_val).powi(2))
         .sum::<f64>()
-        / estimate.len() as f64
+        / _estimate.len() as f64
 }
 
 /// Export signals to CSV file for external plotting
 #[allow(dead_code)]
-fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
-    let mut file = File::create(file_name).map_err(|e| {
+fn export_to_csv(_file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
+    let mut file = File::create(_file_name).map_err(|e| {
         scirs2_signal::error::SignalError::ComputationError(format!("Failed to create file: {}", e))
     })?;
 
     // Write header
     let header = signals
         .iter()
-        .map(|(name, _)| *name)
+        .map(|(name_)| *_name)
         .collect::<Vec<_>>()
         .join(",");
     writeln!(file, "Index,{}", header).map_err(|e| {
@@ -663,8 +664,8 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
 
 /// Save 2D image data as CSV
 #[allow(dead_code)]
-fn save_image_as_csv(file_name: &str, image: &Array2<f64>) -> SignalResult<()> {
-    let mut file = File::create(file_name).map_err(|e| {
+fn save_image_as_csv(_file_name: &str, image: &Array2<f64>) -> SignalResult<()> {
+    let mut file = File::create(_file_name).map_err(|e| {
         scirs2_signal::error::SignalError::ComputationError(format!("Failed to create file: {}", e))
     })?;
 

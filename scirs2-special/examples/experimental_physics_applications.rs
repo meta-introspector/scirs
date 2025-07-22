@@ -17,8 +17,8 @@
 //! Run with: cargo run --example experimental_physics_applications
 
 use ndarray::Array1;
-use num_complex::Complex64;
-use scirs2_special::*;
+use num__complex::Complex64;
+use scirs2__special::*;
 use std::f64::consts::PI;
 use std::io::{self, Write};
 
@@ -47,8 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(7) => statistical_mechanics_mesoscopic()?,
             Ok(8) => nonlinear_optics_solitons()?,
             Ok(9) => cosmic_ray_physics()?,
-            Ok(10) => quantum_information_experiments()?,
-            _ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(10) => quantum_information_experiments()?_ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 
@@ -73,8 +72,8 @@ fn display_main_menu() {
 }
 
 #[allow(dead_code)]
-fn get_user_input(prompt: &str) -> io::Result<String> {
-    print!("{}", prompt);
+fn get_user_input(_prompt: &str) -> io::Result<String> {
+    print!("{}", _prompt);
     io::stdout().flush()?;
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
@@ -916,7 +915,7 @@ fn atomic_spectroscopy() -> Result<(), Box<dyn std::error::Error>> {
     println!("Line   Transition     Wavelength (nm)   Splitting (meV)");
     println!("----   ----------     ---------------   ---------------");
 
-    for &(line, n, l_lower, _j_lower, _j_upper) in &sodium_d_lines {
+    for &(line, n, l_lower_j_lower_j_upper) in &sodium_d_lines {
         let wavelength = sodium_d_line_wavelength(line);
         let splitting = fine_structure_splitting(n, l_lower);
 
@@ -986,8 +985,7 @@ fn atomic_spectroscopy() -> Result<(), Box<dyn std::error::Error>> {
             "Doppler" => "Low pressure",
             "Natural" => "All conditions",
             "Pressure" => "High pressure",
-            "Stark" => "Strong E-field",
-            _ => "Special conditions",
+            "Stark" => "Strong E-field"_ => "Special conditions",
         };
 
         println!(
@@ -1828,40 +1826,40 @@ fn negative_binomial_probability(n: usize, modes: f64, mean: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn neutron_wave_number(energy_mev: f64) -> f64 {
+fn neutron_wave_number(_energy_mev: f64) -> f64 {
     // k = √(2mE)/ħ in fm^-1
     let mass_mev = 939.565; // neutron mass in MeV
     let hbar_c = 197.327; // ħc in MeV·fm
-    (2.0 * mass_mev * energy_mev).sqrt() / hbar_c
+    (2.0 * mass_mev * _energy_mev).sqrt() / hbar_c
 }
 
 #[allow(dead_code)]
-fn calculate_hard_sphere_phase_shift(kr: f64) -> f64 {
+fn calculate_hard_sphere_phase_shift(_kr: f64) -> f64 {
     // Simple hard sphere approximation
-    -kr * 180.0 / PI
+    -_kr * 180.0 / PI
 }
 
 #[allow(dead_code)]
-fn calculate_barrier_penetration(excitation: f64, barrier_height: f64) -> f64 {
-    if excitation >= barrier_height {
+fn calculate_barrier_penetration(_excitation: f64, barrier_height: f64) -> f64 {
+    if _excitation >= barrier_height {
         1.0
     } else {
-        let argument = -2.0 * (barrier_height - excitation).sqrt();
+        let argument = -2.0 * (barrier_height - _excitation).sqrt();
         argument.exp()
     }
 }
 
 #[allow(dead_code)]
-fn nuclear_level_density(energy: f64, a: f64) -> f64 {
+fn nuclear_level_density(_energy: f64, a: f64) -> f64 {
     let sqrt_term = (PI / a).sqrt();
-    let exp_term = (2.0 * (a * energy).sqrt()).exp();
-    sqrt_term * exp_term / (12.0 * energy.powf(1.25))
+    let exp_term = (2.0 * (a * _energy).sqrt()).exp();
+    sqrt_term * exp_term / (12.0 * _energy.powf(1.25))
 }
 
 #[allow(dead_code)]
-fn cumulative_levels(energy: f64, a: f64) -> f64 {
+fn cumulative_levels(_energy: f64, a: f64) -> f64 {
     // Approximate integral of level density
-    nuclear_level_density(energy, a) * energy / 2.0
+    nuclear_level_density(_energy, a) * _energy / 2.0
 }
 
 #[allow(dead_code)]
@@ -1931,9 +1929,9 @@ fn quantum_scaling_function(g: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn chirp_time(mass_solar: f64, f0_hz: f64) -> f64 {
+fn chirp_time(_mass_solar: f64, f0_hz: f64) -> f64 {
     // Simplified formula for binary inspiral time
-    let total_mass_kg = mass_solar * 1.989e30;
+    let total_mass_kg = _mass_solar * 1.989e30;
     let g: f64 = 6.674e-11;
     let c: f64 = 2.998e8;
 
@@ -1954,65 +1952,65 @@ fn inspiral_strain(t: f64, mass: f64, tau: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn detection_probability(snr: f64, threshold: f64) -> f64 {
-    if snr >= threshold {
+fn detection_probability(_snr: f64, threshold: f64) -> f64 {
+    if _snr >= threshold {
         0.999
     } else {
-        (snr / threshold).powi(2)
+        (_snr / threshold).powi(2)
     }
 }
 
 #[allow(dead_code)]
-fn false_alarm_rate_from_snr(snr: f64) -> f64 {
-    (-snr.powi(2) / 2.0).exp() / 1e6
+fn false_alarm_rate_from_snr(_snr: f64) -> f64 {
+    (-_snr.powi(2) / 2.0).exp() / 1e6
 }
 
 #[allow(dead_code)]
-fn gaussian_significance(snr: f64) -> f64 {
-    snr / (2.0_f64).sqrt()
+fn gaussian_significance(_snr: f64) -> f64 {
+    _snr / (2.0_f64).sqrt()
 }
 
 #[allow(dead_code)]
-fn parameter_uncertainty_mass(_m1: f64, _m2: f64, distance: f64) -> f64 {
+fn parameter_uncertainty_mass(_m1: f64_m2: f64, distance: f64) -> f64 {
     // Simplified Fisher matrix estimate
     0.1 / (distance / 100.0).sqrt()
 }
 
 #[allow(dead_code)]
-fn parameter_uncertainty_distance(_m1: f64, _m2: f64, distance: f64) -> f64 {
+fn parameter_uncertainty_distance(_m1: f64_m2: f64, distance: f64) -> f64 {
     // Simplified distance uncertainty
     0.5 * (distance / 100.0).sqrt()
 }
 
 #[allow(dead_code)]
-fn average_thermal_velocity(temp_k: f64, mass_kg: f64) -> f64 {
+fn average_thermal_velocity(_temp_k: f64, mass_kg: f64) -> f64 {
     let k_b = 1.381e-23;
-    (8.0 * k_b * temp_k / (PI * mass_kg)).sqrt()
+    (8.0 * k_b * _temp_k / (PI * mass_kg)).sqrt()
 }
 
 #[allow(dead_code)]
-fn thermal_velocity(temp_k: f64, mass_kg: f64) -> f64 {
+fn thermal_velocity(_temp_k: f64, mass_kg: f64) -> f64 {
     let k_b = 1.381e-23;
-    (k_b * temp_k / mass_kg).sqrt()
+    (k_b * _temp_k / mass_kg).sqrt()
 }
 
 #[allow(dead_code)]
-fn most_probable_velocity(temp_k: f64, mass_kg: f64) -> f64 {
+fn most_probable_velocity(_temp_k: f64, mass_kg: f64) -> f64 {
     let k_b = 1.381e-23;
-    (2.0 * k_b * temp_k / mass_kg).sqrt()
+    (2.0 * k_b * _temp_k / mass_kg).sqrt()
 }
 
 #[allow(dead_code)]
-fn fusion_reaction_rate(temp_kev: f64, z1: f64, z2: f64) -> f64 {
+fn fusion_reaction_rate(_temp_kev: f64, z1: f64, z2: f64) -> f64 {
     // Simplified Gamow peak calculation
-    let gamow_energy = gamow_peak_energy(temp_kev, z1, z2);
-    1e-16 * (gamow_energy / temp_kev).exp() // cm³/s
+    let gamow_energy = gamow_peak_energy(_temp_kev, z1, z2);
+    1e-16 * (gamow_energy / _temp_kev).exp() // cm³/s
 }
 
 #[allow(dead_code)]
-fn gamow_peak_energy(temp_kev: f64, z1: f64, z2: f64) -> f64 {
+fn gamow_peak_energy(_temp_kev: f64, z1: f64, z2: f64) -> f64 {
     // Energy at Gamow peak
-    1.22 * (z1 * z2).powf(2.0 / 3.0) * temp_kev.powf(1.0 / 3.0)
+    1.22 * (z1 * z2).powf(2.0 / 3.0) * _temp_kev.powf(1.0 / 3.0)
 }
 
 #[allow(dead_code)]
@@ -2023,51 +2021,50 @@ fn fusion_power_density(_temp_kev: f64, rate: f64, q_value: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn plasma_dispersion_function(zeta: Complex64) -> Complex64 {
+fn plasma_dispersion_function(_zeta: Complex64) -> Complex64 {
     // Simplified plasma dispersion function
     // This would need proper implementation of Faddeeva function
-    Complex64::new(1.0 / zeta.re, -PI.sqrt() * (-zeta.re.powi(2)).exp())
+    Complex64::new(1.0 / _zeta.re, -PI.sqrt() * (-_zeta.re.powi(2)).exp())
 }
 
 #[allow(dead_code)]
-fn larmor_radius_cm(energy_kev: f64, b_field_t: f64) -> f64 {
+fn larmor_radius_cm(_energy_kev: f64, b_field_t: f64) -> f64 {
     let mass_kg = 3.34e-27; // deuteron
     let charge = 1.602e-19;
-    let velocity = (2.0 * energy_kev * 1000.0 * 1.602e-19 / mass_kg).sqrt();
+    let velocity = (2.0 * _energy_kev * 1000.0 * 1.602e-19 / mass_kg).sqrt();
     mass_kg * velocity / (charge * b_field_t) * 100.0 // convert to cm
 }
 
 #[allow(dead_code)]
-fn cyclotron_frequency_mhz(b_field_t: f64) -> f64 {
+fn cyclotron_frequency_mhz(_b_field_t: f64) -> f64 {
     let charge = 1.602e-19;
     let mass_kg = 3.34e-27;
-    charge * b_field_t / (2.0 * PI * mass_kg) / 1e6
+    charge * _b_field_t / (2.0 * PI * mass_kg) / 1e6
 }
 
 #[allow(dead_code)]
-fn banana_orbit_width(energy_kev: f64, b_field_t: f64) -> f64 {
+fn banana_orbit_width(_energy_kev: f64, b_field_t: f64) -> f64 {
     // Simplified banana orbit width
-    larmor_radius_cm(energy_kev, b_field_t) * 2.0
+    larmor_radius_cm(_energy_kev, b_field_t) * 2.0
 }
 
 #[allow(dead_code)]
-fn hydrogen_wavelength(n1: i32, n2: i32) -> f64 {
+fn hydrogen_wavelength(_n1: i32, n2: i32) -> f64 {
     let rydberg = 1.097e7; // m^-1
-    let wavelength_m = 1.0 / (rydberg * (1.0 / (n1 * n1) as f64 - 1.0 / (n2 * n2) as f64));
+    let wavelength_m = 1.0 / (rydberg * (1.0 / (_n1 * _n1) as f64 - 1.0 / (n2 * n2) as f64));
     wavelength_m * 1e9 // convert to nm
 }
 
 #[allow(dead_code)]
-fn sodium_d_line_wavelength(line: &str) -> f64 {
-    match line {
+fn sodium_d_line_wavelength(_line: &str) -> f64 {
+    match _line {
         "D₁" => 589.6,
-        "D₂" => 589.0,
-        _ => 589.3,
+        "D₂" => 589.0_ => 589.3,
     }
 }
 
 #[allow(dead_code)]
-fn fine_structure_splitting(n: i32, _l: i32) -> f64 {
+fn fine_structure_splitting(n: i32_l: i32) -> f64 {
     // Simplified fine structure splitting in meV
     let alpha = 1.0 / 137.0;
     let rydberg_ev = 13.6;
@@ -2092,15 +2089,15 @@ fn co_fundamental_r_branch(j: i32) -> f64 {
 }
 
 #[allow(dead_code)]
-fn charging_energy_mev(capacitance: f64) -> f64 {
+fn charging_energy_mev(_capacitance: f64) -> f64 {
     let e = 1.602e-19;
-    e * e / (2.0 * capacitance) / 1.602e-16 // convert to meV
+    e * e / (2.0 * _capacitance) / 1.602e-16 // convert to meV
 }
 
 #[allow(dead_code)]
-fn max_electrons_thermal(charging_energy_mev: f64, temp_k: f64) -> f64 {
+fn max_electrons_thermal(_charging_energy_mev: f64, temp_k: f64) -> f64 {
     let k_b_mev = 8.617e-5 * 1000.0; // k_B in meV/K
-    charging_energy_mev / (k_b_mev * temp_k)
+    _charging_energy_mev / (k_b_mev * temp_k)
 }
 
 #[allow(dead_code)]
@@ -2114,36 +2111,36 @@ fn wigner_surmise_gue(s: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn shot_noise_tunnel_junction(current: f64) -> f64 {
-    2.0 * 1.602e-19 * current // 2eI in A²/Hz
+fn shot_noise_tunnel_junction(_current: f64) -> f64 {
+    2.0 * 1.602e-19 * _current // 2eI in A²/Hz
 }
 
 #[allow(dead_code)]
-fn diffusion_coefficient(radius: f64, temp: f64, viscosity: f64) -> f64 {
+fn diffusion_coefficient(_radius: f64, temp: f64, viscosity: f64) -> f64 {
     let k_b = 1.381e-23;
-    k_b * temp / (6.0 * PI * viscosity * radius)
+    k_b * temp / (6.0 * PI * viscosity * _radius)
 }
 
 #[allow(dead_code)]
-fn momentum_correlation_time(radius: f64, viscosity: f64) -> f64 {
-    let mass = 4.0 / 3.0 * PI * radius.powi(3) * 1000.0; // assume water density
-    mass / (6.0 * PI * viscosity * radius)
+fn momentum_correlation_time(_radius: f64, viscosity: f64) -> f64 {
+    let mass = 4.0 / 3.0 * PI * _radius.powi(3) * 1000.0; // assume water density
+    mass / (6.0 * PI * viscosity * _radius)
 }
 
 #[allow(dead_code)]
-fn finite_size_correlation(size: f64, nu: f64) -> f64 {
-    1.0 / size.powf(1.0 / nu)
+fn finite_size_correlation(_size: f64, nu: f64) -> f64 {
+    1.0 / _size.powf(1.0 / nu)
 }
 
 #[allow(dead_code)]
-fn finite_size_susceptibility(size: f64, exponents: (f64, f64, f64)) -> f64 {
-    let (nu, gamma, _beta) = exponents;
-    size.powf(-gamma / nu)
+fn finite_size_susceptibility(_size: f64, exponents: (f64, f64, f64)) -> f64 {
+    let (nu, gamma_beta) = exponents;
+    _size.powf(-gamma / nu)
 }
 
 #[allow(dead_code)]
-fn finite_size_order_parameter(size: f64, beta: f64) -> f64 {
-    size.powf(-beta)
+fn finite_size_order_parameter(_size: f64, beta: f64) -> f64 {
+    _size.powf(-beta)
 }
 
 #[allow(dead_code)]
@@ -2181,24 +2178,24 @@ fn peregrine_phase(z: f64, t: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn kerr_comb_threshold(detuning: f64) -> f64 {
+fn kerr_comb_threshold(_detuning: f64) -> f64 {
     // Simplified threshold calculation
-    1.0 + detuning.abs()
+    1.0 + _detuning.abs()
 }
 
 #[allow(dead_code)]
-fn estimate_comb_lines(detuning: f64, power: f64) -> f64 {
-    if detuning < 0.0 && power > kerr_comb_threshold(detuning) {
-        10.0 * (-detuning).sqrt()
+fn estimate_comb_lines(_detuning: f64, power: f64) -> f64 {
+    if _detuning < 0.0 && power > kerr_comb_threshold(_detuning) {
+        10.0 * (-_detuning).sqrt()
     } else {
         1.0
     }
 }
 
 #[allow(dead_code)]
-fn cosmic_ray_flux(energy: f64, gamma: f64) -> f64 {
+fn cosmic_ray_flux(_energy: f64, gamma: f64) -> f64 {
     // Flux in particles/(m²·s·sr·eV)
-    1e4 * energy.powf(-gamma)
+    1e4 * _energy.powf(-gamma)
 }
 
 #[allow(dead_code)]

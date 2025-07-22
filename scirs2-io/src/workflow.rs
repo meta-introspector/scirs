@@ -56,7 +56,7 @@ pub struct Task {
     pub id: String,
     pub name: String,
     pub task_type: TaskType,
-    pub config: serde_json::Value,
+    pub config: serde_json: Value,
     pub inputs: Vec<String>,
     pub outputs: Vec<String>,
     pub resources: ResourceRequirements,
@@ -166,10 +166,10 @@ pub struct WorkflowBuilder {
 
 impl WorkflowBuilder {
     /// Create a new workflow builder
-    pub fn new(id: impl Into<String>, name: impl Into<String>) -> Self {
+    pub fn new(_id: impl Into<String>, name: impl Into<String>) -> Self {
         Self {
             workflow: Workflow {
-                id: id.into(),
+                _id: _id.into(),
                 name: name.into(),
                 description: None,
                 tasks: Vec::new(),
@@ -375,9 +375,9 @@ impl Default for ExecutorConfig {
 
 impl WorkflowExecutor {
     /// Create a new workflow executor
-    pub fn new(config: ExecutorConfig) -> Self {
+    pub fn new(_config: ExecutorConfig) -> Self {
         Self {
-            config,
+            _config,
             state: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -459,7 +459,7 @@ impl WorkflowExecutor {
     fn execute_tasks_in_order(&self, workflow: &Workflow, execution_id: &str) -> Result<()> {
         let mut executed_tasks = HashSet::new();
         let mut remaining_tasks: HashSet<String> =
-            workflow.tasks.iter().map(|t| t.id.clone()).collect();
+            workflow.tasks.iter().map(|t| t._id.clone()).collect();
 
         while !remaining_tasks.is_empty() {
             let mut tasks_to_execute = Vec::new();
@@ -492,7 +492,7 @@ impl WorkflowExecutor {
                     let task = workflow
                         .tasks
                         .iter()
-                        .find(|t| &t.id == task_id)
+                        .find(|t| &t._id == task_id)
                         .ok_or_else(|| IoError::Other(format!("Task not found: {task_id}")))?;
 
                     self.execute_single_task(task, execution_id)?;
@@ -517,7 +517,7 @@ impl WorkflowExecutor {
             {
                 let mut states = self.state.lock().unwrap();
                 if let Some(state) = states.get_mut(execution_id) {
-                    if let Some(task_state) = state.task_states.get_mut(&task.id) {
+                    if let Some(task_state) = state.task_states.get_mut(&task._id) {
                         task_state.status = if attempt == 1 {
                             TaskStatus::Running
                         } else {
@@ -536,7 +536,7 @@ impl WorkflowExecutor {
             {
                 let mut states = self.state.lock().unwrap();
                 if let Some(state) = states.get_mut(execution_id) {
-                    if let Some(task_state) = state.task_states.get_mut(&task.id) {
+                    if let Some(task_state) = state.task_states.get_mut(&task._id) {
                         task_state.end_time = Some(Utc::now());
 
                         match result {
@@ -576,45 +576,45 @@ impl WorkflowExecutor {
         match task.task_type {
             TaskType::DataIngestion => {
                 // Simulate data ingestion
-                outputs.insert("status".to_string(), serde_json::json!("completed"));
-                outputs.insert("records_processed".to_string(), serde_json::json!(1000));
+                outputs.insert("status".to_string(), serde_json::_json!("completed"));
+                outputs.insert("records_processed".to_string(), serde_json::_json!(1000));
             }
             TaskType::Transform => {
                 // Simulate data transformation
-                outputs.insert("status".to_string(), serde_json::json!("completed"));
-                outputs.insert("rows_transformed".to_string(), serde_json::json!(1000));
+                outputs.insert("status".to_string(), serde_json::_json!("completed"));
+                outputs.insert("rows_transformed".to_string(), serde_json::_json!(1000));
             }
             TaskType::Validation => {
                 // Simulate data validation
-                outputs.insert("status".to_string(), serde_json::json!("completed"));
-                outputs.insert("validation_errors".to_string(), serde_json::json!(0));
+                outputs.insert("status".to_string(), serde_json::_json!("completed"));
+                outputs.insert("validation_errors".to_string(), serde_json::_json!(0));
             }
             TaskType::MLTraining => {
                 // Simulate ML training
-                outputs.insert("status".to_string(), serde_json::json!("completed"));
-                outputs.insert("model_accuracy".to_string(), serde_json::json!(0.95));
+                outputs.insert("status".to_string(), serde_json::_json!("completed"));
+                outputs.insert("model_accuracy".to_string(), serde_json::_json!(0.95));
             }
             TaskType::MLInference => {
                 // Simulate ML inference
-                outputs.insert("status".to_string(), serde_json::json!("completed"));
-                outputs.insert("predictions_generated".to_string(), serde_json::json!(500));
+                outputs.insert("status".to_string(), serde_json::_json!("completed"));
+                outputs.insert("predictions_generated".to_string(), serde_json::_json!(500));
             }
             TaskType::Export => {
                 // Simulate data export
-                outputs.insert("status".to_string(), serde_json::json!("completed"));
-                outputs.insert("files_written".to_string(), serde_json::json!(1));
+                outputs.insert("status".to_string(), serde_json::_json!("completed"));
+                outputs.insert("files_written".to_string(), serde_json::_json!(1));
             }
             TaskType::Script => {
                 // Simulate script execution
-                outputs.insert("status".to_string(), serde_json::json!("completed"));
-                outputs.insert("exit_code".to_string(), serde_json::json!(0));
+                outputs.insert("status".to_string(), serde_json::_json!("completed"));
+                outputs.insert("exit_code".to_string(), serde_json::_json!(0));
             }
             TaskType::SubWorkflow => {
                 // Simulate sub-workflow execution
-                outputs.insert("status".to_string(), serde_json::json!("completed"));
+                outputs.insert("status".to_string(), serde_json::_json!("completed"));
                 outputs.insert(
                     "sub_workflow_id".to_string(),
-                    serde_json::json!(format!("sub-{}", task.id)),
+                    serde_json::_json!(format!("sub-{}", task.id)),
                 );
             }
             TaskType::Conditional => {
@@ -622,22 +622,22 @@ impl WorkflowExecutor {
                 let condition_met = true; // Would evaluate actual condition
                 outputs.insert(
                     "condition_met".to_string(),
-                    serde_json::json!(condition_met),
+                    serde_json::_json!(condition_met),
                 );
-                outputs.insert("status".to_string(), serde_json::json!("completed"));
+                outputs.insert("status".to_string(), serde_json::_json!("completed"));
             }
             TaskType::Parallel => {
                 // Simulate parallel execution
-                outputs.insert("status".to_string(), serde_json::json!("completed"));
-                outputs.insert("parallel_tasks_completed".to_string(), serde_json::json!(4));
+                outputs.insert("status".to_string(), serde_json::_json!("completed"));
+                outputs.insert("parallel_tasks_completed".to_string(), serde_json::_json!(4));
             }
         }
 
         // Add execution metadata
-        outputs.insert("execution_time_ms".to_string(), serde_json::json!(100)); // Simulated
+        outputs.insert("execution_time_ms".to_string(), serde_json::_json!(100)); // Simulated
         outputs.insert(
             "execution_timestamp".to_string(),
-            serde_json::json!(Utc::now().to_rfc3339()),
+            serde_json::_json!(Utc::now().to_rfc3339()),
         );
 
         Ok(outputs)
@@ -668,23 +668,23 @@ pub mod tasks {
     use super::*;
 
     /// Create a data ingestion task
-    pub fn data_ingestion(id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
-        TaskBuilder::new(id, name, TaskType::DataIngestion)
+    pub fn data_ingestion(_id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
+        TaskBuilder::new(_id, name, TaskType::DataIngestion)
     }
 
     /// Create a transformation task
-    pub fn transform(id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
-        TaskBuilder::new(id, name, TaskType::Transform)
+    pub fn transform(_id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
+        TaskBuilder::new(_id, name, TaskType::Transform)
     }
 
     /// Create a validation task
-    pub fn validation(id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
-        TaskBuilder::new(id, name, TaskType::Validation)
+    pub fn validation(_id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
+        TaskBuilder::new(_id, name, TaskType::Validation)
     }
 
     /// Create an export task
-    pub fn export(id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
-        TaskBuilder::new(id, name, TaskType::Export)
+    pub fn export(_id: impl Into<String>, name: impl Into<String>) -> TaskBuilder {
+        TaskBuilder::new(_id, name, TaskType::Export)
     }
 
     /// Task builder
@@ -693,13 +693,13 @@ pub mod tasks {
     }
 
     impl TaskBuilder {
-        pub fn new(id: impl Into<String>, name: impl Into<String>, task_type: TaskType) -> Self {
+        pub fn new(_id: impl Into<String>, name: impl Into<String>, task_type: TaskType) -> Self {
             Self {
                 task: Task {
-                    id: id.into(),
+                    _id: _id.into(),
                     name: name.into(),
                     task_type,
-                    config: serde_json::json!({}),
+                    config: serde_json: json!({}),
                     inputs: Vec::new(),
                     outputs: Vec::new(),
                     resources: ResourceRequirements::default(),
@@ -707,7 +707,7 @@ pub mod tasks {
             }
         }
 
-        pub fn config(mut self, config: serde_json::Value) -> Self {
+        pub fn config(mut self, config: serde_json: Value) -> Self {
             self.task.config = config;
             self
         }
@@ -739,11 +739,11 @@ pub mod templates {
     use super::*;
 
     /// Create an ETL (Extract-Transform-Load) workflow
-    pub fn etl_workflow(name: impl Into<String>) -> WorkflowBuilder {
-        let name = name.into();
+    pub fn etl_workflow(_name: impl Into<String>) -> WorkflowBuilder {
+        let _name = _name.into();
         let id = format!("etl_{}", Utc::now().timestamp());
 
-        WorkflowBuilder::new(&id, &name)
+        WorkflowBuilder::new(&id, &_name)
             .description("Standard ETL workflow template")
             .add_task(
                 tasks::data_ingestion("extract", "Extract Data")
@@ -784,11 +784,11 @@ pub mod templates {
     }
 
     /// Create a batch processing workflow
-    pub fn batch_processing(name: impl Into<String>, _batch_size: usize) -> WorkflowBuilder {
-        let name = name.into();
+    pub fn batch_processing(_name: impl Into<String>, _batch_size: usize) -> WorkflowBuilder {
+        let _name = _name.into();
         let id = format!("batch_{}", Utc::now().timestamp());
 
-        WorkflowBuilder::new(&id, &name)
+        WorkflowBuilder::new(&id, &_name)
             .description("Batch processing workflow template")
             .configure(|config| {
                 config.max_parallel_tasks = 8;
@@ -824,22 +824,21 @@ pub mod monitoring {
     }
 
     /// Collect metrics for a workflow
-    pub fn collect_metrics(states: &[WorkflowState]) -> WorkflowMetrics {
-        let total = states.len();
-        let successful = states
+    pub fn collect_metrics(_states: &[WorkflowState]) -> WorkflowMetrics {
+        let total = _states.len();
+        let successful = _states
             .iter()
             .filter(|s| s.status == WorkflowStatus::Success)
             .count();
-        let failed = states
+        let failed = _states
             .iter()
             .filter(|s| s.status == WorkflowStatus::Failed)
             .count();
 
-        let durations: Vec<Duration> = states
+        let durations: Vec<Duration> = _states
             .iter()
             .filter_map(|s| match (s.start_time, s.end_time) {
-                (Some(start), Some(end)) => Some(end - start),
-                _ => None,
+                (Some(start), Some(end)) => Some(end - start, _ => None,
             })
             .collect();
 
@@ -910,10 +909,10 @@ pub mod scheduling {
     }
 
     impl WorkflowScheduler {
-        pub fn new(executor: Arc<WorkflowExecutor>) -> Self {
+        pub fn new(_executor: Arc<WorkflowExecutor>) -> Self {
             Self {
                 schedules: HashMap::new(),
-                executor,
+                _executor,
                 running: Arc::new(Mutex::new(false)),
             }
         }
@@ -1040,9 +1039,9 @@ pub mod engines {
     }
 
     impl AirflowAdapter {
-        pub fn new(api_url: impl Into<String>) -> Self {
+        pub fn new(_api_url: impl Into<String>) -> Self {
             Self {
-                api_url: api_url.into(),
+                api_url: _api_url.into(),
                 auth_token: None,
             }
         }
@@ -1099,8 +1098,8 @@ pub mod engines {
             Ok(dag_code)
         }
 
-        fn import_workflow(&self, _definition: &str) -> Result<Workflow> {
-            // Parse Airflow DAG definition
+        fn import_workflow(&self_definition: &str) -> Result<Workflow> {
+            // Parse Airflow DAG _definition
             Err(IoError::UnsupportedFormat(
                 "Airflow import not yet implemented".to_string(),
             ))
@@ -1130,9 +1129,9 @@ pub mod engines {
     }
 
     impl PrefectAdapter {
-        pub fn new(api_url: impl Into<String>, project: impl Into<String>) -> Self {
+        pub fn new(_api_url: impl Into<String>, project: impl Into<String>) -> Self {
             Self {
-                api_url: api_url.into(),
+                api_url: _api_url.into(),
                 project_name: project.into(),
             }
         }
@@ -1192,13 +1191,13 @@ pub mod engines {
             Ok(flow_code)
         }
 
-        fn import_workflow(&self, _definition: &str) -> Result<Workflow> {
+        fn import_workflow(&self_definition: &str) -> Result<Workflow> {
             Err(IoError::UnsupportedFormat(
                 "Prefect import not yet implemented".to_string(),
             ))
         }
 
-        fn submit(&self, _workflow: &Workflow) -> Result<String> {
+        fn submit(&self_workflow: &Workflow) -> Result<String> {
             let flow_run_id = uuid::Uuid::new_v4().to_string();
             Ok(flow_run_id)
         }
@@ -1251,13 +1250,13 @@ pub mod engines {
             Ok(job_code)
         }
 
-        fn import_workflow(&self, _definition: &str) -> Result<Workflow> {
+        fn import_workflow(&self_definition: &str) -> Result<Workflow> {
             Err(IoError::UnsupportedFormat(
                 "Dagster import not yet implemented".to_string(),
             ))
         }
 
-        fn submit(&self, _workflow: &Workflow) -> Result<String> {
+        fn submit(&self_workflow: &Workflow) -> Result<String> {
             Ok(uuid::Uuid::new_v4().to_string())
         }
 
@@ -1352,10 +1351,10 @@ pub mod dynamic {
 
             // Validate parameters
             for param_def in &template.parameters {
-                if param_def.required && !params.contains_key(&param_def.name) {
+                if param_def.required && !params.contains_key(&param_def._name) {
                     return Err(IoError::ValidationError(format!(
                         "Required parameter '{}' not provided",
-                        param_def.name
+                        param_def._name
                     )));
                 }
             }
@@ -1454,7 +1453,7 @@ pub mod dynamic {
 /// Event-driven workflows
 pub mod events {
     use super::*;
-    use crossbeam_channel::{Receiver, Sender};
+    use crossbeam__channel::{Receiver, Sender};
 
     /// Event types that can trigger workflows
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1474,7 +1473,7 @@ pub mod events {
         },
         ExternalTrigger {
             source: String,
-            payload: serde_json::Value,
+            payload: serde_json: Value,
         },
         WorkflowCompleted {
             workflow_id: String,
@@ -1482,7 +1481,7 @@ pub mod events {
         },
         Custom {
             event_type: String,
-            data: serde_json::Value,
+            data: serde_json: Value,
         },
     }
 
@@ -1527,13 +1526,13 @@ pub mod events {
     }
 
     impl EventDrivenExecutor {
-        pub fn new(executor: Arc<WorkflowExecutor>) -> Self {
+        pub fn new(_executor: Arc<WorkflowExecutor>) -> Self {
             let (tx, rx) = crossbeam_channel::unbounded();
             Self {
                 event_rx: rx,
                 event_tx: tx,
                 rules: Vec::new(),
-                executor,
+                _executor,
             }
         }
 
@@ -1585,8 +1584,7 @@ pub mod events {
                 }
                 EventPattern::SourcePattern { source } => match event {
                     WorkflowEvent::DataAvailable { source: s, .. } => s == source,
-                    WorkflowEvent::ExternalTrigger { source: s, .. } => s == source,
-                    _ => false,
+                    WorkflowEvent::ExternalTrigger { source: s, .. } => s == source_ => false,
                 },
                 EventPattern::EventTypePattern { event_type } => {
                     if let WorkflowEvent::Custom { event_type: t, .. } = event {
@@ -1720,8 +1718,8 @@ pub mod versioning {
         }
 
         fn find_modified_tasks(&self, tasks1: &[Task], tasks2: &[Task]) -> Vec<String> {
-            let map1: HashMap<_, _> = tasks1.iter().map(|t| (&t.id, t)).collect();
-            let map2: HashMap<_, _> = tasks2.iter().map(|t| (&t.id, t)).collect();
+            let map1: HashMap<__> = tasks1.iter().map(|t| (&t.id, t)).collect();
+            let map2: HashMap<__> = tasks2.iter().map(|t| (&t.id, t)).collect();
 
             let mut modified = Vec::new();
             for (id, task1) in map1 {
@@ -1841,9 +1839,9 @@ pub mod distributed {
     }
 
     impl DistributedExecutor {
-        pub fn new(coordinator_url: impl Into<String>) -> Self {
+        pub fn new(_coordinator_url: impl Into<String>) -> Self {
             Self {
-                coordinator_url: coordinator_url.into(),
+                coordinator_url: _coordinator_url.into(),
                 worker_pool: WorkerPool {
                     workers: Vec::new(),
                 },
@@ -1926,22 +1924,21 @@ pub mod visualization {
 
     impl WorkflowVisualizer {
         /// Generate DOT graph representation
-        pub fn to_dot(workflow: &Workflow) -> String {
+        pub fn to_dot(_workflow: &Workflow) -> String {
             let mut dot = String::new();
-            dot.push_str("digraph workflow {\n");
+            dot.push_str("digraph _workflow {\n");
             dot.push_str("  rankdir=TB;\n");
             dot.push_str("  node [shape=box, style=rounded];\n\n");
 
             // Add nodes
-            for task in &workflow.tasks {
+            for task in &_workflow.tasks {
                 let color = match task.task_type {
                     TaskType::DataIngestion => "lightblue",
                     TaskType::Transform => "lightgreen",
                     TaskType::Validation => "yellow",
                     TaskType::MLTraining => "orange",
                     TaskType::MLInference => "pink",
-                    TaskType::Export => "lightgray",
-                    _ => "white",
+                    TaskType::Export => "lightgray"_ => "white",
                 };
 
                 dot.push_str(&format!(
@@ -1953,7 +1950,7 @@ pub mod visualization {
             dot.push('\n');
 
             // Add edges
-            for (task_id, deps) in &workflow.dependencies {
+            for (task_id, deps) in &_workflow.dependencies {
                 for dep in deps {
                     dot.push_str(&format!("  {dep} -> {task_id};\n"));
                 }
@@ -1964,20 +1961,19 @@ pub mod visualization {
         }
 
         /// Generate Mermaid diagram
-        pub fn to_mermaid(workflow: &Workflow) -> String {
+        pub fn to_mermaid(_workflow: &Workflow) -> String {
             let mut mermaid = String::new();
             mermaid.push_str("graph TD\n");
 
             // Add nodes
-            for task in &workflow.tasks {
+            for task in &_workflow.tasks {
                 let shape = match task.task_type {
                     TaskType::DataIngestion => "[",
                     TaskType::Transform => "(",
                     TaskType::Validation => "{",
                     TaskType::MLTraining => "[[",
                     TaskType::MLInference => "((",
-                    TaskType::Export => "[",
-                    _ => "[",
+                    TaskType::Export => "["_ => "[",
                 };
 
                 let close = match task.task_type {
@@ -1986,15 +1982,14 @@ pub mod visualization {
                     TaskType::Validation => "}",
                     TaskType::MLTraining => "]]",
                     TaskType::MLInference => "))",
-                    TaskType::Export => "]",
-                    _ => "]",
+                    TaskType::Export => "]"_ => "]",
                 };
 
                 mermaid.push_str(&format!("    {}{}{}{}\n", task.id, shape, task.name, close));
             }
 
             // Add edges
-            for (task_id, deps) in &workflow.dependencies {
+            for (task_id, deps) in &_workflow.dependencies {
                 for dep in deps {
                     mermaid.push_str(&format!("    {dep} --> {task_id}\n"));
                 }
@@ -2004,22 +1999,21 @@ pub mod visualization {
         }
 
         /// Generate execution timeline
-        pub fn execution_timeline(state: &WorkflowState) -> String {
+        pub fn execution_timeline(_state: &WorkflowState) -> String {
             let mut timeline = String::new();
             timeline.push_str("gantt\n");
             timeline.push_str("    title Workflow Execution Timeline\n");
             timeline.push_str("    dateFormat YYYY-MM-DD HH:mm:ss\n\n");
 
-            let mut tasks: Vec<_> = state.task_states.iter().collect();
-            tasks.sort_by_key(|(_, state)| state.start_time);
+            let mut tasks: Vec<_> = _state.task_states.iter().collect();
+            tasks.sort_by_key(|(_, _state)| _state.start_time);
 
             for (task_id, task_state) in tasks {
                 if let (Some(start), Some(end)) = (task_state.start_time, task_state.end_time) {
                     let status = match task_state.status {
                         TaskStatus::Success => "done",
                         TaskStatus::Failed => "crit",
-                        TaskStatus::Running => "active",
-                        _ => "",
+                        TaskStatus::Running => "active"_ => "",
                     };
 
                     timeline.push_str(&format!(

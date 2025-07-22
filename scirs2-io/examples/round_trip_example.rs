@@ -4,7 +4,7 @@
 //! to ensure data integrity and format compliance.
 
 use ndarray::{array, Array1, Array2};
-use scirs2_io::{
+use scirs2__io::{
     csv,
     hdf5::{self, AttributeValue},
     matrix_market::{
@@ -49,10 +49,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn test_csv_round_trip(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
+fn test_csv_round_trip(_temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Testing CSV Round-trip...");
 
-    let csv_file = temp_dir.path().join("test_data.csv");
+    let csv_file = _temp_dir.path().join("test_data.csv");
 
     // Original data
     let original_data = vec![
@@ -223,10 +223,10 @@ fn test_matrix_market_round_trip(
 }
 
 #[allow(dead_code)]
-fn test_hdf5_round_trip(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
+fn test_hdf5_round_trip(_temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🗄️  Testing HDF5 Round-trip...");
 
-    let hdf5_file = temp_dir.path().join("test_data.h5");
+    let hdf5_file = _temp_dir.path().join("test_data.h5");
 
     // Create test data
     let array_1d = Array1::from(vec![1.0, 2.0, 3.0, 4.0, 5.0]);

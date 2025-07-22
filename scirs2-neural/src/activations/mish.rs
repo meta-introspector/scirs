@@ -60,13 +60,13 @@ impl<F: Float + Debug> Activation<F> for Mish {
         // We need to compute the derivative of Mish: d(mish)/dx
         let mut grad_input = Array::zeros(grad_output.raw_dim());
         // We need the original x to compute the derivative accurately
-        // For simplicity, we'll approximate it from the output
+        // For simplicity, we'll approximate it from the _output
         // In practice, you'd want to cache the input in the forward pass
         Zip::from(&mut grad_input)
             .and(grad_output)
-            .and(output)
+            .and(_output)
             .for_each(|grad_in, &grad_out, &out| {
-                // Approximate the input value from output
+                // Approximate the input value from _output
                 // This is NOT accurate in general - a real implementation would cache the inputs
                 let x = out; // This is just a placeholder - not correct
                 // Compute the derivative components

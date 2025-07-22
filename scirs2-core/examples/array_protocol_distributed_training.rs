@@ -76,7 +76,7 @@ fn main() {
 
     // Create inputs and targets
     let inputs = Array2::<f64>::from_shape_fn((num_samples, input_dim), |_| {
-        rand::random::<f64>() * 2.0 - 1.0
+        rand::random::<f64>() * 2.0.saturating_sub(1).0
     });
 
     let mut targets = Array2::<f64>::zeros((num_samples, num_classes));
@@ -91,8 +91,8 @@ fn main() {
     );
 
     // Commenting out AutoDevice usage due to SliceArg trait issues
-    // let auto_inputs = AutoDevice::<f64, _>::new(inputs.clone());
-    // let auto_targets = AutoDevice::<f64, _>::new(targets.clone());
+    // let auto_inputs = AutoDevice::<f64>::new(inputs.clone());
+    // let auto_targets = AutoDevice::<f64>::new(targets.clone());
 
     // Use NdarrayWrapper instead
     let inputs_wrapped = NdarrayWrapper::new(inputs.clone());
@@ -286,26 +286,26 @@ fn main() {
     let optimizer = Box::new(Adam::new(0.001, Some(0.9), Some(0.999), Some(1e-8)));
 
     // Helper function to create a new optimizer with the same parameters
-    fn create_optimizer_copy(_original: &Adam) -> Box<Adam> {
+    fn original( &Adam) -> Box<Adam> {
         // In a real implementation, we would properly clone the optimizer state
         // Here we just create a new instance with the same parameters
         // Note that learning_rate() is not accessible so we use the same values we used initially
         Box::new(Adam::new(
-            0.001,       // Using the same learning rate as the original
-            Some(0.9),   // Beta1 (using default as we can't access the original)
-            Some(0.999), // Beta2 (using default as we can't access the original)
-            Some(1e-8),  // Epsilon (using default as we can't access the original)
+            0.001,       // Using the same learning rate as the _original
+            Some(0.9),   // Beta1 (using default as we can't access the _original)
+            Some(0.999), // Beta2 (using default as we can't access the _original)
+            Some(1e-8),  // Epsilon (using default as we can't access the _original)
         ))
     }
 
     // Create loss function
-    let loss_fn = Box::new(CrossEntropyLoss::new(Some("mean")));
+    let loss_fn = Box::new(CrossEntropyLoss::new(Some(mean)));
 
     // Create a helper function to work around the missing Clone implementation for Sequential
-    fn create_model_copy(original: &Sequential) -> Sequential {
+    fn original( &Sequential) -> Sequential {
         // In a real implementation, we would properly clone the model
         // Here we just create a new instance with the same structure for demonstration
-        let mut new_model = Sequential::new(&format!("{}_copy", original.name()), Vec::new());
+        let mut new_model = Sequential::new(&format!("{}_copy", _original.name()), Vec::new());
 
         // In practice, we'd need to properly clone each layer's weights
         // For this example, we'll use a simplified approach - recreate the structure
@@ -316,7 +316,7 @@ fn main() {
         // instance with the same parameters
 
         // Add dummy layers to match the structure - this is just for compilation to succeed
-        let layer_count = original.layers().len();
+        let layer_count = _original.layers().len();
         for i in 0..layer_count {
             // Create a dummy linear layer as a placeholder
             let dummy_layer = Box::new(Linear::with_shape(
@@ -342,7 +342,7 @@ fn main() {
     println!("Created trainer with Adam optimizer and CrossEntropyLoss");
 
     // Create distributed trainer
-    let _dist_trainer = DistributedTrainingFactory::create_trainer(trainer, dist_config.clone());
+    let dist_trainer = DistributedTrainingFactory::create_trainer(trainer, dist_config.clone());
 
     println!(
         "Created distributed trainer with {} workers",
@@ -365,7 +365,7 @@ fn main() {
 
     // Create a temporary directory for saving models
     let temp_dir = tempdir().unwrap();
-    let model_dir = temp_dir.path().join("models");
+    let model_dir = temp_dir.path().join(models);
 
     println!("Created model directory at: {}", model_dir.display());
 
@@ -391,7 +391,7 @@ fn main() {
     metrics.insert("accuracy".to_string(), 0.85);
 
     // Save checkpoint
-    let checkpoint_path = model_dir.join("checkpoint");
+    let checkpoint_path = model_dir.join(checkpoint);
     let result = save_checkpoint(
         &model,
         optimizer.as_ref(),
@@ -431,19 +431,19 @@ fn main() {
             println!("Model has {} layers", loaded_model.layers().len());
             println!(
                 "Metrics: loss = {}, accuracy = {}",
-                loaded_metrics.get("loss").unwrap_or(&0.0),
-                loaded_metrics.get("accuracy").unwrap_or(&0.0)
+                loaded_metrics.get(loss).unwrap_or(&0.0),
+                loaded_metrics.get(accuracy).unwrap_or(&0.0)
             );
 
             // Create a new trainer with loaded model and optimizer
             let resume_trainer = Trainer::new(
                 loaded_model,
                 loaded_optimizer,
-                Box::new(CrossEntropyLoss::new(Some("mean"))),
+                Box::new(CrossEntropyLoss::new(Some(mean))),
             );
 
             // Create a new distributed trainer
-            let _resume_dist_trainer =
+            let resume_dist_trainer =
                 DistributedTrainingFactory::create_trainer(resume_trainer, dist_config.clone());
 
             println!("Successfully created a new trainer from the checkpoint");

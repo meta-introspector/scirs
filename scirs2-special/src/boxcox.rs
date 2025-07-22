@@ -48,7 +48,7 @@ use std::fmt::{Debug, Display};
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::boxcox;
+/// use scirs2__special::boxcox;
 ///
 /// // λ = 0 case (logarithmic)
 /// let result = boxcox(2.718, 0.0).unwrap();
@@ -68,8 +68,8 @@ where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
     check_positive(x, "x")?;
-    check_finite(x, "x")?;
-    check_finite(lmbda, "lmbda")?;
+    check_finite(x, "x value")?;
+    check_finite(lmbda, "lmbda value")?;
 
     let _zero = T::from_f64(0.0).unwrap();
     let one = T::one();
@@ -97,7 +97,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::boxcox1p;
+/// use scirs2__special::boxcox1p;
 ///
 /// // λ = 0 case
 /// let result = boxcox1p(1.718, 0.0).unwrap();
@@ -112,8 +112,8 @@ pub fn boxcox1p<T>(x: T, lmbda: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
-    check_finite(x, "x")?;
-    check_finite(lmbda, "lmbda")?;
+    check_finite(x, "x value")?;
+    check_finite(lmbda, "lmbda value")?;
 
     let neg_one = T::from_f64(-1.0).unwrap();
     if x <= neg_one {
@@ -147,7 +147,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::{boxcox, inv_boxcox};
+/// use scirs2__special::{boxcox, inv_boxcox};
 ///
 /// let x = 5.0;
 /// let lmbda = 0.3;
@@ -160,8 +160,8 @@ pub fn inv_boxcox<T>(y: T, lmbda: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
-    check_finite(y, "y")?;
-    check_finite(lmbda, "lmbda")?;
+    check_finite(y, "y value")?;
+    check_finite(lmbda, "lmbda value")?;
 
     let zero = T::from_f64(0.0).unwrap();
     let one = T::one();
@@ -195,7 +195,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2_special::{boxcox1p, inv_boxcox1p};
+/// use scirs2__special::{boxcox1p, inv_boxcox1p};
 ///
 /// let x = 0.5;
 /// let lmbda = -0.2;
@@ -208,8 +208,8 @@ pub fn inv_boxcox1p<T>(y: T, lmbda: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
 {
-    check_finite(y, "y")?;
-    check_finite(lmbda, "lmbda")?;
+    check_finite(y, "y value")?;
+    check_finite(lmbda, "lmbda value")?;
 
     let zero = T::from_f64(0.0).unwrap();
     let one = T::one();
@@ -242,7 +242,7 @@ where
 /// # Examples
 /// ```
 /// use ndarray::array;
-/// use scirs2_special::boxcox_array;
+/// use scirs2__special::boxcox_array;
 ///
 /// let x = array![1.0, 2.0, 4.0, 8.0];
 /// let result = boxcox_array(&x.view(), 0.0).unwrap();

@@ -1,4 +1,4 @@
-use scirs2_fft::{
+use scirs2__fft::{
     sparse_fft::{SparseFFTAlgorithm, WindowFunction},
     sparse_fft_gpu::{gpu_batch_sparse_fft, gpu_sparse_fft, GPUBackend},
     sparse_fft_gpu_memory::{

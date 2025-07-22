@@ -66,14 +66,14 @@ fn main() {
 // Function to process array with standard chunking
 #[cfg(feature = "memory_management")]
 #[allow(dead_code)]
-fn basic_chunking(array: &Array2<f64>) {
+fn array( &Array2<f64>) {
     let start = Instant::now();
     let mut sum = 0.0;
     let mut count = 0;
 
-    for i in 0..array.nrows() {
-        for j in 0..array.ncols() {
-            sum += array[[i, j]];
+    for i in 0.._array.nrows() {
+        for j in 0.._array.ncols() {
+            sum += _array[[i, j]];
             count += 1;
         }
     }
@@ -87,7 +87,7 @@ fn basic_chunking(array: &Array2<f64>) {
 // Function to process array with tracked chunking
 #[cfg(feature = "memory_management")]
 #[allow(dead_code)]
-fn tracked_chunking(array: &Array2<f64>) {
+fn array( &Array2<f64>) {
     let start = Instant::now();
 
     // Define chunk size (500x500 chunks = ~2MB per chunk)
@@ -95,7 +95,7 @@ fn tracked_chunking(array: &Array2<f64>) {
     println!("Using chunk size: {}x{}", chunk_size.0, chunk_size.1);
 
     // Create a tracked chunk processor
-    let mut processor = TrackedChunkProcessor2D::new(array, chunk_size, "ArrayChunking");
+    let mut processor = TrackedChunkProcessor2D::new(_array, chunk_size, "ArrayChunking");
 
     // Variables to track global statistics
     let mut shared_data = SharedData {
@@ -105,7 +105,7 @@ fn tracked_chunking(array: &Array2<f64>) {
         max_value: f64::MIN,
     };
 
-    // Process the array in chunks
+    // Process the _array in chunks
     processor.process_chunks(|chunk, coords| {
         println!("  Processing chunk at {:?}", coords);
 

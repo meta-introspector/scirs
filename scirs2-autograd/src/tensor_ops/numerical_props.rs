@@ -89,15 +89,15 @@ impl<F: Float> Op<F> for RankOp<F> {
 
 impl<F: Float> RankOp<F> {
     /// Compute singular values using proper SVD decomposition
-    fn compute_svd_singular_values(matrix: &Array2<F>) -> Result<Vec<F>, OpError> {
-        let (m, n) = matrix.dim();
+    fn compute_svd_singular_values(_matrix: &Array2<F>) -> Result<Vec<F>, OpError> {
+        let (m, n) = _matrix.dim();
         let min_dim = m.min(n);
 
         // For now, implement a simplified SVD using QR decomposition approach
         // This is more accurate than diagonal elements but not full SVD
 
         // Convert to f64 for numerical computation
-        let matrix_f64: Array2<f64> = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
+        let _matrix_f64: Array2<f64> = _matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
 
         // Compute A^T * A for eigenvalue decomposition approach
         let ata = if m >= n {
@@ -120,12 +120,12 @@ impl<F: Float> RankOp<F> {
             let singular_value = eigenvalue.sqrt();
             singular_values.push(F::from(singular_value).unwrap_or(F::zero()));
 
-            // Deflate matrix by removing the computed eigenvalue contribution
+            // Deflate _matrix by removing the computed eigenvalue contribution
             // This is a simplified deflation - in practice, more sophisticated methods are used
             let eye = Array2::<f64>::eye(current_matrix.nrows());
             current_matrix = current_matrix - eye * eigenvalue;
 
-            // Ensure matrix remains positive semidefinite
+            // Ensure _matrix remains positive semidefinite
             current_matrix.mapv_inplace(|x| if x < 0.0_f64 { 0.0_f64 } else { x });
         }
 
@@ -133,9 +133,9 @@ impl<F: Float> RankOp<F> {
     }
 
     /// Simple power iteration method to find the largest eigenvalue
-    fn power_iteration(matrix: &Array2<f64>) -> Result<f64, OpError> {
-        let n = matrix.nrows();
-        if n != matrix.ncols() {
+    fn power_iteration(_matrix: &Array2<f64>) -> Result<f64, OpError> {
+        let n = _matrix.nrows();
+        if n != _matrix.ncols() {
             return Err(OpError::IncompatibleShape(
                 "Matrix must be square for eigenvalue computation".into(),
             ));
@@ -157,7 +157,7 @@ impl<F: Float> RankOp<F> {
 
         for _ in 0..max_iterations {
             // Compute A * v
-            let av = matrix.dot(&v);
+            let av = _matrix.dot(&v);
 
             // Compute eigenvalue estimate: v^T * A * v
             let new_eigenvalue = v.t().dot(&av)[[0, 0]];
@@ -184,11 +184,11 @@ impl<F: Float> RankOp<F> {
 
 /// Compute the rank of a matrix
 #[allow(dead_code)]
-pub fn matrix_rank<'g, F: Float>(matrix: &Tensor<'g, F>, tolerance: Option<F>) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn matrix_rank<'g, F: Float>(_matrix: &Tensor<'g, F>, tolerance: Option<F>) -> Tensor<'g, F> {
+    let g = _matrix.graph();
 
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(RankOp { tolerance })
 }
 
@@ -351,26 +351,26 @@ pub fn cond<'g, F: Float + ndarray::ScalarOperand>(
 
 /// Compute 1-norm condition number
 #[allow(dead_code)]
-pub fn cond_1<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    cond(matrix, Some(ConditionType::One))
+pub fn cond_1<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    cond(_matrix, Some(ConditionType::One))
 }
 
 /// Compute 2-norm condition number (default)
 #[allow(dead_code)]
-pub fn cond_2<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    cond(matrix, Some(ConditionType::Two))
+pub fn cond_2<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    cond(_matrix, Some(ConditionType::Two))
 }
 
 /// Compute infinity-norm condition number
 #[allow(dead_code)]
-pub fn cond_inf<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    cond(matrix, Some(ConditionType::Inf))
+pub fn cond_inf<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    cond(_matrix, Some(ConditionType::Inf))
 }
 
 /// Compute Frobenius norm condition number
 #[allow(dead_code)]
-pub fn cond_fro<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    cond(matrix, Some(ConditionType::Fro))
+pub fn cond_fro<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    cond(_matrix, Some(ConditionType::Fro))
 }
 
 /// Log-determinant Operation
@@ -486,11 +486,11 @@ impl<F: Float> Op<F> for LogDetOp {
 
 /// Compute log(|det(A)|) in a numerically stable way
 #[allow(dead_code)]
-pub fn logdet<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
-    let g = matrix.graph();
+pub fn logdet<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+    let g = _matrix.graph();
 
     Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(LogDetOp)
 }
 
@@ -635,8 +635,7 @@ impl<F: Float> Op<F> for SLogDetExtractOp {
 
         match self.component {
             0 => ctx.append_output(ndarray::arr0(sign).into_dyn()),
-            1 => ctx.append_output(ndarray::arr0(log_det).into_dyn()),
-            _ => return Err(OpError::IncompatibleShape("Invalid component".into())),
+            1 => ctx.append_output(ndarray::arr0(log_det).into_dyn(), _ => return Err(OpError::IncompatibleShape("Invalid component".into())),
         }
 
         Ok(())
@@ -651,15 +650,15 @@ impl<F: Float> Op<F> for SLogDetExtractOp {
 ///
 /// Returns (sign, log|det|) where det(A) = sign * exp(log|det|)
 #[allow(dead_code)]
-pub fn slogdet<'g, F: Float>(matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'g, F>) {
-    let g = matrix.graph();
+pub fn slogdet<'g, F: Float>(_matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'g, F>) {
+    let g = _matrix.graph();
 
     let sign = Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(SLogDetExtractOp { component: 0 });
 
     let logdet = Tensor::builder(g)
-        .append_input(matrix, false)
+        .append_input(_matrix, false)
         .build(SLogDetExtractOp { component: 1 });
 
     (sign, logdet)
@@ -668,7 +667,7 @@ pub fn slogdet<'g, F: Float>(matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tensor_ops::convert_to_tensor;
+    use crate::tensor__ops::convert_to_tensor;
     use ndarray::array;
 
     #[test]
@@ -743,7 +742,7 @@ mod tests {
 
             // Negative determinant
             let b = convert_to_tensor(array![[0.0_f64, 1.0], [1.0, 0.0]], g);
-            let (sign2, _ld2) = slogdet(&b);
+            let (sign2_ld2) = slogdet(&b);
             let sign2_val = sign2.eval(g).unwrap();
 
             // det(B) = -1 (but our simplified implementation may not handle all cases)

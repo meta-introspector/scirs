@@ -35,8 +35,7 @@ pub trait OptimizedSpatialSearch<F: Float> {
     fn parallel_k_nearest_neighbors(
         &self,
         queries: &ArrayView2<F>,
-        k: usize,
-        _workers: Option<usize>,
+        k: usize_workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>>;
 
     /// Adaptive k-nearest neighbor search that adjusts strategy based on query characteristics
@@ -153,8 +152,7 @@ impl SimdDistanceOps {
     #[cfg(all(feature = "simd", feature = "parallel"))]
     pub fn parallel_enhanced_batch_distances<F>(
         points: &ArrayView2<F>,
-        queries: &ArrayView2<F>,
-        _num_threads: Option<usize>,
+        queries: &ArrayView2<F>, _num_threads: Option<usize>,
     ) -> Vec<Vec<F>>
     where
         F: Float + FromPrimitive + SimdUnifiedOps + Debug + Send + Sync,
@@ -189,11 +187,11 @@ impl SimdDistanceOps {
 
     /// Batch compute distances from multiple points to a single query
     #[cfg(feature = "simd")]
-    pub fn batch_distances_to_query<F>(points: &ArrayView2<F>, query: &[F]) -> Vec<F>
+    pub fn batch_distances_to_query<F>(_points: &ArrayView2<F>, query: &[F]) -> Vec<F>
     where
         F: Float + FromPrimitive + SimdUnifiedOps,
     {
-        points
+        _points
             .axis_iter(Axis(0))
             .map(|point| {
                 let point_slice = point.as_slice().unwrap();
@@ -204,11 +202,11 @@ impl SimdDistanceOps {
 
     /// Batch compute distances without SIMD
     #[cfg(not(feature = "simd"))]
-    pub fn batch_distances_to_query<F>(points: &ArrayView2<F>, query: &[F]) -> Vec<F>
+    pub fn batch_distances_to_query<F>(_points: &ArrayView2<F>, query: &[F]) -> Vec<F>
     where
         F: Float + FromPrimitive,
     {
-        points
+        _points
             .axis_iter(Axis(0))
             .map(|point| {
                 let point_slice = point.as_slice().unwrap();
@@ -229,10 +227,9 @@ pub struct CacheFriendlyKNN<F: Float> {
 
 impl<F: Float + FromPrimitive> CacheFriendlyKNN<F> {
     /// Create a new cache-friendly kNN searcher
-    pub fn new(cache_size: usize) -> Self {
+    pub fn new(_cache_size: usize) -> Self {
         Self {
-            cache_size,
-            _phantom: std::marker::PhantomData,
+            cache_size_phantom: std::marker::PhantomData,
         }
     }
 
@@ -269,12 +266,11 @@ pub struct ParallelQueryProcessor<F: Float> {
 #[cfg(feature = "parallel")]
 impl<F: Float + FromPrimitive + Send + Sync> ParallelQueryProcessor<F> {
     /// Create a new parallel query processor
-    pub fn new(num_workers: Option<usize>) -> Self {
+    pub fn new(_num_workers: Option<usize>) -> Self {
         use scirs2_core::parallel_ops::num_threads;
 
         Self {
-            num_workers: num_workers.unwrap_or_else(num_threads),
-            _phantom: std::marker::PhantomData,
+            num_workers: _num_workers.unwrap_or_else(num_threads), _phantom: std::marker::PhantomData,
         }
     }
 
@@ -315,8 +311,7 @@ where
     fn parallel_k_nearest_neighbors(
         &self,
         queries: &ArrayView2<F>,
-        k: usize,
-        _workers: Option<usize>,
+        k: usize_workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         use scirs2_core::parallel_ops::*;
 
@@ -329,7 +324,7 @@ where
                     let query_slice = query.as_slice().unwrap();
                     self.k_nearest_neighbors(query_slice, k)
                 })
-                .collect::<Result<Vec<_>, _>>()
+                .collect::<Result<Vec<_>_>>()
         })
     }
 
@@ -337,8 +332,7 @@ where
     fn parallel_k_nearest_neighbors(
         &self,
         queries: &ArrayView2<F>,
-        k: usize,
-        _workers: Option<usize>,
+        k: usize_workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         // Fallback to sequential processing
         self.batch_k_nearest_neighbors(queries, k)
@@ -390,8 +384,7 @@ where
     fn parallel_k_nearest_neighbors(
         &self,
         queries: &ArrayView2<F>,
-        k: usize,
-        _workers: Option<usize>,
+        k: usize_workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         use scirs2_core::parallel_ops::*;
 
@@ -404,7 +397,7 @@ where
                     let query_slice = query.as_slice().unwrap();
                     self.k_nearest_neighbors(query_slice, k)
                 })
-                .collect::<Result<Vec<_>, _>>()
+                .collect::<Result<Vec<_>_>>()
         })
     }
 
@@ -412,8 +405,7 @@ where
     fn parallel_k_nearest_neighbors(
         &self,
         queries: &ArrayView2<F>,
-        k: usize,
-        _workers: Option<usize>,
+        k: usize_workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         // Fallback to sequential processing
         self.batch_k_nearest_neighbors(queries, k)

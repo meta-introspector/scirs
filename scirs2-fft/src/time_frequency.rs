@@ -8,7 +8,7 @@ use crate::error::{FFTError, FFTResult};
 use crate::fft::{fft, ifft};
 use crate::{window, WindowFunction};
 use ndarray::Array2;
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::NumCast;
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -172,7 +172,7 @@ where
 
 /// Compute Short-Time Fourier Transform (STFT)
 #[allow(dead_code)]
-fn compute_stft<T>(signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
+fn compute_stft<T>(_signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
 where
     T: NumCast + Copy + Debug,
 {
@@ -183,17 +183,17 @@ where
 
     // Create window function
     let window_type = match config.window_function {
-        WindowFunction::None => crate::window::Window::Rectangular,
-        WindowFunction::Hann => crate::window::Window::Hann,
-        WindowFunction::Hamming => crate::window::Window::Hamming,
-        WindowFunction::Blackman => crate::window::Window::Blackman,
-        WindowFunction::FlatTop => crate::window::Window::FlatTop,
-        WindowFunction::Kaiser => crate::window::Window::Kaiser(5.0), // Default beta
+        WindowFunction::None =>, crate::window::Window::Rectangular,
+        WindowFunction::Hann =>, crate::window::Window::Hann,
+        WindowFunction::Hamming =>, crate::window::Window::Hamming,
+        WindowFunction::Blackman =>, crate::window::Window::Blackman,
+        WindowFunction::FlatTop =>, crate::window::Window::FlatTop,
+        WindowFunction::Kaiser =>, crate::window::Window::Kaiser(5.0), // Default beta
     };
     let window = window::get_window(window_type, window_size, true)?;
 
-    // Calculate number of frames based on signal length, window size, and hop size
-    let num_frames = ((signal.len() - window_size) / hop_size) + 1;
+    // Calculate number of frames based on _signal length, window size, and hop size
+    let num_frames = ((_signal.len() - window_size) / hop_size) + 1;
 
     // Limit number of frames for testing to avoid timeouts
     let num_frames = num_frames.min(config.max_size / window_size);
@@ -233,8 +233,8 @@ where
         // Extract frame
         let start = (time * sample_rate.unwrap_or(1.0)) as usize;
 
-        // Skip if frame would go beyond signal bounds
-        if start + window_size > signal.len() {
+        // Skip if frame would go beyond _signal bounds
+        if start + window_size > _signal.len() {
             continue;
         }
 
@@ -243,8 +243,8 @@ where
 
         // Copy frame and apply window
         for i in 0..window_size {
-            let signal_val: f64 = NumCast::from(signal[start + i]).ok_or_else(|| {
-                FFTError::ValueError("Failed to convert signal value to f64".to_string())
+            let _signal_val: f64 = NumCast::from(_signal[start + i]).ok_or_else(|| {
+                FFTError::ValueError("Failed to convert _signal value to f64".to_string())
             })?;
             windowed_frame.push(Complex64::new(signal_val * window[i], 0.0));
         }
@@ -287,12 +287,12 @@ where
 
 /// Compute Continuous Wavelet Transform (CWT)
 #[allow(dead_code)]
-fn compute_cwt<T>(signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
+fn compute_cwt<T>(_signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
 where
     T: NumCast + Copy + Debug,
 {
     // Signal length
-    let n = signal.len().min(config.max_size);
+    let n = _signal.len().min(config.max_size);
 
     // Calculate frequencies (scales)
     let min_freq = config.frequency_range.0;
@@ -324,16 +324,16 @@ where
     // Initialize result matrix
     let mut coefficients = Array2::zeros((num_freqs, n));
 
-    // Convert signal to complex for FFT
+    // Convert _signal to complex for FFT
     let mut signal_complex = Vec::with_capacity(n);
-    for &val in signal.iter().take(n) {
+    for &val in _signal.iter().take(n) {
         let val_f64: f64 = NumCast::from(val).ok_or_else(|| {
-            FFTError::ValueError("Failed to convert signal value to f64".to_string())
+            FFTError::ValueError("Failed to convert _signal value to f64".to_string())
         })?;
         signal_complex.push(Complex64::new(val_f64, 0.0));
     }
 
-    // Compute FFT of signal
+    // Compute FFT of _signal
     let signal_fft = fft(&signal_complex, None)?;
 
     // For each scale/frequency (limit to first 3 for testing)
@@ -347,7 +347,7 @@ where
             sample_rate.unwrap_or(1.0),
         )?;
 
-        // Multiply signal FFT with wavelet FFT (convolution in time domain)
+        // Multiply _signal FFT with wavelet FFT (convolution in time domain)
         let mut product = Vec::with_capacity(n);
         for j in 0..n {
             product.push(signal_fft[j] * wavelet_fft[j]);
@@ -401,12 +401,12 @@ fn create_wavelet_fft(
     // Normalized frequency vector
     let mut freqs = Vec::with_capacity(n);
     for k in 0..n {
-        let freq = if k <= n / 2 {
+        let _freq = if k <= n / 2 {
             k as f64 / (n as f64 * dt)
         } else {
             -((n - k) as f64) / (n as f64 * dt)
         };
-        freqs.push(freq);
+        freqs.push(_freq);
     }
 
     // Initialize wavelet in frequency domain
@@ -417,8 +417,8 @@ fn create_wavelet_fft(
             // Morlet wavelet parameters
             let omega0 = 6.0; // Central frequency
 
-            for (k, &freq) in freqs.iter().enumerate().take(n) {
-                let norm_freq = freq * scale;
+            for (k, &_freq) in freqs.iter().enumerate().take(n) {
+                let norm_freq = _freq * scale;
                 if norm_freq > 0.0 {
                     // Morlet wavelet in frequency domain
                     let exp_term = (-0.5 * (norm_freq - omega0).powi(2)).exp();
@@ -427,8 +427,8 @@ fn create_wavelet_fft(
             }
         }
         WaveletType::MexicanHat => {
-            for (k, &freq) in freqs.iter().enumerate().take(n) {
-                let norm_freq = freq * scale;
+            for (k, &_freq) in freqs.iter().enumerate().take(n) {
+                let norm_freq = _freq * scale;
                 if norm_freq > 0.0 {
                     // Mexican hat wavelet in frequency domain
                     let exp_term = (-0.5 * norm_freq.powi(2)).exp();
@@ -441,8 +441,8 @@ fn create_wavelet_fft(
             // Paul wavelet parameter
             let m = 4; // Order of the wavelet
 
-            for (k, &freq) in freqs.iter().enumerate().take(n) {
-                let norm_freq = freq * scale;
+            for (k, &_freq) in freqs.iter().enumerate().take(n) {
+                let norm_freq = _freq * scale;
                 if norm_freq > 0.0 {
                     // Paul wavelet in frequency domain
                     let h = (norm_freq > 0.0) as i32 as f64;
@@ -456,8 +456,8 @@ fn create_wavelet_fft(
             // DOG wavelet parameter
             let m = 2; // Order of the derivative
 
-            for (k, &freq) in freqs.iter().enumerate().take(n) {
-                let norm_freq = freq * scale;
+            for (k, &_freq) in freqs.iter().enumerate().take(n) {
+                let norm_freq = _freq * scale;
                 if norm_freq > 0.0 {
                     // DOG wavelet in frequency domain
                     let exp_term = (-0.5 * norm_freq.powi(2)).exp();
@@ -520,7 +520,7 @@ fn compute_reassigned_spectrogram(
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap_or(0);
 
             // Reassign energy to the maximum neighbor
@@ -532,8 +532,7 @@ fn compute_reassigned_spectrogram(
                 4 => reassigned[[i, j + 1]] += mag,
                 5 => reassigned[[i + 1, j - 1]] += mag,
                 6 => reassigned[[i + 1, j]] += mag,
-                7 => reassigned[[i + 1, j + 1]] += mag,
-                _ => reassigned[[i, j]] += mag,
+                7 => reassigned[[i + 1, j + 1]] += mag_ => reassigned[[i, j]] += mag,
             }
         }
     }
@@ -611,7 +610,7 @@ fn compute_synchrosqueezed_wt(
                         .partial_cmp(&(*b - inst_freq).abs())
                         .unwrap()
                 })
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .unwrap_or(i);
 
             // Reassign energy to the closest frequency bin
@@ -685,9 +684,9 @@ where
 
 /// Extract ridge (maximum energy path) from a time-frequency representation
 #[allow(dead_code)]
-pub fn extract_ridge(tf_result: &TFResult) -> Vec<(f64, f64)> {
-    let num_times = tf_result.times.len();
-    let num_freqs = tf_result.frequencies.len();
+pub fn extract_ridge(_tf_result: &TFResult) -> Vec<(f64, f64)> {
+    let num_times = _tf_result.times.len();
+    let num_freqs = _tf_result.frequencies.len();
 
     // Limit processing to avoid timeouts
     let max_times = num_times.min(500);
@@ -700,7 +699,7 @@ pub fn extract_ridge(tf_result: &TFResult) -> Vec<(f64, f64)> {
         let mut max_freq_idx = 0;
 
         for i in 0..num_freqs {
-            let energy = tf_result.coefficients[[i, j]].norm_sqr();
+            let energy = _tf_result.coefficients[[i, j]].norm_sqr();
             if energy > max_energy {
                 max_energy = energy;
                 max_freq_idx = i;
@@ -761,7 +760,7 @@ mod tests {
 
         // Use the middle frame
         let mid_frame = result.times.len() / 2;
-        for (bin, _) in result.frequencies.iter().enumerate() {
+        for (bin_) in result.frequencies.iter().enumerate() {
             let energy = result.coefficients[[mid_frame, bin]].norm_sqr();
             if energy > max_energy {
                 max_energy = energy;
@@ -813,7 +812,7 @@ mod tests {
 
         // Use the middle time point
         let mid_time = result.times.len() / 2;
-        for (scale, _) in result
+        for (scale_) in result
             .frequencies
             .iter()
             .enumerate()

@@ -356,11 +356,21 @@ impl Angle64 {
     }
 
     /// Get the angle in radians
+    pub fn radians_2(&self) -> f64 {
+        self.radians
+    }
+    
+    /// Get the angle in radians (alias)
     pub fn radians(&self) -> f64 {
         self.radians
     }
 
     /// Get the angle in degrees
+    pub fn degrees_2(&self) -> f64 {
+        self.radians * 180.0 / std::f64::consts::PI
+    }
+    
+    /// Get the angle in degrees (alias)
     pub fn degrees(&self) -> f64 {
         self.radians * 180.0 / std::f64::consts::PI
     }
@@ -468,7 +478,7 @@ impl Complex64 {
     }
 
     /// Get the magnitude (absolute value)
-    pub fn magnitude(&self) -> f64 {
+    pub fn magnitude_2(&self) -> f64 {
         (self.re * self.re + self.im * self.im).sqrt()
     }
 
@@ -494,7 +504,7 @@ impl Complex64 {
     /// Natural logarithm
     pub fn ln(&self) -> Self {
         Self {
-            re: self.magnitude().ln(),
+            re: self.magnitude_2().ln(),
             im: self.phase(),
         }
     }
@@ -506,7 +516,7 @@ impl Complex64 {
 
     /// Power with real exponent
     pub fn powf(&self, exp: f64) -> Self {
-        let magnitude = self.magnitude().powf(exp);
+        let magnitude = self.magnitude_2().powf(exp);
         let phase = self.phase() * exp;
         Self::from_polar(magnitude, phase)
     }
@@ -927,7 +937,7 @@ mod tests {
         let z1 = Complex64::new(3.0, 4.0);
         let z2 = Complex64::new(1.0, 2.0);
 
-        assert!((z1.magnitude() - 5.0).abs() < 1e-10);
+        assert!((z1.magnitude_2() - 5.0).abs() < 1e-10);
         assert!((z1.phase() - (4.0_f64 / 3.0).atan()).abs() < 1e-10);
 
         let sum = z1 + z2;

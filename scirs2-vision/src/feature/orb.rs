@@ -77,7 +77,7 @@ pub fn detect_and_compute_orb(
     config: &OrbConfig,
 ) -> Result<Vec<OrbDescriptor>> {
     let array = image_to_array(img)?;
-    let (_height, _width) = array.dim();
+    let (_height_width) = array.dim();
 
     // Create image pyramid
     let pyramid = create_pyramid(&array, config.num_levels, config.scale_factor);
@@ -135,8 +135,8 @@ pub fn detect_and_compute_orb(
 
 /// Create image pyramid for multi-scale detection
 #[allow(dead_code)]
-fn create_pyramid(image: &Array2<f32>, num_levels: usize, scale_factor: f32) -> Vec<Array2<f32>> {
-    let mut pyramid = vec![image.clone()];
+fn create_pyramid(_image: &Array2<f32>, num_levels: usize, scale_factor: f32) -> Vec<Array2<f32>> {
+    let mut pyramid = vec![_image.clone()];
 
     for _level in 1..num_levels {
         let prev_level = pyramid.last().unwrap();
@@ -145,7 +145,7 @@ fn create_pyramid(image: &Array2<f32>, num_levels: usize, scale_factor: f32) -> 
         let new_h = ((prev_h as f32) / scale_factor).round() as usize;
         let new_w = ((prev_w as f32) / scale_factor).round() as usize;
 
-        // Simple downsampling - in practice, use proper image resize
+        // Simple downsampling - in practice, use proper _image resize
         let mut new_level = Array2::zeros((new_h, new_w));
         for y in 0..new_h {
             for x in 0..new_w {
@@ -166,8 +166,8 @@ fn create_pyramid(image: &Array2<f32>, num_levels: usize, scale_factor: f32) -> 
 
 /// FAST keypoint detection
 #[allow(dead_code)]
-fn detect_fast_keypoints(image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyPoint>> {
-    let (height, width) = image.dim();
+fn detect_fast_keypoints(_image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyPoint>> {
+    let (height, width) = _image.dim();
     let mut keypoints = Vec::new();
 
     // FAST detector uses a circle of radius 3 pixels
@@ -179,7 +179,7 @@ fn detect_fast_keypoints(image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyPo
 
     for y in fast_radius..(height as isize - fast_radius) {
         for x in fast_radius..(width as isize - fast_radius) {
-            let center_val = image[[y as usize, x as usize]];
+            let center_val = _image[[y as usize, x as usize]];
 
             // Count consecutive pixels that are brighter or darker
             let mut consecutive_brighter = 0;
@@ -192,7 +192,7 @@ fn detect_fast_keypoints(image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyPo
                 let px = x + circle_x[idx];
                 let py = y + circle_y[idx];
 
-                let pixel_val = image[[py as usize, px as usize]];
+                let pixel_val = _image[[py as usize, px as usize]];
                 let diff = pixel_val - center_val;
 
                 if diff > threshold as f32 {
@@ -229,8 +229,8 @@ fn detect_fast_keypoints(image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyPo
 
 /// Refine keypoints using Harris corner measure
 #[allow(dead_code)]
-fn refine_with_harris(image: &Array2<f32>, keypoints: Vec<KeyPoint>) -> Result<Vec<KeyPoint>> {
-    let (height, width) = image.dim();
+fn refine_with_harris(_image: &Array2<f32>, keypoints: Vec<KeyPoint>) -> Result<Vec<KeyPoint>> {
+    let (height, width) = _image.dim();
     let mut refined = Vec::new();
 
     // Compute gradients
@@ -239,8 +239,8 @@ fn refine_with_harris(image: &Array2<f32>, keypoints: Vec<KeyPoint>) -> Result<V
 
     for y in 1..(height - 1) {
         for x in 1..(width - 1) {
-            dx[[y, x]] = image[[y, x + 1]] - image[[y, x - 1]];
-            dy[[y, x]] = image[[y + 1, x]] - image[[y - 1, x]];
+            dx[[y, x]] = _image[[y, x + 1]] - _image[[y, x - 1]];
+            dy[[y, x]] = _image[[y + 1, x]] - _image[[y - 1, x]];
         }
     }
 
@@ -287,10 +287,10 @@ fn refine_with_harris(image: &Array2<f32>, keypoints: Vec<KeyPoint>) -> Result<V
 
 /// Compute orientation for a keypoint using intensity centroid
 #[allow(dead_code)]
-fn compute_orientation(image: &Array2<f32>, keypoint: &KeyPoint) -> Result<f32> {
+fn compute_orientation(_image: &Array2<f32>, keypoint: &KeyPoint) -> Result<f32> {
     let x = keypoint.x as usize;
     let y = keypoint.y as usize;
-    let (height, width) = image.dim();
+    let (height, width) = _image.dim();
 
     // Use a circular patch of radius 15
     let radius = 15;
@@ -313,7 +313,7 @@ fn compute_orientation(image: &Array2<f32>, keypoint: &KeyPoint) -> Result<f32> 
             let px = (x as isize + dx) as usize;
             let py = (y as isize + dy) as usize;
 
-            let intensity = image[[py, px]];
+            let intensity = _image[[py, px]];
             m01 += (dy as f32) * intensity;
             m10 += (dx as f32) * intensity;
         }
@@ -396,11 +396,11 @@ fn generate_brief_pattern() -> Vec<(isize, isize, isize, isize)> {
     let mut rng = StdRng::seed_from_u64(42); // Fixed seed for reproducibility
 
     for _ in 0..256 {
-        let x1 = rng.random_range(-{ max_offset }..=max_offset) as isize;
-        let y1 = rng.random_range(-{ max_offset }..=max_offset) as isize;
-        let x2 = rng.random_range(-{ max_offset }..=max_offset) as isize;
-        let y2 = rng.random_range(-{ max_offset }..=max_offset) as isize;
-        pattern.push((x1, y1, x2, y2));
+        let x1 = rng.gen_range(-{ max_offset }..=max_offset) as isize;
+        let y1 = rng.gen_range(-{ max_offset }..=max_offset) as isize;
+        let x2 = rng.gen_range(-{ max_offset }..=max_offset) as isize;
+        let y2 = rng.gen_range(-{ max_offset }..=max_offset) as isize;
+        pattern.push((x1..y1, x2, y2));
     }
 
     pattern
@@ -453,10 +453,10 @@ pub fn match_orb_descriptors(
 
 /// Calculate Hamming distance between binary descriptors
 #[allow(dead_code)]
-fn hamming_distance(desc1: &[u32], desc2: &[u32]) -> u32 {
+fn hamming_distance(_desc1: &[u32], desc2: &[u32]) -> u32 {
     let mut distance = 0;
 
-    for (&d1, &d2) in desc1.iter().zip(desc2.iter()) {
+    for (&d1, &d2) in _desc1.iter().zip(desc2.iter()) {
         distance += (d1 ^ d2).count_ones();
     }
 

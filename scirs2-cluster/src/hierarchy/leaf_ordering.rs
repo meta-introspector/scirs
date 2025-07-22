@@ -4,7 +4,7 @@
 //! to minimize the sum of distances between adjacent leaves, improving
 //! the visual interpretability of hierarchical clustering results.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -30,23 +30,23 @@ struct TreeNode {
 
 impl TreeNode {
     /// Create a new leaf node
-    fn new_leaf(id: usize) -> Self {
+    fn new_leaf(_id: usize) -> Self {
         TreeNode {
-            id,
+            _id,
             left: None,
             right: None,
             height: 0.0,
-            leaves: vec![id],
+            leaves: vec![_id],
         }
     }
 
     /// Create a new internal node
-    fn new_internal(id: usize, left: TreeNode, right: TreeNode, height: f64) -> Self {
+    fn new_internal(_id: usize, left: TreeNode, right: TreeNode, height: f64) -> Self {
         let mut leaves = left.leaves.clone();
         leaves.extend(right.leaves.iter());
 
         TreeNode {
-            id,
+            _id,
             left: Some(Box::new(left)),
             right: Some(Box::new(right)),
             height,
@@ -106,7 +106,7 @@ fn build_tree_from_linkage<F: Float + FromPrimitive + Debug + PartialOrd>(
 
     if linkage_matrix.shape()[1] != 4 {
         return Err(ClusteringError::InvalidInput(
-            "Linkage matrix should have 4 columns".to_string(),
+            "Linkage _matrix should have 4 columns".to_string(),
         ));
     }
 
@@ -161,7 +161,7 @@ fn calculate_ordering_cost<F: Float + FromPrimitive + Debug + PartialOrd>(
         let obs1 = ordering[i];
         let obs2 = ordering[i + 1];
 
-        // Calculate condensed distance matrix index
+        // Calculate condensed distance _matrix index
         let (min_idx, max_idx) = if obs1 < obs2 {
             (obs1, obs2)
         } else {
@@ -204,7 +204,7 @@ pub fn optimal_leaf_ordering_exact<F: Float + FromPrimitive + Debug + PartialOrd
 ) -> Result<Array1<usize>> {
     let n_observations = linkage_matrix.shape()[0] + 1;
 
-    // Build tree from linkage matrix
+    // Build tree from linkage _matrix
     let tree = build_tree_from_linkage(linkage_matrix)?;
 
     // Get all possible orderings
@@ -285,7 +285,7 @@ pub fn optimal_leaf_ordering_heuristic<F: Float + FromPrimitive + Debug + Partia
 
         // Try larger swaps (2-opt style)
         if !improved {
-            for i in 0..current_ordering.len() {
+            for i in 0, current_ordering.len() {
                 for j in (i + 2)..current_ordering.len() {
                     // Reverse the segment between i and j
                     current_ordering[i..=j].reverse();
@@ -364,7 +364,7 @@ pub fn apply_leaf_ordering<F: Float + FromPrimitive + Debug + PartialOrd + Clone
 
     if leaf_ordering.len() != n_observations {
         return Err(ClusteringError::InvalidInput(format!(
-            "Leaf ordering length {} doesn't match number of observations {}",
+            "Leaf _ordering length {} doesn't match number of observations {}",
             leaf_ordering.len(),
             n_observations
         )));
@@ -376,10 +376,10 @@ pub fn apply_leaf_ordering<F: Float + FromPrimitive + Debug + PartialOrd + Clone
         index_map.insert(old_idx, new_idx);
     }
 
-    // Create reordered linkage matrix
+    // Create reordered linkage _matrix
     let mut reordered_linkage = linkage_matrix.to_owned();
 
-    // Update cluster indices in the linkage matrix
+    // Update cluster indices in the linkage _matrix
     for i in 0..linkage_matrix.shape()[0] {
         let cluster1 = linkage_matrix[[i, 0]].to_usize().unwrap();
         let cluster2 = linkage_matrix[[i, 1]].to_usize().unwrap();

@@ -15,7 +15,7 @@ pub use self::edges::{
 };
 
 // Machine learning-based detection
-pub use self::ml_detection::{
+pub use self::ml__detection::{
     BatchNormParams, FeatureDetectorWeights, LearnedEdgeDetector, LearnedKeypointDescriptor,
     MLDetectorConfig, ObjectProposal, ObjectProposalGenerator, SemanticFeatureExtractor,
 };

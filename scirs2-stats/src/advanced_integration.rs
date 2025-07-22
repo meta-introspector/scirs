@@ -12,6 +12,7 @@ use crate::mcmc::{GibbsSampler, MultivariateNormalGibbs};
 use crate::multivariate::{FactorAnalysis, FactorAnalysisResult, PCAResult, PCA};
 use crate::qmc::{halton, latin_hypercube, sobol};
 use crate::survival::{CoxPHModel, KaplanMeierEstimator};
+use statrs::statistics::Statistics;
 
 /// Comprehensive Bayesian analysis workflow
 #[derive(Debug, Clone)]
@@ -139,8 +140,7 @@ impl BayesianAnalysisWorkflow {
     /// Perform MCMC sampling from posterior
     fn perform_mcmc_sampling(
         &self,
-        regression: &BayesianRegressionResult,
-        _n_features: usize,
+        regression: &BayesianRegressionResult_n_features: usize,
     ) -> Result<Array2<f64>> {
         use rand::{rngs::StdRng, SeedableRng};
 
@@ -182,7 +182,7 @@ impl BayesianAnalysisWorkflow {
         x_test: ArrayView2<f64>,
     ) -> Result<Array2<f64>> {
         use rand::{rngs::StdRng, SeedableRng};
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
 
         let mut rng = match self.random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
@@ -234,8 +234,7 @@ impl BayesianAnalysisWorkflow {
     fn compute_model_metrics(
         &self,
         regression: &BayesianRegressionResult,
-        x: ArrayView2<f64>,
-        _y: ArrayView1<f64>,
+        x: ArrayView2<f64>, _y: ArrayView1<f64>,
     ) -> Result<BayesianModelMetrics> {
         let n_samples = x.nrows() as f64;
         let n_params = regression.posterior_mean.len() as f64;
@@ -362,7 +361,7 @@ impl DimensionalityAnalysisWorkflow {
     /// Perform comprehensive dimensionality analysis
     pub fn analyze(&self, data: ArrayView2<f64>) -> Result<DimensionalityAnalysisResult> {
         check_array_finite(&data, "data")?;
-        let (n_samples, _n_features) = data.dim();
+        let (n_samples_n_features) = data.dim();
 
         if n_samples < 3 {
             return Err(StatsError::InvalidArgument(
@@ -494,7 +493,7 @@ impl DimensionalityAnalysisWorkflow {
         let cov = centered.t().dot(&centered) / (data.nrows() - 1) as f64;
 
         // Compute eigenvalues
-        use ndarray_linalg::Eigh;
+        use ndarray__linalg::Eigh;
         let eigenvalues = cov
             .eigh(ndarray_linalg::UPLO::Upper)
             .map_err(|e| {
@@ -593,9 +592,9 @@ impl Default for QMCWorkflow {
 
 impl QMCWorkflow {
     /// Create new QMC workflow
-    pub fn new(dimensions: usize, n_samples: usize) -> Self {
+    pub fn new(_dimensions: usize, n_samples: usize) -> Self {
         Self {
-            dimensions,
+            _dimensions,
             n_samples,
             ..Default::default()
         }
@@ -862,8 +861,7 @@ impl SurvivalAnalysisWorkflow {
 
     /// Compute survival summary statistics
     fn compute_summary_stats(
-        &self,
-        _durations: &ArrayView1<f64>,
+        &self_durations: &ArrayView1<f64>,
         events: &ArrayView1<bool>,
         km: &KaplanMeierEstimator,
     ) -> Result<SurvivalSummaryStats> {
@@ -900,6 +898,6 @@ impl SurvivalAnalysisWorkflow {
                 return Ok(Some(km.event_times[i]));
             }
         }
-        Ok(None) // Target survival not reached
+        Ok(None) // Target _survival not reached
     }
 }

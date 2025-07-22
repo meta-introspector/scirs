@@ -418,7 +418,7 @@ where
 /// AVX2-optimized dot product for f64
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2", enable = "fma")]
-unsafe fn avx2_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> LinalgResult<f64> {
+unsafe fn avx2_dot_f64(_x_ptr: *const f64, y_ptr: *const f64, n: usize) -> LinalgResult<f64> {
     use std::arch::x86_64::*;
 
     const BLOCK_SIZE: usize = 4;
@@ -427,7 +427,7 @@ unsafe fn avx2_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
     // Process 4 elements at a time
     let mut i = 0;
     while i + BLOCK_SIZE <= n {
-        let x_vec = _mm256_loadu_pd(x_ptr.add(i));
+        let x_vec = _mm256_loadu_pd(_x_ptr.add(i));
         let y_vec = _mm256_loadu_pd(y_ptr.add(i));
         sum = _mm256_fmadd_pd(x_vec, y_vec, sum);
         i += BLOCK_SIZE;
@@ -442,7 +442,7 @@ unsafe fn avx2_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
 
     // Handle remaining elements
     while i < n {
-        result += *x_ptr.add(i) * *y_ptr.add(i);
+        result += *_x_ptr.add(i) * *y_ptr.add(i);
         i += 1;
     }
 
@@ -452,7 +452,7 @@ unsafe fn avx2_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
 /// AVX2-optimized dot product for f32
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2", enable = "fma")]
-unsafe fn avx2_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> LinalgResult<f32> {
+unsafe fn avx2_dot_f32(_x_ptr: *const f32, y_ptr: *const f32, n: usize) -> LinalgResult<f32> {
     use std::arch::x86_64::*;
 
     const BLOCK_SIZE: usize = 8;
@@ -461,7 +461,7 @@ unsafe fn avx2_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linalg
     // Process 8 elements at a time
     let mut i = 0;
     while i + BLOCK_SIZE <= n {
-        let x_vec = _mm256_loadu_ps(x_ptr.add(i));
+        let x_vec = _mm256_loadu_ps(_x_ptr.add(i));
         let y_vec = _mm256_loadu_ps(y_ptr.add(i));
         sum = _mm256_fmadd_ps(x_vec, y_vec, sum);
         i += BLOCK_SIZE;
@@ -477,7 +477,7 @@ unsafe fn avx2_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linalg
 
     // Handle remaining elements
     while i < n {
-        result += *x_ptr.add(i) * *y_ptr.add(i);
+        result += *_x_ptr.add(i) * *y_ptr.add(i);
         i += 1;
     }
 
@@ -487,7 +487,7 @@ unsafe fn avx2_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linalg
 /// ARM Neon-optimized dot product for f64
 #[cfg(target_arch = "aarch64")]
 #[target_feature(enable = "neon")]
-unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> LinalgResult<f64> {
+unsafe fn neon_dot_f64(_x_ptr: *const f64, y_ptr: *const f64, n: usize) -> LinalgResult<f64> {
     use std::arch::aarch64::*;
 
     const BLOCK_SIZE: usize = 2;
@@ -496,7 +496,7 @@ unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
     // Process 2 elements at a time
     let mut i = 0;
     while i + BLOCK_SIZE <= n {
-        let x_vec = vld1q_f64(x_ptr.add(i));
+        let x_vec = vld1q_f64(_x_ptr.add(i));
         let y_vec = vld1q_f64(y_ptr.add(i));
         sum = vfmaq_f64(sum, x_vec, y_vec);
         i += BLOCK_SIZE;
@@ -507,7 +507,7 @@ unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
 
     // Handle remaining elements
     while i < n {
-        result += *x_ptr.add(i) * *y_ptr.add(i);
+        result += *_x_ptr.add(i) * *y_ptr.add(i);
         i += 1;
     }
 
@@ -517,7 +517,7 @@ unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
 /// ARM Neon-optimized dot product for f32
 #[cfg(target_arch = "aarch64")]
 #[target_feature(enable = "neon")]
-unsafe fn neon_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> LinalgResult<f32> {
+unsafe fn neon_dot_f32(_x_ptr: *const f32, y_ptr: *const f32, n: usize) -> LinalgResult<f32> {
     use std::arch::aarch64::*;
 
     const BLOCK_SIZE: usize = 4;
@@ -526,7 +526,7 @@ unsafe fn neon_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linalg
     // Process 4 elements at a time
     let mut i = 0;
     while i + BLOCK_SIZE <= n {
-        let x_vec = vld1q_f32(x_ptr.add(i));
+        let x_vec = vld1q_f32(_x_ptr.add(i));
         let y_vec = vld1q_f32(y_ptr.add(i));
         sum = vfmaq_f32(sum, x_vec, y_vec);
         i += BLOCK_SIZE;
@@ -537,7 +537,7 @@ unsafe fn neon_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linalg
 
     // Handle remaining elements
     while i < n {
-        result += *x_ptr.add(i) * *y_ptr.add(i);
+        result += *_x_ptr.add(i) * *y_ptr.add(i);
         i += 1;
     }
 
@@ -547,7 +547,7 @@ unsafe fn neon_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linalg
 /// ARM Neon-optimized dot product for f64
 #[cfg(target_arch = "aarch64")]
 #[target_feature(enable = "neon")]
-unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> LinalgResult<f64> {
+unsafe fn neon_dot_f64(_x_ptr: *const f64, y_ptr: *const f64, n: usize) -> LinalgResult<f64> {
     use std::arch::aarch64::*;
 
     const BLOCK_SIZE: usize = 2;
@@ -556,7 +556,7 @@ unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
     // Process 2 elements at a time
     let mut i = 0;
     while i + BLOCK_SIZE <= n {
-        let x_vec = vld1q_f64(x_ptr.add(i));
+        let x_vec = vld1q_f64(_x_ptr.add(i));
         let y_vec = vld1q_f64(y_ptr.add(i));
         sum = vfmaq_f64(sum, x_vec, y_vec);
         i += BLOCK_SIZE;
@@ -567,7 +567,7 @@ unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
 
     // Handle remaining elements
     while i < n {
-        result += *x_ptr.add(i) * *y_ptr.add(i);
+        result += *_x_ptr.add(i) * *y_ptr.add(i);
         i += 1;
     }
 
@@ -690,8 +690,7 @@ fn hardware_optimized_gemm_block<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
     capabilities: &HardwareCapabilities,
-    cache_block_size: usize,
-    _simd_width: usize,
+    cache_block_size: usize, _simd_width: usize,
 ) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Zero + Send + Sync + 'static,

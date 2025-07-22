@@ -33,42 +33,42 @@ struct Tensor {
     dim: TensorDim,
 impl Tensor {
     // Create a 1D tensor
-    fn new_1d(data: Array1<f32>) -> Self {
-        let shape = data.shape();
+    fn new_1d(_data: Array1<f32>) -> Self {
+        let shape = _data.shape();
         let mut tensor_data = Array4::<f32>::zeros((1, 1, 1, shape[0]));
         for i in 0..shape[0] {
-            tensor_data[[0, 0, 0, i]] = data[i];
+            tensor_data[[0, 0, 0, i]] = _data[i];
         }
         Tensor {
             data: tensor_data,
             dim: TensorDim::Dim1(shape[0]),
     }
     // Create a 2D tensor
-    fn new_2d(data: Array2<f32>) -> Self {
+    fn new_2d(_data: Array2<f32>) -> Self {
         let mut tensor_data = Array4::<f32>::zeros((shape[0], 1, 1, shape[1]));
             for j in 0..shape[1] {
-                tensor_data[[i, 0, 0, j]] = data[[i, j]];
+                tensor_data[[i, 0, 0, j]] = _data[[i, j]];
             }
             dim: TensorDim::Dim2(shape[0], shape[1]),
     // Create a 3D tensor
-    fn new_3d(data: Array3<f32>) -> Self {
+    fn new_3d(_data: Array3<f32>) -> Self {
         let mut tensor_data = Array4::<f32>::zeros((shape[0], 1, shape[1], shape[2]));
                 for k in 0..shape[2] {
-                    tensor_data[[i, 0, j, k]] = data[[i, j, k]];
+                    tensor_data[[i, 0, j, k]] = _data[[i, j, k]];
                 }
             dim: TensorDim::Dim3(shape[0], shape[1], shape[2]),
     // Create a 4D tensor
-    fn new_4d(data: Array4<f32>) -> Self {
-        let shape = data.shape().to_vec();
-            data,
+    fn new_4d(_data: Array4<f32>) -> Self {
+        let shape = _data.shape().to_vec();
+            _data,
             dim: TensorDim::Dim4(shape[0], shape[1], shape[2], shape[3]),
-    // Get the underlying data as a view appropriate for the dimension
+    // Get the underlying _data as a view appropriate for the dimension
     fn as_1d(&self) -> Array1<f32> {
         match self.dim {
             TensorDim::Dim1(size) => {
                 let mut result = Array1::<f32>::zeros(size);
                 for i in 0..size {
-                    result[i] = self.data[[0, 0, 0, i]];
+                    result[i] = self._data[[0, 0, 0, i]];
                 result
             _ => panic!("Cannot convert tensor to 1D: incompatible dimensions"),
     fn as_2d(&self) -> Array2<f32> {
@@ -76,7 +76,7 @@ impl Tensor {
                 let mut result = Array2::<f32>::zeros((dim1, dim2));
                 for i in 0..dim1 {
                     for j in 0..dim2 {
-                        result[[i, j]] = self.data[[i, 0, 0, j]];
+                        result[[i, j]] = self._data[[i, 0, 0, j]];
                     }
             _ => panic!("Cannot convert tensor to 2D: incompatible dimensions"),
     fn as_3d(&self) -> Array3<f32> {
@@ -87,8 +87,7 @@ impl Tensor {
                         }
             _ => panic!("Cannot convert tensor to 3D: incompatible dimensions"),
     fn as_4d(&self) -> Array4<f32> {
-            TensorDim::Dim4(_, _, _, _) => self.data.clone(),
-            _ => panic!("Cannot convert tensor to 4D: incompatible dimensions"),
+            TensorDim::Dim4(____) => self.data.clone(, _ => panic!("Cannot convert tensor to 4D: incompatible dimensions"),
     // Get shape based on dimensions
     fn shape(&self) -> Vec<usize> {
             TensorDim::Dim1(d1) => vec![d1],
@@ -132,8 +131,7 @@ impl Tensor {
                                         arr[idx] = self.data[[i, j, k, l]];
                                         idx += 1;
                                     }
-                Self::new_1d(arr)
-            TensorDim::Dim2(d1, d2) => {
+                Self::new_1d(arr), TensorDim::Dim2(d1, d2) => {
                 let mut arr = Array2::<f32>::zeros((d1, d2));
                 // Linearize and reshape
                 let total = d1 * d2;
@@ -158,8 +156,7 @@ impl Tensor {
                                         if idx >= total {
                                             break;
                                         }
-                Self::new_2d(arr)
-            TensorDim::Dim3(d1, d2, d3) => {
+                Self::new_2d(arr), TensorDim::Dim3(d1, d2, d3) => {
                 // Implementation for 3D reshaping
                 let mut arr = Array3::<f32>::zeros((d1, d2, d3));
                 let total = d1 * d2 * d3;
@@ -171,8 +168,7 @@ impl Tensor {
                                         arr[[i_new, j_new, k_new]] = self.data[[i, j, k, l]];
                     // Add implementations for other source dimensions as needed
                     _ => panic!("Reshape from this dimension to 3D not implemented"),
-                Self::new_3d(arr)
-            TensorDim::Dim4(d1, d2, d3, d4) => {
+                Self::new_3d(arr), TensorDim::Dim4(d1, d2, d3, d4) => {
                 // Allocate new 4D tensor
                 let mut new_data = Array4::<f32>::zeros((d1, d2, d3, d4));
                 let total = d1 * d2 * d3 * d4;
@@ -206,18 +202,18 @@ struct Linear {
     // Cache for backward pass
     input: Option<Tensor>,
 impl Linear {
-    fn new(in_features: usize, out_features: usize, name: Option<String>) -> Self {
+    fn new(_in_features: usize, out_features: usize, name: Option<String>) -> Self {
         // Xavier/Glorot initialization
-        let bound = (6.0 / (in_features + out_features) as f32).sqrt();
+        let bound = (6.0 / (_in_features + out_features) as f32).sqrt();
         // Create a random number generator
         let mut rng = rand::rng();
         // Initialize weight matrix with random values
-        let mut weight = Array2::<f32>::zeros((out_features, in_features));
+        let mut weight = Array2::<f32>::zeros((out_features, _in_features));
         for elem in weight.iter_mut() {
-            *elem = rng.random_range(-bound..bound);
+            *elem = rng.gen_range(-bound..bound);
         let bias = Array::zeros(out_features);
         Linear {
-            name_str: name.unwrap_or_else(|| format!("Linear_{}_{}", in_features, out_features)),
+            name_str: name.unwrap_or_else(|| format!("Linear_{}_{}"..in_features, out_features)),
             in_features,
             out_features,
             weight,
@@ -268,23 +264,20 @@ impl Layer for Linear {
 // ReLU Activation Layer
 struct ReLU {
 impl ReLU {
-    fn new(name: Option<String>) -> Self {
+    fn new(_name: Option<String>) -> Self {
         ReLU {
-            name_str: name.unwrap_or_else(|| "ReLU".to_string()),
+            name_str: _name.unwrap_or_else(|| "ReLU".to_string()),
 impl Layer for ReLU {
         // Apply ReLU based on tensor dimension
         match input.dim {
             TensorDim::Dim1(_) => {
                 let x = input.as_1d();
                 let output = x.mapv(|v| v.max(0.0));
-                Tensor::new_1d(output)
-            TensorDim::Dim2(_, _) => {
+                Tensor::new_1d(output), TensorDim::Dim2(__) => {
                 let x = input.as_2d();
-                Tensor::new_2d(output)
-            TensorDim::Dim3(_, _, _) => {
+                Tensor::new_2d(output), TensorDim::Dim3(___) => {
                 let x = input.as_3d();
-                Tensor::new_3d(output)
-            TensorDim::Dim4(_, _, _, _) => {
+                Tensor::new_3d(output), TensorDim::Dim4(____) => {
                 let x = input.as_4d();
                 Tensor::new_4d(output)
         let input = self
@@ -312,14 +305,14 @@ impl Layer for ReLU {
                                 if x[[i, j, k, l]] <= 0.0 {
                                     dx[[i, j, k, l]] = 0.0;
                 Tensor::new_4d(dx)
-    fn update_parameters(&mut self, _learning_rate: f32) {
+    fn update_parameters(&mut self_learning_rate: f32) {
         // ReLU has no parameters to update
 // Sigmoid Activation Layer
 struct Sigmoid {
     output: Option<Tensor>,
 impl Sigmoid {
         Sigmoid {
-            name_str: name.unwrap_or_else(|| "Sigmoid".to_string()),
+            name_str: _name.unwrap_or_else(|| "Sigmoid".to_string()),
             output: None,
     fn sigmoid(x: f32) -> f32 {
         1.0 / (1.0 + (-x).exp())
@@ -353,7 +346,7 @@ impl Layer for Sigmoid {
 struct Softmax {
 impl Softmax {
         Softmax {
-            name_str: name.unwrap_or_else(|| "Softmax".to_string()),
+            name_str: _name.unwrap_or_else(|| "Softmax".to_string()),
 impl Layer for Softmax {
         // Input should be 2D tensor [batch_size, features]
         let mut output = Array2::<f32>::zeros(x.raw_dim());
@@ -391,7 +384,7 @@ impl Layer for Softmax {
                     } else {
                         jacobian[[j, k]] = -y[[i, j]] * y[[i, k]];
             // Apply Jacobian to gradient
-            let grad_i = Array1::<f32>::from_iter(dout.slice(s![i, ..]).iter().cloned());
+            let grad_i = Array1::<f32>::from_iter..].iter().cloned());
             let dx_i = jacobian.dot(&grad_i);
                 dx[[i, j]] = dx_i[j];
         // Softmax has no parameters to update
@@ -433,29 +426,29 @@ struct LSTMCell {
     c_t: Option<Array2<f32>>,
     h_t: Option<Array2<f32>>,
 impl LSTMCell {
-    fn new(input_size: usize, hidden_size: usize, name: Option<String>) -> Self {
-        let bound = (6.0 / (input_size + hidden_size) as f32).sqrt();
+    fn new(_input_size: usize, hidden_size: usize, name: Option<String>) -> Self {
+        let bound = (6.0 / (_input_size + hidden_size) as f32).sqrt();
         // Input gate weights
-        let mut w_ii = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_ii = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_hi = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_i = Array1::zeros(hidden_size);
         // Initialize with random values
         for elem in w_ii.iter_mut() {
         for elem in w_hi.iter_mut() {
         // Forget gate weights (initialize forget gate bias to 1 to avoid vanishing gradients early in training)
-        let mut w_if = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_if = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_hf = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_f = Array1::ones(hidden_size);
         for elem in w_if.iter_mut() {
         for elem in w_hf.iter_mut() {
         // Cell gate weights
-        let mut w_ig = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_ig = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_hg = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_g = Array1::zeros(hidden_size);
         for elem in w_ig.iter_mut() {
         for elem in w_hg.iter_mut() {
         // Output gate weights
-        let mut w_io = Array2::<f32>::zeros((hidden_size, input_size));
+        let mut w_io = Array2::<f32>::zeros((hidden_size, _input_size));
         let mut w_ho = Array2::<f32>::zeros((hidden_size, hidden_size));
         let b_o = Array1::zeros(hidden_size);
         for elem in w_io.iter_mut() {
@@ -580,7 +573,7 @@ impl Loss for CrossEntropyLoss {
                                 let epsilon = 1e-10;
                                 total_loss -= (pred[[i, target_idx]] + epsilon).ln();
                     // Targets are one-hot encoded [batch_size, classes]
-                    TensorDim::Dim2(_, _) => {
+                    TensorDim::Dim2(__) => {
                         let targ = targets.as_2d();
                             for j in 0..num_classes {
                                 if targ[[i, j]] > 0.0 {
@@ -689,9 +682,9 @@ fn create_classification_dataset(
     (x_tensor, y_tensor)
 // Create regression dataset with non-linear relationship
 #[allow(dead_code)]
-fn create_regression_dataset(num_samples: usize, num_features: usize) -> (Tensor, Tensor) {
+fn create_regression_dataset(_num_samples: usize, num_features: usize) -> (Tensor, Tensor) {
     // Create target values based on non-linear function
-    let mut y_data = Array2::<f32>::zeros((num_samples, 1));
+    let mut y_data = Array2::<f32>::zeros((_num_samples, 1));
         let x1 = x_data[[i, 0]];
         let x2 = if num_features > 1 {
             x_data[[i, 1]]
@@ -705,7 +698,7 @@ fn create_regression_dataset(num_samples: usize, num_features: usize) -> (Tensor
 #[allow(dead_code)]
 fn create_batches(x: &Tensor, y: &Tensor, batch_size: usize) -> (Vec<Tensor>, Vec<Tensor>) {
     match (x.dim.clone(), y.dim.clone()) {
-        (TensorDim::Dim2(samples, features), _) => {
+        (TensorDim::Dim2(samples, features)_) => {
             let num_batches = samples.div_ceil(batch_size);
             let mut x_batches = Vec::with_capacity(num_batches);
             let mut y_batches = Vec::with_capacity(num_batches);
@@ -737,10 +730,10 @@ fn create_batches(x: &Tensor, y: &Tensor, batch_size: usize) -> (Vec<Tensor>, Ve
         _ => panic!("Batching only supported for 2D input tensors"),
 // Calculate accuracy for classification
 #[allow(dead_code)]
-fn calculate_accuracy(predictions: &Tensor, targets: &Tensor) -> f32 {
-    match (predictions.dim.clone(), targets.dim.clone()) {
-        (TensorDim::Dim2(batch_size, _), TensorDim::Dim1(_)) => {
-            let pred = predictions.as_2d();
+fn calculate_accuracy(_predictions: &Tensor, targets: &Tensor) -> f32 {
+    match (_predictions.dim.clone(), targets.dim.clone()) {
+        (TensorDim::Dim2(batch_size_), TensorDim::Dim1(_)) => {
+            let pred = _predictions.as_2d();
             let targ = targets.as_1d();
             let mut correct = 0;
             for i in 0..batch_size {
@@ -853,7 +846,7 @@ fn regression_example() {
     model.add(Box::new(Linear::new(32, 16, Some("hidden2".to_string()))));
     model.add(Box::new(Linear::new(16, 1, Some("output".to_string()))));
     let loss_fn = Box::new(MSELoss::new());
-        let (test_loss, _) = trainer.evaluate(&x_test, &y_test);
+        let (test_loss_) = trainer.evaluate(&x_test, &y_test);
             "Epoch {}/{}: Train Loss: {:.4}, Test Loss: {:.4}",
             test_loss
     println!("Regression training completed!");

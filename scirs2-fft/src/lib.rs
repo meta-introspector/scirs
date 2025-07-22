@@ -33,8 +33,8 @@
 //! ## Examples
 //!
 //! ```
-//! use scirs2_fft::{fft, ifft};
-//! use num_complex::Complex64;
+//! use scirs2__fft::{fft, ifft};
+//! use num__complex::Complex64;
 //!
 //! // Generate a simple signal
 //! let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -58,11 +58,11 @@ pub use error::{FFTError, FFTResult};
 
 // FFT plan caching
 pub mod plan_cache;
-pub use plan_cache::{get_global_cache, init_global_cache, CacheStats, PlanCache};
+pub use plan__cache::{get_global_cache, init_global_cache, CacheStats, PlanCache};
 
 // Worker pool management
 pub mod worker_pool;
-pub use worker_pool::{
+pub use worker__pool::{
     get_global_pool, get_workers, init_global_pool, set_workers, with_workers, WorkerConfig,
     WorkerPool, WorkerPoolInfo,
 };
@@ -83,11 +83,11 @@ pub use context::{
 
 // Advanced striding support
 pub mod strided_fft;
-pub use strided_fft::{fft_strided, fft_strided_complex, ifft_strided};
+pub use strided__fft::{fft_strided, fft_strided_complex, ifft_strided};
 
 // Plan serialization
 pub mod plan_serialization;
-pub use plan_serialization::{PlanDatabaseStats, PlanInfo, PlanMetrics, PlanSerializationManager};
+pub use plan__serialization::{PlanDatabaseStats, PlanInfo, PlanMetrics, PlanSerializationManager};
 
 // Advanced FFT planning system
 pub mod planning;
@@ -101,17 +101,17 @@ pub mod planning_adaptive;
 
 // Parallel planning extensions
 pub mod planning_parallel;
-pub use planning_parallel::{
+pub use planning__parallel::{
     ParallelExecutor, ParallelPlanResult, ParallelPlanner, ParallelPlanningConfig,
 };
 
 // Auto-tuning for hardware optimization
 pub mod auto_tuning;
-pub use auto_tuning::{AutoTuneConfig, AutoTuner, FftVariant, SizeRange, SizeStep};
+pub use auto__tuning::{AutoTuneConfig, AutoTuner, FftVariant, SizeRange, SizeStep};
 
 // Advanced mode coordinator for advanced AI-driven optimization (temporarily disabled)
 // pub mod advanced_coordinator;
-// pub use advanced_coordinator::{
+// pub use advanced__coordinator::{
 //     create_advanced_fft_coordinator, create_advanced_fft_coordinator_with_config,
 //     FftPerformanceMetrics, FftRecommendation, advancedFftConfig, advancedFftCoordinator,
 // };
@@ -139,14 +139,14 @@ pub use fft::{fft2_parallel, ifft2_parallel};
 pub use rfft::{irfft, irfft2, irfftn, rfft, rfft2, rfftn};
 
 // Re-export SIMD-optimized implementations
-pub use simd_fft::{
+pub use simd__fft::{
     fft2_adaptive, fft2_simd, fft_adaptive, fft_simd, fftn_adaptive, fftn_simd, ifft2_adaptive,
     ifft2_simd, ifft_adaptive, ifft_simd, ifftn_adaptive, ifftn_simd, simd_support_available,
 };
 
 // Real FFT SIMD module
 pub mod simd_rfft;
-pub use simd_rfft::{irfft_adaptive, irfft_simd, rfft_adaptive, rfft_simd};
+pub use simd__rfft::{irfft_adaptive, irfft_simd, rfft_adaptive, rfft_simd};
 
 // Helper modules
 pub mod helper;
@@ -190,33 +190,33 @@ pub use distributed::{
     CommunicationPattern, DecompositionStrategy, DistributedConfig, DistributedFFT,
 };
 #[cfg(feature = "never")]
-pub use optimized_fft::{OptimizationLevel, OptimizedConfig, OptimizedFFT};
+pub use optimized__fft::{OptimizationLevel, OptimizedConfig, OptimizedFFT};
 #[cfg(feature = "never")]
-pub use signal_processing::{
+pub use signal__processing::{
     convolve, cross_correlate, design_fir_filter, fir_filter, frequency_filter, FilterSpec,
     FilterType, FilterWindow,
 };
-pub use sparse_fft::WindowFunction;
-pub use sparse_fft::{
+pub use sparse__fft::WindowFunction;
+pub use sparse__fft::{
     adaptive_sparse_fft, frequency_pruning_sparse_fft, reconstruct_filtered,
     reconstruct_high_resolution, reconstruct_spectrum, reconstruct_time_domain, sparse_fft,
     sparse_fft2, sparse_fftn, spectral_flatness_sparse_fft,
 };
-pub use sparse_fft_cuda_kernels::{
+pub use sparse_fft_cuda__kernels::{
     execute_cuda_compressed_sensing_sparse_fft, execute_cuda_sublinear_sparse_fft,
     CUDACompressedSensingSparseFFTKernel, CUDASublinearSparseFFTKernel, CUDAWindowKernel,
 };
-pub use sparse_fft_cuda_kernels_frequency_pruning::{
+pub use sparse_fft_cuda_kernels_frequency__pruning::{
     execute_cuda_frequency_pruning_sparse_fft, CUDAFrequencyPruningSparseFFTKernel,
 };
-pub use sparse_fft_cuda_kernels_iterative::{
+pub use sparse_fft_cuda_kernels__iterative::{
     execute_cuda_iterative_sparse_fft, CUDAIterativeSparseFFTKernel,
 };
-pub use sparse_fft_cuda_kernels_spectral_flatness::{
+pub use sparse_fft_cuda_kernels_spectral__flatness::{
     execute_cuda_spectral_flatness_sparse_fft, CUDASpectralFlatnessSparseFFTKernel,
 };
-pub use sparse_fft_gpu::{gpu_batch_sparse_fft, gpu_sparse_fft, GPUBackend};
-pub use sparse_fft_gpu_cuda::{
+pub use sparse_fft__gpu::{gpu_batch_sparse_fft, gpu_sparse_fft, GPUBackend};
+pub use sparse_fft_gpu__cuda::{
     cuda_batch_sparse_fft,
     cuda_sparse_fft,
     get_cuda_devices,
@@ -224,44 +224,44 @@ pub use sparse_fft_gpu_cuda::{
     GpuDeviceInfo,
     // CUDAStream - migrated to core GPU abstractions
 };
-pub use sparse_fft_gpu_kernels::{
+pub use sparse_fft_gpu__kernels::{
     execute_sparse_fft_kernel, GPUKernel, KernelConfig, KernelFactory, KernelImplementation,
     KernelLauncher, KernelStats,
 };
-pub use sparse_fft_gpu_memory::{
+pub use sparse_fft_gpu__memory::{
     get_global_memory_manager, init_global_memory_manager, memory_efficient_gpu_sparse_fft,
     AllocationStrategy, BufferLocation, BufferType,
 };
-pub use sparse_fft_gpu_memory::{is_cuda_available, is_hip_available, is_sycl_available};
+pub use sparse_fft_gpu__memory::{is_cuda_available, is_hip_available, is_sycl_available};
 
 // Multi-GPU processing module
 pub mod sparse_fft_multi_gpu;
-pub use sparse_fft_multi_gpu::{
+pub use sparse_fft_multi__gpu::{
     multi_gpu_sparse_fft, GPUDeviceInfo, MultiGPUConfig, MultiGPUSparseFFT, WorkloadDistribution,
 };
 
 // Specialized hardware support module
 pub mod sparse_fft_specialized_hardware;
-pub use sparse_fft_specialized_hardware::{
+pub use sparse_fft_specialized__hardware::{
     specialized_hardware_sparse_fft, AcceleratorCapabilities, AcceleratorInfo, AcceleratorType,
     HardwareAbstractionLayer, SpecializedHardwareManager,
 };
 // Batch processing module
 pub mod sparse_fft_batch;
-pub use sparse_fft_batch::{batch_sparse_fft, spectral_flatness_batch_sparse_fft, BatchConfig};
+pub use sparse_fft__batch::{batch_sparse_fft, spectral_flatness_batch_sparse_fft, BatchConfig};
 
 #[cfg(feature = "never")]
-pub use time_frequency::{time_frequency_transform, TFConfig, TFTransform, WaveletType};
+pub use time__frequency::{time_frequency_transform, TFConfig, TFTransform, WaveletType};
 
 // Memory-efficient FFT operations
 pub mod memory_efficient;
-pub use memory_efficient::{
+pub use memory__efficient::{
     fft2_efficient, fft_inplace, fft_streaming, process_in_chunks, FftMode,
 };
 
 // Optimized N-dimensional FFT
 pub mod ndim_optimized;
-pub use ndim_optimized::{fftn_memory_efficient, fftn_optimized, rfftn_optimized};
+pub use ndim__optimized::{fftn_memory_efficient, fftn_optimized, rfftn_optimized};
 
 // Hartley transform
 pub mod hartley;
@@ -269,7 +269,7 @@ pub use hartley::{dht, dht2, fht as hartley_fht, idht};
 
 // Higher-order DCT and DST types (V-VIII)
 pub mod higher_order_dct_dst;
-pub use higher_order_dct_dst::{
+pub use higher_order_dct__dst::{
     dct_v, dct_vi, dct_vii, dct_viii, dst_v, dst_vi, dst_vii, dst_viii, idct_v, idct_vi, idct_vii,
     idct_viii, idst_v, idst_vi, idst_vii, idst_viii,
 };
@@ -284,7 +284,7 @@ pub use window::{apply_window, get_window, Window};
 
 // Extended window functions and analysis
 pub mod window_extended;
-pub use window_extended::{
+pub use window__extended::{
     analyze_window, compare_windows, get_extended_window, visualize_window, ExtendedWindow,
     WindowProperties,
 };
@@ -326,7 +326,7 @@ pub use padding::{
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::{stft, window::Window};
+/// use scirs2__fft::{stft, window::Window};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a simple sine wave
@@ -363,7 +363,7 @@ pub fn stft<T>(
     boundary: Option<&str>,
 ) -> FFTResult<(Vec<f64>, Vec<f64>, ndarray::Array2<num_complex::Complex64>)>
 where
-    T: num_traits::NumCast + Copy + std::fmt::Debug,
+    T: num_traits: NumCast + Copy + std::fmt::Debug,
 {
     spectrogram::stft(
         x,
@@ -400,7 +400,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::hilbert;
+/// use scirs2__fft::hilbert;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a cosine signal
@@ -426,17 +426,17 @@ where
 
 /// Helper function to try and extract a Complex value
 #[allow(dead_code)]
-fn try_as_complex<U: 'static + Copy>(val: U) -> Option<num_complex::Complex64> {
-    use num_complex::Complex64;
+fn try_as_complex<U: 'static + Copy>(_val: U) -> Option<num_complex::Complex64> {
+    use num__complex::Complex64;
     use std::any::Any;
 
-    // Try to use runtime type checking with Any for complex types
-    if let Some(complex) = (&val as &dyn Any).downcast_ref::<Complex64>() {
-        return Some(*complex);
+    // Try to use runtime type checking with Any for _complex types
+    if let Some(_complex) = (&_val as &dyn Any).downcast_ref::<Complex64>() {
+        return Some(*_complex);
     }
 
-    // Try to handle f32 complex numbers
-    if let Some(complex32) = (&val as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
+    // Try to handle f32 _complex numbers
+    if let Some(complex32) = (&_val as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
         return Some(Complex64::new(complex32.re as f64, complex32.im as f64));
     }
 
@@ -446,9 +446,9 @@ fn try_as_complex<U: 'static + Copy>(val: U) -> Option<num_complex::Complex64> {
 #[allow(dead_code)]
 pub fn hilbert<T>(x: &[T]) -> FFTResult<Vec<num_complex::Complex64>>
 where
-    T: num_traits::NumCast + Copy + std::fmt::Debug + 'static,
+    T: num_traits: NumCast + Copy + std::fmt::Debug + 'static,
 {
-    use num_complex::Complex64;
+    use num__complex::Complex64;
 
     // Input length
     let n = x.len();
@@ -538,7 +538,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_fft::fft_bounds;
+/// use scirs2__fft::fft_bounds;
 ///
 /// let bounds = fft_bounds(&[4, 4]);
 /// assert_eq!(bounds, vec![(-2, 1), (-2, 1)]);
@@ -548,8 +548,8 @@ where
 /// ```
 #[must_use]
 #[allow(dead_code)]
-pub fn fft_bounds(shape: &[usize]) -> Vec<(i32, i32)> {
-    shape
+pub fn fft_bounds(_shape: &[usize]) -> Vec<(i32, i32)> {
+    _shape
         .iter()
         .map(|&n| {
             // Cast with explicit handling for possible truncation/wrapping

@@ -20,6 +20,7 @@ use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
+use statrs::statistics::Statistics;
 /// Advanced Mode Coordinator
 ///
 /// The central intelligence system that coordinates all advanced mode operations,
@@ -450,9 +451,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
         Ok(available_samples.min(input.shape()[0]).max(1))
     /// Perform mixed precision training step
     fn mixed_precision_step<M: Model<F>>(
-        _model: &mut M,
-        _input: &ArrayD<F>,
-        _target: &ArrayD<F>,
+        _model: &mut M_input: &ArrayD<F>, _target: &ArrayD<F>,
         // Implementation would perform mixed precision training
         // using FP16 for forward pass and FP32 for backward pass
         Ok(F::from(0.5).unwrap())
@@ -666,11 +665,11 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
             emergent_behaviors_detected: emergent_stats.total_behaviors_detected,
 impl<F: Float + Debug + ScalarOperand> IntelligentCache<F> {
     /// Create new intelligent cache
-    pub fn new(size_limit_mb: usize) -> Self {
+    pub fn new(_size_limit_mb: usize) -> Self {
             activation_cache: HashMap::new(),
             gradient_cache: HashMap::new(),
             model_cache: HashMap::new(),
-            size_limit_mb,
+            _size_limit_mb,
             current_size_mb: 0,
     /// Conservative cleanup to free memory
     pub fn conservative_cleanup(&mut self) {
@@ -700,7 +699,7 @@ impl<F: Float + Debug + ScalarOperand> IntelligentCache<F> {
                 // Default allocation for other layer types
                 32
         // Check if we have enough memory for aggressive preallocation
-        if self.current_size_mb + estimated_memory_mb > self.size_limit_mb {
+        if self.current_size_mb + estimated_memory_mb > self._size_limit_mb {
             // Not enough cache space - do conservative cleanup first
             self.conservative_cleanup();
         // Pre-allocate activation cache entries
@@ -1088,8 +1087,7 @@ pub struct MultiModalCoordinator<F: Float + Debug + ScalarOperand> {
 impl<F: Float + Debug + ScalarOperand> MultiModalCoordinator<F> {
             coordination_strategy: CoordinationStrategy::AdaptiveWeighting,
             modality_weights: HashMap::new(),
-            modality_performance: HashMap::new(),
-            _phantom: std::marker::PhantomData,
+            modality_performance: HashMap::new(), _phantom: std::marker::PhantomData,
     pub fn coordinate_training(
         &self,
     ) -> Result<TrainingStrategy> {
@@ -1125,9 +1123,9 @@ impl QuantumInspiredOptimizer {
             average_improvement: 1.15,
             quantum_coherence_level: 0.87,
             annealing_effectiveness: 0.89,
-    fn create_annealing_schedule(steps: usize) -> Vec<f64> {
-        (0..steps)
-            .map(|i| 1.0 - (i as f64 / steps as f64))
+    fn create_annealing_schedule(_steps: usize) -> Vec<f64> {
+        (0.._steps)
+            .map(|i| 1.0 - (i as f64 / _steps as f64))
             .collect()
 /// Self-modification engine with safety constraints
 pub struct SelfModificationEngine<F: Float + Debug + ScalarOperand> {
@@ -1278,7 +1276,7 @@ pub struct QuantumOptimizationStatistics {
 pub struct SafetyChecker {
     // Safety checking implementation would go here
 impl SafetyChecker {
-    pub fn evaluate_safety(&self, _modification: &NetworkModification) -> f64 {
+    pub fn evaluate_safety(&self_modification: &NetworkModification) -> f64 {
         0.95 // High safety score for most modifications
 pub struct AppliedModification {
     pub modification: NetworkModification,

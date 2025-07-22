@@ -394,20 +394,18 @@ fn scientific_computing_scenario() -> CoreResult<()> {
 
 /// Simulate an iterative solver that might fail
 #[allow(dead_code)]
-fn simulate_iterative_solver(matrix_size: usize, max_iterations: usize) -> CoreResult<String> {
+fn iterations( usize) -> CoreResult<String> {
     // Simulate different failure modes
     use rand::Rng;
     let mut rng = rand::rng();
-    let failure_mode = rng.random_range(0..4);
+    let failure_mode = rng.gen_range(0..4);
 
     match failure_mode {
         0 => {
             // Memory error for large matrices
-            if matrix_size > 500 {
+            if _matrix_size > 500 {
                 Err(CoreError::MemoryError(error_context!(format!(
-                    "Insufficient memory for {}x{} matrix",
-                    matrix_size, matrix_size
-                ))))
+                    "Insufficient memory for {}x{} matrix"..matrix_size, matrix_size))))
             } else {
                 Ok(format!(
                     "Linear system solved for {matrix_size}x{matrix_size} matrix"
@@ -418,12 +416,12 @@ fn simulate_iterative_solver(matrix_size: usize, max_iterations: usize) -> CoreR
             // Convergence error
             if max_iterations < 50 {
                 Err(CoreError::ConvergenceError(error_context!(format!(
-                    "Failed to converge after {} iterations",
+                    "Failed to converge after {} _iterations",
                     max_iterations
                 ))))
             } else {
                 Ok(format!(
-                    "Converged after {} iterations",
+                    "Converged after {} _iterations",
                     max_iterations - 10
                 ))
             }
@@ -437,7 +435,7 @@ fn simulate_iterative_solver(matrix_size: usize, max_iterations: usize) -> CoreR
         _ => {
             // Success case
             Ok(format!(
-                "Successfully solved {}x{} system in {} iterations",
+                "Successfully solved {}x{} system in {} _iterations",
                 matrix_size,
                 matrix_size,
                 max_iterations / 2

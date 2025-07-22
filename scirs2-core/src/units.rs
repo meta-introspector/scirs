@@ -773,20 +773,20 @@ pub mod conversions {
         feet * 0.3048
     }
 
-    pub fn inches_to_centimeters(inches: f64) -> f64 {
+    pub fn inches_to_cm(inches: f64) -> f64 {
         inches * 2.54
     }
 
-    pub fn centimeters_to_inches(cm: f64) -> f64 {
+    pub fn cm_to_inches(cm: f64) -> f64 {
         cm / 2.54
     }
 
     /// Mass conversions
-    pub fn kilograms_to_pounds(kg: f64) -> f64 {
+    pub fn kg_to_lbs(kg: f64) -> f64 {
         kg / 0.453_592_37
     }
 
-    pub fn pounds_to_kilograms(lbs: f64) -> f64 {
+    pub fn lbs_to_kg(lbs: f64) -> f64 {
         lbs * 0.453_592_37
     }
 

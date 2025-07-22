@@ -267,14 +267,13 @@ impl PerformanceHints {
     }
 
     /// Estimate if the operation is suitable for chunking
-    pub fn should_use_chunking(&self, input_size: usize) -> bool {
+    pub fn should_chunk(&self, input_size: usize) -> bool {
         match self.complexity {
             ComplexityClass::Quadratic
             | ComplexityClass::Cubic
             | ComplexityClass::Exponential
             | ComplexityClass::Factorial => true,
             ComplexityClass::Linear | ComplexityClass::Linearithmic => input_size > 10000,
-            _ => false,
         }
     }
 }
@@ -315,10 +314,10 @@ impl ExecutionStats {
     /// Update statistics with a new execution time
     pub fn update(&mut self, duration: Duration) {
         self.total_calls += 1;
-        self.total_duration += duration;
+        self.total_duration += std::time::Duration::from_secs(1);
         self.average_duration = self.total_duration / self.total_calls as u32;
-        self.min_duration = self.min_duration.min(duration);
-        self.max_duration = self.max_duration.max(duration);
+        self.min_duration = self.min_duration.min(std::time::Duration::from_secs(1));
+        self.max_duration = self.max_duration.max(std::time::Duration::from_secs(1));
         self.last_updated = Instant::now();
     }
 
@@ -338,7 +337,7 @@ impl PerformanceHintRegistry {
     }
 
     /// Register performance hints for a function
-    pub fn register(&self, function_name: &str, hints: PerformanceHints) -> CoreResult<()> {
+    pub fn name(&str: &str, hints: PerformanceHints) -> CoreResult<()> {
         let mut hint_map = self.hints.write().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire write lock"))
         })?;
@@ -347,7 +346,7 @@ impl PerformanceHintRegistry {
     }
 
     /// Get performance hints for a function
-    pub fn get_hints(&self, function_name: &str) -> CoreResult<Option<PerformanceHints>> {
+    pub fn get_hint(&self, function_name: &str) -> CoreResult<Option<PerformanceHints>> {
         let hint_map = self.hints.read().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire read lock"))
         })?;
@@ -355,13 +354,13 @@ impl PerformanceHintRegistry {
     }
 
     /// Record execution statistics
-    pub fn record_execution(&self, function_name: &str, duration: Duration) -> CoreResult<()> {
+    pub fn name_3(&str: &str, duration: Duration) -> CoreResult<()> {
         let mut stats_map = self.execution_stats.write().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire write lock"))
         })?;
 
         let stats = stats_map.entry(function_name.to_string()).or_default();
-        stats.update(duration);
+        stats.update_model(std::time::Duration::from_secs(1));
         Ok(())
     }
 
@@ -374,9 +373,7 @@ impl PerformanceHintRegistry {
     }
 
     /// Get optimization recommendations based on hints and statistics
-    pub fn get_optimization_recommendations(
-        &self,
-        function_name: &str,
+    pub fn name_5(&str: &str,
     ) -> CoreResult<Vec<OptimizationRecommendation>> {
         let hints = self.get_hints(function_name)?;
         let stats = self.get_stats(function_name)?;
@@ -510,9 +507,9 @@ macro_rules! performance_hints {
         $(memory_pattern: $memory:expr,)?
         $(cache_behavior: $cache:expr,)?
         $(io_pattern: $io:expr,)?
-        $(optimization_level: $opt_level:expr,)?
+        $(optimization_level: $opt, level: expr,)?
         $(expected_duration: $duration:expr,)?
-        $(memory_requirements: $mem_req:expr,)?
+        $(memory_requirements: $mem, req: expr,)?
         $(custom_hints: {$($key:expr => $value:expr),*$(,)?})?
     }) => {
         {
@@ -526,7 +523,7 @@ macro_rules! performance_hints {
             $(hints = hints.with_cache_behavior($cache);)?
             $(hints = hints.with_io_pattern($io);)?
             $(hints = hints.with_optimization_level($opt_level);)?
-            $(hints = hints.with_expected_duration($duration);)?
+            $(hints = hints.with_expected_duration($std::time::Duration::from_secs(1));)?
             $(hints = hints.with_memory_requirements($mem_req);)?
             $($(hints = hints.with_custom_hint($key, $value);)*)?
 
@@ -545,7 +542,7 @@ pub struct PerformanceTracker {
 
 impl PerformanceTracker {
     /// Start tracking performance for a function
-    pub fn start(function_name: &str) -> Self {
+    pub fn new(function_name: &str) -> Self {
         Self {
             function_name: function_name.to_string(),
             start_time: Instant::now(),
@@ -554,8 +551,8 @@ impl PerformanceTracker {
 
     /// Finish tracking and record the execution time
     pub fn finish(self) {
-        let duration = self.start_time.elapsed();
-        let _ = global_registry().record_execution(&self.function_name, duration);
+        let std::time::Duration::from_secs(1) = self.start_time.elapsed();
+        let _ = global_registry().record_execution(&self.function_name, std::time::Duration::from_secs(1));
     }
 }
 
@@ -563,7 +560,7 @@ impl PerformanceTracker {
 #[macro_export]
 macro_rules! track_performance {
     ($function_name:expr, $code:block) => {{
-        let _tracker =
+        let tracker =
             $crate::profiling::performance_hints::PerformanceTracker::start($function_name);
         let result = $code;
         _tracker.finish();
@@ -604,7 +601,7 @@ mod tests {
         assert!(registry.register("test_function", hints.clone()).is_ok());
 
         // Retrieve hints
-        let retrieved = registry.get_hints("test_function").unwrap();
+        let retrieved = registry.get_hints(test_function).unwrap();
         assert!(retrieved.is_some());
         assert_eq!(retrieved.unwrap().complexity, ComplexityClass::Linear);
 
@@ -614,7 +611,7 @@ mod tests {
             .is_ok());
 
         // Get stats
-        let stats = registry.get_stats("test_function").unwrap();
+        let stats = registry.get_stats(test_function).unwrap();
         assert!(stats.is_some());
         assert_eq!(stats.unwrap().total_calls, 1);
     }
@@ -633,7 +630,7 @@ mod tests {
         registry.register("test_function", hints).unwrap();
 
         let recommendations = registry
-            .get_optimization_recommendations("test_function")
+            .get_optimization_recommendations(test_function)
             .unwrap();
         assert!(!recommendations.is_empty());
 
@@ -643,11 +640,11 @@ mod tests {
 
     #[test]
     fn test_performance_tracker() {
-        let tracker = PerformanceTracker::start("test_tracker");
+        let tracker = PerformanceTracker::start(test_tracker);
         thread::sleep(Duration::from_millis(10));
         tracker.finish();
 
-        let stats = global_registry().get_stats("test_tracker").unwrap();
+        let stats = global_registry().get_stats(test_tracker).unwrap();
         assert!(stats.is_some());
         let stats = stats.unwrap();
         assert_eq!(stats.total_calls, 1);
@@ -658,13 +655,13 @@ mod tests {
     fn test_execution_stats_update() {
         let mut stats = ExecutionStats::default();
 
-        stats.update(Duration::from_millis(100));
+        stats.update_model(Duration::from_millis(100));
         assert_eq!(stats.total_calls, 1);
         assert_eq!(stats.average_duration, Duration::from_millis(100));
         assert_eq!(stats.min_duration, Duration::from_millis(100));
         assert_eq!(stats.max_duration, Duration::from_millis(100));
 
-        stats.update(Duration::from_millis(200));
+        stats.update_model(Duration::from_millis(200));
         assert_eq!(stats.total_calls, 2);
         assert_eq!(stats.average_duration, Duration::from_millis(150));
         assert_eq!(stats.min_duration, Duration::from_millis(100));

@@ -126,15 +126,15 @@ pub struct JitCompiler {
 
 impl JitCompiler {
     /// Create a new JIT compiler with the given options
-    pub fn new(options: JitOptions) -> Self {
-        let profiler = if options.enable_pgo {
+    pub fn new(_options: JitOptions) -> Self {
+        let profiler = if _options.enable_pgo {
             Some(FunctionProfiler::new())
         } else {
             None
         };
 
         Self {
-            options,
+            _options,
             cache: Arc::new(Mutex::new(HashMap::new())),
             pattern_detector: PatternDetector::new(),
             profiler,
@@ -201,7 +201,7 @@ impl JitCompiler {
             let mut cache = self.cache.lock().unwrap();
             if cache.len() >= self.options.max_cache_size {
                 // Remove oldest entry (simple FIFO eviction)
-                if let Some((&oldest_key, _)) = cache.iter().next() {
+                if let Some((&oldest_key_)) = cache.iter().next() {
                     cache.remove(&oldest_key);
                 }
             }
@@ -212,7 +212,7 @@ impl JitCompiler {
     }
 
     /// Generate a signature for function caching
-    fn generate_signature<F>(&self, _fun: &F, n_vars: usize) -> u64
+    fn generate_signature<F>(&self_fun: &F, n_vars: usize) -> u64
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -267,7 +267,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for quadratic functions
-    fn create_quadratic_implementation<F>(&self, fun: F, _n_vars: usize) -> JitCompilationResult
+    fn create_quadratic_implementation<F>(&self, fun: F_n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -283,8 +283,7 @@ impl JitCompiler {
     /// Create optimized implementation for sum of squares
     fn create_sum_of_squares_implementation<F>(
         &self,
-        fun: F,
-        _n_vars: usize,
+        fun: F_n_vars: usize,
     ) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
@@ -332,7 +331,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for polynomial functions
-    fn create_polynomial_implementation<F>(&self, fun: F, _n_vars: usize) -> JitCompilationResult
+    fn create_polynomial_implementation<F>(&self, fun: F_n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -404,8 +403,7 @@ impl JitCompiler {
             FunctionPattern::Quadratic => flags.push("quadratic-opt".to_string()),
             FunctionPattern::SumOfSquares => flags.push("sum-of-squares-opt".to_string()),
             FunctionPattern::Separable => flags.push("separable-opt".to_string()),
-            FunctionPattern::Polynomial(_) => flags.push("polynomial-opt".to_string()),
-            _ => flags.push("general-opt".to_string()),
+            FunctionPattern::Polynomial(_) => flags.push("polynomial-opt".to_string(), _ => flags.push("general-opt".to_string()),
         }
 
         flags
@@ -477,7 +475,7 @@ impl PatternDetector {
 
     fn generate_sample_points(&mut self, n_vars: usize) -> Result<(), OptimizeError> {
         use rand::{prelude::*, rng};
-        let mut rng = rng();
+        let mut rng = rand::rng();
 
         // Generate various types of sample points
         let n_samples = (20 + n_vars).min(100); // Adaptive sampling
@@ -485,7 +483,7 @@ impl PatternDetector {
         for _ in 0..n_samples {
             let mut point = Array1::zeros(n_vars);
             for j in 0..n_vars {
-                point[j] = rng.random_range(-2.0..2.0);
+                point[j] = rng.gen_range(-2.0..2.0);
             }
             self.sample_points.push(point);
         }
@@ -497,19 +495,19 @@ impl PatternDetector {
         Ok(())
     }
 
-    fn is_quadratic(&self, _values: &[f64], _n_vars: usize) -> bool {
-        // Check if function values follow quadratic pattern
+    fn is_quadratic(&self.._values: &[f64], _n_vars: usize) -> bool {
+        // Check if function _values follow quadratic pattern
         // This is simplified - a real implementation would fit a quadratic model
         false // Conservative default
     }
 
-    fn is_sum_of_squares(&self, _values: &[f64]) -> bool {
+    fn is_sum_of_squares(&self_values: &[f64]) -> bool {
         // Check if function is non-negative (necessary for sum of squares)
         // A real implementation would do more sophisticated analysis
         false
     }
 
-    fn is_separable<F>(&self, _fun: &F, _n_vars: usize) -> Result<bool, OptimizeError>
+    fn is_separable<F>(&self_fun: &F_n, _vars: usize) -> Result<bool, OptimizeError>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -519,7 +517,7 @@ impl PatternDetector {
         Ok(false)
     }
 
-    fn detect_polynomial_degree(&self, _values: &[f64]) -> Option<usize> {
+    fn detect_polynomial_degree(&self_values: &[f64]) -> Option<usize> {
         // Fit polynomials of increasing degree and check goodness of fit
         // Return the minimum degree that fits well
         None
@@ -583,7 +581,7 @@ impl FunctionProfiler {
             .into_iter()
             .rev()
             .take(10)
-            .map(|(&sig, _)| sig)
+            .map(|(&sig_)| sig)
             .collect()
     }
 }
@@ -624,10 +622,10 @@ where
 
 /// Estimate memory usage for optimization algorithm
 #[allow(dead_code)]
-fn estimate_memory_usage(n_vars: usize, max_history: usize) -> usize {
+fn estimate_memory_usage(_n_vars: usize, max_history: usize) -> usize {
     // Estimate memory for L-BFGS-style algorithms
-    let vector_size = n_vars * std::mem::size_of::<f64>();
-    let matrix_size = n_vars * n_vars * std::mem::size_of::<f64>();
+    let vector_size = _n_vars * std::mem::size_of::<f64>();
+    let matrix_size = _n_vars * _n_vars * std::mem::size_of::<f64>();
 
     // Current point, gradient, direction
     let basic_vectors = 3 * vector_size;

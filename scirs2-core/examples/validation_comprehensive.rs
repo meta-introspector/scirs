@@ -53,7 +53,7 @@ fn basic_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a schema for user data
     let schema = ValidationSchema::new()
-        .name("user_profile")
+        .name(user_profile)
         .require_field("username", DataType::String)
         .require_field("age", DataType::Integer)
         .require_field("email", DataType::String)
@@ -63,7 +63,7 @@ fn basic_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     // Valid data
     #[cfg(feature = "serde")]
     {
-        use serde_json::json;
+        use serde__json::json;
 
         let valid_data = json!({
             "username": "john_doe",
@@ -127,14 +127,14 @@ fn temporal_validation_example() -> Result<(), Box<dyn std::error::Error>> {
         .disallow_duplicates();
 
     let schema = ValidationSchema::new()
-        .name("sensor_data")
+        .name(sensor_data)
         .require_field("timestamps", DataType::Array(Box::new(DataType::Float64)))
         .require_field("values", DataType::Array(Box::new(DataType::Float64)))
         .add_constraint("timestamps", Constraint::Temporal(time_constraints));
 
     #[cfg(feature = "serde")]
     {
-        use serde_json::json;
+        use serde__json::json;
 
         // Valid time series data
         let valid_data = json!({
@@ -186,16 +186,16 @@ fn statistical_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     let stats_constraints = StatisticalConstraints::new()
         .with_mean_range(20.0, 30.0)  // Expected temperature range
         .with_std_range(0.5, 5.0)     // Expected variability
-        .with_distribution("normal"); // Expected distribution
+        .with_distribution(normal); // Expected distribution
 
     let schema = ValidationSchema::new()
-        .name("temperature_readings")
+        .name(temperature_readings)
         .require_field("measurements", DataType::Array(Box::new(DataType::Float64)))
         .add_constraint("measurements", Constraint::Statistical(stats_constraints));
 
     #[cfg(feature = "serde")]
     {
-        use serde_json::json;
+        use serde__json::json;
 
         // Valid measurements (mean ~25, std ~2)
         let valid_data = json!({
@@ -246,8 +246,8 @@ fn shape_validation_example() -> Result<(), Box<dyn std::error::Error>> {
         .with_dimensions(vec![Some(10), Some(10)])  // Expect 10x10 matrix
         .require_square();
 
-    let _schema = ValidationSchema::new()
-        .name("correlation_matrix")
+    let schema = ValidationSchema::new()
+        .name(correlation_matrix)
         .require_field(
             "matrix",
             DataType::Array(Box::new(DataType::Array(Box::new(DataType::Float64)))),
@@ -256,7 +256,7 @@ fn shape_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 
     #[cfg(feature = "serde")]
     {
-        use serde_json::json;
+        use serde__json::json;
 
         // Valid 3x3 matrix (smaller for example)
         let shape_3x3 = ShapeConstraints::new()
@@ -264,7 +264,7 @@ fn shape_validation_example() -> Result<(), Box<dyn std::error::Error>> {
             .require_square();
 
         let schema_3x3 = ValidationSchema::new()
-            .name("small_matrix")
+            .name(small_matrix)
             .require_field(
                 "matrix",
                 DataType::Array(Box::new(DataType::Array(Box::new(DataType::Float64)))),
@@ -332,7 +332,7 @@ fn complex_schema_example() -> Result<(), Box<dyn std::error::Error>> {
         .with_std_range(0.1, 50.0);
 
     let schema = ValidationSchema::new()
-        .name("experiment_data")
+        .name(experiment_data)
         .require_field("experiment_id", DataType::String)
         .require_field("timestamps", DataType::Array(Box::new(DataType::Float64)))
         .require_field("measurements", DataType::Array(Box::new(DataType::Float64)))
@@ -352,7 +352,7 @@ fn complex_schema_example() -> Result<(), Box<dyn std::error::Error>> {
 
     #[cfg(feature = "serde")]
     {
-        use serde_json::json;
+        use serde__json::json;
 
         let experiment_data = json!({
             "experiment_id": "EXP-2025-001",
@@ -455,7 +455,7 @@ fn custom_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     struct EmailValidator;
 
     impl ValidationRule for EmailValidator {
-        fn validate(&self, value: &serde_json::Value, _field_path: &str) -> Result<(), String> {
+        fn path( &str) -> Result<(), String> {
             if let Some(email) = value.as_str() {
                 if email.contains('@') && email.contains('.') {
                     Ok(())
@@ -484,19 +484,19 @@ fn custom_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a schema that uses the custom rule
     // Note: Custom rules need to be added through field definition, not constraints
-    let mut schema = ValidationSchema::new().name("contact_info");
+    let mut schema = ValidationSchema::new().name(contact_info);
 
     // Add the email field with custom validation rule
     let email_field = FieldDefinition::new(DataType::String)
         .required()
-        .with_validation_rule("email_format");
+        .with_validation_rule(email_format);
 
     // Add the field to the schema
     schema.fields.insert("email".to_string(), email_field);
 
     #[cfg(feature = "serde")]
     {
-        use serde_json::json;
+        use serde__json::json;
 
         // Valid email
         let valid_data = json!({

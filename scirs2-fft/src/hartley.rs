@@ -4,7 +4,7 @@
 //! It is related to the FFT by: H(f) = Re(FFT(f)) - Im(FFT(f))
 
 use ndarray::{Array1, ArrayBase, Data, Dimension};
-use num_complex::Complex64;
+use num__complex::Complex64;
 
 use crate::error::{FFTError, FFTResult};
 use crate::fft::fft;
@@ -28,7 +28,7 @@ use crate::fft::fft;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_fft::hartley::dht;
+/// use scirs2__fft::hartley::dht;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0];
 /// let h = dht(&x).unwrap();
@@ -83,7 +83,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_fft::hartley::{dht, idht};
+/// use scirs2__fft::hartley::{dht, idht};
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0];
 /// let h = dht(&x).unwrap();
@@ -126,7 +126,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_fft::hartley::dht2;
+/// use scirs2__fft::hartley::dht2;
 ///
 /// let x = array![[1.0, 2.0], [3.0, 4.0]];
 /// let h = dht2(&x, None).unwrap();

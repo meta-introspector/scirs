@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Basic example of creating and using memory-mapped arrays
 #[allow(dead_code)]
-fn basic_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Memory-Mapped Array Example");
     println!("----------------------------------");
 
@@ -48,8 +48,8 @@ fn basic_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("Created a 1D array with 100 elements");
 
     // Create a memory-mapped file from the data
-    let file_path = temp_dir.join("basic_example.bin");
-    let mmap = create_mmap::<f64, _, _>(&data, &file_path, AccessMode::Write, 0)?;
+    let file_path = _temp_dir.join("basic_example.bin");
+    let mmap = create_mmap::<f64>(&data, &file_path, AccessMode::Write, 0)?;
     println!("Created memory-mapped array at: {:?}", file_path);
     println!("  Shape: {:?}", mmap.shape);
     println!("  Size: {} elements", mmap.size);
@@ -59,7 +59,7 @@ fn basic_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     // let's just verify the data we've written directly from the original memory-mapped array
 
     // Read the data from the original mmap
-    let loaded_data = mmap.as_array::<ndarray::Ix1>()?;
+    let loaded_data = mmap.asarray::<ndarray::Ix1>()?;
 
     // Verify some values
     println!(
@@ -72,7 +72,7 @@ fn basic_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Example showing how to work with large arrays using memory mapping
 #[allow(dead_code)]
-fn large_array_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Large Array Processing Example");
     println!("-------------------------------");
 
@@ -86,17 +86,17 @@ fn large_array_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Error
     println!("Created a {}x{} array ({:.2} MB)", rows, cols, size_mb);
 
     // Use a temporary memory-mapped file instead
-    let mut mmap = create_temp_mmap::<f32, _, _>(&data, AccessMode::ReadWrite, 0)?;
+    let mut mmap = create_temp_mmap::<f32>(&data, AccessMode::ReadWrite, 0)?;
     println!("Created temporary memory-mapped array");
 
     // Process the data without loading it all into memory
     // For example, compute the sum of all elements
-    let sum = mmap.as_array::<Ix2>()?.sum();
+    let sum = mmap.asarray::<Ix2>()?.sum();
     println!("Sum of all elements: {}", sum);
 
     // Find the maximum element
     let max = mmap
-        .as_array::<Ix2>()?
+        .asarray::<Ix2>()?
         .fold(f32::MIN, |a, &b| f32::max(a, b));
     println!("Maximum element: {}", max);
 
@@ -121,7 +121,7 @@ fn large_array_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Error
 
 /// Example showing how to work with multi-dimensional arrays
 #[allow(dead_code)]
-fn multi_dimensional_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Multi-Dimensional Array Example");
     println!("---------------------------------");
 
@@ -131,11 +131,11 @@ fn multi_dimensional_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error:
     println!("Created a 10x10x10 3D array");
 
     // Create a temporary memory-mapped file
-    let mmap = create_temp_mmap::<i32, _, _>(&data, AccessMode::ReadWrite, 0)?;
+    let mmap = create_temp_mmap::<i32>(&data, AccessMode::ReadWrite, 0)?;
     println!("Created temporary memory-mapped 3D array");
 
     // Access as a regular ndarray array
-    let array = mmap.as_array::<Ix3>()?;
+    let array = mmap.asarray::<Ix3>()?;
 
     // Instead of using slice which causes Dimension trait issues,
     // let's just access individual elements directly
@@ -153,7 +153,7 @@ fn multi_dimensional_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error:
 
 /// Example comparing performance between memory-mapped and in-memory arrays
 #[allow(dead_code)]
-fn performance_comparison_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. Performance Comparison Example");
     println!("--------------------------------");
 
@@ -178,7 +178,7 @@ fn performance_comparison_example(_temp_dir: &Path) -> Result<(), Box<dyn std::e
 
     // For simplicity in this test, use a temporary memory-mapped array instead
     let start = Instant::now();
-    let mmap = create_temp_mmap::<f64, _, _>(&data, AccessMode::ReadWrite, 0)?;
+    let mmap = create_temp_mmap::<f64>(&data, AccessMode::ReadWrite, 0)?;
     let mmap_creation_time = start.elapsed();
     println!(
         "Memory-mapped array creation time: {:?}",
@@ -196,7 +196,7 @@ fn performance_comparison_example(_temp_dir: &Path) -> Result<(), Box<dyn std::e
 
     // Performance for reading: Memory-mapped
     let start = Instant::now();
-    let mmap_sum = mmap.as_array::<Ix2>()?.sum();
+    let mmap_sum = mmap.asarray::<Ix2>()?.sum();
     let mmap_read_time = start.elapsed();
     println!(
         "Memory-mapped array sum calculation time: {:?}",

@@ -17,16 +17,16 @@ use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
-fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
-    T::from_i32(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
+fn safe_i32_to_float<T: Float + FromPrimitive>(_value: i32) -> NdimageResult<T> {
+    T::from_i32(_value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", _value))
     })
 }
 
 /// Helper function for safe float to usize conversion
 #[allow(dead_code)]
-fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
-    value.to_usize().ok_or_else(|| {
+fn safe_float_to_usize<T: Float>(_value: T) -> NdimageResult<usize> {
+    _value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert float to usize".to_string())
     })
 }
@@ -86,8 +86,7 @@ where
     // Dispatch to the appropriate implementation based on dimensionality
     match input.ndim() {
         1 => bilateral_filter_1d(input, sigma_spatial, sigma_color, &border_mode),
-        2 => bilateral_filter_2d(input, sigma_spatial, sigma_color, &border_mode),
-        _ => bilateral_filter_nd(input, sigma_spatial, sigma_color, &border_mode),
+        2 => bilateral_filter_2d(input, sigma_spatial, sigma_color, &border_mode, _ => bilateral_filter_nd(input, sigma_spatial, sigma_color, &border_mode),
     }
 }
 
@@ -109,8 +108,8 @@ where
         .into_dimensionality::<ndarray::Ix1>()
         .map_err(|_| NdimageError::DimensionError("Failed to convert to 1D array".into()))?;
 
-    // Calculate kernel radius based on spatial sigma
-    let three = safe_f64_to_float::<T>(3.0)?;
+    // Calculate kernel radius based on _spatial sigma
+    let three = safe_f64, _to_float: :<T>(3.0)?;
     let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
     let kernel_size = 2 * radius + 1;
 
@@ -121,9 +120,9 @@ where
     let pad_width = vec![(radius, radius)];
     let padded_input = pad_array(&input_1d, &pad_width, mode, None)?;
 
-    // Precompute spatial weights
+    // Precompute _spatial weights
     let mut spatial_weights = Array1::zeros(kernel_size);
-    let two = safe_f64_to_float::<T>(2.0)?;
+    let two = safe_f64, _to_float: :<T>(2.0)?;
     let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
 
     for k in 0..kernel_size {
@@ -184,8 +183,8 @@ where
 
     let (rows, cols) = input_2d.dim();
 
-    // Calculate kernel radius based on spatial sigma
-    let three = safe_f64_to_float::<T>(3.0)?;
+    // Calculate kernel radius based on _spatial sigma
+    let three = safe_f64, _to_float: :<T>(3.0)?;
     let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
     let kernel_size = 2 * radius + 1;
 
@@ -196,9 +195,9 @@ where
     let pad_width = vec![(radius, radius), (radius, radius)];
     let padded_input = pad_array(&input_2d, &pad_width, mode, None)?;
 
-    // Precompute spatial weights
+    // Precompute _spatial weights
     let mut spatial_weights = Array2::zeros((kernel_size, kernel_size));
-    let two = safe_f64_to_float::<T>(2.0)?;
+    let two = safe_f64, _to_float: :<T>(2.0)?;
     let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
 
     for dy in 0..kernel_size {
@@ -263,8 +262,8 @@ where
     T: Float + Debug + Clone + Display + FromPrimitive,
     D: Dimension,
 {
-    // Calculate kernel radius based on spatial sigma
-    let three = safe_f64_to_float::<T>(3.0)?;
+    // Calculate kernel radius based on _spatial sigma
+    let three = safe_f64, _to_float: :<T>(3.0)?;
     let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
 
     // Convert to dynamic dimension for easier processing
@@ -275,7 +274,7 @@ where
     let pad_width: Vec<(usize, usize)> = (0..input.ndim()).map(|_| (radius, radius)).collect();
     let padded_input = pad_array(&input_dyn, &pad_width, mode, None)?;
 
-    let two = safe_f64_to_float::<T>(2.0)?;
+    let two = safe_f64, _to_float: :<T>(2.0)?;
     let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
     let two_sigma_color_sq = two * sigma_color * sigma_color;
 
@@ -301,14 +300,14 @@ where
 
             let neighbor_value = padded_input[&IxDyn(&neighbor_idx)];
 
-            // Calculate spatial weight
+            // Calculate _spatial weight
             let spatial_dist_sq = neighbor_offset.iter().try_fold(T::zero(), |acc, &offset| {
                 let dist = safe_i32_to_float(offset)?;
                 Ok(acc + dist * dist)
             })?;
             let spatial_weight = (-spatial_dist_sq / two_sigma_spatial_sq).exp();
 
-            // Calculate color weight
+            // Calculate _color weight
             let color_diff = neighbor_value - center_value;
             let color_weight = (-color_diff * color_diff / two_sigma_color_sq).exp();
 
@@ -397,8 +396,7 @@ where
 
     match input.ndim() {
         1 => bilateral_filter_1d_simd_f32(input, sigma_spatial, sigma_color, &border_mode),
-        2 => bilateral_filter_2d_simd_f32(input, sigma_spatial, sigma_color, &border_mode),
-        _ => bilateral_filter(input, sigma_spatial, sigma_color, mode), // Fall back to regular implementation
+        2 => bilateral_filter_2d_simd_f32(input, sigma_spatial, sigma_color, &border_mode, _ => bilateral_filter(input, sigma_spatial, sigma_color, mode), // Fall back to regular implementation
     }
 }
 
@@ -432,8 +430,7 @@ where
 
     match input.ndim() {
         1 => bilateral_filter_1d_simd_f64(input, sigma_spatial, sigma_color, &border_mode),
-        2 => bilateral_filter_2d_simd_f64(input, sigma_spatial, sigma_color, &border_mode),
-        _ => bilateral_filter(input, sigma_spatial, sigma_color, mode), // Fall back to regular implementation
+        2 => bilateral_filter_2d_simd_f64(input, sigma_spatial, sigma_color, &border_mode, _ => bilateral_filter(input, sigma_spatial, sigma_color, mode), // Fall back to regular implementation
     }
 }
 
@@ -461,7 +458,7 @@ where
     let pad_width = vec![(radius, radius)];
     let padded_input = pad_array(&input_1d, &pad_width, mode, None)?;
 
-    // Precompute spatial weights
+    // Precompute _spatial weights
     let mut spatial_weights = Array1::zeros(kernel_size);
     let two_sigma_spatial_sq = 2.0 * sigma_spatial * sigma_spatial;
 
@@ -640,7 +637,7 @@ where
     let pad_width = vec![(radius, radius), (radius, radius)];
     let padded_input = pad_array(&input_2d, &pad_width, mode, None)?;
 
-    // Precompute spatial weights
+    // Precompute _spatial weights
     let mut spatial_weights = Array2::zeros((kernel_size, kernel_size));
     let two_sigma_spatial_sq = 2.0 * sigma_spatial * sigma_spatial;
 
@@ -972,7 +969,7 @@ impl Default for MultiScaleBilateralConfig {
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_ndimage::filters::{multi_scale_bilateral_filter, MultiScaleBilateralConfig};
+/// use scirs2__ndimage::filters::{multi_scale_bilateral_filter, MultiScaleBilateralConfig};
 ///
 /// let image = Array2::from_elem((64, 64), 1.0);
 /// let config = MultiScaleBilateralConfig::default();
@@ -1007,8 +1004,8 @@ where
 
     // For single level, fall back to regular bilateral filter
     if config.levels == 1 {
-        let spatial_sigma = safe_f64_to_float::<T>(config.spatial_sigmas[0])?;
-        let color_sigma = safe_f64_to_float::<T>(config.color_sigmas[0])?;
+        let spatial_sigma = safe_f64, _to_float: :<T>(config.spatial_sigmas[0])?;
+        let color_sigma = safe_f64, _to_float: :<T>(config.color_sigmas[0])?;
         return bilateral_filter(input, spatial_sigma, color_sigma, Some(config.mode));
     }
 
@@ -1023,8 +1020,8 @@ where
     // Apply bilateral filter at each level
     let mut filtered_pyramid = Vec::with_capacity(config.levels);
     for (level, image) in pyramid.iter().enumerate() {
-        let spatial_sigma = safe_f64_to_float::<T>(config.spatial_sigmas[level])?;
-        let color_sigma = safe_f64_to_float::<T>(config.color_sigmas[level])?;
+        let spatial_sigma = safe_f64, _to_float: :<T>(config.spatial_sigmas[level])?;
+        let color_sigma = safe_f64, _to_float: :<T>(config.color_sigmas[level])?;
 
         let filtered = bilateral_filter(image, spatial_sigma, color_sigma, Some(config.mode))?;
         filtered_pyramid.push(filtered);
@@ -1036,7 +1033,7 @@ where
         result = upsample_image(&result, &filtered_pyramid[level])?;
 
         // Blend with original level
-        let alpha = safe_f64_to_float::<T>(0.7)?; // Blend factor
+        let alpha = safe_f64, _to_float: :<T>(0.7)?; // Blend factor
         result = blend_arrays(&result, &filtered_pyramid[level], alpha)?;
     }
 
@@ -1064,7 +1061,7 @@ where
 ///
 /// ```rust
 /// use ndarray::Array2;
-/// use scirs2_ndimage::filters::{adaptive_bilateral_filter, BorderMode};
+/// use scirs2__ndimage::filters::{adaptive_bilateral_filter, BorderMode};
 ///
 /// let image = Array2::from_elem((32, 32), 1.0);
 /// let result = adaptive_bilateral_filter(&image, 1.0, 1.0, 0.5, Some(BorderMode::Reflect)).unwrap();
@@ -1089,9 +1086,9 @@ where
     scirs2_core::validation::check_positive(base_color_sigma, "base_color_sigma")
         .map_err(NdimageError::from)?;
 
-    if adaptation_factor < T::zero() || adaptation_factor > T::one() {
+    if adaptation_factor < T::zero() || adaptation_factor >, T::one() {
         return Err(NdimageError::InvalidInput(
-            "Adaptation factor must be between 0.0 and 1.0".into(),
+            "Adaptation _factor must be between 0.0 and 1.0".into(),
         ));
     }
 
@@ -1168,11 +1165,11 @@ where
                 T::zero()
             };
 
-            // Higher variance -> larger spatial sigma, smaller color sigma
+            // Higher variance -> larger spatial _sigma, smaller color _sigma
             let adaptive_spatial =
                 base_spatial_sigma * (T::one() + adaptation_factor * variance_ratio);
             let adaptive_color = base_color_sigma
-                * (T::one() - adaptation_factor * variance_ratio * safe_f64_to_float::<T>(0.5)?);
+                * (T::one() - adaptation_factor * variance_ratio * safe_f64, _to_float: :<T>(0.5)?);
 
             // Apply bilateral filtering with adaptive parameters
             let filtered_value = apply_bilateral_window(
@@ -1196,16 +1193,16 @@ where
 
 /// Compute local variance in a 2D array using a sliding window
 #[allow(dead_code)]
-fn compute_local_variance<T>(input: &Array2<T>, window_size: usize) -> NdimageResult<Array2<T>>
+fn compute_local_variance<T>(_input: &Array2<T>, window_size: usize) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
 {
-    let (rows, cols) = input.dim();
+    let (rows, cols) = _input.dim();
     let mut variance = Array2::zeros((rows, cols));
     let radius = window_size / 2;
 
     let pad_width = vec![(radius, radius), (radius, radius)];
-    let padded = super::pad_array(input, &pad_width, &BorderMode::Reflect, None)?;
+    let padded = super::pad_array(_input, &pad_width, &BorderMode::Reflect, None)?;
 
     for i in 0..rows {
         for j in 0..cols {
@@ -1253,7 +1250,7 @@ where
     T: Float + FromPrimitive + Debug + Clone + 'static,
 {
     let radius = window_size / 2;
-    let two = safe_f64_to_float::<T>(2.0)?;
+    let two = safe_f64, _to_float: :<T>(2.0)?;
     let two_sigma_spatial_sq = two * spatial_sigma * spatial_sigma;
     let two_sigma_color_sq = two * color_sigma * color_sigma;
 
@@ -1262,9 +1259,9 @@ where
 
     for dy in 0..window_size {
         for dx in 0..window_size {
-            let y = center_y - radius + dy;
-            let x = center_x - radius + dx;
-            let neighbor_value = padded_input[[y, x]];
+            let _y = center_y - radius + dy;
+            let _x = center_x - radius + dx;
+            let neighbor_value = padded_input[[_y_x]];
 
             // Spatial weight
             let y_dist = safe_i32_to_float((dy as i32) - (radius as i32))?;
@@ -1291,7 +1288,7 @@ where
 
 /// Downsample an image by the given factor
 #[allow(dead_code)]
-fn downsample_image<T, D>(input: &Array<T, D>, factor: f64) -> NdimageResult<Array<T, D>>
+fn downsample_image<T, D>(_input: &Array<T, D>, factor: f64) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
     D: Dimension,
@@ -1304,7 +1301,7 @@ where
 
     // For simplicity, implement basic downsampling
     // In a production implementation, you might want to use proper anti-aliasing
-    let old_shape = input.shape();
+    let old_shape = _input.shape();
     let mut new_shape = Vec::with_capacity(old_shape.len());
 
     for &dim_size in old_shape {
@@ -1316,8 +1313,8 @@ where
     let mut output = Array::zeros(new_shape.clone());
 
     // For 2D case (most common)
-    if input.ndim() == 2 && new_shape.len() == 2 {
-        let input_2d = input
+    if _input.ndim() == 2 && new_shape.len() == 2 {
+        let input_2d = _input
             .to_owned()
             .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D".into()))?;
@@ -1337,17 +1334,17 @@ where
     }
 
     // Fallback: return a copy for unsupported dimensions
-    Ok(input.clone())
+    Ok(_input.clone())
 }
 
 /// Upsample an image to match the target shape
 #[allow(dead_code)]
-fn upsample_image<T, D>(input: &Array<T, D>, target: &Array<T, D>) -> NdimageResult<Array<T, D>>
+fn upsample_image<T, D>(_input: &Array<T, D>, target: &Array<T, D>) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
     D: Dimension,
 {
-    let input_shape = input.shape();
+    let input_shape = _input.shape();
     let target_shape = target.shape();
 
     if input_shape.len() != target_shape.len() {
@@ -1357,8 +1354,8 @@ where
     }
 
     // For 2D case
-    if input.ndim() == 2 {
-        let input_2d = input
+    if _input.ndim() == 2 {
+        let input_2d = _input
             .to_owned()
             .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D".into()))?;
@@ -1380,7 +1377,7 @@ where
             .map_err(|_| NdimageError::DimensionError("Failed to convert back from 2D".into()));
     }
 
-    // Fallback: return target shape with input values
+    // Fallback: return target shape with _input values
     Ok(target.clone())
 }
 

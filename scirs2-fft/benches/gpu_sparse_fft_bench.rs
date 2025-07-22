@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Bencher, Criterion};
 use rand::Rng;
-use scirs2_fft::{
+use scirs2__fft::{
     sparse_fft,
     sparse_fft::{SparseFFTAlgorithm, WindowFunction},
     sparse_fft_gpu::{gpu_batch_sparse_fft, gpu_sparse_fft, GPUBackend},
@@ -35,7 +35,7 @@ fn create_noisy_sparse_signal(
     let mut rng = rand::rng();
 
     for i in 0..n {
-        signal[i] += noise_level * rng.random_range(-1.0..1.0);
+        signal[i] += noise_level * rng.gen_range(-1.0..1.0);
     }
 
     signal
@@ -45,7 +45,7 @@ fn create_noisy_sparse_signal(
 #[allow(dead_code)]
 fn bench_cpu_sparse_fft_small(b: &mut Bencher) {
     let n = 1024;
-    let frequencies = vec![(10, 1.0), (50, 0.5), (100, 0.3)];
+    let frequencies = vec![(10..1.0), (50, 0.5), (100, 0.3)];
     let signal = create_sparse_signal(n, &frequencies);
     let sparsity = 10;
 

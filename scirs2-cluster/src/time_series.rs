@@ -4,7 +4,7 @@
 //! including dynamic time warping (DTW) distance and other temporal similarity measures.
 //! These algorithms can handle time series of different lengths and temporal alignments.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -33,7 +33,7 @@ use crate::error::{ClusteringError, Result};
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_cluster::time_series::dtw_distance;
+/// use scirs2__cluster::time_series::dtw_distance;
 ///
 /// let series1 = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0]);
 /// let series2 = Array1::from_vec(vec![1.0, 2.0, 2.0, 3.0, 2.0, 1.0]);
@@ -170,11 +170,11 @@ where
 ///
 /// Soft DTW distance
 #[allow(dead_code)]
-pub fn soft_dtw_distance<F>(series1: ArrayView1<F>, series2: ArrayView1<F>, gamma: F) -> Result<F>
+pub fn soft_dtw_distance<F>(_series1: ArrayView1<F>, series2: ArrayView1<F>, gamma: F) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + 'static,
 {
-    let n = series1.len();
+    let n = _series1.len();
     let m = series2.len();
 
     if n == 0 || m == 0 {
@@ -194,7 +194,7 @@ where
 
     for i in 1..=n {
         for j in 1..=m {
-            let cost = (series1[i - 1] - series2[j - 1]).powi(2);
+            let cost = (_series1[i - 1] - series2[j - 1]).powi(2);
 
             let candidates = [dtw[[i - 1, j]], dtw[[i, j - 1]], dtw[[i - 1, j - 1]]];
 
@@ -245,24 +245,24 @@ where
 
     if k > n_series {
         return Err(ClusteringError::InvalidInput(
-            "Number of clusters cannot exceed number of time series".to_string(),
+            "Number of clusters cannot exceed number of time _series".to_string(),
         ));
     }
 
     if n_series == 0 {
         return Err(ClusteringError::InvalidInput(
-            "No time series provided".to_string(),
+            "No time _series provided".to_string(),
         ));
     }
 
-    // Initialize medoids randomly (for deterministic results, use first k series)
+    // Initialize medoids randomly (for deterministic results, use first k _series)
     let mut medoids: Array1<usize> = Array1::from_iter(0..k);
     let mut assignments = Array1::zeros(n_series);
 
     for _iteration in 0..max_iterations {
         let mut changed = false;
 
-        // Assign each time series to nearest medoid
+        // Assign each time _series to nearest medoid
         for i in 0..n_series {
             let mut min_distance = F::infinity();
             let mut best_cluster = 0;
@@ -289,7 +289,7 @@ where
                 .iter()
                 .enumerate()
                 .filter(|(_, &assignment)| assignment == cluster_id)
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .collect();
 
             if !cluster_members.is_empty() {
@@ -357,7 +357,7 @@ where
 
     if n_series < 2 {
         return Err(ClusteringError::InvalidInput(
-            "Need at least 2 time series for clustering".to_string(),
+            "Need at least 2 time _series for clustering".to_string(),
         ));
     }
 
@@ -479,11 +479,11 @@ where
 
     if k > n_series {
         return Err(ClusteringError::InvalidInput(
-            "Number of clusters cannot exceed number of time series".to_string(),
+            "Number of clusters cannot exceed number of time _series".to_string(),
         ));
     }
 
-    // Initialize centers with first k time series
+    // Initialize centers with first k time _series
     let mut centers = Array2::zeros((k, series_length));
     for i in 0..k {
         centers.row_mut(i).assign(&time_series.row(i));
@@ -494,7 +494,7 @@ where
     for _iteration in 0..max_iterations {
         let mut changed = false;
 
-        // Assign each time series to nearest center
+        // Assign each time _series to nearest center
         for i in 0..n_series {
             let mut min_distance = F::infinity();
             let mut best_cluster = 0;
@@ -525,7 +525,7 @@ where
                 .iter()
                 .enumerate()
                 .filter(|(_, &assignment)| assignment == cluster_id)
-                .map(|(idx, _)| idx)
+                .map(|(idx_)| idx)
                 .collect();
 
             if !cluster_members.is_empty() {
@@ -582,7 +582,7 @@ where
 
     if n_series == 0 {
         return Err(ClusteringError::InvalidInput(
-            "No time series provided".to_string(),
+            "No time _series provided".to_string(),
         ));
     }
 
@@ -590,14 +590,14 @@ where
         return Ok(time_series.row(0).to_owned());
     }
 
-    // Initialize barycenter as the mean of all series
+    // Initialize barycenter as the mean of all _series
     let mut barycenter = time_series.mean_axis(Axis(0)).unwrap();
 
     for _iteration in 0..max_iterations {
         let mut new_barycenter = Array1::zeros(series_length);
         let mut weights = Array1::zeros(series_length);
 
-        // For each time series, find optimal alignment with current barycenter
+        // For each time _series, find optimal alignment with current barycenter
         for i in 0..n_series {
             let (aligned_series, alignment_weights) =
                 dtw_align_series(time_series.row(i), barycenter.view())?;

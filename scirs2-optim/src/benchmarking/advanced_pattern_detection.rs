@@ -567,10 +567,10 @@ pub enum FeatureType {
 
 impl AdvancedPatternDetector {
     /// Create a new advanced pattern detector
-    pub fn new(config: AdvancedPatternConfig) -> Result<Self> {
+    pub fn new(_config: AdvancedPatternConfig) -> Result<Self> {
         Ok(Self {
-            config: config.clone(),
-            pattern_classifier: PatternClassifier::new(config.learning_rate)?,
+            _config: _config.clone(),
+            pattern_classifier: PatternClassifier::new(_config.learning_rate)?,
             signal_processor: SignalProcessor::new()?,
             statistical_analyzer: AdvancedStatisticalAnalyzer::new()?,
             pattern_database: PatternDatabase::new(),
@@ -586,7 +586,7 @@ impl AdvancedPatternDetector {
 
         let mut detected_patterns = Vec::new();
 
-        // Extract features from memory data
+        // Extract features from memory _data
         let features = self.feature_extractor.extract_features(memory_data)?;
 
         // Signal processing analysis
@@ -712,8 +712,7 @@ impl AdvancedPatternDetector {
             (AdvancedPatternType::LinearGrowth { .. }, AdvancedPatternType::ExponentialGrowth { .. }) => 0.7,
             (AdvancedPatternType::ExponentialGrowth { .. }, AdvancedPatternType::LinearGrowth { .. }) => 0.7,
             (AdvancedPatternType::SawTooth { .. }, AdvancedPatternType::Periodic { .. }) => 0.6,
-            (AdvancedPatternType::Periodic { .. }, AdvancedPatternType::SawTooth { .. }) => 0.6,
-            _ => 0.0,
+            (AdvancedPatternType::Periodic { .. }, AdvancedPatternType::SawTooth { .. }) => 0.6_ => 0.0,
         }
     }
 
@@ -723,7 +722,7 @@ impl AdvancedPatternDetector {
         pattern_group: Vec<&AdvancedMemoryPattern>,
     ) -> Result<AdvancedMemoryPattern> {
         if pattern_group.is_empty() {
-            return Err(OptimError::InvalidInput("Empty pattern group".to_string()));
+            return Err(OptimError::InvalidInput("Empty pattern _group".to_string()));
         }
 
         if pattern_group.len() == 1 {
@@ -831,7 +830,7 @@ impl AdvancedPatternDetector {
         patterns_to_remove.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
         
         let patterns_to_remove_count = self.pattern_database.patterns.len() - self.config.max_patterns_stored;
-        for (id, _) in patterns_to_remove.iter().take(patterns_to_remove_count) {
+        for (id_) in patterns_to_remove.iter().take(patterns_to_remove_count) {
             self.pattern_database.patterns.remove(id);
             self.pattern_database.frequency_stats.remove(id);
         }
@@ -846,7 +845,7 @@ impl AdvancedPatternDetector {
         memory_data: &[f64],
     ) -> Result<()> {
         for pattern in patterns {
-            // Compute anomaly score based on historical data
+            // Compute anomaly score based on historical _data
             let historical_mean = self.get_historical_pattern_mean(&pattern.pattern_type)?;
             let deviation = (pattern.strength - historical_mean).abs();
             pattern.anomaly_score = (deviation / historical_mean.max(1.0)).min(1.0);
@@ -866,7 +865,7 @@ impl AdvancedPatternDetector {
                 let n = memory_data.len();
                 let last_values = &memory_data[n.saturating_sub(10)..];
                 
-                if let Some((slope, _)) = self.calculate_linear_trend(last_values) {
+                if let Some((slope_)) = self.calculate_linear_trend(last_values) {
                     pattern.trend.direction = slope.signum();
                     pattern.trend.strength = slope.abs().min(1.0);
                     pattern.trend.acceleration = 0.0; // Would be computed from second derivative
@@ -906,8 +905,7 @@ impl AdvancedPatternDetector {
             AdvancedPatternType::LinearGrowth { .. } => Ok(0.5),
             AdvancedPatternType::ExponentialGrowth { .. } => Ok(0.3),
             AdvancedPatternType::Periodic { .. } => Ok(0.7),
-            AdvancedPatternType::LeakSignature { .. } => Ok(0.2),
-            _ => Ok(0.5),
+            AdvancedPatternType::LeakSignature { .. } => Ok(0.2, _ => Ok(0.5),
         }
     }
 }
@@ -915,11 +913,11 @@ impl AdvancedPatternDetector {
 // Implementation stubs for the various components
 
 impl PatternClassifier {
-    fn new(learning_rate: f64) -> Result<Self> {
+    fn new(_learning_rate: f64) -> Result<Self> {
         Ok(Self {
             weights: vec![vec![0.0; 50]; 10], // 10 output classes, 50 input features
             biases: vec![0.0; 10],
-            learning_rate,
+            _learning_rate,
             training_data: Vec::new(),
         })
     }
@@ -979,8 +977,7 @@ impl PatternClassifier {
                 harmonics: vec![1.0, 0.5, 0.25],
                 phase_shift: 0.0,
                 amplitude: features.get(5).copied().unwrap_or(1.0),
-            },
-            _ => AdvancedPatternType::LeakSignature {
+            }_ => AdvancedPatternType::LeakSignature {
                 leak_rate: features.get(6).copied().unwrap_or(0.01),
                 leak_acceleration: features.get(7).copied().unwrap_or(0.001),
                 leak_confidence: confidence,
@@ -988,7 +985,7 @@ impl PatternClassifier {
         };
 
         Ok(AdvancedMemoryPattern {
-            id: format!("ml_pattern_{}", class_id),
+            _id: format!("ml_pattern_{}", class_id),
             pattern_type,
             confidence,
             signature: features.to_vec(),
@@ -1110,8 +1107,7 @@ impl FFTProcessor {
                 .iter()
                 .enumerate()
                 .map(|(i, &x)| x * (0.54 - 0.46 * (2.0 * PI * i as f64 / (n - 1) as f64).cos()))
-                .collect(),
-            _ => signal.to_vec(),
+                .collect(, _ => signal.to_vec(),
         }
     }
 
@@ -1148,7 +1144,7 @@ impl FFTProcessor {
         freq_mag_pairs
             .iter()
             .take(5)
-            .map(|(i, _)| *i as f64 / spectrum.len() as f64)
+            .map(|(i_)| *i as f64 / spectrum.len() as f64)
             .collect()
     }
 }

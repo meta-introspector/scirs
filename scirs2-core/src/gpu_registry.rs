@@ -146,7 +146,7 @@ impl KernelRegistry {
         id: &KernelId,
         device: &GpuDevice,
     ) -> Result<Arc<GpuKernel>, GpuError> {
-        let device_id = device.id();
+        let device_id = device.device_id();
         let cache_key = (id.clone(), device_id);
 
         // Check cache first

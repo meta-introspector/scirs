@@ -1,4 +1,5 @@
-use scirs2_signal::window::{bartlett, hamming, hann};
+use scirs2__signal::window::{bartlett, hamming, hann};
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -23,15 +24,15 @@ fn main() {
 }
 
 #[allow(dead_code)]
-fn print_window_analysis(window: &[f64], name: &str) {
+fn print_window_analysis(_window: &[f64], name: &str) {
     // Print all values
     println!("Values:");
-    for (i, &val) in window.iter().enumerate() {
+    for (i, &val) in _window.iter().enumerate() {
         println!("  [{}]: {:.6}", i, val);
     }
 
     // Find maximum value and position
-    let (max_idx, &max_val) = window
+    let (max_idx, &max_val) = _window
         .iter()
         .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -40,7 +41,7 @@ fn print_window_analysis(window: &[f64], name: &str) {
     println!("\nMaximum value: {:.6} at index {}", max_val, max_idx);
 
     // Calculate expected theoretical values
-    let n = window.len();
+    let n = _window.len();
     match name {
         "Hamming" => {
             // Hamming: w[i] = 0.54 - 0.46 * cos(2π * i / (N-1))
@@ -82,7 +83,7 @@ fn print_window_analysis(window: &[f64], name: &str) {
             }
         }
         "Bartlett" => {
-            // Bartlett: triangular window
+            // Bartlett: triangular _window
             // For even N: maximum at indices (N/2-1) and N/2
             // Value: 2*i/(N-1) for i < N/2
             if n % 2 == 0 {

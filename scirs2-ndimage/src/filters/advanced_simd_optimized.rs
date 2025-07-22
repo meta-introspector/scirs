@@ -86,10 +86,10 @@ fn advanced_simd_horizontal_convolution_row<T>(
 ) where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
-    let (height, width) = input.dim();
+    let (height_width) = input.dim();
 
     // Process in SIMD chunks with loop unrolling
-    let num_chunks = width / simd_width;
+    let num_chunks = _width / simd_width;
 
     for chunk_idx in 0..num_chunks {
         let x_start = chunk_idx * simd_width;
@@ -105,7 +105,7 @@ fn advanced_simd_horizontal_convolution_row<T>(
             let mut input_vals = vec![T::zero(); simd_width];
             for i in 0..simd_width {
                 let x = (x_start + i) as isize + x_offset;
-                let clamped_x = x.clamp(0, width as isize - 1) as usize;
+                let clamped_x = x.clamp(0, _width as isize - 1) as usize;
                 input_vals[i] = input[(y, clamped_x)];
             }
 
@@ -117,18 +117,18 @@ fn advanced_simd_horizontal_convolution_row<T>(
 
         // Store results
         for i in 0..simd_width {
-            if x_start + i < width {
+            if x_start + i < _width {
                 output_row[[0, x_start + i]] = sums[i];
             }
         }
     }
 
     // Handle remaining elements
-    for x in (num_chunks * simd_width)..width {
+    for x in (num_chunks * simd_width).._width {
         let mut sum = T::zero();
         for (k_idx, &k_val) in kernel.iter().enumerate() {
             let x_offset = k_idx as isize - k_half as isize;
-            let sample_x = (x as isize + x_offset).clamp(0, width as isize - 1) as usize;
+            let sample_x = (x as isize + x_offset).clamp(0, _width as isize - 1) as usize;
             sum = sum + input[(y, sample_x)] * k_val;
         }
         output_row[[0, x]] = sum;
@@ -147,7 +147,7 @@ fn advanced_simd_vertical_convolution_column<T>(
 ) where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
-    let (height, width) = input.dim();
+    let (height_width) = input.dim();
 
     // Process in SIMD chunks vertically
     let num_chunks = height / simd_width;
@@ -250,11 +250,11 @@ fn advanced_simd_erosion_row<T>(
 ) where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps + PartialOrd,
 {
-    let (height, width) = input.dim();
+    let (height_width) = input.dim();
     let (s_height, s_width) = structure.dim();
 
     // Process in SIMD chunks
-    let num_chunks = width / simd_width;
+    let num_chunks = _width / simd_width;
 
     for chunk_idx in 0..num_chunks {
         let x_start = chunk_idx * simd_width;
@@ -270,7 +270,7 @@ fn advanced_simd_erosion_row<T>(
                     for i in 0..simd_width {
                         let x = x_start + i;
                         let sample_x = (x as isize + sx as isize - sw_half as isize)
-                            .clamp(0, width as isize - 1)
+                            .clamp(0, _width as isize - 1)
                             as usize;
                         let sample_y = (y as isize + sy as isize - sh_half as isize)
                             .clamp(0, height as isize - 1)
@@ -286,21 +286,21 @@ fn advanced_simd_erosion_row<T>(
 
         // Store results
         for i in 0..simd_width {
-            if x_start + i < width {
+            if x_start + i < _width {
                 output_row[x_start + i] = min_vals[i];
             }
         }
     }
 
     // Handle remaining elements
-    for x in (num_chunks * simd_width)..width {
+    for x in (num_chunks * simd_width).._width {
         let mut min_val = T::infinity();
 
         for sy in 0..s_height {
             for sx in 0..s_width {
                 if structure[(sy, sx)] {
                     let sample_x = (x as isize + sx as isize - sw_half as isize)
-                        .clamp(0, width as isize - 1) as usize;
+                        .clamp(0, _width as isize - 1) as usize;
                     let sample_y = (y as isize + sy as isize - sh_half as isize)
                         .clamp(0, height as isize - 1) as usize;
                     let val = input[(sample_y, sample_x)];
@@ -317,15 +317,15 @@ fn advanced_simd_erosion_row<T>(
 
 /// Check if a structure element is separable
 #[allow(dead_code)]
-fn is_separable_structure(structure: &ArrayView2<bool>) -> bool {
-    let (height, width) = structure.dim();
+fn is_separable_structure(_structure: &ArrayView2<bool>) -> bool {
+    let (height, width) = _structure.dim();
 
     // Check for horizontal line
     let mut has_horizontal = false;
     for y in 0..height {
         let mut all_true = true;
         for x in 0..width {
-            if !structure[(y, x)] {
+            if !_structure[(y, x)] {
                 all_true = false;
                 break;
             }
@@ -341,7 +341,7 @@ fn is_separable_structure(structure: &ArrayView2<bool>) -> bool {
     for x in 0..width {
         let mut all_true = true;
         for y in 0..height {
-            if !structure[(y, x)] {
+            if !_structure[(y, x)] {
                 all_true = false;
                 break;
             }
@@ -475,7 +475,7 @@ fn advanced_simd_template_match_row<T>(
                 let image_centered: Vec<T> = image_vals
                     .iter()
                     .zip(image_means.iter())
-                    .map(|(&img_val, &mean)| img_val - mean)
+                    .map(|(&img_val, &_mean)| img_val - _mean)
                     .collect();
 
                 let template_vec = vec![template_centered; simd_width];
@@ -570,17 +570,17 @@ where
 
 /// Generate optimized Gaussian kernel for separable convolution
 #[allow(dead_code)]
-fn advanced_simd_generate_gaussian_kernel<T>(sigma: T) -> NdimageResult<Vec<T>>
+fn advanced_simd_generate_gaussian_kernel<T>(_sigma: T) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive + Debug,
 {
-    // Determine kernel size (6*sigma + 1, ensuring odd size)
-    let size = ((sigma * T::from_f64(6.0).unwrap()).to_usize().unwrap_or(3) | 1).max(3);
+    // Determine kernel size (6*_sigma + 1, ensuring odd size)
+    let size = ((_sigma * T::from_f64(6.0).unwrap()).to_usize().unwrap_or(3) | 1).max(3);
     let half_size = size / 2;
     let mut kernel = vec![T::zero(); size];
 
-    let two_sigma_sq = T::from_f64(2.0).unwrap() * sigma * sigma;
-    let normalization_factor = T::from_f64(1.0 / (2.0 * std::f64::consts::PI)).unwrap() * sigma;
+    let two_sigma_sq = T::from_f64(2.0).unwrap() * _sigma * _sigma;
+    let normalization_factor = T::from_f64(1.0 / (2.0 * std::f64::consts::PI)).unwrap() * _sigma;
 
     // Generate Gaussian weights
     for i in 0..size {
@@ -600,11 +600,11 @@ where
 
 /// Optimized SIMD downsampling by factor of 2
 #[allow(dead_code)]
-fn advanced_simd_downsample_2x<T>(input: &ArrayView2<T>) -> NdimageResult<Array<T, Ix2>>
+fn advanced_simd_downsample_2x<T>(_input: &ArrayView2<T>) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
-    let (h, w) = input.dim();
+    let (h, w) = _input.dim();
     let out_h = h / 2;
     let out_w = w / 2;
     let mut output = Array::zeros((out_h, out_w));
@@ -638,7 +638,7 @@ where
                         if x < out_w {
                             let input_x = x * 2;
                             // Simple subsampling (could be replaced with anti-aliasing filter)
-                            samples[i] = input[(input_y, input_x)];
+                            samples[i] = _input[(input_y, input_x)];
                         }
                     }
 
@@ -654,7 +654,7 @@ where
                 // Handle remaining elements
                 for x in (num_chunks * simd_width)..out_w {
                     let input_x = x * 2;
-                    row[x] = input[(input_y, input_x)];
+                    row[x] = _input[(input_y, input_x)];
                 }
             }
         });
@@ -664,11 +664,11 @@ where
 
 /// Compute mean of array patch using SIMD when possible
 #[allow(dead_code)]
-fn advanced_simd_compute_mean<T>(array: &ArrayView2<T>) -> NdimageResult<T>
+fn advanced_simd_compute_mean<T>(_array: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
-    let total_elements = array.len();
+    let total_elements = _array.len();
     if total_elements == 0 {
         return Ok(T::zero());
     }
@@ -678,7 +678,7 @@ where
     let mut sum = T::zero();
 
     // SIMD accumulation
-    let flat_view = array.as_slice().unwrap_or(&[]);
+    let flat_view = _array.as_slice().unwrap_or(&[]);
     for chunk_idx in 0..num_chunks {
         let start = chunk_idx * simd_width;
         let chunk = &flat_view[start..start + simd_width];
@@ -697,11 +697,11 @@ where
 
 /// Compute norm (standard deviation) of array patch
 #[allow(dead_code)]
-fn advanced_simd_compute_norm<T>(array: &ArrayView2<T>, mean: T) -> NdimageResult<T>
+fn advanced_simd_compute_norm<T>(_array: &ArrayView2<T>, mean: T) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
-    let total_elements = array.len();
+    let total_elements = _array.len();
     if total_elements <= 1 {
         return Ok(T::zero());
     }
@@ -711,7 +711,7 @@ where
     let mut variance_sum = T::zero();
 
     // SIMD variance computation
-    let flat_view = array.as_slice().unwrap_or(&[]);
+    let flat_view = _array.as_slice().unwrap_or(&[]);
     for chunk_idx in 0..num_chunks {
         let start = chunk_idx * simd_width;
         let chunk = &flat_view[start..start + simd_width];
@@ -736,13 +736,12 @@ where
 /// Separable erosion for specific structure patterns
 #[allow(dead_code)]
 fn advanced_simd_separable_erosion<T>(
-    input: ArrayView2<T>,
-    _structure: ArrayView2<bool>,
+    input: ArrayView2<T>, _structure: ArrayView2<bool>,
 ) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps + PartialOrd,
 {
-    // Simplified implementation - in practice would decompose structure
+    // Simplified implementation - in practice would decompose _structure
     let (height, width) = input.dim();
     let mut output = Array::zeros((height, width));
 

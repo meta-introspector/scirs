@@ -20,7 +20,7 @@
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-use ndarray::{Array, IntoDimension, Ix1, Ix2, IxDyn};
+use ndarray::{Array1, Array2, Ix1, Ix2, IxDyn};
 
 use crate::array_protocol::{
     get_implementing_args, ArrayFunction, ArrayProtocol, NdarrayWrapper, NotImplemented,
@@ -74,12 +74,12 @@ macro_rules! array_function_dispatch {
 
     // For generic functions
     (fn $name:ident<$($type_param:ident $(: $type_bound:path)?),*>($($arg:ident: $arg_ty:ty),*) -> Result<$ret:ty, $err:ty> $body:block, $func_name:expr) => {
-        pub fn $name<$($type_param $(: $type_bound)?),*>($($arg: $arg_ty),*) -> Result<$ret, $err> $body
+        pub fn $name <$($type_param $(: $type_bound)?),*>($($arg: $arg_ty),*) -> Result<$ret, $err> $body
     };
 
     // For generic functions with trailing commas
     (fn $name:ident<$($type_param:ident $(: $type_bound:path)?),*>($($arg:ident: $arg_ty:ty,)*) -> Result<$ret:ty, $err:ty> $body:block, $func_name:expr) => {
-        pub fn $name<$($type_param $(: $type_bound)?),*>($($arg: $arg_ty),*) -> Result<$ret, $err> $body
+        pub fn $name <$($type_param $(: $type_bound)?),*>($($arg: $arg_ty),*) -> Result<$ret, $err> $body
     };
 }
 
@@ -106,14 +106,14 @@ array_function_dispatch!(
                 let b_array_owned = b_array.as_array().clone();
                 let (m, k) = a_array_owned.dim();
                 let (_, n) = b_array_owned.dim();
-                let mut result = ndarray::Array::<f64, _>::zeros((m, n));
+                let mut result = ndarray::Array2::<f64>::zeros((m, n));
                 for i in 0..m {
                     for j in 0..n {
                         let mut sum = 0.0;
                         for l in 0..k {
                             sum += a_array_owned[[i, l]] * b_array_owned[[l, j]];
                         }
-                        result[[i, j]] = sum;
+                        result[[0, j]] = sum;
                     }
                 }
                 return Ok(Box::new(NdarrayWrapper::new(result)));
@@ -135,14 +135,14 @@ array_function_dispatch!(
                 }
                 let (m, k) = (a_dim[0], a_dim[1]);
                 let n = b_dim[1];
-                let mut result = ndarray::Array::<f64, _>::zeros((m, n).into_dimension());
+                let mut result = ndarray::Array2::<f64>::zeros((m, n));
                 for i in 0..m {
                     for j in 0..n {
                         let mut sum = 0.0;
                         for l in 0..k {
                             sum += a_array_owned[[i, l]] * b_array_owned[[l, j]];
                         }
-                        result[[i, j]] = sum;
+                        result[[0, j]] = sum;
                     }
                 }
                 return Ok(Box::new(NdarrayWrapper::new(result)));
@@ -157,14 +157,14 @@ array_function_dispatch!(
                 let b_array_owned = b_array.as_array().clone();
                 let (m, k) = a_array_owned.dim();
                 let (_, n) = b_array_owned.dim();
-                let mut result = ndarray::Array::<f32, _>::zeros((m, n));
+                let mut result = ndarray::Array2::<f32>::zeros((m, n));
                 for i in 0..m {
                     for j in 0..n {
                         let mut sum = 0.0;
                         for l in 0..k {
                             sum += a_array_owned[[i, l]] * b_array_owned[[l, j]];
                         }
-                        result[[i, j]] = sum;
+                        result[[0, j]] = sum;
                     }
                 }
                 return Ok(Box::new(NdarrayWrapper::new(result)));
@@ -186,14 +186,14 @@ array_function_dispatch!(
                 }
                 let (m, k) = (a_dim[0], a_dim[1]);
                 let n = b_dim[1];
-                let mut result = ndarray::Array::<f32, _>::zeros((m, n).into_dimension());
+                let mut result = ndarray::Array2::<f32>::zeros((m, n));
                 for i in 0..m {
                     for j in 0..n {
                         let mut sum = 0.0;
                         for l in 0..k {
                             sum += a_array_owned[[i, l]] * b_array_owned[[l, j]];
                         }
-                        result[[i, j]] = sum;
+                        result[[0, j]] = sum;
                     }
                 }
                 return Ok(Box::new(NdarrayWrapper::new(result)));
@@ -707,7 +707,7 @@ array_function_dispatch!(
 
                 // Create a transposed array
                 let (m, n) = (a_dim[0], a_dim[1]);
-                let mut result = ndarray::Array::<f64, _>::zeros((n, m).into_dimension());
+                let mut result = ndarray::Array2::<f64>::zeros((n, m));
 
                 // Fill the transposed array
                 for i in 0..m {
@@ -829,7 +829,7 @@ array_function_dispatch!(
             .collect();
 
         let mut kwargs = HashMap::new();
-        kwargs.insert("axis".to_string(), Box::new(axis) as Box<dyn Any>);
+        kwargs.insert(axis.to_string(), Box::new(axis) as Box<dyn Any>);
 
         let array_ref = implementing_args[0].1;
 
@@ -941,9 +941,9 @@ array_function_dispatch!(
                 // For this example, we'll use a placeholder implementation
                 // In a real implementation, we would use an actual SVD algorithm
                 let (m, n) = a_array.as_array().dim();
-                let u = Array::<f64, _>::eye(m);
-                let s = Array::<f64, _>::ones(Ix1(std::cmp::min(m, n)));
-                let vt = Array::<f64, _>::eye(n);
+                let u = Array2::<f64>::eye(m);
+                let s = Array1::<f64>::ones(std::cmp::min(m, n));
+                let vt = Array2::<f64>::eye(n);
 
                 return Ok((
                     Box::new(NdarrayWrapper::new(u)),
@@ -1005,7 +1005,7 @@ array_function_dispatch!(
                 }
 
                 // Placeholder: just return the identity matrix
-                let result = Array::<f64, _>::eye(m);
+                let result = Array2::<f64>::eye(m);
                 return Ok(Box::new(NdarrayWrapper::new(result)));
             }
             return Err(OperationError::NotImplemented(
@@ -1065,7 +1065,7 @@ pub fn multiply_by_scalar_f64(
 
     // Delegate to the implementation
     let mut kwargs = HashMap::new();
-    kwargs.insert("scalar".to_string(), Box::new(scalar) as Box<dyn Any>);
+    kwargs.insert(scalar.to_string(), Box::new(scalar) as Box<dyn Any>);
 
     let array_ref = implementing_args[0].1;
 
@@ -1116,7 +1116,7 @@ pub fn multiply_by_scalar_f32(
 
     // Delegate to the implementation
     let mut kwargs = HashMap::new();
-    kwargs.insert("scalar".to_string(), Box::new(scalar) as Box<dyn Any>);
+    kwargs.insert(scalar.to_string(), Box::new(scalar) as Box<dyn Any>);
 
     let array_ref = implementing_args[0].1;
 
@@ -1167,7 +1167,7 @@ pub fn divide_by_scalar_f64(
 
     // Delegate to the implementation
     let mut kwargs = HashMap::new();
-    kwargs.insert("scalar".to_string(), Box::new(scalar) as Box<dyn Any>);
+    kwargs.insert(scalar.to_string(), Box::new(scalar) as Box<dyn Any>);
 
     let array_ref = implementing_args[0].1;
 
@@ -1210,7 +1210,7 @@ mod tests {
 
         // Test matrix multiplication
         if let Ok(result) = matmul(&wrapped_a, &wrapped_b) {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, _>>() {
+            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>() {
                 assert_eq!(result_array.as_array(), &a.dot(&b));
             } else {
                 panic!("Matrix multiplication result is not the expected type");
@@ -1222,7 +1222,7 @@ mod tests {
 
         // Test addition
         if let Ok(result) = add(&wrapped_a, &wrapped_b) {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, _>>() {
+            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>() {
                 assert_eq!(result_array.as_array(), &(a.clone() + b.clone()));
             } else {
                 panic!("Addition result is not the expected type");
@@ -1233,7 +1233,7 @@ mod tests {
 
         // Test multiplication
         if let Ok(result) = multiply(&wrapped_a, &wrapped_b) {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, _>>() {
+            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>() {
                 assert_eq!(result_array.as_array(), &(a.clone() * b.clone()));
             } else {
                 panic!("Multiplication result is not the expected type");
@@ -1255,7 +1255,7 @@ mod tests {
 
         // Test transpose
         if let Ok(result) = transpose(&wrapped_a) {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, _>>() {
+            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, Ix2>>() {
                 assert_eq!(result_array.as_array(), &a.t().to_owned());
             } else {
                 panic!("Transpose result is not the expected type");
@@ -1268,7 +1268,7 @@ mod tests {
         let c = array![[1., 2., 3.], [4., 5., 6.]];
         let wrapped_c = NdarrayWrapper::new(c.clone());
         if let Ok(result) = reshape(&wrapped_c, &[6]) {
-            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, _>>() {
+            if let Some(result_array) = result.as_any().downcast_ref::<NdarrayWrapper<f64, Ix1>>() {
                 let expected = c.clone().into_shape_with_order(6).unwrap();
                 assert_eq!(result_array.as_array(), &expected);
             } else {

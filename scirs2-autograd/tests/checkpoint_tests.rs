@@ -5,7 +5,7 @@ use scirs2_autograd as ag;
 #[test]
 #[allow(dead_code)]
 fn test_checkpoint_basic() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Create a simple computation graph
         let a = T::convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0]], ctx);
         let b = T::convert_to_tensor(array![[5.0, 6.0], [7.0, 8.0]], ctx);
@@ -47,7 +47,7 @@ fn test_checkpoint_basic() {
 #[test]
 #[allow(dead_code)]
 fn test_detach() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Create a tensor
         let a = T::convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0]], ctx);
 
@@ -79,7 +79,7 @@ fn test_detach() {
 #[test]
 #[allow(dead_code)]
 fn test_checkpoint_segment() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Create input tensors
         let a = T::convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0]], ctx);
         let b = T::convert_to_tensor(array![[5.0, 6.0], [7.0, 8.0]], ctx);
@@ -123,7 +123,7 @@ fn test_checkpoint_segment() {
 #[test]
 #[allow(dead_code)]
 fn test_checkpoint_deep_network() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Create a simple "deep network" with multiple layers
         let input = T::convert_to_tensor(array![[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]], ctx);
         let w1 = T::convert_to_tensor(array![[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]], ctx);
@@ -179,7 +179,7 @@ fn test_checkpoint_deep_network() {
 #[test]
 #[allow(dead_code)]
 fn test_adaptive_checkpoint() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Create input tensors
         let a = T::convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0]], ctx);
         let b = T::convert_to_tensor(array![[5.0, 6.0], [7.0, 8.0]], ctx);
@@ -230,7 +230,7 @@ fn test_adaptive_checkpoint() {
 #[test]
 #[allow(dead_code)]
 fn test_checkpoint_group() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Create input tensors
         let a = T::convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0]], ctx);
         let b = T::convert_to_tensor(array![[5.0, 6.0], [7.0, 8.0]], ctx);
@@ -303,7 +303,7 @@ fn test_checkpoint_group() {
 #[test]
 #[allow(dead_code)]
 fn test_stop_gradient() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Create a tensor
         let a = T::convert_to_tensor(array![[1.0, 2.0], [3.0, 4.0]], ctx);
 
@@ -335,7 +335,7 @@ fn test_stop_gradient() {
 #[test]
 #[allow(dead_code)]
 fn test_checkpoint_profiler() {
-    ag::run::<f64, _, _>(|ctx| {
+    ag::run::<f64_>(|ctx| {
         // Reset statistics
         T::CheckpointProfiler::reset_statistics();
 

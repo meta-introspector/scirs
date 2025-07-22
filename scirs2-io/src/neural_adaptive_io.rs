@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
+use statrs::statistics::Statistics;
 
 /// Advanced Adam optimizer for neural network training
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,10 +39,10 @@ pub struct AdamOptimizer {
 
 impl AdamOptimizer {
     /// Create a new Adam optimizer
-    pub fn new(weight_shape: (usize, usize), bias_size: usize) -> Self {
+    pub fn new(_weight_shape: (usize, usize), bias_size: usize) -> Self {
         Self {
-            m_weights: Array2::zeros(weight_shape),
-            v_weights: Array2::zeros(weight_shape),
+            m_weights: Array2::zeros(_weight_shape),
+            v_weights: Array2::zeros(_weight_shape),
             m_bias: Array1::zeros(bias_size),
             v_bias: Array1::zeros(bias_size),
             beta1: 0.9,
@@ -115,22 +116,22 @@ pub struct NeuralIoNetwork {
 
 impl NeuralIoNetwork {
     /// Create a new neural network with specified layer sizes
-    pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> Self {
+    pub fn new(_input_size: usize, hidden_size: usize, output_size: usize) -> Self {
         // Initialize weights with Xavier/Glorot initialization
-        let input_scale = (2.0 / input_size as f32).sqrt();
+        let input_scale = (2.0 / _input_size as f32).sqrt();
         let hidden_scale = (2.0 / hidden_size as f32).sqrt();
         let output_scale = (2.0 / hidden_size as f32).sqrt();
 
         Self {
-            input_weights: Self::random_weights((hidden_size, input_size), input_scale),
+            input_weights: Self::random_weights((hidden_size, _input_size), input_scale),
             hidden_weights: Self::random_weights((hidden_size, hidden_size), hidden_scale),
             output_weights: Self::random_weights((output_size, hidden_size), output_scale),
             input_bias: Array1::zeros(hidden_size),
             hidden_bias: Array1::zeros(hidden_size),
             output_bias: Array1::zeros(output_size),
             learning_rate: 0.001,
-            adam_optimizer: AdamOptimizer::new((hidden_size, input_size), hidden_size),
-            attention_weights: Array1::from_elem(input_size, 1.0 / input_size as f32),
+            adam_optimizer: AdamOptimizer::new((hidden_size, _input_size), hidden_size),
+            attention_weights: Array1::from_elem(_input_size, 1.0 / _input_size as f32),
             dropout_rate: 0.1,
         }
     }
@@ -215,8 +216,8 @@ impl NeuralIoNetwork {
     }
 
     /// Generate random weights using Xavier initialization
-    fn random_weights(shape: (usize, usize), scale: f32) -> Array2<f32> {
-        Array2::from_shape_fn(shape, |_| {
+    fn random_weights(_shape: (usize, usize), scale: f32) -> Array2<f32> {
+        Array2::from_shape_fn(_shape, |_| {
             // Simple pseudo-random number generation
             let mut state = std::ptr::addr_of!(scale) as usize;
             state = state.wrapping_mul(1103515245).wrapping_add(12345);
@@ -424,20 +425,19 @@ pub struct OptimizationDecisions {
 
 impl OptimizationDecisions {
     /// Convert from neural network output vector
-    pub fn from_output_vector(output: &Array1<f32>) -> Self {
+    pub fn from_output_vector(_output: &Array1<f32>) -> Self {
         Self {
-            thread_count_factor: output[0].clamp(0.0, 1.0),
-            buffer_size_factor: output[1].clamp(0.0, 1.0),
-            compression_level: output[2].clamp(0.0, 1.0),
-            cache_priority: output[3].clamp(0.0, 1.0),
-            simd_factor: output[4].clamp(0.0, 1.0),
+            thread_count_factor: _output[0].clamp(0.0, 1.0),
+            buffer_size_factor: _output[1].clamp(0.0, 1.0),
+            compression_level: _output[2].clamp(0.0, 1.0),
+            cache_priority: _output[3].clamp(0.0, 1.0),
+            simd_factor: _output[4].clamp(0.0, 1.0),
         }
     }
 
     /// Convert to concrete parameters
     pub fn to_concrete_params(
-        &self,
-        _base_thread_count: usize,
+        &self_base_thread_count: usize,
         base_buffer_size: usize,
     ) -> ConcreteOptimizationParams {
         ConcreteOptimizationParams {
@@ -592,7 +592,7 @@ impl NeuralAdaptiveIoController {
             // Use the last 10 entries for training
             let recent_entries: Vec<_> = history.iter().rev().take(10).collect();
 
-            for (metrics, _decisions, feedback) in recent_entries {
+            for (metrics_decisions, feedback) in recent_entries {
                 let input = metrics.to_input_vector();
                 let current_output = network.forward(&input).unwrap_or_else(|_| Array1::zeros(5));
                 let target = feedback.to_target_vector(baseline_throughput);
@@ -613,7 +613,7 @@ impl NeuralAdaptiveIoController {
             .iter()
             .rev()
             .take(50)
-            .map(|(_, _, feedback)| feedback.throughput_mbps)
+            .map(|(__, feedback)| feedback.throughput_mbps)
             .collect();
 
         let avg_recent_performance = if !recent_performance.is_empty() {
@@ -884,7 +884,7 @@ impl ReinforcementLearningAgent {
         // Then get mutable reference to current Q value
         let current_q = self
             .q_table
-            .entry(state.to_string())
+            .entry(_state.to_string())
             .or_default()
             .entry(action.to_string())
             .or_insert(0.0);
@@ -895,7 +895,7 @@ impl ReinforcementLearningAgent {
 
         // Record in history
         self.action_history
-            .push_back((state.to_string(), action.to_string(), reward));
+            .push_back((_state.to_string(), action.to_string(), reward));
         if self.action_history.len() > 1000 {
             self.action_history.pop_front();
         }
@@ -907,7 +907,7 @@ impl ReinforcementLearningAgent {
     /// Get current learning statistics
     pub fn get_learning_stats(&self) -> ReinforcementLearningStats {
         let avg_reward = if !self.action_history.is_empty() {
-            self.action_history.iter().map(|(_, _, r)| r).sum::<f32>()
+            self.action_history.iter().map(|(__, r)| r).sum::<f32>()
                 / self.action_history.len() as f32
         } else {
             0.0
@@ -963,7 +963,7 @@ impl EnsembleNeuralNetwork {
         hidden_size: usize,
         output_size: usize,
     ) -> Self {
-        let networks = (0..num_networks)
+        let _networks = (0..num_networks)
             .map(|_| NeuralIoNetwork::new(input_size, hidden_size, output_size))
             .collect();
 
@@ -971,7 +971,7 @@ impl EnsembleNeuralNetwork {
         let network_performance = vec![1.0; num_networks];
 
         Self {
-            networks,
+            _networks,
             ensemble_weights,
             network_performance,
         }

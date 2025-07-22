@@ -65,9 +65,7 @@ impl Initializer {
                     .map(|_| {
                         let val = rng.random_range(*min..*max);
                         F::from(val).ok_or_else(|| {
-                            NeuralError::InvalidArchitecture(
-                                "Failed to convert random value".to_string(),
-                            )
+                            NeuralError::InvalidArchitecture("Failed to convert random value".to_string())
                         })
                     })
                     .collect::<Result<Vec<F>>>()?;
@@ -86,8 +84,7 @@ impl Initializer {
                         let val0 = mean + std * z0;
                         let val1 = mean + std * z1;
                         vec![
-                            F::from(val0).unwrap_or(F::zero()),
-                            F::from(val1).unwrap_or(F::zero()),
+                            F::from(val0).unwrap_or(F::zero()), F::from(val1).unwrap_or(F::zero()),
                         ]
                     })
                     .take(size)
@@ -120,8 +117,7 @@ impl Initializer {
                         let val0 = std * z0;
                         let val1 = std * z1;
                         vec![
-                            F::from(val0).unwrap_or(F::zero()),
-                            F::from(val1).unwrap_or(F::zero()),
+                            F::from(val0).unwrap_or(F::zero()), F::from(val1).unwrap_or(F::zero()),
                         ]
                     })
                     .take(size)
@@ -142,8 +138,7 @@ impl Initializer {
                         let val0 = std * z0;
                         let val1 = std * z1;
                         vec![
-                            F::from(val0).unwrap_or(F::zero()),
-                            F::from(val1).unwrap_or(F::zero()),
+                            F::from(val0).unwrap_or(F::zero()), F::from(val1).unwrap_or(F::zero()),
                         ]
                     })
                     .take(size)
@@ -162,16 +157,16 @@ impl Initializer {
 /// # Returns
 /// * Initialized weights array
 #[allow(dead_code)]
-pub fn xavier_uniform<F: Float + Debug>(shape: IxDyn) -> Result<Array<F, IxDyn>> {
-    let fan_in = match shape.ndim() {
+pub fn xavier_uniform<F: Float + Debug>(_shape: IxDyn) -> Result<Array<F, IxDyn>> {
+    let fan_in = match _shape.ndim() {
         0 => 1,
-        1 => shape[0],
-        _ => shape[0],
+        1 => _shape[0],
+        _ => _shape[0],
     };
-    let fan_out = match shape.ndim() {
+    let fan_out = match _shape.ndim() {
         1 => 1,
-        _ => shape[1],
+        _ => _shape[1],
     };
     let mut rng = rng();
-    Initializer::Xavier.initialize(shape, fan_in, fan_out, &mut rng)
+    Initializer::Xavier.initialize(_shape, fan_in, fan_out, &mut rng)
 }

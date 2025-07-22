@@ -18,7 +18,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.sin())
+        _array.mapv(|x| x.sin())
     }
 
     /// Apply cosine function element-wise to a 1D array
@@ -26,7 +26,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.cos())
+        _array.mapv(|x| x.cos())
     }
 
     /// Apply tangent function element-wise to a 1D array
@@ -34,7 +34,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.tan())
+        _array.mapv(|x| x.tan())
     }
 
     /// Apply exponential function element-wise to a 1D array
@@ -42,7 +42,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.exp())
+        _array.mapv(|x| x.exp())
     }
 
     /// Apply natural logarithm function element-wise to a 1D array
@@ -50,7 +50,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.ln())
+        _array.mapv(|x| x.ln())
     }
 
     /// Apply square root function element-wise to a 1D array
@@ -58,7 +58,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.sqrt())
+        _array.mapv(|x| x.sqrt())
     }
 
     /// Apply absolute value function element-wise to a 1D array
@@ -66,7 +66,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.abs())
+        _array.mapv(|x| x.abs())
     }
 
     /// Apply hyperbolic sine function element-wise to a 1D array
@@ -74,7 +74,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.sinh())
+        _array.mapv(|x| x.sinh())
     }
 
     /// Apply hyperbolic cosine function element-wise to a 1D array
@@ -82,7 +82,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.cosh())
+        _array.mapv(|x| x.cosh())
     }
 
     /// Apply hyperbolic tangent function element-wise to a 1D array
@@ -90,7 +90,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.tanh())
+        _array.mapv(|x| x.tanh())
     }
 
     /// Apply arcsine function element-wise to a 1D array
@@ -98,7 +98,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.asin())
+        _array.mapv(|x| x.asin())
     }
 
     /// Apply arccosine function element-wise to a 1D array
@@ -106,7 +106,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.acos())
+        _array.mapv(|x| x.acos())
     }
 
     /// Apply arctangent function element-wise to a 1D array
@@ -114,7 +114,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.atan())
+        _array.mapv(|x| x.atan())
     }
 
     /// Apply base-10 logarithm function element-wise to a 1D array
@@ -122,7 +122,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.log10())
+        _array.mapv(|x| x.log10())
     }
 
     /// Apply base-2 logarithm function element-wise to a 1D array
@@ -130,7 +130,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.log2())
+        _array.mapv(|x| x.log2())
     }
 
     /// Apply ceil function element-wise to a 1D array
@@ -138,7 +138,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.ceil())
+        _array.mapv(|x| x.ceil())
     }
 
     /// Apply floor function element-wise to a 1D array
@@ -146,7 +146,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.floor())
+        _array.mapv(|x| x.floor())
     }
 
     /// Apply round function element-wise to a 1D array
@@ -154,7 +154,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.round())
+        _array.mapv(|x| x.round())
     }
 
     /// Apply truncate function element-wise to a 1D array
@@ -162,7 +162,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.trunc())
+        _array.mapv(|x| x.trunc())
     }
 
     /// Apply square function element-wise to a 1D array
@@ -170,7 +170,7 @@ pub mod math {
     where
         T: Clone + Float + std::ops::Mul<Output = T>,
     {
-        array.mapv(|x| x * x)
+        _array.mapv(|x| x * x)
     }
 
     /// Apply cube function element-wise to a 1D array
@@ -178,7 +178,7 @@ pub mod math {
     where
         T: Clone + Float + std::ops::Mul<Output = T>,
     {
-        array.mapv(|x| x * x * x)
+        _array.mapv(|x| x * x * x)
     }
 
     /// Convert degrees to radians element-wise for a 1D array
@@ -186,7 +186,7 @@ pub mod math {
     where
         T: Clone + Float + FloatConst,
     {
-        array.mapv(|x| x * T::PI() / T::from(180.0).unwrap())
+        _array.mapv(|x| x * T::PI() / T::from(180.0).unwrap())
     }
 
     /// Convert radians to degrees element-wise for a 1D array
@@ -194,7 +194,7 @@ pub mod math {
     where
         T: Clone + Float + FloatConst,
     {
-        array.mapv(|x| x * T::from(180.0).unwrap() / T::PI())
+        _array.mapv(|x| x * T::from(180.0).unwrap() / T::PI())
     }
 
     /// Apply sign function element-wise to a 1D array
@@ -202,7 +202,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| {
+        _array.mapv(|x| {
             if x.is_zero() {
                 T::zero()
             } else if x < T::zero() {
@@ -218,7 +218,7 @@ pub mod math {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| T::one() / x)
+        _array.mapv(|x| T::one() / x)
     }
 }
 
@@ -232,7 +232,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.sin())
+        _array.mapv(|x| x.sin())
     }
 
     /// Apply cosine function element-wise to a 2D array
@@ -240,7 +240,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.cos())
+        _array.mapv(|x| x.cos())
     }
 
     /// Apply tangent function element-wise to a 2D array
@@ -248,7 +248,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.tan())
+        _array.mapv(|x| x.tan())
     }
 
     /// Apply exponential function element-wise to a 2D array
@@ -256,7 +256,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.exp())
+        _array.mapv(|x| x.exp())
     }
 
     /// Apply natural logarithm function element-wise to a 2D array
@@ -264,7 +264,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.ln())
+        _array.mapv(|x| x.ln())
     }
 
     /// Apply square root function element-wise to a 2D array
@@ -272,7 +272,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.sqrt())
+        _array.mapv(|x| x.sqrt())
     }
 
     /// Apply absolute value function element-wise to a 2D array
@@ -280,7 +280,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.abs())
+        _array.mapv(|x| x.abs())
     }
 
     /// Apply hyperbolic sine function element-wise to a 2D array
@@ -288,7 +288,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.sinh())
+        _array.mapv(|x| x.sinh())
     }
 
     /// Apply hyperbolic cosine function element-wise to a 2D array
@@ -296,7 +296,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.cosh())
+        _array.mapv(|x| x.cosh())
     }
 
     /// Apply hyperbolic tangent function element-wise to a 2D array
@@ -304,7 +304,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.tanh())
+        _array.mapv(|x| x.tanh())
     }
 
     /// Apply arcsine function element-wise to a 2D array
@@ -312,7 +312,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.asin())
+        _array.mapv(|x| x.asin())
     }
 
     /// Apply arccosine function element-wise to a 2D array
@@ -320,7 +320,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.acos())
+        _array.mapv(|x| x.acos())
     }
 
     /// Apply arctangent function element-wise to a 2D array
@@ -328,7 +328,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.atan())
+        _array.mapv(|x| x.atan())
     }
 
     /// Apply base-10 logarithm function element-wise to a 2D array
@@ -336,7 +336,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.log10())
+        _array.mapv(|x| x.log10())
     }
 
     /// Apply base-2 logarithm function element-wise to a 2D array
@@ -344,7 +344,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.log2())
+        _array.mapv(|x| x.log2())
     }
 
     /// Apply ceil function element-wise to a 2D array
@@ -352,7 +352,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.ceil())
+        _array.mapv(|x| x.ceil())
     }
 
     /// Apply floor function element-wise to a 2D array
@@ -360,7 +360,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.floor())
+        _array.mapv(|x| x.floor())
     }
 
     /// Apply round function element-wise to a 2D array
@@ -368,7 +368,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.round())
+        _array.mapv(|x| x.round())
     }
 
     /// Apply truncate function element-wise to a 2D array
@@ -376,7 +376,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| x.trunc())
+        _array.mapv(|x| x.trunc())
     }
 
     /// Apply square function element-wise to a 2D array
@@ -384,7 +384,7 @@ pub mod math2d {
     where
         T: Clone + Float + std::ops::Mul<Output = T>,
     {
-        array.mapv(|x| x * x)
+        _array.mapv(|x| x * x)
     }
 
     /// Apply cube function element-wise to a 2D array
@@ -392,7 +392,7 @@ pub mod math2d {
     where
         T: Clone + Float + std::ops::Mul<Output = T>,
     {
-        array.mapv(|x| x * x * x)
+        _array.mapv(|x| x * x * x)
     }
 
     /// Convert degrees to radians element-wise for a 2D array
@@ -400,7 +400,7 @@ pub mod math2d {
     where
         T: Clone + Float + FloatConst,
     {
-        array.mapv(|x| x * T::PI() / T::from(180.0).unwrap())
+        _array.mapv(|x| x * T::PI() / T::from(180.0).unwrap())
     }
 
     /// Convert radians to degrees element-wise for a 2D array
@@ -408,7 +408,7 @@ pub mod math2d {
     where
         T: Clone + Float + FloatConst,
     {
-        array.mapv(|x| x * T::from(180.0).unwrap() / T::PI())
+        _array.mapv(|x| x * T::from(180.0).unwrap() / T::PI())
     }
 
     /// Apply sign function element-wise to a 2D array
@@ -416,7 +416,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| {
+        _array.mapv(|x| {
             if x.is_zero() {
                 T::zero()
             } else if x < T::zero() {
@@ -432,7 +432,7 @@ pub mod math2d {
     where
         T: Clone + Float,
     {
-        array.mapv(|x| T::one() / x)
+        _array.mapv(|x| T::one() / x)
     }
 }
 
@@ -622,7 +622,7 @@ pub mod reduction {
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (_array.shape()[0], _array.shape()[1]);
 
                 match ax {
                     0 => {
@@ -632,7 +632,7 @@ pub mod reduction {
                         for j in 0..cols {
                             let mut sum = T::zero();
                             for i in 0..rows {
-                                sum = sum + array[[i, j]].clone();
+                                sum = sum + _array[[0, j]].clone();
                             }
                             result[j] = sum;
                         }
@@ -646,9 +646,9 @@ pub mod reduction {
                         for i in 0..rows {
                             let mut sum = T::zero();
                             for j in 0..cols {
-                                sum = sum + array[[i, j]].clone();
+                                sum = sum + _array[[0, j]].clone();
                             }
-                            result[i] = sum;
+                            result[0] = sum;
                         }
 
                         Ok(result)
@@ -668,7 +668,7 @@ pub mod reduction {
                 // Sum over all elements
                 let mut sum = T::zero();
 
-                for val in array.iter() {
+                for val in _array.iter() {
                     sum = sum + val.clone();
                 }
 
@@ -684,7 +684,7 @@ pub mod reduction {
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (_array.shape()[0], _array.shape()[1]);
 
                 match ax {
                     0 => {
@@ -694,7 +694,7 @@ pub mod reduction {
                         for j in 0..cols {
                             let mut prod = T::one();
                             for i in 0..rows {
-                                prod = prod * array[[i, j]].clone();
+                                prod = prod * _array[[0, j]].clone();
                             }
                             result[j] = prod;
                         }
@@ -708,9 +708,9 @@ pub mod reduction {
                         for i in 0..rows {
                             let mut prod = T::one();
                             for j in 0..cols {
-                                prod = prod * array[[i, j]].clone();
+                                prod = prod * _array[[0, j]].clone();
                             }
-                            result[i] = prod;
+                            result[0] = prod;
                         }
 
                         result
@@ -722,7 +722,7 @@ pub mod reduction {
                 // Product over all elements
                 let mut prod = T::one();
 
-                for val in array.iter() {
+                for val in _array.iter() {
                     prod = prod * val.clone();
                 }
 
@@ -738,7 +738,7 @@ pub mod reduction {
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (_array.shape()[0], _array.shape()[1]);
 
                 match ax {
                     0 => {
@@ -749,7 +749,7 @@ pub mod reduction {
                         for j in 0..cols {
                             let mut sum = T::zero();
                             for i in 0..rows {
-                                sum = sum + array[[i, j]].clone();
+                                sum = sum + _array[[0, j]].clone();
                             }
                             result[j] = sum / n.clone();
                         }
@@ -764,9 +764,9 @@ pub mod reduction {
                         for i in 0..rows {
                             let mut sum = T::zero();
                             for j in 0..cols {
-                                sum = sum + array[[i, j]].clone();
+                                sum = sum + _array[[0, j]].clone();
                             }
-                            result[i] = sum / n.clone();
+                            result[0] = sum / n.clone();
                         }
 
                         result
@@ -776,11 +776,11 @@ pub mod reduction {
             }
             None => {
                 // Mean over all elements
-                let (rows, cols) = (array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (_array.shape()[0], _array.shape()[1]);
                 let n = T::from_usize(rows * cols).unwrap();
                 let mut sum = T::zero();
 
-                for val in array.iter() {
+                for val in _array.iter() {
                     sum = sum + val.clone();
                 }
 
@@ -804,19 +804,19 @@ pub mod reduction {
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (_array.shape()[0], _array.shape()[1]);
 
                 match ax {
                     0 => {
                         // Variance along rows (result has length cols)
-                        let means = mean(array, Some(0));
+                        let means = mean(_array, Some(0));
                         let mut result = Array::<T, Ix1>::default(cols);
                         let n = T::from_usize(rows).unwrap();
 
                         for j in 0..cols {
                             let mut sum_sq_diff = T::zero();
                             for i in 0..rows {
-                                let diff = array[[i, j]].clone() - means[j].clone();
+                                let diff = _array[[0, j]].clone() - means[j].clone();
                                 sum_sq_diff = sum_sq_diff + (diff.clone() * diff);
                             }
                             result[j] = sum_sq_diff / n.clone();
@@ -826,17 +826,17 @@ pub mod reduction {
                     }
                     1 => {
                         // Variance along columns (result has length rows)
-                        let means = mean(array, Some(1));
+                        let means = mean(_array, Some(1));
                         let mut result = Array::<T, Ix1>::default(rows);
                         let n = T::from_usize(cols).unwrap();
 
                         for i in 0..rows {
                             let mut sum_sq_diff = T::zero();
                             for j in 0..cols {
-                                let diff = array[[i, j]].clone() - means[i].clone();
+                                let diff = _array[[0, j]].clone() - means[0].clone();
                                 sum_sq_diff = sum_sq_diff + (diff.clone() * diff);
                             }
-                            result[i] = sum_sq_diff / n.clone();
+                            result[0] = sum_sq_diff / n.clone();
                         }
 
                         result
@@ -846,15 +846,15 @@ pub mod reduction {
             }
             None => {
                 // Variance over all elements
-                let (rows, cols) = (array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (_array.shape()[0], _array.shape()[1]);
                 let n = T::from_usize(rows * cols).unwrap();
 
                 // Compute the mean
-                let mean_val = mean(array, None)[0].clone();
+                let mean_val = mean(_array, None)[0].clone();
 
                 // Compute the sum of squared differences from the mean
                 let mut sum_sq_diff = T::zero();
-                for val in array.iter() {
+                for val in _array.iter() {
                     let diff = val.clone() - mean_val.clone();
                     sum_sq_diff = sum_sq_diff + (diff.clone() * diff);
                 }
@@ -878,7 +878,7 @@ pub mod reduction {
             + FromPrimitive
             + Float,
     {
-        let variances = var(array, axis);
+        let variances = var(_array, axis);
 
         variances.mapv(|x| x.sqrt())
     }
@@ -890,7 +890,7 @@ pub mod reduction {
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (_array.shape()[0], _array.shape()[1]);
 
                 match ax {
                     0 => {
@@ -900,8 +900,8 @@ pub mod reduction {
                         for j in 0..cols {
                             let mut min_val = T::max_value();
                             for i in 0..rows {
-                                if array[[i, j]] < min_val {
-                                    min_val = array[[i, j]].clone();
+                                if _array[[0, j]] < min_val {
+                                    min_val = _array[[0, j]].clone();
                                 }
                             }
                             result[j] = min_val;
@@ -916,11 +916,11 @@ pub mod reduction {
                         for i in 0..rows {
                             let mut min_val = T::max_value();
                             for j in 0..cols {
-                                if array[[i, j]] < min_val {
-                                    min_val = array[[i, j]].clone();
+                                if _array[[0, j]] < min_val {
+                                    min_val = _array[[0, j]].clone();
                                 }
                             }
-                            result[i] = min_val;
+                            result[0] = min_val;
                         }
 
                         result
@@ -932,7 +932,7 @@ pub mod reduction {
                 // Min over all elements
                 let mut min_val = T::max_value();
 
-                for val in array.iter() {
+                for val in _array.iter() {
                     if *val < min_val {
                         min_val = val.clone();
                     }
@@ -950,7 +950,7 @@ pub mod reduction {
     {
         match axis {
             Some(ax) => {
-                let (rows, cols) = (array.shape()[0], array.shape()[1]);
+                let (rows, cols) = (_array.shape()[0], _array.shape()[1]);
 
                 match ax {
                     0 => {
@@ -960,8 +960,8 @@ pub mod reduction {
                         for j in 0..cols {
                             let mut max_val = T::min_value();
                             for i in 0..rows {
-                                if array[[i, j]] > max_val {
-                                    max_val = array[[i, j]].clone();
+                                if _array[[0, j]] > max_val {
+                                    max_val = _array[[0, j]].clone();
                                 }
                             }
                             result[j] = max_val;
@@ -976,11 +976,11 @@ pub mod reduction {
                         for i in 0..rows {
                             let mut max_val = T::min_value();
                             for j in 0..cols {
-                                if array[[i, j]] > max_val {
-                                    max_val = array[[i, j]].clone();
+                                if _array[[0, j]] > max_val {
+                                    max_val = _array[[0, j]].clone();
                                 }
                             }
-                            result[i] = max_val;
+                            result[0] = max_val;
                         }
 
                         result
@@ -992,7 +992,7 @@ pub mod reduction {
                 // Max over all elements
                 let mut max_val = T::min_value();
 
-                for val in array.iter() {
+                for val in _array.iter() {
                     if *val > max_val {
                         max_val = val.clone();
                     }

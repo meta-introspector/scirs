@@ -4,7 +4,7 @@
 //! including multi-GPU processing, specialized hardware support, and performance
 //! comparison across different acceleration methods.
 
-use scirs2_fft::{
+use scirs2__fft::{
     // GPU backends
     gpu_sparse_fft,
     is_cuda_available,
@@ -144,8 +144,8 @@ fn create_sparse_signal(n: usize, components: &[(usize, f64)]) -> Vec<f64> {
 
 /// Compare acceleration methods for a given signal
 #[allow(dead_code)]
-fn perform_acceleration_comparison(signal: &[f64]) -> FFTResult<()> {
-    let sparsity = (signal.len() / 64).max(4).min(32); // Adaptive sparsity
+fn perform_acceleration_comparison(_signal: &[f64]) -> FFTResult<()> {
+    let sparsity = (_signal.len() / 64).max(4).min(32); // Adaptive sparsity
     let config = SparseFFTConfig {
         sparsity,
         algorithm: SparseFFTAlgorithm::Sublinear,
@@ -158,14 +158,14 @@ fn perform_acceleration_comparison(signal: &[f64]) -> FFTResult<()> {
 
     // 1. CPU Reference Implementation
     print_performance_result("CPU Sparse FFT", || {
-        sparse_fft(signal, sparsity, Some(SparseFFTAlgorithm::Sublinear), None)
+        sparse_fft(_signal, sparsity, Some(SparseFFTAlgorithm::Sublinear), None)
     });
 
     // 2. GPU Acceleration Tests
     if is_cuda_available() {
         print_performance_result("CUDA GPU", || {
             gpu_sparse_fft(
-                signal,
+                _signal,
                 sparsity,
                 GPUBackend::CUDA,
                 Some(SparseFFTAlgorithm::Sublinear),
@@ -177,7 +177,7 @@ fn perform_acceleration_comparison(signal: &[f64]) -> FFTResult<()> {
     if is_hip_available() {
         print_performance_result("HIP/ROCm GPU", || {
             gpu_sparse_fft(
-                signal,
+                _signal,
                 sparsity,
                 GPUBackend::HIP,
                 Some(SparseFFTAlgorithm::Sublinear),
@@ -189,7 +189,7 @@ fn perform_acceleration_comparison(signal: &[f64]) -> FFTResult<()> {
     if is_sycl_available() {
         print_performance_result("SYCL GPU", || {
             gpu_sparse_fft(
-                signal,
+                _signal,
                 sparsity,
                 GPUBackend::SYCL,
                 Some(SparseFFTAlgorithm::Sublinear),
@@ -203,10 +203,10 @@ fn perform_acceleration_comparison(signal: &[f64]) -> FFTResult<()> {
 
 /// Demonstrate multi-GPU processing capabilities
 #[allow(dead_code)]
-fn demonstrate_multi_gpu_processing(signal: &[f64]) -> FFTResult<()> {
+fn demonstrate_multi_gpu_processing(_signal: &[f64]) -> FFTResult<()> {
     println!("\n  🔄 Multi-GPU Processing:");
 
-    let sparsity = (signal.len() / 64).max(4).min(32);
+    let sparsity = (_signal.len() / 64).max(4).min(32);
 
     // Test different workload distribution strategies
     let strategies = [
@@ -216,9 +216,9 @@ fn demonstrate_multi_gpu_processing(signal: &[f64]) -> FFTResult<()> {
         ("Adaptive", WorkloadDistribution::Adaptive),
     ];
 
-    for (strategy_name, _strategy) in &strategies {
+    for (strategy_name_strategy) in &strategies {
         print_performance_result(&format!("Multi-GPU ({strategy_name})"), || {
-            multi_gpu_sparse_fft(signal, sparsity, Some(SparseFFTAlgorithm::Sublinear), None)
+            multi_gpu_sparse_fft(_signal, sparsity, Some(SparseFFTAlgorithm::Sublinear), None)
         });
     }
 
@@ -227,10 +227,10 @@ fn demonstrate_multi_gpu_processing(signal: &[f64]) -> FFTResult<()> {
 
 /// Demonstrate specialized hardware capabilities
 #[allow(dead_code)]
-fn demonstrate_specialized_hardware(signal: &[f64]) -> FFTResult<()> {
+fn demonstrate_specialized_hardware(_signal: &[f64]) -> FFTResult<()> {
     println!("\n  ⚡ Specialized Hardware:");
 
-    let sparsity = (signal.len() / 64).max(4).min(32);
+    let sparsity = (_signal.len() / 64).max(4).min(32);
     let config = SparseFFTConfig {
         sparsity,
         algorithm: SparseFFTAlgorithm::Sublinear,
@@ -239,7 +239,7 @@ fn demonstrate_specialized_hardware(signal: &[f64]) -> FFTResult<()> {
     };
 
     print_performance_result("Specialized Hardware", || {
-        specialized_hardware_sparse_fft(signal, config.clone())
+        specialized_hardware_sparse_fft(_signal, config.clone())
     });
 
     // Detailed hardware analysis
@@ -269,7 +269,7 @@ fn demonstrate_specialized_hardware(signal: &[f64]) -> FFTResult<()> {
 
 /// Helper function to measure and print performance results
 #[allow(dead_code)]
-fn print_performance_result<F, R>(name: &str, f: F)
+fn print_performance_result<F, R>(_name: &str, f: F)
 where
     F: FnOnce() -> FFTResult<R>,
     R: std::fmt::Debug,
@@ -280,12 +280,12 @@ where
             let elapsed = start.elapsed();
             println!(
                 "    ✅ {:<20}: {:>8.2}ms",
-                name,
+                _name,
                 elapsed.as_secs_f64() * 1000.0
             );
         }
         Err(e) => {
-            println!("    ❌ {name:<20}: Failed ({e})");
+            println!("    ❌ {_name:<20}: Failed ({e})");
         }
     }
 }

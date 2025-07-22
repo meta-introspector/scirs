@@ -31,26 +31,26 @@ pub struct SparseDistanceMatrix<F: Float> {
 
 impl<F: Float + FromPrimitive> SparseDistanceMatrix<F> {
     /// Create a new sparse distance matrix
-    pub fn new(n_samples: usize, default_value: F) -> Self {
+    pub fn new(_n_samples: usize, default_value: F) -> Self {
         Self {
             rows: Vec::new(),
             cols: Vec::new(),
             data: Vec::new(),
-            n_samples,
+            _n_samples,
             default_value,
         }
     }
 
     /// Create a sparse distance matrix from a dense matrix, keeping only values above threshold
-    pub fn from_dense(dense: ArrayView2<F>, threshold: F) -> Self {
-        let n_samples = dense.shape()[0];
+    pub fn from_dense(_dense: ArrayView2<F>, threshold: F) -> Self {
+        let n_samples = _dense.shape()[0];
         let mut rows = Vec::new();
         let mut cols = Vec::new();
         let mut data = Vec::new();
 
         for i in 0..n_samples {
             for j in (i + 1)..n_samples {
-                let distance = dense[[i, j]];
+                let distance = _dense[[i, j]];
                 if distance > threshold {
                     rows.push(i);
                     cols.push(j);
@@ -120,7 +120,7 @@ impl<F: Float + FromPrimitive> SparseDistanceMatrix<F> {
 
         // Check all stored distances involving this point
         for idx in 0..self.rows.len() {
-            let (neighbor, distance) = if self.rows[idx] == point {
+            let (neighbor_distance) = if self.rows[idx] == point {
                 (self.cols[idx], self.data[idx])
             } else if self.cols[idx] == point {
                 (self.rows[idx], self.data[idx])
@@ -128,8 +128,8 @@ impl<F: Float + FromPrimitive> SparseDistanceMatrix<F> {
                 continue;
             };
 
-            if distance <= max_distance {
-                neighbors.push((neighbor, distance));
+            if _distance <= max_distance {
+                neighbors.push((neighbor, _distance));
             }
         }
 
@@ -210,9 +210,9 @@ pub struct SparseHierarchicalClustering<F: Float> {
 
 impl<F: Float + FromPrimitive + Debug + PartialOrd> SparseHierarchicalClustering<F> {
     /// Create a new sparse hierarchical clustering instance
-    pub fn new(sparse_matrix: SparseDistanceMatrix<F>, linkage_method: LinkageMethod) -> Self {
+    pub fn new(_sparse_matrix: SparseDistanceMatrix<F>, linkage_method: LinkageMethod) -> Self {
         Self {
-            sparse_matrix,
+            _sparse_matrix,
             linkage_method,
         }
     }
@@ -319,10 +319,10 @@ impl<F: Float + FromPrimitive + Debug + PartialOrd> SparseHierarchicalClustering
     fn mst_to_linkage(&self, mut mst_edges: Vec<(usize, usize, F)>) -> Result<Array2<F>> {
         let n_samples = self.sparse_matrix.n_samples();
 
-        // Sort edges by distance for single linkage, or process in MST order
+        // Sort _edges by distance for single linkage, or process in MST order
         match self.linkage_method {
             LinkageMethod::Single => {
-                // For single linkage, MST edges directly give the dendrogram
+                // For single linkage, MST _edges directly give the dendrogram
                 mst_edges.sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap());
             }
             _ => {

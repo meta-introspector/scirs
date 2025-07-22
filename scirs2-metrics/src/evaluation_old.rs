@@ -9,6 +9,7 @@ use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use std::collections::HashMap;
 
 use crate::error::{MetricsError, Result};
+use rand::seq::SliceRandom;
 
 /// Type alias for the train-test split result
 pub type TrainTestSplitResult<T> = (Vec<Array1<T>>, Vec<Array1<T>>);
@@ -30,9 +31,9 @@ pub type TrainTestSplitResult<T> = (Vec<Array1<T>>, Vec<Array1<T>>);
 ///
 /// ```
 /// use ndarray::{Array, Ix1};
-/// use scirs2_metrics::evaluation::train_test_split;
+/// use scirs2__metrics::evaluation::train_test_split;
 ///
-/// let x = Array::<f64, _>::linspace(0., 9., 10).into_shape(Ix1(10)).unwrap();
+/// let x = Array::<f64>::linspace(0., 9., 10).into_shape(Ix1(10)).unwrap();
 /// let y = &x * 2.;
 ///
 /// let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).unwrap();
@@ -82,11 +83,11 @@ where
         )));
     }
 
-    // Calculate the size of the test set
+    // Calculate the _size of the test set
     let n_test = (n_samples as f64 * test_size).round() as usize;
     if n_test == 0 || n_test >= n_samples {
         return Err(MetricsError::InvalidInput(format!(
-            "test_size={} resulted in an invalid test set size: {}",
+            "test_size={} resulted in an invalid test set _size: {}",
             test_size, n_test
         )));
     }
@@ -94,10 +95,10 @@ where
     // Generate shuffled indices
     let mut indices: Vec<usize> = (0..n_samples).collect();
 
-    // Initialize random number generator with provided seed
-    // In rand 0.9.0 we need to use rng() instead of rng()
+    // Initialize random number generator with provided _seed
+    // In rand 0.9.0 we need to use rand::rng() instead of rand::rng()
     let mut rng = match random_seed {
-        Some(seed) => StdRng::seed_from_u64(seed),
+        Some(_seed) => StdRng::seed_from_u64(_seed),
         None => {
             // In rand 0.9.0, from_rng returns the RNG directly, not a Result
             let r = rand::rng();
@@ -175,7 +176,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_metrics::evaluation::k_fold_cross_validation;
+/// use scirs2__metrics::evaluation::k_fold_cross_validation;
 ///
 /// let splits = k_fold_cross_validation(10, 3, false, None).unwrap();
 /// assert_eq!(splits.len(), 3); // 3 folds
@@ -200,13 +201,13 @@ pub fn k_fold_cross_validation(
 
     if n_folds < 2 {
         return Err(MetricsError::InvalidInput(
-            "Number of folds must be at least 2".to_string(),
+            "Number of _folds must be at least 2".to_string(),
         ));
     }
 
     if n_folds > n {
         return Err(MetricsError::InvalidInput(format!(
-            "Number of folds ({}) cannot be greater than number of samples ({})",
+            "Number of _folds ({}) cannot be greater than number of samples ({})",
             n_folds, n
         )));
     }
@@ -217,7 +218,7 @@ pub fn k_fold_cross_validation(
     // Shuffle if requested
     if shuffle {
         let mut rng = match random_seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
+            Some(_seed) => StdRng::seed_from_u64(_seed),
             None => {
                 let r = rand::rng();
                 StdRng::from_rng(r)?
@@ -233,9 +234,9 @@ pub fn k_fold_cross_validation(
         .collect::<Vec<_>>();
 
     let mut current = 0;
-    let mut folds = Vec::with_capacity(n_folds);
+    let mut _folds = Vec::with_capacity(n_folds);
 
-    // Create folds
+    // Create _folds
     for fold_size in fold_sizes {
         // Extract test indices for this fold
         let test_indices = indices[current..(current + fold_size)].to_vec();
@@ -245,11 +246,11 @@ pub fn k_fold_cross_validation(
         train_indices.extend_from_slice(&indices[0..current]);
         train_indices.extend_from_slice(&indices[(current + fold_size)..]);
 
-        folds.push((train_indices, test_indices));
+        _folds.push((train_indices, test_indices));
         current += fold_size;
     }
 
-    Ok(folds)
+    Ok(_folds)
 }
 
 /// Leave-one-out cross-validation (LOOCV)
@@ -268,7 +269,7 @@ pub fn k_fold_cross_validation(
 /// # Examples
 ///
 /// ```
-/// use scirs2_metrics::evaluation::leave_one_out_cv;
+/// use scirs2__metrics::evaluation::leave_one_out_cv;
 ///
 /// let splits = leave_one_out_cv(5).unwrap();
 /// assert_eq!(splits.len(), 5); // 5 splits for 5 samples
@@ -326,7 +327,7 @@ pub fn leave_one_out_cv(n: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_metrics::evaluation::stratified_k_fold;
+/// use scirs2__metrics::evaluation::stratified_k_fold;
 ///
 /// let y = array![0, 0, 0, 1, 1, 1, 2, 2, 2];
 /// let splits = stratified_k_fold(&y, 3, true, Some(42)).unwrap();
@@ -352,13 +353,13 @@ where
 
     if n_folds < 2 {
         return Err(MetricsError::InvalidInput(
-            "Number of folds must be at least 2".to_string(),
+            "Number of _folds must be at least 2".to_string(),
         ));
     }
 
     if n_folds > n_samples {
         return Err(MetricsError::InvalidInput(format!(
-            "Number of folds ({}) cannot be greater than number of samples ({})",
+            "Number of _folds ({}) cannot be greater than number of samples ({})",
             n_folds, n_samples
         )));
     }
@@ -386,7 +387,7 @@ where
 
     // Initialize random number generator if needed
     let mut rng = match random_seed {
-        Some(seed) => Some(StdRng::seed_from_u64(seed)),
+        Some(_seed) => Some(StdRng::seed_from_u64(_seed)),
         None if shuffle => {
             let r = rand::rng();
             Some(StdRng::from_rng(r)?)
@@ -403,12 +404,12 @@ where
         }
     }
 
-    // Allocate samples to folds, respecting the class distribution
-    let mut folds = vec![Vec::new(); n_folds];
+    // Allocate samples to _folds, respecting the class distribution
+    let mut _folds = vec![Vec::new(); n_folds];
 
     for indices in class_counts.values() {
         for (i, &idx) in indices.iter().enumerate() {
-            folds[i % n_folds].push(idx);
+            _folds[i % n_folds].push(idx);
         }
     }
 
@@ -416,10 +417,10 @@ where
     let mut splits = Vec::with_capacity(n_folds);
 
     for i in 0..n_folds {
-        let test_indices = folds[i].clone();
+        let test_indices = _folds[i].clone();
 
         let mut train_indices = Vec::with_capacity(n_samples - test_indices.len());
-        for (j, fold) in folds.iter().enumerate() {
+        for (j, fold) in _folds.iter().enumerate() {
             if j != i {
                 train_indices.extend_from_slice(fold);
             }

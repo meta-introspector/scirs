@@ -1,5 +1,5 @@
 use ndarray::{array, ArrayView1};
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 
 #[allow(dead_code)]
 fn main() {

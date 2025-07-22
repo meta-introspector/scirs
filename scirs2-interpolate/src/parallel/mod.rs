@@ -19,11 +19,11 @@
 //!
 //! ```
 //! use ndarray::{Array1, Array2, ArrayView2};
-//! use scirs2_interpolate::parallel::{
+//! use scirs2__interpolate::parallel::{
 //!     ParallelMovingLeastSquares, ParallelConfig,
 //!     ParallelEvaluate
 //! };
-//! use scirs2_interpolate::local::mls::{WeightFunction, PolynomialBasis};
+//! use scirs2__interpolate::local::mls::{WeightFunction, PolynomialBasis};
 //!
 //! // Create sample data
 //! let points = Array2::from_shape_vec((5, 2), vec![
@@ -102,9 +102,9 @@ impl ParallelConfig {
     /// Get the chunk size to use for a given total size
     pub fn get_chunk_size(&self, total_size: usize) -> usize {
         match self.chunk_size {
-            Some(size) => size,
+            Some(_size) => _size,
             None => {
-                // Choose a reasonable chunk size based on total size
+                // Choose a reasonable chunk _size based on total _size
                 // This is a heuristic and might need tuning for different workloads
                 let n_cpus = num_cpus::get();
                 let min_chunks_per_cpu = 4; // Ensure at least 4 chunks per CPU for load balancing
@@ -174,13 +174,13 @@ pub trait ParallelPredict<F: Float> {
 ///
 /// The recommended chunk size
 #[allow(dead_code)]
-pub fn estimate_chunk_size(total_size: usize, cost_factor: f64, config: &ParallelConfig) -> usize {
-    // If chunk size is explicitly specified, use that
-    if let Some(size) = config.chunk_size {
-        return size;
+pub fn estimate_chunk_size(_total_size: usize, cost_factor: f64, config: &ParallelConfig) -> usize {
+    // If chunk _size is explicitly specified, use that
+    if let Some(_size) = config.chunk_size {
+        return _size;
     }
 
-    // Otherwise, compute a reasonable chunk size
+    // Otherwise, compute a reasonable chunk _size
     let n_cpus = match config.n_workers {
         Some(n) => n,
         None => num_cpus::get(),
@@ -200,7 +200,7 @@ pub fn estimate_chunk_size(total_size: usize, cost_factor: f64, config: &Paralle
 
     let base_chunk_size = std::cmp::max(1, total_size / (n_cpus * desired_chunks_per_cpu));
 
-    // Apply cost factor adjustment
+    // Apply cost _factor adjustment
     let adjusted_size = (base_chunk_size as f64 * cost_factor.sqrt()).ceil() as usize;
 
     // Ensure a reasonable bound
@@ -221,8 +221,8 @@ pub fn estimate_chunk_size(total_size: usize, cost_factor: f64, config: &Paralle
 ///
 /// Vector of (start, end) index pairs for each partition
 #[allow(dead_code)]
-pub fn create_index_ranges(total_size: usize, n_parts: usize) -> Vec<(usize, usize)> {
-    if total_size == 0 || n_parts == 0 {
+pub fn create_index_ranges(_total_size: usize, n_parts: usize) -> Vec<(usize, usize)> {
+    if _total_size == 0 || n_parts == 0 {
         return Vec::new();
     }
 

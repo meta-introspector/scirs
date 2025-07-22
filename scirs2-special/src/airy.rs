@@ -233,7 +233,7 @@ const AIRY_TABLE: [(f64, f64, f64, f64, f64); 13] = [
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::ai;
+/// use scirs2__special::ai;
 ///
 /// // Ai(0) = 3^(-2/3) / Γ(2/3) ≈ 0.3550
 /// assert!((ai(0.0f64) - 0.3550280538878172).abs() < 1e-10);
@@ -293,7 +293,7 @@ pub fn ai<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::aip;
+/// use scirs2__special::aip;
 ///
 /// // Ai'(0) = -3^(-1/3) / Γ(1/3) ≈ -0.2588
 /// assert!((aip(0.0f64) + 0.25881940379280677).abs() < 1e-10);
@@ -356,7 +356,7 @@ pub fn aip<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bi;
+/// use scirs2__special::bi;
 ///
 /// // Bi(0) = 3^(-1/6) / Γ(2/3) ≈ 0.6149
 /// assert!((bi(0.0f64) - 0.6149266274460007).abs() < 1e-10);
@@ -416,7 +416,7 @@ pub fn bi<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2_special::bip;
+/// use scirs2__special::bip;
 ///
 /// // Bi'(0) = 3^(1/6) / Γ(1/3) ≈ 0.4483
 /// assert!((bip(0.0f64) - 0.4482883573538264).abs() < 1e-10);
@@ -485,7 +485,7 @@ pub mod complex {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_special::ai_complex;
+    /// use scirs2__special::ai_complex;
     /// use num_complex::Complex64;
     ///
     /// let z = Complex64::new(1.0, 0.0);
@@ -528,7 +528,7 @@ pub mod complex {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_special::aip_complex;
+    /// use scirs2__special::aip_complex;
     /// use num_complex::Complex64;
     ///
     /// let z = Complex64::new(1.0, 0.0);
@@ -571,7 +571,7 @@ pub mod complex {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_special::bi_complex;
+    /// use scirs2__special::bi_complex;
     /// use num_complex::Complex64;
     ///
     /// let z = Complex64::new(1.0, 0.0);
@@ -614,7 +614,7 @@ pub mod complex {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_special::bip_complex;
+    /// use scirs2__special::bip_complex;
     /// use num_complex::Complex64;
     ///
     /// let z = Complex64::new(1.0, 0.0);

@@ -13,6 +13,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use crate::error::{Result, TimeSeriesError};
+use statrs::statistics::Statistics;
 
 /// Advanced GARCH model variants
 #[derive(Debug, Clone)]
@@ -215,7 +216,7 @@ pub struct RiskMetrics<F: Float + Debug + std::iter::Sum + num_traits::FromPrimi
 
 impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> RiskMetrics<F> {
     /// Create new risk metrics calculator
-    pub fn new(returns: Array1<F>) -> Self {
+    pub fn new(_returns: Array1<F>) -> Self {
         let confidence_levels = vec![
             F::from(0.90).unwrap(),
             F::from(0.95).unwrap(),
@@ -223,7 +224,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
         ];
 
         Self {
-            returns,
+            _returns,
             confidence_levels,
         }
     }
@@ -405,26 +406,26 @@ pub struct HFTIndicators;
 
 impl HFTIndicators {
     /// Volume Weighted Average Price (VWAP)
-    pub fn vwap<F: Float + Clone>(prices: &Array1<F>, volumes: &Array1<F>) -> Result<Array1<F>> {
-        if prices.len() != volumes.len() {
+    pub fn vwap<F: Float + Clone>(_prices: &Array1<F>, volumes: &Array1<F>) -> Result<Array1<F>> {
+        if _prices.len() != volumes.len() {
             return Err(TimeSeriesError::DimensionMismatch {
-                expected: prices.len(),
+                expected: _prices.len(),
                 actual: volumes.len(),
             });
         }
 
-        let mut vwap = Array1::zeros(prices.len());
+        let mut vwap = Array1::zeros(_prices.len());
         let mut cumulative_pv = F::zero();
         let mut cumulative_volume = F::zero();
 
-        for i in 0..prices.len() {
-            cumulative_pv = cumulative_pv + prices[i] * volumes[i];
+        for i in 0.._prices.len() {
+            cumulative_pv = cumulative_pv + _prices[i] * volumes[i];
             cumulative_volume = cumulative_volume + volumes[i];
 
             if cumulative_volume > F::zero() {
                 vwap[i] = cumulative_pv / cumulative_volume;
             } else {
-                vwap[i] = if i > 0 { vwap[i - 1] } else { prices[i] };
+                vwap[i] = if i > 0 { vwap[i - 1] } else { _prices[i] };
             }
         }
 
@@ -432,20 +433,20 @@ impl HFTIndicators {
     }
 
     /// Time Weighted Average Price (TWAP)
-    pub fn twap<F: Float + Clone>(prices: &Array1<F>, window: usize) -> Result<Array1<F>> {
-        if prices.len() < window {
+    pub fn twap<F: Float + Clone>(_prices: &Array1<F>, window: usize) -> Result<Array1<F>> {
+        if _prices.len() < window {
             return Err(TimeSeriesError::InsufficientData {
                 message: "Not enough data for TWAP calculation".to_string(),
                 required: window,
-                actual: prices.len(),
+                actual: _prices.len(),
             });
         }
 
-        let mut twap = Array1::zeros(prices.len() - window + 1);
+        let mut twap = Array1::zeros(_prices.len() - window + 1);
         let window_f = F::from(window).unwrap();
 
         for i in 0..twap.len() {
-            let sum = prices.slice(s![i..i + window]).sum();
+            let sum = _prices.slice(s![i..i + window]).sum();
             twap[i] = sum / window_f;
         }
 
@@ -469,15 +470,15 @@ impl HFTIndicators {
         let beta = F::from(0.5).unwrap(); // Square-root law exponent
         let gamma = F::from(0.1).unwrap(); // Market impact coefficient
 
-        let relative_volume = volume / average_daily_volume;
+        let relative_volume = _volume / average_daily_volume;
         let impact = gamma * volatility * relative_volume.powf(beta) * participation_rate.sqrt();
 
         Ok(impact)
     }
 
     /// Order Book Imbalance
-    pub fn order_book_imbalance<F: Float>(bid_volume: F, ask_volume: F) -> F {
-        let total_volume = bid_volume + ask_volume;
+    pub fn order_book_imbalance<F: Float>(_bid_volume: F, ask_volume: F) -> F {
+        let total_volume = _bid_volume + ask_volume;
         if total_volume == F::zero() {
             return F::zero();
         }
@@ -529,16 +530,16 @@ pub struct BlackScholes;
 
 impl BlackScholes {
     /// Calculate option price using Black-Scholes formula
-    pub fn price(contract: &OptionContract, volatility: f64) -> Result<OptionPrice> {
-        let s = contract.spot;
-        let k = contract.strike;
-        let t = contract.maturity;
-        let r = contract.risk_free_rate;
-        let q = contract.dividend_yield;
+    pub fn price(_contract: &OptionContract, volatility: f64) -> Result<OptionPrice> {
+        let s = _contract.spot;
+        let k = _contract.strike;
+        let t = _contract.maturity;
+        let r = _contract.risk_free_rate;
+        let q = _contract.dividend_yield;
         let sigma = volatility;
 
         if t <= 0.0 {
-            return match contract.option_type {
+            return match _contract.option_type {
                 OptionType::Call => Ok(OptionPrice {
                     price: (s - k).max(0.0),
                     delta: if s > k { 1.0 } else { 0.0 },
@@ -554,8 +555,7 @@ impl BlackScholes {
                     theta: 0.0,
                     vega: 0.0,
                     rho: 0.0,
-                }),
-                _ => Err(TimeSeriesError::NotImplemented(
+                }, _ => Err(TimeSeriesError::NotImplemented(
                     "Only European options supported".to_string(),
                 )),
             };
@@ -572,7 +572,7 @@ impl BlackScholes {
         let discount_factor = (-r * t).exp();
         let dividend_factor = (-q * t).exp();
 
-        let (price, delta) = match contract.option_type {
+        let (price, delta) = match _contract.option_type {
             OptionType::Call => {
                 let price = s * dividend_factor * nd1 - k * discount_factor * nd2;
                 let delta = dividend_factor * nd1;
@@ -594,7 +594,7 @@ impl BlackScholes {
         let phi_d1 = Self::standard_normal_pdf(d1);
         let gamma = dividend_factor * phi_d1 / (s * sigma * t.sqrt());
         let vega = s * dividend_factor * phi_d1 * t.sqrt() / 100.0; // Per 1% volatility change
-        let theta = match contract.option_type {
+        let theta = match _contract.option_type {
             OptionType::Call => {
                 (-s * dividend_factor * phi_d1 * sigma / (2.0 * t.sqrt())
                     - r * k * discount_factor * nd2
@@ -610,10 +610,9 @@ impl BlackScholes {
             _ => 0.0,
         };
 
-        let rho = match contract.option_type {
+        let rho = match _contract.option_type {
             OptionType::Call => k * t * discount_factor * nd2 / 100.0, // Per 1% rate change
-            OptionType::Put => -k * t * discount_factor * n_minus_d2 / 100.0,
-            _ => 0.0,
+            OptionType::Put => -k * t * discount_factor * n_minus_d2 / 100.0_ => 0.0,
         };
 
         Ok(OptionPrice {
@@ -668,8 +667,8 @@ impl BlackScholes {
         let mut vol = initial_guess.max(0.001);
 
         for _ in 0..max_iterations {
-            let option_price = Self::price(contract, vol)?;
-            let price_diff = option_price.price - market_price;
+            let option_price = Self::_price(contract, vol)?;
+            let price_diff = option_price._price - market_price;
 
             if price_diff.abs() < tolerance {
                 return Ok(vol);

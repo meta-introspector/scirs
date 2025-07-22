@@ -3,11 +3,13 @@
 //! This module provides functions for estimating power spectral densities and spectrograms.
 
 use crate::error::{SignalError, SignalResult};
-use num_complex::Complex64;
+use num__complex::Complex64;
 use num_traits::{Float, NumCast};
+use rand::Rng;
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
+#[allow(unused_imports)]
 /// Type alias for periodogram result containing frequencies and power spectral density values
 pub type PeriodogramResult = SignalResult<(Vec<f64>, Vec<f64>)>;
 
@@ -28,8 +30,8 @@ pub type SpectrogramResult = SignalResult<(Vec<f64>, Vec<f64>, Vec<Vec<f64>>)>;
 ///
 /// * Window function as a vector of length `nperseg`
 #[allow(dead_code)]
-fn get_window(window_type: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
-    match window_type.to_lowercase().as_str() {
+fn get_window(_window_type: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
+    match _window_type.to_lowercase().as_str() {
         "hann" => {
             let mut window = Vec::with_capacity(nperseg);
             for i in 0..nperseg {
@@ -55,9 +57,8 @@ fn get_window(window_type: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
             }
             Ok(window)
         }
-        "boxcar" | "rectangular" => Ok(vec![1.0; nperseg]),
-        _ => Err(SignalError::ValueError(format!(
-            "Unknown window type: {}",
+        "boxcar" | "rectangular" => Ok(vec![1.0; nperseg], _ => Err(SignalError::ValueError(format!(
+            "Unknown window _type: {}",
             window_type
         ))),
     }
@@ -78,7 +79,7 @@ fn apply_detrend(x: &[f64], detrend_type: &str) -> SignalResult<Vec<f64>> {
     match detrend_type {
         "constant" => {
             // Remove mean
-            let mean = x.iter().sum::<f64>() / x.len() as f64;
+            let mean = x.iter().sum::<f64>() / x.len()  as f64;
             Ok(x.iter().map(|&v| v - mean).collect())
         }
         "linear" => {
@@ -97,7 +98,7 @@ fn apply_detrend(x: &[f64], detrend_type: &str) -> SignalResult<Vec<f64>> {
                 .sum::<f64>();
 
             let slope = (n as f64 * sum_xy - sum_x * sum_y) / (n as f64 * sum_xx - sum_x * sum_x);
-            let intercept = (sum_y - slope * sum_x) / n as f64;
+            let intercept = (sum_y - slope * sum_x) / n  as f64;
 
             // Remove trend
             Ok(x.iter()
@@ -105,8 +106,7 @@ fn apply_detrend(x: &[f64], detrend_type: &str) -> SignalResult<Vec<f64>> {
                 .map(|(i, &y)| y - (slope * i as f64 + intercept))
                 .collect())
         }
-        "none" => Ok(x.to_vec()),
-        _ => Err(SignalError::ValueError(format!(
+        "none" => Ok(x.to_vec(), _ => Err(SignalError::ValueError(format!(
             "Unknown detrend option: {}",
             detrend_type
         ))),
@@ -395,7 +395,7 @@ where
 
     // Normalize by number of segments
     for psd in &mut psd_avg {
-        *psd /= num_segments as f64;
+        *psd /= num_segments  as f64;
     }
 
     // Apply scaling
@@ -740,13 +740,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
-    use rand::Rng;
-
-    use std::f64::consts::PI;
-
+use approx::assert_relative_eq;
     #[test]
     fn test_periodogram_sine_wave() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Generate a sine wave at 10 Hz
         let fs = 100.0;
         let t: Vec<f64> = (0..1000).map(|i| i as f64 / fs).collect();
@@ -776,6 +774,8 @@ mod tests {
 
     #[test]
     fn test_welch_sine_wave() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Generate a sine wave at 10 Hz with noise
         let fs = 100.0;
         let t: Vec<f64> = (0..2000).map(|i| i as f64 / fs).collect();
@@ -808,6 +808,8 @@ mod tests {
 
     #[test]
     fn test_stft_sine_wave() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Generate a chirp signal (increasing frequency)
         let fs = 1000.0;
         let t: Vec<f64> = (0..2000).map(|i| i as f64 / fs).collect();
@@ -869,13 +871,15 @@ mod tests {
 
     #[test]
     fn test_spectrogram_modes() {
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![0.5, 0.5];
         // Generate a test signal
         let fs = 100.0;
         let t: Vec<f64> = (0..1000).map(|i| i as f64 / fs).collect();
         let x: Vec<f64> = t.iter().map(|&t| (2.0 * PI * 10.0 * t).sin()).collect();
 
         // Compute spectrograms with different modes
-        let (_, _, psd_values) = spectrogram(
+        let (__, psd_values) = spectrogram(
             &x,
             Some(fs),
             None,
@@ -887,7 +891,7 @@ mod tests {
             Some("psd"),
         )
         .unwrap();
-        let (_, _, mag_values) = spectrogram(
+        let (__, mag_values) = spectrogram(
             &x,
             Some(fs),
             None,
@@ -899,7 +903,7 @@ mod tests {
             Some("magnitude"),
         )
         .unwrap();
-        let (_, _, phase_values) = spectrogram(
+        let (__, phase_values) = spectrogram(
             &x,
             Some(fs),
             None,

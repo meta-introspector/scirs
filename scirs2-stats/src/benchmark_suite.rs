@@ -279,15 +279,15 @@ impl BenchmarkSuite {
     }
 
     /// Create a new benchmark suite with custom configuration
-    pub fn with_config(config: BenchmarkConfig) -> Self {
-        let memory_tracker = if config.track_memory {
+    pub fn with_config(_config: BenchmarkConfig) -> Self {
+        let memory_tracker = if _config.track_memory {
             Some(Arc::new(Mutex::new(MemoryTracker::new())))
         } else {
             None
         };
 
         Self {
-            config,
+            _config,
             memory_tracker,
             baseline_cache: HashMap::new(),
         }
@@ -529,10 +529,10 @@ impl BenchmarkSuite {
 
     /// Generate test data for benchmarking
     fn generate_test_data(&self, size: usize) -> StatsResult<Array1<f64>> {
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
         use scirs2_core::rng;
 
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
         })?;
@@ -548,10 +548,10 @@ impl BenchmarkSuite {
         base_data: &Array1<f64>,
         correlation: f64,
     ) -> StatsResult<Array1<f64>> {
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
         use scirs2_core::rng;
 
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
         })?;
@@ -568,10 +568,10 @@ impl BenchmarkSuite {
 
     /// Generate matrix test data
     fn generate_matrix_data(&self, rows: usize, cols: usize) -> StatsResult<Array2<f64>> {
-        use rand_distr::{Distribution, Normal};
+        use rand__distr::{Distribution, Normal};
         use scirs2_core::rng;
 
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
         })?;
@@ -612,9 +612,7 @@ impl BenchmarkSuite {
 
     /// Get baseline performance comparison
     fn get_baseline_comparison(
-        &self,
-        _function_name: &str,
-        _data_size: usize,
+        &self, _function_name: &str, _data_size: usize,
         current_time_ns: f64,
     ) -> Option<f64> {
         // This would typically compare against stored baseline measurements
@@ -791,7 +789,7 @@ impl BenchmarkSuite {
     }
 
     /// Generate threshold recommendations for algorithm switching
-    fn generate_thresholds(&self, _metrics: &[&BenchmarkMetrics]) -> Vec<ThresholdRecommendation> {
+    fn generate_thresholds(&self_metrics: &[&BenchmarkMetrics]) -> Vec<ThresholdRecommendation> {
         // Placeholder implementation - would analyze performance crossover points
         // between different algorithm variants
         Vec::new()
@@ -843,8 +841,7 @@ impl BenchmarkSuite {
 
     /// Generate optimization recommendations
     fn generate_recommendations(
-        &self,
-        _metrics: &[BenchmarkMetrics],
+        &self_metrics: &[BenchmarkMetrics],
         analysis: &PerformanceAnalysis,
     ) -> Vec<OptimizationRecommendation> {
         let mut recommendations = Vec::new();

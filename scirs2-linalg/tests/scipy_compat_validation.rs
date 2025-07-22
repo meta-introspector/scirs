@@ -512,7 +512,7 @@ mod numerical_stability_tests {
         let spd = a.t().dot(&a); // 2x2 SPD matrix
 
         // All eigenvalues should be positive
-        let (eigenvals, _) = compat::eigh(
+        let (eigenvals) = compat::eigh(
             &spd.view(),
             None,
             false,
@@ -553,7 +553,7 @@ mod numerical_stability_tests {
         ];
 
         for matrix in test_matrices.iter() {
-            let (_, s, _) = compat::svd(&matrix.view(), true, true, false, true, "gesdd").unwrap();
+            let (_, s) = compat::svd(&matrix.view(), true, true, false, true, "gesdd").unwrap();
 
             // Singular values should be non-negative
             assert!(s.iter().all(|&sigma| sigma >= 0.0));

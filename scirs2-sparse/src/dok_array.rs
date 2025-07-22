@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::coo_array::CooArray;
+use crate::coo__array::CooArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::{SparseArray, SparseSum};
 
@@ -63,10 +63,10 @@ where
     ///
     /// # Returns
     /// A new empty `DokArray`
-    pub fn new(shape: (usize, usize)) -> Self {
+    pub fn new(_shape: (usize, usize)) -> Self {
         Self {
             data: HashMap::new(),
-            shape,
+            _shape,
         }
     }
 
@@ -126,7 +126,7 @@ where
 
         // Sort by row, then column for deterministic output
         let mut entries: Vec<_> = self.data.iter().collect();
-        entries.sort_by_key(|&(&(row, col), _)| (row, col));
+        entries.sort_by_key(|&(&(row, col)_)| (row, col));
 
         for (&(row, col), &value) in entries {
             row_indices.push(row);
@@ -148,11 +148,11 @@ where
     ///
     /// # Returns
     /// A new `DokArray` containing non-zero elements from the input array
-    pub fn from_array(array: &Array2<T>) -> Self {
-        let shape = (array.shape()[0], array.shape()[1]);
+    pub fn from_array(_array: &Array2<T>) -> Self {
+        let shape = (_array.shape()[0], _array.shape()[1]);
         let mut dok = Self::new(shape);
 
-        for ((i, j), &value) in array.indexed_iter() {
+        for ((i, j), &value) in _array.indexed_iter() {
             if !value.is_zero() {
                 dok.data.insert((i, j), value);
             }
@@ -350,7 +350,7 @@ where
 
     fn dot(&self, other: &dyn SparseArray<T>) -> SparseResult<Box<dyn SparseArray<T>>> {
         let (_m, n) = self.shape();
-        let (p, _q) = other.shape();
+        let (p_q) = other.shape();
 
         if n != p {
             return Err(SparseError::DimensionMismatch {
@@ -468,10 +468,10 @@ where
             }
             Some(1) => {
                 // Sum along columns
-                let (rows, _) = self.shape();
+                let (rows_) = self.shape();
                 let mut result = DokArray::new((rows, 1));
 
-                for (&(row, _col), &value) in &self.data {
+                for (&(row_col), &value) in &self.data {
                     let current = result.get(row, 0);
                     result.set(row, 0, current + value)?;
                 }
@@ -750,8 +750,7 @@ mod tests {
 
         // Sum all elements
         match array.sum(None).unwrap() {
-            SparseSum::Scalar(sum) => assert_eq!(sum, 21.0),
-            _ => panic!("Expected scalar sum"),
+            SparseSum::Scalar(sum) => assert_eq!(sum, 21.0, _ => panic!("Expected scalar sum"),
         }
 
         // Sum along rows (axis 0)

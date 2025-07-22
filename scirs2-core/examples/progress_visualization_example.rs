@@ -63,7 +63,7 @@ fn demo_progress_styles() -> Result<(), Box<dyn std::error::Error>> {
             // Simulate variable processing speed
             let delay = if i % 10 == 0 { 100 } else { 20 };
             thread::sleep(Duration::from_millis(delay));
-            progress.update(i);
+            progress.update_model(i);
         }
 
         progress.finish();
@@ -107,13 +107,13 @@ fn demo_multi_progress() -> Result<(), Box<dyn std::error::Error>> {
 
         // Update different tasks at different rates
         if i < 100 {
-            multi.update(task1_id, i as u64);
+            multi.update_model(task1_id, i as u64);
         }
         if i < 75 {
-            multi.update(task2_id, i as u64);
+            multi.update_model(task2_id, i as u64);
         }
         if i < 60 {
-            multi.update(task3_id, i as u64);
+            multi.update_model(task3_id, i as u64);
         }
 
         // Finish tasks when complete
@@ -138,7 +138,7 @@ fn demo_multi_progress() -> Result<(), Box<dyn std::error::Error>> {
 fn demo_logger_integration() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nDemo 3: Logger Integration\n");
 
-    let logger = Logger::new("data_processor")
+    let logger = Logger::new(data_processor)
         .with_field("version", "1.0")
         .with_field("mode", "batch");
 
@@ -153,7 +153,7 @@ fn demo_logger_integration() -> Result<(), Box<dyn std::error::Error>> {
             for _item in 0..20 {
                 thread::sleep(Duration::from_millis(25));
                 processed_items += 1;
-                progress.update(processed_items);
+                progress.update_model(processed_items);
             }
 
             // Log batch completion
@@ -194,7 +194,7 @@ fn demo_themes_and_templates() -> Result<(), Box<dyn std::error::Error>> {
 
     for i in 0..=80 {
         thread::sleep(Duration::from_millis(30));
-        progress.update(i);
+        progress.update_model(i);
     }
 
     progress.finish();
@@ -221,7 +221,7 @@ fn demo_themes_and_templates() -> Result<(), Box<dyn std::error::Error>> {
 
     for i in 0..=50 {
         thread::sleep(Duration::from_millis(40));
-        progress.update(i);
+        progress.update_model(i);
     }
 
     progress.finish();
@@ -250,21 +250,21 @@ fn demo_progress_groups() -> Result<(), Box<dyn std::error::Error>> {
     // Extract phase
     for i in 0..=100 {
         thread::sleep(Duration::from_millis(20));
-        group.update(extract_id, i);
+        group.update_model(extract_id, i);
     }
     println!("Extraction complete");
 
     // Transform phase
     for i in 0..=150 {
         thread::sleep(Duration::from_millis(15));
-        group.update(transform_id, i);
+        group.update_model(transform_id, i);
     }
     println!("Transformation complete");
 
     // Load phase
     for i in 0..=80 {
         thread::sleep(Duration::from_millis(25));
-        group.update(load_id, i);
+        group.update_model(load_id, i);
     }
     println!("Loading complete");
 
@@ -298,7 +298,7 @@ fn _demo_adaptive_tracking() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         thread::sleep(Duration::from_millis(delay));
-        progress.update(i);
+        progress.update_model(i);
     }
 
     progress.finish();

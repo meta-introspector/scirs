@@ -28,10 +28,10 @@ pub struct QLearningOptimizer {
 
 impl QLearningOptimizer {
     /// Create new Q-learning optimizer
-    pub fn new(config: RLOptimizationConfig, num_params: usize) -> Self {
-        let exploration_rate = config.exploration_rate;
+    pub fn new(_config: RLOptimizationConfig, num_params: usize) -> Self {
+        let exploration_rate = _config.exploration_rate;
         Self {
-            config,
+            _config,
             q_table: HashMap::new(),
             exploration_rate,
             best_params: Array1::zeros(num_params),
@@ -95,16 +95,16 @@ impl RLOptimizer for QLearningOptimizer {
 
     fn select_action(&mut self, state: &OptimizationState) -> OptimizationAction {
         // Epsilon-greedy action selection
-        if rng().random_range(0.0..1.0) < self.exploration_rate {
+        if rand::rng().gen_range(0.0..1.0) < self.exploration_rate {
             // Random action
             let actions = self.get_possible_actions();
-            let idx = rng().random_range(0..actions.len());
+            let idx = rand::rng().gen_range(0..actions.len());
             actions[idx].clone()
         } else {
             // Greedy action
             let actions = self.get_possible_actions();
             let mut best_action = actions[0].clone();
-            let mut best_q = self.get_q_value(state, &best_action);
+            let mut best_q = self.get_q_value(state..&best_action);
 
             for action in &actions[1..] {
                 let q_value = self.get_q_value(state, action);

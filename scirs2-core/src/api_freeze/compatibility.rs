@@ -97,7 +97,7 @@ impl ApiCompatibilityChecker {
     }
 
     /// Set minimum version requirement
-    pub fn require_version(mut self, version: Version) -> Self {
+    pub fn minimum_version(mut self, version: Version) -> Self {
         self.minimum_version = Some(version);
         self
     }

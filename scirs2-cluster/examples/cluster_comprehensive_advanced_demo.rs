@@ -5,9 +5,9 @@
 //! and continual adaptation features for optimal clustering performance.
 
 use ndarray::Array2;
-use scirs2_cluster::advanced_clustering::{AdvancedClusterer, AdvancedConfig};
-use scirs2_cluster::metrics::silhouette_score;
-use scirs2_cluster::preprocess::standardize;
+use scirs2__cluster::advanced_clustering::{AdvancedClusterer, AdvancedConfig};
+use scirs2__cluster::metrics::silhouette_score;
+use scirs2__cluster::preprocess::standardize;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

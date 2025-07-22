@@ -11,7 +11,7 @@ use rand::rng;
 use crate::layers::{Dense, Layer, LayerNorm, Sequential};
 use crate::models::architectures::{ViTConfig, VisionTransformer};
 use crate::transformer::TransformerEncoderLayer;
-// use crate::utils::positional_encoding::{PositionalEncoding, SinusoidalPositionalEncoding}; // Disabled - module is broken
+// use crate::utils::positional__encoding::{PositionalEncoding, SinusoidalPositionalEncoding}; // Disabled - module is broken
 use ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::{rngs::SmallRng,  SeedableRng};
@@ -85,42 +85,42 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + scirs2_core::simd_ops::Sim
     CLIPTextEncoder<F>
 {
     /// Create a new CLIPTextEncoder
-    pub fn new(config: CLIPTextConfig, projection_dim: usize) -> Result<Self> {
+    pub fn new(_config: CLIPTextConfig, projection_dim: usize) -> Result<Self> {
         // Token embedding
         let mut token_embedding = Sequential::new();
         let mut rng = rng();
         token_embedding.add(Dense::<F>::new(
-            config.vocab_size,
-            config.hidden_size,
+            _config.vocab_size,
+            _config.hidden_size,
             None,
             &mut rng,
         )?);
         // Position embedding
         let position_embedding = SinusoidalPositionalEncoding::<F>::new(
-            config.max_position_embeddings,
+            _config.max_position_embeddings,
         )?;
         // Transformer encoder layers
-        let mut encoder_layers = Vec::with_capacity(config.num_layers);
-        for _i in 0..config.num_layers {
+        let mut encoder_layers = Vec::with_capacity(_config.num_layers);
+        for _i in 0.._config.num_layers {
             encoder_layers.push(TransformerEncoderLayer::<F>::new(
-                config.hidden_size,
-                config.num_heads,
-                config.intermediate_size,
-                config.dropout_rate,
-                config.layer_norm_eps,
+                _config.hidden_size,
+                _config.num_heads,
+                _config.intermediate_size,
+                _config.dropout_rate,
+                _config.layer_norm_eps,
                 &mut rng,
             )?);
         // Layer normalization
-        let layer_norm = LayerNorm::<F>::new(config.hidden_size, config.layer_norm_eps, &mut rng)?;
+        let layer_norm = LayerNorm::<F>::new(_config.hidden_size, _config.layer_norm_eps, &mut rng)?;
         // Projection
-        let projection = Dense::<F>::new(config.hidden_size, projection_dim, None, &mut rng)?;
+        let projection = Dense::<F>::new(_config.hidden_size, projection_dim, None, &mut rng)?;
         Ok(Self {
             token_embedding,
             position_embedding,
             encoder_layers,
             layer_norm,
             projection,
-            config,
+            _config,
         })
 impl<
         F: Float
@@ -168,7 +168,7 @@ impl<
         let seq_len = input.shape()[1];
         let hidden_size = grad_after_proj.shape()[1];
         // Create gradient for full sequence (most gradients go to CLS token position)
-        let mut grad_full_seq = Array::<F, _>::zeros((batch_size, seq_len, hidden_size));
+        let mut grad_full_seq = Array::<F>::zeros((batch_size, seq_len, hidden_size));
         // Put the gradient at the CLS token position (index 0)
         for i in 0..batch_size {
             for j in 0..hidden_size {
@@ -223,12 +223,12 @@ pub struct CLIPVisionEncoder<
             + scirs2_core::simd_ops::SimdUnifiedOps,
     > CLIPVisionEncoder<F>
     /// Create a new CLIPVisionEncoder
-    pub fn new(config: ViTConfig, projection_dim: usize) -> Result<Self> {
-        // Create ViT with a clone of the config to avoid ownership issues
-        let vision_transformer = VisionTransformer::<F>::new(config.clone())?;
+    pub fn new(_config: ViTConfig, projection_dim: usize) -> Result<Self> {
+        // Create ViT with a clone of the _config to avoid ownership issues
+        let vision_transformer = VisionTransformer::<F>::new(_config.clone())?;
         // Projection layer
         let mut rng_proj = rng();
-        let projection = Dense::<F>::new(config.embed_dim, projection_dim, None, &mut rng_proj)?;
+        let projection = Dense::<F>::new(_config.embed_dim, projection_dim, None, &mut rng_proj)?;
             vision_transformer,
     > Layer<F> for CLIPVisionEncoder<F>
         // Apply vision transformer
@@ -252,24 +252,24 @@ pub struct CLIP<
     /// Optional classifier for zero-shot classification
     pub classifier: Option<Dense<F>>,
     /// Model configuration
-    pub config: CLIPConfig,
+    pub _config: CLIPConfig,
     /// Temperature parameter for contrastive loss
     pub logit_scale: F,
     > CLIP<F>
     /// Create a new CLIP model
-    pub fn new(config: CLIPConfig) -> Result<Self> {
+    pub fn new(_config: CLIPConfig) -> Result<Self> {
         // Create vision encoder
         let vision_encoder =
-            CLIPVisionEncoder::<F>::new(config.vision_config.clone(), config.projection_dim)?;
+            CLIPVisionEncoder::<F>::new(_config.vision_config.clone(), _config.projection_dim)?;
         // Create text encoder
         let text_encoder =
-            CLIPTextEncoder::<F>::new(config.text_config.clone(), config.projection_dim)?;
+            CLIPTextEncoder::<F>::new(_config.text_config.clone(), _config.projection_dim)?;
         // Create classifier if needed
-        let classifier = if config.include_head {
+        let classifier = if _config.include_head {
             let mut rng_cls = SmallRng::seed_from_u64(42);
             Some(Dense::<F>::new(
-                config.projection_dim,
-                config.num_classes,
+                _config.projection_dim,
+                _config.num_classes,
                 None,
                 &mut rng_cls,
             )?)
@@ -308,12 +308,12 @@ pub struct CLIP<
         let logits = compute_similarity(&image_features_norm, text_embeddings, self.logit_scale)?;
         Ok(logits)
     /// Create a CLIP model with default settings
-    pub fn clip_base(num_classes: usize, include_head: bool) -> Result<Self> {
+    pub fn clip_base(_num_classes: usize, include_head: bool) -> Result<Self> {
         let vision_config = ViTConfig {
             image_size: (224, 224),
             patch_size: (16, 16),
             in_channels: 3,
-            num_classes,
+            _num_classes,
             embed_dim: 768,
             num_heads: 12,
             mlp_dim: 3072,
@@ -326,7 +326,7 @@ pub struct CLIP<
             include_head,
         Self::new(config)
     /// Create a small CLIP model
-    pub fn clip_small(num_classes: usize, include_head: bool) -> Result<Self> {
+    pub fn clip_small(_num_classes: usize, include_head: bool) -> Result<Self> {
             embed_dim: 512,
             num_layers: 8,
             mlp_dim: 2048,

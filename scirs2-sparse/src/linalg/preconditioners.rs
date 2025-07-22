@@ -18,16 +18,16 @@ pub struct JacobiPreconditioner<F> {
 
 impl<F: Float> JacobiPreconditioner<F> {
     /// Create a new Jacobi preconditioner from a sparse matrix
-    pub fn new(matrix: &CsrMatrix<F>) -> SparseResult<Self>
+    pub fn new(_matrix: &CsrMatrix<F>) -> SparseResult<Self>
     where
         F: Debug,
     {
-        let n = matrix.rows();
+        let n = _matrix.rows();
         let mut inv_diagonal = vec![F::zero(); n];
 
         // Extract diagonal elements
         for (i, diag_inv) in inv_diagonal.iter_mut().enumerate().take(n) {
-            let diag_val = matrix.get(i, i);
+            let diag_val = _matrix.get(i, i);
             if diag_val.abs() < F::epsilon() {
                 return Err(SparseError::ValueError(format!(
                     "Zero diagonal element at position {i}"
@@ -43,14 +43,14 @@ impl<F: Float> JacobiPreconditioner<F> {
     }
 
     /// Create from diagonal values directly
-    pub fn from_diagonal(diagonal: Vec<F>) -> SparseResult<Self> {
-        let size = diagonal.len();
+    pub fn from_diagonal(_diagonal: Vec<F>) -> SparseResult<Self> {
+        let size = _diagonal.len();
         let mut inv_diagonal = vec![F::zero(); size];
 
-        for (i, &d) in diagonal.iter().enumerate() {
+        for (i, &d) in _diagonal.iter().enumerate() {
             if d.abs() < F::epsilon() {
                 return Err(SparseError::ValueError(format!(
-                    "Zero diagonal element at position {i}"
+                    "Zero _diagonal element at position {i}"
                 )));
             }
             inv_diagonal[i] = F::one() / d;
@@ -101,19 +101,19 @@ pub struct SSORPreconditioner<F> {
 
 impl<F: Float + NumAssign + Sum + Debug + 'static> SSORPreconditioner<F> {
     /// Create a new SSOR preconditioner
-    pub fn new(matrix: CsrMatrix<F>, omega: F) -> SparseResult<Self> {
+    pub fn new(_matrix: CsrMatrix<F>, omega: F) -> SparseResult<Self> {
         if omega <= F::zero() || omega >= F::from(2.0).unwrap() {
             return Err(SparseError::ValueError(
                 "Relaxation parameter omega must be in (0, 2)".to_string(),
             ));
         }
 
-        let n = matrix.rows();
+        let n = _matrix.rows();
         let mut diagonal = vec![F::zero(); n];
 
         // Extract diagonal elements
         for (i, diag) in diagonal.iter_mut().enumerate().take(n) {
-            *diag = matrix.get(i, i);
+            *diag = _matrix.get(i, i);
             if diag.abs() < F::epsilon() {
                 return Err(SparseError::ValueError(format!(
                     "Zero diagonal element at position {i}"
@@ -122,7 +122,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> SSORPreconditioner<F> {
         }
 
         Ok(Self {
-            matrix,
+            _matrix,
             omega,
             diagonal,
         })
@@ -205,13 +205,13 @@ pub struct ILU0Preconditioner<F> {
 
 impl<F: Float + NumAssign + Sum + Debug + 'static> ILU0Preconditioner<F> {
     /// Create a new ILU(0) preconditioner
-    pub fn new(matrix: &CsrMatrix<F>) -> SparseResult<Self> {
-        let n = matrix.rows();
+    pub fn new(_matrix: &CsrMatrix<F>) -> SparseResult<Self> {
+        let n = _matrix.rows();
 
-        // Copy the matrix data for modification
-        let mut data = matrix.data.clone();
-        let indices = matrix.indices.clone();
-        let indptr = matrix.indptr.clone();
+        // Copy the _matrix data for modification
+        let mut data = _matrix.data.clone();
+        let indices = _matrix.indices.clone();
+        let indptr = _matrix.indptr.clone();
 
         // Perform ILU(0) factorization
         for k in 0..n {
@@ -375,11 +375,11 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for ILU0Pre
 
 // Helper function to find diagonal index in CSR format
 #[allow(dead_code)]
-fn find_diagonal_index(indices: &[usize], indptr: &[usize], row: usize) -> SparseResult<usize> {
+fn find_diagonal_index(_indices: &[usize], indptr: &[usize], row: usize) -> SparseResult<usize> {
     let row_start = indptr[row];
     let row_end = indptr[row + 1];
 
-    for (idx, &col) in indices[row_start..row_end]
+    for (idx, &col) in _indices[row_start..row_end]
         .iter()
         .enumerate()
         .map(|(i, col)| (i + row_start, col))

@@ -7,7 +7,7 @@
 //! - Working with image metadata
 
 use ndarray::Array3;
-use scirs2_io::image::{
+use scirs2__io::image::{
     convert_image, get_image_info, load_image, resize_image, save_image, ColorMode, ImageData,
     ImageFormat, ImageMetadata,
 };

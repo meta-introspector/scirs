@@ -1,4 +1,4 @@
-use scirs2_integrate::{
+use scirs2__integrate::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, SpectralElementOptions,
     SpectralElementPoisson2D,
 };

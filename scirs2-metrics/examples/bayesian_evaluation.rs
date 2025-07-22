@@ -5,8 +5,9 @@
 //! predictive checks, credible intervals, and Bayesian model averaging.
 
 use ndarray::{Array1, Array2};
-use scirs2_metrics::bayesian::*;
-use scirs2_metrics::error::Result;
+use scirs2__metrics::bayesian::*;
+use scirs2__metrics::error::Result;
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {

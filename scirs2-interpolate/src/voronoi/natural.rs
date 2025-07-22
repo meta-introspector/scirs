@@ -12,7 +12,7 @@ use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use super::voronoi_cell::VoronoiDiagram;
+use super::voronoi__cell::VoronoiDiagram;
 use crate::error::{InterpolateError, InterpolateResult};
 use crate::spatial::kdtree::KdTree;
 
@@ -147,7 +147,7 @@ impl<
             Ok(weights) => weights,
             Err(_) => {
                 // Fallback to nearest neighbor for extrapolation
-                let (idx, _) = self.kdtree.nearest_neighbor(&query.to_vec())?;
+                let (idx_) = self.kdtree.nearest_neighbor(&query.to_vec())?;
                 let mut weights = HashMap::new();
                 weights.insert(idx, F::one());
                 weights
@@ -156,7 +156,7 @@ impl<
 
         if neighbor_weights.is_empty() {
             // If no natural neighbors found, use nearest neighbor
-            let (idx, _) = self.kdtree.nearest_neighbor(&query.to_vec())?;
+            let (idx_) = self.kdtree.nearest_neighbor(&query.to_vec())?;
             return Ok(self.values[idx]);
         }
 
@@ -192,7 +192,7 @@ impl<
                 let mut interpolated_value = F::zero();
                 let mut total_weight = F::zero();
 
-                for (idx, _) in neighbor_weights.iter() {
+                for (idx_) in neighbor_weights.iter() {
                     // For Laplace method, we need to compute a different weight
                     // based on the distances and Voronoi cell edge lengths
                     let site = &self.voronoi_diagram.cells[*idx].site;

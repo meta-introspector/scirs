@@ -278,7 +278,7 @@ where
     }
 
     // For larger matrices, use the LU decomposition
-    let (_, _, u) = factorizations::extended_lu::<A, I>(a)?;
+    let (_, u, _) = factorizations::extended_lu::<A, I>(a)?;
 
     // Compute determinant as the product of diagonal elements of U
     let n = u.nrows();

@@ -19,7 +19,7 @@ use crate::regularizers::Regularizer;
 ///
 /// ```no_run
 /// use ndarray::array;
-/// use scirs2_optim::regularizers::{ManifoldRegularization, Regularizer};
+/// use scirs2__optim::regularizers::{ManifoldRegularization, Regularizer};
 ///
 /// let mut manifold_reg = ManifoldRegularization::new(0.01);
 ///
@@ -51,9 +51,9 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> ManifoldRegularization<A>
     /// # Arguments
     ///
     /// * `lambda` - Regularization strength
-    pub fn new(lambda: A) -> Self {
+    pub fn new(_lambda: A) -> Self {
         Self {
-            lambda,
+            _lambda,
             similarity_matrix: None,
             degree_matrix: None,
             laplacian: None,

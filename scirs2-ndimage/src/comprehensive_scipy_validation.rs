@@ -91,9 +91,9 @@ impl SciPyValidationSuite {
     }
 
     /// Create new validation suite with custom configuration
-    pub fn with_config(config: ValidationConfig) -> Self {
+    pub fn with_config(_config: ValidationConfig) -> Self {
         Self {
-            config,
+            _config,
             results: Vec::new(),
             passed_tests: 0,
             failed_tests: 0,

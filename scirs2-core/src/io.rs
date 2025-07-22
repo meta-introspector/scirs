@@ -22,8 +22,8 @@ use crate::error::CoreResult;
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be opened.
 #[allow(dead_code)]
-pub fn open_file<P: AsRef<Path>>(path: P) -> CoreResult<BufReader<File>> {
-    let file = File::open(path.as_ref())?;
+pub fn open_file<P: AsRef<Path>>(_path: P) -> CoreResult<BufReader<File>> {
+    let file = File::open(_path.as_ref())?;
     Ok(BufReader::new(file))
 }
 
@@ -41,8 +41,8 @@ pub fn open_file<P: AsRef<Path>>(path: P) -> CoreResult<BufReader<File>> {
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be opened.
 #[allow(dead_code)]
-pub fn create_file<P: AsRef<Path>>(path: P) -> CoreResult<BufWriter<File>> {
-    let file = File::create(path.as_ref())?;
+pub fn create_file<P: AsRef<Path>>(_path: P) -> CoreResult<BufWriter<File>> {
+    let file = File::create(_path.as_ref())?;
     Ok(BufWriter::new(file))
 }
 
@@ -60,8 +60,8 @@ pub fn create_file<P: AsRef<Path>>(path: P) -> CoreResult<BufWriter<File>> {
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be read.
 #[allow(dead_code)]
-pub fn read_to_string<P: AsRef<Path>>(path: P) -> CoreResult<String> {
-    let mut file = open_file(path)?;
+pub fn read_to_string<P: AsRef<Path>>(_path: P) -> CoreResult<String> {
+    let mut file = open_file(_path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
     Ok(contents)
@@ -81,8 +81,8 @@ pub fn read_to_string<P: AsRef<Path>>(path: P) -> CoreResult<String> {
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be read.
 #[allow(dead_code)]
-pub fn read_to_bytes<P: AsRef<Path>>(path: P) -> CoreResult<Vec<u8>> {
-    let mut file = open_file(path)?;
+pub fn read_to_bytes<P: AsRef<Path>>(_path: P) -> CoreResult<Vec<u8>> {
+    let mut file = open_file(_path)?;
     let mut contents = Vec::new();
     file.read_to_end(&mut contents)?;
     Ok(contents)
@@ -100,8 +100,8 @@ pub fn read_to_bytes<P: AsRef<Path>>(path: P) -> CoreResult<Vec<u8>> {
 /// * `Ok(())` if the file was written successfully
 /// * `Err(CoreError::IoError)` if the file could not be written
 #[allow(dead_code)]
-pub fn write_string<P: AsRef<Path>, S: AsRef<str>>(path: P, contents: S) -> CoreResult<()> {
-    let mut file = create_file(path)?;
+pub fn write_string<P: AsRef<Path>, S: AsRef<str>>(_path: P, contents: S) -> CoreResult<()> {
+    let mut file = create_file(_path)?;
     file.write_all(contents.as_ref().as_bytes())?;
     file.flush()?;
     Ok(())
@@ -119,8 +119,8 @@ pub fn write_string<P: AsRef<Path>, S: AsRef<str>>(path: P, contents: S) -> Core
 /// * `Ok(())` if the file was written successfully
 /// * `Err(CoreError::IoError)` if the file could not be written
 #[allow(dead_code)]
-pub fn write_bytes<P: AsRef<Path>, B: AsRef<[u8]>>(path: P, contents: B) -> CoreResult<()> {
-    let mut file = create_file(path)?;
+pub fn write_bytes<P: AsRef<Path>, B: AsRef<[u8]>>(_path: P, contents: B) -> CoreResult<()> {
+    let mut file = create_file(_path)?;
     file.write_all(contents.as_ref())?;
     file.flush()?;
     Ok(())
@@ -138,12 +138,12 @@ pub fn write_bytes<P: AsRef<Path>, B: AsRef<[u8]>>(path: P, contents: B) -> Core
 /// * `Ok(())` if the file was read successfully
 /// * `Err(CoreError::IoError)` if the file could not be read
 #[allow(dead_code)]
-pub fn read_lines<P, F>(path: P, mut callback: F) -> CoreResult<()>
+pub fn read_lines<P, F>(_path: P, mut callback: F) -> CoreResult<()>
 where
     P: AsRef<Path>,
     F: FnMut(String) -> CoreResult<()>,
 {
-    let file = open_file(path)?;
+    let file = open_file(_path)?;
     for line in file.lines() {
         let line = line?;
         callback(line)?;
@@ -163,8 +163,8 @@ where
 /// * `false` if the file does not exist
 #[must_use]
 #[allow(dead_code)]
-pub fn file_exists<P: AsRef<Path>>(path: P) -> bool {
-    path.as_ref().exists() && path.as_ref().is_file()
+pub fn file_exists<P: AsRef<Path>>(_path: P) -> bool {
+    _path.as_ref().exists() && _path.as_ref().is_file()
 }
 
 /// Checks if a directory exists
@@ -179,8 +179,8 @@ pub fn file_exists<P: AsRef<Path>>(path: P) -> bool {
 /// * `false` if the directory does not exist
 #[must_use]
 #[allow(dead_code)]
-pub fn directory_exists<P: AsRef<Path>>(path: P) -> bool {
-    path.as_ref().exists() && path.as_ref().is_dir()
+pub fn directory_exists<P: AsRef<Path>>(_path: P) -> bool {
+    _path.as_ref().exists() && _path.as_ref().is_dir()
 }
 
 /// Creates a directory if it doesn't exist
@@ -194,9 +194,9 @@ pub fn directory_exists<P: AsRef<Path>>(path: P) -> bool {
 /// * `Ok(())` if the directory was created successfully or already exists
 /// * `Err(CoreError::IoError)` if the directory could not be created
 #[allow(dead_code)]
-pub fn create_directory<P: AsRef<Path>>(path: P) -> CoreResult<()> {
-    if !directory_exists(&path) {
-        std::fs::create_dir_all(path.as_ref())?;
+pub fn create_directory<P: AsRef<Path>>(_path: P) -> CoreResult<()> {
+    if !directory_exists(&_path) {
+        std::fs::create_dir_all(_path.as_ref())?;
     }
     Ok(())
 }
@@ -215,8 +215,8 @@ pub fn create_directory<P: AsRef<Path>>(path: P) -> CoreResult<()> {
 /// # Errors
 /// Returns `CoreError::IoError` if the file size could not be determined.
 #[allow(dead_code)]
-pub fn file_size<P: AsRef<Path>>(path: P) -> CoreResult<u64> {
-    let metadata = std::fs::metadata(path.as_ref())?;
+pub fn filesize<P: AsRef<Path>>(_path: P) -> CoreResult<u64> {
+    let metadata = std::fs::metadata(_path.as_ref())?;
     Ok(metadata.len())
 }
 
@@ -231,7 +231,7 @@ pub fn file_size<P: AsRef<Path>>(path: P) -> CoreResult<u64> {
 /// * A formatted string with appropriate units
 #[must_use]
 #[allow(dead_code)]
-pub fn format_file_size(size: u64) -> String {
+pub fn formatsize(size: u64) -> String {
     const KB: u64 = 1024;
     const MB: u64 = KB * 1024;
     const GB: u64 = MB * 1024;
@@ -339,24 +339,24 @@ mod tests {
     }
 
     #[test]
-    fn test_file_size() {
+    fn test_filesize() {
         let dir = tempdir().unwrap();
-        let file_path = dir.path().join("test_size.txt");
+        let file_path = dir.path().join("testsize.txt");
 
         let test_str = "Hello, world!";
         write_string(&file_path, test_str).unwrap();
 
-        let size = file_size(&file_path).unwrap();
+        let size = filesize(&file_path).unwrap();
         assert_eq!(size, test_str.len() as u64);
     }
 
     #[test]
-    fn test_format_file_size() {
-        assert_eq!(format_file_size(500), "500 B");
-        assert_eq!(format_file_size(1024), "1.00 KB");
-        assert_eq!(format_file_size(1500), "1.46 KB");
-        assert_eq!(format_file_size(1024 * 1024), "1.00 MB");
-        assert_eq!(format_file_size(1024 * 1024 * 1024), "1.00 GB");
-        assert_eq!(format_file_size(1024 * 1024 * 1024 * 1024), "1.00 TB");
+    fn test_formatsize() {
+        assert_eq!(formatsize(500), "500 B");
+        assert_eq!(formatsize(1024), "1.00 KB");
+        assert_eq!(formatsize(1500), "1.46 KB");
+        assert_eq!(formatsize(1024 * 1024), "1.00 MB");
+        assert_eq!(formatsize(1024 * 1024 * 1024), "1.00 GB");
+        assert_eq!(formatsize(1024 * 1024 * 1024 * 1024), "1.00 TB");
     }
 }

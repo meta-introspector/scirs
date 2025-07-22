@@ -261,7 +261,7 @@ fn demonstrate_performance_modeling(
     }
 
     // Check model accuracy
-    if let Some(accuracy) = manager.get_model_accuracy("matrix_multiply") {
+    if let Some(accuracy) = manager.get_model_accuracy(matrix_multiply) {
         println!("🎯 Model accuracy: {:.1}%", accuracy * 100.0);
     }
 
@@ -492,7 +492,7 @@ mod tests {
         let manager = StabilityGuaranteeManager::new();
 
         // Initially disabled
-        if let Some((enabled, _, _)) = manager.get_chaos_status() {
+        if let Some((enabled__)) = manager.get_chaos_status() {
             assert!(!enabled);
         }
 
@@ -500,7 +500,7 @@ mod tests {
         manager.enable_chaos_engineering(0.1);
 
         // Should now be enabled
-        if let Some((enabled, probability, _)) = manager.get_chaos_status() {
+        if let Some((enabled, probability_)) = manager.get_chaos_status() {
             assert!(enabled);
             assert!((probability - 0.1).abs() < f64::EPSILON);
         }

@@ -10,7 +10,7 @@
 //! while monitoring performance and using advanced error estimation.
 
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_integrate::{
+use scirs2__integrate::{
     // Advanced modules
     amr_advanced::{
         AdaptiveCell, AdaptiveMeshLevel, AdvancedAMRManager, CellId, GradientRefinementCriterion,
@@ -57,8 +57,8 @@ fn main() -> IntegrateResult<()> {
 
 /// Demonstrate Advanced Adaptive Mesh Refinement
 #[allow(dead_code)]
-fn demonstrate_advanced_amr(profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
-    profiler.start_phase("amr_demonstration");
+fn demonstrate_advanced_amr(_profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
+    _profiler.start_phase("amr_demonstration");
     println!("1. Advanced AMR Demonstration");
     println!("   Setting up adaptive mesh refinement for 2D heat equation...");
 
@@ -104,7 +104,7 @@ fn demonstrate_advanced_amr(profiler: &mut PerformanceProfiler) -> IntegrateResu
     amr_manager.add_criterion(Box::new(gradient_criterion));
 
     // Simulate solution update
-    let solution = Array2::from_shape_fn((4, 1), |(i, _)| {
+    let solution = Array2::from_shape_fn((4, 1), |(i_)| {
         let x = (i % 2) as f64 * 0.5 + 0.25;
         let y = (i / 2) as f64 * 0.5 + 0.25;
         heat_equation_solution(x, y, 0.1)
@@ -127,14 +127,14 @@ fn demonstrate_advanced_amr(profiler: &mut PerformanceProfiler) -> IntegrateResu
         adaptation_result.load_balance_quality
     );
 
-    profiler.end_phase("amr_demonstration");
+    _profiler.end_phase("amr_demonstration");
     Ok(())
 }
 
 /// Demonstrate advanced error estimation techniques
 #[allow(dead_code)]
-fn demonstrate_error_estimation(profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
-    profiler.start_phase("error_estimation_demo");
+fn demonstrate_error_estimation(_profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
+    _profiler.start_phase("error_estimation_demo");
     println!("\n2. Advanced Error Estimation Demonstration");
     println!("   Using Richardson extrapolation and spectral analysis...");
 
@@ -174,14 +174,14 @@ fn demonstrate_error_estimation(profiler: &mut PerformanceProfiler) -> Integrate
         }
     }
 
-    profiler.end_phase("error_estimation_demo");
+    _profiler.end_phase("error_estimation_demo");
     Ok(())
 }
 
 /// Demonstrate parallel optimization with vectorized operations
 #[allow(dead_code)]
-fn demonstrate_parallel_optimization(profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
-    profiler.start_phase("parallel_optimization_demo");
+fn demonstrate_parallel_optimization(_profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
+    _profiler.start_phase("parallel_optimization_demo");
     println!("\n3. Parallel Optimization Demonstration");
     println!("   Performing vectorized matrix operations...");
 
@@ -232,10 +232,10 @@ fn demonstrate_parallel_optimization(profiler: &mut PerformanceProfiler) -> Inte
             result.dim()
         );
 
-        profiler.record_metric(&format!("{name}_time_ms"), duration.as_millis() as f64);
+        _profiler.record_metric(&format!("{name}_time_ms"), duration.as_millis() as f64);
     }
 
-    profiler.end_phase("parallel_optimization_demo");
+    _profiler.end_phase("parallel_optimization_demo");
     Ok(())
 }
 

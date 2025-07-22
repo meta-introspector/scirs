@@ -246,10 +246,10 @@ where
             )));
         }
 
-        // Check that only one element is (close to) 1, rest are (close to) 0
+        // Check that only one element is (close to) 1, rest are 0
         let mut has_one = false;
-        for &val in targets.slice(s![i, ..]).iter() {
-            if (val - F::one()).abs() < F::from(1e-6).unwrap() {
+        for val in targets.slice(s![i, ..]).iter() {
+            if (*val - F::one()).abs() < F::from(1e-6).unwrap() {
                 if has_one {
                     // More than one value close to 1
                     return Err(LinalgError::InvalidInputError(format!(
@@ -257,10 +257,10 @@ where
                     )));
                 }
                 has_one = true;
-            } else if val > F::from(1e-6).unwrap() {
+            } else if *val > F::from(1e-6).unwrap() {
                 // Value is not close to 0 or 1
                 return Err(LinalgError::InvalidInputError(format!(
-                    "targets row {i} is not a valid one-hot vector: contains value {val} not close to 0 or 1"
+                    "targets row {i} is not a valid one-hot vector: contains value {} not close to 0 or 1", *val
                 )));
             }
         }

@@ -4,31 +4,31 @@
 //! from the `scirs2-spatial` crate, which measure the similarity between sets of points.
 
 use ndarray::{array, ArrayView2};
-use scirs2_spatial::set_distance::{
+use scirs2__spatial::set_distance::{
     directed_hausdorff, gromov_hausdorff_distance, hausdorff_distance, wasserstein_distance,
 };
 
 /// Print distance and description
 #[allow(dead_code)]
-fn print_distance(name: &str, dist: f64, description: &str) {
-    println!("{name: <25} : {dist:.6}");
+fn print_distance(_name: &str, dist: f64, description: &str) {
+    println!("{_name: <25} : {dist:.6}");
     println!("{: <25}   {}", "", description);
     println!();
 }
 
 /// Create a nice visual representation of the point sets
 #[allow(dead_code)]
-fn visualize_sets(set1: &ArrayView2<f64>, set2: &ArrayView2<f64>) {
+fn visualize_sets(_set1: &ArrayView2<f64>, set2: &ArrayView2<f64>) {
     let size = 10;
     let mut grid = vec![vec![' '; size]; size];
 
     // Scale the points to fit in our grid
     let scale = (size - 1) as f64;
 
-    // Mark set1 points with 'A'
-    for i in 0..set1.shape()[0] {
-        let x = (set1[[i, 0]] * scale).round() as usize;
-        let y = (set1[[i, 1]] * scale).round() as usize;
+    // Mark _set1 points with 'A'
+    for i in 0.._set1.shape()[0] {
+        let x = (_set1[[i, 0]] * scale).round() as usize;
+        let y = (_set1[[i, 1]] * scale).round() as usize;
         if x < size && y < size {
             grid[y][x] = 'A';
         }
@@ -49,7 +49,7 @@ fn visualize_sets(set1: &ArrayView2<f64>, set2: &ArrayView2<f64>) {
     }
 
     // Print the grid
-    println!("Visualization (A: set1, B: set2, X: overlap):");
+    println!("Visualization (A: _set1, B: set2, X: overlap):");
     println!("  0123456789");
     println!(" +----------+");
     for (i, row) in grid.iter().enumerate() {

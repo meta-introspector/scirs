@@ -412,13 +412,13 @@ where
 
 /// Refine a Bessel function zero using Newton's method
 #[allow(dead_code)]
-fn refine_bessel_zero<T, F, D>(initial: T, f: F, df: D) -> SpecialResult<T>
+fn refine_bessel_zero<T, F, D>(_initial: T, f: F, df: D) -> SpecialResult<T>
 where
     T: Float + FromPrimitive,
     F: Fn(T) -> T,
     D: Fn(T) -> T,
 {
-    let mut x = initial;
+    let mut x = _initial;
     let tol = T::from_f64(1e-12).unwrap();
     let max_iter = 20;
 
@@ -588,7 +588,7 @@ mod tests {
         let x = 0.5;
         let result = itj0y0::<f64>(x, 0);
         assert!(result.is_ok(), "itj0y0 should work for n=0, x=0.5");
-        let (int1, _int2) = result.unwrap();
+        let (int1_int2) = result.unwrap();
         // Should be negative values based on the formula
         assert!(int1 < 0.0, "First integral should be negative for n=0");
 
@@ -648,7 +648,7 @@ mod tests {
         let x = 0.999;
         let result = itj0y0::<f64>(x, 0);
         assert!(result.is_ok(), "Should work for x close to 1");
-        let (int1, _) = result.unwrap();
+        let (int1_) = result.unwrap();
         // Should have large magnitude when x approaches 1
         assert!(
             int1.abs() > 100.0,

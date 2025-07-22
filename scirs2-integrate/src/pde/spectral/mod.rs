@@ -67,7 +67,7 @@ pub struct SpectralOptions {
 }
 
 impl Default for SpectralOptions {
-    fn default() -> Self {
+    fn default(&self) -> Self {
         SpectralOptions {
             basis: SpectralBasis::Fourier,
             num_modes: 64,
@@ -190,8 +190,8 @@ pub fn chebyshev_transform(u: &ArrayView1<f64>) -> Array1<f64> {
 
 /// Transform from Chebyshev coefficient space to physical space
 #[allow(dead_code)]
-pub fn chebyshev_inverse_transform(coeffs: &ArrayView1<f64>) -> Array1<f64> {
-    let n = coeffs.len();
+pub fn chebyshev_inverse_transform(_coeffs: &ArrayView1<f64>) -> Array1<f64> {
+    let n = _coeffs.len();
     let mut u = Array1::zeros(n);
 
     // Generate Chebyshev points
@@ -201,7 +201,7 @@ pub fn chebyshev_inverse_transform(coeffs: &ArrayView1<f64>) -> Array1<f64> {
     for j in 0..n {
         let mut sum = 0.0;
         for k in 0..n {
-            sum += coeffs[k] * (k as f64 * j as f64 * PI / (n - 1) as f64).cos();
+            sum += _coeffs[k] * (k as f64 * j as f64 * PI / (n - 1) as f64).cos();
         }
         u[j] = sum;
     }
@@ -378,7 +378,7 @@ pub fn legendre_diff_matrix(n: usize) -> Array2<f64> {
     let mut d = Array2::zeros((n, n));
 
     // Compute Legendre-Gauss-Lobatto points and weights
-    let (x, _) = legendre_points(n);
+    let (x_) = legendre_points(n);
 
     // Compute the differentiation matrix entries
     for i in 0..n {
@@ -450,9 +450,9 @@ pub fn legendre_inverse_transform(
     let n = coeffs.len();
     let mut u = Array1::zeros(n);
 
-    // Use provided points or generate Legendre-Gauss-Lobatto points
-    let x = if let Some(points) = x_points {
-        points.to_owned()
+    // Use provided _points or generate Legendre-Gauss-Lobatto _points
+    let x = if let Some(_points) = x_points {
+        _points.to_owned()
     } else {
         legendre_points(n).0
     };
@@ -513,7 +513,7 @@ impl FourierSpectralSolver1D {
 
         if !has_periodic {
             return Err(PDEError::BoundaryConditions(
-                "Fourier spectral methods require periodic boundary conditions".to_string(),
+                "Fourier spectral methods require periodic boundary _conditions".to_string(),
             ));
         }
 
@@ -676,10 +676,10 @@ impl ChebyshevSpectralSolver1D {
             ));
         }
 
-        // Validate boundary conditions
+        // Validate boundary _conditions
         if boundary_conditions.len() != 2 {
             return Err(PDEError::BoundaryConditions(
-                "1D Chebyshev spectral solver requires exactly 2 boundary conditions".to_string(),
+                "1D Chebyshev spectral solver requires exactly 2 boundary _conditions".to_string(),
             ));
         }
 
@@ -692,10 +692,10 @@ impl ChebyshevSpectralSolver1D {
                 BoundaryLocation::Upper => has_upper = true,
             }
 
-            // Periodic boundary conditions are not suitable for Chebyshev methods
+            // Periodic boundary _conditions are not suitable for Chebyshev methods
             if bc.bc_type == BoundaryConditionType::Periodic {
                 return Err(PDEError::BoundaryConditions(
-                    "Chebyshev spectral methods are not suitable for periodic boundary conditions"
+                    "Chebyshev spectral methods are not suitable for periodic boundary _conditions"
                         .to_string(),
                 ));
             }
@@ -703,7 +703,7 @@ impl ChebyshevSpectralSolver1D {
 
         if !has_lower || !has_upper {
             return Err(PDEError::BoundaryConditions(
-                "Chebyshev spectral solver requires boundary conditions at both domain endpoints"
+                "Chebyshev spectral solver requires boundary _conditions at both domain endpoints"
                     .to_string(),
             ));
         }
@@ -901,7 +901,7 @@ impl ChebyshevSpectralSolver1D {
     }
 
     /// Solve the linear system Ax = b
-    fn solve_linear_system(&self, a: &Array2<f64>, b: &ArrayView1<f64>) -> PDEResult<Array1<f64>> {
+    fn solve_linear_system(a: &Array2<f64>, b: &ArrayView1<f64>) -> PDEResult<Array1<f64>> {
         let n = b.len();
 
         // Simple Gaussian elimination with partial pivoting
@@ -1002,10 +1002,10 @@ impl LegendreSpectralSolver1D {
             ));
         }
 
-        // Validate boundary conditions
+        // Validate boundary _conditions
         if boundary_conditions.len() != 2 {
             return Err(PDEError::BoundaryConditions(
-                "1D Legendre spectral solver requires exactly 2 boundary conditions".to_string(),
+                "1D Legendre spectral solver requires exactly 2 boundary _conditions".to_string(),
             ));
         }
 
@@ -1018,10 +1018,10 @@ impl LegendreSpectralSolver1D {
                 BoundaryLocation::Upper => has_upper = true,
             }
 
-            // Periodic boundary conditions are not suitable for Legendre methods
+            // Periodic boundary _conditions are not suitable for Legendre methods
             if bc.bc_type == BoundaryConditionType::Periodic {
                 return Err(PDEError::BoundaryConditions(
-                    "Legendre spectral methods are not suitable for periodic boundary conditions"
+                    "Legendre spectral methods are not suitable for periodic boundary _conditions"
                         .to_string(),
                 ));
             }
@@ -1029,7 +1029,7 @@ impl LegendreSpectralSolver1D {
 
         if !has_lower || !has_upper {
             return Err(PDEError::BoundaryConditions(
-                "Legendre spectral solver requires boundary conditions at both domain endpoints"
+                "Legendre spectral solver requires boundary _conditions at both domain endpoints"
                     .to_string(),
             ));
         }
@@ -1060,7 +1060,7 @@ impl LegendreSpectralSolver1D {
         let n = self.options.num_modes;
 
         // Generate Legendre-Gauss-Lobatto grid in [-1, 1] and weights
-        let (lgb_grid, _weights) = legendre_points(n);
+        let (lgb_grid_weights) = legendre_points(n);
 
         // Map Legendre grid to the domain [a, b]
         let mut grid = Array1::zeros(n);
@@ -1224,7 +1224,7 @@ impl LegendreSpectralSolver1D {
     }
 
     /// Solve the linear system Ax = b
-    fn solve_linear_system(&self, a: &Array2<f64>, b: &ArrayView1<f64>) -> PDEResult<Array1<f64>> {
+    fn solve_linear_system(a: &Array2<f64>, b: &ArrayView1<f64>) -> PDEResult<Array1<f64>> {
         let n = b.len();
 
         // Simple Gaussian elimination with partial pivoting
@@ -1295,23 +1295,23 @@ impl LegendreSpectralSolver1D {
 }
 
 impl From<SpectralResult> for PDESolution<f64> {
-    fn from(result: SpectralResult) -> Self {
-        let grids = vec![result.grid.clone()];
+    fn from(_result: SpectralResult) -> Self {
+        let grids = vec![_result.grid.clone()];
 
         // Create solution values as a 2D array with one column
         let mut values = Vec::new();
-        // Clone the result.u to avoid the move issue
-        let u_clone = result.u.clone();
+        // Clone the _result.u to avoid the move issue
+        let u_clone = _result.u.clone();
         let u_len = u_clone.len();
         let u_reshaped = u_clone.into_shape_with_order((u_len, 1)).unwrap();
         values.push(u_reshaped);
 
         // Create solver info
         let info = PDESolverInfo {
-            num_iterations: result.num_iterations,
-            computation_time: result.computation_time,
-            residual_norm: Some(result.residual_norm),
-            convergence_history: result.convergence_history,
+            num_iterations: _result.num_iterations,
+            computation_time: _result.computation_time,
+            residual_norm: Some(_result.residual_norm),
+            convergence_history: _result.convergence_history,
             method: "Spectral Method".to_string(),
         };
 
@@ -1336,8 +1336,8 @@ impl From<SpectralResult> for PDESolution<f64> {
 /// # Returns
 /// * A complex-valued array containing the FFT result
 #[allow(dead_code)]
-fn fft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
-    // Convert to complex array
+fn fft(x: &Array1<f64>) -> Array1<num__complex::Complex<f64>> {
+    // Convert to _complex array
     let mut input: Vec<num_complex::Complex<f64>> = x
         .iter()
         .map(|&val| num_complex::Complex::new(val, 0.0))
@@ -1450,7 +1450,7 @@ fn ifft(x: &Array1<num_complex::Complex<f64>>) -> Array1<num_complex::Complex<f6
     let n = x.len();
     let mut input: Vec<num_complex::Complex<f64>> = x.to_vec();
 
-    // Take complex conjugate
+    // Take _complex conjugate
     for val in &mut input {
         *val = val.conj();
     }
@@ -1458,7 +1458,7 @@ fn ifft(x: &Array1<num_complex::Complex<f64>>) -> Array1<num_complex::Complex<f6
     // Perform FFT
     fft_complex(&mut input);
 
-    // Take complex conjugate and scale by 1/n
+    // Take _complex conjugate and scale by 1/n
     let scale = 1.0 / (n as f64);
     for val in &mut input {
         *val = val.conj() * scale;
@@ -1501,7 +1501,7 @@ fn rfft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
 /// * A real-valued array containing the IRFFT result
 #[allow(dead_code)]
 fn irfft_with_size(x: &Array1<num_complex::Complex<f64>>, n: usize) -> Array1<f64> {
-    // Reconstruct the full complex spectrum using Hermitian symmetry
+    // Reconstruct the full _complex spectrum using Hermitian symmetry
     let mut full_spectrum = Array1::zeros(n);
     let rfft_size = x.len();
 
@@ -1544,7 +1544,7 @@ fn irfft(x: &Array1<num_complex::Complex<f64>>) -> Array1<f64> {
 
 // Import spectral element module
 pub mod spectral_element;
-pub use spectral_element::{
+pub use spectral__element::{
     QuadElement, SpectralElementMesh2D, SpectralElementOptions, SpectralElementPoisson2D,
     SpectralElementResult,
 };

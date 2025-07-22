@@ -3,7 +3,8 @@
 //! This example shows how to compute and visualize scalograms using the
 //! continuous wavelet transform (CWT) functionality in scirs2-signal.
 
-use scirs2_signal::wavelets::{cwt_magnitude, morlet, paul, scale_to_frequency, scalogram};
+use scirs2__signal::wavelets::{cwt_magnitude, morlet, paul, scale_to_frequency, scalogram};
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

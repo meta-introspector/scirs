@@ -39,7 +39,7 @@ impl<F: Float + ScalarOperand + Debug> RMSprop<F> {
     ///
     /// # Arguments
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(learning_rate: F) -> Result<Self> {
+    pub fn new(_learning_rate: F) -> Result<Self> {
         let rho = F::from(0.9).ok_or_else(|| {
             NeuralError::InvalidArgument(
                 "Failed to convert 0.9 to the appropriate floating point type".to_string(),
@@ -59,7 +59,7 @@ impl<F: Float + ScalarOperand + Debug> RMSprop<F> {
     /// * `rho` - Decay rate for the moving average of squared gradients
     /// * `epsilon` - Small constant for numerical stability
     /// * `weight_decay` - Weight decay factor (L2 regularization)
-    pub fn new_with_config(learning_rate: F, rho: F, epsilon: F, weight_decay: F) -> Self {
+    pub fn new_with_config(_learning_rate: F, rho: F, epsilon: F, weight_decay: F) -> Self {
         Self {
             weight_decay,
         }

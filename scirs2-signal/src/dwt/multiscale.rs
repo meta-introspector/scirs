@@ -3,12 +3,13 @@
 //! This module provides functions for multi-level/multi-resolution wavelet analysis,
 //! including decomposition and reconstruction of signals.
 
-use super::filters::Wavelet;
-use super::transform::{dwt_decompose, dwt_reconstruct};
+use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
+use super::transform::{dwt_decompose, dwt_reconstruct};
 
+#[allow(unused_imports)]
 /// Perform multi-level wavelet decomposition
 ///
 /// # Arguments
@@ -26,7 +27,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::dwt::{wavedec, Wavelet};
+/// use scirs2__signal::dwt::{wavedec, Wavelet};
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 /// let coeffs = wavedec(&signal, Wavelet::DB(4), Some(2), None).unwrap();
@@ -120,7 +121,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::dwt::{wavedec, waverec, Wavelet};
+/// use scirs2__signal::dwt::{wavedec, waverec, Wavelet};
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 /// let coeffs = wavedec(&signal, Wavelet::DB(4), Some(2), None).unwrap();
@@ -134,27 +135,27 @@ where
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn waverec(coeffs: &[Vec<f64>], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
-    if coeffs.is_empty() {
+pub fn waverec(_coeffs: &[Vec<f64>], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
+    if _coeffs.is_empty() {
         return Err(SignalError::ValueError(
             "Coefficients array is empty".to_string(),
         ));
     }
 
     // Case of no transform (just the signal)
-    if coeffs.len() == 1 {
-        return Ok(coeffs[0].clone());
+    if _coeffs.len() == 1 {
+        return Ok(_coeffs[0].clone());
     }
 
     // Start with the coarsest approximation
-    let mut approx = coeffs[0].clone();
+    let mut approx = _coeffs[0].clone();
 
     // Number of reconstruction levels
-    let n_levels = coeffs.len() - 1;
+    let n_levels = _coeffs.len() - 1;
 
     // Reconstruct each level
     for i in 0..n_levels {
-        let detail = &coeffs[i + 1];
+        let detail = &_coeffs[i + 1];
 
         // In some cases, approximation and detail coefficients might be off by 1 or 2
         // elements due to boundary handling and padding. We'll adjust them to make them equal.

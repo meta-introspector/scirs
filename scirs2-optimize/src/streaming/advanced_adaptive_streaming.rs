@@ -470,11 +470,11 @@ enum NotificationChannel {
 
 impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
     /// Create a new advanced-adaptive streaming optimizer
-    pub fn new(initial_parameters: Array1<f64>, objective: T, config: StreamingConfig) -> Self {
-        let param_size = initial_parameters.len();
+    pub fn new(_initial_parameters: Array1<f64>, objective: T, config: StreamingConfig) -> Self {
+        let param_size = _initial_parameters.len();
 
         Self {
-            parameters: initial_parameters,
+            _parameters: _initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),
@@ -605,7 +605,7 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
         let weight_sum = fusion_weights.sum();
         fusion_weights /= weight_sum;
 
-        // Compute fused update
+        // Compute fused _update
         let fused = fusion_weights[0] * neuromorphic_update
             + fusion_weights[1] * quantum_update
             + fusion_weights[2] * federated_update;
@@ -701,7 +701,7 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
             regularized *= clip_threshold / gradient_norm;
         }
 
-        // Apply learning rate
+        // Apply learning _rate
         regularized *= learning_rate;
 
         Ok(regularized)
@@ -726,7 +726,7 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
     }
 
     /// Adaptive hyperparameter tuning
-    fn adaptive_hyperparameter_tuning(&mut self, _context: &Array1<f64>) -> Result<()> {
+    fn adaptive_hyperparameter_tuning(&mut self_context: &Array1<f64>) -> Result<()> {
         // Tune learning rate based on performance
         if self.performance_tracker.is_stagnant() {
             self.config.learning_rate *= 1.1; // Increase learning rate
@@ -882,12 +882,12 @@ impl MultiScaleTemporalMemory {
 }
 
 impl NeuromorphicLearningSystem {
-    fn new(param_size: usize) -> Self {
+    fn new(_param_size: usize) -> Self {
         Self {
-            spike_trains: vec![VecDeque::with_capacity(100); param_size],
-            synaptic_weights: Array2::eye(param_size),
-            membrane_potentials: Array1::zeros(param_size),
-            adaptation_thresholds: Array1::ones(param_size),
+            spike_trains: vec![VecDeque::with_capacity(100); _param_size],
+            synaptic_weights: Array2::eye(_param_size),
+            membrane_potentials: Array1::zeros(_param_size),
+            adaptation_thresholds: Array1::ones(_param_size),
             stdp_rates: STDPRates {
                 ltp_rate: 0.01,
                 ltd_rate: 0.005,
@@ -899,10 +899,7 @@ impl NeuromorphicLearningSystem {
     }
 
     fn process_spike_update(
-        &mut self,
-        _parameters: &Array1<f64>,
-        _data_point: &StreamingDataPoint,
-        _context: &Array1<f64>,
+        &mut self_parameters: &Array1<f64>, _data_point: &StreamingDataPoint, _context: &Array1<f64>,
     ) -> Result<Array1<f64>> {
         // Placeholder for neuromorphic update
         Ok(Array1::zeros(_parameters.len()))
@@ -910,12 +907,12 @@ impl NeuromorphicLearningSystem {
 }
 
 impl QuantumInspiredVariational {
-    fn new(param_size: usize) -> Self {
+    fn new(_param_size: usize) -> Self {
         Self {
-            quantum_state: Array1::ones(param_size) / (param_size as f64).sqrt(),
-            variational_params: Array1::zeros(param_size),
-            entanglement_matrix: Array2::eye(param_size),
-            measurement_operators: vec![Array2::eye(param_size)],
+            quantum_state: Array1::ones(_param_size) / (_param_size as f64).sqrt(),
+            variational_params: Array1::zeros(_param_size),
+            entanglement_matrix: Array2::eye(_param_size),
+            measurement_operators: vec![Array2::eye(_param_size)],
             noise_model: QuantumNoiseModel {
                 decoherence_rate: 0.01,
                 thermal_noise: 0.001,
@@ -926,10 +923,7 @@ impl QuantumInspiredVariational {
     }
 
     fn variational_update(
-        &mut self,
-        _parameters: &Array1<f64>,
-        _data_point: &StreamingDataPoint,
-        _context: &Array1<f64>,
+        &mut self_parameters: &Array1<f64>, _data_point: &StreamingDataPoint, _context: &Array1<f64>,
     ) -> Result<Array1<f64>> {
         // Placeholder for quantum variational update
         Ok(Array1::zeros(_parameters.len()))
@@ -958,9 +952,7 @@ impl MetaLearningSelector {
     }
 
     fn select_algorithm(
-        &mut self,
-        _context: &Array1<f64>,
-        _metrics: &HashMap<String, f64>,
+        &mut self_context: &Array1<f64>, _metrics: &HashMap<String, f64>,
     ) -> Result<OptimizationAlgorithm> {
         // Placeholder for meta-learning selection
         Ok(OptimizationAlgorithm::AdaptiveGradientDescent)
@@ -968,10 +960,10 @@ impl MetaLearningSelector {
 }
 
 impl FederatedLearningCoordinator {
-    fn new(param_size: usize) -> Self {
+    fn new(_param_size: usize) -> Self {
         Self {
-            local_model: Array1::zeros(param_size),
-            global_model: Array1::zeros(param_size),
+            local_model: Array1::zeros(_param_size),
+            global_model: Array1::zeros(_param_size),
             peer_models: HashMap::new(),
             communication_budget: 100,
             privacy_params: DifferentialPrivacyParams {
@@ -984,9 +976,7 @@ impl FederatedLearningCoordinator {
     }
 
     fn aggregate_update(
-        &mut self,
-        _update1: &Array1<f64>,
-        _update2: &Array1<f64>,
+        &mut self_update1: &Array1<f64>, _update2: &Array1<f64>,
     ) -> Result<Array1<f64>> {
         // Placeholder for federated aggregation
         Ok(Array1::zeros(_update1.len()))
@@ -1005,7 +995,7 @@ impl SelfOrganizingMemoryHierarchy {
         }
     }
 
-    fn consolidate_updates(&mut self, _update: &Array1<f64>, _context: &Array1<f64>) -> Result<()> {
+    fn consolidate_updates(&mut self_update: &Array1<f64>, _context: &Array1<f64>) -> Result<()> {
         // Placeholder for memory consolidation
         Ok(())
     }
@@ -1064,10 +1054,7 @@ impl AdvancedPerformanceTracker {
     }
 
     fn update_metrics(
-        &mut self,
-        _parameters: &Array1<f64>,
-        _data_point: &StreamingDataPoint,
-        _processing_time: Duration,
+        &mut self_parameters: &Array1<f64>, _data_point: &StreamingDataPoint_processing, _time: Duration,
     ) -> Result<()> {
         // Placeholder for metrics update
         Ok(())

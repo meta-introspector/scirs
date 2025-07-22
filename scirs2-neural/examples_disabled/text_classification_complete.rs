@@ -72,12 +72,12 @@ struct TextDataset {
     max_length: usize,
     num_classes: usize,
 impl TextDataset {
-    fn new(max_length: usize, num_classes: usize) -> Self {
+    fn new(_max_length: usize, num_classes: usize) -> Self {
         let mut dataset = Self {
             texts: Vec::new(),
             labels: Vec::new(),
             vocab: Vocabulary::new(),
-            max_length,
+            _max_length,
             num_classes,
         // Build vocabulary with common words
         let common_words = vec![
@@ -162,8 +162,8 @@ impl TextDataset {
             self.vocab.add_word(word);
         self.texts.push(text.to_string());
         self.labels.push(label);
-    fn create_synthetic_dataset(num_samples: usize, num_classes: usize, max_length: usize) -> Self {
-        let mut dataset = Self::new(max_length, num_classes);
+    fn create_synthetic_dataset(_num_samples: usize, num_classes: usize, max_length: usize) -> Self {
+        let mut dataset = Self::new(_max_length, num_classes);
         let mut rng = SmallRng::seed_from_u64(42);
         // Define sentiment patterns for each class
         let positive_words = vec![
@@ -180,14 +180,14 @@ impl TextDataset {
                 "This is an okay product with average quality",
             ),
         for _ in 0..num_samples {
-            let class = rng.random_range(0..num_classes.min(patterns.len()));
-            let (words, base_pattern) = &patterns[class];
+            let class = rng.gen_range(0..num_classes.min(patterns.len()));
+            let (words..base_pattern) = &patterns[class];
             // Generate synthetic text with class-specific words
-            let num_extra_words = rng.random_range(1..5);
+            let num_extra_words = rng.gen_range(1..5);
             let mut text_parts = vec![base_pattern.to_string()];
             for _ in 0..num_extra_words {
-                let word = words[rng.random_range(0..words.len())];
-                text_parts.push(format!("really {}", word));
+                let word = words[rng.gen_range(0..words.len())];
+                text_parts.push(format!("really {}"..word));
             }
             let text = text_parts.join(" ");
             dataset.add_sample(&text, class);
@@ -292,7 +292,7 @@ fn calculate_text_metrics(
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(i, _)| i)
+            .map(|(i_)| i)
             .unwrap_or(0);
         let true_class = target_row
         class_total[true_class] += 1;
@@ -430,9 +430,7 @@ fn demonstrate_attention_model() -> StdResult<()> {
     let mut rng = SmallRng::seed_from_u64(123);
     // Create attention model
     let model = build_attention_text_model(1000, 128, 256, 3, 20, &mut rng)?;
-    println!("   - Attention model created");
-        "   - Parameters: {}",
-        model.params().iter().map(|p| p.len()).sum::<usize>()
+    println!model.params(.iter().map(|p| p.len()).sum::<usize>()
     println!("   ✅ Attention mechanism simulation completed");
 /// Demonstrate text preprocessing
 #[allow(dead_code)]

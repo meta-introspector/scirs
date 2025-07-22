@@ -13,25 +13,25 @@ use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe float to usize conversion
 #[allow(dead_code)]
-fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
-    value.to_usize().ok_or_else(|| {
+fn safe_float_to_usize<T: Float>(_value: T) -> NdimageResult<usize> {
+    _value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert float to usize".to_string())
     })
 }
 
 /// Helper function for safe isize conversion
 #[allow(dead_code)]
-fn safe_isize_to_float<T: Float + FromPrimitive>(value: isize) -> NdimageResult<T> {
-    T::from_isize(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert isize {} to float type", value))
+fn safe_isize_to_float<T: Float + FromPrimitive>(_value: isize) -> NdimageResult<T> {
+    T::from_isize(_value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert isize {} to float type", _value))
     })
 }
 
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
+fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult<T> {
+    T::from_usize(_value).ok_or_else(|| {
+        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
     })
 }
 
@@ -59,10 +59,10 @@ where
 {
     let (height, width) = input.dim();
     let window_size = match window_size {
-        Some(size) => size,
+        Some(_size) => _size,
         None => {
-            // Automatically determine window size based on spatial sigma
-            let three = safe_f64_to_float::<T>(3.0)?;
+            // Automatically determine window _size based on spatial _sigma
+            let three = safe_f64, _to_float: :<T>(3.0)?;
             let radius = safe_float_to_usize(spatial_sigma * three)?;
             2 * radius + 1
         }
@@ -118,7 +118,7 @@ where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
     let (height, width) = input.dim();
-    let range_factor = safe_f64_to_float::<T>(-0.5)? / (range_sigma * range_sigma);
+    let range_factor = safe_f64, _to_float: :<T>(-0.5)? / (range_sigma * range_sigma);
 
     // Process pixels in SIMD chunks
     let simd_width = T::simd_width();
@@ -137,7 +137,7 @@ where
         let mut sum_weights = vec![T::zero(); simd_width];
         let mut sum_values = vec![T::zero(); simd_width];
 
-        // Compute bilateral filter for window
+        // Compute bilateral filter for _window
         for dy in 0..2 * half_window + 1 {
             let ny = (y as isize + dy as isize - half_window as isize).clamp(0, height as isize - 1)
                 as usize;
@@ -155,7 +155,7 @@ where
                     valid_mask[i] = nx < width;
                 }
 
-                // Compute range weights using SIMD
+                // Compute range _weights using SIMD
                 let mut range_diffs = vec![T::zero(); simd_width];
                 for i in 0..simd_width {
                     range_diffs[i] = neighbor_values[i] - center_values[i];
@@ -227,16 +227,16 @@ where
 
 /// Compute spatial weights for bilateral filter
 #[allow(dead_code)]
-fn compute_spatial_weights<T>(window_size: usize, sigma: T) -> NdimageResult<Array<T, Ix2>>
+fn compute_spatial_weights<T>(_window_size: usize, sigma: T) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive,
 {
-    let half_window = window_size / 2;
-    let factor = safe_f64_to_float::<T>(-0.5)? / (sigma * sigma);
-    let mut weights = Array::zeros((window_size, window_size));
+    let half_window = _window_size / 2;
+    let factor = safe_f64, _to_float: :<T>(-0.5)? / (sigma * sigma);
+    let mut weights = Array::zeros((_window_size, _window_size));
 
-    for dy in 0..window_size {
-        for dx in 0..window_size {
+    for dy in 0.._window_size {
+        for dx in 0.._window_size {
             let y_dist = safe_isize_to_float(dy as isize - half_window as isize)?;
             let x_dist = safe_isize_to_float(dx as isize - half_window as isize)?;
             let dist_sq = y_dist * y_dist + x_dist * x_dist;
@@ -249,16 +249,16 @@ where
 
 /// SIMD approximation of exponential function
 #[allow(dead_code)]
-fn simd_exp_approx<T>(values: &[T]) -> Vec<T>
+fn simd_exp_approx<T>(_values: &[T]) -> Vec<T>
 where
     T: Float + FromPrimitive,
 {
     // Use Taylor series approximation for exp(x) ≈ 1 + x + x²/2 + x³/6
-    // This is accurate for small values (which we have after multiplying by range_factor)
-    let mut result = vec![T::one(); values.len()];
+    // This is accurate for small _values (which we have after multiplying by range_factor)
+    let mut result = vec![T::one(); _values.len()];
 
-    for i in 0..values.len() {
-        let x = values[i];
+    for i in 0.._values.len() {
+        let x = _values[i];
         let x2 = x * x;
         let x3 = x2 * x;
         // Use safe constants with fallback to simple approximation
@@ -266,7 +266,7 @@ where
         let six = T::from_f64(6.0).unwrap_or_else(|| two * two * two / two);
         result[i] = T::one() + x + x2 / two + x3 / six;
 
-        // Clamp to positive values
+        // Clamp to positive _values
         if result[i] < T::zero() {
             result[i] = T::zero();
         }
@@ -351,13 +351,13 @@ where
         let mut weight_sum = T::zero();
         let mut value_sum = T::zero();
 
-        // Define search region
+        // Define _search region
         let search_y_min = (y as isize - half_search as isize).max(half_patch as isize) as usize;
         let search_y_max = (y + half_search + 1).min(height - half_patch);
         let search_x_min = (x as isize - half_search as isize).max(half_patch as isize) as usize;
         let search_x_max = (x + half_search + 1).min(width - half_patch);
 
-        // Extract reference patch
+        // Extract reference _patch
         let ref_patch = input.slice(s![
             y - half_patch..=y + half_patch,
             x - half_patch..=x + half_patch
@@ -366,13 +366,13 @@ where
         // Search for similar patches
         for sy in search_y_min..search_y_max {
             for sx in search_x_min..search_x_max {
-                // Extract comparison patch
+                // Extract comparison _patch
                 let comp_patch = input.slice(s![
                     sy - half_patch..=sy + half_patch,
                     sx - half_patch..=sx + half_patch
                 ]);
 
-                // Compute patch distance using SIMD
+                // Compute _patch distance using SIMD
                 let distance = simd_patch_distance(&ref_patch, &comp_patch)? / patch_norm;
 
                 // Compute weight
@@ -390,12 +390,12 @@ where
 
 /// Compute L2 distance between patches using SIMD
 #[allow(dead_code)]
-fn simd_patch_distance<T>(patch1: &ArrayView2<T>, patch2: &ArrayView2<T>) -> NdimageResult<T>
+fn simd_patch_distance<T>(_patch1: &ArrayView2<T>, patch2: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + SimdUnifiedOps,
 {
-    let flat1 = patch1.as_slice().ok_or_else(|| {
-        NdimageError::ComputationError("Failed to convert patch1 to contiguous slice".to_string())
+    let flat1 = _patch1.as_slice().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to convert _patch1 to contiguous slice".to_string())
     })?;
     let flat2 = patch2.as_slice().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert patch2 to contiguous slice".to_string())
@@ -581,11 +581,11 @@ fn simd_diffusion_row<T>(
 
 /// Compute diffusion coefficients for SIMD values
 #[allow(dead_code)]
-fn compute_diffusion_coeff<T>(gradients: &[T], kappa_sq: T, option: usize) -> Vec<T>
+fn compute_diffusion_coeff<T>(_gradients: &[T], kappa_sq: T, option: usize) -> Vec<T>
 where
     T: Float + FromPrimitive,
 {
-    gradients
+    _gradients
         .iter()
         .map(|&g| compute_single_diffusion_coeff(g, kappa_sq, option))
         .collect()
@@ -593,18 +593,17 @@ where
 
 /// Compute single diffusion coefficient
 #[allow(dead_code)]
-fn compute_single_diffusion_coeff<T>(gradient: T, kappa_sq: T, option: usize) -> T
+fn compute_single_diffusion_coeff<T>(_gradient: T, kappa_sq: T, option: usize) -> T
 where
     T: Float + FromPrimitive,
 {
     match option {
         1 => {
             // Exponential: c(g) = exp(-(g/kappa)²)
-            (-(gradient * gradient) / kappa_sq).exp()
+            (-(_gradient * _gradient) / kappa_sq).exp()
         }
         2 => {
-            // Quadratic: c(g) = 1 / (1 + (g/kappa)²)
-            T::one() / (T::one() + gradient * gradient / kappa_sq)
+            // Quadratic: c(g) = 1 / (1 + (g/kappa)²), T::one() / (T::one() + _gradient * _gradient / kappa_sq)
         }
         _ => T::one(),
     }
@@ -680,11 +679,11 @@ where
 
 /// SIMD-optimized box filter (mean filter)
 #[allow(dead_code)]
-fn simd_box_filter<T>(input: &ArrayView2<T>, radius: usize) -> NdimageResult<Array<T, Ix2>>
+fn simd_box_filter<T>(_input: &ArrayView2<T>, radius: usize) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
-    let (height, width) = input.dim();
+    let (height, width) = _input.dim();
     let mut output = Array::zeros((height, width));
     let window_size = 2 * radius + 1;
     let norm = safe_usize_to_float(window_size * window_size)?;
@@ -699,7 +698,7 @@ where
 
             for (local_y, mut row) in chunk.axis_iter_mut(Axis(0)).enumerate() {
                 let y = y_start + local_y;
-                if let Err(e) = simd_box_filter_row(input, &mut row, y, radius, norm) {
+                if let Err(e) = simd_box_filter_row(_input, &mut row, y, radius, norm) {
                     // For parallel processing, we can't propagate errors directly
                     // Log error and continue with default values
                     eprintln!("Warning: box filter row processing failed: {:?}", e);
@@ -745,7 +744,7 @@ where
                 let end = start + simd_width;
                 let slice = row_slice.as_slice().ok_or_else(|| {
                     NdimageError::ComputationError(
-                        "Failed to convert row slice to contiguous slice".to_string(),
+                        "Failed to convert _row slice to contiguous slice".to_string(),
                     )
                 })?;
                 let chunk_sum = T::simd_sum(&slice[start..end]);
@@ -888,9 +887,9 @@ where
     }
 
     let window_size = match window_size {
-        Some(size) => size,
+        Some(_size) => _size,
         None => {
-            let three = safe_f64_to_float::<T>(3.0)?;
+            let three = safe_f64, _to_float: :<T>(3.0)?;
             let radius = safe_float_to_usize(spatial_sigma * three)?;
             2 * radius + 1
         }
@@ -949,7 +948,7 @@ where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
     let (height, width) = input.dim();
-    let range_factor = safe_f64_to_float::<T>(-0.5)? / (range_sigma * range_sigma);
+    let range_factor = safe_f64, _to_float: :<T>(-0.5)? / (range_sigma * range_sigma);
     let simd_width = T::simd_width();
 
     for x in 0..width {
@@ -1075,7 +1074,7 @@ where
         window_size += 2;
     }
 
-    // If we reach max window size, return median of largest window
+    // If we reach max window _size, return median of largest window
     input[(y, x)]
 }
 

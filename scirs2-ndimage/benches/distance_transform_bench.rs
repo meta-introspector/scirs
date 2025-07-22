@@ -5,31 +5,31 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array2, Array3, IxDyn};
-use scirs2_ndimage::morphology::{distance_transform_bf, distance_transform_edt};
+use scirs2__ndimage::morphology::{distance_transform_bf, distance_transform_edt};
 
 #[allow(dead_code)]
-fn create_test_pattern_2d(rows: usize, cols: usize) -> Array2<bool> {
-    Array2::from_shape_fn((rows, cols), |(i, j)| {
+fn create_test_pattern_2d(_rows: usize, cols: usize) -> Array2<bool> {
+    Array2::from_shape_fn((_rows, cols), |(i, j)| {
         // Create a pattern with some foreground regions
-        let center_i = rows / 2;
+        let center_i = _rows / 2;
         let center_j = cols / 2;
         let dist_sq = (i as f64 - center_i as f64).powi(2) + (j as f64 - center_j as f64).powi(2);
-        let radius_sq = (std::cmp::min(rows, cols) / 4) as f64;
+        let radius_sq = (std::cmp::min(_rows, cols) / 4) as f64;
         radius_sq.powi(2) < dist_sq && dist_sq < (radius_sq * 2.0).powi(2)
     })
 }
 
 #[allow(dead_code)]
-fn create_test_pattern_3d(size_x: usize, size_y: usize, size_z: usize) -> Array3<bool> {
-    Array3::from_shape_fn((size_x, size_y, size_z), |(i, j, k)| {
+fn create_test_pattern_3d(_size_x: usize, size_y: usize, size_z: usize) -> Array3<bool> {
+    Array3::from_shape_fn((_size_x, size_y, size_z), |(i, j, k)| {
         // Create a 3D pattern with some complexity
-        let center_i = size_x / 2;
+        let center_i = _size_x / 2;
         let center_j = size_y / 2;
         let center_k = size_z / 2;
         let dist_sq = (i as f64 - center_i as f64).powi(2)
             + (j as f64 - center_j as f64).powi(2)
             + (k as f64 - center_k as f64).powi(2);
-        let radius_sq = (std::cmp::min(std::cmp::min(size_x, size_y), size_z) / 4) as f64;
+        let radius_sq = (std::cmp::min(std::cmp::min(_size_x, size_y), size_z) / 4) as f64;
         radius_sq.powi(2) < dist_sq && dist_sq < (radius_sq * 2.0).powi(2)
     })
 }
@@ -45,7 +45,7 @@ fn bench_distance_transform_2d(c: &mut Criterion) {
         (400, 400, "Very Large"),
     ];
 
-    for (rows, cols, _label) in sizes {
+    for (rows, cols_label) in sizes {
         let input = create_test_pattern_2d(rows, cols);
         let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
 
@@ -55,7 +55,7 @@ fn bench_distance_transform_2d(c: &mut Criterion) {
             &input_dyn,
             |b, input| {
                 b.iter(|| {
-                    let (distances, _) =
+                    let (distances_) =
                         distance_transform_edt(black_box(input), None, true, false)
                             .expect("EDT failed");
                     black_box(distances)
@@ -70,7 +70,7 @@ fn bench_distance_transform_2d(c: &mut Criterion) {
                 &input_dyn,
                 |b, input| {
                     b.iter(|| {
-                        let (distances, _) =
+                        let (distances_) =
                             distance_transform_bf(black_box(input), "euclidean", None, true, false)
                                 .expect("BF failed");
                         black_box(distances)
@@ -103,7 +103,7 @@ fn bench_distance_transform_3d(c: &mut Criterion) {
             &input_dyn,
             |b, input| {
                 b.iter(|| {
-                    let (distances, _) =
+                    let (distances_) =
                         distance_transform_edt(black_box(input), None, true, false)
                             .expect("EDT 3D failed");
                     black_box(distances)
@@ -118,7 +118,7 @@ fn bench_distance_transform_3d(c: &mut Criterion) {
                 &input_dyn,
                 |b, input| {
                     b.iter(|| {
-                        let (distances, _) =
+                        let (distances_) =
                             distance_transform_bf(black_box(input), "euclidean", None, true, false)
                                 .expect("BF 3D failed");
                         black_box(distances)
@@ -147,7 +147,7 @@ fn bench_distance_metrics(c: &mut Criterion) {
     for (metric, label) in metrics {
         group.bench_with_input(BenchmarkId::new("Metric", label), &input_dyn, |b, input| {
             b.iter(|| {
-                let (distances, _) =
+                let (distances_) =
                     distance_transform_bf(black_box(input), metric, None, true, false)
                         .expect("Metric transform failed");
                 black_box(distances)
@@ -179,7 +179,7 @@ fn bench_sampling_effects(c: &mut Criterion) {
             &input_dyn,
             |b, input| {
                 b.iter(|| {
-                    let (distances, _) =
+                    let (distances_) =
                         distance_transform_edt(black_box(input), sampling.as_deref(), true, false)
                             .expect("Sampling transform failed");
                     black_box(distances)

@@ -59,7 +59,7 @@ fn test_ar_estimation() -> Result<(), Box<dyn std::error::Error>> {
 
         // For this example, we'll simulate the estimation results
         // In the actual implementation, this would call:
-        // let (ar_coeffs, _, variance) = estimate_ar(&signal, 2, method)?;
+        // let (ar_coeffs_, variance) = estimate_ar(&signal, 2, method)?;
 
         // Simulated results (in real implementation, these would be computed)
         let estimated_coeffs = if idx == 0 {
@@ -126,8 +126,7 @@ fn test_ma_estimation() -> Result<(), Box<dyn std::error::Error>> {
         let estimated_variance = match *method_name {
             "Innovations Method" => 0.012,
             "Maximum Likelihood" => 0.011,
-            "Durbin Method" => 0.013,
-            _ => 0.012,
+            "Durbin Method" => 0.013_ => 0.012,
         };
 
         println!("    Estimated noise variance: {:.4}", estimated_variance);

@@ -7,7 +7,6 @@
 use crate::error::{OptimError, Result};
 use ndarray::Array1;
 use num_traits::Float;
-use scirs2_core::random;
 use std::collections::HashMap;
 
 /// Secure Multi-Party Computation coordinator
@@ -187,12 +186,12 @@ pub struct ShamirSecretSharing<T: Float> {
 
 impl<T: Float + Send + Sync> ShamirSecretSharing<T> {
     /// Create new secret sharing instance
-    pub fn new(threshold: usize, num_shares: usize) -> Self {
+    pub fn new(_threshold: usize, num_shares: usize) -> Self {
         // Use a large prime for field arithmetic
         let prime_field = 2u128.pow(127) - 1; // Mersenne prime
 
         Self {
-            threshold,
+            _threshold,
             num_shares,
             prime_field,
             coefficients: Vec::new(),
@@ -202,12 +201,12 @@ impl<T: Float + Send + Sync> ShamirSecretSharing<T> {
     /// Share a secret value
     pub fn share_secret(&mut self, secret: T) -> Result<Vec<(usize, T)>> {
         // Generate random polynomial coefficients
-        let mut rng = random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::with_seed(42);
         self.coefficients.clear();
         self.coefficients.push(secret); // a0 = secret
 
         for _ in 1..self.threshold {
-            let coeff = T::from(rng.random_range(0.0, 1.0)).unwrap();
+            let coeff = T::from(rng.gen_range(0.0..1.0)).unwrap();
             self.coefficients.push(coeff);
         }
 
@@ -236,7 +235,7 @@ impl<T: Float + Send + Sync> ShamirSecretSharing<T> {
         for (i, &(xi, yi)) in shares.iter().enumerate().take(self.threshold) {
             let mut lagrange_coeff = T::one();
 
-            for (j, &(xj, _)) in shares.iter().enumerate().take(self.threshold) {
+            for (j, &(xj_)) in shares.iter().enumerate().take(self.threshold) {
                 if i != j {
                     let xi_f = T::from(xi).unwrap();
                     let xj_f = T::from(xj).unwrap();
@@ -281,9 +280,9 @@ pub struct CryptographicAggregator<T: Float> {
 
 impl<T: Float + Send + Sync + ndarray::ScalarOperand> CryptographicAggregator<T> {
     /// Create new cryptographic aggregator
-    pub fn new(config: SMPCConfig) -> Self {
+    pub fn new(_config: SMPCConfig) -> Self {
         Self {
-            config,
+            _config,
             commitment_scheme: CommitmentScheme::new(),
             verification_params: VerificationParameters::new(),
             aggregation_proofs: Vec::new(),
@@ -368,7 +367,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> CryptographicAggregator<T>
     ) -> Result<Array1<T>> {
         if honest_participants.is_empty() {
             return Err(OptimError::InvalidConfig(
-                "No honest participants for aggregation".to_string(),
+                "No honest _participants for aggregation".to_string(),
             ));
         }
 
@@ -407,8 +406,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> CryptographicAggregator<T>
             verification_data: self
                 .verification_params
                 .generate_verification_data(aggregate)?,
-            timestamp: std::time::SystemTime::now(),
-            _phantom: std::marker::PhantomData,
+            timestamp: std::time::SystemTime::now(), _phantom: std::marker::PhantomData,
         };
 
         self.aggregation_proofs.push(proof.clone());
@@ -453,12 +451,11 @@ pub struct CommitmentScheme<T: Float> {
 impl<T: Float + Send + Sync> CommitmentScheme<T> {
     /// Create new commitment scheme
     pub fn new() -> Self {
-        let mut rng = random::Random::with_seed(42);
-        let commitment_key: Vec<u8> = (0..32).map(|_| rng.random_range(0, 255)).collect();
+        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let commitment_key: Vec<u8> = (0..32).map(|_| rng.gen_range(0..255)).collect();
 
         Self {
-            commitment_key,
-            _phantom: std::marker::PhantomData,
+            commitment_key_phantom: std::marker::PhantomData,
         }
     }
 
@@ -491,8 +488,8 @@ pub struct VerificationParameters<T: Float> {
 impl<T: Float + Send + Sync> VerificationParameters<T> {
     /// Create new verification parameters
     pub fn new() -> Self {
-        let mut rng = random::Random::with_seed(42);
-        let verification_key: Vec<u8> = (0..64).map(|_| rng.random_range(0, 255)).collect();
+        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let verification_key: Vec<u8> = (0..64).map(|_| rng.gen_range(0..255)).collect();
 
         Self {
             verification_key,
@@ -528,11 +525,11 @@ pub struct ProofParameters<T: Float> {
 impl<T: Float + Send + Sync> ProofParameters<T> {
     /// Create new proof parameters
     pub fn new() -> Self {
-        let mut rng = random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::with_seed(42);
         let generators: Vec<T> = (0..16)
-            .map(|_| T::from(rng.random_range(0.0, 1.0)).unwrap())
+            .map(|_| T::from(rng.gen_range(0.0..1.0)).unwrap())
             .collect();
-        let system_params: Vec<u8> = (0..128).map(|_| rng.random_range(0, 255)).collect();
+        let system_params: Vec<u8> = (0..128).map(|_| rng.random_range(0..255)).collect();
 
         Self {
             generators,
@@ -556,9 +553,9 @@ pub struct HomomorphicEngine<T: Float> {
 impl<T: Float + Send + Sync> HomomorphicEngine<T> {
     /// Create new homomorphic encryption engine
     pub fn new() -> Self {
-        let mut rng = random::Random::with_seed(42);
-        let public_key: Vec<u8> = (0..256).map(|_| rng.random_range(0, 255)).collect();
-        let private_key: Vec<u8> = (0..256).map(|_| rng.random_range(0, 255)).collect();
+        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let public_key: Vec<u8> = (0..256).map(|_| rng.gen_range(0..255)).collect();
+        let private_key: Vec<u8> = (0..256).map(|_| rng.gen_range(0..255)).collect();
 
         Self {
             params: HomomorphicParameters::new(),
@@ -670,14 +667,13 @@ pub struct HomomorphicParameters<T: Float> {
 impl<T: Float + Send + Sync> HomomorphicParameters<T> {
     /// Create new homomorphic parameters
     pub fn new() -> Self {
-        let mut rng = random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::with_seed(42);
         let noise_params: Vec<T> = (0..8)
-            .map(|_| T::from(rng.random_range(0.0, 1.0)).unwrap())
+            .map(|_| T::from(rng.gen_range(0.0..1.0)).unwrap())
             .collect();
 
         Self {
-            security_level: 128,
-            noise_params,
+            security_level: 128, noise_params,
             modulus: 2u128.pow(64) - 1,
         }
     }
@@ -705,8 +701,8 @@ pub struct ZKProofSystem<T: Float> {
 impl<T: Float + Send + Sync> ZKProofSystem<T> {
     /// Create new zero-knowledge proof system
     pub fn new() -> Self {
-        let mut rng = random::Random::with_seed(42);
-        let crs: Vec<u8> = (0..512).map(|_| rng.random_range(0, 255)).collect();
+        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let crs: Vec<u8> = (0..512).map(|_| rng.gen_range(0..255)).collect();
 
         Self {
             params: ZKProofParameters::new(),
@@ -726,8 +722,7 @@ impl<T: Float + Send + Sync> ZKProofSystem<T> {
             statement: format!("Computed {} on input", computation),
             witness: self.generate_witness(input, output)?,
             proof_data: self.generate_proof_data(input, output)?,
-            verification_key: self.crs.clone(),
-            _phantom: std::marker::PhantomData,
+            verification_key: self.crs.clone(), _phantom: std::marker::PhantomData,
         };
 
         Ok(proof)
@@ -786,14 +781,13 @@ pub struct ZKProofParameters<T: Float> {
 impl<T: Float + Send + Sync> ZKProofParameters<T> {
     /// Create new ZK proof parameters
     pub fn new() -> Self {
-        let mut rng = random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::with_seed(42);
         let circuit_params: Vec<T> = (0..16)
-            .map(|_| T::from(rng.random_range(0.0, 1.0)).unwrap())
+            .map(|_| T::from(rng.gen_range(0.0..1.0)).unwrap())
             .collect();
 
         Self {
-            security_param: 128,
-            proof_type: ZKProofType::SNARK,
+            security_param: 128, proof_type: ZKProofType::SNARK,
             circuit_params,
         }
     }
@@ -868,14 +862,14 @@ pub struct SecureAggregationResult<T: Float> {
 
 impl<T: Float + Send + Sync + ndarray::ScalarOperand> SMPCCoordinator<T> {
     /// Create new SMPC coordinator
-    pub fn new(config: SMPCConfig) -> Result<Self> {
-        let secret_sharing = ShamirSecretSharing::new(config.threshold, config.num_participants);
-        let secure_aggregator = CryptographicAggregator::new(config.clone());
+    pub fn new(_config: SMPCConfig) -> Result<Self> {
+        let secret_sharing = ShamirSecretSharing::new(_config.threshold, _config.num_participants);
+        let secure_aggregator = CryptographicAggregator::new(_config.clone());
         let homomorphic_engine = HomomorphicEngine::new();
         let zk_proof_system = ZKProofSystem::new();
 
         Ok(Self {
-            config,
+            _config,
             secret_sharing,
             secure_aggregator,
             homomorphic_engine,
@@ -1001,7 +995,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SMPCCoordinator<T> {
         let first_shares = shared_inputs
             .values()
             .next()
-            .ok_or_else(|| OptimError::InvalidConfig("No shared inputs provided".to_string()))?;
+            .ok_or_else(|| OptimError::InvalidConfig("No shared _inputs provided".to_string()))?;
 
         let mut result_shares = vec![(0usize, T::zero()); first_shares.len()];
 
@@ -1036,8 +1030,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SMPCCoordinator<T> {
 
     /// Secure weighted sum computation
     fn secure_weighted_sum(
-        &self,
-        _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
+        &self, _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
     ) -> Result<Vec<(usize, T)>> {
         // Placeholder for weighted sum implementation
         Err(OptimError::InvalidConfig(
@@ -1047,8 +1040,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SMPCCoordinator<T> {
 
     /// Secure custom computation
     fn secure_custom_computation(
-        &self,
-        _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
+        &self, _shared_inputs: &HashMap<String, Vec<(usize, T)>>,
     ) -> Result<Vec<(usize, T)>> {
         // Placeholder for custom computation implementation
         Err(OptimError::InvalidConfig(

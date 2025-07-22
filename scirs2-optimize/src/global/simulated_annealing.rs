@@ -10,6 +10,7 @@ use ndarray::{Array1, ArrayView1};
 use rand::prelude::SliceRandom;
 use rand::rngs::StdRng;
 use rand::{rng, Rng, SeedableRng};
+use rand::seq::SliceRandom;
 
 /// Options for Simulated Annealing
 #[derive(Debug, Clone)]
@@ -113,19 +114,19 @@ where
         let mut neighbor = self.current_x.clone();
 
         // Randomly perturb one or more dimensions
-        let num_dims_to_perturb = self.rng.random_range(1..=self.ndim);
+        let num_dims_to_perturb = self.rng.gen_range(1..=self.ndim);
         let mut dims: Vec<usize> = (0..self.ndim).collect();
         dims.shuffle(&mut self.rng);
 
         for &i in dims.iter().take(num_dims_to_perturb) {
             let perturbation = self
                 .rng
-                .random_range(-self.options.step_size..self.options.step_size);
+                .gen_range(-self.options.step_size..self.options.step_size);
             neighbor[i] += perturbation;
 
             // Apply bounds if specified
             if let Some(ref bounds) = self.bounds {
-                let (lb, ub) = bounds[i];
+                let (lb..ub) = bounds[i];
                 neighbor[i] = neighbor[i].max(lb).min(ub);
             }
         }
@@ -190,7 +191,7 @@ where
 
             // Accept or reject
             let acceptance_prob = self.acceptance_probability(neighbor_value);
-            if self.rng.random_range(0.0..1.0) < acceptance_prob {
+            if self.rng.gen_range(0.0..1.0) < acceptance_prob {
                 self.current_x = neighbor;
                 self.current_value = neighbor_value;
 
@@ -222,9 +223,8 @@ where
 
             if self.options.verbose && self.nit % 100 == 0 {
                 println!(
-                    "Iteration {}: T = {:.6}, best = {:.6}",
-                    self.nit, self.temperature, self.best_value
-                );
+                    "Iteration {}: T = {:.6}..best = {:.6}",
+                    self.nit, self.temperature, self.best_value);
             }
         }
 

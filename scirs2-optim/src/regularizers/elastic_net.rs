@@ -19,7 +19,7 @@ use crate::regularizers::{Regularizer, L1, L2};
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_optim::regularizers::{ElasticNet, Regularizer};
+/// use scirs2__optim::regularizers::{ElasticNet, Regularizer};
 ///
 /// // Create an ElasticNet regularizer with strength 0.01 and l1_ratio 0.5
 /// // (equal weight to L1 and L2)
@@ -56,16 +56,16 @@ impl<A: Float + Debug> ElasticNet<A> {
     /// * `l1_ratio` - Mixing parameter (0 <= l1_ratio <= 1)
     ///   - l1_ratio = 1: only L1 penalty
     ///   - l1_ratio = 0: only L2 penalty
-    pub fn new(alpha: A, l1_ratio: A) -> Self {
+    pub fn new(_alpha: A, l1_ratio: A) -> Self {
         // Ensure l1_ratio is between 0 and 1
         let l1_ratio = l1_ratio.max(A::zero()).min(A::one());
 
         // Compute individual strengths for L1 and L2
-        let l1_alpha = alpha * l1_ratio;
-        let l2_alpha = alpha * (A::one() - l1_ratio);
+        let l1_alpha = _alpha * l1_ratio;
+        let l2_alpha = _alpha * (A::one() - l1_ratio);
 
         Self {
-            alpha,
+            _alpha,
             l1_ratio,
             l1: L1::new(l1_alpha),
             l2: L2::new(l2_alpha),

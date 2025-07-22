@@ -35,7 +35,7 @@
 //!
 //! Run with: cargo run --example complete_derivations_curriculum
 
-use scirs2_special::*;
+use scirs2__special::*;
 use std::collections::HashMap;
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};
@@ -1111,8 +1111,7 @@ impl DerivationCurriculum {
                 Ok(3) => self.interactive_derivation_builder()?,
                 Ok(4) => self.verification_laboratory()?,
                 Ok(5) => self.view_progress_and_mastery()?,
-                Ok(6) => self.access_reference_materials()?,
-                _ => println!("❌ Invalid choice. Please try again.\n"),
+                Ok(6) => self.access_reference_materials()?_ => println!("❌ Invalid choice. Please try again.\n"),
             }
         }
 
@@ -1569,8 +1568,7 @@ impl DerivationCurriculum {
             Ok(1) => self.numerical_verification()?,
             Ok(2) => self.symbolic_verification()?,
             Ok(3) => self.edge_case_testing()?,
-            Ok(4) => self.precision_analysis()?,
-            _ => println!("❌ Invalid choice."),
+            Ok(4) => self.precision_analysis()?_ => println!("❌ Invalid choice."),
         }
 
         Ok(())
@@ -1902,8 +1900,8 @@ impl ProofValidator {
 
 // Utility function for duration formatting
 #[allow(dead_code)]
-fn format_duration(duration: Duration) -> String {
-    let total_seconds = duration.as_secs();
+fn format_duration(_duration: Duration) -> String {
+    let total_seconds = _duration.as_secs();
     let hours = total_seconds / 3600;
     let minutes = (total_seconds % 3600) / 60;
 

@@ -7,7 +7,7 @@
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::validation::{check_positive, check_shape};
-use scirs2_linalg::eigh;
+use scirs2__linalg::eigh;
 
 use crate::error::{Result, TransformError};
 
@@ -60,9 +60,9 @@ impl SpectralEmbedding {
     /// # Arguments
     /// * `n_components` - Number of dimensions in the embedding space
     /// * `affinity_method` - Method for constructing the affinity matrix
-    pub fn new(n_components: usize, affinity_method: AffinityMethod) -> Self {
+    pub fn new(_n_components: usize, affinity_method: AffinityMethod) -> Self {
         SpectralEmbedding {
-            n_components,
+            _n_components,
             affinity_method,
             n_neighbors: 10,
             gamma: None,
@@ -418,7 +418,7 @@ impl SpectralEmbedding {
         let eigenvalues = self.eigenvalues.as_ref().unwrap();
 
         let (n_new, n_features) = x_new.dim();
-        let (n_training, _) = training_data.dim();
+        let (n_training_) = training_data.dim();
 
         if n_features != training_data.ncols() {
             return Err(TransformError::InvalidInput(format!(
@@ -428,7 +428,7 @@ impl SpectralEmbedding {
             )));
         }
 
-        // Compute affinity between new points and training points
+        // Compute affinity between _new points and training points
         let mut new_to_training_affinity = Array2::zeros((n_new, n_training));
 
         for i in 0..n_new {

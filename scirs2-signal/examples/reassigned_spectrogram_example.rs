@@ -3,12 +3,13 @@ use rand::{rng, Rng};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2_signal::reassigned::{
+use scirs2__signal::reassigned::{
     extract_ridges, reassigned_spectrogram, smoothed_reassigned_spectrogram, ReassignedConfig,
     ReassignedResult,
 };
-use scirs2_signal::spectral;
-use scirs2_signal::window;
+use scirs2__signal::spectral;
+use scirs2__signal::window;
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -79,7 +80,7 @@ fn generate_test_signal() -> Array1<f64> {
 
     // Add some noise
     let noise_level = 0.05;
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let noise =
         Array::from_iter((0..n_samples).map(|_| noise_level * (2.0 * rng.random::<f64>() - 1.0)));
 
@@ -89,7 +90,7 @@ fn generate_test_signal() -> Array1<f64> {
 
 /// Compute a standard STFT spectrogram
 #[allow(dead_code)]
-fn compute_standard_spectrogram(signal: &Array1<f64>) -> Array2<f64> {
+fn compute_standard_spectrogram(_signal: &Array1<f64>) -> Array2<f64> {
     let fs = 2048.0;
     let window_size = 256;
     let hop_size = 64;
@@ -99,7 +100,7 @@ fn compute_standard_spectrogram(signal: &Array1<f64>) -> Array2<f64> {
 
     // Compute STFT using spectral module
     let stft_result = spectral::stft(
-        signal.as_slice().unwrap(),
+        _signal.as_slice().unwrap(),
         Some(fs),
         Some("hann"),
         Some(window_size),
@@ -112,7 +113,7 @@ fn compute_standard_spectrogram(signal: &Array1<f64>) -> Array2<f64> {
     .unwrap();
 
     // STFT returns (frequencies, times, STFT values)
-    let (_, _, stft_complex) = stft_result;
+    let (__, stft_complex) = stft_result;
 
     // Convert to power spectrogram
     let mut spectrogram = Array2::zeros((n_fft / 2 + 1, stft_complex.len()));
@@ -133,7 +134,7 @@ fn compute_standard_spectrogram(signal: &Array1<f64>) -> Array2<f64> {
 
 /// Compute a reassigned spectrogram
 #[allow(dead_code)]
-fn compute_reassigned_spectrogram(signal: &Array1<f64>) -> ReassignedResult {
+fn compute_reassigned_spectrogram(_signal: &Array1<f64>) -> ReassignedResult {
     let fs = 2048.0;
 
     // Configure the reassigned spectrogram
@@ -145,7 +146,7 @@ fn compute_reassigned_spectrogram(signal: &Array1<f64>) -> ReassignedResult {
     config.return_spectrogram = true;
 
     // Compute the reassigned spectrogram
-    let result = reassigned_spectrogram(signal, config).unwrap();
+    let result = reassigned_spectrogram(_signal, config).unwrap();
 
     println!(
         "Reassigned spectrogram: {} time frames, {} frequency bins",
@@ -158,7 +159,7 @@ fn compute_reassigned_spectrogram(signal: &Array1<f64>) -> ReassignedResult {
 
 /// Compute a smoothed reassigned spectrogram
 #[allow(dead_code)]
-fn compute_smoothed_reassigned_spectrogram(signal: &Array1<f64>) -> ReassignedResult {
+fn compute_smoothed_reassigned_spectrogram(_signal: &Array1<f64>) -> ReassignedResult {
     let fs = 2048.0;
 
     // Configure the reassigned spectrogram
@@ -170,7 +171,7 @@ fn compute_smoothed_reassigned_spectrogram(signal: &Array1<f64>) -> ReassignedRe
     config.return_spectrogram = true;
 
     // Compute the smoothed reassigned spectrogram with smoothing width of 3
-    let result = smoothed_reassigned_spectrogram(signal, config, 3).unwrap();
+    let result = smoothed_reassigned_spectrogram(_signal, config, 3).unwrap();
 
     println!(
         "Smoothed reassigned spectrogram: {} time frames, {} frequency bins",
@@ -224,7 +225,7 @@ fn analyze_multicomponent_signal() -> (Array2<f64>, Array2<f64>, Array2<f64>) {
     .unwrap();
 
     // STFT returns (frequencies, times, STFT values)
-    let (_, _, stft_complex) = stft_result;
+    let (__, stft_complex) = stft_result;
 
     // Convert to power spectrogram
     let mut spectrogram = Array2::zeros((n_fft / 2 + 1, stft_complex.len()));
@@ -259,9 +260,9 @@ fn analyze_multicomponent_signal() -> (Array2<f64>, Array2<f64>, Array2<f64>) {
 
 /// Extract and analyze ridges from a reassigned spectrogram
 #[allow(dead_code)]
-fn extract_and_analyze_ridges(result: &ReassignedResult) -> Vec<Vec<(usize, f64)>> {
+fn extract_and_analyze_ridges(_result: &ReassignedResult) -> Vec<Vec<(usize, f64)>> {
     // Extract the ridges (maximum 2 components)
-    let ridges = extract_ridges(&result.reassigned, &result.frequencies, 2, 0.2);
+    let ridges = extract_ridges(&_result.reassigned, &_result.frequencies, 2, 0.2);
 
     println!("Found {} significant ridges", ridges.len());
 
@@ -322,18 +323,18 @@ fn save_results_to_csv(
         &reassigned_result.frequencies,
     );
 
-    // Save the reassigned spectrogram
+    // Save the _reassigned spectrogram
     save_matrix_to_csv(
         "reassigned_spectrogram.csv",
-        &reassigned_result.reassigned,
+        &reassigned_result._reassigned,
         &reassigned_result.times,
         &reassigned_result.frequencies,
     );
 
-    // Save the smoothed reassigned spectrogram
+    // Save the _smoothed _reassigned spectrogram
     save_matrix_to_csv(
         "smoothed_reassigned_spectrogram.csv",
-        &smoothed_result.reassigned,
+        &smoothed_result._reassigned,
         &smoothed_result.times,
         &smoothed_result.frequencies,
     );
@@ -348,7 +349,7 @@ fn save_results_to_csv(
 
     // Save any extracted ridges
     let ridges = extract_ridges(
-        &reassigned_result.reassigned,
+        &reassigned_result._reassigned,
         &reassigned_result.frequencies,
         2,
         0.2,

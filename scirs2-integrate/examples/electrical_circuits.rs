@@ -4,7 +4,7 @@
 //! It includes RC/RL circuits, RLC oscillators, and nonlinear circuits with diodes.
 
 use ndarray::{array, Array1, ArrayView1};
-use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::f64::consts::PI;
 
 /// Simple RC charging circuit: C(dV/dt) + V/R = V_source/R

@@ -1,17 +1,17 @@
 //! Tests for temporal constraint validation
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
+#[cfg(all(feature = data_validation, feature = serde))]
 use scirs2_core::validation::data::{
     Constraint, DataType, TimeConstraints, ValidationConfig, ValidationSchema, Validator,
 };
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
+#[cfg(all(feature = data_validation, feature = serde))]
 use std::time::Duration;
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
-use serde_json::json;
+#[cfg(all(feature = data_validation, feature = serde))]
+use serde__json::json;
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
+#[cfg(all(feature = data_validation, feature = serde))]
 #[test]
 #[allow(dead_code)]
 fn test_temporal_constraint_basic() {
@@ -39,7 +39,7 @@ fn test_temporal_constraint_basic() {
     assert!(result.is_valid(), "Valid timestamps should pass validation");
 }
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
+#[cfg(all(feature = data_validation, feature = serde))]
 #[test]
 #[allow(dead_code)]
 fn test_temporal_constraint_monotonic() {
@@ -70,7 +70,7 @@ fn test_temporal_constraint_monotonic() {
         .any(|e| e.constraint == Some("temporal.monotonic".to_string())));
 }
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
+#[cfg(all(feature = data_validation, feature = serde))]
 #[test]
 #[allow(dead_code)]
 fn test_temporal_constraint_no_duplicates() {
@@ -101,7 +101,7 @@ fn test_temporal_constraint_no_duplicates() {
         .any(|e| e.constraint == Some("temporal.unique".to_string())));
 }
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
+#[cfg(all(feature = data_validation, feature = serde))]
 #[test]
 #[allow(dead_code)]
 fn test_temporal_constraint_interval_too_small() {
@@ -129,7 +129,7 @@ fn test_temporal_constraint_interval_too_small() {
         .any(|e| e.constraint == Some("temporal.min_interval".to_string())));
 }
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
+#[cfg(all(feature = data_validation, feature = serde))]
 #[test]
 #[allow(dead_code)]
 fn test_temporal_constraint_interval_too_large() {
@@ -157,7 +157,7 @@ fn test_temporal_constraint_interval_too_large() {
         .any(|e| e.constraint == Some("temporal.max_interval".to_string())));
 }
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
+#[cfg(all(feature = data_validation, feature = serde))]
 #[test]
 #[allow(dead_code)]
 fn test_temporal_constraint_float_timestamps() {
@@ -183,7 +183,7 @@ fn test_temporal_constraint_float_timestamps() {
     assert!(result.is_valid(), "Float timestamps should be accepted");
 }
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
+#[cfg(all(feature = data_validation, feature = serde))]
 #[test]
 #[allow(dead_code)]
 fn test_temporal_constraint_non_array() {
@@ -214,7 +214,7 @@ fn test_temporal_constraint_non_array() {
         .any(|e| e.message.contains("require an array")));
 }
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
+#[cfg(all(feature = data_validation, feature = serde))]
 #[test]
 #[allow(dead_code)]
 fn test_temporal_constraint_too_few_timestamps() {
@@ -245,7 +245,7 @@ fn test_temporal_constraint_too_few_timestamps() {
         .any(|e| e.message.contains("at least 2 timestamps")));
 }
 
-#[cfg(all(feature = "data_validation", feature = "serde"))]
+#[cfg(all(feature = data_validation, feature = serde))]
 #[test]
 #[allow(dead_code)]
 fn test_temporal_constraint_complex() {

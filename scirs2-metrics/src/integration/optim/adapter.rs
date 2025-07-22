@@ -51,9 +51,9 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> MetricOptimizer<F> {
     ///
     /// * `metric_name` - Name of the metric to optimize
     /// * `maximize` - Whether to maximize (true) or minimize (false) the metric
-    pub fn new<S: Into<String>>(metric_name: S, maximize: bool) -> Self {
+    pub fn new<S: Into<String>>(_metric_name: S, maximize: bool) -> Self {
         Self {
-            metric_name: metric_name.into(),
+            metric_name: _metric_name.into(),
             mode: if maximize {
                 OptimizationMode::Maximize
             } else {
@@ -61,8 +61,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> MetricOptimizer<F> {
             },
             history: Vec::new(),
             best_value: None,
-            additional_metrics: HashMap::new(),
-            _phantom: PhantomData,
+            additional_metrics: HashMap::new(), _phantom: PhantomData,
         }
     }
 
@@ -92,10 +91,10 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> MetricOptimizer<F> {
 
         // Update best value
         self.best_value = match (self.best_value, self.mode) {
-            (None, _) => Some(value),
+            (None_) => Some(value),
             (Some(best), OptimizationMode::Maximize) if value > best => Some(value),
             (Some(best), OptimizationMode::Minimize) if value < best => Some(value),
-            (Some(best), _) => Some(best),
+            (Some(best)_) => Some(best),
         };
     }
 
